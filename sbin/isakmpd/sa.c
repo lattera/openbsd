@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.2 1998/11/15 00:44:02 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.3 1998/11/17 11:10:19 niklas Exp $	*/
+/*	$EOM: sa.c,v 1.55 1998/11/14 23:42:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

@@ -1,4 +1,5 @@
-#	$Id: genconstants.sh,v 1.2 1998/07/24 22:25:42 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/genconstants.sh,v 1.2 1998/11/17 11:10:11 niklas Exp $
+#	$EOM: genconstants.sh,v 1.2 1998/07/24 22:25:42 niklas Exp $
 
 #
 # Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.
