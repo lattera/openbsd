@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/common/libsysdep/Attic/cast.c,v 1.2 2001/01/28 22:38:48 niklas Exp $	*/
+
 /* 
  * Created by Martin Rinman, rinman@erlang.ericsson.se 
  * Copyright (C) 1998 Ericsson Radio Systems AB 

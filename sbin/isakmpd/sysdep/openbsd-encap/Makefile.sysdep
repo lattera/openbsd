@@ -1,4 +1,4 @@
-#	$Id: Makefile.sysdep,v 1.10 2000/10/15 22:22:41 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/sysdep/openbsd-encap/Attic/Makefile.sysdep,v 1.2 2001/01/28 22:38:49 niklas Exp $
 
 #
 # Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.

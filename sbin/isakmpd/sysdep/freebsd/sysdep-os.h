@@ -1,4 +1,4 @@
-/*	$Id: sysdep-os.h,v 1.2 2000/03/07 22:52:21 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/freebsd/Attic/sysdep-os.h,v 1.2 2001/01/28 22:38:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999 Niklas Hallqvist.  All rights reserved.

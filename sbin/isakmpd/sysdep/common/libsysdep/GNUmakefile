@@ -1,4 +1,4 @@
-#	$Id: GNUmakefile,v 1.2 2000/03/07 23:18:03 ho Exp $
+#	$OpenBSD: src/sbin/isakmpd/sysdep/common/libsysdep/Attic/GNUmakefile,v 1.2 2001/01/28 22:38:47 niklas Exp $
 
 #
 # Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.

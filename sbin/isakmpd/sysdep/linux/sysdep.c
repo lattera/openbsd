@@ -1,4 +1,4 @@
-/*	$Id: sysdep.c,v 1.13 2000/12/12 00:29:17 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/linux/Attic/sysdep.c,v 1.4 2001/01/28 22:38:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999 Niklas Hallqvist.  All rights reserved.

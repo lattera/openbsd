@@ -1,4 +1,4 @@
-/*	$Id: klips.c,v 1.18 2000/12/12 00:29:17 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/linux/Attic/klips.c,v 1.2 2001/01/28 22:38:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.
