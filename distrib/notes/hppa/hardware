@@ -1,0 +1,45 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/hardware,v 1.9 2003/08/20 21:28:54 mickey Exp $
+OpenBSD/MACHINE OSREV runs on the following classes of HP9000 machines:
+dnl - PA7000-based
+dnl	705, 710, 720, 730, 750
+- PA7100-based
+	715/33, 715/50, 715/75
+	725/50, 725/75
+	735/100
+	755/100
+- PA7100LC-based
+	712
+	715/64, 715/80, 715/100, 715/100XC
+	725/64, 725/100
+- PA7150-based
+	735/125
+	755/125
+- PA7200-based
+	J200, J210, J210XC
+	C100, C110
+- PA7300LC-based
+	C160L (RDI PrecisionBook)
+
+Supported devices {:-include-:}:
+- Ethernet Controller
+	built-in Intel 82596 (ie)
+- SCSI controllers
+	built-in 53C710 SCSI (osiop)
+- SGC/GSC graphics:
+	Artist (as found on 712) (sti)
+	CRX-8, CRX-24, HCRX-8, HCRX-24 (sti)
+- RS-232 devices:
+	on-board NS16550 or similar serial ports (com)
+- Parallel ports:
+	on-board parallel port (lpt)
+- Audio devices:
+	Harmony CS4215/AD1849 LASI audio (harmony)
+- Input devices:
+	PS/2 keyboard (gsckbd) and mouse (pms)
+	HIL keyboard (hilkbd), mouse and tablets (hilms)
+- Miscellaneous devices:
+	battery-backed real time clock
+	``soft'' power button as available on some models (power)
+
+If your hardware is not listed above, there is currently no support for it
+in this release.
