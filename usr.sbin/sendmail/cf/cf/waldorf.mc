@@ -1,5 +1,5 @@
 divert(-1)
-#	$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/waldorf.mc,v 1.1 1996/05/09 06:34:36 niklas Exp $
+#	$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/waldorf.mc,v 1.1.1.1 1998/07/12 17:12:00 millert Exp $
 #
 # Copyright (c) 1996 Niklas Hallqvist
 # All rights reserved.
@@ -33,15 +33,24 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')
-VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/waldorf.mc,v 1.1 1996/05/09 06:34:36 niklas Exp $')
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/waldorf.mc,v 1.1.1.1 1998/07/12 17:12:00 millert Exp $')
 OSTYPE(bsd4.4)dnl
+
 MASQUERADE_AS(appli.se)
 MASQUERADE_DOMAIN(appli.se)
+
+FEATURE(local_procmail)dnl
+
 MAILER(local)dnl
 MAILER(smtp)dnl
+
+FEATURE(limited_masquerade)dnl
 FEATURE(always_add_domain)dnl
-FEATURE(allmasquerade)dnl
+FEATURE(virtusertable)dnl
+FEATURE(use_cw_file)dnl
+
 define(`confAUTO_REBUILD', True)dnl
+
 LOCAL_RULE_0
 # We take care of all mail directed to either appli.se or *.appli.se
 R$+<@$*$m.>	$#local $:$1

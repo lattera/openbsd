@@ -35,6 +35,6 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')
-VERSIONID(`@(#)pain.mc	$Revision: 1.2 $')
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/nettan.mc,v 1.1.1.1 1998/07/12 17:11:55 millert Exp $')
 OSTYPE(bsd4.4)dnl
 FEATURE(nullclient,mail.appli.se)dnl

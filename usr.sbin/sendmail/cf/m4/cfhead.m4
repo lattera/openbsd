@@ -1,35 +1,13 @@
 #
-# Copyright (c) 1983, 1995 Eric P. Allman
+# Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+# Copyright (c) 1983, 1995 Eric P. Allman.  All rights reserved.
 # Copyright (c) 1988, 1993
 #	The Regents of the University of California.  All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-# 3. All advertising materials mentioning features or use of this software
-#    must display the following acknowledgement:
-#	This product includes software developed by the University of
-#	California, Berkeley and its contributors.
-# 4. Neither the name of the University nor the names of its contributors
-#    may be used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# By using this file, you agree to the terms and conditions set
+# forth in the LICENSE file which can be found at the top level of
+# the sendmail distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-# SUCH DAMAGE.
 #
 
 ######################################################################
@@ -86,8 +64,13 @@ define(`LOCAL_RULE_2',
 
 S2
 ')
+define(`LOCAL_RULESETS',
+`divert(9)
+
+')
 define(`LOCAL_RULE_3', `divert(2)')
 define(`LOCAL_CONFIG', `divert(6)')
+define(`MAILER_DEFINITIONS', `divert(7)')
 define(`LOCAL_NET_CONFIG', `define(`_LOCAL_RULES_', 1)divert(1)')
 define(`UUCPSMTP', `R DOL(*) < @ $1 .UUCP > DOL(*)	DOL(1) < @ $2 > DOL(2)')
 define(`CONCAT', `$1$2$3$4$5$6$7')
@@ -101,24 +84,36 @@ define(`SITE', `ifelse(CONCAT($'2`, $3), SU,
 		CONCAT(C, $3, $'1`))')
 sinclude(_CF_DIR_`'siteconfig/$1.m4)')
 define(`EXPOSED_USER', `PUSHDIVERT(5)CE$1
-POPDIVERT`'dnl')
+POPDIVERT`'dnl`'')
 define(`LOCAL_USER', `PUSHDIVERT(5)CL$1
-POPDIVERT`'dnl')
+POPDIVERT`'dnl`'')
 define(`MASQUERADE_AS', `define(`MASQUERADE_NAME', $1)')
 define(`MASQUERADE_DOMAIN', `PUSHDIVERT(5)CM$1
-POPDIVERT`'dnl')
+POPDIVERT`'dnl`'')
 define(`MASQUERADE_DOMAIN_FILE', `PUSHDIVERT(5)FM$1
-POPDIVERT`'dnl')
+POPDIVERT`'dnl`'')
+define(`GENERICS_DOMAIN', `PUSHDIVERT(5)CG$1
+POPDIVERT`'dnl`'')
+define(`GENERICS_DOMAIN_FILE', `PUSHDIVERT(5)FG$1
+POPDIVERT`'dnl`'')
+define(`RELAY_DOMAIN', `PUSHDIVERT(5)CR$1
+POPDIVERT`'dnl`'')
+define(`RELAY_DOMAIN_FILE', `PUSHDIVERT(5)FR$1
+POPDIVERT`'dnl`'')
 define(`_OPTINS', `ifdef(`$1', `$2$1$3')')
 
 m4wrap(`include(_CF_DIR_`m4/proto.m4')')
 
 # set up default values for options
+define(`ALIAS_FILE', `/etc/aliases')
 define(`confMAILER_NAME', ``MAILER-DAEMON'')
 define(`confFROM_LINE', `From $g  $d')
 define(`confOPERATORS', `.:%@!^/[]+')
 define(`confSMTP_LOGIN_MSG', `$j Sendmail $v/$Z; $b')
-define(`confRECEIVED_HEADER', `$?sfrom $s $.$?_($?s$|from $.$_) $.by $j ($v/$Z)$?r with $r$. id $i$?u for $u$.; $b')
+define(`confRECEIVED_HEADER', `$?sfrom $s $.$?_($?s$|from $.$_)
+	$.by $j ($v/$Z)$?r with $r$. id $i$?u
+	for $u; $|;
+	$.$b')
 define(`confSEVEN_BIT_INPUT', `False')
 define(`confEIGHT_BIT_HANDLING', `pass8')
 define(`confALIAS_WAIT', `10')
@@ -138,10 +133,10 @@ define(`confSAFE_QUEUE', `True')
 define(`confTO_QUEUERETURN', `5d')
 define(`confTO_QUEUEWARN', `4h')
 define(`confTIME_ZONE', `USE_SYSTEM')
-define(`confDEF_USER_ID', `1:1')
 define(`confCW_FILE', `/etc/sendmail.cw')
 define(`confMIME_FORMAT_ERRORS', `True')
 define(`confFORWARD_PATH', `$z/.forward.$w:$z/.forward')
+define(`confCR_FILE', `-o /etc/mail/relay-domains')
 
 divert(0)dnl
-VERSIONID(`@(#)cfhead.m4	8.3 (Berkeley) 9/15/95')
+VERSIONID(`@(#)cfhead.m4	8.22 (Berkeley) 5/19/98')

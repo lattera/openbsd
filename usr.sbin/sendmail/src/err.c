@@ -1,51 +1,26 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)err.c	8.27 (Berkeley) 4/18/94";
+static char sccsid[] = "@(#)err.c	8.74 (Berkeley) 6/4/98";
 #endif /* not lint */
 
 # include "sendmail.h"
 # include <errno.h>
-# include <netdb.h>
-# include <pwd.h>
 
 /*
 **  SYSERR -- Print error message.
 **
-**	Prints an error message via printf to the diagnostic
-**	output.  If LOG is defined, it logs it also.
+**	Prints an error message via printf to the diagnostic output.
 **
 **	If the first character of the syserr message is `!' it will
 **	log this as an ALERT message and exit immediately.  This can
@@ -53,8 +28,11 @@ static char sccsid[] = "@(#)err.c	8.27 (Berkeley) 4/18/94";
 **	be used lightly.
 **
 **	Parameters:
-**		f -- the format string
-**		a, b, c, d, e -- parameters
+**		fmt -- the format string.  If it does not begin with
+**			a three-digit SMTP reply code, either 554 or
+**			451 is assumed depending on whether errno
+**			is set.
+**		(others) -- parameters
 **
 **	Returns:
 **		none
@@ -65,9 +43,12 @@ static char sccsid[] = "@(#)err.c	8.27 (Berkeley) 4/18/94";
 **		sets ExitStat.
 */
 
-char	MsgBuf[BUFSIZ*2];	/* text of most recent message */
+char	MsgBuf[BUFSIZ*2];		/* text of most recent message */
+char	HeldMessageBuf[sizeof MsgBuf];	/* for held messages */
 
-static void	fmtmsg();
+extern void	putoutmsg __P((char *, bool, bool));
+extern void	puterrmsg __P((char *));
+static void	fmtmsg __P((char *, const char *, const char *, int, const char *, va_list));
 
 #if NAMED_BIND && !defined(NO_DATA)
 # define NO_DATA	NO_ADDRESS
@@ -86,16 +67,17 @@ syserr(fmt, va_alist)
 	register char *p;
 	int olderrno = errno;
 	bool panic;
-#ifdef LOG
 	char *uname;
 	struct passwd *pw;
 	char ubuf[80];
-#endif
 	VA_LOCAL_DECL
 
 	panic = *fmt == '!';
 	if (panic)
+	{
 		fmt++;
+		HoldErrs = FALSE;
+	}
 
 	/* format and output the error message */
 	if (olderrno == 0)
@@ -106,6 +88,14 @@ syserr(fmt, va_alist)
 	fmtmsg(MsgBuf, (char *) NULL, p, olderrno, fmt, ap);
 	VA_END;
 	puterrmsg(MsgBuf);
+
+	/* save this message for mailq printing */
+	if (!panic && CurEnv != NULL)
+	{
+		if (CurEnv->e_message != NULL)
+			free(CurEnv->e_message);
+		CurEnv->e_message = newstr(MsgBuf + 4);
+	}
 
 	/* determine exit status if not already set */
 	if (ExitStat == EX_OK)
@@ -118,31 +108,52 @@ syserr(fmt, va_alist)
 			printf("syserr: ExitStat = %d\n", ExitStat);
 	}
 
-# ifdef LOG
-	pw = getpwuid(getuid());
+	pw = sm_getpwuid(getuid());
 	if (pw != NULL)
 		uname = pw->pw_name;
 	else
 	{
 		uname = ubuf;
-		sprintf(ubuf, "UID%d", getuid());
+		snprintf(ubuf, sizeof ubuf, "UID%d", getuid());
 	}
 
 	if (LogLevel > 0)
-		syslog(panic ? LOG_ALERT : LOG_CRIT, "%s: SYSERR(%s): %s",
-			CurEnv->e_id == NULL ? "NOQUEUE" : CurEnv->e_id,
-			uname, &MsgBuf[4]);
-# endif /* LOG */
-	if (olderrno == EMFILE)
+		sm_syslog(panic ? LOG_ALERT : LOG_CRIT,
+			  CurEnv == NULL ? NOQID : CurEnv->e_id,
+			  "SYSERR(%s): %.900s",
+			  uname, &MsgBuf[4]);
+	switch (olderrno)
 	{
+	  case EBADF:
+	  case ENFILE:
+	  case EMFILE:
+	  case ENOTTY:
+#ifdef EFBIG
+	  case EFBIG:
+#endif
+#ifdef ESPIPE
+	  case ESPIPE:
+#endif
+#ifdef EPIPE
+	  case EPIPE:
+#endif
+#ifdef ENOBUFS
+	  case ENOBUFS:
+#endif
+#ifdef ESTALE
+	  case ESTALE:
+#endif
 		printopenfds(TRUE);
 		mci_dump_all(TRUE);
+		break;
 	}
 	if (panic)
 	{
 #ifdef XLA
 		xla_all_end();
 #endif
+		if (tTd(0, 1))
+			abort();
 		exit(EX_OSERR);
 	}
 	errno = 0;
@@ -155,7 +166,9 @@ syserr(fmt, va_alist)
 **	This is much like syserr except it is for user errors.
 **
 **	Parameters:
-**		fmt, a, b, c, d -- printf strings
+**		fmt -- the format string.  If it does not begin with
+**			a three-digit SMTP reply code, 501 is assumed.
+**		(others) -- printf strings
 **
 **	Returns:
 **		none
@@ -183,14 +196,42 @@ usrerr(fmt, va_alist)
 	VA_START(fmt);
 	fmtmsg(MsgBuf, CurEnv->e_to, "501", 0, fmt, ap);
 	VA_END;
+
+	/* save this message for mailq printing */
+	switch (MsgBuf[0])
+	{
+	  case '4':
+	  case '8':
+		if (CurEnv->e_message != NULL)
+			break;
+
+		/* fall through.... */
+
+	  case '5':
+	  case '6':
+		if (CurEnv->e_message != NULL)
+			free(CurEnv->e_message);
+		if (MsgBuf[0] == '6')
+		{
+			char buf[MAXLINE];
+
+			snprintf(buf, sizeof buf, "Postmaster warning: %.*s",
+				sizeof buf - 22, MsgBuf + 4);
+			CurEnv->e_message = newstr(buf);
+		}
+		else
+		{
+			CurEnv->e_message = newstr(MsgBuf + 4);
+		}
+		break;
+	}
+
 	puterrmsg(MsgBuf);
 
-# ifdef LOG
 	if (LogLevel > 3 && LogUsrErrs)
-		syslog(LOG_NOTICE, "%s: %s",
-			CurEnv->e_id == NULL ? "NOQUEUE" : CurEnv->e_id,
+		sm_syslog(LOG_NOTICE, CurEnv->e_id,
+			"%.900s",
 			&MsgBuf[4]);
-# endif /* LOG */
 
 	if (QuickAbort)
 		longjmp(TopFrame, 1);
@@ -201,7 +242,7 @@ usrerr(fmt, va_alist)
 **	Parameters:
 **		msg -- the message (printf fmt) -- it can begin with
 **			an SMTP reply code.  If not, 050 is assumed.
-**		a, b, c, d, e -- printf arguments
+**		(others) -- printf arguments
 **
 **	Returns:
 **		none
@@ -210,7 +251,7 @@ usrerr(fmt, va_alist)
 **		none.
 */
 
-/*VARARGS2*/
+/*VARARGS1*/
 void
 #ifdef __STDC__
 message(const char *msg, ...)
@@ -226,7 +267,23 @@ message(msg, va_alist)
 	VA_START(msg);
 	fmtmsg(MsgBuf, CurEnv->e_to, "050", 0, msg, ap);
 	VA_END;
-	putoutmsg(MsgBuf, FALSE);
+	putoutmsg(MsgBuf, FALSE, FALSE);
+
+	/* save this message for mailq printing */
+	switch (MsgBuf[0])
+	{
+	  case '4':
+	  case '8':
+		if (CurEnv->e_message != NULL)
+			break;
+		/* fall through.... */
+
+	  case '5':
+		if (CurEnv->e_message != NULL)
+			free(CurEnv->e_message);
+		CurEnv->e_message = newstr(MsgBuf + 4);
+		break;
+	}
 }
 /*
 **  NMESSAGE -- print message (not necessarily an error)
@@ -234,10 +291,10 @@ message(msg, va_alist)
 **	Just like "message" except it never puts the to... tag on.
 **
 **	Parameters:
-**		num -- the default ARPANET error number (in ascii)
 **		msg -- the message (printf fmt) -- if it begins
-**			with three digits, this number overrides num.
-**		a, b, c, d, e -- printf arguments
+**			with a three digit SMTP reply code, that is used,
+**			otherwise 050 is assumed.
+**		(others) -- printf arguments
 **
 **	Returns:
 **		none
@@ -246,7 +303,7 @@ message(msg, va_alist)
 **		none.
 */
 
-/*VARARGS2*/
+/*VARARGS1*/
 void
 #ifdef __STDC__
 nmessage(const char *msg, ...)
@@ -262,7 +319,23 @@ nmessage(msg, va_alist)
 	VA_START(msg);
 	fmtmsg(MsgBuf, (char *) NULL, "050", 0, msg, ap);
 	VA_END;
-	putoutmsg(MsgBuf, FALSE);
+	putoutmsg(MsgBuf, FALSE, FALSE);
+
+	/* save this message for mailq printing */
+	switch (MsgBuf[0])
+	{
+	  case '4':
+	  case '8':
+		if (CurEnv->e_message != NULL)
+			break;
+		/* fall through.... */
+
+	  case '5':
+		if (CurEnv->e_message != NULL)
+			free(CurEnv->e_message);
+		CurEnv->e_message = newstr(MsgBuf + 4);
+		break;
+	}
 }
 /*
 **  PUTOUTMSG -- output error message to transcript and channel
@@ -271,6 +344,8 @@ nmessage(msg, va_alist)
 **		msg -- message to output (in SMTP format).
 **		holdmsg -- if TRUE, don't output a copy of the message to
 **			our output channel.
+**		heldmsg -- if TRUE, this is a previously held message;
+**			don't log it to the transcript file.
 **
 **	Returns:
 **		none.
@@ -281,28 +356,54 @@ nmessage(msg, va_alist)
 **		Deletes SMTP reply code number as appropriate.
 */
 
-putoutmsg(msg, holdmsg)
+void
+putoutmsg(msg, holdmsg, heldmsg)
 	char *msg;
 	bool holdmsg;
+	bool heldmsg;
 {
+	char msgcode = msg[0];
+
 	/* display for debugging */
 	if (tTd(54, 8))
-		printf("--- %s%s\n", msg, holdmsg ? " (held)" : "");
-
-	/* output to transcript if serious */
-	if (CurEnv->e_xfp != NULL && strchr("456", msg[0]) != NULL)
-		fprintf(CurEnv->e_xfp, "%s\n", msg);
-
-	/* output to channel if appropriate */
-	if (holdmsg || (!Verbose && msg[0] == '0'))
-		return;
+		printf("--- %s%s%s\n", msg, holdmsg ? " (hold)" : "",
+			heldmsg ? " (held)" : "");
 
 	/* map warnings to something SMTP can handle */
-	if (msg[0] == '6')
+	if (msgcode == '6')
 		msg[0] = '5';
+	else if (msgcode == '8')
+		msg[0] = '4';
+
+	/* output to transcript if serious */
+	if (!heldmsg && CurEnv != NULL && CurEnv->e_xfp != NULL &&
+	    strchr("45", msg[0]) != NULL)
+		fprintf(CurEnv->e_xfp, "%s\n", msg);
+
+	if (LogLevel >= 15 && (OpMode == MD_SMTP || OpMode == MD_DAEMON))
+		sm_syslog(LOG_INFO, CurEnv->e_id,
+			"--> %s%s",
+			msg, holdmsg ? " (held)" : "");
+
+	if (msgcode == '8')
+		msg[0] = '0';
+
+	/* output to channel if appropriate */
+	if (!Verbose && msg[0] == '0')
+		return;
+	if (holdmsg)
+	{
+		/* save for possible future display */
+		msg[0] = msgcode;
+		snprintf(HeldMessageBuf, sizeof HeldMessageBuf, "%s", msg);
+		return;
+	}
 
 	(void) fflush(stdout);
 
+	if (OutChannel == NULL)
+		return;
+	
 	/* if DisConnected, OutChannel now points to the transcript */
 	if (!DisConnected &&
 	    (OpMode == MD_SMTP || OpMode == MD_DAEMON || OpMode == MD_ARPAFTP))
@@ -310,7 +411,7 @@ putoutmsg(msg, holdmsg)
 	else
 		fprintf(OutChannel, "%s\n", &msg[4]);
 	if (TrafficLogFile != NULL)
-		fprintf(TrafficLogFile, "%05d >>> %s\n", getpid(),
+		fprintf(TrafficLogFile, "%05d >>> %s\n", (int) getpid(),
 			(OpMode == MD_SMTP || OpMode == MD_DAEMON) ? msg : &msg[4]);
 	if (msg[3] == ' ')
 		(void) fflush(OutChannel);
@@ -323,19 +424,17 @@ putoutmsg(msg, holdmsg)
 	**	rude servers don't read result.
 	*/
 
-	if (feof(InChannel) || ferror(InChannel) || strncmp(msg, "221", 3) == 0)
+	if (InChannel == NULL || feof(InChannel) || ferror(InChannel) ||
+	    strncmp(msg, "221", 3) == 0)
 		return;
 
 	/* can't call syserr, 'cause we are using MsgBuf */
 	HoldErrs = TRUE;
-#ifdef LOG
 	if (LogLevel > 0)
-		syslog(LOG_CRIT,
-			"%s: SYSERR: putoutmsg (%s): error on output channel sending \"%s\": %s",
-			CurEnv->e_id == NULL ? "NOQUEUE" : CurEnv->e_id,
+		sm_syslog(LOG_CRIT, CurEnv->e_id,
+			"SYSERR: putoutmsg (%s): error on output channel sending \"%s\": %s",
 			CurHostName == NULL ? "NO-HOST" : CurHostName,
-			msg, errstring(errno));
-#endif
+			shortenstring(msg, MAXSHORTSTR), errstring(errno));
 }
 /*
 **  PUTERRMSG -- like putoutmsg, but does special processing for error messages
@@ -350,16 +449,25 @@ putoutmsg(msg, holdmsg)
 **		Sets the fatal error bit in the envelope as appropriate.
 */
 
+void
 puterrmsg(msg)
 	char *msg;
 {
 	char msgcode = msg[0];
 
 	/* output the message as usual */
-	putoutmsg(msg, HoldErrs);
+	putoutmsg(msg, HoldErrs, FALSE);
+
+	/* be careful about multiple error messages */
+	if (OnlyOneError)
+		HoldErrs = TRUE;
 
 	/* signal the error */
 	Errors++;
+
+	if (CurEnv == NULL)
+		return;
+	
 	if (msgcode == '6')
 	{
 		/* notify the postmaster */
@@ -392,17 +500,20 @@ puterrmsg(msg)
 static void
 fmtmsg(eb, to, num, eno, fmt, ap)
 	register char *eb;
-	char *to;
-	char *num;
+	const char *to;
+	const char *num;
 	int eno;
-	char *fmt;
+	const char *fmt;
 	va_list ap;
 {
 	char del;
-	char *meb;
+	int l;
+	int spaceleft = sizeof MsgBuf;
 
 	/* output the reply code */
-	if (isdigit(fmt[0]) && isdigit(fmt[1]) && isdigit(fmt[2]))
+	if (isascii(fmt[0]) && isdigit(fmt[0]) &&
+	    isascii(fmt[1]) && isdigit(fmt[1]) &&
+	    isascii(fmt[2]) && isdigit(fmt[2]))
 	{
 		num = fmt;
 		fmt += 4;
@@ -411,44 +522,76 @@ fmtmsg(eb, to, num, eno, fmt, ap)
 		del = '-';
 	else
 		del = ' ';
-	(void) sprintf(eb, "%3.3s%c", num, del);
+	(void) snprintf(eb, spaceleft, "%3.3s%c", num, del);
 	eb += 4;
+	spaceleft -= 4;
 
 	/* output the file name and line number */
 	if (FileName != NULL)
 	{
-		(void) sprintf(eb, "%s: line %d: ", FileName, LineNumber);
-		eb += strlen(eb);
+		(void) snprintf(eb, spaceleft, "%s: line %d: ",
+			shortenstring(FileName, 83), LineNumber);
+		eb += (l = strlen(eb));
+		spaceleft -= l;
 	}
 
 	/* output the "to" person */
-	if (to != NULL && to[0] != '\0')
+	if (to != NULL && to[0] != '\0' &&
+	    strncmp(num, "551", 3) != 0 &&
+	    strncmp(num, "251", 3) != 0)
 	{
-		(void) sprintf(eb, "%s... ", shortenstring(to, 203));
+		(void) snprintf(eb, spaceleft, "%s... ",
+			shortenstring(to, MAXSHORTSTR));
+		spaceleft -= strlen(eb);
 		while (*eb != '\0')
 			*eb++ &= 0177;
 	}
 
-	meb = eb;
-
 	/* output the message */
-	(void) vsprintf(eb, fmt, ap);
+	(void) vsnprintf(eb, spaceleft, fmt, ap);
+	spaceleft -= strlen(eb);
 	while (*eb != '\0')
 		*eb++ &= 0177;
 
 	/* output the error code, if any */
 	if (eno != 0)
-	{
-		(void) sprintf(eb, ": %s", errstring(eno));
-		eb += strlen(eb);
-	}
+		(void) snprintf(eb, spaceleft, ": %s", errstring(eno));
+}
+/*
+**  BUFFER_ERRORS -- arrange to buffer future error messages
+**
+**	Parameters:
+**		none
+**
+**	Returns:
+**		none.
+*/
 
-	if (num[0] == '5' || (CurEnv->e_message == NULL && num[0] == '4'))
-	{
-		if (CurEnv->e_message != NULL)
-			free(CurEnv->e_message);
-		CurEnv->e_message = newstr(meb);
-	}
+void
+buffer_errors()
+{
+	HeldMessageBuf[0] = '\0';
+	HoldErrs = TRUE;
+}
+/*
+**  FLUSH_ERRORS -- flush the held error message buffer
+**
+**	Parameters:
+**		print -- if set, print the message, otherwise just
+**			delete it.
+**
+**	Returns:
+**		none.
+*/
+
+void
+flush_errors(print)
+	bool print;
+{
+	if (print && HeldMessageBuf[0] != '\0')
+		putoutmsg(HeldMessageBuf, FALSE, TRUE);
+	HeldMessageBuf[0] = '\0';
+	HoldErrs = FALSE;
 }
 /*
 **  ERRSTRING -- return string description of error code
@@ -468,12 +611,13 @@ errstring(errnum)
 	int errnum;
 {
 	char *dnsmsg;
+	char *bp;
 	static char buf[MAXLINE];
-# ifndef ERRLIST_PREDEFINED
+# if !HASSTRERROR && !defined(ERRLIST_PREDEFINED)
 	extern char *sys_errlist[];
 	extern int sys_nerr;
 # endif
-# ifdef SMTP
+# if SMTP
 	extern char *SmtpPhase;
 # endif /* SMTP */
 
@@ -489,34 +633,55 @@ errstring(errnum)
 # if defined(DAEMON) && defined(ETIMEDOUT)
 	  case ETIMEDOUT:
 	  case ECONNRESET:
-		(void) strcpy(buf, sys_errlist[errnum]);
-		if (SmtpPhase != NULL)
-		{
-			(void) strcat(buf, " during ");
-			(void) strcat(buf, SmtpPhase);
-		}
+		bp = buf;
+#if HASSTRERROR
+		snprintf(bp, SPACELEFT(buf, bp), "%s", strerror(errnum));
+#else
+		if (errnum >= 0 && errnum < sys_nerr)
+			snprintf(bp, SPACELEFT(buf, bp), "%s", sys_errlist[errnum]);
+		else
+			snprintf(bp, SPACELEFT(buf, bp), "Error %d", errnum);
+#endif
+		bp += strlen(bp);
 		if (CurHostName != NULL)
 		{
-			(void) strcat(buf, " with ");
-			(void) strcat(buf, CurHostName);
+			if (errnum == ETIMEDOUT)
+			{
+				snprintf(bp, SPACELEFT(buf, bp), " with ");
+				bp += strlen(bp);
+			}
+			else
+			{
+				bp = buf;
+				snprintf(bp, SPACELEFT(buf, bp),
+					"Connection reset by ");
+				bp += strlen(bp);
+			}
+			snprintf(bp, SPACELEFT(buf, bp), "%s",
+				shortenstring(CurHostName, MAXSHORTSTR));
+			bp += strlen(buf);
+		}
+		if (SmtpPhase != NULL)
+		{
+			snprintf(bp, SPACELEFT(buf, bp), " during %s",
+				SmtpPhase);
 		}
 		return (buf);
 
 	  case EHOSTDOWN:
 		if (CurHostName == NULL)
 			break;
-		(void) sprintf(buf, "Host %s is down", CurHostName);
+		(void) snprintf(buf, sizeof buf, "Host %s is down",
+			shortenstring(CurHostName, MAXSHORTSTR));
 		return (buf);
 
 	  case ECONNREFUSED:
 		if (CurHostName == NULL)
 			break;
-		(void) sprintf(buf, "Connection refused by %s", CurHostName);
+		(void) snprintf(buf, sizeof buf, "Connection refused by %s",
+			shortenstring(CurHostName, MAXSHORTSTR));
 		return (buf);
 # endif
-
-	  case EOPENTIMEOUT:
-		return "Timeout on file open";
 
 # if NAMED_BIND
 	  case HOST_NOT_FOUND + E_DNSBASE:
@@ -539,23 +704,64 @@ errstring(errnum)
 	  case EPERM:
 		/* SunOS gives "Not owner" -- this is the POSIX message */
 		return "Operation not permitted";
+
+	/*
+	**  Error messages used internally in sendmail.
+	*/
+
+	  case E_SM_OPENTIMEOUT:
+		return "Timeout on file open";
+
+	  case E_SM_NOSLINK:
+		return "Symbolic links not allowed";
+
+	  case E_SM_NOHLINK:
+		return "Hard links not allowed";
+
+	  case E_SM_REGONLY:
+		return "Regular files only";
+
+	  case E_SM_ISEXEC:
+		return "Executable files not allowed";
+
+	  case E_SM_WWDIR:
+		return "World writable directory";
+
+	  case E_SM_GWDIR:
+		return "Group writable directory";
+
+	  case E_SM_FILECHANGE:
+		return "File changed after open";
+
+	  case E_SM_WWFILE:
+		return "World writable file";
+
+	  case E_SM_GWFILE:
+		return "Group writable file";
 	}
 
 	if (dnsmsg != NULL)
 	{
-		(void) strcpy(buf, "Name server: ");
+		bp = buf;
+		strcpy(bp, "Name server: ");
+		bp += strlen(bp);
 		if (CurHostName != NULL)
 		{
-			(void) strcat(buf, CurHostName);
-			(void) strcat(buf, ": ");
+			snprintf(bp, SPACELEFT(buf, bp), "%s: ",
+				shortenstring(CurHostName, MAXSHORTSTR));
+			bp += strlen(bp);
 		}
-		(void) strcat(buf, dnsmsg);
+		snprintf(bp, SPACELEFT(buf, bp), "%s", dnsmsg);
 		return buf;
 	}
 
+#if HASSTRERROR
+	return strerror(errnum);
+#else
 	if (errnum > 0 && errnum < sys_nerr)
 		return (sys_errlist[errnum]);
 
-	(void) sprintf(buf, "Error %d", errnum);
+	(void) snprintf(buf, sizeof buf, "Error %d", errnum);
 	return (buf);
+#endif
 }

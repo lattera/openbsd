@@ -1,5 +1,12 @@
 PUSHDIVERT(-1)
 #
+# Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+#
+# By using this file, you agree to the terms and conditions set
+# forth in the LICENSE file which can be found at the top level of
+# the sendmail distribution.
+#
+#
 # Not exciting enough to bother with copyrights and most of the
 # rulesets are based from those provided by DEC.
 # Barb Dijker, Labyrinth Computer Services, barb@labyrinth.com
@@ -15,12 +22,13 @@ ifdef(`MAIL11_MAILER_PATH',, `define(`MAIL11_MAILER_PATH', /usr/etc/mail11)')
 ifdef(`MAIL11_MAILER_FLAGS',, `define(`MAIL11_MAILER_FLAGS', nsFx)')
 ifdef(`MAIL11_MAILER_ARGS',, `define(`MAIL11_MAILER_ARGS', mail11 $g $x $h $u)')
 define(`_USE_DECNET_SYNTAX_')
+define(`_LOCAL_', ifdef(`confLOCAL_MAILER', confLOCAL_MAILER, `local'))
 
 POPDIVERT
 
 PUSHDIVERT(3)
 # DECNET delivery
-R$* < @ $=w .DECNET. >		$#local $: $1			local DECnet
+R$* < @ $=w .DECNET. >		$#_LOCAL_ $: $1			local DECnet
 R$+ < @ $+ .DECNET. >		$#mail11 $@ $2 $: $1		DECnet user
 POPDIVERT
 
@@ -32,7 +40,7 @@ POPDIVERT
 ###   UTK-MAIL11 Mailer specification   ###
 ###########################################
 
-VERSIONID(`@(#)mail11.m4	8.1 (Berkeley) 5/23/95')
+VERSIONID(`@(#)mail11.m4	8.8 (Berkeley) 5/19/98')
 
 Mmail11, P=MAIL11_MAILER_PATH, F=MAIL11_MAILER_FLAGS, S=15, R=25,
 	A=MAIL11_MAILER_ARGS

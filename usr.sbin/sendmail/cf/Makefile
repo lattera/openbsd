@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/sendmail/cf/Attic/Makefile,v 1.1 1998/05/19 16:56:49 millert Exp $
+#	$OpenBSD: src/usr.sbin/sendmail/cf/Attic/Makefile,v 1.1.1.1 1998/07/12 17:11:06 millert Exp $
 #
 
 NOOBJ=	noobj

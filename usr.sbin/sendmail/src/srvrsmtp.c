@@ -1,56 +1,36 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 # include "sendmail.h"
 
 #ifndef lint
-#ifdef SMTP
-static char sccsid[] = "@(#)srvrsmtp.c	8.37 (Berkeley) 4/13/94 (with SMTP)";
+#if SMTP
+static char sccsid[] = "@(#)srvrsmtp.c	8.181 (Berkeley) 6/15/98 (with SMTP)";
 #else
-static char sccsid[] = "@(#)srvrsmtp.c	8.37 (Berkeley) 4/13/94 (without SMTP)";
+static char sccsid[] = "@(#)srvrsmtp.c	8.181 (Berkeley) 6/15/98 (without SMTP)";
 #endif
 #endif /* not lint */
 
 # include <errno.h>
 
-# ifdef SMTP
+# if SMTP
 
 /*
 **  SMTP -- run the SMTP protocol.
 **
 **	Parameters:
-**		none.
+**		nullserver -- if non-NULL, rejection message for
+**			all SMTP commands.
+**		e -- the envelope.
 **
 **	Returns:
 **		never.
@@ -79,9 +59,11 @@ struct cmd
 # define CMDHELO	9	/* helo -- be polite */
 # define CMDHELP	10	/* help -- give usage info */
 # define CMDEHLO	11	/* ehlo -- extended helo (RFC 1425) */
+# define CMDETRN	12	/* etrn -- flush queue */
 /* non-standard commands */
 # define CMDONEX	16	/* onex -- sending one transaction only */
 # define CMDVERB	17	/* verb -- go into verbose mode */
+# define CMDXUSR	18	/* xusr -- initial (user) submission */
 /* use this to catch and log "door handle" attempts on your system */
 # define CMDLOGBOGUS	23	/* bogus command that should be logged */
 /* debugging-only commands, only enabled if SMTPDEBUG is defined */
@@ -90,62 +72,79 @@ struct cmd
 
 static struct cmd	CmdTab[] =
 {
-	"mail",		CMDMAIL,
-	"rcpt",		CMDRCPT,
-	"data",		CMDDATA,
-	"rset",		CMDRSET,
-	"vrfy",		CMDVRFY,
-	"expn",		CMDEXPN,
-	"help",		CMDHELP,
-	"noop",		CMDNOOP,
-	"quit",		CMDQUIT,
-	"helo",		CMDHELO,
-	"ehlo",		CMDEHLO,
-	"verb",		CMDVERB,
-	"onex",		CMDONEX,
-	/*
-	 * remaining commands are here only
-	 * to trap and log attempts to use them
-	 */
-	"showq",	CMDDBGQSHOW,
-	"debug",	CMDDBGDEBUG,
-	"wiz",		CMDLOGBOGUS,
-	NULL,		CMDERROR,
+	{ "mail",	CMDMAIL		},
+	{ "rcpt",	CMDRCPT		},
+	{ "data",	CMDDATA		},
+	{ "rset",	CMDRSET		},
+	{ "vrfy",	CMDVRFY		},
+	{ "expn",	CMDEXPN		},
+	{ "help",	CMDHELP		},
+	{ "noop",	CMDNOOP		},
+	{ "quit",	CMDQUIT		},
+	{ "helo",	CMDHELO		},
+	{ "ehlo",	CMDEHLO		},
+	{ "etrn",	CMDETRN		},
+	{ "verb",	CMDVERB		},
+	{ "onex",	CMDONEX		},
+	{ "xusr",	CMDXUSR		},
+    /* remaining commands are here only to trap and log attempts to use them */
+	{ "showq",	CMDDBGQSHOW	},
+	{ "debug",	CMDDBGDEBUG	},
+	{ "wiz",	CMDLOGBOGUS	},
+
+	{ NULL,		CMDERROR	}
 };
 
 bool	OneXact = FALSE;		/* one xaction only this run */
 char	*CurSmtpClient;			/* who's at the other end of channel */
 
-static char	*skipword();
-extern char	RealUserName[];
+static char	*skipword __P((char *volatile, char *));
 
 
-#define MAXBADCOMMANDS	25		/* maximum number of bad commands */
+#define MAXBADCOMMANDS	25	/* maximum number of bad commands */
+#define MAXNOOPCOMMANDS	20	/* max "noise" commands before slowdown */
+#define MAXHELOCOMMANDS	3	/* max HELO/EHLO commands before slowdown */
+#define MAXVRFYCOMMANDS	6	/* max VRFY/EXPN commands before slowdown */
+#define MAXETRNCOMMANDS	8	/* max ETRN commands before slowdown */
 
-smtp(e)
-	register ENVELOPE *e;
+void
+smtp(nullserver, e)
+	char *nullserver;
+	register ENVELOPE *volatile e;
 {
-	register char *p;
+	register char *volatile p;
 	register struct cmd *c;
 	char *cmd;
 	auto ADDRESS *vrfyqueue;
 	ADDRESS *a;
-	bool gotmail;			/* mail command received */
-	bool gothello;			/* helo command received */
+	volatile bool gotmail;		/* mail command received */
+	volatile bool gothello;		/* helo command received */
 	bool vrfy;			/* set if this is a vrfy command */
-	char *protocol;			/* sending protocol */
-	char *sendinghost;		/* sending hostname */
-	unsigned long msize;		/* approximate maximum message size */
-	char *peerhostname;		/* name of SMTP peer or "localhost" */
+	char *volatile protocol;	/* sending protocol */
+	char *volatile sendinghost;	/* sending hostname */
+	char *volatile peerhostname;	/* name of SMTP peer or "localhost" */
 	auto char *delimptr;
 	char *id;
-	int nrcpts;			/* number of RCPT commands */
+	volatile int nrcpts = 0;	/* number of RCPT commands */
 	bool doublequeue;
-	int badcommands = 0;		/* count of bad commands */
+	bool discard;
+	volatile int badcommands = 0;	/* count of bad commands */
+	volatile int nverifies = 0;	/* count of VRFY/EXPN commands */
+	volatile int n_etrn = 0;	/* count of ETRN commands */
+	volatile int n_noop = 0;	/* count of NOOP/VERB/ONEX etc cmds */
+	volatile int n_helo = 0;	/* count of HELO/EHLO commands */
+	bool ok;
+	volatile int lognullconnection = TRUE;
+	register char *q;
+	QUEUE_CHAR *new;
 	char inp[MAXLINE];
 	char cmdbuf[MAXLINE];
-	extern char Version[];
 	extern ENVELOPE BlankEnvelope;
+	extern void help __P((char *));
+	extern void settime __P((ENVELOPE *));
+	extern bool enoughdiskspace __P((long));
+	extern int runinchild __P((char *, ENVELOPE *));
+	extern void checksmtpattack __P((volatile int *, int, char *, ENVELOPE *));
 
 	if (fileno(OutChannel) != fileno(stdout))
 	{
@@ -161,29 +160,46 @@ smtp(e)
 	if (CurSmtpClient == NULL)
 		CurSmtpClient = CurHostName;
 
-	setproctitle("server %s startup", CurSmtpClient);
-	expand("\201e", inp, &inp[sizeof inp], e);
-	if (BrokenSmtpPeers)
-	{
-		p = strchr(inp, '\n');
-		if (p != NULL)
-			*p = '\0';
-		message("220 %s", inp);
-	}
-	else
-	{
-		char *q = inp;
+	/* check_relay may have set discard bit, save for later */
+	discard = bitset(EF_DISCARD, e->e_flags);
 
-		while (q != NULL)
-		{
-			p = strchr(q, '\n');
-			if (p != NULL)
-				*p++ = '\0';
-			message("220-%s", q);
-			q = p;
-		}
-		message("220 ESMTP spoken here");
+	setproctitle("server %s startup", CurSmtpClient);
+#if DAEMON
+	if (LogLevel > 11)
+	{
+		/* log connection information */
+		sm_syslog(LOG_INFO, NOQID,
+			"SMTP connect from %.100s (%.100s)",
+			CurSmtpClient, anynet_ntoa(&RealHostAddr));
 	}
+#endif
+
+	/* output the first line, inserting "ESMTP" as second word */
+	expand(SmtpGreeting, inp, sizeof inp, e);
+	p = strchr(inp, '\n');
+	if (p != NULL)
+		*p++ = '\0';
+	id = strchr(inp, ' ');
+	if (id == NULL)
+		id = &inp[strlen(inp)];
+	cmd = p == NULL ? "220 %.*s ESMTP%s" : "220-%.*s ESMTP%s";
+	message(cmd, id - inp, inp, id);
+
+	/* output remaining lines */
+	while ((id = p) != NULL && (p = strchr(id, '\n')) != NULL)
+	{
+		*p++ = '\0';
+		if (isascii(*id) && isspace(*id))
+			id++;
+		message("220-%s", id);
+	}
+	if (id != NULL)
+	{
+		if (isascii(*id) && isspace(*id))
+			id++;
+		message("220 %s", id);
+	}
+
 	protocol = NULL;
 	sendinghost = macvalue('s', e);
 	gothello = FALSE;
@@ -191,19 +207,12 @@ smtp(e)
 	for (;;)
 	{
 		/* arrange for backout */
-		if (setjmp(TopFrame) > 0)
-		{
-			/* if() nesting is necessary for Cray UNICOS */
-			if (InChild)
-			{
-				QuickAbort = FALSE;
-				SuprErrs = TRUE;
-				finis();
-			}
-		}
+		(void) setjmp(TopFrame);
 		QuickAbort = FALSE;
 		HoldErrs = FALSE;
+		SuprErrs = FALSE;
 		LogUsrErrs = FALSE;
+		OnlyOneError = TRUE;
 		e->e_flags &= ~(EF_VRFYONLY|EF_GLOBALERRS);
 
 		/* setup for the read */
@@ -213,7 +222,7 @@ smtp(e)
 
 		/* read the input line */
 		SmtpPhase = "server cmd read";
-		setproctitle("server %s cmd read", CurHostName);
+		setproctitle("server %s cmd read", CurSmtpClient);
 		p = sfgets(inp, sizeof inp, InChannel, TimeOuts.to_nextcommand,
 				SmtpPhase);
 
@@ -224,11 +233,22 @@ smtp(e)
 			disconnect(1, e);
 			message("421 %s Lost input channel from %s",
 				MyHostName, CurSmtpClient);
-#ifdef LOG
 			if (LogLevel > (gotmail ? 1 : 19))
-				syslog(LOG_NOTICE, "lost input channel from %s",
+				sm_syslog(LOG_NOTICE, e->e_id,
+					"lost input channel from %.100s",
 					CurSmtpClient);
-#endif
+			if (lognullconnection && LogLevel > 5)
+				sm_syslog(LOG_INFO, NULL,
+				"Null connection from %.100s",
+				CurSmtpClient);
+
+			/*
+			** If have not accepted mail (DATA), do not bounce
+			** bad addresses back to sender.
+			*/
+			if (bitset(EF_CLRQUEUE, e->e_flags))
+				e->e_sendqueue = NULL;
+
 			if (InChild)
 				ExitStat = EX_QUIT;
 			finis();
@@ -240,6 +260,11 @@ smtp(e)
 		/* echo command to transcript */
 		if (e->e_xfp != NULL)
 			fprintf(e->e_xfp, "<<< %s\n", inp);
+
+		if (LogLevel >= 15)
+			sm_syslog(LOG_INFO, e->e_id,
+				"<-- %s",
+				inp);
 
 		if (e->e_id == NULL)
 			setproctitle("%s: %.80s", CurSmtpClient, inp);
@@ -270,7 +295,42 @@ smtp(e)
 		/* reset errors */
 		errno = 0;
 
-		/* process command */
+		/*
+		**  Process command.
+		**
+		**	If we are running as a null server, return 550
+		**	to everything.
+		*/
+
+		if (nullserver != NULL)
+		{
+			switch (c->cmdcode)
+			{
+			  case CMDQUIT:
+			  case CMDHELO:
+			  case CMDEHLO:
+			  case CMDNOOP:
+				/* process normally */
+				break;
+
+			  default:
+				if (++badcommands > MAXBADCOMMANDS)
+					sleep(1);
+				usrerr("550 %s", nullserver);
+				continue;
+			}
+		}
+
+		/* non-null server */
+		switch (c->cmdcode)
+		{
+		  case CMDMAIL:
+		  case CMDEXPN:
+		  case CMDVRFY:
+		  case CMDETRN:
+			lognullconnection = FALSE;
+		}
+
 		switch (c->cmdcode)
 		{
 		  case CMDHELO:		/* hello -- introduce yourself */
@@ -285,25 +345,97 @@ smtp(e)
 				protocol = "SMTP";
 				SmtpPhase = "server HELO";
 			}
-			sendinghost = newstr(p);
-			gothello = TRUE;
-			if (c->cmdcode != CMDEHLO)
+
+			/* avoid denial-of-service */
+			checksmtpattack(&n_helo, MAXHELOCOMMANDS, "HELO/EHLO", e);
+
+			/* check for duplicate HELO/EHLO per RFC 1651 4.2 */
+			if (gothello)
 			{
-				/* print old message and be done with it */
-				message("250 %s Hello %s, pleased to meet you",
-					MyHostName, CurSmtpClient);
+				usrerr("503 %s Duplicate HELO/EHLO",
+					MyHostName);
 				break;
 			}
+
+			/* check for valid domain name (re 1123 5.2.5) */
+			if (*p == '\0' && !AllowBogusHELO)
+			{
+				usrerr("501 %s requires domain address",
+					cmdbuf);
+				break;
+			}
+
+			/* check for long domain name (hides Received: info) */
+			if (strlen(p) > MAXNAME)
+			{
+				usrerr("501 Invalid domain name");
+				break;
+			}
+
+			for (q = p; *q != '\0'; q++)
+			{
+				if (!isascii(*q))
+					break;
+				if (isalnum(*q))
+					continue;
+				if (isspace(*q))
+				{
+					*q = '\0';
+					break;
+				}
+				if (strchr("[].-_#", *q) == NULL)
+					break;
+			}
+			if (*q == '\0')
+			{
+				q = "pleased to meet you";
+				sendinghost = newstr(p);
+			}
+			else if (!AllowBogusHELO)
+			{
+				usrerr("501 Invalid domain name");
+				break;
+			}
+			else
+			{
+				q = "accepting invalid domain name";
+			}
+
+			gothello = TRUE;
 			
-			/* print extended message and brag */
-			message("250-%s Hello %s, pleased to meet you",
-				MyHostName, CurSmtpClient);
+			/* print HELO response message */
+			if (c->cmdcode != CMDEHLO || nullserver != NULL)
+			{
+				message("250 %s Hello %s, %s",
+					MyHostName, CurSmtpClient, q);
+				break;
+			}
+
+			message("250-%s Hello %s, %s",
+				MyHostName, CurSmtpClient, q);
+
+			/* print EHLO features list */
 			if (!bitset(PRIV_NOEXPN, PrivacyFlags))
+			{
 				message("250-EXPN");
+				if (!bitset(PRIV_NOVERB, PrivacyFlags))
+					message("250-VERB");
+			}
+#if MIME8TO7
+			message("250-8BITMIME");
+#endif
 			if (MaxMessageSize > 0)
 				message("250-SIZE %ld", MaxMessageSize);
 			else
 				message("250-SIZE");
+#if DSN
+			if (SendMIMEErrors)
+				message("250-DSN");
+#endif
+			message("250-ONEX");
+			if (!bitset(PRIV_NOETRN, PrivacyFlags))
+				message("250-ETRN");
+			message("250-XUSR");
 			message("250 HELP");
 			break;
 
@@ -311,23 +443,14 @@ smtp(e)
 			SmtpPhase = "server MAIL";
 
 			/* check for validity of this command */
-			if (!gothello)
+			if (!gothello && bitset(PRIV_NEEDMAILHELO, PrivacyFlags))
 			{
-				/* set sending host to our known value */
-				if (sendinghost == NULL)
-					sendinghost = peerhostname;
-
-				if (bitset(PRIV_NEEDMAILHELO, PrivacyFlags))
-				{
-					message("503 Polite people say HELO first");
-					break;
-				}
+				usrerr("503 Polite people say HELO first");
+				break;
 			}
 			if (gotmail)
 			{
-				message("503 Sender already specified");
-				if (InChild)
-					finis();
+				usrerr("503 Sender already specified");
 				break;
 			}
 			if (InChild)
@@ -337,14 +460,24 @@ smtp(e)
 				finis();
 			}
 
+			/* make sure we know who the sending host is */
+			if (sendinghost == NULL)
+				sendinghost = peerhostname;
+
+			p = skipword(p, "from");
+			if (p == NULL)
+				break;
+
 			/* fork a subprocess to process this command */
 			if (runinchild("SMTP-MAIL", e) > 0)
 				break;
+			if (Errors > 0)
+				goto undo_subproc_no_pm;
 			if (!gothello)
 			{
 				auth_warning(e,
-					"Host %s didn't use HELO protocol",
-					peerhostname);
+					"%s didn't use HELO protocol",
+					CurSmtpClient);
 			}
 #ifdef PICKY_HELO_CHECK
 			if (strcasecmp(sendinghost, peerhostname) != 0 &&
@@ -352,7 +485,7 @@ smtp(e)
 			     strcasecmp(sendinghost, MyHostName) != 0))
 			{
 				auth_warning(e, "Host %s claimed to be %s",
-					peerhostname, sendinghost);
+					CurSmtpClient, sendinghost);
 			}
 #endif
 
@@ -361,17 +494,19 @@ smtp(e)
 			define('r', protocol, e);
 			define('s', sendinghost, e);
 			initsys(e);
+			if (Errors > 0)
+				goto undo_subproc_no_pm;
 			nrcpts = 0;
-			e->e_flags |= EF_LOGSENDER;
+			e->e_flags |= EF_LOGSENDER|EF_CLRQUEUE;
 			setproctitle("%s %s: %.80s", e->e_id, CurSmtpClient, inp);
 
 			/* child -- go do the processing */
-			p = skipword(p, "from");
-			if (p == NULL)
-				break;
 			if (setjmp(TopFrame) > 0)
 			{
 				/* this failed -- undo work */
+ undo_subproc_no_pm:
+				e->e_flags &= ~EF_PM_NOTIFY;
+ undo_subproc:
 				if (InChild)
 				{
 					QuickAbort = FALSE;
@@ -385,26 +520,35 @@ smtp(e)
 
 			/* must parse sender first */
 			delimptr = NULL;
-			setsender(p, e, &delimptr, FALSE);
-			p = delimptr;
-			if (p != NULL && *p != '\0')
-				*p++ = '\0';
+			setsender(p, e, &delimptr, ' ', FALSE);
+			if (delimptr != NULL && *delimptr != '\0')
+				*delimptr++ = '\0';
+			if (Errors > 0)
+				goto undo_subproc_no_pm;
+
+			/* do config file checking of the sender */
+			if (rscheck("check_mail", p, NULL, e) != EX_OK ||
+			    Errors > 0)
+				goto undo_subproc_no_pm;
 
 			/* check for possible spoofing */
 			if (RealUid != 0 && OpMode == MD_SMTP &&
-			    (e->e_from.q_mailer != LocalMailer &&
-			     strcmp(e->e_from.q_user, RealUserName) != 0))
+			    !wordinclass(RealUserName, 't') &&
+			    !bitnset(M_LOCALMAILER, e->e_from.q_mailer->m_flags) &&
+			    strcmp(e->e_from.q_user, RealUserName) != 0)
 			{
 				auth_warning(e, "%s owned process doing -bs",
 					RealUserName);
 			}
 
 			/* now parse ESMTP arguments */
-			msize = 0;
+			e->e_msgsize = 0;
+			p = delimptr;
 			while (p != NULL && *p != '\0')
 			{
 				char *kp;
 				char *vp = NULL;
+				extern void mail_esmtp_args __P((char *, char *, ENVELOPE *));
 
 				/* locate the beginning of the keyword */
 				while (isascii(*p) && isspace(*p))
@@ -414,7 +558,7 @@ smtp(e)
 				kp = p;
 
 				/* skip to the value portion */
-				while (isascii(*p) && isalnum(*p) || *p == '-')
+				while ((isascii(*p) && isalnum(*p)) || *p == '-')
 					p++;
 				if (*p == '=')
 				{
@@ -435,63 +579,27 @@ smtp(e)
 					printf("MAIL: got arg %s=\"%s\"\n", kp,
 						vp == NULL ? "<null>" : vp);
 
-				if (strcasecmp(kp, "size") == 0)
-				{
-					if (vp == NULL)
-					{
-						usrerr("501 SIZE requires a value");
-						/* NOTREACHED */
-					}
-# ifdef __STDC__
-					msize = strtoul(vp, (char **) NULL, 10);
-# else
-					msize = strtol(vp, (char **) NULL, 10);
-# endif
-				}
-				else if (strcasecmp(kp, "body") == 0)
-				{
-					if (vp == NULL)
-					{
-						usrerr("501 BODY requires a value");
-						/* NOTREACHED */
-					}
-# ifdef MIME
-					if (strcasecmp(vp, "8bitmime") == 0)
-					{
-						e->e_bodytype = "8BITMIME";
-						SevenBit = FALSE;
-					}
-					else if (strcasecmp(vp, "7bit") == 0)
-					{
-						e->e_bodytype = "7BIT";
-						SevenBit = TRUE;
-					}
-					else
-					{
-						usrerr("501 Unknown BODY type %s",
-							vp);
-					}
-# endif
-				}
-				else
-				{
-					usrerr("501 %s parameter unrecognized", kp);
-					/* NOTREACHED */
-				}
+				mail_esmtp_args(kp, vp, e);
+				if (Errors > 0)
+					goto undo_subproc_no_pm;
 			}
+			if (Errors > 0)
+				goto undo_subproc_no_pm;
 
-			if (MaxMessageSize > 0 && msize > MaxMessageSize)
+			if (MaxMessageSize > 0 && e->e_msgsize > MaxMessageSize)
 			{
 				usrerr("552 Message size exceeds fixed maximum message size (%ld)",
 					MaxMessageSize);
-				/* NOTREACHED */
+				goto undo_subproc_no_pm;
 			}
 				
-			if (!enoughspace(msize))
+			if (!enoughdiskspace(e->e_msgsize))
 			{
-				message("452 Insufficient disk space; try again later");
-				break;
+				usrerr("452 Insufficient disk space; try again later");
+				goto undo_subproc_no_pm;
 			}
+			if (Errors > 0)
+				goto undo_subproc_no_pm;
 			message("250 Sender ok");
 			gotmail = TRUE;
 			break;
@@ -511,22 +619,81 @@ smtp(e)
 			QuickAbort = TRUE;
 			LogUsrErrs = TRUE;
 
+			/* limit flooding of our machine */
+			if (MaxRcptPerMsg > 0 && nrcpts >= MaxRcptPerMsg)
+			{
+				usrerr("452 Too many recipients");
+				break;
+			}
+
 			if (e->e_sendmode != SM_DELIVER)
 				e->e_flags |= EF_VRFYONLY;
 
 			p = skipword(p, "to");
 			if (p == NULL)
 				break;
-			a = parseaddr(p, NULLADDR, RF_COPYALL, ' ', NULL, e);
-			if (a == NULL)
+			a = parseaddr(p, NULLADDR, RF_COPYALL, ' ', &delimptr, e);
+			if (a == NULL || Errors > 0)
 				break;
-			a->q_flags |= QPRIMARY;
-			a = recipient(a, &e->e_sendqueue, e);
-			if (Errors != 0)
+			if (delimptr != NULL && *delimptr != '\0')
+				*delimptr++ = '\0';
+
+			/* do config file checking of the recipient */
+			if (rscheck("check_rcpt", p, NULL, e) != EX_OK ||
+			    Errors > 0)
+				break;
+
+			/* now parse ESMTP arguments */
+			p = delimptr;
+			while (p != NULL && *p != '\0')
+			{
+				char *kp;
+				char *vp = NULL;
+				extern void rcpt_esmtp_args __P((ADDRESS *, char *, char *, ENVELOPE *));
+
+				/* locate the beginning of the keyword */
+				while (isascii(*p) && isspace(*p))
+					p++;
+				if (*p == '\0')
+					break;
+				kp = p;
+
+				/* skip to the value portion */
+				while ((isascii(*p) && isalnum(*p)) || *p == '-')
+					p++;
+				if (*p == '=')
+				{
+					*p++ = '\0';
+					vp = p;
+
+					/* skip to the end of the value */
+					while (*p != '\0' && *p != ' ' &&
+					       !(isascii(*p) && iscntrl(*p)) &&
+					       *p != '=')
+						p++;
+				}
+
+				if (*p != '\0')
+					*p++ = '\0';
+
+				if (tTd(19, 1))
+					printf("RCPT: got arg %s=\"%s\"\n", kp,
+						vp == NULL ? "<null>" : vp);
+
+				rcpt_esmtp_args(a, kp, vp, e);
+				if (Errors > 0)
+					break;
+			}
+			if (Errors > 0)
+				break;
+
+			/* save in recipient list after ESMTP mods */
+			a = recipient(a, &e->e_sendqueue, 0, e);
+			if (Errors > 0)
 				break;
 
 			/* no errors during parsing, but might be a duplicate */
-			e->e_to = p;
+			e->e_to = a->q_paddr;
 			if (!bitset(QBADADDR, a->q_flags))
 			{
 				message("250 Recipient ok%s",
@@ -537,30 +704,34 @@ smtp(e)
 			else
 			{
 				/* punt -- should keep message in ADDRESS.... */
-				message("550 Addressee unknown");
+				usrerr("550 Addressee unknown");
 			}
-			e->e_to = NULL;
 			break;
 
 		  case CMDDATA:		/* data -- text of mail */
 			SmtpPhase = "server DATA";
 			if (!gotmail)
 			{
-				message("503 Need MAIL command");
+				usrerr("503 Need MAIL command");
 				break;
 			}
 			else if (nrcpts <= 0)
 			{
-				message("503 Need RCPT (recipient)");
+				usrerr("503 Need RCPT (recipient)");
 				break;
 			}
+
+			/* put back discard bit */
+			if (discard)
+				e->e_flags |= EF_DISCARD;
 
 			/* check to see if we need to re-expand aliases */
 			/* also reset QBADADDR on already-diagnosted addrs */
 			doublequeue = FALSE;
 			for (a = e->e_sendqueue; a != NULL; a = a->q_next)
 			{
-				if (bitset(QVERIFIED, a->q_flags))
+				if (bitset(QVERIFIED, a->q_flags) &&
+				    !bitset(EF_DISCARD, e->e_flags))
 				{
 					/* need to re-expand aliases */
 					doublequeue = TRUE;
@@ -575,10 +746,21 @@ smtp(e)
 
 			/* collect the text of the message */
 			SmtpPhase = "collect";
-			collect(TRUE, doublequeue, e);
-			if (Errors != 0)
+			buffer_errors();
+			collect(InChannel, TRUE, NULL, e);
+			if (Errors > 0)
+			{
+				flush_errors(TRUE);
+				buffer_errors();
 				goto abortmessage;
-			HoldErrs = TRUE;
+			}
+
+			/* make sure we actually do delivery */
+			e->e_flags &= ~EF_CLRQUEUE;
+
+			/* from now on, we have to operate silently */
+			buffer_errors();
+			e->e_errormode = EM_MAIL;
 
 			/*
 			**  Arrange to send to everyone.
@@ -599,38 +781,34 @@ smtp(e)
 			*/
 
 			SmtpPhase = "delivery";
-			if (nrcpts != 1 && !doublequeue)
-			{
-				HoldErrs = TRUE;
-				e->e_errormode = EM_MAIL;
-			}
 			e->e_xfp = freopen(queuename(e, 'x'), "w", e->e_xfp);
 			id = e->e_id;
 
-			/* send to all recipients */
-			sendall(e, doublequeue ? SM_QUEUE : SM_DEFAULT);
-			e->e_to = NULL;
-
-			/* issue success if appropriate and reset */
-			if (Errors == 0 || HoldErrs)
-				message("250 %s Message accepted for delivery", id);
-
-			if (bitset(EF_FATALERRS, e->e_flags) && !HoldErrs)
+			if (doublequeue)
 			{
-				/* avoid sending back an extra message */
-				e->e_flags &= ~EF_FATALERRS;
-				e->e_flags |= EF_CLRQUEUE;
+				/* make sure it is in the queue */
+				queueup(e, FALSE);
 			}
 			else
 			{
-				/* from now on, we have to operate silently */
-				HoldErrs = TRUE;
-				e->e_errormode = EM_MAIL;
+				/* send to all recipients */
+				sendall(e, SM_DEFAULT);
+			}
+			e->e_to = NULL;
 
-				/* if we just queued, poke it */
-				if (doublequeue && e->e_sendmode != SM_QUEUE)
+			/* issue success message */
+			message("250 %s Message accepted for delivery", id);
+
+			/* if we just queued, poke it */
+			if (doublequeue &&
+			    e->e_sendmode != SM_QUEUE &&
+			    e->e_sendmode != SM_DEFER)
+			{
+				CurrentLA = getla();
+
+				if (!shouldqueue(e->e_msgpriority, e->e_ctime))
 				{
-					extern pid_t dowork();
+					extern pid_t dowork __P((char *, bool, bool, ENVELOPE *));
 
 					unlockqueue(e);
 					(void) dowork(id, TRUE, TRUE, e);
@@ -644,90 +822,149 @@ smtp(e)
 
 			/* clean up a bit */
 			gotmail = FALSE;
-			dropenvelope(e);
+			dropenvelope(e, TRUE);
 			CurEnv = e = newenvelope(e, CurEnv);
 			e->e_flags = BlankEnvelope.e_flags;
 			break;
 
 		  case CMDRSET:		/* rset -- reset state */
-			message("250 Reset state");
+			if (tTd(94, 100))
+				message("451 Test failure");
+			else
+				message("250 Reset state");
+
+			/* arrange to ignore any current send list */
+			e->e_sendqueue = NULL;
 			e->e_flags |= EF_CLRQUEUE;
 			if (InChild)
 				finis();
 
 			/* clean up a bit */
 			gotmail = FALSE;
-			dropenvelope(e);
+			SuprErrs = TRUE;
+			dropenvelope(e, TRUE);
 			CurEnv = e = newenvelope(e, CurEnv);
 			break;
 
 		  case CMDVRFY:		/* vrfy -- verify address */
 		  case CMDEXPN:		/* expn -- expand address */
+			checksmtpattack(&nverifies, MAXVRFYCOMMANDS,
+				c->cmdcode == CMDVRFY ? "VRFY" : "EXPN", e);
 			vrfy = c->cmdcode == CMDVRFY;
 			if (bitset(vrfy ? PRIV_NOVRFY : PRIV_NOEXPN,
 						PrivacyFlags))
 			{
 				if (vrfy)
-					message("252 Who's to say?");
+					message("252 Cannot VRFY user; try RCPT to attempt delivery (or try finger)");
 				else
 					message("502 Sorry, we do not allow this operation");
-#ifdef LOG
 				if (LogLevel > 5)
-					syslog(LOG_INFO, "%s: %s [rejected]",
-						CurSmtpClient, inp);
-#endif
+					sm_syslog(LOG_INFO, e->e_id,
+						"%.100s: %s [rejected]",
+						CurSmtpClient,
+						shortenstring(inp, MAXSHORTSTR));
 				break;
 			}
 			else if (!gothello &&
 				 bitset(vrfy ? PRIV_NEEDVRFYHELO : PRIV_NEEDEXPNHELO,
 						PrivacyFlags))
 			{
-				message("503 I demand that you introduce yourself first");
+				usrerr("503 I demand that you introduce yourself first");
 				break;
 			}
 			if (runinchild(vrfy ? "SMTP-VRFY" : "SMTP-EXPN", e) > 0)
 				break;
-#ifdef LOG
+			if (Errors > 0)
+				goto undo_subproc;
 			if (LogLevel > 5)
-				syslog(LOG_INFO, "%s: %s", CurSmtpClient, inp);
-#endif
-			vrfyqueue = NULL;
+				sm_syslog(LOG_INFO, e->e_id,
+					"%.100s: %s",
+					CurSmtpClient,
+					shortenstring(inp, MAXSHORTSTR));
+			if (setjmp(TopFrame) > 0)
+				goto undo_subproc;
 			QuickAbort = TRUE;
+			vrfyqueue = NULL;
 			if (vrfy)
 				e->e_flags |= EF_VRFYONLY;
 			while (*p != '\0' && isascii(*p) && isspace(*p))
-				*p++;
+				p++;
 			if (*p == '\0')
 			{
-				message("501 Argument required");
-				Errors++;
+				usrerr("501 Argument required");
 			}
 			else
 			{
-				(void) sendtolist(p, NULLADDR, &vrfyqueue, e);
+				(void) sendtolist(p, NULLADDR, &vrfyqueue, 0, e);
 			}
-			if (Errors != 0)
-			{
-				if (InChild)
-					finis();
-				break;
-			}
+			if (Errors > 0)
+				goto undo_subproc;
 			if (vrfyqueue == NULL)
 			{
-				message("554 Nothing to %s", vrfy ? "VRFY" : "EXPN");
+				usrerr("554 Nothing to %s", vrfy ? "VRFY" : "EXPN");
 			}
 			while (vrfyqueue != NULL)
 			{
+				extern void printvrfyaddr __P((ADDRESS *, bool, bool));
+
 				a = vrfyqueue;
 				while ((a = a->q_next) != NULL &&
 				       bitset(QDONTSEND|QBADADDR, a->q_flags))
 					continue;
 				if (!bitset(QDONTSEND|QBADADDR, vrfyqueue->q_flags))
-					printvrfyaddr(vrfyqueue, a == NULL);
+					printvrfyaddr(vrfyqueue, a == NULL, vrfy);
 				vrfyqueue = vrfyqueue->q_next;
 			}
 			if (InChild)
 				finis();
+			break;
+
+		  case CMDETRN:		/* etrn -- force queue flush */
+			if (bitset(PRIV_NOETRN, PrivacyFlags))
+			{
+				message("502 Sorry, we do not allow this operation");
+				if (LogLevel > 5)
+					sm_syslog(LOG_INFO, e->e_id,
+						"%.100s: %s [rejected]",
+						CurSmtpClient,
+						shortenstring(inp, MAXSHORTSTR));
+				break;
+			}
+
+			if (strlen(p) <= 0)
+			{
+				usrerr("500 Parameter required");
+				break;
+			}
+
+			/* crude way to avoid denial-of-service attacks */
+			checksmtpattack(&n_etrn, MAXETRNCOMMANDS, "ETRN", e);
+
+			if (LogLevel > 5)
+				sm_syslog(LOG_INFO, e->e_id,
+					"%.100s: ETRN %s",
+					CurSmtpClient,
+					shortenstring(p, MAXSHORTSTR));
+
+			id = p;
+			if (*id == '@')
+				id++;
+			else
+				*--id = '@';
+				  
+			if ((new = (QUEUE_CHAR *)malloc(sizeof(QUEUE_CHAR))) == NULL)
+			{
+				syserr("500 ETRN out of memory");
+				break;
+			}
+			new->queue_match = id;
+			new->queue_next = NULL;
+			QueueLimitRecipient = new;
+			ok = runqueue(TRUE, TRUE);
+			free(QueueLimitRecipient);
+			QueueLimitRecipient = NULL;
+			if (ok && Errors == 0)
+				message("250 Queuing for node %s started", p);
 			break;
 
 		  case CMDHELP:		/* help -- give user info */
@@ -735,6 +972,7 @@ smtp(e)
 			break;
 
 		  case CMDNOOP:		/* noop -- do nothing */
+			checksmtpattack(&n_noop, MAXNOOPCOMMANDS, "NOOP", e);
 			message("250 OK");
 			break;
 
@@ -742,31 +980,47 @@ smtp(e)
 			message("221 %s closing connection", MyHostName);
 
 doquit:
+			/* arrange to ignore any current send list */
+			e->e_sendqueue = NULL;
+
 			/* avoid future 050 messages */
 			disconnect(1, e);
 
 			if (InChild)
 				ExitStat = EX_QUIT;
+			if (lognullconnection && LogLevel > 5)
+				sm_syslog(LOG_INFO, NULL,
+					"Null connection from %.100s",
+					CurSmtpClient);
 			finis();
 
 		  case CMDVERB:		/* set verbose mode */
-			if (bitset(PRIV_NOEXPN, PrivacyFlags))
+			if (bitset(PRIV_NOEXPN, PrivacyFlags) ||
+			    bitset(PRIV_NOVERB, PrivacyFlags))
 			{
 				/* this would give out the same info */
 				message("502 Verbose unavailable");
 				break;
 			}
-			Verbose = TRUE;
+			checksmtpattack(&n_noop, MAXNOOPCOMMANDS, "VERB", e);
+			Verbose = 1;
 			e->e_sendmode = SM_DELIVER;
 			message("250 Verbose mode");
 			break;
 
 		  case CMDONEX:		/* doing one transaction only */
+			checksmtpattack(&n_noop, MAXNOOPCOMMANDS, "ONEX", e);
 			OneXact = TRUE;
 			message("250 Only one transaction");
 			break;
 
-# ifdef SMTPDEBUG
+		  case CMDXUSR:		/* initial (user) submission */
+			checksmtpattack(&n_noop, MAXNOOPCOMMANDS, "XUSR", e);
+			UserSubmission = TRUE;
+			message("250 Initial submission");
+			break;
+
+# if SMTPDEBUG
 		  case CMDDBGQSHOW:	/* show queues */
 			printf("Send Queue=");
 			printaddr(e->e_sendqueue, TRUE);
@@ -783,13 +1037,11 @@ doquit:
 		  case CMDDBGDEBUG:	/* set debug mode */
 # endif /* SMTPDEBUG */
 		  case CMDLOGBOGUS:	/* bogus command */
-# ifdef LOG
 			if (LogLevel > 0)
-				syslog(LOG_CRIT,
-				    "\"%s\" command from %s (%s)",
-				    c->cmdname, peerhostname,
+				sm_syslog(LOG_CRIT, e->e_id,
+				    "\"%s\" command from %.100s (%.100s)",
+				    c->cmdname, CurSmtpClient,
 				    anynet_ntoa(&RealHostAddr));
-# endif
 			/* FALL THROUGH */
 
 		  case CMDERROR:	/* unknown command */
@@ -800,7 +1052,8 @@ doquit:
 				goto doquit;
 			}
 
-			message("500 Command unrecognized");
+			usrerr("500 Command unrecognized: \"%s\"",
+				shortenstring(inp, MAXSHORTSTR));
 			break;
 
 		  default:
@@ -808,6 +1061,41 @@ doquit:
 			syserr("500 smtp: unknown code %d", c->cmdcode);
 			break;
 		}
+	}
+}
+/*
+**  CHECKSMTPATTACK -- check for denial-of-service attack by repetition
+**
+**	Parameters:
+**		pcounter -- pointer to a counter for this command.
+**		maxcount -- maximum value for this counter before we
+**			slow down.
+**		cname -- command name for logging.
+**		e -- the current envelope.
+**
+**	Returns:
+**		none.
+**
+**	Side Effects:
+**		Slows down if we seem to be under attack.
+*/
+
+void
+checksmtpattack(pcounter, maxcount, cname, e)
+	volatile int *pcounter;
+	int maxcount;
+	char *cname;
+	ENVELOPE *e;
+{
+	if (++(*pcounter) >= maxcount)
+	{
+		if (*pcounter == maxcount && LogLevel > 5)
+		{
+			sm_syslog(LOG_INFO, e->e_id,
+				"%.100s: %.40s attack?",
+			       CurSmtpClient, cname);
+		}
+		sleep(*pcounter / maxcount);
 	}
 }
 /*
@@ -827,7 +1115,7 @@ doquit:
 
 static char *
 skipword(p, w)
-	register char *p;
+	register char *volatile p;
 	char *w;
 {
 	register char *q;
@@ -846,9 +1134,8 @@ skipword(p, w)
 	if (*p != ':')
 	{
 	  syntax:
-		message("501 Syntax error in parameters scanning \"%s\"",
-			firstp);
-		Errors++;
+		usrerr("501 Syntax error in parameters scanning \"%s\"",
+			shortenstring(firstp, MAXSHORTSTR));
 		return (NULL);
 	}
 	*p++ = '\0';
@@ -865,11 +1152,189 @@ skipword(p, w)
 	return (p);
 }
 /*
+**  MAIL_ESMTP_ARGS -- process ESMTP arguments from MAIL line
+**
+**	Parameters:
+**		kp -- the parameter key.
+**		vp -- the value of that parameter.
+**		e -- the envelope.
+**
+**	Returns:
+**		none.
+*/
+
+void
+mail_esmtp_args(kp, vp, e)
+	char *kp;
+	char *vp;
+	ENVELOPE *e;
+{
+	if (strcasecmp(kp, "size") == 0)
+	{
+		if (vp == NULL)
+		{
+			usrerr("501 SIZE requires a value");
+			/* NOTREACHED */
+		}
+# if defined(__STDC__) && !defined(BROKEN_ANSI_LIBRARY)
+		e->e_msgsize = strtoul(vp, (char **) NULL, 10);
+# else
+		e->e_msgsize = strtol(vp, (char **) NULL, 10);
+# endif
+	}
+	else if (strcasecmp(kp, "body") == 0)
+	{
+		if (vp == NULL)
+		{
+			usrerr("501 BODY requires a value");
+			/* NOTREACHED */
+		}
+		else if (strcasecmp(vp, "8bitmime") == 0)
+		{
+			SevenBitInput = FALSE;
+		}
+		else if (strcasecmp(vp, "7bit") == 0)
+		{
+			SevenBitInput = TRUE;
+		}
+		else
+		{
+			usrerr("501 Unknown BODY type %s",
+				vp);
+			/* NOTREACHED */
+		}
+		e->e_bodytype = newstr(vp);
+	}
+	else if (strcasecmp(kp, "envid") == 0)
+	{
+		if (vp == NULL)
+		{
+			usrerr("501 ENVID requires a value");
+			/* NOTREACHED */
+		}
+		if (!xtextok(vp))
+		{
+			usrerr("501 Syntax error in ENVID parameter value");
+			/* NOTREACHED */
+		}
+		if (e->e_envid != NULL)
+		{
+			usrerr("501 Duplicate ENVID parameter");
+			/* NOTREACHED */
+		}
+		e->e_envid = newstr(vp);
+	}
+	else if (strcasecmp(kp, "ret") == 0)
+	{
+		if (vp == NULL)
+		{
+			usrerr("501 RET requires a value");
+			/* NOTREACHED */
+		}
+		if (bitset(EF_RET_PARAM, e->e_flags))
+		{
+			usrerr("501 Duplicate RET parameter");
+			/* NOTREACHED */
+		}
+		e->e_flags |= EF_RET_PARAM;
+		if (strcasecmp(vp, "hdrs") == 0)
+			e->e_flags |= EF_NO_BODY_RETN;
+		else if (strcasecmp(vp, "full") != 0)
+		{
+			usrerr("501 Bad argument \"%s\" to RET", vp);
+			/* NOTREACHED */
+		}
+	}
+	else
+	{
+		usrerr("501 %s parameter unrecognized", kp);
+		/* NOTREACHED */
+	}
+}
+/*
+**  RCPT_ESMTP_ARGS -- process ESMTP arguments from RCPT line
+**
+**	Parameters:
+**		a -- the address corresponding to the To: parameter.
+**		kp -- the parameter key.
+**		vp -- the value of that parameter.
+**		e -- the envelope.
+**
+**	Returns:
+**		none.
+*/
+
+void
+rcpt_esmtp_args(a, kp, vp, e)
+	ADDRESS *a;
+	char *kp;
+	char *vp;
+	ENVELOPE *e;
+{
+	if (strcasecmp(kp, "notify") == 0)
+	{
+		char *p;
+
+		if (vp == NULL)
+		{
+			usrerr("501 NOTIFY requires a value");
+			/* NOTREACHED */
+		}
+		a->q_flags &= ~(QPINGONSUCCESS|QPINGONFAILURE|QPINGONDELAY);
+		a->q_flags |= QHASNOTIFY;
+		if (strcasecmp(vp, "never") == 0)
+			return;
+		for (p = vp; p != NULL; vp = p)
+		{
+			p = strchr(p, ',');
+			if (p != NULL)
+				*p++ = '\0';
+			if (strcasecmp(vp, "success") == 0)
+				a->q_flags |= QPINGONSUCCESS;
+			else if (strcasecmp(vp, "failure") == 0)
+				a->q_flags |= QPINGONFAILURE;
+			else if (strcasecmp(vp, "delay") == 0)
+				a->q_flags |= QPINGONDELAY;
+			else
+			{
+				usrerr("501 Bad argument \"%s\"  to NOTIFY",
+					vp);
+				/* NOTREACHED */
+			}
+		}
+	}
+	else if (strcasecmp(kp, "orcpt") == 0)
+	{
+		if (vp == NULL)
+		{
+			usrerr("501 ORCPT requires a value");
+			/* NOTREACHED */
+		}
+		if (strchr(vp, ';') == NULL || !xtextok(vp))
+		{
+			usrerr("501 Syntax error in ORCPT parameter value");
+			/* NOTREACHED */
+		}
+		if (a->q_orcpt != NULL)
+		{
+			usrerr("501 Duplicate ORCPT parameter");
+			/* NOTREACHED */
+		}
+		a->q_orcpt = newstr(vp);
+	}
+	else
+	{
+		usrerr("501 %s parameter unrecognized", kp);
+		/* NOTREACHED */
+	}
+}
+/*
 **  PRINTVRFYADDR -- print an entry in the verify queue
 **
 **	Parameters:
 **		a -- the address to print
 **		last -- set if this is the last one.
+**		vrfy -- set if this is a VRFY command.
 **
 **	Returns:
 **		none.
@@ -878,13 +1343,19 @@ skipword(p, w)
 **		Prints the appropriate 250 codes.
 */
 
-printvrfyaddr(a, last)
+void
+printvrfyaddr(a, last, vrfy)
 	register ADDRESS *a;
 	bool last;
+	bool vrfy;
 {
 	char fmtbuf[20];
 
-	strcpy(fmtbuf, "250");
+	if (vrfy && a->q_mailer != NULL &&
+	    !bitnset(M_VRFY250, a->q_mailer->m_flags))
+		strcpy(fmtbuf, "252");
+	else
+		strcpy(fmtbuf, "250");
 	fmtbuf[3] = last ? ' ' : '-';
 
 	if (a->q_fullname == NULL)
@@ -905,6 +1376,86 @@ printvrfyaddr(a, last)
 	}
 }
 /*
+**  RUNINCHILD -- return twice -- once in the child, then in the parent again
+**
+**	Parameters:
+**		label -- a string used in error messages
+**
+**	Returns:
+**		zero in the child
+**		one in the parent
+**
+**	Side Effects:
+**		none.
+*/
+
+int
+runinchild(label, e)
+	char *label;
+	register ENVELOPE *e;
+{
+	pid_t childpid;
+
+	if (!OneXact)
+	{
+		/*
+		**  Disable child process reaping, in case ETRN has preceeded
+		**  MAIL command, and then fork.
+		*/
+
+		(void) blocksignal(SIGCHLD);
+
+		childpid = dofork();
+		if (childpid < 0)
+		{
+			syserr("451 %s: cannot fork", label);
+			(void) releasesignal(SIGCHLD);
+			return (1);
+		}
+		if (childpid > 0)
+		{
+			auto int st;
+
+			/* parent -- wait for child to complete */
+			setproctitle("server %s child wait", CurSmtpClient);
+			st = waitfor(childpid);
+			if (st == -1)
+				syserr("451 %s: lost child", label);
+			else if (!WIFEXITED(st))
+				syserr("451 %s: died on signal %d",
+					label, st & 0177);
+
+			/* if we exited on a QUIT command, complete the process */
+			if (WEXITSTATUS(st) == EX_QUIT)
+			{
+				disconnect(1, e);
+				finis();
+			}
+
+			/* restore the child signal */
+			(void) releasesignal(SIGCHLD);
+
+			return (1);
+		}
+		else
+		{
+			/* child */
+			InChild = TRUE;
+			QuickAbort = FALSE;
+			clearenvelope(e, FALSE);
+			(void) setsignal(SIGCHLD, SIG_DFL);
+			(void) releasesignal(SIGCHLD);
+		}
+	}
+
+	/* open alias database */
+	initmaps(FALSE, e);
+
+	return (0);
+}
+
+# endif /* SMTP */
+/*
 **  HELP -- implement the HELP command.
 **
 **	Parameters:
@@ -917,29 +1468,44 @@ printvrfyaddr(a, last)
 **		outputs the help file to message output.
 */
 
+void
 help(topic)
 	char *topic;
 {
 	register FILE *hf;
 	int len;
-	char buf[MAXLINE];
 	bool noinfo;
+	int sff = SFF_OPENASROOT|SFF_REGONLY;
+	char buf[MAXLINE];
+	extern char Version[];
 
-	if (HelpFile == NULL || (hf = fopen(HelpFile, "r")) == NULL)
+	if (DontLockReadFiles)
+		sff |= SFF_NOLOCK;
+	if (!bitset(DBS_HELPFILEINUNSAFEDIRPATH, DontBlameSendmail))    
+		sff |= SFF_SAFEDIRPATH;
+
+	if (HelpFile == NULL ||
+	    (hf = safefopen(HelpFile, O_RDONLY, 0444, sff)) == NULL)
 	{
 		/* no help */
 		errno = 0;
-		message("502 HELP not implemented");
+		message("502 Sendmail %s -- HELP not implemented", Version);
 		return;
 	}
 
 	if (topic == NULL || *topic == '\0')
+	{
 		topic = "smtp";
+		message("214-This is Sendmail version %s", Version);
+		noinfo = FALSE;
+	}
 	else
+	{
 		makelower(topic);
+		noinfo = TRUE;
+	}
 
 	len = strlen(topic);
-	noinfo = TRUE;
 
 	while (fgets(buf, sizeof buf, hf) != NULL)
 	{
@@ -959,74 +1525,8 @@ help(topic)
 	}
 
 	if (noinfo)
-		message("504 HELP topic unknown");
+		message("504 HELP topic \"%.10s\" unknown", topic);
 	else
 		message("214 End of HELP info");
 	(void) fclose(hf);
 }
-/*
-**  RUNINCHILD -- return twice -- once in the child, then in the parent again
-**
-**	Parameters:
-**		label -- a string used in error messages
-**
-**	Returns:
-**		zero in the child
-**		one in the parent
-**
-**	Side Effects:
-**		none.
-*/
-
-runinchild(label, e)
-	char *label;
-	register ENVELOPE *e;
-{
-	int childpid;
-
-	if (!OneXact)
-	{
-		childpid = dofork();
-		if (childpid < 0)
-		{
-			syserr("%s: cannot fork", label);
-			return (1);
-		}
-		if (childpid > 0)
-		{
-			auto int st;
-
-			/* parent -- wait for child to complete */
-			setproctitle("server %s child wait", CurHostName);
-			st = waitfor(childpid);
-			if (st == -1)
-				syserr("%s: lost child", label);
-			else if (!WIFEXITED(st))
-				syserr("%s: died on signal %d",
-					label, st & 0177);
-
-			/* if we exited on a QUIT command, complete the process */
-			if (WEXITSTATUS(st) == EX_QUIT)
-			{
-				disconnect(1, e);
-				finis();
-			}
-
-			return (1);
-		}
-		else
-		{
-			/* child */
-			InChild = TRUE;
-			QuickAbort = FALSE;
-			clearenvelope(e, FALSE);
-		}
-	}
-
-	/* open alias database */
-	initmaps(FALSE, e);
-
-	return (0);
-}
-
-# endif /* SMTP */

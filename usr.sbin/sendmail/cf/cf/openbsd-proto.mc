@@ -43,7 +43,7 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')
-VERSIONID(`@(#)openbsd-proto.mc	$Revision$')
+VERSIONID(`@(#)openbsd-proto.mc	$Revision: 1.1 $')
 OSTYPE(bsd4.4)dnl
 MAILER(local)dnl
 MAILER(smtp)dnl

@@ -1,39 +1,17 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)arpadate.c	8.1 (Berkeley) 6/7/93";
+static char sccsid[] = "@(#)arpadate.c	8.12 (Berkeley) 5/19/98";
 #endif /* not lint */
 
 # include "sendmail.h"
@@ -64,6 +42,17 @@ static char sccsid[] = "@(#)arpadate.c	8.1 (Berkeley) 6/7/93";
 **		the format is and work appropriately.
 */
 
+#ifndef TZNAME_MAX
+# define TZNAME_MAX	50	/* max size of timezone */
+#endif
+
+/* values for TZ_TYPE */
+#define TZ_NONE		0	/* no character timezone support */
+#define TZ_TM_NAME	1	/* use tm->tm_name */
+#define TZ_TM_ZONE	2	/* use tm->tm_zone */
+#define TZ_TZNAME	3	/* use tzname[] */
+#define TZ_TIMEZONE	4	/* use timezone() */
+
 char *
 arpadate(ud)
 	register char *ud;
@@ -75,7 +64,8 @@ arpadate(ud)
 	register struct tm *lt;
 	time_t t;
 	struct tm gmt;
-	static char b[40];
+	char *tz;
+	static char b[43 + TZNAME_MAX];
 
 	/*
 	**  Get current time.
@@ -147,15 +137,41 @@ arpadate(ud)
 		off += 24 * 60;
 
 	*q++ = ' ';
-	if (off == 0) {
+	if (off == 0)
+	{
 		*q++ = 'G';
 		*q++ = 'M';
 		*q++ = 'T';
-	} else {
-		if (off < 0) {
+	}
+	else
+	{
+		tz = NULL;
+#if TZ_TYPE == TZ_TM_NAME
+		tz = lt->tm_name;
+#endif
+#if TZ_TYPE == TZ_TM_ZONE
+		tz = lt->tm_zone;
+#endif
+#if TZ_TYPE == TZ_TZNAME
+		{
+			extern char *tzname[];
+
+			tz = tzname[lt->tm_isdst];
+		}
+#endif
+#if TZ_TYPE == TZ_TIMEZONE
+		{
+			extern char *timezone();
+
+			tz = timezone(off, lt->tm_isdst);
+		}
+#endif
+		if (off < 0)
+		{
 			off = -off;
 			*q++ = '-';
-		} else
+		}
+		else
 			*q++ = '+';
 
 		if (off >= 24*60)		/* should be impossible */
@@ -166,6 +182,14 @@ arpadate(ud)
 		off %= 60;
 		*q++ = (off / 10) + '0';
 		*q++ = (off % 10) + '0';
+		if (tz != NULL && *tz != '\0')
+		{
+			*q++ = ' ';
+			*q++ = '(';
+			while (*tz != '\0' && q < &b[sizeof b - 3])
+				*q++ = *tz++;
+			*q++ = ')';
+		}
 	}
 	*q = '\0';
 

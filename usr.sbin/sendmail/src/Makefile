@@ -1,9 +1,10 @@
+#	$OpenBSD: src/usr.sbin/sendmail/src/Attic/Makefile,v 1.1.1.2 1998/07/12 17:10:56 millert Exp $
 #
-#  NetBSD Makefile
+#  OpenBSD Makefile
 #
-#	@(#)Makefile.NetBSD	8.1 (Berkeley) 2/26/94
-#	@Id: Makefile.NetBSD,v 1.3 1994/02/01 05:33:44 glass Exp $
 #
+
+.include <bsd.own.mk>
 
 PROG=	sendmail
 
@@ -15,28 +16,40 @@ PROG=	sendmail
 # databases are read, but the new format will be used on any rebuilds.  On
 # really gnarly systems, you can set this to null; it will crawl like a high
 # spiral snail, but it will work.
-DBMDEF=	-DNEWDB -DNIS
+MAPDEF=	-DNEWDB -DMAP_REGEX
 
-CFLAGS+=-I${.CURDIR} ${DBMDEF} -DNETISO
+.if (${YP} == "yes")
+MAPDEF+=-DNIS
+.endif
+
+CFLAGS+=-I${.CURDIR} ${MAPDEF} -DNETISO
+
+.if (${TCP_WRAPPERS} == "yes")
+CFLAGS+=-DTCPWRAPPERS
+
+DPADD=	${LIBWRAP}
+LDADD=	-lwrap
+.endif
 
 SRCS=	alias.c arpadate.c clock.c collect.c conf.c convtime.c daemon.c \
 	deliver.c domain.c envelope.c err.c headers.c macro.c main.c map.c \
-	mci.c parseaddr.c queue.c readcf.c recipient.c savemail.c srvrsmtp.c \
-	stab.c stats.c sysexits.c trace.c udb.c usersmtp.c \
-	util.c version.c
+	mci.c mime.c parseaddr.c queue.c readcf.c recipient.c safefile.c \
+	savemail.c snprintf.c srvrsmtp.c stab.c stats.c sysexits.c trace.c \
+	udb.c usersmtp.c util.c version.c
 MAN=	aliases.5 mailq.1 newaliases.1 sendmail.8
-LINKS=	/usr/sbin/sendmail /usr/bin/newaliases \
-	/usr/sbin/sendmail /usr/bin/mailq
-BINDIR=	/usr/sbin
+LINKS=	${BINDIR}/sendmail /usr/bin/newaliases \
+	${BINDIR}/sendmail /usr/bin/mailq \
+	${BINDIR}/sendmail /usr/bin/hoststat \
+	${BINDIR}/sendmail /usr/bin/purgestat
 BINOWN=	root
+BINGRP=	bin
 BINMODE=4555
 
 beforeinstall:
-#	install -c -o ${BINOWN} -g ${BINGRP} -m 644 /dev/null \
-#	    ${DESTDIR}/etc/sendmail.fc
-	install -c -o ${BINOWN} -g ${BINGRP} -m 644 /dev/null \
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 644 /dev/null \
 	    ${DESTDIR}/var/log/sendmail.st
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/sendmail.hf \
-	    ${DESTDIR}/usr/share/misc
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
+	    ${.CURDIR}/sendmail.hf ${DESTDIR}/usr/share/misc
 
+.include "../../Makefile.inc"
 .include <bsd.prog.mk>

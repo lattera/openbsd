@@ -31,7 +31,7 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')dnl
-VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/lucifier.mc,v 1.1 1997/05/29 00:18:12 mickey Exp $')dnl
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/lucifier.mc,v 1.1.1.1 1998/07/12 17:11:54 millert Exp $')dnl
 OSTYPE(bsd4.4)dnl
 MAILER(local)dnl
 MAILER(smtp)dnl

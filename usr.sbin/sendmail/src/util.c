@@ -1,39 +1,17 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)util.c	8.39.1.5 (Berkeley) 3/5/95";
+static char sccsid[] = "@(#)util.c	8.159 (Berkeley) 7/1/98";
 #endif /* not lint */
 
 # include "sendmail.h"
@@ -57,6 +35,7 @@ static char sccsid[] = "@(#)util.c	8.39.1.5 (Berkeley) 3/5/95";
 **		deliver
 */
 
+void
 stripquotes(s)
 	char *s;
 {
@@ -77,6 +56,122 @@ stripquotes(s)
 			continue;
 		*q++ = c;
 	} while (c != '\0');
+}
+/*
+**  ADDQUOTES -- Adds quotes & quote bits to a string.
+**
+**	Runs through a string and adds characters and quote bits.
+**
+**	Parameters:
+**		s -- the string to modify.
+**
+**	Returns:
+**		pointer to quoted string.
+**
+**	Side Effects:
+**		none.
+**
+*/
+
+char *
+addquotes(s)
+	char *s;
+{
+	int len = 0;
+	char c;
+	char *p = s, *q, *r;
+
+	if (s == NULL)
+		return NULL;
+
+	/* Find length of quoted string */
+	while ((c = *p++) != '\0')
+	{
+		len++;
+		if (c == '\\' || c == '"')
+			len++;
+	}
+	
+	q = r = xalloc(len + 3);
+	p = s;
+
+	/* add leading quote */
+	*q++ = '"';
+	while ((c = *p++) != '\0')
+	{
+		/* quote \ or " */
+		if (c == '\\' || c == '"')
+			*q++ = '\\';
+		*q++ = c;
+	}
+	*q++ = '"';
+	*q = '\0';
+	return r;
+}
+/*
+**  RFC822_STRING -- Checks string for proper RFC822 string quoting.
+**
+**	Runs through a string and verifies RFC822 special characters
+**	are only found inside comments, quoted strings, or backslash
+**	escaped.  Also verified balanced quotes and parenthesis.
+**
+**	Parameters:
+**		s -- the string to modify.
+**
+**	Returns:
+**		TRUE -- if the string is RFC822 compliant.
+**		FALSE -- if the string is not RFC822 compliant.
+**
+**	Side Effects:
+**		none.
+**
+*/
+
+bool
+rfc822_string(s)
+	char *s;
+{
+	bool quoted = FALSE;
+	int commentlev = 0;
+	char *c = s;
+
+	if (s == NULL)
+		return FALSE;
+
+	while (*c != '\0')
+	{
+		/* escaped character */
+		if (*c == '\\')
+		{
+			c++;
+			if (*c == '\0')
+				return FALSE;
+		}
+		else if (commentlev == 0 && *c == '"')
+			quoted = !quoted;
+		else if (!quoted)
+		{
+			if (*c == ')')
+			{
+				/* unbalanced ')' */
+				if (commentlev == 0)
+					return FALSE;
+				else
+					commentlev--;
+			}
+			else if (*c == '(')
+				commentlev++;
+			else if (commentlev == 0 &&
+				 strchr(MustQuoteChars, *c) != NULL)
+				return FALSE;
+		}
+		c++;
+	}
+	/* unbalanced '"' or '(' */
+	if (quoted || commentlev != 0)
+		return FALSE;
+	else
+		return TRUE;
 }
 /*
 **  XALLOC -- Allocate memory and bitch wildly on failure.
@@ -107,8 +202,7 @@ xalloc(sz)
 	p = malloc((unsigned) sz);
 	if (p == NULL)
 	{
-		syserr("Out of memory!!");
-		abort();
+		syserr("!Out of memory!!");
 		/* exit(EX_UNAVAILABLE); */
 	}
 	return (p);
@@ -208,13 +302,14 @@ copyqueue(addr)
 **		prints av.
 */
 
+void
 printav(av)
 	register char **av;
 {
 	while (*av != NULL)
 	{
 		if (tTd(0, 44))
-			printf("\n\t%08x=", *av);
+			printf("\n\t%08lx=", (u_long) *av);
 		else
 			(void) putchar(' ');
 		xputs(*av++);
@@ -253,40 +348,81 @@ lower(c)
 **		output to stdout
 */
 
+void
 xputs(s)
-	register char *s;
+	register const char *s;
 {
 	register int c;
 	register struct metamac *mp;
+	bool shiftout = FALSE;
 	extern struct metamac MetaMacros[];
 
 	if (s == NULL)
 	{
-		printf("<null>");
+		printf("%s<null>%s", TermEscape.te_rv_on, TermEscape.te_rv_off);
 		return;
 	}
 	while ((c = (*s++ & 0377)) != '\0')
 	{
+		if (shiftout)
+		{
+			printf("%s", TermEscape.te_rv_off);
+			shiftout = FALSE;
+		}
 		if (!isascii(c))
 		{
-			if (c == MATCHREPL || c == MACROEXPAND)
+			if (c == MATCHREPL)
 			{
-				putchar('$');
+				printf("%s$", TermEscape.te_rv_on);
+				shiftout = TRUE;
+				if (*s == '\0')
+					continue;
+				c = *s++ & 0377;
+				goto printchar;
+			}
+			if (c == MACROEXPAND || c == MACRODEXPAND)
+			{
+				printf("%s$", TermEscape.te_rv_on);
+				if (c == MACRODEXPAND)
+					putchar('&');
+				shiftout = TRUE;
+				if (*s == '\0')
+					continue;
+				if (strchr("=~&?", *s) != NULL)
+					putchar(*s++);
+				if (bitset(0200, *s))
+					printf("{%s}", macname(*s++ & 0377));
+				else
+					printf("%c", *s++);
 				continue;
 			}
 			for (mp = MetaMacros; mp->metaname != '\0'; mp++)
 			{
 				if ((mp->metaval & 0377) == c)
 				{
-					printf("$%c", mp->metaname);
+					printf("%s$%c",
+						TermEscape.te_rv_on,
+						mp->metaname);
+					shiftout = TRUE;
 					break;
 				}
 			}
+			if (c == MATCHCLASS || c == MATCHNCLASS)
+			{
+				if (bitset(0200, *s))
+					printf("{%s}", macname(*s++ & 0377));
+				else if (*s != '\0')
+					printf("%c", *s++);
+			}
 			if (mp->metaname != '\0')
 				continue;
-			(void) putchar('\\');
+
+			/* unrecognized meta character */
+			printf("%sM-", TermEscape.te_rv_on);
+			shiftout = TRUE;
 			c &= 0177;
 		}
+  printchar:
 		if (isprint(c))
 		{
 			putchar(c);
@@ -296,9 +432,6 @@ xputs(s)
 		/* wasn't a meta-macro -- find another way to print it */
 		switch (c)
 		{
-		  case '\0':
-			continue;
-
 		  case '\n':
 			c = 'n';
 			break;
@@ -310,13 +443,25 @@ xputs(s)
 		  case '\t':
 			c = 't';
 			break;
-
-		  default:
+		}
+		if (!shiftout)
+		{
+			printf("%s", TermEscape.te_rv_on);
+			shiftout = TRUE;
+		}
+		if (isprint(c))
+		{
+			(void) putchar('\\');
+			(void) putchar(c);
+		}
+		else
+		{
 			(void) putchar('^');
 			(void) putchar(c ^ 0100);
-			continue;
 		}
 	}
+	if (shiftout)
+		printf("%s", TermEscape.te_rv_off);
 	(void) fflush(stdout);
 }
 /*
@@ -336,6 +481,7 @@ xputs(s)
 **		parse
 */
 
+void
 makelower(p)
 	register char *p;
 {
@@ -357,6 +503,7 @@ makelower(p)
 **		p -- name to build.
 **		login -- the login name of this user (for &).
 **		buf -- place to put the result.
+**		buflen -- length of buf.
 **
 **	Returns:
 **		none.
@@ -365,204 +512,39 @@ makelower(p)
 **		none.
 */
 
-buildfname(gecos, login, buf)
+void
+buildfname(gecos, login, buf, buflen)
 	register char *gecos;
 	char *login;
 	char *buf;
+	int buflen;
 {
 	register char *p;
 	register char *bp = buf;
-	int l;
 
 	if (*gecos == '*')
 		gecos++;
 
-	/* find length of final string */
-	l = 0;
+	/* copy gecos, interpolating & to be full name */
 	for (p = gecos; *p != '\0' && *p != ',' && *p != ';' && *p != '%'; p++)
 	{
-		if (*p == '&')
-			l += strlen(login);
-		else
-			l++;
-	}
-
-	/* now fill in buf */
-	for (p = gecos; *p != '\0' && *p != ',' && *p != ';' && *p != '%'; p++)
-	{
+		if (bp >= &buf[buflen - 1])
+		{
+			/* buffer overflow -- just use login name */
+			snprintf(buf, buflen, "%s", login);
+			return;
+		}
 		if (*p == '&')
 		{
-			(void) strcpy(bp, login);
+			/* interpolate full name */
+			snprintf(bp, buflen - (bp - buf), "%s", login);
 			*bp = toupper(*bp);
-			while (*bp != '\0')
-				bp++;
+			bp += strlen(bp);
 		}
 		else
 			*bp++ = *p;
 	}
 	*bp = '\0';
-}
-/*
-**  SAFEFILE -- return true if a file exists and is safe for a user.
-**
-**	Parameters:
-**		fn -- filename to check.
-**		uid -- user id to compare against.
-**		gid -- group id to compare against.
-**		uname -- user name to compare against (used for group
-**			sets).
-**		flags -- modifiers:
-**			SFF_MUSTOWN -- "uid" must own this file.
-**			SFF_NOSLINK -- file cannot be a symbolic link.
-**		mode -- mode bits that must match.
-**
-**	Returns:
-**		0 if fn exists, is owned by uid, and matches mode.
-**		An errno otherwise.  The actual errno is cleared.
-**
-**	Side Effects:
-**		none.
-*/
-
-#include <grp.h>
-
-#ifndef S_IXOTH
-# define S_IXOTH	(S_IEXEC >> 6)
-#endif
-
-#ifndef S_IXGRP
-# define S_IXGRP	(S_IEXEC >> 3)
-#endif
-
-#ifndef S_IXUSR
-# define S_IXUSR	(S_IEXEC)
-#endif
-
-int
-safefile(fn, uid, gid, uname, flags, mode)
-	char *fn;
-	uid_t uid;
-	gid_t gid;
-	char *uname;
-	int flags;
-	int mode;
-{
-	register char *p;
-	register struct group *gr = NULL;
-	struct stat stbuf;
-
-	if (tTd(54, 4))
-		printf("safefile(%s, uid=%d, gid=%d, flags=%x, mode=%o):\n",
-			fn, uid, gid, flags, mode);
-	errno = 0;
-
-	for (p = fn; (p = strchr(++p, '/')) != NULL; *p = '/')
-	{
-		*p = '\0';
-		if (stat(fn, &stbuf) < 0)
-			break;
-		if (uid == 0 && !bitset(SFF_ROOTOK, flags))
-		{
-			if (bitset(S_IXOTH, stbuf.st_mode))
-				continue;
-			break;
-		}
-		if (stbuf.st_uid == uid && bitset(S_IXUSR, stbuf.st_mode))
-			continue;
-		if (stbuf.st_gid == gid && bitset(S_IXGRP, stbuf.st_mode))
-			continue;
-#ifndef NO_GROUP_SET
-		if (uname != NULL &&
-		    ((gr != NULL && gr->gr_gid == stbuf.st_gid) ||
-		     (gr = getgrgid(stbuf.st_gid)) != NULL))
-		{
-			register char **gp;
-
-			for (gp = gr->gr_mem; *gp != NULL; gp++)
-				if (strcmp(*gp, uname) == 0)
-					break;
-			if (*gp != NULL && bitset(S_IXGRP, stbuf.st_mode))
-				continue;
-		}
-#endif
-		if (!bitset(S_IXOTH, stbuf.st_mode))
-			break;
-	}
-	if (p != NULL)
-	{
-		int ret = errno;
-
-		if (ret == 0)
-			ret = EACCES;
-		if (tTd(54, 4))
-			printf("\t[dir %s] %s\n", fn, errstring(ret));
-		*p = '/';
-		return ret;
-	}
-
-#ifdef HASLSTAT
-	if ((bitset(SFF_NOSLINK, flags) ? lstat(fn, &stbuf)
-					: stat(fn, &stbuf)) < 0)
-#else
-	if (stat(fn, &stbuf) < 0)
-#endif
-	{
-		int ret = errno;
-
-		if (tTd(54, 4))
-			printf("\t%s\n", errstring(ret));
-
-		errno = 0;
-		return ret;
-	}
-
-#ifdef S_ISLNK
-	if (bitset(SFF_NOSLINK, flags) && S_ISLNK(stbuf.st_mode))
-	{
-		if (tTd(54, 4))
-			printf("\t[slink mode %o]\tEPERM\n", stbuf.st_mode);
-		return EPERM;
-	}
-#endif
-
-	if (uid == 0 && !bitset(SFF_ROOTOK, flags))
-		mode >>= 6;
-	else if (stbuf.st_uid != uid)
-	{
-		mode >>= 3;
-		if (stbuf.st_gid == gid)
-			;
-#ifndef NO_GROUP_SET
-		else if (uname != NULL &&
-			 ((gr != NULL && gr->gr_gid == stbuf.st_gid) ||
-			  (gr = getgrgid(stbuf.st_gid)) != NULL))
-		{
-			register char **gp;
-
-			for (gp = gr->gr_mem; *gp != NULL; gp++)
-				if (strcmp(*gp, uname) == 0)
-					break;
-			if (*gp == NULL)
-				mode >>= 3;
-		}
-#endif
-		else
-			mode >>= 3;
-	}
-	if (tTd(54, 4))
-		printf("\t[uid %d, stat %o, mode %o] ",
-			stbuf.st_uid, stbuf.st_mode, mode);
-	if ((stbuf.st_uid == uid || stbuf.st_uid == 0 ||
-	     !bitset(SFF_MUSTOWN, flags)) &&
-	    (stbuf.st_mode & mode) == mode)
-	{
-		if (tTd(54, 4))
-			printf("\tOK\n");
-		return 0;
-	}
-	if (tTd(54, 4))
-		printf("\tEACCES\n");
-	return EACCES;
 }
 /*
 **  FIXCRLF -- fix <CR><LF> in line.
@@ -583,6 +565,7 @@ safefile(fn, uid, gid, uname, flags, mode)
 **		line is changed in place.
 */
 
+void
 fixcrlf(line, stripnl)
 	char *line;
 	bool stripnl;
@@ -597,84 +580,6 @@ fixcrlf(line, stripnl)
 	if (!stripnl)
 		*p++ = '\n';
 	*p = '\0';
-}
-/*
-**  DFOPEN -- determined file open
-**
-**	This routine has the semantics of fopen, except that it will
-**	keep trying a few times to make this happen.  The idea is that
-**	on very loaded systems, we may run out of resources (inodes,
-**	whatever), so this tries to get around it.
-*/
-
-#ifndef O_ACCMODE
-# define O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)
-#endif
-
-struct omodes
-{
-	int	mask;
-	int	mode;
-	char	*farg;
-} OpenModes[] =
-{
-	O_ACCMODE,		O_RDONLY,		"r",
-	O_ACCMODE|O_APPEND,	O_WRONLY,		"w",
-	O_ACCMODE|O_APPEND,	O_WRONLY|O_APPEND,	"a",
-	O_TRUNC,		0,			"w+",
-	O_APPEND,		O_APPEND,		"a+",
-	0,			0,			"r+",
-};
-
-FILE *
-dfopen(filename, omode, cmode)
-	char *filename;
-	int omode;
-	int cmode;
-{
-	register int tries;
-	int fd;
-	register struct omodes *om;
-	struct stat st;
-
-	for (om = OpenModes; om->mask != 0; om++)
-		if ((omode & om->mask) == om->mode)
-			break;
-
-	for (tries = 0; tries < 10; tries++)
-	{
-		sleep((unsigned) (10 * tries));
-		errno = 0;
-		fd = open(filename, omode, cmode);
-		if (fd >= 0)
-			break;
-		switch (errno)
-		{
-		  case ENFILE:		/* system file table full */
-		  case EINTR:		/* interrupted syscall */
-#ifdef ETXTBSY
-		  case ETXTBSY:		/* Apollo: net file locked */
-#endif
-			continue;
-		}
-		break;
-	}
-	if (fd >= 0 && fstat(fd, &st) >= 0 && S_ISREG(st.st_mode))
-	{
-		int locktype;
-
-		/* lock the file to avoid accidental conflicts */
-		if ((omode & O_ACCMODE) != O_RDONLY)
-			locktype = LOCK_EX;
-		else
-			locktype = LOCK_SH;
-		(void) lockfile(fd, filename, NULL, locktype);
-		errno = 0;
-	}
-	if (fd < 0)
-		return NULL;
-	else
-		return fdopen(fd, om->farg);
 }
 /*
 **  PUTLINE -- put a line like fputs obeying SMTP conventions
@@ -693,56 +598,117 @@ dfopen(filename, omode, cmode)
 **		output of l to fp.
 */
 
+void
 putline(l, mci)
 	register char *l;
 	register MCI *mci;
 {
-	register char *p;
-	register char svchar;
+	putxline(l, strlen(l), mci, PXLF_MAPFROM);
+}
+/*
+**  PUTXLINE -- putline with flags bits.
+**
+**	This routine always guarantees outputing a newline (or CRLF,
+**	as appropriate) at the end of the string.
+**
+**	Parameters:
+**		l -- line to put.
+**		len -- the length of the line.
+**		mci -- the mailer connection information.
+**		pxflags -- flag bits:
+**		    PXLF_MAPFROM -- map From_ to >From_.
+**		    PXLF_STRIP8BIT -- strip 8th bit.
+**		    PXLF_HEADER -- map bare newline in header to newline space.
+**
+**	Returns:
+**		none
+**
+**	Side Effects:
+**		output of l to fp.
+*/
+
+void
+putxline(l, len, mci, pxflags)
+	register char *l;
+	size_t len;
+	register MCI *mci;
+	int pxflags;
+{
+	register char *p, *end;
 	int slop = 0;
+	size_t eol_len = strlen(mci->mci_mailer->m_eol);
 
 	/* strip out 0200 bits -- these can look like TELNET protocol */
-	if (bitset(MCIF_7BIT, mci->mci_flags))
+	if (bitset(MCIF_7BIT, mci->mci_flags) ||
+	    bitset(PXLF_STRIP8BIT, pxflags))
 	{
+		register char svchar;
+
 		for (p = l; (svchar = *p) != '\0'; ++p)
 			if (bitset(0200, svchar))
 				*p = svchar &~ 0200;
 	}
 
+	end = l + len;
 	do
 	{
 		/* find the end of the line */
-		p = strchr(l, '\n');
+		p = memchr(l, '\n', end - l);
 		if (p == NULL)
-			p = &l[strlen(l)];
+			p = end;
 
 		if (TrafficLogFile != NULL)
-			fprintf(TrafficLogFile, "%05d >>> ", getpid());
+			fprintf(TrafficLogFile, "%05d >>> ", (int) getpid());
 
 		/* check for line overflow */
 		while (mci->mci_mailer->m_linelimit > 0 &&
 		       (p - l + slop) > mci->mci_mailer->m_linelimit)
 		{
+			char *l_base = l;
 			register char *q = &l[mci->mci_mailer->m_linelimit - slop - 1];
 
-			svchar = *q;
-			*q = '\0';
 			if (l[0] == '.' && slop == 0 &&
 			    bitnset(M_XDOT, mci->mci_mailer->m_flags))
 			{
 				(void) putc('.', mci->mci_out);
+				if (!bitset(MCIF_INHEADER, mci->mci_flags))
+					mci->mci_contentlen++;
 				if (TrafficLogFile != NULL)
 					(void) putc('.', TrafficLogFile);
 			}
-			fputs(l, mci->mci_out);
+			else if (l[0] == 'F' && slop == 0 &&
+				 bitset(PXLF_MAPFROM, pxflags) &&
+				 strncmp(l, "From ", 5) == 0 &&
+				 bitnset(M_ESCFROM, mci->mci_mailer->m_flags))
+			{
+				(void) putc('>', mci->mci_out);
+				if (!bitset(MCIF_INHEADER, mci->mci_flags))
+					mci->mci_contentlen++;
+				if (TrafficLogFile != NULL)
+					(void) putc('>', TrafficLogFile);
+			}
+			while (l < q)
+			{
+				(void) putc(*l++, mci->mci_out);
+				if (!bitset(MCIF_INHEADER, mci->mci_flags))
+					mci->mci_contentlen++;
+			}
 			(void) putc('!', mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen++;
 			fputs(mci->mci_mailer->m_eol, mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen += eol_len;
 			(void) putc(' ', mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen++;
 			if (TrafficLogFile != NULL)
-				fprintf(TrafficLogFile, "%s!\n%05d >>>  ",
-					l, getpid());
-			*q = svchar;
-			l = q;
+			{
+				for (l = l_base; l < q; l++)
+					(void) putc(*l, TrafficLogFile);
+				fprintf(TrafficLogFile, "!\n%05d >>>  ",
+					(int) getpid());
+			}
 			slop = 1;
 		}
 
@@ -751,17 +717,48 @@ putline(l, mci)
 		    bitnset(M_XDOT, mci->mci_mailer->m_flags))
 		{
 			(void) putc('.', mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen++;
 			if (TrafficLogFile != NULL)
 				(void) putc('.', TrafficLogFile);
 		}
-		if (TrafficLogFile != NULL)
-			fprintf(TrafficLogFile, "%.*s\n", p - l, l);
+		else if (l[0] == 'F' && slop == 0 &&
+			 bitset(PXLF_MAPFROM, pxflags) &&
+			 strncmp(l, "From ", 5) == 0 &&
+			 bitnset(M_ESCFROM, mci->mci_mailer->m_flags))
+		{
+			(void) putc('>', mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen++;
+			if (TrafficLogFile != NULL)
+				(void) putc('>', TrafficLogFile);
+		}
 		for ( ; l < p; ++l)
+		{
+			if (TrafficLogFile != NULL)
+				(void) putc(*l, TrafficLogFile);
 			(void) putc(*l, mci->mci_out);
+			if (!bitset(MCIF_INHEADER, mci->mci_flags))
+				mci->mci_contentlen++;
+		}
+		if (TrafficLogFile != NULL)
+			(void) putc('\n', TrafficLogFile);
 		fputs(mci->mci_mailer->m_eol, mci->mci_out);
-		if (*l == '\n')
-			++l;
-	} while (l[0] != '\0');
+		if (!bitset(MCIF_INHEADER, mci->mci_flags))
+			mci->mci_contentlen += eol_len;
+		if (l < end && *l == '\n')
+		{
+			if (*++l != ' ' && *l != '\t' && *l != '\0' &&
+			    bitset(PXLF_HEADER, pxflags))
+			{
+				(void) putc(' ', mci->mci_out);
+				if (!bitset(MCIF_INHEADER, mci->mci_flags))
+					mci->mci_contentlen++;
+				if (TrafficLogFile != NULL)
+					(void) putc(' ', TrafficLogFile);
+			}
+		}
+	} while (l < end);
 }
 /*
 **  XUNLINK -- unlink a file, doing logging as appropriate.
@@ -776,21 +773,22 @@ putline(l, mci)
 **		f is unlinked.
 */
 
+void
 xunlink(f)
 	char *f;
 {
 	register int i;
 
-# ifdef LOG
 	if (LogLevel > 98)
-		syslog(LOG_DEBUG, "%s: unlink %s", CurEnv->e_id, f);
-# endif /* LOG */
+		sm_syslog(LOG_DEBUG, CurEnv->e_id,
+			"unlink %s",
+			f);
 
 	i = unlink(f);
-# ifdef LOG
 	if (i < 0 && LogLevel > 97)
-		syslog(LOG_DEBUG, "%s: unlink-fail %d", f, errno);
-# endif /* LOG */
+		sm_syslog(LOG_DEBUG, CurEnv->e_id,
+			"%s: unlink-fail %d",
+			f, errno);
 }
 /*
 **  XFCLOSE -- close a file, doing logging as appropriate.
@@ -806,13 +804,14 @@ xunlink(f)
 **		fp is closed.
 */
 
+void
 xfclose(fp, a, b)
 	FILE *fp;
 	char *a, *b;
 {
 	if (tTd(53, 99))
-		printf("xfclose(%x) %s %s\n", fp, a, b);
-#ifdef XDEBUG
+		printf("xfclose(%lx) %s %s\n", (u_long) fp, a, b);
+#if XDEBUG
 	if (fileno(fp) == 1)
 		syserr("xfclose(%s %s): fd = 1", a, b);
 #endif
@@ -839,10 +838,7 @@ xfclose(fp, a, b)
 */
 
 static jmp_buf	CtxReadTimeout;
-static int	readtimeout();
-static EVENT	*GlobalTimeout = NULL;
-static bool	EnableTimeout = FALSE;
-static int	ReadProgress;
+static void	readtimeout __P((time_t));
 
 char *
 sfgets(buf, siz, fp, timeout, during)
@@ -866,24 +862,22 @@ sfgets(buf, siz, fp, timeout, during)
 	{
 		if (setjmp(CtxReadTimeout) != 0)
 		{
-# ifdef LOG
-			syslog(LOG_NOTICE,
-			    "timeout waiting for input from %s during %s\n",
-			    CurHostName? CurHostName: "local", during);
-# endif
+			if (LogLevel > 1)
+				sm_syslog(LOG_NOTICE, CurEnv->e_id,
+				       "timeout waiting for input from %.100s during %s",
+				       CurHostName ? CurHostName : "local",
+				       during);
 			errno = 0;
-			usrerr("451 timeout waiting for input during %s",
-				during);
 			buf[0] = '\0';
-#ifdef XDEBUG
+#if XDEBUG
 			checkfd012(during);
 #endif
+			if (TrafficLogFile != NULL)
+				fprintf(TrafficLogFile, "%05d <<< [TIMEOUT]\n",
+					(int) getpid());
 			return (NULL);
 		}
-		if (GlobalTimeout == NULL)
-			ev = setevent(timeout, readtimeout, 0);
-		else
-			EnableTimeout = TRUE;
+		ev = setevent(timeout, readtimeout, 0);
 	}
 
 	/* try to read */
@@ -898,10 +892,7 @@ sfgets(buf, siz, fp, timeout, during)
 	}
 
 	/* clear the event if it has not sprung */
-	if (GlobalTimeout == NULL)
-		clrevent(ev);
-	else
-		EnableTimeout = FALSE;
+	clrevent(ev);
 
 	/* clean up the books and exit */
 	LineNumber++;
@@ -909,55 +900,36 @@ sfgets(buf, siz, fp, timeout, during)
 	{
 		buf[0] = '\0';
 		if (TrafficLogFile != NULL)
-			fprintf(TrafficLogFile, "%05d <<< [EOF]\n", getpid());
+			fprintf(TrafficLogFile, "%05d <<< [EOF]\n", (int) getpid());
 		return (NULL);
 	}
 	if (TrafficLogFile != NULL)
-		fprintf(TrafficLogFile, "%05d <<< %s", getpid(), buf);
-	if (SevenBit)
+		fprintf(TrafficLogFile, "%05d <<< %s", (int) getpid(), buf);
+	if (SevenBitInput)
+	{
 		for (p = buf; *p != '\0'; p++)
 			*p &= ~0200;
+	}
+	else if (!HasEightBits)
+	{
+		for (p = buf; *p != '\0'; p++)
+		{
+			if (bitset(0200, *p))
+			{
+				HasEightBits = TRUE;
+				break;
+			}
+		}
+	}
 	return (buf);
 }
 
-void
-sfgetset(timeout)
-	time_t timeout;
-{
-	/* cancel pending timer */
-	if (GlobalTimeout != NULL)
-	{
-		clrevent(GlobalTimeout);
-		GlobalTimeout = NULL;
-	}
-
-	/* schedule fresh one if so requested */
-	if (timeout != 0)
-	{
-		ReadProgress = LineNumber;
-		GlobalTimeout = setevent(timeout, readtimeout, timeout);
-	}
-}
-
-static
+/* ARGSUSED */
+static void
 readtimeout(timeout)
 	time_t timeout;
 {
-	/* terminate if ordinary timeout */
-	if (GlobalTimeout == NULL)
-		longjmp(CtxReadTimeout, 1);
-
-	/* terminate if no progress was made -- reset state */
-	if (EnableTimeout && (LineNumber <= ReadProgress))
-	{
-		EnableTimeout = FALSE;
-		GlobalTimeout = NULL;
-		longjmp(CtxReadTimeout, 2);
-	}
-
-	/* schedule a new timeout */
-	GlobalTimeout = NULL;
-	sfgetset(timeout);
+	longjmp(CtxReadTimeout, 1);
 }
 /*
 **  FGETFOLDED -- like fgets, but know about folded lines.
@@ -1033,7 +1005,9 @@ fgetfolded(buf, n, f)
 	}
 	if (p == bp)
 		return (NULL);
-	*--p = '\0';
+	if (p[-1] == '\n')
+		p--;
+	*p = '\0';
 	return (bp);
 }
 /*
@@ -1095,6 +1069,7 @@ atobool(s)
 **		none.
 */
 
+int
 atooct(s)
 	register char *s;
 {
@@ -1103,44 +1078,6 @@ atooct(s)
 	while (*s >= '0' && *s <= '7')
 		i = (i << 3) | (*s++ - '0');
 	return (i);
-}
-/*
-**  WAITFOR -- wait for a particular process id.
-**
-**	Parameters:
-**		pid -- process id to wait for.
-**
-**	Returns:
-**		status of pid.
-**		-1 if pid never shows up.
-**
-**	Side Effects:
-**		none.
-*/
-
-int
-waitfor(pid)
-	int pid;
-{
-#ifdef WAITUNION
-	union wait st;
-#else
-	auto int st;
-#endif
-	int i;
-
-	do
-	{
-		errno = 0;
-		i = wait(&st);
-	} while ((i >= 0 || errno == EINTR) && i != pid);
-	if (i < 0)
-		return -1;
-#ifdef WAITUNION
-	return st.w_status;
-#else
-	return st;
-#endif
 }
 /*
 **  BITINTERSECT -- tell if two bitmaps intersect
@@ -1241,30 +1178,102 @@ strcontainedin(a, b)
 **		none
 */
 
+void
 checkfd012(where)
 	char *where;
 {
-#ifdef XDEBUG
+#if XDEBUG
 	register int i;
-	struct stat stbuf;
 
 	for (i = 0; i < 3; i++)
-	{
-		if (fstat(i, &stbuf) < 0 && errno != EOPNOTSUPP)
-		{
-			/* oops.... */
-			int fd;
-
-			syserr("%s: fd %d not open", where, i);
-			fd = open("/dev/null", i == 0 ? O_RDONLY : O_WRONLY, 0666);
-			if (fd != i)
-			{
-				(void) dup2(fd, i);
-				(void) close(fd);
-			}
-		}
-	}
+		fill_fd(i, where);
 #endif /* XDEBUG */
+}
+/*
+**  CHECKFDOPEN -- make sure file descriptor is open -- for extended debugging
+**
+**	Parameters:
+**		fd -- file descriptor to check.
+**		where -- tag to print on failure.
+**
+**	Returns:
+**		none.
+*/
+
+void
+checkfdopen(fd, where)
+	int fd;
+	char *where;
+{
+#if XDEBUG
+	struct stat st;
+
+	if (fstat(fd, &st) < 0 && errno == EBADF)
+	{
+		syserr("checkfdopen(%d): %s not open as expected!", fd, where);
+		printopenfds(TRUE);
+	}
+#endif
+}
+/*
+**  CHECKFDS -- check for new or missing file descriptors
+**
+**	Parameters:
+**		where -- tag for printing.  If null, take a base line.
+**
+**	Returns:
+**		none
+**
+**	Side Effects:
+**		If where is set, shows changes since the last call.
+*/
+
+void
+checkfds(where)
+	char *where;
+{
+	int maxfd;
+	register int fd;
+	bool printhdr = TRUE;
+	int save_errno = errno;
+	static BITMAP baseline;
+	extern int DtableSize;
+
+	if (DtableSize > 256)
+		maxfd = 256;
+	else
+		maxfd = DtableSize;
+	if (where == NULL)
+		clrbitmap(baseline);
+
+	for (fd = 0; fd < maxfd; fd++)
+	{
+		struct stat stbuf;
+
+		if (fstat(fd, &stbuf) < 0 && errno != EOPNOTSUPP)
+		{
+			if (!bitnset(fd, baseline))
+				continue;
+			clrbitn(fd, baseline);
+		}
+		else if (!bitnset(fd, baseline))
+			setbitn(fd, baseline);
+		else
+			continue;
+
+		/* file state has changed */
+		if (where == NULL)
+			continue;
+		if (printhdr)
+		{
+			sm_syslog(LOG_DEBUG, CurEnv->e_id,
+				"%s: changed fds:",
+				where);
+			printhdr = FALSE;
+		}
+		dumpfd(fd, TRUE, TRUE);
+	}
+	errno = save_errno;
 }
 /*
 **  PRINTOPENFDS -- print the open file descriptors (for debugging)
@@ -1277,9 +1286,9 @@ checkfd012(where)
 **		none.
 */
 
-#include <netdb.h>
 #include <arpa/inet.h>
 
+void
 printopenfds(logit)
 	bool logit;
 {
@@ -1299,170 +1308,394 @@ printopenfds(logit)
 **		logit -- if set, send output to syslog instead of stdout.
 */
 
+void
 dumpfd(fd, printclosed, logit)
 	int fd;
 	bool printclosed;
 	bool logit;
 {
-	register struct hostent *hp;
 	register char *p;
-	char *fmtstr;
-	struct sockaddr_in sin;
-	auto int slen;
+	char *hp;
+#ifdef S_IFSOCK
+	SOCKADDR sa;
+#endif
+	auto SOCKADDR_LEN_T slen;
+	int i;
+#if STAT64 > 0
+	struct stat64 st;
+#else
 	struct stat st;
+#endif
 	char buf[200];
 
 	p = buf;
-	sprintf(p, "%3d: ", fd);
+	snprintf(p, SPACELEFT(buf, p), "%3d: ", fd);
 	p += strlen(p);
 
-	if (fstat(fd, &st) < 0)
+	if (
+#if STAT64 > 0
+	    fstat64(fd, &st)
+#else
+	    fstat(fd, &st)
+#endif
+	    < 0)
 	{
-		if (printclosed || errno != EBADF)
+		if (errno != EBADF)
 		{
-			sprintf(p, "CANNOT STAT (%s)", errstring(errno));
+			snprintf(p, SPACELEFT(buf, p), "CANNOT STAT (%s)",
+				errstring(errno));
+			goto printit;
+		}
+		else if (printclosed)
+		{
+			snprintf(p, SPACELEFT(buf, p), "CLOSED");
 			goto printit;
 		}
 		return;
 	}
 
-	slen = fcntl(fd, F_GETFL, NULL);
-	if (slen != -1)
+	i = fcntl(fd, F_GETFL, NULL);
+	if (i != -1)
 	{
-		sprintf(p, "fl=0x%x, ", slen);
+		snprintf(p, SPACELEFT(buf, p), "fl=0x%x, ", i);
 		p += strlen(p);
 	}
 
-	sprintf(p, "mode=%o: ", st.st_mode);
+	snprintf(p, SPACELEFT(buf, p), "mode=%o: ", st.st_mode);
 	p += strlen(p);
 	switch (st.st_mode & S_IFMT)
 	{
 #ifdef S_IFSOCK
 	  case S_IFSOCK:
-		sprintf(p, "SOCK ");
+		snprintf(p, SPACELEFT(buf, p), "SOCK ");
 		p += strlen(p);
-		slen = sizeof sin;
-		if (getsockname(fd, (struct sockaddr *) &sin, &slen) < 0)
-			sprintf(p, "(badsock)");
+		slen = sizeof sa;
+		if (getsockname(fd, &sa.sa, &slen) < 0)
+			snprintf(p, SPACELEFT(buf, p), "(%s)", errstring(errno));
 		else
 		{
-			hp = gethostbyaddr((char *) &sin.sin_addr, slen, AF_INET);
-			sprintf(p, "%s/%d", hp == NULL ? inet_ntoa(sin.sin_addr)
-						   : hp->h_name, ntohs(sin.sin_port));
+			hp = hostnamebyanyaddr(&sa);
+			if (sa.sa.sa_family == AF_INET)
+				snprintf(p, SPACELEFT(buf, p), "%s/%d",
+					hp, ntohs(sa.sin.sin_port));
+			else
+				snprintf(p, SPACELEFT(buf, p), "%s", hp);
 		}
 		p += strlen(p);
-		sprintf(p, "->");
+		snprintf(p, SPACELEFT(buf, p), "->");
 		p += strlen(p);
-		slen = sizeof sin;
-		if (getpeername(fd, (struct sockaddr *) &sin, &slen) < 0)
-			sprintf(p, "(badsock)");
+		slen = sizeof sa;
+		if (getpeername(fd, &sa.sa, &slen) < 0)
+			snprintf(p, SPACELEFT(buf, p), "(%s)", errstring(errno));
 		else
 		{
-			hp = gethostbyaddr((char *) &sin.sin_addr, slen, AF_INET);
-			sprintf(p, "%s/%d", hp == NULL ? inet_ntoa(sin.sin_addr)
-						   : hp->h_name, ntohs(sin.sin_port));
+			hp = hostnamebyanyaddr(&sa);
+			if (sa.sa.sa_family == AF_INET)
+				snprintf(p, SPACELEFT(buf, p), "%s/%d",
+					hp, ntohs(sa.sin.sin_port));
+			else
+				snprintf(p, SPACELEFT(buf, p), "%s", hp);
 		}
 		break;
 #endif
 
 	  case S_IFCHR:
-		sprintf(p, "CHR: ");
+		snprintf(p, SPACELEFT(buf, p), "CHR: ");
 		p += strlen(p);
 		goto defprint;
 
 	  case S_IFBLK:
-		sprintf(p, "BLK: ");
+		snprintf(p, SPACELEFT(buf, p), "BLK: ");
 		p += strlen(p);
 		goto defprint;
 
 #if defined(S_IFIFO) && (!defined(S_IFSOCK) || S_IFIFO != S_IFSOCK)
 	  case S_IFIFO:
-		sprintf(p, "FIFO: ");
+		snprintf(p, SPACELEFT(buf, p), "FIFO: ");
 		p += strlen(p);
 		goto defprint;
 #endif
 
 #ifdef S_IFDIR
 	  case S_IFDIR:
-		sprintf(p, "DIR: ");
+		snprintf(p, SPACELEFT(buf, p), "DIR: ");
 		p += strlen(p);
 		goto defprint;
 #endif
 
 #ifdef S_IFLNK
 	  case S_IFLNK:
-		sprintf(p, "LNK: ");
+		snprintf(p, SPACELEFT(buf, p), "LNK: ");
 		p += strlen(p);
 		goto defprint;
 #endif
 
 	  default:
 defprint:
-		if (sizeof st.st_size > sizeof (long))
-			fmtstr = "dev=%d/%d, ino=%d, nlink=%d, u/gid=%d/%d, size=%qd";
+		if (sizeof st.st_ino > sizeof (long))
+			snprintf(p, SPACELEFT(buf, p),
+				 "dev=%d/%d, ino=%s, nlink=%d, u/gid=%d/%d, ",
+				 major(st.st_dev), minor(st.st_dev),
+				 quad_to_string(st.st_ino),
+				 st.st_nlink, st.st_uid, st.st_gid);
 		else
-			fmtstr = "dev=%d/%d, ino=%d, nlink=%d, u/gid=%d/%d, size=%ld";
-		sprintf(p, fmtstr,
-			major(st.st_dev), minor(st.st_dev), st.st_ino,
-			st.st_nlink, st.st_uid, st.st_gid, st.st_size);
+			snprintf(p, SPACELEFT(buf, p),
+				"dev=%d/%d, ino=%lu, nlink=%d, u/gid=%d/%d, ",
+				major(st.st_dev), minor(st.st_dev),
+				(unsigned long) st.st_ino,
+				st.st_nlink, st.st_uid, st.st_gid);
+		if (sizeof st.st_size > sizeof (long))
+			snprintf(p, SPACELEFT(buf, p), "size=%s",
+				 quad_to_string(st.st_size));
+		else
+			snprintf(p, SPACELEFT(buf, p), "size=%lu",
+				 (unsigned long) st.st_size);
 		break;
 	}
 
 printit:
-#ifdef LOG
 	if (logit)
-		syslog(LOG_DEBUG, "%s", buf);
+		sm_syslog(LOG_DEBUG, CurEnv ? CurEnv->e_id : NULL,
+			"%.800s", buf);
 	else
-#endif
 		printf("%s\n", buf);
 }
 /*
-**  SHORTENSTRING -- return short version of a string
-**
-**	If the string is already short, just return it.  If it is too
-**	long, return the head and tail of the string.
+**  SHORTEN_HOSTNAME -- strip local domain information off of hostname.
 **
 **	Parameters:
-**		s -- the string to shorten.
-**		m -- the max length of the string.
+**		host -- the host to shorten (stripped in place).
 **
 **	Returns:
-**		Either s or a short version of s.
+**		none.
 */
 
-#ifndef MAXSHORTSTR
-# define MAXSHORTSTR	203
-#endif
+void
+shorten_hostname(host)
+	char host[];
+{
+	register char *p;
+	char *mydom;
+	int i;
+	bool canon = FALSE;
+
+	/* strip off final dot */
+	p = &host[strlen(host) - 1];
+	if (*p == '.')
+	{
+		*p = '\0';
+		canon = TRUE;
+	}
+
+	/* see if there is any domain at all -- if not, we are done */
+	p = strchr(host, '.');
+	if (p == NULL)
+		return;
+
+	/* yes, we have a domain -- see if it looks like us */
+	mydom = macvalue('m', CurEnv);
+	if (mydom == NULL)
+		mydom = "";
+	i = strlen(++p);
+	if ((canon ? strcasecmp(p, mydom) : strncasecmp(p, mydom, i)) == 0 &&
+	    (mydom[i] == '.' || mydom[i] == '\0'))
+		*--p = '\0';
+}
+/*
+**  PROG_OPEN -- open a program for reading
+**
+**	Parameters:
+**		argv -- the argument list.
+**		pfd -- pointer to a place to store the file descriptor.
+**		e -- the current envelope.
+**
+**	Returns:
+**		pid of the process -- -1 if it failed.
+*/
+
+int
+prog_open(argv, pfd, e)
+	char **argv;
+	int *pfd;
+	ENVELOPE *e;
+{
+	int pid;
+	int i;
+	int saveerrno;
+	int fdv[2];
+	char *p, *q;
+	char buf[MAXLINE + 1];
+	extern int DtableSize;
+
+	if (pipe(fdv) < 0)
+	{
+		syserr("%s: cannot create pipe for stdout", argv[0]);
+		return -1;
+	}
+	pid = fork();
+	if (pid < 0)
+	{
+		syserr("%s: cannot fork", argv[0]);
+		close(fdv[0]);
+		close(fdv[1]);
+		return -1;
+	}
+	if (pid > 0)
+	{
+		/* parent */
+		close(fdv[1]);
+		*pfd = fdv[0];
+		return pid;
+	}
+
+	/* child -- close stdin */
+	close(0);
+
+	/* stdout goes back to parent */
+	close(fdv[0]);
+	if (dup2(fdv[1], 1) < 0)
+	{
+		syserr("%s: cannot dup2 for stdout", argv[0]);
+		_exit(EX_OSERR);
+	}
+	close(fdv[1]);
+
+	/* stderr goes to transcript if available */
+	if (e->e_xfp != NULL)
+	{
+		if (dup2(fileno(e->e_xfp), 2) < 0)
+		{
+			syserr("%s: cannot dup2 for stderr", argv[0]);
+			_exit(EX_OSERR);
+		}
+	}
+
+	/* this process has no right to the queue file */
+	if (e->e_lockfp != NULL)
+		close(fileno(e->e_lockfp));
+
+	/* run as default user */
+	endpwent();
+	if (setgid(DefGid) < 0 && geteuid() == 0)
+		syserr("prog_open: setgid(%ld) failed", (long) DefGid);
+	if (setuid(DefUid) < 0 && geteuid() == 0)
+		syserr("prog_open: setuid(%ld) failed", (long) DefUid);
+
+	/* run in some directory */
+	if (ProgMailer != NULL)
+		p = ProgMailer->m_execdir;
+	else
+		p = NULL;
+	for (; p != NULL; p = q)
+	{
+		q = strchr(p, ':');
+		if (q != NULL)
+			*q = '\0';
+		expand(p, buf, sizeof buf, e);
+		if (q != NULL)
+			*q++ = ':';
+		if (buf[0] != '\0' && chdir(buf) >= 0)
+			break;
+	}
+	if (p == NULL)
+	{
+		/* backup directories */
+		if (chdir("/tmp") < 0)
+			(void) chdir("/");
+	}
+
+	/* arrange for all the files to be closed */
+	for (i = 3; i < DtableSize; i++)
+	{
+		register int j;
+
+		if ((j = fcntl(i, F_GETFD, 0)) != -1)
+			(void) fcntl(i, F_SETFD, j | 1);
+	}
+
+	/* now exec the process */
+	execve(argv[0], (ARGV_T) argv, (ARGV_T) UserEnviron);
+
+	/* woops!  failed */
+	saveerrno = errno;
+	syserr("%s: cannot exec", argv[0]);
+	if (transienterror(saveerrno))
+		_exit(EX_OSERR);
+	_exit(EX_CONFIG);
+	return -1;	/* avoid compiler warning on IRIX */
+}
+/*
+**  GET_COLUMN  -- look up a Column in a line buffer
+**
+**	Parameters:
+**		line -- the raw text line to search.
+**		col -- the column number to fetch.
+**		delim -- the delimiter between columns.  If null,
+**			use white space.
+**		buf -- the output buffer.
+**		buflen -- the length of buf.
+**
+**	Returns:
+**		buf if successful.
+**		NULL otherwise.
+*/
 
 char *
-shortenstring(s, m)
-	register char *s;
-	int m;
+get_column(line, col, delim, buf, buflen)
+	char line[];
+	int col;
+	char delim;
+	char buf[];
+	int buflen;
 {
-	int l;
-	static char buf[MAXSHORTSTR + 1];
-
-	l = strlen(s);
-	if (l < m)
-		return s;
-	if (m > MAXSHORTSTR)
-		m = MAXSHORTSTR;
-	else if (m < 10)
+	char *p;
+	char *begin, *end;
+	int i;
+	char delimbuf[4];
+	
+	if (delim == '\0')
+		strcpy(delimbuf, "\n\t ");
+	else
 	{
-		if (m < 5)
-		{
-			strncpy(buf, s, m);
-			buf[m] = '\0';
-			return buf;
-		}
-		strncpy(buf, s, m - 3);
-		strcpy(buf + m - 3, "...");
-		return buf;
+		delimbuf[0] = delim;
+		delimbuf[1] = '\0';
 	}
-	m = (m - 3) / 2;
-	strncpy(buf, s, m);
-	strcpy(buf + m, "...");
-	strcpy(buf + m + 3, s + l - m);
+
+	p = line;
+	if (*p == '\0')
+		return NULL;			/* line empty */
+	if (*p == delim && col == 0)
+		return NULL;			/* first column empty */
+
+	begin = line;
+
+	if (col == 0 && delim == '\0')
+	{
+		while (*begin != '\0' && isascii(*begin) && isspace(*begin))
+			begin++;
+	}
+
+	for (i = 0; i < col; i++)
+	{
+		if ((begin = strpbrk(begin, delimbuf)) == NULL)
+			return NULL;		/* no such column */
+		begin++;
+		if (delim == '\0')
+		{
+			while (*begin != '\0' && isascii(*begin) && isspace(*begin))
+				begin++;
+		}
+	}
+	
+	end = strpbrk(begin, delimbuf);
+	if (end == NULL)
+		i = strlen(begin);
+	else
+		i = end - begin;
+	if (i >= buflen)
+		i = buflen - 1;
+	strncpy(buf, begin, i);
+	buf[i] = '\0';
 	return buf;
 }
 /*
@@ -1483,10 +1716,8 @@ cleanstrcpy(t, f, l)
 	register char *f;
 	int l;
 {
-#ifdef LOG
 	/* check for newlines and log if necessary */
 	(void) denlstring(f, TRUE, TRUE);
-#endif
 
 	l--;
 	while (l > 0 && *f != '\0')
@@ -1517,8 +1748,8 @@ cleanstrcpy(t, f, l)
 char *
 denlstring(s, strict, logattacks)
 	char *s;
-	int strict;
-	int logattacks;
+	bool strict;
+	bool logattacks;
 {
 	register char *p;
 	int l;
@@ -1545,14 +1776,319 @@ denlstring(s, strict, logattacks)
 	for (p = bp; (p = strchr(p, '\n')) != NULL; )
 		*p++ = ' ';
 
-#ifdef LOG
 	if (logattacks)
 	{
-		syslog(LOG_NOTICE, "POSSIBLE ATTACK from %s: newline in string \"%s\"",
+		sm_syslog(LOG_NOTICE, CurEnv->e_id,
+			"POSSIBLE ATTACK from %.100s: newline in string \"%s\"",
 			RealHostName == NULL ? "[UNKNOWN]" : RealHostName,
-			shortenstring(bp, 80));
+			shortenstring(bp, MAXSHORTSTR));
 	}
-#endif
 
 	return bp;
+}
+/*
+**  PATH_IS_DIR -- check to see if file exists and is a directory.
+**
+**	There are some additional checks for security violations in
+**	here.  This routine is intended to be used for the host status
+**	support.
+**
+**	Parameters:
+**		pathname -- pathname to check for directory-ness.
+**		createflag -- if set, create directory if needed.
+**
+**	Returns:
+**		TRUE -- if the indicated pathname is a directory
+**		FALSE -- otherwise
+*/
+
+int
+path_is_dir(pathname, createflag)
+	char *pathname;
+	bool createflag;
+{
+	struct stat statbuf;
+
+#if HASLSTAT
+	if (lstat(pathname, &statbuf) < 0)
+#else
+	if (stat(pathname, &statbuf) < 0)
+#endif
+	{
+		if (errno != ENOENT || !createflag)
+			return FALSE;
+		if (mkdir(pathname, 0755) < 0)
+			return FALSE;
+		return TRUE;
+	}
+	if (!S_ISDIR(statbuf.st_mode))
+	{
+		errno = ENOTDIR;
+		return FALSE;
+	}
+
+	/* security: don't allow writable directories */
+	if (bitset(S_IWGRP|S_IWOTH, statbuf.st_mode))
+	{
+		errno = EACCES;
+		return FALSE;
+	}
+
+	return TRUE;
+}
+/*
+**  PROC_LIST_ADD -- add process id to list of our children
+**
+**	Parameters:
+**		pid -- pid to add to list.
+**
+**	Returns:
+**		none
+*/
+
+static pid_t	*ProcListVec	= NULL;
+static int	ProcListSize	= 0;
+
+#define NO_PID		((pid_t) 0)
+#ifndef PROC_LIST_SEG
+# define PROC_LIST_SEG	32		/* number of pids to alloc at a time */
+#endif
+
+void
+proc_list_add(pid)
+	pid_t pid;
+{
+	int i;
+	extern void proc_list_probe __P((void));
+
+	for (i = 0; i < ProcListSize; i++)
+	{
+		if (ProcListVec[i] == NO_PID)
+			break;
+	}
+	if (i >= ProcListSize)
+	{
+		/* probe the existing vector to avoid growing infinitely */
+		proc_list_probe();
+
+		/* now scan again */
+		for (i = 0; i < ProcListSize; i++)
+		{
+			if (ProcListVec[i] == NO_PID)
+				break;
+		}
+	}
+	if (i >= ProcListSize)
+	{
+		/* grow process list */
+		pid_t *npv;
+
+		npv = (pid_t *) xalloc(sizeof (pid_t) * (ProcListSize + PROC_LIST_SEG));
+		if (ProcListSize > 0)
+		{
+			bcopy(ProcListVec, npv, ProcListSize * sizeof (pid_t));
+			free(ProcListVec);
+		}
+		for (i = ProcListSize; i < ProcListSize + PROC_LIST_SEG; i++)
+			npv[i] = NO_PID;
+		i = ProcListSize;
+		ProcListSize += PROC_LIST_SEG;
+		ProcListVec = npv;
+	}
+	ProcListVec[i] = pid;
+	CurChildren++;
+}
+/*
+**  PROC_LIST_DROP -- drop pid from process list
+**
+**	Parameters:
+**		pid -- pid to drop
+**
+**	Returns:
+**		none.
+*/
+
+void
+proc_list_drop(pid)
+	pid_t pid;
+{
+	int i;
+
+	for (i = 0; i < ProcListSize; i++)
+	{
+		if (ProcListVec[i] == pid)
+		{
+			ProcListVec[i] = NO_PID;
+			break;
+		}
+	}
+	if (CurChildren > 0)
+		CurChildren--;
+}
+/*
+**  PROC_LIST_CLEAR -- clear the process list
+**
+**	Parameters:
+**		none.
+**
+**	Returns:
+**		none.
+*/
+
+void
+proc_list_clear()
+{
+	int i;
+
+	for (i = 0; i < ProcListSize; i++)
+		ProcListVec[i] = NO_PID;
+	CurChildren = 0;
+}
+/*
+**  PROC_LIST_PROBE -- probe processes in the list to see if they still exist
+**
+**	Parameters:
+**		none
+**
+**	Returns:
+**		none
+*/
+
+void
+proc_list_probe()
+{
+	int i;
+
+	for (i = 0; i < ProcListSize; i++)
+	{
+		if (ProcListVec[i] == NO_PID)
+			continue;
+		if (kill(ProcListVec[i], 0) < 0)
+		{
+			if (LogLevel > 3)
+				sm_syslog(LOG_DEBUG, CurEnv->e_id,
+					"proc_list_probe: lost pid %d",
+					ProcListVec[i]);
+			ProcListVec[i] = NO_PID;
+			CurChildren--;
+		}
+	}
+	if (CurChildren < 0)
+		CurChildren = 0;
+}
+/*
+**  SM_STRCASECMP -- 8-bit clean version of strcasecmp
+**
+**	Thank you, vendors, for making this all necessary.
+*/
+
+/*
+ * Copyright (c) 1987, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed by the University of
+ *	California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+#if defined(LIBC_SCCS) && !defined(lint)
+static char sccsid[] = "@(#)strcasecmp.c	8.1 (Berkeley) 6/4/93";
+#endif /* LIBC_SCCS and not lint */
+
+/*
+ * This array is designed for mapping upper and lower case letter
+ * together for a case independent comparison.  The mappings are
+ * based upon ascii character sequences.
+ */
+static const u_char charmap[] = {
+	0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007,
+	0010, 0011, 0012, 0013, 0014, 0015, 0016, 0017,
+	0020, 0021, 0022, 0023, 0024, 0025, 0026, 0027,
+	0030, 0031, 0032, 0033, 0034, 0035, 0036, 0037,
+	0040, 0041, 0042, 0043, 0044, 0045, 0046, 0047,
+	0050, 0051, 0052, 0053, 0054, 0055, 0056, 0057,
+	0060, 0061, 0062, 0063, 0064, 0065, 0066, 0067,
+	0070, 0071, 0072, 0073, 0074, 0075, 0076, 0077,
+	0100, 0141, 0142, 0143, 0144, 0145, 0146, 0147,
+	0150, 0151, 0152, 0153, 0154, 0155, 0156, 0157,
+	0160, 0161, 0162, 0163, 0164, 0165, 0166, 0167,
+	0170, 0171, 0172, 0133, 0134, 0135, 0136, 0137,
+	0140, 0141, 0142, 0143, 0144, 0145, 0146, 0147,
+	0150, 0151, 0152, 0153, 0154, 0155, 0156, 0157,
+	0160, 0161, 0162, 0163, 0164, 0165, 0166, 0167,
+	0170, 0171, 0172, 0173, 0174, 0175, 0176, 0177,
+	0200, 0201, 0202, 0203, 0204, 0205, 0206, 0207,
+	0210, 0211, 0212, 0213, 0214, 0215, 0216, 0217,
+	0220, 0221, 0222, 0223, 0224, 0225, 0226, 0227,
+	0230, 0231, 0232, 0233, 0234, 0235, 0236, 0237,
+	0240, 0241, 0242, 0243, 0244, 0245, 0246, 0247,
+	0250, 0251, 0252, 0253, 0254, 0255, 0256, 0257,
+	0260, 0261, 0262, 0263, 0264, 0265, 0266, 0267,
+	0270, 0271, 0272, 0273, 0274, 0275, 0276, 0277,
+	0300, 0301, 0302, 0303, 0304, 0305, 0306, 0307,
+	0310, 0311, 0312, 0313, 0314, 0315, 0316, 0317,
+	0320, 0321, 0322, 0323, 0324, 0325, 0326, 0327,
+	0330, 0331, 0332, 0333, 0334, 0335, 0336, 0337,
+	0340, 0341, 0342, 0343, 0344, 0345, 0346, 0347,
+	0350, 0351, 0352, 0353, 0354, 0355, 0356, 0357,
+	0360, 0361, 0362, 0363, 0364, 0365, 0366, 0367,
+	0370, 0371, 0372, 0373, 0374, 0375, 0376, 0377,
+};
+
+int
+sm_strcasecmp(s1, s2)
+	const char *s1, *s2;
+{
+	register const u_char *cm = charmap,
+			*us1 = (const u_char *)s1,
+			*us2 = (const u_char *)s2;
+
+	while (cm[*us1] == cm[*us2++])
+		if (*us1++ == '\0')
+			return (0);
+	return (cm[*us1] - cm[*--us2]);
+}
+
+int
+sm_strncasecmp(s1, s2, n)
+	const char *s1, *s2;
+	register size_t n;
+{
+	if (n != 0) {
+		register const u_char *cm = charmap,
+				*us1 = (const u_char *)s1,
+				*us2 = (const u_char *)s2;
+
+		do {
+			if (cm[*us1] != cm[*us2++])
+				return (cm[*us1] - cm[*--us2]);
+			if (*us1++ == '\0')
+				break;
+		} while (--n != 0);
+	}
+	return (0);
 }

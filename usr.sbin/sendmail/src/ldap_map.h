@@ -1,15 +1,26 @@
 /*
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ *
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
+ *
+ */
+
+/*
 **  Support for LDAP.
 **
-**	Contributed by Booker C. Bense <bbense@networking.stanford.edu>.
+**	Contributed by Booker C. Bense <bbense+ldap@stanford.edu>.
 **	Please go to him for support -- since I (Eric) don't run LDAP, I
 **	can't help you at all.
 **
-**	@(#)ldap_map.h	8.2 (Berkeley) 5/22/96
+**	@(#)ldap_map.h	8.9 (Berkeley) 5/19/98
 */
 
 #ifndef _LDAP_MAP_H
 #define _LDAP_MAP_H
+
+#include <sys/time.h>
 
 struct ldap_map_struct
 {
@@ -33,7 +44,7 @@ struct ldap_map_struct
 	char		*base;
 	int		scope;
 	char		*filter;
-	char		*attr;
+	char		*attr[2];
 	int		attrsonly;
 	struct timeval	timeout;
 	LDAPMessage	*res;

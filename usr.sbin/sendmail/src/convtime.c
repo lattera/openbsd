@@ -1,39 +1,17 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)convtime.c	8.1 (Berkeley) 6/7/93";
+static char sccsid[] = "@(#)convtime.c	8.14 (Berkeley) 5/19/98";
 #endif /* not lint */
 
 # include "sendmail.h"
@@ -79,6 +57,11 @@ convtime(p, units)
 		{
 			c = units;
 			p--;
+		}
+		else if (strchr("wdhms", c) == NULL)
+		{
+			usrerr("Invalid time unit `%c'", c);
+			c = units;
 		}
 		switch (c)
 		{
@@ -144,7 +127,10 @@ pintvl(intvl, brief)
 	hr = intvl % 24;
 	intvl /= 24;
 	if (brief)
+	{
 		dy = intvl;
+		wk = 0;
+	}
 	else
 	{
 		dy = intvl % 7;
@@ -158,37 +144,38 @@ pintvl(intvl, brief)
 	{
 		if (dy > 0)
 		{
-			(void) sprintf(p, "%d+", dy);
+			(void) snprintf(p, SPACELEFT(buf, p), "%d+", dy);
 			p += strlen(p);
 		}
-		(void) sprintf(p, "%02d:%02d:%02d", hr, mi, se);
+		(void) snprintf(p, SPACELEFT(buf, p), "%02d:%02d:%02d",
+			hr, mi, se);
 		return (buf);
 	}
 
 	/* use the verbose form */
 	if (wk > 0)
 	{
-		(void) sprintf(p, ", %d week%s", wk, PLURAL(wk));
+		(void) snprintf(p, SPACELEFT(buf, p), ", %d week%s", wk, PLURAL(wk));
 		p += strlen(p);
 	}
 	if (dy > 0)
 	{
-		(void) sprintf(p, ", %d day%s", dy, PLURAL(dy));
+		(void) snprintf(p, SPACELEFT(buf, p), ", %d day%s", dy, PLURAL(dy));
 		p += strlen(p);
 	}
 	if (hr > 0)
 	{
-		(void) sprintf(p, ", %d hour%s", hr, PLURAL(hr));
+		(void) snprintf(p, SPACELEFT(buf, p), ", %d hour%s", hr, PLURAL(hr));
 		p += strlen(p);
 	}
 	if (mi > 0)
 	{
-		(void) sprintf(p, ", %d minute%s", mi, PLURAL(mi));
+		(void) snprintf(p, SPACELEFT(buf, p), ", %d minute%s", mi, PLURAL(mi));
 		p += strlen(p);
 	}
 	if (se > 0)
 	{
-		(void) sprintf(p, ", %d second%s", se, PLURAL(se));
+		(void) snprintf(p, SPACELEFT(buf, p), ", %d second%s", se, PLURAL(se));
 		p += strlen(p);
 	}
 

@@ -1,83 +1,79 @@
 /*
- * Copyright (c) 1986 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1986, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 #include "sendmail.h"
 
 #ifndef lint
 #if NAMED_BIND
-static char sccsid[] = "@(#)domain.c	8.19.1.1 (Berkeley) 3/6/95 (with name server)";
+static char sccsid[] = "@(#)domain.c	8.77 (Berkeley) 6/4/98 (with name server)";
 #else
-static char sccsid[] = "@(#)domain.c	8.19.1.1 (Berkeley) 3/6/95 (without name server)";
+static char sccsid[] = "@(#)domain.c	8.77 (Berkeley) 6/4/98 (without name server)";
 #endif
 #endif /* not lint */
 
 #if NAMED_BIND
 
 #include <errno.h>
-#include <arpa/nameser.h>
 #include <resolv.h>
-#include <netdb.h>
+#include <arpa/inet.h>
+
+/*
+**  The standard udp packet size PACKETSZ (512) is not sufficient for some
+**  nameserver answers containing very many resource records. The resolver
+**  may switch to tcp and retry if it detects udp packet overflow.
+**  Also note that the resolver routines res_query and res_search return
+**  the size of the *un*truncated answer in case the supplied answer buffer
+**  it not big enough to accommodate the entire answer.
+*/
+
+#ifndef MAXPACKET
+# define MAXPACKET 8192		/* max packet size used internally by BIND */
+#endif
 
 typedef union
 {
 	HEADER	qb1;
-	char	qb2[PACKETSZ];
+	u_char	qb2[MAXPACKET];
 } querybuf;
 
-static char	MXHostBuf[MAXMXHOSTS*PACKETSZ];
+#ifndef MXHOSTBUFSIZE
+# define MXHOSTBUFSIZE	(128 * MAXMXHOSTS)
+#endif
+
+static char	MXHostBuf[MXHOSTBUFSIZE];
 
 #ifndef MAXDNSRCH
-#define MAXDNSRCH	6	/* number of possible domains to search */
+# define MAXDNSRCH	6	/* number of possible domains to search */
 #endif
 
 #ifndef MAX
-#define MAX(a, b)	((a) > (b) ? (a) : (b))
+# define MAX(a, b)	((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef NO_DATA
 # define NO_DATA	NO_ADDRESS
 #endif
 
-#ifndef HEADERSZ
-# define HEADERSZ	sizeof(HEADER)
+#ifndef HFIXEDSZ
+# define HFIXEDSZ	12	/* sizeof(HEADER) */
 #endif
 
-/* don't use sizeof because sizeof(long) is different on 64-bit machines */
-#define SHORTSIZE	2	/* size of a short (really, must be 2) */
-#define LONGSIZE	4	/* size of a long (really, must be 4) */
-
 #define MAXCNAMEDEPTH	10	/* maximum depth of CNAME recursion */
+
+#if defined(__RES) && (__RES >= 19940415)
+# define RES_UNC_T	char *
+#else
+# define RES_UNC_T	u_char *
+#endif
 /*
 **  GETMXRR -- get MX resource records for a domain
 **
@@ -96,13 +92,13 @@ static char	MXHostBuf[MAXMXHOSTS*PACKETSZ];
 **			and 1 is returned.
 */
 
+int
 getmxrr(host, mxhosts, droplocalhost, rcode)
 	char *host;
 	char **mxhosts;
 	bool droplocalhost;
 	int *rcode;
 {
-	extern int h_errno;
 	register u_char *eom, *cp;
 	register int i, j, n;
 	int nmx = 0;
@@ -111,42 +107,49 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 	querybuf answer;
 	int ancount, qdcount, buflen;
 	bool seenlocal = FALSE;
-	u_short pref, localpref, type;
+	u_short pref, type;
+	u_short localpref = 256;
 	char *fallbackMX = FallBackMX;
-	static bool firsttime = TRUE;
-	STAB *st;
 	bool trycanon = FALSE;
+	int (*resfunc)();
+	extern int res_query(), res_search();
 	u_short prefer[MAXMXHOSTS];
 	int weight[MAXMXHOSTS];
-	extern bool getcanonname();
+	extern int mxrand __P((char *));
 
 	if (tTd(8, 2))
 		printf("getmxrr(%s, droplocalhost=%d)\n", host, droplocalhost);
 
-	if (fallbackMX != NULL)
+	if (fallbackMX != NULL && droplocalhost &&
+	    wordinclass(fallbackMX, 'w'))
 	{
-		if (firsttime && res_query(FallBackMX, C_IN, T_A,
-					   (char *) &answer, sizeof answer) < 0)
-		{
-			/* this entry is bogus */
-			fallbackMX = FallBackMX = NULL;
-		}
-		else if (droplocalhost &&
-			 (st = stab(fallbackMX, ST_CLASS, ST_FIND)) != NULL &&
-			 bitnset('w', st->s_class))
-		{
-			/* don't use fallback for this pass */
-			fallbackMX = NULL;
-		}
-		firsttime = FALSE;
+		/* don't use fallback for this pass */
+		fallbackMX = NULL;
 	}
+
+	*rcode = EX_OK;
 
 	/* efficiency hack -- numeric or non-MX lookups */
 	if (host[0] == '[')
 		goto punt;
 
+	/*
+	**  If we don't have MX records in our host switch, don't
+	**  try for MX records.  Note that this really isn't "right",
+	**  since we might be set up to try NIS first and then DNS;
+	**  if the host is found in NIS we really shouldn't be doing
+	**  MX lookups.  However, that should be a degenerate case.
+	*/
+
+	if (!UseNameServer)
+		goto punt;
+	if (HasWildcardMX && ConfigLevel >= 6)
+		resfunc = res_query;
+	else
+		resfunc = res_search;
+
 	errno = 0;
-	n = res_search(host, C_IN, T_MX, (char *)&answer, sizeof(answer));
+	n = (*resfunc)(host, C_IN, T_MX, (u_char *) &answer, sizeof(answer));
 	if (n < 0)
 	{
 		if (tTd(8, 1))
@@ -163,25 +166,23 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 			goto punt;
 
 		  case HOST_NOT_FOUND:
-#ifdef BROKEN_RES_SEARCH
-			/* Ultrix resolver returns failure w/ h_errno=0 */
-		  case 0:
+#if BROKEN_RES_SEARCH
+		  case 0:	/* Ultrix resolver retns failure w/ h_errno=0 */
 #endif
-			/* the host just doesn't exist */
+			/* host doesn't exist in DNS; might be in /etc/hosts */
+			trycanon = TRUE;
 			*rcode = EX_NOHOST;
-
-			if (!UseNameServer)
-			{
-				/* might exist in /etc/hosts */
-				goto punt;
-			}
-			break;
+			goto punt;
 
 		  case TRY_AGAIN:
+		  case -1:
 			/* couldn't connect to the name server */
-			if (!UseNameServer && errno == ECONNREFUSED)
-				goto punt;
-
+			if (fallbackMX != NULL)
+			{
+				/* name server is hosed -- push to fallback */
+				mxhosts[nmx++] = fallbackMX;
+				return nmx;
+			}
 			/* it might come up later; better queue it up */
 			*rcode = EX_TEMPFAIL;
 			break;
@@ -197,9 +198,13 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 		return (-1);
 	}
 
+	/* avoid problems after truncation in tcp packets */
+	if (n > sizeof(answer))
+		n = sizeof(answer);
+
 	/* find first satisfactory answer */
 	hp = (HEADER *)&answer;
-	cp = (u_char *)&answer + HEADERSZ;
+	cp = (u_char *)&answer + HFIXEDSZ;
 	eom = (u_char *)&answer + n;
 	for (qdcount = ntohs(hp->qdcount); qdcount--; cp += n + QFIXEDSZ)
 		if ((n = dn_skipname(cp, eom)) < 0)
@@ -210,11 +215,11 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 	while (--ancount >= 0 && cp < eom && nmx < MAXMXHOSTS - 1)
 	{
 		if ((n = dn_expand((u_char *)&answer,
-		    eom, cp, (u_char *)bp, buflen)) < 0)
+		    eom, cp, (RES_UNC_T) bp, buflen)) < 0)
 			break;
 		cp += n;
 		GETSHORT(type, cp);
- 		cp += SHORTSIZE + LONGSIZE;
+ 		cp += INT16SZ + INT32SZ;
 		GETSHORT(n, cp);
 		if (type != T_MX)
 		{
@@ -226,22 +231,25 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 		}
 		GETSHORT(pref, cp);
 		if ((n = dn_expand((u_char *)&answer, eom, cp,
-				   (u_char *)bp, buflen)) < 0)
+				   (RES_UNC_T) bp, buflen)) < 0)
 			break;
 		cp += n;
-		if (droplocalhost &&
-		    (st = stab(bp, ST_CLASS, ST_FIND)) != NULL &&
-		    bitnset('w', st->s_class))
+		if (wordinclass(bp, 'w'))
 		{
 			if (tTd(8, 3))
 				printf("found localhost (%s) in MX list, pref=%d\n",
 					bp, pref);
-			if (!seenlocal || pref < localpref)
-				localpref = pref;
-			seenlocal = TRUE;
-			continue;
+			if (droplocalhost)
+			{
+				if (!seenlocal || pref < localpref)
+					localpref = pref;
+				seenlocal = TRUE;
+				continue;
+			}
+			weight[nmx] = 0;
 		}
-		weight[nmx] = mxrand(bp);
+		else
+			weight[nmx] = mxrand(bp);
 		prefer[nmx] = pref;
 		mxhosts[nmx++] = bp;
 		n = strlen(bp);
@@ -284,11 +292,25 @@ getmxrr(host, mxhosts, droplocalhost, rcode)
 		}
 	}
 
+	/* delete duplicates from list (yes, some bozos have duplicates) */
+	for (i = 0; i < nmx - 1; )
+	{
+		if (strcasecmp(mxhosts[i], mxhosts[i + 1]) != 0)
+			i++;
+		else
+		{
+			/* compress out duplicate */
+			for (j = i + 1; j < nmx; j++)
+				mxhosts[j] = mxhosts[j + 1];
+			nmx--;
+		}
+	}
+
 	if (nmx == 0)
 	{
 punt:
 		if (seenlocal &&
-		    (!TryNullMXList || gethostbyname(host) == NULL))
+		    (!TryNullMXList || sm_gethostbyname(host) == NULL))
 		{
 			/*
 			**  If we have deleted all MX entries, this is
@@ -307,20 +329,29 @@ punt:
 				host, MyHostName);
 			return -1;
 		}
-		strcpy(MXHostBuf, host);
+		if (strlen(host) >= (SIZE_T) sizeof MXHostBuf)
+		{
+			*rcode = EX_CONFIG;
+			syserr("Host name %s too long",
+			       shortenstring(host, MAXSHORTSTR));
+			return -1;
+		}
+		snprintf(MXHostBuf, sizeof MXHostBuf, "%s", host);
 		mxhosts[0] = MXHostBuf;
 		if (host[0] == '[')
 		{
 			register char *p;
-			struct in_addr junk;
 
 			/* this may be an MX suppression-style address */
 			p = strchr(MXHostBuf, ']');
 			if (p != NULL)
 			{
 				*p = '\0';
-				if (inet_aton(&MXHostBuf[1], &junk) != 0)
+				if (inet_addr(&MXHostBuf[1]) != INADDR_NONE)
+				{
+					nmx++;
 					*p = ']';
+				}
 				else
 				{
 					trycanon = TRUE;
@@ -337,8 +368,8 @@ punt:
 				*bp++ = '.';
 				*bp = '\0';
 			}
+			nmx = 1;
 		}
-		nmx = 1;
 	}
 
 	/* if we have a default lowest preference, include that */
@@ -365,6 +396,7 @@ punt:
 **		none.
 */
 
+int
 mxrand(host)
 	register char *host;
 {
@@ -392,13 +424,76 @@ mxrand(host)
 	}
 
 	hfunc &= 0xff;
+	hfunc++;
 
 	if (tTd(17, 9))
 		printf(" = %d\n", hfunc);
 	return hfunc;
 }
 /*
-**  GETCANONNAME -- get the canonical name for named host
+**  BESTMX -- find the best MX for a name
+**
+**	This is really a hack, but I don't see any obvious way
+**	to generalize it at the moment.
+*/
+
+/* ARGSUSED3 */
+char *
+bestmx_map_lookup(map, name, av, statp)
+	MAP *map;
+	char *name;
+	char **av;
+	int *statp;
+{
+	int nmx;
+	auto int rcode;
+	int saveopts = _res.options;
+	int i, len = 0;
+	char *p;
+	char *mxhosts[MAXMXHOSTS + 1];
+	char buf[MXHOSTBUFSIZE + 1];
+
+	_res.options &= ~(RES_DNSRCH|RES_DEFNAMES);
+	nmx = getmxrr(name, mxhosts, FALSE, &rcode);
+	_res.options = saveopts;
+	if (nmx <= 0)
+		return NULL;
+	if (bitset(MF_MATCHONLY, map->map_mflags))
+		return map_rewrite(map, name, strlen(name), NULL);
+	if ((map->map_coldelim == '\0') || (nmx == 1))
+		return map_rewrite(map, mxhosts[0], strlen(mxhosts[0]), av);
+
+	/*
+	** We were given a -z flag (return all MXs) and there are multiple
+	** ones.  We need to build them all into a list.
+	*/
+	p = buf;
+	for (i = 0; i < nmx; i++)
+	{
+		int slen;
+		
+		if (strchr(mxhosts[i], map->map_coldelim) != NULL)
+		{
+			syserr("bestmx_map_lookup: MX host %.64s includes map delimiter character 0x%02X",
+			       mxhosts[i], map->map_coldelim);
+			return NULL;
+		}
+		slen = strlen(mxhosts[i]);
+		if (len + slen + 2 > sizeof buf)
+			break;
+		if (i > 0)
+		{
+			*p++ = map->map_coldelim;
+			len++;
+		}
+		strcpy(p, mxhosts[i]);
+		p += slen;
+		len += slen;
+	}
+	return map_rewrite(map, buf, len, av);
+}
+/*
+**  DNS_GETCANONNAME -- get the canonical name for named host using DNS
 **
 **	This algorithm tries to be smart about wildcard MX records.
 **	This is hard to do because DNS doesn't tell is if we matched
@@ -420,6 +515,7 @@ mxrand(host)
 **			This is a value-result parameter.
 **		hbsize -- the size of the host buffer.
 **		trymx -- if set, try MX records as well as A and CNAME.
+**		statp -- pointer to place to store status.
 **
 **	Returns:
 **		TRUE -- if the host matched.
@@ -427,12 +523,12 @@ mxrand(host)
 */
 
 bool
-getcanonname(host, hbsize, trymx)
+dns_getcanonname(host, hbsize, trymx, statp)
 	char *host;
 	int hbsize;
 	bool trymx;
+	int *statp;
 {
-	extern int h_errno;
 	register u_char *eom, *ap;
 	register char *cp;
 	register int n; 
@@ -445,19 +541,22 @@ getcanonname(host, hbsize, trymx)
 	char **dp;
 	char *mxmatch;
 	bool amatch;
-	bool gotmx;
+	bool gotmx = FALSE;
 	int qtype;
 	int loopcnt;
 	char *xp;
-	char nbuf[MAX(PACKETSZ, MAXDNAME*2+2)];
+	char nbuf[MAX(MAXPACKET, MAXDNAME*2+2)];
 	char *searchlist[MAXDNSRCH+2];
-	extern char *gethostalias();
+	extern char *gethostalias __P((char *));
 
 	if (tTd(8, 2))
-		printf("getcanonname(%s)\n", host);
+		printf("dns_getcanonname(%s, trymx=%d)\n", host, trymx);
 
 	if ((_res.options & RES_INIT) == 0 && res_init() == -1)
-		return (FALSE);
+	{
+		*statp = EX_UNAVAILABLE;
+		return FALSE;
+	}
 
 	/*
 	**  Initialize domain search list.  If there is at least one
@@ -471,10 +570,15 @@ getcanonname(host, hbsize, trymx)
 
 	loopcnt = 0;
 cnameloop:
-	for (cp = host, n = 0; *cp; cp++)
+	/* Check for dots in the name */
+	for (cp = host, n = 0; *cp != '\0'; cp++)
 		if (*cp == '.')
 			n++;
 
+	/*
+	**  If this is a simple name, determine whether it matches an 
+	**  alias in the file defined by the environment variable HOSTALIASES.
+	*/
 	if (n == 0 && (xp = gethostalias(host)) != NULL)
 	{
 		if (loopcnt++ > MAXCNAMEDEPTH)
@@ -488,6 +592,17 @@ cnameloop:
 			goto cnameloop;
 		}
 	}
+
+	/*
+	**  Build the search list.  
+	**	If there is at least one dot in name, start with a null
+	**	domain to search the unmodified name first.
+	**	If name does not end with a dot and search up local domain
+	**	tree desired, append each local domain component to the
+	**	search list; if name contains no dots and default domain
+	**	name is desired, append default domain name to search list;
+	**	else if name ends in a dot, remove that dot.
+	*/
 
 	dp = searchlist;
 	if (n > 0)
@@ -508,7 +623,8 @@ cnameloop:
 	*dp = NULL;
 
 	/*
-	**  Now run through the search list for the name in question.
+	**  Now loop through the search list, appending each domain in turn
+	**  name and searching for a match.
 	*/
 
 	mxmatch = NULL;
@@ -519,11 +635,12 @@ cnameloop:
 		if (qtype == T_ANY)
 			gotmx = FALSE;
 		if (tTd(8, 5))
-			printf("getcanonname: trying %s.%s (%s)\n", host, *dp,
+			printf("dns_getcanonname: trying %s.%s (%s)\n",
+				host, *dp,
 				qtype == T_ANY ? "ANY" : qtype == T_A ? "A" :
 				qtype == T_MX ? "MX" : "???");
 		ret = res_querydomain(host, *dp, C_IN, qtype,
-				      &answer, sizeof(answer));
+				      answer.qb2, sizeof(answer.qb2));
 		if (ret <= 0)
 		{
 			if (tTd(8, 7))
@@ -534,6 +651,7 @@ cnameloop:
 			{
 				/* the name server seems to be down */
 				h_errno = TRY_AGAIN;
+				*statp = EX_TEMPFAIL;
 				return FALSE;
 			}
 
@@ -552,13 +670,7 @@ cnameloop:
 				}
 			}
 
-			if (mxmatch != NULL)
-			{
-				/* we matched before -- use that one */
-				break;
-			}
-
-			/* otherwise, try the next name */
+			/* definite no -- try the next domain */
 			dp++;
 			qtype = T_ANY;
 			continue;
@@ -566,14 +678,18 @@ cnameloop:
 		else if (tTd(8, 7))
 			printf("\tYES\n");
 
+		/* avoid problems after truncation in tcp packets */
+		if (ret > sizeof(answer))
+			ret = sizeof(answer);
+
 		/*
-		**  This might be a bogus match.  Search for A or
-		**  CNAME records.  If we don't have a matching
+		**  Appear to have a match.  Confirm it by searching for A or
+		**  CNAME records.  If we don't have a local domain
 		**  wild card MX record, we will accept MX as well.
 		*/
 
 		hp = (HEADER *) &answer;
-		ap = (u_char *) &answer + HEADERSZ;
+		ap = (u_char *) &answer + HFIXEDSZ;
 		eom = (u_char *) &answer + ret;
 
 		/* skip question part of response -- we know what we asked */
@@ -584,44 +700,66 @@ cnameloop:
 				if (tTd(8, 20))
 					printf("qdcount failure (%d)\n",
 						ntohs(hp->qdcount));
+				*statp = EX_SOFTWARE;
 				return FALSE;		/* ???XXX??? */
 			}
 		}
 
 		amatch = FALSE;
-		for (ancount = ntohs(hp->ancount); --ancount >= 0 && ap < eom; ap += n)
+		for (ancount = ntohs(hp->ancount); --ancount >= 0 && ap < eom;
+									ap += n)
 		{
 			n = dn_expand((u_char *) &answer, eom, ap,
-				      (u_char *) nbuf, sizeof nbuf);
+				      (RES_UNC_T) nbuf, sizeof nbuf);
 			if (n < 0)
 				break;
 			ap += n;
 			GETSHORT(type, ap);
-			ap += SHORTSIZE + LONGSIZE;
+			ap += INT16SZ + INT32SZ;
 			GETSHORT(n, ap);
 			switch (type)
 			{
 			  case T_MX:
 				gotmx = TRUE;
-				if (**dp != '\0')
+				if (**dp != '\0' && HasWildcardMX)
 				{
-					/* got a match -- save that info */
+					/*
+					**  If we are using MX matches and have
+					**  not yet gotten one, save this one
+					**  but keep searching for an A or 
+					**  CNAME match.
+					*/
+
 					if (trymx && mxmatch == NULL)
 						mxmatch = *dp;
 					continue;
 				}
 
-				/* exact MX matches are as good as an A match */
-				/* fall through */
+				/*
+				**  If we did not append a domain name, this
+				**  must have been a canonical name to start
+				**  with.  Even if we did append a domain name,
+				**  in the absence of a wildcard MX this must
+				**  still be a real MX match.
+				**  Such MX matches are as good as an A match,
+				**  fall through.
+				*/
 
 			  case T_A:
-				/* good show */
+				/* Flag that a good match was found */
 				amatch = TRUE;
 
 				/* continue in case a CNAME also exists */
 				continue;
 
 			  case T_CNAME:
+				if (DontExpandCnames)
+				{
+					/* got CNAME -- guaranteed canonical */
+					amatch = TRUE;
+					break;
+				}
+
 				if (loopcnt++ > MAXCNAMEDEPTH)
 				{
 					/*XXX should notify postmaster XXX*/
@@ -631,17 +769,19 @@ cnameloop:
 					{
 						char ebuf[MAXLINE];
 
-						sprintf(ebuf, "Deferred: DNS failure: CNAME loop for %s",
+						snprintf(ebuf, sizeof ebuf,
+							"Deferred: DNS failure: CNAME loop for %.100s",
 							host);
 						CurEnv->e_message = newstr(ebuf);
 					}
 					h_errno = NO_RECOVERY;
+					*statp = EX_CONFIG;
 					return FALSE;
 				}
 
 				/* value points at name */
 				if ((ret = dn_expand((u_char *)&answer,
-				    eom, ap, (u_char *)nbuf, sizeof(nbuf))) < 0)
+				    eom, ap, (RES_UNC_T) nbuf, sizeof(nbuf))) < 0)
 					break;
 				(void)strncpy(host, nbuf, hbsize); /* XXX */
 				host[hbsize - 1] = '\0';
@@ -662,14 +802,24 @@ cnameloop:
 
 		if (amatch)
 		{
-			/* got an A record and no CNAME */
+			/* 
+			**  Got a good match -- either an A, CNAME, or an
+			**  exact MX record.  Save it and get out of here.
+			*/
+
 			mxmatch = *dp;
 			break;
 		}
 
 		/*
-		**  If this was a T_ANY query, we may have the info but
-		**  need an explicit query.  Try T_A, then T_MX.
+		**  Nothing definitive yet.
+		**	If this was a T_ANY query, we don't really know what
+		**		was returned -- it might have been a T_NS,
+		**		for example.  Try T_A to be more specific
+		**		during the next pass.
+		**	If this was a T_A query and we haven't yet found a MX
+		**		match, try T_MX if allowed to do so.
+		**	Otherwise, try the next domain.
 		*/
 
 		if (qtype == T_ANY)
@@ -678,23 +828,35 @@ cnameloop:
 			qtype = T_MX;
 		else
 		{
-			/* really nothing in this domain; try the next */
 			qtype = T_ANY;
 			dp++;
 		}
 	}
 
+	/* if nothing was found, we are done */
 	if (mxmatch == NULL)
+	{
+		*statp = EX_NOHOST;
 		return FALSE;
+	}
 
-	/* create matching name and return */
-	(void) sprintf(nbuf, "%.*s%s%.*s", MAXDNAME, host,
+	/*
+	**  Create canonical name and return.
+	**  If saved domain name is null, name was already canonical.
+	**  Otherwise append the saved domain name.
+	*/
+
+	(void) snprintf(nbuf, sizeof nbuf, "%.*s%s%.*s", MAXDNAME, host,
 			*mxmatch == '\0' ? "" : ".",
 			MAXDNAME, mxmatch);
 	strncpy(host, nbuf, hbsize);
 	host[hbsize - 1] = '\0';
+	if (tTd(8, 5))
+		printf("dns_getcanonname: %s\n", host);
+	*statp = EX_OK;
 	return TRUE;
 }
+
 
 
 char *
@@ -703,14 +865,17 @@ gethostalias(host)
 {
 	char *fname;
 	FILE *fp;
-	register char *p;
+	register char *p = NULL;
+	int sff = SFF_REGONLY;
 	char buf[MAXLINE];
 	static char hbuf[MAXDNAME];
 
+	if (DontLockReadFiles)
+		sff |= SFF_NOLOCK;
 	fname = getenv("HOSTALIASES");
-	if (fname == NULL || (fp = fopen(fname, "r")) == NULL)
+	if (fname == NULL ||
+	    (fp = safefopen(fname, O_RDONLY, 0, sff)) == NULL)
 		return NULL;
-	setbuf(fp, NULL);
 	while (fgets(buf, sizeof buf, fp) != NULL)
 	{
 		for (p = buf; p != '\0' && !(isascii(*p) && isspace(*p)); p++)
@@ -731,6 +896,7 @@ gethostalias(host)
 		fclose(fp);
 		return NULL;
 	}
+	fclose(fp);
 
 	/* got a match; extract the equivalent name */
 	while (*p != '\0' && isascii(*p) && isspace(*p))
@@ -744,28 +910,4 @@ gethostalias(host)
 	return hbuf;
 }
 
-
-#else /* not NAMED_BIND */
-
-#include <netdb.h>
-
-bool
-getcanonname(host, hbsize, trymx)
-	char *host;
-	int hbsize;
-	bool trymx;
-{
-	struct hostent *hp;
-
-	hp = gethostbyname(host);
-	if (hp == NULL)
-		return (FALSE);
-
-	if (strlen(hp->h_name) >= hbsize)
-		return (FALSE);
-
-	(void) strcpy(host, hp->h_name);
-	return (TRUE);
-}
-
-#endif /* not NAMED_BIND */
+#endif /* NAMED_BIND */

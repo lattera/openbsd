@@ -1,51 +1,29 @@
 /*
- * Copyright (c) 1983 Eric P. Allman
+ * Copyright (c) 1998 Sendmail, Inc.  All rights reserved.
+ * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * By using this file, you agree to the terms and conditions set
+ * forth in the LICENSE file which can be found at the top level of
+ * the sendmail distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
  */
 
 # include "sendmail.h"
 
 #ifndef lint
-#ifdef SMTP
-static char sccsid[] = "@(#)usersmtp.c	8.18 (Berkeley) 1/24/94 (with SMTP)";
+#if SMTP
+static char sccsid[] = "@(#)usersmtp.c	8.104 (Berkeley) 6/30/98 (with SMTP)";
 #else
-static char sccsid[] = "@(#)usersmtp.c	8.18 (Berkeley) 1/24/94 (without SMTP)";
+static char sccsid[] = "@(#)usersmtp.c	8.104 (Berkeley) 6/30/98 (without SMTP)";
 #endif
 #endif /* not lint */
 
 # include <sysexits.h>
 # include <errno.h>
 
-# ifdef SMTP
+# if SMTP
 
 /*
 **  USERSMTP -- run SMTP protocol from the user end.
@@ -60,12 +38,10 @@ static char sccsid[] = "@(#)usersmtp.c	8.18 (Berkeley) 1/24/94 (without SMTP)";
 char	SmtpMsgBuffer[MAXLINE];		/* buffer for commands */
 char	SmtpReplyBuffer[MAXLINE];	/* buffer for replies */
 char	SmtpError[MAXLINE] = "";	/* save failure error messages */
-int	SmtpPid;			/* pid of mailer */
 bool	SmtpNeedIntro;			/* need "while talking" in transcript */
 
-#ifdef __STDC__
-extern	smtpmessage(char *f, MAILER *m, MCI *mci, ...);
-#endif
+extern void	smtpmessage __P((char *f, MAILER *m, MCI *mci, ...));
+extern int	reply __P((MAILER *, MCI *, ENVELOPE *, time_t, void (*)()));
 /*
 **  SMTPINIT -- initialize SMTP.
 **
@@ -83,15 +59,16 @@ extern	smtpmessage(char *f, MAILER *m, MCI *mci, ...);
 **		creates connection and sends initial protocol.
 */
 
+void
 smtpinit(m, mci, e)
-	struct mailer *m;
+	MAILER *m;
 	register MCI *mci;
 	ENVELOPE *e;
 {
 	register int r;
 	register char *p;
-	extern void esmtp_check();
-	extern void helo_options();
+	extern void esmtp_check __P((char *, bool, MAILER *, MCI *, ENVELOPE *));
+	extern void helo_options __P((char *, bool, MAILER *, MCI *, ENVELOPE *));
 
 	if (tTd(18, 1))
 	{
@@ -105,6 +82,8 @@ smtpinit(m, mci, e)
 
 	SmtpError[0] = '\0';
 	CurHostName = mci->mci_host;		/* XXX UGLY XXX */
+	if (CurHostName == NULL)
+		CurHostName = MyHostName;
 	SmtpNeedIntro = TRUE;
 	switch (mci->mci_state)
 	{
@@ -141,8 +120,10 @@ smtpinit(m, mci, e)
 	SmtpPhase = mci->mci_phase = "client greeting";
 	setproctitle("%s %s: %s", e->e_id, CurHostName, mci->mci_phase);
 	r = reply(m, mci, e, TimeOuts.to_initial, esmtp_check);
-	if (r < 0 || REPLYTYPE(r) == 4)
+	if (r < 0)
 		goto tempfail1;
+	if (REPLYTYPE(r) == 4)
+		goto tempfail2;
 	if (REPLYTYPE(r) != 2)
 		goto unavailable;
 
@@ -151,11 +132,16 @@ smtpinit(m, mci, e)
 	**	My mother taught me to always introduce myself.
 	*/
 
-	if (bitnset(M_ESMTP, m->m_flags))
+	if (bitnset(M_ESMTP, m->m_flags) || bitnset(M_LMTP, m->m_flags))
 		mci->mci_flags |= MCIF_ESMTP;
 
 tryhelo:
-	if (bitset(MCIF_ESMTP, mci->mci_flags))
+	if (bitnset(M_LMTP, m->m_flags))
+	{
+		smtpmessage("LHLO %s", m, mci, MyHostName);
+		SmtpPhase = mci->mci_phase = "client LHLO";
+	}
+	else if (bitset(MCIF_ESMTP, mci->mci_flags))
 	{
 		smtpmessage("EHLO %s", m, mci, MyHostName);
 		SmtpPhase = mci->mci_phase = "client EHLO";
@@ -171,7 +157,8 @@ tryhelo:
 		goto tempfail1;
 	else if (REPLYTYPE(r) == 5)
 	{
-		if (bitset(MCIF_ESMTP, mci->mci_flags))
+		if (bitset(MCIF_ESMTP, mci->mci_flags) &&
+		    !bitnset(M_LMTP, m->m_flags))
 		{
 			/* try old SMTP instead */
 			mci->mci_flags &= ~MCIF_ESMTP;
@@ -180,25 +167,24 @@ tryhelo:
 		goto unavailable;
 	}
 	else if (REPLYTYPE(r) != 2)
-		goto tempfail1;
+		goto tempfail2;
 
 	/*
 	**  Check to see if we actually ended up talking to ourself.
 	**  This means we didn't know about an alias or MX, or we managed
 	**  to connect to an echo server.
-	**
-	**	If this code remains at all, "CheckLoopBack" should be
-	**	a mailer flag.  This is a MAYBENEXTRELEASE feature.
 	*/
 
 	p = strchr(&SmtpReplyBuffer[4], ' ');
 	if (p != NULL)
 		*p = '\0';
-	if (CheckLoopBack && strcasecmp(&SmtpReplyBuffer[4], MyHostName) == 0)
+	if (!bitnset(M_NOLOOPCHECK, m->m_flags) &&
+	    !bitnset(M_LMTP, m->m_flags) &&
+	    strcasecmp(&SmtpReplyBuffer[4], MyHostName) == 0)
 	{
-		syserr("553 %s config error: mail loops back to myself",
-			MyHostName);
-		mci->mci_exitstat = EX_CONFIG;
+		syserr("553 %s config error: mail loops back to me (MX problem?)",
+			CurHostName);
+		mci_setstat(mci, EX_CONFIG, NULL, NULL);
 		mci->mci_errno = 0;
 		smtpquit(m, mci, e);
 		return;
@@ -215,7 +201,7 @@ tryhelo:
 		smtpmessage("VERB", m, mci);
 		r = reply(m, mci, e, TimeOuts.to_miscshort, NULL);
 		if (r < 0)
-			goto tempfail2;
+			goto tempfail1;
 	}
 
 	if (mci->mci_state != MCIS_CLOSED)
@@ -227,26 +213,34 @@ tryhelo:
 	/* got a 421 error code during startup */
 
   tempfail1:
-  tempfail2:
-	mci->mci_exitstat = EX_TEMPFAIL;
 	if (mci->mci_errno == 0)
 		mci->mci_errno = errno;
+	mci_setstat(mci, EX_TEMPFAIL, "4.4.2", NULL);
+	if (mci->mci_state != MCIS_CLOSED)
+		smtpquit(m, mci, e);
+	return;
+
+  tempfail2:
+	if (mci->mci_errno == 0)
+		mci->mci_errno = errno;
+	/* XXX should use code from other end iff ENHANCEDSTATUSCODES */
+	mci_setstat(mci, EX_TEMPFAIL, "4.5.0", SmtpReplyBuffer);
 	if (mci->mci_state != MCIS_CLOSED)
 		smtpquit(m, mci, e);
 	return;
 
   unavailable:
-	mci->mci_exitstat = EX_UNAVAILABLE;
 	mci->mci_errno = errno;
+	mci_setstat(mci, EX_UNAVAILABLE, "5.5.0", SmtpReplyBuffer);
 	smtpquit(m, mci, e);
 	return;
 }
 /*
 **  ESMTP_CHECK -- check to see if this implementation likes ESMTP protocol
 **
-**
 **	Parameters:
 **		line -- the response line.
+**		firstline -- set if this is the first line of the reply.
 **		m -- the mailer.
 **		mci -- the mailer connection info.
 **		e -- the envelope.
@@ -256,23 +250,24 @@ tryhelo:
 */
 
 void
-esmtp_check(line, m, mci, e)
+esmtp_check(line, firstline, m, mci, e)
 	char *line;
+	bool firstline;
 	MAILER *m;
 	register MCI *mci;
 	ENVELOPE *e;
 {
-	if (strlen(line) < 5)
-		return;
-	line += 4;
-	if (strncmp(line, "ESMTP ", 6) == 0)
+	if (strstr(line, "ESMTP") != NULL)
 		mci->mci_flags |= MCIF_ESMTP;
+	if (strstr(line, "8BIT-OK") != NULL)
+		mci->mci_flags |= MCIF_8BITOK;
 }
 /*
 **  HELO_OPTIONS -- process the options on a HELO line.
 **
 **	Parameters:
 **		line -- the response line.
+**		firstline -- set if this is the first line of the reply.
 **		m -- the mailer.
 **		mci -- the mailer connection info.
 **		e -- the envelope.
@@ -282,15 +277,19 @@ esmtp_check(line, m, mci, e)
 */
 
 void
-helo_options(line, m, mci, e)
+helo_options(line, firstline, m, mci, e)
 	char *line;
+	bool firstline;
 	MAILER *m;
 	register MCI *mci;
 	ENVELOPE *e;
 {
 	register char *p;
 
-	if (strlen(line) < 5)
+	if (firstline)
+		return;
+
+	if (strlen(line) < (SIZE_T) 5)
 		return;
 	line += 4;
 	p = strchr(line, ' ');
@@ -309,6 +308,8 @@ helo_options(line, m, mci, e)
 	}
 	else if (strcasecmp(line, "expn") == 0)
 		mci->mci_flags |= MCIF_EXPN;
+	else if (strcasecmp(line, "dsn") == 0)
+		mci->mci_flags |= MCIF_DSN;
 }
 /*
 **  SMTPMAILFROM -- send MAIL command
@@ -319,14 +320,17 @@ helo_options(line, m, mci, e)
 **		e -- the envelope (including the sender to specify).
 */
 
+int
 smtpmailfrom(m, mci, e)
-	struct mailer *m;
+	MAILER *m;
 	MCI *mci;
 	ENVELOPE *e;
 {
 	int r;
+	int l;
 	char *bufp;
-	char buf[MAXNAME];
+	char *bodytype;
+	char buf[MAXNAME + 1];
 	char optbuf[MAXLINE];
 
 	if (tTd(18, 2))
@@ -334,9 +338,73 @@ smtpmailfrom(m, mci, e)
 
 	/* set up appropriate options to include */
 	if (bitset(MCIF_SIZE, mci->mci_flags) && e->e_msgsize > 0)
-		sprintf(optbuf, " SIZE=%ld", e->e_msgsize);
+		snprintf(optbuf, sizeof optbuf, " SIZE=%ld", e->e_msgsize);
 	else
 		strcpy(optbuf, "");
+	l = sizeof optbuf - strlen(optbuf) - 1;
+
+	bodytype = e->e_bodytype;
+	if (bitset(MCIF_8BITMIME, mci->mci_flags))
+	{
+		if (bodytype == NULL &&
+		    bitset(MM_MIME8BIT, MimeMode) &&
+		    bitset(EF_HAS8BIT, e->e_flags) &&
+		    !bitset(EF_DONT_MIME, e->e_flags) &&
+		    !bitnset(M_8BITS, m->m_flags))
+			bodytype = "8BITMIME";
+		if (bodytype != NULL && strlen(bodytype) + 7 < l)
+		{
+			strcat(optbuf, " BODY=");
+			strcat(optbuf, bodytype);
+			l -= strlen(optbuf);
+		}
+	}
+	else if (bitnset(M_8BITS, m->m_flags) ||
+		 !bitset(EF_HAS8BIT, e->e_flags) ||
+		 bitset(MCIF_8BITOK, mci->mci_flags))
+	{
+		/* just pass it through */
+	}
+#if MIME8TO7
+	else if (bitset(MM_CVTMIME, MimeMode) &&
+		 !bitset(EF_DONT_MIME, e->e_flags) &&
+		 (!bitset(MM_PASS8BIT, MimeMode) ||
+		  bitset(EF_IS_MIME, e->e_flags)))
+	{
+		/* must convert from 8bit MIME format to 7bit encoded */
+		mci->mci_flags |= MCIF_CVT8TO7;
+	}
+#endif
+	else if (!bitset(MM_PASS8BIT, MimeMode))
+	{
+		/* cannot just send a 8-bit version */
+		extern char MsgBuf[];
+
+		usrerr("%s does not support 8BITMIME", CurHostName);
+		mci_setstat(mci, EX_NOTSTICKY, "5.6.3", MsgBuf);
+		return EX_DATAERR;
+	}
+
+	if (bitset(MCIF_DSN, mci->mci_flags))
+	{
+		if (e->e_envid != NULL && strlen(e->e_envid) < (SIZE_T) (l - 7))
+		{
+			strcat(optbuf, " ENVID=");
+			strcat(optbuf, e->e_envid);
+			l -= strlen(optbuf);
+		}
+
+		/* RET= parameter */
+		if (bitset(EF_RET_PARAM, e->e_flags) && l >= 9)
+		{
+			strcat(optbuf, " RET=");
+			if (bitset(EF_NO_BODY_RETN, e->e_flags))
+				strcat(optbuf, "HDRS");
+			else
+				strcat(optbuf, "FULL");
+			l -= 9;
+		}
+	}
 
 	/*
 	**  Send the MAIL command.
@@ -349,7 +417,7 @@ smtpmailfrom(m, mci, e)
 	    !bitnset(M_NO_NULL_FROM, m->m_flags))
 		(void) strcpy(buf, "");
 	else
-		expand("\201g", buf, &buf[sizeof buf - 1], e);
+		expand("\201g", buf, sizeof buf, e);
 	if (buf[0] == '<')
 	{
 		/* strip off <angle brackets> (put back on below) */
@@ -360,7 +428,7 @@ smtpmailfrom(m, mci, e)
 	}
 	else
 		bufp = buf;
-	if (e->e_from.q_mailer == LocalMailer ||
+	if (bitnset(M_LOCALMAILER, e->e_from.q_mailer->m_flags) ||
 	    !bitnset(M_FROMPATH, m->m_flags))
 	{
 		smtpmessage("MAIL From:<%s>%s", m, mci, bufp, optbuf);
@@ -373,37 +441,68 @@ smtpmailfrom(m, mci, e)
 	SmtpPhase = mci->mci_phase = "client MAIL";
 	setproctitle("%s %s: %s", e->e_id, CurHostName, mci->mci_phase);
 	r = reply(m, mci, e, TimeOuts.to_mail, NULL);
-	if (r < 0 || REPLYTYPE(r) == 4)
+	if (r < 0)
 	{
-		mci->mci_exitstat = EX_TEMPFAIL;
+		/* communications failure */
 		mci->mci_errno = errno;
+		mci_setstat(mci, EX_TEMPFAIL, "4.4.2", NULL);
 		smtpquit(m, mci, e);
 		return EX_TEMPFAIL;
 	}
-	else if (r == 250)
+	else if (r == 421)
 	{
-		mci->mci_exitstat = EX_OK;
+		/* service shutting down */
+		mci_setstat(mci, EX_TEMPFAIL, "4.5.0", SmtpReplyBuffer);
+		smtpquit(m, mci, e);
+		return EX_TEMPFAIL;
+	}
+	else if (REPLYTYPE(r) == 4)
+	{
+		mci_setstat(mci, EX_NOTSTICKY, smtptodsn(r), SmtpReplyBuffer);
+		return EX_TEMPFAIL;
+	}
+	else if (REPLYTYPE(r) == 2)
+	{
 		return EX_OK;
+	}
+	else if (r == 501)
+	{
+		/* syntax error in arguments */
+		mci_setstat(mci, EX_NOTSTICKY, "5.5.2", SmtpReplyBuffer);
+		return EX_DATAERR;
+	}
+	else if (r == 553)
+	{
+		/* mailbox name not allowed */
+		mci_setstat(mci, EX_NOTSTICKY, "5.1.3", SmtpReplyBuffer);
+		return EX_DATAERR;
 	}
 	else if (r == 552)
 	{
-		/* signal service unavailable */
-		mci->mci_exitstat = EX_UNAVAILABLE;
-		smtpquit(m, mci, e);
+		/* exceeded storage allocation */
+		mci_setstat(mci, EX_NOTSTICKY, "5.3.4", SmtpReplyBuffer);
+		if (bitset(MCIF_SIZE, mci->mci_flags))
+			e->e_flags |= EF_NO_BODY_RETN;
+		return EX_UNAVAILABLE;
+	}
+	else if (REPLYTYPE(r) == 5)
+	{
+		/* unknown error */
+		mci_setstat(mci, EX_NOTSTICKY, "5.0.0", SmtpReplyBuffer);
 		return EX_UNAVAILABLE;
 	}
 
-#ifdef LOG
 	if (LogLevel > 1)
 	{
-		syslog(LOG_CRIT, "%s: SMTP MAIL protocol error: %s",
-			e->e_id, SmtpReplyBuffer);
+		sm_syslog(LOG_CRIT, e->e_id,
+			"%.100s: SMTP MAIL protocol error: %s",
+			CurHostName,
+			shortenstring(SmtpReplyBuffer, 403));
 	}
-#endif
 
 	/* protocol error -- close up */
+	mci_setstat(mci, EX_PROTOCOL, "5.5.1", SmtpReplyBuffer);
 	smtpquit(m, mci, e);
-	mci->mci_exitstat = EX_PROTOCOL;
 	return EX_PROTOCOL;
 }
 /*
@@ -422,6 +521,7 @@ smtpmailfrom(m, mci, e)
 **		Sends the mail via SMTP.
 */
 
+int
 smtprcpt(to, m, mci, e)
 	ADDRESS *to;
 	register MAILER *m;
@@ -429,36 +529,103 @@ smtprcpt(to, m, mci, e)
 	ENVELOPE *e;
 {
 	register int r;
+	int l;
+	char optbuf[MAXLINE];
 
-	smtpmessage("RCPT To:<%s>", m, mci, to->q_user);
+	strcpy(optbuf, "");
+	l = sizeof optbuf - 1;
+	if (bitset(MCIF_DSN, mci->mci_flags))
+	{
+		/* NOTIFY= parameter */
+		if (bitset(QHASNOTIFY, to->q_flags) &&
+		    bitset(QPRIMARY, to->q_flags) &&
+		    !bitnset(M_LOCALMAILER, m->m_flags))
+		{
+			bool firstone = TRUE;
+
+			strcat(optbuf, " NOTIFY=");
+			if (bitset(QPINGONSUCCESS, to->q_flags))
+			{
+				strcat(optbuf, "SUCCESS");
+				firstone = FALSE;
+			}
+			if (bitset(QPINGONFAILURE, to->q_flags))
+			{
+				if (!firstone)
+					strcat(optbuf, ",");
+				strcat(optbuf, "FAILURE");
+				firstone = FALSE;
+			}
+			if (bitset(QPINGONDELAY, to->q_flags))
+			{
+				if (!firstone)
+					strcat(optbuf, ",");
+				strcat(optbuf, "DELAY");
+				firstone = FALSE;
+			}
+			if (firstone)
+				strcat(optbuf, "NEVER");
+			l -= strlen(optbuf);
+		}
+
+		/* ORCPT= parameter */
+		if (to->q_orcpt != NULL && strlen(to->q_orcpt) + 7 < l)
+		{
+			strcat(optbuf, " ORCPT=");
+			strcat(optbuf, to->q_orcpt);
+			l -= strlen(optbuf);
+		}
+	}
+
+	smtpmessage("RCPT To:<%s>%s", m, mci, to->q_user, optbuf);
 
 	SmtpPhase = mci->mci_phase = "client RCPT";
 	setproctitle("%s %s: %s", e->e_id, CurHostName, mci->mci_phase);
 	r = reply(m, mci, e, TimeOuts.to_rcpt, NULL);
+	to->q_rstatus = newstr(SmtpReplyBuffer);
+	to->q_status = smtptodsn(r);
+	to->q_statmta = mci->mci_host;
 	if (r < 0 || REPLYTYPE(r) == 4)
-		return (EX_TEMPFAIL);
+		return EX_TEMPFAIL;
 	else if (REPLYTYPE(r) == 2)
-		return (EX_OK);
-	else if (r == 550 || r == 551 || r == 553)
-		return (EX_NOUSER);
-	else if (r == 552 || r == 554)
-		return (EX_UNAVAILABLE);
+		return EX_OK;
+	else if (r == 550)
+	{
+		to->q_status = "5.1.1";
+		return EX_NOUSER;
+	}
+	else if (r == 551)
+	{
+		to->q_status = "5.1.6";
+		return EX_NOUSER;
+	}
+	else if (r == 553)
+	{
+		to->q_status = "5.1.3";
+		return EX_NOUSER;
+	}
+	else if (REPLYTYPE(r) == 5)
+	{
+		return EX_UNAVAILABLE;
+	}
 
-#ifdef LOG
 	if (LogLevel > 1)
 	{
-		syslog(LOG_CRIT, "%s: SMTP RCPT protocol error: %s",
-			e->e_id, SmtpReplyBuffer);
+		sm_syslog(LOG_CRIT, e->e_id,
+			"%.100s: SMTP RCPT protocol error: %s",
+			CurHostName,
+			shortenstring(SmtpReplyBuffer, 403));
 	}
-#endif
 
-	return (EX_PROTOCOL);
+	mci_setstat(mci, EX_PROTOCOL, "5.5.1", SmtpReplyBuffer);
+	return EX_PROTOCOL;
 }
 /*
 **  SMTPDATA -- send the data and clean up the transaction.
 **
 **	Parameters:
 **		m -- mailer being sent to.
+**		mci -- the mailer connection information.
 **		e -- the envelope for this message.
 **
 **	Returns:
@@ -469,15 +636,18 @@ smtprcpt(to, m, mci, e)
 */
 
 static jmp_buf	CtxDataTimeout;
-static int	datatimeout();
+static void	datatimeout __P((void));
 
+int
 smtpdata(m, mci, e)
-	struct mailer *m;
+	MAILER *m;
 	register MCI *mci;
 	register ENVELOPE *e;
 {
 	register int r;
 	register EVENT *ev;
+	int rstat;
+	int xstat;
 	time_t timeout;
 
 	/*
@@ -496,23 +666,24 @@ smtpdata(m, mci, e)
 	if (r < 0 || REPLYTYPE(r) == 4)
 	{
 		smtpquit(m, mci, e);
-		return (EX_TEMPFAIL);
+		return EX_TEMPFAIL;
 	}
-	else if (r == 554)
+	else if (REPLYTYPE(r) == 5)
 	{
 		smtprset(m, mci, e);
-		return (EX_UNAVAILABLE);
+		return EX_UNAVAILABLE;
 	}
 	else if (r != 354)
 	{
-#ifdef LOG
 		if (LogLevel > 1)
 		{
-			syslog(LOG_CRIT, "%s: SMTP DATA-1 protocol error: %s",
-				e->e_id, SmtpReplyBuffer);
+			sm_syslog(LOG_CRIT, e->e_id,
+				"%.100s: SMTP DATA-1 protocol error: %s",
+				CurHostName,
+				shortenstring(SmtpReplyBuffer, 403));
 		}
-#endif
 		smtprset(m, mci, e);
+		mci_setstat(mci, EX_PROTOCOL, "5.5.1", SmtpReplyBuffer);
 		return (EX_PROTOCOL);
 	}
 
@@ -525,23 +696,29 @@ smtpdata(m, mci, e)
 	if (setjmp(CtxDataTimeout) != 0)
 	{
 		mci->mci_errno = errno;
-		mci->mci_exitstat = EX_TEMPFAIL;
 		mci->mci_state = MCIS_ERROR;
-		syserr("451 timeout writing message to %s", mci->mci_host);
+		mci_setstat(mci, EX_TEMPFAIL, "4.4.2", NULL);
+		syserr("451 timeout writing message to %s", CurHostName);
 		smtpquit(m, mci, e);
 		return EX_TEMPFAIL;
 	}
 
 	timeout = e->e_msgsize / 16;
-	if (timeout < (time_t) 60)
-		timeout = (time_t) 60;
-	timeout += e->e_nrcpts * 90;
+	if (timeout < (time_t) 600)
+		timeout = (time_t) 600;
+	timeout += e->e_nrcpts * 300;
 	ev = setevent(timeout, datatimeout, 0);
 
-	/* now output the actual message */
-	(*e->e_puthdr)(mci, e);
-	putline("\n", mci);
+	/*
+	**  Output the actual message.
+	*/
+
+	(*e->e_puthdr)(mci, e->e_header, e);
 	(*e->e_putbody)(mci, e, NULL);
+
+	/*
+	**  Cleanup after sending message.
+	*/
 
 	clrevent(ev);
 
@@ -549,8 +726,8 @@ smtpdata(m, mci, e)
 	{
 		/* error during processing -- don't send the dot */
 		mci->mci_errno = EIO;
-		mci->mci_exitstat = EX_IOERR;
 		mci->mci_state = MCIS_ERROR;
+		mci_setstat(mci, EX_IOERR, "4.4.2", NULL);
 		smtpquit(m, mci, e);
 		return EX_IOERR;
 	}
@@ -558,48 +735,115 @@ smtpdata(m, mci, e)
 	/* terminate the message */
 	fprintf(mci->mci_out, ".%s", m->m_eol);
 	if (TrafficLogFile != NULL)
-		fprintf(TrafficLogFile, "%05d >>> .\n", getpid());
+		fprintf(TrafficLogFile, "%05d >>> .\n", (int) getpid());
 	if (Verbose)
 		nmessage(">>> .");
 
 	/* check for the results of the transaction */
-	SmtpPhase = mci->mci_phase = "client DATA 250";
+	SmtpPhase = mci->mci_phase = "client DATA status";
 	setproctitle("%s %s: %s", e->e_id, CurHostName, mci->mci_phase);
+	if (bitnset(M_LMTP, m->m_flags))
+		return EX_OK;
 	r = reply(m, mci, e, TimeOuts.to_datafinal, NULL);
 	if (r < 0)
 	{
 		smtpquit(m, mci, e);
-		return (EX_TEMPFAIL);
+		return EX_TEMPFAIL;
 	}
 	mci->mci_state = MCIS_OPEN;
+	xstat = EX_NOTSTICKY;
+	if (r == 452)
+		rstat = EX_TEMPFAIL;
+	else if (REPLYTYPE(r) == 4)
+		rstat = xstat = EX_TEMPFAIL;
+	else if (REPLYCLASS(r) != 5)
+		rstat = xstat = EX_PROTOCOL;
+	else if (REPLYTYPE(r) == 2)
+		rstat = xstat = EX_OK;
+	else if (REPLYTYPE(r) == 5)
+		rstat = EX_UNAVAILABLE;
+	else
+		rstat = EX_PROTOCOL;
+	mci_setstat(mci, xstat, smtptodsn(r), SmtpReplyBuffer);
+	if (e->e_statmsg != NULL)
+		free(e->e_statmsg);
 	e->e_statmsg = newstr(&SmtpReplyBuffer[4]);
-	if (REPLYTYPE(r) == 4)
-		return (EX_TEMPFAIL);
-	else if (r == 250)
-		return (EX_OK);
-	else if (r == 552 || r == 554)
-		return (EX_UNAVAILABLE);
-#ifdef LOG
+	if (rstat != EX_PROTOCOL)
+		return rstat;
 	if (LogLevel > 1)
 	{
-		syslog(LOG_CRIT, "%s: SMTP DATA-2 protocol error: %s",
-			e->e_id, SmtpReplyBuffer);
+		sm_syslog(LOG_CRIT, e->e_id,
+			"%.100s: SMTP DATA-2 protocol error: %s",
+			CurHostName,
+			shortenstring(SmtpReplyBuffer, 403));
 	}
-#endif
-	return (EX_PROTOCOL);
+	return rstat;
 }
 
 
-static int
+static void
 datatimeout()
 {
 	longjmp(CtxDataTimeout, 1);
+}
+/*
+**  SMTPGETSTAT -- get status code from DATA in LMTP
+**
+**	Parameters:
+**		m -- the mailer to which we are sending the message.
+**		mci -- the mailer connection structure.
+**		e -- the current envelope.
+**
+**	Returns:
+**		The exit status corresponding to the reply code.
+*/
+
+int
+smtpgetstat(m, mci, e)
+	MAILER *m;
+	MCI *mci;
+	ENVELOPE *e;
+{
+	int r;
+	int stat;
+
+	/* check for the results of the transaction */
+	r = reply(m, mci, e, TimeOuts.to_datafinal, NULL);
+	if (r < 0)
+	{
+		smtpquit(m, mci, e);
+		return EX_TEMPFAIL;
+	}
+	if (e->e_statmsg != NULL)
+		free(e->e_statmsg);
+	e->e_statmsg = newstr(&SmtpReplyBuffer[4]);
+	if (REPLYTYPE(r) == 4)
+		stat = EX_TEMPFAIL;
+	else if (REPLYCLASS(r) != 5)
+		stat = EX_PROTOCOL;
+	else if (REPLYTYPE(r) == 2)
+		stat = EX_OK;
+	else if (REPLYTYPE(r) == 5)
+		stat = EX_UNAVAILABLE;
+	else
+		stat = EX_PROTOCOL;
+	mci_setstat(mci, stat, smtptodsn(r), SmtpReplyBuffer);
+	if (LogLevel > 1 && stat == EX_PROTOCOL)
+	{
+		sm_syslog(LOG_CRIT, e->e_id,
+			"%.100s: SMTP DATA-3 protocol error: %s",
+			CurHostName,
+			shortenstring(SmtpReplyBuffer, 403));
+	}
+	return stat;
 }
 /*
 **  SMTPQUIT -- close the SMTP connection.
 **
 **	Parameters:
 **		m -- a pointer to the mailer.
+**		mci -- the mailer connection information.
+**		e -- the current envelope.
 **
 **	Returns:
 **		none.
@@ -608,6 +852,7 @@ datatimeout()
 **		sends the final protocol and closes the connection.
 */
 
+void
 smtpquit(m, mci, e)
 	register MAILER *m;
 	register MCI *mci;
@@ -632,10 +877,7 @@ smtpquit(m, mci, e)
 		(void) reply(m, mci, e, TimeOuts.to_quit, NULL);
 		SuprErrs = oldSuprErrs;
 		if (mci->mci_state == MCIS_CLOSED)
-		{
-			SuprErrs = oldSuprErrs;
 			return;
-		}
 	}
 
 	/* now actually close the connection and pick up the zombie */
@@ -647,6 +889,7 @@ smtpquit(m, mci, e)
 **  SMTPRSET -- send a RSET (reset) command
 */
 
+void
 smtprset(m, mci, e)
 	register MAILER *m;
 	register MCI *mci;
@@ -670,6 +913,7 @@ smtprset(m, mci, e)
 **  SMTPPROBE -- check the connection state
 */
 
+int
 smtpprobe(mci)
 	register MCI *mci;
 {
@@ -693,9 +937,8 @@ smtpprobe(mci)
 **		mci -- the mailer connection info structure.
 **		e -- the current envelope.
 **		timeout -- the timeout for reads.
-**		pfunc -- processing function for second and subsequent
-**			lines of response -- if null, no special
-**			processing is done.
+**		pfunc -- processing function called on each line of response.
+**			If null, no special processing is done.
 **
 **	Returns:
 **		reply code it reads.
@@ -704,6 +947,7 @@ smtpprobe(mci)
 **		flushes the mail file.
 */
 
+int
 reply(m, mci, e, timeout, pfunc)
 	MAILER *m;
 	MCI *mci;
@@ -726,10 +970,11 @@ reply(m, mci, e, timeout, pfunc)
 	**  Read the input line, being careful not to hang.
 	*/
 
-	for (bufp = SmtpReplyBuffer;; bufp = junkbuf)
+	bufp = SmtpReplyBuffer;
+	for (;;)
 	{
 		register char *p;
-		extern time_t curtime();
+		extern time_t curtime __P((void));
 
 		/* actually do the read */
 		if (e->e_xfp != NULL)
@@ -749,7 +994,7 @@ reply(m, mci, e, timeout, pfunc)
 		if (p == NULL)
 		{
 			bool oldholderrs;
-			extern char MsgBuf[];		/* err.c */
+			extern char MsgBuf[];
 
 			/* if the remote end closed early, fake an error */
 			if (errno == 0)
@@ -760,27 +1005,34 @@ reply(m, mci, e, timeout, pfunc)
 # endif /* ECONNRESET */
 
 			mci->mci_errno = errno;
-			mci->mci_exitstat = EX_TEMPFAIL;
 			oldholderrs = HoldErrs;
 			HoldErrs = TRUE;
-			usrerr("451 reply: read error from %s", mci->mci_host);
+			usrerr("451 reply: read error from %s", CurHostName);
+			mci_setstat(mci, EX_TEMPFAIL, "4.4.2", MsgBuf);
 
 			/* if debugging, pause so we can see state */
 			if (tTd(18, 100))
 				pause();
 			mci->mci_state = MCIS_ERROR;
 			smtpquit(m, mci, e);
-#ifdef XDEBUG
+#if XDEBUG
 			{
 				char wbuf[MAXLINE];
 				char *p = wbuf;
+				int wbufleft = sizeof wbuf;
+
 				if (e->e_to != NULL)
 				{
-					sprintf(p, "%s... ", e->e_to);
-					p += strlen(p);
+					int plen;
+
+					snprintf(p, wbufleft, "%s... ",
+						shortenstring(e->e_to, MAXSHORTSTR));
+					plen = strlen(p);
+					p += plen;
+					wbufleft -= plen;
 				}
-				sprintf(p, "reply(%s) during %s",
-					mci->mci_host, SmtpPhase);
+				snprintf(p, wbufleft, "reply(%.100s) during %s",
+					CurHostName, SmtpPhase);
 				checkfd012(wbuf);
 			}
 #endif
@@ -814,26 +1066,32 @@ reply(m, mci, e, timeout, pfunc)
 		if (Verbose)
 			nmessage("050 %s", bufp);
 
+		/* ignore improperly formated input */
+		if (!(isascii(bufp[0]) && isdigit(bufp[0])) ||
+		    !(isascii(bufp[1]) && isdigit(bufp[1])) ||
+		    !(isascii(bufp[2]) && isdigit(bufp[2])) ||
+		    !(bufp[3] == ' ' || bufp[3] == '-' || bufp[3] == '\0'))
+			continue;
+
 		/* process the line */
-		if (pfunc != NULL && !firstline)
-			(*pfunc)(bufp, m, mci, e);
+		if (pfunc != NULL)
+			(*pfunc)(bufp, firstline, m, mci, e);
 
 		firstline = FALSE;
-
-		/* if continuation is required, we can go on */
-		if (bufp[3] == '-')
-			continue;
-
-		/* ignore improperly formated input */
-		if (!(isascii(bufp[0]) && isdigit(bufp[0])))
-			continue;
 
 		/* decode the reply code */
 		r = atoi(bufp);
 
 		/* extra semantics: 0xx codes are "informational" */
-		if (r >= 100)
+		if (r < 100)
+			continue;
+
+		/* if no continuation lines, return this line */
+		if (bufp[3] != '-')
 			break;
+
+		/* first line of real reply -- ignore rest */
+		bufp = junkbuf;
 	}
 
 	/*
@@ -842,8 +1100,9 @@ reply(m, mci, e, timeout, pfunc)
 	*/
 
 	/* save temporary failure messages for posterity */
-	if (SmtpReplyBuffer[0] == '4' && SmtpError[0] == '\0')
-		(void) strcpy(SmtpError, SmtpReplyBuffer);
+	if (SmtpReplyBuffer[0] == '4' &&
+	    (bitnset(M_LMTP, m->m_flags) || SmtpError[0] == '\0'))
+		snprintf(SmtpError, sizeof SmtpError, "%s", SmtpReplyBuffer);
 
 	/* reply code 421 is "Service Shutting Down" */
 	if (r == SMTPCLOSING && mci->mci_state != MCIS_SSD)
@@ -871,6 +1130,7 @@ reply(m, mci, e, timeout, pfunc)
 */
 
 /*VARARGS1*/
+void
 #ifdef __STDC__
 smtpmessage(char *f, MAILER *m, MCI *mci, ...)
 #else
@@ -884,13 +1144,14 @@ smtpmessage(f, m, mci, va_alist)
 	VA_LOCAL_DECL
 
 	VA_START(mci);
-	(void) vsprintf(SmtpMsgBuffer, f, ap);
+	(void) vsnprintf(SmtpMsgBuffer, sizeof SmtpMsgBuffer, f, ap);
 	VA_END;
 
 	if (tTd(18, 1) || Verbose)
 		nmessage(">>> %s", SmtpMsgBuffer);
 	if (TrafficLogFile != NULL)
-		fprintf(TrafficLogFile, "%05d >>> %s\n", getpid(), SmtpMsgBuffer);
+		fprintf(TrafficLogFile, "%05d >>> %s\n",
+			(int) getpid(), SmtpMsgBuffer);
 	if (mci->mci_out != NULL)
 	{
 		fprintf(mci->mci_out, "%s%s", SmtpMsgBuffer,
