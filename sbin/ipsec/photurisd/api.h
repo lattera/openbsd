@@ -30,17 +30,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Header: /home/ap_sys/provos/arbeit/Photuris/RCS/api.h,v 1.1 1997/05/22 17:36:07 provos Exp $
- *
- * $Author: provos $
- *
- * $Log: api.h,v $
- * Revision 1.1  1997/05/22 17:36:07  provos
- * Initial revision
- *
- */
-
 #ifndef _API_H_
 #define _API_H_
 

@@ -33,7 +33,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: spi.c,v 1.3 1997/06/12 17:09:20 provos Exp provos $";
+static char rcsid[] = "$Id: spi.c,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $";
 #endif
 
 #define _SPI_C_
@@ -59,21 +59,6 @@ static char rcsid[] = "$Id: spi.c,v 1.3 1997/06/12 17:09:20 provos Exp provos $"
 
 
 static struct spiob *spiob = NULL;
-
-int
-isinattrib(u_int8_t *attributes, u_int16_t attribsize, u_int8_t attribute)
-{
-     while(attribsize>0) {
-	  if(*attributes==attribute)
-	       return 1;
-	  if(attribsize - (*(attributes+1)+2) > attribsize) 
-	       return 0;
-
-	  attribsize -= *(attributes+1)+2;
-	  attributes += *(attributes+1)+2;
-     }
-     return 0;
-}
 
 time_t
 getspilifetime(struct stateob *st)
