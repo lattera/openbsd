@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcompat/4.3/Attic/remque.c,v 1.2 2000/03/02 00:29:48 todd Exp $	*/
+/*	$OpenBSD: src/lib/libc/stdlib/insque.c,v 1.1 2003/05/08 23:26:30 millert Exp $	*/
 
 /*
  *  Copyright (c) 1993 John Brezak
@@ -29,7 +29,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/lib/libcompat/4.3/Attic/remque.c,v 1.2 2000/03/02 00:29:48 todd Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/insque.c,v 1.1 2003/05/08 23:26:30 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <search.h>
@@ -40,10 +40,13 @@ struct qelem {
 };
 
 void
-remque(element)
-	void *element;
+insque(void *entry, void *pred)
 {
-	struct qelem *e = (struct qelem *) element;
-	e->q_forw->q_back = e->q_back;
-	e->q_back->q_forw = e->q_forw;
+	struct qelem *e = (struct qelem *) entry;
+	struct qelem *p = (struct qelem *) pred;
+
+	e->q_forw = p->q_forw;
+	e->q_back = p;
+	p->q_forw->q_back = e;
+	p->q_forw = e;
 }
