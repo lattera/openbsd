@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.8 2003/05/15 04:08:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.9 2003/05/17 19:15:20 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -400,8 +400,6 @@ cpu_boot_secondary (ci)
 
 }
 
-int relcpus = 0;
-
 /*
  * The CPU ends up here when its ready to run
  * XXX should share some of this with init386 in machdep.c
@@ -427,13 +425,6 @@ cpu_hatch(void *v)
 	enable_intr();
 	printf("%s: CPU %ld running\n", ci->ci_dev.dv_xname, ci->ci_cpuid);
 	splx(s);
-
-#if 0
-	while(!relcpus)
-		;
-#endif
-
-	printf("%s: CPU %ld released\n", ci->ci_dev.dv_xname, ci->ci_cpuid);
 }
 
 void
