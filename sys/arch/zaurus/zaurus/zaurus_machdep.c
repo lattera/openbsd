@@ -1,4 +1,4 @@
-/*	$OpenBSD	*/
+/*	$OpenBSD: src/sys/arch/zaurus/zaurus/zaurus_machdep.c,v 1.9 2005/01/31 17:33:58 drahn Exp $	*/
 /*	$NetBSD: lubbock_machdep.c,v 1.2 2003/07/15 00:25:06 lukem Exp $ */
 
 /*
