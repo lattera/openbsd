@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: env.c,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $";
+static char rcsid[] = "$Id: env.c,v 1.2 1996/09/25 02:06:27 bitblt Exp $";
 #endif
 
 
@@ -154,6 +154,8 @@ load_env(envstr, f)
 		}
 	}
 
+	if (strlen(name) + 1 + strlen(val) >= MAX_ENVSTR-1)
+		return (FALSE);
 	(void) sprintf(envstr, "%s=%s", name, val);
 	Debug(DPARS, ("load_env, <%s> <%s> -> <%s>\n", name, val, envstr))
 	return (TRUE);
