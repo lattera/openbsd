@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.3 2001/07/14 10:02:45 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.4 2001/07/16 21:41:55 niklas Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.28 1997/06/06 23:29:17 thorpej Exp $	*/
 
 /*-
@@ -507,20 +507,19 @@ pci_intr_string(pc, ih)
 {
 	static char irqstr[64];
 
-	if (ih.line == 0 || ih.line >= ICU_LEN || ih.line == 2)
+	if (ih.line == 0 || (ih.line  & 0xff) >= ICU_LEN || ih.line == 2)
 		panic("pci_intr_string: bogus handle 0x%x", ih.line);
 
 #if NIOAPIC > 0
-	if (ih.line & APIC_INT_VIA_APIC)
+	if (ih.line & APIC_INT_VIA_APIC) {
 		sprintf(irqstr, "apic %d int %d (irq %d)",
-			APIC_IRQ_APIC(ih.line),
-			APIC_IRQ_PIN(ih.line),
-			ih.line & 0xff);
-	else
-		sprintf(irqstr, "irq %d", ih.line & 0xff);
-#else
-	sprintf(irqstr, "irq %d", ih.line & 0xff);
+		     APIC_IRQ_APIC(ih.line), APIC_IRQ_PIN(ih.line),
+		     ih.line & 0xff);
+		return (irqstr);
+	}
 #endif
+
+	sprintf(irqstr, "irq %d", ih.line & 0xff);
 	return (irqstr);
 }
 
@@ -536,19 +535,19 @@ pci_intr_establish(pc, ih, level, func, arg, what)
 
 #if NIOAPIC > 0
 	if (ih.line != -1 && ih.line & APIC_INT_VIA_APIC)
-		return apic_intr_establish(ih.line, IST_LEVEL, level, func, 
-					   arg);
+		return (apic_intr_establish(ih.line, IST_LEVEL, level, func, 
+		    arg, what));
 #endif
 	if (ih.line == 0 || ih.line >= ICU_LEN || ih.line == 2)
 		panic("pci_intr_establish: bogus handle 0x%x", ih.line);
 
-	ret = isa_intr_establish(NULL, ih.line,
-	    IST_LEVEL, level, func, arg, what);
+	ret = isa_intr_establish(NULL, ih.line, IST_LEVEL, level, func, arg,
+	    what);
 #if NPCIBIOS > 0
 	if (ret)
 		pci_intr_route_link(pc, &ih);
 #endif
-	return ret;
+	return (ret);
 }
 
 void
@@ -557,5 +556,5 @@ pci_intr_disestablish(pc, cookie)
 	void *cookie;
 {
 	/* XXX oh, unroute the pci int link? */
-	return isa_intr_disestablish(NULL, cookie);
+	return (isa_intr_disestablish(NULL, cookie));
 }
