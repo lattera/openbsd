@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/lib/libsa/nullfs.c,v 1.2 1996/09/23 14:19:00 mickey Exp $	*/
 /*	$NetBSD: open.c,v 1.9 1995/09/19 09:16:52 thorpej Exp $	*/
 
 /*-
