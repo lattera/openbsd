@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.71 2003/06/09 07:40:25 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.71.2.1 2004/03/03 08:37:05 brad Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -873,6 +873,7 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	void *newp;
 	size_t newlen;
 {
+	int error, nval;
 
 	/* All sysctl names at this level are terminal. */
 	if (namelen != 1)
@@ -927,6 +928,18 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		   &tcp_do_ecn));
 #endif
+	case TCPCTL_REASS_LIMIT:
+		nval = tcp_reass_limit;
+		error = sysctl_int(oldp, oldlenp, newp, newlen, &nval);
+		if (error)
+			return (error);
+		if (nval != tcp_reass_limit) {
+			error = pool_sethardlimit(&tcpqe_pool, nval, NULL, 0);
+			if (error)
+				return (error);
+			tcp_reass_limit = nval;
+		}
+		return (0);
 	default:
 		return (ENOPROTOOPT);
 	}
