@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.29.2.1 2000/05/27 20:17:12 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.29.2.2 2000/06/18 02:08:07 jason Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -1199,6 +1199,29 @@ bridge_broadcast(sc, ifp, eh, m)
 		m_freem(m);
 }
 
+int	bridge_memcmp __P((const void *, const void *, size_t));
+
+/*
+ * bridge_memcmp is a hack because memcmp does not exist in
+ * the 2.7 kernel tree, and the bridge needs memcmp's <, >, =
+ * comparisons.
+ */
+int
+bridge_memcmp(s1, s2, n)
+	const void *s1, *s2;
+	size_t n;
+{
+	if (n != 0) {
+		register const unsigned char *p1 = s1, *p2 = s2;
+
+		do {
+			if (*p1++ != *p2++)
+				return (*--p1 - *--p2);
+		} while (--n != 0);
+	}
+	return (0);
+}
+
 struct ifnet *
 bridge_rtupdate(sc, ea, ifp, setflags, flags)
 	struct bridge_softc *sc;
@@ -1256,7 +1279,7 @@ bridge_rtupdate(sc, ea, ifp, setflags, flags)
 		q = p;
 		p = LIST_NEXT(p, brt_next);
 
-		dir = bcmp(ea, &q->brt_addr, sizeof(q->brt_addr));
+		dir = bridge_memcmp(ea, &q->brt_addr, sizeof(q->brt_addr));
 		if (dir == 0) {
 			if (setflags) {
 				q->brt_if = ifp;
@@ -1340,7 +1363,7 @@ bridge_rtlookup(sc, ea)
 	h = bridge_hash(ea);
 	p = LIST_FIRST(&sc->sc_rts[h]);
 	while (p != NULL) {
-		dir = bcmp(ea, &p->brt_addr, sizeof(p->brt_addr));
+		dir = bridge_memcmp(ea, &p->brt_addr, sizeof(p->brt_addr));
 		if (dir == 0) {
 			splx(s);
 			return (p->brt_if);
