@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/include/disklabel.h,v 1.2 1997/01/12 15:13:34 downsj Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.1 1994/10/14 18:26:39 cgd Exp $	*/
 
 /*

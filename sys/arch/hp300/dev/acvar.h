@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/acvar.h,v 1.2 1997/01/12 15:12:19 downsj Exp $	*/
 /*	$NetBSD: acvar.h,v 1.2 1994/10/26 07:23:27 cgd Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf_dvreg.h,v 1.2 1997/01/12 15:12:33 downsj Exp $	*/
 /*	$NetBSD: grf_dvreg.h,v 1.5 1994/10/26 07:23:50 cgd Exp $	*/
 
 /*

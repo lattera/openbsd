@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/hil_keymaps.c,v 1.3 1997/01/12 15:12:42 downsj Exp $	*/
 /*	$NetBSD: hil_keymaps.c,v 1.6 1995/12/06 22:13:23 thorpej Exp $	*/
 
 /*

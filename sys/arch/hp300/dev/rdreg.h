@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/rdreg.h,v 1.4 1997/01/12 15:13:00 downsj Exp $	*/
 /*	$NetBSD: rdreg.h,v 1.7 1996/02/09 18:00:37 scottr Exp $	*/
 
 /*

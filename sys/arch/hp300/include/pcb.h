@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/include/pcb.h,v 1.2 1997/01/12 15:13:38 downsj Exp $	*/
 /*	$NetBSD: pcb.h,v 1.8 1995/05/12 12:55:17 mycroft Exp $	*/
 
 /*

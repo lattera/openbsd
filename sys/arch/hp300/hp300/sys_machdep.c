@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/hp300/sys_machdep.c,v 1.3 1997/01/12 15:13:27 downsj Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.13 1995/12/11 17:09:17 thorpej Exp $	*/
 
 /*

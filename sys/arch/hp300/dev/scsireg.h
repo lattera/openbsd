@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/scsireg.h,v 1.2 1997/01/12 15:13:02 downsj Exp $	*/
 /*	$NetBSD: scsireg.h,v 1.4 1994/10/26 07:24:59 cgd Exp $	*/
 
 /*

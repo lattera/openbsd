@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/dev/hpibvar.h,v 1.4 1997/01/12 15:12:45 downsj Exp $	*/
 /*	$NetBSD: hpibvar.h,v 1.8 1996/02/14 02:44:31 thorpej Exp $	*/
 
 /*
