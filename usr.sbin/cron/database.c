@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: database.c,v 1.1.1.4 1994/01/20 02:47:20 jtc Exp $";
+static char rcsid[] = "$Id: database.c,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $";
 #endif
 
 /* vix 26jan87 [RCS has the log]
@@ -102,7 +102,7 @@ load_database(old_db)
 
 	while (NULL != (dp = readdir(dir))) {
 		char	fname[MAXNAMLEN+1],
-			tabname[MAXNAMLEN+1];
+			tabname[MAXPATHLEN];
 
 		/* avoid file names beginning with ".".  this is good
 		 * because we would otherwise waste two guaranteed calls
