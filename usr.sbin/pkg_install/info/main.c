@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.5 1997/12/14 09:18:08 gene Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.6 1997/12/14 09:42:19 gene Exp $	*/
 
 #ifndef lint
-static char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.5 1997/12/14 09:18:08 gene Exp $";
+static char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.6 1997/12/14 09:42:19 gene Exp $";
 #endif
 
 /*
@@ -115,7 +115,7 @@ main(int argc, char **argv)
 	    break;
 
 	case 't':
-	    strcpy(PlayPen, optarg);
+	    strncpy(PlayPen, optarg, FILENAME_MAX);
 	    break;
 
 	case 'e':
