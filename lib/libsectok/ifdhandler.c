@@ -1,4 +1,4 @@
-/* $Id: ifdhandler.c,v 1.4 2001/06/08 15:04:02 rees Exp $ */
+/* $Id: ifdhandler.c,v 1.14 2001/07/27 15:19:29 rees Exp $ */
 
 /*
 copyright 2000
@@ -41,7 +41,7 @@ such damages.
 #include <string.h>
 #include <string.h>
 
-#include "sc7816.h"
+#include "sectok.h"
 #include "todos_scrw.h"
 #include "ifdhandler.h"
 
