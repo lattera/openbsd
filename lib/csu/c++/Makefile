@@ -1,6 +1,9 @@
-#	$Id: Makefile,v 1.3 1995/01/07 23:09:08 mycroft Exp $
+#	$OpenBSD: src/lib/csu/c++/Attic/Makefile,v 1.2 1996/03/05 07:55:33 niklas Exp $
 
-CFLAGS+=	-DLIBC_SCCS -fpic
+CFLAGS+=	-DLIBC_SCCS
+.if !defined(NOPIC)
+CFLAGS+=	-fpic
+.endif
 OBJS=		c++rt0.o
 
 all: ${OBJS}
