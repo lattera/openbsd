@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/dev/microcode/atmel/build.c,v 1.6 2004/11/21 19:26:01 grange Exp $	*/
+
 /*
  * Copyright (c) 2004 Theo de Raadt <deraadt@openbsd.org>
  *
