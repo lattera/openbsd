@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.3 1997/02/28 22:57:38 niklas Exp $	*/
+
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1982, 1986, 1990 The Regents of the University of California.
@@ -36,18 +38,17 @@
  * SUCH DAMAGE.
  *
  * from: Utah $Hdr: machparam.h 1.11 89/08/14$
- *
- *	@(#)param.h	7.8 (Berkeley) 6/28/91
- *	$Id: param.h,v 1.1.1.1 1995/10/18 10:54:21 deraadt Exp $
  */
 #ifndef _MACHINE_PARAM_H_
 #define _MACHINE_PARAM_H_
 
 /*
- * Machine dependent constants for amiga
+ * Machine dependent constants for mvme88k
  */
-#define	MACHINE		"m88k"
+#define	MACHINE		"mvme88k"
+#define	_MACHINE	mvme88k
 #define MACHINE_ARCH	"m88k"
+#define _MACHINE_ARCH	m88k
 #define MID_MACHINE	MID_M88K
 
 /*
