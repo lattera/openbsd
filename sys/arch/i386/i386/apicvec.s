@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.7 2003/05/13 19:42:07 ho Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.8 2003/05/17 19:14:44 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -78,10 +78,16 @@ XINTR(ltimer):
 	movl	%eax,CPL
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
 	sti
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintlock)
+#endif
 	movl	%esp,%eax
 	pushl	%eax
 	call	_C_LABEL(lapic_clockintr)
 	addl	$4,%esp		
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintunlock)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 
 	.globl	XINTR(softclock), XINTR(softnet), XINTR(softtty)
@@ -95,7 +101,13 @@ XINTR(softclock):
 	andl	$~(1<<SIR_CLOCK),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
 	sti
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintlock)
+#endif
 	call	_C_LABEL(softclock)
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintunlock)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 	
 #define DONETISR(s, c) \
@@ -115,9 +127,15 @@ XINTR(softnet):
 	andl	$~(1<<SIR_NET),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintlock)
+#endif
 	xorl	%edi,%edi
 	xchgl	_C_LABEL(netisr),%edi
 #include <net/netisr_dispatch.h>
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintunlock)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 #undef DONETISR
 
@@ -131,7 +149,13 @@ XINTR(softtty):
 	andl	$~(1<<SIR_TTY),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintlock)
+#endif
 	call	_C_LABEL(comsoft)
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(i386_softintunlock)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 
 #if NIOAPIC > 0
@@ -161,6 +185,7 @@ XINTR(ioapic/**/minor):						\
 	testl	%ebx,%ebx						;\
 	jz	8f			/* oops, no handlers.. */	;\
 7:									 \
+	LOCK_KERNEL							;\
 	movl	IH_ARG(%ebx),%eax	/* get handler arg */		;\
 	testl	%eax,%eax						;\
 	jnz	6f							;\
@@ -169,6 +194,7 @@ XINTR(ioapic/**/minor):						\
 	pushl	%eax							;\
 	call	*IH_FUN(%ebx)		/* call it */			;\
 	addl	$4,%esp			/* toss the arg */		;\
+	UNLOCK_KERNEL							;\
 	incl	IH_COUNT(%ebx)		/* count the intrs */		;\
 	movl	IH_NEXT(%ebx),%ebx	/* next handler in chain */	;\
 	testl	%ebx,%ebx						;\
