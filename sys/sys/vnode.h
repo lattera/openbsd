@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/vnode.h,v 1.46.2.3 2003/05/19 22:32:36 tedu Exp $	*/
+/*	$OpenBSD: src/sys/sys/vnode.h,v 1.46.2.4 2003/05/20 04:07:34 tedu Exp $	*/
 /*	$NetBSD: vnode.h,v 1.38 1996/02/29 20:59:05 cgd Exp $	*/
 
 /*
@@ -464,9 +464,6 @@ int 	vn_rdwr(enum uio_rw rw, struct vnode *vp, caddr_t base,
 int	vn_lock(struct vnode *vp, int flags, struct proc *p);
 
 int	vop_generic_abortop(void *);
-int	vop_generic_islocked(void *);
-int	vop_generic_lock(void *);
-int	vop_generic_unlock(void *);
 int	vop_generic_revoke(void *);
 int	vop_generic_kqfilter(void *);
 int	vop_generic_mmap(void *);
