@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/rpc.lockd/Attic/test.c,v 1.2 1997/08/10 21:06:41 millert Exp $	*/
+
 #include <rpc/rpc.h>
 #include <rpcsvc/nlm_prot.h>
 #ifndef lint
