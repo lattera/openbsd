@@ -1,7 +1,7 @@
 package Socket;
 
-use vars qw($VERSION @ISA @EXPORT);
-$VERSION = "1.5";
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+$VERSION = "1.7";
 
 =head1 NAME
 
@@ -20,7 +20,7 @@ Socket, sockaddr_in, sockaddr_un, inet_aton, inet_ntoa - load the C socket.h def
 
     $proto = getprotobyname('tcp');
     socket(Socket_Handle, PF_INET, SOCK_STREAM, $proto);
-    $port = getservbyname('smtp');
+    $port = getservbyname('smtp', 'tcp');
     $sin = sockaddr_in($port,inet_aton("127.1"));
     $sin = sockaddr_in(7,inet_aton("localhost"));
     $sin = sockaddr_in(7,INADDR_LOOPBACK);
@@ -45,14 +45,26 @@ and your native C compiler.  This means that it has a
 far more likely chance of getting the numbers right.  This includes
 all of the commonly used pound-defines like AF_INET, SOCK_STREAM, etc.
 
+Also, some common socket "newline" constants are provided: the
+constants C<CR>, C<LF>, and C<CRLF>, as well as C<$CR>, C<$LF>, and
+C<$CRLF>, which map to C<\015>, C<\012>, and C<\015\012>.  If you do
+not want to use the literal characters in your programs, then use
+the constants provided here.  They are not exported by default, but can
+be imported individually, and with the C<:crlf> export tag:
+
+    use Socket qw(:DEFAULT :crlf);
+
 In addition, some structure manipulation functions are available:
+
+=over
 
 =item inet_aton HOSTNAME
 
 Takes a string giving the name of a host, and translates that
 to the 4-byte string (structure). Takes arguments of both
 the 'rtfm.mit.edu' type and '18.181.0.24'. If the host name
-cannot be resolved, returns undef.
+cannot be resolved, returns undef. For multi-homed hosts (hosts
+with more than one address), the first address found is returned.
 
 =item inet_ntoa IP_ADDRESS
 
@@ -72,6 +84,15 @@ a particular network interface. This wildcard address
 allows you to bind to all of them simultaneously.)
 Normally equivalent to inet_aton('0.0.0.0').
 
+=item INADDR_BROADCAST
+
+Note: does not return a number, but a packed string.
+
+Returns the 4-byte 'this-lan' ip broadcast address.
+This can be useful for some protocols to solicit information
+from all servers on the same LAN cable.
+Normally equivalent to inet_aton('255.255.255.255').
+
 =item INADDR_LOOPBACK
 
 Note - does not return a number.
@@ -83,7 +104,7 @@ to inet_aton('localhost').
 
 Note - does not return a number.
 
-Returns the 4-byte invalid ip address. Normally equivalent
+Returns the 4-byte 'invalid' ip address. Normally equivalent
 to inet_aton('255.255.255.255').
 
 =item sockaddr_in PORT, ADDRESS
@@ -115,10 +136,10 @@ Will croak if the structure does not have AF_INET in the right place.
 =item sockaddr_un SOCKADDR_UN
 
 In an array context, unpacks its SOCKADDR_UN argument and returns an array
-consisting of (PATHNAME).  In a scalar context, packs its PATHANE
+consisting of (PATHNAME).  In a scalar context, packs its PATHNAME
 arguments as a SOCKADDR_UN and returns it.  If this is confusing, use
 pack_sockaddr_un() and unpack_sockaddr_un() explicitly.
-These are only supported if your system has <sys/un.h>.
+These are only supported if your system has E<lt>F<sys/un.h>E<gt>.
 
 =item pack_sockaddr_un PATH
 
@@ -134,19 +155,20 @@ Takes a sockaddr_un structure (as returned by pack_sockaddr_un())
 and returns the pathname.  Will croak if the structure does not
 have AF_UNIX in the right place.
 
+=back
+
 =cut
 
 use Carp;
 
 require Exporter;
-use AutoLoader;
 require DynaLoader;
 @ISA = qw(Exporter DynaLoader);
 @EXPORT = qw(
 	inet_aton inet_ntoa pack_sockaddr_in unpack_sockaddr_in
 	pack_sockaddr_un unpack_sockaddr_un
 	sockaddr_in sockaddr_un
-	INADDR_ANY INADDR_LOOPBACK INADDR_NONE
+	INADDR_ANY INADDR_BROADCAST INADDR_LOOPBACK INADDR_NONE
 	AF_802
 	AF_APPLETALK
 	AF_CCITT
@@ -171,10 +193,25 @@ require DynaLoader;
 	AF_UNIX
 	AF_UNSPEC
 	AF_X25
+	MSG_CTLFLAGS
+	MSG_CTLIGNORE
+	MSG_CTRUNC
 	MSG_DONTROUTE
+	MSG_DONTWAIT
+	MSG_EOF
+	MSG_EOR
+	MSG_ERRQUEUE
+	MSG_FIN
 	MSG_MAXIOVLEN
+	MSG_NOSIGNAL
 	MSG_OOB
 	MSG_PEEK
+	MSG_PROXY
+	MSG_RST
+	MSG_SYN
+	MSG_TRUNC
+	MSG_URG
+	MSG_WAITALL
 	PF_802
 	PF_APPLETALK
 	PF_CCITT
@@ -199,6 +236,11 @@ require DynaLoader;
 	PF_UNIX
 	PF_UNSPEC
 	PF_X25
+	SCM_CONNECT
+	SCM_CREDENTIALS
+	SCM_CREDS
+	SCM_RIGHTS
+	SCM_TIMESTAMP
 	SOCK_DGRAM
 	SOCK_RAW
 	SOCK_RDM
@@ -225,6 +267,23 @@ require DynaLoader;
 	SO_TYPE
 	SO_USELOOPBACK
 );
+
+@EXPORT_OK = qw(CR LF CRLF $CR $LF $CRLF);
+
+%EXPORT_TAGS = (
+    crlf    => [qw(CR LF CRLF $CR $LF $CRLF)],
+    all     => [@EXPORT, @EXPORT_OK],
+);
+
+BEGIN {
+    sub CR   () {"\015"}
+    sub LF   () {"\012"}
+    sub CRLF () {"\015\012"}
+}
+
+*CR   = \CR();
+*LF   = \LF();
+*CRLF = \CRLF();
 
 sub sockaddr_in {
     if (@_ == 6 && !wantarray) { # perl5.001m compat; use this && die
@@ -256,14 +315,8 @@ sub AUTOLOAD {
     ($constname = $AUTOLOAD) =~ s/.*:://;
     my $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
-	if ($! =~ /Invalid/) {
-	    $AutoLoader::AUTOLOAD = $AUTOLOAD;
-	    goto &AutoLoader::AUTOLOAD;
-	}
-	else {
-	    my ($pack,$file,$line) = caller;
-	    croak "Your vendor has not defined Socket macro $constname, used";
-	}
+	my ($pack,$file,$line) = caller;
+	croak "Your vendor has not defined Socket macro $constname, used";
     }
     eval "sub $AUTOLOAD { $val }";
     goto &$AUTOLOAD;
@@ -271,8 +324,4 @@ sub AUTOLOAD {
 
 bootstrap Socket $VERSION;
 
-# Preloaded methods go here.  Autoload methods go after __END__, and are
-# processed by the autosplit program.
-
 1;
-__END__

@@ -12,6 +12,7 @@ VMS::Filespec - convert between VMS and Unix file specification syntax
 =head1 SYNOPSIS
 
 use VMS::Filespec;
+$fullspec = rmsexpand('[.VMS]file.specification'[, 'default:[file.spec]']);
 $vmsspec = vmsify('/my/Unix/file/specification');
 $unixspec = unixify('my:[VMS]file.specification');
 $path = pathify('my:[VMS.or.Unix.directory]specification.dir');
@@ -60,6 +61,16 @@ subroutine call, which bypasses prototype checking).
 
 
 The routines provided are:
+
+=head2 rmsexpand
+
+Uses the RMS $PARSE and $SEARCH services to expand the input
+specification to its fully qualified form, except that a null type
+or version is not added unless it was present in either the original
+file specification or the default specification passed to C<rmsexpand>.
+(If the file does not exist, the input specification is expanded as much
+as possible.)  If an error occurs, returns C<undef> and sets C<$!>
+and C<$^E>.
 
 =head2 vmsify
 
@@ -124,10 +135,9 @@ require 5.002;
 require Exporter;
 
 @ISA = qw( Exporter );
-@EXPORT = qw( &vmsify &unixify &pathify  &fileify
-              &vmspath &unixpath &candelete);
+@EXPORT = qw( &vmsify &unixify &pathify &fileify
+              &vmspath &unixpath &candelete &rmsexpand );
 
-@EXPORT_OK = qw( &rmsexpand );
 1;
 
 
@@ -142,7 +152,7 @@ __END__
 # should be adequate for most purposes.
 
 # A sort-of sys$parse() replacement
-sub rmsexpand {
+sub rmsexpand ($;$) {
   my($fspec,$defaults) = @_;
   if (!$fspec) { return undef }
   my($node,$dev,$dir,$name,$type,$ver,$dnode,$ddev,$ddir,$dname,$dtype,$dver);
@@ -256,6 +266,7 @@ sub fileify ($) {
   my($path) = @_;
 
   if (!$path) { return undef }
+  if ($path eq '/') { return 'sys$disk:[000000]'; }
   if ($path =~ /(.+)\.([^:>\]]*)$/) {
     $path = $1;
     if ($2 !~ /^dir(?:;1)?$/i) { return undef }

@@ -1,9 +1,16 @@
 # hints/solaris_2.sh
-# Last modified:  Thu Feb  8 11:38:12 EST 1996
+# Last modified:  Wed May 27 13:04:45 EDT 1998
 # Andy Dougherty  <doughera@lafcol.lafayette.edu>
 # Based on input from lots of folks, especially
 # Dean Roehrich <roehrich@ironwood-fddi.cray.com>
 
+# If perl fails tests that involve dynamic loading of extensions, and
+# you are using gcc, be sure that you are NOT using GNU as and ld.  One
+# way to do that is to invoke Configure with
+# 
+#     sh Configure -Dcc='gcc -B/usr/ccs/bin/'
+# 
+ 
 # See man vfork.
 usevfork=false
 
@@ -35,17 +42,6 @@ case "$archname" in
     ;;
 esac
 
-# Solaris 2.5 has reintroduced some BSD-ish functions into libc.
-# This is no problem unless you compile perl under Solaris 2.5 but
-# try to run the binary on 2.4.  Here, we take the easy way out by
-# claiming we don't have these functions.  perl.h works around all of
-# these anyway.
-# XXX Eventually, I should fix perl.h to prefer the POSIX versions.
-d_bcmp='undef'
-d_bcopy='undef'
-d_safebcpy='undef'
-d_index='undef'
-
 ######################################################
 # General sanity testing.  See below for excerpts from the Solaris FAQ.
 
@@ -57,11 +53,12 @@ d_index='undef'
 
 # Here's another draft of the perl5/solaris/gcc sanity-checker. 
 
-case $PATH in
-*/usr/ucb*:/usr/bin:*|*/usr/ucb*:/usr/bin) cat <<END
+case `type ${cc:-cc}` in
+*/usr/ucb/cc*) cat <<END >&4
 
 NOTE:  Some people have reported problems with /usr/ucb/cc.  
-Remove /usr/ucb from your PATH if you have difficulties.
+If you have difficulties, please make sure the directory
+containing your C compiler is before /usr/ucb in your PATH.
 
 END
 ;;
@@ -74,7 +71,7 @@ esac
 case $? in
 0) ;;
 *)
-	cat <<END
+	cat <<END >&4
 
 NOTE: Your system does not have /dev/fd mounted.  If you want to
 be able to use set-uid scripts you must ask your system administrator
@@ -90,7 +87,7 @@ esac
 /usr/bin/ls /usr/lib/libucb* >/dev/null 2>&1
 case $? in
 0)
-	cat <<END
+	cat <<END >&4
 
 NOTE: libucb has been found in /usr/lib.  libucb should reside in
 /usr/ucblib.  You may have trouble while building Perl extensions.
@@ -99,15 +96,24 @@ END
 ;;
 esac
 
+# Use shell built-in 'type' command instead of /usr/bin/which to
+# avoid possible csh start-up problems and also to use the same shell
+# we'll be using to Configure and make perl.
+# The path name is the last field in the output, but the type command
+# has an annoying array of possible outputs, e.g.:
+#	make is hashed (/opt/gnu/bin/make)
+# 	cc is /usr/ucb/cc
+#	foo not found
+# use a command like type make | awk '{print $NF}' | sed 's/[()]//g'
 
 # See if make(1) is GNU make(1).
 # If it is, make sure the setgid bit is not set.
 make -v > make.vers 2>&1
 if grep GNU make.vers > /dev/null 2>&1; then
-    tmp=`/usr/bin/which make`
-    case "`/usr/bin/ls -l $tmp`" in
+    tmp=`type make | awk '{print $NF}' | sed 's/[()]//g'`
+    case "`/usr/bin/ls -lL $tmp`" in
     ??????s*)
-	    cat <<END
+	    cat <<END >&2
 	
 NOTE: Your PATH points to GNU make, and your GNU make has the set-group-id
 bit set.  You must either rearrange your PATH to put /usr/ccs/bin before the
@@ -120,24 +126,31 @@ END
 fi
 rm -f make.vers
 
+# XXX EXPERIMENTAL  A.D.  2/27/1998
+# XXX This script UU/cc.cbu will get 'called-back' by Configure after it
+# XXX has prompted the user for the C compiler to use.
+cat > UU/cc.cbu <<'EOSH'
 # If the C compiler is gcc:
 #   - check the fixed-includes
 #   - check as(1) and ld(1), they should not be GNU
+#	(GNU as and ld 2.8.1 and later are reportedly ok, however.)
 # If the C compiler is not gcc:
 #   - check as(1) and ld(1), they should not be GNU
+#	(GNU as and ld 2.8.1 and later are reportedly ok, however.)
 #
 # Watch out in case they have not set $cc.
-case "`${cc:-cc} -v 2>&1`" in
-*gcc*)
+
+# Get gcc to share its secrets.
+echo 'main() { return 0; }' > try.c
+	# Indent to avoid propagation to config.sh
+	verbose=`${cc:-cc} -v -o try try.c 2>&1`
+
+if echo "$verbose" | grep '^Reading specs from' >/dev/null 2>&1; then
 	#
 	# Using gcc.
 	#
 	#echo Using gcc
 
-	# Get gcc to share its secrets.
-	echo 'main() { return 0; }' > try.c
-	verbose=`${cc:-cc} -v -o try try.c 2>&1`
-	rm -f try try.c
 	tmp=`echo "$verbose" | grep '^Reading' |
 		awk '{print $NF}'  | sed 's/specs$/include/'`
 
@@ -145,35 +158,55 @@ case "`${cc:-cc} -v 2>&1`" in
 	# Doesn't work anymore for gcc-2.7.2.
 
 	# See if as(1) is GNU as(1).  GNU as(1) won't work for this job.
-	case $verbose in
-	*/usr/ccs/bin/as*) ;;
-	*)
-	    cat <<END
+	if echo "$verbose" | grep ' /usr/ccs/bin/as ' >/dev/null 2>&1; then
+	    :
+	else
+	    cat <<END >&2
 
 NOTE: You are using GNU as(1).  GNU as(1) will not build Perl.
-You must arrange to use /usr/ccs/bin/as, perhaps by setting
-GCC_EXEC_PREFIX or by including -B/usr/ccs/bin in your cc command.
+I'm arranging to use /usr/ccs/bin/as by including -B/usr/ccs/bin/
+in your ${cc:-cc} command.  (Note that the trailing "/" is required.)
 
 END
-	;;
-	esac
+	    cc="${cc:-cc} -B/usr/ccs/bin/"
+	fi
 
 	# See if ld(1) is GNU ld(1).  GNU ld(1) won't work for this job.
-	case $verbose in
-	*/usr/ccs/bin/ld*) ;;
-	*)
-	    cat <<END
+	# Recompute $verbose since we may have just changed $cc.
+	verbose=`${cc:-cc} -v -o try try.c 2>&1 | grep ld 2>&1`
+	if echo "$verbose" | grep ' /usr/ccs/bin/ld ' >/dev/null 2>&1; then
+	    :
+	else
+        # It's not /usr/ccs/bin/ld - but it might be egcs's ld wrapper,
+        # which calls /usr/ccs/bin/ld in turn. Passing -V to it will
+        # make it show its true colors.
 
-NOTE: You are using GNU ld(1).  GNU ld(1) will not build Perl.
-You must arrange to use /usr/ccs/bin/ld, perhaps by setting
-GCC_EXEC_PREFIX or by including -B/usr/ccs/bin in your cc command.
+	    myld=`echo $verbose| grep ld | awk '/\/ld/ {print $1}'`
+            # This assumes that gcc's output will not change, and that
+            # /full/path/to/ld will be the first word of the output.
+
+            # all Solaris versions of ld I've seen contain the magic
+            # string used in the grep below.
+            if $myld -V 2>&1 | grep "ld: Software Generation Utilities" >/dev/null 2>&1; then
+                cat <<END >&2
+
+Aha. You're using egcs and /usr/ccs/bin/ld.
 
 END
-	;;
-	esac
 
-	;; #using gcc
-*)
+            else
+	    cat <<END >&2
+
+NOTE: You are using GNU ld(1).  GNU ld(1) will not build Perl.
+I'm arranging to use /usr/ccs/bin/ld by including -B/usr/ccs/bin/
+in your ${cc:-cc} command.  (Note that the trailing "/" is required.)
+
+END
+	    cc="${cc:-cc} -B/usr/ccs/bin/"
+            fi
+	fi
+
+else
 	#
 	# Not using gcc.
 	#
@@ -182,34 +215,99 @@ END
 	# See if as(1) is GNU as(1).  GNU as(1) won't work for this job.
 	case `as --version < /dev/null 2>&1` in
 	*GNU*)
-		cat <<END
+		cat <<END >&2
 
 NOTE: You are using GNU as(1).  GNU as(1) will not build Perl.
-You must arrange to use /usr/ccs/bin, perhaps by adding it to the
-beginning of your PATH.
+You must arrange to use /usr/ccs/bin/as, perhaps by adding /usr/ccs/bin
+to the beginning of your PATH.
 
 END
 		;;
 	esac
 
 	# See if ld(1) is GNU ld(1).  GNU ld(1) won't work for this job.
+	# ld --version doesn't properly report itself as a GNU tool,
+	# as of ld version 2.6, so we need to be more strict. TWP 9/5/96
+	gnu_ld=false
 	case `ld --version < /dev/null 2>&1` in
-	*GNU*)
-		cat <<END
+	*GNU*|ld\ version\ 2*)
+		gnu_ld=true ;;
+	*) ;;
+	esac
+	if $gnu_ld ; then :
+	else
+		# Try to guess from path
+		case `type ld | awk '{print $NF}'` in
+		*gnu*|*GNU*|*FSF*)
+			gnu_ld=true ;;
+		esac
+	fi
+	if $gnu_ld ; then
+		cat <<END >&2
 
-NOTE: You are using GNU ld(1).  GNU ld(1) will not build Perl.
-You must arrange to use /usr/ccs/bin, perhaps by adding it to the
-beginning of your PATH
+NOTE: You are apparently using GNU ld(1).  GNU ld(1) will not build Perl.
+You must arrange to use /usr/ccs/bin/ld, perhaps by adding /usr/ccs/bin
+to the beginning of your PATH.
 
 END
-		;;
-	esac
+	fi
 
-	;; #not using gcc
-esac
+fi
 
 # as --version or ld --version might dump core.
+rm -f try try.c
 rm -f core
+
+# XXX
+EOSH
+
+# This script UU/usethreads.cbu will get 'called-back' by Configure 
+# after it has prompted the user for whether to use threads.
+cat > UU/usethreads.cbu <<'EOCBU'
+case "$usethreads" in
+$define|true|[yY]*)
+        ccflags="-D_REENTRANT $ccflags"
+
+        # sched_yield is in -lposix4
+        set `echo X "$libswanted "| sed -e 's/ c / posix4 pthread c /'`
+        shift
+        libswanted="$*"
+
+        # On Solaris 2.6 x86 there is a bug with sigsetjmp() and siglongjmp()
+        # when linked with the threads library, such that whatever positive
+        # value you pass to siglongjmp(), sigsetjmp() returns 1.
+        # Thanks to Simon Parsons <S.Parsons@ftel.co.uk> for this report.
+        # Sun BugID is 4117946, "sigsetjmp always returns 1 when called by
+        # siglongjmp in a MT program". As of 19980622, there is no patch
+        # available.
+        cat >try.c <<'EOM'
+	/* Test for sig(set|long)jmp bug. */
+	#include <setjmp.h>
+	 
+	main()
+	{
+	    sigjmp_buf env;
+	    int ret;
+	
+	    ret = sigsetjmp(env, 1);
+	    if (ret) { return ret == 2; }
+	    siglongjmp(env, 2);
+	}
+EOM
+        if test "`arch`" = i86pc -a "$osvers" = 2.6 && \
+           ${cc:-cc} try.c -lpthread >/dev/null 2>&1 && ./a.out; then
+ 	    d_sigsetjmp=$undef
+	    cat << 'EOM' >&2
+
+You will see a *** WHOA THERE!!! ***  message from Configure for
+d_sigsetjmp.  Keep the recommended value.  See hints/solaris_2.sh
+for more information.
+
+EOM
+        fi
+	;;
+esac
+EOCBU
 
 # This is just a trick to include some useful notes.
 cat > /dev/null <<'End_of_Solaris_Notes'

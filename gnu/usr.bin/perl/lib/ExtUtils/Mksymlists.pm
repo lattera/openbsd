@@ -7,7 +7,7 @@ use Exporter;
 use vars qw( @ISA @EXPORT $VERSION );
 @ISA = 'Exporter';
 @EXPORT = '&Mksymlists';
-$VERSION = '1.03';
+$VERSION = substr q$Revision: 1.17 $, 10;
 
 sub Mksymlists {
     my(%spec) = @_;
@@ -19,10 +19,10 @@ sub Mksymlists {
 
     $spec{DL_VARS} = [] unless $spec{DL_VARS};
     ($spec{FILE} = $spec{NAME}) =~ s/.*::// unless $spec{FILE};
+    $spec{FUNCLIST} = [] unless $spec{FUNCLIST};
     $spec{DL_FUNCS} = { $spec{NAME} => [] }
         unless ( ($spec{DL_FUNCS} and keys %{$spec{DL_FUNCS}}) or
-                 $spec{FUNCLIST});
-    $spec{FUNCLIST} = [] unless $spec{FUNCLIST};
+                 @{$spec{FUNCLIST}});
     if (defined $spec{DL_FUNCS}) {
         my($package);
         foreach $package (keys %{$spec{DL_FUNCS}}) {
@@ -40,6 +40,7 @@ sub Mksymlists {
     }
 
 #    We'll need this if we ever add any OS which uses mod2fname
+#    not as pseudo-builtin.
 #    require DynaLoader;
     if (defined &DynaLoader::mod2fname and not $spec{DLBASE}) {
         $spec{DLBASE} = DynaLoader::mod2fname([ split(/::/,$spec{NAME}) ]);
@@ -47,7 +48,8 @@ sub Mksymlists {
 
     if    ($osname eq 'aix') { _write_aix(\%spec); }
     elsif ($osname eq 'VMS') { _write_vms(\%spec) }
-    elsif ($osname =~ m|^os/?2$|i) { _write_os2(\%spec) }
+    elsif ($osname eq 'os2') { _write_os2(\%spec) }
+    elsif ($osname eq 'MSWin32') { _write_win32(\%spec) }
     else { croak("Don't know how to create linker option file for $osname\n"); }
 }
 
@@ -67,6 +69,8 @@ sub _write_aix {
 
 sub _write_os2 {
     my($data) = @_;
+    require Config;
+    my $threaded = ($Config::Config{archname} =~ /-thread/ ? " threaded" : "");
 
     if (not $data->{DLBASE}) {
         ($data->{DLBASE} = $data->{NAME}) =~ s/.*:://;
@@ -77,6 +81,7 @@ sub _write_os2 {
     open(DEF,">$data->{FILE}.def")
         or croak("Can't create $data->{FILE}.def: $!\n");
     print DEF "LIBRARY '$data->{DLBASE}' INITINSTANCE TERMINSTANCE\n";
+    print DEF "DESCRIPTION 'Perl (v$]$threaded) module $data->{NAME} v$data->{VERSION}'\n";
     print DEF "CODE LOADONCALL\n";
     print DEF "DATA LOADONCALL NONSHARED MULTIPLE\n";
     print DEF "EXPORTS\n  ";
@@ -84,10 +89,54 @@ sub _write_os2 {
     print DEF join("\n  ",@{$data->{FUNCLIST}}, "\n") if @{$data->{FUNCLIST}};
     if (%{$data->{IMPORTS}}) {
         print DEF "IMPORTS\n";
-my ($name, $exp);
-while (($name, $exp)= each %{$data->{IMPORTS}}) {
-  print DEF "  $name=$exp\n";
+	my ($name, $exp);
+	while (($name, $exp)= each %{$data->{IMPORTS}}) {
+	    print DEF "  $name=$exp\n";
+	}
+    }
+    close DEF;
 }
+
+sub _write_win32 {
+    my($data) = @_;
+
+    require Config;
+    if (not $data->{DLBASE}) {
+        ($data->{DLBASE} = $data->{NAME}) =~ s/.*:://;
+        $data->{DLBASE} = substr($data->{DLBASE},0,7) . '_';
+    }
+    rename "$data->{FILE}.def", "$data->{FILE}_def.old";
+
+    open(DEF,">$data->{FILE}.def")
+        or croak("Can't create $data->{FILE}.def: $!\n");
+    # put library name in quotes (it could be a keyword, like 'Alias')
+    if ($Config::Config{'cc'} !~ /^gcc/i) {
+      print DEF "LIBRARY \"$data->{DLBASE}\"\n";
+    }
+    print DEF "EXPORTS\n  ";
+    my @syms;
+    # Export public symbols both with and without underscores to
+    # ensure compatibility between DLLs from different compilers
+    # NOTE: DynaLoader itself only uses the names without underscores,
+    # so this is only to cover the case when the extension DLL may be
+    # linked to directly from C. GSAR 97-07-10
+    if ($Config::Config{'cc'} =~ /^bcc/i) {
+	for (@{$data->{DL_VARS}}, @{$data->{FUNCLIST}}) {
+	    push @syms, "_$_", "$_ = _$_";
+	}
+    }
+    else {
+	for (@{$data->{DL_VARS}}, @{$data->{FUNCLIST}}) {
+	    push @syms, "$_", "_$_ = $_";
+	}
+    }
+    print DEF join("\n  ",@syms, "\n") if @syms;
+    if (%{$data->{IMPORTS}}) {
+        print DEF "IMPORTS\n";
+        my ($name, $exp);
+        while (($name, $exp)= each %{$data->{IMPORTS}}) {
+            print DEF "  $name=$exp\n";
+        }
     }
     close DEF;
 }
@@ -97,8 +146,10 @@ sub _write_vms {
     my($data) = @_;
 
     require Config; # a reminder for once we do $^O
+    require ExtUtils::XSSymSet;
 
     my($isvax) = $Config::Config{'arch'} =~ /VAX/i;
+    my($set) = new ExtUtils::XSSymSet;
     my($sym);
 
     rename "$data->{FILE}.opt", "$data->{FILE}.opt_old";
@@ -114,23 +165,18 @@ sub _write_vms {
     # the GSMATCH criteria for a dynamic extension
 
     foreach $sym (@{$data->{FUNCLIST}}) {
-        if ($isvax) { print OPT "UNIVERSAL=$sym\n" }
-        else        { print OPT "SYMBOL_VECTOR=($sym=PROCEDURE)\n"; }
+        my $safe = $set->addsym($sym);
+        if ($isvax) { print OPT "UNIVERSAL=$safe\n" }
+        else        { print OPT "SYMBOL_VECTOR=($safe=PROCEDURE)\n"; }
     }
     foreach $sym (@{$data->{DL_VARS}}) {
+        my $safe = $set->addsym($sym);
         print OPT "PSECT_ATTR=${sym},PIC,OVR,RD,NOEXE,WRT,NOSHR\n";
-        if ($isvax) { print OPT "UNIVERSAL=$sym\n" }
-        else        { print OPT "SYMBOL_VECTOR=($sym=DATA)\n"; }
+        if ($isvax) { print OPT "UNIVERSAL=$safe\n" }
+        else        { print OPT "SYMBOL_VECTOR=($safe=DATA)\n"; }
     }
     close OPT;
 
-    # Options file specifying RTLs to which this extension must be linked.
-    # Eventually, the list of libraries will be supplied by a working
-    # extliblist routine.
-    open OPT,'>rtls.opt';
-    print OPT "PerlShr/Share\n";
-    foreach $rtl (split(/\s+/,$Config::Config{'libs'})) { print OPT "$rtl\n"; }
-    close OPT;
 }
 
 1;
@@ -152,17 +198,22 @@ ExtUtils::Mksymlists - write linker options files for dynamic extension
 =head1 DESCRIPTION
 
 C<ExtUtils::Mksymlists> produces files used by the linker under some OSs
-during the creation of shared libraries for synamic extensions.  It is
+during the creation of shared libraries for dynamic extensions.  It is
 normally called from a MakeMaker-generated Makefile when the extension
 is built.  The linker option file is generated by calling the function
 C<Mksymlists>, which is exported by default from C<ExtUtils::Mksymlists>.
 It takes one argument, a list of key-value pairs, in which the following
 keys are recognized:
 
-=item NAME
+=over
 
-This gives the name of the extension (I<e.g.> Tk::Canvas) for which
-the linker option file will be produced.
+=item DLBASE
+
+This item specifies the name by which the linker knows the
+extension, which may be different from the name of the
+extension itself (for instance, some linkers add an '_' to the
+name of the extension).  If it is not specified, it is derived
+from the NAME attribute.  It is presently used only by OS2 and Win32.
 
 =item DL_FUNCS
 
@@ -171,7 +222,7 @@ from which it is usually taken.  Its value is a reference to an
 associative array, in which each key is the name of a package, and
 each value is an a reference to an array of function names which
 should be exported by the extension.  For instance, one might say
-C<DL_FUNCS =E<gt> { Homer::Iliad   =E<gt> [ qw(trojans greeks) ],
+C<DL_FUNCS =E<gt> { Homer::Iliad =E<gt> [ qw(trojans greeks) ],
 Homer::Odyssey =E<gt> [ qw(travellers family suitors) ] }>.  The
 function names should be identical to those in the XSUB code;
 C<Mksymlists> will alter the names written to the linker option
@@ -195,7 +246,7 @@ be exported by the extension.
 This key can be used to specify the name of the linker option file
 (minus the OS-specific extension), if for some reason you do not
 want to use the default value, which is the last word of the NAME
-attribute (I<e.g.> for Tk::Canvas, FILE defaults to 'Canvas').
+attribute (I<e.g.> for C<Tk::Canvas>, FILE defaults to C<Canvas>).
 
 =item FUNCLIST
 
@@ -203,14 +254,27 @@ This provides an alternate means to specify function names to be
 exported from the extension.  Its value is a reference to an
 array of function names to be exported by the extension.  These
 names are passed through unaltered to the linker options file.
+Specifying a value for the FUNCLIST attribute suppresses automatic
+generation of the bootstrap function for the package. To still create
+the bootstrap name you have to specify the package name in the
+DL_FUNCS hash:
 
-=item DLBASE
+    Mksymlists({ NAME     => $name ,
+		 FUNCLIST => [ $func1, $func2 ],
+                 DL_FUNCS => { $pkg => [] } });
 
-This item specifies the name by which the linker knows the
-extension, which may be different from the name of the
-extension itself (for instance, some linkers add an '_' to the
-name of the extension).  If it is not specified, it is derived
-from the NAME attribute.  It is presently used only by OS2.
+
+=item IMPORTS
+
+This attribute is used to specify names to be imported into the
+extension. It is currently only used by OS/2 and Win32.
+
+=item NAME
+
+This gives the name of the extension (I<e.g.> C<Tk::Canvas>) for which
+the linker option file will be produced.
+
+=back
 
 When calling C<Mksymlists>, one should always specify the NAME
 attribute.  In most cases, this is all that's necessary.  In
@@ -219,7 +283,7 @@ can be used to provide additional information to the linker.
 
 =head1 AUTHOR
 
-Charles Bailey I<E<lt>bailey@genetics.upenn.eduE<gt>>
+Charles Bailey I<E<lt>bailey@newman.upenn.eduE<gt>>
 
 =head1 REVISION
 

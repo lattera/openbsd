@@ -1,6 +1,6 @@
 /* $RCSfile: util.c,v $$Revision: 4.1 $$Date: 92/08/07 18:29:29 $
  *
- *    Copyright (c) 1991, Larry Wall
+ *    Copyright (c) 1991-1997, Larry Wall
  *
  *    You may distribute under the terms of either the GNU General Public
  *    License or the Artistic License, as specified in the README file.
@@ -13,6 +13,7 @@
 #include "INTERN.h"
 #include "util.h"
 
+#include <stdarg.h>
 #define FLUSH
 
 static char nomem[] = "Out of memory!\n";
@@ -21,16 +22,16 @@ static char nomem[] = "Out of memory!\n";
 
 
 Malloc_t
-safemalloc(size)
-MEM_SIZE size;
+safemalloc(MEM_SIZE size)
 {
-    char *ptr;
-    Malloc_t malloc();
+    Malloc_t ptr;
 
-    ptr = (char *) malloc(size?size:1);	/* malloc(0) is NASTY on our system */
+    /* malloc(0) is NASTY on some systems */
+    ptr = malloc(size ? size : 1);
 #ifdef DEBUGGING
     if (debug & 128)
-	fprintf(stderr,"0x%x: (%05d) malloc %d bytes\n",ptr,an++,size);
+	fprintf(stderr,"0x%lx: (%05d) malloc %ld bytes\n",(unsigned long)ptr,
+    	    	an++,(long)size);
 #endif
     if (ptr != Nullch)
 	return ptr;
@@ -39,24 +40,22 @@ MEM_SIZE size;
 	exit(1);
     }
     /*NOTREACHED*/
+    return 0;
 }
 
 /* paranoid version of realloc */
 
 Malloc_t
-saferealloc(where,size)
-char *where;
-MEM_SIZE size;
+saferealloc(Malloc_t where, MEM_SIZE size)
 {
-    char *ptr;
-    Malloc_t realloc();
+    Malloc_t ptr;
 
-    ptr = (char *)
-		realloc(where,size?size:1);	/* realloc(0) is NASTY on our system */
+    /* realloc(0) is NASTY on some systems */
+    ptr = realloc(where, size ? size : 1);
 #ifdef DEBUGGING
     if (debug & 128) {
-	fprintf(stderr,"0x%x: (%05d) rfree\n",where,an++);
-	fprintf(stderr,"0x%x: (%05d) realloc %d bytes\n",ptr,an++,size);
+	fprintf(stderr,"0x%lx: (%05d) rfree\n",(unsigned long)where,an++);
+	fprintf(stderr,"0x%lx: (%05d) realloc %ld bytes\n",(unsigned long)ptr,an++,(long)size);
     }
 #endif
     if (ptr != Nullch)
@@ -66,17 +65,17 @@ MEM_SIZE size;
 	exit(1);
     }
     /*NOTREACHED*/
+    return 0;
 }
 
 /* safe version of free */
 
-void
-safefree(where)
-char *where;
+Free_t
+safefree(Malloc_t where)
 {
 #ifdef DEBUGGING
     if (debug & 128)
-	fprintf(stderr,"0x%x: (%05d) free\n",where,an++);
+	fprintf(stderr,"0x%lx: (%05d) free\n",(unsigned long)where,an++);
 #endif
     free(where);
 }
@@ -84,10 +83,7 @@ char *where;
 /* safe version of string copy */
 
 char *
-safecpy(to,from,len)
-char *to;
-register char *from;
-register int len;
+safecpy(char *to, register char *from, register int len)
 {
     register char *dest = to;
 
@@ -100,9 +96,7 @@ register int len;
 /* copy a string up to some (non-backslashed) delimiter, if any */
 
 char *
-cpytill(to,from,delim)
-register char *to, *from;
-register int delim;
+cpytill(register char *to, register char *from, register int delim)
 {
     for (; *from; from++,to++) {
 	if (*from == '\\') {
@@ -121,9 +115,7 @@ register int delim;
 
 
 char *
-cpy2(to,from,delim)
-register char *to, *from;
-register int delim;
+cpy2(register char *to, register char *from, register int delim)
 {
     for (; *from; from++,to++) {
 	if (*from == '\\')
@@ -141,9 +133,7 @@ register int delim;
 /* return ptr to little string in big string, NULL if not found */
 
 char *
-instr(big, little)
-char *big, *little;
-
+instr(char *big, char *little)
 {
     register char *t, *s, *x;
 
@@ -163,10 +153,9 @@ char *big, *little;
 /* copy a string to a safe spot */
 
 char *
-savestr(str)
-char *str;
+savestr(char *str)
 {
-    register char *newaddr = safemalloc((MEM_SIZE)(strlen(str)+1));
+    register char *newaddr = (char *) safemalloc((MEM_SIZE)(strlen(str)+1));
 
     (void)strcpy(newaddr,str);
     return newaddr;
@@ -175,46 +164,55 @@ char *str;
 /* grow a static string to at least a certain length */
 
 void
-growstr(strptr,curlen,newlen)
-char **strptr;
-int *curlen;
-int newlen;
+growstr(char **strptr, int *curlen, int newlen)
 {
     if (newlen > *curlen) {		/* need more room? */
 	if (*curlen)
-	    *strptr = saferealloc(*strptr,(MEM_SIZE)newlen);
+	    *strptr = (char *) saferealloc(*strptr,(MEM_SIZE)newlen);
 	else
-	    *strptr = safemalloc((MEM_SIZE)newlen);
+	    *strptr = (char *) safemalloc((MEM_SIZE)newlen);
 	*curlen = newlen;
     }
 }
 
-/*VARARGS1*/
 void
-croak(pat,a1,a2,a3,a4)
-char *pat;
-int a1,a2,a3,a4;
+croak(char *pat,...)
 {
+#if defined(HAS_VPRINTF)
+    va_list args;
+
+    va_start(args, pat);
+    vfprintf(stderr,pat,args);
+#else
     fprintf(stderr,pat,a1,a2,a3,a4);
+#endif
     exit(1);
 }
 
-/*VARARGS1*/
 void
-fatal(pat,a1,a2,a3,a4)
-char *pat;
-int a1,a2,a3,a4;
+fatal(char *pat,...)
 {
+#if defined(HAS_VPRINTF)
+    va_list args;
+
+    va_start(args, pat);
+    vfprintf(stderr,pat,args);
+#else
     fprintf(stderr,pat,a1,a2,a3,a4);
+#endif
     exit(1);
 }
 
-/*VARARGS1*/
 void
-warn(pat,a1,a2,a3,a4)
-char *pat;
-int a1,a2,a3,a4;
+warn(char *pat,...)
 {
+#if defined(HAS_VPRINTF)
+    va_list args;
+
+    va_start(args, pat);
+    vfprintf(stderr,pat,args);
+#else
     fprintf(stderr,pat,a1,a2,a3,a4);
+#endif
 }
 

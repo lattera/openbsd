@@ -2,6 +2,7 @@
 
 use Config;
 use File::Basename qw(&basename &dirname);
+use Cwd;
 
 # List explicitly here the variables you want Configure to
 # generate.  Metaconfig only looks for shell variables, so you
@@ -12,10 +13,10 @@ use File::Basename qw(&basename &dirname);
 
 # This forces PL files to create target in same directory as PL file.
 # This is so that make depend always knows where to find PL derivatives.
-chdir(dirname($0));
-($file = basename($0)) =~ s/\.PL$//;
-$file =~ s/\.pl$//
-	if ($^O eq 'VMS' or $^O eq 'os2');  # "case-forgiving"
+$origdir = cwd;
+chdir dirname($0);
+$file = basename($0, '.PL');
+$file .= '.com' if $^O eq 'VMS';
 
 open OUT,">$file" or die "Can't create $file: $!";
 
@@ -25,10 +26,11 @@ print "Extracting $file (with variable substitutions)\n";
 # You can use $Config{...} to use Configure variables.
 
 print OUT <<"!GROK!THIS!";
-$Config{'startperl'}
-    eval 'exec perl -S \$0 "\$@"'
-	if 0;
+$Config{startperl}
+    eval 'exec $Config{perlpath} -S \$0 \${1+"\$@"}'
+	if \$running_under_some_shell;
 \$startperl = "$Config{startperl}";
+\$perlpath = "$Config{perlpath}";
 !GROK!THIS!
 
 # In the following, perl variables are not expanded during extraction.
@@ -38,6 +40,78 @@ print OUT <<'!NO!SUBS!';
 # $RCSfile: s2p.SH,v $$Revision: 4.1 $$Date: 92/08/07 18:29:23 $
 #
 # $Log:	s2p.SH,v $
+
+=head1 NAME
+
+s2p - Sed to Perl translator
+
+=head1 SYNOPSIS
+
+B<s2p [options] filename>
+
+=head1 DESCRIPTION
+
+I<S2p> takes a sed script specified on the command line (or from
+standard input) and produces a comparable I<perl> script on the
+standard output.
+
+=head2 Options
+
+Options include:
+
+=over 5
+
+=item B<-DE<lt>numberE<gt>>
+
+sets debugging flags.
+
+=item B<-n>
+
+specifies that this sed script was always invoked with a B<sed -n>.
+Otherwise a switch parser is prepended to the front of the script.
+
+=item B<-p>
+
+specifies that this sed script was never invoked with a B<sed -n>.
+Otherwise a switch parser is prepended to the front of the script.
+
+=back
+
+=head2 Considerations
+
+The perl script produced looks very sed-ish, and there may very well
+be better ways to express what you want to do in perl.  For instance,
+s2p does not make any use of the split operator, but you might want
+to.
+
+The perl script you end up with may be either faster or slower than
+the original sed script.  If you're only interested in speed you'll
+just have to try it both ways.  Of course, if you want to do something
+sed doesn't do, you have no choice.  It's often possible to speed up
+the perl script by various methods, such as deleting all references to
+$\ and chop.
+
+=head1 ENVIRONMENT
+
+S2p uses no environment variables.
+
+=head1 AUTHOR
+
+Larry Wall E<lt>F<larry@wall.org>E<gt>
+
+=head1 FILES
+
+=head1 SEE ALSO
+
+ perl	The perl compiler/interpreter
+ 
+ a2p	awk to perl translator
+
+=head1 DIAGNOSTICS
+
+=head1 BUGS
+
+=cut
 
 $indent = 4;
 $shiftwidth = 4;
@@ -63,7 +137,7 @@ while ($ARGV[0] =~ /^-/) {
 }
 
 unless ($debug) {
-    open(BODY,">/tmp/sperl$$") ||
+    open(BODY,"+>/tmp/sperl$$") ||
       &Die("Can't open temp file: $!\n");
 }
 
@@ -271,38 +345,21 @@ print BODY &q(<<'EOT');
 EOT
 }
 
-close BODY;
-
 unless ($debug) {
-    open(HEAD,">/tmp/sperl2$$.c")
-      || &Die("Can't open temp file 2: $!\n");
-    print HEAD "#define PRINTIT\n"	if $printit;
-    print HEAD "#define APPENDSEEN\n"	if $appendseen;
-    print HEAD "#define TSEEN\n"	if $tseen;
-    print HEAD "#define DSEEN\n"	if $dseen;
-    print HEAD "#define ASSUMEN\n"	if $assumen;
-    print HEAD "#define ASSUMEP\n"	if $assumep;
-    print HEAD "#define TOPLABEL\n"	if $toplabel;
-    print HEAD "#define SAWNEXT\n"	if $sawnext;
-    if ($opens) {print HEAD "$opens\n";}
-    open(BODY,"/tmp/sperl$$")
-      || &Die("Can't reopen temp file: $!\n");
-    while (<BODY>) {
-	print HEAD $_;
-    }
-    close HEAD;
 
     print &q(<<"EOT");
 :	$startperl
-:	eval 'exec perl -S \$0 \${1+"\$@"}'
+:	eval 'exec $perlpath -S \$0 \${1+"\$@"}'
 :		if \$running_under_some_shell;
 :	
 EOT
-    open(BODY,"cc -E /tmp/sperl2$$.c |") ||
-	&Die("Can't reopen temp file: $!\n");
+    print"$opens\n" if $opens;
+    seek(BODY, 0, 0) || die "Can't rewind temp file: $!\n";
     while (<BODY>) {
-	/^# [0-9]/ && next;
 	/^[ \t]*$/ && next;
+	/^#ifdef (\w+)/ && ((${lc $1} || &skip), next);
+	/^#else/ && (&skip, next);
+	/^#endif/ && next;
 	s/^<><>//;
 	print;
     }
@@ -312,8 +369,7 @@ EOT
 exit;
 
 sub Cleanup {
-    chdir "/tmp";
-    unlink "sperl$$", "sperl2$$", "sperl2$$.c";
+    unlink "/tmp/sperl$$";
 }
 sub Die {
     &Cleanup;
@@ -531,7 +587,6 @@ EOT
 	    $repl = substr($_, $repl+1, $end-$repl-1);
 	    $end = substr($_, $end + 1, 1000);
 	    &simplify($pat);
-	    $dol = '$';
 	    $subst = "$pat$repl$delim";
 	    $cmd = '';
 	    while ($end) {
@@ -616,7 +671,7 @@ EOT
 	}
 
 	if (/^H/) {
-	    $_ = '$hold .= "\n"; $hold .= $_;';
+	    $_ = '$hold .= "\n", $hold .= $_;';
 	    next;
 	}
 
@@ -626,7 +681,7 @@ EOT
 	}
 
 	if (/^G/) {
-	    $_ = '$_ .= "\n"; $_ .= $hold;';
+	    $_ = '$_ .= "\n", $_ .= $hold;';
 	    next;
 	}
 
@@ -774,8 +829,20 @@ sub simplify {
     $_[0] =~ s/([\w\s!@#%^&-=,:;'"])\1\*/$1+/g;
 }
 
+sub skip {
+    local($level) = 0;
+
+    while(<BODY>) {
+	/^#ifdef/ && $level++;
+	/^#else/  && !$level && return;
+	/^#endif/ && !$level-- && return;
+    }
+
+    die "Unterminated `#ifdef' conditional\n";
+}
 !NO!SUBS!
 
 close OUT or die "Can't close $file: $!";
 chmod 0755, $file or die "Can't reset permissions for $file: $!\n";
 exec("$Config{'eunicefix'} $file") if $Config{'eunicefix'} ne ':';
+chdir $origdir;

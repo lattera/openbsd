@@ -6,6 +6,7 @@ $
 $!  A little basic setup
 $   On Error Then Goto wrapup
 $   olddef = F$Environment("Default")
+$   oldmsg = F$Environment("Message")
 $   If F$Search("t.dir").nes.""
 $   Then
 $       Set Default [.t]
@@ -18,14 +19,26 @@ $           Write Sys$Error "Can't find test directory"
 $           Exit 44
 $       EndIf
 $   EndIf
+$   Set Message /Facility/Severity/Identification/Text
 $
+$   exe = ".Exe"
+$   If p1.nes."" Then exe = p1
+$   If F$Extract(0,1,exe) .nes. "."
+$   Then
+$     Write Sys$Error ""
+$     Write Sys$Error "The first parameter passed to Test.Com must be the file type used for the"
+$     Write Sys$Error "images produced when you built Perl (i.e. "".Exe"", unless you edited"
+$     Write Sys$Error "Descrip.MMS or used the AXE=1 macro in the MM[SK] command line."
+$     Write Sys$Error ""
+$     Exit 44
+$   EndIf
 $!  Pick up a copy of perl to use for the tests
 $   Delete/Log/NoConfirm Perl.;*
-$   Copy/Log/NoConfirm [-]Perl.Exe []Perl.
+$   Copy/Log/NoConfirm [-]Perl'exe' []Perl.
 $
 $!  Make the environment look a little friendlier to tests which assume Unix
 $   cat = "Type"
-$   Macro/NoDebug/Object=Echo.Obj Sys$Input
+$   Macro/NoDebug/NoList/Object=Echo.Obj Sys$Input
 		.title echo
 		.psect data,wrt,noexe
 	dsc:
@@ -65,14 +78,15 @@ $   Macro/NoDebug/Object=Echo.Obj Sys$Input
 		movl	#1,r0
 		ret	
 		.end echo
-$   Link/NoTrace Echo.Obj;
+$   Link/NoMap/NoTrace/Exe=Echo.Exe Echo.Obj;
 $   Delete/Log/NoConfirm Echo.Obj;*
 $   echo = "$" + F$Parse("Echo.Exe")
 $
 $!  And do it
+$   Show Process/Accounting
 $   testdir = "Directory/NoHead/NoTrail/Column=1"
-$   Define/User Perlshr Sys$Disk:[-]PerlShr.Exe
-$   MCR Sys$Disk:[]Perl. "''p1'" "''p2'" "''p3'" "''p4'" "''p5'" "''p6'"
+$   Define/User Perlshr Sys$Disk:[-]PerlShr'exe'
+$   MCR Sys$Disk:[]Perl. "-I[-.lib]" - "''p2'" "''p3'" "''p4'" "''p5'" "''p6'"
 $   Deck/Dollar=$$END-OF-TEST$$
 # $RCSfile: TEST,v $$Revision: 4.1 $$Date: 92/08/07 18:27:00 $
 # Modified for VMS 30-Sep-1994  Charles Bailey  bailey@genetics.upenn.edu
@@ -81,12 +95,24 @@ $   Deck/Dollar=$$END-OF-TEST$$
 # most of the constructs we'll be testing for.
 
 # skip those tests we know will fail entirely or cause perl to hang bacause
-# of Unixisms
-@compexcl=('cpp.t','script.t');
-@ioexcl=('argv.t','dup.t','fs.t','inplace.t','pipe.t');
-@libexcl=('anydbm.t','db-btree.t','db-hash.t','db-recno.t',
-          'gdbm.t','ndbm.t','odbm.t','sdbm.t','posix.t','soundex.t');
-@opexcl=('exec.t','fork.t','glob.t','magic.t','misc.t','stat.t');
+# of Unixisms in the tests.  (The Perl operators being tested may work fine,
+# but the tests may use other operators which don't.)
+use Config;
+
+@compexcl=('cpp.t');
+@ioexcl=('argv.t','dup.t','fs.t','pipe.t');
+@libexcl=('db-btree.t','db-hash.t','db-recno.t',
+          'gdbm.t','io_dup.t', 'io_pipe.t', 'io_sel.t', 'io_sock.t',
+          'ndbm.t','odbm.t','open2.t','open3.t', 'ph.t', 'posix.t');
+
+# Note: POSIX is not part of basic build, but can be built
+# separately if you're using DECC
+# io_xs.t tests the new_tmpfile routine, which doesn't work with the
+# VAXCRTL, since the file can't be stat()d, an Perl's do_open()
+# insists on stat()ing a file descriptor before it'll use it.
+push(@libexcl,'io_xs.t') if $Config{'vms_cc_type'} ne 'decc';
+
+@opexcl=('die_exit.t','exec.t','fork.t','glob.t','groups.t','magic.t','misc.t','stat.t');
 @exclist=(@compexcl,@ioexcl,@libexcl,@opexcl);
 foreach $file (@exclist) { $skip{$file}++; }
 
@@ -94,7 +120,7 @@ $| = 1;
 
 @ARGV = grep($_,@ARGV);  # remove empty elements due to "''p1'" syntax
 
-if ($ARGV[0] eq '-v') {
+if (lc($ARGV[0]) eq '-v') {
     $verbose = 1;
     shift;
 }
@@ -131,10 +157,12 @@ while ($test = shift) {
 	close(script);
 	if (/#!..perl(.*)/) {
 	    $switch = $1;
+	    # Add "" to protect uppercase switches on command line
+	    $switch =~ s/-(\S*[A-Z]\S*)/"-$1"/g;
 	} else {
 	    $switch = '';
 	}
-	open(results,"\$ MCR Sys\$Disk:[]Perl. $switch $test |") || (print "can't run.\n");
+	open(results,"\$ MCR Sys\$Disk:[]Perl. \"-I[-.lib]\" $switch $test |") || (print "can't run.\n");
     $ok = 0;
     $next = 0;
     while (<results>) {
@@ -162,8 +190,13 @@ while ($test = shift) {
     }
     $next = $next - 1;
     if ($ok && $next == $max) {
-	print "${te}ok\n";
-	$good = $good + 1;
+	if ($max) {
+	    print "${te}ok\n";
+	    $good = $good + 1;
+	} else {
+	    print "${te}skipping test on this platform\n";
+	    $files -= 1;
+	}
     } else {
 	$next += 1;
 	print "${te}FAILED on test $next\n";
@@ -194,6 +227,8 @@ print sprintf("u=%g  s=%g  cu=%g  cs=%g  files=%d  tests=%d\n",
     $user,$sys,$cuser,$csys,$files,$totmax);
 $$END-OF-TEST$$
 $ wrapup:
+$   Show Process/Accounting
 $   If F$Search("Echo.Exe").nes."" Then Delete/Log/NoConfirm Echo.Exe;*
 $   Set Default &olddef
+$   Set Message 'oldmsg'
 $   Exit

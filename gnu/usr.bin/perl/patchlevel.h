@@ -1,5 +1,7 @@
-#define PATCHLEVEL 3
-#define SUBVERSION 0
+#ifndef __PATCHLEVEL_H_INCLUDED__
+#define PATCHLEVEL 5
+#undef SUBVERSION     /* OS/390 has a SUBVERSION in a system header */
+#define SUBVERSION 3
 
 /*
 	local_patches -- list of locally applied less-than-subversion patches.
@@ -41,5 +43,9 @@ static	char	*local_patches[] = {
 	,NULL
 };
 
-#define	LOCAL_PATCH_COUNT	\
+/* Initial space prevents this variable from being inserted in config.sh  */
+#  define	LOCAL_PATCH_COUNT	\
 	(sizeof(local_patches)/sizeof(local_patches[0])-2)
+
+#  define __PATCHLEVEL_H_INCLUDED__
+#endif

@@ -1,8 +1,8 @@
 #!./perl
 
-# $RCSfile: local.t,v $$Revision: 4.1 $$Date: 92/08/07 18:28:04 $
+# $RCSfile: my.t,v $
 
-print "1..20\n";
+print "1..30\n";
 
 sub foo {
     my($a, $b) = @_;
@@ -10,7 +10,8 @@ sub foo {
     my $d;
     $c = "ok 3\n";
     $d = "ok 4\n";
-    { my($a,$c) = ("ok 9\n", "ok 10\n"); ($x, $y) = ($a, $c); }
+    { my($a, undef, $c) = ("ok 9\n", "not ok 10\n", "ok 10\n");
+      ($x, $y) = ($a, $c); }
     print $a, $b;
     $c . $d;
 }
@@ -44,3 +45,50 @@ $d{''} = "ok 18\n";
 print &foo2("ok 11\n","ok 12\n");
 
 print $a,@b,@c,%d,$x,$y;
+
+my $i = "outer";
+
+if (my $i = "inner") {
+    print "not " if $i ne "inner";
+}
+print "ok 21\n";
+
+if ((my $i = 1) == 0) {
+    print "not ";
+}
+else {
+    print "not" if $i != 1;
+}
+print "ok 22\n";
+
+my $j = 5;
+while (my $i = --$j) {
+    print("not "), last unless $i > 0;
+}
+continue {
+    print("not "), last unless $i > 0;
+}
+print "ok 23\n";
+
+$j = 5;
+for (my $i = 0; (my $k = $i) < $j; ++$i) {
+    print("not "), last unless $i >= 0 && $i < $j && $i == $k;
+}
+print "ok 24\n";
+print "not " if defined $k;
+print "ok 25\n";
+
+foreach my $i (26, 27) {
+    print "ok $i\n";
+}
+
+print "not " if $i ne "outer";
+print "ok 28\n";
+
+# Ensure that C<my @y> (without parens) doesn't force scalar context.
+my @x;
+{ @x = my @y }
+print +(@x ? "not " : ""), "ok 29\n";
+{ @x = my %y }
+print +(@x ? "not " : ""), "ok 30\n";
+

@@ -5,7 +5,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(Complete);
 
-#      @(#)complete.pl,v1.1            (me@anywhere.EBay.Sun.COM) 09/23/91
+#      @(#)complete.pl,v1.2            (me@anywhere.EBay.Sun.COM) 09/23/91
 
 =head1 NAME
 
@@ -13,8 +13,8 @@ Term::Complete - Perl word completion module
 
 =head1 SYNOPSIS
 
-    $input = complete('prompt_string', \@completion_list);
-    $input = complete('prompt_string', @completion_list);
+    $input = Complete('prompt_string', \@completion_list);
+    $input = Complete('prompt_string', @completion_list);
 
 =head1 DESCRIPTION
 
@@ -28,7 +28,8 @@ The following command characters are defined:
 
 =over 4
 
-=item <tab>
+=item E<lt>tabE<gt>
+
 Attempts word completion.
 Cannot be changed.
 
@@ -42,7 +43,7 @@ Defined by I<$Term::Complete::complete>.
 Erases the current input.
 Defined by I<$Term::Complete::kill>.
 
-=item <del>, <bs>
+=item E<lt>delE<gt>, E<lt>bsE<gt>
 
 Erases one character.
 Defined by I<$Term::Complete::erase1> and I<$Term::Complete::erase2>.
@@ -55,7 +56,7 @@ Bell sounds when word completion fails.
 
 =head1 BUGS
 
-The completion charater <tab> cannot be changed.
+The completion character E<lt>tabE<gt> cannot be changed.
 
 =head1 AUTHOR
 
@@ -71,6 +72,12 @@ CONFIG: {
 }
 
 sub Complete {
+    my($prompt, @cmp_list, $cmp, $test, $l, @match);
+    my ($return, $r) = ("", 0);
+
+    $return = "";
+    $r      = 0;
+
     $prompt = shift;
     if (ref $_[0] || $_[0] =~ /^\*/) {
 	@cmp_lst = sort @{$_[0]};
@@ -87,17 +94,17 @@ sub Complete {
                 # (TAB) attempt completion
                 $_ eq "\t" && do {
                     @match = grep(/^$return/, @cmp_lst);
-                    $l = length($test = shift(@match));
                     unless ($#match < 0) {
+                        $l = length($test = shift(@match));
                         foreach $cmp (@match) {
                             until (substr($cmp, 0, $l) eq substr($test, 0, $l)) {
                                 $l--;
                             }
                         }
                         print("\a");
+                        print($test = substr($test, $r, $l - $r));
+                        $r = length($return .= $test);
                     }
-                    print($test = substr($test, $r, $l - $r));
-                    $r = length($return .= $test);
                     last CASE;
                 };
 
@@ -110,7 +117,8 @@ sub Complete {
                 # (^U) kill
                 $_ eq $kill && do {
                     if ($r) {
-                        undef($r, $return);
+                        $r	= 0;
+			$return	= "";
                         print("\r\n");
                         redo LOOP;
                     }
