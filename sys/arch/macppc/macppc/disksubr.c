@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/disksubr.c,v 1.1.6.1 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/disksubr.c,v 1.1.6.2 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*

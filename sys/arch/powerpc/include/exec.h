@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.7 2001/09/01 15:49:05 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.7.4.1 2002/10/29 00:28:08 art Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: exec.h,v 1.6 2001/01/22 14:51:06 art Exp $
+ *	$Id: exec.h,v 1.7 2001/09/01 15:49:05 drahn Exp $
  */
 
 #ifndef _POWERPC_EXEC_H_

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.63.2.2 2002/06/11 03:34:57 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.63.2.3 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.95 1997/08/27 18:31:17 is Exp $	*/
 
 /*
@@ -50,7 +50,6 @@
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
-#include <sys/conf.h>
 #include <sys/file.h>
 #include <sys/clist.h>
 #include <sys/timeout.h>
@@ -84,6 +83,7 @@
 #include <ddb/db_sym.h>
 #include <ddb/db_extern.h>
 
+#include <machine/conf.h>
 #include <machine/cpu.h>
 #include <machine/reg.h>
 #include <machine/psl.h>

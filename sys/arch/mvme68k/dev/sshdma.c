@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.8.1 2002/06/11 03:36:49 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.8.2 2002/10/29 00:28:07 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -135,8 +135,10 @@ void *auxp;
 /*XXX*/	else
 /*XXX*/		sc->sc_dcntl |= (3 << 6);
 
-#if defined(MVME172) || defined(MVME177)  /* No Select timouts on MC68060 */
-	if (cputyp == CPU_172 || cputyp == CPU_177)
+#if defined(MVME172) || defined(MVME177)
+	/* No Select timouts on MC68060 */
+	/* XXX 177 works better with them! */
+	if (cputyp == CPU_172 /* || cputyp == CPU_177 */)
 		sc->sc_ctest7 = SSH_CTEST7_SNOOP | SSH_CTEST7_TT1 | SSH_CTEST7_STD;
 	else
 #endif 

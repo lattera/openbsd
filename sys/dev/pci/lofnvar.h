@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/lofnvar.h,v 1.4.6.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofnvar.h,v 1.4.6.2 2002/10/29 00:33:29 art Exp $	*/
 
 /*
  * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
@@ -81,4 +81,3 @@ struct lofn_q {
 #define	LOFN_MODEXP_PAR_M	0
 #define	LOFN_MODEXP_PAR_E	1
 #define	LOFN_MODEXP_PAR_N	2
-#define	LOFN_MODEXP_PAR_C	3

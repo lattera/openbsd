@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/powerpc.h,v 1.1.6.1 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/powerpc.h,v 1.1.6.2 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: powerpc.h,v 1.1 1996/09/30 16:34:30 ws Exp $	*/
 
 /*
@@ -76,7 +76,6 @@ struct firmware {
 #endif
 };
 extern  struct firmware *fw;
-void ofwconprobe(void);
 int ppc_open_pci_bridge(void);
 void ppc_close_pci_bridge(int);
 void install_extint(void (*handler) (void));

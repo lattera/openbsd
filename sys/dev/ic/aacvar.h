@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aacvar.h,v 1.1.8.1 2002/06/11 03:42:16 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aacvar.h,v 1.1.8.2 2002/10/29 00:33:23 art Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith
@@ -48,7 +48,7 @@
 #define AAC_D_IO	0x10
 extern int aac_debug;
 
-#define AAC_PRINT_FIB(sc, fib)	aac_print_fib((sc), (fib), __FUNCTION__)
+#define AAC_PRINT_FIB(sc, fib)	aac_print_fib((sc), (fib), __func__)
 #else
 #define AAC_DPRINTF(mask, args)
 #define AAC_PRINT_FIB(sc, fib)

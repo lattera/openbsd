@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/bereg.h,v 1.9.6.1 2002/06/11 03:38:15 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/bereg.h,v 1.9.6.2 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -260,6 +260,8 @@ struct be_txd {
 #define BE_TX_RING_SIZE		32		/* power of 2, <= MAXSIZE */
 #define BE_RX_RING_SIZE		32		/* power of 2, <= MAXSIZE */
 #define BE_PKT_BUF_SZ		2048
+#define	BE_TX_HIGH_WATER	27		/* enable tx interrupt */
+#define	BE_TX_LOW_WATER		5		/* disable tx interrupt */
 
 #define	BE_TX_RING_MAXMASK	(BE_TX_RING_MAXSIZE-1)
 #define	BE_RX_RING_MAXMASK	(BE_RX_RING_MAXSIZE-1)

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/amiga/conf/Attic/Makefile.amiga,v 1.29.2.1 2002/01/31 22:55:06 niklas Exp $
+#	$OpenBSD: src/sys/arch/amiga/conf/Attic/Makefile.amiga,v 1.29.2.2 2002/10/29 00:28:01 art Exp $
 #	$NetBSD: Makefile.amiga,v 1.60 1997/07/23 10:19:42 is Exp $
 
 # Makefile for OpenBSD
@@ -53,7 +53,7 @@ CMACHFLAGS=	-m68060 -Wa,-m68030
 CMACHFLAGS+=	-msoft-float
 
 COPTS?=	-O2
-CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS}
+CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
 LINKFLAGS=	-n -Ttext 0 -e start
 STRIPFLAGS=	-d
@@ -129,7 +129,7 @@ LINKFLAGS+=	-S
 %LOAD
 
 assym.h: $S/kern/genassym.sh \
-	 ${M68K}/m68k/genassym.cf ${AMIGA}/amiga/genassym.cf
+	 ${M68K}/m68k/genassym.cf ${AMIGA}/amiga/genassym.cf Makefile
 	cat ${M68K}/m68k/genassym.cf ${AMIGA}/amiga/genassym.cf | \
 	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} ${PROF} \
 	    > assym.h.tmp && \

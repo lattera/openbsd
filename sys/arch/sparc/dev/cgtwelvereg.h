@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwelvereg.h,v 1.1 2002/08/12 10:44:03 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwelvereg.h,v 1.1.4.1 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Miodrag Vallat.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf_cv.c,v 1.16.20.1 2002/06/11 03:34:57 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf_cv.c,v 1.16.20.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: grf_cv.c,v 1.24 1997/07/30 11:05:55 veego Exp $	*/
 
 /*
@@ -1078,7 +1078,7 @@ cv_getcmap(gfp, cmap)
 	if (cmap->count == 0 || cmap->index >= 256)
 		return (0);
 
-	if (cmap->index + cmap->count > 256)
+	if (cmap->count > 256 - cmap->index)
 		cmap->count = 256 - cmap->index;
 
 	/* first read colors out of the chip, then copyout to userspace */
@@ -1118,7 +1118,7 @@ cv_putcmap(gfp, cmap)
 	if (cmap->count == 0 || cmap->index >= 256)
 		return (0);
 
-	if (cmap->index + cmap->count > 256)
+	if (cmap->count > 256 - cmap->index)
 		cmap->count = 256 - cmap->index;
 
 	/* first copy the colors into kernelspace */

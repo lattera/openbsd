@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwelve.c,v 1.4 2002/09/23 18:13:38 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwelve.c,v 1.4.4.1 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Miodrag Vallat.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cons.h,v 1.1 2002/08/12 10:44:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cons.h,v 1.1.4.1 2002/10/29 00:28:09 art Exp $	*/
 
 struct consdev;
 struct zs_chanstate;

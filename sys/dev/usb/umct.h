@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umct.h,v 1.3 2002/06/11 06:42:17 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umct.h,v 1.3.4.1 2002/10/29 00:33:32 art Exp $	*/
 /*	$NetBSD: umct.h,v 1.1 2001/03/28 18:42:13 ichiro Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.

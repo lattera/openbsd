@@ -1,5 +1,5 @@
 /*
- * $OpenBSD: src/sys/dev/ic/Attic/aic7xxx.h,v 1.5 2002/07/05 05:41:03 smurph Exp $
+ * $OpenBSD: src/sys/dev/ic/Attic/aic7xxx.h,v 1.5.4.1 2002/10/29 00:33:24 art Exp $
  * Core definitions and data structures shareable across OS platforms.
  *
  * Copyright (c) 1994-2001 Justin T. Gibbs.
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: aic7xxx.h,v 1.4 2002/06/28 00:34:54 smurph Exp $
+ * $Id$
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx.h,v 1.40 2001/07/18 21:39:47 gibbs Exp $
  */

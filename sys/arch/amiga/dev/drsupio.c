@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/drsupio.c,v 1.1.22.1 2002/06/11 03:34:57 art Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/drsupio.c,v 1.1.22.2 2002/10/29 00:28:01 art Exp $ */
 /*	$NetBSD: drsupio.c,v 1.1 1997/08/27 19:32:53 is Exp $ */
 
 /*
@@ -38,7 +38,6 @@
 
 #include <sys/types.h>
 
-#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/systm.h>
 #include <sys/param.h>

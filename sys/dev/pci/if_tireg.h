@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tireg.h,v 1.9 2000/11/21 03:50:48 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tireg.h,v 1.9.6.1 2002/10/29 00:33:28 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -44,18 +44,14 @@
  * configuration space registers.
  */
 
-#define TI_PCI_ID			0x000 /* PCI device/vendor ID */
-#define TI_PCI_CMDSTAT			0x004
-#define TI_PCI_CLASSCODE		0x008
-#define TI_PCI_BIST			0x00C
-#define TI_PCI_LOMEM			0x010 /* Shared memory base address */
-#define TI_PCI_SUBSYS			0x02C
+#define TI_PCI_ID			PCI_ID_REG /* PCI device/vendor ID */
+#define TI_PCI_CMDSTAT			PCI_COMMAND_STATUS_REG
+#define TI_PCI_CLASSCODE		PCI_CLASS_REG
+#define TI_PCI_BIST			PCI_BHLC_REG
+#define TI_PCI_LOMEM			PCI_MAPS /* Shared memory base address */
+#define TI_PCI_SUBSYS			PCI_SUBVEND_0
 #define TI_PCI_ROMBASE			0x030
-#define TI_PCI_INT			0x03C
-
-#ifndef PCIM_CMD_MWIEN
-#define PCIM_CMD_MWIEN			0x0010
-#endif
+#define TI_PCI_INT			PCI_INTLINE
 
 /*
  * Alteon AceNIC PCI vendor/device ID.

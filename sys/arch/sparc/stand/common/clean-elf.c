@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/clean-elf.c,v 1.1 2002/08/11 12:19:47 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/clean-elf.c,v 1.1.4.1 2002/10/29 00:28:11 art Exp $	*/
 /*
  * Public domain. I don't even want my name on this.
  */

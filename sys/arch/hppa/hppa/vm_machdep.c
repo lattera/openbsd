@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.30.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.30.2.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Michael Shalayeff
@@ -105,7 +105,8 @@ pagemove(from, to, size)
 	paddr_t pa;
 
 	while (size > 0) {
-		pmap_extract(pmap_kernel(), (vaddr_t)from, &pa);
+		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
+			panic("pagemove");
 		pmap_kremove((vaddr_t)from, PAGE_SIZE);
 		pmap_kenter_pa((vaddr_t)to, pa, UVM_PROT_RW);
 		from += PAGE_SIZE;
@@ -135,44 +136,11 @@ void
 cpu_swapout(p)
 	struct proc *p;
 {
-	extern paddr_t fpu_curpcb;
+	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct trapframe *tf = p->p_md.md_regs;
 
 	if (tf->tf_cr30 == fpu_curpcb) {
-		__asm __volatile(
-		    "fstds,ma %%fr0 , 8(%0)\n\t"
-		    "fstds,ma %%fr1 , 8(%0)\n\t"
-		    "fstds,ma %%fr2 , 8(%0)\n\t"
-		    "fstds,ma %%fr3 , 8(%0)\n\t"
-		    "fstds,ma %%fr4 , 8(%0)\n\t"
-		    "fstds,ma %%fr5 , 8(%0)\n\t"
-		    "fstds,ma %%fr6 , 8(%0)\n\t"
-		    "fstds,ma %%fr7 , 8(%0)\n\t"
-		    "fstds,ma %%fr8 , 8(%0)\n\t"
-		    "fstds,ma %%fr9 , 8(%0)\n\t"
-		    "fstds,ma %%fr10, 8(%0)\n\t"
-		    "fstds,ma %%fr11, 8(%0)\n\t"
-		    "fstds,ma %%fr12, 8(%0)\n\t"
-		    "fstds,ma %%fr13, 8(%0)\n\t"
-		    "fstds,ma %%fr14, 8(%0)\n\t"
-		    "fstds,ma %%fr15, 8(%0)\n\t"
-		    "fstds,ma %%fr16, 8(%0)\n\t"
-		    "fstds,ma %%fr17, 8(%0)\n\t"
-		    "fstds,ma %%fr18, 8(%0)\n\t"
-		    "fstds,ma %%fr19, 8(%0)\n\t"
-		    "fstds,ma %%fr20, 8(%0)\n\t"
-		    "fstds,ma %%fr21, 8(%0)\n\t"
-		    "fstds,ma %%fr22, 8(%0)\n\t"
-		    "fstds,ma %%fr23, 8(%0)\n\t"
-		    "fstds,ma %%fr24, 8(%0)\n\t"
-		    "fstds,ma %%fr25, 8(%0)\n\t"
-		    "fstds,ma %%fr26, 8(%0)\n\t"
-		    "fstds,ma %%fr27, 8(%0)\n\t"
-		    "fstds,ma %%fr28, 8(%0)\n\t"
-		    "fstds,ma %%fr29, 8(%0)\n\t"
-		    "fstds,ma %%fr30, 8(%0)\n\t"
-		    "fstds    %%fr31, 0(%0)\n\t"
-		    : "+r" (fpu_curpcb) :: "memory");
+		fpu_save(fpu_curpcb);
 		fpu_curpcb = 0;
 	}
 }
@@ -185,6 +153,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	void (*func)(void *);
 	void *arg;
 {
+	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct pcb *pcbp;
 	struct trapframe *tf;
 	register_t sp, osp;
@@ -193,12 +162,20 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	if (round_page(sizeof(struct user)) > NBPG)
 		panic("USPACE too small for user");
 #endif
+	if (p1->p_md.md_regs->tf_cr30 == fpu_curpcb)
+		fpu_save(fpu_curpcb);
 
 	pcbp = &p2->p_addr->u_pcb;
 	bcopy(&p1->p_addr->u_pcb, pcbp, sizeof(*pcbp));
 	/* space is cached for the copy{in,out}'s pleasure */
 	pcbp->pcb_space = p2->p_vmspace->vm_map.pmap->pm_space;
 	pcbp->pcb_uva = (vaddr_t)p2->p_addr;
+	/* reset any of the pending FPU exceptions from parent */
+	pcbp->pcb_fpregs[0] = ((u_int64_t)HPPA_FPU_INIT) << 32;
+	pcbp->pcb_fpregs[1] = 0;
+	pcbp->pcb_fpregs[2] = 0;
+	pcbp->pcb_fpregs[3] = 0;
+	fdcache(HPPA_SID_KERNEL, (vaddr_t)&pcbp->pcb_fpregs[0], 8 * 4);
 
 	sp = (register_t)p2->p_addr + NBPG;
 	p2->p_md.md_regs = tf = (struct trapframe *)sp;
@@ -223,8 +200,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	 */
 	tf->tf_sr7 = HPPA_SID_KERNEL;
 	tf->tf_eiem = ~0;
-	tf->tf_ipsw = PSW_C | PSW_Q | PSW_P | PSW_D | PSW_I /* | PSW_L */;
-	pcbp->pcb_fpregs[32] = 0;
+	tf->tf_ipsw = PSL_C | PSL_Q | PSL_P | PSL_D | PSL_I /* | PSL_L */;
 
 	/*
 	 * Set up return value registers as libc:fork() expects
@@ -247,7 +223,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	*HPPA_FRAME_CARG(0, sp) = tf->tf_sp;
 	*HPPA_FRAME_CARG(1, sp) = KERNMODE(func);
 	*HPPA_FRAME_CARG(2, sp) = (register_t)arg;
-	*(register_t*)(osp) = 0;
+	*(register_t*)(osp) = (sp - HPPA_FRAME_SIZE);
 	*(register_t*)(sp + HPPA_FRAME_PSP) = osp;
 	*(register_t*)(osp + HPPA_FRAME_CRP) = (register_t)&switch_trampoline;
 	tf->tf_sp = sp;
@@ -261,14 +237,11 @@ cpu_exit(p)
 	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct trapframe *tf = p->p_md.md_regs;
 
-	uvmexp.swtch++;
-
-	splhigh();
-	curproc = NULL;
 	if (fpu_curpcb == tf->tf_cr30)
 		fpu_curpcb = 0;
 
-	switch_exit(p);
+	exit2(p);
+	cpu_switch(p);
 }
 
 void

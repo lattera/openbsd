@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.4.2.2 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.4.2.3 2002/10/29 00:33:27 art Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.
@@ -97,6 +97,7 @@ int	autri_attach_codec(void *sc, struct ac97_codec_if *);
 int	autri_read_codec(void *sc, u_int8_t a, u_int16_t *d);
 int	autri_write_codec(void *sc, u_int8_t a, u_int16_t d);
 void	autri_reset_codec(void *sc);
+enum ac97_host_flags	autri_flags_codec(void *);
 
 void autri_powerhook(int why,void *addr);
 int  autri_init(void *sc);
@@ -292,9 +293,10 @@ autri_read_codec(sc_, index, data)
 	}
 
 	/* wait for 'Ready to Read' */
-	for (count=0; count<0xffff; count++) {
+	for (count=0; count < 0xffff; count++) {
 		if ((TREAD4(sc, addr) & busy) == 0)
 			break;
+		DELAY(1);
 	}
 
 	if (count == 0xffff) {
@@ -307,10 +309,11 @@ autri_read_codec(sc_, index, data)
 	TWRITE4(sc, addr, (index & 0x7f) | cmd);
 
 	/* wait for 'Returned data is avalable' */
-	for (count=0; count<0xffff; count++) {
+	for (count=0; count < 0xffff; count++) {
 		status = TREAD4(sc, addr);
 		if ((status & busy) == 0)
 			break;
+		DELAY(1);
 	}
 
 	if (count == 0xffff) {
@@ -367,9 +370,10 @@ autri_write_codec(sc_, index, data)
 	}
 
 	/* wait for 'Ready to Write' */
-	for (count=0; count<0xffff; count++) {
+	for (count=0; count < 0xffff; count++) {
 		if ((TREAD4(sc, addr) & busy) == 0)
 			break;
+		DELAY(1);
 	}
 
 	if (count == 0xffff) {
@@ -454,6 +458,12 @@ autri_reset_codec(sc_)
 	if (count == 0)
 		printf("%s: Codec timeout. AC97 is not ready for operation.\n",
 		    sc->sc_dev.dv_xname);
+}
+
+enum ac97_host_flags
+autri_flags_codec(void *v)
+{
+	return (AC97_HOST_DONT_READ);
 }
 
 /*
@@ -563,6 +573,7 @@ autri_attach(parent, self, aux)
 	codec->host_if.reset = autri_reset_codec;
 	codec->host_if.read = autri_read_codec;
 	codec->host_if.write = autri_write_codec;
+	codec->host_if.flags = autri_flags_codec;
 
 	if ((r = ac97_attach(&codec->host_if)) != 0) {
 		printf("%s: can't attach codec (error 0x%X)\n",

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/Attic/fwohci_cardbus.c,v 1.1 2002/06/26 15:55:33 tdeval Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/Attic/fwohci_cardbus.c,v 1.1.4.1 2002/10/29 00:33:23 art Exp $	*/
 /*	$NetBSD: fwohci_cardbus.c,v 1.5 2002/01/26 16:34:28 ichiro Exp $	*/
 
 /*-

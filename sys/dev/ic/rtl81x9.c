@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.2 2002/06/11 03:42:20 art Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.3 2002/10/29 00:33:26 art Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -133,6 +133,7 @@
 
 void rl_tick(void *);
 void rl_shutdown(void *);
+void rl_powerhook(int, void *);
 
 int rl_encap(struct rl_softc *, struct mbuf * );
 
@@ -978,7 +979,7 @@ void rl_init(xsc)
 	CSR_WRITE_1(sc, RL_COMMAND, RL_CMD_TX_ENB|RL_CMD_RX_ENB);
 
 	/*
-	 * Set the inital TX and RX configuration.
+	 * Set the initial TX and RX configuration.
 	 */
 	CSR_WRITE_4(sc, RL_TXCFG, RL_TXCFG_CONFIG);
 	CSR_WRITE_4(sc, RL_RXCFG, RL_RXCFG_CONFIG);
@@ -1302,6 +1303,7 @@ rl_attach(sc)
 	ether_ifattach(ifp);
 
 	sc->sc_sdhook = shutdownhook_establish(rl_shutdown, sc);
+	sc->sc_pwrhook = powerhook_establish(rl_powerhook, sc);
 
 	return (0);
 }
@@ -1326,16 +1328,27 @@ rl_detach(sc)
 	if_detach(ifp);
 
 	shutdownhook_disestablish(sc->sc_sdhook);
+	powerhook_disestablish(sc->sc_pwrhook);
 
 	return (0);
 }
 
-void rl_shutdown(arg)
+void
+rl_shutdown(arg)
 	void			*arg;
 {
 	struct rl_softc		*sc = (struct rl_softc *)arg;
 
 	rl_stop(sc);
+}
+
+void
+rl_powerhook(why, arg)
+	int why;
+	void *arg;
+{
+	if (why == PWR_RESUME)
+		rl_init(arg);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/conf.c,v 1.33.2.1 2002/06/11 03:34:57 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/conf.c,v 1.33.2.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.42 1997/01/07 11:35:03 mrg Exp $	*/
 
 /*-
@@ -41,7 +41,6 @@
 #include <sys/buf.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
-#include <sys/conf.h>
 #include <sys/vnode.h>
 #include <dev/cons.h>
 

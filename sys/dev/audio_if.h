@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/audio_if.h,v 1.13.2.2 2002/06/11 03:42:15 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/audio_if.h,v 1.13.2.3 2002/10/29 00:33:23 art Exp $	*/
 /*	$NetBSD: audio_if.h,v 1.24 1998/01/10 14:07:25 tv Exp $	*/
 
 /*
@@ -65,20 +65,20 @@ struct audio_hw_if {
 	int	(*open)(void *, int);	/* open hardware */
 	void	(*close)(void *);		/* close hardware */
 	int	(*drain)(void *);		/* Optional: drain buffers */
-	
+
 	/* Encoding. */
 	/* XXX should we have separate in/out? */
 	int	(*query_encoding)(void *, struct audio_encoding *);
 
 	/* Set the audio encoding parameters (record and play).
-	 * Return 0 on success, or an error code if the 
+	 * Return 0 on success, or an error code if the
 	 * requested parameters are impossible.
 	 * The values in the params struct may be changed (e.g. rounding
 	 * to the nearest sample rate.)
 	 */
-        int	(*set_params)(void *, int, int, struct audio_params *,
+	int	(*set_params)(void *, int, int, struct audio_params *,
 		    struct audio_params *);
-  
+
 	/* Hardware may have some say in the blocksize to choose */
 	int	(*round_blocksize)(void *, int);
 
@@ -106,13 +106,13 @@ struct audio_hw_if {
 
 	int	(*getdev)(void *, struct audio_device *);
 	int	(*setfd)(void *, int);
-	
+
 	/* Mixer (in/out ports) */
 	int	(*set_port)(void *, struct mixer_ctrl *);
 	int	(*get_port)(void *, struct mixer_ctrl *);
 
 	int	(*query_devinfo)(void *, struct mixer_devinfo *);
-	
+
 	/* Allocate/free memory for the ring buffer. Usually malloc/free. */
 	/* The _old interfaces have been deprecated and will not be
 	   called in newer kernels if the new interfaces are present */
@@ -121,7 +121,7 @@ struct audio_hw_if {
 	size_t	(*round_buffersize)(void *, int, size_t);
 	paddr_t	(*mappage)(void *, void *, off_t, int);
 
-	int 	(*get_props)(void *); /* device properties */
+	int	(*get_props)(void *); /* device properties */
 
 	int	(*trigger_output)(void *, void *, void *, int,
 		    void (*)(void *), void *, struct audio_params *);
@@ -141,8 +141,7 @@ struct audio_attach_args {
 #define AUDIODEV_TYPE_RADIO	4
 
 /* Attach the MI driver(s) to the MD driver. */
-struct device *audio_attach_mi(struct audio_hw_if *, void *, 
-				    struct device *);
+struct device *audio_attach_mi(struct audio_hw_if *, void *, struct device *);
 int	       audioprint(void *, const char *);
 
 /* Device identity flags */
@@ -159,7 +158,7 @@ int	       audioprint(void *, const char *);
 #define ISDEVAUDIOCTL(x)	(AUDIODEV((x)) == AUDIOCTL_DEVICE)
 #define ISDEVMIXER(x)		(AUDIODEV((x)) == MIXER_DEVICE)
 
-#if !defined(__i386__) && !defined(__sparc64__)
+#if !defined(__i386__) && !defined(__sparc64__) && !defined(__powerpc__)
 #define splaudio splbio		/* XXX */
 #define IPL_AUDIO IPL_BIO	/* XXX */
 #endif

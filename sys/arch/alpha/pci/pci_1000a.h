@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_1000a.h,v 1.1 2002/06/30 16:24:40 miod Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_1000a.h,v 1.1.4.1 2002/10/29 00:28:01 art Exp $ */
 /* $NetBSD: pci_1000a.h,v 1.2 1998/06/26 21:59:46 ross Exp $ */
 
 /*

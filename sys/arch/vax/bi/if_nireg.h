@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/bi/Attic/if_nireg.h,v 1.1 2002/06/11 09:36:23 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/if_nireg.h,v 1.1.4.1 2002/10/29 00:28:12 art Exp $ */
 /*	$NetBSD: if_nireg.h,v 1.3 2001/08/20 12:20:07 wiz Exp $	*/
 /*
  * Copyright (c) 1988 Regents of the University of California.

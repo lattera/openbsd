@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/limits.h,v 1.2.8.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/limits.h,v 1.2.8.2 2002/10/29 00:28:03 art Exp $	*/
 
 /* 
  * Copyright (c) 1992-1994, The University of Utah and
@@ -64,6 +64,7 @@
 #define	MB_LEN_MAX	6		/* Allow 31 bit UTF2 */
 
 #if !defined(_ANSI_SOURCE)
+#define	SIZE_MAX	UINT_MAX	/* max value for a size_t */
 #define	SSIZE_MAX	INT_MAX		/* max value for a ssize_t */
 
 #if !defined(_POSIX_SOURCE)

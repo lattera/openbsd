@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/z8530sc.h,v 1.1 2002/08/12 10:44:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/z8530sc.h,v 1.1.4.1 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: z8530sc.h,v 1.15 2001/05/11 01:40:48 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/dma.c,v 1.9.2.3 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/dma.c,v 1.9.2.4 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-

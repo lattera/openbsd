@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ata/ata_wdc.c,v 1.12.2.1 2002/06/11 03:42:16 art Exp $	*/
+/*      $OpenBSD: src/sys/dev/ata/ata_wdc.c,v 1.12.2.2 2002/10/29 00:33:23 art Exp $	*/
 /*	$NetBSD: ata_wdc.c,v 1.21 1999/08/09 09:43:11 bouyer Exp $	*/
 
 /*
@@ -413,7 +413,7 @@ wdc_ata_bio_intr(chp, xfer, irq)
 		printf("%s:%d:%d: bad state %d in wdc_ata_bio_intr\n",
 		    chp->wdc->sc_dev.dv_xname, chp->channel, xfer->drive,
 		    drvp->state);
-		panic("wdc_ata_bio_intr: bad state\n");
+		panic("wdc_ata_bio_intr: bad state");
 	}
 
 	/*

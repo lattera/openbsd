@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/limits.h,v 1.6.8.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/limits.h,v 1.6.8.2 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: limits.h,v 1.7 1996/01/05 18:10:57 pk Exp $ */
 
 /*
@@ -39,6 +39,7 @@
 #define	MB_LEN_MAX	1		/* no multibyte characters */
 
 #if !defined(_ANSI_SOURCE)
+#define	SIZE_MAX	UINT_MAX	/* max value for a size_t */
 #define	SSIZE_MAX	INT_MAX		/* max value for a ssize_t */
 
 #if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)

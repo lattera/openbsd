@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/fpu.c,v 1.2 1996/12/28 06:21:56 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/fpu.c,v 1.2.24.1 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: fpu.c,v 1.1 1996/09/30 16:34:44 ws Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.10.2.1 2002/06/11 03:37:22 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.10.2.2 2002/10/29 00:28:08 art Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -113,7 +113,6 @@ cdev_decl(xfs_dev);
 #endif  
  
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 #include "pf.h"
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.5.2.1 2002/06/11 03:36:33 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.5.2.2 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: if_bm.c,v 1.1 1999/01/01 01:27:52 tsubai Exp $	*/
 
 /*-
@@ -448,6 +448,9 @@ bmac_init(sc)
 
 	bmac_init_dma(sc);
 
+	/* Configure Media. */
+	mii_mediachg(&sc->sc_mii);
+
 	/* Enable TX/RX */
 	bmac_set_bits(sc, RXCFG, RxMACEnable);
 	bmac_set_bits(sc, TXCFG, TxMACEnable);
@@ -461,7 +464,7 @@ bmac_init(sc)
 	data = sc->sc_txbuf;
 	eh = (struct ether_header *)data;
 
-	bzero(data, sizeof(eh) + ETHERMIN);
+	bzero(data, sizeof(*eh) + ETHERMIN);
 	bcopy(sc->sc_enaddr, eh->ether_dhost, ETHER_ADDR_LEN);
 	bcopy(sc->sc_enaddr, eh->ether_shost, ETHER_ADDR_LEN);
 	bmac_transmit_packet(sc, sc->sc_txbuf_pa, sizeof(eh) + ETHERMIN);
@@ -971,8 +974,6 @@ bmac_mediastatus(ifp, ifmr)
 	ifmr->ifm_active = sc->sc_mii.mii_media_active;
 }
 
-#define MC_POLY_LE 0xedb88320UL		/* mcast crc, little endian */
-
 /*
  * Set up the logical address filter.
  */
@@ -985,8 +986,7 @@ bmac_setladrf(sc)
 	struct ether_multistep step;
 	u_int32_t crc;
 	u_int16_t hash[4];
-	int x, i, j;
-	u_int8_t octet;
+	int x;
 
 	/*
 	 * Set up multicast address filter by passing all multicast addresses
@@ -1027,20 +1027,7 @@ bmac_setladrf(sc)
 			goto chipit;
 		}
 
-		crc = 0xffffffff;
-		for (i = 0; i < ETHER_ADDR_LEN; i++) {
-			octet = enm->enm_addrlo[i];
-
-			for (j = 0; j < 8; j++) {
-				if ((crc & 1) ^ (octet & 1)) {
-					crc >>= 1;
-					crc ^= MC_POLY_LE;
-				}
-				else
-					crc >>= 1;
-				octet >>= 1;
-			}
-		}
+		crc = ether_crc32_le(enm->enm_addrlo, ETHER_ADDR_LEN);
 
 		/* Just want the 6 most significant bits. */
 		crc >>= 26;

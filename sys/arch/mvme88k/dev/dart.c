@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/dart.c,v 1.15.2.1 2002/06/11 03:37:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/dart.c,v 1.15.2.2 2002/10/29 00:28:07 art Exp $	*/
 
 /*
  * Mach Operating System
@@ -1193,16 +1193,9 @@ dartcnputc(dev, c)
 	DELAY_CR;
 	ptaddr->write.wr_cr = TXEN;
 
-	/* If the character is a line feed(\n) */
-	/* then follow it with carriage return (\r) */
-	for (;;) {
-		while (!(ptaddr->read.rd_sr & TXRDY))
-			;
-		ptaddr->write.wr_tb = c;
-		if (c != '\n')
-			break;
-		c = '\r';
-	}
+	while (!(ptaddr->read.rd_sr & TXRDY))
+		;
+	ptaddr->write.wr_tb = c;
 
 	/* wait for transmitter to empty */
 	while (!(ptaddr->read.rd_sr & TXEMT))

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24.2.2 2002/10/29 00:28:03 art Exp $	*/
 
 /*
- * Copyright (c) 2000-2001 Michael Shalayeff
+ * Copyright (c) 2000-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,21 @@ extern const char *cpu_typename;
  */
 #define	HPPA_FPUS	0xc0
 #define	HPPA_FPUVER(w)	(((w) & 0x003ff800) >> 11)
+#define	HPPA_FPU_OP(w)	((w) >> 26)
+#define	HPPA_FPU_UNMPL	0x9
+#define	HPPA_FPU_I	0x01
+#define	HPPA_FPU_U	0x02
+#define	HPPA_FPU_O	0x04
+#define	HPPA_FPU_Z	0x08
+#define	HPPA_FPU_V	0x10
+#define	HPPA_FPU_D	0x20
+#define	HPPA_FPU_T	0x40
+#define	HPPA_FPU_T_POS	25
+#define	HPPA_FPU_RM	0x00000600
+#define	HPPA_FPU_CQ	0x00fff800
+#define	HPPA_FPU_C	0x04000000
+#define	HPPA_FPU_FLSH	27
+#define	HPPA_FPU_INIT	(0)
 #define	HPPA_PMSFUS	0x20	/* ??? */
 
 /*
@@ -135,7 +150,6 @@ int	spstrcpy(pa_space_t ssp, const void *src,
 		      pa_space_t dsp, void *dst, size_t size, size_t *rsize);
 int	copy_on_fault(void);
 void	switch_trampoline(void);
-void	switch_exit(struct proc *p);
 int	cpu_dumpsize(void);
 int	cpu_dump(void);
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/dbdma.c,v 1.4 2001/11/06 19:53:15 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/dbdma.c,v 1.4.2.1 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: dbdma.c,v 1.2 1998/08/21 16:13:28 tsubai Exp $	*/
 
 /*

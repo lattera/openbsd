@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.2 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.3 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: intr.c,v 1.39 2001/07/19 23:38:11 eeh Exp $ */
 
 /*
@@ -80,6 +80,8 @@ int	intr_list_handler(void *);
  */
 int ignore_stray = 1;
 int straycnt[16];
+
+int handled_intr_level;	/* interrupt level that we're handling now */
 
 void
 strayintr(fp, vectored)
@@ -355,6 +357,14 @@ splassert_check(int wantipl, const char *func)
 
 	if (oldipl < wantipl) {
 		splassert_fail(wantipl, oldipl, func);
+	}
+
+	if (handled_intr_level > wantipl) {
+		/*
+		 * XXX - need to show difference between what's blocked and
+		 * what's running.
+		 */
+		splassert_fail(wantipl, handled_intr_level, func);
 	}
 }
 #endif

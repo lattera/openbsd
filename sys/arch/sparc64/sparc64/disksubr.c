@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6.6.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6.6.2 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.13 2000/12/17 22:39:18 pk Exp $ */
 
 /*
@@ -48,9 +48,6 @@
 
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
-#if defined(SUN4)
-#include <machine/oldmon.h>
-#endif
 
 #include <dev/sbus/sbusvar.h>
 #include "cd.h"

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.7.10.1 2002/06/11 03:36:49 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.7.10.2 2002/10/29 00:28:07 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -115,7 +115,7 @@ ipicscan(parent, child, args)
 	}
 #endif
 
-	/* XXX can we determing IPIC_IPSPACE automatically? */
+	/* XXX can we determine IPIC_IPSPACE automatically? */
 	for (slot = 0; slot < sc->sc_nip; slot++) {
 		ipp = sc->sc_ipspace + (slot * IPIC_IP_MODSIZE);
 		if (badpaddr((paddr_t)ipp + IPIC_IP_IDOFFSET, 2))

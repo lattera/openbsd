@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/Attic/types.h,v 1.10 2001/08/11 01:58:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/Attic/types.h,v 1.10.4.1 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: types.h,v 1.11 1996/12/10 23:19:38 pk Exp $	*/
 
 /*
@@ -83,5 +83,6 @@ typedef	unsigned long long	u_int64_t;
 typedef	unsigned long long	 uint64_t;
 
 typedef int32_t			register_t;
+
 
 #endif	/* _MACHTYPES_H_ */

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/Attic/if_gx.c,v 1.6.2.1 2002/06/11 03:42:25 art Exp $ */
+/* $OpenBSD: src/sys/dev/pci/Attic/if_gx.c,v 1.6.2.2 2002/10/29 00:33:28 art Exp $ */
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon
  * All rights reserved.
@@ -96,13 +96,10 @@ struct gx_device gx_devs[] = {
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82543GC_SC,
 	    GXF_LIVENGOOD | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
 	    6 | 8 << 10 | 6 << 20 },
-	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82543_SC,
-	    GXF_LIVENGOOD | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
-	    6 | 8 << 10 | 6 << 20 },
-	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82543GC_CU,
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82543GC,
 	    GXF_LIVENGOOD | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
 	    8 | 8 << 10 | 6 << 20 },
-	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544EI_CU,
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544EI,
 	    GXF_CORDOVA | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
 	    8 | 8 << 10 | 6 << 20 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544EI_SC,
@@ -111,9 +108,10 @@ struct gx_device gx_devs[] = {
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544GC,
 	    GXF_CORDOVA | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
 	    8 | 8 << 10 | 6 << 20 },
-	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544GC_64,
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544GC_LX,
 	    GXF_CORDOVA | GXF_DMA | GXF_ENABLE_MWI | GXF_CSUM,
 	    8 | 8 << 10 | 6 << 20 },
+	{ 0, 0, 0, NULL }
 };
 
 struct gx_regs new_regs = {
@@ -241,7 +239,7 @@ gx_attach(struct device *parent, struct device *self, void *aux)
 	command = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 	command |= PCI_COMMAND_MEM_ENABLE | PCI_COMMAND_MASTER_ENABLE;
 	if (gx->gx_vflags & GXF_ENABLE_MWI)
-		command |= PCIM_CMD_MWIEN;
+		command |= PCI_COMMAND_INVALIDATE_ENABLE;
 	pci_conf_write(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG, command);
 	command = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mc6845.h,v 1.2 1996/09/23 15:07:50 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mc6845.h,v 1.2.26.1 2002/10/29 00:33:25 art Exp $	*/
 
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis and Joerg Wunsch.
@@ -47,7 +47,7 @@
 #define CRTC_HSYNCE	0x05		/* horizontal sync end */
 #define CRTC_VTOTAL	0x06		/* vertical total */
 #define CRTC_OVERFLL	0x07		/* overflow low */
-#define CRTC_IROWADDR	0x08		/* inital row address */
+#define CRTC_IROWADDR	0x08		/* initial row address */
 #define CRTC_MAXROW	0x09		/* maximum row address */
 #define CRTC_CURSTART	0x0A		/* cursor start row address */
 #define CRTC_CUREND	0x0B		/* cursor end row address */

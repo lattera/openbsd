@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.50.2.2 2002/06/11 03:35:53 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.50.2.3 2002/10/29 00:28:03 art Exp $	*/
 
 /*-
  * Copyright (c) 1998-2001 Michael Shalayeff. All rights reserved.
@@ -1121,11 +1121,9 @@ filt_apmread(kn, hint)
 	struct knote *kn;
 	long hint;
 {
-	/* XXX weird kqueue_scan() semantics */
-	if (hint && !kn->kn_data)
-		kn->kn_data = (int)hint;
+	kn->kn_data = (int)hint;
 
-	return (1);
+	return (hint != 0);
 }
 
 int

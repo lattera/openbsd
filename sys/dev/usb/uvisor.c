@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.6.1 2002/06/11 03:42:31 art Exp $	*/
-/*	$NetBSD: uvisor.c,v 1.14 2002/02/27 23:00:03 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.6.2 2002/10/29 00:33:33 art Exp $	*/
+/*	$NetBSD: uvisor.c,v 1.16 2002/07/11 21:14:36 augustss Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -162,6 +162,7 @@ static const struct uvisor_type uvisor_devs[] = {
 	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M505 }, PALM4 },
 	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M125 }, PALM4 },
 	{{ USB_VENDOR_SONY, USB_PRODUCT_SONY_CLIE_40 }, PALM4 },
+	{{ USB_VENDOR_SONY, USB_PRODUCT_SONY_CLIE_41 }, 0 },
 /*	{{ USB_VENDOR_SONY, USB_PRODUCT_SONY_CLIE_25 }, PALM4 },*/
 };
 #define uvisor_lookup(v, p) ((struct uvisor_type *)usb_lookup(uvisor_devs, v, p))
@@ -171,7 +172,7 @@ USB_DECLARE_DRIVER(uvisor);
 USB_MATCH(uvisor)
 {
 	USB_MATCH_START(uvisor, uaa);
-	
+
 	if (uaa->iface != NULL)
 		return (UMATCH_NONE);
 
@@ -360,7 +361,7 @@ uvisor_init(struct uvisor_softc *sc, struct uvisor_connection_info *ci)
 	USETW(req.wIndex, 0);
 	USETW(req.wLength, UVISOR_CONNECTION_INFO_SIZE);
 	err = usbd_do_request_flags(sc->sc_udev, &req, ci,
-		  USBD_SHORT_XFER_OK, &actlen);
+		  USBD_SHORT_XFER_OK, &actlen, USBD_DEFAULT_TIMEOUT);
 	if (err)
 		return (err);
 
@@ -415,6 +416,6 @@ uvisor_close(void *addr, int portno)
 	USETW(req.wValue, 0);
 	USETW(req.wIndex, 0);
 	USETW(req.wLength, UVISOR_CONNECTION_INFO_SIZE);
-	(void)usbd_do_request_flags(sc->sc_udev, &req, &coninfo, 
-		  USBD_SHORT_XFER_OK, &actlen);
+	(void)usbd_do_request_flags(sc->sc_udev, &req, &coninfo,
+		  USBD_SHORT_XFER_OK, &actlen, USBD_DEFAULT_TIMEOUT);
 }

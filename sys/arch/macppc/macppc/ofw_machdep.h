@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.h,v 1.1.2.1 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.h,v 1.1.2.2 2002/10/29 00:28:06 art Exp $	*/
 
 /*
  * Copyright (c) 2002, Miodrag Vallat.
@@ -39,6 +39,9 @@ extern int cons_height, cons_width, cons_linebytes, cons_depth;
 extern int cons_display_ofh;
 extern u_int32_t cons_addr;
 extern int cons_backlight_available;
+
+void ofwconprobe(void);
+void ofwconsinit(void);
 
 /*
  * For some reason, setting the brightness under 0x29 from OF switches the

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/agp_amd.c,v 1.2 2002/07/25 23:31:04 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/agp_amd.c,v 1.2.4.1 2002/10/29 00:33:27 art Exp $	*/
 /*	$NetBSD: agp_amd.c,v 1.6 2001/10/06 02:48:50 thorpej Exp $	*/
 
 

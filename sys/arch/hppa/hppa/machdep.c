@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.47.2.2 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.47.2.3 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Michael Shalayeff
@@ -162,6 +162,7 @@ int (*cpu_dbtlb_ins)(int i, pa_space_t sp, vaddr_t va, paddr_t pa,
 
 dev_t	bootdev;
 int	totalphysmem, resvmem, physmem, esym;
+paddr_t	avail_end;
 
 /*
  * Things for MI glue to stick on.
@@ -296,8 +297,6 @@ hppa_init(start)
 	vaddr_t v, v1;
 	int error, cpu_features = 0;
 
-	boothowto |= RB_SINGLE;	/* XXX always go into single-user while debug */
-
 	pdc_init();	/* init PDC iface, so we can call em easy */
 
 	cpu_hzticks = (PAGE0->mem_10msec * 100) / hz;
@@ -408,8 +407,9 @@ hppa_init(start)
 	ptlball();
 	fcacheall();
 
-	totalphysmem = PAGE0->imm_max_mem / NBPG;
-	resvmem = ((vaddr_t)&kernel_text) / NBPG;
+	totalphysmem = btoc(PAGE0->imm_max_mem);
+	resvmem = btoc(((vaddr_t)&kernel_text));
+	avail_end = ctob(totalphysmem);
 
 #if defined(HP7100LC_CPU) || defined(HP7300LC_CPU)
 	if (pdc_call((iodcio_t)pdc, 0, PDC_TLB, PDC_TLB_INFO, &pdc_hwtlb) &&
@@ -494,6 +494,9 @@ hppa_init(start)
 #ifdef COMPAT_HPUX
 				cpu_model_hpux = HPUX_SYSCONF_CPUPA11;
 #endif
+				/* this one is just a 100MHz pcxl */
+				if (lev == 0x10)
+					lev = 0xe;
 				break;
 			case 8:
 				q = "2.0";
@@ -566,12 +569,14 @@ hppa_init(start)
 	bzero ((void *)v1, (v - v1));
 
 	msgbufp = (struct msgbuf *)v;
-	v += hppa_round_page(MSGBUFSIZE);
+	v += round_page(MSGBUFSIZE);
 	bzero(msgbufp, MSGBUFSIZE);
-	msgbufmapped = 1;
 
 	/* sets physmem */
 	pmap_bootstrap(v);
+
+	msgbufmapped = 1;
+	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/* locate coprocessors and SFUs */
 	if ((error = pdc_call((iodcio_t)pdc, 0, PDC_COPROC, PDC_COPROC_DFLT,
@@ -587,7 +592,7 @@ hppa_init(start)
 	}
 
 	/* they say PDC_COPROC might turn fault light on */
-	pdc_call((iodcio_t)pdc, PDC_CHASSIS, PDC_CHASSIS_DISP,
+	pdc_call((iodcio_t)pdc, 0, PDC_CHASSIS, PDC_CHASSIS_DISP,
 	    PDC_OSTAT(PDC_OSTAT_RUN) | 0xCEC0);
 
 #ifdef DDB
@@ -899,36 +904,36 @@ boot(howto)
 	int howto;
 {
 	/* If system is cold, just halt. */
-	if (cold) {
+	if (cold)
 		howto |= RB_HALT;
-		goto haltsys;
+	else {
+
+		boothowto = howto | (boothowto & RB_HALT);
+
+		if (!(howto & RB_NOSYNC)) {
+			waittime = 0;
+			vfs_shutdown();
+			/*
+			 * If we've been adjusting the clock, the todr
+			 * will be out of synch; adjust it now unless
+			 * the system was sitting in ddb.
+			 */
+			if ((howto & RB_TIMEBAD) == 0)
+				resettodr();
+			else
+				printf("WARNING: not updating battery clock\n");
+		}
+
+		/* XXX probably save howto into stable storage */
+
+		splhigh();
+
+		if (howto & RB_DUMP)
+			dumpsys();
+
+		doshutdownhooks();
 	}
 
-	boothowto = howto | (boothowto & RB_HALT);
-
-	if (!(howto & RB_NOSYNC)) {
-		waittime = 0;
-		vfs_shutdown();
-		/*
-		 * If we've been adjusting the clock, the todr
-		 * will be out of synch; adjust it now unless
-		 * the system was sitting in ddb.
-		 */
-		if ((howto & RB_TIMEBAD) == 0)
-			resettodr();
-		else
-			printf("WARNING: not updating battery clock\n");
-	}
-
-	/* XXX probably save howto into stable storage */
-
-	splhigh();
-
-	if (howto & RB_DUMP)
-		dumpsys();
-
-	doshutdownhooks();
-haltsys:
 	/* in case we came on powerfail interrupt */
 	if (cold_hook)
 		(*cold_hook)(HPPA_COLD_COLD);
@@ -946,6 +951,8 @@ haltsys:
 	} else {
 		printf("rebooting...");
 		DELAY(1000000);
+		__asm __volatile(".export hppa_reset, entry\n\t"
+		    ".label hppa_reset");
 		__asm __volatile("stwas %0, 0(%1)"
 		    :: "r" (CMD_RESET), "r" (LBCAST_ADDR + iomod_command));
 	}
@@ -1086,13 +1093,7 @@ kcopy(from, to, size)
 	void *to;
 	size_t size;
 {
-	register u_int oldh = curproc->p_addr->u_pcb.pcb_onfault;
-
-	curproc->p_addr->u_pcb.pcb_onfault = (u_int)&copy_on_fault;
-	bcopy(from, to, size);
-	curproc->p_addr->u_pcb.pcb_onfault = oldh;
-
-	return 0;
+	return spcopy(HPPA_SID_KERNEL, from, HPPA_SID_KERNEL, to, size);
 }
 
 int
@@ -1159,8 +1160,9 @@ setregs(p, pack, stack, retval)
 	u_long stack;
 	register_t *retval;
 {
+	extern paddr_t fpu_curpcb;	/* from locore.S */
 	register struct trapframe *tf = p->p_md.md_regs;
-	/* register struct pcb *pcb = &p->p_addr->u_pcb; */
+	register struct pcb *pcb = &p->p_addr->u_pcb;
 #ifdef DEBUG
 	/*extern int pmapdebug;*/
 	/*pmapdebug = 13;
@@ -1169,17 +1171,31 @@ setregs(p, pack, stack, retval)
 	*/
 #endif
 
+	tf->tf_flags = TFF_SYS|TFF_LAST;
 	tf->tf_iioq_tail = 4 +
 	    (tf->tf_iioq_head = pack->ep_entry | HPPA_PC_PRIV_USER);
 	tf->tf_rp = 0;
 	tf->tf_arg0 = (u_long)PS_STRINGS;
 	tf->tf_arg1 = tf->tf_arg2 = 0; /* XXX dynload stuff */
 
+	/* reset any of the pending FPU exceptions */
+	pcb->pcb_fpregs[0] = ((u_int64_t)HPPA_FPU_INIT) << 32;
+	pcb->pcb_fpregs[1] = 0;
+	pcb->pcb_fpregs[2] = 0;
+	pcb->pcb_fpregs[3] = 0;
+	fdcache(HPPA_SID_KERNEL, (vaddr_t)pcb->pcb_fpregs, 8 * 4);
+	if (tf->tf_cr30 == fpu_curpcb) {
+		fpu_curpcb = 0;
+		/* force an fpu ctxsw, we'll not be hugged by the cpu_switch */
+		mtctl(0, CR_CCR);
+	}
+
 	/* setup terminal stack frame */
 	stack = hppa_round_page(stack);
+	tf->tf_r3 = stack;
+	suword((caddr_t)(stack), 0);
 	stack += HPPA_FRAME_SIZE;
-	suword((caddr_t)(stack - HPPA_FRAME_PSP), 0);
-	suword((caddr_t)(stack - HPPA_FRAME_CRP), 0);
+	suword((caddr_t)(stack + HPPA_FRAME_CRP), 0);
 	tf->tf_sp = stack;
 
 	retval[1] = 0;
@@ -1197,10 +1213,10 @@ sendsig(catcher, sig, mask, code, type, val)
 	union sigval val;
 {
 	struct proc *p = curproc;
-	struct sigcontext *scp, ksc;
 	struct trapframe *tf = p->p_md.md_regs;
 	struct sigacts *psp = p->p_sigacts;
-	siginfo_t ksi, *sip = NULL;
+	struct sigcontext ksc, *scp;
+	siginfo_t ksi, *sip;
 	int sss;
 
 #ifdef DEBUG
@@ -1222,10 +1238,11 @@ sendsig(catcher, sig, mask, code, type, val)
 		scp = (struct sigcontext *)tf->tf_sp;
 
 	sss = sizeof(*scp);
+	sip = NULL;
 	if (psp->ps_siginfo & sigmask(sig)) {
 		initsiginfo(&ksi, sig, code, type, val);
-		sip = (void *)(scp + 1);
-		if (copyout((caddr_t)&ksi, sip, sizeof(*sip)))
+		sip = (siginfo_t *)(scp + 1);
+		if (copyout((caddr_t)&ksi, sip, sizeof(ksi)))
 			sigexit(p, SIGILL);
 		sss += sizeof(*sip);
 	}
@@ -1241,8 +1258,8 @@ sendsig(catcher, sig, mask, code, type, val)
 		sigexit(p, SIGILL);
 
 	sss += HPPA_FRAME_SIZE;
-	if (suword((caddr_t)scp + sss - HPPA_FRAME_PSP, 0) ||
-	    suword((caddr_t)scp + sss - HPPA_FRAME_CRP, 0))
+	if (suword((caddr_t)scp + sss - HPPA_FRAME_SIZE, 0) ||
+	    suword((caddr_t)scp + sss + HPPA_FRAME_CRP, 0))
 		sigexit(p, SIGILL);
 
 #ifdef DEBUG
@@ -1256,8 +1273,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->tf_arg2 = tf->tf_r3 = (register_t)scp;
 	tf->tf_arg3 = (register_t)catcher;
 	tf->tf_sp = (register_t)scp + sss;
-	tf->tf_iioq_head = HPPA_PC_PRIV_USER |
-	    ((register_t)PS_STRINGS + sizeof(struct ps_strings));
+	tf->tf_iioq_head = HPPA_PC_PRIV_USER | p->p_sigcode;
 	tf->tf_iioq_tail = tf->tf_iioq_head + 4;
 	/* disable tracing in the trapframe */
 
@@ -1292,9 +1308,9 @@ sys_sigreturn(p, v, retval)
 	    copyin((caddr_t)scp, (caddr_t)&ksc, sizeof ksc))
 		return (EINVAL);
 
-#define PSW_MBS (PSW_C|PSW_Q|PSW_P|PSW_D|PSW_I)
-#define PSW_MBZ (PSW_Y|PSW_Z|PSW_S|PSW_X|PSW_M|PSW_R)
-	if ((ksc.sc_ps & (PSW_MBS|PSW_MBZ)) != PSW_MBS)
+#define PSL_MBS (PSL_C|PSL_Q|PSL_P|PSL_D|PSL_I)
+#define PSL_MBZ (PSL_Y|PSL_Z|PSL_S|PSL_X|PSL_M|PSL_R)
+	if ((ksc.sc_ps & (PSL_MBS|PSL_MBZ)) != PSL_MBS)
 		return (EINVAL);
 
 	if (ksc.sc_onstack)

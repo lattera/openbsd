@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.20 2001/12/05 18:21:52 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.20.2.1 2002/10/29 00:28:04 art Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1996/03/04 05:04:26 cgd Exp $	*/
 
 /*-
@@ -75,7 +75,7 @@
 
 #define	NPTEPG		(NBPG/(sizeof (pt_entry_t)))
 
-#define	KERNBASE	0xe0000000		/* start of kernel virtual space */
+#define	KERNBASE	0xd0000000		/* start of kernel virtual space */
 #define	KERNTEXTOFF	(KERNBASE+0x100000)	/* start of kernel text */
 #define	BTOPKERNBASE	((u_long)KERNBASE >> PGSHIFT)
 

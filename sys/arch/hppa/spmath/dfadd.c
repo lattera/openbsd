@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/dfadd.c,v 1.4.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/dfadd.c,v 1.4.6.2 2002/10/29 00:28:03 art Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -499,4 +499,4 @@ dbl_fadd(leftptr, rightptr, dstptr, status)
 	    Set_inexactflag();
     }
     return(NOEXCEPTION);
-    }
+}

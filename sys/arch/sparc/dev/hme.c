@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34.4.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34.4.2 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -621,7 +621,7 @@ hme_poll_stop(sc)
 	    (HME_FLAG_POLLENABLE | HME_FLAG_POLL))
 		return;
 
-	/* Turn off MIF interrupts, and diable polling */
+	/* Turn off MIF interrupts, and disable polling */
 	tcvr->int_mask = 0xffff;
 	tcvr->cfg &= ~(TCVR_CFG_PENABLE);
 	sc->sc_flags &= ~(HME_FLAG_POLL);
@@ -767,10 +767,16 @@ hme_eint(sc, why)
 	struct hme_softc *sc;
 	u_int32_t why;
 {
-	if (why & GR_STAT_NORXD)
+	if (why & GR_STAT_NORXD) {
 		sc->sc_arpcom.ac_if.if_ierrors++;
+		why &= ~GR_STAT_NORXD;
+	}
+	if (why & GR_STAT_DTIMEXP) {
+		sc->sc_arpcom.ac_if.if_oerrors++;
+		why &= ~GR_STAT_DTIMEXP;
+	}
 
-	if (why & (GR_STAT_ALL_ERRORS & (~GR_STAT_NORXD))) {
+	if (why & GR_STAT_ALL_ERRORS) {
 		printf("%s: stat=%b, resetting.\n", sc->sc_dev.dv_xname,
 		    why, GR_STAT_BITS);
 		hmereset(sc);

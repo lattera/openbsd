@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.11.2.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.11.2.2 2002/10/29 00:33:29 art Exp $	*/
 
 /*
  * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
@@ -229,8 +229,13 @@ lofn_read_reg(sc, ridx, rp)
 	int ridx;
 	union lofn_reg *rp;
 {
+#if BYTE_ORDER == BIG_ENDIAN
+	bus_space_read_region_4(sc->sc_st, sc->sc_sh,
+	    LOFN_REGADDR(LOFN_WIN_0, ridx, 0), rp->w, 1024/32);
+#else
 	bus_space_read_region_4(sc->sc_st, sc->sc_sh,
 	    LOFN_REGADDR(LOFN_WIN_2, ridx, 0), rp->w, 1024/32);
+#endif
 }
 
 void
@@ -239,8 +244,13 @@ lofn_write_reg(sc, ridx, rp)
 	int ridx;
 	union lofn_reg *rp;
 {
+#if BYTE_ORDER == BIG_ENDIAN
+	bus_space_write_region_4(sc->sc_st, sc->sc_sh,
+	    LOFN_REGADDR(LOFN_WIN_0, ridx, 0), rp->w, 1024/32);
+#else
 	bus_space_write_region_4(sc->sc_st, sc->sc_sh,
 	    LOFN_REGADDR(LOFN_WIN_2, ridx, 0), rp->w, 1024/32);
+#endif
 }
 
 void
@@ -474,15 +484,15 @@ lofn_modexp_finish(sc, q)
 
 	reglen = ((READ_REG(sc, LOFN_LENADDR(LOFN_WIN_2, 3)) & LOFN_LENMASK) +
 	    7) / 8;
-	crplen = (krp->krp_param[LOFN_MODEXP_PAR_C].crp_nbits + 7) / 8;
+	crplen = (krp->krp_param[krp->krp_iparams].crp_nbits + 7) / 8;
 
 	if (crplen <= reglen)
-		bcopy(sc->sc_tmp.b, krp->krp_param[LOFN_MODEXP_PAR_C].crp_p,
+		bcopy(sc->sc_tmp.b, krp->krp_param[krp->krp_iparams].crp_p,
 		    reglen);
 	else {
-		bcopy(sc->sc_tmp.b, krp->krp_param[LOFN_MODEXP_PAR_C].crp_p,
+		bcopy(sc->sc_tmp.b, krp->krp_param[krp->krp_iparams].crp_p,
 		    reglen);
-		bzero(krp->krp_param[LOFN_MODEXP_PAR_C].crp_p + reglen,
+		bzero(krp->krp_param[krp->krp_iparams].crp_p + reglen,
 		    crplen - reglen);
 	}
 	bzero(&sc->sc_tmp, sizeof(sc->sc_tmp));

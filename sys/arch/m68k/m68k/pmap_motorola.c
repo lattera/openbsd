@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.13.2.2 2002/06/11 03:36:06 art Exp $ */
+/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.13.2.3 2002/10/29 00:28:05 art Exp $ */
 
 /*
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -419,7 +419,7 @@ pmap_init()
 		 * portion of the kernel page table isn't big enough
 		 * and we overran the page table map.
 		 */
-		panic("pmap_init: bogons in the VM system!\n");
+		panic("pmap_init: bogons in the VM system!");
 	}
 
 	PMAP_DPRINTF(PDB_INIT,
@@ -1880,9 +1880,9 @@ ok:
  *	Note: WE DO NOT CURRENTLY LOCK THE TEMPORARY ADDRESSES!
  */
 void
-pmap_zero_page(phys)
-	paddr_t phys;
+pmap_zero_page(struct vm_page *pg)
 {
+	paddr_t phys = VM_PAGE_TO_PHYS(pg);
 	int npte;
 
 	PMAP_DPRINTF(PDB_FOLLOW, ("pmap_zero_page(%lx)\n", phys));
@@ -1930,9 +1930,11 @@ pmap_zero_page(phys)
  *	Note: WE DO NOT CURRENTLY LOCK THE TEMPORARY ADDRESSES!
  */
 void
-pmap_copy_page(src, dst)
-	paddr_t src, dst;
+pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 {
+	paddr_t src = VM_PAGE_TO_PHYS(srcpg);
+	paddr_t dst = VM_PAGE_TO_PHYS(dstpg);
+
 	int npte1, npte2;
 
 	PMAP_DPRINTF(PDB_FOLLOW, ("pmap_copy_page(%lx, %lx)\n", src, dst));

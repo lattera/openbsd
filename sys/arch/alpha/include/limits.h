@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/limits.h,v 1.7.8.1 2002/06/11 03:33:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/limits.h,v 1.7.8.2 2002/10/29 00:28:00 art Exp $	*/
 /*	$NetBSD: limits.h,v 1.2 1996/04/12 01:38:25 cgd Exp $	*/
 
 /*
@@ -42,6 +42,7 @@
 #define	MB_LEN_MAX	6		/* Allow 31 bit UTF2 */
 
 #if !defined(_ANSI_SOURCE)
+#define	SIZE_MAX	ULONG_MAX	/* max value for a size_t */
 #define	SSIZE_MAX	LONG_MAX	/* max value for a ssize_t */
 
 #if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)

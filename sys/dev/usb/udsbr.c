@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/udsbr.c,v 1.5 2002/07/25 04:07:32 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/udsbr.c,v 1.5.4.1 2002/10/29 00:33:32 art Exp $	*/
 /*	$NetBSD: udsbr.c,v 1.7 2002/07/11 21:14:27 augustss Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_addr_fixup.c,v 1.12.2.1 2002/06/11 03:35:54 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_addr_fixup.c,v 1.12.2.2 2002/10/29 00:28:04 art Exp $	*/
 /*	$NetBSD: pci_addr_fixup.c,v 1.7 2000/08/03 20:10:45 nathanw Exp $	*/
 
 /*-
@@ -407,7 +407,7 @@ pciaddr_search(mem_port, startp, size)
 		struct extent *ex = mem_port? sc->extent_mem : sc->extent_port;
 
 		/* Search the PCI I/O memory space extent for free
-		 * space that will accomodate size.  Remember that the
+		 * space that will accommodate size.  Remember that the
 		 * extent stores allocated space and we're searching
 		 * for the gaps.
 		 *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/net.c,v 1.1 2001/09/01 15:39:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/net.c,v 1.1.6.1 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: net.c,v 1.1 1997/04/16 20:29:18 thorpej Exp $	*/
 
 /*

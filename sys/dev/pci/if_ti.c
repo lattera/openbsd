@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.32.2.2 2002/06/11 03:42:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.32.2.3 2002/10/29 00:33:28 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -195,7 +195,7 @@ u_int32_t ti_eeprom_putbyte(sc, byte)
 	TI_SETBIT(sc, TI_MISC_LOCAL_CTL, TI_MLC_EE_TXEN);
 
 	/*
-	 * Feed in each bit and stobe the clock.
+	 * Feed in each bit and strobe the clock.
 	 */
 	for (i = 0x80; i; i >>= 1) {
 		if (byte & i) {
@@ -1185,7 +1185,7 @@ int ti_chipinit(sc)
 	 * the write max parameter accordingly. This is necessary
 	 * to use MWI with the Tigon 2.
 	 */
-	if (CSR_READ_4(sc, TI_PCI_CMDSTAT) & PCIM_CMD_MWIEN) {
+	if (CSR_READ_4(sc, TI_PCI_CMDSTAT) & PCI_COMMAND_INVALIDATE_ENABLE) {
 		switch(cacheline) {
 		case 1:
 		case 4:
@@ -1201,7 +1201,7 @@ int ti_chipinit(sc)
 				    "supported; disabling PCI MWI\n",
 				    sc->sc_dv.dv_xname, cacheline);
 			CSR_WRITE_4(sc, TI_PCI_CMDSTAT, CSR_READ_4(sc,
-			    TI_PCI_CMDSTAT) & ~PCIM_CMD_MWIEN);
+			    TI_PCI_CMDSTAT) & ~PCI_COMMAND_INVALIDATE_ENABLE);
 			break;
 		}
 	}

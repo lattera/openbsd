@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/limits.h,v 1.4.8.1 2002/06/11 03:36:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/limits.h,v 1.4.8.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: limits.h,v 1.9 1994/10/26 07:50:48 cgd Exp $	*/
 
 /*
@@ -39,6 +39,7 @@
 #define	MB_LEN_MAX	1		/* no multibyte characters */
 
 #if !defined(_ANSI_SOURCE)
+#define	SIZE_MAX	UINT_MAX	/* max value for a size_t */
 #define SSIZE_MAX	INT_MAX		/* max value for a ssize_t */
 
 #if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/process_machdep.c,v 1.3.14.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/process_machdep.c,v 1.3.14.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Michael Shalayeff
@@ -36,6 +36,8 @@
 #include <sys/proc.h>
 #include <sys/ptrace.h>
 #include <sys/user.h>
+
+#include <machine/cpufunc.h>
 
 int
 process_read_regs(p, regs)
@@ -85,7 +87,12 @@ process_read_fpregs(p, fpregs)
 	struct proc *p;
 	struct fpreg *fpregs;
 {
-	bcopy (p->p_addr->u_pcb.pcb_fpregs, fpregs, sizeof(*fpregs));
+	extern paddr_t fpu_curpcb;
+
+	if (p->p_md.md_regs->tf_cr30 == fpu_curpcb)
+		fpu_save((vaddr_t)p->p_addr->u_pcb.pcb_fpregs);
+	bcopy(p->p_addr->u_pcb.pcb_fpregs, fpregs, 32*8);
+
 	return 0;
 }
 
@@ -139,7 +146,17 @@ process_write_fpregs(p, fpregs)
 	struct proc *p;
 	struct fpreg *fpregs;
 {
-	bcopy (fpregs, p->p_addr->u_pcb.pcb_fpregs, sizeof(*fpregs));
+	extern paddr_t fpu_curpcb;
+
+	if (p->p_md.md_regs->tf_cr30 == fpu_curpcb)
+		fpu_save((vaddr_t)p->p_addr->u_pcb.pcb_fpregs);
+	bcopy(fpregs, p->p_addr->u_pcb.pcb_fpregs, 32 * 8);
+
+	if (p->p_md.md_regs->tf_cr30 == fpu_curpcb) {
+		mtctl(0, CR_CCR);
+		fpu_curpcb = 0;
+	}
+
 	return 0;
 }
 

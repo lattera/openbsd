@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.2.2.1 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.2.2.2 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: vgavar.h,v 1.2 1996/11/23 06:06:43 cgd Exp $	*/
 
 /*

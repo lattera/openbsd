@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.4.4.1 2002/06/11 03:42:20 art Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.4.4.2 2002/10/29 00:33:26 art Exp $     */
 /*	$NetBSD: wdcreg.h,v 1.22 1999/03/07 14:02:54 bouyer Exp $	*/
 
 /*-
@@ -177,17 +177,6 @@
 #define ATAPI_WRITEEXT		0x34 /* Write sectors Ext */
 #define ATAPI_SETMAXEXT		0x37 /* Set Max Address Ext */
 #define ATAPI_WRITEMULTIEXT	0x39 /* Write Multi Ext */
-
-/* SubCommands for SMART operations */
-#define ATAPI_SMART_READ	0xD0 /* SMART read data */
-#define ATAPI_SMART_AUTOSAVE	0xD2 /* SMART en-/disable attr. autosave */
-#define ATAPI_SMART_SAVE	0xD3 /* SMART save attributes */
-#define ATAPI_SMART_OFFLINE	0xD4 /* SMART execute offline immediately */
-#define ATAPI_SMART_READLOG	0xD5 /* SMART read log */
-#define ATAPI_SMART_WRITELOG	0xD6 /* SMART write log */
-#define ATAPI_SMART_EN		0xD8 /* SMART enable operations */
-#define ATAPI_SMART_DS		0xD9 /* SMART disable operations */
-#define ATAPI_SMART_STATUS	0xDA /* SMART return status */
 
 /* Bytes used by ATAPI_PACKET_COMMAND ( feature register) */
 #define ATAPI_PKT_CMD_FTRE_DMA 0x01

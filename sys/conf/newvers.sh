@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.37.2.1 2002/06/11 03:28:26 art Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.37.2.2 2002/10/29 00:30:52 art Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -65,13 +65,14 @@ id=`basename ${d}`
 #		change	/X.X/macppc/bsd.rd
 
 ost="OpenBSD"
-osr="3.1"
+osr="3.2"
 
 cat >vers.c <<eof
 const char ostype[] = "${ost}";
 const char osrelease[] = "${osr}";
 const char osversion[] = "${id}#${v}";
-const char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };
+const char sccs[] =
+    "    @(#)${ost} ${osr}-current (${id}) #${v}: ${t}\n";
 const char version[] =
     "${ost} ${osr}-current (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
 eof

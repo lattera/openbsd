@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/dfcmp.c,v 1.4.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/dfcmp.c,v 1.4.6.2 2002/10/29 00:28:03 art Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -126,8 +126,8 @@ dbl_fcmp(leftptr, rightptr, cond, status)
     else
 	{
 	/* Negative compare.  Signed or unsigned compares
- 	 * both work the same.  That distinction is only
- 	 * important when the sign bits differ. */
+	 * both work the same.  That distinction is only
+	 * important when the sign bits differ. */
 	if( Dbl_allp1(leftp1) > Dbl_allp1(rightp1) )
 	    {
 	    Set_status_cbit(Lessthan(cond));
@@ -151,4 +151,4 @@ dbl_fcmp(leftptr, rightptr, cond, status)
 	    }
 	}
 	return(NOEXCEPTION);
-    }
+}

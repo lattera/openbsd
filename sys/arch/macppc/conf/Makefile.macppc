@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.2.2.2 2002/06/11 03:36:33 art Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.2.2.3 2002/10/29 00:28:05 art Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -46,7 +46,7 @@ CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
 CMACHFLAGS=	-msoft-float -Wa,-m7400
 COPTS?=		-O2
-CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE
 LINKFLAGS=	-N -Ttext 100074 -e start
 STRIPFLAGS=	-g -X -x
@@ -119,7 +119,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${MACPPC}/macppc/genassym.cf
+assym.h: $S/kern/genassym.sh ${MACPPC}/macppc/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    < ${MACPPC}/macppc/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

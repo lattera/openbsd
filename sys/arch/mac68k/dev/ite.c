@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.19.2.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.19.2.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: ite.c,v 1.32 1997/02/20 00:23:25 scottr Exp $	*/
 
 /*
@@ -1334,7 +1334,7 @@ itecngetc(dev)
 	return ite_pollforchar();
 }
 
-int
+void
 itecnputc(dev, c)
 	dev_t	dev;
 	int	c;
@@ -1347,6 +1347,4 @@ itecnputc(dev, c)
 	drawcursor();
 	if (mac68k_machine.serial_boot_echo)
 		zscnputc(mac68k_zsdev, c);
-
-	return c;
 }

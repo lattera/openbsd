@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/stp4020.c,v 1.4 2002/06/21 07:55:26 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/stp4020.c,v 1.4.4.1 2002/10/29 00:33:31 art Exp $	*/
 /*	$NetBSD: stp4020.c,v 1.23 2002/06/01 23:51:03 lukem Exp $	*/
 
 /*-

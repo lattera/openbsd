@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.9 2001/12/08 02:24:06 art Exp $        */
+/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.9.2.1 2002/10/29 00:28:08 art Exp $        */
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-

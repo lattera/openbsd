@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/rbus_machdep.c,v 1.3 2002/09/15 09:01:58 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/rbus_machdep.c,v 1.3.4.1 2002/10/29 00:28:06 art Exp $ */
 /*	$NetBSD: rbus_machdep.c,v 1.2 1999/10/15 06:43:06 haya Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/agpreg.h,v 1.1 2002/07/12 20:17:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/agpreg.h,v 1.1.4.1 2002/10/29 00:33:27 art Exp $	*/
 /*	$NetBSD: agpreg.h,v 1.1 2001/09/10 10:01:02 fvdl Exp $	*/
 
 /*-

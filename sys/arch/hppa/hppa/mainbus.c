@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20.2.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -707,7 +707,8 @@ mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_addr_t offset, bus_size_t len,
 {
 
 	if (ops & (BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE))
-		__asm __volatile ("syncdma");
+		__asm __volatile ("sync\n\tsyncdma\n\tsync\n\t"
+		    "nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\t");
 
 	if (ops & BUS_DMASYNC_PREREAD)
 		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
@@ -720,6 +721,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 		  bus_size_t boundary, bus_dma_segment_t *segs, int nsegs,
 		  int *rsegs, int flags)
 {
+	extern paddr_t avail_end;
 	struct pglist pglist;
 	struct vm_page *pg;
 	vaddr_t va;
@@ -727,15 +729,15 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 	size = round_page(size);
 
 	TAILQ_INIT(&pglist);
-	if (uvm_pglistalloc(size, VM_MIN_KERNEL_ADDRESS, VM_MAX_KERNEL_ADDRESS,
-	    alignment, 0, &pglist, 1, FALSE))
-		return ENOMEM;
+	if (uvm_pglistalloc(size, 0, avail_end, alignment, boundary,
+	    &pglist, nsegs, flags & BUS_DMA_NOWAIT))
+		return (ENOMEM);
 
 	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
 	      UVM_ADV_RANDOM, 0))) {
 		uvm_pglistfree(&pglist);
-		return ENOMEM;
+		return (ENOMEM);
 	}
 
 	segs[0].ds_addr = va;

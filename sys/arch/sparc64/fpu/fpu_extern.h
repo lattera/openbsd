@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_extern.h,v 1.2.6.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_extern.h,v 1.2.6.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: fpu_extern.h,v 1.4 2000/08/03 18:32:08 eeh Exp $	*/
 
 /*-
@@ -57,7 +57,7 @@ int fpu_emulate(struct proc *, struct trapframe *, struct fpstate *);
 void fpu_cleanup(struct proc *, struct fpstate64 *);
 int fpu_emulate(struct proc *, struct trapframe64 *, struct fpstate64 *);
 #endif /* SUN4U */
-int fpu_execute(struct fpemu *, union instr);
+int fpu_execute(struct proc *, struct fpemu *, union instr);
 
 /* fpu_add.c */
 struct fpn *fpu_add(struct fpemu *);

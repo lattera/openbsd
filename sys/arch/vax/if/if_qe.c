@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_qe.c,v 1.12.6.1 2002/06/11 03:39:19 art Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/if/if_qe.c,v 1.12.6.2 2002/10/29 00:28:13 art Exp $ */
 /*      $NetBSD: if_qe.c,v 1.39 2000/01/24 02:40:29 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -767,7 +767,7 @@ qe_add_rxbuf(sc, i)
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_rcvmap[i],
 	    m->m_ext.ext_buf, m->m_ext.ext_size, NULL, BUS_DMA_NOWAIT);
 	if (error)
-		panic("%s: can't load rx DMA map %d, error = %d\n",
+		panic("%s: can't load rx DMA map %d, error = %d",
 		    sc->sc_dev.dv_xname, i, error);
 	sc->sc_rxmbuf[i] = m;
 

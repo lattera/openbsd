@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/aic_isapnp.c,v 1.1 2002/09/03 16:30:55 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/aic_isapnp.c,v 1.1.4.1 2002/10/29 00:33:26 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Arnholm

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.6.2 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.6.3 2002/10/29 00:33:25 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -68,14 +68,17 @@ struct wi_softc	{
 	u_int16_t		wi_supprates;
 	u_int16_t		wi_diversity;
 
+	u_int8_t		wi_txbuf[1596];
+	u_int8_t		wi_scanbuf[1596];
+
+	u_int8_t		wi_scanbuf_len;
+
 	struct ieee80211_nwid	wi_node_name;
 	struct ieee80211_nwid	wi_net_name;
 	struct ieee80211_nwid	wi_ibss_name;
 
-	u_int8_t		wi_txbuf[1596];
-	u_int8_t		wi_scanbuf[1596];
-	u_int8_t		wi_scanbuf_len;
 	int			wi_use_wep;
+	int			wi_crypto_algorithm;
 	int			wi_tx_key;
 	struct wi_ltv_keys	wi_keys;
 	struct wi_counters	wi_stats;
@@ -108,21 +111,23 @@ struct wi_softc	{
 };
 
 /* Values for wi_flags. */
-#define WI_FLAGS_ATTACHED		0x01
-#define WI_FLAGS_INITIALIZED		0x02
-#define WI_FLAGS_HAS_WEP		0x04
-#define WI_FLAGS_HAS_IBSS		0x08
-#define WI_FLAGS_HAS_CREATE_IBSS	0x10
-#define WI_FLAGS_HAS_MOR		0x20
-#define WI_FLAGS_HAS_ROAMING		0x30
-#define WI_FLAGS_HAS_DIVERSITY		0x40
-
-/* Firmware types */
-#define WI_LUCENT	0
-#define WI_INTERSIL	1
-#define WI_SYMBOL	2
+#define WI_FLAGS_ATTACHED		0x0001
+#define WI_FLAGS_INITIALIZED		0x0002
+#define WI_FLAGS_HAS_WEP		0x0004
+#define WI_FLAGS_HAS_IBSS		0x0008
+#define WI_FLAGS_HAS_CREATE_IBSS	0x0010
+#define WI_FLAGS_HAS_MOR		0x0020
+#define WI_FLAGS_HAS_ROAMING		0x0040
+#define WI_FLAGS_HAS_DIVERSITY		0x0080
+#define WI_FLAGS_HAS_HOSTAP		0x0100
+#define WI_FLAGS_BUS_PCMCIA		0x0200
 
 #define WI_PRT_FMT "%s"
 #define WI_PRT_ARG(sc)	(sc)->sc_dev.dv_xname
 
-int wi_mgmt_xmit(struct wi_softc *, caddr_t, int);
+int	wi_attach(struct wi_softc *);
+int	wi_intr(void *);
+void	wi_init(struct wi_softc *);
+void	wi_stop(struct wi_softc *);
+void	wi_cor_reset(struct wi_softc *);
+int	wi_mgmt_xmit(struct wi_softc *, caddr_t, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.76.4.2 2002/06/11 03:42:17 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.76.4.3 2002/10/29 00:33:24 art Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -102,7 +102,6 @@
 
 /* XXX: These belong elsewhere */
 cdev_decl(com);
-bdev_decl(com);
 
 static u_char tiocm_xxx2mcr(int);
 
@@ -1227,6 +1226,8 @@ compoll(arg)
 out:
 #ifndef __HAVE_GENERIC_SOFT_INTERRUPTS
 	timeout_add(&sc->sc_poll_tmo, 1);
+#else
+	;
 #endif
 }
 
@@ -1295,10 +1296,6 @@ comintr(arg)
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct tty *tp;
 	u_char lsr, data, msr, delta;
-#ifdef PPS_SYNC
-	struct timeval tv;
-	long usec;
-#endif /* PPS_SYNC */
 
 	if (!sc->sc_tty)
 		return (0);		/* can't do squat. */
@@ -1359,19 +1356,6 @@ comintr(arg)
 			delta = msr ^ sc->sc_msr;
 			sc->sc_msr = msr;
 			if (ISSET(delta, MSR_DCD)) {
-#ifdef PPS_SYNC
-				if (ISSET(sc->sc_swflags, COM_SW_PPS)) {
-					if (ISSET(msr, MSR_DCD)) {
-						usec = time.tv_usec;
-						microtime(&tv);
-						usec = tv.tv_usec - usec;
-						if (usec < 0)
-							usec += 1000000;
-						hardpps(&tv, usec);
-					}
-				}
-				else
-#endif /* PPS_SYNC */
 				if (!ISSET(sc->sc_swflags, COM_SW_SOFTCAR) &&
 				    (*linesw[tp->t_line].l_modem)(tp, ISSET(msr, MSR_DCD)) == 0) {
 					CLR(sc->sc_mcr, sc->sc_dtr);

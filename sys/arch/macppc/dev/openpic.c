@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7.2.2 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7.2.3 2002/10/29 00:28:06 art Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom

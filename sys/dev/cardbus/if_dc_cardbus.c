@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.7.2.2 2002/06/11 03:42:16 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.7.2.3 2002/10/29 00:33:23 art Exp $	*/
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -126,7 +126,8 @@ dc_cardbus_attach(parent, self, aux)
 
 	csc->sc_intrline = ca->ca_intrline;
 
-	sc->dc_cachesize = pci_conf_read(cc, ca->ca_tag, DC_PCI_CFLT) & 0xFF;
+	sc->dc_cachesize = cardbus_conf_read(cc, cf, ca->ca_tag, DC_PCI_CFLT)
+	    & 0xFF;
 
 	dc_cardbus_setup(csc);
 

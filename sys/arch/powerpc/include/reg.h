@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/reg.h,v 1.5.2.1 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/reg.h,v 1.5.2.2 2002/10/29 00:28:08 art Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.

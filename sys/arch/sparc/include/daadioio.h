@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/daadioio.h,v 1.2 2002/07/12 19:50:17 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/daadioio.h,v 1.2.4.1 2002/10/29 00:28:10 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops1.c,v 1.1.8.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops1.c,v 1.1.8.2 2002/10/29 00:33:31 art Exp $	*/
 /*	$NetBSD: rasops1.c,v 1.11 2000/04/12 14:22:29 pk Exp $	*/
 
 /*-
@@ -47,13 +47,13 @@
 #include <dev/rasops/rasops.h>
 #include <dev/rasops/rasops_masks.h>
 
-static void	rasops1_copycols(void *, int, int, int, int);
-static void	rasops1_erasecols(void *, int, int, int, long);
-static void	rasops1_do_cursor(struct rasops_info *);
-static void	rasops1_putchar(void *, int, int col, u_int, long);
+void	rasops1_copycols(void *, int, int, int, int);
+void	rasops1_erasecols(void *, int, int, int, long);
+void	rasops1_do_cursor(struct rasops_info *);
+void	rasops1_putchar(void *, int, int col, u_int, long);
 #ifndef RASOPS_SMALL
-static void	rasops1_putchar8(void *, int, int col, u_int, long);
-static void	rasops1_putchar16(void *, int, int col, u_int, long);
+void	rasops1_putchar8(void *, int, int col, u_int, long);
+void	rasops1_putchar16(void *, int, int col, u_int, long);
 #endif
 
 /*
@@ -88,7 +88,7 @@ rasops1_init(ri)
 /*
  * Paint a single character. This is the generic version, this is ugly.
  */
-static void
+void
 rasops1_putchar(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -236,7 +236,7 @@ rasops1_putchar(cookie, row, col, uc, attr)
 /*
  * Paint a single character. This is for 8-pixel wide fonts.
  */
-static void
+void
 rasops1_putchar8(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -301,7 +301,7 @@ rasops1_putchar8(cookie, row, col, uc, attr)
 /*
  * Paint a single character. This is for 16-pixel wide fonts.
  */
-static void
+void
 rasops1_putchar16(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;

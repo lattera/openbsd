@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/bus.h,v 1.3.4.1 2002/06/11 03:39:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/bus.h,v 1.3.4.2 2002/10/29 00:28:13 art Exp $	*/
 /*	$NetBSD: bus.h,v 1.14 2000/06/26 04:56:13 simonb Exp $	*/
 
 /*-
@@ -921,6 +921,8 @@ struct vax_bus_dma_segment {
 	bus_size_t	ds_len;		/* length of transfer */
 };
 typedef struct vax_bus_dma_segment	bus_dma_segment_t;
+
+struct proc;
 
 /*
  *	bus_dma_tag_t

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/ipkdb.h,v 1.4 2001/09/01 15:49:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/ipkdb.h,v 1.4.4.1 2002/10/29 00:28:08 art Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996 Wolfgang Solfrank.

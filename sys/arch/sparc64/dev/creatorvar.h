@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/creatorvar.h,v 1.7 2002/08/19 20:16:04 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/creatorvar.h,v 1.7.4.1 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net),

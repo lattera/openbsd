@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.9.2.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.9.2.2 2002/10/29 00:33:31 art Exp $	*/
 /*	$NetBSD: if_fta.c,v 1.7 1996/10/22 21:37:26 cgd Exp $	*/
 
 /*-
@@ -109,7 +109,7 @@ pdq_tc_attach(parent, self, aux)
 		return;
 	}
 	bcopy((caddr_t) sc->sc_pdq->pdq_hwaddr.lanaddr_bytes,
-	    sc->sc_ac.ac_enaddr, 6);
+	    sc->sc_arpcom.ac_enaddr, 6);
 	printf("\n");
 	pdq_ifattach(sc, NULL);
 

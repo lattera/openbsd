@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsecvar.h,v 1.22.4.2 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsecvar.h,v 1.22.4.3 2002/10/29 00:33:30 art Exp $	*/
 
 /*
  * Copyright (c) 2000 Theo de Raadt
@@ -78,7 +78,6 @@ struct ubsec_q2_rng {
 #define	UBS_MODEXP_PAR_M	0
 #define	UBS_MODEXP_PAR_E	1
 #define	UBS_MODEXP_PAR_N	2
-#define	UBS_MODEXP_PAR_C	3
 struct ubsec_q2_modexp {
 	struct ubsec_q2			me_q;
 	struct cryptkop *		me_krp;
@@ -88,6 +87,7 @@ struct ubsec_q2_modexp {
 	struct ubsec_dma_alloc		me_epb;
 	int				me_modbits;
 	int				me_shiftbits;
+	int				me_normbits;
 };
 
 #define	UBS_RSAPRIV_PAR_P	0

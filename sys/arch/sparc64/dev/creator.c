@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/creator.c,v 1.11.2.1 2002/06/11 03:38:42 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/creator.c,v 1.11.2.2 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -48,40 +48,15 @@
 #include <dev/wscons/wscons_raster.h>
 #include <dev/rasops/rasops.h>
 
-/* Number of register sets */
-#define	FFB_NREGS		24
-
-/* Register set numbers */
-#define	FFB_REG_PROM		0
-#define	FFB_REG_DAC		1
-#define	FFB_REG_FBC		2
-#define	FFB_REG_DFB8R		3
-#define	FFB_REG_DFB8G		4
-#define	FFB_REG_DFB8B		5
-#define	FFB_REG_DFB8X		6
-#define	FFB_REG_DFB24		7
-#define	FFB_REG_DFB32		8
-#define	FFB_REG_SFB8R		9
-#define	FFB_REG_SFB8G		10
-#define	FFB_REG_SFB8B		11
-#define	FFB_REG_SFB8X		12
-#define	FFB_REG_SFB32		13
-#define	FFB_REG_SFB64		14
-#define	FFB_REG_DFB422A		15
-#define	FFB_REG_DFB422AD	16
-#define	FFB_REG_DFB24B		17
-#define	FFB_REG_DFB422B		18
-#define	FFB_REG_DFB422BD	19
-#define	FFB_REG_SFB8Z		20
-#define	FFB_REG_SFB16Z		21
-#define	FFB_REG_SFB422		22
-#define	FFB_REG_SFB422D		23
+#include <sparc64/dev/creatorreg.h>
+#include <sparc64/dev/creatorvar.h>
 
 struct wsscreen_descr creator_stdscreen = {
 	"std",
 	0, 0,	/* will be filled in -- XXX shouldn't, it's global. */
 	0,
 	0, 0,
+	WSSCREEN_UNDERLINE | WSSCREEN_HILIT |
 	WSSCREEN_REVERSE | WSSCREEN_WSCOLORS
 };
 
@@ -103,6 +78,16 @@ int	creator_show_screen(void *, void *, int, void (*cb)(void *, int, int),
 	    void *);
 paddr_t creator_mmap(void *, off_t, int);
 static int a2int(char *, int);
+void	creator_ras_fifo_wait(struct creator_softc *, int);
+void	creator_ras_wait(struct creator_softc *);
+void	creator_ras_init(struct creator_softc *);
+void	creator_ras_copyrows(void *, int, int, int);
+void	creator_ras_erasecols(void *, int, int, int, long int);
+void	creator_ras_eraserows(void *, int, int, long int);
+void	creator_ras_updatecursor(struct rasops_info *);
+void	creator_ras_fill(struct creator_softc *);
+void	creator_ras_setfg(struct creator_softc *, int32_t);
+void	creator_ras_updatecursor(struct rasops_info *);
 
 struct wsdisplay_accessops creator_accessops = {
 	creator_ioctl,
@@ -110,70 +95,27 @@ struct wsdisplay_accessops creator_accessops = {
 	creator_alloc_screen,
 	creator_free_screen,
 	creator_show_screen,
-	NULL,	/* load_font */
+	NULL,	/* load font */
 	NULL,	/* scrollback */
 	NULL,	/* getchar */
 	NULL,	/* burner */
-};
-
-struct creator_softc {
-	struct device sc_dv;
-	bus_space_tag_t sc_bt;
-	bus_space_handle_t sc_pixel_h;
-	bus_addr_t sc_addrs[FFB_NREGS];
-	bus_size_t sc_sizes[FFB_NREGS];
-	int sc_height, sc_width, sc_linebytes, sc_depth;
-	int sc_nscreens, sc_nreg;
-	u_int sc_mode;
-	struct rasops_info sc_rasops;
-};
-
-int	creator_match(struct device *, void *, void *);
-void	creator_attach(struct device *, struct device *, void *);
-
-struct cfattach creator_ca = {
-	sizeof(struct creator_softc), creator_match, creator_attach
 };
 
 struct cfdriver creator_cd = {
 	NULL, "creator", DV_DULL
 };
 
-int
-creator_match(parent, match, aux)
-	struct device *parent;
-	void *match, *aux;
-{
-	struct mainbus_attach_args *ma = aux;
-
-	if (strcmp(ma->ma_name, "SUNW,ffb") == 0 ||
-	    strcmp(ma->ma_name, "SUNW,afb") == 0)
-		return (1);
-	return (0);
-}
-
 void
-creator_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+creator_attach(struct creator_softc *sc)
 {
-	struct creator_softc *sc = (struct creator_softc *)self;
-	struct mainbus_attach_args *ma = aux;
 	struct wsemuldisplaydev_attach_args waa;
-	long defattr;
-	extern int fbnode;
-	int i, btype, console, nregs;
 	char *model;
-
-	sc->sc_bt = ma->ma_bustag;
-
-	nregs = min(ma->ma_nreg, FFB_NREGS);
+	int btype;
 
 	printf(":");
 
-	if (strcmp(ma->ma_name, "SUNW,afb") != 0) {
-		btype = getpropint(ma->ma_node, "board_type", 0);
-
+	if (sc->sc_type == FFB_CREATOR) {
+		btype = getpropint(sc->sc_node, "board_type", 0);
 		if ((btype & 7) == 3)
 			printf(" Creator3D");
 		else
@@ -181,35 +123,16 @@ creator_attach(parent, self, aux)
 	} else
 		printf(" Elite3D");
 
-	model = getpropstring(ma->ma_node, "model");
+	model = getpropstring(sc->sc_node, "model");
 	if (model == NULL || strlen(model) == 0)
 		model = "unknown";
 
 	printf(", model %s\n", model);
 
-	if (nregs < FFB_REG_DFB24) {
-		printf(": no dfb24 regs found\n");
-		goto fail;
-	}
-
-	if (bus_space_map2(sc->sc_bt, 0, ma->ma_reg[FFB_REG_DFB24].ur_paddr,
-	    ma->ma_reg[FFB_REG_DFB24].ur_len, 0, NULL, &sc->sc_pixel_h)) {
-		printf("%s: failed to map dfb24\n", sc->sc_dv.dv_xname);
-		goto fail;
-	}
-
-	for (i = 0; i < nregs; i++) {
-		sc->sc_addrs[i] = ma->ma_reg[i].ur_paddr;
-		sc->sc_sizes[i] = ma->ma_reg[i].ur_len;
-	}
-	sc->sc_nreg = nregs;
-
-	console = (fbnode == ma->ma_node);
-
 	sc->sc_depth = 24;
 	sc->sc_linebytes = 8192;
-	sc->sc_height = getpropint(ma->ma_node, "height", 0);
-	sc->sc_width = getpropint(ma->ma_node, "width", 0);
+	sc->sc_height = getpropint(sc->sc_node, "height", 0);
+	sc->sc_width = getpropint(sc->sc_node, "width", 0);
 
 	sc->sc_rasops.ri_depth = 32;
 	sc->sc_rasops.ri_stride = sc->sc_linebytes;
@@ -225,37 +148,47 @@ creator_attach(parent, self, aux)
 	    a2int(getpropstring(optionsnode, "screen-#rows"), 34),
 	    a2int(getpropstring(optionsnode, "screen-#columns"), 80));
 
+	if ((sc->sc_dv.dv_cfdata->cf_flags & CREATOR_CFFLAG_NOACCEL) == 0) {
+		sc->sc_rasops.ri_hw = sc;
+		sc->sc_rasops.ri_ops.eraserows = creator_ras_eraserows;
+		sc->sc_rasops.ri_ops.erasecols = creator_ras_erasecols;
+		sc->sc_rasops.ri_ops.copyrows = creator_ras_copyrows;
+		creator_ras_init(sc);
+	}
+
 	creator_stdscreen.nrows = sc->sc_rasops.ri_rows;
 	creator_stdscreen.ncols = sc->sc_rasops.ri_cols;
 	creator_stdscreen.textops = &sc->sc_rasops.ri_ops;
-	sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops, 0, 0, 0, &defattr);
 
-	if (console) {
-		int *ccolp, *crowp;
+	if (sc->sc_console) {
+		long defattr;
 
-		if (romgetcursoraddr(&crowp, &ccolp))
-			ccolp = crowp = NULL;
-		if (ccolp != NULL)
-			sc->sc_rasops.ri_ccol = *ccolp;
-		if (crowp != NULL)
-			sc->sc_rasops.ri_crow = *crowp;
+		if (romgetcursoraddr(&sc->sc_crowp, &sc->sc_ccolp))
+			sc->sc_ccolp = sc->sc_crowp = NULL;
+		if (sc->sc_ccolp != NULL)
+			sc->sc_rasops.ri_ccol = *sc->sc_ccolp;
+		if (sc->sc_crowp != NULL)
+			sc->sc_rasops.ri_crow = *sc->sc_crowp;
+
+		/* fix color choice */
+		wscol_white = 0;
+		wscol_black = 255;
+		wskernel_bg = 0;
+		wskernel_fg = 255;
+
+		sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops,
+		    0, 0, 0, &defattr);
+		sc->sc_rasops.ri_updatecursor = creator_ras_updatecursor;
 
 		wsdisplay_cnattach(&creator_stdscreen, &sc->sc_rasops,
 		    sc->sc_rasops.ri_ccol, sc->sc_rasops.ri_crow, defattr);
 	}
 
-	waa.console = console;
+	waa.console = sc->sc_console;
 	waa.scrdata = &creator_screenlist;
 	waa.accessops = &creator_accessops;
 	waa.accesscookie = sc;
-	config_found(self, &waa, wsemuldisplaydevprint);
-
-	return;
-
-fail:
-	if (sc->sc_pixel_h != 0)
-		bus_space_unmap(sc->sc_bt, sc->sc_pixel_h,
-		    ma->ma_reg[FFB_REG_DFB24].ur_len);
+	config_found(&sc->sc_dv, &waa, wsemuldisplaydevprint);
 }
 
 int
@@ -271,7 +204,7 @@ creator_ioctl(v, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_SUNFFB;
+		*(u_int *)data = WSDISPLAY_TYPE_SUN24;
 		break;
 	case WSDISPLAYIO_SMODE:
 		sc->sc_mode = *(u_int *)data;
@@ -395,4 +328,200 @@ a2int(char *cp, int deflt)
 	while (*cp != '\0')
 		i = i * 10 + *cp++ - '0';
 	return (i);
+}
+
+void
+creator_ras_fifo_wait(sc, n)
+	struct creator_softc *sc;
+	int n;
+{
+	int32_t cache = sc->sc_fifo_cache;
+
+	if (cache < n) {
+		do {
+			cache = FBC_READ(sc, FFB_FBC_UCSR);
+			cache = (cache & FBC_UCSR_FIFO_MASK) - 8;
+		} while (cache < n);
+	}
+	sc->sc_fifo_cache = cache - n;
+}
+
+void
+creator_ras_wait(sc)
+	struct creator_softc *sc;
+{
+	u_int32_t ucsr, r;
+
+	while (1) {
+		ucsr = FBC_READ(sc, FFB_FBC_UCSR);
+		if ((ucsr & (FBC_UCSR_FB_BUSY|FBC_UCSR_RP_BUSY)) == 0)
+			break;
+		r = ucsr & (FBC_UCSR_READ_ERR | FBC_UCSR_FIFO_OVFL);
+		if (r != 0)
+			FBC_WRITE(sc, FFB_FBC_UCSR, r);
+	}
+}
+
+void
+creator_ras_init(sc)
+	struct creator_softc *sc;
+{
+	creator_ras_fifo_wait(sc, 7);
+	FBC_WRITE(sc, FFB_FBC_PPC,
+	    FBC_PPC_VCE_DIS | FBC_PPC_TBE_OPAQUE |
+	    FBC_PPC_APE_DIS | FBC_PPC_CS_CONST);
+	FBC_WRITE(sc, FFB_FBC_FBC,
+	    FFB_FBC_WB_A | FFB_FBC_RB_A | FFB_FBC_SB_BOTH |
+	    FFB_FBC_XE_OFF | FFB_FBC_RGBE_MASK);
+	FBC_WRITE(sc, FFB_FBC_ROP, FBC_ROP_NEW);
+	FBC_WRITE(sc, FFB_FBC_DRAWOP, FBC_DRAWOP_RECTANGLE);
+	FBC_WRITE(sc, FFB_FBC_PMASK, 0xffffffff);
+	FBC_WRITE(sc, FFB_FBC_FONTINC, 0x10000);
+	sc->sc_fg_cache = 0;
+	FBC_WRITE(sc, FFB_FBC_FG, sc->sc_fg_cache);
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_eraserows(cookie, row, n, attr)
+	void *cookie;
+	int row, n;
+	long int attr;
+{
+	struct rasops_info *ri = cookie;
+	struct creator_softc *sc = ri->ri_hw;
+
+	if (row < 0) {
+		n += row;
+		row = 0;
+	}
+	if (row + n > ri->ri_rows)
+		n = ri->ri_rows - row;
+	if (n <= 0)
+		return;
+
+	creator_ras_fill(sc);
+	creator_ras_setfg(sc, ri->ri_devcmap[(attr >> 16) & 0xf]);
+	creator_ras_fifo_wait(sc, 4);
+	if ((n == ri->ri_rows) && (ri->ri_flg & RI_FULLCLEAR)) {
+		FBC_WRITE(sc, FFB_FBC_BY, 0);
+		FBC_WRITE(sc, FFB_FBC_BX, 0);
+		FBC_WRITE(sc, FFB_FBC_BH, ri->ri_height);
+		FBC_WRITE(sc, FFB_FBC_BW, ri->ri_width);
+	} else {
+		row *= ri->ri_font->fontheight;
+		FBC_WRITE(sc, FFB_FBC_BY, ri->ri_yorigin + row);
+		FBC_WRITE(sc, FFB_FBC_BX, ri->ri_xorigin);
+		FBC_WRITE(sc, FFB_FBC_BH, n * ri->ri_font->fontheight);
+		FBC_WRITE(sc, FFB_FBC_BW, ri->ri_emuwidth);
+	}
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_erasecols(cookie, row, col, n, attr)
+	void *cookie;
+	int row, col, n;
+	long int attr;
+{
+	struct rasops_info *ri = cookie;
+	struct creator_softc *sc = ri->ri_hw;
+
+	if ((row < 0) || (row >= ri->ri_rows))
+		return;
+	if (col < 0) {
+		n += col;
+		col = 0;
+	}
+	if (col + n > ri->ri_cols)
+		n = ri->ri_cols - col;
+	if (n <= 0)
+		return;
+	n *= ri->ri_font->fontwidth;
+	col *= ri->ri_font->fontwidth;
+	row *= ri->ri_font->fontheight;
+
+	creator_ras_fill(sc);
+	creator_ras_setfg(sc, ri->ri_devcmap[(attr >> 16) & 0xf]);
+	creator_ras_fifo_wait(sc, 4);
+	FBC_WRITE(sc, FFB_FBC_BY, ri->ri_yorigin + row);
+	FBC_WRITE(sc, FFB_FBC_BX, ri->ri_xorigin + col);
+	FBC_WRITE(sc, FFB_FBC_BH, ri->ri_font->fontheight);
+	FBC_WRITE(sc, FFB_FBC_BW, n - 1);
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_fill(sc)
+	struct creator_softc *sc;
+{
+	creator_ras_fifo_wait(sc, 2);
+	FBC_WRITE(sc, FFB_FBC_ROP, FBC_ROP_NEW);
+	FBC_WRITE(sc, FFB_FBC_DRAWOP, FBC_DRAWOP_RECTANGLE);
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_copyrows(cookie, src, dst, n)
+	void *cookie;
+	int src, dst, n;
+{
+	struct rasops_info *ri = cookie;
+	struct creator_softc *sc = ri->ri_hw;
+
+	if (dst == src)
+		return;
+	if (src < 0) {
+		n += src;
+		src = 0;
+	}
+	if ((src + n) > ri->ri_rows)
+		n = ri->ri_rows - src;
+	if (dst < 0) {
+		n += dst;
+		dst = 0;
+	}
+	if ((dst + n) > ri->ri_rows)
+		n = ri->ri_rows - dst;
+	if (n <= 0)
+		return;
+	n *= ri->ri_font->fontheight;
+	src *= ri->ri_font->fontheight;
+	dst *= ri->ri_font->fontheight;
+
+	creator_ras_fifo_wait(sc, 8);
+	FBC_WRITE(sc, FFB_FBC_ROP, FBC_ROP_OLD | (FBC_ROP_OLD << 8));
+	FBC_WRITE(sc, FFB_FBC_DRAWOP, FBC_DRAWOP_VSCROLL);
+	FBC_WRITE(sc, FFB_FBC_BY, ri->ri_yorigin + src);
+	FBC_WRITE(sc, FFB_FBC_BX, ri->ri_xorigin);
+	FBC_WRITE(sc, FFB_FBC_DY, ri->ri_yorigin + dst);
+	FBC_WRITE(sc, FFB_FBC_DX, ri->ri_xorigin);
+	FBC_WRITE(sc, FFB_FBC_BH, n);
+	FBC_WRITE(sc, FFB_FBC_BW, ri->ri_emuwidth);
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_setfg(sc, fg)
+	struct creator_softc *sc;
+	int32_t fg;
+{
+	creator_ras_fifo_wait(sc, 1);
+	if (fg == sc->sc_fg_cache)
+		return;
+	sc->sc_fg_cache = fg;
+	FBC_WRITE(sc, FFB_FBC_FG, fg);
+	creator_ras_wait(sc);
+}
+
+void
+creator_ras_updatecursor(ri)
+	struct rasops_info *ri;
+{
+	struct creator_softc *sc = ri->ri_hw;
+
+	if (sc->sc_crowp != NULL)
+		*sc->sc_crowp = ri->ri_crow;
+	if (sc->sc_ccolp != NULL)
+		*sc->sc_ccolp = ri->ri_ccol;
 }

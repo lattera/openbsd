@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.6.1 2002/06/11 03:27:42 art Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.6.2 2002/10/29 00:28:00 art Exp $	*/
 /*	$KAME: altq_var.h,v 1.8 2001/02/09 09:44:41 kjc Exp $	*/
 
 /*
@@ -232,7 +232,11 @@ typedef void (timeout_t)(void *);
 
 #define	m_pktlen(m)		((m)->m_pkthdr.len)
 
+/* define a macro to check pf/altq until the transition is complete */
+#define	PFALTQ_IS_ACTIVE()	(!TAILQ_EMPTY(pf_altqs_active))
+
 struct ifnet; struct mbuf; struct flowinfo;
+struct pf_altq; struct pf_qstats;
 
 void *altq_lookup(char *, int);
 int altq_extractflow(struct mbuf *, int, struct flowinfo *, u_int32_t);
@@ -246,6 +250,20 @@ void write_dsfield(struct mbuf *, struct altq_pktattr *, u_int8_t);
 void altq_assert(const char *, int, const char *);
 int tbr_set(struct ifaltq *, struct tb_profile *);
 int tbr_get(struct ifaltq *, struct tb_profile *);
+int	altq_pfattach(struct pf_altq *);
+int	altq_pfdetach(struct pf_altq *);
+int	altq_add(struct pf_altq *);
+int	altq_remove(struct pf_altq *);
+int	altq_add_queue(struct pf_altq *);
+int	altq_remove_queue(struct pf_altq *);
+int	altq_getqstats(struct pf_altq *, void *, int *);
+
+int	cbq_pfattach(struct pf_altq *);
+int	cbq_add_altq(struct pf_altq *);
+int	cbq_remove_altq(struct pf_altq *);
+int	cbq_add_queue(struct pf_altq *);
+int	cbq_remove_queue(struct pf_altq *);
+int	cbq_getqstats(struct pf_altq *, void *, int *);
 
 #endif /* _KERNEL */
 #endif /* _ALTQ_ALTQ_VAR_H_ */

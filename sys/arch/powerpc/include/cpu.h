@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.8.4.1 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.8.4.2 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*

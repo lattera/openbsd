@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_fs.c,v 1.6.2.1 2002/06/11 03:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_fs.c,v 1.6.2.2 2002/10/29 00:30:52 art Exp $	*/
 /*	$NetBSD: ultrix_fs.c,v 1.4 1996/04/07 17:23:06 jonathan Exp $	*/
 
 /*
@@ -244,7 +244,7 @@ ultrix_sys_getmnt(p, v, retval)
 	for (count = 0, mp = mountlist.cqh_first;
 	    mp != (void *)&mountlist && count < maxcount; mp = nmp) {
 		nmp = mp->mnt_list.cqe_next;
-		if (sfsp != NULL && (mp->mnt_flag & MNT_MLOCK) == 0) {
+		if (sfsp != NULL) {
 			struct ultrix_fs_data tem;
 			sp = &mp->mnt_stat;
 
@@ -331,13 +331,11 @@ ultrix_sys_mount(p, v, retval)
 
 	int error;
 	int otype = SCARG(uap, type);
-	extern char sigcode[], esigcode[];
 	char fsname[MFSNAMELEN];
 	char * fstype;
 	struct sys_mount_args nuap;
-
-#define	szsigcode	(esigcode - sigcode)
-	caddr_t usp = (caddr_t)ALIGN(PS_STRINGS - szsigcode - STACKGAPLEN);
+	caddr_t sg = stackgap_init(p->p_emul);
+	caddr_t usp = stackgap_alloc(&sg, 1024 /* XXX */);
 
 	bzero(&nuap, sizeof(nuap));
 	SCARG(&nuap, flags) = 0;

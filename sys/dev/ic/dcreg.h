@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.21.2.1 2002/06/11 03:42:18 art Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.21.2.2 2002/10/29 00:33:24 art Exp $ */
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -84,6 +84,7 @@
 #define DC_TYPE_PNIC		0xA	/* 82c168/82c169 PNIC I */
 #define DC_TYPE_XIRCOM		0xB	/* Xircom X3201 */
 #define DC_TYPE_CONEXANT	0xC	/* Conexant LANfinity RS7112 */
+#define DC_TYPE_21145		0xD	/* Intel 21145 */
 
 #define DC_IS_MACRONIX(x)			\
 	(x->dc_type == DC_TYPE_98713 ||		\
@@ -94,7 +95,10 @@
 	(x->dc_type == DC_TYPE_AL981 ||		\
 	 x->dc_type == DC_TYPE_AN983)
 
-#define DC_IS_INTEL(x)		(x->dc_type == DC_TYPE_21143)
+#define DC_IS_INTEL(x)				\
+	(x->dc_type == DC_TYPE_21143 ||		\
+	 x->dc_type == DC_TYPE_21145)
+
 #define DC_IS_ASIX(x)		(x->dc_type == DC_TYPE_ASIX)
 #define DC_IS_COMET(x)		(x->dc_type == DC_TYPE_AL981)
 #define DC_IS_CENTAUR(x)	(x->dc_type == DC_TYPE_AN983)
@@ -469,7 +473,7 @@ struct dc_list_data {
 /* software descriptor */
 struct dc_swdesc {
 	bus_dmamap_t		sd_map;
-	struct mbuf *		sd_mbuf;
+	struct mbuf		*sd_mbuf;
 };
 
 struct dc_chain_data {

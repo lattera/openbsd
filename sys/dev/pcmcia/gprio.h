@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/gprio.h,v 1.3 2002/09/25 19:09:02 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/gprio.h,v 1.3.4.1 2002/10/29 00:33:30 art Exp $	*/
 
 /*
  * Copyright (c) 2002, Federico G. Schwindt

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ohcireg.h,v 1.9 2000/11/08 18:10:37 aaron Exp $ */
-/*	$NetBSD: ohcireg.h,v 1.18 2000/04/27 15:26:47 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ohcireg.h,v 1.9.6.1 2002/10/29 00:33:32 art Exp $ */
+/*	$NetBSD: ohcireg.h,v 1.19 2002/07/11 21:14:27 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohcireg.h,v 1.8 1999/11/17 22:33:40 n_hibma Exp $	*/
 
 
@@ -226,7 +226,7 @@ typedef struct {
 } ohci_itd_t;
 /* #define OHCI_ITD_SIZE 32 */
 #define OHCI_ITD_ALIGN 32
-	
+
 
 #define OHCI_CC_NO_ERROR		0
 #define OHCI_CC_CRC			1

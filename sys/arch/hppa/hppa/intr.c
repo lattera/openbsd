@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/intr.c,v 1.2.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/intr.c,v 1.2.6.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -100,10 +100,14 @@ cpu_intr(frame)
 			mtctl(1 << bit, CR_EIRR);
 			eirr &= ~(1 << bit);
 			/* ((struct iomod *)cpu_gethpa(0))->io_eir = 0; */
+			if (bit != 31) {
 #ifdef INTRDEBUG
-			if (bit != 31)
 				db_printf ("cpu_intr: 0x%08x\n", (1 << bit));
 #endif
+				frame->tf_flags |= TFF_INTR;
+			} else
+				frame->tf_flags &= ~TFF_INTR;
+
 			iv = &cpu_intr_vectors[bit];
 			if (iv->handler) {
 				register int s, r;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/apmvar.h,v 1.2 2001/10/03 20:06:01 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/apmvar.h,v 1.2.6.1 2002/10/29 00:28:06 art Exp $	*/
 
 /*
  *  Copyright (c) 2001 Alexander Guy

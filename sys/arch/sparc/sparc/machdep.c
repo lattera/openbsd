@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.74.2.2 2002/06/11 03:38:17 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.74.2.3 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -138,7 +138,6 @@ int	physmem;
 
 /* sysctl settable */
 int	sparc_led_blink = 0;
-int	sparc_vsyncblank = 0;
 
 /*
  * safepri is a safe priority for sleep to set for a spin-wait
@@ -252,6 +251,7 @@ cpu_startup()
 		}
 	}
 	pmap_update(pmap_kernel());
+
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
@@ -471,10 +471,6 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (ENOTDIR);	/* overloaded */
 
 	switch (name[0]) {
-	case CPU_VSYNCBLANK:
-		ret = sysctl_int(oldp, oldlenp, newp, newlen,
-		    &sparc_vsyncblank);
-		return (ret);
 	case CPU_LED_BLINK:
 #if (NLED > 0) || (NAUXREG > 0) || (NSCF > 0)
 		oldval = sparc_led_blink;
@@ -501,6 +497,8 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 #else
 		return (EOPNOTSUPP);
 #endif
+	case CPU_CPUTYPE:
+		return (sysctl_rdint(oldp, oldlenp, newp, cputyp));
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -524,8 +522,6 @@ sendsig(catcher, sig, mask, code, type, val)
 	struct trapframe *tf;
 	int caddr, oonstack, oldsp, newsp;
 	struct sigframe sf;
-	extern char sigcode[], esigcode[];
-#define	szsigcode	(esigcode - sigcode)
 #ifdef COMPAT_SUNOS
 	extern struct emul emul_sunos;
 #endif
@@ -623,7 +619,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	} else
 #endif
 	{
-		caddr = (int)PS_STRINGS - szsigcode;
+		caddr = p->p_sigcode;
 		tf->tf_global[1] = (int)catcher;
 	}
 	tf->tf_pc = caddr;

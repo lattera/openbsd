@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.2.2.1 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.2.2.2 2002/10/29 00:28:06 art Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -41,7 +41,7 @@
  * from: Utah Hdr: autoconf.c 1.31 91/01/21
  *
  *	from: @(#)autoconf.c	8.1 (Berkeley) 6/10/93
- *      $Id: autoconf.c,v 1.2 2001/12/05 23:58:41 tdeval Exp $
+ *      $Id: autoconf.c,v 1.2.2.1 2002/06/11 03:36:34 art Exp $
  */
 
 /*
@@ -560,6 +560,8 @@ findtype(s)
 	static struct devmap devmap[] = {
 		{ "/pci@",	NULL, T_BUS },
 		{ "/pci",	NULL, T_BUS },
+		{ "/AppleKiwi@",NULL, T_BUS },
+		{ "/AppleKiwi",	NULL, T_BUS },
 		{ "/mac-io@",	NULL, T_BUS },
 		{ "/mac-io",	NULL, T_BUS },
 		{ "/@",		NULL, T_BUS },
@@ -580,7 +582,7 @@ findtype(s)
 		dp++;
 	}
 	if (dp->att == NULL) {
-		printf("string [%s]not found\n", *s);
+		printf("string [%s] not found\n", *s);
 	}
 	return(dp);
 }

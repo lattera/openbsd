@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.20.2.1 2002/06/11 03:39:20 art Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.20.2.2 2002/10/29 00:28:14 art Exp $     */
 /*	$NetBSD: trap.c,v 1.47 1999/08/21 19:26:20 matt Exp $     */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.
@@ -241,7 +241,7 @@ if(faultdebug)printf("trap accflt type %lx, code %lx, pc %lx, psl %lx\n",
 				    (u_int)frame->pc, (u_int)frame->code);
 			}
 			if (rv == ENOMEM) {
-				printf("UVM: pid %d (%s), uid %d killed: "
+				printf("UVM: pid %d (%s), uid %u killed: "
 				       "out of swap\n",
 				       p->p_pid, p->p_comm,
 				       p->p_cred && p->p_ucred ?

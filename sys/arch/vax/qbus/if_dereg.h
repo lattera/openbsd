@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_dereg.h,v 1.1 2002/06/11 09:36:24 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_dereg.h,v 1.1.4.1 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: if_dereg.h,v 1.2 2000/05/28 17:23:44 ragge Exp $	*/
 
 /*

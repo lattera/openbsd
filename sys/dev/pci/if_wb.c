@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.15.2.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.15.2.2 2002/10/29 00:33:28 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -202,7 +202,7 @@ void wb_eeprom_putbyte(sc, addr)
 	d = addr | WB_EECMD_READ;
 
 	/*
-	 * Feed in each bit and stobe the clock.
+	 * Feed in each bit and strobe the clock.
 	 */
 	for (i = 0x400; i; i >>= 1) {
 		if (d & i) {

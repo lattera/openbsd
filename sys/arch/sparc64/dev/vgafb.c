@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/vgafb.c,v 1.2.2.2 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/vgafb.c,v 1.2.2.3 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -44,6 +44,7 @@
 #include <sys/device.h>
 #include <sys/ioctl.h>
 #include <sys/malloc.h>
+#include <sys/pciio.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -65,11 +66,11 @@ struct vgafb_softc {
 	int sc_node, sc_ofhandle;
 	bus_space_tag_t sc_mem_t;
 	bus_space_tag_t sc_io_t;
-	bus_space_handle_t sc_mem_h, sc_io_h, sc_mmio_h;
-	bus_addr_t sc_io_addr, sc_mem_addr, sc_mmio_addr, sc_rom_addr;
-	bus_size_t sc_io_size, sc_mem_size, sc_mmio_size, sc_rom_size;
+	pcitag_t sc_pcitag;
+	bus_space_handle_t sc_mem_h;
+	bus_addr_t sc_io_addr, sc_mem_addr, sc_mmio_addr;
+	bus_size_t sc_io_size, sc_mem_size, sc_mmio_size;
 	pci_chipset_tag_t sc_pci_chip;
-	u_int8_t *sc_rom_ptr;
 	int sc_has_rom;
 	int sc_console;
 	u_int sc_mode;
@@ -77,6 +78,7 @@ struct vgafb_softc {
 	u_int8_t sc_cmap_green[256];
 	u_int8_t sc_cmap_blue[256];
 	struct rasops_info sc_rasops;
+	int *sc_crowp, *sc_ccolp;
 };
 
 struct wsscreen_descr vgafb_stdscreen = {
@@ -84,6 +86,7 @@ struct wsscreen_descr vgafb_stdscreen = {
 	0, 0,	/* will be filled in -- XXX shouldn't, it's global. */
 	NULL,
 	0, 0,
+	WSSCREEN_UNDERLINE | WSSCREEN_HILIT |
 	WSSCREEN_REVERSE | WSSCREEN_WSCOLORS
 };
 
@@ -110,7 +113,7 @@ int vgafb_getcmap(struct vgafb_softc *, struct wsdisplay_cmap *);
 int vgafb_putcmap(struct vgafb_softc *, struct wsdisplay_cmap *);
 void vgafb_setcolor(struct vgafb_softc *, unsigned int,
     u_int8_t, u_int8_t, u_int8_t);
-
+void vgafb_updatecursor(struct rasops_info *ri);
 static int a2int(char *, int);
 
 struct wsdisplay_accessops vgafb_accessops = {
@@ -168,6 +171,7 @@ vgafbattach(parent, self, aux)
 	sc->sc_mem_t = pa->pa_memt;
 	sc->sc_io_t = pa->pa_iot;
 	sc->sc_node = PCITAG_NODE(pa->pa_tag);
+	sc->sc_pcitag = pa->pa_tag;
 
 	sc->sc_depth = getpropint(sc->sc_node, "depth", -1);
 	if (sc->sc_depth == -1)
@@ -201,7 +205,7 @@ vgafbattach(parent, self, aux)
 		sc->sc_rasops.ri_stride = sc->sc_linebytes;
 	}
 
-	sc->sc_rasops.ri_flg = RI_CENTER;
+	sc->sc_rasops.ri_flg = RI_CENTER | RI_BSWAP;
 	sc->sc_rasops.ri_bits = (void *)bus_space_vaddr(sc->sc_mem_t,
 	    sc->sc_mem_h);
 	sc->sc_rasops.ri_width = sc->sc_width;
@@ -216,18 +220,16 @@ vgafbattach(parent, self, aux)
 	vgafb_stdscreen.ncols = sc->sc_rasops.ri_cols;
 	vgafb_stdscreen.textops = &sc->sc_rasops.ri_ops;
 	sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops,
-	    WSCOL_WHITE, WSCOL_BLACK, WSATTR_WSCOLORS, &defattr);
+	    WSCOL_BLACK, WSCOL_WHITE, WSATTR_WSCOLORS, &defattr);
 
 	printf("\n");
 
 	if (sc->sc_console) {
-		int *ccolp, *crowp;
-
 		sc->sc_ofhandle = OF_stdout();
 
 		if (sc->sc_depth == 8) {
 			vgafb_setcolor(sc, WSCOL_BLACK, 0, 0, 0);
-			vgafb_setcolor(sc, 255, 255, 255, 255);
+			vgafb_setcolor(sc, 255, 0, 0, 0);
 			vgafb_setcolor(sc, WSCOL_RED, 255, 0, 0);
 			vgafb_setcolor(sc, WSCOL_GREEN, 0, 255, 0);
 			vgafb_setcolor(sc, WSCOL_BROWN, 154, 85, 46);
@@ -235,14 +237,22 @@ vgafbattach(parent, self, aux)
 			vgafb_setcolor(sc, WSCOL_MAGENTA, 255, 255, 0);
 			vgafb_setcolor(sc, WSCOL_CYAN, 0, 255, 255);
 			vgafb_setcolor(sc, WSCOL_WHITE, 255, 255, 255);
+		} else {
+			/* fix color choice */
+			wscol_white = 0;
+			wscol_black = 255;
+			wskernel_bg = 0;
+			wskernel_fg = 255;
 		}
 
-		if (romgetcursoraddr(&crowp, &ccolp))
-			ccolp = crowp = NULL;
-		if (ccolp != NULL)
-			sc->sc_rasops.ri_ccol = *ccolp;
-		if (crowp != NULL)
-			sc->sc_rasops.ri_crow = *crowp;
+		if (romgetcursoraddr(&sc->sc_crowp, &sc->sc_ccolp))
+			sc->sc_ccolp = sc->sc_crowp = NULL;
+		if (sc->sc_ccolp != NULL)
+			sc->sc_rasops.ri_ccol = *sc->sc_ccolp;
+		if (sc->sc_crowp != NULL)
+			sc->sc_rasops.ri_crow = *sc->sc_crowp;
+		sc->sc_rasops.ri_updatecursor = vgafb_updatecursor;
+
 		wsdisplay_cnattach(&vgafb_stdscreen, &sc->sc_rasops,
 		    sc->sc_rasops.ri_ccol, sc->sc_rasops.ri_crow, defattr);
 	}
@@ -266,6 +276,7 @@ vgafb_ioctl(v, cmd, data, flags, p)
 {
 	struct vgafb_softc *sc = v;
 	struct wsdisplay_fbinfo *wdf;
+	struct pcisel *sel;
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
@@ -284,7 +295,7 @@ vgafb_ioctl(v, cmd, data, flags, p)
 	case WSDISPLAYIO_LINEBYTES:
 		*(u_int *)data = sc->sc_rasops.ri_stride;
 		break;
-
+		
 	case WSDISPLAYIO_GETCMAP:
 		if (sc->sc_console == 0)
 			return (EINVAL);
@@ -293,6 +304,13 @@ vgafb_ioctl(v, cmd, data, flags, p)
 		if (sc->sc_console == 0)
 			return (EINVAL);
 		return vgafb_putcmap(sc, (struct wsdisplay_cmap *)data);
+
+	case WSDISPLAYIO_GPCIID:
+		sel = (struct pcisel *)data;
+		sel->pc_bus = PCITAG_BUS(sc->sc_pcitag);
+		sel->pc_dev = PCITAG_DEV(sc->sc_pcitag);
+		sel->pc_func = PCITAG_FUNC(sc->sc_pcitag);
+		break;
 
 	case WSDISPLAYIO_SVIDEO:
 	case WSDISPLAYIO_GVIDEO:
@@ -317,6 +335,9 @@ vgafb_getcmap(sc, cm)
 	u_int count = cm->count;
 	int error;
 
+	if (index >= 256 || count > 256 - index)
+		return (EINVAL);
+
 	error = copyout(&sc->sc_cmap_red[index], cm->red, count);
 	if (error)
 		return (error);
@@ -334,13 +355,12 @@ vgafb_putcmap(sc, cm)
 	struct vgafb_softc *sc;
 	struct wsdisplay_cmap *cm;
 {
-	int index = cm->index;
-	int count = cm->count;
+	u_int index = cm->index;
+	u_int count = cm->count;
 	int i;
 	u_char *r, *g, *b;
 
-	if (cm->index >= 256 || cm->count > 256 ||
-	    (cm->index + cm->count) > 256)
+	if (index >= 256 || count > 256 - index)
 		return (EINVAL);
 	if (!uvm_useracc(cm->red, cm->count, B_READ) ||
 	    !uvm_useracc(cm->green, cm->count, B_READ) ||
@@ -390,7 +410,7 @@ vgafb_alloc_screen(v, type, cookiep, curxp, curyp, attrp)
 	*curyp = 0;
 	*curxp = 0;
 	sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops,
-	    WSCOL_WHITE, WSCOL_BLACK, WSATTR_WSCOLORS, attrp);
+	    WSCOL_BLACK, WSCOL_WHITE, WSATTR_WSCOLORS, attrp);
 	sc->sc_nscreens++;
 	return (0);
 }
@@ -423,8 +443,6 @@ vgafb_mmap(v, off, prot)
 	int prot;
 {
 	struct vgafb_softc *sc = v;
-	paddr_t pa;
-	vaddr_t va;
 
 	if (off & PGOFSET)
 		return (-1);
@@ -442,26 +460,13 @@ vgafb_mmap(v, off, prot)
 			return (bus_space_mmap(sc->sc_mem_t,
 			    sc->sc_mmio_addr, off - sc->sc_mmio_addr,
 			    prot, BUS_SPACE_MAP_LINEAR));
-
-		if (sc->sc_rom_ptr != NULL &&
-		    off >= sc->sc_rom_addr &&
-		    off < sc->sc_rom_addr + sc->sc_rom_size) {
-			off -= sc->sc_rom_addr;
-			va = ((vaddr_t)sc->sc_rom_ptr) + off;
-			if (pmap_extract(pmap_kernel(), va, &pa) == FALSE)
-				return (-1);
-			return (pa);
-		}
-		return (-1);
+		break;
 
 	case WSDISPLAYIO_MODE_DUMBFB:
 		if (off >= 0 && off < sc->sc_mem_size)
 			return (bus_space_mmap(sc->sc_mem_t, sc->sc_mem_addr,
 			    off, prot, BUS_SPACE_MAP_LINEAR));
-		return (-1);
-
-	default:
-		return (-1);
+		break;
 	}
 
 	return (-1);
@@ -488,87 +493,6 @@ vgafb_is_console(node)
 	return (fbnode == node);
 }
 
-#define	PCI_ROMBAR_REG		0x30
-#define	PCI_ROMBAR_ADDR(mr)						\
-	    ((mr) & PCI_ROMBAR_ADDR_MASK)
-#define	PCI_ROMBAR_SIZE(mr)						\
-	    (PCI_ROMBAR_ADDR(mr) & -PCI_ROMBAR_ADDR(mr))
-#define	PCI_ROMBAR_ADDR_ENABLE	0x00000001
-#define	PCI_ROMBAR_ADDR_MASK	0xfffff800
-
-/* offsets into the rom space */
-#define	PCI_ROM_OFF_MAGIC0	0x0
-#define	PCI_ROM_OFF_MAGIC1	0x1
-
-/* rom header magic numbers */
-#define	PCI_ROM_MAGIC0		0x55
-#define	PCI_ROM_MAGIC1		0xaa
-
-int
-vgafb_rommap(sc, pa)
-	struct vgafb_softc *sc;
-	struct pci_attach_args *pa;
-{
-	bus_space_handle_t bh;
-	u_int32_t origaddr, address, mask, size, i;
-	u_int8_t *romptr, *p;
-	int s;
-
-	s = splhigh();
-	origaddr = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG);
-	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG,
-	    PCI_ROMBAR_ADDR_MASK);
-	mask = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG);
-	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG, origaddr);
-	address = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG);
-	splx(s);
-
-	/* No ROM supported? */
-	if (mask == 0)
-		return (0);
-
-	address &= PCI_ROMBAR_ADDR_MASK;
-
-	/* Turn on the address decoder please... */
-	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG,
-	    address | PCI_ROMBAR_ADDR_ENABLE);
-
-	size = PCI_ROMBAR_SIZE(mask);
-
-	if (bus_space_map(pa->pa_memt, address, size, 0, &bh)) {
-		pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG, origaddr);
-		return (0);
-	}
-
-	if ((bus_space_read_1(pa->pa_memt, bh, PCI_ROM_OFF_MAGIC0) !=
-	    PCI_ROM_MAGIC0) ||
-	    (bus_space_read_1(pa->pa_memt, bh, PCI_ROM_OFF_MAGIC1) !=
-	    PCI_ROM_MAGIC1)) {
-		/* ROM is supported but not present */
-		bus_space_unmap(pa->pa_memt, bh, size);
-		pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG, origaddr);
-		return (0);
-	}
-
-	romptr = (u_int8_t *)malloc(size, M_DEVBUF, M_NOWAIT);
-	if (romptr == NULL) {
-		bus_space_unmap(pa->pa_memt, bh, size);
-		pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG, origaddr);
-		return (0);
-	}
-
-	for (p = romptr, i = 0; i < size; i++)
-		*p++ = bus_space_read_1(pa->pa_memt, bh, i);
-
-	sc->sc_rom_ptr = romptr;
-	sc->sc_rom_addr = address;
-	sc->sc_rom_size = size;
-
-	bus_space_unmap(pa->pa_memt, bh, size);
-	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROMBAR_REG, origaddr);
-	return (0);
-}
-
 int
 vgafb_mapregs(sc, pa)
 	struct vgafb_softc *sc;
@@ -579,9 +503,7 @@ vgafb_mapregs(sc, pa)
 	int hasio = 0, hasmem = 0, hasmmio = 0; 
 	u_int32_t i, cf;
 
-	vgafb_rommap(sc, pa);
-
-	for (i = 0x10; i <= 0x18; i += 4) {
+	for (i = PCI_MAPREG_START; i < PCI_MAPREG_END; i += 4) {
 		cf = pci_conf_read(pa->pa_pc, pa->pa_tag, i);
 		if (PCI_MAPREG_TYPE(cf) == PCI_MAPREG_TYPE_IO) {
 			if (hasio)
@@ -589,11 +511,6 @@ vgafb_mapregs(sc, pa)
 			if (pci_io_find(pa->pa_pc, pa->pa_tag, i,
 			    &sc->sc_io_addr, &sc->sc_io_size)) {
 				printf(": failed to find io at 0x%x\n", i);
-				continue;
-			}
-			if (bus_space_map(pa->pa_iot, sc->sc_io_addr,
-			    sc->sc_io_size, 0, &sc->sc_io_h)) {
-				printf(": can't map io space\n");
 				continue;
 			}
 			hasio = 1;
@@ -608,19 +525,14 @@ vgafb_mapregs(sc, pa)
 			if (bs <= 0x10000) {	/* mmio */
 				if (hasmmio)
 					continue;
-				if (bus_space_map(pa->pa_memt, ba, bs, 0,
-				    &sc->sc_mmio_h)) {
-					printf(": can't map mmio space\n");
-					continue;
-				}
 				sc->sc_mmio_addr = ba;
 				sc->sc_mmio_size = bs;
 				hasmmio = 1;
 			} else {
 				if (hasmem)
 					continue;
-				if (bus_space_map2(pa->pa_memt, SBUS_BUS_SPACE,
-				    ba, bs, 0, NULL, &sc->sc_mem_h)) {
+				if (bus_space_map(pa->pa_memt, ba, bs,
+				    0, &sc->sc_mem_h)) {
 					printf(": can't map mem space\n");
 					continue;
 				}
@@ -639,11 +551,19 @@ vgafb_mapregs(sc, pa)
 	return (0);
 
 fail:
-	if (hasio)
-		bus_space_unmap(pa->pa_iot, sc->sc_io_h, sc->sc_io_size);
-	if (hasmmio)
-		bus_space_unmap(pa->pa_memt, sc->sc_mmio_h, sc->sc_mmio_size);
 	if (hasmem)
 		bus_space_unmap(pa->pa_memt, sc->sc_mem_h, sc->sc_mem_size);
 	return (1);
+}
+
+void
+vgafb_updatecursor(ri)
+	struct rasops_info *ri;
+{
+	struct vgafb_softc *sc = ri->ri_hw;
+
+	if (sc->sc_crowp != NULL)
+		*sc->sc_crowp = ri->ri_crow;
+	if (sc->sc_ccolp != NULL)
+		*sc->sc_ccolp = ri->ri_ccol;
 }

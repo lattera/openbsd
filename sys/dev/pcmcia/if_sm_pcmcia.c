@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_sm_pcmcia.c,v 1.15.4.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_sm_pcmcia.c,v 1.15.4.2 2002/10/29 00:33:30 art Exp $	*/
 /*	$NetBSD: if_sm_pcmcia.c,v 1.11 1998/08/15 20:47:32 thorpej Exp $  */
 
 /*-
@@ -189,7 +189,7 @@ sm_pcmcia_attach(parent, self, aux)
 		return;
 	}
 
-	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, cfe->iospace[0].length);
+	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, psc->sc_pcioh.size);
 
 	/*
 	 * First try to get the Ethernet address from FUNCE/LANNID tuple.

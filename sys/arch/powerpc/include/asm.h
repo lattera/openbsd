@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/asm.h,v 1.5 2001/09/01 15:49:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/asm.h,v 1.5.4.1 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: asm.h,v 1.1 1996/09/30 16:34:20 ws Exp $	*/
 
 /*

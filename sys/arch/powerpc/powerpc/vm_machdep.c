@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.29.2.2 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.29.2.3 2002/10/29 00:28:09 art Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*

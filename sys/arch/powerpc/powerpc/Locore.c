@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.6 2001/06/24 04:46:25 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.6.4.1 2002/10/29 00:28:08 art Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996 Wolfgang Solfrank.

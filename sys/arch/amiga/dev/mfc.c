@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/mfc.c,v 1.10.24.1 2002/06/11 03:34:58 art Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/mfc.c,v 1.10.24.2 2002/10/29 00:28:01 art Exp $ */
 /*	$NetBSD: mfc.c,v 1.18 1996/12/23 09:10:23 veego Exp $ */
 
 /*
@@ -59,7 +59,6 @@
 
 #include <dev/cons.h>
 
-#include <sys/conf.h>
 #include <machine/conf.h>
 
 #include "mfcs.h"

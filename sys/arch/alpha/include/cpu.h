@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.15.2.1 2002/06/11 03:33:40 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.15.2.2 2002/10/29 00:28:00 art Exp $ */
 /* $NetBSD: cpu.h,v 1.45 2000/08/21 02:03:12 thorpej Exp $ */
 
 /*-
@@ -331,7 +331,9 @@ do {									\
 #define	CPU_BOOTED_KERNEL	6	/* string: booted kernel name */
 #define	CPU_FP_SYNC_COMPLETE	7	/* int: always fixup sync fp traps */
 #define CPU_CHIPSET		8	/* chipset information */
-#define	CPU_MAXID		9	/* 7 valid machdep IDs */
+#define CPU_ALLOWAPERTURE         9
+
+#define	CPU_MAXID		10	/* valid machdep IDs */
 
 #define CPU_CHIPSET_MEM		1	/* PCI memory address */
 #define CPU_CHIPSET_BWX		2	/* PCI supports BWX */
@@ -351,6 +353,7 @@ do {									\
 	{ "booted_kernel", CTLTYPE_STRING }, \
 	{ "fp_sync_complete", CTLTYPE_INT }, \
 	{ "chipset", CTLTYPE_NODE }, \
+	{ "allowaperture", CTLTYPE_INT }, \
 }
 
 #define CTL_CHIPSET_NAMES { \
@@ -385,9 +388,10 @@ void alpha_write_fpcr(u_int64_t);				/* MAGIC */
 u_int64_t alpha_read_fp_c(struct proc *);
 void alpha_write_fp_c(struct proc *, u_int64_t);
 
-void alpha_enable_fp(struct proc *, int);
 int alpha_fp_complete(u_long, u_long, struct proc *, u_int64_t *);
 #endif
+
+void alpha_enable_fp(struct proc *, int);
 
 #endif /* _KERNEL */
 #endif /* _ALPHA_CPU_H_ */

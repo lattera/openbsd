@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgsixreg.h,v 1.4 2002/08/12 16:18:59 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgsixreg.h,v 1.4.4.1 2002/10/29 00:33:31 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

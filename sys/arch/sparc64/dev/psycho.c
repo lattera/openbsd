@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/psycho.c,v 1.9.2.2 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/psycho.c,v 1.9.2.3 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: psycho.c,v 1.39 2001/10/07 20:30:41 eeh Exp $	*/
 
 /*
@@ -57,12 +57,12 @@
 #include <sparc64/dev/psychovar.h>
 #include <sparc64/sparc64/cache.h>
 
-#undef DEBUG
 #ifdef DEBUG
 #define PDB_PROM	0x01
 #define PDB_BUSMAP	0x02
 #define PDB_INTR	0x04
-int psycho_debug = 0x0;
+#define PDB_CONF	0x08
+int psycho_debug = 0;
 #define DPRINTF(l, s)   do { if (psycho_debug & l) printf s; } while (0)
 #else
 #define DPRINTF(l, s)
@@ -614,7 +614,7 @@ psycho_ue(arg)
 	/*
 	 * It's uncorrectable.  Dump the regs and panic.
 	 */
-	panic("%s: uncorrectable DMA error AFAR %llx (pa=%llx) AFSR %llx\n",
+	panic("%s: uncorrectable DMA error AFAR %llx (pa=%llx) AFSR %llx",
 	    sc->sc_dev.dv_xname, afar,
 	    (long long)iommu_extract(sc->sc_is, (vaddr_t)afar), afsr);
 	return (1);
@@ -755,7 +755,7 @@ psycho_iommu_init(sc, tsbsize)
 
 	/* give us a nice name.. */
 	name = (char *)malloc(32, M_DEVBUF, M_NOWAIT);
-	if (name == 0)
+	if (name == NULL)
 		panic("couldn't malloc iommu name");
 	snprintf(name, 32, "%s dvma", sc->sc_dev.dv_xname);
 
@@ -1191,10 +1191,10 @@ psycho_pci_conf_read(pc, tag, reg)
 	struct psycho_softc *sc = pp->pp_sc;
 	pcireg_t val = (pcireg_t)~0;
 
-	DPRINTF(SPDB_CONF, ("pci_conf_read: tag %lx reg %x ", 
+	DPRINTF(PDB_CONF, ("pci_conf_read: tag %lx reg %x ", 
 		(long)tag, reg));
 	if (PCITAG_NODE(tag) != -1) {
-		DPRINTF(SPDB_CONF, ("asi=%x addr=%qx (offset=%x) ...",
+		DPRINTF(PDB_CONF, ("asi=%x addr=%qx (offset=%x) ...",
 			bus_type_asi[sc->sc_configtag->type],
 			(long long)(sc->sc_configaddr + 
 				PCITAG_OFFSET(tag) + reg),
@@ -1204,10 +1204,10 @@ psycho_pci_conf_read(pc, tag, reg)
 			PCITAG_OFFSET(tag) + reg);
 	}
 #ifdef DEBUG
-	else DPRINTF(SPDB_CONF, ("pci_conf_read: bogus pcitag %x\n",
+	else DPRINTF(PDB_CONF, ("pci_conf_read: bogus pcitag %x\n",
 	    (int)PCITAG_OFFSET(tag)));
 #endif
-	DPRINTF(SPDB_CONF, (" returning %08x\n", (u_int)val));
+	DPRINTF(PDB_CONF, (" returning %08x\n", (u_int)val));
 
 	return (val);
 }
@@ -1222,16 +1222,16 @@ psycho_pci_conf_write(pc, tag, reg, data)
 	struct psycho_pbm *pp = pc->cookie;
 	struct psycho_softc *sc = pp->pp_sc;
 
-	DPRINTF(SPDB_CONF, ("pci_conf_write: tag %lx; reg %x; data %x; ", 
+	DPRINTF(PDB_CONF, ("pci_conf_write: tag %lx; reg %x; data %x; ", 
 		(long)PCITAG_OFFSET(tag), reg, (int)data));
-	DPRINTF(SPDB_CONF, ("asi = %x; readaddr = %qx (offset = %x)\n",
+	DPRINTF(PDB_CONF, ("asi = %x; readaddr = %qx (offset = %x)\n",
 		bus_type_asi[sc->sc_configtag->type],
 		(long long)(sc->sc_configaddr + PCITAG_OFFSET(tag) + reg), 
 		(int)PCITAG_OFFSET(tag) + reg));
 
 	/* If we don't know it, just punt. */
 	if (PCITAG_NODE(tag) == -1) {
-		DPRINTF(SPDB_CONF, ("pci_config_write: bad addr"));
+		DPRINTF(PDB_CONF, ("pci_config_write: bad addr"));
 		return;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.8.10.2 2002/06/11 03:35:36 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.8.10.3 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -82,6 +82,7 @@ com_gsc_attach(parent, self, aux)
 	struct gsc_attach_args *ga = aux;
 	struct com_gsc_regs *regs;
 
+	sc->sc_frequency = COM_FREQ;
 	sc->sc_iobase = (bus_addr_t)ga->ga_hpa + IOMOD_DEVOFFSET;
 	sc->sc_iot = ga->ga_iot;
 	if (sc->sc_iobase == CONADDR)

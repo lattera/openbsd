@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii.c,v 1.10.4.1 2002/06/11 03:42:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii.c,v 1.10.4.2 2002/10/29 00:33:27 art Exp $	*/
 /*	$NetBSD: mii.c,v 1.19 2000/02/02 17:09:44 thorpej Exp $	*/
 
 /*-
@@ -190,7 +190,7 @@ mii_activate(mii, act, phyloc, offloc)
 
 		case DVACT_DEACTIVATE:
 			if (config_deactivate(&child->mii_dev) != 0)
-				panic("%s: config_activate(%d) failed\n",
+				panic("%s: config_activate(%d) failed",
 				    child->mii_dev.dv_xname, act);
 		}
 	}

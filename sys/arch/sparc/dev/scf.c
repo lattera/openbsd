@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/scf.c,v 1.3.6.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/scf.c,v 1.3.6.2 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -50,6 +50,7 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
+#include <sys/timeout.h>
 
 #include <machine/autoconf.h>
 #include <sparc/cpu.h>
@@ -140,10 +141,10 @@ scfattach(parent, self, aux)
 	sc->sc_regs->led1 &= ~LED_MASK;
 	sc->sc_regs->ssldcr = 0;
 
-	if (sparc_led_blink) {
-		timeout_set(&sc->sc_blink_tmo, scfblink, 0);
+	timeout_set(&sc->sc_blink_tmo, scfblink, 0);
+
+	if (sparc_led_blink)
 		scfblink(0);
-	}
 }
 
 int

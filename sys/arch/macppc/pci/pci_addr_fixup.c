@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pci_addr_fixup.c,v 1.6 2002/10/17 02:47:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pci_addr_fixup.c,v 1.6.2.1 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: pci_addr_fixup.c,v 1.7 2000/08/03 20:10:45 nathanw Exp $	*/
 
 /*-

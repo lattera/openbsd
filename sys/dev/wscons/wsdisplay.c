@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.36.2.2 2002/06/11 03:42:31 art Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.36.2.3 2002/10/29 00:33:33 art Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -249,7 +249,7 @@ struct consdev wsdisplay_cons = {
 };
 
 #ifndef WSDISPLAY_DEFAULTSCREENS
-# define WSDISPLAY_DEFAULTSCREENS	0
+# define WSDISPLAY_DEFAULTSCREENS	1
 #endif
 int wsdisplay_defaultscreens = WSDISPLAY_DEFAULTSCREENS;
 
@@ -680,7 +680,7 @@ wsdisplay_common_attach(sc, console, scrdata, accessops, accesscookie)
 
 	sc->sc_muxdv = wsmux_create("dmux", sc->sc_dv.dv_unit);
 	if (!sc->sc_muxdv)
-		panic("wsdisplay_common_attach: no memory\n");
+		panic("wsdisplay_common_attach: no memory");
 	sc->sc_muxdv->sc_displaydv = &sc->sc_dv;
 #endif
 
@@ -1100,8 +1100,8 @@ wsdisplay_internal_ioctl(sc, scr, cmd, data, flag, p)
 		    }
 		    else {
 			    /* reenable the burner after exiting from X */
-			    if (sc->sc_burnout)
-				    timeout_add(&sc->sc_burner, sc->sc_burnout);
+			    if (!sc->sc_burnman)
+				    wsdisplay_burn(sc, sc->sc_burnflags);
 
 			    /*
 			     * wsmoused cohabitation with X-Window support

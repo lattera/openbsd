@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/upa.c,v 1.2 2002/06/11 11:03:07 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/upa.c,v 1.2.4.1 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

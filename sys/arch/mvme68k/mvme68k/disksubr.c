@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.23.4.1 2002/06/11 03:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.23.4.2 2002/10/29 00:28:07 art Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -88,8 +88,8 @@ dk_establish(dk, dev)
 		} else
 #endif
 		{
-			target = bootdevlun / 10;
-			lun = bootdevlun % 10;
+			target = bootdevlun >> 4;
+			lun = bootdevlun & 0x0f;
 		}
     		
 		if (sbsc->sc_link[target][lun] != NULL &&

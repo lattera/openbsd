@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.61.2.2 2002/06/11 03:33:39 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.61.2.3 2002/10/29 00:28:00 art Exp $ */
 /* $NetBSD: machdep.c,v 1.210 2000/06/01 17:12:38 thorpej Exp $ */
 
 /*-
@@ -160,6 +160,14 @@ int	bufcachepercent = BUFCACHEPERCENT;
 
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
+
+#ifdef APERTURE
+#ifdef INSECURE
+int allowaperture = 1;
+#else
+int allowaperture = 0;
+#endif
+#endif
 
 int	maxmem;			/* max memory per process */
 
@@ -1533,7 +1541,6 @@ sendsig(catcher, sig, mask, code, type, val)
 	struct trapframe *frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack, fsize, rndfsize, kscsize;
-	extern char sigcode[], esigcode[];
 	siginfo_t *sip, ksi;
 
 	frame = p->p_md.md_tf;
@@ -1638,8 +1645,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Set up the registers to return to sigcode.
 	 */
-	frame->tf_regs[FRAME_PC] =
-	    (u_int64_t)PS_STRINGS - (esigcode - sigcode);
+	frame->tf_regs[FRAME_PC] = p->p_sigcode;
 	frame->tf_regs[FRAME_A0] = sig;
 	frame->tf_regs[FRAME_A1] = (psp->ps_siginfo & sigmask(sig)) ?
 	    (u_int64_t)sip : NULL;
@@ -1787,7 +1793,17 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &alpha_fp_sync_complete));
 #endif
-
+	case CPU_ALLOWAPERTURE:
+#ifdef APERTURE
+		if (securelevel > 0)
+                        return (sysctl_rdint(oldp, oldlenp, newp,
+				 allowaperture));
+                else
+                        return (sysctl_int(oldp, oldlenp, newp, newlen,
+                            &allowaperture));
+#else
+		return (sysctl_rdint(oldp, oldlenp, newp, 0));
+#endif
 	default:
 		return (EOPNOTSUPP);
 	}

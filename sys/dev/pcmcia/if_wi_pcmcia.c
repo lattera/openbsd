@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15.2.2 2002/06/11 03:42:28 art Exp $ */
+/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15.2.3 2002/10/29 00:33:30 art Exp $ */
 /* $NetBSD: if_wi_pcmcia.c,v 1.14 2001/11/26 04:34:56 ichiro Exp $ */
 
 /*
@@ -74,12 +74,6 @@ int	wi_pcmcia_match(struct device *, void *, void *);
 void	wi_pcmcia_attach(struct device *, struct device *, void *);
 int	wi_pcmcia_detach(struct device *, int);
 int	wi_pcmcia_activate(struct device *, enum devact);
-
-int	wi_intr(void *);
-int	wi_attach(struct wi_softc *);
-void	wi_cor_reset(struct wi_softc *);
-void	wi_init(struct wi_softc *);
-void	wi_stop(struct wi_softc *);
 
 struct wi_pcmcia_softc {
 	struct wi_softc sc_wi;
@@ -169,6 +163,11 @@ static const struct wi_pcmcia_product {
 	  PCMCIA_PRODUCT_ELSA_XI300_IEEE,
 	  PCMCIA_CIS_ELSA_XI300_IEEE,
 	  "XI300 Wireless LAN",
+	},
+	{ PCMCIA_VENDOR_ELSA,
+	  PCMCIA_PRODUCT_ELSA_XI325_IEEE,
+	  PCMCIA_CIS_ELSA_XI325_IEEE,
+	  "XI325 Wireless LAN",
 	},
 	{ PCMCIA_VENDOR_COMPAQ,
 	  PCMCIA_PRODUCT_COMPAQ_NC5004,
@@ -265,6 +264,11 @@ static const struct wi_pcmcia_product {
 	  PCMCIA_CIS_NOKIA_C110_WLAN,
 	  "NOKIA C110 Wireless LAN PC CARD",
 	},
+	{ PCMCIA_VENDOR_NETGEAR2,
+	  PCMCIA_PRODUCT_NETGEAR2_MA401RA,
+	  PCMCIA_CIS_NETGEAR2_MA401RA,
+	  "Netgear MA401RA Wireless LAN PC CARD",
+	},
 	{ 0,
 	  0,
 	  { NULL, NULL, NULL, NULL },
@@ -353,11 +357,12 @@ wi_pcmcia_attach(parent, self, aux)
 	}
 	state++;
 
-	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, cfe->iospace[0].length);
+	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, psc->sc_pcioh.size);
 
 	sc->wi_ltag = sc->wi_btag = psc->sc_pcioh.iot;
 	sc->wi_lhandle = sc->wi_bhandle = psc->sc_pcioh.ioh;
 	sc->wi_cor_offset = WI_COR_OFFSET;
+	sc->wi_flags |= WI_FLAGS_BUS_PCMCIA;
 
 	/* Make sure interrupts are disabled. */
 	CSR_WRITE_2(sc, WI_INT_EN, 0);

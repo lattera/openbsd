@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.9.10.1 2002/06/11 03:35:36 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.9.10.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -2335,8 +2335,9 @@ db_disasm(loc, flag)
 	OFS ofs = 0;
 
 	iExInit();
-
-	if (USERMODE(loc)) {
+	if (loc == ddb_regs.tf_iioq_head && ddb_regs.tf_iir)
+		instruct = ddb_regs.tf_iir;
+	else if (USERMODE(loc)) {
 		if (copyin((caddr_t)(loc &~ HPPA_PC_PRIV_MASK),
 		    &instruct, sizeof(instruct)))
 			instruct = 0;

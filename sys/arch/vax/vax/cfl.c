@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cfl.c,v 1.2.10.1 2002/06/11 03:39:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cfl.c,v 1.2.10.2 2002/10/29 00:28:14 art Exp $	*/
 /*	$NetBSD: cfl.c,v 1.2 1998/04/13 12:10:26 ragge Exp $	*/
 /*-
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -138,7 +138,7 @@ cflrw(dev, uio, flag)
 		return (0);
 	s = spl4();
 	while (cfltab.cfl_state == BUSY)
-		sleep((caddr_t)&cfltab, PRIBIO);
+		tsleep((caddr_t)&cfltab, PRIBIO, "cflrw", 0);
 	cfltab.cfl_state = BUSY;
 	splx(s);
 
@@ -160,7 +160,7 @@ cflrw(dev, uio, flag)
 		s = spl4(); 
 		cflstart();
 		while ((bp->b_flags & B_DONE) == 0)
-			sleep((caddr_t)bp, PRIBIO);	
+			tsleep((caddr_t)bp, PRIBIO, "cflrw", 0);	
 		splx(s);
 		if (bp->b_flags & B_ERROR) {
 			error = EIO;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_de.c,v 1.1 2002/06/11 09:36:24 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_de.c,v 1.1.4.1 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: if_de.c,v 1.11 2001/11/13 07:11:24 lukem Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/rpb.h,v 1.7.8.1 2002/06/11 03:39:19 art Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/rpb.h,v 1.7.8.2 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: rpb.h,v 1.6 1998/07/01 09:37:11 ragge Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -125,5 +125,5 @@ struct rpb {		/* size		description */
 #define	BDEV_NET 	BDEV_QE		/* first network BDEV */
 
 #ifdef _KERNEL
-extern struct rpb *rpb;
+extern struct rpb rpb;
 #endif

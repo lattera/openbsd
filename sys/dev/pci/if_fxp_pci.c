@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.11.2.1 2002/06/11 03:42:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.11.2.2 2002/10/29 00:33:28 art Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -107,9 +107,11 @@ fxp_pci_match(parent, match, aux)
 	case PCI_PRODUCT_INTEL_82562:
 	case PCI_PRODUCT_INTEL_PRO_100_VE_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VE_2:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_2:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_3:
 		return (1);
 	}
 
@@ -182,9 +184,11 @@ fxp_pci_attach(parent, self, aux)
 		break;
 	case PCI_PRODUCT_INTEL_PRO_100_VE_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VE_2:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_2:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_3:
 		sc->sc_flags |= FXPF_HAS_RESUME_BUG;
 		sc->not_82557 = 0;
 		break;

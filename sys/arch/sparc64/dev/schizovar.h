@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/schizovar.h,v 1.1.2.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/schizovar.h,v 1.1.2.2 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -49,6 +49,7 @@ struct schizo_pbm {
 	int			sp_flags;
 	int			sp_bus_a;
 	bus_addr_t		sp_confpaddr;
+	struct iommu_state	sp_is;
 };
 
 struct schizo_softc {
@@ -59,4 +60,6 @@ struct schizo_softc {
 	bus_space_tag_t sc_bustag;
 	struct iommu_state *sc_is;
 	bus_addr_t sc_ctrl;
+	bus_space_handle_t sc_ctrlh;
+	struct schizo_regs *sc_regs;
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/usb.h,v 1.14.2.1 2002/06/11 03:42:31 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/usb.h,v 1.14.2.2 2002/10/29 00:33:32 art Exp $ */
 /*	$NetBSD: usb.h,v 1.52 2001/07/23 15:17:50 nathanw Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb.h,v 1.14 1999/11/17 22:33:46 n_hibma Exp $	*/
 
@@ -66,6 +66,8 @@ MALLOC_DECLARE(M_USBHC);
 #endif /* __FreeBSD__ */
 
 
+#define USB_STACK_VERSION 2
+
 #define USB_MAX_DEVICES 128
 #define USB_START_ADDR 0
 
@@ -95,7 +97,7 @@ typedef u_int8_t uDWord[4];
 		     (w)[2] = (u_int8_t)((v) >> 16), \
 		     (w)[3] = (u_int8_t)((v) >> 24))
 #else
-/* 
+/*
  * On little-endian machines that can handle unanliged accesses
  * (e.g. i386) these macros can be replaced by the following.
  */
@@ -404,7 +406,7 @@ typedef struct {
 #define   UIPROTO_DATA_Q921M		0x50    /* Management for Q921 */
 #define   UIPROTO_DATA_Q921		0x51    /* Data for Q921 */
 #define   UIPROTO_DATA_Q921TM		0x52    /* TEI multiplexer for Q921 */
-#define   UIPROTO_DATA_V42BIS		0x90    /* Data compression */  
+#define   UIPROTO_DATA_V42BIS		0x90    /* Data compression */
 #define   UIPROTO_DATA_Q931		0x91    /* Euro-ISDN */
 #define   UIPROTO_DATA_V120		0x92    /* V.24 rate adaption */
 #define   UIPROTO_DATA_CAPI		0x93    /* CAPI 2.0 commands */
@@ -420,8 +422,8 @@ typedef struct {
 
 #define USB_HUB_MAX_DEPTH 5
 
-/* 
- * Minimum time a device needs to be powered down to go through 
+/*
+ * Minimum time a device needs to be powered down to go through
  * a power cycle.  XXX Are these time in the spec?
  */
 #define USB_POWER_DOWN_TIME	200 /* ms */
@@ -572,7 +574,7 @@ struct usb_event {
 		struct {
 			usb_event_cookie_t	ue_cookie;
 			char			ue_devname[16];
-		} ue_driver;			
+		} ue_driver;
 	} u;
 };
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/Attic/svr4_machdep.c,v 1.9.22.1 2002/06/11 03:38:17 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/Attic/svr4_machdep.c,v 1.9.22.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: svr4_machdep.c,v 1.24 1997/07/29 10:04:45 fair Exp $	 */
 
 /*
@@ -452,8 +452,6 @@ svr4_sendsig(catcher, sig, mask, code, type, val)
 	struct svr4_sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack, oldsp, newsp, caddr;
-	extern char svr4_sigcode[], svr4_esigcode[];
-
 
 	tf = (struct trapframe *)p->p_md.md_tf;
 	oldsp = tf->tf_out[6];
@@ -514,7 +512,7 @@ svr4_sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Build context to run handler in.
 	 */
-	caddr = (int)PS_STRINGS - (svr4_esigcode - svr4_sigcode);
+	caddr = p->p_sigcode;
 	tf->tf_global[1] = (int)catcher;
 
 	tf->tf_pc = caddr;

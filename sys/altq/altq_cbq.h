@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_cbq.h,v 1.1 2001/06/27 05:28:34 kjc Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_cbq.h,v 1.1.6.1 2002/10/29 00:28:00 art Exp $	*/
 /*	$KAME: altq_cbq.h,v 1.5 2000/12/02 13:44:40 kjc Exp $	*/
 
 /*
@@ -74,8 +74,8 @@ typedef struct cbq_class_spec {
 	u_int		maxidle;
 	int		minidle;	
 	u_int		offtime;
-	u_long		parent_class_handle;
-	u_long		borrow_class_handle;
+	u_int32_t	parent_class_handle;
+	u_int32_t	borrow_class_handle;
 
 	u_int		pktsize;
 	int		flags;
@@ -87,6 +87,7 @@ typedef struct cbq_class_spec {
 #define	CBQCLF_RIO		0x0004  /* use RIO */
 #define	CBQCLF_FLOWVALVE	0x0008	/* use flowvalve (aka penalty-box) */
 #define	CBQCLF_CLEARDSCP	0x0010  /* clear diffserv codepoint */
+#define	CBQCLF_BORROW		0x0020  /* borrow from parent */
 
 /* class flags only for root class */
 #define	CBQCLF_WRR		0x0100	/* weighted-round robin */
@@ -104,24 +105,24 @@ struct cbq_add_class {
 	struct cbq_interface	cbq_iface;
 
 	cbq_class_spec_t	cbq_class;	
-	u_long			cbq_class_handle;
+	u_int32_t		cbq_class_handle;
 };
 
 struct cbq_delete_class {
 	struct cbq_interface	cbq_iface;
-	u_long			cbq_class_handle;
+	u_int32_t		cbq_class_handle;
 };
 
 struct cbq_modify_class {
 	struct cbq_interface	cbq_iface;
 
 	cbq_class_spec_t	cbq_class;	
-	u_long			cbq_class_handle;
+	u_int32_t		cbq_class_handle;
 };
 
 struct cbq_add_filter {
-	struct cbq_interface		cbq_iface;
-	u_long			cbq_class_handle;
+	struct cbq_interface	cbq_iface;
+	u_int32_t		cbq_class_handle;
 	struct flow_filter	cbq_filter;
 
 	u_long			cbq_filter_handle;
@@ -133,7 +134,7 @@ struct cbq_delete_filter {
 };
 
 typedef struct _cbq_class_stats_ {
-	u_int		handle;
+	u_int32_t	handle;
 	u_int		depth;
 
 	struct pktcntr	xmit_cnt;	/* packets sent in this class */

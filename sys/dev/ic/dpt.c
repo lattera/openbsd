@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.5.2.1 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.5.2.2 2002/10/29 00:33:25 art Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -525,7 +525,7 @@ dpt_poll(sc, ccb)
 
 #ifdef DEBUG
 	if ((ccb->ccb_flg & CCB_PRIVATE) == 0)
-		panic("dpt_poll: called for non-CCB_PRIVATE request\n");
+		panic("dpt_poll: called for non-CCB_PRIVATE request");
 #endif
 
  	if ((ccb->ccb_flg & CCB_INTR) != 0)
@@ -819,7 +819,7 @@ dpt_done_ccb(sc, ccb)
 	 */
 #ifdef DIAGNOSTIC
 	if ((ccb->ccb_flg & CCB_ALLOC) == 0) {
-		panic("%s: done ccb not allocated!\n", sc->sc_dv.dv_xname);
+		panic("%s: done ccb not allocated!", sc->sc_dv.dv_xname);
 		return;
 	}
 #endif

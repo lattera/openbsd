@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pte.h,v 1.3.4.1 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pte.h,v 1.3.4.2 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: pte.h,v 1.1 1996/09/30 16:34:32 ws Exp $	*/
 
 /*-
@@ -79,7 +79,7 @@ typedef	struct pte pte_t;
 
 #ifndef	_LOCORE
 #ifdef	_KERNEL
-extern pte_t *ptable;
+extern struct pte *ptable;
 extern int ptab_cnt;
 #endif	/* _KERNEL */
 #endif	/* _LOCORE */

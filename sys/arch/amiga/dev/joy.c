@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1.10.1 2002/06/11 03:34:58 art Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1.10.2 2002/10/29 00:28:01 art Exp $ */
 
 /*
  * Copyright (c) 2000 Marc Espie.
@@ -30,7 +30,6 @@
 #include <sys/device.h>
 #include <sys/systm.h>
 #include <machine/joystick.h>
-#include <sys/conf.h>
 #include <machine/conf.h>
 #include <amiga/amiga/device.h>
 #include <amiga/amiga/custom.h>

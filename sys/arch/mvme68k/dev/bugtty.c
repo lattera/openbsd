@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/bugtty.c,v 1.4.26.1 2002/06/11 03:36:49 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/bugtty.c,v 1.4.26.2 2002/10/29 00:28:07 art Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn.
@@ -497,7 +497,5 @@ bugttycnputc(dev, c)
 	dev_t dev;
 	char c;
 {
-	if (c == '\n')
-		bug_outchr('\r');
 	bug_outchr(c);
 }

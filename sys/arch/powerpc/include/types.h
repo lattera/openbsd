@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.1 1996/09/30 16:34:36 ws Exp $	*/
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/types.h,v 1.10 2001/09/01 15:49:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/types.h,v 1.10.4.1 2002/10/29 00:28:08 art Exp $	*/
 
 /*-
  * Copyright (C) 1995 Wolfgang Solfrank.

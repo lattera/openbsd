@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.41.2.1 2002/06/11 03:36:50 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.41.2.2 2002/10/29 00:28:07 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -734,7 +734,7 @@ writeback(fp, docachepush)
 							(vm_offset_t)&vmmap[NBPG]);
 			pmap_update(pmap_kernel());
 		} else
-			printf("WARNING: pid %d(%s) uid %d: CPUSH not done\n",
+			printf("WARNING: pid %d(%s) uid %u: CPUSH not done\n",
 					 p->p_pid, p->p_comm, p->p_ucred->cr_uid);
 	} else if ((f->f_ssw & (SSW4_RW|SSW4_TTMASK)) == SSW4_TTM16) {
 		/*

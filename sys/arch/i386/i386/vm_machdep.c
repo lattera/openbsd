@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.36 2001/12/08 02:24:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.36.2.1 2002/10/29 00:28:04 art Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -282,7 +282,7 @@ pagemove(from, to, size)
 		size -= PAGE_SIZE;
 	}
 #if defined(I386_CPU)
-	if (cpu_class != CPUCLASS_386)
+	if (cpu_class == CPUCLASS_386)
 		tlbflush();		
 #endif
 }

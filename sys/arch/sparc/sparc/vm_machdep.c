@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40.2.2 2002/06/11 03:38:17 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40.2.3 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -323,14 +323,12 @@ dvma_mapout(kva, va, len)
  * Map an IO request into kernel virtual address space.
  */
 void
-vmapbuf(bp, sz)
-	struct buf *bp;
-	vsize_t sz;
+vmapbuf(struct buf *bp, vsize_t sz)
 {
 	vaddr_t uva, kva;
-	paddr_t pa;
 	vsize_t size, off;
 	struct pmap *pmap;
+	paddr_t pa;
 
 #ifdef DIAGNOSTIC
 	if ((bp->b_flags & B_PHYS) == 0)
@@ -348,14 +346,7 @@ vmapbuf(bp, sz)
 	 * We do it on our own here to be able to specify an offset to uvm_map
 	 * so that we can get all benefits of PMAP_PREFER.
 	 */
-	while (1) {
-		kva = vm_map_min(kernel_map);
-		if (uvm_map(kernel_map, &kva, size, NULL, uva, 0,
-		    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == 0)
-			break;
-		tsleep(kernel_map, PVM, "vallocwait", 0);
-	}
+	kva = uvm_km_valloc_prefer_wait(kernel_map, size, uva);
 	bp->b_data = (caddr_t)(kva + off);
 
 	while (size > 0) {

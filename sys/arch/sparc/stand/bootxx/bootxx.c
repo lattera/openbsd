@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/bootxx.c,v 1.1.22.1 2002/06/11 03:38:17 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/bootxx.c,v 1.1.22.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: bootxx.c,v 1.2 1997/09/14 19:28:17 pk Exp $	*/
 
 /*
@@ -45,7 +45,7 @@ int netif_debug;
 /*
  * Boot device is derived from ROM provided information.
  */
-const char		progname[] = "bootxx";
+char		progname[] = "bootxx";
 struct open_file	io;
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.6.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.6.2 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: locore.s,v 1.137 2001/08/13 06:10:10 jdolecek Exp $	*/
 
 /*
@@ -64,7 +64,6 @@
 #undef	FLTRACE			/* Keep history of all page faults */
 #undef	TRAPSTATS		/* Count traps */
 #undef	TRAPS_USE_IG		/* Use Interrupt Globals for all traps */
-#define	HWREF			/* Track ref/mod bits in trap handlers */
 #undef	PMAP_FPSTATE		/* Allow nesting of VIS pmap copy/zero */
 #define	NEW_FPSTATE
 #define	PMAP_PHYS_PAGE		/* Use phys ASIs for pmap copy/zero */
@@ -424,48 +423,9 @@ _C_LABEL(cpcb):	POINTER	_C_LABEL(u0)
 	.globl	romp
 romp:	POINTER	0
 
-
-/* NB:	 Do we really need the following around? */
-/*
- * _cputyp is the current cpu type, used to distinguish between
- * the many variations of different sun4* machines. It contains
- * the value CPU_SUN4, CPU_SUN4C, or CPU_SUN4M.
- */
-	.globl	_C_LABEL(cputyp)
-_C_LABEL(cputyp):
-	.word	1
-/*
- * _cpumod is the current cpu model, used to distinguish between variants
- * in the Sun4 and Sun4M families. See /sys/arch/sparc64/include/param.h
- * for possible values.
- */
-	.globl	_C_LABEL(cpumod)
-_C_LABEL(cpumod):
-	.word	1
-/*
- * _mmumod is the current mmu model, used to distinguish between the
- * various implementations of the SRMMU in the sun4m family of machines.
- * See /sys/arch/sparc64/include/param.h for possible values.
- */
-	.globl	_C_LABEL(mmumod)
-_C_LABEL(mmumod):
-	.word	0
-
 	.globl _C_LABEL(cold)
 _C_LABEL(cold):
 	.word 1
-
-/*
- * There variables are pointed to by the cpp symbols PGSHIFT, NBPG,
- * and PGOFSET.
- */
-	.globl	_C_LABEL(pgshift), _C_LABEL(nbpg), _C_LABEL(pgofset)
-_C_LABEL(pgshift):
-	.word	0
-_C_LABEL(nbpg):
-	.word	0
-_C_LABEL(pgofset):
-	.word	0
 
 	_ALIGN
 
@@ -935,11 +895,7 @@ ufast_DMMU_protection:			! 06c = fast data access MMU protection
 	inc	%g2
 	stw	%g2, [%g1+%lo(_C_LABEL(udprot))]
 #endif
-#ifdef HWREF
 	ba,a,pt	%xcc, dmmu_write_fault
-#else
-	ba,a,pt	%xcc, winfault
-#endif
 	nop
 	TA32
 	UTRAP(0x070)			! Implementation dependent traps
@@ -1175,11 +1131,7 @@ kfast_DMMU_protection:			! 06c = fast data access MMU protection
 	inc	%g2
 	stw	%g2, [%g1+%lo(_C_LABEL(kdprot))]
 #endif
-#ifdef HWREF
 	ba,a,pt	%xcc, dmmu_write_fault
-#else
-	ba,a,pt	%xcc, winfault
-#endif
 	nop
 	TA32
 	UTRAP(0x070)			! Implementation dependent traps
@@ -3249,8 +3201,16 @@ instr_miss:
 1:
 	ldxa	[%g6] ASI_PHYS_CACHED, %g4
 	brgez,pn %g4, textfault
-	 or	%g4, TTE_ACCESS, %g7			! Update accessed bit
-	btst	TTE_ACCESS, %g4				! Need to update access git?
+	 nop
+
+	/* Check if it's an executable mapping. */
+	andcc	%g4, TTE_EXEC, %g0
+	bz,pn	%xcc, textfault
+	 nop
+
+
+	or	%g4, TTE_ACCESS, %g7			! Update accessed bit
+	btst	TTE_ACCESS, %g4				! Need to update access bit?
 	bne,pt	%xcc, 1f
 	 nop
 	casxa	[%g6] ASI_PHYS_CACHED, %g4, %g7		!  and store it
@@ -3423,7 +3383,7 @@ slowtrap:
 #ifdef DIAGNOSTIC
 	/* Make sure kernel stack is aligned */
 	btst	0x03, %sp		! 32-bit stack OK?
-	 and	%sp, 0x07, %g4		! 64-bit stack OK?
+	and	%sp, 0x07, %g4		! 64-bit stack OK?
 	bz,pt	%icc, 1f
 	cmp	%g4, 0x1		! Must end in 0b001
 	be,pt	%icc, 1f
@@ -4227,7 +4187,7 @@ _C_LABEL(sparc_interrupt):
 	stw	%g2, [%g1]
 1:
 #endif
-	INTR_SETUP(-CC64FSZ-TF_SIZE)
+	INTR_SETUP(-CC64FSZ-TF_SIZE-8)
 	! Switch to normal globals so we can save them
 	wrpr	%g0, PSTATE_KERN, %pstate
 	stx	%g1, [%sp + CC64FSZ + STKB + TF_G + ( 1*8)]
@@ -4272,7 +4232,17 @@ _C_LABEL(sparc_interrupt):
 	STULNG	%o0, [%l4]
 	sll	%l3, %l6, %l3		! Generate IRQ mask
 	
+	sethi	%hi(_C_LABEL(handled_intr_level)), %l4
+
 	wrpr	%l6, %pil
+
+	/*
+	 * Set handled_intr_level and save the old one so we can restore it
+	 * later.
+	 */
+	ld	[%l4 + %lo(_C_LABEL(handled_intr_level))], %l7
+	st	%l6, [%l4 + %lo(_C_LABEL(handled_intr_level))]
+	st	%l7, [%sp + CC64FSZ + STKB + TF_SIZE]
 
 sparc_intr_retry:
 	wr	%l3, 0, CLEAR_SOFTINT	! (don't clear possible %tick IRQ)
@@ -4440,6 +4410,11 @@ intrcmplt:
 	restore
 97:
 #endif
+
+	/* Restore old handled_intr_level */
+	sethi	%hi(_C_LABEL(handled_intr_level)), %l4
+	ld	[%sp + CC64FSZ + STKB + TF_SIZE], %l7
+	st	%l7, [%l4 + %lo(_C_LABEL(handled_intr_level))]
 
 	ldub	[%sp + CC64FSZ + STKB + TF_OLDPIL], %l3	! restore old %pil
 	wrpr	%g0, PSTATE_KERN, %pstate	! Disable interrupts
@@ -5696,37 +5671,37 @@ _C_LABEL(cpu_initialize):
 	flushw
 
 	/*
-	 * Step 7: change the trap base register, and install our TSB
-	 *
-	 * XXXX -- move this to CPUINFO_VA+32KB?
+	 * Step 7: change the trap base register, and install our TSBs
 	 */
+
+	/* Set the dmmu tsb */
 	sethi	%hi(0x1fff), %l2
-	set	_C_LABEL(tsb), %l0
+	set	_C_LABEL(tsb_dmmu), %l0
 	LDPTR	[%l0], %l0
 	set	_C_LABEL(tsbsize), %l1
 	or	%l2, %lo(0x1fff), %l2
 	ld	[%l1], %l1
 	andn	%l0, %l2, %l0			! Mask off size and split bits
 	or	%l0, %l1, %l0			! Make a TSB pointer
-!	srl	%l0, 0, %l0	! DEBUG -- make sure this is a valid pointer by zeroing the high bits
+	set	TSB, %l2
+	stxa	%l0, [%l2] ASI_DMMU		! Install data TSB pointer
+	membar	#Sync
 
-#ifdef DEBUG
-	set	1f, %o0		! Debug printf
-	srlx	%l0, 32, %o1
-	call	_C_LABEL(prom_printf)
-	 srl	%l0, 0, %o2
-	.data
-1:
-	.asciz	"Setting TSB pointer %08x %08x\r\n"
-	_ALIGN
-	.text
-#endif
 
+	/* Set the immu tsb */
+	sethi	%hi(0x1fff), %l2
+	set	_C_LABEL(tsb_immu), %l0
+	LDPTR	[%l0], %l0
+	set	_C_LABEL(tsbsize), %l1
+	or	%l2, %lo(0x1fff), %l2
+	ld	[%l1], %l1
+	andn	%l0, %l2, %l0			! Mask off size and split bits
+	or	%l0, %l1, %l0			! Make a TSB pointer
 	set	TSB, %l2
 	stxa	%l0, [%l2] ASI_IMMU		! Install insn TSB pointer
 	membar	#Sync				! We may need more membar #Sync in here
-	stxa	%l0, [%l2] ASI_DMMU		! Install data TSB pointer
-	membar	#Sync
+
+	/* Change the trap base register */
 	set	_C_LABEL(trapbase), %l1
 	call	_C_LABEL(prom_set_trap_table)	! Now we should be running 100% from our handlers
 	 mov	%l1, %o0
@@ -8077,7 +8052,7 @@ ENTRY(probeset)
 paginuse:
 	.word	0
 	.text
-ENTRY(pmap_zero_page)
+ENTRY(pmap_zero_phys)
 	!!
 	!! If we have 64-bit physical addresses (and we do now)
 	!! we need to move the pointer from %o0:%o1 to %o0
@@ -8367,7 +8342,7 @@ pmap_zero_phys:
  * We also need to blast the D$ and flush like
  * pmap_zero_page.
  */
-ENTRY(pmap_copy_page)
+ENTRY(pmap_copy_phys)
 	!!
 	!! If we have 64-bit physical addresses (and we do now)
 	!! we need to move the pointer from %o0:%o1 to %o0 and
@@ -12059,7 +12034,6 @@ _C_LABEL(intrcnt):
 _C_LABEL(eintrcnt):
 
 	.comm	_C_LABEL(curproc), PTRSZ
-	.comm	_C_LABEL(promvec), PTRSZ
 	.comm	_C_LABEL(nwindows), 4
 
 #ifdef DEBUG

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.16.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.16.6.2 2002/10/29 00:28:02 art Exp $	*/
 
 /*
- * Copyright (c) 1999-2000 Michael Shalayeff
+ * Copyright (c) 1999-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,8 +53,6 @@
 
 void kdbprinttrap(int, int);
 
-extern label_t *db_recover;
-extern int db_active;
 extern char *trap_type[];
 extern int trap_types;
 
@@ -94,6 +92,8 @@ struct db_variable db_regs[] = {
 	{ "r31",   (long *)&ddb_regs.tf_r31,   FCN_NULL },
 	{ "sar",   (long *)&ddb_regs.tf_sar,   FCN_NULL },
 
+	{ "rctr",  (long *)&ddb_regs.tf_rctr,  FCN_NULL },
+	{ "ccr",   (long *)&ddb_regs.tf_ccr,   FCN_NULL },
 	{ "eirr",  (long *)&ddb_regs.tf_eirr,  FCN_NULL },
 	{ "eiem",  (long *)&ddb_regs.tf_eiem,  FCN_NULL },
 	{ "iir",   (long *)&ddb_regs.tf_iir,   FCN_NULL },
@@ -132,8 +132,10 @@ int db_active = 0;
 void
 Debugger()
 {
-	__asm __volatile ("break	%0, %1"
-			  :: "i" (HPPA_BREAK_KERNEL), "i" (HPPA_BREAK_KGDB));
+	extern int kernelmapped;	/* from locore.S */
+	if (kernelmapped)
+		__asm __volatile ("break %0, %1"
+		    :: "i" (HPPA_BREAK_KERNEL), "i" (HPPA_BREAK_KGDB));
 }
 
 void
@@ -172,12 +174,13 @@ void
 kdbprinttrap(type, code)
 	int type, code;
 {
+	type &= ~T_USER;	/* just in case */
 	db_printf("kernel: ");
 	if (type >= trap_types || type < 0)
-		db_printf("type %d", type);
+		db_printf("type 0x%x", type);
 	else
 		db_printf("%s", trap_type[type]);
-	db_printf(" trap, code=%x\n", code);
+	db_printf(" trap, code=0x%x\n", code);
 }
 
 /*
@@ -188,6 +191,7 @@ kdb_trap(type, code, regs)
 	int type, code;
 	db_regs_t *regs;
 {
+	extern label_t *db_recover;
 	int s;
 
 	switch (type) {
@@ -208,9 +212,8 @@ kdb_trap(type, code, regs)
 
 	/* XXX Should switch to kdb`s own stack here. */
 
-	ddb_regs = *regs;
-
 	s = splhigh();
+	ddb_regs = *regs;
 	db_active++;
 	cnpollc(TRUE);
 	db_trap(type, code);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.6.4.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.6.4.2 2002/10/29 00:33:30 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -131,8 +131,7 @@ an_pcmcia_attach(parent, self, aux)
 	sc->an_btag = psc->sc_pcioh.iot;
 	sc->an_bhandle = psc->sc_pcioh.ioh;
 
-	sc->sc_ih = pcmcia_intr_establish(psc->sc_pf, IPL_NET,
-	    an_intr, sc, "");
+	sc->sc_ih = pcmcia_intr_establish(psc->sc_pf, IPL_NET, an_intr, sc, "");
 	if (sc->sc_ih == NULL)
 		printf("no irq");
 

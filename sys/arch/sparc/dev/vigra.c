@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/vigra.c,v 1.4 2002/10/12 01:09:43 krw Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/vigra.c,v 1.4.2.1 2002/10/29 00:28:10 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Miodrag Vallat.  All rights reserved.

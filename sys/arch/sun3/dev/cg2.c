@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg2.c,v 1.9.2.1 2002/06/11 03:39:01 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg2.c,v 1.9.2.2 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: cg2.c,v 1.7 1996/10/13 03:47:26 christos Exp $	*/
 
 /*
@@ -315,7 +315,7 @@ cg2getcmap(fb, cmap)
 	start = cmap->index;
 	count = cmap->count;
 	ecount = start + count;
-	if (start >= CMSIZE || ecount > CMSIZE)
+	if (start >= CMSIZE || count > CMSIZE - start)
 		return (EINVAL);
 
 	/* XXX - Wait for retrace? */
@@ -358,7 +358,7 @@ cg2putcmap(fb, cmap)
 	start = cmap->index;
 	count = cmap->count;
 	ecount = start + count;
-	if (start >= CMSIZE || ecount > CMSIZE)
+	if (start >= CMSIZE || count > CMSIZE - start)
 		return (EINVAL);
 
 	/* Copy from user space to local arrays. */

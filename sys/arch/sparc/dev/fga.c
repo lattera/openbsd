@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.6.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.6.2.2 2002/10/29 00:28:09 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -525,7 +525,7 @@ fga_intr_establish(sc, vec, level, ih)
 		    sizeof(struct intrhand *), M_DEVBUF, M_NOWAIT);
 		if (sc->sc_vmevec == NULL)
 			panic("fga_addirq");
-		bzero(sc->sc_vmevec, 256 * sizeof(struct intrhand));
+		bzero(sc->sc_vmevec, 256 * sizeof(struct intrhand *));
 	}
 	if (sc->sc_vmevec[vec] == NULL)
 		sc->sc_vmevec[vec] = ih;
@@ -610,7 +610,12 @@ fgaopen(dev, flags, mode, p)
 	int flags, mode;
 	struct proc *p;
 {
+	struct fga_softc *sc;
+
 	if (fga_cd.cd_ndevs == 0)
+		return (ENXIO);
+	sc = fga_cd.cd_devs[0];
+	if (sc == NULL)
 		return (ENXIO);
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.12.2.2 2002/06/11 03:39:19 art Exp $	   */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.12.2.3 2002/10/29 00:28:14 art Exp $	   */
 /*	$NetBSD: uba.c,v 1.43 2000/01/24 02:40:36 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.
@@ -620,7 +620,7 @@ ubasetup(uh, bp, flags)
 				return (0);
 			}
 			uh->uh_bdpwant++;
-			sleep((caddr_t)&uh->uh_bdpwant, PSWP);
+			tsleep((caddr_t)&uh->uh_bdpwant, PSWP, "ubasetup", 0);
 		}
 		uh->uh_bdpfree &= ~(1 << (bdp-1));
 	} else if (flags & UBA_HAVEBDP)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/loadfile_machdep.h,v 1.1 2002/10/24 19:27:15 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/loadfile_machdep.h,v 1.1.2.1 2002/10/29 00:28:03 art Exp $	*/
 
 /*-
  * Copyright (c) 1998, 1999 The NetBSD Foundation, Inc.

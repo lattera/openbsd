@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.14.8.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.14.8.2 2002/10/29 00:28:09 art Exp $	*/
 /*	$NetBSD: si.c,v 1.38 1997/08/27 11:24:20 bouyer Exp $	*/
 
 /*-
@@ -408,7 +408,7 @@ si_attach(parent, self, args)
 		break;
 
 	default:
-		panic("\nsi_attach: impossible bus type 0x%x", ca->ca_bustype);
+		panic("si_attach: impossible bus type 0x%x", ca->ca_bustype);
 		/* NOTREACHED */
 	}
 

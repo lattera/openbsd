@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82596var.h,v 1.5.4.1 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82596var.h,v 1.5.4.2 2002/10/29 00:33:25 art Exp $	*/
 /*	$NetBSD: i82586var.h,v 1.10 1998/08/15 04:42:42 mycroft Exp $	*/
 
 /*-
@@ -111,18 +111,19 @@
 #define IED_CMDS	0x80
 #define	IED_ALL		0xff
 
-#define B_PER_F		3		/* recv buffers per frame */
+#define B_PER_F		6		/* recv buffers per frame */
 #define	IE_RBUF_SIZE	256		/* size of each receive buffer;
 						MUST BE POWER OF TWO */
-#define	NTXBUF		2		/* number of transmit commands */
+#define	NTXBUF		4		/* number of transmit commands */
 #define	IE_TBUF_SIZE	ETHER_MAX_LEN	/* length of transmit buffer */
 
 #define IE_MAXMCAST	(IE_TBUF_SIZE/6)/* must fit in transmit buffer */
 
 
-#define	IE_INTR_ENTER	0		/* intr hook called on ISR entry */
-#define	IE_INTR_EXIT	1		/* intr hook called on ISR exit */
-#define	IE_INTR_LOOP	2		/* intr hook called on ISR loop */
+#define	IE_INTR_ENRCV	1		/* receive pkt interrupt */
+#define	IE_INTR_ENSND	2		/* send pkt interrupt */
+#define	IE_INTR_LOOP	3		/* a loop for next one*/
+#define	IE_INTR_EXIT	4		/* done w/ interrupts */
 
 #define	IE_CHIP_PROBE	0		/* reset called from chip probe */
 #define	IE_CARD_RESET	1		/* reset called from card reset */

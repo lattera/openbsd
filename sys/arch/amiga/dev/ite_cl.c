@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ite_cl.c,v 1.4.6.1 2002/06/11 03:34:58 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ite_cl.c,v 1.4.6.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: ite_cl.c,v 1.3.2.1 1999/06/28 23:22:17 perry Exp $	*/
 
 /*
@@ -38,13 +38,13 @@
 #if NGRFCL > 0
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/proc.h>
 #include <sys/device.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
 #include <sys/systm.h>
 #include <dev/cons.h>
+#include <machine/conf.h>
 #include <machine/cpu.h>
 #include <amiga/amiga/device.h>
 #include <amiga/dev/grfioctl.h>

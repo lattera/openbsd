@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.6.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.6.2.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: conf.h,v 1.9 2001/03/26 12:33:26 lukem Exp $	*/
 
 /*-
@@ -41,12 +41,7 @@
 #define mmwrite mmrw
 cdev_decl(mm);
 
-cdev_decl(crypto);
-
-cdev_decl(ksyms);
-
 cdev_decl(openprom);
-
 
 /* open, close, ioctl */
 #define cdev_openprom_init(c,n) { \
@@ -112,14 +107,6 @@ cdev_decl(sabtty);
 cdev_decl(pcons);
 
 cdev_decl(com);
-
-cdev_decl(usb);
-cdev_decl(uhid);
-cdev_decl(ugen);
-cdev_decl(ulpt);
-cdev_decl(urio);
-cdev_decl(ucom);
-cdev_decl(uscanner);
 
 cdev_decl(mtty);
 cdev_decl(mbpp);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.7.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.7.2.2 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: psl.h,v 1.12 1997/03/10 21:49:11 pk Exp $ */
 
 /*
@@ -79,6 +79,7 @@
 /*
  * Various interrupt levels.
  */
+#define IPL_NONE	0
 #define IPL_SOFTINT	1
 #define IPL_SOFTCLOCK	IPL_SOFTINT	/* softclock() interrupts */
 #define IPL_SOFTNET	IPL_SOFTINT	/* soft network interrupts */
@@ -88,6 +89,7 @@
 #define IPL_TTY		6		/* tty soft interrupts */
 #define IPL_NET		7		/* network hardware at 7 or below */
 #define IPL_VM		7		/* max(BIO, NET, TTY) */
+#define	IPL_FB		9		/* framebuffer interrupts */
 #define	IPL_CLOCK	10		/* hardclock() */
 #define IPL_FD		11		/* hard floppy interrupts. */
 #define IPL_ZS		12		/* zs interrupts */

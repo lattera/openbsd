@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ncr5380.c,v 1.16.4.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ncr5380.c,v 1.16.4.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: ncr5380.c,v 1.38 1996/12/19 21:48:18 scottr Exp $	*/
 
 /*
@@ -1780,7 +1780,7 @@ SC_REQ	*reqp;
 		return (0);
 
 	/*
-	 * LWP: I think that this restriction is not strictly nessecary.
+	 * LWP: I think that this restriction is not strictly necessary.
 	 */
 	if ((req_len & 0x1) || ((u_int)req_addr & 0x3))
 		return (0);

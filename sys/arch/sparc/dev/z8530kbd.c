@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/z8530kbd.c,v 1.1 2002/08/12 10:44:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/z8530kbd.c,v 1.1.4.1 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: z8530tty.c,v 1.77 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-

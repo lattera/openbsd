@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_mainbus.c,v 1.4 2002/07/26 16:39:04 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_mainbus.c,v 1.4.4.1 2002/10/29 00:28:11 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net),

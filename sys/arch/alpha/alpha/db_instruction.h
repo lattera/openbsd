@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.3.4.1 2002/06/11 03:33:39 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.3.4.2 2002/10/29 00:28:00 art Exp $ */
 /* $NetBSD: db_instruction.h,v 1.7 2001/04/26 03:10:44 ross Exp $ */
 
 /*
@@ -141,7 +141,7 @@ typedef union {
 	/*
 	 *	Operate instructions are of two types, with
 	 *	a second source register or with a literal
-	 *	specifier.  Bit 12 sez which is which.
+	 *	specifier.  Bit 12 says which is which.
 	 */
 	struct {
 		unsigned	rc : 5,

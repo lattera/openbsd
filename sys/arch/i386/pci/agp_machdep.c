@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/agp_machdep.c,v 1.1 2002/07/12 20:17:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/agp_machdep.c,v 1.1.4.1 2002/10/29 00:28:04 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff

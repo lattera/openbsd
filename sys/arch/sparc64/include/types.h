@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/types.h,v 1.1.4.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/types.h,v 1.1.4.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: types.h,v 1.17 2001/05/12 22:42:07 kleink Exp $ */
 
 /*

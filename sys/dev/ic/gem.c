@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.13.2.2 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.13.2.3 2002/10/29 00:33:25 art Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -209,7 +209,7 @@ gem_config(sc)
 	 */
 
 	/* Announce ourselves. */
-	printf("%s: Ethernet address %s\n", sc->sc_dev.dv_xname,
+	printf("%s: address %s\n", sc->sc_dev.dv_xname,
 	    ether_sprintf(sc->sc_enaddr));
 
 	/* Get RX FIFO size */
@@ -259,7 +259,7 @@ gem_config(sc)
 			 * connector.
 			 */
 			if (child->mii_phy > 1 || child->mii_inst > 1) {
-				printf("%s: cannot accomodate MII device %s"
+				printf("%s: cannot accommodate MII device %s"
 				       " at phy %d, instance %d\n",
 				       sc->sc_dev.dv_xname,
 				       child->mii_dev.dv_xname,
@@ -448,7 +448,7 @@ gem_stop(struct ifnet *ifp, int disable)
 
 	/* XXX - Should we reset these instead? */
 	gem_disable_rx(sc);
-	gem_disable_rx(sc);
+	gem_disable_tx(sc);
 
 	/*
 	 * Release any queued transmit buffers.
@@ -819,7 +819,7 @@ gem_init(struct ifnet *ifp)
 		(*sc->sc_hwinit)(sc);
 
 
-	/* step 15.  Give the reciever a swift kick */
+	/* step 15.  Give the receiver a swift kick */
 	bus_space_write_4(t, h, GEM_RX_KICK, GEM_NRXDESC-4);
 
 	/* Start the one second timer. */
@@ -1649,6 +1649,7 @@ gem_tint(sc, status)
 			sd->sd_mbuf = NULL;
 		}
 		sc->sc_tx_cnt--;
+		ifp->if_opackets++;
 		if (++cons == GEM_NTXDESC)
 			cons = 0;
 	}
@@ -1693,7 +1694,7 @@ gem_start(ifp)
 		 * or fail...
 		 */
 		if (gem_encap(sc, m, &bix)) {
-			ifp->if_flags |= IFF_OACTIVE;
+			ifp->if_timer = 2;
 			break;
 		}
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_1000a.c,v 1.2 2002/10/12 01:09:43 krw Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_1000a.c,v 1.2.2.1 2002/10/29 00:28:00 art Exp $ */
 /* $NetBSD: dec_1000a.c,v 1.14 2001/06/05 04:53:11 thorpej Exp $ */
 
 /*

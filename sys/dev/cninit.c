@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cninit.c,v 1.4 1998/06/17 14:58:35 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/cninit.c,v 1.4.18.1 2002/10/29 00:33:23 art Exp $	*/
 /*	$NetBSD: cninit.c,v 1.2 1995/04/11 22:08:10 pk Exp $	*/
 
 /*
@@ -56,14 +56,10 @@
 
 #include <dev/cons.h>
 
-extern struct consdev constab[];
-
-extern struct	consdev *cn_tab;	/* physical console device info */
-
 void
 cninit()
 {
-	register struct consdev *cp;
+	struct consdev *cp;
 
 	/*
 	 * Collect information about all possible consoles

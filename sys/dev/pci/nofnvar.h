@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/nofnvar.h,v 1.4.2.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/nofnvar.h,v 1.4.2.2 2002/10/29 00:33:29 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -82,4 +82,3 @@ struct nofn_pk_q {
 #define	NOFN_MODEXP_PAR_M	0
 #define	NOFN_MODEXP_PAR_E	1
 #define	NOFN_MODEXP_PAR_N	2
-#define	NOFN_MODEXP_PAR_C	3

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbicreg.h,v 1.3.24.1 2002/06/11 03:34:58 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbicreg.h,v 1.3.24.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: sbicreg.h,v 1.2 1994/10/26 02:04:40 cgd Exp $	*/
 
 /*
@@ -139,7 +139,7 @@
 /*
  * CDBn registers, note that
  *	cdb11 is used for status byte in target mode (send-status-and-cc)
- *	cdb12 sez if linked command complete, and w/flag if so
+ *	cdb12 says if linked command complete, and w/flag if so
  */
 
 /*

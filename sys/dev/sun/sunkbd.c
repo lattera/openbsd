@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/sunkbd.c,v 1.1.2.2 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/sunkbd.c,v 1.1.2.3 2002/10/29 00:33:31 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -53,6 +53,7 @@
 const keysym_t sunkbd_keydesc_us[] = {
     KC(0x01), KS_Cmd,
     KC(0x02), KS_Cmd_BrightnessDown,
+    KC(0x03),				KS_Again,
     KC(0x04), KS_Cmd_BrightnessUp,
     KC(0x05),				KS_f1,
     KC(0x06),				KS_f2,
@@ -71,8 +72,10 @@ const keysym_t sunkbd_keydesc_us[] = {
     KC(0x14),				KS_Up,
     KC(0x15),				KS_Pause,
     KC(0x16),				KS_Print_Screen,
+    KC(0x17),				KS_Hold_Screen,
     KC(0x18),				KS_Left,
-    KC(0x19),				KS_Hold_Screen,
+    KC(0x19),				KS_Props,
+    KC(0x1a),				KS_Undo,
     KC(0x1b),				KS_Down,
     KC(0x1c),				KS_Right,
     KC(0x1d),				KS_Escape,
@@ -89,12 +92,14 @@ const keysym_t sunkbd_keydesc_us[] = {
     KC(0x28),				KS_minus,	KS_underscore,
     KC(0x29),				KS_equal,	KS_plus,
     KC(0x2a),				KS_grave,	KS_asciitilde,
-    KC(0x2b),				KS_BackSpace,
+    KC(0x2b),				KS_Delete,
     KC(0x2c),				KS_Insert,
     KC(0x2d),				KS_KP_Equal,
     KC(0x2e),				KS_KP_Divide,
     KC(0x2f),				KS_KP_Multiply,
-    KC(0x32),				KS_KP_Delete,
+    KC(0x31),				KS_Front,
+    KC(0x32),				KS_KP_Delete,	KS_KP_Decimal,
+    KC(0x33),				KS_Copy,
     KC(0x34),				KS_Home,
     KC(0x35),				KS_Tab,
     KC(0x36),				KS_q,
@@ -115,6 +120,8 @@ const keysym_t sunkbd_keydesc_us[] = {
     KC(0x45),				KS_KP_Up,	KS_KP_8,
     KC(0x46),				KS_KP_Prior,	KS_KP_9,
     KC(0x47),				KS_KP_Subtract,
+    KC(0x48),				KS_Open,
+    KC(0x49),				KS_Paste,
     KC(0x4a),				KS_End,
     KC(0x4c),				KS_Control_L,
     KC(0x4d), KS_Cmd_Debugger,		KS_a,
@@ -137,6 +144,7 @@ const keysym_t sunkbd_keydesc_us[] = {
     KC(0x5e),				KS_KP_Insert,	KS_KP_0,
     KC(0x5f),				KS_Find,
     KC(0x60),				KS_Prior,
+    KC(0x61),				KS_Cut,
     KC(0x62),				KS_Num_Lock,
     KC(0x63),				KS_Shift_L,
     KC(0x64),				KS_z,

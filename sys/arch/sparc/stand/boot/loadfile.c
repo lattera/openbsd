@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.1 2002/08/11 23:11:22 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.1.4.1 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*

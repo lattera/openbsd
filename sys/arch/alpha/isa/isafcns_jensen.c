@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/isa/isafcns_jensen.c,v 1.5.16.1 2002/06/11 03:33:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/isa/isafcns_jensen.c,v 1.5.16.2 2002/10/29 00:28:00 art Exp $	*/
 /*	$NetBSD: isafcns_jensen.c,v 1.4 1996/10/13 02:59:54 christos Exp $	*/
 
 /*
@@ -88,7 +88,7 @@ jensen_inw(ioaddr)
 	rval = ((val) >> (8 * offset)) & 0xffff;
 	rval = val & 0xffff;
 
-panic("inw(0x%x) => 0x%x @ %p => 0x%x", ioaddr, val, port, rval);
+printf("inw(0x%x) => 0x%x @ %p => 0x%x", ioaddr, val, port, rval);
 
 	return rval;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/db_machdep.h,v 1.6.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/db_machdep.h,v 1.6.2.2 2002/10/29 00:28:03 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -92,8 +92,8 @@ static __inline int inst_trap_return(u_int ins)	{
 }
 
 #if 0
-#define db_clear_single_step(r)	((r)->tf_flags &= ~(PSW_Z))
-#define db_set_single_step(r)	((r)->tf_flags |= (PSW_Z))
+#define db_clear_single_step(r)	((r)->tf_flags &= ~(PSL_Z))
+#define db_set_single_step(r)	((r)->tf_flags |= (PSL_Z))
 #else
 #define	SOFTWARE_SSTEP		1
 #define	SOFTWARE_SSTEP_EMUL	1

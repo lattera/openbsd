@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/fubyte.c,v 1.3 2001/06/24 23:29:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/fubyte.c,v 1.3.4.1 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: fubyte.c,v 1.1 1996/09/30 16:34:45 ws Exp $	*/
 
 /*-

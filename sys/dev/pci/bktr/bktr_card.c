@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_card.c,v 1.2.4.1 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_card.c,v 1.2.4.2 2002/10/29 00:33:30 art Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_card.c,v 1.16 2000/10/31 13:09:56 roger Exp $ */
 
 /*
@@ -89,10 +89,8 @@
 #endif
 
 /* Include the PCI Vendor definitions */
-#ifdef __NetBSD__
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/pcireg.h>
-#endif
 
 /* Various defines */
 #define HAUP_REMOTE_INT_WADDR   0x30
@@ -531,18 +529,12 @@ static int locate_eeprom_address( bktr_ptr_t bktr) {
  * configuration EEPROM used on Bt878/879 cards. They should match the
  * number assigned to the company by the PCI Special Interest Group
  */
-#ifndef __NetBSD__
-#define PCI_VENDOR_HAUPPAUGE	0x0070
-#define PCI_VENDOR_AVERMEDIA	0x1461
-#define PCI_VENDOR_STB		0x10B4
-#define PCI_VENDOR_ASKEY	0x144F
-#endif
 /* Following not confirmed with http://members.hyperlink.net.au/~chart,
    so not added to NetBSD's pcidevs */
-#define PCI_VENDOR_LEADTEK_ALT	0x6606
+#define PCI_VENDOR_LEADTEK_ALT	0x6606	/* this is swapped w/ prod id */
 #define PCI_VENDOR_FLYVIDEO	0x1851
 #define PCI_VENDOR_FLYVIDEO_2	0x1852
-#define PCI_VENDOR_PINNACLE_ALT	0xBD11
+#define PCI_VENDOR_PINNACLE_ALT	0xBD11	/* this is swapped w/ prod id */
 
 
 void

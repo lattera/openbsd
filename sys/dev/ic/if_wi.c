@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.17.2.2 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.17.2.3 2002/10/29 00:33:25 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -124,7 +124,7 @@ u_int32_t	widebug = WIDEBUG;
 
 #if !defined(lint) && !defined(__OpenBSD__)
 static const char rcsid[] =
-	"$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.17.2.2 2002/06/11 03:42:18 art Exp $";
+	"$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.17.2.3 2002/10/29 00:33:25 art Exp $";
 #endif	/* lint */
 
 #ifdef foo
@@ -132,7 +132,6 @@ static u_int8_t	wi_mcast_addr[6] = { 0x01, 0x60, 0x1D, 0x00, 0x01, 0x00 };
 #endif
 
 STATIC void wi_reset(struct wi_softc *);
-STATIC void wi_cor_reset(struct wi_softc *);
 STATIC int wi_ioctl(struct ifnet *, u_long, caddr_t);
 STATIC void wi_start(struct ifnet *);
 STATIC void wi_watchdog(struct ifnet *);
@@ -168,14 +167,16 @@ STATIC int wi_get_pm(struct wi_softc *, struct ieee80211_power *);
 STATIC int wi_get_debug(struct wi_softc *, struct wi_req *);
 STATIC int wi_set_debug(struct wi_softc *, struct wi_req *);
 
-int	wi_intr(void *);
-int	wi_attach(struct wi_softc *);
-void	wi_init(struct wi_softc *);
-void	wi_stop(struct wi_softc *);
+STATIC void wi_do_hostencrypt(struct wi_softc *, caddr_t, int);                
+STATIC int wi_do_hostdecrypt(struct wi_softc *, caddr_t, int);
 
 /* Autoconfig definition of driver back-end */
 struct cfdriver wi_cd = {
 	NULL, "wi", DV_IFNET
+};
+
+const struct wi_card_ident wi_card_ident[] = {
+	WI_CARD_IDS
 };
 
 int
@@ -186,8 +187,6 @@ wi_attach(sc)
 	struct wi_ltv_gen	gen;
 	struct ifnet		*ifp;
 	int			error;
-
-	sc->wi_flags = WI_FLAGS_ATTACHED;
 
 	wi_cor_reset(sc);
 	wi_reset(sc);
@@ -235,6 +234,7 @@ wi_attach(sc)
 	sc->wi_roaming = WI_DEFAULT_ROAMING;
 	sc->wi_authtype = WI_DEFAULT_AUTHTYPE;
 	sc->wi_diversity = WI_DEFAULT_DIVERSITY;
+	sc->wi_crypto_algorithm = WI_CRYPTO_FIRMWARE_WEP;
 
 	/*
 	 * Read the default channel from the NIC. This may vary
@@ -266,6 +266,7 @@ wi_attach(sc)
 	case WI_INTERSIL:
 		sc->wi_flags |= WI_FLAGS_HAS_ROAMING;
 		if (sc->sc_sta_firmware_ver >= 800) {
+			sc->wi_flags |= WI_FLAGS_HAS_HOSTAP;
 			sc->wi_flags |= WI_FLAGS_HAS_IBSS;
 			sc->wi_flags |= WI_FLAGS_HAS_CREATE_IBSS;
 		}
@@ -311,7 +312,7 @@ wi_attach(sc)
 	if (sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)
 		ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_AUTO,
 		    IFM_IEEE80211_IBSSMASTER, 0), 0);
-	if (sc->sc_firmware_type == WI_INTERSIL)
+	if (sc->wi_flags & WI_FLAGS_HAS_HOSTAP)
 		ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_AUTO,
 		    IFM_IEEE80211_HOSTAP, 0), 0);
 	if (sc->wi_supprates & WI_SUPPRATES_1M) {
@@ -324,7 +325,7 @@ wi_attach(sc)
 		if (sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS1,
 			    IFM_IEEE80211_IBSSMASTER, 0), 0);
-		if (sc->sc_firmware_type == WI_INTERSIL)
+		if (sc->wi_flags & WI_FLAGS_HAS_HOSTAP)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS1,
 			    IFM_IEEE80211_HOSTAP, 0), 0);
 	}
@@ -338,7 +339,7 @@ wi_attach(sc)
 		if (sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS2,
 			    IFM_IEEE80211_IBSSMASTER, 0), 0);
-		if (sc->sc_firmware_type == WI_INTERSIL)
+		if (sc->wi_flags & WI_FLAGS_HAS_HOSTAP)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS2,
 			    IFM_IEEE80211_HOSTAP, 0), 0);
 	}
@@ -352,7 +353,7 @@ wi_attach(sc)
 		if (sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS5,
 			    IFM_IEEE80211_IBSSMASTER, 0), 0);
-		if (sc->sc_firmware_type == WI_INTERSIL)
+		if (sc->wi_flags & WI_FLAGS_HAS_HOSTAP)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS5,
 			    IFM_IEEE80211_HOSTAP, 0), 0);
 	}
@@ -366,7 +367,7 @@ wi_attach(sc)
 		if (sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS11,
 			    IFM_IEEE80211_IBSSMASTER, 0), 0);
-		if (sc->sc_firmware_type == WI_INTERSIL)
+		if (sc->wi_flags & WI_FLAGS_HAS_HOSTAP)
 			ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_IEEE80211_DS11,
 			    IFM_IEEE80211_HOSTAP, 0), 0);
 		ADD(IFM_MAKEWORD(IFM_IEEE80211, IFM_MANUAL, 0, 0), 0);
@@ -381,6 +382,8 @@ wi_attach(sc)
 	if_attach(ifp);
 	ether_ifattach(ifp);
 	printf("\n");
+
+	sc->wi_flags |= WI_FLAGS_ATTACHED;
 
 #if NBPFILTER > 0
 	BPFATTACH(&sc->sc_arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
@@ -467,7 +470,9 @@ wi_rxeof(sc)
 	struct ifnet		*ifp;
 	struct ether_header	*eh;
 	struct mbuf		*m;
+	caddr_t			olddata;
 	u_int16_t		msg_type;
+	int			maxlen;
 	int			id;
 
 	ifp = &sc->sc_arpcom.ac_if;
@@ -590,19 +595,21 @@ wi_rxeof(sc)
 			return;
 		}
 
+		olddata = m->m_data;
 		/* Align the data after the ethernet header */
 		m->m_data = (caddr_t)ALIGN(m->m_data +
 		    sizeof(struct ether_header)) - sizeof(struct ether_header);
 
 		eh = mtod(m, struct ether_header *);
+		maxlen = MCLBYTES - (m->m_data - olddata);
 		m->m_pkthdr.rcvif = ifp;
 
 		if (msg_type == WI_STAT_MGMT &&
-		    sc->wi_ptype == WI_PORTTYPE_AP) {
+		    sc->wi_ptype == WI_PORTTYPE_HOSTAP) {
 
 			u_int16_t rxlen = letoh16(rx_frame.wi_dat_len);
 
-			if ((WI_802_11_OFFSET_RAW + rxlen + 2) > MCLBYTES) {
+			if ((WI_802_11_OFFSET_RAW + rxlen + 2) > maxlen) {
 				printf("%s: oversized mgmt packet received in "
 				    "hostap mode (wi_dat_len=%d, "
 				    "wi_status=0x%x)\n", sc->sc_dev.dv_xname,
@@ -640,7 +647,7 @@ wi_rxeof(sc)
 		case WI_STAT_TUNNEL:
 		case WI_STAT_WMP_MSG:
 			if ((letoh16(rx_frame.wi_dat_len) + WI_SNAPHDR_LEN) >
-			    MCLBYTES) {
+			    maxlen) {
 				printf(WI_PRT_FMT ": oversized packet received "
 				    "(wi_dat_len=%d, wi_status=0x%x)\n",
 				    WI_PRT_ARG(sc),
@@ -670,7 +677,7 @@ wi_rxeof(sc)
 			break;
 		default:
 			if ((letoh16(rx_frame.wi_dat_len) +
-			    sizeof(struct ether_header)) > MCLBYTES) {
+			    sizeof(struct ether_header)) > maxlen) {
 				printf(WI_PRT_FMT ": oversized packet received "
 				    "(wi_dat_len=%d, wi_status=0x%x)\n",
 				    WI_PRT_ARG(sc),
@@ -695,7 +702,47 @@ wi_rxeof(sc)
 
 		ifp->if_ipackets++;
 
-		if (sc->wi_ptype == WI_PORTTYPE_AP) {
+		if (sc->wi_use_wep &&
+		    rx_frame.wi_frame_ctl & WI_FCTL_WEP) {
+			int len;
+			u_int8_t rx_buf[1596];
+
+			switch (sc->wi_crypto_algorithm) {
+			case WI_CRYPTO_FIRMWARE_WEP:
+				break;
+			case WI_CRYPTO_SOFTWARE_WEP:
+				m_copydata(m, 0, m->m_pkthdr.len,
+				    (caddr_t)rx_buf);
+				len = m->m_pkthdr.len -
+				    sizeof(struct ether_header);
+				if (wi_do_hostdecrypt(sc, rx_buf +
+				    sizeof(struct ether_header), len)) {
+					if (sc->sc_arpcom.ac_if.if_flags & IFF_DEBUG)
+						printf(WI_PRT_FMT ": Error decrypting incoming packet.\n", WI_PRT_ARG(sc));
+					return;
+				}
+				len -= IEEE80211_WEP_IVLEN +
+				    IEEE80211_WEP_KIDLEN + IEEE80211_WEP_CRCLEN;
+				/*
+				 * copy data back to mbufs:
+				 * we need to ditch the IV & most LLC/SNAP stuff
+				 * (except SNAP type, we're going use that to
+				 * overwrite the ethertype in the ether_header)
+				 */
+				m_copyback(m, sizeof(struct ether_header) -
+				    WI_ETHERTYPE_LEN, WI_ETHERTYPE_LEN +
+				    (len - WI_SNAPHDR_LEN),
+				    rx_buf + sizeof(struct ether_header) +
+				    IEEE80211_WEP_IVLEN +
+				    IEEE80211_WEP_KIDLEN + WI_SNAPHDR_LEN);
+				m_adj(m, -(WI_ETHERTYPE_LEN +
+				    IEEE80211_WEP_IVLEN + IEEE80211_WEP_KIDLEN +
+				    WI_SNAPHDR_LEN));
+				break;
+			}
+		}
+
+		if (sc->wi_ptype == WI_PORTTYPE_HOSTAP) {
 			/*
 			 * Give host AP code first crack at data packets.
 			 * If it decides to handle it (or drop it), it will
@@ -788,7 +835,7 @@ wi_update_stats(sc)
 
 	if (gen.wi_type == htole16(WI_INFO_SCAN_RESULTS)) {
 		sc->wi_scanbuf_len = letoh16(gen.wi_len);
-		wi_read_data(sc, id, 4, (char *)sc->wi_scanbuf,
+		wi_read_data(sc, id, 4, (caddr_t)sc->wi_scanbuf,
 		    sc->wi_scanbuf_len * 2);
 		return;
 	} else if (gen.wi_type != htole16(WI_INFO_COUNTERS))
@@ -904,7 +951,7 @@ wi_cor_reset(sc)
 	 * we only soft reset Symbol cards for now.
 	 */
 	if (sc->sc_firmware_type == WI_SYMBOL) {
-		cor_value = bus_space_read_2(sc->wi_ltag, sc->wi_lhandle,
+		cor_value = bus_space_read_1(sc->wi_ltag, sc->wi_lhandle,
 		    sc->wi_cor_offset);
 		bus_space_write_1(sc->wi_ltag, sc->wi_lhandle,
 		    sc->wi_cor_offset, (cor_value | WI_COR_SOFT_RESET));
@@ -938,6 +985,8 @@ wi_read_record(sc, ltv)
 			ltv = &p2ltv;
 			break;
 		case WI_RID_TX_CRYPT_KEY:
+			if (ltv->wi_val > WI_NLTV_KEYS)
+				return (EINVAL);
 			p2ltv.wi_type = WI_RID_P2_TX_CRYPT_KEY;
 			p2ltv.wi_len = 2;
 			ltv = &p2ltv;
@@ -1026,7 +1075,7 @@ wi_write_record(sc, ltv)
 	struct wi_ltv_gen	*ltv;
 {
 	u_int8_t		*ptr;
-	u_int16_t		val;
+	u_int16_t		val = 0;
 	int			i;
 	struct wi_ltv_gen	p2ltv;
 
@@ -1073,15 +1122,28 @@ wi_write_record(sc, ltv)
 				if (sc->wi_authtype != IEEE80211_AUTH_OPEN ||
 				    sc->sc_firmware_type == WI_SYMBOL)
 					val |= EXCLUDE_UNENCRYPTED;
-				/* TX encryption is broken in Host AP mode. */
-				if (sc->wi_ptype == WI_PORTTYPE_AP)
-					val |= HOST_ENCRYPT;
+
+				switch (sc->wi_crypto_algorithm) {
+				case WI_CRYPTO_FIRMWARE_WEP:
+					/*
+					 * TX encryption is broken in
+					 * Host AP mode.
+					 */
+					if (sc->wi_ptype == WI_PORTTYPE_HOSTAP)
+						val |= HOST_ENCRYPT;
+					break;
+				case WI_CRYPTO_SOFTWARE_WEP:
+					val |= HOST_ENCRYPT|HOST_DECRYPT;
+					break;
+				}
 				p2ltv.wi_val = htole16(val);
 			} else
 				p2ltv.wi_val = htole16(HOST_ENCRYPT | HOST_DECRYPT);
 			ltv = &p2ltv;
 			break;
 		case WI_RID_TX_CRYPT_KEY:
+			if (ltv->wi_val > WI_NLTV_KEYS)
+				return (EINVAL);
 			p2ltv.wi_type = WI_RID_P2_TX_CRYPT_KEY;
 			p2ltv.wi_len = 2;
 			p2ltv.wi_val = ltv->wi_val;
@@ -1314,19 +1376,15 @@ wi_setdef(sc, wreq)
 	struct wi_softc		*sc;
 	struct wi_req		*wreq;
 {
-	struct sockaddr_dl	*sdl;
-	struct ifaddr		*ifa;
 	struct ifnet		*ifp;
-	extern struct ifaddr	**ifnet_addrs;
 	int error = 0;
 
 	ifp = &sc->sc_arpcom.ac_if;
 
 	switch(wreq->wi_type) {
 	case WI_RID_MAC_NODE:
-		ifa = ifnet_addrs[ifp->if_index];
-		sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-		bcopy((char *)&wreq->wi_val, LLADDR(sdl), ETHER_ADDR_LEN);
+		bcopy((char *)&wreq->wi_val, LLADDR(ifp->if_sadl),
+		    ETHER_ADDR_LEN);
 		bcopy((char *)&wreq->wi_val, (char *)&sc->sc_arpcom.ac_enaddr,
 		    ETHER_ADDR_LEN);
 		break;
@@ -1393,6 +1451,20 @@ wi_setdef(sc, wreq)
 	case WI_RID_DEFLT_CRYPT_KEYS:
 		bcopy((char *)wreq, (char *)&sc->wi_keys,
 		    sizeof(struct wi_ltv_keys));
+		break;
+	case WI_FRID_CRYPTO_ALG:
+		switch (letoh16(wreq->wi_val[0])) {
+		case WI_CRYPTO_FIRMWARE_WEP:
+			sc->wi_crypto_algorithm = WI_CRYPTO_FIRMWARE_WEP;
+			break;
+		case WI_CRYPTO_SOFTWARE_WEP:
+			sc->wi_crypto_algorithm = WI_CRYPTO_SOFTWARE_WEP;
+			break;
+		default:
+			printf(WI_PRT_FMT ": unsupported crypto algorithm %d\n",
+			    WI_PRT_ARG(sc), letoh16(wreq->wi_val[0]));
+			error = EINVAL;
+		}
 		break;
 	default:
 		error = EINVAL;
@@ -1475,20 +1547,18 @@ wi_ioctl(ifp, command, data)
 
 	case SIOCSIFFLAGS:
 		if (ifp->if_flags & IFF_UP) {
-			if (sc->wi_ptype == WI_PORTTYPE_AP) {
-				WI_SETVAL(WI_RID_PROMISC, 0);
-			} else {
-				if (ifp->if_flags & IFF_RUNNING &&
-				    ifp->if_flags & IFF_PROMISC &&
-				    !(sc->wi_if_flags & IFF_PROMISC)) {
+			if (ifp->if_flags & IFF_RUNNING &&
+			    ifp->if_flags & IFF_PROMISC &&
+			    !(sc->wi_if_flags & IFF_PROMISC)) {
+				if (sc->wi_ptype != WI_PORTTYPE_HOSTAP)
 					WI_SETVAL(WI_RID_PROMISC, 1);
-				} else if (ifp->if_flags & IFF_RUNNING &&
-				    !(ifp->if_flags & IFF_PROMISC) &&
-				    sc->wi_if_flags & IFF_PROMISC) {
+			} else if (ifp->if_flags & IFF_RUNNING &&
+			    !(ifp->if_flags & IFF_PROMISC) &&
+			    sc->wi_if_flags & IFF_PROMISC) {
+				if (sc->wi_ptype != WI_PORTTYPE_HOSTAP)
 					WI_SETVAL(WI_RID_PROMISC, 0);
-				}
-			}
-			wi_init(sc);
+			} else
+				wi_init(sc);
 		} else if (ifp->if_flags & IFF_RUNNING)
 			wi_stop(sc);
 		sc->wi_if_flags = ifp->if_flags;
@@ -1554,6 +1624,11 @@ wi_ioctl(ifp, command, data)
 				wreq.wi_len = sc->wi_scanbuf_len;
 				break;
 			}
+		case WI_FRID_CRYPTO_ALG:
+			wreq.wi_val[0] =
+			    htole16((u_int16_t)sc->wi_crypto_algorithm);
+			wreq.wi_len = 1;
+			break;
 		default:
 			if (wi_read_record(sc, (struct wi_ltv_gen *)&wreq)) {
 				error = EINVAL;
@@ -1589,10 +1664,18 @@ wi_ioctl(ifp, command, data)
 				error = wi_write_record(sc,
 				    (struct wi_ltv_gen *)&wreq);
 			break;
+		case WI_FRID_CRYPTO_ALG:
+			if (sc->sc_firmware_type != WI_LUCENT) {
+				error = wi_setdef(sc, &wreq);
+				if (!error && (ifp->if_flags & IFF_UP))
+					wi_init(sc);
+			}
+			break;
 		case WI_RID_SYMBOL_DIVERSITY:
 		case WI_RID_ROAMING_MODE:
 		case WI_RID_CREATE_IBSS:
 		case WI_RID_MICROWAVE_OVEN:
+		case WI_RID_OWN_SSID:
 			/*
 			 * Check for features that may not be supported
 			 * (must be just before default case).
@@ -1604,7 +1687,9 @@ wi_ioctl(ifp, command, data)
 			    (wreq.wi_type == WI_RID_CREATE_IBSS &&
 			    !(sc->wi_flags & WI_FLAGS_HAS_CREATE_IBSS)) ||
 			    (wreq.wi_type == WI_RID_MICROWAVE_OVEN &&
-			    !(sc->wi_flags & WI_FLAGS_HAS_MOR)))
+			    !(sc->wi_flags & WI_FLAGS_HAS_MOR)) ||
+			    (wreq.wi_type == WI_RID_OWN_SSID &&
+			    wreq.wi_len != 0))
 				break;
 			/* FALLTHROUGH */
 		default:
@@ -1625,7 +1710,8 @@ wi_ioctl(ifp, command, data)
 			break;
 		}
 		error = wi_get_debug(sc, &wreq);
-		error = copyout(&wreq, ifr->ifr_data, sizeof(wreq));
+		if (error == 0)
+			error = copyout(&wreq, ifr->ifr_data, sizeof(wreq));
 		break;
 	case SIOCSPRISM2DEBUG:
 		error = copyin(ifr->ifr_data, &wreq, sizeof(wreq));
@@ -1634,13 +1720,13 @@ wi_ioctl(ifp, command, data)
 		error = wi_set_debug(sc, &wreq);
 		break;
 	case SIOCG80211NWID:
-		if (ifp->if_flags & IFF_UP) {
+		if ((ifp->if_flags & IFF_UP) && sc->wi_net_name.i_len > 0) {
 			/* Return the desired ID */
 			error = copyout(&sc->wi_net_name, ifr->ifr_data,
 			    sizeof(sc->wi_net_name));
 		} else {
-			wreq.wi_type = htole16(WI_RID_CURRENT_SSID);
-			wreq.wi_len = htole16(WI_MAX_DATALEN);
+			wreq.wi_type = WI_RID_CURRENT_SSID;
+			wreq.wi_len = WI_MAX_DATALEN;
 			if (wi_read_record(sc, (struct wi_ltv_gen *)&wreq) ||
 			    letoh16(wreq.wi_val[0]) > IEEE80211_NWID_LEN)
 				error = EINVAL;
@@ -1756,7 +1842,7 @@ wi_init(sc)
 	WI_SETSTR(WI_RID_DESIRED_SSID, sc->wi_net_name);
 
 	/* Specify the IBSS name */
-	if (sc->wi_net_name.i_len != 0 && (sc->wi_ptype == WI_PORTTYPE_AP ||
+	if (sc->wi_net_name.i_len != 0 && (sc->wi_ptype == WI_PORTTYPE_HOSTAP ||
 	    (sc->wi_create_ibss && sc->wi_ptype == WI_PORTTYPE_IBSS)))
 		WI_SETSTR(WI_RID_OWN_SSID, sc->wi_net_name);
 	else
@@ -1783,7 +1869,7 @@ wi_init(sc)
 	 *	and always reset promisc mode in Host-AP regime,
 	 *	it shows us all the packets anyway.
 	 */
-	if (sc->wi_ptype != WI_PORTTYPE_AP && ifp->if_flags & IFF_PROMISC)
+	if (sc->wi_ptype != WI_PORTTYPE_HOSTAP && ifp->if_flags & IFF_PROMISC)
 		WI_SETVAL(WI_RID_PROMISC, 1);
 	else
 		WI_SETVAL(WI_RID_PROMISC, 0);
@@ -1904,7 +1990,7 @@ static const u_int32_t crc32_tab[] = {
 #define RC4SWAP(x,y) \
     do { u_int8_t t = state[x]; state[x] = state[y]; state[y] = t; } while(0)
 
-static void
+STATIC void
 wi_do_hostencrypt(struct wi_softc *sc, caddr_t buf, int len)
 {
 	u_int32_t i, crc, klen;
@@ -1925,15 +2011,15 @@ wi_do_hostencrypt(struct wi_softc *sc, caddr_t buf, int len)
                 sc->wi_icv += 0x000100;
 
 	/* prepend 24bit IV to tx key, byte order does not matter */
+	bzero(key, sizeof(key));
 	key[0] = sc->wi_icv >> 16;
 	key[1] = sc->wi_icv >> 8;
 	key[2] = sc->wi_icv;
 
-	klen = sc->wi_keys.wi_keys[sc->wi_tx_key].wi_keylen +
-	    IEEE80211_WEP_IVLEN;
-	klen = (klen >= RC4KEYLEN) ? RC4KEYLEN : RC4KEYLEN/2;
+	klen = sc->wi_keys.wi_keys[sc->wi_tx_key].wi_keylen;
 	bcopy((char *)&sc->wi_keys.wi_keys[sc->wi_tx_key].wi_keydat,
-	    (char *)key + IEEE80211_WEP_IVLEN, klen - IEEE80211_WEP_IVLEN);
+	    (char *)key + IEEE80211_WEP_IVLEN, klen);
+	klen = (klen > IEEE80211_WEP_KEYLEN) ? RC4KEYLEN : RC4KEYLEN / 2;
 
 	/* rc4 keysetup */
 	x = y = 0;
@@ -1979,6 +2065,74 @@ wi_do_hostencrypt(struct wi_softc *sc, caddr_t buf, int len)
 	}
 }
 
+STATIC int
+wi_do_hostdecrypt(struct wi_softc *sc, caddr_t buf, int len)
+{
+	u_int32_t i, crc, klen, kid;
+	u_int8_t state[RC4STATE], key[RC4KEYLEN];
+	u_int8_t x, y, *dat;
+
+	if (len < IEEE80211_WEP_IVLEN + IEEE80211_WEP_KIDLEN +
+	    IEEE80211_WEP_CRCLEN)
+		return -1;
+	len -= (IEEE80211_WEP_IVLEN + IEEE80211_WEP_KIDLEN +
+	    IEEE80211_WEP_CRCLEN);
+
+	dat = buf;
+
+	bzero(key, sizeof(key));
+	key[0] = dat[0];
+	key[1] = dat[1];
+	key[2] = dat[2];
+	kid = (dat[3] >> 6) % 4;
+	dat += 4;
+
+	klen = sc->wi_keys.wi_keys[kid].wi_keylen;
+	bcopy((char *)&sc->wi_keys.wi_keys[kid].wi_keydat,
+	    (char *)key + IEEE80211_WEP_IVLEN, klen);
+	klen = (klen > IEEE80211_WEP_KEYLEN) ? RC4KEYLEN : RC4KEYLEN / 2;
+
+	/* rc4 keysetup */
+	x = y = 0;
+	for (i = 0; i < RC4STATE; i++)
+		state[i] = i;
+	for (i = 0; i < RC4STATE; i++) {
+		y = (key[x] + state[i] + y) % RC4STATE;
+		RC4SWAP(i, y);
+		x = (x + 1) % klen;
+	}
+
+	/* compute rc4 over data, crc32 over data */
+	crc = ~0;
+	x = y = 0;
+	for (i = 0; i < len; i++) {
+		x = (x + 1) % RC4STATE;
+		y = (state[x] + y) % RC4STATE;
+		RC4SWAP(x, y);
+		dat[i] ^= state[(state[x] + state[y]) % RC4STATE];
+		crc = crc32_tab[(crc ^ dat[i]) & 0xff] ^ (crc >> 8);
+	}
+	crc = ~crc;
+	dat += len;
+
+	/* append little-endian crc32 and encrypt */
+	for (i = 0; i < IEEE80211_WEP_CRCLEN; i++) {
+		x = (x + 1) % RC4STATE;
+		y = (state[x] + y) % RC4STATE;
+		RC4SWAP(x, y);
+		dat[i] ^= state[(state[x] + state[y]) % RC4STATE];
+	}
+	if ((dat[0] != crc) && (dat[1] != crc >> 8) &&
+	    (dat[2] != crc >> 16) && (dat[3] != crc >> 24)) {
+		if (sc->sc_arpcom.ac_if.if_flags & IFF_DEBUG)
+			printf(WI_PRT_FMT ": wi_do_hostdecrypt: iv mismatch\n",
+			    WI_PRT_ARG(sc));
+		return -1;
+	}
+
+	return 0;
+}
+
 STATIC void
 wi_start(ifp)
 	struct ifnet		*ifp;
@@ -2009,7 +2163,7 @@ nextpkt:
 	id = sc->wi_tx_data_id;
 	eh = mtod(m0, struct ether_header *);
 
-	if (sc->wi_ptype == WI_PORTTYPE_AP) {
+	if (sc->wi_ptype == WI_PORTTYPE_HOSTAP) {
 		if (!wihap_check_tx(&sc->wi_hostap_info, eh->ether_dhost,
 		    &tx_frame.wi_tx_rate) && !(ifp->if_flags & IFF_PROMISC)) {
 			if (ifp->if_flags & IFF_DEBUG)
@@ -2017,6 +2171,7 @@ nextpkt:
 				    ": wi_start: dropping unassoc dst %s\n",
 				    WI_PRT_ARG(sc),
 				    ether_sprintf(eh->ether_dhost));
+			m_freem(m0);
 			goto nextpkt;
 		}
 	}
@@ -2031,7 +2186,7 @@ nextpkt:
 	    eh->ether_type == htons(ETHERTYPE_IPV6)) {
 		bcopy((char *)&eh->ether_dhost,
 		    (char *)&tx_frame.wi_addr1, ETHER_ADDR_LEN);
-		if (sc->wi_ptype == WI_PORTTYPE_AP) {
+		if (sc->wi_ptype == WI_PORTTYPE_HOSTAP) {
 			tx_frame.wi_tx_ctl = htole16(WI_ENC_TX_MGMT); /* XXX */
 			tx_frame.wi_frame_ctl |= htole16(WI_FCTL_FROMDS);
 			if (sc->wi_use_wep)
@@ -2054,7 +2209,7 @@ nextpkt:
 		tx_frame.wi_len = htons(m0->m_pkthdr.len - WI_SNAPHDR_LEN);
 		tx_frame.wi_type = eh->ether_type;
 
-		if (sc->wi_ptype == WI_PORTTYPE_AP && sc->wi_use_wep) {
+		if (sc->wi_ptype == WI_PORTTYPE_HOSTAP && sc->wi_use_wep) {
 
 			/* Do host encryption. */
 			bcopy(&tx_frame.wi_dat[0], &sc->wi_txbuf[4], 8);
@@ -2063,7 +2218,7 @@ nextpkt:
 			    m0->m_pkthdr.len - sizeof(struct ether_header),
 			    (caddr_t)&sc->wi_txbuf[12]);
 
-			wi_do_hostencrypt(sc, &sc->wi_txbuf[0],
+			wi_do_hostencrypt(sc, (caddr_t)&sc->wi_txbuf,
 			    tx_frame.wi_dat_len);
 
 			tx_frame.wi_dat_len += IEEE80211_WEP_IVLEN +
@@ -2092,7 +2247,7 @@ nextpkt:
 	} else {
 		tx_frame.wi_dat_len = htole16(m0->m_pkthdr.len);
 
-		if (sc->wi_ptype == WI_PORTTYPE_AP && sc->wi_use_wep) {
+		if (sc->wi_ptype == WI_PORTTYPE_HOSTAP && sc->wi_use_wep) {
 
 			/* Do host encryption. (XXX - not implemented) */
 			printf(WI_PRT_FMT
@@ -2233,64 +2388,30 @@ STATIC void
 wi_get_id(sc)
 	struct wi_softc *sc;
 {
-	struct wi_ltv_ver	ver;
-	u_int16_t		pri_fw_ver[3];
-	const char		*p;
+	struct wi_ltv_ver		ver;
+	const struct wi_card_ident	*id;
+	u_int16_t			pri_fw_ver[3];
+	const char			*card_name;
+	u_int16_t			card_id;
 
 	/* get chip identity */
 	bzero(&ver, sizeof(ver));
 	ver.wi_type = WI_RID_CARD_ID;
 	ver.wi_len = 5;
 	wi_read_record(sc, (struct wi_ltv_gen *)&ver);
-	switch (letoh16(ver.wi_ver[0])) {
-		case WI_NIC_EVB2:
-			p = "PRISM I HFA3841(EVB2)";
-			sc->sc_firmware_type = WI_INTERSIL;
+	card_id = letoh16(ver.wi_ver[0]);
+	for (id = wi_card_ident; id->firm_type != WI_NOTYPE; id++) {
+		if (card_id == id->card_id)
 			break;
-		case WI_NIC_HWB3763:
-			p = "PRISM II HWB3763 rev.B";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_HWB3163:
-			p = "PRISM II HWB3163 rev.A";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_HWB3163B:
-			p = "PRISM II HWB3163 rev.B";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_EVB3:
-			p = "PRISM II  HFA3842(EVB3)";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_HWB1153:
-			p = "PRISM I HFA1153";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_P2_SST:
-			p = "PRISM II HWB3163 SST-flash";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_PRISM2_5:
-			p = "PRISM 2.5 ISL3873";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_3874A:
-			p = "PRISM 2.5 ISL3874A(PCI)";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		case WI_NIC_37300P:
-			p = "PRISM 2.5 ISL37300P";
-			sc->sc_firmware_type = WI_INTERSIL;
-			break;
-		default:
-			if (ver.wi_ver[0] & htole16(0x8000)) {
-				p = "Unknown PRISM2 chip";
-				sc->sc_firmware_type = WI_INTERSIL;
-			} else {
-				sc->sc_firmware_type = WI_LUCENT;
-			}
-			break;
+	}
+	if (id->firm_type != WI_NOTYPE) {
+		sc->sc_firmware_type = id->firm_type;
+		card_name = id->card_name;
+	} else if (ver.wi_ver[0] & htole16(0x8000)) {
+		sc->sc_firmware_type = WI_INTERSIL;
+		card_name = "Unknown PRISM2 chip";
+	} else {
+		sc->sc_firmware_type = WI_LUCENT;
 	}
 
 	/* get primary firmware version (XXX - how to do Lucent?) */
@@ -2340,14 +2461,12 @@ wi_get_id(sc)
 	} else {
 		printf("\n%s: %s%s, Firmware %d.%d.%d (primary), %d.%d.%d (station), ",
 		    WI_PRT_ARG(sc),
-		    sc->sc_firmware_type == WI_SYMBOL ? "Symbol " : "", p,
-		    pri_fw_ver[0], pri_fw_ver[1], pri_fw_ver[2],
+		    sc->sc_firmware_type == WI_SYMBOL ? "Symbol " : "",
+		    card_name, pri_fw_ver[0], pri_fw_ver[1], pri_fw_ver[2],
 		    sc->sc_sta_firmware_ver / 10000,
 		    (sc->sc_sta_firmware_ver % 10000) / 100,
 		    sc->sc_sta_firmware_ver % 100);
 	}
-
-	return;
 }
 
 STATIC int
@@ -2389,7 +2508,7 @@ wi_sync_media(sc, ptype, txrate)
 	case WI_PORTTYPE_ADHOC:
 		options |= IFM_IEEE80211_ADHOC;
 		break;
-	case WI_PORTTYPE_AP:
+	case WI_PORTTYPE_HOSTAP:
 		options |= IFM_IEEE80211_HOSTAP;
 		break;
 	case WI_PORTTYPE_IBSS:
@@ -2435,7 +2554,7 @@ wi_media_change(ifp)
 		sc->wi_ptype = WI_PORTTYPE_ADHOC;
 		break;
 	case IFM_IEEE80211_HOSTAP:
-		sc->wi_ptype = WI_PORTTYPE_AP;
+		sc->wi_ptype = WI_PORTTYPE_HOSTAP;
 		break;
 	case IFM_IEEE80211_IBSSMASTER:
 	case IFM_IEEE80211_IBSSMASTER|IFM_IEEE80211_IBSS:
@@ -2486,6 +2605,7 @@ wi_media_status(ifp, imr)
 	struct ifmediareq *imr;
 {
 	struct wi_softc *sc = ifp->if_softc;
+	struct wi_req wreq;
 
 	if (!(sc->sc_arpcom.ac_if.if_flags & IFF_UP)) {
 		imr->ifm_active = IFM_IEEE80211|IFM_NONE;
@@ -2493,8 +2613,51 @@ wi_media_status(ifp, imr)
 		return;
 	}
 
-	imr->ifm_active = sc->sc_media.ifm_cur->ifm_media;
-	imr->ifm_status = IFM_AVALID|IFM_ACTIVE;
+	if (sc->wi_tx_rate == 3) {
+		imr->ifm_active = IFM_IEEE80211|IFM_AUTO;
+
+		wreq.wi_type = WI_RID_CUR_TX_RATE;
+		wreq.wi_len = WI_MAX_DATALEN;
+		if (wi_read_record(sc, (struct wi_ltv_gen *)&wreq) == 0) {
+			switch (letoh16(wreq.wi_val[0])) {
+			case 1:
+				imr->ifm_active |= IFM_IEEE80211_DS1;
+				break;
+			case 2:
+				imr->ifm_active |= IFM_IEEE80211_DS2;
+				break;
+			case 6:
+				imr->ifm_active |= IFM_IEEE80211_DS5;
+				break;
+			case 11:
+				imr->ifm_active |= IFM_IEEE80211_DS11;
+				break;
+			}
+		}
+	} else {
+		imr->ifm_active = sc->sc_media.ifm_cur->ifm_media;
+	}
+
+	imr->ifm_status = IFM_AVALID;
+	switch (sc->wi_ptype) {
+	case WI_PORTTYPE_ADHOC:
+	case WI_PORTTYPE_IBSS:
+		/*
+		 * XXX: It would be nice if we could give some actually
+		 * useful status like whether we joined another IBSS or
+		 * created one ourselves.
+		 */
+		/* FALLTHROUGH */
+	case WI_PORTTYPE_HOSTAP:
+		imr->ifm_status |= IFM_ACTIVE;
+		break;
+	default:
+		wreq.wi_type = WI_RID_COMMQUAL;
+		wreq.wi_len = WI_MAX_DATALEN;
+		if (wi_read_record(sc, (struct wi_ltv_gen *)&wreq) == 0 &&
+		    letoh16(wreq.wi_val[0]) != 0)
+			imr->ifm_status |= IFM_ACTIVE;
+	}
 }
 
 STATIC int

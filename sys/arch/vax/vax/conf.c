@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.32.2.1 2002/06/11 03:39:19 art Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.32.2.2 2002/10/29 00:28:14 art Exp $ */
 /*	$NetBSD: conf.c,v 1.44 1999/10/27 16:38:54 ragge Exp $	*/
 
 /*-
@@ -43,8 +43,6 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 #include <sys/vnode.h>
-
-#include <vax/include/rpb.h> 
 
 #include "hp.h" /* 0 */
 bdev_decl(hp);
@@ -111,7 +109,6 @@ bdev_decl(ry);
 #include "cd.h"
 
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 struct bdevsw	bdevsw[] =
 {
@@ -143,46 +140,6 @@ struct bdevsw	bdevsw[] =
 	bdev_disk_init(NRAID,raid),	/* 25: RAIDframe disk driver */
 };
 int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
-
-struct bdevmajtpl {
-	int bdev;
-	int maj;
-} bdevtpls[] = {
-	{ BDEV_HP,	0 },
-	{ BDEV_RK,	3 }, 
-	{ BDEV_UDA,	9 },
-	{ BDEV_IDC,	11 },
-	{ BDEV_RL,	14 },
-	{ BDEV_KDB,	16 },
-	{ BDEV_RD,	19 },
-	{ BDEV_SD,	20 },
-	{ BDEV_SDN,	20 },
-	{ BDEV_ST,	21 },
-	
-	/* some things need these network devices, do not change them */
-	{ BDEV_QE, BDEV_QE },
-	{ BDEV_DE, BDEV_DE },
-	{ BDEV_NI, BDEV_NI },
-	{ BDEV_LE, BDEV_LE },
-	{ BDEV_ZE, BDEV_ZE },
-
-	{ -1, -1 }
-};
-
-/* 
- * BDEV_* -> major table (for bootable block devices)
- */
-int	bdevtomaj (bdev)
-	int bdev;
-{
-	struct bdevmajtpl *bd; 
-
-	for(bd = bdevtpls; bd; bd++) {
-		if(bdev == bd->bdev || bd->bdev == -1)
-			return bd->maj;
-	}
-	return bd != NULL ? bd->maj : NULL;
-}
 
 /*
  * Console routines for VAX console.
@@ -477,6 +434,8 @@ struct cdevsw	cdevsw[] =
 	cdev_tty_init(NDL,dl),		/* 66: DL11 */
     cdev_random_init(1,random), /* 67: random data source */
 	cdev_wsdisplay_init(NWSDISPLAY, wsdisplay),	/* 68: workstation console */
+	cdev_notdef(),			/* 69 */
+	cdev_notdef(),			/* 70 */
 	cdev_disk_init(NRY,ry),		/* 71: VS floppy */
 	cdev_notdef(),		/* 72: was: SCSI bus */
 	cdev_disk_init(NRAID,raid),	/* 73: RAIDframe disk driver */

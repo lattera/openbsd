@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_ni.c,v 1.1 2002/06/11 09:36:23 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_ni.c,v 1.1.4.1 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: if_ni.c,v 1.2 2000/07/10 10:40:38 ragge Exp $ */
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden.

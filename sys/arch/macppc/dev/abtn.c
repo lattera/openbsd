@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.6.1 2002/06/11 03:36:33 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.6.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: abtn.c,v 1.1 1999/07/12 17:48:26 tsubai Exp $	*/
 
 /*-
@@ -135,7 +135,7 @@ abtn_adbcomplete(buffer, data, adb_command)
 		break;
 
 	default:
-		if ((cmd & ~0x7f) == 0))
+		if ((cmd & ~0x7f) == 0)
 			printf("unknown ADB button %d\n", cmd);
 		break;
 #endif

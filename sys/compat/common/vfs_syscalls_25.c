@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_25.c,v 1.1.6.1 2002/06/11 03:28:07 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_25.c,v 1.1.6.2 2002/10/29 00:30:51 art Exp $	*/
 
 /*
  * Copyright (c) 1989, 1993
@@ -147,7 +147,6 @@ compat_25_sys_fstatfs(p, v, retval)
 
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
-	FREF(fp);
 	mp = ((struct vnode *)fp->f_data)->v_mount;
 	sp = &mp->mnt_stat;
 	error = VFS_STATFS(mp, sp, p);

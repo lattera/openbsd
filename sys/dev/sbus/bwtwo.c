@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/bwtwo.c,v 1.1.2.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/bwtwo.c,v 1.1.2.2 2002/10/29 00:33:31 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -130,6 +130,7 @@ struct bwtwo_softc {
 	int sc_width, sc_height, sc_depth, sc_linebytes;
 	union bt_cmap sc_cmap;
 	struct rasops_info sc_rasops;
+	int *sc_crowp, *sc_ccolp;
 };
 
 struct wsscreen_descr bwtwo_stdscreen = {
@@ -137,7 +138,7 @@ struct wsscreen_descr bwtwo_stdscreen = {
 	0, 0,	/* will be filled in -- XXX shouldn't, it's global. */
 	0,
 	0, 0,
-	WSSCREEN_REVERSE
+	WSSCREEN_UNDERLINE | WSSCREEN_REVERSE
 };
 
 const struct wsscreen_descr *bwtwo_scrlist[] = {
@@ -158,6 +159,7 @@ int bwtwo_show_screen(void *, void *, int, void (*cb)(void *, int, int),
 paddr_t bwtwo_mmap(void *, off_t, int);
 int bwtwo_is_console(int);
 void bwtwo_burner(void *, u_int, u_int);
+void bwtwo_updatecursor(struct rasops_info *);
 static int a2int(char *, int);
 
 struct wsdisplay_accessops bwtwo_accessops = {
@@ -245,13 +247,14 @@ bwtwoattach(parent, self, aux)
 
 	sc->sc_rasops.ri_depth = sc->sc_depth;
 	sc->sc_rasops.ri_stride = sc->sc_linebytes;
-	sc->sc_rasops.ri_flg = RI_CENTER;
+	sc->sc_rasops.ri_flg = RI_CENTER |
+	    (console ? 0 : RI_CLEAR);
 	sc->sc_rasops.ri_bits = (void *)bus_space_vaddr(sc->sc_bustag,
 	    sc->sc_vid_regs);
 	sc->sc_rasops.ri_width = sc->sc_width;
 	sc->sc_rasops.ri_height = sc->sc_height;
 	sc->sc_rasops.ri_hw = sc;
-
+	
 	rasops_init(&sc->sc_rasops,
 	    a2int(getpropstring(optionsnode, "screen-#rows"), 34),
 	    a2int(getpropstring(optionsnode, "screen-#columns"), 80));
@@ -264,14 +267,13 @@ bwtwoattach(parent, self, aux)
 	printf("\n");
 
 	if (console) {
-		int *ccolp, *crowp;
-
-		if (romgetcursoraddr(&crowp, &ccolp))
-			ccolp = crowp = NULL;
-		if (ccolp != NULL)
-			sc->sc_rasops.ri_ccol = *ccolp;
-		if (crowp != NULL)
-			sc->sc_rasops.ri_crow = *crowp;
+		if (romgetcursoraddr(&sc->sc_crowp, &sc->sc_ccolp))
+			sc->sc_ccolp = sc->sc_crowp = NULL;
+		if (sc->sc_ccolp != NULL)
+			sc->sc_rasops.ri_ccol = *sc->sc_ccolp;
+		if (sc->sc_crowp != NULL)
+			sc->sc_rasops.ri_crow = *sc->sc_crowp;
+		sc->sc_rasops.ri_updatecursor = bwtwo_updatecursor;
 
 		wsdisplay_cnattach(&bwtwo_stdscreen, &sc->sc_rasops,
 		    sc->sc_rasops.ri_ccol, sc->sc_rasops.ri_crow, defattr);
@@ -304,7 +306,7 @@ bwtwo_ioctl(v, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_UNKNOWN;
+		*(u_int *)data = WSDISPLAY_TYPE_SUNBW;
 		break;
 	case WSDISPLAYIO_GINFO:
 		wdf = (void *)data;
@@ -319,7 +321,7 @@ bwtwo_ioctl(v, cmd, data, flags, p)
 
 	case WSDISPLAYIO_GETCMAP:
 	case WSDISPLAYIO_PUTCMAP:
-		return (-1);
+		break;
 
 	case WSDISPLAYIO_SVIDEO:
 	case WSDISPLAYIO_GVIDEO:
@@ -439,4 +441,16 @@ bwtwo_burner(vsc, on, flags)
 	}
 	FBC_WRITE(sc, FBC_CTRL, fbc);
 	splx(s);
+}
+
+void
+bwtwo_updatecursor(ri)
+	struct rasops_info *ri;
+{
+	struct bwtwo_softc *sc = ri->ri_hw;
+
+	if (sc->sc_crowp != NULL)
+		*sc->sc_crowp = ri->ri_crow;
+	if (sc->sc_ccolp != NULL)
+		*sc->sc_ccolp = ri->ri_ccol;
 }

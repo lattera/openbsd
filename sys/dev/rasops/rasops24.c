@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops24.c,v 1.1.8.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops24.c,v 1.1.8.2 2002/10/29 00:33:31 art Exp $	*/
 /*	$NetBSD: rasops24.c,v 1.12 2000/04/12 14:22:29 pk Exp $	*/
 
 /*-
@@ -47,14 +47,14 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/rasops/rasops.h>
 
-static void 	rasops24_erasecols(void *, int, int, int, long);
-static void 	rasops24_eraserows(void *, int, int, long);
-static void 	rasops24_putchar(void *, int, int, u_int, long attr);
+void 	rasops24_erasecols(void *, int, int, int, long);
+void 	rasops24_eraserows(void *, int, int, long);
+void 	rasops24_putchar(void *, int, int, u_int, long attr);
 #ifndef RASOPS_SMALL
-static void 	rasops24_putchar8(void *, int, int, u_int, long attr);
-static void 	rasops24_putchar12(void *, int, int, u_int, long attr);
-static void 	rasops24_putchar16(void *, int, int, u_int, long attr);
-static void	rasops24_makestamp(struct rasops_info *, long);
+void 	rasops24_putchar8(void *, int, int, u_int, long attr);
+void 	rasops24_putchar12(void *, int, int, u_int, long attr);
+void 	rasops24_putchar16(void *, int, int, u_int, long attr);
+void	rasops24_makestamp(struct rasops_info *, long);
 
 /*
  * 4x1 stamp for optimized character blitting
@@ -119,7 +119,7 @@ rasops24_init(ri)
  * Put a single character. This is the generic version.
  * XXX this bites - we should use masks.
  */
-static void
+void
 rasops24_putchar(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -203,7 +203,7 @@ rasops24_putchar(cookie, row, col, uc, attr)
 /*
  * Recompute the blitting stamp.
  */
-static void
+void
 rasops24_makestamp(ri, attr)
 	struct rasops_info *ri;
 	long attr;
@@ -246,7 +246,7 @@ rasops24_makestamp(ri, attr)
 /*
  * Put a single character. This is for 8-pixel wide fonts.
  */
-static void
+void
 rasops24_putchar8(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -327,7 +327,7 @@ rasops24_putchar8(cookie, row, col, uc, attr)
 /*
  * Put a single character. This is for 12-pixel wide fonts.
  */
-static void
+void
 rasops24_putchar12(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -415,7 +415,7 @@ rasops24_putchar12(cookie, row, col, uc, attr)
 /*
  * Put a single character. This is for 16-pixel wide fonts.
  */
-static void
+void
 rasops24_putchar16(cookie, row, col, uc, attr)
 	void *cookie;
 	int row, col;
@@ -511,7 +511,7 @@ rasops24_putchar16(cookie, row, col, uc, attr)
 /*
  * Erase rows. This is nice and easy due to alignment.
  */
-static void
+void
 rasops24_eraserows(cookie, row, num, attr)
 	void *cookie;
 	int row, num;
@@ -615,7 +615,7 @@ rasops24_eraserows(cookie, row, num, attr)
 /*
  * Erase columns.
  */
-static void
+void
 rasops24_erasecols(cookie, row, col, num, attr)
 	void *cookie;
 	int row, col, num;

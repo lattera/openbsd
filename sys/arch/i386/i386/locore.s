@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.64.2.1 2002/06/11 03:35:53 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.64.2.2 2002/10/29 00:28:03 art Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1734,8 +1734,8 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 
 	/* Save segment registers. */
 #ifdef DDB
-	xorl	%ax, %ax
-	xorl	%cx, %cx
+	xorl	%eax, %eax
+	xorl	%ecx, %ecx
 #endif
 	movl	%fs,%ax
 	movl	%gs,%cx
@@ -1896,8 +1896,8 @@ ENTRY(savectx)
 
 	/* Save segment registers. */
 #ifdef DDB
-	xorl	%ax, %ax
-	xorl	%cx, %cx
+	xorl	%eax, %eax
+	xorl	%ecx, %ecx
 #endif
 	movl	%fs,%ax
 	movl	%gs,%cx

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_de.c,v 1.1 2002/06/11 09:36:23 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_de.c,v 1.1.4.1 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: if_de.c,v 1.2 2002/05/24 21:41:40 ragge Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.4 2000/11/10 15:33:09 provos Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.4.6.1 2002/10/29 00:28:14 art Exp $	*/
 /*	$NetBSD: qv.c,v 1.2 1996/09/02 06:44:28 mycroft Exp $	*/
 
 /*-
@@ -981,8 +981,6 @@ qvputc(c)
 char c;
 {
 	qvputchar(c);
-	if (c == '\n')
-		qvputchar('\r');
 }
 
 /*

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/files.macppc,v 1.5.2.1 2002/06/11 03:36:33 art Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/files.macppc,v 1.5.2.2 2002/10/29 00:28:05 art Exp $
 
 #
 # macppc-specific configuration info
@@ -71,7 +71,7 @@ file	arch/macppc/pci/pciide_machdep.c		pciide
 device	mpcpcibr {} : pcibus
 attach	mpcpcibr at mainbus
 file	arch/macppc/pci/mpcpcibus.c			mpcpcibr
-#file	arch/macppc/pci/pci_addr_fixup.c		mpcpcibr
+file	arch/macppc/pci/pci_addr_fixup.c		mpcpcibr
 
 #
 # "workstation console" routines
@@ -121,10 +121,6 @@ device	bm: ether, ifnet, ifmedia, mii, mii_bitbang
 attach	bm at macobio
 file	arch/macppc/dev/if_bm.c				bm
 
-device	gm: ether, ifnet, ifmedia, mii
-attach	gm at pci
-file	arch/macppc/dev/if_gm.c				gm needs-flag
-
 device	macintr {}
 attach	macintr at macobio
 file	arch/macppc/dev/macintr.c			macintr
@@ -136,11 +132,11 @@ file	arch/macppc/dev/openpic.c			openpic
 device	zsc {channel = -1}
 attach	zsc at macobio
 file	arch/macppc/dev/zs.c				zsc needs-flag
-file	dev/ic/z8530sc.c				zsc
+file	arch/macppc/dev/z8530sc.c			zsc
 
 device	zstty: tty
 attach	zstty at zsc
-file	dev/ic/z8530tty.c				zstty needs-flag
+file	arch/macppc/dev/z8530tty.c			zstty needs-flag
 
 device	adb {}
 attach	adb at macobio
@@ -204,7 +200,7 @@ file	arch/macppc/pci/vgafb_pci.c			vgafb_pci needs-flag
 # CARDBUS
 #
 include	"dev/cardbus/files.cardbus"
-#file	arch/macppc/macppc/rbus_machdep.c		cardbus
+file	arch/macppc/macppc/rbus_machdep.c		cardbus
 
 #
 # Machine-independent PCMCIA drivers
@@ -216,9 +212,14 @@ include "dev/pcmcia/files.pcmcia"
 #
 include "dev/usb/files.usb"
 
+#
+# Machine-independent IEEE1394 drivers
+#
+include "dev/ieee1394/files.ieee1394"
+
 # Sun HME Ethernet controllers
-device  hme: ether, ifnet, mii, ifmedia
-file    dev/ic/hme.c                   
+device	hme: ether, ifnet, mii, ifmedia
+file	dev/ic/hme.c
 
 attach	hme at pci with hme_pci
 file	dev/pci/if_hme_pci.c		hme_pci

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/frnd.c,v 1.5.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/frnd.c,v 1.5.6.2 2002/10/29 00:28:03 art Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -237,4 +237,3 @@ quad_frnd(srcptr,dstptr,status)
 {
 	return(UNIMPLEMENTEDEXCEPTION);
 }
-

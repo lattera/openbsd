@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.29.2.1 2002/06/11 03:33:39 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.29.2.2 2002/10/29 00:28:00 art Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -293,6 +293,7 @@ trap(a0, a1, a2, entry, framep)
 	caddr_t v;
 	int typ;
 	union sigval sv;
+	vm_prot_t ftype;
 
 	uvmexp.traps++;
 	p = curproc;
@@ -410,29 +411,8 @@ trap(a0, a1, a2, entry, framep)
 			break;
 
 		case ALPHA_IF_CODE_FEN:
-#ifndef NO_IEEE
 			alpha_enable_fp(p, 0);
 			alpha_pal_wrfen(0);
-#else
-			/*
-			 * on exit from the kernel, if proc == fpcurproc,
-			 * FP is enabled.
-			 */
-			if (fpcurproc == p) {
-				printf("trap: fp disabled for fpcurproc == %p",
-				    p);
-				goto dopanic;
-			}
-
-			alpha_pal_wrfen(1);
-			if (fpcurproc)
-				savefpstate(&fpcurproc->p_addr->u_pcb.pcb_fp);
-			fpcurproc = p;
-			restorefpstate(&fpcurproc->p_addr->u_pcb.pcb_fp);
-			alpha_pal_wrfen(0);
-
-			p->p_md.md_flags |= MDP_FPUSED;
-#endif
 			goto out;
 
 		default:
@@ -445,11 +425,12 @@ trap(a0, a1, a2, entry, framep)
 		switch (a1) {
 		case ALPHA_MMCSR_FOR:
 		case ALPHA_MMCSR_FOE:
-			pmap_emulate_reference(p, a0, user, 0);
-			goto out;
-
 		case ALPHA_MMCSR_FOW:
-			pmap_emulate_reference(p, a0, user, 1);
+			if (pmap_emulate_reference(p, a0, user, a1)) {
+				/* XXX - stupid API right now. */
+				ftype = VM_PROT_EXECUTE|VM_PROT_READ;
+				goto do_fault;
+			}
 			goto out;
 
 		case ALPHA_MMCSR_INVALTRANS:
@@ -458,10 +439,22 @@ trap(a0, a1, a2, entry, framep)
 			vaddr_t va;
 			struct vmspace *vm = NULL;
 			struct vm_map *map;
-			vm_prot_t ftype;
 			int rv;
 			extern struct vm_map *kernel_map;
 
+			switch (a2) {
+			case -1:		/* instruction fetch fault */
+				ftype = VM_PROT_EXECUTE|VM_PROT_READ;
+				break;
+			case 0:			/* load instruction */
+				ftype = VM_PROT_READ;
+				break;
+			case 1:			/* store instruction */
+				ftype = VM_PROT_READ|VM_PROT_WRITE;
+				break;
+			}
+	
+do_fault:
 			/*
 			 * If it was caused by fuswintr or suswintr,
 			 * just punt.  Note that we check the faulting
@@ -494,20 +487,6 @@ trap(a0, a1, a2, entry, framep)
 			else {
 				vm = p->p_vmspace;
 				map = &vm->vm_map;
-			}
-	
-			switch (a2) {
-			case -1:		/* instruction fetch fault */
-			case 0:			/* load instruction */
-				ftype = VM_PROT_READ;
-				break;
-			case 1:			/* store instruction */
-				ftype = VM_PROT_WRITE;
-				break;
-#ifdef DIAGNOSTIC
-			default:		/* XXX gcc -Wuninitialized */
-				goto dopanic;
-#endif
 			}
 	
 			va = trunc_page((vaddr_t)a0);
@@ -551,7 +530,7 @@ trap(a0, a1, a2, entry, framep)
 			v = (caddr_t)a0;
 			typ = SEGV_MAPERR;
 			if (rv == ENOMEM) {
-				printf("UVM: pid %d (%s), uid %d killed: "
+				printf("UVM: pid %u (%s), uid %u killed: "
 				       "out of swap\n", p->p_pid, p->p_comm,
 				       p->p_cred && p->p_ucred ?
 				       p->p_ucred->cr_uid : -1);
@@ -770,7 +749,6 @@ child_return(arg)
 #endif
 }
 
-#ifndef NO_IEEE
 /*
  * Set the float-point enable for the current process, and return
  * the FPU context to the named process. If check == 0, it is an
@@ -807,7 +785,6 @@ alpha_enable_fp(struct proc *p, int check)
 	alpha_pal_wrfen(1);
 	restorefpstate(&p->p_addr->u_pcb.pcb_fp);
 }
-#endif
 
 /*
  * Process an asynchronous software trap.
@@ -1107,7 +1084,7 @@ unaligned_fixup(va, opcode, reg, p)
 	 */
 	if (doprint) {
 		uprintf(
-		"pid %d (%s): unaligned access: va=0x%lx pc=0x%lx ra=0x%lx op=",
+		"pid %u (%s): unaligned access: va=0x%lx pc=0x%lx ra=0x%lx op=",
 		    p->p_pid, p->p_comm, va,
 		    p->p_md.md_tf->tf_regs[FRAME_PC] - 4,
 		    p->p_md.md_tf->tf_regs[FRAME_RA]);

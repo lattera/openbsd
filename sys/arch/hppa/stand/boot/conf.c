@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.12.8.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.12.8.2 2002/10/29 00:28:03 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -34,17 +34,10 @@
 #include <libsa.h>
 #include <lib/libsa/ufs.h>
 #include <lib/libsa/cd9660.h>
-#include <lib/libsa/exec.h>
 #include <dev/cons.h>
 
 const char version[] = "0.7";
 int	debug = 0;
-
-const struct x_sw execsw[] = {
-	{ "elf", elf_probe,	elf_load,	elf_ldsym },
-/*	{ "som", som_probe,	som_load,	som_ldsym }, */
-	{ ""   , NULL,		NULL,		NULL },
-};
 
 struct fs_ops file_system[] = {
 	{ lif_open,    lif_close,    lif_read,    lif_write,    lif_seek,

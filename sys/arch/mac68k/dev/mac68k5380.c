@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/mac68k5380.c,v 1.14.4.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/mac68k5380.c,v 1.14.4.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: mac68k5380.c,v 1.29 1997/02/28 15:50:50 scottr Exp $	*/
 
 /*
@@ -548,7 +548,7 @@ transfer_pdma(phasep, data, count)
 
 	if (pdma_5380_dir) {
 		panic("ncrscsi: transfer_pdma called when operation already "
-			"pending.\n");
+			"pending.");
 	}
 	PID("transfer_pdma0")
 

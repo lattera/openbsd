@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.14.2.1 2002/06/11 03:34:57 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.14.2.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: grf.c,v 1.32 1996/12/23 09:10:01 veego Exp $	*/
 
 /*
@@ -68,7 +68,6 @@
 #include <amiga/dev/itevar.h>
 #include <amiga/dev/viewioctl.h>
 
-#include <sys/conf.h>
 #include <machine/conf.h>
 
 #include "view.h"

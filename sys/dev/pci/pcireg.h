@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.17.4.1 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.17.4.2 2002/10/29 00:33:29 art Exp $	*/
 /*	$NetBSD: pcireg.h,v 1.26 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*
@@ -89,6 +89,12 @@ typedef u_int16_t pci_product_id_t;
 #define	PCI_STATUS_SPECIAL_ERROR		0x40000000
 #define	PCI_STATUS_PARITY_DETECT		0x80000000
 
+#define	PCI_COMMAND_STATUS_BITS \
+    ("\020\01IO\02MEM\03MASTER\04SPECIAL\05INVALIDATE\06PALETTE\07PARITY"\
+     "\010STEPPING\011SERR\012BACKTOBACK\025CAPLIST\026CLK66\027UDF"\
+     "\030BACK2BACK_STAT\031PARITY_STAT\032DEVSEL_MEDIUM\033DEVSEL_SLOW"\
+     "\034TARGET_TARGET_ABORT\035MASTER_TARGET_ABORT\036MASTER_ABORT"\
+     "\037SPECIAL_ERROR\040PARITY_DETECT")
 /*
  * PCI Class and Revision Register; defines type and revision of device.
  */

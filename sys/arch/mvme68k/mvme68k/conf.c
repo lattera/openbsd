@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.25.2.1 2002/06/11 03:36:50 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.25.2.2 2002/10/29 00:28:07 art Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -150,7 +150,6 @@ cdev_decl(lptwo);
 cdev_decl(xfs_dev);
 #endif
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 #ifdef notyet
 cdev_decl(xd);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/start.S,v 1.1 2002/06/11 09:36:24 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/start.S,v 1.1.4.1 2002/10/29 00:28:13 art Exp $ */
 /*	$NetBSD: start.S,v 1.1 2002/02/24 01:04:26 matt Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.

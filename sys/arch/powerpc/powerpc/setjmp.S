@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/setjmp.S,v 1.4 2001/08/21 04:00:41 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/setjmp.S,v 1.4.4.1 2002/10/29 00:28:09 art Exp $	*/
 /* kernel version of this file, does not have signal goop */
 /* int setjmp(jmp_buf env) */
 

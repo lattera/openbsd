@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/exec.h,v 1.6 2001/01/22 14:51:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/exec.h,v 1.6.6.1 2002/10/29 00:28:03 art Exp $	*/
 
 /* 
  * Copyright (c) 1994, The University of Utah and
@@ -37,15 +37,8 @@
 #define ELF_TARG_DATA           ELFDATA2MSB
 #define ELF_TARG_MACH           EM_PARISC   
 
-/* #define _NLIST_DO_AOUT */
-/* #define _NLIST_DO_ECOFF */
 #define _NLIST_DO_ELF
-#define _NLIST_DO_SOM
-
-/* #define	_KERN_DO_AOUT */
-/* #define	_KERN_DO_ECOFF */
 #define	_KERN_DO_ELF
-#define	_KERN_DO_SOM
 
 /*
  * the following MD ELF values defenitions are from the:

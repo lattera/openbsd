@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/cnv_float.h,v 1.5.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/cnv_float.h,v 1.5.6.2 2002/10/29 00:28:03 art Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -310,4 +310,3 @@ int sgl_to_sgl_fcnvxf(int *, sgl_floating_point *, unsigned int *);
 int sgl_to_dbl_fcnvxf(int *, dbl_floating_point *, unsigned int *);
 int dbl_to_sgl_fcnvxf(dbl_integer *, sgl_floating_point *, unsigned int *);
 int dbl_to_dbl_fcnvxf(dbl_integer *, dbl_floating_point *, unsigned int *);
-

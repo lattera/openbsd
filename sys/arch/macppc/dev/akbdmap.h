@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdmap.h,v 1.2.6.1 2002/06/11 03:36:33 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdmap.h,v 1.2.6.2 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: akbdmap.h,v 1.3 2000/09/01 16:00:39 tsubai Exp $	*/
 
 /*-
@@ -132,6 +132,11 @@ static const keysym_t akbd_keydesc_us[] = {
 
     KC(106),			KS_KP_Enter,
 
+    KC(115),			KS_KP_Home,
+    KC(116),			KS_KP_Prior,
+    KC(119),			KS_KP_End,
+    KC(121),			KS_KP_Next,
+
     KC(127),  KS_Cmd_Debugger,
 };
 
@@ -189,6 +194,14 @@ static const keysym_t akbd_keydesc_jp[] = {
     KC(93),			KS_backslash,	KS_bar,
 };
 #endif
+
+static const keysym_t akbd_keydesc_uk[] = {
+/*  pos		normal		shifted		altgr		shift-altgr */
+    KC(10),	KS_section,	KS_plusminus,
+    KC(20),	KS_3,		KS_sterling,	KS_numbersign,
+    KC(52),	KS_KP_Enter,
+    KC(58),	KS_Mode_switch,	KS_Multi_key,		/* Option */
+};
 
 static const keysym_t akbd_keydesc_sv[] = {
 /*  pos		normal		shifted		altgr		shift-altgr */
@@ -285,6 +298,7 @@ static const struct wscons_keydesc akbd_keydesctab[] = {
 	KBD_MAP(KB_SV | KB_NODEAD,	KB_SV,	akbd_keydesc_sv_nodead),
 	KBD_MAP(KB_DE,			KB_US,	akbd_keydesc_de),
 	KBD_MAP(KB_DE | KB_NODEAD,	KB_DE,	akbd_keydesc_de_nodead),
+	KBD_MAP(KB_UK,			KB_US,	akbd_keydesc_uk),
 	{0, 0, 0, 0}
 };
 

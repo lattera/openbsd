@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcivar.h,v 1.21.4.2 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcivar.h,v 1.21.4.3 2002/10/29 00:33:29 art Exp $	*/
 /*	$NetBSD: pcivar.h,v 1.23 1997/06/06 23:48:05 thorpej Exp $	*/
 
 /*
@@ -185,14 +185,11 @@ int pci_get_capability(pci_chipset_tag_t, pcitag_t, int,
 /*
  * Helper functions for autoconfiguration.
  */
+const char *pci_findvendor(pcireg_t);
 void	pci_devinfo(pcireg_t, pcireg_t, int, char *);
 void	set_pci_isa_bridge_callback(void (*)(void *), void *);
-const struct pci_quirkdata *pci_lookup_quirkdata(pci_vendor_id_t,
-	    pci_product_id_t);
-
-/*
- * Misc.
- */
-const char   *pci_findvendor(pcireg_t);
+const struct pci_quirkdata *
+	pci_lookup_quirkdata(pci_vendor_id_t, pci_product_id_t);
+void	pciagp_set_pchb(struct pci_attach_args *);
 
 #endif /* _DEV_PCI_PCIVAR_H_ */

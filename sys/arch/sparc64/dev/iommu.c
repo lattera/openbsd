@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.7.2.1 2002/06/11 03:38:42 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.7.2.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: iommu.c,v 1.47 2002/02/08 20:03:45 eeh Exp $	*/
 
 /*
@@ -183,7 +183,7 @@ iommu_init(name, is, tsbsize, iovabase)
 	 */
 	if (is->is_sb[0] || is->is_sb[1])
 		(void)pmap_extract(pmap_kernel(), (vaddr_t)&is->is_flush[0],
-		    (paddr_t *)&is->is_flushpa);
+		    &is->is_flushpa);
 
 	/*
 	 * now actually start up the IOMMU
@@ -310,7 +310,7 @@ iommu_tsb_entry(is, dva)
 	tte = is->is_tsb[IOTSBSLOT(dva,is->is_tsbsize)];
 
 	if ((tte & IOTTE_V) == 0)
-		panic("iommu_tsb_entry: invalid entry %llx\n", (long long)dva);
+		panic("iommu_tsb_entry: invalid entry %llx", (long long)dva);
 
 	return (tte);
 }
@@ -398,7 +398,7 @@ iommu_strbuf_flush_done(is)
 
 	if (!is->is_sb[0] && !is->is_sb[1])
 		return (0);
-				
+
 	/*
 	 * Streaming buffer flushes:
 	 * 
@@ -493,7 +493,7 @@ iommu_dvmamap_load(t, is, map, buf, buflen, p, flags)
 	if (map->dm_nsegs) {
 		/* Already in use?? */
 #ifdef DIAGNOSTIC
-		printf("iommu_dvmamap_load: map still in use\n");
+		panic("iommu_dvmamap_load: map still in use");
 #endif
 		bus_dmamap_unload(t, map);
 	}
@@ -574,7 +574,7 @@ iommu_dvmamap_load(t, is, map, buf, buflen, p, flags)
 			map->dm_segs[seg].ds_len));
 		map->dm_segs[seg].ds_len =
 		    boundary - (sgstart & (boundary - 1));
-		if (++seg > map->_dm_segcnt) {
+		if (++seg >= map->_dm_segcnt) {
 			/* Too many segments.  Fail the operation. */
 			DPRINTF(IDB_INFO, ("iommu_dvmamap_load: "
 				"too many segments %d\n", seg));
@@ -712,7 +712,7 @@ iommu_dvmamap_load_raw(t, is, map, segs, nsegs, flags, size)
 	if (map->dm_nsegs) {
 		/* Already in use?? */
 #ifdef DIAGNOSTIC
-		printf("iommu_dvmamap_load_raw: map still in use\n");
+		panic("iommu_dvmamap_load_raw: map still in use");
 #endif
 		bus_dmamap_unload(t, map);
 	}
@@ -836,6 +836,10 @@ printf("appending offset %x pa %lx, prev %lx dva %lx prev %lx\n",
 				    (long)map->dm_segs[j].ds_addr,
 				    map->dm_segs[j].ds_len));
 			} else {
+				if (j >= map->_dm_segcnt) {
+					iommu_dvmamap_unload(t, is, map);
+					return (E2BIG);
+				}
 				map->dm_segs[j].ds_addr = sgstart;
 				map->dm_segs[j].ds_len = left;
 				DPRINTF(IDB_INFO, ("iommu_dvmamap_load_raw: "
@@ -850,12 +854,12 @@ printf("appending offset %x pa %lx, prev %lx dva %lx prev %lx\n",
 				(sgend & ~(boundary - 1))) {
 				/* Need a new segment. */
 				map->dm_segs[j].ds_len =
-					sgstart & (boundary - 1);
+				    boundary - (sgstart & (boundary - 1));
 				DPRINTF(IDB_INFO, ("iommu_dvmamap_load_raw: "
 					"seg %d start %lx size %lx\n", j,
 					(long)map->dm_segs[j].ds_addr, 
 					map->dm_segs[j].ds_len));
-				if (++j > map->_dm_segcnt) {
+				if (++j >= map->_dm_segcnt) {
 					iommu_dvmamap_unload(t, is, map);
 					return (E2BIG);
 				}
@@ -868,7 +872,7 @@ printf("appending offset %x pa %lx, prev %lx dva %lx prev %lx\n",
 				panic("iommu_dmamap_load_raw: size botch");
 
 			/* Now map a series of pages. */
-			while (dvmaddr < sgend) {
+			while (dvmaddr <= sgend) {
 				DPRINTF(IDB_BUSDMA,
 				    ("iommu_dvamap_load_raw: map %p "
 				    "loading va %lx at pa %lx\n",
@@ -923,12 +927,12 @@ printf("appending offset %x pa %lx, prev %lx dva %lx prev %lx\n",
 	map->dm_segs[i].ds_addr = sgstart;
 	while ((sgstart & ~(boundary - 1)) != (sgend & ~(boundary - 1))) {
 		/* Oops.  We crossed a boundary.  Split the xfer. */
-		map->dm_segs[i].ds_len = sgstart & (boundary - 1);
+		map->dm_segs[i].ds_len = boundary - (sgstart & (boundary - 1));
 		DPRINTF(IDB_INFO, ("iommu_dvmamap_load_raw: "
 			"seg %d start %lx size %lx\n", i,
 			(long)map->dm_segs[i].ds_addr,
 			map->dm_segs[i].ds_len));
-		if (++i > map->_dm_segcnt) {
+		if (++i >= map->_dm_segcnt) {
 			/* Too many segments.  Fail the operation. */
 			s = splhigh();
 			/* How can this fail?  And if it does what can we do? */

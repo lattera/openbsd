@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93.2.2 2002/06/11 03:33:40 art Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93.2.3 2002/10/29 00:28:00 art Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 
 machine	alpha
@@ -16,6 +16,8 @@ option		DEC_EB164	# EB164:	AlphaPC 164
 option		DEC_EB64PLUS	# EB64+:	AlphaPC 64, etc.
 option		DEC_2000_300	# "Jensen":	2000/300 (DECpc AXP 150)
 option		DEC_550		# Miata:	Digital Personal Workstation
+option		DEC_1000	# Mikasa etc:	Digital AlphaServer 1000
+option		DEC_1000A	# Corelle etc:	Digital AlphaServer 800/1000A
 option		DEC_6600	# EV6:		XP1000, 264DP OEM Board
 option		API_UP1000	# EV6:		Alpha Processor UP1000
 
@@ -36,6 +38,7 @@ option		USBVERBOSE
 # Wscons options
 option		WSDISPLAY_COMPAT_RAWKBD # can get raw scancodes
 
+option		APERTURE		# in-kernel aperture driver for XFree86
 option		USER_PCICONF		# user-space PCI configuration
 
 config		bsd	swap generic
@@ -164,23 +167,23 @@ bge*	at pci? dev ? function ?	# Broadcom BCM570x (aka Tigon3)
 stge*	at pci? dev ? function ?	# Sundance TC9021 GigE
 rl*	at pci? dev ? function ?	# RealTek 81[23]9 ethernet
 vr*	at pci? dev ? function ?	# VIA Rhine ethernet
-gx*	at pci? dev ? function ?	# Intel Pro/1000 ethernet
+em*	at pci? dev ? function ?	# Intel Pro/1000 ethernet
+sis*	at pci? dev ? function ?	# SiS 900/7016 ethernet
 
-#UNTESTED:  the vollowing section of drivers is untested on alpha.
+#UNTESTED:  the following section of drivers is untested on alpha.
 en*	at pci? dev ? function ?	# ENI PCI ATM (untested)
 tl*	at pci? dev ? function ?	# Compaq Thunderlan ethernet
 le*	at pci? dev ? function ?	# PCI LANCE Ethernet (untested)
 lmc*	at pci? dev ? function ?	# Lan Media Corp SSI/T3/HSSI
 wb*	at pci? dev ? function ?	# Winbond W89C840F ethernet
 sf*	at pci? dev ? function ?	# Adaptec AIC-6915 ethernet
-sis*	at pci? dev ? function ?	# SiS 900/7016 ethernet
 ste*	at pci? dev ? function ?	# Sundance ST201 ethernet
 ti*	at pci? dev ? function ?	# Alteon Tigon 1Gb ethernet
 skc*	at pci? dev ? function ?	# SysKonnect GEnesis 984x
 sk*	at skc?				#  each port of above
 an*	at pci? dev ? function ?	# Cisco/Aironet 802.11DS
 
-#BROKEN:  The following two drivers have 64-bit issues
+#BROKEN: The following driver has 64-bit issues
 #tx*	at pci? dev ? function ?	# SMC 83C170 EPIC ethernet
 
 vga*	at pci? dev ? function ?	# PCI VGA graphics
@@ -234,7 +237,10 @@ ne0	at	isa? port 0x240 irq 9		# NE[12]000 ethernet cards
 ne1	at	isa? port 0x300 irq 10		# NE[12]000 ethernet cards
 ne2	at	isa? port 0x280 irq 9		# NE[12]000 ethernet cards
 ep*	at	isa? port ? irq ?		# 3C509 ethernet cards
+ep*	at	isapnp?				# 3C509 ethernet cards
 #wss*	at	isa? port 0x530 irq 9 drq 0	# Windows Sound System
+lc0	at	isa? port 0x200 irq ?		# DEC EtherWorks
+lc1	at	isa? port 0x280 irq ?		# DEC EtherWorks
 
 cy0	at	isa? iomem 0xd4000 irq 12	# ISA cyclom card
 fdc0	at	isa? port 0x3f0 irq 6 drq 2     # floppy controller
@@ -300,7 +306,7 @@ audio*	at uaudio?
 # Workstation Console attachments
 #wsdisplay*	at	cfb?
 #wsdisplay*	at	sfb?
-#wsdisplay*	at	vga?
+wsdisplay*	at	vga?
 wsdisplay*	at	tga?
 wskbd*		at	pckbd?
 wsmouse*	at	pms?

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.5.2.2 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.5.2.3 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*
@@ -54,6 +54,7 @@
 
 #include <ukbd.h>
 #include <akbd.h>
+#include <zstty.h>
 #include <dev/usb/ukbdvar.h>
 #include <macppc/dev/akbdvar.h>
 
@@ -369,14 +370,17 @@ ofwconprobe()
 		return;
 	}
 	if (strcmp(type, "serial") == 0) {
-		/* serial console not supported, forcing to screen for now */
-		OF_stdout = OF_open("screen");
-		OF_stdin = OF_open("keyboard");
-
-		/* cross fingers that this works. */
-		of_display_console();
+#if NZSTTY > 0
+		/* zscnprobe/zscninit do all the required initialization */
 		return;
+#endif
 	}
+
+	OF_stdout = OF_open("screen");
+	OF_stdin = OF_open("keyboard");
+
+	/* cross fingers that this works. */
+	of_display_console();
 
 	return;
 }
@@ -540,7 +544,7 @@ of_display_console()
 		len = OF_getprop(display_node, "assigned-addresses",
 			addr, sizeof(addr));
 		if (len < sizeof(addr[0])) {
-			panic(": no address\n");
+			panic(": no address");
 		}
 	}
 	len = OF_getprop(display_node, "backlight-control",
@@ -618,4 +622,69 @@ of_setbrightness(brightness)
 
 	/* XXX this routine should also save the brightness settings in the nvram */
 #endif
+}
+
+#include <dev/cons.h>
+
+cons_decl(ofw);
+
+/*   
+ * Console support functions
+ */
+void
+ofwcnprobe(cd)
+        struct consdev *cd;
+{
+	cd->cn_pri = CN_DEAD;
+}
+
+void
+ofwcninit(cd)
+        struct consdev *cd;
+{
+}
+void
+ofwcnputc(dev, c)
+	dev_t dev;
+	int c;
+{
+	char ch = c;
+ 
+	OF_write(OF_stdout, &ch, 1);
+}
+int
+ofwcngetc(dev)
+	dev_t dev;
+{
+        unsigned char ch = '\0';
+        int l;
+
+        while ((l = OF_read(OF_stdin, &ch, 1)) != 1)
+                if (l != -2 && l != 0)
+                        return -1;
+        return ch;
+}
+
+void
+ofwcnpollc(dev, on)
+	dev_t dev;
+	int on;
+{
+}
+
+struct consdev consdev_ofw = {
+        ofwcnprobe,
+        ofwcninit,
+        ofwcngetc,
+        ofwcnputc,
+        ofwcnpollc,
+        NULL,
+};
+
+void
+ofwconsinit()
+{
+	struct consdev *cp;
+	cp = &consdev_ofw;
+	cn_tab = cp;
 }

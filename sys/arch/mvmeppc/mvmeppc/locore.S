@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/locore.S,v 1.1.6.1 2002/06/11 03:37:22 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/locore.S,v 1.1.6.2 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*
@@ -952,6 +952,7 @@ s_dsitrap:
 	mfdar	3
 	mfsrr1	4
 	mfdsisr	5
+	li	6, 0
 s_pte_spill:
 	bl	_C_LABEL(pte_spill_r)	/* try a spill */
 	cmpwi	0,3,0
@@ -1006,6 +1007,7 @@ s_isitrap:
 	mfsrr0	3
 	mfsrr1	4
 	li	5, 0
+	li	6, 1
 	b	s_pte_spill		/* above */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/netif_of.c,v 1.1 2001/09/01 15:39:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/netif_of.c,v 1.1.6.1 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: netif_of.c,v 1.1 1997/04/16 20:29:19 thorpej Exp $	*/
 
 /*

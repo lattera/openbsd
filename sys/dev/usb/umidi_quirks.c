@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umidi_quirks.c,v 1.4 2002/07/09 15:22:08 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umidi_quirks.c,v 1.4.4.1 2002/10/29 00:33:32 art Exp $	*/
 /*	$NetBSD: umidi_quirks.c,v 1.4 2002/06/19 13:55:30 tshiozak Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_blue.c,v 1.2.4.1 2002/06/11 03:27:42 art Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_blue.c,v 1.2.4.2 2002/10/29 00:27:59 art Exp $	*/
 /*	$KAME: altq_blue.c,v 1.9 2002/04/03 05:38:50 kjc Exp $	*/
 
 /*
@@ -92,7 +92,7 @@
 /* fixed-point uses 12-bit decimal places */
 #define	FP_SHIFT	12	/* fixed-point shift */
 
-#define	BLUE_LIMIT	200	/* default max queue lenght */
+#define	BLUE_LIMIT	200	/* default max queue length */
 #define	BLUE_STATS		/* collect statistics */
 
 /* blue_list keeps all blue_state_t's allocated. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/dcphy.c,v 1.5.6.1 2002/06/11 03:42:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/dcphy.c,v 1.5.6.2 2002/10/29 00:33:27 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -167,6 +167,9 @@ dcphy_attach(parent, self, aux)
 		}
 		break;
 	}
+
+	if (dc_sc->dc_type == DC_TYPE_21145)
+		sc->mii_capabilities = BMSR_10THDX;
 
 	sc->mii_capabilities &= ma->mii_capmask;
 	if (sc->mii_capabilities & BMSR_MEDIAMASK)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.18.2.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.18.2.2 2002/10/29 00:33:29 art Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Håkan Olsson (ho@crt.se)
@@ -1127,7 +1127,7 @@ ises_freesession(u_int64_t tsid)
 {
 	struct ises_softc *sc;
 	int card, sesn;
-	u_int32_t sid = ((u_int32_t) tsid) & 0xffffffff;
+	u_int32_t sid = ((u_int32_t)tsid) & 0xffffffff;
 
 	card = ISES_CARD(sid);
 	if (card >= ises_cd.cd_ndevs || ises_cd.cd_devs[card] == NULL)
@@ -1469,7 +1469,7 @@ errout:
 		free(q, M_DEVBUF);
 	}
 	crp->crp_etype = err;
-	crp->crp_callback(crp);
+	crypto_done(crp);
 	return (0);
 }
 

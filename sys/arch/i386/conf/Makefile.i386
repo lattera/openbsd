@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/Makefile.i386,v 1.27.4.1 2002/01/31 22:55:10 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/Makefile.i386,v 1.27.4.2 2002/10/29 00:28:03 art Exp $
 #	$NetBSD: Makefile.i386,v 1.67 1996/05/11 16:12:11 mycroft Exp $
 
 # Makefile for OpenBSD
@@ -50,9 +50,9 @@ CMACHFLAGS=
 .endif
 
 COPTS?=	-O2
-CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
-LINKFLAGS=	-z -Ttext E0100000 -e start
+LINKFLAGS=	-z -Ttext D0100000 -e start
 STRIPFLAGS=	-d
 
 HOSTCC= ${CC}
@@ -122,7 +122,7 @@ LINKFLAGS+=	-x
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${I386}/i386/genassym.cf
+assym.h: $S/kern/genassym.sh ${I386}/i386/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    ${PARAM} < ${I386}/i386/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosprobe.c,v 1.1 2002/06/20 20:22:58 weingart Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosprobe.c,v 1.1.4.1 2002/10/29 00:28:04 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Tobias Weingartner

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.31.2.1 2002/06/11 03:42:31 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.31.2.2 2002/10/29 00:33:32 art Exp $ */
 /*	$NetBSD: usb_port.h,v 1.44 2001/05/14 20:35:29 bouyer Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb_port.h,v 1.21 1999/11/17 22:33:47 n_hibma Exp $	*/
 
@@ -42,7 +42,7 @@
 #ifndef _USB_PORT_H
 #define _USB_PORT_H
 
-/* 
+/*
  * Macro's to cope with the differences between operating systems.
  */
 

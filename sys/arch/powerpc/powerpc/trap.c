@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.41.2.2 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.41.2.3 2002/10/29 00:28:09 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -300,7 +300,7 @@ trap(frame)
 				va &= ADDR_PIDX | ADDR_POFF;
 				va |= user_sr << ADDR_SR_SHIFT;
 				map = &p->p_vmspace->vm_map;
-				if (pte_spill_v(map->pmap, va, frame->dsisr)) {
+				if (pte_spill_v(map->pmap, va, frame->dsisr, 0)) {
 					return;
 				}
 			}
@@ -329,7 +329,7 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 			int ftype, vftype;
 			
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->dar, frame->dsisr))
+				frame->dar, frame->dsisr, 0))
 			{
 				/* fault handled by spill handler */
 				break;
@@ -359,7 +359,7 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 			int ftype;
 			
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->srr0, 0))
+				frame->srr0, 0, 1))
 			{
 				/* fault handled by spill handler */
 				break;
@@ -533,7 +533,7 @@ mpc_print_pci_stat();
 			name = "0";
 			offset = frame->srr0;
 		}
-		panic ("trap type %x at %x (%s+0x%x) lr %x\n",
+		panic ("trap type %x at %x (%s+0x%x) lr %x",
 			type, frame->srr0, name, offset, frame->lr);
 
 

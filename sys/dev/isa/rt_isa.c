@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/rt_isa.c,v 1.1 2002/08/28 21:20:48 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/isa/rt_isa.c,v 1.1.4.1 2002/10/29 00:33:26 art Exp $ */
 
 /*
  * Copyright (c) 2001, 2002 Maxim Tsyplakov <tm@oganer.net>,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umidireg.h,v 1.3 2002/06/11 07:49:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umidireg.h,v 1.3.4.1 2002/10/29 00:33:32 art Exp $	*/
 /*	$NetBSD: umidireg.h,v 1.2 2001/05/28 20:52:06 tshiozak Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.6.2.2 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.6.2.3 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: clock.c,v 1.41 2001/07/24 19:29:25 eeh Exp $ */
 
 /*
@@ -321,7 +321,7 @@ sbus_wenable(handle, onoff)
 			8192, prot, (vaddr_t)sbi->si_bh, &newaddr);
 		/* We can panic now or take a datafault later... */
 		if (sbi->si_bh != newaddr)
-			panic("sbus_wenable: address %p changed to %p\n",
+			panic("sbus_wenable: address %p changed to %p",
 			      (void *)(u_long)sbi->si_bh,
 			      (void *)(u_long)newaddr);
 	}
@@ -397,7 +397,7 @@ ebus_wenable(handle, onoff)
 			(vaddr_t)ebi->ei_bh, &newaddr);
 		/* We can panic now or take a datafault later... */
 		if (ebi->ei_bh != newaddr)
-			panic("ebus_wenable: address %p changed to %p\n",
+			panic("ebus_wenable: address %p changed to %p",
 			      (void *)(u_long)ebi->ei_bh,
 			      (void *)(u_long)newaddr);
 	}
@@ -693,17 +693,7 @@ cpu_initclocks()
 	
 	/* Initialize the %tick register */
 	lasttick = start_time;
-#ifdef __arch64__
 	__asm __volatile("wrpr %0, 0, %%tick" : : "r" (start_time));
-#else
-	{
-		int start_hi = (start_time>>32), start_lo = start_time;
-		__asm __volatile("sllx %1,32,%0; or %0,%2,%0; wrpr %0, 0, %%tick" 
-				 : "=&r" (start_hi) /* scratch register */
-				 : "r" ((int)(start_hi)), "r" ((int)(start_lo)));
-	}
-#endif
-
 
 	/*
 	 * Now handle machines w/o counter-timers.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/profile.h,v 1.2 1998/07/04 23:56:14 rahnds Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/profile.h,v 1.2.18.1 2002/10/29 00:28:08 art Exp $ */
 
 /*
  * Copyright (c) 1998 Dale Rahn. All rights reserved.

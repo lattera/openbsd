@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/itevar.h,v 1.2.26.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/itevar.h,v 1.2.26.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: itevar.h,v 1.1 1996/05/05 06:16:49 briggs Exp $	*/
 
 /*
@@ -53,4 +53,4 @@ struct tty	*itetty(dev_t dev);
 int	itecnprobe(struct consdev * cp);
 int	itecninit(struct consdev * cp);
 int	itecngetc(dev_t dev);
-int	itecnputc(dev_t dev, int c);
+void	itecnputc(dev_t dev, int c);

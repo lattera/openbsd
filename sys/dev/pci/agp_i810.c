@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/agp_i810.c,v 1.3 2002/07/25 23:31:04 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/agp_i810.c,v 1.3.4.1 2002/10/29 00:33:27 art Exp $	*/
 /*	$NetBSD: agp_i810.c,v 1.8 2001/09/20 20:00:16 fvdl Exp $	*/
 
 /*-

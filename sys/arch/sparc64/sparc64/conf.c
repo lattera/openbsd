@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.2 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.3 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -54,12 +54,6 @@
 #include <sys/conf.h>
 
 #include <machine/conf.h>
-
-/* open, close, write, ioctl */
-#define cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
 
 #include "pty.h"
 #include "bpfilter.h"
@@ -268,11 +262,11 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 89 */
 	cdev_usb_init(NUSB,usb),	/* 90: USB controller */
 	cdev_usbdev_init(NUHID,uhid),	/* 91: USB generic HID */
-	cdev_ugen_init(NUGEN,ugen),	/* 92: USB generic driver */
+	cdev_usbdev_init(NUGEN,ugen),	/* 92: USB generic driver */
 	cdev_ulpt_init(NULPT,ulpt),	/* 93: USB printers */
 	cdev_usbdev_init(NURIO,urio),	/* 94: USB Diamond Rio 500 */
 	cdev_tty_init(NUCOM,ucom),	/* 95: USB tty */
-	cdev_ugen_init(NUSCANNER,uscanner), /* 96: USB scanners */
+	cdev_usbdev_init(NUSCANNER,uscanner), /* 96: USB scanners */
 	cdev_notdef(),			/* 97 */
 	cdev_notdef(),			/* 98 */
 	cdev_notdef(),			/* 99 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/stp4020reg.h,v 1.2 2002/06/21 07:49:31 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/stp4020reg.h,v 1.2.4.1 2002/10/29 00:33:31 art Exp $	*/
 /*	$NetBSD: stp4020reg.h,v 1.1 1998/11/22 22:14:35 pk Exp $	*/
 
 /*-

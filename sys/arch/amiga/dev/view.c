@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.5.2.1 2002/06/11 03:34:58 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.5.2.2 2002/10/29 00:28:01 art Exp $	*/
 /*	$NetBSD: view.c,v 1.16 1996/10/13 03:07:35 christos Exp $	*/
 
 /*
@@ -51,7 +51,6 @@
 #include <amiga/dev/viewioctl.h>
 #include <amiga/dev/viewvar.h>
 
-#include <sys/conf.h>
 #include <machine/conf.h>
 
 #include "view.h"
@@ -349,7 +348,10 @@ view_get_colormap (vu, ucm)
 	u_long *uep;
 
 	/* add one incase of zero, ick. */
-	cme = malloc(sizeof (u_long)*(ucm->size + 1), M_IOCTLOPS, M_WAITOK);
+	if (ucm->size >= SIZE_T_MAX / sizeof(u_long))
+		return (EINVAL);
+	cme = malloc(sizeof(u_long) * ((size_t)ucm->size + 1), M_IOCTLOPS,
+	    M_WAITOK);
 
 	uep = ucm->entry;
 	error = 0;	

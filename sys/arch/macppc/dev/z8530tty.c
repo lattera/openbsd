@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/z8530tty.c,v 1.1 2002/09/06 13:56:51 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/z8530tty.c,v 1.1.4.1 2002/10/29 00:28:06 art Exp $ */
 /*	$NetBSD: z8530tty.c,v 1.13 1996/10/16 20:42:14 gwr Exp $	*/
 
 /*-

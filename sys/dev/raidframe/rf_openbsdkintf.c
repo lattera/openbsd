@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.11.2.2 2002/06/11 03:42:28 art Exp $	*/
+/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.11.2.3 2002/10/29 00:33:30 art Exp $	*/
 /* $NetBSD: rf_netbsdkintf.c,v 1.109 2001/07/27 03:30:07 oster Exp $	*/
 /*-
  * Copyright (c) 1996, 1997, 1998 The NetBSD Foundation, Inc.
@@ -141,6 +141,7 @@
 #include "rf_dagflags.h"
 #include "rf_desc.h"
 #include "rf_diskqueue.h"
+#include "rf_engine.h"
 #include "rf_acctrace.h"
 #include "rf_etimer.h"
 #include "rf_general.h"
@@ -390,7 +391,7 @@ raidattach(num)
 	/* Make some space for requested number of units... */
 	RF_Calloc(raidPtrs, num, sizeof(RF_Raid_t *), (RF_Raid_t **));
 	if (raidPtrs == NULL) {
-		panic("raidPtrs is NULL!!\n");
+		panic("raidPtrs is NULL!!");
 	}
 
 	rc = rf_mutex_init(&rf_sparet_wait_mutex);
@@ -406,7 +407,7 @@ raidattach(num)
 	if (rc == 0)
 	        printf("Kernelized RAIDframe activated\n");
 	else
-	        panic("Serious error booting RAID!!\n");
+	        panic("Serious error booting RAID!!");
 	
 	/*
 	 * Put together some datastructures like the CCD device does..
@@ -436,7 +437,7 @@ raidattach(num)
 	raidrootdev = (struct device *)malloc(num * sizeof(struct device),
 					      M_RAIDFRAME, M_NOWAIT);
 	if (raidrootdev == NULL) {
-		panic("No memory for RAIDframe driver!!?!?!\n");
+		panic("No memory for RAIDframe driver!!?!?!");
 	}
 
 	for (raidID = 0; raidID < num; raidID++) {
@@ -469,7 +470,7 @@ raidattach(num)
 	if (raidautoconfig) {
 		/* 1. locate all RAID components on the system */
 
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 		printf("Searching for raid components...\n");
 #endif
 		ac_list = rf_find_raid_components();
@@ -516,14 +517,14 @@ rf_buildroothack(arg)
 			if (!retcode) {
 				if (cset->rootable) {
 					rootID = raidID;
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 					printf("eligible root device %d: raid%d\n", num_root, rootID);
-#endif /* DEBUG */
+#endif	/* RAIDDEBUG */
 					num_root++;
 				}
 			} else {
 				/* The autoconfig didn't work :( */
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 				printf("Autoconfig failed with code %d for raid%d\n", retcode, raidID);
 #endif
 				rf_release_all_vps(cset);
@@ -575,6 +576,9 @@ rf_shutdown_hook(arg)
 	rs = &raid_softc[unit];
 
 	/* Shutdown the system */
+
+	if (rf_hook_cookies != NULL && rf_hook_cookies[unit] != NULL)
+		rf_hook_cookies[unit] = NULL;
 
 	rf_Shutdown(raidPtr);
 
@@ -1140,6 +1144,7 @@ raidioctl(dev, cmd, data, flag, p)
 		   trying to patch things.
 		   */
 
+#ifdef	RAIDDEBUG
 		printf("Got component label:\n");
 		printf("Version: %d\n",clabel->version);
 		printf("Serial Number: %d\n",clabel->serial_number);
@@ -1150,6 +1155,7 @@ raidioctl(dev, cmd, data, flag, p)
 		printf("Num Columns: %d\n", clabel->num_columns);
 		printf("Clean: %d\n", clabel->clean);
 		printf("Status: %d\n", clabel->status);
+#endif
 
 		row = clabel->row;
 		column = clabel->column;
@@ -1223,13 +1229,13 @@ raidioctl(dev, cmd, data, flag, p)
 
 	case RAIDFRAME_SET_AUTOCONFIG:
 		d = rf_set_autoconfig(raidPtr, *(int *) data);
-		printf("New autoconfig value is: %d\n", d);
+		db1_printf(("New autoconfig value is: %d\n", d));
 		*(int *) data = d;
 		return (retcode);
 
 	case RAIDFRAME_SET_ROOT:
 		d = rf_set_rootpartition(raidPtr, *(int *) data);
-		printf("New rootpartition value is: %d\n", d);
+		db1_printf(("New rootpartition value is: %d\n", d));
 		*(int *) data = d;
 		return (retcode);
 
@@ -1274,7 +1280,7 @@ raidioctl(dev, cmd, data, flag, p)
 			sizeof(RF_SingleComponent_t));
 		row = component.row;
 		column = component.column;
-		printf("Rebuild: %d %d\n",row, column);
+		db1_printf(("Rebuild: %d %d\n",row, column));
 		if ((row < 0) || (row >= raidPtr->numRow) ||
 		    (column < 0) || (column >= raidPtr->numCol)) {
 			return(EINVAL);
@@ -1361,8 +1367,8 @@ raidioctl(dev, cmd, data, flag, p)
 		    rr->col < 0 || rr->col >= raidPtr->numCol)
 			return (EINVAL);
 
-		printf("raid%d: Failing the disk: row: %d col: %d\n",
-		       unit, rr->row, rr->col);
+		db1_printf(("raid%d: Failing the disk: row: %d col: %d\n",
+		       unit, rr->row, rr->col));
 		
 		/*
 		 * Make a copy of the recon request so that we don't
@@ -1690,7 +1696,6 @@ raidinit(raidPtr)
 	cf->cf_unit   = unit;
 
 	config_attach(NULL, cf, NULL, NULL);
-	printf("\n");	/* pretty up config_attach()'s output. */
 }
 
 /*
@@ -1892,7 +1897,7 @@ rf_DispatchKernelIO(queue, req)
 
 	if (unit >= numraid) {
 		printf("Invalid unit number: %d %d\n", unit, numraid);
-		panic("Invalid Unit number in rf_DispatchKernelIO\n");
+		panic("Invalid Unit number in rf_DispatchKernelIO");
 	}
 
 	rs = &raid_softc[unit];
@@ -1940,7 +1945,7 @@ rf_DispatchKernelIO(queue, req)
 		 * I'm leaving this in, as I've never actually seen it
 		 * used, and I'd like folks to report it... GO
 		 */
-		printf(("WAKEUP CALLED\n"));
+		db1_printf(("WAKEUP CALLED\n"));
 		queue->numOutstanding++;
 
 		/* XXX need to glue the original buffer into this??  */
@@ -2105,7 +2110,7 @@ rf_InitBP(bp, b_vp, rw_flag, dev, startSect, numSect, buf, cbFunc, cbArg,
 	bp->b_blkno = startSect;
 	bp->b_resid = bp->b_bcount; /* XXX is this right!??!?!! */
 	if (bp->b_bcount == 0) {
-		panic("bp->b_bcount is zero in rf_InitBP!!\n");
+		panic("bp->b_bcount is zero in rf_InitBP!!");
 	}
 	bp->b_proc = b_proc;
 	bp->b_iodone = cbFunc;
@@ -2192,11 +2197,13 @@ raidgetdisklabel(dev)
 	 * same componets are used, and old disklabel may used
 	 * if that is found.
 	 */
+#ifdef	RAIDDEBUG
 	if (lp->d_secperunit != rs->sc_size)
 		printf("WARNING: %s: "
 		    "total sector size in disklabel (%d) != "
 		    "the size of raid (%ld)\n", rs->sc_xname,
 		    lp->d_secperunit, (long) rs->sc_size);
+#endif	/* RAIDDEBUG */
 	for (i = 0; i < lp->d_npartitions; i++) {
 		pp = &lp->d_partitions[i];
 		if (pp->p_offset + pp->p_size > rs->sc_size)
@@ -2248,9 +2255,9 @@ raidlookup(path, p, vpp)
 
 	NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE, path, p);
 	if ((error = vn_open(&nd, FREAD|FWRITE, 0)) != 0) {
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 		printf("RAIDframe: vn_open returned %d\n", error);
-#endif
+#endif	/* RAIDDEBUG */
 		return (error);
 	}
 	vp = nd.ni_vp;
@@ -2378,14 +2385,13 @@ raidread_component_label(dev, b_vp, clabel)
 		rf_print_component_label( clabel );
 #endif
         } else {
-#if 0
-		printf("Failed to read RAID component label!\n");
-#endif
+		db1_printf(("Failed to read RAID component label!\n"));
 	}
 
 	brelse(bp); 
 	return(error);
 }
+
 /* ARGSUSED */
 int 
 raidwrite_component_label(dev, b_vp, clabel)
@@ -2414,9 +2420,7 @@ raidwrite_component_label(dev, b_vp, clabel)
 	error = biowait(bp); 
 	brelse(bp);
 	if (error) {
-#if 1
 		printf("Failed to write RAID component info!\n");
-#endif
 	}
 
 	return(error);
@@ -2662,7 +2666,8 @@ rf_UnconfigureVnodes(raidPtr)
 
 	for (r = 0; r < raidPtr->numRow; r++) {
 		for (c = 0; c < raidPtr->numCol; c++) {
-			printf("Closing vnode for row: %d col: %d\n", r, c);
+			db1_printf(("Closing vnode for row: %d col: %d\n",
+			    r, c));
 			vp = raidPtr->raid_cinfo[r][c].ci_vp;
 			acd = raidPtr->Disks[r][c].auto_configured;
 			rf_close_component(raidPtr, vp, acd);
@@ -2671,7 +2676,7 @@ rf_UnconfigureVnodes(raidPtr)
 		}
 	}
 	for (r = 0; r < raidPtr->numSpare; r++) {
-		printf("Closing vnode for spare: %d\n", r);
+		db1_printf(("Closing vnode for spare: %d\n", r));
 		vp = raidPtr->raid_cinfo[0][raidPtr->numCol + r].ci_vp;
 		acd = raidPtr->Disks[0][raidPtr->numCol + r].auto_configured;
 		rf_close_component(raidPtr, vp, acd);
@@ -2886,7 +2891,7 @@ rf_find_raid_components()
 				if (rf_reasonable_label(clabel) &&
 				    (clabel->partitionSize <= 
 				     label.d_partitions[i].p_size)) {
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 					printf("Component on: %s%c: %d\n", 
 					       dv->dv_xname, 'a'+i,
 					       label.d_partitions[i].p_size);
@@ -2972,7 +2977,7 @@ rf_print_component_label(clabel)
 	       clabel->root_partition ? "Yes" : "No" );
 	printf("   Last configured as: raid%d\n", clabel->last_unit );
 #if 0
-	   printf("   Config order: %d\n", clabel->config_order);
+	printf("   Config order: %d\n", clabel->config_order);
 #endif
 	       
 }
@@ -3003,7 +3008,7 @@ rf_create_auto_sets(ac_list)
 				malloc(sizeof(RF_ConfigSet_t), 
 				       M_RAIDFRAME, M_NOWAIT);
 			if (config_sets == NULL) {
-				panic("rf_create_auto_sets: No memory!\n");
+				panic("rf_create_auto_sets: No memory!");
 			}
 			/* this one is easy :) */
 			config_sets->ac = ac;
@@ -3028,7 +3033,7 @@ rf_create_auto_sets(ac_list)
 					malloc(sizeof(RF_ConfigSet_t), 
 					       M_RAIDFRAME, M_NOWAIT);
 				if (cset == NULL) {
-					panic("rf_create_auto_sets: No memory!\n");
+					panic("rf_create_auto_sets: No memory!");
 				}
 				cset->ac = ac;
 				ac->next = NULL;
@@ -3158,7 +3163,7 @@ rf_have_enough_components(cset)
 				    (ac->clabel->column == c) && 
 				    (ac->clabel->mod_counter == mod_counter)) {
 					/* it's this one... */
-#ifdef DEBUG
+#ifdef	RAIDDEBUG
 					printf("Found: %s at %d,%d\n",
 					       ac->devname,r,c);
 #endif
@@ -3477,7 +3482,7 @@ rf_auto_config_set(cset,unit)
 	int raidID;
 	int retcode;
 
-	printf("RAID autoconfigure\n");
+	db1_printf(("RAID autoconfigure\n"));
 
 	retcode = 0;
 	*unit = -1;
@@ -3530,7 +3535,6 @@ rf_auto_config_set(cset,unit)
 		printf("(Out of RAID devs!)\n");
 		return(1);
 	}
-	printf("Configuring raid%d:\n",raidID);
 	raidPtr = raidPtrs[raidID];
 
 	/* XXX all this stuff should be done SOMEWHERE ELSE! */
@@ -3557,6 +3561,13 @@ rf_auto_config_set(cset,unit)
 			raidPtrs[raidID]->root_partition = 1; 
 		}
 	}
+
+	printf(": (%s) total number of sectors is %lu (%lu MB)%s\n",
+	    (raidPtrs[raidID]->Layout).map->configName,
+	    (unsigned long) raidPtrs[raidID]->totalSectors,
+	    (unsigned long) (raidPtrs[raidID]->totalSectors / 1024 *
+	    (1 << raidPtrs[raidID]->logBytesPerSector) / 1024),
+	    raidPtrs[raidID]->root_partition ? " as root" : "");
 
 	/* 5. Cleanup */
 	free(config, M_RAIDFRAME);

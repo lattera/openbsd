@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/cpu.h,v 1.11.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/cpu.h,v 1.11.2.2 2002/10/29 00:28:10 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.24 1997/03/15 22:25:15 pk Exp $ */
 
 /*
@@ -52,13 +52,15 @@
  * CTL_MACHDEP definitions.
  */
 #define CPU_LED_BLINK	1	/* int: twiddle the power LED */
-#define CPU_VSYNCBLANK	2	/* int: turn off monitors in *blank */
-#define CPU_MAXID	3	/* 2 valid machdep IDs */
+ 		/*	2	   formerly int: vsyncblank */
+#define CPU_CPUTYPE	3	/* int: cpu type */
+#define CPU_MAXID	4	/* 3 valid machdep IDs */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
 	{ "led_blink", CTLTYPE_INT }, \
-	{ "vsyncblank", CTLTYPE_INT }, \
+	{ 0, 0 }, \
+	{ "cputype", CTLTYPE_INT }, \
 }
 
 #ifdef _KERNEL
@@ -211,11 +213,8 @@ void	kill_user_windows(struct proc *);
 int	rwindow_save(struct proc *);
 /* amd7930intr.s */
 void	amd7930_trap(void);
-/* cons.c */
-int	cnrom(void);
-/* zs.c */
-void zsconsole(struct tty *, int, int, int (**)(struct tty *, int));
 #ifdef KGDB
+/* zs_kgdb.c */
 void zs_kgdb_init(void);
 #endif
 /* fb.c */

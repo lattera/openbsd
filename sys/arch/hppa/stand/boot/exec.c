@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/exec.c,v 1.1 2002/10/24 19:27:15 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/exec.c,v 1.1.2.1 2002/10/29 00:28:03 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff

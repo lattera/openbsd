@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.11.2.1 2002/06/11 03:36:33 art Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.11.2.2 2002/10/29 00:28:05 art Exp $
 #
 # PPC GENERIC config file
 #
@@ -28,9 +28,6 @@ include "../../../conf/GENERIC"
 
 config		bsd	swap generic
 
-#
-#  Now the Machine specification
-#
 mainbus0	at root
 cpu*		at mainbus0
 
@@ -45,7 +42,7 @@ ppb*		at pci? dev ? function ?	# PCI-PCI bridges
 pci*		at ppb? bus ?
 
 siop*		at pci? dev ? function ?
-#fxp*		at pci? dev ? function ?
+fxp*		at pci? dev ? function ?
 de*		at pci? dev ? function ?
 #vme*		at pci? dev ? function ?
 vgafb0		at pci? dev ? function ?	# PCI VGA graphics 
@@ -59,9 +56,10 @@ vgafb0		at pci? dev ? function ?	# PCI VGA graphics
 pciide*		at pci? dev ? function ?
 macobio0	at pci? dev ? function ?
 gem*		at pci? dev ? function ?	# GMAC ethernet
-gm*		at pci? disable dev ? function ?	# GMAC ethernet
 hme*		at pci? dev ? function ?	# HME ethernet
 dc*		at pci? dev ? function ?	# DEC Tulip 21143 clones
+#xl*		at pci? dev ? function ?	# 3C9xx ethernet
+em*		at pci? dev ? function ?	# Intel Pro/1000 ethernet
 an*		at pci? dev ? function ?	# Cisco/Aironet
 wi*		at pci? dev ? function ?	# WaveLAN IEEE 802.11DS
 iop*		at pci? dev ? function ?	# I2O processor
@@ -103,6 +101,11 @@ gpio*		at gpio?			# GPIO, PMU interrupt router.
 aed*		at adb?				# ADB Event Device
 akbd*		at adb?				# ADB keyboard
 
+fwohci*		at pci? dev ? function ?	# FireWire on ohci
+#fw*		at fwbus?			# IPv4/v6 over FireWire
+fwnode*		at fwbus? idhi ? idlo ?
+#fwscsi*	at fwnode?
+
 wskbd*		at akbd? console ? mux 1
 ams*		at adb?				# ADB mouse
 wsmouse*	at ams?	mux 0
@@ -127,6 +130,7 @@ scsibus*	at ioprbs?
 scsibus*	at iopsp?
 #scsibus*	at pcscp?
 scsibus*	at siop?
+#scsibus*	at fwscsi?
 
 wdc*		at macobio? flags 0x1
 wd*		at wdc? drive ? flags 0x0000
@@ -159,8 +163,20 @@ umass*		at uhub? port ? configuration ? # USB Mass Storage devices
 scsibus*	at umass?
 kue*		at uhub? port ?			# Kawasaki KL5KUSB101B
 aue*		at uhub? port ?			# USB EtherNet 
-uplcom* 	at uhub? port ?            # I/O DATA USB-RSAQ2 serial adapter
-ucom*   	at uplcom? portno ?
+uplcom* 	at uhub? port ?			# I/O DATA USB-RSAQ2 serial
+ucom*		at uplcom? portno ?
+
+# CardBus bus support
+cardbus*	at cardslot?
+pcmcia*		at cardslot?
+cbb*		at pci? dev ? function ?
+cardslot*	at cbb?
+wi*		at pcmcia? function ?		# WaveLAN IEEE 802.11DS
+dc*		at cardbus? dev ? function ?	# 21143, "tulip" clone ethernet
+#fxp*		at cardbus? dev ? function ?	# Intel PRO/100 ethernet
+#xl*		at cardbus? dev ? function ?	# 3C575/3C656 ethernet
+#rl*		at cardbus? dev ? function ?	# RealTek 81[23]9 ethernet
+wdc*		at pcmcia? function ?
 
 wsdisplay*	at vgafb?
 wskbd*		at ukbd? console ? mux 1
@@ -172,4 +188,4 @@ ch*		at scsibus? target ? lun ?
 ss*		at scsibus? target ? lun ?
 uk*		at scsibus? target ? lun ?
 
-pseudo-device        wsmux	2	# mouse & keyboard multiplexor
+pseudo-device	wsmux	2	# mouse & keyboard multiplexor

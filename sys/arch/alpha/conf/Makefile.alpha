@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/Makefile.alpha,v 1.22.4.1 2002/01/31 22:55:05 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/Makefile.alpha,v 1.22.4.2 2002/10/29 00:28:00 art Exp $
 #	$NetBSD: Makefile.alpha,v 1.27 1996/12/01 06:12:25 jonathan Exp $
 
 # Makefile for OpenBSD
@@ -40,7 +40,7 @@ CDIAGFLAGS?=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 
 CMACHFLAGS=	-mno-fp-regs
 COPTS?= 	-O2
-CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-traditional -D_LOCORE
 LINKFLAGS=	-N -Ttext fffffc0000230000 -e __start -G 4
 STRIPFLAGS=	-g -X -x
@@ -104,7 +104,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${ALPHA}/alpha/genassym.cf
+assym.h: $S/kern/genassym.sh ${ALPHA}/alpha/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    ${PARAM} < ${ALPHA}/alpha/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1.8.1 2002/06/11 03:42:32 art Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1.8.2 2002/10/29 00:33:33 art Exp $ */
 /* 	$NetBSD: wsfont.c,v 1.17 2001/02/07 13:59:24 ad Exp $	*/
 
 /*-
@@ -99,12 +99,20 @@
 /* Make sure we always have at least one font. */
 #ifndef HAVE_FONT
 #define HAVE_FONT 1
+#if defined(SMALL_KERNEL) && !defined(__sparc__)
+#if defined(__sparc64__)
+#define FONT_GALLANT12x22
+#else
+#define FONT_BOLD8x16 1
+#endif
+#else	/* SMALL_KERNEL */
 #define FONT_BOLD8x16 1
 /* Add the gallant 12x22 font for high screen resolutions */
-#if !defined(SMALL_KERNEL) && !defined(FONT_GALLANT12x22)
+#if !defined(FONT_GALLANT12x22)
 #define FONT_GALLANT12x22
 #endif
-#endif
+#endif	/* SMALL_KERNEL */
+#endif	/* HAVE_FONT */
 
 #ifdef FONT_BOLD8x16
 #include <dev/wsfont/bold8x16.h>
@@ -516,7 +524,7 @@ wsfont_unlock(cookie)
 	
 	if ((ent = wsfont_find0(cookie)) != NULL) {
 		if (ent->lockcount == 0)
-			panic("wsfont_unlock: font not locked\n");
+			panic("wsfont_unlock: font not locked");
 		lc = --ent->lockcount;
 	} else	
 		lc = -1;

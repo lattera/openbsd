@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/amiga/conf/Attic/GENERIC,v 1.38.2.1 2002/01/31 22:55:06 niklas Exp $
+#	$OpenBSD: src/sys/arch/amiga/conf/Attic/GENERIC,v 1.38.2.2 2002/10/29 00:28:01 art Exp $
 #	$NetBSD: GENERIC,v 1.85 1997/08/27 19:32:49 is Exp $
 
 #
@@ -52,7 +52,7 @@ option		COMPAT_SUNOS	# Support to run Sun (m68k) executables
 option		GENERIC		# Mini-root boot support
 
 #
-# Misc. debuging options
+# Misc. debugging options
 #
 #option		DEBUG		# Add debugging statements
 #option		SYSCALL_DEBUG	# debug all syscalls.

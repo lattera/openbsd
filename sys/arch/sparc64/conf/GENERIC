@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.34.2.2 2002/06/11 03:38:42 art Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.34.2.3 2002/10/29 00:28:11 art Exp $
 # 	$NetBSD: GENERIC32,v 1.18 2001/07/20 00:07:12 eeh Exp $
 
 machine		sparc64
@@ -19,6 +19,8 @@ config		bsd	swap generic
 # Main bus and CPU .. all systems.
 mainbus0 at root
 cpu0	at mainbus0
+
+upa0	at mainbus0
 
 # Bus types found on SPARC systems.
 
@@ -46,8 +48,10 @@ vgafb*		at pci? dev ? function ?
 wsdisplay*	at vgafb?
 
 # PCI crypto
-hifn*		at pci? dev ? function ?
-ubsec*		at pci? dev ? function ?
+hifn*		at pci? dev ? function ?	# Hifn 7751/7811/7951
+#nofn*		at pci? dev ? function ?	# Hifn 7814/7851/7854
+lofn*		at pci? dev ? function ?	# Hifn 6500
+ubsec*		at pci? dev ? function ?	# Broadcom 580[125]/582[012]
 
 # PCI sound
 autri*		at pci? dev ? function ?	# Trident 4D WAVE
@@ -74,6 +78,7 @@ ugen*	at uhub? port ? configuration ?		# USB generic device
 #### Standard system devices -- all required for a given architecture
 
 auxio*	at ebus?
+auxio*	at sbus? slot ? offset ?
 beeper*	at ebus?
 
 # SAB82532 based serial ports
@@ -186,9 +191,8 @@ dcphy*	at mii? phy ?				# Digital clone PHYs
 amphy*	at mii? phy ?				# AMD AM79c873 PHYs
 ukphy*	at mii? phy ?				# Unknown PHYs
 
-# Untested
-#bwtwo*		at sbus? slot ? offset ?	# bw2, sbus mono framebuffer
-#wsdisplay*	at bwtwo?
+bwtwo*		at sbus? slot ? offset ?	# bw2, sbus mono framebuffer
+wsdisplay*	at bwtwo?
 
 cgsix*		at sbus? slot ? offset ?	# cg6, sbus color framebuffer
 wsdisplay*	at cgsix?
@@ -204,7 +208,14 @@ com*		at asio?
 apio*		at sbus? slot ? offset ?	# Aurora 210SJ
 lpt*		at apio?
 
+stp*		at sbus? slot ? offset ?	# STP4020
+pcmcia*		at stp? socket ?
+#com*		at pcmcia? function ?		# PCMCIA modems/serial ports
+wi*		at pci? dev ? function ?	# WaveLAN IEEE 802.11DS
+wi*		at pcmcia? function ?		# WaveLAN IEEE 802.11DS
+
 creator*	at mainbus0
+creator*	at upa0
 wsdisplay*	at creator?
 
 # mouse & keyboard multiplexor pseudo-devices

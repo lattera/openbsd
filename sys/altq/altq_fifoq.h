@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_fifoq.h,v 1.1 2001/06/27 05:28:35 kjc Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_fifoq.h,v 1.1.6.1 2002/10/29 00:28:00 art Exp $	*/
 /*	$KAME: altq_fifoq.h,v 1.6 2000/12/14 08:12:45 thorpej Exp $	*/
 
 /*
@@ -65,7 +65,7 @@ struct fifoq_conf {
 	int fifoq_limit;
 };
 
-#define	FIFOQ_LIMIT	50	/* default max queue lenght */
+#define	FIFOQ_LIMIT	50	/* default max queue length */
 
 /* 
  * IOCTLs for FIFOQ

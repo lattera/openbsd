@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/limits.h,v 1.9.4.1 2002/06/11 03:37:28 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/limits.h,v 1.9.4.2 2002/10/29 00:28:08 art Exp $	*/
 /*	$NetBSD: limits.h,v 1.1 1996/09/30 16:34:28 ws Exp $	*/
 
 /*-
@@ -38,6 +38,7 @@
 #define	MB_LEN_MAX	1		/* no multibyte characters	*/
 
 #if !defined(_ANSI_SOURCE)
+#define	SIZE_MAX	UINT_MAX	/* max value for a size_t */
 #define SSIZE_MAX	INT_MAX		/* max value for a ssize_t */  
 
 #if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)

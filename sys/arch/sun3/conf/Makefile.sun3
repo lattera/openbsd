@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sun3/conf/Attic/Makefile.sun3,v 1.28.2.1 2002/01/31 22:55:25 niklas Exp $
+#	$OpenBSD: src/sys/arch/sun3/conf/Attic/Makefile.sun3,v 1.28.2.2 2002/10/29 00:28:12 art Exp $
 #	$NetBSD: Makefile.sun3,v 1.51 1996/09/09 21:07:08 mycroft Exp $
 
 # Makefile for OpenBSD
@@ -46,7 +46,7 @@ CWARNFLAGS= 	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
 CMACHFLAGS=	-m68020 -msoft-float
 COPTS?=	-O2
-CFLAGS= 	${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS}
+CFLAGS= 	${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE ${CMACHFLAGS}
 LINKFLAGS=	-N -Ttext 0E004000 -e start
 STRIPFLAGS=	-d
@@ -109,7 +109,7 @@ LINKFLAGS+=	-S
 %LOAD
 
 assym.h: $S/kern/genassym.sh \
-	 ${M68K}/m68k/genassym.cf ${SUN3}/sun3/genassym.cf
+	 ${M68K}/m68k/genassym.cf ${SUN3}/sun3/genassym.cf Makefile
 	cat ${M68K}/m68k/genassym.cf ${SUN3}/sun3/genassym.cf | \
 	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} ${PROF} \
 	    > assym.h.tmp && \

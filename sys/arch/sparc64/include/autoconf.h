@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/autoconf.h,v 1.5.6.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/autoconf.h,v 1.5.6.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: autoconf.h,v 1.10 2001/07/24 19:32:11 eeh Exp $ */
 
 /*-
@@ -162,7 +162,6 @@ struct bootpath {
 	struct device *dev;	/* device that recognised this component */
 };
 struct bootpath	*bootpath_store(int, struct bootpath *);
-int		sd_crazymap(int);
 
 /* Parse a disk string into a dev_t, return device struct pointer */
 struct	device *parsedisk(char *, int, int, dev_t *);

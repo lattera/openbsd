@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.20.4.1 2002/06/11 03:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.20.4.2 2002/10/29 00:30:51 art Exp $	*/
 /*	$NetBSD: linux_socket.c,v 1.14 1996/04/05 00:01:50 christos Exp $	*/
 
 /*
@@ -284,6 +284,7 @@ linux_accept(p, v, retval)
 	} */ *uap = v;
 	struct linux_accept_args laa;
 	struct compat_43_sys_accept_args baa;
+	struct sys_fcntl_args fca;
 	int error;
 
 	if ((error = copyin((caddr_t) uap, (caddr_t) &laa, sizeof laa)))
@@ -293,7 +294,21 @@ linux_accept(p, v, retval)
 	SCARG(&baa, name) = (caddr_t) laa.addr;
 	SCARG(&baa, anamelen) = laa.namelen;
 
-	return compat_43_sys_accept(p, &baa, retval);
+	error = compat_43_sys_accept(p, &baa, retval);
+	if (error)
+		return (error);
+
+	/*
+	 * linux appears not to copy flags from the parent socket to the
+	 * accepted one, so we must clear the flags in the new descriptor.
+	 * Ignore any errors, because we already have an open fd.
+	 */
+	SCARG(&fca, fd) = *retval;
+	SCARG(&fca, cmd) = F_SETFL;
+	SCARG(&fca, arg) = 0;
+	(void)sys_fcntl(p, &fca, retval);
+	*retval = SCARG(&fca, fd);
+	return (0);
 }
 
 int
@@ -510,7 +525,7 @@ linux_sendto_hdrincl(p, bsa, retval)
 
 	/* Convert fields from Linux to BSD raw IP socket format */
 	rpacket.ip_len = SCARG(bsa, len);
-	error = copyout(&rpacket, packet, sizeof(packet));
+	error = copyout(&rpacket, packet, linux_ip_copysize);
 	if (error)
 		return (error);
 

@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.12 1995/12/24 01:08:03 mycroft Exp $	*/
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.9 2001/08/11 01:58:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.9.4.1 2002/10/29 00:28:04 art Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.

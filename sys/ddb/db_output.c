@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.16.2.1 2002/06/11 03:28:48 art Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.16.2.2 2002/10/29 00:30:52 art Exp $	*/
 /*	$NetBSD: db_output.c,v 1.13 1996/04/01 17:27:14 christos Exp $	*/
 
 /* 
@@ -247,8 +247,6 @@ db_stack_dump(void)
 	static int intrace;
 
 	if (intrace) {
-db_panic = 1;
-panic("foo");
 		printf("Faulted in traceback, aborting...\n");
 		return;
 	}

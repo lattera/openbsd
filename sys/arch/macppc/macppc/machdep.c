@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.18.2.2 2002/06/11 03:36:34 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.18.2.3 2002/10/29 00:28:06 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -67,10 +67,6 @@
 
 #include <dev/cons.h>
 
-#include <dev/ofw/openfirm.h>
-
-#include <dev/pci/pcivar.h>
-
 #include <machine/bat.h>
 #include <machine/pmap.h>
 #include <machine/powerpc.h>
@@ -79,6 +75,11 @@
 #include <machine/bus.h>
 #include <machine/pio.h>
 #include <machine/intr.h>
+
+#include <dev/pci/pcivar.h>
+
+#include <arch/macppc/macppc/ofw_machdep.h>
+#include <dev/ofw/openfirm.h>
 
 #include "adb.h"
 #if NADB > 0
@@ -128,7 +129,6 @@ struct bat battable[16];
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
 
-int astpending;
 int ppc_malloc_ok = 0;
 
 #ifndef SYS_TYPE
@@ -458,7 +458,7 @@ where = 3;
 	/*
 	 * Now we can set up the console as mapping is enabled.
 	 */
-	consinit();
+	ofwconsinit();
 	/* while using openfirmware, run userconfig */
 	if (boothowto & RB_CONFIG) {
 #ifdef BOOT_CONFIG
@@ -470,8 +470,8 @@ where = 3;
 	/*
 	 * Replace with real console.
 	 */
-	cninit();
 	ofwconprobe();
+	consinit();
 
 #if NIPKDB > 0
 	/*
@@ -658,11 +658,11 @@ allocsys(v)
 		if (nbuf < 16)
 			nbuf = 16;
 	}
-	/* Restrict to at most 70% filled kvm */
-	if (nbuf * MAXBSIZE >
-	    (VM_MAX_KERNEL_ADDRESS - VM_MIN_KERNEL_ADDRESS) * 7 / 10)
+	/* Restrict to at most 35% filled kvm */
+	if (nbuf >
+	    (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) / MAXBSIZE * 35 / 100)
 		nbuf = (VM_MAX_KERNEL_ADDRESS - VM_MIN_KERNEL_ADDRESS) /
-		    MAXBSIZE * 7 / 10;
+		    MAXBSIZE * 35 / 100;
 
 	/* More buffer pages than fits into the buffers is senseless.  */
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
@@ -774,8 +774,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->fixreg[3] = (int)sig;
 	tf->fixreg[4] = (psp->ps_siginfo & sigmask(sig)) ? (int)&fp->sf_si : NULL;
 	tf->fixreg[5] = (int)&fp->sf_sc;
-	tf->srr0 = (int)(((char *)PS_STRINGS)
-			 - (p->p_emul->e_esigcode - p->p_emul->e_sigcode));
+	tf->srr0 = p->p_sigcode;
 
 #if WHEN_WE_ONLY_FLUSH_DATA_WHEN_DOING_PMAP_ENTER
 	pmap_extract(vm_map_pmap(&p->p_vmspace->vm_map),tf->srr0, &pa);
@@ -1064,7 +1063,7 @@ ppc_intr_establish(lcv, ih, type, level, func, arg, name)
 		ppc_configed_intr_cnt++;
 	} else {
 		panic("ppc_intr_establish called before interrupt controller"
-			" configured: driver %s too many interrupts\n", name);
+			" configured: driver %s too many interrupts", name);
 	}
 	/* disestablish is going to be tricky to supported for these :-) */
 	return (void *)ppc_configed_intr_cnt;
@@ -1169,30 +1168,31 @@ bus_space_unmap(t, bsh, size)
 {
 	bus_addr_t sva;
 	bus_size_t off, len;
+	bus_addr_t bpa;
 
 	/* should this verify that the proper size is freed? */
 	sva = trunc_page(bsh);
 	off = bsh - sva;
 	len = size+off;
 
+	if (pmap_extract(pmap_kernel(), sva, &bpa) == TRUE) {
+		if (extent_free(devio_ex, bpa | (bsh & PAGE_MASK), size, EX_NOWAIT |
+			(ppc_malloc_ok ? EX_MALLOCOK : 0)))
+		{
+			printf("bus_space_map: pa 0x%x, size 0x%x\n",
+				bpa, size);
+			printf("bus_space_map: can't free region\n");
+		}
+	}
 	/* do not free memory which was stolen from the vm system */
 	if (ppc_malloc_ok &&
 	  ((sva >= VM_MIN_KERNEL_ADDRESS) && (sva < VM_MAX_KERNEL_ADDRESS)) )
 	{
 		uvm_km_free(phys_map, sva, len);
+	} else {
+		pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
+		pmap_update(pmap_kernel());
 	}
-#if 0
-	pmap_extract(pmap_kernel(), sva, &bpa);
-	if (extent_free(devio_ex, bpa, size, EX_NOWAIT |
-		(ppc_malloc_ok ? EX_MALLOCOK : 0)))
-	{
-		printf("bus_space_map: pa 0x%x, size 0x%x\n",
-			bpa, size);
-		printf("bus_space_map: can't free region\n");
-	}
-#endif
-	pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
-	pmap_update(pmap_kernel());
 }
 
 vm_offset_t ppc_kvm_stolen = VM_KERN_ADDRESS_SIZE;
@@ -1223,7 +1223,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 		bus_size_t alloc_size;
 
 		/* need to steal vm space before kernel vm is initialized */
-		alloc_size = round_page(size);
+		alloc_size = round_page(len);
 
 		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_stolen;
 		ppc_kvm_stolen += alloc_size;
@@ -1232,6 +1232,9 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 		}
 	} else {
 		vaddr = uvm_km_valloc_wait(phys_map, len);
+		if (vaddr == 0)
+			panic("bus_mem_add_mapping: kvm alloc of 0x%x failed",
+			    len);
 	}
 	*bshp = vaddr + off;
 #ifdef DEBUG_BUS_MEM_ADD_MAPPING
@@ -1289,12 +1292,21 @@ mapiodev(pa, len)
 			return (void *)pa;
 		}
 	}
-	va = vaddr = uvm_km_valloc(phys_map, size);
+	if (ppc_malloc_ok == 0) {
+		/* need to steal vm space before kernel vm is initialized */
+		va = VM_MIN_KERNEL_ADDRESS + ppc_kvm_stolen;
+		ppc_kvm_stolen += size;
+		if (ppc_kvm_stolen > SEGMENT_LENGTH) {
+			panic("ppc_kvm_stolen, out of space");
+		}
+	} else {
+		va = uvm_km_valloc_wait(phys_map, size);
+	}
 
 	if (va == 0)
 		return NULL;
 
-	for (; size > 0; size -= PAGE_SIZE) {
+	for (vaddr = va; size > 0; size -= PAGE_SIZE) {
 		pmap_kenter_cache(vaddr, spa,
 			VM_PROT_READ | VM_PROT_WRITE, PMAP_CACHE_DEFAULT);
 		spa += PAGE_SIZE;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7.2.2 2002/06/11 03:42:18 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7.2.3 2002/10/29 00:33:25 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -33,8 +33,6 @@
  *
  *	From: if_wireg.h,v 1.8.2.2 2001/08/25 00:48:25 nsayer Exp $
  */
-
-#pragma pack(1)
 
 #define WI_TIMEOUT	50000	/* 10x XXX just a guess at a good value.  */
 
@@ -81,31 +79,50 @@
 /*
  * register space access macros
  */
-#define CSR_WRITE_4(sc, reg, val)	\
-	bus_space_write_4(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg) , val)
-#define CSR_WRITE_2(sc, reg, val)	\
-	bus_space_write_2(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg) , val)
-#define CSR_WRITE_1(sc, reg, val)	\
-	bus_space_write_1(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg) , val)
 
-#define CSR_READ_4(sc, reg)		\
-	bus_space_read_4(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg))
-#define CSR_READ_2(sc, reg)		\
-	bus_space_read_2(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg))
-#define CSR_READ_1(sc, reg)		\
-	bus_space_read_1(sc->wi_btag, sc->wi_bhandle,	\
-	    (sc->sc_pci? reg * 2: reg))
+#if defined(__sparc64__)
+#define WI_BIG_ENDIAN_POSSIBLE	(sc->wi_flags & WI_FLAGS_BUS_PCMCIA)
+#elif defined(__sparc__)
+#define WI_BIG_ENDIAN_POSSIBLE 	1
+#else
+#define WI_BIG_ENDIAN_POSSIBLE 	0
+#endif
 
-#define CSR_READ_RAW_2(sc, ba, dst, sz) \
-	bus_space_read_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, \
+#define CSR_WRITE_4(sc, reg, val)				\
+	bus_space_write_4(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg),			\
+	     WI_BIG_ENDIAN_POSSIBLE ? htole32(val) : (val))
+#define CSR_WRITE_2(sc, reg, val)				\
+	bus_space_write_2(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg),			\
+	    WI_BIG_ENDIAN_POSSIBLE ? htole16(val) : (val))
+#define CSR_WRITE_1(sc, reg, val)				\
+	bus_space_write_1(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg), val)
+
+#define CSR_READ_4(sc, reg)					\
+	(WI_BIG_ENDIAN_POSSIBLE ?				\
+	letoh32(bus_space_read_4(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci ? reg * 2: reg))) :			\
+	bus_space_read_4(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg)))
+#define CSR_READ_2(sc, reg)					\
+	(WI_BIG_ENDIAN_POSSIBLE ?				\
+	letoh16(bus_space_read_2(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci ? reg * 2: reg))) :			\
+	bus_space_read_2(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg)))
+#define CSR_READ_1(sc, reg)					\
+	bus_space_read_1(sc->wi_btag, sc->wi_bhandle,		\
+	    (sc->sc_pci ? reg * 2: reg))
+
+#define CSR_READ_RAW_2(sc, ba, dst, sz)				\
+	bus_space_read_raw_multi_2((sc)->wi_btag,		\
+	    (sc)->wi_bhandle,					\
 	    (sc->sc_pci? ba * 2: ba), (dst), (sz))
-#define CSR_WRITE_RAW_2(sc, ba, dst, sz) \
-	bus_space_write_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, \
+#define CSR_WRITE_RAW_2(sc, ba, dst, sz)			\
+	bus_space_write_raw_multi_2((sc)->wi_btag,		\
+	    (sc)->wi_bhandle,					\
 	    (sc->sc_pci? ba * 2: ba), (dst), (sz))
 
 /*
@@ -273,19 +290,21 @@
 #define WI_AUX_OFFSET		0x3C
 #define WI_AUX_DATA		0x3E
 
-#define WI_COR_OFFSET		0x3E0	/* COR attribute offset of card */
+#define WI_COR_OFFSET		0x40	/* COR attribute offset of card */
+#define WI_COR_IOMODE		0x41	/* Enable i/o mode with level irqs */
 
 #define WI_PLX_LOCALRES		0x14	/* PLX chip's local registers */
 #define WI_PLX_MEMRES		0x18	/* Prism attribute memory (PLX) */
 #define WI_PLX_IORES		0x1C	/* Prism I/O space (PLX) */
 #define WI_PLX_INTCSR		0x4C	/* PLX Interrupt CSR */
-#define WI_PLX_INTEN		0x40	/* Interrupt Enable bit */
-#define WI_PLX_COR_VALUE	0x41	/* Enable with irq in level trigger */
+#define WI_PLX_INTEN		0x40	/* PCI Interrupt Enable bit */
+#define WI_PLX_LINT1STAT	0x04	/* Local interrupt 1 status bit */
+#define WI_PLX_COR_OFFSET	0x3E0	/* COR attribute offset of card */
+
+#define	WI_DRVR_MAGIC		0x4A2D	/* Magic number for card detection */
 
 #define WI_TMD_LOCALRES		0x14	/* TMD chip's local registers */
 #define WI_TMD_IORES		0x18	/* Prism I/O space (TMD) */
-#define WI_TMD_COR_OFFSET	0x00	/* COR attribute offset of Prism2 */
-#define WI_TMD_COR_VALUE	0x45
 
 /*
  * PCI Host Interface Registers (HFA3842 Specific)
@@ -383,19 +402,6 @@ struct wi_ltv_ver {
 	u_int16_t	wi_len;
 	u_int16_t	wi_type;
 	u_int16_t	wi_ver[4];
-#define	WI_NIC_LUCENT		0x0001
-#define	WI_NIC_SONY		0x0002
-#define	WI_NIC_LUCENT_EM	0x0005
-#define	WI_NIC_EVB2		0x8000
-#define	WI_NIC_HWB3763		0x8001
-#define	WI_NIC_HWB3163		0x8002
-#define	WI_NIC_HWB3163B		0x8003
-#define	WI_NIC_EVB3		0x8004
-#define	WI_NIC_HWB1153		0x8007
-#define	WI_NIC_P2_SST		0x8008  /* Prism2 with SST flush */
-#define	WI_NIC_PRISM2_5		0x800C
-#define	WI_NIC_3874A		0x8013	/* Prism2.5 Mini-PCI */
-#define	WI_NIC_37300P		0x801a
 };
 
 /*
@@ -465,7 +471,7 @@ struct wi_ltv_pcf {
 #define WI_PORTTYPE_WDS		0x2
 #define WI_PORTTYPE_ADHOC	0x3
 #define WI_PORTTYPE_IBSS	0x4
-#define WI_PORTTYPE_AP		0x6
+#define WI_PORTTYPE_HOSTAP	0x6
 
 /*
  * Mac addresses.
@@ -593,4 +599,4 @@ struct wi_frame {
 #define WI_SNAPHDR_LEN		0x6
 #define WI_FCS_LEN		0x4
 
-#pragma pack()
+#define	WI_ETHERTYPE_LEN	0x2

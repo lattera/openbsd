@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_subr.c,v 1.4.2.1 2002/06/11 03:27:42 art Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_subr.c,v 1.4.2.2 2002/10/29 00:28:00 art Exp $	*/
 /*	$KAME: altq_subr.c,v 1.11 2002/01/11 08:11:49 kjc Exp $	*/
 
 /*
@@ -54,6 +54,7 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
+#include <net/pfvar.h>
 #include <altq/altq.h>
 #include <altq/altq_conf.h>
 
@@ -139,10 +140,15 @@ altq_attach(ifq, type, discipline, enqueue, dequeue, request, clfier, classify)
 {
 	if (!ALTQ_IS_READY(ifq))
 		return ENXIO;
-	if (ALTQ_IS_ENABLED(ifq))
-		return EBUSY;
-	if (ALTQ_IS_ATTACHED(ifq))
-		return EEXIST;
+
+	if (PFALTQ_IS_ACTIVE()) {
+		/* pfaltq can override the existing discipline */
+	} else {
+		if (ALTQ_IS_ENABLED(ifq))
+			return EBUSY;
+		if (ALTQ_IS_ATTACHED(ifq))
+			return EEXIST;
+	}
 	ifq->altq_type     = type;
 	ifq->altq_disc     = discipline;
 	ifq->altq_enqueue  = enqueue;
@@ -150,7 +156,11 @@ altq_attach(ifq, type, discipline, enqueue, dequeue, request, clfier, classify)
 	ifq->altq_request  = request;
 	ifq->altq_clfier   = clfier;
 	ifq->altq_classify = classify;
-	ifq->altq_flags &= ALTQF_CANTCHANGE;
+	if (PFALTQ_IS_ACTIVE())
+		ifq->altq_flags &= (ALTQF_CANTCHANGE|ALTQF_ENABLED);
+	else
+		ifq->altq_flags &= ALTQF_CANTCHANGE;
+
 #ifdef ALTQ_KLD
 	altq_module_incref(type);
 #endif
@@ -416,6 +426,169 @@ tbr_get(ifq, profile)
 		profile->depth = (u_int)TBR_UNSCALE(tbr->tbr_depth);
 	}
 	return (0);
+}
+
+/*
+ * attach a discipline to the interface.  if one already exists, it is
+ * overridden.
+ */
+int
+altq_pfattach(struct pf_altq *a)
+{
+	struct ifnet *ifp;
+	struct tb_profile tb;
+	int s, error = 0;
+
+	switch (a->scheduler) {
+	case ALTQT_NONE:
+		break;
+	case ALTQT_CBQ:
+		error = cbq_pfattach(a);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	/* if altq is already enabled, reset set tokenbucket regulator */
+	if (error == 0 && (ifp = ifunit(a->ifname)) != NULL &&
+	    ALTQ_IS_ENABLED(&ifp->if_snd)) {
+		tb.rate = a->ifbandwidth;
+		tb.depth = a->tbrsize;
+		s = splimp();
+		error = tbr_set(&ifp->if_snd, &tb);
+		splx(s);
+	}
+
+	return (error);
+}
+
+/*
+ * detach a discipline from the interface.
+ * it is possible that the discipline was already overridden by another
+ * discipline.
+ */
+int
+altq_pfdetach(struct pf_altq *a)
+{
+	struct ifnet *ifp;
+	int s, error = 0;
+	
+	if ((ifp = ifunit(a->ifname)) == NULL)
+		return (EINVAL);
+
+	/* if this discipline is no longer referenced, just return */
+	if (a->altq_disc == NULL || a->altq_disc != ifp->if_snd.altq_disc)
+		return (0);
+
+	s = splimp();
+	if (ALTQ_IS_ENABLED(&ifp->if_snd))
+		error = altq_disable(&ifp->if_snd);
+	if (error == 0)
+		error = altq_detach(&ifp->if_snd);
+	splx(s);
+
+	return (error);
+}
+
+/*
+ * add a discipline or a queue
+ */
+int
+altq_add(struct pf_altq *a)
+{
+	int error = 0;
+
+	if (a->qname[0] != 0)
+		return (altq_add_queue(a));
+
+	switch (a->scheduler) {
+	case ALTQT_CBQ:
+		error = cbq_add_altq(a);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	return (error);
+}
+
+/*
+ * remove a discipline or a queue
+ */
+int
+altq_remove(struct pf_altq *a)
+{
+	int error = 0;
+
+	if (a->qname[0] != 0)
+		return (altq_remove_queue(a));
+
+	switch (a->scheduler) {
+	case ALTQT_CBQ:
+		error = cbq_remove_altq(a);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	return (error);
+}
+
+/*
+ * add a queue to the discipline
+ */
+int
+altq_add_queue(struct pf_altq *a)
+{
+	int error = 0;
+
+	switch (a->scheduler) {
+	case ALTQT_CBQ:
+		error = cbq_add_queue(a);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	return (error);
+}
+
+/*
+ * remove a queue from the discipline
+ */
+int
+altq_remove_queue(struct pf_altq *a)
+{
+	int error = 0;
+
+	switch (a->scheduler) {
+	case ALTQT_CBQ:
+		error = cbq_remove_queue(a);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	return (error);
+}
+
+/*
+ * get queue statistics
+ */
+int
+altq_getqstats(struct pf_altq *a, void *ubuf, int *nbytes)
+{
+	int error = 0;
+
+	switch (a->scheduler) {
+	case ALTQT_CBQ:
+		error = cbq_getqstats(a, ubuf, nbytes);
+		break;
+	default:
+		error = EINVAL;
+	}
+
+	return (error);
 }
 
 
@@ -889,6 +1062,10 @@ acc_discard_filters(classifier, class, all)
 	struct acc_filter *afp;
 	int	i, s;
 
+#if 1 /* PFALTQ */
+	if (classifier == NULL)
+		return (0);
+#endif
 	s = splimp();
 	for (i = 0; i < ACC_FILTER_TABLESIZE; i++) {
 		do {
@@ -1353,6 +1530,7 @@ ip4f_free(fp)
 	TAILQ_INSERT_TAIL(&ip4f_list, fp, ip4f_chain);
 }
 
+
 /*
  * read and write diffserv field in IPv4 or IPv6 header
  */
@@ -1520,7 +1698,7 @@ init_machclk(void)
 #endif
 #elif defined(__NetBSD__)
 	machclk_freq = (u_int32_t)cpu_tsc_freq;
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) && (defined(I586_CPU) || defined(I686_CPU))
 	machclk_freq = pentium_mhz * 1000000;
 #endif
 #elif defined(__alpha__)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_driver.c,v 1.9 2000/08/08 16:07:40 peter Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_driver.c,v 1.9.8.1 2002/10/29 00:33:30 art Exp $	*/
 /*	$NetBSD: rf_driver.c,v 1.37 2000/06/04 02:05:13 oster Exp $	*/
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -360,8 +360,10 @@ rf_Configure(raidPtr, cfgPtr, ac)
 			return (rc);
 		}
 		/* initialize globals */
+#ifdef	RAIDDEBUG
 		printf("RAIDFRAME: protectedSectors is %ld\n", 
 		       rf_protectedSectors);
+#endif	/* RAIDDEBUG */
 
 		rf_clear_debug_print_buffer();
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.6.1 2002/06/11 03:38:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.6.2 2002/10/29 00:28:12 art Exp $	*/
 /*	$NetBSD: ofdev.c,v 1.1 2000/08/20 14:58:41 mrg Exp $	*/
 
 /*
@@ -80,7 +80,7 @@ filename(str, ppart)
 		/* ...look whether there is a device with this name */
 		dhandle = OF_finddevice(str);
 #ifdef NOTDEF_DEBUG
-		printf("filename: OF_finddevice(%s) sez %x\n",
+		printf("filename: OF_finddevice(%s) says %x\n",
 		       str, dhandle);
 #endif
 		*cp = savec;
@@ -465,11 +465,11 @@ devopen(of, name, file)
 			     LABELSECTOR, DEV_BSIZE, buf, &read) != 0
 		    || read != DEV_BSIZE
 		    || (errmsg = getdisklabel(buf, &label))) {
-			if (errmsg) printf("devopen: getdisklabel sez %s\n", errmsg);
+			if (errmsg) printf("devopen: getdisklabel says %s\n", errmsg);
 			/* Else try MBR partitions */
 			errmsg = search_label(&ofdev, 0, buf, &label, 0);
 			if (errmsg) { 
-				printf("devopen: search_label sez %s\n", errmsg);
+				printf("devopen: search_label says %s\n", errmsg);
 				error = ERDLAB;
 			}
 			if (error && error != ERDLAB)

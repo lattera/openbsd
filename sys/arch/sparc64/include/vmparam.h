@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.5.2.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.5.2.2 2002/10/29 00:28:11 art Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.18 2001/05/01 02:19:19 thorpej Exp $ */
 
 /*
@@ -57,12 +57,7 @@
  * is the top (end) of the user stack.
  */
 #define	USRTEXT		0x2000			/* Start of user text */
-#define USRSTACK32	0xffffe000L
-#ifdef __arch64__
 #define USRSTACK	0xffffffffffffe000L
-#else
-#define USRSTACK	USRSTACK32
-#endif
 
 /*
  * Virtual memory related constants, all in bytes
@@ -158,8 +153,6 @@
 
 #define	VM_NFREELIST		1
 #define	VM_FREELIST_DEFAULT	0
-
-#define	__HAVE_PMAP_PHYSSEG
 
 /*
  * pmap specific data stored in the vm_physmem[] array

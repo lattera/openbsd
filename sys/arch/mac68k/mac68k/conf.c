@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.27.2.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.27.2.2 2002/10/29 00:28:05 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.41 1997/02/11 07:35:49 scottr Exp $	*/
 
 /*
@@ -103,7 +103,6 @@ cdev_decl(zs);
 #include "asc.h"
 cdev_decl(asc);
 #include "ksyms.h"
-cdev_decl(ksyms);
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
