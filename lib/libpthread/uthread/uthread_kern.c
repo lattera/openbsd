@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpthread/uthread/Attic/uthread_kern.c,v 1.27 2003/05/13 16:49:32 marc Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/uthread/Attic/uthread_kern.c,v 1.27.4.1 2004/05/03 01:16:27 brad Exp $	*/
 /*
  * Copyright (c) 1995-1998 John Birrell <jb@cimlogic.com.au>
  * All rights reserved.
@@ -470,6 +470,16 @@ _thread_kern_sched(struct sigcontext * scp)
 			/* Restore the new thread, saving current. */
 			_thread_machdep_switch(&curthread->_machdep,
 					       &old_thread_run->_machdep);
+
+			/*
+			 * DANGER WILL ROBINSON
+			 * All stack local variables now contain the values
+			 * they had when this thread was last running.  In
+			 * particular, curthread is NOT pointing to the
+			 * current thread.   Make it point to the current
+			 * before use.
+			 */
+			curthread = _get_curthread();
 			_thread_kern_in_sched = 0;
 
 			/* run any installed switch-hooks */
