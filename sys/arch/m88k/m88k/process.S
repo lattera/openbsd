@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/m88k/process.S,v 1.1.2.1 2004/06/05 23:09:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/process.S,v 1.1.2.2 2004/06/07 20:19:30 tedu Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -215,6 +215,8 @@ ASLOCAL(Ldoneloop)
 
 	or.u	r11, r0, hi16(_C_LABEL(curproc))
 	st	r9,  r11,lo16(_C_LABEL(curproc))	/* curproc = p */
+	or	r2, r0, SONPROC
+	st.b	r2, r9, P_STAT
 
 	/*  r9 is curproc */
 	st	r0, r9, P_BACK			/* p->p_back = 0 */
