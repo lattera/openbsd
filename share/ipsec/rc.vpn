@@ -1,0 +1,160 @@
+#!/bin/sh
+
+#
+#    $OpenBSD: src/share/ipsec/Attic/rc.vpn,v 1.3 1999/08/28 12:10:37 ho Exp $
+#
+# Richard Reiner, Ph.D., FSC Internet Corp.
+# rreiner@fscinternet.com
+# v0.81 / 26Jul98
+#
+# Modifications and cleanup by H. Olsson <ho@openbsd.org>, 28Aug99
+#
+# rc.vpn -- configure IPSec in tunnel mode for a mesh of N local and
+#           M remote networks. (N x M mesh)
+#
+# For this to work, you will need to have these enabled (in /etc/sysct.conf):
+#   'sysctl -w net.inet.ip.forwarding=1'   (IP packet routing)
+#   'sysctl -w net.inet.esp.enable=1'      (IPsec ESP protocol)
+
+# XXX The configuration parameters should be moved to another file.
+
+# Uncomment to debug (and not execute) commands
+#DEBUG=echo
+
+# Gateway adresses
+GW_LOCAL=192.168.254.254
+GW_PEER=192.168.1.2
+
+# Local and remote networks, numbered, syntax <network>:<mask>
+LOCAL_NET_0=192.168.254.0:0xffffff00
+LOCAL_NET_1=192.168.253.0:0xffffff00
+REMOTE_NET_0=192.168.1.0:0xffffff00
+REMOTE_NET_1=192.168.2.0:0xffffff00
+
+# Crypto options and keys, note that key/iv lengths need to correspond
+# to the selected encryption and authentication algorithms.
+ENC=des
+AUTH=sha1
+SPI_OUT=1000
+SPI_IN=1001
+KEY=2ea140ac3911cb27
+AUTHKEY=176cc284bc1631afbd1468fbe976fa729fcb4321
+IV=c4b279f1a9bcd849
+
+#############################################################################
+############# -- NO CHANGES SHOULD BE NEEDED BELOW THIS LINE -- #############
+#############################################################################
+
+ipsecadm=/sbin/ipsecadm
+
+#
+# Sanity, be verbose about errors.
+# XXX In a 1 x M mesh, ip.forwarding may not be strictly necessary.
+#
+
+abort=0
+if [ `/usr/sbin/sysctl -n net.inet.esp.enable` == 0 ]; then
+    echo " VPN: variable 'net.inet.esp.enable' (IPsec ESP protocol)"
+    abort=1
+fi
+if [ `/usr/sbin/sysctl -n net.inet.ip.forwarding` == 0 ]; then
+    echo " VPN: variable 'net.inet.ip.forwarding' (IP forwarding/routing)"
+    abort=1
+fi
+if [ ${abort} = 1 ]; then
+    echo " VPN: must be enabled in /etc/sysctl.conf. Aborting VPN setup." 
+    exit 0
+fi
+
+[ ! -n "${DEBUG}" ] && echo " VPN "
+
+#
+# Setup the SAs
+#
+
+$DEBUG $ipsecadm new esp -src $GW_LOCAL -dst $GW_PEER \
+    -forcetunnel -spi $SPI_OUT -enc $ENC -auth $AUTH \
+    -key $KEY -authkey $AUTHKEY
+
+$DEBUG $ipsecadm new esp -src $GW_PEER -dst $GW_LOCAL \
+    -forcetunnel -spi $SPI_IN -enc $ENC -auth $AUTH \
+    -key $KEY -authkey $AUTHKEY
+
+#
+# Create the flows
+#
+
+# Gateway to gateway
+$DEBUG ipsecadm flow -proto esp -dst $GW_PEER -spi $SPI_OUT \
+    -addr 0.0.0.0 0xffffffff $GW_PEER 0xffffffff
+
+# Flows from each local, to each remote, subnet
+mycount=0
+while :
+do
+    eval network=\$LOCAL_NET_${mycount}
+    set `echo $network | sed 's/:/ /g'` 0x0 0x0
+    local_net=$1
+    local_mask=$2
+    if [ "${local_net}" != "0x0" ]; then
+	peercount=0
+	while :
+	do
+	    eval network=\$REMOTE_NET_${peercount}
+	    set `echo $network | sed 's/:/ /g'` 0x0 0x0
+	    remote_net=$1
+	    remote_mask=$2
+	    if [ "${remote_net}" != "0x0" ]; then
+		$DEBUG $ipsecadm flow \
+		    -proto esp -dst $GW_PEER -spi $SPI_OUT \
+		    -addr $local_net $local_mask $remote_net $remote_mask
+		peercount=$(($peercount + 1))
+	    else
+		break;
+	    fi
+	done
+	mycount=$(($mycount + 1))
+    else
+	break;
+    fi
+done
+
+# XXX Stuff below is mainly for testing, may be removed later.
+
+# Flows from local gw to each remote subnet
+peercount=0
+while :
+do
+    eval network=\$REMOTE_NET_${peercount}
+    set `echo $network | sed 's/:/ /g'` 0x0 0x0
+    remote_net=$1
+    remote_mask=$2
+    if [ "${remote_net}" != "0x0" ]; then
+	$DEBUG $ipsecadm flow \
+	    -proto esp -dst $GW_PEER -spi $SPI_OUT \
+	    -addr 0.0.0.0 0xffffffff $remote_net $remote_mask
+	peercount=$(($peercount + 1))
+    else
+	break;
+    fi
+done
+
+# Flows from local subnets to the remote gw
+mycount=0
+while :
+do
+    eval network=\$LOCAL_NET_${mycount}
+    set `echo $network | sed 's/:/ /g'` 0x0 0x0
+    local_net=$1
+    local_mask=$2
+    if [ "${local_net}" != "0x0" ]; then
+	$DEBUG $ipsecadm flow \
+	    -proto esp -dst $GW_PEER -spi $SPI_OUT \
+	    -addr $local_net $local_mask $GW_PEER 0xffffffff
+	mycount=$(($mycount + 1))
+    else
+	break;
+    fi
+done
+
+exit 0
