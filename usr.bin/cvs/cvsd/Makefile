@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2004/12/06 18:57:10 xsa Exp $
+# $Id: Makefile,v 1.7 2004/12/08 18:07:07 xsa Exp $
 
 .PATH:	${.CURDIR}/..
 
@@ -14,5 +14,6 @@ CFLAGS+= -Wmissing-declarations
 CFLAGS+= -Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+= -Wsign-compare
 CFLAGS+= -DCVSD
+YFLAGS=
 
 .include <bsd.prog.mk>
