@@ -1,4 +1,4 @@
-/* $Id: todos_atr.c,v 1.10 2001/06/12 20:46:56 rees Exp $ */
+/* $Id: todos_atr.c,v 1.5 2001/06/18 16:00:50 rees Exp $ */
 
 /*
 copyright 1997, 1999, 2000
@@ -51,7 +51,7 @@ typedef long int32_t;
 #include <sys/types.h>
 #endif
 
-#include "sectok.h"
+#include "sc7816.h"
 #include "todos_scrw.h"
 
 #ifdef __unix__

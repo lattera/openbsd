@@ -1,4 +1,4 @@
-/* $Id: scT1.c,v 1.6 2001/06/07 20:15:05 rees Exp rees $ */
+/* $Id: scT1.c,v 1.3 2001/06/08 15:04:04 rees Exp $ */
 
 /*
 copyright 1997, 1999, 2000
@@ -50,7 +50,7 @@ such damages.
 #include <sys/time.h>
 #endif
 
-#include "sectok.h"
+#include "sc7816.h"
 
 #ifdef __palmos__
 #undef printf
