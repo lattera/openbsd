@@ -1,6 +1,6 @@
-#	$OpenBSD: src/distrib/simpleroot/Attic/Makefile,v 1.10 1997/10/01 22:13:01 deraadt Exp $
+#	$OpenBSD: src/distrib/simpleroot/Attic/Makefile,v 1.11 1998/03/08 00:27:39 deraadt Exp $
 
-REV=		22
+REV=		23
 
 ARCHDIR=	${.CURDIR}/../${MACHINE}/simpleroot
 
