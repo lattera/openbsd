@@ -1,5 +1,4 @@
-/* $Id: base64.c,v 1.1 2001/01/23 11:38:40 ho Exp $ */
-/* $OpenBSD: src/sbin/isakmpd/apps/keyconv/Attic/base64.c,v 1.1 2001/08/15 12:31:40 ho Exp $ */
+/* $OpenBSD: src/sbin/isakmpd/apps/keyconv/Attic/base64.c,v 1.2 2001/08/22 15:25:32 ho Exp $ */
 
 /*
  * Copyright (c) 1996-1999 by Internet Software Consortium.
