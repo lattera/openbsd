@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.3 2001/07/16 21:39:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.4 2001/10/27 09:46:09 niklas Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-
@@ -48,7 +48,7 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
- 
+
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
@@ -122,7 +122,7 @@ lapic_set_lvt()
 {
 #ifdef MULTIPROCESSOR
 	struct cpu_info *ci = curcpu();
-	
+
 	if (mp_verbose) {
 		apic_format_redir(ci->ci_dev.dv_xname, "prelint", 0, 0,
 		    i82489_readreg(LAPIC_LVINT0));
@@ -132,7 +132,7 @@ lapic_set_lvt()
 #endif
 	if (lapic_ints[0])
 		i82489_writereg(LAPIC_LVINT0, lapic_ints[0]->redir);
-	if (lapic_ints[1])	
+	if (lapic_ints[1])
 		i82489_writereg(LAPIC_LVINT1, lapic_ints[1]->redir);
 
 #ifdef MULTIPROCESSOR
@@ -196,7 +196,7 @@ lapic_clockintr (arg)
 	void *arg;
 {
 	struct clockframe *frame = arg;
-	
+
 	hardclock(frame);
 }
 
@@ -239,9 +239,9 @@ lapic_calibrate_timer(ci)
 	u_int64_t dtick, dapic, tmp;
 	int i;
 	char tbuf[9];
-	
+
 	printf("%s: calibrating local timer\n", ci->ci_dev.dv_xname);
-	
+
 	/*
 	 * Configure timer to one-shot, interrupt masked,
 	 * large positive number.
@@ -249,12 +249,12 @@ lapic_calibrate_timer(ci)
 	i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_M);
 	i82489_writereg (LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
 	i82489_writereg (LAPIC_ICR_TIMER, 0x80000000);
-	
+
 	starttick = gettick();
 	startapic = lapic_gettick();
 
 	DELAY(2);		/* using "old" delay here.. */
-	
+
 	for (i=0; i<hz; i++) {
 		do {
 			tick1 = gettick();
@@ -266,7 +266,7 @@ lapic_calibrate_timer(ci)
 			apic2 = lapic_gettick();
 		} while (tick2 > starttick);
 	}
-	
+
 	endtick = gettick();
 	endapic = lapic_gettick();
 
@@ -285,34 +285,35 @@ lapic_calibrate_timer(ci)
 	humanize_number(tbuf, sizeof(tbuf), tmp, "Hz", 1000);
 #else /* XXX: from NetBSD sources... sigh. */
 	{
-	  /* prefixes are: (none), Kilo, Mega, Giga, Tera, Peta, Exa */
-	  static const char prefixes[] = " KMGTPE";
-	  
-	  int             i;
-	  u_int64_t       max;
-	  size_t          suffixlen;
-	  
-	  if (tbuf == NULL)
-	    goto out;
-	  if (sizeof(tbuf) > 0)
-	    tbuf[0] = '\0';
-	  suffixlen = strlen("Hz");
-	  /* check if enough room for `x y' + suffix + `\0' */
-	  if (sizeof(tbuf) < 4 + suffixlen)
-	    goto out;
-	  
-	  max = 1;
-	  for (i = 0; i < sizeof(tbuf) - suffixlen - 3; i++)
-	    max *= 10;
-	  for (i = 0; tmp >= max && i < sizeof(prefixes); i++)
-	    tmp /= 1000;
-	  
-	  snprintf(tbuf, sizeof(tbuf), "%qu%s%c%s", (unsigned long long)tmp,
-		   i == 0 ? "" : " ", prefixes[i], "Hz");
+		/* prefixes are: (none), Kilo, Mega, Giga, Tera, Peta, Exa */
+		static const char prefixes[] = " KMGTPE";
+
+		int             i;
+		u_int64_t       max;
+		size_t          suffixlen;
+
+		if (tbuf == NULL)
+			goto out;
+		if (sizeof(tbuf) > 0)
+			tbuf[0] = '\0';
+		suffixlen = sizeof "Hz" - 1;
+		/* check if enough room for `x y' + suffix + `\0' */
+		if (sizeof(tbuf) < 4 + suffixlen)
+			goto out;
+
+		max = 1;
+		for (i = 0; i < sizeof(tbuf) - suffixlen - 3; i++)
+			max *= 10;
+		for (i = 0; tmp >= max && i < sizeof(prefixes); i++)
+			tmp /= 1000;
+
+		snprintf(tbuf, sizeof(tbuf), "%qu%s%c%s",
+		    (unsigned long long)tmp, i == 0 ? "" : " ", prefixes[i],
+		    "Hz");
 	out:
 	}
 #endif
-	   
+
 	printf("%s: apic clock running at %s\n", ci->ci_dev.dv_xname, tbuf);
 
 	if (lapic_per_second != 0) {
@@ -322,7 +323,7 @@ lapic_calibrate_timer(ci)
 		 */
 		lapic_tval = (lapic_per_second * 2) / hz;
 		lapic_tval = (lapic_tval / 2) + (lapic_tval & 0x1);
-	
+
 		i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_LVTT_M
 		    |LAPIC_TIMER_VECTOR);
 		i82489_writereg (LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
@@ -336,11 +337,11 @@ lapic_calibrate_timer(ci)
 
 		tmp = (1000000 * (u_int64_t)1 << 32) / lapic_per_second;
 		lapic_frac_usec_per_cycle = tmp;
-		
+
 		tmp = (lapic_per_second * (u_int64_t)1 << 32) / 1000000;
-		
+
 		lapic_frac_cycle_per_usec = tmp;
-	
+
 		/*
 		 * Compute delay in cycles for likely short delays in usec.
 		 */
@@ -367,7 +368,7 @@ void lapic_delay(usec)
 {
 	int32_t tick, otick;
 	int64_t deltat;		/* XXX may want to be 64bit */
-	
+
 	otick = lapic_gettick();
 
 	if (usec <= 0)
@@ -400,7 +401,7 @@ void lapic_microtime (tv)
 	u_int32_t tick;
 	u_int32_t usec;
 	u_int32_t tmp;
-	
+
 	disable_intr();
 	tick = lapic_gettick();
 	now = time;
@@ -408,13 +409,13 @@ void lapic_microtime (tv)
 
 	tmp = lapic_tval - tick;
 	usec = ((u_int64_t)tmp * lapic_frac_usec_per_cycle) >> 32;
-	
+
 	now.tv_usec += usec;
 	while (now.tv_usec >= 1000000) {
 		now.tv_sec += 1;
 		now.tv_usec -= 1000000;
 	}
-	
+
 	*tv = now;
 }
 
@@ -428,23 +429,23 @@ i386_ipi_init(target)
 {
 	unsigned j;
 
-	if ((target&LAPIC_DEST_MASK)==0) {
-		i82489_writereg(LAPIC_ICRHI, target<<LAPIC_ID_SHIFT);
+	if ((target & LAPIC_DEST_MASK) == 0) {
+		i82489_writereg(LAPIC_ICRHI, target << LAPIC_ID_SHIFT);
 	}
 
 	i82489_writereg(LAPIC_ICRLO, (target & LAPIC_DEST_MASK) |
 	    LAPIC_DLMODE_INIT | LAPIC_LVL_ASSERT );
 
-	for (j=100000; j > 0; j--)
+	for (j = 100000; j > 0; j--)
 		if ((i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY) == 0)
 			break;
-    
+
 	delay(10000);
-	
+
 	i82489_writereg(LAPIC_ICRLO, (target & LAPIC_DEST_MASK) |
 	     LAPIC_DLMODE_INIT | LAPIC_LVL_TRIG | LAPIC_LVL_DEASSERT);
-    
-	for (j=100000; j > 0; j--)
+
+	for (j = 100000; j > 0; j--)
 		if ((i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY) == 0)
 			break;
 
@@ -463,11 +464,10 @@ i386_ipi(vec,target,dl)
 	i82489_writereg(LAPIC_ICRLO,
 	    (target & LAPIC_DEST_MASK) | vec | dl | LAPIC_LVL_ASSERT);
 
-	for (j=100000;
+	for (j = 100000;
 	     j > 0 && (i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY);
 	     j--)
 		;
 
 	return (i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY)?EBUSY:0;
 }
-
