@@ -28,6 +28,10 @@ Report problems and direct all questions to:
 
 /*
  * $Log: ident.c,v $
+ * Revision 1.2  1996/05/07 12:03:10  mickey
+ * change -L option name to -Z, note that in
+ * co(1) manual, add -Z where were missed.
+ *
  * Revision 1.1.1.1  1995/10/18 08:41:00  deraadt
  * initial import of NetBSD tree
  *
@@ -100,7 +104,7 @@ Report problems and direct all questions to:
 static int match P((FILE*));
 static void scanfile P((FILE*,char const*,int));
 
-mainProg(identId, "ident", "$Id: ident.c,v 1.1.1.1 1995/10/18 08:41:00 deraadt Exp $")
+mainProg(identId, "ident", "$Id: ident.c,v 1.2 1996/05/07 12:03:10 mickey Exp $")
 /*  Ident searches the named files for all occurrences
  *  of the pattern $keyword: text $.
  */
@@ -116,11 +120,6 @@ mainProg(identId, "ident", "$Id: ident.c,v 1.1.1.1 1995/10/18 08:41:00 deraadt E
 	    switch (*a) {
 		case 'q':
 		    quiet = 1;
-		    break;
-
-		case 'Z':
-		    setRCSlocalId(a+1);
-		    a += strlen(a) - 1;
 		    break;
 
 		case 'V':

@@ -28,6 +28,10 @@ Report problems and direct all questions to:
 
 /*
  * $Log: ci.c,v $
+ * Revision 1.3  1996/05/07 12:02:52  mickey
+ * change -L option name to -Z, note that in
+ * co(1) manual, add -Z where were missed.
+ *
  * Revision 1.2  1996/04/19 12:40:00  mickey
  * -L<string> option added to support LOCALID behaviour.
  * maybe set up in RCSINIT environment variable.
@@ -271,7 +275,7 @@ static struct hshentry newdelta;	/* new delta to be inserted	*/
 static struct stat workstat;
 static struct Symrev *assoclst, **nextassoc;
 
-mainProg(ciId, "ci", "$Id: ci.c,v 1.2 1996/04/19 12:40:00 mickey Exp $")
+mainProg(ciId, "ci", "$Id: ci.c,v 1.3 1996/05/07 12:02:52 mickey Exp $")
 {
 	static char const cmdusage[] =
 		"\nci usage: ci -{fIklMqru}[rev] -d[date] -mmsg -{nN}name -sstate -ttext -T -Vn -wwho -xsuff -zzone -ZlocalId file ...";
@@ -352,10 +356,6 @@ mainProg(ciId, "ci", "$Id: ci.c,v 1.2 1996/04/19 12:40:00 mickey Exp $")
                 case 'k':
                         keepflag=true;
                         goto revno;
-
-		case 'Z':
-			setRCSlocalId(a);
-			break;
 
                 case 'm':
 			if (msg.size) redefined('m');
