@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.2 2001/11/13 21:10:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.3 2002/03/28 15:09:09 niklas Exp $	*/
 /*	$NetBSD: if_fta.c,v 1.7 1996/10/22 21:37:26 cgd Exp $	*/
 
 /*-
@@ -62,8 +62,8 @@
 #include <dev/ic/pdqvar.h>
 #include <dev/ic/pdqreg.h>
 
-int	pdq_tc_match __P((struct device *, void *, void *));
-void	pdq_tc_attach __P((struct device *, struct device *, void *));
+int	pdq_tc_match(struct device *, void *, void *);
+void	pdq_tc_attach(struct device *, struct device *, void *);
 
 int
 pdq_tc_match(parent, match, aux)

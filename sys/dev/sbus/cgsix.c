@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.1.2.1 2002/03/06 02:11:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.1.2.2 2002/03/28 15:09:09 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -150,6 +150,7 @@ struct cgsix_softc {
 	struct rcons sc_rcons;
 	struct raster sc_raster;
 	union bt_cmap sc_cmap;
+	void *sc_ih;
 };
 
 #define	CG6_USER_FBC	0x70000000
@@ -218,23 +219,25 @@ struct wsscreen_list cgsix_screenlist = {
 	sizeof(cgsix_scrlist) / sizeof(struct wsscreen_descr *), cgsix_scrlist
 };
 
-int cgsix_ioctl __P((void *, u_long, caddr_t, int, struct proc *));
-int cgsix_alloc_screen __P((void *, const struct wsscreen_descr *, void **,
-    int *, int *, long *));
-void cgsix_free_screen __P((void *, void *));
-int cgsix_show_screen __P((void *, void *, int,
-    void (*cb) __P((void *, int, int)), void *));
-paddr_t cgsix_mmap __P((void *, off_t, int));
-int cgsix_is_console __P((int));
-int cg6_bt_getcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
-int cg6_bt_putcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
-void cgsix_loadcmap __P((struct cgsix_softc *, u_int, u_int));
-void cgsix_setcolor __P((struct cgsix_softc *, u_int,
-    u_int8_t, u_int8_t, u_int8_t));
-void cgsix_reset __P((struct cgsix_softc *));
-void cgsix_hardreset __P((struct cgsix_softc *));
-void cgsix_burner __P((void *, u_int, u_int));
-static int a2int __P((char *, int));
+int cgsix_ioctl(void *, u_long, caddr_t, int, struct proc *);
+int cgsix_alloc_screen(void *, const struct wsscreen_descr *, void **,
+    int *, int *, long *);
+void cgsix_free_screen(void *, void *);
+int cgsix_show_screen(void *, void *, int, void (*cb)(void *, int, int),
+    void *);
+paddr_t cgsix_mmap(void *, off_t, int);
+int cgsix_is_console(int);
+int cg6_bt_getcmap(union bt_cmap *, struct wsdisplay_cmap *);
+int cg6_bt_putcmap(union bt_cmap *, struct wsdisplay_cmap *);
+void cgsix_loadcmap_immediate(struct cgsix_softc *, u_int, u_int);
+void cgsix_loadcmap_deferred(struct cgsix_softc *, u_int, u_int);
+void cgsix_setcolor(struct cgsix_softc *, u_int,
+    u_int8_t, u_int8_t, u_int8_t);
+void cgsix_reset(struct cgsix_softc *);
+void cgsix_hardreset(struct cgsix_softc *);
+void cgsix_burner(void *, u_int, u_int);
+int cgsix_intr(void *);
+static int a2int(char *, int);
 
 struct wsdisplay_accessops cgsix_accessops = {
 	cgsix_ioctl,
@@ -248,8 +251,8 @@ struct wsdisplay_accessops cgsix_accessops = {
 	NULL,	/* burner */
 };
 
-int	cgsixmatch	__P((struct device *, void *, void *));
-void	cgsixattach	__P((struct device *, struct device *, void *));
+int	cgsixmatch(struct device *, void *, void *);
+void	cgsixattach(struct device *, struct device *, void *);
 
 struct cfattach cgsix_ca = {
 	sizeof (struct cgsix_softc), cgsixmatch, cgsixattach
@@ -327,6 +330,12 @@ cgsixattach(parent, self, aux)
 		goto fail_tec;
 	}
 
+	if ((sc->sc_ih = bus_intr_establish(sa->sa_bustag, sa->sa_pri,
+	    IPL_TTY, 0, cgsix_intr, sc)) == NULL) {
+		printf(": couldn't establish interrupt, pri %d\n", sa->sa_pri);
+		goto fail_intr;
+	}
+
 	/* if prom didn't initialize us, do it the hard way */
 	if (OF_getproplen(sa->sa_node, "width") != sizeof(u_int32_t))
 		cgsix_hardreset(sc);
@@ -350,7 +359,7 @@ cgsixattach(parent, self, aux)
 	sc->sc_height = getpropint(sa->sa_node, "height", 900);
 	sc->sc_width = getpropint(sa->sa_node, "width", 1152);
 
-	sbus_establish(&sc->sc_sd, &sc->sc_dev);
+	sbus_establish(&sc->sc_sd, self);
 
 	sc->sc_rcons.rc_sp = &sc->sc_raster;
 	sc->sc_raster.width = sc->sc_width;
@@ -405,6 +414,8 @@ cgsixattach(parent, self, aux)
 
 	return;
 
+fail_intr:
+	bus_space_unmap(sa->sa_bustag, sc->sc_tec_regs, CGSIX_TEC_SIZE);
 fail_tec:
 	bus_space_unmap(sa->sa_bustag, sc->sc_vid_regs, CGSIX_VID_SIZE);
 fail_vid:
@@ -457,7 +468,7 @@ cgsix_ioctl(v, cmd, data, flags, p)
 		error = cg6_bt_putcmap(&sc->sc_cmap, cm);
 		if (error)
 			return (error);
-		cgsix_loadcmap(sc, cm->index, cm->count);
+		cgsix_loadcmap_deferred(sc, cm->index, cm->count);
 		break;
 
 	case WSDISPLAYIO_SVIDEO:
@@ -510,7 +521,7 @@ cgsix_show_screen(v, cookie, waitok, cb, cbarg)
 	void *v;
 	void *cookie;
 	int waitok;
-	void (*cb) __P((void *, int, int));
+	void (*cb)(void *, int, int);
 	void *cbarg;
 {
 	return (0);
@@ -606,7 +617,20 @@ cg6_bt_putcmap(bcm, rcm)
 }
 
 void
-cgsix_loadcmap(sc, start, ncolors)
+cgsix_loadcmap_deferred(sc, start, ncolors)
+	struct cgsix_softc *sc;
+	u_int start, ncolors;
+{
+	u_int32_t thcm;
+
+	thcm = THC_READ(sc, CG6_THC_MISC);
+	thcm &= ~THC_MISC_RESET;
+	thcm |= THC_MISC_INTEN;
+	THC_WRITE(sc, CG6_THC_MISC, thcm);
+}
+
+void
+cgsix_loadcmap_immediate(sc, start, ncolors)
 	struct cgsix_softc *sc;
 	u_int start, ncolors;
 {
@@ -638,7 +662,7 @@ cgsix_setcolor(sc, index, r, g, b)
 	bcm->cm_map[index][0] = r;
 	bcm->cm_map[index][1] = g;
 	bcm->cm_map[index][2] = b;
-	cgsix_loadcmap(sc, index, 1);
+	cgsix_loadcmap_immediate(sc, index, 1);
 }
 
 void
@@ -751,4 +775,26 @@ cgsix_burner(vsc, on, flags)
 	}
 	THC_WRITE(sc, CG6_THC_MISC, thcm);
 	splx(s);
+}
+
+int
+cgsix_intr(vsc)
+	void *vsc;
+{
+	struct cgsix_softc *sc = vsc;
+	u_int32_t thcm;
+
+	thcm = THC_READ(sc, CG6_THC_MISC);
+	if ((thcm & (THC_MISC_INTEN | THC_MISC_INTR)) !=
+	    (THC_MISC_INTEN | THC_MISC_INTR)) {
+		/* Not expecting an interrupt, it's not for us. */
+		return (0);
+	}
+
+	/* Acknowledge the interrupt and disable it. */
+	thcm &= ~(THC_MISC_RESET | THC_MISC_INTEN);
+	thcm |= THC_MISC_INTR;
+	THC_WRITE(sc, CG6_THC_MISC, thcm);
+	cgsix_loadcmap_immediate(sc, 0, 256);
+	return (1);
 }

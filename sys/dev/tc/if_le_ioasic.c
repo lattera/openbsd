@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/if_le_ioasic.c,v 1.4.8.5 2002/03/06 02:11:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/if_le_ioasic.c,v 1.4.8.6 2002/03/28 15:09:09 niklas Exp $	*/
 /*	$NetBSD: if_le_ioasic.c,v 1.2 1996/05/07 02:24:56 thorpej Exp $	*/
 
 /*
@@ -56,19 +56,19 @@
 #include <dev/tc/tcvar.h>
 #include <dev/tc/ioasicvar.h>
 
-int	le_ioasic_match __P((struct device *, void *, void *));
-void	le_ioasic_attach __P((struct device *, struct device *, void *));
+int	le_ioasic_match(struct device *, void *, void *);
+void	le_ioasic_attach(struct device *, struct device *, void *);
 
-hide void le_ioasic_copytobuf_gap2 __P((struct am7990_softc *, void *,
-	    int, int));
-hide void le_ioasic_copyfrombuf_gap2 __P((struct am7990_softc *, void *,
-	    int, int));
+hide void le_ioasic_copytobuf_gap2(struct am7990_softc *, void *,
+	    int, int);
+hide void le_ioasic_copyfrombuf_gap2(struct am7990_softc *, void *,
+	    int, int);
 
-hide void le_ioasic_copytobuf_gap16 __P((struct am7990_softc *, void *,
-	    int, int));
-hide void le_ioasic_copyfrombuf_gap16 __P((struct am7990_softc *, void *,
-	    int, int));
-hide void le_ioasic_zerobuf_gap16 __P((struct am7990_softc *, int, int));
+hide void le_ioasic_copytobuf_gap16(struct am7990_softc *, void *,
+	    int, int);
+hide void le_ioasic_copyfrombuf_gap16(struct am7990_softc *, void *,
+	    int, int);
+hide void le_ioasic_zerobuf_gap16(struct am7990_softc *, int, int);
 
 struct cfattach le_ioasic_ca = {
 	sizeof(struct le_softc), le_ioasic_match, le_ioasic_attach

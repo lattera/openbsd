@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.5 2002/03/28 15:09:10 niklas Exp $ */
 /*	$NetBSD: ohci.c,v 1.104 2001/09/28 23:57:21 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohci.c,v 1.22 1999/11/17 22:33:40 n_hibma Exp $	*/
 
@@ -592,7 +592,7 @@ ohci_alloc_sitd(ohci_softc_t *sc)
 			return (NULL);
 		for(i = 0; i < OHCI_SITD_CHUNK; i++) {
 			offs = i * OHCI_SITD_SIZE;
-			sitd = (ohci_soft_itd_t *)((char*)KERNADDR(&dma)+offs);
+			sitd = (ohci_soft_itd_t *)((char *)KERNADDR(&dma)+offs);
 			sitd->physaddr = DMAADDR(&dma) + offs;
 			sitd->nextitd = sc->sc_freeitds;
 			sc->sc_freeitds = sitd;

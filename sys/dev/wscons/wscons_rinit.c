@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_rinit.c,v 1.6.10.1 2001/05/14 22:26:29 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_rinit.c,v 1.6.10.2 2002/03/28 15:09:10 niklas Exp $ */
 /* $NetBSD: wscons_rinit.c,v 1.2 1998/05/14 20:49:56 drochner Exp $ */
 
 /*
@@ -54,7 +54,7 @@
 
 #include <dev/wscons/wscons_rfont.h>
 
-void	rcons_initfont __P((struct rcons *, struct raster_font *));
+void	rcons_initfont(struct rcons *, struct raster_font *);
 
 void
 rcons_initfont(rc, fp)

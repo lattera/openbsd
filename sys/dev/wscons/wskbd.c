@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.5 2002/03/28 15:09:10 niklas Exp $ */
 /* $NetBSD: wskbd.c,v 1.38 2000/03/23 07:01:47 thorpej Exp $ */
 
 /*
@@ -207,32 +207,31 @@ struct wskbd_softc {
 #define MOD_ONESET(id, mask)	(((id)->t_modifiers & (mask)) != 0)
 #define MOD_ALLSET(id, mask)	(((id)->t_modifiers & (mask)) == (mask))
 
-int	wskbd_match __P((struct device *, void *, void *));
-void	wskbd_attach __P((struct device *, struct device *, void *));
-int	wskbd_detach __P((struct device *, int));
-int	wskbd_activate __P((struct device *, enum devact));
+int	wskbd_match(struct device *, void *, void *);
+void	wskbd_attach(struct device *, struct device *, void *);
+int	wskbd_detach(struct device *, int);
+int	wskbd_activate(struct device *, enum devact);
 
-int wskbd_displayioctl
-	    __P((struct device *, u_long, caddr_t, int, struct proc *p));
-int	wskbd_set_display __P((struct device *, struct wsmux_softc *));
-int	wskbd_isset_display __P((struct device *));
+int wskbd_displayioctl(struct device *, u_long, caddr_t, int, struct proc *p);
+int	wskbd_set_display(struct device *, struct wsmux_softc *);
+int	wskbd_isset_display(struct device *);
 
-inline void update_leds __P((struct wskbd_internal *));
-inline void update_modifier __P((struct wskbd_internal *, u_int, int, int));
-int internal_command __P((struct wskbd_softc *, u_int *, keysym_t, keysym_t));
-int wskbd_translate __P((struct wskbd_internal *, u_int, int));
-int wskbd_enable __P((struct wskbd_softc *, int));
+inline void update_leds(struct wskbd_internal *);
+inline void update_modifier(struct wskbd_internal *, u_int, int, int);
+int internal_command(struct wskbd_softc *, u_int *, keysym_t, keysym_t);
+int wskbd_translate(struct wskbd_internal *, u_int, int);
+int wskbd_enable(struct wskbd_softc *, int);
 #if NWSDISPLAY > 0
-void change_displayparam __P((struct wskbd_softc *, int, int, int));
-void wskbd_holdscreen __P((struct wskbd_softc *, int));
+void change_displayparam(struct wskbd_softc *, int, int, int);
+void wskbd_holdscreen(struct wskbd_softc *, int);
 #endif
 
-int	wskbd_do_ioctl __P((struct wskbd_softc *, u_long, caddr_t, 
-			    int, struct proc *));
+int	wskbd_do_ioctl(struct wskbd_softc *, u_long, caddr_t, 
+			    int, struct proc *);
 
-int	wskbddoclose __P((struct device *, int, int, struct proc *));
-int	wskbddoioctl __P((struct device *, u_long, caddr_t, int, 
-			  struct proc *));
+int	wskbddoclose(struct device *, int, int, struct proc *);
+int	wskbddoioctl(struct device *, u_long, caddr_t, int, 
+			  struct proc *);
 
 struct cfdriver wskbd_cd = {
 	NULL, "wskbd", DV_TTY
@@ -287,14 +286,14 @@ struct wsmuxops wskbd_muxops = {
 #endif
 
 #if NWSDISPLAY > 0
-void wskbd_repeat __P((void *v));
+void wskbd_repeat(void *v);
 #endif
 
 static int wskbd_console_initted;
 static struct wskbd_softc *wskbd_console_device;
 static struct wskbd_internal wskbd_console_data;
 
-void wskbd_update_layout __P((struct wskbd_internal *, kbd_t));
+void wskbd_update_layout(struct wskbd_internal *, kbd_t);
 
 void
 wskbd_update_layout(id, enc)

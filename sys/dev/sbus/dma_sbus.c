@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/dma_sbus.c,v 1.5.4.1 2001/10/31 03:22:49 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/dma_sbus.c,v 1.5.4.2 2002/03/28 15:09:09 niklas Exp $	*/
 /*	$NetBSD: dma_sbus.c,v 1.5 2000/07/09 20:57:42 pk Exp $ */
 
 /*-
@@ -94,20 +94,20 @@ struct dma_softc {
 	struct sbusdev	sc_sd;			/* sbus device */
 };
 
-int	dmamatch_sbus	__P((struct device *, void *, void *));
-void	dmaattach_sbus	__P((struct device *, struct device *, void *));
+int	dmamatch_sbus(struct device *, void *, void *);
+void	dmaattach_sbus(struct device *, struct device *, void *);
 
-int	dmaprint_sbus	__P((void *, const char *));
+int	dmaprint_sbus(void *, const char *);
 
-void	*dmabus_intr_establish __P((
+void	*dmabus_intr_establish(
 		bus_space_tag_t,
 		int,			/*bus interrupt priority*/
 		int,			/*`device class' level*/
 		int,			/*flags*/
-		int (*) __P((void *)),	/*handler*/
-		void *));		/*handler arg*/
+		int (*)(void *),	/*handler*/
+		void *);		/*handler arg*/
 
-static	bus_space_tag_t dma_alloc_bustag __P((struct dma_softc *sc));
+static	bus_space_tag_t dma_alloc_bustag(struct dma_softc *sc);
 
 struct cfattach dma_sbus_ca = {
 	sizeof(struct dma_softc), dmamatch_sbus, dmaattach_sbus
@@ -251,7 +251,7 @@ dmabus_intr_establish(t, pri, level, flags, handler, arg)
 	int pri;
 	int level;
 	int flags;
-	int (*handler) __P((void *));
+	int (*handler)(void *);
 	void *arg;
 {
 	struct lsi64854_softc *sc = t->cookie;

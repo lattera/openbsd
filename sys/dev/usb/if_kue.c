@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.5 2002/03/06 02:11:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.6 2002/03/28 15:09:09 niklas Exp $ */
 /*	$NetBSD: if_kue.c,v 1.43 2001/10/08 03:37:53 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -767,7 +767,7 @@ kue_rxeof(usbd_xfer_handle xfer, usbd_private_handle priv, usbd_status status)
 
 	m = c->kue_mbuf;
 	/* copy data to mbuf */
-	memcpy(mtod(m, char*), c->kue_buf, total_len);
+	memcpy(mtod(m, char *), c->kue_buf, total_len);
 
 	/* No errors; receive the packet. */
 	total_len = UGETW(mtod(m, u_int8_t *));

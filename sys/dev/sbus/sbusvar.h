@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/sbusvar.h,v 1.4.4.1 2001/10/31 03:22:49 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/sbusvar.h,v 1.4.4.2 2002/03/28 15:09:09 niklas Exp $	*/
 /*	$NetBSD: sbusvar.h,v 1.11 2000/11/01 06:18:45 eeh Exp $ */
 
 /*-
@@ -48,7 +48,7 @@ struct sbus_softc;
 struct sbusdev {
 	struct	device *sd_dev;		/* backpointer to generic */
 	struct	sbusdev *sd_bchain;	/* forward link in bus chain */
-	void	(*sd_reset) __P((struct device *));
+	void	(*sd_reset)(struct device *);
 };
 
 
@@ -100,20 +100,20 @@ struct sbus_attach_args {
 };
 
 /* sbus_attach_internal() is also used from obio.c */
-void	sbus_attach_common __P((struct sbus_softc *, char *, int, 
-				const char * const *));
-int	sbus_print __P((void *, const char *));
+void	sbus_attach_common(struct sbus_softc *, char *, int, 
+				const char * const *);
+int	sbus_print(void *, const char *);
 
-void	sbus_establish __P((struct sbusdev *, struct device *));
+void	sbus_establish(struct sbusdev *, struct device *);
 
-int	sbus_setup_attach_args __P((
+int	sbus_setup_attach_args(
 		struct sbus_softc *,
 		bus_space_tag_t,
 		bus_dma_tag_t,
 		int,			/*node*/
-		struct sbus_attach_args *));
+		struct sbus_attach_args *);
 
-void	sbus_destroy_attach_args __P((struct sbus_attach_args *));
+void	sbus_destroy_attach_args(struct sbus_attach_args *);
 
 #define sbus_bus_map(t, bt, a, s, f, v, hp) \
 	bus_space_map2(t, bt, a, s, f, v, hp)

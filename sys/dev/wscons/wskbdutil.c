@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wskbdutil.c,v 1.2.4.1 2001/05/14 22:26:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wskbdutil.c,v 1.2.4.2 2002/03/28 15:09:10 niklas Exp $	*/
 /*	$NetBSD: wskbdutil.c,v 1.7 1999/12/21 11:59:13 drochner Exp $	*/
 
 /*-
@@ -183,10 +183,10 @@ static struct compose_tab_s {
 
 static int compose_tab_inorder = 0;
 
-inline int compose_tab_cmp __P((struct compose_tab_s *,
-				struct compose_tab_s *));
-keysym_t ksym_upcase __P((keysym_t));
-void fillmapentry __P((const keysym_t *, int, struct wscons_keymap *));
+inline int compose_tab_cmp(struct compose_tab_s *,
+				struct compose_tab_s *);
+keysym_t ksym_upcase(keysym_t);
+void fillmapentry(const keysym_t *, int, struct wscons_keymap *);
 
 inline int
 compose_tab_cmp(i, j)
