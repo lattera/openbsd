@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/httpd/src/main/http_main.c,v 1.25.2.1 2002/11/08 00:04:04 jason Exp $ */
+/* $OpenBSD: src/usr.sbin/httpd/src/main/http_main.c,v 1.25.2.2 2003/02/24 02:09:38 margarida Exp $ */
 
 /* ====================================================================
  * The Apache Software License, Version 1.1
@@ -5176,6 +5176,7 @@ static void standalone_main(int argc, char **argv)
 	}
 	ap_set_version();	/* create our server_version string */
 	ap_init_modules(pconf, server_conf);
+	ap_init_etag(pconf);
 	version_locked++;	/* no more changes to server_version */
 
 	if(!is_graceful && !is_chrooted)
