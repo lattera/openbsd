@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.17.4.2 2002/10/29 00:33:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.17.4.3 2003/05/19 22:19:08 tedu Exp $	*/
 /*	$NetBSD: pcireg.h,v 1.26 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*
@@ -157,6 +157,7 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_MASS_STORAGE_IPI		0x03
 #define	PCI_SUBCLASS_MASS_STORAGE_RAID		0x04
 #define	PCI_SUBCLASS_MASS_STORAGE_ATA		0x05
+#define	PCI_SUBCLASS_MASS_STORAGE_SATA		0x06
 #define	PCI_SUBCLASS_MASS_STORAGE_MISC		0x80
 
 /* 0x02 network subclasses */
@@ -205,6 +206,8 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_COMMUNICATIONS_PARALLEL	0x01
 #define	PCI_SUBCLASS_COMMUNICATIONS_MPSERIAL	0x02
 #define	PCI_SUBCLASS_COMMUNICATIONS_MODEM	0x03
+#define	PCI_SUBCLASS_COMMUNICATIONS_GPIB	0x04
+#define	PCI_SUBCLASS_COMMUNICATIONS_SMARTCARD	0x05
 #define	PCI_SUBCLASS_COMMUNICATIONS_MISC	0x80
 
 /* 0x08 system subclasses */
@@ -252,6 +255,10 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_WIRELESS_IRDA		0x00
 #define	PCI_SUBCLASS_WIRELESS_CONSUMERIR	0x01
 #define	PCI_SUBCLASS_WIRELESS_RF		0x10
+#define	PCI_SUBCLASS_WIRELESS_BLUETOOTH		0x11
+#define	PCI_SUBCLASS_WIRELESS_BROADBAND		0x12
+#define	PCI_SUBCLASS_WIRELESS_802_11A		0x20
+#define	PCI_SUBCLASS_WIRELESS_802_11B		0x21
 #define	PCI_SUBCLASS_WIRELESS_MISC		0x80
 
 /* 0x0e I2O (Intelligent I/O) subclasses */
@@ -272,6 +279,8 @@ typedef u_int8_t pci_revision_t;
 /* 0x11 data acquisition and signal processing subclasses */
 #define	PCI_SUBCLASS_DASP_DPIO			0x00
 #define	PCI_SUBCLASS_DASP_TIMEFREQ		0x01
+#define	PCI_SUBCLASS_DASP_SYNC			0x10
+#define	PCI_SUBCLASS_DASP_MGMT			0x20
 #define	PCI_SUBCLASS_DASP_MISC			0x80
 
 /*
@@ -427,7 +436,8 @@ typedef u_int8_t pci_revision_t;
 /*
  * capabilities link list (PCI rev. 2.2)
  */
-#define PCI_CAPLISTPTR_REG		0x34
+#define PCI_CAPLISTPTR_REG		0x34	/* header type 0 */
+#define PCI_CARDBUS_CAPLISTPTR_REG	0x14	/* header type 2 */
 #define PCI_CAPLIST_PTR(cpr) ((cpr) & 0xff)
 #define PCI_CAPLIST_NEXT(cr) (((cr) >> 8) & 0xff)
 #define PCI_CAPLIST_CAP(cr) ((cr) & 0xff)
@@ -437,7 +447,7 @@ typedef u_int8_t pci_revision_t;
 #define PCI_CAP_AGP		0x02
 #define PCI_CAP_VPD		0x03
 #define PCI_CAP_SLOTID		0x04
-#define PCI_CAP_MBI		0x05
+#define PCI_CAP_MSI		0x05
 #define PCI_CAP_CPCI_HOTSWAP	0x06
 #define PCI_CAP_PCIX		0x07
 #define PCI_CAP_LDT		0x08
@@ -445,6 +455,10 @@ typedef u_int8_t pci_revision_t;
 #define PCI_CAP_DEBUGPORT	0x0a
 #define PCI_CAP_CPCI_RSRCCTL	0x0b
 #define PCI_CAP_HOTPLUG		0x0c
+#define PCI_CAP_AGP8		0x0e
+#define PCI_CAP_SECURE		0x0f
+#define PCI_CAP_PCIEXPRESS     	0x10
+#define PCI_CAP_MSIX		0x11
 
 /*
  * Power Management Control Status Register; access via capability pointer.
@@ -489,5 +503,68 @@ typedef u_int8_t pci_intr_line_t;
 #define	PCI_INTERRUPT_PIN_C			0x03
 #define	PCI_INTERRUPT_PIN_D			0x04
 #define	PCI_INTERRUPT_PIN_MAX			0x04
+
+/*
+ * Vital Product Data resource tags.
+ */
+struct pci_vpd_smallres {
+	uint8_t		vpdres_byte0;		/* length of data + tag */
+	/* Actual data. */
+} __attribute__((__packed__));
+
+struct pci_vpd_largeres {
+	uint8_t		vpdres_byte0;
+	uint8_t		vpdres_len_lsb;		/* length of data only */
+	uint8_t		vpdres_len_msb;
+	/* Actual data. */
+} __attribute__((__packed__));
+
+#define	PCI_VPDRES_ISLARGE(x)			((x) & 0x80)
+
+#define	PCI_VPDRES_SMALL_LENGTH(x)		((x) & 0x7)
+#define	PCI_VPDRES_SMALL_NAME(x)		(((x) >> 3) & 0xf)
+
+#define	PCI_VPDRES_LARGE_NAME(x)		((x) & 0x7f)
+
+#define	PCI_VPDRES_TYPE_COMPATIBLE_DEVICE_ID	0x3	/* small */
+#define	PCI_VPDRES_TYPE_VENDOR_DEFINED		0xe	/* small */
+#define	PCI_VPDRES_TYPE_END_TAG			0xf	/* small */
+
+#define	PCI_VPDRES_TYPE_IDENTIFIER_STRING	0x02	/* large */
+#define	PCI_VPDRES_TYPE_VPD			0x10	/* large */
+
+struct pci_vpd {
+	uint8_t		vpd_key0;
+	uint8_t		vpd_key1;
+	uint8_t		vpd_len;		/* length of data only */
+	/* Actual data. */
+} __attribute__((__packed__));
+
+/*
+ * Recommended VPD fields:
+ *
+ *	PN		Part number of assembly
+ *	FN		FRU part number
+ *	EC		EC level of assembly
+ *	MN		Manufacture ID
+ *	SN		Serial Number
+ *
+ * Conditionally recommended VPD fields:
+ *
+ *	LI		Load ID
+ *	RL		ROM Level
+ *	RM		Alterable ROM Level
+ *	NA		Network Address
+ *	DD		Device Driver Level
+ *	DG		Diagnostic Level
+ *	LL		Loadable Microcode Level
+ *	VI		Vendor ID/Device ID
+ *	FU		Function Number
+ *	SI		Subsystem Vendor ID/Subsystem ID
+ *
+ * Additional VPD fields:
+ *
+ *	Z0-ZZ		User/Product Specific
+ */
 
 #endif /* _DEV_PCI_PCIREG_H_ */

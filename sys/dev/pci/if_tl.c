@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.24.2.2 2002/10/29 00:33:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.24.2.3 2003/05/19 22:18:01 tedu Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -1479,7 +1479,7 @@ int tl_encap(sc, c, m_head)
 				break;
 			total_len+= m->m_len;
 			c->tl_ptr->tl_frag[frag].tlist_dadr =
-				vtophys(mtod(m, vm_offset_t));
+				vtophys(mtod(m, vaddr_t));
 			c->tl_ptr->tl_frag[frag].tlist_dcnt = m->m_len;
 			frag++;
 		}

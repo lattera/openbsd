@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.7.4.1 2002/10/29 00:36:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.7.4.2 2003/05/19 22:30:41 tedu Exp $	*/
 
 /*
  * Copyright 1998 Massachusetts Institute of Technology
@@ -42,7 +42,7 @@ struct vlan_mc_entry {
 	union {
 		struct ether_multi	*mcu_enm;
 	} mc_u;
-	struct ether_addr		mc_addr;
+	struct sockaddr_storage		mc_addr;
 };
 
 struct	ifvlan {

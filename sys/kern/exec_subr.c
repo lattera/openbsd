@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16.2.2 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16.2.3 2003/05/19 22:31:09 tedu Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -207,7 +207,7 @@ vmcmd_map_pagedvn(p, cmd)
 		uobj->pgops->pgo_detach(uobj);
 	}
 
-	return(error);
+	return (error);
 }
 
 /*
@@ -216,20 +216,22 @@ vmcmd_map_pagedvn(p, cmd)
  *	appropriate for non-demand-paged text/data segments, i.e. impure
  *	objects (a la OMAGIC and NMAGIC).
  */
+
 int
-vmcmd_map_readvn(p, cmd)
-	struct proc *p;
-	struct exec_vmcmd *cmd;
+vmcmd_map_readvn(struct proc *p, struct exec_vmcmd *cmd)
 {
 	int error;
+	vm_prot_t prot;
 
 	if (cmd->ev_len == 0)
 		return (0);
-	
+
+	prot = cmd->ev_prot;
+
 	cmd->ev_addr = trunc_page(cmd->ev_addr); /* required by uvm_map */
 	error = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr,
 	    round_page(cmd->ev_len), NULL, UVM_UNKNOWN_OFFSET, 0,
-	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_COPY,
+	    UVM_MAPFLAG(prot | UVM_PROT_WRITE, UVM_PROT_ALL, UVM_INH_COPY,
 	    UVM_ADV_NORMAL,
 	    UVM_FLAG_FIXED|UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW));
 
@@ -252,7 +254,7 @@ vmcmd_map_readvn(p, cmd)
 		return (uvm_map_protect(&p->p_vmspace->vm_map,
 		    trunc_page(cmd->ev_addr),
 		    round_page(cmd->ev_addr + cmd->ev_len),
-		    cmd->ev_prot, FALSE));
+		    prot, FALSE));
 	}
 	return (0);
 }
@@ -305,11 +307,12 @@ exec_setup_stack(p, epp)
 {
 
 #ifdef MACHINE_STACK_GROWS_UP
-	epp->ep_maxsaddr = USRSTACK + MAXSSIZ;
+	epp->ep_maxsaddr = USRSTACK;
+	epp->ep_minsaddr = USRSTACK + MAXSSIZ;
 #else
 	epp->ep_maxsaddr = USRSTACK - MAXSSIZ;
-#endif
 	epp->ep_minsaddr = USRSTACK;
+#endif
 	epp->ep_ssize = round_page(p->p_rlimit[RLIMIT_STACK].rlim_cur);
 
 	/*
@@ -325,10 +328,10 @@ exec_setup_stack(p, epp)
 	 */
 #ifdef MACHINE_STACK_GROWS_UP
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
-	    (epp->ep_maxsaddr - (epp->ep_minsaddr + epp->ep_ssize)),
-	    epp->ep_minsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
+	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
+	    epp->ep_maxsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
-	    epp->ep_minsaddr, NULLVP, 0,
+	    epp->ep_maxsaddr, NULLVP, 0,
 	    VM_PROT_READ|VM_PROT_WRITE);
 #else
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,

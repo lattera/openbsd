@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/asc_tc.c,v 1.6.2.1 2002/06/11 03:42:29 art Exp $ */
+/* $OpenBSD: src/sys/dev/tc/asc_tc.c,v 1.6.2.2 2003/05/19 22:23:39 tedu Exp $ */
 /* $NetBSD: asc_tc.c,v 1.19 2001/11/15 09:48:19 lukem Exp $ */
 
 /*-
@@ -149,7 +149,7 @@ asc_tc_attach(parent, self, aux)
 	sc->sc_id = 7;
 	sc->sc_freq = (ta->ta_busspeed) ? 25000000 : 12500000;
 
-	/* gimme Mhz */
+	/* gimme MHz */
 	sc->sc_freq /= 1000000;
 
 	/*

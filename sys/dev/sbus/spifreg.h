@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1.2.3 2002/10/29 00:33:31 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1.2.4 2003/05/19 22:14:42 tedu Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Jason L. Wright (jason@thought.net)
@@ -362,8 +362,8 @@
 /*
  * "verosc" node tells which oscillator we have.
  */
-#define	SPIF_OSC9	1		/* 9.8304 Mhz */
-#define	SPIF_OSC10	2		/* 10Mhz */
+#define	SPIF_OSC9	1		/* 9.8304 MHz */
+#define	SPIF_OSC10	2		/* 10MHz */
 
 /*
  * There are two interrupts, serial gets interrupt[0], and parallel

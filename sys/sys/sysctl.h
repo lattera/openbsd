@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44.2.2 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44.2.3 2003/05/19 22:32:36 tedu Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -177,7 +177,11 @@ struct ctlname {
 #define KERN_NUMVNODES		58	/* int: number of vnodes in use */
 #define	KERN_MBSTAT		59	/* struct: mbuf statistics */
 #define KERN_USERASYMCRYPTO	60	/* int: usercrypto */
-#define	KERN_MAXID		61	/* number of valid kern ids */
+#define	KERN_SEMINFO		61	/* struct: SysV struct seminfo */
+#define	KERN_SHMINFO		62	/* struct: SysV struct shminfo */
+#define KERN_INTRCNT		63	/* node: interrupt counters */
+#define	KERN_WATCHDOG		64	/* node: watchdog */
+#define	KERN_MAXID		65	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -241,6 +245,10 @@ struct ctlname {
 	{ "numvnodes", CTLTYPE_INT }, \
 	{ "mbstat", CTLTYPE_STRUCT }, \
 	{ "userasymcrypto", CTLTYPE_INT }, \
+	{ "seminfo", CTLTYPE_STRUCT }, \
+	{ "shminfo", CTLTYPE_STRUCT }, \
+	{ "intrcnt", CTLTYPE_NODE }, \
+ 	{ "watchdog", CTLTYPE_NODE }, \
 }
 
 /*
@@ -306,6 +314,34 @@ struct kinfo_proc {
 };
 
 /*
+ * KERN_INTR_CNT
+ */
+#define KERN_INTRCNT_NUM	1	/* int: # intrcnt */
+#define KERN_INTRCNT_CNT	2	/* node: intrcnt */
+#define KERN_INTRCNT_NAME	3	/* node: names */
+#define KERN_INTRCNT_MAXID	4
+
+#define CTL_KERN_INTRCNT_NAMES { \
+	{ 0, 0 }, \
+	{ "nintrcnt", CTLTYPE_INT }, \
+	{ "intrcnt", CTLTYPE_NODE }, \
+	{ "intrname", CTLTYPE_NODE }, \
+}
+
+/*
+ * KERN_WATCHDOG
+ */
+#define KERN_WATCHDOG_PERIOD	1	/* int: watchdog period */
+#define KERN_WATCHDOG_AUTO	2	/* int: automatic tickle */
+#define KERN_WATCHDOG_MAXID	3
+
+#define CTL_KERN_WATCHDOG_NAMES { \
+	{ 0, 0 }, \
+	{ "period", CTLTYPE_INT }, \
+	{ "auto", CTLTYPE_INT }, \
+}
+
+/*
  * CTL_FS identifiers
  */
 #define	FS_POSIX	1		/* POSIX flags */
@@ -340,7 +376,8 @@ struct kinfo_proc {
 #define	HW_DISKNAMES	 8		/* strings: disk drive names */
 #define	HW_DISKSTATS	 9		/* struct: diskstats[] */
 #define	HW_DISKCOUNT	10		/* int: number of disks */
-#define	HW_MAXID	11		/* number of valid hw ids */
+#define	HW_SENSORS	11		/* node: hardware monitors */
+#define	HW_MAXID	12		/* number of valid hw ids */
 
 #define	CTL_HW_NAMES { \
 	{ 0, 0 }, \
@@ -354,6 +391,7 @@ struct kinfo_proc {
 	{ "disknames", CTLTYPE_STRING }, \
 	{ "diskstats", CTLTYPE_STRUCT }, \
 	{ "diskcount", CTLTYPE_INT }, \
+	{ "sensors", CTLTYPE_NODE}, \
 }
 
 /*
@@ -497,6 +535,7 @@ int cpu_sysctl(int *, u_int, void *, size_t *, void *, size_t,
 int vfs_sysctl(int *, u_int, void *, size_t *, void *, size_t,
 		    struct proc *);
 int sysctl_sysvipc(int *, u_int, void *, size_t *);
+int sysctl_wdog(int *, u_int, void *, size_t *, void *, size_t);
 
 void sysctl_init(void);
 

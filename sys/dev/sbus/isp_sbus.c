@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/isp_sbus.c,v 1.2.2.2 2002/10/29 00:33:31 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/isp_sbus.c,v 1.2.2.3 2003/05/19 22:14:42 tedu Exp $	*/
 /* $NetBSD: isp_sbus.c,v 1.46 2001/09/26 20:53:14 eeh Exp $ */
 
 /*
@@ -169,7 +169,13 @@ isp_sbus_attach(struct device *parent, struct device *self, void *aux)
 	sbc->sbus_mdvec = mdvec;
 
 	if (sa->sa_npromvaddrs != 0) {
-		sbc->sbus_reg = (bus_space_handle_t)sa->sa_promvaddrs[0];
+		if (bus_space_map(sa->sa_bustag, sa->sa_promvaddrs[0],
+		    sa->sa_size,
+		    BUS_SPACE_MAP_PROMADDRESS | BUS_SPACE_MAP_LINEAR,
+		    &sbc->sbus_reg) == 0) {
+			printf("%s: cannot map registers\n", self->dv_xname);
+			return;
+		}
 	} else {
 		if (sbus_bus_map(sa->sa_bustag, sa->sa_slot, sa->sa_offset,
 				 sa->sa_size, BUS_SPACE_MAP_LINEAR, 0,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhub.c,v 1.14.2.2 2002/10/29 00:33:32 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uhub.c,v 1.14.2.3 2003/05/19 22:24:08 tedu Exp $ */
 /*	$NetBSD: uhub.c,v 1.52 2001/10/26 17:53:59 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhub.c,v 1.18 1999/11/17 22:33:43 n_hibma Exp $	*/
 
@@ -156,7 +156,7 @@ USB_ATTACH(uhub)
 
 	DPRINTFN(1,("uhub_attach\n"));
 	sc->sc_hub = dev;
-	usbd_devinfo(dev, 1, devinfo);
+	usbd_devinfo(dev, 1, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->sc_dev), devinfo);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_fddisubr.c,v 1.28.2.1 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_fddisubr.c,v 1.28.2.2 2003/05/19 22:30:08 tedu Exp $	*/
 /*	$NetBSD: if_fddisubr.c,v 1.5 1996/05/07 23:20:21 christos Exp $	*/
 
 /*
@@ -103,11 +103,7 @@
 #include <netinet/in_var.h>
 #endif
 #include <netinet/if_ether.h>
-#if defined(__FreeBSD__)
-#include <netinet/if_fddi.h>
-#else
 #include <net/if_fddi.h>
-#endif
 
 #ifdef IPX
 #include <netipx/ipx.h>
@@ -156,15 +152,6 @@ extern struct ifqueue pkintrq;
 #define	llc_snap	llc_un.type_snap
 #endif
 
-#if defined(__bsdi__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#define	RTALLOC1(a, b)			rtalloc1(a, b)
-#define	ARPRESOLVE(a, b, c, d, e, f)	arpresolve(a, b, c, d, e)
-#define	TYPEHTONS(t)			(t)
-#elif defined(__FreeBSD__)
-#define	RTALLOC1(a, b)			rtalloc1(a, b, 0UL)
-#define	ARPRESOLVE(a, b, c, d, e, f)	arpresolve(a, b, c, d, e, f)
-#define	TYPEHTONS(t)			(htons(t))
-#endif
 /*
  * FDDI output routine.
  * Encapsulate a packet of type family for the local net.
@@ -185,14 +172,13 @@ fddi_output(ifp, m0, dst, rt0)
 	struct mbuf *mcopy = (struct mbuf *)0;
 	register struct fddi_header *fh;
 	struct arpcom *ac = (struct arpcom *)ifp;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 	short mflags;
 
 	if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
 		senderr(ENETDOWN);
 	if ((rt = rt0) != NULL) {
 		if ((rt->rt_flags & RTF_UP) == 0) {
-			if ((rt0 = rt = RTALLOC1(dst, 1)) != NULL)
+			if ((rt0 = rt = rtalloc1(dst, 1)) != NULL)
 				rt->rt_refcnt--;
 			else 
 				senderr(EHOSTUNREACH);
@@ -202,7 +188,7 @@ fddi_output(ifp, m0, dst, rt0)
 				goto lookup;
 			if (((rt = rt->rt_gwroute)->rt_flags & RTF_UP) == 0) {
 				rtfree(rt); rt = rt0;
-			lookup: rt->rt_gwroute = RTALLOC1(rt->rt_gateway, 1);
+			lookup: rt->rt_gwroute = rtalloc1(rt->rt_gateway, 1);
 				if ((rt = rt->rt_gwroute) == 0)
 					senderr(EHOSTUNREACH);
 			}
@@ -213,17 +199,11 @@ fddi_output(ifp, m0, dst, rt0)
 				senderr(rt == rt0 ? EHOSTDOWN : EHOSTUNREACH);
 	}
 
-	/*
-	 * If the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
-
 	switch (dst->sa_family) {
 
 #ifdef INET
 	case AF_INET:
-		if (!ARPRESOLVE(ac, rt, m, dst, edst, rt0))
+		if (!arpresolve(ac, rt, m, dst, edst))
 			return (0);	/* if not yet resolved */
 		/* If broadcasting on a simplex interface, loopback a copy */
 		if ((m->m_flags & M_BCAST) && (ifp->if_flags & IFF_SIMPLEX))
@@ -318,15 +298,6 @@ fddi_output(ifp, m0, dst, rt0)
 		l = mtod(m, struct llc *);
 		l->llc_dsap = l->llc_ssap = LLC_ISO_LSAP;
 		l->llc_control = LLC_UI;
-#if defined(__FreeBSD__)
-		IFDEBUG(D_ETHER)
-			int i;
-			printf("unoutput: sending pkt to: ");
-			for (i=0; i<6; i++)
-				printf("%x ", edst[i] & 0xff);
-			printf("\n");
-		ENDDEBUG
-#endif
 		} break;
 #endif /* ISO */
 #ifdef	CCITT
@@ -385,7 +356,7 @@ fddi_output(ifp, m0, dst, rt0)
  		bcopy((caddr_t)eh->ether_dhost, (caddr_t)edst, sizeof (edst));
 		if (*edst & 1)
 			m->m_flags |= (M_BCAST|M_MCAST);
-		type = TYPEHTONS(eh->ether_type);
+		type = eh->ether_type;
 		break;
 	}
 
@@ -471,7 +442,7 @@ fddi_output(ifp, m0, dst, rt0)
 	 * Queue message on interface, and start output if interface
 	 * not yet active.
 	 */
-	IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+	IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 	if (error) {
 		/* mbuf is already freed */
 		splx(s);
@@ -595,11 +566,6 @@ fddi_input(ifp, fh, m)
 				if (m == 0)
 					return;
 				*mtod(m, struct fddi_header *) = *fh;
-#if defined(__FreeBSD__)
-				IFDEBUG(D_ETHER)
-					printf("clnp packet");
-				ENDDEBUG
-#endif
 				schednetisr(NETISR_ISO);
 				inq = &clnlintrq;
 				break;

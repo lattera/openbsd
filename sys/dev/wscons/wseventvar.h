@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wseventvar.h,v 1.1.10.1 2002/06/11 03:42:32 art Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wseventvar.h,v 1.1.10.2 2003/05/19 22:14:07 tedu Exp $ */
 /* $NetBSD: wseventvar.h,v 1.1 1998/03/22 14:24:03 drochner Exp $ */
 
 /*
@@ -103,7 +103,7 @@ struct wseventvar {
 		wakeup((caddr_t)(ev)); \
 	} \
 	if ((ev)->async) \
-		psignal((ev)->io, SIGIO); \
+		pgsignal((ev)->io->p_pgrp, SIGIO, 0); \
 }
 
 void	wsevent_init(struct wseventvar *);

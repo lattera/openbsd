@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.59.2.2 2002/10/29 00:33:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.59.2.3 2003/05/19 22:18:01 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001
@@ -144,27 +144,24 @@ struct cfdriver txp_cd = {
 	0, "txp", DV_IFNET
 };
 
+const struct pci_matchid txp_devices[] = {
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990TX95 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990TX97 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990SVR95 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990SVR97 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C990BTXM },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C990BSVR },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990FX },
+};
+
 int
 txp_probe(parent, match, aux)
 	struct device *parent;
 	void *match, *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
-
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_3COM)
-		return (0);
-
-	switch (PCI_PRODUCT(pa->pa_id)) {
-	case PCI_PRODUCT_3COM_3CR990TX95:
-	case PCI_PRODUCT_3COM_3CR990TX97:
-	case PCI_PRODUCT_3COM_3CR990SVR95:
-	case PCI_PRODUCT_3COM_3CR990SVR97:
-	case PCI_PRODUCT_3COM_3C990BTXM:
-	case PCI_PRODUCT_3COM_3C990BSVR:
-		return (1);
-	}
-
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, txp_devices,
+	    sizeof(txp_devices)/sizeof(txp_devices[0])));
 }
 
 void

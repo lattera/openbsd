@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/esa.c,v 1.2.4.2 2002/10/29 00:33:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/esa.c,v 1.2.4.3 2003/05/19 22:18:00 tedu Exp $	*/
 /* $NetBSD: esa.c,v 1.12 2002/03/24 14:17:35 jmcneill Exp $ */
 
 /*
@@ -992,23 +992,17 @@ esa_freemem(struct esa_softc *sc, struct esa_dma *p)
 /*
  * Supporting Subroutines
  */
+const struct pci_matchid esa_devices[] = {
+	{ PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_ES1989 },
+	{ PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_MAESTRO3 },
+	{ PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_MAESTRO3_2 },
+};
 
 int
 esa_match(struct device *dev, void *match, void *aux)
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
-
-	switch(PCI_VENDOR(pa->pa_id)) {
-	case PCI_VENDOR_ESSTECH:
-		switch(PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_ESSTECH_ES1989:
-		case PCI_PRODUCT_ESSTECH_MAESTRO3:
-		case PCI_PRODUCT_ESSTECH_MAESTRO3_2:
-			return (1);
-		}
-	}
-
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, esa_devices,
+	    sizeof(esa_devices)/sizeof(esa_devices[0])));
 }
 
 void
@@ -1026,7 +1020,7 @@ esa_attach(struct device *parent, struct device *self, void *aux)
 	int revision, len;
 	int i;
 
-	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo);
+	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo, sizeof devinfo);
 	revision = PCI_REVISION(pa->pa_class);
 	printf(": %s (rev. 0x%02x)\n", devinfo, revision);
 

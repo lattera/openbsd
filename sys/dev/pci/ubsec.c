@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.76.2.3 2002/10/29 00:33:30 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.76.2.4 2003/05/19 22:19:08 tedu Exp $	*/
 
 /*
  * Copyright (c) 2000 Jason L. Wright (jason@thought.net)
@@ -95,10 +95,10 @@ int	ubsec_newsession(u_int32_t *, struct cryptoini *);
 int	ubsec_freesession(u_int64_t);
 int	ubsec_process(struct cryptop *);
 void	ubsec_callback(struct ubsec_softc *, struct ubsec_q *);
-int	ubsec_feed(struct ubsec_softc *);
+void	ubsec_feed(struct ubsec_softc *);
 void	ubsec_mcopy(struct mbuf *, struct mbuf *, int, int);
 void	ubsec_callback2(struct ubsec_softc *, struct ubsec_q2 *);
-int	ubsec_feed2(struct ubsec_softc *);
+void	ubsec_feed2(struct ubsec_softc *);
 void	ubsec_rng(void *);
 int	ubsec_dma_malloc(struct ubsec_softc *, bus_size_t,
     struct ubsec_dma_alloc *, int);
@@ -132,30 +132,27 @@ void ubsec_dump_ctx2(struct ubsec_ctx_keyop *);
 
 struct ubsec_stats ubsecstats;
 
+const struct pci_matchid ubsec_devices[] = {
+	{ PCI_VENDOR_BLUESTEEL, PCI_PRODUCT_BLUESTEEL_5501 },
+	{ PCI_VENDOR_BLUESTEEL, PCI_PRODUCT_BLUESTEEL_5601 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5801 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5802 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5805 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5820 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5821 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5822 },
+	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_SCA1K },
+	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_5821 },
+};
+
 int
 ubsec_probe(parent, match, aux)
 	struct device *parent;
 	void *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BLUESTEEL &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5501 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5601))
-		return (1);
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5801 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5802 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5805 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5820 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5821 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5822))
-		return (1);
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SUN &&
-	    PCI_PRODUCT(pa->pa_id) ==  PCI_PRODUCT_SUN_SCA1K)
-		return (1);
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, ubsec_devices,
+	    sizeof(ubsec_devices)/sizeof(ubsec_devices[0])));
 }
 
 void
@@ -171,6 +168,8 @@ ubsec_attach(parent, self, aux)
 	struct ubsec_dma *dmap;
 	bus_size_t iosize;
 	u_int32_t cmd, i;
+	int algs[CRYPTO_ALGORITHM_MAX + 1];
+	int kalgs[CRK_ALGORITHM_MAX + 1];
 
 	SIMPLEQ_INIT(&sc->sc_queue);
 	SIMPLEQ_INIT(&sc->sc_qchip);
@@ -198,7 +197,8 @@ ubsec_attach(parent, self, aux)
 	if ((PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
 	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5821) ||
 	    (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SUN &&
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_SCA1K)) {
+	     (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_SCA1K ||
+	      PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_5821))) {
 		sc->sc_statmask |= BS_STAT_MCR1_ALLEMPTY |
 		    BS_STAT_MCR2_ALLEMPTY;
 		sc->sc_flags |= UBS_FLAGS_KEY | UBS_FLAGS_RNG |
@@ -277,11 +277,13 @@ ubsec_attach(parent, self, aux)
 		SIMPLEQ_INSERT_TAIL(&sc->sc_freequeue, q, q_next);
 	}
 
-	crypto_register(sc->sc_cid, CRYPTO_3DES_CBC, 0, 0,
-	    ubsec_newsession, ubsec_freesession, ubsec_process);
-	crypto_register(sc->sc_cid, CRYPTO_DES_CBC, 0, 0, NULL, NULL, NULL);
-	crypto_register(sc->sc_cid, CRYPTO_MD5_HMAC, 0, 0, NULL, NULL, NULL);
-	crypto_register(sc->sc_cid, CRYPTO_SHA1_HMAC, 0, 0, NULL, NULL, NULL);
+	bzero(algs, sizeof(algs));
+	algs[CRYPTO_3DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
+	algs[CRYPTO_DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
+	algs[CRYPTO_MD5_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
+	algs[CRYPTO_SHA1_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
+	crypto_register(sc->sc_cid, algs, ubsec_newsession,
+	    ubsec_freesession, ubsec_process);
 
 	/*
 	 * Reset Broadcom chip
@@ -336,10 +338,13 @@ skip_rng:
 	if (sc->sc_flags & UBS_FLAGS_KEY) {
 		sc->sc_statmask |= BS_STAT_MCR2_DONE;
 
-		crypto_kregister(sc->sc_cid, CRK_MOD_EXP, 0, ubsec_kprocess);
+		bzero(kalgs, sizeof(kalgs));
+		kalgs[CRK_MOD_EXP] = CRYPTO_ALG_FLAG_SUPPORTED;
 #if 0
-		crypto_kregister(sc->sc_cid, CRK_MOD_EXP_CRT, 0, ubsec_kprocess);
+		kalgs[CRK_MOD_EXP_CRT] = CRYPTO_ALG_FLAG_SUPPORTED;
 #endif
+
+		crypto_kregister(sc->sc_cid, kalgs, ubsec_kprocess);
 	}
 
 	printf("\n");
@@ -386,15 +391,12 @@ ubsec_intr(arg)
 			 * at the top.
 			 */
 			for (i = 0; i < npkts; i++) {
-				if(q->q_stacked_mcr[i]) {
+				if(q->q_stacked_mcr[i])
 					ubsec_callback(sc, q->q_stacked_mcr[i]);
-					ubsecstats.hst_opackets++;
-				} else {
+				else
 					break;
-				}
 			}
 			ubsec_callback(sc, q);
-			ubsecstats.hst_opackets++;
 		}
 
 		/*
@@ -461,7 +463,7 @@ ubsec_intr(arg)
  * ubsec_feed() - aggregate and post requests to chip
  *		  It is assumed that the caller set splnet()
  */
-int
+void
 ubsec_feed(sc)
 	struct ubsec_softc *sc;
 {
@@ -484,7 +486,7 @@ ubsec_feed(sc)
 			ubsec_totalreset(sc);
 			ubsecstats.hst_dmaerr++;
 		}
-		return (0);
+		return;
 	}
 
 #ifdef UBSEC_DEBUG
@@ -531,7 +533,7 @@ ubsec_feed(sc)
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 	WRITE_REG(sc, BS_MCR1, q->q_dma->d_alloc.dma_paddr +
 	    offsetof(struct ubsec_dmachunk, d_mcr));
-	return (0);
+	return;
 
 feed1:
 	while (!SIMPLEQ_EMPTY(&sc->sc_queue)) {
@@ -557,13 +559,13 @@ feed1:
 		WRITE_REG(sc, BS_MCR1, q->q_dma->d_alloc.dma_paddr +
 		    offsetof(struct ubsec_dmachunk, d_mcr));
 #ifdef UBSEC_DEBUG
-		printf("feed: q->chip %p %08x\n", q, (u_int32_t)vtophys(&q->q_dma->d_dma->d_mcr));
+		printf("feed: q->chip %p %08x\n", q,
+		    (u_int32_t)q->q_dma->d_alloc.dma_paddr);
 #endif /* UBSEC_DEBUG */
 		SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q, q_next);
 		--sc->sc_nqueue;
 		SIMPLEQ_INSERT_TAIL(&sc->sc_qchip, q, q_next);
 	}
-	return (0);
 }
 
 /*
@@ -1027,9 +1029,9 @@ ubsec_process(crp)
 		    offsetof(struct ubsec_dmachunk, d_macbuf[0]));
 #ifdef UBSEC_DEBUG
 		printf("opkt: %x %x %x\n",
-		    dmap->d_mcr->mcr_opktbuf.pb_addr,
-		    dmap->d_mcr->mcr_opktbuf.pb_len,
-		    dmap->d_mcr->mcr_opktbuf.pb_next);
+		    dmap->d_dma->d_mcr.mcr_opktbuf.pb_addr,
+		    dmap->d_dma->d_mcr.mcr_opktbuf.pb_len,
+		    dmap->d_dma->d_mcr.mcr_opktbuf.pb_next);
 #endif
 	} else {
 		if (crp->crp_flags & CRYPTO_F_IOV) {
@@ -1250,6 +1252,9 @@ ubsec_callback(sc, q)
 	struct cryptodesc *crd;
 	struct ubsec_dma *dmap = q->q_dma;
 
+	ubsecstats.hst_opackets++;
+	ubsecstats.hst_obytes += dmap->d_alloc.dma_size;
+
 	bus_dmamap_sync(sc->sc_dmat, dmap->d_alloc.dma_map, 0,
 	    dmap->d_alloc.dma_map->dm_mapsize,
 	    BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
@@ -1268,7 +1273,6 @@ ubsec_callback(sc, q)
 		m_freem(q->q_src_m);
 		crp->crp_buf = (caddr_t)q->q_dst_m;
 	}
-	ubsecstats.hst_obytes += ((struct mbuf *)crp->crp_buf)->m_len;
 
 	/* copy out IV for future use */
 	if (q->q_flags & UBSEC_QFLAGS_COPYOUTIV) {
@@ -1348,7 +1352,7 @@ ubsec_mcopy(srcm, dstm, hoffset, toffset)
 /*
  * feed the key generator, must be called at splnet() or higher.
  */
-int
+void
 ubsec_feed2(sc)
 	struct ubsec_softc *sc;
 {
@@ -1371,7 +1375,6 @@ ubsec_feed2(sc)
 		--sc->sc_nqueue2;
 		SIMPLEQ_INSERT_TAIL(&sc->sc_qchip2, q, q_next);
 	}
-	return (0);
 }
 
 /*
@@ -1391,6 +1394,7 @@ ubsec_callback2(sc, q)
 
 	switch (q->q_type) {
 #ifndef UBSEC_NO_RNG
+	case UBS_CTXOP_RNGSHA1:
 	case UBS_CTXOP_RNGBYPASS: {
 		struct ubsec_q2_rng *rng = (struct ubsec_q2_rng *)q;
 		u_int32_t *p;
@@ -1517,8 +1521,8 @@ ubsec_rng(vsc)
 	mcr->mcr_opktbuf.pb_next = 0;
 
 	ctx->rbp_len = htole16(sizeof(struct ubsec_ctx_rngbypass));
-	ctx->rbp_op = htole16(UBS_CTXOP_RNGBYPASS);
-	rng->rng_q.q_type = UBS_CTXOP_RNGBYPASS;
+	ctx->rbp_op = htole16(UBS_CTXOP_RNGSHA1);
+	rng->rng_q.q_type = UBS_CTXOP_RNGSHA1;
 
 	bus_dmamap_sync(sc->sc_dmat, rng->rng_buf.dma_map, 0,
 	    rng->rng_buf.dma_map->dm_mapsize, BUS_DMASYNC_PREREAD);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.17.2.2 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.17.2.3 2003/05/19 22:27:25 tedu Exp $	*/
 /*	$KAME: ip6_mroute.c,v 1.45 2001/03/25 08:38:51 itojun Exp $	*/
 
 /*
@@ -31,6 +31,45 @@
  */
 
 /*	BSDI ip_mroute.c,v 2.10 1996/11/14 00:29:52 jch Exp	*/
+
+/*
+ * Copyright (c) 1989 Stephen Deering
+ * Copyright (c) 1992, 1993
+ *      The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Stephen Deering of Stanford University.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *      @(#)ip_mroute.c 8.2 (Berkeley) 11/15/93
+ */
 
 /*
  * IP multicast forwarding procedures
@@ -71,6 +110,9 @@
 
 #include <netinet/in.h>
 #include <netinet/in_var.h>
+#ifdef MULTICAST_PMTUD
+#include <netinet/icmp6.h>
+#endif
 
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
@@ -540,8 +582,9 @@ add_m6if(mifcp)
 
 	if (mifcp->mif6c_flags & MIFF_REGISTER) {
 		if (reg_mif_num == (mifi_t)-1) {
-			strcpy(multicast_register_if.if_xname,
-			       "register_mif"); /* XXX */
+			strlcpy(multicast_register_if.if_xname,
+			    "register_mif",
+			    sizeof multicast_register_if.if_xname); /* XXX */
 			multicast_register_if.if_flags |= IFF_LOOPBACK;
 			multicast_register_if.if_index = mifcp->mif6c_mifi;
 			reg_mif_num = mifcp->mif6c_mifi;
@@ -1415,9 +1458,9 @@ ip6_mdq(m, ifp, rt)
 
 static void
 phyint_send(ip6, mifp, m)
-    struct ip6_hdr *ip6;
-    struct mif6 *mifp;
-    struct mbuf *m;
+	struct ip6_hdr *ip6;
+	struct mif6 *mifp;
+	struct mbuf *m;
 {
 	struct mbuf *mb_copy;
 	struct ifnet *ifp = mifp->m6_ifp;
@@ -1638,20 +1681,23 @@ pim6_input(mp, offp, proto)
 	 * Make sure that the IP6 and PIM headers in contiguous memory, and
 	 * possibly the PIM REGISTER header
 	 */
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, minlen, IPPROTO_DONE);
-	/* adjust pointer */
-	ip6 = mtod(m, struct ip6_hdr *);
-
-	/* adjust mbuf to point to the PIM header */
-	pim = (struct pim *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(pim, struct pim *, m, off, minlen);
 	if (pim == NULL) {
 		pim6stat.pim6s_rcv_tooshort++;
 		return IPPROTO_DONE;
 	}
+
+	/* PIM version check */
+	if (pim->pim_ver != PIM_VERSION) {
+		++pim6stat.pim6s_rcv_badversion;
+#ifdef MRT6DEBUG
+		log(LOG_ERR,
+		    "pim6_input: incorrect version %d, expecting %d\n",
+		    pim->pim_ver, PIM_VERSION);
 #endif
+		m_freem(m);
+		return (IPPROTO_DONE);
+	}
 
 #define PIM6_CHECKSUM
 #ifdef PIM6_CHECKSUM
@@ -1679,18 +1725,6 @@ pim6_input(mp, offp, proto)
 		}
 	}
 #endif /* PIM_CHECKSUM */
-
-	/* PIM version check */
-	if (pim->pim_ver != PIM_VERSION) {
-		++pim6stat.pim6s_rcv_badversion;
-#ifdef MRT6DEBUG
-		log(LOG_ERR,
-		    "pim6_input: incorrect version %d, expecting %d\n",
-		    pim->pim_ver, PIM_VERSION);
-#endif
-		m_freem(m);
-		return (IPPROTO_DONE);
-	}
 
 	if (pim->pim_type == PIM_REGISTER) {
 		/*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.6.2.2 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.6.2.3 2003/05/19 22:14:42 tedu Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -164,9 +164,9 @@ int	qe_rint(struct qe_softc *);
 int	qe_tint(struct qe_softc *);
 void	qe_mcreset(struct qe_softc *);
 
-static int	qe_put(struct qe_softc *, int, struct mbuf *);
-static void	qe_read(struct qe_softc *, int, int);
-static struct mbuf	*qe_get(struct qe_softc *, int, int);
+int	qe_put(struct qe_softc *, int, struct mbuf *);
+void	qe_read(struct qe_softc *, int, int);
+struct mbuf	*qe_get(struct qe_softc *, int, int);
 
 /* ifmedia callbacks */
 void	qe_ifmedia_sts(struct ifnet *, struct ifmediareq *);
@@ -218,8 +218,8 @@ qeattach(parent, self, aux)
 		return;
 	}
 
-	if (bus_space_map2(sa->sa_bustag,
-	    (bus_type_t)sa->sa_reg[0].sbr_slot,
+	if (sbus_bus_map(sa->sa_bustag,
+	    sa->sa_reg[0].sbr_slot,
 	    (bus_addr_t)sa->sa_reg[0].sbr_offset,
 	    (bus_size_t)sa->sa_reg[0].sbr_size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_cr) != 0) {
@@ -227,8 +227,8 @@ qeattach(parent, self, aux)
 		return;
 	}
 
-	if (bus_space_map2(sa->sa_bustag,
-	    (bus_type_t)sa->sa_reg[1].sbr_slot,
+	if (sbus_bus_map(sa->sa_bustag,
+	    sa->sa_reg[1].sbr_slot,
 	    (bus_addr_t)sa->sa_reg[1].sbr_offset,
 	    (bus_size_t)sa->sa_reg[1].sbr_size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_mr) != 0) {
@@ -338,7 +338,7 @@ qeattach(parent, self, aux)
  * We copy the data into mbufs.  When full cluster sized units are present,
  * we copy into clusters.
  */
-static __inline__ struct mbuf *
+struct mbuf *
 qe_get(sc, idx, totlen)
 	struct qe_softc *sc;
 	int idx, totlen;

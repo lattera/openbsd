@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.8.4.3 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.8.4.4 2003/05/19 22:30:08 tedu Exp $	*/
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -92,7 +92,7 @@ faithattach(faith)
 	for (i = 0; i < NFAITH; i++) {
 		ifp = &faithif[i];
 		bzero(ifp, sizeof(faithif[i]));
-		sprintf(ifp->if_xname, "faith%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "faith%d", i);
 		ifp->if_mtu = FAITHMTU;
 		/* Change to BROADCAST experimentaly to announce its prefix. */
 		ifp->if_flags = /* IFF_LOOPBACK */ IFF_BROADCAST | IFF_MULTICAST;
@@ -141,6 +141,7 @@ faithoutput(ifp, m, dst, rt)
 		struct mbuf m0;
 		u_int32_t af = dst->sa_family;
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;

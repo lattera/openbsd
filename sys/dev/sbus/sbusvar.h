@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/sbusvar.h,v 1.4.6.2 2002/10/29 00:33:31 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/sbusvar.h,v 1.4.6.3 2003/05/19 22:14:42 tedu Exp $	*/
 /*	$NetBSD: sbusvar.h,v 1.11 2000/11/01 06:18:45 eeh Exp $ */
 
 /*-
@@ -115,8 +115,8 @@ int	sbus_setup_attach_args(
 
 void	sbus_destroy_attach_args(struct sbus_attach_args *);
 
-#define sbus_bus_map(t, bt, a, s, f, v, hp) \
-	bus_space_map2(t, bt, a, s, f, v, hp)
+#define sbus_bus_map(t, slot, offset, sz, flags, unused, hp) \
+	bus_space_map(t, BUS_ADDR(slot, offset), sz, flags, hp)
 
 #if notyet
 /* variables per Sbus */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.h,v 1.17.4.1 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.h,v 1.17.4.2 2003/05/19 22:29:06 tedu Exp $	*/
 /*	$NetBSD: bpf.h,v 1.15 1996/12/13 07:57:33 mikel Exp $	*/
 
 /*
@@ -44,7 +44,7 @@
 #ifndef _NET_BPF_H_
 #define _NET_BPF_H_
 
-/* BSD style release date */ 
+/* BSD style release date */
 #define BPF_RELEASE 199606
 
 typedef	int32_t	bpf_int32;
@@ -67,7 +67,7 @@ struct bpf_program {
 	u_int bf_len;
 	struct bpf_insn *bf_insns;
 };
- 
+
 /*
  * Struct returned by BIOCGSTATS.
  */
@@ -77,7 +77,7 @@ struct bpf_stat {
 };
 
 /*
- * Struct return by BIOCVERSION.  This represents the version number of 
+ * Struct return by BIOCVERSION.  This represents the version number of
  * the filter language described by the instruction encodings below.
  * bpf understands a program iff kernel_major == filter_major &&
  * kernel_minor >= filter_minor, that is, if the value returned by the
@@ -169,7 +169,9 @@ struct bpf_hdr {
 #define DLT_RAW		14	/* raw IP */
 #define DLT_SLIP_BSDOS	15	/* BSD/OS Serial Line IP */
 #define DLT_PPP_BSDOS	16	/* BSD/OS Point-to-point Protocol */
-#define DLT_PFLOG	17	/* Packet filter logging */
+#define DLT_OLD_PFLOG	17	/* Packet filter logging, old (XXX remove?) */
+#define DLT_PFSYNC	18	/* Packet filter state syncing */
+#define DLT_PFLOG	117	/* Packet filter logging, by pcap people */
 
 /*
  * The instruction encodings.

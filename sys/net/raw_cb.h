@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/raw_cb.h,v 1.3.4.1 2002/06/11 03:30:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/raw_cb.h,v 1.3.4.2 2003/05/19 22:30:41 tedu Exp $	*/
 /*	$NetBSD: raw_cb.h,v 1.9 1996/02/13 22:00:41 christos Exp $	*/
 
 /*
@@ -60,7 +60,7 @@ struct rawcb {
 #define	RAWRCVQ		8192
 
 #ifdef _KERNEL
-LIST_HEAD(, rawcb) rawcb;		/* head of list */
+extern LIST_HEAD(rawcbhead, rawcb) rawcb;		/* head of list */
 
 int	 raw_attach(struct socket *, int);
 void	 *raw_ctlinput(int, struct sockaddr *, void *);

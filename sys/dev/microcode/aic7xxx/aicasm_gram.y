@@ -1753,9 +1753,7 @@ type_check(symbol_t *symbol, expression_t *expression, int opcode)
 	 * expression are defined for this register.
 	 */
 	if(symbol->info.rinfo->typecheck_masks != FALSE) {
-		for(node = expression->referenced_syms.slh_first;
-		    node != NULL;
-		    node = node->links.sle_next) {
+		SLIST_FOREACH(node, &expression->referenced_syms, links) {
 			if ((node->symbol->type == MASK
 			  || node->symbol->type == BIT)
 			 && symlist_search(&node->symbol->info.minfo->symrefs,
@@ -1829,10 +1827,7 @@ add_version(const char *verstring)
         versions = realloc(versions, newlen + oldlen + 2);
         if (versions == NULL)
                 stop("Can't allocate version string", EX_SOFTWARE);
-        strcpy(&versions[oldlen], prefix);
-        strcpy(&versions[oldlen + strlen(prefix)], verstring);
-        versions[newlen + oldlen] = '\n';
-        versions[newlen + oldlen + 1] = '\0';
+	snprintf(&versions[oldlen], newlen + 2, "%s%s\n", prefix, verstring);
 }
 
 void
@@ -1844,9 +1839,10 @@ yyerror(const char *string)
 static int
 is_download_const(expression_t *immed)
 {
-	if ((immed->referenced_syms.slh_first != NULL)
-	 && (immed->referenced_syms.slh_first->symbol->type == DOWNLOAD_CONST))
+	if (SLIST_EMPTY(&immed->referenced_syms))
+		return (FALSE);
+	if (SLIST_FIRST(&immed->referenced_syms)->symbol->type ==
+	    DOWNLOAD_CONST)
 		return (TRUE);
-
 	return (FALSE);
 }

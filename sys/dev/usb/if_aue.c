@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.17.2.3 2002/10/29 00:33:31 art Exp $ */
-/*	$NetBSD: if_aue.c,v 1.80 2002/07/25 06:45:38 matt Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.17.2.4 2003/05/19 22:23:39 tedu Exp $ */
+/*	$NetBSD: if_aue.c,v 1.81 2002/09/29 19:55:52 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -730,7 +730,7 @@ USB_ATTACH(aue)
 
 	DPRINTFN(5,(" : aue_attach: sc=%p", sc));
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->aue_dev), devinfo);
 

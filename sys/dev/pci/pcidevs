@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.475.2.3 2002/10/29 00:33:29 art Exp $
+	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.475.2.4 2003/05/19 22:18:01 tedu Exp $
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
 /*
@@ -35,8 +35,13 @@
 /*
  * NOTE: a fairly complete list of PCI codes can be found at:
  *
- *	http://www.yourvote.com/pci/
  *	http://members.hyperlink.net.au/~chart/pci.htm
+ *
+ * A list used to be available at:
+ *	http://www.yourvote.com/pci/
+ * But is no longer available because the fuckheads at PCI-SIG such as
+ * Tony Pierce <tonypi@pcisig.com> sicked their lawyers on the
+ * database author, and later claimed there was a "misunderstanding".
  *
  * There is a Vendor ID search engine available at:
  *
@@ -491,6 +496,7 @@ vendor CYCLADES		0x120e	Cyclades
 vendor ESSENTIAL	0x120f	Essential Communications
 vendor O2MICRO		0x1217	O2 Micro Inc
 vendor 3DFX		0x121a	3DFX Interactive
+vendor ATML		0x121b	Advanced Telecommunications Modules
 vendor ARIEL		0x1220	Ariel
 vendor AZTECH		0x122d	Aztech
 vendor 3DO		0x1239	The 3D0 Company
@@ -548,10 +554,12 @@ vendor BROADCOM		0x14e4	Broadcom
 vendor CONEXANT		0x14f1	Conexant
 vendor DELTA		0x1500	Delta
 vendor TOPIC		0x151f	Topic/SmartLink
+vendor ENE		0x1524	ENE Technology Inc
 vendor TERRATEC		0x153b	TerraTec Electronic Gmbh
+vendor SYMBOL		0x1562	Symbol
+vendor SYBA		0x1592	Syba
 vendor BLUESTEEL	0x15ab	Bluesteel Networks
 vendor VMWARE		0x15ad	VMware
-vendor SYBA		0x1592	Syba
 vendor NDC		0x15e8	National Datacomm Corp
 vendor EUMITCOM		0x1638	Eumitcom
 vendor NETSEC		0x1660	NetSec
@@ -561,6 +569,8 @@ vendor USR2		0x16ec	US Robotics
 vendor NETOCTAVE	0x170b	Netoctave
 vendor ALTIMA		0x173b	Altima
 vendor ANTARES		0x1754	Antares Microsystems
+vendor CAVIUM		0x177d	Cavium
+vendor LANERGY		0x1812	Lanergy
 vendor SYMPHONY2	0x1c1c	Symphony Labs
 vendor TEKRAM2		0x1de1	Tekram Technology
 vendor HINT		0x3388	Hint
@@ -585,6 +595,7 @@ vendor ADP2		0x9005	Adaptec
 vendor ATRONICS		0x907f	Atronics
 vendor NETMOS		0x9710	NetMos
 vendor CHRYSALIS	0xcafe	Chrysalis-ITS
+vendor ENDACE		0xeace	Endace Measurement Systems
 vendor ARC		0xedd8	ARC Logic
 vendor INVALID		0xffff	INVALID VENDOR ID
 
@@ -592,8 +603,14 @@ vendor INVALID		0xffff	INVALID VENDOR ID
  * List of known products.  Grouped by vendor.
  */
 
-/* 2 Micro Inc */
-product O2MICRO OZ6832		0x6832	OZ6832 CardBus
+/* O2 Micro Inc */
+product O2MICRO OZ6832		0x6832	OZ6832 and OZ6836 CardBus
+product O2MICRO OZ6836		0x6836	OZ6836 and OZ6860 CardBus
+product O2MICRO OZ6872		0x6872	OZ6812 and OZ6872 CardBus
+product O2MICRO OZ6922		0x6925	OZ6922 CardBus
+product O2MICRO OZ6933		0x6933	OZ6933 CardBus
+product O2MICRO OZ6972		0x6972	OZ6912 and OZ6972 CardBus
+ 
 
 
 /* 3Com Products */
@@ -625,11 +642,15 @@ product 3COM 3C905BT4		0x9056	3c905B 100Base-T4
 product 3COM 3C905BCOMBO	0x9058	3c905B 10/100Mbps-Combo
 product 3COM 3C905BFX		0x905a	3c905B 100Base-FX
 product 3COM 3C905CTX		0x9200	3c905C 100Base-TX
+product 3COM 3C9201		0x9201	3c9201 100Base-TX
+product 3COM 3CSHO100BTX	0x9300	3cSOHO 100B-TX
 product 3COM 3C980TX		0x9800	3c980 100Base-TX
 product 3COM 3C980CTX		0x9805	3c980C 100Base-TX
+product	3COM 3CR990		0x9900	3cr990
 product 3COM 3CR990TX95		0x9902	3cr990-TX-95
 product 3COM 3CR990TX97		0x9903	3cr990-TX-97
 product 3COM 3C990BTXM		0x9904	3c990b-TX-M
+product	3COM 3CR990FX		0x9905	3cr990-FX
 product 3COM 3CR990SVR95	0x9908	3cr990SVR95
 product 3COM 3CR990SVR97	0x9909	3cr990SVR97
 product 3COM 3C990BSVR		0x990a	3c990BSVR
@@ -771,6 +792,12 @@ product ADVSYS WIDE		0x2300	ABP-940UW
 product ADVSYS U2W		0x2500	ASP-3940U2W
 product ADVSYS U3W		0x2700	ASP-3940U3W
 
+/* Advanced Telecommunications Modules Ltd. */
+product ATML WAIKATO		0x3200	Waikato Dag3.2
+product ATML DAG35		0x3500	Endace Dag3.5
+product ATML DAG422GE		0x422e	Endace Dag4.22GE
+product ATML DAG423		0x4230	Endace Dag4.23
+
 /* Alliance products */
 product ALLIANCE AT22		0x6422	AT22
 product ALLIANCE AT24		0x6424	AT24
@@ -783,6 +810,7 @@ product ALTEON BCM5701		0x0004	BCM5701 (Broadcom)
 
 /* Altima products */
 product ALTIMA AC100X		0x03e8	AC100X
+product ALTIMA AC9100		0x03ea	AC9100
 
 /* AMD products */
 product	AMD PCNET_PCI		0x2000	79c970 PCnet-PCI LANCE
@@ -815,11 +843,12 @@ product	AMD 766_USB_HCI		0x7414	766 USB OpenHCI
 product	AMD PBC768_ISA		0x7440	768 PCI-ISA
 product	AMD PBC768_IDE		0x7441	768 IDE
 product	AMD PBC768_PMC		0x7443	768 Power Mgmt
-product	AMD PBC768_AC		0x7445	768 AC97 Audio
+product	AMD PBC768_ACA		0x7445	768 AC97 Audio
 product	AMD PBC768_MD		0x7446	768 AC97 Modem
 product	AMD PBC768_PPB		0x7448	768 PCI-PCI
 product	AMD PBC768_USB		0x7449	768 USB
 product AMD 8111_IDE		0x7469	8111 IDE
+product AMD 8111_ACA		0x746d	8111 AC97 Audio
 
 /* AMI */
 product AMI MEGARAID		0x1960	MegaRAID
@@ -856,8 +885,12 @@ product APPLE GMAC3             0x0032  GMAC Ethernet
 product APPLE UNINORTH_AGP3     0x0034  UniNorth AGP Bridge
 product APPLE UNINORTH5         0x0035  UniNorth Host-PCI Bridge
 product APPLE UNINORTH6         0x0036  UniNorth Host-PCI Bridge
+product APPLE INTREPID_ATA	0x003b	Intrepid ATA
+product APPLE INTREPID		0x003e	Intrepid
+product APPLE INTREPID_OHCI	0x003f	Intrepid USB
 
 /* ARC Logic products */
+product ARC USB			0x0003	USB
 product ARC 1000PV		0xa091	1000PV
 product ARC 2000PV		0xa099	2000PV
 product ARC 2000MT		0xa0a1	2000MT
@@ -890,6 +923,8 @@ product ATI MACH64_GW		0x4757	Mach64 GW
 product ATI MACH64_GX		0x4758	Mach64 GX
 product ATI MACH64_GY		0x4759	Mach64 GY
 product ATI MACH64_GZ		0x475a	Mach64 GZ
+product ATI RV250		0x4966	Radeon 9000
+product ATI RV250_S		0x496e	Radeon 9000 Sec
 product ATI MACH64_LB		0x4c42	Mach64 LB
 product ATI MACH64_LD		0x4c44	Mach64 LD
 product ATI RAGE128_LE		0x4c45	Rage128 LE
@@ -905,8 +940,11 @@ product ATI MACH64LS		0x4c53	Mach64 LS
 product ATI RADEON_M7LW		0x4c57	Radeon Mobility M7 LW
 product ATI RADEON_M6LY		0x4c59	Radeon Mobility M6 LY
 product ATI RADEON_M6LZ		0x4c5a	Radeon Mobility M6 LZ
+product ATI RADEON_M9Lf		0x4c66	Radeon Mobility M9 Lf
 product ATI RAGE128_MF		0x4d46	Rage 128 Mobility MF
 product ATI RAGE128_ML		0x4d4c	Rage 128 Mobility ML
+product ATI R300		0x4e44	Radeon 9500/9700
+product ATI R300_S		0x4e64	Radeon 9500/9700 Sec
 product ATI RAGE128_PD		0x5044	Rage 128 Pro PD
 product ATI RAGE_FURY		0x5046	Rage Fury
 product ATI RAGE128_PK		0x5052	Rage 128 PK
@@ -997,6 +1035,9 @@ product BUSLOGIC FLASHPOINT	0x8130	FlashPoint
 /* c't Magazin products */
 product C4T GPPCI		0x6773	GPPCI
 
+/* Cavium products */
+product CAVIUM NITROX		0x0001	Nitrox XL
+
 /* CCUBE products */
 product CCUBE CINEMASTER	0x8888	Cinemaster C 3.0 DVD Decoder
 
@@ -1009,6 +1050,7 @@ product CHIPS 65554		0x00e4	65554
 product CHIPS 65555		0x00e5	65555
 product CHIPS 68554		0x00f4	68554
 product CHIPS 69000		0x00c0	69000
+product CHIPS 69030		0x0c30	69030
 
 /* Cirrus Logic products */
 product CIRRUS CL_GD7548	0x0038	CL-GD7548
@@ -1047,6 +1089,7 @@ product CMDTECH 650A		0x0650	PCI0650A
 product CMDTECH 670		0x0670	USB0670
 product CMDTECH 673		0x0673	USB0673
 product CMDTECH 680		0x0680	PCI0680
+product CMDTECH 3112		0x3112	SiI3112 SATA
 
 /* Cogent Data Technologies products */
 product COGENT EM110TX		0x1400 EX110TX
@@ -1063,9 +1106,15 @@ product COMPAQ TRIFLEX4		0x4000	Triflex Host-PCI
 product COMPAQ CSA5300		0x4070	Smart Array 5300
 product COMPAQ CSA5i		0x4080	Smart Array 5i
 product COMPAQ CSA532		0x4082	Smart Array 532
+product COMPAQ CSA5312		0x4083	Smart Array 5312
+product COMPAQ CSA641		0x409A	Smart Array 641
+product COMPAQ CSA642		0x409B	Smart Array 642
+product COMPAQ CSA6400		0x409C	Smart Array 6400
+product COMPAQ CSA6400EM	0x409D	Smart Array 6400 EM
 product COMPAQ USB		0x7020	USB
 product COMPAQ FXP		0xa0f0	Netelligent ASMC
 product COMPAQ PCI_ISA_BRIDGE1	0xa0f3	PCI-ISA
+product COMPAQ PCI_HOTPLUG	0xa0f7	PCI Hotplug controller
 product COMPAQ OHCI		0xa0f8	USB OpenHost
 product COMPAQ SMART2P		0xae10	SMART2P RAID
 product COMPAQ PCI_ISA_BRIDGE3	0xae29	PCI-ISA
@@ -1160,6 +1209,7 @@ product DLINK DGE550T		0x4000	DGE-550T
 /* Davicom Technologies */
 product DAVICOM DM9100		0x9100	DM9100
 product DAVICOM DM9102		0x9102	DM9102
+product DAVICOM DM9009		0x9009	DM9009
 
 /* DEC products */
 product DEC 21050		0x0001	21050 PCI-PCI
@@ -1172,6 +1222,7 @@ product DEC PBXGB		0x000d	TGA2
 product DEC DEFPA		0x000f	DEFPA
 product DEC 21041		0x0014	21041
 product DEC DGLPB		0x0016	DGLPB (OPPO)
+product DEC ZLXPL2		0x0017	ZLXP-L2 (Pixelvision)
 product DEC 21142		0x0019	21142/3
 /* Farallon apparently used DEC's vendor ID by mistake */
 product DEC PN9000SX		0x001a	Farallon PN9000SX
@@ -1203,9 +1254,25 @@ product DOLPHIN PCISCI		0x0658	PCI-SCI
 /* DTC Technology Corp products */
 product DTCTECH DMX3194U	0x0002	DMX3194U SCSI
 
+/* Efficient Networks products */
+product EFFICIENTNETS ENI155PF	0x0000	155P-MF1 ATM (FPGA)
+product EFFICIENTNETS ENI155PA	0x0002	155P-MF1 ATM (ASIC)
+product EFFICIENTNETS EFSS25	0x0005	25SS-3010 ATM (ASIC)
+product EFFICIENTNETS SS1023	0x1023	SpeedStream 1023
+
 /* Emulex products */
 product EMULEX LPPFC		0x10df	Light Pulse FibreChannel
 product EMULEX LP8000		0xf800	Light Pulse 8000
+
+/* Endace Measurement Systems */
+product ENDACE DAG35		0x3500	Endace Dag3.5
+product ENDACE DAG36D		0x360d	Endace Dag3.6D
+product ENDACE DAG422GE		0x422e	Endace Dag4.22GE
+product ENDACE DAG423		0x4230	Endace Dag4.23
+product ENDACE DAG423GE		0x423e	Endace Dag4.23GE
+
+/* ENE Technology Inc products */
+product ENE CB1410		0x1410	CB-1410 PCI-CardBus
 
 /* Ensoniq products */
 product ENSONIQ	AUDIOPCI97	0x1371	AudioPCI97
@@ -1246,12 +1313,6 @@ product FORTEMEDIA FM801	0x0801	801 Sound
 /* Future Domain products */
 product FUTUREDOMAIN TMC_18C30	0x0000	TMC-18C30 (36C70)
 
-/* Efficient Networks products */
-product EFFICIENTNETS ENI155PF	0x0000	155P-MF1 ATM (FPGA)
-product EFFICIENTNETS ENI155PA	0x0002	155P-MF1 ATM (ASIC)
-product EFFICIENTNETS EFSS25	0x0005	25SS-3010 ATM (ASIC)
-product EFFICIENTNETS SS1023	0x1023	SpeedStream 1023
-
 /* Global Sun Technology products */
 product GLOBALSUN GL24110P	0x1101	GL24110P
 product GLOBALSUN GL24110P02	0x1102	GL24110P02
@@ -1264,10 +1325,15 @@ product HAUPPAUGE WINTV		0x13eb	WinTV
 
 /* Hewlett-Packard products */
 product HP A4977A		0x1005	A4977A Visualize EG
+product HP VISUALIZE_FX4	0x1008	Visualize FX4
+product HP TACH_TL		0x1028	Tach TL FibreChannel
+product HP TACH_XL2		0x1029	Tach XL2 FibreChannel
 product HP J2585A		0x1030	J2585A
 product HP J2585B		0x1031	J2585B
-product HP 82557B		0x1200	82557B 10/100 NIC
+product HP DIVA			0x1048	Diva Serial Multiport
+product HP VISUALIZE_FXE	0x108b	Visualize FXe
 product HP NETRAID_4M		0x10c2	NetRaid-4M
+product HP 82557B		0x1200	82557B 10/100 NIC
 
 /* Hifn products */
 product HIFN 7751		0x0005	7751
@@ -1300,6 +1366,7 @@ product IBM 0x0036		0x0036	Miami/PCI
 product IBM OLYMPIC		0x003e	Olympic
 product IBM I82557B		0x0057	i82557B 10/100
 product IBM FIREGL2		0x0170	FireGL2
+product IBM PCIX		0x01a7	PCI-X to PCI-X
 
 /* IDT products */
 product IDT 77201		0x0001	77201/77211 ATM (NICStAR)
@@ -1344,6 +1411,7 @@ product INTEL 82546EB		0x1010	PRO/1000MT (PWLA8492MT)
 product INTEL 82545EM_SC	0x1011	PRO/1000MF (PWLA8490MF)
 product INTEL 82546EB_SC	0x1012	PRO/1000MF (PWLA8492MF)
 product INTEL 82545EM_LX	0x1015	PRO/1000MF (PWLA8490LX)
+product INTEL 82559		0x1030	82559
 product INTEL PRO_100_VE_0	0x1031	PRO/100 VE
 product INTEL PRO_100_VE_1	0x1032	PRO/100 VE
 product INTEL PRO_100_VM_0	0x1033	PRO/100 VM
@@ -1357,6 +1425,7 @@ product INTEL PRO_100_VE_3	0x103a	PRO/100 VE
 product INTEL PRO_100_VM_3	0x103b	PRO/100 VM
 product INTEL PRO_100_VM_4	0x103c	PRO/100 VM
 product INTEL PRO_100_VE_4	0x103d	PRO/100 VE
+product INTEL PRO_100_M		0x1059	PRO/100 M
 product INTEL 82815_DC100_HUB	0x1100	82815 Hub
 product INTEL 82815_DC100_AGP	0x1101	82815 AGP
 product INTEL 82815_DC100_GRAPH	0x1102	82815 Graphics
@@ -1367,6 +1436,7 @@ product INTEL 82815_NOGRAPH_AGP	0x1121	82815 AGP
 product INTEL 82815_FULL_HUB	0x1130	82815 Hub
 product INTEL 82815_FULL_AGP	0x1131	82815 AGP
 product INTEL 82815_FULL_GRAPH	0x1132	82815 Graphics
+product INTEL 82806AA_APIC	0x1161	82806AA PCI64 APIC
 product INTEL 82559ER		0x1209	82559ER
 product INTEL 82092AA		0x1222	82092AA IDE
 product INTEL SAA7116		0x1223	SAA7116
@@ -1374,8 +1444,6 @@ product INTEL 82596		0x1226	EE Pro 10 PCI
 product INTEL EEPRO100		0x1227	EE Pro 100
 product INTEL EEPRO100S		0x1228	EE Pro 100 Smart
 product INTEL 82557		0x1229	82557
-product INTEL 82559		0x1030	82559
-product INTEL 82806AA_APIC	0x1161	82806AA PCI64 APIC
 product INTEL 82437FX		0x122d	82437FX
 product INTEL 82371FB_ISA	0x122e	82371FB PCI-ISA
 product INTEL 82371FB_IDE	0x1230	82371FB IDE
@@ -1438,6 +1506,7 @@ product INTEL 82801DB_USB_2	0x24c4	82801DB USB
 product INTEL 82801DB_ACA	0x24c5	82801DB AC97 Audio
 product INTEL 82801DB_ACM	0x24c6	82801DB Modem
 product INTEL 82801DB_USB_3	0x24c7	82801DB USB
+product INTEL 82801DBM_IDE	0x24ca	82801DBM IDE
 product INTEL 82801DB_IDE	0x24cb	82801DB IDE
 product INTEL 82801DB_USB_4	0x24cd	82801DB USB
 product INTEL 82820_MCH		0x2501	82820 MCH
@@ -1458,11 +1527,16 @@ product INTEL 82860_PCI2	0x2534	82860 PCI-PCI
 product INTEL 82860_PCI3	0x2535	82860 PCI-PCI
 product INTEL 82860_PCI4	0x2536	82860 PCI-PCI
 product INTEL 82845G		0x2560	82845G/GL
-product INTEL 82845G_IV		0x2562	82845G/GL Video
+product INTEL 82845G_AGP	0x2561	82845G/GL/GV/GE/PE Host-AGP
+product INTEL 82845G_IGD	0x2562	82845G/GL Video
+product INTEL 31244		0x3200	31244 SATA
 product INTEL 82830MP_IO_1	0x3575	82830MP CPU to I/O Bridge 1
 product INTEL 82830MP_AGP	0x3576	82830MP CPU to AGP Bridge
 product INTEL 82830MP_IV	0x3577	82830MP Integrated Video
 product INTEL 82830MP_IO_2	0x3578	82830MP CPU to I/O Bridge 2
+product INTEL 82855PE		0x3340	82855PE Host-Hub Bridge
+product INTEL 82855PE_AGP	0x3341	82855PE AGP
+product INTEL 82801DBM		0x24cc	82801DBM LPC
 product INTEL RCU32		0x3092	RCU32 I2O RAID
 product INTEL 82371SB_ISA	0x7000	82371SB PCI-ISA
 product INTEL 82371SB_IDE	0x7010	82371SB IDE
@@ -1486,6 +1560,7 @@ product INTEL 82443BX_AGP	0x7191	82443BX AGP
 product INTEL 82443BX_NOAGP	0x7192	82443BX
 product INTEL 82440MX		0x7194	82440MX Host
 product INTEL 82440MX_ACA	0x7195	82440MX AC97 Audio
+product INTEL 82440MX_ACM	0x7196	82440MX AC97 Modem
 product INTEL 82440MX_ISA	0x7198	82440MX PCI-ISA
 product INTEL 82440MX_IDE	0x7199	82440MX IDE
 product INTEL 82440MX_USB	0x719a	82440MX USB
@@ -1511,6 +1586,9 @@ product INTEL 21154		0xb154	S21154AE/BE PCI-PCI
 /* Intergraph products */
 product INTERGRAPH 4D50T	0x00e4	Powerstorm 4D50T
 
+/* Interphase products */
+product INTERPHASE 5526		0x0004	5526 FibreChannel
+
 /* Intersil products */
 product INTERSIL MINI_PCI_WLAN	0x3873	PRISM2.5 Mini-PCI WLAN
 
@@ -1535,6 +1613,9 @@ product LMC HSSI		0x0003	HSSI
 product LMC DS3			0x0004	DS3
 product LMC SSI			0x0005	SSI
 product LMC DS1			0x0006	DS1
+
+/* Lanergy */
+product LANERGY APPIAN_PCI_LITE	0x0001	Appian Lite
 
 /* Lava */
 product LAVA TWOSP_2S		0x0100	Dual Serial
@@ -1676,6 +1757,8 @@ product NDC NCP130A2 		0x0131	NCP130 Rev A2
 /* National Semiconductor products */
 product NS DP83810		0x0001	DP83810 10/100
 product NS PC87415		0x0002	PC87415 IDE
+product NS PC87560		0x000e	87560 Legacy I/O
+product NS USB			0x0012	USB
 product NS DP83815		0x0020	DP83815 10/100
 product NS DP83820		0x0022	DP83820 1/10/100/1000
 product NS NS87410		0xd001	NS87410
@@ -1797,6 +1880,7 @@ product NKK NDR4600		0xa001	NDR4600 Host-PCI
 
 /* Nortel Networks products */
 product NORTEL BS21		0x1211	BS21 10/100
+product NORTEL 211818A 		0x8030	E-mobility Wireless
 
 /* Number Nine products */
 product NUMBER9 I128		0x2309	Imagine-128
@@ -1812,6 +1896,17 @@ product NVIDIA RIVA_TNT2	0x0028	Riva TNT2
 product NVIDIA RIVA_TNT2_ULTRA	0x0029	Riva TNT2 Ultra
 product NVIDIA VANTA1		0x002c	Vanta
 product NVIDIA VANTA2		0x002d	Vanta
+product NVIDIA NFORCE2_ISA	0x0060	nForce2 PCI-ISA
+product NVIDIA NFORCE2_SMBUS	0x0064	nForce2 SMBus
+product NVIDIA NFORCE2_IDE	0x0065	nForce2 IDE
+product NVIDIA NFORCE2_LAN	0x0066	nForce2 LAN
+product NVIDIA NFORCE2_USB	0x0067	nForce2 USB
+product NVIDIA NFORCE2_USB2	0x0068	nForce2 USB2
+product NVIDIA NFORCE2_ACA	0x006a	nForce2	AC-97 Audio
+product NVIDIA NFORCE2_APU	0x006b	nForce2	Audio Processing unit
+product NVIDIA NFORCE2_PPB	0x006c	nForce2 PCI-PCI
+product NVIDIA NFORCE2_PPB2	0x006d	nForce2 PCI-PCI
+product NVIDIA NFORCE2_FW	0x006e	nForce2 FireWire
 product NVIDIA ITNT2		0x00a0	Aladdin TNT2
 product NVIDIA GEFORCE256	0x0100	GeForce256
 product NVIDIA GEFORCE256_DDR	0x0101	GeForce256 DDR
@@ -1829,9 +1924,9 @@ product NVIDIA GEFORCE4MX440	0x0171	GeForce4 MX 440
 product NVIDIA GEFORCE4MX420	0x0172	GeForce4 MX 420
 product NVIDIA GEFORCE4440GO	0x0174	GeForce4 440 Go
 product NVIDIA GEFORCE4420GO	0x0175	GeForce4 420 Go
-product NVIDIA GEFORCE4420GOM32	0x0176	GeForce4 420 Go M32
+product NVIDIA GEFORCE4420GOM32	0x0176	GeForce4 420 Go 32M
 product NVIDIA QUADRO4500XGL	0x0178	Quadro4 500XGL
-product NVIDIA GEFORCE4440GOM64	0x0179	GeForce4 440 Go M32
+product NVIDIA GEFORCE4440GOM64	0x0179	GeForce4 440 Go 64M
 product NVIDIA QUADRO4200	0x017a	Quadro4 200/400NVS
 product NVIDIA QUADRO4550XGL	0x017b	Quadro4 550XGL
 product NVIDIA QUADRO4500GOGL	0x017c	Quadro4 GoGL
@@ -1840,11 +1935,20 @@ product NVIDIA NFORCE_PCHB	0x01a4	nForce PCI Host
 product NVIDIA NFORCE_DDR	0x01ab	nForce 420 DDR
 product NVIDIA NFORCE_MEM	0x01ac	nForce 220/420
 product NVIDIA NFORCE_MEM1	0x01ad	nForce 220/420
+product NVIDIA NFORCE_ACA	0x01b1	nForce AC-97 Audio
 product NVIDIA NFORCE_ISA	0x01b2	nForce PCI-ISA
 product NVIDIA NFORCE_SMB	0x01b4	nForce SMBus
 product NVIDIA NFORCE_AGP	0x01b7	nForce PCI-AGP
 product NVIDIA NFORCE_PPB	0x01b8	nForce PCI-PCI
 product NVIDIA NFORCE_IDE	0x01bc	nForce IDE
+product NVIDIA NFORCE_USB	0x01c2	nForce USB
+product NVIDIA NFORCE2_PCHB	0x01e0	nForce2 Host-PCI
+product NVIDIA NFORCE2_AGP	0x01e8	nForce2 Host-AGP
+product NVIDIA NFORCE2_MEM1	0x01eb	nForce2
+product NVIDIA NFORCE2_MEM2	0x01ec	nForce2
+product NVIDIA NFORCE2_MEM3	0x01ed	nForce2
+product NVIDIA NFORCE2_MEM4	0x01ee	nForce2
+product NVIDIA NFORCE2_MEM5	0x01ef	nForce2
 product	NVIDIA GEFORCE3		0x0200	GeForce3
 product	NVIDIA GEFORCE3TI200	0x0201	GeForce3 Ti 200
 product	NVIDIA GEFORCE3TI500	0x0202	GeForce3 Ti 500
@@ -1917,11 +2021,14 @@ product RCC CMIC_SL		0x0017	CMIC_SL Host
 product RCC CIOBX2		0x0101	CIOBX2
 product RCC ROSB4		0x0200	ROSB4 SouthBridge
 product RCC CSB5		0x0201	CSB5 SouthBridge
+product RCC CSB6_PCI		0x0203	CSB6 Host-PCI
 product RCC OSB4_IDE		0x0211	OSB4 IDE
 product RCC CSB5_IDE		0x0212	CSB5 IDE
+product RCC CSB6_IDE		0x0213	CSB6 IDE
 product RCC USB			0x0220	OSB4/CSB5 USB
+product RCC CSB6_USB		0x0221	CSB6 USB
 product RCC CSB5BRIDGE		0x0225	CSB5 PCI Bridge
-product RCC unknown		0x0230	unknown SouthBridge
+product RCC ISA			0x0230	PCI/ISA Bridge
 
 /* Picopower */
 product PICOPOWER PT80C826	0x0000	PT80C826
@@ -1945,13 +2052,29 @@ product PLX	9080		0x9080	I/O 9080
 product PROMISE DC5030		0x5300	DC5030
 product PROMISE PDC20246	0x4d33	PDC20246
 product PROMISE PDC20262	0x4d38	PDC20262
+product PROMISE PDC20263	0x0d38	PDC20263
 product PROMISE PDC20265	0x0d30	PDC20265
-product PROMISE	PDC20267	0x4d30	PDC20267
+product PROMISE PDC20267	0x4d30	PDC20267
 product PROMISE PDC20268	0x4d68	PDC20268
 product PROMISE PDC20268R	0x6268	PDC20268R
 product PROMISE PDC20269	0x4d69	PDC20269
 product PROMISE PDC20271	0x6269	PDC20271
+product PROMISE PDC20275	0x1275	PDC20275
 product PROMISE PDC20276	0x5275	PDC20276
+product PROMISE PDC20277	0x7275	PDC20277
+product PROMISE PDC20318	0x3318	PDC20318
+product PROMISE PDC20319	0x3319	PDC20319
+product PROMISE PDC20371	0x3371	PDC20371
+product PROMISE PDC20375	0x3375	PDC20375
+product PROMISE PDC20376	0x3376	PDC20376
+product PROMISE PDC20377	0x3377	PDC20377
+product PROMISE PDC20378	0x3373	PDC20378
+product PROMISE PDC20379	0x3372	PDC20379
+product PROMISE PDC20617	0x6617	PDC20617
+product PROMISE PDC20618	0x6626	PDC20618
+product PROMISE PDC20619	0x6629	PDC20619
+product PROMISE PDC20620	0x6620	PDC20620
+product PROMISE PDC20621	0x6621	PDC20621
 
 /* QLogic products */
 product QLOGIC ISP1020		0x1020	ISP1020
@@ -1981,6 +2104,9 @@ product RICOH RF5C475		0x0475	5C475 PCI-CardBus
 product RICOH RF5C476		0x0476	5C476 PCI-CardBus
 product RICOH RF5C477		0x0477	5C477 PCI-CardBus
 product RICOH RF5C478		0x0478	5C478 PCI-CardBus
+product RICOH R5C521		0x0521	5C521 PCI-Firewire
+product RICOH R5C551		0x0551	5C551 PCI-Firewire
+product RICOH RL5C552		0x0552	5C552 PCI-Firewire
 
 /* Rockwell products */
 product ROCKWELL RS56SP_PCI11P1	0x2005	RS56/SP-PCI11P1 Modem
@@ -2024,10 +2150,12 @@ product S3 SAVAGE_IX		0x8c13	Savage/IX
 product S3 SUPERSAVAGE		0x8c2e	SuperSavage
 product S3 TWISTER		0x8d01	Twister
 product S3 TWISTER_K		0x8d02	Twister-K
+product S3 PROSAVAGE_DDR	0x8d04  ProSavage DDR
 product S3 SONICVIBES		0xca00	SonicVibes
 
 /* Schneider & Koch (SysKonnect) */
 product SCHNEIDERKOCH GE	0x4300	984x GE
+product SCHNEIDERKOCH SK9821v2	0x4320	SK-9821 v2.0
 product SCHNEIDERKOCH SK9D21	0x4400	SK-9D21
 
 /* SGI products */
@@ -2047,8 +2175,9 @@ product SIGMA DVDMAGICPRO	0x8300	DVDmagic-PRO
 product SIS 86C201		0x0001	86C201 Host-AGP
 product SIS 86C202		0x0002	86C202 VGA
 product SIS 86C205_1		0x0005	86C205
-product SIS 85C503		0x0008	85C503 ISA
+product SIS 85C503		0x0008	85C503 PCI System I/O Chipset
 product SIS 5595		0x0009	5595 PCI System I/O Chipset
+product SIS 85C503_ISA		0x0018	85C503 PCI-ISA
 product SIS 5597VGA		0x0200	5597/5598 VGA
 product SIS 6215		0x0204	6215
 product SIS 86C205_2		0x0205	86C205
@@ -2056,15 +2185,38 @@ product SIS 300			0x0300	300/305/630 VGA
 product SIS 85C501		0x0406	85C501
 product SIS 85C496		0x0496	85C496
 product SIS 85C596		0x0496	85C596
-product SIS SiS530		0x0530	SiS530 Host-PCI
+product SIS 530			0x0530	530 Host-PCI
+product SIS 540			0x0540	540 Host-PCI
+product SIS 550			0x0550	550 Host-PCI
 product SIS 85C601		0x0601	85C601 EIDE
 product SIS 620			0x0620	620 Host-PCI
 product SIS 630			0x0630	630 Host-PCI
+product SIS 633			0x0633	633 Host-PCI
+product SIS 635			0x0635	635 Host-PCI
+product SIS 640			0x0640	640 Host-PCI
+product SIS 645			0x0645	645 Host-PCI
+product SIS 646			0x0646	646 Host-PCI
+product SIS 648			0x0648	648 Host-PCI
+product SIS 650			0x0650	650 Host-PCI
+product SIS 651			0x0651	651 Host-PCI
+product SIS 652			0x0652	652 Host-PCI
+product SIS 655			0x0655	655 Host-PCI
+product SIS 658			0x0658	658 Host-PCI
 product SIS 730			0x0730	730 Host-PCI
+product SIS 733			0x0733	733 Host-PCI
 product SIS 735			0x0735	735 Host-PCI
+product SIS 740			0x0740	740 Host-PCI
+product SIS 745			0x0745	745 Host-PCI
+product SIS 746			0x0746	746 Host-PCI
+product SIS 748			0x0748	748 Host-PCI
+product SIS 750			0x0750	750 Host-PCI
+product SIS 751			0x0751	751 Host-PCI
+product SIS 752			0x0752	752 Host-PCI
+product SIS 755			0x0755	755 Host-PCI
 product SIS 900			0x0900	900 10/100BaseTX
-product SIS 7016		0x7016	7016 10/100BaseTX
-product SIS 7018		0x7018	Trident 4D WAVE
+product SIS 961			0x0961	961 Host-PCI
+product SIS 962			0x0962	962 Host-PCI
+product SIS 963			0x0963	963 Host-PCI
 product SIS 5511		0x5511	5511
 product SIS 5512		0x5512	5512
 product SIS 5513		0x5513	5513 EIDE
@@ -2078,9 +2230,15 @@ product SIS 5598		0x5598	5598
 product SIS 6204		0x6204	6204
 product SIS 6205		0x6205	6205
 product SIS 6300		0x6300	6300
-product SIS 530			0x6306	530 VGA
+product SIS 530_VGA		0x6306	530 VGA
 product SIS 6326		0x6326	6326 AGP Video
 product SIS 5597_USB		0x7001	5597/5598 USB
+product SIS 7002		0x7002	7002 USB
+product SIS 7007		0x7007	7007 FireWire
+product SIS 7012_ACA		0x7012	7012 AC97 Audio
+product SIS 7013		0x7013	7013 Modem
+product SIS 7016		0x7016	7016 10/100BaseTX
+product SIS 7018		0x7018	7018 Audio
 
 /* SMC products */
 product SMC 37C665		0x1000	FDC 37C665
@@ -2119,11 +2277,13 @@ product SUN FIREWIRE		0x1102	FireWire
 product SUN USB			0x1103	USB
 product SUN GEMNETWORK		0x2bad	GEM
 product SUN SIMBA		0x5000	Simba PCI-PCI
+product SUN 5821		0x5454	Crypto 5821
 product SUN SCA1K		0x5455	Crypto 1K
 product SUN PSYCHO		0x8000	Psycho PCI
 product SUN MS_IIep		0x9000	microSPARC IIep PCI
 product SUN US_IIi		0xa000	UltraSPARC IIi PCI
 product SUN US_IIe		0xa001	UltraSPARC IIe PCI
+product SUN CE			0xabba	Cassini Ethernet
 
 /* Sundance products */
 product SUNDANCE ST201		0x0201	ST201
@@ -2131,12 +2291,16 @@ product SUNDANCE ST2021		0x2021	ST2021 Gigabit Ethernet
 
 /* Sunix */
 product SUNIX 4065A		0x7168	4065A
+product SUNIX 4018A		0x7268	4018A
 
 /* Surecom products */
 product SURECOM NE34		0x0e34	Surecom NE-34
 
 /* Syba */
 product SYBA 4S2P		0x0781	4S2P
+
+/* Symbol */
+product SYMBOL LA41X3		0x0001	Spectrum24 LA41X3 Series WLAN
 
 /* Symphony Labs products */
 product SYMPHONY 82C101		0x0001	82C101
@@ -2170,7 +2334,9 @@ product TI PCI4450_FW		0x8011	PCI4450 FireWire
 product TI PCI4410_FW		0x8017	PCI4410 FireWire
 product TI TSB12LV23		0x8019	TSB12LV23 FireWire
 product TI TSB12LV26		0x8020	TSB12LV26 FireWire
+product TI TSB43AA22		0x8021	TSB43AA22 FireWire
 product TI TSB43AB22		0x8023	TSB43AB22 FireWire
+product TI TSB43AB21		0x8026	TSB43AB21 FireWire
 product TI PCI4451_FW		0x8027	PCI4451 FireWire
 product TI DWL520P		0x8400	DWL-520+
 product TI PCI1130		0xac12	PCI1130 PCI-CardBus
@@ -2191,6 +2357,7 @@ product TI PCI1410		0xac50	PCI1410 PCI-CardBus
 product TI PCI1420		0xac51	PCI1420 PCI-CardBus
 product TI PCI1451		0xac52	PCI1451 PCI-CardBus
 product TI PCI1421		0xac53	PCI1421 PCI-CardBus
+product TI PCI1520		0xac55	PCI1520 PCI-CardBus
 product TI PCI2040		0xac60	PCI2040 PCI-DSP
 
 /* Topic */
@@ -2317,6 +2484,7 @@ product VIATECH	VT82C1595	0x1595	VT82C1595 Host-PCI
 product VIATECH	VT83C572	0x3038	VT83C572 USB
 product VIATECH	VT82C586_PWR	0x3040	VT82C586 Power Mgmt
 product VIATECH	RHINE		0x3043	Rhine/RhineII
+product VIATECH	VT6306		0x3044	VT6306 FireWire
 product VIATECH	VT82C596	0x3050	VT82C596 Power Mgmt
 product VIATECH	VT82C686A_SMB	0x3057	VT82C686 SMBus
 product VIATECH	VT82C686A_AC97	0x3058	VT82C686 AC97 Audio
@@ -2326,8 +2494,14 @@ product VIATECH	VT82C686A_ACM	0x3068	VT82C686 AC97 Modem
 product VIATECH	VT8366_ISA	0x3074	VT8366 PCI-ISA
 product VIATECH	VT8366		0x3099	VT8366 Host-PCI
 product VIATECH	VT6202		0x3104	VT6202 USB 2.0
+product VIATECH	VT6105		0x3106	VT6105 RhineIII
+product VIATECH	CLE266		0x3122	CLE266
+product VIATECH	VT8623		0x3123	VT8623 Host-PCI
 product VIATECH	VT8233_ISA	0x3147	VT8233 PCI-ISA
+product VIATECH	VT8235_ISA	0x3177	VT8235 PCI-ISA
+product VIATECH VT8377		0x3189	VT8377 Host-PCI
 product VIATECH	RHINEII		0x6100	RhineII
+product VIATECH	VT8231_ISA	0x8231	VT8231 PCI-ISA
 product VIATECH	VT8363_AGP	0x8305	VT8363 PCI-AGP
 product VIATECH	VT8371_PPB	0x8391	VT8371 PCI-PCI
 product VIATECH	VT8501_AGP	0x8501	VT8501 PCI-AGP
@@ -2335,7 +2509,9 @@ product VIATECH	VT82C601	0x8601	VT82C601 PCI-AGP
 product VIATECH	VT82C597AGP	0x8597	VT82C597 PCI-AGP
 product VIATECH	VT82C598AGP	0x8598	VT82C598 PCI-AGP
 product VIATECH	VT8605_AGP	0x8605	VT8605 PCI-AGP
+product VIATECH	VT8633_AGP	0xb091	VT8633 PCI-AGP
 product VIATECH	VT8366_AGP	0xb099	VT8366 PCI-AGP
+product VIATECH	VT8235_AGP	0xb168	VT8235 PCI-AGP
 
 /* Vortex Computer Systems products */
 product VORTEX GDT_60x0		0x0000	GDT6000/6020/6050

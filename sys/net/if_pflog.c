@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4.6.2 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4.6.3 2003/05/19 22:30:08 tedu Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -33,6 +33,9 @@
  * PURPOSE.
  */
 
+#include "bpfilter.h"
+#include "pflog.h"
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/mbuf.h>
@@ -44,11 +47,11 @@
 #include <net/route.h>
 #include <net/bpf.h>
 
-#include <net/if_pflog.h>
-
 #ifdef	INET
 #include <netinet/in.h>
 #include <netinet/in_var.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
 #endif
 
 #ifdef INET6
@@ -58,8 +61,8 @@
 #include <netinet6/nd6.h>
 #endif /* INET6 */
 
-#include "bpfilter.h"
-#include "pflog.h"
+#include <net/pfvar.h>
+#include <net/if_pflog.h>
 
 #define PFLOGMTU	(32768 + MHLEN + MLEN)
 
@@ -90,7 +93,7 @@ pflogattach(int npflog)
 
 	for (i = 0; i < NPFLOG; i++) {
 		ifp = &pflogif[i].sc_if;
-		sprintf(ifp->if_xname, "pflog%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "pflog%d", i);
 		ifp->if_softc = &pflogif[i];
 		ifp->if_mtu = PFLOGMTU;
 		ifp->if_ioctl = pflogioctl;
@@ -164,6 +167,65 @@ pflogioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 	default:
 		return (EINVAL);
 	}
+
+	return (0);
+}
+
+int
+pflog_packet(struct ifnet *ifp, struct mbuf *m, sa_family_t af, u_int8_t dir,
+    u_int8_t reason, struct pf_rule *rm, struct pf_rule *am,
+    struct pf_ruleset *ruleset)
+{
+#if NBPFILTER > 0
+	struct ifnet *ifn;
+	struct pfloghdr hdr;
+	struct mbuf m1;
+
+	if (ifp == NULL || m == NULL || rm == NULL)
+		return (-1);
+
+	hdr.length = PFLOG_REAL_HDRLEN;
+	hdr.af = af;
+	hdr.action = rm->action;
+	hdr.reason = reason;
+	memcpy(hdr.ifname, ifp->if_xname, sizeof(hdr.ifname));
+
+	if (am == NULL) {
+		hdr.rulenr = htonl(rm->nr);
+		hdr.subrulenr = -1;
+		bzero(hdr.ruleset, sizeof(hdr.ruleset));
+	} else {
+		hdr.rulenr = htonl(am->nr);
+		hdr.subrulenr = htonl(rm->nr);
+		if (ruleset == NULL)
+			bzero(hdr.ruleset, sizeof(hdr.ruleset));
+		else
+			memcpy(hdr.ruleset, ruleset->name,
+			    sizeof(hdr.ruleset));
+
+			
+	}
+	hdr.dir = dir;
+
+#ifdef INET
+	if (af == AF_INET && dir == PF_OUT) {
+		struct ip *ip;
+
+		ip = mtod(m, struct ip *);
+		ip->ip_sum = 0;
+		ip->ip_sum = in_cksum(m, ip->ip_hl << 2);
+	}
+#endif /* INET */
+
+	m1.m_next = m;
+	m1.m_len = PFLOG_HDRLEN;
+	m1.m_data = (char *) &hdr;
+
+	ifn = &(pflogif[0].sc_if);
+
+	if (ifn->if_bpf)
+		bpf_mtap(ifn->if_bpf, &m1);
+#endif
 
 	return (0);
 }

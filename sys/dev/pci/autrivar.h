@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/autrivar.h,v 1.2 2001/11/26 18:10:52 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/autrivar.h,v 1.2.4.1 2003/05/19 22:18:00 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.
@@ -48,6 +48,7 @@ struct autri_codec_softc {
 	int			status_addr;
 	struct ac97_host_if	host_if;
 	struct ac97_codec_if	*codec_if;
+	int			flags;
 };
 
 struct autri_chstatus {

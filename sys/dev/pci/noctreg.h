@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/noctreg.h,v 1.1.2.2 2002/10/29 00:33:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/noctreg.h,v 1.1.2.3 2003/05/19 22:18:01 tedu Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -311,7 +311,7 @@ union noct_pkh_cmd {
 
 /* NOCT_EA_SDRAM_CFG */
 #define	EASDRC_8KREFRESH	0x00000080	/* 8K refreshes/64ms */
-#define	EASDRC_FREQ		0x0000003f	/* in Mhz */
+#define	EASDRC_FREQ		0x0000003f	/* in MHz */
 
 /* NOCT_RNG_CTL */
 #define	RNGCTL_RNG_ENA		0x80000000	/* rng enable */

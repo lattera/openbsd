@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.18.2.1 2002/10/29 00:36:45 art Exp $       */
+/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.18.2.2 2003/05/19 22:30:08 tedu Exp $       */
 
 /*
  *
@@ -141,17 +141,9 @@ atm_output(ifp, m0, dst, rt0)
 	register struct rtentry *rt;
 	struct atmllc *atmllc;
 	u_int32_t atm_flags;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
 		senderr(ENETDOWN);
-
-	/*
-	 * if the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m,
-		     (dst != NULL ? dst->sa_family : AF_UNSPEC), &pktattr);
 
 	/*
 	 * check route
@@ -265,7 +257,7 @@ atm_output(ifp, m0, dst, rt0)
 	 */
 	len = m->m_pkthdr.len;
 	s = splimp();
-	IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+	IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 	if (error) {
 		splx(s);
 		return (error);

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pci/siop_pci.c,v 1.2.8.2 2002/10/29 00:33:29 art Exp $ */
-/*	$NetBSD: siop_pci.c,v 1.11 2002/04/23 20:41:18 bouyer Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/siop_pci.c,v 1.2.8.3 2003/05/19 22:19:08 tedu Exp $ */
+/*	$NetBSD: siop_pci.c,v 1.14 2002/10/02 16:51:54 thorpej Exp $	*/
 
 /*
  * Copyright (c) 2000 Manuel Bouyer.

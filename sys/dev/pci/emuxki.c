@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.7.2.2 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.7.2.3 2003/05/19 22:18:00 tedu Exp $	*/
 /*	$NetBSD: emuxki.c,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-
@@ -432,17 +432,18 @@ emuxki_attach(struct device *parent, struct device *self, void *aux)
 	/* XXX it's unknown wheather APS is made from Audigy as well */
 	if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CREATIVELABS_AUDIGY) {
 		sc->sc_type = EMUXKI_AUDIGY;
-		strcpy(sc->sc_audv.name, "Audigy");
+		strlcpy(sc->sc_audv.name, "Audigy", sizeof sc->sc_audv.name);
 	} else if (pci_conf_read(pa->pa_pc, pa->pa_tag,
 	    PCI_SUBSYS_ID_REG) == EMU_SUBSYS_APS) {
 		sc->sc_type = EMUXKI_APS;
-		strcpy(sc->sc_audv.name, "E-mu APS");
+		strlcpy(sc->sc_audv.name, "E-mu APS", sizeof sc->sc_audv.name);
 	} else {
 		sc->sc_type = EMUXKI_SBLIVE;
-		strcpy(sc->sc_audv.name, "SB Live!");
+		strlcpy(sc->sc_audv.name, "SB Live!", sizeof sc->sc_audv.name);
 	}
-	sprintf(sc->sc_audv.version, "0x%02x", PCI_REVISION(pa->pa_class));
-	strcpy(sc->sc_audv.config, "emuxki");
+	snprintf(sc->sc_audv.version, sizeof sc->sc_audv.version, "0x%02x",
+		 PCI_REVISION(pa->pa_class));
+	strlcpy(sc->sc_audv.config, "emuxki", sizeof sc->sc_audv.config);
 
 	if (emuxki_scinit(sc) ||
 	    /* APS has no ac97 XXX */
@@ -829,7 +830,7 @@ emuxki_shutdown(struct emuxki_softc *sc)
 	emuxki_dmamem_free(sc->ptb, M_DEVBUF);
 }
 
-/* Emu10k1 Memory managment */
+/* Emu10k1 Memory management */
 
 struct emuxki_mem *
 emuxki_mem_new(struct emuxki_softc *sc, int ptbidx,
@@ -917,7 +918,7 @@ emuxki_rmem_alloc(struct emuxki_softc *sc, size_t size, int type, int flags)
 }
 
 /*
- * emuxki_channel_* : Channel managment functions
+ * emuxki_channel_* : Channel management functions
  * emuxki_chanparms_* : Channel parameters modification functions
  */
 
@@ -935,7 +936,7 @@ emuxki_chanparms_set_defaults(struct emuxki_channel *chan)
 	chan->fxsend.c.dest = 0x2;
 	chan->fxsend.d.dest = 0x3;
 
-	chan->pitch.intial = 0x0000;	/* shouldn't it be 0xE000 ? */
+	chan->pitch.initial = 0x0000;	/* shouldn't it be 0xE000 ? */
 	chan->pitch.current = 0x0000;	/* should it be 0x0400 */
 	chan->pitch.target = 0x0000;	/* the unity pitch shift ? */
 	chan->pitch.envelope_amount = 0x00;	/* none */
@@ -1024,7 +1025,7 @@ emuxki_channel_set_srate(struct emuxki_channel *chan, u_int32_t srate)
 		(chan->pitch.target & 1);
 	chan->pitch.target &= 0xffff;
 	chan->pitch.current = chan->pitch.target;
-	chan->pitch.intial =
+	chan->pitch.initial =
 		(emuxki_rate_to_pitch(srate) >> 8) & EMU_CHAN_IP_MASK;
 }
 
@@ -1150,7 +1151,7 @@ emuxki_channel_start(struct emuxki_channel *chan)
 		chan->pitch.target);
 	emuxki_write(sc, chano, EMU_CHAN_CPF_PITCH,
 		chan->pitch.current);
-	emuxki_write(sc, chano, EMU_CHAN_IP, chan->pitch.intial);
+	emuxki_write(sc, chano, EMU_CHAN_IP, chan->pitch.initial);
 
 	splx(s);
 }
@@ -1173,7 +1174,7 @@ emuxki_channel_stop(struct emuxki_channel *chan)
 }
 
 /*
- * Voices managment
+ * Voices management
  * emuxki_voice_dataloc : use(play or rec) independant dataloc union helpers
  * emuxki_voice_channel_* : play part of dataloc union helpers
  * emuxki_voice_recsrc_* : rec part of dataloc union helpers
@@ -1684,49 +1685,49 @@ emuxki_query_encoding(void *addr, struct audio_encoding *fp)
 
 	switch (fp->index) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		break;
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;

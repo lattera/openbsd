@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.122.2.3 2002/10/29 00:33:28 art Exp $
+#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.122.2.4 2003/05/19 22:18:00 tedu Exp $
 #	$NetBSD: files.pci,v 1.20 1996/09/24 17:47:15 christos Exp $
 #
 # Config file and device description for machine-independent PCI code.
@@ -443,15 +443,15 @@ device	stge: ether, ifnet, mii, ifmedia, mii_phy, mii_bitbang
 attach	stge at pci
 file	dev/pci/if_stge.c		stge
 
-# Intel gigabit ethernet
-device	gx: ether, ifnet, mii, ifmedia, mii_phy
-attach	gx at pci
-file	dev/pci/if_gx.c			gx
-
 # AMD 768MPX power management controller
 device	amdpm {}
 attach	amdpm at pci
 file	dev/pci/amdpm.c			amdpm
+
+# VIA VT82C686A hardware monitor
+device	viaenv
+attach	viaenv at pci
+file	dev/pci/viaenv.c		viaenv
 
 # OHCI IEEE 1394 controller
 attach	fwohci at pci with fwohci_pci

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofcons.c,v 1.8.4.1 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofcons.c,v 1.8.4.2 2003/05/19 22:20:35 tedu Exp $	*/
 /*	$NetBSD: ofcons.c,v 1.3 1996/10/13 01:38:11 christos Exp $	*/
 
 /*
@@ -393,7 +393,7 @@ ofprintf(char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, sizeof buf, fmt, ap);
 
 	c = buf;
 	while (*c != '\0') {

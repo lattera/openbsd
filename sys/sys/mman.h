@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mman.h,v 1.10.2.1 2002/06/11 03:32:33 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/mman.h,v 1.10.2.2 2003/05/19 22:32:19 tedu Exp $	*/
 /*	$NetBSD: mman.h,v 1.11 1995/03/26 20:24:23 jtc Exp $	*/
 
 /*-
@@ -106,7 +106,6 @@
 #define	MCL_CURRENT	0x01	/* lock all pages currently mapped */
 #define	MCL_FUTURE	0x02	/* lock all pages mapped in the future */
 
-
 #ifndef _KERNEL
 
 #include <sys/cdefs.h>
@@ -124,6 +123,7 @@ int	munlockall(void);
 int	madvise(void *, size_t, int);
 int	mincore(void *, size_t, char *);
 int	minherit(void *, size_t, int);
+void *	mquery(void *, size_t, int, int, int, off_t);
 __END_DECLS
 
 #endif /* !_KERNEL */

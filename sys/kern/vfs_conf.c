@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.15 2000/06/17 17:16:05 provos Exp $	*/
+/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.15.8.1 2003/05/19 22:31:57 tedu Exp $	*/
 /*	$NetBSD: vfs_conf.c,v 1.21.4.1 1995/11/01 00:06:26 jtc Exp $	*/
 
 /*
@@ -112,11 +112,11 @@ extern	struct vfsops portal_vfsops;
 #endif
 
 #ifdef NULLFS
-extern	struct vfsops null_vfsops;
+extern	struct vfsops nullfs_vfsops;
 #endif
 
 #ifdef UMAPFS
-extern	struct vfsops umap_vfsops;
+extern	struct vfsops umapfs_vfsops;
 #endif
 
 #ifdef KERNFS
@@ -125,10 +125,6 @@ extern	struct vfsops kernfs_vfsops;
 
 #ifdef PROCFS
 extern	struct vfsops procfs_vfsops;
-#endif
-
-#ifdef AFS
-extern	struct vfsops afs_vfsops;
 #endif
 
 #ifdef CD9660
@@ -149,10 +145,6 @@ extern	struct vfsops ext2fs_vfsops;
 
 #ifdef XFS
 extern  struct vfsops xfs_vfsops;
-#endif
-
-#ifdef TCFS
-extern  struct vfsops tcfs_vfsops;
 #endif
 
 /*
@@ -198,11 +190,6 @@ static struct vfsconf vfsconflist[] = {
         { &nfs_vfsops, MOUNT_NFS, 2, 0, 0, nfs_mountroot, NULL },
 #endif
 
-        /* Andrew Filesystem */
-#ifdef AFS
-        { &afs_vfsops, MOUNT_AFS, 13, 0, 0, afs_mountroot, NULL },
-#endif
-
 	/* XFS */
 #ifdef XFS
 	{ &xfs_vfsops, MOUNT_XFS, 21, 0, 0, NULL, NULL },
@@ -215,7 +202,7 @@ static struct vfsconf vfsconflist[] = {
 
         /* Loopback (Minimal) Filesystem Layer */
 #ifdef NULLFS
-        { &null_vfsops, MOUNT_NULL, 9, 0, 0, NULL, NULL },
+        { &nullfs_vfsops, MOUNT_NULL, 9, 0, 0, NULL, NULL },
 #endif
 
         /* Union (translucent) Filesystem */
@@ -225,7 +212,7 @@ static struct vfsconf vfsconflist[] = {
 
         /* User/Group Identifer Remapping Filesystem */
 #ifdef UMAPFS
-        { &umap_vfsops, MOUNT_UMAP, 10, 0, 0, NULL, NULL },
+        { &umapfs_vfsops, MOUNT_UMAP, 10, 0, 0, NULL, NULL },
 #endif
 
         /* Portal Filesystem */
@@ -241,10 +228,6 @@ static struct vfsconf vfsconflist[] = {
         /* Kernel Information Filesystem */
 #ifdef KERNFS
         { &kernfs_vfsops, MOUNT_KERNFS, 11, 0, 0, NULL, NULL },
-#endif
-
-#ifdef TCFS
-        { &tcfs_vfsops, MOUNT_TCFS, 22, 0, 0, NULL, NULL },
 #endif
 
 };
@@ -279,8 +262,8 @@ extern struct vnodeopv_desc spec_nfsv2nodeop_opv_desc;
 extern struct vnodeopv_desc fifo_nfsv2nodeop_opv_desc;
 extern struct vnodeopv_desc fdesc_vnodeop_opv_desc;
 extern struct vnodeopv_desc portal_vnodeop_opv_desc;
-extern struct vnodeopv_desc null_vnodeop_opv_desc;
-extern struct vnodeopv_desc umap_vnodeop_opv_desc;
+extern struct vnodeopv_desc nullfs_vnodeop_opv_desc;
+extern struct vnodeopv_desc umapfs_vnodeop_opv_desc;
 extern struct vnodeopv_desc kernfs_vnodeop_opv_desc;
 extern struct vnodeopv_desc procfs_vnodeop_opv_desc;
 extern struct vnodeopv_desc cd9660_vnodeop_opv_desc;
@@ -293,7 +276,6 @@ extern struct vnodeopv_desc ext2fs_vnodeop_opv_desc;
 extern struct vnodeopv_desc ext2fs_specop_opv_desc;
 extern struct vnodeopv_desc ext2fs_fifoop_opv_desc;
 extern struct vnodeopv_desc xfs_vnodeop_opv_desc;
-extern struct vnodeopv_desc tcfs_vnodeop_opv_desc;
 
 struct vnodeopv_desc *vfs_opv_descs[] = {
 	&sync_vnodeop_opv_desc,
@@ -333,10 +315,10 @@ struct vnodeopv_desc *vfs_opv_descs[] = {
 	&portal_vnodeop_opv_desc,
 #endif
 #ifdef NULLFS
-	&null_vnodeop_opv_desc,
+	&nullfs_vnodeop_opv_desc,
 #endif
 #ifdef UMAPFS
-	&umap_vnodeop_opv_desc,
+	&umapfs_vnodeop_opv_desc,
 #endif
 #ifdef KERNFS
 	&kernfs_vnodeop_opv_desc,
@@ -369,9 +351,6 @@ struct vnodeopv_desc *vfs_opv_descs[] = {
 #endif
 #ifdef XFS
 	&xfs_vnodeop_opv_desc,
-#endif
-#ifdef TCFS
-        &tcfs_vnodeop_opv_desc,
 #endif
 
 	NULL

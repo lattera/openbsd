@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.13.2.2 2002/06/11 03:42:24 art Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.13.2.3 2003/05/19 22:18:00 tedu Exp $ */
 /*	$NetBSD: auvia.c,v 1.7 2000/11/15 21:06:33 jdolecek Exp $	*/
 
 /*-
@@ -206,23 +206,16 @@ void	auvia_reset_codec(void *);
 int	auvia_waitready_codec(struct auvia_softc *sc);
 int	auvia_waitvalid_codec(struct auvia_softc *sc);
 
+const struct pci_matchid auvia_devices[] = {
+	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_AC97 },
+	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8233_AC97 },
+};
 
 int
 auvia_match(struct device *parent, void *match, void *aux)
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *) aux;
-
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_VIATECH)
-		return 0;
-
-	switch(PCI_PRODUCT(pa->pa_id)) {
-	case PCI_PRODUCT_VIATECH_VT82C686A_AC97:
-		return 1;
-	case PCI_PRODUCT_VIATECH_VT8233_AC97:
-		return 1;
-	default:
-		return 0;
-	}
+	return (pci_matchbyid((struct pci_attach_args *)aux, auvia_devices,
+	    sizeof(auvia_devices)/sizeof(auvia_devices[0])));
 }
 
 
@@ -470,49 +463,49 @@ auvia_query_encoding(void *addr, struct audio_encoding *fp)
 {
 	switch (fp->index) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		return (0);
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		return (0);
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;

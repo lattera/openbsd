@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.37.2.3 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.37.2.4 2003/05/19 22:31:57 tedu Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -88,6 +88,7 @@ extern int uvm_doswapencrypt;
 #define TOLOG		0x04	/* to the kernel message buffer */
 #define TOBUFONLY	0x08	/* to the buffer (only) [for sprintf] */
 #define TODDB		0x10	/* to ddb console */
+#define TOCOUNT		0x20	/* act like [v]snprintf */
 
 /* max size buffer kprintf needs to print quad_t [size in base 8 + \0] */
 #define KPRINTF_BUFSIZE		(sizeof(quad_t) * NBBY / 3 + 2)
@@ -104,7 +105,7 @@ void	 kputchar(int, int, struct tty *);
  * globals
  */
 
-struct	tty *constty;	/* pointer to console "window" tty */
+extern struct	tty *constty;	/* pointer to console "window" tty */
 int	consintr = 1;	/* ok to handle console interrupts? */
 extern	int log_open;	/* subr_log: is /dev/klog open? */
 const	char *panicstr; /* arg to first call to panic (used as a flag
@@ -197,7 +198,7 @@ panic(const char *fmt, ...)
 	if (panicstr)
 		bootopt |= RB_NOSYNC;
 	else {
-		vsprintf(panicbuf, fmt, ap);
+		vsnprintf(panicbuf, sizeof panicbuf, fmt, ap);
 		panicstr = panicbuf;
 	}
 	va_end(ap);
@@ -289,7 +290,7 @@ logpri(level)
 	char snbuf[KPRINTF_BUFSIZE];
 
 	kputchar('<', TOLOG, NULL);
-	sprintf(snbuf, "%d", level);
+	snprintf(snbuf, sizeof snbuf, "%d", level);
 	for (p = snbuf ; *p ; p++)
 		kputchar(*p, TOLOG, NULL);
 	kputchar('>', TOLOG, NULL);
@@ -538,6 +539,9 @@ vprintf(fmt, ap)
 	consintr = savintr;		/* reenable interrupts */
 }
 
+__warn_references(sprintf,
+    "warning: sprintf() is often misused, please use snprintf()");
+
 /*
  * sprintf: print a message to a buffer
  */
@@ -554,11 +558,13 @@ sprintf(char *buf, const char *fmt, ...)
 	return(retval);
 }
 
+__warn_references(vsprintf,
+    "warning: vsprintf() is often misused, please use vsnprintf()");
+
 /*
  * vsprintf: print a message to the provided buffer [already have a
  *	va_list]
  */
-
 int
 vsprintf(buf, fmt, ap)
 	char *buf;
@@ -575,7 +581,7 @@ vsprintf(buf, fmt, ap)
 		logwakeup();
 	consintr = savintr;		/* reenable interrupts */
 	buf[len] = 0;
-	return (0);
+	return (len);
 }
 
 /*
@@ -588,13 +594,14 @@ snprintf(char *buf, size_t size, const char *fmt, ...)
 	va_list ap;
 	char *p;
 
-	if (size < 1)
-		return (-1);
 	p = buf + size - 1;
+	if (size < 1)
+		p = buf;
 	va_start(ap, fmt);
-	retval = kprintf(fmt, TOBUFONLY, &p, buf, ap);
+	retval = kprintf(fmt, TOBUFONLY | TOCOUNT, &p, buf, ap);
 	va_end(ap);
-	*(p) = 0;	/* null terminate */
+	if (size > 0)
+		*(p) = 0;	/* null terminate */
 	return(retval);
 }
 
@@ -611,11 +618,12 @@ vsnprintf(buf, size, fmt, ap)
 	int retval;
 	char *p;
 
-	if (size < 1)
-		return (-1);
 	p = buf + size - 1;
-	retval = kprintf(fmt, TOBUFONLY, &p, buf, ap);
-	*(p) = 0;	/* null terminate */
+	if (size < 1)
+		p = buf;
+	retval = kprintf(fmt, TOBUFONLY | TOCOUNT, &p, buf, ap);
+	if (size > 0)
+		*(p) = 0;	/* null terminate */
 	return(retval);
 }
 
@@ -695,17 +703,19 @@ vsnprintf(buf, size, fmt, ap)
 	    flags&SHORTINT ? (u_long)(u_short)va_arg(ap, int) : \
 	    (u_long)va_arg(ap, u_int))
 
-#define KPRINTF_PUTCHAR(C) {						\
-	if (oflags == TOBUFONLY) {					\
+#define KPRINTF_PUTCHAR(C) do {					\
+	int chr = (C);							\
+	ret += 1;							\
+	if (oflags & TOBUFONLY) {					\
 		if ((vp != NULL) && (sbuf == tailp)) {			\
-			ret += 1;		/* indicate error */	\
-			goto overflow;					\
-		}							\
-		*sbuf++ = (C);						\
+			if (!(oflags & TOCOUNT))				\
+				goto overflow;				\
+		} else							\
+			*sbuf++ = chr;					\
 	} else {							\
-		kputchar((C), oflags, (struct tty *)vp);			\
+		kputchar(chr, oflags, (struct tty *)vp);			\
 	}								\
-}
+} while(0)
 
 int
 kprintf(fmt0, oflags, vp, sbuf, ap)
@@ -734,7 +744,7 @@ kprintf(fmt0, oflags, vp, sbuf, ap)
 	char buf[KPRINTF_BUFSIZE]; /* space for %c, %[diouxX] */
 	char *tailp = NULL;	/* tail pointer for snprintf */
 
-	if (oflags == TOBUFONLY && (vp != NULL))
+	if ((oflags & TOBUFONLY) && (vp != NULL))
 		tailp = *(char **)vp;
 
 	fmt = (char *)fmt0;
@@ -745,7 +755,6 @@ kprintf(fmt0, oflags, vp, sbuf, ap)
 	 */
 	for (;;) {
 		while (*fmt != '%' && *fmt) {
-			ret++;
 			KPRINTF_PUTCHAR(*fmt++);
 		}
 		if (*fmt == 0)
@@ -764,7 +773,7 @@ reswitch:	switch (ch) {
 		/* XXX: non-standard '%:' format */
 #ifndef __powerpc__
 		case ':':
-			if (oflags != TOBUFONLY) {
+			if (!(oflags & TOBUFONLY)) {
 				cp = va_arg(ap, char *);
 				kprintf(cp, oflags, vp,
 				    NULL, va_arg(ap, va_list));
@@ -778,18 +787,17 @@ reswitch:	switch (ch) {
 			_uquad = va_arg(ap, u_int);
 			b = va_arg(ap, char *);
 			if (*b == 8)
-				sprintf(buf, "%llo", _uquad);
+				snprintf(buf, sizeof buf, "%llo", _uquad);
 			else if (*b == 10)
-				sprintf(buf, "%lld", _uquad);
+				snprintf(buf, sizeof buf, "%lld", _uquad);
 			else if (*b == 16)
-				sprintf(buf, "%llx", _uquad);
+				snprintf(buf, sizeof buf, "%llx", _uquad);
 			else
 				break;
 			b++;
 
 			z = buf;
 			while (*z) {
-				ret++;
 				KPRINTF_PUTCHAR(*z++);
 			}
 
@@ -797,10 +805,8 @@ reswitch:	switch (ch) {
 				tmp = 0;
 				while ((n = *b++) != 0) {
 					if (_uquad & (1 << (n - 1))) {
-						ret++;
 						KPRINTF_PUTCHAR(tmp ? ',':'<');
 						while ((n = *b) > ' ') {
-							ret++;
 							KPRINTF_PUTCHAR(n);
 							b++;
 						}
@@ -811,7 +817,6 @@ reswitch:	switch (ch) {
 					}
 				}
 				if (tmp) {
-					ret++;
 					KPRINTF_PUTCHAR('>');
 				}
 			}
@@ -1130,9 +1135,6 @@ number:			if ((dprec = prec) >= 0)
 		else if (flags & HEXPREFIX)
 			realsz+= 2;
 
-		/* adjust ret */
-		ret += width > realsz ? width : realsz;
-
 		/* right-adjusting blank padding */
 		if ((flags & (LADJUST|ZEROPAD)) == 0) {
 			n = width - realsz;
@@ -1172,7 +1174,7 @@ number:			if ((dprec = prec) >= 0)
 	}
 
 done:
-	if ((oflags == TOBUFONLY) && (vp != NULL))
+	if ((oflags & TOBUFONLY) && (vp != NULL))
 		*(char **)vp = sbuf;
 overflow:
 	return (ret);

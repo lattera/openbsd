@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.5 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.6 2003/05/19 22:31:57 tedu Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -411,18 +411,23 @@ getnewvnode(tag, mp, vops, vpp)
 		simple_unlock(&vnode_free_list_slock);
 		vp = pool_get(&vnode_pool, PR_WAITOK);
 		bzero(vp, sizeof *vp);
-		/*
-		 * initialize uvm_object within vnode.
-		 */
+		simple_lock_init(&vp->v_interlock);
 		uobj = &vp->v_uobj;
 		uobj->pgops = &uvm_vnodeops;
 		uobj->uo_npages = 0;
 		TAILQ_INIT(&uobj->memq);
 		numvnodes++;
 	} else {
-		TAILQ_FOREACH(vp, listhd, v_freelist) {
-			if (simple_lock_try(&vp->v_interlock))
-				break;
+		for (vp = TAILQ_FIRST(listhd); vp != NULLVP;
+		    vp = TAILQ_NEXT(vp, v_freelist)) {
+			if (simple_lock_try(&vp->v_interlock)) {
+				if ((vp->v_flag & VLAYER) == 0)
+					break;
+				if (VOP_ISLOCKED(vp) == 0)
+					break;
+				else
+					simple_unlock(&vp->v_interlock);
+			}
 		}
 		/*
 		 * Unless this is a bad time of the month, at most
@@ -464,6 +469,8 @@ getnewvnode(tag, mp, vops, vpp)
 	}
 	vp->v_type = VNON;
 	cache_purge(vp);
+	vp->v_vnlock = NULL;
+	lockinit(&vp->v_lock, PVFS, "v_lock", 0, 0);
 	vp->v_tag = tag;
 	vp->v_op = vops;
 	insmntque(vp, mp);
@@ -643,6 +650,8 @@ loop:
 	VOP_UNLOCK(vp, 0, p);
 	simple_lock(&vp->v_interlock);
 	vclean(vp, 0, p);
+	vp->v_vnlock = NULL;
+	lockinit(&vp->v_lock, PVFS, "v_lock", 0, 0);
 	vp->v_op = nvp->v_op;
 	vp->v_tag = nvp->v_tag;
 	nvp->v_type = VNON;
@@ -1112,12 +1121,6 @@ vclean(vp, flags, p)
 		simple_unlock(&vp->v_interlock);
 	}
 	cache_purge(vp);
-	if (vp->v_vnlock) {
-		if ((vp->v_vnlock->lk_flags & LK_DRAINED) == 0)
-			vprint("vclean: lock not drained", vp);
-		FREE(vp->v_vnlock, M_VNODE);
-		vp->v_vnlock = NULL;
-	}
 
 	/*
 	 * Done with purge, notify sleepers of the grim news.
@@ -1366,19 +1369,19 @@ vprint(label, vp)
 		vp->v_holdcnt);
 	buf[0] = '\0';
 	if (vp->v_flag & VROOT)
-		strcat(buf, "|VROOT");
+		strlcat(buf, "|VROOT", sizeof buf);
 	if (vp->v_flag & VTEXT)
-		strcat(buf, "|VTEXT");
+		strlcat(buf, "|VTEXT", sizeof buf);
 	if (vp->v_flag & VSYSTEM)
-		strcat(buf, "|VSYSTEM");
+		strlcat(buf, "|VSYSTEM", sizeof buf);
 	if (vp->v_flag & VXLOCK)
-		strcat(buf, "|VXLOCK");
+		strlcat(buf, "|VXLOCK", sizeof buf);
 	if (vp->v_flag & VXWANT)
-		strcat(buf, "|VXWANT");
+		strlcat(buf, "|VXWANT", sizeof buf);
 	if (vp->v_bioflag & VBIOWAIT)
-		strcat(buf, "| VBIOWAIT");
+		strlcat(buf, "| VBIOWAIT", sizeof buf);
 	if (vp->v_flag & VALIASED)
-		strcat(buf, "|VALIASED");
+		strlcat(buf, "|VALIASED", sizeof buf);
 	if (buf[0] != '\0')
 		printf(" flags (%s)", &buf[1]);
 	if (vp->v_data == NULL) {
@@ -1818,7 +1821,7 @@ vfs_unmountall(void)
 		nmp = CIRCLEQ_PREV(mp, mnt_list);
 		if ((vfs_busy(mp, LK_EXCLUSIVE|LK_NOWAIT, NULL, p)) != 0)
 			continue;
-		if ((error = dounmount(mp, MNT_FORCE, curproc)) != 0) {
+		if ((error = dounmount(mp, MNT_FORCE, curproc, NULL)) != 0) {
 			printf("unmount of %s failed with error %d\n",
 			    mp->mnt_stat.f_mntonname, error);
 			allerror = 1;

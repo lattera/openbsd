@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/opl_eso.c,v 1.2.14.1 2002/06/11 03:42:26 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/opl_eso.c,v 1.2.14.2 2003/05/19 22:18:01 tedu Exp $	*/
 /*	$NetBSD: opl_eso.c,v 1.1 1999/07/12 15:13:31 kleink Exp $	*/
 
 /*
@@ -102,7 +102,7 @@ opl_eso_attach(parent, self, aux)
 	sc->ioh = esc->sc_sb_ioh;
 	sc->iot = esc->sc_sb_iot;
 	sc->offs = 0;
-	strcpy(sc->syn.name, "ESO ");
+	strlcpy(sc->syn.name, "ESO ", sizeof sc->syn.name);
 	/*sc->spkrctl = 0;
 	  sc->spkrarg = 0;*/
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.51.4.2 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.51.4.3 2003/05/19 22:28:21 tedu Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -202,7 +202,7 @@ sdattach(parent, self, aux)
 	}
 
 	if (!(sc_link->inquiry_flags & SID_RelAdr))
-		sc_link->quirks |= SDEV_NOCDB6;
+		sc_link->quirks |= SDEV_ONLYBIG;
 
 	/*
 	 * Note if this device is ancient.  This is used in sdminphys().
@@ -390,6 +390,7 @@ sdopen(dev, flag, fmt, p)
 	} else {
 		/* Check that it is still responding and ok. */
 		error = scsi_test_unit_ready(sc_link,
+		    TEST_READY_RETRIES_DEFAULT,
 		    SCSI_IGNORE_ILLEGAL_REQUEST |
 		    SCSI_IGNORE_MEDIA_CHANGE |
 		    SCSI_IGNORE_NOT_READY);
@@ -698,7 +699,7 @@ sdstart(v)
 		 *  fit in a "small" cdb, use it.
 		 */
 		if (!(sc_link->flags & SDEV_ATAPI) &&
-		    !(sc_link->quirks & SDEV_NOCDB6) && 
+		    !(sc_link->quirks & SDEV_ONLYBIG) && 
 		    ((blkno & 0x1fffff) == blkno) &&
 		    ((nblks & 0xff) == nblks)) {
 			/*
@@ -978,7 +979,8 @@ sdgetdisklabel(dev, sd, lp, clp, spoofonly)
 	struct cpu_disklabel *clp;
 	int spoofonly;
 {
-	char *errstring;
+	size_t len;
+	char *errstring, packname[sizeof(lp->d_packname) + 1];
 
 	bzero(lp, sizeof(struct disklabel));
 	bzero(clp, sizeof(struct cpu_disklabel));
@@ -996,18 +998,29 @@ sdgetdisklabel(dev, sd, lp, clp, spoofonly)
 	lp->d_type = DTYPE_SCSI;
 	if (sd->type == T_OPTICAL)
 		strncpy(lp->d_typename, "SCSI optical",
-		    sizeof(lp->d_typename) - 1);
+		    sizeof(lp->d_typename));
 	else
 		strncpy(lp->d_typename, "SCSI disk",
-		    sizeof(lp->d_typename) - 1);
+		    sizeof(lp->d_typename));
 
-	if (strlen(sd->name.vendor) + strlen(sd->name.product) + 1 <
-	    sizeof(lp->d_packname))
-		sprintf(lp->d_packname, "%s %s", sd->name.vendor,
-		    sd->name.product);
-	else
-		strncpy(lp->d_packname, sd->name.product,
-		    sizeof(lp->d_packname) - 1);
+	/*
+	 * Try to fit '<vendor> <product>' into d_packname. If that doesn't fit
+	 * then leave out '<vendor> ' and use only as much of '<product>' as
+	 * does fit.
+	 */
+	len = snprintf(packname, sizeof(packname), "%s %s",
+	    sd->name.vendor, sd->name.product);
+	if (len > sizeof(lp->d_packname)) {
+		strlcpy(packname, sd->name.product, sizeof(packname));
+		len = strlen(packname);
+	}
+	/*
+	 * It is safe to use len as the count of characters to copy because
+	 * packname is sizeof(lp->d_packname)+1, the string in packname is
+	 * always null terminated and len does not count the terminating null.
+	 * d_packname is not a null terminated string.
+	 */
+	bcopy(packname, lp->d_packname, len);
 
 	lp->d_secperunit = sd->params.disksize;
 	lp->d_rpm = 3600;

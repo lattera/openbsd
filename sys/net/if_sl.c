@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_sl.c,v 1.14.4.2 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_sl.c,v 1.14.4.3 2003/05/19 22:30:41 tedu Exp $	*/
 /*	$NetBSD: if_sl.c,v 1.39.4.1 1996/06/02 16:26:31 thorpej Exp $	*/
 
 /*
@@ -206,7 +206,8 @@ slattach(n)
 	bzero(sl_softc, n * sizeof(struct sl_softc));
 	for (sc = sl_softc; i < nsl; sc++) {
 		sc->sc_unit = i;		/* XXX */
-		sprintf(sc->sc_if.if_xname, "sl%d", i++);
+		snprintf(sc->sc_if.if_xname, sizeof sc->sc_if.if_xname,
+		    "sl%d", i++);
 		sc->sc_if.if_softc = sc;
 		sc->sc_if.if_mtu = SLMTU;
 		sc->sc_if.if_flags =
@@ -386,9 +387,6 @@ sloutput(ifp, m, dst, rtp)
 	register struct sl_softc *sc = ifp->if_softc;
 	register struct ip *ip;
 	int s, error;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
-
-	IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
 
 	/*
 	 * `Cannot happen' (see slioctl).  Someday we will extend
@@ -427,7 +425,7 @@ sloutput(ifp, m, dst, rtp)
 			slstart(sc->sc_ttyp);
 		}
 	}
-	IFQ_ENQUEUE(&sc->sc_if.if_snd, m, &pktattr, error);
+	IFQ_ENQUEUE(&sc->sc_if.if_snd, m, NULL, error);
 	if (error) {
 		splx(s);
 		sc->sc_if.if_oerrors++;

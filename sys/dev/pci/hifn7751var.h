@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.40.2.3 2002/10/29 00:33:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.40.2.4 2003/05/19 22:18:00 tedu Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -76,7 +76,7 @@
  */
 struct hifn_dma {
 	/*
-	 *  Descriptor rings.  We add +1 to the size to accomidate the
+	 *  Descriptor rings.  We add +1 to the size to accommodate the
 	 *  jump descriptor.
 	 */
 	struct hifn_desc	cmdr[HIFN_D_CMD_RSIZE+1];
@@ -93,7 +93,7 @@ struct hifn_dma {
 	u_int64_t		test_src, test_dst;
 
 	/*
-	 *  Our current positions for insertion and removal from the desriptor
+	 *  Our current positions for insertion and removal from the descriptor
 	 *  rings. 
 	 */
 	int			cmdi, srci, dsti, resi;
@@ -106,6 +106,11 @@ struct hifn_session {
 	int hs_prev_op; /* XXX collapse into hs_flags? */
 	u_int8_t hs_iv[HIFN_IV_LENGTH];
 };
+
+/* We use a state machine on sessions */
+#define	HS_STATE_FREE	0		/* unused session entry */
+#define	HS_STATE_USED	1		/* allocated, but key not on card */
+#define	HS_STATE_KEY	2		/* allocated and key is on card */
 
 #define	HIFN_RING_SYNC(sc, r, i, f)					\
 	bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
@@ -125,11 +130,6 @@ struct hifn_session {
 	bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
 	    offsetof(struct hifn_dma, result_bufs[(i)][0]),		\
 	    HIFN_MAX_RESULT, (f))
-
-/* We use a state machine to on sessions */
-#define	HS_STATE_FREE	0		/* unused session entry */
-#define	HS_STATE_USED	1		/* allocated, but key not on card */
-#define	HS_STATE_KEY	2		/* allocated and key is on card */
 
 /*
  * Holds data specific to a single HIFN board.
@@ -183,7 +183,7 @@ struct hifn_softc {
 		    READ_REG_1(sc, HIFN_1_7811_MIPSRST) & ~(v))
 
 /*
- *  hifn_command_t
+ *  struct hifn_command
  *
  *  This is the control structure used to pass commands to hifn_encrypt().
  *
@@ -198,7 +198,7 @@ struct hifn_softc {
  *
  *	HIFN_CRYPT_3DES or HIFN_CRYPT_DES
  *
- *  To use authentication is used, a single MAC algorithm must be included:
+ *  To use authentication, a single MAC algorithm must be included:
  *
  *	HIFN_MAC_MD5 or HIFN_MAC_SHA1
  *
@@ -249,7 +249,7 @@ struct hifn_softc {
  */
 struct hifn_command {
 	u_int16_t session_num;
-	u_int16_t base_masks, cry_masks, mac_masks;
+	u_int16_t base_masks, cry_masks, mac_masks, comp_masks;
 	u_int8_t iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
 	int cklen;
 	int sloplen, slopidx;
@@ -268,7 +268,9 @@ struct hifn_command {
 
 	struct hifn_softc *softc;
 	struct cryptop *crp;
-	struct cryptodesc *enccrd, *maccrd;
+	struct cryptodesc *enccrd, *maccrd, *compcrd;
+	void (*cmd_callback)(struct hifn_softc *, struct hifn_command *,
+	    u_int8_t *);
 };
 
 /*

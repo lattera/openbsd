@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/puc.c,v 1.5.4.1 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/puc.c,v 1.5.4.2 2003/05/19 22:19:08 tedu Exp $	*/
 /*	$NetBSD: puc.c,v 1.3 1999/02/06 06:29:54 cgd Exp $	*/
 
 /*
@@ -163,9 +163,9 @@ puc_attach(parent, self, aux)
 		printf(": unknown PCI communications device\n");
 		printf("%s: compile kernel with PUC_PRINT_REGS and larger\n",
 		    sc->sc_dev.dv_xname);
-		printf("%s: mesage buffer (via 'options MSGBUFSIZE=...'),\n",
+		printf("%s: message buffer (via 'options MSGBUFSIZE=...'),\n",
 		    sc->sc_dev.dv_xname);
-		printf("%s: and report the result with send-pr\n",
+		printf("%s: and report the result with sendbug(1)\n",
 		    sc->sc_dev.dv_xname);
 #endif
 		return;

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.6.2 2002/10/29 00:33:32 art Exp $ 	*/
-/*	$NetBSD: uftdi.c,v 1.12 2002/07/18 14:44:10 scw Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.6.3 2003/05/19 22:24:07 tedu Exp $ 	*/
+/*	$NetBSD: uftdi.c,v 1.13 2002/09/23 05:51:23 simonb Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -173,7 +173,7 @@ USB_ATTACH(uftdi)
 		goto bad;
 	}
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", devname, devinfo);
 
@@ -265,7 +265,6 @@ uftdi_activate(device_ptr_t self, enum devact act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		return (EOPNOTSUPP);
-		break;
 
 	case DVACT_DEACTIVATE:
 		if (sc->sc_subdev != NULL)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.54.4.3 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.54.4.4 2003/05/19 22:32:19 tedu Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -529,7 +529,7 @@ struct mbstat {
 };
 
 #ifdef	_KERNEL
-struct	mbstat mbstat;
+extern	struct mbstat mbstat;
 extern	int nmbclust;			/* limit on the # of clusters */
 extern	int mblowat;			/* mbuf low water mark */
 extern	int mcllowat;			/* mbuf cluster low water mark */
@@ -598,6 +598,7 @@ struct m_tag *m_tag_next(struct mbuf *, struct m_tag *);
 #define PACKET_TAG_PF_ROUTED			12 /* PF routed, no route loops */
 #define PACKET_TAG_PF_FRAGCACHE			13 /* PF fragment cached */
 #define	PACKET_TAG_PF_QID			14 /* PF queue id */
+#define PACKET_TAG_PF_TAG			15 /* PF tags */
 
 #ifdef MBTYPES
 int mbtypes[] = {				/* XXX */

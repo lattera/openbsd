@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.7.4.1 2002/06/11 03:42:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.7.4.2 2003/05/19 22:20:35 tedu Exp $	*/
 /*	$NetBSD: icsphy.c,v 1.17 2000/02/02 23:34:56 thorpej Exp $	*/
 
 /*-
@@ -119,6 +119,10 @@ icsphymatch(parent, match, aux)
 
         if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxICS &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxICS_1892)
+		return (10);
+
+        if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxICS &&
+	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxICS_1893)
 		return (10);
 
 	return (0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_sm_pcmcia.c,v 1.15.4.2 2002/10/29 00:33:30 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_sm_pcmcia.c,v 1.15.4.3 2003/05/19 22:19:57 tedu Exp $	*/
 /*	$NetBSD: if_sm_pcmcia.c,v 1.11 1998/08/15 20:47:32 thorpej Exp $  */
 
 /*-
@@ -155,7 +155,7 @@ sm_pcmcia_attach(parent, self, aux)
 	u_int8_t myla[ETHER_ADDR_LEN], *enaddr = NULL;
 
 	psc->sc_pf = pa->pf;
-	cfe = pa->pf->cfe_head.sqh_first;
+	cfe = SIMPLEQ_FIRST(&pa->pf->cfe_head);
 
 	/* Enable the card. */
 	pcmcia_function_init(pa->pf, cfe);
@@ -223,7 +223,7 @@ sm_pcmcia_attach(parent, self, aux)
 	if (psc->sc_ih == NULL)
 		printf(": couldn't establish interrupt\n");
 
-	/* Perform generic intialization. */
+	/* Perform generic initialization. */
 	smc91cxx_attach(sc, enaddr);
 
 #ifdef notyet

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/cd.c,v 1.57.2.1 2002/06/11 03:32:13 art Exp $	*/
+/*	$OpenBSD: src/sys/scsi/cd.c,v 1.57.2.2 2003/05/19 22:28:21 tedu Exp $	*/
 /*	$NetBSD: cd.c,v 1.100 1997/04/02 02:29:30 mycroft Exp $	*/
 
 /*
@@ -353,10 +353,13 @@ cdopen(dev, flag, fmt, p)
 			goto bad3;
 		}
 	} else {
-		/* Check that it is still responding and ok. */
-		error = scsi_test_unit_ready(sc_link,
-		    SCSI_IGNORE_ILLEGAL_REQUEST |
-		    SCSI_IGNORE_MEDIA_CHANGE | SCSI_IGNORE_NOT_READY);
+		/*
+		 * Check that it is still responding and ok.
+		 * Drive can be in progress of loading media so use
+		 * increased retries number and don't ignore NOT_READY.
+		 */
+		error = scsi_test_unit_ready(sc_link, TEST_READY_RETRIES_CD,
+		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE);
 		if (error) {
 			if (part != RAW_PART || fmt != S_IFCHR)
 				goto bad3;
@@ -664,6 +667,7 @@ cdstart(v)
 		 *  fit in a "small" cdb, use it.
 		 */
 		if (!(sc_link->flags & SDEV_ATAPI) &&
+		    !(sc_link->quirks & SDEV_ONLYBIG) && 
 		    ((blkno & 0x1fffff) == blkno) &&
 		    ((nblks & 0xff) == nblks)) {
 			/*
@@ -1211,14 +1215,14 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	}
 
 	if (cd->sc_link->flags & SDEV_ATAPI) {
-		strncpy(lp->d_typename, "ATAPI CD-ROM", sizeof(lp->d_typename) - 1);
+		strncpy(lp->d_typename, "ATAPI CD-ROM", sizeof(lp->d_typename));
 		lp->d_type = DTYPE_ATAPI;
 	} else {
-		strncpy(lp->d_typename, "SCSI CD-ROM", sizeof(lp->d_typename) - 1);
+		strncpy(lp->d_typename, "SCSI CD-ROM", sizeof(lp->d_typename));
 		lp->d_type = DTYPE_SCSI;
 	}
 
-	strncpy(lp->d_packname, "fictitious", sizeof(lp->d_packname) - 1);
+	strncpy(lp->d_packname, "fictitious", sizeof(lp->d_packname));
 	lp->d_secperunit = cd->params.disksize;
 	lp->d_rpm = 300;
 	lp->d_interleave = 1;
@@ -1239,7 +1243,7 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	lp->d_npartitions = RAW_PART + 1;
 
 	/*
-	 * Read the TOC and loop throught the individual tracks and lay them
+	 * Read the TOC and loop through the individual tracks and lay them
 	 * out in our disklabel.  If there is a data track, call the generic
 	 * disklabel read routine.  XXX should we move all data tracks up front
 	 * before any other tracks?
@@ -1403,6 +1407,7 @@ cd_play_tracks(cd, strack, sindex, etrack, eindex)
 	int strack, sindex, etrack, eindex;
 {
 	struct cd_toc toc;
+	u_char endf, ends, endm;
 	int error;
 
 	if (!etrack)
@@ -1421,12 +1426,26 @@ cd_play_tracks(cd, strack, sindex, etrack, eindex)
 	if (strack < 0)
 		return (EINVAL);
 
+	/*
+	 * The track ends one frame before the next begins.  The last track
+	 * is taken care of by the leadoff track.
+	 */
+	endm = toc.entries[etrack].addr.msf.minute;
+	ends = toc.entries[etrack].addr.msf.second;
+	endf = toc.entries[etrack].addr.msf.frame;
+	if (endf-- == 0) {
+		endf = CD_FRAMES - 1;
+		if (ends-- == 0) {
+			ends = CD_SECS - 1;
+			if (endm-- == 0)
+				return (EINVAL);
+		}
+	}
+
 	return (cd_play_msf(cd, toc.entries[strack].addr.msf.minute,
 	    toc.entries[strack].addr.msf.second,
 	    toc.entries[strack].addr.msf.frame,
-	    toc.entries[etrack].addr.msf.minute,
-	    toc.entries[etrack].addr.msf.second,
-	    toc.entries[etrack].addr.msf.frame));
+	    endm, ends, endf));
 }
 
 /*

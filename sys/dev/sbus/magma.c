@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/magma.c,v 1.4.2.2 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/magma.c,v 1.4.2.3 2003/05/19 22:14:42 tedu Exp $	*/
 /*
  * magma.c
  *
@@ -78,7 +78,7 @@
  *
  *  Thanks to Bruce at Magma for telling me the hardware offsets.
  */
-static struct magma_board_info supported_cards[] = {
+static const struct magma_board_info supported_cards[] = {
 	{
 		"MAGMA_Sp", "MAGMA,4_Sp", "Magma 4 Sp", 4, 0,
 		1, 0xa000, 0xc000, 0xe000, { 0x8000, 0, 0, 0 },
@@ -306,7 +306,7 @@ magma_match(parent, vcf, aux)
 	void *vcf, *aux;
 {
 	struct sbus_attach_args *sa = aux;
-	struct magma_board_info *card;
+	const struct magma_board_info *card;
 
 	/* See if we support this device */
 	for (card = supported_cards; ; card++) {
@@ -327,7 +327,7 @@ magma_attach(parent, dev, aux)
 {
 	struct sbus_attach_args *sa = aux;
 	struct magma_softc *sc = (struct magma_softc *)dev;
-	struct magma_board_info *card;
+	const struct magma_board_info *card;
 	char magma_prom[40], *clockstr;
 	int chip, cd_clock;
 
@@ -422,7 +422,7 @@ magma_attach(parent, dev, aux)
 		/* seemingly the Magma drivers just ignore the propstring */
 		cd->cd_chiprev = cd1400_read_reg(cd, CD1400_GFRCR);
 
-		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMhz\n",
+		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMHz\n",
 			    sc->ms_dev.dv_xname, chip, cd->cd_reg,
 			    cd->cd_chiprev, cd->cd_clock));
 

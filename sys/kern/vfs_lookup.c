@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_lookup.c,v 1.19.4.1 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_lookup.c,v 1.19.4.2 2003/05/19 22:31:57 tedu Exp $	*/
 /*	$NetBSD: vfs_lookup.c,v 1.17 1996/02/09 19:00:59 christos Exp $	*/
 
 /*
@@ -167,6 +167,11 @@ namei(ndp)
 		VREF(dp);
 	}
 	for (;;) {
+		if (!dp->v_mount) {
+			/* Give up if the directory is no longer mounted */
+			FREE(cnp->cn_pnbuf, M_NAMEI);
+			return (ENOENT);
+		}
 		cnp->cn_nameptr = cnp->cn_pnbuf;
 		ndp->ni_startdir = dp;
 		if ((error = lookup(ndp)) != 0) {
@@ -289,6 +294,7 @@ lookup(ndp)
 	int wantparent;			/* 1 => wantparent or lockparent flag */
 	int rdonly;			/* lookup read-only flag bit */
 	int error = 0;
+	int dpunlocked = 0;		/* dp has already been unlocked */
 	int slashes;
 	struct componentname *cnp = &ndp->ni_cnd;
 	struct proc *p = cnp->cn_proc;
@@ -439,6 +445,8 @@ dirloop:
 unionlookup:
 	ndp->ni_dvp = dp;
 	ndp->ni_vp = NULL;
+	cnp->cn_flags &= ~PDIRUNLOCK;
+
 	if ((error = VOP_LOOKUP(dp, &ndp->ni_vp, cnp)) != 0) {
 #ifdef DIAGNOSTIC
 		if (ndp->ni_vp != NULL)
@@ -452,7 +460,10 @@ unionlookup:
 		    (dp->v_mount->mnt_flag & MNT_UNION)) {
 			tdp = dp;
 			dp = dp->v_mount->mnt_vnodecovered;
-			vput(tdp);
+			if (cnp->cn_flags & PDIRUNLOCK)
+				vrele(tdp);
+			else
+				vput(tdp);
 			VREF(dp);
 			vn_lock(dp, LK_EXCLUSIVE | LK_RETRY, p);
 			goto unionlookup;
@@ -517,11 +528,14 @@ unionlookup:
 	    (cnp->cn_flags & NOCROSSMOUNT) == 0) {
 		if (vfs_busy(mp, 0, 0, p))
 			continue;
+		VOP_UNLOCK(dp, 0, p);
 		error = VFS_ROOT(mp, &tdp);
 		vfs_unbusy(mp, p);
-		if (error)
+		if (error) {
+			dpunlocked = 1;
 			goto bad2;
-		vput(dp);
+		}
+		vrele(dp);
 		ndp->ni_vp = dp = tdp;
 	}
 
@@ -585,11 +599,15 @@ terminal:
 	return (0);
 
 bad2:
-	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN))
+	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN) &&
+	    ((cnp->cn_flags & PDIRUNLOCK) == 0))
 		VOP_UNLOCK(ndp->ni_dvp, 0, p);
 	vrele(ndp->ni_dvp);
 bad:
-	vput(dp);
+	if (dpunlocked)
+		vrele(dp);
+	else
+		vput(dp);
 	ndp->ni_vp = NULL;
 	return (error);
 }
@@ -604,7 +622,6 @@ relookup(dvp, vpp, cnp)
 {
 	struct proc *p = cnp->cn_proc;
 	register struct vnode *dp = 0;	/* the directory we are searching */
-	int docache;			/* == 0 do not cache last component */
 	int wantparent;			/* 1 => wantparent or lockparent flag */
 	int rdonly;			/* lookup read-only flag bit */
 	int error = 0;
@@ -617,10 +634,6 @@ relookup(dvp, vpp, cnp)
 	 * Setup: break out flag bits into variables.
 	 */
 	wantparent = cnp->cn_flags & (LOCKPARENT|WANTPARENT);
-	docache = (cnp->cn_flags & NOCACHE) ^ NOCACHE;
-	if (cnp->cn_nameiop == DELETE ||
-	    (wantparent && cnp->cn_nameiop != CREATE))
-		docache = 0;
 	rdonly = cnp->cn_flags & RDONLY;
 	cnp->cn_flags &= ~ISSYMLINK;
 	dp = dvp;

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ums.c,v 1.6.2.2 2002/10/29 00:33:32 art Exp $ */
-/*	$NetBSD: ums.c,v 1.57 2002/07/11 21:14:33 augustss Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ums.c,v 1.6.2.3 2003/05/19 22:26:19 tedu Exp $ */
+/*	$NetBSD: ums.c,v 1.59 2002/09/23 05:59:01 simonb Exp $	*/
 
 /*
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
@@ -253,7 +253,6 @@ ums_activate(device_ptr_t self, enum devact act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		return (EOPNOTSUPP);
-		break;
 
 	case DVACT_DEACTIVATE:
 		if (sc->sc_wsmousedev != NULL)
@@ -344,7 +343,7 @@ ums_disable(void *v)
 #endif
 
 	sc->sc_enabled = 0;
-	return (uhidev_close(&sc->sc_hdev));
+	uhidev_close(&sc->sc_hdev);
 }
 
 Static int

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.13.4.3 2002/10/29 00:33:33 art Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.13.4.4 2003/05/19 22:14:07 tedu Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -105,12 +105,14 @@ struct wscons_event {
 #define		WSKBD_TYPE_PC_AT	4	/* PC-ish, AT scancode */
 #define		WSKBD_TYPE_USB		5	/* USB, XT scancode */
 #define		WSKBD_TYPE_NEXT		6	/* NeXT keyboard */
-#define		WSKBD_TYPE_HPC_KBD	7	/* HPC bultin keyboard */
+#define		WSKBD_TYPE_HPC_KBD	7	/* HPC builtin keyboard */
 #define		WSKBD_TYPE_HPC_BTN	8	/* HPC/PsPC buttons */
 #define		WSKBD_TYPE_ARCHIMEDES	9	/* Archimedes keyboard */
 #define		WSKBD_TYPE_ADB		10	/* Apple ADB keyboard */
 #define		WSKBD_TYPE_SUN		11	/* Sun Type3/4 */
 #define		WSKBD_TYPE_SUN5		12	/* Sun Type5 */
+#define		WSKBD_TYPE_HIL		13	/* HP HIL */
+#define		WSKBD_TYPE_GSC		14	/* HP PS/2 */
 
 /* Manipulate the keyboard bell. */
 struct wskbd_bell_data {
@@ -189,6 +191,7 @@ struct wskbd_map_data {
 #define		WSMOUSE_TYPE_NEXT	7	/* NeXT mouse */
 #define		WSMOUSE_TYPE_ARCHIMEDES	8	/* Archimedes mouse */
 #define		WSMOUSE_TYPE_ADB	9	/* ADB */
+#define		WSMOUSE_TYPE_HIL	10	/* HP HIL */
 
 /* Set resolution.  Not applicable to all mouse types. */
 #define	WSMOUSEIO_SRES		_IOW('W', 33, u_int)
@@ -254,6 +257,19 @@ struct wsmouse_calibcoords {
 #define		WSDISPLAY_TYPE_DCPVR	24	/* Dreamcast PowerVR */
 #define		WSDISPLAY_TYPE_SUN24	25	/* Sun 24 bit framebuffers */
 #define		WSDISPLAY_TYPE_SUNBW	26	/* Sun black and white fb */
+#define		WSDISPLAY_TYPE_STI	27	/* HP STI frambuffers */
+#define		WSDISPLAY_TYPE_SUNCG3	28	/* Sun cgthree */
+#define		WSDISPLAY_TYPE_SUNCG6	29	/* Sun cgsix */
+#define		WSDISPLAY_TYPE_SUNFFB	30	/* Sun creator FFB */
+#define		WSDISPLAY_TYPE_SUNCG14	31	/* Sun cgfourteen */
+#define		WSDISPLAY_TYPE_SUNCG2	32	/* Sun cgtwo */
+#define		WSDISPLAY_TYPE_SUNCG4	33	/* Sun cgfour */
+#define		WSDISPLAY_TYPE_SUNCG8	34	/* Sun cgeight */
+#define		WSDISPLAY_TYPE_SUNTCX	35	/* Sun TCX */
+#define		WSDISPLAY_TYPE_AGTEN	36	/* AG10E */
+#define		WSDISPLAY_TYPE_XVIDEO	37	/* Xvideo */
+#define		WSDISPLAY_TYPE_SUNCG12	38	/* Sun cgtwelve */
+#define		WSDISPLAY_TYPE_MGX	39	/* SMS MGX */
 
 /* Basic display information.  Not applicable to all display types. */
 struct wsdisplay_fbinfo {

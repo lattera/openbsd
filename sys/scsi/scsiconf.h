@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.31.2.3 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.31.2.4 2003/05/19 22:28:21 tedu Exp $	*/
 /*	$NetBSD: scsiconf.h,v 1.35 1997/04/02 02:29:38 mycroft Exp $	*/
 
 /*
@@ -182,10 +182,10 @@ struct scsi_link {
 #define	SDEV_NOSYNCCACHE	0x0100	/* no SYNCHRONIZE_CACHE */
 #define	ADEV_NOSENSE		0x0200	/* No request sense - ATAPI */
 #define	ADEV_LITTLETOC		0x0400	/* little-endian TOC - ATAPI */
-#define	ADEV_NOCAPACITY		0x0800
-#define	ADEV_NOTUR		0x1000
-#define	ADEV_NODOORLOCK		0x2000
-#define SDEV_NOCDB6		0x4000  /* does not support 6 byte CDB */
+#define	ADEV_NOCAPACITY		0x0800	/* no READ CD CAPACITY */
+#define	ADEV_NOTUR		0x1000	/* No TEST UNIT READY */
+#define	ADEV_NODOORLOCK		0x2000	/* can't lock door */
+#define SDEV_ONLYBIG		0x4000  /* always use READ_BIG and WRITE_BIG */
 	u_int8_t inquiry_flags;		/* copy of flags from probe INQUIRY */
 	u_int8_t inquiry_flags2;	/* copy of flags2 from probe INQUIRY */
 	struct	scsi_device *device;	/* device entry points etc. */
@@ -309,16 +309,22 @@ struct scsi_xfer {
 #define XS_SHORTSENSE   6	/* Check the ATAPI sense for the error */
 #define XS_RESET	8	/* bus was reset; possible retry command  */
 
+/*
+ * Possible retries numbers for scsi_test_unit_ready()
+ */
+#define TEST_READY_RETRIES_DEFAULT	5
+#define TEST_READY_RETRIES_CD		10
+
 caddr_t scsi_inqmatch(struct scsi_inquiry_data *, caddr_t, int,
 	    int, int *);
 
 void	scsi_init(void);
 struct scsi_xfer *
 	scsi_get_xs(struct scsi_link *, int);
-void	scsi_free_xs(struct scsi_xfer *, int);
+void	scsi_free_xs(struct scsi_xfer *);
 int	scsi_execute_xs(struct scsi_xfer *);
 u_long	scsi_size(struct scsi_link *, int);
-int	scsi_test_unit_ready(struct scsi_link *, int);
+int	scsi_test_unit_ready(struct scsi_link *, int, int);
 int	scsi_change_def(struct scsi_link *, int);
 int	scsi_inquire(struct scsi_link *, struct scsi_inquiry_data *, int);
 int	scsi_prevent(struct scsi_link *, int, int);

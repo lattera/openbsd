@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.3.2.2 2002/10/29 00:33:33 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.3.2.3 2003/05/19 22:26:42 tedu Exp $ */
 /*	$NetBSD: uyap.c,v 1.6 2002/07/11 21:14:37 augustss Exp $	*/
 
 /*
@@ -87,7 +87,7 @@ USB_ATTACH(uyap)
 	usbd_status err;
 	char devinfo[1024];
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->sc_dev), devinfo);
 	printf("%s: downloading firmware\n", USBDEVNAME(sc->sc_dev));

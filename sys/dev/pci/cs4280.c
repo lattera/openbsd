@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.12.2.2 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.12.2.3 2003/05/19 22:18:00 tedu Exp $	*/
 /*	$NetBSD: cs4280.c,v 1.5 2000/06/26 04:56:23 simonb Exp $	*/
 
 /*
@@ -291,6 +291,12 @@ struct audio_device cs4280_device = {
 	"cs4280"
 };
 
+const struct pci_matchid cs4280_devices[] = {
+	{ PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4280 },
+	{ PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4610 },
+	{ PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4614 },
+	{ PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4615 },
+};
 
 int
 cs4280_match(parent, ma, aux) 
@@ -298,17 +304,8 @@ cs4280_match(parent, ma, aux)
 	void *ma;
 	void *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
-
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_CIRRUS)
-		return (0);
-	if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CIRRUS_CS4280 ||
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CIRRUS_CS4610 ||
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CIRRUS_CS4614 ||
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CIRRUS_CS4615) {
-		return (1);
-	}
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, cs4280_devices,
+	    sizeof(cs4280_devices)/sizeof(cs4280_devices[0])));
 }
 
 int
@@ -1028,49 +1025,49 @@ cs4280_query_encoding(addr, fp)
 {
 	switch (fp->index) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		break;
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		break;
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = 0;

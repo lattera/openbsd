@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/netisr.h,v 1.16.4.1 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/netisr.h,v 1.16.4.2 2003/05/19 22:30:41 tedu Exp $	*/
 /*	$NetBSD: netisr.h,v 1.12 1995/08/12 23:59:24 mycroft Exp $	*/
 
 /*
@@ -72,7 +72,7 @@
 
 #ifndef _LOCORE
 #ifdef _KERNEL
-int	netisr;				/* scheduling bits for network */
+extern int	netisr;			/* scheduling bits for network */
 
 void	arpintr(void);
 void	ipintr(void);

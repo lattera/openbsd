@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/umidivar.h,v 1.6.4.1 2002/10/29 00:33:32 art Exp $ */
-/*	$NetBSD: umidivar.h,v 1.4 2002/07/11 21:14:32 augustss Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umidivar.h,v 1.6.4.2 2003/05/19 22:26:19 tedu Exp $ */
+/*	$NetBSD: umidivar.h,v 1.5 2002/09/12 21:00:42 augustss Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
  * All rights reserved.

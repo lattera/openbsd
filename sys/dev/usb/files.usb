@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/usb/files.usb,v 1.21.4.2 2002/10/29 00:33:31 art Exp $
+#	$OpenBSD: src/sys/dev/usb/files.usb,v 1.21.4.3 2003/05/19 22:23:39 tedu Exp $
 #	$NetBSD: files.usb,v 1.16 2000/02/14 20:29:54 augustss Exp $
 #
 # Config file and device description for machine-independent USB code.
@@ -89,9 +89,11 @@ file	dev/usb/ulpt.c			ulpt			needs-flag
 
 
 # Mass storage
-device	umass: scsi, atapi
+device	umass: scsi, atapi, ata
 attach	umass at uhub
 file	dev/usb/umass.c			umass
+file	dev/usb/umass_quirks.c		umass
+file	dev/usb/umass_scsi.c		umass & (scsibus | atapiscsi)
 
 
 # Misc
@@ -157,12 +159,22 @@ file	dev/usb/uftdi.c			uftdi
 # Prolific PL2303 serial driver
 device	uplcom: ucombus
 attach	uplcom at uhub
-file	dev/usb/uplcom.c                uplcom
+file	dev/usb/uplcom.c		uplcom
 
 # MCT USB-232 serial driver
 device	umct: ucombus
 attach	umct at uhub
 file	dev/usb/umct.c			umct
+
+# SUNTAC Slipper U VS-10U driver
+device	uvscom: ucombus
+attach	uvscom at uhub
+file	dev/usb/uvscom.c		uvscom
+
+# Belkin & other serial driver
+device	ubsa: ucombus
+attach	ubsa at uhub
+file	dev/usb/ubsa.c			ubsa
 
 
 # Scanners

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.60.2.2 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.60.2.3 2003/05/19 22:31:10 tedu Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -65,6 +65,7 @@
 #include <sys/namei.h>
 #include <sys/exec.h>
 #include <sys/mbuf.h>
+#include <sys/sensors.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
@@ -93,6 +94,8 @@ extern  long numvnodes;
 
 int sysctl_diskinit(int, struct proc *);
 int sysctl_proc_args(int *, u_int, void *, size_t *, struct proc *);
+int sysctl_intrcnt(int *, u_int, void *, size_t *);
+int sysctl_sensors(int *, u_int, void *, size_t *, void *, size_t);
 
 /*
  * Lock to avoid too many processes vslocking a large amount of memory
@@ -142,7 +145,7 @@ sys___sysctl(p, v, retval)
 	 */
 	if (SCARG(uap, namelen) > CTL_MAXNAME || SCARG(uap, namelen) < 2)
 		return (EINVAL);
-	error = copyin(SCARG(uap, name), &name,
+	error = copyin(SCARG(uap, name), name,
 		       SCARG(uap, namelen) * sizeof(int));
 	if (error)
 		return (error);
@@ -201,7 +204,7 @@ sys___sysctl(p, v, retval)
 		}
 		savelen = oldlen;
 	}
-	error = (*fn)(name + 1, SCARG(uap, namelen) - 1, SCARG(uap, old),
+	error = (*fn)(&name[1], SCARG(uap, namelen) - 1, SCARG(uap, old),
 	    &oldlen, SCARG(uap, new), SCARG(uap, newlen), p);
 	if (SCARG(uap, old) != NULL) {
 		if (dolock)
@@ -256,11 +259,24 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 #endif
 
 	/* all sysctl names at this level are terminal except a ton of them */
-	if (namelen != 1 && !(name[0] == KERN_PROC || name[0] == KERN_PROF ||
-	    name[0] == KERN_MALLOCSTATS || name[0] == KERN_TTY ||
-	    name[0] == KERN_POOL || name[0] == KERN_SYSVIPC_INFO ||
-	    name[0] == KERN_PROC_ARGS))
-		return (ENOTDIR);		/* overloaded */
+	if (namelen != 1) {
+		switch (name[0]) {
+		case KERN_PROC:
+		case KERN_PROF:
+		case KERN_MALLOCSTATS:
+		case KERN_TTY:
+		case KERN_POOL:
+		case KERN_PROC_ARGS:
+		case KERN_SYSVIPC_INFO:
+		case KERN_SEMINFO:
+		case KERN_SHMINFO:
+		case KERN_INTRCNT:
+		case KERN_WATCHDOG:
+			break;
+		default:
+			return (ENOTDIR);	/* overloaded */
+		}
+	}
 
 	switch (name[0]) {
 	case KERN_OSTYPE:
@@ -455,6 +471,21 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	case KERN_SPLASSERT:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &splassert_ctl));
+#ifdef SYSVSEM
+	case KERN_SEMINFO:
+		return (sysctl_sysvsem(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen));
+#endif
+#ifdef SYSVSHM
+	case KERN_SHMINFO:
+		return (sysctl_sysvshm(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen));
+#endif
+	case KERN_INTRCNT:
+		return (sysctl_intrcnt(name + 1, namelen - 1, oldp, oldlenp));
+	case KERN_WATCHDOG:
+		return (sysctl_wdog(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen));
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -477,8 +508,8 @@ hw_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	extern char machine[], cpu_model[];
 	int err;
 
-	/* all sysctl names at this level are terminal */
-	if (namelen != 1)
+	/* all sysctl names at this level except sensors are terminal */
+	if (name[0] != HW_SENSORS && namelen != 1)
 		return (ENOTDIR);		/* overloaded */
 
 	switch (name[0]) {
@@ -514,6 +545,9 @@ hw_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		    disk_count * sizeof(struct diskstats)));
 	case HW_DISKCOUNT:
 		return (sysctl_rdint(oldp, oldlenp, newp, disk_count));
+	case HW_SENSORS:
+		return (sysctl_sensors(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen));
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -1250,8 +1284,9 @@ sysctl_diskinit(update, p)
 
 		for (dk = TAILQ_FIRST(&disklist), i = 0, l = 0; dk;
 		    dk = TAILQ_NEXT(dk, dk_link), i++) {
-			l += sprintf(disknames + l, "%s,",
+			snprintf(disknames + l, tlen - l, "%s,",
 			    dk->dk_name ? dk->dk_name : "");
+			l += strlen(disknames + l);
 			sdk = diskstats + i;
 			sdk->ds_busy = dk->dk_busy;
 			sdk->ds_xfer = dk->dk_xfer;
@@ -1395,12 +1430,20 @@ sysctl_sysvipc(name, namelen, where, sizep)
 #endif
 #ifdef SYSVSEM
 			case KERN_SYSVIPC_SEM_INFO:
-				bcopy(&sema[i], &semsi->semids[i], dssize);
+				if (sema[i] != NULL)
+					bcopy(sema[i], &semsi->semids[i],
+					    dssize);
+				else
+					bzero(&semsi->semids[i], dssize);
 				break;
 #endif
 #ifdef SYSVSHM
 			case KERN_SYSVIPC_SHM_INFO:
-				bcopy(&shmsegs[i], &shmsi->shmids[i], dssize);
+				if (shmsegs[i] != NULL)
+					bcopy(shmsegs[i], &shmsi->shmids[i],
+					    dssize);
+				else
+					bzero(&shmsi->shmids[i], dssize);
 				break;
 #endif
 			}
@@ -1414,3 +1457,65 @@ sysctl_sysvipc(name, namelen, where, sizep)
 	return (error ? error : ret);
 }
 #endif /* SYSVMSG || SYSVSEM || SYSVSHM */
+
+int
+sysctl_intrcnt(int *name, u_int namelen, void *oldp, size_t *oldlenp)
+{
+	extern int intrcnt[], eintrcnt[];
+	extern char intrnames[], eintrnames[];
+	char *intrname;
+	int nintr, i;
+
+	nintr = (off_t)(eintrcnt - intrcnt);
+
+	if (name[0] != KERN_INTRCNT_NUM) {
+		if (namelen != 2)
+			return (ENOTDIR);
+		if (name[1] < 0 || name[1] >= nintr)
+			return (EINVAL);
+		i = name[1];
+	}
+
+	switch (name[0]) {
+	case KERN_INTRCNT_NUM:
+		return (sysctl_rdint(oldp, oldlenp, NULL, nintr));
+		break;
+	case KERN_INTRCNT_CNT:
+		return (sysctl_rdint(oldp, oldlenp, NULL, intrcnt[i]));
+	case KERN_INTRCNT_NAME:
+		intrname = intrnames;
+		while (i > 0) {
+			intrname += strlen(intrname) + 1;
+			i--;
+			if (intrname > eintrnames)
+				return (EINVAL);
+		}
+		return (sysctl_rdstring(oldp, oldlenp, NULL, intrname));
+	default:
+		return (EOPNOTSUPP);
+	}
+}
+
+int nsensors = 0;
+struct sensors_head sensors = SLIST_HEAD_INITIALIZER(&sensors);
+
+int
+sysctl_sensors(int *name, u_int namelen, void *oldp, size_t *oldlenp,
+    void *newp, size_t newlen)
+{
+	struct sensor *s = NULL;
+	int num;
+
+	if (namelen != 1)
+		return (ENOTDIR);
+
+	num = name[0];
+	if (num >= nsensors)
+		return (ENXIO);
+
+	SLIST_FOREACH(s, &sensors, list)
+		if (s->num == num)
+			break;
+
+	return (sysctl_rdstruct(oldp, oldlenp, newp, s, sizeof(struct sensor)));
+}

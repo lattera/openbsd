@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.12.2.1 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.12.2.2 2003/05/19 22:28:21 tedu Exp $	*/
 /*	$NetBSD: scsi_all.h,v 1.10 1996/09/12 01:57:17 thorpej Exp $	*/
 
 /*
@@ -180,8 +180,8 @@ struct scsi_changedef {
 #define PREVENT_ALLOW		0x1e
 #define POSITION_TO_ELEMENT	0x2b
 #define	CHANGE_DEFINITION	0x40
-#define	MODE_SENSE_BIG		0x54
 #define	MODE_SELECT_BIG		0x55
+#define	MODE_SENSE_BIG		0x5a
 
 /*
  * Sort of an extra one, for SCSI_RESET.
@@ -299,7 +299,7 @@ struct scsi_blk_desc {
 };
 
 struct scsi_mode_header {
-	u_int8_t data_length;	/* Sense data length */
+	u_int8_t data_length;		/* Sense data length */
 	u_int8_t medium_type;
 	u_int8_t dev_spec;
 	u_int8_t blk_desc_len;

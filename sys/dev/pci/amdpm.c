@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/amdpm.c,v 1.2.2.1 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/amdpm.c,v 1.2.2.2 2003/05/19 22:17:59 tedu Exp $	*/
 
 /*-
  * Copyright (c) 2002 The NetBSD Foundation, Inc.
@@ -72,6 +72,10 @@ void	amdpm_rnd_callout(void *);
 
 struct cfattach amdpm_ca = {
 	sizeof(struct amdpm_softc), amdpm_match, amdpm_attach
+};
+
+struct cfdriver amdpm_cd = {
+	NULL, "amdpm", DV_DULL
 };
 
 #ifdef AMDPM_RND_COUNTERS

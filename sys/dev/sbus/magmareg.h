@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4.2.2 2002/06/11 03:42:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4.2.3 2003/05/19 22:14:42 tedu Exp $	*/
 
 /* magmareg.h
  *
@@ -91,7 +91,7 @@ struct cd1400 {
 	bus_space_handle_t cd_regh;	/* chip register handle */
 	bus_space_tag_t cd_regt;	/* chip register tag */
 	int cd_chiprev;			/* chip revision */
-	int cd_clock;			/* clock speed in Mhz */
+	int cd_clock;			/* clock speed in MHz */
 	int cd_parmode;			/* parallel mode operation */
 };
 
@@ -125,7 +125,7 @@ struct magma_softc {
 	int ms_ncd1190;
 	struct cd1190 ms_cd1190[MAGMA_MAX_CD1190];
 
-	struct magma_board_info *ms_board;	/* what am I? */
+	const struct magma_board_info *ms_board;	/* what am I? */
 
 	struct mtty_softc *ms_mtty;
 	struct mbpp_softc *ms_mbpp;

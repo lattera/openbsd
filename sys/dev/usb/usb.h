@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/usb.h,v 1.14.2.2 2002/10/29 00:33:32 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/usb.h,v 1.14.2.3 2003/05/19 22:26:19 tedu Exp $ */
 /*	$NetBSD: usb.h,v 1.52 2001/07/23 15:17:50 nathanw Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb.h,v 1.14 1999/11/17 22:33:46 n_hibma Exp $	*/
 
@@ -392,8 +392,8 @@ typedef struct {
 #define  UISUBCLASS_SCSI	6
 #define  UIPROTO_MASS_CBI_I	0
 #define  UIPROTO_MASS_CBI	1
-#define  UIPROTO_MASS_BBB	2
-#define  UIPROTO_MASS_BBB_P	80	/* 'P' for the Iomega Zip drive */
+#define  UIPROTO_MASS_BBB_OLD	2	/* Not in the spec anymore */
+#define  UIPROTO_MASS_BBB	80	/* 'P' for the Iomega Zip drive */
 
 #define UICLASS_HUB		0x09
 #define  UISUBCLASS_HUB		0

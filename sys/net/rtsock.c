@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.19.2.2 2002/10/29 00:36:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.19.2.3 2003/05/19 22:30:41 tedu Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -277,7 +277,7 @@ route_output(struct mbuf *m, ...)
 		rt = (struct rtentry *)rn;
 		rt->rt_refcnt++;
 
-		switch(rtm->rtm_type) {
+		switch (rtm->rtm_type) {
 
 		case RTM_GET:
 		report:
@@ -450,60 +450,6 @@ rt_xaddrs(cp, cplim, rtinfo)
 		rtinfo->rti_info[i] = sa = (struct sockaddr *)cp;
 		ADVANCE(cp, sa);
 	}
-}
-
-/*
- * Copy data from a buffer back into the indicated mbuf chain,
- * starting "off" bytes from the beginning, extending the mbuf
- * chain if necessary. The mbuf needs to be properly initialized
- * including the setting of m_len.
- */
-void
-m_copyback(m0, off, len, cp)
-	struct	mbuf *m0;
-	register int off;
-	register int len;
-	caddr_t cp;
-{
-	register int mlen;
-	register struct mbuf *m = m0, *n;
-	int totlen = 0;
-
-	if (m0 == 0)
-		return;
-	while (off > (mlen = m->m_len)) {
-		off -= mlen;
-		totlen += mlen;
-		if (m->m_next == 0) {
-			n = m_getclr(M_DONTWAIT, m->m_type);
-			if (n == 0)
-				goto out;
-			n->m_len = min(MLEN, len + off);
-			m->m_next = n;
-		}
-		m = m->m_next;
-	}
-	while (len > 0) {
-		mlen = min (m->m_len - off, len);
-		bcopy(cp, off + mtod(m, caddr_t), (unsigned)mlen);
-		cp += mlen;
-		len -= mlen;
-		mlen += off;
-		off = 0;
-		totlen += mlen;
-		if (len == 0)
-			break;
-		if (m->m_next == 0) {
-			n = m_get(M_DONTWAIT, m->m_type);
-			if (n == 0)
-				break;
-			n->m_len = min(MLEN, len);
-			m->m_next = n;
-		}
-		m = m->m_next;
-	}
-out:	if (((m = m0)->m_flags & M_PKTHDR) && (m->m_pkthdr.len < totlen))
-		m->m_pkthdr.len = totlen;
 }
 
 static struct mbuf *
@@ -783,7 +729,7 @@ sysctl_dumpentry(rn, v)
 			brdaddr = rt->rt_ifa->ifa_dstaddr;
 	}
 	size = rt_msg2(RTM_GET, &info, 0, w);
-	if (w->w_where && w->w_tmem) {
+	if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 		register struct rt_msghdr *rtm = (struct rt_msghdr *)w->w_tmem;
 
 		rtm->rtm_flags = rt->rt_flags;
@@ -820,7 +766,7 @@ sysctl_iflist(af, w)
 		ifpaddr = ifa->ifa_addr;
 		len = rt_msg2(RTM_IFINFO, &info, (caddr_t)0, w);
 		ifpaddr = 0;
-		if (w->w_where && w->w_tmem) {
+		if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 			register struct if_msghdr *ifm;
 
 			ifm = (struct if_msghdr *)w->w_tmem;
@@ -841,7 +787,7 @@ sysctl_iflist(af, w)
 			netmask = ifa->ifa_netmask;
 			brdaddr = ifa->ifa_dstaddr;
 			len = rt_msg2(RTM_NEWADDR, &info, 0, w);
-			if (w->w_where && w->w_tmem) {
+			if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 				register struct ifa_msghdr *ifam;
 
 				ifam = (struct ifa_msghdr *)w->w_tmem;

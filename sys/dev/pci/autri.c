@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.4.2.3 2002/10/29 00:33:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.4.2.4 2003/05/19 22:17:59 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.
@@ -425,11 +425,11 @@ autri_reset_codec(sc_)
 		break;
 	case AUTRI_DEVICE_ID_SIS_7018:
 		/* warm reset AC97 codec */
-		autri_reg_set_4(sc, AUTRI_SIS_SCTRL, 1);
-		delay(100);
+		autri_reg_set_4(sc, AUTRI_SIS_SCTRL, 2);
+		delay(1000);
 		/* release reset (warm & cold) */
 		autri_reg_clear_4(sc, AUTRI_SIS_SCTRL, 3);
-		delay(100);
+		delay(2000);
 
 		addr = AUTRI_SIS_SCTRL;
 		ready = AUTRI_SIS_SCTRL_CODEC_READY;
@@ -463,12 +463,20 @@ autri_reset_codec(sc_)
 enum ac97_host_flags
 autri_flags_codec(void *v)
 {
-	return (AC97_HOST_DONT_READ);
+	struct autri_codec_softc *sc = v;
+
+	return (sc->flags);
 }
 
 /*
  *
  */
+const struct pci_matchid autri_devices[] = {
+	{ PCI_VENDOR_TRIDENT, PCI_PRODUCT_TRIDENT_4DWAVE_DX },
+	{ PCI_VENDOR_TRIDENT, PCI_PRODUCT_TRIDENT_4DWAVE_NX },
+	{ PCI_VENDOR_SIS, PCI_PRODUCT_SIS_7018 },
+	{ PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M5451 },
+};
 
 int
 autri_match(parent, match, aux)
@@ -476,31 +484,8 @@ autri_match(parent, match, aux)
 	void *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *) aux;
-
-	switch (PCI_VENDOR(pa->pa_id)) {
-	case PCI_VENDOR_TRIDENT:
-		switch (PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_TRIDENT_4DWAVE_DX:
-		case PCI_PRODUCT_TRIDENT_4DWAVE_NX:
-			return 1;
-		}
-		break;
-	case PCI_VENDOR_SIS:
-		switch (PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_SIS_7018:
-			return 1;
-		}
-		break;
-	case PCI_VENDOR_ALI:
-		switch (PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_ALI_M5451:
-			return 1;
-		}
-		break;
-	}
-
-	return 0;
+	return (pci_matchbyid((struct pci_attach_args *)aux, autri_devices,
+	    sizeof(autri_devices)/sizeof(autri_devices[0])));
 }
 
 void
@@ -574,6 +559,9 @@ autri_attach(parent, self, aux)
 	codec->host_if.read = autri_read_codec;
 	codec->host_if.write = autri_write_codec;
 	codec->host_if.flags = autri_flags_codec;
+	codec->flags = AC97_HOST_DONT_READ | AC97_HOST_SWAPPED_CHANNELS;
+	if (sc->sc_dev.dv_cfdata->cf_flags & 0x0001)
+		codec->flags &= ~AC97_HOST_SWAPPED_CHANNELS;
 
 	if ((r = ac97_attach(&codec->host_if)) != 0) {
 		printf("%s: can't attach codec (error 0x%X)\n",
@@ -947,49 +935,49 @@ autri_query_encoding(addr, fp)
 {
 	switch (fp->index) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		break;
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		break;
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		break;
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		break;
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
@@ -1308,12 +1296,13 @@ autri_setup_channel(sc, mode, param)
 	if (delta > 48000)
 		delta = 48000;
 
+	attribute = 0;
+
 	dch[1] = ((delta << 12) / 48000) & 0x0000ffff;
 	if (mode == AUMODE_PLAY) {
 		chst = &sc->sc_play;
 		dch[0] = ((delta << 12) / 48000) & 0x0000ffff;
-		if (sc->sc_devid != AUTRI_DEVICE_ID_SIS_7018)
-			ctrl |= AUTRI_CTRL_WAVEVOL;
+		ctrl |= AUTRI_CTRL_WAVEVOL;
 /*
 		if (sc->sc_devid == AUTRI_DEVICE_ID_ALI_M5451)
 			ctrl |= 0x80000000;
@@ -1321,6 +1310,12 @@ autri_setup_channel(sc, mode, param)
 	} else {
 		chst = &sc->sc_rec;
 		dch[0] = ((48000 << 12) / delta) & 0x0000ffff;
+		if (sc->sc_devid == AUTRI_DEVICE_ID_SIS_7018) {
+			ctrl |= AUTRI_CTRL_MUTE_SIS;
+			attribute = AUTRI_ATTR_PCMREC_SIS;
+			if (delta != 48000)
+				attribute |= AUTRI_ATTR_ENASRC_SIS;
+		}
 		ctrl |= AUTRI_CTRL_MUTE;
 	}
 
@@ -1328,7 +1323,6 @@ autri_setup_channel(sc, mode, param)
 	cso = alpha_fms = 0;
 	rvol = cvol = 0x7f;
 	fm_vol = 0x0 | ((rvol & 0x7f) << 7) | (cvol & 0x7f);
-	attribute = 0;
 
 	for (ch=0; ch<2; ch++) {
 
@@ -1337,7 +1331,11 @@ autri_setup_channel(sc, mode, param)
 		else {
 			/* channel for interrupt */
 			dmalen = (chst->blksize >> factor);
-			ctrl |= AUTRI_CTRL_MUTE;
+			if (sc->sc_devid == AUTRI_DEVICE_ID_SIS_7018)
+				ctrl |= AUTRI_CTRL_MUTE_SIS;
+			else
+				ctrl |= AUTRI_CTRL_MUTE;
+			attribute = 0;
 		}
 
 		eso = dmalen - 1;
@@ -1361,7 +1359,7 @@ autri_setup_channel(sc, mode, param)
 			cr[0] = (cso << 16) | (alpha_fms & 0x0000ffff);
 			cr[1] = dmaaddr;
 			cr[2] = (eso << 16) | (dch[ch] & 0x0000ffff);
-			cr[3] = (attribute << 16) | (fm_vol & 0x0000ffff);
+			cr[3] = attribute;
 			cr[4] = ctrl;
 			break;
 		case AUTRI_DEVICE_ID_ALI_M5451:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/namei.h,v 1.7.4.2 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/namei.h,v 1.7.4.3 2003/05/19 22:32:19 tedu Exp $	*/
 /*	$NetBSD: namei.h,v 1.11 1996/02/09 18:25:20 christos Exp $	*/
 
 /*
@@ -140,7 +140,8 @@ struct nameidata {
 #define	DOWHITEOUT	0x040000      /* do whiteouts */
 #define	REQUIREDIR	0x080000      /* must be a directory */
 #define STRIPSLASHES    0x100000      /* strip trailing slashes */
-#define PARAMASK	0x1fff00      /* mask of parameter descriptors */
+#define PDIRUNLOCK	0x200000      /* vfs_lookup() unlocked parent dir */
+
 /*
  * Initialization of an nameidata structure.
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/eephy.c,v 1.3.4.1 2002/06/11 03:42:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/eephy.c,v 1.3.4.2 2003/05/19 22:20:35 tedu Exp $	*/
 /*
  * Principal Author: Parag Patel
  * Copyright (c) 2001
@@ -76,12 +76,6 @@ int
 eephymatch(struct device *parent, void *match, void *aux)
 {
 	struct mii_attach_args *ma = aux;
-	u_int32_t id;
-
-	id = ((ma->mii_id1 << 16) | ma->mii_id2) & E1000_ID_MASK;
-	if (id == E1000_ID_88E1000 || id == E1000_ID_88E1000S) {
-		return(10);
-	}
 
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxMARVELL &&
 	    (MII_MODEL(ma->mii_id2) == MII_MODEL_xxMARVELL_E1000_3 ||
@@ -91,6 +85,8 @@ eephymatch(struct device *parent, void *match, void *aux)
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_MARVELL &&
 	    (MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000 ||
 	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_3 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_4 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_5 ||
 	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_6))
 		return (10);
 
@@ -130,12 +126,12 @@ eephyattach(struct device *parent, struct device *self, void *aux)
 #ifndef __OpenBSD__
 	printf("%s: ", sc->mii_dev.dv_xname);
 #endif
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, IFM_FDX, sc->mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, IFM_FDX, sc->mii_inst),
 			E1000_CR_SPEED_1000 | E1000_CR_FULL_DUPLEX);
 	PRINT("1000baseTX-FDX");
 	/*
 	TODO - apparently 1000BT-simplex not supported?
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, 0, sc->mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, 0, sc->mii_inst),
 			E1000_CR_SPEED_1000);
 	PRINT("1000baseTX");
 	*/
@@ -249,7 +245,7 @@ eephy_service(struct mii_softc *sc, struct mii_data *mii, int cmd)
 			(void)eephy_mii_phy_auto(sc, 1);
 			break;
 
-		case IFM_1000_TX:
+		case IFM_1000_T:
 			if (sc->mii_flags & MIIF_DOINGAUTO)
 				return (0);
 
@@ -382,7 +378,7 @@ eephy_status(struct mii_softc *sc)
 	}
 
 	if (ssr & E1000_SSR_1000MBS)
-		mii->mii_media_active |= IFM_1000_TX;
+		mii->mii_media_active |= IFM_1000_T;
 	else if (ssr & E1000_SSR_100MBS)
 		mii->mii_media_active |= IFM_100_TX;
 	else

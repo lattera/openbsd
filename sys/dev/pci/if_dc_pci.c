@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.22.2.3 2002/10/29 00:33:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.22.2.4 2003/05/19 22:18:00 tedu Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -86,6 +86,7 @@
 struct dc_type dc_devs[] = {
 	{ PCI_VENDOR_DEC, PCI_PRODUCT_DEC_21140 },
 	{ PCI_VENDOR_DEC, PCI_PRODUCT_DEC_21142 },
+	{ PCI_VENDOR_DAVICOM, PCI_PRODUCT_DAVICOM_DM9009 },
 	{ PCI_VENDOR_DAVICOM, PCI_PRODUCT_DAVICOM_DM9100 },
 	{ PCI_VENDOR_DAVICOM, PCI_PRODUCT_DAVICOM_DM9102 },
 	{ PCI_VENDOR_ADMTEK, PCI_PRODUCT_ADMTEK_AL981 },
@@ -164,9 +165,6 @@ void dc_pci_acpi(self, aux)
 	struct pci_attach_args	*pa = (struct pci_attach_args *)aux;
 	pci_chipset_tag_t	pc = pa->pa_pc;
 	u_int32_t		r, cptr;
-	int			unit;
-
-	unit = sc->dc_unit;
 
 	/* Find the location of the capabilities block */
 	cptr = pci_conf_read(pc, pa->pa_tag, DC_PCI_CCAP) & 0xFF;
@@ -184,8 +182,9 @@ void dc_pci_acpi(self, aux)
 			irq = pci_conf_read(pc, pa->pa_tag, DC_PCI_CFIT);
 
 			/* Reset the power state. */
-			printf("dc%d: chip is in D%d power mode "
-			    "-- setting to D0\n", unit, r & DC_PSTATE_D3);
+			printf("%s: chip is in D%d power mode "
+			    "-- setting to D0\n", sc->sc_dev.dv_xname,
+			    r & DC_PSTATE_D3);
 			r &= 0xFFFFFFFC;
 			pci_conf_write(pc, pa->pa_tag, cptr + 4, r);
 
@@ -220,7 +219,6 @@ void dc_pci_attach(parent, self, aux)
 
 	s = splimp();
 	sc->sc_dmat = pa->pa_dmat;
-	sc->dc_unit = sc->sc_dev.dv_unit;
 
 	/*
 	 * Handle power management nonsense.
@@ -311,7 +309,8 @@ void dc_pci_attach(parent, self, aux)
 		}
 	case PCI_VENDOR_DAVICOM:
 		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9100 ||
-		    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9102) {
+		    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9102 ||
+		    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9009) {
 			found = 1;
 			sc->dc_type = DC_TYPE_DM9102;
 			sc->dc_flags |= DC_TX_COALESCE|DC_TX_INTR_ALWAYS;
@@ -503,6 +502,10 @@ void dc_pci_attach(parent, self, aux)
 		if (OF_getprop(PCITAG_NODE(pa->pa_tag), "local-mac-address",
 		    sc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN) <= 0)
 			myetheraddr(sc->sc_arpcom.ac_enaddr);
+		if (sc->sc_arpcom.ac_enaddr[0] == 0x00 &&
+		    sc->sc_arpcom.ac_enaddr[1] == 0x03 &&
+		    sc->sc_arpcom.ac_enaddr[2] == 0xcc)
+			sc->dc_flags |= DC_MOMENCO_BOTCH;
 		sc->sc_hasmac = 1;
 	}
 #endif

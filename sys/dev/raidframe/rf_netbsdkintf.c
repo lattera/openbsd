@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_netbsdkintf.c,v 1.8.4.2 2002/10/29 00:33:30 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_netbsdkintf.c,v 1.8.4.3 2003/05/19 22:21:52 tedu Exp $	*/
 /*	$NetBSD: rf_netbsdkintf.c,v 1.93 2000/07/14 15:26:29 oster Exp $	*/
 /*-
  * Copyright (c) 1996, 1997, 1998 The NetBSD Foundation, Inc.
@@ -1551,7 +1551,7 @@ rf_GetSpareTableFromDaemon(req)
 	/* mpsleep unlocks the mutex */
 	while (!rf_sparet_resp_queue) {
 		tsleep(&rf_sparet_resp_queue, PRIBIO,
-		    "raidframe getsparetable", 0);
+		    "RAIDframe getsparetable", 0);
 	}
 	req = rf_sparet_resp_queue;
 	rf_sparet_resp_queue = req->next;

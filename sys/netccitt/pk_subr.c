@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_subr.c,v 1.4.20.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_subr.c,v 1.4.20.2 2003/05/19 22:27:39 tedu Exp $	*/
 /*	$NetBSD: pk_subr.c,v 1.12 1996/03/30 21:54:33 christos Exp $	*/
 
 /*
@@ -824,7 +824,7 @@ pk_flowcontrol(lcp, inhibit, forced)
 }
 
 /*
- * This procedure sends a RESET request packet. It re-intializes virtual
+ * This procedure sends a RESET request packet. It re-initializes virtual
  * circuit.
  */
 

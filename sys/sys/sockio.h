@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sockio.h,v 1.20 2001/12/15 08:40:56 jason Exp $	*/
+/*	$OpenBSD: src/sys/sys/sockio.h,v 1.20.2.1 2003/05/19 22:32:36 tedu Exp $	*/
 /*	$NetBSD: sockio.h,v 1.5 1995/08/23 00:40:47 thorpej Exp $	*/
 
 /*-
@@ -128,6 +128,7 @@
 #define	SIOCBRDGGMA	_IOWR('i', 83, struct ifbrparam)/* get max age */
 #define	SIOCBRDGSMA	 _IOW('i', 83, struct ifbrparam)/* set max age */
 #define	SIOCBRDGSIFPRIO	 _IOW('i', 84, struct ifbreq)	/* set if priority */
+#define	SIOCBRDGSIFCOST	 _IOW('i', 85, struct ifbreq)	/* set if cost */
 
 #define	SIOCBRDGS
 #define GRESADDRS        _IOW('i', 101, struct ifreq)

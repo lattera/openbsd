@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.36.2.3 2002/10/29 00:33:33 art Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.36.2.4 2003/05/19 22:14:07 tedu Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -2301,13 +2301,11 @@ ctrl_event(u_int type, int value, struct wsdisplay_softc *ws_sc, struct proc *p)
 	if (type == WSCONS_EVENT_WSMOUSED_SLEEP) {
 		/* sleeping until next switch to text mode */
 		ws_sc->wsmoused_sleep = 1;
+		error = 0;
 		while (ws_sc->wsmoused_sleep && error == 0)
 			error = tsleep(&ws_sc->wsmoused_sleep, PPAUSE,
 			    "wsmoused_sleep", 0);
-		if (error)
-			return error;
-		else
-			return (0);
+		return (error);
 	}
 	for (i = 0 ; i < WSDISPLAY_DEFAULTSCREENS ; i++)
 		if (sc->sc_scr[i]) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.7.4.2 2002/10/29 00:33:28 art Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.7.4.3 2003/05/19 22:18:00 tedu Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -371,7 +371,8 @@ struct sis_ring_data {
 #define SIS_REV_630E		0x0081
 #define SIS_REV_630S		0x0082
 #define SIS_REV_630EA1		0x0083
-#define	SIS_REV_630ET		0x0084
+#define SIS_REV_630ET		0x0084
+#define SIS_REV_635		0x0090
 
 struct sis_type {
 	u_int16_t		sis_vid;
@@ -392,6 +393,7 @@ struct sis_softc {
 	bus_space_tag_t		sis_btag;
 	u_int8_t		sis_unit;
 	u_int8_t		sis_type;
+	u_int8_t		sis_rev;
 	u_int8_t		sis_link;
 	struct sis_list_data	*sis_ldata;
 	struct sis_ring_data	sis_cdata;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.11.4.1 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.11.4.2 2003/05/19 22:20:35 tedu Exp $	*/
 /*	$NetBSD: mii_physubr.c,v 1.20 2001/04/13 23:30:09 thorpej Exp $	*/
 
 /*-
@@ -62,14 +62,26 @@
  * XXX 802.3 doesn't specify ANAR or ANLPAR bits for 1000base.
  */
 const struct mii_media mii_media_table[] = {
-	{ BMCR_ISO,		ANAR_CSMA },		/* None */
-	{ BMCR_S10,		ANAR_CSMA|ANAR_10 },	/* 10baseT */
-	{ BMCR_S10|BMCR_FDX,	ANAR_CSMA|ANAR_10_FD },	/* 10baseT-FDX */
-	{ BMCR_S100,		ANAR_CSMA|ANAR_T4 },	/* 100baseT4 */
-	{ BMCR_S100,		ANAR_CSMA|ANAR_TX },	/* 100baseTX */
-	{ BMCR_S100|BMCR_FDX,	ANAR_CSMA|ANAR_TX_FD },	/* 100baseTX-FDX */
-	{ BMCR_S1000,		ANAR_CSMA },		/* 1000base */
-	{ BMCR_S1000|BMCR_FDX,	ANAR_CSMA },		/* 1000base-FDX */
+	/* None */
+	{ BMCR_ISO,		ANAR_CSMA,		0 },
+	/* 10baseT */
+	{ BMCR_S10,		ANAR_CSMA|ANAR_10,	0 },
+	/* 10baseT-FDX */
+	{ BMCR_S10|BMCR_FDX,	ANAR_CSMA|ANAR_10_FD,	0 },
+	/* 100baseT4 */
+	{ BMCR_S100,		ANAR_CSMA|ANAR_T4,	0 },
+	/* 100baseTX */
+	{ BMCR_S100,		ANAR_CSMA|ANAR_TX,	0 },
+	/* 100baseTX-FDX */
+	{ BMCR_S100|BMCR_FDX,	ANAR_CSMA|ANAR_TX_FD,	0 },
+	/* 1000baseX */
+	{ BMCR_S1000,		ANAR_CSMA,		0 },
+	/* 1000baseX-FDX */
+	{ BMCR_S1000|BMCR_FDX,	ANAR_CSMA,		0 },
+	/* 1000baseT */
+	{ BMCR_S1000,		ANAR_CSMA,		GTCR_ADV_1000THDX },
+	/* 1000baseT-FDX */
+	{ BMCR_S1000|BMCR_FDX,	ANAR_CSMA,		GTCR_ADV_1000TFDX },
 };
 
 void	mii_phy_auto_timeout(void *);
@@ -377,12 +389,12 @@ mii_phy_add_media(sc)
 		}
 		if (sc->mii_extcapabilities & EXTSR_1000THDX) {
 			sc->mii_anegticks = 10;
-			ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, 0,
+			ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, 0,
 			    sc->mii_inst), MII_MEDIA_1000_T);
 		}
 		if (sc->mii_extcapabilities & EXTSR_1000TFDX) {
 			sc->mii_anegticks = 10;
-			ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, IFM_FDX,
+			ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, IFM_FDX,
 			    sc->mii_inst), MII_MEDIA_1000_T_FDX);
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ydsvar.h,v 1.2.4.1 2002/01/31 22:55:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ydsvar.h,v 1.2.4.2 2003/05/19 22:19:37 tedu Exp $	*/
 /*	$NetBSD$	*/
 
 /*
@@ -119,7 +119,5 @@ struct yds_softc {
 };
 #define sc_opl_iot	sc_legacy_iot
 #define sc_mpu_iot	sc_legacy_iot
-
-int ac97_id2;
 
 #endif /* _DEV_PCI_YDSVAR_H_ */

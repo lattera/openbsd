@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/nofn.c,v 1.4.2.2 2002/10/29 00:33:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/nofn.c,v 1.4.2.3 2003/05/19 22:18:01 tedu Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -243,7 +243,8 @@ nofn_rng_read(sc)
 		reg = PK_READ_4(sc, NOFN_PK_SR);
 		if (reg & PK_SR_UFLOW) {
 			ret = -1;
-			printf("%s: rng underflow, disabling.\n");
+			printf("%s: rng underflow, disabling.\n",
+			    sc->sc_dev.dv_xname);
 			nofn_rng_disable(sc);
 			break;
 		}
@@ -318,7 +319,8 @@ nofn_rng_disable(sc)
 		REG_WRITE_4(sc, NOFN_PCI_INT_MASK, sc->sc_intrmask);
 		break;
 	default:
-		printf("%s: nofn_rng_disable: unknown rev %x\n", sc->sc_revid);
+		printf("%s: nofn_rng_disable: unknown rev %x\n", 
+		    sc->sc_dev.dv_xname, sc->sc_revid);
 		break;
 	}
 
@@ -361,7 +363,8 @@ nofn_rng_enable(sc)
 		sc->sc_intrmask |= PCIINTMASK_RNGRDY;
 		break;
 	default:
-		printf("%s: nofn_rng_enable: unknown rev %x\n", sc->sc_revid);
+		printf("%s: nofn_rng_enable: unknown rev %x\n", 
+		    sc->sc_dev.dv_xname, sc->sc_revid);
 		break;
 	}
 
@@ -373,6 +376,7 @@ nofn_pk_enable(sc)
 	struct nofn_softc *sc;
 {
 	u_int32_t r;
+	int algs[CRK_ALGORITHM_MAX + 1];
 
 	if ((sc->sc_cid = crypto_get_driverid(0)) < 0) {
 		printf(": failed to register cid\n");
@@ -382,7 +386,9 @@ nofn_pk_enable(sc)
 	SIMPLEQ_INIT(&sc->sc_pk_queue);
 	sc->sc_pk_current = NULL;
 
-	crypto_kregister(sc->sc_cid, CRK_MOD_EXP, 0, nofn_pk_process);
+	bzero(algs, sizeof(algs));
+	algs[CRK_MOD_EXP] = CRYPTO_ALG_FLAG_SUPPORTED;
+	crypto_kregister(sc->sc_cid, algs, nofn_pk_process);
 
 	/* enable ALU */
 	r = PK_READ_4(sc, NOFN_PK_CFG2);

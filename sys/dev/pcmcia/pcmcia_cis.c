@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.5.8.3 2002/10/29 00:33:30 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.5.8.4 2003/05/19 22:19:57 tedu Exp $	*/
 /*	$NetBSD: pcmcia_cis.c,v 1.9 1998/08/22 23:41:48 msaitoh Exp $	*/
 
 /*
@@ -155,8 +155,11 @@ pcmcia_scan_cis(dev, fct, arg)
 	while (1) {
 		while (1) {
 			/* get the tuple code */
-
-			tuple.code = pcmcia_cis_read_1(&tuple, tuple.ptr);
+			if (tuple.ptr * tuple.mult < PCMCIA_CIS_SIZE)
+				tuple.code = pcmcia_cis_read_1(&tuple,
+				    tuple.ptr);
+			else
+				tuple.code = PCMCIA_CISTPL_END;
 
 			/* two special-case tuples */
 
@@ -471,8 +474,7 @@ pcmcia_print_cis(sc)
 	printf("%s: Manufacturer code 0x%x, product 0x%x\n",
 	       sc->dev.dv_xname, card->manufacturer, card->product);
 
-	for (pf = card->pf_head.sqh_first; pf != NULL;
-	    pf = pf->pf_list.sqe_next) {
+	SIMPLEQ_FOREACH(pf, &card->pf_head, pf_list) {
 		printf("%s: function %d: ", sc->dev.dv_xname, pf->number);
 
 		switch (pf->function) {
@@ -522,8 +524,7 @@ pcmcia_print_cis(sc)
 
 		printf(", ccr addr %lx mask %lx\n", pf->ccr_base, pf->ccr_mask);
 
-		for (cfe = pf->cfe_head.sqh_first; cfe != NULL;
-		    cfe = cfe->cfe_list.sqe_next) {
+		SIMPLEQ_FOREACH(cfe, &pf->cfe_head, cfe_list) {
 			printf("%s: function %d, config table entry %d: ",
 			    sc->dev.dv_xname, pf->number, cfe->number);
 
@@ -632,9 +633,9 @@ pcmcia_parse_cis_tuple(tuple, arg)
 		if (state->gotmfc == 1) {
 			struct pcmcia_function *pf, *pfnext;
 
-			for (pf = state->card->pf_head.sqh_first; pf != NULL;
-			    pf = pfnext) {
-				pfnext = pf->pf_list.sqe_next;
+			for (pf = SIMPLEQ_FIRST(&state->card->pf_head);
+			    pf != NULL; pf = pfnext) {
+				pfnext = SIMPLEQ_NEXT(pf, pf_list);
 				free(pf, M_DEVBUF);
 			}
 

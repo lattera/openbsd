@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.11.4.2 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.11.4.3 2003/05/19 22:31:10 tedu Exp $	*/
 /*
  * Copyright (c) 2001 Thomas Nordin <nordin@openbsd.org>
  * Copyright (c) 2000-2001 Artur Grabowski <art@openbsd.org>
@@ -158,13 +158,14 @@ timeout_add(struct timeout *new, int to_ticks)
 	int s;
 	int old_time;
 
-	timeout_wheel_lock(&s);
 #ifdef DIAGNOSTIC
 	if (!(new->to_flags & TIMEOUT_INITIALIZED))
 		panic("timeout_add: not initialized");
 	if (to_ticks < 0)
 		panic("timeout_add: to_ticks < 0");
 #endif
+
+	timeout_wheel_lock(&s);
 	/* Initialize the time here, it won't change. */
 	old_time = new->to_time;
 	new->to_time = to_ticks + ticks;
@@ -176,7 +177,7 @@ timeout_add(struct timeout *new, int to_ticks)
 	 * and let it be rescheduled later.
 	 */
 	if (new->to_flags & TIMEOUT_ONQUEUE) {
-		if (new->to_time < old_time) {
+		if (new->to_time - ticks < old_time - ticks) {
 			CIRCQ_REMOVE(&new->to_list);
 			CIRCQ_INSERT(&new->to_list, &timeout_todo);
 		}
@@ -293,7 +294,7 @@ db_show_callout(db_expr_t addr, int haddr, db_expr_t count, char *modif)
 
 	timeout_wheel_lock(&s);
 
-	/* XXX: Show timeout_todo? */
+	db_show_callout_bucket(&timeout_todo);
 	for (b = 0; b < BUCKETS; b++)
 		db_show_callout_bucket(&timeout_wheel[b]);
 

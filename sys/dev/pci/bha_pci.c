@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bha_pci.c,v 1.1.2.2 2002/06/11 03:42:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bha_pci.c,v 1.1.2.3 2003/05/19 22:18:00 tedu Exp $	*/
 /*	$NetBSD: bha_pci.c,v 1.16 1998/08/15 10:10:53 mycroft Exp $	*/
 
 /*-
@@ -63,6 +63,11 @@ struct cfattach bha_pci_ca = {
 	sizeof(struct bha_softc), bha_pci_match, bha_pci_attach
 };
 
+const struct pci_matchid bha_pci_devices[] = {
+	{ PCI_VENDOR_BUSLOGIC, PCI_PRODUCT_BUSLOGIC_MULTIMASTER_NC },
+	{ PCI_VENDOR_BUSLOGIC, PCI_PRODUCT_BUSLOGIC_MULTIMASTER },
+};
+
 /*
  * Check the slots looking for a board we recognise
  * If we find one, note it's address (slot) and call
@@ -79,11 +84,8 @@ bha_pci_match(parent, match, aux)
 	bus_size_t iosize;
 	int rv;
 
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_BUSLOGIC)
-		return (0);
-
-	if (PCI_PRODUCT(pa->pa_id) != PCI_PRODUCT_BUSLOGIC_MULTIMASTER_NC &&
-	    PCI_PRODUCT(pa->pa_id) != PCI_PRODUCT_BUSLOGIC_MULTIMASTER)
+	if (pci_matchbyid(pa, bha_pci_devices,
+	    sizeof(bha_pci_devices)/sizeof(bha_pci_devices[0])) == 0)
 		return (0);
 
 	if (pci_mapreg_map(pa, PCI_CBIO, PCI_MAPREG_TYPE_IO, 0, &iot, &ioh,

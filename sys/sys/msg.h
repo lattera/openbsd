@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/msg.h,v 1.7.4.2 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/msg.h,v 1.7.4.3 2003/05/19 22:32:19 tedu Exp $	*/
 /*	$NetBSD: msg.h,v 1.9 1996/02/09 18:25:18 christos Exp $	*/
 
 /*
@@ -129,7 +129,7 @@ struct msg_sysctl_info {
 #ifndef MSGSEG
 #define MSGSEG	2048		/* must be less than 32767 */
 #endif
-#undef MSGMAX			/* ALWAYS compute MGSMAX! */
+#undef MSGMAX			/* ALWAYS compute MSGMAX! */
 #define MSGMAX	(MSGSSZ*MSGSEG)
 #ifndef MSGMNB
 #define MSGMNB	2048		/* max # of bytes in a queue */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.2.4.1 2002/10/29 00:33:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.2.4.2 2003/05/19 22:18:02 tedu Exp $	*/
 /*      $NetBSD: pciide_hpt_reg.h,v 1.4 2001/07/23 14:55:27 bouyer Exp $       */
 
 /*
@@ -14,8 +14,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
+ *      This product includes software developed by Manuel Bouyer.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.

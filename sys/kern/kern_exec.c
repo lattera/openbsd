@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.61.2.3 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.61.2.4 2003/05/19 22:31:09 tedu Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -98,7 +98,7 @@ int stackgap_random = 1024;
  *	ok:	return 0, filled exec package, one locked vnode.
  *	error:	destructive:
  *			everything deallocated execept exec header.
- *		non-descructive:
+ *		non-destructive:
  *			error code, locked vnode, exec header unmodified
  */
 int
@@ -349,7 +349,7 @@ sys_execve(p, v, retval)
 	}
 
 	envc = 0;
-	/* environment need not be there */
+	/* environment does not need to be there */
 	if ((cpp = SCARG(uap, envp)) != NULL ) {
 		while (1) {
 			len = argp + ARG_MAX - dp;
@@ -454,11 +454,15 @@ sys_execve(p, v, retval)
 	}
 
 	/*
-	 * If process does execve() while it has euid/uid or egid/gid
-	 * which are mismatched, it remains P_SUGIDEXEC.
+	 * If process does execve() while it has a mismatched real,
+	 * effective, or saved uid/gid, we set P_SUGIDEXEC.
 	 */
-	if (p->p_ucred->cr_uid == p->p_cred->p_ruid &&
-	    p->p_ucred->cr_gid == p->p_cred->p_rgid)
+	if (p->p_ucred->cr_uid != p->p_cred->p_ruid ||
+	    p->p_ucred->cr_uid != p->p_cred->p_svuid ||
+	    p->p_ucred->cr_gid != p->p_cred->p_rgid ||
+	    p->p_ucred->cr_gid != p->p_cred->p_svgid)
+		p->p_flag |= P_SUGIDEXEC;
+	else
 		p->p_flag &= ~P_SUGIDEXEC;
 
 	/*
@@ -641,7 +645,6 @@ exec_abort:
 free_pack_abort:
 	free(pack.ep_hdr, M_EXEC);
 	exit1(p, W_EXITCODE(0, SIGABRT));
-	exit1(p, -1);
 
 	/* NOTREACHED */
 	p->p_flag &= ~P_INEXEC;
@@ -730,7 +733,7 @@ exec_sigcode_map(struct proc *p, struct emul *e)
 	}
 
 	/* Just a hint to uvm_mmap where to put it. */
-	p->p_sigcode = round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ);
+	p->p_sigcode = uvm_map_hint(p, VM_PROT_READ|VM_PROT_EXECUTE);
 	uao_reference(e->e_sigobject);
 	if (uvm_map(&p->p_vmspace->vm_map, &p->p_sigcode, round_page(sz),
 	    e->e_sigobject, 0, 0, UVM_MAPFLAG(UVM_PROT_RX, UVM_PROT_RX,

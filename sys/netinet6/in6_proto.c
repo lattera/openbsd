@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.31.4.3 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.31.4.4 2003/05/19 22:27:25 tedu Exp $	*/
 /*	$KAME: in6_proto.c,v 1.66 2000/10/10 15:35:47 itojun Exp $	*/
 
 /*
@@ -273,7 +273,6 @@ time_t	ip6_log_time = (time_t)0L;
  * or so? (jinmei@kame.net 19990310)
  */
 int pmtu_expire = 60*10;
-int pmtu_probe = 60*2;
 
 /* raw IP6 parameters */
 /*

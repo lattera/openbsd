@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ppp.c,v 1.25.4.2 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ppp.c,v 1.25.4.3 2003/05/19 22:30:41 tedu Exp $	*/
 /*	$NetBSD: if_ppp.c,v 1.39 1997/05/17 21:11:59 christos Exp $	*/
 
 /*
@@ -162,6 +162,8 @@
 #include <net/ppp-comp.h>
 #endif
 
+struct	ppp_softc ppp_softc[NPPP];
+
 static int	pppsioctl(struct ifnet *, u_long, caddr_t);
 static void	ppp_requeue(struct ppp_softc *);
 static void	ppp_ccp(struct ppp_softc *, struct mbuf *m, int rcvd);
@@ -227,7 +229,7 @@ pppattach()
 
     for (sc = ppp_softc; i < NPPP; sc++) {
 	sc->sc_unit = i;	/* XXX */
-	sprintf(sc->sc_if.if_xname, "ppp%d", i++);
+	snprintf(sc->sc_if.if_xname, sizeof sc->sc_if.if_xname, "ppp%d", i++);
 	sc->sc_if.if_softc = sc;
 	sc->sc_if.if_mtu = PPP_MTU;
 	sc->sc_if.if_flags = IFF_POINTOPOINT | IFF_MULTICAST;
@@ -680,15 +682,12 @@ pppoutput(ifp, m0, dst, rtp)
     enum NPmode mode;
     int len;
     struct mbuf *m;
-    ALTQ_DECL(struct altq_pktattr pktattr;)
 
     if (sc->sc_devp == NULL || (ifp->if_flags & IFF_RUNNING) == 0
 	|| ((ifp->if_flags & IFF_UP) == 0 && dst->sa_family != AF_UNSPEC)) {
 	error = ENETDOWN;	/* sort of */
 	goto bad;
     }
-
-    IFQ_CLASSIFY(&ifp->if_snd, m0, dst->sa_family, &pktattr);
 
     /*
      * Compute PPP header.
@@ -822,7 +821,7 @@ pppoutput(ifp, m0, dst, rtp)
 		error = 0;
 	    }
 	} else
-	    IFQ_ENQUEUE(&sc->sc_if.if_snd, m0, &pktattr, error);
+	    IFQ_ENQUEUE(&sc->sc_if.if_snd, m0, NULL, error);
 	if (error) {
 	    splx(s);
 	    sc->sc_if.if_oerrors++;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.7.2.2 2002/10/29 00:36:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.7.2.3 2003/05/19 22:29:54 tedu Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@keromytis.org)
  *
@@ -162,6 +162,9 @@ export_sa(void **p, struct tdb *tdb)
 		switch (tdb->tdb_compalgxform->type) {
 		case CRYPTO_DEFLATE_COMP:
 			sadb_sa->sadb_sa_encrypt = SADB_X_CALG_DEFLATE;
+			break;
+		case CRYPTO_LZS_COMP:
+			sadb_sa->sadb_sa_encrypt = SADB_X_CALG_LZS;
 			break;
 		}
 	}
@@ -492,7 +495,7 @@ import_address(struct sockaddr *sa, struct sadb_address *sadb_address)
 	if (ssa->sa_len)
 		salen = ssa->sa_len;
 	else
-		switch(ssa->sa_family) {
+		switch (ssa->sa_family) {
 #ifdef INET
 		case AF_INET:
 			salen = sizeof(struct sockaddr_in);
@@ -695,11 +698,11 @@ export_auth(void **p, struct tdb *tdb, int dstauth)
 	    PADUP((*ipr)->ref_len)) / sizeof(uint64_t);
 
 	switch ((*ipr)->ref_type) {
-	case IPSP_CRED_KEYNOTE:
-		sadb_auth->sadb_x_cred_type = SADB_X_CREDTYPE_KEYNOTE;
+	case IPSP_AUTH_PASSPHRASE:
+		sadb_auth->sadb_x_cred_type = SADB_X_AUTHTYPE_PASSPHRASE;
 		break;
-	case IPSP_CRED_X509:
-		sadb_auth->sadb_x_cred_type = SADB_X_CREDTYPE_X509;
+	case IPSP_AUTH_RSA:
+		sadb_auth->sadb_x_cred_type = SADB_X_AUTHTYPE_RSA;
 		break;
 	}
 	*p += sizeof(struct sadb_x_cred);

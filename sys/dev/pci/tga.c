@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.10.2.2 2002/10/29 00:33:30 art Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.10.2.3 2003/05/19 22:19:08 tedu Exp $ */
 /* $NetBSD: tga.c,v 1.40 2002/03/13 15:05:18 ad Exp $ */
 
 /*
@@ -173,24 +173,21 @@ int tgadebug = 0;
 #define DPRINTFN(n,...)
 #endif
 
+const struct pci_matchid tga_devices[] = {
+	{ PCI_VENDOR_DEC, PCI_PRODUCT_DEC_21030 },
+	{ PCI_VENDOR_DEC, PCI_PRODUCT_DEC_PBXGB },
+};
+
 int
 tgamatch(parent, match, aux)
 	struct device *parent;
 	struct cfdata *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = aux;
+	if (pci_matchbyid((struct pci_attach_args *)aux, tga_devices,
+	    sizeof(tga_devices) / sizeof(tga_devices[0])))
+		return (10);	/* need to return more than vga_pci here! */
 
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_DEC)
-		return (0);
-
-	switch (PCI_PRODUCT(pa->pa_id)) {
-	case PCI_PRODUCT_DEC_21030:
-	case PCI_PRODUCT_DEC_PBXGB:
-		return 10;
-	default:
-		return 0;
-	}
 	return (0);
 }
 
@@ -895,10 +892,6 @@ tga_builtin_set_cursor(dc, cursorp)
 		if ((u_int)cursorp->size.x != 64 ||
 		    (u_int)cursorp->size.y > 64)
 			return (EINVAL);
-		/* The cursor is 2 bits deep, and there is no mask */
-		count = (cursorp->size.y * 64 * 2) / NBBY;
-		if (!uvm_useracc(cursorp->image, count, B_READ))
-			return (EFAULT);
 	}
 	if (v & WSDISPLAY_CURSOR_DOHOT)		/* not supported */
 		return EINVAL;
@@ -921,12 +914,13 @@ tga_builtin_set_cursor(dc, cursorp)
 		dcrf->ramdac_set_curcmap(dcrc, cursorp);
 	}
 	if (v & WSDISPLAY_CURSOR_DOSHAPE) {
-		count = ((64 * 2) / NBBY) * cursorp->size.y;
+		/* The cursor is 2 bits deep, and there is no mask */
+		count = (cursorp->size.y * 64 * 2) / NBBY;
 		TGAWREG(dc, TGA_REG_CCBR,
 		    (TGARREG(dc, TGA_REG_CCBR) & ~0xfc00) | (cursorp->size.y << 10));
-		copyin(cursorp->image, (char *)(dc->dc_vaddr +
-		    (TGARREG(dc, TGA_REG_CCBR) & 0x3ff)),
-		    count);				/* can't fail. */
+		if ((error = copyin(cursorp->image,(char *)(dc->dc_vaddr +
+		    (TGARREG(dc, TGA_REG_CCBR) & 0x3ff)), count)) != 0)
+			return (error);
 	}
 	return (0);
 }

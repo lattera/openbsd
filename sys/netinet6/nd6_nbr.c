@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.19.2.2 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.19.2.3 2003/05/19 22:27:25 tedu Exp $	*/
 /*	$KAME: nd6_nbr.c,v 1.61 2001/02/10 16:06:14 jinmei Exp $	*/
 
 /*
@@ -100,16 +100,11 @@ nd6_ns_input(m, off, icmp6len)
 	union nd_opts ndopts;
 	struct sockaddr_dl *proxydl = NULL;
 
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, icmp6len,);
-	nd_ns = (struct nd_neighbor_solicit *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(nd_ns, struct nd_neighbor_solicit *, m, off, icmp6len);
 	if (nd_ns == NULL) {
 		icmp6stat.icp6s_tooshort++;
 		return;
 	}
-#endif
 	ip6 = mtod(m, struct ip6_hdr *); /* adjust pointer for safety */
 	taddr6 = nd_ns->nd_ns_target;
 
@@ -560,16 +555,11 @@ nd6_na_input(m, off, icmp6len)
 		goto bad;
 	}
 
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, icmp6len,);
-	nd_na = (struct nd_neighbor_advert *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(nd_na, struct nd_neighbor_advert *, m, off, icmp6len);
 	if (nd_na == NULL) {
 		icmp6stat.icp6s_tooshort++;
 		return;
 	}
-#endif
 	taddr6 = nd_na->nd_na_target;
 	flags = nd_na->nd_na_flags_reserved;
 	is_router = ((flags & ND_NA_FLAG_ROUTER) != 0);

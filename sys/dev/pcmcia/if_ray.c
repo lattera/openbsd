@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.17.4.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.17.4.2 2003/05/19 22:19:57 tedu Exp $	*/
 /*	$NetBSD: if_ray.c,v 1.21 2000/07/05 02:35:54 onoe Exp $	*/
 
 /*
@@ -532,7 +532,7 @@ ray_attach(parent, self, aux)
 	printf("\n");
 
 	/* enable the card */
-	pcmcia_function_init(sc->sc_pf, sc->sc_pf->cfe_head.sqh_first);
+	pcmcia_function_init(sc->sc_pf, SIMPLEQ_FIRST(&sc->sc_pf->cfe_head));
 	if (pcmcia_function_enable(sc->sc_pf)) {
 		printf(": failed to enable the card");
 		return;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uaudio.c,v 1.11.2.2 2002/10/29 00:33:32 art Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uaudio.c,v 1.11.2.3 2003/05/19 22:23:39 tedu Exp $ */
 /*	$NetBSD: uaudio.c,v 1.60 2002/05/18 15:14:39 kent Exp $	*/
 
 /*
@@ -360,7 +360,7 @@ USB_ATTACH(uaudio)
 	usbd_status err;
 	int i, j, found;
 
-	usbd_devinfo(uaa->device, 0, devinfo);
+	usbd_devinfo(uaa->device, 0, devinfo, sizeof devinfo);
 	printf(": %s\n", devinfo);
 
 	sc->sc_udev = uaa->device;
@@ -484,49 +484,49 @@ uaudio_query_encoding(void *addr, struct audio_encoding *fp)
 	idx = fp->index;
 	switch (idx) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = flags&HAS_8U ? 0 : AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = flags&HAS_MULAW ? 0 : AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = flags&HAS_ALAW ? 0 : AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = flags&HAS_8 ? 0 : AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		return (0);
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
@@ -611,7 +611,7 @@ char *
 uaudio_id_name(struct uaudio_softc *sc, usb_descriptor_t **dps, int id)
 {
 	static char buf[32];
-	sprintf(buf, "i%d", id);
+	snprintf(buf, sizeof buf, "i%d", id);
 	return (buf);
 }
 
@@ -762,7 +762,8 @@ uaudio_add_mixer(struct uaudio_softc *sc, usb_descriptor_t *v,
 						mix.wValue[k++] =
 							MAKE(p+c+1, o+1);
 				}
-			sprintf(mix.ctlname, "mix%d-%s", d->bUnitId,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"mix%d-%s", d->bUnitId,
 				uaudio_id_name(sc, dps, d->baSourceId[i]));
 			mix.nchan = chs;
 			uaudio_mixer_add_ctl(sc, &mix);
@@ -844,35 +845,40 @@ uaudio_add_feature(struct uaudio_softc *sc, usb_descriptor_t *v,
 		switch (ctl) {
 		case MUTE_CONTROL:
 			mix.type = MIX_ON_OFF;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNmute);
 			mix.ctlunit = "";
 			break;
 		case VOLUME_CONTROL:
 			mix.type = MIX_SIGNED_16;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNmaster);
 			mix.ctlunit = AudioNvolume;
 			break;
 		case BASS_CONTROL:
 			mix.type = MIX_SIGNED_8;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNbass);
 			mix.ctlunit = AudioNbass;
 			break;
 		case MID_CONTROL:
 			mix.type = MIX_SIGNED_8;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNmid);
 			mix.ctlunit = AudioNmid;
 			break;
 		case TREBLE_CONTROL:
 			mix.type = MIX_SIGNED_8;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNtreble);
 			mix.ctlunit = AudioNtreble;
@@ -882,28 +888,32 @@ uaudio_add_feature(struct uaudio_softc *sc, usb_descriptor_t *v,
 			break;
 		case AGC_CONTROL:
 			mix.type = MIX_ON_OFF;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNagc);
 			mix.ctlunit = "";
 			break;
 		case DELAY_CONTROL:
 			mix.type = MIX_UNSIGNED_16;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNdelay);
 			mix.ctlunit = "4 ms";
 			break;
 		case BASS_BOOST_CONTROL:
 			mix.type = MIX_ON_OFF;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNbassboost);
 			mix.ctlunit = "";
 			break;
 		case LOUDNESS_CONTROL:
 			mix.type = MIX_ON_OFF;
-			sprintf(mix.ctlname, "fea%d-%s-%s", unit,
+			snprintf(mix.ctlname, sizeof mix.ctlname,
+				"fea%d-%s-%s", unit,
 				uaudio_id_name(sc, dps, srcId),
 				AudioNloudness);
 			mix.ctlunit = "";
@@ -941,7 +951,8 @@ uaudio_add_processing_updown(struct uaudio_softc *sc, usb_descriptor_t *v,
 	mix.class = -1;
 	mix.type = MIX_ON_OFF;	/* XXX */
 	mix.ctlunit = "";
-	sprintf(mix.ctlname, "pro%d-mode", d->bUnitId);
+	snprintf(mix.ctlname, sizeof mix.ctlname,
+		"pro%d-mode", d->bUnitId);
 
 	for (i = 0; i < ud->bNrModes; i++) {
 		DPRINTFN(2,("uaudio_add_processing_updown: i=%d bm=0x%x\n",
@@ -972,7 +983,8 @@ uaudio_add_processing(struct uaudio_softc *sc, usb_descriptor_t *v,
 		mix.class = -1;
 		mix.type = MIX_ON_OFF;
 		mix.ctlunit = "";
-		sprintf(mix.ctlname, "pro%d.%d-enable", d->bUnitId, ptype);
+		snprintf(mix.ctlname, sizeof mix.ctlname,
+			"pro%d.%d-enable", d->bUnitId, ptype);
 		uaudio_mixer_add_ctl(sc, &mix);
 	}
 
@@ -1017,7 +1029,8 @@ uaudio_add_extension(struct uaudio_softc *sc, usb_descriptor_t *v,
 		mix.class = -1;
 		mix.type = MIX_ON_OFF;
 		mix.ctlunit = "";
-		sprintf(mix.ctlname, "ext%d-enable", d->bUnitId);
+		snprintf(mix.ctlname, sizeof mix.ctlname,
+			"ext%d-enable", d->bUnitId);
 		uaudio_mixer_add_ctl(sc, &mix);
 	}
 }
@@ -1375,40 +1388,46 @@ uaudio_query_devinfo(void *addr, mixer_devinfo_t *mi)
 			mi->type = AUDIO_MIXER_CLASS;
 			mi->mixer_class = nctls + UAC_OUTPUT;
 			mi->next = mi->prev = AUDIO_MIXER_LAST;
-			strcpy(mi->label.name, AudioCoutputs);
+			strlcpy(mi->label.name, AudioCoutputs,
+			    sizeof mi->label.name);
 			return (0);
 		case UAC_INPUT:
 			mi->type = AUDIO_MIXER_CLASS;
 			mi->mixer_class = nctls + UAC_INPUT;
 			mi->next = mi->prev = AUDIO_MIXER_LAST;
-			strcpy(mi->label.name, AudioCinputs);
+			strlcpy(mi->label.name, AudioCinputs,
+			    sizeof mi->label.name);
 			return (0);
 		case UAC_EQUAL:
 			mi->type = AUDIO_MIXER_CLASS;
 			mi->mixer_class = nctls + UAC_EQUAL;
 			mi->next = mi->prev = AUDIO_MIXER_LAST;
-			strcpy(mi->label.name, AudioCequalization);
+			strlcpy(mi->label.name, AudioCequalization,
+			    sizeof mi->label.name);
 			return (0);
 		default:
 			return (ENXIO);
 		}
 	}
 	mc = &sc->sc_ctls[n];
-	strncpy(mi->label.name, mc->ctlname, MAX_AUDIO_DEV_LEN);
+	strlcpy(mi->label.name, mc->ctlname, sizeof mi->label.name);
 	mi->mixer_class = mc->class;
 	mi->next = mi->prev = AUDIO_MIXER_LAST;	/* XXX */
 	switch (mc->type) {
 	case MIX_ON_OFF:
 		mi->type = AUDIO_MIXER_ENUM;
 		mi->un.e.num_mem = 2;
-		strcpy(mi->un.e.member[0].label.name, AudioNoff);
+		strlcpy(mi->un.e.member[0].label.name, AudioNoff,
+		    sizeof mi->un.e.member[0].label.name);
 		mi->un.e.member[0].ord = 0;
-		strcpy(mi->un.e.member[1].label.name, AudioNon);
+		strlcpy(mi->un.e.member[1].label.name, AudioNon,
+		    sizeof mi->un.e.member[1].label.name);
 		mi->un.e.member[1].ord = 1;
 		break;
 	default:
 		mi->type = AUDIO_MIXER_VALUE;
-		strncpy(mi->un.v.units.name, mc->ctlunit, MAX_AUDIO_DEV_LEN);
+		strlcpy(mi->un.v.units.name, mc->ctlunit,
+		    sizeof mi->un.v.units.name);
 		mi->un.v.num_channels = mc->nchan;
 		mi->un.v.delta = mc->delta;
 		break;

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/umidi.c,v 1.6.4.1 2002/10/29 00:33:32 art Exp $	*/
-/*	$NetBSD: umidi.c,v 1.16 2002/07/11 21:14:32 augustss Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umidi.c,v 1.6.4.2 2003/05/19 22:26:19 tedu Exp $	*/
+/*	$NetBSD: umidi.c,v 1.16 2002/07/11 21:14:32 augustss Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -166,7 +166,7 @@ USB_ATTACH(umidi)
 
 	DPRINTFN(1,("umidi_attach\n"));
 
-	usbd_devinfo(uaa->device, 0, devinfo);
+	usbd_devinfo(uaa->device, 0, devinfo, sizeof devinfo);
 	printf("\n%s: %s\n", USBDEVNAME(sc->sc_dev), devinfo);
 
 	sc->sc_iface = uaa->iface;

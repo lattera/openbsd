@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.16.2.1 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.16.2.2 2003/05/19 22:30:08 tedu Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -49,6 +49,7 @@ struct ifbreq {
 	u_int8_t	ifbr_state;		/* member stp state */
 	u_int8_t	ifbr_priority;		/* member stp priority */
 	u_int8_t	ifbr_portno;		/* member port number */
+	u_int32_t	ifbr_path_cost;		/* member stp path cost */
 };
 /* SIOCBRDGIFFLGS, SIOCBRDGIFFLGS */
 #define	IFBIF_LEARNING		0x0001	/* ifs can learn */
@@ -275,5 +276,6 @@ struct mbuf *bstp_input(struct bridge_softc *, struct ifnet *,
     struct ether_header *, struct mbuf *);
 void	bstp_initialization(struct bridge_softc *);
 int	bstp_ioctl(struct ifnet *, u_long, caddr_t);
+void	bridge_rtdelete(struct bridge_softc *, struct ifnet *, int);
 #endif /* _KERNEL */
 #endif /* _NET_IF_BRIDGE_H_ */

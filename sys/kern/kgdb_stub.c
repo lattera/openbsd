@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/kern/kgdb_stub.c,v 1.2.4.1 2002/06/11 03:29:40 art Exp $ */
+/* $OpenBSD: src/sys/kern/kgdb_stub.c,v 1.2.4.2 2003/05/19 22:31:56 tedu Exp $ */
 /*	$NetBSD: kgdb_stub.c,v 1.6 1998/08/30 20:30:57 scottr Exp $	*/
 
 /*
@@ -379,7 +379,7 @@ kgdb_trap(type, regs)
 		kgdb_active = 1;
 	} else {
 		/* Tell remote host that an exception has occurred. */
-		sprintf(buffer, "S%02x", kgdb_signal(type));
+		snprintf(buffer, sizeof buffer, "S%02x", kgdb_signal(type));
 		kgdb_send(buffer);
 	}
 
@@ -407,7 +407,7 @@ kgdb_trap(type, regs)
 			 * knowing if we're in or out of this loop
 			 * when he issues a "remote-signal".
 			 */
-			sprintf(buffer, "S%02x", kgdb_signal(type));
+			snprintf(buffer, sizeof buffer, "S%02x", kgdb_signal(type));
 			kgdb_send(buffer);
 			continue;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50.2.3 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50.2.4 2003/05/19 22:31:10 tedu Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -1309,7 +1309,7 @@ coredump(p)
 	cred->cr_uid = p->p_cred->p_ruid;
 	cred->cr_gid = p->p_cred->p_rgid;
 
-	sprintf(name, "%s.core", p->p_comm);
+	snprintf(name, sizeof name, "%s.core", p->p_comm);
 	NDINIT(&nd, LOOKUP, NOFOLLOW, UIO_SYSSPACE, name, p);
 
 	error = vn_open(&nd, O_CREAT | FWRITE | O_NOFOLLOW, S_IRUSR | S_IWUSR);

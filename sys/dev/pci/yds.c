@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.9.2.2 2002/06/11 03:42:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.9.2.3 2003/05/19 22:19:37 tedu Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -91,6 +91,8 @@ int	ydsdebug = 0;
 #else
 # define YDS_INPUT_SLOT 1	/* ADC slot */
 #endif
+
+static	int ac97_id2;
 
 int	yds_match(struct device *, void *, void *);
 void	yds_attach(struct device *, struct device *, void *);
@@ -570,7 +572,7 @@ yds_configure_legacy (arg)
 
 	reg = pci_conf_read(sc->sc_pc, sc->sc_pcitag, YDS_PCI_LEGACY);
 	reg &= ~0x8133c03f;	/* these bits are out of interest */
-	reg |= ((YDS_PCI_EX_LEGACY_IMOD) |
+	reg |= YDS_PCI_EX_LEGACY_SBMOD_XXX | ((YDS_PCI_EX_LEGACY_IMOD) |
 		(YDS_PCI_LEGACY_FMEN |
 		 YDS_PCI_LEGACY_MEN /*| YDS_PCI_LEGACY_MIEN*/));
 	if (FLEXIBLE) {
@@ -668,7 +670,7 @@ yds_attach(parent, self, aux)
 	mixer_ctrl_t ctl;
 	int i, r;
 
-	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo);
+	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo, sizeof devinfo);
 
 	/* Map register to memory */
 	if (pci_mapreg_map(pa, YDS_PCI_MBA, PCI_MAPREG_TYPE_MEM, 0,
@@ -1113,49 +1115,49 @@ yds_query_encoding(addr, fp)
 {
 	switch (fp->index) {
 	case 0:
-		strcpy(fp->name, AudioEulinear);
+		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
 		fp->flags = 0;
 		return (0);
 	case 1:
-		strcpy(fp->name, AudioEmulaw);
+		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 2:
-		strcpy(fp->name, AudioEalaw);
+		strlcpy(fp->name, AudioEalaw, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ALAW;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 3:
-		strcpy(fp->name, AudioEslinear);
+		strlcpy(fp->name, AudioEslinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR;
 		fp->precision = 8;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 4:
-		strcpy(fp->name, AudioEslinear_le);
+		strlcpy(fp->name, AudioEslinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_LE;
 		fp->precision = 16;
 		fp->flags = 0;
 		return (0);
 	case 5:
-		strcpy(fp->name, AudioEulinear_le);
+		strlcpy(fp->name, AudioEulinear_le, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_LE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 6:
-		strcpy(fp->name, AudioEslinear_be);
+		strlcpy(fp->name, AudioEslinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_SLINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
 		return (0);
 	case 7:
-		strcpy(fp->name, AudioEulinear_be);
+		strlcpy(fp->name, AudioEulinear_be, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR_BE;
 		fp->precision = 16;
 		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
@@ -1595,7 +1597,6 @@ yds_halt_input(addr)
 	struct yds_softc *sc = addr;
 
 	DPRINTF(("yds: yds_halt_input\n"));
-	sc->sc_rec.intr = NULL;
 	if (sc->sc_rec.intr) {
 		/* Stop the rec slot operation */
 		YWRITE4(sc, YDS_MAPOF_REC, 0);
@@ -1610,6 +1611,7 @@ yds_halt_input(addr)
 		bus_dmamap_sync(sc->sc_dmatag, sc->sc_rec.dma->map,
 				0, sc->sc_rec.length, BUS_DMASYNC_POSTREAD);
 	}
+	sc->sc_rec.intr = NULL;
 
 	return 0;
 }

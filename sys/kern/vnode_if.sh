@@ -33,7 +33,7 @@ copyright="\
  * SUCH DAMAGE.
  */
 "
-SCRIPT_ID='$OpenBSD: src/sys/kern/Attic/vnode_if.sh,v 1.8.6.1 2002/06/11 03:29:41 art Exp $'
+SCRIPT_ID='$OpenBSD: src/sys/kern/Attic/vnode_if.sh,v 1.8.6.2 2003/05/19 22:31:57 tedu Exp $'
 # SCRIPT_ID='$NetBSD: vnode_if.sh,v 1.9 1996/02/29 20:58:22 cgd Exp $'
 
 # Script to produce VFS front-end sugar.
@@ -112,10 +112,18 @@ awk_parser='
 	    $3 == "WILLRELE") {
 		willrele[argc] = 1;
 		i++;
+	} else if ($2 == "WILLUNLOCK" ||
+	    $3 == "WILLUNLOCK") {
+		willrele[argc] = 2;
+		i++;
+	} else if ($2 == "WILLPUT" ||
+	    $3 == "WILLPUT") {
+		willrele[argc] = 3;
+		i++;
 	} else
 		willrele[argc] = 0;
 
-    if ($2 == "SHOULDBELOCKED") {
+	if ($2 == "SHOULDBELOCKED") {
 	   shouldbelocked[argc] = 1;
 	   i++;
 	} else
@@ -280,10 +288,17 @@ function doit() {
 	vpnum = 0;
 	for (i=0; i<argc; i++) {
 		if (willrele[i]) {
-			if (argdir[i] ~ /OUT/) {
-				printf(" | VDESC_VPP_WILLRELE");
+			if (willrele[i] == 2) {
+				word = "UNLOCK";
+			} else if (willrele[i] == 3) {
+				word = "PUT";
 			} else {
-				printf(" | VDESC_VP%s_WILLRELE", vpnum);
+				word = "RELE";
+			}
+			if (argdir[i] ~ /OUT/) {
+				printf(" | VDESC_VPP_WILL%s", word);
+			} else {
+				printf(" | VDESC_VP%s_WILL%s", vpnum, word);
 			};
 			vpnum++;
 		}

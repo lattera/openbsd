@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7.6.2 2002/10/29 00:33:32 art Exp $ */
-/*	$NetBSD: umodem.c,v 1.44 2002/07/11 21:14:33 augustss Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7.6.3 2003/05/19 22:26:19 tedu Exp $ */
+/*	$NetBSD: umodem.c,v 1.45 2002/09/23 05:51:23 simonb Exp $	*/
 
 /*
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
@@ -193,7 +193,7 @@ USB_ATTACH(umodem)
 	int i;
 	struct ucom_attach_args uca;
 
-	usbd_devinfo(uaa->device, 0, devinfo);
+	usbd_devinfo(uaa->device, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 
 	sc->sc_udev = dev;
@@ -723,7 +723,6 @@ umodem_activate(device_ptr_t self, enum devact act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		return (EOPNOTSUPP);
-		break;
 
 	case DVACT_DEACTIVATE:
 		sc->sc_dying = 1;

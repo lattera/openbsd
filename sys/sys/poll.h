@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/poll.h,v 1.6.4.2 2002/10/29 00:36:49 art Exp $ */
+/*	$OpenBSD: src/sys/sys/poll.h,v 1.6.4.3 2003/05/19 22:32:19 tedu Exp $ */
 
 /*
  * Copyright (c) 1996 Theo de Raadt
@@ -43,6 +43,7 @@ struct pollfd {
 #define	POLLHUP		0x0010
 #define	POLLNVAL	0x0020
 #define	POLLRDNORM	0x0040
+#define POLLNORM	POLLRDNORM
 #define POLLWRNORM      POLLOUT
 #define	POLLRDBAND	0x0080
 #define	POLLWRBAND	0x0100

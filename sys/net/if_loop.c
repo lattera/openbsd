@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_loop.c,v 1.21.2.3 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_loop.c,v 1.21.2.4 2003/05/19 22:30:08 tedu Exp $	*/
 /*	$NetBSD: if_loop.c,v 1.15 1996/05/07 02:40:33 thorpej Exp $	*/
 
 /*
@@ -191,7 +191,7 @@ loopattach(n)
 		bzero(ifp, sizeof(struct ifnet));
 		if (i == 0)
 			lo0ifp = ifp;
-		sprintf(ifp->if_xname, "lo%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "lo%d", i);
 		ifp->if_softc = NULL;
 		ifp->if_mtu = LOMTU;
 		ifp->if_flags = IFF_LOOPBACK | IFF_MULTICAST;
@@ -241,6 +241,7 @@ looutput(ifp, m, dst, rt)
 		struct mbuf m0;
 		u_int32_t af = htonl(dst->sa_family);
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = sizeof(af);
 		m0.m_data = (char *)&af;
@@ -266,15 +267,8 @@ looutput(ifp, m, dst, rt)
 	 */
 	if ((ALTQ_IS_ENABLED(&ifp->if_snd) || TBR_IS_ENABLED(&ifp->if_snd))
 	    && ifp->if_start == lo_altqstart) {
-		struct altq_pktattr pktattr;
 		int32_t *afp;
 	        int error;
-
-		/*
-		 * if the queueing discipline needs packet classification,
-		 * do it before prepending link headers.
-		 */
-		IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
 
 		M_PREPEND(m, sizeof(int32_t), M_DONTWAIT);
 		if (m == 0)
@@ -283,7 +277,7 @@ looutput(ifp, m, dst, rt)
 		*afp = (int32_t)dst->sa_family;
 
 	        s = splimp();
-		IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+		IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 		(*ifp->if_start)(ifp);
 		splx(s);
 		return (error);

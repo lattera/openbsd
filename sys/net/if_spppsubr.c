@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.11.2.3 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.11.2.4 2003/05/19 22:30:41 tedu Exp $	*/
 /*
  * Synchronous PPP/Cisco link level subroutines.
  * Keepalive protocol implemented in both Cisco and PPP modes.
@@ -653,7 +653,6 @@ sppp_output(struct ifnet *ifp, struct mbuf *m,
 	struct ppp_header *h;
 	struct ifqueue *ifq = NULL;
 	int s, len, rv = 0;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	s = splimp();
 
@@ -674,12 +673,6 @@ sppp_output(struct ifnet *ifp, struct mbuf *m,
 		lcp.Open(sp);
 		s = splimp();
 	}
-
-	/*
-	 * if the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
 
 #ifdef INET
 	/*
@@ -814,7 +807,7 @@ nosupport:
 		}
 		IF_ENQUEUE (ifq, m);
 	} else
-		IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, rv);
+		IFQ_ENQUEUE(&ifp->if_snd, m, NULL, rv);
 	if (rv != 0) {
 		++ifp->if_oerrors;
 		splx (s);
@@ -4116,7 +4109,7 @@ sppp_cp_type_name(u_char type)
 	case ECHO_REPLY: return "echo-reply";
 	case DISC_REQ:   return "discard-req";
 	}
-	sprintf (buf, "0x%x", type);
+	snprintf (buf, sizeof buf, "0x%x", type);
 	return buf;
 }
 
@@ -4139,7 +4132,7 @@ sppp_auth_type_name(u_short proto, u_char type)
 		case PAP_NAK:		return "nak";
 		}
 	}
-	sprintf (buf, "0x%x", type);
+	snprintf (buf, sizeof buf, "0x%x", type);
 	return buf;
 }
 
@@ -4156,7 +4149,7 @@ sppp_lcp_opt_name(u_char opt)
 	case LCP_OPT_PROTO_COMP:	return "proto-comp";
 	case LCP_OPT_ADDR_COMP:		return "addr-comp";
 	}
-	sprintf (buf, "0x%x", opt);
+	snprintf (buf, sizeof buf, "0x%x", opt);
 	return buf;
 }
 
@@ -4169,7 +4162,7 @@ sppp_ipcp_opt_name(u_char opt)
 	case IPCP_OPT_COMPRESSION:	return "compression";
 	case IPCP_OPT_ADDRESS:		return "address";
 	}
-	sprintf (buf, "0x%x", opt);
+	snprintf (buf, sizeof buf, "0x%x", opt);
 	return buf;
 }
 
@@ -4214,7 +4207,7 @@ sppp_proto_name(u_short proto)
 	case PPP_PAP:	return "pap";
 	case PPP_CHAP:	return "chap";
 	}
-	sprintf(buf, "0x%x", (unsigned)proto);
+	snprintf(buf, sizeof buf, "0x%x", (unsigned)proto);
 	return buf;
 }
 
@@ -4247,7 +4240,7 @@ HIDE const char *
 sppp_dotted_quad(u_long addr)
 {
 	static char s[16];
-	sprintf(s, "%d.%d.%d.%d",
+	snprintf(s, sizeof s, "%d.%d.%d.%d",
 		(int)((addr >> 24) & 0xff),
 		(int)((addr >> 16) & 0xff),
 		(int)((addr >> 8) & 0xff),

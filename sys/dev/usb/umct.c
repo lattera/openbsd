@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/umct.c,v 1.5.4.1 2002/10/29 00:33:32 art Exp $	*/
-/*	$NetBSD: umct.c,v 1.8 2002/07/11 21:14:32 augustss Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umct.c,v 1.5.4.2 2003/05/19 22:26:19 tedu Exp $	*/
+/*	$NetBSD: umct.c,v 1.9 2002/09/23 05:51:23 simonb Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -179,7 +179,7 @@ USB_ATTACH(umct)
 	int i, found;
 	struct ucom_attach_args uca;
 
-        usbd_devinfo(dev, 0, devinfo);
+        usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
         USB_ATTACH_SETUP;
         printf("%s: %s\n", devname, devinfo);
 
@@ -336,7 +336,6 @@ umct_activate(device_ptr_t self, enum devact act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		return (EOPNOTSUPP);
-		break;
 
 	case DVACT_DEACTIVATE:
 		if (sc->sc_subdev != NULL)

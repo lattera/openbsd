@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.6.2 2002/10/29 00:33:33 art Exp $	*/
-/*	$NetBSD: uvisor.c,v 1.16 2002/07/11 21:14:36 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.6.3 2003/05/19 22:26:20 tedu Exp $	*/
+/*	$NetBSD: uvisor.c,v 1.17 2002/08/13 11:38:15 augustss Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -160,6 +160,7 @@ static const struct uvisor_type uvisor_devs[] = {
 	{{ USB_VENDOR_HANDSPRING, USB_PRODUCT_HANDSPRING_VISOR }, 0 },
 	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M500 }, PALM4 },
 	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M505 }, PALM4 },
+	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M515 }, PALM4 },
 	{{ USB_VENDOR_PALM, USB_PRODUCT_PALM_M125 }, PALM4 },
 	{{ USB_VENDOR_SONY, USB_PRODUCT_SONY_CLIE_40 }, PALM4 },
 	{{ USB_VENDOR_SONY, USB_PRODUCT_SONY_CLIE_41 }, 0 },
@@ -214,7 +215,7 @@ USB_ATTACH(uvisor)
 		goto bad;
 	}
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", devname, devinfo);
 

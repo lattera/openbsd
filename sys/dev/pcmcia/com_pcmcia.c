@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.29.4.3 2002/10/29 00:33:30 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.29.4.4 2003/05/19 22:19:56 tedu Exp $	*/
 /*	$NetBSD: com_pcmcia.c,v 1.15 1998/08/22 17:47:58 msaitoh Exp $	*/
 
 /*
@@ -197,8 +197,7 @@ com_pcmcia_match(parent, match, aux)
 
 	/* 2. Does it have all four 'standard' port ranges? */
 	comportmask = 0;
-	for (cfe = pa->pf->cfe_head.sqh_first; cfe;
-	     cfe = cfe->cfe_list.sqe_next) {
+	SIMPLEQ_FOREACH(cfe, &pa->pf->cfe_head, cfe_list) {
 		switch (cfe->iospace[0].start) {
 		case IO_COM1:
 			comportmask |= 1;

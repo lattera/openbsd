@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.6.2.2 2002/10/29 00:33:28 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.6.2.3 2003/05/19 22:18:00 tedu Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -303,7 +303,7 @@ void lge_miibus_statchg(dev)
 
 	LGE_CLRBIT(sc, LGE_GMIIMODE, LGE_GMIIMODE_SPEED);
 	switch (IFM_SUBTYPE(mii->mii_media_active)) {
-	case IFM_1000_TX:
+	case IFM_1000_T:
 	case IFM_1000_SX:
 		LGE_SETBIT(sc, LGE_GMIIMODE, LGE_SPEED_1000);
 		break;
@@ -1147,7 +1147,7 @@ void lge_tick(xsc)
 		    IFM_SUBTYPE(mii->mii_media_active) != IFM_NONE) {
 			sc->lge_link++;
 			if (IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_SX||
-			    IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_TX)
+			    IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_T)
 				printf("%s: gigabit link up\n",
 				       sc->sc_dv.dv_xname);
 			if (!IFQ_IS_EMPTY(&ifp->if_snd))

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uhidev.h,v 1.3.2.1 2002/06/11 03:42:30 art Exp $	*/
-/*	$NetBSD: uhidev.h,v 1.2 2001/12/29 18:56:52 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhidev.h,v 1.3.2.2 2003/05/19 22:24:08 tedu Exp $	*/
+/*	$NetBSD: uhidev.h,v 1.3 2002/10/08 09:56:17 dan Exp $	*/
 
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
@@ -40,6 +40,11 @@
 
 #if defined(__NetBSD__)
 #include "locators.h"
+#include "rnd.h"
+
+#if NRND > 0
+#include <sys/rnd.h>
+#endif
 #endif
 
 #define uhidevcf_reportid cf_loc[UHIDBUSCF_REPORTID]
@@ -73,6 +78,9 @@ struct uhidev {
 	int sc_in_rep_size;
 #define	UHIDEV_OPEN	0x01	/* device is open */
 	void (*sc_intr)(struct uhidev *, void *, u_int);
+#if defined(__NetBSD__) && NRND > 0
+        rndsource_element_t     rnd_source;
+#endif
 };
 
 struct uhidev_attach_arg {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.21.2.2 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.21.2.3 2003/05/19 22:27:25 tedu Exp $	*/
 /*	$KAME: in6_ifattach.c,v 1.124 2001/07/18 08:32:51 jinmei Exp $	*/
 
 /*
@@ -218,9 +218,6 @@ found:
 		break;
 
 	case IFT_GIF:
-#ifdef IFT_STF
-	case IFT_STF:
-#endif
 		/*
 		 * RFC2893 says: "SHOULD use IPv4 address as ifid source".
 		 * however, IPv4 address is not very suitable as unique
@@ -605,16 +602,6 @@ in6_ifattach(ifp, altifp)
 	 * quirks based on interface type
 	 */
 	switch (ifp->if_type) {
-#ifdef IFT_STF
-	case IFT_STF:
-		/*
-		 * 6to4 interface is a very special kind of beast.
-		 * no multicast, no linklocal.  RFC2529 specifies how to make
-		 * linklocals for 6to4 interface, but there's no use and
-		 * it is rather harmful to have one.
-		 */
-		return;
-#endif
 	default:
 		break;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.8.4.2 2002/10/29 00:33:27 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.8.4.3 2003/05/19 22:17:59 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -134,7 +134,7 @@ ami_pci_match(parent, match, aux)
 		    pami->product == PCI_PRODUCT(pa->pa_id)) {
 			if (!(pami->flags & AMI_CHECK_SIGN))
 				return (1);
-			/* some cards have 0x11223344, but somee only 16bit */
+			/* some cards have 0x11223344, but some only 16bit */
 			sig = pci_conf_read(pa->pa_pc, pa->pa_tag,
 			    AMI_PCI_SIG) & 0xffff;
 			if (sig == AMI_SIGNATURE_1 ||
@@ -232,10 +232,11 @@ ami_pci_attach(parent, self, aux)
 		for (vp = ami_pci_vendors;
 		     vp->id && vp->id != (csr & 0xffff); vp++);
 		if (vp->id)
-			sprintf(modelbuf, "%s %x", vp->name,
+			snprintf(modelbuf, sizeof modelbuf, "%s %x", vp->name,
 			    (csr >> 16) & 0xffff);
 		else
-			sprintf(modelbuf, "unknown 0x%08x", csr);
+			snprintf(modelbuf, sizeof modelbuf, "unknown 0x%08x",
+			    csr);
 		model = modelbuf;
 	}
 

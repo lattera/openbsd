@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgthree.c,v 1.2.2.3 2002/10/29 00:33:31 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgthree.c,v 1.2.2.4 2003/05/19 22:14:42 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -247,6 +247,11 @@ cgthreeattach(parent, self, aux)
 	sc->sc_bustag = sa->sa_bustag;
 	sc->sc_paddr = sbus_bus_addr(sa->sa_bustag, sa->sa_slot, sa->sa_offset);
 
+	sc->sc_depth = getpropint(sa->sa_node, "depth", 8);
+	sc->sc_linebytes = getpropint(sa->sa_node, "linebytes", 1152);
+	sc->sc_height = getpropint(sa->sa_node, "height", 900);
+	sc->sc_width = getpropint(sa->sa_node, "width", 1152);
+
 	if (sa->sa_nreg != 1) {
 		printf(": expected %d registers, got %d\n", 1, sa->sa_nreg);
 		goto fail;
@@ -265,18 +270,13 @@ cgthreeattach(parent, self, aux)
 
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset + CGTHREE_VID_OFFSET,
-	    CGTHREE_VID_SIZE, BUS_SPACE_MAP_LINEAR,
+	    sc->sc_linebytes * sc->sc_height, BUS_SPACE_MAP_LINEAR,
 	    0, &sc->sc_vid_regs) != 0) {
 		printf(": cannot map vid registers\n");
 		goto fail_vid;
 	}
 
 	console = cgthree_is_console(sa->sa_node);
-
-	sc->sc_depth = getpropint(sa->sa_node, "depth", 8);
-	sc->sc_linebytes = getpropint(sa->sa_node, "linebytes", 1152);
-	sc->sc_height = getpropint(sa->sa_node, "height", 900);
-	sc->sc_width = getpropint(sa->sa_node, "width", 1152);
 
 	sbus_establish(&sc->sc_sd, &sc->sc_dev);
 
@@ -346,6 +346,7 @@ fail_vid:
 	bus_space_unmap(sa->sa_bustag, sc->sc_ctrl_regs, CGTHREE_CTRL_SIZE);
 fail_ctrl:
 fail:
+;
 }
 
 int
@@ -363,7 +364,7 @@ cgthree_ioctl(v, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_UNKNOWN;
+		*(u_int *)data = WSDISPLAY_TYPE_SUNCG3;
 		break;
 	case WSDISPLAYIO_SMODE:
 		sc->sc_mode = *(u_int *)data;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_script.c,v 1.15.2.1 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_script.c,v 1.15.2.2 2003/05/19 22:31:09 tedu Exp $	*/
 /*	$NetBSD: exec_script.c,v 1.13 1996/02/04 02:15:06 christos Exp $	*/
 
 /*
@@ -203,10 +203,10 @@ check_shell:
 	MALLOC(shellargp, char **, 4 * sizeof(char *), M_EXEC, M_WAITOK);
 	tmpsap = shellargp;
 	*tmpsap = malloc(shellnamelen + 1, M_EXEC, M_WAITOK);
-	strcpy(*tmpsap++, shellname);
+	strlcpy(*tmpsap++, shellname, shellnamelen + 1);
 	if (shellarg != NULL) {
 		*tmpsap = malloc(shellarglen + 1, M_EXEC, M_WAITOK);
-		strcpy(*tmpsap++, shellarg);
+		strlcpy(*tmpsap++, shellarg, shellarglen + 1);
 	}
 	*tmpsap = malloc(MAXPATHLEN, M_EXEC, M_WAITOK);
 #ifdef FDSCRIPTS
@@ -221,7 +221,7 @@ check_shell:
 #endif
 #ifdef FDSCRIPTS
 	} else
-		sprintf(*tmpsap++, "/dev/fd/%d", epp->ep_fd);
+		snprintf(*tmpsap++, MAXPATHLEN, "/dev/fd/%d", epp->ep_fd);
 #endif
 	*tmpsap = NULL;
 
