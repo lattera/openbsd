@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19 2000/02/07 04:57:15 assar Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19.2.1 2001/05/14 22:32:37 niklas Exp $	*/
 /*	$NetBSD: cd9660_vfsops.c,v 1.26 1997/06/13 15:38:58 pk Exp $	*/
 
 /*-
@@ -77,7 +77,8 @@ struct vfsops cd9660_vfsops = {
 	cd9660_fhtovp,
 	cd9660_vptofh,
 	cd9660_init,
-	cd9660_sysctl
+	cd9660_sysctl,
+	cd9660_check_export
 };
 
 /*
@@ -133,7 +134,7 @@ int
 cd9660_mount(mp, path, data, ndp, p)
 	register struct mount *mp;
 	const char *path;
-	caddr_t data;
+	void *data;
 	struct nameidata *ndp;
 	struct proc *p;
 {
@@ -143,7 +144,7 @@ cd9660_mount(mp, path, data, ndp, p)
 	int error;
 	struct iso_mnt *imp = NULL;
 	
-	error = copyin(data, (caddr_t)&args, sizeof (struct iso_args));
+	error = copyin(data, &args, sizeof (struct iso_args));
 	if (error)
 		return (error);
 	
@@ -962,5 +963,31 @@ cd9660_vptofh(vp, fhp)
 	printf("vptofh: ino %d, start %ld\n",
 	    ifhp->ifid_ino,ifhp->ifid_start);
 #endif
+	return (0);
+}
+
+/*
+ * Verify a remote client has export rights and return these rights via
+ * exflagsp and credanonp.
+ */
+int
+cd9660_check_export(mp, nam, exflagsp, credanonp)
+	register struct mount *mp;
+	struct mbuf *nam;
+	int *exflagsp;
+	struct ucred **credanonp;
+{
+	register struct netcred *np;
+	register struct iso_mnt *imp = VFSTOISOFS(mp);
+
+	/*
+	 * Get the export permission structure for this <mp, client> tuple.
+	 */
+	np = vfs_export_lookup(mp, &imp->im_export, nam);
+	if (np == NULL)
+		return (EACCES);
+
+	*exflagsp = np->netc_exflags;
+	*credanonp = &np->netc_anon;
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/Attic/md5.c,v 1.6 1997/06/06 17:48:48 grr Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/Attic/md5.c,v 1.6.12.1 2001/05/14 22:32:48 niklas Exp $	*/
 
 /*
  * The rest of the code is derived from MD5C.C by RSADSI. Minor cosmetic
@@ -38,12 +38,12 @@ documentation and/or software.
  */
 
 #include <sys/param.h>
-#include <sys/systm.h>
 #include <sys/md5k.h>
 #ifdef _STANDALONE
 #include <stand.h>
+#else
+#include <sys/systm.h>
 #endif
-
 /* Constants for MD5Transform routine.
  */
 

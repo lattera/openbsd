@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2 2001/03/28 18:20:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.1 2001/05/14 22:32:50 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2001 Michael Shalayeff
@@ -34,7 +34,7 @@
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2 2001/03/28 18:20:45 mickey Exp $"
+	.asciz "$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.1 2001/05/14 22:32:50 niklas Exp $"
 	.align	4
 #endif
 

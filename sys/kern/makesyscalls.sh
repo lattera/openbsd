@@ -1,5 +1,5 @@
 #! /bin/sh -
-#	$OpenBSD: src/sys/kern/makesyscalls.sh,v 1.6 1998/02/08 22:30:41 tholo Exp $
+#	$OpenBSD: src/sys/kern/makesyscalls.sh,v 1.6.10.1 2001/05/14 22:32:42 niklas Exp $
 #	$NetBSD: makesyscalls.sh,v 1.26 1998/01/09 06:17:51 thorpej Exp $
 #
 # Copyright (c) 1994,1996 Christopher G. Demetriou
@@ -240,6 +240,10 @@ function parseline() {
 		funcalias=""
 		end=NF
 	}
+	if ($f ~ /^[a-z0-9_]*$/) {      # allow syscall alias
+		funcalias=$f
+		f++
+	}	
 	if ($f != "{")
 		parserr($f, "{")
 	f++

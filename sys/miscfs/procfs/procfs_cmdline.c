@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_cmdline.c,v 1.1 2000/08/12 04:29:24 jasoni Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_cmdline.c,v 1.1.6.1 2001/05/14 22:32:55 niklas Exp $	*/
 /*	$NetBSD: procfs_cmdline.c,v 1.3 1999/03/13 22:26:48 thorpej Exp $	*/
 
 /*

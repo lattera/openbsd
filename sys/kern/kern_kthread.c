@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7 2000/01/31 19:57:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.1 2001/05/14 22:32:40 niklas Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -79,12 +79,17 @@ kthread_create(func, arg, newpp, fmt, va_alist)
 	va_list ap;
 
 	/*
-	 * First, create the new process.  Share the memory, copy file
+	 * First, create the new process.  Share the memory, file
 	 * descriptors and don't leave the exit status around for the
 	 * parent to wait for.
 	 */
-	error = fork1(&proc0, FORK_RFORK|FORK_SHAREVM|FORK_NOZOMBIE, NULL,
-	    0, rv);
+#ifdef UVM
+	error = fork1(&proc0, 0,
+	    FORK_SHAREVM|FORK_NOZOMBIE|FORK_SIGHAND, NULL, 0, rv);
+#else
+	error = fork1(&proc0, 0,
+	    FORK_VMNOSTACK|FORK_NOZOMBIE|FORK_SIGHAND, NULL, 0, rv);
+#endif
 	if (error)
 		return (error);
 

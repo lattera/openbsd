@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_cipher_TDES.c,v 1.5 2000/06/18 19:08:44 provos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_cipher_TDES.c,v 1.5.6.1 2001/05/14 22:32:56 niklas Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.

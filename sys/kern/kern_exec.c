@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.1 2000/03/24 09:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.2 2001/05/14 22:32:40 niklas Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -51,6 +51,7 @@
 #include <sys/mman.h>
 #include <sys/signalvar.h>
 #include <sys/stat.h>
+#include <sys/conf.h>
 #ifdef SYSVSHM
 #include <sys/shm.h>
 #endif
@@ -263,13 +264,12 @@ sys_execve(p, v, retval)
 	 * initialize the fields of the exec package.
 	 */
 	pack.ep_name = (char *)SCARG(uap, path);
-	MALLOC(pack.ep_hdr, void *, exec_maxhdrsz, M_EXEC, M_WAITOK);
+	pack.ep_hdr = malloc(exec_maxhdrsz, M_EXEC, M_WAITOK);
 	pack.ep_hdrlen = exec_maxhdrsz;
 	pack.ep_hdrvalid = 0;
 	pack.ep_ndp = &nid;
 	pack.ep_emul_arg = NULL;
-	pack.ep_vmcmds.evs_cnt = 0;
-	pack.ep_vmcmds.evs_used = 0;
+	VMCMDSET_INIT(&pack.ep_vmcmds);
 	pack.ep_vap = &attr;
 	pack.ep_emul = &emul_native;
 	pack.ep_flags = 0;
@@ -305,7 +305,7 @@ sys_execve(p, v, retval)
 				*dp++ = *cp++;
 			dp++;
 
-			FREE(*tmpfap, M_EXEC);
+			free(*tmpfap, M_EXEC);
 			tmpfap++; argc++;
 		}
 		FREE(pack.ep_fa, M_EXEC);
@@ -497,8 +497,7 @@ sys_execve(p, v, retval)
 		 */
 		if (p->p_tracep && !(p->p_traceflag & KTRFAC_ROOT)) {
 			p->p_traceflag = 0;
-			vrele(p->p_tracep);
-			p->p_tracep = NULL;
+			ktrsettracevnode(p, NULL);
 		}
 #endif
 		p->p_ucred = crcopy(cred);
@@ -536,26 +535,38 @@ sys_execve(p, v, retval)
 			 * allocated.  We do not want userland to accidentally
 			 * allocate descriptors in this range which has implied
 			 * meaning to libc.
+			 *
+			 * XXX - Shouldn't the exec fail if we can't allocate
+			 *       resources here?
 			 */
 			if (fp == NULL) {
 				short flags = FREAD | (i == 0 ? 0 : FWRITE);
-				struct nameidata nd;
+				struct vnode *vp;
 				int indx;
 
 				if ((error = falloc(p, &fp, &indx)) != 0)
-					continue;
-				NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE,
-				    "/dev/null", p);
-				if ((error = vn_open(&nd, flags, 0)) != 0) {
+					break;
+#ifdef DIAGNOSTIC
+				if (indx != i)
+					panic("sys_execve: falloc indx != i");
+#endif
+				if ((error = cdevvp(getnulldev(), &vp)) != 0) {
 					ffree(fp);
 					fdremove(p->p_fd, indx);
 					break;
 				}
+				if ((error = VOP_OPEN(vp, flags, p->p_ucred, p)) != 0) {
+					ffree(fp);
+					fdremove(p->p_fd, indx);
+					vrele(vp);
+					break;
+				}
+				if (flags & FWRITE)
+					vp->v_writecount++;
 				fp->f_flag = flags;
 				fp->f_type = DTYPE_VNODE;
 				fp->f_ops = &vnops;
-				fp->f_data = (caddr_t)nd.ni_vp;
-				VOP_UNLOCK(nd.ni_vp, 0, p);
+				fp->f_data = (caddr_t)vp;
 			}
 		}
 	} else
@@ -587,6 +598,11 @@ sys_execve(p, v, retval)
 	VOP_CLOSE(pack.ep_vp, FREAD, cred, p);
 	vput(pack.ep_vp);
 
+	/*
+	 * notify others that we exec'd
+	 */
+	KNOTE(&p->p_klist, NOTE_EXEC);
+
 	/* setup new registers and do misc. setup. */
 	if(pack.ep_emul->e_fixup != NULL) {
 		if((*pack.ep_emul->e_fixup)(p, &pack) != 0)
@@ -602,11 +618,11 @@ sys_execve(p, v, retval)
 		psignal(p, SIGTRAP);
 
 	p->p_emul = pack.ep_emul;
-	FREE(pack.ep_hdr, M_EXEC);
+	free(pack.ep_hdr, M_EXEC);
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_EMUL))
-		ktremul(p->p_tracep, p->p_emul->e_name);
+		ktremul(p, p->p_emul->e_name);
 #endif
 	return (0);
 
@@ -629,7 +645,7 @@ bad:
 #endif
 
 freehdr:
-	FREE(pack.ep_hdr, M_EXEC);
+	free(pack.ep_hdr, M_EXEC);
 	return (error);
 
 exec_abort:
@@ -657,7 +673,7 @@ exec_abort:
 #endif
 
 free_pack_abort:
-	FREE(pack.ep_hdr, M_EXEC);
+	free(pack.ep_hdr, M_EXEC);
 	exit1(p, W_EXITCODE(0, SIGABRT));
 	exit1(p, -1);
 

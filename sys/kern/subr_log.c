@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_log.c,v 1.5.12.1 2000/03/02 07:04:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_log.c,v 1.5.12.2 2001/05/14 22:32:43 niklas Exp $	*/
 /*	$NetBSD: subr_log.c,v 1.11 1996/03/30 22:24:44 christos Exp $	*/
 
 /*
@@ -68,8 +68,6 @@ int	log_open;			/* also used in log() */
 int	msgbufmapped;			/* is the message buffer mapped */
 int	msgbufenabled;			/* is logging to the buffer enabled */
 struct	msgbuf *msgbufp;		/* the mapped buffer, itself. */
-
-#define offsetof(type, member) ((size_t)(&((type *)0)->member))
 
 void
 initmsgbuf(buf, bufsize)

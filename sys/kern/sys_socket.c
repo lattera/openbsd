@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_socket.c,v 1.3 1997/08/31 20:42:23 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_socket.c,v 1.3.12.1 2001/05/14 22:32:44 niklas Exp $	*/
 /*	$NetBSD: sys_socket.c,v 1.13 1995/08/12 23:59:09 mycroft Exp $	*/
 
 /*
@@ -50,13 +50,16 @@
 #include <net/if.h>
 #include <net/route.h>
 
-struct	fileops socketops =
-    { soo_read, soo_write, soo_ioctl, soo_select, soo_close };
+struct	fileops socketops = {
+	soo_read, soo_write, soo_ioctl, soo_select, soo_kqfilter,
+	soo_close
+};
 
 /* ARGSUSED */
 int
-soo_read(fp, uio, cred)
+soo_read(fp, poff, uio, cred)
 	struct file *fp;
+	off_t *poff;
 	struct uio *uio;
 	struct ucred *cred;
 {
@@ -67,8 +70,9 @@ soo_read(fp, uio, cred)
 
 /* ARGSUSED */
 int
-soo_write(fp, uio, cred)
+soo_write(fp, poff, uio, cred)
 	struct file *fp;
+	off_t *poff;
 	struct uio *uio;
 	struct ucred *cred;
 {

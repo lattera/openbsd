@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.1 2000/03/24 09:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.2 2001/05/14 22:32:41 niklas Exp $	*/
 /*	$NetBSD: kern_subr.c,v 1.15 1996/04/09 17:21:56 ragge Exp $	*/
 
 /*
@@ -49,10 +49,6 @@
 #include <sys/kernel.h>
 #include <sys/resourcevar.h>
 
-void uio_yield __P((struct proc *));
-
-#define UIO_NEED_YIELD (roundrobin_attempts >= 2)
-
 int
 uiomove(cp, n, uio)
 	register caddr_t cp;
@@ -85,8 +81,8 @@ uiomove(cp, n, uio)
 		switch (uio->uio_segflg) {
 
 		case UIO_USERSPACE:
-			if (UIO_NEED_YIELD)
-				uio_yield(p);
+			if (p->p_schedflags & PSCHED_SHOULDYIELD)
+				preempt(NULL);
 			if (uio->uio_rw == UIO_READ)
 				error = copyout(cp, iov->iov_base, cnt);
 			else
@@ -166,20 +162,6 @@ again:
 	uio->uio_resid--;
 	uio->uio_offset++;
 	return (0);
-}
-
-void
-uio_yield(p)
-	struct proc *p;
-{
-	int s;
-
-	p->p_priority = p->p_usrpri;
-	s = splstatclock();
-	setrunqueue(p);
-	p->p_stats->p_ru.ru_nivcsw++;
-	mi_switch();
-	splx(s);
 }
 
 /*
@@ -280,12 +262,13 @@ doshutdownhooks()
  */
 
 struct powerhook_desc {
-	LIST_ENTRY(powerhook_desc) sfd_list;
+	CIRCLEQ_ENTRY(powerhook_desc) sfd_list;
 	void	(*sfd_fn) __P((int, void *));
 	void	*sfd_arg;
 };
 
-LIST_HEAD(, powerhook_desc) powerhook_list;
+CIRCLEQ_HEAD(, powerhook_desc) powerhook_list =
+	CIRCLEQ_HEAD_INITIALIZER(powerhook_list);
 
 void *
 powerhook_establish(fn, arg)
@@ -301,7 +284,7 @@ powerhook_establish(fn, arg)
 
 	ndp->sfd_fn = fn;
 	ndp->sfd_arg = arg;
-	LIST_INSERT_HEAD(&powerhook_list, ndp, sfd_list);
+	CIRCLEQ_INSERT_HEAD(&powerhook_list, ndp, sfd_list);
 
 	return (ndp);
 }
@@ -313,15 +296,15 @@ powerhook_disestablish(vhook)
 #ifdef DIAGNOSTIC
 	struct powerhook_desc *dp;
 
-	for (dp = powerhook_list.lh_first; dp != NULL;
-	    dp = dp->sfd_list.le_next)
+	CIRCLEQ_FOREACH(dp, &powerhook_list, sfd_list)
                 if (dp == vhook)
 			break;
 	if (dp == NULL)
 		panic("powerhook_disestablish: hook not established");
 #endif
 
-	LIST_REMOVE((struct powerhook_desc *)vhook, sfd_list);
+	CIRCLEQ_REMOVE(&powerhook_list, (struct powerhook_desc *)vhook,
+		sfd_list);
 	free(vhook, M_DEVBUF);
 }
 
@@ -333,10 +316,17 @@ dopowerhooks(why)
 	int why;
 {
 	struct powerhook_desc *dp;
+	int s;
 
-	for (dp = LIST_FIRST(&powerhook_list); 
-	     dp != NULL; 
-	     dp = LIST_NEXT(dp, sfd_list)) {
-		(*dp->sfd_fn)(why, dp->sfd_arg);
+	s = splhigh();
+	if (why == PWR_RESUME) {
+		CIRCLEQ_FOREACH_REVERSE(dp, &powerhook_list, sfd_list) {
+			(*dp->sfd_fn)(why, dp->sfd_arg);
+		}
+	} else {
+		CIRCLEQ_FOREACH(dp, &powerhook_list, sfd_list) {
+			(*dp->sfd_fn)(why, dp->sfd_arg);
+		}
 	}
+	splx(s);
 }

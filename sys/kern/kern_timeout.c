@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3.2.1 2000/03/24 09:09:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3.2.2 2001/05/14 22:32:42 niklas Exp $	*/
 /*
  * Copyright (c) 2000 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
@@ -92,15 +92,34 @@ timeout_init()
 }
 
 void
-timeout_set(to, fn, arg)
-	struct timeout *to;
+timeout_set(new, fn, arg)
+	struct timeout *new;
 	void (*fn)(void *);
 	void *arg;
 {
 
-	to->to_func = fn;
-	to->to_arg = arg;
-	to->to_flags = TIMEOUT_INITIALIZED;
+#ifdef DIAGNOSTIC
+	struct timeout *to;
+	int s;
+
+	/*
+	 * Be careful. We could be called with random non-zero memory, but
+	 * on the other hand we could be called with a timeout that's
+	 * already queued.
+	 * XXX - this is expensive.
+	 */
+	timeout_list_lock(&s);
+	if (new->to_flags & TIMEOUT_ONQUEUE) {
+		TAILQ_FOREACH(to, &timeout_todo, to_list)
+			if (to == new)
+				panic("timeout_set: on queue");
+	}
+	timeout_list_unlock(s);
+#endif
+
+	new->to_func = fn;
+	new->to_arg = arg;
+	new->to_flags = TIMEOUT_INITIALIZED;
 }
 
 void
@@ -116,6 +135,8 @@ timeout_add(new, to_ticks)
 	 */
 
 #ifdef DIAGNOSTIC
+	if (!(new->to_flags & TIMEOUT_INITIALIZED))
+		panic("timeout_add: not initialized");
 	if (to_ticks < 0)
 		panic("timeout_add: to_ticks < 0");
 #endif
@@ -123,17 +144,18 @@ timeout_add(new, to_ticks)
 	timeout_list_lock(&s);
 
 	/*
-	 * First we prepare the now timeout so that we can return right
+	 * First we prepare the new timeout so that we can return right
 	 * after the insertion in the queue (makes the code simpler).
 	 */
 
 	/* If this timeout was already on a queue we remove it. */
 	if (new->to_flags & TIMEOUT_ONQUEUE)
-		TAILQ_REMOVE(&timeout_todo, to, to_list);
+		TAILQ_REMOVE(&timeout_todo, new, to_list);
 	else
 		new->to_flags |= TIMEOUT_ONQUEUE;
 	/* Initialize the time here, it won't change. */
 	new->to_time = to_ticks + ticks;
+	new->to_flags &= ~TIMEOUT_TRIGGERED;
 
 	/*
 	 * Walk the list of pending timeouts and find an entry which
@@ -163,6 +185,7 @@ timeout_del(to)
 		TAILQ_REMOVE(&timeout_todo, to, to_list);
 		to->to_flags &= ~TIMEOUT_ONQUEUE;
 	}
+	to->to_flags &= ~TIMEOUT_TRIGGERED;
 	timeout_list_unlock(s);
 }
 
@@ -175,7 +198,14 @@ timeout_del(to)
 int
 timeout_hardclock_update()
 {
-	return (TAILQ_FIRST(&timeout_todo)->to_time - ticks <= 0);
+	struct timeout *to;
+
+	to = TAILQ_FIRST(&timeout_todo);
+
+	if (to == NULL)
+		return 0;
+
+	return (to->to_time - ticks <= 0);
 }
 
 void
@@ -189,9 +219,13 @@ softclock()
 	timeout_list_lock(&s);
 	while ((to = TAILQ_FIRST(&timeout_todo)) != NULL &&
 	       to->to_time - ticks <= 0) {
-
+#ifdef DIAGNOSTIC
+		if (!(to->to_flags & TIMEOUT_ONQUEUE))
+			panic("softclock: not onqueue");
+#endif
 		TAILQ_REMOVE(&timeout_todo, to, to_list);
 		to->to_flags &= ~TIMEOUT_ONQUEUE;
+		to->to_flags |= TIMEOUT_TRIGGERED;
 
 		fn = to->to_func;
 		arg = to->to_arg;

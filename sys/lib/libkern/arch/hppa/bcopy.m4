@@ -1,4 +1,4 @@
-define(_rcsid,``$OpenBSD: src/sys/lib/libkern/arch/hppa/bcopy.m4,v 1.4 1999/12/05 02:38:09 mickey Exp $'')dnl
+define(_rcsid,``$OpenBSD: src/sys/lib/libkern/arch/hppa/bcopy.m4,v 1.4.2.1 2001/05/14 22:32:49 niklas Exp $'')dnl
 dnl
 dnl
 dnl  This is the source file for bcopy.S, spcopy.S
@@ -202,6 +202,7 @@ ifelse(NAME, `bcopy',
 #if defined(LIBC_SCCS)
 	.text
 	.asciz "versionmacro"
+	.align	4
 #endif
 
 ENTRY(memcpy)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_vfsops.c,v 1.4 2001/02/20 01:50:10 assar Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_vfsops.c,v 1.4.4.1 2001/05/14 22:32:58 niklas Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.

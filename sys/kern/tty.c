@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.1 2000/03/24 09:09:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.2 2001/05/14 22:32:44 niklas Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -70,6 +70,10 @@ void ttyunblock __P((struct tty *));
 static void ttyecho __P((int, struct tty *));
 static void ttyrubo __P((struct tty *, int));
 static int proc_compare __P((struct proc *, struct proc *));
+int	filt_ttyread __P((struct knote *kn, long hint));
+void 	filt_ttyrdetach __P((struct knote *kn));
+int	filt_ttywrite __P((struct knote *kn, long hint));
+void 	filt_ttywdetach __P((struct knote *kn));
 
 /* Symbolic sleep message strings. */
 char ttclos[]	= "ttycls";
@@ -1049,6 +1053,90 @@ win:			splx(s);
 	return (0);
 }
 
+struct filterops ttyread_filtops =
+	{ 1, NULL, filt_ttyrdetach, filt_ttyread };
+struct filterops ttywrite_filtops =
+	{ 1, NULL, filt_ttywdetach, filt_ttywrite };
+
+int
+ttkqfilter(dev, kn)
+	dev_t dev;
+	struct knote *kn;
+{
+	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+	struct klist *klist;
+	int s;
+
+	switch (kn->kn_filter) {
+	case EVFILT_READ:
+		klist = &tp->t_rsel.si_note;
+		kn->kn_fop = &ttyread_filtops;
+		break;
+	case EVFILT_WRITE:
+		klist = &tp->t_wsel.si_note;
+		kn->kn_fop = &ttywrite_filtops;
+		break;
+	default:
+		return (1);
+	}
+
+	kn->kn_hook = (caddr_t)((u_long)dev);
+
+	s = spltty();
+	SLIST_INSERT_HEAD(klist, kn, kn_selnext);
+	splx(s);
+
+	return (0);
+}
+
+void
+filt_ttyrdetach(struct knote *kn)
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+	int s = spltty();
+
+	SLIST_REMOVE(&tp->t_rsel.si_note, kn, knote, kn_selnext);
+	splx(s);
+}
+
+int
+filt_ttyread(struct knote *kn, long hint)
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+
+	kn->kn_data = ttnread(tp);
+	if (!ISSET(tp->t_state, CLOCAL) && !ISSET(tp->t_state, TS_CARR_ON)) {
+		kn->kn_flags |= EV_EOF;
+		return (1);
+	}
+	return (kn->kn_data > 0);
+}
+
+void
+filt_ttywdetach(struct knote *kn)
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+	int s = spltty();
+
+	SLIST_REMOVE(&tp->t_wsel.si_note, kn, knote, kn_selnext);
+	splx(s);
+}
+
+int
+filt_ttywrite(kn, hint)
+	struct knote *kn;
+	long hint;
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+
+	kn->kn_data = tp->t_outq.c_cc;
+	return (kn->kn_data <= tp->t_lowat);
+}
+
 static int
 ttnread(tp)
 	struct tty *tp;
@@ -1935,6 +2023,7 @@ ttwakeup(tp)
 	if (ISSET(tp->t_state, TS_ASYNC))
 		pgsignal(tp->t_pgrp, SIGIO, 1);
 	wakeup((caddr_t)&tp->t_rawq);
+	KNOTE(&tp->t_rsel.si_note, 0);
 }
 
 /*
@@ -2034,7 +2123,7 @@ ttyinfo(tp)
 		tmp = (pick->p_pctcpu * 10000 + FSCALE / 2) >> FSHIFT;
 		ttyprintf(tp, "%d%% %ldk\n",
 		    tmp / 100,
-		    pick->p_stat == SIDL || pick->p_stat == SZOMB ? 0 :
+		    pick->p_stat == SIDL || P_ZOMBIE(pick) ? 0 :
 			vm_resident_count(pick->p_vmspace));
 	}
 	tp->t_rocount = 0;	/* so pending input will be retyped if BS */
@@ -2087,7 +2176,7 @@ proc_compare(p1, p2)
 	/*
  	 * weed out zombies
 	 */
-	switch (TESTAB(p1->p_stat == SZOMB, p2->p_stat == SZOMB)) {
+	switch (TESTAB(P_ZOMBIE(p1), P_ZOMBIE(p2))) {
 	case ONLYA:
 		return (1);
 	case ONLYB:
@@ -2188,6 +2277,7 @@ tty_attach(tp)
 
 	TAILQ_INSERT_TAIL(&ttylist, tp, tty_link);
 	++tty_count;
+	timeout_set(&tp->t_rstrt_to, ttrstrt, tp);
 }
 
 /*

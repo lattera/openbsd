@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.3 2000/03/24 09:09:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.4 2001/05/14 22:32:39 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -105,14 +105,10 @@
 extern void nfs_init __P((void));
 #endif
 
-#ifndef MIN
-#define MIN(a,b)	(((a)<(b))?(a):(b))
-#endif
-
 char	copyright[] =
 "Copyright (c) 1982, 1986, 1989, 1991, 1993\n"
 "\tThe Regents of the University of California.  All rights reserved.\n"
-"Copyright (c) 1995-2000 OpenBSD. All rights reserved.  http://www.OpenBSD.org\n";
+"Copyright (c) 1995-2001 OpenBSD. All rights reserved.  http://www.OpenBSD.org\n";
 
 /* Components of the first process -- never freed. */
 struct	session session0;
@@ -122,7 +118,10 @@ struct	pcred cred0;
 struct	filedesc0 filedesc0;
 struct	plimit limit0;
 struct	vmspace vmspace0;
-struct	proc *curproc = &proc0;
+struct	sigacts sigacts0;
+#ifndef curproc
+struct	proc *curproc;
+#endif
 struct	proc *initproc;
 
 int	cmask = CMASK;
@@ -141,6 +140,8 @@ void	check_console __P((struct proc *));
 void	start_init __P((void *));
 void	start_pagedaemon __P((void *));
 void	start_update __P((void *));
+void	start_reaper __P((void *));
+void    start_crypto __P((void *));
 
 #ifdef cpu_set_init_frame
 void *initframep;				/* XXX should go away */
@@ -223,6 +224,9 @@ main(framep)
 	tty_init();		/* initialise tty's */
 	cpu_startup();
 
+	/* Initialize sysctls (must be done before any processes run) */
+	sysctl_init();
+
 	/*
 	 * Initialize process and pgrp structures.
 	 */
@@ -294,20 +298,18 @@ main(framep)
 #else
 	p->p_vmspace = &vmspace0;
 	vmspace0.vm_refcnt = 1;
-	pmap_pinit(&vmspace0.vm_pmap);
+	vmspace0.vm_map.pmap = pmap_create(0);
 	vm_map_init(&p->p_vmspace->vm_map, round_page(VM_MIN_ADDRESS),
 	    trunc_page(VM_MAX_ADDRESS), TRUE);
-	vmspace0.vm_map.pmap = &vmspace0.vm_pmap;
 #endif /* UVM */
 
 	p->p_addr = proc0paddr;				/* XXX */
 
 	/*
-	 * We continue to place resource usage info and signal
-	 * actions in the user struct so they're pageable.
+	 * We continue to place resource usage info in the
+	 * user struct so they're pageable.
 	 */
 	p->p_stats = &p->p_addr->u_stats;
-	p->p_sigacts = &p->p_addr->u_sigacts;
 
 	/*
 	 * Charge root for one process.
@@ -358,7 +360,8 @@ main(framep)
 	/* Attach pseudo-devices. */
 	randomattach();
 	for (pdev = pdevinit; pdev->pdev_attach != NULL; pdev++)
-		(*pdev->pdev_attach)(pdev->pdev_count);
+		if (pdev->pdev_count > 0)
+			(*pdev->pdev_attach)(pdev->pdev_count);
 
 #ifdef CRYPTO
 	swcr_init();
@@ -388,7 +391,7 @@ main(framep)
 	/* Mount the root file system. */
 	if (vfs_mountroot())
 		panic("cannot mount root");
-	mountlist.cqh_first->mnt_flag |= MNT_ROOTFS;
+	CIRCLEQ_FIRST(&mountlist)->mnt_flag |= MNT_ROOTFS;
 
 	/* Get the vnode for '/'.  Set filedesc0.fd_fd.fd_cdir to reference it. */
 	if (VFS_ROOT(mountlist.cqh_first, &rootvnode))
@@ -397,6 +400,7 @@ main(framep)
 	VREF(filedesc0.fd_fd.fd_cdir);
 	VOP_UNLOCK(rootvnode, 0, p);
 	filedesc0.fd_fd.fd_rdir = NULL;
+
 #if defined(UVM)
 	uvm_swap_init();
 #else
@@ -412,10 +416,12 @@ main(framep)
 	p->p_rtime.tv_sec = p->p_rtime.tv_usec = 0;
 
 	/* Initialize signal state for process 0. */
+	signal_init();
+	p->p_sigacts = &sigacts0;
 	siginit(p);
 
 	/* Create process 1 (init(8)). */
-	if (fork1(p, FORK_FORK, NULL, 0, rval))
+	if (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, rval))
 		panic("fork init");
 #ifdef cpu_set_init_frame			/* XXX should go away */
 	if (rval[1]) {
@@ -434,12 +440,22 @@ main(framep)
 	if (kthread_create(start_pagedaemon, NULL, NULL, "pagedaemon"))
 		panic("fork pagedaemon");
 
-	/* Create process 3, the update daemon kernel thread. */
+	/* Create process 3, the reaper daemon kernel thread. */
+	if (kthread_create(start_reaper, NULL, NULL, "reaper"))
+		panic("fork reaper");
+
+	/* Create process 4, the update daemon kernel thread. */
 	if (kthread_create(start_update, NULL, NULL, "update")) {
 #ifdef DIAGNOSTIC
 		panic("fork update");
 #endif
 	}
+
+#ifdef CRYPTO
+	/* Create process 5, the crypto kernel thread. */
+	if (kthread_create(start_crypto, NULL, NULL, "crypto"))
+	        panic("crypto thread");
+#endif /* CRYPTO */
 
 	/* Create any other deferred kernel threads. */
 	kthread_run_deferred_queue();
@@ -611,6 +627,7 @@ start_init(arg)
 		arg0 = ucp;
 		uap = (char **)((u_long)ucp & ~ALIGNBYTES);
 #endif
+
 		/*
 		 * Move out the arg pointers.
 		 */
@@ -658,3 +675,21 @@ start_update(arg)
 	sched_sync(curproc);
 	/* NOTREACHED */
 }
+
+void
+start_reaper(arg)
+	void *arg;
+{
+	reaper();
+	/* NOTREACHED */
+}
+
+#ifdef CRYPTO
+void
+start_crypto(arg)
+        void *arg;
+{
+        crypto_thread();
+        /* NOTREACHED */
+}
+#endif /* CRYPTO */

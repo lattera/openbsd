@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_linux.c,v 1.2 2001/04/13 01:41:37 miod Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_linux.c,v 1.2.4.1 2001/05/14 22:32:55 niklas Exp $	*/
 /*      $NetBSD: procfs_linux.c,v 1.2.4.1 2001/03/30 21:48:11 he Exp $      */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/prefix.h,v 1.1.1.1 1998/06/23 18:56:54 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/prefix.h,v 1.1.1.1.8.1 2001/05/14 22:32:49 niklas Exp $	*/
 
 /*
  *  (c) Copyright 1985 HEWLETT-PACKARD COMPANY
@@ -78,10 +78,6 @@
 #define MILLI_RETN	BV,n  0(r31)
 #define MILLI_RET	BV    0(r31)
 #endif
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	.SPACE	$TEXT$
-	.subspa $MILLICODE$
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; VERSION is used wherever ".version" can appear in a routine
 ;#define VERSION .version
 #define VERSION ;

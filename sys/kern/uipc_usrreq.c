@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_usrreq.c,v 1.11 1999/10/11 19:49:39 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_usrreq.c,v 1.11.4.1 2001/05/14 22:32:45 niklas Exp $	*/
 /*	$NetBSD: uipc_usrreq.c,v 1.18 1996/02/09 19:00:50 christos Exp $	*/
 
 /*
@@ -403,7 +403,6 @@ unp_bind(unp, nam, p)
 
 	if (unp->unp_vnode != NULL)
 		return (EINVAL);
-#define offsetof(s, e) ((char *)&((s *)0)->e - (char *)((s *)0))
 	namelen = soun->sun_len - offsetof(struct sockaddr_un, sun_path);
 	if (namelen <= 0 || namelen >= MLEN)
 		return EINVAL;

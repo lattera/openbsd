@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.1 2000/03/24 09:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.2 2001/05/14 22:32:41 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -81,7 +81,7 @@ scheduler_start()
 	/*
 	 * We avoid polluting the global namespace by keeping the scheduler
 	 * timeouts static in this function.
-	 * We setup the timeouts here and kick rundrobin and schedcpu once to
+	 * We setup the timeouts here and kick roundrobin and schedcpu once to
 	 * make them do their job.
 	 */
 
@@ -93,14 +93,6 @@ scheduler_start()
 }
 
 /*
- * We need to keep track on how many times we call roundrobin before we
- * actually attempt a switch (that is when we call mi_switch()).
- * This is done so that some slow kernel subsystems can yield instead of
- * blocking the scheduling.
- */
-int	roundrobin_attempts;
-
-/*
  * Force switch among equal priority processes every 100ms.
  */
 /* ARGSUSED */
@@ -109,9 +101,24 @@ roundrobin(arg)
 	void *arg;
 {
 	struct timeout *to = (struct timeout *)arg;
+	struct proc *p = curproc;
+	int s;
 
+	if (p != NULL) {
+		s = splstatclock();
+		if (p->p_schedflags & PSCHED_SEENRR) {
+			/*
+			 * The process has already been through a roundrobin
+			 * without switching and may be hogging the CPU.
+			 * Indicate that the process should yield.
+			 */
+			p->p_schedflags |= PSCHED_SHOULDYIELD;
+		} else {
+			p->p_schedflags |= PSCHED_SEENRR;
+		}
+		splx(s);
+	}
 	need_resched();
-	roundrobin_attempts++;
 	timeout_add(to, hz / 10);
 }
 
@@ -222,6 +229,7 @@ schedcpu(arg)
 	 * clock available)
 	 */
 	phz = stathz ? stathz : profhz;
+	KASSERT(phz);
 
 	for (p = LIST_FIRST(&allproc); p != 0; p = LIST_NEXT(p, p_list)) {
 		/*
@@ -243,7 +251,6 @@ schedcpu(arg)
 		/*
 		 * p_pctcpu is only for ps.
 		 */
-		KASSERT(phz);
 #if	(FSHIFT >= CCPU_SHIFT)
 		p->p_pctcpu += (phz == 100)?
 			((fixpt_t) p->p_cpticks) << (FSHIFT - CCPU_SHIFT):
@@ -350,7 +357,7 @@ tsleep(ident, priority, wmesg, timo)
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p->p_tracep, 1, 0);
+		ktrcsw(p, 1, 0);
 #endif
 	s = splhigh();
 	if (cold || panicstr) {
@@ -419,7 +426,7 @@ resume:
 		if (sig == 0) {
 #ifdef KTRACE
 			if (KTRPOINT(p, KTR_CSW))
-				ktrcsw(p->p_tracep, 0, 0);
+				ktrcsw(p, 0, 0);
 #endif
 			return (EWOULDBLOCK);
 		}
@@ -428,7 +435,7 @@ resume:
 	if (catch && (sig != 0 || (sig = CURSIG(p)) != 0)) {
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_CSW))
-			ktrcsw(p->p_tracep, 0, 0);
+			ktrcsw(p, 0, 0);
 #endif
 		if (p->p_sigacts->ps_sigintr & sigmask(sig))
 			return (EINTR);
@@ -436,7 +443,7 @@ resume:
 	}
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p->p_tracep, 0, 0);
+		ktrcsw(p, 0, 0);
 #endif
 	return (0);
 }
@@ -516,7 +523,7 @@ sleep(ident, priority)
 	p->p_stats->p_ru.ru_nvcsw++;
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p->p_tracep, 1, 0);
+		ktrcsw(p, 1, 0);
 #endif
 	mi_switch();
 #ifdef	DDB
@@ -525,7 +532,7 @@ sleep(ident, priority)
 #endif
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p->p_tracep, 0, 0);
+		ktrcsw(p, 0, 0);
 #endif
 	curpriority = p->p_usrpri;
 	splx(s);
@@ -559,11 +566,12 @@ unsleep(p)
  * Make all processes sleeping on the specified identifier runnable.
  */
 void
-wakeup(ident)
-	register void *ident;
+wakeup_n(ident, n)
+	void *ident;
+	int n;
 {
-	register struct slpque *qp;
-	register struct proc *p, **q;
+	struct slpque *qp;
+	struct proc *p, **q;
 	int s;
 
 	s = splhigh();
@@ -575,6 +583,7 @@ restart:
 			panic("wakeup");
 #endif
 		if (p->p_wchan == ident) {
+			--n;
 			p->p_wchan = 0;
 			*q = p->p_forw;
 			if (qp->sq_tailp == &p->p_forw)
@@ -585,25 +594,84 @@ restart:
 					updatepri(p);
 				p->p_slptime = 0;
 				p->p_stat = SRUN;
-				if (p->p_flag & P_INMEM)
-					setrunqueue(p);
+
 				/*
 				 * Since curpriority is a user priority,
 				 * p->p_priority is always better than
 				 * curpriority.
 				 */
-				if ((p->p_flag & P_INMEM) == 0)
-					wakeup((caddr_t)&proc0);
-				else
+
+				if ((p->p_flag & P_INMEM) != 0) {
+					setrunqueue(p);
 					need_resched();
+				} else {
+					wakeup((caddr_t)&proc0);
+				}
 				/* END INLINE EXPANSION */
-				goto restart;
+
+				if (n != 0)
+					goto restart;
+				else
+					break;
 			}
 		} else
 			q = &p->p_forw;
 	}
 	splx(s);
 }
+
+void
+wakeup(chan)
+	void *chan;
+{
+	wakeup_n(chan, -1);
+}
+
+/*
+ * General yield call.  Puts the current process back on its run queue and
+ * performs a voluntary context switch.
+ */
+void
+yield()
+{
+	struct proc *p = curproc;
+	int s;
+
+	p->p_priority = p->p_usrpri;
+	s = splstatclock();
+	setrunqueue(p);
+	p->p_stats->p_ru.ru_nvcsw++;
+	mi_switch();
+	splx(s);
+}
+
+/*
+ * General preemption call.  Puts the current process back on its run queue
+ * and performs an involuntary context switch.  If a process is supplied,
+ * we switch to that process.  Otherwise, we use the normal process selection
+ * criteria.
+ */
+void
+preempt(newp)
+	struct proc *newp;
+{
+	struct proc *p = curproc;
+	int s;
+
+	/*
+	 * XXX Switching to a specific process is not supported yet.
+	 */
+	if (newp != NULL)
+		panic("preempt: cpu_preempt not yet implemented");
+
+	p->p_priority = p->p_usrpri;
+	s = splstatclock();
+	setrunqueue(p);
+	p->p_stats->p_ru.ru_nivcsw++;
+	mi_switch();
+	splx(s);
+}
+
 
 /*
  * The machine independent parts of mi_switch().
@@ -654,6 +722,13 @@ mi_switch()
 		resetpriority(p);
 	}
 
+
+	/*
+	 * Process is about to yield the CPU; clear the appropriate
+	 * scheduling flags.
+	 */
+	p->p_schedflags &= ~PSCHED_SWITCHCLEAR;
+
 	/*
 	 * Pick a new current process and record its start time.
 	 */
@@ -664,13 +739,6 @@ mi_switch()
 #endif
 	cpu_switch(p);
 	microtime(&runtime);
-
-	/*
-	 * We reset roundrobin_attempts at exit, because cpu_switch could
-	 * have looped in the idle loop and the attempts would increase
-	 * leading to unjust punishment of an innocent process.
-	 */
-	roundrobin_attempts = 0;
 }
 
 /*
@@ -702,6 +770,7 @@ setrunnable(p)
 	case 0:
 	case SRUN:
 	case SZOMB:
+	case SDEAD:
 	default:
 		panic("setrunnable");
 	case SSTOP:
@@ -758,7 +827,7 @@ resetpriority(p)
  * queue will not change.  The cpu usage estimator ramps up quite quickly
  * when the process is running (linearly), and decays away exponentially, at
  * a rate which is proportionally slower when the system is busy.  The basic
- * principal is that the system will 90% forget that the process used a lot
+ * principle is that the system will 90% forget that the process used a lot
  * of CPU time in 5 * loadav seconds.  This causes the system to favor
  * processes which haven't run much recently, and to round-robin among other
  * processes.
@@ -827,7 +896,8 @@ db_show_all_procs(addr, haddr, count, modif)
 		pp = p->p_pptr;
 		if (p->p_stat) {
 
-			db_printf("%5d  ", p->p_pid);
+			db_printf("%c%5d  ", p == curproc ? '*' : ' ',
+				p->p_pid);
 
 			switch (*mode) {
 

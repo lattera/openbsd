@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11 1997/11/06 05:58:43 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11.10.1 2001/05/14 22:32:55 niklas Exp $	*/
 /*	$NetBSD: procfs_subr.c,v 1.15 1996/02/12 15:01:42 christos Exp $	*/
 
 /*
@@ -147,6 +147,7 @@ loop:
 		break;
 
 	case Pcurproc:	/* /proc/curproc = lr--r--r-- */
+	case Pself:	/* /proc/self = lr--r--r-- */
 		pfs->pfs_mode = S_IRUSR|S_IRGRP|S_IROTH;
 		vp->v_type = VLNK;
 		break;
@@ -172,6 +173,9 @@ loop:
 		break;
 
 	case Pstatus:	/* /proc/N/status = -r--r--r-- */
+	case Pcmdline:	/* /proc/N/cmdline = -r--r--r-- */
+	case Pmeminfo:	/* /proc/meminfo = -r--r--r-- */
+	case Pcpuinfo:	/* /proc/cpuinfo = -r--r--r-- */
 		pfs->pfs_mode = S_IRUSR|S_IRGRP|S_IROTH;
 		vp->v_type = VREG;
 		break;
@@ -243,6 +247,15 @@ procfs_rw(v)
 
 	case Pmem:
 		return (procfs_domem(curp, p, pfs, uio));
+
+	case Pcmdline:
+		return (procfs_docmdline(curp, p, pfs, uio));
+
+	case Pmeminfo:
+		return (procfs_domeminfo(curp, p, pfs, uio));
+
+	case Pcpuinfo:
+		return (procfs_docpuinfo(curp, p, pfs, uio));
 
 	default:
 		return (EOPNOTSUPP);

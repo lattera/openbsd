@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/libkern.h,v 1.14 1997/11/30 21:47:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/libkern.h,v 1.14.10.1 2001/05/14 22:32:47 niklas Exp $	*/
 /*	$NetBSD: libkern.h,v 1.7 1996/03/14 18:52:08 christos Exp $	*/
 
 /*-
@@ -158,6 +158,7 @@ int	 bcmp __P((const void *, const void *, size_t));
 int	 ffs __P((int));
 int	 locc __P((int, char *, u_int));
 void	*memchr __P((const void *, int, size_t));
+int	 memcmp __P((const void *, const void *, size_t));
 u_long	 random __P((void));
 void	 srandom __P((u_long));
 int	 scanc __P((u_int, const u_char *, const u_char *, int));
@@ -166,6 +167,8 @@ size_t	 strlen __P((const char *));
 char	*strcat __P((char *, const char *));
 char	*strcpy __P((char *, const char *));
 char	*strncpy __P((char *, const char *, size_t));
+size_t	 strlcpy __P((char *, const char *, size_t));
+size_t	 strlcat __P((char *, const char *, size_t));
 int	 strcmp __P((const char *, const char *));
 int	 strncmp __P((const char *, const char *, size_t));
 int	 strncasecmp __P((const char *, const char *, size_t));

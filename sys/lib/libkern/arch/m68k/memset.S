@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/m68k/memset.S,v 1.1 2000/06/16 19:56:55 millert Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/m68k/memset.S,v 1.1.6.1 2001/05/14 22:32:50 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -41,7 +41,7 @@
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$OpenBSD: src/sys/lib/libkern/arch/m68k/memset.S,v 1.1 2000/06/16 19:56:55 millert Exp $"
+	.asciz "$OpenBSD: src/sys/lib/libkern/arch/m68k/memset.S,v 1.1.6.1 2001/05/14 22:32:50 niklas Exp $"
 #endif /* LIBC_SCCS */
 
 /*

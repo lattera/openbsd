@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7 1999/11/05 01:18:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7.2.1 2001/05/14 22:32:39 niklas Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -94,19 +94,17 @@ vmcmdset_extend(evsp)
 		panic("vmcmdset_extend: not necessary");
 #endif
 
-	/* figure out number of entries in new set */
 	ocnt = evsp->evs_cnt;
-	evsp->evs_cnt += ocnt ? ocnt : EXEC_DEFAULT_VMCMD_SETSIZE;
+	KASSERT(ocnt > 0);
+	/* figure out number of entries in new set */
+	evsp->evs_cnt += ocnt;
 
-	/* allocate it */
-	MALLOC(nvcp, struct exec_vmcmd *, 
-	    (evsp->evs_cnt * sizeof(struct exec_vmcmd)), M_EXEC, M_WAITOK);
-
-	/* free the old struct, if there was one, and record the new one */
-	if (ocnt) {
-		bcopy(evsp->evs_cmds, nvcp, (ocnt * sizeof(struct exec_vmcmd)));
-		FREE(evsp->evs_cmds, M_EXEC);
-	}
+	/* reallocate the command set */
+	nvcp = malloc(evsp->evs_cnt * sizeof(struct exec_vmcmd), M_EXEC,
+		      M_WAITOK);
+	bcopy(evsp->evs_cmds, nvcp, (ocnt * sizeof(struct exec_vmcmd)));
+	if (evsp->evs_cmds != evsp->evs_start)
+		free(evsp->evs_cmds, M_EXEC);
 	evsp->evs_cmds = nvcp;
 }
 
@@ -117,16 +115,20 @@ kill_vmcmds(evsp)
 	struct exec_vmcmd *vcp;
 	int i;
 
-	if (evsp->evs_cnt == 0)
-		return;
-
 	for (i = 0; i < evsp->evs_used; i++) {
 		vcp = &evsp->evs_cmds[i];
 		if (vcp->ev_vp != NULLVP)
 			vrele(vcp->ev_vp);
 	}
-	evsp->evs_used = evsp->evs_cnt = 0;
-	FREE(evsp->evs_cmds, M_EXEC);
+
+	/*
+	 * Free old vmcmds and restet the array.
+	 */
+	evsp->evs_used = 0;
+	if (evsp->evs_cmds != evsp->evs_start)
+		free(evsp->evs_cmds, M_EXEC);
+	evsp->evs_cmds = evsp->evs_start;
+	evsp->evs_cnt = EXEC_DEFAULT_VMCMD_SETSIZE;
 }
 
 /*
@@ -154,12 +156,13 @@ vmcmd_map_pagedvn(p, cmd)
 	 * map the vnode in using uvm_map.
 	 */
 
-	/* checks imported from uvm_mmap, needed? */
         if (cmd->ev_len == 0)
                 return(0);
         if (cmd->ev_offset & PAGE_MASK)
                 return(EINVAL);
 	if (cmd->ev_addr & PAGE_MASK)
+		return(EINVAL);
+	if (cmd->ev_len & PAGE_MASK)
 		return(EINVAL);
 
 	/*

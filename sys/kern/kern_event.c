@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8 2001/05/14 12:38:46 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8.2.1 2001/05/14 22:32:40 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon <jlemon@FreeBSD.org>
@@ -61,7 +61,6 @@ int	kqueue_ioctl(struct file *fp, u_long com, caddr_t data,
 		    struct proc *p);
 int	kqueue_select(struct file *fp, int which, struct proc *p);
 int 	kqueue_kqfilter(struct file *fp, struct knote *kn);
-int	kqueue_stat(struct file *fp, struct stat *st, struct proc *p);
 int	kqueue_close(struct file *fp, struct proc *p);
 void	kqueue_wakeup(struct kqueue *kq);
 
@@ -71,7 +70,6 @@ struct fileops kqueueops = {
 	kqueue_ioctl,
 	kqueue_select,
 	kqueue_kqfilter,
-	kqueue_stat,
 	kqueue_close
 };
 
@@ -676,19 +674,6 @@ kqueue_select(struct file *fp, int which, struct proc *p)
 	}
 	splx(s);
 	return (res);
-}
-
-/*ARGSUSED*/
-int
-kqueue_stat(struct file *fp, struct stat *st, struct proc *p)
-{
-	struct kqueue *kq = (struct kqueue *)fp->f_data;
-
-	bzero((void *)st, sizeof(*st));
-	st->st_size = kq->kq_count;
-	st->st_blksize = sizeof(struct kevent);
-	st->st_mode = S_IFIFO;
-	return (0);
 }
 
 /*ARGSUSED*/

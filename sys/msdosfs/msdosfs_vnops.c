@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21 1999/02/26 03:28:13 art Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21.6.1 2001/05/14 22:32:59 niklas Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -469,7 +469,7 @@ msdosfs_read(v)
 			error = bread(pmp->pm_devvp, lbn, blsize, NOCRED, &bp);
 		} else {
 			rablock = lbn + 1;
-			if (vp->v_lastr + 1 == lbn &&
+			if (dep->de_lastr + 1 == lbn &&
 			    de_cn2off(pmp, rablock) < dep->de_FileSize)
 				error = breada(vp, de_cn2bn(pmp, lbn),
 				    pmp->pm_bpcluster, de_cn2bn(pmp, rablock),
@@ -477,7 +477,7 @@ msdosfs_read(v)
 			else
 				error = bread(vp, de_cn2bn(pmp, lbn),
 				    pmp->pm_bpcluster, NOCRED, &bp);
-			vp->v_lastr = lbn;
+			dep->de_lastr = lbn;
 		}
 		n = min(n, pmp->pm_bpcluster - bp->b_resid);
 		if (error) {
@@ -1060,7 +1060,7 @@ abortit:
 	vrele(fdvp);
 	if (doingdirectory && newparent) {
 		if (error)	/* write access check above */
-			goto bad;
+			goto bad1;
 		if (xp != NULL)
 			vput(tvp);
 		/*
@@ -1086,19 +1086,19 @@ abortit:
 		if (xp->de_Attributes & ATTR_DIRECTORY) {
 			if (!dosdirempty(xp)) {
 				error = ENOTEMPTY;
-				goto bad;
+				goto bad1;
 			}
 			if (!doingdirectory) {
 				error = ENOTDIR;
-				goto bad;
+				goto bad1;
 			}
 			cache_purge(tdvp);
 		} else if (doingdirectory) {
 			error = EISDIR;
-			goto bad;
+			goto bad1;
 		}
 		if ((error = removede(dp, xp)) != 0)
-			goto bad;
+			goto bad1;
 		vput(tvp);
 		xp = NULL;
 	}
@@ -1109,7 +1109,7 @@ abortit:
 	 * file/directory.
 	 */
 	if ((error = uniqdosname(VTODE(tdvp), tcnp, toname)) != 0)
-		goto abortit;
+		goto bad1;
 
 	/*
 	 * Since from wasn't locked at various places above,
@@ -1150,7 +1150,6 @@ abortit:
 		if (doingdirectory)
 			panic("rename: lost dir entry");
 		vrele(ap->a_fvp);
-		VOP_UNLOCK(fvp, 0, p);
 		if (newparent)
 			VOP_UNLOCK(fdvp, 0, p);
 		xp = NULL;
@@ -1175,7 +1174,6 @@ abortit:
 			bcopy(oldname, ip->de_Name, 11);
 			if (newparent)
 				VOP_UNLOCK(fdvp, 0, p);
-			VOP_UNLOCK(fvp, 0, p);
 			goto bad;
 		}
 		ip->de_refcnt++;
@@ -1184,7 +1182,6 @@ abortit:
 			/* XXX should really panic here, fs is corrupt */
 			if (newparent)
 				VOP_UNLOCK(fdvp, 0, p);
-			VOP_UNLOCK(fvp, 0, p);
 			goto bad;
 		}
 		if (!doingdirectory) {
@@ -1194,7 +1191,6 @@ abortit:
 				/* XXX should really panic here, fs is corrupt */
 				if (newparent)
 					VOP_UNLOCK(fdvp, 0, p);
-				VOP_UNLOCK(fvp, 0, p);
 				goto bad;
 			}
 			if (ip->de_dirclust != MSDOSFSROOT)
@@ -1221,26 +1217,25 @@ abortit:
 		if (error) {
 			/* XXX should really panic here, fs is corrupt */
 			brelse(bp);
-			VOP_UNLOCK(fvp, 0, p);
 			goto bad;
 		}
 		dotdotp = (struct direntry *)bp->b_data + 1;
 		putushort(dotdotp->deStartCluster, dp->de_StartCluster);
 		if ((error = bwrite(bp)) != 0) {
 			/* XXX should really panic here, fs is corrupt */
-			VOP_UNLOCK(fvp, 0, p);
 			goto bad;
 		}
 	}
 
-	VOP_UNLOCK(fvp, 0, p);
 bad:
+	VOP_UNLOCK(fvp, 0, p);
+	vrele(fdvp);
+bad1:
 	if (xp)
 		vput(tvp);
 	vput(tdvp);
 out:
 	ip->de_flag &= ~DE_RENAME;
-	vrele(fdvp);
 	vrele(fvp);
 	return (error);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.2 2000/03/24 09:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.3 2001/05/14 22:32:40 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -50,12 +50,14 @@
 #include <sys/mount.h>
 #include <sys/proc.h>
 #include <sys/resourcevar.h>
+#include <sys/signalvar.h>
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/acct.h>
 #include <sys/ktrace.h>
 #include <sys/sched.h>
 #include <dev/rndvar.h>
+#include <sys/pool.h>
 
 #include <sys/syscallargs.h>
 
@@ -80,7 +82,7 @@ sys_fork(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	return (fork1(p, FORK_FORK, NULL, 0, retval));
+	return (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, retval));
 }
 
 /*ARGSUSED*/
@@ -90,7 +92,7 @@ sys_vfork(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	return (fork1(p, FORK_VFORK|FORK_PPWAIT, NULL, 0, retval));
+	return (fork1(p, SIGCHLD, FORK_VFORK|FORK_PPWAIT, NULL, 0, retval));
 }
 
 int
@@ -102,6 +104,7 @@ sys_rfork(p, v, retval)
 	struct sys_rfork_args /* {
 		syscallarg(int) flags;
 	} */ *uap = v;
+
 	int rforkflags;
 	int flags;
 
@@ -128,14 +131,15 @@ sys_rfork(p, v, retval)
 		flags |= FORK_NOZOMBIE;
 
 	if (rforkflags & RFMEM)
-		flags |= FORK_SHAREVM;
+		flags |= FORK_VMNOSTACK;
 
-	return (fork1(p, flags, NULL, 0, retval));
+	return (fork1(p, SIGCHLD, flags, NULL, 0, retval));
 }
 
 int
-fork1(p1, flags, stack, stacksize, retval)
+fork1(p1, exitsig, flags, stack, stacksize, retval)
 	register struct proc *p1;
+	int exitsig;
 	int flags;
 	void *stack;
 	size_t stacksize;
@@ -148,6 +152,7 @@ fork1(p1, flags, stack, stacksize, retval)
 	int count;
 	static int pidchecked = 0;
 	vaddr_t uaddr;
+	int s;
 	extern void endtsleep __P((void *));
 	extern void realitexpire __P((void *));
 
@@ -162,6 +167,11 @@ fork1(p1, flags, stack, stacksize, retval)
 		tablefull("proc");
 		return (EAGAIN);
 	}
+
+#if !defined(UVM)
+	if (flags & FORK_SHAREVM)
+		return (EINVAL);
+#endif
 
 	/*
 	 * Increment the count of procs running with this uid. Don't allow
@@ -189,7 +199,7 @@ fork1(p1, flags, stack, stacksize, retval)
 		return ENOMEM;
 
 	/* Allocate new proc. */
-	MALLOC(newproc, struct proc *, sizeof(struct proc), M_PROC, M_WAITOK);
+	newproc = pool_get(&proc_pool, PR_WAITOK);
 
 	lastpid++;
 	if (randompid)
@@ -239,6 +249,7 @@ again:
 	p2 = newproc;
 	p2->p_stat = SIDL;			/* protect against others */
 	p2->p_pid = lastpid;
+	p2->p_exitsig = exitsig;
 	LIST_INSERT_HEAD(&allproc, p2, p_list);
 	p2->p_forw = p2->p_back = NULL;		/* shouldn't be necessary */
 	LIST_INSERT_HEAD(PIDHASH(p2->p_pid), p2, p_hash);
@@ -331,13 +342,28 @@ again:
 	scheduler_fork_hook(p1, p2);
 
 	/*
+	 * Create signal actions for the child process.
+	 */
+	if (flags & FORK_SIGHAND)
+		sigactsshare(p1, p2);
+	else
+		p2->p_sigacts = sigactsinit(p1);
+
+	/*
 	 * This begins the section where we must prevent the parent
 	 * from being swapped.
 	 */
-	p1->p_holdcnt++;
+	PHOLD(p1);
 
-#if !defined(UVM) /* We do this later for UVM */
-	if (flags & FORK_SHAREVM) {
+#if defined(UVM)
+	if (flags & FORK_VMNOSTACK) {
+		/* share as much address space as possible */
+		(void) uvm_map_inherit(&p1->p_vmspace->vm_map,
+		    VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS - MAXSSIZ,
+		    VM_INHERIT_SHARE);
+	}
+#else
+	if (flags & FORK_VMNOSTACK) {
 		/* share as much address space as possible */
 		(void) vm_map_inherit(&p1->p_vmspace->vm_map,
 		    VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS - MAXSSIZ,
@@ -368,7 +394,7 @@ again:
 	 */
 #if defined(UVM)
 	uvm_fork(p1, p2, ((flags & FORK_SHAREVM) ? TRUE : FALSE), stack,
-		 stacksize);
+	    stacksize);
 #else /* UVM */
 	vm_fork(p1, p2, stack, stacksize);
 #endif /* UVM */
@@ -384,22 +410,25 @@ again:
 	} else if (flags & FORK_RFORK) {
 		forkstat.cntrfork++;
 		forkstat.sizrfork += vm->vm_dsize + vm->vm_ssize;
+	} else {
+		forkstat.cntkthread++;
+		forkstat.sizkthread += vm->vm_dsize + vm->vm_ssize;
 	}
 
 	/*
 	 * Make child runnable, set start time, and add to run queue.
 	 */
-	(void) splstatclock();
+	s = splstatclock();
 	p2->p_stats->p_start = time;
 	p2->p_acflag = AFORK;
 	p2->p_stat = SRUN;
 	setrunqueue(p2);
-	(void) spl0();
+	splx(s);
 
 	/*
 	 * Now can be swapped.
 	 */
-	p1->p_holdcnt--;
+	PRELE(p1);
 
 #if defined(UVM)
 	uvmexp.forks++;
@@ -408,6 +437,11 @@ again:
 	if (flags & FORK_SHAREVM)
 		uvmexp.forks_sharevm++;
 #endif
+
+	/*
+	 * tell any interested parties about the new process
+	 */
+	KNOTE(&p1->p_klist, NOTE_FORK | p2->p_pid);
 
 	/*
 	 * Preserve synchronization semantics of vfork.  If waiting for

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_syscalls.c,v 1.30 2000/01/17 18:16:48 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_syscalls.c,v 1.30.2.1 2001/05/14 22:32:45 niklas Exp $	*/
 /*	$NetBSD: uipc_syscalls.c,v 1.19 1996/02/09 19:00:48 christos Exp $	*/
 
 /*
@@ -43,6 +43,7 @@
 #include <sys/file.h>
 #include <sys/buf.h>
 #include <sys/malloc.h>
+#include <sys/event.h>
 #include <sys/mbuf.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
@@ -195,18 +196,23 @@ sys_accept(p, v, retval)
 		return (error);
 	}
 	*retval = tmpfd;
+
+	/* connection has been removed from the listen queue */
+	KNOTE(&so->so_rcv.sb_sel.si_note, 0);
+
 	{ struct socket *aso = so->so_q;
 	  if (soqremque(aso, 1) == 0)
 		panic("accept");
 	  so = aso;
 	}
+
 	fp->f_type = DTYPE_SOCKET;
 	fp->f_flag = FREAD|FWRITE;
 	fp->f_ops = &socketops;
 	fp->f_data = (caddr_t)so;
 	nam = m_get(M_WAIT, MT_SONAME);
-	(void) soaccept(so, nam);
-	if (SCARG(uap, name)) {
+	error = soaccept(so, nam);
+	if (!error && SCARG(uap, name)) {
 		if (namelen > nam->m_len)
 			namelen = nam->m_len;
 		/* SHOULD COPY OUT A CHAIN HERE */
@@ -215,6 +221,11 @@ sys_accept(p, v, retval)
 			error = copyout((caddr_t)&namelen,
 			    (caddr_t)SCARG(uap, anamelen),
 			    sizeof (*SCARG(uap, anamelen)));
+	}
+	/* if an error occured, free the file descriptor */
+	if (error) {
+		fdremove(p->p_fd, tmpfd);
+		ffree(fp);
 	}
 	m_freem(nam);
 	splx(s);
@@ -390,8 +401,8 @@ sys_sendmsg(p, v, retval)
 	if (msg.msg_iovlen <= 0 || msg.msg_iovlen > IOV_MAX)
 		return (EMSGSIZE);
 	if (msg.msg_iovlen > UIO_SMALLIOV)
-		MALLOC(iov, struct iovec *,
-		       sizeof(struct iovec) * msg.msg_iovlen, M_IOV, M_WAITOK);
+		iov = malloc(sizeof(struct iovec) * msg.msg_iovlen,
+		    M_IOV, M_WAITOK);
 	else
 		iov = aiov;
 	if (msg.msg_iovlen &&
@@ -405,7 +416,7 @@ sys_sendmsg(p, v, retval)
 	error = sendit(p, SCARG(uap, s), &msg, SCARG(uap, flags), retval);
 done:
 	if (iov != aiov)
-		FREE(iov, M_IOV);
+		free(iov, M_IOV);
 	return (error);
 }
 
@@ -485,7 +496,7 @@ sendit(p, s, mp, flags, retsize)
 	if (KTRPOINT(p, KTR_GENIO)) {
 		int iovlen = auio.uio_iovcnt * sizeof (struct iovec);
 
-		MALLOC(ktriov, struct iovec *, iovlen, M_TEMP, M_WAITOK);
+		ktriov = malloc(iovlen, M_TEMP, M_WAITOK);
 		bcopy((caddr_t)auio.uio_iov, (caddr_t)ktriov, iovlen);
 	}
 #endif
@@ -504,9 +515,8 @@ sendit(p, s, mp, flags, retsize)
 #ifdef KTRACE
 	if (ktriov != NULL) {
 		if (error == 0)
-			ktrgenio(p->p_tracep, s, UIO_WRITE,
-				ktriov, *retsize, error);
-		FREE(ktriov, M_TEMP);
+			ktrgenio(p, s, UIO_WRITE, ktriov, *retsize, error);
+		free(ktriov, M_TEMP);
 	}
 #endif
 bad:
@@ -574,8 +584,8 @@ sys_recvmsg(p, v, retval)
 	if (msg.msg_iovlen <= 0 || msg.msg_iovlen > IOV_MAX)
 		return (EMSGSIZE);
 	if (msg.msg_iovlen > UIO_SMALLIOV)
-		MALLOC(iov, struct iovec *,
-		       sizeof(struct iovec) * msg.msg_iovlen, M_IOV, M_WAITOK);
+		iov = malloc(sizeof(struct iovec) * msg.msg_iovlen,
+		    M_IOV, M_WAITOK);
 	else
 		iov = aiov;
 #ifdef COMPAT_OLDSOCK
@@ -596,7 +606,7 @@ sys_recvmsg(p, v, retval)
 	}
 done:
 	if (iov != aiov)
-		FREE(iov, M_IOV);
+		free(iov, M_IOV);
 	return (error);
 }
 
@@ -639,7 +649,7 @@ recvit(p, s, mp, namelenp, retsize)
 	if (KTRPOINT(p, KTR_GENIO)) {
 		int iovlen = auio.uio_iovcnt * sizeof (struct iovec);
 
-		MALLOC(ktriov, struct iovec *, iovlen, M_TEMP, M_WAITOK);
+		ktriov = malloc(iovlen, M_TEMP, M_WAITOK);
 		bcopy((caddr_t)auio.uio_iov, (caddr_t)ktriov, iovlen);
 	}
 #endif
@@ -655,9 +665,9 @@ recvit(p, s, mp, namelenp, retsize)
 #ifdef KTRACE
 	if (ktriov != NULL) {
 		if (error == 0)
-			ktrgenio(p->p_tracep, s, UIO_READ,
+			ktrgenio(p, s, UIO_READ,
 				ktriov, len - auio.uio_resid, error);
-		FREE(ktriov, M_TEMP);
+		free(ktriov, M_TEMP);
 	}
 #endif
 	if (error)
@@ -1031,17 +1041,24 @@ sockargs(mp, buf, buflen, type)
 	register struct mbuf *m;
 	int error;
 
-	if (buflen > MLEN) {
-#ifdef COMPAT_OLDSOCK
-		if (type == MT_SONAME && buflen <= 112)
-			buflen = MLEN;		/* unix domain compat. hack */
-		else
-#endif
+	/*
+	 * We can't allow socket names > UCHAR_MAX in length, since that
+	 * will overflow sa_len.
+	 */
+	if (type == MT_SONAME && (u_int)buflen > UCHAR_MAX)
 		return (EINVAL);
-	}
+	if ((u_int)buflen > MCLBYTES)
+		return (EINVAL);
+
+	/* Allocate an mbuf to hold the arguments. */
 	m = m_get(M_WAIT, type);
-	if (m == NULL)
-		return (ENOBUFS);
+	if ((u_int)buflen > MLEN) {
+		MCLGET(m, M_WAITOK);
+		if ((m->m_flags & M_EXT) == 0) {
+			m_free(m);
+			return ENOBUFS;
+		}
+	}
 	m->m_len = buflen;
 	error = copyin(buf, mtod(m, caddr_t), buflen);
 	if (error) {

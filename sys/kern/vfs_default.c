@@ -1,4 +1,4 @@
-/*       $OpenBSD: src/sys/kern/vfs_default.c,v 1.3 1998/08/06 19:34:24 csapuntz Exp $  */
+/*       $OpenBSD: src/sys/kern/vfs_default.c,v 1.3.8.1 2001/05/14 22:32:46 niklas Exp $  */
 
 
 /*
@@ -104,6 +104,7 @@ vop_generic_revoke(v)
 				vgone(vq);
 				break;
 			}
+			simple_unlock(&spechash_slock);
 		}
 		/*
 		 * Remove the lock so that vgone below will

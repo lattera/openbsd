@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/lib/libkern/memset.c,v 1.1.8.1 2001/05/14 22:32:48 niklas Exp $	*/
 /*	$NetBSD: memset.c,v 1.6 1998/03/27 05:35:47 cgd Exp $	*/
 
 /*-
@@ -51,6 +52,7 @@ __RCSID("$NetBSD: memset.c,v 1.6 1998/03/27 05:35:47 cgd Exp $");
 #include <string.h>
 #include <limits.h>
 #else
+#include <sys/systm.h>
 #include <lib/libkern/libkern.h>
 #include <machine/limits.h>
 #endif 
@@ -80,7 +82,9 @@ memset(dst0, c0, length)
 #endif
 {
 	size_t t;
+#ifndef BZERO
 	u_int c;
+#endif
 	u_char *dst;
 
 	dst = dst0;

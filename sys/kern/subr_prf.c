@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.2 2000/03/24 09:09:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.3 2001/05/14 22:32:43 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -72,6 +72,9 @@
 #ifdef DDB
 #include <ddb/db_output.h>	/* db_printf, db_putchar prototypes */
 extern	int db_radix;		/* XXX: for non-standard '%r' format */
+#endif
+#if defined(UVM) && defined(UVM_SWAP_ENCRYPT)
+extern int uvm_doswapencrypt;
 #endif
 
 
@@ -189,6 +192,10 @@ panic(fmt, va_alist)
 	va_list ap;
 
 	bootopt = RB_AUTOBOOT | RB_DUMP;
+#if defined(UVM) && defined(UVM_SWAP_ENCRYPT)
+	if (uvm_doswapencrypt)
+		bootopt &= ~RB_DUMP;
+#endif
 	va_start(ap, fmt);
 	if (panicstr)
 		bootopt |= RB_NOSYNC;
@@ -812,7 +819,7 @@ reswitch:	switch (ch) {
 		case 'b': {
 			char *b, *z;
 			int tmp;
-			_uquad = va_arg(ap, int);
+			_uquad = va_arg(ap, u_int);
 			b = va_arg(ap, char *);
 			if (*b == 8)
 				sprintf(buf, "%qo", _uquad);

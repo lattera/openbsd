@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1 2000/12/18 18:40:45 provos Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.1 2001/05/14 22:32:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -28,7 +28,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1 2000/12/18 18:40:45 provos Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.1 2001/05/14 22:32:48 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.2 2000/03/02 07:04:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.3 2001/05/14 22:32:45 niklas Exp $	*/
 /*	$NetBSD: uipc_socket2.c,v 1.11 1996/02/04 02:17:55 christos Exp $	*/
 
 /*
@@ -47,6 +47,7 @@
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/signalvar.h>
+#include <sys/event.h>
 
 /*
  * Primitive routines for operating on sockets and socket buffers
@@ -324,6 +325,7 @@ sowakeup(so, sb)
 	}
 	if (so->so_state & SS_ASYNC)
 		csignal(so->so_pgid, SIGIO, so->so_siguid, so->so_sigeuid);
+	KNOTE(&sb->sb_sel.si_note, 0);
 }
 
 /*

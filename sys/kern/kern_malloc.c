@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.1 2000/03/24 09:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.2 2001/05/14 22:32:41 niklas Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*
@@ -42,6 +42,7 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/systm.h>
+#include <sys/sysctl.h>
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
@@ -57,8 +58,16 @@ struct kmembuckets bucket[MINBUCKET + 16];
 struct kmemstats kmemstats[M_LAST];
 struct kmemusage *kmemusage;
 char *kmembase, *kmemlimit;
+char buckstring[16 * sizeof("123456,")];
+int buckstring_init = 0;
 #if defined(KMEMSTATS) || defined(DIAGNOSTIC) || defined(FFS_SOFTUPDATES)
 char *memname[] = INITKMEMNAMES;
+#endif
+
+#ifdef MALLOC_DEBUG
+extern int debug_malloc __P((unsigned long, int, int, void **));
+extern int debug_free __P((void *, int));
+extern void debug_malloc_init __P((void));
 #endif
 
 #ifdef DIAGNOSTIC
@@ -83,7 +92,7 @@ long addrmask[] = { 0,
  * Normally the freelist structure is used only to hold the list pointer
  * for free objects.  However, when running with diagnostics, the first
  * 8 bytes of the structure is unused except for diagnostic information,
- * and the free list pointer is at offst 8 in the structure.  Since the
+ * and the free list pointer is at offset 8 in the structure.  Since the
  * first 8 bytes is the portion of the structure most often modified, this
  * helps to detect memory reuse problems and avoid free list corruption.
  */
@@ -124,6 +133,12 @@ malloc(size, type, flags)
 	if (((unsigned long)type) > M_LAST)
 		panic("malloc - bogus type");
 #endif
+
+#ifdef MALLOC_DEBUG
+	if (debug_malloc(size, type, flags, (void **)&va))
+		return ((void *) va);
+#endif
+
 	indx = BUCKETINDX(size);
 	kbp = &bucket[indx];
 	s = splimp();
@@ -319,6 +334,11 @@ free(addr, type)
 	register struct kmemstats *ksp = &kmemstats[type];
 #endif
 
+#ifdef MALLOC_DEBUG
+	if (debug_free(addr, type))
+		return;
+#endif
+
 	kup = btokup(addr);
 	size = 1 << kup->ku_indx;
 	kbp = &bucket[kup->ku_indx];
@@ -457,4 +477,50 @@ kmeminit()
 	for (indx = 0; indx < M_LAST; indx++)
 		kmemstats[indx].ks_limit = npg * PAGE_SIZE * 6 / 10;
 #endif
+#ifdef MALLOC_DEBUG
+	debug_malloc_init();
+#endif
+}
+
+/*
+ * Return kernel malloc statistics information.
+ */
+int
+sysctl_malloc(name, namelen, oldp, oldlenp, newp, newlen)
+	int *name;
+	u_int namelen;
+	void *oldp;
+	size_t *oldlenp;
+	void *newp;
+	size_t newlen;
+{
+        struct kmembuckets kb;
+        int i, siz;
+
+	if (namelen != 2 && name[0] != KERN_MALLOC_BUCKETS)
+		return (ENOTDIR);		/* overloaded */
+
+	switch (name[0]) {
+	case KERN_MALLOC_BUCKETS:
+	        /* Initialize the first time */
+	        if (buckstring_init == 0) {
+			buckstring_init = 1;
+			bzero(buckstring, sizeof(buckstring));
+		        for (siz = 0, i = MINBUCKET; i < MINBUCKET + 16; i++)
+			        siz += snprintf(buckstring + siz,
+						sizeof(buckstring) - siz - 1,
+					        "%d,", (u_int)(1<<i));
+			buckstring[siz - 1] = '\0'; /* Remove trailing comma */
+		}
+	        return (sysctl_rdstring(oldp, oldlenp, newp, buckstring));
+
+	case KERN_MALLOC_BUCKET:
+	        bcopy(&bucket[BUCKETINDX(name[1])], &kb, sizeof(kb));
+		kb.kb_next = kb.kb_last = 0;
+		return (sysctl_rdstruct(oldp, oldlenp, newp, &kb,
+					sizeof(kb)));
+	default:
+	        return (EOPNOTSUPP);
+	}
+	/* NOTREACHED */
 }

@@ -1,9 +1,10 @@
-#	$OpenBSD: src/sys/lib/libkern/arch/sparc/Attic/Makefile.inc,v 1.6.2.1 2000/03/02 07:04:41 niklas Exp $
+#	$OpenBSD: src/sys/lib/libkern/arch/sparc/Attic/Makefile.inc,v 1.6.2.2 2001/05/14 22:32:51 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.12 1996/04/23 23:05:22 christos Exp $
 
 SRCS+=  __main.c imax.c imin.c lmax.c lmin.c max.c min.c ulmax.c ulmin.c \
-	memchr.c memset.c \
-	bcmp.c bzero.S strcat.c strcmp.c strcpy.c strlen.S strncmp.c \
+	memchr.c memcmp.c memset.c \
+	bcmp.c bzero.S strcat.c strcmp.c strcpy.c strlcat.c strlcpy.c \
+	strlen.S strncmp.c \
 	strncpy.c htonl.S htons.S ntohl.S ntohs.S scanc.c skpc.c \
 	strncasecmp.c
 

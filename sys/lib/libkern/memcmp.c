@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/memcmp.c,v 1.2 2000/06/29 16:18:52 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/memcmp.c,v 1.2.6.1 2001/05/14 22:32:48 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -37,7 +37,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/sys/lib/libkern/memcmp.c,v 1.2 2000/06/29 16:18:52 mickey Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/memcmp.c,v 1.2.6.1 2001/05/14 22:32:48 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)

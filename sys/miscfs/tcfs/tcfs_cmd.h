@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_cmd.h,v 1.2 2000/06/17 17:32:26 provos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_cmd.h,v 1.2.6.1 2001/05/14 22:32:57 niklas Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.

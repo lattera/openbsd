@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9 1999/02/26 03:46:25 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.1 2001/05/14 22:32:55 niklas Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -64,9 +64,7 @@
 #define	ISSET(t, f)	((t) & (f))
 
 #if !defined(UVM)
-static int procfs_rwmem __P((struct proc *, struct uio *));
-
-static int
+int
 procfs_rwmem(p, uio)
 	struct proc *p;
 	struct uio *uio;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5 2000/06/07 11:21:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.1 2001/05/14 22:32:41 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Artur Grabowski <art@openbsd.org>

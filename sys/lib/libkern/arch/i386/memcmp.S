@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/i386/memcmp.S,v 1.1 2000/06/16 19:56:54 millert Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/i386/memcmp.S,v 1.1.6.1 2001/05/14 22:32:50 niklas Exp $	*/
 
 /*
  * Written by J.T. Conklin <jtc@netbsd.org>.

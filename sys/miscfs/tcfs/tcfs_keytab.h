@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_keytab.h,v 1.5 2000/11/16 20:02:21 provos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_keytab.h,v 1.5.4.1 2001/05/14 22:32:58 niklas Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.

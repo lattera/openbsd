@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6 2001/03/28 20:03:00 angelos Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6.4.1 2001/05/14 22:32:45 niklas Exp $	*/
 /*	$KAME: uipc_mbuf2.c,v 1.29 2001/02/14 13:42:10 itojun Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.40 1999/04/01 00:23:25 thorpej Exp $	*/
 

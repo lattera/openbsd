@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_pipe.c,v 1.23 2000/01/27 18:56:13 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_pipe.c,v 1.23.2.1 2001/05/14 22:32:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 John S. Dyson
@@ -45,6 +45,7 @@
 #include <sys/kernel.h>
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#include <sys/event.h>
 
 #include <vm/vm.h>
 #include <vm/vm_prot.h>
@@ -62,16 +63,28 @@
 /*
  * interfaces to the outside world
  */
-int	pipe_read __P((struct file *, struct uio *, struct ucred *));
-int	pipe_write __P((struct file *, struct uio *, struct ucred *));
+int	pipe_read __P((struct file *, off_t *, struct uio *, struct ucred *));
+int	pipe_write __P((struct file *, off_t *, struct uio *, struct ucred *));
 int	pipe_close __P((struct file *, struct proc *));
 int	pipe_select __P((struct file *, int which, struct proc *));
+int	pipe_kqfilter __P((struct file *fp, struct knote *kn));
 int	pipe_ioctl __P((struct file *, u_long, caddr_t, struct proc *));
 
-static struct fileops pipeops =
-    { pipe_read, pipe_write, pipe_ioctl, pipe_select, pipe_close };
+static struct fileops pipeops = {
+	pipe_read, pipe_write, pipe_ioctl, pipe_select, pipe_kqfilter,
+	pipe_close 
+};
 
+void	filt_pipedetach(struct knote *kn);
+int	filt_piperead(struct knote *kn, long hint);
+int	filt_pipewrite(struct knote *kn, long hint);
 
+struct filterops pipe_rfiltops =
+	{ 1, NULL, filt_pipedetach, filt_piperead };
+struct filterops pipe_wfiltops =
+	{ 1, NULL, filt_pipedetach, filt_pipewrite };
+
+ 
 /*
  * Default pipe buffer size(s), this can be kind-of large now because pipe
  * space is pageable.  The pipe code will try to maintain locality of
@@ -260,12 +273,14 @@ pipeselwakeup(cpipe)
 	}
 	if ((cpipe->pipe_state & PIPE_ASYNC) && cpipe->pipe_pgid != NO_PID)
 		gsignal(cpipe->pipe_pgid, SIGIO);
+	KNOTE(&cpipe->pipe_sel.si_note, 0);
 }
 
 /* ARGSUSED */
 int
-pipe_read(fp, uio, cred)
+pipe_read(fp, poff, uio, cred)
 	struct file *fp;
+	off_t *poff;
 	struct uio *uio;
 	struct ucred *cred;
 {
@@ -390,8 +405,9 @@ pipe_read(fp, uio, cred)
 }
 
 int
-pipe_write(fp, uio, cred)
+pipe_write(fp, poff, uio, cred)
 	struct file *fp;
+	off_t *poff;
 	struct uio *uio;
 	struct ucred *cred;
 {
@@ -743,3 +759,65 @@ pipeclose(cpipe)
 	}
 }
 #endif
+
+int
+pipe_kqfilter(struct file *fp, struct knote *kn)
+{
+	struct pipe *rpipe = (struct pipe *)kn->kn_fp->f_data;
+
+	switch (kn->kn_filter) {
+	case EVFILT_READ:
+		kn->kn_fop = &pipe_rfiltops;
+		break;
+	case EVFILT_WRITE:
+		kn->kn_fop = &pipe_wfiltops;
+		break;
+	default:
+		return (1);
+	}
+	
+	SLIST_INSERT_HEAD(&rpipe->pipe_sel.si_note, kn, kn_selnext);
+	return (0);
+}
+
+void
+filt_pipedetach(struct knote *kn)
+{
+	struct pipe *rpipe = (struct pipe *)kn->kn_fp->f_data;
+
+	SLIST_REMOVE(&rpipe->pipe_sel.si_note, kn, knote, kn_selnext);
+}
+
+/*ARGSUSED*/
+int
+filt_piperead(struct knote *kn, long hint)
+{
+	struct pipe *rpipe = (struct pipe *)kn->kn_fp->f_data;
+	struct pipe *wpipe = rpipe->pipe_peer;
+
+	kn->kn_data = rpipe->pipe_buffer.cnt;
+
+	if ((rpipe->pipe_state & PIPE_EOF) ||
+	    (wpipe == NULL) || (wpipe->pipe_state & PIPE_EOF)) {
+		kn->kn_flags |= EV_EOF; 
+		return (1);
+	}
+	return (kn->kn_data > 0);
+}
+
+/*ARGSUSED*/
+int
+filt_pipewrite(struct knote *kn, long hint)
+{
+	struct pipe *rpipe = (struct pipe *)kn->kn_fp->f_data;
+	struct pipe *wpipe = rpipe->pipe_peer;
+
+	if ((wpipe == NULL) || (wpipe->pipe_state & PIPE_EOF)) {
+		kn->kn_data = 0;
+		kn->kn_flags |= EV_EOF; 
+		return (1);
+	}
+	kn->kn_data = wpipe->pipe_buffer.size - wpipe->pipe_buffer.cnt;
+
+	return (kn->kn_data >= PIPE_BUF);
+}

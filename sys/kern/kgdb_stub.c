@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/kern/kgdb_stub.c,v 1.1 2001/01/24 09:37:59 hugh Exp $ */
+/* $OpenBSD: src/sys/kern/kgdb_stub.c,v 1.1.4.1 2001/05/14 22:32:42 niklas Exp $ */
 /*	$NetBSD: kgdb_stub.c,v 1.6 1998/08/30 20:30:57 scottr Exp $	*/
 
 /*

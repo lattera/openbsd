@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_subr.c,v 1.2 2000/06/17 20:25:55 provos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_subr.c,v 1.2.6.1 2001/05/14 22:32:58 niklas Exp $	*/
 /*	$NetBSD: tcfs_subr.c,v 1.6 1996/05/10 22:50:52 jtk Exp $	*/
 
 /*
