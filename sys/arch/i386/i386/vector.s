@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vector.s,v 1.1.2.1 2004/03/16 18:27:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vector.s,v 1.1.2.2 2004/03/22 23:48:40 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*
@@ -276,9 +276,10 @@ IDTVEC(resume)
 	.long	_C_LABEL(Xresume12), _C_LABEL(Xresume13)
 	.long	_C_LABEL(Xresume14), _C_LABEL(Xresume15)
 	/* for soft interrupts */
-	.long	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.long	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	.long	_C_LABEL(Xsofttty), _C_LABEL(Xsoftnet)
 	.long	_C_LABEL(Xsoftclock)
+	.long	0, 0
 /* fake interrupts to resume from splx() */
 IDTVEC(recurse)
 	.long	_C_LABEL(Xrecurse0), _C_LABEL(Xrecurse1)
@@ -290,9 +291,10 @@ IDTVEC(recurse)
 	.long	_C_LABEL(Xrecurse12), _C_LABEL(Xrecurse13)
 	.long	_C_LABEL(Xrecurse14), _C_LABEL(Xrecurse15)
 	/* for soft interrupts */
-	.long	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.long	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	.long	_C_LABEL(Xsofttty), _C_LABEL(Xsoftnet)
 	.long	_C_LABEL(Xsoftclock)
+	.long	0, 0
 
 /* Some bogus data, to keep vmstat happy, for now. */
 	.globl	_C_LABEL(intrnames), _C_LABEL(eintrnames)
