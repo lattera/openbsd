@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_status.c,v 1.3.10.1 2001/05/14 22:32:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_status.c,v 1.3.10.2 2001/07/04 10:49:16 niklas Exp $	*/
 /*	$NetBSD: procfs_status.c,v 1.11 1996/03/16 23:52:50 christos Exp $	*/
 
 /*
@@ -168,8 +168,6 @@ procfs_dostatus(curp, p, pfs, uio)
 
 	len = procfs_stat_gen(p, NULL, 0);
 	ps = malloc(len, M_TEMP, M_WAITOK);
-	if (!ps)
-		return (ENOMEM);
 	(void) procfs_stat_gen(p, ps, len);
 
 	len -= uio->uio_offset;

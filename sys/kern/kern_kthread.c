@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.1 2001/05/14 22:32:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.2 2001/07/04 10:48:20 niklas Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -83,32 +83,15 @@ kthread_create(func, arg, newpp, fmt, va_alist)
 	 * descriptors and don't leave the exit status around for the
 	 * parent to wait for.
 	 */
-#ifdef UVM
 	error = fork1(&proc0, 0,
 	    FORK_SHAREVM|FORK_NOZOMBIE|FORK_SIGHAND, NULL, 0, rv);
-#else
-	error = fork1(&proc0, 0,
-	    FORK_VMNOSTACK|FORK_NOZOMBIE|FORK_SIGHAND, NULL, 0, rv);
-#endif
 	if (error)
 		return (error);
 
-#ifdef cpu_set_init_frame			/* XXX should go away */
-	if (rv[1]) {
-		/*
-		 * Now in child.
-		 */
-		func(arg);
-		return (0);
-	}
-#endif
-
 	p2 = pfind(rv[0]);
 
-#ifndef cpu_set_init_frame			/* XXX should go away */
 	/* Arrange for it to start at the specified function. */
 	cpu_set_kpc(p2, func, arg);
-#endif
 
 	/*
 	 * Mark it as a system process and not a candidate for

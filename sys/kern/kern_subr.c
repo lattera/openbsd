@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.2 2001/05/14 22:32:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.3 2001/07/04 10:48:26 niklas Exp $	*/
 /*	$NetBSD: kern_subr.c,v 1.15 1996/04/09 17:21:56 ragge Exp $	*/
 
 /*
@@ -92,22 +92,14 @@ uiomove(cp, n, uio)
 			break;
 
 		case UIO_SYSSPACE:
-#if defined(UVM)
 			if (uio->uio_rw == UIO_READ)
 				error = kcopy(cp, iov->iov_base, cnt);
 			else
 				error = kcopy(iov->iov_base, cp, cnt);
 			if (error)
 				return(error);
-#else
-			if (uio->uio_rw == UIO_READ)
-				bcopy((caddr_t)cp, iov->iov_base, cnt);
-			else
-				bcopy(iov->iov_base, (caddr_t)cp, cnt);
-			break;
-#endif
 		}
-		iov->iov_base += cnt;
+		iov->iov_base = (caddr_t)iov->iov_base + cnt;
 		iov->iov_len -= cnt;
 		uio->uio_resid -= cnt;
 		uio->uio_offset += cnt;
@@ -157,7 +149,7 @@ again:
 		*(char *)iov->iov_base = c;
 		break;
 	}
-	iov->iov_base++;
+	iov->iov_base = (caddr_t)iov->iov_base + 1;
 	iov->iov_len--;
 	uio->uio_resid--;
 	uio->uio_offset++;
@@ -182,6 +174,8 @@ hashinit(elements, type, flags, hashmask)
 		continue;
 	hashsize >>= 1;
 	hashtbl = malloc((u_long)hashsize * sizeof(*hashtbl), type, flags);
+	if (hashtbl == NULL)
+		return NULL;
 	for (i = 0; i < hashsize; i++)
 		LIST_INIT(&hashtbl[i]);
 	*hashmask = hashsize - 1;

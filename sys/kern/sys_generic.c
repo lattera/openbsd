@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.1 2001/05/14 22:32:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.2 2001/07/04 10:48:33 niklas Exp $	*/
 /*	$NetBSD: sys_generic.c,v 1.24 1996/03/29 00:25:32 cgd Exp $	*/
 
 /*
@@ -691,10 +691,7 @@ sys_select(p, v, retval)
 	if (SCARG(uap, nd) > FD_SETSIZE) {
 		caddr_t mbits;
 
-		if ((mbits = malloc(ni * 6, M_TEMP, M_WAITOK)) == NULL) {
-			error = EINVAL;
-			goto cleanup;
-		}
+		mbits = malloc(ni * 6, M_TEMP, M_WAITOK);
 		bzero(mbits, ni * 6);
 		pibits[0] = (fd_set *)&mbits[ni * 0];
 		pibits[1] = (fd_set *)&mbits[ni * 1];
@@ -779,7 +776,6 @@ done:
 #undef putbits
 	}
 	
-cleanup:
 	if (pibits[0] != &bits[0])
 		free(pibits[0], M_TEMP);
 	return (error);

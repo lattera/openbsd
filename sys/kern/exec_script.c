@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_script.c,v 1.10.2.1 2001/05/14 22:32:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_script.c,v 1.10.2.2 2001/07/04 10:48:13 niklas Exp $	*/
 /*	$NetBSD: exec_script.c,v 1.13 1996/02/04 02:15:06 christos Exp $	*/
 
 /*
@@ -167,7 +167,7 @@ check_shell:
 	    ) {
 		struct file *fp;
 
-#if defined(DIAGNOSTIC) && defined(FDSCRIPTS)
+#ifdef DIAGNOSTIC
 		if (epp->ep_flags & EXEC_HASFD)
 			panic("exec_script_makecmds: epp already has a fd");
 #endif
@@ -270,13 +270,13 @@ fail:
 	epp->ep_flags |= EXEC_DESTR;
 
 	/* kill the opened file descriptor, else close the file */
-        if (epp->ep_flags & EXEC_HASFD) {
-                epp->ep_flags &= ~EXEC_HASFD;
-                (void) fdrelease(p, epp->ep_fd);
-        } else
+	if (epp->ep_flags & EXEC_HASFD) {
+		epp->ep_flags &= ~EXEC_HASFD;
+		(void) fdrelease(p, epp->ep_fd);
+	} else
 		vn_close(scriptvp, FREAD, p->p_ucred, p);
 
-        FREE(epp->ep_ndp->ni_cnd.cn_pnbuf, M_NAMEI);
+	FREE(epp->ep_ndp->ni_cnd.cn_pnbuf, M_NAMEI);
 
 	/* free the fake arg list, because we're not returning it */
 	tmpsap = shellargp;
@@ -286,11 +286,11 @@ fail:
 	}
 	FREE(shellargp, M_EXEC);
 
-        /*
-         * free any vmspace-creation commands,
-         * and release their references
-         */
-        kill_vmcmds(&epp->ep_vmcmds);
+	/*
+	 * free any vmspace-creation commands,
+	 * and release their references
+	 */
+	kill_vmcmds(&epp->ep_vmcmds);
 
-        return error;
+	return error;
 }

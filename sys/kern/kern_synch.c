@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.2 2001/05/14 22:32:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.3 2001/07/04 10:48:27 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -52,9 +52,7 @@
 #include <sys/sched.h>
 #include <sys/timeout.h>
 
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 #ifdef KTRACE
 #include <sys/ktrace.h>
@@ -277,11 +275,7 @@ schedcpu(arg)
 		}
 		splx(s);
 	}
-#if defined(UVM)
 	uvm_meter();
-#else
-	vmmeter();
-#endif
 	wakeup((caddr_t)&lbolt);
 	timeout_add(to, hz);
 }
@@ -353,7 +347,6 @@ tsleep(ident, priority, wmesg, timo)
 	register struct slpque *qp;
 	register int s;
 	int sig, catch = priority & PCATCH;
-	extern int cold;
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
@@ -484,7 +477,6 @@ sleep(ident, priority)
 	register struct proc *p = curproc;
 	register struct slpque *qp;
 	register int s;
-	extern int cold;
 
 #ifdef DIAGNOSTIC
 	if (priority > PZERO) {
@@ -732,11 +724,7 @@ mi_switch()
 	/*
 	 * Pick a new current process and record its start time.
 	 */
-#if defined(UVM)
 	uvmexp.swtch++;
-#else
-	cnt.v_swtch++;
-#endif
 	cpu_switch(p);
 	microtime(&runtime);
 }
@@ -783,7 +771,6 @@ setrunnable(p)
 	case SSLEEP:
 		unsleep(p);		/* e.g. when sending signals */
 		break;
-
 	case SIDL:
 		break;
 	}

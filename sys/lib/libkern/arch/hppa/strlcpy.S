@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.1 2001/05/14 22:32:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.2 2001/07/04 10:49:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2001 Michael Shalayeff
@@ -34,7 +34,7 @@
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.1 2001/05/14 22:32:50 niklas Exp $"
+	.asciz "$OpenBSD: src/sys/lib/libkern/arch/hppa/Attic/strlcpy.S,v 1.2.4.2 2001/07/04 10:49:00 niklas Exp $"
 	.align	4
 #endif
 
@@ -42,7 +42,7 @@
  *
  * it will never be a string of 2^32, so we assume 2^31 as a max size
  */
-ENTRY(strlcpy)
+LEAF_ENTRY(strlcpy)
 
 	addi	1, arg1, ret0
 	subi	1, arg2, t2

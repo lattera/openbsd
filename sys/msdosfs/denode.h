@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/denode.h,v 1.8.2.1 2001/05/14 22:32:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/denode.h,v 1.8.2.2 2001/07/04 10:49:24 niklas Exp $	*/
 /*	$NetBSD: denode.h,v 1.24 1997/10/17 11:23:39 ws Exp $	*/
 
 /*-
@@ -274,9 +274,7 @@ int	lease_check		__P((void *));
 #endif
 int	msdosfs_ioctl		__P((void *));
 int	msdosfs_select		__P((void *));
-int	msdosfs_mmap		__P((void *));
 int	msdosfs_fsync		__P((void *));
-int	msdosfs_seek		__P((void *));
 int	msdosfs_remove		__P((void *));
 int	msdosfs_link		__P((void *));
 int	msdosfs_rename		__P((void *));
@@ -296,7 +294,6 @@ int	msdosfs_islocked	__P((void *));
 int	msdosfs_advlock		__P((void *));
 int	msdosfs_reallocblks	__P((void *));
 int	msdosfs_pathconf	__P((void *));
-int	msdosfs_update		__P((void *));
 
 /*
  * Internal service routine prototypes.

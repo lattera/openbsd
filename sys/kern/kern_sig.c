@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.2 2001/05/14 22:32:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.3 2001/07/04 10:48:25 niklas Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -84,7 +84,7 @@ int	filt_signal(struct knote *kn, long hint);
 struct filterops sig_filtops =
 	{ 0, filt_sigattach, filt_sigdetach, filt_signal };
 
-void stop __P((struct proc *p));
+void proc_stop __P((struct proc *p));
 void killproc __P((struct proc *, char *));
 int cansignal __P((struct proc *, struct pcred *, struct proc *, int));
 
@@ -272,7 +272,7 @@ sys_sigaction(p, v, retval)
 	}
 	if (SCARG(uap, nsa)) {
 		error = copyin((caddr_t)SCARG(uap, nsa), (caddr_t)sa,
-			       sizeof (vec));
+		    sizeof (vec));
 		if (error)
 			return (error);
 		setsigvec(p, signum, sa);
@@ -414,7 +414,7 @@ execsigs(p)
 	ps->ps_sigstk.ss_size = 0;
 	ps->ps_sigstk.ss_sp = 0;
 	ps->ps_flags = 0;
-	p->p_flag &= ~P_NOCLDWAIT;	
+	p->p_flag &= ~P_NOCLDWAIT;
 }
 
 /*
@@ -451,7 +451,7 @@ sys_sigprocmask(p, v, retval)
 	case SIG_SETMASK:
 		p->p_sigmask = SCARG(uap, mask) &~ sigcantmask;
 		break;
-	
+
 	default:
 		error = EINVAL;
 		break;
@@ -559,10 +559,6 @@ sys_kill(cp, v, retval)
 	register struct proc *p;
 	register struct pcred *pc = cp->p_cred;
 
-#ifdef COMPAT_09
-	SCARG(uap, pid) = (short) SCARG(uap, pid);
-#endif
-
 	if ((u_int)SCARG(uap, signum) >= NSIG)
 		return (EINVAL);
 	if (SCARG(uap, pid) > 0) {
@@ -599,10 +595,10 @@ killpg1(cp, signum, pgid, all)
 	register struct pcred *pc = cp->p_cred;
 	struct pgrp *pgrp;
 	int nfound = 0;
-	
-	if (all)	
+
+	if (all)
 		/* 
-		 * broadcast 
+		 * broadcast
 		 */
 		for (p = LIST_FIRST(&allproc); p; p = LIST_NEXT(p, p_list)) {
 			if (p->p_pid <= 1 || p->p_flag & P_SYSTEM || 
@@ -613,8 +609,8 @@ killpg1(cp, signum, pgid, all)
 				psignal(p, signum);
 		}
 	else {
-		if (pgid == 0)		
-			/* 
+		if (pgid == 0)
+			/*
 			 * zero pgid means send to my process group.
 			 */
 			pgrp = cp->p_pgrp;
@@ -727,8 +723,8 @@ trapsignal(p, signum, code, type, sigval)
 		p->p_stats->p_ru.ru_nsignals++;
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_PSIG))
-			ktrpsig(p, signum, ps->ps_sigact[signum], 
-				p->p_sigmask, code);
+			ktrpsig(p, signum, ps->ps_sigact[signum],
+			    p->p_sigmask, code);
 #endif
 		(*p->p_emul->e_sendsig)(ps->ps_sigact[signum], signum,
 		    p->p_sigmask, code, type, sigval);
@@ -868,7 +864,7 @@ psignal(p, signum)
 			p->p_xstat = signum;
 			if ((p->p_pptr->p_flag & P_NOCLDSTOP) == 0)
 				psignal(p->p_pptr, SIGCHLD);
-			stop(p);
+			proc_stop(p);
 			goto out;
 		}
 		/*
@@ -1010,10 +1006,8 @@ issignal(p)
 			} else {
 				/* ptrace debugging */
 				psignal(p->p_pptr, SIGCHLD);
-				do {
-					stop(p);
-					mi_switch();
-				} while (!trace_req(p) && p->p_flag & P_TRACED);
+				proc_stop(p);
+				mi_switch();
 			}
 
 			/*
@@ -1073,7 +1067,7 @@ issignal(p)
 				p->p_xstat = signum;
 				if ((p->p_pptr->p_flag & P_NOCLDSTOP) == 0)
 					psignal(p->p_pptr, SIGCHLD);
-				stop(p);
+				proc_stop(p);
 				mi_switch();
 				break;
 			} else if (prop & SA_IGNORE) {
@@ -1118,8 +1112,8 @@ keep:
  * on the run queue.
  */
 void
-stop(p)
-	register struct proc *p;
+proc_stop(p)
+	struct proc *p;
 {
 
 	p->p_stat = SSTOP;
@@ -1357,11 +1351,7 @@ coredump(p)
 		 * vm_coredump() spits out all appropriate segments.
 		 * All that's left to do is to write the core header.
 		 */
-#if defined(UVM)
 		error = uvm_coredump(p, vp, cred, &core);
-#else
-		error = vm_coredump(p, vp, cred, &core);
-#endif
 		if (error)
 			goto out;
 		error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&core,
@@ -1445,7 +1435,7 @@ filt_sigdetach(struct knote *kn)
 }
 
 /*
- * signal knotes are shared with proc knotes, so we apply a mask to 
+ * signal knotes are shared with proc knotes, so we apply a mask to
  * the hint in order to differentiate them from process hints.  This
  * could be avoided by using a signal-specific knote list, but probably
  * isn't worth the trouble.

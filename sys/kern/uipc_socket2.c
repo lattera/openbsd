@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.3 2001/05/14 22:32:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.4 2001/07/04 10:48:45 niklas Exp $	*/
 /*	$NetBSD: uipc_socket2.c,v 1.11 1996/02/04 02:17:55 christos Exp $	*/
 
 /*
@@ -81,7 +81,7 @@ u_long	sb_max = SB_MAX;		/* patchable */
  * structure queued on so_q0 by calling sonewconn().  When the connection
  * is established, soisconnected() is called, and transfers the
  * socket structure to so_q, making it available to accept().
- * 
+ *
  * If a socket is closed with sockets on either
  * so_q0 or so_q, these sockets are dropped.
  *
@@ -164,7 +164,7 @@ sonewconn1(head, connstatus)
 	if (head->so_qlen + head->so_q0len > head->so_qlimit * 3)
 		return ((struct socket *)0);
 	MALLOC(so, struct socket *, sizeof(*so), M_SOCKET, M_DONTWAIT);
-	if (so == NULL) 
+	if (so == NULL)
 		return ((struct socket *)0);
 	bzero((caddr_t)so, sizeof(*so));
 	so->so_type = head->so_type;
@@ -285,7 +285,7 @@ sbwait(sb)
 	    sb->sb_timeo));
 }
 
-/* 
+/*
  * Lock a sockbuf already known to be locked;
  * return any error returned from sleep (EINTR).
  */
@@ -297,9 +297,9 @@ sb_lock(sb)
 
 	while (sb->sb_flags & SB_LOCK) {
 		sb->sb_flags |= SB_WANT;
-		error = tsleep((caddr_t)&sb->sb_flags, 
-			       (sb->sb_flags & SB_NOINTR) ?
-					PSOCK : PSOCK|PCATCH, netio, 0);
+		error = tsleep((caddr_t)&sb->sb_flags,
+		    (sb->sb_flags & SB_NOINTR) ?
+		    PSOCK : PSOCK|PCATCH, netio, 0);
 		if (error)
 			return (error);
 	}
@@ -394,7 +394,8 @@ sbreserve(sb, cc)
 	u_long cc;
 {
 
-	if (cc == 0 || cc > sb_max * MCLBYTES / (MSIZE + MCLBYTES))
+	if (cc == 0 ||
+	    (u_int64_t)cc > (u_int64_t)sb_max * MCLBYTES / (MSIZE + MCLBYTES))
 		return (0);
 	sb->sb_hiwat = cc;
 	sb->sb_mbmax = min(cc * 2, sb_max);
@@ -585,8 +586,8 @@ sbappendaddr(sb, asa, m0, control)
 	register struct mbuf *m, *n;
 	int space = asa->sa_len;
 
-if (m0 && (m0->m_flags & M_PKTHDR) == 0)
-panic("sbappendaddr");
+	if (m0 && (m0->m_flags & M_PKTHDR) == 0)
+		panic("sbappendaddr");
 	if (m0)
 		space += m0->m_pkthdr.len;
 	for (n = control; n; n = n->m_next) {
@@ -668,8 +669,8 @@ sbcompress(sb, m, n)
 		eor |= m->m_flags & M_EOR;
 		if (m->m_len == 0 &&
 		    (eor == 0 ||
-		     (((o = m->m_next) || (o = n)) &&
-		      o->m_type == m->m_type))) {
+		    (((o = m->m_next) || (o = n)) &&
+		    o->m_type == m->m_type))) {
 			m = m_free(m);
 			continue;
 		}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lkm.c,v 1.26.2.1 2001/05/14 22:32:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lkm.c,v 1.26.2.2 2001/07/04 10:48:21 niklas Exp $	*/
 /*	$NetBSD: kern_lkm.c,v 1.31 1996/03/31 21:40:27 christos Exp $	*/
 
 /*
@@ -155,13 +155,10 @@ lkmalloc()
 	struct lkm_table *ret = NULL;
 
 	MALLOC(ret, struct lkm_table *, sizeof(*ret), M_DEVBUF, M_WAITOK);
-	if (ret != NULL) {
-		ret->refcnt =
-		ret->depcnt = 0;
-		ret->id = nlkms++;
-		ret->sym_id = -1;
-		TAILQ_INSERT_TAIL(&lkmods, ret, list);
-	}
+	ret->refcnt = ret->depcnt = 0;
+	ret->id = nlkms++;
+	ret->sym_id = -1;
+	TAILQ_INSERT_TAIL(&lkmods, ret, list);
 
 	return ret;
 }
@@ -252,11 +249,7 @@ lkmunreserve()
 	 * Actually unreserve the memory
 	 */
 	if (curp && curp->area) {
-#if defined(UVM)
 		uvm_km_free(kmem_map, curp->area, curp->size);
-#else
-		kmem_free(kmem_map, curp->area, curp->size);/**/
-#endif
 		curp->area = 0;
 	}
 
@@ -332,11 +325,7 @@ lkmioctl(dev, cmd, data, flag, p)
 		 */
 		curp->size = resrvp->size;
 
-#if defined(UVM)
 		curp->area = uvm_km_zalloc(kmem_map, curp->size);
-#else
-		curp->area = kmem_alloc(kmem_map, curp->size);/**/
-#endif
 
 		curp->offset = 0;		/* load offset */
 
@@ -345,13 +334,8 @@ lkmioctl(dev, cmd, data, flag, p)
 		if (cmd == LMRESERV && resrvp->sym_size) {
 			curp->sym_size = resrvp->sym_size;
 			curp->sym_symsize = resrvp->sym_symsize;
-#if defined(UVM)
 			curp->syms = (caddr_t)uvm_km_zalloc(kmem_map,
 							    curp->sym_size);
-#else
-			curp->syms = (caddr_t)kmem_alloc(kmem_map,
-							 curp->sym_size);
-#endif
 			curp->sym_offset = 0;
 			resrvp->sym_addr = curp->syms; /* ret symbol addr */
 		} else {
@@ -557,7 +541,7 @@ lkmioctl(dev, cmd, data, flag, p)
 		statp->offset	= curp->private.lkm_any->lkm_offset;
 		statp->type	= curp->private.lkm_any->lkm_type;
 		statp->area	= curp->area;
-		statp->size	= curp->size / CLBYTES;
+		statp->size	= curp->size / PAGE_SIZE;
 		statp->private	= (unsigned long)curp->private.lkm_any;
 		statp->ver	= curp->private.lkm_any->lkm_ver;
 		copyoutstr(curp->private.lkm_any->lkm_name, 

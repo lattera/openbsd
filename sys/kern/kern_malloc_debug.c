@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.1 2001/05/14 22:32:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.2 2001/07/04 10:48:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Artur Grabowski <art@openbsd.org>
@@ -58,10 +58,6 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/systm.h>
-
-#if !defined(UVM)
-#error MALLOC_DEBUG will not work without UVM.
-#endif
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.15.10.1 2001/05/14 22:32:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.15.10.2 2001/07/04 10:49:19 niklas Exp $	*/
 /*	$NetBSD: spec_vnops.c,v 1.29 1996/04/22 01:42:38 christos Exp $	*/
 
 /*
@@ -83,9 +83,7 @@ struct vnodeopv_entry_desc spec_vnodeop_entries[] = {
 	{ &vop_select_desc, spec_select },		/* select */
 	{ &vop_kqfilter_desc, spec_kqfilter },		/* kqfilter */
 	{ &vop_revoke_desc, spec_revoke },              /* revoke */
-	{ &vop_mmap_desc, spec_mmap },			/* mmap */
 	{ &vop_fsync_desc, spec_fsync },		/* fsync */
-	{ &vop_seek_desc, spec_seek },			/* seek */
 	{ &vop_remove_desc, spec_remove },		/* remove */
 	{ &vop_link_desc, spec_link },			/* link */
 	{ &vop_rename_desc, spec_rename },		/* rename */
@@ -105,11 +103,6 @@ struct vnodeopv_entry_desc spec_vnodeop_entries[] = {
 	{ &vop_islocked_desc, spec_islocked },		/* islocked */
 	{ &vop_pathconf_desc, spec_pathconf },		/* pathconf */
 	{ &vop_advlock_desc, spec_advlock },		/* advlock */
-	{ &vop_blkatoff_desc, spec_blkatoff },		/* blkatoff */
-	{ &vop_valloc_desc, spec_valloc },		/* valloc */
-	{ &vop_vfree_desc, spec_vfree },		/* vfree */
-	{ &vop_truncate_desc, spec_truncate },		/* truncate */
-	{ &vop_update_desc, spec_update },		/* update */
 	{ &vop_bwrite_desc, spec_bwrite },		/* bwrite */
 	{ (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
 };

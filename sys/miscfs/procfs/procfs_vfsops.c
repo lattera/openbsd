@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.11.2.1 2001/05/14 22:32:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.11.2.2 2001/07/04 10:49:17 niklas Exp $	*/
 /*	$NetBSD: procfs_vfsops.c,v 1.25 1996/02/09 22:40:53 christos Exp $	*/
 
 /*
@@ -60,9 +60,7 @@
 
 #include <vm/vm.h>			/* for PAGE_SIZE */
 
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 int	procfs_mount __P((struct mount *, const char *, void *,
 			  struct nameidata *, struct proc *));
@@ -183,11 +181,7 @@ procfs_statfs(mp, sbp, p)
 {
 	struct vmtotal	vmtotals;
 
-#if defined(UVM)
 	uvm_total(&vmtotals);
-#else
-	vmtotal(&vmtotals);
-#endif
 	sbp->f_bsize = PAGE_SIZE;
 	sbp->f_iosize = PAGE_SIZE;
 	sbp->f_blocks = vmtotals.t_vm;

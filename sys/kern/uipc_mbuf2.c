@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6.4.1 2001/05/14 22:32:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6.4.2 2001/07/04 10:48:44 niklas Exp $	*/
 /*	$KAME: uipc_mbuf2.c,v 1.29 2001/02/14 13:42:10 itojun Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.40 1999/04/01 00:23:25 thorpej Exp $	*/
 
@@ -74,7 +74,7 @@
 
 #define M_SHAREDCLUSTER(m) \
 	(((m)->m_flags & M_EXT) != 0 && \
-	 ((m)->m_ext.ext_free || mclrefcnt[mtocl((m)->m_ext.ext_buf)] > 1))
+	 ((m)->m_ext.ext_free || MCLISREFERENCED((m))))
 
 /* can't call it m_dup(), as freebsd[34] uses m_dup() with different arg */
 static struct mbuf *m_dup1 __P((struct mbuf *, int, int, int));
@@ -104,7 +104,7 @@ m_pulldown(m, off, len, offp)
 		panic("m == NULL in m_pulldown()");
 	if (len > MCLBYTES) {
 		m_freem(m);
-		return NULL;	/* impossible */
+		return (NULL);	/* impossible */
 	}
 
 	n = m;
@@ -119,7 +119,7 @@ m_pulldown(m, off, len, offp)
 		n = n->m_next;
 	if (!n) {
 		m_freem(m);
-		return NULL;	/* mbuf chain too short */
+		return (NULL);	/* mbuf chain too short */
 	}
 
 	sharedcluster = M_SHAREDCLUSTER(n);
@@ -141,7 +141,7 @@ m_pulldown(m, off, len, offp)
 		o = m_dup1(n, off, n->m_len - off, M_DONTWAIT);
 		if (o == NULL) {
 			m_freem(m);
-			return NULL;	/* ENOBUFS */
+			return (NULL);	/* ENOBUFS */
 		}
 		n->m_len = off;
 		o->m_next = n->m_next;
@@ -168,7 +168,7 @@ m_pulldown(m, off, len, offp)
 		olen += o->m_len;
 	if (hlen + olen < len) {
 		m_freem(m);
-		return NULL;	/* mbuf chain too short */
+		return (NULL);	/* mbuf chain too short */
 	}
 
 	/*
@@ -207,7 +207,7 @@ m_pulldown(m, off, len, offp)
 	}
 	if (!o) {
 		m_freem(m);
-		return NULL;	/* ENOBUFS */
+		return (NULL);	/* ENOBUFS */
 	}
 	/* get hlen from <n, off> into <o, 0> */
 	o->m_len = hlen;
@@ -225,7 +225,7 @@ m_pulldown(m, off, len, offp)
 ok:
 	if (offp)
 		*offp = off;
-	return n;
+	return (n);
 }
 
 static struct mbuf *
@@ -240,7 +240,7 @@ m_dup1(m, off, len, wait)
 	int copyhdr;
 
 	if (len > MCLBYTES)
-		return NULL;
+		return (NULL);
 	if (off == 0 && (m->m_flags & M_PKTHDR) != 0) {
 		copyhdr = 1;
 		MGETHDR(n, wait, m->m_type);
@@ -258,10 +258,175 @@ m_dup1(m, off, len, wait)
 		}
 	}
 	if (!n)
-		return NULL;
+		return (NULL);
 
 	if (copyhdr)
 		M_DUP_PKTHDR(n, m);
 	m_copydata(m, off, len, mtod(n, caddr_t));
-	return n;
+	return (n);
+}
+
+/* Get a packet tag structure along with specified data following. */
+struct m_tag *
+m_tag_get(type, len, wait)
+	int type;
+	int len;
+	int wait;
+{
+	struct m_tag *t;
+
+	if (len < 0)
+		return (NULL);
+	MALLOC(t, struct m_tag *, len + sizeof(struct m_tag), M_PACKET_TAGS,
+	    wait);
+	if (t == NULL)
+		return (NULL);
+	t->m_tag_id = type;
+	t->m_tag_len = len;
+	return (t);
+}
+
+/* Free a packet tag. */
+void
+m_tag_free(t)
+	struct m_tag *t;
+{
+	FREE(t, M_PACKET_TAGS);
+}
+
+/* Prepend a packet tag. */
+void
+m_tag_prepend(m, t)
+	struct mbuf *m;
+	struct m_tag *t;
+{
+	SLIST_INSERT_HEAD(&m->m_pkthdr.tags, t, m_tag_link);
+}
+
+/* Unlink a packet tag. */
+void
+m_tag_unlink(m, t)
+	struct mbuf *m;
+	struct m_tag *t;
+{
+	SLIST_REMOVE(&m->m_pkthdr.tags, t, m_tag, m_tag_link);
+}
+
+/* Unlink and free a packet tag. */
+void
+m_tag_delete(m, t)
+	struct mbuf *m;
+	struct m_tag *t;
+{
+	m_tag_unlink(m, t);
+	m_tag_free(t);
+}
+
+/* Unlink and free a packet tag chain, starting from given tag. */
+void
+m_tag_delete_chain(m, t)
+	struct mbuf *m;
+	struct m_tag *t;
+{
+	struct m_tag *p, *q;
+
+	if (t != NULL)
+		p = t;
+	else
+		p = SLIST_FIRST(&m->m_pkthdr.tags);
+	if (p == NULL)
+		return;
+	while ((q = SLIST_NEXT(p, m_tag_link)) != NULL)
+		m_tag_delete(m, q);
+	m_tag_delete(m, p);
+}
+
+/* Find a tag, starting from a given position. */
+struct m_tag *
+m_tag_find(m, type, t)
+	struct mbuf *m;
+	int type;
+	struct m_tag *t;
+{
+	struct m_tag *p;
+
+	if (t == NULL)
+		p = SLIST_FIRST(&m->m_pkthdr.tags);
+	else
+		p = SLIST_NEXT(t, m_tag_link);
+	while (p != NULL) {
+		if (p->m_tag_id == type)
+			return (p);
+		p = SLIST_NEXT(p, m_tag_link);
+	}
+	return (NULL);
+}
+
+/* Copy a single tag. */
+struct m_tag *
+m_tag_copy(t)
+	struct m_tag *t;
+{
+	struct m_tag *p;
+
+	p = m_tag_get(t->m_tag_id, t->m_tag_len, M_NOWAIT);
+	if (p == NULL)
+		return (NULL);
+	bcopy(t + 1, p + 1, t->m_tag_len); /* Copy the data */
+	return (p);
+}
+
+/*
+ * Copy two tag chains. The destination mbuf (to) loses any attached
+ * tags even if the operation fails. This should not be a problem, as
+ * m_tag_copy_chain() is typically called with a newly-allocated
+ * destination mbuf.
+ */
+int
+m_tag_copy_chain(to, from)
+	struct mbuf *to;
+	struct mbuf *from;
+{
+	struct m_tag *p, *t, *tprev = NULL;
+
+	m_tag_delete_chain(to, NULL);
+	SLIST_FOREACH(p, &from->m_pkthdr.tags, m_tag_link) {
+		t = m_tag_copy(p);
+		if (t == NULL) {
+			m_tag_delete_chain(to, NULL);
+			return (0);
+		}
+		if (tprev == NULL)
+			SLIST_INSERT_HEAD(&to->m_pkthdr.tags, t, m_tag_link);
+		else {
+			SLIST_INSERT_AFTER(tprev, t, m_tag_link);
+			tprev = t;
+		}
+	}
+	return (1);
+}
+
+/* Initialize tags on an mbuf. */
+void
+m_tag_init(m)
+	struct mbuf *m;
+{
+	SLIST_INIT(&m->m_pkthdr.tags);
+}
+
+/* Get first tag in chain. */
+struct m_tag *
+m_tag_first(m)
+	struct mbuf *m;
+{
+	return (SLIST_FIRST(&m->m_pkthdr.tags));
+}
+
+/* Get next tag in chain. */
+struct m_tag *
+m_tag_next(m, t)
+	struct mbuf *m;
+	struct m_tag *t;
+{
+	return (SLIST_NEXT(t, m_tag_link));
 }
