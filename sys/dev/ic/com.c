@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.3 2002/03/06 02:11:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.4 2002/03/28 11:51:00 niklas Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -104,11 +104,11 @@
 cdev_decl(com);
 bdev_decl(com);
 
-static u_char tiocm_xxx2mcr __P((int));
+static u_char tiocm_xxx2mcr(int);
 
-void	compwroff __P((struct com_softc *));
-void	com_raisedtr __P((void *));
-void	com_enable_debugport	__P((struct com_softc *));
+void	compwroff(struct com_softc *);
+void	com_raisedtr(void *);
+void	com_enable_debugport(struct com_softc *);
 
 struct cfdriver com_cd = {
 	NULL, "com", DV_TTY
@@ -131,8 +131,8 @@ int com_kgdb_addr;
 bus_space_tag_t com_kgdb_iot;
 bus_space_handle_t com_kgdb_ioh;
 
-int    com_kgdb_getc __P((void *));
-void   com_kgdb_putc __P((void *, int));
+int    com_kgdb_getc(void *);
+void   com_kgdb_putc(void *, int);
 #endif /* KGDB */
 
 #define	DEVUNIT(x)	(minor(x) & 0x7f)
@@ -1175,7 +1175,7 @@ compoll(arg)
 		TTY_FE, TTY_PE|TTY_FE
 	};
 
-	if (sc == 0 || sc->sc_ibufp == sc->sc_ibuf)
+	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf)
 		goto out;
 
 	tp = sc->sc_tty;
@@ -1195,7 +1195,7 @@ compoll(arg)
 	sc->sc_ibufhigh = sc->sc_ibuf + COM_IHIGHWATER;
 	sc->sc_ibufend = sc->sc_ibuf + COM_IBUFSIZE;
 
-	if (tp == 0 || !ISSET(tp->t_state, TS_ISOPEN)) {
+	if (tp == NULL || !ISSET(tp->t_state, TS_ISOPEN)) {
 		splx(s);
 		goto out;
 	}

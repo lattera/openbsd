@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/lptvar.h,v 1.1.14.1 2001/05/14 22:23:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/lptvar.h,v 1.1.14.2 2002/03/28 11:51:01 niklas Exp $ */
 /*	$NetBSD: lpt.c,v 1.42 1996/10/21 22:41:14 thorpej Exp $	*/
 
 /*
@@ -76,7 +76,7 @@ struct lpt_softc {
 	u_int8_t sc_laststatus;
 };
 
-int	lptintr __P((void *));
-int	lpt_port_test __P((bus_space_tag_t, bus_space_handle_t, bus_addr_t,
-	    bus_size_t, u_int8_t, u_int8_t));
-void	lpt_attach_common __P((struct lpt_softc *));
+int	lptintr(void *);
+int	lpt_port_test(bus_space_tag_t, bus_space_handle_t, bus_addr_t,
+	    bus_size_t, u_int8_t, u_int8_t);
+void	lpt_attach_common(struct lpt_softc *);

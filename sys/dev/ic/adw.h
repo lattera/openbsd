@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adw.h,v 1.3.2.3 2001/11/13 21:10:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adw.h,v 1.3.2.4 2002/03/28 11:50:59 niklas Exp $ */
 /*      $NetBSD: adw.h,v 1.9 2000/05/26 15:13:43 dante Exp $        */
 
 /*
@@ -109,10 +109,10 @@ struct adw_control {
 
 /******************************************************************************/
 
-int adw_init __P((ADW_SOFTC *sc));
-void adw_attach __P((ADW_SOFTC *sc));
-int adw_intr __P((void *arg));
-ADW_CCB *adw_ccb_phys_kv __P((ADW_SOFTC *, u_int32_t));
+int adw_init(ADW_SOFTC *sc);
+void adw_attach(ADW_SOFTC *sc);
+int adw_intr(void *arg);
+ADW_CCB *adw_ccb_phys_kv(ADW_SOFTC *, u_int32_t);
 
 /******************************************************************************/
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.3 2002/03/06 02:11:43 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.4 2002/03/28 11:51:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -1004,10 +1004,10 @@ struct dc_eblock_reset {
 /*	u_int16_t		dc_reset_dat[n]; */
 };
 
-extern void dc_attach	__P((struct dc_softc *));
-extern int dc_detach	__P((struct dc_softc *));
-extern int dc_intr	__P((void *));
-extern void dc_reset	__P((struct dc_softc *));
+extern void dc_attach(struct dc_softc *);
+extern int dc_detach(struct dc_softc *);
+extern int dc_intr(void *);
+extern void dc_reset(struct dc_softc *);
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define	DC_SP_FIELD_C(x)	((x) << 16)

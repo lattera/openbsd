@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.3 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.4 2002/03/28 11:51:00 niklas Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -102,8 +102,8 @@ __KERNEL_RCSID(0, "$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $");
 #include <dev/ic/dptvar.h>
 
 #ifdef __OpenBSD__
-static void dpt_enqueue __P((struct dpt_softc *, struct scsi_xfer *, int));
-static struct scsi_xfer *dpt_dequeue __P((struct dpt_softc *));
+static void dpt_enqueue(struct dpt_softc *, struct scsi_xfer *, int);
+static struct scsi_xfer *dpt_dequeue(struct dpt_softc *);
 
 struct cfdriver dpt_cd = {
 	NULL, "dpt", DV_DULL

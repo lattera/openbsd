@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/lsi64854var.h,v 1.2.4.1 2001/10/31 03:22:42 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/lsi64854var.h,v 1.2.4.2 2002/03/28 11:51:01 niklas Exp $	*/
 /*	$NetBSD: lsi64854var.h,v 1.4 2001/03/29 02:58:39 petrov Exp $ */
 
 /*-
@@ -59,12 +59,12 @@ struct lsi64854_softc {
 	caddr_t			*sc_dmaaddr;
 	size_t			*sc_dmalen;
 
-	void	(*reset) __P((struct lsi64854_softc *));/* reset routine */
-	int	(*setup) __P((struct lsi64854_softc *, caddr_t *, size_t *,
-			      int, size_t *));	/* dma setup */
-	int	(*intr) __P((void *));		/* interrupt handler */
+	void	(*reset)(struct lsi64854_softc *);/* reset routine */
+	int	(*setup)(struct lsi64854_softc *, caddr_t *, size_t *,
+			      int, size_t *);	/* dma setup */
+	int	(*intr)(void *);		/* interrupt handler */
 
-	int	(*sc_intrchain) __P((void *));	/* next handler in intr chain */
+	int	(*sc_intrchain)(void *);	/* next handler in intr chain */
 	void	*sc_intrchainarg;		/* arg for next intr handler */
 
 	u_int 			sc_dmactl;
@@ -102,7 +102,7 @@ struct lsi64854_softc {
 } while (0)
 
 
-void	lsi64854_attach	__P((struct lsi64854_softc *));
-int	lsi64854_scsi_intr	__P((void *));
-int	lsi64854_enet_intr	__P((void *));
-int	lsi64854_pp_intr	__P((void *));
+void	lsi64854_attach(struct lsi64854_softc *);
+int	lsi64854_scsi_intr(void *);
+int	lsi64854_enet_intr(void *);
+int	lsi64854_pp_intr(void *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cacvar.h,v 1.1.4.1 2001/05/14 22:23:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cacvar.h,v 1.1.4.2 2002/03/28 11:51:00 niklas Exp $	*/
 /*	$NetBSD: cacvar.h,v 1.7 2000/10/19 14:28:47 ad Exp $	*/
 
 /*-
@@ -116,8 +116,8 @@ struct cac_softc {
 	struct cac_drive_info	*sc_dinfos;
 };
 
-int	cac_init __P((struct cac_softc *, int));
-int	cac_intr __P((void *));
+int	cac_init(struct cac_softc *, int);
+int	cac_intr(void *);
 
 extern const struct	cac_linkage cac_l0;
 

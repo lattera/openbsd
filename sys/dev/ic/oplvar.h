@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/oplvar.h,v 1.1.6.1 2001/07/04 10:41:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/oplvar.h,v 1.1.6.2 2002/03/28 11:51:01 niklas Exp $	*/
 /*	$NetBSD: oplvar.h,v 1.3 1998/11/25 22:17:06 augustss Exp $	*/
 
 /*
@@ -61,7 +61,7 @@ struct opl_softc {
 	struct opl_voice voices[OPL3_NVOICE];
 	int volume;
 
-	int	(*spkrctl)__P((void *, int));
+	int	(*spkrctl)(void *, int);
 	void    *spkrarg;
 };
 
@@ -88,5 +88,5 @@ struct opl_operators {
 extern const struct opl_operators opl2_instrs[];
 extern const struct opl_operators opl3_instrs[];
 
-int	opl_find __P((struct opl_softc *));
-void	opl_attach __P((struct opl_softc *));
+int	opl_find(struct opl_softc *);
+void	opl_attach(struct opl_softc *);

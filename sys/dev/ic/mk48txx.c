@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.4.1 2001/10/31 03:22:42 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.4.2 2002/03/28 11:51:01 niklas Exp $	*/
 /*	$NetBSD: mk48txx.c,v 1.7 2001/04/08 17:05:10 tsutsui Exp $ */
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -75,6 +75,7 @@ struct {
 } mk48txx_models[] = {
 	{ "mk48t02", MK48T02_CLKSZ, MK48T02_CLKOFF, 0 },
 	{ "mk48t08", MK48T08_CLKSZ, MK48T08_CLKOFF, 0 },
+	{ "mk48t18", MK48T18_CLKSZ, MK48T18_CLKOFF, 0 },
 	{ "mk48t59", MK48T59_CLKSZ, MK48T59_CLKOFF, MK48TXX_EXT_REGISTERS },
 };
 

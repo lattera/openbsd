@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adwlib.c,v 1.3.2.4 2001/11/13 21:10:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adwlib.c,v 1.3.2.5 2002/03/28 11:50:59 niklas Exp $ */
 /* $NetBSD: adwlib.c,v 1.20 2000/07/04 04:17:03 itojun Exp $        */
 
 /*
@@ -75,26 +75,26 @@
 #include <dev/ic/adw.h>
 
 
-int AdwRamSelfTest __P((bus_space_tag_t, bus_space_handle_t, u_int8_t));
-int AdwLoadMCode __P((bus_space_tag_t, bus_space_handle_t, u_int16_t *,
-								u_int8_t));
-int AdwASC3550Cabling __P((bus_space_tag_t, bus_space_handle_t, ADW_DVC_CFG *));
-int AdwASC38C0800Cabling __P((bus_space_tag_t, bus_space_handle_t,
-								ADW_DVC_CFG *));
-int AdwASC38C1600Cabling __P((bus_space_tag_t, bus_space_handle_t,
-								ADW_DVC_CFG *));
+int AdwRamSelfTest(bus_space_tag_t, bus_space_handle_t, u_int8_t);
+int AdwLoadMCode(bus_space_tag_t, bus_space_handle_t, u_int16_t *,
+								u_int8_t);
+int AdwASC3550Cabling(bus_space_tag_t, bus_space_handle_t, ADW_DVC_CFG *);
+int AdwASC38C0800Cabling(bus_space_tag_t, bus_space_handle_t,
+								ADW_DVC_CFG *);
+int AdwASC38C1600Cabling(bus_space_tag_t, bus_space_handle_t,
+								ADW_DVC_CFG *);
 
-u_int16_t AdwGetEEPROMConfig __P((bus_space_tag_t, bus_space_handle_t,
-     							ADW_EEPROM *));
-void AdwSetEEPROMConfig __P((bus_space_tag_t, bus_space_handle_t,
-					                 ADW_EEPROM *));
-u_int16_t AdwReadEEPWord __P((bus_space_tag_t, bus_space_handle_t, int));
-void AdwWaitEEPCmd __P((bus_space_tag_t, bus_space_handle_t));
+u_int16_t AdwGetEEPROMConfig(bus_space_tag_t, bus_space_handle_t,
+     							ADW_EEPROM *);
+void AdwSetEEPROMConfig(bus_space_tag_t, bus_space_handle_t,
+					                 ADW_EEPROM *);
+u_int16_t AdwReadEEPWord(bus_space_tag_t, bus_space_handle_t, int);
+void AdwWaitEEPCmd(bus_space_tag_t, bus_space_handle_t);
 
-void AdwInquiryHandling __P((ADW_SOFTC *, ADW_SCSI_REQ_Q *));
+void AdwInquiryHandling(ADW_SOFTC *, ADW_SCSI_REQ_Q *);
 
-void AdwSleepMilliSecond __P((u_int32_t));
-void AdwDelayMicroSecond __P((u_int32_t));
+void AdwSleepMilliSecond(u_int32_t);
+void AdwDelayMicroSecond(u_int32_t);
 
 
 /*

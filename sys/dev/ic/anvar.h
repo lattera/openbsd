@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.4 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.5 2002/03/28 11:51:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -670,16 +670,16 @@ struct an_softc	{
 	int			an_nextitem;
 };
 
-void	an_release_resources    __P((struct device *));
-int	an_alloc_port           __P((struct device *, int, int));
-int	an_alloc_memory         __P((struct device *, int, int));
-int	an_alloc_irq            __P((struct device *, int, int));
-int	an_probe                __P((struct device *));
-void	an_shutdown             __P((void *));
-int	an_attach               __P((struct an_softc *));
-void	an_init                 __P((struct an_softc *));
-void	an_stop                 __P((struct an_softc *));
-int	an_intr                 __P((void *));
+void	an_release_resources(struct device *);
+int	an_alloc_port(struct device *, int, int);
+int	an_alloc_memory(struct device *, int, int);
+int	an_alloc_irq(struct device *, int, int);
+int	an_probe(struct device *);
+void	an_shutdown(void *);
+int	an_attach(struct an_softc *);
+void	an_init(struct an_softc *);
+void	an_stop(struct an_softc *);
+int	an_intr(void *);
 #endif
 
 #endif
