@@ -1,4 +1,4 @@
-# $OpenBSD: src/kerberosIV/usr.bin/pagsh/Attic/Makefile,v 1.1 2000/02/25 16:35:32 hin Exp $
+# $OpenBSD: src/kerberosIV/usr.bin/pagsh/Attic/Makefile,v 1.2 2000/09/16 18:26:10 rahnds Exp $
 
 PROG	= pagsh
 
@@ -8,7 +8,7 @@ KRBDEPTH=../..
 .PATH:	${KRBSRC}/appl/afsutil
 
 CFLAGS	+= -I.
-LDADD	+= ${LIBROKEN} -lkrb -lkafs
+LDADD	+= ${LIBROKEN} -lkrb -lkafs -lcrypto
 
 SRCS	= pagsh.c
 
