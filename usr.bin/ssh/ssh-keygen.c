@@ -14,7 +14,7 @@ Identity and host key generation and maintenance.
 */
 
 #include "includes.h"
-RCSID("$Id: ssh-keygen.c,v 1.7 1999/11/16 22:27:54 markus Exp $");
+RCSID("$Id: ssh-keygen.c,v 1.8 1999/11/16 22:49:28 markus Exp $");
 
 #include "rsa.h"
 #include "ssh.h"
@@ -322,6 +322,7 @@ do_change_comment(struct passwd *pw)
 
   /* Save the public key in text format in a file with the same name but
      .pub appended. */
+  file = xrealloc(file, strlen(file) + 5);
   strcat(file, ".pub");
   f = fopen(file, "w");
   if (!f)
