@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/lib/libcurses/base/define_key.c,v 1.2 1999/02/24 06:31:07 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/base/keybound.c,v 1.1 1999/02/24 06:31:07 millert Exp $	*/
 
 /****************************************************************************
- * Copyright (c) 1998 Free Software Foundation, Inc.                        *
+ * Copyright (c) 1999 Free Software Foundation, Inc.                        *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,31 +29,19 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Thomas E. Dickey <dickey@clark.net> 1997                        *
+ *  Author: Thomas E. Dickey <dickey@clark.net> 1999                        *
  ****************************************************************************/
 
 #include <curses.priv.h>
 
-MODULE_ID("$From: define_key.c,v 1.3 1999/02/19 11:53:02 tom Exp $")
+MODULE_ID("$From: keybound.c,v 1.1 1999/02/19 11:55:56 tom Exp $")
 
-int
-define_key(char *str, int keycode)
+/*
+ * Returns the count'th string definition which is associated with the
+ * given keycode.  The result is malloc'd, must be freed by the caller.
+ */
+
+char *keybound(int code, int count)
 {
-	int code = ERR;
-
-	T((T_CALLED("define_key(%s,%d)"), _nc_visbuf(str), keycode));
-	if (keycode > 0) {
-		if (has_key(keycode)) {
-			while (_nc_remove_key(&(SP->_keytry), keycode))
-				code = OK;
-		}
-		if (str != 0) {
-			(void) _nc_add_to_try(&(SP->_keytry), str, keycode);
-			code = OK;
-		}
-	} else {
-		while (_nc_remove_string(&(SP->_keytry), str))
-			code = OK;
-	}
-	returnCode(code);
+	return _nc_expand_try(SP->_key_ok, code, &count, 0);
 }

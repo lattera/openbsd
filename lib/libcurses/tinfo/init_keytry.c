@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/lib/libcurses/base/define_key.c,v 1.2 1999/02/24 06:31:07 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/tinfo/init_keytry.c,v 1.1 1999/02/24 06:31:10 millert Exp $	*/
 
 /****************************************************************************
- * Copyright (c) 1998 Free Software Foundation, Inc.                        *
+ * Copyright (c) 1999 Free Software Foundation, Inc.                        *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -28,32 +28,42 @@
  * authorization.                                                           *
  ****************************************************************************/
 
-/****************************************************************************
- *  Author: Thomas E. Dickey <dickey@clark.net> 1997                        *
- ****************************************************************************/
-
 #include <curses.priv.h>
 
-MODULE_ID("$From: define_key.c,v 1.3 1999/02/19 11:53:02 tom Exp $")
+#include <term.h>	/* keypad_xmit, keypad_local, meta_on, meta_off */
+			/* cursor_visible,cursor_normal,cursor_invisible */
+#include <tic.h>	/* struct tinfo_fkeys */
 
-int
-define_key(char *str, int keycode)
+MODULE_ID("$From: init_keytry.c,v 1.1 1999/02/18 22:39:11 tom Exp $")
+
+/*
+**      _nc_init_keytry()
+**
+**      Construct the try for the current terminal's keypad keys.
+**
+*/
+
+/* LINT_PREPRO
+#if 0*/
+#include <init_keytry.h>
+/* LINT_PREPRO
+#endif*/
+
+void _nc_init_keytry(void)
 {
-	int code = ERR;
+	size_t n;
 
-	T((T_CALLED("define_key(%s,%d)"), _nc_visbuf(str), keycode));
-	if (keycode > 0) {
-		if (has_key(keycode)) {
-			while (_nc_remove_key(&(SP->_keytry), keycode))
-				code = OK;
-		}
-		if (str != 0) {
-			(void) _nc_add_to_try(&(SP->_keytry), str, keycode);
-			code = OK;
-		}
-	} else {
-		while (_nc_remove_string(&(SP->_keytry), str))
-			code = OK;
-	}
-	returnCode(code);
+	/* The SP->_keytry value is initialized in newterm(), where the SP
+	 * structure is created, because we can not tell where keypad() or
+	 * mouse_activate() (which will call keyok()) are first called.
+	 */
+
+	for (n = 0; _nc_tinfo_fkeys[n].code; n++)
+		if (_nc_tinfo_fkeys[n].offset < STRCOUNT)
+		_nc_add_to_try(&(SP->_keytry),
+			CUR Strings[_nc_tinfo_fkeys[n].offset],
+			_nc_tinfo_fkeys[n].code);
+#ifdef TRACE
+	_nc_trace_tries(SP->_keytry);
+#endif
 }

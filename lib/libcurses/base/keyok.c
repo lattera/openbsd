@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/base/keyok.c,v 1.1 1999/01/18 19:09:34 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/base/keyok.c,v 1.2 1999/02/24 06:31:08 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -34,7 +34,7 @@
 
 #include <curses.priv.h>
 
-MODULE_ID("$From: keyok.c,v 1.2 1998/02/11 12:13:54 tom Exp $")
+MODULE_ID("$From: keyok.c,v 1.3 1999/02/19 11:29:48 tom Exp $")
 
 /*
  * Enable (or disable) ncurses' interpretation of a keycode by adding (or
@@ -49,22 +49,25 @@ MODULE_ID("$From: keyok.c,v 1.2 1998/02/11 12:13:54 tom Exp $")
 int keyok(int c, bool flag)
 {
 	int code = ERR;
+	int count = 0;
 	char *s;
 
 	T((T_CALLED("keyok(%d,%d)"), c, flag));
 	if (flag) {
-		if ((s = _nc_expand_try(SP->_key_ok, c, 0)) != 0
+		while ((s = _nc_expand_try(SP->_key_ok, c, &count, 0)) != 0
 		 && _nc_remove_key(&(SP->_key_ok), c)) {
 			_nc_add_to_try(&(SP->_keytry), s, c);
 			free(s);
 			code = OK;
+			count = 0;
 		}
 	} else {
-		if ((s = _nc_expand_try(SP->_keytry, c, 0)) != 0
+		while ((s = _nc_expand_try(SP->_keytry, c, &count, 0)) != 0
 		 && _nc_remove_key(&(SP->_keytry), c)) {
 			_nc_add_to_try(&(SP->_key_ok), s, c);
 			free(s);
 			code = OK;
+			count = 0;
 		}
 	}
 	returnCode(code);
