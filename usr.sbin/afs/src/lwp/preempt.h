@@ -1,9 +1,8 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/preempt.h,v 1.2 1999/04/30 01:59:13 art Exp $	*/
-/* $Header: /usr/local/cvsroot/arla/lwp/preempt.h,v 1.2 1999/02/01 04:56:31 assar Exp $ */
-/* $Source: /usr/local/cvsroot/arla/lwp/preempt.h,v $ */
+/* $Header: /afs/stacken.kth.se/src/SourceRepository/arla/lwp/preempt.h,v 1.2 1999/02/01 04:56:31 assar Exp $ */
+/* $Source: /afs/stacken.kth.se/src/SourceRepository/arla/lwp/preempt.h,v $ */
 
 #if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-static char *rcsidpreempt = "$Header: /usr/local/cvsroot/arla/lwp/preempt.h,v 1.2 1999/02/01 04:56:31 assar Exp $";
+static char *rcsidpreempt = "$Header: /afs/stacken.kth.se/src/SourceRepository/arla/lwp/preempt.h,v 1.2 1999/02/01 04:56:31 assar Exp $";
 #endif
 
 /*

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/fs_errors.h,v 1.1 1999/04/30 01:59:08 art Exp $	*/
 /*
- * Copyright (c) 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -36,6 +35,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+/* $Id: fs_errors.h,v 1.8 2000/04/02 20:46:07 assar Exp $ */
 
 #ifndef _FS_ERRORS_H_
 #define _FS_ERRORS_H_ 1

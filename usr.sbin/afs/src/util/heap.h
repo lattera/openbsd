@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/heap.h,v 1.1 1999/04/30 01:59:17 art Exp $	*/
 /*
  * Copyright (c) 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -41,7 +40,7 @@
  * an abstract heap implementation
  */
 
-/* $KTH: heap.h,v 1.1 1998/12/28 00:14:41 assar Exp $ */
+/* $Id: heap.h,v 1.1 1998/12/28 00:14:41 assar Exp $ */
 
 #ifndef _HEAP_
 #define _HEAP_

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/conn.h,v 1.2 1999/04/30 01:59:07 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -41,7 +40,7 @@
  * Header for connection cache
  */
 
-/* $KTH: conn.h,v 1.20 1999/04/14 15:27:34 map Exp $ */
+/* $Id: conn.h,v 1.22 2000/02/20 04:23:48 assar Exp $ */
 
 #ifndef _CONN_H_
 #define _CONN_H_
@@ -57,7 +56,7 @@ struct conncacheentry {
     int32_t cell;		/* cell of host */
     int securityindex;
     int (*probe)(struct rx_connection *);
-    pag_t cred;
+    xfs_pag_t cred;
     struct rx_connection *connection;
     struct {
 	unsigned alivep : 1;
@@ -73,6 +72,8 @@ struct conncacheentry {
 };
 
 typedef struct conncacheentry ConnCacheEntry;
+
+extern int conn_rxkad_level;
 
 void
 conn_init (unsigned nentries);
@@ -104,7 +105,7 @@ void
 conn_status (void);
 
 void
-conn_clearcred (int32_t cell, pag_t cred, int securityindex);
+conn_clearcred (int32_t cell, xfs_pag_t cred, int securityindex);
 
 void
 conn_downhosts(int32_t cell, u_int32_t *hosts, int *num, int flags);

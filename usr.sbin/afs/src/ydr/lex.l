@@ -1,6 +1,6 @@
 %{
 /*
- * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -39,7 +39,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$Id: lex.l,v 1.20 1999/03/04 06:56:11 assar Exp $");
+RCSID("$Id: lex.l,v 1.23 2000/06/27 02:43:55 assar Exp $");
 #endif
 
 /*
@@ -60,6 +60,10 @@ RCSID("$Id: lex.l,v 1.20 1999/03/04 06:56:11 assar Exp $");
 #include "parse.h"
 #include "lex.h"
 #include "output.h"
+
+#undef ECHO
+
+#define YY_NO_UNPUT
 
 static unsigned lineno;
 
@@ -153,9 +157,9 @@ parse_filename (char *s)
 {
      char *d1, *d2;
 
-     while (!isspace(*s))
+     while (!isspace((unsigned char)*s))
 	 ++s;
-     while (isspace(*s))
+     while (isspace((unsigned char)*s))
 	 ++s;
 
      lineno = atoi (s);
@@ -169,9 +173,9 @@ parse_filename (char *s)
 static void
 parse_lineno (char *s)
 {
-     while (!isspace(*s))
+     while (!isspace((unsigned char)*s))
 	 ++s;
-     while (isspace(*s))
+     while (isspace((unsigned char)*s))
 	 ++s;
 
      lineno = atoi (s);

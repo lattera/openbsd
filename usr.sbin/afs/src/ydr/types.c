@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/types.c,v 1.2 1999/04/30 01:59:20 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -39,7 +38,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: types.c,v 1.7 1999/03/19 06:06:30 lha Exp $");
+RCSID("$Id: types.c,v 1.7 1999/03/19 06:06:30 lha Exp $");
 #endif
 
 #include <stdio.h>

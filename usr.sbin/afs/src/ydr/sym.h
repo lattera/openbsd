@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/sym.h,v 1.2 1999/04/30 01:59:20 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -37,7 +36,7 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: sym.h,v 1.6 1999/03/04 06:43:03 assar Exp $ */
+/* $Id: sym.h,v 1.7 1999/09/10 19:13:02 lha Exp $ */
 
 #ifndef _SYM_
 #define _SYM_
@@ -67,6 +66,7 @@ typedef struct {
 	      unsigned id;
 	      List *arguments;
 	      unsigned flags;
+	      char *package;
 	  } proc;
      } u;
 } Symbol;

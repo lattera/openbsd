@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/darla.h,v 1.1 1999/04/30 01:59:07 art Exp $	*/
 /* COPYRIGHT  (C)  1998
  * THE REGENTS OF THE UNIVERSITY OF MICHIGAN
  * ALL RIGHTS RESERVED
@@ -28,7 +27,7 @@
  * SUCH DAMAGES.
  */
 
-/* $KTH: darla.h,v 1.3 1998/12/21 21:54:03 assar Exp $ */
+/* $Id: darla.h,v 1.3 1998/12/21 21:54:03 assar Exp $ */
 
 #ifndef _DARLA_H
 #define _DARLA_H

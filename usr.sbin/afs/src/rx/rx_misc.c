@@ -1,7 +1,6 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_misc.c,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 #include "rx_locl.h"
 
-RCSID("$KTH: rx_misc.c,v 1.4 1998/02/22 19:47:15 joda Exp $");
+RCSID("$Id: rx_misc.c,v 1.4 1998/02/22 19:47:15 joda Exp $");
 
 /*
  * We currently only include below the errors that

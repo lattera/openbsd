@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lib/roken/Attic/erealloc.c,v 1.1 1999/04/30 01:59:12 art Exp $	*/
 /*
  * Copyright (c) 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -39,7 +38,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: erealloc.c,v 1.2 1999/02/13 05:10:56 assar Exp $");
+RCSID("$Id: erealloc.c,v 1.3 1999/05/16 22:10:58 assar Exp $");
 #endif
 
 #include <stdlib.h>
@@ -57,6 +56,6 @@ erealloc (void *ptr, size_t sz)
     void *tmp = realloc (ptr, sz);
 
     if (tmp == NULL && sz != 0)
-	err (1, "realloc %u", sz);
+	err (1, "realloc %lu", (unsigned long)sz);
     return tmp;
 }

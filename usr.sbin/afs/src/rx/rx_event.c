@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_event.c,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
@@ -22,7 +21,7 @@
 
 #include "rx_locl.h"
 
-RCSID("$KTH: rx_event.c,v 1.3 1998/02/22 19:43:59 joda Exp $");
+RCSID("$Id: rx_event.c,v 1.4 1999/12/31 05:41:49 assar Exp $");
 
 /*
  * All event processing is relative to the apparent current time
@@ -213,8 +212,8 @@ rxevent_RaiseEvents(struct clock * next)
     return 0;
 }
 
-void
-shutdown_rxevent()
+static void
+shutdown_rxevent(void)
 {
     struct xfreelist *xp, *nxp;
 

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rxkad/Attic/rxkad_locl.h,v 1.2 1999/04/30 01:59:16 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -37,12 +36,12 @@
  * SUCH DAMAGE.
  */
 
-/* @(#)$KTH: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
+/* @(#)$Id: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
 
 #ifndef __RXKAD_LOCL_H
 #define __RXKAD_LOCL_H
 
-/* $KTH: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
+/* $Id: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lib/roken/Attic/signal.c,v 1.1.1.1 1998/09/14 21:53:08 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -39,7 +38,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: signal.c,v 1.1 1998/01/13 16:25:36 lha Exp $");
+RCSID("$Id: signal.c,v 1.2 2000/03/04 17:57:16 map Exp $");
 #endif
 
 #include <signal.h>
@@ -48,7 +47,7 @@ RCSID("$KTH: signal.c,v 1.1 1998/01/13 16:25:36 lha Exp $");
  * We would like to always use this signal but there is a link error
  * on NEXTSTEP
  */
-#ifndef NeXT
+#if !defined(NeXT) && !defined(__APPLE__)
 /*
  * Bugs:
  *

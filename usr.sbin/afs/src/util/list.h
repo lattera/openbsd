@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/list.h,v 1.2 1999/04/30 01:59:17 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -41,7 +40,7 @@
  * list handling functions
  */
 
-/* $KTH: list.h,v 1.9 1999/01/11 02:24:33 rb Exp $ */
+/* $Id: list.h,v 1.9 1999/01/11 02:24:33 rb Exp $ */
 
 #ifndef _LIST_
 #define _LIST_

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/lex.h,v 1.2 1999/04/30 01:59:19 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,11 +36,13 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: lex.h,v 1.4 1999/03/01 08:38:22 assar Exp $ */
+/* $Id: lex.h,v 1.5 2000/06/17 04:18:58 assar Exp $ */
 
 #ifndef _LEX_
 #define _LEX_
 
 void error_message (int errorp, char *, ...);
+
+int yylex (void);
 
 #endif /* _LEX_ */

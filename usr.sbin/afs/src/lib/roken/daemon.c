@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lib/roken/Attic/daemon.c,v 1.1.1.1 1998/09/14 21:53:01 art Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -40,7 +39,7 @@ static char sccsid[] = "@(#)daemon.c	8.1 (Berkeley) 6/4/93";
 #include <config.h>
 #endif
 
-RCSID("$KTH: daemon.c,v 1.1 1998/01/13 16:25:16 lha Exp $");
+RCSID("$Id: daemon.c,v 1.1 1998/01/13 16:25:16 lha Exp $");
 
 #ifndef HAVE_DAEMON
 

@@ -2,7 +2,7 @@
  * Interface to Volumeserver, 
  * reference /afs/nada.kth.se/misc/reference/programming/afs/shadow/
  *
- * $Id: volumeserver.xg,v 1.17 1999/03/10 01:20:14 assar Exp $
+ * $Id: volumeserver.xg,v 1.20 2000/06/01 23:59:02 ahltorp Exp $
  */
 
 package VOLSER_
@@ -75,6 +75,17 @@ const VOLSERNOVOL	      = 1492325135;
 const VOLSERMULTIRWVOL        = 1492325136;
 const VOLSERFAILEDOP          = 1492325137;
 
+const ITOffline = 0x1;
+const ITBusy = 0x2;
+const ITReadOnly = 0x8;
+const ITCreate = 0x10;
+const ITCreateVolID = 0x1000;
+
+const VTDeleteOnSalvage = 1;
+const VTOutOfService = 2;
+const VTDeleted = 4;
+
+#if 0
 struct volser_trans { 
     volser_trans *next;
     long tid;
@@ -93,7 +104,7 @@ struct volser_trans {
     char lastProcName[30];
 /*    struct rx_call *rxCallPtr; XXXXXXX BROKEN /lha */
 };
-
+#endif
 struct volDescription {
     char volName[VOLSER_MAXVOLNAME];
     long volId;
