@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4.2.1 1996/09/17 09:34:13 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4.2.2 1996/09/24 09:35:51 mickey Exp $	*/
 /*	$NetBSD: start.S,v 1.12 1995/01/18 17:34:18 mycroft Exp $	*/
 
 /*
@@ -67,19 +67,15 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include <machine/asm.h>
-#define	addr32	.byte 0x67
-#define	data32	.byte 0x66
 
-BOOTSEG		=	0x0100	# boot will be loaded here (below 640K)
 BOOTSTACK	=	0xfffc	# boot stack
 BOOTBIOS	=	0x7c0	# segment where we loaded
-BOOTRELOC	=	0x5c0	# segment where to relocate
+BOOTRELOC	=	0x7a0	# segment where to relocate
 SIGNATURE	=	0xaa55	# MBR signature
-PARTSTART	=	0x1be	# starting address of partition table
 NUMPART		=	4	# number of partitions in partition table
 PARTSZ		=	16	# each partition table entry is 16 bytes
-BSDPART		=	0xA5	# value of boot_ind, means bootable partition
-BOOTABLE	=	0x80	# value of boot_ind, means bootable partition
+BSDPART		=	0xA5	# value of boot_ind, means bsd partition
+BOOTABLE	=	0x80	# value of boot_flag, means bootable partition
 CHAR_S		=	'S'	# started
 CHAR_2		=	'2'	# loading 2nd stage boot
 CHAR_G		=	'G'	# jumping to it
@@ -89,6 +85,7 @@ CHAR_L		=	'L'	# looking up bootable partition
 CHAR_R		=	'R'	# relocating
 CHAR_D		=	'D'	# booting from non-BSD partition
 CHAR_P		=	'P'	# partition table corrupted
+CHAR_B		=	':'	# booting
 
 #ifdef DEBUG
 #define DBGMSG(msg) \
@@ -98,11 +95,10 @@ CHAR_P		=	'P'	# partition table corrupted
 #define DBGMSG(msg)
 #endif /* !DEBUG */
 
-	.text
-	.globl	start
+	.file	"start.S"
+	.code16
 
 ENTRY(boot1)
-start:
 #ifndef DOSREAD
 	cli	# disable interrupts w/o stack
 	/*
@@ -110,28 +106,26 @@ start:
 	 */
 	# start (aka boot1) is loaded at 0x0:0x7c00 but we want 0x7c0:0
 	# ljmp to the next instruction to adjust %cs
-	data32
 	ljmp $BOOTBIOS, $start1
 
 start1:
 	# set up stack(%ss:%esp)
-	movl	$BOOTSEG, %ax
-	movl	%ax, %ss
-	data32
+	movw	$BOOTBIOS, %ax
+	movw	%ax, %ss
 	movl	$BOOTSTACK, %esp
+
+	/*** set up %es, (where we will load boot2 to) ***/
+	movw	%ax, %es
 
 	sti	# we have stack, do ints
 
-	/*** set up %es, (where we will load boot2 to) ***/
-	movl	%ax, %es
-
 #ifdef SERIAL
 	# Initialize the serial port to 9600 baud, 8N1.
-	pushl	%dx
-	movl	$0x00e3, %ax
-	movl	SERIAL, %dx
+	pushw	%dx
+	movw	$0x00e3, %ax
+	movw	SERIAL, %dx
 	int	$0x14
-	popl	%dx
+	popw	%dx
 #endif
 
 #if	!defined(NOFD) && !defined(NOHD)
@@ -145,62 +139,61 @@ start1:
 fd:
 	DBGMSG(CHAR_F)
 	# set up %ds
-	pushl	%cs
-	popl	%ds
-	data32
-	movl	$0x0001, %ecx	# cyl 0, sector 1
+	pushw	%cs
+	popw	%ds
+	movw	$0x0002, %cx	# cyl 0, sector 1
 	movb	$0x00, %dh	# head
 	jmp	doload
 #endif
 #ifndef	NOHD
 hd:
 	DBGMSG(CHAR_H)
-	# movl	%si, %bx
-	# movb	1(%ebx), %dh	# head
-	.byte   0x8a, 0x74, 0x01
-	# movl	2(%ebx), %ecx	# sect, cyl (+ 2 bytes junk in top word)
-	.byte   0x8b, 0x4c, 0x02
-	# movb	4(%ebx), %al	# partition type
+	# movb	4(%si), %al	# partition type
 	.byte   0x8a, 0x44, 0x04
 	cmpb	$BSDPART, %al
-	# set up %ds
-	pushl	%cs
-	popl	%ds
-	je	doload		# we are not a MBR
+	je	found		# we are not a MBR
 
-	movl	$signature, %esi
-	cmpl	$SIGNATURE, (%esi)
+	# set up %ds
+	pushw	%cs
+	popw	%ds
+	xorw	%bx, %bx
+	# cmpw	$SIGNATURE, (%bx)
+	.byte	0x81, 0xbf
+	.word	signature
+	.word	SIGNATURE
 	je	pt_ok
 	DBGMSG(CHAR_P)
 
 pt_ok:
 	/* find the first active partition */
 	DBGMSG(CHAR_L)
-	data32
-	movl	$PARTSTART, %esi
-	data32
-	movl	$NUMPART, %ecx
+	movw	$pt, %si
+	movw	$NUMPART, %cx
 again:
-	addr32
-	cmpb	$BOOTABLE, (%esi)
+	# movb	(%si), %al
+	.byte	0x8a, 0x44, 0x00
+	cmpb	$BOOTABLE, %al
 	je	found
-	data32
-	addl	$PARTSZ, %esi
+	addw	$PARTSZ, %si
 	loop	again
-	data32
-	movl	$enoboot, %esi
+	movw	$enoboot, %si
 	jmp	err_stop
 #endif
 
 #ifndef	NOHD
 found:
 	DBGMSG(CHAR_2)
-	addr32
-	movb	1(%esi), %dh /* head */
-	addr32
-	movl	2(%esi), %ecx /*sect, cyl (+ 2 bytes junk in top word) */
+	# movb	1(%si), %dh	# head
+	.byte   0x8a, 0x74, 0x01
+	# movw	2(%si), %cx	# sect, cyl
+	.byte   0x8b, 0x4c, 0x02
+	# movb	4(%si), %al	# partition type
+	.byte   0x8a, 0x44, 0x04
 
-	cmpb	$BSDPART, 4(%esi)
+	# set up %ds
+	pushw	%cs
+	popw	%ds
+	cmpb	$BSDPART, %al
 	jne	foreign	/* foreign partition */
 #endif
 doload:
@@ -208,45 +201,39 @@ doload:
 
 	DBGMSG(CHAR_G)
 
-	# ljmp to the second stage boot loader (boot2).
-	# After ljmp, %cs is BOOTSEG and boot1 (512 bytes) will be used
+	# jmp to the second stage boot loader (boot2).
+	# After ljmp, %cs is BOOTBIOS and boot1 (512 bytes) will be used
 	# as an internal buffer "intbuf".
 
-	data32
-	ljmp	$BOOTSEG, $_C_LABEL(boot2)
+	jmp	boot2
 	/* not reached */
 
 #ifndef	NOHD
 foreign:
 	# relocate the code to leave the space for next stage
 	DBGMSG(CHAR_R)
-	data32
-	pushl	%ecx
-	movl	$BOOTRELOC, %ax
-	movl	%ax, %es
-	data32
-	xorl	%esi, %esi
-	data32
-	xorl	%edi, %edi
-	movl	$0x100, %cx
+	pushw	%es
+	pushw	%cx
+	pushw	%si
+	pushw	$BOOTRELOC
+	popw	%es
+	xorw	%si, %si
+	xorw	%di, %di
+	movw	$0x100, %cx
 	cld
 	rep
-	movsl
-	data32
-	popl	%ecx
-	# jump to the new code
-	data32
+	movsw
+	popw	%cx
+	popw	%si
+	popw	%es
+	# jump to the relocated code
 	ljmp $BOOTRELOC, $start2
 
 start2:
-	/*** set up %es, (where we will load boot2 to) ***/
-	pushl	$BOOTBIOS
-	popl	%es
-
-	data32
 	call	load
 
 	DBGMSG(CHAR_D)
+	# jump to the new code (%ds:%si is at he right point)
 	ljmp	$0, $BOOTBIOS << 4
 	/* not reached */
 #endif
@@ -264,8 +251,8 @@ start2:
 #                       %al = 0x0 on success; err code on failure
 */
 load:
-	movl	$0x200 | LOADSZ, %ax	/* number of blocks */
-	xorl	%bx, %bx		/* put it at BOOTSEG:0 */
+	movw	$0x200 | LOADSZ, %ax	/* number of blocks */
+	xorw	%bx, %bx		/* put it at BOOTBIOS:0 */
 	int	$0x13
 	jc	read_error
 	ret
@@ -275,14 +262,13 @@ load:
 #
 
 read_error:
-	data32
-	movl	$eread, %esi
+	movw	$eread, %si
 err_stop:
 	call	message
 	jmp	stop
 
 #
-#	message: write the error message in %ds:%esi to console
+#	message: write the error message in %ds:%si to console
 #
 
 chr:
@@ -300,57 +286,49 @@ chr:
 #			%dx = port number
 #endif
 */
-	data32
-	pushl	%eax
+	pushw	%ax
 
 #ifndef SERIAL
-	data32
-	pushl	%ebx
+	pushw	%bx
 	movb	$0x0e, %ah
-	data32
-	movl	$0x0001, %ebx
+	movw	$0x0001, %bx
 	int	$0x10
-	data32
-	popl	%ebx
+	popw	%bx
 #else
-	data32
-	pushl	%edx
+	pushw	%dx
 	movb	$0x01, %ah
-	movl	SERIAL, %edx
+	movw	SERIAL, %dx
 	int	$0x14
-	data32
-	popl	%edx
+	popw	%dx
 #endif
-	data32
-	popl	%eax
+	popw	%ax
 	ret
 
 /*
  * Display string
  */
 message:
-	data32
-	pushl	%eax
+#ifndef	DEBUG
+	pushw	%ax
+#endif
 
 nextb:
 	cld
-	addr32
 	lodsb			# load a byte into %al
 	testb	%al, %al
-	data32
 	jz	done
 	call	chr
 
-	data32
 	jmp	nextb
 
 done:
-	data32
-	popl	%eax
+#ifndef	DEBUG
+	popw	%ax
+#endif
 	ret
 #else	/* !DOSREAD */
 	movb	$0xff, %dl
-	jmp	_C_LABEL(boot2)
+	jmp	boot2
 #endif /* DOSREAD */
 
 /* Conventional GDT indexes. */
@@ -358,41 +336,36 @@ BOOT_CS_INDEX	=	3
 BOOT_CS16_INDEX	=	5
 BOOT_DS_INDEX	=	4
 
-ENTRY(boot2)
-	data32
+boot2:
+	pushw	%cs
+	pushw	%cs
+	pushw	%cs
+	popw	%ds
+	popw	%es
 	xorl	%eax, %eax
-	movl	%cs, %ax
-	movl	%ax, %ds
-	movl	%ax, %es
-	addr32
-	data32
+	popw	%ax
 	movl	%eax, _C_LABEL(ourseg)
-	data32
 	shll	$4, %eax
 
 	/* fix up GDT entries for bootstrap */
 #define FIXUP(gdt_index) \
-	addr32; \
 	movl	%eax, _C_LABEL(Gdt)+(8*gdt_index)+2;  /* actually movw %ax */ \
-	addr32; \
 	movb	%bl, _C_LABEL(Gdt)+(8*gdt_index)+4
 
-	data32
 	shldl	$16, %eax, %ebx
 	FIXUP(BOOT_CS_INDEX)
 	FIXUP(BOOT_CS16_INDEX)
 	FIXUP(BOOT_DS_INDEX)
 
 	/* fix up GDT pointer */
-	data32
 	addl	$_C_LABEL(Gdt), %eax
-	addr32
-	data32
 	movl	%eax, _C_LABEL(Gdtr)+2
 
+	DBGMSG(CHAR_B)
 	/* change to protected mode */
-	data32
 	call	_C_LABEL(real_to_prot)
+
+	.code32
 
 	/* clear the bss */
 	movl	$_C_LABEL(edata), %edi
@@ -404,7 +377,8 @@ ENTRY(boot2)
 
 	movzbl	%dl, %edx	/* discard head (%dh) and random high bits */
 	pushl	%edx
-	call	_C_LABEL(boot)
+	jmp	_C_LABEL(boot)
+	#call	_C_LABEL(boot)
 
 stop:
 	cli
@@ -419,7 +393,8 @@ enoboot: .asciz		"No partition to boot\r\n"
 endofcode:
 /* throw in a partition in case we are block0 as well */
 /* flag, head, sec, cyl, typ, ehead, esect, ecyl, start, len */
-	. = _C_LABEL(boot1) + PARTSTART
+	. = _C_LABEL(boot1) + 0x1be	# starting address of partition table
+pt:
 	.byte	0x0,0,0,0,0,0,0,0
 	.long	0,0
 	.byte	0x0,0,0,0,0,0,0,0

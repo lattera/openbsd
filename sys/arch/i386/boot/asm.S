@@ -52,8 +52,6 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include <machine/asm.h>
-#define	addr32	.byte 0x67
-#define	data32	.byte 0x66
 
 CR0_PE		=	0x1
 
@@ -66,41 +64,39 @@ _ourseg:
  * real_to_prot()
  * 	transfer from real mode to protected mode.
  */
+	.code16
 ENTRY(real_to_prot)
 	# guarantee that interrupt is disabled when in prot mode
 	cli
 
 	# load the gdtr
-	addr32
-	data32
 	lgdt	_C_LABEL(Gdtr)
 
 	# set the PE bit of CR0
 	movl	%cr0, %eax
-
-	data32
 	orl	$CR0_PE, %eax
 	movl	%eax, %cr0 
 
 	# make intrasegment jump to flush the processor pipeline and
 	# reload CS register
-	data32
 	ljmp	$0x18, $xprot
 
 xprot:
+	.code32
 	# we are in USE32 mode now
 	# set up the protected mode segment registers : DS, SS, ES
-	movl	$0x20, %eax
-	movl	%ax, %ds
-	movl	%ax, %ss
-	movl	%ax, %es
+	movw	$0x20, %ax
+	movw	%ax, %ds
+	movw	%ax, %ss
+	movw	%ax, %es
 
-	ret
+	lret
 
 /*
  * prot_to_real()
  * 	transfer from protected mode to real mode
  */
+	.code32
 ENTRY(prot_to_real)
 	# set up a dummy stack frame for the second seg change.
 	# Adjust the intersegment jump instruction following
@@ -110,14 +106,14 @@ ENTRY(prot_to_real)
 	movl    _ourseg, %eax
 	movw    %ax, xreal-2
 
-
 	# Change to use16 mode.
 	ljmp	$0x28, $x16
 
 x16:
+	.code16
+
 	# clear the PE bit of CR0
 	movl	%cr0, %eax
-	data32
 	andl 	$~CR0_PE, %eax
 	movl	%eax, %cr0
 
@@ -132,15 +128,15 @@ x16:
 xreal:
 	# we are in real mode now
 	# set up the real mode segment registers : DS, SS, ES
-	movl	%cs, %ax
-	movl	%ax, %ds
-	movl	%ax, %ss
-	movl	%ax, %es
+	movw	%cs, %ax
+	movw	%ax, %ds
+	movw	%ax, %ss
+	movw	%ax, %es
 
-	sti
-	data32
+	#sti
 	ret
 
+	.code32
 /*
  * startprog(phyaddr)
  *	start the program on protected mode where phyaddr is the entry point
