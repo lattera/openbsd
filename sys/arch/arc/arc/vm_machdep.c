@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arc/arc/Attic/vm_machdep.c,v 1.7 1998/01/28 13:46:00 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/arc/arc/Attic/vm_machdep.c,v 1.8 1998/03/01 00:37:25 niklas Exp $	*/
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -39,7 +39,7 @@
  * from: Utah Hdr: vm_machdep.c 1.21 91/04/06
  *
  *	from: @(#)vm_machdep.c	8.3 (Berkeley) 1/4/94
- *      $Id: vm_machdep.c,v 1.6 1997/11/10 00:39:10 niklas Exp $
+ *      $Id: vm_machdep.c,v 1.7 1998/01/28 13:46:00 pefo Exp $
  */
 
 #include <sys/param.h>
@@ -509,7 +509,7 @@ kmem_alloc_wait_align(map, size, align)
 		}
 		assert_wait(map, TRUE);
 		vm_map_unlock(map);
-		thread_block();
+		thread_block("kmawa");
 	}
 	vm_map_insert(map, NULL, (vm_offset_t)0, addr, addr + size);
 	vm_map_unlock(map);
