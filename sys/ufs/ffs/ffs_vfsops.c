@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.28.2.1 2001/05/14 22:47:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.28.2.2 2001/07/04 11:00:51 niklas Exp $	*/
 /*	$NetBSD: ffs_vfsops.c,v 1.19 1996/02/09 22:22:26 christos Exp $	*/
 
 /*
@@ -83,6 +83,15 @@ struct vfsops ffs_vfsops = {
 	ffs_init,
 	ffs_sysctl,
 	ufs_check_export
+};
+
+struct inode_vtbl ffs_vtbl = {
+	ffs_truncate,
+	ffs_update,
+	ffs_inode_alloc,
+	ffs_inode_free,
+	ffs_balloc,
+	ffs_bufatoff
 };
 
 extern u_long nextgennumber;
@@ -194,7 +203,6 @@ ffs_mount(mp, path, data, ndp, p)
 				mp->mnt_flag &= ~MNT_SOFTDEP;
 			} else
 				error = ffs_flushfiles(mp, flags, p);
-			free(fs->fs_contigdirs, M_WAITOK);
 			ronly = 1;
 		}
 
@@ -408,6 +416,8 @@ success:
 			fs->fs_ronly = ronly;
 			fs->fs_clean = ronly &&
 			    (fs->fs_flags & FS_UNCLEAN) == 0 ? 1 : 0;
+			if (ronly)
+				free(fs->fs_contigdirs, M_UFSMNT);
 		}
 		if (!ronly) {
 			if (mp->mnt_flag & MNT_SOFTDEP)
@@ -489,6 +499,7 @@ ffs_reload(mountp, cred, p)
 	 */
 	newfs->fs_csp = fs->fs_csp;
 	newfs->fs_maxcluster = fs->fs_maxcluster;
+	newfs->fs_ronly = fs->fs_ronly;
 	bcopy(newfs, fs, (u_int)fs->fs_sbsize);
 	if (fs->fs_sbsize < SBSIZE)
 		bp->b_flags |= B_INVAL;
@@ -807,6 +818,10 @@ ffs_oldfscompat(fs)
 		fs->fs_qbmask = ~fs->fs_bmask;			/* XXX */
 		fs->fs_qfmask = ~fs->fs_fmask;			/* XXX */
 	}							/* XXX */
+	if (fs->fs_avgfilesize <= 0)				/* XXX */
+		fs->fs_avgfilesize = AVFILESIZ;			/* XXX */
+	if (fs->fs_avgfpdir <= 0)				/* XXX */
+		fs->fs_avgfpdir = AFPDIR;			/* XXX */
 	return (0);
 }
 
@@ -1082,6 +1097,8 @@ retry:
 	ip->i_fs = fs = ump->um_fs;
 	ip->i_dev = dev;
 	ip->i_number = ino;
+	ip->i_vtbl = &ffs_vtbl;
+
 #ifdef QUOTA
 	{
 		int i;

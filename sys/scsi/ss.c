@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/Attic/ss.c,v 1.40.4.1 2001/05/14 22:45:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/Attic/ss.c,v 1.40.4.2 2001/07/04 11:00:09 niklas Exp $	*/
 /*	$NetBSD: ss.c,v 1.10 1996/05/05 19:52:55 christos Exp $	*/
 
 /*
@@ -767,7 +767,7 @@ ss_set_window(ss, sio)
 	bzero(&window_data, sizeof(window_data));
 	if (ss->quirkdata->quirks & SS_Q_WINDOW_DESC_LEN)
 		_lto2l(ss->quirkdata->window_descriptor_length,
-		       window_data.window_desc_len);
+		    window_data.window_desc_len);
 	else
 		_lto2l(40L, window_data.window_desc_len);
 
@@ -857,11 +857,11 @@ ss_set_window(ss, sio)
 	else
 		/* send the command to the scanner */
 		return (scsi_scsi_cmd(sc_link,
-		        (struct scsi_generic *)&window_cmd,
-			sizeof(window_cmd), (u_char *) &wd.window_data,
-			(ss->quirkdata->quirks & SS_Q_WINDOW_DESC_LEN) ?
-			ss->quirkdata->window_descriptor_length : 40,
-			4, 5000, NULL, SCSI_DATA_OUT));
+		    (struct scsi_generic *)&window_cmd,
+		    sizeof(window_cmd), (u_char *) &wd.window_data,
+		    (ss->quirkdata->quirks & SS_Q_WINDOW_DESC_LEN) ?
+		    ss->quirkdata->window_descriptor_length : 40,
+		    4, 5000, NULL, SCSI_DATA_OUT));
 }
 
 int

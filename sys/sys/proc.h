@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.2 2001/05/14 22:45:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.3 2001/07/04 11:00:27 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -293,17 +293,10 @@ struct	pcred {
 		FREE(s, M_SESSION);					\
 }
 
-#if defined(UVM)
 #define	PHOLD(p) {							\
 	if ((p)->p_holdcnt++ == 0 && ((p)->p_flag & P_INMEM) == 0)	\
 		uvm_swapin(p);						\
 }
-#else
-#define	PHOLD(p) {							\
-	if ((p)->p_holdcnt++ == 0 && ((p)->p_flag & P_INMEM) == 0)	\
-		swapin(p);						\
-}
-#endif
 #define	PRELE(p)	(--(p)->p_holdcnt)
 
 /*
@@ -372,11 +365,7 @@ void	resetpriority __P((struct proc *));
 void	setrunnable __P((struct proc *));
 void	setrunqueue __P((struct proc *));
 void	sleep __P((void *chan, int pri));
-#if defined(UVM)
 void	uvm_swapin __P((struct proc *));  /* XXX: uvm_extern.h? */
-#else
-void	swapin __P((struct proc *));
-#endif
 int	tsleep __P((void *chan, int pri, char *wmesg, int timo));
 void	unsleep __P((struct proc *));
 void    wakeup_n __P((void *chan, int));
@@ -392,5 +381,7 @@ int	groupmember __P((gid_t, struct ucred *));
 void	cpu_switch __P((struct proc *));
 void	cpu_wait __P((struct proc *));
 void	cpu_exit __P((struct proc *));
+
+int	proc_cansugid __P((struct proc *));
 #endif	/* _KERNEL */
 #endif	/* !_SYS_PROC_H_ */

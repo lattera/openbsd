@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/tty.h,v 1.4.16.1 2001/05/14 22:45:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/tty.h,v 1.4.16.2 2001/07/04 11:00:35 niklas Exp $	*/
 /*	$NetBSD: tty.h,v 1.30.4.1 1996/06/02 09:08:13 mrg Exp $	*/
 
 /*-
@@ -45,6 +45,20 @@
 #include <sys/queue.h>
 #include <sys/select.h>		/* For struct selinfo. */
 #include <sys/timeout.h>
+
+#define KERN_TTY_TKNIN		1	/* quad: input chars */
+#define KERN_TTY_TKNOUT		2	/* quad: output chars */
+#define KERN_TTY_TKRAWCC	3	/* quad: input chars, raw mode */
+#define KERN_TTY_TKCANCC	4	/* quad: input char, cooked mode */
+#define KERN_TTY_MAXID		5
+
+#define CTL_KERN_TTY_NAMES { \
+	{ 0, 0 }, \
+	{ "tk_nin", CTLTYPE_QUAD }, \
+	{ "tk_nout", CTLTYPE_QUAD }, \
+	{ "tk_rawcc", CTLTYPE_QUAD }, \
+	{ "tk_cancc", CTLTYPE_QUAD }, \
+}
 
 #ifndef REAL_CLISTS
 /*
@@ -209,6 +223,8 @@ extern	struct ttychars ttydefaults;
 /* Symbolic sleep message strings. */
 extern	 char ttyin[], ttyout[], ttopen[], ttclos[], ttybg[], ttybuf[];
 
+int	sysctl_tty __P((int *, u_int, void *, size_t *, void *, size_t));
+
 int	 b_to_q __P((u_char *cp, int cc, struct clist *q));
 void	 catq __P((struct clist *from, struct clist *to));
 void	 clist_init __P((void));
@@ -256,7 +272,7 @@ void	tty_attach __P((struct tty *));
 void	tty_detach __P((struct tty *));
 struct tty *ttymalloc __P((void));
 void	 ttyfree __P((struct tty *));
-u_char	*firstc           __P((struct clist *clp, int *c));
+u_char	*firstc __P((struct clist *clp, int *c));
 
 int	cttyopen __P((dev_t, int, int, struct proc *));
 int	cttyread __P((dev_t, struct uio *, int));

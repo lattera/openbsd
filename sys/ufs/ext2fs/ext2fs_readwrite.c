@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_readwrite.c,v 1.5.6.1 2001/05/14 22:47:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_readwrite.c,v 1.5.6.2 2001/07/04 11:00:44 niklas Exp $	*/
 /*	$NetBSD: ext2fs_readwrite.c,v 1.1 1997/06/11 09:34:01 bouyer Exp $	*/
 
 /*-
@@ -188,7 +188,6 @@ ext2fs_write(v)
 	daddr_t lbn;
 	off_t osize;
 	int blkoffset, error, flags, ioflag, resid, size, xfersize;
-	struct timespec ts;
 
 	ioflag = ap->a_ioflag;
 	uio = ap->a_uio;
@@ -250,23 +249,15 @@ ext2fs_write(v)
 		else
 			flags &= ~B_CLRBUF;
 
-		error = ext2fs_balloc(ip,
+		error = ext2fs_buf_alloc(ip,
 			lbn, blkoffset + xfersize, ap->a_cred, &bp, flags);
 		if (error)
 			break;
 		if (uio->uio_offset + xfersize > ip->i_e2fs_size) {
 			ip->i_e2fs_size = uio->uio_offset + xfersize;
-#if defined(UVM)
 			uvm_vnp_setsize(vp, ip->i_e2fs_size);
-#else
-			vnode_pager_setsize(vp, (u_long)ip->i_e2fs_size);
-#endif
 		}
-#if defined(UVM)
 		uvm_vnp_uncache(vp);
-#else
-		(void)vnode_pager_uncache(vp);
-#endif
 
 		size = fs->e2fs_bsize - bp->b_resid;
 		if (size < xfersize)
@@ -296,14 +287,13 @@ ext2fs_write(v)
 		ip->i_e2fs_mode &= ~(ISUID | ISGID);
 	if (error) {
 		if (ioflag & IO_UNIT) {
-			(void)VOP_TRUNCATE(vp, osize,
-				ioflag & IO_SYNC, ap->a_cred, uio->uio_procp);
+			(void)ext2fs_truncate(ip, osize,
+				ioflag & IO_SYNC, ap->a_cred);
 			uio->uio_offset -= resid - uio->uio_resid;
 			uio->uio_resid = resid;
 		}
 	} else if (resid > uio->uio_resid && (ioflag & IO_SYNC)) {
-		TIMEVAL_TO_TIMESPEC(&time, &ts);
-		error = VOP_UPDATE(vp, &ts, &ts, 1);
+		error = ext2fs_update(ip, NULL, NULL, 1);
 	}
 	return (error);
 }

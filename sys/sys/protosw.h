@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/protosw.h,v 1.3.16.1 2001/05/14 22:45:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/protosw.h,v 1.3.16.2 2001/07/04 11:00:28 niklas Exp $	*/
 /*	$NetBSD: protosw.h,v 1.10 1996/04/09 20:55:32 cgd Exp $	*/
 
 /*-
@@ -112,6 +112,8 @@ struct protosw {
 #define	PR_CONNREQUIRED	0x04		/* connection required by protocol */
 #define	PR_WANTRCVD	0x08		/* want PRU_RCVD calls */
 #define	PR_RIGHTS	0x10		/* passes capabilities */
+#define	PR_ABRTACPTDIS	0x20		/* abort on accept(2) to disconnected
+					   socket */
 
 /*
  * The arguments to usrreq are:
@@ -148,8 +150,9 @@ struct protosw {
 #define	PRU_SLOWTIMO		19	/* 500ms timeout */
 #define	PRU_PROTORCV		20	/* receive from below */
 #define	PRU_PROTOSEND		21	/* send to below */
+#define PRU_PEEREID		22	/* get local peer eid */
 
-#define	PRU_NREQ		21
+#define	PRU_NREQ		22
 
 #ifdef PRUREQUESTS
 char *prurequests[] = {
@@ -158,7 +161,7 @@ char *prurequests[] = {
 	"RCVD",		"SEND",		"ABORT",	"CONTROL",
 	"SENSE",	"RCVOOB",	"SENDOOB",	"SOCKADDR",
 	"PEERADDR",	"CONNECT2",	"FASTTIMO",	"SLOWTIMO",
-	"PROTORCV",	"PROTOSEND",
+	"PROTORCV",	"PROTOSEND",	"PEEREID",
 };
 #endif
 

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.2 2001/05/14 22:47:47 niklas Exp $	*/
-/*	$NetBSD: uvm_meter.c,v 1.8 1999/03/25 18:48:53 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.3 2001/07/04 11:01:06 niklas Exp $	*/
+/*	$NetBSD: uvm_meter.c,v 1.10 1999/07/25 06:30:36 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.

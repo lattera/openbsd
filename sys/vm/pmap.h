@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/vm/Attic/pmap.h,v 1.12.2.2 2001/05/14 22:47:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/pmap.h,v 1.12.2.3 2001/07/04 11:01:14 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.16 1996/03/31 22:15:32 pk Exp $	*/
 
 /* 
@@ -121,12 +121,9 @@ typedef struct pmap_statistics	*pmap_statistics_t;
 #ifdef _KERNEL
 __BEGIN_DECLS
 void		*pmap_bootstrap_alloc __P((int));
-void		 pmap_change_wiring __P((pmap_t, vaddr_t, boolean_t));
+void		 pmap_unwire __P((pmap_t, vaddr_t));
 
 #if defined(PMAP_NEW)
-#if 0
-void		 pmap_unwire __P((pmap_t, vaddr_t));
-#endif
 #if !defined(pmap_clear_modify)
 boolean_t	 pmap_clear_modify __P((struct vm_page *));
 #endif
@@ -150,27 +147,22 @@ void		 pmap_destroy __P((pmap_t));
 #if defined(PMAP_NEW) && defined(__i386__)
 #ifdef notyet
 int		 pmap_enter __P((pmap_t, vaddr_t, paddr_t, vm_prot_t, int));
-boolean_t	 pmap_extract __P((pmap_t, vaddr_t, paddr_t *));
 #else
 int		 _pmap_enter __P((pmap_t, vaddr_t, paddr_t, vm_prot_t, int));
 #define	 pmap_enter(pmap, va, pa, prot, wired, access_type) \
     (_pmap_enter((pmap), (va), (pa), (prot), ((wired) ? PMAP_WIRED : 0)))
-boolean_t	 _pmap_extract __P((pmap_t, vaddr_t, paddr_t *));
 #endif
 #else
 void		 pmap_enter __P((pmap_t,
 		    vaddr_t, paddr_t, vm_prot_t, boolean_t, vm_prot_t));
 #endif
-paddr_t		 pmap_extract __P((pmap_t, vaddr_t));
+
+boolean_t	 pmap_extract __P((pmap_t, vaddr_t, paddr_t *));
 #if defined(PMAP_NEW) && defined(PMAP_GROWKERNEL)
 vaddr_t		 pmap_growkernel __P((vaddr_t));
 #endif
 
-#if !defined(MACHINE_NONCONTIG) && !defined(MACHINE_NEW_NONCONTIG)
-void		 pmap_init __P((paddr_t, paddr_t));
-#else
 void		 pmap_init __P((void));
-#endif
 
 #if defined(PMAP_NEW)
 void		 pmap_kenter_pa __P((vaddr_t, paddr_t, vm_prot_t));
@@ -187,20 +179,12 @@ boolean_t	 pmap_is_modified __P((paddr_t pa));
 boolean_t	 pmap_is_referenced __P((paddr_t pa));
 #endif	/* PMAP_NEW */
 
-#if !defined(MACHINE_NEW_NONCONTIG)
-#ifndef pmap_page_index
-int		 pmap_page_index __P((paddr_t));
-#endif
-#endif /* ! MACHINE_NEW_NONCONTIG */
-
 #if defined(PMAP_NEW)
 void		 pmap_page_protect __P((struct vm_page *, vm_prot_t));
 #else
 void		 pmap_page_protect __P((paddr_t, vm_prot_t));
 #endif
 
-void		 pmap_pageable __P((pmap_t,
-		    vaddr_t, vaddr_t, boolean_t));
 #if !defined(pmap_phys_address)
 paddr_t		 pmap_phys_address __P((int));
 #endif
@@ -213,11 +197,7 @@ void		 pmap_remove __P((pmap_t, vaddr_t, vaddr_t));
 void		 pmap_update __P((void));
 void		 pmap_zero_page __P((paddr_t));
 
-#ifdef MACHINE_NONCONTIG
-u_int		 pmap_free_pages __P((void));
-boolean_t	 pmap_next_page __P((paddr_t *));
-#endif
-#if defined(MACHINE_NEW_NONCONTIG) && defined(PMAP_STEAL_MEMORY)
+#if defined(PMAP_STEAL_MEMORY)
 vaddr_t		 pmap_steal_memory __P((vsize_t, paddr_t *, paddr_t *));
 #else
 void		 pmap_virtual_space __P((vaddr_t *, vaddr_t *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.3 2001/05/14 22:45:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.4 2001/07/04 11:00:29 niklas Exp $	*/
 /*	$NetBSD: socket.h,v 1.14 1996/02/09 18:25:36 christos Exp $	*/
 
 /*
@@ -134,7 +134,9 @@ struct	linger {
 #define	AF_ENCAP	28
 #define	AF_SIP		29		/* Simple Internet Protocol */
 #define AF_KEY		30
-#define	AF_MAX		31
+#define pseudo_AF_HDRCMPLT 31		/* Used by BPF to not rewrite headers
+					   in interface output routine */
+#define	AF_MAX		32
 
 /*
  * Structure used by kernel to store most
@@ -159,11 +161,11 @@ struct sockaddr {
  * occurences (including header file) to __ss_len.
  */
 struct sockaddr_storage {
-	u_int8_t    ss_len;		/* total length */
-	sa_family_t ss_family;		/* address family */
-	u_char	    __ss_pad1[6];	/* align to quad */
-	u_int64_t   __ss_pad2;		/* force alignment for stupid compilers */
-	u_char      __ss_pad3[240];	/* pad to a total of 256 bytes */
+	u_int8_t	ss_len;		/* total length */
+	sa_family_t	ss_family;	/* address family */
+	u_char		__ss_pad1[6];	/* align to quad */
+	u_int64_t	__ss_pad2;	/* force alignment for stupid compilers */
+	u_char		__ss_pad3[240];	/* pad to a total of 256 bytes */
 };
 
 /*
@@ -406,6 +408,7 @@ __BEGIN_DECLS
 int	accept __P((int, struct sockaddr *, socklen_t *));
 int	bind __P((int, const struct sockaddr *, socklen_t));
 int	connect __P((int, const struct sockaddr *, socklen_t));
+int	getpeereid __P((int, uid_t *, gid_t *));
 int	getpeername __P((int, struct sockaddr *, socklen_t *));
 int	getsockname __P((int, struct sockaddr *, socklen_t *));
 int	getsockopt __P((int, int, int, void *, socklen_t *));

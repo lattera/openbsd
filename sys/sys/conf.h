@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.2 2001/05/14 22:45:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.3 2001/07/04 11:00:14 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.33 1996/05/03 20:03:32 christos Exp $	*/
 
 /*-
@@ -257,6 +257,12 @@ extern struct cdevsw cdevsw[];
 	dev_init(c,n,write), dev_init(c,n,ioctl), \
 	(dev_type_stop((*))) enodev, 0, seltrue, dev_init(c,n,mmap) }
 
+/* open, close, read, write, ioctl, mmap */
+#define cdev_crypto_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+	0, (dev_type_select((*))) enodev, (dev_type_mmap((*))) enodev }
+
 /* read, write */
 #define cdev_swap_init(c,n) { \
 	(dev_type_open((*))) nullop, (dev_type_close((*))) nullop, \
@@ -353,13 +359,6 @@ extern struct cdevsw cdevsw[];
 	(dev_type_ioctl((*))) enodev, (dev_type_stop((*))) nullop, \
 	0, (dev_type_select((*))) enodev, (dev_type_mmap((*))) enodev }
 
-/* open, close, read, ioctl */
-#define	cdev_gen_ipf(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
-	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) enodev, 0, (dev_type_select((*))) enodev, \
-	(dev_type_mmap((*))) enodev }
-
 /* open, close, read, write, ioctl, select */
 #define cdev_xfs_init(c, n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
@@ -401,8 +400,21 @@ void	randomattach __P((void));
 	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
 	0, (dev_type_select((*))) enodev, (dev_type_mmap((*))) enodev }
 
+/* open, close, ioctl */
+#define cdev_pf_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) enodev, 0, (dev_type_select((*))) enodev, \
+	(dev_type_mmap((*))) enodev }
+
 #define	cdev_usbdev_init(c,n)	cdev_random_init(c,n)
 #define	cdev_ugen_init(c,n)	cdev_random_init(c,n)
+
+#define       cdev_pci_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) enodev, 0, (dev_type_select((*))) enodev, \
+	(dev_type_mmap((*))) enodev }
 
 /* symbolic sleep message strings */
 extern char devopn[], devio[], devwait[], devin[], devout[];

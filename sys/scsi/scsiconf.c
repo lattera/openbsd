@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.2 2001/05/14 22:44:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.3 2001/07/04 11:00:06 niklas Exp $	*/
 /*	$NetBSD: scsiconf.c,v 1.57 1996/05/02 01:09:01 neil Exp $	*/
 
 /*
@@ -134,8 +134,8 @@ scsiprint(aux, pnp)
 
 int
 scsibusmatch(parent, match, aux)
-        struct device *parent;
-        void *match, *aux;
+	struct device *parent;
+	void *match, *aux;
 {
 
 	return 1;
@@ -147,13 +147,12 @@ scsibusmatch(parent, match, aux)
  */
 void
 scsibusattach(parent, self, aux)
-        struct device *parent, *self;
-        void *aux;
+	struct device *parent, *self;
+	void *aux;
 {
 	struct scsibus_softc *sb = (struct scsibus_softc *)self;
 	struct scsi_link *sc_link_proto = aux;
 	int nbytes, i;
-	extern int cold;
 
 	if (!cold)
 		scsi_autoconf = 0;
@@ -619,7 +618,7 @@ struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
  */
 int
 scsibusprint(aux, pnp)
-	void       *aux;
+	void	*aux;
 	const char *pnp;
 {
 	struct scsibus_attach_args *sa = aux;
@@ -635,11 +634,11 @@ scsibusprint(aux, pnp)
 
 	inqbuf = sa->sa_inqbuf;
 
-        target = sa->sa_sc_link->target;
-        lun = sa->sa_sc_link->lun;
+	target = sa->sa_sc_link->target;
+	lun = sa->sa_sc_link->lun;
 
-        type = inqbuf->device & SID_TYPE;
-        removable = inqbuf->dev_qual2 & SID_REMOVABLE ? 1 : 0;
+	type = inqbuf->device & SID_TYPE;
+	removable = inqbuf->dev_qual2 & SID_REMOVABLE ? 1 : 0;
 
 	/*
 	 * Figure out basic device type and qualifier.
@@ -706,14 +705,14 @@ scsibusprint(aux, pnp)
 		}
 	}
 
-        scsi_strvis(vendor, inqbuf->vendor, 8);
-        scsi_strvis(product, inqbuf->product, 16);
-        scsi_strvis(revision, inqbuf->revision, 4);
+	scsi_strvis(vendor, inqbuf->vendor, 8);
+	scsi_strvis(product, inqbuf->product, 16);
+	scsi_strvis(revision, inqbuf->revision, 4);
 
-        printf(" targ %d lun %d: <%s, %s, %s> SCSI%d %d/%s %s%s",
-            target, lun, vendor, product, revision,
-            inqbuf->version & SID_ANSII, type, dtype,
-            removable ? "removable" : "fixed", qtype);
+	printf(" targ %d lun %d: <%s, %s, %s> SCSI%d %d/%s %s%s",
+	    target, lun, vendor, product, revision,
+	    inqbuf->version & SID_ANSII, type, dtype,
+	    removable ? "removable" : "fixed", qtype);
 
 	return (UNCONF);
 }
@@ -740,6 +739,8 @@ scsi_probedev(scsi, target, lun)
 		return;
 
 	sc_link = malloc(sizeof(*sc_link), M_DEVBUF, M_NOWAIT);
+	if (sc_link == NULL)
+		return;
 	*sc_link = *scsi->adapter_link;
 	sc_link->target = target;
 	sc_link->lun = lun;

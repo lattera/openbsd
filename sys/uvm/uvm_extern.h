@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.5.4.2 2001/05/14 22:47:45 niklas Exp $	*/
-/*	$NetBSD: uvm_extern.h,v 1.28 1999/06/15 23:27:47 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.5.4.3 2001/07/04 11:01:01 niklas Exp $	*/
+/*	$NetBSD: uvm_extern.h,v 1.34 1999/07/22 22:58:38 thorpej Exp $	*/
 
 /*
  *
@@ -136,6 +136,12 @@
 #define UVM_PGA_USERESERVE		0x0001
 
 /*
+ * lockflags that control the locking behavior of various functions.
+ */
+#define	UVM_LK_ENTER	0x00000001	/* map locked on entry */
+#define	UVM_LK_EXIT	0x00000002	/* leave map locked on exit */
+
+/*
  * structures
  */
 
@@ -150,6 +156,7 @@ struct vm_anon;
 struct vmspace;
 struct pmap;
 struct vnode;
+struct simplelock;
 
 /*
  * uvmexp: global data structures that are exported to parts of the kernel
@@ -181,10 +188,12 @@ struct uvmexp {
 	/* swap */
 	int nswapdev;	/* number of configured swap devices in system */
 	int swpages;	/* number of PAGE_SIZE'ed swap pages */
+	int swpguniq;	/* number of swap pages in use, not also in RAM */
 	int swpginuse;	/* number of swap pages in use */
 	int swpgonly;	/* number of swap pages in use, not also in RAM */
 	int nswget;	/* number of times fault calls uvm_swap_get() */
 	int nanon;	/* number total of anon's in system */
+	int nanonneeded;/* number of anons currently needed */
 	int nfreeanon;	/* number of free anon's */
 
 	/* stat counters */
@@ -280,6 +289,8 @@ int			uvm_fault __P((vm_map_t, vaddr_t,
 #if defined(KGDB)
 void			uvm_chgkprot __P((caddr_t, size_t, int));
 #endif
+void			uvm_sleep __P((void *, struct simplelock *, boolean_t,
+			    const char *, int));
 void			uvm_fork __P((struct proc *, struct proc *, boolean_t,
 			    void *, size_t));
 void			uvm_exit __P((struct proc *));
@@ -288,7 +299,7 @@ boolean_t		uvm_kernacc __P((caddr_t, size_t, int));
 __dead void		uvm_scheduler __P((void)) __attribute__((__noreturn__));
 void			uvm_swapin __P((struct proc *));
 boolean_t		uvm_useracc __P((caddr_t, size_t, int));
-void			uvm_vslock __P((struct proc *, caddr_t, size_t,
+int			uvm_vslock __P((struct proc *, caddr_t, size_t,
 			    vm_prot_t));
 void			uvm_vsunlock __P((struct proc *, caddr_t, size_t));
 
@@ -324,7 +335,7 @@ void			uvm_km_free_poolpage1 __P((vm_map_t, vaddr_t));
 int			uvm_map __P((vm_map_t, vaddr_t *, vsize_t,
 				struct uvm_object *, vaddr_t, uvm_flag_t));
 int			uvm_map_pageable __P((vm_map_t, vaddr_t, 
-				vaddr_t, boolean_t));
+				vaddr_t, boolean_t, boolean_t));
 int			uvm_map_pageable_all __P((vm_map_t, int, vsize_t));
 boolean_t		uvm_map_checkprot __P((vm_map_t, vaddr_t,
 				vaddr_t, vm_prot_t));
@@ -350,7 +361,7 @@ void			uvm_total __P((struct vmtotal *));
 /* uvm_mmap.c */
 int			uvm_mmap __P((vm_map_t, vaddr_t *, vsize_t,
 				vm_prot_t, vm_prot_t, int, 
-				caddr_t, vaddr_t));
+				caddr_t, vaddr_t, vsize_t));
 
 /* uvm_page.c */
 struct vm_page		*uvm_pagealloc_strat __P((struct uvm_object *,
@@ -358,7 +369,7 @@ struct vm_page		*uvm_pagealloc_strat __P((struct uvm_object *,
 #define	uvm_pagealloc(obj, off, anon, flags) \
 	    uvm_pagealloc_strat((obj), (off), (anon), (flags), \
 				UVM_PGA_STRAT_NORMAL, 0)
-vaddr_t			uvm_pagealloc_contig __P((vaddr_t, vaddr_t, 
+vaddr_t			uvm_pagealloc_contig __P((vaddr_t, vaddr_t,
 				vaddr_t, vaddr_t));
 void			uvm_pagerealloc __P((struct vm_page *, 
 					     struct uvm_object *, vaddr_t));

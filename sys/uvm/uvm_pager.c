@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.4.4.2 2001/05/14 22:47:47 niklas Exp $	*/
-/*	$NetBSD: uvm_pager.c,v 1.22 1999/07/22 22:58:39 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.4.4.3 2001/07/04 11:01:07 niklas Exp $	*/
+/*	$NetBSD: uvm_pager.c,v 1.21 1999/07/08 01:02:44 thorpej Exp $	*/
 
 /*
  *

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.3 2001/05/14 22:47:45 niklas Exp $	*/
-/*	$NetBSD: uvm_glue.c,v 1.23 1999/05/28 20:49:51 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.4 2001/07/04 11:01:03 niklas Exp $	*/
+/*	$NetBSD: uvm_glue.c,v 1.29 1999/07/25 06:30:36 thorpej Exp $	*/
 
 /* 
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -107,6 +107,31 @@ int readbuffers = 0;		/* allow KGDB to read kern buffer pool */
 
 
 /*
+ * uvm_sleep: atomic unlock and sleep for UVM_UNLOCK_AND_WAIT().
+ */
+
+void
+uvm_sleep(event, slock, canintr, msg, timo)
+	void *event;
+	struct simplelock *slock;
+	boolean_t canintr;
+	const char *msg;
+	int timo;
+{
+	int s, pri;
+
+	pri = PVM;
+	if (canintr)
+		pri |= PCATCH;
+
+	s = splhigh();
+	if (slock != NULL)
+		simple_unlock(slock);
+	(void) tsleep(event, pri, (char *)msg, timo);
+	splx(s);
+}
+
+/*
  * uvm_kernacc: can the kernel access a region of memory
  *
  * - called from malloc [DIAGNOSTIC], and /dev/kmem driver (mem.c)
@@ -122,8 +147,8 @@ uvm_kernacc(addr, len, rw)
 	vaddr_t saddr, eaddr;
 	vm_prot_t prot = rw == B_READ ? VM_PROT_READ : VM_PROT_WRITE;
 
-	saddr = trunc_page(addr);
-	eaddr = round_page(addr+len);
+	saddr = trunc_page((vaddr_t)addr);
+	eaddr = round_page((vaddr_t)addr+len);
 	vm_map_lock_read(kernel_map);
 	rv = uvm_map_checkprot(kernel_map, saddr, eaddr, prot);
 	vm_map_unlock_read(kernel_map);
@@ -155,22 +180,18 @@ uvm_useracc(addr, len, rw)
 	size_t len;
 	int rw;
 {
+	vm_map_t map;
 	boolean_t rv;
 	vm_prot_t prot = rw == B_READ ? VM_PROT_READ : VM_PROT_WRITE;
 
-#if (defined(i386) || defined(pc532)) && !defined(PMAP_NEW)
-	/*
-	 * XXX - specially disallow access to user page tables - they are
-	 * in the map.  This is here until i386 & pc532 pmaps are fixed...
-	 */
-	if ((vaddr_t) addr >= VM_MAXUSER_ADDRESS
-	    || (vaddr_t) addr + len > VM_MAXUSER_ADDRESS
-	    || (vaddr_t) addr + len <= (vaddr_t) addr)
-		return (FALSE);
-#endif
+	/* XXX curproc */
+	map = &curproc->p_vmspace->vm_map;
 
-	rv = uvm_map_checkprot(&curproc->p_vmspace->vm_map,
-			trunc_page(addr), round_page(addr+len), prot);
+	vm_map_lock_read(map);
+	rv = uvm_map_checkprot(map, trunc_page((vaddr_t)addr),
+		round_page((vaddr_t)addr+len), prot);
+	vm_map_unlock_read(map);
+
 	return(rv);
 }
 
@@ -198,18 +219,17 @@ uvm_chgkprot(addr, len, rw)
 	vaddr_t sva, eva;
 
 	prot = rw == B_READ ? VM_PROT_READ : VM_PROT_READ|VM_PROT_WRITE;
-	eva = round_page(addr + len);
-	for (sva = trunc_page(addr); sva < eva; sva += PAGE_SIZE) {
+	eva = round_page((vaddr_t)addr + len);
+	for (sva = trunc_page((vaddr_t)addr); sva < eva; sva += PAGE_SIZE) {
 		/*
 		 * Extract physical address for the page.
 		 * We use a cheezy hack to differentiate physical
 		 * page 0 from an invalid mapping, not that it
 		 * really matters...
 		 */
-		pa = pmap_extract(pmap_kernel(), sva|1);
-		if (pa == 0)
+		if (pmap_extract(pmap_kernel(), sva, &pa) == FALSE)
 			panic("chgkprot: invalid page");
-		pmap_enter(pmap_kernel(), sva, pa&~1, prot, TRUE, 0);
+		pmap_enter(pmap_kernel(), sva, pa, prot, TRUE, 0);
 	}
 }
 #endif
@@ -221,16 +241,24 @@ uvm_chgkprot(addr, len, rw)
  * - XXXCDC: consider nuking this (or making it a macro?)
  */
 
-void
+int
 uvm_vslock(p, addr, len, access_type)
 	struct proc *p;
 	caddr_t	addr;
 	size_t	len;
 	vm_prot_t access_type;
 {
+	vm_map_t map;
+	vaddr_t start, end;
+	int rv;
 
-	uvm_fault_wire(&p->p_vmspace->vm_map, trunc_page(addr), 
-	    round_page(addr+len), access_type);
+	map = &p->p_vmspace->vm_map;
+	start = trunc_page((vaddr_t)addr);
+	end = round_page((vaddr_t)addr + len);
+
+	rv = uvm_fault_wire(map, start, end, access_type);
+
+	return (rv);
 }
 
 /*
@@ -246,8 +274,8 @@ uvm_vsunlock(p, addr, len)
 	caddr_t	addr;
 	size_t	len;
 {
-	uvm_fault_unwire(&p->p_vmspace->vm_map, trunc_page(addr), 
-		round_page(addr+len));
+	uvm_fault_unwire(&p->p_vmspace->vm_map, trunc_page((vaddr_t)addr),
+		round_page((vaddr_t)addr+len));
 }
 
 /*
@@ -295,7 +323,7 @@ uvm_fork(p1, p2, shared, stack, stacksize)
 		panic("uvm_fork: uvm_fault_wire failed: %d", rv);
 
 	/*
-	 * p_stats currently point at fields in the user struct.  Copy
+	 * p_stats currently points at a field in the user struct.  Copy
 	 * parts of p_stats, and zero out the rest.
 	 */
 	p2->p_stats = &up->u_stats;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.1 2001/05/14 22:44:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.2 2001/07/04 11:00:05 niklas Exp $	*/
 /*	$NetBSD: scsi_ioctl.c,v 1.23 1996/10/12 23:23:17 christos Exp $	*/
 
 /*
@@ -364,7 +364,7 @@ scsi_do_ioctl(sc_link, dev, cmd, addr, flag, p)
 		if ((flag & FWRITE) == 0)
 			return EBADF;
 		scsi_scsi_cmd(sc_link, 0, 0, 0, 0, GENRETRY, 2000, NULL,
-		      SCSI_RESET);
+		    SCSI_RESET);
 		return 0;
 	}
 	default:
@@ -416,6 +416,10 @@ scsi_do_safeioctl(sc_link, dev, cmd, addr, flag, p)
 	case SCIOCDECONFIG:
 		return EINVAL;
 	default:
-		return ENOTTY;
+		if (sc_link->adapter->ioctl)
+			return (sc_link->adapter->ioctl)(sc_link, cmd, addr, 
+			    flag);
+		else
+			return ENOTTY;
 	}
 }

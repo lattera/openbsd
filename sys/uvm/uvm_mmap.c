@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.2 2001/05/14 22:47:47 niklas Exp $	*/
-/*	$NetBSD: uvm_mmap.c,v 1.23 1999/06/16 17:25:39 minoura Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.3 2001/07/04 11:01:07 niklas Exp $	*/
+/*	$NetBSD: uvm_mmap.c,v 1.35 1999/07/17 21:35:50 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -93,7 +93,7 @@ sys_sbrk(p, v, retval)
 {
 #if 0
 	struct sys_sbrk_args /* {
-		syscallarg(int) incr;
+		syscallarg(intptr_t) incr;
 	} */ *uap = v;
 #endif
 
@@ -198,16 +198,16 @@ sys_mincore(p, v, retval)
 		lim = end < entry->end ? end : entry->end;
 
 		/*
-		 * Special case for mapped devices; these are always
-		 * considered resident.
+		 * Special case for objects with no "real" pages.  Those
+		 * are always considered resident (mapped devices).
 		 */
 		if (UVM_ET_ISOBJ(entry)) {
-			extern struct uvm_pagerops uvm_deviceops; /* XXX */
 #ifdef DIAGNOSTIC
 			if (UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj))
 				panic("mincore: user map has kernel object");
 #endif
-			if (entry->object.uvm_obj->pgops == &uvm_deviceops) {
+			if (entry->object.uvm_obj->pgops->pgo_releasepg
+			    == NULL) {
 				for (/* nothing */; start < lim;
 				     start += PAGE_SIZE, vec++)
 					subyte(vec, 1);
@@ -215,8 +215,8 @@ sys_mincore(p, v, retval)
 			}
 		}
 
-		uobj = entry->object.uvm_obj;	/* top layer */
-		amap = entry->aref.ar_amap;	/* bottom layer */
+		amap = entry->aref.ar_amap;	/* top layer */
+		uobj = entry->object.uvm_obj;	/* bottom layer */
 
 		if (amap != NULL)
 			amap_lock(amap);
@@ -336,6 +336,15 @@ sys_mmap(p, v, retval)
 	pos = SCARG(uap, pos);
 
 	/*
+	 * Fixup the old deprecated MAP_COPY into MAP_PRIVATE, and
+	 * validate the flags.
+	 */
+	if (flags & MAP_COPY)
+		flags = (flags & ~MAP_COPY) | MAP_PRIVATE;
+	if ((flags & (MAP_SHARED|MAP_PRIVATE)) == (MAP_SHARED|MAP_PRIVATE))
+		return (EINVAL);
+
+	/*
 	 * make sure that the newsize fits within a vaddr_t
 	 * XXX: need to revise addressing data types
 	 */
@@ -383,8 +392,8 @@ sys_mmap(p, v, retval)
 		 * not fixed: make sure we skip over the largest possible heap.
 		 * we will refine our guess later (e.g. to account for VAC, etc)
 		 */
-		if (addr < round_page(p->p_vmspace->vm_daddr + MAXDSIZ))
-			addr = round_page(p->p_vmspace->vm_daddr + MAXDSIZ);
+		if (addr < round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ))
+			addr = round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ);
 	}
 
 	/*
@@ -419,7 +428,7 @@ sys_mmap(p, v, retval)
 		 *
 		 * XXX: how does MAP_ANON fit in the picture?
 		 */
-		if ((flags & (MAP_SHARED|MAP_PRIVATE|MAP_COPY)) == 0) {
+		if ((flags & (MAP_SHARED|MAP_PRIVATE)) == 0) {
 #if defined(DEBUG)
 			printf("WARNING: defaulted mmap() share type to "
 			   "%s (pid %d comm %s)\n", vp->v_type == VCHR ?
@@ -489,14 +498,31 @@ sys_mmap(p, v, retval)
 		handle = (caddr_t)vp;
 
 	} else {		/* MAP_ANON case */
-
+		/*
+		 * XXX What do we do about (MAP_SHARED|MAP_PRIVATE) == 0?
+		 */
 		if (fd != -1)
 			return (EINVAL);
 
-is_anon:		/* label for SunOS style /dev/zero */
+ is_anon:		/* label for SunOS style /dev/zero */
 		handle = NULL;
 		maxprot = VM_PROT_ALL;
 		pos = 0;
+	}
+
+	/*
+	 * XXX (in)sanity check.  We don't do proper datasize checking
+	 * XXX for anonymous (or private writable) mmap().  However,
+	 * XXX know that if we're trying to allocate more than the amount
+	 * XXX remaining under our current data size limit, _that_ should
+	 * XXX be disallowed.
+	 */
+	if ((flags & MAP_ANON) != 0 ||
+	    ((flags & MAP_PRIVATE) != 0 && (prot & PROT_WRITE) != 0)) {
+		if (size >
+		    (p->p_rlimit[RLIMIT_DATA].rlim_cur - ctob(p->p_vmspace->vm_dsize))) {
+			return (ENOMEM);
+		}
 	}
 
 	/*
@@ -504,7 +530,7 @@ is_anon:		/* label for SunOS style /dev/zero */
 	 */
 
 	error = uvm_mmap(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
-	    flags, handle, pos);
+	    flags, handle, pos, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur);
 
 	if (error == 0)
 		/* remember to add offset */
@@ -595,7 +621,9 @@ sys_msync(p, v, retval)
 	/*
 	 * translate MS_ flags into PGO_ flags
 	 */
-	uvmflags = (flags & MS_INVALIDATE) ? PGO_FREE : 0;
+	uvmflags = PGO_CLEANIT;
+	if (flags & MS_INVALIDATE)
+		uvmflags |= PGO_FREE;
 	if (flags & MS_SYNC)
 		uvmflags |= PGO_SYNCIO;
 	else
@@ -817,7 +845,7 @@ sys_madvise(p, v, retval)
 	} */ *uap = v;
 	vaddr_t addr;
 	vsize_t size, pageoff;
-	int advice;
+	int advice, rv;;
 	
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
@@ -831,15 +859,75 @@ sys_madvise(p, v, retval)
 	size += pageoff;
 	size = (vsize_t) round_page(size);
 
-	if ((int)size < 0)
+	if ((ssize_t)size <= 0)
 		return (EINVAL);
-	
-	switch (uvm_map_advice(&p->p_vmspace->vm_map, addr, addr+size,
-			 advice)) {
+
+	switch (advice) {
+	case MADV_NORMAL:
+	case MADV_RANDOM:
+	case MADV_SEQUENTIAL:
+		rv = uvm_map_advice(&p->p_vmspace->vm_map, addr, addr + size,
+		    advice);
+		break;
+
+	case MADV_WILLNEED:
+		/*
+		 * Activate all these pages, pre-faulting them in if
+		 * necessary.
+		 */
+		/*
+		 * XXX IMPLEMENT ME.
+		 * Should invent a "weak" mode for uvm_fault()
+		 * which would only do the PGO_LOCKED pgo_get().
+		 */
+		return (0);
+
+	case MADV_DONTNEED:
+		/*
+		 * Deactivate all these pages.  We don't need them
+		 * any more.  We don't, however, toss the data in
+		 * the pages.
+		 */
+		rv = uvm_map_clean(&p->p_vmspace->vm_map, addr, addr + size,
+		    PGO_DEACTIVATE);
+		break;
+
+	case MADV_FREE:
+		/*
+		 * These pages contain no valid data, and may be
+		 * grbage-collected.  Toss all resources, including
+		 * any swap space in use.
+		 */
+		rv = uvm_map_clean(&p->p_vmspace->vm_map, addr, addr + size,
+		    PGO_FREE);
+		break;
+
+	case MADV_SPACEAVAIL:
+		/*
+		 * XXXMRG What is this?  I think it's:
+		 *
+		 *	Ensure that we have allocated backing-store
+		 *	for these pages.
+		 *
+		 * This is going to require changes to the page daemon,
+		 * as it will free swap space allocated to pages in core.
+		 * There's also what to do for device/file/anonymous memory.
+		 */
+		return (EINVAL);
+
+	default:
+		return (EINVAL);
+	}
+
+	switch (rv) {
 	case KERN_SUCCESS:
 		return (0);
-	case KERN_PROTECTION_FAILURE:
-		return (EACCES);
+	case KERN_NO_SPACE:
+		return (EAGAIN);
+	case KERN_INVALID_ADDRESS:
+		return (ENOMEM);
+	case KERN_FAILURE:
+		return (EIO);
 	}
 
 	return (EINVAL);
@@ -893,7 +981,8 @@ sys_mlock(p, v, retval)
 		return (error);
 #endif
 
-	error = uvm_map_pageable(&p->p_vmspace->vm_map, addr, addr+size, FALSE);
+	error = uvm_map_pageable(&p->p_vmspace->vm_map, addr, addr+size, FALSE,
+	    0);
 	return (error == KERN_SUCCESS ? 0 : ENOMEM);
 }
 
@@ -939,7 +1028,8 @@ sys_munlock(p, v, retval)
 		return (error);
 #endif
 
-	error = uvm_map_pageable(&p->p_vmspace->vm_map, addr, addr+size, TRUE);
+	error = uvm_map_pageable(&p->p_vmspace->vm_map, addr, addr+size, TRUE,
+	    0);
 	return (error == KERN_SUCCESS ? 0 : ENOMEM);
 }
 
@@ -956,7 +1046,6 @@ sys_mlockall(p, v, retval)
 	struct sys_mlockall_args /* {
 		syscallarg(int) flags;
 	} */ *uap = v;
-	vsize_t limit;
 	int error, flags;
 
 	flags = SCARG(uap, flags);
@@ -965,16 +1054,13 @@ sys_mlockall(p, v, retval)
 	    (flags & ~(MCL_CURRENT|MCL_FUTURE)) != 0)
 		return (EINVAL);
 
-#ifdef pmap_wired_count
-	/* Actually checked in uvm_map_pageable_all() */
-	limit = p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur;
-#else
-	limit = 0;
+#ifndef pmap_wired_count
 	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
 		return (error);
 #endif
 
-	error = uvm_map_pageable_all(&p->p_vmspace->vm_map, flags, limit);
+	error = uvm_map_pageable_all(&p->p_vmspace->vm_map, flags,
+	    p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur);
 	switch (error) {
 	case KERN_SUCCESS:
 		error = 0;
@@ -1020,7 +1106,7 @@ sys_munlockall(p, v, retval)
  */
 
 int
-uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
+uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 	vm_map_t map;
 	vaddr_t *addr;
 	vsize_t size;
@@ -1028,6 +1114,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
 	int flags;
 	caddr_t handle;		/* XXX: VNODE? */
 	vaddr_t foff;
+	vsize_t locklimit;
 {
 	struct uvm_object *uobj;
 	struct vnode *vp;
@@ -1141,8 +1228,51 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
 
 	retval = uvm_map(map, addr, size, uobj, foff, uvmflag);
 
-	if (retval == KERN_SUCCESS)
-		return(0);
+	if (retval == KERN_SUCCESS) {
+		/*
+		 * POSIX 1003.1b -- if our address space was configured
+		 * to lock all future mappings, wire the one we just made.
+		 */
+		if (prot == VM_PROT_NONE) {
+			/*
+			 * No more work to do in this case.
+			 */
+			return (0);
+		}
+		
+		vm_map_lock(map);
+
+		if (map->flags & VM_MAP_WIREFUTURE) {
+			/*
+			 * uvm_map_pageable() always returns the map
+			 * unlocked.
+			 */
+			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
+#ifdef pmap_wired_count
+			    || (locklimit != 0 && (size +
+			         ptoa(pmap_wired_count(vm_map_pmap(map)))) >
+			        locklimit)
+#endif
+			) {
+				retval = KERN_RESOURCE_SHORTAGE;
+				/* unmap the region! */
+				(void) uvm_unmap(map, *addr, *addr + size);
+				goto bad;
+			}
+			retval = uvm_map_pageable(map, *addr, *addr + size,
+			    FALSE, UVM_LK_ENTER);
+			if (retval != KERN_SUCCESS) {
+				/* unmap the region! */
+				(void) uvm_unmap(map, *addr, *addr + size);
+				goto bad;
+			}
+			return (0);
+		}
+
+		vm_map_unlock(map);
+
+		return (0);
+	}
 
 	/*
 	 * errors: first detach from the uobj, if any.
@@ -1151,10 +1281,13 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
 	if (uobj)
 		uobj->pgops->pgo_detach(uobj);
 
+ bad:
 	switch (retval) {
 	case KERN_INVALID_ADDRESS:
 	case KERN_NO_SPACE:
 		return(ENOMEM);
+	case KERN_RESOURCE_SHORTAGE:
+		return (EAGAIN);
 	case KERN_PROTECTION_FAILURE:
 		return(EACCES);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/systm.h,v 1.37.2.1 2000/02/20 11:57:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/systm.h,v 1.37.2.2 2001/07/04 11:00:35 niklas Exp $	*/
 /*	$NetBSD: systm.h,v 1.50 1996/06/09 04:55:09 briggs Exp $	*/
 
 /*-
@@ -77,14 +77,11 @@ extern int securelevel;		/* system security level */
 extern const char *panicstr;	/* panic message */
 extern char version[];		/* system version */
 extern char copyright[];	/* system copyright */
+extern int cold;		/* cold start flag initialized in locore */
 
 extern int ncpus;		/* number of CPUs */
 extern int nblkdev;		/* number of entries in bdevsw */
 extern int nchrdev;		/* number of entries in cdevsw */
-#if !defined(UVM)
-extern int nswdev;		/* number of swap devices */
-extern int nswap;		/* size of swap space */
-#endif
 
 extern int selwait;		/* select timeout address */
 
@@ -178,9 +175,7 @@ void	ttyprintf __P((struct tty *, const char *, ...))
 
 void	tablefull __P((const char *));
 
-#if defined(UVM)
 int	kcopy __P((const void *, void *, size_t));
-#endif
 
 void	bcopy __P((const void *, void *, size_t));
 void	ovbcopy __P((const void *, void *, size_t));
@@ -262,6 +257,7 @@ void	longjmp	__P((label_t *));
 void	consinit __P((void));
 
 void	cpu_startup __P((void));
+void	cpu_configure __P((void));
 void	cpu_set_kpc __P((struct proc *, void (*)(void *), void *));
 extern void (*md_diskconf) __P((void));
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.4.4.2 2001/05/14 22:47:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.4.4.3 2001/07/04 11:01:10 niklas Exp $	*/
 /*	$NetBSD: uvm_unix.c,v 1.8 1999/03/25 18:48:56 mrg Exp $	*/
 
 /*
@@ -83,7 +83,7 @@ sys_obreak(p, v, retval)
 	long diff;
 
 	old = (vaddr_t)vm->vm_daddr;
-	new = round_page(SCARG(uap, nsize));
+	new = round_page((vaddr_t)SCARG(uap, nsize));
 	if ((new - old) > p->p_rlimit[RLIMIT_DATA].rlim_cur)
 		return(ENOMEM);
 
@@ -155,9 +155,9 @@ uvm_grow(p, sp)
 	 * Really need to check vs limit and increment stack size if ok.
 	 */
 #ifdef MACHINE_STACK_GROWS_UP
-	si = clrnd(btoc(sp - USRSTACK) - vm->vm_ssize);
+	si = btoc(sp - USRSTACK) - vm->vm_ssize;
 #else
-	si = clrnd(btoc(USRSTACK-sp) - vm->vm_ssize);
+	si = btoc(USRSTACK-sp) - vm->vm_ssize;
 #endif
 	if (vm->vm_ssize + si > btoc(p->p_rlimit[RLIMIT_STACK].rlim_cur))
 		return (0);

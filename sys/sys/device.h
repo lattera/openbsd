@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.1 2001/05/14 22:45:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.2 2001/07/04 11:00:15 niklas Exp $	*/
 /*	$NetBSD: device.h,v 1.15 1996/04/09 20:55:24 cgd Exp $	*/
 
 /*
@@ -81,7 +81,7 @@ struct device {
 	char	dv_xname[16];		/* external name (name + unit) */
 	struct	device *dv_parent;	/* pointer to parent device */
 	int	dv_flags;		/* misc. flags; see below */
-	int     dv_ref;                 /* ref count */
+	int	dv_ref;			/* ref count */
 };
 
 /* dv_flags */
