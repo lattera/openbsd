@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.7 1996/05/22 11:48:45 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.8 1997/02/11 22:23:14 kstailey Exp $	*/
 /*	$NetBSD: if_ether.c,v 1.31 1996/05/11 12:59:58 mycroft Exp $	*/
 
 /*

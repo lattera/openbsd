@@ -8,7 +8,7 @@
 
 /*
  * written to comply with the RFC (1761) from Sun.
- * $Id: snoop.h,v 1.1.1.1 1996/06/23 07:27:17 darrenr Exp $
+ * $Id: snoop.h,v 2.0.1.1 1997/01/09 15:14:45 darrenr Exp $
  */
 struct	snoophdr	{
 	char	s_id[8];

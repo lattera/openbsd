@@ -25,14 +25,12 @@
 #include <netinet/tcp.h>
 #include <netinet/tcpip.h>
 #include <net/if.h>
-#include "ip_fil_compat.h"
-#include "ip_fil.h"
 #include "ipf.h"
 #include "ipt.h"
 #include "pcap.h"
 
-#ifndef	lint
-static	char	rcsid[] = "$Id: ipft_pc.c,v 1.4 1996/07/18 04:59:23 dm Exp $";
+#if !defined(lint) && defined(LIBC_SCCS)
+static	char	rcsid[] = "$Id: ipft_pc.c,v 2.0.1.1 1997/01/09 15:14:44 darrenr Exp $";
 #endif
 
 struct	llc	{

@@ -38,8 +38,9 @@
 #include "ipf.h"
 #include "ipt.h"
 
-#ifndef	lint
+#if !defined(lint) && defined(LIBC_SCCS)
 static	char	sccsid[] = "@(#)misc.c	1.3 2/4/96 (C) 1995 Darren Reed";
+static	char	rcsid[] = "$Id: misc.c,v 2.0.1.1 1997/01/09 15:14:44 darrenr Exp $";
 #endif
 
 void	debug(), verbose();

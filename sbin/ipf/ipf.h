@@ -6,9 +6,12 @@
  * to the original author and the contributors.
  *
  * @(#)ipf.h	1.12 6/5/96
- * $Id: ipf.h,v 1.2 1996/07/04 13:18:51 darrenr Exp $
+ * $Id: ipf.h,v 2.0.1.1 1997/01/09 15:14:43 darrenr Exp $
  */
 
+#ifndef	SOLARIS
+#define	SOLARIS	(defined(sun) && (defined(__svr4__) || defined(__SVR4)))
+#endif
 #define	OPT_REMOVE	0x00001
 #define	OPT_DEBUG	0x00002
 #define	OPT_OUTQUE	FR_OUTQUE	/* 0x0004 */
@@ -47,11 +50,18 @@ struct	ipopt_names	{
 
 extern	u_long	hostnum(), optname();
 extern	void	printpacket();
+#if SOLARIS
+extern	int	inet_aton();
+#endif
 
 #ifdef	sun
 #define	STRERROR(x)	sys_errlist[x]
 extern	char	*sys_errlist[];
 #else
 #define	STRERROR(x)	strerror(x)
+#endif
+
+#ifndef	MIN
+#define	MIN(a,b)	((a) > (b) ? (b) : (a))
 #endif
 
