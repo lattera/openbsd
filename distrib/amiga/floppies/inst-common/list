@@ -1,4 +1,4 @@
-#	$Id: list,v 1.5 1995/11/28 23:57:05 jtc Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/inst-common/Attic/list,v 1.4 1996/04/25 02:35:59 mickey Exp $
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin	instbin

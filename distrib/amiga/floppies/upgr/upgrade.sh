@@ -28,9 +28,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#	$Id: upgrade.sh,v 1.2 1995/10/09 02:41:35 chopps Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/upgr/Attic/upgrade.sh,v 1.2 1996/04/25 02:36:13 mickey Exp $
 
-#	NetBSD upgrade script.
+#	OpenBSD upgrade script.
 #	In a perfect world, this would be a nice C program, with a reasonable
 #	user interface.
 

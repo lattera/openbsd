@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.2 1995/09/30 04:22:40 chopps Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/Attic/Makefile.inc,v 1.2 1996/04/25 02:35:46 mickey Exp $
 
-# Revision is 1.1
-REV=	11
+# Revision is 1.2
+REV=	12

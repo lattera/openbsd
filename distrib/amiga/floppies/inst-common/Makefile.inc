@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.7 1995/11/28 23:57:03 jtc Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/inst-common/Attic/Makefile.inc,v 1.4 1996/04/25 02:35:54 mickey Exp $
 
 # TOP is assumed to be defined by Makefile including this one.
 
