@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: readconf.c,v 1.30 2000/05/06 17:45:36 markus Exp $");
+RCSID("$Id: readconf.c,v 1.35 2000/05/31 09:20:38 markus Exp $");
 
 #include "ssh.h"
 #include "cipher.h"
@@ -92,7 +92,7 @@ typedef enum {
 	oBadOption,
 	oForwardAgent, oForwardX11, oGatewayPorts, oRhostsAuthentication,
 	oPasswordAuthentication, oRSAAuthentication, oFallBackToRsh, oUseRsh,
-	oSkeyAuthentication,
+	oSkeyAuthentication, oXAuthLocation,
 #ifdef KRB4
 	oKerberosAuthentication,
 #endif /* KRB4 */
@@ -116,6 +116,7 @@ static struct {
 } keywords[] = {
 	{ "forwardagent", oForwardAgent },
 	{ "forwardx11", oForwardX11 },
+	{ "xauthlocation", oXAuthLocation },
 	{ "gatewayports", oGatewayPorts },
 	{ "useprivilegedport", oUsePrivilegedPort },
 	{ "rhostsauthentication", oRhostsAuthentication },
@@ -396,6 +397,10 @@ parse_flag:
 		}
 		break;
 
+	case oXAuthLocation:
+		charptr=&options->xauth_location;
+		goto parse_string;
+
 	case oUser:
 		charptr = &options->user;
 parse_string:
@@ -464,6 +469,8 @@ parse_int:
 	case oCipher:
 		intptr = &options->cipher;
 		cp = strtok(NULL, WHITESPACE);
+		if (!cp)
+			fatal("%.200s line %d: Missing argument.", filename, linenum);
 		value = cipher_number(cp);
 		if (value == -1)
 			fatal("%.200s line %d: Bad cipher '%s'.",
@@ -474,6 +481,8 @@ parse_int:
 
 	case oCiphers:
 		cp = strtok(NULL, WHITESPACE);
+		if (!cp)
+			fatal("%.200s line %d: Missing argument.", filename, linenum);
 		if (!ciphers_valid(cp))
 			fatal("%.200s line %d: Bad SSH2 cipher spec '%s'.",
 			      filename, linenum, cp ? cp : "<NONE>");
@@ -484,6 +493,8 @@ parse_int:
 	case oProtocol:
 		intptr = &options->protocol;
 		cp = strtok(NULL, WHITESPACE);
+		if (!cp)
+			fatal("%.200s line %d: Missing argument.", filename, linenum);
 		value = proto_spec(cp);
 		if (value == SSH_PROTO_UNKNOWN)
 			fatal("%.200s line %d: Bad protocol spec '%s'.",
@@ -638,6 +649,7 @@ initialize_options(Options * options)
 	memset(options, 'X', sizeof(*options));
 	options->forward_agent = -1;
 	options->forward_x11 = -1;
+	options->xauth_location = NULL;
 	options->gateway_ports = -1;
 	options->use_privileged_port = -1;
 	options->rhosts_authentication = -1;
@@ -691,9 +703,13 @@ void
 fill_default_options(Options * options)
 {
 	if (options->forward_agent == -1)
-		options->forward_agent = 1;
+		options->forward_agent = 0;
 	if (options->forward_x11 == -1)
 		options->forward_x11 = 0;
+#ifdef XAUTH_PATH
+	if (options->xauth_location == NULL)
+		options->xauth_location = XAUTH_PATH;
+#endif /* XAUTH_PATH */
 	if (options->gateway_ports == -1)
 		options->gateway_ports = 0;
 	if (options->use_privileged_port == -1)

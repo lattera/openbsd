@@ -11,7 +11,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: ssh.c,v 1.50 2000/04/28 08:10:20 markus Exp $");
+RCSID("$Id: ssh.c,v 1.55 2000/05/31 06:36:40 markus Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/dsa.h>
@@ -108,10 +108,12 @@ usage()
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "  -l user     Log in using this user name.\n");
 	fprintf(stderr, "  -n          Redirect input from /dev/null.\n");
+	fprintf(stderr, "  -A          Enable authentication agent forwarding.\n");
 	fprintf(stderr, "  -a          Disable authentication agent forwarding.\n");
 #ifdef AFS
 	fprintf(stderr, "  -k          Disable Kerberos ticket and AFS token forwarding.\n");
 #endif				/* AFS */
+        fprintf(stderr, "  -X          Enable X11 connection forwarding.\n");
 	fprintf(stderr, "  -x          Disable X11 connection forwarding.\n");
 	fprintf(stderr, "  -i file     Identity for RSA authentication (default: ~/.ssh/identity).\n");
 	fprintf(stderr, "  -t          Tty; allocate a tty even if command is given.\n");
@@ -306,6 +308,9 @@ main(int ac, char **av)
 		case 'a':
 			options.forward_agent = 0;
 			break;
+		case 'A':
+			options.forward_agent = 1;
+			break;
 #ifdef AFS
 		case 'k':
 			options.kerberos_tgt_passing = 0;
@@ -422,7 +427,7 @@ main(int ac, char **av)
 	if (!host)
 		usage();
 
-        OpenSSL_add_all_algorithms();
+	SSLeay_add_all_algorithms();
 
 	/* Initialize the command to execute on remote host. */
 	buffer_init(&command);
@@ -664,17 +669,17 @@ x11_get_proto(char *proto, int proto_len, char *data, int data_len)
 	FILE *f;
 	int got_data = 0, i;
 
-#ifdef XAUTH_PATH
-	/* Try to get Xauthority information for the display. */
-	snprintf(line, sizeof line, "%.100s list %.200s 2>/dev/null",
-		 XAUTH_PATH, getenv("DISPLAY"));
-	f = popen(line, "r");
-	if (f && fgets(line, sizeof(line), f) &&
-	    sscanf(line, "%*s %s %s", proto, data) == 2)
-		got_data = 1;
-	if (f)
-		pclose(f);
-#endif /* XAUTH_PATH */
+	if (options.xauth_location) {
+		/* Try to get Xauthority information for the display. */
+		snprintf(line, sizeof line, "%.100s list %.200s 2>/dev/null",
+		    options.xauth_location, getenv("DISPLAY"));
+		f = popen(line, "r");
+		if (f && fgets(line, sizeof(line), f) &&
+		    sscanf(line, "%*s %s %s", proto, data) == 2)
+			got_data = 1;
+		if (f)
+			pclose(f);
+	}
 	/*
 	 * If we didn't get authentication data, just make up some
 	 * data.  The forwarding code will check the validity of the
