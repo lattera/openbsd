@@ -1,5 +1,4 @@
-
-/*	$OpenBSD: src/usr.sbin/ipsend/iptest/Attic/iptest.c,v 1.5 2001/01/17 06:01:27 fgsch Exp $	*/
+/*	$OpenBSD: src/usr.sbin/ipsend/iptest/Attic/iptest.c,v 1.6 2001/01/17 06:11:15 fgsch Exp $	*/
 
 /*
  * ipsend.c (C) 1995-1998 Darren Reed
