@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: ctm_dequeue.c,v 1.1.1.1 1996/10/30 17:32:58 graichen Exp $
+ *	$Id: ctm_dequeue.c,v 1.2 1997/06/24 02:52:42 dgregor Exp $
  */
 
 /* 
@@ -126,7 +126,7 @@ main(int argc, char **argv)
 #undef IGNORE
 #undef HASNEXT
 
-	if (snprintf(filename, len, "%s/%s", queue_dir, ftsent->fts_name) > len)
+	if (snprintf(filename, len, "%s/%s", queue_dir, ftsent->fts_name) >= len)
 	    err("snprintf(filename) longer than buffer");
 
 	fp = open(filename, O_RDONLY, 0);
