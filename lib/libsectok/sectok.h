@@ -1,7 +1,7 @@
 /*
  * See copyright notice at end of file
  *
- * $Id: sectok.h,v 1.1 2001/05/22 15:35:58 rees Exp $
+ * $Id: sectok.h,v 1.1 2001/06/06 21:51:09 rees Exp $
  */
 
 /* SCPERF - performance evaluation */
