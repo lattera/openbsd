@@ -1,0 +1,908 @@
+.\" $OpenBSD: src/sbin/isakmpd/isakmpd.conf.5,v 1.42 2000/10/16 23:28:22 niklas Exp $
+.\" $EOM: isakmpd.conf.5,v 1.52 2000/10/15 20:01:28 niklas Exp $
+.\"
+.\" Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
+.\" Copyright (c) 2000 Håkan Olsson.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by Ericsson Radio Systems.
+.\" 4. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" This code was written under funding by Ericsson Radio Systems.
+.\"
+.\" Manual page, using -mandoc macros
+.\"
+.Dd October 10, 1998
+.Dt ISAKMPD.CONF 5
+.Os
+.Sh NAME
+.Nm isakmpd.conf
+.Nd configuration file for isakmpd
+.Sh DESCRIPTION
+.Nm
+is the configuration file for the
+.Nm isakmpd
+daemon managing security association and key management for the
+IPSEC layer of the kernel's networking stack.
+.Pp
+The file is of a well known type of format called .INI style, named after
+the suffix used by an overrated windowing environment for its configuration
+files.
+This format consists of sections, each beginning with a line looking like:
+.Bd -literal
+[Section name]
+.Ed
+Between the brackets is the name of the section following this section header.
+Inside a section many tag/value pairs can be stored, each one looking like:
+.Bd -literal
+Tag=Value
+.Ed
+If the value needs more space than fits on a single line it's possible to
+continue it on the next by ending the first with a backslash character
+immediately before the newline character.
+This method can extend a value for an arbitrary amount of lines.
+.Pp
+Comments can be put anywhere in the file by using a hash mark
+.Pq Sq \&# .
+Then the comment goes on to the end of the line.
+.Pp
+Often the right-hand side values consist of other section names.
+This results in a tree structure.
+Some values are treated as a list of several scalar values, such lists always
+use comma as the separator.
+Some values are formatted like this: X,Y:Z, which
+is an offer/accept syntax, where X is a value we offer and Y:Z is a range of
+accepted values, inclusive.
+.Pp
+.Ss Auto-generated parts of the configuration
+.Pp
+Some predefined section names are recognized by the daemon, voiding the need
+to fully specify the Main Mode transforms and Quick Mode suites, protocols 
+and transforms.
+.Pp
+For Main Mode:
+.Bd -filled -offset indent -compact
+.Ar {DES,BLF,3DES,CAST}-{MD5,SHA}[-{DSS,RSA_SIG}]
+.Ed
+.Pp
+For Quick Mode:
+.Bd -filled -offset indent -compact
+.Ar QM-{ESP,AH}[-TRP]-{DES,3DES,CAST,BLF,AES}[-{MD5,SHA,RIPEMD}][-PFS]-SUITE
+.Ed
+.Pp
+Example 1: 3DES-SHA means; 3DES encryption, SHA hash, and authorization by 
+pre-shared keys.
+Example 2: QM-ESP-3DES-SHA-PFS-SUITE means; ESP protocol, 3DES encryption, 
+SHA hash, and use Perfect Forward Security.
+.Pp
+There are two predefined lifetimes used. The Main Mode lifetime,
+named LIFE_MAIN_MODE, currently 
+defaults to one hour (minimum 60 seconds, maximum 1 day). The Quick Mode 
+lifetime,
+LIFE_QUICK_MODE,
+defaults to 20 minutes (minimum 60 seconds, maximum 1 day).
+.Pp
+In addition, the predefinitions include some default values for the special
+sections "General", and "X509-certificates".  These values are presented in
+the example below.
+.Pp
+Note that using the predefined section names imply some minor limitations.
+There are currently no predefined ESP+AH Quick Mode suites, and the 
+Diffie-Hellman group description for Main Mode (and Quick Mode with PFS) is
+set to DH group 1 (MODP_768) when using MD5 hash, and DH group 2 (MODP_1024) 
+when using SHA hash.
+.Pp
+All autogenerated values can be overridden by manual entries by using the 
+same section and tag names in the configuration file.
+.Pp
+In particular, the default phase 1 (Main or Aggressive Mode) and phase 2 
+(Quick Mode) lifetimes can be overridden by these tags under the "General" 
+section;
+.Pp
+.Bd -literal
+[General]
+Default-phase-1-lifetime=	3600,60:86400
+Default-phase-2-lifetime=	1200,60:86400
+.Ed
+.\"XXX Following empty .Ss works around a nroff bug, we want the new line."
+.Ss
+.Pp
+.Ss Roots
+.Bl -hang -width 12n
+.It Em General
+Generic global configuration parameters
+.Bl -tag -width 12n
+.It Em Policy-File
+The name of the file that contains
+.Xr KeyNote 4
+policies.
+The default is "/etc/isakmpd/isakmpd.policy".
+.It Em Retransmits
+How many times should a message be retransmitted before giving up.
+.It Em Check-interval
+The interval between watchdog checks of connections we want up at all times.
+.It Em Exchange-max-time
+How many seconds should an exchange maximally take to setup
+before we give up.
+.It Em Listen-on
+A list of IP-addresses OK to listen on.
+This list is used as
+a filter for the set of addresses the interfaces configured
+provides.
+This means that we won't see if an address given
+here does not exist on this host, and thus no error is given for
+that case.
+.It Em Shared-SADB
+If this tag is defined, whatever the value is, some semantics of
+.Nm
+are changed so that multiple instances can run on top of one SADB
+and setup SAs with eachother.
+Specifically this means replay
+protection will not be asked for, and errors that can occur when
+updating an SA with its parameters a 2nd time will be ignored.
+.El
+.It Em Phase 1
+ISAKMP SA negotiation parameter root
+.Bl -tag -width 12n
+.It Em <IP-address>
+A name of the ISAKMP peer at the given IP-address.
+.It Em Default
+A name of the default ISAKMP peer.  Incoming
+Phase 1 connections from other IP-addresses will use this peer name.
+.It ""
+This name is used as the section name for further information to be found.
+Look at <ISAKMP-peer> below.
+.El
+.It Em Phase 2
+IPsec SA negotiation parameter root
+.Bl -tag -width 12n
+.It Em Connections
+A list of directed IPSec "connection" names that should be brought up
+automatically, either on first use if the system supports it, or at
+startup of the daemon.
+These names are section names where further information can be found.
+Look at <IPSec-connection> below.
+Normally any connection mentioned here are treated as part of the
+"Passive-connection" list we present below, however there is a
+flag: "Active-only" that disables this behaviour.
+This too is mentioned in the <IPSec-connection> section, in the "Flags" tag.
+.It Em Passive-connections
+A list of IPSec "connection" names we recognize and accept initiations for.
+These names are section names where further information can be found.
+Look at <IPSec-connection> below.
+Currently only the Local-ID and Remote-ID tags
+are looked at in those sections, as they are matched against the IDs given
+by the initiator.
+.El
+.It Em KeyNote
+.Bl -tag -width 12n
+.It Em Credential-directory
+A directory containing directories named after IDs (IP
+addresses, ``user@domain'', or hostnames) that contain files named
+``credentials'' and ``private_key''.
+.Pp
+The credentials file contains
+.Xr keynote 4
+credentials that are sent to a remote IKE daemon when we use the
+associated ID, or credentials that we may want to consider when doing
+an exchange with a remote IKE daemon that uses that ID. Note that, in
+the former case, the last credential in the file MUST contain our
+public key in its Licensees field. More than one credentials may exist
+in the file. They are separated by whitelines (the format is
+essentially the same as that of the policy file). The credentials are
+of the same format as the policies described in
+.Xr isakmpd.policy 5 .
+The only difference is that the Authorizer field contains a public
+key, and the assertion is signed. Signed assertions can be generated
+using the
+.Xr keynote 1
+utility.
+.Pp
+The private_key file contains the private RSA key we use for
+authentication. If the directory (and the files) exist, they take
+precedence over X509-based authentication.
+.El
+.It Em X509-Certificates
+.Bl -tag -width 12n
+.It Em Ca-directory
+A directory containing PEM certificates of certification authorities
+that we trust to sign other certificates.  Note that for a CA to be
+really trusted, it needs to be somehow referred to by policy, in
+.Xr isakmpd.policy 5 .
+The certificates in this directory are used for the actual X.509
+authentication and for cross-referencing policies that refer to
+Distinguished Names (DNs). Keeping a separate directory (as opposed
+to integrating policies and X.509 CA certificates) allows for maintenance
+of a list of "well known" CAs without actually having to trust all (or any)
+of them.
+.It Em Cert-directory
+A directory containing PEM certificates that we trust to be valid.
+These certificates are used in preference to those passed in messages and
+are required to have a SubjectAltName extension.
+.It Em Accept-self-signed
+If this tag is defined, whatever the value is, certificates that
+do not originate from a trusted CA but are self-signed will be
+accepted.
+.It Em Private-key
+The private key matching the public key of our certificate (which should be
+in the "Cert-directory", and have a subjectAltName matching our ID, so far
+that is our IP-address).
+.El
+.El
+.Ss Referred-to sections
+.Bl -hang -width 12n
+.It Em <ISAKMP-peer>
+Parameters for negotiation with an ISAKMP peer
+.Bl -tag -width 12n
+.It Em Phase
+The constant
+.Li 1 ,
+as ISAKMP-peers and IPSec-connections
+really are handled by the same code inside isakmpd.
+.It Em Transport
+The name of the transport protocol, defaults to
+.Li UDP .
+.It Em Port
+In case of 
+.Li UDP , 
+the 
+.Li UDP 
+port number to send to.
+This is optional, the
+default value is 500 which is the IANA-registered number for ISAKMP.
+.It Em Local-address
+The Local IP-address to use, if we are multi-homed, or have aliases.
+.It Em Address
+If existent, the IP-address of the peer.
+.It Em Configuration
+The name of the ISAKMP-configuration section to use.
+Look at <ISAKMP-configuration> below.
+.It Em Authentication
+If existent, authentication data for this specific peer.
+In the case of preshared key, this is the key value itself.
+.It Em ID
+If existent, the name of the section that describes the
+local client ID that we should present to our peer.
+If not present, it
+defaults to the address of the local interface we are sending packets
+over to the remote daemon.
+Look at <Phase1-ID> below.
+.It Em Remote-ID
+If existent, the name of the section that describes the remote client
+ID we expect the remote daemon to send us.
+If not present, it defaults to the address of the remote daemon.
+Look at <Phase1-ID> below.
+.It Em Flags
+A comma-separated list of flags controlling the further
+handling of the ISAKMP SA.
+Currently there are no specific ISAKMP SA flags defined.
+.El
+.It Em <Phase1-ID>
+.Bl -tag -width 12n
+.It Em ID-type
+The ID type as given by the RFCs.
+For Phase 1 this is currently
+.Li IPV4_ADDR ,
+.Li IPV4_ADDR_SUBNET ,
+.Li FQDN ,
+or
+.Li USER_FQDN .
+.It Em Address
+If the ID-type is
+.Li IPV4_ADDR ,
+this tag should exist and be an IP-address.
+.It Em Network
+If the ID-type is
+.Li IPV4_ADDR_SUBNET
+this tag should exist and
+be a network address.
+.It Em Netmask
+If the ID-type is
+.Li IPV4_ADDR_SUBNET
+this tag should exist and
+be a network subnet mask.
+.It Em Name
+If the ID-type is
+.Li FQDN
+or
+.Li USER_FQDN ,
+this tag should exist and contain a domain name or a user@domain
+string respectively.
+.El
+.It Em <ISAKMP-configuration>
+.Bl -tag -width 12n
+.It Em DOI
+The domain of interpretation as given by the RFCs.
+Normally
+.Li IPSEC .
+If unspecified, defaults to 
+.Li IPSEC .
+.It Em EXCHANGE_TYPE
+The exchange type as given by the RFCs.
+For main mode this is
+.Li ID_PROT
+and for aggressive mode it is
+.Li AGGRESSIVE .
+.It Em Transforms
+A list of proposed transforms to use for protecting the
+ISAKMP traffic.
+These are actually names for sections
+further describing the transforms.
+Look at <ISAKMP-transform> below.
+.El
+.It Em <ISAKMP-transform>
+.Bl -tag -width 12n
+.It Em ENCRYPTION_ALGORITHM
+The encryption algorithm as the RFCs name it, or ANY to denote that any
+encryption algorithm proposed will be accepted.
+.It Em KEY_LENGTH
+For encryption algorithms with variable key length, this is
+where the offered/accepted keylengths are described.
+The value is of the offer-accept kind described above.
+.It Em HASH_ALGORITHM
+The hash algorithm as the RFCs name it, or ANY.
+.It Em AUTHENTICATION_METHOD
+The authentication method as the RFCs name it, or ANY.
+.It Em GROUP_DESCRIPTION
+The group used for Diffie-Hellman exponentiations, or ANY.
+The name are symbolic, like
+.Li MODP_768 , MODP_1024 , EC_155
+and
+.Li EC_185 .
+.It Em PRF
+The algorithm to use for the keyed pseudo-random function (used for key
+derivation and authentication in Phase 1), or ANY.
+.It Em Life
+A list of lifetime descriptions, or ANY.
+In the former case, each
+element is in itself a name of the section that defines the lifetime.
+Look at <Lifetime> below.
+If it is set to ANY, then any type of
+proposed lifetime type and value will be accepted.
+.El
+.It Em <Lifetime>
+.Bl -tag -width 12n
+.It Em LIFE_TYPE
+.Li SECONDS
+or
+.Li BYTES
+depending on the type of the duration.
+Notice that this field may NOT be set to ANY.
+.It Em LIFE_DURATION
+An offer/accept kind of value, see above.
+Can also be set to ANY.
+.El
+.It Em <IPSec-connection>
+.Bl -tag -width 12n
+.It Em Phase
+The constant
+.Li 2 ,
+as ISAKMP-peers and IPSec-connections
+really are handled by the same code inside isakmpd.
+.It Em ISAKMP-peer
+The name of the ISAKMP-peer which to talk to in order to
+set up this connection.
+The value is the name of an <ISAKMP-peer> section.
+See above.
+.It Em Configuration
+The name of the IPSec-configuration section to use.
+Look at <IPSec-configuration> below.
+.It Em Local-ID
+If existent, the name of the section that describes the
+optional local client ID that we should present to our peer.
+It is also used when we act as responders to find out what
+<IPSec-connection> we are dealing with.
+Look at <IPSec-ID> below.
+.It Em Remote-ID
+If existent, the name of the section that describes the
+optional remote client ID that we should present to our peer.
+It is also used when we act as responders to find out what
+<IPSec-connection> we are dealing with.
+Look at <IPSec-ID> below.
+.It Em Flags
+A comma-separated list of flags controlling the further
+handling of the IPSec SA.
+Currently only one flag is defined:
+.Bl -tag -width 12n
+.It Em Active-only
+If this flag is given and this <IPSec-connection> is part of the phase 2
+connections we automatically keep up, it will not automatically be used for
+accepting connections from the peer.
+.El
+.El
+.It Em <IPSec-configuration>
+.Bl -tag -width 12n
+.It Em DOI
+The domain of interpretation as given by the RFCs.
+Normally
+.Li IPSEC . 
+If unspecified, defaults to
+.Li IPSEC . 
+.It Em EXCHANGE_TYPE
+The exchange type as given by the RFCs.
+For quick mode this is
+.Li QUICK_MODE .
+.It Em Suites
+A list of protection suites (bundles of protocols) usable for
+protecting the IP traffic.
+Each of the list elements is a name of an <IPSec-suite> section.
+See below.
+.El
+.It Em <IPSec-suite>
+.Bl -tag -width 12n
+.It Em Protocols
+A list of the protocols included in this protection suite.
+Each of the list elements is a name of an <IPSec-protocol>
+section.
+See below.
+.El
+.It Em <IPSec-protocol>
+.Bl -tag -width 12n
+.It Em PROTOCOL_ID
+The protocol as given by the RFCs.
+Acceptable values today are
+.Li IPSEC_AH
+and
+.Li IPSEC_ESP .
+.It Em Transforms
+A list of transforms usable for implementing the protocol.
+Each of the list elements is a name of an <IPSec-transform>
+section.
+See below.
+.It Em ReplayWindow
+The size of the window used for replay protection.
+This is normally left alone.
+Look at the
+.Nm ESP
+and
+.Nm AH
+RFCs for a better description.
+.El
+.It Em <IPSec-transform>
+.Bl -tag -width 12n
+.It Em TRANSFORM_ID
+The transform ID as given by the RFCs.
+.It Em ENCAPSULATION_MODE
+The encapsulation mode as given by the RFCs.
+This means TRANSPORT or TUNNEL.
+.It Em AUTHENTICATION_ALGORITHM
+The optional authentication algorithm in the case of this
+being an ESP transform.
+.It Em GROUP_DESCRIPTION
+An optional (provides PFS if present) Diffie-Hellman group
+description.
+The values are the same as GROUP_DESCRIPTION's
+in <ISAKMP-transform> sections shown above.
+.It Em Life
+List of lifetimes, each element is a <Lifetime> section name.
+.El
+.It Em <IPSec-ID>
+.Bl -tag -width 12n
+.It Em ID-type
+The ID type as given by the RFCs.
+For IPSec this is currently
+.Li IPV4_ADDR
+or
+.Li IPV4_ADDR_SUBNET .
+.It Em Address
+If the ID-type is
+.Li IPV4_ADDR ,
+this tag should exist and be an IP-address.
+.It Em Network
+If the ID-type is
+.Li IPV4_ADDR_SUBNET
+this tag should exist and
+be a network address.
+.It Em Netmask
+If the ID-type is
+.Li IPV4_ADDR_SUBNET
+this tag should exist and
+be a network subnet mask.
+.El
+.El
+.Sh EXAMPLE
+An example of a configuration file:
+.Pp
+.Bd -literal
+# A configuration sample for the isakmpd ISAKMP/Oakley (aka IKE) daemon.
+
+[General]
+Listen-on=		10.1.0.2
+
+# Incoming phase 1 negotiations are multiplexed on the source IP address
+[Phase 1]
+10.1.0.1=		ISAKMP-peer-west
+
+# These connections are walked over after config file parsing and told
+# to the application layer so that it will inform us when traffic wants to
+# pass over them.  This means we can do on-demand keying.
+[Phase 2]
+Connections=		IPsec-east-west
+
+# Default values are commented out.
+[ISAKMP-peer-west]
+Phase=			1
+#Transport=		udp
+Local-address=		10.1.0.2
+Address=		10.1.0.1
+#Port=			isakmp
+#Port=			500
+Configuration=		Default-main-mode
+Authentication=		mekmitasdigoat
+#Flags=
+
+[IPsec-east-west]
+Phase=			2
+ISAKMP-peer=		ISAKMP-peer-west
+Configuration=		Default-quick-mode
+Local-ID=		Net-east
+Remote-ID=		Net-west
+#Flags=
+
+[Net-west]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		192.168.1.0
+Netmask=		255.255.255.0
+
+[Net-east]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		192.168.2.0
+Netmask=		255.255.255.0
+
+# Main mode descriptions
+
+[Default-main-mode]
+EXCHANGE_TYPE=		ID_PROT
+Transforms=		3DES-SHA
+
+# Quick mode descriptions
+
+[Default-quick-mode]
+EXCHANGE_TYPE=		QUICK_MODE
+Suites=			QM-ESP-3DES-SHA-PFS-SUITE,QM-ESP-DES-MD5-SUITE
+
+#
+# #####################################################################
+# All configration data below this point is not required as the example
+# uses the predefined Main Mode transform and Quick Mode suite names.
+# It is included here for completeness. Note the default values for the
+# [General] and [X509-certificates] sections just below.
+# #####################################################################
+#
+
+[General]
+Policy-File=		/etc/isakmpd/isakmpd.policy
+Retransmits=		3
+Exchange-max-time=	120
+
+# KeyNote credential storage
+[KeyNote]
+Credential-directory=	/etc/isakmpd/keynote/
+
+# Certificates stored in PEM format
+[X509-certificates]
+CA-directory=           /etc/isakmpd/ca/
+Cert-directory=         /etc/isakmpd/certs/
+Private-key=		/etc/isakmpd/private/local.key
+
+# Main mode transforms
+######################
+
+# DES
+
+[DES-MD5]
+ENCRYPTION_ALGORITHM=	DES_CBC
+HASH_ALGORITHM=		MD5
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	MODP_768
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+[DES-MD5-NO-VOL-LIFE]
+ENCRYPTION_ALGORITHM=	DES_CBC
+HASH_ALGORITHM=		MD5
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	MODP_768
+Life=			LIFE_600_SECS
+
+[DES-SHA]
+ENCRYPTION_ALGORITHM=	DES_CBC
+HASH_ALGORITHM=		SHA
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	MODP_768
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+# 3DES
+
+[3DES-SHA]
+ENCRYPTION_ALGORITHM=	3DES_CBC
+HASH_ALGORITHM=		SHA
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	MODP_1024
+Life=			LIFE_3600_SECS
+
+# Blowfish
+
+[BLF-SHA-M1024]
+ENCRYPTION_ALGORITHM=	BLOWFISH_CBC
+KEY_LENGTH=		128,96:192
+HASH_ALGORITHM=		SHA
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	MODP_1024
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+[BLF-SHA-EC155]
+ENCRYPTION_ALGORITHM=	BLOWFISH_CBC
+KEY_LENGTH=		128,96:192
+HASH_ALGORITHM=		SHA
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	EC2N_155
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+[BLF-MD5-EC155]
+ENCRYPTION_ALGORITHM=	BLOWFISH_CBC
+KEY_LENGTH=		128,96:192
+HASH_ALGORITHM=		MD5
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	EC2N_155
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+[BLF-SHA-EC185]
+ENCRYPTION_ALGORITHM=	BLOWFISH_CBC
+KEY_LENGTH=		128,96:192
+HASH_ALGORITHM=		SHA
+AUTHENTICATION_METHOD=	PRE_SHARED
+GROUP_DESCRIPTION=	EC2N_185
+Life=			LIFE_600_SECS,LIFE_1000_KB
+
+# Quick mode protection suites
+##############################
+
+# DES
+
+[QM-ESP-DES-SUITE]
+Protocols=		QM-ESP-DES
+
+[QM-ESP-DES-PFS-SUITE]
+Protocols=		QM-ESP-DES-PFS
+
+[QM-ESP-DES-MD5-SUITE]
+Protocols=		QM-ESP-DES-MD5
+
+[QM-ESP-DES-MD5-PFS-SUITE]
+Protocols=		QM-ESP-DES-MD5-PFS
+
+[QM-ESP-DES-SHA-SUITE]
+Protocols=		QM-ESP-DES-SHA
+
+[QM-ESP-DES-SHA-PFS-SUITE]
+Protocols=		QM-ESP-DES-SHA-PFS
+
+# 3DES
+
+[QM-ESP-3DES-SHA-SUITE]
+Protocols=		QM-ESP-3DES-SHA
+
+[QM-ESP-3DES-SHA-PFS-SUITE]
+Protocols=		QM-ESP-3DES-SHA-PFS
+
+# AES
+
+[QM-ESP-AES-SHA-SUITE]
+Protocols=              QM-ESP-AES-SHA
+
+[QM-ESP-3DES-SHA-PFS-SUITE]
+Protocols=              QM-ESP-AES-SHA-PFS
+
+# AH
+
+[QM-AH-MD5-SUITE]
+Protocols=		QM-AH-MD5
+
+[QM-AH-MD5-PFS-SUITE]
+Protocols=		QM-AH-MD5-PFS
+
+# AH + ESP
+
+[QM-AH-MD5-ESP-DES-SUITE]
+Protocols=		QM-AH-MD5,QM-ESP-DES
+
+[QM-AH-MD5-ESP-DES-MD5-SUITE]
+Protocols=		QM-AH-MD5,QM-ESP-DES-MD5
+
+[QM-ESP-DES-MD5-AH-MD5-SUITE]
+Protocols=		QM-ESP-DES-MD5,QM-AH-MD5
+
+# Quick mode protocols
+
+# DES
+
+[QM-ESP-DES]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-DES-XF
+
+[QM-ESP-DES-MD5]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-DES-MD5-XF
+
+[QM-ESP-DES-MD5-PFS]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-DES-MD5-PFS-XF
+
+[QM-ESP-DES-SHA]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-DES-SHA-XF
+
+# 3DES
+
+[QM-ESP-3DES-SHA]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-3DES-SHA-XF
+
+[QM-ESP-3DES-SHA-PFS]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-3DES-SHA-PFS-XF
+
+[QM-ESP-3DES-SHA-TRP]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-3DES-SHA-TRP-XF
+
+# AES
+
+[QM-ESP-AES-SHA]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-AES-SHA-XF
+
+[QM-ESP-AES-SHA-PFS]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-AES-SHA-PFS-XF
+
+[QM-ESP-AES-SHA-TRP]
+PROTOCOL_ID=		IPSEC_ESP
+Transforms=		QM-ESP-AES-SHA-TRP-XF
+
+# AH MD5
+
+[QM-AH-MD5]
+PROTOCOL_ID=		IPSEC_AH
+Transforms=		QM-AH-MD5-XF
+
+[QM-AH-MD5-PFS]
+PROTOCOL_ID=		IPSEC_AH
+Transforms=		QM-AH-MD5-PFS-XF
+
+# Quick mode transforms
+
+# ESP DES+MD5
+
+[QM-ESP-DES-XF]
+TRANSFORM_ID=		DES
+ENCAPSULATION_MODE=	TUNNEL
+Life=			LIFE_600_SECS
+
+[QM-ESP-DES-MD5-XF]
+TRANSFORM_ID=		DES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_MD5
+Life=			LIFE_600_SECS
+
+[QM-ESP-DES-MD5-PFS-XF]
+TRANSFORM_ID=		DES
+ENCAPSULATION_MODE=	TUNNEL
+GROUP_DESCRIPTION=	MODP_768
+AUTHENTICATION_ALGORITHM=	HMAC_MD5
+Life=			LIFE_600_SECS
+
+[QM-ESP-DES-SHA-XF]
+TRANSFORM_ID=		DES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+Life=			LIFE_600_SECS
+
+# 3DES
+
+[QM-ESP-3DES-SHA-XF]
+TRANSFORM_ID=		3DES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+Life=			LIFE_600_SECS
+
+[QM-ESP-3DES-SHA-PFS-XF]
+TRANSFORM_ID=		3DES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+GROUP_DESCRIPTION=	MODP_1024
+Life=			LIFE_600_SECS
+
+[QM-ESP-3DES-SHA-TRP-XF]
+TRANSFORM_ID=		3DES
+ENCAPSULATION_MODE=	TRANSPORT
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+Life=			LIFE_600_SECS
+
+# AES
+
+[QM-ESP-AES-SHA-XF]
+TRANSFORM_ID=		AES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+Life=			LIFE_600_SECS
+
+[QM-ESP-AES-SHA-PFS-XF]
+TRANSFORM_ID=		AES
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+GROUP_DESCRIPTION=	MODP_1024
+Life=			LIFE_600_SECS
+
+[QM-ESP-AES-SHA-TRP-XF]
+TRANSFORM_ID=		AES
+ENCAPSULATION_MODE=	TRANSPORT
+AUTHENTICATION_ALGORITHM=	HMAC_SHA
+Life=			LIFE_600_SECS
+
+# AH
+
+[QM-AH-MD5-XF]
+TRANSFORM_ID=		MD5
+ENCAPSULATION_MODE=	TUNNEL
+AUTHENTICATION_ALGORITHM=	HMAC_MD5
+Life=			LIFE_600_SECS
+
+[QM-AH-MD5-PFS-XF]
+TRANSFORM_ID=		MD5
+ENCAPSULATION_MODE=	TUNNEL
+GROUP_DESCRIPTION=	MODP_768
+Life=			LIFE_600_SECS
+
+[LIFE_600_SECS]
+LIFE_TYPE=		SECONDS
+LIFE_DURATION=		600,450:720
+
+[LIFE_3600_SECS]
+LIFE_TYPE=		SECONDS
+LIFE_DURATION=		3600,1800:7200
+
+[LIFE_1000_KB]
+LIFE_TYPE=		KILOBYTES
+LIFE_DURATION=		1000,768:1536
+
+[LIFE_32_MB]
+LIFE_TYPE=		KILOBYTES
+LIFE_DURATION=		32768,16384:65536
+
+[LIFE_4.5_GB]
+LIFE_TYPE=		KILOBYTES
+LIFE_DURATION=		4608000,4096000:8192000
+.Ed
+.Sh BUGS
+.Nm
+does not currently verify the Remote-ID as specified in the
+ISAKMP-peer section.
+It is still possible to verify this through the policy file.
+.Sh SEE ALSO
+.Xr ipsec 4 ,
+.Xr keynote 1 ,
+.Xr keynote 4 ,
+.Xr isakmpd.policy 5 ,
+.Xr isakmpd 8
