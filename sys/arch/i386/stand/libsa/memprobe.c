@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.8 2004/06/05 23:09:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.9 2004/06/08 21:14:50 drahn Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -35,6 +35,7 @@
 #include "libsa.h"
 
 u_int cnvmem, extmem;		/* XXX - compatibility */
+
 
 /* Check gateA20
  *
@@ -356,7 +357,7 @@ memprobe(void)
 	}
 
 	/* Check if gate A20 is on */
-	printf("a20=o%s]", checkA20()? "n" : "ff!");
+	printf("a20=o%s] ", checkA20()? "n" : "ff!");
 }
 #endif
 

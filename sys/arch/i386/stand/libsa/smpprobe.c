@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.5 2004/06/05 23:09:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.6 2004/06/08 21:14:50 drahn Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -29,13 +29,23 @@
 
 #include <sys/param.h>
 #include <machine/biosvar.h>
-#include <machine/mp.h>
-#include <stand/boot/bootarg.h>
 #include "libsa.h"
 
 extern int debug;
 
-extern u_int cnvmem;
+extern u_int cnvmem, extmem;
+#define	MP_FLOAT_SIG	0x5F504D5F	/* _MP_ */
+#define	MP_CONF_SIG	0x504D4350	/* PCMP */
+
+typedef struct _mp_float {
+	u_int32_t signature;
+	u_int32_t conf_addr;
+	u_int8_t length;
+	u_int8_t spec_rev;
+	u_int8_t checksum;
+	u_int8_t feature[5];
+} mp_float_t;
+
 
 static __inline int
 mp_checksum(u_int8_t *ptr, int len)
@@ -49,14 +59,14 @@ mp_checksum(u_int8_t *ptr, int len)
 	for (i = 0; i < len; i++)
 		sum += *(ptr + i);
 
-	return ((sum & 0xff) == 0);
+	return (!(sum & 0xff));
 }
 
 
 static mp_float_t *
 mp_probefloat(u_int8_t *ptr, int len)
 {
-	struct mp_float *mpp;
+	mp_float_t *mpp = NULL;
 	int i;
 
 #ifdef DEBUG
@@ -79,14 +89,8 @@ mp_probefloat(u_int8_t *ptr, int len)
 				printf("Found valid MP signature at: %p\n",
 				    ptr);
 #endif
-			if (mp_checksum((u_int8_t *)mpp, mpp->length * 16)) {
-#ifdef DEBUG
-				if (debug)
-					printf("Found valid MP signature at: "
-					    "%p\n", ptr);
-#endif
-				break;
-			}
+			mpp = tmp;
+			break;
 		}
 	}
 
@@ -97,15 +101,16 @@ mp_probefloat(u_int8_t *ptr, int len)
 void
 smpprobe(void)
 {
-	struct mp_float *mp = NULL;
+	mp_float_t *mp = NULL;
 
 	/* Check EBDA */
-	if (!(mp = mp_probefloat((void *)((*((u_int16_t*)0x40e)) * 16),
-	    1024)) &&
-		/* Check BIOS ROM 0xF0000 - 0xFFFFF */
-	    !(mp = mp_probefloat((void *)(0xF0000), 0xFFFF)) &&
+	if (!(mp = mp_probefloat((void *)((*((u_int32_t*)0x4e)) * 16), 1024)) &&
+		/* Check BIOS ROM 0xE0000 - 0xFFFFF */
+	    !(mp = mp_probefloat((void *)(0xE0000), 0x1FFFF)) &&
 		/* Check last 1K of base RAM */
-	    !(mp = mp_probefloat((void *)(cnvmem * 1024), 1024))) {
+	    !(mp = mp_probefloat((void *)(cnvmem * 1024), 1024)) &&
+		/* Check last 1K of extended RAM XXX */
+	    !(mp = mp_probefloat((void *)(extmem * 1024 - 1024), 1024))) {
 		/* No valid MP signature found */
 #if DEBUG
 		if (debug)
