@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/rshd/rshd.c,v 1.40 2001/09/05 22:32:36 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/rshd/rshd.c,v 1.40.2.1 2002/03/19 04:28:22 jason Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -41,7 +41,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rshd.c	8.2 (Berkeley) 4/6/94"; */
-static char *rcsid = "$OpenBSD: src/libexec/rshd/rshd.c,v 1.40 2001/09/05 22:32:36 deraadt Exp $";
+static char *rcsid = "$OpenBSD: src/libexec/rshd/rshd.c,v 1.40.2.1 2002/03/19 04:28:22 jason Exp $";
 #endif /* not lint */
 
 /*
@@ -225,6 +225,7 @@ doit(fromp)
 	char saddr[NI_MAXHOST];
 	char raddr[NI_MAXHOST];
 	char pbuf[NI_MAXSERV];
+	auth_session_t *as;
 #ifdef NI_WITHSCOPEID
 	const int niflags = NI_NUMERICHOST | NI_NUMERICSERV | NI_WITHSCOPEID;
 #else
@@ -494,6 +495,15 @@ doit(fromp)
 			errorstr = "Login incorrect.\n";
 		goto fail;
 	}
+	as = auth_open();
+	if (as == NULL || auth_setpwd(as, pwd) != 0) {
+		syslog(LOG_INFO|LOG_AUTH,
+		    "%s@%s as %s: unable to allocate memory. cmd='%.80s'",
+		    remuser, hostname, locuser, cmdbuf);
+		if (errorstr == NULL)
+			errorstr = "Cannot allocate memory.\n";
+		goto fail;
+	}
 
 	setegid(pwd->pw_gid);
 	seteuid(pwd->pw_uid);
@@ -730,8 +740,10 @@ fail:
 
 	if (setusercontext(lc, pwd, pwd->pw_uid, LOGIN_SETALL))
 		errx(1, "cannot set user context");
-	if (auth_approval(NULL, lc, pwd->pw_name, "rsh") <= 0)
+	if (auth_approval(as, lc, pwd->pw_name, "rsh") <= 0)
 		errx(1, "approval failure");
+	auth_close(as);
+	login_close(lc);
 
 	cp = strrchr(pwd->pw_shell, '/');
 	if (cp)
