@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ld.so/mips/Attic/syscall.h,v 1.13 2004/08/06 09:40:44 pefo Exp $ */
+/*	$OpenBSD: src/libexec/ld.so/mips64/syscall.h,v 1.1 2004/08/11 17:11:45 pefo Exp $ */
 
 /*
  * Copyright (c) 1998-2002 Opsycon AB, Sweden.
