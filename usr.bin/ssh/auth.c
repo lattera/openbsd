@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.28 2001/10/03 10:01:20 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.28.2.1 2001/11/14 03:24:38 jason Exp $");
 
 #include <libgen.h>
 
@@ -156,7 +156,7 @@ auth_log(Authctxt *authctxt, int authenticated, char *method, char *info)
 	    authmsg,
 	    method,
 	    authctxt->valid ? "" : "illegal user ",
-	    authctxt->valid && authctxt->pw->pw_uid == 0 ? "ROOT" : authctxt->user,
+	    authctxt->user,
 	    get_remote_ipaddr(),
 	    get_remote_port(),
 	    info);

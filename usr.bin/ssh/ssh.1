@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/ssh.1,v 1.139 2001/10/01 21:51:16 markus Exp $
+.\" $OpenBSD: src/usr.bin/ssh/ssh.1,v 1.139.2.1 2001/11/14 03:24:39 jason Exp $
 .Dd September 25, 1999
 .Dt SSH 1
 .Os
@@ -294,7 +294,7 @@ Background ssh
 List forwarded connections
 .It Cm ~&
 Background ssh at logout when waiting for forwarded connection / X11 sessions
-to terminate (protocol version 1 only)
+to terminate
 .It Cm ~?
 Display a list of escape characters
 .It Cm ~R
@@ -1389,6 +1389,15 @@ This file provides defaults for those
 values that are not specified in the user's configuration file, and
 for those users who do not have a configuration file.
 This file must be world-readable.
+.It Pa /etc/ssh_host_key, /etc/ssh_host_dsa_key, /etc/ssh_host_rsa_key
+These three files contain the private parts of the host keys
+and are used for
+.Cm RhostsRSAAuthentication
+and
+.Cm HostbasedAuthentication .
+Since they are readable only by root
+.Nm
+must be setuid root if these authentication methods are desired.
 .It Pa $HOME/.rhosts
 This file is used in
 .Pa \&.rhosts

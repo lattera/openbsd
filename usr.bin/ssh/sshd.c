@@ -40,7 +40,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206 2001/10/02 22:56:09 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206.2.1 2001/11/14 03:24:39 jason Exp $");
 
 #include <openssl/dh.h>
 #include <openssl/bn.h>
@@ -328,7 +328,7 @@ sshd_exchange_identification(int sock_in, int sock_out)
 		/* Send our protocol version identification. */
 		if (atomicio(write, sock_out, server_version_string, strlen(server_version_string))
 		    != strlen(server_version_string)) {
-			log("Could not write ident string to %s.", get_remote_ipaddr());
+			log("Could not write ident string to %s", get_remote_ipaddr());
 			fatal_cleanup();
 		}
 
@@ -336,7 +336,7 @@ sshd_exchange_identification(int sock_in, int sock_out)
 		memset(buf, 0, sizeof(buf));
 		for (i = 0; i < sizeof(buf) - 1; i++) {
 			if (atomicio(read, sock_in, &buf[i], 1) != 1) {
-				log("Did not receive identification string from %s.",
+				log("Did not receive identification string from %s",
 				    get_remote_ipaddr());
 				fatal_cleanup();
 			}
@@ -1106,9 +1106,8 @@ main(int ac, char **av)
 	remote_port = get_remote_port();
 	remote_ip = get_remote_ipaddr();
 
-	/* Check whether logins are denied from this host. */
 #ifdef LIBWRAP
-	/* XXX LIBWRAP noes not know about IPv6 */
+	/* Check whether logins are denied from this host. */
 	{
 		struct request_info req;
 
@@ -1116,13 +1115,14 @@ main(int ac, char **av)
 		fromhost(&req);
 
 		if (!hosts_access(&req)) {
+			debug("Connection refused by tcp wrapper");
 			refuse(&req);
-			close(sock_in);
-			close(sock_out);
+			/* NOTREACHED */
+			fatal("libwrap refuse returns");
 		}
-/*XXX IPv6 verbose("Connection from %.500s port %d", eval_client(&req), remote_port); */
 	}
 #endif /* LIBWRAP */
+
 	/* Log the connection. */
 	verbose("Connection from %.500s port %d", remote_ip, remote_port);
 
@@ -1149,7 +1149,7 @@ main(int ac, char **av)
 	if (remote_port >= IPPORT_RESERVED ||
 	    remote_port < IPPORT_RESERVED / 2) {
 		debug("Rhosts Authentication disabled, "
-		    "originating port not trusted.");
+		    "originating port %d not trusted.", remote_port);
 		options.rhosts_authentication = 0;
 	}
 #if defined(KRB4) && !defined(KRB5)
