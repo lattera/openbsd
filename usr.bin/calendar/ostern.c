@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/calendar/ostern.c,v 1.4 2003/06/25 22:41:24 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/calendar/ostern.c,v 1.5 2004/12/10 15:31:01 mickey Exp $	*/
 
 /*
  * Copyright (c) 1996 Wolfram Schneider <wosch@FreeBSD.org>. Berlin.
@@ -25,16 +25,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * 	$Id: ostern.c,v 1.3 1998/12/13 07:31:08 pjanzen Exp $
+ * 	$Id: ostern.c,v 1.4 2003/06/25 22:41:24 deraadt Exp $
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/calendar/ostern.c,v 1.4 2003/06/25 22:41:24 deraadt Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/calendar/ostern.c,v 1.5 2004/12/10 15:31:01 mickey Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <tzfile.h>
 
