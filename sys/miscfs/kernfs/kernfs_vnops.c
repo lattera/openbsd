@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.4 1997/02/07 06:07:56 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.5 1997/02/07 06:16:36 mickey Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -587,7 +587,7 @@ kernfs_getattr(v)
 		vap->va_nlink = 1;
 		vap->va_fileid = 3 + kern_ntargets + kfs->kf_st->id;
 		vap->va_size = sizeof(struct exec) +
-			kfs->kf_st->rend - kfs->kf_st->start;
+			kfs->kf_st->private - kfs->kf_st->start;
 #endif
 	} else {
 #ifdef KERNFS_DIAGNOSTIC
@@ -686,8 +686,8 @@ kernfs_read(v)
 			p = (caddr_t)&xh;
 		} else if (sizeof(struct exec) <= off &&
 			   off < (sizeof(struct exec) +
-				  (kfs->kf_st->rend - kfs->kf_st->rstart))) {
-			len = (kfs->kf_st->rend - kfs->kf_st->rstart);
+				  (kfs->kf_st->private - kfs->kf_st->rstart))) {
+			len = (kfs->kf_st->private - kfs->kf_st->rstart);
 			off -= sizeof(struct exec);
 			p = kfs->kf_st->rstart;
 		} else
