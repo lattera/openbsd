@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.1 2001/07/04 10:15:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.2 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: sd.c,v 1.34 1997/07/10 18:14:10 kleink Exp $	*/
 
 /*
@@ -61,8 +61,6 @@
 #include <hp300/dev/scsireg.h>
 #include <hp300/dev/scsivar.h>
 #include <hp300/dev/sdvar.h>
-
-#include "opt_useleds.h"
 
 #ifdef USELEDS
 #include <hp300/hp300/leds.h>

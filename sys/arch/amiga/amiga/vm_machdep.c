@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.2 2001/07/04 10:15:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.3 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/05/19 10:14:50 veego Exp $	*/
 
 /*
@@ -58,7 +58,6 @@
 
 #include <vm/vm.h>
 #include <sys/user.h>
-#include <vm/vm_kern.h>
 #include <uvm/uvm_extern.h>
 #include <machine/pte.h>
 
@@ -191,8 +190,8 @@ pagemove(from, to, size)
 		pmap_remove(pmap_kernel(), (vm_offset_t)from,
 		    (vm_offset_t)from + PAGE_SIZE);
 		pmap_enter(pmap_kernel(),  (vm_offset_t)to, pa,
-		    VM_PROT_READ|VM_PROT_WRITE, 1,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
@@ -347,8 +346,6 @@ kvtop(addr)
 	return((int)pa);
 }
 
-extern vm_map_t phys_map;
-
 /*
  * Map a user I/O request into kernel virtual address space.
  * Note: the pages are already locked by uvm_vslock(), so we
@@ -380,7 +377,7 @@ vmapbuf(bp, len)
 		if (pmap_extract(upmap, uva, &pa) == FALSE)
 			panic("vmapbuf: null page frame");
 		pmap_enter(kpmap, kva, pa, VM_PROT_READ|VM_PROT_WRITE,
-			   TRUE, 0);
+			   PMAP_WIRED);
                 uva += PAGE_SIZE;
                 kva += PAGE_SIZE;
                 len -= PAGE_SIZE;

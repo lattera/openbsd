@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.3 2001/07/04 10:15:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.4 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -42,8 +42,6 @@
  *
  *	@(#)machdep.c	8.10 (Berkeley) 4/20/94
  */
-
-#define HP300_NEWKVM		/* Write generic m68k format kcore dumps. */
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -92,9 +90,7 @@
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
 #include <machine/hp300spu.h>
-#ifdef HP300_NEWKVM
 #include <machine/kcore.h>
-#endif	/* HP300_NEWKVM */
 #include <machine/reg.h>
 #include <machine/psl.h>
 #include <machine/pte.h>
@@ -102,12 +98,8 @@
 #include <dev/cons.h>
 
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
-#include <vm/vm_kern.h>
 #include <vm/vm_param.h>
-
 #include <uvm/uvm_extern.h>
-
-#include "opt_useleds.h"
 
 #include <arch/hp300/dev/hilreg.h>
 #include <arch/hp300/dev/hilioctl.h>
@@ -274,8 +266,8 @@ cpu_startup()
 	 * avail_end was pre-decremented in pmap_bootstrap to compensate.
 	 */
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
-		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp,
-		    avail_end + i * NBPG, VM_PROT_ALL, TRUE, VM_PROT_ALL);
+		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp + i * NBPG,
+		    avail_end + i * NBPG, VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -327,13 +319,7 @@ cpu_startup()
 			if (pg == NULL) 
 				panic("cpu_startup: not enough memory for "
 				    "buffer cache");
-#if defined(PMAP_NEW)
 			pmap_kenter_pgs(curbuf, &pg, 1);
-#else
-			pmap_enter(kernel_map->pmap, curbuf,
-			    VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE,
-			    TRUE, VM_PROT_READ|VM_PROT_WRITE);
-#endif
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -344,21 +330,16 @@ cpu_startup()
 	 * limits the number of processes exec'ing at any time.
 	 */
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				   16*NCARGS, TRUE, FALSE, NULL);
+				   16*NCARGS, VM_MAP_PAGEABLE, FALSE, NULL);
 
 	/*
 	 * Allocate a submap for physio
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				   VM_PHYS_SIZE, TRUE, FALSE, NULL);
+				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
 	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
-	/*
-	 * Initialize timeouts
-	 */
-	timeout_init();
 
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
@@ -430,10 +411,6 @@ allocsys(v)
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
 
-#ifdef REAL_CLISTS
-	valloc(cfree, struct cblock, nclist);
-#endif
-	valloc(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -767,9 +744,6 @@ void
 boot(howto)
 	int howto;
 {
-#if __GNUC__	/* XXX work around lame compiler problem (gcc 2.7.2) */
-	(void)&howto;
-#endif
 	/* take a snap shot before clobbering any registers */
 	if (curproc && curproc->p_addr)
 		savectx(&curproc->p_addr->u_pcb);
@@ -803,7 +777,7 @@ boot(howto)
 	if (howto & RB_DUMP)
 		dumpsys();
 
- haltsys:
+haltsys:
 	/* Run any shutdown hooks. */
 	doshutdownhooks();
 
@@ -833,9 +807,7 @@ boot(howto)
 u_long	dumpmag = 0x8fca0101;	/* magic number */
 int	dumpsize = 0;		/* pages */
 long	dumplo = 0;		/* blocks */
-#ifdef HP300_NEWKVM
 cpu_kcore_hdr_t cpu_kcore_hdr;
-#endif	/* HP300_NEWKVM */
 
 /*
  * This is called by configure to set dumplo and dumpsize.
@@ -866,14 +838,12 @@ dumpconf()
 	 */
 	dumpsize = physmem;
 
-#ifdef HP300_NEWKVM
 	/* hp300 only uses a single segment. */
 	cpu_kcore_hdr.ram_segs[0].start = lowram;
 	cpu_kcore_hdr.ram_segs[0].size = ctob(dumpsize);
 	cpu_kcore_hdr.mmutype = mmutype;
 	cpu_kcore_hdr.kernel_pa = lowram;
 	cpu_kcore_hdr.sysseg_pa = pmap_kernel()->pm_stpa;
-#endif	/* HP300_NEWKVM */
 
 	/* Always skip the first block, in case there is a label there. */
 	if (dumplo < ctod(1))
@@ -899,11 +869,9 @@ dumpsys()
 	int pg;			/* page being dumped */
 	paddr_t maddr;		/* PA being dumped */
 	int error;		/* error code from (*dump)() */
-#ifdef HP300_NEWKVM
 	kcore_seg_t *kseg_p;
 	cpu_kcore_hdr_t *chdr_p;
 	char dump_hdr[dbtob(1)];	/* XXX assume hdr fits in 1 block */
-#endif	/* HP300_NEWKVM */
 	extern int msgbufmapped;
 
 	/* XXX initialized here because of gcc lossage */
@@ -932,7 +900,6 @@ dumpsys()
 	printf("\ndumping to dev %u,%u offset %ld\n", major(dumpdev),
 	    minor(dumpdev), dumplo);
 
-#ifdef HP300_NEWKVM
 	kseg_p = (kcore_seg_t *)dump_hdr;
 	chdr_p = (cpu_kcore_hdr_t *)&dump_hdr[ALIGN(sizeof(*kseg_p))];
 	bzero(dump_hdr, sizeof(dump_hdr));
@@ -948,10 +915,8 @@ dumpsys()
 	 */
 
 	*chdr_p = cpu_kcore_hdr;
-#endif	/* HP300_NEWKVM */
 
 	printf("dump ");
-#ifdef HP300_NEWKVM
 	maddr = cpu_kcore_hdr.ram_segs[0].start;
 	/* Dump the header. */
 	error = (*dump) (dumpdev, blkno++, (caddr_t)dump_hdr, dbtob(1));
@@ -983,9 +948,6 @@ dumpsys()
 			printf("error %d\n", error);
 			return;
 	}
-#else
-	maddr = lowram;
-#endif	/* HP300_NEWKVM */
 	for (pg = 0; pg < dumpsize; pg++) {
 #define NPGMB	(1024*1024/NBPG)
 		/* print out how many MBs we have dumped */
@@ -993,7 +955,7 @@ dumpsys()
 			printf("%d ", pg / NPGMB);
 #undef NPGMB
 		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, maddr,
-		    VM_PROT_READ, TRUE, VM_PROT_READ);
+		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
 
 		error = (*dump)(dumpdev, blkno, vmmap, NBPG);
 		switch (error) {
@@ -1098,26 +1060,6 @@ badbaddr(addr)
 	return(0);
 }
 
-#ifdef PANICBUTTON
-/*
- * Declare these so they can be patched.
- */
-int panicbutton = 1;	/* non-zero if panic buttons are enabled */
-int candbdiv = 2;	/* give em half a second (hz / candbdiv) */
-
-void	candbtimer __P((void *));
-
-int crashandburn;
-
-void
-candbtimer(arg)
-	void *arg;
-{
-
-	crashandburn = 0;
-}
-#endif /* PANICBUTTON */
-
 static int innmihand;	/* simple mutex */
 
 /*
@@ -1153,20 +1095,6 @@ nmihand(frame)
 		} else
 			printf("\n");
 #else
-#ifdef PANICBUTTON
-		if (panicbutton) {
-			if (crashandburn) {
-				crashandburn = 0;
-				printf(": CRASH AND BURN!\n");
-				panic("forced crash");
-			} else {
-				/* Start the crashandburn sequence */
-				printf("\n");
-				crashandburn = 1;
-				timeout(candbtimer, NULL, hz / candbdiv);
-			}
-		} else
-#endif /* PANICBUTTON */
 			printf(": ignoring\n");
 #endif /* DDB */
 
@@ -1178,7 +1106,7 @@ nmihand(frame)
 	/* panic?? */
 	printf("unexpected level 7 interrupt ignored\n");
 
- nmihand_out:
+nmihand_out:
 	innmihand = 0;
 }
 
@@ -1240,7 +1168,7 @@ parityerror(fp)
 		printf("WARNING: kernel parity error ignored\n");
 #endif
 	} else {
-		regdump(fp, 128);
+		regdump(&(fp->F_t), 128);
 		panic("kernel parity error");
 	}
 	return(1);
@@ -1265,7 +1193,7 @@ parityerrorfind()
 #endif
 	/*
 	 * If looking is true we are searching for a known parity error
-	 * and it has just occured.  All we do is return to the higher
+	 * and it has just occurred.  All we do is return to the higher
 	 * level invocation.
 	 */
 	if (looking)
@@ -1273,7 +1201,7 @@ parityerrorfind()
 	s = splhigh();
 	/*
 	 * If setjmp returns true, the parity error we were searching
-	 * for has just occured (longjmp above) at the current pg+o
+	 * for has just occurred (longjmp above) at the current pg+o
 	 */
 	if (setjmp(&parcatch)) {
 		printf("Parity error at 0x%x\n", ctob(pg)|o);
@@ -1281,7 +1209,7 @@ parityerrorfind()
 		goto done;
 	}
 	/*
-	 * If we get here, a parity error has occured for the first time
+	 * If we get here, a parity error has occurred for the first time
 	 * and we need to find it.  We turn off any external caches and
 	 * loop thru memory, testing every longword til a fault occurs and
 	 * we regain control at setjmp above.  Note that because of the
@@ -1291,7 +1219,7 @@ parityerrorfind()
 	ecacheoff();
 	for (pg = btoc(lowram); pg < btoc(lowram)+physmem; pg++) {
 		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, ctob(pg),
-		    VM_PROT_READ, TRUE, VM_PROT_READ);
+		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
 		ip = (int *)vmmap;
 		for (o = 0; o < NBPG; o += sizeof(int))
 			i = *ip++;
@@ -1307,97 +1235,6 @@ done:
 	ecacheon();
 	splx(s);
 	return(found);
-}
-
-void
-regdump(fp, sbytes)
-	struct frame *fp; /* must not be register */
-	int sbytes;
-{
-	static int doingdump = 0;
-	register int i;
-	int s;
-
-	if (doingdump)
-		return;
-	s = splhigh();
-	doingdump = 1;
-	printf("pid = %d, pc = %s, ",
-	       curproc ? curproc->p_pid : -1, hexstr(fp->f_pc, 8));
-	printf("ps = %s, ", hexstr(fp->f_sr, 4));
-	printf("sfc = %s, ", hexstr(getsfc(), 4));
-	printf("dfc = %s\n", hexstr(getdfc(), 4));
-	printf("Registers:\n     ");
-	for (i = 0; i < 8; i++)
-		printf("        %d", i);
-	printf("\ndreg:");
-	for (i = 0; i < 8; i++)
-		printf(" %s", hexstr(fp->f_regs[i], 8));
-	printf("\nareg:");
-	for (i = 0; i < 8; i++)
-		printf(" %s", hexstr(fp->f_regs[i+8], 8));
-	if (sbytes > 0) {
-		if (fp->f_sr & PSL_S) {
-			printf("\n\nKernel stack (%s):",
-			       hexstr((int)(((int *)&fp)-1), 8));
-			dumpmem(((int *)&fp)-1, sbytes, 0);
-		} else {
-			printf("\n\nUser stack (%s):", hexstr(fp->f_regs[SP], 8));
-			dumpmem((int *)fp->f_regs[SP], sbytes, 1);
-		}
-	}
-	doingdump = 0;
-	splx(s);
-}
-
-#define KSADDR	((int *)((u_int)curproc->p_addr + USPACE - NBPG))
-
-void
-dumpmem(ptr, sz, ustack)
-	register int *ptr;
-	int sz, ustack;
-{
-	register int i, val;
-
-	for (i = 0; i < sz; i++) {
-		if ((i & 7) == 0)
-			printf("\n%s: ", hexstr((int)ptr, 6));
-		else
-			printf(" ");
-		if (ustack == 1) {
-			if ((val = fuword(ptr++)) == -1)
-				break;
-		} else {
-			if (ustack == 0 &&
-			    (ptr < KSADDR || ptr > KSADDR+(NBPG/4-1)))
-				break;
-			val = *ptr++;
-		}
-		printf("%s", hexstr(val, 8));
-	}
-	printf("\n");
-}
-
-char *
-hexstr(val, len)
-	register int val;
-	int len;
-{
-	static char nbuf[9];
-	register int x, i;
-
-	if (len > 8)
-		return("");
-	nbuf[len] = '\0';
-	for (i = len-1; i >= 0; --i) {
-		x = val & 0xF;
-		if (x > 9)
-			nbuf[i] = x - 10 + 'A';
-		else
-			nbuf[i] = x + '0';
-		val >>= 4;
-	}
-	return(nbuf);
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.2 2001/07/04 10:14:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.3 2001/10/31 02:52:43 nate Exp $	*/
 /*	$NetBSD: conf.c,v 1.16 1996/10/18 21:26:57 cgd Exp $	*/
 
 /*-
@@ -46,7 +46,8 @@
 
 #include "wd.h"
 bdev_decl(wd);
-bdev_decl(sw);
+#include "fd.h"
+bdev_decl(fd);
 #include "st.h"
 #include "cd.h"
 #include "sd.h"
@@ -54,10 +55,8 @@ bdev_decl(sw);
 #include "uk.h"
 #include "vnd.h"
 #include "raid.h"
-bdev_decl(raid);
 #include "ccd.h"
 #include "rd.h"
-bdev_decl(rd);
 
 struct bdevsw	bdevsw[] =
 {
@@ -65,7 +64,7 @@ struct bdevsw	bdevsw[] =
 	bdev_swap_init(1,sw),		/* 1: swap pseudo-device */
 	bdev_tape_init(NST,st),		/* 2: SCSI tape */
 	bdev_disk_init(NCD,cd),		/* 3: SCSI CD-ROM */
-	bdev_notdef(),			/* 4 */
+	bdev_disk_init(NFD,fd),		/* 4: Floppy disk */
 	bdev_notdef(),			/* 5 */
 	bdev_disk_init(NRD,rd),		/* 6: ram disk driver */
 	bdev_disk_init(NCCD,ccd),	/* 7: concatenated disk driver */
@@ -90,16 +89,15 @@ int	nblkdev = sizeof (bdevsw) / sizeof (bdevsw[0]);
 #define	mmread  mmrw
 #define	mmwrite mmrw
 cdev_decl(mm);
-cdev_decl(sw);
 #include "pty.h"
 #include "tun.h"
 dev_type_open(filedescopen);
 #include "bpfilter.h"
+#include "iop.h"
 #include "ch.h"
 #include "scc.h"
 cdev_decl(scc);
 #include "audio.h"
-cdev_decl(audio);
 #include "com.h"
 cdev_decl(com);
 #include "wsdisplay.h"
@@ -107,10 +105,9 @@ cdev_decl(com);
 #include "wsmouse.h"
 #include "lpt.h"
 cdev_decl(lpt);
-cdev_decl(rd);
-cdev_decl(raid);
 cdev_decl(prom);			/* XXX XXX XXX */
 cdev_decl(wd);
+cdev_decl(fd);
 #include "cy.h"
 cdev_decl(cy);
 #ifdef XFS
@@ -134,7 +131,6 @@ cdev_decl(ucom);
 #include "ugen.h"
 cdev_decl(ugen);
 #include "pf.h"
-cdev_decl(pf);
 #ifdef USER_PCICONF
 #include "pci.h"
 cdev_decl(pci);
@@ -181,7 +177,7 @@ struct cdevsw	cdevsw[] =
 	cdev_random_init(1,random),	/* 34: random data source */
 	cdev_pf_init(NPF, pf),		/* 35: packet filter */
 	cdev_disk_init(NWD,wd), 	/* 36: ST506/ESDI/IDE disk */
-	cdev_notdef(),			/* 37 */
+	cdev_disk_init(NFD,fd),		/* 37: Floppy disk */
         cdev_tty_init(NCY,cy),          /* 38: Cyclom serial port */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 39: Kernel symbols device */
 	cdev_notdef(),			/* 40 */
@@ -206,6 +202,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),
 #endif
 	cdev_altq_init(NALTQ, altq),	/* 53: ALTQ control interface */
+	cdev_iop_init(NIOP, iop),	/* 54: I2O IOP control interface */
 };
 int	nchrdev = sizeof (cdevsw) / sizeof (cdevsw[0]);
 
@@ -290,7 +287,7 @@ static int chrtoblktbl[] = {
 	/* 34 */	NODEV,
 	/* 35 */	NODEV,
 	/* 36 */	0,
-	/* 37 */	4,
+	/* 37 */	4,		/* fd */
 	/* 38 */	NODEV,
 	/* 39 */	NODEV,
 	/* 40 */	NODEV,
@@ -326,7 +323,7 @@ chrtoblk(dev)
 }
 
 /*
- * Convert a character device number to a block device number.
+ * Convert a block device number to a character device number.
  */
 dev_t
 blktochr(dev)

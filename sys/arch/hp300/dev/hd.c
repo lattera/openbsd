@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.11.8.1 2001/07/04 10:15:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.11.8.2 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: rd.c,v 1.33 1997/07/10 18:14:08 kleink Exp $	*/
 
 /*
@@ -66,8 +66,6 @@
 
 #include <hp300/dev/hdreg.h>
 #include <hp300/dev/hdvar.h>
-
-#include "opt_useleds.h"
 
 #ifdef USELEDS
 #include <hp300/hp300/leds.h>
@@ -1029,7 +1027,7 @@ hderror(unit)
 		return(1);
 
 	/*
-	 * First conjure up the block number at which the error occured.
+	 * First conjure up the block number at which the error occurred.
 	 * Note that not all errors report a block number, in that case
 	 * we just use b_blkno.
  	 */
@@ -1047,7 +1045,7 @@ hderror(unit)
 	 * Now output a generic message suitable for badsect.
 	 * Note that we don't use harderr cuz it just prints
 	 * out b_blkno which is just the beginning block number
-	 * of the transfer, not necessary where the error occured.
+	 * of the transfer, not necessary where the error occurred.
 	 */
 	printf("%s%c: hard error sn%d\n", rs->sc_dev.dv_xname,
 	    'a'+hdpart(bp->b_dev), pbn);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.2 2001/07/04 10:15:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.3 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: conf.c,v 1.39 1997/05/12 08:17:53 thorpej Exp $	*/
 
 /*-
@@ -50,7 +50,6 @@ bdev_decl(ct);
 bdev_decl(mt);
 #include "hd.h"
 bdev_decl(hd);
-bdev_decl(sw);
 #include "sd.h"
 bdev_decl(sd);
 #include "ccd.h"
@@ -107,7 +106,6 @@ cdev_decl(ctty);
 #define	mmread	mmrw
 #define	mmwrite	mmrw
 cdev_decl(mm);
-cdev_decl(sw);
 #include "pty.h"
 #define	ptstty		ptytty
 #define	ptsioctl	ptyioctl
@@ -153,7 +151,6 @@ cdev_decl(xfs_dev);
 #endif
 
 #include "pf.h"
-cdev_decl(pf);
 
 #include <altq/altqconf.h>
 

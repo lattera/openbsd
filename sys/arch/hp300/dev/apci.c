@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/apci.c,v 1.3.12.1 2001/07/04 10:15:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/apci.c,v 1.3.12.2 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: apci.c,v 1.9 2000/11/02 00:35:05 eeh Exp $	*/
 
 /*-
@@ -120,6 +120,10 @@
 #include <hp300/dev/frodovar.h>
 #include <hp300/dev/apcireg.h>
 #include <hp300/dev/dcareg.h>		/* register bit definitions */
+
+#ifdef DDB
+#include <ddb/db_var.h>
+#endif
 
 struct apci_softc {
 	struct	device sc_dev;		/* generic device glue */
@@ -556,6 +560,13 @@ apcieint(sc, stat)
 	c = apci->ap_data;
 	if ((tp->t_state & TS_ISOPEN) == 0)
 		return;
+
+#ifdef DDB
+	if ((sc->sc_flags & APCI_ISCONSOLE) && db_console && (stat & LSR_BI)) {
+		Debugger();
+		return;
+	}
+#endif
 
 	if (stat & (LSR_BI | LSR_FE)) {
 		c |= TTY_FE;

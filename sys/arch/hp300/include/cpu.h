@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.1 2001/07/04 10:15:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.2 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*
@@ -147,8 +147,6 @@ struct pcb;
 /* locore.s functions */
 void	m68881_save __P((struct fpframe *));
 void	m68881_restore __P((struct fpframe *));
-u_long	getdfc __P((void));
-u_long	getsfc __P((void));
 void	DCIA __P((void));
 void	DCIS __P((void));
 void	DCIU __P((void));
@@ -174,8 +172,7 @@ void	switch_exit __P((struct proc *));
 void	proc_trampoline __P((void));
 void	loadustp __P((int));
 
-void	doboot __P((void))
-	__attribute__((__noreturn__));
+__dead void	doboot __P((void));
 void	ecacheon __P((void));
 void	ecacheoff __P((void));
 
@@ -185,7 +182,6 @@ void	hp300_calibrate_delay __P((void));
 /* machdep.c functions */
 int	badaddr __P((caddr_t));
 int	badbaddr __P((caddr_t));
-void	regdump __P((struct frame *, int));
 void	dumpconf __P((void));
 
 /* pmap.c functions */

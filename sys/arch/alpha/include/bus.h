@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/bus.h,v 1.10.10.1 2001/04/18 16:00:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/bus.h,v 1.10.10.2 2001/10/31 02:52:44 nate Exp $	*/
 /*	$NetBSD: bus.h,v 1.10 1996/12/02 22:19:32 cgd Exp $	*/
 
 /*
@@ -211,8 +211,10 @@ struct alpha_bus_space {
  */
 #define	bus_space_map(t, a, s, c, hp)					\
 	(*(t)->abs_map)((t)->abs_cookie, (a), (s), (c), (hp))
+#define alpha_bus_space_map_noacct bus_space_map
 #define	bus_space_unmap(t, h, s)					\
 	(*(t)->abs_unmap)((t)->abs_cookie, (h), (s))
+#define alpha_bus_space_unmap_noacct bus_space_unmap
 #define	bus_space_subregion(t, h, o, s, hp)				\
 	(*(t)->abs_subregion)((t)->abs_cookie, (h), (o), (s), (hp))
 

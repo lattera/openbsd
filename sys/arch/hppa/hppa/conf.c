@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.2 2001/07/04 10:16:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.3 2001/10/31 02:52:47 nate Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -44,7 +44,6 @@
 
 #include <machine/conf.h>
 
-bdev_decl(sw);
 #include "ccd.h"
 #include "vnd.h"
 #include "rd.h"
@@ -96,12 +95,12 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #define mmread  mmrw
 #define mmwrite mmrw
 cdev_decl(mm);
-cdev_decl(sw);
 #include "pty.h"
 #include "wsdisplay.h"
 #include "wskbd.h"
 #include "wsmouse.h"
 #include "wsmux.h"
+
 #include "bpfilter.h"
 #include "tun.h"
 
@@ -115,7 +114,6 @@ cdev_decl(lpt);
 cdev_decl(com);
 
 #include "pf.h"
-cdev_decl(pf);
 
 #include <altq/altqconf.h>
 

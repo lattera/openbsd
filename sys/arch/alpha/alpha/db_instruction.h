@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.2.2.1 2001/04/18 16:00:11 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.2.2.2 2001/10/31 02:52:43 nate Exp $ */
 /* $NetBSD: db_instruction.h,v 1.6 2000/03/20 02:54:45 thorpej Exp $ */
 
 /*
@@ -197,7 +197,7 @@ typedef union {
 
 } alpha_instruction;
 
-#endif	!defined(ASSEMBLER)
+#endif /* !defined(ASSEMBLER) */
 
 /*
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/if_le.c,v 1.12 1998/09/16 22:41:17 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/if_le.c,v 1.12.8.1 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: if_le.c,v 1.43 1997/05/05 21:05:32 thorpej Exp $	*/
 
 /*-
@@ -71,7 +71,6 @@
 #include <hp300/dev/if_lereg.h>
 #include <hp300/dev/if_levar.h>
 
-#include "opt_useleds.h"
 #ifdef USELEDS
 #include <hp300/hp300/leds.h>
 #endif

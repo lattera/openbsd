@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/amiga/conf/Attic/RAMDISK,v 1.6.4.2 2001/07/04 10:15:06 niklas Exp $
+#	$OpenBSD: src/sys/arch/amiga/conf/Attic/RAMDISK,v 1.6.4.3 2001/10/31 02:52:45 nate Exp $
 
 #
 # A ramdisk kernel
@@ -40,7 +40,6 @@ option		ADOSFS		# AmigaDOS file system
 # Support for various kernel options
 #
 
-option		"NKMEMCLUSTERS=256"	# Size of kernel malloc area
 
 #
 # Misc. debuging options

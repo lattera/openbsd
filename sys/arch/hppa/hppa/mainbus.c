@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.1 2001/04/18 16:06:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.2 2001/10/31 02:52:47 nate Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -42,7 +42,6 @@
 #include <sys/mbuf.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <uvm/uvm_page.h>
 #include <uvm/uvm.h>
 
@@ -242,7 +241,7 @@ mbus_alloc(void *v, bus_addr_t rstart, bus_addr_t rend, bus_size_t size,
 		panic("bus_space_alloc: bad region start/end");
 
 	if ((error = extent_alloc_subregion(hppa_ex, rstart, rend, size,
-					    align, boundary, EX_NOWAIT, &bpa)))
+					    align, 0, boundary, EX_NOWAIT, &bpa)))
 		return (error);
 
 	if ((error = mbus_add_mapping(bpa, size, cachable, bshp))) {
@@ -767,8 +766,8 @@ mbus_dmamem_unmap(void *v, caddr_t kva, size_t size)
 {
 }
 
-int
-mbus_dmamem_mmap(void *v, bus_dma_segment_t *segs, int nsegs, int off,
+paddr_t
+mbus_dmamem_mmap(void *v, bus_dma_segment_t *segs, int nsegs, off_t off,
 		 int prot, int flags)
 {
 	panic("_dmamem_mmap: not implemented");

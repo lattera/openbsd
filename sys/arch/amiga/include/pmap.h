@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pmap.h,v 1.3.12.1 2001/04/18 16:02:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pmap.h,v 1.3.12.2 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: pmap.h,v 1.17 1997/06/10 18:34:52 veego Exp $	*/
 
 /* 
@@ -136,9 +136,6 @@ struct pmap	kernel_pmap_store;
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_wired_count(pmap)		((pmap)->pm_stats.wired_count)
 
-struct proc;
-void	pmap_activate __P((struct proc *));
-void	pmap_deactivate __P((struct proc *));
 #endif	/* _KERNEL */
 
 #endif	/* !_MACHINE_PMAP_H_ */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amiga/stand/device-streams/Attic/util.c,v 1.1.1.1.4.1 2001/10/31 02:52:46 nate Exp $	*/
+
 /* -------------------------------------------------- 
  |  NAME
  |    util
@@ -234,6 +236,7 @@ ask_bool (int def, int other, char *f, ...)
     va_start (ap, f);
     vfprintf (mout, f, ap);
     fprintf (mout, "? [%lc%lc]:",toupper (def),tolower (other));
+    va_end (ap);
     fflush (mout);
     if (fgets (buffer, 18, min)) {
 	char *s = stripws (buffer);
@@ -285,6 +288,7 @@ verbose_message (char *f, ...)
 	va_start (ap, f);
 	vfprintf (mout, f, ap);
 	fprintf (mout, "\n");
+	va_end (ap);
     }
 }
 
@@ -297,6 +301,7 @@ debug_message (char *f, ...)
 	fprintf (mout, "debug: ");
 	vfprintf (mout, f, ap);
         fprintf (mout, "\n");
+	va_end (ap);
     }
 }
 
@@ -309,6 +314,7 @@ verbose_debug_message (char *f, ...)
 	fprintf (mout, "debug: ");
 	vfprintf (mout, f, ap);
 	fprintf (mout, "\n");
+	va_end (ap);
     }
 }
 
@@ -319,6 +325,7 @@ message (char *f, ...)
     va_start (ap, f);
     vfprintf (mout, f, ap);
     fprintf (mout, "\n");
+    va_end (ap);
 }
 
 void
@@ -329,6 +336,7 @@ warn_message (char *f, ...)
     fprintf (mout, "warn: ");
     vfprintf (mout, f, ap);
     fprintf (mout, "\n");
+    va_end (ap);
 }
 
 void

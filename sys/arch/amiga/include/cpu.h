@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/cpu.h,v 1.12.10.1 2001/07/04 10:15:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/cpu.h,v 1.12.10.2 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: cpu.h,v 1.36 1996/09/11 00:11:42 thorpej Exp $	*/
 
 /*
@@ -186,8 +186,6 @@ struct pcb;
 
 void	clearseg __P((vm_offset_t));
 void	doboot __P((void)) __attribute__((__noreturn__));
-u_long	getdfc __P((void));
-u_long	getsfc __P((void));
 void	loadustp __P((int));
 void	m68881_save __P((struct fpframe *));
 void	m68881_restore __P((struct fpframe *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.c,v 1.9.10.2 2001/07/04 10:14:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.c,v 1.9.10.3 2001/10/31 02:52:44 nate Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.7 1996/11/19 04:57:32 cgd Exp $	*/
 
 /*
@@ -47,7 +47,7 @@
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pcidevs.h>
 
-#include "vga_pci.h"
+#include "vga.h"
 #if NVGA_PCI
 #include <dev/pci/vga_pcivar.h>
 #endif

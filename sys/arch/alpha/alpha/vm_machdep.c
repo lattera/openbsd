@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/vm_machdep.c,v 1.12.4.2 2001/07/04 10:14:25 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/vm_machdep.c,v 1.12.4.3 2001/10/31 02:52:44 nate Exp $ */
 /* $NetBSD: vm_machdep.c,v 1.55 2000/03/29 03:49:48 simonb Exp $ */
 
 /*
@@ -40,8 +40,6 @@
 #include <sys/exec.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
@@ -380,7 +378,7 @@ vmapbuf(bp, len)
 		    faddr, &pa) == FALSE)
 			panic("vmapbuf: null page frame");
 		pmap_enter(vm_map_pmap(phys_map), taddr, trunc_page(pa),
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE, 0);
+		    VM_PROT_READ|VM_PROT_WRITE, PMAP_WIRED);
 		faddr += PAGE_SIZE;
 		taddr += PAGE_SIZE;
 	}

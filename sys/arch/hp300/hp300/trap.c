@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.2 2001/07/04 10:15:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.3 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: trap.c,v 1.57 1998/02/16 20:58:31 thorpej Exp $	*/
 
 /*
@@ -217,7 +217,7 @@ userret(p, fp, oticks, faultaddr, fromtrap)
 	u_int faultaddr;
 	int fromtrap;
 {
-	int sig, s;
+	int sig;
 #ifdef M68040
 	union sigval sv;
 	int beenhere = 0;
@@ -230,18 +230,9 @@ again:
 	p->p_priority = p->p_usrpri;
 	if (want_resched) {
 		/*
-		 * Since we are curproc, clock will normally just change
-		 * our priority without moving us from one queue to another
-		 * (since the running process is not on a queue.)
-		 * If that happened after we put ourselves on the run queue
-		 * but before we mi_switch()'ed, we might not be on the queue
-		 * indicated by our priority.
+		 * We're being preempted.
 		 */
-		s = splstatclock();
-		setrunqueue(p);
-		p->p_stats->p_ru.ru_nivcsw++;
-		mi_switch();
-		splx(s);
+		preempt(NULL);
 		while ((sig = CURSIG(p)) != 0)
 			postsig(sig);
 	}
@@ -302,7 +293,7 @@ trap(type, code, v, frame)
 	struct proc *p;
 	int i, s;
 	u_int ucode;
-	u_quad_t sticks = 0 /* XXX initializer works around compiler bug */;
+	u_quad_t sticks;
 	int typ = 0;
 	union sigval sv;
 
@@ -326,7 +317,7 @@ trap(type, code, v, frame)
 	switch (type) {
 
 	default:
-	dopanic:
+dopanic:
 		printf("trap type %d, code = 0x%x, v = 0x%x\n", type, code, v);
 		printf("%s program counter = 0x%x\n",
 		    (type & T_USER) ? "user" : "kernel", frame.f_pc);
@@ -355,7 +346,7 @@ trap(type, code, v, frame)
 			printf("(press a key)\n"); (void)cngetc();
 #endif
 		}
-		regdump(&frame, 128);
+		regdump(&(frame.F_t), 128);
 		type &= ~T_USER;
 		if ((u_int)type < trap_types)
 			panic(trap_type[type]);
@@ -521,12 +512,12 @@ trap(type, code, v, frame)
 	 * XXX: Trace traps are a nightmare.
 	 *
 	 *	HP-UX uses trap #1 for breakpoints,
-	 *	NetBSD/m68k uses trap #2,
+	 *	OpenBSD/m68k uses trap #2,
 	 *	SUN 3.x uses trap #15,
 	 *	DDB and KGDB uses trap #15 (for kernel breakpoints;
 	 *	handled elsewhere).
 	 *
-	 * NetBSD and HP-UX traps both get mapped by locore.s into T_TRACE.
+	 * OpenBSD and HP-UX traps both get mapped by locore.s into T_TRACE.
 	 * SUN 3.x traps get passed through as T_TRAP15 and are not really
 	 * supported yet.
 	 *
@@ -575,7 +566,7 @@ trap(type, code, v, frame)
 		 * IPL while processing the SIR.
 		 */
 		spl1();
-		/* fall into... */
+		/* FALLTHROUGH */
 
 	case T_SSIR:		/* software interrupt */
 	case T_SSIR|T_USER:
@@ -612,7 +603,7 @@ trap(type, code, v, frame)
 		if (p->p_addr->u_pcb.pcb_onfault == fubail ||
 		    p->p_addr->u_pcb.pcb_onfault == subail)
 			goto copyfault;
-		/* fall into ... */
+		/* FALLTHROUGH */
 
 	case T_MMUFLT|T_USER:	/* page fault */
 	    {
@@ -797,7 +788,7 @@ writeback(fp, docachepush)
 
 			pmap_enter(pmap_kernel(), (vaddr_t)vmmap,
 				   trunc_page((vaddr_t)f->f_fa), VM_PROT_WRITE,
-				   TRUE, VM_PROT_WRITE);
+				   VM_PROT_WRITE|PMAP_WIRED);
 			fa = (u_int)&vmmap[(f->f_fa & PGOFSET) & ~0xF];
 			bcopy((caddr_t)&f->f_pd0, (caddr_t)fa, 16);
 			pmap_extract(pmap_kernel(), (vaddr_t)fa, &pa);
@@ -1160,7 +1151,7 @@ syscall(code, frame)
 		/* nothing to do */
 		break;
 	default:
-	bad:
+bad:
 		if (p->p_emul->e_errno)
 			error = p->p_emul->e_errno[error];
 		frame.f_regs[D0] = error;

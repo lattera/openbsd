@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/GENERIC,v 1.8.2.1 2001/04/18 16:05:51 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/GENERIC,v 1.8.2.2 2001/10/31 02:52:46 nate Exp $
 #
 # Generic kernel config (all that is supportted)
 #
@@ -14,7 +14,6 @@ config	bsd swap generic
 
 #atapibus* at wdc?
 #wd*	at wdc? drive ?
-#acd*	at atapibus? drive ?
  
 sd*	at scsibus? target ? lun ?
 #cd*	at scsibus? target ? lun ?

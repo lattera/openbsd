@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/Attic/SHEPHERD_PIE,v 1.7.2.2 2001/07/04 10:15:57 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/Attic/SHEPHERD_PIE,v 1.7.2.3 2001/10/31 02:52:46 nate Exp $
 #
 # Diskless kernel config
 #
@@ -15,8 +15,6 @@ option	HP7200_CPU,HP7250_CPU		# PCXT, PCXT'
 #option	HP8000_CPU			# PCXU
 #option	HP8200_CPU			# PCXU2
 #option	HP8500_CPU			# PCXW
-
-option	SWAPPAGER, DEVPAGER
 
 option		DDB		# in-kernel debugger
 #makeoptions	DEBUG="-g"	# compile full symbol table

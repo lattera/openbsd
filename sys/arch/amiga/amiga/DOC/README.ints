@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/arch/amiga/amiga/DOC/Attic/README.ints,v 1.2.16.1 2001/07/04 10:15:04 niklas Exp $
+$OpenBSD: src/sys/arch/amiga/amiga/DOC/Attic/README.ints,v 1.2.16.2 2001/10/31 02:52:45 nate Exp $
 
 There are four different interruptsystems currently supported (well
 only three, really) in the kernel.  They are all mutual exclusive:
@@ -18,7 +18,7 @@ only three, really) in the kernel.  They are all mutual exclusive:
 	temporarily blocking level 6 interrupts via the Amiga custom
 	interrupt controller and set the AUD3 interrupt bit in that
 	same chip.  This will imply a level 4 interrupt to be
-	schudled.  In that handler after the level 6 interrupt has
+	scheduled.  In that handler after the level 6 interrupt has
 	been serviced, IPL 6 is unblocked again.  This will have
 	positive effect on interrupts coming in at IPL 5, specifically
 	the serial receive interrupt.  A potential trouble area is

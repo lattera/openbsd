@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/pmap.c,v 1.14.4.2 2001/07/04 10:15:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/pmap.c,v 1.14.4.3 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: pmap.c,v 1.80 1999/09/16 14:52:06 chs Exp $	*/
 
 /*-
@@ -143,10 +143,10 @@
 #include <machine/pte.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 
@@ -693,7 +693,7 @@ pmap_map(va, spa, epa, prot)
 	    ("pmap_map(%lx, %lx, %lx, %x)\n", va, spa, epa, prot));
 
 	while (spa < epa) {
-		pmap_enter(pmap_kernel(), va, spa, prot, FALSE, 0);
+		pmap_enter(pmap_kernel(), va, spa, prot, 0);
 		va += NBPG;
 		spa += NBPG;
 	}
@@ -707,7 +707,6 @@ pmap_map(va, spa, epa, prot)
  *
  *	Note: no locking is necessary in this function.
  */
-#ifdef PMAP_NEW
 pmap_t
 pmap_create()
 {
@@ -721,29 +720,6 @@ pmap_create()
 	pmap_pinit(pmap);
 	return (pmap);
 }
-#else
-pmap_t
-pmap_create(size)
-	vsize_t	size;
-{
-	pmap_t pmap;
-
-	PMAP_DPRINTF(PDB_FOLLOW|PDB_CREATE,
-	    ("pmap_create(%lx)\n", size));
-
-	/*
-	 * Software use map does not need a pmap
-	 */
-	if (size)
-		return (NULL);
-
-	pmap = pool_get(&pmap_pmap_pool, PR_WAITOK);
-
-	bzero(pmap, sizeof(*pmap));
-	pmap_pinit(pmap);
-	return (pmap);
-}
-#endif
 
 /*
  * pmap_pinit:
@@ -995,18 +971,11 @@ pmap_remove(pmap, sva, eva)
  *	the permissions specified.
  */
 void
-#ifdef PMAP_NEW
 pmap_page_protect(pg, prot)
 	struct vm_page *pg;
 	vm_prot_t	prot;
 {
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
-#else
-pmap_page_protect(pa, prot)
-	paddr_t		pa;
-	vm_prot_t	prot;
-{
-#endif
 	struct pv_entry *pv;
 	int s;
 
@@ -1161,27 +1130,24 @@ pmap_protect(pmap, sva, eva, prot)
  *	or lose information.  That is, this routine must actually
  *	insert this page into the given map NOW.
  */
-void
-pmap_enter(pmap, va, pa, prot, wired, access_type)
+int
+pmap_enter(pmap, va, pa, prot, flags)
 	pmap_t pmap;
 	vaddr_t va;
 	paddr_t pa;
 	vm_prot_t prot;
-	boolean_t wired;
-	vm_prot_t access_type;
+	int flags;
 {
 	pt_entry_t *pte;
 	int npte;
 	paddr_t opa;
 	boolean_t cacheable = TRUE;
 	boolean_t checkpv = TRUE;
+	boolean_t wired = (flags & PMAP_WIRED) != 0;
 
 	PMAP_DPRINTF(PDB_FOLLOW|PDB_ENTER,
 	    ("pmap_enter(%p, %lx, %lx, %x, %x)\n",
 	    pmap, va, pa, prot, wired));
-
-	if (pmap == NULL)
-		return;
 
 #ifdef DIAGNOSTIC
 	/*
@@ -1351,12 +1317,12 @@ pmap_enter(pmap, va, pa, prot, wired, access_type)
 		 * on the hint provided in access_type.
 		 */
 #ifdef DIAGNOSTIC
-		if (access_type & ~prot)
-			panic("pmap_enter: access_type exceeds prot");
+		if ((flags & VM_PROT_ALL) & ~prot)
+			panic("pmap_enter: access type exceeds prot");
 #endif
-		if (access_type & VM_PROT_WRITE)
+		if (flags & VM_PROT_WRITE)
 			*pa_to_attribute(pa) |= (PG_U|PG_M);
-		else if (access_type & VM_PROT_ALL)
+		else if (flags & VM_PROT_ALL)
 			*pa_to_attribute(pa) |= PG_U;
 
 		splx(s);
@@ -1448,16 +1414,17 @@ validate:
 	if ((pmapdebug & PDB_WIRING) && pmap != pmap_kernel())
 		pmap_check_wiring("enter", trunc_page((vaddr_t)pte));
 #endif
+
+	return (KERN_SUCCESS);
 }
 
-#ifdef PMAP_NEW
 void
 pmap_kenter_pa(va, pa, prot)
 	vaddr_t va;
 	paddr_t pa;
 	vm_prot_t prot;
 {
-	pmap_enter(pmap_kernel(), va, pa, prot, TRUE, 0);
+	pmap_enter(pmap_kernel(), va, pa, prot, PMAP_WIRED);
 }
 
 void
@@ -1470,7 +1437,7 @@ pmap_kenter_pgs(va, pgs, npgs)
 
 	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
 		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
-				VM_PROT_READ|VM_PROT_WRITE, TRUE, 0);
+				VM_PROT_READ|VM_PROT_WRITE, PMAP_WIRED);
 	}
 }
 
@@ -1483,7 +1450,6 @@ pmap_kremove(va, len)
 		pmap_remove(pmap_kernel(), va, va + PAGE_SIZE);
 	}
 }
-#endif
 
 /*
  * pmap_unwire:			[ INTERFACE]
@@ -1886,7 +1852,6 @@ pmap_copy_page(src, dst)
  *
  *	Clear the modify bits on the specified physical page.
  */
-#ifdef PMAP_NEW
 boolean_t
 pmap_clear_modify(pg)
 	struct vm_page *pg;
@@ -1900,24 +1865,12 @@ pmap_clear_modify(pg)
 	pmap_changebit(pa, 0, ~PG_M);
 	return rv;
 }
-#else
-void
-pmap_clear_modify(pa)
-	paddr_t	pa;
-{
-
-	PMAP_DPRINTF(PDB_FOLLOW, ("pmap_clear_modify(%lx)\n", pa));
-
-	pmap_changebit(pa, 0, ~PG_M);
-}
-#endif
 
 /*
  * pmap_clear_reference:	[ INTERFACE ]
  *
  *	Clear the reference bit on the specified physical page.
  */
-#ifdef PMAP_NEW
 boolean_t
 pmap_clear_reference(pg)
 	struct vm_page *pg;
@@ -1931,17 +1884,6 @@ pmap_clear_reference(pg)
 	pmap_changebit(pa, 0, ~PG_U);
 	return rv;
 }
-#else
-void
-pmap_clear_reference(pa)
-	paddr_t	pa;
-{
-
-	PMAP_DPRINTF(PDB_FOLLOW, ("pmap_clear_reference(%lx)\n", pa));
-
-	pmap_changebit(pa, 0, ~PG_U);
-}
-#endif
 
 /*
  * pmap_is_referenced:		[ INTERFACE ]
@@ -1950,16 +1892,10 @@ pmap_clear_reference(pa)
  *	by any physical maps.
  */
 boolean_t
-#ifdef PMAP_NEW
 pmap_is_referenced(pg)
 	struct vm_page *pg;
 {
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
-#else
-pmap_is_referenced(pa)
-	paddr_t	pa;
-{
-#endif
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW) {
 		boolean_t rv = pmap_testbit(pa, PG_U);
@@ -1977,16 +1913,10 @@ pmap_is_referenced(pa)
  *	by any physical maps.
  */
 boolean_t
-#ifdef PMAP_NEW
 pmap_is_modified(pg)
 	struct vm_page *pg;
 {
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
-#else
-pmap_is_modified(pa)
-	paddr_t	pa;
-{
-#endif
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW) {
 		boolean_t rv = pmap_testbit(pa, PG_M);
@@ -2611,8 +2541,8 @@ pmap_enter_ptpage(pmap, va)
 		kpt_used_list = kpt;
 		ptpa = kpt->kpt_pa;
 		bzero((caddr_t)kpt->kpt_va, NBPG);
-		pmap_enter(pmap, va, ptpa, VM_PROT_DEFAULT, TRUE,
-		    VM_PROT_DEFAULT);
+		pmap_enter(pmap, va, ptpa, VM_PROT_DEFAULT,
+		    VM_PROT_DEFAULT|PMAP_WIRED);
 #ifdef DEBUG
 		if (pmapdebug & (PDB_ENTER|PDB_PTPAGE)) {
 			int ix = pmap_ste(pmap, va) - pmap_ste(pmap, 0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.2 2001/07/04 10:16:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.3 2001/10/31 02:52:47 nate Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -38,8 +38,6 @@
  */
 #define	USRTEXT		0x00002000		/* Start of user .text */
 #define	USRSTACK	0x68FF3000		/* Start of user stack */
-#define	BTOPUSRSTACK	btop(USRSTACK)		/* btop(USRSTACK) */
-#define	P1PAGES		2
 #define	LOWPAGES	0
 #define	HIGHPAGES	UPAGES
 #define	SYSCALLGATE	0xC0000000		/* syscall gateway page */
@@ -62,16 +60,6 @@
 #ifndef	MAXSSIZ
 #define	MAXSSIZ		(UADDR-USRSTACK)	/* max stack size */
 #endif
-
-/*
- * Default sizes of swap allocation chunks (see dmap.h).
- * The actual values may be changed in vminit() based on MAXDSIZ.
- * With MAXDSIZ of 64Mb and NDMAP of 62, dmmax will be 4096.
- * DMMIN should be at least ctod(1) so that vtod() works.
- * vminit() ensures this.
- */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	4096			/* largest potential swap allocation */
 
 #ifndef USRIOSIZE
 #define	USRIOSIZE	((2*HPPA_PGALIAS)/PAGE_SIZE)	/* 2mb */
@@ -96,15 +84,6 @@
  */
 #define	MAXSLP 		20
 
-/*
- * A swapped in process is given a small amount of core without being bothered
- * by the page replacement algorithm.  Basically this says that if you are
- * swapped in you deserve some resources.  We protect the last SAFERSS
- * pages against paging and will just swap you out rather than paging you.
- */
-#define	SAFERSS		(0x4000/NBPG)	/* nominal ``small'' resident set size
-					   protected against replacement */
-
 /* user/kernel map constants */
 #define	VM_MIN_ADDRESS		((vaddr_t)0)
 #define	VM_MAXUSER_ADDRESS	((vaddr_t)0xc0000000)
@@ -126,9 +105,7 @@
 #define	VM_FREELIST_DEFAULT	0
 #define	VM_FREELIST_FIRST16	1
 
-#define	PMAP_NEW
-
-#ifdef _KERNEL
+#ifndef _LOCORE
 struct pmap_physseg {
 	struct pv_entry *pvent;
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/swapgeneric.c,v 1.12 1999/07/30 19:41:29 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/swapgeneric.c,v 1.12.4.1 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.27 1997/01/26 22:58:32 rat Exp $	*/
 
 /*
@@ -65,8 +65,8 @@ dev_t	rootdev = NODEV;
 dev_t	dumpdev = NODEV;
 
 struct	swdevt swdevt[] = {
-	{ NODEV,	1,	0 },
-	{ NODEV,	0,	0 },
+	{ NODEV, 0, 0 },	/* to be filled in */
+	{ NODEV, 0, 0 }
 };
 
 #if NFD > 0

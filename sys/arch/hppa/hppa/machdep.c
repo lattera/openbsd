@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.4 2001/07/04 10:16:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.5 2001/10/31 02:52:47 nate Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -68,7 +68,6 @@
 #include <sys/syscallargs.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <uvm/uvm_page.h>
 #include <uvm/uvm.h>
 
@@ -475,11 +474,6 @@ hptsize=256;	/* XXX one page for now */
 	v = vstart;
 #define valloc(name, type, num) (name) = (type *)v; v = (vaddr_t)((name)+(num))
 
-#ifdef REAL_CLISTS
-	valloc(cfree, struct cblock, nclist);
-#endif
-
-	valloc(timeouts, struct timeout, ntimeout);
 	valloc(buf, struct buf, nbuf);
 
 #ifdef SYSVSHM
@@ -648,7 +642,7 @@ cpu_startup()
 				    "buffer cache");
 			pmap_enter(kernel_map->pmap, curbuf,
 			    VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE,
-			    TRUE, VM_PROT_READ|VM_PROT_WRITE);
+			    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -667,13 +661,8 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr,
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
-	/*
-	 * Initialize timeouts
-	 */
-	timeout_init();
 
 #ifdef DEBUG
 	pmapdebug = opmapdebug;

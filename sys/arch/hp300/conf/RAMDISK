@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/RAMDISK,v 1.7.4.2 2001/07/04 10:15:22 niklas Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/RAMDISK,v 1.7.4.3 2001/10/31 02:52:46 nate Exp $
 #
 # Ram disk kernel.
 #
@@ -25,9 +25,6 @@ maxusers	8
 option		TIMEZONE=0	# time zone to adjust RTC time by
 option		DST=0		# daylight saving time used by RTC
 
-option		SWAPPAGER	# paging; REQUIRED
-option		DEVPAGER	# mmap() of devices
-
 option		DIAGNOSTIC	# internal consistency checks
 
 option		FFS		# UFS
@@ -36,7 +33,7 @@ option		FFS		# UFS
 option		NFSCLIENT	# Network File System client
 
 option		CD9660		# ISO 9660 + Rock Ridge file system
-option		MSDOSFS		# MS-DOS file system
+#option		MSDOSFS		# MS-DOS file system
 option		FIFO		# FIFOs; RECOMMENDED
 
 option		INET		# IP + ICMP + TCP + UDP

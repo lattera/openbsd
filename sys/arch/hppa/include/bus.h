@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.1 2001/04/18 16:06:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.2 2001/10/31 02:52:47 nate Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -356,8 +356,8 @@ struct hppa_bus_dma_tag {
 	int	(*_dmamem_map) __P((void *, bus_dma_segment_t *,
 		    int, size_t, caddr_t *, int));
 	void	(*_dmamem_unmap) __P((void *, caddr_t, size_t));
-	int	(*_dmamem_mmap) __P((void *, bus_dma_segment_t *,
-		    int, int, int, int));
+	paddr_t	(*_dmamem_mmap) __P((void *, bus_dma_segment_t *,
+		    int, off_t, int, int));
 };
 
 #define	bus_dmamap_create(t, s, n, m, b, f, p)			\

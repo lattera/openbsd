@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cia.h,v 1.3 1996/05/06 11:36:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cia.h,v 1.3.16.1 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: cia.h,v 1.9 1996/02/01 22:29:06 mycroft Exp $	*/
 
 /*
@@ -143,4 +143,4 @@ void dispatch_cia_ints __P((int, int));
 void ciaa_intr __P((void));
 void ciab_intr __P((void));
 
-#endif _AMIGA_CIA_
+#endif /* _AMIGA_CIA_ */

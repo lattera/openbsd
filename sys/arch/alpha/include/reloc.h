@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/alpha/include/reloc.h,v 1.1.2.1 2001/10/31 02:52:44 nate Exp $	*/
+
 #ifndef	_MACH_RELOC_H_
 #define	_MACH_RELOC_H_
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.6.10.2 2001/07/04 10:15:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.6.10.3 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.13 1997/06/10 18:56:50 veego Exp $	*/
 
 /* 
@@ -63,7 +63,6 @@ extern char *extiobase, *proc0paddr;
 extern st_entry_t *Sysseg;
 extern pt_entry_t *Sysptmap, *Sysmap;
 extern vaddr_t CLKbase, MMUbase;
-extern paddr_t pagezero;
 
 extern int maxmem, physmem;
 extern paddr_t avail_start, avail_end;
@@ -312,14 +311,6 @@ pmap_bootstrap(nextpa, firstpa)
 	epte = &pte[nptpages * NPTEPG];
 	while (pte < epte)
 		*pte++ = PG_NV;
-
-	/*
-	 * Save the physical address of `page zero'.  This is
-	 * a page of memory at the beginning of kernel text
-	 * not mapped at VA 0.  But, we might want to use it
-	 * for something later.
-	 */
-	RELOC(pagezero, paddr_t) = firstpa;
 
 	/*
 	 * Validate PTEs for kernel text (RO).  The first page

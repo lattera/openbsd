@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.2 2001/07/04 10:15:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.3 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: trap.c,v 1.56 1997/07/16 00:01:47 is Exp $	*/
 
 /*
@@ -204,7 +204,7 @@ userret(p, pc, oticks)
 	int pc;
 	u_quad_t oticks;
 {
-	int sig, s;
+	int sig;
 
 	while ((sig = CURSIG(p)) != 0)
 		postsig(sig);
@@ -213,18 +213,9 @@ userret(p, pc, oticks)
 
 	if (want_resched) {
 		/*
-		 * Since we are curproc, clock will normally just change
-		 * our priority without moving us from one queue to another
-		 * (since the running process is not on a queue.)
-		 * If that happened after we setrunqueue ourselves but before
-		 * we switch'ed, we might not be on the queue indicated by
-		 * our priority.
+		 * We're being preempted.
 		 */
-		s = splstatclock();
-		setrunqueue(p);
-		p->p_stats->p_ru.ru_nivcsw++;
-		mi_switch();
-		splx(s);
+		preempt(NULL);
 		while ((sig = CURSIG(p)) != 0)
 			postsig(sig);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.2 2001/07/04 10:15:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.3 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.16 1997/07/12 16:18:36 perry Exp $	*/
 
 /*
@@ -48,7 +48,7 @@
 #include <machine/pte.h>
 
 /*
- * Machine dependent constants for HP300
+ * Machine dependent constants for amiga
  */
 /*
  * USRTEXT is the start of the user text/data space, while USRSTACK
@@ -64,7 +64,7 @@
 #define	USRTEXT		(vm_offset_t)0x2000
 #define	USRSTACK	(vm_offset_t)0x0E000000
 #define	LOWPAGES	btoc(USRTEXT)
-#define KUSER_AREA	(-UPAGES*NBPG)
+
 /*
  * Virtual memory related constants, all in bytes
  */
@@ -86,20 +86,8 @@
 #endif
 
 /*
- * Default sizes of swap allocation chunks (see dmap.h).
- * The actual values may be changed in vminit() based on MAXDSIZ.
- * With MAXDSIZ of 16Mb and NDMAP of 38, dmmax will be 1024.
- * DMMIN should be at least ctod(1) so that vtod() works.
- * vminit() insures this.
- */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	NBPG			/* largest potential swap allocation */
-
-/*
  * Sizes of the system and user portions of the system page table.
  */
-/* SYSPTSIZE IS SILLY; IT SHOULD BE COMPUTED AT BOOT TIME */
-#define	SYSPTSIZE	(2 * NPTEPG)	/* 16mb */
 #define	USRPTSIZE 	(1 * NPTEPG)	/* 16mb */
 
 /*
@@ -128,15 +116,6 @@
  * change over time.
  */
 #define	MAXSLP 		20
-
-/*
- * A swapped in process is given a small amount of core without being bothered
- * by the page replacement algorithm.  Basically this says that if you are
- * swapped in you deserve some resources.  We protect the last SAFERSS
- * pages against paging and will just swap you out rather than paging you.
- */
-#define	SAFERSS		4		/* nominal ``small'' resident set size
-					   protected against replacement */
 
 /*
  * user/kernel map constants
@@ -180,16 +159,5 @@ struct pmap_physseg {
  * number of kernel PT pages (initial only, can grow dynamically)
  */
 #define VM_KERNEL_PT_PAGES	((vm_size_t)8)
-
-/*
- * XXX Override MI values for number of kernel maps and entries to statically
- * allocate, as we seem to lose hanging in high IPL with the MI values.
- */
-#ifndef MAX_KMAP
-#define MAX_KMAP	10
-#endif
-#ifndef MAX_KMAPENT
-#define MAX_KMAPENT	500
-#endif
 
 #endif /* !_MACHINE_VMPARAM_H_ */

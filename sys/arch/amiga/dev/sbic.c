@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.1 2001/04/18 16:02:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.2 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: sbic.c,v 1.28 1996/10/13 03:07:29 christos Exp $	*/
 
 /*
@@ -54,7 +54,6 @@
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 #include <machine/pmap.h>
 #include <machine/cpu.h>

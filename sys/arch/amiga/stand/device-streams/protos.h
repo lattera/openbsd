@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amiga/stand/device-streams/Attic/protos.h,v 1.1.1.1.4.1 2001/10/31 02:52:46 nate Exp $	*/
+
 /* START: "getdevices.c" */
 struct List * get_drive_list  (void);
 void free_drive_list  (struct List *l);

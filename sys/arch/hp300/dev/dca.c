@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11.12.1 2001/07/04 10:15:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11.12.2 2001/10/31 02:52:46 nate Exp $	*/
 /*	$NetBSD: dca.c,v 1.35 1997/05/05 20:58:18 thorpej Exp $	*/
 
 /*
@@ -71,6 +71,10 @@
 #include <hp300/dev/diovar.h>
 #include <hp300/dev/diodevs.h>
 #include <hp300/dev/dcareg.h>
+
+#ifdef DDB
+#include <ddb/db_var.h>
+#endif
 
 struct	dca_softc {
 	struct device		sc_dev;		/* generic device glue */
@@ -614,6 +618,12 @@ dcaeint(sc, stat)
 #endif
 		return;
 	}
+#if defined(DDB) && !defined(KGDB)
+	if ((sc->sc_flags & DCA_ISCONSOLE) && db_console && (stat & LSR_BI)) {
+		Debugger();
+		return;
+	}
+#endif
 	if (stat & (LSR_BI | LSR_FE))
 		c |= TTY_FE;
 	else if (stat & LSR_PE)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.2 2001/07/04 10:14:20 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.3 2001/10/31 02:52:44 nate Exp $ */
 /* $NetBSD: locore.s,v 1.80 2000/09/04 00:31:59 thorpej Exp $ */
 
 /*-
@@ -384,7 +384,7 @@ LEAF(exception_return, 1)			/* XXX should be NESTED */
 5:	ldiq	a0, ALPHA_PSL_IPL_SOFT
 	call_pal PAL_OSF1_swpipl
 	mov	v0, s2				/* remember old IPL */
-	CALL(do_sir)
+	CALL(softintr_dispatch)
 
 	/* SIR handled; restore IPL and check again */
 	mov	s2, a0

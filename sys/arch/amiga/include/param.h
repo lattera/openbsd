@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.2 2001/07/04 10:15:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.3 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:36 veego Exp $	*/
 
 /*
@@ -77,7 +77,7 @@
  * Size of kernel malloc arena in logical pages
  */
 #ifndef NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(3072 * 1024 / PAGE_SIZE)
+#define	NKMEMCLUSTERS	(2048 * 1024 / PAGE_SIZE)
 #endif
 
 #define MSGBUFSIZE	8192

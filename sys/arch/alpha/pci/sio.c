@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/sio.c,v 1.15.6.1 2001/04/18 16:01:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/sio.c,v 1.15.6.2 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: sio.c,v 1.15 1996/12/05 01:39:36 cgd Exp $	*/
 
 /*
@@ -45,10 +45,13 @@
 
 #include <alpha/pci/siovar.h>
 
+#include "isadma.h"
+
 struct sio_softc {
 	struct device	sc_dv;
 
 	bus_space_tag_t sc_iot, sc_memt;
+	bus_dma_tag_t	sc_dmat;
 	int		sc_haseisa;
 };
 
@@ -58,6 +61,9 @@ int	siomatch __P((struct device *, void *, void *));
 int	siomatch __P((struct device *, struct cfdata *, void *));
 #endif
 void	sioattach __P((struct device *, struct device *, void *));
+
+extern int sio_intr_alloc __P((isa_chipset_tag_t *, int, int, int *));
+
 
 struct cfattach sio_ca = {
 	sizeof(struct sio_softc), siomatch, sioattach,
@@ -154,6 +160,7 @@ sioattach(parent, self, aux)
 
 	sc->sc_iot = pa->pa_iot;
 	sc->sc_memt = pa->pa_memt;
+        sc->sc_dmat = pa->pa_dmat;
 	sc->sc_haseisa = (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_INTEL &&
 		PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_INTEL_PCEB);
 
@@ -193,10 +200,15 @@ sio_bridge_callback(v)
 	ic.ic_attach_hook = sio_isa_attach_hook;
 	ic.ic_intr_establish = sio_intr_establish;
 	ic.ic_intr_disestablish = sio_intr_disestablish;
+	ic.ic_intr_alloc = sio_intr_alloc;
 
 	sa.sa_iba.iba_busname = "isa";
 	sa.sa_iba.iba_iot = sc->sc_iot;
 	sa.sa_iba.iba_memt = sc->sc_memt;
+#if NISADMA > 0
+	sa.sa_iba.iba_dmat =
+		alphabus_dma_get_tag(sc->sc_dmat, ALPHA_BUS_ISA);
+#endif
 	sa.sa_iba.iba_ic = &ic;
 	config_found(&sc->sc_dv, &sa.sa_iba, sioprint);
 }

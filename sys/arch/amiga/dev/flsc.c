@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/flsc.c,v 1.8 1997/01/18 12:26:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/flsc.c,v 1.8.14.1 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: flsc.c,v 1.14 1996/12/23 09:10:00 veego Exp $	*/
 
 /*
@@ -45,7 +45,6 @@
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 #include <machine/pmap.h>
 #include <amiga/amiga/custom.h>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/conf.h,v 1.1 2001/10/26 01:28:06 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/conf.h,v 1.1.2.1 2001/10/31 02:52:44 nate Exp $ */
 /*
  * Copyright (c) 2001 Nathan L. Binkert
  * All rights reserved.

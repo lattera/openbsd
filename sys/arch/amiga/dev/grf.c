@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.8.14.1 2001/07/04 10:15:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.8.14.2 2001/10/31 02:52:45 nate Exp $	*/
 /*	$NetBSD: grf.c,v 1.32 1996/12/23 09:10:01 veego Exp $	*/
 
 /*
@@ -59,9 +59,6 @@
 #include <sys/vnode.h>
 #include <sys/mman.h>
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_page.h>
-#include <vm/vm_pager.h>
 #include <machine/cpu.h>
 #include <machine/fbio.h>
 #include <amiga/amiga/color.h>	/* DEBUG */
