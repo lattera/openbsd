@@ -253,14 +253,14 @@ neither line ending conversion nor keyword expansion will be done.
    Here is an example of how you can create a new file using the `-kb'
 flag:
 
-     $ echo '$Id$' > kotest
+     $ echo '$Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $' > kotest
      $ cvs add -kb -m"A test file" kotest
      $ cvs ci -m"First checkin; contains a keyword" kotest
 
    If a file accidentally gets added without `-kb', one can use the
 `cvs admin' command to recover.  For example:
 
-     $ echo '$Id$' > kotest
+     $ echo '$Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $' > kotest
      $ cvs add -m"A test file" kotest
      $ cvs ci -m"First checkin; contains a keyword" kotest
      $ cvs admin -kb kotest
@@ -1010,7 +1010,10 @@ file.
 * Using keywords::              Using keywords
 * Avoiding substitution::       Avoiding substitution
 * Substitution modes::          Substitution modes
-* Log keyword::                 Problems with the $Log$ keyword.
+* Log keyword::                 Problems with the $Log: cvs.info-4,v $
+* Log keyword::                 Problems with the Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+* Log keyword::                 Problems with the Latest from Cyclic Software
+* Log keyword::                 Problems with the keyword.
 
 
 File: cvs.info,  Node: Keyword list,  Next: Using keywords,  Up: Keyword substitution
@@ -1020,42 +1023,51 @@ Keyword List
 
    This is a list of the keywords:
 
-`$Author$'
+`$Author: tholo $'
      The login name of the user who checked in the revision.
 
-`$Date$'
+`$Date: 2001/09/28 22:48:51 $'
      The date and time (UTC) the revision was checked in.
 
-`$Header$'
+`$Header: /cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $'
      A standard header containing the full pathname of the RCS file,
      the revision number, the date (UTC), the author, the state, and
      the locker (if locked).  Files will normally never be locked when
      you use CVS.
 
-`$Id$'
-     Same as `$Header$', except that the RCS filename is without a path.
+`$Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $'
+     Same as `$Header: /cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $', except that the RCS filename is without a path.
 
-`$Name$'
+`$Name:  $'
      Tag name used to check out this file.  The keyword is expanded
      only if one checks out with an explicit tag name.  For example,
      when running the command `cvs co -r first', the keyword expands to
      `Name: first'.
 
-`$Locker$'
+`$Locker:  $'
      The login name of the user who locked the revision (empty if not
      locked, which is the normal case unless `cvs admin -l' is in use).
 
-`$Log$'
+`$Log: cvs.info-4,v $
+`Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+`Latest from Cyclic Software
+`'
      The log message supplied during commit, preceded by a header
      containing the RCS filename, the revision number, the author, and
      the date (UTC).  Existing log messages are _not_ replaced.
-     Instead, the new log message is inserted after `$Log:...$'.  Each
+     Instead, the new log message is inserted after `$Log: cvs.info-4,v $
+     Instead, the new log message is inserted after `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+     Instead, the new log message is inserted after `Latest from Cyclic Software
+     Instead, the new log message is inserted after `'.  Each
      new line is prefixed with the same string which precedes the
      `$Log' keyword.  For example, if the file contains
 
             /* Here is what people have been up to:
              *
-             * $Log: frob.c,v $
+             * $Log: cvs.info-4,v $
+             * Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+             * Latest from Cyclic Software
+             *
              * Revision 1.1  1997/01/03 14:23:51  joe
              * Add the superfrobnicate option
              *
@@ -1068,16 +1080,16 @@ Keyword List
      log in a source file, but for several reasons it can be
      problematic.  *Note Log keyword::.
 
-`$RCSfile$'
+`$RCSfile: cvs.info-4,v $'
      The name of the RCS file without a path.
 
-`$Revision$'
+`$Revision: 1.1.1.18 $'
      The revision number assigned to the revision.
 
-`$Source$'
+`$Source: /cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v $'
      The full pathname of the RCS file.
 
-`$State$'
+`$State: Exp $'
      The state assigned to the revision.  States can be assigned with
      `cvs admin -s'--see *Note admin options::.
 
@@ -1088,10 +1100,10 @@ Using keywords
 ==============
 
    To include a keyword string you simply include the relevant text
-string, such as `$Id$', inside the file, and commit the file.  CVS will
+string, such as `$Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $', inside the file, and commit the file.  CVS will
 automatically expand the string as part of the commit operation.
 
-   It is common to embed the `$Id$' string in the source files so that
+   It is common to embed the `$Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $' string in the source files so that
 it gets passed through to generated files.  For example, if you are
 managing computer program source code, you might include a variable
 which is initialized to contain that string.  Or some C compilers may
@@ -1105,11 +1117,11 @@ binary files.
 
      $ ident samp.c
      samp.c:
-          $Id: samp.c,v 1.5 1993/10/19 14:57:32 ceder Exp $
+          $Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $
      $ gcc samp.c
      $ ident a.out
      a.out:
-          $Id: samp.c,v 1.5 1993/10/19 14:57:32 ceder Exp $
+          $Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $
 
    SCCS is another popular revision control system.  It has a command,
 `what', which is very similar to `ident' and used for the same purpose.
@@ -1118,7 +1130,7 @@ character sequence `@(#)' it is easy to include keywords that are
 detected by either command.  Simply prefix the keyword with the magic
 SCCS phrase, like this:
 
-     static char *id="@(#) $Id: ab.c,v 1.5 1993/10/19 14:57:32 ceder Exp $";
+     static char *id="@(#) $Id: cvs.info-4,v 1.1.1.18 2001/09/28 22:48:51 tholo Exp $";
 
 
 File: cvs.info,  Node: Avoiding substitution,  Next: Substitution modes,  Prev: Using keywords,  Up: Keyword substitution
@@ -1127,9 +1139,9 @@ Avoiding substitution
 =====================
 
    Keyword substitution has its disadvantages.  Sometimes you might
-want the literal text string `$Author$' to appear inside a file without
+want the literal text string `$Author: tholo $' to appear inside a file without
 CVS interpreting it as a keyword and expanding it into something like
-`$Author: ceder $'.
+`$Author: tholo $'.
 
    There is unfortunately no way to selectively turn off keyword
 substitution.  You can use `-ko' (*note Substitution modes::) to turn
@@ -1137,7 +1149,7 @@ off keyword substitution entirely.
 
    In many cases you can avoid using keywords in the source, even
 though they appear in the final product.  For example, the source for
-this manual contains `$@asis{}Author$' whenever the text `$Author$'
+this manual contains `$@asis{}Author$' whenever the text `$Author: tholo $'
 should appear.  In `nroff' and `troff' you can embed the null-character
 `\&' inside the keyword for a similar effect.
 
@@ -1168,15 +1180,15 @@ files::, and *Note Merging and keywords::.
 `-kk'
      Generate only keyword names in keyword strings; omit their values.
      For example, for the `Revision' keyword, generate the string
-     `$Revision$' instead of `$Revision: 5.7 $'.  This option is useful
+     `$Revision: 1.1.1.18 $' instead of `$Revision: 1.1.1.18 $'.  This option is useful
      to ignore differences due to keyword substitution when comparing
      different revisions of a file (*note Merging and keywords::).
 
 `-ko'
      Generate the old keyword string, present in the working file just
      before it was checked in.  For example, for the `Revision'
-     keyword, generate the string `$Revision: 1.1 $' instead of
-     `$Revision: 5.7 $' if that is how the string appeared when the
+     keyword, generate the string `$Revision: 1.1.1.18 $' instead of
+     `$Revision: 1.1.1.18 $' if that is how the string appeared when the
      file was checked in.
 
 `-kb'
@@ -1190,9 +1202,9 @@ files::, and *Note Merging and keywords::.
 `-kv'
      Generate only keyword values for keyword strings.  For example,
      for the `Revision' keyword, generate the string `5.7' instead of
-     `$Revision: 5.7 $'.  This can help generate files in programming
+     `$Revision: 1.1.1.18 $'.  This can help generate files in programming
      languages where it is hard to strip keyword delimiters like
-     `$Revision: $' from a string.  However, further keyword
+     `$Revision: 1.1.1.18 $' from a string.  However, further keyword
      substitution cannot be performed once the keyword names are
      removed, so this option should be used with care.
 
@@ -1203,15 +1215,27 @@ files::, and *Note Merging and keywords::.
 
 File: cvs.info,  Node: Log keyword,  Prev: Substitution modes,  Up: Keyword substitution
 
-Problems with the $Log$ keyword.
+Problems with the $Log: cvs.info-4,v $
+Problems with the Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+Problems with the Latest from Cyclic Software
+Problems with the keyword.
 ================================
 
-   The `$Log$' keyword is somewhat controversial.  As long as you are
+   The `$Log: cvs.info-4,v $
+   The `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+   The `Latest from Cyclic Software
+   The `' keyword is somewhat controversial.  As long as you are
 working on your development system the information is easily accessible
-even if you do not use the `$Log$' keyword--just do a `cvs log'.  Once
+even if you do not use the `$Log: cvs.info-4,v $
+even if you do not use the `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+even if you do not use the `Latest from Cyclic Software
+even if you do not use the `' keyword--just do a `cvs log'.  Once
 you export the file the history information might be useless anyhow.
 
-   A more serious concern is that CVS is not good at handling `$Log$'
+   A more serious concern is that CVS is not good at handling `$Log: cvs.info-4,v $
+   A more serious concern is that CVS is not good at handling `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+   A more serious concern is that CVS is not good at handling `Latest from Cyclic Software
+   A more serious concern is that CVS is not good at handling `'
 entries when a branch is merged onto the main trunk.  Conflicts often
 result from the merging operation.
 
@@ -1220,7 +1244,10 @@ spelling mistakes and maybe even factual errors).  If that is done the
 information from `cvs log' will not be consistent with the information
 inside the file.  This may or may not be a problem in real life.
 
-   It has been suggested that the `$Log$' keyword should be inserted
+   It has been suggested that the `$Log: cvs.info-4,v $
+   It has been suggested that the `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+   It has been suggested that the `Latest from Cyclic Software
+   It has been suggested that the `' keyword should be inserted
 _last_ in the file, and not in the files header, if it is to be used at
 all.  That way the long list of change messages will not interfere with
 everyday source file browsing.

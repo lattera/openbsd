@@ -105,26 +105,29 @@ run the `cvs --help' command, or see *Note Index::.
 
    Keyword expansion modes (*note Substitution modes::):
 
-     -kkv  $Id: file1,v 1.1 1993/12/09 03:21:13 joe Exp $
-     -kkvl $Id: file1,v 1.1 1993/12/09 03:21:13 joe Exp harry $
-     -kk   $Id$
+     -kkv  $Id: cvs.info-7,v 1.1.1.13 2001/09/28 22:48:51 tholo Exp $
+     -kkvl $Id: cvs.info-7,v 1.1.1.13 2001/09/28 22:48:51 tholo Exp $
+     -kk   $Id: cvs.info-7,v 1.1.1.13 2001/09/28 22:48:51 tholo Exp $
      -kv   file1,v 1.1 1993/12/09 03:21:13 joe Exp
      -ko   no expansion
      -kb   no expansion, file is binary
 
    Keywords (*note Keyword list::):
 
-     $Author: joe $
-     $Date: 1993/12/09 03:21:13 $
-     $Header: /home/files/file1,v 1.1 1993/12/09 03:21:13 joe Exp harry $
-     $Id: file1,v 1.1 1993/12/09 03:21:13 joe Exp harry $
-     $Locker: harry $
-     $Name: snapshot_1_14 $
-     $RCSfile: file1,v $
-     $Revision: 1.1 $
-     $Source: /home/files/file1,v $
+     $Author: tholo $
+     $Date: 2001/09/28 22:48:51 $
+     $Header: /cvs/src/gnu/usr.bin/cvs/doc/cvs.info-7,v 1.1.1.13 2001/09/28 22:48:51 tholo Exp $
+     $Id: cvs.info-7,v 1.1.1.13 2001/09/28 22:48:51 tholo Exp $
+     $Locker:  $
+     $Name:  $
+     $RCSfile: cvs.info-7,v $
+     $Revision: 1.1.1.13 $
+     $Source: /cvs/src/gnu/usr.bin/cvs/doc/cvs.info-7,v $
      $State: Exp $
-     $Log: file1,v $
+     $Log: cvs.info-7,v $
+     Revision 1.1.1.13  2001/09/28 22:48:51  tholo
+     Latest from Cyclic Software
+
      Revision 1.1  1993/12/09 03:30:17  joe
      Initial revision
 

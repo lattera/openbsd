@@ -898,8 +898,11 @@ you undo the effect!
      set of states is `Exp' (for experimental), `Stab' (for stable),
      and `Rel' (for released).  By default, the state of a new revision
      is set to `Exp' when it is created.  The state is visible in the
-     output from CVS LOG (*note log::), and in the `$Log$' and
-     `$State$' keywords (*note Keyword substitution::).  Note that CVS
+     output from CVS LOG (*note log::), and in the `$Log: cvs.info-5,v $
+     output from CVS LOG (*note log::), and in the `Revision 1.1.1.18  2001/09/28 22:48:51  tholo
+     output from CVS LOG (*note log::), and in the `Latest from Cyclic Software
+     output from CVS LOG (*note log::), and in the `' and
+     `$State: Exp $' keywords (*note Keyword substitution::).  Note that CVS
      uses the `dead' state for its own purposes; to take a file to or
      from the `dead' state use commands like `cvs remove' and `cvs
      add', not `cvs admin -s'.
