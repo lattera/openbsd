@@ -17,7 +17,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: packet.c,v 1.28 2000/04/14 10:09:15 markus Exp $");
+RCSID("$Id: packet.c,v 1.29 2000/04/14 10:30:32 markus Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -1093,8 +1093,15 @@ packet_send_debug(const char *fmt,...)
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	packet_start(SSH_MSG_DEBUG);
-	packet_put_string(buf, strlen(buf));
+	if (compat20) {
+		packet_start(SSH2_MSG_DEBUG);
+		packet_put_char(0);	/* bool: always display */
+		packet_put_cstring(buf);
+		packet_put_cstring("");
+	} else {
+		packet_start(SSH_MSG_DEBUG);
+		packet_put_cstring(buf);
+	}
 	packet_send();
 	packet_write_wait();
 }
