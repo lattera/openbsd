@@ -1,10 +1,11 @@
+/*     $OpenBSD: src/usr.sbin/ipftest/Attic/pcap.h,v 1.5 1998/01/26 04:16:43 dgregor Exp $     */
 /*
- * (C)opyright 1993-1996 by Darren Reed.
+ * Copyright (C) 1993-1997 by Darren Reed.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
  * to the original author and the contributors.
- * $Id: pcap.h,v 2.0.1.1 1997/01/09 15:14:45 darrenr Exp $
+ * $Id: pcap.h,v 2.0.2.4 1997/09/28 07:12:10 darrenr Exp $
  */
 /*
  * This header file is constructed to match the version described by
