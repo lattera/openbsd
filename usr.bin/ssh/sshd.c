@@ -11,7 +11,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: sshd.c,v 1.74 1999/12/12 19:20:03 markus Exp $");
+RCSID("$Id: sshd.c,v 1.75 2000/01/04 00:08:01 markus Exp $");
 
 #include <poll.h>
 
@@ -848,6 +848,14 @@ main(int ac, char **av)
 		options.rhosts_authentication = 0;
 		options.rhosts_rsa_authentication = 0;
 	}
+#ifdef KRB4
+	if (!packet_connection_is_ipv4() &&
+	    options.kerberos_authentication) {
+		debug("Kerberos Authentication disabled, only available for IPv4.");
+		options.kerberos_authentication = 0;
+	}
+#endif /* KRB4 */
+
 	packet_set_nonblocking();
 
 	/* Handle the connection. */
