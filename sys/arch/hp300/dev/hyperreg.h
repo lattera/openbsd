@@ -1,14 +1,15 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/itereg.h,v 1.3 2003/06/02 23:27:45 millert Exp $	*/
-/*	$NetBSD: itereg.h,v 1.5 1994/10/26 07:24:39 cgd Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/hyperreg.h,v 1.1 2005/01/14 22:39:25 miod Exp $	*/
+/*	$NetBSD: grf_hyreg.h,v 1.2 1994/10/26 07:23:57 cgd Exp $	*/
 
 /*
- * Copyright (c) 1988 University of Utah.
+ * Copyright (c) 1991 University of Utah.
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
- * Science Department.
+ * Science Department and Mark Davies of the Department of Computer
+ * Science, Victoria University of Wellington, New Zealand.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,23 +35,43 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * from: Utah $Hdr: itereg.h 1.3 92/01/21$
+ * from: Utah $Hdr: grf_hyreg.h 1.1 92/01/22$
  *
- *	@(#)itereg.h	8.1 (Berkeley) 6/10/93
+ *	@(#)grf_hyreg.h	8.1 (Berkeley) 6/10/93
  */
 
-/*
- * Offsets into the display ROM that is part of the first 4K of each
- * display device.
- */
-#define FONTROM		0x3B	/* Offset of font information structure. */
-#define FONTADDR	0x4	/* Offset from FONTROM to font address. */
-#define FONTHEIGHT	0x0	/* Offset from font address to font height. */
-#define FONTWIDTH	0x2	/* Offset from font address to font width. */
-#define FONTDATA	0xA	/* Offset from font address to font glyphs. */
+struct hyboxfb {
+	u_int8_t :8;
+	u_int8_t reset;			/* reset register		0x01 */
+	u_int8_t fb_address;		/* frame buffer address 	0x02 */
+	u_int8_t interrupt;		/* interrupt register		0x03 */
+	u_int8_t :8;
+	u_int8_t fbwmsb;		/* frame buffer width MSB	0x05 */
+	u_int8_t :8;
+	u_int8_t fbwlsb;		/* frame buffer width MSB	0x07 */
+	u_int8_t :8;
+	u_int8_t fbhmsb;		/* frame buffer height MSB	0x09 */
+	u_int8_t :8;
+	u_int8_t fbhlsb;		/* frame buffer height MSB	0x0b */
+	u_int8_t :8;
+	u_int8_t dwmsb;			/* display width MSB		0x0d */
+	u_int8_t :8;
+	u_int8_t dwlsb;			/* display width MSB		0x0f */
+	u_int8_t :8;
+	u_int8_t dhmsb;			/* display height MSB		0x11 */
+	u_int8_t :8;
+	u_int8_t dhlsb;			/* display height MSB		0x13 */
+	u_int8_t :8;
+	u_int8_t fbid;			/* Scondary frame buffer id	0x15 */
+	u_int8_t :8;
+	u_int8_t bits;			/* square(0)/double-high(1) 	0x17 */
+	u_int8_t f1[0x5b-0x17-1];
+	u_int8_t num_planes;		/* number of color planes       0x5b */
+	u_int8_t :8;
+	u_int8_t fbomsb;		/* frame buffer offset MSB	0x5d */
+	u_int8_t :8;
+	u_int8_t fbolsb;		/* frame buffer offset LSB	0x5f */
+	u_int8_t f2[0x4000-0x5f-1];
+	u_int8_t nblank;		/* display enable planes      0x4000 */
+};
 
-#ifdef hp300
-#define FBBASE		((volatile u_char *)ip->fbbase)
-#else
-#define FBBASE		((volatile u_long *)ip->fbbase)
-#endif

@@ -1,8 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grfreg.h,v 1.4 2005/01/14 19:11:53 miod Exp $	*/
-/*	$NetBSD: grfreg.h,v 1.2 1994/10/26 07:24:09 cgd Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/diofbreg.h,v 1.1 2005/01/14 22:39:25 miod Exp $	*/
 
 /*
- * Copyright (c) 1991 University of Utah.
+ * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -60,32 +59,42 @@
 #define GID_HYPERION   14
 
 #ifndef	_LOCORE
-typedef unsigned char	grftype;
-
-struct	grfreg {
-	grftype	gr_pad0,
-		gr_id,		/* +0x01 */
-		gr_pad1[0x3],
-		gr_fbwidth_h,	/* +0x05 */
-		gr_pad2,
-		gr_fbwidth_l,	/* +0x07 */
-		gr_pad3,
-		gr_fbheight_h,	/* +0x09 */
-		gr_pad4,
-		gr_fbheight_l,	/* +0x0B */
-		gr_pad5,
-		gr_dwidth_h,	/* +0x0D */
-		gr_pad6,
-		gr_dwidth_l,	/* +0x0F */
-		gr_pad7,
-		gr_dheight_h,	/* +0x11 */
-		gr_pad8,
-		gr_dheight_l,	/* +0x13 */
-		gr_pad9,
-		gr_id2,		/* +0x15 */
-		gr_pad10[0x47],
-		gr_fbomsb,	/* +0x5d */
-		gr_pad11,
-		gr_fbolsb;	/* +0x5f */
+struct	diofbreg {
+	u_int8_t	:8;
+	u_int8_t	id;		/* +0x01 */
+	u_int8_t	pad1[0x3];
+	u_int8_t	fbwmsb;		/* +0x05 */
+	u_int8_t	:8;
+	u_int8_t	fbwlsb;		/* +0x07 */
+	u_int8_t	:8;
+	u_int8_t	fbhmsb;		/* +0x09 */
+	u_int8_t	:8;
+	u_int8_t	fbhlsb;		/* +0x0B */
+	u_int8_t	:8;
+	u_int8_t	dwmsb;		/* +0x0D */
+	u_int8_t	:8;
+	u_int8_t	dwlsb;		/* +0x0F */
+	u_int8_t	:8;
+	u_int8_t	dhmsb;		/* +0x11 */
+	u_int8_t	:8;
+	u_int8_t	dhlsb;		/* +0x13 */
+	u_int8_t	:8;
+	u_int8_t	id2;		/* +0x15 */
+	u_int8_t	pad2[0x47];
+	u_int8_t	fbomsb;		/* +0x5d */
+	u_int8_t	:8;
+	u_int8_t	fbolsb;		/* +0x5f */
 };
 #endif
+
+/*
+ * Offsets into the display ROM that is part of the first 4K of each
+ * DIO display device.
+ */
+#define FONTROM		0x3b	/* Offset of font information structure. */
+#define FONTADDR	0x4	/* Offset from FONTROM to font address. */
+#define FONTHEIGHT	0x0	/* Offset from font address to font height. */
+#define FONTWIDTH	0x2	/* Offset from font address to font width. */
+#define FONTDATA	0xA	/* Offset from font address to font glyphs. */
+
+#define FBBASE(fb)	((volatile char *)(fb)->fbkva)
