@@ -352,9 +352,10 @@ otilde\365oslash\370ugrave\371uacute\372yacute\375"     /* 6 */
  * the tag value is html decoded if dodecode is non-zero
  */
 
-static char *get_tag(pool *p, FILE *in, char *tag, int tagbuf_len, int dodecode)
+static char *get_tag(request_rec *r, FILE *in, char *tag, int tagbuf_len, int dodecode)
 {
     char *t = tag, *tag_val, c, term;
+    pool *p = r->pool;
 
     /* makes code below a little less cluttered */
     --tagbuf_len;
@@ -380,7 +381,7 @@ static char *get_tag(pool *p, FILE *in, char *tag, int tagbuf_len, int dodecode)
 
     /* find end of tag name */
     while (1) {
-        if (t - tag == tagbuf_len) {
+        if (t == tag + tagbuf_len) {
             *t = '\0';
             return NULL;
         }
@@ -414,16 +415,30 @@ static char *get_tag(pool *p, FILE *in, char *tag, int tagbuf_len, int dodecode)
     term = c;
     while (1) {
         GET_CHAR(in, c, NULL, p);
-        if (t - tag == tagbuf_len) {
+        if (t == tag + tagbuf_len) {
             *t = '\0';
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
+                          "mod_include: value length exceeds limit"
+                          " (%d) in %s", tagbuf_len, r->filename);
             return NULL;
         }
-/* Want to accept \" as a valid character within a string. */
+	/* Want to accept \" as a valid character within a string. */
         if (c == '\\') {
-            *(t++) = c;         /* Add backslash */
             GET_CHAR(in, c, NULL, p);
-            if (c == term) {    /* Only if */
-                *(--t) = c;     /* Replace backslash ONLY for terminator */
+            /* Insert backslash only if not escaping a terminator char */
+            if (c != term) {
+                *(t++) = '\\';
+                /*
+                 * check to make sure that adding in the backslash won't cause
+                 * an overflow, since we're now 1 character ahead.
+                 */
+                if (t == tag + tagbuf_len) {
+                    *t = '\0';
+                    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
+                                  "mod_include: value length exceeds limit"
+                                  " (%d) in %s", tagbuf_len, r->filename);
+                    return NULL;
+                }
             }
         }
         else if (c == term) {
@@ -659,7 +674,7 @@ static int handle_include(FILE *in, request_rec *r, const char *error, int noexe
     char *tag_val;
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         if (!strcmp(tag, "file") || !strcmp(tag, "virtual")) {
@@ -882,7 +897,7 @@ static int handle_exec(FILE *in, request_rec *r, const char *error)
     char parsed_string[MAX_STRING_LEN];
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         if (!strcmp(tag, "cmd")) {
@@ -933,7 +948,7 @@ static int handle_echo(FILE *in, request_rec *r, const char *error)
     encode = E_ENTITY;
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         if (!strcmp(tag, "var")) {
@@ -995,7 +1010,7 @@ static int handle_perl(FILE *in, request_rec *r, const char *error)
         return DECLINED;
     }
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             break;
         }
         if (strnEQ(tag, "sub", 3)) {
@@ -1028,7 +1043,7 @@ static int handle_config(FILE *in, request_rec *r, char *error, char *tf,
     table *env = r->subprocess_env;
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 0))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 0))) {
             return 1;
         }
         if (!strcmp(tag, "errmsg")) {
@@ -1144,7 +1159,7 @@ static int handle_fsize(FILE *in, request_rec *r, const char *error, int sizefmt
     char parsed_string[MAX_STRING_LEN];
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         else if (!strcmp(tag, "done")) {
@@ -1184,7 +1199,7 @@ static int handle_flastmod(FILE *in, request_rec *r, const char *error, const ch
     char parsed_string[MAX_STRING_LEN];
 
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         else if (!strcmp(tag, "done")) {
@@ -1960,7 +1975,7 @@ static int handle_if(FILE *in, request_rec *r, const char *error,
 
     expr = NULL;
     while (1) {
-        tag_val = get_tag(r->pool, in, tag, sizeof(tag), 0);
+        tag_val = get_tag(r, in, tag, sizeof(tag), 0);
         if (!tag_val || *tag == '\0') {
             return 1;
         }
@@ -2003,7 +2018,7 @@ static int handle_elif(FILE *in, request_rec *r, const char *error,
 
     expr = NULL;
     while (1) {
-        tag_val = get_tag(r->pool, in, tag, sizeof(tag), 0);
+        tag_val = get_tag(r, in, tag, sizeof(tag), 0);
         if (!tag_val || *tag == '\0') {
             return 1;
         }
@@ -2050,7 +2065,7 @@ static int handle_else(FILE *in, request_rec *r, const char *error,
 {
     char tag[MAX_STRING_LEN];
 
-    if (!get_tag(r->pool, in, tag, sizeof(tag), 1)) {
+    if (!get_tag(r, in, tag, sizeof(tag), 1)) {
         return 1;
     }
     else if (!strcmp(tag, "done")) {
@@ -2078,7 +2093,7 @@ static int handle_endif(FILE *in, request_rec *r, const char *error,
 {
     char tag[MAX_STRING_LEN];
 
-    if (!get_tag(r->pool, in, tag, sizeof(tag), 1)) {
+    if (!get_tag(r, in, tag, sizeof(tag), 1)) {
         return 1;
     }
     else if (!strcmp(tag, "done")) {
@@ -2108,7 +2123,7 @@ static int handle_set(FILE *in, request_rec *r, const char *error)
 
     var = (char *) NULL;
     while (1) {
-        if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+        if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
             return 1;
         }
         else if (!strcmp(tag, "done")) {
@@ -2145,7 +2160,7 @@ static int handle_printenv(FILE *in, request_rec *r, const char *error)
     table_entry *elts = (table_entry *) arr->elts;
     int i;
 
-    if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
+    if (!(tag_val = get_tag(r, in, tag, sizeof(tag), 1))) {
         return 1;
     }
     else if (!strcmp(tag, "done")) {
