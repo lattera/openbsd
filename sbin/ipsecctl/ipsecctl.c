@@ -1,4 +1,4 @@
-/*	$Id: ipsecctl.c,v 1.9 2005/04/04 20:39:49 hshoexer Exp $	 */
+/*	$OpenBSD: src/sbin/ipsecctl/ipsecctl.c,v 1.2 2005/04/04 22:22:55 hshoexer Exp $	*/
 /*
  * Copyright (c) 2004, 2005 Hans-Joerg Hoexer <hshoexer@openbsd.org>
  *

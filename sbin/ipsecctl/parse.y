@@ -1,4 +1,4 @@
-/*	$Id: parse.y,v 1.9 2005/04/04 21:41:56 hshoexer Exp $	*/
+/*	$OpenBSD: src/sbin/ipsecctl/parse.y,v 1.2 2005/04/04 22:22:55 hshoexer Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
