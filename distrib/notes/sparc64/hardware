@@ -1,0 +1,51 @@
+OpenBSD/MACHINE OSREV runs on the following classes of machines:
+	- SBUS based workstations:
+		Ultra 1
+		Ultra 1/Creator (should work, but has not been tested)
+		Ultra 2 (should work, but could not be tested)
+	- PCI based workstations:
+		Blade 100 (onboard ethernet has issues)
+		Enterprise 250
+		Ultra 5
+		Ultra 10
+		Ultra 30
+		SPARCengineUltra AX
+		SPARCengineUltra AXi
+	- faithful clones of the above Sun systems.
+
+If your machine is not listed above, it is very likely that OpenBSD/MACHINE
+does not work on it (yet).
+
+The minimal configuration requires 32M of RAM and ~160M of disk space.
+To install the entire system requires much more disk space, and to run
+X or compile the system, more RAM is recommended.
+
+At the moment, the X window system is not available.
+
+Supported devices {:-include-:}:
+	serial ports: 
+		Zilog ttya and ttyb (can be used as console if needed),
+
+	ethernet: 
+		on-board AMD Lance ethernet ("le0")
+		SBus AMD Lance ethernet cards
+		PCI/SBus SunSwift and Quad FastEthernet cards (hme, qfe)
+		SBus FastEthernet cards (qec+be)
+		SBus QuadEthernet cards (qec+qe)
+
+	SCSI: 
+		on-board "esp" SCSI controller
+		SBus "esp" SCSI controller (including 3rd party compatibles)
+
+	framebuffers:
+		on-board framebuffers,
+		(but the kernel will use the OpenPROM console still).
+
+
+Hardware the we do NOT currently support, but get many questions about:
+	Multiprocessor machines
+	Audio drivers
+	Floppy driver (except for booting)
+	FFB (Creator), PGX and AFB (Elite 3D) framebuffers
+        SBus ZX framebuffer (aka Leo)
+	other PCI and SBus cards have not been tested yet.
