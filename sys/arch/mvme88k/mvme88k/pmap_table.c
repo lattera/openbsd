@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.18 2004/05/19 14:30:53 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.19 2004/07/25 11:06:43 miod Exp $	*/
 
 /*
  * Mach Operating System
@@ -28,7 +28,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/types.h>
 #include <machine/board.h>
 #include <machine/cmmu.h>
 #include <uvm/uvm_extern.h>
