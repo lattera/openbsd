@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.26 2004/04/15 15:44:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.27 2004/06/06 18:20:27 grange Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -2028,7 +2028,7 @@ IDTVEC(dna)
 	GET_CPUINFO(%eax)
 	pushl	%eax
 #else
-	pushl	_C_LABEL(cpu_info_store)
+	pushl	$_C_LABEL(cpu_info_primary)
 #endif
 	call	*_C_LABEL(npxdna_func)
 	addl	$4,%esp
