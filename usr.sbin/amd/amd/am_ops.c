@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)am_ops.c	8.1 (Berkeley) 6/6/93
- *	$Id: am_ops.c,v 1.1.1.1 1995/10/18 08:47:10 deraadt Exp $
+ *	$Id: am_ops.c,v 1.2 2001/03/02 06:22:01 deraadt Exp $
  */
 
 #include "am.h"
@@ -111,7 +111,8 @@ char *map;
 	char *sublink = fs ? strchr(fs+1, ':') : 0;
 	char keybuf[MAXPATHLEN];
 
-	sprintf(keybuf, "type:=nfs;rhost:=%s;rfs:=%s;sublink:=%s;opts:=%s", host,
+	snprintf(keybuf, sizeof(keybuf),
+		"type:=nfs;rhost:=%s;rfs:=%s;sublink:=%s;opts:=%s", host,
 		fs ? fs+1 : "",
 		sublink ? sublink+1  : "",
 		g_key);

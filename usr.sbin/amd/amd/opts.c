@@ -38,7 +38,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)opts.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: opts.c,v 1.1.1.1 1995/10/18 08:47:11 deraadt Exp $";
+static char *rcsid = "$Id: opts.c,v 1.2 2001/03/02 06:22:04 deraadt Exp $";
 #endif /* not lint */
 
 #include "am.h"
@@ -520,7 +520,7 @@ static char expand_error[] = "No space to expand \"%s\"";
 						/*
 						 * Copy the string across unexpanded
 						 */
-						sprintf(xbuf, "${%s%s%s}",
+						snprintf(xbuf, sizeof(xbuf), "${%s%s%s}",
 							todo == E_File ? "/" :
 								todo == E_Domain ? "." : "",
 							nbuf,
