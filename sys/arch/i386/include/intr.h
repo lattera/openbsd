@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.16 2003/05/15 17:46:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.17 2003/05/17 16:07:37 andreas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -268,7 +268,9 @@ softintr(sir, vec)
 #define I386_IPI_GMTB	0x00000010
 #define I386_IPI_NYCHI	0x00000020
 
-#define I386_NIPI	6
+#define I386_IPI_DDB	0x00000040	/* syncronize while in ddb */
+
+#define I386_NIPI	7
 
 struct cpu_info;
 

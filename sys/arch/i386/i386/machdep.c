@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.18 2003/05/16 00:29:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.19 2003/05/17 16:07:37 andreas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -2732,6 +2732,7 @@ init386(paddr_t first_avail)
 #endif
 
 #ifdef DDB
+	db_machine_init();
 	ddb_init();
 	if (boothowto & RB_KDB)
 		Debugger();

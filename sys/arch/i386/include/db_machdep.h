@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.4 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.5 2003/05/17 16:07:37 andreas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.9 1996/05/03 19:23:59 christos Exp $	*/
 
 /* 
@@ -91,6 +91,8 @@ boolean_t 	db_check_access(vaddr_t, int, task_t);
 boolean_t	db_phys_eq(task_t, vaddr_t, task_t, vaddr_t);
 #endif
 
+#define DB_MACHINE_COMMANDS
+
 /* macros for printing OS server dependent task name */
 
 #define DB_TASK_NAME(task)	db_task_name(task)
@@ -116,5 +118,15 @@ void		db_task_name(/* task_t */);
 #define db_thread_fp_used(thread)	((thread)->pcb->ims.ifps != 0)
 
 int kdb_trap(int, int, db_regs_t *);
+
+void db_machine_init(void);
+void db_enter_ddb(void);
+void db_leave_ddb(void);
+void db_startcpu(int cpu);
+void db_stopcpu(int cpu);
+void db_movetocpu(int cpu);
+void i386_ipi_db(void);
+
+extern struct simplelock ddb_mp_slock;
 
 #endif	/* _I386_DB_MACHDEP_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.7 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.8 2003/05/17 16:07:37 andreas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -57,6 +57,7 @@
 #include <machine/intr.h>
 #include <machine/atomic.h>
 #include <machine/i82093var.h>
+#include <machine/db_machdep.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -75,6 +76,7 @@ void (*ipifunc[I386_NIPI])(void) =
 	0,
 	0,
 	0,
+	i386_ipi_db,
 };
 
 void
