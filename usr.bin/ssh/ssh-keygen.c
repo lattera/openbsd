@@ -7,7 +7,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: ssh-keygen.c,v 1.20 2000/04/26 21:55:04 deraadt Exp $");
+RCSID("$Id: ssh-keygen.c,v 1.21 2000/04/27 08:01:27 markus Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -488,7 +488,7 @@ void
 usage(void)
 {
 	printf("ssh-keygen version %s\n", SSH_VERSION);
-	printf("Usage: %s [-b bits] [-p] [-c] [-l] [-x] [-X] [-y] [-f file] [-P pass] [-N new-pass] [-C comment]\n", __progname);
+	printf("Usage: %s [-b bits] [-c] [-d] [-f file] [-l] [-p] [-q] [-x] [-y] [-C comment] [-N new-pass] [-P pass] [-X]\n", __progname);
 	exit(1);
 }
 
