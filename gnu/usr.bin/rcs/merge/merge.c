@@ -40,7 +40,7 @@ badoption(a)
 }
 
 
-mainProg(mergeId, "merge", "$Id: merge.c,v 1.3 1995/02/24 02:25:21 mycroft Exp $")
+mainProg(mergeId, "merge", "$Id: merge.c,v 1.1.1.1 1995/10/18 08:41:02 deraadt Exp $")
 {
 	register char const *a;
 	char const *arg[3], *label[3], *edarg = 0;
@@ -68,6 +68,9 @@ mainProg(mergeId, "merge", "$Id: merge.c,v 1.3 1995/02/24 02:25:21 mycroft Exp $
 				if (!(label[labels++] = *++argv))
 					faterror("-L needs following argument");
 				--argc;
+				break;
+
+			case 'Z':
 				break;
 
 			case 'V':

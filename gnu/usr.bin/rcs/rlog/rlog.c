@@ -28,6 +28,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rlog.c,v $
+ * Revision 1.1.1.1  1995/10/18 08:41:04  deraadt
+ * initial import of NetBSD tree
+ *
  * Revision 1.3  1995/02/24 02:25:43  mycroft
  * RCS 5.6.7.4
  *
@@ -212,10 +215,10 @@ static struct lockers *lockerlist;
 static struct stateattri *statelist;
 
 
-mainProg(rlogId, "rlog", "$Id: rlog.c,v 1.3 1995/02/24 02:25:43 mycroft Exp $")
+mainProg(rlogId, "rlog", "$Id: rlog.c,v 1.1.1.1 1995/10/18 08:41:04 deraadt Exp $")
 {
 	static char const cmdusage[] =
-		"\nrlog usage: rlog -{bhLNRt} -ddates -l[lockers] -r[revs] -sstates -Vn -w[logins] -xsuff -zzone file ...";
+		"\nrlog usage: rlog -{bhLNRt} -ddates -l[lockers] -r[revs] -sstates -Vn -w[logins] -xsuff -zzone -ZlocalId file ...";
 
 	register FILE *out;
 	char *a, **newargv;
@@ -309,6 +312,11 @@ mainProg(rlogId, "rlog", "$Id: rlog.c,v 1.3 1995/02/24 02:25:43 mycroft Exp $")
 
 		case 'V':
 			setRCSversion(*argv);
+			break;
+
+		case 'Z':
+			/* add local Id keyword */
+			setRCSlocalId(a);
 			break;
 
                 default:

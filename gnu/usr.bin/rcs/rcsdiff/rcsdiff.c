@@ -28,6 +28,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rcsdiff.c,v $
+ * Revision 1.2  1996/01/15 21:40:37  niklas
+ * Fix typo so two -L options can be fed to rcsdiff.
+ *
  * Revision 1.1.1.1  1995/10/18 08:41:03  deraadt
  * initial import of NetBSD tree
  *
@@ -150,10 +153,10 @@ static int exitstatus;
 static RILE *workptr;
 static struct stat workstat;
 
-mainProg(rcsdiffId, "rcsdiff", "$Id: rcsdiff.c,v 1.1.1.1 1995/10/18 08:41:03 deraadt Exp $")
+mainProg(rcsdiffId, "rcsdiff", "$Id: rcsdiff.c,v 1.2 1996/01/15 21:40:37 niklas Exp $")
 {
     static char const cmdusage[] =
-	    "\nrcsdiff usage: rcsdiff -ksubst -q -rrev1 [-rrev2] -Vn -xsuff -zzone [diff options] file ...";
+	    "\nrcsdiff usage: rcsdiff -ksubst -q -rrev1 [-rrev2] -Vn -xsuff -zzone -ZlocalId [diff options] file ...";
 
     int  revnums;                 /* counter for revision numbers given */
     char const *rev1, *rev2;	/* revision numbers from command line */
@@ -256,6 +259,9 @@ mainProg(rcsdiffId, "rcsdiff", "$Id: rcsdiff.c,v 1.1.1.1 1995/10/18 08:41:03 der
 	    case 'V':
 		    versionarg = *argv;
 		    setRCSversion(versionarg);
+		    goto option_handled;
+	    case 'Z':
+		    setRCSlocalId(*argv + 2);
 		    goto option_handled;
 	    case 'k':
 		    expandarg = *argv;
