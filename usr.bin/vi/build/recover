@@ -1,0 +1,119 @@
+#!/usr/bin/perl -w
+#
+# $OpenBSD: src/usr.bin/vi/build/recover,v 1.7 2001/01/11 04:56:52 millert Exp $
+#
+# Script to (safely) recover nvi edit sessions.
+#
+
+use Fcntl;
+require 'sys/syscall.ph';
+
+$recoverdir = $ARGV[0] || "/var/tmp/vi.recover";
+$sendmail = "/usr/sbin/sendmail";
+
+die "Sorry, $0 must be run as root\n" if $>;
+
+# Make the recovery dir if it does not already exist.
+if (!sysopen(DIR, $recoverdir, O_RDONLY|O_NOFOLLOW) || !stat(DIR)) {
+	die "Warning! $recoverdir is a symbolic link! (ignoring)\n"
+	    if -l $recoverdir;
+	mkdir($recoverdir, 01777) || die "Unable to create $recoverdir: $!\n";
+	chmod(01777, $recoverdir);
+	exit(0);
+}
+
+#
+# Sanity check the vi recovery dir
+# Perl doesn't support fchdir, fchmod, or fchown so we call
+# fchdir(2) via the syscall interface and then just modify ".".
+#
+die "Warning! $recoverdir is not a directory! (ignoring)\n"
+    unless -d _;
+die "$0: can't chdir to $recoverdir: $!\n"
+    unless syscall(&SYS_fchdir, fileno(DIR)) == 0;
+if (! -O _) {
+	warn "Warning! $recoverdir is not owned by root! (fixing)\n";
+	chown(0, 0, ".");
+}
+if (((stat(_))[2] & 07777) != 01777) {
+	warn "Warning! $recoverdir is not mode 01777! (fixing)\n";
+	chmod(01777, ".");
+}
+
+# Check editor backup files.
+opendir(RECDIR, ".") || die "$0: can't open $recoverdir: $!\n";
+foreach $file (readdir(RECDIR)) {
+	next unless $file =~ /^vi\./;
+
+	#
+	# Unmodified vi editor backup files either have the
+	# execute bit set or are zero length.  Delete them.
+	# Anything that is not a normal file gets deleted too.
+	#
+	lstat($file) || die "$0: can't stat $file: $!\n";
+	if (-x _ || ! -s _ || ! -f _) {
+		unlink($file) unless -d _;
+	}
+}
+
+#
+# It is possible to get incomplete recovery files if the editor crashes
+# at the right time.
+#
+rewinddir(RECDIR);
+foreach $file (readdir(RECDIR)) {
+	next unless $file =~ /^recover\./;
+
+	if (!sysopen(RECFILE, $file, O_RDONLY|O_NOFOLLOW)) {
+	    warn "$0: can't open $file: $!\n";
+	    next;
+	}
+
+	#
+	# Delete anything that is not a regular file as that is either
+	# filesystem corruption from fsck or an exploit attempt.
+	#
+	if (!stat(RECFILE)) {
+		warn "$0: can't stat $file: $!\n";
+		close(RECFILE);
+		next;
+	}
+	if (! -f _ || ! -s _) {
+		unlink($file) unless -d _;
+		close(RECFILE);
+		next;
+	}
+
+	#
+	# Slurp in the recover.* file and search for X-vi-recover-path
+	# (which should point to an existing vi.* file).
+	#
+	@recfile = <RECFILE>;
+	close(RECFILE);
+
+	#
+	# Delete any recovery files that have no (or more than one)
+	# corresponding backup file.
+	#
+	@backups = grep(/^X-vi-recover-path:/, @recfile);
+	unlink($file) unless $#backups == 0;
+
+	#
+	# If recovery file is zero length, remove it.
+	# Else send mail to the user.
+	#
+	$backups[0] =~ /^X-vi-recover-path:\s*(.*)[\r\n]*$/;
+	$backup = $1;
+	if (! -s $backup) {
+		unlink($file, $backup);
+	} else {
+		open(SENDMAIL, "|$sendmail -t") ||
+		    die "$0: can't run $sendmail -t: $!\n";
+		print SENDMAIL @recfile;
+		close(SENDMAIL);
+	}
+}
+closedir(RECDIR);
+close(DIR);
+
+exit(0);
