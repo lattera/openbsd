@@ -1,21 +1,42 @@
 /*
- *
- * authfile.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Mon Mar 27 03:52:05 1995 ylo
- *
  * This file contains functions for reading and writing identity files, and
  * for reading the passphrase from the user.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ *
+ *
+ * Copyright (c) 2000 Markus Friedl.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.16.2.1 2000/09/01 18:23:17 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.16.2.2 2000/11/08 21:30:27 jason Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/dsa.h>
@@ -26,7 +47,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.16.2.1 2000/09/01 18:23:17 jason
 #include "xmalloc.h"
 #include "buffer.h"
 #include "bufaux.h"
-#include "cipher.h"
 #include "ssh.h"
 #include "key.h"
 
@@ -47,8 +67,8 @@ save_private_key_rsa(const char *filename, const char *passphrase,
 	Buffer buffer, encrypted;
 	char buf[100], *cp;
 	int fd, i;
-	CipherContext cipher;
-	int cipher_type;
+	CipherContext ciphercontext;
+	Cipher *cipher;
 	u_int32_t rand;
 
 	/*
@@ -56,9 +76,11 @@ save_private_key_rsa(const char *filename, const char *passphrase,
 	 * to another cipher; otherwise use SSH_AUTHFILE_CIPHER.
 	 */
 	if (strcmp(passphrase, "") == 0)
-		cipher_type = SSH_CIPHER_NONE;
+		cipher = cipher_by_number(SSH_CIPHER_NONE);
 	else
-		cipher_type = SSH_AUTHFILE_CIPHER;
+		cipher = cipher_by_number(SSH_AUTHFILE_CIPHER);
+	if (cipher == NULL)
+		fatal("save_private_key_rsa: bad cipher");
 
 	/* This buffer is used to built the secret part of the private key. */
 	buffer_init(&buffer);
@@ -95,7 +117,7 @@ save_private_key_rsa(const char *filename, const char *passphrase,
 	buffer_put_char(&encrypted, 0);
 
 	/* Store cipher type. */
-	buffer_put_char(&encrypted, cipher_type);
+	buffer_put_char(&encrypted, cipher->number);
 	buffer_put_int(&encrypted, 0);	/* For future extension */
 
 	/* Store public key.  This will be in plain text. */
@@ -107,11 +129,10 @@ save_private_key_rsa(const char *filename, const char *passphrase,
 	/* Allocate space for the private part of the key in the buffer. */
 	buffer_append_space(&encrypted, &cp, buffer_len(&buffer));
 
-	cipher_set_key_string(&cipher, cipher_type, passphrase);
-	cipher_encrypt(&cipher, (unsigned char *) cp,
-		       (unsigned char *) buffer_ptr(&buffer),
-		       buffer_len(&buffer));
-	memset(&cipher, 0, sizeof(cipher));
+	cipher_set_key_string(&ciphercontext, cipher, passphrase);
+	cipher_encrypt(&ciphercontext, (unsigned char *) cp,
+	    (unsigned char *) buffer_ptr(&buffer), buffer_len(&buffer));
+	memset(&ciphercontext, 0, sizeof(ciphercontext));
 
 	/* Destroy temporary data. */
 	memset(buf, 0, sizeof(buf));
@@ -262,6 +283,7 @@ load_public_key_rsa(const char *filename, RSA * pub, char **comment_return)
 	return 1;
 }
 
+/* load public key from private-key file */
 int
 load_public_key(const char *filename, Key * key, char **comment_return)
 {
@@ -291,7 +313,8 @@ load_private_key_rsa(int fd, const char *filename,
 	off_t len;
 	Buffer buffer, decrypted;
 	char *cp;
-	CipherContext cipher;
+	CipherContext ciphercontext;
+	Cipher *cipher;
 	BN_CTX *ctx;
 	BIGNUM *aux;
 
@@ -342,10 +365,10 @@ load_private_key_rsa(int fd, const char *filename,
 		xfree(buffer_get_string(&buffer, NULL));
 
 	/* Check that it is a supported cipher. */
-	if (((cipher_mask1() | SSH_CIPHER_NONE | SSH_AUTHFILE_CIPHER) &
-	     (1 << cipher_type)) == 0) {
-		debug("Unsupported cipher %.100s used in key file %.200s.",
-		      cipher_name(cipher_type), filename);
+	cipher = cipher_by_number(cipher_type);
+	if (cipher == NULL) {
+		debug("Unsupported cipher %d used in key file %.200s.",
+		    cipher_type, filename);
 		buffer_free(&buffer);
 		goto fail;
 	}
@@ -354,11 +377,10 @@ load_private_key_rsa(int fd, const char *filename,
 	buffer_append_space(&decrypted, &cp, buffer_len(&buffer));
 
 	/* Rest of the buffer is encrypted.  Decrypt it using the passphrase. */
-	cipher_set_key_string(&cipher, cipher_type, passphrase);
-	cipher_decrypt(&cipher, (unsigned char *) cp,
-		       (unsigned char *) buffer_ptr(&buffer),
-		       buffer_len(&buffer));
-
+	cipher_set_key_string(&ciphercontext, cipher, passphrase);
+	cipher_decrypt(&ciphercontext, (unsigned char *) cp,
+	    (unsigned char *) buffer_ptr(&buffer), buffer_len(&buffer));
+	memset(&ciphercontext, 0, sizeof(ciphercontext));
 	buffer_free(&buffer);
 
 	check1 = buffer_get_char(&decrypted);
@@ -490,4 +512,58 @@ load_private_key(const char *filename, const char *passphrase, Key *key,
 	}
 	close(fd);
 	return ret;
+}
+
+int
+do_load_public_key(const char *filename, Key *k, char **commentp)
+{
+	FILE *f;
+	unsigned int bits;
+	char line[1024];
+	char *cp;
+
+	f = fopen(filename, "r");
+	if (f != NULL) {
+		while (fgets(line, sizeof(line), f)) {
+			line[sizeof(line)-1] = '\0';
+			cp = line;
+			switch(*cp){
+			case '#':
+			case '\n':
+			case '\0':
+				continue;
+			}
+			/* Skip leading whitespace. */
+			for (; *cp && (*cp == ' ' || *cp == '\t'); cp++)
+				;
+			if (*cp) {
+				bits = key_read(k, &cp);
+				if (bits != 0) {
+					if (commentp)
+						*commentp=xstrdup(filename);
+					fclose(f);
+					return 1;
+				}
+			}
+		}
+		fclose(f);
+	}
+	return 0;
+}
+
+/* load public key from pubkey file */
+int
+try_load_public_key(const char *filename, Key *k, char **commentp)
+{
+	char pub[MAXPATHLEN];
+
+	if (do_load_public_key(filename, k, commentp) == 1)
+		return 1;
+	if (strlcpy(pub, filename, sizeof pub) >= MAXPATHLEN)
+		return 0;
+	if (strlcat(pub, ".pub", sizeof pub) >= MAXPATHLEN)
+		return 0;
+	if (do_load_public_key(pub, k, commentp) == 1)
+		return 1;
+	return 0;
 }

@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/usr.bin/ssh/deattack.c,v 1.6.2.2 2000/11/08 21:30:43 jason Exp $	*/
+
 /*
- * $OpenBSD: src/usr.bin/ssh/deattack.c,v 1.6.2.1 2000/09/01 18:23:19 jason Exp $
  * Cryptographic attack detector for ssh - source code
  *
  * Copyright (c) 1998 CORE SDI S.A., Buenos Aires, Argentina.
@@ -84,7 +85,7 @@ int
 detect_attack(unsigned char *buf, u_int32_t len, unsigned char *IV)
 {
 	static u_int16_t *h = (u_int16_t *) NULL;
-	static u_int16_t n = HASH_MINSIZE / HASH_ENTRYSIZE;
+	static u_int32_t n = HASH_MINSIZE / HASH_ENTRYSIZE;
 	register u_int32_t i, j;
 	u_int32_t l;
 	register unsigned char *c;

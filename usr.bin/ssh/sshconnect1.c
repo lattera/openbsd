@@ -2,14 +2,18 @@
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- * Created: Sat Mar 18 22:15:47 1995 ylo
  * Code to connect to a remote host, and to perform the client side of the
  * login (authentication) dialog.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.3.2.1 2000/09/01 18:23:24 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.3.2.2 2000/11/08 21:31:29 jason Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/dsa.h>
@@ -21,7 +25,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.3.2.1 2000/09/01 18:23:24 jas
 #include "ssh.h"
 #include "buffer.h"
 #include "packet.h"
-#include "cipher.h"
 #include "mpaux.h"
 #include "uidswap.h"
 #include "readconf.h"
@@ -832,17 +835,11 @@ ssh_kex(char *host, struct sockaddr *hostaddr)
 
 	if (options.cipher == SSH_CIPHER_ILLEGAL) {
 		log("No valid SSH1 cipher, using %.100s instead.",
-		    cipher_name(SSH_FALLBACK_CIPHER));
-		options.cipher = SSH_FALLBACK_CIPHER;
+		    cipher_name(ssh_cipher_default));
+		options.cipher = ssh_cipher_default;
 	} else if (options.cipher == SSH_CIPHER_NOT_SET) {
-		if (cipher_mask1() & supported_ciphers & (1 << ssh_cipher_default))
+		if (cipher_mask_ssh1(1) & supported_ciphers & (1 << ssh_cipher_default))
 			options.cipher = ssh_cipher_default;
-		else {
-			debug("Cipher %s not supported, using %.100s instead.",
-			    cipher_name(ssh_cipher_default),
-			    cipher_name(SSH_FALLBACK_CIPHER));
-			options.cipher = SSH_FALLBACK_CIPHER;
-		}
 	}
 	/* Check that the selected cipher is supported. */
 	if (!(supported_ciphers & (1 << options.cipher)))

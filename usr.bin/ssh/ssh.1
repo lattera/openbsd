@@ -1,16 +1,40 @@
 .\"  -*- nroff -*-
 .\"
-.\" ssh.1.in
-.\"
 .\" Author: Tatu Ylonen <ylo@cs.hut.fi>
-.\"
 .\" Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
 .\"                    All rights reserved
 .\"
-.\" Created: Sat Apr 22 21:55:14 1995 ylo
+.\" As far as I am concerned, the code I have written for this software
+.\" can be used freely for any purpose.  Any derived versions of this
+.\" software must be clearly marked as such, and if the derived work is
+.\" incompatible with the protocol description in the RFC file, it must be
+.\" called by a name other than "ssh" or "Secure Shell".
 .\"
-.\" $Id: ssh.1,v 1.57 2000/08/25 16:16:15 deraadt Exp $
+.\" Copyright (c) 1999,2000 Markus Friedl. All rights reserved.
+.\" Copyright (c) 1999 Aaron Campbell. All rights reserved.
+.\" Copyright (c) 1999 Theo de Raadt. All rights reserved.
 .\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $OpenBSD: src/usr.bin/ssh/ssh.1,v 1.52.2.3 2000/11/08 21:31:23 jason Exp $
 .Dd September 25, 1999
 .Dt SSH 1
 .Os
@@ -344,15 +368,16 @@ It is believed to be secure.
 (triple-des) is an encrypt-decrypt-encrypt triple with three different keys.
 It is presumably more secure than the
 .Ar des
-cipher which is no longer supported in
+cipher which is no longer fully supported in
 .Nm ssh .
 .Ar blowfish
 is a fast block cipher, it appears very secure and is much faster than
 .Ar 3des .
 .It Fl c Ar "3des-cbc,blowfish-cbc,arcfour,cast128-cbc"
 Additionally, for protocol version 2 a comma-separated list of ciphers can
-be specified in order of preference. Protocol version 2 supports
-3DES, Blowfish and CAST128 in CBC mode and Arcfour.
+be specified in order of preference.
+Protocol version 2 supports 3DES, Blowfish, and CAST128 in CBC mode
+and Arcfour.
 .It Fl e Ar ch|^ch|none
 Sets the escape character for sessions with a pty (default:
 .Ql ~ ) .
@@ -460,6 +485,8 @@ debugging connection, authentication, and configuration problems.
 The verbose mode is also used to display
 .Xr skey 1
 challenges, if the user entered "s/key" as password.
+Multiple -v options increases the verbosity.
+Maximum is 3.
 .It Fl x
 Disables X11 forwarding.
 .It Fl X
@@ -601,9 +628,10 @@ If the option is set to
 .Dq no ,
 the check will not be executed.
 .It Cm Cipher
-Specifies the cipher to use for encrypting the session.
+Specifies the cipher to use for encrypting the session
+in protocol version 1.
 Currently,
-.Dq blowfish ,
+.Dq blowfish 
 and
 .Dq 3des
 are supported.
@@ -614,7 +642,7 @@ Specifies the ciphers allowed for protocol version 2
 in order of preference.
 Multiple ciphers must be comma-separated.
 The default is
-.Dq 3des-cbc,blowfish-cbc,arcfour,cast128-cbc .
+.Dq 3des-cbc,blowfish-cbc,cast128-cbc,arcfour .
 .It Cm Compression
 Specifies whether to use compression.
 The argument must be
@@ -946,6 +974,7 @@ Specifies the location of the
 program.
 The default is
 .Pa /usr/X11R6/bin/xauth .
+.El
 .Sh ENVIRONMENT
 .Nm
 will normally set the following environment variables:
@@ -1189,6 +1218,7 @@ above.
 .It Pa libcrypto.so.X.1
 A version of this library which includes support for the RSA algorithm
 is required for proper operation.
+.El
 .Sh AUTHOR
 OpenSSH
 is a derivative of the original (free) ssh 1.2.12 release by Tatu Ylonen,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999 Markus Friedl.  All rights reserved.
+ * Copyright (c) 1999,2000 Markus Friedl.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -9,11 +9,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Markus Friedl.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -28,12 +23,13 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.13.2.2 2000/09/01 18:23:19 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.13.2.3 2000/11/08 21:30:38 jason Exp $");
 
 #include "ssh.h"
 #include "packet.h"
 #include "xmalloc.h"
 #include "compat.h"
+#include <regex.h>
 
 int compat13 = 0;
 int compat20 = 0;
@@ -55,27 +51,46 @@ enable_compat13(void)
 void
 compat_datafellows(const char *version)
 {
-	int i;
-	size_t len;
-	struct {
-		char	*version;
+	int i, ret;
+	char ebuf[1024];
+	regex_t reg;
+	static struct {
+		char	*pat;
 		int	bugs;
 	} check[] = {
-		{"2.1.0",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC},
-		{"2.0.1",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC|SSH_BUG_PUBKEYAUTH|SSH_BUG_X11FWD},
-		{"2.",		SSH_BUG_HMAC|SSH_COMPAT_SESSIONID_ENCODING},
-		{NULL,		0}
+		{ "^OpenSSH[-_]2\\.[012]",	SSH_OLD_SESSIONID },
+		{ "MindTerm",		0 },
+		{ "^2\\.1\\.0 ",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
+					SSH_OLD_SESSIONID },
+		{ "^2\\.0\\.",		SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
+					SSH_OLD_SESSIONID|
+					SSH_BUG_PUBKEYAUTH|SSH_BUG_X11FWD },
+		{ "^2\\.[23]\\.0 ",	SSH_BUG_HMAC},
+		{ "^2\\.[2-9]\\.",	0 },
+		{ "^2\\.4$",		SSH_OLD_SESSIONID}, /* Van Dyke */
+		{ "^3\\.0 SecureCRT",	SSH_OLD_SESSIONID},
+		{ "^1\\.7 SecureFX",	SSH_OLD_SESSIONID},
+		{ "^2\\.",		SSH_BUG_HMAC},	/* XXX fallback */
+		{ NULL,			0 }
 	};
 	/* process table, return first match */
-	for (i = 0; check[i].version; i++) {
-		len = strlen(check[i].version);
-		if (strlen(version) >= len &&
-		   (strncmp(version, check[i].version, len) == 0)) {
-			verbose("datafellows: %.200s", version);
+	for (i = 0; check[i].pat; i++) {
+		ret = regcomp(&reg, check[i].pat, REG_EXTENDED|REG_NOSUB);
+		if (ret != 0) {
+			regerror(ret, &reg, ebuf, sizeof(ebuf));
+			ebuf[sizeof(ebuf)-1] = '\0';
+			error("regerror: %s", ebuf);
+			continue;
+		}
+		ret = regexec(&reg, version, 0, NULL, 0);
+		regfree(&reg);
+		if (ret == 0) {
+			debug("match: %s pat %s\n", version, check[i].pat);
 			datafellows = check[i].bugs;
 			return;
 		}
 	}
+	debug("no match: %s", version);
 }
 
 #define	SEP	","

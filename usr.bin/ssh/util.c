@@ -1,5 +1,31 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/util.c,v 1.4.2.2 2000/11/08 21:31:38 jason Exp $	*/
+
+/*
+ * Copyright (c) 2000 Markus Friedl.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/util.c,v 1.4.2.1 2000/09/01 18:23:25 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/util.c,v 1.4.2.2 2000/11/08 21:31:38 jason Exp $");
 
 #include "ssh.h"
 
@@ -22,18 +48,15 @@ void
 set_nonblock(int fd)
 {
 	int val;
-	if (isatty(fd)) {
-		/* do not mess with tty's */
-		debug("no set_nonblock for tty fd %d", fd);
-		return;
-	}
 	val = fcntl(fd, F_GETFL, 0);
 	if (val < 0) {
 		error("fcntl(%d, F_GETFL, 0): %s", fd, strerror(errno));
 		return;
 	}
-	if (val & O_NONBLOCK)
+	if (val & O_NONBLOCK) {
+		debug("fd %d IS O_NONBLOCK", fd);
 		return;
+	}
 	debug("fd %d setting O_NONBLOCK", fd);
 	val |= O_NONBLOCK;
 	if (fcntl(fd, F_SETFL, val) == -1)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999 Theo de Raadt
+ * Copyright (c) 1995,1999 Theo de Raadt
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.3.2.1 2000/09/01 18:23:16 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.3.2.2 2000/11/08 21:30:16 jason Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"

@@ -1,19 +1,17 @@
 /*
- *
- * readconf.h
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Sat Apr 22 00:25:29 1995 ylo
- *
  * Functions for reading the configuration file.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.18.2.2 2000/09/01 18:23:21 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.18.2.3 2000/11/08 21:31:07 jason Exp $"); */
 
 #ifndef READCONF_H
 #define READCONF_H
@@ -49,6 +47,8 @@ typedef struct {
 #endif
 	int     password_authentication;	/* Try password
 						 * authentication. */
+	int     kbd_interactive_authentication; /* Try keyboard-interactive auth. */
+	char	*kbd_interactive_devices; /* Keyboard-interactive auth devices. */
 	int     fallback_to_rsh;/* Use rsh if cannot connect with ssh. */
 	int     use_rsh;	/* Always use rsh (don\'t try ssh). */
 	int     batch_mode;	/* Batch mode: do not ask for passwords. */

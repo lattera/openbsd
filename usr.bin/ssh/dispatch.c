@@ -9,11 +9,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Markus Friedl.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -27,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/dispatch.c,v 1.2.2.1 2000/09/01 18:23:19 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/dispatch.c,v 1.2.2.2 2000/11/08 21:30:45 jason Exp $");
 #include "ssh.h"
 #include "dispatch.h"
 #include "packet.h"
@@ -38,7 +33,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/dispatch.c,v 1.2.2.1 2000/09/01 18:23:19 jason 
 dispatch_fn *dispatch[DISPATCH_MAX];
 
 void
-dispatch_protocol_error(int type, int plen)
+dispatch_protocol_error(int type, int plen, void *ctxt)
 {
 	error("Hm, dispatch protocol error: type %d plen %d", type, plen);
 }
@@ -55,7 +50,7 @@ dispatch_set(int type, dispatch_fn *fn)
 	dispatch[type] = fn;
 }
 void
-dispatch_run(int mode, int *done)
+dispatch_run(int mode, int *done, void *ctxt)
 {
 	for (;;) {
 		int plen;
@@ -69,7 +64,7 @@ dispatch_run(int mode, int *done)
 				return;
 		}
 		if (type > 0 && type < DISPATCH_MAX && dispatch[type] != NULL)
-			(*dispatch[type])(type, plen);
+			(*dispatch[type])(type, plen, ctxt);
 		else
 			packet_disconnect("protocol error: rcvd type %d", type);	
 		if (done != NULL && *done)

@@ -1,21 +1,45 @@
 /*
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- */
-/*
+ *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ *
  * SSH2 support by Markus Friedl.
  * Copyright (c) 2000 Markus Friedl. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.12.2.2 2000/09/01 18:23:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.12.2.3 2000/11/08 21:31:14 jason Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"
 #include "pty.h"
 #include "packet.h"
 #include "buffer.h"
-#include "cipher.h"
 #include "mpaux.h"
 #include "servconf.h"
 #include "uidswap.h"
@@ -65,7 +89,7 @@ void	session_pty_cleanup(Session *s);
 void	session_proctitle(Session *s);
 void	do_exec_pty(Session *s, const char *command, struct passwd * pw);
 void	do_exec_no_pty(Session *s, const char *command, struct passwd * pw);
-void	do_login(Session *s);
+void	do_login(Session *s, const char *command);
 
 void
 do_child(const char *command, struct passwd * pw, const char *term,
@@ -83,6 +107,9 @@ extern int startup_pipe;
 
 /* Local Xauthority file. */
 static char *xauthfile;
+
+/* original command from peer. */
+char *original_command = NULL; 
 
 /* data */
 #define MAX_SESSIONS 10
@@ -144,7 +171,7 @@ void
 do_authenticated(struct passwd * pw)
 {
 	Session *s;
-	int type;
+	int type, fd;
 	int compression_level = 0, enable_compression_after_reply = 0;
 	int have_pty = 0;
 	char *command;
@@ -169,7 +196,7 @@ do_authenticated(struct passwd * pw)
 	 * by the client telling us, so we can equally well trust the client
 	 * not to request anything bogus.)
 	 */
-	if (!no_port_forwarding_flag)
+	if (!no_port_forwarding_flag && options.allow_tcp_forwarding)
 		channel_permit_all_opens();
 
 	s = session_new();
@@ -299,7 +326,9 @@ do_authenticated(struct passwd * pw)
 				break;
 			}
 			strlcat(xauthfile, "/cookies", MAXPATHLEN);
-			open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
+			fd = open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
+			if (fd >= 0)
+				close(fd);
 			restore_uid();
 			fatal_add_cleanup(xauthfile_cleanup_proc, NULL);
 			success = 1;
@@ -317,6 +346,10 @@ do_authenticated(struct passwd * pw)
 		case SSH_CMSG_PORT_FORWARD_REQUEST:
 			if (no_port_forwarding_flag) {
 				debug("Port forwarding not permitted for this authentication.");
+				break;
+			}
+			if (!options.allow_tcp_forwarding) {
+				debug("Port forwarding not permitted.");
 				break;
 			}
 			debug("Received TCP/IP port forwarding request.");
@@ -344,6 +377,7 @@ do_authenticated(struct passwd * pw)
 				packet_integrity_check(plen, 0, type);
 			}
 			if (forced_command != NULL) {
+				original_command = command;
 				command = forced_command;
 				debug("Forced command '%.500s'", forced_command);
 			}
@@ -538,8 +572,8 @@ do_exec_pty(Session *s, const char *command, struct passwd * pw)
 		close(ttyfd);
 
 		/* record login, etc. similar to login(1) */
-		if (command == NULL && !options.use_login)
-			do_login(s);
+		if (!(options.use_login && command == NULL))
+			do_login(s, command);
 
 		/* Do common processing for the child, such as execing the command. */
 		do_child(command, pw, s->term, s->display, s->auth_proto,
@@ -591,11 +625,12 @@ get_remote_name_or_ip(void)
 
 /* administrative, login(1)-like work */
 void
-do_login(Session *s)
+do_login(Session *s, const char *command)
 {
 	FILE *f;
 	char *time_string;
 	char buf[256];
+	char hostname[MAXHOSTNAMELEN];
 	socklen_t fromlen;
 	struct sockaddr_storage from;
 	struct stat st;
@@ -617,11 +652,18 @@ do_login(Session *s)
 		}
 	}
 
+	/* Get the time and hostname when the user last logged in. */
+	hostname[0] = '\0';
+	last_login_time = get_last_login_time(pw->pw_uid, pw->pw_name,
+	    hostname, sizeof(hostname));
+
 	/* Record that there was a login on that tty from the remote host. */
 	record_login(pid, s->tty, pw->pw_name, pw->pw_uid,
 	    get_remote_name_or_ip(), (struct sockaddr *)&from);
 
-	/* Done if .hushlogin exists. */
+	/* Done if .hushlogin exists or a command given. */
+	if (command != NULL)
+		return;
 	snprintf(buf, sizeof(buf), "%.200s/.hushlogin", pw->pw_dir);
 #ifdef HAVE_LOGIN_CAP
 	if (login_getcapbool(lc, "hushlogin", 0) || stat(buf, &st) >= 0)
@@ -629,20 +671,14 @@ do_login(Session *s)
 	if (stat(buf, &st) >= 0)
 #endif
 		return;
-	/*
-	 * Get the time when the user last logged in.  'buf' will be set
-	 * to contain the hostname the last login was from. 
-	 */
-	last_login_time = get_last_login_time(pw->pw_uid, pw->pw_name,
-	    buf, sizeof(buf));
 	if (last_login_time != 0) {
 		time_string = ctime(&last_login_time);
 		if (strchr(time_string, '\n'))
 			*strchr(time_string, '\n') = 0;
-		if (strcmp(buf, "") == 0)
+		if (strcmp(hostname, "") == 0)
 			printf("Last login: %s\r\n", time_string);
 		else
-			printf("Last login: %s from %s\r\n", time_string, buf);
+			printf("Last login: %s from %s\r\n", time_string, hostname);
 	}
 	if (options.print_motd) {
 #ifdef HAVE_LOGIN_CAP
@@ -749,7 +785,7 @@ do_child(const char *command, struct passwd * pw, const char *term,
 	 const char *display, const char *auth_proto,
 	 const char *auth_data, const char *ttyname)
 {
-	const char *shell, *hostname, *cp = NULL;
+	const char *shell, *hostname = NULL, *cp = NULL;
 	char buf[256];
 	char cmd[1024];
 	FILE *f = NULL;
@@ -886,6 +922,9 @@ do_child(const char *command, struct passwd * pw, const char *term,
 		child_set_env(&env, &envsize, "TERM", term);
 	if (display)
 		child_set_env(&env, &envsize, "DISPLAY", display);
+	if (original_command)
+		child_set_env(&env, &envsize, "SSH_ORIGINAL_COMMAND",
+		    original_command);
 
 #ifdef KRB4
 	{
@@ -1289,6 +1328,7 @@ session_subsystem_req(Session *s)
 int
 session_x11_req(Session *s)
 {
+	int fd;
 	if (no_x11_forwarding_flag) {
 		debug("X11 forwarding disabled in user configuration file.");
 		return 0;
@@ -1333,7 +1373,9 @@ session_x11_req(Session *s)
 		return 0;
 	}
 	strlcat(xauthfile, "/cookies", MAXPATHLEN);
-	open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
+	fd = open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
+	if (fd >= 0)
+		close(fd);
 	restore_uid();
 	fatal_add_cleanup(xauthfile_cleanup_proc, s);
 	return 1;
@@ -1360,7 +1402,7 @@ session_exec_req(Session *s)
 	char *command = packet_get_string(&len);
 	packet_done();
 	if (forced_command) {
-		xfree(command);
+		original_command = command;
 		command = forced_command;
 		debug("Forced command '%.500s'", forced_command);
 	}
@@ -1440,7 +1482,8 @@ session_set_fds(Session *s, int fdin, int fdout, int fderr)
 		fatal("no channel for session %d", s->self);
 	channel_set_fds(s->chanid,
 	    fdout, fdin, fderr,
-	    fderr == -1 ? CHAN_EXTENDED_IGNORE : CHAN_EXTENDED_READ);
+	    fderr == -1 ? CHAN_EXTENDED_IGNORE : CHAN_EXTENDED_READ,
+	    1);
 }
 
 void

@@ -1,22 +1,65 @@
 /*
- *
- * clientloop.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- *
- * Created: Sat Sep 23 12:23:57 1995 ylo
- *
  * The main loop for the interactive session (client side).
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ *
+ *
+ * Copyright (c) 1999 Theo de Raadt.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
  * SSH2 support added by Markus Friedl.
+ * Copyright (c) 1999,2000 Markus Friedl.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.26.2.1 2000/09/01 18:23:18 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.26.2.2 2000/11/08 21:30:37 jason Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"
@@ -31,6 +74,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.26.2.1 2000/09/01 18:23:18 jas
 
 #include "buffer.h"
 #include "bufaux.h"
+
+
+/* import options */
+extern Options options;
 
 /* Flag indicating that stdin should be redirected from /dev/null. */
 extern int stdin_null_flag;
@@ -290,7 +337,7 @@ client_check_window_change()
 	if (ioctl(fileno(stdin), TIOCGWINSZ, &ws) < 0)
 		return;
 
-	debug("client_check_window_change: changed");
+	debug2("client_check_window_change: changed");
 
 	if (compat20) {
 		channel_request_start(session_ident, "window-change", 0);
@@ -317,8 +364,6 @@ client_check_window_change()
 void
 client_wait_until_can_do_something(fd_set * readset, fd_set * writeset)
 {
-	/*debug("client_wait_until_can_do_something"); */
-
 	/* Initialize select masks. */
 	FD_ZERO(readset);
 	FD_ZERO(writeset);
@@ -437,7 +482,6 @@ client_process_net_input(fd_set * readset)
 	if (FD_ISSET(connection_in, readset)) {
 		/* Read as much as possible. */
 		len = read(connection_in, buf, sizeof(buf));
-/*debug("read connection_in len %d", len); XXX */
 		if (len == 0) {
 			/* Received EOF.  The remote host has closed the connection. */
 			snprintf(buf, sizeof buf, "Connection to %.300s closed by remote host.\r\n",
@@ -728,7 +772,7 @@ client_process_output(fd_set * writeset)
 void
 client_process_buffered_input_packets()
 {
-	dispatch_run(DISPATCH_NONBLOCK, &quit_pending);
+	dispatch_run(DISPATCH_NONBLOCK, &quit_pending, NULL);
 }
 
 /* scan buf[] for '~' before sending data to the peer */
@@ -750,7 +794,6 @@ simple_escape_filter(Channel *c, char *buf, int len)
 int
 client_loop(int have_pty, int escape_char_arg, int ssh2_chan_id)
 {
-	extern Options options;
 	double start_time, total_time;
 	int len;
 	char buf[100];
@@ -809,7 +852,7 @@ client_loop(int have_pty, int escape_char_arg, int ssh2_chan_id)
 		client_process_buffered_input_packets();
 
 		if (compat20 && !channel_still_open()) {
-			debug("!channel_still_open.");
+			debug2("!channel_still_open.");
 			break;
 		}
 
@@ -935,7 +978,7 @@ client_loop(int have_pty, int escape_char_arg, int ssh2_chan_id)
 /*********/
 
 void
-client_input_stdout_data(int type, int plen)
+client_input_stdout_data(int type, int plen, void *ctxt)
 {
 	unsigned int data_len;
 	char *data = packet_get_string(&data_len);
@@ -946,7 +989,7 @@ client_input_stdout_data(int type, int plen)
 	xfree(data);
 }
 void
-client_input_stderr_data(int type, int plen)
+client_input_stderr_data(int type, int plen, void *ctxt)
 {
 	unsigned int data_len;
 	char *data = packet_get_string(&data_len);
@@ -957,7 +1000,7 @@ client_input_stderr_data(int type, int plen)
 	xfree(data);
 }
 void
-client_input_exit_status(int type, int plen)
+client_input_exit_status(int type, int plen, void *ctxt)
 {
 	packet_integrity_check(plen, 4, type);
 	exit_status = packet_get_int();
@@ -975,7 +1018,7 @@ client_input_exit_status(int type, int plen)
 
 /* XXXX move to generic input handler */
 void
-client_input_channel_open(int type, int plen)
+client_input_channel_open(int type, int plen, void *ctxt)
 {
 	Channel *c = NULL;
 	char *ctype;
@@ -993,13 +1036,13 @@ client_input_channel_open(int type, int plen)
 	debug("client_input_channel_open: ctype %s rchan %d win %d max %d",
 	    ctype, rchan, rwindow, rmaxpack);
 
-	if (strcmp(ctype, "x11") == 0) {
+	if (strcmp(ctype, "x11") == 0 && options.forward_x11) {
 		int sock;
 		char *originator;
 		int originator_port;
 		originator = packet_get_string(NULL);
 		if (datafellows & SSH_BUG_X11FWD) {
-			debug("buggy server: x11 request w/o originator_port");
+			debug2("buggy server: x11 request w/o originator_port");
 			originator_port = 0;
 		} else {
 			originator_port = packet_get_int();
@@ -1010,10 +1053,9 @@ client_input_channel_open(int type, int plen)
 		/* XXX move to channels.c */
 		sock = x11_connect_display();
 		if (sock >= 0) {
-/*XXX MAXPACK */
 			id = channel_new("x11", SSH_CHANNEL_X11_OPEN,
-			    sock, sock, -1, 4*1024, 32*1024, 0,
-			    xstrdup("x11"));
+			    sock, sock, -1, CHAN_X11_WINDOW_DEFAULT,
+			    CHAN_X11_PACKET_DEFAULT, 0, xstrdup("x11"), 1);
 			c = channel_lookup(id);
 		}
 	}
@@ -1066,11 +1108,14 @@ client_init_dispatch_13()
 	dispatch_set(SSH_MSG_CHANNEL_OPEN_CONFIRMATION, &channel_input_open_confirmation);
 	dispatch_set(SSH_MSG_CHANNEL_OPEN_FAILURE, &channel_input_open_failure);
 	dispatch_set(SSH_MSG_PORT_OPEN, &channel_input_port_open);
-	dispatch_set(SSH_SMSG_AGENT_OPEN, &auth_input_open_request);
 	dispatch_set(SSH_SMSG_EXITSTATUS, &client_input_exit_status);
 	dispatch_set(SSH_SMSG_STDERR_DATA, &client_input_stderr_data);
 	dispatch_set(SSH_SMSG_STDOUT_DATA, &client_input_stdout_data);
-	dispatch_set(SSH_SMSG_X11_OPEN, &x11_input_open);
+
+	dispatch_set(SSH_SMSG_AGENT_OPEN, options.forward_agent ?
+	    &auth_input_open_request : &deny_input_open);
+	dispatch_set(SSH_SMSG_X11_OPEN, options.forward_x11 ?
+	    &x11_input_open : &deny_input_open);
 }
 void
 client_init_dispatch_15()
@@ -1106,7 +1151,7 @@ client_input_channel_req(int id, void *arg)
 
 	c = channel_lookup(id);
 	if (c == NULL)
-		fatal("session_input_channel_req: channel %d: bad channel", id);
+		fatal("client_input_channel_req: channel %d: bad channel", id);
 
 	if (session_ident == -1) {
 		error("client_input_channel_req: no channel %d", id);
@@ -1130,7 +1175,7 @@ client_input_channel_req(int id, void *arg)
 void
 client_set_session_ident(int id)
 {
-	debug("client_set_session_ident: id %d", id);
+	debug2("client_set_session_ident: id %d", id);
 	session_ident = id;
 	channel_register_callback(id, SSH2_MSG_CHANNEL_REQUEST,
 	    client_input_channel_req, (void *)0);

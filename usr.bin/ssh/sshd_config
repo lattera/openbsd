@@ -37,6 +37,7 @@ PasswordAuthentication yes
 PermitEmptyPasswords no
 # Uncomment to disable s/key passwords 
 #SkeyAuthentication no
+#KbdInteractiveAuthentication yes
 
 # To change Kerberos options
 #KerberosAuthentication no
@@ -50,5 +51,6 @@ PermitEmptyPasswords no
 #CheckMail yes
 #UseLogin no
 
-#Subsystem	sftp	/usr/local/sbin/sftpd
+# Uncomment if you want to enable sftp
+#Subsystem	sftp	/usr/libexec/sftp-server
 #MaxStartups 10:30:60

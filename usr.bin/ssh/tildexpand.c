@@ -2,11 +2,16 @@
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- * Created: Wed Jul 12 01:07:36 1995 ylo
+ *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.c,v 1.6.2.1 2000/09/01 18:23:25 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.c,v 1.6.2.2 2000/11/08 21:31:34 jason Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"

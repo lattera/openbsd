@@ -1,23 +1,20 @@
 /*
- *
- * readconf.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Sat Apr 22 00:03:10 1995 ylo
- *
  * Functions for reading the configuration files.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.31.2.2 2000/09/01 18:23:21 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.31.2.3 2000/11/08 21:31:07 jason Exp $");
 
 #include "ssh.h"
-#include "cipher.h"
 #include "readconf.h"
 #include "match.h"
 #include "xmalloc.h"
@@ -105,7 +102,8 @@ typedef enum {
 	oBatchMode, oCheckHostIP, oStrictHostKeyChecking, oCompression,
 	oCompressionLevel, oKeepAlives, oNumberOfPasswordPrompts, oTISAuthentication,
 	oUsePrivilegedPort, oLogLevel, oCiphers, oProtocol, oIdentityFile2,
-	oGlobalKnownHostsFile2, oUserKnownHostsFile2, oDSAAuthentication
+	oGlobalKnownHostsFile2, oUserKnownHostsFile2, oDSAAuthentication,
+	oKbdInteractiveAuthentication, oKbdInteractiveDevices
 } OpCodes;
 
 /* Textual representations of the tokens. */
@@ -121,6 +119,8 @@ static struct {
 	{ "useprivilegedport", oUsePrivilegedPort },
 	{ "rhostsauthentication", oRhostsAuthentication },
 	{ "passwordauthentication", oPasswordAuthentication },
+	{ "kbdinteractiveauthentication", oKbdInteractiveAuthentication },
+	{ "kbdinteractivedevices", oKbdInteractiveDevices },
 	{ "rsaauthentication", oRSAAuthentication },
 	{ "dsaauthentication", oDSAAuthentication },
 	{ "skeyauthentication", oSkeyAuthentication },
@@ -289,6 +289,14 @@ parse_flag:
 	case oPasswordAuthentication:
 		intptr = &options->password_authentication;
 		goto parse_flag;
+
+	case oKbdInteractiveAuthentication:
+		intptr = &options->kbd_interactive_authentication;
+		goto parse_flag;
+
+	case oKbdInteractiveDevices:
+		charptr = &options->kbd_interactive_devices;
+		goto parse_string;
 
 	case oDSAAuthentication:
 		intptr = &options->dsa_authentication;
@@ -664,6 +672,8 @@ initialize_options(Options * options)
 	options->afs_token_passing = -1;
 #endif
 	options->password_authentication = -1;
+	options->kbd_interactive_authentication = -1;
+	options->kbd_interactive_devices = NULL;
 	options->rhosts_rsa_authentication = -1;
 	options->fallback_to_rsh = -1;
 	options->use_rsh = -1;
@@ -734,6 +744,8 @@ fill_default_options(Options * options)
 #endif /* AFS */
 	if (options->password_authentication == -1)
 		options->password_authentication = 1;
+	if (options->kbd_interactive_authentication == -1)
+		options->kbd_interactive_authentication = 0;
 	if (options->rhosts_rsa_authentication == -1)
 		options->rhosts_rsa_authentication = 1;
 	if (options->fallback_to_rsh == -1)

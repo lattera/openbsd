@@ -9,7 +9,7 @@
 .\"
 .\" Created: Sun May  7 00:14:37 1995 ylo
 .\"
-.\" $Id: scp.1,v 1.9 2000/08/19 02:26:08 deraadt Exp $
+.\" $OpenBSD: src/usr.bin/ssh/scp.1,v 1.7.2.2 2000/11/08 21:31:11 jason Exp $
 .\"
 .Dd September 25, 1999
 .Dt SCP 1
@@ -20,9 +20,11 @@
 .Sh SYNOPSIS
 .Nm scp
 .Op Fl pqrvC46
+.Op Fl S Ar program
 .Op Fl P Ar port
 .Op Fl c Ar cipher
 .Op Fl i Ar identity_file
+.Op Fl o Ar option
 .Sm off
 .Oo
 .Op Ar user@
@@ -68,11 +70,6 @@ This option is directly passed to
 .It Fl p
 Preserves modification times, access times, and modes from the
 original file.
-.It Fl S
-Name of program to use for the encrypted connection.
-The program must understand
-.Xr ssh 1
-options.
 .It Fl r
 Recursively copy entire directories.
 .It Fl v
@@ -103,11 +100,16 @@ because
 .Fl p
 is already reserved for preserving the times and modes of the file in
 .Xr rcp 1 .
-.It Fl S
-Name of program to use for the encrypted connection. The program must 
-understand
+.It Fl S Ar program
+Name of
+.Ar program
+to use for the encrypted connection.
+The program must understand
 .Xr ssh 1
 options.
+.It Fl o Ar option
+The given option is directly passed to
+.Xr ssh 1 .
 .It Fl 4
 Forces
 .Nm

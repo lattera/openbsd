@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.6 2000/09/07 20:27:53 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.6.4.1 2000/11/08 21:31:18 jason Exp $");
 
 #include "ssh.h"
 #include "buffer.h"

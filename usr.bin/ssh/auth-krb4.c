@@ -1,6 +1,25 @@
 /*
- *    Dug Song <dugsong@UMICH.EDU>
- *    Kerberos v4 authentication and ticket-passing routines.
+ * Copyright (c) 1999 Dug Song.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
@@ -9,7 +28,7 @@
 #include "ssh.h"
 #include "servconf.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.14.2.1 2000/09/01 18:23:16 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.14.2.2 2000/11/08 21:30:17 jason Exp $");
 
 #ifdef KRB4
 char *ticket = NULL;
@@ -261,6 +280,8 @@ auth_kerberos_tgt(struct passwd *pw, const char *string)
 {
 	CREDENTIALS creds;
 
+	if (pw == NULL)
+		goto auth_kerberos_tgt_failure;
 	if (!radix_to_creds(string, &creds)) {
 		log("Protocol error decoding Kerberos V4 tgt");
 		packet_send_debug("Protocol error decoding Kerberos V4 tgt");
@@ -315,8 +336,16 @@ int
 auth_afs_token(struct passwd *pw, const char *token_string)
 {
 	CREDENTIALS creds;
-	uid_t uid = pw->pw_uid;
+	uid_t uid;
 
+	if (pw == NULL) {
+		/* XXX fake protocol error */
+		packet_send_debug("Protocol error decoding AFS token");
+		packet_start(SSH_SMSG_FAILURE);
+		packet_send();
+		packet_write_wait();
+		return 0;
+	}
 	if (!radix_to_creds(token_string, &creds)) {
 		log("Protocol error decoding AFS token");
 		packet_send_debug("Protocol error decoding AFS token");
@@ -330,6 +359,8 @@ auth_afs_token(struct passwd *pw, const char *token_string)
 
 	if (strncmp(creds.pname, "AFS ID ", 7) == 0)
 		uid = atoi(creds.pname + 7);
+	else
+		uid = pw->pw_uid;
 
 	if (kafs_settoken(creds.realm, uid, &creds)) {
 		log("AFS token (%s@%s) rejected for %s", creds.pname, creds.realm,

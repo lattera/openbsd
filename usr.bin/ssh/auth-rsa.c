@@ -1,22 +1,20 @@
 /*
- *
- * auth-rsa.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Mon Mar 27 01:46:52 1995 ylo
- *
  * RSA-based authentication.  This code determines whether to admit a login
  * based on RSA authentication.  This file also contains functions to check
  * validity of the host key.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.23.2.2 2000/09/01 18:23:17 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.23.2.3 2000/11/08 21:30:21 jason Exp $");
 
 #include "rsa.h"
 #include "packet.h"
@@ -30,6 +28,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.23.2.2 2000/09/01 18:23:17 jason
 
 #include <openssl/rsa.h>
 #include <openssl/md5.h>
+
+
+/* import */
+extern ServerOptions options;
 
 /*
  * Session identifier that is used to bind key exchange and authentication
@@ -118,7 +120,6 @@ auth_rsa_challenge_dialog(RSA *pk)
 int
 auth_rsa(struct passwd *pw, BIGNUM *client_n)
 {
-	extern ServerOptions options;
 	char line[8192], file[1024];
 	int authenticated;
 	unsigned int bits;
@@ -126,6 +127,10 @@ auth_rsa(struct passwd *pw, BIGNUM *client_n)
 	unsigned long linenum = 0;
 	struct stat st;
 	RSA *pk;
+
+	/* no user given */
+	if (pw == NULL)
+		return 0;
 
 	/* Temporarily use the user's uid. */
 	temporarily_use_uid(pw->pw_uid);
@@ -226,6 +231,12 @@ auth_rsa(struct passwd *pw, BIGNUM *client_n)
 			}
 		} else
 			options = NULL;
+		/*
+		 * If our options do not allow this key to be used,
+		 * do not send challenge.
+		 */
+		if (!auth_parse_options(pw, options, linenum))
+			continue;
 
 		/* Parse the key from the line. */
 		if (!auth_rsa_read_key(&cp, &bits, pk->e, pk->n)) {
@@ -264,9 +275,8 @@ auth_rsa(struct passwd *pw, BIGNUM *client_n)
 		 * Break out of the loop if authentication was successful;
 		 * otherwise continue searching.
 		 */
-		authenticated = auth_parse_options(pw, options, linenum);
-		if (authenticated)
-			break;
+		authenticated = 1;
+		break;
 	}
 
 	/* Restore the privileged uid. */
@@ -279,6 +289,8 @@ auth_rsa(struct passwd *pw, BIGNUM *client_n)
 
 	if (authenticated)
 		packet_send_debug("RSA authentication accepted.");
+	else
+		auth_clear_options();
 
 	/* Return authentication result. */
 	return authenticated;

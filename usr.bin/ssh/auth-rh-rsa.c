@@ -1,21 +1,19 @@
 /*
- *
- * auth-rh-rsa.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Sun May  7 03:08:06 1995 ylo
- *
  * Rhosts or /etc/hosts.equiv authentication combined with RSA host
  * authentication.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.13.2.1 2000/09/01 18:23:16 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.13.2.2 2000/11/08 21:30:20 jason Exp $");
 
 #include "packet.h"
 #include "ssh.h"
@@ -41,9 +39,9 @@ auth_rhosts_rsa(struct passwd *pw, const char *client_user, RSA *client_host_key
 	HostStatus host_status;
 	Key *client_key, *found;
 
-	debug("Trying rhosts with RSA host authentication for %.100s", client_user);
+	debug("Trying rhosts with RSA host authentication for client user %.100s", client_user);
 
-	if (client_host_key == NULL)
+	if (pw == NULL || client_host_key == NULL)
 		return 0;
 
 	/* Check if we would accept it using rhosts authentication. */

@@ -2,16 +2,44 @@
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- * Created: Sat Mar 18 16:36:11 1995 ylo
  * Ssh client program.  This program can be used to log into a remote machine.
  * The software supports strong authentication, encryption, and forwarding
  * of X11, TCP/IP, and authentication connections.
  *
- * Modified to work with SSL by Niels Provos <provos@citi.umich.edu> in Canada.
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ *
+ * Copyright (c) 1999 Niels Provos.  All rights reserved.
+ *
+ * Modified to work with SSL by Niels Provos <provos@citi.umich.edu>
+ * in Canada (German citizen).
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.51.2.2 2000/09/01 18:23:23 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.51.2.3 2000/11/08 21:31:24 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/dsa.h>
@@ -119,6 +147,7 @@ usage()
 	fprintf(stderr, "  -t          Tty; allocate a tty even if command is given.\n");
 	fprintf(stderr, "  -T          Do not allocate a tty.\n");
 	fprintf(stderr, "  -v          Verbose; display verbose debugging messages.\n");
+	fprintf(stderr, "              Multiple -v increases verbosity.\n");
 	fprintf(stderr, "  -V          Display version number only.\n");
 	fprintf(stderr, "  -P          Don't allocate a privileged port.\n");
 	fprintf(stderr, "  -q          Quiet; don't display any warning messages.\n");
@@ -333,6 +362,16 @@ main(int ac, char **av)
 			tty_flag = 1;
 			break;
 		case 'v':
+			if (0 == debug_flag) {
+				debug_flag = 1;
+				options.log_level = SYSLOG_LEVEL_DEBUG1;
+			} else if (options.log_level < SYSLOG_LEVEL_DEBUG3) {
+				options.log_level++;
+				break;
+			} else {
+				fatal("Too high debugging level.\n");
+			}
+			/* fallthrough */
 		case 'V':
 			fprintf(stderr, "SSH Version %s, protocol versions %d.%d/%d.%d.\n",
 			    SSH_VERSION,
@@ -341,8 +380,6 @@ main(int ac, char **av)
 			fprintf(stderr, "Compiled with SSL (0x%8.8lx).\n", SSLeay());
 			if (opt == 'V')
 				exit(0);
-			debug_flag = 1;
-			options.log_level = SYSLOG_LEVEL_DEBUG;
 			break;
 		case 'q':
 			options.log_level = SYSLOG_LEVEL_QUIET;
@@ -367,11 +404,12 @@ main(int ac, char **av)
 				options.cipher = SSH_CIPHER_ILLEGAL;
 			} else {
 				/* SSH1 only */
-				options.cipher = cipher_number(optarg);
-				if (options.cipher == -1) {
+				Cipher *c = cipher_by_name(optarg);
+				if (c == NULL || c->number < 0) {
 					fprintf(stderr, "Unknown cipher type '%s'\n", optarg);
 					exit(1);
 				}
+				options.cipher = c->number;
 			}
 			break;
 		case 'p':
@@ -522,22 +560,6 @@ main(int ac, char **av)
 	if (options.hostname != NULL)
 		host = options.hostname;
 
-	/* Find canonic host name. */
-	if (strchr(host, '.') == 0) {
-		struct addrinfo hints;
-		struct addrinfo *ai = NULL;
-		int errgai;
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = IPv4or6;
-		hints.ai_flags = AI_CANONNAME;
-		hints.ai_socktype = SOCK_STREAM;
-		errgai = getaddrinfo(host, NULL, &hints, &ai);
-		if (errgai == 0) {
-			if (ai->ai_canonname != NULL)
-				host = xstrdup(ai->ai_canonname);
-			freeaddrinfo(ai);
-		}
-	}
 	/* Disable rhosts authentication if not running as root. */
 	if (original_effective_uid != 0 || !options.use_privileged_port) {
 		options.rhosts_authentication = 0;
@@ -958,6 +980,14 @@ ssh_session2(void)
 	if (in < 0 || out < 0 || err < 0)
 		fatal("dup() in/out/err failed");
 
+	/* enable nonblocking unless tty */
+	if (!isatty(in))
+		set_nonblock(in);
+	if (!isatty(out))
+		set_nonblock(out);
+	if (!isatty(err))
+		set_nonblock(err);
+
 	/* should be pre-session */
 	init_local_fwd();
 	
@@ -966,18 +996,16 @@ ssh_session2(void)
 		if (daemon(1, 1) < 0)
 			fatal("daemon() failed: %.200s", strerror(errno));
 
-	window = 32*1024;
-	if (tty_flag) {
-		packetmax = window/8;
-	} else {
+	window = CHAN_SES_WINDOW_DEFAULT;
+	packetmax = CHAN_SES_PACKET_DEFAULT;
+	if (!tty_flag) {
 		window *= 2;
-		packetmax = window/2;
+		packetmax *=2;
 	}
-
-/*XXX MAXPACK */
 	id = channel_new(
 	    "session", SSH_CHANNEL_OPENING, in, out, err,
-	    window, packetmax, CHAN_EXTENDED_WRITE, xstrdup("client-session"));
+	    window, packetmax, CHAN_EXTENDED_WRITE,
+	    xstrdup("client-session"), /*nonblock*/0);
 
 	channel_open(id);
 	channel_register_callback(id, SSH2_MSG_CHANNEL_OPEN_CONFIRMATION, client_init, (void *)0);

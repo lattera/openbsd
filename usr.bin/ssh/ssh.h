@@ -1,33 +1,24 @@
 /*
- *
- * ssh.h
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
  *
- * Created: Fri Mar 17 17:09:37 1995 ylo
- *
  * Generic header file for ssh.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.45.2.2 2000/09/01 18:23:24 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.45.2.3 2000/11/08 21:31:25 jason Exp $"); */
 
 #ifndef SSH_H
 #define SSH_H
 
 #include "rsa.h"
 #include "cipher.h"
-
-/*
- * XXX
- * The default cipher used if IDEA is not supported by the remote host. It is
- * recommended that this be one of the mandatory ciphers (DES, 3DES), though
- * that is not required.
- */
-#define SSH_FALLBACK_CIPHER	SSH_CIPHER_3DES
 
 /* Cipher used for encrypting authentication files. */
 #define SSH_AUTHFILE_CIPHER	SSH_CIPHER_3DES
@@ -82,6 +73,7 @@
 #define SERVER_CONFIG_FILE	ETCDIR "/sshd_config"
 #define HOST_CONFIG_FILE	ETCDIR "/ssh_config"
 #define HOST_DSA_KEY_FILE	ETCDIR "/ssh_host_dsa_key"
+#define DH_PRIMES		ETCDIR "/primes"
 
 #define SSH_PROGRAM		"/usr/bin/ssh"
 
@@ -381,7 +373,7 @@ int     auth_rsa_challenge_dialog(RSA *pk);
  * passphrase (allocated with xmalloc).  Exits if EOF is encountered. If
  * from_stdin is true, the passphrase will be read from stdin instead.
  */
-char   *read_passphrase(const char *prompt, int from_stdin);
+char   *read_passphrase(char *prompt, int from_stdin);
 
 
 /*------------ Definitions for logging. -----------------------*/
@@ -407,7 +399,9 @@ typedef enum {
 	SYSLOG_LEVEL_ERROR,
 	SYSLOG_LEVEL_INFO,
 	SYSLOG_LEVEL_VERBOSE,
-	SYSLOG_LEVEL_DEBUG
+	SYSLOG_LEVEL_DEBUG1,
+	SYSLOG_LEVEL_DEBUG2,
+	SYSLOG_LEVEL_DEBUG3
 }       LogLevel;
 /* Initializes logging. */
 void    log_init(char *av0, LogLevel level, SyslogFacility facility, int on_stderr);
@@ -425,6 +419,8 @@ void    error(const char *fmt,...) __attribute__((format(printf, 1, 2)));
 void    log(const char *fmt,...) __attribute__((format(printf, 1, 2)));
 void    verbose(const char *fmt,...) __attribute__((format(printf, 1, 2)));
 void    debug(const char *fmt,...) __attribute__((format(printf, 1, 2)));
+void    debug2(const char *fmt,...) __attribute__((format(printf, 1, 2)));
+void    debug3(const char *fmt,...) __attribute__((format(printf, 1, 2)));
 
 /* same as fatal() but w/o logging */
 void    fatal_cleanup(void);

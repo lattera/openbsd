@@ -1,5 +1,20 @@
+/*
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ * RSA-based authentication.  This code determines whether to admit a login
+ * based on RSA authentication.  This file also contains functions to check
+ * validity of the host key.
+ *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ */
+
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.2.2.1 2000/09/01 18:23:16 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.2.2.2 2000/11/08 21:30:17 jason Exp $");
 
 #include "ssh.h"
 #include "packet.h"
@@ -18,6 +33,25 @@ char *forced_command = NULL;
 /* "environment=" options. */
 struct envstring *custom_environment = NULL;
 
+void
+auth_clear_options(void)
+{
+	no_agent_forwarding_flag = 0;
+	no_port_forwarding_flag = 0;
+	no_pty_flag = 0;
+	no_x11_forwarding_flag = 0;
+	while (custom_environment) {
+		struct envstring *ce = custom_environment;
+		custom_environment = ce->next;
+		xfree(ce->s);
+		xfree(ce);
+	}
+	if (forced_command) {
+		xfree(forced_command);
+		forced_command = NULL;
+	}
+}
+
 /* return 1 if access is granted, 0 if not. side effect: sets key option flags */
 int
 auth_parse_options(struct passwd *pw, char *options, unsigned long linenum)
@@ -25,6 +59,10 @@ auth_parse_options(struct passwd *pw, char *options, unsigned long linenum)
 	const char *cp;
 	if (!options)
 		return 1;
+
+	/* reset options */
+	auth_clear_options();
+
 	while (*options && *options != ' ' && *options != '\t') {
 		cp = "no-port-forwarding";
 		if (strncmp(options, cp, strlen(cp)) == 0) {
@@ -72,9 +110,9 @@ auth_parse_options(struct passwd *pw, char *options, unsigned long linenum)
 			}
 			if (!*options) {
 				debug("%.100s, line %lu: missing end quote",
-				      SSH_USER_PERMITTED_KEYS, linenum);
+				    SSH_USER_PERMITTED_KEYS, linenum);
 				packet_send_debug("%.100s, line %lu: missing end quote",
-						  SSH_USER_PERMITTED_KEYS, linenum);
+				    SSH_USER_PERMITTED_KEYS, linenum);
 				continue;
 			}
 			forced_command[i] = 0;
@@ -102,9 +140,9 @@ auth_parse_options(struct passwd *pw, char *options, unsigned long linenum)
 			}
 			if (!*options) {
 				debug("%.100s, line %lu: missing end quote",
-				      SSH_USER_PERMITTED_KEYS, linenum);
+				    SSH_USER_PERMITTED_KEYS, linenum);
 				packet_send_debug("%.100s, line %lu: missing end quote",
-						  SSH_USER_PERMITTED_KEYS, linenum);
+				    SSH_USER_PERMITTED_KEYS, linenum);
 				continue;
 			}
 			s[i] = 0;
@@ -160,21 +198,6 @@ auth_parse_options(struct passwd *pw, char *options, unsigned long linenum)
 				    get_remote_ipaddr());
 				packet_send_debug("Your host '%.200s' is not permitted to use this key for login.",
 				get_canonical_hostname());
-				/* key invalid for this host, reset flags */
-				no_agent_forwarding_flag = 0;
-				no_port_forwarding_flag = 0;
-				no_pty_flag = 0;
-				no_x11_forwarding_flag = 0;
-				while (custom_environment) {
-					struct envstring *ce = custom_environment;
-					custom_environment = ce->next;
-					xfree(ce->s);
-					xfree(ce);
-				}
-				if (forced_command) {
-					xfree(forced_command);
-					forced_command = NULL;
-				}
 				/* deny access */
 				return 0;
 			}

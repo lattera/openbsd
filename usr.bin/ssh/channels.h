@@ -1,4 +1,38 @@
-/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.12.2.2 2000/09/01 18:23:18 jason Exp $"); */
+/*
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ */
+/*
+ * Copyright (c) 2000 Markus Friedl.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.12.2.3 2000/11/08 21:30:34 jason Exp $"); */
 
 #ifndef CHANNELS_H
 #define CHANNELS_H
@@ -74,7 +108,15 @@ struct Channel {
 #define CHAN_EXTENDED_READ		1
 #define CHAN_EXTENDED_WRITE		2
 
-void	channel_set_fds(int id, int rfd, int wfd, int efd, int extusage);
+/* default window/packet sizes for tcp/x11-fwd-channel */
+#define CHAN_SES_WINDOW_DEFAULT	(32*1024)
+#define CHAN_SES_PACKET_DEFAULT	(CHAN_SES_WINDOW_DEFAULT/2)
+#define CHAN_TCP_WINDOW_DEFAULT	(32*1024)
+#define CHAN_TCP_PACKET_DEFAULT	(CHAN_TCP_WINDOW_DEFAULT/2)
+#define CHAN_X11_WINDOW_DEFAULT	(4*1024)
+#define CHAN_X11_PACKET_DEFAULT	(CHAN_X11_WINDOW_DEFAULT/2)
+
+
 void	channel_open(int id);
 void	channel_request(int id, char *service, int wantconfirm);
 void	channel_request_start(int id, char *service, int wantconfirm);
@@ -86,20 +128,26 @@ Channel	*channel_lookup(int id);
 
 int
 channel_new(char *ctype, int type, int rfd, int wfd, int efd,
-    int window, int maxpack, int extended_usage, char *remote_name);
+    int window, int maxpack, int extended_usage, char *remote_name,
+    int nonblock);
+void
+channel_set_fds(int id, int rfd, int wfd, int efd,
+    int extusage, int nonblock);
 
-void	channel_input_channel_request(int type, int plen);
-void	channel_input_close(int type, int plen);
-void	channel_input_close_confirmation(int type, int plen);
-void	channel_input_data(int type, int plen);
-void	channel_input_extended_data(int type, int plen);
-void	channel_input_ieof(int type, int plen);
-void	channel_input_oclose(int type, int plen);
-void	channel_input_open_confirmation(int type, int plen);
-void	channel_input_open_failure(int type, int plen);
-void	channel_input_port_open(int type, int plen);
-void	channel_input_window_adjust(int type, int plen);
-void	channel_input_open(int type, int plen);
+void	deny_input_open(int type, int plen, void *ctxt);
+
+void	channel_input_channel_request(int type, int plen, void *ctxt);
+void	channel_input_close(int type, int plen, void *ctxt);
+void	channel_input_close_confirmation(int type, int plen, void *ctxt);
+void	channel_input_data(int type, int plen, void *ctxt);
+void	channel_input_extended_data(int type, int plen, void *ctxt);
+void	channel_input_ieof(int type, int plen, void *ctxt);
+void	channel_input_oclose(int type, int plen, void *ctxt);
+void	channel_input_open_confirmation(int type, int plen, void *ctxt);
+void	channel_input_open_failure(int type, int plen, void *ctxt);
+void	channel_input_port_open(int type, int plen, void *ctxt);
+void	channel_input_window_adjust(int type, int plen, void *ctxt);
+void	channel_input_open(int type, int plen, void *ctxt);
 
 /* Sets specific protocol options. */
 void    channel_set_options(int hostname_in_open);
@@ -203,7 +251,7 @@ char   *x11_create_display_inet(int screen, int x11_display_offset);
  * the remote channel number.  We should do whatever we want, and respond
  * with either SSH_MSG_OPEN_CONFIRMATION or SSH_MSG_OPEN_FAILURE.
  */
-void    x11_input_open(int type, int plen);
+void    x11_input_open(int type, int plen, void *ctxt);
 
 /*
  * Requests forwarding of X11 connections.  This should be called on the
@@ -236,7 +284,7 @@ char   *auth_get_socket_name(void);
 int     auth_input_request_forwarding(struct passwd * pw);
 
 /* This is called to process an SSH_SMSG_AGENT_OPEN message. */
-void    auth_input_open_request(int type, int plen);
+void    auth_input_open_request(int type, int plen, void *ctxt);
 
 /* XXX */
 int	channel_connect_to(const char *host, u_short host_port);

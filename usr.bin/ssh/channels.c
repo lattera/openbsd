@@ -1,23 +1,46 @@
 /*
- *
- * channels.c
- *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- *
- * Created: Fri Mar 24 16:35:24 1995 ylo
- *
  * This file contains functions for generic socket connection forwarding.
  * There is also code for initiating connection forwarding for X11 connections,
  * arbitrary tcp/ip connections, and the authentication agent connection.
  *
+ * As far as I am concerned, the code I have written for this software
+ * can be used freely for any purpose.  Any derived versions of this
+ * software must be clearly marked as such, and if the derived work is
+ * incompatible with the protocol description in the RFC file, it must be
+ * called by a name other than "ssh" or "Secure Shell".
+ *
+ *
  * SSH2 support added by Markus Friedl.
+ * Copyright (c) 1999,2000 Markus Friedl.  All rights reserved.
+ * Copyright (c) 1999 Dug Song.  All rights reserved.
+ * Copyright (c) 1999 Theo de Raadt.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.57.2.2 2000/09/01 18:23:18 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.57.2.3 2000/11/08 21:30:32 jason Exp $");
 
 #include "ssh.h"
 #include "packet.h"
@@ -43,12 +66,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.57.2.2 2000/09/01 18:23:18 jason
 
 /* Max len of agent socket */
 #define MAX_SOCKET_NAME 100
-
-/* default window/packet sizes for tcp/x11-fwd-channel */
-#define CHAN_TCP_WINDOW_DEFAULT	(8*1024)
-#define CHAN_TCP_PACKET_DEFAULT	(CHAN_TCP_WINDOW_DEFAULT/2)
-#define CHAN_X11_WINDOW_DEFAULT	(4*1024)
-#define CHAN_X11_PACKET_DEFAULT	(CHAN_X11_WINDOW_DEFAULT/2)
 
 /*
  * Pointer to an array containing all allocated channels.  The array is
@@ -157,7 +174,8 @@ channel_lookup(int id)
  */
 
 void
-channel_register_fds(Channel *c, int rfd, int wfd, int efd, int extusage)
+channel_register_fds(Channel *c, int rfd, int wfd, int efd,
+    int extusage, int nonblock)
 {
 	/* Update the maximum file descriptor value. */
 	if (rfd > channel_max_fd_value)
@@ -173,12 +191,16 @@ channel_register_fds(Channel *c, int rfd, int wfd, int efd, int extusage)
 	c->sock = (rfd == wfd) ? rfd : -1;
 	c->efd = efd;
 	c->extended_usage = extusage;
-	if (rfd != -1)
-		set_nonblock(rfd);
-	if (wfd != -1)
-		set_nonblock(wfd);
-	if (efd != -1)
-		set_nonblock(efd);
+
+	/* enable nonblocking mode */
+	if (nonblock) {
+		if (rfd != -1)
+			set_nonblock(rfd);
+		if (wfd != -1)
+			set_nonblock(wfd);
+		if (efd != -1)
+			set_nonblock(efd);
+	}
 }
 
 /*
@@ -188,7 +210,7 @@ channel_register_fds(Channel *c, int rfd, int wfd, int efd, int extusage)
 
 int
 channel_new(char *ctype, int type, int rfd, int wfd, int efd,
-    int window, int maxpack, int extusage, char *remote_name)
+    int window, int maxpack, int extusage, char *remote_name, int nonblock)
 {
 	int i, found;
 	Channel *c;
@@ -217,7 +239,7 @@ channel_new(char *ctype, int type, int rfd, int wfd, int efd,
 		/* There are no free slots.  Take last+1 slot and expand the array.  */
 		found = channels_alloc;
 		channels_alloc += 10;
-		debug("channel: expanding %d", channels_alloc);
+		debug2("channel: expanding %d", channels_alloc);
 		channels = xrealloc(channels, channels_alloc * sizeof(Channel));
 		for (i = found; i < channels_alloc; i++)
 			channels[i].type = SSH_CHANNEL_FREE;
@@ -228,7 +250,7 @@ channel_new(char *ctype, int type, int rfd, int wfd, int efd,
 	buffer_init(&c->output);
 	buffer_init(&c->extended);
 	chan_init_iostates(c);
-	channel_register_fds(c, rfd, wfd, efd, extusage);
+	channel_register_fds(c, rfd, wfd, efd, extusage, nonblock);
 	c->self = found;
 	c->type = type;
 	c->ctype = ctype;
@@ -252,7 +274,7 @@ channel_new(char *ctype, int type, int rfd, int wfd, int efd,
 int
 channel_allocate(int type, int sock, char *remote_name)
 {
-	return channel_new("", type, sock, sock, -1, 0, 0, 0, remote_name);
+	return channel_new("", type, sock, sock, -1, 0, 0, 0, remote_name, 1);
 }
 
 
@@ -531,7 +553,7 @@ channel_post_x11_listener(Channel *c, fd_set * readset, fd_set * writeset)
 		newch = channel_new("x11",
 		    SSH_CHANNEL_OPENING, newsock, newsock, -1,
 		    c->local_window_max, c->local_maxpacket,
-		    0, xstrdup(buf));
+		    0, xstrdup(buf), 1);
 		if (compat20) {
 			packet_start(SSH2_MSG_CHANNEL_OPEN);
 			packet_put_cstring("x11");
@@ -589,7 +611,7 @@ channel_post_port_listener(Channel *c, fd_set * readset, fd_set * writeset)
 		newch = channel_new("direct-tcpip",
 		    SSH_CHANNEL_OPENING, newsock, newsock, -1,
 		    c->local_window_max, c->local_maxpacket,
-		    0, xstrdup(buf));
+		    0, xstrdup(buf), 1);
 		if (compat20) {
 			packet_start(SSH2_MSG_CHANNEL_OPEN);
 			packet_put_cstring("direct-tcpip");
@@ -720,7 +742,7 @@ channel_handle_efd(Channel *c, fd_set * readset, fd_set * writeset)
 		    buffer_len(&c->extended) > 0) {
 			len = write(c->efd, buffer_ptr(&c->extended),
 			    buffer_len(&c->extended));
-			debug("channel %d: written %d to efd %d",
+			debug2("channel %d: written %d to efd %d",
 			    c->self, len, c->efd);
 			if (len > 0) {
 				buffer_consume(&c->extended, len);
@@ -729,7 +751,7 @@ channel_handle_efd(Channel *c, fd_set * readset, fd_set * writeset)
 		} else if (c->extended_usage == CHAN_EXTENDED_READ &&
 		    FD_ISSET(c->efd, readset)) {
 			len = read(c->efd, buf, sizeof(buf));
-			debug("channel %d: read %d from efd %d",
+			debug2("channel %d: read %d from efd %d",
 			     c->self, len, c->efd);
 			if (len == 0) {
 				debug("channel %d: closing efd %d",
@@ -752,7 +774,7 @@ channel_check_window(Channel *c, fd_set * readset, fd_set * writeset)
 		packet_put_int(c->remote_id);
 		packet_put_int(c->local_consumed);
 		packet_send();
-		debug("channel %d: window %d sent adjust %d",
+		debug2("channel %d: window %d sent adjust %d",
 		    c->self, c->local_window,
 		    c->local_consumed);
 		c->local_window += c->local_consumed;
@@ -981,7 +1003,7 @@ channel_output_poll()
  */
 
 void
-channel_input_data(int type, int plen)
+channel_input_data(int type, int plen, void *ctxt)
 {
 	int id;
 	char *data;
@@ -1026,7 +1048,7 @@ channel_input_data(int type, int plen)
 	xfree(data);
 }
 void
-channel_input_extended_data(int type, int plen)
+channel_input_extended_data(int type, int plen, void *ctxt)
 {
 	int id;
 	int tcode;
@@ -1059,7 +1081,7 @@ channel_input_extended_data(int type, int plen)
 		xfree(data);
 		return;
 	}
-	debug("channel %d: rcvd ext data %d", c->self, data_len);
+	debug2("channel %d: rcvd ext data %d", c->self, data_len);
 	c->local_window -= data_len;
 	buffer_append(&c->extended, data, data_len);
 	xfree(data);
@@ -1096,7 +1118,7 @@ channel_not_very_much_buffered_data()
 }
 
 void
-channel_input_ieof(int type, int plen)
+channel_input_ieof(int type, int plen, void *ctxt)
 {
 	int id;
 	Channel *c;
@@ -1111,7 +1133,7 @@ channel_input_ieof(int type, int plen)
 }
 
 void
-channel_input_close(int type, int plen)
+channel_input_close(int type, int plen, void *ctxt)
 {
 	int id;
 	Channel *c;
@@ -1150,7 +1172,7 @@ channel_input_close(int type, int plen)
 
 /* proto version 1.5 overloads CLOSE_CONFIRMATION with OCLOSE */
 void
-channel_input_oclose(int type, int plen)
+channel_input_oclose(int type, int plen, void *ctxt)
 {
 	int id = packet_get_int();
 	Channel *c = channel_lookup(id);
@@ -1161,7 +1183,7 @@ channel_input_oclose(int type, int plen)
 }
 
 void
-channel_input_close_confirmation(int type, int plen)
+channel_input_close_confirmation(int type, int plen, void *ctxt)
 {
 	int id = packet_get_int();
 	Channel *c = channel_lookup(id);
@@ -1177,7 +1199,7 @@ channel_input_close_confirmation(int type, int plen)
 }
 
 void
-channel_input_open_confirmation(int type, int plen)
+channel_input_open_confirmation(int type, int plen, void *ctxt)
 {
 	int id, remote_id;
 	Channel *c;
@@ -1201,9 +1223,9 @@ channel_input_open_confirmation(int type, int plen)
 		c->remote_maxpacket = packet_get_int();
 		packet_done();
 		if (c->cb_fn != NULL && c->cb_event == type) {
-			debug("callback start");
+			debug2("callback start");
 			c->cb_fn(c->self, c->cb_arg);
-			debug("callback done");
+			debug2("callback done");
 		}
 		debug("channel %d: open confirm rwindow %d rmax %d", c->self,
 		    c->remote_window, c->remote_maxpacket);
@@ -1211,7 +1233,7 @@ channel_input_open_confirmation(int type, int plen)
 }
 
 void
-channel_input_open_failure(int type, int plen)
+channel_input_open_failure(int type, int plen, void *ctxt)
 {
 	int id;
 	Channel *c;
@@ -1239,7 +1261,7 @@ channel_input_open_failure(int type, int plen)
 }
 
 void
-channel_input_channel_request(int type, int plen)
+channel_input_channel_request(int type, int plen, void *ctxt)
 {
 	int id;
 	Channel *c;
@@ -1252,19 +1274,19 @@ channel_input_channel_request(int type, int plen)
 		packet_disconnect("Received request for "
 		    "non-open channel %d.", id);
 	if (c->cb_fn != NULL && c->cb_event == type) {
-		debug("callback start");
+		debug2("callback start");
 		c->cb_fn(c->self, c->cb_arg);
-		debug("callback done");
+		debug2("callback done");
 	} else {
 		char *service = packet_get_string(NULL);
 		debug("channel: %d rcvd request for %s", c->self, service);
-debug("cb_fn %p cb_event %d", c->cb_fn , c->cb_event);
+		debug("cb_fn %p cb_event %d", c->cb_fn , c->cb_event);
 		xfree(service);
 	}
 }
 
 void
-channel_input_window_adjust(int type, int plen)
+channel_input_window_adjust(int type, int plen, void *ctxt)
 {
 	Channel *c;
 	int id, adjust;
@@ -1283,7 +1305,7 @@ channel_input_window_adjust(int type, int plen)
 	}
 	adjust = packet_get_int();
 	packet_done();
-	debug("channel %d: rcvd adjust %d", id, adjust);
+	debug2("channel %d: rcvd adjust %d", id, adjust);
 	c->remote_window += adjust;
 }
 
@@ -1493,7 +1515,7 @@ channel_request_local_forwarding(u_short port, const char *host,
 		    "port listener", SSH_CHANNEL_PORT_LISTENER,
 		    sock, sock, -1,
 		    CHAN_TCP_WINDOW_DEFAULT, CHAN_TCP_PACKET_DEFAULT,
-		    0, xstrdup("port listener"));
+		    0, xstrdup("port listener"), 1);
 		strlcpy(channels[ch].path, host, sizeof(channels[ch].path));
 		channels[ch].host_port = host_port;
 		channels[ch].listening_port = port;
@@ -1635,7 +1657,7 @@ channel_connect_to(const char *host, u_short host_port)
  */
 
 void
-channel_input_port_open(int type, int plen)
+channel_input_port_open(int type, int plen, void *ctxt)
 {
 	u_short host_port;
 	char *host, *originator_string;
@@ -1783,7 +1805,7 @@ x11_create_display_inet(int screen_number, int x11_display_offset)
 		(void) channel_new("x11 listener",
 		    SSH_CHANNEL_X11_LISTENER, sock, sock, -1,
 		    CHAN_X11_WINDOW_DEFAULT, CHAN_X11_PACKET_DEFAULT,
-		    0, xstrdup("X11 inet listener"));
+		    0, xstrdup("X11 inet listener"), 1);
 	}
 
 	/* Return a suitable value for the DISPLAY environment variable. */
@@ -1925,7 +1947,7 @@ x11_connect_display(void)
  */
 
 void
-x11_input_open(int type, int plen)
+x11_input_open(int type, int plen, void *ctxt)
 {
 	int remote_channel, sock = 0, newch;
 	char *remote_host;
@@ -1967,6 +1989,28 @@ x11_input_open(int type, int plen)
 		packet_put_int(newch);
 		packet_send();
 	}
+}
+
+/* dummy protocol handler that denies SSH-1 requests (agent/x11) */
+void
+deny_input_open(int type, int plen, void *ctxt)
+{
+	int rchan = packet_get_int();
+	switch(type){
+	case SSH_SMSG_AGENT_OPEN:
+		error("Warning: ssh server tried agent forwarding.");
+		break;
+	case SSH_SMSG_X11_OPEN:
+		error("Warning: ssh server tried X11 forwarding.");
+		break;
+	default:
+		error("deny_input_open: type %d plen %d", type, plen);
+		break;
+	}
+	error("Warning: this is probably a break in attempt by a malicious server.");
+	packet_start(SSH_MSG_CHANNEL_OPEN_FAILURE);
+	packet_put_int(rchan);
+	packet_send();
 }
 
 /*
@@ -2140,7 +2184,7 @@ auth_input_request_forwarding(struct passwd * pw)
 /* This is called to process an SSH_SMSG_AGENT_OPEN message. */
 
 void
-auth_input_open_request(int type, int plen)
+auth_input_open_request(int type, int plen, void *ctxt)
 {
 	int remch, sock, newch;
 	char *dummyname;
@@ -2273,16 +2317,16 @@ channel_register_filter(int id, channel_filter_fn *fn)
 }
 
 void
-channel_set_fds(int id, int rfd, int wfd, int efd, int extusage)
+channel_set_fds(int id, int rfd, int wfd, int efd,
+    int extusage, int nonblock)
 {
 	Channel *c = channel_lookup(id);
 	if (c == NULL || c->type != SSH_CHANNEL_LARVAL)
 		fatal("channel_activate for non-larval channel %d.", id);
-
-	channel_register_fds(c, rfd, wfd, efd, extusage);
+	channel_register_fds(c, rfd, wfd, efd, extusage, nonblock);
 	c->type = SSH_CHANNEL_OPEN;
 	/* XXX window size? */
-	c->local_window = c->local_window_max = c->local_maxpacket/2;
+	c->local_window = c->local_window_max = c->local_maxpacket * 2;
 	packet_start(SSH2_MSG_CHANNEL_WINDOW_ADJUST);
 	packet_put_int(c->remote_id);
 	packet_put_int(c->local_window);
