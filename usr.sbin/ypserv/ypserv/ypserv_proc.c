@@ -28,11 +28,11 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: ypserv_proc.c,v 1.7 1995/03/05 23:25:59 moj Exp root $";
+static char rcsid[] = "$Id: ypserv_proc.c,v 1.8 1995/10/23 22:36:35 moj Exp $";
 #endif
 
 #include <rpc/rpc.h>
-#include <rpcsvc/yp.h>
+#include "yp.h"
 #include <rpcsvc/ypclnt.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -58,7 +58,7 @@ extern void ypdb_close_all();
 extern int acl_access_ok;
 
 void *
-ypproc_null_2(argp, rqstp, transp)
+ypproc_null_2_svc(argp, rqstp, transp)
 	void *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -74,7 +74,7 @@ ypproc_null_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 	
-	if (!svc_freeargs(transp, xdr_void, argp)) {
+	if (!svc_freeargs(transp, xdr_void, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -83,7 +83,7 @@ ypproc_null_2(argp, rqstp, transp)
 }
 
 bool_t *
-ypproc_domain_2(argp, rqstp, transp)
+ypproc_domain_2_svc(argp, rqstp, transp)
 	domainname *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -121,7 +121,7 @@ ypproc_domain_2(argp, rqstp, transp)
 	  svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_domainname, argp)) {
+	if (!svc_freeargs(transp, xdr_domainname, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -130,7 +130,7 @@ ypproc_domain_2(argp, rqstp, transp)
 }
 
 bool_t *
-ypproc_domain_nonack_2(argp, rqstp, transp)
+ypproc_domain_nonack_2_svc(argp, rqstp, transp)
 	domainname *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -178,7 +178,7 @@ ypproc_domain_nonack_2(argp, rqstp, transp)
 	  
 	}
 
-	if (!svc_freeargs(transp, xdr_domainname, argp)) {
+	if (!svc_freeargs(transp, xdr_domainname, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -187,7 +187,7 @@ ypproc_domain_nonack_2(argp, rqstp, transp)
 }
 
 ypresp_val *
-ypproc_match_2(argp, rqstp, transp)
+ypproc_match_2_svc(argp, rqstp, transp)
 	ypreq_key *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -221,7 +221,7 @@ ypproc_match_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_key, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_key, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -230,7 +230,7 @@ ypproc_match_2(argp, rqstp, transp)
 }
 
 ypresp_key_val *
-ypproc_first_2(argp, rqstp, transp)
+ypproc_first_2_svc(argp, rqstp, transp)
 	ypreq_key *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -262,7 +262,7 @@ ypproc_first_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_key, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_key, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -271,7 +271,7 @@ ypproc_first_2(argp, rqstp, transp)
 }
 
 ypresp_key_val *
-ypproc_next_2(argp, rqstp, transp)
+ypproc_next_2_svc(argp, rqstp, transp)
 	ypreq_key *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -305,7 +305,7 @@ ypproc_next_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 	
-	if (!svc_freeargs(transp, xdr_ypreq_key, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_key, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -314,7 +314,7 @@ ypproc_next_2(argp, rqstp, transp)
 }
 
 ypresp_xfr *
-ypproc_xfr_2(argp, rqstp, transp)
+ypproc_xfr_2_svc(argp, rqstp, transp)
 	ypreq_xfr *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -360,7 +360,7 @@ ypproc_xfr_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_xfr, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_xfr, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -369,7 +369,7 @@ ypproc_xfr_2(argp, rqstp, transp)
 }
 
 void *
-ypproc_clear_2(argp, rqstp, transp)
+ypproc_clear_2_svc(argp, rqstp, transp)
 	void *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -393,7 +393,7 @@ ypproc_clear_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 	
-	if (!svc_freeargs(transp, xdr_void, argp)) {
+	if (!svc_freeargs(transp, xdr_void, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -402,7 +402,7 @@ ypproc_clear_2(argp, rqstp, transp)
 }
 
 ypresp_all *
-ypproc_all_2(argp, rqstp, transp)
+ypproc_all_2_svc(argp, rqstp, transp)
 	ypreq_nokey *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -436,7 +436,7 @@ ypproc_all_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_nokey, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_nokey, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -445,7 +445,7 @@ ypproc_all_2(argp, rqstp, transp)
 }
 
 ypresp_master *
-ypproc_master_2(argp, rqstp, transp)
+ypproc_master_2_svc(argp, rqstp, transp)
 	ypreq_nokey *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -494,7 +494,7 @@ ypproc_master_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_nokey, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_nokey, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -504,7 +504,7 @@ ypproc_master_2(argp, rqstp, transp)
 
 
 ypresp_order *
-ypproc_order_2(argp, rqstp, transp)
+ypproc_order_2_svc(argp, rqstp, transp)
 	ypreq_nokey *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -537,7 +537,7 @@ ypproc_order_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 
-	if (!svc_freeargs(transp, xdr_ypreq_nokey, argp)) {
+	if (!svc_freeargs(transp, xdr_ypreq_nokey, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
@@ -547,7 +547,7 @@ ypproc_order_2(argp, rqstp, transp)
 
 
 ypresp_maplist *
-ypproc_maplist_2(argp, rqstp, transp)
+ypproc_maplist_2_svc(argp, rqstp, transp)
 	domainname *argp;
         struct svc_req *rqstp;
 	SVCXPRT *transp;
@@ -638,7 +638,7 @@ ypproc_maplist_2(argp, rqstp, transp)
 		svcerr_systemerr(transp);
 	}
 	
-	if (!svc_freeargs(transp, xdr_domainname, argp)) {
+	if (!svc_freeargs(transp, xdr_domainname, (caddr_t) argp)) {
 		(void)fprintf(stderr, "unable to free arguments\n");
 		exit(1);
 	}
