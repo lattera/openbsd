@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscall.h,v 1.26.4.2 2001/07/04 10:39:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscall.h,v 1.26.4.3 2001/10/31 03:11:47 nate Exp $	*/
 
 /*
  * System call numbers.

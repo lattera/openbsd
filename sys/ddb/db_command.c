@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.2 2001/07/04 10:40:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.3 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: db_command.c,v 1.20 1996/03/30 22:30:05 christos Exp $	*/
 
 /* 

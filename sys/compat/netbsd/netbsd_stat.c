@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.1 2001/07/04 10:39:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.2 2001/10/31 03:11:46 nate Exp $	*/
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -192,8 +192,7 @@ netbsd_sys___fstat13(p, v, retval)
 	struct stat sb;
 	int error;
 
-	if ((u_int)fd >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[fd]) == NULL)
+	if ((fp = fd_getfile(fdp, fd)) == NULL)
 		return (EBADF);
 
 	error = (*fp->f_ops->fo_stat)(fp, &sb, p);

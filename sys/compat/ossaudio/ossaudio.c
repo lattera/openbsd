@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ossaudio/ossaudio.c,v 1.2.8.2 2001/07/04 10:39:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ossaudio/ossaudio.c,v 1.2.8.3 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: ossaudio.c,v 1.23 1997/10/19 07:41:52 augustss Exp $	*/
 
 /*
@@ -88,8 +88,7 @@ oss_ioctl_audio(p, uap, retval)
 	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
 
 	fdp = p->p_fd;
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
 	if ((fp->f_flag & (FREAD | FWRITE)) == 0)
@@ -652,8 +651,7 @@ oss_ioctl_mixer(p, uap, retval)
 	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
 
 	fdp = p->p_fd;
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
 	if ((fp->f_flag & (FREAD | FWRITE)) == 0)
@@ -816,8 +814,7 @@ oss_ioctl_sequencer(p, uap, retval)
 #endif
 
 	fdp = p->p_fd;
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
 	if ((fp->f_flag & (FREAD | FWRITE)) == 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.1 2001/05/14 22:04:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.2 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: hpux_compat.c,v 1.35 1997/05/08 16:19:48 mycroft Exp $	*/
 
 /*
@@ -374,36 +374,6 @@ hpux_sys_writev(p, v, retval)
 		}
 	}
 	return (error);
-}
-
-/*
- * 4.3bsd dup allows dup2 to come in on the same syscall entry
- * and hence allows two arguments.  HP-UX dup has only one arg.
- */
-int
-hpux_sys_dup(p, v, retval)
-	struct proc *p;
-	void *v;
-	register_t *retval;
-{
-	struct hpux_sys_dup_args *uap = v;
-	struct filedesc *fdp = p->p_fd;
-	struct file *fp;
-	int fd, error;
-
-	if (((unsigned)SCARG(uap, fd)) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
-		return (EBADF);
-	if ((error = fdalloc(p, 0, &fd)))
-		return (error);
-	fdp->fd_ofiles[fd] = fp;
-	fdp->fd_ofileflags[fd] =
-	    fdp->fd_ofileflags[SCARG(uap, fd)] &~ UF_EXCLOSE;
-	fp->f_count++;
-	if (fd > fdp->fd_lastfile)
-		fdp->fd_lastfile = fd;
-	*retval = fd;
-	return (0);
 }
 
 int
@@ -856,8 +826,7 @@ hpux_sys_ioctl(p, v, retval)
 	if (com == HPUXTIOCGETP || com == HPUXTIOCSETP)
 		return (getsettty(p, SCARG(uap, fd), com, SCARG(uap, data)));
 
-	if (((unsigned)SCARG(uap, fd)) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd)) == NULL)
 		return (EBADF);
 	if ((fp->f_flag & (FREAD|FWRITE)) == 0)
 		return (EBADF);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_run.c,v 1.12.4.1 2001/05/14 22:06:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_run.c,v 1.12.4.2 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: db_run.c,v 1.8 1996/02/05 01:57:12 christos Exp $	*/
 
 /* 
@@ -210,7 +210,7 @@ db_restart_at_pc(regs, watchpt)
 			db_load_count += inst_load(ins);
 			db_store_count += inst_store(ins);
 		}
-#endif	SOFTWARE_SSTEP
+#endif	/* SOFTWARE_SSTEP */
 	}
 
 	if (db_run_mode == STEP_CONTINUE) {
@@ -410,4 +410,4 @@ db_clear_single_step(regs)
 	}
 }
 
-#endif	SOFTWARE_SSTEP
+#endif	/* SOFTWARE_SSTEP */

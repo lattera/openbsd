@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/crypto/Attic/cryptombuf.c,v 1.3 2001/06/23 18:30:36 deraadt Exp $	*/
+/*      $OpenBSD: src/sys/crypto/Attic/cryptombuf.c,v 1.3.2.1 2001/10/31 03:11:47 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Theo de Raadt
@@ -34,9 +34,8 @@
 #include <sys/malloc.h>
 #include <sys/kernel.h>
 #include <sys/mbuf.h>
+
 #include <vm/vm.h>
-#include <vm/vm_extern.h>
-#include <vm/pmap.h>
 
 #include <crypto/cryptodev.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.21.12.1 2001/05/14 22:07:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.21.12.2 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: db_sym.c,v 1.24 2000/08/11 22:50:47 tv Exp $	*/
 
 /* 
@@ -127,21 +127,32 @@ ddb_init()
 	const db_symformat_t **symf;
 	const char *name = "bsd";
 	extern char *esym;
+#ifdef __sparc64__
+	extern char *ssym;
+#else
 	extern long end;
+#endif
+	char *xssym, *xesym;
 
+	xesym = esym;
+#ifdef __sparc64__
+	xssym = ssym;
+#else
+	xssym = (char *)&end;
+#endif
 	/*
 	 * Do this check now for the master symbol table to avoid printing
 	 * the message N times.
 	 */
-	if ((((vaddr_t)&end) & (sizeof(long) - 1)) != 0) {
+	if ((((vaddr_t)xssym) & (sizeof(long) - 1)) != 0) {
 		printf("[ %s symbol table has bad start address %p ]\n",
-		    name, &end);
+		    name, xssym);
 		return;
 	}
 
 	for (symf = db_symformats; *symf != NULL; symf++) {
 		db_symformat = *symf;
-		if (X_db_sym_init((long)esym - (long)&end, &end, esym, name) == TRUE)
+		if (X_db_sym_init((long)xesym - (long)xssym, xssym, xesym, name) == TRUE)
 			return;
 	}
 

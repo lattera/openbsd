@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_fcntl.c,v 1.14.4.1 2001/05/14 22:05:25 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_fcntl.c,v 1.14.4.2 2001/10/31 03:11:47 nate Exp $	 */
 /*	$NetBSD: svr4_fcntl.c,v 1.14 1995/10/14 20:24:24 christos Exp $	 */
 
 /*
@@ -265,7 +265,7 @@ fd_truncate(p, fd, flp, retval)
 	/*
 	 * We only support truncating the file.
 	 */
-	if ((u_int)fd >= fdp->fd_nfiles || (fp = fdp->fd_ofiles[fd]) == NULL)
+	if ((fp = fd_getfile(fdp, fd)) == NULL)
 		return EBADF;
 
 	vp = (struct vnode *)fp->f_data;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_syscall.h,v 1.7.4.1 2001/07/04 10:39:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_syscall.h,v 1.7.4.2 2001/10/31 03:11:47 nate Exp $	*/
 
 /*
  * System call numbers.

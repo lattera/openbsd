@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_descrip.c,v 1.6.2.2 2001/07/04 10:39:38 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_descrip.c,v 1.6.2.3 2001/10/31 03:11:46 nate Exp $ */
 /* $NetBSD: osf1_descrip.c,v 1.5 1999/06/26 01:24:41 cgd Exp $ */
 
 /*
@@ -243,10 +243,7 @@ osf1_sys_fstat(p, v, retval)
 	struct osf1_stat oub;
 	int error;
 
-	/* XXX */
-	if ((unsigned)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL) /* ||
-	    (fp->f_iflags & FIF_WANTCLOSE) != 0) */
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
 	error = (*fp->f_ops->fo_stat)(fp, &ub, p);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/osf1/Attic/osf1_syscallargs.h,v 1.6.4.1 2001/05/14 22:05:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/osf1/Attic/osf1_syscallargs.h,v 1.6.4.2 2001/10/31 03:11:46 nate Exp $	*/
 
 /*
  * System call argument lists.
@@ -7,7 +7,21 @@
  * created from	OpenBSD: syscalls.master,v 1.8 2000/08/04 15:47:55 ericj Exp 
  */
 
-#define	syscallarg(x)	union { x datum; register_t pad; }
+#ifdef	syscallarg
+#undef	syscallarg
+#endif
+
+#define	syscallarg(x)							\
+	union {								\
+		register_t pad;						\
+		struct { x datum; } le;					\
+		struct {						\
+			int8_t pad[ (sizeof (register_t) < sizeof (x))	\
+				? 0					\
+				: sizeof (register_t) - sizeof (x)];	\
+			x datum;					\
+		} be;							\
+	}
 
 struct osf1_sys_wait4_args {
 	syscallarg(int) pid;

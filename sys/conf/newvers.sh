@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.2 2001/07/04 10:39:55 niklas Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.3 2001/10/31 03:11:47 nate Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -63,7 +63,7 @@ id=`basename ${d}`
 #		VERSION and other bits
 
 ost="OpenBSD"
-osr="2.9"
+osr="3.0"
 
 cat >vers.c <<eof
 char ostype[] = "${ost}";

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.1 2001/05/14 22:04:36 niklas Exp $ */
+/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.2 2001/10/31 03:11:46 nate Exp $ */
 
 /*-
  * Copyright (c) 1994-1995 Søren Schmidt
@@ -107,3 +107,17 @@ DUMMY(sendfile);		/* #187 */
 DUMMY(getpmsg);			/* #188 */
 DUMMY(putpmsg);			/* #189 */
 DUMMY(mmap2);			/* #192 */
+DUMMY(lchown);			/* #198 */
+DUMMY(setreuid);		/* #203 */
+DUMMY(setregid);		/* #204 */
+DUMMY(fchown);			/* #207 */
+DUMMY(setresuid);		/* #208 */
+DUMMY(setresgid);		/* #210 */
+DUMMY(getresgid);		/* #211 */
+DUMMY(chown);			/* #212 */
+DUMMY(setfsgid);		/* #216 */
+DUMMY(pivot_root);		/* #217 */
+DUMMY(mincore);			/* #218 */
+DUMMY(madvise);			/* #219 */
+DUMMY(getdents64);		/* #220 */
+DUMMY(fcntl64);			/* #221 */

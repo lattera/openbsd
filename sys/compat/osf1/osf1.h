@@ -1,5 +1,5 @@
-/* $OpenBSD */
-/* $NetBSD: osf1.h,v 1.20 1999/05/10 21:41:07 cgd Exp $ */
+/*	$OpenBSD: src/sys/compat/osf1/Attic/osf1.h,v 1.1.6.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$NetBSD: osf1.h,v 1.20 1999/05/10 21:41:07 cgd Exp $	*/
 
 /*
  * Copyright (c) 1999 Christopher G. Demetriou.  All rights reserved.

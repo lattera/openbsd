@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9 2001/06/25 17:52:37 angelos Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.1 2001/10/31 03:11:47 nate Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -84,7 +84,9 @@
 #define CRYPTO_SHA1_KPDK	10
 #define CRYPTO_RIJNDAEL128_CBC	11 /* 128 bit blocksize */
 #define CRYPTO_AES_CBC		11 /* 128 bit blocksize -- the same as above */
-#define CRYPTO_ALGORITHM_MAX	17 /* Keep updated - including public key */
+#define CRYPTO_ARC4		19
+#define CRYPTO_MD5		20
+#define CRYPTO_SHA1		21
 
 /* Begin public key additions */
 #define CRYPTO_DH_SEND		12 /* Compute public value */
@@ -93,6 +95,11 @@
 #define CRYPTO_RSA_DECRYPT	15 /* RSA public key decryption */
 #define CRYPTO_DSA_SIGN		16 /* DSA sign */
 #define CRYPTO_DSA_VERIFY	17 /* DSA verify */
+
+/* Compression */
+#define CRYPTO_DEFLATE_COMP	18 /* Deflate compression algorithm */
+
+#define CRYPTO_ALGORITHM_MAX	21 /* Keep updated - see below */
 
 /* Algorithm flags */
 #define	CRYPTO_ALG_FLAG_SUPPORTED	0x00000001 /* Algorithm is supported */
@@ -239,6 +246,7 @@ struct cryptodesc {
 					   place, so don't copy. */
 #define	CRD_F_IV_EXPLICIT	0x04	/* IV explicitly provided */
 #define	CRD_F_DSA_SHA_NEEDED	0x08	/* Compute SHA-1 of buffer for DSA */
+#define CRD_F_COMP		0x0f    /* Set when doing compression */
 
 	struct cryptoini	CRD_INI; /* Initialization/context data */
 #define crd_iv		CRD_INI.cri_iv
@@ -254,7 +262,7 @@ struct cryptodesc {
 struct cryptop {
 	u_int64_t	crp_sid;	/* Session ID */
 	int		crp_ilen;	/* Input data total length */
-	int		crp_olen;	/* Result total length (unused for now) */
+	int		crp_olen;	/* Result total length */
 	int		crp_alloctype;	/* Type of buf to allocate if needed */
 
 	int		crp_etype;	/*
@@ -281,7 +289,6 @@ struct cryptop {
 
 	struct cryptop	*crp_next;
 	caddr_t		crp_mac;
-	int		crp_mac_trunc_len;
 };
 
 #define CRYPTO_BUF_CONTIG	0x1
@@ -321,7 +328,7 @@ struct session_op {
 	int		mackeylen;	/* mac key */
 	caddr_t		mackey;
 
-	u_int32_t	ses;		/* returns: session # */
+  	u_int32_t	ses;		/* returns: session # */ 
 };
 
 struct crypt_op {
@@ -331,9 +338,11 @@ struct crypt_op {
 
 	u_int		len;
 	caddr_t		src, dst;	/* become iov[] inside kernel */
-	caddr_t		mac;
+	caddr_t		mac;		/* must be big enough for chosen MAC */
 	caddr_t		iv;
 };
+
+#define CRYPTO_MAX_MAC_LEN	20
 
 #define COP_ENCRYPT	1
 #define COP_DECRYPT	2

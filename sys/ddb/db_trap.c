@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5.12.1 2001/05/14 22:07:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5.12.2 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: db_trap.c,v 1.9 1996/02/05 01:57:18 christos Exp $	*/
 
 /* 
@@ -76,8 +76,10 @@ db_trap(type, code)
 		if (panicstr != NULL) {
 			if (db_print_position() != 0)
 				db_printf("\n");
-			db_printf("Run at least 'trace' and 'ps' and include "
-			    "the output when reporting this panic.\n");
+			db_printf("RUN AT LEAST 'trace' AND 'ps' AND INCLUDE "
+			    "OUTPUT WHEN REPORTING THIS PANIC!\n");
+			db_printf("DO NOT EVEN BOTHER REPORTING THIS WITHOUT "
+			    "INCLUDING THAT INFORMATION!\n");
 		}
 
 		db_command_loop();

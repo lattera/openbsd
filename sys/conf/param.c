@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.3 2001/07/04 10:39:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.4 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: param.c,v 1.16 1996/03/12 03:08:40 mrg Exp $	*/
 
 /*
@@ -48,9 +48,6 @@
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/timeout.h>
-#ifdef REAL_CLISTS
-#include <sys/clist.h>
-#endif
 #include <sys/mbuf.h>
 #include <ufs/ufs/quota.h>
 #include <sys/kernel.h>
@@ -95,10 +92,6 @@ int	maxproc = NPROC;
 #define	NVNODE (NPROC * 2 + NTEXT + 100)
 int	desiredvnodes = NVNODE;
 int	maxfiles = 3 * (NPROC + MAXUSERS) + 80;
-int	ntimeout = (16 + NPROC) * 2;
-#ifdef REAL_CLISTS
-int	nclist = 60 + 12 * MAXUSERS;
-#endif
 int	nmbclusters = NMBCLUSTERS;
 
 #ifndef MBLOWAT
@@ -138,7 +131,6 @@ struct	shminfo shminfo = {
  */
 #ifdef SYSVSEM
 struct	seminfo seminfo = {
-	SEMMAP,		/* # of entries in semaphore map */
 	SEMMNI,		/* # of semaphore identifiers */
 	SEMMNS,		/* # of semaphores in system */
 	SEMMNU,		/* # of undo structures in system */
@@ -177,8 +169,6 @@ int	nbuf, nswbuf;
  * them here forces loader errors if this file is omitted
  * (if they've been externed everywhere else; hah!).
  */
-struct 	timeout *timeouts;
-struct	cblock *cfree;
 struct	buf *buf, *swbuf;
 char	*buffers;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_fdio.c,v 1.1.4.1 2001/05/14 22:04:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_fdio.c,v 1.1.4.2 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: linux_fdio.c,v 1.1 2000/12/10 14:12:16 fvdl Exp $	*/
 
 /*
@@ -75,18 +75,8 @@ linux_ioctl_fdio(struct proc *p, struct linux_sys_ioctl_args *uap,
 	com = (u_long)SCARG(uap, data);
 
 	fdp = p->p_fd;
-#if 1
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
-#else
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL ||
-	    (fp->f_iflags & FIF_WANTCLOSE) != 0)
-		return (EBADF);
-
-	FILE_USE(fp);
-#endif
 
 	com = SCARG(uap, com);
 	ioctlf = fp->f_ops->fo_ioctl;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.4 2001/07/04 10:39:55 niklas Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.5 2001/10/31 03:11:47 nate Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -15,10 +15,15 @@ define	ifmedia
 define	mii {[phy = -1]}
 define	midibus { }
 define	midisyn
+define	radio {}
 
 # audio device attributes
 define	mulaw
 define	auconv
+
+# radio device attributes
+define tea5757
+define lm700x
 
 # audio and midi devices, attaches to audio hardware driver
 device	audio
@@ -40,9 +45,9 @@ define	rasops32
 # and fddi.
 define	arc
 define	atm
+define	crypto
 define	ether
 define	fddi
-define	crypto
 define	sppp
 define	token
 
@@ -54,6 +59,7 @@ define	pdq		# DEC FDDI chipset
 define	dp8390nic	# 8390-family Ethernet controllers
 define	rtl80x9		# RealTek 8019/8029 NE2000-compatible
 define	dl10019		# DL10019/10022-family Ethernet controllers
+define	ax88190		# AX88190-family Ethernet controllers
 
 # a wscons output device; used later, but needs to be near the top for
 # common file (e.g. vga) definitions.
@@ -68,10 +74,14 @@ define	pcdisplayops
 file	dev/ic/pcdisplay_subr.c		pcdisplayops
 file	dev/ic/pcdisplay_chars.c	pcdisplayops
 
+# Mostek time-of-day clock and NVRAM
+define	mk48txx
+file	dev/ic/mk48txx.c		mk48txx
+
 # VGA graphics
 device	vga: wsemuldisplaydev, pcdisplayops
-file	dev/ic/vga.c		vga & vga_pci	needs-flag
-file	dev/ic/vga_subr.c	vga & vga_pci
+file	dev/ic/vga.c		vga & (vga_pci | vga_isa)	needs-flag
+file	dev/ic/vga_subr.c	vga & (vga_pci | vga_isa)	needs-flag
 
 # Attribute for devices that read/write an IEEE 802.3u MII bus using the
 # bit-bang method.
@@ -91,6 +101,7 @@ file	dev/ic/wdc.c wdc_base
 # Adaptec 2[789]4X, 394X, aic7770 and aic78[5678]0 SCSI controllers
 device	ahc: scsi
 file	dev/ic/aic7xxx.c	ahc
+file	dev/ic/smc93cx6.c	ahc
 
 # Adaptec AIC-6[23]60 SCSI controllers
 device	aic: scsi
@@ -119,6 +130,10 @@ file	dev/ic/gdt_common.c	gdt
 # 3ware Escalade RAID controllers
 device	twe: scsi
 file	dev/ic/twe.c		twe
+
+# LSI64854 DMA controller back-end
+define	lsi64854
+file	dev/ic/lsi64854.c	lsi64854
 
 # Compaq Smart ARRAY controllers
 device	cac: scsi
@@ -153,6 +168,10 @@ file	dev/ic/siop.c			siop
 # 3Com Etherlink-III Ethernet controller
 device	ep: ether, ifnet, ifmedia, mii
 file	dev/ic/elink3.c		ep
+
+# LEMAC-based cards
+device	lc: ether, ifnet, ifmedia
+file	dev/ic/lemac.c		lc
 
 # WaveLan
 device	wi: ether, ifnet, ifmedia
@@ -199,9 +218,16 @@ file	dev/ic/ne2000.c		ne
 # D-Link DL10019/10022 NE2000-compatible network interface subroutines
 file	dev/ic/dl10019.c	dl10019
 
+# ASIX AX88190 NE2000-compatible network interface subroutines
+file	dev/ic/ax88190.c	ax88190
+
 # Intel i82596/i82586 Ethernet Controller
 device	ie: ether, ifnet, ifmedia
 file	dev/ic/i82596.c		ie & (ie_pci | ie_eisa | ie_gsc)
+
+# Sun GEM Ethernet controllers
+device	gem: ether, ifnet, ifmedia, mii
+file	dev/ic/gem.c		gem
 
 # TROPIC Token-Ring controller
 device	tr: ether, token, ifnet
@@ -209,7 +235,7 @@ file	dev/ic/tropic.c		tr
 
 # 8250/16[45]50-based "com" ports
 device	com: tty
-file	dev/ic/com.c		com & (com_isa | com_isapnp | com_commulti | com_pcmcia | com_pica | com_algor | com_gsc | com_puc) needs-flag
+file	dev/ic/com.c		com & (com_isa | com_isapnp | com_commulti | com_pcmcia | com_pica | com_algor | com_gsc | com_puc | com_ebus) needs-flag
 
 # PC-like keyboard controller
 device	pckbc { [slot = -1] }
@@ -261,6 +287,10 @@ file	dev/usb/uhci.c			uhci	needs-flag
 device	ohci: usbus
 file	dev/usb/ohci.c			ohci	needs-flag
 
+# radio devices, attaches to radio hardware driver
+device	radio
+attach	radio at radio
+
 # legitimate pseudo-devices
 pseudo-device vnd: disk
 pseudo-device ccd: disk
@@ -294,6 +324,7 @@ file	dev/ksyms.c	ksyms needs-flag
 
 pseudo-device pf: ifnet
 file	net/pf.c		pf	needs-flag
+file	net/pf_norm.c		pf
 
 # XXX machine-independent SCSI files should live somewhere here, maybe
 
@@ -302,20 +333,20 @@ file adosfs/adlookup.c			adosfs
 file adosfs/adutil.c			adosfs
 file adosfs/advfsops.c			adosfs
 file adosfs/advnops.c			adosfs
-file altq/altq_afmap.c			altq
-file altq/altq_blue.c			altq
-file altq/altq_cbq.c			altq
-file altq/altq_cdnr.c			altq
 file altq/altq_conf.c			altq
-file altq/altq_fifoq.c			altq
-file altq/altq_hfsc.c			altq
-file altq/altq_localq.c			altq
-file altq/altq_priq.c			altq
-file altq/altq_red.c			altq
-file altq/altq_rio.c			altq
-file altq/altq_rmclass.c		altq
 file altq/altq_subr.c			altq
-file altq/altq_wfq.c			altq
+file altq/altq_red.c			altq
+file altq/altq_cbq.c			altq
+file altq/altq_rmclass.c		altq
+file altq/altq_afmap.c			altq_afmap
+file altq/altq_blue.c			altq_blue
+file altq/altq_cdnr.c			altq_cdnr
+file altq/altq_fifoq.c			altq_fifoq
+file altq/altq_hfsc.c			altq_hfsc
+file altq/altq_localq.c			altq_localq
+file altq/altq_priq.c			altq_priq
+file altq/altq_rio.c			altq_rio
+file altq/altq_wfq.c			altq_wfq
 file ddb/db_access.c			ddb | kgdb
 file ddb/db_aout.c			ddb
 file ddb/db_break.c			ddb
@@ -337,6 +368,7 @@ file ddb/db_usrreq.c			ddb
 file ddb/db_hangman.c			ddb
 file dev/auconv.c			auconv
 file dev/audio.c			audio			needs-flag
+file dev/radio.c			radio			needs-flag
 file dev/ccd.c				ccd			needs-flag
 file dev/ic/ncr5380sbc.c		ncr5380sbc
 file dev/ic/ncr53c7xx.c			ncr53c7xx
@@ -344,6 +376,8 @@ file dev/ic/pdq.c			pdq
 file dev/ic/pdq_ifsubr.c		pdq
 file dev/ic/dp8390.c			dp8390nic
 file dev/ic/rtl80x9.c			rtl80x9
+file dev/ic/tea5757.c			tea5757
+file dev/ic/lm700x.c			lm700x
 file dev/midi.c				midi | midibus		needs-flag
 file dev/midisyn.c			midisyn
 file dev/mulaw.c			mulaw
@@ -420,7 +454,7 @@ file isofs/cd9660/cd9660_vnops.c	cd9660
 file kern/exec_aout.c
 file kern/exec_conf.c
 file kern/exec_ecoff.c
-file kern/exec_elf.c
+file kern/exec_elf32.c
 file kern/exec_elf64.c
 file kern/exec_script.c
 file kern/exec_subr.c
@@ -433,7 +467,6 @@ file kern/kern_event.c
 file kern/kern_exec.c
 file kern/kern_exit.c
 file kern/kern_fork.c
-file kern/kern_fthread.c
 file kern/kern_kthread.c
 file kern/kern_ktrace.c			ktrace
 file kern/kern_lock.c
@@ -457,6 +490,7 @@ file kern/subr_autoconf.c
 file kern/subr_disk.c
 file kern/subr_extent.c
 file kern/subr_log.c
+file kern/subr_pool.c
 file kern/subr_prf.c
 file kern/subr_prof.c
 file kern/subr_rmap.c
@@ -465,7 +499,6 @@ file kern/subr_xxx.c
 file kern/sys_generic.c
 file kern/sys_pipe.c
 file kern/sys_process.c
-file kern/subr_pool.c
 file kern/sys_socket.c
 file kern/syscalls.c			syscall_debug
 file kern/sysv_ipc.c			sysvshm | sysvsem | sysvmsg
@@ -565,7 +598,7 @@ file net/if_ppp.c			ppp			needs-count
 file net/ppp_tty.c			ppp
 file net/bsd-comp.c			ppp_bsdcomp
 file net/ppp-deflate.c			ppp_deflate
-file net/zlib.c				ppp_deflate
+file net/zlib.c				ppp_deflate | ipsec
 file net/if_tokensubr.c			token			needs-flag
 file net/if_tun.c			tun			needs-count
 file net/if_bridge.c			bridge			needs-count
@@ -628,6 +661,7 @@ file netinet/ipsec_input.c		(inet | inet6) & ipsec
 file netinet/ipsec_output.c		(inet | inet6) & ipsec
 file netinet/ip_esp.c			inet & ipsec
 file netinet/ip_ah.c			inet & ipsec
+file netinet/ip_ipcomp.c		inet & ipsec
 file crypto/rijndael.c			(inet & ipsec) | crypto | uvm_swap_encrypt
 file crypto/rmd160.c			(inet & ipsec) | crypto
 file crypto/sha1.c			(inet & ipsec) | crypto
@@ -643,6 +677,7 @@ file crypto/criov.c			(inet & ipsec) | crypto
 file crypto/cryptosoft.c		(inet & ipsec) | crypto
 file crypto/cryptombuf.c		(inet & ipsec) | crypto
 file crypto/xform.c			(inet & ipsec) | crypto
+file crypto/deflate.c			(inet & ipsec) | crypto
 file netatalk/aarp.c			netatalk
 file netatalk/at_control.c		netatalk
 file netatalk/at_proto.c		netatalk
@@ -742,6 +777,7 @@ file ufs/ufs/ufs_vnops.c		ffs | mfs | ext2fs
 file ufs/ext2fs/ext2fs_alloc.c		ext2fs
 file ufs/ext2fs/ext2fs_balloc.c		ext2fs
 file ufs/ext2fs/ext2fs_bmap.c		ext2fs
+file ufs/ext2fs/ext2fs_bswap.c		ext2fs
 file ufs/ext2fs/ext2fs_inode.c		ext2fs
 file ufs/ext2fs/ext2fs_lookup.c		ext2fs
 file ufs/ext2fs/ext2fs_readwrite.c	ext2fs

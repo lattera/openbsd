@@ -1,12 +1,10 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.3 2001/07/04 10:39:54 niklas Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.4 2001/10/31 03:11:47 nate Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
 
 #option		INSECURE	# default to secure
 
-option		TIMEZONE=0	# time zone to adjust RTC time by
-option		DST=0		# daylight saving time used by RTC
 option		NTP		# hooks supporting the Network Time Protocol
 
 option		DDB		# in-kernel debugger
@@ -60,6 +58,7 @@ option		UNION		# union file system
 
 #option		GATEWAY		# packet forwarding
 option		INET		# IP + ICMP + TCP + UDP
+option		ALTQ		# ALTQ base
 option		INET6		# IPv6 (needs INET)
 option		PULLDOWN_TEST	# use m_pulldown for IPv6 packet parsing
 option		IPSEC		# IPsec
@@ -84,7 +83,7 @@ pseudo-device	sl	2	# CSLIP
 pseudo-device	ppp	2	# PPP
 pseudo-device	sppp	1	# Sync PPP/HDLC
 pseudo-device	tun	2	# network tunneling over tty
-pseudo-device	enc	1	# IPSEC needs the encapsulation interface
+pseudo-device	enc	1	# option IPSEC needs the encapsulation interface
 pseudo-device	bridge	2	# network bridging support
 pseudo-device	vlan 	2	# IEEE 802.1Q VLAN 
 pseudo-device	gre	1	# GRE encapsulation interface

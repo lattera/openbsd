@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.9.8.1 2001/05/14 22:05:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.9.8.2 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: sunos_ioctl.c,v 1.23 1996/03/14 19:33:46 christos Exp $	*/
 
 /*
@@ -404,8 +404,7 @@ sunos_sys_ioctl(p, v, retval)
 	register int (*ctl) __P((struct file *, u_long, caddr_t, struct proc *));
 	int error;
 
-	if ( (unsigned)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return EBADF;
 
 	if ((fp->f_flag & (FREAD|FWRITE)) == 0)

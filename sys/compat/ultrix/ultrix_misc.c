@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.2 2001/07/04 10:39:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.3 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: ultrix_misc.c,v 1.23 1996/04/07 17:23:04 jonathan Exp $	*/
 
 /*
@@ -140,9 +140,9 @@ extern char *ultrix_syscallnames[];
 #define ULTRIX_EXEC_SETREGS cpu_exec_ecoff_setregs
 #endif /* __mips__ */
 
-#ifdef vax
+#ifdef __vax__
 #define ULTRIX_EXEC_SETREGS setregs
-#endif /* mips */
+#endif /* __vax__ */
 
 
 extern void ULTRIX_EXEC_SETREGS __P((struct proc *, struct exec_package *,
@@ -344,8 +344,7 @@ ultrix_sys_mmap(p, v, retval)
 	 * Special case: if fd refers to /dev/zero, map as MAP_ANON.  (XXX)
 	 */
 	fdp = p->p_fd;
-	if ((unsigned)SCARG(&ouap, fd) < fdp->fd_nfiles &&		/*XXX*/
-	    (fp = fdp->fd_ofiles[SCARG(&ouap, fd)]) != NULL &&		/*XXX*/
+	if ((fp = fd_getfile(fdp, SCARG(&ouap, fd))) != NULL &&		/*XXX*/
 	    fp->f_type == DTYPE_VNODE &&				/*XXX*/
 	    (vp = (struct vnode *)fp->f_data)->v_type == VCHR &&	/*XXX*/
 	    iszerodev(vp->v_rdev)) {					/*XXX*/

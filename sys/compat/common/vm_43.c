@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vm_43.c,v 1.1.16.1 2001/07/04 10:39:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vm_43.c,v 1.1.16.2 2001/10/31 03:11:45 nate Exp $	*/
 /*	$NetBSD: vm_43.c,v 1.1 1996/02/05 01:58:29 christos Exp $	*/
 
 /*
@@ -63,8 +63,6 @@
 #include <miscfs/specfs/specdev.h>
 
 #include <vm/vm.h>
-#include <vm/vm_pager.h>
-#include <vm/vm_prot.h>
 
 /* ARGSUSED */
 int

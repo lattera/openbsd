@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ipc.c,v 1.4.12.1 2001/05/14 22:05:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ipc.c,v 1.4.12.2 2001/10/31 03:11:47 nate Exp $	*/
 /*	$NetBSD: svr4_ipc.c,v 1.3 1997/03/30 17:21:02 christos Exp $	*/
 
 /*
@@ -54,8 +54,6 @@
 #include <compat/svr4/svr4_syscallargs.h>
 #include <compat/svr4/svr4_util.h>
 #include <compat/svr4/svr4_ipc.h>
-
-#define	syscallarg(x)	union { x datum; register_t pad; }
 
 #if defined(SYSVMSG) || defined(SYSVSHM) || defined(SYSVSEM)
 static void svr4_to_bsd_ipc_perm __P((const struct svr4_ipc_perm *,

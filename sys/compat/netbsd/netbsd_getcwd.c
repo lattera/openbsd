@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getcwd.c,v 1.3.4.1 2001/07/04 10:39:31 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getcwd.c,v 1.3.4.2 2001/10/31 03:11:46 nate Exp $ */
 /* $NetBSD: vfs_getcwd.c,v 1.3.2.3 1999/07/11 10:24:09 sommerfeld Exp $ */
 
 /*-
@@ -53,6 +53,7 @@ int proc_isunder __P((struct proc *, struct proc*)); /* missing from proc.h */
 #include <sys/dirent.h>
 #include <ufs/ufs/dir.h>	/* XXX only for DIRBLKSIZ */
 
+#include <compat/netbsd/netbsd_types.h>
 #include <compat/netbsd/netbsd_signal.h>
 #include <compat/netbsd/netbsd_syscallargs.h>
 

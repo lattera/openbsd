@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_signal.h,v 1.3.12.2 2001/05/14 22:04:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_signal.h,v 1.3.12.3 2001/10/31 03:11:46 nate Exp $	*/
 /* 	$NetBSD: linux_signal.h,v 1.4 1995/08/27 20:51:51 fvdl Exp $	*/
 
 /*
@@ -114,6 +114,10 @@ struct linux_sigaltstack {
 	size_t	ss_size;
 };
 
+/* ss_flags */
+#define LINUX_SS_ONSTACK	0x00000001
+#define LINUX_SS_DISABLE	0x00000002
+
 extern int bsd_to_linux_sig[];
 extern int linux_to_bsd_sig[];
 
@@ -137,5 +141,8 @@ void linux_to_bsd_sigaction __P((struct linux_sigaction *,
     struct sigaction *));
 void bsd_to_linux_sigaction __P((struct sigaction *,
     struct linux_sigaction *));
+
+int  linux_to_bsd_signal (int, int *);
+int  bsd_to_linux_signal (int, int *);
 
 #endif /* !_LINUX_SIGNAL_H */

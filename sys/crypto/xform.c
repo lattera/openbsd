@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.3 2001/07/04 10:40:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.4 2001/10/31 03:11:47 nate Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -54,6 +54,7 @@
 #include <crypto/rijndael.h>
 #include <crypto/cryptodev.h>
 #include <crypto/xform.h>
+#include <crypto/deflate.h>
 
 extern void des_ecb3_encrypt(caddr_t, caddr_t, caddr_t, caddr_t, caddr_t, int);
 extern void des_ecb_encrypt(caddr_t, caddr_t, caddr_t, int);
@@ -87,6 +88,9 @@ void rijndael128_zerokey(u_int8_t **);
 int MD5Update_int(void *, u_int8_t *, u_int16_t);
 int SHA1Update_int(void *, u_int8_t *, u_int16_t);
 int RMD160Update_int(void *, u_int8_t *, u_int16_t);
+
+u_int32_t deflate_compress(u_int8_t *, u_int32_t, u_int8_t **);
+u_int32_t deflate_decompress(u_int8_t *, u_int32_t, u_int8_t **);
 
 /* Encryption instances */
 struct enc_xform enc_xform_des = {
@@ -143,6 +147,15 @@ struct enc_xform enc_xform_rijndael128 = {
 	rijndael128_zerokey,
 };
 
+struct enc_xform enc_xform_arc4 = {
+	CRYPTO_ARC4, "ARC4",
+	1, 1, 32,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
+
 /* Authentication instances */
 struct auth_hash auth_hash_hmac_md5_96 = {
 	CRYPTO_MD5_HMAC, "HMAC-MD5",
@@ -177,6 +190,25 @@ struct auth_hash auth_hash_key_sha1 = {
 	0, 20, 20, sizeof(SHA1_CTX),
 	(void (*)(void *)) SHA1Init, SHA1Update_int,
 	(void (*)(u_int8_t *, void *)) SHA1Final 
+};
+
+struct auth_hash auth_hash_md5 = {
+	CRYPTO_MD5, "MD5",
+	0, 16, 0, 0,
+	NULL, NULL, NULL
+};
+
+struct auth_hash auth_hash_sha1 = {
+	CRYPTO_SHA1, "SHA1",
+	0, 20, 0, 0,
+	NULL, NULL, NULL
+};
+
+/* Compression instance */
+struct comp_algo comp_algo_deflate = {
+	CRYPTO_DEFLATE_COMP, "Deflate",
+	90, deflate_compress,
+	deflate_decompress
 };
 
 /*
@@ -336,14 +368,14 @@ skipjack_zerokey(u_int8_t **sched)
 void
 rijndael128_encrypt(caddr_t key, u_int8_t *blk)
 {
-	rijndael_encrypt((rijndael_ctx *) key, (u4byte *) blk, (u4byte *) blk);
+	rijndael_encrypt((rijndael_ctx *) key, (u_char *) blk, (u_char *) blk);
 }
 
 void
 rijndael128_decrypt(caddr_t key, u_int8_t *blk)
 {
-	rijndael_decrypt(((rijndael_ctx *) key) + 1, (u4byte *) blk,
-	    (u4byte *) blk);
+	rijndael_decrypt(((rijndael_ctx *) key) + 1, (u_char *) blk,
+	    (u_char *) blk);
 }
 
 void
@@ -352,8 +384,8 @@ rijndael128_setkey(u_int8_t **sched, u_int8_t *key, int len)
 	MALLOC(*sched, u_int8_t *, 2 * sizeof(rijndael_ctx), M_CRYPTO_DATA,
 	    M_WAITOK);
 	bzero(*sched, 2 * sizeof(rijndael_ctx));
-	rijndael_set_key((rijndael_ctx *) *sched, (u4byte *) key, len * 8, 1);
-	rijndael_set_key(((rijndael_ctx *) *sched) + 1, (u4byte *) key,
+	rijndael_set_key((rijndael_ctx *) *sched, (u_char *) key, len * 8, 1);
+	rijndael_set_key(((rijndael_ctx *) *sched) + 1, (u_char *) key,
 	    len * 8, 0);
 }
 
@@ -388,4 +420,26 @@ SHA1Update_int(void *ctx, u_int8_t *buf, u_int16_t len)
 {
 	SHA1Update(ctx, buf, len);
 	return 0;
+}
+
+/*
+ * And compression
+ */
+
+u_int32_t
+deflate_compress(data, size, out)
+	u_int8_t *data;
+	u_int32_t size;
+	u_int8_t **out;
+{
+	return deflate_global(data, size, 0, out);
+}
+
+u_int32_t
+deflate_decompress(data, size, out)
+	u_int8_t *data;
+	u_int32_t size;
+	u_int8_t **out;
+{
+	return deflate_global(data, size, 1, out);
 }

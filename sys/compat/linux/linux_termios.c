@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_termios.c,v 1.6.4.2 2001/07/04 10:39:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_termios.c,v 1.6.4.3 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: linux_termios.c,v 1.3 1996/04/05 00:01:54 christos Exp $	*/
 
 /*
@@ -460,8 +460,7 @@ linux_ioctl_termios(p, v, retval)
 	int error;
 
 	fdp = p->p_fd;
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
 	if ((fp->f_flag & (FREAD | FWRITE)) == 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7.10.1 2001/05/14 22:05:25 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7.10.2 2001/10/31 03:11:47 nate Exp $	 */
 /*	$NetBSD: svr4_ioctl.c,v 1.16 1996/04/11 12:54:41 christos Exp $	 */
 
 /*
@@ -109,8 +109,7 @@ svr4_sys_ioctl(p, v, retval)
 	fdp = p->p_fd;
 	cmd = SCARG(uap, com);
 
-	if ((u_int)SCARG(uap, fd) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL)
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return EBADF;
 
 	if ((fp->f_flag & (FREAD | FWRITE)) == 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_ipc_10.c,v 1.3.10.2 2001/07/04 10:39:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_ipc_10.c,v 1.3.10.3 2001/10/31 03:11:45 nate Exp $	*/
 /*	$NetBSD: kern_ipc_10.c,v 1.4 1995/10/07 06:26:25 mycroft Exp $	*/
 
 /*
@@ -42,9 +42,6 @@
 #include <sys/syscallargs.h>
 
 #include <vm/vm.h>
-#include <vm/vm_map.h>
-#include <vm/vm_map.h>
-#include <vm/vm_kern.h>
 
 /*
  * Note that while we no longer have a COMPAT_10 kernel option,

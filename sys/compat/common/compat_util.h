@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/compat_util.h,v 1.3.4.1 2001/05/14 22:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/compat_util.h,v 1.3.4.2 2001/10/31 03:11:45 nate Exp $	*/
 /*	$NetBSD: compat_util.h,v 1.1 1995/06/24 20:16:05 christos Exp $	*/
 
 /*
@@ -34,7 +34,6 @@
 #define	_COMPAT_UTIL_H_
 
 #include <vm/vm.h>
-#include <vm/vm_param.h>
 #include <sys/exec.h>
 
 struct emul;

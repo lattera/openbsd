@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.1 2001/05/14 22:04:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.2 2001/10/31 03:11:46 nate Exp $	*/
 /*	$NetBSD: freebsd_exec.c,v 1.2 1996/05/18 16:02:08 christos Exp $	*/
 
 /*
@@ -88,9 +88,9 @@ struct emul emul_elf_freebsd = {
 	NULL,
 #endif
 	FREEBSD_ELF_AUX_ARGSIZ,
-	elf_copyargs,
+	elf32_copyargs,
 	setregs,
-	exec_elf_fixup,
+	exec_elf32_fixup,
 	freebsd_sigcode,
 	freebsd_esigcode,
 };
@@ -157,7 +157,7 @@ freebsd_elf_probe(p, epp, itp, pos, os)
 	int error;
 	size_t len;
 
-	brand = elf_check_brand(eh);
+	brand = elf32_check_brand(eh);
 	if (brand == NULL || strcmp(brand, "FreeBSD"))
 		return (EINVAL);
 	if (itp[0]) {

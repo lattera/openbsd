@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getdents.c,v 1.2.4.1 2001/05/14 22:04:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getdents.c,v 1.2.4.2 2001/10/31 03:11:46 nate Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
@@ -49,6 +49,7 @@
 #include <sys/vnode.h>
 #include <sys/stat.h>
 
+#include <compat/netbsd/netbsd_types.h>
 #include <compat/netbsd/netbsd_signal.h>
 #include <compat/netbsd/netbsd_syscallargs.h>
 

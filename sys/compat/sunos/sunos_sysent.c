@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_sysent.c,v 1.11.4.1 2001/07/04 10:39:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_sysent.c,v 1.11.4.2 2001/10/31 03:11:47 nate Exp $	*/
 
 /*
  * System call switch table.
