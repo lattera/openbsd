@@ -866,11 +866,12 @@ sub guesswork {
     # Make all caps a little smaller.  Be careful here, since we don't want
     # to make @ARGV into small caps, nor do we want to fix the MIME in
     # MIME-Version, since it looks weird with the full-height V.
-    s{
-        ( ^ | [\s\(\"\'\`\[\{<>] )
-        ( [A-Z] [A-Z] [/A-Z+:\d_\$&-]* )
-        (?: (?= [\s>\}\]\)\'\".?!,;:] | -- ) | $ )
-    } { $1 . '\s-1' . $2 . '\s0' }egx;
+# XXX - disabled for now since it messes up on escapes nested in C<>
+#    s{
+#        ( ^ | [\s\(\"\'\`\[\{<>] )
+#        ( [A-Z] [A-Z] [/A-Z+:\d_\$&-]* )
+#        (?: (?= [\s>\}\]\)\'\".?!,;:] | -- ) | $ )
+#    } { $1 . '\s-1' . $2 . '\s0' }egx;
 
     # Turn PI into a pretty pi.
     s{ (?: \\s-1 | \b ) PI (?: \\s0 | \b ) } {\\*\(PI}gx;
