@@ -63,7 +63,7 @@ void
 tTflag(s)
 	register char *s;
 {
-	int first, last;
+	unsigned int first, last;
 	register unsigned int i;
 
 	if (*s == '\0')
@@ -73,16 +73,28 @@ tTflag(s)
 	{
 		/* find first flag to set */
 		i = 0;
-		while (isascii(*s) && isdigit(*s))
+		while (isascii(*s) && isdigit(*s) && i < tTsize)
 			i = i * 10 + (*s++ - '0');
+
+		/*
+		**  skip over rest of a too large number
+		**  Maybe we should complain if out-of-bounds values are used.
+		*/
+
+		while (isascii(*s) && isdigit(*s) && i >= tTsize)
+			s++;
 		first = i;
 
 		/* find last flag to set */
 		if (*s == '-')
 		{
 			i = 0;
-			while (isascii(*++s) && isdigit(*s))
+			while (isascii(*++s) && isdigit(*s) && i < tTsize)
 				i = i * 10 + (*s - '0');
+
+			/* skip over rest of a too large number */
+			while (isascii(*s) && isdigit(*s) && i >= tTsize)
+				s++;
 		}
 		last = i;
 
