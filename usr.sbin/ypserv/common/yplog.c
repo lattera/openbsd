@@ -1,7 +1,6 @@
-/* $Id: xd.c,v 1.10 1995/12/11 12:40:20 pk Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypserv/common/yplog.c,v 1.3 1996/05/30 09:53:03 deraadt Exp $ */
 
 /*
- *
  * Copyright (c) 1996 Charles D. Cranor
  * All rights reserved.
  *

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/ypserv/yppush/yppush.c,v 1.3 1996/05/30 09:53:19 deraadt Exp $ */
+
 /*
  * Copyright (c) 1995 Mats O Jansson <moj@stacken.kth.se>
  * All rights reserved.
@@ -30,7 +32,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: yppush.c,v 1.1 1996/03/02 03:01:43 dm Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/yppush/yppush.c,v 1.3 1996/05/30 09:53:19 deraadt Exp $";
 #endif /* not lint */
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/ypserv/common/ypdef.h,v 1.3 1996/05/30 09:53:02 deraadt Exp $ */
+
 /*
  * Copyright (c) 1994 Mats O Jansson <moj@stacken.kth.se>
  * All rights reserved.
@@ -29,8 +31,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id: ypdef.h,v 1.1 1995/11/01 16:56:17 deraadt Exp $
  */
 
 #ifndef _YPDEF_H_

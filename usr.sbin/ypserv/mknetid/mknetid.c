@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/ypserv/mknetid/mknetid.c,v 1.2 1996/05/30 09:53:09 deraadt Exp $ */
+
 /*
  * Copyright (c) 1996 Mats O Jansson <moj@stacken.kth.se>
  * All rights reserved.
@@ -30,7 +32,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: mknetid.c,v 1.0 1996/01/13 22:06:05 moj Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/mknetid/mknetid.c,v 1.2 1996/05/30 09:53:09 deraadt Exp $";
 #endif
 
 #include <sys/param.h>

@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.8 (Berkeley) 7/28/90
-#	$Id: Makefile,v 1.0 1995/01/29 21:35:37 moj Exp $
+#	$OpenBSD: src/usr.sbin/ypserv/yptest/Makefile,v 1.2 1996/05/30 09:53:31 deraadt Exp $
 
 PROG=	yptest
 MAN=	yptest.8

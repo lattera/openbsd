@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.3 (Berkeley) 6/22/90
-#	$Id: Makefile,v 1.6 1996/01/20 00:35:27 chuck Exp $
+#	$OpenBSD: src/usr.sbin/ypserv/ypinit/Makefile,v 1.8 1996/05/30 09:53:15 deraadt Exp $
 
 NOOBJ=	noobj
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/ypserv/common/ypdb.c,v 1.3 1996/05/30 09:53:01 deraadt Exp $ */
+
 /*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -37,8 +39,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id: ypdb.c,v 1.1 1995/11/01 16:56:16 deraadt Exp $
  */
 
 #include <sys/param.h>

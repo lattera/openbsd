@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.6.1.2 (Berkeley) 5/8/91
-#	$Id: Makefile,v 1.2 1995/11/01 16:56:03 deraadt Exp $
+#	$OpenBSD: src/usr.sbin/ypserv/Makefile,v 1.4 1996/05/30 09:52:58 deraadt Exp $
 
 SUBDIR=	makedbm mknetid stdethers stdhosts ypinit ypserv yptest yppush ypxfr
 
