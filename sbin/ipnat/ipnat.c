@@ -41,6 +41,7 @@
 #include <netinet/tcp.h>
 #include <net/if.h>
 #include "ip_fil_compat.h"
+#include "ip_fil.h"
 #include <netdb.h>
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
@@ -51,7 +52,7 @@
 
 #ifndef lint
 static  char    sccsid[] ="@(#)ipnat.c	1.9 6/5/96 (C) 1993 Darren Reed";
-static	char	rcsid[] = "$Id: ipnat.c,v 1.2 1996/07/07 02:45:58 darrenr Exp $";
+static	char	rcsid[] = "$Id: ipnat.c,v 1.3 1996/07/18 05:08:39 dm Exp $";
 #endif
 
 #if	SOLARIS

@@ -25,13 +25,14 @@
 #include <netinet/tcp.h>
 #include <netinet/tcpip.h>
 #include <net/if.h>
+#include "ip_fil_compat.h"
 #include "ip_fil.h"
 #include "ipf.h"
 #include "ipt.h"
 #include "pcap.h"
 
 #ifndef	lint
-static	char	rcsid[] = "$Id: ipft_pc.c,v 1.1.1.1 1996/06/23 07:27:17 darrenr Exp $";
+static	char	rcsid[] = "$Id: ipft_pc.c,v 1.4 1996/07/18 04:59:23 dm Exp $";
 #endif
 
 struct	llc	{
