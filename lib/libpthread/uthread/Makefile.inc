@@ -1,5 +1,5 @@
-#	$Id: Makefile.inc,v 1.2 1998/11/09 03:13:18 d Exp $
-#	$OpenBSD: src/lib/libpthread/uthread/Attic/Makefile.inc,v 1.3 1998/12/10 00:33:54 d Exp $
+#	$Id: Makefile.inc,v 1.3 1998/12/10 00:33:54 d Exp $
+#	$OpenBSD: src/lib/libpthread/uthread/Attic/Makefile.inc,v 1.4 1999/01/08 04:59:49 d Exp $
 
 # uthread sources
 .PATH: ${.CURDIR}/uthread
@@ -65,6 +65,7 @@ SRCS+= \
 	uthread_once.c \
 	uthread_open.c \
 	uthread_pipe.c \
+	uthread_poll.c \
 	uthread_queue.c \
 	uthread_read.c \
 	uthread_readv.c \
