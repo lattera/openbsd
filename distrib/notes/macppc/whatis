@@ -1,0 +1,4 @@
+dnl	$OpenBSD: src/distrib/notes/macppc/whatis,v 1.5 2005/03/18 13:29:46 miod Exp $
+
+OpenBSD/MACHINE runs on the ``New World'' 32 bit PowerPC-based Apple
+Macintosh systems (i.e. from the iMac onwards).
