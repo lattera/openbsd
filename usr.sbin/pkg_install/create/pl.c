@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/create/Attic/pl.c,v 1.9 2003/07/04 17:31:19 avsm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/create/Attic/pl.c,v 1.10 2003/08/12 06:54:03 espie Exp $	*/
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/create/Attic/pl.c,v 1.9 2003/07/04 17:31:19 avsm Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/create/Attic/pl.c,v 1.10 2003/08/12 06:54:03 espie Exp $";
 #endif
 
 /*
@@ -67,6 +67,8 @@ check_list(char *home, package_t *pkg)
 				tmp->next = p->next;
 				tmp->prev = p;
 				p->next = tmp;
+				if (pkg->tail == p)
+					pkg->tail = tmp;
 				p = tmp;
 			}
 			break;
