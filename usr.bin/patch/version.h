@@ -1,3 +1,3 @@
-/*	$Id: version.h,v 1.2 1993/08/02 17:55:26 mycroft Exp $ */
+/*	$OpenBSD: src/usr.bin/patch/Attic/version.h,v 1.2 1996/06/10 11:21:36 niklas Exp $ */
 
 void version();

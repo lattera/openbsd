@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/patch/backupfile.h,v 1.2 1996/06/10 11:21:26 niklas Exp $*/
 /* backupfile.h -- declarations for making Emacs style backup file names
    Copyright (C) 1990 Free Software Foundation, Inc.
 
@@ -8,7 +9,6 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	$Id: backupfile.h,v 1.2 1993/08/02 17:55:14 mycroft Exp $
 */
 
 /* When to make backup files. */

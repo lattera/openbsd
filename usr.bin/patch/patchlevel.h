@@ -1,3 +1,3 @@
-/*	$Id: patchlevel.h,v 1.2 1993/08/02 17:55:20 mycroft Exp $ */
+/*	$OpenBSD: src/usr.bin/patch/Attic/patchlevel.h,v 1.2 1996/06/10 11:21:32 niklas Exp $ */
 
 #define PATCHLEVEL "12u8"

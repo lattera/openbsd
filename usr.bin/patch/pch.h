@@ -1,4 +1,4 @@
-/*	$Id: pch.h,v 1.2 1993/08/02 17:55:22 mycroft Exp $ */
+/*	$OpenBSD: src/usr.bin/patch/pch.h,v 1.2 1996/06/10 11:21:34 niklas Exp $ */
 
 EXT FILE *pfp INIT(Nullfp);		/* patch file pointer */
 

@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.bin/patch/util.c,v 1.2 1996/06/10 11:21:34 niklas Exp $	*/
+
 #ifndef lint
-static char rcsid[] = "$Id: util.c,v 1.3 1993/12/07 10:36:16 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/patch/util.c,v 1.2 1996/06/10 11:21:34 niklas Exp $";
 #endif /* not lint */
 
 #include "EXTERN.h"

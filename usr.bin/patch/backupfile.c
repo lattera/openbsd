@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/patch/backupfile.c,v 1.2 1996/06/10 11:21:25 niklas Exp $	*/
+
 /* backupfile.c -- make Emacs style backup file names
    Copyright (C) 1990 Free Software Foundation, Inc.
 
@@ -12,7 +14,7 @@
    Some algorithms adapted from GNU Emacs. */
 
 #ifndef lint
-static char rcsid[] = "$Id: backupfile.c,v 1.3 1994/12/24 17:30:13 cgd Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/patch/backupfile.c,v 1.2 1996/06/10 11:21:25 niklas Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
