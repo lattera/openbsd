@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.sub,v 1.27 1995/04/24 05:37:46 jh Exp $
+# $Id: Makefile.sub,v 1.1.1.4 1998/01/18 23:12:19 etheisen Exp $
 #
 MAN7=groff_mm.n groff_mmse.n
 FILES=0.MT 5.MT 4.MT ms.cov se_ms.cov 
