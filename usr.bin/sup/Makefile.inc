@@ -1,0 +1,5 @@
+#	$OpenBSD: src/usr.bin/sup/Attic/Makefile.inc,v 1.3 2000/08/20 18:42:41 millert Exp $
+
+
+CFLAGS+=-UCMUCS -UCMU -UMACH -DVAR_TMP -DHAS_DAEMON -DHAS_POSIX_DIR \
+	-DHAS_LOGIN_CAP
