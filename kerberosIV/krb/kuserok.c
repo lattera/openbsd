@@ -1,7 +1,7 @@
 /*
  * This software may now be redistributed outside the US.
  *
- * $Source: /usr/src/kerberosIV/lib/krb/RCS/kuserok.c,v $
+ * $Source: /cvs/src/kerberosIV/krb/kuserok.c,v $
  *
  * $Locker:  $
  */
@@ -122,8 +122,7 @@ kuserok(kdata, luser)
     if ((pwd = getpwnam(luser)) == NULL) {
 	return(NOTOK);
     }
-    (void) strcpy(pbuf, pwd->pw_dir);
-    (void) strcat(pbuf, "/.klogin");
+    snprintf(pbuf, sizeof pbuf, "%s/.klogin", pwd->pw_dir);
 
     if (access(pbuf, F_OK)) {	 /* not accessible */
 	/*
