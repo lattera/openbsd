@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/powerpc.h,v 1.6 2001/06/29 06:07:09 drahn Exp $	*/
-/*	$NetBSD: powerpc.h,v 1.1 1996/09/30 16:34:30 ws Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/cpu.h,v 1.1 2001/09/01 15:49:06 drahn Exp $	*/
+/*	$NetBSD: cpu.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*
- * Copyright (C) 1996 Wolfgang Solfrank.
- * Copyright (C) 1996 TooLs GmbH.
+ * Copyright (C) 1995, 1996 Wolfgang Solfrank.
+ * Copyright (C) 1995, 1996 TooLs GmbH.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,56 +31,33 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef	_MACHINE_POWERPC_H_
-#define	_MACHINE_POWERPC_H_
+#ifndef	_MACHINE_CPU_H_
+#define	_MACHINE_CPU_H_
 
-struct mem_region {
-	vm_offset_t start;
-	vm_size_t size;
-};
+#include <powerpc/cpu.h>
 
-void mem_regions __P((struct mem_region **, struct mem_region **));
+void	child_return __P((struct proc *));
 
-/*
- * These two functions get used solely in boot() in machdep.c.
- *
- * Not sure whether boot itself should be implementation dependent instead.	XXX
- */
-typedef void (exit_f) __P((void)) /*__attribute__((__noreturn__))*/ ;
-typedef void (boot_f) __P((char *bootspec)) /* __attribute__((__noreturn__))*/ ;
-typedef void (vmon_f) __P((void));
+#define	CACHELINESIZE	32			/* For now		XXX */
 
-/* firmware interface.
- * regardless of type of firmware used several items
- * are need from firmware to boot up.
- * these include:
- *	memory information
- *	vmsetup for firmware calls.
- *	default character print mechanism ???
- *	firmware exit (return)
- *	firmware boot (reset)
- *	vmon - tell firmware the bsd vm is active.
- */
-
-typedef void (mem_regions_f)__P((struct mem_region **memp,
-	struct mem_region **availp));
-
-struct firmware {
-	mem_regions_f	*mem_regions;
-	exit_f		*exit;
-	boot_f		*boot;
-	vmon_f		*vmon;
+static __inline void
+syncicache(void *from, int len)
+{
+	int l = len;
+	char *p = from;
 	
-#ifdef FW_HAS_PUTC
-	boot_f		*putc;
-#endif
-};
-extern  struct firmware *fw;
-void ofwconprobe(void);
-int ppc_open_pci_bridge __P((void));
-void ppc_close_pci_bridge __P((int));
-void install_extint __P((void (*handler) (void)));
-void ppc_intr_enable __P((int enable));
-int ppc_intr_disable __P((void));
+	do {
+		__asm__ __volatile__ ("dcbst 0,%0" :: "r"(p));
+		p += CACHELINESIZE;
+	} while ((l -= CACHELINESIZE) > 0);
+	__asm__ __volatile__ ("sync");
+	p = from;
+	l = len;
+	do {
+		__asm__ __volatile__ ("icbi 0,%0" :: "r"(p));
+		p += CACHELINESIZE;
+	} while ((l -= CACHELINESIZE) > 0);
+	__asm__ __volatile__ ("isync");
+}
 
-#endif	/* _MACHINE_POWERPC_H_ */
+#endif	/* _MACHINE_CPU_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/loadfile_machdep.h,v 1.2 2001/07/04 08:38:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/loadfile_machdep.h,v 1.1 2001/09/01 15:49:06 drahn Exp $	*/
 /*	$NetBSD: loadfile_machdep.h,v 1.1 1999/04/29 03:17:12 tsubai Exp $	*/
 
 /*-

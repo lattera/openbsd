@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/autoconf.h,v 1.10 2001/07/09 02:14:05 mickey Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/include/autoconf.h,v 1.1 2001/09/01 15:49:06 drahn Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
