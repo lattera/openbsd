@@ -1,4 +1,4 @@
-/*	$Id: site.h,v 1.3 1996/01/29 19:18:40 tholo Exp $	*/
+/*	$OpenBSD: src/kerberosIV/include/kerberosIV/Attic/site.h,v 1.5 1999/08/20 11:00:32 art Exp $	*/
 
 /* 
  * Site-specific definitions.
@@ -25,6 +25,12 @@
 /* from: kadm_server.h  */
 /* the default syslog file */
 #define KADM_SYSLOG	"/var/log/admin_server.log"
+
+/* used by kdb_init.c */
+/* The default expire time for principals created by kadmind */
+/* The time "1104555599" gives a date of:  Sat Jan  1 04:59:59 2005 */
+#define KDBINIT_EXPDATE		1104555599
+#define KDBINIT_EXPDATE_TXT	"12/31/04"
 
 #define DEFAULT_ACL_DIR	"/etc/kerberosIV/"
 /* These get appended to DEFAULT_ACL_DIR */
