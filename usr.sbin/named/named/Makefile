@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/named/named/Attic/Makefile,v 1.3 1998/05/22 00:47:29 millert Exp $
+#	$OpenBSD: src/usr.sbin/named/named/Attic/Makefile,v 1.3.16.1 2002/11/14 23:34:39 millert Exp $
 #	$NetBSD: Makefile,v 1.1 1996/02/02 15:28:00 mrg Exp $
 # from: $Id: Makefile,v 8.1 1994/12/15 06:23:45 vixie Exp 
 
@@ -10,15 +10,15 @@ SRCS=	version.c db_dump.c db_glue.c db_load.c db_lookup.c db_reload.c \
 	ns_init.c ns_main.c ns_maint.c ns_ncache.c ns_req.c ns_resp.c \
 	ns_sort.c ns_stats.c ns_udp.c ns_validate.c storage.c tree.c
 MAN=	named.8
+CLEANFILES+= version.c
 
 CFLAGS+=${INCLUDE} ${CONFIG}
-LDADD=	${LIBRESOLV}
 
-makeversionc:
+version.c: Version.c ${.CURDIR}/../Makefile
 	(u=root d=`pwd` h=localhost t=`date +%c`; \
 	sed -e "s|%WHEN%|$${t}|" -e "s|%VERSION%|"${VER}"|" \
 	    -e "s|%WHOANDWHERE%|$${u}@$${h}:$${d}|" \
-	    < ${.CURDIR}/Version.c > ${.CURDIR}/version.c)
+	    < ${.CURDIR}/Version.c > version.c)
 
 .include <bsd.prog.mk>
 .include "../../Makefile.inc"

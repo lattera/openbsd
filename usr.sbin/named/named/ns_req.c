@@ -1,11 +1,11 @@
-/*	$OpenBSD: src/usr.sbin/named/named/Attic/ns_req.c,v 1.9 2002/02/17 19:42:37 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/named/named/Attic/ns_req.c,v 1.9.2.1 2002/11/14 23:34:39 millert Exp $	*/
 
 #if !defined(lint) && !defined(SABER)
 #if 0
 static char sccsid[] = "@(#)ns_req.c	4.47 (Berkeley) 7/1/91";
 static char rcsid[] = "$From: ns_req.c,v 8.30 1998/05/11 04:19:45 vixie Exp $";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.sbin/named/named/Attic/ns_req.c,v 1.9 2002/02/17 19:42:37 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/named/named/Attic/ns_req.c,v 1.9.2.1 2002/11/14 23:34:39 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -1526,7 +1526,7 @@ make_rr(name, dp, buf, buflen, doadd)
 
 		/* first just copy over the type_covered, algorithm, */
 		/* labels, orig ttl, two timestamps, and the footprint */
-		if ((dp->d_size - 18) > buflen)
+		if (buflen < 18)
 			goto cleanup;
 		bcopy( cp1, cp, 18 );
 		cp  += 18;
