@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/netns/Attic/ns_cksum.c,v 1.2 1997/02/24 14:38:37 niklas Exp $	*/
 /*	$NetBSD: ns_cksum.c,v 1.3 1995/03/08 02:14:53 cgd Exp $	*/
 
 /*
