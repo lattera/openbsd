@@ -1,4 +1,4 @@
-/* $OpenBSD: src/lib/libc/arch/powerpc/sys/brk.S,v 1.6 2002/10/07 04:47:12 drahn Exp $ */
+/* $OpenBSD: src/lib/libc/arch/powerpc/sys/brk.S,v 1.6.2.1 2004/01/16 01:02:38 brad Exp $ */
 
 /*
  * Copyright (c) 1996 Dale Rahn
@@ -43,7 +43,7 @@ PREFIX2(brk,break)
 	mtlr	10
 	lwz	5,_C_LABEL(end)@got(9)
 #endif
-	cmpw	3,5
+	cmplw	3,5
 	bge+	.L_brk_call
 	mr	3, 5
 
