@@ -18,7 +18,7 @@ agent connections.
 */
 
 #include "includes.h"
-RCSID("$Id: sshd.c,v 1.5 1999/09/29 18:16:21 dugsong Exp $");
+RCSID("$Id: sshd.c,v 1.6 1999/09/29 21:14:16 deraadt Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -409,9 +409,7 @@ main(int ac, char **av)
 	  close(fd);
 	}
 #endif /* TIOCNOTTY */
-#ifdef HAVE_SETSID
       (void)setsid();
-#endif /* HAVE_SETSID */
     }
 
   /* Reinitialize the log (because of the fork above). */
