@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.25.2.1 2003/08/21 23:36:36 brad Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.25.2.2 2004/03/03 08:50:13 brad Exp $	*/
 /*	$NetBSD: ext2fs_vnops.c,v 1.1 1997/06/11 09:34:09 bouyer Exp $	*/
 
 /*
@@ -1507,7 +1507,7 @@ struct vnodeopv_entry_desc ext2fs_fifoop_entries[] = {
 	{ &vop_write_desc, ufsfifo_write },		/* write */
 	{ &vop_fsync_desc, ext2fs_fsync },		/* fsync */
 	{ &vop_inactive_desc, ext2fs_inactive },/* inactive */
-	{ &vop_reclaim_desc, ext2fs_reclaim },	/* reclaim */
+	{ &vop_reclaim_desc, ext2fsfifo_reclaim },	/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
 	{ &vop_print_desc, ufs_print },			/* print */
@@ -1517,4 +1517,11 @@ struct vnodeopv_entry_desc ext2fs_fifoop_entries[] = {
 };
 struct vnodeopv_desc ext2fs_fifoop_opv_desc =
 	{ &ext2fs_fifoop_p, ext2fs_fifoop_entries };
+
+int
+ext2fsfifo_reclaim(void *v)
+{
+	fifo_reclaim(v);
+	return (ext2fs_reclaim(v));
+}
 #endif /* FIFO */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_extern.h,v 1.15 2002/03/14 03:16:13 millert Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_extern.h,v 1.15.6.1 2004/03/03 08:50:13 brad Exp $	*/
 /*	$NetBSD: ext2fs_extern.h,v 1.1 1997/06/11 09:33:55 bouyer Exp $	*/
 
 /*-
@@ -146,6 +146,7 @@ int ext2fs_makeinode(int, struct vnode *, struct vnode **,
                      struct componentname *cnp);
 int ext2fs_fsync(void *);
 int ext2fs_reclaim(void *);
+int ext2fsfifo_reclaim(void *);
 
 __END_DECLS
 
