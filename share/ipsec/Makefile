@@ -1,7 +1,7 @@
 #
-#	$OpenBSD: src/share/ipsec/Attic/Makefile,v 1.3 1998/07/30 08:14:36 provos Exp $
+#	$OpenBSD: src/share/ipsec/Attic/Makefile,v 1.4 2002/09/06 22:06:29 deraadt Exp $
 #
-FILES=	*.conf *.startup rc.vpn
+FILES=	rc.vpn
 NOOBJ=	noobj
 
 all clean cleandir depend lint tags:
