@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2.6.2 2001/10/31 03:22:40 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2.6.3 2002/03/29 23:39:33 niklas Exp $ */
 /*	$NetBSD: rbus.c,v 1.3 1999/11/06 06:20:53 soren Exp $	*/
 /*
  * Copyright (c) 1999
@@ -56,10 +56,10 @@
 
 
 
-static rbus_tag_t rbus_new_body __P((bus_space_tag_t bt, rbus_tag_t parent,
+static rbus_tag_t rbus_new_body(bus_space_tag_t bt, rbus_tag_t parent,
 				    struct extent *ex, bus_addr_t start,
 				    bus_addr_t end, bus_addr_t offset,
-				    int flags));
+				    int flags);
 
 
 int
