@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_an_isapnp.c,v 1.3 2003/06/04 04:43:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_an_isapnp.c,v 1.3.2.1 2003/06/07 10:32:24 ho Exp $	*/
 
 /*
  * Copyright (c) 2003 Michael Shalayeff

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/bt458reg.h,v 1.2 2003/06/02 18:53:18 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/bt458reg.h,v 1.2.2.1 2003/06/07 10:32:24 ho Exp $	*/
 
 /*
  * Copyright (c) 2003 Jason L. Wright (jason@thought.net)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2 2003/05/28 19:21:11 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2.2.1 2003/06/07 10:32:24 ho Exp $	*/
 
 /*
  * Copyright (c) 2003 Julien Bordet <zejames@greygats.org>
