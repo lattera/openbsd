@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: command.c,v 1.3 1997/12/08 20:09:06 brian Exp $
+ * $Id: command.c,v 1.4 1997/12/15 22:44:50 brian Exp $
  *
  */
 #include <sys/param.h>
@@ -688,7 +688,7 @@ FindExec(struct cmdtab const *cmds, int argc, char const *const *argv)
   if (val == -1)
     LogPrintf(LogWARN, "Usage: %s\n", cmd->syntax);
   else if (val)
-    LogPrintf(LogCOMMAND, "%s: Failed %d\n", *argv, val);
+    LogPrintf(LogWARN, "%s: Failed %d\n", *argv, val);
 
   return val;
 }
