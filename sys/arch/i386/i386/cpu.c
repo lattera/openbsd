@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.14 2004/04/06 13:30:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.15 2004/06/06 18:11:04 grange Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -299,7 +299,7 @@ cpu_attach(parent, self, aux)
 		ci->ci_next = cpu_info_list->ci_next;
 		cpu_info_list->ci_next = ci;
 #else
-		printf("%s: not started\n", sc->sc_dev.dv_xname);
+		printf("%s: not started\n", ci->ci_dev.dv_xname);
 #endif
 		break;
 
