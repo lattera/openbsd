@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/alpha/alpha/prom_disp.s,v 1.6 2000/11/08 19:16:59 ericj Exp $ */
 /* $NetBSD: prom_disp.s,v 1.8 1997/11/03 04:22:03 ross Exp $ */
 
 /*
