@@ -1,5 +1,5 @@
 dnl
-dnl $Id: func-krb-get-err-text.m4,v 1.3 2000/01/23 13:01:51 lha Exp $
+dnl $KTH: func-krb-get-err-text.m4,v 1.3 2000/01/23 13:01:51 lha Exp $
 dnl
 
 dnl

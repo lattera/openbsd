@@ -1,5 +1,5 @@
 dnl
-dnl $Id: check-kernel-var.m4,v 1.2 2000/01/25 20:31:24 assar Exp $
+dnl $KTH: check-kernel-var.m4,v 1.2 2000/01/25 20:31:24 assar Exp $
 dnl
 
 dnl AC_CHECK_KERNEL_VAR(var, type, [includes])

@@ -1,4 +1,4 @@
-dnl $Id: krb-sys-nextstep.m4,v 1.2 1999/05/16 13:44:46 assar Exp $
+dnl $KTH: krb-sys-nextstep.m4,v 1.2 1999/05/16 13:44:46 assar Exp $
 dnl
 dnl
 dnl NEXTSTEP is not posix compliant by default,

@@ -1,5 +1,5 @@
 dnl
-dnl $Id: type-krb-principal.m4,v 1.3 2000/01/23 13:01:42 lha Exp $
+dnl $KTH: type-krb-principal.m4,v 1.3 2000/01/23 13:01:42 lha Exp $
 dnl
 
 dnl

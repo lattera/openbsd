@@ -1,5 +1,5 @@
 dnl
-dnl $Id: bsd-vfs-busy.m4,v 1.3 2000/02/20 03:06:43 assar Exp $
+dnl $KTH: bsd-vfs-busy.m4,v 1.3 2000/02/20 03:06:43 assar Exp $
 dnl
 
 dnl
