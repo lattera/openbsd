@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.h,v 1.4 2003/06/02 07:06:56 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.h,v 1.5 2003/10/11 22:08:57 miod Exp $ */
 
-/* Copyright (c) 1998 Steve Murphree, Jr. 
+/* Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Theo de Raadt
  * All rights reserved.
  *
