@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2001/07/27 14:13:08 rees Exp $ */
+/* $Id: main.c,v 1.3 2001/10/02 16:12:57 rees Exp $ */
 
 /*
  * Smartcard commander.
@@ -145,7 +145,8 @@ char *av[];
 	dispatch(tc, tv);
     }
 
-    exit(0);
+    quit(0, NULL);
+    return 0;
 }
 
 void onintr(int sigraised)
