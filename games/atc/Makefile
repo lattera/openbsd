@@ -1,0 +1,35 @@
+#	$OpenBSD: src/games/atc/Makefile,v 1.7 1997/09/21 11:35:18 deraadt Exp $
+
+PROG=	atc
+CFLAGS+=-DBSD -I${.CURDIR} -I.
+SRCS=	extern.c grammar.c graphics.c input.c lex.c list.c log.c \
+	main.c tunable.c update.c
+MAN=	atc.6
+LDADD=	-ll -lm -lcurses -ltermlib
+DPADD=	${LIBL} ${LIBM} ${LIBTERMLIB} ${LIBCURSES}
+GAMES=	ATC_scores Game_List Killer crossover default easy game_2 \
+	Atlantis OHare Tic-Tac-Toe airports box crosshatch game_3 \
+	game_4 novice two-corners
+CLEANFILES=grammar.c y.tab.h lex.c
+HIDEGAME=hidegame
+
+beforeinstall: 
+	@if [ ! -d ${DESTDIR}/usr/share/games/atc ]; then \
+                /bin/rm -f ${DESTDIR}/usr/share/games/atc ; \
+                mkdir -p ${DESTDIR}/usr/share/games/atc ; \
+                chown root.wheel ${DESTDIR}/usr/share/games/atc ; \
+                chmod 755 ${DESTDIR}/usr/share/games/atc ; \
+        else \
+                true ; \
+        fi
+	(cd ${.CURDIR}/games; ${INSTALL} ${INSTALL_COPY} \
+	    -o ${BINOWN} -g ${BINGRP} \
+	    -m 444 ${GAMES} ${DESTDIR}/usr/share/games/atc)
+	@if [ ! -f ${DESTDIR}/var/games/atc_score ]; then \
+	    ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 664 \
+		/dev/null ${DESTDIR}/var/games/atc_score ; \
+	else \
+                true ; \
+        fi
+
+.include <bsd.prog.mk>
