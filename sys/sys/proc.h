@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.12 2003/05/15 04:08:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.13 2003/05/15 23:36:53 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -210,6 +210,7 @@ struct	proc {
 	u_short	p_acflag;	/* Accounting flags. */
 	struct	rusage *p_ru;	/* Exit information. XXX */
 	struct	cpu_info * __volatile p_cpu; /* CPU we're running on. */
+	int	p_locks;       	/* DEBUG: lockmgr count of held locks */
 };
 
 #define	p_session	p_pgrp->pg_session
