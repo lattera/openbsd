@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/faithd/Attic/rsh.c,v 1.2 1999/12/20 16:32:53 itojun Exp $	*/
+
 /*
  * Copyright (C) 1997 and 1998 WIDE Project.
  * All rights reserved.
