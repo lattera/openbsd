@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.4 1993/08/02 17:56:16 mycroft Exp $
+#	$OpenBSD: src/usr.bin/tn3270/tools/mkhits/Attic/Makefile,v 1.2 1996/03/09 01:33:40 niklas Exp $
 
 CFLAGS += -I${.CURDIR}/.. -I.
 
