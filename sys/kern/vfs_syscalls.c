@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.95 2002/03/14 01:27:06 millert Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.95.2.1 2002/10/13 20:54:54 miod Exp $	*/
 /*	$NetBSD: vfs_syscalls.c,v 1.71 1996/04/23 10:29:02 mycroft Exp $	*/
 
 /*
@@ -2505,7 +2505,7 @@ sys_getdirentries(p, v, retval)
 	struct sys_getdirentries_args /* {
 		syscallarg(int) fd;
 		syscallarg(char *) buf;
-		syscallarg(u_int) count;
+		syscallarg(int) count;
 		syscallarg(long *) basep;
 	} */ *uap = v;
 	struct vnode *vp;
@@ -2515,6 +2515,8 @@ sys_getdirentries(p, v, retval)
 	long loff;
 	int error, eofflag;
 
+	if (SCARG(uap, count) < 0)
+		return EINVAL;
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 	if ((fp->f_flag & FREAD) == 0)
