@@ -1,4 +1,4 @@
-/*	$Id: boot.c,v 1.3 1997/08/24 20:30:27 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/boot.c,v 1.2 2000/03/03 00:54:49 todd Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

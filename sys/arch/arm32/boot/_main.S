@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/boot/Attic/_main.S,v 1.2 2000/03/03 00:54:47 todd Exp $ */
 /* $NetBSD: _main.S,v 1.1 1996/01/31 23:17:57 mark Exp $ */
 
 /* Copyright (c) 1994 Mark Brinicombe.
@@ -44,7 +45,6 @@
  *
  * Based on kate/boot/_main.s
  *
- *	$Id: _main.S,v 1.1 1996/01/31 23:17:57 mark Exp $
  */
 
 #include "regs.h"

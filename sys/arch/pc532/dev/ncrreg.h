@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pc532/dev/Attic/ncrreg.h,v 1.4 2000/03/03 00:54:54 todd Exp $ */
 /*	$NetBSD: ncrreg.h,v 1.3 1995/11/30 00:58:56 jtc Exp $ */
 
 /*
@@ -29,7 +30,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: ncrreg.h,v 1.3 1995/11/30 00:58:56 jtc Exp $
  */
 
 #ifndef _NCRREG_H

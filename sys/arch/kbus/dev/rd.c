@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/kbus/dev/Attic/rd.c,v 1.2 2000/03/03 00:54:49 todd Exp $	*/
 /*
  * Copyright (c) 1995 Philip A. Nelson.
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: rd.c,v 1.1.1.1 1997/07/26 20:29:07 gingold Exp $
  */
 
 #include <sys/param.h>

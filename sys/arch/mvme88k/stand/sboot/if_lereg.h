@@ -1,4 +1,4 @@
-/*	$Id: if_lereg.h,v 1.2 1995/11/07 08:51:10 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/if_lereg.h,v 1.2 2000/03/03 00:54:54 todd Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993

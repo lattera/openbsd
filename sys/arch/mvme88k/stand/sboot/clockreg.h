@@ -1,4 +1,4 @@
-/*	$Id: clockreg.h,v 1.2 1995/11/07 08:51:09 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/clockreg.h,v 1.2 2000/03/03 00:54:54 todd Exp $ */
 
 /*
  * Copyright (c) 1992, 1993

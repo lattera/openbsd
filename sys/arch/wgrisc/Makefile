@@ -1,5 +1,5 @@
+#	$OpenBSD: src/sys/arch/wgrisc/Attic/Makefile,v 1.3 2000/03/03 00:54:56 todd Exp $
 #	from: @(#)Makefile	8.1 (Berkeley) 6/16/93
-#	$Id: Makefile,v 1.1.1.1 1997/02/06 16:02:41 pefo Exp $
 
 # Makefile for pica links, tags file
 

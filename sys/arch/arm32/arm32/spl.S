@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/arm32/Attic/spl.S,v 1.2 2000/03/03 00:54:46 todd Exp $ */
 /* $NetBSD: spl.S,v 1.1 1996/03/08 18:03:15 mark Exp $ */
 
 /*
@@ -40,7 +41,6 @@
  *
  * Created      : 01/03/96
  *
- *    $Id: spl.S,v 1.1 1996/03/08 18:03:15 mark Exp $
  */
 
 #include "assym.h"

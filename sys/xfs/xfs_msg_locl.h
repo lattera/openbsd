@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/xfs/Attic/xfs_msg_locl.h,v 1.4 2000/03/03 00:54:58 todd Exp $ */
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -36,7 +37,6 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_msg_locl.h,v 1.2 1998/10/18 23:50:30 assar Exp $ */
 
 #ifndef _xfs_msg_locl_h
 #define _xfs_msg_locl_h

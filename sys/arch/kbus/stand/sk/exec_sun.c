@@ -1,4 +1,4 @@
-/*	$Id: exec_sun.c,v 1.1 1997/08/23 13:51:04 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/sk/Attic/exec_sun.c,v 1.2 2000/03/03 00:54:51 todd Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

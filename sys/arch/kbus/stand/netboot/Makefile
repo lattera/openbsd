@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1997/08/23 13:51:00 gingold Exp $
+#	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/Makefile,v 1.2 2000/03/03 00:54:49 todd Exp $
 
 RELOC=0xfff10000
 

@@ -1,4 +1,4 @@
-/*	$Id: clockreg.h,v 1.1 1997/07/27 12:21:04 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/kbus/Attic/clockreg.h,v 1.2 2000/03/03 00:54:49 todd Exp $ */
 
 /*
  * Copyright (c) 1992, 1993

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/xfs/Attic/xfs_message.h,v 1.3 2000/03/03 00:54:58 todd Exp $ */
 /*
  * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -36,7 +37,6 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_message.h,v 1.29 1999/01/12 05:00:22 assar Exp $ */
 
 #ifndef _xmsg_h
 #define _xmsg_h

@@ -1,4 +1,4 @@
-/*	$Id: promboot.c,v 1.1 1997/08/23 13:51:07 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/promboot.c,v 1.2 2000/03/03 00:54:50 todd Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

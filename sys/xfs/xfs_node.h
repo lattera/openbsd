@@ -1,3 +1,4 @@
+/* 	$OpenBSD: src/sys/xfs/Attic/xfs_node.h,v 1.5 2000/03/03 00:54:58 todd Exp $	 */
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -36,7 +37,6 @@
  * SUCH DAMAGE.
  */
 
-/* 	$Id: xfs_node.h,v 1.12 1999/03/20 01:19:34 lha Exp $	 */
 
 #ifndef _xfs_xnode_h
 #define _xfs_xnode_h

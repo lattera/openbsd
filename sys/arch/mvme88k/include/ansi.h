@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.9 2000/03/03 00:54:53 todd Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)ansi.h	8.2 (Berkeley) 1/4/94
- *      $Id: ansi.h,v 1.7 1999/02/09 06:36:25 smurph Exp $
  */
 
 #ifndef	_ANSI_H_

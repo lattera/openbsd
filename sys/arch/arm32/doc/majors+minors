@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/doc/Attic/majors+minors,v 1.2 2000/03/03 00:54:48 todd Exp $ */
 /* $NetBSD: majors+minors,v 1.3 1996/04/19 20:04:29 mark Exp $ */
 
 /*
@@ -40,7 +41,6 @@
  * Created      : 17/09/94
  * Last updated : 30/12/95
  *
- *    $Id: majors+minors,v 1.3 1996/04/19 20:04:29 mark Exp $
  */
 
 List of allocated and reserved major and minor numbers

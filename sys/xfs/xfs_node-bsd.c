@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_node-bsd.c,v 1.2 2000/03/03 00:54:58 todd Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -41,7 +43,7 @@
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_deb.h>
 
-RCSID("$Id: xfs_node-bsd.c,v 1.24 1999/02/26 00:47:48 lha Exp $");
+RCSID("$OpenBSD: src/sys/xfs/Attic/xfs_node-bsd.c,v 1.2 2000/03/03 00:54:58 todd Exp $");
 
 extern vop_t **xfs_vnodeop_p;
 

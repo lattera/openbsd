@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/arm32/Attic/setcpsr.S,v 1.2 2000/03/03 00:54:46 todd Exp $ */
 /* $NetBSD: setcpsr.S,v 1.1 1996/01/31 23:16:54 mark Exp $ */
 
 /*
@@ -47,7 +48,6 @@
  *
  * Based of kate/display/setcpsr.s
  *
- *    $Id: setcpsr.S,v 1.1 1996/01/31 23:16:54 mark Exp $
  */
 
 fp      .req    r11

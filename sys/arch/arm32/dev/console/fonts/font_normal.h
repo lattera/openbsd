@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/dev/console/fonts/Attic/font_normal.h,v 1.2 2000/03/03 00:54:48 todd Exp $ */
 /* $NetBSD: font_normal.h,v 1.1 1996/01/31 23:20:16 mark Exp $ */
 
 /*
@@ -45,7 +46,6 @@
  *
  * Based on kate/display/14norm.h
  *
- *    $Id: font_normal.h,v 1.1 1996/01/31 23:20:16 mark Exp $
  */
  
 unsigned char font_terminal_14normal_data[] = {

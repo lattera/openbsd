@@ -1,4 +1,4 @@
-;	$Id: SRT0.S,v 1.1.1.1 1997/03/03 19:30:35 rahnds Exp $
+;	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Attic/SRT0.S,v 1.3 2000/03/03 00:54:54 todd Exp $
 
 ; Copyright (c) 1996 Nivas Madhur
 ; Copyright (c) 1995 Theo de Raadt

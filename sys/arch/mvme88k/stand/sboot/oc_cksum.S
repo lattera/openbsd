@@ -1,4 +1,4 @@
-|	$Id: oc_cksum.S,v 1.2 1995/11/07 08:51:11 deraadt Exp $
+|	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/oc_cksum.S,v 1.2 2000/03/03 00:54:54 todd Exp $
 
 | Copyright (c) 1988 Regents of the University of California.
 | All rights reserved.
