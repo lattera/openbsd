@@ -38,7 +38,7 @@
  * from: Utah $Hdr: machparam.h 1.11 89/08/14$
  *
  *	@(#)param.h	7.8 (Berkeley) 6/28/91
- *	$Id: param.h,v 1.12 1994/06/04 11:59:26 chopps Exp $
+ *	$Id: param.h,v 1.1.1.1 1995/10/18 10:54:21 deraadt Exp $
  */
 #ifndef _MACHINE_PARAM_H_
 #define _MACHINE_PARAM_H_
@@ -104,8 +104,8 @@
  * of the hardware page size.
  */
 #define	MSIZE		128		/* size of an mbuf */
-#define	MCLBYTES	1024
-#define	MCLSHIFT	10
+#define	MCLSHIFT	11
+#define	MCLBYTES	(1 << MCLSHIFT)
 #define	MCLOFSET	(MCLBYTES - 1)
 #ifndef NMBCLUSTERS
 #ifdef GATEWAY
