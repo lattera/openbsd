@@ -149,6 +149,8 @@ _initialize_ppcobsd_tdep (void)
   gdbarch_register_osabi_sniffer (bfd_arch_powerpc, bfd_target_unknown_flavour,
                                   ppcobsd_core_osabi_sniffer);
 
+  gdbarch_register_osabi (bfd_arch_rs6000, 0, GDB_OSABI_OPENBSD_ELF,
+			  ppcobsd_init_abi);
   gdbarch_register_osabi (bfd_arch_powerpc, 0, GDB_OSABI_OPENBSD_ELF,
 			  ppcobsd_init_abi);
 
