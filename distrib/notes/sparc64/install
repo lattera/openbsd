@@ -1,0 +1,421 @@
+OpenBSDInstallPrelude
+
+There are several ways to install OpenBSD onto a disk. The easiest way
+in terms of preliminary setup is to use the OpenBSD installation
+cdrom, or an installation floppy.
+
+If your machine is hooked up in a network and you can find a server to
+arrange for a diskless setup, which is a convenient way to install on a
+machine whose disk does not currently hold a usable operating system.
+This is difficult to get set up correctly the first time, but easy to
+use afterwards.  (see ``Installing using a diskless setup'' below).
+
+It is also possible to install OpenBSD "manually" from a running Solaris
+system, using the system tools, as well as gunzip; see ``Installing from
+Solaris'' below.
+
+
+Booting from the Installation Media:
+
+Prior to attempting an installation, you should make sure that everything
+of value on the target system has been backed up.  While installing OpenBSD
+does not necessarily wipe out all the partitions on the hard disk, errors
+during the install process can have unforeseen consequences and you will
+probably render the system unbootable if you start, but do not complete
+the installation.  Having the installation media for the prior installation,
+be it a Solaris or OpenBSD CD-ROM or OpenBSD install diskettes is good
+insurance if you want to be able to "go back" for some reason.
+
+After taking care of all that, bring your system down gracefully using
+the shutdown(8) and/or halt(8) commands.  This will get you to the monitor
+prompt.
+
+
+Booting from Floppy Disk installation media:
+
+       ok boot floppy bsd
+
+This will cause the kernel contained in the floppy to be booted.
+
+
+Booting From CD-ROM installation media:
+
+	ok boot cdrom
+
+If the boot is successful, you will get a loader version message,
+executable sizes and then the Kernel copyright and device probe
+messages.  Boot failure modes are typically a lot of CD-ROM drive
+activity, but no messages or complaints about magic numbers,
+checksums or formats.
+
+
+Booting from disk (miniroot or floppy image):
+
+Boot the miniroot by typing the appropriate command at the PROM:
+
+	ok boot disk:b bsd
+
+If you've loaded the miniroot onto some other disk than the default
+drive 0, modify the boot specifier accordingly, keeping in mind the
+partition naming a=0, b=1... 
+
+	ok boot disk1:b bsd     # example - scsi target 1 or
+				# second ide drive
+
+During the boot, the kernel might not be able to determine by itself
+which device it has been booted from.  In this case, it will ask you
+for the root and swap devices.  Answer the device and partition you
+booted from as the root partition (likely sd0b or wd0b); you might
+want to rely on the boot messages to find the correct device name
+(see below).  When the kernel asks your for the swap device, just
+validate the suggested device name; since the installation procedure
+does not use swap, it doesn't matter.
+
+
+Installing using a diskless setup:
+
+First, you must setup a diskless client configuration on a server. If
+you are using a OpenBSD system as the boot-server, have a look at the
+diskless(8) manual page for guidelines on how to proceed with this.
+If the server runs another operating system, you'll have to consult
+documentation that came with it (on SunOS systems, add_client(8) and
+the Sun System/Networks administrators guide constitute a good start;
+on Solaris systems, share(1M) is a good starting point as well).
+
+
+Boot your workstation from the server by entering the appropriate `boot'
+command at the monitor prompt:
+
+	ok boot net bsd.rd
+
+
+Installing using the Floppy, CD-ROM, miniroot or netboot procedure:
+
+OpenBSDInstallPart2
+
+	Boot your machine from the installation media as described above.
+
+	It will take a while to load the kernel especially from a floppy
+	or slow network connection, most likely more than a minute.  If
+	some action doesn't eventually happen, or the spinning cursor has
+	stopped and nothing further has happened, either your boot media
+	is bad, your diskless setup isn't correct, or you may have
+	a hardware or configuration problem.
+
+OpenBSDBootMsgs
+
+	While booting, you will probably see several warnings.  You
+	may be warned that the kernel can't figure out what device
+	it booted from.  Do not be alarmed, this is completely normal.
+	This warning occurs because while OpenBSD/MACHINE can boot from
+	the floppy drive, the kernel itself lacks a floppy driver.
+	On some machines, you might also get this kind of warning:
+	"No counter-timer -- using %tick at 179MHz as system clock."
+	Unless the frequency displayed does not match your CPU speed,
+	this is nothing to worry about.
+
+	You will next be asked for your terminal type.  If you are
+	installing from a keyboard/monitor console, the default of
+	"sun" if correct.  If you are installing from a serial console
+	you should choose the terminal type from amongst those listed.
+	(If your terminal type is xterm, just use vt100).
+
+	After entering the terminal type you will be asked whether you
+	wish to do an "(I)nstall" or an "(U)pgrade".  Enter 'I' for a
+	fresh install or 'U' to upgrade an existing installation.
+
+	You will be presented with a welcome message and asked if
+	you really want to continue. Assuming you answered yes, the
+	install program will then tell you which disks of that type
+	it can install on, and ask you which it should use.  The name
+	of the disk is typically "sd0" for SCSI drives and "wd0" for
+	IDE drives. Reply with the name of your disk.
+
+	Next you will have to edit or create a disklabel for the disk
+	OpenBSD is being installed on.  The installation script will
+	invoke the text editor allowing you to do this.  Note that
+	partition 'c' inside this disk label should ALWAYS reflect the
+	entire disk, including any non-OpenBSD portions.  The root file
+	system should be in partition 'a', and swap is usually in partition
+	'b'.  It is recommended that you create separate partitions for
+	root and /usr, you may also want to specify /var and /home
+	partitions.
+
+	The swap partition (usually 'b') should have a type of "swap", all
+	other native OpenBSD partitions should have a type of "4.2BSD".
+	Block and fragment sizes are usually 8192 and 1024 bytes, but can
+	also be 16384 and 2048 bytes.
+
+	The install program will now label your disk and ask which file
+	systems should be created on which partitions.  It will auto-
+	matically select the 'a' partition to be the root file system.
+	Next it will ask for which disk and partition you want a file
+	system created on.  This will be the same as the disk name (e.g.
+	"sd0") with the letter identifying the partition (e.g. "d")
+	appended (e.g. "sd0d").  Then it will ask where this partition is
+	to be mounted, e.g. /usr.  This process will be repeated until
+	you type "done".
+
+	At this point you will be asked to confirm that the file system
+	information you have entered is correct, and given an opportunity
+	to change the file system table.  Next it will create the new file
+	systems as specified, OVERWRITING ANY EXISTING DATA.  This is the
+	point of no return.
+
+	After all your file systems have been created, the install program
+	will give you an opportunity to configure the network.  The network
+	configuration you enter (if any) can then be used to do the install
+	from another system using NFS, HTTP or FTP, and will also be the
+	configuration used by the system after the installation is complete.
+
+	If you select to configure the network, the install program will
+	ask you for a name of your system and the DNS domain name to use.
+	Note that the host name should be without the domain part, and that
+	the domain name should NOT {:-include-:} the host name part.
+
+	Next the system will give you a list of network interfaces you can
+	configure.  For each network interface you select to configure, it
+	will ask for the IP address to use, the symbolic host name to use,
+	the netmask to use and any media flags to set. It is usually safe
+	to keep the default settings.
+
+	After all network interfaces have been configured the install pro-
+	gram will ask for a default route and IP address of the primary
+	name server to use.  You will also be presented with an opportunity
+	to edit the host table.
+
+	At this point you will be allowed to edit the file system table
+	that will be used for the remainder of the installation and that
+	will be used by the finished system, following which the new file
+	systems will be mounted to complete the installation.
+
+	After these preparatory steps have been completed, you will be
+	able to extract the distribution sets onto your system.  There
+	are several install methods supported; FTP, HTTP, tape, CD-ROM, NFS
+	or a local disk partition.  Note that installation from floppies
+	is not currently supported.
+
+OpenBSDFTPInstall
+
+OpenBSDHTTPInstall
+
+OpenBSDTAPEInstall
+
+OpenBSDCDROMInstall
+
+	On some pci-based systems, installing files from CD-ROM yields
+	a lot of ``pciide bogus intr'' warning messages.  While annoying,
+	these messages do not prevent the installation from suceeding.
+		
+OpenBSDNFSInstall
+
+OpenBSDDISKInstall({:-"wdN" or -:},{:-only -:})
+
+OpenBSDCommonFS
+		
+OpenBSDCommonURL
+
+After completing an installation:
+
+Now try a reboot.  (If needed, swap your scsi id's first).  Initially
+I'd suggest you "boot sd()bsd -bs", then try multiuser after that.
+if you boot single-user the OpenBSD incantation to make the root
+filesystem writable is
+
+    OpenBSD# mount -u /dev/sd0a /
+
+The UltraSPARC OpenFirmware will normally load the kernel from the device
+and filename as instructed by the ``boot-device'' and ``boot-file''
+variables.  If the ``boot-file'' variable is empty, the OpenBSD bootloader
+will look for a kernel named ``bsd'', unless a different filename has been
+specified in the boot command.  To reset this variable to its default,
+empty, value, type the following:
+
+    ok set-default boot-file
+
+
+OpenBSDCongratulations
+
+If you will be running your OpenBSD system from a serial console, you may
+need to edit /etc/ttys and change the terminal type, and getty method from
+"sun" and "suncons" to "vt100" and "std.9600" or something similar.  Also
+when running from a serial console, you may wish to adjust the eeprom
+settings for input-device, output-device, screen-#columns, and screen-#rows
+as appropriate.  
+
+In order to use 'tip' on OpenBSD/MACHINE, you'll need to edit /etc/ttys
+and add "local" to the end of the tty configuration line, and run 
+'ttyflags -a' to put your changes into effect.
+
+
+Installing from Solaris:
+
+You need a machine running under Solaris to install OpenBSD.  You will
+also need at least the following pieces:
+
+  - the *.tgz files you want to install (as a minimum, base{:--:}OSrev.tgz and
+    etc{:--:}OSrev.tgz)
+  - gunzip (GNU gzip) Solaris binary
+  - a boot block file from a Solaris machine that matches your machine type,
+    for ufs filesystem, such as /usr/platform/`uname -i`/lib/fs/ufs/bootblk
+  - an OpenBSD kernel
+
+All these pieces, except the boot block and the GNU utilities are supplied
+in the OpenBSD/MACHINE distribution.
+
+You need to format and partition the disk using Solaris (since
+OpenBSD/MACHINE uses Sun compatible disk labels.)  Give yourself adequate
+partition sizes.  Here is an example layout:
+
+    solaris# prtvtoc -s /dev/rdsk/c0t1d0s2
+    *                          First     Sector    Last
+    * Partition  Tag  Flags    Sector     Count    Sector  Mount Directory
+           0      2    00          0     80000     79999   /
+           1      3    01      80000    256000    335999
+           2      5    00          0   4165271   4165270
+           3      7    00     336000    100000    435999   /tmp
+           4      7    00     436000    100000    535999   /var
+           5      7    00     536000    400000    935999   /var/tmp
+           6      4    00     936000   3229271   4165270   /usr
+
+Use Solaris to newfs the partitions which will have filesystems on them.
+(OpenBSD's filesystem format is almost identical to Solaris).
+
+    solaris# newfs /dev/rdsk/c0t1d0s0
+    [... lots of output]
+ 
+Repeat for any other partition (in this example, /dev/rdsk/c0t1d0s3,
+/dev/rdsk/c0t1d0s4, /dev/rdsk/c0t1d0s5 and /dev/rdsk/c0t1d0s6).
+
+dnl XXX I had no time to check the -O restriction is still necessary.
+NOTE: If you are able to, there is a performance benefit from
+newfs'ing using OpenBSD.  If you newfs using the OpenBSD newfs command,
+be sure to use the -O flag for your / partition, so that newfs will
+use the 4.3BSD filesystem format, rather than the new 4.4BSD filesystem
+format.  If you forget, you will not be able to boot -- the Solaris boot
+blocks do not understand the extended 4.4BSD filesystem format.
+
+Mount those partitions in a tree formation, under /mnt; ie:
+
+    solaris# df -k
+    Filesystem            kbytes    used   avail capacity  Mounted on
+    [...]
+    /dev/dsk/c0t1d0s0      38427       0   38427     0%    /mnt
+    /dev/dsk/c0t1d0s3      48249       0   48249     0%    /mnt/tmp
+    /dev/dsk/c0t1d0s4      48249       0   48249     0%    /mnt/var
+    /dev/dsk/c0t1d0s5     193536       0  193536     0%    /mnt/var/tmp
+    /dev/dsk/c0t1d0s6    1564024       0 1564024     0%    /mnt/usr
+
+Place the boot block in /mnt (your new root partition), and use the Solaris
+command "installboot" to make it work.
+The installboot man page says to do something like this:
+
+    solaris# cp /usr/platform/`uname -i`/lib/fs/ufs/bootblk /mnt/bootblk
+    solaris# sync; sync
+    solaris# /usr/sbin/installboot /mnt/bootblk /dev/rdsk/c0t1d0s0
+
+You can now extract the provided "*.tgz files onto your disk.
+
+    solaris# ls -FC
+    base{:--:}OSrev.tgz     etc{:--:}OSrev.tgz      misc{:--:}OSrev.tgz     xserv{:--:}OSrev.tgz
+    bsd            game{:--:}OSrev.tgz     xbase{:--:}OSrev.tgz    xshare{:--:}OSrev.tgz
+    comp{:--:}OSrev.tgz     man{:--:}OSrev.tgz      xfont{:--:}OSrev.tgz
+    solaris{:-#-:} gunzip < base{:--:}OSrev.tgz | (cd /mnt; tar xvpf -)
+    [...] for each set
+
+And finally copy the OpenBSD kernel onto your disk.
+
+    solaris# cp bsd /mnt/bsd
+
+The GNU gunzip program is not distributed as part of Solaris, but may be
+present in your /usr/local/bin.  If not, you will need to obtain it from a
+GNU archive and install before proceeding.
+
+After the files have been extracted, setup /mnt/etc/fstab to match
+your actual disk layout.  (Minus the "/mnt" component of each path, of
+course :-)
+
+Now proceed to reboot the machine and the customize your installation.
+
+
+Net Boot or Diskless Setup Information:
+
+The set up is similar to the diskless setup, but not identical, because
+the Sun setup assumes that the bootblocks load a kernel image, which then
+uses NFS to access the exported root partition, while the OpenBSD bootblocks
+use internal NFS routines to load the kernel image directly from the
+exported root partition.
+
+Please understand that no one gets this right the first try, since
+there is a lot of setup and all the host daemons must be running and
+configured correctly.  If you have problems, extract the diskless(8)
+manpage, find someone who's been through it before and use the host
+syslog and tcpdump(8) to get visibility of what's happening (or not).
+
+Your UltraSPARC expects to be able to download a second stage bootstrap
+program via TFTP after having acquired its IP address through RevARP when
+instructed to boot "over the net". It will look for a filename composed of
+the machine's IP address. For example, a machine which has been assigned IP
+address 130.115.144.11, will make an TFTP request for `8273900B'.
+Normally, this file is a symbolic link to an appropriate second-stage
+boot program, which should be located in a place where the TFTP daemon
+can find it (remember, many TFTP daemons run in a chroot'ed environment).
+
+You can find the boot program in `/usr/mdec/boot' in the OpenBSD/MACHINE
+distribution.
+
+After the boot program has been loaded into memory and given control by
+the PROM, it starts locating the machine's remote root directory through
+the BOOTPARAM protocol. First a BOOTPARAM WHOAMI request is broadcast
+on the local net. The answer to this request (if it comes in) contains
+the client's name. This name is used in next step, a BOOTPARAM GETFILE
+request -- sent to the server that responded to the WHOAMI request --
+requesting the name and address of the machine that will serve the client's
+root directory, as well as the path of the client's root on that server.
+
+Finally, this information (if it comes in) is used to issue a REMOTE MOUNT
+request to the client's root filesystem server, asking for an NFS file
+handle corresponding to the root filesystem. If successful, the boot
+program starts reading from the remote root filesystem in search of the
+kernel which is then read into memory.
+
+You will want export the miniroot{:--:}OSrev.fs filesystem to the client.  You
+can dd this filesystem image to some spare partition, mount and export
+that partition or use tar to copy the contents to a more convenient spot.
+
+Alternatively you can build a bootable partition from the distribution sets
+as follows:
+
+Unpack `base{:--:}OSrev.tgz' and `etc{:--:}OSrev.tgz' on the server in the root directory
+for your target machine. If you elect to use a separately NFS-mounted
+filesystem for `/usr' with your diskless setup, make sure the "./usr" base
+files in base{:--:}OSrev.tgz end up in the correct location. One way to do this is
+to temporarily use a loopback mount on the server, re-routing <root>/usr to
+your server's exported OpenBSD "/usr" directory. Also put the kernel and
+the install/upgrade scripts into the root directory.
+
+A few configuration files need to be edited:
+
+	<root>/etc/hosts
+		Add the IP addresses of both server and client.
+
+	<root>/etc/myname
+		This files contains the client's hostname; use the same
+		name as in <root>/etc/hosts.
+
+	<root>/etc/fstab
+		Enter the entries for the remotely mounted filesystems.
+		For example:
+			server:/export/root/client       /     nfs  rw 0 0
+			server:/export/exec/MACHINE.OpenBSD /usr  nfs  rw 0 0
+
+Now you must populate the the `/dev' directory for your client. If you server
+runs SunOS 4.x, you can simply change your working directory to `<root>/dev'
+and run the MAKEDEV script: `sh MAKEDEV all'.
+
+On Solaris (SunOS 5.x) systems, MAKEDEV can also be used, but there'll be
+error messages about unknown user and groups. These errors are
+inconsequential for the purpose of installing OpenBSD. However, you may
+want to correct them if you plan to the diskless setup regularly. In that
+case, you may re-run MAKEDEV on your OpenBSD machine once it has booted.
+
