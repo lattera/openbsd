@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5 1999/11/22 19:22:00 matthieu Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.6.1 2001/01/31 22:48:15 jason Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -193,8 +193,7 @@ mmmmap(dev, off, prot)
         dev_t dev;
         int off, prot;
 {
-
-	return (EOPNOTSUPP);
+	return (-1);
 }
 
 /*ARGSUSED*/

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/wgrisc/wgrisc/Attic/mem.c,v 1.4 1999/11/22 19:22:03 matthieu Exp $	*/
+/*	$OpenBSD: src/sys/arch/wgrisc/wgrisc/Attic/mem.c,v 1.4.6.1 2001/01/31 22:48:17 jason Exp $	*/
 /*	$NetBSD: mem.c,v 1.6 1995/04/10 11:55:03 mycroft Exp $	*/
 
 /*
@@ -181,8 +181,7 @@ mmmmap(dev, off, prot)
 	dev_t dev;
 	int off, prot;
 {
-
-	return (EOPNOTSUPP);
+	return (-1);
 }
 
 /*ARGSUSED*/

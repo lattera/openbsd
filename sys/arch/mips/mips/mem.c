@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips/mips/Attic/mem.c,v 1.4 2000/01/30 18:12:55 imp Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips/mips/Attic/mem.c,v 1.4.6.1 2001/01/31 22:48:14 jason Exp $	*/
 /*	$NetBSD: mem.c,v 1.6 1995/04/10 11:55:03 mycroft Exp $	*/
 
 /*
@@ -185,8 +185,7 @@ mmmmap(dev, off, prot)
 	dev_t dev;
 	int off, prot;
 {
-
-	return (EOPNOTSUPP);
+	return (-1);
 }
 
 /*ARGSUSED*/
