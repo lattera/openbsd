@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libc/net/freeaddrinfo.c,v 1.5 2004/10/01 04:08:45 jsg Exp $	*/
+
 /*
  * Copyright (c) 1996, 1997, 1998, 1999, Craig Metz, All rights reserved.
  *

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/si4136reg.h,v 1.2 2004/10/01 04:08:45 jsg Exp $	*/
 /* $NetBSD$ */
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libc/net/Attic/net_addrcmp.c,v 1.8 2004/10/01 04:08:45 jsg Exp $	*/
+
 /*
  * Copyright (c) 1999 Theo de Raadt
  * All rights reserved.
