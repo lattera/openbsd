@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.6 1997/03/31 07:34:38 deraadt Exp $
+#	$OpenBSD: src/distrib/sparc/floppies/kernel/Attic/Makefile,v 1.8 1997/05/01 11:30:54 niklas Exp $
 
 .include "../Makefile.inc"
 

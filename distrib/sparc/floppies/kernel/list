@@ -1,4 +1,4 @@
-#	$Id: list,v 1.2 1996/10/08 19:39:54 deraadt Exp $
+#	$OpenBSD: src/distrib/sparc/floppies/kernel/Attic/list,v 1.4 1997/05/01 11:30:55 niklas Exp $
 
 # copy the kernel
 COPY	${OBJDIR}/bsd	bsd
