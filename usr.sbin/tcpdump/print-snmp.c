@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-snmp.c,v 1.10 2001/11/06 03:11:40 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-snmp.c,v 1.11 2004/03/19 04:55:03 aaron Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996, 1997
@@ -57,7 +57,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-snmp.c,v 1.9 2001/08/11 22:26:39 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-snmp.c,v 1.10 2001/11/06 03:11:40 deraadt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -555,7 +555,7 @@ asn1_print(struct be *elem)
 	switch (elem->type) {
 
 	case BE_OCTET:
-		for (i = asnlen; i-- > 0; p++);
+		for (i = asnlen; i-- > 0; p++)
 			printf("_%.2x", *p);
 		break;
 
