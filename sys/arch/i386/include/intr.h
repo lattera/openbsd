@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.17 2003/05/17 16:07:37 andreas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.18 2003/05/25 19:24:31 ho Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -105,15 +105,14 @@
 #include <machine/cpu.h>
 #endif
 
-extern volatile u_int32_t lapic_tpr;
+extern volatile u_int32_t lapic_tpr;	/* Current interrupt priority level. */
 
-volatile int cpl;	/* Current interrupt priority level.		*/
-volatile u_int32_t ipending;/* Interrupts pending.			*/
+extern volatile u_int32_t ipending;	/* Interrupts pending. */
 #ifndef MULTIPROCESSOR
-volatile u_int32_t astpending;/* Async software traps (softints) pending. */
+extern volatile u_int32_t astpending;	/* Async software traps (softints) pending. */
 #endif
-int imask[NIPL];	/* Bitmasks telling what interrupts are blocked. */
-int iunmask[NIPL];	/* Bitmasks telling what interrupts are accepted. */
+extern int imask[];	/* Bitmasks telling what interrupts are blocked. */
+extern int iunmask[];	/* Bitmasks telling what interrupts are accepted. */
 
 #define IMASK(level) imask[IPL(level)]
 #define IUNMASK(level) iunmask[IPL(level)]
@@ -197,12 +196,6 @@ spllower(ncpl)
 	int ocpl = lapic_tpr;
 
 	splx(ncpl);
-
-/* XXX - instead of splx() call above.
-	lapic_tpr = ncpl;
-	if (ipending & IUNMASK(ncpl))
-		Xspllower();
-*/
 	return (ocpl);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.12 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.13 2003/05/25 19:24:32 ho Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -306,6 +306,9 @@ isa_strayintr(irq)
 int intrtype[ICU_LEN], intrmask[ICU_LEN], intrlevel[ICU_LEN];
 int iminlevel[ICU_LEN], imaxlevel[ICU_LEN];
 struct intrhand *intrhand[ICU_LEN];
+
+int imask[NIPL];	/* Bitmask telling what interrupts are blocked. */
+int iunmask[NIPL];	/* Bitmask telling what interrupts are accepted. */
 
 /*
  * Recalculate the interrupt masks from scratch.
