@@ -1,12 +1,10 @@
-#	$OpenBSD: src/usr.bin/sup/supscan/Attic/Makefile,v 1.5 2001/05/04 22:16:18 millert Exp $
+#	$OpenBSD: src/usr.bin/sup/supscan/Attic/Makefile,v 1.6 2001/05/05 15:32:12 millert Exp $
 
 PROG=	supscan
 NOMAN=
 SRCS=	supscan.c stree.c scan.c \
 	atoo.c errmsg.c expand.c ffilecopy.c filecopy.c nxtarg.c \
 	path.c quit.c run.c skipto.c vprintf.c netcryptvoid.c
-LDADD+=	-lutil
-DPADD+=	${LIBUTIL}
 BINOWN=	root
 BINGRP=	daemon
 BINMODE=555
