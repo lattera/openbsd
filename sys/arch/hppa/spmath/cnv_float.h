@@ -1,42 +1,18 @@
 /*
- * Copyright 1996 1995 by Open Software Foundation, Inc.   
- *              All Rights Reserved 
- *  
- * Permission to use, copy, modify, and distribute this software and 
- * its documentation for any purpose and without fee is hereby granted, 
- * provided that the above copyright notice appears in all copies and 
- * that both the copyright notice and this permission notice appear in 
- * supporting documentation. 
- *  
- * OSF DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE 
- * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE. 
- *  
- * IN NO EVENT SHALL OSF BE LIABLE FOR ANY SPECIAL, INDIRECT, OR 
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM 
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN ACTION OF CONTRACT, 
- * NEGLIGENCE, OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION 
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. 
- */
+  (c) Copyright 1986 HEWLETT-PACKARD COMPANY
+  To anyone who acknowledges that this file is provided "AS IS"
+  without any express or implied warranty:
+      permission to use, copy, modify, and distribute this file
+  for any purpose is hereby granted without fee, provided that
+  the above copyright notice and this notice appears in all
+  copies, and that the name of Hewlett-Packard Company not be
+  used in advertising or publicity pertaining to distribution
+  of the software without specific, written prior permission.
+  Hewlett-Packard Company makes no representations about the
+  suitability of this software for any purpose.
+*/
 /*
- * pmk1.1
- */
-/*
- * (c) Copyright 1986 HEWLETT-PACKARD COMPANY
- *
- * To anyone who acknowledges that this file is provided "AS IS" 
- * without any express or implied warranty:
- *     permission to use, copy, modify, and distribute this file 
- * for any purpose is hereby granted without fee, provided that 
- * the above copyright notice and this notice appears in all 
- * copies, and that the name of Hewlett-Packard Company not be 
- * used in advertising or publicity pertaining to distribution 
- * of the software without specific, written prior permission.  
- * Hewlett-Packard Company makes no representations about the 
- * suitability of this software for any purpose.
- */
-/*
- * @(#)cnv_float.h: $Revision: 2.0 $ $Date: 1998/06/17 20:47:06 $
+ * @(#)cnv_float.h: $Revision: 2.9.88.1 $ $Date: 93/12/07 15:05:29 $
  * $Locker:  $
  * 
  */
@@ -322,98 +298,3 @@
 	    position--;				\
 	else position -= 2;			\
     }
-
-/*
- * The following 4 functions handle the assignment of a floating point
- * number to a 32-bit integer in cases where the floating point number
- * is too large (or small) to fit in the integer field.
- *
- * In all these cases, HP-UX would return an UNIMPLEMENTEDEXCEPTION
- * resulting in a SIGFPE being sent to the process.  For BSD's math
- * library (and various other applications), this was unacceptable.
- * As a result, we now return maxint/minint (like most other OS's)
- * and either return an INEXACTEXCEPTION (SIGFPE) or set the inexact
- * flag (so that the program may continue execution).
- *
- * After discussing this with Jerry Huck @ HP, the one case where we
- * differ from BSD is for programs that try to convert a NaN to an
- * integer; in this case, we will return an UNIMPLEMENTEDEXCEPTION
- * since doing anything else would be completely unreasonable.
- *
- *	jef
- */
-
-#define	Dbl_return_overflow(srcp1, srcp2, resultp)	\
-    {						\
-	if (Dbl_isnan(srcp1, srcp2))		\
-		return(UNIMPLEMENTEDEXCEPTION);	\
-	if (Dbl_iszero_sign(srcp1))		\
-		*resultp = 0x7fffffff;		\
-	else					\
-		*resultp = 0x80000000;		\
-	if (Is_overflowtrap_enabled()) {	\
-		if (Is_inexacttrap_enabled())	\
-			return(OVERFLOWEXCEPTION|INEXACTEXCEPTION);	\
-		else				\
-			Set_inexactflag();	\
-		return(OVERFLOWEXCEPTION);	\
-	}					\
-	return(NOEXCEPTION);			\
-    }
-
-#define	Dbl_return_overflow_dbl(srcp1, srcp2, resultp)	\
-    {						\
-	if (Dbl_isnan(srcp1, srcp2))		\
-		return(UNIMPLEMENTEDEXCEPTION);	\
-	if (Dbl_iszero_sign(srcp1)) {		\
-		Dint_copytoptr(0x7fffffff,0xffffffff,resultp); \
-	} else {				\
-		Dint_copytoptr(0x80000000,0x00000000,resultp); \
-	}					\
-	if (Is_overflowtrap_enabled()) {	\
-		if (Is_inexacttrap_enabled())	\
-			return(OVERFLOWEXCEPTION|INEXACTEXCEPTION);	\
-		else				\
-			Set_inexactflag();	\
-		return(OVERFLOWEXCEPTION);	\
-	}					\
-	return(NOEXCEPTION);			\
-    }
-
-#define	Sgl_return_overflow(src, resultp)	\
-    {						\
-	if (Sgl_isnan(src))			\
-		return(UNIMPLEMENTEDEXCEPTION);	\
-	if (Sgl_iszero_sign(src))		\
-		*resultp = 0x7fffffff;		\
-	else					\
-		*resultp = 0x80000000;		\
-	if (Is_overflowtrap_enabled()) {	\
-		if (Is_inexacttrap_enabled())	\
-			return(OVERFLOWEXCEPTION|INEXACTEXCEPTION);	\
-		else				\
-			Set_inexactflag();	\
-		return(OVERFLOWEXCEPTION);	\
-	}					\
-	return(NOEXCEPTION);			\
-    }
-
-#define	Sgl_return_overflow_dbl(src, resultp)	\
-    {						\
-	if (Sgl_isnan(src))			\
-		return(UNIMPLEMENTEDEXCEPTION);	\
-	if (Sgl_iszero_sign(src)) {		\
-		Dint_copytoptr(0x7fffffff,0xffffffff,resultp); \
-	} else {				\
-		Dint_copytoptr(0x80000000,0x00000000,resultp); \
-	}					\
-	if (Is_overflowtrap_enabled()) {	\
-		if (Is_inexacttrap_enabled())	\
-			return(OVERFLOWEXCEPTION|INEXACTEXCEPTION);	\
-		else				\
-			Set_inexactflag();	\
-		return(OVERFLOWEXCEPTION);	\
-	}					\
-	return(NOEXCEPTION);			\
-    }
-
