@@ -1,8 +1,9 @@
-/*	$OpenBSD: src/sys/kern/Attic/kern_conf.h,v 1.2 1996/04/19 16:08:52 niklas Exp $	*/
-/*	$NetBSD: kern_conf.h,v 1.2 1996/03/14 19:01:08 christos Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/kcore.h,v 1.1 1996/04/19 16:08:13 niklas Exp $	*/
+/*	$NetBSD: kcore.h,v 1.1 1996/03/10 21:55:18 leo Exp $	*/
 
 /*
- * Copyright (c) 1995 Christos Zoulas.  All rights reserved.
+ * Copyright (c) 1996 Leo Weppelman.
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,9 +15,9 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by Christos Zoulas.
+ *      This product includes software developed by Leo Weppelman.
  * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -30,26 +31,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/conf.h>
+#ifndef _M68K_KCORE_H_
+#define	_M68K_KCORE_H_
 
-cdev_decl(filedesc);
+#define	NPHYS_RAM_SEGS	8
 
-cdev_decl(log);
+typedef struct cpu_kcore_hdr {
+	vm_offset_t	kernel_pa;	/* Phys. address of kernel VA 0	*/
+	st_entry_t	*sysseg_pa;	/* Phys. address of Sysseg	*/
+	int		mmutype;
+	phys_ram_seg_t	ram_segs[NPHYS_RAM_SEGS];
+} cpu_kcore_hdr_t;
 
-#ifndef LKM
-# define	NLKM	0
-# define	lkmenodev	enodev
-#else
-# define	NLKM	1
-#endif
-cdev_decl(lkm);
-
-#include "pty.h"
-#define	ptstty		ptytty
-#define	ptsioctl	ptyioctl
-cdev_decl(pts);
-#define	ptctty		ptytty
-#define	ptcioctl	ptyioctl
-cdev_decl(ptc);
-
-cdev_decl(ctty);
+#endif /* _M68K_KCORE_H_ */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libkern/Attic/strcpy.c,v 1.2 1996/04/19 16:09:39 niklas Exp $	*/
+
 /*
  * Copyright (c) 1988 Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)strcpy.c	5.7 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: strcpy.c,v 1.5 1995/10/07 09:26:46 mycroft Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/Attic/strcpy.c,v 1.2 1996/04/19 16:09:39 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <string.h>
@@ -45,6 +47,6 @@ strcpy(to, from)
 {
 	char *save = to;
 
-	for (; *to = *from; ++from, ++to);
+	for (; (*to = *from) != '\0'; ++from, ++to);
 	return(save);
 }

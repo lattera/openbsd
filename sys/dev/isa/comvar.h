@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/kern/Attic/kern_conf.h,v 1.2 1996/04/19 16:08:52 niklas Exp $	*/
-/*	$NetBSD: kern_conf.h,v 1.2 1996/03/14 19:01:08 christos Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/comvar.h,v 1.1 1996/04/19 16:08:34 niklas Exp $	*/
+/*	$NetBSD: comvar.h,v 1.3 1996/03/10 09:01:26 cgd Exp $	*/
 
 /*
- * Copyright (c) 1995 Christos Zoulas.  All rights reserved.
+ * Copyright (c) 1996 Christopher G. Demetriou.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,9 +14,10 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by Christos Zoulas.
+ *      This product includes software developed by Christopher G. Demetriou
+ *	for the NetBSD Project.
  * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -30,26 +31,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/conf.h>
+struct commulti_attach_args {
+	int		ca_slave;		/* slave number */
 
-cdev_decl(filedesc);
+	bus_chipset_tag_t ca_bc;
+	bus_io_handle_t ca_ioh;
+	int		ca_iobase;
+	int		ca_noien;
+};
 
-cdev_decl(log);
+int comprobe1 __P((bus_chipset_tag_t, bus_io_handle_t, int));
 
-#ifndef LKM
-# define	NLKM	0
-# define	lkmenodev	enodev
-#else
-# define	NLKM	1
-#endif
-cdev_decl(lkm);
-
-#include "pty.h"
-#define	ptstty		ptytty
-#define	ptsioctl	ptyioctl
-cdev_decl(pts);
-#define	ptctty		ptytty
-#define	ptcioctl	ptyioctl
-cdev_decl(ptc);
-
-cdev_decl(ctty);
+extern int comconsaddr;
+extern int comconsattached;
+extern bus_chipset_tag_t comconsbc;
+extern bus_io_handle_t comconsioh;
