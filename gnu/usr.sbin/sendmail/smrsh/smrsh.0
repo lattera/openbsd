@@ -47,10 +47,10 @@ DDEESSCCRRIIPPTTIIOONN
 
 CCOOMMPPIILLAATTIIOONN
        Compilation  should  be  trivial on most systems.  You may
-       need to use -DPATH=\"_p_a_t_h\" to adjust the  default  search
-       path   (defaults   to  ``/bin:/usr/bin:/usr/ucb'')  and/or
-       -DCMDBIN=\"_d_i_r\" to change the default  program  directory
-       (defaults to ``/usr/adm/sm.bin'').
+       need to use -DSMRSH_PATH=\"_p_a_t_h\" to  adjust  the  default
+       search   path   (defaults  to  ``/bin:/usr/bin:/usr/ucb'')
+       and/or -DSMRSH_CMDBIN=\"_d_i_r\" to change the  default  pro-
+       gram directory (defaults to ``/usr/adm/sm.bin'').
 
 FFIILLEESS
        /usr/adm/sm.bin - directory for restricted programs
@@ -61,6 +61,6 @@ SSEEEE AALLSSOO
 
 
 
-                   $Date: 2000/12/15 19:50:46 $                 1
+                   $Date: 2001/01/24 00:40:47 $                 1
 
 

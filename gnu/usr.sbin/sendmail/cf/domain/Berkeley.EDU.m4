@@ -12,7 +12,7 @@ divert(-1)
 #
 #
 divert(0)
-VERSIONID(`$Id: Berkeley.EDU.m4,v 8.17 1999/02/07 07:26:06 gshapiro Exp $')
+VERSIONID(`$Sendmail: Berkeley.EDU.m4,v 8.17 1999/02/07 07:26:06 gshapiro Exp $')
 DOMAIN(berkeley-only)dnl
 define(`BITNET_RELAY', `bitnet-relay.Berkeley.EDU')dnl
 define(`UUCP_RELAY', `uucp-relay.Berkeley.EDU')dnl

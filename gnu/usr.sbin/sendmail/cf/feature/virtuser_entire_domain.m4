@@ -10,7 +10,7 @@ divert(-1)
 #
 
 divert(0)
-VERSIONID(`$Id: virtuser_entire_domain.m4,v 8.2 1999/03/16 00:43:05 ca Exp $')
+VERSIONID(`$Sendmail: virtuser_entire_domain.m4,v 8.2 1999/03/16 00:43:05 ca Exp $')
 divert(-1)
 
 define(`_VIRTUSER_ENTIRE_DOMAIN_', 1)

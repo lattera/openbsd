@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -11,11 +11,9 @@
  *
  */
 
-#ifndef lint
-static char id[] = "@(#)$Id: arpadate.c,v 8.23 1999/09/23 19:59:18 ca Exp $";
-#endif /* ! lint */
-
 #include <sendmail.h>
+
+SM_RCSID("@(#)$Sendmail: arpadate.c,v 8.28 2001/02/14 14:45:47 ca Exp $")
 
 /*
 **  ARPADATE -- Create date in ARPANET format
@@ -74,6 +72,7 @@ arpadate(ud)
 	**	to resolve the timezone.
 	*/
 
+	/* SM_REQUIRE(ud == NULL || strlen(ud) >= 23); */
 	t = curtime();
 	if (ud == NULL)
 		ud = ctime(&t);
@@ -117,11 +116,12 @@ arpadate(ud)
 		*q++ = *p++;
 
 	/*
-	 * should really get the timezone from the time in "ud" (which
-	 * is only different if a non-null arg was passed which is different
-	 * from the current time), but for all practical purposes, returning
-	 * the current local zone will do (its all that is ever needed).
-	 */
+	**  should really get the timezone from the time in "ud" (which
+	**  is only different if a non-null arg was passed which is different
+	**  from the current time), but for all practical purposes, returning
+	**  the current local zone will do (its all that is ever needed).
+	*/
+
 	gmt = *gmtime(&t);
 	lt = localtime(&t);
 

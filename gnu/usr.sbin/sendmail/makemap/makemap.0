@@ -9,7 +9,7 @@ NNAAMMEE
 
 SSYYNNOOPPSSIISS
        mmaakkeemmaapp  [--CC _f_i_l_e] [--NN] [--cc _c_a_c_h_e_s_i_z_e] [--dd] [--ee] [--ff] [--ll]
-       [--oo] [--rr] [--ss] [--uu] [--vv] _m_a_p_t_y_p_e _m_a_p_n_a_m
+       [--oo] [--rr] [--ss] [--tt _d_e_l_i_m] [--uu] [--vv] _m_a_p_t_y_p_e _m_a_p_n_a_m
 
 DDEESSCCRRIIPPTTIIOONN
        MMaakkeemmaapp creates the database maps used by  the  keyed  map
@@ -61,7 +61,7 @@ DDEESSCCRRIIPPTTIIOONN
 
 
 
-                   $Date: 2000/12/29 18:12:20 $                 1
+                   $Date: 2000/12/29 18:16:55 $                 1
 
 
 
@@ -89,7 +89,9 @@ MAKEMAP(8)                                             MAKEMAP(8)
               includes  checking  for  hard  or symbolic links in
               world writable directories.
 
-       --uu     dump (unmap) the content of the database  to  stan-
+       --tt     Use the specified delimiter instead of white space.
+
+       --uu     dump  (unmap)  the content of the database to stan-
               dard output.
 
        --vv     Verbosely print what it is doing.
@@ -125,8 +127,6 @@ HHIISSTTOORRYY
 
 
 
-
-
-                   $Date: 2000/12/29 18:12:20 $                 2
+                   $Date: 2000/12/29 18:16:55 $                 2
 
 

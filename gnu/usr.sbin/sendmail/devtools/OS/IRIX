@@ -1,7 +1,7 @@
-#	$Id: IRIX,v 8.10 1999/06/02 22:53:37 gshapiro Exp $
+#	$Sendmail: IRIX,v 8.13 2000/12/17 16:17:50 ca Exp $
 define(`confMAPDEF', `-DNDBM -DNIS')
-define(`confENVDEF', `-DIRIX')
 define(`confLIBS', `-lmld -lmalloc -lsun')
+define(`confSM_OS_HEADER', `sm_os_irix')
 define(`confMBINDIR', `/usr/lib')
 define(`confSBINDIR', `/usr/etc')
 define(`confUBINDIR', `/usr/bsd')

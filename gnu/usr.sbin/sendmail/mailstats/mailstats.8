@@ -1,4 +1,4 @@
-.\" Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+.\" Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
 .\"	 All rights reserved.
 .\"
 .\" By using this file, you agree to the terms and conditions set
@@ -6,15 +6,15 @@
 .\" the sendmail distribution.
 .\"
 .\"
-.\"	$Id: mailstats.8,v 8.17.4.3 2000/12/29 18:12:20 gshapiro Exp $
+.\"	$Sendmail: mailstats.8,v 8.25 2001/04/18 04:53:31 gshapiro Exp $
 .\"
-.TH MAILSTATS 1 "$Date: 2000/12/29 18:12:20 $"
+.TH MAILSTATS 8 "$Date: 2001/04/18 04:53:31 $"
 .SH NAME
 mailstats
 \- display mail statistics
 .SH SYNOPSIS
 .B mailstats
-.RB [ \-o "] [" \-p ]
+.RB [ \-o "] [" \-p "] [" \-P ]
 .RB [ \-C 
 .IR cffile ]
 .RB [ \-f
@@ -61,11 +61,11 @@ The name of the mailer.
 .RE
 .PP
 After this display, a line totaling the values for all of the mailers 
-is displayed (preceeded with a ``T''),
+is displayed (preceded with a ``T''),
 separated from the previous information by a line containing only equals 
 (``='') 
 characters.
-Another line preceeded with a ``C'' lists the number of connections.
+Another line preceded with a ``C'' lists the number of connections.
 .PP
 The options are as follows:
 .TP 
@@ -80,6 +80,9 @@ specified in the
 .B sendmail 
 configuration file.
 .TP 
+.B \-P
+Output information in program-readable mode without clearing statistics.
+.TP
 .B \-p
 Output information in program-readable mode and clear statistics.
 .TP

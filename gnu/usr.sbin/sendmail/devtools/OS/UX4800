@@ -1,8 +1,8 @@
-#	$Id: UX4800,v 8.13 1999/08/08 02:52:05 gshapiro Exp $
+#	$Sendmail: UX4800,v 8.14 2000/12/12 19:39:05 dmoen Exp $
 define(`confCC', `/usr/abiccs/bin/cc -KOlimit=1000')
 define(`confBEFORE', `sysexits.h ndbm.h')
 define(`confMAPDEF', `-DNDBM -DNIS')
-define(`confENVDEF', `-DHASSNPRINTF=1')
+define(`confENVDEF', `')
 define(`confLIBS', `-lsocket -lnsl -lelf')
 define(`confMBINDIR', `/usr/ucblib')
 define(`confSBINDIR', `/usr/ucbetc')

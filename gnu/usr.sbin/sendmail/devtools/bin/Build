@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+# Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
 #	All rights reserved.
 # Copyright (c) 1993, 1996-1997 Eric P. Allman.  All rights reserved.
 # Copyright (c) 1993
@@ -11,7 +11,7 @@
 # the sendmail distribution.
 #
 #
-#       $Id: Build,v 8.155.4.5 2000/12/27 00:44:35 gshapiro Exp $
+#	$Sendmail: Build,v 8.169 2001/06/05 22:02:57 gshapiro Exp $
 #
 
 #
@@ -61,6 +61,29 @@ while [ ! -z "$1" ]
 do
 	case $1
 	in
+	  -src)	# Specify pathname of source directory relative to
+		# root of cvs tree.  This relative pathname may have
+		# multiple components, as in 'foo/bar/baz', and will also
+		# be used to form the pathname of the object directory.
+		shift
+		arg=$1
+		if [ -z "$arg" ]
+		then
+			echo "Missing arg for -src" >&2
+			exit $EX_USAGE
+		fi
+		case $arg
+		in
+		  /*)	echo "Arg for -src must not begin with / ($arg)" >&2
+			exit $EX_USAGE
+			;;
+		esac
+		src_dir="$arg"
+		absolute_base_dir=`echo ${full_src_dir} | sed "s;/${src_dir}$;;"`
+		obj_rel_base_dir=`echo x/${src_dir} | sed "s;[^/][^/]*;..;g"`
+		SMROOT=${absolute_base_dir}
+		shift
+		;;
 	  -c)	# clean out existing $obj tree
 		cflag=1
 		SENDMAIL_BUILD_FLAGS="$SENDMAIL_BUILD_FLAGS $1"
@@ -86,8 +109,8 @@ do
 		arg=`echo $1 | sed 's/^-E//'`
 		if [ -z "$arg" ]
 		then
-		    shift   # move to argument
-		    arg=$1
+			shift   # move to argument
+			arg=$1
 		fi
 		if [ -z "$arg" ]
 		then
@@ -126,8 +149,8 @@ do
 		arg=`echo $1 | sed 's/^-f//'`
 		if [ -z "$arg" ]
 		then
-		    shift   # move to argument
-		    arg=$1
+			shift   # move to argument
+			arg=$1
 		fi
 		if [ "$pfx" ]
 		then
@@ -167,8 +190,8 @@ do
 		arg="`echo $1 | sed 's/^-O//'`"
 		if [ -z "$arg" ]
 		then
-		    shift   # move to argument
-		    arg="$1"
+			shift   # move to argument
+			arg="$1"
 		fi
 		case $arg
 		in
@@ -195,8 +218,8 @@ do
 		arg=`echo $1 | sed 's/^-Q//'`
 		if [ -z "$arg" ]
 		then
-		    shift   # move to argument
-		    arg=$1
+			shift   # move to argument
+			arg=$1
 		fi
 		if [ -z "$arg" ]
 		then
@@ -221,17 +244,17 @@ do
 		shift
 		build_variant=$1
 		if [ -z "$build_variant" ]
-		then 
-		    echo "Usage error with \"-v\" <build_variant>"  >&2
-		    echo "You must specify exactly one build variant of debug|optimized|purify"  >&2
-		    exit $EX_USAGE
+		then
+			echo "Usage error with \"-v\" <build_variant>"  >&2
+			echo "You must specify exactly one build variant of debug|optimized|purify"  >&2
+			exit $EX_USAGE
 		fi
 		shift
 		;;
 
 	  *)	# pass argument to make
 		makeargs="$makeargs \"$1\""
-		SENDMAIL_BUILD_FLAGS="$SENDMAIL_BUILD_FLAGS \"$1\""
+		#SENDMAIL_BUILD_FLAGS="$SENDMAIL_BUILD_FLAGS \"$1\""
 		shift
 		;;
 	esac
@@ -239,20 +262,20 @@ done
 
 # process selected build variant.
 case $build_variant in
-    debug)
-	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=DEBUG"
-	;;
-    optimized)
-	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=OPTIMIZED"
-	;;
-    purify)
-	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=PURIFY"
-	echo "Sorry, the purify build variant has not been plumbed yet. (Bummer.)"  >&2
-	exit $EX_USAGE
-	;;
-    *)
-	exit $EX_USAGE
-	;;
+	debug)
+		M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=DEBUG"
+		;;
+	optimized)
+		M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=OPTIMIZED"
+		;;
+	purify)
+		M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=PURIFY"
+		echo "Sorry, the purify build variant has not been plumbed yet. (Bummer.)"  >&2
+		exit $EX_USAGE
+		;;
+	*)
+		exit $EX_USAGE
+		;;
 esac
 
 
@@ -439,7 +462,7 @@ then
 	echo "Configuration: pfx=$pfx, os=$os, rel=$rel, rbase=$rbase, rroot=$rroot, arch=$arch, sfx=$sfx, variant=$build_variant"
 fi
 
-SMROOT=${SMROOT-..}
+SMROOT=${SMROOT-`(cd ..;pwd)`}
 BUILDTOOLS=${BUILDTOOLS-$SMROOT/devtools}
 export SMROOT BUILDTOOLS
 
@@ -471,34 +494,34 @@ fi
 
 # now try to find a reasonable object directory
 if [ -r ${OBJ_ROOT}/obj${prefix}.$os.$rel.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rel.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rel.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os.$rroot.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rroot.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rroot.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os.$rbase.x.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rbase.x.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rbase.x.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os.$rel$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rel$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rel$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os.$rbase.x$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rbase.x$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rbase.x$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$rel.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$rel.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$rel.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$rbase.x.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$rbase.x.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$rbase.x.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$os$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$os$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$arch$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$arch$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$arch$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$rel$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$rel$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$rel$sfx
 elif [ -r ${OBJ_ROOT}/obj${prefix}.$sfx ]; then
-	obj=${OBJ_ROOT}/obj${prefix}.$sfx
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$sfx
 fi
 
-if [ -n "$obj" ]
+if [ -n "$abs_obj_dir" ]
 then
-	obj=${obj}/${src_dir}
+	obj=${abs_obj_dir}/${src_dir}
 fi
 
 # Print the directory which would be used for the build and exit
@@ -544,7 +567,8 @@ fi
 # If we didn't detect an existing obj directory, makeup a new obj name.
 if [ -z "$obj" ]
 then
-	obj=${OBJ_ROOT}/obj${prefix}.$os.$rel.$arch$sfx/${src_dir}
+	abs_obj_dir=${OBJ_ROOT}/obj${prefix}.$os.$rel.$arch$sfx
+	obj=${abs_obj_dir}/${src_dir}
 fi
 
 # Check if obj directory exists
@@ -605,7 +629,7 @@ then
 	elif [ -r $BUILDTOOLS/OS/$rel$sfx ]; then
 		oscf=$rel$sfx
 	else
-		echo "Cannot determine how to support $arch.$os.$rel" >&2
+		echo "Cannot determine how to support $os.$rel.$arch" >&2
 		exit $EX_UNAVAILABLE
 	fi
 	M4=`sh $BUILDTOOLS/bin/find_m4.sh`
@@ -626,16 +650,24 @@ then
 	${mkdir} $obj
 
 		ln="ln -s"
-		(cd $obj; $ln ${obj_rel_base_dir}/${src_dir}/*.[ch13458] .)
 		(cd $obj
 		# This glob doesn't actually glob to something everywhere,
 		# thus the protective measures.
-		for i in ${obj_rel_base_dir}/${src_dir}/*.0 
-		do 
-			if [ -f $i ] 
-			then 
-				$ln $i `basename $i`.dist 
-			fi 
+		for i in ${obj_rel_base_dir}/${src_dir}/*.[ch13458]
+		do
+			if [ -f $i ]
+			then
+				$ln $i .
+			fi
+		done
+		# This glob doesn't actually glob to something everywhere,
+		# thus the protective measures.
+		for i in ${obj_rel_base_dir}/${src_dir}/*.0
+		do
+			if [ -f $i ]
+			then
+				$ln $i `basename $i`.dist
+			fi
 		done)
 		if [ -f helpfile ]
 		then
@@ -650,11 +682,8 @@ then
 	echo "define(\`bldARCH', \`\`$arch'')" >> $obj/.settings$$
 	cat $BUILDTOOLS/OS/$oscf >> $obj/.settings$$
 
-		cur_dir=`pwd`
-		cd $obj/..
-		absolute_obj_dir=`pwd`
-		cd $cur_dir
-		echo "ifdef(\`bldABS_OBJ_DIR',,\`define(\`bldABS_OBJ_DIR', \`$absolute_obj_dir')')" >> $obj/.settings$$
+		abs_obj_dir=`(cd $abs_obj_dir; pwd)`
+		echo "ifdef(\`bldABS_OBJ_DIR',,\`define(\`bldABS_OBJ_DIR', \`$abs_obj_dir')')" >> $obj/.settings$$
 		rel_src_dir="$obj_rel_base_dir/$src_dir"
 		echo "define(\`bldREL_SRC_DIR', \`$rel_src_dir')" >> $obj/.settings$$
 

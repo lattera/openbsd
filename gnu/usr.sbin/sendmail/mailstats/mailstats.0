@@ -1,14 +1,14 @@
 
 
 
-MAILSTATS(1)                                         MAILSTATS(1)
+MAILSTATS(8)                                         MAILSTATS(8)
 
 
 NNAAMMEE
        mailstats - display mail statistics
 
 SSYYNNOOPPSSIISS
-       mmaaiillssttaattss [--oo] [--pp] [--CC _c_f_f_i_l_e] [--ff _s_t_f_i_l_e]
+       mmaaiillssttaattss [--oo] [--pp] [--PP] [--CC _c_f_f_i_l_e] [--ff _s_t_f_i_l_e]
 
 DDEESSCCRRIIPPTTIIOONN
        The  mmaaiillssttaattss  utility  displays the current mail statis-
@@ -29,9 +29,9 @@ DDEESSCCRRIIPPTTIIOONN
               MMaaiilleerr      The name of the mailer.
 
        After  this display, a line totaling the values for all of
-       the mailers is displayed (preceeded with a  ``T''),  sepa-
+       the mailers is displayed (preceded with  a  ``T''),  sepa-
        rated  from  the previous information by a line containing
-       only equals (``='') characters.   Another  line  preceeded
+       only equals (``='')  characters.   Another  line  preceded
        with a ``C'' lists the number of connections.
 
        The options are as follows:
@@ -43,32 +43,34 @@ DDEESSCCRRIIPPTTIIOONN
               statistics  file specified in the sseennddmmaaiill configu-
               ration file.
 
-       --pp     Output information  in  program-readable  mode  and
+       --PP     Output information in program-readable mode without
+              clearing statistics.
+
+       --pp     Output  information  in  program-readable  mode and
               clear statistics.
 
        --oo     Don't display the name of the mailer in the output.
 
-       The mmaaiillssttaattss utility exits 0 on success,  and  >0  if  an
+       The  mmaaiillssttaattss  utility  exits  0 on success, and >0 if an
        error occurs.
 
 FFIILLEESS
-       /etc/mail/sendmail.cf    The  default  sseennddmmaaiill configura-
+       /etc/mail/sendmail.cf    The default  sseennddmmaaiill  configura-
                                 tion file.
-       /etc/mail/statistics     The default  sseennddmmaaiill  statistics
+       /etc/mail/statistics     The  default  sseennddmmaaiill statistics
+
+
+
+                   $Date: 2001/04/18 04:53:31 $                 1
+
+
+
+
+
+MAILSTATS(8)                                         MAILSTATS(8)
+
+
                                 file.
-
-
-
-
-
-                   $Date: 2000/12/29 18:12:20 $                 1
-
-
-
-
-
-MAILSTATS(1)                                         MAILSTATS(1)
-
 
 SSEEEE AALLSSOO
        mailq(1), sendmail(8)
@@ -125,8 +127,6 @@ SSEEEE AALLSSOO
 
 
 
-
-
-                   $Date: 2000/12/29 18:12:20 $                 2
+                   $Date: 2001/04/18 04:53:31 $                 2
 
 

@@ -1,15 +1,16 @@
-#	$Id: Linux,v 8.18.4.3 2000/12/14 01:04:46 rand Exp $
+#	$Sendmail: Linux,v 8.29 2001/08/15 08:55:54 guenther Exp $
 define(`confDEPEND_TYPE', `CC-M')
+define(`confSM_OS_HEADER', `sm_os_linux')
 define(`confMANROOT', `/usr/man/man')
 define(`confLIBS', `-ldl')
 define(`confEBINDIR', `/usr/sbin')
 APPENDDEF(`confLIBSEARCH', `crypt nsl')
 
 define(`confLD', `ld')
+define(`confMTCCOPTS', `-D_REENTRANT')
 define(`confMTLDOPTS', `-lpthread')
 define(`confLDOPTS_SO', `-shared')
 define(`confSONAME',`-soname')
-
 
 ifelse(confBLDVARIANT, `DEBUG',
 dnl Debug build
@@ -19,14 +20,14 @@ dnl Debug build
 dnl Optimized build
 confBLDVARIANT, `OPTIMIZED',
 `
-	define(`confOPTIMIZE',`-O')
+	define(`confOPTIMIZE',`-O2')
 ',
 dnl Purify build
 confBLDVARIANT, `PURIFY',
 `
-	define(`confOPTIMIZE',`-g -Wall')
+	define(`confOPTIMIZE',`-g')
 ',
 dnl default
 `
-	define(`confOPTIMIZE',`-O')
+	define(`confOPTIMIZE',`-O2')
 ')

@@ -1,8 +1,8 @@
-#	$Id: IRIX.5.x,v 8.11 1999/07/24 23:37:45 gshapiro Exp $
-define(`confCC', `cc -mips2')
+#	$Sendmail: IRIX.5.x,v 8.15 2001/02/10 18:19:47 ca Exp $
+define(`confCC', `cc -mips2 -OPT:Olimit=1400')
 define(`confMAPDEF', `-DNDBM -DNIS')
-define(`confENVDEF', `-DIRIX5')
 define(`confLIBS', `-lmld -lmalloc')
+define(`confSM_OS_HEADER', `sm_os_irix')
 define(`confMBINDIR', `/usr/lib')
 define(`confSBINDIR', `/usr/etc')
 define(`confUBINDIR', `/usr/bsd')

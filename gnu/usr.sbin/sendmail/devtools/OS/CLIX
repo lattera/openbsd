@@ -1,4 +1,4 @@
-#	$Id: CLIX,v 8.12 1999/06/02 22:53:36 gshapiro Exp $
+#	$Sendmail: CLIX,v 8.12 1999/06/02 22:53:36 gshapiro Exp $
 define(`confCC', `gcc')
 define(`confMAPDEF', `-DNDBM')
 define(`confENVDEF', `-DCLIX')

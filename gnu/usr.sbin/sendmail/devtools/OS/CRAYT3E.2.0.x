@@ -1,4 +1,4 @@
-#	$Id: CRAYT3E.2.0.x,v 8.4 1999/06/02 22:53:36 gshapiro Exp $
+#	$Sendmail: CRAYT3E.2.0.x,v 8.4 1999/06/02 22:53:36 gshapiro Exp $
 define(`confMAPDEF', `-DNDBM')
 define(`confENVDEF', `-DUNICOS')
 define(`confOPTIMIZE', `-O')

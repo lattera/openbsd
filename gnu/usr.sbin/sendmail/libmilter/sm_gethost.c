@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
+ *  Copyright (c) 1999-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  *
  * By using this file, you agree to the terms and conditions set
@@ -8,11 +8,9 @@
  *
  */
 
-#ifndef lint
-static char id[] = "@(#)$Id: sm_gethost.c,v 8.7.8.4 2000/12/19 04:26:33 gshapiro Exp $";
-#endif /* ! lint */
+#include <sm/gen.h>
+SM_RCSID("@(#)$Sendmail: sm_gethost.c,v 8.23 2001/07/21 00:05:06 gshapiro Exp $")
 
-#if _FFR_MILTER
 #include <sendmail.h>
 #if NETINET || NETINET6
 # include <arpa/inet.h>
@@ -29,14 +27,17 @@ static char id[] = "@(#)$Id: sm_gethost.c,v 8.7.8.4 2000/12/19 04:26:33 gshapiro
 **	Support IPv6 as well as IPv4.
 */
 
-#if NETINET6 && NEEDSGETIPNODE && __RES < 19990909
+#if NETINET6 && NEEDSGETIPNODE
 
-# ifndef AI_V4MAPPED
-#  define AI_V4MAPPED	0	/* dummy */
-# endif /* ! AI_V4MAPPED */
+# ifndef AI_ADDRCONFIG
+#  define AI_ADDRCONFIG	0	/* dummy */
+# endif /* ! AI_ADDRCONFIG */
 # ifndef AI_ALL
 #  define AI_ALL	0	/* dummy */
 # endif /* ! AI_ALL */
+# ifndef AI_DEFAULT
+#  define AI_DEFAULT	0	/* dummy */
+# endif /* ! AI_DEFAULT */
 
 static struct hostent *
 getipnodebyname(name, family, flags, err)
@@ -45,7 +46,7 @@ getipnodebyname(name, family, flags, err)
 	int flags;
 	int *err;
 {
-	bool resv6 = TRUE;
+	bool resv6 = true;
 	struct hostent *h;
 
 	if (family == AF_INET6)
@@ -54,15 +55,14 @@ getipnodebyname(name, family, flags, err)
 		resv6 = bitset(RES_USE_INET6, _res.options);
 		_res.options |= RES_USE_INET6;
 	}
-	h_errno = 0;
+	SM_SET_H_ERRNO(0);
 	h = gethostbyname(name);
-	*err = h_errno;
 	if (family == AF_INET6 && !resv6)
 		_res.options &= ~RES_USE_INET6;
+	*err = h_errno;
 	return h;
 }
 
-# if _FFR_FREEHOSTENT
 void
 freehostent(h)
 	struct hostent *h;
@@ -74,8 +74,7 @@ freehostent(h)
 
 	return;
 }
-# endif /* _FFR_FREEHOSTENT */
-#endif /* NEEDSGETIPNODE && NETINET6 && __RES < 19990909 */
+#endif /* NEEDSGETIPNODE && NETINET6 */
 
 struct hostent *
 mi_gethostbyname(name, family)
@@ -97,12 +96,16 @@ mi_gethostbyname(name, family)
 # endif /* SOLARIS == 20300 || SOLARIS == 203 */
 #else /* (SOLARIS > 10000 && SOLARIS < 20400) || (defined(SOLARIS) && SOLARIS < 204) || (defined(sony_news) && defined(__svr4)) */
 # if NETINET6
+	int flags = AI_DEFAULT|AI_ALL;
 	int err;
 # endif /* NETINET6 */
 
 # if NETINET6
-	h = getipnodebyname(name, family, AI_V4MAPPED|AI_ALL, &err);
-	h_errno = err;
+#  if ADDRCONFIG_IS_BROKEN
+	flags &= ~AI_ADDRCONFIG;
+#  endif /* ADDRCONFIG_IS_BROKEN */
+	h = getipnodebyname(name, family, flags, &err);
+	SM_SET_H_ERRNO(err);
 # else /* NETINET6 */
 	h = gethostbyname(name);
 # endif /* NETINET6 */
@@ -110,4 +113,33 @@ mi_gethostbyname(name, family)
 #endif /* (SOLARIS > 10000 && SOLARIS < 20400) || (defined(SOLARIS) && SOLARIS < 204) || (defined(sony_news) && defined(__svr4)) */
 	return h;
 }
-#endif /* _FFR_MILTER */
+
+#if NETINET6
+/*
+**  MI_INET_PTON -- convert printed form to network address.
+**
+**	Wrapper for inet_pton() which handles IPv6: labels.
+**
+**	Parameters:
+**		family -- address family
+**		src -- string
+**		dst -- destination address structure
+**
+**	Returns:
+**		1 if the address was valid
+**		0 if the address wasn't parseable
+**		-1 if error
+*/
+
+int
+mi_inet_pton(family, src, dst)
+	int family;
+	const char *src;
+	void *dst;
+{
+	if (family == AF_INET6 &&
+	    strncasecmp(src, "IPv6:", 5) == 0)
+		src += 5;
+	return inet_pton(family, src, dst);
+}
+#endif /* NETINET6 */

@@ -1,4 +1,4 @@
-#	$Id: NCR.MP-RAS.2.x,v 8.13 1999/06/02 22:53:39 gshapiro Exp $
+#	$Sendmail: NCR.MP-RAS.2.x,v 8.13 1999/06/02 22:53:39 gshapiro Exp $
 define(`confMAPDEF', `-DNDBM')
 define(`confENVDEF', `-DNCR_MP_RAS2')
 define(`confOPTIMIZE', `-O2')

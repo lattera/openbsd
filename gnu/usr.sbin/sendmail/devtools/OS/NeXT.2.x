@@ -1,4 +1,5 @@
-#	$Id: NeXT.2.x,v 8.11 1999/12/08 06:08:07 gshapiro Exp $
+#	$Sendmail: NeXT.2.x,v 8.12 2001/03/11 19:09:51 ca Exp $
+define(`confSM_OS_HEADER', `sm_os_next')
 define(`confBEFORE', `unistd.h dirent.h')
 define(`confMAPDEF', `-DNDBM -DNIS -DNETINFO')
 define(`confENVDEF', `-DNeXT')

@@ -1,7 +1,8 @@
-#	$Id: SunOS.4.0,v 8.9 1999/06/02 22:53:41 gshapiro Exp $
+#	$Sendmail: SunOS.4.0,v 8.12 2000/12/17 16:17:51 ca Exp $
 define(`confBEFORE', `stdlib.h stddef.h limits.h')
 define(`confMAPDEF', `-DNDBM -DNIS')
 define(`confENVDEF', `-DSUNOS403')
+define(`confSM_OS_HEADER', `sm_os_sunos')
 define(`confLDOPTS', `-Bstatic')
 define(`confMBINDIR', `/usr/lib')
 define(`confSBINDIR', `/usr/etc')

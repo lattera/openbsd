@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1999-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  *
  * By using this file, you agree to the terms and conditions set
@@ -13,12 +13,13 @@
 
 #ifndef _LIBMILTER_H
 # define _LIBMILTER_H	1
+
+#include <sm/gen.h>
+
 #ifdef _DEFINE
 # define EXTERN
 # define INIT(x)	= x
-# ifndef lint
-static char MilterlId[] = "@(#)$Id: libmilter.h,v 8.3.6.10 2000/11/20 21:15:36 ca Exp $";
-# endif /* ! lint */
+SM_IDSTR(MilterlId, "@(#)$Sendmail: libmilter.h,v 8.26 2001/07/20 02:48:37 gshapiro Exp $")
 #else /* _DEFINE */
 # define EXTERN extern
 # define INIT(x)
@@ -30,11 +31,6 @@ static char MilterlId[] = "@(#)$Id: libmilter.h,v 8.3.6.10 2000/11/20 21:15:36 c
 #include "sendmail.h"
 
 #include "libmilter/milter.h"
-
-#ifndef __P
-# include "sendmail/cdefs.h"
-#endif /* ! __P */
-#include "sendmail/useful.h"
 
 # define ValidSocket(sd)	((sd) >= 0)
 # define INVALID_SOCKET		-1
@@ -58,18 +54,22 @@ typedef pthread_mutex_t smutex_t;
 #define MILTER_VERSION		100
 
 /* some defaults */
-#define MI_TIMEOUT	1800		/* default timeout for read/write */
+#define MI_TIMEOUT	7210		/* default timeout for read/write */
 #define MI_CHK_TIME	5		/* checking whether to terminate */
 
-#if SOMAXCONN > 20
-# define MI_SOMAXCONN	SOMAXCONN
-#else /* SOMAXCONN */
-# define MI_SOMAXCONN	20
-#endif /* SOMAXCONN */
+#ifndef MI_SOMAXCONN
+# if SOMAXCONN > 20
+#  define MI_SOMAXCONN	SOMAXCONN
+# else /* SOMAXCONN */
+#  define MI_SOMAXCONN	20
+# endif /* SOMAXCONN */
+#endif /* ! MI_SOMAXCONN */
 
 /* maximum number of repeated failures in mi_listener() */
 #define MAX_FAILS_M	16	/* malloc() */
 #define MAX_FAILS_T	16	/* thread creation */
+#define MAX_FAILS_A	16	/* accept() */
+#define MAX_FAILS_S	16	/* select() */
 
 /* internal "commands", i.e., error codes */
 #define SMFIC_TIMEOUT	((char) 1)	/* timeout */
@@ -83,6 +83,7 @@ typedef pthread_mutex_t smutex_t;
 
 /* hack */
 #define smi_log		syslog
+#define sm_dprintf	printf
 #define milter_ret	int
 #define SMI_LOG_ERR	LOG_ERR
 #define SMI_LOG_FATAL	LOG_ERR
@@ -105,6 +106,7 @@ extern int	mi_control_startup __P((char *));
 extern void	mi_stop_milters __P((int));
 extern void	mi_clean_signals __P((void));
 extern struct hostent *mi_gethostbyname __P((char *, int));
+extern int	mi_inet_pton __P((int, const char *, void *));
 extern void	mi_closener __P((void));
 
 /* communication functions */

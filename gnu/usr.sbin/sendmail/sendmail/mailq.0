@@ -41,9 +41,10 @@ DDEESSCCRRIIPPTTIIOONN
               user'' information; this shows  who  will  own  any
               programs  that  are executed on behalf of this mes-
               sage  and  the  name  of  the  alias  this  command
-              expanded from, if any.
+              expanded  from,  if any.  Moreover, status messages
+              for each recipient are printed if available.
 
-       The  mmaaiillqq  utility exits 0 on success, and >0 if an error
+       The mmaaiillqq utility exits 0 on success, and >0 if  an  error
        occurs.
 
 SSEEEE AALLSSOO
@@ -60,7 +61,6 @@ HHIISSTTOORRYY
 
 
 
-
-                   $Date: 2000/12/14 23:08:15 $                 1
+                   $Date: 2000/12/23 19:37:48 $                 1
 
 

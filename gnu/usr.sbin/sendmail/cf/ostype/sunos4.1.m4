@@ -13,6 +13,6 @@ divert(-1)
 #
 
 divert(0)
-VERSIONID(`$Id: sunos4.1.m4,v 8.10 1999/02/07 07:26:24 gshapiro Exp $')
+VERSIONID(`$Sendmail: sunos4.1.m4,v 8.10 1999/02/07 07:26:24 gshapiro Exp $')
 
 define(`confEBINDIR', `/usr/lib')dnl

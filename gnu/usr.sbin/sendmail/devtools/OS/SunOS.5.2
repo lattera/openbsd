@@ -1,8 +1,9 @@
-#	$Id: SunOS.5.2,v 8.11 1999/06/02 22:53:41 gshapiro Exp $
+#	$Sendmail: SunOS.5.2,v 8.14 2000/12/17 16:17:51 ca Exp $
 define(`confCC', `gcc')
 define(`confBEFORE', `sysexits.h')
 define(`confMAPDEF', `-DNDBM -DNIS')
 define(`confENVDEF', `-DSOLARIS=20100')
+define(`confSM_OS_HEADER', `sm_os_sunos')
 define(`confLIBS', `-lsocket -lnsl -lelf')
 define(`confMBINDIR', `/usr/lib')
 define(`confSBINDIR', `/usr/etc')

@@ -1,4 +1,10 @@
-#	$Id: OpenBSD,v 8.7 1999/05/06 19:45:41 gshapiro Exp $
+#	$Sendmail: OpenBSD,v 8.19 2001/05/07 21:57:10 gshapiro Exp $
+define(`confLD', `cc')
+define(`confLDOPTS_SO', `-shared')
+define(`confCCOPTS_SO', `-fPIC')
+
 define(`confMAPDEF', `-DNEWDB -DNIS -DMAP_REGEX')
-define(`confENVDEF', ` -DNETISO')
-define(`confSTDIO_TYPE', `torek')
+define(`confENVDEF', ` -DNETISO -DFAST_PID_RECYCLE')
+define(`confSM_OS_HEADER', `sm_os_openbsd')
+define(`confMTCCOPTS', `-pthread')
+define(`confMTLDOPTS', `-pthread')

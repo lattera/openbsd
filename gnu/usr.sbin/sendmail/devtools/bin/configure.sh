@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+# Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
 #	All rights reserved.
 #
 # By using this file, you agree to the terms and conditions set
@@ -8,7 +8,7 @@
 # the sendmail distribution.
 #
 #
-#	$Id: configure.sh,v 8.40 2000/03/13 19:26:20 gshapiro Exp $
+#	$Sendmail: configure.sh,v 8.43 2001/06/27 21:46:42 gshapiro Exp $
 
 #
 #  Special script to autoconfigure for M4 generation of Makefile
@@ -180,3 +180,4 @@ in
 		echo "ifdef(\`confNROFF',,\`define(\`confNO_MAN_BUILD')')dnl"
 		;;
 esac
+

@@ -1,4 +1,4 @@
-#	$Id: Darwin,v 8.2.18.1 2000/06/15 06:37:04 gshapiro Exp $
+#	$Sendmail: Darwin,v 8.3 2000/06/15 06:36:31 gshapiro Exp $
 #
 # Wilfredo Sanchez <wsanchez@apple.com>:
 #    We look a lot more like 4.4BSD than NeXTStep or OpenStep.

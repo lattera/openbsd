@@ -1,4 +1,4 @@
-#	$Id: GNU,v 8.2 2000/01/28 18:50:33 gshapiro Exp $
+#	$Sendmail: GNU,v 8.2 2000/01/28 18:50:33 gshapiro Exp $
 define(`confCC', `gcc')
 define(`confOPTIMIZE', `-g -O2')
 define(`confDEPEND_TYPE', `CC-M')

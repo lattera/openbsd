@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <sysexits.h>
 
+#ifndef lint
+static char id[] = "@(#)$Sendmail: t_snprintf.c,v 8.3 2001/08/28 23:07:12 gshapiro Exp $";
+#endif /* ! lint */
+
 #define TEST_STRING	"1234567890"
 
 int
@@ -13,7 +17,8 @@ main(argc, argv)
 
 	r = snprintf(buf, sizeof buf, "%s", TEST_STRING);
 
-	if (buf[sizeof buf - 1] != '\0')
+	if (buf[sizeof buf - 1] != '\0' ||
+	    r != strlen(TEST_STRING))
 	{
 		fprintf(stderr, "Add the following to devtools/Site/site.config.m4:\n\n");
 		fprintf(stderr, "APPENDDEF(`confENVDEF', `-DSNPRINTF_IS_BROKEN=1')\n\n");

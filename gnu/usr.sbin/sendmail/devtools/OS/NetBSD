@@ -1,8 +1,7 @@
-#	$Id: NetBSD,v 8.9.14.1 2000/04/27 21:24:06 gshapiro Exp $
+#	$Sendmail: NetBSD,v 8.13 2001/01/25 19:03:44 gshapiro Exp $
 define(`confMAPDEF', `-DNEWDB -DNIS -DMAP_REGEX')
 define(`confENVDEF', ` -DNETISO')
 define(`confDEPEND_TYPE', `CC-M')
-define(`confSTDIO_TYPE', `torek')
 define(`confSBINGRP', `wheel')
 define(`confUBINOWN', `root')
 define(`confUBINGRP', `wheel')
