@@ -1,0 +1,18 @@
+#	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/Makefile,v 1.5 1999/03/02 15:27:36 niklas Exp $
+#	$EOM: Makefile,v 1.3 1999/02/25 15:12:01 niklas Exp $
+
+# RSA Key Generation
+
+PROG=		rsakeygen
+SRCS=		log.c asn.c gmp_util.c pkcs.c rsakeygen.c sysdep.c
+TOPSRC=		${.CURDIR}/../..
+TOPOBJ!=	cd ${TOPSRC}; printf "all:\n\t@pwd\n" |${MAKE} -f-
+OS!=		awk '/^OS=/ { print $$2 }' ${.CURDIR}/../../Makefile
+.PATH:		${TOPSRC} ${TOPSRC}/sysdep/${OS} ${TOPOBJ}
+CFLAGS+=	-I${TOPSRC} -I${TOPSRC}/sysdep/${OS} -I${TOPOBJ} -Wall
+LDADD+=		-lgmp
+DPADD+=		${LIBDES}
+NOMAN=
+DEBUG=		-g
+
+.include <bsd.prog.mk>
