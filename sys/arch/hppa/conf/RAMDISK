@@ -1,0 +1,21 @@
+#	$OpenBSD: src/sys/arch/hppa/conf/RAMDISK,v 1.4 2002/09/20 19:29:00 mickey Exp $
+#
+# Generic kernel config (all that is supportted)
+#
+
+include	"arch/hppa/conf/generic.hppa"
+maxusers	8
+
+option  GSCVERBOSE
+option  EISAVERBOSE
+#option PCIVERBOSE
+
+option	RAMDISK_HOOKS
+option	MINIROOTSIZE=4096
+
+config	bsd root on rd0a swap on rd0b
+
+pseudo-device	rd	2
+
+sd*	at scsibus? target ? lun ?
+cd*	at scsibus? target ? lun ?
