@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_sysi86.h,v 1.2 1996/08/02 20:35:14 niklas Exp $	*/
 /*	$NetBSD: ibcs2_sysi86.h,v 1.1 1996/01/06 03:23:54 scottb Exp $	*/
 
 /*

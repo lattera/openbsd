@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_net.c,v 1.2 1996/08/02 20:34:56 niklas Exp $	*/
 /*	$NetBSD: hpux_net.c,v 1.12 1995/10/07 06:26:37 mycroft Exp $	*/
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_rtprio.h,v 1.3 1996/08/02 20:34:47 niklas Exp $	*/
+
 /*
  * Copyright (c) 1994, Henrik Vestergaard Draboel
  * All rights reserved.

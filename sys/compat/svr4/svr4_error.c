@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_error.c,v 1.2 1996/08/02 20:35:36 niklas Exp $	 */
 /*	$NetBSD: svr4_error.c,v 1.2 1994/11/18 02:53:41 christos Exp $	 */
 
 /*

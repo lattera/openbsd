@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/compat/linux/linux_sysent.c,v 1.7 1996/08/02 20:35:22 niklas Exp $	*/
+
 /*
  * System call switch table.
  *
