@@ -42,7 +42,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)repquota.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: repquota.c,v 1.9 1997/01/17 07:14:24 millert Exp $";
+static char *rcsid = "$Id: repquota.c,v 1.10 2000/02/01 03:24:08 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -155,7 +155,7 @@ main(argc, argv)
 			done |= 1 << argnum;
 			if (gflag && hasquota(fs, GRPQUOTA, &qfnp))
 				errs += repquota(fs, GRPQUOTA, qfnp);
-			if (uflag && hasquota(fs, GRPQUOTA, &qfnp))
+			if (uflag && hasquota(fs, USRQUOTA, &qfnp))
 				errs += repquota(fs, USRQUOTA, qfnp);
 		}
 	}
