@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.47.2.1 2002/01/02 20:19:10 jason Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.47.2.2 2002/08/02 08:09:18 miod Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -59,6 +59,7 @@
 #include <sys/signalvar.h>
 #include <sys/resourcevar.h>
 #include <sys/sysctl.h>
+#include <sys/pool.h>
 
 #include <sys/namei.h>
 
@@ -212,6 +213,8 @@ ttyclose(tp)
 
 	tp->t_gen++;
 	tp->t_pgrp = NULL;
+	if (tp->t_session)
+		SESSRELE(tp->t_session);
 	tp->t_session = NULL;
 	tp->t_state = 0;
 	return (0);
@@ -982,6 +985,8 @@ ttioctl(tp, cmd, data, flag, p)
 		    ((p->p_session->s_ttyvp || tp->t_session) &&
 		     (tp->t_session != p->p_session)))
 			return (EPERM);
+		if (tp->t_session)
+			SESSRELE(tp->t_session);
 		SESSHOLD(p->p_session);
 		tp->t_session = p->p_session;
 		tp->t_pgrp = p->p_pgrp;
