@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/cvs/log.c,v 1.4 2004/08/05 13:39:01 jfb Exp $	*/
+/*	$OpenBSD: src/usr.bin/cvs/log.c,v 1.5 2004/11/28 15:12:17 pat Exp $	*/
 /*
  * Copyright (c) 2004 Jean-Francois Brousseau <jfb@openbsd.org>
  * All rights reserved.
@@ -295,9 +295,7 @@ cvs_printf(const char *fmt, ...)
 	va_list vap;
 
 	va_start(vap, fmt);
-
 	ret = vprintf(fmt, vap);
-
 	va_end(vap);
 
 	return (ret);
