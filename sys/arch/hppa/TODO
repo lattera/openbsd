@@ -1,0 +1,63 @@
+
+read, and decide what can you do to make your "snakes" happy!
+
+### resources:
+* sources repo;
+* http://www.openbsd.org/hppa.html - supported hardware list
+* http://hppa.fries.net/ - technical resources for developers
+* mailto:hppa@openbsd.org
+
+
+### current open projects and assignments by area:
+
+hardware and installation notes (distrib/notes/hppa/*):	fries@
+* wip, will flesh out as development progresses
+* For now have rbootd running on the server, boot.lif from hppa.fries.net,
+    and then:
+         <esc> on bootup, a to get to BOOT_ADMIN prompt, and finally,
+         BOOT_ADMIN> boot lan isl
+
+hardware manuals (man4.hppa/*):				mickey@
+* ie manual
+* siop manual
+* sti manual
+* hil manual
+* add more to lasi and asp (also wax when studied enough)
+
+gcc/egcs/binutils:					espie@ mickey@
+* move to binutils 2.9.1
+
+boots (sys/arch/hppa/stand/*):				mickey@ fries@
+* loading elf symbol table, i have some code, testing
+* almost could be considered working/done, fixes and such (;
+
+kernel (sys/arch/hppa/*):				mickey@
+* several harware problems (ie non-functional drivers)
+* fix kvtop for equ mapped regions virtual_avail < va < io (sti)
+* proper serial console
+* user-land support (signal stuff)
+* wscons devices (sti, hil/*, pckbc/*) unfinished
+* 7300lc-based machines, 8k-based machines
+* "original snakes" (700,705,710,...) support
+* advanced audio driver
+* general cleanup (far-east future)
+
+ramdisk development edition (distrib/hppa/*):		mickey@
+* basic environment done (not in the repo)
+* requires libc and kernel-user support
+
+libc (lib/libc/arch/hppa/*):				mickey@
+* MD syscalls (postponed until kernel part's ready)
+
+userland (*):						mickey@
+* libc_r done (not verified)
+* libkvm (awaits her kernel counterpart)
+* no shared libs support (not needed until on ramdisk ;) (? ldso from pefo?)
+
+X11 (X11/*):						fries@ mickey@
+* patch is available, nothing to run at tho (;
+
+$OpenBSD: src/sys/arch/hppa/Attic/TODO,v 1.8 2000/01/18 16:10:08 mickey Exp $
+
+--
+	paranoic mickey
