@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.7 2001/10/27 09:48:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.8 2001/10/30 19:20:17 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -2415,8 +2415,8 @@ init386(first_avail)
 			a = i386_round_page(im->addr);
 			e = i386_trunc_page(im->addr + im->size);
 			/* skip first four pages */
-			if (a < 4 * NBPG)
-				a = 4 * NBPG;
+			if (a < 5 * NBPG)
+				a = 5 * NBPG;
 #ifdef DEBUG
 			printf(" %u-%u", a, e);
 #endif
