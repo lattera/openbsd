@@ -15,7 +15,7 @@ to the system log.
 */
 
 #include "includes.h"
-RCSID("$Id: log-server.c,v 1.7 1999/05/04 11:58:48 bg Exp $");
+RCSID("$Id: log-server.c,v 1.1 1999/09/26 20:53:36 deraadt Exp $");
 
 #include <syslog.h>
 #ifdef NEED_SYS_SYSLOG_H
@@ -228,8 +228,7 @@ void fatal(const char *fmt, ...)
   if (ticket)
     {
       if (strcmp(ticket,"none"))
-	/* ticket -> FILE:path */
-	unlink(ticket + 5);
+	unlink(ticket);
       else
 	ticket = NULL;
     }
