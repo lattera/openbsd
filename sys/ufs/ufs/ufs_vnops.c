@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.4 2003/05/20 04:18:42 tedu Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*
@@ -1672,56 +1672,6 @@ ufs_readlink(v)
 }
 
 /*
- * Lock an inode. If its already locked, set the WANT bit and sleep.
- */
-int
-ufs_lock(v)
-	void *v;
-{
-	struct vop_lock_args /* {
-		struct vnode *a_vp;
-		int a_flags;
-		sturct proc *a_p;
-	} */ *ap = v;
-	struct vnode *vp = ap->a_vp;
-
-	return (lockmgr(&VTOI(vp)->i_lock, ap->a_flags, &vp->v_interlock,
-		ap->a_p));
-}
-
-/*
- * Unlock an inode.  If WANT bit is on, wakeup.
- */
-int
-ufs_unlock(v)
-	void *v;
-{
-	struct vop_unlock_args /* {
-		struct vnode *a_vp;
-		int a_flags;
-		struct proc *a_p;
-	} */ *ap = v;
-	struct vnode *vp = ap->a_vp;
-
-	return (lockmgr(&VTOI(vp)->i_lock, ap->a_flags | LK_RELEASE,
-		&vp->v_interlock, ap->a_p));
-}
-
-/*
- * Check for a locked inode.
- */
-int
-ufs_islocked(v)
-	void *v;
-{
-	struct vop_islocked_args /* {
-		struct vnode *a_vp;
-	} */ *ap = v;
-
-	return (lockstatus(&VTOI(ap->a_vp)->i_lock));
-}
-
-/*
  * Calculate the logical to physical mapping if not done already,
  * then call the device strategy routine.
  */
@@ -1791,7 +1741,7 @@ ufs_print(v)
 	if (vp->v_type == VFIFO)
 		fifo_printinfo(vp);
 #endif /* FIFO */
-	lockmgr_printinfo(&ip->i_lock);
+	lockmgr_printinfo(&ITOV(ip)->v_lock);
 	printf("\n");
 	return (0);
 }
@@ -2006,6 +1956,7 @@ ufs_vinit(mntp, specops, fifoops, vpp)
 {
 	struct inode *ip;
 	struct vnode *vp, *nvp;
+	struct proc *p = curproc;
 
 	vp = *vpp;
 	ip = VTOI(vp);
@@ -2016,17 +1967,17 @@ ufs_vinit(mntp, specops, fifoops, vpp)
 		if ((nvp = checkalias(vp, ip->i_ffs_rdev, mntp)) != NULL) {
 			/*
 			 * Discard unneeded vnode, but save its inode.
-			 * Note that the lock is carried over in the inode
-			 * to the replacement vnode.
 			 */
 			nvp->v_data = vp->v_data;
 			vp->v_data = NULL;
+			VOP_UNLOCK(vp, 0, p);
 			vp->v_op = spec_vnodeop_p;
 #ifdef DIAGNOSTIC
 			vp->v_flag &= ~VLOCKSWORK;
 #endif
 			vrele(vp);
 			vgone(vp);
+			lockmgr(&nvp->v_lock, LK_EXCLUSIVE, &nvp->v_interlock, p);
 			/*
 			 * Reinitialize aliased inode.
 			 */

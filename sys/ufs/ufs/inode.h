@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.18.2.2 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.18.2.3 2003/05/20 04:18:42 tedu Exp $	*/
 /*	$NetBSD: inode.h,v 1.8 1995/06/15 23:22:50 cgd Exp $	*/
 
 /*
@@ -90,7 +90,6 @@ struct inode {
 	struct	 dquot *i_dquot[MAXQUOTAS]; /* Dquot structures. */
 	u_quad_t i_modrev;	/* Revision level for NFS lease. */
 	struct	 lockf *i_lockf;/* Head of byte-level lock list. */
-	struct   lock i_lock;   /* Inode lock */
 
 	/*
 	 * Side effects; used during directory lookup.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_extern.h,v 1.15.2.1 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_extern.h,v 1.15.2.2 2003/05/20 04:18:42 tedu Exp $	*/
 /*	$NetBSD: ufs_extern.h,v 1.5 1996/02/09 22:36:03 christos Exp $	*/
 
 /*-
@@ -66,7 +66,7 @@ int	 ufs_create(void *);
 int	 ufs_getattr(void *);
 int	 ufs_inactive(void *);
 int	 ufs_ioctl(void *);
-int	 ufs_islocked(void *);
+#define	 ufs_islocked	genfs_islocked
 #ifdef NFSSERVER
 int	 lease_check(void *);
 #define	 ufs_lease_check lease_check
@@ -74,7 +74,7 @@ int	 lease_check(void *);
 #define	 ufs_lease_check ((int (*)(void *))nullop)
 #endif
 int	 ufs_link(void *);
-int	 ufs_lock(void *);
+#define	 ufs_lock	genfs_lock
 int	 ufs_lookup(void *);
 int	 ufs_mkdir(void *);
 int	 ufs_mknod(void *);
@@ -94,7 +94,7 @@ int	ufs_kqfilter(void *);
 int	ufs_setattr(void *);
 int	ufs_strategy(void *);
 int	ufs_symlink(void *);
-int	ufs_unlock(void *);
+#define	ufs_unlock	genfs_unlock
 int	ufs_whiteout(void *);
 int	ufsspec_close(void *);
 int	ufsspec_read(void *);

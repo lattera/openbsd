@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.20.2.3 2003/05/19 22:38:11 tedu Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.20.2.4 2003/05/20 04:18:42 tedu Exp $	*/
 /*	$NetBSD: ext2fs_vnops.c,v 1.30 2000/11/27 08:39:53 chs Exp $	*/
 
 /*
@@ -63,6 +63,7 @@
 #include <uvm/uvm_extern.h>
 
 #include <miscfs/fifofs/fifo.h>
+#include <miscfs/genfs/genfs.h>
 #include <miscfs/specfs/specdev.h>
 
 #include <ufs/ufs/extattr.h>
