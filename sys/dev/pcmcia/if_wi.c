@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_wi.c,v 1.2 1999/08/08 01:17:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_wi.c,v 1.3 1999/08/13 20:36:38 fgsch Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -176,9 +176,9 @@ u_int32_t	widebug = WIDEBUG;
 #if !defined(lint)
 static const char rcsid[] =
 #ifdef __FreeBSD__
-	"$Id: if_wi.c,v 1.1 1999/07/11 16:25:36 niklas Exp $";
+	"$Id: if_wi.c,v 1.2 1999/08/08 01:17:23 niklas Exp $";
 #else	/* !__FreeBSD__ */
-	"$OpenBSD: src/sys/dev/pcmcia/Attic/if_wi.c,v 1.2 1999/08/08 01:17:23 niklas Exp $";
+	"$OpenBSD: src/sys/dev/pcmcia/Attic/if_wi.c,v 1.3 1999/08/13 20:36:38 fgsch Exp $";
 #endif	/* __FreeBSD__ */
 #endif	/* lint */
 
@@ -620,10 +620,9 @@ wi_pcmcia_attach(parent, self, aux)
 
 bad:
 	if (state > 2)
-		pcmcia_chip_io_unmap(pf->sc->pct, pf->sc->pch,
-		    sc->sc_io_window);
+		pcmcia_io_unmap(pf, sc->sc_io_window);
 	if (state > 1)
-		pcmcia_chip_io_free(pf->sc->pct, pf->sc->pch, &sc->sc_pcioh);
+		pcmcia_io_free(pf, &sc->sc_pcioh);
 	if (state > 0)
 		pcmcia_function_disable(pf);
 }
