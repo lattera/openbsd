@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.2 2001/03/16 08:16:18 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.2.2.1 2001/03/21 18:53:05 jason Exp $");
 
 #include <glob.h>
 

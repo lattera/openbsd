@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.2.2.4 2001/03/12 15:44:07 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.2.2.5 2001/03/21 18:52:34 jason Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -23,10 +23,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.2.2.4 2001/03/12 15:44:07 jason Exp
 #include "compat.h"
 #include "auth.h"
 #include "session.h"
+#include "misc.h"
 
 /* import */
 extern ServerOptions options;
-extern char *forced_command;
 
 /*
  * convert ssh auth msg type into description

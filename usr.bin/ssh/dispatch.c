@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/dispatch.c,v 1.2.2.3 2001/03/12 15:44:10 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/dispatch.c,v 1.2.2.4 2001/03/21 18:52:45 jason Exp $");
 
 #include "ssh1.h"
 #include "ssh2.h"

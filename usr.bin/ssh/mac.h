@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/usr.bin/ssh/mac.h,v 1.1.4.1 2001/03/12 15:44:11 jason Exp $   */
+/*      $OpenBSD: src/usr.bin/ssh/mac.h,v 1.1.4.2 2001/03/21 18:52:51 jason Exp $   */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *

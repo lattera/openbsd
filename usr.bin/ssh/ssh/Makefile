@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.24.2.3 2001/03/12 15:44:19 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.24.2.4 2001/03/21 18:53:27 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -12,7 +12,7 @@ MAN=	ssh.1
 LINKS=	${BINDIR}/ssh ${BINDIR}/slogin
 MLINKS=	ssh.1 slogin.1
 
-SRCS=	ssh.c log-client.c readconf.c clientloop.c \
+SRCS=	ssh.c readconf.c clientloop.c \
 	sshconnect.c sshconnect1.c sshconnect2.c
 
 .include <bsd.own.mk> # for AFS
@@ -30,5 +30,5 @@ DPADD+=  ${LIBKRBAFS}
 
 .include <bsd.prog.mk>
 
-LDADD+=	-lutil -lz -lcrypto
-DPADD+=	${LIBCRYPTO} ${LIBUTIL} ${LIBZ}
+LDADD+=	-lcrypto -lz
+DPADD+=	${LIBCRYPTO} ${LIBZ}

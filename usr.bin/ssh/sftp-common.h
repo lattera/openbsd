@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sftp-common.h,v 1.1.4.1 2001/03/12 15:44:15 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sftp-common.h,v 1.1.4.2 2001/03/21 18:53:05 jason Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.

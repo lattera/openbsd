@@ -11,10 +11,12 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.18.2.4 2001/03/12 15:44:13 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.18.2.5 2001/03/21 18:52:57 jason Exp $"); */
 
 #ifndef READCONF_H
 #define READCONF_H
+
+#include "key.h"
 
 /* Data structure for representing a forwarding request. */
 
@@ -80,10 +82,11 @@ typedef struct {
 	char   *user_hostfile;	/* Path for $HOME/.ssh/known_hosts. */
 	char   *system_hostfile2;
 	char   *user_hostfile2;
+	char   *preferred_authentications;
 
 	int     num_identity_files;	/* Number of files for RSA/DSA identities. */
 	char   *identity_files[SSH_MAX_IDENTITY_FILES];
-	int	identity_files_type[SSH_MAX_IDENTITY_FILES];
+	Key    *identity_keys[SSH_MAX_IDENTITY_FILES];
 
 	/* Local TCP/IP forward requests. */
 	int     num_local_forwards;

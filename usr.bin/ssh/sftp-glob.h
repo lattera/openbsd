@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.1 2001/03/13 22:42:54 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.1.2.1 2001/03/21 18:53:05 jason Exp $ */
 
 /*
  * Copyright (c) 2001 Damien Miller.  All rights reserved.

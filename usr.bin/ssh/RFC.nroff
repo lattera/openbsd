@@ -1,6 +1,6 @@
 .\" -*- nroff -*-
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/Attic/RFC.nroff,v 1.1.4.2 2001/03/12 15:44:06 jason Exp $
+.\" $OpenBSD: src/usr.bin/ssh/Attic/RFC.nroff,v 1.1.4.3 2001/03/21 18:52:30 jason Exp $
 .\"
 .pl 10.0i
 .po 0

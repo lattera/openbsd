@@ -32,7 +32,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/cipher.h,v 1.17.2.3 2001/03/12 15:44:09 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/cipher.h,v 1.17.2.4 2001/03/21 18:52:41 jason Exp $"); */
 
 #ifndef CIPHER_H
 #define CIPHER_H

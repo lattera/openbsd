@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-int.h,v 1.1.4.1 2001/03/12 15:44:15 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-int.h,v 1.1.4.2 2001/03/21 18:53:06 jason Exp $ */
 
 /*
  * Copyright (c) 2001 Damien Miller.  All rights reserved.

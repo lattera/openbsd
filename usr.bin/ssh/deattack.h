@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/deattack.h,v 1.3.2.1 2001/03/12 15:44:10 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/deattack.h,v 1.3.2.2 2001/03/21 18:52:44 jason Exp $	*/
 
 /*
  * Cryptographic attack detector for ssh - Header file

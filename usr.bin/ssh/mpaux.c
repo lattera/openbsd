@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.c,v 1.12.2.3 2001/03/12 15:44:12 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.c,v 1.12.2.4 2001/03/21 18:52:53 jason Exp $");
 
 #include <openssl/bn.h>
 #include "getput.h"

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-dss.h,v 1.3.4.1 2001/03/12 15:44:16 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-dss.h,v 1.3.4.2 2001/03/21 18:53:09 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.

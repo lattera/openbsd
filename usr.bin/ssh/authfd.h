@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.7.2.3 2001/03/12 15:44:08 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.7.2.4 2001/03/21 18:52:36 jason Exp $"); */
 
 #ifndef AUTHFD_H
 #define AUTHFD_H
