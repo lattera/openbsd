@@ -1,0 +1,54 @@
+dnl	$OpenBSD: src/distrib/notes/alpha/contents,v 1.31 2003/09/09 22:29:02 miod Exp $
+TopPart
+
+OpenBSDfloppy
+				This floppy image will boot on the following
+				MACHINE models:
+				- AlphaStation 200, 250, 255, 400
+dnl uncomment when it works again
+dnl				- AlphaStation 500, 600
+				- AlphaServer 800, 1000, 1000A
+				- AXPpci33 based machines, including
+				  ``Noname'', UDB, Multia
+				- EB164 based machines, including
+				  PC164, 164SX and 164LX
+				- Personal Workstation (Miata)
+
+		floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+				see below.
+				This floppy image will boot on the following
+				MACHINE models:
+    				- Alpha Processor, Inc. UP1000
+				- XP1000, 264DP, DS10, DS20
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+OpenBSDcd
+
+OpenBSDfloppydesc(two,Each,s)
+
+DistributionDescription(ten)
+
+OpenBSDbase(38.8,121.2,shared)
+
+OpenBSDcomp(23.7,92.5,shared)
+
+OpenBSDetc(1.6,6.0)
+
+OpenBSDgame(2.8,6.5)
+
+OpenBSDman(6.3,22.4)
+
+OpenBSDmisc(2.0,6.5)
+
+OpenBSDxbase(14.8,49.6)
+
+OpenBSDxfont(31.9,35.2)
+
+OpenBSDxserv(5.3,20.1)
+
+OpenBSDxshare(1.7,8.6)

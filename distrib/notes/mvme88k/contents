@@ -1,0 +1,42 @@
+dnl	$OpenBSD: src/distrib/notes/mvme88k/contents,v 1.6 2003/09/09 22:29:05 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		installboot	The OpenBSD/MACHINE boot loader
+				installation program.
+		bootxx		The OpenBSD/MACHINE boot block.
+		bootsd		The OpenBSD/MACHINE disk boot loader.
+		bootst		The OpenBSD/MACHINE tape boot loader.
+		netboot		The OpenBSD/MACHINE network boot loader.
+		stboot		A VID tape block.
+
+These files can be used to make a bootable tape suitable for installation.
+They can also be used to configure an NFS server to support installation
+over the network. See the section "Getting the OpenBSD system onto Useful
+Media" for more information.
+
+DistributionDescription(six)
+
+OpenBSDbase(69.1,174.4)
+
+OpenBSDcomp(12.7,39.4)
+
+OpenBSDetc(1.6,6.0)
+
+OpenBSDgame(6.7,14.8)
+
+OpenBSDman(6.0,21.5)
+
+OpenBSDmisc(2.0,6.5)
+dnl Not there yet...
+dnl
+dnl OpenBSDxbase
+dnl
+dnl OpenBSDxshare
+dnl
+dnl OpenBSDxfont
