@@ -1,7 +1,7 @@
-.\"	$OpenBSD: src/sbin/reboot/Attic/boot_x68k.8,v 1.7 1999/06/04 02:45:23 aaron Exp $
-.\"	$NetBSD: boot_x68k.8,v 1.1 1996/06/15 18:54:22 oki Exp $
+.\"	$OpenBSD: src/share/man/man8/man8.sun3/Attic/boot_sun3.8,v 1.1 2000/11/09 03:57:35 deraadt Exp $
+.\"	$NetBSD: boot_sun3.8,v 1.1 1995/08/08 20:46:20 gwr Exp $
 .\"
-.\" Copyright (c) 1980, 1991, 1993
+.\" Copyright (c) 1992, 1993
 .\"	The Regents of the University of California.  All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -32,91 +32,86 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\"	@(#)boot_x68k.8	8.2 (Berkeley) 4/19/94
+.\"     @(#)boot_sparc.8	8.2 (Berkeley) 4/19/94
 .\"
-.Dd June 16, 1996
-.Dt BOOT_X68K 8 x68k
+.Dd April 19, 1994
+.Dt BOOT_SUN3 8 sun3
 .Os
 .Sh NAME
 .Nm boot
 .Nd
+.Tn sun3-specific
 system bootstrapping procedures
 .Sh DESCRIPTION
 .Ss Power fail and crash recovery
 Normally, the system will reboot itself at power-up or after crashes.
-An automatic consistency check of the file systems will be performed,
+An automatic consistency check of the file systems will be performed
+as described in
+.Xr fsck 8 .
 and unless this fails, the system will resume multi-user operations.
 .Pp
 .Ss Cold starts
-The X68000/X68030 system boots from the device
-which is determined by the configuration of
-battery-backuped SRAM.
-By default, the boot ROM attempts to boot from a
-floppy disk drive (from 0 to 3) first,
-and then from a hard disk (SASI or SCSI).
-On the OpenBSD/X68k, booting from partition
+A disk-boot program
+.Pq Pa /usr/mdec/ufsboot
+will attempt to load
+.Pa bsd
+from partition
 .Dq a
-of SCSI disks (sd?a)
-and 2HD floppy disks (fd?a, fd?c) is currently supported.
+of the boot device,
+which must currently be an
+.Dq sd
+disk.
+Alternatively, the network boot program
+.Pq Pa /usr/mdec/netboot
+will load
+.Pa bsd
+from the NFS root as determined by the procedure described in
+.Xr diskless 8 .
 .Pp
-First, the initial program loader of IOCS ROM or SCSI disk
-(or equivalent) reads the
-.Nm boot
-program at the top of the disk,
-and then the
-.Nm boot
-program loads the
-.Ox
-kernel
-.Pa /bsd
-which is in the same partition of the disk.
-If you press the
-.Sq SHIFT
-key when booting, the boot program enables you to change the
-boot flag
-.Dv RB_SINGLE
-with the
-.Sq SHIFT
-key, and to choose which kernel
-to be used with arrow keys.
-If the LED of the
-.Sq HIRAGANA
-key is turned on, the boot program adds the
-.Dv RB_KDB
-flag and tries to boot the system in debug mode; see
-.Xr ddb 8
-for details.
+The
+.Fl s
+flag to the bootloader will bring the system up in single-user mode.
+The
+.Fl a
+flag instructs the system to prompt for the location of the root filesystem
+and the primary swap partition.
+The
+.Fl d
+flag to the bootloader will bring the system up in debug mode.
+Here it waits for a kernel debugger connect; see
+.Xr ddb 8 .
+Other flags are currently ignored.
 .Pp
-Note for X68030+MC68030 systems:
-Nothing special to be attended to; you can boot
-.Ox
-just like as
-other operating systems such as Human68k and OS-9.
-.Pp
-Note for X68030/040turbo(68040 accelerator by BEEPs) systems:
-.Ox
-can boot under 040 mode.
-It can also boot under 030 mode if you have an MC68030 on the board.
-.Pp
-Note for X68000/Xellent30(68030 accelerator by TSR) + MC68030 systems:
-In order to boot
-.Ox ,
-you must choose 030 mode by using
-.Pa CH30.SYS ,
-which must reside in the battery-backuped SRAM.
-.Pp
-Note for X68000/Jupiter-X(68040/060 accelerator by FTZ-net) systems:
-The system must be in 040/060 processor mode.
+At any time you can break back to the ROM by pressing the
+.Dq L1
+and
+.Dq a
+keys at the same time (if the console is a serial port the same is
+achieved by sending a
+.Dq break ) .
+If you do this accidentally you can continue whatever was in progress
+by typing
+.Dq c
+followed by the return key.
 .Sh FILES
-.Bl -tag -width /usr/mdec/xxbootxx -compact
+.Bl -tag -width /usr/mdec/installboot -compact
 .It Pa /bsd
 system code
-.It Pa /usr/mdec/xxboot
-boot program, xx is disk type
+.It Pa /usr/mdec/bootxx
+first-level boot block for disks
+.It Pa /usr/mdec/netboot
+boot program for NFS (diskless) boot
+.It Pa /usr/mdec/ufsboot
+second-level boot program for UFS disks
+.It Pa /usr/mdec/installboot
+program to install bootxx on a disk
 .El
 .Sh SEE ALSO
-.Xr reboot 2 ,
+.Xr crash 8 ,
 .Xr disklabel 8 ,
+.Xr fsck 8 ,
 .Xr halt 8 ,
-.Xr reboot 8 ,
-.Xr shutdown 8
+.Xr init 8 ,
+.Xr rc 8 ,
+.Xr shutdown 8 ,
+.Xr syslogd 8
