@@ -1,15 +1,6 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/gnuc.h,v 1.3 2000/10/03 14:31:55 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/gnuc.h,v 1.4 2002/02/17 19:42:39 millert Exp $	*/
 
-/* @(#) $Header: /cvs/src/usr.sbin/tcpdump/gnuc.h,v 1.2 1997/07/25 20:12:29 mickey Exp $ (LBL) */
-
-/* Define __P() macro, if necessary */
-#ifndef __P
-#ifdef __STDC__
-#define __P(protos) protos
-#else
-#define __P(protos) ()
-#endif
-#endif
+/* @(#) $Header: /cvs/src/usr.sbin/tcpdump/gnuc.h,v 1.3 2000/10/03 14:31:55 ho Exp $ (LBL) */
 
 /* inline foo */
 #ifdef __GNUC__
