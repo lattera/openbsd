@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.10 2003/03/28 00:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.11 2004/02/19 11:01:44 niklas Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -136,33 +136,6 @@ uvm_kernacc(addr, len, rw)
 	return(rv);
 }
 
-/*
- * uvm_useracc: can the user access it?
- *
- * - called from physio() and sys___sysctl().
- */
-
-boolean_t
-uvm_useracc(addr, len, rw)
-	caddr_t addr;
-	size_t len;
-	int rw;
-{
-	vm_map_t map;
-	boolean_t rv;
-	vm_prot_t prot = rw == B_READ ? VM_PROT_READ : VM_PROT_WRITE;
-
-	/* XXX curproc */
-	map = &curproc->p_vmspace->vm_map;
-
-	vm_map_lock_read(map);
-	rv = uvm_map_checkprot(map, trunc_page((vaddr_t)addr),
-	    round_page((vaddr_t)addr + len), prot);
-	vm_map_unlock_read(map);
-
-	return(rv);
-}
-
 #ifdef KGDB
 /*
  * Change protections on kernel pages from addr to addr+len
@@ -203,7 +176,7 @@ uvm_chgkprot(addr, len, rw)
 #endif
 
 /*
- * vslock: wire user memory for I/O
+ * uvm_vslock: wire user memory for I/O
  *
  * - called from physio and sys___sysctl
  * - XXXCDC: consider nuking this (or making it a macro?)
@@ -223,6 +196,8 @@ uvm_vslock(p, addr, len, access_type)
 	map = &p->p_vmspace->vm_map;
 	start = trunc_page((vaddr_t)addr);
 	end = round_page((vaddr_t)addr + len);
+	if (end <= start)
+		return (EINVAL);
 
 	rv = uvm_fault_wire(map, start, end, access_type);
 
@@ -230,7 +205,7 @@ uvm_vslock(p, addr, len, access_type)
 }
 
 /*
- * vslock: wire user memory for I/O
+ * uvm_vsunlock: unwire user memory wired by uvm_vslock()
  *
  * - called from physio and sys___sysctl
  * - XXXCDC: consider nuking this (or making it a macro?)
@@ -242,8 +217,14 @@ uvm_vsunlock(p, addr, len)
 	caddr_t	addr;
 	size_t	len;
 {
-	uvm_fault_unwire(&p->p_vmspace->vm_map, trunc_page((vaddr_t)addr),
-		round_page((vaddr_t)addr + len));
+	vaddr_t start, end;
+
+	start = trunc_page((vaddr_t)addr);
+	end = round_page((vaddr_t)addr + len);
+	if (end <= start)
+		return;
+
+	uvm_fault_unwire(&p->p_vmspace->vm_map, start, end);
 }
 
 /*
@@ -379,6 +360,14 @@ uvm_swapin(p)
 	vaddr_t addr;
 	int rv, s;
 
+	s = splstatclock();
+	if (p->p_flag & P_SWAPIN) {
+		splx(s);
+		return;
+	}
+	p->p_flag |= P_SWAPIN;
+	splx(s);
+
 	addr = (vaddr_t)p->p_addr;
 	/* make P_INMEM true */
 	if ((rv = uvm_fault_wire(kernel_map, addr, addr + USPACE,
@@ -394,6 +383,7 @@ uvm_swapin(p)
 	if (p->p_stat == SRUN)
 		setrunqueue(p);
 	p->p_flag |= P_INMEM;
+	p->p_flag &= ~P_SWAPIN;
 	splx(s);
 	p->p_swtime = 0;
 	++uvmexp.swapins;
@@ -579,26 +569,30 @@ uvm_swapout(p)
 #ifdef DEBUG
 	if (swapdebug & SDB_SWAPOUT)
 		printf("swapout: pid %d(%s)@%p, stat %x pri %d free %d\n",
-	   p->p_pid, p->p_comm, p->p_addr, p->p_stat,
-	   p->p_slptime, uvmexp.free);
+		    p->p_pid, p->p_comm, p->p_addr, p->p_stat,
+		    p->p_slptime, uvmexp.free);
 #endif
-
-	/*
-	 * Do any machine-specific actions necessary before swapout.
-	 * This can include saving floating point state, etc.
-	 */
-	cpu_swapout(p);
 
 	/*
 	 * Mark it as (potentially) swapped out.
 	 */
 	s = splstatclock();
+	if (!(p->p_flag & P_INMEM)) {
+		splx(s);
+		return;
+	}
 	p->p_flag &= ~P_INMEM;
 	if (p->p_stat == SRUN)
 		remrunqueue(p);
 	splx(s);
 	p->p_swtime = 0;
 	++uvmexp.swapouts;
+
+	/*
+	 * Do any machine-specific actions necessary before swapout.
+	 * This can include saving floating point state, etc.
+	 */
+	cpu_swapout(p);
 
 	/*
 	 * Unwire the to-be-swapped process's user struct and kernel stack.

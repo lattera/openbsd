@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota.c,v 1.7.4.4 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota.c,v 1.7.4.5 2004/02/19 11:01:43 niklas Exp $	*/
 /*	$NetBSD: ufs_quota.c,v 1.8 1996/02/09 22:36:09 christos Exp $	*/
 
 /*
@@ -154,7 +154,7 @@ getinoquota(ip)
 	struct vnode *vp = ITOV(ip);
 	int error;
 
-	ump = VFSTOUFS(vp->v_mount);
+	ump = ip->i_ump;
 	/*
 	 * Set up the user quota based on file uid.
 	 * EINVAL means that quotas are not enabled.
@@ -286,7 +286,7 @@ chkdqchg(ip, change, cred, type)
 	if (ncurblocks >= dq->dq_bsoftlimit && dq->dq_bsoftlimit) {
 		if (dq->dq_curblocks < dq->dq_bsoftlimit) {
 			dq->dq_btime = time.tv_sec +
-			    VFSTOUFS(ITOV(ip)->v_mount)->um_btime[type];
+			    ip->i_ump->um_btime[type];
 			if (ip->i_ffs_uid == cred->cr_uid)
 				uprintf("\n%s: warning, %s %s\n",
 				    ITOV(ip)->v_mount->mnt_stat.f_mntonname,
@@ -409,7 +409,7 @@ chkiqchg(ip, change, cred, type)
 	if (ncurinodes >= dq->dq_isoftlimit && dq->dq_isoftlimit) {
 		if (dq->dq_curinodes < dq->dq_isoftlimit) {
 			dq->dq_itime = time.tv_sec +
-			    VFSTOUFS(ITOV(ip)->v_mount)->um_itime[type];
+			    ip->i_ump->um_itime[type];
 			if (ip->i_ffs_uid == cred->cr_uid)
 				uprintf("\n%s: warning, %s %s\n",
 				    ITOV(ip)->v_mount->mnt_stat.f_mntonname,
@@ -440,7 +440,7 @@ void
 chkdquot(ip)
 	struct inode *ip;
 {
-	struct ufsmount *ump = VFSTOUFS(ITOV(ip)->v_mount);
+	struct ufsmount *ump = ip->i_ump;
 	int i;
 	struct vnode *vp = ITOV(ip);
 
@@ -1060,7 +1060,7 @@ ufs_quotactl(mp, cmds, uid, arg, p)
 			break;
 		/* fall through */
 	default:
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		if ((error = suser(p, 0)) != 0)
 			return (error);
 	}
 

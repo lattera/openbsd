@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/tty.h,v 1.4.16.6 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/tty.h,v 1.4.16.7 2004/02/19 11:01:35 niklas Exp $	*/
 /*	$NetBSD: tty.h,v 1.30.4.1 1996/06/02 09:08:13 mrg Exp $	*/
 
 /*-
@@ -245,7 +245,7 @@ int	 ttioctl(struct tty *tp, u_long com, caddr_t data, int flag,
 	    struct proc *p);
 int	 ttread(struct tty *tp, struct uio *uio, int flag);
 void	 ttrstrt(void *tp);
-int	 ttselect(dev_t device, int rw, struct proc *p);
+int	 ttpoll(dev_t device, int events, struct proc *p);
 int	 ttkqfilter(dev_t dev, struct knote *kn);
 void	 ttsetwater(struct tty *tp);
 int	 ttspeedtab(int speed, struct speedtab *table);
@@ -271,8 +271,6 @@ int	 ttywait(struct tty *tp);
 int	 ttywflush(struct tty *tp);
 
 void	tty_init(void);
-void	tty_attach(struct tty *);
-void	tty_detach(struct tty *);
 struct tty *ttymalloc(void);
 void	 ttyfree(struct tty *);
 u_char	*firstc(struct clist *clp, int *c);
@@ -281,7 +279,7 @@ int	cttyopen(dev_t, int, int, struct proc *);
 int	cttyread(dev_t, struct uio *, int);
 int	cttywrite(dev_t, struct uio *, int);
 int	cttyioctl(dev_t, u_long, caddr_t, int, struct proc *);
-int	cttyselect(dev_t, int, struct proc *);
+int	cttypoll(dev_t, int, struct proc *);
 
 int	clalloc(struct clist *, int, int);
 void	clfree(struct clist *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.7 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.8 2004/02/19 11:01:33 niklas Exp $	*/
 /*	$NetBSD: filedesc.h,v 1.14 1996/04/09 20:55:28 cgd Exp $	*/
 
 /*
@@ -32,7 +32,7 @@
  *	@(#)filedesc.h	8.1 (Berkeley) 6/2/93
  */
 
-#include <sys/lock.h>
+#include <sys/rwlock.h>
 /*
  * This structure is used for the management of descriptors.  It may be
  * shared by multiple processes.
@@ -68,7 +68,7 @@ struct filedesc {
 	int	fd_freefile;		/* approx. next free file */
 	u_short	fd_cmask;		/* mask for file creation */
 	u_short	fd_refcnt;		/* reference count */
-	struct lock fd_lock;		/* lock for growing the structure */
+	struct rwlock fd_lock;		/* lock for the file descs */
 
 	int	fd_knlistsize;		/* size of knlist */
 	struct	klist *fd_knlist;	/* list of attached knotes */
@@ -127,4 +127,7 @@ struct file *fd_getfile(struct filedesc *, int fd);
 
 int	closef(struct file *, struct proc *);
 int	getsock(struct filedesc *, int, struct file **);
+
+#define	fdplock(fdp, p)	rw_enter_write(&(fdp)->fd_lock, p)
+#define	fdpunlock(fdp)	rw_exit_write(&(fdp)->fd_lock)
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.10 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.11 2004/02/19 11:01:44 niklas Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -89,7 +89,7 @@ sys_sbrk(p, v, retval)
 {
 #if 0
 	struct sys_sbrk_args /* {
-		syscallarg(intptr_t) incr;
+		syscallarg(int) incr;
 	} */ *uap = v;
 #endif
 
@@ -134,7 +134,7 @@ sys_mquery(p, v, retval)
 	register_t *retval;
 {
 	struct sys_mquery_args /* {
-		syscallarg(caddr_t) addr;
+		syscallarg(void *) addr;
 		syscallarg(size_t) len;
 		syscallarg(int) prot;
 		syscallarg(int) flags;
@@ -153,9 +153,12 @@ sys_mquery(p, v, retval)
 	int fd;
 
 	vaddr = (vaddr_t) SCARG(uap, addr);
-	prot = SCARG(uap, prot) & VM_PROT_ALL;
+	prot = SCARG(uap, prot);
 	size = (vsize_t) SCARG(uap, len);
 	fd = SCARG(uap, fd);
+
+	if ((prot & VM_PROT_ALL) != prot)
+		return (EINVAL);
 
 	if (SCARG(uap, flags) & MAP_FIXED)
 		flags |= UVM_FLAG_FIXED;
@@ -201,78 +204,6 @@ again:
 		}
 		error = 0;
 		*retval = (register_t)(vaddr);
-	}
-done:
-	if (fp != NULL)
-		FRELE(fp);
-	return (error);
-}
-
-/* ARGSUSED */
-int
-sys_omquery(struct proc *p, void *v, register_t *retval)
-{
-	struct sys_omquery_args /* {
-		syscallarg(int) flags;
-		syscallarg(void **) addr;
-		syscallarg(size_t) size;
-		syscallarg(int) fd;
-		syscallarg(off_t) off;
-	} */ *uap = v;
-	struct file *fp;
-	struct uvm_object *uobj;
-	voff_t uoff;
-	int error;
-	vaddr_t vaddr;
-	int flags = 0;
-	vm_prot_t prot = SCARG(uap, flags) & VM_PROT_ALL;
-
-	if (SCARG(uap, flags) & MAP_FIXED)
-		flags |= UVM_FLAG_FIXED;
-
-	if ((error = copyin(SCARG(uap, addr), &vaddr, sizeof(void *))) != 0)
-		return (error);
-
-	if (SCARG(uap, fd) >= 0) {
-		if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
-			return (error);
-		uobj = &((struct vnode *)fp->f_data)->v_uvm.u_obj;
-		uoff = SCARG(uap, off);
-	} else {
-		fp = NULL;
-		uobj = NULL;
-		uoff = 0;
-	}
-
-	if (vaddr == 0)
-		vaddr = uvm_map_hint(p, prot);
-
-	/* prevent a user requested address from falling in heap space */
-	if ((vaddr + SCARG(uap, size) > (vaddr_t)p->p_vmspace->vm_daddr) &&
-	    (vaddr < (vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ)) {
-		if (flags & UVM_FLAG_FIXED) {
-			error = EINVAL;
-			goto done;
-		}
-		vaddr = round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ);
-	}
-
-	if (uvm_map_findspace(&p->p_vmspace->vm_map, vaddr, SCARG(uap, size),
-	    &vaddr, uobj, uoff, 0, flags) == NULL) {
-		if (flags & UVM_FLAG_FIXED)
-			error = EINVAL;
-		else
-			error = ENOMEM;
-	} else {
-		/*
-		 * XXX?
-		 * is it possible for uvm_map_findspace() to return
-		 * an address in vm_addr - vm_addr+MAXDSIZ ?
-		 * if all of the memory below 1G (i386) is used, 
-		 * this could occur. In this case, could this loop
-		 * changing the hint to above daddr in that case?
-		 */
-		error = copyout(&vaddr, SCARG(uap, addr), sizeof(void *));
 	}
 done:
 	if (fp != NULL)
@@ -436,7 +367,7 @@ sys_mmap(p, v, retval)
 	register_t *retval;
 {
 	struct sys_mmap_args /* {
-		syscallarg(caddr_t) addr;
+		syscallarg(void *) addr;
 		syscallarg(size_t) len;
 		syscallarg(int) prot;
 		syscallarg(int) flags;
@@ -463,7 +394,7 @@ sys_mmap(p, v, retval)
 
 	addr = (vaddr_t) SCARG(uap, addr);
 	size = (vsize_t) SCARG(uap, len);
-	prot = SCARG(uap, prot) & VM_PROT_ALL;
+	prot = SCARG(uap, prot);
 	flags = SCARG(uap, flags);
 	fd = SCARG(uap, fd);
 	pos = SCARG(uap, pos);
@@ -472,6 +403,10 @@ sys_mmap(p, v, retval)
 	 * Fixup the old deprecated MAP_COPY into MAP_PRIVATE, and
 	 * validate the flags.
 	 */
+	if ((prot & VM_PROT_ALL) != prot)
+		return (EINVAL);
+	if ((flags & MAP_FLAGMASK) != flags)
+		return (EINVAL);
 	if (flags & MAP_COPY)
 		flags = (flags & ~MAP_COPY) | MAP_PRIVATE;
 	if ((flags & (MAP_SHARED|MAP_PRIVATE)) == (MAP_SHARED|MAP_PRIVATE))
@@ -513,8 +448,10 @@ sys_mmap(p, v, retval)
 		 * not fixed: make sure we skip over the largest possible heap.
 		 * we will refine our guess later (e.g. to account for VAC, etc)
 		 */
-
-		if (addr < uvm_map_hint(p, prot))
+		if (addr == 0)
+			addr = uvm_map_hint(p, prot);
+		else if (!(flags & MAP_TRYFIXED) &&
+		    addr < (vaddr_t)p->p_vmspace->vm_daddr)
 			addr = uvm_map_hint(p, prot);
 	}
 
@@ -687,7 +624,7 @@ sys_msync(p, v, retval)
 	register_t *retval;
 {
 	struct sys_msync_args /* {
-		syscallarg(caddr_t) addr;
+		syscallarg(void *) addr;
 		syscallarg(size_t) len;
 		syscallarg(int) flags;
 	} */ *uap = v;
@@ -788,7 +725,7 @@ sys_munmap(p, v, retval)
 	register_t *retval;
 {
 	struct sys_munmap_args /* {
-		syscallarg(caddr_t) addr;
+		syscallarg(void *) addr;
 		syscallarg(size_t) len;
 	} */ *uap = v;
 	vaddr_t addr;
@@ -867,8 +804,8 @@ sys_mprotect(p, v, retval)
 	register_t *retval;
 {
 	struct sys_mprotect_args /* {
-		syscallarg(caddr_t) addr;
-		syscallarg(int) len;
+		syscallarg(void *) addr;
+		syscallarg(size_t) len;
 		syscallarg(int) prot;
 	} */ *uap = v;
 	vaddr_t addr;
@@ -882,7 +819,10 @@ sys_mprotect(p, v, retval)
 
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
-	prot = SCARG(uap, prot) & VM_PROT_ALL;
+	prot = SCARG(uap, prot);
+	
+	if ((prot & VM_PROT_ALL) != prot)
+		return (EINVAL);
 
 	/*
 	 * align the address to a page boundary, and adjust the size accordingly
@@ -919,8 +859,8 @@ sys_minherit(p, v, retval)
 	register_t *retval;
 {
 	struct sys_minherit_args /* {
-		syscallarg(caddr_t) addr;
-		syscallarg(int) len;
+		syscallarg(void *) addr;
+		syscallarg(size_t) len;
 		syscallarg(int) inherit;
 	} */ *uap = v;
 	vaddr_t addr;
@@ -964,13 +904,13 @@ sys_madvise(p, v, retval)
 	register_t *retval;
 {
 	struct sys_madvise_args /* {
-		syscallarg(caddr_t) addr;
+		syscallarg(void *) addr;
 		syscallarg(size_t) len;
 		syscallarg(int) behav;
 	} */ *uap = v;
 	vaddr_t addr;
 	vsize_t size, pageoff;
-	int advice, rv;;
+	int advice, rv;
 	
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
@@ -1091,7 +1031,7 @@ sys_mlock(p, v, retval)
 			p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur)
 		return (EAGAIN);
 #else
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return (error);
 #endif
 
@@ -1138,7 +1078,7 @@ sys_munlock(p, v, retval)
 		return (EINVAL);
 
 #ifndef pmap_wired_count
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return (error);
 #endif
 
@@ -1169,7 +1109,7 @@ sys_mlockall(p, v, retval)
 		return (EINVAL);
 
 #ifndef pmap_wired_count
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return (error);
 #endif
 

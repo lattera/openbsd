@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/bootarg.c,v 1.6.4.2 2003/06/07 11:07:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/bootarg.c,v 1.6.4.3 2004/02/19 11:01:32 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997,1998 Michael Shalayeff
@@ -33,10 +33,7 @@
 bootarg_t *bootarg_list;
 
 void
-addbootarg(t, l, p)
-	int t;
-	size_t l;
-	void *p;
+addbootarg(int t, size_t l, void *p)
 {
 	bootarg_t *q = alloc(sizeof(*q) + l - sizeof(q->ba_arg));
 
@@ -48,13 +45,11 @@ addbootarg(t, l, p)
 }
 
 void
-makebootargs(v, lenp)
-	caddr_t v;
-	size_t *lenp;
+makebootargs(caddr_t v, size_t *lenp)
 {
-	register bootarg_t *p;
-	register u_char *q;
-	register size_t l;
+	bootarg_t *p;
+	u_char *q;
+	size_t l;
 
 	/* get total size */
 	l = sizeof(*p);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sockio.h,v 1.15.2.4 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/sockio.h,v 1.15.2.5 2004/02/19 11:01:34 niklas Exp $	*/
 /*	$NetBSD: sockio.h,v 1.5 1995/08/23 00:40:47 thorpej Exp $	*/
 
 /*-
@@ -138,4 +138,9 @@
 #define	SIOCGIFMTU	_IOWR('i', 126, struct ifreq)	/* get ifnet mtu */
 #define	SIOCSIFASYNCMAP  _IOW('i', 125, struct ifreq)	/* set ppp asyncmap */
 #define	SIOCGIFASYNCMAP _IOWR('i', 124, struct ifreq)	/* get ppp asyncmap */
+
+#define	SIOCIFCREATE	 _IOW('i', 122, struct ifreq)	/* create clone if */
+#define	SIOCIFDESTROY	 _IOW('i', 121, struct ifreq)	/* destroy clone if */
+#define	SIOCIFGCLONERS	_IOWR('i', 120, struct if_clonereq) /* get cloners */
+
 #endif /* !_SYS_SOCKIO_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/types.h,v 1.15.6.5 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/types.h,v 1.15.6.6 2004/02/19 11:01:35 niklas Exp $	*/
 /*	$NetBSD: types.h,v 1.29 1996/11/15 22:48:25 jtc Exp $	*/
 
 /*-
@@ -69,12 +69,13 @@ typedef	int32_t		daddr_t;	/* disk address */
 typedef	int32_t		dev_t;		/* device number */
 typedef	u_int32_t	fixpt_t;	/* fixed point number */
 typedef	u_int32_t	gid_t;		/* group id */
+typedef	u_int32_t	id_t;		/* may contain pid, uid or gid */
 typedef	u_int32_t	ino_t;		/* inode number */
 typedef	long		key_t;		/* IPC key (for Sys V IPC) */
 typedef	u_int16_t	mode_t;		/* permissions */
 typedef	u_int16_t	nlink_t;	/* link count */
 typedef	int32_t		pid_t;		/* process id */
-typedef quad_t		rlim_t;		/* resource limit */
+typedef u_quad_t	rlim_t;		/* resource limit */
 typedef	int32_t		segsz_t;	/* segment size */
 typedef	int32_t		swblk_t;	/* swap offset */
 typedef	u_int32_t	uid_t;		/* user id */
@@ -84,7 +85,7 @@ typedef	int32_t		suseconds_t;	/* microseconds (signed) */
 /*
  * XPG4.2 states that inclusion of <netinet/in.h> must pull these
  * in and that inclusion of <sys/socket.h> must pull in sa_family_t.
- * We put there here because there are other headers that require
+ * We put these here because there are other headers that require
  * these types and <sys/socket.h> and <netinet/in.h> will indirectly
  * include <sys/types.h>.  Thus we are compliant without too many hoops.
  */
@@ -161,7 +162,7 @@ __END_DECLS
  * be enough for most uses.
  */
 #ifndef	FD_SETSIZE
-#define	FD_SETSIZE	256
+#define	FD_SETSIZE	1024
 #endif
 
 typedef int32_t	fd_mask;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.h,v 1.3.4.8 2003/03/28 00:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.h,v 1.3.4.9 2004/02/19 11:01:44 niklas Exp $	*/
 /*	$NetBSD: uvm_page.h,v 1.19 2000/12/28 08:24:55 chs Exp $	*/
 
 /* 
@@ -110,7 +110,7 @@
  * fields were dumped and all the flags were lumped into one short.
  * that is fine for a single threaded uniprocessor OS, but bad if you
  * want to actual make use of locking (simple_lock's).  so, we've
- * seperated things back out again.
+ * separated things back out again.
  *
  * note the page structure has no lock of its own.
  */

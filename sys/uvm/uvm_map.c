@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.10 2003/05/13 19:36:58 ho Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.11 2004/02/19 11:01:44 niklas Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /* 
@@ -79,13 +79,16 @@
 #include <sys/pool.h>
 #include <sys/kernel.h>
 
+#include <dev/rndvar.h>
+
 #ifdef SYSVSHM
 #include <sys/shm.h>
 #endif
 
-#define RB_AUGMENT(x) uvm_rb_augment(x)
 #define UVM_MAP
 #include <uvm/uvm.h>
+#undef RB_AUGMENT
+#define RB_AUGMENT(x) uvm_rb_augment(x)
 
 #ifdef DDB
 #include <uvm/uvm_ddb.h>
@@ -319,7 +322,7 @@ _uvm_tree_sanity(vm_map_t map, const char *name)
 			goto error;
 		}
 		if (trtmp != NULL && trtmp->start >= tmp->start) {
-			printf("%s: corrupt: %p >= %p\n",
+			printf("%s: corrupt: 0x%lx >= 0x%lx\n",
 			    name, trtmp->start, tmp->start);
 			goto error;
 		}
@@ -1078,16 +1081,25 @@ uvm_map_spacefits(vm_map_t map, vaddr_t *phint, vsize_t length,
 vaddr_t
 uvm_map_hint(struct proc *p, vm_prot_t prot)
 {
+	vaddr_t addr;
+
 #ifdef __i386__
 	/*
 	 * If executable skip first two pages, otherwise start
 	 * after data + heap region.
 	 */
 	if ((prot & VM_PROT_EXECUTE) &&
-	    ((vaddr_t)p->p_vmspace->vm_daddr >= I386_MAX_EXE_ADDR))
-		return (round_page(PAGE_SIZE*2));
+	    ((vaddr_t)p->p_vmspace->vm_daddr >= I386_MAX_EXE_ADDR)) {
+		addr = (PAGE_SIZE*2) +
+		    (arc4random() & (I386_MAX_EXE_ADDR / 2 - 1));
+		return (round_page(addr));
+	}
 #endif
-	return (round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ));
+	addr = (vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ;
+#if !defined(__vax__)
+	addr += arc4random() & (MIN((256 * 1024 * 1024), MAXDSIZ) - 1);
+#endif
+	return (round_page(addr));
 }
 
 /*

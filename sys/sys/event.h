@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/event.h,v 1.3.4.3 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/event.h,v 1.3.4.4 2004/02/19 11:01:32 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon <jlemon@FreeBSD.org>
@@ -79,6 +79,7 @@ struct kevent {
  * data/hint flags for EVFILT_{READ|WRITE}, shared with userspace
  */
 #define NOTE_LOWAT	0x0001			/* low water mark */
+#define NOTE_EOF	0x0002			/* return on EOF */
 
 /*
  * data/hint flags for EVFILT_VNODE, shared with userspace
@@ -90,6 +91,7 @@ struct kevent {
 #define	NOTE_LINK	0x0010			/* link count changed */
 #define	NOTE_RENAME	0x0020			/* vnode was renamed */
 #define	NOTE_REVOKE	0x0040			/* vnode access was revoked */
+#define	NOTE_TRUNCATE   0x0080			/* vnode was truncated */
 
 /*
  * data/hint flags for EVFILT_PROC, shared with userspace
@@ -144,7 +146,7 @@ struct knote {
 		struct		proc *p_proc;	/* proc pointer */
 	} kn_ptr;
 	const struct		filterops *kn_fop;
-	caddr_t			kn_hook;
+	void			*kn_hook;
 #define KN_ACTIVE	0x01			/* event has been triggered */
 #define KN_QUEUED	0x02			/* event is on queue */
 #define KN_DISABLED	0x04			/* event is disabled */
@@ -165,6 +167,8 @@ extern void	knote_remove(struct proc *p, struct klist *list);
 extern void	knote_fdclose(struct proc *p, int fd);
 extern int	kqueue_register(struct kqueue *kq,
 		    struct kevent *kev, struct proc *p);
+extern int	filt_seltrue(struct knote *kn, long hint);
+extern void	klist_invalidate(struct klist *);
 
 #else	/* !_KERNEL */
 

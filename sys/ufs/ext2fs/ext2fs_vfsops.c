@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.11.2.7 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.11.2.8 2004/02/19 11:01:36 niklas Exp $	*/
 /*	$NetBSD: ext2fs_vfsops.c,v 1.1 1997/06/11 09:34:07 bouyer Exp $	*/
 
 /*
@@ -81,7 +81,7 @@ struct vnodeopv_desc *ext2fs_vnodeopv_descs[] = {
 	NULL,
 };
 
-struct vfsops ext2fs_vfsops = {
+const struct vfsops ext2fs_vfsops = {
 	ext2fs_mount,
 	ufs_start,
 	ext2fs_unmount,
@@ -362,7 +362,7 @@ ext2fs_reload_vnode(struct vnode *vp, void *args) {
 	}
 	cp = (caddr_t)bp->b_data +
 	    (ino_to_fsbo(era->fs, ip->i_number) * EXT2_DINODE_SIZE);
-	e2fs_iload((struct ext2fs_dinode *)cp, &ip->i_din.e2fs_din);
+	e2fs_iload((struct ext2fs_dinode *)cp, &ip->i_e2din);
 	brelse(bp);
 	vput(vp);
 	return (0);
@@ -536,6 +536,7 @@ ext2fs_mountfs(devvp, mp, p)
 	bp = NULL;
 	m_fs = ump->um_e2fs;
 	m_fs->e2fs_ronly = ronly;
+	ump->um_fstype = UM_EXT2FS;
 	if (ronly == 0) {
 		if (m_fs->e2fs.e2fs_state == E2FS_ISCLEAN)
 			m_fs->e2fs.e2fs_state = 0;
@@ -853,6 +854,7 @@ ext2fs_vget(mp, ino, vpp)
 	lockinit(&ip->i_lock, PINOD, "inode", 0, 0);
 	vp->v_data = ip;
 	ip->i_vnode = vp;
+	ip->i_ump = ump;
 	ip->i_e2fs = fs = ump->um_e2fs;
 	ip->i_dev = dev;
 	ip->i_number = ino;
@@ -892,9 +894,14 @@ ext2fs_vget(mp, ino, vpp)
 		return (error);
 	}
 	bcopy(((struct ext2fs_dinode*)bp->b_data + ino_to_fsbo(fs, ino)),
-				&ip->i_din, sizeof(struct ext2fs_dinode));
+				&ip->i_e2din, sizeof(struct ext2fs_dinode));
 	ip->i_effnlink = ip->i_e2fs_nlink;
 	brelse(bp);
+
+	/* If the inode was deleted, reset all fields */
+	if (ip->i_e2fs_dtime != 0) {
+		ip->i_e2fs_mode = ip->i_e2fs_size = ip->i_e2fs_nblock = 0;
+	}
 
 	/*
 	 * Initialize the vnode from the inode, check for aliases.
@@ -909,7 +916,6 @@ ext2fs_vget(mp, ino, vpp)
 	/*
 	 * Finish inode initialization now that aliasing has been resolved.
 	 */
-	ip->i_devvp = ump->um_devvp;
 	VREF(ip->i_devvp);
 	/*
 	 * Set up a generation number for this inode if it does not

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6.10.7 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6.10.8 2004/02/19 11:01:40 niklas Exp $	*/
 /*	$NetBSD: ffs_subr.c,v 1.6 1996/03/17 02:16:23 christos Exp $	*/
 
 /*
@@ -38,10 +38,15 @@
 #ifdef _KERNEL
 #include <sys/systm.h>
 #include <sys/vnode.h>
+#include <sys/mount.h>
 #include <sys/buf.h>
+
 #include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#include <ufs/ufs/ufsmount.h>
+#include <ufs/ufs/ufs_extern.h>
+
 #include <ufs/ffs/ffs_extern.h>
 
 /*
@@ -73,6 +78,14 @@ ffs_bufatoff(struct inode *ip, off_t offset, char **res, struct buf **bpp)
 	*bpp = bp;
 	return (0);
 }
+#else
+/* Prototypes for userland */
+void	ffs_fragacct(struct fs *, int, int32_t[], int);
+int	ffs_isfreeblock(struct fs *, unsigned char *, daddr_t);
+int	ffs_isblock(struct fs *, unsigned char *, daddr_t);
+void	ffs_clrblock(struct fs *, u_char *, daddr_t);
+void	ffs_setblock(struct fs *, unsigned char *, daddr_t);
+__dead void panic(const char *, ...);
 #endif
 
 /*
@@ -143,10 +156,6 @@ ffs_checkoverlap(bp, ip)
 	}
 }
 #endif /* DIAGNOSTIC */
-
-#ifndef _KERNEL
-void panic(const char *, ...);
-#endif
 
 /*
  * block operations

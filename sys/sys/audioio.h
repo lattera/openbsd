@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/audioio.h,v 1.10.6.3 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/audioio.h,v 1.10.6.4 2004/02/19 11:01:32 niklas Exp $	*/
 /*	$NetBSD: audioio.h,v 1.24 1998/08/13 06:28:41 mrg Exp $	*/
 
 /*
@@ -56,7 +56,7 @@ struct audio_prinfo {
 	u_int	samples;	/* number of samples */
 	u_int	eof;		/* End Of File (zero-size writes) counter */
 	u_char	pause;		/* non-zero if paused, zero to resume */
-	u_char	error;		/* non-zero if underflow/overflow ocurred */
+	u_char	error;		/* non-zero if underflow/overflow occurred */
 	u_char	waiting;	/* non-zero if another process hangs in open */
 	u_char	balance;	/* stereo channel balance */
 	u_char	cspare[2];

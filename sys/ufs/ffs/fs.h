@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/fs.h,v 1.8.6.3 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/fs.h,v 1.8.6.4 2004/02/19 11:01:41 niklas Exp $	*/
 /*	$NetBSD: fs.h,v 1.6 1995/04/12 21:21:02 mycroft Exp $	*/
 
 /*
@@ -62,6 +62,13 @@
 #define	SBOFF		((off_t)(BBOFF + BBSIZE))
 #define	BBLOCK		((daddr_t)(0))
 #define	SBLOCK		((daddr_t)(BBLOCK + BBSIZE / DEV_BSIZE))
+#define	SBLOCK_FLOPPY	0
+#define	SBLOCK_UFS1	8192
+#define	SBLOCK_UFS2	65536
+#define	SBLOCK_PIGGY	262144
+#define	SBLOCKSIZE	8192
+#define	SBLOCKSEARCH \
+	{ SBLOCK_UFS2, SBLOCK_UFS1, SBLOCK_FLOPPY, SBLOCK_PIGGY, -1 }
 
 /*
  * Addresses stored in inodes are capable of addressing fragments
@@ -167,10 +174,10 @@ struct csum {
 struct fs {
 	int32_t	 fs_firstfield;		/* historic file system linked list, */
 	int32_t	 fs_unused_1;		/*     used for incore super blocks */
-	daddr_t	 fs_sblkno;		/* addr of super-block in filesys */
-	daddr_t	 fs_cblkno;		/* offset of cyl-block in filesys */
-	daddr_t	 fs_iblkno;		/* offset of inode-blocks in filesys */
-	daddr_t	 fs_dblkno;		/* offset of first data after cg */
+	int32_t	 fs_sblkno;		/* addr of super-block in filesys */
+	int32_t	 fs_cblkno;		/* offset of cyl-block in filesys */
+	int32_t	 fs_iblkno;		/* offset of inode-blocks in filesys */
+	int32_t	 fs_dblkno;		/* offset of first data after cg */
 	int32_t	 fs_cgoffset;		/* cylinder group offset in cylinder */
 	int32_t	 fs_cgmask;		/* used to calc mod fs_ntrak */
 	time_t 	 fs_time;		/* last time written */
@@ -210,7 +217,7 @@ struct fs {
 /* fs_id takes the space of the unused fs_headswitch and fs_trkseek fields */
 	int32_t  fs_id[2];		/* unique filesystem id */
 /* sizes determined by number of cylinder groups and their sizes */
-	daddr_t  fs_csaddr;		/* blk addr of cyl grp summary area */
+	int32_t  fs_csaddr;		/* blk addr of cyl grp summary area */
 	int32_t	 fs_cssize;		/* size of cyl grp summary area */
 	int32_t	 fs_cgsize;		/* cylinder group size */
 /* these fields are derived from the hardware */
@@ -264,6 +271,8 @@ struct fs {
  * Filesystem identification
  */
 #define	FS_MAGIC	0x011954	/* the fast filesystem magic number */
+#define	FS_UFS1_MAGIC	0x011954	/* the fast filesystem magic number */
+#define	FS_UFS2_MAGIC	0x19540119	/* UFS fast filesystem magic number */
 #define	FS_OKAY		0x7c269d38	/* superblock checksum */
 #define FS_42INODEFMT	-1		/* 4.2BSD inode format */
 #define FS_44INODEFMT	2		/* 4.4BSD inode format */
@@ -530,5 +539,5 @@ struct ocg {
  */
 #define	NINDIR(fs)	((fs)->fs_nindir)
 
-extern int inside[], around[];
-extern u_char *fragtbl[];
+extern const int inside[], around[];
+extern const u_char *fragtbl[];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.27.6.9 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.27.6.10 2004/02/19 11:01:43 niklas Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*
@@ -53,6 +53,7 @@
 #include <sys/dirent.h>
 #include <sys/lockf.h>
 #include <sys/event.h>
+#include <sys/poll.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -65,6 +66,9 @@
 #include <ufs/ufs/dir.h>
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
+#ifdef UFS_DIRHASH
+#include <ufs/ufs/dirhash.h>
+#endif
 #include <ufs/ext2fs/ext2fs_extern.h>
 
 static int ufs_chmod(struct vnode *, int, struct ucred *, struct proc *);
@@ -349,6 +353,8 @@ ufs_setattr(v)
 	struct ucred *cred = ap->a_cred;
 	struct proc *p = ap->a_p;
 	int error;
+	long hint = NOTE_ATTRIB;
+	u_quad_t oldsize;
 
 	/*
 	 * Check for unsettable attributes.
@@ -363,7 +369,7 @@ ufs_setattr(v)
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != ip->i_ffs_uid &&
-		    (error = suser(cred, &p->p_acflag)))
+		    (error = suser_ucred(cred)))
 			return (error);
 		if (cred->cr_uid == 0) {
 			if ((ip->i_ffs_flags & (SF_IMMUTABLE | SF_APPEND)) &&
@@ -394,6 +400,7 @@ ufs_setattr(v)
 			return (error);
 	}
 	if (vap->va_size != VNOVAL) {
+		oldsize = ip->i_ffs_size;
 		/*
 		 * Disallow write attempts on read-only file systems;
 		 * unless the file is a socket, fifo, or a block or
@@ -412,12 +419,14 @@ ufs_setattr(v)
 		}
  		if ((error = UFS_TRUNCATE(ip, vap->va_size, 0, cred)) != 0)
  			return (error);
+		if (vap->va_size < oldsize)
+			hint |= NOTE_TRUNCATE;
 	}
 	if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != ip->i_ffs_uid &&
-		    (error = suser(cred, &p->p_acflag)) &&
+		    (error = suser_ucred(cred)) &&
 		    ((vap->va_vaflags & VA_UTIMES_NULL) == 0 || 
 		    (error = VOP_ACCESS(vp, VWRITE, cred, p))))
 			return (error);
@@ -435,7 +444,7 @@ ufs_setattr(v)
 			return (EROFS);
 		error = ufs_chmod(vp, (int)vap->va_mode, cred, p);
 	}
-	VN_KNOTE(vp, NOTE_ATTRIB);
+	VN_KNOTE(vp, hint);
 	return (error);
 }
 
@@ -454,7 +463,7 @@ ufs_chmod(vp, mode, cred, p)
 	int error;
 
 	if (cred->cr_uid != ip->i_ffs_uid &&
-	    (error = suser(cred, &p->p_acflag)))
+	    (error = suser_ucred(cred)))
 		return (error);
 	if (cred->cr_uid) {
 		if (vp->v_type != VDIR && (mode & S_ISTXT))
@@ -500,7 +509,7 @@ ufs_chown(vp, uid, gid, cred, p)
 	 */
 	if ((cred->cr_uid != ip->i_ffs_uid || uid != ip->i_ffs_uid ||
 	    (gid != ip->i_ffs_gid && !groupmember((gid_t)gid, cred))) &&
-	    (error = suser(cred, &p->p_acflag)))
+	    (error = suser_ucred(cred)))
 		return (error);
 	ogid = ip->i_ffs_gid;
 	ouid = ip->i_ffs_uid;
@@ -582,23 +591,19 @@ ufs_ioctl(v)
 
 /* ARGSUSED */
 int
-ufs_select(v)
+ufs_poll(v)
 	void *v;
 {
-#if 0
-	struct vop_select_args /* {
+	struct vop_poll_args /* {
 		struct vnode *a_vp;
-		int  a_which;
-		int  a_fflags;
-		struct ucred *a_cred;
+		int  a_events;
 		struct proc *a_p;
 	} */ *ap = v;
-#endif
 
 	/*
 	 * We should really check to see if I/O is possible.
 	 */
-	return (1);
+	return (ap->a_events & (POLLIN | POLLOUT | POLLRDNORM | POLLWRNORM));
 }
 
 /*
@@ -1481,6 +1486,12 @@ ufs_rmdir(v)
 		error = UFS_TRUNCATE(ip, (off_t)0, ioflag, cnp->cn_cred);
 	}
 	cache_purge(vp);
+#ifdef UFS_DIRHASH
+	/* Kill any active hash; i_effnlink == 0, so it will not come back. */
+	if (ip->i_dirhash != NULL)
+		ufsdirhash_free(ip);
+#endif
+
 out:
 	VN_KNOTE(vp, NOTE_DELETE);
         vput(dvp);
@@ -2109,7 +2120,7 @@ ufs_makeinode(mode, dvp, vpp, cnp)
 		softdep_change_linkcnt(ip);
 	if ((ip->i_ffs_mode & ISGID) &&
 		!groupmember(ip->i_ffs_gid, cnp->cn_cred) &&
-	    suser(cnp->cn_cred, NULL))
+	    suser_ucred(cnp->cn_cred))
 		ip->i_ffs_mode &= ~ISGID;
 
 	if (cnp->cn_flags & ISWHITEOUT)
@@ -2143,6 +2154,7 @@ bad:
 	ip->i_flag |= IN_CHANGE;
 	if (DOINGSOFTDEP(tvp))
 		softdep_change_linkcnt(ip);
+	tvp->v_type = VNON;
 	vput(tvp);
 
 	return (error);
@@ -2217,9 +2229,13 @@ filt_ufsread(struct knote *kn, long hint)
 	}
 
         kn->kn_data = ip->i_ffs_size - kn->kn_fp->f_offset;
+	if (kn->kn_data == 0 && kn->kn_sfflags & NOTE_EOF) {
+		kn->kn_fflags |= NOTE_EOF;
+		return (1);
+	}
+
         return (kn->kn_data != 0);
 }
-
 
 int
 filt_ufswrite(struct knote *kn, long hint)
@@ -2240,7 +2256,6 @@ filt_ufswrite(struct knote *kn, long hint)
 int
 filt_ufsvnode(struct knote *kn, long hint)
 {
-
 	if (kn->kn_sfflags & hint)
 		kn->kn_fflags |= hint;
 	if (hint == NOTE_REVOKE) {
@@ -2249,6 +2264,3 @@ filt_ufsvnode(struct knote *kn, long hint)
 	}
 	return (kn->kn_fflags != 0);
 }
-
-
-

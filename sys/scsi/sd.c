@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.7 2003/06/07 11:07:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.8 2004/02/19 11:01:30 niklas Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -234,12 +234,12 @@ sdattach(parent, self, aux)
 		result = SDGP_RESULT_OFFLINE;
 	else
 		result = (*sd->sc_ops->sdo_get_parms)(sd, &sd->params,
-		    scsi_autoconf | SCSI_IGNORE_MEDIA_CHANGE);
+		    scsi_autoconf | SCSI_SILENT | SCSI_IGNORE_MEDIA_CHANGE);
 
 	printf("%s: ", sd->sc_dev.dv_xname);
 	switch (result) {
 	case SDGP_RESULT_OK:
-		printf("%ldMB, %d cyl, %d head, %d sec, %d bytes/sec, %ld sec total",
+		printf("%luMB, %lu cyl, %lu head, %lu sec, %lu bytes/sec, %lu sec total",
 		    dp->disksize / (1048576 / dp->blksize), dp->cyls,
 		    dp->heads, dp->sectors, dp->blksize, dp->disksize);
 		break;
@@ -409,10 +409,13 @@ sdopen(dev, flag, fmt, p)
 		sc_link->flags |= SDEV_OPEN;
 
 		/* Lock the pack in. */
-		error = scsi_prevent(sc_link, PR_PREVENT,
-		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE);
-		if (error)
-			goto bad;
+		if ((sc_link->flags & SDEV_REMOVABLE) != 0) {
+			error = scsi_prevent(sc_link, PR_PREVENT,
+			    SCSI_IGNORE_ILLEGAL_REQUEST |
+			        SCSI_IGNORE_MEDIA_CHANGE);
+			if (error)
+				goto bad;
+		}
 
 		if ((sc_link->flags & SDEV_MEDIA_LOADED) == 0) {
 			sc_link->flags |= SDEV_MEDIA_LOADED;
@@ -461,9 +464,11 @@ bad2:
 
 bad:
 	if (sd->sc_dk.dk_openmask == 0) {
+	    if ((sd->sc_link->flags & SDEV_REMOVABLE) != 0)
 		scsi_prevent(sc_link, PR_ALLOW,
-		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE);
-		sc_link->flags &= ~SDEV_OPEN;
+		    SCSI_IGNORE_ILLEGAL_REQUEST |
+		    SCSI_IGNORE_MEDIA_CHANGE);
+	    sc_link->flags &= ~SDEV_OPEN;
 	}
 
 bad3:
@@ -508,8 +513,9 @@ sdclose(dev, flag, fmt, p)
 		    sd->sc_ops->sdo_flush != NULL)
 			(*sd->sc_ops->sdo_flush)(sd, 0);
 
-		scsi_prevent(sd->sc_link, PR_ALLOW,
-		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_NOT_READY);
+		if ((sd->sc_link->flags & SDEV_REMOVABLE) != 0)
+			scsi_prevent(sd->sc_link, PR_ALLOW,
+			    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_NOT_READY);
 		sd->sc_link->flags &= ~(SDEV_OPEN|SDEV_MEDIA_LOADED);
 
 		if (sd->sc_link->flags & SDEV_EJECTING) {
@@ -1023,7 +1029,7 @@ sdgetdisklabel(dev, sd, lp, clp, spoofonly)
 	bcopy(packname, lp->d_packname, len);
 
 	lp->d_secperunit = sd->params.disksize;
-	lp->d_rpm = 3600;
+	lp->d_rpm = sd->params.rot_rate;
 	lp->d_interleave = 1;
 	lp->d_flags = 0;
 

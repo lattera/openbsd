@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/vars.c,v 1.5.2.3 2003/06/07 11:07:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/vars.c,v 1.5.2.4 2004/02/19 11:01:32 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -33,7 +33,7 @@
 #include <lib/libkern/funcs.h>
 #include "cmd.h"
 
-extern const char version[];
+extern char prog_ident[];
 extern int debug;
 
 static int Xaddr(void);
@@ -63,7 +63,7 @@ const struct cmd_table cmd_set[] = {
 
 #ifdef DEBUG
 static int
-Xdebug()
+Xdebug(void)
 {
 	if (cmd.argc != 2)
 		printf( "o%s\n", debug? "n": "ff" );
@@ -76,7 +76,7 @@ Xdebug()
 #endif
 
 static int
-Xtimeout()
+Xtimeout(void)
 {
 	if (cmd.argc != 2)
 		printf( "%d\n", cmd.timeout );
@@ -87,11 +87,11 @@ Xtimeout()
 
 /* called only w/ no arguments */
 int
-Xset()
+Xset(void)
 {
-	register const struct cmd_table *ct;
+	const struct cmd_table *ct;
 
-	printf(">> OpenBSD/" MACHINE_ARCH " BOOT %s\n", version);
+	printf("%s\n", prog_ident);
 	for (ct = cmd_set; ct->cmd_name != NULL; ct++) {
 		printf("%s\t ", ct->cmd_name);
 		(*ct->cmd_exec)();
@@ -100,7 +100,7 @@ Xset()
 }
 
 static int
-Xdevice()
+Xdevice(void)
 {
 	if (cmd.argc != 2)
 		printf("%s\n", cmd.bootdev);
@@ -110,7 +110,7 @@ Xdevice()
 }
 
 static int
-Ximage()
+Ximage(void)
 {
 	if (cmd.argc != 2)
 		printf("%s\n", cmd.image);
@@ -120,7 +120,7 @@ Ximage()
 }
 
 static int
-Xaddr()
+Xaddr(void)
 {
 	if (cmd.argc != 2)
 		printf("%p\n", cmd.addr);
@@ -130,7 +130,7 @@ Xaddr()
 }
 
 static int
-Xtty()
+Xtty(void)
 {
 	dev_t dev;
 
@@ -151,7 +151,7 @@ Xtty()
 }
 
 static int
-Xhowto()
+Xhowto(void)
 {
 	if (cmd.argc == 1) {
 		if (cmd.boothowto) {
@@ -176,10 +176,9 @@ Xhowto()
 }
 
 int
-bootparse(i)
-	int i;
+bootparse(int i)
 {
-	register char *cp;
+	char *cp;
 	int howto = cmd.boothowto;
 
 	for (; i < cmd.argc; i++) {
@@ -230,7 +229,7 @@ bootparse(i)
 char *environ;
 
 int
-Xenv()
+Xenv(void)
 {
 	if (cmd.argc == 1) {
 		if (environ)
@@ -238,8 +237,9 @@ Xenv()
 		else
 			printf("empty\n");
 	} else {
-		register char *p, *q;
+		char *p, *q;
 		int l;
+
 		for (p = environ; p && *p; p = q) {
 			l = strlen(cmd.argv[1]);
 			for (q = p; *q != '='; q++)

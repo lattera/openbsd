@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/pipe.h,v 1.4.2.3 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/pipe.h,v 1.4.2.4 2004/02/19 11:01:33 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 John S. Dyson
@@ -53,7 +53,6 @@ struct pipebuf {
 	u_int	out;		/* out pointer */
 	u_int	size;		/* size of buffer */
 	caddr_t	buffer;		/* kva of buffer */
-	struct	vm_object *object;	/* VM object containing buffer */
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.10.6.9 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.10.6.10 2004/02/19 11:01:36 niklas Exp $	*/
 /*	$NetBSD: ext2fs_vnops.c,v 1.1 1997/06/11 09:34:09 bouyer Exp $	*/
 
 /*
@@ -140,7 +140,7 @@ ext2fs_mknod(v)
 		 * Want to be able to use this to make badblock
 		 * inodes, so don't truncate the dev number.
 		 */
-		ip->i_din.e2fs_din.e2di_rdev = h2fs32(vap->va_rdev);
+		ip->i_e2din.e2di_rdev = h2fs32(vap->va_rdev);
 	}
 	/*
 	 * Remove inode so that it will be reloaded by VFS_VGET and
@@ -227,7 +227,7 @@ ext2fs_getattr(v)
 	vap->va_nlink = ip->i_e2fs_nlink;
 	vap->va_uid = ip->i_e2fs_uid;
 	vap->va_gid = ip->i_e2fs_gid;
-	vap->va_rdev = (dev_t)fs2h32(ip->i_din.e2fs_din.e2di_rdev);
+	vap->va_rdev = (dev_t)fs2h32(ip->i_e2din.e2di_rdev);
 	vap->va_size = ip->i_e2fs_size;
 	vap->va_atime.tv_sec = ip->i_e2fs_atime;
 	vap->va_atime.tv_nsec = 0;
@@ -289,7 +289,7 @@ ext2fs_setattr(v)
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != ip->i_e2fs_uid &&
-			(error = suser(cred, &p->p_acflag)))
+			(error = suser_ucred(cred)))
 			return (error);
 #ifdef EXT2FS_SYSTEM_FLAGS
 		if (cred->cr_uid == 0) {
@@ -349,7 +349,7 @@ ext2fs_setattr(v)
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != ip->i_e2fs_uid &&
-			(error = suser(cred, &p->p_acflag)) &&
+			(error = suser_ucred(cred)) &&
 			((vap->va_vaflags & VA_UTIMES_NULL) == 0 || 
 			(error = VOP_ACCESS(vp, VWRITE, cred, p))))
 			return (error);
@@ -385,8 +385,7 @@ ext2fs_chmod(vp, mode, cred, p)
 	register struct inode *ip = VTOI(vp);
 	int error;
 
-	if (cred->cr_uid != ip->i_e2fs_uid &&
-		(error = suser(cred, &p->p_acflag)))
+	if (cred->cr_uid != ip->i_e2fs_uid && (error = suser_ucred(cred)))
 		return (error);
 	if (cred->cr_uid) {
 		if (vp->v_type != VDIR && (mode & S_ISTXT))
@@ -430,7 +429,7 @@ ext2fs_chown(vp, uid, gid, cred, p)
 	 */
 	if ((cred->cr_uid != ip->i_e2fs_uid || uid != ip->i_e2fs_uid ||
 		(gid != ip->i_e2fs_gid && !groupmember((gid_t)gid, cred))) &&
-		(error = suser(cred, &p->p_acflag)))
+		(error = suser_ucred(cred)))
 		return (error);
 	ogid = ip->i_e2fs_gid;
 	ouid = ip->i_e2fs_uid;
@@ -1178,7 +1177,7 @@ ext2fs_symlink(v)
 	len = strlen(ap->a_target);
 	if (len < vp->v_mount->mnt_maxsymlinklen) {
 		ip = VTOI(vp);
-		bcopy(ap->a_target, (char *)ip->i_din.e2fs_din.e2di_shortlink, len);
+		bcopy(ap->a_target, (char *)ip->i_e2din.e2di_shortlink, len);
 		ip->i_e2fs_size = len;
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	} else
@@ -1208,7 +1207,7 @@ ext2fs_readlink(v)
 	isize = ip->i_e2fs_size;
 	if (isize < vp->v_mount->mnt_maxsymlinklen ||
 	    (vp->v_mount->mnt_maxsymlinklen == 0 && ip->i_e2fs_nblock == 0)) {
-		uiomove((char *)ip->i_din.e2fs_din.e2di_shortlink, isize, ap->a_uio);
+		uiomove((char *)ip->i_e2din.e2di_shortlink, isize, ap->a_uio);
 		return (0);
 	}
 	return (VOP_READ(vp, ap->a_uio, 0, ap->a_cred));
@@ -1232,73 +1231,6 @@ ext2fs_advlock(v)
 
 	return (lf_advlock(&ip->i_lockf, ip->i_e2fs_size, ap->a_id, ap->a_op,
 	    ap->a_fl, ap->a_flags));
-}
-
-/*
- * Initialize the vnode associated with a new inode, handle aliased
- * vnodes.
- */
-int
-ext2fs_vinit(mntp, specops, fifoops, vpp)
-	struct mount *mntp;
-	int (**specops)(void *);
-	int (**fifoops)(void *);
-	struct vnode **vpp;
-{
-	struct inode *ip;
-	struct vnode *vp, *nvp;
-	struct proc *p = curproc;
-
-	vp = *vpp;
-	ip = VTOI(vp);
-	switch(vp->v_type = IFTOVT(ip->i_e2fs_mode)) {
-	case VCHR:
-	case VBLK:
-		vp->v_op = specops;
-		if ((nvp = checkalias(vp, ip->i_din.e2fs_din.e2di_rdev, mntp))
-			!= NULL) {
-			/*
-			 * Discard unneeded vnode, but save its inode.
-			 */
-			ufs_ihashrem(ip);
-			VOP_UNLOCK(vp, 0, p);
-			nvp->v_data = vp->v_data;
-			vp->v_data = NULL;
-			vp->v_op = spec_vnodeop_p;
-			vrele(vp);
-			vgone(vp);
-			/*
-			 * Reinitialize aliased inode.
-			 */
-			vp = nvp;
-			ip->i_vnode = vp;
-			ufs_ihashins(ip);
-		}
-		break;
-	case VFIFO:
-#ifdef FIFO
-		vp->v_op = fifoops;
-		break;
-#else
-		return (EOPNOTSUPP);
-#endif
-	case VNON:
-	case VBAD:
-	case VSOCK:
-	case VLNK:
-	case VDIR:
-	case VREG:
-		break;
-	}
-	if (ip->i_number == ROOTINO)
-                vp->v_flag |= VROOT;
-	/*
-	 * Initialize modrev times
-	 */
-	SETHIGH(ip->i_modrev, mono_time.tv_sec);
-	SETLOW(ip->i_modrev, mono_time.tv_usec * 4294);
-	*vpp = vp;
-	return (0);
 }
 
 /*
@@ -1339,7 +1271,7 @@ ext2fs_makeinode(mode, dvp, vpp, cnp)
 	ip->i_e2fs_nlink = 1;
 	if ((ip->i_e2fs_mode & ISGID) &&
 		!groupmember(ip->i_e2fs_gid, cnp->cn_cred) &&
-	    suser(cnp->cn_cred, NULL))
+	    suser_ucred(cnp->cn_cred))
 		ip->i_e2fs_mode &= ~ISGID;
 
 	/*
@@ -1365,6 +1297,7 @@ bad:
 	vput(dvp);
 	ip->i_e2fs_nlink = 0;
 	ip->i_flag |= IN_CHANGE;
+	tvp->v_type = VNON;
 	vput(tvp);
 	return (error);
 }
@@ -1417,7 +1350,6 @@ ext2fs_reclaim(v)
     cache_purge(vp);
     if (ip->i_devvp) {
         vrele(ip->i_devvp);
-        ip->i_devvp = 0;
     }
 
 	FREE(vp->v_data, M_EXT2FSNODE);
@@ -1441,7 +1373,7 @@ struct vnodeopv_entry_desc ext2fs_vnodeop_entries[] = {
 	{ &vop_write_desc, ext2fs_write },		/* write */
 	{ &vop_lease_desc, ufs_lease_check },	/* lease */
 	{ &vop_ioctl_desc, ufs_ioctl },			/* ioctl */
-	{ &vop_select_desc, ufs_select },		/* select */
+	{ &vop_poll_desc, ufs_poll },		/* poll */
 	{ &vop_kqfilter_desc, vop_generic_kqfilter },	/* kqfilter */
 	{ &vop_fsync_desc, ext2fs_fsync },		/* fsync */
 	{ &vop_remove_desc, ext2fs_remove },	/* remove */

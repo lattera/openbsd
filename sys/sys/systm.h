@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/systm.h,v 1.37.2.9 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/systm.h,v 1.37.2.10 2004/02/19 11:01:34 niklas Exp $	*/
 /*	$NetBSD: systm.h,v 1.50 1996/06/09 04:55:09 briggs Exp $	*/
 
 /*-
@@ -41,7 +41,7 @@
 #define __SYSTM_H__
 
 #include <sys/queue.h>
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 /*
  * The `securelevel' variable controls the security level of the system.
@@ -155,29 +155,23 @@ void	*hashinit(int, int, int, u_long *);
 int	sys_nosys(struct proc *, void *, register_t *);
 
 void	panic(const char *, ...)
-#ifdef __KPRINTF_ATTRIBUTE__
-    __kprintf_attribute__((__noreturn__,__format__(__kprintf__,1,2)));
-#else
-    __attribute__((__noreturn__));
-#endif
+    __attribute__((__noreturn__,__format__(__kprintf__,1,2)));
 void	__assert(const char *, const char *, int, const char *)
     __attribute__((__noreturn__));
 int	printf(const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,1,2)));
+    __attribute__((__format__(__kprintf__,1,2)));
 void	uprintf(const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,1,2)));
-int	vprintf(const char *, _BSD_VA_LIST_);
-int	vsprintf(char *, const char *, va_list)
-    __kprintf_attribute__((__format__(__kprintf__,2,3)));
+    __attribute__((__format__(__kprintf__,1,2)));
+int	vprintf(const char *, va_list);
+int	vsprintf(char *, const char *, va_list);
 int	sprintf(char *buf, const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,2,3)));
-int	vsnprintf(char *, size_t, const char *, va_list)
-    __kprintf_attribute__((__format__(__kprintf__,3,4)));
+    __attribute__((__format__(__kprintf__,2,3)));
+int	vsnprintf(char *, size_t, const char *, va_list);
 int	snprintf(char *buf, size_t, const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,3,4)));
+    __attribute__((__format__(__kprintf__,3,4)));
 struct tty;
 void	ttyprintf(struct tty *, const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,2,3)));
+    __attribute__((__format__(__kprintf__,2,3)));
 
 void	splassert_fail(int, int, const char *);
 extern	int splassert_ctl;
@@ -268,7 +262,7 @@ void	dopowerhooks(int);
 #define PWR_STANDBY 2
 
 struct uio;
-int	uiomove(caddr_t, int, struct uio *);
+int	uiomove(void *, int, struct uio *);
 
 int	setjmp(label_t *);
 void	longjmp(label_t *);

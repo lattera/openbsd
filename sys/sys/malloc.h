@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27.2.8 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27.2.9 2004/02/19 11:01:33 niklas Exp $	*/
 /*	$NetBSD: malloc.h,v 1.39 1998/07/12 19:52:01 augustss Exp $	*/
 
 /*
@@ -87,12 +87,13 @@
 #define	M_SHM		29	/* SVID compatible shared memory segments */
 #define	M_VMMAP		30	/* VM map structures */
 #define	M_SEM		31	/* SVID compatible semaphores */
-/* 32-33 - free */
+#define	M_DIRHASH	32	/* UFS dirhash */
+/* 33 - free */
 #define	M_VMPMAP	34	/* VM pmap */
 /* 35-37 - free */
 #define	M_FILE		38	/* Open file structure */
 #define	M_FILEDESC	39	/* Open file descriptor table */
-#define	M_LOCKF		40	/* Byte-range locking structures */
+/* 40 - free */
 #define	M_PROC		41	/* Proc structures */
 #define	M_SUBPROC	42	/* Proc sub-structures */
 #define	M_VCLUSTER	43	/* Cluster for VFS */
@@ -152,7 +153,8 @@
 #define M_PACKET_TAGS	111	/* Packet-attached information */
 #define M_1394CTL	112	/* IEEE 1394 control structures */
 #define M_1394DATA	113	/* IEEE 1394 data buffers */
-/* 114-122 - free */
+#define	M_EMULDATA	114	/* Per-process emulation data */
+/* 115-122 - free */
 
 /* KAME IPv6 */
 #define	M_IP6OPT	123	/* IPv6 options */
@@ -206,7 +208,7 @@
 	"shm",		/* 29 M_SHM */ \
 	"VM map",	/* 30 M_VMMAP */ \
 	"sem",		/* 31 M_SEM */ \
-	NULL, \
+	"dirhash",	/* 32 M_DIRHASH */ \
 	NULL, \
 	"VM pmap",	/* 34 M_VMPMAP */ \
 	NULL,	/* 35 */ \
@@ -214,7 +216,7 @@
 	NULL,	/* 37 */ \
 	"file",		/* 38 M_FILE */ \
 	"file desc",	/* 39 M_FILEDESC */ \
-	"lockf",	/* 40 M_LOCKF */ \
+	NULL,	/* 40 */ \
 	"proc",		/* 41 M_PROC */ \
 	"subproc",	/* 42 M_SUBPROC */ \
 	"VFS cluster",	/* 43 M_VCLUSTER */ \
@@ -279,7 +281,8 @@
 	"packet tags",	/* 111 M_PACKET_TAGS */ \
 	"1394ctl",	/* 112 M_1394CTL */ \
 	"1394data",	/* 113 M_1394DATA */ \
-	NULL, NULL, NULL, NULL, NULL, \
+	"emuldata",	/* 114 M_EMULDATA */ \
+	NULL, NULL, NULL, NULL, \
 	NULL, NULL, NULL, NULL, \
 	"ip6_options",	/* 123 M_IP6OPT */ \
 	"NDP",		/* 124 M_IP6NDP */ \

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/cdefs.h,v 1.5.16.3 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/cdefs.h,v 1.5.16.4 2004/02/19 11:01:32 niklas Exp $	*/
 /*	$NetBSD: cdefs.h,v 1.16 1996/04/03 20:46:39 christos Exp $	*/
 
 /*
@@ -37,14 +37,6 @@
 
 #ifndef	_CDEFS_H_
 #define	_CDEFS_H_
-
-/*
- * Gratuitous NetBSD gcc extensions we can do without.
- */
-
-#ifdef __KPRINTF_ATTRIBUTE__
-#undef __KPRINTF_ATTRIBUTE__
-#endif
 
 #include <machine/cdefs.h>
 
@@ -171,16 +163,20 @@
 #define __predict_false(exp)	((exp) != 0)
 #endif
 
-#ifdef __KPRINTF_ATTRIBUTE__
-#define __kprintf_attribute__(a) __attribute__(a)
-#else
-#define __kprintf_attribute__(a)
-#endif
-
 /* Delete pseudo-keywords wherever they are not available or needed. */
 #ifndef __dead
 #define	__dead
 #define	__pure
+#endif
+
+#if __GNUC_PREREQ__(2, 7)
+#define	__packed	__attribute__((__packed__))
+#elif defined(lint)
+#define	__packed
+#endif
+
+#if !__GNUC_PREREQ__(2, 8)
+#define	__extension__
 #endif
 
 #endif /* !_CDEFS_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.11 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.12 2004/02/19 11:01:33 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -301,7 +301,7 @@ __mp_lock_init(struct __mp_lock *lock)
 
 extern void Debugger(void);
 extern int db_printf(const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,1,2)));
+    __attribute__((__format__(__kprintf__,1,2)));
 
 /* CPU-dependent timing, needs this to be settable from ddb. */
 extern int __mp_lock_spinout;
@@ -342,7 +342,7 @@ __mp_unlock(struct __mp_lock *lock)
 {
 	int s = spllock();
 
-#ifdef mp_LOCKDEBUG
+#ifdef MP_LOCKDEBUG
 	if (lock->mpl_count == 0 || lock->mpl_cpu == LK_NOCPU) {
 		db_printf("__mp_unlock(0x%x): releasing not locked lock\n",
 		    lock);

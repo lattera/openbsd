@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_inode.c,v 1.7.10.6 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_inode.c,v 1.7.10.7 2004/02/19 11:01:43 niklas Exp $	*/
 /*	$NetBSD: ufs_inode.c,v 1.7 1996/05/11 18:27:52 mycroft Exp $	*/
 
 /*
@@ -51,6 +51,10 @@
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
+#ifdef UFS_DIRHASH
+#include <ufs/ufs/dir.h>
+#include <ufs/ufs/dirhash.h>
+#endif
 
 u_long	nextgennumber;		/* Next generation number to assign. */
 
@@ -143,8 +147,11 @@ ufs_reclaim(vp, p)
 	cache_purge(vp);
 	if (ip->i_devvp) {
 		vrele(ip->i_devvp);
-		ip->i_devvp = 0;
 	}
+#ifdef UFS_DIRHASH
+	if (ip->i_dirhash != NULL)
+		ufsdirhash_free(ip);
+#endif
 	ufs_quota_delete(ip);
 	return (0);
 }

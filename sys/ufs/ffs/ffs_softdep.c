@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.8.2.10 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.8.2.11 2004/02/19 11:01:36 niklas Exp $	*/
 /*
  * Copyright 1998, 2000 Marshall Kirk McKusick. All Rights Reserved.
  *
@@ -1600,7 +1600,7 @@ handle_workitem_freefrag(freefrag)
 
 	tip.i_vnode = NULL;
 	tip.i_fs = VFSTOUFS(freefrag->ff_mnt)->um_fs;
-	tip.i_devvp = freefrag->ff_devvp;
+	tip.i_ump = VFSTOUFS(freefrag->ff_mnt);
 	tip.i_dev = freefrag->ff_devvp->v_rdev;
 	tip.i_number = freefrag->ff_inum;
 	tip.i_ffs_uid = freefrag->ff_state & ~ONWORKLIST; /* XXX - set above */
@@ -1896,8 +1896,8 @@ softdep_setup_freeblocks(ip, length)
 	    fsbtodb(fs, ino_to_fsba(fs, ip->i_number)),
 	    (int)fs->fs_bsize, NOCRED, &bp)) != 0)
 		softdep_error("softdep_setup_freeblocks", error);
-	*((struct dinode *)bp->b_data + ino_to_fsbo(fs, ip->i_number)) =
-	    ip->i_din.ffs_din;
+	*((struct ufs1_dinode *)bp->b_data + ino_to_fsbo(fs, ip->i_number)) =
+	    ip->i_din1;
 	/*
 	 * Find and eliminate any inode dependencies.
 	 */
@@ -2233,7 +2233,7 @@ handle_workitem_freeblocks(freeblks)
 
 	tip.i_fs = fs = VFSTOUFS(freeblks->fb_mnt)->um_fs;
 	tip.i_number = freeblks->fb_previousinum;
-	tip.i_devvp = freeblks->fb_devvp;
+	tip.i_ump = VFSTOUFS(freeblks->fb_mnt);
 	tip.i_dev = freeblks->fb_devvp->v_rdev;
 	tip.i_ffs_size = freeblks->fb_oldsize;
 	tip.i_ffs_uid = freeblks->fb_uid;
@@ -2271,7 +2271,7 @@ handle_workitem_freeblocks(freeblks)
 
 #ifdef DIAGNOSTIC
 	if (freeblks->fb_chkcnt != blocksreleased)
-		printf("handle_workitem_freeblocks: block count");
+		printf("handle_workitem_freeblocks: block count\n");
 	if (allerror)
 		softdep_error("handle_workitem_freeblks", allerror);
 #endif /* DIAGNOSTIC */
@@ -3026,7 +3026,7 @@ handle_workitem_freefile(freefile)
 	if (error)
 		panic("handle_workitem_freefile: inodedep survived");
 #endif
-	tip.i_devvp = freefile->fx_devvp;
+	tip.i_ump = VFSTOUFS(freefile->fx_mnt);
 	tip.i_dev = freefile->fx_devvp->v_rdev;
 	tip.i_fs = fs;
 	tip.i_vnode = &vp;
@@ -3194,7 +3194,7 @@ initiate_write_inodeblock(inodedep, bp)
 	struct buf *bp;			/* The inode block */
 {
 	struct allocdirect *adp, *lastadp;
-	struct dinode *dp;
+	struct ufs1_dinode *dp;
 	struct fs *fs;
 #ifdef DIAGNOSTIC
 	ufs_lbn_t prevlbn = 0;
@@ -3205,7 +3205,7 @@ initiate_write_inodeblock(inodedep, bp)
 		panic("initiate_write_inodeblock: already started");
 	inodedep->id_state |= IOSTARTED;
 	fs = inodedep->id_fs;
-	dp = (struct dinode *)bp->b_data +
+	dp = (struct ufs1_dinode *)bp->b_data +
 	    ino_to_fsbo(fs, inodedep->id_ino);
 	/*
 	 * If the bitmap is not yet written, then the allocated
@@ -3214,10 +3214,10 @@ initiate_write_inodeblock(inodedep, bp)
 	if ((inodedep->id_state & DEPCOMPLETE) == 0) {
 		if (inodedep->id_savedino != NULL)
 			panic("initiate_write_inodeblock: already doing I/O");
-		MALLOC(inodedep->id_savedino, struct dinode *,
-		    sizeof(struct dinode), M_INODEDEP, M_WAITOK);
+		MALLOC(inodedep->id_savedino, struct ufs1_dinode *,
+		    sizeof(struct ufs1_dinode), M_INODEDEP, M_WAITOK);
 		*inodedep->id_savedino = *dp;
-		bzero((caddr_t)dp, sizeof(struct dinode));
+		bzero((caddr_t)dp, sizeof(struct ufs1_dinode));
 		return;
 	}
 	/*
@@ -3570,14 +3570,14 @@ handle_written_inodeblock(inodedep, bp)
 {
 	struct worklist *wk, *filefree;
 	struct allocdirect *adp, *nextadp;
-	struct dinode *dp;
+	struct ufs1_dinode *dp;
 	int hadchanges;
 
 	if ((inodedep->id_state & IOSTARTED) == 0)
 		panic("handle_written_inodeblock: not started");
 	inodedep->id_state &= ~IOSTARTED;
 	inodedep->id_state |= COMPLETE;
-	dp = (struct dinode *)bp->b_data +
+	dp = (struct ufs1_dinode *)bp->b_data +
 	    ino_to_fsbo(inodedep->id_fs, inodedep->id_ino);
 	/*
 	 * If we had to rollback the inode allocation because of

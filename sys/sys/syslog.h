@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syslog.h,v 1.5.10.4 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/syslog.h,v 1.5.10.5 2004/02/19 11:01:34 niklas Exp $	*/
 /*	$NetBSD: syslog.h,v 1.14 1996/04/03 20:46:44 christos Exp $	*/
 
 /*
@@ -212,9 +212,9 @@ __END_DECLS
 
 void	logpri(int);
 void	log(int, const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,2,3)));
+    __attribute__((__format__(__kprintf__,2,3)));
 int	addlog(const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,1,2)));
+    __attribute__((__format__(__kprintf__,1,2)));
 void	logwakeup(void);
 
 #endif /* !_KERNEL */

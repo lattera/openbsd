@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.28.2.7 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.28.2.8 2004/02/19 11:01:41 niklas Exp $	*/
 /*	$NetBSD: ffs_vfsops.c,v 1.19 1996/02/09 22:22:26 christos Exp $	*/
 
 /*
@@ -60,6 +60,7 @@
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/dir.h>
 #include <ufs/ufs/ufs_extern.h>
+#include <ufs/ufs/dirhash.h>
 
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
@@ -68,7 +69,7 @@ int ffs_sbupdate(struct ufsmount *, int);
 int ffs_reload_vnode(struct vnode *, void *);
 int ffs_sync_vnode(struct vnode *, void *);
 
-struct vfsops ffs_vfsops = {
+const struct vfsops ffs_vfsops = {
 	ffs_mount,
 	ufs_start,
 	ffs_unmount,
@@ -119,18 +120,27 @@ ffs_mountroot()
 	/*
 	 * Get vnodes for swapdev and rootdev.
 	 */
+	swapdev_vp = NULL;
 	if ((error = bdevvp(swapdev, &swapdev_vp)) ||
 	    (error = bdevvp(rootdev, &rootvp))) {
 		printf("ffs_mountroot: can't setup bdevvp's");
+		if (swapdev_vp)
+			vrele(swapdev_vp);
 		return (error);
 	}
 
-	if ((error = vfs_rootmountalloc("ffs", "root_device", &mp)) != 0)
+	if ((error = vfs_rootmountalloc("ffs", "root_device", &mp)) != 0) {
+		vrele(swapdev_vp);
+		vrele(rootvp);
 		return (error);
+	}
+
 	if ((error = ffs_mountfs(rootvp, mp, p)) != 0) {
 		mp->mnt_vfc->vfc_refcount--;
 		vfs_unbusy(mp, p);
 		free(mp, M_MOUNT);
+		vrele(swapdev_vp);
+		vrele(rootvp);
 		return (error);
 	}
 	simple_lock(&mountlist_slock);
@@ -284,7 +294,7 @@ ffs_mount(mp, path, data, ndp, p)
 					printf(
 "WARNING: R/W mount of %s denied.  Filesystem is not clean - run fsck\n",
 					    fs->fs_fsmnt);
-					error = EPERM;
+					error = EROFS;
 					goto error_1;
 				}
 			}
@@ -483,7 +493,7 @@ ffs_reload_vnode(struct vnode *vp, void *args)
 		vput(vp);
 		return (error);
 	}
-	ip->i_din.ffs_din = *((struct dinode *)bp->b_data +
+	ip->i_din1 = *((struct ufs1_dinode *)bp->b_data +
 	    ino_to_fsbo(fra->fs, ip->i_number));
 	ip->i_effnlink = ip->i_ffs_nlink;
 	brelse(bp);
@@ -656,8 +666,10 @@ ffs_mountfs(devvp, mp, p)
 	if (error)
 		goto out;
 	fs = (struct fs *)bp->b_data;
-	if (fs->fs_magic != FS_MAGIC || fs->fs_bsize > MAXBSIZE ||
+	if (fs->fs_magic != FS_UFS1_MAGIC || fs->fs_bsize > MAXBSIZE ||
 	    fs->fs_bsize < sizeof(struct fs)) {
+		if (fs->fs_magic == FS_UFS2_MAGIC)
+			printf("no UFS2 support\n");
 		error = EFTYPE;		/* Inappropriate format */
 		goto out;
 	}
@@ -686,7 +698,7 @@ ffs_mountfs(devvp, mp, p)
 			printf(
 "WARNING: R/W mount of %s denied.  Filesystem is not clean - run fsck\n",
 			    fs->fs_fsmnt);
-			error = EPERM;
+			error = EROFS;
 			goto out;
 		}
 	}
@@ -696,9 +708,12 @@ ffs_mountfs(devvp, mp, p)
 		goto out;
 	}
 	ump = malloc(sizeof *ump, M_UFSMNT, M_WAITOK);
-	bzero((caddr_t)ump, sizeof *ump);
+	bzero(ump, sizeof *ump);
 	ump->um_fs = malloc((u_long)fs->fs_sbsize, M_UFSMNT,
 	    M_WAITOK);
+	if (fs->fs_magic == FS_UFS1_MAGIC) {
+		ump->um_fstype = UM_UFS1;
+	}
 	bcopy(bp->b_data, ump->um_fs, (u_int)fs->fs_sbsize);
 	if (fs->fs_sbsize < SBSIZE)
 		bp->b_flags |= B_INVAL;
@@ -993,7 +1008,7 @@ ffs_statfs(mp, sbp, p)
 	sbp->f_blocks = fs->fs_dsize;
 	sbp->f_bfree = fs->fs_cstotal.cs_nbfree * fs->fs_frag +
 		fs->fs_cstotal.cs_nffree;
-	sbp->f_bavail = sbp->f_bfree - fs->fs_dsize * fs->fs_minfree / 100;
+	sbp->f_bavail = sbp->f_bfree - ((int64_t)fs->fs_dsize * fs->fs_minfree / 100);
 	sbp->f_files = fs->fs_ncg * fs->fs_ipg - ROOTINO;
 	sbp->f_ffree = fs->fs_cstotal.cs_nifree;
 	if (sbp != &mp->mnt_stat) {
@@ -1152,6 +1167,8 @@ retry:
 	ip = pool_get(&ffs_ino_pool, PR_WAITOK);
 	bzero((caddr_t)ip, sizeof(struct inode));
 	lockinit(&ip->i_lock, PINOD, "inode", 0, 0);
+	ip->i_ump = ump;
+	VREF(ip->i_devvp);
 	vp->v_data = ip;
 	ip->i_vnode = vp;
 	ip->i_fs = fs = ump->um_fs;
@@ -1196,7 +1213,7 @@ retry:
 		*vpp = NULL;
 		return (error);
 	}
-	ip->i_din.ffs_din = *((struct dinode *)bp->b_data + ino_to_fsbo(fs, ino));
+	ip->i_din1 = *((struct ufs1_dinode *)bp->b_data + ino_to_fsbo(fs, ino));
 	if (DOINGSOFTDEP(vp))
 		softdep_load_inodeblock(ip);
 	else
@@ -1214,16 +1231,11 @@ retry:
 		return (error);
 	}
 	/*
-	 * Finish inode initialization now that aliasing has been resolved.
-	 */
-	ip->i_devvp = ump->um_devvp;
-	VREF(ip->i_devvp);
-	/*
 	 * Set up a generation number for this inode if it does not
 	 * already have one. This should only happen on old filesystems.
 	 */
 	if (ip->i_ffs_gen == 0) {
-		ip->i_ffs_gen = arc4random();
+		ip->i_ffs_gen = arc4random() & INT_MAX;
 		if (ip->i_ffs_gen == 0 || ip->i_ffs_gen == -1)
 			ip->i_ffs_gen = 1;		/* shouldn't happen */
 		if ((vp->v_mount->mnt_flag & MNT_RDONLY) == 0)
@@ -1234,8 +1246,8 @@ retry:
 	 * fix until fsck has been changed to do the update.
 	 */
 	if (fs->fs_inodefmt < FS_44INODEFMT) {			/* XXX */
-		ip->i_ffs_uid = ip->i_din.ffs_din.di_ouid;	/* XXX */
-		ip->i_ffs_gid = ip->i_din.ffs_din.di_ogid;	/* XXX */
+		ip->i_ffs_uid = ip->i_din1.di_ouid;		/* XXX */
+		ip->i_ffs_gid = ip->i_din1.di_ogid;		/* XXX */
 	}							/* XXX */
 
 	*vpp = vp;
@@ -1431,6 +1443,17 @@ ffs_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	case FFS_SD_DIR_ENTRY:
 		return (sysctl_rdint(oldp, oldlenp, newp, stat_dir_entry));
 #endif
+#ifdef UFS_DIRHASH
+	case FFS_DIRHASH_DIRSIZE:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &ufs_mindirhashsize));
+	case FFS_DIRHASH_MAXMEM:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &ufs_dirhashmaxmem));
+	case FFS_DIRHASH_MEM:
+		return (sysctl_rdint(oldp, oldlenp, newp, ufs_dirhashmem));
+#endif
+
 	default:
 		return (EOPNOTSUPP);
 	}

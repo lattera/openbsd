@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.11.4.7 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.11.4.8 2004/02/19 11:01:42 niklas Exp $	*/
 /*	$NetBSD: inode.h,v 1.8 1995/06/15 23:22:50 cgd Exp $	*/
 
 /*
@@ -42,8 +42,6 @@
 #include <ufs/ufs/dir.h>
 #include <ufs/ext2fs/ext2fs_dinode.h>
 
-typedef long ufs_lbn_t;
-
 /*
  * Per-filesystem inode extensions.
  */
@@ -64,7 +62,7 @@ struct ext2fs_inode_ext {
 struct inode {
 	LIST_ENTRY(inode) i_hash; /* Hash chain */
 	struct	vnode  *i_vnode;/* Vnode associated with this inode. */
-	struct	vnode  *i_devvp;/* Vnode for block I/O. */
+	struct	ufsmount *i_ump;
 	u_int32_t i_flag;	/* flags, see below */
 	dev_t	  i_dev;	/* Device associated with the inode. */
 	ino_t	  i_number;	/* The identity of the inode. */
@@ -100,17 +98,21 @@ struct inode {
 	union {
 		/* Other extensions could go here... */
 		struct ext2fs_inode_ext   e2fs;
+		struct dirhash *dirhash;
 	} inode_ext;
 #define i_e2fs_last_lblk inode_ext.e2fs.ext2fs_last_lblk
 #define i_e2fs_last_blk inode_ext.e2fs.ext2fs_last_blk
+#define	i_dirhash	inode_ext.dirhash
 
 	/*
 	 * The on-disk dinode itself.
 	 */
 	union {
-		struct	dinode ffs_din;	/* 128 bytes of the on-disk dinode. */
-		struct ext2fs_dinode e2fs_din; /* 128 bytes of the on-disk dinode. */
-	} i_din;
+		struct ufs1_dinode ffs1_din;
+		struct ext2fs_dinode e2fs_din;
+	} dinode_u;
+#define i_din1 dinode_u.ffs1_din
+#define	i_e2din	dinode_u.e2fs_din
 
 	struct inode_vtbl *i_vtbl;
 };
@@ -152,24 +154,25 @@ struct inode_vtbl {
     ((ip)->i_vtbl->iv_bufatoff)((ip), (offset), (res), (bpp))
 
 
-#define	i_ffs_atime		i_din.ffs_din.di_atime
-#define	i_ffs_atimensec		i_din.ffs_din.di_atimensec
-#define	i_ffs_blocks		i_din.ffs_din.di_blocks
-#define	i_ffs_ctime		i_din.ffs_din.di_ctime
-#define	i_ffs_ctimensec		i_din.ffs_din.di_ctimensec
-#define	i_ffs_db		i_din.ffs_din.di_db
-#define	i_ffs_flags		i_din.ffs_din.di_flags
-#define	i_ffs_gen		i_din.ffs_din.di_gen
-#define	i_ffs_gid		i_din.ffs_din.di_gid
-#define	i_ffs_ib		i_din.ffs_din.di_ib
-#define	i_ffs_mode		i_din.ffs_din.di_mode
-#define	i_ffs_mtime		i_din.ffs_din.di_mtime
-#define	i_ffs_mtimensec		i_din.ffs_din.di_mtimensec
-#define	i_ffs_nlink		i_din.ffs_din.di_nlink
-#define	i_ffs_rdev		i_din.ffs_din.di_rdev
-#define	i_ffs_shortlink		i_din.ffs_din.di_shortlink
-#define	i_ffs_size		i_din.ffs_din.di_size
-#define	i_ffs_uid		i_din.ffs_din.di_uid
+#define	i_ffs_atime		i_din1.di_atime
+#define	i_ffs_atimensec		i_din1.di_atimensec
+#define	i_ffs_blocks		i_din1.di_blocks
+#define	i_ffs_ctime		i_din1.di_ctime
+#define	i_ffs_ctimensec		i_din1.di_ctimensec
+#define	i_ffs_db		i_din1.di_db
+#define	i_ffs_flags		i_din1.di_flags
+#define	i_ffs_gen		i_din1.di_gen
+#define	i_ffs_gid		i_din1.di_gid
+#define	i_ffs_ib		i_din1.di_ib
+#define	i_ffs_mode		i_din1.di_mode
+#define	i_ffs_mtime		i_din1.di_mtime
+#define	i_ffs_mtimensec		i_din1.di_mtimensec
+#define	i_ffs_nlink		i_din1.di_nlink
+#define	i_ffs_rdev		i_din1.di_rdev
+#define	i_ffs_shortlink		i_din1.di_shortlink
+#define	i_ffs_size		i_din1.di_size
+#define	i_ffs_uid		i_din1.di_uid
+#define i_size			i_din1.di_size
 
 #ifndef _KERNEL
 /*
@@ -177,44 +180,44 @@ struct inode_vtbl {
  * They allow direct references to FFS structures using the old names.
  */
 
-#define	i_atime			i_din.ffs_din.di_atime
-#define	i_atimensec		i_din.ffs_din.di_atimensec
-#define	i_blocks		i_din.ffs_din.di_blocks
-#define	i_ctime			i_din.ffs_din.di_ctime
-#define	i_ctimensec		i_din.ffs_din.di_ctimensec
-#define	i_db			i_din.ffs_din.di_db
-#define	i_flags			i_din.ffs_din.di_flags
-#define	i_gen			i_din.ffs_din.di_gen
-#define	i_gid			i_din.ffs_din.di_gid
-#define	i_ib			i_din.ffs_din.di_ib
-#define	i_mode			i_din.ffs_din.di_mode
-#define	i_mtime			i_din.ffs_din.di_mtime
-#define	i_mtimensec		i_din.ffs_din.di_mtimensec
-#define	i_nlink			i_din.ffs_din.di_nlink
-#define	i_rdev			i_din.ffs_din.di_rdev
-#define	i_shortlink		i_din.ffs_din.di_shortlink
-#define	i_size			i_din.ffs_din.di_size
-#define	i_uid			i_din.ffs_din.di_uid
+#define	i_atime			i_din1.di_atime
+#define	i_atimensec		i_din1.di_atimensec
+#define	i_blocks		i_din1.di_blocks
+#define	i_ctime			i_din1.di_ctime
+#define	i_ctimensec		i_din1.di_ctimensec
+#define	i_db			i_din1.di_db
+#define	i_flags			i_din1.di_flags
+#define	i_gen			i_din1.di_gen
+#define	i_gid			i_din1.di_gid
+#define	i_ib			i_din1.di_ib
+#define	i_mode			i_din1.di_mode
+#define	i_mtime			i_din1.di_mtime
+#define	i_mtimensec		i_din1.di_mtimensec
+#define	i_nlink			i_din1.di_nlink
+#define	i_rdev			i_din1.di_rdev
+#define	i_shortlink		i_din1.di_shortlink
+#define	i_size			i_din1.di_size
+#define	i_uid			i_din1.di_uid
 #endif	/* _KERNEL */
 
-#define i_e2fs_mode		i_din.e2fs_din.e2di_mode
-#define i_e2fs_uid		i_din.e2fs_din.e2di_uid
-#define i_e2fs_size		i_din.e2fs_din.e2di_size
-#define i_e2fs_atime		i_din.e2fs_din.e2di_atime
-#define i_e2fs_ctime		i_din.e2fs_din.e2di_ctime
-#define i_e2fs_mtime		i_din.e2fs_din.e2di_mtime
-#define i_e2fs_dtime		i_din.e2fs_din.e2di_dtime
-#define i_e2fs_gid		i_din.e2fs_din.e2di_gid
-#define i_e2fs_nlink		i_din.e2fs_din.e2di_nlink
-#define i_e2fs_nblock		i_din.e2fs_din.e2di_nblock
-#define i_e2fs_flags		i_din.e2fs_din.e2di_flags
-#define i_e2fs_blocks		i_din.e2fs_din.e2di_blocks
-#define i_e2fs_gen		i_din.e2fs_din.e2di_gen
-#define i_e2fs_facl		i_din.e2fs_din.e2di_facl
-#define i_e2fs_dacl		i_din.e2fs_din.e2di_dacl
-#define i_e2fs_faddr		i_din.e2fs_din.e2di_faddr
-#define i_e2fs_nfrag		i_din.e2fs_din.e2di_nfrag
-#define i_e2fs_fsize		i_din.e2fs_din.e2di_fsize
+#define i_e2fs_mode		i_e2din.e2di_mode
+#define i_e2fs_uid		i_e2din.e2di_uid
+#define i_e2fs_size		i_e2din.e2di_size
+#define i_e2fs_atime		i_e2din.e2di_atime
+#define i_e2fs_ctime		i_e2din.e2di_ctime
+#define i_e2fs_mtime		i_e2din.e2di_mtime
+#define i_e2fs_dtime		i_e2din.e2di_dtime
+#define i_e2fs_gid		i_e2din.e2di_gid
+#define i_e2fs_nlink		i_e2din.e2di_nlink
+#define i_e2fs_nblock		i_e2din.e2di_nblock
+#define i_e2fs_flags		i_e2din.e2di_flags
+#define i_e2fs_blocks		i_e2din.e2di_blocks
+#define i_e2fs_gen		i_e2din.e2di_gen
+#define i_e2fs_facl		i_e2din.e2di_facl
+#define i_e2fs_dacl		i_e2din.e2di_dacl
+#define i_e2fs_faddr		i_e2din.e2di_faddr
+#define i_e2fs_nfrag		i_e2din.e2di_nfrag
+#define i_e2fs_fsize		i_e2din.e2di_fsize
 
 /* These flags are kept in i_flag. */
 #define	IN_ACCESS	0x0001		/* Access time update request. */
@@ -225,7 +228,28 @@ struct inode_vtbl {
 #define IN_SHLOCK       0x0020          /* File has shared lock. */
 #define	IN_EXLOCK	0x0040		/* File has exclusive lock. */
 
+#define	i_devvp i_ump->um_devvp
+
 #ifdef _KERNEL
+
+/*
+ * The DIP macro is used to access fields in the dinode that are
+ * not cached in the inode itself.
+ */
+#define	DIP(ip, field) \
+	(((ip)->i_ump->um_fstype == UM_UFS1) ? \
+	(ip)->i_din1->d##field : (ip)->i_din2->d##field)
+
+#if 0
+#define	MAXSYMLINKLEN(ip) \
+	((ip)->i_ump->um_fstype == UM_UFS1) ? \
+	((NDADDR + NIADDR) * sizeof(ufs1_daddr_t)) : \
+	((NDADDR + NIADDR) * sizeof(ufs2_daddr_t))
+#define	SHORTLINK(ip) \
+	(((ip)->i_ump->um_fstype == UM_UFS1) ? \
+	(caddr_t)(ip)->i_din1->di_db : (caddr_t)(ip)->i_din2->di_db)
+#endif
+
 /*
  * Structure used to pass around logical block paths generated by
  * ufs_getlbns and used by truncate and bmap code.

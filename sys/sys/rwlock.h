@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/rwlock.h,v 1.3 2004/01/11 00:42:03 tedu Exp $	*/
+/*	$OpenBSD: src/sys/sys/rwlock.h,v 1.3.2.1 2004/02/19 11:01:34 niklas Exp $	*/
 /*
  * Copyright (c) 2002 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 

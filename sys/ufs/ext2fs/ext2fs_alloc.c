@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_alloc.c,v 1.4.6.5 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_alloc.c,v 1.4.6.6 2004/02/19 11:01:35 niklas Exp $	*/
 /*	$NetBSD: ext2fs_alloc.c,v 1.10 2001/07/05 08:38:27 toshii Exp $	*/
 
 /*
@@ -45,6 +45,8 @@
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#include <ufs/ufs/extattr.h>
+#include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
 
 #include <ufs/ext2fs/ext2fs.h>
@@ -169,7 +171,7 @@ ext2fs_inode_alloc(struct inode *pip, int mode, struct ucred *cred,
 		panic("ext2fs_valloc: dup alloc");
 	}
 
-	bzero(&(ip->i_din.e2fs_din), sizeof(struct ext2fs_dinode));
+	bzero(&(ip->i_e2din), sizeof(struct ext2fs_dinode));
 
 	/*
 	 * Set up a new generation number for this inode.
@@ -535,7 +537,7 @@ ext2fs_inode_free(struct inode *pip, ino_t ino, int mode)
 	int error, cg;
 
 	fs = pip->i_e2fs;
-	if ((u_int)ino >= fs->e2fs.e2fs_icount || (u_int)ino < EXT2_FIRSTINO)
+	if ((u_int)ino > fs->e2fs.e2fs_icount || (u_int)ino < EXT2_FIRSTINO)
 		panic("ifree: range: dev = 0x%x, ino = %d, fs = %s",
 			pip->i_dev, ino, fs->e2fs_fsmnt);
 	cg = ino_to_cg(fs, ino);

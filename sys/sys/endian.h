@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/endian.h,v 1.4.4.5 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/endian.h,v 1.4.4.6 2004/02/19 11:01:32 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
@@ -68,13 +68,13 @@
 	u_int64_t __swap64gen_x = (x);					\
 									\
 	(u_int64_t)((__swap64gen_x & 0xff) << 56 |			\
-	    (__swap64gen_x & 0xff00) << 40 |				\
-	    (__swap64gen_x & 0xff0000) << 24 |				\
-	    (__swap64gen_x & 0xff000000) << 8 |				\
-	    (__swap64gen_x & 0xff00000000) >> 8 |			\
-	    (__swap64gen_x & 0xff0000000000) >> 24 |			\
-	    (__swap64gen_x & 0xff000000000000) >> 40 |			\
-	    (__swap64gen_x & 0xff00000000000000) >> 56);		\
+	    (__swap64gen_x & 0xff00ULL) << 40 |				\
+	    (__swap64gen_x & 0xff0000ULL) << 24 |			\
+	    (__swap64gen_x & 0xff000000ULL) << 8 |			\
+	    (__swap64gen_x & 0xff00000000ULL) >> 8 |			\
+	    (__swap64gen_x & 0xff0000000000ULL) >> 24 |			\
+	    (__swap64gen_x & 0xff000000000000ULL) >> 40 |		\
+	    (__swap64gen_x & 0xff00000000000000ULL) >> 56);		\
 })
 
 #else /* __GNUC__ */
@@ -90,13 +90,13 @@
 
 #define __swap64gen(x)							\
 	(u_int64_t)((((u_int64_t)(x) & 0xff) << 56) |			\
-	    ((u_int64_t)(x) & 0xff00) << 40 |				\
-	    ((u_int64_t)(x) & 0xff0000) << 24 |				\
-	    ((u_int64_t)(x) & 0xff000000) << 8 |			\
-	    ((u_int64_t)(x) & 0xff00000000) >> 8 |			\
-	    ((u_int64_t)(x) & 0xff0000000000) >> 24 |			\
-	    ((u_int64_t)(x) & 0xff000000000000) >> 40 |			\
-	    ((u_int64_t)(x) & 0xff00000000000000) >> 56)
+	    ((u_int64_t)(x) & 0xff00ULL) << 40 |			\
+	    ((u_int64_t)(x) & 0xff0000ULL) << 24 |			\
+	    ((u_int64_t)(x) & 0xff000000ULL) << 8 |			\
+	    ((u_int64_t)(x) & 0xff00000000ULL) >> 8 |			\
+	    ((u_int64_t)(x) & 0xff0000000000ULL) >> 24 |		\
+	    ((u_int64_t)(x) & 0xff000000000000ULL) >> 40 |		\
+	    ((u_int64_t)(x) & 0xff00000000000000ULL) >> 56)
 
 #endif /* __GNUC__ */
 
@@ -150,13 +150,17 @@
 } while (0)
 
 __BEGIN_DECLS
+u_int64_t	htobe64(u_int64_t);
 u_int32_t	htobe32(u_int32_t);
 u_int16_t	htobe16(u_int16_t);
+u_int64_t	betoh64(u_int64_t);
 u_int32_t	betoh32(u_int32_t);
 u_int16_t	betoh16(u_int16_t);
 
+u_int64_t	htole64(u_int64_t);
 u_int32_t	htole32(u_int32_t);
 u_int16_t	htole16(u_int16_t);
+u_int64_t	letoh64(u_int64_t);
 u_int32_t	letoh32(u_int32_t);
 u_int16_t	letoh16(u_int16_t);
 __END_DECLS

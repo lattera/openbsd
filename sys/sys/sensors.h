@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sensors.h,v 1.1.2.1 2003/05/12 19:50:24 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/sensors.h,v 1.1.2.2 2004/02/19 11:01:34 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Alexander Yurchenko <grange@openbsd.org>
@@ -47,5 +47,15 @@ struct sensor {
 };
 
 SLIST_HEAD(sensors_head, sensor);
+
+#ifdef _KERNEL
+extern int nsensors;
+extern struct sensors_head sensors;
+
+#define SENSOR_ADD(s) do { \
+	(s)->num = nsensors++;				\
+	SLIST_INSERT_HEAD(&sensors, (s), list);		\
+} while (0)
+#endif	/* _KERNEL */
 
 #endif	/* !_SYS_SENSORS_H_ */

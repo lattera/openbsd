@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.5 2003/03/28 00:08:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.6 2004/02/19 11:01:30 niklas Exp $	*/
 /*	$NetBSD: scsi_ioctl.c,v 1.23 1996/10/12 23:23:17 christos Exp $	*/
 
 /*
@@ -173,7 +173,8 @@ scsi_user_done(xs)
 		break;
 	default:
 		sc_print_addr(sc_link);
-		printf("unknown error category from host adapter code\n");
+		printf("unknown error category (0x%x) from host adapter code\n",
+		    xs->error);
 		screq->retsts = SCCMD_UNKNOWN;
 		break;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/varargs.h,v 1.2 2004/01/03 14:55:34 espie Exp $ */
+/*	$OpenBSD: src/sys/sys/varargs.h,v 1.2.2.1 2004/02/19 11:01:35 niklas Exp $ */
 /*
  * Copyright (c) 2003, 2004  Marc espie <espie@openbsd.org>
  *

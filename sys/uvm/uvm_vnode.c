@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.6.2.9 2003/03/28 00:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.6.2.10 2004/02/19 11:01:45 niklas Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.36 2000/11/24 20:34:01 chs Exp $	*/
 
 /*
@@ -1818,16 +1818,20 @@ uvm_vnp_uncache(vp)
 #if defined(NFSCLIENT)
 		extern int (**nfsv2_vnodeop_p)(void *);
 		extern int (**spec_nfsv2nodeop_p)(void *);
+#if defined(FIFO)
 		extern int (**fifo_nfsv2nodeop_p)(void *);
+#endif	/* defined(FIFO) */
 
 		/* vnode is NOT VOP_LOCKed: some vnode types _never_ lock */
 		if (vp->v_op == nfsv2_vnodeop_p ||
 		    vp->v_op == spec_nfsv2nodeop_p) {
 			is_ok_anyway = TRUE;
 		}
+#if defined(FIFO)
 		if (vp->v_op == fifo_nfsv2nodeop_p) {
 			is_ok_anyway = TRUE;
 		}
+#endif	/* defined(FIFO) */
 #endif	/* defined(NFSSERVER) || defined(NFSCLIENT) */
 		if (!is_ok_anyway)
 			panic("uvm_vnp_uncache: vnode not locked!");

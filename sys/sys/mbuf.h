@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.9 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.10 2004/02/19 11:01:33 niklas Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -140,6 +140,7 @@ struct mbuf {
 #define M_AUTH		0x0800  /* payload was authenticated (AH or ESP auth) */
 #define M_COMP		0x1000  /* payload was compressed (IPCOMP) */
 #define M_AUTH_AH	0x2000  /* header was authenticated (AH) */
+#define M_TUNNEL	0x4000  /* IP-in-IP added by tunnel mode IPsec */
 
 /* Checksumming flags */
 #define	M_IPV4_CSUM_OUT		0x0001	/* IPv4 checksum needed */
@@ -158,7 +159,8 @@ struct mbuf {
 #define M_LOOP		0x0040	/* for Mbuf statistics */
 
 /* flags copied when copying m_pkthdr */
-#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_PROTO1|M_BCAST|M_MCAST|M_CONF|M_AUTH|M_COMP|M_ANYCAST6|M_LOOP)
+#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_PROTO1|M_BCAST|M_MCAST|M_CONF|\
+			 M_AUTH|M_COMP|M_ANYCAST6|M_LOOP|M_TUNNEL)
 
 /* mbuf types */
 #define	MT_FREE		0	/* should be on free list */
@@ -553,7 +555,7 @@ struct  mbuf *m_inject(struct mbuf *, int, int, int);
 struct  mbuf *m_getptr(struct mbuf *, int, int *);
 void	m_adj(struct mbuf *, int);
 int	m_clalloc(int, int);
-void	m_copyback(struct mbuf *, int, int, caddr_t);
+void	m_copyback(struct mbuf *, int, int, const void *);
 void	m_freem(struct mbuf *);
 void	m_reclaim(void *, int);
 void	m_copydata(struct mbuf *, int, int, caddr_t);
@@ -595,6 +597,8 @@ struct m_tag *m_tag_next(struct mbuf *, struct m_tag *);
 #define PACKET_TAG_PF_FRAGCACHE			13 /* PF fragment cached */
 #define	PACKET_TAG_PF_QID			14 /* PF queue id */
 #define PACKET_TAG_PF_TAG			15 /* PF tags */
+#define PACKET_TAG_CARP				16 /* CARP info */
+#define PACKET_TAG_PF_TRANSLATE_LOCALHOST	17 /* translated to localhost */
 
 #ifdef MBTYPES
 int mbtypes[] = {				/* XXX */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_subr.c,v 1.3.12.5 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_subr.c,v 1.3.12.6 2004/02/19 11:01:36 niklas Exp $	*/
 /*	$NetBSD: ext2fs_subr.c,v 1.1 1997/06/11 09:34:03 bouyer Exp $	*/
 
 /*
@@ -37,9 +37,14 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
+#include <sys/mount.h>
 #include <sys/buf.h>
+
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#include <ufs/ufs/extattr.h>
+#include <ufs/ufs/ufsmount.h>
+
 #include <ufs/ext2fs/ext2fs.h>
 #include <ufs/ext2fs/ext2fs_extern.h>
 

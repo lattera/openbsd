@@ -3,9 +3,9 @@
  * (Modifications made here may easily be lost!)
  *
  * Created from the file:
- *	OpenBSD: vnode_if.src,v 1.9.6.6 2003/05/13 19:21:29 ho Exp 
+ *	OpenBSD
  * by the script:
- *	OpenBSD: vnode_if.sh,v 1.6.6.3 2003/05/13 19:21:29 ho Exp 
+ *	OpenBSD
  */
 
 /*
@@ -163,25 +163,23 @@ struct vop_ioctl_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
 	u_long a_command;
-	caddr_t a_data;
+	void *a_data;
 	int a_fflag;
 	struct ucred *a_cred;
 	struct proc *a_p;
 };
 extern struct vnodeop_desc vop_ioctl_desc;
-int VOP_IOCTL(struct vnode *, u_long, caddr_t, int, struct ucred *, 
+int VOP_IOCTL(struct vnode *, u_long, void *, int, struct ucred *, 
     struct proc *);
 
-struct vop_select_args {
+struct vop_poll_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
-	int a_which;
-	int a_fflags;
-	struct ucred *a_cred;
+	int a_events;
 	struct proc *a_p;
 };
-extern struct vnodeop_desc vop_select_desc;
-int VOP_SELECT(struct vnode *, int, int, struct ucred *, struct proc *);
+extern struct vnodeop_desc vop_poll_desc;
+int VOP_POLL(struct vnode *, int, struct proc *);
 
 struct vop_kqfilter_args {
 	struct vnodeop_desc *a_desc;
@@ -366,13 +364,13 @@ int VOP_PATHCONF(struct vnode *, int, register_t *);
 struct vop_advlock_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
-	caddr_t a_id;
+	void *a_id;
 	int a_op;
 	struct flock *a_fl;
 	int a_flags;
 };
 extern struct vnodeop_desc vop_advlock_desc;
-int VOP_ADVLOCK(struct vnode *, caddr_t, int, struct flock *, int);
+int VOP_ADVLOCK(struct vnode *, void *, int, struct flock *, int);
 
 struct vop_reallocblks_args {
 	struct vnodeop_desc *a_desc;

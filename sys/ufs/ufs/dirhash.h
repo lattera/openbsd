@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/ufs/ufs/dirhash.h,v 1.3 2004/02/02 19:34:39 tedu Exp $	*/
+/* $OpenBSD: src/sys/ufs/ufs/dirhash.h,v 1.3.2.1 2004/02/19 11:01:42 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Ian Dowse.  All rights reserved.
  *

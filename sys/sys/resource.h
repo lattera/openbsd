@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/resource.h,v 1.3.14.2 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/resource.h,v 1.3.14.3 2004/02/19 11:01:34 niklas Exp $	*/
 /*	$NetBSD: resource.h,v 1.14 1996/02/09 18:25:27 christos Exp $	*/
 
 /*
@@ -88,7 +88,9 @@ struct	rusage {
 
 #define	RLIM_NLIMITS	9		/* number of resource limits */
 
-#define	RLIM_INFINITY	(((u_quad_t)1 << 63) - 1)
+#define	RLIM_INFINITY	(((rlim_t)1 << 63) - 1)
+#define	RLIM_SAVED_MAX	RLIM_INFINITY
+#define	RLIM_SAVED_CUR	RLIM_INFINITY
 
 struct orlimit {
 	int32_t	rlim_cur;		/* current (soft) limit */
@@ -115,10 +117,10 @@ int	donice(struct proc *, struct proc *, int);
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int	getpriority(int, int);
+int	getpriority(int, id_t);
 int	getrlimit(int, struct rlimit *);
 int	getrusage(int, struct rusage *);
-int	setpriority(int, int, int);
+int	setpriority(int, id_t, int);
 int	setrlimit(int, const struct rlimit *);
 __END_DECLS
 

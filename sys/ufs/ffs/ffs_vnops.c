@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.10.2.9 2003/06/07 11:09:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.10.2.10 2004/02/19 11:01:41 niklas Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -79,7 +79,7 @@ struct vnodeopv_entry_desc ffs_vnodeop_entries[] = {
 	{ &vop_write_desc, ffs_write },			/* write */
 	{ &vop_lease_desc, ufs_lease_check },		/* lease */
 	{ &vop_ioctl_desc, ufs_ioctl },			/* ioctl */
-	{ &vop_select_desc, ufs_select },		/* select */
+	{ &vop_poll_desc, ufs_poll },			/* poll */
 	{ &vop_kqfilter_desc, ufs_kqfilter },		/* kqfilter */
 	{ &vop_revoke_desc, ufs_revoke },		/* revoke */
 	{ &vop_fsync_desc, ffs_fsync },			/* fsync */

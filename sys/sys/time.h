@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/time.h,v 1.9.2.5 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/time.h,v 1.9.2.6 2004/02/19 11:01:35 niklas Exp $	*/
 /*	$NetBSD: time.h,v 1.18 1996/04/23 10:29:33 mycroft Exp $	*/
 
 /*
@@ -141,6 +141,15 @@ struct	itimerval {
 };
 
 /*
+ * Structure defined by POSIX 1003.1b to be like a itimerval,
+ * but with timespecs. Used in the timer_*() system calls.
+ */
+struct  itimerspec {
+	struct  timespec it_interval;	/* timer interval */
+	struct  timespec it_value;	/* timer expiration */
+};
+
+/*
  * Getkerninfo clock information structure
  */
 struct clockinfo {
@@ -154,6 +163,7 @@ struct clockinfo {
 #define CLOCK_REALTIME	0
 #define CLOCK_VIRTUAL	1
 #define CLOCK_PROF	2
+#define	CLOCK_MONOTONIC	3
 
 #define TIMER_RELTIME	0x0	/* relative timer */
 #define TIMER_ABSTIME	0x1	/* absolute timer */

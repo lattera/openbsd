@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.1.2.1 2003/03/28 00:08:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.1.2.2 2004/02/19 11:01:43 niklas Exp $ */
 /*-
  * Copyright (c) 1999, 2000, 2001, 2002 Robert N. M. Watson
  * Copyright (c) 2002 Networks Associates Technology, Inc.
@@ -845,7 +845,7 @@ ufs_extattr_credcheck(struct vnode *vp, struct ufs_extattr_list_entry *uele,
 	switch (uele->uele_attrnamespace) {
 	case EXTATTR_NAMESPACE_SYSTEM:
 		/* Potentially should be: return (EPERM); */
-		return (suser(cred, &p->p_acflag));
+		return (suser_ucred(cred));
 	case EXTATTR_NAMESPACE_USER:
 		return (VOP_ACCESS(vp, access, cred, p));
 	default:
