@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23.2.4 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23.2.5 2002/11/04 20:10:59 art Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.51 2002/05/09 07:04:23 enami Exp $	*/
 
 /*
@@ -580,7 +580,7 @@ uao_init(void)
 	 */
 
 	pool_init(&uao_swhash_elt_pool, sizeof(struct uao_swhash_elt),
-	    0, 0, 0, "uaoeltpl", &pool_allocator_nointr);
+	    0, 0, 0, "uaoeltpl", NULL);
 	pool_init(&uvm_aobj_pool, sizeof(struct uvm_aobj), 0, 0, 0,
 	    "aobjpl", &pool_allocator_nointr);
 }

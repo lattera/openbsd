@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.5 2002/11/04 20:11:00 art Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.59 2002/10/05 17:26:06 oster Exp $	*/
 
 /*
@@ -185,9 +185,9 @@ uvm_km_init(start, end)
 	kernel_map_store.pmap = pmap_kernel();
 	if (start != base &&
 	    uvm_map(&kernel_map_store, &base, start - base, NULL,
-	    UVM_UNKNOWN_OFFSET, 0,
-	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
-			UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
+		    UVM_UNKNOWN_OFFSET, 0,
+		    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
+				UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 
 	/*
@@ -455,10 +455,10 @@ uvm_km_kmemalloc(map, obj, size, flags)
 
 		if (obj == NULL) {
 			pmap_kenter_pa(loopva, VM_PAGE_TO_PHYS(pg),
-			    UVM_PROT_RW);
+			    VM_PROT_READ | VM_PROT_WRITE);
 		} else {
 			pmap_enter(map->pmap, loopva, VM_PAGE_TO_PHYS(pg),
-			    UVM_PROT_RW,
+			    VM_PROT_READ | VM_PROT_WRITE,
 			    PMAP_WIRED | VM_PROT_READ | VM_PROT_WRITE);
 		}
 		loopva += PAGE_SIZE;
