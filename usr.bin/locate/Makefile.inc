@@ -1,6 +1,5 @@
-#  $OpenBSD: src/usr.bin/locate/Makefile.inc,v 1.1 1996/08/17 11:03:54 michaels Exp $
+#	$OpenBSD: src/usr.bin/locate/Makefile.inc,v 1.2 1996/09/15 16:50:34 michaels Exp $
 #
-#       $Id: Makefile.include ,v 1.1 1996/08/14 00:22:24 wosch Exp $
+#	$Id: Makefile.inc,v 1.1 1996/08/14 00:22:24 wosch Exp $
 
-LIBEXECDIR?=    /usr/libexec
-
+LIBEXECDIR?=	/usr/libexec
