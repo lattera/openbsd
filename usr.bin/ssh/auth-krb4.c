@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.26.2.2 2002/10/11 14:51:51 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.26.2.3 2003/04/03 22:35:16 miod Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -271,7 +271,7 @@ auth_krb4(Authctxt *authctxt, KTEXT auth, char **client, KTEXT reply)
 		reply->length = r;
 
 	/* Clear session key. */
-	memset(&adat.session, 0, sizeof(&adat.session));
+	memset(&adat.session, 0, sizeof(adat.session));
 	return (1);
 }
 #endif /* KRB4 */

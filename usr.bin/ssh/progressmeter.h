@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/progressmeter.h,v 1.1 2003/01/10 08:19:07 fgsch Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/progressmeter.h,v 1.1.6.1 2003/04/03 22:35:17 miod Exp $	*/
 /*
  * Copyright (c) 2002 Nils Nordman.  All rights reserved.
  *

@@ -32,15 +32,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/key.c,v 1.43.2.2 2002/10/11 14:51:52 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/key.c,v 1.43.2.3 2003/04/03 22:35:17 miod Exp $");
 
 #include <openssl/evp.h>
 
 #include "xmalloc.h"
 #include "key.h"
 #include "rsa.h"
-#include "ssh-dss.h"
-#include "ssh-rsa.h"
 #include "uuencode.h"
 #include "buffer.h"
 #include "bufaux.h"
@@ -410,14 +408,14 @@ key_read(Key *ret, char **cpp)
 	case KEY_DSA:
 		space = strchr(cp, ' ');
 		if (space == NULL) {
-			debug3("key_read: no space");
+			debug3("key_read: missing whitespace");
 			return -1;
 		}
 		*space = '\0';
 		type = key_type_from_name(cp);
 		*space = ' ';
 		if (type == KEY_UNSPEC) {
-			debug3("key_read: no key found");
+			debug3("key_read: missing keytype");
 			return -1;
 		}
 		cp = space+1;

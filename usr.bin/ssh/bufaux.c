@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.24.2.3 2002/06/26 15:30:37 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.24.2.4 2003/04/03 22:35:16 miod Exp $");
 
 #include <openssl/bn.h>
 #include "bufaux.h"
@@ -221,7 +221,7 @@ buffer_get_string(Buffer *buffer, u_int *length_ptr)
 	/* Get the length. */
 	len = buffer_get_int(buffer);
 	if (len > 256 * 1024)
-		fatal("buffer_get_string: bad string length %d", len);
+		fatal("buffer_get_string: bad string length %u", len);
 	/* Allocate space for the string.  Add one byte for a null character. */
 	value = xmalloc(len + 1);
 	/* Get the string. */

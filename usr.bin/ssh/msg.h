@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/msg.h,v 1.1.4.1 2002/06/26 15:51:09 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/msg.h,v 1.1.4.2 2003/04/03 22:35:17 miod Exp $	*/
 /*
  * Copyright (c) 2002 Markus Friedl.  All rights reserved.
  *
@@ -25,7 +25,7 @@
 #ifndef SSH_MSG_H
 #define SSH_MSG_H
 
-void	 msg_send(int, u_char, Buffer *);
-int	 msg_recv(int, Buffer *);
+void	 ssh_msg_send(int, u_char, Buffer *);
+int	 ssh_msg_recv(int, Buffer *);
 
 #endif

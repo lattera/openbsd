@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.5.2.2 2002/10/11 14:51:52 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.5.2.3 2003/04/03 22:35:17 miod Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
@@ -208,6 +208,6 @@ ls_file(char *name, struct stat *st, int remote)
 	glen = MAX(strlen(group), 8);
 	snprintf(buf, sizeof buf, "%s %3d %-*s %-*s %8llu %s %s", mode,
 	    st->st_nlink, ulen, user, glen, group,
-	    (u_int64_t)st->st_size, tbuf, name);
+	    (unsigned long long)st->st_size, tbuf, name);
 	return xstrdup(buf);
 }

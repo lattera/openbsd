@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-int.h,v 1.5 2002/02/13 00:59:23 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-int.h,v 1.5.2.1 2003/04/03 22:35:17 miod Exp $ */
 
 /*
  * Copyright (c) 2001,2002 Damien Miller.  All rights reserved.
@@ -24,4 +24,4 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void	 interactive_loop(int, int, char *, char *);
+int	 interactive_loop(int, int, char *, char *);

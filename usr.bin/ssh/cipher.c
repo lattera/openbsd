@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cipher.c,v 1.55.2.2 2002/10/11 14:51:52 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/cipher.c,v 1.55.2.3 2003/04/03 22:35:17 miod Exp $");
 
 #include "xmalloc.h"
 #include "log.h"
@@ -221,7 +221,7 @@ cipher_init(CipherContext *cc, Cipher *cipher,
 		    cipher->name);
 	klen = EVP_CIPHER_CTX_key_length(&cc->evp);
 	if (klen > 0 && keylen != klen) {
-		debug("cipher_init: set keylen (%d -> %d)", klen, keylen);
+		debug2("cipher_init: set keylen (%d -> %d)", klen, keylen);
 		if (EVP_CIPHER_CTX_set_key_length(&cc->evp, keylen) == 0)
 			fatal("cipher_init: set keylen failed (%d -> %d)",
 			    klen, keylen);
