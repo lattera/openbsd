@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/snprintf.c,v 1.2 2003/06/04 17:38:24 millert Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/snprintf.c,v 1.2.2.1 2003/06/07 10:41:25 ho Exp $	*/
 /*	$NetBSD: printf.c,v 1.10 1996/11/30 04:19:21 gwr Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass_quirks.c,v 1.6 2003/05/19 01:02:39 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umass_quirks.c,v 1.6.4.1 2003/06/07 10:39:47 ho Exp $	*/
 /*	$NetBSD: umass_quirks.c,v 1.39 2003/05/08 15:19:47 augustss Exp $	*/
 
 /*

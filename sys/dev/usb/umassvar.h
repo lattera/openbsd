@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umassvar.h,v 1.3 2003/05/17 06:07:57 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umassvar.h,v 1.3.4.1 2003/06/07 10:39:47 ho Exp $ */
 /*	$NetBSD: umassvar.h,v 1.19 2003/02/22 05:18:50 tsutsui Exp $	*/
 /*-
  * Copyright (c) 1999 MAEKAWA Masahide <bishop@rr.iij4u.or.jp>,

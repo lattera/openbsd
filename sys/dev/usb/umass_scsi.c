@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass_scsi.c,v 1.4 2003/05/17 18:25:51 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umass_scsi.c,v 1.4.4.1 2003/06/07 10:39:47 ho Exp $ */
 /*	$NetBSD: umass_scsipi.c,v 1.9 2003/02/16 23:14:08 augustss Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
