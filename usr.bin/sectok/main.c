@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2001/07/26 16:10:01 rees Exp $ */
+/* $Id: main.c,v 1.4 2001/07/27 14:13:08 rees Exp $ */
 
 /*
  * Smartcard commander.
@@ -128,8 +128,10 @@ char *av[];
 	if (!fgets(buf, sizeof buf, cmdf)) {
 	    if (interrupted)
 		continue;
-	    else
+	    else {
+		putchar('\n');
 		break;
+	    }
 	}
 	if (cmdf != stdin)
 	    printf("sectok> %s", buf);
