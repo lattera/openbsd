@@ -1,0 +1,547 @@
+.\"
+.\" Copyright (c) 1997 David E. O'Brien
+.\"
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE DEVELOPERS BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $OpenBSD: src/share/man/man7/ports.7,v 1.40 2003/09/03 09:10:30 jmc Exp $
+.\" $FreeBSD: ports.7,v 1.7 1998/06/23 04:38:50 hoek Exp $
+.\"
+.Dd January 25, 1998
+.Dt PORTS 7
+.Os
+.Sh NAME
+.Nm ports
+.Nd contributed applications
+.Sh DESCRIPTION
+The
+.Ox
+Ports Collection
+(shamelessly stolen from the
+.Fx
+Ports Collection) offers a simple way
+for users and administrators to install applications.
+Each port contains any patches necessary to make the original
+application source code compile and run on
+.Ox .
+Compiling an application is as simple as typing
+.Ic make
+in the port directory!
+The
+.Pa Makefile
+automatically fetches the
+application source code, either from a local disk or via ftp, unpacks it
+on the local system, applies the patches, and compiles it.
+If all goes well, simply type
+.Ic sudo make install
+to install the application.
+.Pp
+For more information about using ports, see
+The
+.Ox
+Ports Mechanism
+(http://www.openbsd.org/ports.html) and the
+.Ox
+FAQ (http://www.openbsd.org/faq/).
+For information about creating new ports, see
+the
+.Ox
+Porting Checklist (http://www.openbsd.org/checklist.html).
+.Pp
+For a detailed description of the build process, see
+.Xr bsd.port.mk 5 .
+.Sh PORTS MASTER MAKEFILE
+The ports master Makefile, normally located in
+.Pa /usr/ports/Makefile
+(but see
+.Ev PORTSDIR
+below)
+offers a few useful targets.
+.Bl -tag -width configure
+.It Ar index
+rebuild the ports complete index,
+.Pa /usr/ports/INDEX
+.It Ar mirror-maker
+see
+.Xr mirroring-ports 7 ,
+.It Ar print-index
+display the contents of the index in a user-friendly way,
+.It Ar search
+invoked with a key, e.g.,
+.Ic make search key=foo ,
+retrieve information relevant to a given port (obsolescent).
+.El
+.Sh SELECTING A SET OF PORTS
+If
+.Pa /usr/ports/INDEX
+is up to date, it is possible to select subsets by setting the following
+variables on the command line:
+.Bl -tag -width category
+.It Va key
+package name matching the given key,
+.It Va category
+port belonging to category,
+.It Va maintainer
+port maintained by a given person.
+.El
+.Pp
+For instance, to invoke clean on all ports in the x11 category, one can say:
+.Bd -literal -offset indent
+	$ make category=x11 clean
+.Ed
+.Pp
+The index search is done by a perl script, so all regular expressions from
+.Xr perlre 1
+apply.
+.Sh TARGETS
+Individual ports are controlled through a few documented targets.
+Some of these targets work recursively through subdirectories, so that
+someone can, for examples, install all of the net
+ports.
+.Pp
+The variable
+.Ev SKIPDIR
+can hold a set of package directories to avoid during recursion.
+These are always specified relative to the root of the ports tree,
+and can contain a flavor or subpackage part
+.Po
+see
+.Xr packages-specs 7
+.Pc .
+.Pp
+In case of failure in a subdirectory, the shell fragment held in
+.Ev REPORT_PROBLEM
+is executed.
+Default behavior is to call exit, but this can be overridden on the command
+line, e.g., to avoid stopping after each problem.
+.Bd -literal -offset indent
+	$ make REPORT_PROBLEM=true
+.Ed
+.Pp
+The targets that do this are
+.Ar all , build , checksum , clean ,
+.Ar configure , extract , fake ,
+.Ar fetch , install , distclean ,
+.Ar deinstall , reinstall , package ,
+.Ar link-categories , unlink-categories ,
+.Ar describe , show , regress ,
+.Ar lib-depends-check , homepage-links , manpages-check ,
+.Ar license-check , all-dir-depends , build-dir-depends ,
+.Ar run-dir-depends
+and
+.Ar readmes .
+.Pp
+Target names starting with _ are private to the ports infrastructure,
+should not be invoked directly, and are liable to change without notice.
+.Pp
+In the following list, each target will run the preceding targets
+in order automatically.
+That is,
+.Ar build
+will be run
+.Pq if necessary
+by
+.Ar install ,
+and so on all the way to
+.Ar fetch .
+Typical use only runs
+.Ar install
+explicitly (if root or
+.Ev SUDO
+is defined in
+.Pa /etc/mk.conf ) ,
+or
+.Ar build
+(as user), then
+.Ar install
+(as root).
+.Bl -tag -width configure
+.It Ar fetch
+Fetch all of the files needed to build this port from the site(s)
+listed in
+.Ev MASTER_SITES
+and
+.Ev PATCH_SITES .
+See
+.Ev FETCH_CMD
+and
+.Ev MASTER_SITE_OVERRIDE .
+.It Ar checksum
+Verify that the fetched distfile matches the one the port was tested against.
+Defining
+.Ev NO_CHECKSUM
+to
+.Dv Yes
+will skip this step.
+Sometimes, distfiles change without warning.
+The main
+.Ox
+mirror should still hold a copy of old distfiles, indexed by checksum.
+Using
+.Bd -literal -offset indent
+	$ make checksum REFETCH=true
+.Ed
+.Pp
+will try to get a set of distfiles that match the recorded checksum.
+.It Ar depends
+Install
+.Pq or package if only compilation is necessary
+any dependencies of the current port.
+When called by the
+.Ar extract , install
+or
+.Ar fetch
+targets, this is run in scattered pieces as
+.Ar lib-depends , build-depends
+and
+.Ar run-depends .
+Defining
+.Ev NO_DEPENDS
+to
+.Dv Yes
+will skip this step.
+.It Ar extract
+Expand the distfile into a work directory.
+.It Ar patch
+Apply any patches that are necessary for the port.
+.It Ar configure
+Configure the port.
+Some ports will ask questions during this stage.
+See
+.Ev INTERACTIVE
+and
+.Ev BATCH .
+.It Ar build
+Build the port.
+This is the same as calling the
+.Ar all
+target.
+.It Ar fake
+Pretend to install the port under a subdirectory of the work directory.
+.It Ar package
+Create a binary package from the fake installation.
+The package is a .tgz file that can be used to
+install the port on several machines with
+.Xr pkg_add 1 .
+.It Ar install
+Install the resulting package.
+.El
+.Pp
+The following targets are not run during the normal install process.
+.Bl -tag -width fetch-list
+.It Ar print-build-depends print-run-depends
+Print an ordered list of all the compile and run dependencies.
+.It Ar clean
+Remove the expanded source code.
+This does not recurse to dependencies unless
+.Ev CLEANDEPENDS
+is defined to
+.Dv Yes .
+.It Ar distclean
+Remove the port's distfile(s) and perform the
+.Ar clean
+operation.
+This does not recurse to dependencies.
+.It Ar reinstall
+Use this to restore a port after using
+.Xr pkg_delete 1 .
+.It Ar link-categories
+Populate the ports tree with symbolic links for each category the port
+belongs to.
+.It Ar unlink-categories
+Remove the symbolic links created by
+.Ar link-categories .
+.El
+.Sh BULK PACKAGE BUILDING
+The ports tree contains some mechanisms to save space when building
+large collections of packages.
+If
+.Ev BIN_PACKAGES ,
+.Ev TRUST_PACKAGES ,
+and
+.Ev BULK
+are set to
+.Sq Yes
+for a package build, some shortcuts are taken to allow cleaning up working
+directories on the fly.
+.Pp
+Some important caveats apply:
+the packages already built in the package repository are assumed to be
+up-to-date (BIN_PACKAGES), the database of installed packages is assumed
+to be accurate (TRUST_PACKAGES), and the bulk cookies are assumed to be
+up-to-date (BULK).
+.Pp
+This means that newer iterations of package buildings should make sure
+those conditions are met, which entails erasing old package repository,
+removing packages that need to be rebuilt from the base of installed
+packages, and cleaning up old bulk cookies.
+.Pp
+If any of these conditions is not met, the package build may run into weird
+problems.
+.Sh NETWORK CONFIGURATION
+The variables pertaining to network access have been marshalled into
+.Pa ${PORTSDIR}/infrastructure/template/network.conf.template .
+.Pp
+To customize that setup, copy that file into
+.Pa ${PORTSDIR}/infrastructure/db/network.conf
+and edit it.
+.Pp
+.Bl -tag -width MASTER_SITES
+.It Ev MASTER_SITE_OPENBSD
+If set to
+.Dv Yes ,
+include the master
+.Ox
+site when fetching files.
+.It Ev MASTER_SITE_FREEBSD
+If set to
+.Dv Yes ,
+include the master
+.Fx
+site when fetching files.
+.It Ev MASTER_SITE_OVERRIDE
+Go to this site first for all files.
+.El
+.Sh FLAVORS
+The
+.Ox
+ports tree comes with a mechanism called
+.Ic FLAVORS .
+Thanks to this mechanism, users can select specific options provided by
+a given port.
+.Pp
+If a port is "flavored", there should be a terse description of
+available flavors in the
+.Pa pkg/DESCR
+file.
+.Pp
+For example, the shells/bash port comes with a flavor called
+.Ic static .
+This changes the building process so a statically compiled version of
+the program will be built.
+To avoid confusion with other packages or flavors,
+the package name will be extended with a dash-separated list of
+the selected flavors.
+.Pp
+In this instance, the corresponding package will be called
+.Ic bash-1.14.7p1-static .
+.Pp
+To build a port with a specific flavor, just pass
+.Ev FLAVOR
+in the environment of the
+.Xr make 1
+command:
+.Pp
+.Bd -literal -offset indent
+$ env FLAVOR="static" make package
+.Ed
+.Pp
+and of course, use the same settings for the subsequent invocations of make:
+.Bd -literal -offset indent
+$ env FLAVOR="static" make package
+$ env FLAVOR="static" make clean
+.Ed
+.Pp
+More than one flavor may be specified:
+.Bd -literal -offset indent
+$ cd /usr/ports/mail/exim
+$ env FLAVOR="mysql ldap" make package
+.Ed
+.Pp
+Specifying a flavor that does not exist is an error.
+Additionally, some ports impose some further restrictions on flavor
+combinations, when such combinations do not make sense.
+.Pp
+Lots of ports can be built without X11 requirement and accordingly
+have a
+.Ic no_x11
+flavor.
+.Pp
+Flavor settings are not propagated to dependencies.
+If a specific combination is needed, careful hand-building of the
+required set of packages is still necessary.
+.Sh PORT VARIABLES
+These can be changed in the environment, or in
+.Pa /etc/mk.conf
+for persistence.
+They can also be set on make's command line, e.g.,
+.Ic make VAR_FOO=foo
+.Pp
+Boolean variables should be set to
+.Dv Yes
+instead of simply being defined, for uniformity and future compatibility.
+.Pp
+Variable names starting with _ are private to the ports infrastructure,
+should not be changed by the user, and are liable to change without notice.
+.Pp
+.Bl -tag -width MASTER_SITES
+.It Ev PORTSDIR
+Location of the ports tree
+.Po
+usually
+.Pa /usr/ports
+.Pc
+.It Ev DISTDIR
+Where to find/put distfiles, normally
+.Pa distfiles/
+in
+.Ev PORTSDIR .
+.It Ev PKGREPOSITORYBASE
+Used only for the
+.Ar package
+target; the base directory for the packages tree, normally
+.Pa packages/${MACHINE_ARCH}
+in
+.Ev PORTSDIR .
+If this directory exists, the package tree will be (partially) constructed.
+This directory does not have to exist; if it doesn't, packages will be
+placed into the current directory, or define one of
+.Bl -tag -width PKGREPOSITORY
+.It Ev PKGREPOSITORY
+Directory to put the package in.
+.It Ev PKGFILE
+The full path to the package.
+.El
+.It Ev BULK_COOKIES_DIR
+During bulk package building, used to store cookies for already built
+packages to avoid rebuilding them, since the actual
+working directory will already have been cleaned out.
+Defaults to bulk/${MACHINE_ARCH} under
+.Ev PORTSDIR .
+.It Ev LOCALBASE
+Where to install things in general
+.Po
+usually
+.Pa /usr/local
+.Pc
+.It Ev MASTER_SITES
+Primary sites for distribution files if not found locally.
+.It Ev PATCH_SITES
+Primary location(s) for distribution patch files if not found
+locally.
+.It Ev CLEANDEPENDS
+If set to
+.Dv Yes ,
+let
+.Sq clean
+recurse to dependencies.
+.It Ev FETCH_CMD
+Command to use to fetch files.
+Normally
+.Xr ftp 1 .
+.It Ev PATCH_DEBUG
+If defined, display verbose output when applying each patch.
+.It Ev INTERACTIVE
+If defined, only operate on a port if it requires interaction.
+.It Ev BATCH
+If defined, only operate on a port if it can be installed 100% automatically.
+.It Ev USE_SYSTRACE
+Set to
+.Sq Yes
+to protect the
+.Ar configure , build ,
+and
+.Ar fake
+targets with
+.Xr systrace 1 .
+This way it is ensured that ports do not make any network connections
+during build or write outside some well defined directories.
+The filter list is stored in
+.Pa ${PORTSDIR}/infrastructure/db/systrace.filter .
+.El
+.Sh USING A READ-ONLY PORTS TREE
+Select read-write partition(s) that can accommodate working directories, the
+distfiles repository, and the built packages.
+Set
+.Ev WRKOBJDIR ,
+.Ev PACKAGES ,
+.Ev BULK_COOKIES_DIR
+and
+.Ev DISTDIR
+in
+.Pa /etc/mk.conf
+accordingly.
+.Sh FILES
+.Bl -tag -width /usr/ports/xxxxxxxx -compact
+.It Pa /usr/ports
+The default ports directory.
+.It Pa /usr/ports/Makefile
+Ports master Makefile.
+.It Pa /usr/ports/INDEX
+Ports index.
+.It Pa /usr/ports/infrastructure/mk/bsd.port.mk
+The ports main engine.
+.It Pa /usr/ports/infrastructure/templates/network.conf.template
+Network configuration defaults.
+.It Pa /usr/ports/infrastructure/db/network.conf
+Local network configuration.
+.It Pa /usr/ports/infrastructure/db/systrace.filter
+Filter list for systrace.
+.It Pa /usr/ports/infrastructure/db/user.list
+List of users and groups created by ports.
+.El
+.Sh SEE ALSO
+.Xr make 1 ,
+.Xr pkg_add 1 ,
+.Xr pkg_create 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_info 1 ,
+.Xr bsd.port.mk 5 ,
+.Xr packages 7
+.Pp
+The
+.Ox
+Ports Mechanism: http://www.openbsd.org/ports.html
+.Pp
+The
+.Ox
+Porting Checklist: http://www.openbsd.org/checklist.html
+.Sh HISTORY
+.Nm The Ports Collection
+appeared in
+.Fx 1.0 .
+It was introduced in
+.Ox
+by Ejovi Nuwere, with much initial effort by Angelos D. Keromytis.
+Maintenance passed then to Marco S. Hyman, and then to Christopher Turan.
+It is currently managed by Marc Espie, Brad Smith, and Christian Weisgerber,
+along with a host of others found at ports@openbsd.org.
+.Sh AUTHORS
+This man page was originated by
+David O'Brien, from the
+.Fx
+project.
+.Sh BUGS
+Ports documentation is split over several places ---
+.Xr bsd.port.mk 5 ,
+the
+.Dq Ports Collection
+section of the
+.Fx
+handbook, the
+.Dq Porting Existing Software
+section of the
+.Fx
+handbook,
+and some man pages.
+.Ox
+adds a few web pages to further confuse the issue.
