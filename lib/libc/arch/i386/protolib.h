@@ -28,7 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *     $OpenBSD: src/lib/libc/arch/i386/Attic/protolib.h,v 1.1 1996/03/25 23:31:19 tholo Exp $
+ *     $OpenBSD: src/lib/libc/arch/i386/Attic/protolib.h,v 1.2 1996/09/15 10:09:08 tholo Exp $
  */
 
 #include <float.h>
@@ -41,6 +41,7 @@
 /* PROTOLIB1 */
 
 void	*alloca(size_t);
+int	exect(const char *, char * const [], char * const []);
 double	fabs(double);
 int	__flt_rounds(void);
 fp_except fpgetmask(void);
