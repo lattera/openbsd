@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/ispcvt/Attic/Makefile,v 1.5 2000/05/19 14:49:44 espie Exp $
+#	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/ispcvt/Attic/Makefile,v 1.6 2000/05/25 21:54:47 deraadt Exp $
 
 .if ${MACHINE} == "i386"
 PROG=	ispcvt
@@ -7,6 +7,6 @@ NOPROG=yes
 .endif
 
 MAN8=	ispcvt.${MAN8EXT}
-MANSUBDIR=i386
+MANSUBDIR=/i386
 
 .include <bsd.prog.mk>
