@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.2 2000/06/06 06:49:47 deraadt Exp $	*/
 
 /* This is an independent implementation of the encryption algorithm:   */
 /*                                                                      */
