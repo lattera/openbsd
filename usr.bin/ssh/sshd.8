@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.176 2002/04/05 20:56:21 stevesk Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.176.2.1 2002/05/18 04:12:11 jason Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -116,14 +116,14 @@ Rhosts authentication is normally disabled
 because it is fundamentally insecure, but can be enabled in the server
 configuration file if desired.
 System security is not improved unless
-.Xr rshd 8 ,
-.Xr rlogind 8 ,
+.Nm rshd ,
+.Nm rlogind ,
 and
-.Xr rexecd 8
+.Xr rexecd
 are disabled (thus completely disabling
-.Xr rlogin 1
+.Xr rlogin
 and
-.Xr rsh 1
+.Xr rsh
 into the machine).
 .Pp
 .Ss SSH protocol version 2
@@ -332,7 +332,7 @@ keywords are case-insensitive and arguments are case-sensitive):
 .It Cm AFSTokenPassing
 Specifies whether an AFS token may be forwarded to the server.
 Default is
-.Dq yes .
+.Dq no .
 .It Cm AllowGroups
 This keyword can be followed by a list of group name patterns, separated
 by spaces.
@@ -571,7 +571,7 @@ the Kerberos KDC.
 To use this option, the server needs a
 Kerberos servtab which allows the verification of the KDC's identity.
 Default is
-.Dq yes .
+.Dq no .
 .It Cm KerberosOrLocalPasswd
 If set then if password authentication through Kerberos fails then
 the password will be validated via any additional local mechanism

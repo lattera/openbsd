@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105 2002/03/20 19:12:24 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.1 2002/05/18 04:12:11 jason Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 #include <krb.h>
@@ -181,7 +181,7 @@ fill_default_server_options(ServerOptions *options)
 		options->pubkey_authentication = 1;
 #if defined(KRB4) || defined(KRB5)
 	if (options->kerberos_authentication == -1)
-		options->kerberos_authentication = (access(KEYFILE, R_OK) == 0);
+		options->kerberos_authentication = 0;
 	if (options->kerberos_or_local_passwd == -1)
 		options->kerberos_or_local_passwd = 1;
 	if (options->kerberos_ticket_cleanup == -1)
@@ -193,7 +193,7 @@ fill_default_server_options(ServerOptions *options)
 #endif
 #ifdef AFS
 	if (options->afs_token_passing == -1)
-		options->afs_token_passing = k_hasafs();
+		options->afs_token_passing = 0;
 #endif
 	if (options->password_authentication == -1)
 		options->password_authentication = 1;

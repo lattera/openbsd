@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.35 2002/03/19 10:35:39 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.35.2.1 2002/05/18 04:12:10 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -133,6 +133,8 @@ void	auth_log(Authctxt *, int, char *, char *);
 void	userauth_finish(Authctxt *, int, char *);
 int	auth_root_allowed(char *);
 
+char	*auth2_read_banner(void);
+
 void	privsep_challenge_enable(void);
 
 int	auth2_challenge(Authctxt *, char *);
@@ -166,6 +168,11 @@ Key	*get_hostkey_by_index(int);
 Key	*get_hostkey_by_type(int);
 int	 get_hostkey_index(Key *);
 int	 ssh1_session_key(BIGNUM *);
+
+/* debug messages during authentication */
+void	 auth_debug_add(const char *fmt,...) __attribute__((format(printf, 1, 2)));
+void	 auth_debug_send(void);
+void	 auth_debug_reset(void);
 
 #define AUTH_FAIL_MAX 6
 #define AUTH_FAIL_LOG (AUTH_FAIL_MAX/2)

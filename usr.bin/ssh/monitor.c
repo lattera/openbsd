@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.9 2002/03/30 18:51:15 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.9.2.1 2002/05/18 04:12:10 jason Exp $");
 
 #include <openssl/dh.h>
 
@@ -96,6 +96,7 @@ struct {
 int mm_answer_moduli(int, Buffer *);
 int mm_answer_sign(int, Buffer *);
 int mm_answer_pwnamallow(int, Buffer *);
+int mm_answer_auth2_read_banner(int, Buffer *);
 int mm_answer_authserv(int, Buffer *);
 int mm_answer_authpassword(int, Buffer *);
 int mm_answer_bsdauthquery(int, Buffer *);
@@ -143,6 +144,7 @@ struct mon_table mon_dispatch_proto20[] = {
     {MONITOR_REQ_SIGN, MON_ONCE, mm_answer_sign},
     {MONITOR_REQ_PWNAM, MON_ONCE, mm_answer_pwnamallow},
     {MONITOR_REQ_AUTHSERV, MON_ONCE, mm_answer_authserv},
+    {MONITOR_REQ_AUTH2_READ_BANNER, MON_ONCE, mm_answer_auth2_read_banner},
     {MONITOR_REQ_AUTHPASSWORD, MON_AUTH, mm_answer_authpassword},
 #ifdef BSD_AUTH
     {MONITOR_REQ_BSDAUTHQUERY, MON_ISAUTH, mm_answer_bsdauthquery},
@@ -225,7 +227,7 @@ monitor_permit_authentications(int permit)
 }
 
 Authctxt *
-monitor_child_preauth(struct monitor *monitor)
+monitor_child_preauth(struct monitor *pmonitor)
 {
 	struct mon_table *ent;
 	int authenticated = 0;
@@ -248,7 +250,7 @@ monitor_child_preauth(struct monitor *monitor)
 
 	/* The first few requests do not require asynchronous access */
 	while (!authenticated) {
-		authenticated = monitor_read(monitor, mon_dispatch, &ent);
+		authenticated = monitor_read(pmonitor, mon_dispatch, &ent);
 		if (authenticated) {
 			if (!(ent->flags & MON_AUTHDECIDE))
 				fatal("%s: unexpected authentication from %d",
@@ -272,13 +274,13 @@ monitor_child_preauth(struct monitor *monitor)
 	debug("%s: %s has been authenticated by privileged process",
 	    __FUNCTION__, authctxt->user);
 
-	mm_get_keystate(monitor);
+	mm_get_keystate(pmonitor);
 
 	return (authctxt);
 }
 
 void
-monitor_child_postauth(struct monitor *monitor)
+monitor_child_postauth(struct monitor *pmonitor)
 {
 	if (compat20) {
 		mon_dispatch = mon_dispatch_postauth20;
@@ -298,18 +300,18 @@ monitor_child_postauth(struct monitor *monitor)
 	}
 
 	for (;;)
-		monitor_read(monitor, mon_dispatch, NULL);
+		monitor_read(pmonitor, mon_dispatch, NULL);
 }
 
 void
-monitor_sync(struct monitor *monitor)
+monitor_sync(struct monitor *pmonitor)
 {
 	/* The member allocation is not visible, so sync it */
-	mm_share_sync(&monitor->m_zlib, &monitor->m_zback);
+	mm_share_sync(&pmonitor->m_zlib, &pmonitor->m_zback);
 }
 
 int
-monitor_read(struct monitor *monitor, struct mon_table *ent,
+monitor_read(struct monitor *pmonitor, struct mon_table *ent,
     struct mon_table **pent)
 {
 	Buffer m;
@@ -318,7 +320,7 @@ monitor_read(struct monitor *monitor, struct mon_table *ent,
 
 	buffer_init(&m);
 
-	mm_request_receive(monitor->m_sendfd, &m);
+	mm_request_receive(pmonitor->m_sendfd, &m);
 	type = buffer_get_char(&m);
 
 	debug3("%s: checking request %d", __FUNCTION__, type);
@@ -333,7 +335,7 @@ monitor_read(struct monitor *monitor, struct mon_table *ent,
 		if (!(ent->flags & MON_PERMIT))
 			fatal("%s: unpermitted request %d", __FUNCTION__,
 			    type);
-		ret = (*ent->f)(monitor->m_sendfd, &m);
+		ret = (*ent->f)(pmonitor->m_sendfd, &m);
 		buffer_free(&m);
 
 		/* The child may use this request only once, disable it */
@@ -505,10 +507,27 @@ mm_answer_pwnamallow(int socket, Buffer *m)
 	/* For SSHv1 allow authentication now */
 	if (!compat20)
 		monitor_permit_authentications(1);
-	else
+	else {
 		/* Allow service/style information on the auth context */
 		monitor_permit(mon_dispatch, MONITOR_REQ_AUTHSERV, 1);
+		monitor_permit(mon_dispatch, MONITOR_REQ_AUTH2_READ_BANNER, 1);
+	}
 
+
+	return (0);
+}
+
+int mm_answer_auth2_read_banner(int socket, Buffer *m)
+{
+	char *banner;
+
+	buffer_clear(m);
+	banner = auth2_read_banner();
+	buffer_put_cstring(m, banner != NULL ? banner : "");
+	mm_request_send(socket, MONITOR_ANS_AUTH2_READ_BANNER, m);
+
+	if (banner != NULL)
+		free(banner);
 
 	return (0);
 }
@@ -946,7 +965,7 @@ mm_session_close(Session *s)
 int
 mm_answer_pty(int socket, Buffer *m)
 {
-	extern struct monitor *monitor;
+	extern struct monitor *pmonitor;
 	Session *s;
 	int res, fd0;
 
@@ -958,7 +977,7 @@ mm_answer_pty(int socket, Buffer *m)
 		goto error;
 	s->authctxt = authctxt;
 	s->pw = authctxt->pw;
-	s->pid = monitor->m_pid;
+	s->pid = pmonitor->m_pid;
 	res = pty_allocate(&s->ptyfd, &s->ttyfd, s->tty, sizeof(s->tty));
 	if (res == 0)
 		goto error;
@@ -1195,7 +1214,7 @@ mm_answer_rsa_response(int socket, Buffer *m)
 int
 mm_answer_term(int socket, Buffer *req)
 {
-	extern struct monitor *monitor;
+	extern struct monitor *pmonitor;
 	int res, status;
 
 	debug3("%s: tearing down sessions", __FUNCTION__);
@@ -1203,7 +1222,7 @@ mm_answer_term(int socket, Buffer *req)
 	/* The child is terminating */
 	session_destroy_all(&mm_session_close);
 
-	while (waitpid(monitor->m_pid, &status, 0) == -1)
+	while (waitpid(pmonitor->m_pid, &status, 0) == -1)
 		if (errno != EINTR)
 			exit(1);
 
@@ -1214,7 +1233,7 @@ mm_answer_term(int socket, Buffer *req)
 }
 
 void
-monitor_apply_keystate(struct monitor *monitor)
+monitor_apply_keystate(struct monitor *pmonitor)
 {
 	if (compat20) {
 		set_newkeys(MODE_IN);
@@ -1246,7 +1265,7 @@ monitor_apply_keystate(struct monitor *monitor)
 	    sizeof(outgoing_stream));
 
 	/* Update with new address */
-	mm_init_compression(monitor->m_zlib);
+	mm_init_compression(pmonitor->m_zlib);
 
 	/* Network I/O buffers */
 	/* XXX inefficient for large buffers, need: buffer_init_from_string */
@@ -1296,7 +1315,7 @@ mm_get_kex(Buffer *m)
 /* This function requries careful sanity checking */
 
 void
-mm_get_keystate(struct monitor *monitor)
+mm_get_keystate(struct monitor *pmonitor)
 {
 	Buffer m;
 	u_char *blob, *p;
@@ -1305,7 +1324,7 @@ mm_get_keystate(struct monitor *monitor)
 	debug3("%s: Waiting for new keys", __FUNCTION__);
 
 	buffer_init(&m);
-	mm_request_receive_expect(monitor->m_sendfd, MONITOR_REQ_KEYEXPORT, &m);
+	mm_request_receive_expect(pmonitor->m_sendfd, MONITOR_REQ_KEYEXPORT, &m);
 	if (!compat20) {
 		child_state.ssh1protoflags = buffer_get_int(&m);
 		child_state.ssh1cipher = buffer_get_int(&m);
@@ -1315,7 +1334,7 @@ mm_get_keystate(struct monitor *monitor)
 		goto skip;
 	} else {
 		/* Get the Kex for rekeying */
-		*monitor->m_pkex = mm_get_kex(&m);
+		*pmonitor->m_pkex = mm_get_kex(&m);
 	}
 
 	blob = buffer_get_string(&m, &bloblen);
