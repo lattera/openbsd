@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/doi.h,v 1.11 2003/06/03 14:28:16 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/doi.h,v 1.11.2.1 2004/03/17 14:59:17 brad Exp $	*/
 /*	$EOM: doi.h,v 1.29 2000/07/02 18:47:15 provos Exp $	*/
 
 /*
@@ -83,7 +83,7 @@ struct doi {
   int (*validate_key_information) (u_int8_t *, size_t);
   int (*validate_notification) (u_int16_t);
   int (*validate_proto) (u_int8_t);
-  int (*validate_situation) (u_int8_t *, size_t *);
+  int (*validate_situation) (u_int8_t *, size_t *, size_t);
   int (*validate_transform_id) (u_int8_t, u_int8_t);
   int (*initiator) (struct message *msg);
   int (*responder) (struct message *msg);

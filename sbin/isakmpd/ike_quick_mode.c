@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.70 2003/06/10 16:41:29 deraadt Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.70.2.1 2004/03/17 14:59:17 brad Exp $	*/
 /*	$EOM: ike_quick_mode.c,v 1.139 2001/01/26 10:43:17 niklas Exp $	*/
 
 /*
@@ -1163,12 +1163,18 @@ initiator_recv_HASH_SA_NONCE (struct message *msg)
 
       if (!ie->id_ci || !ie->id_cr)
 	{
-	  log_error ("initiator_recv_HASH_SA_NONCE: malloc (%lu) failed",
-		     (unsigned long)ie->id_cr_sz);
+	  log_error ("initiator_recv_HASH_SA_NONCE: calloc (%lu, %lu) failed",
+	             (unsigned long)ie->id_cr_sz, (unsigned long)sizeof (char));
 	  if (ie->id_ci)
-	    free (ie->id_ci);
+	    {
+	      free (ie->id_ci);
+	      ie->id_ci = 0;
+	    }
 	  if (ie->id_cr)
-	    free (ie->id_cr);
+	    {
+	      free (ie->id_cr);
+	      ie->id_cr = 0;
+	    }
 	  return -1;
 	}
 
@@ -1176,7 +1182,9 @@ initiator_recv_HASH_SA_NONCE (struct message *msg)
 	{
 	  log_error ("initiator_recv_HASH_SA_NONCE: sa_family mismatch");
 	  free (ie->id_ci);
+	  ie->id_ci = 0;
 	  free (ie->id_cr);
+	  ie->id_cr = 0;
 	  return -1;
 	}
 
@@ -1196,7 +1204,9 @@ initiator_recv_HASH_SA_NONCE (struct message *msg)
 	  log_error ("initiator_recv_HASH_SA_NONCE: unknown sa_family %d",
 		     src->sa_family);
 	  free (ie->id_ci);
+	  ie->id_ci = 0;
 	  free (ie->id_cr);
+	  ie->id_cr = 0;
 	  return -1;
 	}
       memcpy (ie->id_ci + ISAKMP_ID_DATA_OFF, sockaddr_addrdata (src),
@@ -1744,9 +1754,15 @@ cleanup:
   if (my_hash)
     free (my_hash);
   if (ie->id_ci)
-    free (ie->id_ci);
+    {
+      free (ie->id_ci);
+      ie->id_ci = 0;
+    }
   if (ie->id_cr)
-    free (ie->id_cr);
+    {
+      free (ie->id_cr);
+      ie->id_cr = 0;
+    }
   return -1;
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/isakmp_doi.c,v 1.16 2003/08/08 08:46:59 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/isakmp_doi.c,v 1.16.2.1 2004/03/17 14:59:17 brad Exp $	*/
 /*	$EOM: isakmp_doi.c,v 1.42 2000/09/12 16:29:41 ho Exp $	*/
 
 /*
@@ -67,7 +67,7 @@ static int isakmp_validate_id_information (u_int8_t, u_int8_t *, u_int8_t *,
 static int isakmp_validate_key_information (u_int8_t *, size_t);
 static int isakmp_validate_notification (u_int16_t);
 static int isakmp_validate_proto (u_int8_t);
-static int isakmp_validate_situation (u_int8_t *, size_t *);
+static int isakmp_validate_situation (u_int8_t *, size_t *, size_t);
 static int isakmp_validate_transform_id (u_int8_t, u_int8_t);
 
 static struct doi isakmp_doi = {
@@ -197,7 +197,7 @@ isakmp_validate_proto (u_int8_t proto)
 }
 
 static int
-isakmp_validate_situation (u_int8_t *buf, size_t *sz)
+isakmp_validate_situation (u_int8_t *buf, size_t *sz, size_t len)
 {
   /* There are no situations in the ISAKMP DOI.  */
   *sz = 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/util.h,v 1.15 2003/06/03 14:28:16 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/util.h,v 1.15.2.1 2004/03/17 14:59:18 brad Exp $	*/
 /*	$EOM: util.h,v 1.10 2000/10/24 13:33:39 niklas Exp $	*/
 
 /*
@@ -34,8 +34,6 @@
 #define _UTIL_H_
 
 #include <sys/types.h>
-
-#define ROUNDUP_32(x) (((x) + 3) & ~4)
 
 extern int allow_name_lookups;
 extern int regrand;
