@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2003 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: rsh_locl.h,v 1.24 2000/07/02 15:48:46 assar Exp $ */
+/* $KTH: rsh_locl.h,v 1.33 2003/04/16 20:05:39 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -78,6 +78,9 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #include <errno.h>
 
 #ifdef HAVE_SYS_PARAM_H
@@ -97,7 +100,10 @@
 #include <krb.h>
 #include <prot.h>
 #endif
+#ifdef KRB5
 #include <krb5.h>
+#include <krb5-private.h> /* for _krb5_{get,put}_int */
+#endif
 #include <kafs.h>
 
 #ifndef _PATH_NOLOGIN
@@ -113,7 +119,7 @@
 #endif
 
 #ifndef _PATH_ETC_ENVIRONMENT
-#define _PATH_ETC_ENVIRONMENT "/etc/environment"
+#define _PATH_ETC_ENVIRONMENT SYSCONFDIR "/environment"
 #endif
 
 /*
@@ -124,22 +130,36 @@ enum auth_method { AUTH_KRB4, AUTH_KRB5, AUTH_BROKEN };
 
 extern enum auth_method auth_method;
 extern int do_encrypt;
+#ifdef KRB5
 extern krb5_context context;
 extern krb5_keyblock *keyblock;
 extern krb5_crypto crypto;
+extern int key_usage;
+extern void *ivec_in[2];
+extern void *ivec_out[2];
+void init_ivecs(int);
+#endif
 #ifdef KRB4
 extern des_key_schedule schedule;
 extern des_cblock iv;
 #endif
 
-#define KCMD_VERSION "KCMDV0.1"
+#define KCMD_OLD_VERSION "KCMDV0.1"
+#define KCMD_NEW_VERSION "KCMDV0.2"
 
 #define USERNAME_SZ 16
-#define COMMAND_SZ 1024
+#ifndef ARG_MAX
+#define ARG_MAX 8192
+#endif
 
-#define RSH_BUFSIZ (16 * 1024)
+#define RSH_BUFSIZ (5 * 1024) /* MIT kcmd can't handle larger buffers */
 
 #define PATH_RSH BINDIR "/rsh"
 
-ssize_t do_read (int fd, void *buf, size_t sz);
-ssize_t do_write (int fd, void *buf, size_t sz);
+#if defined(KRB4) || defined(KRB5)
+ssize_t do_read (int, void*, size_t, void*);
+ssize_t do_write (int, void*, size_t, void*);
+#else
+#define do_write(F, B, L, I) write((F), (B), (L))
+#define do_read(F, B, L, I) read((F), (B), (L))
+#endif

@@ -1,15 +1,24 @@
-# $KTH: Makefile.am,v 1.138 2001/09/06 12:19:16 assar Exp $
+# $KTH: Makefile.am,v 1.156.2.4 2004/06/21 10:52:01 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(INCLUDE_des) -I../com_err
+INCLUDES += $(INCLUDE_krb4) $(INCLUDE_des) -I../com_err -I$(srcdir)/../com_err
 
 bin_PROGRAMS = verify_krb5_conf
 
-noinst_PROGRAMS = dump_config test_get_addrs krbhst-test
+noinst_PROGRAMS = dump_config test_get_addrs krbhst-test test_alname
 
-check_PROGRAMS = n-fold-test string-to-key-test derived-key-test store-test
-TESTS = n-fold-test string-to-key-test derived-key-test store-test 
+TESTS =						\
+	aes-test				\
+	n-fold-test				\
+	string-to-key-test			\
+	derived-key-test			\
+	store-test				\
+	parse-name-test				\
+	test_cc					\
+	name-45-test
+
+check_PROGRAMS = $(TESTS)
 
 LDADD = libkrb5.la \
 	$(LIB_des) \
@@ -109,6 +118,7 @@ libkrb5_la_SOURCES =				\
 	set_default_realm.c			\
 	sock_principal.c			\
 	store.c					\
+	store-int.h				\
 	store_emem.c				\
 	store_fd.c				\
 	store_mem.c				\
@@ -122,39 +132,48 @@ libkrb5_la_SOURCES =				\
 	write_message.c				\
 	$(ERR_FILES)
 
-libkrb5_la_LDFLAGS = -version-info 18:2:1
+libkrb5_la_LDFLAGS = -version-info 20:0:3
 
 $(libkrb5_la_OBJECTS): $(srcdir)/krb5-protos.h $(srcdir)/krb5-private.h
 
 $(srcdir)/krb5-protos.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -o krb5-protos.h $(libkrb5_la_SOURCES) || rm -f krb5-protos.h
+	cd $(srcdir) && perl ../../cf/make-proto.pl -q -P comment -o krb5-protos.h $(libkrb5_la_SOURCES) || rm -f krb5-protos.h
 
 $(srcdir)/krb5-private.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -p krb5-private.h $(libkrb5_la_SOURCES) || rm -f krb5-private.h
+	cd $(srcdir) && perl ../../cf/make-proto.pl -q -P comment -p krb5-private.h $(libkrb5_la_SOURCES) || rm -f krb5-private.h
 
 #libkrb5_la_LIBADD = ../com_err/error.lo ../com_err/com_err.lo
 
 man_MANS =					\
 	kerberos.8				\
+	krb5.3					\
 	krb5.conf.5				\
 	krb5_425_conv_principal.3		\
+	krb5_address.3				\
+	krb5_aname_to_localname.3		\
 	krb5_appdefault.3			\
 	krb5_auth_context.3			\
 	krb5_build_principal.3			\
+	krb5_ccache.3				\
 	krb5_config.3				\
 	krb5_context.3				\
 	krb5_create_checksum.3			\
 	krb5_crypto_init.3			\
+	krb5_data.3				\
 	krb5_encrypt.3				\
+	krb5_free_addresses.3			\
 	krb5_free_principal.3			\
 	krb5_get_all_client_addrs.3		\
 	krb5_get_krbhst.3			\
 	krb5_init_context.3			\
 	krb5_keytab.3				\
 	krb5_krbhst_init.3			\
+	krb5_kuserok.3				\
 	krb5_openlog.3				\
 	krb5_parse_name.3			\
 	krb5_principal_get_realm.3		\
+	krb5_set_default_realm.3		\
+	krb5_set_password.3			\
 	krb5_sname_to_principal.3		\
 	krb5_timeofday.3			\
 	krb5_unparse_name.3			\

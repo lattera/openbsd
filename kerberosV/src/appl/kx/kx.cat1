@@ -8,11 +8,11 @@ SSYYNNOOPPSSIISS
      _k_x [--ll _u_s_e_r_n_a_m_e] [--kk] [--dd] [--tt] [--pp _p_o_r_t] [--PP] _h_o_s_t
 
 DDEESSCCRRIIPPTTIIOONN
-     The kkxx program forwards a X connection from a remote client to a local
+     The kkxx program forwards an X connection from a remote client to a local
      screen through an authenticated and encrypted stream.  Options supported
      by kkxx:
 
-     --ll      Log in on remote the host as user _u_s_e_r_n_a_m_e.
+     --ll      Log in on the remote the host as user _u_s_e_r_n_a_m_e.
 
      --kk      Do not enable keep-alives on the TCP connections.
 
@@ -31,7 +31,7 @@ DDEESSCCRRIIPPTTIIOONN
      It connects to a kkxxdd on the host _h_o_s_t and then will relay the traffic
      from the remote X clients to the local server.  When started, it prints
      the display and Xauthority-file to be used on host _h_o_s_t and then goes to
-     the background, waiting for connections from the remote kkxxdd..
+     the background, waiting for connections from the remote kkxxdd.
 
 SSEEEE AALLSSOO
      rxtelnet(1),  rxterm(1),  kxd(8)

@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: common.c,v 1.65 2001/08/26 01:40:38 assar Exp $");
+RCSID("$KTH: common.c,v 1.68 2003/04/16 16:45:39 joda Exp $");
 
 char x_socket[MaxPathLen];
 
@@ -405,11 +405,9 @@ create_and_write_cookie (char *xauthfile,
      int fd;
      FILE *f;
      char hostname[MaxHostNameLen];
-     struct in_addr loopback;
      int saved_errno;
 
      gethostname (hostname, sizeof(hostname));
-     loopback.s_addr = htonl(INADDR_LOOPBACK);
      
      auth.family = FamilyLocal;
      auth.address = hostname;
@@ -454,11 +452,6 @@ create_and_write_cookie (char *xauthfile,
 
      auth.family  = FamilyWild;
      auth.address_length = 0;
-
-#if 0 /* XXX */
-     auth.address = (char *)&loopback;
-     auth.address_length = sizeof(loopback);
-#endif
 
      if (XauWriteAuth(f, &auth) == 0) {
 	 saved_errno = errno;
@@ -587,9 +580,11 @@ match_local_auth (Xauth* auth,
     char *tmp_disp;
     struct addrinfo *a;
     
-    tmp_disp = strndup (auth->number, auth->number_length);
+    tmp_disp = malloc(auth->number_length + 1);
     if (tmp_disp == NULL)
 	return -1;
+    memcpy(tmp_disp, auth->number, auth->number_length);
+    tmp_disp[auth->number_length] = '\0';
     auth_disp = atoi(tmp_disp);
     free (tmp_disp);
     if (auth_disp != disp_nr)
@@ -752,17 +747,29 @@ replace_cookie(int xserver, int fd, char *filename, int cookiesp) /* XXX */
  */
 
 int
-suspicious_address (int sock, struct sockaddr_in addr)
+suspicious_address (int sock, struct sockaddr *addr)
 {
     char data[40];
     socklen_t len = sizeof(data);
 
-    return addr.sin_addr.s_addr != htonl(INADDR_LOOPBACK)
+    switch (addr->sa_family) {
+    case AF_INET:
+	return ((struct sockaddr_in *)addr)->sin_addr.s_addr != 
+	    htonl(INADDR_LOOPBACK)
 #if defined(IP_OPTIONS) && defined(HAVE_GETSOCKOPT)
-	|| getsockopt (sock, IPPROTO_IP, IP_OPTIONS, data, &len) < 0
-	|| len != 0
+	    || getsockopt (sock, IPPROTO_IP, IP_OPTIONS, data, &len) < 0
+	    || len != 0
 #endif
-    ;
+	    ;
+	break;
+#ifdef HAVE_IPV6
+    case AF_INET6:
+	/* XXX check route headers */
+	return !IN6_IS_ADDR_LOOPBACK(&((struct sockaddr_in6*)addr)->sin6_addr);
+#endif
+    default:
+	return 1;
+    }
 }
 
 /*

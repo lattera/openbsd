@@ -5,7 +5,7 @@
  */
 
 #include <popper.h>
-RCSID("$KTH: pop_init.c,v 1.58 2001/02/20 01:44:47 assar Exp $");
+RCSID("$KTH: pop_init.c,v 1.58.12.1 2003/10/13 12:01:35 lha Exp $");
 
 
 #if defined(KRB4) || defined(KRB5)
@@ -394,5 +394,8 @@ pop_init(POP *p,int argcount,char **argmessage)
 #endif /* DEBUG */
 
 
-    return((p->kerberosp ? krb_authenticate : plain_authenticate)(p, cs));
+    if(p->kerberosp)
+	return krb_authenticate(p, cs);
+    else
+	return plain_authenticate(p, cs);
 }

@@ -5,7 +5,7 @@ NNAAMMEE
      ffttpp - ARPANET file transfer program
 
 SSYYNNOOPPSSIISS
-     ffttpp [--tt] [--vv] [--dd] [--ii] [--nn] [--gg] [--pp] [--ll] [_h_o_s_t]
+     ffttpp [--tt] [--vv] [--dd] [--ii] [--nn] [--gg] [--pp] [--ll] [----nnoo--ggssss--bbiinnddiinnggss] [_h_o_s_t]
 
 DDEESSCCRRIIPPTTIIOONN
      FFttpp is the user interface to the ARPANET standard File Transfer Protocol.
@@ -39,6 +39,10 @@ DDEESSCCRRIIPPTTIIOONN
 
      --gg    Disables file name globbing.
 
+     ----nnoo--ggssss--bbiinnddiinnggss
+           use GSS-API bindings when talking to peer (ie make sure IP address-
+           es match).
+
      --ll    Disables command line editing.
 
      The client host with which ffttpp is to communicate may be specified on the
@@ -61,8 +65,6 @@ DDEESSCCRRIIPPTTIIOONN
                  Supply a supplemental password required by a remote system
                  for access to resources once a login has been successfully
                  completed.  If no argument is included, the user will be
-
-
                  prompted for an account password in a non-echoing input mode.
 
      aappppeenndd _l_o_c_a_l_-_f_i_l_e [_r_e_m_o_t_e_-_f_i_l_e]
@@ -129,7 +131,6 @@ DDEESSCCRRIIPPTTIIOONN
                  get local file for receiving ddiirr output.  If no directory is
                  specified, the current working directory on the remote ma-
                  chine is used.  If no local file is specified, or _l_o_c_a_l_-_f_i_l_e
-
                  is --, output comes to the terminal.
 
      ddiissccoonnnneecctt  A synonym for _c_l_o_s_e.
@@ -392,7 +393,6 @@ DDEESSCCRRIIPPTTIIOONN
                  continued from the apparent point of failure.  This command
                  is useful when transferring very large files over networks
 
-
                  that are prone to dropping connections.
 
      rreemmootteehheellpp [_c_o_m_m_a_n_d_-_n_a_m_e]
@@ -626,14 +626,16 @@ TTHHEE ..nneettrrcc FFIILLEE
                as the last step in the auto-login process.
 
 EENNVVIIRROONNMMEENNTT
-     FFttpp utilizes the following environment variables.
+     FFttpp uses the following environment variables.
 
      HOME        For default location of a _._n_e_t_r_c file, if one exists.
 
      SHELL       For default shell.
 
 SSEEEE AALLSSOO
-     ftpd(8),  _R_F_C_2_2_2_8
+     ftpd(8)
+
+     _R_F_C_2_2_2_8.
 
 HHIISSTTOORRYY
      The ffttpp command appeared in 4.2BSD.

@@ -33,7 +33,7 @@
  *	@(#)externs.h	8.3 (Berkeley) 5/30/95
  */
 
-/* $KTH: externs.h,v 1.23 2001/08/29 00:45:20 assar Exp $ */
+/* $KTH: externs.h,v 1.25 2002/08/28 20:58:23 joda Exp $ */
 
 #ifndef	BSD
 # define BSD 43
@@ -66,6 +66,7 @@ extern int
     localchars,		/* we recognize interrupt/quit */
     donelclchars,	/* the user has set "localchars" */
     showoptions,
+    wantencryption,	/* User has requested encryption */
     net,		/* Network file descriptor */
     tin,		/* Terminal input file descriptor */
     tout,		/* Terminal output file descriptor */
@@ -80,6 +81,8 @@ extern int
     prettydump,		/* Print "netdata" output in user readable format */
     termdata,		/* Print out terminal data flow */
     debug;		/* Debug level */
+
+extern int intr_happened, intr_waiting;	/* for interrupt handling */
 
 extern cc_t escape;	/* Escape to command mode */
 extern cc_t rlogin;	/* Rlogin mode escape character */
@@ -234,6 +237,7 @@ void command(int top, char *tbuf, int cnt);
 
 void tninit(void);
 void usage(void);
+void set_forward_options(void);
 
 /* network.c */
 
@@ -296,7 +300,6 @@ void     TerminalFlushOutput (void);
 void     TerminalNewMode (int);
 void     TerminalRestoreState (void);
 void     TerminalSaveState (void);
-void     tninit (void);
 void     willoption (int);
 void     wontoption (int);
 

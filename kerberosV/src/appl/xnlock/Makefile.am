@@ -1,4 +1,4 @@
-# $KTH: Makefile.am,v 1.15 2000/11/15 22:51:12 assar Exp $
+# $KTH: Makefile.am,v 1.15.12.1 2003/05/06 16:50:33 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
@@ -15,6 +15,8 @@ else
 bin_PROGRAMS =
 
 endif
+
+CHECK_LOCAL = 
 
 man_MANS = xnlock.1
 

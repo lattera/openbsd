@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2003 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -39,7 +39,7 @@
 #include <sys/capability.h>
 #endif
 
-RCSID("$KTH: login.c,v 1.51 2001/07/06 17:36:48 assar Exp $");
+RCSID("$KTH: login.c,v 1.59.2.1 2004/09/08 09:15:39 joda Exp $");
 
 static int login_timeout = 60;
 
@@ -142,6 +142,8 @@ otp_verify(struct passwd *pwd, const char *password)
 #endif /* OTP */
 
 
+static int pag_set = 0;
+
 #ifdef KRB5
 static krb5_context context;
 static krb5_ccache  id, id2;
@@ -179,21 +181,19 @@ krb5_to4 (krb5_ccache id)
 
     int get_v4_tgt;
 
-    get_v4_tgt = krb5_config_get_bool(context, NULL,
-				      "libdefaults",
-				      "krb4_get_tickets",
-				      NULL);
-
     ret = krb5_cc_get_principal(context, id, &princ);
-    if (ret == 0) {
-	get_v4_tgt = krb5_config_get_bool_default(context, NULL,
-						  get_v4_tgt,
-						  "realms",
-						  *krb5_princ_realm(context,
-								    princ),
-						  "krb4_get_tickets",
-						  NULL);
+    if(ret == 0) {
+	krb5_appdefault_boolean(context, "login", 
+				krb5_principal_get_realm(context, princ), 
+				"krb4_get_tickets", FALSE, &get_v4_tgt);
 	krb5_free_principal(context, princ);
+    } else {
+	krb5_realm realm = NULL;
+	krb5_get_default_realm(context, &realm);
+	krb5_appdefault_boolean(context, "login", 
+				realm, 
+				"krb4_get_tickets", FALSE, &get_v4_tgt);
+	free(realm);
     }
 
     if (get_v4_tgt) {
@@ -265,10 +265,6 @@ krb5_finish (void)
     krb5_free_context(context);
 }
 
-#ifdef KRB4
-
-static int pag_set = 0;
-
 static void
 krb5_get_afs_tokens (const struct passwd *pwd)
 {
@@ -297,8 +293,6 @@ krb5_get_afs_tokens (const struct passwd *pwd)
 	krb5_cc_close (context, id2);
     }
 }
-
-#endif /* KRB4 */
 
 #endif /* KRB5 */
 
@@ -416,6 +410,19 @@ checknologin(void)
     exit(0);
 }
 
+/* print contents of a file */
+static void
+show_file(const char *file)
+{
+    FILE *f;
+    char buf[BUFSIZ];
+    if((f = fopen(file, "r")) == NULL)
+	return;
+    while (fgets(buf, sizeof(buf), f))
+	fputs(buf, stdout);
+    fclose(f);
+}
+
 /* 
  * Actually log in the user.  `pwd' contains all the relevant
  * information about the user.  `ttyn' is the complete name of the tty
@@ -432,6 +439,7 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
     gid_t tty_gid;
     struct group *gr;
     const char *home_dir;
+    int i;
 
     if(!rootlogin)
 	checknologin();
@@ -468,6 +476,10 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 	    exit(1);
     }
 #endif
+#ifdef HAVE_SETPCRED
+    if (setpcred (pwd->pw_name, NULL) == -1)
+	warn("setpcred(%s)", pwd->pw_name);
+#endif /* HAVE_SETPCRED */
 #ifdef HAVE_INITGROUPS
     if(initgroups(pwd->pw_name, pwd->pw_gid)){
 	warn("initgroups(%s, %u)", pwd->pw_name, (unsigned)pwd->pw_gid);
@@ -487,6 +499,13 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 	if(rootlogin == 0)
 	    exit(1);
     }
+
+    /* make sure signals are set to default actions, apparently some
+       OS:es like to ignore SIGINT, which is not very convenient */
+    
+    for (i = 1; i < NSIG; ++i)
+	signal(i, SIG_DFL);
+
     /* all kinds of different magic */
 
 #ifdef HAVE_GETSPNAM
@@ -571,9 +590,10 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 	    krb5_cc_close (context, id);
 	}
     }
+#endif /* KRB4 */
 
     krb5_get_afs_tokens (pwd);
-#endif /* KRB4 */
+
     krb5_finish ();
 #endif /* KRB5 */
 
@@ -595,6 +615,22 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 		    continue;
 		login_read_env(buf);
 	    }
+	}
+    }
+    {
+	const char *str = login_conf_get_string("motd");
+	char buf[MAXPATHLEN];
+
+	if(str != NULL) {
+	    while(strsep_copy(&str, ",", buf, sizeof(buf)) != -1) {
+		if(buf[0] == '\0')
+		    continue;
+		show_file(buf);
+	    }
+	} else {
+	    str = login_conf_get_string("welcome");
+	    if(str != NULL)
+		show_file(str);
 	}
     }
     add_env("HOME", home_dir);

@@ -8,7 +8,7 @@
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: xnlock.c,v 1.87 2001/06/23 22:20:04 assar Exp $");
+RCSID("$KTH: xnlock.c,v 1.93.2.4 2004/09/08 09:16:00 joda Exp $");
 #endif
 
 #include <stdio.h>
@@ -30,12 +30,20 @@ RCSID("$KTH: xnlock.c,v 1.87 2001/06/23 22:20:04 assar Exp $");
 #ifdef HAVE_PWD_H
 #include <pwd.h>
 #endif
+#ifdef HAVE_CRYPT_H
+#undef des_encrypt
+#define des_encrypt wingless_pigs_mostly_fail_to_fly
+#include <crypt.h>
+#undef des_encrypt
+#endif
 
 #ifdef KRB5
 #include <krb5.h>
 #endif
 #ifdef KRB4
 #include <krb.h>
+#endif
+#if defined(KRB4) || defined(KRB5)
 #include <kafs.h>
 #endif
 
@@ -241,6 +249,9 @@ init_words (int argc, char **argv)
 		if (appres.file == NULL)
 		    errx (1, "cannot allocate memory for message");
 	    }
+	} else if(strcmp(argv[i], "--version") == 0) {
+	    print_version(NULL);
+	    exit(0);
 	} else {
 	    int j;
 	    int len = 1;
@@ -372,12 +383,22 @@ walk(int dir)
     lastdir = dir;
 }
 
+static long
+my_random (void)
+{
+#ifdef HAVE_RANDOM
+    return random();
+#else
+    return rand();
+#endif
+}
+
 static int
 think(void)
 {
-    if (rand() & 1)
+    if (my_random() & 1)
 	walk(FRONT);
-    if (rand() & 1) {
+    if (my_random() & 1) {
 	words = get_words();
 	return 1;
     }
@@ -392,21 +413,21 @@ move(XtPointer _p, XtIntervalId *_id)
     if (!length) {
 	int tries = 0;
 	dir = 0;
-	if ((rand() & 1) && think()) {
+	if ((my_random() & 1) && think()) {
 	    talk(0); /* sets timeout to itself */
 	    return;
 	}
-	if (!(rand() % 3) && (interval = look())) {
+	if (!(my_random() % 3) && (interval = look())) {
 	    timeout_id = XtAppAddTimeOut(app, interval, move, NULL);
 	    return;
 	}
-	interval = 20 + rand() % 100;
+	interval = 20 + my_random() % 100;
 	do  {
 	    if (!tries)
-		length = Width/100 + rand() % 90, tries = 8;
+		length = Width/100 + my_random() % 90, tries = 8;
 	    else
 		tries--;
-	    switch (rand() % 8) {
+	    switch (my_random() % 8) {
 		case 0:
 		    if (x - X_INCR*length >= 5)
 			dir = LEFT;
@@ -558,6 +579,7 @@ verify_krb5(const char *password)
 {
     krb5_error_code ret;
     krb5_ccache id;
+    krb5_boolean get_v4_tgt;
     
     krb5_cc_default(context, &id);
     ret = krb5_verify_user(context,
@@ -568,10 +590,10 @@ verify_krb5(const char *password)
 			   NULL);
     if (ret == 0){
 #ifdef KRB4
-	if (krb5_config_get_bool(context, NULL,
-				 "libdefaults",
-				 "krb4_get_tickets",
-				 NULL)) {
+	krb5_appdefault_boolean(context, "xnlock", 
+				krb5_principal_get_realm(context, client),
+				"krb4_get_tickets", FALSE, &get_v4_tgt);
+	if(get_v4_tgt) {
 	    CREDENTIALS c;
 	    krb5_creds mcred, cred;
 
@@ -590,9 +612,9 @@ verify_krb5(const char *password)
 	    }
 	    krb5_free_principal(context, mcred.server);
 	}
+#endif
 	if (k_hasafs())
 	    krb5_afslog(context, id, NULL, NULL);
-#endif
 	return 0;
     }
     if (ret != KRB5KRB_AP_ERR_MODIFIED)
@@ -605,8 +627,6 @@ verify_krb5(const char *password)
 static int
 verify(char *password)
 {
-    int ret;
-
     /*
      * First try with root password, if allowed.
      */
@@ -651,19 +671,22 @@ verify(char *password)
 #endif
 
 #ifdef KRB4
-    /*
-     * Try to verify as user with kerberos 4.
-     */
-    ret = krb_verify_user(name, inst, realm, password,
-			  KRB_VERIFY_NOT_SECURE, NULL);
-    if (ret == KSUCCESS){
-	if (k_hasafs())
-	    krb_afslog(NULL, NULL);
-	return 0;
+    {
+	int ret;
+	/*
+	 * Try to verify as user with kerberos 4.
+	 */
+	ret = krb_verify_user(name, inst, realm, password,
+			      KRB_VERIFY_NOT_SECURE, NULL);
+	if (ret == KSUCCESS){
+	    if (k_hasafs())
+		krb_afslog(NULL, NULL);
+	    return 0;
+	}
+	if (ret != INTK_BADPW)
+	    warnx ("warning: %s",
+		   (ret < 0) ? strerror(ret) : krb_get_err_text(ret));
     }
-    if (ret != INTK_BADPW)
-	warnx ("warning: %s",
-	       (ret < 0) ? strerror(ret) : krb_get_err_text(ret));
 #endif
     
     return -1;
@@ -745,7 +768,7 @@ GetPasswd(Widget w, XEvent *_event, String *_s, Cardinal *_n)
 			 prompt_x + XTextWidth(font, STRING, echolen),
 			 prompt_y, SPACE_STRING, STRING_LENGTH - echolen + 1);
       }
-    } else if (isprint(c)) {
+    } else if (isprint((unsigned char)c)) {
 	if ((cnt + 1) >= MAX_PASSWD_LENGTH)
 	    XBell(dpy, 50);
 	else
@@ -915,21 +938,21 @@ look(void)
 {
     XSetForeground(dpy, gc, White);
     XSetBackground(dpy, gc, Black);
-    if (rand() % 3) {
-	XCopyPlane(dpy, (rand() & 1)? down : front, XtWindow(widget), gc,
+    if (my_random() % 3) {
+	XCopyPlane(dpy, (my_random() & 1)? down : front, XtWindow(widget), gc,
 	    0, 0, 64,64, x, y, 1L);
 	return 1000L;
     }
-    if (!(rand() % 5))
+    if (!(my_random() % 5))
 	return 0;
-    if (rand() % 3) {
-	XCopyPlane(dpy, (rand() & 1)? left_front : right_front,
+    if (my_random() % 3) {
+	XCopyPlane(dpy, (my_random() & 1)? left_front : right_front,
 	    XtWindow(widget), gc, 0, 0, 64,64, x, y, 1L);
 	return 1000L;
     }
-    if (!(rand() % 5))
+    if (!(my_random() % 5))
 	return 0;
-    XCopyPlane(dpy, (rand() & 1)? left0 : right0, XtWindow(widget), gc,
+    XCopyPlane(dpy, (my_random() & 1)? left0 : right0, XtWindow(widget), gc,
 	0, 0, 64,64, x, y, 1L);
     return 1000L;
 }
@@ -966,9 +989,15 @@ main (int argc, char **argv)
       strlcpy(login, pw->pw_name, sizeof(login));
     }
 
-    srand(getpid());
+#if defined(HAVE_SRANDOMDEV)
+    srandomdev();
+#elif defined(HAVE_RANDOM)
+    srandom(time(NULL));
+#else
+    srand (time(NULL));
+#endif
     for (i = 0; i < STRING_LENGTH; i++)
-	STRING[i] = ((unsigned long)rand() % ('~' - ' ')) + ' ';
+	STRING[i] = ((unsigned long)my_random() % ('~' - ' ')) + ' ';
 
     locked_at = time(0);
 

@@ -33,7 +33,7 @@
 
 #include "telnetd.h"
 
-RCSID("$KTH: sys_term.c,v 1.103 2001/08/29 00:45:22 assar Exp $");
+RCSID("$KTH: sys_term.c,v 1.104 2001/09/17 02:09:04 assar Exp $");
 
 #if defined(_CRAY) || (defined(__hpux) && !defined(HAVE_UTMPX_H))
 # define PARENT_DOES_UTMP
@@ -101,6 +101,8 @@ char	wtmpf[]	= "/etc/wtmp";
 #endif
 
 #endif /* STREAMSPTY */
+
+#undef NOERROR
 
 #ifdef	HAVE_SYS_STREAM_H
 #ifdef  HAVE_SYS_UIO_H

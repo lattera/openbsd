@@ -1,5 +1,5 @@
 dnl
-dnl $KTH: krb-bigendian.m4,v 1.6 2000/08/19 15:37:00 assar Exp $
+dnl $KTH: krb-bigendian.m4,v 1.8.6.1 2004/04/01 07:27:33 joda Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -7,12 +7,12 @@ dnl if we can figure it out at compile-time then don't define the cpp symbol
 dnl otherwise test for it and define it.  also allow options for overriding
 dnl it when cross-compiling
 
-AC_DEFUN(KRB_C_BIGENDIAN, [
+AC_DEFUN([KRB_C_BIGENDIAN], [
 AC_ARG_ENABLE(bigendian,
-[  --enable-bigendian	the target is big endian],
+	AC_HELP_STRING([--enable-bigendian],[the target is big endian]),
 krb_cv_c_bigendian=yes)
 AC_ARG_ENABLE(littleendian,
-[  --enable-littleendian	the target is little endian],
+	AC_HELP_STRING([--enable-littleendian],[the target is little endian]),
 krb_cv_c_bigendian=no)
 AC_CACHE_CHECK(whether byte order is known at compile time,
 krb_cv_c_bigendian_compile,
@@ -50,4 +50,13 @@ fi
 if test "$krb_cv_c_bigendian_compile" = "yes"; then
   AC_DEFINE(ENDIANESS_IN_SYS_PARAM_H, 1, [define if sys/param.h defines the endiness])dnl
 fi
+AH_BOTTOM([
+#if ENDIANESS_IN_SYS_PARAM_H
+#  include <sys/types.h>
+#  include <sys/param.h>
+#  if BYTE_ORDER == BIG_ENDIAN
+#  define WORDS_BIGENDIAN 1
+#  endif
+#endif
+])
 ])

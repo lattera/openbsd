@@ -53,7 +53,7 @@
 
 #include <config.h>
 
-RCSID("$KTH: kerberos5.c,v 1.49 2001/06/18 19:50:11 joda Exp $");
+RCSID("$KTH: kerberos5.c,v 1.53.2.1 2004/06/21 08:21:07 lha Exp $");
 
 #ifdef	KRB5
 
@@ -86,15 +86,18 @@ int dfsfwd = 0;
 
 int forward_flags = 0;  /* Flags get set in telnet/main.c on -f and -F */
 
+int forward(int);
+int forwardable(int);
+
 /* These values need to be the same as those defined in telnet/main.c. */
 /* Either define them in both places, or put in some common header file. */
 #define OPTS_FORWARD_CREDS	0x00000002
 #define OPTS_FORWARDABLE_CREDS	0x00000001
 
+
 void kerberos5_forward (Authenticator *);
 
-static unsigned char str_data[1024] = { IAC, SB, TELOPT_AUTHENTICATION, 0,
-			  		AUTHTYPE_KERBEROS_V5, };
+static unsigned char str_data[4] = { IAC, SB, TELOPT_AUTHENTICATION, 0 };
 
 #define	KRB_AUTH		0	/* Authentication data follows */
 #define	KRB_REJECT		1	/* Rejected (reason might follow) */
@@ -114,12 +117,25 @@ static krb5_auth_context auth_context;
 static int
 Data(Authenticator *ap, int type, void *d, int c)
 {
-    unsigned char *p = str_data + 4;
     unsigned char *cd = (unsigned char *)d;
+    unsigned char *p0, *p;
+    size_t len = sizeof(str_data) + 3 + 2;
+    int ret;
 
     if (c == -1)
 	c = strlen((char*)cd);
 
+    for (p = cd; p - cd < c; p++, len++)
+	if (*p == IAC)
+	    len++;
+
+    p0 = malloc(len);
+    if (p0 == NULL)
+	return 0;
+    
+    memcpy(p0, str_data, sizeof(str_data));
+    p = p0 + sizeof(str_data);
+	
     if (auth_debug_mode) {
 	printf("%s:%d: [%d] (%d)",
 	       str_data[3] == TELQUAL_IS ? ">>>IS" : ">>>REPLY",
@@ -138,8 +154,10 @@ Data(Authenticator *ap, int type, void *d, int c)
     *p++ = IAC;
     *p++ = SE;
     if (str_data[3] == TELQUAL_IS)
-	printsub('>', &str_data[2], p - &str_data[2]);
-    return(telnet_net_write(str_data, p - str_data));
+	printsub('>', &p0[2], len - 2);
+    ret = telnet_net_write(p0, len);
+    free(p0);
+    return ret;
 }
 
 int
@@ -202,6 +220,8 @@ kerberos5_send(char *name, Authenticator *ap)
 	ap_opts = AP_OPTS_MUTUAL_REQUIRED;
     else
 	ap_opts = 0;
+
+    ap_opts |= AP_OPTS_USE_SUBKEY;
     
     ret = krb5_auth_con_init (context, &auth_context);
     if (ret) {
@@ -416,6 +436,29 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 		printf("Kerberos V5: "
 		       "krb5_auth_con_getremotesubkey failed (%s)\r\n",
 		       krb5_get_err_text(context, ret));
+	    return;
+	}
+
+	if (key_block == NULL) {
+	    ret = krb5_auth_con_getkey(context,
+				       auth_context,
+				       &key_block);
+	}
+	if (ret) {
+	    Data(ap, KRB_REJECT, "krb5_auth_con_getkey failed", -1);
+	    auth_finished(ap, AUTH_REJECT);
+	    if (auth_debug_mode)
+		printf("Kerberos V5: "
+		       "krb5_auth_con_getkey failed (%s)\r\n",
+		       krb5_get_err_text(context, ret));
+	    return;
+	}
+	if (key_block == NULL) {
+	    Data(ap, KRB_REJECT, "no subkey received", -1);
+	    auth_finished(ap, AUTH_REJECT);
+	    if (auth_debug_mode)
+		printf("Kerberos V5: "
+		       "krb5_auth_con_getremotesubkey returned NULL key\r\n");
 	    return;
 	}
 
@@ -810,5 +853,29 @@ kerberos5_dfspag(void)
     }
 }
 #endif
+
+int
+kerberos5_set_forward(int on)
+{
+    if(on == 0)
+	forward_flags &= ~OPTS_FORWARD_CREDS;
+    if(on == 1)
+	forward_flags |= OPTS_FORWARD_CREDS;
+    if(on == -1)
+	forward_flags ^= OPTS_FORWARD_CREDS;
+    return 0;
+}
+
+int
+kerberos5_set_forwardable(int on)
+{
+    if(on == 0)
+	forward_flags &= ~OPTS_FORWARDABLE_CREDS;
+    if(on == 1)
+	forward_flags |= OPTS_FORWARDABLE_CREDS;
+    if(on == -1)
+	forward_flags ^= OPTS_FORWARDABLE_CREDS;
+    return 0;
+}
 
 #endif /* KRB5 */

@@ -1,4 +1,4 @@
-dnl $KTH: roken.m4,v 1.2 2000/07/08 15:50:34 assar Exp $
+dnl $KTH: roken.m4,v 1.3.8.1 2004/04/01 07:27:35 joda Exp $
 dnl
 dnl try to look for an installed roken library with sufficient stuff
 dnl
@@ -7,10 +7,10 @@ dnl set DIR_roken to if the directory should be built
 dnl set CPPFLAGS_roken to stuff to add to CPPFLAGS
 
 dnl AC_ROKEN(version,directory-to-try,roken-dir,fallback-library,fallback-cppflags)
-AC_DEFUN(AC_ROKEN, [
+AC_DEFUN([AC_ROKEN], [
 
 AC_ARG_WITH(roken,
-[  --with-roken=dir	use the roken library in dir],
+	AC_HELP_STRING([--with-roken=dir],[use the roken library in dir]),
 [if test "$withval" = "no"; then
   AC_MSG_ERROR(roken is required)
 fi])

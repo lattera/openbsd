@@ -33,7 +33,7 @@
 
 #include "telnet_locl.h"
 
-RCSID("$KTH: sys_bsd.c,v 1.28 2001/08/29 00:45:21 assar Exp $");
+RCSID("$KTH: sys_bsd.c,v 1.30 2002/04/18 16:18:43 joda Exp $");
 
 /*
  * The following routines try to encapsulate what is system dependent
@@ -651,10 +651,17 @@ deadpeer(int sig)
 	longjmp(peerdied, -1);
 }
 
+int intr_happened = 0;
+int intr_waiting = 0;
+
     /* ARGSUSED */
 static RETSIGTYPE
 intr(int sig)
 {
+    if (intr_waiting) {
+	intr_happened = 1;
+	return;
+    }
     if (localchars) {
 	intp();
 	return;
@@ -736,9 +743,8 @@ sys_telnet_init(void)
 
 
 #if	defined(SO_OOBINLINE)
-    if (SetSockOpt(net, SOL_SOCKET, SO_OOBINLINE, 1) == -1) {
-	perror("SetSockOpt");
-    }
+    if (SetSockOpt(net, SOL_SOCKET, SO_OOBINLINE, 1) == -1)
+	perror("setsockopt (SO_OOBINLINE) (ignored)");
 #endif	/* defined(SO_OOBINLINE) */
 }
 

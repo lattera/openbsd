@@ -1,8 +1,8 @@
-dnl $KTH: broken-getaddrinfo.m4,v 1.2 2001/08/22 01:05:29 assar Exp $
+dnl $KTH: broken-getaddrinfo.m4,v 1.3.6.1 2004/04/01 07:27:32 joda Exp $
 dnl
 dnl test if getaddrinfo can handle numeric services
 
-AC_DEFUN(rk_BROKEN_GETADDRINFO,[
+AC_DEFUN([rk_BROKEN_GETADDRINFO],[
 AC_CACHE_CHECK([if getaddrinfo handles numeric services], ac_cv_func_getaddrinfo_numserv,
 AC_TRY_RUN([[#include <stdio.h>
 #include <sys/types.h>
@@ -17,7 +17,7 @@ main(int argc, char **argv)
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = PF_UNSPEC;
-	if(getaddrinfo(NULL, "17", &hints, &ai) == EAI_SERVICE)
+	if(getaddrinfo(NULL, "17", &hints, &ai) != 0)
 		return 1;
 	return 0;
 }

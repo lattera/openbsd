@@ -1,4 +1,4 @@
-dnl $KTH: check-compile-et.m4,v 1.6 2001/09/02 17:08:48 assar Exp $
+dnl $KTH: check-compile-et.m4,v 1.7.2.1 2003/08/15 14:40:42 lha Exp $
 dnl
 dnl CHECK_COMPILE_ET
 AC_DEFUN([CHECK_COMPILE_ET], [
@@ -6,12 +6,13 @@ AC_DEFUN([CHECK_COMPILE_ET], [
 AC_CHECK_PROG(COMPILE_ET, compile_et, [compile_et])
 
 krb_cv_compile_et="no"
+krb_cv_com_err_need_r=""
 if test "${COMPILE_ET}" = "compile_et"; then
 
 dnl We have compile_et.  Now let's see if it supports `prefix' and `index'.
 AC_MSG_CHECKING(whether compile_et has the features we need)
 cat > conftest_et.et <<'EOF'
-error_table conf
+error_table test conf
 prefix CONFTEST
 index 1
 error_code CODE1, "CODE1"
@@ -21,7 +22,7 @@ end
 EOF
 if ${COMPILE_ET} conftest_et.et >/dev/null 2>&1; then
   dnl XXX Some systems have <et/com_err.h>.
-  save_CPPFLAGS="${save_CPPFLAGS}"
+  save_CPPFLAGS="${CPPFLAGS}"
   if test -d "/usr/include/et"; then
     CPPFLAGS="-I/usr/include/et ${CPPFLAGS}"
   fi
@@ -30,10 +31,24 @@ if ${COMPILE_ET} conftest_et.et >/dev/null 2>&1; then
 #include <com_err.h>
 #include <string.h>
 #include "conftest_et.h"
-int main(){return (CONFTEST_CODE2 - CONFTEST_CODE1) != 127;}
+int main(){
+#ifndef ERROR_TABLE_BASE_conf
+#error compile_et does not handle error_table N M
+#endif
+return (CONFTEST_CODE2 - CONFTEST_CODE1) != 127;}
   ], [krb_cv_compile_et="yes"],[CPPFLAGS="${save_CPPFLAGS}"])
 fi
 AC_MSG_RESULT(${krb_cv_compile_et})
+if test "${krb_cv_compile_et}" = "yes"; then
+  AC_MSG_CHECKING(for if com_err needs to have a initialize_error_table_r)
+  AC_EGREP_CPP(initialize_error_table_r,[#include "conftest_et.c"],
+     [krb_cv_com_err_need_r="initialize_error_table_r(0,0,0,0);"])
+  if test X"$krb_cv_com_err_need_r" = X ; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(yes)
+  fi
+fi
 rm -fr conftest*
 fi
 
@@ -45,6 +60,7 @@ if test "${krb_cv_compile_et}" = "yes"; then
   AC_TRY_LINK([#include <com_err.h>],[
     const char *p;
     p = error_message(0);
+    $krb_cv_com_err_need_r
   ],[krb_cv_com_err="yes"],[krb_cv_com_err="no"; CPPFLAGS="${save_CPPFLAGS}"])
   AC_MSG_RESULT(${krb_cv_com_err})
   LIBS="${krb_cv_save_LIBS}"

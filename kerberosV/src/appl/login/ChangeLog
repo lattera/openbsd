@@ -1,3 +1,47 @@
+2004-09-08  Johan Danielsson  <joda@pdc.kth.se>
+
+	* login.c: pull up 1.62->1.63: use krb5_appdefault_boolean instead
+	of krb5_config_get_bool
+
+2003-03-24  Johan Danielsson  <joda@pdc.kth.se>
+
+	* Makefile.am: install man pages
+
+	* login.1: manpage for login
+
+	* login.c: allow "welcome" as well as "motd" in login.conf
+
+	* login.access.5: login.access manual page
+
+2003-03-18  Love Hörnquist Åstrand <lha@it.su.se>
+	
+	* login.c: also need pag_set
+	* login.c: if there is kerberos 5, call krb5_afslog\*
+	
+2002-08-23  Johan Danielsson  <joda@pdc.kth.se>
+
+	* login.c: if motd is set in login.conf, output its contents
+	before starting the shell
+
+2002-02-27  Johan Danielsson  <joda@pdc.kth.se>
+
+	* login.c: reset signals to default, needed on solaris 8
+
+2002-02-19  Johan Danielsson  <joda@pdc.kth.se>
+
+	* login_locl.h: include netgroup.h and rpcsvc/ypclnt.h
+
+	* login.c: make this build without krb5
+
+2001-09-22  Assar Westerlund  <assar@sics.se>
+
+	* login_locl.h: kludge: use absolute path to find prot.h so we do
+	not get confused by athena's prot.h
+
+2001-09-17  Assar Westerlund  <assar@sics.se>
+
+	* login.c (do_login): add setpcred
+
 2001-07-06  Assar Westerlund  <assar@sics.se>
 
 	* login.c: move osf2c magic earlier.  from Mark Davies

@@ -41,7 +41,7 @@ uid_t	userid;
 int     errs, remin, remout;
 int     pflag, iamremote, iamrecursive, targetshouldbedirectory;
 int     doencrypt, noencrypt;
-int     usebroken, usekrb5, forwardtkt;
+int     usebroken, usekrb4, usekrb5, forwardtkt;
 char    *port;
 
 #define	CMDNEEDS	64
@@ -61,6 +61,7 @@ static int fflag, tflag;
 static int version_flag, help_flag;
 
 struct getargs args[] = {
+    { NULL,	'4', arg_flag,		&usekrb4,	"use Kerberos 4 authentication" },
     { NULL,	'5', arg_flag,		&usekrb5,	"use Kerberos 5 authentication" },
     { NULL,	'F', arg_flag,		&forwardtkt,	"forward credentials" },
     { NULL,	'K', arg_flag,		&usebroken,	"use BSD authentication" },
@@ -513,7 +514,7 @@ sink(int argc, char **argv)
 		if (*cp++ != ' ')
 			SCREWUP("mode not delimited");
 
-		for (size = 0; isdigit(*cp);)
+		for (size = 0; isdigit((unsigned char)*cp);)
 			size = size * 10 + (*cp++ - '0');
 		if (*cp++ != ' ')
 			SCREWUP("size not delimited");
@@ -684,21 +685,23 @@ run_err(const char *fmt, ...)
 {
 	static FILE *fp;
 	va_list ap;
-	va_start(ap, fmt);
 
 	++errs;
 	if (fp == NULL && !(fp = fdopen(remout, "w")))
 		return;
+	va_start(ap, fmt);
 	fprintf(fp, "%c", 0x01);
 	fprintf(fp, "rcp: ");
 	vfprintf(fp, fmt, ap);
 	fprintf(fp, "\n");
 	fflush(fp);
-
-	if (!iamremote)
-		vwarnx(fmt, ap);
-
 	va_end(ap);
+
+	if (!iamremote) {
+	    va_start(ap, fmt);
+	    vwarnx(fmt, ap);
+	    va_end(ap);
+	}
 }
 
 /*
@@ -749,6 +752,8 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 
 		i = 0;
 		args[i++] = RSH_PROGRAM;
+		if (usekrb4)
+			args[i++] = "-4";
 		if (usekrb5)
 			args[i++] = "-5";
 		if (usebroken)

@@ -1,8 +1,10 @@
-# $KTH: Makefile.am,v 1.19 2000/11/15 22:51:08 assar Exp $
+# $KTH: Makefile.am,v 1.21 2003/03/24 16:15:48 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
 INCLUDES += $(INCLUDE_krb4)
+
+man_MANS = login.1 login.access.5
 
 bin_PROGRAMS = login
 
@@ -32,6 +34,6 @@ LDADD = $(LIB_otp) \
 	$(DBLIB)
 
 $(srcdir)/login_protos.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -o login_protos.h $(login_SOURCES) || rm -f login_protos.h
+	cd $(srcdir); perl ../../cf/make-proto.pl -o login_protos.h -q -P comment $(login_SOURCES) || rm -f login_protos.h
 
 $(login_OBJECTS): $(srcdir)/login_protos.h

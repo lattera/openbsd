@@ -82,8 +82,9 @@ DDEESSCCRRIIPPTTIIOONN
              the escape character is set to the tilde (~) character, unless
              modified by the -e option.
 
-     --xx      Turns on encryption of the data stream if possible. This is cur-
-             rently the default and when it fails a warning is issued.
+     --xx      Turn on encryption of the data stream.  When this option is
+             turned on, will exit with an error if authentication cannot be
+             negotiated or if encryption cannot be turned on.
 
      _h_o_s_t    Indicates the official name, an alias, or the Internet address of
              a remote host.
@@ -258,6 +259,8 @@ DDEESSCCRRIIPPTTIIOONN
      mmooddee _t_y_p_e  _T_y_p_e is one of several options, depending on the state of the
                 TELNET session.  The remote host is asked for permission to go
                 into the requested mode.  If the remote host is capable of en-
+
+
                 tering that mode, the requested mode will be entered.
 
                 cchhaarraacctteerr     Disable the TELNET LINEMODE option, or, if the
@@ -322,11 +325,12 @@ DDEESSCCRRIIPPTTIIOONN
 
                 aaoo      Sends the TELNET AO (Abort Output) sequence, which
                         should cause the remote system to flush all output
+
+
                         _f_r_o_m the remote system _t_o the user's terminal.
 
                 aayytt     Sends the TELNET AYT (Are You There) sequence, to
                         which the remote system may or may not choose to re-
-
                         spond.
 
                 bbrrkk     Sends the TELNET BRK (Break) sequence, which may have
@@ -523,8 +527,6 @@ DDEESSCCRRIIPPTTIIOONN
                 LINEMODE option has been enabled.  Special characters are
                 characters that get mapped to TELNET commands sequences (like
                 iipp or qquuiitt) or line editing characters (like eerraassee and kkiillll).
-
-
                 By default, the local special characters are exported.
 
                 cchheecckk       Verify the current settings for the current spe-
@@ -588,6 +590,7 @@ DDEESSCCRRIIPPTTIIOONN
                               AUTHENTICATION option is not supported, the us-
                               er's login name are propagated through the
                               TELNET ENVIRON option.  This command is the same
+
                               as specifying _a option on the ooppeenn command.
 
                 aauuttoossyynncchh     If aauuttoossyynncchh and llooccaallcchhaarrss are both TRUE, then
@@ -654,6 +657,7 @@ DDEESSCCRRIIPPTTIIOONN
                 ooppttiioonnss       Toggles the display of some internal tteellnneett pro-
                               tocol processing (having to do with TELNET op-
                               tions).  The initial value for this toggle is
+
                               FALSE.
 
                 pprreettttyydduummpp    When the nneettddaattaa toggle is enabled, if

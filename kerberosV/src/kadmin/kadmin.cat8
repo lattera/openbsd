@@ -12,9 +12,9 @@ SSYYNNOOPPSSIISS
      [_c_o_m_m_a_n_d]
 
 DDEESSCCRRIIPPTTIIOONN
-     The kkaaddmmiinn program is used to make modification to the Kerberos database,
-     either remotely via the kadmind(8) daemon, or locally (with the --ll op-
-     tion).
+     The kkaaddmmiinn program is used to make modifications to the Kerberos
+     database, either remotely via the kadmind(8) daemon, or locally (with the
+     --ll option).
 
      Supported options:
 
@@ -22,7 +22,7 @@ DDEESSCCRRIIPPTTIIOONN
              principal to authenticate as
 
      --KK _s_t_r_i_n_g, ----kkeeyyttaabb==_s_t_r_i_n_g
-             keytab for authentication pricipal
+             keytab for authentication principal
 
      --cc _f_i_l_e, ----ccoonnffiigg--ffiillee==_f_i_l_e
              location of config file
@@ -64,7 +64,7 @@ DDEESSCCRRIIPPTTIIOONN
            ddeell__eennccttyyppee _p_r_i_n_c_i_p_a_l _e_n_c_t_y_p_e_s_._._.
 
 
-                 removes some enctypes from a principal, this can be useful
+                 removes some enctypes from a principal. This can be useful
                  the service belonging to the principal is known to not handle
                  certain enctypes
 
@@ -91,9 +91,9 @@ DDEESSCCRRIIPPTTIIOONN
 
            pprriivviilleeggeess
 
-                 lists the operations you are allowd to perform
+                 lists the operations you are allowed to perform
 
-     When running in local mode, the following commands can also be used.
+     When running in local mode, the following commands can also be used:
 
            dduummpp [--dd | ----ddeeccrryypptt] [_d_u_m_p_-_f_i_l_e]
 
@@ -103,8 +103,8 @@ DDEESSCCRRIIPPTTIIOONN
            iinniitt [----rreeaallmm--mmaaxx--ttiicckkeett--lliiffee==_s_t_r_i_n_g]
            [----rreeaallmm--mmaaxx--rreenneewwaabbllee--lliiffee==_s_t_r_i_n_g] _r_e_a_l_m
 
-                 initialises the Kerberos database with entries for a new
-                 realm, it's possible to have more than one realm served by
+                 initializes the Kerberos database with entries for a new
+                 realm. It's possible to have more than one realm served by
                  one server
 
            llooaadd _f_i_l_e

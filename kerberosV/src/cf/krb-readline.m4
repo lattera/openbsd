@@ -1,11 +1,11 @@
-dnl $KTH: krb-readline.m4,v 1.2 2000/11/15 00:47:08 assar Exp $
+dnl $KTH: krb-readline.m4,v 1.5.6.1 2004/04/01 07:27:34 joda Exp $
 dnl
 dnl Tests for readline functions
 dnl
 
 dnl el_init
 
-AC_DEFUN(KRB_READLINE,[
+AC_DEFUN([KRB_READLINE],[
 AC_FIND_FUNC_NO_LIBS(el_init, edit, [], [], [$LIB_tgetent])
 if test "$ac_cv_func_el_init" = yes ; then
 	AC_CACHE_CHECK(for four argument el_init, ac_cv_func_el_init_four,[
@@ -28,15 +28,11 @@ elif test "$ac_cv_func_readline" = yes; then
 	:
 elif test "$ac_cv_func_el_init" = yes; then
 	ac_foo=yes
-	LIB_readline="\$(top_builddir)/lib/editline/libel_compat.la $LIB_el_init"
+	LIB_readline="\$(top_builddir)/lib/editline/libel_compat.la \$(LIB_el_init) \$(LIB_tgetent)"
 else
-	LIB_readline='$(top_builddir)/lib/editline/libeditline.la'
+	LIB_readline="\$(top_builddir)/lib/editline/libeditline.la \$(LIB_tgetent)"
 fi
 AM_CONDITIONAL(el_compat, test "$ac_foo" = yes)
-if test "$readline_libdir"; then
-	LIB_readline="-rpath $readline_libdir $LIB_readline"
-fi
-LIB_readline="$LIB_readline \$(LIB_tgetent)"
 AC_DEFINE(HAVE_READLINE, 1, 
 	[Define if you have a readline compatible library.])dnl
 

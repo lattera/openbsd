@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995-2003 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: kx.c,v 1.68 2001/02/20 01:44:45 assar Exp $");
+RCSID("$KTH: kx.c,v 1.72 2003/04/16 17:33:02 joda Exp $");
 
 static int nchild;
 static int donep;
@@ -132,12 +132,14 @@ connect_host (kx_context *kc)
 	return -1;
     }
 
-    addrlen = a->ai_addrlen;
+    addrlen = sizeof(thisaddr_ss);
     if (getsockname (s, thisaddr, &addrlen) < 0 ||
 	addrlen != a->ai_addrlen)
 	err(1, "getsockname(%s)", kc->host);
-    memcpy (&kc->thisaddr, thisaddr, sizeof(kc->thisaddr));
-    memcpy (&kc->thataddr, a->ai_addr, sizeof(kc->thataddr));
+    memcpy (&kc->__ss_this, thisaddr, sizeof(kc->__ss_this));
+    kc->thisaddr_len = addrlen;
+    memcpy (&kc->__ss_that, a->ai_addr, sizeof(kc->__ss_that));
+    kc->thataddr_len = a->ai_addrlen;
     freeaddrinfo (ai);
     if ((*kc->authenticate)(kc, s))
 	return -1;
@@ -284,15 +286,14 @@ doit_passive (kx_context *kc)
 	     warn("fork");
 	     continue;
 	 } else if (child == 0) {
-	     struct sockaddr_in addr;
 	     int fd;
 	     int xserver;
 
-	     addr = kc->thataddr;
 	     close (otherside);
 
-	     addr.sin_port = htons(tmp);
-	     fd = socket (AF_INET, SOCK_STREAM, 0);
+	     socket_set_port(kc->thataddr, htons(tmp));
+		 
+	     fd = socket (kc->thataddr->sa_family, SOCK_STREAM, 0);
 	     if (fd < 0)
 		 err(1, "socket");
 #if defined(TCP_NODELAY) && defined(HAVE_SETSOCKOPT)
@@ -312,7 +313,7 @@ doit_passive (kx_context *kc)
 	     }
 #endif
 
-	     if (connect (fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	     if (connect (fd, kc->thataddr, kc->thataddr_len) < 0)
 		 err(1, "connect(%s)", host);
 	     {
 		 int d = 0;
@@ -496,16 +497,15 @@ doit_active (kx_context *kc)
 	    continue;
 	} else if (child == 0) {
 	    int s;
-	    struct sockaddr_in addr;
 
 	    for (i = 0; i < nsockets; ++i)
 		close (sockets[i].fd);
 
-	    addr = kc->thataddr;
 	    close (otherside);
 
-	    addr.sin_port = htons(other_port);
-	    s = socket (AF_INET, SOCK_STREAM, 0);
+	    socket_set_port(kc->thataddr, htons(tmp));
+
+	    s = socket (kc->thataddr->sa_family, SOCK_STREAM, 0);
 	    if (s < 0)
 		err(1, "socket");
 #if defined(TCP_NODELAY) && defined(HAVE_SETSOCKOPT)
@@ -525,7 +525,7 @@ doit_active (kx_context *kc)
 	    }
 #endif
 
-	    if (connect (s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	    if (connect (s, kc->thataddr, kc->thataddr_len) < 0)
 		err(1, "connect");
 
 	    return active_session (fd, s, kc);

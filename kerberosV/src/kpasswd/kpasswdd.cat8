@@ -33,13 +33,13 @@ DDEESSCCRRIIPPTTIIOONN
              the password (in _p_a_s_s_w_o_r_d_-_>_d_a_t_a) is not zero terminated.
 
      --kk _k_s_p_e_c, ----kkeeyyttaabb==_k_s_p_e_c
-             keytab to get authentication key from
+             Keytab to get authentication key from
 
      --rr _r_e_a_l_m, ----rreeaallmm==_r_e_a_l_m
-             default realm
+             Default realm
 
      --pp _s_t_r_i_n_g, ----ppoorrtt==_s_t_r_i_n_g
-             port to listen on (default service kpasswd - 464).
+             Port to listen on (default service kpasswd - 464).
 
 DDIIAAGGNNOOSSTTIICCSS
      If an error occurs, the error message is returned to the user and/or
@@ -49,6 +49,6 @@ BBUUGGSS
      The default password quality checks are too basic.
 
 SSEEEE AALLSSOO
-     kdc(8),  kpasswd(1)
+     kpasswd(1),  kdc(8)
 
  HEIMDAL                        April 19, 1999                               1

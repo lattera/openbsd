@@ -34,7 +34,7 @@
 #include "otp_locl.h"
 #include <getarg.h>
 
-RCSID("$KTH: otp.c,v 1.33 2001/02/20 01:44:46 assar Exp $");
+RCSID("$KTH: otp.c,v 1.34 2003/02/25 10:55:17 lha Exp $");
 
 static int listp;
 static int deletep;
@@ -323,7 +323,7 @@ main (int argc, char **argv)
 
     if(deletep || openp || listp) {
 	if(argc != 0)
-	    errx(1, "delete, open, and list requires no arguments\n");
+	    errx(1, "delete, open, and list requires no arguments");
     } else {
 	if(argc != 2)
 	    errx(1, "setup, and renew requires `num', and `seed'");
