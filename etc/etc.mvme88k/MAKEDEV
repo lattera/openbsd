@@ -1,0 +1,384 @@
+#!/bin/sh -
+#
+# THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
+# generated from:
+#
+#	OpenBSD: etc.mvme88k/MAKEDEV.md,v 1.7 2003/06/18 18:08:59 todd Exp 
+#	OpenBSD: MAKEDEV.mi,v 1.60 2003/06/18 18:08:59 todd Exp 
+#	OpenBSD: MAKEDEV.sub,v 1.8 2003/06/18 18:08:59 todd Exp 
+#
+#
+# Copyright (c) 2001,2002,2003 Todd T. Fries <todd@OpenBSD.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+# Device "make" file.  Valid arguments:
+#	all	makes all known devices, including local devices.
+#		Tries to make the ``standard'' number of each type.
+#	ramdisk	makes all devices for a ramdisk kernel
+#	std	standard devices
+#	local	configuration specific devices
+# Tapes:
+#	st*	SCSI tapes
+# Disks:
+#	sd*	SCSI disks
+#	cd*	SCSI cdrom drives
+#	ccd*	concatenated disk devices
+#	vnd*	"file" pseudo-disks
+#	rd*	"rd" pseudo-disks
+# Terminal ports:
+#	ttya-d	MVME188 standard serial ports
+#	tty0*	MVME1x7 CL-CD2400 serial ports
+#	ttyv*	MVME332XT serial ports
+# Pseudo terminals:
+#	tty*	set of 16 slave psuedo terminals
+#	pty*	set of 16 master pseudo terminals
+# Special purpose devices:
+#	fd	makes fd/* for the fdescfs
+#	bpf*	Berkeley Packet Filter
+#	tun*	network tunnel driver
+#	pf*	Packet Filter
+#	lkm	loadable kernel modules interface
+#	*random	inkernel random data source
+#	xfs*	XFS filesystem devices
+#	sram0	static memory access
+#	nvram0	non-volatile memory access
+#	vmes0	VMEbus access
+#	vmel0	VMEbus access
+#	systrace*	system call tracing device
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+T=$0
+
+# set this to echo for Echo-Only debugging
+[ "$eo" ] || eo=
+
+hex()
+{
+	case $1 in
+	[0-9]) echo -n $1;;
+	10) echo -n a;;
+	11) echo -n b;;
+	12) echo -n c;;
+	13) echo -n d;;
+	14) echo -n e;;
+	15) echo -n f;;
+	esac
+}
+
+trunc()
+{
+	# XXX pdksh can't seem to deal with locally scoped variables
+	# in ${foo#$bar} expansions
+	arg1="$1"
+	arg2="$2"
+	case $3 in
+	l)   echo ${arg2#$arg1} ;;
+	r|*) echo ${arg1#$arg2} ;;
+	esac
+}
+
+unt()
+{
+	# XXX pdksh can't seem to deal with locally scoped variables
+	# in ${foo#$bar} expansions
+	arg="$1"
+	tmp="${arg#[a-zA-Z]*}"
+	tmp="${tmp%*[a-zA-Z]}"
+	while [ "$tmp" != "$arg" ]
+	do
+		arg=$tmp
+		tmp="${arg#[a-zA-Z]*}"
+		tmp="${tmp%*[a-zA-Z]}"
+	done
+	echo $arg
+}
+
+dodisk()
+{
+	[ "$DEBUG" ] && set -x
+	n=$(($((${5}*${7:-16}))+${6})) count=0
+	RMlist="$RMlist $1$2? r$1$2?"
+	[ 0$7 -ne 8 ] && l="i j k l m n o p"
+	for d in a b c d e f g h $l
+	do
+		M $1$2$d	b $3 $(($n+$count)) 640
+		M r$1$2$d	c $4 $(($n+$count)) 640
+		let count=count+1
+	done
+	MKlist="$MKlist;chown root:operator $1$2? r$1$2?"
+}
+
+dodisk2()
+{
+	n=$(($(($5*${7:-16}))+$6))
+	M $1$2a b $3 $n 640 operator
+	M r$1$2a c $4 $n 640 operator
+	n=$(($n+2))
+	M $1$2c b $3 $n 640 operator
+	M r$1$2c c $4 $n 640 operator
+}
+
+# M name b/c major minor [mode] [group]
+RMlist="rm -f"
+MKlist=":"
+
+mkl() {
+	[ "${mklist[$1]}" ] && {
+		mklist[$1]="${mklist[$1]};mknod -m $1 $2 $3 $4 $5"
+	} || {
+		mklist[$1]="mknod -m $1 $2 $3 $4 $5"
+		modes="$modes $1"
+	}
+}
+
+M() {
+	RMlist="$RMlist $1"
+	mkl ${5-666} $1 $2 $3 $4
+	mklist="$mklist $1"
+	G=${6:-wheel}
+	[ "$7" ] && {
+		MKlist="$MKlist;chown $7:$G $1"
+	} || {
+		case $G in
+		wheel)g=0;;kmem)g=2;;operator)g=5;;tty)g=4;;dialer)g=117;;_lkm)g=61;;
+		esac
+		[ "${grplist[$g]}" ] && {
+			grplist[$g]="${grplist[$g]} $1"
+		} || {
+			groups="$groups $g"
+			grplist[$g]="chgrp $G $1"
+		}
+	}
+	return 0
+}
+
+R() {
+[ "$DEBUG" ] && set -x
+for i in "$@"
+do
+U=`unt $i`
+[ "$U" ] || U=0
+
+case $i in
+std)
+	M console	c 0 0 600
+	M tty		c 1 0
+	M mem		c 2 0 640 kmem
+	M kmem		c 2 1 640 kmem
+	M null		c 2 2
+	M zero		c 2 12
+	M stdin		c 21 0
+	M stdout	c 21 1
+	M stderr	c 21 2
+	M ksyms		c 43 0 640 kmem
+	M drum		c 3 0 640 kmem
+	M klog		c 6 0 600
+	;;
+
+
+systrace)
+	M systrace c 50 0 644
+	;;
+
+vmel0)
+	M vmel0 c 31 0 640 kmem
+	;;
+
+vmes0)
+	M vmes0 c 32 0 640 kmem
+	;;
+
+nvram0)
+	M nvram0 c 10 0 640 kmem
+	;;
+
+sram0)
+	M sram0 c 7 0 640 kmem
+	;;
+
+xfs*)
+	M xfs$U c 51 $U 600
+	;;
+
+*random)
+	n=0
+	for pre in " " s u p a
+	do
+		M ${pre}random c 40 $n 644
+		n=$(($n+1))
+	done
+	;;
+
+lkm)
+	M lkm c 24 0 640 _lkm
+	;;
+
+pf*)
+	M pf c 39 0 600
+	;;
+
+tun*)
+	M tun$U c 23 $U 600
+	;;
+
+bpf*)
+	M bpf$U c 22 $U 600
+	;;
+
+fd)
+	RMlist="mkdir -p fd;$RMlist" n=0
+	while [ $n -lt 64 ];do M fd/$n c 21 $n;n=$(($n+1));done
+	MKlist="$MKlist;chmod 555 fd"
+	;;
+
+pty*)
+	if [ $U -gt 15 ]; then
+		echo bad unit for pty in: $i
+		continue
+	fi
+	set -A tbl p q r s t u v w x y z P Q R S T
+	name=${tbl[$U]}
+	n=0
+	while [ $n -lt 16 ]
+	do
+		nam=$name$(hex $n)
+		off=$(($U*16))
+		M tty$nam c 4 $(($off+$n))
+		M pty$nam c 5 $(($off+$n))
+		n=$(($n+1))
+	done
+	;;
+
+ttyv*)
+	u=${i#ttyv*}
+	case $u in
+	0|1|2|3|4|5|6|7)
+		M ttyv$u c 15 $u 660 dialer uucp
+		M cuav$u c 15 $(($u+128)) 660 dialer uucp
+		;;
+	*) echo unknown tty device $i ;;
+	esac
+	;;
+
+tty0*)
+	u=${i#tty0*}
+	case $u in
+	0|1|2|3)
+		M tty0$u c 13 $u 660 dialer uucp
+		M cua0$u c 13 $(($u+128)) 660 dialer uucp
+		;;
+	*) echo unknown tty device $i ;;
+	esac
+	;;
+
+tty[a-z])
+	u=${i#tty*}
+	case $u in
+	a) n=0 ;;
+	b) n=1 ;;
+	c) n=2 ;;
+	d) n=3 ;;
+	*) echo unknown tty device $i ;;
+	esac
+	case $u in
+	a|b|c|d)
+		M tty$u c 12 $n 660 dialer uucp
+		M cua$u c 12 $(($n+128)) 660 dialer uucp
+		;;
+	esac
+	;;
+
+rd*)
+	dodisk2 rd $U 7 18 $U 0
+	;;
+
+vnd*)
+	dodisk vnd $U 8 19 $U 0
+	dodisk svnd $U 8 19 $U 128
+	;;
+
+cd*)
+	dodisk2 cd $U 6 9 $U 0
+	;;
+
+st*)
+	n=$(($U*16))
+	for pre in " " n e en
+	do
+		M ${pre}st$U	b 5 $n 660 operator
+		M ${pre}rst$U	c 20 $n 660 operator
+		n=$(($n+1))
+	done
+	;;
+
+local)
+	test -s $T.local && sh $T.local
+	;;
+
+ramdisk)
+	R pty0 tty00 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4
+	R bpf0 std
+	;;
+
+all)
+	R ttyv0 ttyv1 ttyv2 ttyv3 ttyv4 ttyv5 ttyv6 ttyv7 tty00 tty01
+	R tty02 tty03 ttya ttyb ttyc ttyd ccd0 ccd1 ccd2 ccd3 vnd0
+	R vnd1 vnd2 vnd3 sd0 sd1 sd2 sd3 sd4 cd0 cd1 rd0 tun0 tun1
+	R tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7 bpf8 bpf9
+	R pty0 pty1 pty2 xfs0 vmel0 vmes0 nvram0 sram0 random lkm pf
+	R systrace std st0 st1 fd
+	;;
+
+sd*|ccd*)
+	case $i in
+	sd*) dodisk sd $U 4 8 $U 0;;
+	ccd*) dodisk ccd $U 9 17 $U 0;;
+	esac
+	;;
+
+*)
+	echo $i: unknown device
+	;;
+esac
+done
+}
+R "$@"
+if [ "$os" = "SunOS" ]; then
+	eo=transform
+	transform() {
+		case $mode in
+		600) mask=077;;
+		640) mask=027;;
+		660) mask=007;;
+		644) mask=022;;
+		666) mask=0;;
+		440) mask=227;;
+		esac
+		echo `echo "$@"|sed \
+		    's/mknod -m \([0-9]*\) /umask '$mask';mknod /;s/-m [0-9]* //g;\
+		    s/operator/5/g;s/root.kmem/root.2/g;s/root\./root:/g'`
+	}
+fi
+list="$RMlist"
+for mode in $modes; do
+	list="$list;${mklist[$mode]}"
+done
+for group in $groups; do
+	list="$list;${grplist[$group]}"
+done
+list="$list;$MKlist"
+if [ "$eo" = "echo" -o "$eo" = "transform" ]; then
+	$eo "$list"
+else
+	echo "$list" | sh
+fi
