@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)sched.c	8.1 (Berkeley) 6/6/93
- *	$Id: sched.c,v 1.3 1994/06/13 20:48:00 mycroft Exp $
+ *	$Id: sched.c,v 1.1.1.1 1995/10/18 08:47:12 deraadt Exp $
  */
 
 /*
@@ -202,6 +202,7 @@ void sigchld(sig)
 int sig;
 {
 	union wait w;
+	int save_errno = errno;
 	int pid;
 
 #ifdef SYS5_SIGNALS
@@ -240,6 +241,7 @@ int sig;
 #endif /* SYS5_SIGNALS */
 	if (select_intr_valid)
 		longjmp(select_intr, sig);
+	errno = save_errno;
 }
 
 /*
