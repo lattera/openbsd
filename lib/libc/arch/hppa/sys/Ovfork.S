@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa/sys/Ovfork.S,v 1.10 2003/06/02 20:28:04 mickey Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/hppa/sys/Ovfork.S,v 1.11 2004/05/25 20:44:50 mickey Exp $	*/
 
 /*
  * Copyright (c) 1999,2002 Michael Shalayeff
@@ -30,7 +30,7 @@
 
 #ifdef SYSLIBC_SCCS
 	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/hppa/sys/Ovfork.S,v 1.10 2003/06/02 20:28:04 mickey Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/hppa/sys/Ovfork.S,v 1.11 2004/05/25 20:44:50 mickey Exp $"
 	.align	4
 #endif
 
@@ -40,14 +40,9 @@ SYSENTRY(vfork,0)
 	ldil	L%SYSCALLGATE, r1
 	ble	4(sr7, r1)
 	ldi	__CONCAT(SYS_,vfork), t1
+	.import	__cerror, code
+	comb,<>	r0, t1, __cerror
 	copy	t4, rp
-	comb,=,n r0, t1, __CONCAT(x,$noerr)
-	ldil	L%errno, r1
-	stw	t1, R%errno(r1)
-	ldi	-1, ret0
-	bv	r0(rp)
-	ldi	-1, ret1
-	.label	__CONCAT(x,$noerr)
 	addi	-1, ret1, ret1
 	bv	r0(rp)
 	and	ret1, ret0, ret0

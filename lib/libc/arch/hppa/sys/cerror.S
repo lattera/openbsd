@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa/sys/sbrk.S,v 1.11 2004/05/25 20:44:50 mickey Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/hppa/sys/cerror.S,v 1.3 2004/05/25 20:44:50 mickey Exp $	*/
 
 /*
- * Copyright (c) 1999 Michael Shalayeff
+ * Copyright (c) 2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,21 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SYS.h"
+#include <machine/asm.h>
 
-#ifdef SYSLIBC_SCCS
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/hppa/sys/sbrk.S,v 1.11 2004/05/25 20:44:50 mickey Exp $"
-	.align	4
-#endif
-
-	.import	end, data
-
-	.data
-	.export	__curbrk, data
-__curbrk
-	.long	end
-
-SYSENTRY(sbrk,0)
+	.import errno, data
+ENTRY(__cerror,0)
 #ifdef PIC
-	addil	LT%__curbrk, r19
-	ldw	RT%__curbrk(r1), t1
-	ldw	0(t1), t2
+	addil	LT%errno, r19
+	ldw	RT%errno(r1), r1
+	stw	t1, 0(r1)
 #else
-	ldil	L%__curbrk, t1
-	ldw	R%__curbrk(t1), t2
+	ldil	L%errno, r1
+	stw	t1, R%errno(r1)
 #endif
-	add	arg0, t2, arg0
-	stw	arg0, HPPA_FRAME_ARG(0)(sp)
-
-	SYSCALL(break)
-
-#ifdef PIC
-	addil	LT%__curbrk, r19
-	ldw	RT%__curbrk(r1), t1
-#else
-	ldil	L%__curbrk, t1
-	ldo	R%__curbrk(t1), t1
-#endif
-	ldw	HPPA_FRAME_ARG(0)(sp), arg0
-	ldw	0(t1), ret0
+	ldi	-1, ret0
 	bv	r0(rp)
-	stw	arg0, 0(t1)
-
-SYSEXIT(sbrk)
+	ldi	-1, ret1
+EXIT(__cerror)
 
 	.end
-
