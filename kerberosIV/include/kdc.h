@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$Id: kdc.h,v 1.1.1.1 1995/12/14 06:52:34 tholo Exp $	*/
 
 /*-
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology. 
@@ -13,9 +13,6 @@
 #define KDC_DEFS
 
 #define S_AD_SZ		sizeof(struct sockaddr_in)
-
-#define max(a,b)	(a>b ? a : b)
-#define min(a,b)	(a<b ? a : b)
 
 #define TRUE		1
 #define FALSE		0
