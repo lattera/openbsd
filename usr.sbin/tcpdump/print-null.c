@@ -1,8 +1,7 @@
-/**//*	$OpenBSD: src/usr.sbin/tcpdump/print-null.c,v 1.3 1996/06/10 07:47:44 deraadt Exp $	*/
-/*	$NetBSD: print-null.c,v 1.3 1995/03/06 19:11:24 mycroft Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-null.c,v 1.4 1996/07/13 11:01:27 mickey Exp $	*/
 
 /*
- * Copyright (c) 1991, 1993, 1994
+ * Copyright (c) 1991, 1993, 1994, 1995, 1996
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +23,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#)Header: print-null.c,v 1.14 94/06/10 17:01:35 mccanne Exp (LBL)";
+    "@(#)Header: print-null.c,v 1.18 96/06/03 02:53:51 leres Exp (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -33,6 +32,10 @@ static char rcsid[] =
 #include <sys/file.h>
 #include <sys/ioctl.h>
 
+#if __STDC__
+struct mbuf;
+struct rtentry;
+#endif
 #include <net/if.h>
 
 #include <netinet/in.h>
@@ -45,8 +48,8 @@ static char rcsid[] =
 #include <netinet/tcp.h>
 #include <netinet/tcpip.h>
 
-
 #include <stdio.h>
+#include <string.h>
 
 #include "interface.h"
 #include "addrtoname.h"
@@ -59,7 +62,7 @@ null_print(const u_char *p, const struct ip *ip, int length)
 {
 	u_int family;
 
-	bcopy(p, &family, sizeof(family));
+	memcpy((char *)&family, (char *)p, sizeof(family));
 
 	if (nflag) {
 		/* XXX just dump the header */

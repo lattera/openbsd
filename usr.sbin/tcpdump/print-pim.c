@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/bpf_dump.c,v 1.4 1996/07/13 11:01:08 mickey Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-pim.c,v 1.1 1996/07/13 11:01:28 mickey Exp $	*/
 
 /*
- * Copyright (c) 1992, 1993, 1994, 1995
+ * Copyright (c) 1995
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,48 +20,85 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+
 #ifndef lint
 static char rcsid[] =
-    "@(#) Header: bpf_dump.c,v 1.8 95/10/19 20:28:00 leres Exp (LBL)";
+    "@(#) Header: print-pim.c,v 1.4 95/10/07 22:13:12 leres Exp (LBL)";
 #endif
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
-#include <pcap.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_var.h>
+#include <netinet/udp.h>
+#include <netinet/udp_var.h>
+#include <netinet/tcp.h>
+#include <netinet/tcpip.h>
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "interface.h"
+#include "addrtoname.h"
 
-extern void bpf_dump(struct bpf_program *, int);
 
 void
-bpf_dump(struct bpf_program *p, int option)
+pim_print(register const u_char *bp, register int len)
 {
-	struct bpf_insn *insn;
-	int i;
-	int n = p->bf_len;
+    register const u_char *ep;
+    register u_char type;
 
-	insn = p->bf_insns;
-	if (option > 2) {
-		printf("%d\n", n);
-		for (i = 0; i < n; ++insn, ++i) {
-			printf("%u %u %u %u\n", insn->code,
-			       insn->jt, insn->jf, insn->k);
-		}
-		return ;
-	}
-	if (option > 1) {
-		for (i = 0; i < n; ++insn, ++i)
-			printf("{ 0x%x, %d, %d, 0x%08x },\n",
-			       insn->code, insn->jt, insn->jf, insn->k);
-		return;
-	}
-	for (i = 0; i < n; ++insn, ++i) {
-#ifdef BDEBUG
-		extern int bids[];
-		printf(bids[i] > 0 ? "[%02d]" : " -- ", bids[i] - 1);
-#endif
-		puts(bpf_image(insn, i));
-	}
+    ep = (const u_char *)snapend;
+    if (bp >= ep)
+	return;
+
+    type = bp[1];
+
+    switch (type) {
+    case 0:
+	(void)printf(" Query");
+	break;
+
+    case 1:
+	(void)printf(" Register");
+	break;
+
+    case 2:
+	(void)printf(" Register-Stop");
+	break;
+
+    case 3:
+	(void)printf(" Join/Prune");
+	break;
+
+    case 4:
+	(void)printf(" RP-reachable");
+	break;
+
+    case 5:
+	(void)printf(" Assert");
+	break;
+
+    case 6:
+	(void)printf(" Graft");
+	break;
+
+    case 7:
+	(void)printf(" Graft-ACK");
+	break;
+
+    case 8:
+	(void)printf(" Mode");
+	break;
+
+    default:
+	(void)printf(" [type %d]", type);
+	break;
+    }
 }
