@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.10 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.11 2003/04/06 09:43:12 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1737,7 +1737,7 @@ ENTRY(switch_exit)
 	movl	4(%esp),%edi		# old process
 #ifndef MULTIPROCESSOR
 	movl	$_C_LABEL(proc0),%ebx
-	movl	P_ADDR(%ebx,%esi)
+	movl	P_ADDR(%ebx),%esi
 #else
 	GET_CPUINFO(%ebx)
 	movl	CPU_INFO_IDLE_PCB(%ebx),%esi
