@@ -36,11 +36,6 @@
  * Hewlett-Packard Company makes no representations about the 
  * suitability of this software for any purpose.
  */
-/* $Source: /cvs/mickey/src/arch/hppa/spmath/dfsqrt.c,v $
- * $Revision: 2.0 $	$Author: mickey $
- * $State: Exp $   	$Locker:  $
- * $Date: 1998/06/17 20:47:14 $
- */
 
 #include "../spmath/float.h"
 #include "../spmath/dbl_float.h"
