@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/tcfs/Attic/tcfs_getfspath.c,v 1.6 2000/06/20 07:58:57 fgsch Exp $	*/
+/*	$OpenBSD: src/usr.bin/tcfs/Attic/tcfs_getfspath.c,v 1.7 2000/06/20 10:46:51 fgsch Exp $	*/
 
 /*
  *	Transparent Cryptographic File System (TCFS) for NetBSD 
@@ -79,7 +79,7 @@ tcfs_get_label(char *label2search, char *path, int *ciphernumber)
 				break;
 
 			if (path) {
-				strlcpy(path, mountpoint, sizeof(*path));
+				strcpy(path, mountpoint);
 				found = 1;
 			}
 			
