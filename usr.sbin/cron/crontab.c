@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: crontab.c,v 1.8 1996/12/25 19:08:09 mickey Exp $";
+static char rcsid[] = "$Id: crontab.c,v 1.9 1997/04/12 09:39:58 deraadt Exp $";
 #endif
 
 /* crontab - install and manage per-user crontab files
@@ -394,6 +394,10 @@ edit_cmd() {
 	 * close and reopen the file around the edit.
 	 */
 
+	/* Turn off signals. */
+	(void)signal(SIGHUP, SIG_IGN);
+	(void)signal(SIGINT, SIG_IGN);
+	(void)signal(SIGQUIT, SIG_IGN);
 	switch (pid = fork()) {
 	case -1:
 		perror("fork");
@@ -445,6 +449,9 @@ edit_cmd() {
 		} else
 			break;
 	}
+	(void)signal(SIGHUP, SIG_DFL);
+	(void)signal(SIGINT, SIG_DFL);
+	(void)signal(SIGQUIT, SIG_DFL);
 	if (fstat(t, &statbuf) < 0) {
 		perror("fstat");
 		goto fatal;
