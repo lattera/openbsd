@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap.c,v 1.5 1996/05/26 18:36:28 briggs Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap.c,v 1.6 1996/10/28 14:55:33 briggs Exp $	*/
 /*	$NetBSD: pmap.c,v 1.25 1996/05/07 01:45:22 briggs Exp $	*/
 
 /* 
@@ -107,6 +107,7 @@
 #include <vm/vm_page.h>
 
 #include <machine/cpu.h>
+#include <machine/macinfo.h>
 
 #ifdef PMAPSTATS
 struct {
