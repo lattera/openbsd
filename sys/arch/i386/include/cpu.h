@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.18 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.19 2004/02/21 02:48:01 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -76,7 +76,9 @@
 
 #include <sys/device.h>
 #include <sys/lock.h>                  /* will also get LOCKDEBUG */
+#ifdef _KERNEL
 #include <sys/systm.h>
+#endif
 #include <sys/proc.h>
 #include <sys/sched.h>
 
