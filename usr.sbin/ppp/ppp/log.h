@@ -23,9 +23,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$OpenBSD: src/usr.sbin/ppp/ppp/log.h,v 1.9 2001/08/19 23:22:18 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/log.h,v 1.10 2001/11/23 11:17:03 brian Exp $
  */
 
+#define LogLOG		(0)
 #define LogMIN		(1)
 #define LogASYNC	(1)	/* syslog(LOG_INFO, ....)	 */
 #define LogCBCP		(2)
