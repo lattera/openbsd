@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.12 2003/05/16 00:29:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.13 2003/05/18 17:41:16 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -436,7 +436,11 @@ trap(frame)
 			goto we_re_toast;
 #ifdef LOCKDEBUG
 		/* If we page-fault while in scheduler, we're doomed. */
+#ifdef notyet
 		if (simple_lock_held(&sched_lock))
+#else
+		if (__mp_lock_held(&sched_lock))
+#endif
 			goto we_re_toast;
 #endif
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.14 2003/05/17 16:07:37 andreas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.15 2003/05/18 17:41:16 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -72,6 +72,11 @@
  * XXX intrframe has a lot of gunk we don't need.
  */
 #define clockframe intrframe
+
+/* XXX Needs to be before lock.h inclusion. */
+#ifdef MULTIPROCESSOR
+#define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
+#endif
 
 #include <sys/device.h>
 #include <sys/lock.h>                  /* will also get LOCKDEBUG */
@@ -170,7 +175,6 @@ extern struct cpu_info *cpu_info_list;
 #define CPU_STARTUP(_ci)	((_ci)->ci_func->start(_ci))
 #define CPU_STOP(_ci)		((_ci)->ci_func->stop(_ci))
 
-#define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
 #define curcpu()		(cpu_info[cpu_number()])
 #define curpcb			curcpu()->ci_curpcb
 

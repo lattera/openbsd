@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.16 2003/05/16 00:29:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.17 2003/05/18 17:41:16 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -187,7 +187,7 @@ main(framep)
 	int *guard = (int *)&__guard[0];
 #endif
 	extern struct pdevinit pdevinit[];
-	extern struct simplelock kprintf_slock;
+	extern struct SIMPLELOCK kprintf_slock;
 	extern void scheduler_start(void);
 	extern void disk_init(void);
 	extern void endtsleep(void *);
@@ -207,7 +207,7 @@ main(framep)
 	config_init();		/* init autoconfiguration data structures */
 	consinit();
 
-	simple_lock_init(&kprintf_slock);
+	SIMPLE_LOCK_INIT(&kprintf_slock);
 
 	printf(copyright);
 	printf("\n");

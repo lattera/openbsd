@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.17 2003/05/16 01:03:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.18 2003/05/18 17:41:16 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -233,7 +233,8 @@
 struct simplelock pvalloc_lock;
 struct simplelock pmaps_lock;
 
-#ifdef MULTIPROCESSOR
+#if defined(MULTIPROCESSOR) && 0
+
 struct lock pmap_main_lock;
 
 #define PMAP_MAP_TO_HEAD_LOCK() \
@@ -283,7 +284,7 @@ struct pmap_tlb_shootdown_q {
 	TAILQ_HEAD(, pmap_tlb_shootdown_job) pq_head;
 	int pq_pte;			/* aggregate PTE bits */
 	int pq_count;			/* number of pending requests */
-	struct simplelock pq_slock;	/* spin lock on queue */
+	struct SIMPLELOCK pq_slock;	/* spin lock on queue */
 	int pq_flushg;		/* pending flush global */
 	int pq_flushu;		/* pending flush user */
 } pmap_tlb_shootdown_q[I386_MAXPROCS];
@@ -978,7 +979,7 @@ pmap_bootstrap(kva_start)
 	 * init the static-global locks and global lists.
 	 */
 
-#ifdef MULTIPROCESSOR
+#if defined(MULTIPROCESSOR) && 0
 	spinlockinit(&pmap_main_lock, "pmaplk", 0);
 #endif
 	simple_lock_init(&pvalloc_lock);
@@ -1002,7 +1003,7 @@ pmap_bootstrap(kva_start)
 
 	for (i = 0; i < I386_MAXPROCS; i++) {
 		TAILQ_INIT(&pmap_tlb_shootdown_q[i].pq_head);
-		simple_lock_init(&pmap_tlb_shootdown_q[i].pq_slock);
+		SIMPLE_LOCK_INIT(&pmap_tlb_shootdown_q[i].pq_slock);
 	}
 
 #ifdef __NetBSD__
@@ -2488,7 +2489,7 @@ pmap_remove(pmap, sva, eva)
 	 * we lock in the pmap => pv_head direction
 	 */
 
-	PMAP_MAP_TO_HEAD_LOCK();
+ 	PMAP_MAP_TO_HEAD_LOCK();
 	ptes = pmap_map_ptes(pmap);	/* locks pmap */
 
 	/*
@@ -3506,7 +3507,7 @@ pmap_tlb_shootdown(pmap, va, pte, cpumaskp)
 		if (ci != self && !(ci->ci_flags & CPUF_RUNNING))
 			continue;
 		pq = &pmap_tlb_shootdown_q[ci->ci_cpuid];
-		simple_lock(&pq->pq_slock);
+		SIMPLE_LOCK(&pq->pq_slock);
 
 		/*
 		 * If there's a global flush already queued, or a
@@ -3515,7 +3516,7 @@ pmap_tlb_shootdown(pmap, va, pte, cpumaskp)
 		 */
 		if (pq->pq_flushg > 0 ||
 		    (pq->pq_flushu > 0 && (pte & pmap_pg_g) == 0)) {
-			simple_unlock(&pq->pq_slock);
+			SIMPLE_UNLOCK(&pq->pq_slock);
 			continue;
 		}
 
@@ -3532,7 +3533,7 @@ pmap_tlb_shootdown(pmap, va, pte, cpumaskp)
 		if (cpu_class == CPUCLASS_386) {
 			pq->pq_flushu++;
 			*cpumaskp |= 1U << ci->ci_cpuid;
-			simple_unlock(&pq->pq_slock);
+			SIMPLE_UNLOCK(&pq->pq_slock);
 			continue;
 		}
 #endif
@@ -3548,7 +3549,7 @@ pmap_tlb_shootdown(pmap, va, pte, cpumaskp)
 			 */
 			if (ci == self && pq->pq_count < PMAP_TLB_MAXJOBS) {
 				pmap_update_pg(va);
-				simple_unlock(&pq->pq_slock);
+				SIMPLE_UNLOCK(&pq->pq_slock);
 				continue;
 			} else {
 				if (pq->pq_pte & pmap_pg_g)
@@ -3570,7 +3571,7 @@ pmap_tlb_shootdown(pmap, va, pte, cpumaskp)
 			TAILQ_INSERT_TAIL(&pq->pq_head, pj, pj_list);
 			*cpumaskp |= 1U << ci->ci_cpuid;
 		}
-		simple_unlock(&pq->pq_slock);
+		SIMPLE_UNLOCK(&pq->pq_slock);
 	}
 	splx(s);
 }
@@ -3598,7 +3599,7 @@ pmap_do_tlb_shootdown(void)
 
 	s = splipi();
 
-	simple_lock(&pq->pq_slock);
+	SIMPLE_LOCK(&pq->pq_slock);
 
 	if (pq->pq_flushg) {
 		tlbflushg();
@@ -3631,7 +3632,7 @@ pmap_do_tlb_shootdown(void)
 		i386_atomic_clearbits_l(&ci->ci_tlb_ipi_mask,
 		    (1U << cpu_id));
 #endif
-	simple_unlock(&pq->pq_slock);
+	SIMPLE_UNLOCK(&pq->pq_slock);
 
 	splx(s);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.6 2003/05/15 16:45:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.7 2003/05/18 17:41:16 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -1112,12 +1112,14 @@ simple_lock_freecheck(void *start, void *end)
  * We must be holding exactly one lock: the sched_lock.
  */
 
+#ifdef notyet
 void
 simple_lock_switchcheck(void)
 {
 
 	simple_lock_only_held(&sched_lock, "switching");
 }
+#endif
 
 void
 simple_lock_only_held(volatile struct simplelock *lp, const char *where)
@@ -1156,6 +1158,14 @@ simple_lock_only_held(volatile struct simplelock *lp, const char *where)
  * Functions for manipulating the kernel_lock.  We put them here
  * so that they show up in profiles.
  */
+
+/*
+ * XXX Instead of using struct lock for the kernel lock and thus requiring us
+ * XXX to implement simplelocks, causing all sorts of fine-grained locks all
+ * XXX over our tree getting activated consuming both time and potentially
+ * XXX introducing locking protocol bugs.
+ */
+#ifdef notyet
 
 struct lock kernel_lock; 
 
@@ -1200,4 +1210,55 @@ _kernel_proc_unlock(struct proc *p)
 	p->p_flag &= ~P_BIGLOCK;
 	spinlockmgr(&kernel_lock, LK_RELEASE, 0);
 }
+
+#else
+
+struct __mp_lock kernel_lock; 
+
+void
+_kernel_lock_init(void)
+{
+	__mp_lock_init(&kernel_lock);
+}
+
+/*
+ * Acquire/release the kernel lock.  Intended for use in the scheduler
+ * and the lower half of the kernel.
+ */
+
+/* XXX The flag should go, all callers want equal behaviour. */
+void
+_kernel_lock(int flag)
+{
+	SCHED_ASSERT_UNLOCKED();
+	__mp_lock(&kernel_lock);
+}
+
+void
+_kernel_unlock(void)
+{
+	__mp_unlock(&kernel_lock);
+}
+
+/*
+ * Acquire/release the kernel_lock on behalf of a process.  Intended for
+ * use in the top half of the kernel.
+ */
+void
+_kernel_proc_lock(struct proc *p)
+{
+	SCHED_ASSERT_UNLOCKED();
+	__mp_lock(&kernel_lock);
+	p->p_flag |= P_BIGLOCK;
+}
+
+void
+_kernel_proc_unlock(struct proc *p)
+{
+	p->p_flag &= ~P_BIGLOCK;
+	__mp_unlock(&kernel_lock);
+}
+
+#endif
+
 #endif /* MULTIPROCESSOR */

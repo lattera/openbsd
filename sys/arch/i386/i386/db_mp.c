@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_mp.c,v 1.1.2.1 2003/05/17 16:07:37 andreas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_mp.c,v 1.1.2.2 2003/05/18 17:41:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Andreas Gunnarsson
@@ -39,7 +39,7 @@
 #define DDB_STATE_NOT_RUNNING	0
 #define DDB_STATE_RUNNING	1
 
-struct simplelock ddb_mp_slock;
+struct SIMPLELOCK ddb_mp_slock;
 
 volatile int ddb_state = DDB_STATE_NOT_RUNNING;	/* protected by ddb_mp_slock */
 volatile cpuid_t ddb_active_cpu;		/* protected by ddb_mp_slock */
@@ -54,12 +54,12 @@ db_enter_ddb()
 	int s, i;
 
 	s = splhigh();
-	simple_lock(&ddb_mp_slock);
+	SIMPLE_LOCK(&ddb_mp_slock);
 
 	while (ddb_state == DDB_STATE_RUNNING
 	    && ddb_active_cpu != cpu_number()) {
 		db_printf("CPU %d waiting to enter ddb\n", cpu_number());
-		simple_unlock(&ddb_mp_slock);
+		SIMPLE_UNLOCK(&ddb_mp_slock);
 		splx(s);
 
 		/* Busy wait without locking, we'll confirm with lock later */
@@ -68,7 +68,7 @@ db_enter_ddb()
 			;	/* Do nothing */
 
 		s = splhigh();
-		simple_lock(&ddb_mp_slock);
+		SIMPLE_LOCK(&ddb_mp_slock);
 	}
 
 	ddb_state = DDB_STATE_RUNNING;
@@ -87,7 +87,7 @@ db_enter_ddb()
 		}
 	}
 	db_printf("CPU %d entering ddb\n", cpu_number());
-	simple_unlock(&ddb_mp_slock);
+	SIMPLE_UNLOCK(&ddb_mp_slock);
 	splx(s);
 }
 
@@ -97,7 +97,7 @@ db_leave_ddb()
 	int s, i;
 
 	s = splhigh();
-	simple_lock(&ddb_mp_slock);
+	SIMPLE_LOCK(&ddb_mp_slock);
 	db_printf("CPU %d leaving ddb\n", cpu_number());
 	for (i = 0; i < I386_MAXPROCS; i++) {
 		if (cpu_info[i] != NULL) {
@@ -105,7 +105,7 @@ db_leave_ddb()
 		}
 	}
 	ddb_state = DDB_STATE_NOT_RUNNING;
-	simple_unlock(&ddb_mp_slock);
+	SIMPLE_UNLOCK(&ddb_mp_slock);
 	splx(s);
 }
 
@@ -116,9 +116,9 @@ db_startcpu(int cpu)
 
 	if (cpu != cpu_number() && cpu_info[cpu] != NULL) {
 		s = splhigh();
-		simple_lock(&ddb_mp_slock);
+		SIMPLE_LOCK(&ddb_mp_slock);
 		cpu_info[cpu]->ci_ddb_paused = CI_DDB_RUNNING;
-		simple_unlock(&ddb_mp_slock);
+		SIMPLE_UNLOCK(&ddb_mp_slock);
 		splx(s);
 	}
 }
@@ -130,10 +130,10 @@ db_stopcpu(int cpu)
 
 	if (cpu != cpu_number() && cpu_info[cpu] != NULL) {
 		s = splhigh();
-		simple_lock(&ddb_mp_slock);
+		SIMPLE_LOCK(&ddb_mp_slock);
 		cpu_info[cpu]->ci_ddb_paused = CI_DDB_SHOULDSTOP;
 		db_printf("Sending IPI to cpu %d\n", cpu);
-		simple_unlock(&ddb_mp_slock);
+		SIMPLE_UNLOCK(&ddb_mp_slock);
 		splx(s);
 		i386_send_ipi(cpu_info[cpu], I386_IPI_DDB);
 	}
@@ -145,10 +145,10 @@ db_movetocpu(int cpu)
 	int s;
 
 	s = splhigh();
-	simple_lock(&ddb_mp_slock);
+	SIMPLE_LOCK(&ddb_mp_slock);
 	cpu_info[cpu]->ci_ddb_paused = CI_DDB_ENTERDDB;
 	db_printf("Sending IPI to cpu %d\n", cpu);
-	simple_unlock(&ddb_mp_slock);
+	SIMPLE_UNLOCK(&ddb_mp_slock);
 	splx(s);
 	/* XXX If other CPU was running and IPI is lost, we lose. */
 	i386_send_ipi(cpu_info[cpu], I386_IPI_DDB);
@@ -160,28 +160,28 @@ i386_ipi_db(void)
 	int s;
 
 	s = splhigh();
-	simple_lock(&ddb_mp_slock);
+	SIMPLE_LOCK(&ddb_mp_slock);
 	db_printf("CPU %d received ddb IPI\n", cpu_number());
 	while (curcpu()->ci_ddb_paused == CI_DDB_SHOULDSTOP
 	    || curcpu()->ci_ddb_paused == CI_DDB_STOPPED) {
 		if (curcpu()->ci_ddb_paused == CI_DDB_SHOULDSTOP)
 			curcpu()->ci_ddb_paused = CI_DDB_STOPPED;
-		simple_unlock(&ddb_mp_slock);
+		SIMPLE_UNLOCK(&ddb_mp_slock);
 		while (curcpu()->ci_ddb_paused == CI_DDB_STOPPED)
 			;	/* Do nothing */
-		simple_lock(&ddb_mp_slock);
+		SIMPLE_LOCK(&ddb_mp_slock);
 	}
 	if (curcpu()->ci_ddb_paused == CI_DDB_ENTERDDB) {
 		ddb_state = DDB_STATE_RUNNING;
 		ddb_active_cpu = cpu_number();
 		curcpu()->ci_ddb_paused = CI_DDB_INDDB;
 		db_printf("CPU %d grabbing ddb\n", cpu_number());
-		simple_unlock(&ddb_mp_slock);
+		SIMPLE_UNLOCK(&ddb_mp_slock);
 		Debugger();
-		simple_lock(&ddb_mp_slock);
+		SIMPLE_LOCK(&ddb_mp_slock);
 		curcpu()->ci_ddb_paused = CI_DDB_RUNNING;
 	}
 	db_printf("CPU %d leaving ddb IPI handler\n", cpu_number());
-	simple_unlock(&ddb_mp_slock);
+	SIMPLE_UNLOCK(&ddb_mp_slock);
 	splx(s);
 }

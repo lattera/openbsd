@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.8 2003/05/15 16:45:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.9 2003/05/18 17:41:16 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -214,7 +214,7 @@ int	lockmgr(__volatile struct lock *, u_int flags,
 void	lockmgr_printinfo(__volatile struct lock *);
 int	lockstatus(struct lock *);
 
-#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
+#if (0 && defined(MULTIPROCESSOR)) || defined(LOCKDEBUG)
 #define spinlockinit(lkp, name, flags)					\
 	lockinit((lkp), 0, (name), 0, (flags) | LK_SPIN)
 #define spinlockmgr(lkp, flags, intrlk)					\
@@ -244,8 +244,173 @@ void	spinlock_acquire_count(__volatile struct lock *, int);
 #endif
 
 #if defined(MULTIPROCESSOR)
+/*
+ * XXX Instead of using struct lock for the kernel lock and thus requiring us
+ * XXX to implement simplelocks, causing all sorts of fine-grained locks all
+ * XXX over our tree getting activated consuming both time and potentially
+ * XXX introducing locking protocol bugs.
+ */
+#ifdef notyet
+
 extern struct lock kernel_lock;
+
+/*
+ * XXX Simplelock macros used at "trusted" places.
+ */
+#define SIMPLELOCK		simplelock
+#define SIMPLE_LOCK_INIT	simple_lock_init
+#define SIMPLE_LOCK		simple_lock
+#define SIMPLE_UNLOCK		simple_unlock
+
+#else
+
+/*
+ * Really simple spinlock implementation with recursive capabilities.
+ * Correctness is paramount, no fancyness allowed.
+ */
+
+struct __mp_lock {
+	__cpu_simple_lock_t mpl_lock;
+	cpuid_t	mpl_cpu;
+	int	mpl_count;
+};
+
+static __inline void __mp_lock_init(struct __mp_lock *);
+static __inline void __mp_lock(struct __mp_lock *);
+static __inline void __mp_unlock(struct __mp_lock *);
+static __inline int __mp_release_all(struct __mp_lock *);
+static __inline void __mp_acquire_count(struct __mp_lock *, int);
+static __inline int __mp_lock_held(struct __mp_lock *);
+
+/*
+ * XXX Simplelocks macros used at "trusted" places.
+ */
+#define SIMPLELOCK		__mp_lock
+#define SIMPLE_LOCK_INIT	__mp_lock_init
+#define SIMPLE_LOCK		__mp_lock
+#define SIMPLE_UNLOCK		__mp_unlock
+
+static __inline void
+__mp_lock_init(struct __mp_lock *lock)
+{
+	__cpu_simple_lock_init(&lock->mpl_lock);
+	lock->mpl_cpu = LK_NOCPU;
+	lock->mpl_count = 0;
+}
+
+#if defined(MP_LOCKDEBUG)
+#ifndef DDB
+#error "MP_LOCKDEBUG requires DDB"
+#endif
+
+extern void Debugger(void);
+extern int db_printf(const char *, ...)
+    __kprintf_attribute__((__format__(__kprintf__,1,2)));
+
+/* CPU-dependent timing, needs this to be settable from ddb. */
+int __mp_lock_spinout = 200000000;
+#endif
+
+static __inline void
+__mp_lock(struct __mp_lock *lock)
+{
+	int s = spllock();
+
+	if (lock->mpl_cpu != cpu_number()) {
+#ifndef MP_LOCKDEBUG
+		__cpu_simple_lock(&lock->mpl_lock);
+#else
+		{
+			int got_it;
+			int ticks = __mp_lock_spinout;
+
+			do {
+				got_it =
+				    __cpu_simple_lock_try(&lock->mpl_lock);
+			} while (!got_it && ticks-- > 0);
+			if (!got_it) {
+ 				db_printf("__mp_lock(0x%x): lock spun out",
+				    lock);
+				Debugger();
+			}
+		}
+#endif
+		lock->mpl_cpu = cpu_number();
+	}
+	lock->mpl_count++;
+	splx(s);
+}
+
+static __inline void
+__mp_unlock(struct __mp_lock *lock)
+{
+	int s = spllock();
+
+#ifdef mp_LOCKDEBUG
+	if (lock->mpl_count == 0 || lock->mpl_cpu == LK_NOCPU) {
+		db_printf("__mp_unlock(0x%x): releasing not locked lock\n",
+		    lock);
+		Debugger();
+	}
+#endif
+
+	if (--lock->mpl_count == 0) {
+		lock->mpl_cpu = LK_NOCPU;
+		__cpu_simple_unlock(&lock->mpl_lock);
+	}
+	splx(s);
+}
+
+static __inline int
+__mp_release_all(struct __mp_lock *lock) {
+	int s = spllock();
+	int rv = lock->mpl_count;
+
+#ifdef MP_LOCKDEBUG
+	if (lock->mpl_count == 0 || lock->mpl_cpu == LK_NOCPU) {
+		db_printf(
+		    "__mp_release_all(0x%x): releasing not locked lock\n",
+		    lock);
+		Debugger();
+	}
+#endif
+
+	lock->mpl_cpu = LK_NOCPU;
+	lock->mpl_count = 0;
+	__cpu_simple_unlock(&lock->mpl_lock);
+	splx(s);
+	return (rv);
+}
+
+static __inline void
+__mp_acquire_count(struct __mp_lock *lock, int count) {
+	int s = spllock();
+
+	__cpu_simple_lock(&lock->mpl_lock);
+	lock->mpl_cpu = cpu_number();
+	lock->mpl_count = count;
+	splx(s);
+}
+
+static __inline int
+__mp_lock_held(struct __mp_lock *lock) {
+	return lock->mpl_count;
+}
+
+extern struct __mp_lock kernel_lock;
+
+#endif
+
+#else
+
+/*
+ * XXX Simplelock macros used at "trusted" places.
+ */
+#define SIMPLELOCK		simplelock
+#define SIMPLE_LOCK_INIT	simple_lock_init
+#define SIMPLE_LOCK		simple_lock
+#define SIMPLE_UNLOCK		simple_unlock
+
 #endif
 
 #endif /* !_LOCK_H_ */
-

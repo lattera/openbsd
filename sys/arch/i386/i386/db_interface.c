@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.5 2003/05/17 16:07:37 andreas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.6 2003/05/18 17:41:15 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.22 1996/05/03 19:42:00 christos Exp $	*/
 
 /* 
@@ -321,7 +321,7 @@ db_machine_init()
 		if (cpu_info[i] != NULL)
 			cpu_info[i]->ci_ddb_paused = CI_DDB_RUNNING;
 	}
-	simple_lock_init(&ddb_mp_slock);
+	SIMPLE_LOCK_INIT(&ddb_mp_slock);
 #endif /* MULTIPROCESSOR */
 }
 

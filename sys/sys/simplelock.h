@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/simplelock.h,v 1.8.4.3 2003/05/15 04:08:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/simplelock.h,v 1.8.4.4 2003/05/18 17:41:16 niklas Exp $	*/
 
 #ifndef _SIMPLELOCK_H_
 #define _SIMPLELOCK_H_
@@ -33,7 +33,7 @@ struct simplelock {
 #undef LOCKDEBUG
 #endif
 
-#ifndef MULTIPROCESSOR
+#if !defined(MULTIPROCESSOR) || 1
 
 #define SLOCK_LOCKED 1
 #define SLOCK_UNLOCKED 0
