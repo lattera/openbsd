@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/catman/Attic/catman.c,v 1.6 2003/04/15 08:32:38 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/catman/Attic/catman.c,v 1.7 2003/06/28 20:37:29 deraadt Exp $	*/
 /*
  * Copyright (c) 1993 Winning Strategies, Inc.
  * All rights reserved.
@@ -30,7 +30,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: catman.c,v 1.5 2002/06/01 20:15:43 deraadt Exp $";
+static char rcsid[] = "$Id: catman.c,v 1.6 2003/04/15 08:32:38 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -260,7 +260,7 @@ dosystem(const char *cmd)
 }
 
 void
-usage()
+usage(void)
 {
 	extern char *__progname;
 
