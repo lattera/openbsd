@@ -1,0 +1,569 @@
+.\" $OpenBSD: src/share/man/man8/Attic/vpn.8,v 1.70 2003/09/08 14:01:13 fgsch Exp $
+.\"
+.\" Copyright 1998 Niels Provos <provos@physnet.uni-hamburg.de>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed by Niels Provos.
+.\" 4. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" Manual page, using -mandoc macros
+.\"
+.Dd February 9, 1999
+.Dt VPN 8
+.Os
+.Sh NAME
+.Nm vpn
+.Nd configuring the system for virtual private networks
+.Sh DESCRIPTION
+A virtual private network is used to securely connect two or more subnets
+over the internet.
+For each subnet there is a security gateway which is
+linked via a cryptographically secured tunnel to the security gateway of
+the other subnet.
+.Xr ipsec 4
+is used to provide the necessary network-layer cryptographic services.
+This document describes the configuration process for setting up a
+.Nm VPN .
+.Pp
+Briefly, creating a VPN consists of the following steps:
+.Pp
+.Bl -enum -compact
+.It
+Choose a key exchange method: manual keyed, or automated via
+.Xr isakmpd 8 .
+.It
+For manual keying, create the Security Associations (SA), one for
+each endpoint.
+.It
+For manual keying, create the appropriate IPsec flows.
+.It
+For automated keying, create a configuration file for the keying
+daemon.
+.It
+Configure your firewall rules appropriately.
+.El
+.Ss Choosing a key exchange method
+There are currently two key exchange methods available:
+.Pp
+.Bl -bullet -compact
+.It
+manual (symmetric shared secret)
+.It
+.Xr isakmpd 8
+.El
+.Ss Enabling the Appropriate Kernel Operations
+Make sure that the following options and devices are enabled in the kernel:
+.Bd -literal -offset indent
+option    CRYPTO          # Cryptographic Framework
+option    IPSEC           # IPSEC VPN
+pseudo-device enc 4       # Encapsulation device used by IPSEC
+.Ed
+.Pp
+To use IPsec,
+.Xr ipsec 4
+operations must be enabled using
+.Xr sysctl 8 .
+Before doing either manual or automated keying, or performing
+encryption (ESP) or authentication (AH) operations, ensure the appropriate
+kernel operation has been enabled:
+.Bd -literal -offset indent
+# sysctl -w net.inet.esp.enable=1
+# sysctl -w net.inet.ah.enable=1
+.Ed
+.Pp
+The ESP and AH protocols default to 'on'.
+.Pp
+For security gateways, proper operation often also requires packet
+forwarding to be enabled:
+.Bd -literal -offset indent
+# sysctl -w net.inet.ip.forwarding=1
+# sysctl -w net.inet6.ip6.forwarding=1
+.Ed
+.Pp
+Packet forwarding defaults to 'off'.
+.Pp
+For more permanent operation,
+the appropriate option(s) should be enabled in your
+.Xr sysctl.conf 5 .
+.Ss Generating Manual Keys [manual keying]
+The shared secret symmetric keys used to create a VPN can
+be any hexadecimal value, so long as both sides of the connection use
+the same values.
+Since the security of the VPN is based on these keys
+being unguessable, it is very important that the keys be chosen using a
+strong random source.
+One practical method of generating them is by using the
+.Xr random 4
+device.
+To produce 160 bits (20 bytes) of randomness, for example, do:
+.Bd -literal -offset indent
+# openssl rand 20 | hexdump -e '20/1 "%02x"'
+.Ed
+.Pp
+or:
+.Bd -literal -offset indent
+# openssl rand 20 | perl -pe 's/./unpack("H2",$&)/ges'
+.Ed
+.Pp
+Different cipher types may require different sized keys.
+.Pp
+.Bl -column "Cipher" "Key Length" -offset indent -compact
+.It Em Cipher	Key Length
+.It Li DES Ta "56 bits"
+.It Li 3DES Ta "168 bits"
+.It Li AES Ta "Variable (128 bits recommended)"
+.It Li BLF Ta "Variable (160 bits recommended)"
+.It Li CAST Ta "Variable (128 bits maximum and recommended)"
+.It Li SKIPJACK Ta "80 bits"
+.El
+.Pp
+Use of DES or SKIPJACK as an encryption algorithm is not recommended
+(except for backwards compatibility) due to their short key length.
+Furthermore, recent attacks on SKIPJACK have shown severe weaknesses
+in its structure.
+.Pp
+Note that DES requires 8 bytes to form a 56-bit key and 3DES requires 24 bytes
+to form its 168-bit key.
+This is because the most significant bit of each byte is ignored by both
+algorithms.
+.Ss Creating Security Associations [manual keying]
+Before the IPsec flows can be defined, two Security Associations (SAs)
+must be defined on each end of the VPN, e.g.:
+.Bd -literal -offset indent
+# ipsecadm new esp -spi $SPI_AB -src $GATEWAY_A \e
+    -dst $GATEWAY_B -forcetunnel -enc 3des -auth sha1 \e
+    -keyfile $ENCRYPTION_KEY_FILE \e
+    -authkeyfile $AUTHENTICATION_KEY_FILE
+# ipsecadm new esp -spi $SPI_BA -src $GATEWAY_B \e
+    -dst $GATEWAY_A -forcetunnel -enc 3des -auth sha1 \e
+    -keyfile $ENCRYPTION_KEY_FILE \e
+    -authkeyfile $AUTHENTICATION_KEY_FILE
+.Ed
+.Pp
+Note that the
+.Fl key
+and
+.Fl authkey
+options may be used to specify the keys directly in the
+.Xr ipsecadm 8
+command line.
+However, another user could view the keys by using the
+.Xr ps 1
+command at the appropriate time (or use a program for doing so).
+.Ss Creating IPsec Flows [manual keying]
+Both IPsec gateways need to configure
+.Xr ipsec 4
+routes with the
+.Xr ipsecadm 8
+tool:
+.Pp
+On the security gateway of subnet A:
+.Bd -literal -offset indent
+# ipsecadm flow -out -require -proto esp \e
+    -src $GATEWAY_A -dst $GATEWAY_B \e
+    -addr $NETWORK_A $NETWORK_B
+# ipsecadm flow -in -require -proto esp \e
+    -src $GATEWAY_A -dst $GATEWAY_B \e
+    -addr $NETWORK_B $NETWORK_A
+.Ed
+.Pp
+and on the security gateway of subnet B:
+.Bd -literal -offset indent
+# ipsecadm flow -out -require -proto esp \e
+    -src $GATEWAY_B -dst $GATEWAY_A \e
+    -addr $NETWORK_B $NETWORK_A
+# ipsecadm flow -in -require -proto esp \e
+    -src $GATEWAY_B -dst $GATEWAY_A \e
+    -addr $NETWORK_A $NETWORK_B
+.Ed
+.Ss Configure and run the keying daemon [automated keying]
+Unless manual keying is used, both security gateways need to start
+the
+.Xr isakmpd 8
+key management daemon.
+To make sure the daemon is properly configured
+to provide the required security services (typically, encryption and
+authentication) start the daemon with debugging or verbose output.
+.Pp
+.Xr isakmpd 8
+implements security policy using the
+.Em KeyNote
+trust management system.
+.Ss Configuring Firewall Rules
+.Xr pf 4
+needs to be configured such that all packets from the outside are blocked
+by default.
+Only successfully IPsec-processed packets (from the
+.Xr enc 4
+interface), or key management packets (for
+.Xr isakmpd 8 ,
+.Tn UDP
+packets with source and destination ports of 500) should be allowed to pass.
+.Pp
+The
+.Xr pf.conf 5
+rules for a tunnel which uses encryption (the ESP IPsec protocol) and
+.Xr isakmpd 8
+on security gateway A might look like this:
+.Bd -literal
+GATEWAY_A = "192.168.1.254/32"
+GATEWAY_B = "192.168.2.1/32"
+NETWORK_A = "10.0.50.0/24"
+NETWORK_B = "10.0.99.0/24"
+
+# default deny
+# ne0 is the only interface going to the outside.
+block in log on { enc0, ne0 } all
+block out log on { enc0, ne0 } all
+
+# Passing in encrypted traffic from security gateways
+pass in proto esp from $GATEWAY_B to $GATEWAY_A
+pass out proto esp from $GATEWAY_A to $GATEWAY_B
+
+# Passing in traffic from the designated subnets.
+pass in on enc0 from $NETWORK_B to $NETWORK_A
+pass out on enc0 from $NETWORK_A to $NETWORK_B
+
+# Passing in isakmpd(8) traffic from the security gateways
+pass in on ne0 proto udp from $GATEWAY_B port = 500 to $GATEWAY_A port = 500
+pass out on ne0 proto udp from $GATEWAY_A port = 500 to $GATEWAY_B port = 500
+.Ed
+.Pp
+If there are no other
+.Xr pf.conf 5
+rules, the "quick" clause can be added to the last four rules.
+NAT rules can also be used on the
+.Xr enc 4
+interface.
+Note that it is strongly encouraged that instead of detailed PF
+rules, the SPD (IPsec flow database) be utilized to specify security
+policy, if only to avoid filtering conflicts.
+.Sh FILES
+.Bl -tag -width /etc/isakmpd/isakmpd.conf -compact
+.It Pa /usr/share/ipsec/rc.vpn
+Sample VPN configuration file
+.It Pa /etc/isakmpd/isakmpd.conf
+.Xr isakmpd 8
+configuration file
+.It Pa /etc/pf.conf
+Firewall configuration file
+.El
+.Sh EXAMPLES
+.Ss Manual keying
+To create a manual keyed VPN between two class C networks using
+3DES encryption and the following IP addresses:
+.Bd -literal -offset indent
+ GATEWAY_A  = 192.168.1.254
+ NETWORK_A = 10.0.50.0/24
+ GATEWAY_B  = 192.168.2.1
+ NETWORK_B = 10.0.99.0/24
+.Ed
+.Bl -enum
+.It
+Choose the shared secrets using a suitably random method.
+The 3DES encryption key needs 192 bits (3x64), or 24 bytes.
+The SHA-1 authentication key for needs 160 bits, or 20 bytes.
+.Bd -literal
+# openssl rand 24 | hexdump -e '24/1 "%02x"' > enc_key
+# openssl rand 20 | hexdump -e '20/1 "%02x"' > auth_key
+.Ed
+.It
+Create the Security Associations (on both endpoints):
+.Bd -literal
+# /sbin/ipsecadm new esp -src 192.168.2.1 -dst 192.168.1.254 \e
+   -forcetunnel -spi 1000 -enc 3des -auth sha1 \e
+   -keyfile enc_key -authkeyfile auth_key
+
+# /sbin/ipsecadm new esp -src 192.168.1.254 -dst 192.168.2.1 \e
+   -forcetunnel -spi 1001 -enc 3des -auth sha1 \e
+   -keyfile enc_key -authkeyfile auth_key
+.Ed
+.It
+Create the IPsec flows on machine A (the fist is for
+outbound flows, the latter is the ingress filter for the
+incoming security association):
+.Bd -literal
+# ipsecadm flow -out -require -proto esp \e
+    -src 192.168.1.254 -dst 192.168.2.1 \e
+    -addr 10.0.50.0/24 10.0.99.0/24
+# ipsecadm flow -in -require -proto esp \e
+    -src 192.168.1.254 -dst 192.168.2.1 \e
+    -addr 10.0.99.0/24 10.0.50.0/24
+.Ed
+.It
+Create the matching IPsec flows on machine B:
+.Bd -literal
+# ipsecadm flow -out -require -proto esp \e
+    -src 192.168.1.254 -dst 192.168.2.1 \e
+    -addr 10.0.50.0/24 10.0.99.0/24
+# ipsecadm flow -in -require -proto esp \e
+    -src 192.168.1.254 -dst 192.168.2.1 \e
+    -addr 10.0.99.0/24 10.0.50.0/24
+.Ed
+.It
+Configure the firewall rules on machine A
+using the previously defined ruleset:
+.Bd -literal
+GATEWAY_A = "192.168.1.254/32"
+GATEWAY_B = "192.168.2.1/32"
+NETWORK_A = "10.0.50.0/24"
+NETWORK_B = "10.0.99.0/24"
+
+(rest of ruleset)
+.Ed
+.It
+Configure the firewall rules on machine B, modifying the
+definitions as appropriate:
+.Bd -literal
+GATEWAY_B = "192.168.1.254/32"
+GATEWAY_A = "192.168.2.1/32"
+NETWORK_B = "10.0.50.0/24"
+NETWORK_A = "10.0.99.0/24"
+
+(rest of ruleset)
+.Ed
+.El
+.Ss Automated keying
+To create a VPN between the same two C class networks as the example
+above, using
+.Xr isakmpd 8 :
+.Bl -enum
+.It
+Create
+.Pa /etc/isakmpd/isakmpd.conf
+for machine A:
+.Bd -literal
+
+# Incoming phase 1 negotiations are multiplexed on the source IP
+# address. Phase 1 is used to set up a protected channel just
+# between the two gateway machines. This channel is then used for
+# the phase 2 negotiation traffic (i.e. encrypted & authenticated).
+
+[Phase 1]
+192.168.2.1=		peer-machineB
+
+# 'Phase 2' defines which connections the daemon should establish.
+# These connections contain the actual "IPsec VPN" information.
+
+[Phase 2]
+Connections=		VPN-A-B
+
+# ISAKMP phase 1 peers (from [Phase 1])
+
+[peer-machineB]
+Phase=			1
+Transport=		udp
+Address=		192.168.2.1
+Configuration=		Default-main-mode
+Authentication=		yoursharedsecret
+
+# IPSEC phase 2 connections (from [Phase 2])
+
+[VPN-A-B]
+Phase=			2
+ISAKMP-peer=		peer-machineB
+Configuration=		Default-quick-mode
+Local-ID=		machineA-internal-network
+Remote-ID=		machineB-internal-network
+
+# ID sections (as used in [VPN-A-B])
+
+[machineA-internal-network]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		10.0.50.0
+Netmask=		255.255.255.0
+
+[machineB-internal-network]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		10.0.99.0
+Netmask=		255.255.255.0
+
+# Main and Quick Mode descriptions (as used by peers and connections)
+
+[Default-main-mode]
+DOI=			IPSEC
+EXCHANGE_TYPE=		ID_PROT
+Transforms=		3DES-SHA,BLF-SHA
+
+[Default-quick-mode]
+DOI=			IPSEC
+EXCHANGE_TYPE=		QUICK_MODE
+Suites=			QM-ESP-3DES-SHA-SUITE
+.Ed
+.Pp
+.It
+Create
+.Pa /etc/isakmpd/isakmpd.conf
+for machine B:
+.Bd -literal
+
+# Incoming phase 1 negotiations are multiplexed on the source IP
+# address. Phase 1 is used to set up a protected channel just
+# between the two gateway machines. This channel is then used for
+# the phase 2 negotiation traffic (i.e. encrypted & authenticated).
+
+[Phase 1]
+192.168.1.254=		peer-machineA
+
+# 'Phase 2' defines which connections the daemon should establish.
+# These connections contain the actual "IPsec VPN" information.
+
+[Phase 2]
+Connections=		VPN-B-A
+
+# ISAKMP phase 1 peers (from [Phase 1])
+
+[peer-machineA]
+Phase=			1
+Transport=		udp
+Address=		192.168.1.254
+Configuration=		Default-main-mode
+Authentication=		yoursharedsecret
+
+# IPSEC phase 2 connections (from [Phase 2])
+
+[VPN-B-A]
+Phase=			2
+ISAKMP-peer=		peer-machineA
+Configuration=		Default-quick-mode
+Local-ID=		machineB-internal-network
+Remote-ID=		machineA-internal-network
+
+# ID sections (as used in [VPN-A-B])
+
+[machineA-internal-network]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		10.0.50.0
+Netmask=		255.255.255.0
+
+[machineB-internal-network]
+ID-type=		IPV4_ADDR_SUBNET
+Network=		10.0.99.0
+Netmask=		255.255.255.0
+
+# Main and Quick Mode descriptions (as used by peers and connections)
+
+[Default-main-mode]
+DOI=			IPSEC
+EXCHANGE_TYPE=		ID_PROT
+Transforms=		3DES-SHA,BLF-SHA
+
+[Default-quick-mode]
+DOI=			IPSEC
+EXCHANGE_TYPE=		QUICK_MODE
+Suites=			QM-ESP-3DES-SHA-SUITE
+.Ed
+.It
+Read through the configuration one more time.
+The only real differences between the two files in this example are
+the IP-addresses, and ordering of Local- and Remote-ID for the VPN
+itself.
+Note that the shared secret (the
+.Em Authentication
+tag) must match between machineA and machineB.
+.Pp
+Due to the shared secret information in the configuration file, it must
+be installed without any permissions for "group" or "other".
+.Bd -literal -offset indent
+# chmod og-rwx /etc/isakmpd/isakmpd.conf
+.Ed
+.Pp
+.It
+Create a simple
+.Pa /etc/isakmpd/isakmpd.policy
+file for machineA:
+.Bd -literal -offset indent
+Keynote-version: 2
+Authorizer: "POLICY"
+Conditions: app_domain == "IPsec policy" &&
+            esp_present == "yes" &&
+            esp_enc_alg != "null" -> "true";
+.Ed
+.It
+Create a simple
+.Pa /etc/isakmpd/isakmpd.policy
+file for machineB:
+.Bd -literal -offset indent
+Keynote-version: 2
+Authorizer: "POLICY"
+Conditions: app_domain == "IPsec policy" &&
+            esp_present == "yes" &&
+            esp_enc_alg != "null" -> "true";
+.Ed
+.It
+Configure the firewall rules on machines A and B:
+.Pp
+Use the same ruleset as the manual keying example, but add permission
+for the
+.Xr isakmpd 8
+control traffic, on
+.Tn UDP
+port 500.
+.Pp
+For machineA, add:
+.Bd -literal
+# Permit ISAKMPD control traffic between A and B
+pass in proto udp from 192.168.2.1/32 to 193.127.1.254/32 port = 500
+pass out proto udp from 192.168.1.254/32 to 193.127.2.1/32 port = 500
+.Ed
+.Pp
+For machineB, add:
+.Bd -literal
+# Permit ISAKMPD control traffic between A and B
+pass in proto udp from 192.168.1.254/32 to 193.127.2.1/32 port = 500
+pass out proto udp from 192.168.2.1/32 to 193.127.1.254/32 port = 500
+.Ed
+.It
+Start
+.Xr isakmpd 8
+.Pp
+On both machines, run:
+.Bd -literal -offset indent
+# /sbin/isakmpd
+.Ed
+.Pp
+To run with verbose debugging enabled, instead start with:
+.Bd -literal -offset indent
+# /sbin/isakmpd -d -DA=99
+.Ed
+.El
+.Sh SEE ALSO
+.Xr openssl 1 ,
+.Xr enc 4 ,
+.Xr ipsec 4 ,
+.Xr keynote 4 ,
+.Xr options 4 ,
+.Xr isakmpd.conf 5 ,
+.Xr isakmpd.policy 5 ,
+.Xr pf.conf 5 ,
+.Xr ipsecadm 8 ,
+.Xr isakmpd 8 ,
+.Xr pfctl 8 ,
+.Xr sysctl 8
+.Sh BUGS
+In situations where the gateway IPs are outside the tunnelled network
+range, such as when tunnelling private (RFC 1918) networks over the Internet,
+.Xr isakmpd 8
+or manual keying must be used.
