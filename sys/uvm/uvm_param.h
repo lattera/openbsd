@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.6.2.1 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.6.2.2 2004/02/22 23:52:28 tedu Exp $	*/
 /*	$NetBSD: uvm_param.h,v 1.13 2001/12/09 03:07:19 chs Exp $	*/
 
 /*
@@ -72,9 +72,7 @@
 #ifndef	_VM_PARAM_
 #define	_VM_PARAM_
 
-#ifdef _KERNEL
 #include <machine/vmparam.h>
-#endif
 
 /*
  * This belongs in types.h, but breaks too many existing programs.
