@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.10 2004/06/05 23:08:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.11 2004/06/08 21:30:30 grange Exp $	*/
 /*	$NetBSD: gdt.c,v 1.28 2002/12/14 09:38:50 junyoung Exp $	*/
 
 /*-
@@ -159,6 +159,7 @@ gdt_init()
 	gdt_init_cpu(ci);
 }
 
+#ifdef MULTIPROCESSOR
 /*
  * Allocate shadow GDT for a slave cpu.
  */
@@ -176,6 +177,7 @@ gdt_alloc_cpu(struct cpu_info *ci)
 	setsegment(&ci->ci_gdt[GCPU_SEL].sd, ci, sizeof(struct cpu_info)-1,
 	    SDT_MEMRWA, SEL_KPL, 1, 1);
 }
+#endif	/* MULTIPROCESSOR */
 
 
 /*
