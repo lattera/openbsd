@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/bgpd/control.c,v 1.1 2004/01/01 23:46:47 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/bgpd/control.c,v 1.2 2004/01/02 02:27:57 henning Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -25,7 +25,6 @@
 #include <unistd.h>
 
 #include "bgpd.h"
-#include "bgpdctl.h"
 #include "session.h"
 
 #define	CONTROL_BACKLOG	5
