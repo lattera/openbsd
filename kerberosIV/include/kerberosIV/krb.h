@@ -1,4 +1,4 @@
-/*	$Id: krb.h,v 1.2 1995/12/14 08:43:42 tholo Exp $	*/
+/*	$Id: krb.h,v 1.3 1996/06/02 05:04:16 tholo Exp $	*/
 
 /*-
  * Copyright 1987, 1988 by the Student Information Processing Board
@@ -32,7 +32,7 @@
 #include <kerberosIV/site.h>
 
 /* Need some defs from des.h	 */
-#include <kerberosIV/des.h>
+#include <des.h>
 
 /* Global library variables. */
 extern int krbONE;
