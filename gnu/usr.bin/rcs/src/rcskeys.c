@@ -29,6 +29,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rcskeys.c,v $
+ * Revision 1.3  1996/08/12 21:05:54  millert
+ * slightly less gross fix to avoid a coredump.
+ *
  * Revision 1.2  1996/08/12 20:20:04  millert
  * fixes core dump if RCSLOCALID not set--oops.
  *
@@ -70,7 +73,7 @@ Report problems and direct all questions to:
 
 #include "rcsbase.h"
 
-libId(keysId, "$Id: rcskeys.c,v 1.2 1996/08/12 20:20:04 millert Exp $")
+libId(keysId, "$Id: rcskeys.c,v 1.3 1996/08/12 21:05:54 millert Exp $")
 
 
 char const *Keyword[] = {
@@ -119,8 +122,10 @@ setRCSlocalId(string)
 {
 	static char local_id[keylength+1];
 
-	if (strlen(string) > keylength)
+	if (strlen(string) > keylength) {
 		error("LocalId is too long");
+		exit(1);
+	}
 	VOID strcpy(local_id, string);
 	Keyword[LocalId] = local_id;
 }
