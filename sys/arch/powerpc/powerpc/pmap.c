@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.52.2.3 2002/10/29 00:28:08 art Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.52.2.4 2002/10/29 14:34:06 drahn Exp $ */
 
 /*
  * Copyright (c) 2001, 2002 Dale Rahn. All rights reserved.
@@ -522,7 +522,7 @@ pmap_enter(pm, va, pa, prot, flags)
 		pmap_syncicache_user_virt(pm, va);
 
 	/* MP - free pmap lock */
-	return KERN_SUCCESS;
+	return 0;
 }
 
 /* 
