@@ -1,3 +1,5 @@
+/* $OpenBSD: src/usr.sbin/httpd/src/include/multithread.h,v 1.6 2005/03/28 23:26:51 niallo Exp $ */
+
 #ifndef APACHE_MULTITHREAD_H
 #define APACHE_MULTITHREAD_H
 
