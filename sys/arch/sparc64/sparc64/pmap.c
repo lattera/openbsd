@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.7 2003/06/07 11:14:46 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.8 2004/02/19 10:50:01 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.107 2001/08/31 16:47:41 eeh Exp $	*/
 #undef	NO_VCACHE /* Don't forget the locked TLB in dostart */
 /*
@@ -2646,7 +2646,7 @@ pmap_dumpmmu(dump, blkno)
 }
 
 /*
- * Determine (non)existance of physical page
+ * Determine (non)existence of physical page
  */
 int pmap_pa_exists(pa)
 paddr_t pa;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/uba_dma.c,v 1.1.8.3 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/uba_dma.c,v 1.1.8.4 2004/02/19 10:50:02 niklas Exp $	*/
 /* $NetBSD: uba_dma.c,v 1.2 1999/06/20 00:59:55 ragge Exp $ */
 
 /*-
@@ -82,7 +82,7 @@ uba_dma_init(sc)
 	struct uba_vsoftc *sc;
 {
 	bus_dma_tag_t t;
-	struct pte *pte;
+	pt_entry_t *pte;
 
 	/*
 	 * Initialize the DMA tag used for sgmap-mapped DMA.
@@ -111,8 +111,8 @@ uba_dma_init(sc)
 	/*
 	 * Map in Unibus map registers.
 	 */
-	pte = (struct pte *)vax_map_physmem(sc->uv_addr, sc->uv_size/VAX_NBPG);
-	if (pte == 0)
+	pte = (pt_entry_t *)vax_map_physmem(sc->uv_addr, sc->uv_size/VAX_NBPG);
+	if (pte == NULL)
 		panic("uba_dma_init");
 	/*
 	 * Initialize the SGMAP.

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/Makefile.mvme68k,v 1.10.2.5 2003/06/07 11:13:15 ho Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/Makefile.mvme68k,v 1.10.2.6 2004/02/19 10:49:04 niklas Exp $
 
 # This makefile is constructed from a machine description:
 #	config machineid
@@ -47,6 +47,7 @@ CMACHFLAGS+=	-msoft-float
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
+CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-log
 
 COPTS?=		-O2
 CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
@@ -169,6 +170,10 @@ depend:: .depend
 	mkdep ${AFLAGS} ${CPPFLAGS} ${MVME68K}/mvme68k/locore.s
 	mkdep -a ${CFLAGS} ${CPPFLAGS} param.c ioconf.c ${CFILES}
 	mkdep -a ${AFLAGS} ${CPPFLAGS} ${SFILES}
+	sh $S/kern/genassym.sh mkdep -f assym.dep ${CFLAGS} \
+	    ${CPPFLAGS} < ${MVME68K}/mvme68k/genassym.cf
+	@sed -e 's/.*\.o:.* /assym.h: /' < assym.dep >> .depend
+	@rm -f assym.dep
 
 
 # depend on root or device configuration

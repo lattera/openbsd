@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/cpufunc_asm_sa1.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/cpufunc_asm_sa1.S,v 1.1.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: cpufunc_asm_sa1.S,v 1.8 2002/08/17 16:36:32 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/hil_gsc.c,v 1.2 2003/02/15 23:42:45 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/hil_gsc.c,v 1.2.4.1 2004/02/19 10:48:40 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -82,7 +82,7 @@ hil_gsc_attach(struct device *parent, struct device *self, void *aux)
 	hil_attach(sc, hil_is_console);
 
 	gsc_intr_establish((struct gsc_softc *)parent, IPL_TTY,
-	    ga->ga_irq, hil_intr, sc, &sc->sc_dev);
+	    ga->ga_irq, hil_intr, sc, sc->sc_dev.dv_xname);
 
 	startuphook_establish(hil_attach_deferred, sc);
 }

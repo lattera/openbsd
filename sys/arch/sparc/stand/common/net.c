@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/net.c,v 1.1 1997/09/17 10:46:18 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/net.c,v 1.1.12.1 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: net.c,v 1.2 1997/07/22 17:41:07 drochner Exp $	*/
 
 /*
@@ -60,6 +60,8 @@
 #include <lib/libsa/netif.h>
 #include <lib/libsa/bootparam.h>
 
+#include "promdev.h"
+
 char		rootpath[FNAME_SIZE];
 
 int	netdev_sock = -1;
@@ -70,8 +72,7 @@ static	int open_count;
  * This opens the low-level device and sets f->f_devdata.
  */
 int
-net_open(pd)
-	struct promdata *pd;
+net_open(struct promdata *pd)
 {
 	int error = 0;
 
@@ -91,8 +92,7 @@ bad:
 }
 
 int
-net_close(pd)
-	struct promdata *pd;
+net_close(struct promdata *pd)
 {
 	/* On last close, do netif close, etc. */
 	if (open_count > 0)
@@ -101,7 +101,7 @@ net_close(pd)
 }
 
 int
-net_mountroot()
+net_mountroot(void)
 {
 
 #ifdef DEBUG

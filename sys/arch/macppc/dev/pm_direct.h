@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.h,v 1.2.4.3 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.h,v 1.2.4.4 2004/02/19 10:49:03 niklas Exp $	*/
 /*	$NetBSD: pm_direct.h,v 1.5 1999/07/12 15:54:55 tsubai Exp $	*/
 
 /*
@@ -134,4 +134,4 @@ enum {
 #define PMU_PWR_AC_PRESENT	(1 << 0)
 #define PMU_PWR_BATT_PRESENT	(1 << 2)
 
-#endif 
+#endif

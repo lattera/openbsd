@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/ubareg.h,v 1.7.12.3 2003/06/07 11:14:47 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/uba/ubareg.h,v 1.7.12.4 2004/02/19 10:50:03 niklas Exp $ */
 /*	$NetBSD: ubareg.h,v 1.11 2000/01/24 02:40:36 matt Exp $ */
 
 /*-
@@ -100,7 +100,7 @@ struct uba_regs {
 	int	uba_brrvr[4];		/* receive vector registers */
 	int	uba_dpr[16];		/* buffered data path register */
 	int	pad2[480];
-	struct pte uba_map[UBAPAGES];	/* unibus map register */
+	pt_entry_t uba_map[UBAPAGES];	/* unibus map register */
 	int	pad3[UBAIOPAGES];	/* no maps for device address space */
 };
 #endif

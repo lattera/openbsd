@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/autoconf.c,v 1.1 2003/10/31 03:54:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/autoconf.c,v 1.1.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -37,7 +37,7 @@
  * from: Utah Hdr: autoconf.c 1.31 91/01/21
  *
  *	from: @(#)autoconf.c	8.1 (Berkeley) 6/10/93
- *      $Id: autoconf.c,v 1.13 2003/10/16 05:03:22 deraadt Exp $
+ *      $Id$
  */
 
 /*

@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/closeall.c,v 1.1 1997/09/17 10:46:16 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/closeall.c,v 1.1.12.1 2004/02/19 10:49:59 niklas Exp $	*/
 
 void
-closeall()
+closeall(void)
 {
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.7 2003/03/27 23:42:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.8 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 1996/09/30 16:34:29 ws Exp $	*/
 
 /*-
@@ -71,7 +71,9 @@ typedef u_int sr_t;
 #define VP_IDX2_MASK	(VP_IDX2_SIZE-1)
 #define VP_IDX2_POS 	12
 
-void pmap_kenter_cache( vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
+/* functions used by the bus layer for device accesses */
+void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
+void pmap_kremove_pg(vaddr_t va);
 
 /* cache flags */
 #define PMAP_CACHE_DEFAULT	0 	/* WB cache managed mem, devices not */

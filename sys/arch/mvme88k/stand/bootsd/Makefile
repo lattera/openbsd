@@ -1,12 +1,12 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/10/93
-#	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/Makefile,v 1.6.4.1 2001/04/18 16:11:44 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/Makefile,v 1.6.4.2 2004/02/19 10:49:08 niklas Exp $
 
       
 S=	${.CURDIR}/../../../..
 DEFS= 
 INCPATH=-I${.CURDIR} -I${.CURDIR}/../libsa -I${.CURDIR}/../libbug \
 	-I${.CURDIR}/../../include -I${S} -I${S}/lib/libsa
-CFLAGS=-O0 ${INCPATH} ${DEFS} ${COPTS}
+CFLAGS+=${INCPATH} ${DEFS} ${COPTS}
 LDFLAGS=-N -T ${STAGE2_RELOC}
 CLEANFILES+=bootsd
 
@@ -17,7 +17,7 @@ CLEANFILES+=bootsd
 
 SRCS=   boot.c conf.c version.c
 
-LIBS=	${LIBSA} ${LIBBUG} ${LIBZ} ${LIBGCC}
+LIBS=	${LIBSA} ${LIBBUG} ${LIBZ}
 
 OBJS= ${SRCS:N*.h:R:S/$/.o/g}
 

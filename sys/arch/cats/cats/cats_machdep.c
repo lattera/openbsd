@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/cats/Attic/cats_machdep.c,v 1.6 2004/02/13 21:32:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/cats/Attic/cats_machdep.c,v 1.6.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: cats_machdep.c,v 1.50 2003/10/04 14:28:28 chris Exp $	*/
 
 /*
@@ -173,13 +173,13 @@ extern struct user *proc0paddr;
 
 /* Prototypes */
 
-void consinit(void);
+void consinit		__P((void));
 
-int fcomcnattach(u_int iobase, int rate,tcflag_t cflag);
-int fcomcndetach(void);
+int fcomcnattach __P((u_int iobase, int rate,tcflag_t cflag));
+int fcomcndetach __P((void));
 
-static void process_kernel_args(char *);
-extern void configure(void);
+static void process_kernel_args	__P((char *));
+extern void configure		__P((void));
 
 /* A load of console goo. */
 #include "vga.h"
@@ -205,6 +205,7 @@ extern void configure(void);
 #endif
 #endif
 
+#define CONSDEVNAME "fcom"
 #ifndef CONSDEVNAME
 #define CONSDEVNAME "vga"
 #endif
@@ -720,14 +721,6 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	printf("bootstrap done.\n");
 #endif
 
-	if (boothowto & RB_CONFIG) {
-#ifdef BOOT_CONFIG
-		user_config();
-#else
-		printf("kernel does not support -c; continuing..\n");
-#endif 
-	}
-
 	arm32_vector_init(ARM_VECTORS_LOW, ARM_VEC_ALL);
 
 	/*
@@ -738,9 +731,7 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	 * Since the ARM stacks use STMFD etc. we must set r13 to the top end
 	 * of the stack memory.
 	 */
-#ifdef VERBOSE_INIT_ARM
 	printf("init subsystems: stacks ");
-#endif
 
 	set_stackptr(PSR_IRQ32_MODE,
 	    irqstack.pv_va + IRQ_STACK_SIZE * PAGE_SIZE);
@@ -757,9 +748,7 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	 * Initialisation of the vectors will just panic on a data abort.
 	 * This just fills in a slighly better one.
 	 */
-#ifdef VERBOSE_INIT_ARM
 	printf("vectors ");
-#endif
 	data_abort_handler_address = (u_int)data_abort_handler;
 	prefetch_abort_handler_address = (u_int)prefetch_abort_handler;
 	undefined_handler_address = (u_int)undefinedinstruction_bounce;
@@ -773,15 +762,11 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	 */
 
 	/* Initialise the undefined instruction handlers */
-#ifdef VERBOSE_INIT_ARM
 	printf("undefined ");
-#endif
 	undefined_init();
 
 	/* Load memory into UVM. */
-#ifdef VERBOSE_INIT_ARM
 	printf("page ");
-#endif
 	uvm_setpagesize();	/* initialize PAGE_SIZE-dependent variables */
 
 	/* XXX Always one RAM block -- nuke the loop. */
@@ -858,20 +843,14 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	}
 
 	/* Boot strap pmap telling it where the kernel page table is */
-#ifdef VERBOSE_INIT_ARM
 	printf("pmap ");
-#endif
 	pmap_bootstrap((pd_entry_t *)kernel_l1pt.pv_va, KERNEL_VM_BASE,
 	    KERNEL_VM_BASE + KERNEL_VM_SIZE);
 
 	/* Setup the IRQ system */
-#ifdef VERBOSE_INIT_ARM
 	printf("irq ");
-#endif
 	footbridge_intr_init();
-#ifdef VERBOSE_INIT_ARM
 	printf("done.\n");
-#endif
 
 #ifdef IPKDB
 	/* Initialise ipkdb */
@@ -908,8 +887,6 @@ debugledaddr = (void*)(DC21285_PCI_IO_VBASE+DEBUG_LED_OFFSET);
 	return(kernelstack.pv_va + USPACE_SVC_STACK_TOP);
 }
 
-char *console = CONSDEVNAME;
-
 static void
 process_kernel_args(args)
 	char *args;
@@ -923,65 +900,35 @@ process_kernel_args(args)
 	args = bootargs;
 	boot_file = bootargs;
 
-again:
 	/* Skip the kernel image filename */
 	while (*args != ' ' && *args != 0)
 		++args;
 
 	if (*args != 0)
 		*args++ = 0;
+
 	while (*args == ' ')
 		++args;
-	if (*args != '-') {
-		if (0 == strcmp(boot_file, "setargs")) {
-			boot_file = args;
-			goto again;
-		}
-	}
 
 	boot_args = args;
 
-	if (*args == '-') {
-		while (*args) {
-			switch (*args++) {
-			case 'a':
-				boothowto |= RB_ASKNAME;
-				break;
-			case 's':
-				boothowto |= RB_SINGLE;
-				break;
-			case 'd':
-				boothowto |= RB_KDB;
-				break;
-			case 'c':
-				boothowto |= RB_CONFIG;
-				break;
-			case 'v':
-				console = "vga";
-				break;
-			case 'f':
-				console = "fcom";
-				break;
-			default:
-				break;
-			}
-		}
-	}
-
-
-	/* XXX too early for console */
 	printf("bootfile: %s\n", boot_file);
 	printf("bootargs: %s\n", boot_args);
+
+#if 0
+	parse_mi_bootargs(boot_args);
+#endif
 }
 
 extern struct bus_space footbridge_pci_io_bs_tag;
 extern struct bus_space footbridge_pci_mem_bs_tag;
-void footbridge_pci_bs_tag_init(void);
+void footbridge_pci_bs_tag_init __P((void));
 
 void
 consinit(void)
 {
 	static int consinit_called = 0;
+	char *console = CONSDEVNAME;
 
 	if (consinit_called != 0)
 		return;
@@ -1004,16 +951,11 @@ consinit(void)
 	}
 #if (NVGA > 0)
 	else if (strncmp(console, "vga", 3) == 0) {
-		if (0 == vga_cnattach(&footbridge_pci_io_bs_tag,
-		    &footbridge_pci_mem_bs_tag, - 1, 1)) {
+		vga_cnattach(&footbridge_pci_io_bs_tag,
+		    &footbridge_pci_mem_bs_tag, - 1, 0);
 #if (NPCKBC > 0)
 		pckbc_cnattach(&isa_io_bs_tag, IO_KBD, KBCMDP, PCKBC_KBD_SLOT);
 #endif	/* NPCKBC */
-		} else {
-			/* fall back to serial if no video present */
-			fcomcnattach(DC21285_ARMCSR_VBASE, comcnspeed,
-			    comcnmode);
-		}
 	}
 #endif	/* NVGA */
 #if (NCOM > 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.6.2.4 2003/03/27 23:19:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.6.2.5 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: intr.c,v 1.5 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*-
@@ -282,6 +282,8 @@ intr_dispatch(evec)
 	else
 		printf("intr_dispatch: stray level %d interrupt\n", ipl);
 }
+
+int netisr;
 
 void
 netintr()

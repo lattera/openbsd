@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/include/Attic/exec.h,v 1.2 2004/02/01 06:13:17 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/include/Attic/exec.h,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.6 1994/10/27 04:16:05 cgd Exp $	*/
 
 /*

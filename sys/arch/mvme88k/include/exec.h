@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7.4.2 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7.4.3 2004/02/19 10:49:07 niklas Exp $ */
 #ifndef __MACHINE_EXEC_H__
 #define __MACHINE_EXEC_H__
 
 #define __LDPGSZ        4096
 
-struct relocation_info_m88k { 
+struct relocation_info_m88k {
         unsigned int r_address;         /* offset in text or data segment */
         unsigned int r_symbolnum : 24,  /* ordinal number of add symbol */
                         r_extern :  1,  /* 1 if need to add symbol to value */

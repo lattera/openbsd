@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.15 2003/05/25 19:24:32 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.16 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -45,6 +45,9 @@ _C_LABEL(ipending):
 _C_LABEL(astpending)
 	.long	0		# async software traps (softints) pending
 #endif
+_C_LABEL(netisr):
+	.long	0		# scheduling bits for network
+
 	.text
 
 #if defined(PROF) || defined(GPROF)

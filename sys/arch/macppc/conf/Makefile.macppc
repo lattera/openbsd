@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.1.4.6 2003/06/07 11:13:14 ho Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.1.4.7 2004/02/19 10:49:03 niklas Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -37,10 +37,10 @@ MACPPC=	$S/arch/macppc
 
 INCLUDES=	-I. -I$S/arch -I$S -nostdinc -L${DESTDIR}/usr/include
 CPPFLAGS=	${INCLUDES} ${IDENT} -D_KERNEL \
-		-Dmacppc
+		-D__macppc__
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
-CMACHFLAGS=	-msoft-float -Wa,-m7400
+CMACHFLAGS=	-msoft-float -Wa,-m7400 -fno-builtin-printf -fno-builtin-log
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
@@ -142,8 +142,7 @@ clean::
 		[Ee]rrs linterrs makelinks genassym genassym.o assym.h
 
 lint:
-	@lint -hbxncez -DGENERIC -Dvolatile= ${CPPFLAGS} -UKGDB \
-		${MACPPC}/macppc/Locore.c ${CFILES} \
+	@lint -hbxncez -DGENERIC -Dvolatile= ${CPPFLAGS} -UKGDB ${CFILES} \
 		ioconf.c param.c | \
 		grep -v 'static function .* unused'
 
@@ -167,6 +166,10 @@ depend:: .depend
 .if ${SFILES} != ""
 	${MKDEP} -a ${AFLAGS} ${CPPFLAGS} ${SFILES}
 .endif
+	sh $S/kern/genassym.sh ${MKDEP} -f assym.dep ${CFLAGS} \
+	    ${CPPFLAGS} < ${MACPPC}/macppc/genassym.cf
+	@sed -e 's/.*\.o:.* /assym.h: /' < assym.dep >> .depend
+	@rm -f assym.dep
 
 # depend on root or device configuration
 autoconf.o conf.o: Makefile

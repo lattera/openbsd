@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.8 2003/06/07 11:00:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.9 2004/02/19 10:51:30 niklas Exp $	*/
 /*	$NetBSD: param.c,v 1.16 1996/03/12 03:08:40 mrg Exp $	*/
 
 /*
@@ -104,15 +104,15 @@ int	mcllowat = MCLLOWAT;
 int	fscale = FSCALE;	/* kernel uses `FSCALE', user uses `fscale' */
 
 int	shmseg = 8;
-int 	shmmaxpgs = SHMMAXPGS;
+int	shmmaxpgs = SHMMAXPGS;
 /*
  * Values in support of System V compatible shared memory.	XXX
  */
 #ifdef SYSVSHM
 #define	SHMMAX	SHMMAXPGS	/* shminit() performs a `*= PAGE_SIZE' */
 #define	SHMMIN	1
-#define	SHMMNI	32			/* <= SHMMMNI in shm.h */
-#define	SHMSEG	8
+#define	SHMMNI	128		/* <64k, see IPCID_TO_IX in ipc.h */
+#define	SHMSEG	128
 #define	SHMALL	(SHMMAXPGS)
 
 struct	shminfo shminfo = {

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/Makefile,v 1.7.4.2 2003/05/13 19:41:07 ho Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/Makefile,v 1.7.4.3 2004/02/19 10:49:09 niklas Exp $
 
 SIZE?=	size
 STRIP?= strip
@@ -8,7 +8,7 @@ DEFS= -DSUN_BOOTPARAMS
 #-DNETIF_DEBUG
 INCPATH=-I${.CURDIR} -I${.CURDIR}/../libsa -I${.CURDIR}/../libbug \
 	-I${S} -I${S}/lib/libsa
-CFLAGS=-O2 ${DEFS} ${INCPATH} ${COPTS}
+CFLAGS+=${DEFS} ${INCPATH} ${COPTS}
 CLEANFILES+=netboot netboot.bin
 
 .include "${S}/arch/mvme88k/stand/bugcrt/Makefile.inc"
@@ -20,23 +20,21 @@ SRCS=   boot.c conf.c version.c devopen.c dev_net.c
 SRCS+=	if_ie.c 
 #SRCS+=  if_le.c
 OBJS=  ${SRCS:S/.c/.o/g}
-LIBS= ${LIBSA} ${LIBBUG} ${LIBZ} ${LIBGCC}
+LIBS= ${LIBSA} ${LIBBUG} ${LIBZ}
 LDFLAGS+= -s -N -T ${STAGE2_RELOC} 
 #LDFLAGS+= -nostdlib -s -N -Ttext ${RELOC}
 
 all:	netboot.bin
 
 netboot: ${OBJS} ${SINGLE} ${LIBS}
-	${LD} ${LDFLAGS} \
-		${SINGLE} ${OBJS} ${LIBS} -o $@
+	${LD} ${LDFLAGS} -o $@ \
+		${SINGLE} ${OBJS} ${LIBS}
 #	@${SIZE} $@
 
 netboot.bin: netboot
 	${STRIP} netboot
 	dd ibs=32 skip=1 if=netboot of=$@
 #	dd ibs=38 skip=1 if=netboot of=$@
-	chown ${LIBOWN}:${LIBGRP} netboot.bin
-	chmod ${LIBMODE} netboot.bin
 
 install:
 	${INSTALL} ${INSTALL_COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \

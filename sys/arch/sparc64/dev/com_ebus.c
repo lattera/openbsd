@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.4 2003/03/27 23:42:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.5 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: com_ebus.c,v 1.6 2001/07/24 19:27:10 eeh Exp $	*/
 
 /*
@@ -143,7 +143,7 @@ com_ebus_attach(parent, self, aux)
 
 	for (i = 0; i < ea->ea_nintrs; i++)
 		bus_intr_establish(sc->sc_iot, ea->ea_intrs[i],
-		    IPL_TTY, 0, comintr, sc);
+		    IPL_TTY, 0, comintr, sc, self->dv_xname);
 
 	/* Figure out if we're the console. */
 	com_is_input = (ea->ea_node == OF_instance_to_package(OF_stdin()));

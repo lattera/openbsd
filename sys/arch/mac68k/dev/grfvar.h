@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grfvar.h,v 1.8.14.3 2003/06/07 11:13:13 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grfvar.h,v 1.8.14.4 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: grfvar.h,v 1.11 1996/08/04 06:03:58 scottr Exp $	*/
 
 /*
@@ -139,7 +139,7 @@ struct image_data {
 int	grfopen(dev_t dev, int flag, int mode, struct proc *p);
 int	grfclose(dev_t dev, int flag, int mode, struct proc *p);
 int	grfioctl(dev_t, int, caddr_t, int, struct proc *p);
-int	grfselect(dev_t dev, int rw, struct proc *p);
+int	grfpoll(dev_t dev, int rw, struct proc *p);
 paddr_t	grfmmap(dev_t dev, off_t off, int prot);
 int	grfon(dev_t dev);
 int	grfoff(dev_t dev);

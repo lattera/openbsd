@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf_mv.c,v 1.17.4.1 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf_mv.c,v 1.17.4.2 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: grf_mv.c,v 1.24 1997/05/03 02:29:54 briggs Exp $	*/
 
 /*
@@ -210,7 +210,7 @@ grfmv_attach(parent, self, aux)
 		if (strncmp(cardname, "Samsung 768", 11) == 0)
 			sc->card_id = NUBUS_DRHW_SAM768;
 		else if (strncmp(cardname, "Toby frame", 10) != 0)
-			printf("%s: card masquaredes as Toby Framebuffer",
+			printf("%s: card masquerades as Toby Framebuffer",
 			    sc->sc_dev.dv_xname);
 	}
 

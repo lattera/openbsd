@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/SUN4C,v 1.28.2.3 2003/05/16 00:29:40 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/SUN4C,v 1.28.2.4 2004/02/19 10:49:57 niklas Exp $
 # 	$NetBSD: GENERIC,v 1.48 1997/08/23 19:19:01 mjacob Exp $
 
 # Machine architecture; required by config(8)
@@ -136,6 +136,25 @@ wsdisplay* at agten?
 # Southland Media Systems MGX/MGXPlus framebuffer.
 mgx* at sbus?
 wsdisplay* at mgx?
+
+# Sun PCMCIA bridge
+stp*	at sbus?
+pcmcia*	at stp? socket ?
+
+# PCMCIA devices
+wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
+#an*	at pcmcia? function ?			# Aironet IEEE 802.11DS
+ne*	at pcmcia? function ?			# NE2000-compat ethernet
+ep*	at pcmcia? function ?			# PCMCIA based 3C5xx ethernet
+#com*	at pcmcia? function ?			# PCMCIA modems/serial ports
+
+# Media Independent Interface (mii) drivers (required by ne and ep)
+bmtphy*	at mii? phy ?				# Broadcom 10/100 PHYs
+lxtphy*	at mii? phy ?				# Level1 LXT970 PHYs
+nsphy* at mii? phy ?				# NS and compatible PHYs
+nsphyter* at mii? phy ?
+tqphy* at mii? phy ?				# TDK 78Q212x PHYs
+ukphy*	at mii? phy ?
 
 # SCSI bus layer.  SCSI devices attach to the SCSI bus, which attaches
 # to the underlying hardware controller.

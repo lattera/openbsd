@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.19 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.20 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -2015,6 +2015,9 @@ pmap_release(pmap)
 		/*
 		 * no need to switch the LDT; this address space is gone,
 		 * nothing is using it.
+		 *
+		 * No need to lock the pmap for ldt_free (or anything else),
+		 * we're the last one to use it.
 		 */
 		ldt_free(pmap);
 		uvm_km_free(kernel_map, (vaddr_t)pmap->pm_ldt,
@@ -2200,6 +2203,7 @@ pmap_virtual_space(startp, endp)
 /*
  * pmap_zero_page: zero a page
  */
+void (*pagezero)(void *, size_t) = bzero;
 
 void
 pmap_zero_page(struct vm_page *pg)
@@ -2227,12 +2231,8 @@ pmap_zero_phys(paddr_t pa)
 
 	*zpte = (pa & PG_FRAME) | PG_V | PG_RW;	/* map in */
 	pmap_update_pg((vaddr_t)zerova);	/* flush TLB */
-	bzero(zerova, NBPG);			/* zero */
+	pagezero(zerova, PAGE_SIZE);		/* zero */
 	*zpte = 0;				/* zap! */
-	pmap_update_pg((vaddr_t)zerova);	/* flush TLB */
-#ifdef MULTIPROCESSOR
-	/* Using per-cpu VA; no shootdown required here. */
-#endif
 }
 
 /*
@@ -2257,12 +2257,8 @@ pmap_zero_page_uncached(pa)
 	*zpte = (pa & PG_FRAME) | PG_V | PG_RW |	/* map in */
 	    ((cpu_class != CPUCLASS_386) ? PG_N : 0);
 	pmap_update_pg((vaddr_t)zerova);		/* flush TLB */
-	memset(zerova, 0, NBPG);			/* zero */
+	pagezero(zerova, PAGE_SIZE);				/* zero */
 	*zpte = 0;					/* zap! */
-	pmap_update_pg((vaddr_t)zerova);		/* flush TLB */
-#ifdef MULTIPROCESSOR
-	/* Using per-cpu VA; no shootdown required here. */
-#endif
 
 	return (TRUE);
 }

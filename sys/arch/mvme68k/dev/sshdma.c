@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.2.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.2.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -80,7 +80,7 @@ struct cfattach ssh_ca = {
 };
 
 struct cfdriver ssh_cd = {
-	NULL, "ssh", DV_DULL, 0
+	NULL, "ssh", DV_DULL
 };
 
 int

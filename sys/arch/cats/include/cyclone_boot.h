@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/include/Attic/cyclone_boot.h,v 1.1 2004/02/01 05:12:54 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/include/Attic/cyclone_boot.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: cyclone_boot.h,v 1.1 2001/06/20 22:14:34 chris Exp $	*/
 
 /*

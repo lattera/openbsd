@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/boot/srt0.S,v 1.10.8.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/boot/srt0.S,v 1.10.8.3 2004/02/19 10:48:42 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -35,6 +35,7 @@
 	.globl	_C_LABEL(edata)
 	.globl	_C_LABEL(boot)
 	.globl	_C_LABEL(_rtt)
+	.globl	_C_LABEL(bios_bootdev)
 	.globl	_ASM_LABEL(pmm_init)
 	.globl	Gdtr
 
@@ -47,7 +48,7 @@ _start:
 	je	1f
 #ifdef DEBUG
 	movl	$0xb80a0, %ebx
-	movl	$0x07420742, (%ebx)
+	addr32 movl $0x07420742, (%ebx)
 #endif
 1:
 	popl %edx
@@ -69,6 +70,7 @@ _start:
 	mov	%ax,%gs
 	movl	$BOOTSTACK,%esp
 	pushl	%edx
+	movl	%edx, _C_LABEL(bios_bootdev)
 
 	/* Now do it all */
 	call	_ASM_LABEL(pmm_init)

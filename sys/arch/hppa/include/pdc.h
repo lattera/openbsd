@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.5 2003/05/13 19:41:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.6 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990 mt Xinu, Inc.  All rights reserved.
@@ -67,11 +67,11 @@
  *			|                    |
  *	MEM_FREE	+--------------------+
  *			|                    |
- *              	|    Console IODC    |
+ *			|    Console IODC    |
  *			|                    |
  *	MEM_FREE+64k	+--------------------+
  *			|                    |
- *              	|  Boot Device IODC  |
+ *			|  Boot Device IODC  |
  *			|                    |
  *	IPL_START	+--------------------+
  *			|                    |
@@ -210,9 +210,9 @@
 
 #define PDC_BLOCK_TLB	18	/* Manage Block TLB entries (BTLB) */
 #define PDC_BTLB_DEFAULT	0	/* Return BTLB configuration info  */
-#define PDC_BTLB_INSERT		1	/* Insert a BTLB entry             */
-#define PDC_BTLB_PURGE		2	/* Purge a BTLB entry              */
-#define PDC_BTLB_PURGE_ALL	3	/* Purge all BTLB entries          */
+#define PDC_BTLB_INSERT		1	/* Insert a BTLB entry */
+#define PDC_BTLB_PURGE		2	/* Purge a BTLB entry */
+#define PDC_BTLB_PURGE_ALL	3	/* Purge all BTLB entries */
 
 #define PDC_TLB		19	/* Manage Hardware TLB handling */
 #define PDC_TLB_INFO		0	/* Return HW-TLB configuration info  */
@@ -230,30 +230,30 @@
 
 #define	PDC_SYSMAP	22	/* map system modules */
 #define	PDC_SYSMAP_FIND		0	/* find module by index */
-#define	PDC_SYSMAP_ADDR		1
-#define	PDC_SYSMAP_HPA		2	/* same as PDC_MEMMAP_HPA */
+#define	PDC_SYSMAP_ADDR		1	/* fetch list of addresses */
+#define	PDC_SYSMAP_HPA		2	/* get hpa from devpath */
 
 #define	PDC_SOFT_POWER	23	/* support for soft power switch */
 #define	PDC_SOFT_POWER_INFO	0	/* get info about soft power switch */
 #define	PDC_SOFT_POWER_ENABLE	1	/* enable/disable soft power switch */
 
-#define	PDC_PAT_IO		71	/* online services for IO modules */
+#define	PDC_PAT_IO	71	/* online services for IO modules */
 #define	PDC_PAT_IO_GET_PCI_RTSZ	15
 #define	PDC_PAT_IO_GET_PCI_RT	16
 
-#define	PDC_MEMMAP		128	/* hp700: return page information */
+#define	PDC_MEMMAP	128	/* hp700: return page information */
 #define	PDC_MEMMAP_HPA		0	/* map module # to HPA */
 
-#define	PDC_EEPROM		129	/* Hversion dependent */
+#define	PDC_EEPROM	129	/* Hversion dependent */
 #define	PDC_EEPROM_READ_WORD	0
 #define	PDC_EEPROM_WRITE_WORD	1
 #define	PDC_EEPROM_READ_BYTE	2
 #define	PDC_EEPROM_WRITE_BYTE	3
 
-#define	PDC_LAN_STATION_ID	138     /* Hversion dependent mechanism for */
-#define	PDC_LAN_STATION_ID_READ	0       /* getting the lan station address  */
+#define	PDC_LAN_STATION_ID	138	/* Hversion dependent mechanism for */
+#define	PDC_LAN_STATION_ID_READ	0	/* getting the lan station address  */
 
-#define	PDC_PCI_INDEX		147	/* PCI rt access */
+#define	PDC_PCI_INDEX	147	/* PCI rt access */
 #define	PDC_PCI_GET_INT_TBL_SZ	13
 #define	PDC_PCI_GET_INT_TBL	14
 
@@ -405,8 +405,8 @@ struct pdc_coproc {	/* PDC_COPROC */
 	u_int	ccr_enable;	/* same format as CCR (CR 10) */
 	u_int	ccr_present;	/* which co-proc's are present (bitset) */
 	u_int	pad[15];
-	u_int	fpu_model;
 	u_int	fpu_revision;
+	u_int	fpu_model;
 	u_int	filler2[13];
 };
 
@@ -432,7 +432,7 @@ struct pdc_iodc_minit {	/* PDC_IODC, PDC_IODC_NINIT or PDC_IODC_DINIT */
 	u_int	stat;		/* HPA.io_status style error returns */
 	u_int	max_spa;	/* size of SPA (in bytes) > max_mem+map_mem */
 	u_int	max_mem;	/* size of "implemented" memory (in bytes) */
-	u_int	map_mem;	/* size of "mapable-only" memory (in bytes) */
+	u_int	map_mem;	/* size of "mappable-only" memory (in bytes) */
 	u_int	filler[28];
 };
 
@@ -448,12 +448,17 @@ struct pdc_btlb {	/* PDC_BLOCK_TLB */
 	u_int	max_size;	/* Max size in pages */
 	struct btlb_info finfo;	/* Fixed range info */
 	struct btlb_info vinfo; /* Variable range info */
-	u_int 	filler[28];
+	u_int	filler[28];
 };
 
 struct pdc_hwtlb {	/* PDC_TLB */
 	u_int	min_size;	/* What do these mean? */
 	u_int	max_size;
+	u_int	filler[30];
+};
+
+struct pdc_power_info {		/* PDC_SOFT_POWER_INFO */
+	u_int	addr;		/* power register address */
 	u_int	filler[30];
 };
 
@@ -468,6 +473,14 @@ struct pdc_sysmap_addrs {	/* PDC_SYSMAP_ADDR */
 	u_int	hpa;
 	u_int	size;		/* pages */
 	u_int	filler[30];
+};
+
+struct pdc_sysmap_hpa {		/* PDC_SYSMAP_HPA */
+	u_int	hpa;
+	u_int	size;
+	u_int	naddrs;
+	u_int	mod;
+	u_int	filler[28];
 };
 
 struct pdc_pat_io_num {	/* PDC_PAT_IO */
@@ -503,7 +516,7 @@ struct pdc_lan_station_id {	/* PDC_LAN_STATION_ID */
  * Interesting values for Hex1-Hex4 and the resulting LED displays:
  *
  *	FnFF			CnFF:
- *	 0	- - - - -		Counts in binary from 0x0 - 0xF 
+ *	 0	- - - - -		Counts in binary from 0x0 - 0xF
  *	 2	o - - - -		for corresponding values of `n'.
  *	 4	o o - - -
  *	 6	o o o - -

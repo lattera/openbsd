@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.9.12.7 2003/05/13 19:41:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.9.12.8 2004/02/19 10:50:03 niklas Exp $	*/
 /*	$NetBSD: locore.c,v 1.43 2000/03/26 11:39:45 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -89,7 +89,6 @@ void
 start(struct rpb *prpb)
 {
 	extern void *scratch;
-	struct pte *pt;
 
 	mtpr(AST_NO, PR_ASTLVL); /* Turn off ASTs */
 
@@ -329,8 +328,7 @@ start(struct rpb *prpb)
 	pmap_bootstrap();
 
 	/* Now running virtual. set red zone for proc0 */
-	pt = kvtopte((u_int)proc0.p_addr + REDZONEADDR);
-        pt->pg_v = 0;
+	*kvtopte((u_int)proc0.p_addr + REDZONEADDR) &= ~PG_V;
 
 	((struct pcb *)proc0paddr)->framep = scratch;
 

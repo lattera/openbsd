@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.c,v 1.7.8.1 2001/05/14 22:04:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.c,v 1.7.8.2 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: linux_ioctl.c,v 1.14 1996/04/05 00:01:28 christos Exp $	*/
 
 /*
@@ -84,6 +84,8 @@ linux_sys_ioctl(p, v, retval)
 		return linux_ioctl_termios(p, uap, retval);
 	case 'S':
 		return linux_ioctl_cdrom(p, uap, retval);
+	case 'r':	/* VFAT ioctls; not yet support */
+		return (EINVAL);
 	case 0x89:
 		return linux_ioctl_socket(p, uap, retval);
 	case 0x03:

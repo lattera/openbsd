@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dk.c,v 1.5.4.3 2003/05/13 19:41:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dk.c,v 1.5.4.4 2004/02/19 10:48:41 niklas Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.   
@@ -33,9 +33,7 @@
 #include "dev_hppa.h"
 
 const char *
-dk_disklabel(dp, label)
-	struct hppa_dev *dp;
-	struct disklabel *label;
+dk_disklabel(struct hppa_dev *dp, struct disklabel *label)
 {
 	char buf[DEV_BSIZE];
 	int ret;

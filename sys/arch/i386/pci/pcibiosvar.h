@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcibiosvar.h,v 1.6.2.4 2002/03/28 10:31:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pcibiosvar.h,v 1.6.2.5 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: pcibios.h,v 1.2 2000/04/28 17:15:16 uch Exp $	*/
 
 /*
@@ -72,7 +72,7 @@ struct pcibios_softc {
 struct pcibios_linkmap {
 	u_int8_t	link;
 	u_int16_t	bitmap;
-} __attribute__((__packed__));
+} __packed;
 
 struct pcibios_intr_routing {
 	u_int8_t	bus;
@@ -80,7 +80,7 @@ struct pcibios_intr_routing {
 	struct pcibios_linkmap linkmap[4];	/* INT[A:D]# */
 	u_int8_t	slot;
 	u_int8_t	reserved;
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * $PIR header.  Reference:
@@ -98,7 +98,7 @@ struct pcibios_pir_header {
 	u_int32_t	miniport;
 	u_int8_t	reserved[11];
 	u_int8_t	checksum;
-} __attribute__((__packed__));
+} __packed;
 
 #define	PIR_DEVFUNC_DEVICE(devfunc)	(((devfunc) >> 3) & 0x1f)
 #define	PIR_DEVFUNC_FUNCTION(devfunc)	((devfunc) & 7)
@@ -164,6 +164,8 @@ int	opti82c558_init(pci_chipset_tag_t, bus_space_tag_t, pcitag_t,
 int	opti82c700_init(pci_chipset_tag_t, bus_space_tag_t, pcitag_t,
 	    pciintr_icu_tag_t *, pciintr_icu_handle_t *);
 int	via82c586_init(pci_chipset_tag_t, bus_space_tag_t, pcitag_t,
+	    pciintr_icu_tag_t *, pciintr_icu_handle_t *);
+int	via8231_init(pci_chipset_tag_t, bus_space_tag_t, pcitag_t,
 	    pciintr_icu_tag_t *, pciintr_icu_handle_t *);
 int	sis85c503_init(pci_chipset_tag_t, bus_space_tag_t, pcitag_t,
 	    pciintr_icu_tag_t *, pciintr_icu_handle_t *);

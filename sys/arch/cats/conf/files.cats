@@ -1,4 +1,4 @@
-# 	$OpenBSD: src/sys/arch/cats/conf/Attic/files.cats,v 1.2 2004/02/01 14:53:23 miod Exp $
+# 	$OpenBSD: src/sys/arch/cats/conf/Attic/files.cats,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $
 #	$NetBSD: files.cats,v 1.27 2003/10/21 08:15:40 skrll Exp $
 #
 # CATS-specific configuration info

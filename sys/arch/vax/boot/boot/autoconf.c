@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.4.4.5 2003/03/27 23:52:19 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.4.4.6 2004/02/19 10:50:02 niklas Exp $ */
 /*	$NetBSD: autoconf.c,v 1.19 2002/06/01 15:33:22 ragge Exp $ */
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -62,7 +62,7 @@ long *bootregs;
  */
 
 void
-autoconf()
+autoconf(void)
 {
 	int copyrpb = 1;
 	int fromnet = (bootregs[12] != -1);
@@ -127,7 +127,7 @@ autoconf()
 volatile int tickcnt;
 
 int
-getsecs()
+getsecs(void)
 {
 	return tickcnt/100;
 }
@@ -152,7 +152,7 @@ mcheck(void *arg)
  * to detect unwanted interrupts.
  */
 void
-scbinit()
+scbinit(void)
 {
 	int i;
 

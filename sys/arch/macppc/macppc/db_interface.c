@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.4 2004/02/19 10:49:03 niklas Exp $	*/
 /*      $NetBSD: db_interface.c,v 1.12 2001/07/22 11:29:46 wiz Exp $ */
 
 #include <sys/param.h>
@@ -19,8 +19,7 @@ Debugger()
 }
 
 int
-ddb_trap_glue(frame)
-	struct trapframe *frame;
+ddb_trap_glue(struct trapframe *frame)
 {
 	if (!(frame->srr1 & PSL_PR)
 	    && (frame->exc == EXC_TRC

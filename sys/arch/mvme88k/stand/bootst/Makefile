@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/10/93
-#	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/Makefile,v 1.6.4.1 2001/04/18 16:11:45 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/Makefile,v 1.6.4.2 2004/02/19 10:49:09 niklas Exp $
 
 SIZE?=	size
 
@@ -7,7 +7,7 @@ S=	${.CURDIR}/../../../..
 DEFS= -DSTANDALONE -DCOMPAT_NOLABEL
 INCPATH=-I${.CURDIR} -I${.CURDIR}/../libsa -I${.CURDIR}/../libbug \
 	-I${.CURDIR}/../../include -I${S} -I${S}/lib/libsa
-CFLAGS=-O0 ${INCPATH} ${DEFS} ${COPTS}
+CFLAGS+=${INCPATH} ${DEFS} ${COPTS}
 LDFLAGS=-s -N -T ${STAGE2_RELOC}
 CLEANFILES+=stboot bootst bootst.bug
 
@@ -19,7 +19,7 @@ CLEANFILES+=stboot bootst bootst.bug
 
 SRCS=   boot.c conf.c dev_tape.c rawfs.c version.c
 
-LIBS=	${LIBSA} ${LIBBUG} ${LIBZ} 
+LIBS=	${LIBSA} ${LIBBUG} ${LIBZ}
 
 OBJS= ${SRCS:N*.h:R:S/$/.o/g}
 
@@ -29,7 +29,8 @@ ALL=	${BOOTS}
 all: ${ALL}
 
 bootst.bug:	${OBJS} ${SINGLE} ${LIBS}
-	${LD} ${LDFLAGS} ${SINGLE} ${OBJS} ${LIBS} -o $@
+	${LD} ${LDFLAGS} ${SINGLE} -o $@ \
+	    ${OBJS} ${LIBS}
 	@${SIZE} bootst.bug
 
 bootst stboot: bootst.bug ${WRTVID}

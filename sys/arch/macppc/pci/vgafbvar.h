@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.1.4.5 2004/02/19 10:49:04 niklas Exp $	*/
 /*	$NetBSD: vgavar.h,v 1.2 1996/11/23 06:06:43 cgd Exp $	*/
 
 /*
@@ -64,6 +64,7 @@ struct vgafb_config {
 	bus_size_t	mmiosize;
 
 	int vc_backlight_on;
+	int nscreens;
 };
 
 int	vgafb_common_probe(bus_space_tag_t, bus_space_tag_t,

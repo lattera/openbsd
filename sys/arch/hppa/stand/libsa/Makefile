@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/libsa/Makefile,v 1.7.2.4 2003/05/13 19:41:04 ho Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/libsa/Makefile,v 1.7.2.5 2004/02/19 10:48:41 niklas Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -21,7 +21,7 @@ SRCS=	machdep.c pdc.c itecons.c dev_hppa.c time.c \
 
 # stand routines
 SRCS+=	alloc.c exit.c getfile.c gets.c globals.c \
-	printf.c strerror.c strtol.c strchr.c ctime.c loadfile.c
+	printf.c strerror.c strtol.c strchr.c ctime.c loadfile.c snprintf.c
 
 # io routines
 SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.7 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.8 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -82,7 +82,7 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #define cdev_wscons_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
 	dev_init(c,n,write), dev_init(c,n,ioctl), dev_init(c,n,stop), \
-	dev_init(c,n,tty), ttselect /* ttpoll */, dev_init(c,n,mmap) }
+	dev_init(c,n,tty), ttpoll, dev_init(c,n,mmap) }
 
 #include "audio.h"
 #include "pty.h"
@@ -110,6 +110,11 @@ cdev_decl(com);
 #include "pf.h"
 
 #include "systrace.h"
+
+#ifdef USER_PCICONF
+#include "pci.h"
+cdev_decl(pci);
+#endif
 
 struct cdevsw   cdevsw[] =
 {
@@ -145,8 +150,11 @@ struct cdevsw   cdevsw[] =
 	cdev_mouse_init(NWSKBD,wskbd),	/* 28: keyboards */
 	cdev_mouse_init(NWSMOUSE,wsmouse), /* 29: mice */
 	cdev_mouse_init(NWSMUX,wsmux),	/* 30: mux */
-	cdev_notdef(),			/* 31 */
-
+#ifdef USER_PCICONF
+	cdev_pci_init(NPCI,pci),	/* 31: PCI user */
+#else
+	cdev_notdef(),
+#endif
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 32: xfs communication device */
 #else

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.10 2003/06/07 11:11:36 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.11 2004/02/19 10:48:41 niklas Exp $
 #	$NetBSD: GENERIC,v 1.48 1996/05/20 18:17:23 mrg Exp $
 #
 #	GENERIC -- everything that's currently supported
@@ -30,6 +30,7 @@ option		COMPAT_IBCS2	# binary compatibility with SCO and ISC
 option		COMPAT_LINUX	# binary compatibility with Linux
 option		COMPAT_FREEBSD	# binary compatibility with FreeBSD
 option		COMPAT_BSDOS	# binary compatibility with BSD/OS
+option		COMPAT_AOUT	# a.out binaries are emulated
 
 #option		NTFS		# Experimental NTFS support
 
@@ -61,11 +62,13 @@ pcib*	at pci? dev ? function ?	# PCI-ISA bridge
 # power management and other environmental stuff
 #amdpm*	at pci? dev ? function ?	# AMD768MPX
 elansc*	at pci? dev ? function ?	# AMD Elan SC520 System Controller
+geodesc* at pci? dev ? function ?	# Geode SC1100/SCx200 IAOC
 
 # National Semiconductor LM7[89] and compatible hardware monitors
 lm0	at isa? port 0x290
 #lm1	at isa? port 0x280
 #lm2	at isa? port 0x310
+nsclpcsio*	at isa?			# NS PC87366 hardware monitor
 
 it0	at isa? port 0x290		# IT8705F, IT8712F and SiS970 hardware
 					# monitors
@@ -366,6 +369,7 @@ xl*	at pci? dev ? function ?		# 3C9xx ethernet
 xl*	at cardbus? dev ? function ?		# 3C575/3C656 ethernet
 rl*	at pci? dev ? function ?		# RealTek 81[23]9 ethernet
 rl*	at cardbus? dev ? function ?		# RealTek 81[23]9 ethernet
+mtd*	at pci? dev ? function ?		# Myson MTD800/803/891
 tx*	at pci? dev ? function ?		# SMC 83C170 EPIC ethernet
 tl*	at pci? dev ? function ?		# Compaq Thunderlan ethernet
 vr*	at pci? dev ? function ?		# VIA Rhine ethernet
@@ -389,6 +393,7 @@ hme*	at pci? dev ? function ?		# Sun Happy Meal
 # Wireless network cards
 wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
+wi*	at uhub? port ?				# WaveLAN IEEE 802.11DS
 #awi*	at pcmcia? function ?			# Bay Networks IEEE 802.11FH
 an*	at pci? dev ? function ?		# Aironet IEEE 802.11DS
 an*	at isapnp?				# Aironet IEEE 802.11DS
@@ -407,8 +412,9 @@ nsphyter*	at mii? phy ?			# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 sqphy*	at mii? phy ?				# Seeq 8x220 PHYs
 rlphy* at mii? phy ?				# RealTek 8139 internal PHYs
-#mtdphy*	at mii? phy ?			# Myson MTD972 PHYs
+mtdphy* at mii? phy ?				# Myson MTD972 PHYs
 dcphy*	at mii? phy ?				# Digital Clone PHYs
+acphy*	at mii? phy ?				# Altima AC101 PHYs
 amphy*	at mii? phy ?				# AMD 79C873 PHYs
 tqphy*	at mii? phy ?				# TDK 78Q212x PHYs
 bmtphy*	at mii? phy ?				# Broadcom 10/100 PHYs
@@ -443,7 +449,7 @@ ess*	at isapnp?				# ESS Tech ES188[78], ES888
 wss0	at isa? port 0x530 irq 10 drq 0		# Windows Sound System
 wss*	at isapnp?
 pas0	at isa? port 0x220 irq 7 drq 1		# ProAudio Spectrum
-gus0	at isa? disable port 0x220 irq 7 drq 1 drq2 6 # Gravis (drq2 is record drq)
+gus0	at isa? port 0x220 irq 7 drq 1 drq2 6	# Gravis (drq2 is record drq)
 ym*	at isapnp?
 mpu*	at isapnp?
 mpu*	at isa? port 0x300 			# generic MPU, Yamaha SW60XG
@@ -467,7 +473,7 @@ midi*	at autri?
 # The spkr driver provides a simple tone interface to the built in speaker.
 #spkr0	at pcppi?		# PC speaker
 
-#Audio Support
+# Audio Support
 audio*	at sb?
 audio*	at gus?
 audio*	at pas?
@@ -524,6 +530,7 @@ hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
 lofn*	at pci? dev ? function ?	# Hi/fn 6500 crypto card
 nofn*	at pci? dev ? function ?	# Hi/fn 7814/7851/7854 crypto card
 ubsec*	at pci? dev ? function ?	# Bluesteel Networks 5xxx crypto card
+safe*	at pci? dev ? function ?	# SafeNet SafeXcel 1141/1741
 #ises*	at pci? dev ? function ?	# Pijnenburg PCC-ISES
 
 # I2O

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/clean-elf.c,v 1.1 2002/08/11 12:19:47 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/clean-elf.c,v 1.1.8.1 2004/02/19 10:49:59 niklas Exp $	*/
 /*
  * Public domain. I don't even want my name on this.
  */
@@ -20,7 +20,7 @@ elf_is_okay(Elf_Ehdr *ehdr)
 	 * We need to check magic, class size, endianess,
 	 * and version before we look at the rest of the
 	 * Elf_Ehdr structure.  These few elements are
-	 * represented in a machine independant fashion.
+	 * represented in a machine independent fashion.
 	 */
 
 	if (IS_ELF(*ehdr) &&

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/bus.h,v 1.2 2004/02/04 20:07:18 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/bus.h,v 1.2.2.1 2004/02/19 10:49:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Per Fogelstrom.  All rights reserved.
@@ -632,22 +632,11 @@ struct powerpc_bus_dmamap {
 /* This architecture does not support accessing ISA memory/io space
  * via the PCI memory/io descriptors
  * drivers must use these instead.
- * It is possible for the machine to have two seperate ISA I/O spaces,
- * one which the kbd/mouse controller uses, and one for
- * the display, And of course neither of these is in the normal PCI 
- * spaces.
- * To allow this flexibility, HAVE seperate MD defines for 'normal'
- * isa stuff such as keyboard/mouse and one for display for the primary
- * display. It is perfectly legal for these to reference the same object
- * or even the same variable.
  */
+#define ISA_SPACE_NOT_ACCESSABLE_WITH_PCI_IOT
 #define MD_ISA_IOT ppc_isa_iobus_space
 #define MD_ISA_MEMT ppc_isa_membus_space
-#define MD_DISPLAY_ISA_IOT ppc_display_isa_iobus_space
-#define MD_DISPLAY_ISA_MEMT ppc_display_isa_membus_space
 extern struct ppc_bus_space *ppc_isa_iobus_space;
 extern struct ppc_bus_space *ppc_isa_membus_space;
-extern struct ppc_bus_space *ppc_display_isa_iobus_space;
-extern struct ppc_bus_space *ppc_display_isa_membus_space;
 
 #endif /* _MACHINE_BUS_H_ */

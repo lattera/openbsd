@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.5 2003/03/27 23:53:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.6 2004/02/19 10:51:29 niklas Exp $ */
 
 /*-
  * Copyright (c) 1994-1995 Søren Schmidt
@@ -81,7 +81,6 @@ DUMMY(vhangup);			/* #111 */
 DUMMY(idle);			/* #112 */
 DUMMY(vm86old);			/* #113 */
 DUMMY(swapoff);			/* #115 */
-DUMMY(sysinfo);			/* #116 */
 #ifndef __i386__
 DUMMY(modify_ldt);		/* #123 */
 #endif
@@ -108,7 +107,6 @@ DUMMY(capset);			/* #185 */
 DUMMY(sendfile);		/* #187 */
 DUMMY(getpmsg);			/* #188 */
 DUMMY(putpmsg);			/* #189 */
-DUMMY(mmap2);			/* #192 */
 DUMMY(lchown);			/* #198 */
 DUMMY(setreuid);		/* #203 */
 DUMMY(setregid);		/* #204 */
@@ -118,3 +116,26 @@ DUMMY(setfsgid);		/* #216 */
 DUMMY(pivot_root);		/* #217 */
 DUMMY(mincore);			/* #218 */
 DUMMY(madvise);			/* #219 */
+DUMMY(fadvise64);		/* #250 */
+
+#define DUMMY_XATTR(s)							\
+int									\
+linux_sys_ ## s ## xattr(p, v, retval)						\
+	struct proc *p;							\
+	void *v;							\
+	register_t *retval;						\
+{									\
+	return (ENOATTR);						\
+}									
+DUMMY_XATTR(set);
+DUMMY_XATTR(lset);
+DUMMY_XATTR(fset);
+DUMMY_XATTR(get);
+DUMMY_XATTR(lget);
+DUMMY_XATTR(fget);
+DUMMY_XATTR(list);
+DUMMY_XATTR(llist);
+DUMMY_XATTR(flist);
+DUMMY_XATTR(remove);
+DUMMY_XATTR(lremove);
+DUMMY_XATTR(fremove);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/mbrdisksubr.c,v 1.2 2003/12/20 22:40:15 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/mbrdisksubr.c,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.6 2003/05/13 19:41:03 ho Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.7 2004/02/19 10:48:39 niklas Exp $
 #
 # hppa-specific configuration info
 
@@ -32,8 +32,8 @@ include "dev/i2o/files.i2o"
 #
 # MI ATAPI drivers
 #
-#include "dev/atapiscsi/files.atapiscsi"
-#include "dev/ata/files.ata"
+include "dev/atapiscsi/files.atapiscsi"
+include "dev/ata/files.ata"
 
 #
 # ISA Bus support
@@ -50,6 +50,16 @@ include "dev/eisa/files.eisa"
 # PCI Bus support
 #
 include "dev/pci/files.pci"
+
+#
+# CardBus support
+#
+include	"dev/cardbus/files.cardbus"
+
+#
+# Machine-independent PCMCIA drivers
+#
+include	"dev/pcmcia/files.pcmcia"
 
 #
 # HIL Human Interface Loop devices
@@ -74,6 +84,10 @@ file	arch/hppa/hppa/mainbus.c	mainbus
 device	pdc
 attach	pdc at mainbus
 file	arch/hppa/dev/pdc.c		pdc
+
+device	power
+attach	power at mainbus
+file	arch/hppa/dev/power.c		power needs-flag
 
 device	mem
 attach	mem at mainbus
@@ -136,6 +150,9 @@ attach	sti at mainbus with sti_sgc
 attach	sti at phantomas with sti_phantom
 file	arch/hppa/dev/sti_sgc.c		sti_sgc | sti_phantom
 
+#attach	siop at mainbus with siop_sgc
+#file	arch/hppa/dev/siop_sgc.c	siop_sgc
+
 ###
 
 major	{ccd = 1}
@@ -179,13 +196,9 @@ file	arch/hppa/gsc/aone.c		aone
 
 # CS4215/AD1849 based 16bit mono/stereo audio iface (most of others not w/ aone)
 # a.k.a. Audio Type 2 (optional beeper)
-device	harmony {} : audio, mulaw, auconv
+device	harmony: audio, mulaw, auconv
 attach	harmony at gsc
 file	arch/hppa/gsc/harmony.c		harmony
-
-# fax/modem/voice on harmony
-attach	com at harmony with com_harmony
-file	arch/hppa/gsc/com_harmony.c	com_harmony
 
 # HPA4011A/B w/ TMS380C26PQL, TMS38054FNL
 #device	tms: tokenring

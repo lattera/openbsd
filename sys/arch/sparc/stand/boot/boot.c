@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/boot/boot.c,v 1.2.4.3 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/boot/boot.c,v 1.2.4.4 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: boot.c,v 1.2 1997/09/14 19:27:21 pk Exp $	*/
 
 /*-
@@ -56,8 +56,7 @@ char		fbuf[80], dbuf[128];
 typedef void (*entry_t)(caddr_t, int, int, int, long, long);
 int loadfile(int, vaddr_t *);
 
-
-main()
+main(int argc, char *argv[])
 {
 	int	io;
 	char	*file;

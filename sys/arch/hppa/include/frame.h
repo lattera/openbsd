@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/frame.h,v 1.11.2.2 2002/03/28 10:27:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/frame.h,v 1.11.2.3 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -67,7 +67,7 @@
  *	one is saved while we are in the physical mode (beginning of the trap),
  *	and should be kept as small as possible, since all the interrupts will
  *	be lost during this phase, also it must be 64-bytes aligned, per
- *	pa-risc stack conventions, and it's dependancies in the code (;
+ *	pa-risc stack conventions, and its dependencies in the code (;
  *	the other part is filled out when we are already in the virtual mode,
  *	are able to catch interrupts (they are kept pending) and perform
  *	other trap activities (like tlb misses).
@@ -133,12 +133,11 @@ struct trapframe {
 	unsigned	tf_rctr;	/* cr0 */
 	unsigned	tf_ccr;		/* cr10 */
 	unsigned	tf_eirr;	/* cr23 - DDB */
-	unsigned	tf_hptm;	/* cr24 - DDB */
 	unsigned	tf_vtop;	/* cr25 - DDB */
 	unsigned	tf_cr28;	/*      - DDB */
 	unsigned	tf_cr30;	/* uaddr */
 
-	unsigned	tf_pad[3];	/* pad to 256 bytes */
+	unsigned	tf_pad[4];	/* pad to 256 bytes */
 };
 #endif /* !_LOCORE */
 

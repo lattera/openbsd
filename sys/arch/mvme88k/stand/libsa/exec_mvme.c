@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/exec_mvme.c,v 1.4.4.5 2003/06/07 11:13:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/exec_mvme.c,v 1.4.4.6 2004/02/19 10:49:09 niklas Exp $	*/
 
 
 /*-
@@ -187,8 +187,8 @@ exec_mvme(file, flag)
 	printf("=0x%x\n", cp - loadaddr);
 	close(io);
 
-	printf("Start @ 0x%x ...\n", (int)entry);
-	printf("Controler Address @ %x ...\n", bugargs.ctrl_addr);
+	printf("Start @ 0x%x\n", (int)entry);
+	printf("Controller Address 0x%x\n", bugargs.ctrl_addr);
 	if (flag & RB_HALT) mvmeprom_return();
 
 	bootdev = (bugargs.ctrl_lun << 8) | (bugargs.dev_lun & 0xFF);

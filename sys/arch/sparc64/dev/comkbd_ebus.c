@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/comkbd_ebus.c,v 1.4.2.3 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/comkbd_ebus.c,v 1.4.2.4 2004/02/19 10:49:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -228,7 +228,7 @@ comkbd_attach(parent, self, aux)
 	}
 
 	sc->sc_ih = bus_intr_establish(sc->sc_iot,
-	    ea->ea_intrs[0], IPL_TTY, 0, comkbd_intr, sc);
+	    ea->ea_intrs[0], IPL_TTY, 0, comkbd_intr, sc, self->dv_xname);
 	if (sc->sc_ih == NULL) {
 		printf(": can't get hard intr\n");
 		return;

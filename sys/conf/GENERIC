@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.7 2003/05/16 00:29:41 niklas Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.8 2004/02/19 10:51:29 niklas Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -32,15 +32,16 @@ option		LKM		# loadable kernel modules
 
 option		FFS		# UFS
 option		FFS_SOFTUPDATES	# Soft updates
+option		UFS_DIRHASH	# hash large directories
 option		QUOTA		# UFS quotas
 option		EXT2FS		# Second Extended Filesystem
 option		MFS		# memory file system
-#option		XFS		# xfs filesystem
+option		XFS		# xfs filesystem
 
 option		TCP_SACK	# Selective Acknowledgements for TCP
 option		TCP_ECN		# Explicit Congestion Notification for TCP
+option		TCP_SIGNATURE	# TCP MD5 Signatures, for BGP routing sessions
 #option		TCP_FACK	# Forward Acknowledgements for TCP
-#option		TCP_SIGNATURE	# TCP MD5 Signatures, for BGP routing sessions
 
 option		NFSCLIENT	# Network File System client
 option		NFSSERVER	# Network File System server
@@ -89,6 +90,7 @@ pseudo-device	bridge	2	# network bridging support
 pseudo-device	vlan 	2	# IEEE 802.1Q VLAN 
 pseudo-device	gre	1	# GRE encapsulation interface
 #pseudo-device	strip	1	# Starmode Radio IP interface
+pseudo-device	carp	2	# CARP protocol support
 
 pseudo-device	pty	64	# pseudo-terminals
 pseudo-device	tb	1	# tablet line discipline

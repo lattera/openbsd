@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pcib.c,v 1.1 2004/02/01 05:12:54 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pcib.c,v 1.1.2.1 2004/02/19 10:48:03 niklas Exp $	*/
 /*	$NetBSD: pcib.c,v 1.4 2003/01/01 01:25:34 thorpej Exp $	*/
 
 /*-

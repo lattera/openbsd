@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/mpc106reg.h,v 1.2 2004/01/27 10:04:18 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/mpc106reg.h,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom

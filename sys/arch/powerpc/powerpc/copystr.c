@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/copystr.c,v 1.3.12.4 2003/05/13 19:41:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/copystr.c,v 1.3.12.5 2004/02/19 10:49:57 niklas Exp $	*/
 
 /*-
  * Copyright (C) 1995 Wolfgang Solfrank.
@@ -35,7 +35,7 @@
 #include <sys/systm.h>
 
 /*
- * Emulate copyinstr.
+ * Emulate copystr.
  */
 int
 copystr(const void *kfaddr, void *kdaddr, size_t len, size_t *done)

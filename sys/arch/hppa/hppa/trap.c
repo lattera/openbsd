@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.9 2003/05/13 19:41:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.10 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2003 Michael Shalayeff
@@ -383,7 +383,8 @@ trap(type, frame)
 		 * the current limit and we need to reflect that as an access
 		 * error.
 		 */
-		if (space != 0 && va < (vaddr_t)vm->vm_minsaddr &&
+		if (space != HPPA_SID_KERNEL &&
+		    va < (vaddr_t)vm->vm_minsaddr &&
 		    va >= (vaddr_t)vm->vm_maxsaddr + ctob(vm->vm_ssize)) {
 			if (ret == 0) {
 				vsize_t nss = btoc(va - USRSTACK + NBPG - 1);
@@ -409,7 +410,7 @@ trap(type, frame)
 #endif
 				} else {
 					panic("trap: "
-					    "uvm_fault(%p, %x, %d, %d): %d",
+					    "uvm_fault(%p, %lx, %d, %d): %d",
 					    map, va, 0, vftype, ret);
 				}
 			}
@@ -463,7 +464,14 @@ if (kdb_trap (type, va, frame))
 	if (trapnum != T_INTERRUPT)
 		splx(cpl);	/* process softints */
 
-	if (type & T_USER)
+	/*
+	 * in case we were interrupted from the syscall gate page
+	 * treat this as we were not realy running user code no more
+	 * for weird things start to happen on return to the userland
+	 * and also see a note in locore.S:TLABEL(all)
+	 */
+	if ((type & T_USER) &&
+	    (frame->tf_iioq_head & ~PAGE_MASK) != SYSCALLGATE)
 		userret(p, frame->tf_iioq_head, 0);
 }
 
@@ -517,7 +525,7 @@ syscall(struct trapframe *frame)
 			break;
 		/*
 		 * this works, because quads get magically swapped
-		 * due to the args being layed backwards on the stack
+		 * due to the args being laid backwards on the stack
 		 * and then copied in words
 		 */
 		code = frame->tf_arg0;
@@ -559,7 +567,7 @@ syscall(struct trapframe *frame)
 		 * of the arguments on the stack.
 		 * this assumes that none of 'em are called
 		 * by their normal syscall number, maybe a regress
-		 * test should be used, to whatch the behaviour.
+		 * test should be used, to watch the behaviour.
 		 */
 		if (!error && argoff < 4) {
 			int t;
@@ -626,15 +634,17 @@ syscall(struct trapframe *frame)
 	scdebug_ret(p, code, oerror, rval);
 #endif
 	userret(p, frame->tf_iioq_head, 0);
-	splx(cpl);	/* process softints */
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, oerror, rval[0]);
 #endif
 #ifdef DIAGNOSTIC
-	if (cpl != oldcpl)
+	if (cpl != oldcpl) {
 		printf("WARNING: SPL (0x%x) NOT LOWERED ON "
 		    "syscall(0x%x, 0x%x, 0x%x, 0x%x...) EXIT, PID %d\n",
 		    cpl, code, args[0], args[1], args[2], p->p_pid);
+		cpl = oldcpl;
+	}
 #endif
+	splx(cpl);	/* process softints */
 }

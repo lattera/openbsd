@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.6 2003/06/07 11:02:27 ho Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.7 2004/02/19 10:51:30 niklas Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -73,7 +73,7 @@
 #define EALG_MAX_BLOCK_LEN	16 /* Keep this updated */
 
 /* Maximum hash algorithm result length */
-#define AALG_MAX_RESULT_LEN	20 /* Keep this updated */
+#define AALG_MAX_RESULT_LEN	64 /* Keep this updated */
 
 #define CRYPTO_DES_CBC		1
 #define CRYPTO_3DES_CBC		2
@@ -93,7 +93,10 @@
 #define CRYPTO_DEFLATE_COMP	15 /* Deflate compression algorithm */
 #define CRYPTO_NULL		16
 #define CRYPTO_LZS_COMP		17 /* LZS compression algorithm */
-#define CRYPTO_ALGORITHM_MAX	17 /* Keep updated - see below */
+#define CRYPTO_SHA2_256_HMAC	18
+#define CRYPTO_SHA2_384_HMAC	19
+#define CRYPTO_SHA2_512_HMAC	20
+#define CRYPTO_ALGORITHM_MAX	20 /* Keep updated - see below */
 
 #define	CRYPTO_ALGORITHM_ALL	(CRYPTO_ALGORITHM_MAX + 1)
 
@@ -311,7 +314,7 @@ void	crypto_kdone(struct cryptkop *);
 int	crypto_getfeat(int *);
 
 void	cuio_copydata(struct uio *, int, int, caddr_t);
-void	cuio_copyback(struct uio *, int, int, caddr_t);
+void	cuio_copyback(struct uio *, int, int, const void *);
 int	cuio_getptr(struct uio *, int, int *);
 int	cuio_apply(struct uio *, int, int,
 	    int (*f)(caddr_t, caddr_t, unsigned int), caddr_t);

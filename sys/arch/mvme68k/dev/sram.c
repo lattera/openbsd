@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.5.10.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.5.10.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -63,7 +63,7 @@ struct cfattach sram_ca = {
 };
 
 struct cfdriver sram_cd = {
-	NULL, "sram", DV_DULL, 0
+	NULL, "sram", DV_DULL
 };
 
 int

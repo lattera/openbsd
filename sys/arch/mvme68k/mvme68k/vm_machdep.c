@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14.4.7 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14.4.8 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -126,7 +126,7 @@ cpu_exit(p)
 	struct proc *p;
 {
 
-	(void) splimp();
+	splhigh();
 	uvmexp.swtch++;
 	switch_exit(p);
 	/* NOTREACHED */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11.12.5 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11.12.6 2004/02/19 10:48:38 niklas Exp $	*/
 /*	$NetBSD: dca.c,v 1.35 1997/05/05 20:58:18 thorpej Exp $	*/
 
 /*
@@ -307,7 +307,6 @@ dcaopen(dev, flag, mode, p)
 	s = spltty();
 	if (sc->sc_tty == NULL) {
 		tp = sc->sc_tty = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = sc->sc_tty;
 	splx(s);
@@ -442,7 +441,6 @@ dcaclose(dev, flag, mode, p)
 	splx(s);
 	ttyclose(tp);
 #if 0
-	tty_detach(tp);
 	ttyfree(tp);
 	sc->sc_tty = NULL;
 #endif
@@ -733,7 +731,7 @@ dcaioctl(dev, cmd, data, flag, p)
 	case TIOCSFLAGS: {
 		int userbits;
 
-		error = suser(p->p_ucred, &p->p_acflag);
+		error = suser(p, 0);
 		if (error)
 			return (EPERM);
 

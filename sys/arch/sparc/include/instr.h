@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/instr.h,v 1.2.12.1 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/instr.h,v 1.2.12.2 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: instr.h,v 1.3 1997/03/14 23:54:07 christos Exp $ */
 
 /*
@@ -219,6 +219,7 @@ union instr {
 		u_int	:2;		/* 11 only */
 		u_int	i_rd:5;		/* destination register */
 		u_int	i_op3:6;	/* second-level decode (see IOP3_mem) */
+		u_int	i_rs1:5;	/* source register 1 */
 		u_int	i_i:1;		/* immediate vs asi */
 		u_int	i_low13:13;	/* depend on i bit */
 	} i_loadstore;

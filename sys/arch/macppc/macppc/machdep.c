@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.8 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.9 2004/02/19 10:49:03 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -31,9 +31,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*
-#include "machine/ipkdb.h"
-*/
 
 #include <sys/param.h>
 #include <sys/buf.h>
@@ -164,6 +161,11 @@ void *ppc_intr_establish(void *lcv, pci_intr_handle_t ih, int type,
     int level, int (*func)(void *), void *arg, char *name);
 int bus_mem_add_mapping(bus_addr_t bpa, bus_size_t size, int cacheable,
     bus_space_handle_t *bshp);
+bus_addr_t bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh,
+    bus_size_t size);
+void bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
+    bus_size_t size);
+
 
 /*
  * Extent maps to manage I/O. Allocate storage for 8 regions in each,
@@ -178,7 +180,6 @@ static int devio_malloc_safe = 0;
 int segment8_a_mapped = 0;
 
 extern int OF_stdout;
-extern int where;
 
 /* XXX, called from asm */
 void initppc(u_int startkernel, u_int endkernel, char *args);
@@ -199,9 +200,6 @@ initppc(startkernel, endkernel, args)
 #ifdef DDB
 	extern void *ddblow; extern int ddbsize;
 #endif
-#if NIPKDB > 0
-	extern ipkdblow, ipkdbsize;
-#endif
 	extern void consinit(void);
 	extern void callback(void *);
 	extern void *msgbuf_addr;
@@ -210,7 +208,6 @@ initppc(startkernel, endkernel, args)
 	proc0.p_addr = proc0paddr;
 	bzero(proc0.p_addr, sizeof *proc0.p_addr);
 
-where = 3;
 	curpcb = &proc0paddr->u_pcb;
 
 	curpm = curpcb->pcb_pmreal = curpcb->pcb_pm = pmap_kernel();
@@ -219,14 +216,14 @@ where = 3;
 	 * Initialize BAT registers to unmapped to not generate
 	 * overlapping mappings below.
 	 */
-	__asm__ volatile ("mtibatu 0,%0" :: "r"(0));
-	__asm__ volatile ("mtibatu 1,%0" :: "r"(0));
-	__asm__ volatile ("mtibatu 2,%0" :: "r"(0));
-	__asm__ volatile ("mtibatu 3,%0" :: "r"(0));
-	__asm__ volatile ("mtdbatu 0,%0" :: "r"(0));
-	__asm__ volatile ("mtdbatu 1,%0" :: "r"(0));
-	__asm__ volatile ("mtdbatu 2,%0" :: "r"(0));
-	__asm__ volatile ("mtdbatu 3,%0" :: "r"(0));
+	ppc_mtibat0u(0);
+	ppc_mtibat1u(0);
+	ppc_mtibat2u(0);
+	ppc_mtibat3u(0);
+	ppc_mtdbat0u(0);
+	ppc_mtdbat1u(0);
+	ppc_mtdbat2u(0);
+	ppc_mtdbat3u(0);
 
 	/*
 	 * Set up initial BAT table to only map the lowest 256 MB area
@@ -241,13 +238,12 @@ where = 3;
 	 * registers were cleared above.
 	 */
 	/* IBAT0 used for initial 256 MB segment */
-	__asm__ volatile ("mtibatl 0,%0; mtibatu 0,%1"
-		      :: "r"(battable[0].batl), "r"(battable[0].batu));
+	ppc_mtibat0l(battable[0].batl);
+	ppc_mtibat0u(battable[0].batu);
+
 	/* DBAT0 used similar */
-	__asm__ volatile ("mtdbatl 0,%0; mtdbatu 0,%1"
-		      :: "r"(battable[0].batl), "r"(battable[0].batu));
-
-
+	ppc_mtdbat0l(battable[0].batl);
+	ppc_mtdbat0u(battable[0].batu);
 
 	/*
 	 * Set up trap vectors
@@ -289,10 +285,6 @@ where = 3;
 		case EXC_BPT:
 #if defined(DDB)
 			bcopy(&ddblow, (void *)exc, (size_t)&ddbsize);
-#else
-#if NIPKDB > 0
-			bcopy(&ipkdblow, (void *)exc, (size_t)&ipkdbsize);
-#endif
 #endif
 			break;
 		}
@@ -322,19 +314,16 @@ where = 3;
 
 	/* use BATs to map 1GB memory, no pageable BATs now */
 	if (physmem > btoc(0x10000000)) {
-		__asm__ volatile ("mtdbatl 1,%0; mtdbatu 1,%1"
-			      :: "r"(BATL(0x10000000, BAT_M)),
-			      "r"(BATU(0x10000000)));
+		ppc_mtdbat1l(BATL(0x10000000, BAT_M));
+		ppc_mtdbat1u(BATU(0x10000000));
 	}
 	if (physmem > btoc(0x20000000)) {
-		__asm__ volatile ("mtdbatl 2,%0; mtdbatu 2,%1"
-			      :: "r"(BATL(0x20000000, BAT_M)),
-			      "r"(BATU(0x20000000)));
+		ppc_mtdbat2l(BATL(0x20000000, BAT_M));
+		ppc_mtdbat2u(BATU(0x20000000));
 	}
 	if (physmem > btoc(0x30000000)) {
-		__asm__ volatile ("mtdbatl 3,%0; mtdbatu 3,%1"
-			      :: "r"(BATL(0x30000000, BAT_M)),
-			      "r"(BATU(0x30000000)));
+		ppc_mtdbat3l(BATL(0x30000000, BAT_M));
+		ppc_mtdbat3u(BATU(0x30000000));
 	}
 #if 0
 	/* now that we know physmem size, map physical memory with BATs */
@@ -467,18 +456,9 @@ where = 3;
 	ofwconprobe();
 	consinit();
 
-#if NIPKDB > 0
-	/*
-	 * Now trap to IPKDB
-	 */
-	ipkdb_init();
-	if (boothowto & RB_KDB)
-		ipkdb_connect(0);
-#else
 #ifdef DDB
 	if (boothowto & RB_KDB)
 		Debugger();
-#endif
 #endif
 
 	/*
@@ -497,8 +477,7 @@ void ofw_dbg(char *str)
 
 
 void
-install_extint(handler)
-	void (*handler)(void);
+install_extint(void (*handler)(void))
 {
 	void extint(void);
 	void extsize(void);
@@ -510,13 +489,14 @@ install_extint(handler)
 	if (offset > 0x1ffffff)
 		panic("install_extint: too far away");
 #endif
-	__asm__ volatile ("mfmsr %0; andi. %1, %0, %2; mtmsr %1"
-		      : "=r"(omsr), "=r"(msr) : "K"((u_short)~PSL_EE));
+	omsr = ppc_mfmsr();
+	msr = omsr & ~PSL_EE;
+	ppc_mtmsr(msr);
 	extint_call = (extint_call & 0xfc000003) | offset;
 	bcopy(&extint, (void *)EXC_EXI, (size_t)&extsize);
 	syncicache((void *)&extint_call, sizeof extint_call);
 	syncicache((void *)EXC_EXI, (int)&extsize);
-	__asm__ volatile ("mtmsr %0" :: "r"(omsr));
+	ppc_mtmsr(omsr);
 }
 
 /*
@@ -553,9 +533,8 @@ cpu_startup()
 	 */
 	sz = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
-		    NULL, UVM_UNKNOWN_OFFSET, 0,
-		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)))
+	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE,
+	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	/*
 	addr = (vaddr_t)buffers;
@@ -602,8 +581,8 @@ cpu_startup()
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
 
-	printf("avail mem = %d (%dK)\n", ptoa(uvmexp.free),
-	    ptoa(uvmexp.free)/1024);
+	printf("avail mem = %ld (%ldK)\n", ptoa(uvmexp.free),
+	    ptoa(uvmexp.free) / 1024);
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
 	    bufpages * PAGE_SIZE);
 
@@ -619,8 +598,7 @@ cpu_startup()
  * Allocate space for system data structures.
  */
 caddr_t
-allocsys(v)
-	caddr_t v;
+allocsys(caddr_t v)
 {
 #define	valloc(name, type, num) \
 	v = (caddr_t)(((name) = (type *)v) + (num))
@@ -676,11 +654,8 @@ consinit()
  * Clear registers on exec
  */
 void
-setregs(p, pack, stack, retval)
-	struct proc *p;
-	struct exec_package *pack;
-	u_long stack;
-	register_t *retval;
+setregs(struct proc *p, struct exec_package *pack, u_long stack,
+    register_t *retval)
 {
 	u_int32_t newstack;
 	u_int32_t pargs;
@@ -707,12 +682,8 @@ setregs(p, pack, stack, retval)
  * Send a signal to process.
  */
 void
-sendsig(catcher, sig, mask, code, type, val)
-	sig_t catcher;
-	int sig, mask;
-	u_long code;
-	int type;
-	union sigval val;
+sendsig(sig_t catcher, int sig, int mask, u_long code, int type,
+    union sigval val)
 {
 	struct proc *p = curproc;
 	struct trapframe *tf;
@@ -736,6 +707,7 @@ sendsig(catcher, sig, mask, code, type, val)
 		psp->ps_sigstk.ss_flags |= SS_ONSTACK;
 	} else
 		fp = (struct sigframe *)tf->fixreg[1];
+
 	fp = (struct sigframe *)((int)(fp - 1) & ~0xf);
 
 	/*
@@ -756,7 +728,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->fixreg[1] = (int)fp;
 	tf->lr = (int)catcher;
 	tf->fixreg[3] = (int)sig;
-	tf->fixreg[4] = (psp->ps_siginfo & sigmask(sig)) ? (int)&fp->sf_si : NULL;
+	tf->fixreg[4] = (psp->ps_siginfo & sigmask(sig)) ? (int)&fp->sf_si : 0;
 	tf->fixreg[5] = (int)&fp->sf_sc;
 	tf->srr0 = p->p_sigcode;
 
@@ -770,10 +742,7 @@ sendsig(catcher, sig, mask, code, type, val)
  * System call to cleanup state after a signal handler returns.
  */
 int
-sys_sigreturn(p, v, retval)
-	struct proc *p;
-	void *v;
-	register_t *retval;
+sys_sigreturn(struct proc *p, void *v, register_t *retval)
 {
 	struct sys_sigreturn_args /* {
 		syscallarg(struct sigcontext *) sigcntxp;
@@ -801,14 +770,8 @@ sys_sigreturn(p, v, retval)
  * None for now.
  */
 int
-cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
-	int *name;
-	u_int namelen;
-	void *oldp;
-	size_t *oldlenp;
-	void *newp;
-	size_t newlen;
-	struct proc *p;
+cpu_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
+    size_t newlen, struct proc *p)
 {
 	/* all sysctl names at this level are terminal */
 	if (namelen != 1)
@@ -816,11 +779,11 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	switch (name[0]) {
 	case CPU_ALLOWAPERTURE:
 #ifdef APERTURE
-		if (securelevel > 0) 
-			return (sysctl_rdint(oldp, oldlenp, newp, 
+		if (securelevel > 0)
+			return (sysctl_rdint(oldp, oldlenp, newp,
 			    allowaperture));
 		else
-			return (sysctl_int(oldp, oldlenp, newp, newlen, 
+			return (sysctl_int(oldp, oldlenp, newp, newlen,
 			    &allowaperture));
 #else
 		return (sysctl_rdint(oldp, oldlenp, newp, 0));
@@ -836,10 +799,10 @@ dumpsys()
 	printf("dumpsys: TBD\n");
 }
 
-volatile int cpl, ipending, astpending, tickspending;
-int imask[7];
+volatile int cpl, ipending, astpending;
+int imask[IPL_NUM];
 
-/* 
+/*
  * this is a hack interface to allow zs to work better until
  * a true soft interrupt mechanism is created.
  */
@@ -855,12 +818,13 @@ softtty()
 #endif
 }
 
+int netisr;
+
 /*
  * Soft networking interrupts.
  */
 void
-softnet(isr)
-	int isr;
+softnet(int isr)
 {
 #define DONETISR(flag, func) \
 	if (isr & (1 << flag))\
@@ -870,8 +834,7 @@ softnet(isr)
 }
 
 int
-lcsplx(ipl)
-	int ipl;
+lcsplx(int ipl)
 {
 	int oldcpl;
 
@@ -884,8 +847,7 @@ lcsplx(ipl)
  * Halt or reboot the machine after syncing/dumping according to howto.
  */
 void
-boot(howto)
-	int howto;
+boot(int howto)
 {
 	static int syncing;
 	static char str[256];
@@ -1029,14 +991,8 @@ int ppc_configed_intr_cnt = 0;
 struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
 
 void *
-ppc_intr_establish(lcv, ih, type, level, func, arg, name)
-	void *lcv;
-	pci_intr_handle_t ih;
-	int type;
-	int level;
-	int (*func)(void *);
-	void *arg;
-	char *name;
+ppc_intr_establish(void *lcv, pci_intr_handle_t ih, int type, int level,
+    int (*func)(void *), void *arg, char *name)
 {
 	if (ppc_configed_intr_cnt < MAX_PRECONF_INTR) {
 		ppc_configed_intr[ppc_configed_intr_cnt].ih_fun = func;
@@ -1063,41 +1019,10 @@ ppc_intr_setup(intr_establish_t *establish, intr_disestablish_t *disestablish)
 	intr_disestablish_func = disestablish;
 }
 
-/*
- * General functions to enable and disable interrupts
- * without having inlined assembly code in many functions,
- * should be moved into a header file for inlining the function
- * so it is faster
- */
-void
-ppc_intr_enable(int enable)
-{
-	u_int32_t emsr, dmsr;
-	if (enable != 0)  {
-		__asm__ volatile("mfmsr %0" : "=r"(emsr));
-		dmsr = emsr | PSL_EE;
-		__asm__ volatile("mtmsr %0" :: "r"(dmsr));
-	}
-}
-
-int
-ppc_intr_disable(void)
-{
-	u_int32_t emsr, dmsr;
-	__asm__ volatile("mfmsr %0" : "=r"(emsr));
-	dmsr = emsr & ~PSL_EE;
-	__asm__ volatile("mtmsr %0" :: "r"(dmsr));
-	return (emsr & PSL_EE);
-}
-
 /* BUS functions */
 int
-bus_space_map(t, bpa, size, cacheable, bshp)
-	bus_space_tag_t t;
-	bus_addr_t bpa;
-	bus_size_t size;
-	int cacheable;
-	bus_space_handle_t *bshp;
+bus_space_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
+    int cacheable, bus_space_handle_t *bshp)
 {
 	int error;
 
@@ -1107,10 +1032,9 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	}
 	bpa |= POWERPC_BUS_TAG_BASE(t);
 	if ((error = extent_alloc_region(devio_ex, bpa, size, EX_NOWAIT |
-		(ppc_malloc_ok ? EX_MALLOCOK : 0))))
-	{
+	    (ppc_malloc_ok ? EX_MALLOCOK : 0))))
 		return error;
-	}
+
 	if ((bpa >= 0x80000000) && ((bpa+size) < 0xb0000000)) {
 		if (segment8_a_mapped) {
 			*bshp = bpa;
@@ -1121,22 +1045,15 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 		if (extent_free(devio_ex, bpa, size, EX_NOWAIT |
 			(ppc_malloc_ok ? EX_MALLOCOK : 0)))
 		{
-			printf("bus_space_map: pa 0x%x, size 0x%x\n",
+			printf("bus_space_map: pa 0x%lx, size 0x%x\n",
 				bpa, size);
 			printf("bus_space_map: can't free region\n");
 		}
 	}
 	return 0;
 }
-bus_addr_t bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size);
-void bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size);
 bus_addr_t
-bus_space_unmap_p(t, bsh, size)
-	bus_space_tag_t t;
-	bus_space_handle_t bsh;
-	bus_size_t size;
+bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size)
 {
 	bus_addr_t paddr;
 
@@ -1145,10 +1062,7 @@ bus_space_unmap_p(t, bsh, size)
 	return paddr ;
 }
 void
-bus_space_unmap(t, bsh, size)
-	bus_space_tag_t t;
-	bus_space_handle_t bsh;
-	bus_size_t size;
+bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size)
 {
 	bus_addr_t sva;
 	bus_size_t off, len;
@@ -1163,17 +1077,16 @@ bus_space_unmap(t, bsh, size)
 		if (extent_free(devio_ex, bpa | (bsh & PAGE_MASK), size, EX_NOWAIT |
 			(ppc_malloc_ok ? EX_MALLOCOK : 0)))
 		{
-			printf("bus_space_map: pa 0x%x, size 0x%x\n",
+			printf("bus_space_map: pa 0x%lx, size 0x%x\n",
 				bpa, size);
 			printf("bus_space_map: can't free region\n");
 		}
 	}
 	/* do not free memory which was stolen from the vm system */
 	if (ppc_malloc_ok &&
-	  ((sva >= VM_MIN_KERNEL_ADDRESS) && (sva < VM_MAX_KERNEL_ADDRESS)) )
-	{
+	    ((sva >= VM_MIN_KERNEL_ADDRESS) && (sva < VM_MAX_KERNEL_ADDRESS)))
 		uvm_km_free(phys_map, sva, len);
-	} else {
+	else {
 		pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
 		pmap_update(pmap_kernel());
 	}
@@ -1182,11 +1095,8 @@ bus_space_unmap(t, bsh, size)
 vm_offset_t ppc_kvm_stolen = VM_KERN_ADDRESS_SIZE;
 
 int
-bus_mem_add_mapping(bpa, size, cacheable, bshp)
-	bus_addr_t bpa;
-	bus_size_t size;
-	int cacheable;
-	bus_space_handle_t *bshp;
+bus_mem_add_mapping(bus_addr_t bpa, bus_size_t size, int cacheable,
+    bus_space_handle_t *bshp)
 {
 	bus_addr_t vaddr;
 	bus_addr_t spa, epa;
@@ -1236,32 +1146,23 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 }
 
 int
-bus_space_alloc(tag, rstart, rend, size, alignment, boundary, cacheable, addrp, handlep)
-	bus_space_tag_t tag;
-	bus_addr_t rstart, rend;
-	bus_size_t size, alignment, boundary;
-	int cacheable;
-	bus_addr_t *addrp;
-	bus_space_handle_t *handlep;
+bus_space_alloc(bus_space_tag_t tag, bus_addr_t rstart, bus_addr_t rend,
+    bus_size_t size, bus_size_t alignment, bus_size_t boundary, int cacheable,
+    bus_addr_t *addrp, bus_space_handle_t *handlep)
 {
 
 	panic("bus_space_alloc: unimplemented");
 }
 
 void
-bus_space_free(tag, handle, size)
-	bus_space_tag_t tag;
-	bus_space_handle_t handle;
-	bus_size_t size;
+bus_space_free(bus_space_tag_t tag, bus_space_handle_t handle, bus_size_t size)
 {
 
 	panic("bus_space_free: unimplemented");
 }
 
 void *
-mapiodev(pa, len)
-	paddr_t pa;
-	psize_t len;
+mapiodev(paddr_t pa, psize_t len)
 {
 	paddr_t spa;
 	vaddr_t vaddr, va;
@@ -1299,9 +1200,7 @@ mapiodev(pa, len)
 	return (void *) (va+off);
 }
 void
-unmapiodev(kva, p_size)
-	void *kva;
-	psize_t p_size;
+unmapiodev(void *kva, psize_t p_size)
 {
 	vaddr_t vaddr;
 	int size;
@@ -1334,10 +1233,9 @@ unmapiodev(kva, p_size)
 
 #define BUS_SPACE_COPY_N(BYTES,TYPE)					\
 void									\
-__C(bus_space_copy_,BYTES)(v, h1, o1, h2, o2, c)			\
-	void *v;							\
-	bus_space_handle_t h1, h2;					\
-	bus_size_t o1, o2, c;						\
+__C(bus_space_copy_,BYTES)(void *v, bus_space_handle_t h1,		\
+    bus_size_t o1, bus_space_handle_t h2, bus_size_t o2,		\
+    bus_size_t c)							\
 {									\
 	TYPE *src, *dst;						\
 	int i;								\
@@ -1345,49 +1243,63 @@ __C(bus_space_copy_,BYTES)(v, h1, o1, h2, o2, c)			\
 	src = (TYPE *) (h1+o1);						\
 	dst = (TYPE *) (h2+o2);						\
 									\
-	if (h1 == h2 && o2 > o1) {					\
-		for (i = c; i > 0; i--) {				\
+	if (h1 == h2 && o2 > o1)					\
+		for (i = c-1; i >= 0; i--)				\
 			dst[i] = src[i];				\
-		}							\
-	} else {							\
-		for (i = 0; i < c; i++) {				\
+	else								\
+		for (i = 0; i < c; i++)					\
 			dst[i] = src[i];				\
-		}							\
-	}								\
 }
 BUS_SPACE_COPY_N(1,u_int8_t)
 BUS_SPACE_COPY_N(2,u_int16_t)
 BUS_SPACE_COPY_N(4,u_int32_t)
 
-#define BUS_SPACE_SET_REGION_N(BYTES,TYPE)				\
-void									\
-__C(bus_space_set_region_,BYTES)(v, h, o, val, c)			\
-	void *v;							\
-	bus_space_handle_t h;						\
-	TYPE val;							\
-	bus_size_t o, c;						\
-{									\
-	TYPE *dst;							\
-	int i;								\
-									\
-	dst = (TYPE *) (h+o);						\
-	for (i = 0; i < c; i++) {					\
-		dst[i] = val;						\
-	}								\
+void
+bus_space_set_region_1(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
+    u_int8_t val, bus_size_t c)
+{
+	u_int8_t *dst;
+	int i;
+
+	dst = (u_int8_t *) (h+o);
+
+	for (i = 0; i < c; i++)
+		dst[i] = val;
 }
 
-BUS_SPACE_SET_REGION_N(1,u_int8_t)
-BUS_SPACE_SET_REGION_N(2,u_int16_t)
-BUS_SPACE_SET_REGION_N(4,u_int32_t)
+void
+bus_space_set_region_2(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
+    u_int16_t val, bus_size_t c)
+{
+	u_int16_t *dst;
+	int i;
+
+	dst = (u_int16_t *) (h+o);
+	if (t->bus_reverse)
+		val = swap16(val);
+
+	for (i = 0; i < c; i++)
+		dst[i] = val;
+}
+void
+bus_space_set_region_4(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
+    u_int32_t val, bus_size_t c)
+{
+	u_int32_t *dst;
+	int i;
+
+	dst = (u_int32_t *) (h+o);
+	if (t->bus_reverse)
+		val = swap32(val);
+
+	for (i = 0; i < c; i++)
+		dst[i] = val;
+}
 
 #define BUS_SPACE_READ_RAW_MULTI_N(BYTES,SHIFT,TYPE)			\
 void									\
-__C(bus_space_read_raw_multi_,BYTES)(bst, h, o, dst, size)		\
-	bus_space_tag_t bst;						\
-	bus_space_handle_t h;						\
-	bus_addr_t o;							\
-	u_int8_t *dst;							\
-	bus_size_t size;						\
+__C(bus_space_read_raw_multi_,BYTES)(bus_space_tag_t bst,		\
+    bus_space_handle_t h, bus_addr_t o, u_int8_t *dst, bus_size_t size)	\
 {									\
 	TYPE *src;							\
 	TYPE *rdst = (TYPE *)dst;					\
@@ -1400,18 +1312,14 @@ __C(bus_space_read_raw_multi_,BYTES)(bst, h, o, dst, size)		\
 		__asm__("eieio");					\
 	}								\
 }
-BUS_SPACE_READ_RAW_MULTI_N(1,0,u_int8_t)
 BUS_SPACE_READ_RAW_MULTI_N(2,1,u_int16_t)
 BUS_SPACE_READ_RAW_MULTI_N(4,2,u_int32_t)
 
 #define BUS_SPACE_WRITE_RAW_MULTI_N(BYTES,SHIFT,TYPE)			\
 void									\
-__C(bus_space_write_raw_multi_,BYTES)(bst, h, o, src, size)		\
-	bus_space_tag_t bst;						\
-	bus_space_handle_t h;						\
-	bus_addr_t o;							\
-	const u_int8_t *src;						\
-	bus_size_t size;						\
+__C(bus_space_write_raw_multi_,BYTES)( bus_space_tag_t bst,		\
+    bus_space_handle_t h, bus_addr_t o, const u_int8_t *src,		\
+    bus_size_t size)							\
 {									\
 	int i;								\
 	TYPE *dst;							\
@@ -1425,16 +1333,12 @@ __C(bus_space_write_raw_multi_,BYTES)(bst, h, o, src, size)		\
 	}								\
 }
 
-BUS_SPACE_WRITE_RAW_MULTI_N(1,0,u_int8_t)
 BUS_SPACE_WRITE_RAW_MULTI_N(2,1,u_int16_t)
 BUS_SPACE_WRITE_RAW_MULTI_N(4,2,u_int32_t)
 
 int
-bus_space_subregion(t, bsh, offset, size, nbshp)
-	bus_space_tag_t t;
-	bus_space_handle_t bsh;
-	bus_size_t offset, size;
-	bus_space_handle_t *nbshp;
+bus_space_subregion(bus_space_tag_t t, bus_space_handle_t bsh,
+    bus_size_t offset, bus_size_t size, bus_space_handle_t *nbshp)
 {
 	*nbshp = bsh + offset;
 	return (0);
@@ -1467,13 +1371,10 @@ ppc_close_pci_bridge(int handle)
 
 /* bcopy(), error on fault */
 int
-kcopy(from, to, size)
-	const void *from;
-	void *to;
-	size_t size;
+kcopy(const void *from, void *to, size_t size)
 {
 	faultbuf env;
-	register void *oldh = curproc->p_addr->u_pcb.pcb_onfault;
+	void *oldh = curproc->p_addr->u_pcb.pcb_onfault;
 
 	if (setfault(&env)) {
 		curproc->p_addr->u_pcb.pcb_onfault = oldh;
@@ -1486,9 +1387,7 @@ kcopy(from, to, size)
 }
 
 void
-nameinterrupt(replace, newstr)
-	int replace;
-	char *newstr;
+nameinterrupt(int replace, char *newstr)
 {
 #define NENTRIES 66
 	char intrname[NENTRIES][30];
@@ -1497,7 +1396,7 @@ nameinterrupt(replace, newstr)
 	extern char intrnames[];
 	extern char eintrnames[];
 
-	if (replace > NENTRIES) {
+	if (replace >= NENTRIES) {
 		return;
 	}
 	src = intrnames;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/aedvar.h,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/aedvar.h,v 1.1.4.4 2004/02/19 10:49:03 niklas Exp $	*/
 /*	$NetBSD: aedvar.h,v 1.2 2000/03/23 06:40:33 thorpej Exp $	*/
 
 /*
@@ -36,7 +36,7 @@
 
 /* Event queue definitions */
 #ifndef AED_MAX_EVENTS
-#define AED_MAX_EVENTS 200	/* Maximum events to be kept in queue */  
+#define AED_MAX_EVENTS 200	/* Maximum events to be kept in queue */
 				/* maybe should be higher for slower macs? */
 #endif				/* AED_MAX_EVENTS */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.5 2003/03/27 23:28:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.6 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: asc.c,v 1.20 1997/02/24 05:47:33 scottr Exp $	*/
 
 /*
@@ -76,6 +76,7 @@
 #include <sys/param.h>
 #include <sys/device.h>
 #include <sys/fcntl.h>
+#include <sys/poll.h>
 #include <sys/timeout.h>
 
 #include <uvm/uvm_extern.h>
@@ -104,7 +105,7 @@ struct cfattach asc_ca = {
 };
 
 struct cfdriver asc_cd = {
-	NULL, "asc", DV_DULL, NULL, 0
+	NULL, "asc", DV_DULL
 };
 
 static int
@@ -255,21 +256,13 @@ ascioctl(dev, cmd, data, flag, p)
 }
 
 int
-ascselect(dev, rw, p)
+ascpoll(dev, events, p)
 	dev_t dev;
-	int rw;
+	int events;
 	struct proc *p;
 {
-	switch (rw) {
-	case FREAD:
-		break;
-
-	case FWRITE:
-		return (1);	/* always fails => never blocks */
-		break;
-	}
-
-	return (0);
+	/* always fails => never blocks */
+	return (events & (POLLOUT | POLLWRNORM));
 }
 
 paddr_t

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.5 2003/06/07 11:14:48 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.6 2004/02/19 10:50:03 niklas Exp $	*/
 /*	$NetBSD: dc.c,v 1.4 1996/10/13 03:36:10 christos Exp $	*/
 /*-
  * Copyright (c) 1992, 1993
@@ -57,7 +57,7 @@
 /*
  * DC7085 (DZ-11 look alike) Driver
  *
- * bertram 13-apr-1996: slightly modfied for DC367B in VS2000
+ * bertram 13-apr-1996: slightly modified for DC367B in VS2000
  */
 #include <sys/param.h>
 #include <sys/systm.h>

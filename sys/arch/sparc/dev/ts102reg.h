@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/ts102reg.h,v 1.1.4.2 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: ts102reg.h,v 1.7 2002/09/29 23:23:58 wiz Exp $ */
 
 /*-

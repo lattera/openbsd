@@ -1,6 +1,6 @@
-#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27.2.4 2003/05/13 19:42:09 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27.2.5 2004/02/19 10:48:42 niklas Exp $
 
-CFLAGS=${DEBUG} -Os -Wall -Werror
+CFLAGS=${DEBUG} ${COPTS} -Os -Wall -Werror
 CFLAGS+=	-fno-stack-protector
 CPPFLAGS+=-I${S} -I${SADIR}/libsa -I. -I${.CURDIR}
 SACFLAGS=-D_STANDALONE
@@ -29,7 +29,7 @@ SACFLAGS+=-nostdinc -fno-builtin -fpack-struct
 
 .if !make(libdep) && !make(sadep) && !make(salibdir) && !make(kernlibdir) && !make(obj)
 .BEGIN:
-	@([ -h machine ] || ln -s $(S)/arch/i386/include machine)
+	@([ X$(S) == X -o -h machine ] || ln -s $(S)/arch/i386/include machine)
 .endif
 
 
@@ -52,4 +52,4 @@ LIBZ=${SADIR}/libz/${__objdir}/libz.a
 # NO_NET=no_net
 BINDIR=	/usr/mdec
 
-MANSUBDIR=/i386
+MANSUBDIR=i386

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/pegasos/Attic/Makefile,v 1.1 2003/10/31 03:54:33 drahn Exp $
+#	$OpenBSD: src/sys/arch/pegasos/Attic/Makefile,v 1.1.2.1 2004/02/19 10:49:55 niklas Exp $
 
 NOPROG=	noprog
 NOMAN=	noman

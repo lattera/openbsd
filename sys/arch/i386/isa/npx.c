@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.9 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.10 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
-#define iprintf(x)	printf x
+#define IPRINTF(x)	printf x
 #else
-#define	iprintf(x)
+#define	IPRINTF(x)
 #endif
 
 /*-
@@ -93,15 +93,9 @@
 #define	fp_divide_by_0()	__asm("fldz; fld1; fdiv %st,%st(1); fwait")
 #define	frstor(addr)		__asm("frstor %0" : : "m" (*addr))
 #define	fwait()			__asm("fwait")
-#define	read_eflags()		({register u_long ef; \
-				  __asm("pushfl; popl %0" : "=r" (ef)); \
-				  ef;})
-#define	write_eflags(x)		({register u_long ef = (x); \
-				  __asm("pushl %0; popfl" : : "r" (ef));})
 #define	clts()			__asm("clts")
 #define	stts()			lcr0(rcr0() | CR0_TS)
 
-int npxdna(struct cpu_info *);
 int npxintr(void *);
 static int npxprobe1(struct isa_attach_args *);
 static void npxsave1(struct cpu_info *, struct proc *);
@@ -137,6 +131,38 @@ static	volatile u_int		npx_traps_while_probing;
 extern int i386_fpu_present;
 extern int i386_fpu_exception;
 extern int i386_fpu_fdivbug;
+
+#ifdef I686_CPU
+#define        fxsave(addr)            __asm("fxsave %0" : "=m" (*addr))
+#define        fxrstor(addr)           __asm("fxrstor %0" : : "m" (*addr))
+#endif /* I686_CPU */
+
+static __inline void
+fpu_save(union savefpu *addr)
+{
+
+#ifdef I686_CPU
+	if (i386_use_fxsave) {
+		fxsave(&addr->sv_xmm);
+		/* FXSAVE doesn't FNINIT like FNSAVE does -- so do it here. */
+		fninit();
+	} else
+#endif /* I686_CPU */
+		fnsave(&addr->sv_87);
+}
+
+static int
+npxdna_notset(struct cpu_info *ci)
+{
+	panic("npxdna vector not initialized");
+}
+
+int    (*npxdna_func)(struct cpu_info *) = npxdna_notset;
+int    npxdna_s87(struct cpu_info *);
+#ifdef I686_CPU
+int    npxdna_xmm(struct cpu_info *);
+#endif /* I686_CPU */
+void   npxexit(void);
 
 /*
  * Special interrupt handlers.  Someday intr0-intr15 will be used to count
@@ -205,6 +231,7 @@ npxprobe1(ia)
 			fldcw(&control);
 			npx_traps_while_probing = npx_intrs_while_probing = 0;
 			fp_divide_by_0();
+			delay(1);
 			if (npx_traps_while_probing != 0) {
 				/*
 				 * Good, exception 16 works.
@@ -227,7 +254,10 @@ npxprobe1(ia)
 			return 1;
 		}
 	}
+#else
+	npx_intrs_while_probing = npx_traps_while_probing = 0;
 #endif
+
 	/*
 	 * Probe failed.  There is no usable FPU.
 	 */
@@ -349,6 +379,13 @@ npxattach(parent, self, aux)
 	}
 	lcr0(rcr0() | (CR0_TS));
 	i386_fpu_present = 1;
+
+#ifdef I686_CPU
+	if (i386_use_fxsave)
+		npxdna_func = npxdna_xmm;
+	else
+#endif /* I686_CPU */
+		npxdna_func = npxdna_s87;
 }
 
 /*
@@ -372,13 +409,13 @@ npxintr(arg)
 {
 	struct cpu_info *ci = curcpu();
 	register struct proc *p = ci->ci_fpcurproc;
-	register struct save87 *addr;
+	union savefpu *addr;
 	struct intrframe *frame = arg;
 	int code;
 	union sigval sv;
 
 	uvmexp.traps++;
-	iprintf(("Intr"));
+	IPRINTF(("Intr"));
 
 	if (p == 0 || npx_type == NPX_NONE) {
 		/* XXX no %p in stand/printf.c.  Cast to quiet gcc -Wall. */
@@ -400,17 +437,24 @@ npxintr(arg)
 	 * Find the address of npxproc's savefpu.  This is not necessarily
 	 * the one in curpcb.
 	 */
-	addr = &p->p_addr->u_pcb.pcb_savefpu.npx;
+	addr = &p->p_addr->u_pcb.pcb_savefpu;
 	/*
 	 * Save state.  This does an implied fninit.  It had better not halt
 	 * the cpu or we'll hang.
 	 */
-	fnsave(addr);
+	fpu_save(addr);
 	fwait();
 	/*
-	 * Restore control word (was clobbered by fnsave).
+	 * Restore control word (was clobbered by fpu_save).
 	 */
-	fldcw(&addr->sv_env.en_cw);
+	if (i386_use_fxsave) {
+		fldcw(&addr->sv_xmm.sv_env.en_cw);
+		/*
+		 * FNINIT doesn't affect MXCSR or the XMM registers;
+		 * no need to re-load MXCSR here.
+		 */
+	} else
+		fldcw(&addr->sv_87.sv_env.en_cw);
 	fwait();
 	/*
 	 * Remember the exception status word and tag word.  The current
@@ -420,8 +464,13 @@ npxintr(arg)
 	 * preserved the control word and will copy the status and tag
 	 * words, so the complete exception state can be recovered.
 	 */
-	addr->sv_ex_sw = addr->sv_env.en_sw;
-	addr->sv_ex_tw = addr->sv_env.en_tw;
+	if (i386_use_fxsave) {
+	        addr->sv_xmm.sv_ex_sw = addr->sv_xmm.sv_env.en_sw;
+	        addr->sv_xmm.sv_ex_tw = addr->sv_xmm.sv_env.en_tw;
+	} else {
+	        addr->sv_87.sv_ex_sw = addr->sv_87.sv_env.en_sw;
+	        addr->sv_87.sv_ex_tw = addr->sv_87.sv_env.en_tw;
+	}
 
 	/*
 	 * Pass exception to process.  If it's the current process, try to do
@@ -445,19 +494,19 @@ npxintr(arg)
 		 * Encode the appropriate code for detailed information on
 		 * this exception.
 		 */
-		if (addr->sv_ex_sw & EN_SW_IE)
+		if (addr->sv_87.sv_ex_sw & EN_SW_IE)
 			code = FPE_FLTINV;
 #ifdef notyet
-		else if (addr->sv_ex_sw & EN_SW_DE)
+		else if (addr->sv_87.sv_ex_sw & EN_SW_DE)
 			code = FPE_FLTDEN;
 #endif
-		else if (addr->sv_ex_sw & EN_SW_ZE)
+		else if (addr->sv_87.sv_ex_sw & EN_SW_ZE)
 			code = FPE_FLTDIV;
-		else if (addr->sv_ex_sw & EN_SW_OE)
+		else if (addr->sv_87.sv_ex_sw & EN_SW_OE)
 			code = FPE_FLTOVF;
-		else if (addr->sv_ex_sw & EN_SW_UE)
+		else if (addr->sv_87.sv_ex_sw & EN_SW_UE)
 			code = FPE_FLTUND;
-		else if (addr->sv_ex_sw & EN_SW_PE)
+		else if (addr->sv_87.sv_ex_sw & EN_SW_PE)
 			code = FPE_FLTRES;
 		else
 			code = 0;		/* XXX unknown */
@@ -493,20 +542,20 @@ npxintr(arg)
  * interrupt masked, it would be necessary to forcibly unmask the NPX interrupt
  * so that it could succeed.
  */
-static inline void
+static __inline void
 npxsave1(struct cpu_info *ci, struct proc *p)
 {
 	KDASSERT(ci == curcpu());
 	KDASSERT(p->p_addr->u_pcb.pcb_fpcpu == curcpu());
 
-	fnsave(&p->p_addr->u_pcb.pcb_savefpu);
+	fpu_save(&p->p_addr->u_pcb.pcb_savefpu);
 	ci->ci_fpcurproc = 0;
 	p->p_addr->u_pcb.pcb_cr0 |= CR0_TS;
 	p->p_addr->u_pcb.pcb_fpcpu = 0;
 	fwait();
 }
 
-static inline void
+static __inline void
 npxdrop1(struct cpu_info *ci, struct proc *p)
 {
 	KDASSERT(ci == curcpu());
@@ -523,21 +572,73 @@ npxdrop1(struct cpu_info *ci, struct proc *p)
  * Otherwise, we save the previous state, if necessary, and restore our last
  * saved state.
  */
+
+/*
+ * XXX It is unclear if the code below is correct in the multiprocessor
+ * XXX case.  Check the NetBSD sources once again to be sure.
+ */
+#ifdef I686_CPU
 int
-npxdna(struct cpu_info *ci)
+npxdna_xmm(struct cpu_info *ci)
+{
+	struct proc *p = ci->ci_curproc;
+	struct proc *fpcurproc = ci->ci_fpcurproc;
+
+#ifdef DIAGNOSTIC
+	if (lapic_tpr > IPL_NONE || ci->ci_fpsaving != 0)
+	        panic("npxdna_xmm: masked");
+#endif
+
+	p->p_addr->u_pcb.pcb_cr0 &= ~CR0_TS;
+	clts();
+
+	/*
+	 * Initialize the FPU state to clear any exceptions.  If someone else
+	 * was using the FPU, save their state (which does an implicit
+	 * initialization).
+	 */
+	ci->ci_fpsaving = 1;
+	if (fpcurproc != 0 && fpcurproc != p) {
+	        IPRINTF(("Save"));
+	        npxsave1(ci, fpcurproc);
+	} else {
+	        IPRINTF(("Init"));
+	        fninit();
+	        fwait();
+	}
+	ci->ci_fpsaving = 0;
+
+	/* 
+	 * If our desired fp state is on some other CPU, flush it out.
+	 */
+	npxsave_proc(p);
+	ci->ci_fpcurproc = p;
+
+	if ((p->p_md.md_flags & MDP_USEDFPU) == 0) {
+		fldcw(&p->p_addr->u_pcb.pcb_savefpu.sv_xmm.sv_env.en_cw);
+		p->p_md.md_flags |= MDP_USEDFPU;
+	} else
+		fxrstor(&p->p_addr->u_pcb.pcb_savefpu.sv_xmm);
+
+	return (1);
+}
+#endif /* I686_CPU */
+
+int
+npxdna_s87(struct cpu_info *ci)
 {
 	static u_short control = __INITIAL_NPXCW__;
 	struct proc *p = ci->ci_curproc;
 	struct proc *fpcurproc = ci->ci_fpcurproc;
 
 	if (npx_type == NPX_NONE) {
-		iprintf(("Emul"));
+		IPRINTF(("Emul"));
 		return (0);
 	}
 
 #ifdef DIAGNOSTIC
 	if (lapic_tpr > IPL_NONE || ci->ci_fpsaving != 0)
-		panic("npxdna: masked");
+		panic("npxdna_s87: masked");
 #endif
 
 	p->p_addr->u_pcb.pcb_cr0 &= ~CR0_TS;
@@ -545,7 +646,7 @@ npxdna(struct cpu_info *ci)
 
 	if ((p->p_md.md_flags & MDP_USEDFPU) == 0) {
 		p->p_md.md_flags |= MDP_USEDFPU;
-		iprintf(("Init"));
+		IPRINTF(("Init"));
 		if (fpcurproc != 0 && fpcurproc != p)
 			npxsave1(ci, fpcurproc);
 		else {
@@ -558,7 +659,7 @@ npxdna(struct cpu_info *ci)
 	} else {
 		ci->ci_fpsaving = 1;
 		if (fpcurproc != 0 && fpcurproc != p) {
-			iprintf(("Save"));
+			IPRINTF(("Save"));
 			npxsave1(ci, fpcurproc);
 		}
 		ci->ci_fpsaving = 0;
@@ -582,7 +683,7 @@ npxdna(struct cpu_info *ci)
 		 * fnclex if it is the first FPU instruction after a context
 		 * switch.
 		 */
-		frstor(&p->p_addr->u_pcb.pcb_savefpu);
+		frstor(&p->p_addr->u_pcb.pcb_savefpu.sv_87);
 	}
 
 	return (1);
@@ -633,12 +734,12 @@ npxsave_cpu(struct cpu_info *ci)
 		return;
 
 	if (p->p_addr->u_pcb.pcb_fpcpu == 0) {
-		iprintf(("Drop"));
+		IPRINTF(("Drop"));
 		npxdrop1(ci, p);
 		return;
 	}
 	
-	iprintf(("Fork"));
+	IPRINTF(("Fork"));
 	clts();
 	ci->ci_fpsaving = 1;
 	npxsave1(ci, p);
@@ -663,7 +764,7 @@ npxsave_proc(struct proc *p)
 	
 	KDASSERT(p->p_addr != NULL);
 	
-	iprintf(("Save %p\n", p));
+	IPRINTF(("Save %p\n", p));
 
 	ci = p->p_addr->u_pcb.pcb_fpcpu;
 	if (ci == NULL)
@@ -675,7 +776,7 @@ npxsave_proc(struct proc *p)
 #ifndef MULTIPROCESSOR
 		panic("FP state on other cpu on uniprocessor?");
 #else
-		iprintf(("Send IPI\n"));
+		IPRINTF(("Send IPI\n"));
 		do {
 			i386_send_ipi(ci, I386_IPI_FPSAVE);
 			DELAY(1);

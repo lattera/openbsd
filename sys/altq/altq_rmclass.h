@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.1.2.4 2004/02/19 10:51:22 niklas Exp $	*/
 /*	$KAME: altq_rmclass.h,v 1.6 2000/12/09 09:22:44 kjc Exp $	*/
 
 /*
@@ -44,6 +44,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define	RM_MAXPRIO	8	/* Max priority */
 
 #ifdef _KERNEL
 
@@ -113,7 +115,6 @@ struct red;
 #else
 #define	RM_MAXQUEUED	16	/* Max number of packets downstream of CBQ */
 #endif
-#define	RM_MAXPRIO	8	/* Max priority */
 #define	RM_MAXQUEUE	64	/* Max queue length */
 #define	RM_FILTER_GAIN	5	/* log2 of gain, e.g., 5 => 31/32 */
 #define	RM_POWER	(1 << RM_FILTER_GAIN)
@@ -182,7 +183,7 @@ struct rm_class {
  */
 struct rm_ifdat {
 	int		queued_;	/* # pkts queued downstream */
-	int		efficient_;	/* Link Efficency bit */
+	int		efficient_;	/* Link Efficiency bit */
 	int		wrr_;		/* Enable Weighted Round-Robin */
 	u_long		ns_per_byte_;	/* Link byte speed. */
 	int		maxqueued_;	/* Max packets to queue */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/ofdev.c,v 1.2 2003/11/14 20:12:04 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/ofdev.c,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: ofdev.c,v 1.1 1997/04/16 20:29:20 thorpej Exp $	*/
 
 /*

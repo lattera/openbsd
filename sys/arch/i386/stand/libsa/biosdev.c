@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.c,v 1.52.8.3 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.c,v 1.52.8.4 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -46,6 +46,7 @@ static int CHS_rw (int, int, int, int, int, int, void *);
 static int EDD_rw (int, int, u_int64_t, u_int32_t, void *);
 
 extern int debug;
+int bios_bootdev;
 
 #if 0
 struct biosdisk {
@@ -69,8 +70,7 @@ struct EDD_CB {
  * reset disk system
  */
 static int
-biosdreset(dev)
-	int dev;
+biosdreset(int dev)
 {
 	int rv;
 	__asm __volatile (DOINT(0x13) "; setc %b0" : "=a" (rv)
@@ -84,18 +84,16 @@ biosdreset(dev)
  * Return 1 if not ok.
  */
 int
-bios_getdiskinfo(dev, pdi)
-	int dev;
-	bios_diskinfo_t *pdi;
+bios_getdiskinfo(int dev, bios_diskinfo_t *pdi)
 {
-	u_int rv, secl, sech;
+	u_int rv;
 
 	/* Just reset, don't check return code */
 	rv = biosdreset(dev);
 
 #ifdef BIOS_DEBUG
 	if (debug)
-		printf("getinfo: try #8, %x,%p\n", dev, pdi);
+		printf("getinfo: try #8, 0x%x, %p\n", dev, pdi);
 #endif
 	__asm __volatile (DOINT(0x13) "\n\t"
 			  "setc %b0; movzbl %h1, %1\n\t"
@@ -122,21 +120,13 @@ bios_getdiskinfo(dev, pdi)
 	pdi->bios_cylinders &= 0x3ff;
 	pdi->bios_cylinders++;
 
-	/*
-	 * NOTE: This seems to hang on certain machines.  Use function #8
-	 * first, and verify with #21 IFF #8 succeeds first.
-	 * Do not try this for floppy 0 (to support CD-ROM boot).
-	 */
-	if (dev) {
-		__asm __volatile (DOINT(0x13) ";setc %b0"
-				: "=a" (rv), "=d" (secl), "=c" (sech)
-				: "0" (0x15FF), "1" (dev), "2" (0xFFFF)
-				: "cc");
-		if (!(rv & 0xff00))
-			return (1);
-		if (rv & 0xff)
-			return (1);
-	}
+	/* Sanity check */
+	if (!pdi->bios_cylinders || !pdi->bios_heads || !pdi->bios_sectors)
+		return(1);
+
+	/* CD-ROMs sometimes return heads == 1 */
+	if (pdi->bios_heads < 2)
+		return(1);
 
 	/* NOTE:
 	 * This currently hangs/reboots some machines
@@ -148,8 +138,13 @@ bios_getdiskinfo(dev, pdi)
 	 * Future hangs (when reported) can be "fixed"
 	 * with getSYSCONFaddr() and an exceptions list.
 	 */
-	if (dev & 0x80) {
+	if (dev & 0x80 && (dev == 0x80 || dev == 0x81 || dev == bios_bootdev)) {
 		int bm;
+
+#ifdef BIOS_DEBUG
+		if (debug)
+			printf("getinfo: try #41, 0x%x\n", dev);
+#endif
 		/* EDD support check */
 		__asm __volatile(DOINT(0x13) "; setc %b0"
 			 : "=a" (rv), "=c" (bm)
@@ -158,16 +153,21 @@ bios_getdiskinfo(dev, pdi)
 			pdi->bios_edd = (bm & 0xffff) | ((rv & 0xff) << 16);
 		else
 			pdi->bios_edd = -1;
+
+#ifdef BIOS_DEBUG
+		if (debug) {
+			printf("getinfo: got #41\n");
+			printf("disk 0x%x: 0x%x\n", dev, bm);
+		}
+#endif
+		/*
+		 * If extended disk access functions are not supported
+		 * there is not much point on doing EDD.
+		 */
+		if (!(pdi->bios_edd & EXT_BM_EDA))
+			pdi->bios_edd = -1;
 	} else
 		pdi->bios_edd = -1;
-
-	/* Sanity check */
-	if (!pdi->bios_cylinders || !pdi->bios_heads || !pdi->bios_sectors)
-		return(1);
-
-	/* CD-ROMs sometimes return heads == 1 */
-	if (pdi->bios_heads < 2)
-		return(1);
 
 	return(0);
 }
@@ -176,12 +176,11 @@ bios_getdiskinfo(dev, pdi)
  * Read/Write a block from given place using the BIOS.
  */
 static __inline int
-CHS_rw(rw, dev, cyl, head, sect, nsect, buf)
-	int rw, dev, cyl, head;
-	int sect, nsect;
-	void * buf;
+CHS_rw(int rw, int dev, int cyl, int head, int sect, int nsect, void *buf)
 {
 	int rv;
+
+	rw = rw == F_READ ? 2 : 3;
 	BIOS_regs.biosr_es = (u_int32_t)buf >> 4;
 	__asm __volatile ("movb %b7, %h1\n\t"
 			  "movb %b6, %%dh\n\t"
@@ -196,18 +195,14 @@ CHS_rw(rw, dev, cyl, head, sect, nsect, buf)
 			  : "=a" (rv)
 			  : "0" (nsect), "d" (dev), "c" (cyl),
 			    "b" (buf), "m" (sect), "m" (head),
-			    "m" ((rw == F_READ)? 2: 3)
+			    "m" (rw)
 			  : "cc", "memory");
 
 	return (rv & 0xff)? rv >> 8 : 0;
 }
 
 static __inline int
-EDD_rw(rw, dev, daddr, nblk, buf)
-	int rw, dev;
-	u_int64_t daddr;
-	u_int32_t nblk;
-	void *buf;
+EDD_rw(int rw, int dev, u_int64_t daddr, u_int32_t nblk, void *buf)
 {
 	int rv;
 	volatile static struct EDD_CB cb;
@@ -239,12 +234,7 @@ EDD_rw(rw, dev, daddr, nblk, buf)
  * Read given sector, handling retry/errors/etc.
  */
 int
-biosd_io(rw, bd, off, nsect, buf)
-	int rw;
-	bios_diskinfo_t *bd;
-	daddr_t off;
-	int nsect;
-	void* buf;
+biosd_io(int rw, bios_diskinfo_t *bd, daddr_t off, int nsect, void *buf)
 {
 	int dev = bd->bios_number;
 	int j, error;
@@ -325,9 +315,7 @@ biosd_io(rw, bd, off, nsect, buf)
  * Try to read the bsd label on the given BIOS device
  */
 const char *
-bios_getdisklabel(bd, label)
-	bios_diskinfo_t *bd;
-	struct disklabel *label;
+bios_getdisklabel(bios_diskinfo_t *bd, struct disklabel *label)
 {
 	daddr_t off = LABELSECTOR;
 	char *buf;
@@ -480,11 +468,17 @@ biosopen(struct open_file *f, ...)
 
 	/* Try for disklabel again (might be removable media) */
 	if(dip->bios_info.flags & BDI_BADLABEL){
-		const char *st = bios_getdisklabel((void *)biosdev, &dip->disklabel);
+		const char *st = bios_getdisklabel(&dip->bios_info,
+		    &dip->disklabel);
+#ifdef BIOS_DEBUG
 		if (debug && st)
 			printf("%s\n", st);
-
-		return ERDLAB;
+#endif
+		if (!st) {
+			dip->bios_info.flags &= ~BDI_BADLABEL;
+			dip->bios_info.flags |= BDI_GOODLABEL;
+		} else
+			return (ERDLAB);
 	}
 
 	f->f_devdata = dip;
@@ -529,8 +523,7 @@ const u_char bidos_errs[] =
 		"\x00" "\0";
 
 static const char *
-biosdisk_err(error)
-	u_int error;
+biosdisk_err(u_int error)
 {
 	register const u_char *p = bidos_errs;
 
@@ -558,9 +551,9 @@ const struct biosdisk_errors {
 	{ 0x32, ENXIO },
 	{ 0x00, EIO }
 };
+
 static int
-biosdisk_errno(error)
-	u_int error;
+biosdisk_errno(u_int error)
 {
 	register const struct biosdisk_errors *p;
 
@@ -573,13 +566,8 @@ biosdisk_errno(error)
 }
 
 int
-biosstrategy(devdata, rw, blk, size, buf, rsize)
-	void *devdata;
-	int rw;
-	daddr_t blk;
-	size_t size;
-	void *buf;
-	size_t *rsize;
+biosstrategy(void *devdata, int rw, daddr_t blk, size_t size, void *buf,
+    size_t *rsize)
 {
 	struct diskinfo *dip = (struct diskinfo *)devdata;
 	bios_diskinfo_t *bd = &dip->bios_info;
@@ -609,18 +597,14 @@ biosstrategy(devdata, rw, blk, size, buf, rsize)
 }
 
 int
-biosclose(f)
-	struct open_file *f;
+biosclose(struct open_file *f)
 {
 	f->f_devdata = NULL;
 	return 0;
 }
 
 int
-biosioctl(f, cmd, data)
-	struct open_file *f;
-	u_long cmd;
-	void *data;
+biosioctl(struct open_file *f, u_long cmd, void *data)
 {
 	return 0;
 }

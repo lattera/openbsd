@@ -1,19 +1,9 @@
-#	$OpenBSD: src/sys/arch/hp300/stand/libz/Makefile,v 1.1 1997/07/14 08:14:51 downsj Exp $
+#	$OpenBSD: src/sys/arch/hp300/stand/libz/Makefile,v 1.1.12.1 2004/02/19 10:48:39 niklas Exp $
 
-LIB=	z
+S=${.CURDIR}/../../../..
+ZDST=${.OBJDIR}
 
-.PATH:  ${.CURDIR}/../../../../lib/libz
+.PATH: ${S}/lib/libz
 
-CFLAGS= -O2 -msoft-float -D_ZLIB_PRIVATE -I${.CURDIR}/../../../../lib/libz
-
-SRCS=	adler32.c crc32.c infblock.c infcodes.c inffast.c \
-	inflate.c inftrees.c infutil.c
-
-${OBJS}:	${.CURDIR}/../Makefile.inc
-
-install:
-
-NOPIC=
-NOPROFILE=
-
-.include <bsd.lib.mk>
+.include "${S}/lib/libz/Makefile"
+CFLAGS+=-msoft-float

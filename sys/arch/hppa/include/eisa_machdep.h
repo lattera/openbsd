@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/eisa_machdep.h,v 1.1 2002/12/20 01:56:32 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/eisa_machdep.h,v 1.1.4.1 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -47,7 +47,7 @@ struct hppa_eisa_chipset {
 	int	(*ec_intr_map)(void *, u_int, int *);
 	const char *(*ec_intr_string)(void *, int);
 	void	*(*ec_intr_establish)(void *, int, int, int,
-				      int (*)(void *), void *, char *);
+				      int (*)(void *), void *, const char *);
 	void	(*ec_intr_disestablish)(void *, void *);
 };
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.14 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.15 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -86,6 +86,9 @@ extern struct emul emul_aout_freebsd, emul_elf_freebsd;
 #endif
 #ifdef COMPAT_BSDOS
 extern struct emul emul_bsdos;
+#endif
+#ifdef COMPAT_AOUT
+extern struct emul emul_aout;
 #endif
 
 #include "npx.h"
@@ -378,7 +381,7 @@ trap(frame)
 		goto out;
 
 	case T_DNA|T_USER: {
-#if defined(MATH_EMULATE) || defined(GPL_MATH_EMULATE)
+#if defined(GPL_MATH_EMULATE)
 		int rv;
 		if ((rv = math_emulate(&frame)) == 0) {
 			if (frame.tf_eflags & PSL_T)
@@ -559,7 +562,7 @@ trap(frame)
 		KERNEL_PROC_UNLOCK(p);
 		break;
 	case T_TRCTRAP|T_USER:		/* trace trap */
-#if defined(MATH_EMULATE) || defined(GPL_MATH_EMULATE)
+#if defined(GPL_MATH_EMULATE)
 	trace:
 #endif
 		sv.sival_int = rcr2();
@@ -648,6 +651,9 @@ syscall(frame)
 	size_t argsize;
 	register_t code, args[8], rval[2];
 	u_quad_t sticks;
+#ifdef DIAGNOSTIC
+	int ocpl = lapic_tpr;
+#endif
 
 	uvmexp.syscalls++;
 #ifdef DIAGNOSTIC
@@ -704,6 +710,9 @@ syscall(frame)
 #ifdef COMPAT_FREEBSD
 		    && p->p_emul != &emul_aout_freebsd
 		    && p->p_emul != &emul_elf_freebsd
+#endif
+#ifdef COMPAT_AOUT
+		    && p->p_emul != &emul_aout
 #endif
 #ifdef COMPAT_BSDOS
 		    && p->p_emul != &emul_bsdos
@@ -816,6 +825,14 @@ syscall(frame)
 		KERNEL_PROC_LOCK(p);
 		ktrsysret(p, code, orig_error, rval[0]);
 		KERNEL_PROC_UNLOCK(p);
+	}
+#endif
+#ifdef DIAGNOSTIC
+	if (lapic_tpr != ocpl) {
+		printf("WARNING: SPL (0x%x) NOT LOWERED ON "
+		    "syscall(0x%x, 0x%x, 0x%x, 0x%x...) EXIT, PID %d\n",
+		    lapic_tpr, code, args[0], args[1], args[2], p->p_pid);
+		lapic_tpr = ocpl;
 	}
 #endif
 }

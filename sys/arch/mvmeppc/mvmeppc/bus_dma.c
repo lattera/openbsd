@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.4 2003/06/07 11:13:18 ho Exp $        */
+/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.5 2004/02/19 10:49:10 niklas Exp $        */
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-
@@ -421,7 +421,7 @@ _bus_dmamap_sync(t, map, offset, len, op)
 	case BUS_DMASYNC_PREWRITE:
 	case BUS_DMASYNC_PREREAD:
 		for (i = map->dm_nsegs; i--; )
-			invdcache((void *)map->dm_segs[i].ds_addr, 
+			invdcache((void *)PCI_MEM_TO_PHYS(map->dm_segs[i].ds_addr), 
 			    len);
 		break;
 	}
@@ -579,7 +579,7 @@ _bus_dmamem_mmap(t, segs, nsegs, off, prot, flags)
                         continue;
                 }
 
-                return (PCI_MEM_TO_PHYS(segs[i].ds_addr) + off);
+                return (powerpc_btop(PCI_MEM_TO_PHYS(segs[i].ds_addr) + off));
         }
 
         /* Page not found. */

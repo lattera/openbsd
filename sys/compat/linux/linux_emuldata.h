@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_emuldata.h,v 1.2 2003/06/23 18:23:48 tedu Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_emuldata.h,v 1.2.4.1 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: linux_emuldata.h,v 1.4 2002/02/15 16:48:02 christos Exp $	*/
 /*-
  * Copyright (c) 1998,2002 The NetBSD Foundation, Inc.

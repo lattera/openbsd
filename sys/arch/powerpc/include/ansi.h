@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/ansi.h,v 1.6.8.4 2003/06/07 11:13:18 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/ansi.h,v 1.6.8.5 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: ansi.h,v 1.2 1996/11/15 22:38:57 jtc Exp $	*/
 
 /*-
@@ -50,7 +50,11 @@
 #define	_BSD_SSIZE_T_	int			/* byte count or error */
 #define	_BSD_TIME_T_	int			/* time() */
 struct __va_list_tag;
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define _BSD_VA_LIST_	__builtin_va_list
+#else
 #define _BSD_VA_LIST_   struct __va_list_tag * /* va_list */
+#endif
 #define _BSD_CLOCKID_T_	int
 #define _BSD_TIMER_T_	int
 
@@ -69,6 +73,7 @@ struct __va_list_tag;
  * defined for ctype.h.
  */
 #define	_BSD_WCHAR_T_	int			/* wchar_t */
+#define	_BSD_WINT_T_	int			/* wint_t */
 #define	_BSD_RUNE_T_	int			/* rune_t */
 
 /*

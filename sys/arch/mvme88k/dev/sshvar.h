@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshvar.h,v 1.1.2.3 2003/06/07 11:13:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshvar.h,v 1.1.2.4 2004/02/19 10:49:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -193,8 +193,5 @@ struct	ssh_softc {
 #define	STS_BUSY	0x08
 #define	STS_INTERMED	0x10	/* Intermediate status sent */
 #define	STS_EXT		0x80	/* Extended status valid */
-
-void ssh_minphys(struct buf *bp);
-int ssh_scsicmd(struct scsi_xfer *);
 
 #endif /* _SSHVAR_H */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/nvramreg.h,v 1.3.4.2 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/nvramreg.h,v 1.3.4.3 2004/02/19 10:49:06 niklas Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -46,13 +46,13 @@
 
 /*
  * Mostek MK48T08 clock.
- * 
+ *
  * This chip is 8k in size.
  * The first TOD clock starts at offset 0x1FF8. The following structure
  * describes last 2K of it's 8K address space. The first 6K of the NVRAM
  * space is used for various things as follows:
  * 	0000-0fff	User Area
- *	1000-10ff	Networking Area 
+ *	1000-10ff	Networking Area
  *	1100-16f7	Operating System Area
  *	16f8-1ef7	ROM Debugger Area
  *	1ef8-1ff7	Configuration Area (Ethernet address etc)

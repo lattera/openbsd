@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_priq.h,v 1.1.2.2 2003/05/13 19:21:26 ho Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_priq.h,v 1.1.2.3 2004/02/19 10:51:22 niklas Exp $	*/
 /*	$KAME: altq_priq.h,v 1.1 2000/10/18 09:15:23 kjc Exp $	*/
 /*
  * Copyright (C) 2000-2002
@@ -39,7 +39,6 @@ extern "C" {
 #endif
 
 #define	PRIQ_MAXPRI	16	/* upper limit of the number of priorities */
-#define	PRIQ_MAXQID	256	/* upper limit of queues */
 
 /* priq class flags */
 #define	PRCF_RED		0x0001	/* use RED */

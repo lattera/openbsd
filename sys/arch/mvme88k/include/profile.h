@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/profile.h,v 1.7.6.3 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/profile.h,v 1.7.6.4 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -29,7 +29,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)profile.h	8.1 (Berkeley) 6/11/93
- *	$Id: profile.h,v 1.7.6.2 2001/10/31 03:01:19 nate Exp $
  */
 #ifndef __MACHINE_PROFILE_H__
 #define __MACHINE_PROFILE_H__
@@ -40,8 +39,8 @@ extern void mcount() __asm__ ("mcount");					\
 void									\
 mcount()								\
 {									\
-	register int selfret;						\
-	register int callerret;						\
+	int selfret;							\
+	int callerret;							\
 	/*								\
 	 * find the return address for mcount,				\
 	 * and the return address for mcount's caller.			\

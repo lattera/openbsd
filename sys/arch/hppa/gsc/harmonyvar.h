@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/harmonyvar.h,v 1.6.4.1 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/harmonyvar.h,v 1.6.4.2 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Jason L. Wright (jason@thought.net)
@@ -101,6 +101,9 @@ struct harmony_softc {
 	int sc_in_port, sc_out_port, sc_hasulinear8;
 	int sc_micpreamp, sc_ov, sc_outputgain;
 	int sc_teleshare;
+
+	struct timeout sc_acc_tmo;
+	u_int32_t sc_acc, sc_acc_num, sc_acc_cnt;
 };
 
 #define	READ_REG(sc, reg)		\

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.16 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.17 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -292,6 +292,7 @@ struct cpu_cpuid_feature {
 extern int cpu;
 extern int cpu_class;
 extern int cpu_feature;
+extern int cpu_ecxfeature;
 extern int cpu_apmwarn;
 extern int cpu_apmhalt;
 extern int cpuid_level;
@@ -311,11 +312,16 @@ void fix_f00f(void);
 /* dkcsum.c */
 void	dkcsumattach(void);
 
+extern int i386_use_fxsave;
+extern int i386_has_sse;
+extern int i386_has_sse2;
+
 /* machdep.c */
 void	dumpconf(void);
 void	cpu_reset(void);
 void	i386_proc0_tss_ldt_init(void);
 void	i386_init_pcb_tss_ldt(struct cpu_info *);
+void	cpuid(u_int32_t, u_int32_t *);
 
 /* locore.s */
 struct region_descriptor;
@@ -335,12 +341,32 @@ void	i8254_delay(int);
 void	i8254_microtime(struct timeval *);
 void	i8254_initclocks(void);
 
+/* est.c */
+#if !defined(SMALL_KERNEL) && defined(I686_CPU)
+void	est_init(const char *);
+int     est_cpuspeed(void *, size_t *, void *, size_t);
+int     est_setperf(void *, size_t *, void *, size_t);
+#endif
+
+/* longrun.c */
+#if !defined(SMALL_KERNEL) && defined(I586_CPU)
+void	longrun_init(void);
+int	longrun_cpuspeed(void *, size_t *, void *, size_t);
+int	longrun_setperf(void *, size_t *, void *, size_t);
+#endif
+
+/* p4tcc.c */
+#if !defined(SMALL_KERNEL) && defined(I686_CPU)
+void	p4tcc_init(int, int);
+int     p4tcc_setperf(void *, size_t *, void *, size_t);
+#endif
+
 /* npx.c */
 void	npxdrop(struct proc *);
 void	npxsave_proc(struct proc *);
 void	npxsave_cpu(struct cpu_info *);
 
-#if defined(MATH_EMULATE) || defined(GPL_MATH_EMULATE)
+#if defined(GPL_MATH_EMULATE)
 /* math_emulate.c */
 int	math_emulate(struct trapframe *);
 #endif
@@ -348,7 +374,6 @@ int	math_emulate(struct trapframe *);
 #ifdef USER_LDT
 /* sys_machdep.h */
 extern int user_ldt_enable;
-void	i386_user_cleanup(struct pcb *);
 int	i386_get_ldt(struct proc *, void *, register_t *);
 int	i386_set_ldt(struct proc *, void *, register_t *);
 #endif
@@ -391,8 +416,11 @@ void	setconf(void);
 #define CPU_KBDRESET		10	/* keyboard reset under pcvt */
 #define CPU_APMHALT		11	/* halt -p hack */
 #define CPU_USERLDT		12
-#define	CPU_LONGRUN		13	/* LongRun status */
-#define	CPU_MAXID		14	/* number of valid machdep ids */
+#define CPU_OSFXSR		13	/* uses FXSAVE/FXRSTOR */
+#define CPU_SSE			14	/* supports SSE */
+#define CPU_SSE2		15	/* supports SSE2 */
+#define CPU_XCRYPT		16	/* supports VIA xcrypt in userland */
+#define CPU_MAXID		17	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
@@ -408,7 +436,10 @@ void	setconf(void);
 	{ "kbdreset", CTLTYPE_INT }, \
 	{ "apmhalt", CTLTYPE_INT }, \
 	{ "userldt", CTLTYPE_INT }, \
-	{ "longrun", CTLTYPE_STRUCT }, \
+	{ "osfxsr", CTLTYPE_INT }, \
+	{ "sse", CTLTYPE_INT }, \
+	{ "sse2", CTLTYPE_INT }, \
+	{ "xcrypt", CTLTYPE_INT }, \
 }
 
 #endif /* !_I386_CPU_H_ */

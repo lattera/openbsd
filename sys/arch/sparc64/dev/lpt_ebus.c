@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.2.2.1 2003/03/27 23:42:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.2.2.2 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: lpt_ebus.c,v 1.8 2002/03/01 11:51:00 martin Exp $	*/
 
 /*
@@ -95,8 +95,8 @@ lpt_ebus_attach(parent, self, aux)
 	}
 
 	if (ebus_bus_map(sc->sc_lpt.sc_iot, 0,
-	    EBUS_PADDR_FROM_REG(&ea->ea_regs[1]), ea->ea_regs[1].size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_ctrl) != 0) {
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[1]), ea->ea_regs[1].size, 0, 0,
+	    &sc->sc_ctrl) != 0) {
 		printf(": can't map control space\n");
 		bus_space_unmap(sc->sc_lpt.sc_iot, sc->sc_lpt.sc_ioh,
 		    ea->ea_regs[0].size);

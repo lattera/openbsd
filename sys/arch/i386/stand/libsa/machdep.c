@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.28.4.5 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.28.4.6 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -44,7 +44,7 @@ extern int debug;
 int ps2model;
 
 void
-machdep()
+machdep(void)
 {
 	/* here */	CKPT('0');
 	printf("probing:");

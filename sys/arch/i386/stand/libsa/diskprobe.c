@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/diskprobe.c,v 1.17.4.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/diskprobe.c,v 1.17.4.3 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -28,7 +28,7 @@
  */
 
 /* We want the disk type names from disklabel.h */
-#define DKTYPENAMES
+#undef DKTYPENAMES
 
 #include <sys/param.h>
 #include <sys/queue.h>
@@ -56,7 +56,7 @@ extern int debug;
 
 /* Probe for all BIOS floppies */
 static void
-floppyprobe()
+floppyprobe(void)
 {
 	struct diskinfo *dip;
 	int i;
@@ -79,10 +79,14 @@ floppyprobe()
 
 		/* Fill out best we can - (fd?) */
 		dip->bios_info.bsd_dev = MAKEBOOTDEV(2, 0, 0, i, RAW_PART);
-		if((bios_getdisklabel(&dip->bios_info, &dip->disklabel)) != 0) 
-			dip->bios_info.flags |= BDI_BADLABEL;
-		else
-			dip->bios_info.flags |= BDI_GOODLABEL;
+
+		/*
+		 * Delay reading the disklabel until we're sure we want
+		 * to boot from the floppy. Doing this avoids a delay
+		 * (sometimes very long) when trying to read the label
+		 * and the drive is unplugged.
+		 */
+		dip->bios_info.flags |= BDI_BADLABEL;
 
 		/* Add to queue of disks */
 		TAILQ_INSERT_TAIL(&disklist, dip, list);
@@ -92,15 +96,16 @@ floppyprobe()
 
 /* Probe for all BIOS hard disks */
 static void
-hardprobe()
+hardprobe(void)
 {
 	struct diskinfo *dip;
 	int i;
 	u_int bsdunit, type;
 	u_int scsi = 0, ide = 0;
+	const char *dc = (const char *)((0x40 << 4) + 0x75);
 
 	/* Hard disks */
-	for(i = 0x80; i < 0x88; i++) {
+	for (i = 0x80; i < (0x80 + *dc); i++) {
 		dip = alloc(sizeof(struct diskinfo));
 		bzero(dip, sizeof(*dip));
 
@@ -156,7 +161,7 @@ hardprobe()
 /* Probe for all BIOS supported disks */
 u_int32_t bios_cksumlen;
 void
-diskprobe()
+diskprobe(void)
 {
 	struct diskinfo *dip;
 	int i;
@@ -201,8 +206,7 @@ diskprobe()
 
 /* Find info on given BIOS disk */
 struct diskinfo *
-dklookup(dev)
-	int dev;
+dklookup(int dev)
 {
 	struct diskinfo *dip;
 
@@ -214,11 +218,9 @@ dklookup(dev)
 }
 
 void
-dump_diskinfo()
+dump_diskinfo(void)
 {
 	struct diskinfo *dip;
-
-	(void)fstypenames, (void)fstypesnames;
 
 	printf("Disk\tBIOS#\tType\tCyls\tHeads\tSecs\tFlags\tChecksum\n");
 	for(dip = TAILQ_FIRST(&disklist); dip; dip = TAILQ_NEXT(dip, list)){
@@ -227,8 +229,7 @@ dump_diskinfo()
 
 		printf("%cd%d\t0x%x\t%s\t%d\t%d\t%d\t0x%x\t0x%x\n",
 		    (d & 0x80)?'h':'f', d & 0x7F, d,
-			(bdi->flags & BDI_BADLABEL)?"*none*":
-				dktypenames[B_TYPE(dip->disklabel.d_type)],
+			(bdi->flags & BDI_BADLABEL)?"*none*":"label",
 		    bdi->bios_cylinders, bdi->bios_heads, bdi->bios_sectors,
 		    bdi->flags, bdi->checksum);
 	}
@@ -238,8 +239,7 @@ dump_diskinfo()
  * XXX - Use dklookup() instead.
  */
 bios_diskinfo_t *
-bios_dklookup(dev)
-	register int dev;
+bios_dklookup(int dev)
 {
 	struct diskinfo *dip;
 
@@ -257,8 +257,7 @@ bios_dklookup(dev)
  * as it is quick, small, and available.
  */
 int
-disksum(blk)
-	int blk;
+disksum(int blk)
 {
 	struct diskinfo *dip, *dip2;
 	int st, reprobe = 0;

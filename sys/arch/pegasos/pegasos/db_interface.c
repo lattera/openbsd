@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/db_interface.c,v 1.1 2003/10/31 03:54:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/db_interface.c,v 1.1.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*      $NetBSD: db_interface.c,v 1.12 2001/07/22 11:29:46 wiz Exp $ */
 
 #include <sys/param.h>

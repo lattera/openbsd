@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.7 2003/06/07 11:13:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.8 2004/02/19 10:49:06 niklas Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -47,12 +47,14 @@
 #define	_BSD_SIZE_T_	unsigned int		/* sizeof() */
 #define	_BSD_SSIZE_T_	int			/* byte count or error */
 #define	_BSD_TIME_T_	int			/* time() */
-#define	_BSD_CLOCKID_T_	int
-#define	_BSD_TIMER_T_	int
-
-#include <machine/va-m88k.h>
-
-#define _BSD_VA_LIST_	__va_list
+struct __va_list_tag;
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define _BSD_VA_LIST_	__builtin_va_list
+#else
+#define	_BSD_VA_LIST_	struct __va_list_tag *	/* va_list */
+#endif
+#define _BSD_CLOCKID_T_	int
+#define _BSD_TIMER_T_	int
 
 /*
  * Runes (wchar_t) is declared to be an ``int'' instead of the more natural
@@ -63,7 +65,7 @@
  * chosen over a long is that the is*() and to*() routines take ints (says
  * ANSI C), but they use _RUNE_T_ instead of int.  By changing it here, you
  * lose a bit of ANSI conformance, but your programs will still work.
- *    
+ *
  * Note that _WCHAR_T_ and _RUNE_T_ must be of the same type.  When wchar_t
  * and rune_t are typedef'd, _WCHAR_T_ will be undef'd, but _RUNE_T remains
  * defined for ctype.h.

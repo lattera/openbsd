@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27.2.8 2003/05/16 00:29:40 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27.2.9 2004/02/19 10:49:59 niklas Exp $
 # 	$NetBSD: GENERIC32,v 1.18 2001/07/20 00:07:12 eeh Exp $
 
 machine		sparc64
@@ -6,7 +6,6 @@ machine		sparc64
 include "../../../conf/GENERIC"
 
 option		SUN4U
-option		_LP64
 
 option		PCIVERBOSE
 option		USER_PCICONF	# user-space PCI configuration
@@ -36,16 +35,19 @@ ebus*	at pci?
 # PCI Ethernet
 hme*	at pci? dev ? function ?
 gem*	at pci? dev ? function ?
-#ti*	at pci? dev ? function ?		# Alteon Tigon 1Gb ethernet
-fxp*	at pci? dev ? function ?		# EtherExpress 10/100B ethernet
-xl*	at pci? dev ? function ?		# 3C9xx ethernet
-dc*	at pci? dev ? function ?		# 21143, "tulip" clone ethernet
+#ti*	at pci? dev ? function ?	# Alteon Tigon 1Gb ethernet
+fxp*	at pci? dev ? function ?	# EtherExpress 10/100B ethernet
+xl*	at pci? dev ? function ?	# 3C9xx ethernet
+dc*	at pci? dev ? function ?	# 21143, "tulip" clone ethernet
+em*	at pci? dev ? function ?	# Intel Pro/1000 ethernet
 
 # PCI SCSI
-siop*	at pci? dev ? function ?
-isp*	at pci? dev ? function ?
-option ISP_COMPILE_FW=1
+ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
+scsibus* at ahc?
+siop*	at pci? dev ? function ?	# NCR 538XX SCSI controllers
 scsibus* at siop?
+isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
+option ISP_COMPILE_FW=1
 
 # PCI Display
 vgafb*		at pci? dev ? function ?
@@ -62,6 +64,10 @@ autri*		at pci? dev ? function ? flags 0x0000	# Trident 4D WAVE
 eap*		at pci? dev ? function ?	# Ensoniq AudioPCI S5016
 eso*		at pci? dev ? function ?	# ESS Solo-1 PCI AudioDrive
 
+#puc*		at pci?				# PCI "universial" comm device
+#com*		at puc? port ?
+#lpt*		at puc? port ?
+
 # Sound support
 audio*		at audioce?
 audio*		at audiocs?
@@ -77,8 +83,10 @@ midi*		at autri?
 midi*		at opl?
 
 # USB bridges
-ohci*	at pci? dev ? function ?
+ohci*	at pci? dev ? function ?	# Open Host Controller
+uhci*	at pci? dev ? function ?	# Universal Host Controller (Intel)
 usb*	at ohci? flags 0x1
+usb*	at uhci? flags 0x1
 
 # USB devices
 uhub*	at usb?
@@ -89,7 +97,9 @@ wskbd*	at ukbd? console ? mux 1
 ums*	at uhidev? reportid ?
 wsmouse* at ums? mux 0
 uhid*	at uhidev? reportid ?
-ugen*	at uhub? port ? configuration ?		# USB generic device
+ugen*	at uhub? port ? configuration ?	# USB generic device
+uplcom* at uhub? port ?			# I/O DATA USB-RSAQ2 serial adapter
+ucom*	at uplcom? portno ?
 
 #### Standard system devices -- all required for a given architecture
 

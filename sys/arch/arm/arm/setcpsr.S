@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/Attic/setcpsr.S,v 1.2 2004/02/01 06:10:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/Attic/setcpsr.S,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: setcpsr.S,v 1.2 2002/08/15 01:37:02 briggs Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/wdsc.c,v 1.5.14.3 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/wdsc.c,v 1.5.14.4 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1996 Steve Woodford
@@ -76,7 +76,7 @@ struct cfattach wdsc_ca = {
 };
 
 struct cfdriver wdsc_cd = {
-    NULL, "wdsc", DV_DULL, NULL, 0 
+	NULL, "wdsc", DV_DULL
 };
 
 /*

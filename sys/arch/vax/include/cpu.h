@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.5 2003/05/13 19:41:10 ho Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.6 2004/02/19 10:50:02 niklas Exp $      */
 /*      $NetBSD: cpu.h,v 1.41 1999/10/21 20:01:36 ragge Exp $      */
 
 /*
@@ -39,6 +39,7 @@
 #include <sys/device.h>
 
 #include <machine/mtpr.h>
+#include <machine/pte.h>
 #include <machine/pcb.h>
 #include <machine/uvax.h>
 #include <machine/psl.h>
@@ -124,7 +125,7 @@ void	dumpconf(void);
 void	dumpsys(void);
 void	swapconf(void);
 void	disk_printtype(int, int);
-void	disk_reallymapin(struct buf *, struct pte *, int, int);
+void	disk_reallymapin(struct buf *, pt_entry_t *, int, int);
 vaddr_t	vax_map_physmem(paddr_t, int);
 void	vax_unmap_physmem(vaddr_t, int);
 void	ioaccess(vaddr_t, paddr_t, int);

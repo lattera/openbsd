@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.4 2003/05/13 19:21:26 ho Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.5 2004/02/19 10:51:22 niklas Exp $	*/
 /*	$KAME: altq_var.h,v 1.8 2001/02/09 09:44:41 kjc Exp $	*/
 
 /*
@@ -97,13 +97,14 @@ extern int pfaltq_running;
 struct ifnet; struct mbuf;
 struct pf_altq; struct pf_qstats;
 
-void *altq_lookup(char *, int);
+void	*altq_lookup(char *, int);
 u_int8_t read_dsfield(struct mbuf *, struct altq_pktattr *);
-void write_dsfield(struct mbuf *, struct altq_pktattr *, u_int8_t);
-void altq_assert(const char *, int, const char *);
-int tbr_set(struct ifaltq *, struct tb_profile *);
-int tbr_get(struct ifaltq *, struct tb_profile *);
+void	write_dsfield(struct mbuf *, struct altq_pktattr *, u_int8_t);
+void	altq_assert(const char *, int, const char *);
+int	tbr_set(struct ifaltq *, struct tb_profile *);
+int	tbr_get(struct ifaltq *, struct tb_profile *);
 int	altq_pfattach(struct pf_altq *);
+
 int	altq_pfdetach(struct pf_altq *);
 int	altq_add(struct pf_altq *);
 int	altq_remove(struct pf_altq *);

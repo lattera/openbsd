@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/db_disasm.c,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/db_disasm.c,v 1.1.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.4 2003/07/15 00:24:38 lukem Exp $	*/
 
 /*

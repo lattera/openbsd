@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/Makefile,v 1.36.4.4 2003/06/07 11:11:38 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/Makefile,v 1.36.4.5 2004/02/19 10:48:43 niklas Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -59,7 +59,7 @@ install:
 .include <bsd.lib.mk>
 
 CPPFLAGS+=-DLINKADDR=${LINKADDR} -DHEAP_LIMIT=${HEAP_LIMIT} ${DEBUGFLAGS}
-CPPFLAGS+=-I${S}/stand/boot -DCOMPAT_UFS
+CPPFLAGS+=-I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=${SACFLAGS} -D__INTERNAL_LIBSA_CREAD
 #AS=cat ; 
 #AS+=	-R

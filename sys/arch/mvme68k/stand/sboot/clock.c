@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/clock.c,v 1.5.14.1 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/clock.c,v 1.5.14.2 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -70,9 +70,8 @@ static struct clockreg *clockreg = (struct clockreg *) CLOCK_ADDR;
 const short dayyr[12] =
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
-static u_long 
-chiptotime(sec, min, hour, day, mon, year)
-	register int sec, min, hour, day, mon, year;
+static u_long
+chiptotime(int sec, int min, int hour, int day, int mon, int year)
 {
 	register int days, yr;
 
@@ -101,8 +100,8 @@ chiptotime(sec, min, hour, day, mon, year)
 /*
  * Set up the system's time, given a `reasonable' time value.
  */
-u_long 
-ttime()
+u_long
+ttime(void)
 {
 	register struct clockreg *cl = clockreg;
 	int     sec, min, hour, day, mon, year;

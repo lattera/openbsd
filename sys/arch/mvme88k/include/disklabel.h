@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/disklabel.h,v 1.4.6.3 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/disklabel.h,v 1.4.6.4 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1995 Dale Rahn.
  * All rights reserved.
- *   
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -25,7 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */  
+ */
 
 #ifndef __MACHINE_DISKLABEL_H__
 #define __MACHINE_DISKLABEL_H__

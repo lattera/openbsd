@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/frame.h,v 1.2.6.3 2003/06/07 11:13:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/frame.h,v 1.2.6.4 2004/02/19 10:49:07 niklas Exp $	*/
 /*	$NetBSD: frame.h,v 1.15 1997/05/03 12:49:05 mycroft Exp $	*/
 
 /*
@@ -43,7 +43,7 @@
 #define	_M88K_FRAME_H_
 
 struct frame {
-	struct m88100_saved_state  __attribute__((__packed__)) F_t;
+	struct trapframe  __packed F_t;
 };
 
 #endif	/* _M88K_FRAME_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.1.2.4 2003/03/27 23:32:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.1.2.5 2004/02/19 10:49:04 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -84,7 +84,7 @@ struct cfattach vs_ca = {
 };    
  
 struct cfdriver vs_cd = {
-        NULL, "vs", DV_DULL, 0 
+        NULL, "vs", DV_DULL
 }; 
 
 int
@@ -115,6 +115,7 @@ vsattach(parent, self, auxp)
 	sc->sc_link.adapter_target = 7;
 	sc->sc_link.adapter = &vs_scsiswitch;
 	sc->sc_link.device = &vs_scsidev;
+	sc->sc_link.luns = 1;
 	sc->sc_link.openings = 1;
 
 	sc->sc_ih_n.ih_fn = vs_nintr;

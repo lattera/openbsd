@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/fdc_gsc.c,v 1.1.8.2 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/fdc_gsc.c,v 1.1.8.3 2004/02/19 10:48:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -66,7 +66,7 @@ fdc_gsc_probe(parent, match, aux)
 	    ca->ca_type.iodc_sv_model != HPPA_FIO_GPCFD)
 		return 0;
 
-	/* Map the i/o space. */
+	/* Map the I/O space. */
 	if (bus_space_map(ca->ca_iot, ca->ca_hpa, IOMOD_HPASIZE, 0, &ioh))
 		return 0;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.8 2003/03/27 23:53:48 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.9 2004/02/19 10:51:29 niklas Exp $	 */
 /*	$NetBSD: svr4_misc.c,v 1.42 1996/12/06 03:22:34 christos Exp $	 */
 
 /*
@@ -424,7 +424,7 @@ svr4_sys_fchroot(p, v, retval)
 	struct file	*fp;
 	int		 error;
 
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return error;
 	if ((error = getvnode(fdp, SCARG(uap, fd), &fp)) != 0)
 		return error;

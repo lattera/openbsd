@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/autoconf.h,v 1.6.4.4 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/autoconf.h,v 1.6.4.5 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 1999, Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -57,11 +57,6 @@ struct confargs {
 #define BUS_VMEL      5
 #define BUS_SYSCON    6
 #define BUS_BUSSWITCH 7
-
-int always_match(struct device *, struct cfdata *, void *);
-
-#define DEVICE_UNIT(device) (device->dv_unit)
-#define CFDATA_LOC(cfdata) (cfdata->cf_loc)
 
 /* the following are from the prom/bootblocks */
 extern void	*bootaddr;	/* PA of boot device */

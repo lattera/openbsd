@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/findcpu.c,v 1.7.4.2 2002/03/06 02:04:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/findcpu.c,v 1.7.4.3 2004/02/19 10:50:03 niklas Exp $	*/
 /*	$NetBSD: findcpu.c,v 1.5 1999/08/23 19:10:43 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -53,11 +53,13 @@ int vax_cpudata = 0;	/* contents of the SID register */
 int vax_siedata = 0;	/* contents of the SIE register */
 int vax_confdata;	/* machine dependend, configuration/setup data */
 
+void	findcpu(void);
+
 /*
  * Try to figure out which type of system this is.
  */
 void
-findcpu()
+findcpu(void)
 {
 	vax_cpudata = mfpr(PR_SID);
 	vax_cputype = vax_cpudata >> 24;

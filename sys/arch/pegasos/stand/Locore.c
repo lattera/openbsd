@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/Locore.c,v 1.2 2003/11/14 20:09:20 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/Locore.c,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: Locore.c,v 1.1 1997/04/16 20:29:11 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.9 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.10 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -360,7 +360,7 @@ copyfault:
 		break;
 
 #if defined(M68040) || defined(M68060)
-	case T_FPEMULI|T_USER:	/* unimplemented FP instuction */
+	case T_FPEMULI|T_USER:	/* unimplemented FP instruction */
 	case T_FPEMULD|T_USER:	/* unimplemented FP data type */
 		/* XXX need to FSAVE */
 		printf("pid %d(%s): unimplemented FP %s at %x (EA %x)\n",
@@ -616,7 +616,7 @@ copyfault:
 			if (type == T_MMUFLT) {
 				if (p && p->p_addr->u_pcb.pcb_onfault)
 					goto copyfault;
-				printf("uvm_fault(%x, %x, 0, %x) -> %x\n",
+				printf("uvm_fault(%p, %lx, 0, %x) -> %x\n",
 					 map, va, ftype, rv);
 				printf("  type %x, code [mmu,,ssw]: %x\n",
 					 type, code);
@@ -631,9 +631,9 @@ copyfault:
 	}
 	sv.sival_int = v;
 	trapsignal(p, i, ucode, typ, sv);
+out:
 	if ((type & T_USER) == 0)
 		return;
-out:
 	userret(p, &frame, sticks, v, 1);
 }
 

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/parse_args.c,v 1.4.14.1 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/parse_args.c,v 1.4.14.2 2004/02/19 10:49:05 niklas Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_lereg.h,v 1.6.2.1 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_lereg.h,v 1.6.2.2 2004/02/19 10:49:04 niklas Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
@@ -41,7 +41,8 @@ struct lereg1 {
         volatile u_int16_t      ler1_rap;       /* register select port */
 };
 
-#define VLEMEMSIZE 0x40000 
+#define	VLEMEMSIZE	0x00040000 
+#define	VLEMEMBASE	0xfd6c0000
 
 /*
  * LANCE registers for MVME376

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/mainbus/cpu_mainbus.c,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/mainbus/cpu_mainbus.c,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: cpu_mainbus.c,v 1.3 2002/01/05 22:41:48 chris Exp $	*/
 
 /*

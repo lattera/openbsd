@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/disklabel.h,v 1.2 2003/11/13 23:00:54 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/disklabel.h,v 1.2.2.1 2004/02/19 10:49:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Christopher G. Demetriou

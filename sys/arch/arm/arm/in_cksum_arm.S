@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/in_cksum_arm.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/in_cksum_arm.S,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: in_cksum_arm.S,v 1.3 2003/11/26 10:31:53 rearnsha Exp $ */
 
 /*

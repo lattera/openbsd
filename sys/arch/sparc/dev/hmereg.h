@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hmereg.h,v 1.7.6.2 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hmereg.h,v 1.7.6.3 2004/02/19 10:49:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -344,7 +344,7 @@ struct hme_rxd {
 };
 #define	HME_RXD_OWN		0x80000000	/* desc owner: 1=hw,0=sw */
 #define HME_RXD_OVERFLOW	0x40000000	/* 1 = buffer over flow */
-#define HME_RXD_SIZE		0x3fff0000	/* desciptor size */
+#define HME_RXD_SIZE		0x3fff0000	/* descriptor size */
 #define HME_RXD_CSUM		0x0000ffff	/* checksum mask */
 
 struct hme_txd {

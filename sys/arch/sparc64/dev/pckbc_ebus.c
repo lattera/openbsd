@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pckbc_ebus.c,v 1.1.2.2 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pckbc_ebus.c,v 1.1.2.3 2004/02/19 10:49:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -120,7 +120,7 @@ pckbc_ebus_attach(parent, self, aux)
 			    &sc->sc_ioh);
 		else if (ebus_bus_map(sc->sc_iot, 0,
 		    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
-		    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_ioh) != 0) {
+		    0, 0, &sc->sc_ioh) != 0) {
 			printf(": can't map register space\n");
 			return;
 		}
@@ -143,14 +143,14 @@ pckbc_ebus_attach(parent, self, aux)
 	psc->intr_establish = pckbc_ebus_intr_establish;
 
 	sc->sc_irq[0] = bus_intr_establish(ea->ea_iotag, ea->ea_intrs[0],
-	    IPL_TTY, 0, pckbcintr, psc);
+	    IPL_TTY, 0, pckbcintr, psc, self->dv_xname);
 	if (sc->sc_irq[0] == NULL) {
 		printf(": couldn't get intr0\n");
 		return;
 	}
 
 	sc->sc_irq[1] = bus_intr_establish(ea->ea_iotag, ea->ea_intrs[1],
-	    IPL_TTY, 0, pckbcintr, psc);
+	    IPL_TTY, 0, pckbcintr, psc, self->dv_xname);
 	if (sc->sc_irq[1] == NULL) {
 		printf(": couldn't get intr1\n");
 		return;

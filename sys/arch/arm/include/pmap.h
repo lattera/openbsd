@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/pmap.h,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/pmap.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.76 2003/09/06 09:10:46 rearnsha Exp $	*/
 
 /*

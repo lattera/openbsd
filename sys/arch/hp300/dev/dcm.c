@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/dcm.c,v 1.11.12.3 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/dcm.c,v 1.11.12.4 2004/02/19 10:48:38 niklas Exp $	*/
 /*	$NetBSD: dcm.c,v 1.41 1997/05/05 20:59:16 thorpej Exp $	*/
 
 /*
@@ -452,7 +452,6 @@ dcmopen(dev, flag, mode, p)
 	s = spltty();
 	if (sc->sc_tty[port] == NULL) {
 		tp = sc->sc_tty[port] = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = sc->sc_tty[port];
 	splx(s);
@@ -587,7 +586,6 @@ dcmclose(dev, flag, mode, p)
 	splx(s);
 	ttyclose(tp);
 #if 0
-	tty_detach(tp);
 	ttyfree(tp);
 	sc->sc_tty[port] == NULL;
 #endif
@@ -1031,7 +1029,7 @@ dcmioctl(dev, cmd, data, flag, p)
 	case TIOCSFLAGS: {
 		int userbits;
 
-		error = suser(p->p_ucred, &p->p_acflag);
+		error = suser(p, 0);
 		if (error)
 			return (EPERM);
 
@@ -1360,7 +1358,7 @@ dcmsetischeme(brd, flags)
 		       sc->sc_dev.dv_xname, perchar, dis->dis_perchar,
 		       dis->dis_intr, dis->dis_char);
 	if ((flags & DIS_RESET) == 0 && perchar == dis->dis_perchar) {
-		printf("%s: dcmsetischeme: redundent request %d\n",
+		printf("%s: dcmsetischeme: redundant request %d\n",
 		       sc->sc_dev.dv_xname, perchar);
 		return;
 	}

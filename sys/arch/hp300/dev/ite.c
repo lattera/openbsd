@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ite.c,v 1.11.10.4 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ite.c,v 1.11.10.5 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: ite.c,v 1.38 1997/03/31 07:37:25 scottr Exp $	*/
 
 /*
@@ -301,7 +301,6 @@ iteopen(dev, mode, devtype, p)
 
 	if (ip->tty == NULL) {
 	 	tp = ip->tty = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = ip->tty;
 	if ((tp->t_state&(TS_ISOPEN|TS_XCLUDE)) == (TS_ISOPEN|TS_XCLUDE)
@@ -350,7 +349,6 @@ iteclose(dev, flag, mode, p)
 	ttyclose(tp);
 	iteoff(ip, 0);
 #if 0
-	tty_detach(tp);
 	ttyfree(tp);
 	ip->tty = (struct tty *)0;
 #endif

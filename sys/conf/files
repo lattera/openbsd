@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.13 2003/06/07 11:00:37 ho Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.14 2004/02/19 10:51:29 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -54,6 +54,7 @@ define	fddi
 define	ieee1394
 define	sppp
 define	token
+define	wlan
 
 # "Chipset" attributes.  These are the machine-independent portions
 # of device drivers.
@@ -72,6 +73,10 @@ define	wsemuldisplaydev {[console = -1]}
 define	wskbddev {[console = -1], [mux = -1]}
 define	wsmousedev {[mux = -1]}
 define	wsrasteremulops
+
+# SMC 93Cx6 Serial EEPROM devices
+define	smc93cx6
+file	dev/ic/smc93cx6.c		smc93cx6
 
 # common PC display functions
 define	pcdisplayops
@@ -103,10 +108,10 @@ file	dev/ic/wdc.c wdc_base
 # contain the cfdrivers.  Attachments are provided by files.<bus>
 
 # Adaptec 2[789]4X, 394X, aic7770 and aic78[5678]0 SCSI controllers
-device	ahc: scsi
+device	ahc: scsi, smc93cx6
 file	dev/ic/aic7xxx.c		ahc
 file	dev/ic/aic7xxx_openbsd.c	ahc
-file	dev/ic/smc93cx6.c		ahc
+file	dev/ic/aic7xxx_seeprom.c	ahc
 
 # Adaptec AIC-6[23]60 SCSI controllers
 device	aic: scsi
@@ -207,6 +212,10 @@ file	dev/ic/xl.c		xl
 # Intel EtherExpress PRO 10/100B
 device	fxp: ether, ifnet, ifmedia, mii
 file	dev/ic/fxp.c		fxp
+
+# Myson MTD803
+device	mtd: ether, ifnet, ifmedia, mii
+file	dev/ic/mtd8xx.c		mtd
 
 # RealTek 8129/8139
 device	rl: ether, ifnet, ifmedia, mii
@@ -353,6 +362,7 @@ pseudo-device strip: ifnet
 pseudo-device enc: ifnet
 pseudo-device bridge: ifnet, ether
 pseudo-device vlan: ifnet, ether
+pseudo-device carp: ifnet, ether
 pseudo-device sppp: ifnet
 pseudo-device faith: ifnet
 pseudo-device gif: ifnet
@@ -370,6 +380,8 @@ file	net/pf.c		pf	needs-flag
 file	net/pf_norm.c		pf
 file	net/pf_ioctl.c		pf
 file	net/pf_table.c		pf
+file	net/pf_osfp.c		pf
+file	net/pf_if.c		pf
 pseudo-device pflog: ifnet
 file	net/if_pflog.c		pflog	needs-flag
 pseudo-device pfsync: ifnet
@@ -521,6 +533,7 @@ file kern/kern_lock.c
 file kern/kern_lkm.c			lkm
 file kern/kern_malloc.c
 file kern/kern_malloc_debug.c		malloc_debug
+file kern/kern_rwlock.c
 file kern/kern_physio.c
 file kern/kern_proc.c
 file kern/kern_prot.c
@@ -531,7 +544,7 @@ file kern/kern_sysctl.c
 file kern/kern_synch.c
 file kern/kern_time.c
 file kern/kern_timeout.c
-file kern/kern_watchdog.c
+file kern/kern_watchdog.c		!small_kernel
 file kern/kern_xxx.c
 file kern/kgdb_stub.c			kgdb
 file kern/subr_autoconf.c
@@ -627,7 +640,7 @@ file net/bpf_filter.c			bpfilter | ppp
 file net/if.c
 file net/if_arcsubr.c			arc			needs-flag
 file net/if_atmsubr.c			atm			needs-flag
-file net/if_ethersubr.c			ether | fddi | token	needs-flag
+file net/if_ethersubr.c			ether | inet | fddi | token needs-flag
 file net/if_fddisubr.c			fddi
 file net/if_spppsubr.c			sppp
 file net/if_loop.c			loop
@@ -653,6 +666,7 @@ file net/slcompress.c			sl | ppp | strip
 file net/if_enc.c			enc			needs-count
 file net/if_gre.c			gre			needs-count
 #file net/if_ieee1394subr.c		ieee1394
+file net/if_ieee80211subr.c		wlan
 file netccitt/ccitt_proto.c		ccitt
 file netccitt/hd_debug.c		hdlc
 file netccitt/hd_input.c		hdlc
@@ -673,7 +687,7 @@ file netccitt/pk_subr.c			ccitt
 file netccitt/pk_timer.c		ccitt
 file netccitt/pk_usrreq.c		ccitt
 file netinet/if_atm.c			atm
-file netinet/if_ether.c			ether
+file netinet/if_ether.c			ether | inet
 #file netinet/if_ieee1394arp.c		ieee1394 & inet
 file netinet/in4_cksum.c		inet
 file netinet/igmp.c			inet
@@ -702,10 +716,12 @@ file netinet/ipsec_input.c		(inet | inet6) & ipsec
 file netinet/ipsec_output.c		(inet | inet6) & ipsec
 file netinet/ip_esp.c			inet & ipsec
 file netinet/ip_ah.c			inet & ipsec
+file netinet/ip_carp.c			carp			needs-count
 file netinet/ip_ipcomp.c		inet & ipsec
 file crypto/rijndael.c			(inet & ipsec) | crypto | uvm_swap_encrypt
 file crypto/rmd160.c			(inet & ipsec) | crypto
 file crypto/sha1.c			(inet & ipsec) | crypto
+file crypto/sha2.c			(inet & ipsec) | crypto
 file crypto/blf.c			(inet & ipsec) | crypto | vnd
 file crypto/cast.c			(inet & ipsec) | crypto
 file crypto/skipjack.c			(inet & ipsec) | crypto
@@ -718,6 +734,7 @@ file crypto/criov.c			(inet & ipsec) | crypto
 file crypto/cryptosoft.c		(inet & ipsec) | crypto
 file crypto/xform.c			(inet & ipsec) | crypto
 file crypto/deflate.c			(inet & ipsec) | crypto
+file crypto/arc4.c			wi | wlan
 file netatalk/aarp.c			netatalk
 file netatalk/at_control.c		netatalk
 file netatalk/at_proto.c		netatalk
@@ -808,6 +825,7 @@ file ufs/ffs/ffs_softdep.c		ffs_softupdates
 file ufs/mfs/mfs_vfsops.c		mfs
 file ufs/mfs/mfs_vnops.c		mfs
 file ufs/ufs/ufs_bmap.c			ffs | mfs | ext2fs
+file ufs/ufs/ufs_dirhash.c		ufs_dirhash & (ffs | mfs)
 file ufs/ufs/ufs_extattr.c		ffs | mfs
 file ufs/ufs/ufs_ihash.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_inode.c		ffs | mfs | ext2fs
@@ -831,6 +849,7 @@ file xfs/xfs_deb.c			xfs
 file xfs/xfs_dev-bsd.c			xfs
 file xfs/xfs_dev-common.c		xfs
 file xfs/xfs_message.c			xfs
+file xfs/xfs_node.c			xfs
 file xfs/xfs_node-bsd.c			xfs
 file xfs/xfs_syscalls-common.c		xfs
 file xfs/xfs_vfsops-bsd.c		xfs
@@ -893,6 +912,7 @@ file netinet6/in6_proto.c		inet6
 file netinet6/dest6.c			inet6
 file netinet6/frag6.c			inet6
 file netinet6/icmp6.c			inet6
+file netinet6/ip6_id.c			inet6
 file netinet6/ip6_input.c		inet6
 file netinet6/ip6_forward.c		inet6
 file netinet6/ip6_mroute.c		inet6

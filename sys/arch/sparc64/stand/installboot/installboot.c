@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/installboot/installboot.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/installboot/installboot.c,v 1.2.4.3 2004/02/19 10:50:01 niklas Exp $	*/
 /*	$NetBSD: installboot.c,v 1.8 2001/02/19 22:48:59 cgd Exp $ */
 
 /*-
@@ -69,7 +69,7 @@ char	*boot, *proto, *dev;
 #endif
 #else
 /* XXX: Hack in libc nlist works with both formats */
-#define SYMNAME(a)	__CONCAT("_",a)
+#define SYMNAME(a)	"_"a
 #endif
 
 struct nlist nl[] = {
@@ -369,7 +369,7 @@ int	devfd;
 	struct fs	*fs;
 	char		*buf;
 	daddr_t		blk, *ap;
-	struct dinode	*ip;
+	struct ufs1_dinode	*ip;
 	int		ndb;
 
 	/*
@@ -405,7 +405,7 @@ int	devfd;
 
 	blk = fsbtodb(fs, ino_to_fsba(fs, statbuf.st_ino));
 	devread(devfd, buf, blk, fs->fs_bsize, "inode");
-	ip = (struct dinode *)(buf) + ino_to_fsbo(fs, statbuf.st_ino);
+	ip = (struct ufs1_dinode *)(buf) + ino_to_fsbo(fs, statbuf.st_ino);
 
 	/*
 	 * Register filesystem block size.

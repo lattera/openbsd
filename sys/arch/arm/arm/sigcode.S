@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/sigcode.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/sigcode.S,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: sigcode.S,v 1.6 2003/10/05 19:44:58 matt Exp $	*/
 
 /*

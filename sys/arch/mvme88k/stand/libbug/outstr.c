@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/libbug/outstr.c,v 1.1.8.1 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libbug/outstr.c,v 1.1.8.2 2004/02/19 10:49:09 niklas Exp $	*/
 
 /*
  * bug routines -- assumes that the necessary sections of memory
@@ -6,6 +6,7 @@
  */
 #include <sys/types.h>
 #include <machine/prom.h>
+#include "prom.h"
 
 void
 mvmeprom_outstr(start, end)

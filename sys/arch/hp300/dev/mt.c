@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.4 2003/03/27 23:19:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.5 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: mt.c,v 1.8 1997/03/31 07:37:29 scottr Exp $	*/
 
 /* 
@@ -884,7 +884,7 @@ mtintr(arg)
 			if (i == 0)
 				sc->sc_flags |= MTF_HITEOF;
 			bp->b_resid = bp->b_bcount - i;
-			dlog(LOG_DEBUG, "%s intr: bcount %ld, resid %ld",
+			dlog(LOG_DEBUG, "%s intr: bcount %ld, resid %d",
 			    sc->sc_dev.dv_xname, bp->b_bcount, bp->b_resid);
 		} else {
 			tprintf(sc->sc_ttyp,

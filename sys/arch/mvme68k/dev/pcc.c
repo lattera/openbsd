@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcc.c,v 1.5.14.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcc.c,v 1.5.14.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -65,7 +65,7 @@ struct cfattach pcc_ca = {
 };
 
 struct cfdriver pcc_cd = {
-	NULL, "pcc", DV_DULL, 0
+	NULL, "pcc", DV_DULL
 };
 
 struct pccreg *sys_pcc = NULL;
@@ -105,11 +105,6 @@ pcc_scan(parent, child, args)
 	struct cfdata *cf = child;
 	struct pccsoftc *sc = (struct pccsoftc *)parent;
 	struct confargs oca;
-
-	if (parent->dv_cfdata->cf_driver->cd_indirect) {
-                printf(" indirect devices not supported\n");
-                return 0;
-        }
 
 	bzero(&oca, sizeof oca);
 	oca.ca_offset = cf->cf_loc[0];

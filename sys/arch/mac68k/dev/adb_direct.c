@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb_direct.c,v 1.10.8.2 2003/03/27 23:28:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb_direct.c,v 1.10.8.3 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: adb_direct.c,v 1.5 1997/04/21 18:04:28 scottr Exp $	*/
 
 /*  From: adb_direct.c 2.02 4/18/97 jpw */
@@ -2169,7 +2169,7 @@ mrg_pmintr(void)	/* we don't do this yet */
 }
 #endif
 
-/* caller should really use machine-independant version: getPramTime */
+/* caller should really use machine-independent version: getPramTime */
 /* this version does pseudo-adb access only */
 int 
 adb_read_date_time(unsigned long *time)
@@ -2223,7 +2223,7 @@ adb_read_date_time(unsigned long *time)
 	}
 }
 
-/* caller should really use machine-independant version: setPramTime */
+/* caller should really use machine-independent version: setPramTime */
 /* this version does pseudo-adb access only */
 int 
 adb_set_date_time(unsigned long time)

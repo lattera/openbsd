@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sysconreg.h,v 1.1.4.2 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sysconreg.h,v 1.1.4.3 2004/02/19 10:49:06 niklas Exp $ */
 
 /*
  * Memory map for SYSCON found in mvme188 board set.
- * No specific chips are found here like the PCCTWO 
+ * No specific chips are found here like the PCCTWO
  * on MVME1x7. All chips are included in this one
- * map/device so that devices don't run rampant in 
+ * map/device so that devices don't run rampant in
  * the config files.  I may change this later XXX smurph.
  */
 
@@ -17,8 +17,8 @@ struct sysconreg {
 	unsigned int *volatile ien3;
 	unsigned int *volatile ienall;
 	unsigned int *volatile ist;
-	unsigned int *volatile setswi; 
-	unsigned int *volatile clrswi; 
+	unsigned int *volatile setswi;
+	unsigned int *volatile clrswi;
 	unsigned int *volatile istate;
 	unsigned int *volatile clrint;
 	unsigned char *volatile global0;
@@ -42,7 +42,7 @@ struct sysconreg {
 	unsigned int *volatile cio_portb;
 	unsigned int *volatile cio_porta;
 	unsigned int *volatile cio_ctrl;
-}; 
+};
 
 extern struct sysconreg *sys_syscon;
 

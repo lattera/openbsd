@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/hfs.c,v 1.1.4.2 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/hfs.c,v 1.1.4.3 2004/02/19 10:49:04 niklas Exp $	*/
 /*	$NetBSD: hfs.c,v 1.1 2000/11/14 11:25:35 tsubai Exp $	*/
 
 /*-
@@ -37,9 +37,7 @@
 static int OF_fd;	/* XXX */
 
 int
-hfs_open(path, f)
-	char *path;
-	struct open_file *f;
+hfs_open(char *path, struct open_file *f)
 {
 	int chosen;
 	char bootpath[128], *cp;
@@ -72,18 +70,14 @@ hfs_open(path, f)
 }
 
 int
-hfs_close(f)
-	struct open_file *f;
+hfs_close(struct open_file *f)
 {
 	OF_close(OF_fd);
 	return 0;
 }
 
 int
-hfs_read(f, start, size, resid)
-	struct open_file *f;
-	void *start;
-	size_t size, *resid;
+hfs_read(struct open_file *f, void *start, size_t size, size_t *resid)
 {
 	int len;
 
@@ -95,20 +89,14 @@ hfs_read(f, start, size, resid)
 }
 
 int
-hfs_write(f, start, size, resid)
-	struct open_file *f;
-	void *start;
-	size_t size, *resid;
+hfs_write(struct open_file *f, void *start, size_t size, size_t *resid)
 {
 	printf("hfs_write\n");
 	return ENXIO;
 }
 
 off_t
-hfs_seek(f, offset, where)
-	struct open_file *f;
-	off_t offset;
-	int where;
+hfs_seek(struct open_file *f, off_t offset, int where)
 {
 	switch (where) {
 	case SEEK_SET:
@@ -121,9 +109,7 @@ hfs_seek(f, offset, where)
 }
 
 int
-hfs_stat(f, sb)
-	struct open_file *f;
-	struct stat *sb;
+hfs_stat(struct open_file *f, struct stat *sb)
 {
 	return 0;
 }

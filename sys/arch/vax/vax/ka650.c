@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka650.c,v 1.6.12.5 2003/06/07 11:14:48 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka650.c,v 1.6.12.6 2004/02/19 10:50:03 niklas Exp $	*/
 /*	$NetBSD: ka650.c,v 1.25 2001/04/27 15:02:37 ragge Exp $	*/
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -128,7 +128,7 @@ uvaxIII_memerr()
 		printf("cache 2 tag parity error: ");
 		if (time.tv_sec - cache2tag < 7) {
 			ka650setcache(CACHEOFF);
-			printf("cacheing disabled\n");
+			printf("caching disabled\n");
 		} else {
 			cache2tag = time.tv_sec;
 			printf("flushing cache\n");
@@ -218,7 +218,7 @@ uvaxIII_mchk(cmcf)
 	}
 	if (time.tv_sec - i < 7) {
 		ka650setcache(CACHEOFF);
-		printf(" parity error:	cacheing disabled\n");
+		printf(" parity error:	caching disabled\n");
 	} else {
 		printf(" parity error:	flushing cache\n");
 		ka650setcache(CACHEON);

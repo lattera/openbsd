@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/syscall.c,v 1.3 2004/02/12 04:11:42 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/syscall.c,v 1.3.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: syscall.c,v 1.24 2003/11/14 19:03:17 scw Exp $	*/
 
 /*-
@@ -90,9 +90,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
-
-#include "systrace.h"
-#include <dev/systrace.h>
+#ifdef SYSTRACE
+#include <sys/systrace.h>
+#endif
 
 #include <uvm/uvm_extern.h>
 
@@ -200,7 +200,7 @@ syscall_intern(struct proc *p)
 		return;
 	}
 #endif
-#if NSYSTRACE > 0
+#ifdef SYSTRACE
 	if (p->p_flag & P_SYSTRACE) {
 		p->p_md.md_syscall = syscall_fancy;
 		return;
@@ -289,7 +289,7 @@ syscall_plain(struct trapframe *frame, struct proc *p, u_int32_t insn)
 	scdebug_call(p, code, args);
 #endif
 	rval[0] = 0;
-	rval[1] = frame->tf_r1;
+	rval[1] = 0;
 	error = (*callp->sy_call)(p, args, rval);
 
 	switch (error) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_disasm.c,v 1.6.2.2 2003/05/13 19:41:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_disasm.c,v 1.6.2.3 2004/02/19 10:49:57 niklas Exp $	*/
 /*
  * Copyright (c) 1996, 2001, 2003 Dale Rahn. All rights reserved.
  *
@@ -229,6 +229,7 @@ const struct opcode opcodes[] = {
 	{ "",		0x0,		0x0, "" }
 
 };
+
 /* 13 * 4 = 4c */
 const struct opcode opcodes_13[] = {
 /* 0x13 << 2 */
@@ -391,6 +392,7 @@ const struct opcode opcodes_3a[] = {
 	{ "lwa",	0xfc000003, 0xe8000002, " %{D},${ds}${A}" },
 	{ "",		0x0,		0x0, "" }
 };
+
 /* 3b * 4 = ec */
 const struct opcode opcodes_3b[] = {
 	{ "fdivs",	0xfc00003e, 0xec000024, "%{RC} f%{D},f%{A},f%{B}" },
@@ -406,6 +408,7 @@ const struct opcode opcodes_3b[] = {
 	{ "fnmadds",	0xfc00003e, 0xec00003e, "%{RC} f%{D},f%{A},f%{C},f%{B}" },
 	{ "",		0x0,		0x0, "" }
 };
+
 /* 3e * 4 = f8 */
 const struct opcode opcodes_3e[] = {
 	{ "std",	0xfc000003, 0xf8000000, " %{D},${ds}${A}" },
@@ -643,7 +646,7 @@ disasm_process_field(u_int32_t addr, instr_t instr, char **ppfmt,
 					strlcat (disasm_buf, lbuf, bufsize);
 				} else {
 					snprintf(lbuf, sizeof (lbuf),
-					    "0x%x (%s+0x%x)", LI, name,
+					    "0x%x (%s+0x%lx)", LI, name,
 					    offset);
 					strlcat (disasm_buf, lbuf, bufsize);
 				}
@@ -681,7 +684,7 @@ disasm_process_field(u_int32_t addr, instr_t instr, char **ppfmt,
 					strlcat (disasm_buf, lbuf, bufsize);
 				} else {
 					snprintf(lbuf, sizeof (lbuf),
-					    "0x%x (%s+0x%x)", BD, name, offset);
+					    "0x%x (%s+0x%lx)", BD, name, offset);
 					strlcat (disasm_buf, lbuf, bufsize);
 				}
 			} else {

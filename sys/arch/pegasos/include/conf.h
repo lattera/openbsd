@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/conf.h,v 1.2 2004/01/22 21:41:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/conf.h,v 1.2.2.1 2004/02/19 10:49:55 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.2 1996/05/05 19:28:34 christos Exp $	*/
 
 /*

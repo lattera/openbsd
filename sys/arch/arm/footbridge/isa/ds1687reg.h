@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/isa/Attic/ds1687reg.h,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/isa/Attic/ds1687reg.h,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: ds1687reg.h,v 1.1 2002/02/10 12:26:01 chris Exp $	*/
 
 /*

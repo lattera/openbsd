@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8.4.4 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8.4.5 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: sbus.c,v 1.17 1997/06/01 22:10:39 pk Exp $ */
 
 /*
@@ -85,11 +85,16 @@ sbus_print(args, sbus)
 	void *args;
 	const char *sbus;
 {
-	register struct confargs *ca = args;
+	struct confargs *ca = args;
+	char *class;
 	static char *sl = "slave-only";
 
-	if (sbus)
+	if (sbus != NULL) {
 		printf("%s at %s", ca->ca_ra.ra_name, sbus);
+		class = getpropstring(ca->ca_ra.ra_node, "device_type");
+		if (*class != '\0')
+			printf(" class %s", class);
+	}
 	/* Check root node for 'slave-only' property */
 	if (getpropint(0, sl, 0) & (1 << ca->ca_slot))
 		printf(" %s", sl);

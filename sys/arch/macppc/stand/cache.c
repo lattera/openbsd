@@ -1,10 +1,8 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/cache.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/cache.c,v 1.1.4.2 2004/02/19 10:49:04 niklas Exp $	*/
 #define CACHELINESIZE   32                      /* For now              XXX */
 
 void
-syncicache(from, len)  
-	void *from;
-	int len;
+syncicache(void *from, int len)
 {
 	int l = len;
 	void *p = from;
@@ -20,4 +18,3 @@ syncicache(from, len)
 	} while ((len -= CACHELINESIZE) > 0);
 	asm volatile ("isync");
 }
-

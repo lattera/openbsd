@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/qdreg.h,v 1.1.8.2 2003/06/07 11:14:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/qdreg.h,v 1.1.8.3 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: qdreg.h,v 1.1 1998/03/21 10:02:39 ragge Exp $	*/
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.
@@ -329,7 +329,7 @@
 #define XMT_RDY_B	0x10
 #define RCV_RDY_B	0x20
 
-	/* status register bit defintions */
+	/* status register bit definitions */
 
 #define RCV_RDY 	0x01
 #define FIFO_FULL	0x02

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.17.8.5 2003/06/07 11:13:13 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.17.8.6 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: ite.c,v 1.32 1997/02/20 00:23:25 scottr Exp $	*/
 
 /*
@@ -971,7 +971,6 @@ iteopen(dev, mode, devtype, p)
 
 	if (ite_tty == NULL) {
 		tp = ite_tty = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = ite_tty;
 	if ((tp->t_state & (TS_ISOPEN | TS_XCLUDE)) == (TS_ISOPEN | TS_XCLUDE)

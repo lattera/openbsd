@@ -1,5 +1,5 @@
 /*	$NetBSD: mem.c,v 1.31 1996/05/03 19:42:19 christos Exp $	*/
-/*	$OpenBSD: src/sys/arch/i386/i386/mem.c,v 1.14.2.8 2003/06/07 11:11:37 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/mem.c,v 1.14.2.9 2004/02/19 10:48:42 niklas Exp $ */
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1982, 1986, 1990, 1993
@@ -90,7 +90,7 @@ mmopen(dev, flag, mode, p)
 		break;
 #ifdef APERTURE
 	case 4:
-	        if (suser(p->p_ucred, &p->p_acflag) != 0 || !allowaperture)
+	        if (suser(p, 0) != 0 || !allowaperture)
 			return (EPERM);
 
 		/* authorize only one simultaneous open() */
@@ -225,7 +225,7 @@ mmmmap(dev, off, prot)
 /* minor device 0 is physical memory */
 	case 0:
 		if ((u_int)off > ctob(physmem) &&
-		    suser(p->p_ucred, &p->p_acflag) != 0)
+		    suser(p, 0) != 0)
 			return -1;
 		return i386_btop((u_int)off);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/vigra.c,v 1.5.4.2 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/vigra.c,v 1.5.4.3 2004/02/19 10:49:58 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, Miodrag Vallat.
@@ -320,8 +320,8 @@ vigraattach(struct device *parent, struct device *self, void *args)
 	 * vertically (why? no other frame buffer does this in such a mode!),
 	 * so be lazy and clear the screen here too anyways...
 	 */
-	fbwscons_init(&sc->sc_sunfb, isconsole &&
-	    (sc->sc_sunfb.sf_width != 800 && sc->sc_sunfb.sf_width != 1280));
+	fbwscons_init(&sc->sc_sunfb, isconsole && (sc->sc_sunfb.sf_width != 800
+	    && sc->sc_sunfb.sf_width != 1280) ? 0 : RI_CLEAR);
 	fbwscons_setcolormap(&sc->sc_sunfb, vigra_setcolor);
 
 	vigra_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;

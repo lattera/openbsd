@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/locore.S,v 1.2 2004/01/15 03:26:36 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/locore.S,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*

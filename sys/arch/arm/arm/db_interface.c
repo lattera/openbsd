@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/db_interface.c,v 1.2 2004/02/01 06:10:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/db_interface.c,v 1.2.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.34 2003/10/26 23:11:15 chris Exp $	*/
 
 /* 

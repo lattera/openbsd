@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/pciide_machdep.c,v 1.1 2003/10/31 03:54:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/pciide_machdep.c,v 1.1.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: pciide_machdep.c,v 1.2 1999/02/19 18:01:27 mycroft Exp $	*/
 
 /*

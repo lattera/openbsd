@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/fiq_subr.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/fiq_subr.S,v 1.1.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: fiq_subr.S,v 1.3 2002/04/12 18:50:31 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb.c,v 1.10.10.2 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb.c,v 1.10.10.3 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: adb.c,v 1.13 1996/12/16 16:17:02 scottr Exp $	*/
 
 /*-
@@ -36,6 +36,7 @@ e*    notice, this list of conditions and the following disclaimer in the
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/poll.h>
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/systm.h>
@@ -540,23 +541,24 @@ adbioctl(dev, cmd, data, flag, p)
 
 
 int 
-adbselect(dev, rw, p)
+adbpoll(dev, events, p)
     dev_t dev;
-    int rw;
+    int events;
     struct proc *p;
 {
-	switch (rw) {
-	case FREAD:
+	int revents = 0;
+
+	if (events & (POLLIN | POLLRDNORM)) {
 		/* succeed if there is something to read */
 		if (adb_evq_len > 0)
-			return (1);
-		selrecord(p, &adb_selinfo);
-		break;
-
-	case FWRITE:
-		return (1);	/* always fails => never blocks */
-		break;
+			revents |= events & (POLLIN | POLLRDNORM);
+		else
+			selrecord(p, &adb_selinfo);
+	}
+	if (events & (POLLOUT | POLLWRNORM)) {
+		/* always fails => never blocks */
+		revents |= events & (POLLOUT | POLLWRNORM);
 	}
 
-	return (0);
+	return (revents);
 }

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/pegasos/conf/Attic/GENERIC,v 1.4 2004/02/04 20:06:21 drahn Exp $g
+#	$OpenBSD: src/sys/arch/pegasos/conf/Attic/GENERIC,v 1.4.2.1 2004/02/19 10:49:55 niklas Exp $g
 #
 # PPC GENERIC config file
 #
@@ -169,7 +169,6 @@ uyap*		at uhub? port ?			# Y@P firmware loader
 ugen*		at uhub? port ? configuration ? # USB Generic driver
 umass*		at uhub? port ? configuration ? # USB Mass Storage devices
 scsibus*	at umass?
-wi*		at uhub? port ?			# 802.11 USB
 kue*		at uhub? port ?			# Kawasaki KL5KUSB101B
 aue*		at uhub? port ?			# USB EtherNet 
 uplcom* 	at uhub? port ?			# I/O DATA USB-RSAQ2 serial

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/if_ze_vsbus.c,v 1.1.8.2 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/if_ze_vsbus.c,v 1.1.8.3 2004/02/19 10:50:03 niklas Exp $	*/
 /*      $NetBSD: if_ze_vsbus.c,v 1.5 2000/07/26 21:50:49 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -57,7 +57,7 @@
 #include <arch/vax/if/sgecvar.h>
 
 /*
- * Adresses.
+ * Addresses.
  */
 #define SGECADDR        0x20008000
 #define NISA_ROM        0x27800000

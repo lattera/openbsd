@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sab.c,v 1.1.2.6 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sab.c,v 1.1.2.7 2004/02/19 10:50:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -243,8 +243,8 @@ sab_attach(parent, self, aux)
 			return;
 		}
 	} else if (ebus_bus_map(sc->sc_bt, 0,
-	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_bh) != 0) {
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size, 0, 0,
+	    &sc->sc_bh) != 0) {
 		printf(": can't map register space\n");
 		return;
 	}
@@ -252,7 +252,7 @@ sab_attach(parent, self, aux)
 	BUS_SPACE_SET_FLAGS(sc->sc_bt, sc->sc_bh, BSHDB_NO_ACCESS);
 
 	sc->sc_ih = bus_intr_establish(sc->sc_bt, ea->ea_intrs[0],
-	    IPL_TTY, 0, sab_intr, sc);
+	    IPL_TTY, 0, sab_intr, sc, self->dv_xname);
 	if (sc->sc_ih == NULL) {
 		printf(": can't map interrupt\n");
 		return;
@@ -377,11 +377,6 @@ sabtty_attach(parent, self, aux)
 	int r;
 
 	sc->sc_tty = ttymalloc();
-	if (sc->sc_tty == NULL) {
-		printf(": failed to allocate tty\n");
-		return;
-	}
-	tty_attach(sc->sc_tty);
 	sc->sc_tty->t_oproc = sabtty_start;
 	sc->sc_tty->t_param = sabtty_param;
 
@@ -696,7 +691,7 @@ sabttyopen(dev, flags, mode, p)
 		else
 			tp->t_state &= ~TS_CARR_ON;
 	} else if ((tp->t_state & TS_XCLUDE) &&
-	    (!suser(p->p_ucred, &p->p_acflag))) {
+	    (!suser(p, 0))) {
 		return (EBUSY);
 	} else {
 		s = spltty();
@@ -862,7 +857,7 @@ sabttyioctl(dev, cmd, data, flags, p)
 		*((int *)data) = sc->sc_openflags;
 		break;
 	case TIOCSFLAGS:
-		if (suser(p->p_ucred, &p->p_acflag))
+		if (suser(p, 0))
 			error = EPERM;
 		else
 			sc->sc_openflags = *((int *)data) &

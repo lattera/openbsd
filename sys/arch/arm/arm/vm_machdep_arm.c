@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/Attic/vm_machdep_arm.c,v 1.1 2004/02/01 05:09:48 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/arm/arm/Attic/vm_machdep_arm.c,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $ */
 /*	$NetBSD: vm_machdep_arm.c,v 1.7 2003/06/29 22:28:08 fvdl Exp $	*/
 
 /*

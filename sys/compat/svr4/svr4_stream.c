@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stream.c,v 1.10.10.4 2002/03/28 11:28:07 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stream.c,v 1.10.10.5 2004/02/19 10:51:29 niklas Exp $	 */
 /*	$NetBSD: svr4_stream.c,v 1.19 1996/12/22 23:00:03 fvdl Exp $	 */
 
 /*
@@ -152,6 +152,9 @@ show_ioc(str, ioc)
 	len = ioc->len;
 	if (len > 1024)
 		len = 1024;
+
+	if (len <= 0)
+		return 0;
 
 	ptr = (u_char *) malloc(len, M_TEMP, M_WAITOK);	
 	uprintf("%s cmd = %ld, timeout = %d, len = %d, buf = %p { ",

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.5 2003/05/13 19:21:27 ho Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.6 2004/02/19 10:51:29 niklas Exp $	 */
 /*	$NetBSD: svr4_stat.c,v 1.21 1996/04/22 01:16:07 christos Exp $	 */
 
 /*
@@ -625,13 +625,13 @@ svr4_sys_systeminfo(p, v, retval)
 		break;
 
 	case SVR4_SI_SET_HOSTNAME:
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		if ((error = suser(p, 0)) != 0)
 			return error;
 		name = KERN_HOSTNAME;
 		return kern_sysctl(&name, 1, 0, 0, SCARG(uap, buf), rlen, p);
 
 	case SVR4_SI_SET_SRPC_DOMAIN:
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		if ((error = suser(p, 0)) != 0)
 			return error;
 		name = KERN_DOMAINNAME;
 		return kern_sysctl(&name, 1, 0, 0, SCARG(uap, buf), rlen, p);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.7 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.8 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2002 Michael Shalayeff
@@ -74,6 +74,7 @@ enum hppa_cpu_type {
 };
 extern enum hppa_cpu_type cpu_type;
 extern const char *cpu_typename;
+extern int cpu_hvers;
 #endif
 
 /*
@@ -120,14 +121,6 @@ extern const char *cpu_typename;
 #define	HPPA_SPA_ENABLE	0x00000020
 #define	HPPA_NMODSPBUS	64
 
-#define	CPU_CLOCKUPDATE() do {					\
-	register_t __itmr;					\
-	__asm __volatile("mfctl	%%cr16, %0" : "=r" (__itmr));	\
-	cpu_itmr = __itmr;					\
-	__itmr += cpu_hzticks;					\
-	__asm __volatile("mtctl	%0, %%cr16" :: "r" (__itmr));	\
-} while (0)
-
 #define	clockframe		trapframe
 #define	CLKF_PC(framep)		((framep)->tf_iioq_head)
 #define	CLKF_INTR(framep)	((framep)->tf_flags & TFF_INTR)
@@ -146,7 +139,6 @@ extern const char *cpu_typename;
 	(((t)? pdcache : fdcache) (HPPA_SID_KERNEL,(vaddr_t)(a),(s)))
 
 extern int want_resched;
-extern u_int cpu_itmr, cpu_hzticks;
 
 #define DELAY(x) delay(x)
 

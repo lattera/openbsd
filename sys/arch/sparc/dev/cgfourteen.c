@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgfourteen.c,v 1.4.4.7 2003/06/07 11:14:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgfourteen.c,v 1.4.4.8 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: cgfourteen.c,v 1.7 1997/05/24 20:16:08 pk Exp $ */
 
 /*
@@ -327,7 +327,7 @@ cgfourteenattach(parent, self, args)
 	cgfourteen_burner(sc, 1, 0);
 
 	sc->sc_sunfb.sf_ro.ri_hw = sc;
-	fbwscons_init(&sc->sc_sunfb, isconsole);
+	fbwscons_init(&sc->sc_sunfb, isconsole ? 0 : RI_CLEAR);
 	fbwscons_setcolormap(&sc->sc_sunfb, cgfourteen_setcolor);
 
 	cgfourteen_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;

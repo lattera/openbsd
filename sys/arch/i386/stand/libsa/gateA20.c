@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/gateA20.c,v 1.5.10.2 2001/10/31 03:01:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/gateA20.c,v 1.5.10.3 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Ported to boot 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
@@ -46,8 +46,7 @@
  * Gate A20 for high memory
  */
 void
-gateA20(on)
-	int on;
+gateA20(int on)
 {
 	if (ps2model == 0xf82 ||
 	    (inb(IO_KBD + KBSTATP) == 0xff && inb(IO_KBD + KBDATAP) == 0xff)) {

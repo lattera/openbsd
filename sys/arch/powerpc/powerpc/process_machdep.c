@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/process_machdep.c,v 1.3.8.3 2002/03/29 19:46:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/process_machdep.c,v 1.3.8.4 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.1 1996/09/30 16:34:53 ws Exp $	*/
 
 /*
@@ -38,9 +38,7 @@
 #include <machine/reg.h>
 
 int
-process_read_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+process_read_regs(struct proc *p, struct reg *regs)
 {
 	struct trapframe *tf = trapframe(p);
 
@@ -66,20 +64,16 @@ process_read_regs(p, regs)
  * Set the process's program counter.
  */
 int
-process_set_pc(p, addr)
-	struct proc *p;
-	caddr_t addr;
+process_set_pc(struct proc *p, caddr_t addr)
 {
 	struct trapframe *tf = trapframe(p);
 	
-	tf->srr0 = (int)addr;
+	tf->srr0 = (u_int32_t)addr;
 	return 0;
 }
 
 int
-process_sstep(p, sstep)
-	struct proc *p;
-	int sstep;
+process_sstep(struct proc *p, int sstep)
 {
 	struct trapframe *tf = trapframe(p);
 	
@@ -91,9 +85,7 @@ process_sstep(p, sstep)
 }
 
 int
-process_write_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+process_write_regs(struct proc *p, struct reg *regs)
 {
 	struct trapframe *tf = trapframe(p);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmes.c,v 1.6.14.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmes.c,v 1.6.14.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -54,7 +54,7 @@ struct cfattach vmes_ca = {
 };
 
 struct cfdriver vmes_cd = {
-	NULL, "vmes", DV_DULL, 0
+	NULL, "vmes", DV_DULL
 };
 
 int

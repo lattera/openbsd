@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.5.4.6 2003/06/07 11:14:45 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.5.4.7 2004/02/19 10:50:00 niklas Exp $	*/
 /*	$NetBSD: intr.c,v 1.39 2001/07/19 23:38:11 eeh Exp $ */
 
 /*
@@ -22,11 +22,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -107,7 +103,7 @@ strayintr(fp, vectored)
 	if ((fp->tf_pil == PIL_SER) /* && swallow_zsintrs */) return;
 
 	printf("stray interrupt ipl %u pc=%llx npc=%llx pstate=%b "
-	    "vecttored=%d\n", fp->tf_pil, (unsigned long long)fp->tf_pc,
+	    "vectored=%d\n", fp->tf_pil, (unsigned long long)fp->tf_pc,
 	    (unsigned long long)fp->tf_npc, fp->tf_tstate>>TSTATE_PSTATE_SHIFT,
 	    PSTATE_BITS, vectored);
 
@@ -141,6 +137,8 @@ softintr(fp)
 #endif
 	return (1);
 }
+
+int netisr;
 
 int
 softnet(fp)
@@ -240,7 +238,7 @@ intr_establish(level, ih)
 	}
 #endif
 
-	if (ih->ih_number <= 0 || ih->ih_number > MAXINTNUM)
+	if (ih->ih_number <= 0 || ih->ih_number >= MAXINTNUM)
 		panic("intr_establish: bad intr number %x", ih->ih_number);
 
 	q = intrlev[ih->ih_number];

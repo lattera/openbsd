@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.3 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.4 2004/02/19 10:49:06 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -65,7 +65,7 @@ struct cfattach memc_ca = {
 };
 
 struct cfdriver memc_cd = {
-	NULL, "memc", DV_DULL, 0
+	NULL, "memc", DV_DULL
 };
 
 /*int memcintr(struct frame *frame);*/
@@ -78,7 +78,7 @@ memcmatch(parent, vcf, args)
 	struct confargs *ca = args;
 	struct memcreg *memc = (struct memcreg *)ca->ca_vaddr;
 
-	if (badvaddr((vm_offset_t)memc, 4))
+	if (badvaddr((vaddr_t)memc, 4))
 		return (0);
 	if (memc->memc_chipid==MEMC_CHIPID || memc->memc_chipid==MCECC_CHIPID)
 		return (1);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/stand/common/if_le.c,v 1.2 1999/01/11 05:11:21 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/common/if_le.c,v 1.2.6.1 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: if_le.c,v 1.9 1997/01/30 10:32:54 thorpej Exp $	*/
 
 /*
@@ -589,7 +589,7 @@ le_put(desc, pkt, len)
 			if (stat & LE_SERR)
 				le_error(unit, "le_put(timeout)", stat);
 			if (stat & LE_INIT) {
-				printf("le%d: reset and retry packet\n");
+				printf("le%d: reset and retry packet\n", unit);
 				lewrcsr(sc, 0, LE_TINT);	/* sanity */
 				le_init();
 				goto le_put_loop;

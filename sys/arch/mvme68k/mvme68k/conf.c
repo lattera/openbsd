@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.7 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.8 2004/02/19 10:49:05 niklas Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -129,7 +129,7 @@ cdev_decl(fd);
 #define	cdev_mdev_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
 	dev_init(c,n,write), dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) enodev, 0, (dev_type_select((*))) enodev, \
+	(dev_type_stop((*))) enodev, 0, (dev_type_poll((*))) enodev, \
 	dev_init(c,n,mmap) }
 
 #include "lp.h"
@@ -202,7 +202,7 @@ struct cdevsw	cdevsw[] =
 	cdev_uk_init(NUK,uk),		/* 41: unknown SCSI */
 	cdev_ss_init(NSS,ss),           /* 42: SCSI scanner */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 43: Kernel symbols device */
-	cdev_lkm_dummy(),		/* 44 */
+	cdev_ch_init(NCH,ch),		/* 44: SCSI autochanger */
 	cdev_lkm_dummy(),		/* 45 */
 	cdev_lkm_dummy(),		/* 46 */
 	cdev_lkm_dummy(),		/* 47 */

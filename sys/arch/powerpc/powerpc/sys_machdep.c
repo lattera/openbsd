@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/sys_machdep.c,v 1.2.14.3 2002/03/29 19:46:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/sys_machdep.c,v 1.2.14.4 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.1 1996/09/30 16:34:56 ws Exp $	*/
 
 /*
@@ -37,10 +37,7 @@
 #include <sys/syscallargs.h>
 
 int
-sys_sysarch(p, v, retval)
-	struct proc *p;
-	void *v;
-	register_t *retval;
+sys_sysarch(struct proc *p, void *v, register_t *retval)
 {
 	/*
 	 * Currently no special system calls

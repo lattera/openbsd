@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.3 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.4 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -38,9 +38,7 @@ extern int debug;
 extern u_int cnvmem;
 
 static __inline int
-mp_checksum(ptr, len)
-	u_int8_t *ptr;
-	int len;
+mp_checksum(u_int8_t *ptr, int len)
 {
 	register int i, sum = 0;
 
@@ -54,10 +52,9 @@ mp_checksum(ptr, len)
 	return ((sum & 0xff) == 0);
 }
 
-struct mp_float *
-mp_probefloat(ptr, len)
-	u_int8_t *ptr;
-	int len;
+
+static mp_float_t *
+mp_probefloat(u_int8_t *ptr, int len)
 {
 	struct mp_float *mpp;
 	int i;
@@ -75,7 +72,7 @@ mp_probefloat(ptr, len)
 				printf("Found possible MP signature at: %p\n",
 				    mpp);
 #endif
-			if (mp_checksum(mpp, mpp->length * 16)) {
+			if (mp_checksum((u_int8_t *)mpp, mpp->length * 16)) {
 #ifdef DEBUG
 				if (debug)
 					printf("Found valid MP signature at: "
@@ -91,7 +88,7 @@ mp_probefloat(ptr, len)
 
 
 void
-smpprobe()
+smpprobe(void)
 {
 	struct mp_float *mp = NULL;
 

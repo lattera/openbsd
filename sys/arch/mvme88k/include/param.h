@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.8 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.9 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.
@@ -51,8 +51,6 @@
 #define  _MACHINE_ARCH  m88k
 #define  MACHINE_ARCH   "m88k"
 #define  MID_MACHINE    MID_M88K
-/* Older value for MID_MACHINE */
-#define	OLD_MID_MACHINE	151
 
 /*
  * Round p (pointer or byte index) down to a correctly-aligned value
@@ -66,7 +64,7 @@
 #define  ALIGN(p)		(((u_int)(p) + ALIGNBYTES) & ~ALIGNBYTES)
 #define  ALIGNED_POINTER(p,t)	((((u_long)(p)) & (sizeof(t)-1)) == 0)
 
-#define NBPG		4096		/* bytes/page */
+#define NBPG		(1 << PGSHIFT)	/* bytes/page */
 #define PGOFSET		(NBPG-1)	/* byte offset into page */
 #define PGSHIFT		12		/* LOG2(NBPG) */
 
@@ -74,36 +72,33 @@
 #define	PAGE_SIZE	(1 << PAGE_SHIFT)
 #define	PAGE_MASK	(PAGE_SIZE - 1)
 
-#define NPTEPG		(PAGE_SIZE / (sizeof(u_int)))
+#define NPTEPG		(PAGE_SIZE / (sizeof(pt_entry_t)))
 
 /*
- * 187 Bug uses the bottom 64k. We allocate ptes to map this into the
- * kernel. But when we link the kernel, we tell it to start linking
- * past this 64k. How does this change KERNBASE? XXX
+ * The Bug uses the bottom 64KB. The kernel will allocate PTEs to map this
+ * space, but the kernel must be linked with a start address past these 64KB.
  */
+#define KERNBASE	0x00000000	/* start of kernel virtual */
+#define	KERNTEXTOFF	0x00010000	/* start of kernel text */
 
-#define KERNBASE	0x0		/* start of kernel virtual */
-#define BTOPKERNBASE	((u_long)KERNBASE >> PGSHIFT)
-
-#define DEV_BSIZE	512
 #define DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
-#define BLKDEV_IOSIZE	2048		/* Should this be changed? XXX */
+#define DEV_BSIZE	(1 << DEV_BSHIFT)
+#define BLKDEV_IOSIZE	2048
 #define MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 
 #define SSIZE		1		/* initial stack size/NBPG */
 #define SINCR		1		/* increment of stack/NBPG */
-#define USPACE		ctob(UPAGES)
 
-#define UPAGES		8		/* pages of u-area */
-#define UADDR		0xEEE00000	/* address of u */
-#define UVPN		(UADDR>>PGSHIFT)	/* virtual page number of u */
-#define KERNELSTACK	(UADDR+UPAGES*NBPG)	/* top of kernel stack */
+#define UPAGES		3		/* pages of u-area */
+#define USPACE		(UPAGES * NBPG)
 
-#define PHYSIO_MAP_START	0xEEF00000
-#define PHYSIO_MAP_SIZE		0x00100000
-#define IOMAP_MAP_START		0xEF000000	/* VME etc */
-#define IOMAP_SIZE		0x018F0000
-#define NIOPMAP			32
+#define UADDR		0xeee00000	/* address of u */
+
+/*
+ * IO space
+ */
+
+#define	IOMAP_SIZE	0x01000000	/* roughly 0xff000000 - 0xffffffff */
 
 /*
  * Constants related to network buffer management.
@@ -137,18 +132,14 @@
 /* pages ("clicks") to disk blocks */
 #define ctod(x)			((x) << (PGSHIFT - DEV_BSHIFT))
 #define dtoc(x)			((x) >> (PGSHIFT - DEV_BSHIFT))
-#define dtob(x)			((x) << DEV_BSHIFT)
 
 /* pages to bytes */
 #define ctob(x)			((x) << PGSHIFT)
+#define btoc(x)			(((x) + PGOFSET) >> PGSHIFT)
 
-/* bytes to pages */
-#define btoc(x)			(((unsigned)(x) + PAGE_MASK) >> PGSHIFT)
-
-#define btodb(bytes)         /* calculates (bytes / DEV_BSIZE) */ \
-	((unsigned)(bytes) >> DEV_BSHIFT)
-#define dbtob(db)            /* calculates (db * DEV_BSIZE) */ \
-	((unsigned)(db) << DEV_BSHIFT)
+/* bytes to disk blocks */
+#define btodb(x)		((x) >> DEV_BSHIFT)
+#define dbtob(x)		((x) << DEV_BSHIFT)
 
 /*
  * Map a ``block device block'' to a file system block.
@@ -161,11 +152,10 @@
 /*
  * Get interrupt glue.
  */
-#include <machine/psl.h>
 #include <machine/intr.h>
 
 #ifdef   _KERNEL
-extern int delay(int);
+extern void delay(int);
 #define  DELAY(x)             delay(x)
 
 extern int cputyp;

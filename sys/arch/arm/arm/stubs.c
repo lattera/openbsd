@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/stubs.c,v 1.2 2004/02/01 06:10:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/stubs.c,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: stubs.c,v 1.14 2003/07/15 00:24:42 lukem Exp $	*/
 
 /*

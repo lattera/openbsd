@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/bugio.h,v 1.1.8.1 2003/05/13 19:41:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/bugio.h,v 1.1.8.2 2004/02/19 10:49:09 niklas Exp $	*/
 /*
  * Copyright (c) 2002, Miodrag Vallat.
  * All rights reserved.
@@ -41,5 +41,7 @@ void mvmeprom_outchar(int);
 void mvmeprom_return(void);
 void mvmeprom_rtc_rd(struct mvmeprom_time *);
 struct bugenviron *mvmeprom_envrd(void);
+
+void buginit(void);
 
 #endif /* _MACHINE_BUGIO_H_ */

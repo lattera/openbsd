@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.13.4.3 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.13.4.4 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: si.c,v 1.38 1997/08/27 11:24:20 bouyer Exp $	*/
 
 /*-
@@ -72,7 +72,7 @@
  * and Chris Torek for bits of insight needed along the way.  Thanks to
  * David Gilbert and Andrew Gillham who risked filesystem life-and-limb
  * for the sake of testing.  Andrew Gillham helped work out the bugs
- * the the 4/100 DMA code.
+ * in the 4/100 DMA code.
  */
 
 /*

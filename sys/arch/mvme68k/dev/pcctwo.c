@@ -1,5 +1,5 @@
 
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcctwo.c,v 1.6.2.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcctwo.c,v 1.6.2.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -64,7 +64,7 @@ struct cfattach pcctwo_ca = {
 };
 
 struct cfdriver pcctwo_cd = {
-	NULL, "pcctwo", DV_DULL, 0
+	NULL, "pcctwo", DV_DULL
 };
 
 struct pcctworeg *sys_pcc2 = NULL;
@@ -108,11 +108,6 @@ pcctwo_scan(parent, child, args)
 	struct cfdata *cf = child;
 	struct pcctwosoftc *sc = (struct pcctwosoftc *)parent;
 	struct confargs oca;
-
-	if (parent->dv_cfdata->cf_driver->cd_indirect) {
-                printf(" indirect devices not supported\n");
-                return 0;
-        }
 
 	bzero(&oca, sizeof oca);
 	oca.ca_offset = cf->cf_loc[0];

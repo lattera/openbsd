@@ -1,7 +1,7 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/mkboot/Makefile,v 1.2.4.2 2003/03/27 23:26:54 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/mkboot/Makefile,v 1.2.4.3 2004/02/19 10:48:41 niklas Exp $
 
 MAN=	mkboot.8
-MANSUBDIR=/hppa
+MANSUBDIR=hppa
 
 .if ${MACHINE} == "hppa"
 PROG=	mkboot

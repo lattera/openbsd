@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.5 2004/02/19 10:49:04 niklas Exp $	*/
 /*	$NetBSD: vga_pci.c,v 1.4 1996/12/05 01:39:38 cgd Exp $	*/
 
 /*
@@ -61,7 +61,6 @@ struct vgafb_pci_softc {
  
 	pcitag_t sc_pcitag;		/* PCI tag, in case we need it. */
 	struct vgafb_config *sc_vc;	/* VGA configuration */ 
-	int nscreens;
 };
 
 int vgafb_pci_probe(struct pci_attach_args *pa, int id, u_int32_t *ioaddr,
@@ -89,12 +88,9 @@ struct vgafb_config vgafb_pci_console_vc;
 #endif
 
 int
-vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, mmiosize)
-	struct pci_attach_args *pa;
-	int id;
-	u_int32_t *ioaddr, *iosize;
-	u_int32_t *memaddr, *memsize, *cacheable;
-	u_int32_t *mmioaddr, *mmiosize;
+vgafb_pci_probe(struct pci_attach_args *pa, int id, u_int32_t *ioaddr,
+    u_int32_t *iosize, u_int32_t *memaddr, u_int32_t *memsize,
+    u_int32_t *cacheable, u_int32_t *mmioaddr, u_int32_t *mmiosize)
 {
 	u_long addr;
 	u_int32_t size, tcacheable;
@@ -137,29 +133,43 @@ vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, m
 			if (retval) {
 				return 0;
 			}
-			if (size == 0) {
+			if (size == 0 || addr == 0) {
 				/* ignore this entry */
-			} else if (size <= (1024 * 1024)) {
-#ifdef DEBUG_VGAFB
-	printf("vgafb_pci_probe: mem %x addr %x size %x iosize %x\n",
-		i, addr, size, *iosize);
-#endif
-				if (*mmiosize == 0) {
-					/* this is mmio, not memory */
+			} else if (*memsize == 0) {
+				/*
+				 * first memory slot found goes into memory,
+				 * this is for the case of no mmio
+				 */
+				*memaddr = addr;
+				*memsize = size;
+				*cacheable = tcacheable;
+			} else {
+				/*
+				 * Oh, we have a second 'memory' 
+				 * region, is this region the vga memory
+				 * or mmio, we guess that memory is
+				 * the larger of the two.
+				 */ 
+				 if (*memaddr > size) {
+					/* this is the mmio */
 					*mmioaddr = addr;
+					/* ATI driver maps 0x80000 mmio, grr */
 					if (size < 0x80000) {
-						/* ATI driver maps 0x80000, grr */
 						size = 0x80000;
 					}
 					*mmiosize = size;
-					/* need skew in here for io memspace */
-				}
-			} else {
-				if (*memsize == 0) {
+				 } else {
+					/* this is the memory */
+					*mmioaddr = *memaddr;
 					*memaddr = addr;
+					*mmiosize = *memsize;
 					*memsize = size;
 					*cacheable = tcacheable;
-				}
+					/* ATI driver maps 0x80000 mmio, grr */
+					if (*mmiosize < 0x80000) {
+						*mmiosize = 0x80000;
+					}
+				 }
 			}
 		}
 	}
@@ -305,9 +315,7 @@ vgafb_pci_match(parent, match, aux)
 }
 
 void
-vgafb_pci_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+vgafb_pci_attach(struct device *parent, struct device  *self, void *aux)
 {
 	struct pci_attach_args *pa = aux;
 	struct vgafb_pci_softc *sc = (struct vgafb_pci_softc *)self;
@@ -345,12 +353,12 @@ vgafb_pci_attach(parent, self, aux)
 
 	sc->sc_pcitag = pa->pa_tag;
 
-	if (iosize == 0) {
+	if (iosize == 0)
 		printf (", no io");
-	}
-	if (mmiosize != 0) {
+
+	if (mmiosize != 0)
 		printf (", mmio");
-	}
+
 	printf("\n");
 
 	vgafb_wsdisplay_attach(self, vc, console);
@@ -358,13 +366,9 @@ vgafb_pci_attach(parent, self, aux)
 }
 
 void
-vgafb_pci_console(iot, ioaddr, iosize, memt, memaddr, memsize,
-		pc, bus, device, function)
-	bus_space_tag_t iot, memt;
-	u_int32_t memaddr, memsize;
-	u_int32_t ioaddr, iosize;
-	pci_chipset_tag_t pc;
-	int bus, device, function;
+vgafb_pci_console(bus_space_tag_t iot, u_int32_t ioaddr, u_int32_t iosize,
+    bus_space_tag_t  memt, u_int32_t memaddr, u_int32_t memsize,
+    pci_chipset_tag_t pc, int bus, int device, int function)
 {
 	struct vgafb_config *vc = &vgafb_pci_console_vc;
 	u_int32_t mmioaddr;
@@ -397,15 +401,11 @@ vgafb_pci_console(iot, ioaddr, iosize, memt, memaddr, memsize,
 		ioaddr, iosize, memaddr, memsize, mmioaddr, mmiosize);
 
 	vgafb_cnattach(iot, memt, pc, bus, device, function);
+	vc->nscreens++;
 }
 
 int
-vgafbpciioctl(v, cmd, data, flag, p)
-	void *v;
-	u_long cmd;
-	caddr_t data;
-	int flag;
-	struct proc *p;
+vgafbpciioctl(void *v, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
 	struct vgafb_pci_softc *sc = v;
 
@@ -413,10 +413,7 @@ vgafbpciioctl(v, cmd, data, flag, p)
 }
 
 paddr_t
-vgafbpcimmap(v, offset, prot)
-	void *v;
-	off_t offset;
-	int prot;
+vgafbpcimmap(void *v, off_t offset, int prot)
 {
 	struct vgafb_pci_softc *sc = v;
 
@@ -424,49 +421,38 @@ vgafbpcimmap(v, offset, prot)
 }
 
 int
-vgafb_alloc_screen(v, type, cookiep, curxp, curyp, attrp)
-	void *v;
-	const struct wsscreen_descr *type;
-	void **cookiep;
-	int *curxp, *curyp;
-	long *attrp;
+vgafb_alloc_screen(void *v, const struct wsscreen_descr *type, void **cookiep,
+    int *curxp, int *curyp, long *attrp)
 {
-	struct vgafb_pci_softc *sc = v;
+	struct vgafb_config *vc = v;
 	long defattr;
 
-	if (sc->nscreens > 0)
+	if (vc->nscreens > 0)
 		return (ENOMEM);
   
-	*cookiep = &sc->sc_vc->dc_rinfo; /* one and only for now */
+	*cookiep = &vc->dc_rinfo; /* one and only for now */
 	*curxp = 0;
 	*curyp = 0;
-	sc->sc_vc->dc_rinfo.ri_ops.alloc_attr(&sc->sc_vc->dc_rinfo,
-	    0, 0, 0, &defattr);
+	vc->dc_rinfo.ri_ops.alloc_attr(&vc->dc_rinfo, 0, 0, 0, &defattr);
 	*attrp = defattr;
-	sc->nscreens++; 
+	vc->nscreens++; 
 	return (0);
 }
   
 void
-vgafb_free_screen(v, cookie)
-	void *v;
-	void *cookie;
+vgafb_free_screen(void *v, void *cookie)
 {
-	struct vgafb_pci_softc *sc = v;
+	struct vgafb_config *vc = v;
 
-	if (sc->sc_vc == &vgafb_pci_console_vc)
+	if (vc == &vgafb_pci_console_vc)
 		panic("vgafb_free_screen: console");
 
-	sc->nscreens--;
+	vc->nscreens--;
 }
         
 int
-vgafb_show_screen(v, cookie, waitok, cb, cbarg)
-	void *v;
-	void *cookie;
-	int waitok;
-	void (*cb)(void *, int, int);
-	void *cbarg;
+vgafb_show_screen(void *v, void *cookie, int waitok,
+    void (*cb)(void *, int, int), void *cbarg)
 {
 
 	return (0);

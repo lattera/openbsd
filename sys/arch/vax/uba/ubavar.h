@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ubavar.h,v 1.7.12.5 2003/06/07 11:14:48 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ubavar.h,v 1.7.12.6 2004/02/19 10:50:03 niklas Exp $	*/
 /*	$NetBSD: ubavar.h,v 1.21 1999/01/19 21:04:48 ragge Exp $	*/
 
 /*
@@ -72,7 +72,7 @@ struct	uba_softc {
 	SIMPLEQ_HEAD(, uba_unit) uh_resq;	/* resource wait chain */
 	int	uh_type;		/* type of adaptor */
 	struct	uba_regs *uh_uba;	/* virt addr of uba adaptor regs */
-	struct	pte *uh_mr;		/* start of page map */
+	pt_entry_t *uh_mr;		/* start of page map */
 	int	uh_memsize;		/* size of uba memory, pages */
 	caddr_t	uh_iopage;		/* start of uba io page */
 	void	(**uh_reset)(int);	/* UBA reset function array */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/arc4.h,v 1.1 2003/10/07 07:07:14 markus Exp $	*/
+/*	$OpenBSD: src/sys/crypto/arc4.h,v 1.1.2.1 2004/02/19 10:51:30 niklas Exp $	*/
 /*
  * Copyright (c) 2003 Markus Friedl <markus@openbsd.org>
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/consinit.c,v 1.4.4.3 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/consinit.c,v 1.4.4.4 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: consinit.c,v 1.9 2000/10/20 05:32:35 mrg Exp $	*/
 
 /*-
@@ -161,9 +161,7 @@ prom_cnpollc(dev, on)
 {
 	if (on) {
                 /* Entering debugger. */
-#if NFB > 0
                 fb_unblank();
-#endif  
 	} else {
                 /* Resuming kernel. */
 	}

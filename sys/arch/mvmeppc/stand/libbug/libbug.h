@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libbug/Attic/libbug.h,v 1.1.2.1 2002/03/28 10:36:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libbug/Attic/libbug.h,v 1.1.2.2 2004/02/19 10:49:10 niklas Exp $ */
+
+#include <machine/prom.h>
 
 /*
  * prototypes and such.   note that get/put char are in stand.h
@@ -27,3 +29,8 @@ int	mvmeprom_netctrl_reset(u_char, u_char);
 extern struct mvmeprom_args bugargs;
 
 void	bugexec(void (*)());
+
+/* Invoke the BUG */
+#define MVMEPROM_CALL(x)	\
+	__asm__ __volatile__ ( __CONCAT("addi %r10,%r0,",__STRING(x)) ); \
+	__asm__ __volatile__ ("sc");

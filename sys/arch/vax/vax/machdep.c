@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.12 2003/06/07 11:14:48 ho Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.13 2004/02/19 10:50:03 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -164,6 +164,8 @@ struct vm_map *phys_map = NULL;
 #ifdef DEBUG
 int iospace_inited = 0;
 #endif
+
+void cpu_dumpconf(void);
 
 void
 cpu_startup()
@@ -821,7 +823,10 @@ allocsys(v)
  * to skip instructions.
  */
 
-long skip_operand(long ib, int size);
+long skip_operand(long, int);
+long skip_opcode(long);
+
+static u_int8_t get_byte(long);
 
 static __inline__ u_int8_t
 get_byte(ib)
@@ -867,7 +872,7 @@ skip_opcode(ib)
 			}
 			break;
 
-		case 'a':	/* absolute adressing mode */
+		case 'a':	/* absolute addressing mode */
 			/* FALLTHROUGH */
 		default:
 			switch (*(++argp)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14.2.4 2003/05/13 19:41:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14.2.5 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,2000 Michael Shalayeff
@@ -82,7 +82,7 @@ static __inline register_t ldsid(vaddr_t p) {
 #define	mfcpu(r,v)	/* XXX for the lack of the mnemonics */		\
 	__asm __volatile(".word	%1\n\t"					\
 			 "copy	%%r22, %0"				\
-	    : "=r" (v) : "i" ((0x14000600 | ((r) << 21) | ((22) << 16)))\
+	    : "=r" (v) : "i" ((0x14001400 | ((r) << 21) | (22)))	\
 	    : "r22")
 
 #define mtsp(v,r) __asm __volatile("mtsp %0,%1":: "r" (v), "i" (r))
@@ -215,6 +215,7 @@ void fcacheall(void);
 void ptlball(void);
 int btlb_insert(pa_space_t space, vaddr_t va, paddr_t pa, vsize_t *lenp, u_int prot);
 hppa_hpa_t cpu_gethpa(int n);
+void eaio_l2(int i);
 #endif
 
 #endif /* _MACHINE_CPUFUNC_H_ */

@@ -1,7 +1,7 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/boot/Makefile,v 1.9.2.3 2003/05/13 19:41:04 ho Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/boot/Makefile,v 1.9.2.4 2004/02/19 10:48:40 niklas Exp $
 
 MAN=	boot.8
-MANSUBDIR=/hppa
+MANSUBDIR=hppa
 MLINKS=	boot.8 boot.conf.8
 S	=${.CURDIR}/../../../..
 CLEANFILES+=	boot.gdb boot.map boot.lif

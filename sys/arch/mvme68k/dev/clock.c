@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.3.16.3 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.3.16.4 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -81,13 +81,11 @@
 #endif
 #if NPCCTWO > 0
 #include <mvme68k/dev/pcctworeg.h>
+#include <mvme68k/dev/vme.h>
+extern struct vme2reg *sys_vme2;
 #endif
 #if NMC > 0
 #include <mvme68k/dev/mcreg.h>
-#endif
-
-#if defined(GPROF)
-#include <sys/gmon.h>
 #endif
 
 /*
@@ -115,7 +113,7 @@ struct cfattach clock_ca = {
 };
 
 struct cfdriver clock_cd = {
-	NULL, "clock", DV_DULL, 0
+	NULL, "clock", DV_DULL
 };
 
 int	clockintr(void *);
@@ -406,13 +404,24 @@ delay(us)
 #if NPCCTWO > 0
 	case BUS_PCCTWO:
 		/*
-		 * XXX MVME167 doesn't have a 3rd free-running timer,
-		 * so we use a stupid loop. Fix the code to watch t1:
-		 * the profiling timer.
+		 * Use the first VMEChip2 timer in polling mode whenever
+		 * possible. However, since clock attaches before vme,
+		 * use a tight loop if necessary.
 		 */
-		c = 4 * us;
-		while (--c > 0)
-			;
+		if (sys_vme2 != NULL) {
+			sys_vme2->vme2_t1cmp = 0xffffffff;
+			sys_vme2->vme2_t1count = 0;
+			sys_vme2->vme2_tctl |= VME2_TCTL_CEN;
+
+			while (sys_vme2->vme2_t1count < us)
+				;
+
+			sys_vme2->vme2_tctl &= ~VME2_TCTL_CEN;
+		} else {
+			c = 4 * us;
+			while (--c > 0)
+				;
+		}
 		break;
 #endif
 	}

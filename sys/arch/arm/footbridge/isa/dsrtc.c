@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/isa/Attic/dsrtc.c,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/isa/Attic/dsrtc.c,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: dsrtc.c,v 1.5 2003/03/23 14:12:26 chris Exp $	*/
 
 /*

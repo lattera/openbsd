@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_uba.h,v 1.4.12.2 2003/06/07 11:14:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_uba.h,v 1.4.12.3 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: if_uba.h,v 1.6 1996/08/20 14:07:50 ragge Exp $	*/
 
 /*
@@ -68,7 +68,7 @@ struct	ifubinfo {
 	short	iff_flags;			/* used during uballoc's */
 	short	iff_hlen;			/* local net header length */
 	struct	uba_regs *iff_uba;		/* uba adaptor regs, in vm */
-	struct	pte *iff_ubamr;			/* uba map regs, in vm */
+	pt_entry_t *iff_ubamr;			/* uba map regs, in vm */
 	struct	uba_softc *iff_softc;		/* uba */
 };
 
@@ -82,7 +82,7 @@ struct ifrw {
 #define	IFRW_W	0x01				/* is a transmit buffer */
 	int	ifrw_info;			/* value from ubaalloc */
 	int	ifrw_proto;			/* map register prototype */
-	struct	pte *ifrw_mr;			/* base of map registers */
+	pt_entry_t *ifrw_mr;			/* base of map registers */
 };
 
 /*
@@ -91,7 +91,7 @@ struct ifrw {
 struct ifxmt {
 	struct	ifrw ifrw;
 	caddr_t	ifw_base;			/* virt addr of buffer */
-	struct	pte ifw_wmap[IF_MAXNUBAMR];	/* base pages for output */
+	pt_entry_t ifw_wmap[IF_MAXNUBAMR];	/* base pages for output */
 	struct	mbuf *ifw_xtofree;		/* pages being dma'd out */
 	short	ifw_xswapd;			/* mask of clusters swapped */
 	short	ifw_nmr;			/* number of entries in wmap */

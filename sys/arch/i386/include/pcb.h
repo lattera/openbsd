@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.5 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.6 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: pcb.h,v 1.21 1996/01/08 13:51:42 mycroft Exp $	*/
 
 /*-
@@ -61,16 +61,16 @@ struct pcb {
 #define	pcb_fs	pcb_tss.tss_fs
 #define	pcb_gs	pcb_tss.tss_gs
 #define	pcb_ldt_sel	pcb_tss.tss_ldt
-        union	descriptor *pcb_ldt;	/* per process (user) LDT */
-        int	pcb_ldt_len;		/*      number of LDT entries */
+	int	pcb_tss_sel;
+	union	descriptor *pcb_ldt;	/* per process (user) LDT */
+	int	pcb_ldt_len;		/*      number of LDT entries */
 	int	pcb_cr0;		/* saved image of CR0 */
-	union	fsave87 pcb_savefpu;	/* floating point state for 287/387 */
+	int	pcb_pad[2];		/* savefpu on 16-byte boundary */
+	union	savefpu pcb_savefpu;	/* floating point state for FPU */
 	struct	emcsts pcb_saveemc;	/* Cyrix EMC state */
 /*
  * Software pcb (extension)
  */
-	int	pcb_flags;
-#define	PCB_USER_LDT	0x01		/* has user-set LDT */
 	caddr_t	pcb_onfault;		/* copyin/out fault recovery */
 	int	vm86_eflags;		/* virtual eflags for vm86 mode */
 	int	vm86_flagmask;		/* flag mask for vm86 mode */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pciprobe.c,v 1.3.4.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pciprobe.c,v 1.3.4.3 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -35,7 +35,7 @@
 #define PCI_SIG 0x20494350		/* PCI Signature */
 
 void
-pciprobe()
+pciprobe(void)
 {
 	bios_pciinfo_t bpi;
 	u_int32_t hw_chars, rev, rc, sig;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.8 2003/03/27 23:42:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.9 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -83,9 +83,8 @@ ppc_dumpbt(struct trapframe *frame)
 	u_int32_t addr;
 	/* dumpframe is defined in db_trace.c */
 	addr=frame->fixreg[1];
-	while (addr != 0) {
+	while (addr != 0)
 		addr = db_dumpframe(addr, db_printf);
-	}
 	return;
 }
 #endif
@@ -114,17 +113,19 @@ save_vec(struct proc *p)
 	struct pcb *pcb = &p->p_addr->u_pcb;
 	struct vreg *pcb_vr = pcb->pcb_vr;
 	u_int32_t oldmsr, msr;
-	u_int32_t tmp;
+
+	if (p == NULL)
+		return;
+
 	/* first we enable vector so that we dont throw an exception
 	 * in kernel mode
 	 */
-	__asm__ volatile ("mfmsr %0" : "=r" (oldmsr));
+	oldmsr = ppc_mfmsr();
 	msr = oldmsr | PSL_VEC;
-	__asm__ volatile ("mtmsr %0" :: "r" (msr));
+	ppc_mtmsr(msr);
 	__asm__ volatile ("sync;isync");
 
-	__asm__ volatile ("mfspr %0, 256" : "=r" (tmp));
-	pcb->pcb_vr->vrsave = tmp;
+	pcb->pcb_vr->vrsave = ppc_mfvrsave();
 
 #define STR(x) #x
 #define SAVE_VEC_REG(reg, addr)   \
@@ -166,7 +167,7 @@ save_vec(struct proc *p)
 	SAVE_VEC_REG(0,&pcb_vr->vscr);
 
 	/* fix kernel msr back */
-	__asm__ volatile ("mfmsr %0" :: "r" (oldmsr));
+	ppc_mtmsr(oldmsr);
 }
 
 /*
@@ -178,7 +179,6 @@ enable_vec(struct proc *p)
 	struct pcb *pcb = &p->p_addr->u_pcb;
 	struct vreg *pcb_vr = pcb->pcb_vr;
 	u_int32_t oldmsr, msr;
-	u_int32_t tmp;
 
 	/* If this is the very first altivec instruction executed
 	 * by this process, create a context.
@@ -191,9 +191,9 @@ enable_vec(struct proc *p)
 	/* first we enable vector so that we dont throw an exception
 	 * in kernel mode
 	 */
-	__asm__ volatile ("mfmsr %0" : "=r" (oldmsr));
+	oldmsr = ppc_mfmsr();
 	msr = oldmsr | PSL_VEC;
-	__asm__ volatile ("mtmsr %0" :: "r" (msr));
+	ppc_mtmsr(msr);
 	__asm__ volatile ("sync;isync");
 
 #define LOAD_VEC_REG(reg, addr)   \
@@ -201,8 +201,7 @@ enable_vec(struct proc *p)
 
 	LOAD_VEC_REG(0, &pcb_vr->vscr);
 	__asm__ volatile ("mtvscr 0");
-	tmp = pcb_vr->vrsave;
-	__asm__ volatile ("mtspr 256, %0" :: "r" (tmp));
+	ppc_mtvrsave(pcb_vr->vrsave);
 
 	LOAD_VEC_REG(0, &pcb_vr->vreg[0]);
 	LOAD_VEC_REG(1, &pcb_vr->vreg[1]);
@@ -238,12 +237,12 @@ enable_vec(struct proc *p)
 	LOAD_VEC_REG(31, &pcb_vr->vreg[31]);
 
 	/* fix kernel msr back */
-	__asm__ volatile ("mfmsr %0" :: "r" (oldmsr));
+	ppc_mtmsr(oldmsr);
 }
 #endif /* ALTIVEC */
 
 static __inline void
-userret(register struct proc *p, int pc, u_quad_t oticks)
+userret(struct proc *p, int pc, u_quad_t oticks)
 {
 	int sig;
 
@@ -252,10 +251,7 @@ userret(register struct proc *p, int pc, u_quad_t oticks)
 		postsig(sig);
 	p->p_priority = p->p_usrpri;
 	if (want_resched) {
-
-		/*
-		 * We're being preempted.
-		 */
+		/* We're being preempted.  */
 		preempt(NULL);
 		while ((sig = CURSIG(p)))
 			postsig(sig);
@@ -274,8 +270,7 @@ userret(register struct proc *p, int pc, u_quad_t oticks)
 }
 
 void
-trap(frame)
-	struct trapframe *frame;
+trap(struct trapframe *frame)
 {
 	struct proc *p = curproc;
 	int type = frame->exc;
@@ -331,17 +326,16 @@ trap(frame)
 				va &= ADDR_PIDX | ADDR_POFF;
 				va |= user_sr << ADDR_SR_SHIFT;
 				map = &p->p_vmspace->vm_map;
-				if (pte_spill_v(map->pmap, va, frame->dsisr, 0)) {
+				if (pte_spill_v(map->pmap, va, frame->dsisr, 0))
 					return;
-				}
 			}
 			if (frame->dsisr & DSISR_STORE)
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
 			else
 				ftype = VM_PROT_READ;
-			if (uvm_fault(map, trunc_page(va), 0, ftype) == 0) {
+			if (uvm_fault(map, trunc_page(va), 0, ftype) == 0)
 				return;
-			}
+
 			if ((fb = p->p_addr->u_pcb.pcb_onfault)) {
 				p->p_addr->u_pcb.pcb_onfault = 0;
 				frame->srr0 = fb->pc;		/* PC */
@@ -359,12 +353,10 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 		{
 			int ftype, vftype;
 			
+			/* Try spill handler first */
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->dar, frame->dsisr, 0))
-			{
-				/* fault handled by spill handler */
+			    frame->dar, frame->dsisr, 0))
 				break;
-			}
 
 			if (frame->dsisr & DSISR_STORE) {
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
@@ -372,9 +364,9 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 			} else
 				vftype = ftype = VM_PROT_READ;
 			if (uvm_fault(&p->p_vmspace->vm_map,
-				     trunc_page(frame->dar), 0, ftype) == 0) {
+				     trunc_page(frame->dar), 0, ftype) == 0)
 				break;
-			}
+
 #if 0
 printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 #endif
@@ -389,17 +381,15 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 		{
 			int ftype;
 			
+			/* Try spill handler */
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->srr0, 0, 1))
-			{
-				/* fault handled by spill handler */
+			    frame->srr0, 0, 1))
 				break;
-			}
+
 			ftype = VM_PROT_READ | VM_PROT_EXECUTE;
 			if (uvm_fault(&p->p_vmspace->vm_map,
-				     trunc_page(frame->srr0), 0, ftype) == 0) {
+			    trunc_page(frame->srr0), 0, ftype) == 0)
 				break;
-			}
 		}
 #if 0
 printf("isi iar %x lr %x\n", frame->srr0, frame->lr);
@@ -457,8 +447,10 @@ printf("isi iar %x lr %x\n", frame->srr0, frame->lr);
 			n = NARGREG - (params - (frame->fixreg + FIRSTARG));
 			if (argsize > n * sizeof(register_t)) {
 				bcopy(params, args, n * sizeof(register_t));
-				if ((error = copyin(MOREARGS(frame->fixreg[1]),
-				   args + n, argsize - n * sizeof(register_t)))) {
+
+				error = copyin(MOREARGS(frame->fixreg[1]),
+				   args + n, argsize - n * sizeof(register_t));
+				if (error) {
 #ifdef	KTRACE
 					/* Can't get all the arguments! */
 					if (KTRPOINT(p, KTR_SYSCALL))
@@ -537,9 +529,9 @@ syscall_bad:
 		 * by the code that fixes the typical gcc misaligned code
 		 * then kill the process if not.
 		 */
-		if (fix_unaligned(p, frame) == 0) {
+		if (fix_unaligned(p, frame) == 0)
 			frame->srr0 += 4;
-		} else {
+		else {
 			sv.sival_int = frame->srr0;
 			trapsignal(p, SIGSEGV, VM_PROT_EXECUTE, SEGV_MAPERR,
 				sv);
@@ -564,7 +556,7 @@ mpc_print_pci_stat();
 			name = "0";
 			offset = frame->srr0;
 		}
-		panic ("trap type %x at %x (%s+0x%x) lr %x",
+		panic ("trap type %x at %x (%s+0x%lx) lr %x",
 			type, frame->srr0, name, offset, frame->lr);
 
 
@@ -637,9 +629,9 @@ for (i = 0; i < errnum; i++) {
 	case EXC_PERF|EXC_USER:
 #ifdef ALTIVEC 
 	case EXC_VEC|EXC_USER:
-		if (ppc_vecproc) {
+		if (ppc_vecproc)
 			save_vec(ppc_vecproc);
-		}
+
 		ppc_vecproc = p;
 		enable_vec(p);
 		break;
@@ -667,27 +659,24 @@ for (i = 0; i < errnum; i++) {
 	/*
 	 * If someone stole the fpu while we were away, disable it
 	 */
-	if (p != fpuproc) {
+	if (p != fpuproc)
 		frame->srr1 &= ~PSL_FP;
-	} else {
+	else
 		frame->srr1 |= PSL_FP;
-	}
 
 #ifdef ALTIVEC
 	/*
 	 * If someone stole the vector unit while we were away, disable it
 	 */
-	if (p != ppc_vecproc) {
+	if (p != ppc_vecproc)
 		frame->srr1 &= ~PSL_VEC;
-	} else {
+	else
 		frame->srr1 |= PSL_VEC;
-	}
 #endif /* ALTIVEC */
 }
 
 void
-child_return(arg)
-	void *arg;
+child_return(void *arg)
 {
 	struct proc *p = (struct proc *)arg;
 	struct trapframe *tf = trapframe(p);
@@ -708,13 +697,11 @@ child_return(arg)
 }
 
 int
-badaddr(addr, len)
-	char *addr;
-	u_int32_t len;
+badaddr(char *addr, u_int32_t len)
 {
 	faultbuf env;
 	u_int32_t v;
-	register void *oldh = curpcb->pcb_onfault;
+	void *oldh = curpcb->pcb_onfault;
 
 	if (setfault(&env)) {
 		curpcb->pcb_onfault = oldh;
@@ -743,9 +730,7 @@ badaddr(addr, len)
  */
 
 static int
-fix_unaligned(p, frame)
-	struct proc *p;
-	struct trapframe *frame;
+fix_unaligned(struct proc *p, struct trapframe *frame)
 {
 	int indicator = EXC_ALI_OPCODE_INDICATOR(frame->dsisr);
 
@@ -781,6 +766,5 @@ fix_unaligned(p, frame)
 		}
 		break;
 	}
-
 	return -1;
 }

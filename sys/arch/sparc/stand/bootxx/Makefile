@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/stand/bootxx/Makefile,v 1.5.12.1 2003/03/27 23:49:26 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/bootxx/Makefile,v 1.5.12.2 2004/02/19 10:49:59 niklas Exp $
 #	$NetBSD: Makefile,v 1.2 1995/09/30 21:43:38 pk Exp $
 
 .PATH:	${.CURDIR}/../common
@@ -9,7 +9,7 @@ NOMAN=	noman
 INSTALL_STRIP=
 
 SRCS=	srt0.S bootxx.c closeall.c dvma.c promdev.c
-CLEANFILES+=${PROG}.aout ${PROG}.elf
+CLEANFILES+=${PROG}.aout ${PROG}.elf elfclean elf
 
 # pre-built bits of libkern
 KOBJS=	__main.o bzero.o urem.o udiv.o

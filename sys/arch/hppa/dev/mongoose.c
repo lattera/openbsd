@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.4 2003/05/13 19:41:03 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.5 2004/02/19 10:48:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -251,7 +251,7 @@ mg_isa_attach_hook(struct device *parent, struct device *self,
 
 void *
 mg_intr_establish(void *v, int irq, int type, int pri,
-	int (*handler)(void *), void *arg, char *name)
+	int (*handler)(void *), void *arg, const char *name)
 {
 	struct hppa_isa_iv *iv;
 	struct mongoose_softc *sc = v;
@@ -534,11 +534,12 @@ mgmatch(parent, cfdata, aux)
 	bus_space_handle_t ioh;
 
 	if (ca->ca_type.iodc_type != HPPA_TYPE_BHA ||
-	    ca->ca_type.iodc_sv_model != HPPA_BHA_EISA)
+	    (ca->ca_type.iodc_sv_model != HPPA_BHA_EISA &&
+	     ca->ca_type.iodc_sv_model != HPPA_BHA_WEISA))
 		return 0;
 
-	if (bus_space_map(ca->ca_iot, ca->ca_hpa + MONGOOSE_MONGOOSE, IOMOD_HPASIZE,
-			  0, &ioh))
+	if (bus_space_map(ca->ca_iot, ca->ca_hpa + MONGOOSE_MONGOOSE,
+	    IOMOD_HPASIZE, 0, &ioh))
 		return 0;
 
 	/* XXX check EISA signature */
@@ -652,7 +653,7 @@ mgattach(parent, self, aux)
 
 	/* attach interrupt */
 	sc->sc_ih = cpu_intr_establish(IPL_HIGH, ca->ca_irq,
-				       mg_intr, sc, &sc->sc_dev);
+				       mg_intr, sc, sc->sc_dev.dv_xname);
 }
 
 int

@@ -1,26 +1,9 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/libz/Makefile,v 1.3.4.1 2001/10/31 03:07:59 nate Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/libz/Makefile,v 1.3.4.2 2004/02/19 10:50:02 niklas Exp $
 
-LIB=	z
+S=${.CURDIR}/../../../..
+ZDST=${.OBJDIR}
 
-.PATH:  ${.CURDIR}/../../../../lib/libz
+.PATH: ${S}/lib/libz
 
-CLEANFILES+= machine
-
-CFLAGS= -nostdinc ${CEXTRAFLAGS} ${AFLAGS} -O2 -D_ZLIB_PRIVATE -I${.CURDIR}/../../../.. -I${.CURDIR}/../../../../lib/libz -I${.CURDIR}/.
-
-SRCS=	adler32.c crc32.c infblock.c infcodes.c inffast.c \
-	inflate.c inftrees.c infutil.c
-
-${OBJS}:	${.CURDIR}/../Makefile.inc
-
-.if !make(libdep) && !make(sadep) && !make(salibdir) && !make(kernlibdir) && !make(obj)
-.BEGIN:
-	@([ -h machine ] || ln -s ${.CURDIR}/../../include machine)
-.endif
-
-install:
-
-NOPIC=
-NOPROFILE=
-
-.include <bsd.lib.mk>
+.include "${S}/lib/libz/Makefile"
+CFLAGS+=${CEXTRAFLAGS} ${AFLAGS} -I${S}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_cbq.h,v 1.1.2.2 2003/05/13 19:21:26 ho Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_cbq.h,v 1.1.2.3 2004/02/19 10:51:22 niklas Exp $	*/
 /*	$KAME: altq_cbq.h,v 1.5 2000/12/02 13:44:40 kjc Exp $	*/
 
 /*
@@ -43,14 +43,9 @@
 extern "C" {
 #endif
 
-/*
- * Define a well known class handles
- */
-#define	NULL_CLASS_HANDLE	0xffffffff
-#define	ROOT_CLASS_HANDLE	0xfffffffe
-#define	DEFAULT_CLASS_HANDLE	0xfffffffd
+#define	NULL_CLASS_HANDLE	0
 
-/* class flags shoud be same as class flags in rm_class.h */
+/* class flags should be same as class flags in rm_class.h */
 #define	CBQCLF_RED		0x0001	/* use RED */
 #define	CBQCLF_ECN		0x0002  /* use RED/ECN */
 #define	CBQCLF_RIO		0x0004  /* use RIO */
@@ -68,6 +63,7 @@ extern "C" {
 #define	CBQCLF_CLASSMASK	0xf000	/* class mask */
 
 #define	CBQ_MAXQSIZE		200
+#define	CBQ_MAXPRI		RM_MAXPRIO
 
 typedef struct _cbq_class_stats_ {
 	u_int32_t	handle;
@@ -101,7 +97,7 @@ typedef struct _cbq_class_stats_ {
 /*
  * Define macros only good for kernel drivers and modules.
  */
-#define	CBQ_WATCHDOG		(HZ / 20)
+#define	CBQ_WATCHDOG		(hz / 20)
 #define	CBQ_TIMEOUT		10
 #define	CBQ_LS_TIMEOUT		(20 * hz / 1000)
 

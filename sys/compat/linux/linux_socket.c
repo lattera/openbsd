@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.17.6.5 2003/03/27 23:53:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.17.6.6 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: linux_socket.c,v 1.14 1996/04/05 00:01:50 christos Exp $	*/
 
 /*
@@ -1068,6 +1068,7 @@ linux_sendmsg(p, v, retval)
 		msg.msg_name = (struct sockaddr *)sa;
 		if ((error = copyout(&msg, nmsg, sizeof(struct msghdr))))
 			return (error);
+		lla.msg = nmsg;
 	}
 
 	SCARG(&bla, s) = lla.s;
@@ -1089,14 +1090,25 @@ linux_sendmsg(p, v, retval)
 		 * 0xffff, of course.
 		 */
 		level = SOL_SOCKET;
-		/* XXX should use stack gap! */
+		/*
+		 * XXX should use stack gap!
+		 * We don't because the control header is variable length
+		 * up to 2048 bytes, and there's only 512 bytes of gap.
+		 */
 		error = copyout(&level, &((struct cmsghdr *)control)->
 		    cmsg_level, sizeof(int));
 		if (error)
 			return error;
 	}
 done:
-	return sys_sendmsg(p, &bla, retval);
+	error = sys_sendmsg(p, &bla, retval);
+	/* replace level, just in case somebody cares. */
+	if (level == SOL_SOCKET) {
+		level = 1;
+		copyout(&level, &((struct cmsghdr *)control)->cmsg_level,
+		    sizeof(int));
+	}
+	return (error);
 }
 
 /*
@@ -1396,7 +1408,7 @@ linux_ioctl_socket(p, v, retval)
 		SCARG(&ia, com) = SIOCDELMULTI;
 		break;
 	case LINUX_SIOCGIFHWADDR: {
-		struct linux_ifreq *ifr = (struct linux_ifreq *)SCARG(&ia, data);
+		struct linux_ifreq *ifr = (struct linux_ifreq *)SCARG(uap, data);
 		struct sockaddr_dl *sdl;
 		struct ifnet *ifp;
 		struct ifaddr *ifa;
@@ -1423,6 +1435,7 @@ linux_ioctl_socket(p, v, retval)
 			}
 		}
 		error = ENOENT;
+		break;
 	    }
 	default:
 		error = EINVAL;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/unixsys.S,v 1.2.12.1 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/unixsys.S,v 1.2.12.2 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -31,10 +31,17 @@
 #include <sys/syscall.h>
 
 
+#ifdef __STDC__
+#define RSYSCALL(x) \
+	ENTRY(u##x); \
+		movl	 $(SYS_##x), %eax; \
+		jmp	 1f
+#else
 #define RSYSCALL(x) \
 	ENTRY(u/**/x); \
 		movl	 $(SYS_/**/x), %eax; \
 		jmp	 1f
+#endif
 
 	.globl	_errno
 

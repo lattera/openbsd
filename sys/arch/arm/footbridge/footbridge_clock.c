@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_clock.c,v 1.2 2004/02/14 00:17:06 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_clock.c,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: footbridge_clock.c,v 1.17 2003/03/23 14:12:25 chris Exp $	*/
 
 /*
@@ -281,12 +281,13 @@ void
 cpu_initclocks()
 {
 	/* stathz and profhz should be set to something, we have the timer */
-
+#if 0
 	if (stathz == 0)
-		stathz = 128;
+		stathz = hz;
 
 	if (profhz == 0)
-		profhz = stathz * 8;
+		profhz = stathz * 5;
+#endif
 
 	/* Report the clock frequencies */
 	printf("clock: hz=%d stathz = %d profhz = %d\n", hz, stathz, profhz);

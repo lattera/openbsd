@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/sys/arch/hppa/stand/boot/boot.8,v 1.1.1.1.8.4 2003/06/07 11:11:36 ho Exp $
+.\"	$OpenBSD: src/sys/arch/hppa/stand/boot/boot.8,v 1.1.1.1.8.5 2004/02/19 10:48:40 niklas Exp $
 .\"
 .\" Copyright (c) 2002 Miodrag Vallat
 .\" Copyright (c) 1997-2002 Michael Shalayeff
@@ -104,6 +104,18 @@ If you do not,
 will proceed to load the kernel with the current parameters after the
 timeout period has expired.
 .El
+.Pp
+By default,
+.Nm
+attempts to load the kernel executable
+.Pa /bsd .
+If that fails, it will attempt to load
+.Pa /obsd
+and then
+.Pa /bsd.old .
+If it fails to find any of these files,
+and no alternative kernel image has been specified,
+the system will be unable to boot.
 .Sh COMMANDS
 The following commands are accepted at the
 .Nm
@@ -114,8 +126,8 @@ Boots the kernel image specified by
 .Ar image
 with any options given.
 Image specification consists of a pair
-.Em device : filename ,
-either or both can be omitted (':' is not needed if both are omitted),
+.Ar device : Ns Ar filename ;
+either or both can be omitted (`:' is not needed if both are omitted),
 in which case values from
 .Nm
 variables will be used.
@@ -161,14 +173,14 @@ will attempt to switch the console configuration to the desired device.
 The console definition attempts to follow the PDC syntax,
 and would have a form of:
 .Pp
-.Bd -offset indent -compact
+.Bd -filled -compact
 graphics
 .Op _head
 .Op .mode
 .Ed
 for graphics console, and
 .Pp
-.Bd -offset indent -compact
+.Bd -filled -compact
 rs232
 .Op _2
 .Op .speed Op .bits Op .parity
@@ -191,12 +203,12 @@ will attempt to switch the keyboard configuration to the desired port.
 The keyboard definition attempts to follow the PDC syntax,
 and would have a form of:
 .Pp
-.Bd -offset indent -compact
+.Bd -filled -compact
 hil
 .Ed
 for hil keyboard, and
 .Pp
-.Bd -offset indent -compact
+.Bd -filled -compact
 ps2
 .Ed
 for PS/2 keyboard.
@@ -279,23 +291,21 @@ system bootstrap's startup file
 kernel image
 .El
 .Sh EXAMPLES
-.Li boot> boot
+Boot the default kernel:
 .Pp
-Boot the default kernel.
-.Pp
-.Li # echo \&"boot\&" > /etc/boot.conf
+.Dl boot> boot
 .Pp
 Remove the 5 second pause at boot-time permanently, causing
 .Nm
-to load the kernel immediately without prompting.
+to load the kernel immediately without prompting:
 .Pp
-.Li boot> machine console rs232.9600.8.none
+.Dl # echo \&"boot\&" > /etc/boot.conf
 .Pp
 Use serial console on the first serial port, with the usual 9600 8N1 settings.
 A null modem cable should connect the specified serial port to a terminal.
 Useful for debugging.
 .Pp
-.Li boot> boot sd1a:/bsd -c
+.Dl boot> machine console rs232.9600.8.none
 .Pp
 Boot the kernel named
 .Pa /bsd
@@ -310,6 +320,8 @@ Once booted, such changes can be made permanent by using
 .Xr config 8 Ns 's
 .Fl e
 option.
+.Pp
+.Dl boot> boot sd1a:/bsd -c
 .Sh SEE ALSO
 .Xr gzip 1 ,
 .Xr autoconf 4 ,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.4.3 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.4.4 2004/02/19 10:49:03 niklas Exp $	*/
 /*	$NetBSD: abtn.c,v 1.1 1999/07/12 17:48:26 tsubai Exp $	*/
 
 /*-
@@ -61,10 +61,7 @@ struct cfdriver abtn_cd = {
 };
 
 int
-abtn_match(parent, cf, aux)
-	struct device *parent;
-	void *cf;
-	void *aux;
+abtn_match(struct device *parent, void *cf, void *aux)
 {
 	struct adb_attach_args *aa = aux;
 
@@ -76,9 +73,7 @@ abtn_match(parent, cf, aux)
 }
 
 void
-abtn_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+abtn_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct abtn_softc *sc = (struct abtn_softc *)self;
 	struct adb_attach_args *aa = aux;
@@ -96,10 +91,8 @@ abtn_attach(parent, self, aux)
 	SetADBInfo(&adbinfo, sc->adbaddr);
 }
 
-void 
-abtn_adbcomplete(buffer, data, adb_command)
-	caddr_t buffer, data;
-	int adb_command;
+void
+abtn_adbcomplete(caddr_t buffer, caddr_t data, int adb_command)
 {
 	u_int cmd, brightness;
 
@@ -126,17 +119,24 @@ abtn_adbcomplete(buffer, data, adb_command)
 	case 0x02:	/* decrease volume, AV hardware */
 	case 0x06:	/* increase volume */
 	case 0x03:	/* increase volume, AV hardware */
+		/* Need callback to do something with these */
+		break;
+
+	case 0x0c:	/* mirror display key */
+		/* Need callback to do something with this */
 		break;
 
 	case 0x0b:	/* eject tray */
+		/* Need callback to do something with this */
 		break;
 
 	case 0x7f:	/* numlock */
+		/* Need callback to do something with this */
 		break;
 
 	default:
 		if ((cmd & ~0x7f) == 0)
-			printf("unknown ADB button %d\n", cmd);
+			printf("unknown ADB button 0x%x\n", cmd);
 		break;
 #endif
 	}

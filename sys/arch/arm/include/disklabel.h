@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.2 2004/02/13 22:48:14 miod Exp $	*/
-/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.2 2004/02/13 22:48:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.2 2001/11/25 19:02:03 thorpej Exp $	*/
 
 /*
@@ -99,6 +99,8 @@ struct dos_partition {
 #define DOSPTYP_FREEBSD	0xa5		/* FreeBSD partition type */
 #define DOSPTYP_OPENBSD	0xa6		/* OpenBSD partition type */
 #define DOSPTYP_NETBSD	0xa9		/* NetBSD partition type */
+
+#include <sys/dkbad.h>
 
 /* Isolate the relevant bits to get sector and cylinder. */
 #define	DPSECT(s)	((s) & 0x3f)

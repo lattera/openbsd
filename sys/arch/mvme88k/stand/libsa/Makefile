@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Makefile,v 1.3.4.1 2003/06/07 11:13:17 ho Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Makefile,v 1.3.4.2 2004/02/19 10:49:09 niklas Exp $
 
 LIB=sa
 
@@ -17,7 +17,7 @@ SRC_net= arp.c ether.c in_cksum.c net.c netif.c rpc.c nfs.c \
 
 SRC_sa=	alloc.c memcpy.c exit.c getfile.c gets.c globals.c \
 	printf.c strerror.c memset.c memcmp.c strncpy.c strcmp.c strlen.c \
-	snprintf.c \
+	strlcpy.c strlcat.c snprintf.c \
 	close.c closeall.c dev.c dkcksum.c \
 	lseek.c open.c nullfs.c read.c fstat.c \
 	ufs.c cread.c
@@ -37,8 +37,7 @@ SRCS= ${SRC_net} ${SRC_sa} ${SRC_mvme} ${SRC_here} ${SRC_kern}
 DEFS= -D__INTERNAL_LIBSA_CREAD 
 #-DNETIF_DEBUG
 INCL= -I${.CURDIR} -I${.CURDIR}/../libbug -I${S}/lib/libsa -I${S}
-COPTS= #-fno-defer-pop
-CFLAGS+= ${XCFLAGS} ${COPTS} ${DEFS} ${DBG} ${INCL} -O2
+CFLAGS+= ${XCFLAGS} ${COPTS} ${DEFS} ${DBG} ${INCL}
 
 .PATH:  ${DIR_SA} ${DIR_KERN} 
 

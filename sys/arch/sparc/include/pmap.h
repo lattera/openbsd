@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.7 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.8 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -102,7 +102,7 @@
  *
  * The kernel pmap cannot malloc() PTEs since malloc() will sometimes
  * allocate a new virtual segment.  Since kernel mappings are never
- * `stolen' out of the the MMU, we just keep all its PTEs there, and
+ * `stolen' out of the MMU, we just keep all its PTEs there, and
  * have no software copies.  Its mmu entries are nonetheless kept on lists
  * so that the code that fiddles with mmu lists has something to fiddle.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.7 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.8 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2003 Michael Shalayeff
@@ -41,6 +41,8 @@
  *	@(#)autoconf.c	8.4 (Berkeley) 10/1/93
  */
 
+#include "pci.h"
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/buf.h>
@@ -56,6 +58,11 @@
 #include <dev/cons.h>
 
 #include <hppa/dev/cpudevs.h>
+
+#if NPCI > 0
+#include <dev/pci/pcivar.h>
+#include <dev/pci/pcireg.h>
+#endif
 
 void	setroot(void);
 void	swapconf(void);
@@ -77,10 +84,10 @@ struct device *bootdv;
  */
 #ifdef USELEDS
 #include <sys/dkstat.h>
+#include <sys/kernel.h>
 
 struct timeout heartbeat_tmo;
 void heartbeat(void *);
-extern int hz;
 #endif
 
 #include "cd.h"
@@ -132,17 +139,21 @@ heartbeat(v)
 	void *v;
 {
 	static u_int hbcnt = 0, ocp_total, ocp_idle;
-	int toggle, cp_mask, cp_total;
+	int toggle, cp_mask, cp_total, cp_idle;
 
+	timeout_add(&heartbeat_tmo, hz / 16);
+
+	cp_idle = cp_time[CP_IDLE];
 	cp_total = cp_time[CP_USER] + cp_time[CP_NICE] + cp_time[CP_SYS] +
 	    cp_time[CP_INTR] + cp_time[CP_IDLE];
-	if (!cp_total)
-		cp_total = 1;
-	cp_mask = 0xf0 >> (cp_time[CP_IDLE] - ocp_idle) * 4 /
-	    (cp_total - ocp_total);
+	if (cp_total == ocp_total)
+		cp_total = ocp_total + 1;
+	if (cp_idle == ocp_idle)
+		cp_idle = ocp_idle + 1;
+	cp_mask = 0xf0 >> (cp_idle - ocp_idle) * 4 / (cp_total - ocp_total);
 	cp_mask &= 0xf0;
 	ocp_total = cp_total;
-	ocp_idle = cp_time[CP_IDLE];
+	ocp_idle = cp_idle;
 	/*
 	 * do this:
 	 *
@@ -150,10 +161,10 @@ heartbeat(v)
 	 *  _| |_| |_,_,_,_
 	 *   0 1 2 3 4 6 7
 	 */
-	if (hbcnt++ < 4)
+	toggle = 0;
+	if (hbcnt++ < 8 && hbcnt & 1)
 		toggle = PALED_HEARTBEAT;
-	timeout_add(&heartbeat_tmo, hz / 8);
-	hbcnt &= 7;
+	hbcnt &= 15;
 	ledctl(cp_mask,
 	    (~cp_mask & 0xf0) | PALED_NETRCV | PALED_NETSND | PALED_DISK,
 	    toggle);
@@ -353,6 +364,25 @@ gotdisk:
 	return (dv);
 }
 
+void
+print_devpath(const char *label, struct pz_device *pz)
+{
+	int i;
+
+	printf("%s: ", label);
+
+	for (i = 0; i < 6; i++)
+		if (pz->pz_bc[i] >= 0)
+			printf("%d/", pz->pz_bc[i]);
+
+	printf("%d.%d", pz->pz_mod, pz->pz_layers[0]);
+	for (i = 1; i < 6 && pz->pz_layers[i]; i++)
+		printf(".%d", pz->pz_layers[i]);
+
+	printf(" class=%d flags=%b hpa=%p spa=%p io=%p\n", pz->pz_class,
+	    pz->pz_flags, PZF_BITS, pz->pz_hpa, pz->pz_spa, pz->pz_iodc_io);
+}
+
 /*
  * Attempt to find the device from which we were booted.
  * If we can do so, and not instructed not to do so,
@@ -367,7 +397,7 @@ setroot(void)
 {
 	struct swdevt *swp;
 	struct device *dv;
-	int len, majdev, unit, part;
+	int len, majdev, part;
 	dev_t nrootdev, nswapdev = NODEV;
 	char buf[128];
 	dev_t temp;
@@ -381,6 +411,8 @@ setroot(void)
 	bootdv = &fakerdrootdev;
 #endif
 	part = 0;
+
+	print_devpath("boot path", &PAGE0->mem_boot);
 
 	/*
 	 * If 'swap generic' and we couldn't determine boot device,
@@ -461,6 +493,7 @@ setroot(void)
 			}
 		}
 gotswap:
+		majdev = major(nrootdev);
 		rootdev = nrootdev;
 		dumpdev = nswapdev;
 		swdevt[0].sw_dev = nswapdev;
@@ -528,7 +561,7 @@ gotswap:
 	temp = NODEV;
 	for (swp = swdevt; swp->sw_dev != NODEV; swp++) {
 		if (majdev == major(swp->sw_dev) &&
-		    unit == DISKUNIT(swp->sw_dev)) {
+		    DISKUNIT(rootdev) == DISKUNIT(swp->sw_dev)) {
 			temp = swdevt[0].sw_dev;
 			swdevt[0].sw_dev = swp->sw_dev;
 			swp->sw_dev = temp;
@@ -660,7 +693,7 @@ pdc_scanbus(self, ca, maxmod)
 					    pdc_addr.size << PGSHIFT;
 
 					if (autoconf_verbose)
-						printf(" 0x%x[0x%x]",
+						printf(" 0x%lx[0x%x]",
 						    nca.ca_addrs[ia].addr,
 						    nca.ca_addrs[ia].size);
 				}
@@ -673,7 +706,7 @@ pdc_scanbus(self, ca, maxmod)
 			continue;
 
 		if (autoconf_verbose)
-			printf(">> HPA 0x%x[0x%x]\n",
+			printf(">> HPA 0x%lx[0x%x]\n",
 			    nca.ca_hpa, nca.ca_hpasz);
 
 		if ((error = pdc_call((iodcio_t)pdc, 0, PDC_IODC,
@@ -694,7 +727,7 @@ pdc_scanbus(self, ca, maxmod)
 			    nca.ca_dp.dp_bc[0], nca.ca_dp.dp_bc[1],
 			    nca.ca_dp.dp_bc[2], nca.ca_dp.dp_bc[3],
 			    nca.ca_dp.dp_bc[4], nca.ca_dp.dp_bc[5]);
-			printf("mod %x hpa %x type %x sv %x\n",
+			printf("mod %x hpa %lx type %x sv %x\n",
 			    nca.ca_dp.dp_mod, nca.ca_hpa,
 			    nca.ca_type.iodc_type, nca.ca_type.iodc_sv_model);
 		}
@@ -727,6 +760,9 @@ hppa_mod_info(type, sv)
 void
 device_register(struct device *dev, void *aux)
 {
+#if NPCI > 0
+	extern struct cfdriver pci_cd;
+#endif
 	struct confargs *ca = aux;
 	char *basename;
 	static struct device *elder = NULL;
@@ -734,6 +770,27 @@ device_register(struct device *dev, void *aux)
 	if (bootdv != NULL)
 		return;	/* We already have a winner */
 
+#if NPCI > 0
+	if (dev->dv_parent &&
+	    dev->dv_parent->dv_cfdata->cf_driver == &pci_cd) {
+		struct pci_attach_args *pa = aux;
+		pcireg_t addr;
+		int reg;
+
+		for (reg = PCI_MAPREG_START; reg < PCI_MAPREG_END; reg += 4) {
+			addr = pci_conf_read(pa->pa_pc, pa->pa_tag, reg);
+			if (PCI_MAPREG_TYPE(addr) == PCI_MAPREG_TYPE_IO)
+				addr = PCI_MAPREG_IO_ADDR(addr);
+			else
+				addr = PCI_MAPREG_MEM_ADDR(addr);
+
+			if (addr == (pcireg_t)PAGE0->mem_boot.pz_hpa) {
+				elder = dev;
+				break;
+			}
+		}
+	} else
+#endif
 	if (ca->ca_hpa == (hppa_hpa_t)PAGE0->mem_boot.pz_hpa) {
 		/*
 		 * If hpa matches, the only thing we know is that the

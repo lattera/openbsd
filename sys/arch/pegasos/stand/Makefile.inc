@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/pegasos/stand/Attic/Makefile.inc,v 1.2 2003/11/14 20:09:20 drahn Exp $
+#	$OpenBSD: src/sys/arch/pegasos/stand/Attic/Makefile.inc,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.1 1996/09/30 16:34:59 ws Exp $
 
 .if !defined(__stand_makefile_inc)

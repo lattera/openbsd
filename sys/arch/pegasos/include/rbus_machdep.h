@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/rbus_machdep.h,v 1.1 2003/10/31 03:54:33 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/rbus_machdep.h,v 1.1.2.1 2004/02/19 10:49:55 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.h,v 1.2 1999/10/15 06:43:05 haya Exp $	*/
 
 /*

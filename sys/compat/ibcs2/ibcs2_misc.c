@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.14.6.8 2003/06/07 11:00:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.14.6.9 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: ibcs2_misc.c,v 1.23 1997/01/15 01:37:49 perry Exp $	*/
 
 /*
@@ -1032,7 +1032,7 @@ ibcs2_sys_plock(p, v, retval)
 #define IBCS2_DATALOCK	4
 
 	
-        if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+        if ((error = suser(p, 0)) != 0)
                 return EPERM;
 	switch(SCARG(uap, cmd)) {
 	case IBCS2_UNLOCK:
@@ -1076,7 +1076,7 @@ ibcs2_sys_uadmin(p, v, retval)
 #define SCO_AD_GETCMAJ      1
 
 	/* XXX: is this the right place for this call? */
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return (error);
 
 	switch(SCARG(uap, cmd)) {

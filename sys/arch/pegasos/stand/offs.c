@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/offs.c,v 1.1 2003/10/31 03:54:34 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/stand/Attic/offs.c,v 1.1.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: hfs.c,v 1.1 2000/11/14 11:25:35 tsubai Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/asm_macro.h,v 1.6.4.5 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/asm_macro.h,v 1.6.4.6 2004/02/19 10:49:06 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -38,12 +38,8 @@
 /*
  * Flushes the data pipeline.
  */
-static __inline__ void flush_pipeline(void)
-{
-	__asm__ __volatile__ (FLUSH_PIPELINE_STRING);
-}
-
-#define db_flush_pipeline flush_pipeline
+#define	flush_pipeline() \
+	__asm__ __volatile__ (FLUSH_PIPELINE_STRING)
 
 /*
  * PSR_TYPE is the type of the Process Status Register.
@@ -70,7 +66,7 @@ typedef unsigned long m88k_psr_type;
  */
 static __inline__ m88k_psr_type disable_interrupts_return_psr(void)
 {
-	register m88k_psr_type temp, oldpsr;
+	m88k_psr_type temp, oldpsr;
 	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (oldpsr));
 	__asm__ __volatile__ ("set  %1, %0, 1<1>" : "=r" (oldpsr), "=r" (temp));
 	__asm__ __volatile__ ("stcr %0, cr1" : "=r" (temp));
@@ -82,7 +78,7 @@ static __inline__ m88k_psr_type disable_interrupts_return_psr(void)
 /*
  * Sets the PSR. See comments above.
  */
-static __inline__ void set_psr(register m88k_psr_type psr)
+static __inline__ void set_psr(m88k_psr_type psr)
 {
 	__asm__ __volatile__ ("stcr %0, cr1" :: "r" (psr));
 	__asm__ __volatile__ (FLUSH_PIPELINE_STRING);
@@ -93,7 +89,7 @@ static __inline__ void set_psr(register m88k_psr_type psr)
  */
 static __inline__ m88k_psr_type get_psr(void)
 {
-	register m88k_psr_type psr;
+	m88k_psr_type psr;
 	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (psr));
 	return psr;
 }
@@ -103,7 +99,7 @@ static __inline__ m88k_psr_type get_psr(void)
  */
 static __inline__ m88k_psr_type enable_interrupts_return_psr(void)
 {
-	register m88k_psr_type temp, oldpsr; /* need a temporary register */
+	m88k_psr_type temp, oldpsr; /* need a temporary register */
 	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (oldpsr));
 	__asm__ __volatile__ ("clr  %1, %0, 1<1>" : "=r" (oldpsr), "=r" (temp));
 	__asm__ __volatile__ ("stcr %0, cr1" : "=r" (temp));
@@ -116,19 +112,9 @@ static __inline__ m88k_psr_type enable_interrupts_return_psr(void)
 #define db_disable_interrupt disable_interrupt
 
 /*
- * Gets the current stack pointer.
- */
-static __inline__ unsigned long stack_pointer(void)
-{
-	register unsigned long sp;
-	__asm__ __volatile__ ("or %0,r0,r31" : "=r" (sp));
-	return sp;
-}
-
-/*
  * Provide access from C code to the assembly instruction ff1
  */
-static __inline__ unsigned ff1(register unsigned val)
+static __inline__ unsigned ff1(unsigned val)
 {
 	__asm__ __volatile__ ("ff1 %0, %0" : "=r" (val) : "0" (val));
 	return val;

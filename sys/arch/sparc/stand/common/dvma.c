@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/dvma.c,v 1.1.12.1 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/dvma.c,v 1.1.12.2 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: dvma.c,v 1.2 1995/09/17 00:50:56 pk Exp $	*/
 /*
  * Copyright (c) 1995 Gordon W. Ross
@@ -51,7 +51,7 @@
 #define SA_MAX_VA	(SA_MIN_VA + DVMA_MAPLEN)
 
 void
-dvma_init()
+dvma_init(void)
 {
 	register int segva, dmava;
 

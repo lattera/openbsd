@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.4.4 2004/02/19 10:49:03 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
  * Copyright (c) 1997 RTMX Inc
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -61,6 +61,11 @@
 #define HID0_NAP	(1 << (31-9))
 #define HID0_SLEEP	(1 << (31-10))
 #define HID0_DPM	(1 << (31-11))
+#define HID0_SGE	(1 << (31-24))
+#define HID0_BTIC	(1 << (31-26))
+#define HID0_LRSTK	(1 << (31-27))
+#define HID0_FOLD	(1 << (31-28))
+#define HID0_BHT	(1 << (31-29))
 
 char cpu_model[80];
 char machine[] = MACHINE;	/* cpu architecture */
@@ -74,7 +79,7 @@ struct cfattach cpu_ca = {
 };
 
 struct cfdriver cpu_cd = {
-	NULL, "cpu", DV_DULL, NULL, 0
+	NULL, "cpu", DV_DULL
 };
 
 void config_l2cr(int cpu);
@@ -94,18 +99,25 @@ cpumatch(parent, cfdata, aux)
 	return (1);
 }
 
+static u_int32_t ppc_curfreq;
+
+
+int
+ppc_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+{
+	return (sysctl_rdint(oldp, oldlenp, newp, ppc_curfreq));
+}
+
+
 void
-cpuattach(parent, dev, aux)
-	struct device *parent;
-	struct device *dev;
-	void *aux;
+cpuattach(struct device *parent, struct device *dev, void *aux)
 {
 	unsigned int cpu, pvr, hid0;
 	char name[32];
 	int qhandle, phandle;
 	unsigned int clock_freq = 0;
 
-	__asm__ ("mfpvr %0" : "=r"(pvr));
+	pvr = ppc_mfpvr();
 	cpu = pvr >> 16;
 	switch (cpu) {
 	case MPC601:
@@ -162,7 +174,7 @@ cpuattach(parent, dev, aux)
                 if (OF_getprop(qhandle, "device_type", name, sizeof name) >= 0
                     && !strcmp(name, "cpu")
                     && OF_getprop(qhandle, "clock-frequency",
-                                  &clock_freq , sizeof clock_freq ) >= 0)
+                        &clock_freq , sizeof clock_freq ) >= 0)
 		{
 			break;
 		}
@@ -179,10 +191,11 @@ cpuattach(parent, dev, aux)
 		/* Openfirmware stores clock in Hz, not MHz */
 		clock_freq /= 1000000;
 		printf(": %d MHz", clock_freq);
-
+		ppc_curfreq = clock_freq;
+		cpu_cpuspeed = ppc_cpuspeed;
 	}
 	/* power savings mode */
-	__asm __volatile ("mfspr %0,1008" : "=r" (hid0));
+	hid0 = ppc_mfhid0();
 	switch (cpu) {
 	case MPC603:
 	case MPC603e:
@@ -190,15 +203,26 @@ cpuattach(parent, dev, aux)
 	case MPC7400:
 	case IBM750FX:
 	case MPC7410:
-	case MPC7450:
-	case MPC7455:
 		/* select DOZE mode */
 		hid0 &= ~(HID0_NAP | HID0_SLEEP);
-		hid0 |= HID0_DOZE | HID0_DPM; 
+		hid0 |= HID0_DOZE | HID0_DPM;
+		break;
+	case MPC7450:
+	case MPC7455:
+		/* select NAP mode */
+		hid0 &= ~(HID0_DOZE | HID0_SLEEP);
+		hid0 |= HID0_NAP | HID0_DPM;
+		/* try some other flags */
+		hid0 |= HID0_SGE | HID0_BTIC;
+		hid0 |= HID0_LRSTK | HID0_FOLD | HID0_BHT;
+		/* Disable BTIC on 7450 Rev 2.0 or earlier */
+		if (cpu == MPC7450 && (pvr & 0xffff) < 0x0200)
+			hid0 &= ~HID0_BTIC;
+		break;
 	}
-	__asm __volatile ("mtspr 1008,%0" : "=r" (hid0));
+	ppc_mthid0(hid0);
 
-	/* if processor is G3 or G4, configure l2 cache */ 
+	/* if processor is G3 or G4, configure l2 cache */
 	if ( (cpu == MPC750) || (cpu == MPC7400) || (cpu == IBM750FX)
 	    || (cpu == MPC7410) || (cpu == MPC7450) || (cpu == MPC7455)) {
 		config_l2cr(cpu);
@@ -208,8 +232,7 @@ cpuattach(parent, dev, aux)
 
 }
 
-#define L2CR 1017
-
+/* L2CR bit definitions */
 #define L2CR_L2E        0x80000000 /* 0: L2 enable */
 #define L2CR_L2PE       0x40000000 /* 1: L2 data parity enable */
 #define L2CR_L2SIZ      0x30000000 /* 2-3: L2 size */
@@ -242,14 +265,14 @@ cpuattach(parent, dev, aux)
 #define L2CR_L2DF       0x00004000 /* 17: L2 differential clock. */
 #define L2CR_L2BYP      0x00002000 /* 18: L2 DLL bypass. */
 #define L2CR_L2IP       0x00000001 /* 31: L2 global invalidate in progress
-                                      (read only). */
+				       (read only). */
 #ifdef L2CR_CONFIG
 u_int l2cr_config = L2CR_CONFIG;
 #else
 u_int l2cr_config = 0;
 #endif
 
-#define SPR_L3CR                0x3fa   /* .6. L3 Control Register */
+/* L3CR bit definitions */
 #define   L3CR_L3E                0x80000000 /*  0: L3 enable */
 #define   L3CR_L3SIZ              0x10000000 /*  3: L3 size (0=1MB, 1=2MB) */
 
@@ -258,29 +281,29 @@ config_l2cr(int cpu)
 {
 	u_int l2cr, x;
 
-	__asm __volatile ("mfspr %0, 1017" : "=r"(l2cr));
+	l2cr = ppc_mfl2cr();
 
 	/*
 	 * Configure L2 cache if not enabled.
 	 */
 	if ((l2cr & L2CR_L2E) == 0 && l2cr_config != 0) {
 		l2cr = l2cr_config;
-		asm volatile ("mtspr 1017,%0" :: "r"(l2cr));
+		ppc_mtl2cr(l2cr);
 
 		/* Wait for L2 clock to be stable (640 L2 clocks). */
 		delay(100);
 
 		/* Invalidate all L2 contents. */
 		l2cr |= L2CR_L2I;
-		asm volatile ("mtspr 1017,%0" :: "r"(l2cr));
+		ppc_mtl2cr(l2cr);
 		do {
-			asm volatile ("mfspr %0, 1017" : "=r"(x));
+			x = ppc_mfl2cr();
 		} while (x & L2CR_L2IP);
-				      
+
 		/* Enable L2 cache. */
 		l2cr &= ~L2CR_L2I;
 		l2cr |= L2CR_L2E;
-		asm volatile ("mtspr 1017,%0" :: "r"(l2cr));
+		ppc_mtl2cr(l2cr);
 	}
 
 	if (l2cr & L2CR_L2E) {
@@ -289,8 +312,7 @@ config_l2cr(int cpu)
 
 			printf(": 256KB L2 cache");
 
-			__asm__ volatile("mfspr %0, %1" : "=r"(l3cr) :
-			    "n"(SPR_L3CR) );
+			l3cr = ppc_mfl3cr();
 			if (l3cr & L3CR_L3E)
 				printf(", %cMB L3 cache",
 				    l3cr & L3CR_L3SIZ ? '2' : '1');
@@ -304,7 +326,7 @@ config_l2cr(int cpu)
 			case L2SIZ_512K:
 				printf(": 512KB");
 				break;
-			case L2SIZ_1M:  
+			case L2SIZ_1M:
 				printf(": 1MB");
 				break;
 			default:
@@ -326,11 +348,10 @@ config_l2cr(int cpu)
 		default:
 			printf(" unknown type");
 		}
-		
+
 		if (l2cr & L2CR_L2PE)
-			printf(" with parity");  
+			printf(" with parity");
 #endif
 	} else
 		printf(": L2 cache not enabled");
-		
 }

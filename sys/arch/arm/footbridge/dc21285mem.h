@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/dc21285mem.h,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/dc21285mem.h,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: dc21285mem.h,v 1.2 2001/06/09 10:44:11 chris Exp $	*/
 
 /*

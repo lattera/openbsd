@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libsa/Attic/bugdev.c,v 1.1.2.1 2003/06/07 11:13:18 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libsa/Attic/bugdev.c,v 1.1.2.2 2004/02/19 10:49:10 niklas Exp $ */
 
 /*
  * Copyright (c) 1993 Paul Kranenburg
@@ -479,7 +479,7 @@ net_open(struct open_file *f, ...)
 	nfo.clun = pp->clun;
 	nfo.dlun = pp->dlun;
 	nfo.status = 0;
-	strlcpy(nfo.filename, filename, sizeof filename);
+	strlcpy(nfo.filename, filename, sizeof nfo.filename);
 	/* .NETFOPN syscall */
 	mvmeprom_netfopen(&nfo);
 	

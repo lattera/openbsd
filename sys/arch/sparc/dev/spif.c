@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.6 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.7 2004/02/19 10:49:58 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -97,7 +97,7 @@ int	sbppread(dev_t, struct uio *, int);
 int	sbppwrite(dev_t, struct uio *, int);
 int	sbpp_rw(dev_t, struct uio *);
 int	spifppcintr(void *);
-int	sbppselect(dev_t, int, struct proc *);
+int	sbpppoll(dev_t, int, struct proc *);
 int	sbppioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 struct cfattach spif_ca = {
@@ -249,9 +249,6 @@ sttyattach(parent, dev, aux)
 		sc->sc_regs->dtrlatch[port] = 1;
 
 		tp = ttymalloc();
-		if (tp == NULL)
-			break;
-		tty_attach(tp);
 
 		tp->t_oproc = stty_start;
 		tp->t_param = stty_param;
@@ -451,7 +448,7 @@ sttyioctl(dev, cmd, data, flags, p)
 		*((int *)data) = sp->sp_openflags;
 		break;
 	case TIOCSFLAGS:
-		if (suser(p->p_ucred, &p->p_acflag))
+		if (suser(p, 0))
 			error = EPERM;
 		else
 			sp->sp_openflags = *((int *)data) &
@@ -1075,12 +1072,12 @@ sbpp_rw(dev, uio)
 }
 
 int
-sbppselect(dev, rw, p)
+sbpppoll(dev, events, p)
 	dev_t dev;
-	int rw;
+	int events;
 	struct proc *p;
 {
-	return (ENODEV);
+	return (seltrue(dev, events, p));
 }
 
 int

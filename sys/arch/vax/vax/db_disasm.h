@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.h,v 1.2.12.1 2003/03/27 23:52:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.h,v 1.2.12.2 2004/02/19 10:50:03 niklas Exp $ */
 /*	$NetBSD: db_disasm.h,v 1.1 1996/01/28 11:31:27 ragge Exp $ */
 /*
  * Copyright (c) 2002, Miodrag Vallat.
@@ -63,7 +63,7 @@
  *	w: operand is written only
  *	m: operand is modified (both R and W)
  *	b: no operand reference. Branch displacement is specified. 
- *	a: calculate the adress of the specified operand
+ *	a: calculate the address of the specified operand
  *	v: if not "Rn", same as a. If "RN," R[n+1]R[n]
  * Arguments (Data-Types):
  *	b: Byte

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/proc.h,v 1.4.10.2 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/proc.h,v 1.4.10.3 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.5 1994/10/26 08:46:40 cgd Exp $	*/
 
 /*
@@ -32,23 +32,4 @@
  *	@(#)proc.h	7.1 (Berkeley) 5/15/91
  */
 
-/*
- * Machine-dependent part of the proc structure for hp300.
- */
-#ifndef _MAC68K_PROC_H_
-#define _MAC68K_PROC_H_
-
-struct mdproc {
-	int	*md_regs;		/* registers on current frame */
-	int	md_flags;		/* machine-dependent flags */
-};
-
-/* md_flags */
-#define	MDP_AST		0x0001	/* async trap pending */
-#define	MDP_STACKADJ	0x0002	/* Frame SP adjusted, might have to
-				   undo when system call returns
-				   ERESTART. */
-#define	MDP_UNCACHE_WX	0x0004	/* The process might modify code, so
-				   don't cache writeable executable pages.  */
-
-#endif	/* _MAC68K_PROC_H_ */
+#include <m68k/proc.h>

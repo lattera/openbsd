@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.6 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.7 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -69,7 +69,7 @@ struct cfattach flash_ca = {
 };
 
 struct cfdriver flash_cd = {
-	NULL, "flash", DV_DULL, 0
+	NULL, "flash", DV_DULL
 };
 
 int flashwritebyte(struct flashsoftc *sc, int addr, u_char val);

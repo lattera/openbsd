@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/hdc9224.c,v 1.5.12.4 2003/05/13 19:41:10 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vsa/hdc9224.c,v 1.5.12.5 2004/02/19 10:50:03 niklas Exp $ */
 /*	$NetBSD: hdc9224.c,v 1.6 1997/03/15 16:32:22 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -216,7 +216,7 @@ int hdc_getlabel(struct hdcsoftc *hdc, struct hdsoftc *hd, int drive);
 void hdgetlabel(struct hdsoftc *sc);
 
 /*
- * new-config's hdcmatch() is similiar to old-config's hdcprobe(), 
+ * new-config's hdcmatch() is similar to old-config's hdcprobe(), 
  * thus we probe for the existence of the controller and reset it.
  * NB: we can't initialize the controller yet, since space for hdcsoftc 
  *     is not yet allocated. Thus we do this in hdcattach()...
@@ -381,7 +381,7 @@ hdattach(parent, self, aux)
 	disk_attach(&hd->sc_dk);
 	/*
 	 * if it's not a floppy then evaluate the on-disk geometry.
-	 * if neccessary correct the label...
+	 * if necessary correct the label...
 	 */
 	printf("\n%s: ", hd->sc_dev.dv_xname);
 	if (hd->sc_drive == 2) {

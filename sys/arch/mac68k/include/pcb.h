@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pcb.h,v 1.4.10.2 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pcb.h,v 1.4.10.3 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: pcb.h,v 1.7 1996/05/05 06:17:51 briggs Exp $	*/
 
 /*
@@ -72,34 +72,5 @@
  *
  *	@(#)pcb.h	7.4 (Berkeley) 5/4/91
  */
-#ifndef	_MAC68K_PCB_H_
-#define	_MAC68K_PCB_H_
 
-#include <machine/frame.h>
-
-/*
- * mac68k process control block
- */
-struct pcb
-{
-	short	pcb_flags;	/* misc. process flags (+0) */
-	short	pcb_ps; 	/* processor status word (+2) */
-	int	pcb_ustp;	/* user segment table pointer (+4) */
-	int	pcb_usp;	/* user stack pointer (+8) */
-	int	pcb_regs[12];	/* D2-D7, A2-A7 (+C) */
-	caddr_t	pcb_onfault;	/* for copyin/out faults */
-	struct	fpframe pcb_fpregs; /* 68881/2 context save area */
-};
-
-/* flags */
-
-/*
- * The pcb is augmented with machine-dependent additional data for
- * core dumps.  For the m68k, this includes a header that, for the
- * hp300, is used for HP-UX processes' exec header.
- */
-struct md_coredump {
-	int	md_exec[16];	/* Exec structure for HP-UX (sic) core dumps */
-};
-
-#endif /* _MAC68K_PCB_H_ */
+#include <m68k/pcb.h>

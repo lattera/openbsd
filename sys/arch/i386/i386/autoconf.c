@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.11 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.12 2004/02/19 10:48:41 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -87,6 +87,11 @@ dev_t	bootdev = 0;		/* bootdevice, initialized in locore.s */
 extern struct timeout viac3_rnd_tmo;
 extern int	viac3_rnd_present;
 void		viac3_rnd(void *);
+
+#ifdef CRYPTO
+extern int	viac3_crypto_present;
+void		viac3_crypto_setup(void);
+#endif /* CRYPTO */
 #endif
 
 /*
@@ -139,6 +144,13 @@ cpu_configure()
 		timeout_set(&viac3_rnd_tmo, viac3_rnd, &viac3_rnd_tmo);
 		viac3_rnd(&viac3_rnd_tmo);
 	}
+#ifdef CRYPTO
+	/*
+	 * Also, if the chip has crypto available, enable it.
+	 */
+	if (viac3_crypto_present)
+		viac3_crypto_setup();
+#endif /* CRYPTO */
 #endif
 }
 
@@ -369,7 +381,9 @@ rootconf()
 		char name[128];
 retry:
 		printf("root device? ");
+		cnpollc(TRUE);
 		getsn(name, sizeof name);
+		cnpollc(FALSE);
 		if (*name == '\0')
 			goto noask;
 		for (gc = genericconf; gc->gc_driver; gc++)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.20.2.6 2003/06/07 11:13:15 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.20.2.7 2004/02/19 10:49:05 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -161,9 +161,9 @@ readdisklabel(dev, strat, lp, clp, spoofonly)
 #endif
 	if (clp->magic1 != DISKMAGIC || clp->magic2 != DISKMAGIC)
 		return ("no disk label");
-	
+
 	cputobsdlabel(lp, clp);
-	
+
 	if (dkcksum(lp) != 0)
 		return ("disk label corrupted");
 
@@ -437,17 +437,17 @@ bsdtocpulabel(lp, clp)
 	bcopy(&lp->d_partitions[0], clp->vid_4, sizeof(struct partition) * 4);
 	bcopy(&lp->d_partitions[4], clp->cfg_4, sizeof(struct partition) * 12);
 	clp->version = 1;
- 	/* put "MOTOROLA" in the VID.  This makes it a valid boot disk also. xxx - smurph */
+
+	/* Put "MOTOROLA" in the VID.  This makes it a valid boot disk. */
 	mot = clp->vid_mot;
-	for (i=0; i<8; i++) {
+	for (i = 0; i < 8; i++) {
 		*mot++ = *tmot++;
 	}
 	/* put volume id in the VID */
 	mot = clp->vid_id;
-	for (i=0; i<4; i++) {
+	for (i = 0; i < 4; i++) {
 		*mot++ = *id++;
 	}
-
 }
 
 struct cpu_disklabel_old {

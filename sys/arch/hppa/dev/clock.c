@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.6 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.7 2004/02/19 10:48:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -55,7 +55,14 @@
 void
 cpu_initclocks()
 {
-	CPU_CLOCKUPDATE();
+	extern volatile u_long cpu_itmr;
+	extern u_long cpu_hzticks;
+	u_long __itmr;
+
+	mfctl(CR_ITMR, __itmr);
+	cpu_itmr = __itmr;
+	__itmr += cpu_hzticks;
+	mtctl(__itmr, CR_ITMR);
 }
 
 /*
@@ -105,7 +112,7 @@ resettodr()
 
 	if ((error = pdc_call((iodcio_t)pdc, 1, PDC_TOD, PDC_TOD_WRITE,
 	    time.tv_sec, time.tv_usec)))
-		printf("clock: failed to save (%d)\n");
+		printf("clock: failed to save (%d)\n", error);
 }
 
 void

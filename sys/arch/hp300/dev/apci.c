@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/apci.c,v 1.3.12.4 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/apci.c,v 1.3.12.5 2004/02/19 10:48:38 niklas Exp $	*/
 /*	$NetBSD: apci.c,v 1.9 2000/11/02 00:35:05 eeh Exp $	*/
 
 /*-
@@ -304,7 +304,6 @@ apciopen(dev, flag, mode, p)
 	s = spltty();
 	if (sc->sc_tty == NULL) {
 		tp = sc->sc_tty = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = sc->sc_tty;
 	splx(s);
@@ -439,7 +438,6 @@ apciclose(dev, flag, mode, p)
 	splx(s);
 	ttyclose(tp);
 #if 0
-	tty_detach(tp);
 	ttyfree(tp);
 	sc->sc_tty = NULL;
 #endif
@@ -674,7 +672,7 @@ apciioctl(dev, cmd, data, flag, p)
 	case TIOCSFLAGS: {
 		int userbits;
 
-		error = suser(p->p_ucred, &p->p_acflag);
+		error = suser(p, 0);
 		if (error)
 			return (EPERM);
 

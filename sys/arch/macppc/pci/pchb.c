@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1.4.5 2003/05/13 19:41:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1.4.6 2004/02/19 10:49:04 niklas Exp $	*/
 /*	$NetBSD: pchb.c,v 1.4 2000/01/25 07:19:11 tsubai Exp $	*/
 
 /*-
@@ -60,10 +60,7 @@ struct cfdriver pchb_cd = {
 };
 
 int
-pchbmatch(parent, cf, aux)
-	struct device *parent;
-	void *cf;
-	void *aux;
+pchbmatch(struct device *parent, void *cf, void *aux)
 {
 	struct pci_attach_args *pa = aux;
 
@@ -103,11 +100,8 @@ pchbmatch(parent, cf, aux)
 
 /*ARGSUSED*/
 void
-pchbattach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+pchbattach(struct device *parent, struct device  *self, void *aux)
 {
-
 	printf("\n");
 
 	/*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.5 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.6 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -31,8 +31,8 @@
  */
 
 /*
- * Referencies:
- * 1. 82596DX and 82596SX High-Perfomance 32-bit Local Area Network Coprocessor
+ * References:
+ * 1. 82596DX and 82596SX High-Performance 32-bit Local Area Network Coprocessor
  *    Intel Corporation, November 1996, Order Number: 290219-006
  *
  * 2. 712 I/O Subsystem ERS Rev 1.0
@@ -226,8 +226,10 @@ ie_gsc_read16(sc, offset)
 	struct ie_softc *sc;
 	int offset;
 {
-	fdce(0, sc->bh + offset);
-	return *(volatile u_int16_t *)(sc->bh + offset);
+	volatile u_int16_t *addr = (volatile u_int16_t *)(sc->bh + offset);
+
+	asm __volatile ("fdc	%%r0(%%sr0, %0)" :: "r" (addr));
+	return *addr;
 }
 
 void
@@ -236,20 +238,24 @@ ie_gsc_write16(sc, offset, v)
 	int offset;
 	u_int16_t v;
 {
-	*(volatile u_int16_t *)(sc->bh + offset) = v;
-	fdce(0, sc->bh + offset);
+	volatile u_int16_t *addr = (volatile u_int16_t *)(sc->bh + offset);
+
+	*addr = v;
+	asm __volatile ("fdc	%%r0(%%sr0, %0)" :: "r" (addr));
 }
 
 void
-ie_gsc_write24(sc, offset, addr)
+ie_gsc_write24(sc, offset, v)
 	struct ie_softc *sc;
 	int offset;
-	int addr;
+	int v;
 {
-	*(volatile u_int16_t *)(sc->bh + offset + 0) = (addr      ) & 0xffff;
-	*(volatile u_int16_t *)(sc->bh + offset + 2) = (addr >> 16) & 0xffff;
-	fdce(0, sc->bh + offset + 0);
-	fdce(0, sc->bh + offset + 2);
+	volatile u_int16_t *addr = (volatile u_int16_t *)(sc->bh + offset);
+
+	addr[0] = (v      ) & 0xffff;
+	addr[1] = (v >> 16) & 0xffff;
+	asm __volatile ("fdc	%%r0(%%sr0, %0)" :: "r" (addr+0));
+	asm __volatile ("fdc	%%r0(%%sr0, %0)" :: "r" (addr+1));
 }
 
 void
@@ -388,5 +394,5 @@ ie_gsc_attach(parent, self, aux)
 		      ie_gsc_media, IE_NMEDIA, ie_gsc_media[0]);
 
 	sc->sc_ih = gsc_intr_establish((struct gsc_softc *)parent, IPL_NET,
-	    ga->ga_irq, i82596_intr, sc, &sc->sc_dev);
+	    ga->ga_irq, i82596_intr, sc, sc->sc_dev.dv_xname);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/adosfs.h,v 1.8.8.1 2002/03/28 11:26:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/adosfs.h,v 1.8.8.2 2004/02/19 10:51:21 niklas Exp $	*/
 /*	$NetBSD: adosfs.h,v 1.12 1996/10/08 22:18:02 thorpej Exp $	*/
 
 /*
@@ -149,4 +149,4 @@ void		 adosfs_aremhash(struct anode *);
 
 int		 adosfs_lookup(void *);
 
-int		(**adosfs_vnodeop_p)(void *);
+extern int	(**adosfs_vnodeop_p)(void *);

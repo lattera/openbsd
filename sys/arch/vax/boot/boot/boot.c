@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/boot.c,v 1.5.4.5 2003/06/07 11:14:46 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/boot.c,v 1.5.4.6 2004/02/19 10:50:02 niklas Exp $ */
 /*	$NetBSD: boot.c,v 1.18 2002/05/31 15:58:26 ragge Exp $ */
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.
@@ -283,7 +283,7 @@ load:
 
 
 void
-loadpcs()
+loadpcs(void)
 {
 	static int pcsdone = 0;
 	int mid = mfpr(PR_SID);

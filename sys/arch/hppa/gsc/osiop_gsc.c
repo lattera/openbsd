@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/osiop_gsc.c,v 1.3.4.2 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/osiop_gsc.c,v 1.3.4.3 2004/02/19 10:48:40 niklas Exp $	*/
 /*	$NetBSD: osiop_gsc.c,v 1.6 2002/10/02 05:17:50 thorpej Exp $	*/
 
 /*
@@ -159,7 +159,7 @@ osiop_gsc_attach(parent, self, aux)
 	osiop_attach(sc);
 
 	(void)gsc_intr_establish((struct gsc_softc *)parent, IPL_BIO,
-				 ga->ga_irq, osiop_gsc_intr, sc, &sc->sc_dev);
+	    ga->ga_irq, osiop_gsc_intr, sc, sc->sc_dev.dv_xname);
 }
 
 /*
@@ -196,7 +196,9 @@ osiop_gsc_intr(arg)
 	/* Deal with the interrupt */
 	osiop_intr(sc);
 
+#ifdef USELEDS
 	ledctl(PALED_DISK, 0, 0);
+#endif
 
 	return (1);
 }

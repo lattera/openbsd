@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.7 2003/06/07 11:14:45 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.8 2004/02/19 10:50:00 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -225,7 +225,7 @@ bootstrap(nctx)
 	/* 
 	 * Initialize ddb first and register OBP callbacks.
 	 * We can do this because ddb_init() does not allocate anything,
-	 * just initialze some pointers to important things
+	 * just initializes some pointers to important things
 	 * like the symtab.
 	 *
 	 * By doing this first and installing the OBP callbacks
@@ -986,8 +986,6 @@ mainbus_match(parent, cf, aux)
 
 	return (1);
 }
-
-int autoconf_nzs = 0;	/* must be global so obio.c can see it */
 
 /*
  * Attach the mainbus.

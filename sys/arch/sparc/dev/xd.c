@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/xd.c,v 1.14.4.5 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/xd.c,v 1.14.4.6 2004/02/19 10:49:58 niklas Exp $	*/
 /*	$NetBSD: xd.c,v 1.37 1997/07/29 09:58:16 fair Exp $	*/
 
 /*
@@ -899,7 +899,7 @@ xdioctl(dev, command, addr, flag, p)
 
 	case DIOSXDCMD:
 		xio = (struct xd_iocmd *) addr;
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		if ((error = suser(p, 0)) != 0)
 			return (error);
 		return (xdc_ioctlcmd(xd, dev, xio));
 
@@ -1491,7 +1491,7 @@ xdc_startbuf(xdcsc, xdsc, bp)
  * picked up later by the interrupt routine.  for case [2] the
  * programmed i/o driver is called with a special flag that says
  * return when one iopb is free.  for case [3] the process can sleep
- * on the iorq free list until some iopbs are avaliable.
+ * on the iorq free list until some iopbs are available.
  */
 
 
@@ -2364,13 +2364,13 @@ xdc_e2str(no)
 	case XD_ERR_RVFY:
 		return ("Read verify");
 	case XD_ERR_VFER:
-		return ("Fatail VMEDMA error");
+		return ("Fatal VMEDMA error");
 	case XD_ERR_VBUS:
 		return ("VMEbus error");
 	case XD_ERR_DFLT:
 		return ("Drive faulted");
 	case XD_ERR_HECY:
-		return ("Header error/cyliner");
+		return ("Header error/cylinder");
 	case XD_ERR_HEHD:
 		return ("Header error/head");
 	case XD_ERR_NOCY:

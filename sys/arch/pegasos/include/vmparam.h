@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/vmparam.h,v 1.2 2004/01/23 21:20:54 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/vmparam.h,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-

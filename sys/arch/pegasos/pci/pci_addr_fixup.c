@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/pci_addr_fixup.c,v 1.4 2003/12/20 22:40:27 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pci/Attic/pci_addr_fixup.c,v 1.4.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: pci_addr_fixup.c,v 1.7 2000/08/03 20:10:45 nathanw Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_mainbus.c,v 1.6.2.3 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_mainbus.c,v 1.6.2.4 2004/02/19 10:49:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net),
@@ -43,6 +43,7 @@
 #include <dev/wscons/wsdisplayvar.h>
 #include <dev/wscons/wscons_raster.h>
 #include <dev/rasops/rasops.h>
+#include <machine/fbvar.h>
 
 #include <sparc64/dev/creatorreg.h>
 #include <sparc64/dev/creatorvar.h>

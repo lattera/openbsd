@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12.2.3 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12.2.4 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Michael Shalayeff
@@ -121,7 +121,6 @@ struct db_variable db_regs[] = {
 	{ "pidr4", (long *)&ddb_regs.tf_pidr4, FCN_NULL },
 #endif
 
-	{ "hptm",  (long *)&ddb_regs.tf_hptm,  FCN_NULL },
 	{ "vtop",  (long *)&ddb_regs.tf_vtop,  FCN_NULL },
 	{ "cr28",  (long *)&ddb_regs.tf_cr28,  FCN_NULL },
 	{ "cr30",  (long *)&ddb_regs.tf_cr30,  FCN_NULL },

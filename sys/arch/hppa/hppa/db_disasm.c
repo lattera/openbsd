@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.5 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.6 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -2144,7 +2144,7 @@ coprDasm(i, ofs, w)
 	register u_int uid = Uid(w);
 	register int load = 0;
 	register char *pfx = uid > 1 ? "c" : "f";
-	register int dreg;
+	register int dreg = 0;
 
 	if (Match("copr")) {
 		if (uid) {

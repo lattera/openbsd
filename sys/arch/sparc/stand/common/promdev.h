@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/promdev.h,v 1.1.12.1 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/promdev.h,v 1.1.12.2 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: promdev.h,v 1.3 1995/09/18 21:31:50 pk Exp $ */
 
 /*
@@ -61,9 +61,11 @@ extern int	debug;
 extern void	prom_init(void);
 
 /* Note: dvma_*() routines are for "oldmon" machines only */
+extern void	dvma_init(void);	
 extern char	*dvma_mapin(char *, size_t);
 extern char	*dvma_mapout(char *, size_t);
 extern char	*dvma_alloc(int);
+extern void	dvma_free(char *, int);
 
 /*
  * duplicates from pmap.c for mapping device on "oldmon" machines.

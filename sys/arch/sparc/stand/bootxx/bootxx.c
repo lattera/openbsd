@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/bootxx.c,v 1.1.12.2 2003/03/27 23:49:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/bootxx/bootxx.c,v 1.1.12.3 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: bootxx.c,v 1.2 1997/09/14 19:28:17 pk Exp $	*/
 
 /*
@@ -50,7 +50,7 @@ struct open_file	io;
 
 /*
  * The contents of the block_* variables below is set by installboot(8)
- * to hold the the filesystem data of the second-stage boot program
+ * to hold the filesystem data of the second-stage boot program
  * (typically `/boot'): filesystem block size, # of filesystem blocks and
  * the block numbers themselves.
  */
@@ -63,7 +63,7 @@ daddr_t			block_table[MAXBLOCKNUM] = { 0 };
 void	loadboot(struct open_file *, caddr_t);
 
 int
-main()
+main(int argc, char *argv[])
 {
 	char	*dummy;
 	size_t	n;

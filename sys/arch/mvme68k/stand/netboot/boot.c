@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/boot.c,v 1.7.2.1 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/boot.c,v 1.7.2.2 2004/02/19 10:49:05 niklas Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -70,7 +70,7 @@
 extern   char *version;
 char  line[80];
 
-main()
+main(int argc, char *argv[])
 {
 	char *cp, *file;
 	int ask = 0, howto, ret;

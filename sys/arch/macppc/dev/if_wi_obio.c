@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_wi_obio.c,v 1.3.4.3 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_wi_obio.c,v 1.3.4.4 2004/02/19 10:49:03 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -129,7 +129,7 @@ wi_obio_attach(parent, self, aux)
 
 	wi_obio_enable(sc);
 
-	wi_attach(sc);
+	wi_attach(sc, &wi_func_io);
 }
 
 int

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK_CD,v 1.11.2.7 2003/06/07 11:11:36 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK_CD,v 1.11.2.8 2004/02/19 10:48:41 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -29,6 +29,7 @@ option		MSDOSFS		# MS-DOS file system
 option		FIFO		# FIFOs; RECOMMENDED
 
 option		INET		# IP + ICMP + TCP + UDP
+option		INET6		# IPv6 (needs INET)
 
 option		BOOT_CONFIG	# boot-time kernel config
 
@@ -296,6 +297,7 @@ txp*	at pci? dev ? function ?		# 3com 3CR990
 nge*	at pci? dev ? function ?		# NS DP83820/DP83821 GigE
 bge*	at pci? dev ? function ?		# Broadcom BCM570x (aka Tigon3)
 #lge*	at pci? dev ? function ?		# Level1 LXT1001 GigE
+mtd*	at pci? dev ? function ?		# Myson MTD803
 
 # Wireless network cards
 wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
@@ -316,8 +318,9 @@ nsphyter*	at mii? phy ?			# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 sqphy*	at mii? phy ?				# Seeq 8x220 PHYs
 rlphy* at mii? phy ?				# RealTek 8139 internal PHYs
-#mtdphy*	at mii? phy ?			# Myson MTD972 PHYs
+mtdphy*	at mii? phy ?				# Myson MTD972 PHYs
 dcphy*	at mii? phy ?				# Digital Clone PHYs
+acphy*	at mii? phy ?				# Altima AC101 PHYs
 amphy*	at mii? phy ?				# AMD 79C873 PHYs
 tqphy*	at mii? phy ?				# TDK 78Q212x PHYs
 brgphy*	at mii? phy ?				# Broadcom Gigabit PHYs
@@ -331,3 +334,4 @@ pseudo-device	loop	1		# network loopback
 #pseudo-device	ppp	1		# PPP
 pseudo-device	bpfilter 1		# packet filter
 pseudo-device	rd	1		# ramdisk
+pseudo-device	ccd	4		# concatenated disk devices

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgfour.c,v 1.9.6.6 2003/06/07 11:14:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgfour.c,v 1.9.6.7 2004/02/19 10:49:57 niklas Exp $	*/
 /*	$NetBSD: cgfour.c,v 1.13 1997/05/24 20:16:06 pk Exp $	*/
 
 /*
@@ -237,7 +237,7 @@ cgfourattach(parent, self, args)
 	sc->sc_sunfb.sf_ro.ri_bits = mapiodev(ca->ca_ra.ra_reg,
 	    PFOUR_COLOR_OFF_COLOR, round_page(sc->sc_sunfb.sf_fbsize));
 	sc->sc_sunfb.sf_ro.ri_hw = sc;
-	fbwscons_init(&sc->sc_sunfb, isconsole);
+	fbwscons_init(&sc->sc_sunfb, isconsole ? 0 : RI_CLEAR);
 	fbwscons_setcolormap(&sc->sc_sunfb, cgfour_setcolor);
 
 	cgfour_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adbvar.h,v 1.6.14.1 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adbvar.h,v 1.6.14.2 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: adbvar.h,v 1.5 1997/01/13 07:01:24 scottr Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@ int	adbclose(dev_t dev, int flag, int mode, struct proc *p);
 int	adbread(dev_t dev, struct uio *uio, int flag);
 int	adbwrite(dev_t dev, struct uio *uio, int flag);
 int	adbioctl(dev_t , int , caddr_t , int , struct proc *);
-int	adbselect(dev_t dev, int rw, struct proc *p);
+int	adbpoll(dev_t dev, int rw, struct proc *p);
 
 /* adbsysadm.s */
 void	extdms_complete(void);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.9 2003/05/13 19:41:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.10 2004/02/19 10:49:07 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -47,6 +47,8 @@
 #include <machine/disklabel.h>
 #include <machine/vmparam.h>
 
+#include <dev/cons.h>
+
 /*
  * The following several variables are related to
  * the configuration process, and are used in initializing
@@ -57,7 +59,6 @@ struct	device *parsedisk(char *, int, int, dev_t *);
 void	setroot(void);
 void	swapconf(void);
 char	buginchr(void);
-int	getsb(char *, int);
 void	dumpconf(void);
 int	findblkmajor(struct device *);
 struct device	*getdisk(char *, int, int, dev_t *);
@@ -74,32 +75,41 @@ struct device *bootdv;	/* set by device drivers (if found) */
 void
 cpu_configure()
 {
+	struct consdev *temp;
+	extern struct consdev bootcons;
+
 	if (config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");
 
 	/*
-	 * Turn external interrupts on. We have all the drivers in
-	 * place now!
+	 * Turn external interrupts on.
+	 *
+	 * XXX We have a race here. If we enable interrupts after setroot(),
+	 * the kernel dies. If we enable interrupts here, console on cl does
+	 * not work (for boot -a). So we switch to the boot console for the
+	 * time being...
 	 */
+	temp = cn_tab;
+	cn_tab = &bootcons;
+
 	enable_interrupt();
 	spl0();
 	setroot();
 	swapconf();
 
-	/*
-	 * Done with autoconfig!
-	 */
+	cn_tab = temp;
+
 	cold = 0;
 }
 
 /*
  * Configure swap space and related parameters.
  */
-void 
+void
 swapconf()
 {
-	register struct swdevt *swp;
-	register int nblks;
+	struct swdevt *swp;
+	int nblks;
 
 	for (swp = swdevt; swp->sw_dev != NODEV; swp++)
 		if (bdevsw[major(swp->sw_dev)].d_psize) {
@@ -114,7 +124,7 @@ swapconf()
 }
 
 /*
- * the rest of this file was adapted from Theo de Raadt's code in the 
+ * the rest of this file was adapted from Theo de Raadt's code in the
  * sparc port to nuke the "options GENERIC" stuff.
  */
 
@@ -127,13 +137,12 @@ struct nam2blk {
 	{ "rd",	7 },
 };
 
-
 int
 findblkmajor(dv)
 	struct device *dv;
 {
 	char *name = dv->dv_xname;
-	register int i;
+	int i;
 
 	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
 		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[0].name)) == 0)
@@ -147,7 +156,7 @@ getdisk(str, len, defpart, devp)
 	int len, defpart;
 	dev_t *devp;
 {
-	register struct device *dv;
+	struct device *dv;
 
 	if ((dv = parsedisk(str, len, defpart, devp)) == NULL) {
 		printf("use one of:");
@@ -171,8 +180,8 @@ parsedisk(str, len, defpart, devp)
 	int len, defpart;
 	dev_t *devp;
 {
-	register struct device *dv;
-	register char *cp, c;
+	struct device *dv;
+	char *cp, c;
 	int majdev, unit, part;
 
 	if (len == 0)
@@ -220,9 +229,9 @@ parsedisk(str, len, defpart, devp)
 void
 setroot()
 {
-	register struct swdevt *swp;
-	register struct device *dv;
-	register int len, majdev, unit, part;
+	struct swdevt *swp;
+	struct device *dv;
+	int len, majdev, unit;
 	dev_t nrootdev, nswapdev = NODEV;
 	char buf[128];
 	dev_t temp;
@@ -235,13 +244,13 @@ setroot()
 
 	if (boothowto & RB_ASKNAME) {
 		for (;;) {
-			printf("root device");
+			printf("root device ");
 			if (bootdv != NULL)
 				printf("(default %s%c)",
 				    bootdv->dv_xname,
 				    bootdv->dv_class == DV_DISK ? 'a' : ' ');
 			printf(": ");
-			len = getsb(buf, sizeof(buf));
+			len = getsn(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
 				strlcpy(buf, bootdv->dv_xname, sizeof buf);
 				len = strlen(buf);
@@ -249,14 +258,14 @@ setroot()
 			if (len > 0 && buf[len - 1] == '*') {
 				buf[--len] = '\0';
 				dv = getdisk(buf, len, 1, &nrootdev);
-				if (dv != NULL) {
+				if (dv) {
 					bootdv = dv;
 					nswapdev = nrootdev;
 					goto gotswap;
 				}
 			}
 			dv = getdisk(buf, len, 0, &nrootdev);
-			if (dv != NULL) {
+			if (dv) {
 				bootdv = dv;
 				break;
 			}
@@ -276,7 +285,7 @@ setroot()
 				    bootdv->dv_xname,
 				    bootdv->dv_class == DV_DISK ? 'b' : ' ');
 			printf(": ");
-			len = getsb(buf, sizeof(buf));
+			len = getsn(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
 				switch (bootdv->dv_class) {
 				case DV_IFNET:
@@ -295,7 +304,7 @@ setroot()
 				break;
 			}
 			dv = getdisk(buf, len, 1, &nswapdev);
-			if (dv != NULL) {
+			if (dv) {
 				if (dv->dv_class == DV_IFNET)
 					nswapdev = NODEV;
 				break;
@@ -320,9 +329,8 @@ gotswap:
 			 * val[2] of the boot device is the partition number.
 			 * Assume swap is on partition b.
 			 */
-			part = bootpart;
 			unit = bootdv->dv_unit;
-			rootdev = MAKEDISKDEV(majdev, unit, part);
+			rootdev = MAKEDISKDEV(majdev, unit, bootpart);
 			nswapdev = dumpdev = MAKEDISKDEV(major(rootdev),
 			    DISKUNIT(rootdev), 1);
 		} else {
@@ -375,13 +383,15 @@ gotswap:
 			break;
 		}
 	}
-	if (swp->sw_dev != NODEV)
-		/*
-		 * If dumpdev was the same as the old primary swap device,
-		 * move it to the new primary swap device.
-		 */
-		if (temp == dumpdev)
-			dumpdev = swdevt[0].sw_dev;
+	if (swp->sw_dev == NODEV)
+		return;
+
+	/*
+	 * If dumpdev was the same as the old primary swap device, move
+	 * it to the new primary swap device.
+	 */
+	if (temp == dumpdev)
+		dumpdev = swdevt[0].sw_dev;
 }
 
 /*
@@ -410,49 +420,4 @@ getdevunit(name, unit)
 			return NULL;
 	}
 	return dev;
-}
-
-int
-getsb(cp, size)
-	char *cp;
-	int size;
-{
-	register char *lp;
-	register int c;
-	register int len;
-
-	lp = cp;
-	len = 0;
-	for (;;) {
-		c = buginchr();
-		switch (c) {
-		case '\n':
-		case '\r':
-			printf("\n");
-			*lp++ = '\0';
-			return (len);
-		case '\b':
-		case '\177':
-			if (len) {
-				--len;
-				--lp;
-				printf("\b \b");
-			}
-			continue;
-		case '@':
-		case 'u' & 037:
-			len = 0;
-			lp = cp;
-			printf("\n");
-			continue;
-		default:
-			if (len + 1 >= size || c < ' ') {
-				printf("\007");
-				continue;
-			}
-			printf("%c", c);
-			++len;
-			*lp++ = c;
-		}
-	}
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_ipc.c,v 1.4.10.3 2002/03/28 11:28:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_ipc.c,v 1.4.10.4 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: linux_ipc.c,v 1.10 1996/04/05 00:01:44 christos Exp $	*/
 
 /*
@@ -538,7 +538,7 @@ linux_shmat(p, v, retval)
 	SCARG(&bsa, shmaddr) = SCARG(uap, ptr);
 	SCARG(&bsa, shmflg) = SCARG(uap, a2);
 
-	if ((error = sys_shmat(p, &bsa, retval)))
+	if ((error = sys_shmat1(p, &bsa, retval, 1)))
 		return error;
 
 	if ((error = copyout(&retval[0], (caddr_t) SCARG(uap, a3),

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/prom.h,v 1.4.4.5 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/prom.h,v 1.4.4.6 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -30,19 +30,23 @@
 #ifndef __MACHINE_PROM_H__
 #define __MACHINE_PROM_H__
 
+/* BUG trap vector */
+#define	MVMEPROM_VECTOR		496
+
 #define MVMEPROM_INCHR		0x00
 #define MVMEPROM_INSTAT		0x01
 #define MVMEPROM_INLN		0x02
 #define MVMEPROM_READSTR	0x03
 #define MVMEPROM_READLN		0x04
-#define MVMEPROM_OUTCHR		0x20
-#define MVMEPROM_OUTSTR		0x21
 #define MVMEPROM_DSKRD		0x10
 #define MVMEPROM_DSKWR		0x11
 #define MVMEPROM_DSKCFIG	0x12
 #define MVMEPROM_DSKFMT		0x14
 #define MVMEPROM_DSKCTRL	0x15
+#define MVMEPROM_NETFOPEN	0x1b
+#define MVMEPROM_NETFREAD	0x1c
 #define MVMEPROM_NETCTRL	0x1d
+#define MVMEPROM_OUTCHR		0x20
 #define MVMEPROM_OUTSTR		0x21
 #define MVMEPROM_OUTSTRCRLF	0x22
 #define MVMEPROM_WRITE		0x23
@@ -67,14 +71,31 @@
 #define ENVIRONTYPE_MEMSIZE	5
 
 #ifndef LOCORE
-struct prom_netctrl {
-	u_char	dev;
+struct mvmeprom_netctrl {
 	u_char	ctrl;
+	u_char	dev;
 	u_short	status;
 	u_long	cmd;
 	u_long	addr;
 	u_long	len;
 	u_long	flags;
+};
+
+struct mvmeprom_netfopen {
+	u_char	ctrl;
+	u_char	dev;
+	u_short	status;
+	char	filename[64];
+};
+
+struct mvmeprom_netfread {
+	u_char	ctrl;
+	u_char	dev;
+	u_short	status;
+	u_long	addr;
+	u_short	bytes;
+	u_short	blk;
+	u_long	timeout;
 };
 
 struct prom_environ_hdr {
@@ -106,7 +127,7 @@ struct mvmeprom_brdid {
 	u_char	pwa[16];		/* printed wiring assembly number */
 	u_char	speed[4];		/* cpu speed */
 	u_char	etheraddr[6];		/* mac address, all zero if no ether */
-	u_char	fill[2];		
+	u_char	fill[2];
 	u_char	scsiid[2];		/* local SCSI id */
 	u_char	sysid[8];		/* system id - nothing on mvme187 */
 	u_char	brd1_pwb[8];		/* memory board 1 pwb */
@@ -157,11 +178,9 @@ struct mvmeprom_args {
 	u_int	cputyp;
 };
 
-#endif
+extern unsigned long bugvec[2], sysbugvec[2];	/* BUG trap vector copies */
 
-#define MVMEPROM_CALL(x)	\
-	__asm__ __volatile__ ( __CONCAT("or r9,r0,",__STRING(x)) ); \
-	__asm__ __volatile__ ("tb0 0,r0,496")
+#endif	/* _LOCORE */
 
 #define MVMEPROM_REG_DEVLUN	"r2"
 #define MVMEPROM_REG_CTRLLUN	"r3"

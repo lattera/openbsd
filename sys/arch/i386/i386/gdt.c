@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.8 2003/05/15 04:08:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.9 2004/02/19 10:48:41 niklas Exp $	*/
 /*	$NetBSD: gdt.c,v 1.28 2002/12/14 09:38:50 junyoung Exp $	*/
 
 /*-
@@ -83,7 +83,6 @@ struct lock gdt_lock_store;
 
 static __inline void gdt_lock(void);
 static __inline void gdt_unlock(void);
-void gdt_init(void);
 void gdt_grow(void);
 int gdt_get_slot(void);
 void gdt_put_slot(int);

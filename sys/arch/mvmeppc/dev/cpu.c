@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.4 2003/05/13 19:41:07 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.5 2004/02/19 10:49:09 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -52,7 +52,7 @@ struct cfattach cpu_ca = {
 	sizeof(struct device), cpumatch, cpuattach
 };
 struct cfdriver cpu_cd = {
-	NULL, "cpu", DV_DULL, NULL, 0
+	NULL, "cpu", DV_DULL
 };
 
 static int

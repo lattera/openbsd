@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/autoconf.h,v 1.2 2004/01/22 21:28:33 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/pegasos/include/Attic/autoconf.h,v 1.2.2.1 2004/02/19 10:49:55 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7.12.4 2003/05/13 19:41:10 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7.12.5 2004/02/19 10:50:03 niklas Exp $ */
 /*	$NetBSD: db_disasm.c,v 1.10 1998/04/13 12:10:27 ragge Exp $ */
 /*
  * Copyright (c) 2002, Miodrag Vallat.
@@ -237,7 +237,7 @@ get_operands(ib)
 			add_off(ib, ib->addr);
 			break;
 
-		case 'a':	/* absolute adressing mode */
+		case 'a':	/* absolute addressing mode */
 			aa = 1;
 			/* FALLTHROUGH */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpufunc.h,v 1.5.2.5 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpufunc.h,v 1.5.2.6 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: cpufunc.h,v 1.8 1994/10/27 04:15:59 cgd Exp $	*/
 
 /*
@@ -34,6 +34,8 @@
 #ifndef _I386_CPUFUNC_H_
 #define	_I386_CPUFUNC_H_
 
+#ifdef _KERNEL
+
 /*
  * Functions to provide access to i386-specific instructions.
  */
@@ -58,6 +60,8 @@ static __inline void tlbflush(void);
 static __inline void tlbflushg(void);
 static __inline void disable_intr(void);
 static __inline void enable_intr(void);
+static __inline u_int read_eflags(void);
+static __inline void write_eflags(u_int);
 static __inline void wbinvd(void);
 static __inline void wrmsr(u_int, u_int64_t);
 static __inline u_int64_t rdmsr(u_int);
@@ -197,6 +201,21 @@ enable_intr(void)
 	__asm __volatile("sti");
 }
 
+static __inline u_int
+read_eflags(void)
+{
+	u_int ef;
+
+	__asm __volatile("pushfl; popl %0" : "=r" (ef));
+	return (ef);
+}
+
+static __inline void
+write_eflags(u_int ef)
+{
+	__asm __volatile("pushl %0; popfl" : : "r" (ef));
+}
+
 static __inline void
 wbinvd(void)
 {
@@ -226,4 +245,5 @@ breakpoint(void)
 	__asm __volatile("int $3");
 }
 
+#endif /* _KERNEL */
 #endif /* !_I386_CPUFUNC_H_ */

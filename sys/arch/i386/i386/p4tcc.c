@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2 2004/02/14 15:09:22 grange Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2.2.1 2004/02/19 10:48:42 niklas Exp $ */
 /*
  * Copyright (c) 2003 Ted Unangst
  * All rights reserved.
@@ -59,6 +59,9 @@ static struct {
 
 #define TCC_LEVELS sizeof(tcc) / sizeof(tcc[0])
 
+extern int (*cpu_cpuspeed)(void *, size_t *, void *, size_t);
+extern int (*cpu_setperf)(void *, size_t *, void *, size_t);
+
 void
 p4tcc_init(int model, int step)
 {
@@ -91,7 +94,7 @@ p4tcc_init(int model, int step)
 #if 0
 /* possible? not sure */
 int
-p4tcc_cpuspeed(int *)
+p4tcc_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
 {
 
 	return EINVAL;
@@ -99,10 +102,21 @@ p4tcc_cpuspeed(int *)
 #endif
 
 int
-p4tcc_setperf(int level)
+p4tcc_setperf(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
 {
-	int i;
+	int i, error;
 	uint64_t msreg;
+	static uint level = 100;
+	uint olevel;
+
+	olevel = level;
+	if ((error = sysctl_int(oldp, oldlenp, newp, newlen, &level)))
+		return (error);
+	if (level == olevel)
+		return (0);
+
+	if (level > 100)
+		level = 100;
 
 	for (i = 0; i < TCC_LEVELS; i++) {
 		if (level >= tcc[i].level)

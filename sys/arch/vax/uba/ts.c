@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4.12.4 2003/06/07 11:14:47 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4.12.5 2004/02/19 10:50:02 niklas Exp $ */
 /*	$NetBSD: ts.c,v 1.11 1997/01/11 11:34:43 ragge Exp $ */
 
 /*-
@@ -224,7 +224,7 @@ struct	cfattach ts_ca = {
  * Since we don't have credits and thus only one operation per time,
  * we don't have and don't need queues like MSCP/TMSCP use them.
  * Per controller we only need one internal buffer for ioctls and 
- * two pointers to buffers to simulate similiar behaviour ...
+ * two pointers to buffers to simulate similar behaviour ...
  */
 struct buf	 ts_cbuf[NTS];		/* internal cmd buffer (for ioctls) */
 struct buf	*ts_wtab[NTS];		/* dummy I/O wait queue */
@@ -305,7 +305,7 @@ tsexec (ctlr, cmd)
 	case TS_CMD_WTM:	cmdName = "Write Tape Mark";		break;
 	case TS_CMD_WTMR:	cmdName = "Write Tape Mark (Retry)";	break;
 	case TS_CMD_STAT:	cmdName = "Get Status (END)";		break;
-	default:		cmdName = "unexptected Command";	break;
+	default:		cmdName = "Unexpected Command";		break;
 	}
 #endif
 
@@ -402,7 +402,7 @@ tscommand (dev, cmd, count)
 		debug (("tscommand: direct return, no biowait.\n"));
 		return;
 	}
-	debug (("tscommand: calling biowait ...\n"));;
+	debug (("tscommand: calling biowait ...\n"));
 	biowait (bp);
 	if (bp->b_flags & B_WANTED)
 		wakeup ((caddr_t)bp);
@@ -483,7 +483,7 @@ tsstart (sc, bp)
 			/*
 			 * For some reasons which I don't (yet? :) understand,
 			 * tmscp.c initiates in this situation a GET-UNIT
-			 * command. (Because no data-buffers are neccess. ??)
+			 * command. (Because no data-buffers are necessary?)
 			 */
 			cmd = TS_CMD_STAT;
 			goto do_cmd;

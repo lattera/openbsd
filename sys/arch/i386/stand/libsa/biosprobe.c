@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosprobe.c,v 1.1.8.1 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosprobe.c,v 1.1.8.2 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Tobias Weingartner
@@ -25,16 +25,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <machine/biosvar.h>
 #include <machine/pio.h>
 #include <dev/cons.h>
-#include <lib/libsa/stand.h>
+#include <sys/disklabel.h>
+#include "disk.h"
 #include "debug.h"
+#include "libsa.h"
+#include "biosdev.h"
 
 
 void *
-getSYSCONFaddr()
+getSYSCONFaddr(void)
 {
  	u_int32_t status;
 	u_int8_t *vers;
@@ -55,7 +58,7 @@ getSYSCONFaddr()
 }
 
 void *
-getEBDAaddr()
+getEBDAaddr(void)
 {
 	u_int32_t status;
 	u_int8_t *info;

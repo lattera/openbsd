@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10.2.2 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10.2.3 2004/02/19 10:48:40 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1990,1991,1994 The University of Utah and
@@ -159,7 +159,6 @@ isr	.reg	%cr20
 ior	.reg	%cr21
 ipsw	.reg	%cr22
 eirr	.reg	%cr23
-hptmask	.reg	%cr24
 tr0	.reg	%cr24
 vtop	.reg	%cr25
 tr1	.reg	%cr25

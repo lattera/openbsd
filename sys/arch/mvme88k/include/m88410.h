@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/m88410.h,v 1.4 2001/12/22 08:31:05 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/m88410.h,v 1.4.2.1 2004/02/19 10:49:07 niklas Exp $ */
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
  * All rights reserved.
@@ -44,7 +44,7 @@
 #include <machine/psl.h>
 #ifdef _KERNEL
 #include <mvme88k/dev/busswreg.h>
-#endif 
+#endif
 
 #define XCC_NOP		"0x0"
 #define XCC_FLUSH_PAGE	"0x1"
@@ -52,14 +52,15 @@
 #define XCC_INVAL_ALL	"0x3"
 #define XCC_ADDR	0xFF800000
 
-static __inline__ void mc88410_flush_page(vm_offset_t physaddr)
+static __inline__ void
+mc88410_flush_page(paddr_t physaddr)
 {
-	vm_offset_t xccaddr = XCC_ADDR | (physaddr >> PGSHIFT);
+	paddr_t xccaddr = XCC_ADDR | (physaddr >> PGSHIFT);
         m88k_psr_type psr;
 	struct bussw_reg *bs = (struct bussw_reg *)BS_BASE;
         u_short	bs_gcsr = bs->bs_gcsr;
 	u_short	bs_romcr = bs->bs_romcr;
-	
+
 	psr = get_psr();
 	/* mask misaligned exceptions */
 	set_psr(psr | PSR_MXM);
@@ -77,11 +78,11 @@ static __inline__ void mc88410_flush_page(vm_offset_t physaddr)
 	__asm__ __volatile__("ld   r4,r5,lo16(%0)" : : "r" (xccaddr));
 	/* make the double write. bang! */
 	__asm__ __volatile__("st.d r2,r4,0");
-        
+
 	/* spin until the operation starts */
-	while (!bs->bs_xccr & BS_XCC_FBSY)
+	while ((bs->bs_xccr & BS_XCC_FBSY) == 0)
 		;
-	
+
 	/* restore PSR and friends */
         set_psr(psr);
 	flush_pipeline();
@@ -89,13 +90,14 @@ static __inline__ void mc88410_flush_page(vm_offset_t physaddr)
 	bs->bs_romcr = bs_romcr;
 }
 
-static __inline__ void mc88410_flush(void)
+static __inline__ void
+mc88410_flush(void)
 {
         m88k_psr_type psr;
 	struct bussw_reg *bs = (struct bussw_reg *)BS_BASE;
         u_short	bs_gcsr = bs->bs_gcsr;
 	u_short	bs_romcr = bs->bs_romcr;
-	
+
 	psr = get_psr();
 	/* mask misaligned exceptions */
 	set_psr(psr | PSR_MXM);
@@ -112,12 +114,12 @@ static __inline__ void mc88410_flush(void)
 	__asm__ __volatile__("or.u r5,r0,hi16(0xFF800000)");
 	__asm__ __volatile__("or   r4,r5,r0");	/* r4 is now 0xFF800000 */
 	/* make the double write. bang! */
-	__asm__ __volatile__("st.d r2,r4,0");		
-        
+	__asm__ __volatile__("st.d r2,r4,0");
+
 	/* spin until the operation starts */
-	while (!bs->bs_xccr & BS_XCC_FBSY)
+	while ((bs->bs_xccr & BS_XCC_FBSY) == 0)
 		;
-	
+
 	/* restore PSR and friends */
         set_psr(psr);
 	flush_pipeline();
@@ -125,13 +127,14 @@ static __inline__ void mc88410_flush(void)
 	bs->bs_romcr = bs_romcr;
 }
 
-static __inline__ void mc88410_inval(void)
+static __inline__ void
+mc88410_inval(void)
 {
         m88k_psr_type psr;
 	struct bussw_reg *bs = (struct bussw_reg *)BS_BASE;
         u_short	bs_gcsr = bs->bs_gcsr;
 	u_short	bs_romcr = bs->bs_romcr;
-	
+
 	psr = get_psr();
 	/* mask misaligned exceptions */
 	set_psr(psr | PSR_MXM);
@@ -148,12 +151,12 @@ static __inline__ void mc88410_inval(void)
 	__asm__ __volatile__("or.u r5,r0,hi16(0xFF800000)");
 	__asm__ __volatile__("or   r4,r5,r0");	/* r4 is now 0xFF800000 */
 	/* make the double write. bang! */
-	__asm__ __volatile__("st.d r2,r4,0");		
-        
+	__asm__ __volatile__("st.d r2,r4,0");
+
 	/* spin until the operation starts */
-	while (!bs->bs_xccr & BS_XCC_FBSY)
+	while ((bs->bs_xccr & BS_XCC_FBSY) == 0)
 		;
-	
+
 	/* restore PSR and friends */
         set_psr(psr);
 	flush_pipeline();
@@ -161,10 +164,19 @@ static __inline__ void mc88410_inval(void)
 	bs->bs_romcr = bs_romcr;
 }
 
-static __inline__ void mc88410_sync(void)
+static __inline__ void
+mc88410_sync(void)
 {
 	mc88410_flush();
-	mc88410_inval();	
+	mc88410_inval();
+}
+
+static __inline__ int
+mc88410_present(void)
+{
+	struct bussw_reg *bs = (struct bussw_reg *)BS_BASE;
+
+	return (bs->bs_gcsr & BS_GCSR_B410);
 }
 
 #endif	/* _LOCORE */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hmevar.h,v 1.6.6.2 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hmevar.h,v 1.6.6.3 2004/02/19 10:49:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -58,3 +58,10 @@ struct hme_softc {
 	int	sc_first_td, sc_last_td, sc_no_td;	/* tx counters */
 	int	sc_last_rd;				/* rx counters */
 };
+
+#ifndef	EVL_ENCAPLEN	/* defined if NVLAN > 0 */
+#define	EVL_ENCAPLEN	0
+#endif
+ 
+#define	HME_MTU		\
+    (ETHERMTU + EVL_ENCAPLEN + sizeof(u_int32_t) + sizeof(struct ether_header))

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.9 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.10 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*
@@ -148,6 +148,12 @@ const struct pciintr_icu_table {
 	  piix_init },
 	{ PCI_VENDOR_INTEL,     PCI_PRODUCT_INTEL_82801BAM_LPC,
 	  piix_init },
+	{ PCI_VENDOR_INTEL,     PCI_PRODUCT_INTEL_82801CAM_LPC,
+	  piix_init },
+	{ PCI_VENDOR_INTEL,     PCI_PRODUCT_INTEL_82801DB_LPC,
+	  piix_init },
+	{ PCI_VENDOR_INTEL,	PCI_PRODUCT_INTEL_82801EB_LPC,
+	  piix_init },
 
 	{ PCI_VENDOR_OPTI,	PCI_PRODUCT_OPTI_82C558,
 	  opti82c558_init },
@@ -159,7 +165,10 @@ const struct pciintr_icu_table {
 	{ PCI_VENDOR_VIATECH,	PCI_PRODUCT_VIATECH_VT82C586_ISA,
 	  via82c586_init, },
 	{ PCI_VENDOR_VIATECH,	PCI_PRODUCT_VIATECH_VT82C686A_ISA,
-	  via82c586_init, },
+	  via82c586_init },
+
+	{ PCI_VENDOR_VIATECH,	PCI_PRODUCT_VIATECH_VT8231_ISA,
+	  via8231_init },
 
 	{ PCI_VENDOR_SIS,	PCI_PRODUCT_SIS_85C503,
 	  sis85c503_init },
@@ -168,6 +177,9 @@ const struct pciintr_icu_table {
 	  amd756_init },
 	{ PCI_VENDOR_AMD,	PCI_PRODUCT_AMD_766_ISA,
 	  amd756_init },
+
+	{ PCI_VENDOR_ALI,	PCI_PRODUCT_ALI_M1533,
+	  ali1543_init },
 
 	{ PCI_VENDOR_ALI,	PCI_PRODUCT_ALI_M1543,
 	  ali1543_init },

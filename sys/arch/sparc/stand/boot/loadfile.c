@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.2.4.2 2003/06/07 11:14:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.2.4.3 2004/02/19 10:49:59 niklas Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*
@@ -176,8 +176,7 @@ shread:
  * Emulate forward moves with reads, and give up on backwards moves.
  * bsd.rd ought to be correctly ordered.
  */
-int elf_seek(int, off_t);
-int
+static int
 elf_seek(int fd, off_t relpos)
 {
 #define DUMBBUFSIZE	4096

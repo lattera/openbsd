@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/dev/devlist2h.awk,v 1.3.2.1 2001/04/18 16:05:57 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/dev/devlist2h.awk,v 1.3.2.2 2004/02/19 10:48:39 niklas Exp $
 
 #
 # Copyright (c) 1998-2001 Michael Shalayeff
@@ -115,7 +115,7 @@ NR > 1 {
 
 END	{
 	if (busted) {
-		print("unteminated comment at the EOF\n");
+		print("unterminated comment at the EOF\n");
 		exit(1);
 	}
 	printf("{ -1 }\n") > cpud;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/fooip.c,v 1.3.16.3 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/fooip.c,v 1.3.16.4 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -66,7 +66,7 @@ struct cfattach fooip_ca = {
 };
 
 struct cfdriver fooip_cd = {
-	NULL, "fooip", DV_DULL, 0
+	NULL, "fooip", DV_DULL
 };
 
 int  fooipintr(void *);

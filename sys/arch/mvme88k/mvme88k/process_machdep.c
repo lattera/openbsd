@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process_machdep.c,v 1.7.4.3 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process_machdep.c,v 1.7.4.4 2004/02/19 10:49:08 niklas Exp $ */
 
 /*
  * Copyright (c) 1993 The Regents of the University of California.
@@ -71,7 +71,6 @@
 #include <machine/frame.h>
 #endif
 #include <sys/ptrace.h>
-/* NOTE: struct reg == struct trapframe */
 
 int
 process_read_regs(p, regs)
@@ -130,10 +129,6 @@ process_set_pc(p, addr)
 	regs = USER_REGS(p);
 	regs->sxip = (u_int)addr;
 	regs->snip = (u_int)addr + 4;
-	/*
-	p->p_md.md_tf->sxip = (u_int)addr;
-	     p->p_md.md_tf->snip = (u_int)addr + 4;
-	*/
 	return (0);
 }
 

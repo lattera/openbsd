@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.3 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.4 2004/02/19 10:49:06 niklas Exp $ */
 /*  Copyright (c) 1998 Steve Murphree, Jr. */
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -7,6 +7,7 @@
 #include <sys/device.h>
 #include <sys/disklabel.h>
 
+#include <machine/cmmu.h>
 #include <machine/cpu.h>
 #include <machine/autoconf.h>
 
@@ -20,7 +21,7 @@ struct cfattach mainbus_ca = {
 };
 
 struct cfdriver mainbus_cd = {
-	NULL, "mainbus", DV_DULL, 0
+	NULL, "mainbus", DV_DULL
 };
 
 int
@@ -69,7 +70,14 @@ mainbus_attach(parent, self, args)
 	struct device *parent, *self;
 	void *args;
 {
-	printf (" machine type MVME%x\n", brdtyp);
+	extern char cpu_model[];
+
+	printf(": %s\n", cpu_model);
+
+	/*
+	 * Display cpu/mmu details. Only for the master CPU so far.
+	 */
+	cpu_configuration_print(1);
 
 	/* XXX
 	 * should have a please-attach-first list for mainbus,

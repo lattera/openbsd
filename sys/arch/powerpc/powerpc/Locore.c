@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.5.12.4 2003/05/13 19:41:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.5.12.5 2004/02/19 10:49:57 niklas Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996 Wolfgang Solfrank.
@@ -47,8 +47,7 @@ extern int whichqs;
  * Calls should be made at splstatclock(), and p->p_stat should be SRUN.
  */
 void
-setrunqueue(p)
-	struct proc *p;
+setrunqueue(struct proc *p)
 {
 	struct  prochd *q;
 	struct proc *oldlast;
@@ -71,8 +70,7 @@ setrunqueue(p)
  * Calls should be made at splstatclock().
  */
 void
-remrunqueue(p)
-	struct proc *p;
+remrunqueue(struct proc *p)
 {
 	int which = p->p_priority >> 2;
 	struct prochd *q;

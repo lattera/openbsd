@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.5 2003/06/07 11:00:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.6 2004/02/19 10:51:29 niklas Exp $	*/
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -123,7 +123,7 @@ netbsd_sys___stat13(p, v, retval)
 	if (error)
 		return (error);
 	/* Don't let non-root see generation numbers (for NFS security) */
-	if (suser(p->p_ucred, &p->p_acflag))
+	if (suser(p, 0))
 		sb.st_gen = 0;
 	openbsd_to_netbsd_stat(&sb, &nsb);
 	error = copyout(&nsb, SCARG(uap, ub), sizeof(nsb));
@@ -160,7 +160,7 @@ netbsd_sys___lstat13(p, v, retval)
 	if (error)
 		return (error);
 	/* Don't let non-root see generation numbers (for NFS security) */
-	if (suser(p->p_ucred, &p->p_acflag))
+	if (suser(p, 0))
 		sb.st_gen = 0;
 	openbsd_to_netbsd_stat(&sb, &nsb);
 	error = copyout(&nsb, SCARG(uap, ub), sizeof(nsb));

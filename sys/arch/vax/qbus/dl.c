@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dl.c,v 1.1.8.4 2003/06/07 11:14:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dl.c,v 1.1.8.5 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: dl.c,v 1.11 2000/01/24 02:40:29 matt Exp $	*/
 
 /*-
@@ -214,7 +214,6 @@ dl_attach (parent, self, aux)
 	/* Initialize our softc structure. Should be done in open? */
 	
 	sc->sc_tty = ttymalloc();
-	tty_attach(sc->sc_tty);
 
 	/* Now register the TX & RX interrupt handlers */
 	uba_intr_establish(ua->ua_icookie, ua->ua_cvec    , dlxint, sc);

@@ -1,5 +1,5 @@
 /*	$NetBSD: db_memrw.c,v 1.4 2001/05/18 20:38:27 matt Exp $	*/
-/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_memrw.c,v 1.4 2003/02/26 21:54:44 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_memrw.c,v 1.4.4.1 2004/02/19 10:49:57 niklas Exp $	*/
 
 /* 
  * Mach Operating System
@@ -55,10 +55,10 @@
 void
 db_read_bytes(addr, size, data)
 	vaddr_t		addr;
-	register size_t	size;
-	register char	*data;
+	size_t	size;
+	char	*data;
 {
-	register char	*src = (char *)addr;
+	char	*src = (char *)addr;
 	faultbuf env;
 	faultbuf *old_onfault = curpcb->pcb_onfault;
 	if (setfault(&env)) {
@@ -85,10 +85,10 @@ db_read_bytes(addr, size, data)
 void
 db_write_bytes(addr, size, data)
 	vaddr_t		addr;
-	register size_t	size;
-	register char	*data;
+	size_t	size;
+	char	*data;
 {
-	register char	*dst = (char *)addr;
+	char	*dst = (char *)addr;
 	faultbuf env;
 	faultbuf *old_onfault = curpcb->pcb_onfault;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/Attic/disksubr_mbr.c,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/Attic/disksubr_mbr.c,v 1.1.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*

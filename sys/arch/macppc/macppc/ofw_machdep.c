@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3.4.5 2003/03/27 23:29:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3.4.6 2004/02/19 10:49:04 niklas Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*
@@ -88,27 +88,27 @@ static struct mem_region OFmem[OFMEM_REGIONS + 1], OFavail[OFMEM_REGIONS + 3];
  * to provide space for two additional entry beyond the terminating one.
  */
 void
-ofw_mem_regions(memp, availp)
-	struct mem_region **memp, **availp;
+ofw_mem_regions(struct mem_region **memp, struct mem_region **availp)
 {
 	int phandle;
-	
+
 	/*
 	 * Get memory.
 	 */
 	if ((phandle = OF_finddevice("/memory")) == -1
 	    || OF_getprop(phandle, "reg",
-			  OFmem, sizeof OFmem[0] * OFMEM_REGIONS)
-	       <= 0
+	    OFmem, sizeof OFmem[0] * OFMEM_REGIONS) <= 0
 	    || OF_getprop(phandle, "available",
-			  OFavail, sizeof OFavail[0] * OFMEM_REGIONS)
-	       <= 0)
+	    OFavail, sizeof OFavail[0] * OFMEM_REGIONS) <= 0)
 		panic("no memory?");
+
 	*memp = OFmem;
+
 	/* HACK */
 	if (OFmem[0].size == 0) {
 		*memp = OFavail;
 	}
+
 	*availp = OFavail;
 }
 
@@ -136,6 +136,7 @@ static struct {
 	vm_offset_t pa;
 	int mode;
 } ofw_mapping[256];
+
 int
 save_ofw_mapping()
 {
@@ -149,11 +150,13 @@ save_ofw_mapping()
 	if (OF_getprop(chosen, "stdin", &stdin, sizeof stdin) != sizeof stdin) {
 		return 0;
 	}
+
 	OF_stdin = stdin;
 	if (OF_getprop(chosen, "stdout", &stdout, sizeof stdout)
 	    != sizeof stdout) {
 		return 0;
 	}
+
 	if (stdout == 0) {
 		/* If the screen is to be console, but not active, open it */
 		stdout = OF_open("screen");
@@ -217,7 +220,7 @@ ofrootfound()
 {
 	int node;
 	struct ofprobe probe;
-		
+
 	if (!(node = OF_peer(0)))
 		panic("No PROM root");
 	probe.phandle = node;
@@ -273,17 +276,15 @@ void
 ofw_do_pending_int()
 {
 	int pcpl;
-	int emsr, dmsr;
+	int s;
+
 	static int processing;
 
 	if(processing)
 		return;
 
 	processing = 1;
-	__asm__ volatile("mfmsr %0" : "=r"(emsr));
-	dmsr = emsr & ~PSL_EE;
-	__asm__ volatile("mtmsr %0" :: "r"(dmsr));
-
+	s = ppc_intr_disable();
 
 	pcpl = splhigh();		/* Turn off all */
 	if((ipending & SINT_CLOCK) && ((pcpl & imask[IPL_CLOCK]) == 0)) {
@@ -299,7 +300,7 @@ ofw_do_pending_int()
 	}
 	ipending &= pcpl;
 	cpl = pcpl;	/* Don't use splx... we are here already! */
-	__asm__ volatile("mtmsr %0" :: "r"(emsr));
+	ppc_intr_enable(s);
 	processing = 0;
 }
 
@@ -308,10 +309,8 @@ ofw_do_pending_int()
 static pcitag_t ofw_make_tag( void *cpv, int bus, int dev, int fnc);
 
 /* ARGSUSED */
-static pcitag_t 
-ofw_make_tag(cpv, bus, dev, fnc)
-        void *cpv;
-        int bus, dev, fnc;
+static pcitag_t
+ofw_make_tag(void *cpv, int bus, int dev, int fnc)
 {
         return (bus << 16) | (dev << 11) | (fnc << 8);
 }
@@ -322,7 +321,7 @@ ofw_make_tag(cpv, bus, dev, fnc)
 #define       OFW_PCI_PHYS_HI_DEVICESHIFT     11
 #define       OFW_PCI_PHYS_HI_FUNCTIONMASK    0x00000700
 #define       OFW_PCI_PHYS_HI_FUNCTIONSHIFT   8
-   
+
 #define pcibus(x) \
 	(((x) & OFW_PCI_PHYS_HI_BUSMASK) >> OFW_PCI_PHYS_HI_BUSSHIFT)
 #define pcidev(x) \
@@ -384,7 +383,7 @@ ofwconprobe()
 
 	return;
 }
-	
+
 #define DEVTREE_UNKNOWN 0
 #define DEVTREE_USB	1
 #define DEVTREE_ADB	2
@@ -468,7 +467,7 @@ ofw_find_keyboard()
 #if NUKBD > 0
 		printf("USB and ADB found, using USB\n");
 		ukbd_cnattach();
-#else 		
+#else
 		ofw_have_kbd = OFW_HAVE_ADBKBD; /* ??? */
 #endif
 	}
@@ -481,7 +480,7 @@ ofw_find_keyboard()
 #if NAKBD >0
 		printf("ADB found\n");
 		akbd_cnattach();
-#endif 
+#endif
 	}
 }
 
@@ -494,7 +493,6 @@ of_display_console()
 	int stdout_node;
 	int display_node;
 	int err;
-	int backlight_control[2];
 	u_int32_t memtag, iotag;
 	struct ppc_pci_chipset pa;
 	struct {
@@ -547,9 +545,8 @@ of_display_console()
 			panic(": no address");
 		}
 	}
-	len = OF_getprop(display_node, "backlight-control",
-	    backlight_control, sizeof(backlight_control));
-	if (len > 0)
+
+	if (OF_finddevice("/backlight") != 0)
 		cons_backlight_available = 1;
 
 	memtag = ofw_make_tag(NULL, pcibus(addr[0].phys_hi),
@@ -583,7 +580,7 @@ of_display_console()
 
 		vgafb_pci_console(cons_membus,
 			addr[1].phys_lo, addr[1].size_lo,
-			cons_membus, 
+			cons_membus,
 			cons_addr, addr[0].size_lo,
 			&pa, pcibus(addr[1].phys_hi), pcidev(addr[1].phys_hi),
 			pcifunc(addr[1].phys_hi));
@@ -602,8 +599,7 @@ of_display_console()
 }
 
 void
-of_setbrightness(brightness)
-	int brightness;
+of_setbrightness(int brightness)
 {
 
 #if NVGAFB_PCI > 0
@@ -617,7 +613,10 @@ of_setbrightness(brightness)
 
 	cons_brightness = brightness;
 
-	/* The OF method is called "set-contrast" but affects brightness. Don't ask. */
+	/*
+	 * The OF method is called "set-contrast" but affects brightness.
+	 * Don't ask.
+	 */
 	OF_call_method_1("set-contrast", cons_display_ofh, 1, cons_brightness);
 
 	/* XXX this routine should also save the brightness settings in the nvram */
@@ -628,33 +627,28 @@ of_setbrightness(brightness)
 
 cons_decl(ofw);
 
-/*   
+/*
  * Console support functions
  */
 void
-ofwcnprobe(cd)
-        struct consdev *cd;
+ofwcnprobe(struct consdev *cd)
 {
 	cd->cn_pri = CN_DEAD;
 }
 
 void
-ofwcninit(cd)
-        struct consdev *cd;
+ofwcninit(struct consdev *cd)
 {
 }
 void
-ofwcnputc(dev, c)
-	dev_t dev;
-	int c;
+ofwcnputc(dev_t dev, int c)
 {
 	char ch = c;
- 
+
 	OF_write(OF_stdout, &ch, 1);
 }
 int
-ofwcngetc(dev)
-	dev_t dev;
+ofwcngetc(dev_t dev)
 {
         unsigned char ch = '\0';
         int l;
@@ -666,9 +660,7 @@ ofwcngetc(dev)
 }
 
 void
-ofwcnpollc(dev, on)
-	dev_t dev;
-	int on;
+ofwcnpollc(dev_t dev, int on)
 {
 }
 

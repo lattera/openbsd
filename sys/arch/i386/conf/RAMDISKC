@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKC,v 1.17.2.7 2003/06/07 11:11:36 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKC,v 1.17.2.8 2004/02/19 10:48:41 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -133,12 +133,12 @@ pccom*	at isapnp?
 #ahc*	at eisa? slot ?			# Adaptec 274x, aic7770 SCSI controllers
 #ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
 #scsibus* at ahc?
-gdt*	at pci? dev ? function ?	# ICP Vortex GDT RAID controllers
-scsibus* at gdt?
+#gdt*	at pci? dev ? function ?	# ICP Vortex GDT RAID controllers
+#scsibus* at gdt?
 #twe*	at pci? dev ? function ?	# 3ware Escalade RAID controllers
 #scsibus* at pci? dev ? function ?
-isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
-scsibus* at isp?
+#isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
+#scsibus* at isp?
 aic0	at isa? port 0x340 irq 11	# Adaptec 152[02] SCSI controllers
 #aic*	at isapnp?
 aic*	at pcmcia? function ?		# PCMCIA based aic SCSI controllers

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/cl.c,v 1.19.2.6 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/cl.c,v 1.19.2.7 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -200,7 +200,7 @@ struct cfattach cl_ca = {
 };
 
 struct cfdriver cl_cd = {
-	NULL, "cl", DV_TTY, 0
+	NULL, "cl", DV_TTY
 };
 
 #define CLCDBUF 80
@@ -553,7 +553,6 @@ clopen(dev, flag, mode, p)
 		tp = cl->tty;
 	} else {
 		tp = cl->tty = ttymalloc();
-		tty_attach(tp);
 	}
 	tp->t_oproc = clstart;
 	tp->t_param = clparam;
@@ -896,7 +895,7 @@ clioctl(dev, cmd, data, flag, p)
 		*(int *)data = cl->cl_swflags;
 		break;
 	case TIOCSFLAGS:
-		error = suser(p->p_ucred, &p->p_acflag); 
+		error = suser(p, 0); 
 		if (error != 0)
 			return(EPERM); 
 
@@ -1019,6 +1018,7 @@ clcngetc(dev)
 	u_char ier_old = 0xff;
 	struct clreg *cl_reg = cl_cons.cl_vaddr;
 	volatile struct pcctworeg *pcc2_base = cl_cons.pcctwoaddr;
+
 	cl_reg->cl_car = 0;
 	if (!(cl_reg->cl_ier & 0x08)) {
 		ier_old = cl_reg->cl_ier;
@@ -1572,7 +1572,7 @@ cl_txintr(arg)
 				pbuffer = sc->sc_cl[channel].tx[nbuf];
 				resid = tp->t_outq.c_cc;
 				cnt = min (CL_BUFSIZE,resid);
-		log(LOG_WARNING, "cl_txintr: resid %x cnt %x pbuf %x\n",
+		log(LOG_WARNING, "cl_txintr: resid %x cnt %x pbuf %p\n",
 			resid, cnt, pbuffer);
 				if (cnt != 0) {
 					cnt = q_to_b(&tp->t_outq, pbuffer, cnt);
@@ -1920,6 +1920,7 @@ cl_dumpport(channel)
 	rcor = cl_reg->cl_rcor;
 	tbpr = cl_reg->cl_tbpr;
 	rpilr = cl_reg->cl_rpilr;
+	rir = cl_reg->cl_rir;
 	ier = cl_reg->cl_ier;
 	ccr = cl_reg->cl_ccr;
 	tcor = cl_reg->cl_tcor;
@@ -1978,11 +1979,11 @@ cl_dumpport(channel)
 		tpr,   csr,   rts,   dtr);
 	printf("rtprl %x rtprh %x\n",
 		rtprl,   rtprh);
-	printf("rxcnt %x txcnt %x\n",
+	printf("rxcnt %lx txcnt %lx\n",
 		sc->sc_cl[channel].rxcnt, sc->sc_cl[channel].txcnt);
 	printf("dmabsts %x, tcbadru %x, tcbadrl %x, rcbadru %x, rcbadrl %x,\n",
 		dmabsts,    tcbadru,    tcbadrl,    rcbadru,    rcbadrl );
-	printf("parbadru %x, parbadrl %x, parbcnt %x, parbsts %x\n",
+	printf("parbadru %p, parbadrl %p, parbcnt %p, parbsts %p\n",
 		parbadru,    parbadrl,    parbcnt,    parbsts);
 	printf("arbadru %x, arbadrl %x, arbcnt %x, arbsts %x\n",
 		arbadru,    arbadrl,    arbcnt,    arbsts);

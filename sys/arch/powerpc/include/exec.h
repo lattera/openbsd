@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.5.12.4 2002/03/29 16:11:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.5.12.5 2004/02/19 10:49:57 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB.
@@ -11,12 +11,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed under OpenBSD for RTMX Inc,
- *	North Carolina, USA, by	Per Fogelstrom, Opsycon AB, Sweden.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -30,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: exec.h,v 1.7 2001/09/01 15:49:05 drahn Exp $
+ *	$Id$
  */
 
 #ifndef _POWERPC_EXEC_H_

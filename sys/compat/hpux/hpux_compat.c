@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.7 2003/06/07 11:00:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.8 2004/02/19 10:51:28 niklas Exp $	*/
 /*	$NetBSD: hpux_compat.c,v 1.35 1997/05/08 16:19:48 mycroft Exp $	*/
 
 /*
@@ -484,7 +484,7 @@ hpux_sys_ulimit(p, v, retval)
 	case 2:
 		SCARG(uap, newlimit) *= 512;
 		if (SCARG(uap, newlimit) > limp->rlim_max &&
-		    (error = suser(p->p_ucred, &p->p_acflag)))
+		    (error = suser(p, 0)))
 			break;
 		limp->rlim_cur = limp->rlim_max = SCARG(uap, newlimit);
 		/* else fall into... */
@@ -1209,7 +1209,7 @@ hpux_sys_stime_6x(p, v, retval)
 
 	tv.tv_sec = SCARG(uap, time);
 	tv.tv_usec = 0;
-	if ((error = suser(p->p_ucred, &p->p_acflag)))
+	if ((error = suser(p, 0)))
 		return (error);
 
 	/* WHAT DO WE DO ABOUT PENDING REAL-TIME TIMEOUTS??? */

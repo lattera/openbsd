@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/cpu.h,v 1.4.12.5 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/cpu.h,v 1.4.12.6 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.3 1997/02/02 06:56:57 thorpej Exp $	*/
 
 /*
@@ -60,7 +60,7 @@
  *	M68K_MMU_HP		Machine has an HP MMU.
  *
  * Note also that while m68k-generic code conditionalizes on the
- * M68K_MMU_HP CPP symbol, none of the HP MMU defintions are in this
+ * M68K_MMU_HP CPP symbol, none of the HP MMU definitions are in this
  * file (since none are used in otherwise sharable code).
  */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.6 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.7 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: sd.c,v 1.34 1997/07/10 18:14:10 kleink Exp $	*/
 
 /*
@@ -320,7 +320,7 @@ sdgetcapacity(sc, dev)
 			return (-1);
 		}
 		/*
-		 * XXX assume unformatted or non-existant media
+		 * XXX assume unformatted or non-existent media
 		 */
 		sc->sc_blks = 0;
 		sc->sc_blksize = DEV_BSIZE;
@@ -1109,7 +1109,7 @@ sdioctl(dev, cmd, data, flag, p)
 
 	case SDIOCSFORMAT:
 		/* take this device into or out of "format" mode */
-		if (suser(p->p_ucred, &p->p_acflag))
+		if (suser(p, 0))
 			return(EPERM);
 
 		if (*(int *)data) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/Attic/elfXX_exec.c,v 1.3.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/Attic/elfXX_exec.c,v 1.3.4.3 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: elfXX_exec.c,v 1.2 2001/08/15 20:08:15 eeh Exp $	*/
 
 /*
@@ -51,13 +51,7 @@
 #if 0
 int	CAT3(elf,ELFSIZE,_exec)(int, CAT3(Elf,ELFSIZE,_Ehdr) *, u_int64_t *, void **, void **);
 #endif
-#if defined(ELFSIZE) && (ELFSIZE == 32)
-#define ELF_ALIGN(x)	(((x)+3)&(~3))
-#elif defined(ELFSIZE) && (ELFSIZE == 64)
 #define ELF_ALIGN(x)	(((x)+7)&(~7))
-#else
-#error ELFSIZE must be either 32 or 64!
-#endif
 
 int
 CAT3(elf, ELFSIZE, _exec)(fd, elf, entryp, ssymp, esymp)

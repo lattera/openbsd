@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.20 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.21 2004/02/19 10:48:41 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -210,6 +210,7 @@
 	.data
 
 	.globl	_C_LABEL(cpu), _C_LABEL(cpu_id), _C_LABEL(cpu_vendor)
+	.globl	_C_LABEL(cpu_brandstr)
 	.globl	_C_LABEL(cpuid_level)
 	.globl	_C_LABEL(cpu_feature), _C_LABEL(cpu_ecxfeature)
 	.globl	_C_LABEL(cpu_cache_eax), _C_LABEL(cpu_cache_ebx)
@@ -257,7 +258,8 @@ _C_LABEL(cpu_cache_eax):.long	0
 _C_LABEL(cpu_cache_ebx):.long	0
 _C_LABEL(cpu_cache_ecx):.long	0
 _C_LABEL(cpu_cache_edx):.long	0
-_C_LABEL(cpu_vendor): .space 16 # vendor string returned by 'cpuid' instruction
+_C_LABEL(cpu_vendor): .space 16	# vendor string returned by 'cpuid' instruction
+_C_LABEL(cpu_brandstr):	.space 48 # brand string returned by 'cpuid'
 _C_LABEL(cold):		.long	1	# cold till we are not
 _C_LABEL(esym):		.long	0	# ptr to end of syms
 _C_LABEL(cnvmem):	.long	0	# conventional memory size
@@ -481,19 +483,45 @@ try586:	/* Use the `cpuid' instruction. */
 
 	movl	$RELOC(_C_LABEL(cpuid_level)),%eax
 	cmp	$2,%eax
-	jl	2f
+	jl	1f
 
 	movl	$2,%eax
 	cpuid
 /*
 	cmp	$1,%al
-	jne	2f
+	jne	1f
 */
 
 	movl	%eax,RELOC(_C_LABEL(cpu_cache_eax))
 	movl	%ebx,RELOC(_C_LABEL(cpu_cache_ebx))
 	movl	%ecx,RELOC(_C_LABEL(cpu_cache_ecx))
 	movl	%edx,RELOC(_C_LABEL(cpu_cache_edx))
+
+1:
+	/* Check if brand identification string is supported */
+	movl	$0x80000000,%eax
+	cpuid
+	cmpl	$0x80000000,%eax
+	jbe	2f
+	movl	$0x80000002,%eax
+	cpuid
+	movl	%eax,RELOC(_C_LABEL(cpu_brandstr))
+	movl	%ebx,RELOC(_C_LABEL(cpu_brandstr))+4
+	movl	%ecx,RELOC(_C_LABEL(cpu_brandstr))+8
+	movl	%edx,RELOC(_C_LABEL(cpu_brandstr))+12
+	movl	$0x80000003,%eax
+	cpuid
+	movl	%eax,RELOC(_C_LABEL(cpu_brandstr))+16
+	movl	%ebx,RELOC(_C_LABEL(cpu_brandstr))+20
+	movl	%ecx,RELOC(_C_LABEL(cpu_brandstr))+24
+	movl	%edx,RELOC(_C_LABEL(cpu_brandstr))+28
+	movl	$0x80000004,%eax
+	cpuid
+	movl	%eax,RELOC(_C_LABEL(cpu_brandstr))+32
+	movl	%ebx,RELOC(_C_LABEL(cpu_brandstr))+36
+	movl	%ecx,RELOC(_C_LABEL(cpu_brandstr))+40
+	andl	$0x00ffffff,%edx	/* Shouldn't be necessary */
+	movl	%edx,RELOC(_C_LABEL(cpu_brandstr))+44
 
 2:
 	/*
@@ -1009,7 +1037,7 @@ ENTRY(copyout)
 	shrl	$PGSHIFT,%edi
 
 	GET_CURPCB(%edx)
-	movl	$_C_LABEL(copy_fault),PCB_ONFAULT(%edx)
+	movl	$2f, PCB_ONFAULT(%edx)
 
 1:	/* Check PTE for each page. */
 	testb	$PG_RW,_C_LABEL(PTmap)(,%edi,4)
@@ -1019,11 +1047,11 @@ ENTRY(copyout)
 	decl	%ecx
 	jns	1b
 
-	movl	16(%esp),%edi
+	movl	20(%esp),%edi
+	movl	24(%esp),%eax
 	jmp	3f
 
 2:	/* Simulate a trap. */
-	pushl	%eax
 	pushl	%ecx
 	movl	%edi,%eax
 	shll	$PGSHIFT,%eax
@@ -1032,7 +1060,6 @@ ENTRY(copyout)
 	addl	$4,%esp			# pop argument
 	popl	%ecx
 	testl	%eax,%eax		# if not ok, return EFAULT
-	popl	%eax
 	jz	4b
 	jmp	_C_LABEL(copy_fault)
 #endif /* I386_CPU */
@@ -1046,8 +1073,8 @@ ENTRY(copyout)
 	shrl	$2,%ecx
 	rep
 	movsl
-	movb	%al,%cl
-	andb	$3,%cl
+	movl	%eax,%ecx
+	andl	$3,%ecx
 	rep
 	movsb
 
@@ -1119,8 +1146,6 @@ ENTRY(copy_fault)
 ENTRY(copyoutstr)
 	pushl	%esi
 	pushl	%edi
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(copystr_fault),PCB_ONFAULT(%ecx)
 
 	movl	12(%esp),%esi		# esi = from
 	movl	16(%esp),%edi		# edi = to
@@ -1138,12 +1163,8 @@ ENTRY(copyoutstr)
 	movl	$NBPG,%ecx
 	subl	%eax,%ecx		# ecx = NBPG - (src % NBPG)
 
-	GET_CURPCB(%eax)
-	movl	$6f,PCB_ONFAULT(%eax)
-
-	/* Compute PTE offset for start address. */
-	movl	%edi,%eax
-	shrl	$PGSHIFT,%eax		# calculate pte address
+	GET_CURPCB(%ecx)
+	movl	$6f, PCB_ONFAULT(%eax)
 
 1:	/*
 	 * Once per page, check that we are still within the bounds of user
@@ -1152,27 +1173,28 @@ ENTRY(copyoutstr)
 	cmpl	$VM_MAXUSER_ADDRESS,%edi
 	jae	_C_LABEL(copystr_fault)
 
+	/* Compute PTE offset for start address. */
+	movl	%edi,%eax
+	shrl	$PGSHIFT,%eax		# calculate pte address
+
 	testb	$PG_RW,_C_LABEL(PTmap)(,%eax,4)
 	jnz	2f
 
-	/* Simulate a trap. */
-	pushl	%eax
+6:	/* Simulate a trap. */
 	pushl	%edx
 	pushl	%edi
 	call	_C_LABEL(trapwrite)	# trapwrite(addr)
 	addl	$4,%esp			# clear argument from stack
 	popl	%edx
 	testl	%eax,%eax
-	popl	%eax
 	jnz	_C_LABEL(copystr_fault)
 
 2:	/* Copy up to end of this page. */
 	subl	%ecx,%edx		# predecrement total count
-	jnc	6f
+	jnc	3f
 	addl	%edx,%ecx		# ecx += (edx - ecx) = edx
 	xorl	%edx,%edx
 
-6:	pushl	%eax			# save PT index
 3:	decl	%ecx
 	js	4f
 	lodsb
@@ -1181,15 +1203,12 @@ ENTRY(copyoutstr)
 	jnz	3b
 
 	/* Success -- 0 byte reached. */
-	addl	$4,%esp			# discard PT index
 	addl	%ecx,%edx		# add back residual for this page
 	xorl	%eax,%eax
 	jmp	copystr_return
 
 4:	/* Go to next page, if any. */
-	popl	%eax			# restore PT index
 	movl	$NBPG,%ecx
-	incl	%eax
 	testl	%edx,%edx
 	jnz	1b
 
@@ -1340,36 +1359,6 @@ ENTRY(copystr)
 
 7:	popl	%edi
 	popl	%esi
-	ret
-
-/*
- * fuword(caddr_t uaddr);
- * Fetch an int from the user's address space.
- * Not used outside locore anymore.
- */
-ASENTRY(fuword)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-4,%edx
-	ja	_ASM_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_ASM_LABEL(fusufault),PCB_ONFAULT(%ecx)
-	movl	(%edx),%eax
-	movl	$0,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * Handle faults from fuword.  Clean up and return -1.
- */
-ASENTRY(fusufault)
-	movl	$0,PCB_ONFAULT(%ecx)
-	movl	$-1,%eax
-	ret
-
-/*
- * Handle earlier faults from fuword, due to our of range addresses.
- */
-ASENTRY(fusuaddrfault)
-	movl	$-1,%eax
 	ret
 
 /*****************************************************************************/
@@ -1986,7 +1975,7 @@ IDTVEC(dna)
 #else
 	pushl	_C_LABEL(cpu_info_store)
 #endif
-	call	_C_LABEL(npxdna)
+	call	*_C_LABEL(npxdna_func)
 	addl	$4,%esp
 	testl	%eax,%eax
 	jz	calltrap
@@ -2134,19 +2123,6 @@ IDTVEC(syscall)
 syscall1:
 	pushl	$T_ASTFLT	# trap # for doing ASTs
 	INTRENTRY
-#ifdef DIAGNOSTIC
-	movl	CPL,%ebx
-	testl	%ebx,%ebx
-	jz	1f
-	pushl	$5f
-	call	_C_LABEL(printf)
-	addl	$4,%esp
-#if defined(DDB) && 0
-	int	$3
-#endif
-1:
-	movl	TF_EAX(%esp),%esi	# syscall no
-#endif /* DIAGNOSTIC */
 	call	_C_LABEL(syscall)
 2:	/* Check for ASTs on exit to user mode. */
 	cli
@@ -2158,54 +2134,7 @@ syscall1:
 	/* Pushed T_ASTFLT into tf_trapno on entry. */
 	call	_C_LABEL(trap)
 	jmp	2b
-#ifndef DIAGNOSTIC
 1:	INTRFASTEXIT
-#else /* DIAGNOSTIC */
-1:	cmpl	CPL,%ebx
-	jne	3f
-	INTRFASTEXIT
-3:	sti
-	movl	TF_ESP(%esp),%edi	# user stack pointer
-	leal	4(%edi),%edi		# parameters (in userspace)
-	cmpl	$SYS_syscall,%esi
-	jne	5f
-	pushl	%edi
-	CALL	_ASM_LABEL(fuword)
-	movl	%eax,%esi		# indirect syscall no for SYS_syscall
-	leal	4(%edi),%edi		# shift parameters
-	jmp	6f
-5:	
-	cmpl	$SYS___syscall,%esi
-	jne	6f
-	pushl	%edi
-	CALL	_ASM_LABEL(fuword)
-	movl	%eax,%esi		# indirect syscall no for SYS___syscall
-	leal	8(%edi),%edi		# shift parameters (quad alignment)
-6:
-	leal	8(%edi),%ecx
-	pushl	%ecx
-	call	_ASM_LABEL(fuword)
-	movl	%eax,(%esp)		# 3rd syscall arg
-	leal	4(%edi),%ecx
-	pushl	%ecx
-	call	_ASM_LABEL(fuword)
-	movl	%eax,(%esp)		# 2nd syscall arg
-	pushl	%edi
-	call	_ASM_LABEL(fuword)
-	movl	%eax,(%esp)		# 1st syscall arg
-	pushl	%esi			# syscall no
-	pushl	CPL			# current spl
-	pushl	$4f			# format string
-	call	_C_LABEL(printf)
-	addl	$24,%esp
-#if defined(DDB) && 0
-	int	$3
-#endif /* DDB */
-	movl	%ebx,CPL
-	jmp	2b
-4:	.asciz	"WARNING: SPL (0x%x) NOT LOWERED ON syscall(0x%x, 0x%x, 0x%x, 0x%x...) EXIT\n"
-5:	.asciz	"WARNING: SPL NOT ZERO ON SYSCALL ENTRY\n"
-#endif /* DIAGNOSTIC */
 
 #include <i386/isa/vector.s>
 #include <i386/isa/icu.s>
@@ -2281,6 +2210,73 @@ ENTRY(bzero)
 
 	popl	%edi
 	ret
+
+#if defined(I686_CPU) && !defined(SMALL_KERNEL)
+ENTRY(sse2_pagezero)
+	pushl	%ebx
+	movl	8(%esp),%ecx
+	movl	%ecx,%eax
+	addl	$4096,%eax
+	xor	%ebx,%ebx
+1:
+	movnti	%ebx,(%ecx)
+	addl	$4,%ecx
+	cmpl	%ecx,%eax
+	jne	1b
+	sfence
+	popl	%ebx
+	ret
+
+ENTRY(i686_pagezero)
+	pushl	%edi
+	pushl	%ebx
+
+	movl	12(%esp), %edi
+	movl	$1024, %ecx
+	cld
+
+	ALIGN_TEXT
+1:
+	xorl	%eax, %eax
+	repe
+	scasl
+	jnz	2f
+
+	popl	%ebx
+	popl	%edi
+	ret
+
+	ALIGN_TEXT
+
+2:
+	incl	%ecx
+	subl	$4, %edi
+
+	movl	%ecx, %edx
+	cmpl	$16, %ecx
+
+	jge	3f
+
+	movl	%edi, %ebx
+	andl	$0x3f, %ebx
+	shrl	%ebx
+	shrl	%ebx
+	movl	$16, %ecx
+	subl	%ebx, %ecx
+
+3:
+	subl	%ecx, %edx
+	rep
+	stosl
+
+	movl	%edx, %ecx
+	testl	%edx, %edx
+	jnz	1b
+
+	popl	%ebx
+	popl	%edi
+	ret
+#endif
 
 #if NLAPIC > 0 
 #include <i386/i386/apicvec.s>

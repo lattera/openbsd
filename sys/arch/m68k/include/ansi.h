@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/Attic/ansi.h,v 1.5.12.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/Attic/ansi.h,v 1.5.12.3 2004/02/19 10:49:02 niklas Exp $	*/
 /*	$NetBSD: ansi.h,v 1.7 1996/11/15 22:38:52 jtc Exp $	*/
 
 /*-
@@ -49,7 +49,11 @@
 #define	_BSD_SIZE_T_	unsigned int		/* sizeof() */
 #define	_BSD_SSIZE_T_	int			/* byte count or error */
 #define	_BSD_TIME_T_	int			/* time() */
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define _BSD_VA_LIST_	__builtin_va_list
+#else
 #define	_BSD_VA_LIST_	char *			/* va_list */
+#endif
 #define _BSD_CLOCKID_T_	int
 #define _BSD_TIMER_T_	int
 

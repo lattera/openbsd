@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/tvtwo.c,v 1.1.4.1 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/tvtwo.c,v 1.1.4.2 2004/02/19 10:49:58 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -246,7 +246,7 @@ tvtwoattach(struct device *parent, struct device *self, void *args)
 	tvtwo_initcmap(sc);
 
 	sc->sc_sunfb.sf_ro.ri_hw = sc;
-	fbwscons_init(&sc->sc_sunfb, isconsole);
+	fbwscons_init(&sc->sc_sunfb, isconsole ? 0 : RI_CLEAR);
 
 	tvtwo_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;
 	tvtwo_stdscreen.nrows = sc->sc_sunfb.sf_ro.ri_rows;

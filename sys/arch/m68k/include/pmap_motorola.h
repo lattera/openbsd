@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.2.5 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.2.6 2004/02/19 10:49:02 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University
@@ -124,8 +124,10 @@ extern struct pv_entry	*pv_table;	/* array of entries, one per page */
 
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_wired_count(pmap)		((pmap)->pm_stats.wired_count)
+#define	pmap_phys_address(frame)	((paddr_t)m68k_ptob(frame))
 
-#define	pmap_update(pmap)		/* nothing (yet) */
+#define	pmap_copy(dp,sp,d,l,s)		do { /* nothing */ } while (0)
+#define	pmap_update(pmap)		do { /* nothing (yet) */ } while (0)
 
 extern pt_entry_t	*Sysmap;
 extern char		*vmmap;		/* map for mem, dumps, etc. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.3.4.4 2003/06/07 11:13:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.3.4.5 2004/02/19 10:49:07 niklas Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
@@ -46,11 +46,11 @@ int isbad(struct dkbad *, int, int, int);
 
 int
 isbad(bt, cyl, trk, sec)
-	register struct dkbad *bt;
+	struct dkbad *bt;
 	int cyl, trk, sec;
 {
-	register int i;
-	register long blk, bblk;
+	int i;
+	long blk, bblk;
 
 	blk = ((long)cyl << 16) + (trk << 8) + sec;
 	for (i = 0; i < NBT_BAD; i++) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.8.12.5 2003/05/13 19:41:10 ho Exp $	 */
+/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.8.12.6 2004/02/19 10:50:03 niklas Exp $	 */
 /*	$NetBSD: clock.c,v 1.35 2000/06/04 06:16:58 matt Exp $	 */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -136,7 +136,7 @@ inittodr(fs_time)
 		if (deltat < 0)
 			deltat = -deltat;
 		if (deltat >= 2 * SEC_PER_DAY) {
-			printf("Clock has %s %ld days",
+			printf("Clock has %s %d days",
 			    time.tv_sec < fs_time ? "lost" : "gained",
 			    deltat / SEC_PER_DAY);
 			rv = CLKREAD_WARN;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/include/Attic/conf.h,v 1.1 2004/02/01 05:12:54 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/include/Attic/conf.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.8 2002/02/10 12:26:03 chris Exp $	*/
 
 #ifndef _CATS_CONF_H

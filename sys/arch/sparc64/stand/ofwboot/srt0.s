@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2.4.3 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: srt0.s,v 1.1 2000/08/20 14:58:42 mrg Exp $	*/
 
 /*
@@ -45,6 +45,8 @@
 _esym:	.word	0			/* end of symbol table */
 	.globl	_C_LABEL(romp)
 	.align	8
+	.register %g2,	#scratch
+	.register %g3,	#scratch
 _C_LABEL(romp):	.xword	0		/* openfirmware entry point */
 
 /*
@@ -67,7 +69,6 @@ _start:
 	/*
 	 * Start by creating a stack for ourselves.
 	 */
-#ifdef _LP64
 	/* 64-bit stack */
 	btst	1, %sp
 	set	CC64FSZ, %g1	! Frame Size (negative)
@@ -78,18 +79,6 @@ _start:
 1:
 	sub	%sp, %g1, %g1
 	save	%g1, %g0, %sp
-#else
-	/* 32-bit stack */
-	btst	1, %sp
-	set	CC64FSZ, %g1	! Frame Size (negative)
-	bz	1f
-	 set	BIAS, %g2
-	sub	%g1, %g2, %g1
-1:
-	sub	%sp, %g1, %g1	! This is so we properly sign-extend things
-	andn	%g1, 0x7, %g1
-	save	%g1, %g0, %sp
-#endif
 	
 !	mov	%i0, %i4		! Apparenty we get our CIF in i0
 	

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.5 2003/03/27 23:52:20 niklas Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.6 2004/02/19 10:50:03 niklas Exp $     */
 /*	$NetBSD: subr.s,v 1.32 1999/03/25 00:41:48 mrg Exp $	   */
 
 /*
@@ -315,7 +315,7 @@ xxd:
 	addl3	r0,$IFTRAP,pcbtrap	# Save for copy* functions.
 
 #
-# Nice routine to get physical from virtual adresses.
+# Nice routine to get physical from virtual addresses.
 #
 	extzv	$9,$21,r0,r1		# extract offset
 	movl	*_Sysmap[r1],r2		# get pte

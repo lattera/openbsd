@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/if_le.c,v 1.7.6.2 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/if_le.c,v 1.7.6.3 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/reg.h,v 1.5.2.2 2002/03/28 10:29:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/reg.h,v 1.5.2.3 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -135,6 +135,8 @@
 #define	DR0_PCXL2_L1DHPMC_DIS	9	/* r/w L1 D-cache hpmc disable */
 #define	DR0_PCXL2_L2DHPMC	10	/* r/c L1 I-cache error flag */
 #define	DR0_PCXL2_L2DHPMC_DIS	11	/* r/w L1 I-cache hpmc disable */
+#define	DR0_PCXL2_SCRATCH	12	/* r/w scratch register */
+#define	DR0_PCXL2_ACCEL_IO	13	/*  /w enable accel IO writes */
 #define	DR0_PCXL2_STORE0	16	/* r/w scratch space */
 #define	DR0_PCXL2_PFMASK	17	/* r/w power-fail trap mask */
 #define	DR0_PCXL2_STORE1	18	/* r/w scratch */

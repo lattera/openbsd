@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/irq_dispatch.S,v 1.2 2004/02/01 06:10:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/irq_dispatch.S,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: irq_dispatch.S,v 1.5 2003/10/30 08:57:24 scw Exp $	*/
 
 /*

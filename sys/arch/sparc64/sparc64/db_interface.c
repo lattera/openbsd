@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4.4.3 2003/03/27 23:42:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4.4.4 2004/02/19 10:50:00 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.61 2001/07/31 06:55:47 eeh Exp $ */
 
 /*
@@ -279,9 +279,9 @@ kdb_trap(type, tf)
 	extern int trap_trace_dis;
 
 	trap_trace_dis++;
-#if NFB > 0
+
 	fb_unblank();
-#endif
+
 	switch (type) {
 	case T_BREAKPOINT:	/* breakpoint */
 		printf("kdb breakpoint at %llx\n",
@@ -517,9 +517,9 @@ db_dump_dtlb(addr, have_addr, count, modif)
 		dump_dtlb(buf);
 		p = buf;
 		for (i=0; i<64;) {
-			db_printf("%2d:%16.16lx %16.16lx ", i++, p[0], p[1]);
+			db_printf("%2d:%16.16llx %16.16llx ", i++, p[0], p[1]);
 			p += 2;
-			db_printf("%2d:%16.16lx %16.16lx\n", i++, p[0], p[1]);
+			db_printf("%2d:%16.16llx %16.16llx\n", i++, p[0], p[1]);
 			p += 2;
 		}
 	}
@@ -1336,11 +1336,11 @@ db_inst_store(inst)
       case IOP3_SWAPA:
       case IOP3_STF:
       case IOP3_STFSR:
-      case IOP3_STDFQ:
+      case IOP3_STQF:
       case IOP3_STDF:
       case IOP3_STC:
       case IOP3_STCSR:
-      case IOP3_STDCQ:
+      case IOP3_STQFA:
       case IOP3_STDC:
 	return 1;
 

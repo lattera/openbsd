@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libbug/Attic/putchar.c,v 1.1 2001/06/26 21:58:05 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libbug/Attic/putchar.c,v 1.1.2.1 2004/02/19 10:49:10 niklas Exp $ */
 
 /*
  * putchar: easier to do this with outstr than to add more macros to
@@ -6,9 +6,7 @@
  */
 
 #include <sys/types.h>
-#include <machine/prom.h>
 
-#include "stand.h"
 #include "libbug.h"
 
 void

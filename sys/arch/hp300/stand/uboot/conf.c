@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/stand/uboot/conf.c,v 1.2.12.2 2003/06/07 11:11:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/uboot/conf.c,v 1.2.12.3 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.12 1996/10/14 07:29:15 thorpej Exp $	*/
 
 /*
@@ -157,7 +157,7 @@ int	nfsys = 1;		/* default; changed per device type. */
 
 
 /*
- * Inititalize controllers
+ * Initialize controllers
  * 
  * XXX this should be a table
  */

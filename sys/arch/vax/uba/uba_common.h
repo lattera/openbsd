@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/uba_common.h,v 1.1.8.3 2003/06/07 11:14:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/uba_common.h,v 1.1.8.4 2004/02/19 10:50:02 niklas Exp $	*/
 /*	$NetBSD: uba_common.h,v 1.2 1999/06/21 16:23:01 ragge Exp $ */
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.
@@ -77,7 +77,7 @@ struct uba_regs {
 	int	uba_brrvr[4];		/* receive vector registers */
 	int	uba_dpr[16];		/* buffered data path register */
 	int	pad2[480];
-	struct pte uba_map[UBAPAGES];	/* unibus map register */
+	pt_entry_t uba_map[UBAPAGES];	/* unibus map register */
 	int	pad3[UBAIOPAGES];	/* no maps for device address space */
 };
 

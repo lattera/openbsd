@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/Attic/cpuvar.h,v 1.2.4.3 2003/03/27 23:42:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/Attic/cpuvar.h,v 1.2.4.4 2004/02/19 10:50:00 niklas Exp $	*/
 /*	$NetBSD: cpuvar.h,v 1.2 1999/11/06 20:18:13 eeh Exp $ */
 
 /*
@@ -48,7 +48,7 @@
  * The cpu_softc structure. This structure maintains information about one
  * currently installed CPU (there may be several of these if the machine
  * supports multiple CPUs, as on some Sun4m architectures). The information
- * in this structure supercedes the old "cpumod", "mmumod", and similar
+ * in this structure supersedes the old "cpumod", "mmumod", and similar
  * fields.
  */
 

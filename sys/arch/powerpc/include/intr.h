@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.6 2003/03/27 23:42:35 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.7 2004/02/19 10:49:57 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB and RTMX Inc, USA.
@@ -35,14 +35,15 @@
 #ifndef _POWERPC_INTR_H_
 #define _POWERPC_INTR_H_
 
-#define	IPL_BIO		0
+#define	IPL_NONE	0
+#define	IPL_BIO		1
 #define	IPL_AUDIO	IPL_BIO /* XXX - was defined this val in audio_if.h */
-#define	IPL_NET		1
-#define	IPL_TTY		2
-#define	IPL_IMP		3
-#define	IPL_CLOCK	4
-#define	IPL_NONE	5
+#define	IPL_NET		2
+#define	IPL_TTY		3
+#define	IPL_IMP		4
+#define	IPL_CLOCK	5
 #define	IPL_HIGH	6
+#define	IPL_NUM		7
 
 #define	IST_NONE	0
 #define	IST_PULSE	1
@@ -51,8 +52,9 @@
 
 #ifndef _LOCORE
 
-#define PPC_NIRQ	65
+#define PPC_NIRQ	66
 #define PPC_CLK_IRQ	64
+#define PPC_STAT_IRQ	65
 extern int intrcnt[PPC_NIRQ];
 
 void setsoftclock(void);
@@ -65,8 +67,8 @@ int  splsoftnet(void);
 void do_pending_int(void);
 
 
-volatile extern int cpl, ipending, astpending, tickspending;
-extern int imask[7];
+volatile extern int cpl, ipending, astpending;
+extern int imask[IPL_NUM];
 
 /* SPL asserts */
 #define	splassert(wantipl)	/* nothing */
@@ -170,6 +172,4 @@ extern struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
 void softnet(int isr);
 
 #endif /* _LOCORE */
-
-
 #endif /* _POWERPC_INTR_H_ */

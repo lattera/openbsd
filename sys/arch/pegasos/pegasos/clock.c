@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/clock.c,v 1.2 2003/12/18 20:06:15 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/pegasos/pegasos/Attic/clock.c,v 1.2.2.1 2004/02/19 10:49:56 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 1996/09/30 16:34:40 ws Exp $	*/
 
 /*

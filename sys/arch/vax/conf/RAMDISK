@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/RAMDISK,v 1.5.4.5 2003/03/27 23:52:19 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/RAMDISK,v 1.5.4.6 2004/02/19 10:50:02 niklas Exp $
 
 machine 	vax			# machine type
 
@@ -38,6 +38,7 @@ option		CD9660		# ISO 9660 + Rock Ridge file system
 #option		FIFO		# FIFOs; RECOMMENDED
 
 option		INET		# IP + ICMP + TCP + UDP
+option		INET6		# IPv6 (needs INET)
 
 option		BOOT_CONFIG	# boot-time kernel config
 

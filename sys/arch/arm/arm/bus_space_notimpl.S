@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/bus_space_notimpl.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/bus_space_notimpl.S,v 1.1.2.1 2004/02/19 10:48:00 niklas Exp $	*/
 /*	$NetBSD: bus_space_notimpl.S,v 1.2 2001/09/10 02:20:19 reinoud Exp $	*/
 
 /*

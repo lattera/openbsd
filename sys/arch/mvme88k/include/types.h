@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.7 1995/07/05 17:46:11 pk Exp $ */
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/types.h,v 1.7.4.2 2003/06/07 11:13:17 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/types.h,v 1.7.4.3 2004/02/19 10:49:07 niklas Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -48,12 +48,9 @@
 
 #if !defined(_ANSI_SOURCE) && !defined(_POSIX_SOURCE)
 typedef struct label_t {
-	int val[22];
+	int val[19];
 } label_t;
 #endif
-
-typedef	unsigned long	vm_offset_t;
-typedef	unsigned long	vm_size_t;
 
 typedef unsigned long	vaddr_t;
 typedef unsigned long	paddr_t;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/cdboot/cdboot.c,v 1.3.2.2 2003/06/07 11:11:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/cdboot/cdboot.c,v 1.3.2.3 2004/02/19 10:48:41 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Michael Shalayeff
@@ -42,6 +42,7 @@
 #include <machine/pdc.h>
 #include <stand/boot/bootarg.h>
 #include "dev_hppa.h"
+#include "cmd.h"
 
 dev_t bootdev;
 int debug = 1;
@@ -68,8 +69,7 @@ typedef void (*startfuncp) __P((int, int, int, int, int, int, caddr_t))
     __attribute__ ((noreturn));
 
 void
-boot(dev)
-	dev_t	dev;
+boot(dev_t dev)
 {
 	u_long marks[MARK_MAX];
 	char path[128];

@@ -1,5 +1,5 @@
 #
-# $OpenBSD: src/sys/arch/m68k/060sp/isp.s,v 1.2.16.1 2002/03/06 01:03:31 niklas Exp $
+# $OpenBSD: src/sys/arch/m68k/060sp/isp.s,v 1.2.16.2 2004/02/19 10:49:01 niklas Exp $
 # $NetBSD: isp.s,v 1.2 1996/05/15 19:48:48 is Exp $
 #
 
@@ -2527,7 +2527,7 @@ _mul64:
 	cmpi.b		%d0, &0x7		# is src mode Dn or other?
 	bgt.w		mul64_memop		# src is in memory
 
-# multiplier operand in the the data register file.
+# multiplier operand in the data register file.
 # must extract the register number and fetch the operand from the stack.
 mul64_regop:
 	andi.w		&0x7, %d0		# extract Dn
@@ -2934,7 +2934,7 @@ cr_cas2:
 #			    (external to package)			#
 #	_isp_cas_terminate(): create access error stack frame on fault	#
 #			      (external and internal to package)	#
-#	_isp_cas_inrange(): checks whether instr addess is within range	#
+#	_isp_cas_inrange(): checks whether instr addr is within range	#
 #			    of core cas/cas2emulation code		#
 #			    (external to package)			#
 #									#
@@ -3825,7 +3825,7 @@ CAS2W2_FILLER:
 #	(3) Save current DFC/SFC (ASSUMED TO BE EQUAL!!!); Then set	#
 #	    SFC/DFC according to whether exception occurred in user or	#
 #	    supervisor mode.						#
-#	(4) Use "plpaw" instruction to pre-load ATC with efective	#
+#	(4) Use "plpaw" instruction to pre-load ATC with effective	#
 #	    address page(s). THIS SHOULD NOT FAULT!!! The relevant	#
 # 	    page(s) should have been made resident prior to entering 	#
 #	    this routine.						#
@@ -3846,7 +3846,7 @@ CAS2W2_FILLER:
 #	    assert LOCKE* for the final write operation.		#
 #	(13)Exit.							#
 # 									#
-# 	The algorithm is actually implemented slightly diferently	#
+# 	The algorithm is actually implemented slightly differently	#
 # depending on the size of the operation and the misalignment of the	#
 # operand. A misaligned operand must be written in aligned chunks or	#
 # else the BUSCR register control gets confused.			#

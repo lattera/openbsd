@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/arch/cats/include/Attic/isa_machdep.h,v 1.1 2004/02/01 05:12:54 drahn Exp $	*/
+/* 	$OpenBSD: src/sys/arch/cats/include/Attic/isa_machdep.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /* $NetBSD: isa_machdep.h,v 1.4 2002/01/07 22:58:08 chris Exp $ */
 
 #ifndef _CATS_ISA_MACHDEP_H_

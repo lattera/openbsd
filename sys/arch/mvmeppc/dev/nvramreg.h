@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/nvramreg.h,v 1.1.2.1 2003/06/07 11:13:18 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/nvramreg.h,v 1.1.2.2 2004/02/19 10:49:09 niklas Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -59,9 +59,12 @@
  *	1ff8-1fff	TOD clock
  */
 
-#define NVRAM_S0		0x80000074
-#define NVRAM_S1		0x80000075
-#define NVRAM_DATA		0x80000077
+#define	NVRAM_BASE		0x80000000	/* access thrugh ISA space! */
+#define NVRAM_S0		0x00000074
+#define NVRAM_S1		0x00000075
+#define NVRAM_DATA		0x00000077
+
+#define	NVRAM_SIZE		0x2000
 
 #define RTC_SECONDS		0x1FF9
 #define RTC_MINUTES		0x1FFA

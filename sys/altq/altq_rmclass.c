@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_rmclass.c,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_rmclass.c,v 1.1.2.4 2004/02/19 10:51:22 niklas Exp $	*/
 /*	$KAME: altq_rmclass.c,v 1.10 2001/02/09 07:20:40 kjc Exp $	*/
 
 /*
@@ -366,7 +366,7 @@ rmc_modclass(struct rm_class *cl, u_int nsecPerByte, int maxq, u_int maxidle,
 #endif
 
 	/*
-	 * If CBQ's WRR is enabled, then initailize the class WRR state.
+	 * If CBQ's WRR is enabled, then initialize the class WRR state.
 	 */
 	if (ifd->wrr_) {
 		ifd->alloc_[cl->pri_] += cl->allotment_ - old_allotment;
@@ -515,7 +515,7 @@ rmc_depth_recompute(rm_class_t *cl)
 /*
  * void
  * rmc_delete_class(struct rm_ifdat *ifdat, struct rm_class *cl) - This
- *	function deletes a class from the link-sharing stucture and frees
+ *	function deletes a class from the link-sharing structure and frees
  *	all resources associated with the class.
  *
  *	Returns: NONE
@@ -783,7 +783,7 @@ rmc_queue_packet(struct rm_class *cl, mbuf_t *m)
 /*
  * void
  * rmc_tl_satisfied(struct rm_ifdat *ifd, struct timeval *now) - Check all
- *	classes to see if there are satified.
+ *	classes to see if they are satisfied.
  */
 
 static void
@@ -1426,7 +1426,7 @@ void rmc_dropall(struct rm_class *cl)
  * void
  * rmc_delay_action(struct rm_class *cl) - This function is the generic CBQ
  *	delay action routine.  It is invoked via rmc_under_limit when the
- *	packet is discoverd to be overlimit.
+ *	packet is discovered to be overlimit.
  *
  *	If the delay action is result of borrow class being overlimit, then
  *	delay for the offtime of the borrowing class that is overlimit.

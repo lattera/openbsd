@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/disklabel.h,v 1.22.2.3 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/disklabel.h,v 1.22.2.4 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.3 1996/03/09 20:52:54 ghudson Exp $	*/
 
 /*
@@ -79,7 +79,7 @@ struct dos_mbr {
 	u_int8_t		dmbr_boot[DOSPARTOFF];
 	struct dos_partition	dmbr_parts[NDOSPART];
 	u_int16_t		dmbr_sign;
-} __attribute__((__packed__));
+} __packed;
 
 #define DOSMBR_SIGNATURE	(0xaa55)
 #define DOSMBR_SIGNATURE_OFF	(0x1fe)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccom.c,v 1.34.2.5 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccom.c,v 1.34.2.6 2004/02/19 10:48:42 niklas Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -741,7 +741,6 @@ com_detach(self, flags)
 
 	/* Detach and free the tty. */
 	if (sc->sc_tty) {
-		tty_detach(sc->sc_tty);
 		ttyfree(sc->sc_tty);
 	}
 
@@ -817,7 +816,6 @@ comopen(dev, flag, mode, p)
 	s = spltty();
 	if (!sc->sc_tty) {
 		tp = sc->sc_tty = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = sc->sc_tty;
 	splx(s);
@@ -1256,7 +1254,7 @@ comioctl(dev, cmd, data, flag, p)
 	case TIOCSFLAGS: {
 		int userbits, driverbits = 0;
 
-		error = suser(p->p_ucred, &p->p_acflag); 
+		error = suser(p, 0); 
 		if (error != 0)
 			return(EPERM); 
 

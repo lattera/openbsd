@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.4.4.3 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.4.4.4 2004/02/19 10:50:01 niklas Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.13 2001/06/21 00:08:02 eeh Exp $	*/
 
 /*
@@ -33,8 +33,8 @@
  */
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/stdarg.h>
 #include <machine/psl.h>
-#include <machine/stdarg.h>
 
 #include <machine/openfirm.h>
 

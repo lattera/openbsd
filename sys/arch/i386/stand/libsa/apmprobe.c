@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.8.2.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.8.2.3 2004/02/19 10:48:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2000 Michael Shalayeff
@@ -64,7 +64,7 @@
 extern int debug;
 
 static __inline u_int
-apm_check()
+apm_check(void)
 {
 	register u_int detail;
 	register u_int8_t f;
@@ -88,7 +88,7 @@ apm_check()
 }
 
 static __inline int
-apm_disconnect()
+apm_disconnect(void)
 {
 	register u_int16_t rv;
 	__asm __volatile(DOINT(0x15) "\n\t"
@@ -100,8 +100,7 @@ apm_disconnect()
 }
 
 static __inline int
-apm_connect(ai)
-	bios_apminfo_t *ai;
+apm_connect(bios_apminfo_t *ai)
 {
 	register u_int16_t f;
 	__asm __volatile (DOINT(0x15) "\n\t"
@@ -156,7 +155,7 @@ apm_connect(ai)
 static bios_apminfo_t ai;
 
 void
-apmprobe()
+apmprobe(void)
 {
 	if ((ai.apm_detail = apm_check())) {
 

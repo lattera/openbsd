@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_misc.h,v 1.1.4.2 2002/03/28 11:28:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_misc.h,v 1.1.4.3 2004/02/19 10:51:29 niklas Exp $	*/
 /*	$NetBSD: linux_misc.h,v 1.3 1999/05/13 00:31:57 thorpej Exp $	*/
 
 /*-
@@ -39,6 +39,24 @@
 
 #ifndef _LINUX_MISC_H
 #define _LINUX_MISC_H
+
+/* This looks very unportable to me, but this is how Linux defines it. */
+struct linux_sysinfo {
+	long uptime;
+	unsigned long loads[3];
+#define LINUX_SYSINFO_LOADS_SCALE 65536
+	unsigned long totalram;
+	unsigned long freeram;
+	unsigned long sharedram;
+	unsigned long bufferram;
+	unsigned long totalswap;
+	unsigned long freeswap;
+	unsigned short procs;
+	unsigned long totalbig;
+	unsigned long freebig;
+	unsigned int mem_unit;
+	char _f[20-2*sizeof(long)-sizeof(int)];
+};
 
 /*
  * Options passed to the Linux wait4() system call.

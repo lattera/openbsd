@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/libbug.h,v 1.1.16.1 2002/03/28 10:34:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/libbug.h,v 1.1.16.2 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * prototypes and such.   note that get/put char are in stand.h
@@ -20,4 +20,4 @@ void	mvmeprom_rtc_rd(struct mvmeprom_time *);
 
 extern struct mvmeprom_args bugargs;
 
-void	bugexec(void (*)());
+void	bugexec(void (*)(void));

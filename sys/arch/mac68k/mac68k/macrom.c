@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.4 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.5 2004/02/19 10:49:03 niklas Exp $	*/
 /*	$NetBSD: macrom.c,v 1.31 1997/03/01 17:20:34 scottr Exp $	*/
 
 /*-
@@ -494,7 +494,7 @@ mrg_NewPtr()
 #endif
 	}else{
 #if defined(MRG_SHOWTRAPS)
-		printf(" succeded = %p.\n", ptr);
+		printf(" succeeded = %p.\n", ptr);
 #endif
 		*(u_int32_t *)ptr = numbytes;
 		ptr += 4;

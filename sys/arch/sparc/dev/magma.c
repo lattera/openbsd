@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.4.4.5 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.4.4.6 2004/02/19 10:49:57 niklas Exp $	*/
 /*
  * magma.c
  *
@@ -845,8 +845,6 @@ int port, chip, chan;
 		mp->mp_channel = chan;
 
 		tp = ttymalloc();
-		if( tp == NULL ) break;
-		tty_attach(tp);
 		tp->t_oproc = mtty_start;
 		tp->t_param = mtty_param;
 
@@ -1110,7 +1108,7 @@ int error;
 		break;
 
 	case TIOCSFLAGS:
-		if( suser(p->p_ucred, &p->p_acflag) )
+		if( suser(p, 0) )
 			error = EPERM;
 		else
 			mp->mp_openflags = *((int *)data) &
@@ -1398,7 +1396,7 @@ int s, opt;
  *	mbppread	read from mbpp
  *	mbppwrite	write to mbpp
  *	mbppioctl	do ioctl on mbpp
- *	mbppselect	do select on mbpp
+ *	mbpppoll	do poll on mbpp
  *	mbpp_rw		general rw routine
  *	mbpp_timeout	rw timeout
  *	mbpp_start	rw start after delay
@@ -1589,15 +1587,15 @@ int s;
 }
 
 /*
- * select routine
+ * poll routine
  */
 int
-mbppselect(dev, rw, p)
+mbpppoll(dev, events, p)
 dev_t dev;
-int rw;
+int events;
 struct proc *p;
 {
-	return(ENODEV);
+	return(seltrue(dev, events, p));
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/Attic/rtc.h,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/Attic/rtc.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
 /*	$NetBSD: rtc.h,v 1.1 2001/02/23 21:23:50 reinoud Exp $	*/
 
 /*

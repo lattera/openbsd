@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.12 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.13 2004/02/19 10:49:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -396,7 +396,7 @@ again:
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif
-	printf("avail mem = %ld (%ld pages)\n", ptoa(uvmexp.free), uvmexp.free);
+	printf("avail mem = %ld (%d pages)\n", ptoa(uvmexp.free), uvmexp.free);
 	printf("using %d buffers containing %d bytes of memory\n",
 			 nbuf, bufpages * PAGE_SIZE);
 
@@ -506,8 +506,7 @@ identifycpu()
 	switch (cputyp) {
 #ifdef MVME147
 	case CPU_147:
-		bcopy(&brdid.suffix, suffix, sizeof brdid.suffix);
-		snprintf(suffix, sizeof suffix, "MVME%x", brdid.model, suffix);
+		snprintf(suffix, sizeof suffix, "MVME%x", brdid.model);
 		cpuspeed = pccspeed((struct pccreg *)IIOV(0xfffe1000));
 		snprintf(speed, sizeof speed, "%02d", cpuspeed);
 		break;
@@ -541,12 +540,13 @@ identifycpu()
 	    "Motorola %s: %sMHz MC680%c0 CPU", suffix, speed, mc);
 	switch (mmutype) {
 #if defined(M68060) || defined(M68040)
-	case MMU_68060:
 	case MMU_68040:
 #ifdef FPSP
 		bcopy(&fpsp_tab, &fpvect_tab,
 				(&fpvect_end - &fpvect_tab) * sizeof (fpvect_tab));
 #endif
+		/* FALLTHROUGH */
+	case MMU_68060:
 		strlcat(cpu_model, "+MMU", sizeof cpu_model);
 		break;
 #endif
@@ -681,7 +681,7 @@ halt_establish(fn, pri)
 
 __dead void
 boot(howto)
-	register int howto;
+	int howto;
 {
 	/* If system is cold, just halt. */
 	if (cold) {
@@ -1029,6 +1029,8 @@ badvaddr(addr, size)
 	nofault = (int *)0;
 	return (0);
 }
+
+int netisr;
 
 void
 netintr(arg)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8.2.5 2003/03/27 23:53:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8.2.6 2004/02/19 10:51:28 niklas Exp $	*/
 /*	$NetBSD: freebsd_file.c,v 1.3 1996/05/03 17:03:09 christos Exp $	*/
 
 /*
@@ -549,7 +549,7 @@ statfs_to_freebsd_statfs(p, mp, sp, fsp)
 	fsp->f_files = sp->f_files;
 	fsp->f_ffree = sp->f_ffree;
 	/* Don't let non-root see filesystem id (for NFS security) */
-	if (suser(p->p_ucred, &p->p_acflag))
+	if (suser(p, 0))
 		fsp->f_fsid.val[0] = fsp->f_fsid.val[1] = 0;
 	else
 		bcopy(&sp->f_fsid, &fsp->f_fsid, sizeof(fsp->f_fsid));

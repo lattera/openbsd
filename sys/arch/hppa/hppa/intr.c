@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/intr.c,v 1.2.2.1 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/intr.c,v 1.2.2.2 2004/02/19 10:48:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -55,18 +55,26 @@ struct hppa_iv {
 	int (*handler)(void *);
 	void *arg;
 	struct hppa_iv *next;
-} __attribute__((__packed__));
+	struct hppa_iv *share;
+	int pad2[3];
+} __packed;
 
 register_t kpsw = PSL_Q | PSL_P | PSL_C | PSL_D;
-volatile int cpl = IPL_NESTED;
-volatile u_long ipending, imask[NIPL];
+volatile int cpu_inintr, cpl = IPL_NESTED;
 u_long cpu_mask;
-struct hppa_iv *intr_list, intr_store[8*CPU_NINTS], *intr_more = intr_store;
+struct hppa_iv *intr_list, intr_store[8*2*CPU_NINTS], *intr_more = intr_store;
 struct hppa_iv intr_table[CPU_NINTS] = {
 	{ IPL_SOFTCLOCK, 0, HPPA_IV_SOFT, 0, (int (*)(void *))&softclock },
 	{ IPL_SOFTNET  , 0, HPPA_IV_SOFT, 0, (int (*)(void *))&softnet },
 	{ 0 }, { 0 },
 	{ IPL_SOFTTTY  , 0, HPPA_IV_SOFT, 0, (int (*)(void *))&softtty }
+};
+volatile u_long ipending, imask[NIPL] = {
+	0,
+	1 << (IPL_SOFTCLOCK - 1),
+	1 << (IPL_SOFTNET - 1),
+	0, 0,
+	1 << (IPL_SOFTTTY - 1)
 };
 
 #ifdef DIAGNOSTIC
@@ -101,21 +109,21 @@ void
 cpu_intr_init(void)
 {
 	u_long mask = cpu_mask | SOFTINT_MASK;
-	int level;
+	struct hppa_iv *iv;
+	int level, bit;
 
 	/* map the shared ints */
 	while (intr_list) {
-		struct hppa_iv *iv = intr_list;
-		int bit = ffs(imask[(int)iv->pri]);
+		iv = intr_list;
 		intr_list = iv->next;
-
+		bit = ffs(imask[(int)iv->pri]);
 		if (!bit--) {
 			bit = ffs(~mask);
 			if (!bit--)
 				panic("cpu_intr_init: out of bits");
 
-			iv->next = NULL;
 			iv->bit = 31 - bit;
+			iv->next = NULL;
 			intr_table[bit] = *iv;
 			mask |= (1 << bit);
 			imask[(int)iv->pri] |= (1 << bit);
@@ -126,39 +134,47 @@ cpu_intr_init(void)
 		}
 	}
 
-	/* match the init for intr_table */
-	imask[IPL_SOFTCLOCK] = 1 << (IPL_SOFTCLOCK - 1);
-	imask[IPL_SOFTNET  ] = 1 << (IPL_SOFTNET - 1);
-	imask[IPL_SOFTTTY  ] = 1 << (IPL_SOFTTTY - 1);
-
 	for (level = 0; level < NIPL - 1; level++)
 		imask[level + 1] |= imask[level];
 
-	printf("biomask 0x%x netmask 0x%x ttymask 0x%x\n",
+	printf("biomask 0x%lx netmask 0x%lx ttymask 0x%lx\n",
 	    imask[IPL_BIO], imask[IPL_NET], imask[IPL_TTY]);
 
 	/* XXX the whacky trick is to prevent hardclock from happenning */
 	mfctl(CR_ITMR, mask);
 	mtctl(mask - 1, CR_ITMR);
-	/* ack the unwanted clock interrupt */
+
 	mtctl(cpu_mask, CR_EIEM);
-	mtctl((1 << 31), CR_EIRR);
+	/* ack the unwanted interrupts */
+	mfctl(CR_EIRR, mask);
+	mtctl(mask & (1 << 31), CR_EIRR);
 
 	/* in spl*() we trust, clock is started in initclocks() */
 	kpsw |= PSL_I;
-	__asm __volatile("ssm %0, %%r0" :: "i" (PSL_I));
+	ssm(PSL_I, mask);
 }
 
 void *
 cpu_intr_map(void *v, int pri, int irq, int (*handler)(void *), void *arg,
-    struct device *dv)
+    const char *name)
 {
 	struct hppa_iv *iv, *pv = v, *ivb = pv->next;
 
-	if (irq < 0 || irq >= CPU_NINTS || ivb[irq].handler)
+	if (irq < 0 || irq >= CPU_NINTS)
 		return (NULL);
 
 	iv = &ivb[irq];
+	if (iv->handler) {
+		if (!pv->share)
+			return (NULL);
+		else {
+			iv = pv->share;
+			pv->share = iv->share;
+			iv->share = ivb[irq].share;
+			ivb[irq].share = iv;
+		}
+	}
+
 	iv->pri = pri;
 	iv->bit = irq;
 	iv->flags = 0;
@@ -172,9 +188,9 @@ cpu_intr_map(void *v, int pri, int irq, int (*handler)(void *), void *arg,
 
 void *
 cpu_intr_establish(int pri, int irq, int (*handler)(void *), void *arg,
-    struct device *dv)
+    const char *name)
 {
-	struct hppa_iv *iv;
+	struct hppa_iv *iv, *ev;
 
 	if (irq < 0 || irq >= CPU_NINTS || intr_table[irq].handler)
 		return (NULL);
@@ -188,13 +204,16 @@ cpu_intr_establish(int pri, int irq, int (*handler)(void *), void *arg,
 	iv->flags = 0;
 	iv->handler = handler;
 	iv->arg = arg;
+	iv->next = NULL;
+	iv->share = NULL;
 
 	if (pri == IPL_NESTED) {
 		iv->flags = HPPA_IV_CALL;
 		iv->next = intr_more;
-		intr_more += CPU_NINTS;
-	} else
-		iv->next = NULL;
+		intr_more += 2 * CPU_NINTS;
+		for (ev = iv->next + CPU_NINTS; ev < intr_more; ev++)
+			ev->share = iv->share, iv->share = ev;
+	}
 
 	return (iv);
 }
@@ -205,6 +224,9 @@ cpu_intr(void *v)
 	struct trapframe *frame = v;
 	u_long mask;
 	int s = cpl;
+
+	if (cpu_inintr++)
+		frame->tf_flags |= TFF_INTR;
 
 	while ((mask = ipending & ~imask[s])) {
 		int r, bit = ffs(mask) - 1;
@@ -225,8 +247,9 @@ cpu_intr(void *v)
 			cpl = 0;
 			printf("stray interrupt %d\n", bit);
 		}
-		mtctl(0, CR_EIEM);
 #endif
+		mtctl(0, CR_EIEM);
 	}
+	cpu_inintr--;
 	cpl = s;
 }

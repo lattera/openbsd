@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/cdefs.h,v 1.1 2004/02/01 05:09:49 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/cdefs.h,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
 /*	$NetBSD: cdefs.h,v 1.1 2001/01/10 19:02:05 bjh21 Exp $	*/
 
 #ifndef	_MACHINE_CDEFS_H_

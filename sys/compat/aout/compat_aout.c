@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/compat/aout/Attic/compat_aout.c,v 1.2 2003/08/23 19:28:53 tedu Exp $ */
+/* 	$OpenBSD: src/sys/compat/aout/Attic/compat_aout.c,v 1.2.4.1 2004/02/19 10:51:28 niklas Exp $ */
 
 /*
  * Copyright (c) 2003 Marc Espie

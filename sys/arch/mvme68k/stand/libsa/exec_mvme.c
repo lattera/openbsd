@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/exec_mvme.c,v 1.2.16.3 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/exec_mvme.c,v 1.2.16.4 2004/02/19 10:49:05 niklas Exp $ */
 /*	$NetBSD: exec_sun.c,v 1.5 1996/01/29 23:41:06 gwr Exp $ */
 
 /*-
@@ -50,7 +50,7 @@ exec_mvme(file, flag)
 	register int io;
 	struct exec x;
 	int cc, magic;
-	void (*entry)();
+	void (*entry)(int, u_int, int, int, int, void *);
 	register char *cp;
 	register int *ip;
 
@@ -73,11 +73,11 @@ exec_mvme(file, flag)
 	}
 
 	/*
-	 * note: on the mvme ports, the kernel is linked in such a way that 
-	 * its entry point is the first item in .text, and thus a_entry can 
+	 * note: on the mvme ports, the kernel is linked in such a way that
+	 * its entry point is the first item in .text, and thus a_entry can
 	 * be used to determine both the load address and the entry point.
 	 * (also note that we make use of the fact that the kernel will live
-	 *  in a VA == PA range of memory ... otherwise we would take 
+	 *  in a VA == PA range of memory ... otherwise we would take
 	 *  loadaddr as a parameter and let the kernel relocate itself!)
 	 *
 	 * note that ZMAGIC files included the a.out header in the text area
@@ -89,7 +89,7 @@ exec_mvme(file, flag)
 	magic = N_GETMAGIC(x);
 	if (magic == ZMAGIC)
 		cp += sizeof(x);
-	entry = (void (*)())cp;
+	entry = (void (*)(int, u_int, int, int, int, void *))cp;
 
 	/*
 	 * Leave a copy of the exec header before the text.
@@ -103,7 +103,7 @@ exec_mvme(file, flag)
 	 */
 	printf("%d", x.a_text);
 	cc = x.a_text;
-	if (magic == ZMAGIC) 
+	if (magic == ZMAGIC)
 		cc = cc - sizeof(x); /* a.out header part of text in zmagic */
 	if (read(io, cp, cc) != cc)
 		goto shread;
@@ -157,7 +157,7 @@ exec_mvme(file, flag)
 		if (read(io, cp, cc) != cc)
 			goto shread;
 		cp += x.a_syms;
-		ip = (int *)cp;  	/* points to strtab length */
+		ip = (int *)cp;		/* points to strtab length */
 		cp += sizeof(int);
 
 		/* String table.  Length word includes itself. */
@@ -174,8 +174,11 @@ exec_mvme(file, flag)
 	close(io);
 
 	printf("Start @ 0x%x ...\n", (int)entry);
-	(*entry)(flag, bugargs.ctrl_addr, 
-			bugargs.ctrl_lun, bugargs.dev_lun, 0, cp);
+	if (flag & RB_HALT)
+		_rtt();
+
+	(*entry)(flag, bugargs.ctrl_addr, bugargs.ctrl_lun,
+	    bugargs.dev_lun, 0, cp);
 	printf("exec: kernel returned!\n");
 	return;
 

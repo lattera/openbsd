@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/st.c,v 1.11.4.3 2003/06/07 11:11:34 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/st.c,v 1.11.4.4 2004/02/19 10:48:39 niklas Exp $	*/
 /*	$NetBSD: st.c,v 1.22 1997/04/02 22:37:38 scottr Exp $	*/
 
 /*
@@ -633,7 +633,7 @@ stclose(dev, flag, mode, p)
 #ifdef NOTDEF
 	/* wait until more stable before trying [XXX Needed ?] */
 	if (!hit && (sc->sc_flags & SFT_WMODE))
-		/* force out any any bufferd write data */
+		/* force out any buffered write data */
 		stcommand(dev, MTFSR, 0); 
 #endif
 	/* make stats available */
@@ -960,7 +960,7 @@ stintr(arg, stat)
 			 */
 			if (sc->sc_blklen) {
 				tprintf(sc->sc_ctty,
-					"%s: Incorrect Length Indicator, blkcnt diff %ld\n",
+					"%s: Incorrect Length Indicator, blkcnt diff %d\n",
 					sc->sc_dev.dv_xname,
 					sc->sc_blklen - bp->b_resid);
 				bp->b_flags |= B_ERROR;
@@ -1384,7 +1384,7 @@ prtmodsel(msd, modlen)
 	int modlen;
 {
 	printf("Modsel command. len is 0x%x.\n", modlen);
-	printf("rsvd1 0x%x rsvd2 0x%x rsvd3 0x%x bufferd 0x%x speed 0x%x bckdeslen 0x%x\n",
+	printf("rsvd1 0x%x rsvd2 0x%x rsvd3 0x%x buffered 0x%x speed 0x%x bckdeslen 0x%x\n",
 	       msd->rsvd1,msd->rsvd2,msd->rsvd3,msd->buff,msd->speed,msd->blkdeslen);
 	printf("density 0x%x blks2 0x%x blks1 0x%x blks0 0x%x rsvd 0x%x blklen2 0x%x blklen1 0x%x blklen0 0x%x\n",
 	       msd->density,msd->blks2,msd->blks1,msd->blks0,msd->rsvd4,msd->blklen2,msd->blklen1,msd->blklen0);

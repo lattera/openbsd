@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.4 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.5 2004/02/19 10:49:05 niklas Exp $ */
 
 | Copyright (c) 1995 Theo de Raadt
 |
@@ -161,11 +161,11 @@ GLOBAL(fpvect_end)
 	 * 68040: this chunk of vectors is copied into the fpfault zone
 	 */
 GLOBAL(fpsp_tab)
-	ASVECTOR(bsun)		/* 48: FPCP branch/set on unordered cond */
+	ASVECTOR(fpsp_bsun)	/* 48: FPCP branch/set on unordered cond */
 	ASVECTOR(inex)		/* 49: FPCP inexact result */
 	ASVECTOR(dz)		/* 50: FPCP divide by zero */
-	ASVECTOR(unfl)		/* 51: FPCP underflow */
-	ASVECTOR(operr)		/* 52: FPCP operand error */
-	ASVECTOR(ovfl)		/* 53: FPCP overflow */
-	ASVECTOR(snan)		/* 54: FPCP signalling NAN */
+	ASVECTOR(fpsp_unfl)	/* 51: FPCP underflow */
+	ASVECTOR(fpsp_operr)	/* 52: FPCP operand error */
+	ASVECTOR(fpsp_ovfl)	/* 53: FPCP overflow */
+	ASVECTOR(fpsp_snan)	/* 54: FPCP signalling NAN */
 #endif /* FPSP */

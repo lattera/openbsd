@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_file.c,v 1.6.12.6 2003/06/07 11:00:36 ho Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_file.c,v 1.6.12.7 2004/02/19 10:51:28 niklas Exp $	*/
 /*	$NetBSD: hpux_file.c,v 1.5 1997/04/27 21:40:48 thorpej Exp $	*/
 
 /*
@@ -214,7 +214,7 @@ hpux_sys_fcntl(p, v, retval)
 	struct flock fl;
 	struct vnode *vp;
 	struct sys_fcntl_args fa;
-	struct filedesc *fdp;
+	struct filedesc *fdp = p->p_fd;
 
 	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);

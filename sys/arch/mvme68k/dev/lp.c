@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.4 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.5 2004/02/19 10:49:04 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -57,7 +57,7 @@ struct cfattach lp_ca = {
 };
 
 struct cfdriver lp_cd = {
-	NULL, "lp", DV_DULL, 0
+	NULL, "lp", DV_DULL
 };
 
 int lpintr(void *);

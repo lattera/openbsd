@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/files.sparc,v 1.35.2.5 2003/05/16 00:29:40 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/files.sparc,v 1.35.2.6 2004/02/19 10:49:57 niklas Exp $
 #	$NetBSD: files.sparc,v 1.44 1997/08/31 21:29:16 pk Exp $
 
 # @(#)files.sparc	8.1 (Berkeley) 7/19/93
@@ -138,7 +138,7 @@ file	arch/sparc/dev/hme.c		hme
 attach esp at sbus, dma, obio
 file	arch/sparc/dev/esp.c		esp
 
-device audioamd: audio
+device audioamd: audio, mulaw
 attach audioamd at mainbus, obio, sbus
 file	arch/sparc/dev/amd7930.c	audio
 file	arch/sparc/sparc/amd7930intr.s	audio
@@ -190,7 +190,16 @@ device	cgtwelve: wsemuldisplaydev, rasops1, rasops32, wsemul_sun
 attach	cgtwelve at sbus
 file	arch/sparc/dev/cgtwelve.c	cgtwelve
 
-# Onboard Weitek p9100 found on Tadpole 3GS/3GX
+# Onboard Weitek P9000 found on Tadpole SPARCbook 3, and BT ``Chameleon'' RAMDAC
+device	pninek: wsemuldisplaydev, rasops8, wsemul_sun, bt_dac
+attach	pninek at sbus
+file	arch/sparc/dev/p9000.c		pninek
+
+device	btcham
+attach	btcham at obio
+file	arch/sparc/dev/bt445.c		btcham
+
+# Onboard Weitek p9100 found on Tadpole SPARCbook 3GS/3GX/3TX/3XP
 device	pnozz: wsemuldisplaydev, rasops8, rasops16, rasops24, rasops32, wsemul_sun, bt_dac
 attach	pnozz at sbus
 file	arch/sparc/dev/p9100.c		pnozz
@@ -364,3 +373,16 @@ file	arch/sparc/dev/tctrl.c		tctrl needs-flag
 device	presto: disk
 attach	presto at sbus
 file	arch/sparc/dev/presto.c		presto needs-flag
+
+# PCMCIA devices
+
+device	tslot: pcmciabus
+attach	tslot at sbus
+file	arch/sparc/dev/ts102.c		tslot
+
+device	stp: pcmciabus
+attach	stp at sbus with stp_sbus
+file	dev/sbus/stp4020.c		stp
+file	arch/sparc/dev/stp_sbus.c	stp_sbus
+
+include	"dev/pcmcia/files.pcmcia"

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/bootblk/genassym.sh,v 1.1.2.2 2003/03/27 23:42:37 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/bootblk/genassym.sh,v 1.1.2.3 2004/02/19 10:50:01 niklas Exp $
 #	$NetBSD: genassym.sh,v 1.1 2000/08/20 14:58:45 mrg Exp $
 
 #
@@ -36,8 +36,8 @@
 # compile it and execute the result.
 
 awk=${AWK:-awk}
-TMP1=`mktemp /tmp/genassym1.XXXXXX` || exit 1
-TMP2=`mktemp /tmp/genassym2.XXXXXX` || {
+TMP1=`mktemp /tmp/genassym1.XXXXXXXXXX` || exit 1
+TMP2=`mktemp /tmp/genassym2.XXXXXXXXXX` || {
 	rm -f $TMP1
 	exit 1
 }
