@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/mpcpcibus.c,v 1.33 2001/08/17 22:26:58 mickey Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/mpcpcibus.c,v 1.1 2001/09/01 15:55:17 drahn Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -58,8 +58,8 @@
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pcidevs.h>
 
-#include <powerpc/pci/pcibrvar.h>
-#include <powerpc/pci/mpc106reg.h>
+#include <macppc/pci/pcibrvar.h>
+#include <macppc/pci/mpc106reg.h>
 
 #include <dev/ofw/openfirm.h>
 extern vm_map_t phys_map;
