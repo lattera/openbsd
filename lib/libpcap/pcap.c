@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/pcap.c,v 1.6 1999/07/20 04:49:55 deraadt Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/pcap.c,v 1.7 2001/12/17 22:29:47 dugsong Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1997, 1998
@@ -35,7 +35,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: pcap.c,v 1.29 98/07/12 13:15:39 leres Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/lib/libpcap/pcap.c,v 1.6 1999/07/20 04:49:55 deraadt Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -202,6 +202,6 @@ pcap_close(pcap_t *p)
 	if (p->md.device != NULL)
 		free(p->md.device);
 #endif
-
+	pcap_freecode(&p->fcode);
 	free(p);
 }
