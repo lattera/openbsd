@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.83.2.1 2000/11/11 05:15:34 jason Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.83.2.2 2000/12/11 04:34:07 jason Exp $	*/
 /*	$NetBSD: ip_output.c,v 1.28 1996/02/13 23:43:07 christos Exp $	*/
 
 /*
@@ -559,16 +559,21 @@ sendit:
 			error = EHOSTUNREACH;
 			splx(s);
 			goto done;
-		    } else {
-			ip = mtod(m = m0, struct ip *);
-			hlen = ip->ip_hl << 2;
 		    }
+		    if (m0 == 0) { /* in case of 'fastroute' */
+			error = 0;
+			splx(s);
+			goto done;
+		    }
+		    ip = mtod(m = m0, struct ip *);
+		    hlen = ip->ip_hl << 2;
   	        }
 #endif /* IPFILTER */
 		
 		tdb = gettdb(sspi, &sdst, sproto);
 		if (tdb == NULL) {
 			error = EHOSTUNREACH;
+			splx(s);
 			m_freem(m);
 			goto done;
 		}
@@ -599,8 +604,12 @@ sendit:
 		if (fr_checkp && (*fr_checkp)(ip, hlen, ifp, 1, &m0)) {
 			error = EHOSTUNREACH;
 			goto done;
-		} else
-			ip = mtod(m = m0, struct ip *);
+		}
+		if (m0 == 0) { /* in case of 'fastroute' */
+			error = 0;
+			goto done;
+		}
+		ip = mtod(m = m0, struct ip *);
 	}
 #endif
 	/*
