@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$Id: ksrvtgt.c,v 1.1.1.1 1995/12/14 06:52:51 tholo Exp $	*/
 
 /*-
  * Copyright 1988 by the Massachusetts Institute of Technology. 
@@ -13,11 +13,11 @@
 #include <stdio.h>
 #include <strings.h>
 #include <sys/param.h>
-#include <kerberosIV/des.h>
+#include <des.h>
 #include <kerberosIV/krb.h>
 
 const char rcsid[] =
-    "$Id$";
+    "$Id: ksrvtgt.c,v 1.1.1.1 1995/12/14 06:52:51 tholo Exp $";
 
 main(argc,argv)
     int argc;
