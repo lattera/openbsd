@@ -18,7 +18,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: pap.c,v 1.8 1999/05/08 11:06:38 brian Exp $
+ * $Id: pap.c,v 1.9 1999/06/02 15:58:41 brian Exp $
  *
  *	TODO:
  */
@@ -29,7 +29,7 @@
 #include <sys/un.h>
 
 #include <stdlib.h>
-#include <string.h>
+/* #include <string.h> (auto-remove) */
 #include <termios.h>
 
 #include "layer.h"
