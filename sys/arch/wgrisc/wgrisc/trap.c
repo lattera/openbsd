@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/wgrisc/wgrisc/Attic/trap.c,v 1.2 1997/07/23 06:58:33 denny Exp $	*/
+/*	$OpenBSD: src/sys/arch/wgrisc/wgrisc/Attic/trap.c,v 1.3 1999/01/08 00:03:00 deraadt Exp $	*/
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -39,7 +39,7 @@
  * from: Utah Hdr: trap.c 1.32 91/04/06
  *
  *	from: @(#)trap.c	8.5 (Berkeley) 1/11/94
- *      $Id: trap.c,v 1.1.1.1 1997/02/06 16:02:46 pefo Exp $
+ *      $Id: trap.c,v 1.2 1997/07/23 06:58:33 denny Exp $
  */
 
 #include <sys/param.h>
@@ -1008,6 +1008,12 @@ interrupt(statusReg, causeReg, pc, what, args)
 		if (netisr & (1 << NETISR_IP)) {
 			netisr &= ~(1 << NETISR_IP);
 			ipintr();
+		}
+#endif
+#ifdef INET6
+		if (netisr & (1 << NETISR_IPV6)) {
+			netisr &= ~(1 << NETISR_IPV6);
+			ipv6intr();
 		}
 #endif
 #ifdef NETATALK
