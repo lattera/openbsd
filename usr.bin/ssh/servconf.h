@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: servconf.h,v 1.20 2000/05/03 10:21:48 markus Exp $"); */
+/* RCSID("$Id: servconf.h,v 1.21 2000/05/03 18:03:07 markus Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H
@@ -59,6 +59,7 @@ typedef struct {
 	int     rhosts_rsa_authentication;	/* If true, permit rhosts RSA
 						 * authentication. */
 	int     rsa_authentication;	/* If true, permit RSA authentication. */
+	int     dsa_authentication;	/* If true, permit DSA authentication. */
 #ifdef KRB4
 	int     kerberos_authentication;	/* If true, permit Kerberos
 						 * authentication. */
