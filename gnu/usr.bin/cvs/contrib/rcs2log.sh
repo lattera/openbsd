@@ -28,7 +28,7 @@ Options:
 
 Report bugs to <bug-gnu-emacs@gnu.org>.'
 
-Id='$Id: rcs2log,v 1.45 1998/08/12 22:33:01 eggert Exp $'
+Id='$Id: rcs2log.sh,v 1.1.1.5 1999/02/28 21:34:25 tholo Exp $'
 
 # Copyright 1992, 93, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
@@ -300,8 +300,11 @@ case $# in
 	esac
 esac
 
-llogout=$TMPDIR/rcs2log$$l
-rlogout=$TMPDIR/rcs2log$$r
+llogout=`mktemp $TMPDIR/rcs2log_l.XXXXXXXXXX` || exit 1
+rlogout=`mktemp $TMPDIR/rcs2log_r.XXXXXXXXXX` || {
+	rm -f $llogout
+	exit 1
+}
 trap exit 1 2 13 15
 trap "rm -f $llogout $rlogout; exit 1" 0
 
