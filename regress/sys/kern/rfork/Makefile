@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/sys/kern/rfork/Attic/Makefile,v 1.1 2002/02/17 05:11:14 art Exp $
+#	$OpenBSD: src/regress/sys/kern/rfork/Attic/Makefile,v 1.2 2002/02/17 05:17:21 art Exp $
 
-SUBDIR=rfmem
+SUBDIR=rfmem rfcfdg
 
 regress: _SUBDIRUSE
 
