@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.74.4.2 2002/10/29 00:36:47 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.74.4.3 2003/05/19 22:40:41 tedu Exp $	*/
 /*	$NetBSD: udp_usrreq.c,v 1.28 1996/03/16 23:54:03 christos Exp $	*/
 
 /*
@@ -108,6 +108,8 @@ extern int ip6_defhlim;
  */
 int	udpcksum = 1;
 
+struct	inpcbtable udbtable;
+struct	udpstat udpstat;
 
 static	void udp_detach(struct inpcb *);
 static	void udp_notify(struct inpcb *, int);

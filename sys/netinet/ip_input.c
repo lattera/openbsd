@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.3 2002/10/29 00:36:47 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.4 2003/05/19 22:40:40 tedu Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -85,6 +85,8 @@
 #ifndef IPMTUDISCTIMEOUT
 #define IPMTUDISCTIMEOUT (10 * 60)	/* as per RFC 1191 */
 #endif
+
+struct ipqhead ipq;
 
 int encdebug = 0;
 int ipsec_keep_invalid = IPSEC_DEFAULT_EMBRYONIC_SA_TIMEOUT;
@@ -191,7 +193,8 @@ inet_ntoa(ina)
 	static char buf[4*sizeof "123"];
 	unsigned char *ucp = (unsigned char *)&ina;
 
-	sprintf(buf, "%d.%d.%d.%d", ucp[0] & 0xff, ucp[1] & 0xff,
+	snprintf(buf, sizeof buf, "%d.%d.%d.%d",
+	    ucp[0] & 0xff, ucp[1] & 0xff,
 	    ucp[2] & 0xff, ucp[3] & 0xff);
 	return (buf);
 }
@@ -298,6 +301,7 @@ ipv4_input(m)
 	struct in_ifaddr *ia;
 	struct ipqent *ipqe;
 	int hlen, mff;
+	in_addr_t pfrdr = 0;
 #ifdef IPSEC
 	int error, s;
 	struct tdb *tdb;
@@ -392,6 +396,7 @@ ipv4_input(m)
 	/*
 	 * Packet filter
 	 */
+	pfrdr = ip->ip_dst.s_addr;
 	if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
 		goto bad;
 	if (m == NULL)
@@ -399,12 +404,7 @@ ipv4_input(m)
 
 	ip = mtod(m, struct ip *);
 	hlen = ip->ip_hl << 2;
-#endif
-
-#ifdef ALTQ
-	if (altq_input != NULL && (*altq_input)(m, AF_INET) == 0)
-		/* packet is dropped by traffic conditioner */
-		return;
+	pfrdr = (pfrdr != ip->ip_dst.s_addr);
 #endif
 
 	/*
@@ -519,7 +519,7 @@ ipv4_input(m)
 		 */
 #endif /* IPSEC */
 
-		ip_forward(m, 0);
+		ip_forward(m, pfrdr);
 	}
 	return;
 
@@ -1041,7 +1041,8 @@ ip_dooptions(m)
 			if (!ip_dosourceroute) {
 				char buf[4*sizeof "123"];
 
-				strcpy(buf, inet_ntoa(ip->ip_dst));
+				strlcpy(buf, inet_ntoa(ip->ip_dst),
+				    sizeof buf);
 				log(LOG_WARNING,
 				    "attempted source route from %s to %s\n",
 				    inet_ntoa(ip->ip_src), buf);

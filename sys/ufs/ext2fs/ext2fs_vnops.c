@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.20.2.2 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.20.2.3 2003/05/19 22:38:11 tedu Exp $	*/
 /*	$NetBSD: ext2fs_vnops.c,v 1.30 2000/11/27 08:39:53 chs Exp $	*/
 
 /*
@@ -1476,7 +1476,7 @@ struct vnodeopv_desc ext2fs_vnodeop_opv_desc =
 
 int (**ext2fs_specop_p)(void *);
 struct vnodeopv_entry_desc ext2fs_specop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, spec_vnoperate },
 	{ &vop_close_desc, ufsspec_close },		/* close */
 	{ &vop_access_desc, ext2fs_access },	/* access */
 	{ &vop_getattr_desc, ext2fs_getattr },	/* getattr */
@@ -1490,7 +1490,6 @@ struct vnodeopv_entry_desc ext2fs_specop_entries[] = {
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },	/* islocked */
-	SPEC_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ext2fs_specop_opv_desc =
@@ -1499,24 +1498,21 @@ struct vnodeopv_desc ext2fs_specop_opv_desc =
 #ifdef FIFO
 int (**ext2fs_fifoop_p)(void *);
 struct vnodeopv_entry_desc ext2fs_fifoop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, fifo_vnoperate },
 	{ &vop_close_desc, ufsfifo_close },		/* close */
 	{ &vop_access_desc, ext2fs_access },	/* access */
 	{ &vop_getattr_desc, ext2fs_getattr },	/* getattr */
 	{ &vop_setattr_desc, ext2fs_setattr },	/* setattr */
 	{ &vop_read_desc, ufsfifo_read },		/* read */
 	{ &vop_write_desc, ufsfifo_write },		/* write */
-	{ &vop_lease_desc, fifo_lease_check },	/* lease */
 	{ &vop_fsync_desc, ext2fs_fsync },		/* fsync */
 	{ &vop_inactive_desc, ext2fs_inactive },/* inactive */
 	{ &vop_reclaim_desc, ext2fs_reclaim },	/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
-	{ &vop_bmap_desc, fifo_bmap },			/* bmap */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },	/* islocked */
 	{ &vop_bwrite_desc, vop_generic_bwrite },		/* bwrite */
-	FIFO_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ext2fs_fifoop_opv_desc =

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.39.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.39.2.4 2003/05/19 22:41:29 tedu Exp $	*/
 /*	$NetBSD: uvm_extern.h,v 1.73 2002/09/22 07:20:31 chs Exp $	*/
 
 /*
@@ -208,7 +208,7 @@ typedef int		vm_prot_t;
  * flags for uvm_pagealloc_strat()
  */
 #define UVM_PGA_USERESERVE	0x0001	/* ok to use reserve pages */
-#define	UVM_PGA_ZERO		0x0002	/* returned page must be zero'd */
+#define	UVM_PGA_ZERO		0x0002	/* returned page must be zeroed */
 
 /*
  * the following defines are for ubc_alloc's flags
@@ -366,7 +366,7 @@ struct uvmexp {
 	int pdrevs;	/* number of times daemon rev'd clock hand */
 	int pdswout;	/* number of times daemon called for swapout */
 	int pdfreed;	/* number of pages daemon freed since boot */
-	int pdscans;	/* number of pages daemon scaned since boot */
+	int pdscans;	/* number of pages daemon scanned since boot */
 	int pdanscan;	/* number of anonymous pages scanned by daemon */
 	int pdobscan;	/* number of object pages scanned by daemon */
 	int pdreact;	/* number of pages daemon reactivated since boot */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100.4.3 2002/10/29 00:36:47 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100.4.4 2003/05/19 22:40:41 tedu Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -1232,9 +1232,9 @@ findpcb:
 				(void) m_free(am);
 				goto drop;
 			}
-			(void) m_free(am);
 			break;
 		}
+		(void) m_free(am);
 		tp->t_template = tcp_template(tp);
 		if (tp->t_template == 0) {
 			tp = tcp_drop(tp, ENOBUFS);
@@ -1474,7 +1474,7 @@ trimthenstep6:
 				tiflags &= ~TH_URG;
 			todrop--;
 		}
-		if (todrop >= tlen ||
+		if (todrop > tlen ||
 		    (todrop == tlen && (tiflags & TH_FIN) == 0)) {
 			/*
 			 * Any valid FIN must be to the left of the

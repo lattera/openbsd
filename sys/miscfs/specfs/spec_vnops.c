@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.21.2.2 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.21.2.3 2003/05/19 22:36:12 tedu Exp $	*/
 /*	$NetBSD: spec_vnops.c,v 1.29 1996/04/22 01:42:38 christos Exp $	*/
 
 /*
@@ -57,6 +57,8 @@
 
 #define v_lastr v_specinfo->si_lastr
 
+struct vnode *speclisth[SPECHSZ];
+
 /* symbolic sleep message strings for devices */
 char	devopn[] = "devopn";
 char	devio[] = "devio";
@@ -69,24 +71,57 @@ char	devcls[] = "devcls";
 int (**spec_vnodeop_p)(void *);
 struct vnodeopv_entry_desc spec_vnodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
+	{ &vop_lookup_desc, spec_lookup },		/* lookup */
+	{ &vop_create_desc, spec_create },		/* create */
+	{ &vop_mknod_desc, spec_mknod },		/* mknod */
+	{ &vop_open_desc, spec_open },			/* open */
 	{ &vop_close_desc, spec_close },		/* close */
 	{ &vop_access_desc, spec_access },		/* access */
 	{ &vop_getattr_desc, spec_getattr },		/* getattr */
 	{ &vop_setattr_desc, spec_setattr },		/* setattr */
 	{ &vop_read_desc, spec_read },			/* read */
 	{ &vop_write_desc, spec_write },		/* write */
+	{ &vop_lease_desc, spec_lease_check },		/* lease */
+	{ &vop_ioctl_desc, spec_ioctl },		/* ioctl */
+	{ &vop_select_desc, spec_select },		/* select */
+	{ &vop_kqfilter_desc, spec_kqfilter },		/* kqfilter */
+	{ &vop_revoke_desc, spec_revoke },		/* revoke */
 	{ &vop_fsync_desc, spec_fsync },		/* fsync */
+	{ &vop_remove_desc, spec_remove },		/* remove */
+	{ &vop_link_desc, spec_link },			/* link */
+	{ &vop_rename_desc, spec_rename },		/* rename */
+	{ &vop_mkdir_desc, spec_mkdir },		/* mkdir */
+	{ &vop_rmdir_desc, spec_rmdir },		/* rmdir */
+	{ &vop_symlink_desc, spec_symlink },		/* symlink */
+	{ &vop_readdir_desc, spec_readdir },		/* readdir */
+	{ &vop_readlink_desc, spec_readlink },		/* readlink */
+	{ &vop_abortop_desc, spec_abortop },		/* abortop */
 	{ &vop_inactive_desc, spec_inactive },		/* inactive */
 	{ &vop_reclaim_desc, spec_reclaim },		/* reclaim */
 	{ &vop_lock_desc, spec_lock },			/* lock */
 	{ &vop_unlock_desc, spec_unlock },		/* unlock */
+	{ &vop_bmap_desc, spec_bmap },			/* bmap */
+	{ &vop_strategy_desc, spec_strategy },		/* strategy */
 	{ &vop_print_desc, spec_print },		/* print */
 	{ &vop_islocked_desc, spec_islocked },		/* islocked */
-	SPEC_VNODEOP_DESCS,
+	{ &vop_pathconf_desc, spec_pathconf },		/* pathconf */
+	{ &vop_advlock_desc, spec_advlock },		/* advlock */
+	{ &vop_bwrite_desc, spec_bwrite },		/* bwrite */
+	{ &vop_mmap_desc, spec_mmap },			/* mmap */
+	{ &vop_getpages_desc, spec_getpages },		/* getpages */
+	{ &vop_putpages_desc, spec_putpages },		/* putpages */
 	{ NULL, NULL }
 };
 struct vnodeopv_desc spec_vnodeop_opv_desc =
 	{ &spec_vnodeop_p, spec_vnodeop_entries };
+
+int
+spec_vnoperate(void *v)
+{
+	struct vop_generic_args *ap = v;
+
+	return (VOCALL(spec_vnodeop_p, ap->a_desc->vdesc_offset, ap));
+}
 
 /*
  * Trivial lookup routine that always fails.

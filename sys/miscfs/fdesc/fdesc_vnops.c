@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.2 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.3 2003/05/19 22:36:11 tedu Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -256,11 +256,9 @@ fdesc_lookup(v)
 	struct vnode *fvp;
 	char *ln;
 
-	VOP_UNLOCK(dvp, 0, p);
 	if (cnp->cn_namelen == 1 && *pname == '.') {
 		*vpp = dvp;
 		VREF(dvp);
-		vn_lock(dvp, LK_SHARED | LK_RETRY, p);
 		return (0);
 	}
 
@@ -279,8 +277,7 @@ fdesc_lookup(v)
 				goto bad;
 			*vpp = fvp;
 			fvp->v_type = VDIR;
-			vn_lock(fvp, LK_SHARED | LK_RETRY, p);
-			return (0);
+			goto good;
 		}
 
 		if (cnp->cn_namelen == 3 && bcmp(pname, "tty", 3) == 0) {
@@ -294,8 +291,7 @@ fdesc_lookup(v)
 				goto bad;
 			*vpp = fvp;
 			fvp->v_type = VCHR;
-			vn_lock(fvp, LK_SHARED | LK_RETRY, p);
-			return (0);
+			goto good;
 		}
 
 		ln = 0;
@@ -325,8 +321,7 @@ fdesc_lookup(v)
 			VTOFDESC(fvp)->fd_link = ln;
 			*vpp = fvp;
 			fvp->v_type = VLNK;
-			vn_lock(fvp, LK_SHARED | LK_RETRY, p);
-			return (0);
+			goto good;
 		} else {
 			error = ENOENT;
 			goto bad;
@@ -336,10 +331,18 @@ fdesc_lookup(v)
 
 	case Fdevfd:
 		if (cnp->cn_namelen == 2 && bcmp(pname, "..", 2) == 0) {
-			if ((error = fdesc_root(dvp->v_mount, vpp))) 
+			VOP_UNLOCK(dvp, 0, p);
+			cnp->cn_flags |= PDIRUNLOCK;
+			error = fdesc_root(dvp->v_mount, vpp);
+			if (error)
 				goto bad;
-
-			return (0);
+			/* If we're at the last component and need the
+			 * parent locked, undo the unlock above.
+			 */
+			if (((~cnp->cn_flags & (ISLASTCN | LOCKPARENT)) == 0) &&
+			    ((error = vn_lock(dvp, LK_EXCLUSIVE, p)) == 0))
+				cnp->cn_flags &= ~PDIRUNLOCK;
+			return (error);
 		}
 
 		fd = 0;
@@ -363,15 +366,26 @@ fdesc_lookup(v)
 		if (error)
 			goto bad;
 		VTOFDESC(fvp)->fd_fd = fd;
-		vn_lock(fvp, LK_SHARED | LK_RETRY, p);
 		*vpp = fvp;
-		return (0);
+		goto good;
 	}
 
-bad:;
-	vn_lock(dvp, LK_SHARED | LK_RETRY, p);
+bad:
 	*vpp = NULL;
 	return (error);
+
+good:
+	/*
+	 * As "." was special cased above, we now unlock the parent if we're
+	 * supposed to. We're only supposed to not unlock if this is the
+	 * last component, and the caller requested LOCKPARENT. So if either
+	 * condition is false, unlock.
+	 */
+	if (((~cnp->cn_flags) & (ISLASTCN | LOCKPARENT)) != 0) {
+		VOP_UNLOCK(dvp, 0, p);
+		cnp->cn_flags |= PDIRUNLOCK;
+	}
+	return (0);
 }
 
 int
@@ -698,7 +712,8 @@ fdesc_readdir(v)
 				if (fd_getfile(fdp, i - 2) == NULL)
 					continue;
 				d.d_fileno = i - 2 + FD_STDIN;
-				d.d_namlen = sprintf(d.d_name, "%d", i - 2);
+				d.d_namlen = snprintf(d.d_name, sizeof d.d_name,
+				    "%d", i - 2);
 				d.d_type = DT_UNKNOWN;
 				break;
 			}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_subr2.c,v 1.3.26.2 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_subr2.c,v 1.3.26.3 2003/05/19 22:41:16 tedu Exp $	*/
 /*	$NetBSD: tp_subr2.c,v 1.11 1996/03/26 22:27:01 christos Exp $	*/
 
 /*-
@@ -644,7 +644,7 @@ punt_route:
  *  possibly other E* returned from cons_netcmd()
  *
  * SIDE EFFECTS:
- *   Determines recommended tpdusize, buffering and intial delays
+ *   Determines recommended tpdusize, buffering and initial delays
  *	 based on information cached on the route.
  */
 int

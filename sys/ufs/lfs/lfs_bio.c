@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_bio.c,v 1.7.4.1 2002/10/29 00:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_bio.c,v 1.7.4.2 2003/05/19 22:38:11 tedu Exp $	*/
 /*	$NetBSD: lfs_bio.c,v 1.5 1996/02/09 22:28:49 christos Exp $	*/
 
 /*
@@ -129,7 +129,7 @@ lfs_bwrite(v)
 		if (bdirties.tqh_first == bp) {
 			if (timeout_triggered(&wakeup_timeout))
 				timeout_del(&wakeup_timeout);
-			if (!timeout_intialized(&wakeup_timeout))
+			if (!timeout_initialized(&wakeup_timeout))
 				timeout_set(&wakeup_timeout, wakeup, &bdirties);
 			timeout_add(&wakeup_timeout, 30 * hz);
 		}

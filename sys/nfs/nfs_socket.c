@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.4 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.5 2003/05/19 22:36:43 tedu Exp $	*/
 /*	$NetBSD: nfs_socket.c,v 1.27 1996/04/15 20:20:00 thorpej Exp $	*/
 
 /*
@@ -139,6 +139,8 @@ struct nfsrtt nfsrtt;
 void nfs_realign(struct mbuf **, int);
 unsigned int nfs_realign_test = 0;
 unsigned int nfs_realign_count = 0;
+
+struct nfsreqhead nfs_reqq;
 
 /*
  * Initialize sockets and congestion for a new NFS connection.

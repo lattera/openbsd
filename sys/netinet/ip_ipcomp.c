@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1.6.1 2002/10/29 00:36:47 art Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1.6.2 2003/05/19 22:40:40 tedu Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Jacques Bernard-Gundol (jj@wabbitt.org)
@@ -69,6 +69,8 @@
 #define DPRINTF(x)
 #endif
 
+struct ipcompstat ipcompstat;
+
 /*
  * ipcomp_attach() is called from the transformation code
  */
@@ -94,8 +96,9 @@ ipcomp_init(tdbp, xsp, ii)
 	case SADB_X_CALG_DEFLATE:
 		tcomp = &comp_algo_deflate;
 		break;
-
-		/* Only deflate is implemented */
+	case SADB_X_CALG_LZS:
+		tcomp = &comp_algo_lzs;
+		break;
 
 	default:
 		DPRINTF(("ipcomp_init(): unsupported compression algorithm %d specified\n",
@@ -223,15 +226,25 @@ ipcomp_input_cb(op)
 	tc = (struct tdb_crypto *) crp->crp_opaque;
 	skip = tc->tc_skip;
 	protoff = tc->tc_protoff;
+
 	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		ipcompstat.ipcomps_crypto++;
+		DPRINTF(("ipcomp_input_cb(): bogus returned buffer from crypto\n"));
+		return (EINVAL);
+	}
 
 	s = spltdb();
 
 	tdb = gettdb(tc->tc_spi, &tc->tc_dst, tc->tc_proto);
-	FREE(tc, M_XDATA);
 	if (tdb == NULL) {
+		FREE(tc, M_XDATA);
 		ipcompstat.ipcomps_notdb++;
 		DPRINTF(("ipcomp_input_cb(): TDB expired while in crypto"));
+		error = EPERM;
 		goto baddone;
 	}
 	ipcompx = (struct comp_algo *) tdb->tdb_compalgxform;
@@ -243,10 +256,11 @@ ipcomp_input_cb(op)
 	/* Hard expiration */
 	if ((tdb->tdb_flags & TDBF_BYTES) &&
 	    (tdb->tdb_cur_bytes >= tdb->tdb_exp_bytes)) {
+		FREE(tc, M_XDATA);
 		pfkeyv2_expire(tdb, SADB_EXT_LIFETIME_HARD);
 		tdb_delete(tdb);
-		m_freem(m);
-		return ENXIO;
+		error = ENXIO;
+		goto baddone;
 	}
 	/* Notify on soft expiration */
 	if ((tdb->tdb_flags & TDBF_SOFT_BYTES) &&
@@ -257,28 +271,21 @@ ipcomp_input_cb(op)
 
 	/* Check for crypto errors */
 	if (crp->crp_etype) {
-		/* Reset the session ID */
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
+		FREE(tc, M_XDATA);
 		ipcompstat.ipcomps_noxform++;
 		DPRINTF(("ipcomp_input_cb(): crypto error %d\n",
 		    crp->crp_etype));
 		error = crp->crp_etype;
 		goto baddone;
 	}
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		ipcompstat.ipcomps_crypto++;
-		DPRINTF(("ipcomp_input_cb(): bogus returned buffer from crypto\n"));
-		error = EINVAL;
-		goto baddone;
-	}
-	/* Release the crypto descriptors */
-	crypto_freereq(crp);
+	FREE(tc, M_XDATA);
 
 	/* Length of data after processing */
 	clen = crp->crp_olen;
@@ -286,18 +293,19 @@ ipcomp_input_cb(op)
 	/* In case it's not done already, adjust the size of the mbuf chain */
 	m->m_pkthdr.len = clen + hlen + skip;
 
-	if ((m->m_len < skip + hlen) && (m = m_pullup(m, skip + hlen)) == 0)
+	if ((m->m_len < skip + hlen) && (m = m_pullup(m, skip + hlen)) == 0) {
+		error = ENOBUFS;
 		goto baddone;
+	}
 
 	/* Find the beginning of the IPCOMP header */
 	m1 = m_getptr(m, skip, &roff);
 	if (m1 == NULL) {
 		ipcompstat.ipcomps_hdrops++;
-		splx(s);
 		DPRINTF(("ipcomp_input_cb(): bad mbuf chain, IPCA %s/%08x\n",
 		    ipsp_address(tdb->tdb_dst), ntohl(tdb->tdb_spi)));
-		m_freem(m);
-		return EINVAL;
+		error = EINVAL;
+		goto baddone;
 	}
 	/* Keep the next protocol field */
 	addr = (caddr_t) mtod(m, struct ip *) + skip;
@@ -340,6 +348,9 @@ ipcomp_input_cb(op)
 		m->m_pkthdr.len -= hlen;
 	}
 
+	/* Release the crypto descriptors */
+	crypto_freereq(crp);
+
 	/* Restore the Next Protocol field */
 	m_copyback(m, protoff, sizeof(u_int8_t), (u_int8_t *) & nproto);
 
@@ -353,6 +364,7 @@ baddone:
 
 	if (m)
 		m_freem(m);
+
 	crypto_freereq(crp);
 
 	return error;
@@ -618,9 +630,19 @@ ipcomp_output_cb(cp)
 #endif
 
 	tc = (struct tdb_crypto *) crp->crp_opaque;
-	m = (struct mbuf *) crp->crp_buf;
 	skip = tc->tc_skip;
 	rlen = crp->crp_ilen - skip;
+
+	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		ipcompstat.ipcomps_crypto++;
+		DPRINTF(("ipcomp_output_cb(): bogus returned buffer from "
+		    "crypto\n"));
+		return (EINVAL);
+	}
 
 	s = spltdb();
 
@@ -629,36 +651,27 @@ ipcomp_output_cb(cp)
 		FREE(tc, M_XDATA);
 		ipcompstat.ipcomps_notdb++;
 		DPRINTF(("ipcomp_output_cb(): TDB expired while in crypto\n"));
+		error = EPERM;
 		goto baddone;
 	}
 
 	/* Check for crypto errors. */
 	if (crp->crp_etype) {
-		/* Reset session ID */
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
-
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
-
 		FREE(tc, M_XDATA);
 		ipcompstat.ipcomps_noxform++;
 		DPRINTF(("ipcomp_output_cb(): crypto error %d\n",
 		    crp->crp_etype));
-		goto baddone;
-	} else
-		FREE(tc, M_XDATA);
-
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		ipcompstat.ipcomps_crypto++;
-		DPRINTF(("ipcomp_output_cb(): bogus returned buffer from "
-		    "crypto\n"));
-		error = EINVAL;
+		error = crp->crp_etype;
 		goto baddone;
 	}
+	FREE(tc, M_XDATA);
 
 	/* Check sizes. */
 	if (rlen < crp->crp_olen) {
@@ -693,6 +706,7 @@ ipcomp_output_cb(cp)
 		    ntohl(tdb->tdb_spi)));
 		crypto_freereq(crp);
 		ipcompstat.ipcomps_nopf++;
+		splx(s);
 		return EPFNOSUPPORT;
 		break;
 	}
@@ -706,6 +720,7 @@ ipcomp_output_cb(cp)
 
 baddone:
 	splx(s);
+
 	if (m)
 		m_freem(m);
 

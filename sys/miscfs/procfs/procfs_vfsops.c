@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.15.2.1 2002/06/11 03:30:21 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.15.2.2 2003/05/19 22:36:12 tedu Exp $	*/
 /*	$NetBSD: procfs_vfsops.c,v 1.25 1996/02/09 22:40:53 christos Exp $	*/
 
 /*
@@ -104,7 +104,7 @@ procfs_mount(mp, path, data, ndp, p)
 
 	mp->mnt_flag |= MNT_LOCAL;
 	pmnt = (struct procfsmount *) malloc(sizeof(struct procfsmount),
-	    M_UFSMNT, M_WAITOK);	/* XXX need new malloc type */
+	    M_MISCFSMNT, M_WAITOK);
 
 	mp->mnt_data = (qaddr_t)pmnt;
 	vfs_getnewfsid(mp);
@@ -145,6 +145,9 @@ procfs_unmount(mp, mntflags, p)
 	if ((error = vflush(mp, 0, flags)) != 0)
 		return (error);
 
+	free(VFSTOPROC(mp), M_MISCFSMNT);
+	mp->mnt_data = 0;
+
 	return (0);
 }
 
@@ -153,8 +156,14 @@ procfs_root(mp, vpp)
 	struct mount *mp;
 	struct vnode **vpp;
 {
+	int error;
 
-	return (procfs_allocvp(mp, vpp, 0, Proot));
+	error = procfs_allocvp(mp, vpp, 0, Proot);
+	if (error)
+		return (error);
+	vn_lock(*vpp, LK_EXCLUSIVE, curproc);
+
+	return (0);
 }
 
 /* ARGSUSED */

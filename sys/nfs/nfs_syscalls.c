@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.21.2.3 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.21.2.4 2003/05/19 22:36:43 tedu Exp $	*/
 /*	$NetBSD: nfs_syscalls.c,v 1.19 1996/02/18 11:53:52 fvdl Exp $	*/
 
 /*
@@ -98,6 +98,12 @@ static int nfs_numnfsd = 0;
 static struct nfsdrt nfsdrt;
 #endif
 
+struct nfssvc_sockhead nfssvc_sockhead;
+struct nfsdhead nfsd_head;
+
+int nfssvc_sockhead_flag;
+int nfsd_head_flag;
+
 #define	TRUE	1
 #define	FALSE	0
 
@@ -179,7 +185,7 @@ nfs_clientd(struct nfsmount *nmp, struct ucred *cred, struct nfsd_cargs *ncd,
 			"nqnfstimr", hz / 3);
 		    if (error == EINTR || error == ERESTART) {
 			if (vfs_busy(nmp->nm_mountp, LK_EXCLUSIVE, NULL, p) == 0)
-			    dounmount(nmp->nm_mountp, MNT_FORCE, p);
+			    dounmount(nmp->nm_mountp, MNT_FORCE, p, NULL);
 		    }
 	    }
 	}

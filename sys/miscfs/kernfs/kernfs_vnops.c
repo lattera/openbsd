@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.24.2.2 2002/10/29 00:36:45 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.24.2.3 2003/05/19 22:36:11 tedu Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -287,7 +287,6 @@ kernfs_freevp(vp, p)
 	struct kernfs_node *kf = VTOKERN(vp);
 
 	TAILQ_REMOVE(&kfshead, kf, list);
-	VOP_UNLOCK(vp, 0, p);
 	FREE(vp->v_data, M_TEMP);
 	vp->v_data = 0;
 	return(0);
@@ -330,21 +329,27 @@ kernfs_xread(kt, off, bufp, len)
 		struct timeval tv;
 
 		microtime(&tv);
-		sprintf(*bufp, "%ld %ld\n", tv.tv_sec, tv.tv_usec);
+		snprintf(*bufp, len, "%ld %ld\n", tv.tv_sec, tv.tv_usec);
 		break;
 	}
 
 	case KTT_INT: {
 		int *ip = kt->kt_data;
 
-		sprintf(*bufp, "%d\n", *ip);
+		snprintf(*bufp, len, "%d\n", *ip);
 		break;
 	}
 
 	case KTT_STRING: {
 		char *cp = kt->kt_data;
+		size_t end = strlen(cp);
 
-		*bufp = cp;
+		if (end && cp[end - 1] != '\n') {
+			strlcpy(*bufp, cp, len - 1);
+			strlcat(*bufp, "\n", len);
+		} else
+			*bufp = cp;
+
 		break;
 	}
 
@@ -409,17 +414,17 @@ kernfs_xread(kt, off, bufp, len)
 
 	case KTT_AVENRUN:
 		averunnable.fscale = FSCALE;
-		sprintf(*bufp, "%d %d %d %ld\n",
+		snprintf(*bufp, len, "%d %d %d %ld\n",
 		    averunnable.ldavg[0], averunnable.ldavg[1],
 		    averunnable.ldavg[2], averunnable.fscale);
 		break;
 
 	case KTT_USERMEM:
-		sprintf(*bufp, "%u\n", ctob(physmem - uvmexp.wired));
+		snprintf(*bufp, len, "%u\n", ctob(physmem - uvmexp.wired));
 		break;
 
 	case KTT_PHYSMEM:
-		sprintf(*bufp, "%u\n", ctob(physmem));
+		snprintf(*bufp, len, "%u\n", ctob(physmem));
 		break;
 
 #ifdef IPSEC
@@ -487,15 +492,16 @@ kernfs_lookup(v)
 	struct proc *p = cnp->cn_proc;
 	struct kern_target *kt;
 	struct vnode *vp;
-	int error;
+	int error, wantpunlock;
 
 #ifdef KERNFS_DIAGNOSTIC
 	printf("kernfs_lookup(%p)\n", ap);
 	printf("kernfs_lookup(dp = %p, vpp = %p, cnp = %p)\n", dvp, vpp, ap->a_cnp);
 	printf("kernfs_lookup(%s)\n", pname);
 #endif
-	VOP_UNLOCK(dvp, 0, p);
+
 	*vpp = NULLVP;
+	cnp->cn_flags &= ~PDIRUNLOCK;
 
 	if (cnp->cn_nameiop == DELETE || cnp->cn_nameiop == RENAME)
 		return (EROFS);
@@ -503,14 +509,14 @@ kernfs_lookup(v)
 	if (cnp->cn_namelen == 1 && *pname == '.') { 
 		*vpp = dvp;
 		VREF(dvp);
-		vn_lock(dvp, LK_SHARED | LK_RETRY, p);
 		return (0);
 	}
+
+	wantpunlock = (~cnp->cn_flags & (LOCKPARENT | ISLASTCN));
 
 	kt = kernfs_findtarget(pname, cnp->cn_namelen);
 	if (kt == NULL) {
 		/* not found */
-		vn_lock(dvp, LK_SHARED | LK_RETRY, p);
 		return(cnp->cn_nameiop == LOOKUP ? ENOENT : EROFS);
 	}
 
@@ -524,17 +530,25 @@ kernfs_lookup(v)
 		*vpp = vp;
 		if (vget(vp, LK_EXCLUSIVE, p)) 
 			goto loop;
+		if (wantpunlock) {
+			VOP_UNLOCK(dvp, 0, p);
+			cnp->cn_flags |= PDIRUNLOCK;
+		}
 		return(0);
 	}
 
 
 	if ((error = kernfs_allocvp(kt, dvp->v_mount, vpp)) != 0) {
-		vn_lock(dvp, LK_SHARED | LK_RETRY, p);
 		return(error);
 	}
 
-	vn_lock(*vpp, LK_SHARED | LK_RETRY, p);
-	return(error);
+	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, p);
+
+	if (wantpunlock) {
+		VOP_UNLOCK(dvp, 0, p);
+		cnp->cn_flags |= PDIRUNLOCK;
+	}
+	return (0);
 }
 		
 /*ARGSUSED*/

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.28.4.1 2002/10/29 00:36:47 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.28.4.2 2003/05/19 22:40:40 tedu Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -88,6 +88,6 @@ struct ah
 
 #ifdef _KERNEL
 extern int ah_enable;
-struct ahstat ahstat;
+extern struct ahstat ahstat;
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_AH_H_ */

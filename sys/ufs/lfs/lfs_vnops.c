@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vnops.c,v 1.6.2.2 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vnops.c,v 1.6.2.3 2003/05/19 22:38:11 tedu Exp $	*/
 /*	$NetBSD: lfs_vnops.c,v 1.11 1996/05/11 18:27:41 mycroft Exp $	*/
 
 /*
@@ -111,28 +111,26 @@ struct vnodeopv_entry_desc lfs_vnodeop_entries[] = {
 	{ &vop_truncate_desc, lfs_truncate },		/* truncate */
 	{ &vop_update_desc, lfs_update },		/* update */
 	{ &vop_bwrite_desc, lfs_bwrite },		/* bwrite */
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc lfs_vnodeop_opv_desc =
 	{ &lfs_vnodeop_p, lfs_vnodeop_entries };
 
 int (**lfs_specop_p)(void *);
 struct vnodeopv_entry_desc lfs_specop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, spec_vnoperate },
 	{ &vop_close_desc, ufsspec_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, lfs_getattr },		/* getattr */
 	{ &vop_setattr_desc, ufs_setattr },		/* setattr */
 	{ &vop_read_desc, ufsspec_read },		/* read */
 	{ &vop_write_desc, ufsspec_write },		/* write */
-	{ &vop_fsync_desc, spec_fsync },		/* fsync */
 	{ &vop_inactive_desc, lfs_inactive },		/* inactive */
 	{ &vop_reclaim_desc, lfs_reclaim },		/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },		/* islocked */
-	SPEC_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc lfs_specop_opv_desc =
@@ -141,24 +139,20 @@ struct vnodeopv_desc lfs_specop_opv_desc =
 #ifdef FIFO
 int (**lfs_fifoop_p)(void *);
 struct vnodeopv_entry_desc lfs_fifoop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, fifo_vnoperate },
 	{ &vop_close_desc, ufsfifo_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, lfs_getattr },		/* getattr */
 	{ &vop_setattr_desc, ufs_setattr },		/* setattr */
 	{ &vop_read_desc, ufsfifo_read },		/* read */
 	{ &vop_write_desc, ufsfifo_write },		/* write */
-	{ &vop_fsync_desc, fifo_fsync },		/* fsync */
-	{ &vop_seek_desc, fifo_seek },			/* seek */
 	{ &vop_inactive_desc, lfs_inactive },		/* inactive */
 	{ &vop_reclaim_desc, lfs_reclaim },		/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
-	{ &vop_bmap_desc, fifo_bmap },			/* bmap */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },		/* islocked */
 	{ &vop_bwrite_desc, lfs_bwrite },		/* bwrite */
-	FIFO_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc lfs_fifoop_opv_desc =

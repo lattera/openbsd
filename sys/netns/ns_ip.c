@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netns/Attic/ns_ip.c,v 1.14.4.1 2002/10/29 00:36:48 art Exp $	*/
+/*	$OpenBSD: src/sys/netns/Attic/ns_ip.c,v 1.14.4.2 2003/05/19 22:40:57 tedu Exp $	*/
 /*	$NetBSD: ns_ip.c,v 1.16 1996/05/09 22:29:40 scottr Exp $	*/
 
 /*
@@ -93,7 +93,8 @@ nsipattach()
 
 	if (nsipif.if_mtu == 0) {
 		ifp = &nsipif;
-		sprintf(ifp->if_xname, "nsip%d", nsipif_unit);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname,
+		    "nsip%d", nsipif_unit);
 		ifp->if_mtu = LOMTU;
 		ifp->if_ioctl = nsipioctl;
 		ifp->if_output = nsipoutput;
@@ -107,7 +108,8 @@ nsipattach()
 	nsip_list = m;
 	ifp = &m->ifen_ifnet;
 
-	sprintf(ifp->if_xname, "nsip%d", nsipif_unit++);
+	snprintf(ifp->if_xname, sizeof ifp->if_xname,
+	    "nsip%d", nsipif_unit++);
 	ifp->if_mtu = LOMTU;
 	ifp->if_ioctl = nsipioctl;
 	ifp->if_output = nsipoutput;
@@ -120,7 +122,8 @@ nsipattach()
 	 * XXX in the days before if_xname.
 	 */
 	bzero(nsipif.if_xname, sizeof(nsipif.if_xname));
-	sprintf(nsipif.if_xname, "nsip%d", nsipif_unit);
+	snprintf(nsipif.if_xname, sizeof nsipif.if_xname,
+	    "nsip%d", nsipif_unit);
 
 	return (m);
 }
@@ -395,7 +398,8 @@ nsip_route(m)
 	 * now configure this as a point to point link
 	 */
 	bzero(ifr.ifr_name, sizeof(ifr.ifr_name));
-	sprintf(ifr.ifr_name, "nsip%d", nsipif_unit - 1);
+	snprintf(ifr.ifr_name, sizeof ifr.ifr_name,
+	    "nsip%d", nsipif_unit - 1);
 	ifr.ifr_dstaddr = *snstosa(ns_dst);
 	(void)ns_control((struct socket *)0, SIOCSIFDSTADDR, (caddr_t)&ifr,
 			(struct ifnet *)ifn);

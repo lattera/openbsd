@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.36.2.2 2002/10/29 00:36:47 art Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.36.2.3 2003/05/19 22:40:40 tedu Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
@@ -36,6 +36,7 @@
 
 #include <net/if.h>
 #include <net/route.h>
+#include <net/bpf.h>
 
 #ifdef INET
 #include <netinet/in.h>
@@ -51,6 +52,7 @@
 #include <net/if_gif.h>
 
 #include "gif.h"
+#include "bpfilter.h"
 
 #ifdef ENCDEBUG
 #define DPRINTF(x)	if (encdebug) printf x
@@ -239,6 +241,19 @@ etherip_input(struct mbuf *m, ...)
 		m_freem(m);
 		return;
 	}
+#if NBPFILTER > 0
+	if (gif_softc[i].gif_if.if_bpf) {
+		struct mbuf m0;
+		u_int32_t af = sdst.sa.sa_family;
+
+		m0.m_flags = 0;
+		m0.m_next = m;
+		m0.m_len = 4;
+		m0.m_data = (char *)&af;
+
+		bpf_mtap(gif_softc[i].gif_if.if_bpf, &m0);
+	}
+#endif
 
 #if NBRIDGE > 0
 	/*
@@ -382,6 +397,7 @@ etherip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		ip6 = mtod(m, struct ip6_hdr *);
 
 		ip6->ip6_flow = 0;
+		ip6->ip6_nxt = IPPROTO_ETHERIP;
 		ip6->ip6_vfc &= ~IPV6_VERSION_MASK;
 		ip6->ip6_vfc |= IPV6_VERSION;
 		ip6->ip6_plen = htons(m->m_pkthdr.len);

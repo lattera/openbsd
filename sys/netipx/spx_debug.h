@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/spx_debug.h,v 1.2.24.1 2002/06/11 03:31:38 art Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/spx_debug.h,v 1.2.24.2 2003/05/19 22:41:16 tedu Exp $	*/
 
 /*-
  *
@@ -71,7 +71,6 @@ int	spx_debx;
 #ifdef _KERNEL
 extern char *prurequests[];
 extern char *sanames[];
-extern char *tcpstates[];
 
 void	spx_trace(int act, int ostate, struct spxpcb *sp, struct spx *si,
 		       int req);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/udp_var.h,v 1.12.4.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/udp_var.h,v 1.12.4.2 2003/05/19 22:40:41 tedu Exp $	*/
 /*	$NetBSD: udp_var.h,v 1.12 1996/02/13 23:44:41 christos Exp $	*/
 
 /*
@@ -92,8 +92,8 @@ struct	udpstat {
 }
 
 #ifdef _KERNEL
-struct	inpcbtable udbtable;
-struct	udpstat udpstat;
+extern struct	inpcbtable udbtable;
+extern struct	udpstat udpstat;
 
 #if defined(INET6) && !defined(TCP6)
 void	udp6_ctlinput(int, struct sockaddr *, void *);

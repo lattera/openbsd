@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.6 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.7 2003/05/19 22:41:29 tedu Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.120 2002/09/22 07:21:29 chs Exp $	*/
 
 /*
@@ -428,8 +428,10 @@ uvm_mapent_free(me)
 		simple_unlock(&uvm.kentry_lock);
 		splx(s);
 	} else if (me->flags & UVM_MAP_KMEM) {
+		splassert(IPL_NONE);
 		pool_put(&uvm_map_entry_kmem_pool, me);
 	} else {
+		splassert(IPL_NONE);
 		pool_put(&uvm_map_entry_pool, me);
 	}
 }
@@ -1115,6 +1117,25 @@ uvm_map_spacefits(struct vm_map *map, vaddr_t *phint, vsize_t length,
 }
 
 /*
+ * uvm_map_hint: return the beginning of the best area suitable for
+ * creating a new mapping with "prot" protection.
+ */
+vaddr_t
+uvm_map_hint(struct proc *p, vm_prot_t prot)
+{
+#ifdef __i386__
+	/*
+	 * If executable skip first two pages, otherwise start
+	 * after data + heap region.
+	 */
+	if ((prot & VM_PROT_EXECUTE) &&
+	    ((vaddr_t)p->p_vmspace->vm_daddr >= I386_MAX_EXE_ADDR))
+		return (round_page(PAGE_SIZE*2));
+#endif
+	return (round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ));
+}
+
+/*
  * uvm_map_findspace: find "length" sized space in "map".
  *
  * => "hint" is a hint about where we want it, unless FINDSPACE_FIXED is
@@ -1485,7 +1506,7 @@ uvm_unmap_remove(map, start, end, entry_list)
 			 */
 
 			pmap_remove(pmap_kernel(), entry->start,
-			    entry->start + len);
+			    entry->end);
 			uvm_km_pgremove(entry->object.uvm_obj,
 			    entry->start - vm_map_min(kernel_map),
 			    entry->end - vm_map_min(kernel_map));
@@ -3566,7 +3587,6 @@ uvmspace_fork(vm1)
 	UVMHIST_LOG(maphist,"<- done",0,0,0,0);
 	return(vm2);
 }
-
 
 #if defined(DDB)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19.2.3 2002/10/29 02:12:53 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19.2.4 2003/05/19 22:41:30 tedu Exp $	*/
 /*	$NetBSD: uvm_unix.c,v 1.26 2001/12/08 00:35:34 thorpej Exp $	*/
 
 /*
@@ -108,7 +108,7 @@ sys_obreak(p, v, retval)
 		uvm_deallocate(&vm->vm_map, new, old - new);
 		vm->vm_dsize -= atop(old - new);
 	}
-	return 0;
+	return (0);
 }
 
 /*
@@ -126,11 +126,7 @@ uvm_grow(p, sp)
 	/*
 	 * For user defined stacks (from sendsig).
 	 */
-#ifdef MACHINE_STACK_GROWS_UP
-	if (sp > (vaddr_t)vm->vm_maxsaddr)
-#else
 	if (sp < (vaddr_t)vm->vm_maxsaddr)
-#endif
 		return (0);
 
 	/*
@@ -191,13 +187,12 @@ uvm_coredump(p, vp, cred, chdr)
 	struct vmspace *vm = p->p_vmspace;
 	struct vm_map *map = &vm->vm_map;
 	struct vm_map_entry *entry;
-	vaddr_t start, end, maxstack;
+	vaddr_t start, end;
 	struct coreseg cseg;
 	off_t offset;
 	int flag, error = 0;
 
 	offset = chdr->c_hdrsize + chdr->c_seghdrsize + chdr->c_cpusize;
-	maxstack = trunc_page(USRSTACK - ctob(vm->vm_ssize));
 
 	for (entry = map->header.next; entry != &map->header;
 	    entry = entry->next) {
@@ -220,15 +215,19 @@ uvm_coredump(p, vp, cred, chdr)
 			end = VM_MAXUSER_ADDRESS;
 
 #ifdef MACHINE_STACK_GROWS_UP
-		if (start >= USRSTACK) {
+		if (USRSTACK <= start && start < (USRSTACK + MAXSSIZ)) {
+			end = round_page(USRSTACK + ctob(vm->vm_ssize));
+			if (start >= end)
+				continue;
 			start = USRSTACK;
 #else
 		if (start >= (vaddr_t)vm->vm_maxsaddr) {
 			start = trunc_page(USRSTACK - ctob(vm->vm_ssize));
-#endif
-			flag = CORE_STACK;
+
 			if (start >= end)
 				continue;
+#endif
+			flag = CORE_STACK;
 		} else
 			flag = CORE_DATA;
 

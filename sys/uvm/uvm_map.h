@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.h,v 1.19.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.h,v 1.19.2.5 2003/05/19 22:41:29 tedu Exp $	*/
 /*	$NetBSD: uvm_map.h,v 1.33 2002/11/02 07:40:49 perry Exp $	*/
 
 /*
@@ -287,6 +287,7 @@ struct vm_map_entry *uvm_map_findspace(struct vm_map *, vaddr_t, vsize_t,
 int		uvm_map_inherit(struct vm_map *, vaddr_t, vaddr_t,
 		    vm_inherit_t);
 int		uvm_map_advice(struct vm_map *, vaddr_t, vaddr_t, int);
+vaddr_t		uvm_map_hint(struct proc *, vm_prot_t);
 void		uvm_map_init(void);
 boolean_t	uvm_map_lookup_entry(struct vm_map *, vaddr_t,
 		    struct vm_map_entry **);

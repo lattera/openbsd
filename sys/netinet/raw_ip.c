@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/raw_ip.c,v 1.24.4.2 2002/10/29 00:36:47 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/raw_ip.c,v 1.24.4.3 2003/05/19 22:40:41 tedu Exp $	*/
 /*	$NetBSD: raw_ip.c,v 1.25 1996/02/18 18:58:33 christos Exp $	*/
 
 /*
@@ -217,6 +217,10 @@ rip_output(struct mbuf *m, ...)
 		if (m->m_pkthdr.len > IP_MAXPACKET) {
 			m_freem(m);
 			return (EMSGSIZE);
+		}
+		if (m->m_pkthdr.len < sizeof (struct ip)) {
+			m_freem(m);
+			return (EINVAL);
 		}
 		ip = mtod(m, struct ip *);
 		NTOHS(ip->ip_len);

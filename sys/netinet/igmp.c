@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/igmp.c,v 1.12.2.2 2002/10/29 00:36:46 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/igmp.c,v 1.12.2.3 2003/05/19 22:40:40 tedu Exp $	*/
 /*	$NetBSD: igmp.c,v 1.15 1996/02/13 23:41:25 christos Exp $	*/
 
 /*
@@ -34,6 +34,7 @@
 
 int		igmp_timers_are_running;
 static struct router_info *rti_head;
+struct igmpstat igmpstat;
 
 void igmp_sendpkt(struct in_multi *, int, in_addr_t);
 static int rti_fill(struct in_multi *);

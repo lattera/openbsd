@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.22.2.2 2002/10/29 00:36:47 art Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.22.2.3 2003/05/19 22:40:40 tedu Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -214,7 +214,7 @@ ipip_input(struct mbuf *m, int iphlen, struct ifnet *gifp)
 	m_adj(m, iphlen);
 
 	/* Sanity check */
-	if (m->m_pkthdr.len < sizeof(struct ip))  {
+	if (m->m_pkthdr.len < sizeof(struct ip)) {
 		ipipstat.ipips_hdrops++;
 		m_freem(m);
 		return;
@@ -369,6 +369,7 @@ ipip_input(struct mbuf *m, int iphlen, struct ifnet *gifp)
 		else
 			af = AF_INET6;
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.10.2.4 2002/11/04 18:02:33 art Exp $	 */
+/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.10.2.5 2003/05/19 22:41:30 tedu Exp $	 */
 /*	$NetBSD: uvm_stat.c,v 1.22 2001/12/09 03:07:20 chs Exp $	 */
 
 /*
@@ -177,9 +177,6 @@ uvm_hist(bitmask)
 
 	if ((bitmask & UVMHIST_PDHIST) || bitmask == 0)
 		hists[i++] = &pdhist;
-
-	if ((bitmask & UVMHIST_UBCHIST) || bitmask == 0)
-		hists[i++] = &ubchist;
 
 	hists[i] = NULL;
 

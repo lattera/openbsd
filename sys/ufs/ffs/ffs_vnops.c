@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.4 2003/05/19 22:38:11 tedu Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -123,7 +123,7 @@ struct vnodeopv_desc ffs_vnodeop_opv_desc =
 
 int (**ffs_specop_p)(void *);
 struct vnodeopv_entry_desc ffs_specop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, spec_vnoperate },
 	{ &vop_close_desc, ufsspec_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, ufs_getattr },		/* getattr */
@@ -141,7 +141,6 @@ struct vnodeopv_entry_desc ffs_specop_entries[] = {
 	{ &vop_getextattr_desc, ufs_vop_getextattr },
 	{ &vop_setextattr_desc, ufs_vop_setextattr },
 #endif
-	SPEC_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_specop_opv_desc =
@@ -150,7 +149,7 @@ struct vnodeopv_desc ffs_specop_opv_desc =
 #ifdef FIFO
 int (**ffs_fifoop_p)(void *);
 struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
+	{ &vop_default_desc, fifo_vnoperate },
 	{ &vop_close_desc, ufsfifo_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, ufs_getattr },		/* getattr */
@@ -162,7 +161,6 @@ struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_reclaim_desc, ffs_reclaim },		/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
-	{ &vop_bmap_desc, fifo_bmap },			/* bmap */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },		/* islocked */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
@@ -170,7 +168,6 @@ struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_getextattr_desc, ufs_vop_getextattr },
 	{ &vop_setextattr_desc, ufs_vop_setextattr },
 #endif
-	FIFO_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_fifoop_opv_desc =

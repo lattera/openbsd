@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.c,v 1.63.4.2 2002/10/29 00:36:47 art Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ah.c,v 1.63.4.3 2003/05/19 22:40:40 tedu Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -72,6 +72,8 @@
 #else
 #define DPRINTF(x)
 #endif
+
+struct ahstat ahstat;
 
 /*
  * ah_attach() is called from the transformation initialization code.
@@ -682,7 +684,7 @@ ah_input(struct mbuf *m, struct tdb *tdb, int skip, int protoff)
 int
 ah_input_cb(void *op)
 {
-	int roff, rplen, error, skip, protoff;
+	int s, roff, rplen, error, skip, protoff;
 	unsigned char calc[AH_ALEN_MAX];
 	struct mbuf *m1, *m0, *m;
 	struct cryptodesc *crd;
@@ -694,7 +696,6 @@ ah_input_cb(void *op)
 	u_int32_t btsx;
 	u_int8_t prot;
 	caddr_t ptr;
-	int s, err;
 
 	crp = (struct cryptop *) op;
 	crd = crp->crp_desc;
@@ -703,7 +704,17 @@ ah_input_cb(void *op)
 	skip = tc->tc_skip;
 	protoff = tc->tc_protoff;
 	mtag = (struct m_tag *) tc->tc_ptr;
+
 	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		ahstat.ahs_crypto++;
+		DPRINTF(("ah_input_cb(): bogus returned buffer from "
+		    "crypto\n"));
+		return (EINVAL);
+	}
 
 	s = spltdb();
 
@@ -712,6 +723,7 @@ ah_input_cb(void *op)
 		FREE(tc, M_XDATA);
 		ahstat.ahs_notdb++;
 		DPRINTF(("ah_input_cb(): TDB is expired while in crypto"));
+		error = EPERM;
 		goto baddone;
 	}
 
@@ -719,16 +731,14 @@ ah_input_cb(void *op)
 
 	/* Check for crypto errors. */
 	if (crp->crp_etype) {
-		FREE(tc, M_XDATA);
-
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
-
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
-
+		FREE(tc, M_XDATA);
 		ahstat.ahs_noxform++;
 		DPRINTF(("ah_input_cb(): crypto error %d\n", crp->crp_etype));
 		error = crp->crp_etype;
@@ -736,16 +746,6 @@ ah_input_cb(void *op)
 	} else {
 		crypto_freereq(crp); /* No longer needed. */
 		crp = NULL;
-	}
-
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		FREE(tc, M_XDATA);
-		ahstat.ahs_crypto++;
-		DPRINTF(("ah_input_cb(): bogus returned buffer from "
-		    "crypto\n"));
-		error = EINVAL;
-		goto baddone;
 	}
 
 	if (!(tdb->tdb_flags & TDBF_NOREPLAY))
@@ -901,9 +901,9 @@ ah_input_cb(void *op)
 			m->m_pkthdr.len -= rplen + ahx->authsize;
 		}
 
-	err = ipsec_common_input_cb(m, tdb, skip, protoff, mtag);
+	error = ipsec_common_input_cb(m, tdb, skip, protoff, mtag);
 	splx(s);
-	return err;
+	return (error);
 
  baddone:
 	splx(s);
@@ -914,7 +914,7 @@ ah_input_cb(void *op)
 	if (crp != NULL)
 		crypto_freereq(crp);
 
-	return error;
+	return (error);
 }
 
 /*
@@ -946,6 +946,7 @@ ah_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		hdr.spi = tdb->tdb_spi;
 		hdr.flags |= M_AUTH | M_AUTH_AH;
 
+		m1.m_flags = 0;
 		m1.m_next = m;
 		m1.m_len = ENC_HDRLEN;
 		m1.m_data = (char *) &hdr;
@@ -969,7 +970,7 @@ ah_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		    ipsp_address(tdb->tdb_dst), ntohl(tdb->tdb_spi)));
 		m_freem(m);
 		ahstat.ahs_wrap++;
-		return NULL;
+		return EINVAL;
 	}
 
 	if (!(tdb->tdb_flags & TDBF_NOREPLAY))
@@ -1227,7 +1228,17 @@ ah_output_cb(void *op)
 	skip = tc->tc_skip;
 	protoff = tc->tc_protoff;
 	ptr = (caddr_t) (tc + 1);
+
 	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		ahstat.ahs_crypto++;
+		DPRINTF(("ah_output_cb(): bogus returned buffer from "
+		    "crypto\n"));
+		return (EINVAL);
+	}
 
 	s = spltdb();
 
@@ -1236,33 +1247,23 @@ ah_output_cb(void *op)
 		FREE(tc, M_XDATA);
 		ahstat.ahs_notdb++;
 		DPRINTF(("ah_output_cb(): TDB is expired while in crypto\n"));
+		error = EPERM;
 		goto baddone;
 	}
 
 	/* Check for crypto errors. */
 	if (crp->crp_etype) {
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
-
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
-
 		FREE(tc, M_XDATA);
 		ahstat.ahs_noxform++;
 		DPRINTF(("ah_output_cb(): crypto error %d\n", crp->crp_etype));
 		error = crp->crp_etype;
-		goto baddone;
-	}
-
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		FREE(tc, M_XDATA);
-		ahstat.ahs_crypto++;
-		DPRINTF(("ah_output_cb(): bogus returned buffer from "
-		    "crypto\n"));
-		error = EINVAL;
 		goto baddone;
 	}
 

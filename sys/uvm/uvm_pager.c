@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28.2.5 2003/05/19 22:41:30 tedu Exp $	*/
 /*	$NetBSD: uvm_pager.c,v 1.58 2002/10/01 07:52:30 chs Exp $	*/
 
 /*
@@ -297,8 +297,8 @@ uvm_aio_aiodone(bp)
 	struct simplelock *slock;
 	int i, error, swslot;
 	boolean_t write, swap;
-	UVMHIST_FUNC("uvm_aio_aiodone"); UVMHIST_CALLED(ubchist);
-	UVMHIST_LOG(ubchist, "bp %p", bp, 0,0,0);
+	UVMHIST_FUNC("uvm_aio_aiodone"); UVMHIST_CALLED(pdhist);
+	UVMHIST_LOG(pdhist, "bp %p", bp, 0,0,0);
 
 	splassert(IPL_BIO);
 
@@ -312,7 +312,7 @@ uvm_aio_aiodone(bp)
 	uobj = NULL;
 	for (i = 0; i < npages; i++) {
 		pgs[i] = uvm_pageratop((vaddr_t)bp->b_data + (i << PAGE_SHIFT));
-		UVMHIST_LOG(ubchist, "pgs[%d] = %p", i, pgs[i],0,0);
+		UVMHIST_LOG(pdhist, "pgs[%d] = %p", i, pgs[i],0,0);
 	}
 	uvm_pagermapout((vaddr_t)bp->b_data, npages);
 #ifdef UVM_SWAP_ENCRYPT
