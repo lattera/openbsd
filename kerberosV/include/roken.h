@@ -39,7 +39,7 @@
  */
 
 /* $KTH: roken.h.in,v 1.159 2001/08/21 15:32:05 assar Exp $ */
-/* $Id: roken.h,v 1.6 2001/09/29 17:45:40 jakob Exp $ */
+/* $Id: roken.h,v 1.7 2002/02/06 09:12:30 hin Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,8 +168,6 @@ int issuid(void);
 int get_window_size(int fd, struct winsize *);
 
 
-
-extern const char *__progname;
 
 extern char **environ;
 
