@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/newlfs/Attic/misc.c,v 1.7 2003/11/15 00:18:38 tedu Exp $	*/
+/*	$OpenBSD: src/sbin/newlfs/Attic/misc.c,v 1.8 2004/07/17 02:14:33 deraadt Exp $	*/
 /*	$NetBSD: misc.c,v 1.2 1995/03/18 14:58:51 cgd Exp $	*/
 
 /*-
@@ -34,7 +34,7 @@
 #if 0
 static char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 6/5/93";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/newlfs/Attic/misc.c,v 1.7 2003/11/15 00:18:38 tedu Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/newlfs/Attic/misc.c,v 1.8 2004/07/17 02:14:33 deraadt Exp $";
 #endif
 #endif /* not lint */
 
@@ -46,8 +46,7 @@ static char rcsid[] = "$OpenBSD: src/sbin/newlfs/Attic/misc.c,v 1.7 2003/11/15 0
 #include "extern.h"
 
 u_int
-log2(num)
-        u_int num;
+log2(u_int num)
 {
         u_int i, limit;
 
