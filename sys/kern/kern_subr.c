@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.8 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.9 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: kern_subr.c,v 1.15 1996/04/09 17:21:56 ragge Exp $	*/
 
 /*
@@ -77,7 +77,12 @@ uiomove(cp, n, uio)
 		switch (uio->uio_segflg) {
 
 		case UIO_USERSPACE:
+#ifdef MULTIPROCESSOR
+			if (curcpu()->ci_schedstate.spc_schedflags &
+			    SPCF_SHOULDYIELD)
+#else
 			if (p->p_schedflags & PSCHED_SHOULDYIELD)
+#endif
 				preempt(NULL);
 			if (uio->uio_rw == UIO_READ)
 				error = copyout(cp, iov->iov_base, cnt);

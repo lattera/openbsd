@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.17 2004/04/21 09:40:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.18 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -164,7 +164,7 @@ struct	proc {
 	const char *p_wmesg;	 /* Reason for sleep. */
 	u_int	p_swtime;	 /* Time swapped in or out. */
 	u_int	p_slptime;	 /* Time since last blocked. */
-	int	p_schedflags;	 /* PSCHED_* flags */
+	int32_t	__p_free1;	 /* Free 4-byte slot */
 
 	struct	itimerval p_realtimer;	/* Alarm timer. */
 	struct	timeout p_realit_to;	/* Alarm timeout. */
@@ -278,15 +278,6 @@ struct	proc {
 /* Macro to compute the exit signal to be delivered. */
 #define P_EXITSIG(p) \
     (((p)->p_flag & (P_TRACED | P_FSTRACE)) ? SIGCHLD : (p)->p_exitsig)
-
-/*
- * These flags are kept in p_schedflags.  p_schedflags may be modified
- * only at splstatclock().
- */
-#define PSCHED_SEENRR		0x0001	/* process has been in roundrobin() */
-#define PSCHED_SHOULDYIELD	0x0002	/* process should yield */
-
-#define PSCHED_SWITCHCLEAR	(PSCHED_SEENRR|PSCHED_SHOULDYIELD)
 
 /*
  * MOVE TO ucred.h?

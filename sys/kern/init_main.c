@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.19 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.20 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -122,7 +122,9 @@ void	(*md_diskconf)(void) = NULL;
 struct	vnode *rootvp, *swapdev_vp;
 int	boothowto;
 struct	timeval boottime;
+#ifndef MULTIPROCESSOR
 struct	timeval runtime;
+#endif
 int	ncpus =  1;
 
 #if !defined(NO_PROPOLICE)
@@ -412,15 +414,18 @@ main(framep)
 	VOP_UNLOCK(rootvnode, 0, p);
 	p->p_fd->fd_rdir = NULL;
 
-	uvm_swap_init();
-
 	/*
 	 * Now can look at time, having had a chance to verify the time
 	 * from the file system.  Reset p->p_rtime as it may have been
 	 * munched in mi_switch() after the time got set.
 	 */
-	p->p_stats->p_start = runtime = mono_time = boottime = time;
+	p->p_stats->p_start = mono_time = boottime = time;
+#ifdef MULTIPROCESSOR
+	p->p_cpu->ci_schedstate.spc_runtime = time;
+#endif
 	p->p_rtime.tv_sec = p->p_rtime.tv_usec = 0;
+
+	uvm_swap_init();
 
 	/* Create process 1 (init(8)). */
 	if (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, start_init, NULL, rval))

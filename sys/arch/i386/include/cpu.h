@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.22 2004/03/30 09:09:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.23 2004/06/05 17:19:54 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -200,11 +200,15 @@ extern void cpu_init_idle_pcbs __P((void));
 #define want_resched (curcpu()->ci_want_resched)
 #define astpending (curcpu()->ci_astpending)
 
+#define runtime (curcpu()->ci_schedstate.spc_runtime)
+#define rrticks (curcpu()->ci_schedstate.spc_rrticks)
+#define schedclk (curcpu()->ci_schedstate.spc_schedticks)
+
 /*
  * Preemt the current process if in interrupt from user monre,
  * or after the current trap/syscall if in system mode.
  */
-extern void need_resched __P((void));
+extern void need_resched __P((struct cpu_info *));
 
 extern void (*delay_func) __P((int));
 struct timeval;
@@ -220,7 +224,7 @@ extern void (*microtime_func) __P((struct timeval *));
  * or after the current trap/syscall if in system mode.
  */
 int	want_resched;		/* resched() was called */
-#define	need_resched()		(want_resched = 1, setsoftast())
+#define	need_resched(ci)	(want_resched = 1, setsoftast())
 
 #define cpu_number()		0
 

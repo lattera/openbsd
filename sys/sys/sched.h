@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.8 2004/03/14 22:08:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.9 2004/06/05 17:19:55 niklas Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -97,10 +97,13 @@
  */
 struct schedstate_percpu {
         struct timeval spc_runtime;     /* time curproc started running */
-        __volatile int spc_flags;       /* flags; see below */
+        __volatile int spc_schedflags;  /* flags; see below */
         u_int spc_schedticks;           /* ticks for schedclock() */
         u_int64_t spc_cp_time[CPUSTATES]; /* CPU state statistics */
         u_char spc_curpriority;         /* usrpri of curproc */
+	int spc_rrticks;		/* ticks until roundrobin() */
+	int spc_pscnt;			/* prof/stat counter */
+	int spc_psdiv;			/* prof/stat divisor */	
 };
 
 /* spc_flags */
@@ -115,10 +118,13 @@ struct schedstate_percpu {
 #define NICE_WEIGHT 2			/* priorities per nice level */
 #define	ESTCPULIM(e) min((e), NICE_WEIGHT * PRIO_MAX - PPQ)
 
-extern int	schedhz;			/* ideally: 16 */
+extern int schedhz;			/* ideally: 16 */
+extern int rrticks_init;		/* ticks per roundrobin() */
 
 #ifdef	_SYS_PROC_H_
-void schedclock(struct proc *p);
+void schedclock(struct proc *);
+void roundrobin(struct cpu_info *);
+
 static __inline void scheduler_fork_hook(
 	struct proc *parent, struct proc *child);
 static __inline void scheduler_wait_hook(

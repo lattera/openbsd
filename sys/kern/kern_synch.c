@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.13 2004/04/21 09:36:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.14 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -54,8 +54,13 @@
 
 #include <machine/cpu.h>
 
+#ifndef MULTIPROCESSOR
 u_char	curpriority;		/* usrpri of curproc */
+int	rrticks;		/* number of hardclock ticks left to
+				   roundrobin() */
+#endif
 int	lbolt;			/* once a second sleep address */
+int	rrticks_init;		/* # of hardclock ticks per roundrobin() */
 
 int whichqs;			/* Bit mask summary of non-empty Q's. */
 struct prochd qs[NQS];
@@ -64,7 +69,7 @@ struct SIMPLELOCK sched_lock;
 
 void scheduler_start(void);
 
-void roundrobin(void *);
+void roundrobin(struct cpu_info *);
 void schedcpu(void *);
 void updatepri(struct proc *);
 void endtsleep(void *);
@@ -72,34 +77,55 @@ void endtsleep(void *);
 void
 scheduler_start()
 {
-	static struct timeout roundrobin_to;
 	static struct timeout schedcpu_to;
 
 	/*
 	 * We avoid polluting the global namespace by keeping the scheduler
 	 * timeouts static in this function.
-	 * We setup the timeouts here and kick roundrobin and schedcpu once to
+	 * We setup the timeout here and kick schedcpu once to
 	 * make them do their job.
 	 */
 
-	timeout_set(&roundrobin_to, roundrobin, &roundrobin_to);
 	timeout_set(&schedcpu_to, schedcpu, &schedcpu_to);
 
-	roundrobin(&roundrobin_to);
 	schedcpu(&schedcpu_to);
 }
 
 /*
  * Force switch among equal priority processes every 100ms.
+ *
+ * XXX We badly need to unify MULTIPROCESSOR with not MULTIPROCESSOR.
  */
 /* ARGSUSED */
 void
-roundrobin(arg)
-	void *arg;
+roundrobin(struct cpu_info *ci)
 {
-	struct timeout *to = (struct timeout *)arg;
+#ifdef MULTIPROCESSOR
+	struct schedstate_percpu *spc = &ci->ci_schedstate;
+#else
 	struct proc *p = curproc;
+#endif
 	int s;
+
+#ifdef MULTIPROCESSOR
+	spc->spc_rrticks = rrticks_init;
+
+	if (curproc != NULL) {
+		s = splstatclock();
+		if (spc->spc_schedflags & SPCF_SEENRR) {
+			/*
+			 * The process has already been through a roundrobin
+			 * without switching and may be hogging the CPU.
+			 * Indicate that the process should yield.
+			 */
+			spc->spc_schedflags |= SPCF_SHOULDYIELD;
+		} else {
+			spc->spc_schedflags |= SPCF_SEENRR;
+		}
+		splx(s);
+	}
+#else
+	rrticks = rrticks_init;
 
 	if (p != NULL) {
 		s = splstatclock();
@@ -115,8 +141,9 @@ roundrobin(arg)
 		}
 		splx(s);
 	}
-	need_resched();
-	timeout_add(to, hz / 10);
+#endif
+
+	need_resched(curcpu());
 }
 
 /*
@@ -451,7 +478,11 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 	splx(s);
 
 resume:
+#ifdef MULTIPROCESSOR
+	p->p_cpu->ci_schedstate.spc_curpriority = p->p_usrpri;
+#else
 	curpriority = p->p_usrpri;
+#endif
 	p->p_flag &= ~P_SINTR;
 	if (p->p_flag & P_TIMEOUT) {
 		p->p_flag &= ~P_TIMEOUT;
@@ -594,12 +625,16 @@ restart:
 				/*
 				 * Since curpriority is a user priority,
 				 * p->p_priority is always better than
-				 * curpriority.
+				 * curpriority on the last CPU on
+				 * which it ran.
+				 *
+				 * XXXSMP See affinity comment in
+				 * resched_proc().
 				 */
-
 				if ((p->p_flag & P_INMEM) != 0) {
 					setrunqueue(p);
-					need_resched();
+					KASSERT(p->p_cpu != NULL);
+					need_resched(p->p_cpu);
 				} else {
 					wakeup((caddr_t)&proc0);
 				}
@@ -683,6 +718,7 @@ mi_switch()
 	struct timeval tv;
 #if defined(MULTIPROCESSOR)
 	int hold_count;
+	struct schedstate_percpu *spc;
 #endif
 
 	SCHED_ASSERT_LOCKED();
@@ -699,6 +735,8 @@ mi_switch()
 #else
 		hold_count = __mp_release_all(&kernel_lock);
 #endif
+
+	spc = &p->p_cpu->ci_schedstate;
 #endif
 
 	/*
@@ -706,14 +744,22 @@ mi_switch()
 	 * process was running, and add that to its total so far.
 	 */
 	microtime(&tv);
+#ifdef MULTIPROCESSOR
+	if (timercmp(&tv, &spc->spc_runtime, <)) {
+#else
 	if (timercmp(&tv, &runtime, <)) {
 #if 0
 		printf("time is not monotonic! "
-		    "tv=%ld.%06ld, runtime=%ld.%06ld\n",
+		    "tv=%lu.%06lu, runtime=%lu.%06lu\n",
 		    tv.tv_sec, tv.tv_usec, runtime.tv_sec, runtime.tv_usec);
 #endif
+#endif
 	} else {
+#ifdef MULTIPROCESSOR
+		timersub(&tv, &spc->spc_runtime, &tv);
+#else
 		timersub(&tv, &runtime, &tv);
+#endif
 		timeradd(&p->p_rtime, &tv, &p->p_rtime);
 	}
 
@@ -736,20 +782,36 @@ mi_switch()
 	 * Process is about to yield the CPU; clear the appropriate
 	 * scheduling flags.
 	 */
+#ifdef MULTIPROCESSOR
+	spc->spc_schedflags &= ~SPCF_SWITCHCLEAR;
+#else
 	p->p_schedflags &= ~PSCHED_SWITCHCLEAR;
+#endif
 
 	/*
 	 * Pick a new current process and record its start time.
 	 */
 	uvmexp.swtch++;
 	cpu_switch(p);
-	microtime(&runtime);
 
 	/*
 	 * Make sure that MD code released the scheduler lock before
 	 * resuming us.
 	 */
 	SCHED_ASSERT_UNLOCKED();
+
+	/*
+	 * We're running again; record our new start time.  We might
+	 * be running on a new CPU now, so don't use the cache'd
+	 * schedstate_percpu pointer.
+	 */
+#ifdef MULTIPROCESSOR
+	KDASSERT(p->p_cpu != NULL);
+	KDASSERT(p->p_cpu == curcpu());
+	microtime(&p->p_cpu->ci_schedstate.spc_runtime);
+#else
+	microtime(&runtime);
+#endif
 
 #if defined(MULTIPROCESSOR)
 	/*
@@ -778,6 +840,44 @@ rqinit()
 	for (i = 0; i < NQS; i++)
 		qs[i].ph_link = qs[i].ph_rlink = (struct proc *)&qs[i];
 	SIMPLE_LOCK_INIT(&sched_lock);
+}
+
+static __inline void
+resched_proc(struct proc *p, u_char pri)
+{
+#ifdef MULTIPROCESSOR
+	struct cpu_info *ci;
+#endif
+
+	/*
+	 * XXXSMP
+	 * Since p->p_cpu persists across a context switch,
+	 * this gives us *very weak* processor affinity, in
+	 * that we notify the CPU on which the process last
+	 * ran that it should try to switch.
+	 *
+	 * This does not guarantee that the process will run on
+	 * that processor next, because another processor might
+	 * grab it the next time it performs a context switch.
+	 *
+	 * This also does not handle the case where its last
+	 * CPU is running a higher-priority process, but every
+	 * other CPU is running a lower-priority process.  There
+	 * are ways to handle this situation, but they're not
+	 * currently very pretty, and we also need to weigh the
+	 * cost of moving a process from one CPU to another.
+	 *
+	 * XXXSMP
+	 * There is also the issue of locking the other CPU's
+	 * sched state, which we currently do not do.
+	 */
+#ifdef MULTIPROCESSOR
+	ci = (p->p_cpu != NULL) ? p->p_cpu : curcpu();
+	if (pri < ci->ci_schedstate.spc_curpriority)
+#else
+	if (pri < curpriority)
+#endif
+		need_resched(ci);
 }
 
 /*
@@ -820,8 +920,8 @@ setrunnable(p)
 	p->p_slptime = 0;
 	if ((p->p_flag & P_INMEM) == 0)
 		wakeup((caddr_t)&proc0);
-	else if (p->p_priority < curpriority)
-		need_resched();
+	else
+		resched_proc(p, p->p_priority);
 }
 
 /*
@@ -840,8 +940,7 @@ resetpriority(p)
 	newpriority = PUSER + p->p_estcpu + NICE_WEIGHT * (p->p_nice - NZERO);
 	newpriority = min(newpriority, MAXPRI);
 	p->p_usrpri = newpriority;
-	if (newpriority < curpriority)
-		need_resched();
+	resched_proc(p, p->p_usrpri);
 }
 
 /*

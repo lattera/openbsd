@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.9 2004/03/30 09:12:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.10 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -153,6 +153,7 @@ initclocks()
 	if (profhz == 0)
 		profhz = i;
 	psratio = profhz / i;
+	rrticks_init = hz / 10;
 }
 
 /*
@@ -190,6 +191,9 @@ hardclock(frame)
 	 */
 	if (stathz == 0)
 		statclock(frame);
+
+	if (--rrticks <= 0)
+		roundrobin(ci);
 
 #if defined(MULTIPROCESSOR)
 	/*
@@ -402,11 +406,37 @@ statclock(frame)
 	register struct clockframe *frame;
 {
 #ifdef GPROF
-	register struct gmonparam *g;
-	register int i;
+	struct gmonparam *g;
+	int i;
 #endif
+#ifdef MULTIPROCESSOR
+	struct cpu_info *ci = curcpu();
+	struct schedstate_percpu *spc = &ci->ci_schedstate;
+#else
 	static int schedclk;
-	register struct proc *p;
+#endif
+	struct proc *p;
+
+#ifdef MULTIPROCESSOR
+	/*
+	 * Notice changes in divisor frequency, and adjust clock
+	 * frequency accordingly.
+	 */
+	if (spc->spc_psdiv != psdiv) {
+		spc->spc_psdiv = psdiv;
+		spc->spc_pscnt = psdiv;
+		if (psdiv == 1) {
+			setstatclockrate(stathz);
+		} else {
+			setstatclockrate(profhz);			
+		}
+	}
+
+/* XXX Kludgey */
+#define pscnt spc->spc_pscnt
+#define cp_time spc->spc_cp_time
+
+#endif
 
 	if (CLKF_USERMODE(frame)) {
 		p = curproc;
@@ -463,6 +493,11 @@ statclock(frame)
 			cp_time[CP_IDLE]++;
 	}
 	pscnt = psdiv;
+
+#ifdef MULTIPROCESSOR
+#undef psdiv
+#undef cp_time
+#endif
 
 	if (p != NULL) {
 		p->p_cpticks++;

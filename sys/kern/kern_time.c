@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.16.2.8 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.16.2.9 2004/06/05 17:19:55 niklas Exp $	*/
 /*	$NetBSD: kern_time.c,v 1.20 1996/02/18 11:57:06 fvdl Exp $	*/
 
 /*
@@ -63,6 +63,9 @@ int
 settime(struct timeval *tv)
 {
 	struct timeval delta;
+#ifdef MULTIPROCESSOR
+	struct cpu_info *ci;
+#endif
 	int s;
 
 	/*
@@ -98,8 +101,21 @@ settime(struct timeval *tv)
 	s = splclock();
 	timersub(tv, &time, &delta);
 	time = *tv;
+	(void)spllowersoftclock();
 	timeradd(&boottime, &delta, &boottime);
+#ifdef MULTIPROCESSOR
+	/*
+	 * XXXSMP
+	 * This is wrong.  We should traverse a list of all
+	 * CPUs and add the delta to the runtime of those
+	 * CPUs which have a process on them.
+	 */
+	ci = curcpu();
+	timeradd(&ci->ci_schedstate.spc_runtime, &delta,
+	    &ci->ci_schedstate.spc_runtime);
+#else
 	timeradd(&runtime, &delta, &runtime);
+#endif
 	splx(s);
 	resettodr();
 
