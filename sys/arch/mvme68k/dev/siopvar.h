@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$Id: siopvar.h,v 1.2 1995/11/07 08:49:34 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -143,7 +143,8 @@ struct	siop_softc {
 				       nexus_list;
 
 	struct siop_acb *sc_nexus;	/* current command */
-	struct siop_acb sc_acb[8];	/* the real command blocks */
+#define SIOP_NACB 8
+	struct siop_acb *sc_acb;	/* the real command blocks */
 	struct siop_tinfo sc_tinfo[8];
 
 	u_short	sc_clock_freq;
