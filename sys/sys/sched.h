@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.9 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.10 2004/06/06 23:31:37 niklas Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -150,6 +150,13 @@ scheduler_wait_hook(parent, child)
 	parent->p_estcpu = ESTCPULIM(parent->p_estcpu + child->p_estcpu);
 }
 #endif	/* _SYS_PROC_H_ */
+
+#ifndef splsched
+#define splsched() splhigh()
+#endif
+#ifndef IPL_SCHED
+#define IPL_SCHED IPL_HIGH
+#endif
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
 #include <sys/lock.h>
