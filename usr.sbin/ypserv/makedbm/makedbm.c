@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ypserv/makedbm/makedbm.c,v 1.8 1997/07/22 10:53:01 maja Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypserv/makedbm/makedbm.c,v 1.9 1997/08/18 03:11:34 millert Exp $ */
 
 /*
  * Copyright (c) 1994-97 Mats O Jansson <moj@stacken.kth.se>
@@ -32,7 +32,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/makedbm/makedbm.c,v 1.8 1997/07/22 10:53:01 maja Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/makedbm/makedbm.c,v 1.9 1997/08/18 03:11:34 millert Exp $";
 #endif
 
 #include <stdio.h>
@@ -41,7 +41,7 @@ static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/makedbm/makedbm.c,v 1.8 199
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include <strings.h>
+#include <string.h>
 #include <sys/errno.h>
 #include "ypdb.h"
 #include "ypdef.h"

@@ -150,7 +150,7 @@ krb_get_pw_in_tkt(user, instance, realm, service, sinstance, life, password)
 #ifdef NOENCRYPTION
 /*
  * $Source: /cvs/src/kerberosIV/krb/get_in_tkt.c,v $
- * $Author: tholo $
+ * $Author: millert $
  *
  * Copyright 1985, 1986, 1987, 1988 by the Massachusetts Institute
  * of Technology.
@@ -165,14 +165,14 @@ krb_get_pw_in_tkt(user, instance, realm, service, sinstance, life, password)
 
 #ifndef	lint
 static char rcsid_read_password_c[] =
-"Bones$Header: /cvs/src/kerberosIV/krb/get_in_tkt.c,v 1.2 1996/02/05 10:06:40 tholo Exp $";
+"Bones$Header: /cvs/src/kerberosIV/krb/get_in_tkt.c,v 1.3 1997/01/17 07:11:54 millert Exp $";
 #endif /* lint */
 
 #include <des.h>
 #include "conf.h"
 
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <setjmp.h>
