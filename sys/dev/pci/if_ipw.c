@@ -1,4 +1,4 @@
-/*	$Id: if_ipw.c,v 1.26 2004/11/20 16:28:31 damien Exp $  */
+/*	$Id: if_ipw.c,v 1.27 2004/11/24 20:50:55 damien Exp $  */
 
 /*-
  * Copyright (c) 2004
@@ -515,7 +515,9 @@ ipw_newstate_intr(struct ipw_softc *sc, struct ipw_soft_buf *sbuf)
 		break;
 
 	case IPW_STATE_SCANNING:
-		ieee80211_new_state(ic, IEEE80211_S_SCAN, -1);
+		/* don't leave run state on background scan */
+		if (ic->ic_state != IEEE80211_S_RUN)
+			ieee80211_new_state(ic, IEEE80211_S_SCAN, -1);
 		break;
 
 	case IPW_STATE_ASSOCIATION_LOST:
