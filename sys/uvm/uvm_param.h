@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.2.2.1 2001/11/14 10:19:26 ho Exp $	*/
-/*	$NetBSD: uvm_param.h,v 1.5 2001/03/09 01:02:12 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.2.2.2 2001/12/05 01:23:58 niklas Exp $	*/
+/*	$NetBSD: uvm_param.h,v 1.11 2001/07/14 06:36:03 matt Exp $	*/
 
-/* 
+/*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -43,17 +43,17 @@
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -114,7 +114,9 @@ typedef int	boolean_t;
 #define	VM_ANONMIN	7
 #define	VM_VTEXTMIN	8
 #define	VM_VNODEMIN	9
-#define	VM_MAXID	9		/* number of valid vm ids */
+#define	VM_MAXSLP	10
+#define	VM_USPACE	11
+#define	VM_MAXID	12		/* number of valid vm ids */
 
 #define	CTL_VM_NAMES { \
 	{ 0, 0 }, \
@@ -127,6 +129,8 @@ typedef int	boolean_t;
 	{ "anonmin", CTLTYPE_INT }, \
 	{ "vtextmin", CTLTYPE_INT }, \
 	{ "vnodemin", CTLTYPE_INT }, \
+	{ "maxslp", CTLTYPE_INT }, \
+	{ "uspace", CTLTYPE_INT }, \
 }
 
 struct _ps_strings {
@@ -134,20 +138,6 @@ struct _ps_strings {
 };
 
 #define SWAPSKIPBYTES	8192	/* never use at the start of a swap space */
-
-/* 
- *	Return values from the VM routines.
- */
-#define	KERN_SUCCESS		0
-#define	KERN_INVALID_ADDRESS	1
-#define	KERN_PROTECTION_FAILURE	2
-#define	KERN_NO_SPACE		3
-#define	KERN_INVALID_ARGUMENT	4
-#define	KERN_FAILURE		5
-#define	KERN_RESOURCE_SHORTAGE	6
-#define	KERN_NOT_RECEIVER	7
-#define	KERN_NO_ACCESS		8
-#define	KERN_PAGES_LOCKED	9
 
 #ifndef ASSEMBLER
 /*
@@ -166,10 +156,8 @@ struct _ps_strings {
 #define	trunc_page(x)	((x) & ~PAGE_MASK)
 
 extern psize_t		mem_size;	/* size of physical memory (bytes) */
-#ifdef UBC
 extern int		ubc_nwins;	/* number of UBC mapping windows */
-extern int		ubc_winsize;	/* size of a UBC mapping window */
-#endif
+extern int		ubc_winshift;	/* shift for a UBC mapping window */
 
 #else
 /* out-of-kernel versions of round_page and trunc_page */

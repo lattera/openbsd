@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.4.4.4 2001/11/13 23:02:31 niklas Exp $	*/
-/*	$NetBSD: uvm_device.c,v 1.30 2000/11/25 06:27:59 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.4.4.5 2001/12/05 01:23:58 niklas Exp $	*/
+/*	$NetBSD: uvm_device.c,v 1.36 2001/05/26 21:27:21 chs Exp $	*/
 
 /*
  *
@@ -57,7 +57,7 @@
 
 LIST_HEAD(udv_list_struct, uvm_device);
 static struct udv_list_struct udv_list;
-static simple_lock_data_t udv_lock;
+static struct simplelock udv_lock;
 
 /*
  * functions
@@ -67,7 +67,7 @@ static void		udv_init __P((void));
 static void             udv_reference __P((struct uvm_object *));
 static void             udv_detach __P((struct uvm_object *));
 static int		udv_fault __P((struct uvm_faultinfo *, vaddr_t,
-				       vm_page_t *, int, int, vm_fault_t,
+				       struct vm_page **, int, int, vm_fault_t,
 				       vm_prot_t, int));
 static boolean_t        udv_flush __P((struct uvm_object *, voff_t, voff_t,
 				       int));
@@ -145,7 +145,7 @@ udv_attach(arg, accessprot, off, size)
 	/*
 	 * Check that the specified range of the device allows the
 	 * desired protection.
-	 * 
+	 *
 	 * XXX assumes VM_PROT_* == PROT_*
 	 * XXX clobbers off and size, but nothing else here needs them.
 	 */
@@ -163,7 +163,7 @@ udv_attach(arg, accessprot, off, size)
 	for (;;) {
 
 		/*
-		 * first, attempt to find it on the main list 
+		 * first, attempt to find it on the main list
 		 */
 
 		simple_lock(&udv_lock);
@@ -259,7 +259,7 @@ udv_attach(arg, accessprot, off, size)
 	}
 	/*NOTREACHED*/
 }
-	
+
 /*
  * udv_reference
  *
@@ -278,7 +278,7 @@ udv_reference(uobj)
 
 	simple_lock(&uobj->vmobjlock);
 	uobj->uo_refs++;
-	UVMHIST_LOG(maphist, "<- done (uobj=0x%x, ref = %d)", 
+	UVMHIST_LOG(maphist, "<- done (uobj=0x%x, ref = %d)",
 		    uobj, uobj->uo_refs,0,0);
 	simple_unlock(&uobj->vmobjlock);
 }
@@ -306,7 +306,7 @@ again:
 	if (uobj->uo_refs > 1) {
 		uobj->uo_refs--;
 		simple_unlock(&uobj->vmobjlock);
-		UVMHIST_LOG(maphist," <- done, uobj=0x%x, ref=%d", 
+		UVMHIST_LOG(maphist," <- done, uobj=0x%x, ref=%d",
 			  uobj,uobj->uo_refs,0,0);
 		return;
 	}
@@ -374,7 +374,7 @@ static int
 udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 	struct uvm_faultinfo *ufi;
 	vaddr_t vaddr;
-	vm_page_t *pps;
+	struct vm_page **pps;
 	int npages, centeridx, flags;
 	vm_fault_t fault_type;
 	vm_prot_t access_type;
@@ -396,16 +396,16 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 	 * we do not allow device mappings to be mapped copy-on-write
 	 * so we kill any attempt to do so here.
 	 */
-	
+
 	if (UVM_ET_ISCOPYONWRITE(entry)) {
-		UVMHIST_LOG(maphist, "<- failed -- COW entry (etype=0x%x)", 
+		UVMHIST_LOG(maphist, "<- failed -- COW entry (etype=0x%x)",
 		entry->etype, 0,0,0);
 		uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, uobj, NULL);
-		return(VM_PAGER_ERROR);
+		return(EIO);
 	}
 
 	/*
-	 * get device map function.   
+	 * get device map function.
 	 */
 
 	device = udv->u_device;
@@ -422,12 +422,12 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 	curr_offset = entry->offset + (vaddr - entry->start);
 	/* pmap va = vaddr (virtual address of pps[0]) */
 	curr_va = vaddr;
-	
+
 	/*
 	 * loop over the page range entering in as needed
 	 */
 
-	retval = VM_PAGER_OK;
+	retval = 0;
 	for (lcv = 0 ; lcv < npages ; lcv++, curr_offset += PAGE_SIZE,
 	    curr_va += PAGE_SIZE) {
 		if ((flags & PGO_ALLPAGES) == 0 && lcv != centeridx)
@@ -438,7 +438,7 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 
 		mdpgno = (*mapfn)(device, curr_offset, access_type);
 		if (mdpgno == -1) {
-			retval = VM_PAGER_ERROR;
+			retval = EIO;
 			break;
 		}
 		paddr = pmap_phys_address(mdpgno);
@@ -447,7 +447,7 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 		    "  MAPPING: device: pm=0x%x, va=0x%x, pa=0x%lx, at=%d",
 		    ufi->orig_map->pmap, curr_va, paddr, mapprot);
 		if (pmap_enter(ufi->orig_map->pmap, curr_va, paddr,
-		    mapprot, PMAP_CANFAIL | mapprot) != KERN_SUCCESS) {
+		    mapprot, PMAP_CANFAIL | mapprot) != 0) {
 			/*
 			 * pmap_enter() didn't have the resource to
 			 * enter this mapping.  Unlock everything,
@@ -460,11 +460,13 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 			 */
 			uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
 			    uobj, NULL);
+			pmap_update();	/* sync what we have so far */
 			uvm_wait("udv_fault");
-			return (VM_PAGER_REFAULT);
+			return (ERESTART);
 		}
 	}
 
 	uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, uobj, NULL);
+	pmap_update();
 	return (retval);
 }

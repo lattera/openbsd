@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.3.4.5 2001/11/13 23:02:31 niklas Exp $	*/
-/*	$NetBSD: uvm_stat.h,v 1.19 2001/02/04 10:55:58 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.3.4.6 2001/12/05 01:23:58 niklas Exp $	*/
+/*	$NetBSD: uvm_stat.h,v 1.22 2001/05/30 11:57:17 mrg Exp $	*/
 
 /*
  *
@@ -37,6 +37,10 @@
 
 #ifndef _UVM_UVM_STAT_H_
 #define _UVM_UVM_STAT_H_
+
+#if defined(_KERNEL_OPT)
+#include "opt_uvmhist.h"
+#endif
 
 #include <sys/queue.h>
 
@@ -113,7 +117,7 @@ struct uvm_history {
 	LIST_ENTRY(uvm_history) list;	/* link on list of all histories */
 	int n;				/* number of entries */
 	int f; 				/* next free one */
-	simple_lock_data_t l;		/* lock on this history */
+	struct simplelock l;		/* lock on this history */
 	struct uvm_history_ent *e;	/* the malloc'd entries */
 };
 
@@ -228,7 +232,7 @@ do { \
 #define UVMHIST_FUNC(FNAME) \
 	static int _uvmhist_cnt = 0; \
 	static char *_uvmhist_name = FNAME; \
-	int _uvmhist_call; 
+	int _uvmhist_call;
 
 static __inline void uvmhist_print __P((struct uvm_history_ent *));
 
