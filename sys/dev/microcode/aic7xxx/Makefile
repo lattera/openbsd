@@ -1,4 +1,4 @@
-# $OpenBSD: src/sys/dev/microcode/aic7xxx/Makefile,v 1.6 2003/12/24 22:40:16 krw Exp $
+# $OpenBSD: src/sys/dev/microcode/aic7xxx/Makefile,v 1.7 2003/12/24 23:27:55 krw Exp $
 # $FreeBSD: src/sys/dev/aic7xxx/Makefile,v 1.6 1999/08/28 00:41:22 peter Exp $
 
 PROG=	aicasm
