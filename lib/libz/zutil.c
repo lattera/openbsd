@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* $Id: zutil.c,v 1.16 1996/07/02 12:41:24 me Exp $ */
+/* $Id: zutil.c,v 1.17 1996/07/24 13:41:12 me Exp $ */
 
 #include <stdio.h>
 
@@ -28,17 +28,19 @@ const char *z_errmsg[10] = {
 ""};
 
 
-char *zlibVersion()
+const char *zlibVersion()
 {
     return ZLIB_VERSION;
 }
 
+#ifdef DEBUG
 void z_error (m)
     char *m;
 {
     fprintf(stderr, "%s\n", m);
     exit(1);
 }
+#endif
 
 #ifndef HAVE_MEMCPY
 
@@ -151,7 +153,7 @@ void  zcfree (voidpf opaque, voidpf ptr)
         return;
     }
     ptr = opaque; /* just to make some compilers happy */
-    z_error("zcfree: ptr not found");
+    Assert(0, "zcfree: ptr not found");
 }
 #endif
 #endif /* __TURBOC__ */
