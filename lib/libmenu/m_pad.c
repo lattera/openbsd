@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libmenu/m_item_vis.c,v 1.3 1997/12/03 05:31:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libmenu/m_pad.c,v 1.1 1997/12/03 05:31:24 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses menu library is  Copyright (C) 1995-1997               |
@@ -23,36 +23,60 @@
 +-----------------------------------------------------------------------------*/
 
 /***************************************************************************
-* Module m_item_vis                                                        *
-* Tell if menu item is visible                                             *
+* Module m_pad                                                             *
+* Control menus padding character                                          *
 ***************************************************************************/
 
 #include "menu.priv.h"
 
-MODULE_ID("Id: m_item_vis.c,v 1.7 1997/10/21 08:44:31 juergen Exp $")
+MODULE_ID("Id: m_pad.c,v 1.1 1997/10/21 08:48:28 juergen Exp $")
+
+/* Macro to redraw menu if it is posted and changed */
+#define Refresh_Menu(menu) \
+   if ( (menu) && ((menu)->status & _POSTED) )\
+   {\
+      _nc_Draw_Menu( menu );\
+      _nc_Show_Menu( menu );\
+   }
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnmenu  
-|   Function      :  bool item_visible(const ITEM *item)
+|   Function      :  int set_menu_pad(MENU *menu, int pad)
 |   
-|   Description   :  A item is visible if it currently appears in the
-|                    subwindow of a posted menu.
+|   Description   :  Set the character to be used to separate the item name
+|                    from its description. This must be a printable 
+|                    character.
 |
-|   Return Values :  TRUE  if visible
-|                    FALSE if invisible
+|   Return Values :  E_OK              - success
+|                    E_BAD_ARGUMENT    - an invalid value has been passed
 +--------------------------------------------------------------------------*/
-bool item_visible(const ITEM * item)
+int set_menu_pad(MENU *menu, int pad)
 {
-  MENU *menu;
+  bool do_refresh = (menu != (MENU*)0);
+
+  if (!isprint((unsigned char)pad))
+    RETURN(E_BAD_ARGUMENT);
   
-  if ( item                                               && 
-      (menu=item->imenu)                                  && 
-      (menu->status & _POSTED)                            &&
-      ( (menu->toprow + menu->arows) > (item->y) )        &&
-      ( item->y >= menu->toprow) )
-    return TRUE;
-  else
-    return FALSE;
+  Normalize_Menu( menu );
+  menu->pad = pad;
+  
+  if (do_refresh)
+      Refresh_Menu( menu );
+
+  RETURN(E_OK);
 }
 
-/* m_item_vis.c ends here */
+/*---------------------------------------------------------------------------
+|   Facility      :  libnmenu  
+|   Function      :  int menu_pad(const MENU *menu)
+|   
+|   Description   :  Return the value of the padding character
+|
+|   Return Values :  The pad character
++--------------------------------------------------------------------------*/
+int menu_pad(const MENU * menu)
+{
+  return (Normalize_Menu( menu ) -> pad);
+}
+
+/* m_pad.c ends here */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libmenu/m_item_vis.c,v 1.3 1997/12/03 05:31:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libmenu/m_item_top.c,v 1.1 1997/12/03 05:31:21 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses menu library is  Copyright (C) 1995-1997               |
@@ -23,36 +23,72 @@
 +-----------------------------------------------------------------------------*/
 
 /***************************************************************************
-* Module m_item_vis                                                        *
-* Tell if menu item is visible                                             *
+* Module m_item_top                                                        *
+* Set and get top menus item                                               *
 ***************************************************************************/
 
 #include "menu.priv.h"
 
-MODULE_ID("Id: m_item_vis.c,v 1.7 1997/10/21 08:44:31 juergen Exp $")
+MODULE_ID("Id: m_item_top.c,v 1.1 1997/10/21 08:44:31 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnmenu  
-|   Function      :  bool item_visible(const ITEM *item)
+|   Function      :  int set_top_row(MENU *menu, int row)
 |   
-|   Description   :  A item is visible if it currently appears in the
-|                    subwindow of a posted menu.
+|   Description   :  Makes the speified row the top row in the menu
 |
-|   Return Values :  TRUE  if visible
-|                    FALSE if invisible
+|   Return Values :  E_OK             - success
+|                    E_BAD_ARGUMENT   - not a menu pointer or invalid row
+|                    E_NOT_CONNECTED  - there are no items for the menu
 +--------------------------------------------------------------------------*/
-bool item_visible(const ITEM * item)
+int set_top_row(MENU * menu, int row)
 {
-  MENU *menu;
+  ITEM *item;
   
-  if ( item                                               && 
-      (menu=item->imenu)                                  && 
-      (menu->status & _POSTED)                            &&
-      ( (menu->toprow + menu->arows) > (item->y) )        &&
-      ( item->y >= menu->toprow) )
-    return TRUE;
+  if (menu)
+    {
+      if ( menu->status & _IN_DRIVER )
+	RETURN(E_BAD_STATE);
+      if (menu->items == (ITEM **)0)
+	RETURN(E_NOT_CONNECTED);
+      
+      if ((row<0) || (row > (menu->rows - menu->arows)))
+	RETURN(E_BAD_ARGUMENT);
+    }
   else
-    return FALSE;
+    RETURN(E_BAD_ARGUMENT);
+  
+  if (row != menu->toprow)
+    {
+      if (menu->status & _LINK_NEEDED) 
+	_nc_Link_Items(menu);
+      
+      item = menu->items[ (menu->opt&O_ROWMAJOR) ? (row*menu->cols) : row ];
+      assert(menu->pattern);
+      Reset_Pattern(menu);
+      _nc_New_TopRow_and_CurrentItem(menu, row, item);
+    }
+  
+    RETURN(E_OK);
 }
 
-/* m_item_vis.c ends here */
+/*---------------------------------------------------------------------------
+|   Facility      :  libnmenu  
+|   Function      :  int top_row(const MENU *)
+|   
+|   Description   :  Return the top row of the menu
+|
+|   Return Values :  The row number or ERR if there is no row
++--------------------------------------------------------------------------*/
+int top_row(const MENU * menu)
+{
+  if (menu && menu->items && *(menu->items))
+    {
+      assert( (menu->toprow>=0) && (menu->toprow < menu->rows) );
+      return menu->toprow;
+    }
+  else
+    return(ERR);
+}
+
+/* m_item_top.c ends here */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libmenu/m_item_vis.c,v 1.3 1997/12/03 05:31:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libmenu/m_sub.c,v 1.1 1997/12/03 05:31:27 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses menu library is  Copyright (C) 1995-1997               |
@@ -23,36 +23,50 @@
 +-----------------------------------------------------------------------------*/
 
 /***************************************************************************
-* Module m_item_vis                                                        *
-* Tell if menu item is visible                                             *
+* Module m_sub                                                             *
+* Menus subwindow association routines                                     *
 ***************************************************************************/
 
 #include "menu.priv.h"
 
-MODULE_ID("Id: m_item_vis.c,v 1.7 1997/10/21 08:44:31 juergen Exp $")
+MODULE_ID("Id: m_sub.c,v 1.1 1997/10/21 08:44:31 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnmenu  
-|   Function      :  bool item_visible(const ITEM *item)
+|   Function      :  int set_menu_sub(MENU *menu, WINDOW *win)
 |   
-|   Description   :  A item is visible if it currently appears in the
-|                    subwindow of a posted menu.
+|   Description   :  Sets the subwindow of the menu.
 |
-|   Return Values :  TRUE  if visible
-|                    FALSE if invisible
+|   Return Values :  E_OK           - success
+|                    E_POSTED       - menu is already posted
 +--------------------------------------------------------------------------*/
-bool item_visible(const ITEM * item)
+int set_menu_sub(MENU *menu, WINDOW *win)
 {
-  MENU *menu;
-  
-  if ( item                                               && 
-      (menu=item->imenu)                                  && 
-      (menu->status & _POSTED)                            &&
-      ( (menu->toprow + menu->arows) > (item->y) )        &&
-      ( item->y >= menu->toprow) )
-    return TRUE;
+  if (menu)
+    {
+      if ( menu->status & _POSTED )
+	RETURN(E_POSTED);
+      menu->usersub = win;
+      _nc_Calculate_Item_Length_and_Width(menu);
+    }
   else
-    return FALSE;
+    _nc_Default_Menu.usersub = win;
+  
+  RETURN(E_OK);
 }
 
-/* m_item_vis.c ends here */
+/*---------------------------------------------------------------------------
+|   Facility      :  libnmenu  
+|   Function      :  WINDOW *menu_sub(const MENU *menu)
+|   
+|   Description   :  Returns a pointer to the subwindow of the menu
+|
+|   Return Values :  NULL on error, otherwise a pointer to the window
++--------------------------------------------------------------------------*/
+WINDOW *menu_sub(const MENU * menu)
+{
+  const MENU* m = Normalize_Menu(menu);
+  return Get_Menu_Window(m);
+}
+
+/* m_sub.c ends here */

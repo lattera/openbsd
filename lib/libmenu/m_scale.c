@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libmenu/m_item_vis.c,v 1.3 1997/12/03 05:31:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libmenu/m_scale.c,v 1.1 1997/12/03 05:31:26 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses menu library is  Copyright (C) 1995-1997               |
@@ -23,36 +23,41 @@
 +-----------------------------------------------------------------------------*/
 
 /***************************************************************************
-* Module m_item_vis                                                        *
-* Tell if menu item is visible                                             *
+* Module m_scale                                                           *
+* Menu scaling routine                                                     *
 ***************************************************************************/
 
 #include "menu.priv.h"
 
-MODULE_ID("Id: m_item_vis.c,v 1.7 1997/10/21 08:44:31 juergen Exp $")
+MODULE_ID("Id: m_scale.c,v 1.1 1997/10/21 08:44:31 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnmenu  
-|   Function      :  bool item_visible(const ITEM *item)
+|   Function      :  int scale_menu(const MENU *menu)
 |   
-|   Description   :  A item is visible if it currently appears in the
-|                    subwindow of a posted menu.
+|   Description   :  Returns the minimum window size necessary for the
+|                    subwindow of menu.  
 |
-|   Return Values :  TRUE  if visible
-|                    FALSE if invisible
+|   Return Values :  E_OK                  - success
+|                    E_BAD_ARGUMENT        - invalid menu pointer
+|                    E_NOT_CONNECTED       - no items are connected to menu
 +--------------------------------------------------------------------------*/
-bool item_visible(const ITEM * item)
+int scale_menu(const MENU *menu, int *rows, int *cols)
 {
-  MENU *menu;
+  if (!menu) 
+    RETURN( E_BAD_ARGUMENT );
   
-  if ( item                                               && 
-      (menu=item->imenu)                                  && 
-      (menu->status & _POSTED)                            &&
-      ( (menu->toprow + menu->arows) > (item->y) )        &&
-      ( item->y >= menu->toprow) )
-    return TRUE;
+  if (menu->items && *(menu->items))
+    {
+      if (rows)
+	*rows = menu->height;
+      if (cols)
+	*cols = menu->width;
+      RETURN(E_OK);
+    }
   else
-    return FALSE;
+    RETURN( E_NOT_CONNECTED );
 }
 
-/* m_item_vis.c ends here */
+/* m_scale.c ends here */
+
