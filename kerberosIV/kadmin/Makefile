@@ -1,9 +1,9 @@
-#	$Id: Makefile,v 1.4 1997/02/11 04:40:37 tholo Exp $
+#	$Id: Makefile,v 1.5 1997/12/15 17:56:18 art Exp $
 
 .include <bsd.obj.mk>
 
 PROG=	kadmin
-SRCS=	kadmin.c new_pwd.c
+SRCS=	kadmin.c new_pwd.c sl.c
 .PATH:	${.CURDIR}/../kdb_edit
 .if exists(${.CURDIR}/../kadm/${__objdir})
 CFLAGS+=-I${.CURDIR}/../kadm/${__objdir}
@@ -15,7 +15,7 @@ CFLAGS+=-I${.CURDIR}/../krb/${__objdir}
 .else
 CFLAGS+=-I${.CURDIR}/../krb
 .endif
-LDADD+=	-lkadm -lkrb -ldes -lcom_err -lsl
+LDADD+=	-lkadm -lkrb -ldes -lcom_err
 DPADD+=	${LIBKADM} ${LIBKRB} ${LIBDES} ${LIBSS} ${LIBCOM_ERR}
 CLEANFILES+= kadmin_cmds.c
 MAN=	kadmin.8
