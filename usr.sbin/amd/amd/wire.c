@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)wire.c	8.1 (Berkeley) 6/6/93
- *	$Id: wire.c,v 1.5 2000/02/21 02:03:18 itojun Exp $
+ *	$Id: wire.c,v 1.6 2000/02/22 17:29:04 itojun Exp $
  */
 
 /*
@@ -53,6 +53,7 @@
 
 #include "am.h"
 
+#include <unistd.h>
 #include <sys/ioctl.h>
 
 #define NO_SUBNET "notknown"

@@ -36,10 +36,12 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pfs_ops.c	8.1 (Berkeley) 6/6/93
- *	$Id: pfs_ops.c,v 1.3 1994/06/13 20:47:55 mycroft Exp $
+ *	$Id: pfs_ops.c,v 1.1.1.1 1995/10/18 08:47:12 deraadt Exp $
  */
 
 #include "am.h"
+
+#include <unistd.h>
 
 #ifdef HAS_PFS
 

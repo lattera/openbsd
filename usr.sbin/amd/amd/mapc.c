@@ -38,7 +38,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)mapc.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: mapc.c,v 1.5 1994/06/13 20:47:34 mycroft Exp $";
+static char *rcsid = "$Id: mapc.c,v 1.1.1.1 1995/10/18 08:47:10 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -265,7 +265,7 @@ char *key;
 {
 	unsigned int i, j;
 
-	for (i = 0; j = *key++; i += j)
+	for (i = 0; (j = *key++); i += j)
 		;
 
 	return i % NKVHASH;
