@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.19 2001/05/05 00:31:20 angelos Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.19.2.1 2001/05/14 22:40:13 niklas Exp $ */
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -440,7 +440,7 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 		ipo->ipo_last_searched = time.tv_sec; /* "touch" the entry */
 
 		/* Find an appropriate SA from among the existing SAs */
-		ipo->ipo_tdb = gettdbbyaddr(&sdst, ipo, m, af);
+		ipo->ipo_tdb = gettdbbyaddr(&sdst, ipo->ipo_sproto, m, af);
 		if (ipo->ipo_tdb)
 		{
 		    TAILQ_INSERT_TAIL(&ipo->ipo_tdb->tdb_policy_head, ipo,
@@ -455,7 +455,7 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 	    ipo->ipo_last_searched = time.tv_sec; /* "touch" the entry */
 
 	    /* Find an appropriate SA from among the existing SAs */
-	    ipo->ipo_tdb = gettdbbyaddr(&sdst, ipo, m, af);
+	    ipo->ipo_tdb = gettdbbyaddr(&sdst, ipo->ipo_sproto, m, af);
 	    if (ipo->ipo_tdb)
 	    {
 		TAILQ_INSERT_TAIL(&ipo->ipo_tdb->tdb_policy_head, ipo,
@@ -553,8 +553,8 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 		{
 		    ipo->ipo_last_searched = time.tv_sec; /* "touch" */
 
-		    if ((ipo->ipo_tdb = gettdbbysrc(&ssrc, ipo,
-						    m, af)) != NULL)
+		    if ((ipo->ipo_tdb = gettdbbysrc(&ssrc, ipo->ipo_sproto,
+						   m, af)) != NULL)
 		    {
 			TAILQ_INSERT_TAIL(&ipo->ipo_tdb->tdb_policy_head, ipo,
 					  ipo_tdb_next);
@@ -607,7 +607,7 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 		{
 		    ipo->ipo_last_searched = time.tv_sec; /* "touch" */
 
-		    if ((ipo->ipo_tdb = gettdbbysrc(&ssrc, ipo,
+		    if ((ipo->ipo_tdb = gettdbbysrc(&ssrc, ipo->ipo_sproto,
 						   m, af)) != NULL)
 		    {
 			TAILQ_INSERT_TAIL(&ipo->ipo_tdb->tdb_policy_head, ipo,
@@ -768,29 +768,22 @@ ipsp_match_policy(struct tdb *tdb, struct ipsec_policy *ipo,
 int
 ipsec_delete_policy(struct ipsec_policy *ipo)
 {
-    int err = 0;
+    int err;
 
     /* Delete */
-    if (!(ipo->ipo_flags & IPSP_POLICY_SOCKET))
-      err = rtrequest(RTM_DELETE, (struct sockaddr *) &ipo->ipo_addr,
-		      (struct sockaddr *) 0,
-		      (struct sockaddr *) &ipo->ipo_mask,
-		      0, (struct rtentry **) 0);
+    err = rtrequest(RTM_DELETE, (struct sockaddr *) &ipo->ipo_addr,
+		    (struct sockaddr *) 0, (struct sockaddr *) &ipo->ipo_mask,
+		    0, (struct rtentry **) 0);
 
     if (ipo->ipo_tdb)
       TAILQ_REMOVE(&ipo->ipo_tdb->tdb_policy_head, ipo, ipo_tdb_next);
 
     TAILQ_REMOVE(&ipsec_policy_head, ipo, ipo_list);
-
     if (ipo->ipo_srcid)
-      FREE(ipo->ipo_srcid, M_CREDENTIALS);
+      FREE(ipo->ipo_srcid, M_TEMP);
     if (ipo->ipo_dstid)
-      FREE(ipo->ipo_dstid, M_CREDENTIALS);
-    if (ipo->ipo_local_cred)
-      FREE(ipo->ipo_local_cred, M_CREDENTIALS);
-
-    FREE(ipo, M_IPSEC_POLICY);
-
+      FREE(ipo->ipo_dstid, M_TEMP);
+    FREE(ipo, M_TDB);
     ipsec_in_use--;
 
     return err;
@@ -806,8 +799,8 @@ ipsec_add_policy(struct sockaddr_encap *dst, struct sockaddr_encap *mask,
     struct sockaddr_encap encapgw;
     struct ipsec_policy *ipon;
 
-    MALLOC(ipon, struct ipsec_policy *, sizeof(struct ipsec_policy),
-	   M_IPSEC_POLICY, M_NOWAIT);
+    MALLOC(ipon, struct ipsec_policy *, sizeof(struct ipsec_policy), M_TDB,
+	   M_NOWAIT);
     if (ipon == NULL)
       return NULL;
 
@@ -825,7 +818,7 @@ ipsec_add_policy(struct sockaddr_encap *dst, struct sockaddr_encap *mask,
 		  (struct rtentry **) 0) != 0)
     {
         DPRINTF(("ipsec_add_policy: failed to add policy\n"));
-	FREE(ipon, M_IPSEC_POLICY);
+	FREE(ipon, M_TDB);
 	return NULL;
     }
 
@@ -851,7 +844,7 @@ ipsp_delete_acquire(struct ipsec_acquire *ipa)
     TAILQ_REMOVE(&ipsec_acquire_head, ipa, ipa_next);
     if (ipa->ipa_packet)
       m_freem(ipa->ipa_packet);
-    FREE(ipa, M_IPSEC_POLICY);
+    FREE(ipa, M_TDB);
 }
 
 /*
@@ -900,7 +893,6 @@ ipsp_clear_acquire(struct tdb *tdb)
 			    if (IF_QFULL(ifq))
 			    {
 				IF_DROP(ifq);
-				splx(s);
 				break;
 			    }
 			    IF_ENQUEUE(ifq, ipa->ipa_packet);
@@ -930,7 +922,6 @@ ipsp_clear_acquire(struct tdb *tdb)
 			    if (IF_QFULL(ifq))
 			    {
 				IF_DROP(ifq);
-				splx(s);
 				break;
 			    }
 			    IF_ENQUEUE(ifq, ipa->ipa_packet);
@@ -1024,7 +1015,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
     /* Add request in cache and proceed */
     MALLOC(ipa, struct ipsec_acquire *, sizeof(struct ipsec_acquire),
-	   M_IPSEC_POLICY, M_DONTWAIT);
+	   M_TDB, M_DONTWAIT);
     if (ipa == NULL)
       return ENOMEM;
 
@@ -1045,7 +1036,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	    if (ipo->ipo_mask.sen_ip_src.s_addr == INADDR_ANY ||
 		ipo->ipo_addr.sen_ip_src.s_addr == INADDR_ANY ||
-		ipsp_is_unspecified(ipo->ipo_dst))
+		ipo->ipo_dst.sa.sa_family == 0)
 	    {
 		ipa->ipa_info.sen_ip_src = ddst->sen_ip_src;
 		ipa->ipa_mask.sen_ip_src.s_addr = INADDR_BROADCAST;
@@ -1058,7 +1049,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	    if (ipo->ipo_mask.sen_ip_dst.s_addr == INADDR_ANY ||
 		ipo->ipo_addr.sen_ip_dst.s_addr == INADDR_ANY ||
-		ipsp_is_unspecified(ipo->ipo_dst))
+		ipo->ipo_dst.sa.sa_family == 0)
 	    {
 		ipa->ipa_info.sen_ip_dst = ddst->sen_ip_dst;
 		ipa->ipa_mask.sen_ip_dst.s_addr = INADDR_BROADCAST;
@@ -1091,7 +1082,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	    if (IN6_IS_ADDR_UNSPECIFIED(&ipo->ipo_mask.sen_ip6_src) ||
 		IN6_IS_ADDR_UNSPECIFIED(&ipo->ipo_addr.sen_ip6_src) ||
-		ipsp_is_unspecified(ipo->ipo_dst))
+		ipo->ipo_dst.sa.sa_family == 0)
 	    {
 		ipa->ipa_info.sen_ip6_src = ddst->sen_ip6_src;
 		for (i = 0; i < 16; i++)
@@ -1105,7 +1096,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	    if (IN6_IS_ADDR_UNSPECIFIED(&ipo->ipo_mask.sen_ip6_dst) ||
 		IN6_IS_ADDR_UNSPECIFIED(&ipo->ipo_addr.sen_ip6_dst) ||
-		ipsp_is_unspecified(ipo->ipo_dst))
+		ipo->ipo_dst.sa.sa_family == 0)
 	    {
 		ipa->ipa_info.sen_ip6_dst = ddst->sen_ip6_dst;
 		for (i = 0; i < 16; i++)
@@ -1131,7 +1122,7 @@ ipsp_acquire_sa(struct ipsec_policy *ipo, union sockaddr_union *gw,
 #endif /* INET6 */
 
 	default:
-	    FREE(ipa, M_IPSEC_POLICY);
+	    FREE(ipa, M_TDB);
 	    return 0;
     }
 

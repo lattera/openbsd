@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8 2000/02/07 06:18:44 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8.2.1 2001/05/14 22:40:08 niklas Exp $	*/
+/*	$KAME: in_gif.c,v 1.50 2001/01/22 07:27:16 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -65,20 +66,11 @@
 #include <net/if_gif.h>	
 
 #include "gif.h"
+#include "bridge.h"
 
 #include <machine/stdarg.h>
 
 #include <net/net_osdep.h>
-
-#if NGIF > 0
-int ip_gif_ttl = GIF_TTL;
-#else
-int ip_gif_ttl = 0;
-#endif
-
-#ifndef offsetof
-#define offsetof(s, e) ((int)&((s *)0)->e)
-#endif
 
 int
 in_gif_output(ifp, family, m, rt)
@@ -138,6 +130,10 @@ in_gif_output(ifp, family, m, rt)
 		poff = offsetof(struct ip6_hdr, ip6_nxt);
 		break;
 #endif
+#if NBRIDGE > 0
+	case AF_LINK:
+		break;
+#endif /* NBRIDGE */
 	default:
 #ifdef DEBUG
 	        printf("in_gif_output: warning: unknown family %d passed\n",
@@ -147,9 +143,23 @@ in_gif_output(ifp, family, m, rt)
 		return EAFNOSUPPORT;
 	}
 
+#if NBRIDGE > 0
+	if (family == AF_LINK) {
+	        mp = NULL;
+		error = etherip_output(m, &tdb, &mp, 0, 0);
+		if (error)
+		        return error;
+		else if (mp == NULL)
+		        return EFAULT;
+
+		m = mp;
+		goto sendit;
+	}
+#endif /* NBRIDGE */
+
 	/* encapsulate into IPv4 packet */
 	mp = NULL;
-	error = ipip_output(m, &tdb, &mp, hlen, poff);
+	error = ipip_output(m, &tdb, &mp, hlen, poff, NULL);
 	if (error)
 		return error;
 	else if (mp == NULL)
@@ -157,6 +167,9 @@ in_gif_output(ifp, family, m, rt)
 
 	m = mp;
 
+#if NBRIDGE > 0
+ sendit:
+#endif /* NBRIDGE */
 	/* ip_output needs host-order length.  it should be nuked */
 	m_copydata(m, offsetof(struct ip, ip_len), sizeof(u_int16_t),
 		   (caddr_t) &plen);

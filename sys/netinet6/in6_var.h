@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.1 2000/03/02 07:04:45 niklas Exp $	*/
-/*	$KAME: in6_var.h,v 1.29 2000/02/25 05:20:58 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.2 2001/05/14 22:40:18 niklas Exp $	*/
+/*	$KAME: in6_var.h,v 1.55 2001/02/16 12:49:45 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -16,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -189,7 +189,7 @@ struct icmp6_ifstat {
 	u_quad_t ifs6_in_mlddone;
 
 	/*
-	 * Output statistics. We should solve unresolved routing problem...  
+	 * Output statistics. We should solve unresolved routing problem...
 	 */
 	/* ipv6IfIcmpOutMsgs, total # of output messages */
 	u_quad_t ifs6_out_msg;
@@ -365,7 +365,7 @@ struct	in6_rrenumreq {
  */
 #define SIOCSIFDSTADDR_IN6	 _IOW('i', 14, struct in6_ifreq)
 #define SIOCSIFNETMASK_IN6	 _IOW('i', 22, struct in6_ifreq)
-#endif 
+#endif
 
 #define SIOCGIFDSTADDR_IN6	_IOWR('i', 34, struct in6_ifreq)
 #define SIOCGIFNETMASK_IN6	_IOWR('i', 37, struct in6_ifreq)
@@ -394,6 +394,8 @@ struct	in6_rrenumreq {
 
 #define SIOCSDEFIFACE_IN6	_IOWR('i', 85, struct in6_ndifreq)
 #define SIOCGDEFIFACE_IN6	_IOWR('i', 86, struct in6_ndifreq)
+
+#define SIOCSIFINFO_FLAGS	_IOWR('i', 87, struct in6_ndireq) /* XXX */
 
 #define SIOCSIFPREFIX_IN6	_IOW('i', 100, struct in6_prefixreq) /* set */
 #define SIOCGIFPREFIX_IN6	_IOWR('i', 101, struct in6_prefixreq) /* get */
@@ -477,7 +479,7 @@ struct	in6_multi {
 	LIST_ENTRY(in6_multi) in6m_entry; /* list glue */
 	struct	in6_addr in6m_addr;	/* IP6 multicast address */
 	struct	ifnet *in6m_ifp;	/* back pointer to ifnet */
-	struct	in6_ifaddr *in6m_ia;    /* back pointer to in6_ifaddr */ 
+	struct	in6_ifaddr *in6m_ia;	/* back pointer to in6_ifaddr */
 	u_int	in6m_refcount;		/* # membership claims by sockets */
 	u_int	in6m_state;		/* state of the membership */
 	u_int	in6m_timer;		/* MLD6 listener report timer */
@@ -504,7 +506,7 @@ struct	in6_multistep {
 /* struct ifnet *ifp; */					\
 /* struct in6_multi *in6m; */					\
 do {								\
-	register struct in6_ifaddr *ia;				\
+	struct in6_ifaddr *ia;					\
 								\
 	IFP_TO_IA6((ifp), ia);					\
 	if (ia == NULL)						\
@@ -580,6 +582,13 @@ int	in6_prefix_ioctl __P((struct socket *so, u_long cmd, caddr_t data,
 int	in6_prefix_add_ifid __P((int iilen, struct in6_ifaddr *ia));
 void	in6_prefix_remove_ifid __P((int iilen, struct in6_ifaddr *ia));
 void	in6_purgeprefix __P((struct ifnet *));
+
+struct inpcb;
+int in6_embedscope __P((struct in6_addr *, const struct sockaddr_in6 *,
+	struct inpcb *, struct ifnet **));
+int in6_recoverscope __P((struct sockaddr_in6 *, const struct in6_addr *,
+	struct ifnet *));
+void in6_clearscope __P((struct in6_addr *));
 #endif /* _KERNEL */
 
 #endif /* _NETINET6_IN6_VAR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_llc.h,v 1.3 1999/07/28 20:02:41 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/net/if_llc.h,v 1.3.4.1 2001/05/14 22:40:01 niklas Exp $	*/
 /*	$NetBSD: if_llc.h,v 1.6 1995/03/08 02:56:57 cgd Exp $	*/
 
 /*
@@ -63,7 +63,7 @@ struct llc {
 		u_int8_t num_rcv_x2;
 	    } type_s;
 	    struct {
-	        u_int8_t control;
+		u_int8_t control;
 		struct frmrinfo {
 			u_int8_t rej_pdu_0;
 			u_int8_t rej_pdu_1;
@@ -73,8 +73,8 @@ struct llc {
 		} frmrinfo;
 	    } type_frmr;
 	    struct {
-		u_int8_t  control;
-		u_int8_t  org_code[3];
+		u_int8_t control;
+		u_int8_t org_code[3];
 		u_int16_t ether_type;
 	    } type_snap;
 	    struct {
@@ -83,17 +83,18 @@ struct llc {
 	    } type_raw;
 	} llc_un;
 };
-#define	llc_control            llc_un.type_u.control
-#define	llc_control_ext        llc_un.type_raw.control_ext
-#define	llc_fid                llc_un.type_u.format_id
-#define	llc_class              llc_un.type_u.class
-#define	llc_window             llc_un.type_u.window_x2
-#define	llc_frmrinfo           llc_un.type_frmr.frmrinfo
-#define	llc_frmr_pdu0          llc_un.type_frmr.frmrinfo.rej_pdu0
-#define	llc_frmr_pdu1          llc_un.type_frmr.frmrinfo.rej_pdu1
-#define	llc_frmr_control       llc_un.type_frmr.frmrinfo.frmr_control
-#define	llc_frmr_control_ext   llc_un.type_frmr.frmrinfo.frmr_control_ext
-#define	llc_frmr_cause         llc_un.type_frmr.frmrinfo.frmr_control_ext
+#define	llc_control		llc_un.type_u.control
+#define	llc_control_ext		llc_un.type_raw.control_ext
+#define	llc_fid			llc_un.type_u.format_id
+#define	llc_class		llc_un.type_u.class
+#define	llc_window		llc_un.type_u.window_x2
+#define	llc_frmrinfo		llc_un.type_frmr.frmrinfo
+#define	llc_frmr_pdu0		llc_un.type_frmr.frmrinfo.rej_pdu0
+#define	llc_frmr_pdu1		llc_un.type_frmr.frmrinfo.rej_pdu1
+#define	llc_frmr_control	llc_un.type_frmr.frmrinfo.frmr_control
+#define	llc_frmr_control_ext	llc_un.type_frmr.frmrinfo.frmr_control_ext
+#define	llc_frmr_cause		llc_un.type_frmr.frmrinfo.frmr_control_ext
+#define	llc_snap		llc_un.type_snap
 
 /*
  * Don't use sizeof(struct llc_un) for LLC header sizes
@@ -138,6 +139,7 @@ struct llc {
 /*
  * ISO PDTR 10178 contains among others
  */
+#define	LLC_8021D_LSAP	0x42
 #define	LLC_X25_LSAP	0x7e
 #define	LLC_SNAP_LSAP	0xaa
 #define	LLC_ISO_LSAP	0xfe

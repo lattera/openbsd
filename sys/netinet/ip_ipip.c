@@ -1,12 +1,12 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2 2000/01/21 03:16:24 angelos Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2.2.1 2001/05/14 22:40:11 niklas Exp $ */
 
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
  * Niels Provos (provos@physnet.uni-hamburg.de).
  *
- * This code was written by John Ioannidis for BSD/OS in Athens, Greece, 
- * in November 1995.
+ * The original version of this code was written by John Ioannidis
+ * for BSD/OS in Athens, Greece, in November 1995.
  *
  * Ported to OpenBSD and NetBSD, with additional transforms, in December 1996,
  * by Angelos D. Keromytis.
@@ -81,10 +81,6 @@
 #define DPRINTF(x)	if (encdebug) printf x
 #else
 #define DPRINTF(x)
-#endif
-
-#ifndef offsetof
-#define offsetof(s, e) ((int)&((s *)0)->e)
 #endif
 
 /*
@@ -198,7 +194,6 @@ ipip_input(struct mbuf *m, int iphlen)
 	{
 	    DPRINTF(("ipip_input(): m_pullup() failed\n"));
 	    ipipstat.ipips_hdrops++;
-	    m_freem(m);
 	    return;
 	}
     }
@@ -228,7 +223,7 @@ ipip_input(struct mbuf *m, int iphlen)
       otos = (ntohl(mtod(m, struct ip6_hdr *)->ip6_flow) >> 20) & 0xff;
 #endif
 
-    /* Remove outter IP header */
+    /* Remove outer IP header */
     m_adj(m, iphlen);
 
     m_copydata(m, 0, 1, &v);
@@ -293,8 +288,9 @@ ipip_input(struct mbuf *m, int iphlen)
     }
 
     /* Check for local address spoofing. */
-    if (m->m_pkthdr.rcvif == NULL ||
-	!(m->m_pkthdr.rcvif->if_flags & IFF_LOOPBACK))
+    if ((m->m_pkthdr.rcvif == NULL ||
+	!(m->m_pkthdr.rcvif->if_flags & IFF_LOOPBACK)) &&
+	ipip_allow != 2)
     {
         for (ifp = ifnet.tqh_first; ifp != 0; ifp = ifp->if_list.tqe_next)
 	{
@@ -344,10 +340,6 @@ ipip_input(struct mbuf *m, int iphlen)
     /* Statistics */
     ipipstat.ipips_ibytes += m->m_pkthdr.len - iphlen;
 
-    /* tdbi is only set in ESP or AH, if the next protocol is UDP or TCP */
-    if (m->m_flags & (M_CONF|M_AUTH))
-      m->m_pkthdr.tdbi = NULL;
-
     /*
      * Interface pointer stays the same; if no IPsec processing has
      * been done (or will be done), this will point to a normal 
@@ -394,7 +386,7 @@ ipip_input(struct mbuf *m, int iphlen)
 
 int
 ipip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
-	    int protoff)
+	    int protoff, struct tdb *tdb2)
 {
     u_int8_t tp, otos;
 
@@ -404,7 +396,7 @@ ipip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 #endif /* INET */
 
 #ifdef INET6    
-    struct ip6_hdr *ip6o;
+    struct ip6_hdr *ip6, *ip6o;
 #endif /* INET6 */
 
     /* Deal with empty TDB source/destination addresses */
@@ -436,7 +428,7 @@ ipip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		*mp = NULL;
 		return ENOBUFS;
 	    }
-	    
+
 	    ipo = mtod(m, struct ip *);
 
 	    ipo->ip_v = IPVERSION;
@@ -468,7 +460,9 @@ ipip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		 */
 		m_copydata(m, sizeof(struct ip) + offsetof(struct ip, ip_off),
 			   sizeof(u_int16_t), (caddr_t) &ipo->ip_off);
-		ipo->ip_off &= ~(IP_DF | IP_MF | IP_OFFMASK);
+                NTOHS(ipo->ip_off);
+                ipo->ip_off &= ~(IP_DF | IP_MF | IP_OFFMASK);
+                HTONS(ipo->ip_off);
 	    }
 #ifdef INET6
 	    else if (tp == (IPV6_VERSION >> 4))
@@ -509,6 +503,13 @@ ipip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		*mp = NULL;
 		return ENOBUFS;
 	    }
+
+	    /* scoped address handling */
+	    ip6 = mtod(m, struct ip6_hdr *);
+	    if (IN6_IS_SCOPE_LINKLOCAL(&ip6->ip6_src))
+		ip6->ip6_src.s6_addr16[1] = 0;
+	    if (IN6_IS_SCOPE_LINKLOCAL(&ip6->ip6_dst))
+		ip6->ip6_dst.s6_addr16[1] = 0;
 
 	    M_PREPEND(m, sizeof(struct ip6_hdr), M_DONTWAIT);
 	    if (m == 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netatalk/Attic/ddp_output.c,v 1.1 1997/07/23 03:39:54 denny Exp $	*/
+/*	$OpenBSD: src/sys/netatalk/Attic/ddp_output.c,v 1.1.12.1 2001/05/14 22:40:05 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -91,8 +91,6 @@
 #include <netatalk/ddp.h>
 #include <netatalk/ddp_var.h>
 #include <netatalk/at_extern.h>
-
-#define MIN(a,b) (((a)<(b))?(a):(b))
 
 int ddp_output	__P(( struct mbuf *, ... ));
 u_int16_t at_cksum	__P(( struct mbuf *, int ));

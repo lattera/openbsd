@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5 2001/04/06 04:42:09 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5.4.1 2001/05/14 22:40:20 niklas Exp $	*/
 /*	$KAME: raw_ip6.c,v 1.69 2001/03/04 15:55:44 itojun Exp $	*/
 
 /*

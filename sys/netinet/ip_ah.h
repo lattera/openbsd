@@ -1,12 +1,12 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.1 2000/03/24 09:09:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.2 2001/05/14 22:40:08 niklas Exp $	*/
 
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
  * Niels Provos (provos@physnet.uni-hamburg.de).
  *
- * This code was written by John Ioannidis for BSD/OS in Athens, Greece, 
- * in November 1995.
+ * The original version of this code was written by John Ioannidis
+ * for BSD/OS in Athens, Greece, in November 1995.
  *
  * Ported to OpenBSD and NetBSD, with additional transforms, in December 1996,
  * by Angelos D. Keromytis.

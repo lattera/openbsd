@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7 2000/02/07 06:18:44 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7.2.1 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$KAME: in6_gif.c,v 1.43 2001/01/22 07:27:17 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -66,6 +67,8 @@
 #include <net/if_gif.h>
 
 #include <net/net_osdep.h>
+
+#include "bridge.h"
 
 #ifndef offsetof
 #define offsetof(s, e) ((int)&((s *)0)->e)
@@ -135,6 +138,10 @@ in6_gif_output(ifp, family, m, rt)
 		break;
 	    }
 #endif
+#if NBRIDGE > 0
+	case AF_LINK:
+		break;
+#endif /* NBRIDGE */
 	default:
 #ifdef DEBUG
 		printf("in6_gif_output: warning: unknown family %d passed\n",
@@ -144,9 +151,23 @@ in6_gif_output(ifp, family, m, rt)
 		return EAFNOSUPPORT;
 	}
 	
+#if NBRIDGE > 0
+	if (family == AF_LINK) {
+	        mp = NULL;
+		error = etherip_output(m, &tdb, &mp, 0, 0);
+		if (error)
+		        return error;
+		else if (mp == NULL)
+		        return EFAULT;
+
+		m = mp;
+		goto sendit;
+	}
+#endif /* NBRIDGE */
+
 	/* encapsulate into IPv6 packet */
 	mp = NULL;
-	error = ipip_output(m, &tdb, &mp, hlen, poff);
+	error = ipip_output(m, &tdb, &mp, hlen, poff, NULL);
 	if (error)
 	        return error;
 	else if (mp == NULL)
@@ -154,6 +175,9 @@ in6_gif_output(ifp, family, m, rt)
 
 	m = mp;
 
+#if NBRIDGE > 0
+ sendit:
+#endif /* NBRIDGE */
 	/* See if out cached route remains the same */
 	if (dst->sin6_family != sin6_dst->sin6_family ||
 	     !IN6_ARE_ADDR_EQUAL(&dst->sin6_addr, &sin6_dst->sin6_addr)) {

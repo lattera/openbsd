@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/net/if_gif.h,v 1.3 2000/01/12 06:40:45 angelos Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.h,v 1.3.2.1 2001/05/14 22:40:00 niklas Exp $	*/
+/*	$KAME: if_gif.h,v 1.17 2000/09/11 11:36:41 sumikawa Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -71,4 +72,5 @@ extern struct gif_softc *gif;
 int gif_output __P((struct ifnet *, struct mbuf *,
 		    struct sockaddr *, struct rtentry *));
 int gif_ioctl __P((struct ifnet *, u_long, caddr_t));
+void gif_start __P((struct ifnet *));
 #endif /* _NET_IF_GIF_H_ */

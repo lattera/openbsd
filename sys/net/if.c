@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.c,v 1.27.2.1 2000/03/24 09:09:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if.c,v 1.27.2.2 2001/05/14 22:39:59 niklas Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -99,6 +99,8 @@
 #ifndef INET
 #include <netinet/in.h>
 #endif
+#include <netinet6/in6_ifattach.h>
+#include <netinet6/in6_var.h>
 #endif
 
 #ifdef IPFILTER
@@ -117,9 +119,14 @@
 
 void	if_attachsetup __P((struct ifnet *));
 int	if_detach_rtdelete __P((struct radix_node *, void *));
+int	if_mark_ignore __P((struct radix_node *, void *));
+int	if_mark_unignore __P((struct radix_node *, void *));
 
 int	ifqmaxlen = IFQ_MAXLEN;
-void	if_slowtimo __P((void *arg));
+
+void	if_detached_start __P((struct ifnet *));
+int	if_detached_ioctl __P((struct ifnet *, u_long, caddr_t));
+void	if_detached_watchdog __P((struct ifnet *));
 
 #ifdef INET6
 /*
@@ -138,12 +145,16 @@ extern void nd6_setmtu __P((struct ifnet *));
 void
 ifinit()
 {
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
+	static struct timeout if_slowtim;
 
 	for (ifp = ifnet.tqh_first; ifp != 0; ifp = ifp->if_list.tqe_next)
 		if (ifp->if_snd.ifq_maxlen == 0)
 			ifp->if_snd.ifq_maxlen = ifqmaxlen;
-	if_slowtimo(NULL);
+
+	timeout_set(&if_slowtim, if_slowtimo, &if_slowtim);
+
+	if_slowtimo(&if_slowtim);
 }
 
 int if_index = 0;
@@ -281,6 +292,34 @@ if_detach_rtdelete(rn, vifp)
 	return (0);
 }
 
+int
+if_mark_ignore(rn, vifp)
+	struct radix_node *rn;
+	void *vifp;
+{
+	struct ifnet *ifp = vifp;
+	struct rtentry *rt = (struct rtentry *)rn;
+
+	if (rt->rt_ifp == ifp)
+		rn->rn_flags |= RNF_IGNORE;
+
+	return (0);
+}
+
+int
+if_mark_unignore(rn, vifp)
+	struct radix_node *rn;
+	void *vifp;
+{
+	struct ifnet *ifp = vifp;
+	struct rtentry *rt = (struct rtentry *)rn;
+
+	if (rt->rt_ifp == ifp)
+		rn->rn_flags &= ~RNF_IGNORE;
+
+	return (0);
+}
+
 /*
  * Detach an interface from everything in the kernel.  Also deallocate
  * private resources.
@@ -294,6 +333,11 @@ if_detach(ifp)
 	struct ifaddr *ifa;
 	int i, s = splimp();
 	struct radix_node_head *rnh;
+
+	ifp->if_flags &= ~IFF_OACTIVE;
+	ifp->if_start = if_detached_start;
+	ifp->if_ioctl = if_detached_ioctl;
+	ifp->if_watchdog = if_detached_watchdog;
 
 #if NBRIDGE > 0
 	/* Remove the interface from any bridge it is part of.  */
@@ -326,6 +370,9 @@ if_detach(ifp)
 	vif_delete(ifp);
 #endif
 #endif
+#ifdef INET6
+	in6_ifdetach(ifp);
+#endif
 	/*
 	 * XXX transient ifp refs?  inpcb.ip_moptions.imo_multicast_ifp?
 	 * Other network stacks than INET?
@@ -336,7 +383,7 @@ if_detach(ifp)
 
 #ifdef IPFILTER
 	/* XXX More ipf & ipnat cleanup needed.  */
-	nat_ifdetach(ifp);
+	nat_clearlist();
 #endif
 
 	/* Deallocate private resources.  */
@@ -509,10 +556,10 @@ ifaof_ifpforaddr(addr, ifp)
  * This should be moved to /sys/net/link.c eventually.
  */
 void
-link_rtrequest(cmd, rt, sa)
+link_rtrequest(cmd, rt, info)
 	int cmd;
 	register struct rtentry *rt;
-	struct sockaddr *sa;
+	struct rt_addrinfo *info;
 {
 	register struct ifaddr *ifa;
 	struct sockaddr *dst;
@@ -526,7 +573,7 @@ link_rtrequest(cmd, rt, sa)
 		rt->rt_ifa = ifa;
 		ifa->ifa_refcnt++;
 		if (ifa->ifa_rtrequest && ifa->ifa_rtrequest != link_rtrequest)
-			ifa->ifa_rtrequest(cmd, rt, sa);
+			ifa->ifa_rtrequest(cmd, rt, info);
 	}
 }
 
@@ -540,12 +587,24 @@ if_down(ifp)
 	register struct ifnet *ifp;
 {
 	register struct ifaddr *ifa;
+	struct radix_node_head *rnh;
+	int i;
 
 	ifp->if_flags &= ~IFF_UP;
 	for (ifa = ifp->if_addrlist.tqh_first; ifa != 0; ifa = ifa->ifa_list.tqe_next)
 		pfctlinput(PRC_IFDOWN, ifa->ifa_addr);
 	if_qflush(&ifp->if_snd);
 	rt_ifmsg(ifp);
+
+	/*
+	 * Find and mark as ignore all routes which are using this interface.
+	 * XXX Factor out into a route.c function?
+	 */
+	for (i = 1; i <= AF_MAX; i++) {
+		rnh = rt_tables[i];
+		if (rnh)
+			(*rnh->rnh_walktree)(rnh, if_mark_ignore, ifp);
+	}
 }
 
 /*
@@ -560,6 +619,8 @@ if_up(ifp)
 #ifdef notyet
 	register struct ifaddr *ifa;
 #endif
+	struct radix_node_head *rnh;
+	int i;
 
 	ifp->if_flags |= IFF_UP;
 #ifdef notyet
@@ -572,6 +633,16 @@ if_up(ifp)
 #ifdef INET6
 	in6_if_up(ifp);
 #endif
+
+	/*
+	 * Find and unignore all routes which are using this interface.
+	 * XXX Factor out into a route.c function?
+	 */
+	for (i = 1; i <= AF_MAX; i++) {
+		rnh = rt_tables[i];
+		if (rnh)
+			(*rnh->rnh_walktree)(rnh, if_mark_unignore, ifp);
+	}
 }
 
 /*
@@ -602,7 +673,8 @@ void
 if_slowtimo(arg)
 	void *arg;
 {
-	register struct ifnet *ifp;
+	struct timeout *to = (struct timeout *)arg;
+	struct ifnet *ifp;
 	int s = splimp();
 
 	for (ifp = ifnet.tqh_first; ifp != 0; ifp = ifp->if_list.tqe_next) {
@@ -612,7 +684,7 @@ if_slowtimo(arg)
 			(*ifp->if_watchdog)(ifp);
 	}
 	splx(s);
-	timeout(if_slowtimo, NULL, hz / IFNET_SLOWHZ);
+	timeout_add(to, hz / IFNET_SLOWHZ);
 }
 
 /*
@@ -724,12 +796,21 @@ ifioctl(so, cmd, data, p)
 		break;
 	}
 
+	case SIOCSIFPHYADDR:
+	case SIOCDIFPHYADDR:
+#ifdef INET6
+	case SIOCSIFPHYADDR_IN6:
+#endif
+	case SIOCSLIFPHYADDR:
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
 	case SIOCSIFMEDIA:
 		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
 			return (error);
 		/* FALLTHROUGH */
+	case SIOCGIFPSRCADDR:
+	case SIOCGIFPDSTADDR:
+	case SIOCGLIFPHYADDR:
 	case SIOCGIFMEDIA:
 		if (ifp->if_ioctl == 0)
 			return (EOPNOTSUPP);
@@ -781,9 +862,8 @@ ifioctl(so, cmd, data, p)
 			cmd = SIOCGIFNETMASK;
 		}
 		error = ((*so->so_proto->pr_usrreq)(so, PRU_CONTROL,
-						    (struct mbuf *) cmd,
-						    (struct mbuf *) data,
-						    (struct mbuf *) ifp));
+		    (struct mbuf *) cmd, (struct mbuf *) data,
+		    (struct mbuf *) ifp));
 		switch (ocmd) {
 
 		case OSIOCGIFADDR:
@@ -902,4 +982,34 @@ ifconf(cmd, data)
 	}
 	ifc->ifc_len -= space;
 	return (error);
+}
+
+/*
+ * Dummy functions replaced in ifnet during detach (if protocols decide to
+ * fiddle with the if during detach.
+ */
+void
+if_detached_start(struct ifnet *ifp)
+{
+	struct mbuf *m;
+
+	while (1) {
+		IF_DEQUEUE(&ifp->if_snd, m);
+
+		if (m == NULL)
+			return;
+		m_freem(m);
+	}
+}
+
+int
+if_detached_ioctl(struct ifnet *ifp, u_long a, caddr_t b)
+{
+	return ENODEV;
+}
+
+void
+if_detached_watchdog(struct ifnet *ifp)
+{
+	/* nothing */
 }

@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/in6_gif.h,v 1.1 1999/12/08 06:50:21 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_gif.h,v 1.1.2.1 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$KAME: in6_gif.h,v 1.5 2000/04/14 08:36:03 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -31,8 +32,6 @@
 
 #ifndef _NETINET6_IN6_GIF_H_
 #define _NETINET6_IN6_GIF_H_
-
-#define GIF_HLIM	30
 
 int in6_gif_input __P((struct mbuf **, int *, int));
 int in6_gif_output __P((struct ifnet *, int, struct mbuf *, struct rtentry *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.2 2000/03/24 09:09:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.3 2001/05/14 22:39:58 niklas Exp $	*/
 /*	$NetBSD: bpf.c,v 1.33 1997/02/21 23:59:35 thorpej Exp $	*/
 
 /*
@@ -48,6 +48,7 @@
 #include <sys/mbuf.h>
 #include <sys/time.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
 #include <sys/ioctl.h>
 #include <sys/map.h>
@@ -55,9 +56,6 @@
 #include <sys/vnode.h>
 
 #include <sys/file.h>
-#if defined(sparc) && BSD < 199103
-#include <sys/stream.h>
-#endif
 #include <sys/tty.h>
 #include <sys/uio.h>
 
@@ -75,19 +73,7 @@
 #include <netinet/if_arc.h>
 #include <netinet/if_ether.h>
 
-/*
- * Older BSDs don't have kernel malloc.
- */
-#if BSD < 199103
-extern bcopy();
-caddr_t bpf_alloc();
-#include <net/bpf_compat.h>
-#define BPF_BUFSIZE (MCLBYTES-8)
-#define UIOMOVE(cp, len, code, uio) uiomove(cp, len, code, uio)
-#else
 #define BPF_BUFSIZE 8192	/* 4096 too small for FDDI frames */
-#define UIOMOVE(cp, len, code, uio) uiomove(cp, len, uio)
-#endif
 
 #define PRINET  6			/* interruptible */
 
@@ -101,7 +87,8 @@ int bpf_bufsize = BPF_BUFSIZE;
  *  bpf_dtab holds the descriptors, indexed by minor device #
  */
 struct bpf_if	*bpf_iflist;
-struct bpf_d	bpf_dtab[NBPFILTER];
+struct bpf_d	*bpf_dtab;
+int nbpfilter;
 
 int	bpf_allocbufs __P((struct bpf_d *));
 void	bpf_freed __P((struct bpf_d *));
@@ -111,9 +98,7 @@ int	bpf_movein __P((struct uio *, int, struct mbuf **, struct sockaddr *));
 void	bpf_attachd __P((struct bpf_d *, struct bpf_if *));
 void	bpf_detachd __P((struct bpf_d *));
 int	bpf_setif __P((struct bpf_d *, struct ifreq *));
-#if BSD >= 199103
 int	bpfselect __P((dev_t, int, struct proc *));
-#endif
 static __inline void bpf_wakeup __P((struct bpf_d *));
 void	bpf_catchpacket __P((struct bpf_d *, u_char *, size_t, size_t,
 	    void (*)(const void *, void *, size_t)));
@@ -190,13 +175,8 @@ bpf_movein(uio, linktype, mp, sockp)
 	m->m_pkthdr.len = len - hlen;
 
 	if (len > MHLEN) {
-#if BSD >= 199103
 		MCLGET(m, M_WAIT);
 		if ((m->m_flags & M_EXT) == 0) {
-#else
-		MCLGET(m);
-		if (m->m_len != MCLBYTES) {
-#endif
 			error = ENOBUFS;
 			goto bad;
 		}
@@ -208,16 +188,12 @@ bpf_movein(uio, linktype, mp, sockp)
 	 */
 	if (hlen != 0) {
 		m->m_len -= hlen;
-#if BSD >= 199103
 		m->m_data += hlen; /* XXX */
-#else
-		m->m_off += hlen;
-#endif
-		error = UIOMOVE((caddr_t)sockp->sa_data, hlen, UIO_WRITE, uio);
+		error = uiomove((caddr_t)sockp->sa_data, hlen, uio);
 		if (error)
 			goto bad;
 	}
-	error = UIOMOVE(mtod(m, caddr_t), len - hlen, UIO_WRITE, uio);
+	error = uiomove(mtod(m, caddr_t), len - hlen, uio);
 	if (!error)
 		return (0);
  bad:
@@ -266,7 +242,7 @@ bpf_detachd(d)
 
 		d->bd_promisc = 0;
 		error = ifpromisc(bp->bif_ifp, 0);
-		if (error && error != EINVAL)
+		if (error && !(error == EINVAL || error == ENODEV))
 			/*
 			 * Something is really wrong if we were able to put
 			 * the driver into promiscuous mode, but can't
@@ -300,7 +276,6 @@ bpf_detachd(d)
 #define D_MARKFREE(d) ((d)->bd_next = (d))
 #define D_MARKUSED(d) ((d)->bd_next = 0)
 
-#if BSD >= 199207 || NetBSD0_9 >= 2
 /*
  * bpfilterattach() is called at boot time in new systems.  We do
  * nothing here since old systems will not call this.
@@ -312,14 +287,18 @@ bpfilterattach(n)
 {
 	int i;
 
+	bpf_dtab = malloc(n * sizeof(*bpf_dtab), M_DEVBUF, M_NOWAIT);
+	if (!bpf_dtab)
+		return;
+	nbpfilter = n;
+	bzero(bpf_dtab, n * sizeof(*bpf_dtab));
 	/*
 	 * Mark all the descriptors free if this hasn't been done.
 	 */
 	if (!D_ISFREE(&bpf_dtab[0]))
-		for (i = 0; i < NBPFILTER; ++i)
+		for (i = 0; i < nbpfilter; ++i)
 			D_MARKFREE(&bpf_dtab[i]);
 }
-#endif
 
 /*
  * Open ethernet device.  Returns ENXIO for illegal minor device number,
@@ -335,7 +314,7 @@ bpfopen(dev, flag, mode, p)
 {
 	register struct bpf_d *d;
 
-	if (minor(dev) >= NBPFILTER)
+	if (minor(dev) >= nbpfilter)
 		return (ENXIO);
 	/*
 	 * Each minor can be opened by only one process.  If the requested
@@ -483,7 +462,7 @@ bpfread(dev, uio, ioflag)
 	 * We know the entire buffer is transferred since
 	 * we checked above that the read buffer is bpf_bufsize bytes.
 	 */
-	error = UIOMOVE(d->bd_hbuf, d->bd_hlen, UIO_READ, uio);
+	error = uiomove(d->bd_hbuf, d->bd_hlen, uio);
 
 	s = splimp();
 	d->bd_fbuf = d->bd_hbuf;
@@ -507,17 +486,9 @@ bpf_wakeup(d)
 		csignal(d->bd_pgid, d->bd_sig,
 		    d->bd_siguid, d->bd_sigeuid);
 
-#if BSD >= 199103
 	selwakeup(&d->bd_sel);
 	/* XXX */
 	d->bd_sel.si_selpid = 0;
-#else
-	if (d->bd_selproc) {
-		selwakeup(d->bd_selproc, (int)d->bd_selcoll);
-		d->bd_selcoll = 0;
-		d->bd_selproc = 0;
-	}
-#endif
 }
 
 int
@@ -550,11 +521,7 @@ bpfwrite(dev, uio, ioflag)
 	}
 
 	s = splsoftnet();
-#if BSD >= 199103
 	error = (*ifp->if_output)(ifp, m, &dst, (struct rtentry *)0);
-#else
-	error = (*ifp->if_output)(ifp, m, &dst);
-#endif
 	splx(s);
 	/*
 	 * The driver frees the mbuf.
@@ -642,9 +609,6 @@ bpfioctl(dev, cmd, addr, flag, p)
 	 * Set buffer length.
 	 */
 	case BIOCSBLEN:
-#if BSD < 199103
-		error = EINVAL;
-#else
 		if (d->bd_bif != 0)
 			error = EINVAL;
 		else {
@@ -656,7 +620,6 @@ bpfioctl(dev, cmd, addr, flag, p)
 				*(u_int *)addr = size = BPF_MINBUFSIZE;
 			d->bd_bufsize = size;
 		}
-#endif
 		break;
 
 	/*
@@ -962,36 +925,13 @@ bpf_ifname(ifp, ifr)
 }
 
 /*
- * The new select interface passes down the proc pointer; the old select
- * stubs had to grab it out of the user struct.  This glue allows either case.
- */
-#if BSD >= 199103
-#define bpf_select bpfselect
-#else
-int
-bpfselect(dev, rw)
-	register dev_t dev;
-	int rw;
-{
-	/*
-	 * if there isn't data waiting, and there's a timeout,
-	 * mark the time we started waiting.
-	 */
-	if (b->db_rtout != -1 && (d->bd_rdStart == 0))
-		d->bd_rdStart = ticks;
-			    
-	return (bpf_select(dev, rw, u.u_procp));
-}
-#endif
-
-/*
  * Support for select() system call
  *
  * Return true iff the specific operation will not block indefinitely.
  * Otherwise, return false but make a note that a selwakeup() must be done.
  */
 int
-bpf_select(dev, rw, p)
+bpfselect(dev, rw, p)
 	register dev_t dev;
 	int rw;
 	struct proc *p;
@@ -1022,21 +962,7 @@ bpf_select(dev, rw, p)
 	if (d->bd_rtout != -1 && d->bd_rdStart == 0)
 		d->bd_rdStart = ticks;
 			    
-#if BSD >= 199103
 	selrecord(p, &d->bd_sel);
-#else
-	/*
-	 * No data ready.  If there's already a select() waiting on this
-	 * minor device then this is a collision.  This shouldn't happen
-	 * because minors really should not be shared, but if a process
-	 * forks while one of these is open, it is possible that both
-	 * processes could select on the same descriptor.
-	 */
-	if (d->bd_selproc && d->bd_selproc->p_wchan == (caddr_t)&selwait)
-		d->bd_selcoll = 1;
-	else
-		d->bd_selproc = p;
-#endif
 	splx(s);
 	return (0);
 }
@@ -1187,13 +1113,7 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 	 * Append the bpf header.
 	 */
 	hp = (struct bpf_hdr *)(d->bd_sbuf + curlen);
-#if BSD >= 199103
 	microtime(&hp->bh_tstamp);
-#elif defined(sun)
-	uniqtime(&hp->bh_tstamp);
-#else
-	hp->bh_tstamp = time;
-#endif
 	hp->bh_datalen = pktlen;
 	hp->bh_hdrlen = hdrlen;
 	/*
@@ -1276,14 +1196,8 @@ bpfattach(driverp, ifp, dlt, hdrlen)
 	u_int dlt, hdrlen;
 {
 	struct bpf_if *bp;
-#if BSD < 199103
-	static struct bpf_if bpf_ifs[NBPFILTER];
-	static int bpfifno;
-
-	bp = (bpfifno < NBPFILTER) ? &bpf_ifs[bpfifno++] : 0;
-#else
 	bp = (struct bpf_if *)malloc(sizeof(*bp), M_DEVBUF, M_DONTWAIT);
-#endif
+
 	if (bp == 0)
 		panic("bpfattach");
 
@@ -1304,10 +1218,6 @@ bpfattach(driverp, ifp, dlt, hdrlen)
 	 * performance reasons and to alleviate alignment restrictions).
 	 */
 	bp->bif_hdrlen = BPF_WORDALIGN(hdrlen + SIZEOF_BPF_HDR) - hdrlen;
-
-#if 0
-	printf("bpf: %s attached\n", ifp->if_xname);
-#endif
 }
 
 /* Detach an interface from its attached bpf device.  */
@@ -1334,27 +1244,19 @@ bpfdetach(ifp)
 				 * Locate the minor number and nuke the vnode
 				 * for any open instance.
 				 */
-				for (mn = 0; mn < NBPFILTER; mn++)
+				for (mn = 0; mn < nbpfilter; mn++)
 					if (&bpf_dtab[mn] == bd) {
 						vdevgone(maj, mn, mn, VCHR);
 						break;
 					}
 
-#if BSD < 199103
-			if (bp == &bpf_ifs[bpfifno - 1])
-				bpfifno--;
-			else
-				printf("bpfdetach: leaked one bpf\n");
-#else
 			free(bp, M_DEVBUF);
-#endif
-		}
-		pbp = &bp->bif_next;
+		} else
+			pbp = &bp->bif_next;
 	}
 	ifp->if_bpf = NULL;
 }
 
-#if BSD >= 199103
 /* XXX This routine belongs in net/if.c. */
 /*
  * Set/clear promiscuous mode on interface ifp based on the truth value
@@ -1395,35 +1297,3 @@ ifpromisc(ifp, pswitch)
 	ifr.ifr_flags = ifp->if_flags;
 	return ((*ifp->if_ioctl)(ifp, SIOCSIFFLAGS, (caddr_t)&ifr));
 }
-#endif
-
-#if BSD < 199103
-/*
- * Allocate some memory for bpf.  This is temporary SunOS support, and
- * is admittedly a hack.
- * If resources unavaiable, return 0.
- */
-caddr_t
-bpf_alloc(size, canwait)
-	register int size;
-	register int canwait;
-{
-	register struct mbuf *m;
-
-	if ((unsigned)size > (MCLBYTES-8))
-		return 0;
-
-	MGET(m, canwait, MT_DATA);
-	if (m == 0)
-		return 0;
-	if ((unsigned)size > (MLEN-8)) {
-		MCLGET(m);
-		if (m->m_len != MCLBYTES) {
-			m_freem(m);
-			return 0;
-		}
-	}
-	*mtod(m, struct mbuf **) = m;
-	return mtod(m, caddr_t) + 8;
-}
-#endif

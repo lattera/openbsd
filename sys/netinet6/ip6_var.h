@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.2 2000/03/24 09:09:40 niklas Exp $	*/
-/*	$KAME: ip6_var.h,v 1.28 2000/03/09 00:46:12 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.3 2001/05/14 22:40:19 niklas Exp $	*/
+/*	$KAME: ip6_var.h,v 1.33 2000/06/11 14:59:20 jinmei Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -16,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -170,20 +170,6 @@ struct	ip6stat {
 	u_quad_t ip6s_exthdrtoolong;	/* ext hdr are not continuous */
 	u_quad_t ip6s_nogif;		/* no match gif found */
 	u_quad_t ip6s_toomanyhdr;	/* discarded due to too many headers */
-	/* XXX the following two items are not really AF_INET6 thing */
-	u_quad_t ip6s_exthdrget;	/* # of calls to IP6_EXTHDR_GET */
-	u_quad_t ip6s_exthdrget0;	/* # of calls to IP6_EXTHDR_GET0 */
-	u_quad_t ip6s_pulldown;		/* # of calls to m_pulldown */
-	u_quad_t ip6s_pulldown_copy;	/* # of mbuf copies in m_pulldown */
-	u_quad_t ip6s_pulldown_alloc;	/* # of mbuf allocs in m_pulldown */
-	u_quad_t ip6s_pullup;		/* # of calls to m_pullup */
-	u_quad_t ip6s_pullup_copy;	/* # of possible m_pullup copies */
-	u_quad_t ip6s_pullup_alloc;	/* # of possible m_pullup mallocs */
-	u_quad_t ip6s_pullup_fail;	/* # of possible m_pullup failures */
-	u_quad_t ip6s_pullup2;		/* # of calls to m_pullup2 */
-	u_quad_t ip6s_pullup2_copy;	/* # of possible m_pullup2 copies */
-	u_quad_t ip6s_pullup2_alloc;	/* # of possible m_pullup2 mallocs */
-	u_quad_t ip6s_pullup2_fail;	/* # of possible m_pullup2 failures */
 
 	/*
 	 * statistics for improvement of the source address selection
@@ -208,12 +194,16 @@ struct	ip6stat {
 	u_quad_t ip6s_sources_otherscope[16];
 	/* number of times that an deprecated address is chosen */
 	u_quad_t ip6s_sources_deprecated[16];
+
+	u_quad_t ip6s_forward_cachehit;
+	u_quad_t ip6s_forward_cachemiss;
 };
 
 #ifdef _KERNEL
 /* flags passed to ip6_output as last parameter */
 #define	IPV6_DADOUTPUT		0x01	/* DAD */
 #define	IPV6_FORWARDING		0x02	/* most of IPv6 header exists */
+#define	IPV6_ENCAPSULATED	0x04	/* encapsulated already */
 
 extern struct	ip6stat ip6stat;	/* statistics */
 extern u_int32_t ip6_id;		/* fragment identifier */
@@ -221,14 +211,9 @@ extern int	ip6_defhlim;		/* default hop limit */
 extern int	ip6_defmcasthlim;	/* default multicast hop limit */
 extern int	ip6_forwarding;		/* act as router? */
 extern int	ip6_forward_srcrt;	/* forward src-routed? */
-extern int	ip6_gif_hlim;		/* Hop limit for gif encap packet */
 extern int	ip6_use_deprecated;	/* allow deprecated addr as source */
 extern int	ip6_rr_prune;		/* router renumbering prefix
 					 * walk list every 5 sec.    */
-#ifdef MAPPED_ADDR_ENABLED
-extern int	ip6_mapped_addr_on;
-#endif /* MAPPED_ADDR_ENABLED */
-
 extern struct socket *ip6_mrouter; 	/* multicast routing daemon */
 extern int	ip6_sendredirects;	/* send IP redirects when forwarding? */
 extern int	ip6_maxfragpackets; /* Maximum packets in reassembly queue */
@@ -246,6 +231,8 @@ extern int ip6_auto_flowlabel;
 
 struct in6pcb;
 struct inpcb;
+
+int	icmp6_ctloutput __P((int, struct socket *, int, int, struct mbuf **));
 
 void	ip6_init __P((void));
 void	ip6intr __P((void));

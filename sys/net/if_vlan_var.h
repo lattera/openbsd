@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4 2001/03/28 15:22:44 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4.4.1 2001/05/14 22:40:02 niklas Exp $	*/
 
 /*
  * Copyright 1998 Massachusetts Institute of Technology

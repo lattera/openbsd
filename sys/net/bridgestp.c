@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bridgestp.c,v 1.5 2001/03/22 03:48:29 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/bridgestp.c,v 1.5.4.1 2001/05/14 22:39:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Jason L. Wright (jason@thought.net)

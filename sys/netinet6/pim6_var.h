@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/pim6_var.h,v 1.1 1999/12/08 06:50:23 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/pim6_var.h,v 1.1.2.1 2001/05/14 22:40:20 niklas Exp $	*/
+/*	$KAME: pim6_var.h,v 1.8 2000/06/06 08:07:43 jinmei Exp $	*/
 
 /*
  * Copyright (C) 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,7 +29,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* KAME Id: pim6_var.h,v 1.2 1999/08/01 15:58:13 itojun Exp */
 
 #ifndef _NETINET6_PIM6_VAR_H_
 #define _NETINET6_PIM6_VAR_H_
@@ -60,12 +60,11 @@ int pim6_input __P((struct mbuf **, int*, int));
 /*
  * Names for PIM sysctl objects
  */
-#define PIMCTL_STATS		1	/* statistics (read-only) */
-#define PIMCTL_MAXID		2
+#define PIM6CTL_STATS		1	/* statistics (read-only) */
+#define PIM6CTL_MAXID		2
 
-#define PIMCTL_NAMES { \
+#define PIM6CTL_NAMES { \
 	{ 0, 0 }, \
 	{ 0, 0 }, \
 }
-
 #endif /* _NETINET6_PIM6_VAR_H_ */

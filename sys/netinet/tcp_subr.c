@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.2 2000/03/24 09:09:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.3 2001/05/14 22:40:15 niklas Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -57,6 +57,8 @@ didn't get a copy, you may request one from <license@ipv6.nrl.navy.mil>.
 #include <sys/socketvar.h>
 #include <sys/protosw.h>
 #include <sys/errno.h>
+#include <sys/time.h>
+#include <sys/kernel.h>
 
 #include <net/route.h>
 #include <net/if.h>
@@ -79,6 +81,8 @@ didn't get a copy, you may request one from <license@ipv6.nrl.navy.mil>.
 #include <netinet6/ip6_var.h>
 #include <netinet6/tcpipv6.h>
 #include <sys/domain.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/ip6protosw.h>
 #endif /* INET6 */
 
 #ifdef TCP_SIGNATURE
@@ -121,6 +125,8 @@ int	tcbhashsize = TCBHASHSIZE;
 extern int ip6_defhlim;
 #endif /* INET6 */
 
+struct tcpstat tcpstat;		/* tcp statistics */
+
 /*
  * Tcp initialization
  */
@@ -129,10 +135,9 @@ tcp_init()
 {
 #ifdef TCP_COMPAT_42
 	tcp_iss = 1;		/* wrong */
-#else /* TCP_COMPAT_42 */
-	tcp_iss = arc4random() + 1;
-#endif /* !TCP_COMPAT_42 */
+#endif /* TCP_COMPAT_42 */
 	in_pcbinit(&tcbtable, tcbhashsize);
+	tcp_now = arc4random() / 2;
 
 #ifdef INET6
 	/*
@@ -144,6 +149,8 @@ tcp_init()
 	if ((max_linkhdr + sizeof(struct ip6_hdr) + sizeof(struct tcphdr)) >
 	    MHLEN)
 		panic("tcp_init");
+
+	icmp6_mtudisc_callback_register(tcp6_mtudisc_callback);
 #endif /* INET6 */
 }
 
@@ -402,7 +409,8 @@ tcp_respond(tp, template, m, ack, seq, flags)
 		th->th_sum = in_cksum(m, tlen);
 		((struct ip *)ti)->ip_len = tlen;
 		((struct ip *)ti)->ip_ttl = ip_defttl;
-		ip_output(m, NULL, ro, 0, NULL, tp ? tp->t_inpcb : NULL);
+		ip_output(m, NULL, ro, ip_mtudisc ? IP_MTUDISC : 0, NULL,
+			  tp ? tp->t_inpcb : NULL);
 	}
 }
 
@@ -422,8 +430,9 @@ tcp_newtcpcb(inp)
 		return ((struct tcpcb *)0);
 	bzero((char *) tp, sizeof(struct tcpcb));
 	LIST_INIT(&tp->segq);
-	tp->t_maxseg = tp->t_maxopd = tcp_mssdflt;
-
+	tp->t_maxseg = tcp_mssdflt;
+	tp->t_maxopd = 0;
+  
 #ifdef TCP_SACK
 	tp->sack_disable = tcp_do_sack ? 0 : 1;
 #endif
@@ -442,15 +451,11 @@ tcp_newtcpcb(inp)
 	tp->snd_cwnd = TCP_MAXWIN << TCP_MAX_WINSHIFT;
 	tp->snd_ssthresh = TCP_MAXWIN << TCP_MAX_WINSHIFT;
 #ifdef INET6
-	/*
-	 * If we want to use tp->pf for a quick-n-easy way to determine
-	 * the outbound dgram type, we cannot make this decision
-	 * until a connection is established!  Bzero() sets pf to zero, and
-	 * that's the way we want it, unless, of course, it's an AF_INET
-	 * socket...
-	 */
+	/* we disallow IPv4 mapped address completely. */
 	if ((inp->inp_flags & INP_IPV6) == 0)
-		tp->pf = PF_INET;  /* If AF_INET socket, we can't do v6 from it. */
+		tp->pf = PF_INET;
+	else
+		tp->pf = PF_INET6;
 #else
 	tp->pf = PF_INET;
 #endif
@@ -663,6 +668,19 @@ tcp_drain()
 }
 
 /*
+ * Compute proper scaling value for receiver window from buffer space 
+ */
+
+void
+tcp_rscale(struct tcpcb *tp, u_long hiwat)
+{
+	tp->request_r_scale = 0;
+	while (tp->request_r_scale < TCP_MAX_WINSHIFT &&
+	       TCP_MAXWIN << tp->request_r_scale < hiwat)
+		tp->request_r_scale++;
+}
+
+/*
  * Notify a tcp user of an asynchronous error;
  * store error as soft error, but wake up user
  * (for now, won't do anything until can select for soft error).
@@ -696,14 +714,107 @@ tcp_notify(inp, error)
 	sowwakeup(so);
 }
 
-#if defined(INET6) && !defined(TCP6)
+#ifdef INET6
 void
 tcp6_ctlinput(cmd, sa, d)
 	int cmd;
 	struct sockaddr *sa;
 	void *d;
 {
-	(void)tcp_ctlinput(cmd, sa, NULL);	/*XXX*/
+	struct tcphdr th;
+	void (*notify) __P((struct inpcb *, int)) = tcp_notify;
+	struct ip6_hdr *ip6;
+	const struct sockaddr_in6 *sa6_src = NULL;
+	struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+	struct mbuf *m;
+	int off;
+	struct {
+		u_int16_t th_sport;
+		u_int16_t th_dport;
+	} *thp;
+
+	if (sa->sa_family != AF_INET6 ||
+	    sa->sa_len != sizeof(struct sockaddr_in6))
+		return;
+	if ((unsigned)cmd >= PRC_NCMDS)
+		return;
+	else if (cmd == PRC_QUENCH) {
+		/* XXX there's no PRC_QUENCH in IPv6 */
+		notify = tcp_quench;
+	} else if (PRC_IS_REDIRECT(cmd))
+		notify = in_rtchange, d = NULL;
+	else if (cmd == PRC_MSGSIZE)
+		; /* special code is present, see below */
+	else if (cmd == PRC_HOSTDEAD)
+		d = NULL;
+	else if (inet6ctlerrmap[cmd] == 0)
+		return;
+
+	/* if the parameter is from icmp6, decode it. */
+	if (d != NULL) {
+		struct ip6ctlparam *ip6cp = (struct ip6ctlparam *)d;
+		m = ip6cp->ip6c_m;
+		ip6 = ip6cp->ip6c_ip6;
+		off = ip6cp->ip6c_off;
+		sa6_src = ip6cp->ip6c_src;
+	} else {
+		m = NULL;
+		ip6 = NULL;
+		sa6_src = &sa6_any;
+	}
+
+	if (ip6) {
+		/*
+		 * XXX: We assume that when ip6 is non NULL,
+		 * M and OFF are valid.
+		 */
+
+		/* check if we can safely examine src and dst ports */
+		if (m->m_pkthdr.len < off + sizeof(*thp))
+			return;
+
+		bzero(&th, sizeof(th));
+#ifdef DIAGNOSTIC
+		if (sizeof(*thp) > sizeof(th))
+			panic("assumption failed in tcp6_ctlinput");
+#endif
+		m_copydata(m, off, sizeof(*thp), (caddr_t)&th);
+
+		if (cmd == PRC_MSGSIZE) {
+			int valid = 0;
+
+			/*
+			 * Check to see if we have a valid TCP connection
+			 * corresponding to the address in the ICMPv6 message
+			 * payload.
+			 */
+			if (in6_pcbhashlookup(&tcbtable, &sa6->sin6_addr,
+			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
+			    th.th_sport))
+				valid++;
+			else if (in_pcblookup(&tcbtable, &sa6->sin6_addr,
+			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
+			    th.th_sport, INPLOOKUP_IPV6))
+				valid++;
+
+			/*
+			 * Depending on the value of "valid" and routing table
+			 * size (mtudisc_{hi,lo}wat), we will:
+			 * - recalcurate the new MTU and create the
+			 *   corresponding routing entry, or
+			 * - ignore the MTU change notification.
+			 */
+			icmp6_mtudisc_update((struct ip6ctlparam *)d, valid);
+
+			return;
+		}
+
+		(void) in6_pcbnotify(&tcbtable, sa, th.th_dport,
+		    (struct sockaddr *)sa6_src, th.th_sport, cmd, NULL, notify);
+	} else {
+		(void) in6_pcbnotify(&tcbtable, sa, 0,
+		    (struct sockaddr *)sa6_src, 0, cmd, NULL, notify);
+	}
 }
 #endif
 
@@ -719,6 +830,9 @@ tcp_ctlinput(cmd, sa, v)
 	void (*notify) __P((struct inpcb *, int)) = tcp_notify;
 	int errno;
 
+	if (sa->sa_family != AF_INET)
+		return NULL;
+
 	if ((unsigned)cmd >= PRC_NCMDS)
 		return NULL;
 	errno = inetctlerrmap[cmd];
@@ -726,37 +840,38 @@ tcp_ctlinput(cmd, sa, v)
 		notify = tcp_quench;
 	else if (PRC_IS_REDIRECT(cmd))
 		notify = in_rtchange, ip = 0;
+	else if (cmd == PRC_MSGSIZE && ip_mtudisc) {
+		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
+		/*
+		 * Verify that the packet in the icmp payload refers
+		 * to an existing TCP connection.
+		 */
+		if (in_pcblookup(&tcbtable,
+				 &ip->ip_dst, th->th_dport,
+				 &ip->ip_src, th->th_sport,
+				 INPLOOKUP_WILDCARD)) {
+			struct icmp *icp;
+			icp = (struct icmp *)((caddr_t)ip -
+					      offsetof(struct icmp, icmp_ip));
+
+			/* Calculate new mtu and create corresponding route */
+			icmp_mtudisc(icp);
+		}
+		notify = tcp_mtudisc, ip = 0;
+	} else if (cmd == PRC_MTUINC)
+		notify = tcp_mtudisc_increase, ip = 0;
 	else if (cmd == PRC_HOSTDEAD)
 		ip = 0;
 	else if (errno == 0)
 		return NULL;
 
-#ifdef INET6
-	if (sa->sa_family == AF_INET6) {
-		if (ip) {
-			struct ip6_hdr *ipv6 = (struct ip6_hdr *)ip;
-
-			th = (struct tcphdr *)(ipv6 + 1);
-#if 0 /*XXX*/
-			in6_pcbnotify(&tcbtable, sa, th->th_dport,
-			    &ipv6->ip6_src, th->th_sport, cmd, notify);
-#endif
-		} else {
-#if 0 /*XXX*/
-			in6_pcbnotify(&tcbtable, sa, 0,
-			    (struct in6_addr *)&in6addr_any, 0, cmd, notify);
-#endif
-		}
+	if (ip) {
+		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
+		in_pcbnotify(&tcbtable, sa, th->th_dport, ip->ip_src,
+			     th->th_sport, errno, notify);
 	} else
-#endif /* INET6 */
-	{
-		if (ip) {
-			th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
-			in_pcbnotify(&tcbtable, sa, th->th_dport, ip->ip_src,
-			    th->th_sport, errno, notify);
-		} else
-			in_pcbnotifyall(&tcbtable, sa, errno, notify);
-	}
+		in_pcbnotifyall(&tcbtable, sa, errno, notify);
+
 	return NULL;
 }
 
@@ -773,6 +888,83 @@ tcp_quench(inp, errno)
 
 	if (tp)
 		tp->snd_cwnd = tp->t_maxseg;
+}
+
+#ifdef INET6
+/*
+ * Path MTU Discovery handlers.
+ */
+void
+tcp6_mtudisc_callback(faddr)
+	struct in6_addr *faddr;
+{
+	struct sockaddr_in6 sin6;
+
+	bzero(&sin6, sizeof(sin6));
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_len = sizeof(struct sockaddr_in6);
+	sin6.sin6_addr = *faddr;
+	(void) in6_pcbnotify(&tcbtable, (struct sockaddr *)&sin6, 0,
+	    (struct sockaddr *)&sa6_any, 0, PRC_MSGSIZE, NULL, tcp_mtudisc);
+}
+#endif /* INET6 */
+
+/*
+ * On receipt of path MTU corrections, flush old route and replace it
+ * with the new one.  Retransmit all unacknowledged packets, to ensure
+ * that all packets will be received.
+ */
+void
+tcp_mtudisc(inp, errno)
+	struct inpcb *inp;
+	int errno;
+{
+	struct tcpcb *tp = intotcpcb(inp);
+	struct rtentry *rt = in_pcbrtentry(inp);
+
+	if (tp != 0) {
+		if (rt != 0) {
+			/*
+			 * If this was not a host route, remove and realloc.
+			 */
+			if ((rt->rt_flags & RTF_HOST) == 0) {
+				in_rtchange(inp, errno);
+				if ((rt = in_pcbrtentry(inp)) == 0)
+					return;
+			}
+
+			if (rt->rt_rmx.rmx_mtu != 0) {
+				/* also takes care of congestion window */
+				tcp_mss(tp, -1);
+			}
+		}
+
+		/*
+		 * Resend unacknowledged packets.
+		 */
+		tp->snd_nxt = tp->snd_una;
+		tcp_output(tp);
+	}
+}
+
+void
+tcp_mtudisc_increase(inp, errno)
+	struct inpcb *inp;
+	int errno;
+{
+	struct tcpcb *tp = intotcpcb(inp);
+	struct rtentry *rt = in_pcbrtentry(inp);
+
+	if (tp != 0 && rt != 0) {
+		/*
+		 * If this was a host route, remove and realloc.
+		 */
+		if (rt->rt_flags & RTF_HOST)
+			in_rtchange(inp, errno);
+		
+		/* also takes care of congestion window */
+		tcp_mss(tp, -1);
+	}
 }
 
 #ifdef TCP_SIGNATURE
@@ -864,3 +1056,54 @@ tcp_signature_apply(fstate, data, len)
 	return 0;
 }
 #endif /* TCP_SIGNATURE */
+
+#define TCP_RNDISS_ROUNDS	16
+#define TCP_RNDISS_OUT	7200
+#define TCP_RNDISS_MAX	30000
+
+u_int8_t tcp_rndiss_sbox[128];
+u_int16_t tcp_rndiss_msb;
+u_int16_t tcp_rndiss_cnt;
+long tcp_rndiss_reseed;
+
+u_int16_t
+tcp_rndiss_encrypt(val)
+	u_int16_t val;
+{
+	u_int16_t sum = 0, i;
+  
+	for (i = 0; i < TCP_RNDISS_ROUNDS; i++) {
+		sum += 0x79b9;
+		val ^= ((u_int16_t)tcp_rndiss_sbox[(val^sum) & 0x7f]) << 7;
+		val = ((val & 0xff) << 7) | (val >> 8);
+	}
+
+	return val;
+}
+
+void
+tcp_rndiss_init()
+{
+	get_random_bytes(tcp_rndiss_sbox, sizeof(tcp_rndiss_sbox));
+
+	tcp_rndiss_reseed = time.tv_sec + TCP_RNDISS_OUT;
+	tcp_rndiss_msb = tcp_rndiss_msb == 0x8000 ? 0 : 0x8000; 
+	tcp_rndiss_cnt = 0;
+}
+
+tcp_seq
+tcp_rndiss_next()
+{
+	u_int16_t tmp;
+
+        if (tcp_rndiss_cnt >= TCP_RNDISS_MAX ||
+	    time.tv_sec > tcp_rndiss_reseed)
+                tcp_rndiss_init();
+	
+	get_random_bytes(&tmp, sizeof(tmp));
+
+	/* (tmp & 0x7fff) ensures a 32768 byte gap between ISS */
+	return ((tcp_rndiss_encrypt(tcp_rndiss_cnt++) | tcp_rndiss_msb) <<16) |
+		(tmp & 0x7fff);
+}
+

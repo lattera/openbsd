@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_stripvar.h,v 1.4 1997/02/24 13:34:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_stripvar.h,v 1.4.14.1 2001/05/14 22:40:02 niklas Exp $	*/
 /*	$NetBSD: if_stripvar.h,v 1.2.4.1 1996/08/05 20:37:51 jtc Exp $	*/
 
 /*
@@ -36,6 +36,7 @@ struct st_softc {
 	long sc_statetimo;		/* When (secs) current state ends */
 
 	caddr_t	sc_bpf;			/* BPF data */
+	struct timeout sc_timo;
 };
 
 

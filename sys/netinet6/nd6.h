@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.h,v 1.3.2.1 2000/03/02 07:04:46 niklas Exp $	*/
-/*	$KAME: nd6.h,v 1.16 2000/02/24 16:34:51 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.h,v 1.3.2.2 2001/05/14 22:40:20 niklas Exp $	*/
+/*	$KAME: nd6.h,v 1.52 2001/02/19 04:40:37 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -16,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -39,6 +39,7 @@
 #endif
 
 #include <sys/queue.h>
+#include <sys/timeout.h>
 
 struct	llinfo_nd6 {
 	struct	llinfo_nd6 *ln_next;
@@ -49,10 +50,18 @@ struct	llinfo_nd6 {
 	u_long	ln_expire;	/* lifetime for NDP state transition */
 	short	ln_state;	/* reachability state */
 	short	ln_router;	/* 2^0: ND6 router bit */
+	int	ln_byhint;	/* # of times we made it reachable by UL hint */
 };
 
 #define ND6_LLINFO_NOSTATE	-2
-#define ND6_LLINFO_WAITDELETE	-1
+/*
+ * We don't need the WAITDELETE state any more, but we keep the definition
+ * in a comment line instead of removing it. This is necessary to avoid
+ * unintentionally reusing the value for another purpose, which might
+ * affect backward compatibility with old applications.
+ * (20000711 jinmei@kame.net)
+ */
+/* #define ND6_LLINFO_WAITDELETE	-1 */
 #define ND6_LLINFO_INCOMPLETE	0
 #define ND6_LLINFO_REACHABLE	1
 #define ND6_LLINFO_STALE	2
@@ -67,10 +76,13 @@ struct nd_ifinfo {
 	u_int32_t basereachable;	/* BaseReachableTime */
 	u_int32_t reachable;		/* Reachable Time */
 	u_int32_t retrans;		/* Retrans Timer */
+	u_int32_t flags;		/* Flags */
 	int recalctm;			/* BaseReacable re-calculation timer */
 	u_int8_t chlim;			/* CurHopLimit */
 	u_int8_t receivedra;
 };
+
+#define ND6_IFF_PERFORMNUD	0x1
 
 struct in6_nbrinfo {
 	char ifname[IFNAMSIZ];	/* if name, e.g. "en0" */
@@ -227,10 +239,17 @@ extern int nd6_delay;
 extern int nd6_umaxtries;
 extern int nd6_mmaxtries;
 extern int nd6_useloopback;
+extern int nd6_maxnudhint;
+extern int nd6_gctimer;
 extern struct llinfo_nd6 llinfo_nd6;
 extern struct nd_ifinfo *nd_ifinfo;
 extern struct nd_drhead nd_defrouter;
 extern struct nd_prhead nd_prefix;
+extern int nd6_debug;
+
+#define nd6log(x)	do { if (nd6_debug) log x; } while (0)
+
+extern struct timeout nd6_timer_ch;
 
 /* nd6_rtr.c */
 extern struct ifnet *nd6_defifp;  /* XXXYYY */
@@ -265,7 +284,7 @@ union nd_opts {
 /* nd6.c */
 void nd6_init __P((void));
 void nd6_ifattach __P((struct ifnet *));
-int nd6_is_addr_neighbor __P((struct in6_addr *, struct ifnet *));
+int nd6_is_addr_neighbor __P((struct sockaddr_in6 *, struct ifnet *));
 void nd6_option_init __P((void *, int, union nd_opts *));
 struct nd_opt_hdr *nd6_option __P((union nd_opts *));
 int nd6_options __P((union nd_opts *));
@@ -273,23 +292,18 @@ struct	rtentry *nd6_lookup __P((struct in6_addr *, int, struct ifnet *));
 void nd6_setmtu __P((struct ifnet *));
 void nd6_timer __P((void *));
 void nd6_purge __P((struct ifnet *));
-void nd6_free __P((struct rtentry *));
-void nd6_nud_hint __P((struct rtentry *, struct in6_addr *));
+struct llinfo_nd6 *nd6_free __P((struct rtentry *));
+void nd6_nud_hint __P((struct rtentry *, struct in6_addr *, int));
 int nd6_resolve __P((struct ifnet *, struct rtentry *,
 		     struct mbuf *, struct sockaddr *, u_char *));
-#if defined(__bsdi__) && _BSDI_VERSION >= 199802
 void nd6_rtrequest __P((int, struct rtentry *, struct rt_addrinfo *));
 void nd6_p2p_rtrequest __P((int, struct rtentry *, struct rt_addrinfo *));
-#else
-void nd6_rtrequest __P((int, struct rtentry *, struct sockaddr *));
-void nd6_p2p_rtrequest __P((int, struct rtentry *, struct sockaddr *));
-#endif
 int nd6_ioctl __P((u_long, caddr_t, struct ifnet *));
 struct rtentry *nd6_cache_lladdr __P((struct ifnet *, struct in6_addr *,
 	char *, int, int, int));
 /* for test */
-int nd6_output __P((struct ifnet *, struct mbuf *, struct sockaddr_in6 *,
-		    struct rtentry *));
+int nd6_output __P((struct ifnet *, struct ifnet *, struct mbuf *,
+		    struct sockaddr_in6 *, struct rtentry *));
 int nd6_storelladdr __P((struct ifnet *, struct rtentry *, struct mbuf *,
 			 struct sockaddr *, u_char *));
 
@@ -302,6 +316,7 @@ void nd6_ns_output __P((struct ifnet *, struct in6_addr *,
 			struct in6_addr *, struct llinfo_nd6 *, int));
 caddr_t nd6_ifptomac __P((struct ifnet *));
 void nd6_dad_start __P((struct ifaddr *, int *));
+void nd6_dad_stop __P((struct ifaddr *));
 void nd6_dad_duplicated __P((struct ifaddr *));
 
 /* nd6_rtr.c */

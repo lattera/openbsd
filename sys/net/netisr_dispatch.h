@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/netisr_dispatch.h,v 1.2 2000/11/08 11:33:10 art Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/netisr_dispatch.h,v 1.2.4.1 2001/05/14 22:40:03 niklas Exp $	*/
 /* $NetBSD: netisr_dispatch.h,v 1.2 2000/07/02 04:40:47 cgd Exp $ */
 
 /*

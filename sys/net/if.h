@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.1 2000/03/24 09:09:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.2 2001/05/14 22:39:59 niklas Exp $	*/
 /*	$NetBSD: if.h,v 1.23 1996/05/07 02:40:27 thorpej Exp $	*/
 
 /*
@@ -71,6 +71,7 @@ struct rtentry;
 struct socket;
 struct ether_header;
 struct arpcom;
+struct rt_addrinfo;
 
 /*
  * Structure defining statistics and other data kept regarding a network
@@ -81,6 +82,7 @@ struct	if_data {
 	u_char	ifi_type;		/* ethernet, tokenring, etc. */
 	u_char	ifi_addrlen;		/* media address length */
 	u_char	ifi_hdrlen;		/* media header length */
+	u_char	ifi_link_state;		/* current link state */
 	u_long	ifi_mtu;		/* maximum transmission unit */
 	u_long	ifi_metric;		/* routing metric (external only) */
 	u_long	ifi_baudrate;		/* linespeed */
@@ -98,6 +100,13 @@ struct	if_data {
 	u_long	ifi_noproto;		/* destined for unsupported protocol */
 	struct	timeval ifi_lastchange;	/* last updated */
 };
+
+/*
+ * Values for if_link_state.
+ */
+#define	LINK_STATE_UNKNOWN	0	/* link invalid/unknown */
+#define	LINK_STATE_DOWN		1	/* link is down */
+#define	LINK_STATE_UP		2	/* link is up */
 
 /*
  * Structure defining a queue for a network interface.
@@ -151,6 +160,7 @@ struct ifnet {				/* and the entries */
 #define	if_addrlen	if_data.ifi_addrlen
 #define	if_hdrlen	if_data.ifi_hdrlen
 #define	if_metric	if_data.ifi_metric
+#define	if_link_state	if_data.ifi_link_state
 #define	if_baudrate	if_data.ifi_baudrate
 #define	if_ipackets	if_data.ifi_ipackets
 #define	if_ierrors	if_data.ifi_ierrors
@@ -186,6 +196,14 @@ struct ifnet {				/* and the entries */
 #define	IFF_CANTCHANGE \
 	(IFF_BROADCAST|IFF_POINTOPOINT|IFF_RUNNING|IFF_OACTIVE|\
 	    IFF_SIMPLEX|IFF_MULTICAST|IFF_ALLMULTI)
+
+/*
+ * Some convenience macros used for setting ifi_baudrate.
+ * XXX 1000 vs. 1024? --thorpej@netbsd.org
+ */
+#define	IF_Kbps(x)	((x) * 1000)		/* kilobits/sec. */
+#define	IF_Mbps(x)	(IF_Kbps((x) * 1000))	/* megabits/sec. */
+#define	IF_Gbps(x)	(IF_Mbps((x) * 1000))	/* gigabits/sec. */
 
 /*
  * Output queues (ifp->if_snd) and internetwork datagram level (pup level 1)
@@ -238,8 +256,8 @@ struct ifaddr {
 	struct	ifnet *ifa_ifp;		/* back-pointer to interface */
 	TAILQ_ENTRY(ifaddr) ifa_list;	/* list of addresses for interface */
 	void	(*ifa_rtrequest)	/* check or clean routes (+ or -)'d */
-		    __P((int, struct rtentry *, struct sockaddr *));
-	u_short	ifa_flags;		/* mostly rt_flags for cloning */
+		    __P((int, struct rtentry *, struct rt_addrinfo *));
+	u_int	ifa_flags;		/* mostly rt_flags for cloning */
 	u_int	ifa_refcnt;		/* count of references */
 	int	ifa_metric;		/* cost of going out this interface */
 };
@@ -387,9 +405,7 @@ do { \
 
 struct ifnet_head ifnet;
 struct ifnet **ifindex2ifnet;
-#if 0
-struct ifnet loif[];
-#endif
+struct ifnet *lo0ifp;
 int if_index;
 
 void	ether_ifattach __P((struct ifnet *));
@@ -422,11 +438,11 @@ struct	ifaddr *ifa_ifwithroute __P((int, struct sockaddr *,
 					struct sockaddr *));
 struct	ifaddr *ifaof_ifpforaddr __P((struct sockaddr *, struct ifnet *));
 void	ifafree __P((struct ifaddr *));
-void	link_rtrequest __P((int, struct rtentry *, struct sockaddr *));
+void	link_rtrequest __P((int, struct rtentry *, struct rt_addrinfo *));
 
 int	loioctl __P((struct ifnet *, u_long, caddr_t));
 void	loopattach __P((int));
 int	looutput __P((struct ifnet *,
 	   struct mbuf *, struct sockaddr *, struct rtentry *));
-void	lortrequest __P((int, struct rtentry *, struct sockaddr *));
+void	lortrequest __P((int, struct rtentry *, struct rt_addrinfo *));
 #endif /* _KERNEL */

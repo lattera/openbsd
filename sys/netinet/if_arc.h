@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/if_arc.h,v 1.2 1997/02/24 14:06:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/if_arc.h,v 1.2.14.1 2001/05/14 22:40:06 niklas Exp $	*/
 /*	$NetBSD: if_arc.h,v 1.5 1995/06/07 00:14:04 cgd Exp $	*/
 
 /*
@@ -92,6 +92,8 @@ struct	arc_header {
 #define	ARCTYPE_ATALK		221	/* Appletalk */
 #define	ARCTYPE_BANIAN		247	/* Banyan Vines */
 #define	ARCTYPE_IPX		250	/* Novell IPX */
+
+#define	ARCTYPE_INET6		0xc4	/* IPng */
 
 #define	ARCMTU			507
 #define	ARCMIN			0

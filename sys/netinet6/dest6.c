@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/dest6.c,v 1.3 2000/02/07 06:09:09 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/dest6.c,v 1.3.2.1 2001/05/14 22:40:16 niklas Exp $	*/
+/*	$KAME: dest6.c,v 1.25 2001/02/22 01:39:16 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -57,7 +58,7 @@ dest6_input(mp, offp, proto)
 	struct mbuf **mp;
 	int *offp, proto;
 {
-	register struct mbuf *m = *mp;
+	struct mbuf *m = *mp;
 	int off = *offp, dstoptlen, optlen;
 	struct ip6_dest *dstopts;
 	u_int8_t *opt;
@@ -87,34 +88,32 @@ dest6_input(mp, offp, proto)
 
 	/* search header for all options. */
 	for (optlen = 0; dstoptlen > 0; dstoptlen -= optlen, opt += optlen) {
-		switch(*opt) {
-		 case IP6OPT_PAD1:
-			 optlen = 1;
-			 break;
-		 case IP6OPT_PADN:
-			 if (dstoptlen < IP6OPT_MINLEN) {
-				 ip6stat.ip6s_toosmall++;
-				 goto bad;
-			 }
-			 optlen = *(opt + 1) + 2;
-			 break;
-		 default:		/* unknown option */
-			 if (dstoptlen < IP6OPT_MINLEN) {
-				 ip6stat.ip6s_toosmall++;
-				 goto bad;
-			 }
-			 if ((optlen = ip6_unknown_opt(opt, m,
-						       opt-mtod(m, u_int8_t *))) == -1)
-				 return(IPPROTO_DONE);
-			 optlen += 2;
-			 break;
+		if (*opt != IP6OPT_PAD1 &&
+		    (dstoptlen < IP6OPT_MINLEN || *(opt + 1) + 2 > dstoptlen)) {
+			ip6stat.ip6s_toosmall++;
+			goto bad;
+		}
+
+		switch (*opt) {
+		case IP6OPT_PAD1:
+			optlen = 1;
+			break;
+		case IP6OPT_PADN:
+			optlen = *(opt + 1) + 2;
+			break;
+		default:		/* unknown option */
+			if ((optlen = ip6_unknown_opt(opt, m,
+						      opt-mtod(m, u_int8_t *))) == -1)
+				return(IPPROTO_DONE);
+			optlen += 2;
+			break;
 		}
 	}
 
 	*offp = off;
-	return(dstopts->ip6d_nxt);
+	return (dstopts->ip6d_nxt);
 
   bad:
 	m_freem(m);
-	return(IPPROTO_DONE);
+	return (IPPROTO_DONE);
 }

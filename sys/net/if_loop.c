@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13 2000/02/07 06:09:08 itojun Exp $	*/
+/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.1 2001/05/14 22:40:01 niklas Exp $	*/
 /*	$NetBSD: if_loop.c,v 1.15 1996/05/07 02:40:33 thorpej Exp $	*/
 
 /*
@@ -82,7 +82,6 @@ didn't get a copy, you may request one from <license@ipv6.nrl.navy.mil>.
  */
 
 #include "bpfilter.h"
-#include "loop.h"
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -146,8 +145,6 @@ didn't get a copy, you may request one from <license@ipv6.nrl.navy.mil>.
 #define	LOMTU	(32768 +  MHLEN + MLEN)
 #endif
   
-struct	ifnet loif[NLOOP];
-
 void
 loopattach(n)
 	int n;
@@ -155,8 +152,13 @@ loopattach(n)
 	register int i;
 	register struct ifnet *ifp;
 
-	for (i = NLOOP; i--; ) {
-		ifp = &loif[i];
+	for (i = n; i--; ) {
+		MALLOC(ifp, struct ifnet *, sizeof(*ifp), M_DEVBUF, M_NOWAIT);
+		if (ifp == NULL)
+			return;
+		bzero(ifp, sizeof(struct ifnet));
+		if (i == 0)
+			lo0ifp = ifp;
 		sprintf(ifp->if_xname, "lo%d", i);
 		ifp->if_softc = NULL;
 		ifp->if_mtu = LOMTU;
@@ -217,54 +219,6 @@ looutput(ifp, m, dst, rt)
 		return (rt->rt_flags & RTF_BLACKHOLE ? 0 :
 			rt->rt_flags & RTF_HOST ? EHOSTUNREACH : ENETUNREACH);
 	}
-
-#ifndef PULLDOWN_TEST
-	/*
-	 * KAME requires that the packet to be contiguous on the
-	 * mbuf.  We need to make that sure.
-	 * this kind of code should be avoided.
-	 * XXX other conditions to avoid running this part?
-	 */
-	if (m && m->m_next != NULL) {
-		struct mbuf *n;
-
-		MGETHDR(n, M_DONTWAIT, MT_HEADER);
-		if (n) {
-			MCLGET(n, M_DONTWAIT);
-			if ((n->m_flags & M_EXT) == 0) {
-				m_free(n);
-				n = NULL;
-			}
-		}
-		if (!n) {
-			printf("looutput: mbuf allocation failed\n");
-			m_freem(m);
-			return ENOBUFS;
-		}
-
-		n->m_pkthdr.rcvif = m->m_pkthdr.rcvif;
-		n->m_pkthdr.len = m->m_pkthdr.len;
-		if (m->m_pkthdr.len <= MCLBYTES) {
-			m_copydata(m, 0, m->m_pkthdr.len, mtod(n, caddr_t));
-			n->m_len = m->m_pkthdr.len;
-			m_freem(m);
-		} else {
-			m_copydata(m, 0, MCLBYTES, mtod(n, caddr_t));
-			m_adj(m, MCLBYTES);
-			n->m_len = MCLBYTES;
-			n->m_next = m;
-			m->m_flags &= ~M_PKTHDR;
-		}
-		m = n;
-	}
-#if 0
-	if (m && m->m_next != NULL) {
-		printf("loop: not contiguous...\n");
-		m_freem(m);
-		return ENOBUFS;
-	}
-#endif
-#endif
 
 	ifp->if_opackets++;
 	ifp->if_obytes += m->m_pkthdr.len;
@@ -329,10 +283,10 @@ looutput(ifp, m, dst, rt)
 
 /* ARGSUSED */
 void
-lortrequest(cmd, rt, sa)
+lortrequest(cmd, rt, info)
 	int cmd;
 	struct rtentry *rt;
-	struct sockaddr *sa;
+	struct rt_addrinfo *info;
 {
 
 	if (rt)

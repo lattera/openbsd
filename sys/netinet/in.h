@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.h,v 1.38 2000/02/09 07:37:14 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.h,v 1.38.2.1 2001/05/14 22:40:07 niklas Exp $	*/
 /*	$NetBSD: in.h,v 1.20 1996/02/13 23:41:47 christos Exp $	*/
 
 /*
@@ -216,8 +216,6 @@ struct sockaddr_in {
 	int8_t	    sin_zero[8];
 };
 
-#define INET_ADDRSTRLEN                 16
-
 /*
  * Structure used to describe IP options.
  * Used to store options internally, to pass them to a process,
@@ -255,11 +253,9 @@ struct ip_opts {
 /* 14-17 left empty for future compatibility with FreeBSD */
 
 #define IP_PORTRANGE		19   /* int; range to choose for unspec port */
-#define IP_AUTH_LEVEL		20   /* u_char; authentication used */
-#define IP_ESP_TRANS_LEVEL	21   /* u_char; transport encryption */
-#define IP_ESP_NETWORK_LEVEL	22   /* u_char; full-packet encryption */
-
-#define IPSEC_OUTSA		39   /* set the outbound SA for a socket */
+#define IP_AUTH_LEVEL		20   /* int; authentication used */
+#define IP_ESP_TRANS_LEVEL	21   /* int; transport encryption */
+#define IP_ESP_NETWORK_LEVEL	22   /* int; full-packet encryption */
 
 /*
  * Security levels - IPsec, not IPSO
@@ -431,8 +427,10 @@ struct ip_mreq {
 #define IPCTL_IPPORT_HILASTAUTO	10
 #define	IPCTL_IPPORT_MAXQUEUE	11
 #define	IPCTL_ENCDEBUG		12
+#ifdef notdef	/*obsolete*/
 #define IPCTL_GIF_TTL		13	/* default TTL for gif encap packet */
-#define IPCTL_IPSEC_ACL		14	/* ingress IPsec access control */
+#endif
+#define IPCTL_IPSEC_EXPIRE_ACQUIRE 14   /* How long to wait for key mgmt. */
 #define IPCTL_IPSEC_EMBRYONIC_SA_TIMEOUT	15 /* new SA lifetime */
 #define IPCTL_IPSEC_REQUIRE_PFS 16
 #define IPCTL_IPSEC_SOFT_ALLOCATIONS            17
@@ -445,7 +443,9 @@ struct ip_mreq {
 #define IPCTL_IPSEC_FIRSTUSE    24
 #define IPCTL_IPSEC_ENC_ALGORITHM 25
 #define IPCTL_IPSEC_AUTH_ALGORITHM 26
-#define	IPCTL_MAXID		27
+#define	IPCTL_MTUDISC		27	/* allow path MTU discovery */
+#define	IPCTL_MTUDISCTIMEOUT	28	/* allow path MTU discovery */
+#define	IPCTL_MAXID		29
 
 #define	IPCTL_NAMES { \
 	{ 0, 0 }, \
@@ -461,8 +461,8 @@ struct ip_mreq {
 	{ "porthilast", CTLTYPE_INT }, \
 	{ "maxqueue", CTLTYPE_INT }, \
 	{ "encdebug", CTLTYPE_INT }, \
-	{ "gifttl", CTLTYPE_INT }, \
-	{ "ipsec-acl", CTLTYPE_INT }, \
+	{ 0, 0 }, \
+	{ "ipsec-expire-acquire", CTLTYPE_INT }, \
 	{ "ipsec-invalid-life", CTLTYPE_INT }, \
 	{ "ipsec-pfs", CTLTYPE_INT }, \
 	{ "ipsec-soft-allocs", CTLTYPE_INT }, \
@@ -475,6 +475,8 @@ struct ip_mreq {
 	{ "ipsec-firstuse", CTLTYPE_INT }, \
 	{ "ipsec-enc-alg", CTLTYPE_STRING }, \
 	{ "ipsec-auth-alg", CTLTYPE_STRING }, \
+	{ "mtudisc", CTLTYPE_INT }, \
+	{ "mtudisctimeout", CTLTYPE_INT }, \
 }
 
 /* INET6 stuff */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22 2000/02/07 06:09:09 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22.2.1 2001/05/14 22:40:08 niklas Exp $	*/
 /*	$NetBSD: in_pcb.h,v 1.14 1996/02/13 23:42:00 christos Exp $	*/
 
 /*
@@ -122,7 +122,7 @@ struct inpcb {
 	} inp_mou;
 #define inp_moptions inp_mou.mou_mo
 #define inp_moptions6 inp_mou.mou_mo6
-	u_char	  inp_seclevel[3];	/* Only the first 3 are used for now */
+	u_char	  inp_seclevel[3];
 #define SL_AUTH           0             /* Authentication level */
 #define SL_ESP_TRANS      1             /* ESP transport level */
 #define SL_ESP_NETWORK    2             /* ESP network (encapsulation) level */
@@ -131,10 +131,14 @@ struct inpcb {
 #define SR_FAILED         1             /* Negotiation failed permanently */
 #define SR_SUCCESS        2             /* SA successfully established */
 #define SR_WAIT           3             /* Waiting for SA */
-	TAILQ_ENTRY(inpcb) inp_tdb_next;
-	struct tdb     *inp_tdb;	/* If tdb_dst matches our dst, use */
-	int	inp_fflowinfo;          /* Foreign flowlabel & priority */
-	int	inp_csumoffset;
+	TAILQ_ENTRY(inpcb) inp_tdb_in_next, inp_tdb_out_next;
+	struct tdb     *inp_tdb_in, *inp_tdb_out;
+#define	inp_flowinfo	inp_hu.hu_ipv6.ip6_flow
+
+	int	in6p_cksum;
+#ifndef _KERNEL
+#define inp_csumoffset	in6p_cksum
+#endif
 	struct	icmp6_filter *inp_icmp6filt;
 };
 
@@ -168,12 +172,6 @@ struct inpcbtable {
  * protocol at PRU_BIND, PRU_LISTEN, PRU_CONNECT, etc, or by in_pcb*().
  */
 #define	INP_IPV6	0x100	/* sotopf(inp->inp_socket) == PF_INET6 */
-#define	INP_IPV6_UNDEC	0x200	/* PCB is PF_INET6, but listens for V4/V6 */
-#define	INP_IPV6_MAPPED	0x400	/* PF_INET6 PCB which is connected to
-				 * an IPv4 host, or is bound to
-				 * an IPv4 address (specified with
-				 * the mapped form of v6 addresses) */
-#define INP_IPV6_MCAST	0x800	/* Set if inp_moptions points to ipv6 ones */
 
 #if 1	/*KAME*/
 /*
@@ -215,7 +213,7 @@ struct inpcbtable {
 #define	DP_ISSET(m, p)	((m)[((p) - IPPORT_RESERVED/2) / DP_MAPBITS] & (1 << ((p) % DP_MAPBITS)))
 
 /* default values for baddynamicports [see ip_init()] */
-#define	DEFBADDYNAMICPORTS_TCP	{ 749, 750, 751, 760, 761, 871, 0 }
+#define	DEFBADDYNAMICPORTS_TCP	{ 587, 749, 750, 751, 760, 761, 871, 0 }
 #define	DEFBADDYNAMICPORTS_UDP	{ 750, 751, 0 }
 
 struct baddynamicports {
@@ -260,10 +258,12 @@ void	 in_setsockaddr __P((struct inpcb *, struct mbuf *));
 int	 in_baddynamic __P((u_int16_t, u_int16_t));
 extern struct sockaddr_in *in_selectsrc __P((struct sockaddr_in *,
 	struct route *, int, struct ip_moptions *, int *));
+struct rtentry *
+	in_pcbrtentry __P((struct inpcb *));
 
 /* INET6 stuff */
 int	in6_pcbnotify __P((struct inpcbtable *, struct sockaddr *,
-			   u_int, struct in6_addr *, u_int, int,
+			   u_int, struct sockaddr *, u_int, int, void *,
 			   void (*)(struct inpcb *, int)));
 struct 	in6_addr *in6_selectsrc __P((struct sockaddr_in6 *,
 				     struct ip6_pktopts *,
@@ -271,4 +271,5 @@ struct 	in6_addr *in6_selectsrc __P((struct sockaddr_in6 *,
 				     struct route_in6 *,
 				     struct in6_addr *, int *));
 int	in6_selecthlim __P((struct inpcb *, struct ifnet *));
+int	in6_pcbsetport __P((struct in6_addr *, struct inpcb *));
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/spx.h,v 1.3 1996/11/25 08:20:02 mickey Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/spx.h,v 1.3.14.1 2001/05/14 22:40:21 niklas Exp $	*/
 
 /*-
  *
@@ -45,7 +45,7 @@
 
 #include <sys/queue.h>
 
-#define	XXX	__attribute__((packed));
+#define	XXX	__attribute__((__packed__));
 
 /*
  * Definitions for IPX style Sequenced Packet Protocol

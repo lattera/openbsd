@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/Attic/if_atm.c,v 1.7 1999/12/08 06:50:18 itojun Exp $       */
+/*      $OpenBSD: src/sys/netinet/Attic/if_atm.c,v 1.7.2.1 2001/05/14 22:40:07 niklas Exp $       */
 
 /*
  *
@@ -76,10 +76,10 @@
  */
 
 void
-atm_rtrequest(req, rt, sa)
+atm_rtrequest(req, rt, info)
 	int req;
 	register struct rtentry *rt;
-	struct sockaddr *sa;
+	struct rt_addrinfo *info;
 {
 	register struct sockaddr *gate = rt->rt_gateway;
 	struct atm_pseudoioctl api;

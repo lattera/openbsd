@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.2 2000/02/07 06:09:10 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.2.2.1 2001/05/14 22:40:21 niklas Exp $	*/
+/*	$KAME: route6.c,v 1.22 2000/12/03 00:54:00 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -43,16 +44,17 @@
 
 #include <netinet/icmp6.h>
 
-static int ip6_rthdr0 __P((struct mbuf *, struct ip6_hdr *, struct ip6_rthdr0 *));
+static int ip6_rthdr0 __P((struct mbuf *, struct ip6_hdr *,
+    struct ip6_rthdr0 *));
 
 int
 route6_input(mp, offp, proto)
 	struct mbuf **mp;
 	int *offp, proto;	/* proto is unused */
 {
-	register struct ip6_hdr *ip6;
-	register struct mbuf *m = *mp;
-	register struct ip6_rthdr *rh;
+	struct ip6_hdr *ip6;
+	struct mbuf *m = *mp;
+	struct ip6_rthdr *rh;
 	int off = *offp, rhlen;
 
 #ifndef PULLDOWN_TEST
@@ -68,31 +70,44 @@ route6_input(mp, offp, proto)
 	}
 #endif
 
-	switch(rh->ip6r_type) {
-	 case IPV6_RTHDR_TYPE_0:
-		 rhlen = (rh->ip6r_len + 1) << 3;
+	switch (rh->ip6r_type) {
+	case IPV6_RTHDR_TYPE_0:
+		rhlen = (rh->ip6r_len + 1) << 3;
 #ifndef PULLDOWN_TEST
-		 IP6_EXTHDR_CHECK(m, off, rhlen, IPPROTO_DONE);
+		/*
+		 * note on option length:
+		 * due to IP6_EXTHDR_CHECK assumption, we cannot handle
+		 * very big routing header (max rhlen == 2048).
+		 */
+		IP6_EXTHDR_CHECK(m, off, rhlen, IPPROTO_DONE);
 #else
-		 IP6_EXTHDR_GET(rh, struct ip6_rthdr *, m, off, rhlen);
-		 if (rh == NULL) {
+		/*
+		 * note on option length:
+		 * maximum rhlen: 2048
+		 * max mbuf m_pulldown can handle: MCLBYTES == usually 2048
+		 * so, here we are assuming that m_pulldown can handle
+		 * rhlen == 2048 case.  this may not be a good thing to
+		 * assume - we may want to avoid pulling it up altogether.
+		 */
+		IP6_EXTHDR_GET(rh, struct ip6_rthdr *, m, off, rhlen);
+		if (rh == NULL) {
 			ip6stat.ip6s_tooshort++;
 			return IPPROTO_DONE;
-		 }
+		}
 #endif
-		 if (ip6_rthdr0(m, ip6, (struct ip6_rthdr0 *)rh))
-			 return(IPPROTO_DONE);
-		 break;
-	 default:
-		 /* unknown routing type */
-		 if (rh->ip6r_segleft == 0) {
-			 rhlen = (rh->ip6r_len + 1) << 3;
-			 break;	/* Final dst. Just ignore the header. */
-		 }
-		 ip6stat.ip6s_badoptions++;
-		 icmp6_error(m, ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER,
-			     (caddr_t)&rh->ip6r_type - (caddr_t)ip6);
-		 return(IPPROTO_DONE);
+		if (ip6_rthdr0(m, ip6, (struct ip6_rthdr0 *)rh))
+			return(IPPROTO_DONE);
+		break;
+	default:
+		/* unknown routing type */
+		if (rh->ip6r_segleft == 0) {
+			rhlen = (rh->ip6r_len + 1) << 3;
+			break;	/* Final dst. Just ignore the header. */
+		}
+		ip6stat.ip6s_badoptions++;
+		icmp6_error(m, ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER,
+			    (caddr_t)&rh->ip6r_type - (caddr_t)ip6);
+		return(IPPROTO_DONE);
 	}
 
 	*offp += rhlen;
@@ -141,8 +156,23 @@ ip6_rthdr0(m, ip6, rh0)
 	rh0->ip6r0_segleft--;
 	nextaddr = rh0->ip6r0_addr + index;
 
+	/*
+	 * reject invalid addresses.  be proactive about malicious use of
+	 * IPv4 mapped/compat address.
+	 * XXX need more checks?
+	 */
 	if (IN6_IS_ADDR_MULTICAST(nextaddr) ||
-	    IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst)) {
+	    IN6_IS_ADDR_UNSPECIFIED(nextaddr) ||
+	    IN6_IS_ADDR_V4MAPPED(nextaddr) ||
+	    IN6_IS_ADDR_V4COMPAT(nextaddr)) {
+		ip6stat.ip6s_badoptions++;
+		m_freem(m);
+		return(-1);
+	}
+	if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst) ||
+	    IN6_IS_ADDR_UNSPECIFIED(&ip6->ip6_dst) ||
+	    IN6_IS_ADDR_V4MAPPED(&ip6->ip6_dst) ||
+	    IN6_IS_ADDR_V4COMPAT(&ip6->ip6_dst)) {
 		ip6stat.ip6s_badoptions++;
 		m_freem(m);
 		return(-1);
@@ -167,6 +197,6 @@ ip6_rthdr0(m, ip6, rh0)
 #else
 	ip6_forward(m, 1);
 #endif
-    
+
 	return(-1);			/* m would be freed in ip6_forward() */
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.1 2000/03/24 09:09:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.2 2001/05/14 22:40:11 niklas Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -66,6 +66,10 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/ip_ipsp.h>
 
+#ifdef IPSEC
+#include <netinet/ip_ipsp.h>
+#endif /* IPSEC */
+
 #ifndef	IPFORWARDING
 #ifdef GATEWAY
 #define	IPFORWARDING	1	/* forward IP packets not for us */
@@ -77,8 +81,14 @@
 #define	IPSENDREDIRECTS	1
 #endif
 
+#ifndef IPMTUDISC
+#define IPMTUDISC	1
+#endif
+#ifndef IPMTUDISCTIMEOUT
+#define IPMTUDISCTIMEOUT (10 * 60)	/* as per RFC 1191 */
+#endif
+
 int encdebug = 0;
-int ipsec_acl = 0;
 int ipsec_keep_invalid = IPSEC_DEFAULT_EMBRYONIC_SA_TIMEOUT;
 int ipsec_require_pfs = IPSEC_DEFAULT_PFS;
 int ipsec_soft_allocations = IPSEC_DEFAULT_SOFT_ALLOCATIONS;
@@ -89,6 +99,7 @@ int ipsec_soft_timeout = IPSEC_DEFAULT_SOFT_TIMEOUT;
 int ipsec_exp_timeout = IPSEC_DEFAULT_EXP_TIMEOUT;
 int ipsec_soft_first_use = IPSEC_DEFAULT_SOFT_FIRST_USE;
 int ipsec_exp_first_use = IPSEC_DEFAULT_EXP_FIRST_USE;
+int ipsec_expire_acquire = IPSEC_DEFAULT_EXPIRE_ACQUIRE;
 char ipsec_def_enc[20];
 char ipsec_def_auth[20];
 
@@ -107,10 +118,14 @@ int	ipforwarding = IPFORWARDING;
 int	ipsendredirects = IPSENDREDIRECTS;
 int	ip_dosourceroute = 0;	/* no src-routing unless sysctl'd to enable */
 int	ip_defttl = IPDEFTTL;
+int	ip_mtudisc = IPMTUDISC;
+u_int	ip_mtudisc_timeout = IPMTUDISCTIMEOUT;
 int	ip_directedbcast = IPDIRECTEDBCAST;
 #ifdef DIAGNOSTIC
 int	ipprintfs = 0;
 #endif
+
+struct rttimer_queue *ip_mtudisc_timeout_q = NULL;
 
 int	ipsec_auth_default_level = IPSEC_AUTH_LEVEL_DEFAULT;
 int	ipsec_esp_trans_default_level = IPSEC_ESP_TRANS_LEVEL_DEFAULT;
@@ -224,6 +239,9 @@ ip_init()
 	LIST_INIT(&ipq);
 	ipintrq.ifq_maxlen = ipqmaxlen;
 	TAILQ_INIT(&in_ifaddr);
+	if (ip_mtudisc != 0)
+		ip_mtudisc_timeout_q = 
+		    rt_timer_queue_create(ip_mtudisc_timeout);
 
 	/* Fill in list of ports not to allocate dynamically. */
 	bzero((void *)&baddynamicports, sizeof(baddynamicports));
@@ -280,6 +298,11 @@ ipv4_input(struct mbuf *m, ...)
 	int hlen, mff;
 	va_list ap;
 	int extra;
+#ifdef IPSEC
+	int error, s;
+	struct tdb *tdb;
+	struct tdb_ident *tdbi;
+#endif /* IPSEC */
 
 	va_start(ap, m);
 	extra = va_arg(ap, int);
@@ -328,6 +351,16 @@ ipv4_input(struct mbuf *m, ...)
 		}
 		ip = mtod(m, struct ip *);
 	}
+
+	/* 127/8 must not appear on wire - RFC1122 */
+	if ((ntohl(ip->ip_dst.s_addr) >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET ||
+	    (ntohl(ip->ip_src.s_addr) >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET) {
+		if ((m->m_pkthdr.rcvif->if_flags & IFF_LOOPBACK) == 0) {
+			ipstat.ips_badaddr++;
+			goto bad;
+		}
+	}
+
 	if ((ip->ip_sum = in_cksum(m, hlen)) != 0) {
 		ipstat.ips_badsum++;
 		goto bad;
@@ -346,7 +379,7 @@ ipv4_input(struct mbuf *m, ...)
 
 	/*
 	 * Check that the amount of data in the buffers
-	 * is as at least much as the IP header would have us expect.
+	 * is at least as much as the IP header would have us expect.
 	 * Trim mbufs if longer than we expect.
 	 * Drop packet if shorter than we expect.
 	 */
@@ -369,8 +402,12 @@ ipv4_input(struct mbuf *m, ...)
 	 */
 	{
 		struct mbuf *m0 = m;
-		if (fr_checkp && (*fr_checkp)(ip, hlen, m->m_pkthdr.rcvif, 0, &m0))
+		if (fr_checkp && (*fr_checkp)(ip, hlen, m->m_pkthdr.rcvif, 0, &m0)) {
 			return;
+		}
+		if (m0 == 0) {  /* in case of 'fastroute' */
+			return;
+		}
 		ip = mtod(m = m0, struct ip *);
 	}
 #endif
@@ -382,8 +419,9 @@ ipv4_input(struct mbuf *m, ...)
 	 * to be sent and the original packet to be freed).
 	 */
 	ip_nhops = 0;		/* for source routed packets */
-	if (hlen > sizeof (struct ip) && ip_dooptions(m))
-		return;
+	if (hlen > sizeof (struct ip) && ip_dooptions(m)) {
+	        return;
+	}
 
 	/*
 	 * Check our list of addresses, to see if the packet is for us.
@@ -458,8 +496,32 @@ ipv4_input(struct mbuf *m, ...)
 	if (ipforwarding == 0) {
 		ipstat.ips_cantforward++;
 		m_freem(m);
-	} else
+	} else {
+#ifdef IPSEC
+	        /* IPsec policy check for forwarded packets */
+                s = splnet();
+		tdbi = (struct tdb_ident *) m->m_pkthdr.tdbi;
+                if (tdbi == NULL)
+                  tdb = NULL;
+                else
+                  tdb = gettdb(tdbi->spi, &tdbi->dst, tdbi->proto);
+
+	        ipsp_spd_lookup(m, AF_INET, hlen, &error,
+		  	        IPSP_DIRECTION_IN, tdb, NULL);
+                splx(s);
+
+		/* Error or otherwise drop-packet indication */
+		if (error) {
+			ipstat.ips_cantforward++;
+			m_freem(m);
+			return;
+		}
+
+		/* Fall through, forward packet */
+#endif /* IPSEC */
+
 		ip_forward(m, 0);
+	}
 	return;
 
 ours:
@@ -552,6 +614,59 @@ found:
 	} else
 		ip->ip_len -= hlen;
 
+#ifdef IPSEC
+        /*
+         * If it's a protected packet for us, skip the policy check.
+         * That's because we really only care about the properties of
+         * the protected packet, and not the intermediate versions.
+         * While this is not the most paranoid setting, it allows
+         * some flexibility in handling of nested tunnels etc.
+         */
+        if ((ip->ip_p == IPPROTO_ESP) || (ip->ip_p == IPPROTO_AH))
+          goto skipipsec;
+
+	/*
+	 * If the protected packet was tunneled, then we need to
+	 * verify the protected packet's information, not the
+	 * external headers. Thus, skip the policy lookup for the
+	 * external packet, and keep the IPsec information linked on
+	 * the packet header (the encapsulation routines know how
+	 * to deal with that).
+	 */
+	if ((ip->ip_p == IPPROTO_IPIP) || (ip->ip_p == IPPROTO_IPV6))
+	  goto skipipsec;
+
+	/*
+	 * If the protected packet is TCP or UDP, we'll do the
+	 * policy check in the respective input routine, so we can
+	 * check for bypass sockets.
+	 */
+	if ((ip->ip_p == IPPROTO_TCP) || (ip->ip_p == IPPROTO_UDP))
+	  goto skipipsec;
+
+	/* IPsec policy check for local-delivery packets */
+        s = splnet();
+	tdbi = (struct tdb_ident *) m->m_pkthdr.tdbi;
+        if (tdbi == NULL)
+                tdb = NULL;
+        else
+	        tdb = gettdb(tdbi->spi, &tdbi->dst, tdbi->proto);
+
+	ipsp_spd_lookup(m, AF_INET, hlen, &error, IPSP_DIRECTION_IN,
+			tdb, NULL);
+        splx(s);
+
+	/* Error or otherwise drop-packet indication */
+	if (error) {
+	        ipstat.ips_cantforward++;
+		m_freem(m);
+		return;
+	}
+
+ skipipsec:
+	/* Otherwise, just fall through and deliver the packet */
+#endif /* IPSEC */
+
 	/*
 	 * Switch out to protocol's input routine.
 	 */
@@ -575,7 +690,7 @@ in_iawithaddr(ina, m)
 			(IFF_LOOPBACK|IFF_LINK1) &&
 		     ia->ia_subnet == (ina.s_addr & ia->ia_subnetmask)))
 			return ia;
-		if (m && ((ip_directedbcast == 0) || (ip_directedbcast &&
+		if (((ip_directedbcast == 0) || (m && ip_directedbcast &&
 		    ia->ia_ifp == m->m_pkthdr.rcvif)) &&
 		    (ia->ia_ifp->if_flags & IFF_BROADCAST)) {
 			if (ina.s_addr == ia->ia_broadaddr.sin_addr.s_addr ||
@@ -587,7 +702,8 @@ in_iawithaddr(ina, m)
 			    ina.s_addr == ia->ia_subnet ||
 			    ina.s_addr == ia->ia_net) {
 				/* Make sure M_BCAST is set */
-				m->m_flags |= M_BCAST;
+				if (m)
+					m->m_flags |= M_BCAST;
 				return ia;
 			    }
 		}
@@ -849,15 +965,16 @@ ip_dooptions(m)
 {
 	register struct ip *ip = mtod(m, struct ip *);
 	register u_char *cp;
-	register struct ip_timestamp *ipt;
+	struct ip_timestamp ipt;
 	register struct in_ifaddr *ia;
 	int opt, optlen, cnt, off, code, type = ICMP_PARAMPROB, forward = 0;
-	struct in_addr *sin, dst;
+	struct in_addr sin, dst;
 	n_time ntime;
 
 	dst = ip->ip_dst;
 	cp = (u_char *)(ip + 1);
 	cnt = (ip->ip_hl << 2) - sizeof (struct ip);
+
 	for (; cnt > 0; cnt -= optlen, cp += optlen) {
 		opt = cp[IPOPT_OPTVAL];
 		if (opt == IPOPT_EOL)
@@ -865,12 +982,17 @@ ip_dooptions(m)
 		if (opt == IPOPT_NOP)
 			optlen = 1;
 		else {
+			if (cnt < IPOPT_OLEN + sizeof(*cp)) {
+				code = &cp[IPOPT_OLEN] - (u_char *)ip;
+				goto bad;
+			}
 			optlen = cp[IPOPT_OLEN];
-			if (optlen <= 0 || optlen > cnt) {
+			if (optlen < IPOPT_OLEN + sizeof(*cp) || optlen > cnt) {
 				code = &cp[IPOPT_OLEN] - (u_char *)ip;
 				goto bad;
 			}
 		}
+
 		switch (opt) {
 
 		default:
@@ -917,7 +1039,7 @@ ip_dooptions(m)
 				break;
 			}
 			off--;			/* 0 origin */
-			if (off > optlen - sizeof(struct in_addr)) {
+			if ((off + sizeof(struct in_addr)) > optlen) {
 				/*
 				 * End of source route.  Should be for us.
 				 */
@@ -953,6 +1075,10 @@ ip_dooptions(m)
 			break;
 
 		case IPOPT_RR:
+			if (optlen < IPOPT_OFFSET + sizeof(*cp)) {
+				code = &cp[IPOPT_OLEN] - (u_char *)ip;
+				goto bad;
+			}
 			if ((off = cp[IPOPT_OFFSET]) < IPOPT_MINOFF) {
 				code = &cp[IPOPT_OFFSET] - (u_char *)ip;
 				goto bad;
@@ -962,7 +1088,7 @@ ip_dooptions(m)
 			 * If no space remains, ignore.
 			 */
 			off--;			/* 0 origin */
-			if (off > optlen - sizeof(struct in_addr))
+			if ((off + sizeof(struct in_addr)) > optlen)
 				break;
 			bcopy((caddr_t)(&ip->ip_dst), (caddr_t)&ipaddr.sin_addr,
 			    sizeof(ipaddr.sin_addr));
@@ -983,23 +1109,23 @@ ip_dooptions(m)
 
 		case IPOPT_TS:
 			code = cp - (u_char *)ip;
-			ipt = (struct ip_timestamp *)cp;
-			if (ipt->ipt_ptr < 5 || ipt->ipt_len < 5)
+			bcopy(cp, &ipt, sizeof(struct ip_timestamp));
+			if (ipt.ipt_ptr < 5 || ipt.ipt_len < 5)
 				goto bad;
-			if (ipt->ipt_ptr - 1 + sizeof(n_time) > ipt->ipt_len) {
-				if (++ipt->ipt_oflw == 0)
+			if (ipt.ipt_ptr - 1 + sizeof(n_time) > ipt.ipt_len) {
+				if (++ipt.ipt_oflw == 0)
 					goto bad;
 				break;
 			}
-			sin = (struct in_addr *)(cp + ipt->ipt_ptr - 1);
-			switch (ipt->ipt_flg) {
+			bcopy(cp + ipt.ipt_ptr - 1, &sin, sizeof sin);
+			switch (ipt.ipt_flg) {
 
 			case IPOPT_TS_TSONLY:
 				break;
 
 			case IPOPT_TS_TSANDADDR:
-				if (ipt->ipt_ptr - 1 + sizeof(n_time) +
-				    sizeof(struct in_addr) > ipt->ipt_len)
+				if (ipt.ipt_ptr - 1 + sizeof(n_time) +
+				    sizeof(struct in_addr) > ipt.ipt_len)
 					goto bad;
 				ipaddr.sin_addr = dst;
 				ia = (INA)ifaof_ifpforaddr((SA)&ipaddr,
@@ -1007,28 +1133,31 @@ ip_dooptions(m)
 				if (ia == 0)
 					continue;
 				bcopy((caddr_t)&ia->ia_addr.sin_addr,
-				    (caddr_t)sin, sizeof(struct in_addr));
-				ipt->ipt_ptr += sizeof(struct in_addr);
+				    (caddr_t)&sin, sizeof(struct in_addr));
+				ipt.ipt_ptr += sizeof(struct in_addr);
 				break;
 
 			case IPOPT_TS_PRESPEC:
-				if (ipt->ipt_ptr - 1 + sizeof(n_time) +
-				    sizeof(struct in_addr) > ipt->ipt_len)
+				if (ipt.ipt_ptr - 1 + sizeof(n_time) +
+				    sizeof(struct in_addr) > ipt.ipt_len)
 					goto bad;
-				bcopy((caddr_t)sin, (caddr_t)&ipaddr.sin_addr,
+				bcopy((caddr_t)&sin, (caddr_t)&ipaddr.sin_addr,
 				    sizeof(struct in_addr));
 				if (ifa_ifwithaddr((SA)&ipaddr) == 0)
 					continue;
-				ipt->ipt_ptr += sizeof(struct in_addr);
+				ipt.ipt_ptr += sizeof(struct in_addr);
 				break;
 
 			default:
+				/* XXX can't take &ipt->ipt_flg */
+				code = (u_char *)&ipt.ipt_ptr -
+				    (u_char *)ip + 1;
 				goto bad;
 			}
 			ntime = iptime();
-			bcopy((caddr_t)&ntime, (caddr_t)cp + ipt->ipt_ptr - 1,
+			bcopy((caddr_t)&ntime, (caddr_t)cp + ipt.ipt_ptr - 1,
 			    sizeof(n_time));
-			ipt->ipt_ptr += sizeof(n_time);
+			ipt.ipt_ptr += sizeof(n_time);
 		}
 	}
 	if (forward && ipforwarding) {
@@ -1038,9 +1167,7 @@ ip_dooptions(m)
 	return (0);
 bad:
 	ip->ip_len -= ip->ip_hl << 2;   /* XXX icmp_error adds in hdr length */
-	HTONS(ip->ip_len);	/* XXX because ip_input changed these three */
 	HTONS(ip->ip_id);
-	HTONS(ip->ip_off);
 	icmp_error(m, type, code, 0, 0);
 	ipstat.ips_badoptions++;
 	return (1);
@@ -1116,13 +1243,15 @@ ip_weadvertise(addr)
 	sin.sin_other = SIN_PROXY;
 	rt = rtalloc1(sintosa(&sin), 0);
 	if (rt == 0)
-	  return 0;
+		return 0;
 	
 	RTFREE(rt);
 	
 	if ((rt->rt_flags & RTF_GATEWAY) || (rt->rt_flags & RTF_LLINFO) == 0 ||
-	    rt->rt_gateway->sa_family != AF_LINK)
-	  return 0;
+	    rt->rt_gateway->sa_family != AF_LINK) {
+		RTFREE(rt);
+		return 0;
+	}
 
 	for (ifp = ifnet.tqh_first; ifp != 0; ifp = ifp->if_list.tqe_next)
 		for (ifa = ifp->if_addrlist.tqh_first; ifa != 0;
@@ -1132,10 +1261,13 @@ ip_weadvertise(addr)
 
 			if (!bcmp(LLADDR((struct sockaddr_dl *)ifa->ifa_addr), 
 			    LLADDR((struct sockaddr_dl *)rt->rt_gateway),
-			    ETHER_ADDR_LEN))
+			    ETHER_ADDR_LEN)) {
+				RTFREE(rt);
 				return 1;
+			}
 		}
 
+	RTFREE(rt);
 	return 0;
 }
 
@@ -1314,8 +1446,11 @@ ip_forward(m, srcrt)
 	/*
 	 * Save at most 68 bytes of the packet in case
 	 * we need to generate an ICMP message to the src.
+	 * Pullup to avoid sharing mbuf cluster between m and mcopy.
 	 */
-	mcopy = m_copy(m, 0, imin((int)ip->ip_len, 68));
+	mcopy = m_copym(m, 0, imin((int)ip->ip_len, 68), M_DONTWAIT);
+	if (mcopy)
+		mcopy = m_pullup(mcopy, ip->ip_hl << 2);
 
 	/*
 	 * If forwarding packet using same interface that it came in on,
@@ -1461,6 +1596,8 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	void *newp;
 	size_t newlen;
 {
+	int error;
+
 	/* All sysctl names at this level are terminal. */
 	if (namelen != 1)
 		return (ENOTDIR);
@@ -1488,6 +1625,24 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	case IPCTL_DIRECTEDBCAST:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &ip_directedbcast));
+	case IPCTL_MTUDISC:
+		error = sysctl_int(oldp, oldlenp, newp, newlen,
+		    &ip_mtudisc);
+		if (ip_mtudisc != 0 && ip_mtudisc_timeout_q == NULL) {
+			ip_mtudisc_timeout_q = 
+			    rt_timer_queue_create(ip_mtudisc_timeout);
+		} else if (ip_mtudisc == 0 && ip_mtudisc_timeout_q != NULL) {
+			rt_timer_queue_destroy(ip_mtudisc_timeout_q, TRUE);
+			ip_mtudisc_timeout_q = NULL;
+		}
+		return error;
+	case IPCTL_MTUDISCTIMEOUT:
+		error = sysctl_int(oldp, oldlenp, newp, newlen,
+		   &ip_mtudisc_timeout);
+		if (ip_mtudisc_timeout_q != NULL)
+			rt_timer_queue_change(ip_mtudisc_timeout_q, 
+					      ip_mtudisc_timeout);
+		return (error);
 	case IPCTL_IPPORT_FIRSTAUTO:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &ipport_firstauto));
@@ -1505,8 +1660,6 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		    &ip_maxqueue));
 	case IPCTL_ENCDEBUG:
 		return (sysctl_int(oldp, oldlenp, newp, newlen, &encdebug));
-	case IPCTL_IPSEC_ACL:
-		return (sysctl_int(oldp, oldlenp, newp, newlen, &ipsec_acl));
 	case IPCTL_IPSEC_EMBRYONIC_SA_TIMEOUT:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 				   &ipsec_keep_invalid));
@@ -1544,6 +1697,9 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
 				       ipsec_def_auth,
 				       sizeof(ipsec_def_auth)));
+	case IPCTL_IPSEC_EXPIRE_ACQUIRE:
+	        return (sysctl_int(oldp, oldlenp, newp, newlen,
+				   &ipsec_expire_acquire));
 	default:
 		return (EOPNOTSUPP);
 	}

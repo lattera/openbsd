@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx.h,v 1.12 2000/01/17 00:34:00 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx.h,v 1.12.2.1 2001/05/14 22:40:21 niklas Exp $	*/
 
 /*-
  *
@@ -111,7 +111,7 @@
  */
 #define IPX_HOSTADDRLEN	6
 #define IPX_NETADDRLEN	4
-#define XXX	__attribute__((packed))
+#define XXX	__attribute__((__packed__))
 
 typedef
 union ipx_host {
@@ -245,5 +245,12 @@ int	ipx_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
 void	ipx_printhost __P((struct ipx_addr *addr));
 
 #endif /* _KERNEL */
+
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+struct	ipx_addr ipx_addr __P((const char *));
+char	*ipx_ntoa __P((struct ipx_addr));
+__END_DECLS
 
 #endif /* !_NETIPX_IPX_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16 1999/12/21 17:49:28 provos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.1 2001/05/14 22:40:15 niklas Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -60,6 +60,7 @@
 #include <netinet/tcp_timer.h>
 #include <netinet/tcp_var.h>
 #include <netinet/tcpip.h>
+#include <netinet/ip_icmp.h>
 #include <dev/rndvar.h>
 
 int	tcp_keepidle = TCPTV_KEEP_IDLE;
@@ -143,9 +144,7 @@ tpgone:
 	tcp_iss += TCP_ISSINCR/PR_SLOWHZ;		/* increment iss */
 	if ((int)tcp_iss < 0)
 		tcp_iss = 0;				/* XXX */
-#else /* TCP_COMPAT_42 */
-	tcp_iss += arc4random() % (2 * TCP_ISSINCR / PR_SLOWHZ) + 1; /* increment iss */
-#endif /* !TCP_COMPAT_42 */
+#endif /* TCP_COMPAT_42 */
 	tcp_now++;					/* for timestamps */
 	splx(s);
 }
@@ -236,6 +235,63 @@ tcp_timers(tp, timer)
 		    rto * tcp_backoff[tp->t_rxtshift],
 		    tp->t_rttmin, TCPTV_REXMTMAX);
 		tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
+
+		/* 
+		 * If we are losing and we are trying path MTU discovery,
+		 * try turning it off.  This will avoid black holes in
+		 * the network which suppress or fail to send "packet
+		 * too big" ICMP messages.  We should ideally do
+		 * lots more sophisticated searching to find the right
+		 * value here...
+		 */
+		if (ip_mtudisc && tp->t_inpcb &&
+		    TCPS_HAVEESTABLISHED(tp->t_state) &&
+		    tp->t_rxtshift > TCP_MAXRXTSHIFT / 6) {
+			struct inpcb *inp = tp->t_inpcb;
+			struct rtentry *rt = NULL;
+			struct sockaddr_in sin;
+
+			/* No data to send means path mtu is not a problem */
+			if (!inp->inp_socket->so_snd.sb_cc)
+				goto out;
+
+			rt = in_pcbrtentry(inp);
+			/* Check if path MTU discovery is disabled already */
+			if (rt && (rt->rt_flags & RTF_HOST) &&
+			    (rt->rt_rmx.rmx_locks & RTV_MTU))
+				goto out;
+
+			rt = NULL;
+			switch(tp->pf) {
+#ifdef INET6
+			case PF_INET6:
+				/*
+				 * We can not turn off path MTU for IPv6.
+				 * Do nothing for now, maybe lower to
+				 * minimum MTU.
+				 */
+				break;
+#endif
+			case PF_INET:
+				bzero(&sin, sizeof(struct sockaddr_in));
+				sin.sin_family = AF_INET;
+				sin.sin_len = sizeof(struct sockaddr_in);
+				sin.sin_addr = inp->inp_faddr;
+				rt = icmp_mtudisc_clone(sintosa(&sin));
+				break;
+			}
+			if (rt != NULL) {
+				/* Disable path MTU discovery */
+				if ((rt->rt_rmx.rmx_locks & RTV_MTU) == 0) {
+					rt->rt_rmx.rmx_locks |= RTV_MTU;
+					in_rtchange(inp, 0);
+				}
+
+				rtfree(rt);
+			}
+			out:
+		}
+
 		/*
 		 * If losing, let the lower level know and try for
 		 * a better route.  Also, if we backed off this far,
