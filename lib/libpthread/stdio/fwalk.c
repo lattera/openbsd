@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,7 +37,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)fwalk.c	5.2 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: fwalk.c,v 1.1 1994/02/07 22:06:05 proven Exp $";
+static char *rcsid = "$Id: fwalk.c,v 1.52 1995/08/22 22:13:36 proven Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <pthread.h>
@@ -91,13 +92,15 @@ int __swalk_sflush()
 				/* Is there anything to flush? */
 				if (fp->_bf._base && (fp->_bf._base - fp->_p)) {
 					if (ftrylockfile(fp)) {	/* Can we flush it */
-						if (!saven) {		/* No, save first fp we can't flush */
-							saven;
+						if (!saven) {	/* No, save first fp we can't flush */
+							saven = n;
 							saveg = g;
 							savefp = fp;
 							continue;
 						}
+					} else {
 						ret |= __sflush(fp);
+						funlockfile(fp);
 					}
 				}
 			}
@@ -109,11 +112,9 @@ int __swalk_sflush()
 				if (fp->_flags != 0) {		
  					/* Anything to flush */
 					while (fp->_bf._base && (fp->_bf._base - fp->_p)) {
-						if (ftrylockfile(fp)) {	/* Can we flush it */
-							pthread_yield();
-							continue;
-						}
+						flockfile(fp);
 						ret |= __sflush(fp);
+						funlockfile(fp);
 					}
 				}
 			}

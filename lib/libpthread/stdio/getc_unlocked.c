@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,7 +37,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)getc.c	5.1 (Berkeley) 1/20/91";*/
-static char *rcsid = "$Id: getc_unlocked.c,v 1.1 1994/02/07 22:06:09 proven Exp $";
+static char *rcsid = "$Id: getc_unlocked.c,v 1.51 1994/09/04 02:57:54 proven Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <pthread.h>
