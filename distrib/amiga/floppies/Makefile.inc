@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/amiga/floppies/Attic/Makefile.inc,v 1.2 1996/04/25 02:35:46 mickey Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/Attic/Makefile.inc,v 1.2.2.1 1996/10/10 06:57:45 niklas Exp $
 
-# Revision is 1.2
-REV=	12
+# Revision is 2.0
+REV=	20
