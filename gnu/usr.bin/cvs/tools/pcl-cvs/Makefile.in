@@ -4,7 +4,7 @@
 #
 #ident	"@(#)original: dist-makefile,v 1.19 1993/05/31 22:43:45 ceder Exp "
 #
-#ident	"@(#)elisp/pcl-cvs:$Name:  $:$Id: Makefile.in,v 1.4 1996/11/06 17:28:37 jimb Exp $"
+#ident	"@(#)elisp/pcl-cvs:$Name:  $:$Id: Makefile.in,v 1.6 1997/02/17 20:44:30 kingdon Exp $"
 #
 # Makefile for pcl-cvs release 1.05-CVS-$Name:  $.
 # Copyright (C) 1992, 1993  Per Cederqvist
