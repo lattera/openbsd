@@ -1,18 +1,18 @@
-#	$Id$
+#	$OpenBSD: src/kerberosIV/ksrvutil/Attic/Makefile,v 1.2 1996/06/02 14:42:03 niklas Exp $
 
 PROG=	ksrvutil
-.if exists(${.CURDIR}/../kadm/obj)
-CFLAGS+=-I${.CURDIR}/../kadm/obj
+.if exists(${.CURDIR}/../kadm/${__objdir})
+CFLAGS+=-I${.CURDIR}/../kadm/${__objdir}
 .else
 CFLAGS+=-I${.CURDIR}/../kadm
 .endif
-.if exists(${.CURDIR}/../krb/obj)
-CFLAGS+=-I${.CURDIR}/../krb/obj
+.if exists(${.CURDIR}/../krb/${__objdir})
+CFLAGS+=-I${.CURDIR}/../krb/${__objdir}
 .else
 CFLAGS+=-I${.CURDIR}/../krb
 .endif
-.if exists(${.CURDIR}/../ss/obj)
-CFLAGS+=-I${.CURDIR}/../ss/obj
+.if exists(${.CURDIR}/../ss/${__objdir})
+CFLAGS+=-I${.CURDIR}/../ss/${__objdir}
 .else
 CFLAGS+=-I${.CURDIR}/../ss
 .endif
