@@ -52,7 +52,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#) $Id: mtrace.c,v 1.18 2003/08/19 19:08:38 deraadt Exp $";
+    "@(#) $Id: mtrace.c,v 1.19 2003/08/19 22:19:07 itojun Exp $";
 #endif
 
 #include <netdb.h>
@@ -295,6 +295,8 @@ get_netmask(s, dst)
 	return (retval);
     }
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+	if (ifa->ifa_addr->sa_family != AF_INET) 
+             continue;
 	if_addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
 	if_mask = ((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr;
 	if ((dst & if_mask) == (if_addr & if_mask)) {
