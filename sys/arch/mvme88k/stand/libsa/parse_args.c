@@ -1,9 +1,8 @@
-/*	$Id: promboot.c,v 1.1 1996/02/03 02:41:19 build Exp build $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/parse_args.c,v 1.1 1998/08/22 08:08:21 smurph Exp $ */
 
-/*
+/*-
  * Copyright (c) 1995 Theo de Raadt
- * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -14,8 +13,9 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by Theo de Raadt
- * 4. The name of the Author may not be used to endorse or promote products
+ *	This product includes software developed under OpenBSD by
+ *	Theo de Raadt for Willowglen Singapore.
+ * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -29,65 +29,71 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
  */
 
 #include <sys/param.h>
 #include <sys/reboot.h>
+#include <machine/prom.h>
+#include <a.out.h>
+
 #include "stand.h"
-#include "promboot.h"
+#include "libsa.h"
 
-char prom_bootdev[32];
-char prom_bootfile[32];
-int prom_boothow;
-int debug;
+#define KERNEL_NAME "bsd"
+#define RB_NOSYM 0x400
 
-void
-prom_get_boot_info()
+struct flags {
+	char c;
+	short bit;
+} bf[] = {
+	{ 'a', RB_ASKNAME },
+	{ 'b', RB_HALT },
+	{ 'c', RB_CONFIG },
+	{ 'y', RB_NOSYM },
+	{ 'd', RB_KDB },
+	{ 'm', RB_MINIROOT },
+	{ 'r', RB_DFLTROOT },
+	{ 's', RB_SINGLE },
+};
+
+int
+parse_args(filep, flagp)
+
+char **filep;
+int *flagp;
+
 {
-	char	c, *src, *dst;
-	extern int devlun, ctrlun;
-	extern char *oparg, *opargend;
+	char *name = KERNEL_NAME, *ptr;
+	int i, howto = 0;
+	char c;
 
-#ifdef	DEBUG
-	printf("prom_get_boot_info\n");
-#endif
-
-	/* Get kernel filename */
-	src = oparg;
-	while (src && (*src == ' ' || *src == '\t'))
-		src++;
-
-	dst = prom_bootfile;
-	if (src && *src != '-') {
-		while (src && *src) {
-			if (*src == ' ' || *src == '\t')
-				break;
-			*dst++ = *src++;
-		}
-	}
-	*dst = '\0';
-
-	/* Get boothowto flags */
-	while (src && (*src == ' ' || *src == '\t'))
-		src++;
-	if (src && (*src == '-')) {
-		while (*src) {
-			switch (*src++) {
-			case 'a':
-				prom_boothow |= RB_ASKNAME;
-				break;
-			case 's':
-				prom_boothow |= RB_SINGLE;
-				break;
-			case 'd':
-				prom_boothow |= RB_KDB;
-				debug = 1;
-				break;
+	if (bugargs.arg_start != bugargs.arg_end) {
+		ptr = bugargs.arg_start;
+		while (c = *ptr) {
+			while (c == ' ')
+				c = *++ptr;
+			if (c == '\0')
+				return (0);
+			if (c != '-') {
+				name = ptr;
+				while ((c = *++ptr) && c != ' ')
+					;
+				if (c)
+					*ptr++ = 0;
+				continue;
+			}
+			while ((c = *++ptr) && c != ' ') {
+				if (c == 'q')
+					return (1);
+				for (i = 0; i < sizeof(bf)/sizeof(bf[0]); i++)
+					if (bf[i].c == c) {
+						howto |= bf[i].bit;
+					}
 			}
 		}
 	}
-#ifdef	DEBUG
-	printf("promboot: device=\"%s\" file=\"%s\" how=0x%x\n",
-		   prom_bootdev, prom_bootfile, prom_boothow);
-#endif
+	*flagp = howto;
+	*filep = name;
+	return (0);
 }
