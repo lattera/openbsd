@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs.h,v 1.2 1996/02/27 07:55:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs.h,v 1.2.4.1 1996/10/14 13:38:02 mickey Exp $	*/
 /*	$NetBSD: kernfs.h,v 1.10 1996/02/09 22:40:21 christos Exp $	*/
 
 /*
@@ -40,20 +40,70 @@
  */
 
 #define	_PATH_KERNFS	"/kern"		/* Default mountpoint */
+/* #define KERNFS_DIAGNOSTIC */
 
 #ifdef _KERNEL
 struct kernfs_mount {
 	struct vnode	*kf_root;	/* Root node */
 };
 
+typedef
+enum {
+	Kroot,		/* root dir */
+	Kvar,		/* kernel variable */
+	Ksym,		/* symbol table's dir */
+	Ksymtab,	/* symbol table */
+
+}	kernfs_type;
+
+struct kern_target {
+	u_char kt_type;
+	u_char kt_namlen;
+	char *kt_name;
+	void *kt_data;
+#define KTT_NULL         1
+#define KTT_TIME         5
+#define KTT_INT         17
+#define KTT_STRING      31
+#define KTT_HOSTNAME    47
+#define KTT_AVENRUN     53
+#define KTT_DEVICE      71
+#define KTT_MSGBUF      89
+#define KTT_USERMEM     91
+#define KTT_DOMAIN      97
+#define KTT_SYMTAB      101
+	u_char kt_tag;
+	kernfs_type kt_ktype;
+	u_char kt_vtype;
+	mode_t kt_mode;
+};
+
 struct kernfs_node {
-	struct kern_target *kf_kt;
+	TAILQ_ENTRY(kernfs_node) list;
+	kernfs_type	kf_type;
+	u_long		kf_mode;
+	u_long		kf_flags;
+	struct vnode	*kf_vnode;
+	union {
+		struct kern_target *ukf_kt;
+#define	kf_kt	__u.ukf_kt
+		struct db_symtab   *ukf_st;
+#define kf_st	__u.ukf_st
+	} __u;
 };
 
 #define VFSTOKERNFS(mp)	((struct kernfs_mount *)((mp)->mnt_data))
-#define	VTOKERN(vp) ((struct kernfs_node *)(vp)->v_data)
+#define	VTOKERN(vp)	((struct kernfs_node *)(vp)->v_data)
+#define KFSTOV(kfs)	((kfs)->kf_vnode)
 
 extern int (**kernfs_vnodeop_p) __P((void *));
 extern struct vfsops kernfs_vfsops;
 extern dev_t rrootdev;
+
+int kernfs_freevp __P((struct vnode *));
+int kernfs_allocvp __P((struct mount *, struct vnode **, void *, kernfs_type));
+
+void	kernfs_init __P((void));
+int	kernfs_root __P((struct mount *, struct vnode **));
+
 #endif /* _KERNEL */

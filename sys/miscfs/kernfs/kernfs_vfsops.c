@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.4 1996/06/20 14:30:08 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.4.4.1 1996/10/14 13:38:03 mickey Exp $	*/
 /*	$NetBSD: kernfs_vfsops.c,v 1.26 1996/04/22 01:42:27 christos Exp $	*/
 
 /*
@@ -74,12 +74,6 @@ int	kernfs_vget __P((struct mount *, ino_t, struct vnode **));
 int	kernfs_fhtovp __P((struct mount *, struct fid *, struct mbuf *,
 			   struct vnode **, int *, struct ucred **));
 int	kernfs_vptofh __P((struct vnode *, struct fid *));
-
-/*ARGSUSED*/
-void
-kernfs_init()
-{
-}
 
 void
 kernfs_get_rrootdev()
@@ -224,20 +218,11 @@ kernfs_root(mp, vpp)
 	struct mount *mp;
 	struct vnode **vpp;
 {
-	struct vnode *vp;
-
 #ifdef KERNFS_DIAGNOSTIC
 	printf("kernfs_root(mp = %x)\n", mp);
 #endif
 
-	/*
-	 * Return locked reference to root.
-	 */
-	vp = VFSTOKERNFS(mp)->kf_root;
-	VREF(vp);
-	VOP_LOCK(vp);
-	*vpp = vp;
-	return (0);
+	return (kernfs_allocvp(mp, vpp, NULL, Kroot));
 }
 
 int
