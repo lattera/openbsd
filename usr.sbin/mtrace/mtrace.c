@@ -52,7 +52,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#) $Id: mtrace.c,v 1.20 2003/09/23 09:19:18 matthieu Exp $";
+    "@(#) $Id: mtrace.c,v 1.21 2003/11/26 01:17:12 millert Exp $";
 #endif
 
 #include <netdb.h>
@@ -493,7 +493,7 @@ send_recv(dst, type, code, tries, save)
 		continue;
 
 	    iphdrlen = ip->ip_hl << 2;
-	    ipdatalen = ntohs(ip->ip_len);
+	    ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 	    if (iphdrlen + ipdatalen != recvlen) {
 		fprintf(stderr,
 			"packet shorter (%u bytes) than hdr+data len (%u+%u)\n",
@@ -647,7 +647,7 @@ passive_mode(void)
 	    continue;
 
 	iphdrlen = ip->ip_hl << 2;
-	ipdatalen = ntohs(ip->ip_len);
+	ipdatalen = ntohs(ip->ip_len) - iphdrlen;
 	if (iphdrlen + ipdatalen != recvlen) {
 	    fprintf(stderr,
 		    "packet shorter (%u bytes) than hdr+data len (%u+%u)\n",
