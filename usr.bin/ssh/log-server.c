@@ -15,10 +15,9 @@ to the system log.
 */
 
 #include "includes.h"
-RCSID("$Id: log-server.c,v 1.3 1999/09/30 05:03:04 deraadt Exp $");
+RCSID("$Id: log-server.c,v 1.4 1999/09/30 05:11:29 deraadt Exp $");
 
 #include <syslog.h>
-#include <sys/syslog.h>
 #include "packet.h"
 #include "xmalloc.h"
 #include "ssh.h"
