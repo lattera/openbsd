@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/strcmp.S,v 1.4 1997/11/07 15:57:21 niklas Exp $
+/*	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/strcmp.S,v 1.5 1998/03/01 16:10:34 niklas Exp $	*/
 
 #include "DEFS.h"
 

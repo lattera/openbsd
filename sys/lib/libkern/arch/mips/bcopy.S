@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/bcopy.S,v 1.7 1997/11/07 15:57:17 niklas Exp $
+/*	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/bcopy.S,v 1.8 1998/03/01 16:10:24 niklas Exp $	*/
 
 #include "DEFS.h"
 
