@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pc532/pc532/Attic/conf.c,v 1.12 2000/03/22 08:34:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/pc532/pc532/Attic/conf.c,v 1.13 2000/09/26 14:03:54 art Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -192,6 +192,12 @@ iszerodev(dev)
 {
 
 	return (major(dev) == mem_no && minor(dev) == 12);
+}
+
+dev_t
+getnulldev()
+{
+	return makedev(mem_no, 2);
 }
 
 static int chrtoblktbl[] = {
