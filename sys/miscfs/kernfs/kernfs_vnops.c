@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.2 1996/10/18 11:22:20 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.3 1996/10/27 07:57:12 mickey Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -296,7 +296,7 @@ kernfs_xread(kt, off, bufp, len)
 		break;
 
 	case KTT_USERMEM:
-		sprintf(*bufp, "%lu\n", ctob(physmem - cnt.v_wire_count));
+		sprintf(*bufp, "%lu\n", physmem - cnt.v_wire_count);
 		break;
 
 	case KTT_SYMTAB:
