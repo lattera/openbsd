@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/swapgeneric.c,v 1.4 1996/04/28 10:59:12 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/swapgeneric.c,v 1.5 1996/11/06 01:45:05 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1994
@@ -43,7 +43,7 @@
 #include <sys/conf.h>
 #include <machine/disklabel.h>
 
-int (*mountroot)() = NULL;	/* tells autoconf.c that we are "generic" */
+int (*mountroot) __P((void)) = NULL;	/* tells autoconf.c that we are "generic" */
 
 dev_t	rootdev = NODEV;
 dev_t	dumpdev = NODEV;
