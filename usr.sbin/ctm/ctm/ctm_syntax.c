@@ -6,7 +6,7 @@
  * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
  * ----------------------------------------------------------------------------
  *
- * $Id: ctm_syntax.c,v 1.6 1996/02/05 16:06:55 phk Exp $
+ * $Id: ctm_syntax.c,v 1.1.1.1 1996/10/30 17:32:58 graichen Exp $
  *
  */
 
@@ -56,12 +56,12 @@ static int ctmDR[] = /* Directory Remove */
     { Name|Dir, 0 };
 
 struct CTM_Syntax Syntax[] = {
-    { "FM", ctmFM },
-    { "FS", ctmFS },
-    { "FE", ctmFE },
-    { "FN", ctmFE },
-    { "FR", ctmFR },
-    { "AS", ctmAS },
-    { "DM", ctmDM },
-    { "DR", ctmDR },
-    { 0, 0} };
+    { "FM",  	ctmFM },
+    { "FS",  	ctmFS },
+    { "FE",  	ctmFE },
+    { "FN",  	ctmFE },
+    { "FR",  	ctmFR },
+    { "AS", 	ctmAS },
+    { "DM",  	ctmDM },
+    { "DR",  	ctmDR },
+    { 0,    	0} };

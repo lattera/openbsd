@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.sbin/ctm/ctm_rmail/Attic/error.c,v 1.2 1999/07/13 23:02:06 deraadt Exp $ */
 /*
  * Routines for logging error messages or other informative messages.
  *
