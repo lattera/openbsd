@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/bgpd/parse.y,v 1.7 2003/12/22 19:39:59 deraadt Exp $ */
+/*	$OpenBSD: src/usr.sbin/bgpd/parse.y,v 1.8 2003/12/22 19:43:36 deraadt Exp $ */
 
 /*
  * Copyright (c) 2002, 2003 Henning Brauer <henning@openbsd.org>
@@ -181,7 +181,7 @@ address		: STRING		{
 		}
 		;
 
-optnl		: '\n' optnl 
+optnl		: '\n' optnl
 		|
 		;
 
