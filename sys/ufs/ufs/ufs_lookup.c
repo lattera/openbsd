@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_lookup.c,v 1.12.6.2 2001/07/04 11:00:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_lookup.c,v 1.12.6.3 2001/11/13 23:02:31 niklas Exp $	*/
 /*	$NetBSD: ufs_lookup.c,v 1.7 1996/02/09 22:36:06 christos Exp $	*/
 
 /*
@@ -51,7 +51,7 @@
 #include <sys/mount.h>
 #include <sys/vnode.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>

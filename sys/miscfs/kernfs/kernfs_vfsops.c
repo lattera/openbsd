@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.13.2.2 2001/07/04 10:49:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.13.2.3 2001/11/13 23:04:24 niklas Exp $	*/
 /*	$NetBSD: kernfs_vfsops.c,v 1.26 1996/04/22 01:42:27 christos Exp $	*/
 
 /*
@@ -53,7 +53,6 @@
 #include <sys/namei.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>	/* for uvmexp */
 
 #include <miscfs/specfs/specdev.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.1 2001/10/31 03:29:03 nate Exp $ */
+/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.2 2001/11/13 22:59:58 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -191,7 +191,16 @@ struct pf_rule {
 	struct ifnet	*ifp;
 	struct pf_rule_addr src;
 	struct pf_rule_addr dst;
-	struct pf_rule	*skip[7];
+
+#define PF_SKIP_IFP		0
+#define PF_SKIP_AF		1
+#define PF_SKIP_PROTO		2
+#define PF_SKIP_SRC_ADDR	3
+#define PF_SKIP_SRC_PORT	4
+#define PF_SKIP_DST_ADDR	5
+#define PF_SKIP_DST_PORT	6
+#define PF_SKIP_COUNT		7
+	struct pf_rule	*skip[PF_SKIP_COUNT];
 	TAILQ_ENTRY(pf_rule)	entries;
 
 	u_int64_t	 evaluations;

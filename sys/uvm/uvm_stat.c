@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.3.4.3 2001/10/31 03:32:14 nate Exp $	 */
-/*	$NetBSD: uvm_stat.c,v 1.13 2000/01/11 06:57:50 chs Exp $	 */
+/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.3.4.4 2001/11/13 23:02:31 niklas Exp $	 */
+/*	$NetBSD: uvm_stat.c,v 1.18 2001/03/09 01:02:13 chs Exp $	 */
 
 /*
  *
@@ -42,9 +42,8 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
-
 #include <uvm/uvm.h>
+#include <uvm/uvm_ddb.h>
 
 /*
  * globals
@@ -60,6 +59,8 @@ struct uvm_history_head uvm_histories;
 int uvmhist_print_enabled = 1;
 #endif
 
+#ifdef DDB
+
 /*
  * prototypes
  */
@@ -70,7 +71,6 @@ void uvm_hist __P((u_int32_t));
 static void uvmhist_dump_histories __P((struct uvm_history *[]));
 #endif
 void uvmcnt_dump __P((void));
-void uvm_dump   __P((void));
 
 
 #ifdef UVMHIST
@@ -180,6 +180,9 @@ uvm_hist(bitmask)
 	if ((bitmask & UVMHIST_PDHIST) || bitmask == 0)
 		hists[i++] = &pdhist;
 
+	if ((bitmask & UVMHIST_UBCHIST) || bitmask == 0)
+		hists[i++] = &ubchist;
+
 	hists[i] = NULL;
 
 	uvmhist_dump_histories(hists);
@@ -200,54 +203,61 @@ uvmcnt_dump()
 }
 
 /*
- * uvm_dump: ddb hook to dump interesting uvm counters
+ * uvmexp_print: ddb hook to print interesting uvm counters
  */
-void 
-uvm_dump()
+void
+uvmexp_print(void (*pr)(const char *, ...))
 {
 
-	printf("Current UVM status:\n");
-	printf("  pagesize=%d (0x%x), pagemask=0x%x, pageshift=%d\n",
+	(*pr)("Current UVM status:\n");
+	(*pr)("  pagesize=%d (0x%x), pagemask=0x%x, pageshift=%d\n",
 	    uvmexp.pagesize, uvmexp.pagesize, uvmexp.pagemask,
 	    uvmexp.pageshift);
-	printf("  %d VM pages: %d active, %d inactive, %d wired, %d free\n",
+	(*pr)("  %d VM pages: %d active, %d inactive, %d wired, %d free\n",
 	    uvmexp.npages, uvmexp.active, uvmexp.inactive, uvmexp.wired,
 	    uvmexp.free);
-	printf("  freemin=%d, free-target=%d, inactive-target=%d, "
+	(*pr)("  min  %d%% (%d) anon, %d%% (%d) vnode, %d%% (%d) vtext\n",
+	    uvmexp.anonminpct, uvmexp.anonmin, uvmexp.vnodeminpct,
+	    uvmexp.vnodemin, uvmexp.vtextminpct, uvmexp.vtextmin);
+	(*pr)("  pages  %d anon, %d vnode, %d vtext\n",
+	    uvmexp.anonpages, uvmexp.vnodepages, uvmexp.vtextpages);
+	(*pr)("  freemin=%d, free-target=%d, inactive-target=%d, "
 	    "wired-max=%d\n", uvmexp.freemin, uvmexp.freetarg, uvmexp.inactarg,
 	    uvmexp.wiredmax);
-	printf("  faults=%d, traps=%d, intrs=%d, ctxswitch=%d\n",
+	(*pr)("  faults=%d, traps=%d, intrs=%d, ctxswitch=%d\n",
 	    uvmexp.faults, uvmexp.traps, uvmexp.intrs, uvmexp.swtch);
-	printf("  softint=%d, syscalls=%d, swapins=%d, swapouts=%d\n",
+	(*pr)("  softint=%d, syscalls=%d, swapins=%d, swapouts=%d\n",
 	    uvmexp.softs, uvmexp.syscalls, uvmexp.swapins, uvmexp.swapouts);
 
-	printf("  fault counts:\n");
-	printf("    noram=%d, noanon=%d, pgwait=%d, pgrele=%d\n",
+	(*pr)("  fault counts:\n");
+	(*pr)("    noram=%d, noanon=%d, pgwait=%d, pgrele=%d\n",
 	    uvmexp.fltnoram, uvmexp.fltnoanon, uvmexp.fltpgwait,
 	    uvmexp.fltpgrele);
-	printf("    ok relocks(total)=%d(%d), anget(retrys)=%d(%d), "
+	(*pr)("    ok relocks(total)=%d(%d), anget(retrys)=%d(%d), "
 	    "amapcopy=%d\n", uvmexp.fltrelckok, uvmexp.fltrelck,
 	    uvmexp.fltanget, uvmexp.fltanretry, uvmexp.fltamcopy);
-	printf("    neighbor anon/obj pg=%d/%d, gets(lock/unlock)=%d/%d\n",
+	(*pr)("    neighbor anon/obj pg=%d/%d, gets(lock/unlock)=%d/%d\n",
 	    uvmexp.fltnamap, uvmexp.fltnomap, uvmexp.fltlget, uvmexp.fltget);
-	printf("    cases: anon=%d, anoncow=%d, obj=%d, prcopy=%d, przero=%d\n",
+	(*pr)("    cases: anon=%d, anoncow=%d, obj=%d, prcopy=%d, przero=%d\n",
 	    uvmexp.flt_anon, uvmexp.flt_acow, uvmexp.flt_obj, uvmexp.flt_prcopy,
 	    uvmexp.flt_przero);
 
-	printf("  daemon and swap counts:\n");
-	printf("    woke=%d, revs=%d, scans=%d, swout=%d\n", uvmexp.pdwoke,
-	    uvmexp.pdrevs, uvmexp.pdscans, uvmexp.pdswout);
-	printf("    busy=%d, freed=%d, reactivate=%d, deactivate=%d\n",
+	(*pr)("  daemon and swap counts:\n");
+	(*pr)("    woke=%d, revs=%d, scans=%d, obscans=%d, anscans=%d\n",
+	    uvmexp.pdwoke, uvmexp.pdrevs, uvmexp.pdscans, uvmexp.pdobscan,
+	    uvmexp.pdanscan);
+	(*pr)("    busy=%d, freed=%d, reactivate=%d, deactivate=%d\n",
 	    uvmexp.pdbusy, uvmexp.pdfreed, uvmexp.pdreact, uvmexp.pddeact);
-	printf("    pageouts=%d, pending=%d, nswget=%d\n", uvmexp.pdpageouts,
+	(*pr)("    pageouts=%d, pending=%d, nswget=%d\n", uvmexp.pdpageouts,
 	    uvmexp.pdpending, uvmexp.nswget);
-	printf("    nswapdev=%d, nanon=%d, nanonneeded=%d nfreeanon=%d\n",
+	(*pr)("    nswapdev=%d, nanon=%d, nanonneeded=%d nfreeanon=%d\n",
 	    uvmexp.nswapdev, uvmexp.nanon, uvmexp.nanonneeded,
 	    uvmexp.nfreeanon);
-	printf("    swpages=%d, swpginuse=%d, swpgonly=%d paging=%d\n",
+	(*pr)("    swpages=%d, swpginuse=%d, swpgonly=%d paging=%d\n",
 	    uvmexp.swpages, uvmexp.swpginuse, uvmexp.swpgonly, uvmexp.paging);
 
-	printf("  kernel pointers:\n");
-	printf("    objs(kern/kmem/mb)=%p/%p/%p\n", uvm.kernel_object,
+	(*pr)("  kernel pointers:\n");
+	(*pr)("    objs(kern/kmem/mb)=%p/%p/%p\n", uvm.kernel_object,
 	    uvmexp.kmem_object, uvmexp.mb_object);
 }
+#endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.8 2001/10/31 03:26:28 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.9 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -84,8 +84,6 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
-
 #include <uvm/uvm.h>
 
 #include <net/if.h>
@@ -133,7 +131,6 @@ int	ncpus =  1;
 int	main __P((void *));
 void	check_console __P((struct proc *));
 void	start_init __P((void *));
-void	start_pagedaemon __P((void *));
 void	start_cleaner __P((void *));
 void	start_update __P((void *));
 void	start_reaper __P((void *));
@@ -403,13 +400,11 @@ main(framep)
 	p->p_rtime.tv_sec = p->p_rtime.tv_usec = 0;
 
 	/* Create process 1 (init(8)). */
-	if (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, rval))
+	if (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, start_init, NULL, rval))
 		panic("fork init");
-	initproc = pfind(rval[0]);
-	cpu_set_kpc(initproc, start_init, initproc);
 
 	/* Create process 2, the pageout daemon kernel thread. */
-	if (kthread_create(start_pagedaemon, NULL, NULL, "pagedaemon"))
+	if (kthread_create(uvm_pageout, NULL, NULL, "pagedaemon"))
 		panic("fork pagedaemon");
 
 	/* Create process 3, the reaper daemon kernel thread. */
@@ -424,8 +419,12 @@ main(framep)
 	if (kthread_create(start_update, NULL, NULL, "update"))
 		panic("fork update");
 
+	/* Create process 6, the aiodone daemon kernel thread. */ 
+	if (kthread_create(uvm_aiodone_daemon, NULL, NULL, "aiodoned"))
+		panic("fork aiodoned");
+
 #ifdef CRYPTO
-	/* Create process 6, the crypto kernel thread. */
+	/* Create process 7, the crypto kernel thread. */
 	if (kthread_create(start_crypto, NULL, NULL, "crypto"))
 		panic("crypto thread");
 #endif /* CRYPTO */
@@ -496,6 +495,8 @@ start_init(arg)
 	char flags[4], *flagsp;
 	char **pathp, *path, *ucp, **uap, *arg0, *arg1 = NULL;
 
+	initproc = p;
+
 	/*
 	 * Now in process 1.
 	 */
@@ -510,7 +511,7 @@ start_init(arg)
 	addr = USRSTACK - PAGE_SIZE;
 #endif
 	if (uvm_map(&p->p_vmspace->vm_map, &addr, PAGE_SIZE, 
-	    NULL, UVM_UNKNOWN_OFFSET, 
+	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_COPY,
 	    UVM_ADV_NORMAL, UVM_FLAG_FIXED|UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW))
 	    != KERN_SUCCESS)
@@ -609,14 +610,6 @@ start_init(arg)
 	}
 	printf("init: not found\n");
 	panic("no init");
-}
-
-void
-start_pagedaemon(arg)
-	void *arg;
-{
-	uvm_pageout();
-	/* NOTREACHED */
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/Attic/exec_ecoff.c,v 1.5.6.2 2001/07/04 10:48:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/Attic/exec_ecoff.c,v 1.5.6.3 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: exec_ecoff.c,v 1.8 1996/05/19 20:36:06 jonathan Exp $	*/
 
 /*
@@ -39,7 +39,7 @@
 #include <sys/vnode.h>
 #include <sys/exec.h>
 #include <sys/resourcevar.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #if defined(_KERN_DO_ECOFF)
 

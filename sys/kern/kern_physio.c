@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_physio.c,v 1.7.2.3 2001/07/04 10:48:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_physio.c,v 1.7.2.4 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: kern_physio.c,v 1.28 1997/05/19 10:43:28 pk Exp $	*/
 
 /*-
@@ -47,9 +47,7 @@
 #include <sys/buf.h>
 #include <sys/conf.h>
 #include <sys/proc.h>
-#include <sys/malloc.h>
-
-#include <vm/vm.h>
+#include <sys/pool.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -281,7 +279,7 @@ getphysbuf()
 {
 	struct buf *bp;
 
-	bp = malloc(sizeof(*bp), M_TEMP, M_WAITOK);
+	bp = pool_get(&bufpool, PR_WAITOK);
 	bzero(bp, sizeof(*bp));
 
 	/* XXXCDC: are the following two lines necessary? */
@@ -305,9 +303,11 @@ putphysbuf(bp)
 	if (bp->b_vp)
 		brelvp(bp);
 
+#ifdef DIAGNOSTIC
 	if (bp->b_flags & B_WANTED)
 		panic("putphysbuf: private buf B_WANTED");
-	free(bp, M_TEMP);
+#endif
+	pool_put(&bufpool, bp);
 }
 
 /*

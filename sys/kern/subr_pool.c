@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_pool.c,v 1.2.2.3 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_pool.c,v 1.2.2.4 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: subr_pool.c,v 1.59 2001/06/05 18:51:04 thorpej Exp $	*/
 
 /*-
@@ -49,7 +49,6 @@
 #include <sys/syslog.h>
 #include <sys/sysctl.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 /*

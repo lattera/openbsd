@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/acct.h,v 1.2 1996/03/03 12:11:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/acct.h,v 1.2.16.1 2001/11/13 23:02:30 niklas Exp $	*/
 /*	$NetBSD: acct.h,v 1.16 1995/03/26 20:23:52 jtc Exp $	*/
 
 /*-
@@ -75,7 +75,5 @@ struct acct {
 #define	AHZ	64
 
 #ifdef _KERNEL
-struct vnode	*acctp;
-
-int	acct_process __P((struct proc *p));
+int	acct_process(struct proc *p);
 #endif

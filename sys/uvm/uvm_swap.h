@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.h,v 1.2.6.3 2001/10/31 03:32:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.h,v 1.2.6.4 2001/11/13 23:02:31 niklas Exp $	*/
 /*	$NetBSD: uvm_swap.h,v 1.5 2000/01/11 06:57:51 chs Exp $	*/
 
 /*
@@ -34,7 +34,7 @@
 #ifndef _UVM_UVM_SWAP_H_
 #define _UVM_UVM_SWAP_H_
 
-#define SWSLOT_BAD	(-1)
+#define	SWSLOT_BAD	(-1)
 
 #ifdef _KERNEL
 
@@ -45,6 +45,7 @@ void			uvm_swap_free __P((int, int));
 void			uvm_swap_markbad __P((int, int));
 #ifdef UVM_SWAP_ENCRYPT
 void			uvm_swap_initcrypt_all __P((void));
+void			uvm_swap_freepages __P((struct vm_page **, int));
 #endif
 
 #endif /* _KERNEL */

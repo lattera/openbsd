@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_domain.c,v 1.9.2.2 2001/05/14 22:32:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_domain.c,v 1.9.2.3 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: uipc_domain.c,v 1.14 1996/02/09 19:00:44 christos Exp $	*/
 
 /*
@@ -45,7 +45,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 #include <sys/timeout.h>
 

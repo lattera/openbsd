@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.3 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.4 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -64,12 +64,10 @@
 #include <sys/syscallargs.h>
 #include <sys/pool.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <miscfs/specfs/specdev.h>
-
-#include <uvm/uvm_extern.h>
 
 enum vtype iftovt_tab[16] = {
 	VNON, VFIFO, VCHR, VNON, VDIR, VNON, VBLK, VNON,

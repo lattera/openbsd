@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.4 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.5 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -62,7 +62,7 @@
 
 #include <sys/namei.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <dev/rndvar.h>
 
 static int ttnread __P((struct tty *));

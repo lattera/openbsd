@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.4 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.5 2001/11/13 23:02:30 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -113,33 +113,33 @@ struct lock {
  * or passed in as arguments to the lock manager. The LK_REENABLE flag may be
  * set only at the release of a lock obtained by drain.
  */
-#define LK_EXTFLG_MASK	0x00000070	/* mask of external flags */
+#define LK_EXTFLG_MASK	0x00000770	/* mask of external flags */
 #define LK_NOWAIT	0x00000010	/* do not sleep to await lock */
 #define LK_SLEEPFAIL	0x00000020	/* sleep, then return failure */
 #define LK_CANRECURSE	0x00000040	/* allow recursive exclusive lock */
 #define LK_REENABLE	0x00000080	/* lock is be reenabled after drain */
+#define LK_RECURSEFAIL	0x00000100	/* fail if recursive exclusive lock */
 #define LK_SETRECURSE	0x00100000	/* other locks while we have it OK */
-#define LK_RECURSEFAIL	0x00200000	/* attempt at recursive lock fails */
 #define LK_SPIN		0x00400000	/* lock spins instead of sleeps */
 /*
  * Internal lock flags.
  *
  * These flags are used internally to the lock manager.
  */
-#define LK_WANT_UPGRADE	0x00000100	/* waiting for share-to-excl upgrade */
-#define LK_WANT_EXCL	0x00000200	/* exclusive lock sought */
-#define LK_HAVE_EXCL	0x00000400	/* exclusive lock obtained */
-#define LK_WAITDRAIN	0x00000800	/* process waiting for lock to drain */
-#define LK_DRAINING	0x00004000	/* lock is being drained */
-#define LK_DRAINED	0x00008000	/* lock has been decommissioned */
+#define LK_WANT_UPGRADE	0x00001000	/* waiting for share-to-excl upgrade */
+#define LK_WANT_EXCL	0x00002000	/* exclusive lock sought */
+#define LK_HAVE_EXCL	0x00004000	/* exclusive lock obtained */
+#define LK_WAITDRAIN	0x00008000	/* process waiting for lock to drain */
+#define LK_DRAINING	0x00040000	/* lock is being drained */
+#define LK_DRAINED	0x00080000	/* lock has been decommissioned */
 /*
  * Control flags
  *
  * Non-persistent external flags.
  */
-#define LK_INTERLOCK	0x00010000	/* unlock passed simple lock after
+#define LK_INTERLOCK	0x00100000	/* unlock passed simple lock after
 					   getting lk_interlock */
-#define LK_RETRY	0x00020000	/* vn_lock: retry until locked */
+#define LK_RETRY	0x00200000	/* vn_lock: retry until locked */
 
 /*
  * Lock return status.
@@ -180,6 +180,12 @@ int	lockstatus __P((struct lock *));
 #else
 #define spinlockinit(lkp, name, flags)	(void)(lkp)
 #define spinlockmgr(lkp, flags, intrlk)	(0)
+#endif
+
+#ifdef LOCKDEBUG
+#define LOCK_ASSERT(x)	KASSERT(x)
+#else
+#define LOCK_ASSERT(x)	/* nothing */
 #endif
 
 #endif /* !_LOCK_H_ */

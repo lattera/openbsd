@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.29.2.3 2001/10/31 03:26:28 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.29.2.4 2001/11/13 23:04:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Per Fogelstrom
@@ -48,7 +48,7 @@
 #include <sys/stat.h>
 
 #include <sys/mman.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/reg.h>

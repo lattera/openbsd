@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.3.4.4 2001/10/31 03:32:14 nate Exp $	*/
-/*	$NetBSD: uvm_anon.c,v 1.5 2000/01/11 06:57:49 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.3.4.5 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$NetBSD: uvm_anon.c,v 1.15 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
  *
@@ -44,9 +44,6 @@
 #include <sys/pool.h>
 #include <sys/kernel.h>
 
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-
 #include <uvm/uvm.h>
 #include <uvm/uvm_swap.h>
 
@@ -90,7 +87,7 @@ uvm_anon_init()
  *
  * => swap_syscall_lock should be held (protects anonblock_list).
  */
-void
+int
 uvm_anon_add(count)
 	int	count;
 {
@@ -104,17 +101,16 @@ uvm_anon_add(count)
 	simple_unlock(&uvm.afreelock);
 
 	if (needed <= 0) {
-		return;
+		return 0;
 	}
- 
-	MALLOC(anonblock, void *, sizeof(*anonblock), M_UVMAMAP, M_WAITOK);
 	anon = (void *)uvm_km_alloc(kernel_map, sizeof(*anon) * needed);
-
-	/* XXX Should wait for VM to free up. */
-	if (anonblock == NULL || anon == NULL) {
-		printf("uvm_anon_add: can not allocate %d anons\n", needed);
-		panic("uvm_anon_add");
+	if (anon == NULL) {
+		simple_lock(&uvm.afreelock);
+		uvmexp.nanonneeded -= count;
+		simple_unlock(&uvm.afreelock);
+		return ENOMEM;
 	}
+	MALLOC(anonblock, void *, sizeof(*anonblock), M_UVMAMAP, M_WAITOK);
 
 	anonblock->count = needed;
 	anonblock->anons = anon;
@@ -131,6 +127,7 @@ uvm_anon_add(count)
 		simple_lock_init(&uvm.afree->an_lock);
 	}
 	simple_unlock(&uvm.afreelock);
+	return 0;
 }
 
 /*
@@ -152,6 +149,8 @@ uvm_anon_remove(count)
 
 /*
  * allocate an anon
+ *
+ * => new anon is returned locked!
  */
 struct vm_anon *
 uvm_analloc()
@@ -166,6 +165,8 @@ uvm_analloc()
 		a->an_ref = 1;
 		a->an_swslot = 0;
 		a->u.an_page = NULL;		/* so we can free quickly */
+		LOCK_ASSERT(simple_lock_held(&a->an_lock) == 0);
+		simple_lock(&a->an_lock);
 	}
 	simple_unlock(&uvm.afreelock);
 	return(a);
@@ -186,6 +187,9 @@ uvm_anfree(anon)
 	struct vm_page *pg;
 	UVMHIST_FUNC("uvm_anfree"); UVMHIST_CALLED(maphist);
 	UVMHIST_LOG(maphist,"(anon=0x%x)", anon, 0,0,0);
+
+	KASSERT(anon->an_ref == 0);
+	LOCK_ASSERT(simple_lock_held(&anon->an_lock) == 0);
 
 	/*
 	 * get page
@@ -215,19 +219,12 @@ uvm_anfree(anon)
 		 */
 
 		if (pg->uobject) {
-
-			/* kill loan */
 			uvm_lock_pageq();
-#ifdef DIAGNOSTIC
-			if (pg->loan_count < 1)
-				panic("uvm_anfree: obj owned page "
-				      "with no loan count");
-#endif
+			KASSERT(pg->loan_count > 0);
 			pg->loan_count--;
 			pg->uanon = NULL;
 			uvm_unlock_pageq();
 			simple_unlock(&pg->uobject->vmobjlock);
-
 		} else {
 
 			/*
@@ -247,13 +244,11 @@ uvm_anfree(anon)
 				    anon, pg, 0, 0);
 				return;
 			} 
-
 			pmap_page_protect(pg, VM_PROT_NONE);
 			uvm_lock_pageq();	/* lock out pagedaemon */
 			uvm_pagefree(pg);	/* bye bye */
 			uvm_unlock_pageq();	/* free the daemon */
-
-			UVMHIST_LOG(maphist,"  anon 0x%x, page 0x%x: freed now!", 
+			UVMHIST_LOG(maphist,"anon 0x%x, page 0x%x: freed now!",
 			    anon, pg, 0, 0);
 		}
 	}
@@ -285,9 +280,9 @@ uvm_anon_dropswap(anon)
 	struct vm_anon *anon;
 {
 	UVMHIST_FUNC("uvm_anon_dropswap"); UVMHIST_CALLED(maphist);
-	if (anon->an_swslot == 0) {
+
+	if (anon->an_swslot == 0)
 		return;
-	}
 
 	UVMHIST_LOG(maphist,"freeing swap for anon %p, paged to swslot 0x%x",
 		    anon, anon->an_swslot, 0, 0);
@@ -325,6 +320,8 @@ uvm_anon_lockloanpg(anon)
 {
 	struct vm_page *pg;
 	boolean_t locked = FALSE;
+
+	LOCK_ASSERT(simple_lock_held(&anon->an_lock));
 
 	/*
 	 * loop while we have a resident page that has a non-zero loan count.
@@ -365,12 +362,14 @@ uvm_anon_lockloanpg(anon)
 
 			if (!locked) {
 				simple_unlock(&anon->an_lock);
+
 				/*
 				 * someone locking the object has a chance to
 				 * lock us right now
 				 */
+
 				simple_lock(&anon->an_lock);
-				continue;		/* start over */
+				continue;
 			}
 		}
 
@@ -389,13 +388,9 @@ uvm_anon_lockloanpg(anon)
 		/*
 		 * we did it!   break the loop
 		 */
+
 		break;
 	}
-
-	/*
-	 * done!
-	 */
-
 	return(pg);
 }
 
@@ -480,11 +475,16 @@ anon_pagein(anon)
 	struct vm_page *pg;
 	struct uvm_object *uobj;
 	int rv;
-	UVMHIST_FUNC("anon_pagein"); UVMHIST_CALLED(pdhist);
-	
+
 	/* locked: anon */
+	LOCK_ASSERT(simple_lock_held(&anon->an_lock));
+
 	rv = uvmfault_anonget(NULL, NULL, anon);
-	/* unlocked: anon */
+
+	/*
+	 * if rv == VM_PAGER_OK, anon is still locked, else anon
+	 * is unlocked
+	 */
 
 	switch (rv) {
 	case VM_PAGER_OK:
@@ -500,11 +500,6 @@ anon_pagein(anon)
 		 */
 
 		return FALSE;
-
-#ifdef DIAGNOSTIC
-	default:
-		panic("anon_pagein: uvmfault_anonget -> %d", rv);
-#endif
 	}
 
 	/*
@@ -523,7 +518,9 @@ anon_pagein(anon)
 	 */
 
 	pmap_clear_reference(pg);
+#ifndef UBC
 	pmap_page_protect(pg, VM_PROT_NONE);
+#endif
 	uvm_lock_pageq();
 	uvm_pagedeactivate(pg);
 	uvm_unlock_pageq();

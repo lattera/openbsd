@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.3 2001/10/31 03:30:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.4 2001/11/13 22:59:59 niklas Exp $	*/
 /*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
@@ -74,7 +74,7 @@
 #include <sys/kernel.h>
 #include <ufs/ufs/dir.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <nfs/nfsproto.h>
 #include <nfs/rpcv2.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.26.2.3 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.26.2.4 2001/11/13 22:59:59 niklas Exp $	*/
 /*	$NetBSD: nfs_vnops.c,v 1.62.4.1 1996/07/08 20:26:52 jtc Exp $	*/
 
 /*
@@ -61,7 +61,7 @@
 #include <sys/fcntl.h>
 #include <sys/lockf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/fifofs/fifo.h>

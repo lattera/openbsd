@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.4 2001/10/31 03:32:14 nate Exp $	*/
-/*	$NetBSD: uvm_mmap.c,v 1.41 2000/05/23 02:19:20 enami Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.5 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -64,9 +64,6 @@
 #include <sys/stat.h>
 
 #include <miscfs/specfs/specdev.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <sys/syscallargs.h>
 
@@ -180,12 +177,9 @@ sys_mincore(p, v, retval)
 	for (/* nothing */;
 	     entry != &map->header && entry->start < end;
 	     entry = entry->next) {
-#ifdef DIAGNOSTIC
-		if (UVM_ET_ISSUBMAP(entry))
-			panic("mincore: user map has submap");
-		if (start < entry->start)
-			panic("mincore: hole");
-#endif
+		KASSERT(!UVM_ET_ISSUBMAP(entry));
+		KASSERT(start >= entry->start);
+
 		/* Make sure there are no holes. */
 		if (entry->end < end &&
 		     (entry->next == &map->header ||
@@ -201,10 +195,7 @@ sys_mincore(p, v, retval)
 		 * are always considered resident (mapped devices).
 		 */
 		if (UVM_ET_ISOBJ(entry)) {
-#ifdef DIAGNOSTIC
-			if (UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj))
-				panic("mincore: user map has kernel object");
-#endif
+			KASSERT(!UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj));
 			if (entry->object.uvm_obj->pgops->pgo_releasepg
 			    == NULL) {
 				for (/* nothing */; start < lim;
@@ -265,26 +256,6 @@ sys_mincore(p, v, retval)
 	uvm_vsunlock(p, SCARG(uap, vec), npgs);
 	return (error);
 }
-
-#if 0
-/*
- * munmapfd: unmap file descriptor
- *
- * XXX: is this acutally a useful function?   could it be useful?
- */
-
-void
-munmapfd(p, fd)
-	struct proc *p;
-	int fd;
-{
-
-	/*
-	 * XXX should vm_deallocate any regions mapped to this file
-	 */
-	p->p_fd->fd_ofileflags[fd] &= ~UF_MAPPED;
-}
-#endif
 
 /*
  * sys_mmap: mmap system call.
@@ -379,7 +350,9 @@ sys_mmap(p, v, retval)
 		 * not fixed: make sure we skip over the largest possible heap.
 		 * we will refine our guess later (e.g. to account for VAC, etc)
 		 */
-		if (addr < round_page((vaddr_t)p->p_vmspace->vm_daddr+MAXDSIZ))
+
+		if (addr < round_page((vaddr_t)p->p_vmspace->vm_daddr +
+		    MAXDSIZ))
 			addr = round_page((vaddr_t)p->p_vmspace->vm_daddr +
 			    MAXDSIZ);
 	}
@@ -435,11 +408,6 @@ sys_mmap(p, v, retval)
 		 * so just change it to MAP_SHARED.
 		 */
 		if (vp->v_type == VCHR && (flags & MAP_PRIVATE) != 0) {
-#if defined(DIAGNOSTIC)
-			printf("WARNING: converted MAP_PRIVATE device mapping "
-			    "to MAP_SHARED (pid %d comm %s)\n", p->p_pid,
-			    p->p_comm);
-#endif
 			flags = (flags & ~MAP_PRIVATE) | MAP_SHARED;
 		}
 
@@ -883,7 +851,7 @@ sys_madvise(p, v, retval)
 	case MADV_FREE:
 		/*
 		 * These pages contain no valid data, and may be
-		 * grbage-collected.  Toss all resources, including
+		 * garbage-collected.  Toss all resources, including
 		 * any swap space in use.
 		 */
 		rv = uvm_map_clean(&p->p_vmspace->vm_map, addr, addr + size,
@@ -1158,6 +1126,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 			uobj = uvn_attach((void *) vp, (flags & MAP_SHARED) ?
 			   maxprot : (maxprot & ~VM_PROT_WRITE));
 
+#ifndef UBC
 			/*
 			 * XXXCDC: hack from old code
 			 * don't allow vnodes which have been mapped
@@ -1187,11 +1156,25 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 					uvm_vnp_uncache(vp);
 				}
 			}
-
+#else
+			/* XXX for now, attach doesn't gain a ref */
+			VREF(vp);
+#endif
 		} else {
 			uobj = udv_attach((void *) &vp->v_rdev,
-			    (flags & MAP_SHARED) ?
-			    maxprot : (maxprot & ~VM_PROT_WRITE), foff, size);
+			    (flags & MAP_SHARED) ? maxprot :
+			    (maxprot & ~VM_PROT_WRITE), foff, size);
+			/*
+			 * XXX Some devices don't like to be mapped with
+			 * XXX PROT_EXEC, but we don't really have a
+			 * XXX better way of handling this, right now
+			 */
+			if (uobj == NULL && (prot & PROT_EXEC) == 0) {
+				maxprot &= ~VM_PROT_EXECUTE;
+				uobj = udv_attach((void *) &vp->v_rdev,
+				    (flags & MAP_SHARED) ? maxprot :
+				    (maxprot & ~VM_PROT_WRITE), foff, size);
+			}
 			advice = UVM_ADV_RANDOM;
 		}
 		
@@ -1214,7 +1197,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 	 * do it!
 	 */
 
-	retval = uvm_map(map, addr, size, uobj, foff, uvmflag);
+	retval = uvm_map(map, addr, size, uobj, foff, 0, uvmflag);
 
 	if (retval == KERN_SUCCESS) {
 		/*

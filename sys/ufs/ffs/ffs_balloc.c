@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.9.4.2 2001/07/04 11:00:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.9.4.3 2001/11/13 23:02:30 niklas Exp $	*/
 /*	$NetBSD: ffs_balloc.c,v 1.3 1996/02/09 22:22:21 christos Exp $	*/
 
 /*
@@ -43,8 +43,6 @@
 #include <sys/file.h>
 #include <sys/mount.h>
 #include <sys/vnode.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

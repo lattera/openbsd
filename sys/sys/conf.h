@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.4 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.5 2001/11/13 23:02:30 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.33 1996/05/03 20:03:32 christos Exp $	*/
 
 /*-
@@ -153,7 +153,7 @@ struct cdevsw {
 	struct tty *
 		(*d_tty)	__P((dev_t dev));
 	int	(*d_select)	__P((dev_t dev, int which, struct proc *p));
-	int	(*d_mmap)	__P((dev_t, int, int));
+	paddr_t	(*d_mmap)	__P((dev_t, off_t, int));
 	u_int	d_type;
 	int	(*d_kqfilter)	__P((dev_t dev, struct knote *kn));
 };
@@ -168,7 +168,7 @@ extern struct cdevsw cdevsw[];
 #define	dev_type_stop(n)	int n __P((struct tty *, int))
 #define	dev_type_tty(n)		struct tty *n __P((dev_t))
 #define	dev_type_select(n)	int n __P((dev_t, int, struct proc *))
-#define	dev_type_mmap(n)	int n __P((dev_t, int, int))
+#define	dev_type_mmap(n)	paddr_t n __P((dev_t, off_t, int))
 #define dev_type_kqfilter(n)	int n __P((dev_t, struct knote *))
 
 #define	cdev_decl(n) \

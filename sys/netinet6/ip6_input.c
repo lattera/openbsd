@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.4 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.5 2001/11/13 22:59:58 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -1347,6 +1347,8 @@ ip6_nexthdr(m, off, proto, nxtp)
 		if (nxtp)
 			*nxtp = ip6e.ip6e_nxt;
 		off += (ip6e.ip6e_len + 2) << 2;
+		if (m->m_pkthdr.len < off)
+			return -1;
 		return off;
 
 	case IPPROTO_HOPOPTS:
@@ -1358,6 +1360,8 @@ ip6_nexthdr(m, off, proto, nxtp)
 		if (nxtp)
 			*nxtp = ip6e.ip6e_nxt;
 		off += (ip6e.ip6e_len + 1) << 3;
+		if (m->m_pkthdr.len < off)
+			return -1;
 		return off;
 
 	case IPPROTO_NONE:
@@ -1417,7 +1421,7 @@ u_char	inet6ctlerrmap[PRC_NCMDS] = {
 	ENOPROTOOPT
 };
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 int

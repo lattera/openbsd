@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mman.h,v 1.7.8.2 2001/07/04 11:00:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mman.h,v 1.7.8.3 2001/11/13 23:02:30 niklas Exp $	*/
 /*	$NetBSD: mman.h,v 1.11 1995/03/26 20:24:23 jtc Exp $	*/
 
 /*-
@@ -83,6 +83,15 @@
 #define	MADV_DONTNEED	4	/* dont need these pages */
 #define	MADV_SPACEAVAIL	5	/* insure that resources are reserved */
 #define	MADV_FREE	6	/* pages are empty, free them */
+
+/*
+ * Flags to minherit
+ */
+#define MAP_INHERIT_SHARE	0	/* share with child */
+#define MAP_INHERIT_COPY	1	/* copy into child */
+#define MAP_INHERIT_NONE	2	/* absent from child */
+#define MAP_INHERIT_DONATE_COPY	3	/* copy and delete -- not
+					   implemented in UVM */
 
 /*
  * Flags to msync

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.4 2001/10/31 03:29:03 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.5 2001/11/13 22:59:58 niklas Exp $	*/
 /*	$NetBSD: if_ether.c,v 1.31 1996/05/11 12:59:58 mycroft Exp $	*/
 
 /*
@@ -95,7 +95,7 @@ static int revarp_in_progress = 0;
 struct ifnet *myip_ifp = NULL;
 
 #ifdef DDB
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 void	db_print_sa __P((struct sockaddr *));
 void	db_print_ifa __P((struct ifaddr *));

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.3.4.3 2001/10/31 03:32:14 nate Exp $	*/
-/*	$NetBSD: uvm_loan.c,v 1.20 2000/04/10 00:32:46 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.3.4.4 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$NetBSD: uvm_loan.c,v 1.23 2001/01/23 02:27:39 thorpej Exp $	*/
 
 /*
  *
@@ -45,9 +45,6 @@
 #include <sys/proc.h>
 #include <sys/malloc.h>
 #include <sys/mman.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
 
@@ -582,6 +579,7 @@ uvm_loanuobj(ufi, output, flags, va)
 		uvmfault_unlockall(ufi, amap, uobj, NULL);
 		return(-1);
 	}
+	/* anon is locked! */
 	anon->u.an_page = pg;
 	pg->uanon = anon;
 	uvm_lock_pageq();
@@ -596,6 +594,7 @@ uvm_loanuobj(ufi, output, flags, va)
 		wakeup(pg);
 	pg->flags &= ~(PG_WANTED|PG_BUSY);
 	UVM_PAGE_OWN(pg, NULL);
+	simple_unlock(&anon->an_lock);
 	return(1);
 }
 
@@ -651,14 +650,21 @@ uvm_loanzero(ufi, output, flags)
 	/* loaning to an anon */
 	while ((anon = uvm_analloc()) == NULL || 
 	    (pg = uvm_pagealloc(NULL, 0, anon, UVM_PGA_ZERO)) == NULL) {
-		
+
 		/* unlock everything */
 		uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
-		       ufi->entry->object.uvm_obj, NULL);
-		
+		       ufi->entry->object.uvm_obj, anon);
+
 		/* out of swap causes us to fail */
 		if (anon == NULL)
 			return(-1);
+
+		/*
+		 * drop our reference; we're the only one,
+		 * so it's okay that the anon isn't locked
+		 * here.
+		 */
+		anon->an_ref--;
 
 		uvm_anfree(anon);
 		uvm_wait("loanzero2");		/* wait for pagedaemon */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/pipe.h,v 1.4.2.1 2001/07/04 11:00:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/pipe.h,v 1.4.2.2 2001/11/13 23:02:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 John S. Dyson
@@ -27,7 +27,7 @@
 #ifndef _KERNEL
 #include <sys/time.h>			/* for struct timeval */
 #include <sys/select.h>			/* for struct selinfo */
-#include <vm/vm.h>			/* for vm_page_t */
+#include <uvm/uvm_extern.h>		/* for vm_page_t */
 #include <machine/param.h>		/* for PAGE_SIZE */
 #endif /* _KERNEL */
 

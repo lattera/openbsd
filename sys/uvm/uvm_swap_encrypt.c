@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap_encrypt.c,v 1.1.2.3 2001/10/31 03:32:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap_encrypt.c,v 1.1.2.4 2001/11/13 23:02:31 niklas Exp $	*/
 
 /*
  * Copyright 1999 Niels Provos <provos@citi.umich.edu>
@@ -39,8 +39,6 @@
 #include <sys/conf.h>
 #include <dev/rndvar.h>
 #include <crypto/rijndael.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 

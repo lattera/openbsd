@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_user.c,v 1.3.4.2 2001/05/14 22:47:49 niklas Exp $	*/
-/*	$NetBSD: uvm_user.c,v 1.7 1999/03/25 18:48:56 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_user.c,v 1.3.4.3 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$NetBSD: uvm_user.c,v 1.8 2000/06/27 17:29:37 mrg Exp $	*/
 
 /*
  *
@@ -44,7 +44,6 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 /*

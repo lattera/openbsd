@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.2 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.3 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: sysv_shm.c,v 1.50 1998/10/21 22:24:29 tron Exp $	*/
 
 /*
@@ -46,7 +46,6 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 struct shminfo shminfo;
@@ -254,7 +253,7 @@ sys_shmat(p, v, retval)
 	shm_handle = shmseg->shm_internal;
 	uao_reference(shm_handle->shm_object);
 	rv = uvm_map(&p->p_vmspace->vm_map, &attach_va, size,
-	    shm_handle->shm_object, 0, UVM_MAPFLAG(prot, prot,
+	    shm_handle->shm_object, 0, 0, UVM_MAPFLAG(prot, prot,
 	    UVM_INH_SHARE, UVM_ADV_RANDOM, 0));
 	if (rv != KERN_SUCCESS) {
 	    return ENOMEM;

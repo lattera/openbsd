@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_init.c,v 1.3.4.3 2001/10/31 03:32:14 nate Exp $	*/
-/*	$NetBSD: uvm_init.c,v 1.12 2000/03/29 03:43:34 simonb Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_init.c,v 1.3.4.4 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$NetBSD: uvm_init.c,v 1.14 2000/06/27 17:29:23 mrg Exp $	*/
 
 /*
  *
@@ -48,10 +48,6 @@
 #include <sys/proc.h>
 #include <sys/malloc.h>
 #include <sys/vnode.h>
-
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8.2.1 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8.2.2 2001/11/13 22:59:58 niklas Exp $	*/
 
 /*-
  *
@@ -52,7 +52,7 @@
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/proc.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <net/if.h>

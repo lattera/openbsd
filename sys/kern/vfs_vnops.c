@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.23.2.3 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.23.2.4 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: vfs_vnops.c,v 1.20 1996/02/04 02:18:41 christos Exp $	*/
 
 /*
@@ -54,8 +54,6 @@
 #include <sys/ioctl.h>
 #include <sys/tty.h>
 #include <sys/cdio.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

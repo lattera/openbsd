@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.6 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.7 2001/11/13 23:04:23 niklas Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -57,14 +57,12 @@
 #include <sys/tty.h>
 #include <sys/disklabel.h>
 #include <sys/disk.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 #include <sys/msgbuf.h>
 #include <sys/dkstat.h>
 #include <sys/vmmeter.h>
 #include <sys/namei.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
