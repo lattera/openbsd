@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.31.2.3 2001/03/21 19:46:34 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.31.2.4 2001/05/07 21:09:42 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -11,7 +11,7 @@ CFLAGS+=-DHAVE_LOGIN_CAP
 
 SRCS=	sshd.c auth-rhosts.c auth-passwd.c auth-rsa.c auth-rh-rsa.c \
 	sshpty.c sshlogin.c servconf.c serverloop.c \
-	auth.c auth1.c auth2.c auth-options.c session.c dh.c \
+	auth.c auth1.c auth2.c auth-options.c session.c \
 	auth-chall.c auth2-chall.c groupaccess.c
 
 .include <bsd.own.mk> # for KERBEROS and AFS

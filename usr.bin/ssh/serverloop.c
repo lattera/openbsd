@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.34.2.3 2001/03/21 19:46:28 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.34.2.4 2001/05/07 21:09:33 jason Exp $");
 
 #include "xmalloc.h"
 #include "packet.h"
@@ -53,8 +53,12 @@ RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.34.2.3 2001/03/21 19:46:28 jas
 #include "auth-options.h"
 #include "serverloop.h"
 #include "misc.h"
+#include "kex.h"
 
 extern ServerOptions options;
+
+/* XXX */
+extern Kex *xxx_kex;
 
 static Buffer stdin_buffer;	/* Buffer for stdin data. */
 static Buffer stdout_buffer;	/* Buffer for stdout data. */
@@ -73,7 +77,8 @@ static int fderr_eof = 0;	/* EOF encountered readung from fderr. */
 static int fdin_is_tty = 0;	/* fdin points to a tty. */
 static int connection_in;	/* Connection to client (input). */
 static int connection_out;	/* Connection to client (output). */
-static u_int buffer_high;/* "Soft" max buffer size. */
+static int connection_closed = 0;	/* Connection to client closed. */
+static u_int buffer_high;	/* "Soft" max buffer size. */
 
 /*
  * This SIGCHLD kludge is used to detect when the child exits.  The server
@@ -85,6 +90,8 @@ static volatile int child_terminated;	/* The child has terminated. */
 static volatile int child_wait_status;	/* Status from wait(). */
 
 void	server_init_dispatch(void);
+
+int client_alive_timeouts = 0;
 
 void
 sigchld_handler(int sig)
@@ -185,12 +192,27 @@ wait_until_can_do_something(fd_set **readsetp, fd_set **writesetp, int *maxfdp,
 {
 	struct timeval tv, *tvp;
 	int ret;
+	int client_alive_scheduled = 0;
+
+	/*
+	 * if using client_alive, set the max timeout accordingly, 
+	 * and indicate that this particular timeout was for client
+	 * alive by setting the client_alive_scheduled flag.
+	 *
+	 * this could be randomized somewhat to make traffic
+	 * analysis more difficult, but we're not doing it yet.  
+	 */
+	if (max_time_milliseconds == 0 && options.client_alive_interval) {
+	        client_alive_scheduled = 1;
+		max_time_milliseconds = options.client_alive_interval * 1000;
+	} else 
+	        client_alive_scheduled = 0;
 
 	/* When select fails we restart from here. */
 retry_select:
 
 	/* Allocate and update select() masks for channel descriptors. */
-	channel_prepare_select(readsetp, writesetp, maxfdp);
+	channel_prepare_select(readsetp, writesetp, maxfdp, 0);
 
 	if (compat20) {
 		/* wrong: bad condition XXX */
@@ -234,7 +256,7 @@ retry_select:
 	 * from it, then read as much as is available and exit.
 	 */
 	if (child_terminated && packet_not_very_much_data_to_write())
-		if (max_time_milliseconds == 0)
+		if (max_time_milliseconds == 0 || client_alive_scheduled)
 			max_time_milliseconds = 100;
 
 	if (max_time_milliseconds == 0)
@@ -250,12 +272,36 @@ retry_select:
 	/* Wait for something to happen, or the timeout to expire. */
 	ret = select((*maxfdp)+1, *readsetp, *writesetp, NULL, tvp);
 
-	if (ret < 0) {
+	if (ret == -1) {
 		if (errno != EINTR)
 			error("select: %.100s", strerror(errno));
 		else
 			goto retry_select;
 	}
+	if (ret == 0 && client_alive_scheduled) {
+		/* timeout, check to see how many we have had */
+		client_alive_timeouts++;
+
+		if (client_alive_timeouts > options.client_alive_count_max ) {
+			packet_disconnect(
+				"Timeout, your session not responding.");
+		} else {
+			/*
+			 * send a bogus channel request with "wantreply" 
+			 * we should get back a failure
+			 */
+			int id;
+			
+			id = channel_find_open();
+			if (id != -1) {
+				channel_request_start(id,
+				  "keepalive@openssh.com", 1);
+				packet_send();
+			} else 
+				packet_disconnect(
+					"No open channels after timeout!");
+		}
+	} 
 }
 
 /*
@@ -273,6 +319,9 @@ process_input(fd_set * readset)
 		len = read(connection_in, buf, sizeof(buf));
 		if (len == 0) {
 			verbose("Connection closed by remote host.");
+			connection_closed = 1;
+			if (compat20)
+				return;
 			fatal_cleanup();
 		} else if (len < 0) {
 			if (errno != EINTR && errno != EAGAIN) {
@@ -391,7 +440,7 @@ drain_output(void)
 void
 process_buffered_input_packets(void)
 {
-	dispatch_run(DISPATCH_NONBLOCK, NULL, NULL);
+	dispatch_run(DISPATCH_NONBLOCK, NULL, compat20 ? xxx_kex : NULL);
 }
 
 /*
@@ -646,9 +695,7 @@ void
 server_loop2(void)
 {
 	fd_set *readset = NULL, *writeset = NULL;
-	int max_fd;
-	int had_channel = 0;
-	int status;
+	int rekeying = 0, max_fd, status;
 	pid_t pid;
 
 	debug("Entering interactive session for SSH2.");
@@ -664,22 +711,23 @@ server_loop2(void)
 
 	for (;;) {
 		process_buffered_input_packets();
-		if (!had_channel && channel_still_open())
-			had_channel = 1;
-		if (had_channel && !channel_still_open()) {
-			debug("!channel_still_open.");
-			break;
-		}
-		if (packet_not_very_much_data_to_write())
+
+		rekeying = (xxx_kex != NULL && !xxx_kex->done);
+
+		if (!rekeying && packet_not_very_much_data_to_write())
 			channel_output_poll();
-		wait_until_can_do_something(&readset, &writeset, &max_fd, 0);
+		wait_until_can_do_something(&readset, &writeset, &max_fd,
+		    rekeying);
 		if (child_terminated) {
 			while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
 				session_close_by_pid(pid, status);
 			child_terminated = 0;
 		}
-		channel_after_select(readset, writeset);
+		if (!rekeying)
+			channel_after_select(readset, writeset);
 		process_input(readset);
+		if (connection_closed)
+			break;
 		process_output(writeset);
 	}
 	if (readset)
@@ -692,6 +740,19 @@ server_loop2(void)
 		session_close_by_pid(pid, status);
 	channel_stop_listening();
 }
+
+void
+server_input_channel_failure(int type, int plen, void *ctxt)
+{
+	debug("Got CHANNEL_FAILURE for keepalive");
+	/* 
+         * reset timeout, since we got a sane answer from the client.
+	 * even if this was generated by something other than
+	 * the bogus CHANNEL_REQUEST we send for keepalives.
+	 */
+	client_alive_timeouts = 0; 
+}
+
 
 void
 server_input_stdin_data(int type, int plen, void *ctxt)
@@ -905,6 +966,10 @@ server_init_dispatch_20(void)
 	dispatch_set(SSH2_MSG_CHANNEL_REQUEST, &channel_input_channel_request);
 	dispatch_set(SSH2_MSG_CHANNEL_WINDOW_ADJUST, &channel_input_window_adjust);
 	dispatch_set(SSH2_MSG_GLOBAL_REQUEST, &server_input_global_request);
+	/* client_alive */
+	dispatch_set(SSH2_MSG_CHANNEL_FAILURE, &server_input_channel_failure);
+	/* rekeying */
+	dispatch_set(SSH2_MSG_KEXINIT, &kex_input_kexinit);
 }
 void
 server_init_dispatch_13(void)
@@ -939,3 +1004,4 @@ server_init_dispatch(void)
 	else
 		server_init_dispatch_15();
 }
+

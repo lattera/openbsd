@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.20.2.3 2001/03/21 19:46:25 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.20.2.4 2001/05/07 21:09:29 jason Exp $");
 
 #include "packet.h"
 #include "match.h"
@@ -111,19 +111,17 @@ check_host_in_hostfile(const char *filename, const char *host, Key *key,
 	FILE *f;
 	char line[8192];
 	int linenum = 0;
-	u_int kbits, hostlen;
+	u_int kbits;
 	char *cp, *cp2;
 	HostStatus end_return;
 
+	debug3("check_host_in_hostfile: filename %s", filename);
 	if (key == NULL)
 		fatal("no key to look up");
 	/* Open the file containing the list of known hosts. */
 	f = fopen(filename, "r");
 	if (!f)
 		return HOST_NEW;
-
-	/* Cache the length of the host name. */
-	hostlen = strlen(host);
 
 	/*
 	 * Return value when the loop terminates.  This is set to
@@ -132,7 +130,7 @@ check_host_in_hostfile(const char *filename, const char *host, Key *key,
 	 */
 	end_return = HOST_NEW;
 
-	/* Go trough the file. */
+	/* Go through the file. */
 	while (fgets(line, sizeof(line), f)) {
 		cp = line;
 		linenum++;
@@ -169,6 +167,7 @@ check_host_in_hostfile(const char *filename, const char *host, Key *key,
 		/* Check if the current key is the same as the given key. */
 		if (key_equal(key, found)) {
 			/* Ok, they match. */
+			debug3("check_host_in_hostfile: match line %d", linenum);
 			fclose(f);
 			return HOST_OK;
 		}

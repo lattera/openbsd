@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/getput.h,v 1.5.2.3 2001/03/21 19:46:25 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/getput.h,v 1.5.2.4 2001/05/07 21:09:29 jason Exp $"); */
 
 #ifndef GETPUT_H
 #define GETPUT_H

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.3 2001/03/21 19:46:29 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.4 2001/05/07 21:09:35 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.3 2001/03/21 19:46:29 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.4 2001/05/07 21:09:35 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -357,25 +357,6 @@ process_remove_all_identities(SocketEntry *e, int version)
 }
 
 void
-generate_additional_parameters(RSA *rsa)
-{
-	BIGNUM *aux;
-	BN_CTX *ctx;
-	/* Generate additional parameters */
-	aux = BN_new();
-	ctx = BN_CTX_new();
-
-	BN_sub(aux, rsa->q, BN_value_one());
-	BN_mod(rsa->dmq1, rsa->d, aux, ctx);
-
-	BN_sub(aux, rsa->p, BN_value_one());
-	BN_mod(rsa->dmp1, rsa->d, aux, ctx);
-
-	BN_clear_free(aux);
-	BN_CTX_free(ctx);
-}
-
-void
 process_add_identity(SocketEntry *e, int version)
 {
 	Key *k = NULL;
@@ -578,9 +559,9 @@ prepare_select(fd_set **fdrp, fd_set **fdwp, int *fdl)
 	sz = howmany(n+1, NFDBITS) * sizeof(fd_mask);
 	if (*fdrp == NULL || n > *fdl) {
 		if (*fdrp)
-			free(*fdrp);
+			xfree(*fdrp);
 		if (*fdwp)
-			free(*fdwp);
+			xfree(*fdwp);
 		*fdrp = xmalloc(sz);
 		*fdwp = xmalloc(sz);
 		*fdl = n;
@@ -731,6 +712,8 @@ main(int ac, char **av)
 	char *shell, *format, *pidstr, pidstrbuf[1 + 3 * sizeof pid];
 	extern int optind;
 	fd_set *readsetp = NULL, *writesetp = NULL;
+
+	SSLeay_add_all_algorithms();
 
 	while ((ch = getopt(ac, av, "cks")) != -1) {
 		switch (ch) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/rijndael.c,v 1.2.2.3 2001/03/21 19:46:27 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/rijndael.c,v 1.2.2.4 2001/05/07 21:09:32 jason Exp $	*/
 
 /* This is an independent implementation of the encryption algorithm:   */
 /*                                                                      */

@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.69.2.3 2001/03/21 19:46:30 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.69.2.4 2001/05/07 21:09:36 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -67,6 +67,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.69.2.3 2001/03/21 19:46:30 jason Exp 
 #include "misc.h"
 #include "kex.h"
 #include "mac.h"
+#include "sshtty.h"
 
 extern char *__progname;
 
@@ -122,11 +123,11 @@ struct sockaddr_storage hostaddr;
  */
 volatile int received_window_change_signal = 0;
 
-/* Flag indicating whether we have a valid host private key loaded. */
-int host_private_key_loaded = 0;
-
-/* Host private key. */
-RSA *host_private_key = NULL;
+/* Private host keys. */
+struct {
+	Key     **keys;
+	int	nkeys;
+} sensitive_data;
 
 /* Original real UID. */
 uid_t original_real_uid;
@@ -255,6 +256,15 @@ main(int ac, char **av)
 		if (setrlimit(RLIMIT_CORE, &rlim) < 0)
 			fatal("setrlimit failed: %.100s", strerror(errno));
 	}
+	/* Get user data. */
+	pw = getpwuid(original_real_uid);
+	if (!pw) {
+		log("You don't exist, go away!");
+		exit(1);
+	}
+	/* Take a copy of the returned structure. */
+	pw = pwcopy(pw);
+
 	/*
 	 * Use uid-swapping to give up root privileges for the duration of
 	 * option processing.  We will re-instantiate the rights when we are
@@ -262,7 +272,7 @@ main(int ac, char **av)
 	 * them when the port has been created (actually, when the connection
 	 * has been made, as we may need to create the port several times).
 	 */
-	temporarily_use_uid(original_real_uid);
+	temporarily_use_uid(pw);
 
 	/*
 	 * Set our umask to something reasonable, as some files are created
@@ -295,7 +305,7 @@ main(int ac, char **av)
 		opt = av[optind][1];
 		if (!opt)
 			usage();
-		if (strchr("eilcmpLRo", opt)) {	/* options with arguments */
+		if (strchr("eilcmpLRDo", opt)) {   /* options with arguments */
 			optarg = av[optind] + 2;
 			if (strcmp(optarg, "") == 0) {
 				if (optind >= ac - 1)
@@ -434,7 +444,11 @@ main(int ac, char **av)
 			}
 			break;
 		case 'p':
-			options.port = atoi(optarg);
+			options.port = a2port(optarg);
+			if (options.port == 0) {
+				fprintf(stderr, "Bad port '%s'\n", optarg);
+				exit(1);
+			}
 			break;
 		case 'l':
 			options.user = optarg;
@@ -461,6 +475,16 @@ main(int ac, char **av)
 			}
 			add_local_forward(&options, fwd_port, buf, fwd_host_port);
 			break;
+
+		case 'D':
+			fwd_port = a2port(optarg);
+			if (fwd_port == 0) {
+				fprintf(stderr, "Bad dynamic port '%s'\n", optarg);
+				exit(1);
+			}
+			add_local_forward(&options, fwd_port, "socks4", 0);
+			break;
+
 		case 'C':
 			options.compression = 1;
 			break;
@@ -504,7 +528,7 @@ main(int ac, char **av)
 		/* No command specified - execute shell on a tty. */
 		tty_flag = 1;
 		if (subsystem_flag) {
-			fprintf(stderr, "You must specify a subsystem to invoke.");
+			fprintf(stderr, "You must specify a subsystem to invoke.\n");
 			usage();
 		}
 	} else {
@@ -535,20 +559,12 @@ main(int ac, char **av)
 		tty_flag = 0;
 	}
 
-	/* Get user data. */
-	pw = getpwuid(original_real_uid);
-	if (!pw) {
-		log("You don't exist, go away!");
-		exit(1);
-	}
-	/* Take a copy of the returned structure. */
-	pw = pwcopy(pw);
-
 	/*
 	 * Initialize "log" output.  Since we are the client all output
 	 * actually goes to stderr.
 	 */
-	log_init(av[0], SYSLOG_LEVEL_INFO, SYSLOG_FACILITY_USER, 1);
+	log_init(av[0], options.log_level == -1 ? SYSLOG_LEVEL_INFO : options.log_level,
+	    SYSLOG_FACILITY_USER, 1);
 
 	/* Read per-user configuration file. */
 	snprintf(buf, sizeof buf, "%.100s/%.100s", pw->pw_dir, _PATH_SSH_USER_CONFFILE);
@@ -587,7 +603,7 @@ main(int ac, char **av)
 		restore_uid();
 
 		/* Switch to the original uid permanently. */
-		permanently_set_uid(original_real_uid);
+		permanently_set_uid(pw);
 
 		/* Execute rsh. */
 		rsh_connect(host, options.user, &command);
@@ -601,8 +617,7 @@ main(int ac, char **av)
 	ok = ssh_connect(host, &hostaddr, options.port,
 	    options.connection_attempts,
 	    original_effective_uid != 0 || !options.use_privileged_port,
-	    original_real_uid,
-	    options.proxy_command);
+	    pw, options.proxy_command);
 
 	/*
 	 * If we successfully made the connection, load the host private key
@@ -610,13 +625,18 @@ main(int ac, char **av)
 	 * authentication. This must be done before releasing extra
 	 * privileges, because the file is only readable by root.
 	 */
-	if (ok && (options.protocol & SSH_PROTO_1)) {
-		Key k;
-		host_private_key = RSA_new();
-		k.type = KEY_RSA1;
-		k.rsa = host_private_key;
-		if (load_private_key(_PATH_HOST_KEY_FILE, "", &k, NULL))
-			host_private_key_loaded = 1;
+	sensitive_data.nkeys = 0;
+	sensitive_data.keys = NULL;
+	if (ok && (options.rhosts_rsa_authentication ||
+	    options.hostbased_authentication)) {
+		sensitive_data.nkeys = 3;
+		sensitive_data.keys = xmalloc(sensitive_data.nkeys*sizeof(Key));
+		sensitive_data.keys[0] = key_load_private_type(KEY_RSA1,
+		    _PATH_HOST_KEY_FILE, "", NULL);
+		sensitive_data.keys[1] = key_load_private_type(KEY_DSA,
+		    _PATH_HOST_DSA_KEY_FILE, "", NULL);
+		sensitive_data.keys[2] = key_load_private_type(KEY_RSA,
+		    _PATH_HOST_RSA_KEY_FILE, "", NULL);
 	}
 	/*
 	 * Get rid of any extra privileges that we may have.  We will no
@@ -633,7 +653,7 @@ main(int ac, char **av)
 	 * process, read the private hostkey and impersonate the host.
 	 * OpenBSD does not allow ptracing of setuid processes.
 	 */
-	permanently_set_uid(original_real_uid);
+	permanently_set_uid(pw);
 
 	/*
 	 * Now that we are back to our own permissions, create ~/.ssh
@@ -675,12 +695,21 @@ main(int ac, char **av)
 	    tilde_expand_filename(options.user_hostfile2, original_real_uid);
 
 	/* Log into the remote system.  This never returns if the login fails. */
-	ssh_login(host_private_key_loaded, host_private_key,
-		  host, (struct sockaddr *)&hostaddr, original_real_uid);
+	ssh_login(sensitive_data.keys, sensitive_data.nkeys,
+	    host, (struct sockaddr *)&hostaddr, pw);
 
-	/* We no longer need the host private key.  Clear it now. */
-	if (host_private_key_loaded)
-		RSA_free(host_private_key);	/* Destroys contents safely */
+	/* We no longer need the private host keys.  Clear them now. */
+	if (sensitive_data.nkeys != 0) {
+		for (i = 0; i < sensitive_data.nkeys; i++) {
+			if (sensitive_data.keys[i] != NULL) {
+				/* Destroys contents safely */
+				debug3("clear hostkey %d", i);
+				key_free(sensitive_data.keys[i]);
+				sensitive_data.keys[i] = NULL;
+			}
+		}
+		xfree(sensitive_data.keys);
+	}
 
 	exit_status = compat20 ? ssh_session2() : ssh_session();
 	packet_close();
@@ -826,7 +855,7 @@ ssh_session(void)
 		packet_put_int(ws.ws_ypixel);
 
 		/* Store tty modes in the packet. */
-		tty_make_modes(fileno(stdin));
+		tty_make_modes(fileno(stdin), NULL);
 
 		/* Send the packet, and wait for it to leave. */
 		packet_send();
@@ -930,11 +959,9 @@ ssh_session2_callback(int id, void *arg)
 {
 	int len;
 	int interactive = 0;
+	struct termios tio;
 
 	debug("client_init id %d arg %ld", id, (long)arg);
-
-	if (no_shell_flag)
-		goto done;
 
 	if (tty_flag) {
 		struct winsize ws;
@@ -952,7 +979,8 @@ ssh_session2_callback(int id, void *arg)
 		packet_put_int(ws.ws_row);
 		packet_put_int(ws.ws_xpixel);
 		packet_put_int(ws.ws_ypixel);
-		packet_put_cstring("");		/* XXX: encode terminal modes */
+		tio = get_saved_tio();
+		tty_make_modes(/*ignored*/ 0, &tio);
 		packet_send();
 		interactive = 1;
 		/* XXX wait for reply */
@@ -998,15 +1026,14 @@ ssh_session2_callback(int id, void *arg)
 	}
 	/* channel_callback(id, SSH2_MSG_OPEN_CONFIGMATION, client_init, 0); */
 
-done:
 	/* register different callback, etc. XXX */
 	packet_set_interactive(interactive);
 }
 
 int
-ssh_session2(void)
+ssh_session2_command(void)
 {
-	int window, packetmax, id;
+	int id, window, packetmax;
 	int in, out, err;
 
 	if (stdin_null_flag) {
@@ -1028,14 +1055,6 @@ ssh_session2(void)
 	if (!isatty(err))
 		set_nonblock(err);
 
-	/* XXX should be pre-session */
-	ssh_init_forwarding();
-
-	/* If requested, let ssh continue in the background. */
-	if (fork_after_authentication_flag)
-		if (daemon(1, 1) < 0)
-			fatal("daemon() failed: %.200s", strerror(errno));
-
 	window = CHAN_SES_WINDOW_DEFAULT;
 	packetmax = CHAN_SES_PACKET_DEFAULT;
 	if (!tty_flag) {
@@ -1047,31 +1066,31 @@ ssh_session2(void)
 	    window, packetmax, CHAN_EXTENDED_WRITE,
 	    xstrdup("client-session"), /*nonblock*/0);
 
+debug("channel_new: %d", id);
+
 	channel_open(id);
 	channel_register_callback(id, SSH2_MSG_CHANNEL_OPEN_CONFIRMATION,
 	     ssh_session2_callback, (void *)0);
 
-	return client_loop(tty_flag, tty_flag ? options.escape_char : -1, id);
+	return id;
 }
 
 int
-guess_identity_file_type(const char *filename)
+ssh_session2(void)
 {
-	struct stat st;
-	Key *public;
-	int type = KEY_RSA1; /* default */
+	int id;
 
-	if (stat(filename, &st) < 0) {
-		/* ignore this key */
-		return KEY_UNSPEC;
-	}
-	public = key_new(type);
-	if (!load_public_key(filename, public, NULL)) {
-		/* ok, so we will assume this is 'some' key */
-		type = KEY_UNSPEC;
-	}
-	key_free(public);
-	return type;
+	/* XXX should be pre-session */
+	ssh_init_forwarding();
+
+	id = no_shell_flag ? -1 : ssh_session2_command();
+
+	/* If requested, let ssh continue in the background. */
+	if (fork_after_authentication_flag)
+		if (daemon(1, 1) < 0)
+			fatal("daemon() failed: %.200s", strerror(errno));
+
+	return client_loop(tty_flag, tty_flag ? options.escape_char : -1, id);
 }
 
 void
@@ -1084,16 +1103,7 @@ load_public_identity_files(void)
 	for (i = 0; i < options.num_identity_files; i++) {
 		filename = tilde_expand_filename(options.identity_files[i],
 		    original_real_uid);
-		public = key_new(KEY_RSA1);
-		if (!load_public_key(filename, public, NULL)) {
-			key_free(public);
-			public = key_new(KEY_UNSPEC);
-			if (!try_load_public_key(filename, public, NULL)) {
-				debug("unknown identity file %s", filename);
-				key_free(public);
-				public = NULL;
-			}
-		}
+		public = key_load_public(filename, NULL);
 		debug("identity file %s type %d", filename,
 		    public ? public->type : -1);
 		xfree(options.identity_files[i]);

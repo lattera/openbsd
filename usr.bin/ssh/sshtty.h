@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sshtty.h,v 1.1 2001/04/14 16:33:20 stevesk Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sshtty.h,v 1.1.4.1 2001/05/07 21:09:38 jason Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland

@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.27.2.3 2001/03/21 19:46:31 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.27.2.4 2001/05/07 21:09:37 jason Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/md5.h>
@@ -46,15 +46,14 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.27.2.3 2001/03/21 19:46:31 ja
 #include "sshconnect.h"
 #include "authfile.h"
 #include "cli.h"
-#include "dispatch.h"
+#include "dh.h"
 #include "authfd.h"
 #include "log.h"
 #include "readconf.h"
 #include "readpass.h"
 #include "match.h"
-
-void ssh_dh1_client(Kex *, char *, struct sockaddr *, Buffer *, Buffer *);
-void ssh_dhgex_client(Kex *, char *, struct sockaddr *, Buffer *, Buffer *);
+#include "dispatch.h"
+#include "canohost.h"
 
 /* import */
 extern char *client_version_string;
@@ -68,13 +67,26 @@ extern Options options;
 u_char *session_id2 = NULL;
 int session_id2_len = 0;
 
+char *xxx_host;
+struct sockaddr *xxx_hostaddr;
+
+Kex *xxx_kex = NULL;
+
+int
+check_host_key_callback(Key *hostkey)
+{
+	check_host_key(xxx_host, xxx_hostaddr, hostkey,
+	    options.user_hostfile2, options.system_hostfile2);
+	return 0;
+}
+
 void
 ssh_kex2(char *host, struct sockaddr *hostaddr)
 {
-	int i, plen;
 	Kex *kex;
-	Buffer *client_kexinit, *server_kexinit;
-	char *sprop[PROPOSAL_MAX];
+
+	xxx_host = host;
+	xxx_hostaddr = hostaddr;
 
 	if (options.ciphers == (char *)-1) {
 		log("No valid ciphers for protocol version 2 given, using defaults.");
@@ -84,6 +96,10 @@ ssh_kex2(char *host, struct sockaddr *hostaddr)
 		myproposal[PROPOSAL_ENC_ALGS_CTOS] =
 		myproposal[PROPOSAL_ENC_ALGS_STOC] = options.ciphers;
 	}
+	myproposal[PROPOSAL_ENC_ALGS_CTOS] =
+	    compat_cipher_proposal(myproposal[PROPOSAL_ENC_ALGS_CTOS]);
+	myproposal[PROPOSAL_ENC_ALGS_STOC] =
+	    compat_cipher_proposal(myproposal[PROPOSAL_ENC_ALGS_STOC]);
 	if (options.compression) {
 		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
 		myproposal[PROPOSAL_COMP_ALGS_STOC] = "zlib";
@@ -95,47 +111,22 @@ ssh_kex2(char *host, struct sockaddr *hostaddr)
 		myproposal[PROPOSAL_MAC_ALGS_CTOS] =
 		myproposal[PROPOSAL_MAC_ALGS_STOC] = options.macs;
 	}
+	if (options.hostkeyalgorithms != NULL)
+	        myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] =
+		    options.hostkeyalgorithms;
 
-	/* buffers with raw kexinit messages */
-	server_kexinit = xmalloc(sizeof(*server_kexinit));
-	buffer_init(server_kexinit);
-	client_kexinit = kex_init(myproposal);
+	/* start key exchange */
+	kex = kex_setup(myproposal);
+	kex->client_version_string=client_version_string;
+	kex->server_version_string=server_version_string;
+	kex->check_host_key=&check_host_key_callback;
 
-	/* algorithm negotiation */
-	kex_exchange_kexinit(client_kexinit, server_kexinit, sprop);
-	kex = kex_choose_conf(myproposal, sprop, 0);
-	for (i = 0; i < PROPOSAL_MAX; i++)
-		xfree(sprop[i]);
+	xxx_kex = kex;
 
-	/* server authentication and session key agreement */
-	switch(kex->kex_type) {
-	case DH_GRP1_SHA1:
-		ssh_dh1_client(kex, host, hostaddr,
-			       client_kexinit, server_kexinit);
-		break;
-	case DH_GEX_SHA1:
-		ssh_dhgex_client(kex, host, hostaddr, client_kexinit,
-				 server_kexinit);
-		break;
-	default:
-		fatal("Unsupported key exchange %d", kex->kex_type);
-	}
+	dispatch_run(DISPATCH_BLOCK, &kex->done, kex);
 
-	buffer_free(client_kexinit);
-	buffer_free(server_kexinit);
-	xfree(client_kexinit);
-	xfree(server_kexinit);
-
-	debug("Wait SSH2_MSG_NEWKEYS.");
-	packet_read_expect(&plen, SSH2_MSG_NEWKEYS);
-	packet_done();
-	debug("GOT SSH2_MSG_NEWKEYS.");
-
-	debug("send SSH2_MSG_NEWKEYS.");
-	packet_start(SSH2_MSG_NEWKEYS);
-	packet_send();
-	packet_write_wait();
-	debug("done: send SSH2_MSG_NEWKEYS.");
+	session_id2 = kex->session_id;
+	session_id2_len = kex->session_id_len;
 
 #ifdef DEBUG_KEXDH
 	/* send 1st encrypted/maced/compressed message */
@@ -144,310 +135,7 @@ ssh_kex2(char *host, struct sockaddr *hostaddr)
 	packet_send();
 	packet_write_wait();
 #endif
-	debug("done: KEX2.");
-}
-
-/* diffie-hellman-group1-sha1 */
-
-void
-ssh_dh1_client(Kex *kex, char *host, struct sockaddr *hostaddr,
-	       Buffer *client_kexinit, Buffer *server_kexinit)
-{
-#ifdef DEBUG_KEXDH
-	int i;
-#endif
-	int plen, dlen;
-	u_int klen, kout;
-	char *signature = NULL;
-	u_int slen;
-	char *server_host_key_blob = NULL;
-	Key *server_host_key;
-	u_int sbloblen;
-	DH *dh;
-	BIGNUM *dh_server_pub = 0;
-	BIGNUM *shared_secret = 0;
-	u_char *kbuf;
-	u_char *hash;
-
-	debug("Sending SSH2_MSG_KEXDH_INIT.");
-	/* generate and send 'e', client DH public key */
-	dh = dh_new_group1();
-	dh_gen_key(dh, kex->we_need * 8);
-	packet_start(SSH2_MSG_KEXDH_INIT);
-	packet_put_bignum2(dh->pub_key);
-	packet_send();
-	packet_write_wait();
-
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "\np= ");
-	BN_print_fp(stderr, dh->p);
-	fprintf(stderr, "\ng= ");
-	BN_print_fp(stderr, dh->g);
-	fprintf(stderr, "\npub= ");
-	BN_print_fp(stderr, dh->pub_key);
-	fprintf(stderr, "\n");
-	DHparams_print_fp(stderr, dh);
-#endif
-
-	debug("Wait SSH2_MSG_KEXDH_REPLY.");
-
-	packet_read_expect(&plen, SSH2_MSG_KEXDH_REPLY);
-
-	debug("Got SSH2_MSG_KEXDH_REPLY.");
-
-	/* key, cert */
-	server_host_key_blob = packet_get_string(&sbloblen);
-	server_host_key = key_from_blob(server_host_key_blob, sbloblen);
-	if (server_host_key == NULL)
-		fatal("cannot decode server_host_key_blob");
-
-	check_host_key(host, hostaddr, server_host_key,
-		       options.user_hostfile2, options.system_hostfile2);
-
-	/* DH paramter f, server public DH key */
-	dh_server_pub = BN_new();
-	if (dh_server_pub == NULL)
-		fatal("dh_server_pub == NULL");
-	packet_get_bignum2(dh_server_pub, &dlen);
-
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "\ndh_server_pub= ");
-	BN_print_fp(stderr, dh_server_pub);
-	fprintf(stderr, "\n");
-	debug("bits %d", BN_num_bits(dh_server_pub));
-#endif
-
-	/* signed H */
-	signature = packet_get_string(&slen);
-	packet_done();
-
-	if (!dh_pub_is_valid(dh, dh_server_pub))
-		packet_disconnect("bad server public DH value");
-
-	klen = DH_size(dh);
-	kbuf = xmalloc(klen);
-	kout = DH_compute_key(kbuf, dh_server_pub, dh);
-#ifdef DEBUG_KEXDH
-	debug("shared secret: len %d/%d", klen, kout);
-	fprintf(stderr, "shared secret == ");
-	for (i = 0; i< kout; i++)
-		fprintf(stderr, "%02x", (kbuf[i])&0xff);
-	fprintf(stderr, "\n");
-#endif
-	shared_secret = BN_new();
-
-	BN_bin2bn(kbuf, kout, shared_secret);
-	memset(kbuf, 0, klen);
-	xfree(kbuf);
-
-	/* calc and verify H */
-	hash = kex_hash(
-	    client_version_string,
-	    server_version_string,
-	    buffer_ptr(client_kexinit), buffer_len(client_kexinit),
-	    buffer_ptr(server_kexinit), buffer_len(server_kexinit),
-	    server_host_key_blob, sbloblen,
-	    dh->pub_key,
-	    dh_server_pub,
-	    shared_secret
-	);
-	xfree(server_host_key_blob);
-	DH_free(dh);
-	BN_free(dh_server_pub);
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "hash == ");
-	for (i = 0; i< 20; i++)
-		fprintf(stderr, "%02x", (hash[i])&0xff);
-	fprintf(stderr, "\n");
-#endif
-	if (key_verify(server_host_key, (u_char *)signature, slen, hash, 20) != 1)
-		fatal("key_verify failed for server_host_key");
-	key_free(server_host_key);
-	xfree(signature);
-
-	kex_derive_keys(kex, hash, shared_secret);
-	BN_clear_free(shared_secret);
-	packet_set_kex(kex);
-
-	/* save session id */
-	session_id2_len = 20;
-	session_id2 = xmalloc(session_id2_len);
-	memcpy(session_id2, hash, session_id2_len);
-}
-
-/* diffie-hellman-group-exchange-sha1 */
-
-/*
- * Estimates the group order for a Diffie-Hellman group that has an
- * attack complexity approximately the same as O(2**bits).  Estimate
- * with:  O(exp(1.9223 * (ln q)^(1/3) (ln ln q)^(2/3)))
- */
-
-int
-dh_estimate(int bits)
-{
-
-	if (bits < 64)
-		return (512);	/* O(2**63) */
-	if (bits < 128)
-		return (1024);	/* O(2**86) */
-	if (bits < 192)
-		return (2048);	/* O(2**116) */
-	return (4096);		/* O(2**156) */
-}
-
-void
-ssh_dhgex_client(Kex *kex, char *host, struct sockaddr *hostaddr,
-		 Buffer *client_kexinit, Buffer *server_kexinit)
-{
-#ifdef DEBUG_KEXDH
-	int i;
-#endif
-	int plen, dlen;
-	u_int klen, kout;
-	char *signature = NULL;
-	u_int slen, nbits;
-	char *server_host_key_blob = NULL;
-	Key *server_host_key;
-	u_int sbloblen;
-	DH *dh;
-	BIGNUM *dh_server_pub = 0;
-	BIGNUM *shared_secret = 0;
-	BIGNUM *p = 0, *g = 0;
-	u_char *kbuf;
-	u_char *hash;
-
-	nbits = dh_estimate(kex->we_need * 8);
-
-	debug("Sending SSH2_MSG_KEX_DH_GEX_REQUEST.");
-	packet_start(SSH2_MSG_KEX_DH_GEX_REQUEST);
-	packet_put_int(nbits);
-	packet_send();
-	packet_write_wait();
-
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "\nnbits = %d", nbits);
-#endif
-
-	debug("Wait SSH2_MSG_KEX_DH_GEX_GROUP.");
-
-	packet_read_expect(&plen, SSH2_MSG_KEX_DH_GEX_GROUP);
-
-	debug("Got SSH2_MSG_KEX_DH_GEX_GROUP.");
-
-	if ((p = BN_new()) == NULL)
-		fatal("BN_new");
-	packet_get_bignum2(p, &dlen);
-	if ((g = BN_new()) == NULL)
-		fatal("BN_new");
-	packet_get_bignum2(g, &dlen);
-	dh = dh_new_group(g, p);
-
-	dh_gen_key(dh, kex->we_need * 8);
-
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "\np= ");
-	BN_print_fp(stderr, dh->p);
-	fprintf(stderr, "\ng= ");
-	BN_print_fp(stderr, dh->g);
-	fprintf(stderr, "\npub= ");
-	BN_print_fp(stderr, dh->pub_key);
-	fprintf(stderr, "\n");
-	DHparams_print_fp(stderr, dh);
-#endif
-
-	debug("Sending SSH2_MSG_KEX_DH_GEX_INIT.");
-	/* generate and send 'e', client DH public key */
-	packet_start(SSH2_MSG_KEX_DH_GEX_INIT);
-	packet_put_bignum2(dh->pub_key);
-	packet_send();
-	packet_write_wait();
-
-	debug("Wait SSH2_MSG_KEX_DH_GEX_REPLY.");
-
-	packet_read_expect(&plen, SSH2_MSG_KEX_DH_GEX_REPLY);
-
-	debug("Got SSH2_MSG_KEXDH_REPLY.");
-
-	/* key, cert */
-	server_host_key_blob = packet_get_string(&sbloblen);
-	server_host_key = key_from_blob(server_host_key_blob, sbloblen);
-	if (server_host_key == NULL)
-		fatal("cannot decode server_host_key_blob");
-
-	check_host_key(host, hostaddr, server_host_key,
-		       options.user_hostfile2, options.system_hostfile2);
-
-	/* DH paramter f, server public DH key */
-	dh_server_pub = BN_new();
-	if (dh_server_pub == NULL)
-		fatal("dh_server_pub == NULL");
-	packet_get_bignum2(dh_server_pub, &dlen);
-
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "\ndh_server_pub= ");
-	BN_print_fp(stderr, dh_server_pub);
-	fprintf(stderr, "\n");
-	debug("bits %d", BN_num_bits(dh_server_pub));
-#endif
-
-	/* signed H */
-	signature = packet_get_string(&slen);
-	packet_done();
-
-	if (!dh_pub_is_valid(dh, dh_server_pub))
-		packet_disconnect("bad server public DH value");
-
-	klen = DH_size(dh);
-	kbuf = xmalloc(klen);
-	kout = DH_compute_key(kbuf, dh_server_pub, dh);
-#ifdef DEBUG_KEXDH
-	debug("shared secret: len %d/%d", klen, kout);
-	fprintf(stderr, "shared secret == ");
-	for (i = 0; i< kout; i++)
-		fprintf(stderr, "%02x", (kbuf[i])&0xff);
-	fprintf(stderr, "\n");
-#endif
-	shared_secret = BN_new();
-
-	BN_bin2bn(kbuf, kout, shared_secret);
-	memset(kbuf, 0, klen);
-	xfree(kbuf);
-
-	/* calc and verify H */
-	hash = kex_hash_gex(
-	    client_version_string,
-	    server_version_string,
-	    buffer_ptr(client_kexinit), buffer_len(client_kexinit),
-	    buffer_ptr(server_kexinit), buffer_len(server_kexinit),
-	    server_host_key_blob, sbloblen,
-	    nbits, dh->p, dh->g,
-	    dh->pub_key,
-	    dh_server_pub,
-	    shared_secret
-	);
-	xfree(server_host_key_blob);
-	DH_free(dh);
-	BN_free(dh_server_pub);
-#ifdef DEBUG_KEXDH
-	fprintf(stderr, "hash == ");
-	for (i = 0; i< 20; i++)
-		fprintf(stderr, "%02x", (hash[i])&0xff);
-	fprintf(stderr, "\n");
-#endif
-	if (key_verify(server_host_key, (u_char *)signature, slen, hash, 20) != 1)
-		fatal("key_verify failed for server_host_key");
-	key_free(server_host_key);
-	xfree(signature);
-
-	kex_derive_keys(kex, hash, shared_secret);
-	BN_clear_free(shared_secret);
-	packet_set_kex(kex);
-
-	/* save session id */
-	session_id2_len = 20;
-	session_id2 = xmalloc(session_id2_len);
-	memcpy(session_id2, hash, session_id2_len);
+	debug("done: ssh_kex2.");
 }
 
 /*
@@ -463,15 +151,20 @@ typedef int sign_cb_fn(
 
 struct Authctxt {
 	const char *server_user;
+	const char *local_user;
 	const char *host;
 	const char *service;
-	AuthenticationConnection *agent;
 	Authmethod *method;
 	int success;
 	char *authlist;
+	/* pubkey */
 	Key *last_key;
 	sign_cb_fn *last_key_sign;
 	int last_key_hint;
+	AuthenticationConnection *agent;
+	/* hostbased */
+	Key **keys;
+	int nkeys;
 };
 struct Authmethod {
 	char	*name;		/* string to compare against server's list */
@@ -491,6 +184,7 @@ int	userauth_none(Authctxt *authctxt);
 int	userauth_pubkey(Authctxt *authctxt);
 int	userauth_passwd(Authctxt *authctxt);
 int	userauth_kbdint(Authctxt *authctxt);
+int	userauth_hostbased(Authctxt *authctxt);
 
 void	userauth(Authctxt *authctxt, char *authlist);
 
@@ -516,6 +210,10 @@ Authmethod authmethods[] = {
 		userauth_kbdint,
 		&options.kbd_interactive_authentication,
 		&options.batch_mode},
+	{"hostbased",
+		userauth_hostbased,
+		&options.hostbased_authentication,
+		NULL},
 	{"none",
 		userauth_none,
 		NULL,
@@ -524,7 +222,8 @@ Authmethod authmethods[] = {
 };
 
 void
-ssh_userauth2(const char *server_user, char *host)
+ssh_userauth2(const char *local_user, const char *server_user, char *host,
+    Key **keys, int nkeys)
 {
 	Authctxt authctxt;
 	int type;
@@ -558,11 +257,14 @@ ssh_userauth2(const char *server_user, char *host)
 	/* setup authentication context */
 	authctxt.agent = ssh_get_authentication_connection();
 	authctxt.server_user = server_user;
+	authctxt.local_user = local_user;
 	authctxt.host = host;
 	authctxt.service = "ssh-connection";		/* service name */
 	authctxt.success = 0;
 	authctxt.method = authmethod_lookup("none");
 	authctxt.authlist = NULL;
+	authctxt.keys = keys;
+	authctxt.nkeys = nkeys;
 	if (authctxt.method == NULL)
 		fatal("ssh_userauth2: internal error: cannot send userauth none request");
 
@@ -659,7 +361,7 @@ input_userauth_pk_ok(int type, int plen, void *ctxt)
 	Authctxt *authctxt = ctxt;
 	Key *key = NULL;
 	Buffer b;
-	int alen, blen, pktype, sent = 0;
+	int alen, blen, sent = 0;
 	char *pkalg, *pkblob, *fp;
 
 	if (authctxt == NULL)
@@ -687,7 +389,7 @@ input_userauth_pk_ok(int type, int plen, void *ctxt)
 			debug("no last key or no sign cb");
 			break;
 		}
-		if ((pktype = key_type_from_name(pkalg)) == KEY_UNSPEC) {
+		if (key_type_from_name(pkalg) == KEY_UNSPEC) {
 			debug("unknown pkalg %s", pkalg);
 			break;
 		}
@@ -898,26 +600,24 @@ load_identity_file(char *filename)
 {
 	Key *private;
 	char prompt[300], *passphrase;
-	int success = 0, quit, i;
+	int quit, i;
 	struct stat st;
 
 	if (stat(filename, &st) < 0) {
 		debug3("no such identity: %s", filename);
 		return NULL;
 	}
-	private = key_new(KEY_UNSPEC);
-	if (!load_private_key(filename, "", private, NULL)) {
-		if (options.batch_mode) {
-			key_free(private);
+	private = key_load_private_type(KEY_UNSPEC, filename, "", NULL);
+	if (private == NULL) {
+		if (options.batch_mode)
 			return NULL;
-		}
 		snprintf(prompt, sizeof prompt,
 		     "Enter passphrase for key '%.100s': ", filename);
 		for (i = 0; i < options.number_of_password_prompts; i++) {
 			passphrase = read_passphrase(prompt, 0);
 			if (strcmp(passphrase, "") != 0) {
-				success = load_private_key(filename,
-				    passphrase, private, NULL);
+				private = key_load_private_type(KEY_UNSPEC, filename,
+				    passphrase, NULL);
 				quit = 0;
 			} else {
 				debug2("no passphrase given, try next key");
@@ -925,13 +625,9 @@ load_identity_file(char *filename)
 			}
 			memset(passphrase, 0, strlen(passphrase));
 			xfree(passphrase);
-			if (success || quit)
+			if (private != NULL || quit)
 				break;
 			debug2("bad passphrase given, try again...");
-		}
-		if (!success) {
-			key_free(private);
-			return NULL;
 		}
 	}
 	return private;
@@ -964,7 +660,7 @@ int agent_sign_cb(Authctxt *authctxt, Key *key, u_char **sigp, int *lenp,
 int key_sign_cb(Authctxt *authctxt, Key *key, u_char **sigp, int *lenp,
     u_char *data, int datalen)
 {
-        return key_sign(key, sigp, lenp, data, datalen);
+	return key_sign(key, sigp, lenp, data, datalen);
 }
 
 int
@@ -1108,6 +804,95 @@ input_userauth_info_req(int type, int plen, void *ctxt)
 	packet_send();
 }
 
+/*
+ * this will be move to an external program (ssh-keysign) ASAP. ssh-keysign
+ * will be setuid-root and the sbit can be removed from /usr/bin/ssh.
+ */
+int
+userauth_hostbased(Authctxt *authctxt)
+{
+	Key *private = NULL;
+	Buffer b;
+	u_char *signature, *blob;
+	char *chost, *pkalg, *p;
+	const char *service;
+	u_int blen, slen;
+	int ok, i, len, found = 0;
+
+	p = get_local_name(packet_get_connection_in());
+	if (p == NULL) {
+		error("userauth_hostbased: cannot get local ipaddr/name");
+		return 0;
+	}
+	len = strlen(p) + 2;
+	chost = xmalloc(len);
+	strlcpy(chost, p, len);
+	strlcat(chost, ".", len);
+	debug2("userauth_hostbased: chost %s", chost);
+	/* check for a useful key */
+	for (i = 0; i < authctxt->nkeys; i++) {
+		private = authctxt->keys[i];
+		if (private && private->type != KEY_RSA1) {
+			found = 1;
+			/* we take and free the key */
+			authctxt->keys[i] = NULL;
+			break;
+		}
+	}
+	if (!found) {
+		xfree(chost);
+		return 0;
+	}
+	if (key_to_blob(private, &blob, &blen) == 0) {
+		key_free(private);
+		xfree(chost);
+		return 0;
+	}
+	service = datafellows & SSH_BUG_HBSERVICE ? "ssh-userauth" :
+	    authctxt->service;
+	pkalg = xstrdup(key_ssh_name(private));
+	buffer_init(&b);
+	/* construct data */
+	buffer_put_string(&b, session_id2, session_id2_len);
+	buffer_put_char(&b, SSH2_MSG_USERAUTH_REQUEST);
+	buffer_put_cstring(&b, authctxt->server_user);
+	buffer_put_cstring(&b, service);
+	buffer_put_cstring(&b, authctxt->method->name);
+	buffer_put_cstring(&b, pkalg);
+	buffer_put_string(&b, blob, blen);
+	buffer_put_cstring(&b, chost);
+	buffer_put_cstring(&b, authctxt->local_user);
+#ifdef DEBUG_PK
+	buffer_dump(&b);
+#endif
+	debug2("xxx: chost %s", chost);
+	ok = key_sign(private, &signature, &slen, buffer_ptr(&b), buffer_len(&b));
+	key_free(private);
+	buffer_free(&b);
+	if (ok != 0) {
+		error("key_sign failed");
+		xfree(chost);
+		xfree(pkalg);
+		return 0;
+	}
+	packet_start(SSH2_MSG_USERAUTH_REQUEST);
+	packet_put_cstring(authctxt->server_user);
+	packet_put_cstring(authctxt->service);
+	packet_put_cstring(authctxt->method->name);
+	packet_put_cstring(pkalg);
+	packet_put_string(blob, blen);
+	packet_put_cstring(chost);
+	packet_put_cstring(authctxt->local_user);
+	packet_put_string(signature, slen);
+	memset(signature, 's', slen);
+	xfree(signature);
+	xfree(chost);
+	xfree(pkalg);
+
+	packet_send();
+	return 1;
+}
+
 /* find auth method */
 
 /*
@@ -1147,7 +932,7 @@ static char *preferred = NULL;
 /*
  * Given the authentication method list sent by the server, return the
  * next method we should try.  If the server initially sends a nil list,
- * use a built-in default list. 
+ * use a built-in default list.
  */
 Authmethod *
 authmethod_get(char *authlist)

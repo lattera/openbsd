@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/ssh/nchan.ms,v 1.6.2.3 2001/03/21 19:46:26 jason Exp $
+.\"	$OpenBSD: src/usr.bin/ssh/nchan.ms,v 1.6.2.4 2001/05/07 21:09:31 jason Exp $
 .\"
 .\" 
 .\" Copyright (c) 1999 Markus Friedl.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.4.2.3 2001/03/21 19:46:27 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.4.2.4 2001/05/07 21:09:32 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -26,10 +26,11 @@
  * Of these, ssh_host_key must be readable only by root, whereas ssh_config
  * should be world-readable.
  */
-#define _PATH_HOST_KEY_FILE		ETCDIR "/ssh_host_key"
 #define _PATH_SERVER_CONFIG_FILE	ETCDIR "/sshd_config"
 #define _PATH_HOST_CONFIG_FILE		ETCDIR "/ssh_config"
+#define _PATH_HOST_KEY_FILE		ETCDIR "/ssh_host_key"
 #define _PATH_HOST_DSA_KEY_FILE		ETCDIR "/ssh_host_dsa_key"
+#define _PATH_HOST_RSA_KEY_FILE		ETCDIR "/ssh_host_rsa_key"
 #define _PATH_DH_PRIMES			ETCDIR "/primes"
 
 #define _PATH_SSH_PROGRAM		"/usr/bin/ssh"

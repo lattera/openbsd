@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2.2.3 2001/03/21 19:46:24 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2.2.4 2001/05/07 21:09:28 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2.2.3 2001/03/21 19:46:24 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2.2.4 2001/05/07 21:09:28 jason Exp $");
 
 #include "xmalloc.h"
 #include "log.h"

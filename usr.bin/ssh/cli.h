@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.3 2001/03/21 19:46:24 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.4 2001/05/07 21:09:28 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -24,7 +24,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.3 2001/03/21 19:46:24 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.4 2001/05/07 21:09:28 jason Exp $ */
 
 #ifndef CLI_H
 #define CLI_H

@@ -21,12 +21,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $OpenBSD: src/usr.bin/ssh/auth.h,v 1.7.2.3 2001/03/21 19:46:22 jason Exp $
+ * $OpenBSD: src/usr.bin/ssh/auth.h,v 1.7.2.4 2001/05/07 21:09:26 jason Exp $
  */
 #ifndef AUTH_H
 #define AUTH_H
 
 #include <openssl/rsa.h>
+
+#ifdef HAVE_LOGIN_CAP
+#include <login_cap.h>
+#endif
+#ifdef BSD_AUTH
+#include <bsd_auth.h>
+#endif
 
 typedef struct Authctxt Authctxt;
 struct Authctxt {
@@ -39,6 +46,9 @@ struct Authctxt {
 	char *service;
 	struct passwd *pw;
 	char *style;
+#ifdef BSD_AUTH
+	auth_session_t *as;
+#endif
 };
 
 /*
@@ -47,6 +57,11 @@ struct Authctxt {
  * consider .rhosts and .shosts (/etc/hosts.equiv will still be used).
  */
 int     auth_rhosts(struct passwd * pw, const char *client_user);
+
+/* extended interface similar to auth_rhosts() */
+int
+auth_rhosts2(struct passwd *pw, const char *client_user, const char *hostname,
+    const char *ipaddr);
 
 /*
  * Tries to authenticate the user using the .rhosts file and the host using
@@ -59,7 +74,7 @@ auth_rhosts_rsa(struct passwd * pw, const char *client_user, RSA* client_host_ke
  * Tries to authenticate the user using password.  Returns true if
  * authentication succeeds.
  */
-int     auth_password(struct passwd * pw, const char *password);
+int     auth_password(Authctxt *authctxt, const char *password);
 
 /*
  * Performs the RSA authentication dialog with the client.  This returns 0 if
@@ -108,7 +123,7 @@ void	do_authentication2(void);
 
 Authctxt *authctxt_new(void);
 void	auth_log(Authctxt *authctxt, int authenticated, char *method, char *info);
-void	userauth_reply(Authctxt *authctxt, int authenticated);
+void	userauth_finish(Authctxt *authctxt, int authenticated, char *method);
 int	auth_root_allowed(char *method);
 
 int	auth2_challenge(Authctxt *authctxt, char *devs);

@@ -60,7 +60,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/rsa.c,v 1.16.2.3 2001/03/21 19:46:27 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/rsa.c,v 1.16.2.4 2001/05/07 21:09:32 jason Exp $");
 
 #include "rsa.h"
 #include "log.h"
@@ -119,3 +119,23 @@ rsa_private_decrypt(BIGNUM *out, BIGNUM *in, RSA *key)
 	xfree(inbuf);
 	return len;
 }
+
+void
+generate_additional_parameters(RSA *rsa)
+{
+	BIGNUM *aux;
+	BN_CTX *ctx;
+	/* Generate additional parameters */
+	aux = BN_new();
+	ctx = BN_CTX_new();
+
+	BN_sub(aux, rsa->q, BN_value_one());
+	BN_mod(rsa->dmq1, rsa->d, aux, ctx);
+
+	BN_sub(aux, rsa->p, BN_value_one());
+	BN_mod(rsa->dmp1, rsa->d, aux, ctx);
+
+	BN_clear_free(aux);
+	BN_CTX_free(ctx);
+}
+

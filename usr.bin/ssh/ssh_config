@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh_config,v 1.5.2.3 2001/03/21 19:46:30 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh_config,v 1.5.2.4 2001/05/07 21:09:37 jason Exp $
 
 # This is ssh client systemwide configuration file.  See ssh(1) for more
 # information.  This file provides defaults for users, and the values can
@@ -28,8 +28,7 @@
 #   StrictHostKeyChecking yes
 #   IdentityFile ~/.ssh/identity
 #   IdentityFile ~/.ssh/id_dsa
-#   IdentityFile ~/.ssh/id_rsa1
-#   IdentityFile ~/.ssh/id_rsa2
+#   IdentityFile ~/.ssh/id_rsa
 #   Port 22
 #   Protocol 2,1
 #   Cipher blowfish

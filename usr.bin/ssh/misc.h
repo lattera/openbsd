@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.2.2.3 2001/03/21 19:46:26 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.2.2.4 2001/05/07 21:09:31 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -21,3 +21,10 @@ char	*strdelim(char **s);
 void	set_nonblock(int fd);
 
 struct passwd * pwcopy(struct passwd *pw);
+
+/*
+ * Convert ASCII string to TCP/IP port number.
+ * Port must be >0 and <=65535.
+ * Return 0 if invalid.
+ */
+int a2port(const char *s);

@@ -24,10 +24,9 @@
 
 #include "includes.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.7.2.3 2001/03/21 19:46:29 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.7.2.4 2001/05/07 21:09:35 jason Exp $");
 
 /* XXX: commandline mode */
-/* XXX: copy between two remote hosts (commandline) */
 /* XXX: short-form remote directory listings (like 'ls -C') */
 
 #include "buffer.h"
@@ -39,6 +38,8 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.7.2.3 2001/03/21 19:46:29 jason Exp 
 #include "sftp-common.h"
 #include "sftp-client.h"
 #include "sftp-int.h"
+
+#include "scp-common.h"
 
 int use_ssh1 = 0;
 char *ssh_program = _PATH_SSH_PROGRAM;
@@ -141,7 +142,7 @@ make_ssh_args(char *add_arg)
 void
 usage(void)
 {
-	fprintf(stderr, "usage: sftp [-1vC] [-b batchfile] [-osshopt=value] [user@]host\n");
+	fprintf(stderr, "usage: sftp [-1vC] [-b batchfile] [-osshopt=value] [user@]host[:file [file]]\n");
 	exit(1);
 }
 
@@ -150,7 +151,8 @@ main(int argc, char **argv)
 {
 	int in, out, ch, debug_level, compress_flag;
 	pid_t sshpid;
-	char *host, *userhost;
+	char *file1 = NULL;
+	char *host, *userhost, *cp, *file2;
 	LogLevel ll;
 	extern int optind;
 	extern char *optarg;
@@ -184,9 +186,9 @@ main(int argc, char **argv)
 		case 'b':
 			if (infile == stdin) {
 				infile = fopen(optarg, "r");
-				if (infile == NULL) 
+				if (infile == NULL)
 					fatal("%s (%s).", strerror(errno), optarg);
-			} else 
+			} else
 				fatal("Filename already specified.");
 			break;
 		case 'h':
@@ -195,24 +197,30 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (optind == argc || argc > (optind + 1))
+	if (optind == argc || argc > (optind + 2))
 		usage();
 
-	userhost = argv[optind];
+	userhost = xstrdup(argv[optind]);
+	file2 = argv[optind+1];
+
+	if ((cp = colon(userhost)) != NULL) {
+		*cp++ = '\0';
+		file1 = cp;
+	}
 
 	if ((host = strchr(userhost, '@')) == NULL)
 		host = userhost;
 	else {
-		*host = '\0';
+		*host++ = '\0';
 		if (!userhost[0]) {
 			fprintf(stderr, "Missing username\n");
 			usage();
 		}
 		make_ssh_args("-l");
 		make_ssh_args(userhost);
-		host++;
 	}
 
+	host = cleanhostname(host);
 	if (!*host) {
 		fprintf(stderr, "Missing hostname\n");
 		usage();
@@ -249,7 +257,7 @@ main(int argc, char **argv)
 
 	connect_to_server(make_ssh_args(NULL), &in, &out, &sshpid);
 
-	interactive_loop(in, out);
+	interactive_loop(in, out, file1, file2);
 
 	close(in);
 	close(out);

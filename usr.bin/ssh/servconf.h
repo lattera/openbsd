@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.30.2.3 2001/03/21 19:46:28 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.30.2.4 2001/05/07 21:09:33 jason Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H
@@ -51,6 +51,7 @@ typedef struct {
 	int     ignore_user_known_hosts;	/* Ignore ~/.ssh/known_hosts
 						 * for RhostsRsaAuth */
 	int     print_motd;	/* If true, print /etc/motd. */
+	int	print_lastlog;	/* If true, print lastlog */
 	int     check_mail;	/* If true, check for new mail. */
 	int     x11_forwarding;	/* If true, permit inet (spoofing) X11 fwd. */
 	int     x11_display_offset;	/* What DISPLAY number to start
@@ -68,6 +69,8 @@ typedef struct {
 					 * authentication. */
 	int     rhosts_rsa_authentication;	/* If true, permit rhosts RSA
 						 * authentication. */
+	int     hostbased_authentication;	/* If true, permit ssh2 hostbased auth */
+	int     hostbased_uses_name_from_packet_only; /* experimental */
 	int     rsa_authentication;	/* If true, permit RSA authentication. */
 	int     pubkey_authentication;	/* If true, permit ssh2 pubkey authentication. */
 #ifdef KRB4
@@ -112,6 +115,15 @@ typedef struct {
 	int	max_startups;
 	char   *banner;			/* SSH-2 banner message */
 	int	reverse_mapping_check;	/* cross-check ip and dns */
+	int	client_alive_interval;	/*
+					 * poke the client this often to 
+					 * see if it's still there 
+					 */
+	int	client_alive_count_max;	/*
+					 *If the client is unresponsive
+					 * for this many intervals, above
+					 * diconnect the session 
+					 */
 
 }       ServerOptions;
 /*

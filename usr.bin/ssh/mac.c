@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/mac.c,v 1.1.2.3 2001/03/21 19:46:26 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/mac.c,v 1.1.2.4 2001/05/07 21:09:30 jason Exp $");
 
 #include <openssl/hmac.h>
 
@@ -45,7 +45,7 @@ struct {
 	{ "hmac-md5-96",		EVP_md5, 96 },
 	{ "hmac-ripemd160",		EVP_ripemd160, 0 },
 	{ "hmac-ripemd160@openssh.com",	EVP_ripemd160, 0 },
-        { NULL,				NULL, 0 }
+	{ NULL,				NULL, 0 }
 };
 
 int

@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.5.2.3 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.5.2.4 2001/05/07 21:09:25 jason Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"

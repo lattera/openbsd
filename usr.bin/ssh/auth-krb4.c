@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.19.2.3 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.19.2.4 2001/05/07 21:09:25 jason Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"

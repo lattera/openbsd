@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.c,v 1.8.2.3 2001/03/21 19:46:32 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.c,v 1.8.2.4 2001/05/07 21:09:39 jason Exp $");
 
 #include "xmalloc.h"
 #include "log.h"
@@ -39,8 +39,9 @@ xrealloc(void *ptr, size_t new_size)
 	if (new_size == 0)
 		fatal("xrealloc: zero size");
 	if (ptr == NULL)
-		fatal("xrealloc: NULL pointer given as argument");
-	new_ptr = realloc(ptr, new_size);
+		new_ptr = malloc(new_size);
+	else
+		new_ptr = realloc(ptr, new_size);
 	if (new_ptr == NULL)
 		fatal("xrealloc: out of memory (new_size %lu bytes)", (u_long) new_size);
 	return new_ptr;

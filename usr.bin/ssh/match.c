@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.9.2.3 2001/03/21 19:46:26 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.9.2.4 2001/05/07 21:09:31 jason Exp $");
 
 #include "match.h"
 #include "xmalloc.h"

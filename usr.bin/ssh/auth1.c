@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.6.2.4 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.6.2.5 2001/05/07 21:09:26 jason Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -83,7 +83,7 @@ do_authloop(Authctxt *authctxt)
 #ifdef KRB4
 	    (!options.kerberos_authentication || options.kerberos_or_local_passwd) &&
 #endif
-	    auth_password(pw, "")) {
+	    auth_password(authctxt, "")) {
 		auth_log(authctxt, 1, "without authentication", "");
 		return;
 	}
@@ -244,7 +244,7 @@ do_authloop(Authctxt *authctxt)
 			packet_integrity_check(plen, 4 + dlen, type);
 
 			/* Try authentication with the password. */
-			authenticated = auth_password(pw, password);
+			authenticated = auth_password(authctxt, password);
 
 			memset(password, 0, strlen(password));
 			xfree(password);
@@ -284,6 +284,12 @@ do_authloop(Authctxt *authctxt)
 			log("Unknown message during authentication: type %d", type);
 			break;
 		}
+#ifdef BSD_AUTH
+		if (authctxt->as) {
+			auth_close(authctxt->as);
+			authctxt->as = NULL;
+		}
+#endif
 		if (!authctxt->valid && authenticated)
 			fatal("INTERNAL ERROR: authenticated invalid user %s",
 			    authctxt->user);
@@ -366,9 +372,6 @@ do_authentication()
 	packet_send();
 	packet_write_wait();
 
-	xfree(authctxt->user);
-	xfree(authctxt);
-
 	/* Perform session preparation. */
-	do_authenticated(pw);
+	do_authenticated(authctxt);
 }

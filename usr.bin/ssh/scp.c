@@ -75,12 +75,13 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.43.2.3 2001/03/21 19:46:28 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.43.2.4 2001/05/07 21:09:33 jason Exp $");
 
 #include "xmalloc.h"
 #include "atomicio.h"
 #include "pathnames.h"
 #include "log.h"
+#include "scp-common.h"
 
 /* For progressmeter() -- number of seconds before xfer considered "stalled" */
 #define STALLTIME	5
@@ -99,7 +100,7 @@ void addargs(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static struct timeval start;
 
 /* Number of bytes of current file transferred so far. */
-volatile u_long statbytes;
+volatile off_t statbytes;
 
 /* Total size of current file. */
 off_t totalbytes = 0;
@@ -187,10 +188,7 @@ typedef struct {
 	char *buf;
 } BUF;
 
-extern int iamremote;
-
 BUF *allocbuf(BUF *, int, int);
-char *colon(char *);
 void lostconn(int);
 void nospace(void);
 int okname(char *);
@@ -205,13 +203,11 @@ int pflag, iamremote, iamrecursive, targetshouldbedirectory;
 #define	CMDNEEDS	64
 char cmd[CMDNEEDS];		/* must hold "rcp -r -p -d\0" */
 
-int main(int, char *[]);
 int response(void);
 void rsource(char *, struct stat *);
 void sink(int, char *[]);
 void source(int, char *[]);
 void tolocal(int, char *[]);
-char *cleanhostname(char *);
 void toremote(char *, int, char *[]);
 void usage(void);
 
@@ -278,7 +274,6 @@ main(argc, argv)
 			iamremote = 1;
 			tflag = 1;
 			break;
-		case '?':
 		default:
 			usage();
 		}
@@ -327,17 +322,6 @@ main(argc, argv)
 			verifydir(argv[argc - 1]);
 	}
 	exit(errs != 0);
-}
-
-char *
-cleanhostname(host)
-	char *host;
-{
-	if (*host == '[' && host[strlen(host) - 1] == ']') {
-		host[strlen(host) - 1] = '\0';
-		return (host + 1);
-	} else
-		return host;
 }
 
 void
@@ -484,13 +468,17 @@ source(argc, argv)
 	struct stat stb;
 	static BUF buffer;
 	BUF *bp;
-	off_t i;
-	int amt, fd, haderr, indx, result;
+	off_t i, amt, result;
+	int fd, haderr, indx;
 	char *last, *name, buf[2048];
+	int len;
 
 	for (indx = 0; indx < argc; ++indx) {
 		name = argv[indx];
 		statbytes = 0;
+		len = strlen(name);
+		while (len > 1 && name[len-1] == '/')
+			name[--len] = '\0';
 		if ((fd = open(name, O_RDONLY, 0)) < 0)
 			goto syserr;
 		if (fstat(fd, &stb) < 0) {
@@ -530,7 +518,7 @@ syserr:			run_err("%s: %s", name, strerror(errno));
 #define	FILEMODEMASK	(S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO)
 		snprintf(buf, sizeof buf, "C%04o %lld %s\n",
 		    (u_int) (stb.st_mode & FILEMODEMASK),
-		    stb.st_size, last);
+		    (long long)stb.st_size, last);
 		if (verbose_mode) {
 			fprintf(stderr, "Sending file modes: %s", buf);
 			fflush(stderr);
@@ -615,7 +603,7 @@ rsource(name, statp)
 		closedir(dirp);
 		return;
 	}
-	while ((dp = readdir(dirp))) {
+	while ((dp = readdir(dirp)) != NULL) {
 		if (dp->d_ino == 0)
 			continue;
 		if (!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, ".."))
@@ -649,9 +637,10 @@ sink(argc, argv)
 	off_t size;
 	int setimes, targisdir, wrerrno = 0;
 	char ch, *cp, *np, *targ, *why, *vect[1], buf[2048];
-	int dummy_usec;
 	struct timeval tv[2];
 
+#define	atime	tv[0]
+#define	mtime	tv[1]
 #define	SCREWUP(str)	{ why = str; goto screwup; }
 
 	setimes = targisdir = 0;
@@ -698,25 +687,21 @@ sink(argc, argv)
 		if (ch == '\n')
 			*--cp = 0;
 
-#define getnum(t) (t) = 0; \
-  while (*cp >= '0' && *cp <= '9') (t) = (t) * 10 + (*cp++ - '0');
 		cp = buf;
 		if (*cp == 'T') {
 			setimes++;
 			cp++;
-			getnum(tv[1].tv_sec);
-			if (*cp++ != ' ')
+			mtime.tv_sec = strtol(cp, &cp, 10);
+			if (!cp || *cp++ != ' ')
 				SCREWUP("mtime.sec not delimited");
-			getnum(dummy_usec);
-			tv[1].tv_usec = 0;
-			if (*cp++ != ' ')
+			mtime.tv_usec = strtol(cp, &cp, 10);
+			if (!cp || *cp++ != ' ')
 				SCREWUP("mtime.usec not delimited");
-			getnum(tv[0].tv_sec);
-			if (*cp++ != ' ')
+			atime.tv_sec = strtol(cp, &cp, 10);
+			if (!cp || *cp++ != ' ')
 				SCREWUP("atime.sec not delimited");
-			getnum(dummy_usec);
-			tv[0].tv_usec = 0;
-			if (*cp++ != '\0')
+			atime.tv_usec = strtol(cp, &cp, 10);
+			if (!cp || *cp++ != '\0')
 				SCREWUP("atime.usec not delimited");
 			(void) atomicio(write, remout, "", 1);
 			continue;
@@ -744,7 +729,7 @@ sink(argc, argv)
 		if (*cp++ != ' ')
 			SCREWUP("mode not delimited");
 
-		for (size = 0; *cp >= '0' && *cp <= '9';)
+		for (size = 0; isdigit(*cp);)
 			size = size * 10 + (*cp++ - '0');
 		if (*cp++ != ' ')
 			SCREWUP("size not delimited");
@@ -827,7 +812,7 @@ bad:			run_err("%s: %s", np, strerror(errno));
 					continue;
 				} else if (j <= 0) {
 					run_err("%s", j ? strerror(errno) :
-						"dropped connection");
+					    "dropped connection");
 					exit(1);
 				}
 				amt -= j;
@@ -864,12 +849,12 @@ bad:			run_err("%s: %s", np, strerror(errno));
 			if (exists || omode != mode)
 				if (fchmod(ofd, omode))
 					run_err("%s: set mode: %s",
-						np, strerror(errno));
+					    np, strerror(errno));
 		} else {
 			if (!exists && omode != mode)
 				if (fchmod(ofd, omode & ~mask))
 					run_err("%s: set mode: %s",
-						np, strerror(errno));
+					    np, strerror(errno));
 		}
 		if (close(ofd) == -1) {
 			wrerr = YES;
@@ -880,7 +865,7 @@ bad:			run_err("%s: %s", np, strerror(errno));
 			setimes = 0;
 			if (utimes(np, tv) < 0) {
 				run_err("%s: set times: %s",
-					np, strerror(errno));
+				    np, strerror(errno));
 				wrerr = DISPLAYED;
 			}
 		}
@@ -937,8 +922,8 @@ void
 usage()
 {
 	(void) fprintf(stderr, "usage: scp "
-	    "[-pqrvC46] [-S ssh] [-P port] [-c cipher] [-i identity] f1 f2; or:\n"
-	    "       scp [options] f1 ... fn directory\n");
+	    "[-pqrvBC46] [-S ssh] [-P port] [-c cipher] [-i identity] f1 f2\n"
+	    "   or: scp [options] f1 ... fn directory\n");
 	exit(1);
 }
 
@@ -963,30 +948,6 @@ run_err(const char *fmt,...)
 		fprintf(stderr, "\n");
 	}
 	va_end(ap);
-}
-
-char *
-colon(cp)
-	char *cp;
-{
-	int flag = 0;
-
-	if (*cp == ':')		/* Leading colon is part of file name. */
-		return (0);
-	if (*cp == '[')
-		flag = 1;
-
-	for (; *cp; ++cp) {
-		if (*cp == '@' && *(cp+1) == '[')
-			flag = 1;
-		if (*cp == ']' && *(cp+1) == ':' && flag)
-			return (cp+1);
-		if (*cp == ':' && !flag)
-			return (cp);
-		if (*cp == '/')
-			return (0);
-	}
-	return (0);
 }
 
 void

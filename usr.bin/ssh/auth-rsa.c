@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.32.2.3 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.32.2.4 2001/05/07 21:09:25 jason Exp $");
 
 #include <openssl/rsa.h>
 #include <openssl/md5.h>
@@ -135,7 +135,7 @@ auth_rsa(struct passwd *pw, BIGNUM *client_n)
 		return 0;
 
 	/* Temporarily use the user's uid. */
-	temporarily_use_uid(pw->pw_uid);
+	temporarily_use_uid(pw);
 
 	/* The authorized keys. */
 	snprintf(file, sizeof file, "%.500s/%.100s", pw->pw_dir,

@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.16.2.3 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.16.2.4 2001/05/07 21:09:25 jason Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -24,6 +24,9 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.16.2.3 2001/03/21 19:46:22 ja
 #include "servconf.h"
 #include "canohost.h"
 #include "auth.h"
+
+/* import */
+extern ServerOptions options;
 
 /*
  * This function processes an rhosts-style file (.rhosts, .shosts, or
@@ -150,18 +153,33 @@ check_rhosts_file(const char *filename, const char *hostname,
 int
 auth_rhosts(struct passwd *pw, const char *client_user)
 {
-	extern ServerOptions options;
-	char buf[1024];
 	const char *hostname, *ipaddr;
+	int ret;
+
+	hostname = get_canonical_hostname(options.reverse_mapping_check);
+	ipaddr = get_remote_ipaddr();
+	ret = auth_rhosts2(pw, client_user, hostname, ipaddr);
+	return ret;
+}
+
+int
+auth_rhosts2(struct passwd *pw, const char *client_user, const char *hostname,
+    const char *ipaddr)
+{
+	char buf[1024];
 	struct stat st;
 	static const char *rhosts_files[] = {".shosts", ".rhosts", NULL};
 	u_int rhosts_file_index;
 
+	debug2("auth_rhosts2: clientuser %s hostname %s ipaddr %s",
+	    client_user, hostname, ipaddr);
+
 	/* no user given */
 	if (pw == NULL)
 		return 0;
+
 	/* Switch to the user's uid. */
-	temporarily_use_uid(pw->pw_uid);
+	temporarily_use_uid(pw);
 	/*
 	 * Quick check: if the user has no .shosts or .rhosts files, return
 	 * failure immediately without doing costly lookups from name
@@ -183,9 +201,6 @@ auth_rhosts(struct passwd *pw, const char *client_user)
 	    stat(_PATH_RHOSTS_EQUIV, &st) < 0 &&
 	    stat(_PATH_SSH_HOSTS_EQUIV, &st) < 0)
 		return 0;
-
-	hostname = get_canonical_hostname(options.reverse_mapping_check);
-	ipaddr = get_remote_ipaddr();
 
 	/* If not logging in as superuser, try /etc/hosts.equiv and shosts.equiv. */
 	if (pw->pw_uid != 0) {
@@ -223,7 +238,7 @@ auth_rhosts(struct passwd *pw, const char *client_user)
 		return 0;
 	}
 	/* Temporarily use the user's uid. */
-	temporarily_use_uid(pw->pw_uid);
+	temporarily_use_uid(pw);
 
 	/* Check all .rhosts files (currently .shosts and .rhosts). */
 	for (rhosts_file_index = 0; rhosts_files[rhosts_file_index];

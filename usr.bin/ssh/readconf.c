@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.49.2.3 2001/03/21 19:46:27 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.49.2.4 2001/05/07 21:09:32 jason Exp $");
 
 #include "ssh.h"
 #include "xmalloc.h"
@@ -110,7 +110,8 @@ typedef enum {
 	oUsePrivilegedPort, oLogLevel, oCiphers, oProtocol, oMacs,
 	oGlobalKnownHostsFile2, oUserKnownHostsFile2, oPubkeyAuthentication,
 	oKbdInteractiveAuthentication, oKbdInteractiveDevices, oHostKeyAlias,
-	oPreferredAuthentications
+	oDynamicForward, oPreferredAuthentications, oHostbasedAuthentication,
+	oHostKeyAlgorithms
 } OpCodes;
 
 /* Textual representations of the tokens. */
@@ -131,6 +132,8 @@ static struct {
 	{ "rsaauthentication", oRSAAuthentication },
 	{ "pubkeyauthentication", oPubkeyAuthentication },
 	{ "dsaauthentication", oPubkeyAuthentication },		    /* alias */
+	{ "rhostsrsaauthentication", oRhostsRSAAuthentication },
+	{ "hostbasedauthentication", oHostbasedAuthentication },
 	{ "challengeresponseauthentication", oChallengeResponseAuthentication },
 	{ "skeyauthentication", oChallengeResponseAuthentication }, /* alias */
 	{ "tisauthentication", oChallengeResponseAuthentication },  /* alias */
@@ -158,7 +161,6 @@ static struct {
 	{ "user", oUser },
 	{ "host", oHost },
 	{ "escapechar", oEscapeChar },
-	{ "rhostsrsaauthentication", oRhostsRSAAuthentication },
 	{ "globalknownhostsfile", oGlobalKnownHostsFile },
 	{ "userknownhostsfile", oUserKnownHostsFile },
 	{ "globalknownhostsfile2", oGlobalKnownHostsFile2 },
@@ -172,7 +174,9 @@ static struct {
 	{ "keepalive", oKeepAlives },
 	{ "numberofpasswordprompts", oNumberOfPasswordPrompts },
 	{ "loglevel", oLogLevel },
+	{ "dynamicforward", oDynamicForward },
 	{ "preferredauthentications", oPreferredAuthentications },
+	{ "hostkeyalgorithms", oHostKeyAlgorithms },
 	{ NULL, 0 }
 };
 
@@ -217,8 +221,7 @@ add_remote_forward(Options *options, u_short port, const char *host,
 }
 
 /*
- * Returns the number of the token pointed to by cp of length len. Never
- * returns if the token is not known.
+ * Returns the number of the token pointed to by cp or oBadOption.
  */
 
 static OpCodes
@@ -230,8 +233,8 @@ parse_token(const char *cp, const char *filename, int linenum)
 		if (strcasecmp(cp, keywords[i].name) == 0)
 			return keywords[i].opcode;
 
-	fprintf(stderr, "%s: line %d: Bad configuration option: %s\n",
-		filename, linenum, cp);
+	error("%s: line %d: Bad configuration option: %s",
+	    filename, linenum, cp);
 	return oBadOption;
 }
 
@@ -320,6 +323,10 @@ parse_flag:
 
 	case oRhostsRSAAuthentication:
 		intptr = &options->rhosts_rsa_authentication;
+		goto parse_flag;
+
+	case oHostbasedAuthentication:
+		intptr = &options->hostbased_authentication;
 		goto parse_flag;
 
 	case oChallengeResponseAuthentication:
@@ -520,6 +527,17 @@ parse_int:
 			options->macs = xstrdup(arg);
 		break;
 
+	case oHostKeyAlgorithms:
+		arg = strdelim(&s);
+		if (!arg || *arg == '\0')
+			fatal("%.200s line %d: Missing argument.", filename, linenum);
+		if (!key_names_valid2(arg))
+			fatal("%.200s line %d: Bad protocol 2 host key algorithms '%s'.",
+			      filename, linenum, arg ? arg : "<NONE>");
+		if (*activep && options->hostkeyalgorithms == NULL)
+			options->hostkeyalgorithms = xstrdup(arg);
+		break;
+
 	case oProtocol:
 		intptr = &options->protocol;
 		arg = strdelim(&s);
@@ -548,10 +566,10 @@ parse_int:
 		arg = strdelim(&s);
 		if (!arg || *arg == '\0')
 			fatal("%.200s line %d: Missing argument.", filename, linenum);
-		if (arg[0] < '0' || arg[0] > '9')
+		fwd_port = a2port(arg);
+		if (fwd_port == 0)
 			fatal("%.200s line %d: Badly formatted port number.",
 			      filename, linenum);
-		fwd_port = atoi(arg);
 		arg = strdelim(&s);
 		if (!arg || *arg == '\0')
 			fatal("%.200s line %d: Missing second argument.",
@@ -567,10 +585,10 @@ parse_int:
 		arg = strdelim(&s);
 		if (!arg || *arg == '\0')
 			fatal("%.200s line %d: Missing argument.", filename, linenum);
-		if (arg[0] < '0' || arg[0] > '9')
+		fwd_port = a2port(arg);
+		if (fwd_port == 0)
 			fatal("%.200s line %d: Badly formatted port number.",
 			      filename, linenum);
-		fwd_port = atoi(arg);
 		arg = strdelim(&s);
 		if (!arg || *arg == '\0')
 			fatal("%.200s line %d: Missing second argument.",
@@ -580,6 +598,18 @@ parse_int:
 			      filename, linenum);
 		if (*activep)
 			add_local_forward(options, fwd_port, buf, fwd_host_port);
+		break;
+
+	case oDynamicForward:
+		arg = strdelim(&s);
+		if (!arg || *arg == '\0')
+			fatal("%.200s line %d: Missing port argument.",
+			    filename, linenum);
+		fwd_port = a2port(arg);
+		if (fwd_port == 0)
+			fatal("%.200s line %d: Badly formatted port number.",
+			    filename, linenum);
+		add_local_forward(options, fwd_port, "socks4", 0);
 		break;
 
 	case oHost:
@@ -698,6 +728,7 @@ initialize_options(Options * options)
 	options->kbd_interactive_authentication = -1;
 	options->kbd_interactive_devices = NULL;
 	options->rhosts_rsa_authentication = -1;
+	options->hostbased_authentication = -1;
 	options->fallback_to_rsh = -1;
 	options->use_rsh = -1;
 	options->batch_mode = -1;
@@ -712,6 +743,7 @@ initialize_options(Options * options)
 	options->cipher = -1;
 	options->ciphers = NULL;
 	options->macs = NULL;
+	options->hostkeyalgorithms = NULL;
 	options->protocol = SSH_PROTO_UNKNOWN;
 	options->num_identity_files = 0;
 	options->hostname = NULL;
@@ -775,6 +807,8 @@ fill_default_options(Options * options)
 		options->kbd_interactive_authentication = 1;
 	if (options->rhosts_rsa_authentication == -1)
 		options->rhosts_rsa_authentication = 1;
+	if (options->hostbased_authentication == -1)
+		options->hostbased_authentication = 0;
 	if (options->fallback_to_rsh == -1)
 		options->fallback_to_rsh = 0;
 	if (options->use_rsh == -1)
@@ -802,8 +836,9 @@ fill_default_options(Options * options)
 		options->cipher = SSH_CIPHER_NOT_SET;
 	/* options->ciphers, default set in myproposals.h */
 	/* options->macs, default set in myproposals.h */
+	/* options->hostkeyalgorithms, default set in myproposals.h */
 	if (options->protocol == SSH_PROTO_UNKNOWN)
-		options->protocol = SSH_PROTO_1|SSH_PROTO_2|SSH_PROTO_1_PREFERRED;
+		options->protocol = SSH_PROTO_1|SSH_PROTO_2;
 	if (options->num_identity_files == 0) {
 		if (options->protocol & SSH_PROTO_1) {
 			len = 2 + strlen(_PATH_SSH_CLIENT_IDENTITY) + 1;

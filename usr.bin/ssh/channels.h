@@ -32,7 +32,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.3 2001/03/21 19:46:23 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.4 2001/05/07 21:09:27 jason Exp $"); */
 
 #ifndef CHANNELS_H
 #define CHANNELS_H
@@ -53,7 +53,8 @@
 #define SSH_CHANNEL_LARVAL		10	/* larval session */
 #define SSH_CHANNEL_RPORT_LISTENER	11	/* Listening to a R-style port  */
 #define SSH_CHANNEL_CONNECTING		12
-#define SSH_CHANNEL_MAX_TYPE		13
+#define SSH_CHANNEL_DYNAMIC		13
+#define SSH_CHANNEL_MAX_TYPE		14
 
 /*
  * Data structure for channel data.  This is iniailized in channel_allocate
@@ -171,7 +172,8 @@ void    channel_free(int channel);
  * select bitmasks.
  */
 void
-channel_prepare_select(fd_set **readsetp, fd_set **writesetp, int *maxfdp);
+channel_prepare_select(fd_set **readsetp, fd_set **writesetp, int *maxfdp,
+    int rekeying);
 
 /*
  * After select, perform any appropriate operations for channels which have
@@ -304,5 +306,7 @@ void    auth_input_open_request(int type, int plen, void *ctxt);
 int	channel_connect_to(const char *host, u_short host_port);
 int	channel_connect_by_listen_adress(u_short listen_port);
 int	x11_connect_display(void);
+
+int	channel_find_open(void);
 
 #endif

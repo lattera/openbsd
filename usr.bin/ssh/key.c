@@ -32,7 +32,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/key.c,v 1.11.2.3 2001/03/21 19:46:25 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/key.c,v 1.11.2.4 2001/05/07 21:09:30 jason Exp $");
 
 #include <openssl/evp.h>
 
@@ -211,12 +211,12 @@ key_fingerprint_raw(Key *k, enum fp_type dgst_type, size_t *dgst_raw_length)
 }
 
 char*
-key_fingerprint_hex(u_char* dgst_raw, size_t dgst_raw_len) 
+key_fingerprint_hex(u_char* dgst_raw, size_t dgst_raw_len)
 {
 	char *retval;
 	int i;
 
-	retval = xmalloc(dgst_raw_len * 3);
+	retval = xmalloc(dgst_raw_len * 3 + 1);
 	retval[0] = '\0';
 	for(i = 0; i < dgst_raw_len; i++) {
 		char hex[4];
@@ -228,7 +228,7 @@ key_fingerprint_hex(u_char* dgst_raw, size_t dgst_raw_len)
 }
 
 char*
-key_fingerprint_bubblebabble(u_char* dgst_raw, size_t dgst_raw_len) 
+key_fingerprint_bubblebabble(u_char* dgst_raw, size_t dgst_raw_len)
 {
 	char vowels[] = { 'a', 'e', 'i', 'o', 'u', 'y' };
 	char consonants[] = { 'b', 'c', 'd', 'f', 'g', 'h', 'k', 'l', 'm',
@@ -277,9 +277,9 @@ key_fingerprint_bubblebabble(u_char* dgst_raw, size_t dgst_raw_len)
 char*
 key_fingerprint(Key *k, enum fp_type dgst_type, enum fp_rep dgst_rep)
 {
-	char *retval = NULL; 
+	char *retval = NULL;
 	u_char *dgst_raw;
-	size_t dgst_raw_len; 
+	size_t dgst_raw_len;
 	
 	dgst_raw = key_fingerprint_raw(k, dgst_type, &dgst_raw_len);
 	if (!dgst_raw)
@@ -627,6 +627,28 @@ key_type_from_name(char *name)
 	}
 	debug2("key_type_from_name: unknown key type '%s'", name);
 	return KEY_UNSPEC;
+}
+
+int
+key_names_valid2(const char *names)
+{
+	char *s, *cp, *p;
+
+	if (names == NULL || strcmp(names, "") == 0)
+		return 0;
+	s = cp = xstrdup(names);
+	for ((p = strsep(&cp, ",")); p && *p != '\0';
+	     (p = strsep(&cp, ","))) {
+		switch (key_type_from_name(p)) {
+		case KEY_RSA1:
+		case KEY_UNSPEC:
+			xfree(s);
+			return 0;
+		}
+	}
+	debug3("key names ok: [%s]", names);
+	xfree(s);
+	return 1;
 }
 
 Key *

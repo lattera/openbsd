@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.17.2.3 2001/03/21 19:46:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.17.2.4 2001/05/07 21:09:25 jason Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -80,7 +80,7 @@ auth_rhosts_rsa(struct passwd *pw, const char *client_user, RSA *client_host_key
 			    pw->pw_name, user_hostfile);
 		} else {
 			/* XXX race between stat and the following open() */
-			temporarily_use_uid(pw->pw_uid);
+			temporarily_use_uid(pw);
 			host_status = check_host_in_hostfile(user_hostfile, canonical_hostname,
 			    client_key, found, NULL);
 			restore_uid();

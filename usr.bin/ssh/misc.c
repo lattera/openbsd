@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.3 2001/03/21 19:46:26 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.4 2001/05/07 21:09:31 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.3 2001/03/21 19:46:26 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.4 2001/05/07 21:09:31 jason Exp $");
 
 #include "misc.h"
 #include "log.h"
@@ -112,4 +112,19 @@ pwcopy(struct passwd *pw)
 	copy->pw_dir = xstrdup(pw->pw_dir);
 	copy->pw_shell = xstrdup(pw->pw_shell);
 	return copy;
+}
+
+int a2port(const char *s)
+{
+	long port;
+	char *endp;
+
+	errno = 0;
+	port = strtol(s, &endp, 0);
+	if (s == endp || *endp != '\0' ||
+	    (errno == ERANGE && (port == LONG_MIN || port == LONG_MAX)) ||
+	    port <= 0 || port > 65535)
+		return 0;
+
+	return port;
 }
