@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sbin/isakmpd/sysdep/common/libsysdep/Attic/md5.c,v 1.2 2001/01/28 22:38:48 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/common/libsysdep/Attic/md5.c,v 1.3 2002/06/14 21:34:58 todd Exp $	*/
 
 /*
  * The rest of the code is derived from MD5C.C by RSADSI. Minor cosmetic
- * changes to accomodate it in the kernel by ji.
+ * changes to accommodate it in the kernel by ji.
  */
 
 /* MD5C.C - RSA Data Security, Inc., MD5 message-digest algorithm
