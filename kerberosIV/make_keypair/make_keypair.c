@@ -1,4 +1,4 @@
-/*	$Id: make_keypair.c,v 1.1.1.1 1995/12/14 06:52:53 tholo Exp $	*/
+/*	$Id: make_keypair.c,v 1.2 1995/12/29 09:49:55 tholo Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1993
@@ -109,8 +109,7 @@ make_key(addr)
 	char		namebuf[255];
 	int		fd;
 
-	(void)sprintf(namebuf, "%s",
-		inet_ntoa(addr));
+	(void)snprintf(namebuf, sizeof(namebuf), "%s", inet_ntoa(addr));
 	fd = open(namebuf, O_WRONLY|O_CREAT, 0600);
 	if (fd < 0) {
 		perror("open");

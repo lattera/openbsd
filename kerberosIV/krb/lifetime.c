@@ -1,7 +1,7 @@
 /*
  * This software may now be redistributed outside the US.
  *
- * $Source: /usr/src/kerberosIV/lib/krb/RCS/lifetime.c,v $
+ * $Source: /cvs/src/kerberosIV/krb/lifetime.c,v $
  *
  * $Locker:  $
  */
@@ -185,7 +185,8 @@ krb_life_to_atime(life)
     when /= 60;
     hours = when%24;
     when /= 24;
-    sprintf(atime, "%d+%02d:%02d:%02d", (int)when, hours, mins, secs);
+    snprintf(atime, sizeof(atime), "%d+%02d:%02d:%02d", (int)when, hours,
+	     mins, secs);
     return(atime);
 }
 
