@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler for Intel 80386
    running FreeBSD.
-   Copyright (C) 1988, 1992, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1994, 1996, 1997 Free Software Foundation, Inc.
    Contributed by Poul-Henning Kamp <phk@login.dkuug.dk>
 
 This file is part of GNU CC.
@@ -55,11 +55,6 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE 16
 
 #define HAVE_ATEXIT
-
-/* There are conflicting reports about whether this system uses
-   a different assembler syntax.  wilson@cygnus.com says # is right.  */
-#undef COMMENT_BEGIN
-#define COMMENT_BEGIN "#"
 
 #undef ASM_APP_ON
 #define ASM_APP_ON "#APP\n"
@@ -119,12 +114,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define TYPE_ASM_OP	".type"
 #define SIZE_ASM_OP	".size"
-
-/* This is how we tell the assembler that a symbol is weak.  */
-
-#define ASM_WEAKEN_LABEL(FILE,NAME) \
-  do { fputs ("\t.weak\t", FILE); assemble_name (FILE, NAME); \
-       fputc ('\n', FILE); } while (0)
 
 /* The following macro defines the format used to output the second
    operand of the .type assembler directive.  Different svr4 assemblers
@@ -235,9 +224,9 @@ do {                                                                    \
 #ifdef FREEBSD_NATIVE
 
 #define INCLUDE_DEFAULTS { \
-	{ "/usr/include", 0 }, \
-	{ "/usr/include/g++", 1 }, \
-	{ 0, 0} \
+	{ "/usr/include", 0, 0, 0 }, \
+	{ "/usr/include/g++", "G++", 1, 1 }, \
+	{ 0, 0, 0, 0} \
 	}
 
 #undef MD_EXEC_PREFIX

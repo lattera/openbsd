@@ -1,5 +1,5 @@
-This is Info file cpp.info, produced by Makeinfo-1.63 from the input
-file cpp.texi.
+This is Info file cpp.info, produced by Makeinfo version 1.68 from the
+input file cpp.texi.
 
    This file documents the GNU C Preprocessor.
 
@@ -60,6 +60,12 @@ accept these constructs by default.  Strictly speaking, to get ANSI
 Standard C, you must use the options `-trigraphs', `-undef' and
 `-pedantic', but in practice the consequences of having strict ANSI
 Standard C make it undesirable to do this.  *Note Invocation::.
+
+   The C preprocessor is designed for C-like languages; you may run into
+problems if you apply it to other kinds of languages, because it assumes
+that it is dealing with C.  For example, the C preprocessor sometimes
+outputs extra white space to avoid inadvertent C token concatenation,
+and this may cause problems with other languages.
 
 * Menu:
 
@@ -421,19 +427,19 @@ names, then inheritance is straightforward: simply write `#include
 as the base file.  This is less straightforward.
 
    For example, suppose an application program uses the system header
-file `sys/signal.h', but the version of `/usr/include/sys/signal.h' on
-a particular system doesn't do what the application program expects.
-It might be convenient to define a "local" version, perhaps under the
-name `/usr/local/include/sys/signal.h', to override or add to the one
+`sys/signal.h', but the version of `/usr/include/sys/signal.h' on a
+particular system doesn't do what the application program expects.  It
+might be convenient to define a "local" version, perhaps under the name
+`/usr/local/include/sys/signal.h', to override or add to the one
 supplied by the system.
 
-   You can do this by using the option `-I.' for compilation, and
-writing a file `sys/signal.h' that does what the application program
-expects.  But making this file include the standard `sys/signal.h' is
-not so easy--writing `#include <sys/signal.h>' in that file doesn't
-work, because it includes your own version of the file, not the
-standard system version.  Used in that file itself, this leads to an
-infinite recursion and a fatal error in compilation.
+   You can do this by compiling with the option `-I.', and writing a
+file `sys/signal.h' that does what the application program expects.
+But making this file include the standard `sys/signal.h' is not so
+easy--writing `#include <sys/signal.h>' in that file doesn't work,
+because it includes your own version of the file, not the standard
+system version.  Used in that file itself, this leads to an infinite
+recursion and a fatal error in compilation.
 
    `#include </usr/include/sys/signal.h>' would find the proper file,
 but that is not clean, since it makes an assumption about where the
@@ -448,11 +454,11 @@ searching the list of header file directories *after* the directory in
 which the current file was found.
 
    Suppose you specify `-I /usr/local/include', and the list of
-directories to search also includes `/usr/include'; and suppose that
-both directories contain a file named `sys/signal.h'.  Ordinary
-`#include <sys/signal.h>' finds the file under `/usr/local/include'.
-If that file contains `#include_next <sys/signal.h>', it starts
-searching after that directory, and finds the file in `/usr/include'.
+directories to search also includes `/usr/include'; and suppose both
+directories contain `sys/signal.h'.  Ordinary `#include <sys/signal.h>'
+finds the file under `/usr/local/include'.  If that file contains
+`#include_next <sys/signal.h>', it starts searching after that
+directory, and finds the file in `/usr/include'.
 
 
 File: cpp.info,  Node: Macros,  Next: Conditionals,  Prev: Header Files,  Up: Top
@@ -748,7 +754,7 @@ are GNU C extensions.
 `__DATE__'
      This macro expands to a string constant that describes the date on
      which the preprocessor is being run.  The string constant contains
-     eleven characters and looks like `"Jan 29 1987"' or `"Apr 1 1905"'.
+     eleven characters and looks like `"Feb  1 1996"'.
 
 `__TIME__'
      This macro expands to a string constant that describes the time at
@@ -760,6 +766,14 @@ are GNU C extensions.
      Standard C.  (Whether that is actually true depends on what C
      compiler will operate on the output from the preprocessor.)
 
+     On some hosts, system include files use a different convention,
+     where `__STDC__' is normally 0, but is 1 if the user specifies
+     strict conformance to the C Standard.  The preprocessor follows
+     the host convention when processing system include files, but when
+     processing user files it follows the usual GNU C convention.
+
+     This macro is not defined if the `-traditional' option is used.
+
 `__STDC_VERSION__'
      This macro expands to the C Standard's version number, a long
      integer constant of the form `YYYYMML' where YYYY and MM are the
@@ -768,6 +782,8 @@ are GNU C extensions.
      `__STDC__', whether this version number is accurate for the entire
      implementation depends on what C compiler will operate on the
      output from the preprocessor.
+
+     This macro is not defined if the `-traditional' option is used.
 
 `__GNUC__'
      This macro is defined if and only if this is GNU C.  This macro is
@@ -831,9 +847,9 @@ are GNU C extensions.
 `__CHAR_UNSIGNED__'
      This macro is defined if and only if the data type `char' is
      unsigned on the target machine.  It exists to cause the standard
-     header file `limit.h' to work correctly.  It is bad practice to
+     header file `limits.h' to work correctly.  It is bad practice to
      refer to this macro yourself; instead, refer to the standard
-     macros defined in `limit.h'.  The preprocessor uses this macro to
+     macros defined in `limits.h'.  The preprocessor uses this macro to
      determine whether or not to sign-extend large character constants
      written in octal; see *Note The `#if' Directive: #if Directive.
 
@@ -850,7 +866,9 @@ are GNU C extensions.
      assembler code that is usable in multiple environments.  For
      example, in the `m68k-aout' environment it expands to the string
      `"_"', but in the `m68k-coff' environment it expands to the string
-     `""'.
+     `""'.  This does not work with the `-mno-underscores' option that
+     the i386 OSF/rose and m88k targets provide nor with the `-mcall*'
+     options of the rs6000 System V Release 4 target.
 
 
 File: cpp.info,  Node: Nonstandard Predefined,  Prev: Standard Predefined,  Up: Predefined
@@ -1161,29 +1179,4 @@ exactly match the one already in effect, with two possible exceptions:
      where there was no whitespace at all.
 
    Recall that a comment counts as whitespace.
-
-
-File: cpp.info,  Node: Macro Pitfalls,  Prev: Redefining,  Up: Macros
-
-Pitfalls and Subtleties of Macros
----------------------------------
-
-   In this section we describe some special rules that apply to macros
-and macro expansion, and point out certain cases in which the rules have
-counterintuitive consequences that you must watch out for.
-
-* Menu:
-
-* Misnesting::        Macros can contain unmatched parentheses.
-* Macro Parentheses:: Why apparently superfluous parentheses
-                         may be necessary to avoid incorrect grouping.
-* Swallow Semicolon:: Macros that look like functions
-                         but expand into compound statements.
-* Side Effects::      Unsafe macros that cause trouble when
-                         arguments contain side effects.
-* Self-Reference::    Macros whose definitions use the macros' own names.
-* Argument Prescan::  Actual arguments are checked for macro calls
-                         before they are substituted.
-* Cascaded Macros::   Macros whose definitions use other macros.
-* Newlines in Args::  Sometimes line numbers get confused.
 

@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,6 +28,312 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: gcc.info,  Node: Inline,  Next: Extended Asm,  Prev: Alignment,  Up: C Extensions
+
+An Inline Function is As Fast As a Macro
+========================================
+
+   By declaring a function `inline', you can direct GNU CC to integrate
+that function's code into the code for its callers.  This makes
+execution faster by eliminating the function-call overhead; in
+addition, if any of the actual argument values are constant, their known
+values may permit simplifications at compile time so that not all of the
+inline function's code needs to be included.  The effect on code size is
+less predictable; object code may be larger or smaller with function
+inlining, depending on the particular case.  Inlining of functions is an
+optimization and it really "works" only in optimizing compilation.  If
+you don't use `-O', no function is really inline.
+
+   To declare a function inline, use the `inline' keyword in its
+declaration, like this:
+
+     inline int
+     inc (int *a)
+     {
+       (*a)++;
+     }
+
+   (If you are writing a header file to be included in ANSI C programs,
+write `__inline__' instead of `inline'.  *Note Alternate Keywords::.)
+
+   You can also make all "simple enough" functions inline with the
+option `-finline-functions'.  Note that certain usages in a function
+definition can make it unsuitable for inline substitution.
+
+   Note that in C and Objective C, unlike C++, the `inline' keyword
+does not affect the linkage of the function.
+
+   GNU CC automatically inlines member functions defined within the
+class body of C++ programs even if they are not explicitly declared
+`inline'.  (You can override this with `-fno-default-inline'; *note
+Options Controlling C++ Dialect: C++ Dialect Options..)
+
+   When a function is both inline and `static', if all calls to the
+function are integrated into the caller, and the function's address is
+never used, then the function's own assembler code is never referenced.
+In this case, GNU CC does not actually output assembler code for the
+function, unless you specify the option `-fkeep-inline-functions'.
+Some calls cannot be integrated for various reasons (in particular,
+calls that precede the function's definition cannot be integrated, and
+neither can recursive calls within the definition).  If there is a
+nonintegrated call, then the function is compiled to assembler code as
+usual.  The function must also be compiled as usual if the program
+refers to its address, because that can't be inlined.
+
+   When an inline function is not `static', then the compiler must
+assume that there may be calls from other source files; since a global
+symbol can be defined only once in any program, the function must not
+be defined in the other source files, so the calls therein cannot be
+integrated.  Therefore, a non-`static' inline function is always
+compiled on its own in the usual fashion.
+
+   If you specify both `inline' and `extern' in the function
+definition, then the definition is used only for inlining.  In no case
+is the function compiled on its own, not even if you refer to its
+address explicitly.  Such an address becomes an external reference, as
+if you had only declared the function, and had not defined it.
+
+   This combination of `inline' and `extern' has almost the effect of a
+macro.  The way to use it is to put a function definition in a header
+file with these keywords, and put another copy of the definition
+(lacking `inline' and `extern') in a library file.  The definition in
+the header file will cause most calls to the function to be inlined.
+If any uses of the function remain, they will refer to the single copy
+in the library.
+
+   GNU C does not inline any functions when not optimizing.  It is not
+clear whether it is better to inline or not, in this case, but we found
+that a correct implementation when not optimizing was difficult.  So we
+did the easy thing, and turned it off.
+
+
+File: gcc.info,  Node: Extended Asm,  Next: Asm Labels,  Prev: Inline,  Up: C Extensions
+
+Assembler Instructions with C Expression Operands
+=================================================
+
+   In an assembler instruction using `asm', you can specify the
+operands of the instruction using C expressions.  This means you need
+not guess which registers or memory locations will contain the data you
+want to use.
+
+   You must specify an assembler instruction template much like what
+appears in a machine description, plus an operand constraint string for
+each operand.
+
+   For example, here is how to use the 68881's `fsinx' instruction:
+
+     asm ("fsinx %1,%0" : "=f" (result) : "f" (angle));
+
+Here `angle' is the C expression for the input operand while `result'
+is that of the output operand.  Each has `"f"' as its operand
+constraint, saying that a floating point register is required.  The `='
+in `=f' indicates that the operand is an output; all output operands'
+constraints must use `='.  The constraints use the same language used
+in the machine description (*note Constraints::.).
+
+   Each operand is described by an operand-constraint string followed by
+the C expression in parentheses.  A colon separates the assembler
+template from the first output operand and another separates the last
+output operand from the first input, if any.  Commas separate the
+operands within each group.  The total number of operands is limited to
+ten or to the maximum number of operands in any instruction pattern in
+the machine description, whichever is greater.
+
+   If there are no output operands but there are input operands, you
+must place two consecutive colons surrounding the place where the output
+operands would go.
+
+   Output operand expressions must be lvalues; the compiler can check
+this.  The input operands need not be lvalues.  The compiler cannot
+check whether the operands have data types that are reasonable for the
+instruction being executed.  It does not parse the assembler instruction
+template and does not know what it means or even whether it is valid
+assembler input.  The extended `asm' feature is most often used for
+machine instructions the compiler itself does not know exist.  If the
+output expression cannot be directly addressed (for example, it is a
+bit field), your constraint must allow a register.  In that case, GNU CC
+will use the register as the output of the `asm', and then store that
+register into the output.
+
+   The ordinary output operands must be write-only; GNU CC will assume
+that the values in these operands before the instruction are dead and
+need not be generated.  Extended asm supports input-output or read-write
+operands.  Use the constraint character `+' to indicate such an operand
+and list it with the output operands.
+
+   When the constraints for the read-write operand (or the operand in
+which only some of the bits are to be changed) allows a register, you
+may, as an alternative, logically split its function into two separate
+operands, one input operand and one write-only output operand.  The
+connection between them is expressed by constraints which say they need
+to be in the same location when the instruction executes.  You can use
+the same C expression for both operands, or different expressions.  For
+example, here we write the (fictitious) `combine' instruction with
+`bar' as its read-only source operand and `foo' as its read-write
+destination:
+
+     asm ("combine %2,%0" : "=r" (foo) : "0" (foo), "g" (bar));
+
+The constraint `"0"' for operand 1 says that it must occupy the same
+location as operand 0.  A digit in constraint is allowed only in an
+input operand and it must refer to an output operand.
+
+   Only a digit in the constraint can guarantee that one operand will
+be in the same place as another.  The mere fact that `foo' is the value
+of both operands is not enough to guarantee that they will be in the
+same place in the generated assembler code.  The following would not
+work reliably:
+
+     asm ("combine %2,%0" : "=r" (foo) : "r" (foo), "g" (bar));
+
+   Various optimizations or reloading could cause operands 0 and 1 to
+be in different registers; GNU CC knows no reason not to do so.  For
+example, the compiler might find a copy of the value of `foo' in one
+register and use it for operand 1, but generate the output operand 0 in
+a different register (copying it afterward to `foo''s own address).  Of
+course, since the register for operand 1 is not even mentioned in the
+assembler code, the result will not work, but GNU CC can't tell that.
+
+   Some instructions clobber specific hard registers.  To describe this,
+write a third colon after the input operands, followed by the names of
+the clobbered hard registers (given as strings).  Here is a realistic
+example for the VAX:
+
+     asm volatile ("movc3 %0,%1,%2"
+                   : /* no outputs */
+                   : "g" (from), "g" (to), "g" (count)
+                   : "r0", "r1", "r2", "r3", "r4", "r5");
+
+   If you refer to a particular hardware register from the assembler
+code, you will probably have to list the register after the third colon
+to tell the compiler the register's value is modified.  In some
+assemblers, the register names begin with `%'; to produce one `%' in the
+assembler code, you must write `%%' in the input.
+
+   If your assembler instruction can alter the condition code register,
+add `cc' to the list of clobbered registers.  GNU CC on some machines
+represents the condition codes as a specific hardware register; `cc'
+serves to name this register.  On other machines, the condition code is
+handled differently, and specifying `cc' has no effect.  But it is
+valid no matter what the machine.
+
+   If your assembler instruction modifies memory in an unpredictable
+fashion, add `memory' to the list of clobbered registers.  This will
+cause GNU CC to not keep memory values cached in registers across the
+assembler instruction.
+
+   You can put multiple assembler instructions together in a single
+`asm' template, separated either with newlines (written as `\n') or
+with semicolons if the assembler allows such semicolons.  The GNU
+assembler allows semicolons and most Unix assemblers seem to do so.
+The input operands are guaranteed not to use any of the clobbered
+registers, and neither will the output operands' addresses, so you can
+read and write the clobbered registers as many times as you like.  Here
+is an example of multiple instructions in a template; it assumes the
+subroutine `_foo' accepts arguments in registers 9 and 10:
+
+     asm ("movl %0,r9;movl %1,r10;call _foo"
+          : /* no outputs */
+          : "g" (from), "g" (to)
+          : "r9", "r10");
+
+   Unless an output operand has the `&' constraint modifier, GNU CC may
+allocate it in the same register as an unrelated input operand, on the
+assumption the inputs are consumed before the outputs are produced.
+This assumption may be false if the assembler code actually consists of
+more than one instruction.  In such a case, use `&' for each output
+operand that may not overlap an input.  *Note Modifiers::.
+
+   If you want to test the condition code produced by an assembler
+instruction, you must include a branch and a label in the `asm'
+construct, as follows:
+
+     asm ("clr %0;frob %1;beq 0f;mov #1,%0;0:"
+          : "g" (result)
+          : "g" (input));
+
+This assumes your assembler supports local labels, as the GNU assembler
+and most Unix assemblers do.
+
+   Speaking of labels, jumps from one `asm' to another are not
+supported.  The compiler's optimizers do not know about these jumps, and
+therefore they cannot take account of them when deciding how to
+optimize.
+
+   Usually the most convenient way to use these `asm' instructions is to
+encapsulate them in macros that look like functions.  For example,
+
+     #define sin(x)       \
+     ({ double __value, __arg = (x);   \
+        asm ("fsinx %1,%0": "=f" (__value): "f" (__arg));  \
+        __value; })
+
+Here the variable `__arg' is used to make sure that the instruction
+operates on a proper `double' value, and to accept only those arguments
+`x' which can convert automatically to a `double'.
+
+   Another way to make sure the instruction operates on the correct data
+type is to use a cast in the `asm'.  This is different from using a
+variable `__arg' in that it converts more different types.  For
+example, if the desired type were `int', casting the argument to `int'
+would accept a pointer with no complaint, while assigning the argument
+to an `int' variable named `__arg' would warn about using a pointer
+unless the caller explicitly casts it.
+
+   If an `asm' has output operands, GNU CC assumes for optimization
+purposes the instruction has no side effects except to change the output
+operands.  This does not mean instructions with a side effect cannot be
+used, but you must be careful, because the compiler may eliminate them
+if the output operands aren't used, or move them out of loops, or
+replace two with one if they constitute a common subexpression.  Also,
+if your instruction does have a side effect on a variable that otherwise
+appears not to change, the old value of the variable may be reused later
+if it happens to be found in a register.
+
+   You can prevent an `asm' instruction from being deleted, moved
+significantly, or combined, by writing the keyword `volatile' after the
+`asm'.  For example:
+
+     #define get_and_set_priority(new)  \
+     ({ int __old; \
+        asm volatile ("get_and_set_priority %0, %1": "=g" (__old) : "g" (new)); \
+        __old; })
+     b
+
+If you write an `asm' instruction with no outputs, GNU CC will know the
+instruction has side-effects and will not delete the instruction or
+move it outside of loops.  If the side-effects of your instruction are
+not purely external, but will affect variables in your program in ways
+other than reading the inputs and clobbering the specified registers or
+memory, you should write the `volatile' keyword to prevent future
+versions of GNU CC from moving the instruction around within a core
+region.
+
+   An `asm' instruction without any operands or clobbers (and "old
+style" `asm') will not be deleted or moved significantly, regardless,
+unless it is unreachable, the same wasy as if you had written a
+`volatile' keyword.
+
+   Note that even a volatile `asm' instruction can be moved in ways
+that appear insignificant to the compiler, such as across jump
+instructions.  You can't expect a sequence of volatile `asm'
+instructions to remain perfectly consecutive.  If you want consecutive
+output, use a single `asm'.
+
+   It is a natural idea to look for a way to give access to the
+condition code left by the assembler instruction.  However, when we
+attempted to implement this, we found no way to make it work reliably.
+The problem is that output operands might need reloading, which would
+result in additional following "store" instructions.  On most machines,
+these instructions would alter the condition code before there was time
+to test it.  This problem doesn't arise for ordinary "test" and
+"compare" instructions because they don't have any output operands.
+
+   If you are writing a header file that should be includable in ANSI C
+programs, write `__asm__' instead of `asm'.  *Note Alternate Keywords::.
 
 
 File: gcc.info,  Node: Asm Labels,  Next: Explicit Reg Vars,  Prev: Extended Asm,  Up: C Extensions
@@ -276,7 +582,7 @@ incomplete.  However, you can work with pointers to that type.
    This extension is not supported by GNU C++.
 
 
-File: gcc.info,  Node: Function Names,  Prev: Incomplete Enums,  Up: C Extensions
+File: gcc.info,  Node: Function Names,  Next: Return Address,  Prev: Incomplete Enums,  Up: C Extensions
 
 Function Names as Strings
 =========================
@@ -321,7 +627,53 @@ inside a function, since the preprocessor does not do anything special
 with the identifier `__FUNCTION__'.
 
 
-File: gcc.info,  Node: C++ Extensions,  Next: Trouble,  Prev: C Extensions,  Up: Top
+File: gcc.info,  Node: Return Address,  Prev: Function Names,  Up: C Extensions
+
+Getting the Return or Frame Address of a Function
+=================================================
+
+   These functions may be used to get information about the callers of a
+function.
+
+`__builtin_return_address (LEVEL)'
+     This function returns the return address of the current function,
+     or of one of its callers.  The LEVEL argument is number of frames
+     to scan up the call stack.  A value of `0' yields the return
+     address of the current function, a value of `1' yields the return
+     address of the caller of the current function, and so forth.
+
+     The LEVEL argument must be a constant integer.
+
+     On some machines it may be impossible to determine the return
+     address of any function other than the current one; in such cases,
+     or when the top of the stack has been reached, this function will
+     return `0'.
+
+     This function should only be used with a non-zero argument for
+     debugging purposes.
+
+`__builtin_frame_address (LEVEL)'
+     This function is similar to `__builtin_return_address', but it
+     returns the address of the function frame rather than the return
+     address of the function.  Calling `__builtin_frame_address' with a
+     value of `0' yields the frame address of the current function, a
+     value of `1' yields the frame address of the caller of the current
+     function, and so forth.
+
+     The frame is the area on the stack which holds local variables and
+     saved registers.  The frame address is normally the address of the
+     first word pushed on to the stack by the function.  However, the
+     exact definition depends upon the processor and the calling
+     convention.  If the processor has a dedicated frame pointer
+     register, and the function has a frame, then
+     `__builtin_frame_address' will return the value of the frame
+     pointer register.
+
+     The caveats that apply to `__builtin_return_address' apply to this
+     function as well.
+
+
+File: gcc.info,  Node: C++ Extensions,  Next: Gcov,  Prev: C Extensions,  Up: Top
 
 Extensions to the C++ Language
 ******************************
@@ -473,9 +825,8 @@ For example, `MIN (i++, j++)' will fail, incrementing the smaller
 counter twice.  A GNU C extension allows you to write safe macros that
 avoid this kind of problem (*note Naming an Expression's Type: Naming
 Types.).  However, writing `MIN' and `MAX' as macros also forces you to
-use function-call notation notation for a fundamental arithmetic
-operation.  Using GNU C++ extensions, you can write `int min = i <? j;'
-instead.
+use function-call notation for a fundamental arithmetic operation.
+Using GNU C++ extensions, you can write `int min = i <? j;' instead.
 
    Since `<?' and `>?' are built into the compiler, they properly
 handle expressions with side-effects;  `int min = i++ <? j++;' works
@@ -489,8 +840,7 @@ File: gcc.info,  Node: Destructors and Goto,  Next: C++ Interface,  Prev: Min an
 
    In C++ programs, you can safely use the `goto' statement.  When you
 use it to exit a block which contains aggregates requiring destructors,
-the destructors will run before the `goto' transfers control.  (In ANSI
-C++, `goto' is restricted to targets within the current block.)
+the destructors will run before the `goto' transfers control.
 
    The compiler still forbids using `goto' to *enter* a scope that
 requires constructors.
@@ -556,8 +906,8 @@ of the header file.
 
      If you use `#pragma implementation' with no argument, it applies to
      an include file with the same basename(1) as your source file.
-     For example, in `allclass.cc', `#pragma implementation' by itself
-     is equivalent to `#pragma implementation "allclass.h"'.
+     For example, in `allclass.cc', giving just `#pragma implementation'
+     by itself is equivalent to `#pragma implementation "allclass.h"'.
 
      In versions of GNU C++ prior to 2.6.0 `allclass.h' was treated as
      an implementation file whenever you would include it from
@@ -596,7 +946,7 @@ any calls were not inlined, you will get linker errors.
 
    ---------- Footnotes ----------
 
-   (1)  A file's "basename" was the name stripped of all leading path
+   (1) A file's "basename" was the name stripped of all leading path
 information and of trailing suffixes, such as `.h' or `.C' or `.cc'.
 
 
@@ -615,50 +965,104 @@ model.
 
 Borland model
      Borland C++ solved the template instantiation problem by adding
-     the code equivalent of common blocks to their linker; template
-     instances are emitted in each translation unit that uses them, and
-     they are collapsed together at run time.  The advantage of this
+     the code equivalent of common blocks to their linker; the compiler
+     emits template instances in each translation unit that uses them,
+     and the linker collapses them together.  The advantage of this
      model is that the linker only has to consider the object files
      themselves; there is no external complexity to worry about.  This
      disadvantage is that compilation time is increased because the
      template code is being compiled repeatedly.  Code written for this
-     model tends to include definitions of all member templates in the
-     header file, since they must be seen to be compiled.
+     model tends to include definitions of all templates in the header
+     file, since they must be seen to be instantiated.
 
 Cfront model
      The AT&T C++ translator, Cfront, solved the template instantiation
      problem by creating the notion of a template repository, an
      automatically maintained place where template instances are
-     stored.  As individual object files are built, notes are placed in
-     the repository to record where templates and potential type
-     arguments were seen so that the subsequent instantiation step
-     knows where to find them.  At link time, any needed instances are
-     generated and linked in.  The advantages of this model are more
-     optimal compilation speed and the ability to use the system
-     linker; to implement the Borland model a compiler vendor also
-     needs to replace the linker.  The disadvantages are vastly
-     increased complexity, and thus potential for error; theoretically,
-     this should be just as transparent, but in practice it has been
-     very difficult to build multiple programs in one directory and one
-     program in multiple directories using Cfront.  Code written for
-     this model tends to separate definitions of non-inline member
-     templates into a separate file, which is magically found by the
-     link preprocessor when a template needs to be instantiated.
+     stored.  A more modern version of the repository works as follows:
+     As individual object files are built, the compiler places any
+     template definitions and instantiations encountered in the
+     repository.  At link time, the link wrapper adds in the objects in
+     the repository and compiles any needed instances that were not
+     previously emitted.  The advantages of this model are more optimal
+     compilation speed and the ability to use the system linker; to
+     implement the Borland model a compiler vendor also needs to
+     replace the linker.  The disadvantages are vastly increased
+     complexity, and thus potential for error; for some code this can be
+     just as transparent, but in practice it can been very difficult to
+     build multiple programs in one directory and one program in
+     multiple directories.  Code written for this model tends to
+     separate definitions of non-inline member templates into a
+     separate file, which should be compiled separately.
 
-   Currently, g++ implements neither automatic model.  In the mean time,
-you have three options for dealing with template instantiations:
+   When used with GNU ld version 2.8 or later on an ELF system such as
+Linux/GNU or Solaris 2, or on Microsoft Windows, g++ supports the
+Borland model.  On other systems, g++ implements neither automatic
+model.
 
-  1. Do nothing.  Pretend g++ does implement automatic instantiation
+   A future version of g++ will support a hybrid model whereby the
+compiler will emit any instantiations for which the template definition
+is included in the compile, and store template definitions and
+instantiation context information into the object file for the rest.
+The link wrapper will extract that information as necessary and invoke
+the compiler to produce the remaining instantiations.  The linker will
+then combine duplicate instantiations.
+
+   In the mean time, you have the following options for dealing with
+template instantiations:
+
+  1. Compile your code with `-fno-implicit-templates' to disable the
+     implicit generation of template instances, and explicitly
+     instantiate all the ones you use.  This approach requires more
+     knowledge of exactly which instances you need than do the others,
+     but it's less mysterious and allows greater control.  You can
+     scatter the explicit instantiations throughout your program,
+     perhaps putting them in the translation units where the instances
+     are used or the translation units that define the templates
+     themselves; you can put all of the explicit instantiations you
+     need into one big file; or you can create small files like
+
+          #include "Foo.h"
+          #include "Foo.cc"
+          
+          template class Foo<int>;
+          template ostream& operator <<
+                          (ostream&, const Foo<int>&);
+
+     for each of the instances you need, and create a template
+     instantiation library from those.
+
+     If you are using Cfront-model code, you can probably get away with
+     not using `-fno-implicit-templates' when compiling files that don't
+     `#include' the member template definitions.
+
+     If you use one big file to do the instantiations, you may want to
+     compile it without `-fno-implicit-templates' so you get all of the
+     instances required by your explicit instantiations (but not by any
+     other files) without having to specify them as well.
+
+     g++ has extended the template instantiation syntax outlined in the
+     Working Paper to allow forward declaration of explicit
+     instantiations, explicit instantiation of members of template
+     classes and instantiation of the compiler support data for a
+     template class (i.e. the vtable) without instantiating any of its
+     members:
+
+          extern template int max (int, int);
+          template void Foo<int>::f ();
+          inline template class Foo<int>;
+
+  2. Do nothing.  Pretend g++ does implement automatic instantiation
      management.  Code written for the Borland model will work fine, but
      each translation unit will contain instances of each of the
      templates it uses.  In a large program, this can lead to an
      unacceptable amount of code duplication.
 
-  2. Add `#pragma interface' to all files containing template
+  3. Add `#pragma interface' to all files containing template
      definitions.  For each of these files, add `#pragma implementation
      "FILENAME"' to the top of some `.C' file which `#include's it.
-     Then compile everything with -fexternal-templates.  The templates
-     will then only be expanded in the translation unit which
+     Then compile everything with `-fexternal-templates'.  The
+     templates will then only be expanded in the translation unit which
      implements them (i.e. has a `#pragma implementation' line for the
      file where they live); all other files will use external
      references.  If you're lucky, everything should work properly.  If
@@ -676,194 +1080,14 @@ you have three options for dealing with template instantiations:
      containing a class template and the file containing its member
      templates should be implemented in the same translation unit.
 
-     A slight variation on this approach is to use the flag
-     -falt-external-templates instead; this flag causes template
-     instances to be emitted in the translation unit that implements
-     the header where they are first instantiated, rather than the one
-     which implements the file where the templates are defined.  This
-     header must be the same in all translation units, or things are
-     likely to break.
+     A slight variation on this approach is to instead use the flag
+     `-falt-external-templates'; this flag causes template instances to
+     be emitted in the translation unit that implements the header
+     where they are first instantiated, rather than the one which
+     implements the file where the templates are defined.  This header
+     must be the same in all translation units, or things are likely to
+     break.
 
      *Note Declarations and Definitions in One Header: C++ Interface,
      for more discussion of these pragmas.
-
-  3. Explicitly instantiate all the template instances you use, and
-     compile with -fno-implicit-templates.  This is probably your best
-     bet; it may require more knowledge of exactly which templates you
-     are using, but it's less mysterious than the previous approach,
-     and it doesn't require any `#pragma's or other g++-specific code.
-     You can scatter the instantiations throughout your program, you
-     can create one big file to do all the instantiations, or you can
-     create tiny files like
-
-          #include "Foo.h"
-          #include "Foo.cc"
-          
-          template class Foo<int>;
-
-     for each instance you need, and create a template instantiation
-     library from those.  I'm partial to the last, but your mileage may
-     vary.  If you are using Cfront-model code, you can probably get
-     away with not using -fno-implicit-templates when compiling files
-     that don't `#include' the member template definitions.
-
-
-File: gcc.info,  Node: C++ Signatures,  Prev: Template Instantiation,  Up: C++ Extensions
-
-Type Abstraction using Signatures
-=================================
-
-   In GNU C++, you can use the keyword `signature' to define a
-completely abstract class interface as a datatype.  You can connect this
-abstraction with actual classes using signature pointers.  If you want
-to use signatures, run the GNU compiler with the `-fhandle-signatures'
-command-line option.  (With this option, the compiler reserves a second
-keyword `sigof' as well, for a future extension.)
-
-   Roughly, signatures are type abstractions or interfaces of classes.
-Some other languages have similar facilities.  C++ signatures are
-related to ML's signatures, Haskell's type classes, definition modules
-in Modula-2, interface modules in Modula-3, abstract types in Emerald,
-type modules in Trellis/Owl, categories in Scratchpad II, and types in
-POOL-I.  For a more detailed discussion of signatures, see `Signatures:
-A Language Extension for Improving Type Abstraction and Subtype
-Polymorphism in C++' by Gerald Baumgartner and Vincent F. Russo (Tech
-report CSD-TR-95-051, Dept. of Computer Sciences, Purdue University,
-August 1995, a slightly improved version appeared in
-*Software--Practice & Experience*, 25(8), pp. 863-889, August 1995).
-You can get the tech report by anonymous FTP from `ftp.cs.purdue.edu'
-in `pub/gb/Signature-design.ps.gz'.
-
-   Syntactically, a signature declaration is a collection of member
-function declarations and nested type declarations.  For example, this
-signature declaration defines a new abstract type `S' with member
-functions `int foo ()' and `int bar (int)':
-
-     signature S
-     {
-       int foo ();
-       int bar (int);
-     };
-
-   Since signature types do not include implementation definitions, you
-cannot write an instance of a signature directly.  Instead, you can
-define a pointer to any class that contains the required interfaces as a
-"signature pointer".  Such a class "implements" the signature type.
-
-   To use a class as an implementation of `S', you must ensure that the
-class has public member functions `int foo ()' and `int bar (int)'.
-The class can have other member functions as well, public or not; as
-long as it offers what's declared in the signature, it is suitable as
-an implementation of that signature type.
-
-   For example, suppose that `C' is a class that meets the requirements
-of signature `S' (`C' "conforms to" `S').  Then
-
-     C obj;
-     S * p = &obj;
-
-defines a signature pointer `p' and initializes it to point to an
-object of type `C'.  The member function call `int i = p->foo ();'
-executes `obj.foo ()'.
-
-   Abstract virtual classes provide somewhat similar facilities in
-standard C++.  There are two main advantages to using signatures
-instead:
-
-  1. Subtyping becomes independent from inheritance.  A class or
-     signature type `T' is a subtype of a signature type `S'
-     independent of any inheritance hierarchy as long as all the member
-     functions declared in `S' are also found in `T'.  So you can
-     define a subtype hierarchy that is completely independent from any
-     inheritance (implementation) hierarchy, instead of being forced to
-     use types that mirror the class inheritance hierarchy.
-
-  2. Signatures allow you to work with existing class hierarchies as
-     implementations of a signature type.  If those class hierarchies
-     are only available in compiled form, you're out of luck with
-     abstract virtual classes, since an abstract virtual class cannot
-     be retrofitted on top of existing class hierarchies.  So you would
-     be required to write interface classes as subtypes of the abstract
-     virtual class.
-
-   There is one more detail about signatures.  A signature declaration
-can contain member function *definitions* as well as member function
-declarations.  A signature member function with a full definition is
-called a *default implementation*; classes need not contain that
-particular interface in order to conform.  For example, a class `C' can
-conform to the signature
-
-     signature T
-     {
-       int f (int);
-       int f0 () { return f (0); };
-     };
-
-whether or not `C' implements the member function `int f0 ()'.  If you
-define `C::f0', that definition takes precedence; otherwise, the
-default implementation `S::f0' applies.
-
-
-File: gcc.info,  Node: Trouble,  Next: Bugs,  Prev: C++ Extensions,  Up: Top
-
-Known Causes of Trouble with GNU CC
-***********************************
-
-   This section describes known problems that affect users of GNU CC.
-Most of these are not GNU CC bugs per se--if they were, we would fix
-them.  But the result for a user may be like the result of a bug.
-
-   Some of these problems are due to bugs in other software, some are
-missing features that are too much work to add, and some are places
-where people's opinions differ as to what is best.
-
-* Menu:
-
-* Actual Bugs::		      Bugs we will fix later.
-* Installation Problems::     Problems that manifest when you install GNU CC.
-* Cross-Compiler Problems::   Common problems of cross compiling with GNU CC.
-* Interoperation::      Problems using GNU CC with other compilers,
-			   and with certain linkers, assemblers and debuggers.
-* External Bugs::	Problems compiling certain programs.
-* Incompatibilities::   GNU CC is incompatible with traditional C.
-* Fixed Headers::       GNU C uses corrected versions of system header files.
-                           This is necessary, but doesn't always work smoothly.
-* Standard Libraries::  GNU C uses the system C library, which might not be
-                           compliant with the ISO/ANSI C standard.
-* Disappointments::     Regrettable things we can't change, but not quite bugs.
-* C++ Misunderstandings::     Common misunderstandings with GNU C++.
-* Protoize Caveats::    Things to watch out for when using `protoize'.
-* Non-bugs::		Things we think are right, but some others disagree.
-* Warnings and Errors:: Which problems in your code get warnings,
-                         and which get errors.
-
-
-File: gcc.info,  Node: Actual Bugs,  Next: Installation Problems,  Up: Trouble
-
-Actual Bugs We Haven't Fixed Yet
-================================
-
-   * The `fixincludes' script interacts badly with automounters; if the
-     directory of system header files is automounted, it tends to be
-     unmounted while `fixincludes' is running.  This would seem to be a
-     bug in the automounter.  We don't know any good way to work around
-     it.
-
-   * The `fixproto' script will sometimes add prototypes for the
-     `sigsetjmp' and `siglongjmp' functions that reference the
-     `jmp_buf' type before that type is defined.  To work around this,
-     edit the offending file and place the typedef in front of the
-     prototypes.
-
-   * There are several obscure case of mis-using struct, union, and
-     enum tags that are not detected as errors by the compiler.
-
-   * When `-pedantic-errors' is specified, GNU C will incorrectly give
-     an error message when a function name is specified in an expression
-     involving the comma operator.
-
-   * Loop unrolling doesn't work properly for certain C++ programs.
-     This is a bug in the C++ front end.  It sometimes emits incorrect
-     debug info, and the loop unrolling code is unable to recover from
-     this error.
 

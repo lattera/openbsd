@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,6 +28,492 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: gcc.info,  Node: C++ Signatures,  Prev: Template Instantiation,  Up: C++ Extensions
+
+Type Abstraction using Signatures
+=================================
+
+   In GNU C++, you can use the keyword `signature' to define a
+completely abstract class interface as a datatype.  You can connect this
+abstraction with actual classes using signature pointers.  If you want
+to use signatures, run the GNU compiler with the `-fhandle-signatures'
+command-line option.  (With this option, the compiler reserves a second
+keyword `sigof' as well, for a future extension.)
+
+   Roughly, signatures are type abstractions or interfaces of classes.
+Some other languages have similar facilities.  C++ signatures are
+related to ML's signatures, Haskell's type classes, definition modules
+in Modula-2, interface modules in Modula-3, abstract types in Emerald,
+type modules in Trellis/Owl, categories in Scratchpad II, and types in
+POOL-I.  For a more detailed discussion of signatures, see `Signatures:
+A Language Extension for Improving Type Abstraction and Subtype
+Polymorphism in C++' by Gerald Baumgartner and Vincent F. Russo (Tech
+report CSD-TR-95-051, Dept. of Computer Sciences, Purdue University,
+August 1995, a slightly improved version appeared in
+*Software--Practice & Experience*, 25(8), pp. 863-889, August 1995).
+You can get the tech report by anonymous FTP from `ftp.cs.purdue.edu'
+in `pub/gb/Signature-design.ps.gz'.
+
+   Syntactically, a signature declaration is a collection of member
+function declarations and nested type declarations.  For example, this
+signature declaration defines a new abstract type `S' with member
+functions `int foo ()' and `int bar (int)':
+
+     signature S
+     {
+       int foo ();
+       int bar (int);
+     };
+
+   Since signature types do not include implementation definitions, you
+cannot write an instance of a signature directly.  Instead, you can
+define a pointer to any class that contains the required interfaces as a
+"signature pointer".  Such a class "implements" the signature type.
+
+   To use a class as an implementation of `S', you must ensure that the
+class has public member functions `int foo ()' and `int bar (int)'.
+The class can have other member functions as well, public or not; as
+long as it offers what's declared in the signature, it is suitable as
+an implementation of that signature type.
+
+   For example, suppose that `C' is a class that meets the requirements
+of signature `S' (`C' "conforms to" `S').  Then
+
+     C obj;
+     S * p = &obj;
+
+defines a signature pointer `p' and initializes it to point to an
+object of type `C'.  The member function call `int i = p->foo ();'
+executes `obj.foo ()'.
+
+   Abstract virtual classes provide somewhat similar facilities in
+standard C++.  There are two main advantages to using signatures
+instead:
+
+  1. Subtyping becomes independent from inheritance.  A class or
+     signature type `T' is a subtype of a signature type `S'
+     independent of any inheritance hierarchy as long as all the member
+     functions declared in `S' are also found in `T'.  So you can
+     define a subtype hierarchy that is completely independent from any
+     inheritance (implementation) hierarchy, instead of being forced to
+     use types that mirror the class inheritance hierarchy.
+
+  2. Signatures allow you to work with existing class hierarchies as
+     implementations of a signature type.  If those class hierarchies
+     are only available in compiled form, you're out of luck with
+     abstract virtual classes, since an abstract virtual class cannot
+     be retrofitted on top of existing class hierarchies.  So you would
+     be required to write interface classes as subtypes of the abstract
+     virtual class.
+
+   There is one more detail about signatures.  A signature declaration
+can contain member function *definitions* as well as member function
+declarations.  A signature member function with a full definition is
+called a *default implementation*; classes need not contain that
+particular interface in order to conform.  For example, a class `C' can
+conform to the signature
+
+     signature T
+     {
+       int f (int);
+       int f0 () { return f (0); };
+     };
+
+whether or not `C' implements the member function `int f0 ()'.  If you
+define `C::f0', that definition takes precedence; otherwise, the
+default implementation `S::f0' applies.
+
+
+File: gcc.info,  Node: Gcov,  Next: Trouble,  Prev: C++ Extensions,  Up: Top
+
+`gcov': a Test Coverage Program
+*******************************
+
+   `gcov' is a tool you can use in conjunction with GNU CC to test code
+coverage in your programs.
+
+   This chapter describes version 1.5 of `gcov'.
+
+* Menu:
+
+* Gcov Intro::         	        Introduction to gcov.
+* Invoking Gcov::       	How to use gcov.
+* Gcov and Optimization::       Using gcov with GCC optimization.
+* Gcov Data Files::             The files used by gcov.
+
+
+File: gcc.info,  Node: Gcov Intro,  Next: Invoking Gcov,  Up: Gcov
+
+Introduction to `gcov'
+======================
+
+   `gcov' is a test coverage program.  Use it in concert with GNU CC to
+analyze your programs to help create more efficient, faster running
+code.  You can use `gcov' as a profiling tool to help discover where
+your optimization efforts will best affect your code.  You can also use
+`gcov' along with the other profiling tool, `gprof', to assess which
+parts of your code use the greatest amount of computing time.
+
+   Profiling tools help you analyze your code's performance.  Using a
+profiler such as `gcov' or `gprof', you can find out some basic
+performance statistics, such as:
+
+   * how often each line of code executes
+
+   * what lines of code are actually executed
+
+   * how much computing time each section of code uses
+
+   Once you know these things about how your code works when compiled,
+you can look at each module to see which modules should be optimized.
+`gcov' helps you determine where to work on optimization.
+
+   Software developers also use coverage testing in concert with
+testsuites, to make sure software is actually good enough for a release.
+Testsuites can verify that a program works as expected; a coverage
+program tests to see how much of the program is exercised by the
+testsuite.  Developers can then determine what kinds of test cases need
+to be added to the testsuites to create both better testing and a better
+final product.
+
+   You should compile your code without optimization if you plan to use
+`gcov' because the optimization, by combining some lines of code into
+one function, may not give you as much information as you need to look
+for `hot spots' where the code is using a great deal of computer time.
+Likewise, because `gcov' accumulates statistics by line (at the lowest
+resolution), it works best with a programming style that places only
+one statement on each line.  If you use complicated macros that expand
+to loops or to other control structures, the statistics are less
+helpful--they only report on the line where the macro call appears.  If
+your complex macros behave like functions, you can replace them with
+inline functions to solve this problem.
+
+   `gcov' creates a logfile called `SOURCEFILE.gcov' which indicates
+how many times each line of a source file `SOURCEFILE.c' has executed.
+You can use these logfiles along with `gprof' to aid in fine-tuning the
+performance of your programs.  `gprof' gives timing information you can
+use along with the information you get from `gcov'.
+
+   `gcov' works only on code compiled with GNU CC.  It is not
+compatible with any other profiling or test coverage mechanism.
+
+
+File: gcc.info,  Node: Invoking Gcov,  Next: Gcov and Optimization,  Prev: Gcov Intro,  Up: Gcov
+
+Invoking gcov
+=============
+
+     gcov [-b] [-v] [-n] [-l] [-f] [-o directory] SOURCEFILE
+
+`-b'
+     Write branch frequencies to the output file, and write branch
+     summary info to the standard output.  This option allows you to
+     see how often each branch in your program was taken.
+
+`-v'
+     Display the `gcov' version number (on the standard error stream).
+
+`-n'
+     Do not create the `gcov' output file.
+
+`-l'
+     Create long file names for included source files.  For example, if
+     the header file `x.h' contains code, and was included in the file
+     `a.c', then running `gcov' on the file `a.c' will produce an
+     output file called `a.c.x.h.gcov' instead of `x.h.gcov'.  This can
+     be useful if `x.h' is included in multiple source files.
+
+`-f'
+     Output summaries for each function in addition to the file level
+     summary.
+
+`-o'
+     The directory where the object files live.  Gcov will search for
+     `.bb', `.bbg', and `.da' files in this directory.
+
+   When using `gcov', you must first compile your program with two
+special GNU CC options: `-fprofile-arcs -ftest-coverage'.  This tells
+the compiler to generate additional information needed by gcov
+(basically a flow graph of the program) and also includes additional
+code in the object files for generating the extra profiling information
+needed by gcov.  These additional files are placed in the directory
+where the source code is located.
+
+   Running the program will cause profile output to be generated.  For
+each source file compiled with -fprofile-arcs, an accompanying `.da'
+file will be placed in the source directory.
+
+   Running `gcov' with your program's source file names as arguments
+will now produce a listing of the code along with frequency of execution
+for each line.  For example, if your program is called `tmp.c', this is
+what you see when you use the basic `gcov' facility:
+
+     $ gcc -fprofile-arcs -ftest-coverage tmp.c
+     $ a.out
+     $ gcov tmp.c
+      87.50% of 8 source lines executed in file tmp.c
+     Creating tmp.c.gcov.
+
+   The file `tmp.c.gcov' contains output from `gcov'.  Here is a sample:
+
+                     main()
+                     {
+                1      int i, total;
+     
+                1      total = 0;
+     
+               11      for (i = 0; i < 10; i++)
+               10        total += i;
+     
+                1      if (total != 45)
+           ######        printf ("Failure\n");
+                       else
+                1        printf ("Success\n");
+                1    }
+
+   When you use the `-b' option, your output looks like this:
+
+     $ gcov -b tmp.c
+      87.50% of 8 source lines executed in file tmp.c
+      80.00% of 5 branches executed in file tmp.c
+      80.00% of 5 branches taken at least once in file tmp.c
+      50.00% of 2 calls executed in file tmp.c
+     Creating tmp.c.gcov.
+
+   Here is a sample of a resulting `tmp.c.gcov' file:
+
+                     main()
+                     {
+                1      int i, total;
+     
+                1      total = 0;
+     
+               11      for (i = 0; i < 10; i++)
+     branch 0 taken = 91%
+     branch 1 taken = 100%
+     branch 2 taken = 100%
+               10        total += i;
+     
+                1      if (total != 45)
+     branch 0 taken = 100%
+           ######        printf ("Failure\n");
+     call 0 never executed
+     branch 1 never executed
+                       else
+                1        printf ("Success\n");
+     call 0 returns = 100%
+                1    }
+
+   For each basic block, a line is printed after the last line of the
+basic block describing the branch or call that ends the basic block.
+There can be multiple branches and calls listed for a single source
+line if there are multiple basic blocks that end on that line.  In this
+case, the branches and calls are each given a number.  There is no
+simple way to map these branches and calls back to source constructs.
+In general, though, the lowest numbered branch or call will correspond
+to the leftmost construct on the source line.
+
+   For a branch, if it was executed at least once, then a percentage
+indicating the number of times the branch was taken divided by the
+number of times the branch was executed will be printed.  Otherwise, the
+message "never executed" is printed.
+
+   For a call, if it was executed at least once, then a percentage
+indicating the number of times the call returned divided by the number
+of times the call was executed will be printed.  This will usually be
+100%, but may be less for functions call `exit' or `longjmp', and thus
+may not return everytime they are called.
+
+   The execution counts are cumulative.  If the example program were
+executed again without removing the `.da' file, the count for the
+number of times each line in the source was executed would be added to
+the results of the previous run(s).  This is potentially useful in
+several ways.  For example, it could be used to accumulate data over a
+number of program runs as part of a test verification suite, or to
+provide more accurate long-term information over a large number of
+program runs.
+
+   The data in the `.da' files is saved immediately before the program
+exits.  For each source file compiled with -fprofile-arcs, the profiling
+code first attempts to read in an existing `.da' file; if the file
+doesn't match the executable (differing number of basic block counts) it
+will ignore the contents of the file.  It then adds in the new execution
+counts and finally writes the data to the file.
+
+
+File: gcc.info,  Node: Gcov and Optimization,  Next: Gcov Data Files,  Prev: Invoking Gcov,  Up: Gcov
+
+Using `gcov' with GCC Optimization
+==================================
+
+   If you plan to use `gcov' to help optimize your code, you must first
+compile your program with two special GNU CC options: `-fprofile-arcs
+-ftest-coverage'.  Aside from that, you can use any other GNU CC
+options; but if you want to prove that every single line in your
+program was executed, you should not compile with optimization at the
+same time.  On some machines the optimizer can eliminate some simple
+code lines by combining them with other lines.  For example, code like
+this:
+
+     if (a != b)
+       c = 1;
+     else
+       c = 0;
+
+can be compiled into one instruction on some machines.  In this case,
+there is no way for `gcov' to calculate separate execution counts for
+each line because there isn't separate code for each line.  Hence the
+`gcov' output looks like this if you compiled the program with
+optimization:
+
+           100  if (a != b)
+           100    c = 1;
+           100  else
+           100    c = 0;
+
+   The output shows that this block of code, combined by optimization,
+executed 100 times.  In one sense this result is correct, because there
+was only one instruction representing all four of these lines.  However,
+the output does not indicate how many times the result was 0 and how
+many times the result was 1.
+
+
+File: gcc.info,  Node: Gcov Data Files,  Prev: Gcov and Optimization,  Up: Gcov
+
+Brief description of `gcov' data files
+======================================
+
+   `gcov' uses three files for doing profiling.  The names of these
+files are derived from the original *source* file by substituting the
+file suffix with either `.bb', `.bbg', or `.da'.  All of these files
+are placed in the same directory as the source file, and contain data
+stored in a platform-independent method.
+
+   The `.bb' and `.bbg' files are generated when the source file is
+compiled with the GNU CC `-ftest-coverage' option.  The `.bb' file
+contains a list of source files (including headers), functions within
+those files, and line numbers corresponding to each basic block in the
+source file.
+
+   The `.bb' file format consists of several lists of 4-byte integers
+which correspond to the line numbers of each basic block in the file.
+Each list is terminated by a line number of 0.  A line number of -1 is
+used to designate that the source file name (padded to a 4-byte
+boundary and followed by another -1) follows.  In addition, a line
+number of -2 is used to designate that the name of a function (also
+padded to a 4-byte boundary and followed by a -2) follows.
+
+   The `.bbg' file is used to reconstruct the program flow graph for
+the source file.  It contains a list of the program flow arcs (possible
+branches taken from one basic block to another) for each function which,
+in combination with the `.bb' file, enables gcov to reconstruct the
+program flow.
+
+   In the `.bbg' file, the format is:
+             number of basic blocks for function #0 (4-byte number)
+             total number of arcs for function #0 (4-byte number)
+             count of arcs in basic block #0 (4-byte number)
+             destination basic block of arc #0 (4-byte number)
+             flag bits (4-byte number)
+             destination basic block of arc #1 (4-byte number)
+             flag bits (4-byte number)
+             ...
+             destination basic block of arc #N (4-byte number)
+             flag bits (4-byte number)
+             count of arcs in basic block #1 (4-byte number)
+             destination basic block of arc #0 (4-byte number)
+             flag bits (4-byte number)
+             ...
+
+   A -1 (stored as a 4-byte number) is used to separate each function's
+list of basic blocks, and to verify that the file has been read
+correctly.
+
+   The `.da' file is generated when a program containing object files
+built with the GNU CC `-fprofile-arcs' option is executed.  A separate
+`.da' file is created for each source file compiled with this option,
+and the name of the `.da' file is stored as an absolute pathname in the
+resulting object file.  This path name is derived from the source file
+name by substituting a `.da' suffix.
+
+   The format of the `.da' file is fairly simple.  The first 8-byte
+number is the number of counts in the file, followed by the counts
+(stored as 8-byte numbers).  Each count corresponds to the number of
+times each arc in the program is executed.  The counts are cumulative;
+each time the program is executed, it attemps to combine the existing
+`.da' files with the new counts for this invocation of the program.  It
+ignores the contents of any `.da' files whose number of arcs doesn't
+correspond to the current program, and merely overwrites them instead.
+
+   All three of these files use the functions in `gcov-io.h' to store
+integers; the functions in this header provide a machine-independent
+mechanism for storing and retrieving data from a stream.
+
+
+File: gcc.info,  Node: Trouble,  Next: Bugs,  Prev: Gcov,  Up: Top
+
+Known Causes of Trouble with GNU CC
+***********************************
+
+   This section describes known problems that affect users of GNU CC.
+Most of these are not GNU CC bugs per se--if they were, we would fix
+them.  But the result for a user may be like the result of a bug.
+
+   Some of these problems are due to bugs in other software, some are
+missing features that are too much work to add, and some are places
+where people's opinions differ as to what is best.
+
+* Menu:
+
+* Actual Bugs::		      Bugs we will fix later.
+* Installation Problems::     Problems that manifest when you install GNU CC.
+* Cross-Compiler Problems::   Common problems of cross compiling with GNU CC.
+* Interoperation::      Problems using GNU CC with other compilers,
+			   and with certain linkers, assemblers and debuggers.
+* External Bugs::	Problems compiling certain programs.
+* Incompatibilities::   GNU CC is incompatible with traditional C.
+* Fixed Headers::       GNU C uses corrected versions of system header files.
+                           This is necessary, but doesn't always work smoothly.
+* Standard Libraries::  GNU C uses the system C library, which might not be
+                           compliant with the ISO/ANSI C standard.
+* Disappointments::     Regrettable things we can't change, but not quite bugs.
+* C++ Misunderstandings::     Common misunderstandings with GNU C++.
+* Protoize Caveats::    Things to watch out for when using `protoize'.
+* Non-bugs::		Things we think are right, but some others disagree.
+* Warnings and Errors:: Which problems in your code get warnings,
+                         and which get errors.
+
+
+File: gcc.info,  Node: Actual Bugs,  Next: Installation Problems,  Up: Trouble
+
+Actual Bugs We Haven't Fixed Yet
+================================
+
+   * The `fixincludes' script interacts badly with automounters; if the
+     directory of system header files is automounted, it tends to be
+     unmounted while `fixincludes' is running.  This would seem to be a
+     bug in the automounter.  We don't know any good way to work around
+     it.
+
+   * The `fixproto' script will sometimes add prototypes for the
+     `sigsetjmp' and `siglongjmp' functions that reference the
+     `jmp_buf' type before that type is defined.  To work around this,
+     edit the offending file and place the typedef in front of the
+     prototypes.
+
+   * There are several obscure case of mis-using struct, union, and
+     enum tags that are not detected as errors by the compiler.
+
+   * When `-pedantic-errors' is specified, GNU C will incorrectly give
+     an error message when a function name is specified in an expression
+     involving the comma operator.
+
+   * Loop unrolling doesn't work properly for certain C++ programs.
+     This is a bug in the C++ front end.  It sometimes emits incorrect
+     debug info, and the loop unrolling code is unable to recover from
+     this error.
 
 
 File: gcc.info,  Node: Installation Problems,  Next: Cross-Compiler Problems,  Prev: Actual Bugs,  Up: Trouble
@@ -85,11 +571,11 @@ CC.
      GNU CC.  The fix is to get rid of the file `real-ld' which purify
      installs--so that GNU CC won't try to use it.
 
-   * On Linux SLS 1.01, there is a problem with `libc.a': it does not
-     contain the obstack functions.  However, GNU CC assumes that the
-     obstack functions are in `libc.a' when it is the GNU C library.
-     To work around this problem, change the `__GNU_LIBRARY__'
-     conditional around line 31 to `#if 1'.
+   * On GNU/Linux SLS 1.01, there is a problem with `libc.a': it does
+     not contain the obstack functions.  However, GNU CC assumes that
+     the obstack functions are in `libc.a' when it is the GNU C
+     library.  To work around this problem, change the
+     `__GNU_LIBRARY__' conditional around line 31 to `#if 1'.
 
    * On some 386 systems, building the compiler never finishes because
      `enquire' hangs due to a hardware problem in the motherboard--it
@@ -673,472 +1159,4 @@ libraries and debuggers on certain systems.
      proves to be what you need, edit the assembler spec in the file
      `specs' so that it unconditionally passes `-O0' to the assembler,
      and never passes `-O2' or `-O3'.
-
-
-File: gcc.info,  Node: External Bugs,  Next: Incompatibilities,  Prev: Interoperation,  Up: Trouble
-
-Problems Compiling Certain Programs
-===================================
-
-   Certain programs have problems compiling.
-
-   * Parse errors may occur compiling X11 on a Decstation running
-     Ultrix 4.2 because of problems in DEC's versions of the X11 header
-     files `X11/Xlib.h' and `X11/Xutil.h'.  People recommend adding
-     `-I/usr/include/mit' to use the MIT versions of the header files,
-     using the `-traditional' switch to turn off ANSI C, or fixing the
-     header files by adding this:
-
-          #ifdef __STDC__
-          #define NeedFunctionPrototypes 0
-          #endif
-
-   * If you have trouble compiling Perl on a SunOS 4 system, it may be
-     because Perl specifies `-I/usr/ucbinclude'.  This accesses the
-     unfixed header files.  Perl specifies the options
-
-          -traditional -Dvolatile=__volatile__
-          -I/usr/include/sun -I/usr/ucbinclude
-          -fpcc-struct-return
-
-     most of which are unnecessary with GCC 2.4.5 and newer versions.
-     You can make a properly working Perl by setting `ccflags' to
-     `-fwritable-strings' (implied by the `-traditional' in the
-     original options) and `cppflags' to empty in `config.sh', then
-     typing `./doSH; make depend; make'.
-
-   * On various 386 Unix systems derived from System V, including SCO,
-     ISC, and ESIX, you may get error messages about running out of
-     virtual memory while compiling certain programs.
-
-     You can prevent this problem by linking GNU CC with the GNU malloc
-     (which thus replaces the malloc that comes with the system).  GNU
-     malloc is available as a separate package, and also in the file
-     `src/gmalloc.c' in the GNU Emacs 19 distribution.
-
-     If you have installed GNU malloc as a separate library package,
-     use this option when you relink GNU CC:
-
-          MALLOC=/usr/local/lib/libgmalloc.a
-
-     Alternatively, if you have compiled `gmalloc.c' from Emacs 19, copy
-     the object file to `gmalloc.o' and use this option when you relink
-     GNU CC:
-
-          MALLOC=gmalloc.o
-
-
-File: gcc.info,  Node: Incompatibilities,  Next: Fixed Headers,  Prev: External Bugs,  Up: Trouble
-
-Incompatibilities of GNU CC
-===========================
-
-   There are several noteworthy incompatibilities between GNU C and most
-existing (non-ANSI) versions of C.  The `-traditional' option
-eliminates many of these incompatibilities, *but not all*, by telling
-GNU C to behave like the other C compilers.
-
-   * GNU CC normally makes string constants read-only.  If several
-     identical-looking string constants are used, GNU CC stores only one
-     copy of the string.
-
-     One consequence is that you cannot call `mktemp' with a string
-     constant argument.  The function `mktemp' always alters the string
-     its argument points to.
-
-     Another consequence is that `sscanf' does not work on some systems
-     when passed a string constant as its format control string or
-     input.  This is because `sscanf' incorrectly tries to write into
-     the string constant.  Likewise `fscanf' and `scanf'.
-
-     The best solution to these problems is to change the program to use
-     `char'-array variables with initialization strings for these
-     purposes instead of string constants.  But if this is not possible,
-     you can use the `-fwritable-strings' flag, which directs GNU CC to
-     handle string constants the same way most C compilers do.
-     `-traditional' also has this effect, among others.
-
-   * `-2147483648' is positive.
-
-     This is because 2147483648 cannot fit in the type `int', so
-     (following the ANSI C rules) its data type is `unsigned long int'.
-     Negating this value yields 2147483648 again.
-
-   * GNU CC does not substitute macro arguments when they appear inside
-     of string constants.  For example, the following macro in GNU CC
-
-          #define foo(a) "a"
-
-     will produce output `"a"' regardless of what the argument A is.
-
-     The `-traditional' option directs GNU CC to handle such cases
-     (among others) in the old-fashioned (non-ANSI) fashion.
-
-   * When you use `setjmp' and `longjmp', the only automatic variables
-     guaranteed to remain valid are those declared `volatile'.  This is
-     a consequence of automatic register allocation.  Consider this
-     function:
-
-          jmp_buf j;
-          
-          foo ()
-          {
-            int a, b;
-          
-            a = fun1 ();
-            if (setjmp (j))
-              return a;
-          
-            a = fun2 ();
-            /* `longjmp (j)' may occur in `fun3'. */
-            return a + fun3 ();
-          }
-
-     Here `a' may or may not be restored to its first value when the
-     `longjmp' occurs.  If `a' is allocated in a register, then its
-     first value is restored; otherwise, it keeps the last value stored
-     in it.
-
-     If you use the `-W' option with the `-O' option, you will get a
-     warning when GNU CC thinks such a problem might be possible.
-
-     The `-traditional' option directs GNU C to put variables in the
-     stack by default, rather than in registers, in functions that call
-     `setjmp'.  This results in the behavior found in traditional C
-     compilers.
-
-   * Programs that use preprocessing directives in the middle of macro
-     arguments do not work with GNU CC.  For example, a program like
-     this will not work:
-
-          foobar (
-          #define luser
-                  hack)
-
-     ANSI C does not permit such a construct.  It would make sense to
-     support it when `-traditional' is used, but it is too much work to
-     implement.
-
-   * Declarations of external variables and functions within a block
-     apply only to the block containing the declaration.  In other
-     words, they have the same scope as any other declaration in the
-     same place.
-
-     In some other C compilers, a `extern' declaration affects all the
-     rest of the file even if it happens within a block.
-
-     The `-traditional' option directs GNU C to treat all `extern'
-     declarations as global, like traditional compilers.
-
-   * In traditional C, you can combine `long', etc., with a typedef
-     name, as shown here:
-
-          typedef int foo;
-          typedef long foo bar;
-
-     In ANSI C, this is not allowed: `long' and other type modifiers
-     require an explicit `int'.  Because this criterion is expressed by
-     Bison grammar rules rather than C code, the `-traditional' flag
-     cannot alter it.
-
-   * PCC allows typedef names to be used as function parameters.  The
-     difficulty described immediately above applies here too.
-
-   * PCC allows whitespace in the middle of compound assignment
-     operators such as `+='.  GNU CC, following the ANSI standard, does
-     not allow this.  The difficulty described immediately above
-     applies here too.
-
-   * GNU CC complains about unterminated character constants inside of
-     preprocessing conditionals that fail.  Some programs have English
-     comments enclosed in conditionals that are guaranteed to fail; if
-     these comments contain apostrophes, GNU CC will probably report an
-     error.  For example, this code would produce an error:
-
-          #if 0
-          You can't expect this to work.
-          #endif
-
-     The best solution to such a problem is to put the text into an
-     actual C comment delimited by `/*...*/'.  However, `-traditional'
-     suppresses these error messages.
-
-   * Many user programs contain the declaration `long time ();'.  In the
-     past, the system header files on many systems did not actually
-     declare `time', so it did not matter what type your program
-     declared it to return.  But in systems with ANSI C headers, `time'
-     is declared to return `time_t', and if that is not the same as
-     `long', then `long time ();' is erroneous.
-
-     The solution is to change your program to use `time_t' as the
-     return type of `time'.
-
-   * When compiling functions that return `float', PCC converts it to a
-     double.  GNU CC actually returns a `float'.  If you are concerned
-     with PCC compatibility, you should declare your functions to return
-     `double'; you might as well say what you mean.
-
-   * When compiling functions that return structures or unions, GNU CC
-     output code normally uses a method different from that used on most
-     versions of Unix.  As a result, code compiled with GNU CC cannot
-     call a structure-returning function compiled with PCC, and vice
-     versa.
-
-     The method used by GNU CC is as follows: a structure or union
-     which is 1, 2, 4 or 8 bytes long is returned like a scalar.  A
-     structure or union with any other size is stored into an address
-     supplied by the caller (usually in a special, fixed register, but
-     on some machines it is passed on the stack).  The
-     machine-description macros `STRUCT_VALUE' and
-     `STRUCT_INCOMING_VALUE' tell GNU CC where to pass this address.
-
-     By contrast, PCC on most target machines returns structures and
-     unions of any size by copying the data into an area of static
-     storage, and then returning the address of that storage as if it
-     were a pointer value.  The caller must copy the data from that
-     memory area to the place where the value is wanted.  GNU CC does
-     not use this method because it is slower and nonreentrant.
-
-     On some newer machines, PCC uses a reentrant convention for all
-     structure and union returning.  GNU CC on most of these machines
-     uses a compatible convention when returning structures and unions
-     in memory, but still returns small structures and unions in
-     registers.
-
-     You can tell GNU CC to use a compatible convention for all
-     structure and union returning with the option
-     `-fpcc-struct-return'.
-
-   * GNU C complains about program fragments such as `0x74ae-0x4000'
-     which appear to be two hexadecimal constants separated by the minus
-     operator.  Actually, this string is a single "preprocessing token".
-     Each such token must correspond to one token in C.  Since this
-     does not, GNU C prints an error message.  Although it may appear
-     obvious that what is meant is an operator and two values, the ANSI
-     C standard specifically requires that this be treated as erroneous.
-
-     A "preprocessing token" is a "preprocessing number" if it begins
-     with a digit and is followed by letters, underscores, digits,
-     periods and `e+', `e-', `E+', or `E-' character sequences.
-
-     To make the above program fragment valid, place whitespace in
-     front of the minus sign.  This whitespace will end the
-     preprocessing number.
-
-
-File: gcc.info,  Node: Fixed Headers,  Next: Standard Libraries,  Prev: Incompatibilities,  Up: Trouble
-
-Fixed Header Files
-==================
-
-   GNU CC needs to install corrected versions of some system header
-files.  This is because most target systems have some header files that
-won't work with GNU CC unless they are changed.  Some have bugs, some
-are incompatible with ANSI C, and some depend on special features of
-other compilers.
-
-   Installing GNU CC automatically creates and installs the fixed header
-files, by running a program called `fixincludes' (or for certain
-targets an alternative such as `fixinc.svr4').  Normally, you don't
-need to pay attention to this.  But there are cases where it doesn't do
-the right thing automatically.
-
-   * If you update the system's header files, such as by installing a
-     new system version, the fixed header files of GNU CC are not
-     automatically updated.  The easiest way to update them is to
-     reinstall GNU CC.  (If you want to be clever, look in the makefile
-     and you can find a shortcut.)
-
-   * On some systems, in particular SunOS 4, header file directories
-     contain machine-specific symbolic links in certain places.  This
-     makes it possible to share most of the header files among hosts
-     running the same version of SunOS 4 on different machine models.
-
-     The programs that fix the header files do not understand this
-     special way of using symbolic links; therefore, the directory of
-     fixed header files is good only for the machine model used to
-     build it.
-
-     In SunOS 4, only programs that look inside the kernel will notice
-     the difference between machine models.  Therefore, for most
-     purposes, you need not be concerned about this.
-
-     It is possible to make separate sets of fixed header files for the
-     different machine models, and arrange a structure of symbolic
-     links so as to use the proper set, but you'll have to do this by
-     hand.
-
-   * On Lynxos, GNU CC by default does not fix the header files.  This
-     is because bugs in the shell cause the `fixincludes' script to
-     fail.
-
-     This means you will encounter problems due to bugs in the system
-     header files.  It may be no comfort that they aren't GNU CC's
-     fault, but it does mean that there's nothing for us to do about
-     them.
-
-
-File: gcc.info,  Node: Standard Libraries,  Next: Disappointments,  Prev: Fixed Headers,  Up: Trouble
-
-Standard Libraries
-==================
-
-   GNU CC by itself attempts to be what the ISO/ANSI C standard calls a
-"conforming freestanding implementation".  This means all ANSI C
-language features are available, as well as the contents of `float.h',
-`limits.h', `stdarg.h', and `stddef.h'.  The rest of the C library is
-supplied by the vendor of the operating system.  If that C library
-doesn't conform to the C standards, then your programs might get
-warnings (especially when using `-Wall') that you don't expect.
-
-   For example, the `sprintf' function on SunOS 4.1.3 returns `char *'
-while the C standard says that `sprintf' returns an `int'.  The
-`fixincludes' program could make the prototype for this function match
-the Standard, but that would be wrong, since the function will still
-return `char *'.
-
-   If you need a Standard compliant library, then you need to find one,
-as GNU CC does not provide one.  The GNU C library (called `glibc') has
-been ported to a number of operating systems, and provides ANSI/ISO,
-POSIX, BSD and SystemV compatibility.  You could also ask your operating
-system vendor if newer libraries are available.
-
-
-File: gcc.info,  Node: Disappointments,  Next: C++ Misunderstandings,  Prev: Standard Libraries,  Up: Trouble
-
-Disappointments and Misunderstandings
-=====================================
-
-   These problems are perhaps regrettable, but we don't know any
-practical way around them.
-
-   * Certain local variables aren't recognized by debuggers when you
-     compile with optimization.
-
-     This occurs because sometimes GNU CC optimizes the variable out of
-     existence.  There is no way to tell the debugger how to compute the
-     value such a variable "would have had", and it is not clear that
-     would be desirable anyway.  So GNU CC simply does not mention the
-     eliminated variable when it writes debugging information.
-
-     You have to expect a certain amount of disagreement between the
-     executable and your source code, when you use optimization.
-
-   * Users often think it is a bug when GNU CC reports an error for code
-     like this:
-
-          int foo (struct mumble *);
-          
-          struct mumble { ... };
-          
-          int foo (struct mumble *x)
-          { ... }
-
-     This code really is erroneous, because the scope of `struct
-     mumble' in the prototype is limited to the argument list
-     containing it.  It does not refer to the `struct mumble' defined
-     with file scope immediately below--they are two unrelated types
-     with similar names in different scopes.
-
-     But in the definition of `foo', the file-scope type is used
-     because that is available to be inherited.  Thus, the definition
-     and the prototype do not match, and you get an error.
-
-     This behavior may seem silly, but it's what the ANSI standard
-     specifies.  It is easy enough for you to make your code work by
-     moving the definition of `struct mumble' above the prototype.
-     It's not worth being incompatible with ANSI C just to avoid an
-     error for the example shown above.
-
-   * Accesses to bitfields even in volatile objects works by accessing
-     larger objects, such as a byte or a word.  You cannot rely on what
-     size of object is accessed in order to read or write the bitfield;
-     it may even vary for a given bitfield according to the precise
-     usage.
-
-     If you care about controlling the amount of memory that is
-     accessed, use volatile but do not use bitfields.
-
-   * GNU CC comes with shell scripts to fix certain known problems in
-     system header files.  They install corrected copies of various
-     header files in a special directory where only GNU CC will
-     normally look for them.  The scripts adapt to various systems by
-     searching all the system header files for the problem cases that
-     we know about.
-
-     If new system header files are installed, nothing automatically
-     arranges to update the corrected header files.  You will have to
-     reinstall GNU CC to fix the new header files.  More specifically,
-     go to the build directory and delete the files `stmp-fixinc' and
-     `stmp-headers', and the subdirectory `include'; then do `make
-     install' again.
-
-   * On 68000 systems, you can get paradoxical results if you test the
-     precise values of floating point numbers.  For example, you can
-     find that a floating point value which is not a NaN is not equal
-     to itself.  This results from the fact that the the floating point
-     registers hold a few more bits of precision than fit in a `double'
-     in memory.  Compiled code moves values between memory and floating
-     point registers at its convenience, and moving them into memory
-     truncates them.
-
-     You can partially avoid this problem by using the `-ffloat-store'
-     option (*note Optimize Options::.).
-
-   * On the MIPS, variable argument functions using `varargs.h' cannot
-     have a floating point value for the first argument.  The reason
-     for this is that in the absence of a prototype in scope, if the
-     first argument is a floating point, it is passed in a floating
-     point register, rather than an integer register.
-
-     If the code is rewritten to use the ANSI standard `stdarg.h'
-     method of variable arguments, and the prototype is in scope at the
-     time of the call, everything will work fine.
-
-
-File: gcc.info,  Node: C++ Misunderstandings,  Next: Protoize Caveats,  Prev: Disappointments,  Up: Trouble
-
-Common Misunderstandings with GNU C++
-=====================================
-
-   C++ is a complex language and an evolving one, and its standard
-definition (the ANSI C++ draft standard) is also evolving.  As a result,
-your C++ compiler may occasionally surprise you, even when its behavior
-is correct.  This section discusses some areas that frequently give
-rise to questions of this sort.
-
-* Menu:
-
-* Static Definitions::  Static member declarations are not definitions
-* Temporaries::         Temporaries may vanish before you expect
-
-
-File: gcc.info,  Node: Static Definitions,  Next: Temporaries,  Up: C++ Misunderstandings
-
-Declare *and* Define Static Members
------------------------------------
-
-   When a class has static data members, it is not enough to *declare*
-the static member; you must also *define* it.  For example:
-
-     class Foo
-     {
-       ...
-       void method();
-       static int bar;
-     };
-
-   This declaration only establishes that the class `Foo' has an `int'
-named `Foo::bar', and a member function named `Foo::method'.  But you
-still need to define *both* `method' and `bar' elsewhere.  According to
-the draft ANSI standard, you must supply an initializer in one (and
-only one) source file, such as:
-
-     int Foo::bar = 0;
-
-   Other C++ compilers may not correctly implement the standard
-behavior.  As a result, when you switch to `g++' from one of these
-compilers, you may discover that a program that appeared to work
-correctly in fact does not conform to the standard: `g++' reports as
-undefined symbols any static data members that lack definitions.
 

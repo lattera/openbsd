@@ -1,5 +1,5 @@
-This is Info file cpp.info, produced by Makeinfo-1.63 from the input
-file cpp.texi.
+This is Info file cpp.info, produced by Makeinfo version 1.68 from the
+input file cpp.texi.
 
    This file documents the GNU C Preprocessor.
 
@@ -21,55 +21,55 @@ versions.
 
 
 Indirect:
-cpp.info-1: 790
-cpp.info-2: 50196
-cpp.info-3: 90181
+cpp.info-1: 798
+cpp.info-2: 50062
+cpp.info-3: 91249
 
 Tag Table:
 (Indirect)
-Node: Top790
-Node: Global Actions3362
-Node: Directives5882
-Node: Header Files7569
-Node: Header Uses8228
-Node: Include Syntax9720
-Node: Include Operation12862
-Node: Once-Only14724
-Node: Inheritance17149
-Node: Macros19711
-Node: Simple Macros20625
-Node: Argument Macros23613
-Node: Predefined29411
-Node: Standard Predefined29841
-Node: Nonstandard Predefined36978
-Node: Stringification40554
-Node: Concatenation43480
-Node: Undefining46753
-Node: Redefining47792
-Node: Macro Pitfalls49092
-Node: Misnesting50196
-Node: Macro Parentheses51210
-Node: Swallow Semicolon53087
-Node: Side Effects54987
-Node: Self-Reference56685
-Node: Argument Prescan58961
-Node: Cascaded Macros63963
-Node: Newlines in Args65108
-Node: Conditionals66453
-Node: Conditional Uses67805
-Node: Conditional Syntax69228
-Node: #if Directive69814
-Node: #else Directive72103
-Node: #elif Directive72770
-Node: Deleted Code74148
-Node: Conditionals-Macros75209
-Node: Assertions78894
-Node: #error Directive83129
-Node: Combining Sources84569
-Node: Other Directives87480
-Node: Output88942
-Node: Invocation90181
-Node: Concept Index102005
-Node: Index104809
+Node: Top798
+Node: Global Actions3707
+Node: Directives6227
+Node: Header Files7914
+Node: Header Uses8573
+Node: Include Syntax10065
+Node: Include Operation13207
+Node: Once-Only15069
+Node: Inheritance17494
+Node: Macros20027
+Node: Simple Macros20941
+Node: Argument Macros23929
+Node: Predefined29727
+Node: Standard Predefined30157
+Node: Nonstandard Predefined37948
+Node: Stringification41524
+Node: Concatenation44450
+Node: Undefining47723
+Node: Redefining48762
+Node: Macro Pitfalls50062
+Node: Misnesting51166
+Node: Macro Parentheses52180
+Node: Swallow Semicolon54048
+Node: Side Effects55948
+Node: Self-Reference57646
+Node: Argument Prescan59922
+Node: Cascaded Macros64924
+Node: Newlines in Args66069
+Node: Conditionals67414
+Node: Conditional Uses68766
+Node: Conditional Syntax70189
+Node: #if Directive70775
+Node: #else Directive73064
+Node: #elif Directive73731
+Node: Deleted Code75109
+Node: Conditionals-Macros76170
+Node: Assertions79855
+Node: #error Directive84090
+Node: Combining Sources85575
+Node: Other Directives88486
+Node: Output89940
+Node: Invocation91249
+Node: Concept Index103767
+Node: Index106620
 
 End Tag Table

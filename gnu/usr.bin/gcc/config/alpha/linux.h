@@ -1,9 +1,7 @@
-/* Definitions of target machine for GNU compiler, for Alpha Linux,
-   using ECOFF.
-   Copyright (C) 1995 Free Software Foundation, Inc.
+/* Definitions of target machine for GNU compiler, for Alpha Linux-based GNU
+   systems using ECOFF.
+   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
    Contributed by Bob Manson.
-   Derived from work contributed by Cygnus Support,
-   (c) 1993 Free Software Foundation.
 
 This file is part of GNU CC.
 
@@ -21,12 +19,11 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+#undef TARGET_DEFAULT
 #define TARGET_DEFAULT (3 | MASK_GAS)
 
-#include "alpha/alpha.h"
-
 #undef TARGET_VERSION
-#define TARGET_VERSION fprintf (stderr, " (Linux/Alpha)");
+#define TARGET_VERSION fprintf (stderr, " (GNU/Linux/Alpha)");
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
@@ -35,19 +32,18 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* We don't actually need any of these; the MD_ vars are ignored
    anyway for cross-compilers, and the other specs won't get picked up
-   'coz the user is supposed to do ld -r (hmm, perhaps that should be
+   because the user is supposed to do ld -r (hmm, perhaps that should be
    the default).  In any case, setting them thus will catch some
    common user errors. */
 
-#undef	MD_EXEC_PREFIX
-#undef	MD_STARTFILE_PREFIX
+#undef MD_EXEC_PREFIX
+#undef MD_STARTFILE_PREFIX
 
-#undef	LIB_SPEC
+#undef LIB_SPEC
 #define LIB_SPEC "%{pg:-lgmon} %{pg:-lc_p} %{!pg:-lc}"
 
-#undef	LINK_SPEC
-#define LINK_SPEC  \
-  "-G 8 %{O*:-O3} %{!O*:-O1}"
+#undef LINK_SPEC
+#define LINK_SPEC "-G 8 %{O*:-O3} %{!O*:-O1}"
 
 #undef ASM_SPEC
 #define ASM_SPEC "-nocpp"
@@ -60,13 +56,42 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
 #undef FUNCTION_PROFILER
-
 #define FUNCTION_PROFILER(FILE, LABELNO)			\
-    do {							\
-	fputs ("\tlda $27,_mcount\n", (FILE));			\
-	fputs ("\tjsr $26,($27),_mcount\n", (FILE));		\
-	fputs ("\tldgp $29,0($26)\n", (FILE));			\
-    } while (0);
+	fputs ("\tjsr $28,_mcount\n", (FILE))
 
 /* Generate calls to memcpy, etc., not bcopy, etc. */
 #define TARGET_MEM_FUNCTIONS
+
+/* Show that we need a GP when profiling.  */
+#define TARGET_PROFILING_NEEDS_GP
+
+/* We support #pragma.  */
+#define HANDLE_SYSV_PRAGMA
+
+#undef ASM_FINAL_SPEC
+
+/* Emit RTL insns to initialize the variable parts of a trampoline.
+   FNADDR is an RTX for the address of the function's pure code.
+   CXT is an RTX for the static chain value for the function. 
+
+   This differs from the standard version in that:
+
+   We do not initialize the "hint" field because it only has an 8k
+   range and so the target is in range of something on the stack. 
+   Omitting the hint saves a bogus branch-prediction cache line load.
+
+   GNU/Linux always has an executable stack -- no need for a system call. */
+
+#undef INITIALIZE_TRAMPOLINE
+#define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)                       \
+{                                                                       \
+  rtx _addr;                                             		\
+                                                                        \
+  _addr = memory_address (Pmode, plus_constant ((TRAMP), 16));          \
+  emit_move_insn (gen_rtx (MEM, Pmode, _addr), (FNADDR));               \
+  _addr = memory_address (Pmode, plus_constant ((TRAMP), 24));          \
+  emit_move_insn (gen_rtx (MEM, Pmode, _addr), (CXT));                  \
+                                                                        \
+  emit_insn (gen_rtx (UNSPEC_VOLATILE, VOIDmode,                        \
+                      gen_rtvec (1, const0_rtx), 0));                   \
+}

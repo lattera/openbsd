@@ -1,5 +1,5 @@
-This is Info file cpp.info, produced by Makeinfo-1.63 from the input
-file cpp.texi.
+This is Info file cpp.info, produced by Makeinfo version 1.68 from the
+input file cpp.texi.
 
    This file documents the GNU C Preprocessor.
 
@@ -116,15 +116,19 @@ compiler.
      Warn if any trigraphs are encountered (assuming they are enabled).
 
 `-Wcomment'
-     Warn whenever a comment-start sequence `/*' appears in a comment.
+     Warn whenever a comment-start sequence `/*' appears in a `/*'
+     comment, or whenever a Backslash-Newline appears in a `//' comment.
 
 `-Wall'
      Requests both `-Wtrigraphs' and `-Wcomment' (but not
-     `-Wtraditional').
+     `-Wtraditional' or `-Wundef').
 
 `-Wtraditional'
      Warn about certain constructs that behave differently in
      traditional and ANSI C.
+
+`-Wundef'
+     Warn if an undefined identifier is evaluated in an `#if' directive.
 
 `-I DIRECTORY'
      Add the directory DIRECTORY to the head of the list of directories
@@ -160,6 +164,14 @@ compiler.
      Do not search for header files in the C++-specific standard
      directories, but do still search the other standard directories.
      (This option is used when building libg++.)
+
+`-remap'
+     When searching for a header file in a directory, remap file names
+     if a file named `header.gcc' exists in that directory.  This can
+     be used to work around limitations of file systems with file name
+     restrictions.  The `header.gcc' file should contain a series of
+     lines with two tokens on each line: the first token is the name to
+     map, and the second token is the actual name to use.
 
 `-D NAME'
      Predefine NAME as a macro, with definition `1'.
@@ -204,6 +216,10 @@ compiler.
      predefined macros, and it outputs *both* the `#define' directives
      and the result of preprocessing.  Both kinds of output go to the
      standard output file.
+
+`-dI'
+     Output `#include' directives in addition to the result of
+     preprocessing.
 
 `-M [-MG]'
      Instead of outputting the result of preprocessing, output a rule
@@ -282,10 +298,11 @@ compiler.
 `-lang-objc++'
      Specify the source language.  `-lang-c' is the default; it allows
      recognition of C++ comments (comments that begin with `//' and end
-     at end of line), since this is a common feature and it will most
-     likely be in the next C standard.  `-lang-c89' disables
-     recognition of C++ comments.  `-lang-c++' handles C++ comment
-     syntax and includes extra default include directories for C++.
+     at end of line) and hexadecimal floating-point constants, since
+     these features will most likely appear in the next C standard.
+     `-lang-c89' disables recognition of C++ comments and hexadecimal
+     floating-point constants.  `-lang-c++' handles C++ comment syntax
+     and includes extra default include directories for C++.
      `-lang-objc' enables the Objective C `#import' directive.
      `-lang-objc++' enables both C++ and Objective C extensions.
 
@@ -302,11 +319,12 @@ compiler.
      will not pass it from its command line.
 
 `-$'
-     Forbid the use of `$' in identifiers.  This is required for ANSI
-     conformance.  `gcc' automatically supplies this option to the
-     preprocessor if you specify `-ansi', but `gcc' doesn't recognize
-     the `-$' option itself--to use it without the other effects of
-     `-ansi', you must call the preprocessor directly.
+     Forbid the use of `$' in identifiers.  This was formerly required
+     for strict conformance to the C Standard before the standard was
+     corrected.
+
+     This option is available only when you call `cpp' directly; `gcc'
+     will not pass it from its command line.
 
 
 File: cpp.info,  Node: Concept Index,  Next: Index,  Prev: Invocation,  Up: Top
@@ -316,55 +334,55 @@ Concept Index
 
 * Menu:
 
-* ##:                                   Concatenation.
-* arguments in macro definitions:       Argument Macros.
-* assertions:                           Assertions.
-* assertions, undoing:                  Assertions.
-* blank macro arguments:                Argument Macros.
-* cascaded macros:                      Cascaded Macros.
-* commenting out code:                  Deleted Code.
-* computed #include:                    Include Syntax.
-* concatenation:                        Concatenation.
-* conditionals:                         Conditionals.
-* directives:                           Directives.
-* expansion of arguments:               Argument Prescan.
-* function-like macro:                  Argument Macros.
-* header file:                          Header Files.
-* including just once:                  Once-Only.
-* inheritance:                          Inheritance.
-* invocation of the preprocessor:       Invocation.
-* line control:                         Combining Sources.
-* macro argument expansion:             Argument Prescan.
-* macro body uses macro:                Cascaded Macros.
-* macros with argument:                 Argument Macros.
-* manifest constant:                    Simple Macros.
-* newlines in macro arguments:          Newlines in Args.
-* null directive:                       Other Directives.
-* options:                              Invocation.
-* output format:                        Output.
-* overriding a header file:             Inheritance.
-* parentheses in macro bodies:          Macro Parentheses.
-* pitfalls of macros:                   Macro Pitfalls.
-* predefined macros:                    Predefined.
-* predicates:                           Assertions.
-* preprocessing directives:             Directives.
-* prescan of macro arguments:           Argument Prescan.
-* problems with macros:                 Macro Pitfalls.
-* redefining macros:                    Redefining.
-* repeated inclusion:                   Once-Only.
-* retracting assertions:                Assertions.
-* second include path:                  Invocation.
-* self-reference:                       Self-Reference.
-* semicolons (after macro calls):       Swallow Semicolon.
-* side effects (in macro arguments):    Side Effects.
-* simple macro:                         Simple Macros.
-* space as macro argument:              Argument Macros.
-* standard predefined macros:           Standard Predefined.
-* stringification:                      Stringification.
-* testing predicates:                   Assertions.
-* unassert:                             Assertions.
-* undefining macros:                    Undefining.
-* unsafe macros:                        Side Effects.
+* ##:                                    Concatenation.
+* arguments in macro definitions:        Argument Macros.
+* assertions:                            Assertions.
+* assertions, undoing:                   Assertions.
+* blank macro arguments:                 Argument Macros.
+* cascaded macros:                       Cascaded Macros.
+* commenting out code:                   Deleted Code.
+* computed #include:                     Include Syntax.
+* concatenation:                         Concatenation.
+* conditionals:                          Conditionals.
+* directives:                            Directives.
+* expansion of arguments:                Argument Prescan.
+* function-like macro:                   Argument Macros.
+* header file:                           Header Files.
+* including just once:                   Once-Only.
+* inheritance:                           Inheritance.
+* invocation of the preprocessor:        Invocation.
+* line control:                          Combining Sources.
+* macro argument expansion:              Argument Prescan.
+* macro body uses macro:                 Cascaded Macros.
+* macros with argument:                  Argument Macros.
+* manifest constant:                     Simple Macros.
+* newlines in macro arguments:           Newlines in Args.
+* null directive:                        Other Directives.
+* options:                               Invocation.
+* output format:                         Output.
+* overriding a header file:              Inheritance.
+* parentheses in macro bodies:           Macro Parentheses.
+* pitfalls of macros:                    Macro Pitfalls.
+* predefined macros:                     Predefined.
+* predicates:                            Assertions.
+* preprocessing directives:              Directives.
+* prescan of macro arguments:            Argument Prescan.
+* problems with macros:                  Macro Pitfalls.
+* redefining macros:                     Redefining.
+* repeated inclusion:                    Once-Only.
+* retracting assertions:                 Assertions.
+* second include path:                   Invocation.
+* self-reference:                        Self-Reference.
+* semicolons (after macro calls):        Swallow Semicolon.
+* side effects (in macro arguments):     Side Effects.
+* simple macro:                          Simple Macros.
+* space as macro argument:               Argument Macros.
+* standard predefined macros:            Standard Predefined.
+* stringification:                       Stringification.
+* testing predicates:                    Assertions.
+* unassert:                              Assertions.
+* undefining macros:                     Undefining.
+* unsafe macros:                         Side Effects.
 
 
 File: cpp.info,  Node: Index,  Prev: Concept Index,  Up: Top
@@ -374,93 +392,96 @@ Index of Directives, Macros and Options
 
 * Menu:
 
-* #assert:                              Assertions.
-* #cpu:                                 Assertions.
-* #define:                              Argument Macros.
-* #elif:                                #elif Directive.
-* #else:                                #else Directive.
-* #error:                               #error Directive.
-* #ident:                               Other Directives.
-* #if:                                  Conditional Syntax.
-* #ifdef:                               Conditionals-Macros.
-* #ifndef:                              Conditionals-Macros.
-* #import:                              Once-Only.
-* #include:                             Include Syntax.
-* #include_next:                        Inheritance.
-* #line:                                Combining Sources.
-* #machine:                             Assertions.
-* #pragma:                              Other Directives.
-* #pragma once:                         Once-Only.
-* #system:                              Assertions.
-* #unassert:                            Assertions.
-* #warning:                             #error Directive.
-* -$:                                   Invocation.
-* -A:                                   Invocation.
-* -C:                                   Invocation.
-* -D:                                   Invocation.
-* -dD:                                  Invocation.
-* -dM:                                  Invocation.
-* -H:                                   Invocation.
-* -I:                                   Invocation.
-* -idirafter:                           Invocation.
-* -imacros:                             Invocation.
-* -include:                             Invocation.
-* -iprefix:                             Invocation.
-* -isystem:                             Invocation.
-* -iwithprefix:                         Invocation.
-* -lang-c:                              Invocation.
-* -lang-c++:                            Invocation.
-* -lang-c89:                            Invocation.
-* -lang-objc:                           Invocation.
-* -lang-objc++:                         Invocation.
-* -M:                                   Invocation.
-* -MD:                                  Invocation.
-* -MM:                                  Invocation.
-* -MMD:                                 Invocation.
-* -nostdinc:                            Invocation.
-* -nostdinc++:                          Invocation.
-* -P:                                   Invocation.
-* -pedantic:                            Invocation.
-* -pedantic-errors:                     Invocation.
-* -traditional:                         Invocation.
-* -trigraphs:                           Invocation.
-* -U:                                   Invocation.
-* -undef:                               Invocation.
-* -Wall:                                Invocation.
-* -Wcomment:                            Invocation.
-* -Wtraditional:                        Invocation.
-* -Wtrigraphs:                          Invocation.
-* __BASE_FILE__:                        Standard Predefined.
-* __CHAR_UNSIGNED__:                    Standard Predefined.
-* __cplusplus:                          Standard Predefined.
-* __DATE__:                             Standard Predefined.
-* __FILE__:                             Standard Predefined.
-* __GNUC__:                             Standard Predefined.
-* __GNUC_MINOR__:                       Standard Predefined.
-* __GNUG__:                             Standard Predefined.
-* __INCLUDE_LEVEL_:                     Standard Predefined.
-* __LINE__:                             Standard Predefined.
-* __OPTIMIZE__:                         Standard Predefined.
-* __REGISTER_PREFIX__:                  Standard Predefined.
-* __STDC__:                             Standard Predefined.
-* __STDC_VERSION__:                     Standard Predefined.
-* __STRICT_ANSI__:                      Standard Predefined.
-* __TIME__:                             Standard Predefined.
-* __USER_LABEL_PREFIX__:                Standard Predefined.
-* __VERSION__:                          Standard Predefined.
-* _AM29000:                             Nonstandard Predefined.
-* _AM29K:                               Nonstandard Predefined.
-* BSD:                                  Nonstandard Predefined.
-* defined:                              Conditionals-Macros.
-* M68020:                               Nonstandard Predefined.
-* m68k:                                 Nonstandard Predefined.
-* mc68000:                              Nonstandard Predefined.
-* ns32000:                              Nonstandard Predefined.
-* pyr:                                  Nonstandard Predefined.
-* sequent:                              Nonstandard Predefined.
-* sun:                                  Nonstandard Predefined.
-* system header files:                  Header Uses.
-* unix:                                 Nonstandard Predefined.
-* vax:                                  Nonstandard Predefined.
+* #assert:                               Assertions.
+* #cpu:                                  Assertions.
+* #define:                               Argument Macros.
+* #elif:                                 #elif Directive.
+* #else:                                 #else Directive.
+* #error:                                #error Directive.
+* #ident:                                Other Directives.
+* #if:                                   Conditional Syntax.
+* #ifdef:                                Conditionals-Macros.
+* #ifndef:                               Conditionals-Macros.
+* #import:                               Once-Only.
+* #include:                              Include Syntax.
+* #include_next:                         Inheritance.
+* #line:                                 Combining Sources.
+* #machine:                              Assertions.
+* #pragma:                               Other Directives.
+* #pragma once:                          Once-Only.
+* #system:                               Assertions.
+* #unassert:                             Assertions.
+* #warning:                              #error Directive.
+* -$:                                    Invocation.
+* -A:                                    Invocation.
+* -C:                                    Invocation.
+* -D:                                    Invocation.
+* -dD:                                   Invocation.
+* -dI:                                   Invocation.
+* -dM:                                   Invocation.
+* -H:                                    Invocation.
+* -I:                                    Invocation.
+* -idirafter:                            Invocation.
+* -imacros:                              Invocation.
+* -include:                              Invocation.
+* -iprefix:                              Invocation.
+* -isystem:                              Invocation.
+* -iwithprefix:                          Invocation.
+* -lang-c:                               Invocation.
+* -lang-c++:                             Invocation.
+* -lang-c89:                             Invocation.
+* -lang-objc:                            Invocation.
+* -lang-objc++:                          Invocation.
+* -M:                                    Invocation.
+* -MD:                                   Invocation.
+* -MM:                                   Invocation.
+* -MMD:                                  Invocation.
+* -nostdinc:                             Invocation.
+* -nostdinc++:                           Invocation.
+* -P:                                    Invocation.
+* -pedantic:                             Invocation.
+* -pedantic-errors:                      Invocation.
+* -remap:                                Invocation.
+* -traditional:                          Invocation.
+* -trigraphs:                            Invocation.
+* -U:                                    Invocation.
+* -undef:                                Invocation.
+* -Wall:                                 Invocation.
+* -Wcomment:                             Invocation.
+* -Wtraditional:                         Invocation.
+* -Wtrigraphs:                           Invocation.
+* -Wundef:                               Invocation.
+* __BASE_FILE__:                         Standard Predefined.
+* __CHAR_UNSIGNED__:                     Standard Predefined.
+* __cplusplus:                           Standard Predefined.
+* __DATE__:                              Standard Predefined.
+* __FILE__:                              Standard Predefined.
+* __GNUC__:                              Standard Predefined.
+* __GNUC_MINOR__:                        Standard Predefined.
+* __GNUG__:                              Standard Predefined.
+* __INCLUDE_LEVEL_:                      Standard Predefined.
+* __LINE__:                              Standard Predefined.
+* __OPTIMIZE__:                          Standard Predefined.
+* __REGISTER_PREFIX__:                   Standard Predefined.
+* __STDC__:                              Standard Predefined.
+* __STDC_VERSION__:                      Standard Predefined.
+* __STRICT_ANSI__:                       Standard Predefined.
+* __TIME__:                              Standard Predefined.
+* __USER_LABEL_PREFIX__:                 Standard Predefined.
+* __VERSION__:                           Standard Predefined.
+* _AM29000:                              Nonstandard Predefined.
+* _AM29K:                                Nonstandard Predefined.
+* BSD:                                   Nonstandard Predefined.
+* defined:                               Conditionals-Macros.
+* M68020:                                Nonstandard Predefined.
+* m68k:                                  Nonstandard Predefined.
+* mc68000:                               Nonstandard Predefined.
+* ns32000:                               Nonstandard Predefined.
+* pyr:                                   Nonstandard Predefined.
+* sequent:                               Nonstandard Predefined.
+* sun:                                   Nonstandard Predefined.
+* system header files:                   Header Uses.
+* unix:                                  Nonstandard Predefined.
+* vax:                                   Nonstandard Predefined.
 
 

@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,6 +28,770 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: gcc.info,  Node: Insns,  Next: Calls,  Prev: Assembler,  Up: RTL
+
+Insns
+=====
+
+   The RTL representation of the code for a function is a doubly-linked
+chain of objects called "insns".  Insns are expressions with special
+codes that are used for no other purpose.  Some insns are actual
+instructions; others represent dispatch tables for `switch' statements;
+others represent labels to jump to or various sorts of declarative
+information.
+
+   In addition to its own specific data, each insn must have a unique
+id-number that distinguishes it from all other insns in the current
+function (after delayed branch scheduling, copies of an insn with the
+same id-number may be present in multiple places in a function, but
+these copies will always be identical and will only appear inside a
+`sequence'), and chain pointers to the preceding and following insns.
+These three fields occupy the same position in every insn, independent
+of the expression code of the insn.  They could be accessed with `XEXP'
+and `XINT', but instead three special macros are always used:
+
+`INSN_UID (I)'
+     Accesses the unique id of insn I.
+
+`PREV_INSN (I)'
+     Accesses the chain pointer to the insn preceding I.  If I is the
+     first insn, this is a null pointer.
+
+`NEXT_INSN (I)'
+     Accesses the chain pointer to the insn following I.  If I is the
+     last insn, this is a null pointer.
+
+   The first insn in the chain is obtained by calling `get_insns'; the
+last insn is the result of calling `get_last_insn'.  Within the chain
+delimited by these insns, the `NEXT_INSN' and `PREV_INSN' pointers must
+always correspond: if INSN is not the first insn,
+
+     NEXT_INSN (PREV_INSN (INSN)) == INSN
+
+is always true and if INSN is not the last insn,
+
+     PREV_INSN (NEXT_INSN (INSN)) == INSN
+
+is always true.
+
+   After delay slot scheduling, some of the insns in the chain might be
+`sequence' expressions, which contain a vector of insns.  The value of
+`NEXT_INSN' in all but the last of these insns is the next insn in the
+vector; the value of `NEXT_INSN' of the last insn in the vector is the
+same as the value of `NEXT_INSN' for the `sequence' in which it is
+contained.  Similar rules apply for `PREV_INSN'.
+
+   This means that the above invariants are not necessarily true for
+insns inside `sequence' expressions.  Specifically, if INSN is the
+first insn in a `sequence', `NEXT_INSN (PREV_INSN (INSN))' is the insn
+containing the `sequence' expression, as is the value of `PREV_INSN
+(NEXT_INSN (INSN))' is INSN is the last insn in the `sequence'
+expression.  You can use these expressions to find the containing
+`sequence' expression.
+
+   Every insn has one of the following six expression codes:
+
+`insn'
+     The expression code `insn' is used for instructions that do not
+     jump and do not do function calls.  `sequence' expressions are
+     always contained in insns with code `insn' even if one of those
+     insns should jump or do function calls.
+
+     Insns with code `insn' have four additional fields beyond the three
+     mandatory ones listed above.  These four are described in a table
+     below.
+
+`jump_insn'
+     The expression code `jump_insn' is used for instructions that may
+     jump (or, more generally, may contain `label_ref' expressions).  If
+     there is an instruction to return from the current function, it is
+     recorded as a `jump_insn'.
+
+     `jump_insn' insns have the same extra fields as `insn' insns,
+     accessed in the same way and in addition contain a field
+     `JUMP_LABEL' which is defined once jump optimization has completed.
+
+     For simple conditional and unconditional jumps, this field
+     contains the `code_label' to which this insn will (possibly
+     conditionally) branch.  In a more complex jump, `JUMP_LABEL'
+     records one of the labels that the insn refers to; the only way to
+     find the others is to scan the entire body of the insn.
+
+     Return insns count as jumps, but since they do not refer to any
+     labels, they have zero in the `JUMP_LABEL' field.
+
+`call_insn'
+     The expression code `call_insn' is used for instructions that may
+     do function calls.  It is important to distinguish these
+     instructions because they imply that certain registers and memory
+     locations may be altered unpredictably.
+
+     `call_insn' insns have the same extra fields as `insn' insns,
+     accessed in the same way and in addition contain a field
+     `CALL_INSN_FUNCTION_USAGE', which contains a list (chain of
+     `expr_list' expressions) containing `use' and `clobber'
+     expressions that denote hard registers used or clobbered by the
+     called function.  A register specified in a `clobber' in this list
+     is modified *after* the execution of the `call_insn', while a
+     register in a `clobber' in the body of the `call_insn' is
+     clobbered before the insn completes execution.  `clobber'
+     expressions in this list augment registers specified in
+     `CALL_USED_REGISTERS' (*note Register Basics::.).
+
+`code_label'
+     A `code_label' insn represents a label that a jump insn can jump
+     to.  It contains two special fields of data in addition to the
+     three standard ones.  `CODE_LABEL_NUMBER' is used to hold the
+     "label number", a number that identifies this label uniquely among
+     all the labels in the compilation (not just in the current
+     function).  Ultimately, the label is represented in the assembler
+     output as an assembler label, usually of the form `LN' where N is
+     the label number.
+
+     When a `code_label' appears in an RTL expression, it normally
+     appears within a `label_ref' which represents the address of the
+     label, as a number.
+
+     The field `LABEL_NUSES' is only defined once the jump optimization
+     phase is completed and contains the number of times this label is
+     referenced in the current function.
+
+`barrier'
+     Barriers are placed in the instruction stream when control cannot
+     flow past them.  They are placed after unconditional jump
+     instructions to indicate that the jumps are unconditional and
+     after calls to `volatile' functions, which do not return (e.g.,
+     `exit').  They contain no information beyond the three standard
+     fields.
+
+`note'
+     `note' insns are used to represent additional debugging and
+     declarative information.  They contain two nonstandard fields, an
+     integer which is accessed with the macro `NOTE_LINE_NUMBER' and a
+     string accessed with `NOTE_SOURCE_FILE'.
+
+     If `NOTE_LINE_NUMBER' is positive, the note represents the
+     position of a source line and `NOTE_SOURCE_FILE' is the source
+     file name that the line came from.  These notes control generation
+     of line number data in the assembler output.
+
+     Otherwise, `NOTE_LINE_NUMBER' is not really a line number but a
+     code with one of the following values (and `NOTE_SOURCE_FILE' must
+     contain a null pointer):
+
+    `NOTE_INSN_DELETED'
+          Such a note is completely ignorable.  Some passes of the
+          compiler delete insns by altering them into notes of this
+          kind.
+
+    `NOTE_INSN_BLOCK_BEG'
+    `NOTE_INSN_BLOCK_END'
+          These types of notes indicate the position of the beginning
+          and end of a level of scoping of variable names.  They
+          control the output of debugging information.
+
+    `NOTE_INSN_EH_REGION_BEG'
+    `NOTE_INSN_EH_REGION_END'
+          These types of notes indicate the position of the beginning
+          and end of a level of scoping for exception handling.
+          `NOTE_BLOCK_NUMBER' identifies which `CODE_LABEL' is
+          associated with the given region.
+
+    `NOTE_INSN_LOOP_BEG'
+    `NOTE_INSN_LOOP_END'
+          These types of notes indicate the position of the beginning
+          and end of a `while' or `for' loop.  They enable the loop
+          optimizer to find loops quickly.
+
+    `NOTE_INSN_LOOP_CONT'
+          Appears at the place in a loop that `continue' statements
+          jump to.
+
+    `NOTE_INSN_LOOP_VTOP'
+          This note indicates the place in a loop where the exit test
+          begins for those loops in which the exit test has been
+          duplicated.  This position becomes another virtual start of
+          the loop when considering loop invariants.
+
+    `NOTE_INSN_FUNCTION_END'
+          Appears near the end of the function body, just before the
+          label that `return' statements jump to (on machine where a
+          single instruction does not suffice for returning).  This
+          note may be deleted by jump optimization.
+
+    `NOTE_INSN_SETJMP'
+          Appears following each call to `setjmp' or a related function.
+
+     These codes are printed symbolically when they appear in debugging
+     dumps.
+
+   The machine mode of an insn is normally `VOIDmode', but some phases
+use the mode for various purposes; for example, the reload pass sets it
+to `HImode' if the insn needs reloading but not register elimination
+and `QImode' if both are required.  The common subexpression
+elimination pass sets the mode of an insn to `QImode' when it is the
+first insn in a block that has already been processed.
+
+   Here is a table of the extra fields of `insn', `jump_insn' and
+`call_insn' insns:
+
+`PATTERN (I)'
+     An expression for the side effect performed by this insn.  This
+     must be one of the following codes: `set', `call', `use',
+     `clobber', `return', `asm_input', `asm_output', `addr_vec',
+     `addr_diff_vec', `trap_if', `unspec', `unspec_volatile',
+     `parallel', or `sequence'.  If it is a `parallel', each element of
+     the `parallel' must be one these codes, except that `parallel'
+     expressions cannot be nested and `addr_vec' and `addr_diff_vec'
+     are not permitted inside a `parallel' expression.
+
+`INSN_CODE (I)'
+     An integer that says which pattern in the machine description
+     matches this insn, or -1 if the matching has not yet been
+     attempted.
+
+     Such matching is never attempted and this field remains -1 on an
+     insn whose pattern consists of a single `use', `clobber',
+     `asm_input', `addr_vec' or `addr_diff_vec' expression.
+
+     Matching is also never attempted on insns that result from an `asm'
+     statement.  These contain at least one `asm_operands' expression.
+     The function `asm_noperands' returns a non-negative value for such
+     insns.
+
+     In the debugging output, this field is printed as a number
+     followed by a symbolic representation that locates the pattern in
+     the `md' file as some small positive or negative offset from a
+     named pattern.
+
+`LOG_LINKS (I)'
+     A list (chain of `insn_list' expressions) giving information about
+     dependencies between instructions within a basic block.  Neither a
+     jump nor a label may come between the related insns.
+
+`REG_NOTES (I)'
+     A list (chain of `expr_list' and `insn_list' expressions) giving
+     miscellaneous information about the insn.  It is often information
+     pertaining to the registers used in this insn.
+
+   The `LOG_LINKS' field of an insn is a chain of `insn_list'
+expressions.  Each of these has two operands: the first is an insn, and
+the second is another `insn_list' expression (the next one in the
+chain).  The last `insn_list' in the chain has a null pointer as second
+operand.  The significant thing about the chain is which insns appear
+in it (as first operands of `insn_list' expressions).  Their order is
+not significant.
+
+   This list is originally set up by the flow analysis pass; it is a
+null pointer until then.  Flow only adds links for those data
+dependencies which can be used for instruction combination.  For each
+insn, the flow analysis pass adds a link to insns which store into
+registers values that are used for the first time in this insn.  The
+instruction scheduling pass adds extra links so that every dependence
+will be represented.  Links represent data dependencies,
+antidependencies and output dependencies; the machine mode of the link
+distinguishes these three types: antidependencies have mode
+`REG_DEP_ANTI', output dependencies have mode `REG_DEP_OUTPUT', and
+data dependencies have mode `VOIDmode'.
+
+   The `REG_NOTES' field of an insn is a chain similar to the
+`LOG_LINKS' field but it includes `expr_list' expressions in addition
+to `insn_list' expressions.  There are several kinds of register notes,
+which are distinguished by the machine mode, which in a register note
+is really understood as being an `enum reg_note'.  The first operand OP
+of the note is data whose meaning depends on the kind of note.
+
+   The macro `REG_NOTE_KIND (X)' returns the kind of register note.
+Its counterpart, the macro `PUT_REG_NOTE_KIND (X, NEWKIND)' sets the
+register note type of X to be NEWKIND.
+
+   Register notes are of three classes: They may say something about an
+input to an insn, they may say something about an output of an insn, or
+they may create a linkage between two insns.  There are also a set of
+values that are only used in `LOG_LINKS'.
+
+   These register notes annotate inputs to an insn:
+
+`REG_DEAD'
+     The value in OP dies in this insn; that is to say, altering the
+     value immediately after this insn would not affect the future
+     behavior of the program.
+
+     This does not necessarily mean that the register OP has no useful
+     value after this insn since it may also be an output of the insn.
+     In such a case, however, a `REG_DEAD' note would be redundant and
+     is usually not present until after the reload pass, but no code
+     relies on this fact.
+
+`REG_INC'
+     The register OP is incremented (or decremented; at this level
+     there is no distinction) by an embedded side effect inside this
+     insn.  This means it appears in a `post_inc', `pre_inc',
+     `post_dec' or `pre_dec' expression.
+
+`REG_NONNEG'
+     The register OP is known to have a nonnegative value when this
+     insn is reached.  This is used so that decrement and branch until
+     zero instructions, such as the m68k dbra, can be matched.
+
+     The `REG_NONNEG' note is added to insns only if the machine
+     description has a `decrement_and_branch_until_zero' pattern.
+
+`REG_NO_CONFLICT'
+     This insn does not cause a conflict between OP and the item being
+     set by this insn even though it might appear that it does.  In
+     other words, if the destination register and OP could otherwise be
+     assigned the same register, this insn does not prevent that
+     assignment.
+
+     Insns with this note are usually part of a block that begins with a
+     `clobber' insn specifying a multi-word pseudo register (which will
+     be the output of the block), a group of insns that each set one
+     word of the value and have the `REG_NO_CONFLICT' note attached,
+     and a final insn that copies the output to itself with an attached
+     `REG_EQUAL' note giving the expression being computed.  This block
+     is encapsulated with `REG_LIBCALL' and `REG_RETVAL' notes on the
+     first and last insns, respectively.
+
+`REG_LABEL'
+     This insn uses OP, a `code_label', but is not a `jump_insn'.  The
+     presence of this note allows jump optimization to be aware that OP
+     is, in fact, being used.
+
+   The following notes describe attributes of outputs of an insn:
+
+`REG_EQUIV'
+`REG_EQUAL'
+     This note is only valid on an insn that sets only one register and
+     indicates that that register will be equal to OP at run time; the
+     scope of this equivalence differs between the two types of notes.
+     The value which the insn explicitly copies into the register may
+     look different from OP, but they will be equal at run time.  If the
+     output of the single `set' is a `strict_low_part' expression, the
+     note refers to the register that is contained in `SUBREG_REG' of
+     the `subreg' expression.
+
+     For `REG_EQUIV', the register is equivalent to OP throughout the
+     entire function, and could validly be replaced in all its
+     occurrences by OP.  ("Validly" here refers to the data flow of the
+     program; simple replacement may make some insns invalid.)  For
+     example, when a constant is loaded into a register that is never
+     assigned any other value, this kind of note is used.
+
+     When a parameter is copied into a pseudo-register at entry to a
+     function, a note of this kind records that the register is
+     equivalent to the stack slot where the parameter was passed.
+     Although in this case the register may be set by other insns, it
+     is still valid to replace the register by the stack slot
+     throughout the function.
+
+     A `REG_EQUIV' note is also used on an instruction which copies a
+     register parameter into a pseudo-register at entry to a function,
+     if there is a stack slot where that parameter could be stored.
+     Although other insns may set the pseudo-register, it is valid for
+     the compiler to replace the pseudo-register by stack slot
+     throughout the function, provided the compiler ensures that the
+     stack slot is properly initialized by making the replacement in
+     the initial copy instruction as well.  This is used on machines
+     for which the calling convention allocates stack space for
+     register parameters.  See `REG_PARM_STACK_SPACE' in *Note Stack
+     Arguments::.
+
+     In the case of `REG_EQUAL', the register that is set by this insn
+     will be equal to OP at run time at the end of this insn but not
+     necessarily elsewhere in the function.  In this case, OP is
+     typically an arithmetic expression.  For example, when a sequence
+     of insns such as a library call is used to perform an arithmetic
+     operation, this kind of note is attached to the insn that produces
+     or copies the final value.
+
+     These two notes are used in different ways by the compiler passes.
+     `REG_EQUAL' is used by passes prior to register allocation (such as
+     common subexpression elimination and loop optimization) to tell
+     them how to think of that value.  `REG_EQUIV' notes are used by
+     register allocation to indicate that there is an available
+     substitute expression (either a constant or a `mem' expression for
+     the location of a parameter on the stack) that may be used in
+     place of a register if insufficient registers are available.
+
+     Except for stack homes for parameters, which are indicated by a
+     `REG_EQUIV' note and are not useful to the early optimization
+     passes and pseudo registers that are equivalent to a memory
+     location throughout there entire life, which is not detected until
+     later in the compilation, all equivalences are initially indicated
+     by an attached `REG_EQUAL' note.  In the early stages of register
+     allocation, a `REG_EQUAL' note is changed into a `REG_EQUIV' note
+     if OP is a constant and the insn represents the only set of its
+     destination register.
+
+     Thus, compiler passes prior to register allocation need only check
+     for `REG_EQUAL' notes and passes subsequent to register allocation
+     need only check for `REG_EQUIV' notes.
+
+`REG_UNUSED'
+     The register OP being set by this insn will not be used in a
+     subsequent insn.  This differs from a `REG_DEAD' note, which
+     indicates that the value in an input will not be used subsequently.
+     These two notes are independent; both may be present for the same
+     register.
+
+`REG_WAS_0'
+     The single output of this insn contained zero before this insn.
+     OP is the insn that set it to zero.  You can rely on this note if
+     it is present and OP has not been deleted or turned into a `note';
+     its absence implies nothing.
+
+   These notes describe linkages between insns.  They occur in pairs:
+one insn has one of a pair of notes that points to a second insn, which
+has the inverse note pointing back to the first insn.
+
+`REG_RETVAL'
+     This insn copies the value of a multi-insn sequence (for example, a
+     library call), and OP is the first insn of the sequence (for a
+     library call, the first insn that was generated to set up the
+     arguments for the library call).
+
+     Loop optimization uses this note to treat such a sequence as a
+     single operation for code motion purposes and flow analysis uses
+     this note to delete such sequences whose results are dead.
+
+     A `REG_EQUAL' note will also usually be attached to this insn to
+     provide the expression being computed by the sequence.
+
+`REG_LIBCALL'
+     This is the inverse of `REG_RETVAL': it is placed on the first
+     insn of a multi-insn sequence, and it points to the last one.
+
+`REG_CC_SETTER'
+`REG_CC_USER'
+     On machines that use `cc0', the insns which set and use `cc0' set
+     and use `cc0' are adjacent.  However, when branch delay slot
+     filling is done, this may no longer be true.  In this case a
+     `REG_CC_USER' note will be placed on the insn setting `cc0' to
+     point to the insn using `cc0' and a `REG_CC_SETTER' note will be
+     placed on the insn using `cc0' to point to the insn setting `cc0'.
+
+   These values are only used in the `LOG_LINKS' field, and indicate
+the type of dependency that each link represents.  Links which indicate
+a data dependence (a read after write dependence) do not use any code,
+they simply have mode `VOIDmode', and are printed without any
+descriptive text.
+
+`REG_DEP_ANTI'
+     This indicates an anti dependence (a write after read dependence).
+
+`REG_DEP_OUTPUT'
+     This indicates an output dependence (a write after write
+     dependence).
+
+   These notes describe information gathered from gcov profile data.
+They are stored in the `REG_NOTES' field of an insn as an `expr_list'.
+
+`REG_EXEC_COUNT'
+     This is used to indicate the number of times a basic block was
+     executed according to the profile data.  The note is attached to
+     the first insn in the basic block.
+
+`REG_BR_PROB'
+     This is used to specify the ratio of branches to non-branches of a
+     branch insn according to the profile data.  The value is stored as
+     a value between 0 and REG_BR_PROB_BASE; larger values indicate a
+     higher probability that the branch will be taken.
+
+   For convenience, the machine mode in an `insn_list' or `expr_list'
+is printed using these symbolic codes in debugging dumps.
+
+   The only difference between the expression codes `insn_list' and
+`expr_list' is that the first operand of an `insn_list' is assumed to
+be an insn and is printed in debugging dumps as the insn's unique id;
+the first operand of an `expr_list' is printed in the ordinary way as
+an expression.
+
+
+File: gcc.info,  Node: Calls,  Next: Sharing,  Prev: Insns,  Up: RTL
+
+RTL Representation of Function-Call Insns
+=========================================
+
+   Insns that call subroutines have the RTL expression code `call_insn'.
+These insns must satisfy special rules, and their bodies must use a
+special RTL expression code, `call'.
+
+   A `call' expression has two operands, as follows:
+
+     (call (mem:FM ADDR) NBYTES)
+
+Here NBYTES is an operand that represents the number of bytes of
+argument data being passed to the subroutine, FM is a machine mode
+(which must equal as the definition of the `FUNCTION_MODE' macro in the
+machine description) and ADDR represents the address of the subroutine.
+
+   For a subroutine that returns no value, the `call' expression as
+shown above is the entire body of the insn, except that the insn might
+also contain `use' or `clobber' expressions.
+
+   For a subroutine that returns a value whose mode is not `BLKmode',
+the value is returned in a hard register.  If this register's number is
+R, then the body of the call insn looks like this:
+
+     (set (reg:M R)
+          (call (mem:FM ADDR) NBYTES))
+
+This RTL expression makes it clear (to the optimizer passes) that the
+appropriate register receives a useful value in this insn.
+
+   When a subroutine returns a `BLKmode' value, it is handled by
+passing to the subroutine the address of a place to store the value.
+So the call insn itself does not "return" any value, and it has the
+same RTL form as a call that returns nothing.
+
+   On some machines, the call instruction itself clobbers some register,
+for example to contain the return address.  `call_insn' insns on these
+machines should have a body which is a `parallel' that contains both
+the `call' expression and `clobber' expressions that indicate which
+registers are destroyed.  Similarly, if the call instruction requires
+some register other than the stack pointer that is not explicitly
+mentioned it its RTL, a `use' subexpression should mention that
+register.
+
+   Functions that are called are assumed to modify all registers listed
+in the configuration macro `CALL_USED_REGISTERS' (*note Register
+Basics::.) and, with the exception of `const' functions and library
+calls, to modify all of memory.
+
+   Insns containing just `use' expressions directly precede the
+`call_insn' insn to indicate which registers contain inputs to the
+function.  Similarly, if registers other than those in
+`CALL_USED_REGISTERS' are clobbered by the called function, insns
+containing a single `clobber' follow immediately after the call to
+indicate which registers.
+
+
+File: gcc.info,  Node: Sharing,  Next: Reading RTL,  Prev: Calls,  Up: RTL
+
+Structure Sharing Assumptions
+=============================
+
+   The compiler assumes that certain kinds of RTL expressions are
+unique; there do not exist two distinct objects representing the same
+value.  In other cases, it makes an opposite assumption: that no RTL
+expression object of a certain kind appears in more than one place in
+the containing structure.
+
+   These assumptions refer to a single function; except for the RTL
+objects that describe global variables and external functions, and a
+few standard objects such as small integer constants, no RTL objects
+are common to two functions.
+
+   * Each pseudo-register has only a single `reg' object to represent
+     it, and therefore only a single machine mode.
+
+   * For any symbolic label, there is only one `symbol_ref' object
+     referring to it.
+
+   * There is only one `const_int' expression with value 0, only one
+     with value 1, and only one with value -1.  Some other integer
+     values are also stored uniquely.
+
+   * There is only one `pc' expression.
+
+   * There is only one `cc0' expression.
+
+   * There is only one `const_double' expression with value 0 for each
+     floating point mode.  Likewise for values 1 and 2.
+
+   * No `label_ref' or `scratch' appears in more than one place in the
+     RTL structure; in other words, it is safe to do a tree-walk of all
+     the insns in the function and assume that each time a `label_ref'
+     or `scratch' is seen it is distinct from all others that are seen.
+
+   * Only one `mem' object is normally created for each static variable
+     or stack slot, so these objects are frequently shared in all the
+     places they appear.  However, separate but equal objects for these
+     variables are occasionally made.
+
+   * When a single `asm' statement has multiple output operands, a
+     distinct `asm_operands' expression is made for each output operand.
+     However, these all share the vector which contains the sequence of
+     input operands.  This sharing is used later on to test whether two
+     `asm_operands' expressions come from the same statement, so all
+     optimizations must carefully preserve the sharing if they copy the
+     vector at all.
+
+   * No RTL object appears in more than one place in the RTL structure
+     except as described above.  Many passes of the compiler rely on
+     this by assuming that they can modify RTL objects in place without
+     unwanted side-effects on other insns.
+
+   * During initial RTL generation, shared structure is freely
+     introduced.  After all the RTL for a function has been generated,
+     all shared structure is copied by `unshare_all_rtl' in
+     `emit-rtl.c', after which the above rules are guaranteed to be
+     followed.
+
+   * During the combiner pass, shared structure within an insn can exist
+     temporarily.  However, the shared structure is copied before the
+     combiner is finished with the insn.  This is done by calling
+     `copy_rtx_if_shared', which is a subroutine of `unshare_all_rtl'.
+
+
+File: gcc.info,  Node: Reading RTL,  Prev: Sharing,  Up: RTL
+
+Reading RTL
+===========
+
+   To read an RTL object from a file, call `read_rtx'.  It takes one
+argument, a stdio stream, and returns a single RTL object.
+
+   Reading RTL from a file is very slow.  This is not currently a
+problem since reading RTL occurs only as part of building the compiler.
+
+   People frequently have the idea of using RTL stored as text in a
+file as an interface between a language front end and the bulk of GNU
+CC.  This idea is not feasible.
+
+   GNU CC was designed to use RTL internally only.  Correct RTL for a
+given program is very dependent on the particular target machine.  And
+the RTL does not contain all the information about the program.
+
+   The proper way to interface GNU CC to a new language front end is
+with the "tree" data structure.  There is no manual for this data
+structure, but it is described in the files `tree.h' and `tree.def'.
+
+
+File: gcc.info,  Node: Machine Desc,  Next: Target Macros,  Prev: RTL,  Up: Top
+
+Machine Descriptions
+********************
+
+   A machine description has two parts: a file of instruction patterns
+(`.md' file) and a C header file of macro definitions.
+
+   The `.md' file for a target machine contains a pattern for each
+instruction that the target machine supports (or at least each
+instruction that is worth telling the compiler about).  It may also
+contain comments.  A semicolon causes the rest of the line to be a
+comment, unless the semicolon is inside a quoted string.
+
+   See the next chapter for information on the C header file.
+
+* Menu:
+
+* Patterns::            How to write instruction patterns.
+* Example::             An explained example of a `define_insn' pattern.
+* RTL Template::        The RTL template defines what insns match a pattern.
+* Output Template::     The output template says how to make assembler code
+                          from such an insn.
+* Output Statement::    For more generality, write C code to output
+                          the assembler code.
+* Constraints::         When not all operands are general operands.
+* Standard Names::      Names mark patterns to use for code generation.
+* Pattern Ordering::    When the order of patterns makes a difference.
+* Dependent Patterns::  Having one pattern may make you need another.
+* Jump Patterns::       Special considerations for patterns for jump insns.
+* Insn Canonicalizations::Canonicalization of Instructions
+* Peephole Definitions::Defining machine-specific peephole optimizations.
+* Expander Definitions::Generating a sequence of several RTL insns
+                         for a standard operation.
+* Insn Splitting::    Splitting Instructions into Multiple Instructions
+* Insn Attributes::     Specifying the value of attributes for generated insns.
+
+
+File: gcc.info,  Node: Patterns,  Next: Example,  Up: Machine Desc
+
+Everything about Instruction Patterns
+=====================================
+
+   Each instruction pattern contains an incomplete RTL expression, with
+pieces to be filled in later, operand constraints that restrict how the
+pieces can be filled in, and an output pattern or C code to generate
+the assembler output, all wrapped up in a `define_insn' expression.
+
+   A `define_insn' is an RTL expression containing four or five
+operands:
+
+  1. An optional name.  The presence of a name indicate that this
+     instruction pattern can perform a certain standard job for the
+     RTL-generation pass of the compiler.  This pass knows certain
+     names and will use the instruction patterns with those names, if
+     the names are defined in the machine description.
+
+     The absence of a name is indicated by writing an empty string
+     where the name should go.  Nameless instruction patterns are never
+     used for generating RTL code, but they may permit several simpler
+     insns to be combined later on.
+
+     Names that are not thus known and used in RTL-generation have no
+     effect; they are equivalent to no name at all.
+
+  2. The "RTL template" (*note RTL Template::.) is a vector of
+     incomplete RTL expressions which show what the instruction should
+     look like.  It is incomplete because it may contain
+     `match_operand', `match_operator', and `match_dup' expressions
+     that stand for operands of the instruction.
+
+     If the vector has only one element, that element is the template
+     for the instruction pattern.  If the vector has multiple elements,
+     then the instruction pattern is a `parallel' expression containing
+     the elements described.
+
+  3. A condition.  This is a string which contains a C expression that
+     is the final test to decide whether an insn body matches this
+     pattern.
+
+     For a named pattern, the condition (if present) may not depend on
+     the data in the insn being matched, but only the
+     target-machine-type flags.  The compiler needs to test these
+     conditions during initialization in order to learn exactly which
+     named instructions are available in a particular run.
+
+     For nameless patterns, the condition is applied only when matching
+     an individual insn, and only after the insn has matched the
+     pattern's recognition template.  The insn's operands may be found
+     in the vector `operands'.
+
+  4. The "output template": a string that says how to output matching
+     insns as assembler code.  `%' in this string specifies where to
+     substitute the value of an operand.  *Note Output Template::.
+
+     When simple substitution isn't general enough, you can specify a
+     piece of C code to compute the output.  *Note Output Statement::.
+
+  5. Optionally, a vector containing the values of attributes for insns
+     matching this pattern.  *Note Insn Attributes::.
+
+
+File: gcc.info,  Node: Example,  Next: RTL Template,  Prev: Patterns,  Up: Machine Desc
+
+Example of `define_insn'
+========================
+
+   Here is an actual example of an instruction pattern, for the
+68000/68020.
+
+     (define_insn "tstsi"
+       [(set (cc0)
+             (match_operand:SI 0 "general_operand" "rm"))]
+       ""
+       "*
+     { if (TARGET_68020 || ! ADDRESS_REG_P (operands[0]))
+         return \"tstl %0\";
+       return \"cmpl #0,%0\"; }")
+
+   This is an instruction that sets the condition codes based on the
+value of a general operand.  It has no condition, so any insn whose RTL
+description has the form shown may be handled according to this
+pattern.  The name `tstsi' means "test a `SImode' value" and tells the
+RTL generation pass that, when it is necessary to test such a value, an
+insn to do so can be constructed using this pattern.
+
+   The output control string is a piece of C code which chooses which
+output template to return based on the kind of operand and the specific
+type of CPU for which code is being generated.
+
+   `"rm"' is an operand constraint.  Its meaning is explained below.
 
 
 File: gcc.info,  Node: RTL Template,  Next: Output Template,  Prev: Example,  Up: Machine Desc
@@ -57,7 +821,9 @@ substitution of the operands.
      each instruction pattern.  There may be only one `match_operand'
      expression in the pattern for each operand number.  Usually
      operands are numbered in the order of appearance in `match_operand'
-     expressions.
+     expressions.  In the case of a `define_expand', any operand numbers
+     used only in `match_dup' expressions have higher values than all
+     other operand numbers.
 
      PREDICATE is a string that is the name of a C function that
      accepts two arguments, an expression and a machine mode.  During
@@ -284,1044 +1050,4 @@ substitution of the operands.
      as the PDP-10), different formats would perhaps need different
      machine modes and these modes might be written in the `address'
      expression.
-
-
-File: gcc.info,  Node: Output Template,  Next: Output Statement,  Prev: RTL Template,  Up: Machine Desc
-
-Output Templates and Operand Substitution
-=========================================
-
-   The "output template" is a string which specifies how to output the
-assembler code for an instruction pattern.  Most of the template is a
-fixed string which is output literally.  The character `%' is used to
-specify where to substitute an operand; it can also be used to identify
-places where different variants of the assembler require different
-syntax.
-
-   In the simplest case, a `%' followed by a digit N says to output
-operand N at that point in the string.
-
-   `%' followed by a letter and a digit says to output an operand in an
-alternate fashion.  Four letters have standard, built-in meanings
-described below.  The machine description macro `PRINT_OPERAND' can
-define additional letters with nonstandard meanings.
-
-   `%cDIGIT' can be used to substitute an operand that is a constant
-value without the syntax that normally indicates an immediate operand.
-
-   `%nDIGIT' is like `%cDIGIT' except that the value of the constant is
-negated before printing.
-
-   `%aDIGIT' can be used to substitute an operand as if it were a
-memory reference, with the actual operand treated as the address.  This
-may be useful when outputting a "load address" instruction, because
-often the assembler syntax for such an instruction requires you to
-write the operand as if it were a memory reference.
-
-   `%lDIGIT' is used to substitute a `label_ref' into a jump
-instruction.
-
-   `%=' outputs a number which is unique to each instruction in the
-entire compilation.  This is useful for making local labels to be
-referred to more than once in a single template that generates multiple
-assembler instructions.
-
-   `%' followed by a punctuation character specifies a substitution that
-does not use an operand.  Only one case is standard: `%%' outputs a `%'
-into the assembler code.  Other nonstandard cases can be defined in the
-`PRINT_OPERAND' macro.  You must also define which punctuation
-characters are valid with the `PRINT_OPERAND_PUNCT_VALID_P' macro.
-
-   The template may generate multiple assembler instructions.  Write
-the text for the instructions, with `\;' between them.
-
-   When the RTL contains two operands which are required by constraint
-to match each other, the output template must refer only to the
-lower-numbered operand.  Matching operands are not always identical,
-and the rest of the compiler arranges to put the proper RTL expression
-for printing into the lower-numbered operand.
-
-   One use of nonstandard letters or punctuation following `%' is to
-distinguish between different assembler languages for the same machine;
-for example, Motorola syntax versus MIT syntax for the 68000.  Motorola
-syntax requires periods in most opcode names, while MIT syntax does
-not.  For example, the opcode `movel' in MIT syntax is `move.l' in
-Motorola syntax.  The same file of patterns is used for both kinds of
-output syntax, but the character sequence `%.' is used in each place
-where Motorola syntax wants a period.  The `PRINT_OPERAND' macro for
-Motorola syntax defines the sequence to output a period; the macro for
-MIT syntax defines it to do nothing.
-
-   As a special case, a template consisting of the single character `#'
-instructs the compiler to first split the insn, and then output the
-resulting instructions separately.  This helps eliminate redundancy in
-the output templates.   If you have a `define_insn' that needs to emit
-multiple assembler instructions, and there is an matching `define_split'
-already defined, then you can simply use `#' as the output template
-instead of writing an output template that emits the multiple assembler
-instructions.
-
-   If `ASSEMBLER_DIALECT' is defined, you can use
-`{option0|option1|option2}' constructs in the templates.  These
-describe multiple variants of assembler language syntax.  *Note
-Instruction Output::.
-
-
-File: gcc.info,  Node: Output Statement,  Next: Constraints,  Prev: Output Template,  Up: Machine Desc
-
-C Statements for Assembler Output
-=================================
-
-   Often a single fixed template string cannot produce correct and
-efficient assembler code for all the cases that are recognized by a
-single instruction pattern.  For example, the opcodes may depend on the
-kinds of operands; or some unfortunate combinations of operands may
-require extra machine instructions.
-
-   If the output control string starts with a `@', then it is actually
-a series of templates, each on a separate line.  (Blank lines and
-leading spaces and tabs are ignored.)  The templates correspond to the
-pattern's constraint alternatives (*note Multi-Alternative::.).  For
-example, if a target machine has a two-address add instruction `addr'
-to add into a register and another `addm' to add a register to memory,
-you might write this pattern:
-
-     (define_insn "addsi3"
-       [(set (match_operand:SI 0 "general_operand" "=r,m")
-             (plus:SI (match_operand:SI 1 "general_operand" "0,0")
-                      (match_operand:SI 2 "general_operand" "g,r")))]
-       ""
-       "@
-        addr %2,%0
-        addm %2,%0")
-
-   If the output control string starts with a `*', then it is not an
-output template but rather a piece of C program that should compute a
-template.  It should execute a `return' statement to return the
-template-string you want.  Most such templates use C string literals,
-which require doublequote characters to delimit them.  To include these
-doublequote characters in the string, prefix each one with `\'.
-
-   The operands may be found in the array `operands', whose C data type
-is `rtx []'.
-
-   It is very common to select different ways of generating assembler
-code based on whether an immediate operand is within a certain range.
-Be careful when doing this, because the result of `INTVAL' is an
-integer on the host machine.  If the host machine has more bits in an
-`int' than the target machine has in the mode in which the constant
-will be used, then some of the bits you get from `INTVAL' will be
-superfluous.  For proper results, you must carefully disregard the
-values of those bits.
-
-   It is possible to output an assembler instruction and then go on to
-output or compute more of them, using the subroutine `output_asm_insn'.
-This receives two arguments: a template-string and a vector of
-operands.  The vector may be `operands', or it may be another array of
-`rtx' that you declare locally and initialize yourself.
-
-   When an insn pattern has multiple alternatives in its constraints,
-often the appearance of the assembler code is determined mostly by
-which alternative was matched.  When this is so, the C code can test
-the variable `which_alternative', which is the ordinal number of the
-alternative that was actually satisfied (0 for the first, 1 for the
-second alternative, etc.).
-
-   For example, suppose there are two opcodes for storing zero, `clrreg'
-for registers and `clrmem' for memory locations.  Here is how a pattern
-could use `which_alternative' to choose between them:
-
-     (define_insn ""
-       [(set (match_operand:SI 0 "general_operand" "=r,m")
-             (const_int 0))]
-       ""
-       "*
-       return (which_alternative == 0
-               ? \"clrreg %0\" : \"clrmem %0\");
-       ")
-
-   The example above, where the assembler code to generate was *solely*
-determined by the alternative, could also have been specified as
-follows, having the output control string start with a `@':
-
-     (define_insn ""
-       [(set (match_operand:SI 0 "general_operand" "=r,m")
-             (const_int 0))]
-       ""
-       "@
-        clrreg %0
-        clrmem %0")
-
-
-File: gcc.info,  Node: Constraints,  Next: Standard Names,  Prev: Output Statement,  Up: Machine Desc
-
-Operand Constraints
-===================
-
-   Each `match_operand' in an instruction pattern can specify a
-constraint for the type of operands allowed.  Constraints can say
-whether an operand may be in a register, and which kinds of register;
-whether the operand can be a memory reference, and which kinds of
-address; whether the operand may be an immediate constant, and which
-possible values it may have.  Constraints can also require two operands
-to match.
-
-* Menu:
-
-* Simple Constraints::  Basic use of constraints.
-* Multi-Alternative::   When an insn has two alternative constraint-patterns.
-* Class Preferences::   Constraints guide which hard register to put things in.
-* Modifiers::           More precise control over effects of constraints.
-* Machine Constraints:: Existing constraints for some particular machines.
-* No Constraints::      Describing a clean machine without constraints.
-
-
-File: gcc.info,  Node: Simple Constraints,  Next: Multi-Alternative,  Up: Constraints
-
-Simple Constraints
-------------------
-
-   The simplest kind of constraint is a string full of letters, each of
-which describes one kind of operand that is permitted.  Here are the
-letters that are allowed:
-
-`m'
-     A memory operand is allowed, with any kind of address that the
-     machine supports in general.
-
-`o'
-     A memory operand is allowed, but only if the address is
-     "offsettable".  This means that adding a small integer (actually,
-     the width in bytes of the operand, as determined by its machine
-     mode) may be added to the address and the result is also a valid
-     memory address.
-
-     For example, an address which is constant is offsettable; so is an
-     address that is the sum of a register and a constant (as long as a
-     slightly larger constant is also within the range of
-     address-offsets supported by the machine); but an autoincrement or
-     autodecrement address is not offsettable.  More complicated
-     indirect/indexed addresses may or may not be offsettable depending
-     on the other addressing modes that the machine supports.
-
-     Note that in an output operand which can be matched by another
-     operand, the constraint letter `o' is valid only when accompanied
-     by both `<' (if the target machine has predecrement addressing)
-     and `>' (if the target machine has preincrement addressing).
-
-`V'
-     A memory operand that is not offsettable.  In other words,
-     anything that would fit the `m' constraint but not the `o'
-     constraint.
-
-`<'
-     A memory operand with autodecrement addressing (either
-     predecrement or postdecrement) is allowed.
-
-`>'
-     A memory operand with autoincrement addressing (either
-     preincrement or postincrement) is allowed.
-
-`r'
-     A register operand is allowed provided that it is in a general
-     register.
-
-`d', `a', `f', ...
-     Other letters can be defined in machine-dependent fashion to stand
-     for particular classes of registers.  `d', `a' and `f' are defined
-     on the 68000/68020 to stand for data, address and floating point
-     registers.
-
-`i'
-     An immediate integer operand (one with constant value) is allowed.
-     This includes symbolic constants whose values will be known only at
-     assembly time.
-
-`n'
-     An immediate integer operand with a known numeric value is allowed.
-     Many systems cannot support assembly-time constants for operands
-     less than a word wide.  Constraints for these operands should use
-     `n' rather than `i'.
-
-`I', `J', `K', ... `P'
-     Other letters in the range `I' through `P' may be defined in a
-     machine-dependent fashion to permit immediate integer operands with
-     explicit integer values in specified ranges.  For example, on the
-     68000, `I' is defined to stand for the range of values 1 to 8.
-     This is the range permitted as a shift count in the shift
-     instructions.
-
-`E'
-     An immediate floating operand (expression code `const_double') is
-     allowed, but only if the target floating point format is the same
-     as that of the host machine (on which the compiler is running).
-
-`F'
-     An immediate floating operand (expression code `const_double') is
-     allowed.
-
-`G', `H'
-     `G' and `H' may be defined in a machine-dependent fashion to
-     permit immediate floating operands in particular ranges of values.
-
-`s'
-     An immediate integer operand whose value is not an explicit
-     integer is allowed.
-
-     This might appear strange; if an insn allows a constant operand
-     with a value not known at compile time, it certainly must allow
-     any known value.  So why use `s' instead of `i'?  Sometimes it
-     allows better code to be generated.
-
-     For example, on the 68000 in a fullword instruction it is possible
-     to use an immediate operand; but if the immediate value is between
-     -128 and 127, better code results from loading the value into a
-     register and using the register.  This is because the load into
-     the register can be done with a `moveq' instruction.  We arrange
-     for this to happen by defining the letter `K' to mean "any integer
-     outside the range -128 to 127", and then specifying `Ks' in the
-     operand constraints.
-
-`g'
-     Any register, memory or immediate integer operand is allowed,
-     except for registers that are not general registers.
-
-`X'
-     Any operand whatsoever is allowed, even if it does not satisfy
-     `general_operand'.  This is normally used in the constraint of a
-     `match_scratch' when certain alternatives will not actually
-     require a scratch register.
-
-`0', `1', `2', ... `9'
-     An operand that matches the specified operand number is allowed.
-     If a digit is used together with letters within the same
-     alternative, the digit should come last.
-
-     This is called a "matching constraint" and what it really means is
-     that the assembler has only a single operand that fills two roles
-     considered separate in the RTL insn.  For example, an add insn has
-     two input operands and one output operand in the RTL, but on most
-     CISC machines an add instruction really has only two operands, one
-     of them an input-output operand:
-
-          addl #35,r12
-
-     Matching constraints are used in these circumstances.  More
-     precisely, the two operands that match must include one input-only
-     operand and one output-only operand.  Moreover, the digit must be a
-     smaller number than the number of the operand that uses it in the
-     constraint.
-
-     For operands to match in a particular case usually means that they
-     are identical-looking RTL expressions.  But in a few special cases
-     specific kinds of dissimilarity are allowed.  For example, `*x' as
-     an input operand will match `*x++' as an output operand.  For
-     proper results in such cases, the output template should always
-     use the output-operand's number when printing the operand.
-
-`p'
-     An operand that is a valid memory address is allowed.  This is for
-     "load address" and "push address" instructions.
-
-     `p' in the constraint must be accompanied by `address_operand' as
-     the predicate in the `match_operand'.  This predicate interprets
-     the mode specified in the `match_operand' as the mode of the memory
-     reference for which the address would be valid.
-
-`Q', `R', `S', ... `U'
-     Letters in the range `Q' through `U' may be defined in a
-     machine-dependent fashion to stand for arbitrary operand types.
-     The machine description macro `EXTRA_CONSTRAINT' is passed the
-     operand as its first argument and the constraint letter as its
-     second operand.
-
-     A typical use for this would be to distinguish certain types of
-     memory references that affect other insn operands.
-
-     Do not define these constraint letters to accept register
-     references (`reg'); the reload pass does not expect this and would
-     not handle it properly.
-
-   In order to have valid assembler code, each operand must satisfy its
-constraint.  But a failure to do so does not prevent the pattern from
-applying to an insn.  Instead, it directs the compiler to modify the
-code so that the constraint will be satisfied.  Usually this is done by
-copying an operand into a register.
-
-   Contrast, therefore, the two instruction patterns that follow:
-
-     (define_insn ""
-       [(set (match_operand:SI 0 "general_operand" "=r")
-             (plus:SI (match_dup 0)
-                      (match_operand:SI 1 "general_operand" "r")))]
-       ""
-       "...")
-
-which has two operands, one of which must appear in two places, and
-
-     (define_insn ""
-       [(set (match_operand:SI 0 "general_operand" "=r")
-             (plus:SI (match_operand:SI 1 "general_operand" "0")
-                      (match_operand:SI 2 "general_operand" "r")))]
-       ""
-       "...")
-
-which has three operands, two of which are required by a constraint to
-be identical.  If we are considering an insn of the form
-
-     (insn N PREV NEXT
-       (set (reg:SI 3)
-            (plus:SI (reg:SI 6) (reg:SI 109)))
-       ...)
-
-the first pattern would not apply at all, because this insn does not
-contain two identical subexpressions in the right place.  The pattern
-would say, "That does not look like an add instruction; try other
-patterns." The second pattern would say, "Yes, that's an add
-instruction, but there is something wrong with it."  It would direct
-the reload pass of the compiler to generate additional insns to make
-the constraint true.  The results might look like this:
-
-     (insn N2 PREV N
-       (set (reg:SI 3) (reg:SI 6))
-       ...)
-     
-     (insn N N2 NEXT
-       (set (reg:SI 3)
-            (plus:SI (reg:SI 3) (reg:SI 109)))
-       ...)
-
-   It is up to you to make sure that each operand, in each pattern, has
-constraints that can handle any RTL expression that could be present for
-that operand.  (When multiple alternatives are in use, each pattern
-must, for each possible combination of operand expressions, have at
-least one alternative which can handle that combination of operands.)
-The constraints don't need to *allow* any possible operand--when this is
-the case, they do not constrain--but they must at least point the way to
-reloading any possible operand so that it will fit.
-
-   * If the constraint accepts whatever operands the predicate permits,
-     there is no problem: reloading is never necessary for this operand.
-
-     For example, an operand whose constraints permit everything except
-     registers is safe provided its predicate rejects registers.
-
-     An operand whose predicate accepts only constant values is safe
-     provided its constraints include the letter `i'.  If any possible
-     constant value is accepted, then nothing less than `i' will do; if
-     the predicate is more selective, then the constraints may also be
-     more selective.
-
-   * Any operand expression can be reloaded by copying it into a
-     register.  So if an operand's constraints allow some kind of
-     register, it is certain to be safe.  It need not permit all
-     classes of registers; the compiler knows how to copy a register
-     into another register of the proper class in order to make an
-     instruction valid.
-
-   * A nonoffsettable memory reference can be reloaded by copying the
-     address into a register.  So if the constraint uses the letter
-     `o', all memory references are taken care of.
-
-   * A constant operand can be reloaded by allocating space in memory to
-     hold it as preinitialized data.  Then the memory reference can be
-     used in place of the constant.  So if the constraint uses the
-     letters `o' or `m', constant operands are not a problem.
-
-   * If the constraint permits a constant and a pseudo register used in
-     an insn was not allocated to a hard register and is equivalent to
-     a constant, the register will be replaced with the constant.  If
-     the predicate does not permit a constant and the insn is
-     re-recognized for some reason, the compiler will crash.  Thus the
-     predicate must always recognize any objects allowed by the
-     constraint.
-
-   If the operand's predicate can recognize registers, but the
-constraint does not permit them, it can make the compiler crash.  When
-this operand happens to be a register, the reload pass will be stymied,
-because it does not know how to copy a register temporarily into memory.
-
-
-File: gcc.info,  Node: Multi-Alternative,  Next: Class Preferences,  Prev: Simple Constraints,  Up: Constraints
-
-Multiple Alternative Constraints
---------------------------------
-
-   Sometimes a single instruction has multiple alternative sets of
-possible operands.  For example, on the 68000, a logical-or instruction
-can combine register or an immediate value into memory, or it can
-combine any kind of operand into a register; but it cannot combine one
-memory location into another.
-
-   These constraints are represented as multiple alternatives.  An
-alternative can be described by a series of letters for each operand.
-The overall constraint for an operand is made from the letters for this
-operand from the first alternative, a comma, the letters for this
-operand from the second alternative, a comma, and so on until the last
-alternative.  Here is how it is done for fullword logical-or on the
-68000:
-
-     (define_insn "iorsi3"
-       [(set (match_operand:SI 0 "general_operand" "=m,d")
-             (ior:SI (match_operand:SI 1 "general_operand" "%0,0")
-                     (match_operand:SI 2 "general_operand" "dKs,dmKs")))]
-       ...)
-
-   The first alternative has `m' (memory) for operand 0, `0' for
-operand 1 (meaning it must match operand 0), and `dKs' for operand 2.
-The second alternative has `d' (data register) for operand 0, `0' for
-operand 1, and `dmKs' for operand 2.  The `=' and `%' in the
-constraints apply to all the alternatives; their meaning is explained
-in the next section (*note Class Preferences::.).
-
-   If all the operands fit any one alternative, the instruction is
-valid.  Otherwise, for each alternative, the compiler counts how many
-instructions must be added to copy the operands so that that
-alternative applies.  The alternative requiring the least copying is
-chosen.  If two alternatives need the same amount of copying, the one
-that comes first is chosen.  These choices can be altered with the `?'
-and `!' characters:
-
-`?'
-     Disparage slightly the alternative that the `?' appears in, as a
-     choice when no alternative applies exactly.  The compiler regards
-     this alternative as one unit more costly for each `?' that appears
-     in it.
-
-`!'
-     Disparage severely the alternative that the `!' appears in.  This
-     alternative can still be used if it fits without reloading, but if
-     reloading is needed, some other alternative will be used.
-
-   When an insn pattern has multiple alternatives in its constraints,
-often the appearance of the assembler code is determined mostly by which
-alternative was matched.  When this is so, the C code for writing the
-assembler code can use the variable `which_alternative', which is the
-ordinal number of the alternative that was actually satisfied (0 for
-the first, 1 for the second alternative, etc.).  *Note Output
-Statement::.
-
-
-File: gcc.info,  Node: Class Preferences,  Next: Modifiers,  Prev: Multi-Alternative,  Up: Constraints
-
-Register Class Preferences
---------------------------
-
-   The operand constraints have another function: they enable the
-compiler to decide which kind of hardware register a pseudo register is
-best allocated to.  The compiler examines the constraints that apply to
-the insns that use the pseudo register, looking for the
-machine-dependent letters such as `d' and `a' that specify classes of
-registers.  The pseudo register is put in whichever class gets the most
-"votes".  The constraint letters `g' and `r' also vote: they vote in
-favor of a general register.  The machine description says which
-registers are considered general.
-
-   Of course, on some machines all registers are equivalent, and no
-register classes are defined.  Then none of this complexity is relevant.
-
-
-File: gcc.info,  Node: Modifiers,  Next: Machine Constraints,  Prev: Class Preferences,  Up: Constraints
-
-Constraint Modifier Characters
-------------------------------
-
-   Here are constraint modifier characters.
-
-`='
-     Means that this operand is write-only for this instruction: the
-     previous value is discarded and replaced by output data.
-
-`+'
-     Means that this operand is both read and written by the
-     instruction.
-
-     When the compiler fixes up the operands to satisfy the constraints,
-     it needs to know which operands are inputs to the instruction and
-     which are outputs from it.  `=' identifies an output; `+'
-     identifies an operand that is both input and output; all other
-     operands are assumed to be input only.
-
-`&'
-     Means (in a particular alternative) that this operand is written
-     before the instruction is finished using the input operands.
-     Therefore, this operand may not lie in a register that is used as
-     an input operand or as part of any memory address.
-
-     `&' applies only to the alternative in which it is written.  In
-     constraints with multiple alternatives, sometimes one alternative
-     requires `&' while others do not.  See, for example, the `movdf'
-     insn of the 68000.
-
-     `&' does not obviate the need to write `='.
-
-`%'
-     Declares the instruction to be commutative for this operand and the
-     following operand.  This means that the compiler may interchange
-     the two operands if that is the cheapest way to make all operands
-     fit the constraints.  This is often used in patterns for addition
-     instructions that really have only two operands: the result must
-     go in one of the arguments.  Here for example, is how the 68000
-     halfword-add instruction is defined:
-
-          (define_insn "addhi3"
-            [(set (match_operand:HI 0 "general_operand" "=m,r")
-               (plus:HI (match_operand:HI 1 "general_operand" "%0,0")
-                        (match_operand:HI 2 "general_operand" "di,g")))]
-            ...)
-
-`#'
-     Says that all following characters, up to the next comma, are to be
-     ignored as a constraint.  They are significant only for choosing
-     register preferences.
-
-`*'
-     Says that the following character should be ignored when choosing
-     register preferences.  `*' has no effect on the meaning of the
-     constraint as a constraint, and no effect on reloading.
-
-     Here is an example: the 68000 has an instruction to sign-extend a
-     halfword in a data register, and can also sign-extend a value by
-     copying it into an address register.  While either kind of
-     register is acceptable, the constraints on an address-register
-     destination are less strict, so it is best if register allocation
-     makes an address register its goal.  Therefore, `*' is used so
-     that the `d' constraint letter (for data register) is ignored when
-     computing register preferences.
-
-          (define_insn "extendhisi2"
-            [(set (match_operand:SI 0 "general_operand" "=*d,a")
-                  (sign_extend:SI
-                   (match_operand:HI 1 "general_operand" "0,g")))]
-            ...)
-
-
-File: gcc.info,  Node: Machine Constraints,  Next: No Constraints,  Prev: Modifiers,  Up: Constraints
-
-Constraints for Particular Machines
------------------------------------
-
-   Whenever possible, you should use the general-purpose constraint
-letters in `asm' arguments, since they will convey meaning more readily
-to people reading your code.  Failing that, use the constraint letters
-that usually have very similar meanings across architectures.  The most
-commonly used constraints are `m' and `r' (for memory and
-general-purpose registers respectively; *note Simple Constraints::.),
-and `I', usually the letter indicating the most common
-immediate-constant format.
-
-   For each machine architecture, the `config/MACHINE.h' file defines
-additional constraints.  These constraints are used by the compiler
-itself for instruction generation, as well as for `asm' statements;
-therefore, some of the constraints are not particularly interesting for
-`asm'.  The constraints are defined through these macros:
-
-`REG_CLASS_FROM_LETTER'
-     Register class constraints (usually lower case).
-
-`CONST_OK_FOR_LETTER_P'
-     Immediate constant constraints, for non-floating point constants of
-     word size or smaller precision (usually upper case).
-
-`CONST_DOUBLE_OK_FOR_LETTER_P'
-     Immediate constant constraints, for all floating point constants
-     and for constants of greater than word size precision (usually
-     upper case).
-
-`EXTRA_CONSTRAINT'
-     Special cases of registers or memory.  This macro is not required,
-     and is only defined for some machines.
-
-   Inspecting these macro definitions in the compiler source for your
-machine is the best way to be certain you have the right constraints.
-However, here is a summary of the machine-dependent constraints
-available on some particular machines.
-
-*ARM family--`arm.h'*
-    `f'
-          Floating-point register
-
-    `F'
-          One of the floating-point constants 0.0, 0.5, 1.0, 2.0, 3.0,
-          4.0, 5.0 or 10.0
-
-    `G'
-          Floating-point constant that would satisfy the constraint `F'
-          if it were negated
-
-    `I'
-          Integer that is valid as an immediate operand in a data
-          processing instruction.  That is, an integer in the range 0
-          to 255 rotated by a multiple of 2
-
-    `J'
-          Integer in the range -4095 to 4095
-
-    `K'
-          Integer that satisfies constraint `I' when inverted (ones
-          complement)
-
-    `L'
-          Integer that satisfies constraint `I' when negated (twos
-          complement)
-
-    `M'
-          Integer in the range 0 to 32
-
-    `Q'
-          A memory reference where the exact address is in a single
-          register (``m'' is preferable for `asm' statements)
-
-    `R'
-          An item in the constant pool
-
-    `S'
-          A symbol in the text segment of the current file
-
-*AMD 29000 family--`a29k.h'*
-    `l'
-          Local register 0
-
-    `b'
-          Byte Pointer (`BP') register
-
-    `q'
-          `Q' register
-
-    `h'
-          Special purpose register
-
-    `A'
-          First accumulator register
-
-    `a'
-          Other accumulator register
-
-    `f'
-          Floating point register
-
-    `I'
-          Constant greater than 0, less than 0x100
-
-    `J'
-          Constant greater than 0, less than 0x10000
-
-    `K'
-          Constant whose high 24 bits are on (1)
-
-    `L'
-          16 bit constant whose high 8 bits are on (1)
-
-    `M'
-          32 bit constant whose high 16 bits are on (1)
-
-    `N'
-          32 bit negative constant that fits in 8 bits
-
-    `O'
-          The constant 0x80000000 or, on the 29050, any 32 bit constant
-          whose low 16 bits are 0.
-
-    `P'
-          16 bit negative constant that fits in 8 bits
-
-    `G'
-    `H'
-          A floating point constant (in `asm' statements, use the
-          machine independent `E' or `F' instead)
-
-*IBM RS6000--`rs6000.h'*
-    `b'
-          Address base register
-
-    `f'
-          Floating point register
-
-    `h'
-          `MQ', `CTR', or `LINK' register
-
-    `q'
-          `MQ' register
-
-    `c'
-          `CTR' register
-
-    `l'
-          `LINK' register
-
-    `x'
-          `CR' register (condition register) number 0
-
-    `y'
-          `CR' register (condition register)
-
-    `I'
-          Signed 16 bit constant
-
-    `J'
-          Constant whose low 16 bits are 0
-
-    `K'
-          Constant whose high 16 bits are 0
-
-    `L'
-          Constant suitable as a mask operand
-
-    `M'
-          Constant larger than 31
-
-    `N'
-          Exact power of 2
-
-    `O'
-          Zero
-
-    `P'
-          Constant whose negation is a signed 16 bit constant
-
-    `G'
-          Floating point constant that can be loaded into a register
-          with one instruction per word
-
-    `Q'
-          Memory operand that is an offset from a register (`m' is
-          preferable for `asm' statements)
-
-*Intel 386--`i386.h'*
-    `q'
-          `a', `b', `c', or `d' register
-
-    `A'
-          `a', or `d' register (for 64-bit ints)
-
-    `f'
-          Floating point register
-
-    `t'
-          First (top of stack) floating point register
-
-    `u'
-          Second floating point register
-
-    `a'
-          `a' register
-
-    `b'
-          `b' register
-
-    `c'
-          `c' register
-
-    `d'
-          `d' register
-
-    `D'
-          `di' register
-
-    `S'
-          `si' register
-
-    `I'
-          Constant in range 0 to 31 (for 32 bit shifts)
-
-    `J'
-          Constant in range 0 to 63 (for 64 bit shifts)
-
-    `K'
-          `0xff'
-
-    `L'
-          `0xffff'
-
-    `M'
-          0, 1, 2, or 3 (shifts for `lea' instruction)
-
-    `N'
-          Constant in range 0 to 255 (for `out' instruction)
-
-    `G'
-          Standard 80387 floating point constant
-
-*Intel 960--`i960.h'*
-    `f'
-          Floating point register (`fp0' to `fp3')
-
-    `l'
-          Local register (`r0' to `r15')
-
-    `b'
-          Global register (`g0' to `g15')
-
-    `d'
-          Any local or global register
-
-    `I'
-          Integers from 0 to 31
-
-    `J'
-          0
-
-    `K'
-          Integers from -31 to 0
-
-    `G'
-          Floating point 0
-
-    `H'
-          Floating point 1
-
-*MIPS--`mips.h'*
-    `d'
-          General-purpose integer register
-
-    `f'
-          Floating-point register (if available)
-
-    `h'
-          `Hi' register
-
-    `l'
-          `Lo' register
-
-    `x'
-          `Hi' or `Lo' register
-
-    `y'
-          General-purpose integer register
-
-    `z'
-          Floating-point status register
-
-    `I'
-          Signed 16 bit constant (for arithmetic instructions)
-
-    `J'
-          Zero
-
-    `K'
-          Zero-extended 16-bit constant (for logic instructions)
-
-    `L'
-          Constant with low 16 bits zero (can be loaded with `lui')
-
-    `M'
-          32 bit constant which requires two instructions to load (a
-          constant which is not `I', `K', or `L')
-
-    `N'
-          Negative 16 bit constant
-
-    `O'
-          Exact power of two
-
-    `P'
-          Positive 16 bit constant
-
-    `G'
-          Floating point zero
-
-    `Q'
-          Memory reference that can be loaded with more than one
-          instruction (`m' is preferable for `asm' statements)
-
-    `R'
-          Memory reference that can be loaded with one instruction (`m'
-          is preferable for `asm' statements)
-
-    `S'
-          Memory reference in external OSF/rose PIC format (`m' is
-          preferable for `asm' statements)
-
-*Motorola 680x0--`m68k.h'*
-    `a'
-          Address register
-
-    `d'
-          Data register
-
-    `f'
-          68881 floating-point register, if available
-
-    `x'
-          Sun FPA (floating-point) register, if available
-
-    `y'
-          First 16 Sun FPA registers, if available
-
-    `I'
-          Integer in the range 1 to 8
-
-    `J'
-          16 bit signed number
-
-    `K'
-          Signed number whose magnitude is greater than 0x80
-
-    `L'
-          Integer in the range -8 to -1
-
-    `G'
-          Floating point constant that is not a 68881 constant
-
-    `H'
-          Floating point constant that can be used by Sun FPA
-
-*SPARC--`sparc.h'*
-    `f'
-          Floating-point register
-
-    `I'
-          Signed 13 bit constant
-
-    `J'
-          Zero
-
-    `K'
-          32 bit constant with the low 12 bits clear (a constant that
-          can be loaded with the `sethi' instruction)
-
-    `G'
-          Floating-point zero
-
-    `H'
-          Signed 13 bit constant, sign-extended to 32 or 64 bits
-
-    `Q'
-          Memory reference that can be loaded with one instruction
-          (`m' is more appropriate for `asm' statements)
-
-    `S'
-          Constant, or memory address
-
-    `T'
-          Memory address aligned to an 8-byte boundary
-
-    `U'
-          Even register
-
-
-File: gcc.info,  Node: No Constraints,  Prev: Machine Constraints,  Up: Constraints
-
-Not Using Constraints
----------------------
-
-   Some machines are so clean that operand constraints are not
-required.  For example, on the Vax, an operand valid in one context is
-valid in any other context.  On such a machine, every operand
-constraint would be `g', excepting only operands of "load address"
-instructions which are written as if they referred to a memory
-location's contents but actual refer to its address.  They would have
-constraint `p'.
-
-   For such machines, instead of writing `g' and `p' for all the
-constraints, you can choose to write a description with empty
-constraints.  Then you write `""' for the constraint in every
-`match_operand'.  Address operands are identified by writing an
-`address' expression around the `match_operand', not by their
-constraints.
-
-   When the machine description has just empty constraints, certain
-parts of compilation are skipped, making the compiler faster.  However,
-few machines actually do not need constraints; all machine descriptions
-now in existence use constraints.
 

@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,6 +28,145 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: gcc.info,  Node: Cross Runtime,  Next: Build Cross,  Prev: Cross Headers,  Up: Cross-Compiler
+
+`libgcc.a' and Cross-Compilers
+------------------------------
+
+   Code compiled by GNU CC uses certain runtime support functions
+implicitly.  Some of these functions can be compiled successfully with
+GNU CC itself, but a few cannot be.  These problem functions are in the
+source file `libgcc1.c'; the library made from them is called
+`libgcc1.a'.
+
+   When you build a native compiler, these functions are compiled with
+some other compiler-the one that you use for bootstrapping GNU CC.
+Presumably it knows how to open code these operations, or else knows how
+to call the run-time emulation facilities that the machine comes with.
+But this approach doesn't work for building a cross-compiler.  The
+compiler that you use for building knows about the host system, not the
+target system.
+
+   So, when you build a cross-compiler you have to supply a suitable
+library `libgcc1.a' that does the job it is expected to do.
+
+   To compile `libgcc1.c' with the cross-compiler itself does not work.
+The functions in this file are supposed to implement arithmetic
+operations that GNU CC does not know how to open code for your target
+machine.  If these functions are compiled with GNU CC itself, they will
+compile into infinite recursion.
+
+   On any given target, most of these functions are not needed.  If GNU
+CC can open code an arithmetic operation, it will not call these
+functions to perform the operation.  It is possible that on your target
+machine, none of these functions is needed.  If so, you can supply an
+empty library as `libgcc1.a'.
+
+   Many targets need library support only for multiplication and
+division.  If you are linking with a library that contains functions for
+multiplication and division, you can tell GNU CC to call them directly
+by defining the macros `MULSI3_LIBCALL', and the like.  These macros
+need to be defined in the target description macro file.  For some
+targets, they are defined already.  This may be sufficient to avoid the
+need for libgcc1.a; if so, you can supply an empty library.
+
+   Some targets do not have floating point instructions; they need other
+functions in `libgcc1.a', which do floating arithmetic.  Recent
+versions of GNU CC have a file which emulates floating point.  With a
+certain amount of work, you should be able to construct a floating
+point emulator that can be used as `libgcc1.a'.  Perhaps future
+versions will contain code to do this automatically and conveniently.
+That depends on whether someone wants to implement it.
+
+   Some embedded targets come with all the necessary `libgcc1.a'
+routines written in C or assembler.  These targets build `libgcc1.a'
+automatically and you do not need to do anything special for them.
+Other embedded targets do not need any `libgcc1.a' routines since all
+the necessary operations are supported by the hardware.
+
+   If your target system has another C compiler, you can configure GNU
+CC as a native compiler on that machine, build just `libgcc1.a' with
+`make libgcc1.a' on that machine, and use the resulting file with the
+cross-compiler.  To do this, execute the following on the target
+machine:
+
+     cd TARGET-BUILD-DIR
+     ./configure --host=sparc --target=sun3
+     make libgcc1.a
+
+And then this on the host machine:
+
+     ftp TARGET-MACHINE
+     binary
+     cd TARGET-BUILD-DIR
+     get libgcc1.a
+     quit
+
+   Another way to provide the functions you need in `libgcc1.a' is to
+define the appropriate `perform_...' macros for those functions.  If
+these definitions do not use the C arithmetic operators that they are
+meant to implement, you should be able to compile them with the
+cross-compiler you are building.  (If these definitions already exist
+for your target file, then you are all set.)
+
+   To build `libgcc1.a' using the perform macros, use
+`LIBGCC1=libgcc1.a OLDCC=./xgcc' when building the compiler.
+Otherwise, you should place your replacement library under the name
+`libgcc1.a' in the directory in which you will build the
+cross-compiler, before you run `make'.
+
+
+File: gcc.info,  Node: Cross Headers,  Next: Cross Runtime,  Prev: Tools and Libraries,  Up: Cross-Compiler
+
+Cross-Compilers and Header Files
+--------------------------------
+
+   If you are cross-compiling a standalone program or a program for an
+embedded system, then you may not need any header files except the few
+that are part of GNU CC (and those of your program).  However, if you
+intend to link your program with a standard C library such as `libc.a',
+then you probably need to compile with the header files that go with
+the library you use.
+
+   The GNU C compiler does not come with these files, because (1) they
+are system-specific, and (2) they belong in a C library, not in a
+compiler.
+
+   If the GNU C library supports your target machine, then you can get
+the header files from there (assuming you actually use the GNU library
+when you link your program).
+
+   If your target machine comes with a C compiler, it probably comes
+with suitable header files also.  If you make these files accessible
+from the host machine, the cross-compiler can use them also.
+
+   Otherwise, you're on your own in finding header files to use when
+cross-compiling.
+
+   When you have found suitable header files, put them in the directory
+`/usr/local/TARGET/include', before building the cross compiler.  Then
+installation will run fixincludes properly and install the corrected
+versions of the header files where the compiler will use them.
+
+   Provide the header files before you build the cross-compiler, because
+the build stage actually runs the cross-compiler to produce parts of
+`libgcc.a'.  (These are the parts that *can* be compiled with GNU CC.)
+Some of them need suitable header files.
+
+   Here's an example showing how to copy the header files from a target
+machine.  On the target machine, do this:
+
+     (cd /usr/include; tar cf - .) > tarfile
+
+   Then, on the host machine, do this:
+
+     ftp TARGET-MACHINE
+     lcd /usr/local/TARGET/include
+     get tarfile
+     quit
+     tar xf tarfile
 
 
 File: gcc.info,  Node: Build Cross,  Prev: Cross Runtime,  Up: Cross-Compiler
@@ -92,6 +231,12 @@ it by using the following command to compile GNU CC with Sun CC:
 
      make CC="TERMCAP=x OBJS=x LIBFUNCS=x STAGESTUFF=x cc"
 
+   SunOS 4.1.3 and 4.1.3_U1 have bugs that can cause intermittent core
+dumps when compiling GNU CC.  A common symptom is an internal compiler
+error which does not recur if you run it again.  To fix the problem,
+install Sun recommended patch 100726 (for SunOS 4.1.3) or 101508 (for
+SunOS 4.1.3_U1), or upgrade to a later SunOS release.
+
 
 File: gcc.info,  Node: VMS Install,  Next: Collect2,  Prev: Sun Install,  Up: Installation
 
@@ -145,8 +290,8 @@ perform the following steps:
             disk:[gcc.gxx_include.] gnu_gxx_include
 
      with the appropriate disk and directory name.  If you are going to
-     be using libg++, this is where the libg++ install procedure will
-     install the libg++ header files.
+     be using a C++ runtime library, this is where its install
+     procedure will install its header files.
 
   2. Obtain the file `gcc-cc1plus.exe', and place this in the same
      directory that `gcc-cc1.exe' is kept.
@@ -385,8 +530,8 @@ before GNU CC is built.  If the cross compilation header files are
 already suitable for ANSI C and GNU CC, nothing special need be done).
 
    `GPLUS_INCLUDE_DIR' means the same thing for native and cross.  It
-is where `g++' looks first for header files.  `libg++' installs only
-target independent header files in that directory.
+is where `g++' looks first for header files.  The C++ library installs
+only target independent header files in that directory.
 
    `LOCAL_INCLUDE_DIR' is used only for a native compiler.  It is
 normally `/usr/local/include'.  GNU CC searches this directory so that
@@ -446,7 +591,7 @@ Extensions, for extensions that apply *only* to C++.
 * Function Prototypes:: Prototype declarations and old-style definitions.
 * C++ Comments::        C++ comments are recognized.
 * Dollar Signs::        Dollar sign is allowed in identifiers.
-* Character Escapes::   `\e' stands for the character ESC.
+* Character Escapes::   `\e' stands for the character <ESC>.
 * Variable Attributes::	Specifying attributes of variables.
 * Type Attributes::	Specifying attributes of types.
 * Alignment::           Inquiring about the alignment of a type or variable.
@@ -459,6 +604,7 @@ Extensions, for extensions that apply *only* to C++.
 * Incomplete Enums::    `enum foo;', with details to follow.
 * Function Names::	Printable strings which are the name of the current
 			 function.
+* Return Address::      Getting the return or frame address of a function.
 
 
 File: gcc.info,  Node: Statement Exprs,  Next: Local Labels,  Up: C Extensions
@@ -611,9 +757,9 @@ and never pass it as an argument.
 
    ---------- Footnotes ----------
 
-   (1)  The analogous feature in Fortran is called an assigned goto,
-but that name seems inappropriate in C, where one can do more than
-simply store label addresses in label variables.
+   (1) The analogous feature in Fortran is called an assigned goto, but
+that name seems inappropriate in C, where one can do more than simply
+store label addresses in label variables.
 
 
 File: gcc.info,  Node: Nested Functions,  Next: Constructing Calls,  Prev: Labels as Values,  Up: C Extensions
@@ -679,8 +825,7 @@ does not refer to anything that has gone out of scope, you should be
 safe.
 
    GNU CC implements taking the address of a nested function using a
-technique called "trampolines".  A paper describing them is available
-from `maya.idiap.ch' in directory `pub/tmb', file `usenix88-lexic.ps.Z'.
+technique called "trampolines".
 
    A nested function can jump to a label inherited from a containing
 function, provided the label was explicitly declared in the containing
@@ -967,11 +1112,11 @@ Double-Word Integers
 ====================
 
    GNU C supports data types for integers that are twice as long as
-`long int'.  Simply write `long long int' for a signed integer, or
-`unsigned long long int' for an unsigned integer.  To make an integer
-constant of type `long long int', add the suffix `LL' to the integer.
-To make an integer constant of type `unsigned long long int', add the
-suffix `ULL' to the integer.
+`int'.  Simply write `long long int' for a signed integer, or `unsigned
+long long int' for an unsigned integer.  To make an integer constant of
+type `long long int', add the suffix `LL' to the integer.  To make an
+integer constant of type `unsigned long long int', add the suffix `ULL'
+to the integer.
 
    You can use these types in arithmetic like any other integer types.
 Addition, subtraction, and bitwise boolean operations on these types
@@ -1053,173 +1198,4 @@ variable-length object:
 
    In standard C, you would have to give `contents' a length of 1, which
 means either you waste space or complicate the argument to `malloc'.
-
-
-File: gcc.info,  Node: Variable Length,  Next: Macro Varargs,  Prev: Zero Length,  Up: C Extensions
-
-Arrays of Variable Length
-=========================
-
-   Variable-length automatic arrays are allowed in GNU C.  These arrays
-are declared like any other automatic arrays, but with a length that is
-not a constant expression.  The storage is allocated at the point of
-declaration and deallocated when the brace-level is exited.  For
-example:
-
-     FILE *
-     concat_fopen (char *s1, char *s2, char *mode)
-     {
-       char str[strlen (s1) + strlen (s2) + 1];
-       strcpy (str, s1);
-       strcat (str, s2);
-       return fopen (str, mode);
-     }
-
-   Jumping or breaking out of the scope of the array name deallocates
-the storage.  Jumping into the scope is not allowed; you get an error
-message for it.
-
-   You can use the function `alloca' to get an effect much like
-variable-length arrays.  The function `alloca' is available in many
-other C implementations (but not in all).  On the other hand,
-variable-length arrays are more elegant.
-
-   There are other differences between these two methods.  Space
-allocated with `alloca' exists until the containing *function* returns.
-The space for a variable-length array is deallocated as soon as the
-array name's scope ends.  (If you use both variable-length arrays and
-`alloca' in the same function, deallocation of a variable-length array
-will also deallocate anything more recently allocated with `alloca'.)
-
-   You can also use variable-length arrays as arguments to functions:
-
-     struct entry
-     tester (int len, char data[len][len])
-     {
-       ...
-     }
-
-   The length of an array is computed once when the storage is allocated
-and is remembered for the scope of the array in case you access it with
-`sizeof'.
-
-   If you want to pass the array first and the length afterward, you can
-use a forward declaration in the parameter list--another GNU extension.
-
-     struct entry
-     tester (int len; char data[len][len], int len)
-     {
-       ...
-     }
-
-   The `int len' before the semicolon is a "parameter forward
-declaration", and it serves the purpose of making the name `len' known
-when the declaration of `data' is parsed.
-
-   You can write any number of such parameter forward declarations in
-the parameter list.  They can be separated by commas or semicolons, but
-the last one must end with a semicolon, which is followed by the "real"
-parameter declarations.  Each forward declaration must match a "real"
-declaration in parameter name and data type.
-
-
-File: gcc.info,  Node: Macro Varargs,  Next: Subscripting,  Prev: Variable Length,  Up: C Extensions
-
-Macros with Variable Numbers of Arguments
-=========================================
-
-   In GNU C, a macro can accept a variable number of arguments, much as
-a function can.  The syntax for defining the macro looks much like that
-used for a function.  Here is an example:
-
-     #define eprintf(format, args...)  \
-      fprintf (stderr, format , ## args)
-
-   Here `args' is a "rest argument": it takes in zero or more
-arguments, as many as the call contains.  All of them plus the commas
-between them form the value of `args', which is substituted into the
-macro body where `args' is used.  Thus, we have this expansion:
-
-     eprintf ("%s:%d: ", input_file_name, line_number)
-     ==>
-     fprintf (stderr, "%s:%d: " , input_file_name, line_number)
-
-Note that the comma after the string constant comes from the definition
-of `eprintf', whereas the last comma comes from the value of `args'.
-
-   The reason for using `##' is to handle the case when `args' matches
-no arguments at all.  In this case, `args' has an empty value.  In this
-case, the second comma in the definition becomes an embarrassment: if
-it got through to the expansion of the macro, we would get something
-like this:
-
-     fprintf (stderr, "success!\n" , )
-
-which is invalid C syntax.  `##' gets rid of the comma, so we get the
-following instead:
-
-     fprintf (stderr, "success!\n")
-
-   This is a special feature of the GNU C preprocessor: `##' before a
-rest argument that is empty discards the preceding sequence of
-non-whitespace characters from the macro definition.  (If another macro
-argument precedes, none of it is discarded.)
-
-   It might be better to discard the last preprocessor token instead of
-the last preceding sequence of non-whitespace characters; in fact, we
-may someday change this feature to do so.  We advise you to write the
-macro definition so that the preceding sequence of non-whitespace
-characters is just a single token, so that the meaning will not change
-if we change the definition of this feature.
-
-
-File: gcc.info,  Node: Subscripting,  Next: Pointer Arith,  Prev: Macro Varargs,  Up: C Extensions
-
-Non-Lvalue Arrays May Have Subscripts
-=====================================
-
-   Subscripting is allowed on arrays that are not lvalues, even though
-the unary `&' operator is not.  For example, this is valid in GNU C
-though not valid in other C dialects:
-
-     struct foo {int a[4];};
-     
-     struct foo f();
-     
-     bar (int index)
-     {
-       return f().a[index];
-     }
-
-
-File: gcc.info,  Node: Pointer Arith,  Next: Initializers,  Prev: Subscripting,  Up: C Extensions
-
-Arithmetic on `void'- and Function-Pointers
-===========================================
-
-   In GNU C, addition and subtraction operations are supported on
-pointers to `void' and on pointers to functions.  This is done by
-treating the size of a `void' or of a function as 1.
-
-   A consequence of this is that `sizeof' is also allowed on `void' and
-on function types, and returns 1.
-
-   The option `-Wpointer-arith' requests a warning if these extensions
-are used.
-
-
-File: gcc.info,  Node: Initializers,  Next: Constructors,  Prev: Pointer Arith,  Up: C Extensions
-
-Non-Constant Initializers
-=========================
-
-   As in standard C++, the elements of an aggregate initializer for an
-automatic variable are not required to be constant expressions in GNU C.
-Here is an example of an initializer with run-time varying elements:
-
-     foo (float f, float g)
-     {
-       float beat_freqs[2] = { f-g, f+g };
-       ...
-     }
 

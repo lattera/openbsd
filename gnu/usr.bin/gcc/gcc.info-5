@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,475 +28,6 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
-
-
-File: gcc.info,  Node: MIPS Options,  Next: i386 Options,  Prev: RT Options,  Up: Submodel Options
-
-MIPS Options
-------------
-
-   These `-m' options are defined for the MIPS family of computers:
-
-`-mcpu=CPU TYPE'
-     Assume the defaults for the machine type CPU TYPE when scheduling
-     instructions.  The choices for CPU TYPE are `r2000', `r3000',
-     `r4000', `r4400', `r4600', and `r6000'.  While picking a specific
-     CPU TYPE will schedule things appropriately for that particular
-     chip, the compiler will not generate any code that does not meet
-     level 1 of the MIPS ISA (instruction set architecture) without the
-     `-mips2' or `-mips3' switches being used.
-
-`-mips1'
-     Issue instructions from level 1 of the MIPS ISA.  This is the
-     default.  `r3000' is the default CPU TYPE at this ISA level.
-
-`-mips2'
-     Issue instructions from level 2 of the MIPS ISA (branch likely,
-     square root instructions).  `r6000' is the default CPU TYPE at this
-     ISA level.
-
-`-mips3'
-     Issue instructions from level 3 of the MIPS ISA (64 bit
-     instructions).  `r4000' is the default CPU TYPE at this ISA level.
-     This option does not change the sizes of any of the C data types.
-
-`-mfp32'
-     Assume that 32 32-bit floating point registers are available.
-     This is the default.
-
-`-mfp64'
-     Assume that 32 64-bit floating point registers are available.
-     This is the default when the `-mips3' option is used.
-
-`-mgp32'
-     Assume that 32 32-bit general purpose registers are available.
-     This is the default.
-
-`-mgp64'
-     Assume that 32 64-bit general purpose registers are available.
-     This is the default when the `-mips3' option is used.
-
-`-mint64'
-     Types long, int, and pointer are 64 bits.  This works only if
-     `-mips3' is also specified.
-
-`-mlong64'
-     Types long and pointer are 64 bits, and type int is 32 bits.  This
-     works only if `-mips3' is also specified.
-
-`-mmips-as'
-     Generate code for the MIPS assembler, and invoke `mips-tfile' to
-     add normal debug information.  This is the default for all
-     platforms except for the OSF/1 reference platform, using the
-     OSF/rose object format.  If the either of the `-gstabs' or
-     `-gstabs+' switches are used, the `mips-tfile' program will
-     encapsulate the stabs within MIPS ECOFF.
-
-`-mgas'
-     Generate code for the GNU assembler.  This is the default on the
-     OSF/1 reference platform, using the OSF/rose object format.
-
-`-mrnames'
-`-mno-rnames'
-     The `-mrnames' switch says to output code using the MIPS software
-     names for the registers, instead of the hardware names (ie, A0
-     instead of $4).  The only known assembler that supports this option
-     is the Algorithmics assembler.
-
-`-mgpopt'
-`-mno-gpopt'
-     The `-mgpopt' switch says to write all of the data declarations
-     before the instructions in the text section, this allows the MIPS
-     assembler to generate one word memory references instead of using
-     two words for short global or static data items.  This is on by
-     default if optimization is selected.
-
-`-mstats'
-`-mno-stats'
-     For each non-inline function processed, the `-mstats' switch
-     causes the compiler to emit one line to the standard error file to
-     print statistics about the program (number of registers saved,
-     stack size, etc.).
-
-`-mmemcpy'
-`-mno-memcpy'
-     The `-mmemcpy' switch makes all block moves call the appropriate
-     string function (`memcpy' or `bcopy') instead of possibly
-     generating inline code.
-
-`-mmips-tfile'
-`-mno-mips-tfile'
-     The `-mno-mips-tfile' switch causes the compiler not postprocess
-     the object file with the `mips-tfile' program, after the MIPS
-     assembler has generated it to add debug support.  If `mips-tfile'
-     is not run, then no local variables will be available to the
-     debugger.  In addition, `stage2' and `stage3' objects will have
-     the temporary file names passed to the assembler embedded in the
-     object file, which means the objects will not compare the same.
-     The `-mno-mips-tfile' switch should only be used when there are
-     bugs in the `mips-tfile' program that prevents compilation.
-
-`-msoft-float'
-     Generate output containing library calls for floating point.
-     *Warning:* the requisite libraries are not part of GNU CC.
-     Normally the facilities of the machine's usual C compiler are
-     used, but this can't be done directly in cross-compilation.  You
-     must make your own arrangements to provide suitable library
-     functions for cross-compilation.
-
-`-mhard-float'
-     Generate output containing floating point instructions.  This is
-     the default if you use the unmodified sources.
-
-`-mabicalls'
-`-mno-abicalls'
-     Emit (or do not emit) the pseudo operations `.abicalls',
-     `.cpload', and `.cprestore' that some System V.4 ports use for
-     position independent code.
-
-`-mlong-calls'
-`-mno-long-calls'
-     Do all calls with the `JALR' instruction, which requires loading
-     up a function's address into a register before the call.  You need
-     to use this switch, if you call outside of the current 512
-     megabyte segment to functions that are not through pointers.
-
-`-mhalf-pic'
-`-mno-half-pic'
-     Put pointers to extern references into the data section and load
-     them up, rather than put the references in the text section.
-
-`-membedded-pic'
-`-mno-embedded-pic'
-     Generate PIC code suitable for some embedded systems.  All calls
-     are made using PC relative address, and all data is addressed
-     using the $gp register.  This requires GNU as and GNU ld which do
-     most of the work.
-
-`-membedded-data'
-`-mno-embedded-data'
-     Allocate variables to the read-only data section first if
-     possible, then next in the small data section if possible,
-     otherwise in data.  This gives slightly slower code than the
-     default, but reduces the amount of RAM required when executing,
-     and thus may be preferred for some embedded systems.
-
-`-msingle-float'
-`-mdouble-float'
-     The `-msingle-float' switch tells gcc to assume that the floating
-     point coprocessor only supports single precision operations, as on
-     the `r4650' chip.  The `-mdouble-float' switch permits gcc to use
-     double precision operations.  This is the default.
-
-`-mmad'
-`-mno-mad'
-     Permit use of the `mad', `madu' and `mul' instructions, as on the
-     `r4650' chip.
-
-`-m4650'
-     Turns on `-msingle-float', `-mmad', and, at least for now,
-     `-mcpu=r4650'.
-
-`-EL'
-     Compile code for the processor in little endian mode.  The
-     requisite libraries are assumed to exist.
-
-`-EB'
-     Compile code for the processor in big endian mode.  The requisite
-     libraries are assumed to exist.
-
-`-G NUM'
-     Put global and static items less than or equal to NUM bytes into
-     the small data or bss sections instead of the normal data or bss
-     section.  This allows the assembler to emit one word memory
-     reference instructions based on the global pointer (GP or $28),
-     instead of the normal two words used.  By default, NUM is 8 when
-     the MIPS assembler is used, and 0 when the GNU assembler is used.
-     The `-G NUM' switch is also passed to the assembler and linker.
-     All modules should be compiled with the same `-G NUM' value.
-
-`-nocpp'
-     Tell the MIPS assembler to not run it's preprocessor over user
-     assembler files (with a `.s' suffix) when assembling them.
-
-   These options are defined by the macro `TARGET_SWITCHES' in the
-machine description.  The default for the options is also defined by
-that macro, which enables you to change the defaults.
-
-
-File: gcc.info,  Node: i386 Options,  Next: HPPA Options,  Prev: MIPS Options,  Up: Submodel Options
-
-Intel 386 Options
------------------
-
-   These `-m' options are defined for the i386 family of computers:
-
-`-m486'
-`-m386'
-     Control whether or not code is optimized for a 486 instead of an
-     386.  Code generated for an 486 will run on a 386 and vice versa.
-
-`-mieee-fp'
-`-mno-ieee-fp'
-     Control whether or not the compiler uses IEEE floating point
-     comparisons.  These handle correctly the case where the result of a
-     comparison is unordered.
-
-`-msoft-float'
-     Generate output containing library calls for floating point.
-     *Warning:* the requisite libraries are not part of GNU CC.
-     Normally the facilities of the machine's usual C compiler are
-     used, but this can't be done directly in cross-compilation.  You
-     must make your own arrangements to provide suitable library
-     functions for cross-compilation.
-
-     On machines where a function returns floating point results in the
-     80387 register stack, some floating point opcodes may be emitted
-     even if `-msoft-float' is used.
-
-`-mno-fp-ret-in-387'
-     Do not use the FPU registers for return values of functions.
-
-     The usual calling convention has functions return values of types
-     `float' and `double' in an FPU register, even if there is no FPU.
-     The idea is that the operating system should emulate an FPU.
-
-     The option `-mno-fp-ret-in-387' causes such values to be returned
-     in ordinary CPU registers instead.
-
-`-mno-fancy-math-387'
-     Some 387 emulators do not support the `sin', `cos' and `sqrt'
-     instructions for the 387.  Specify this option to avoid generating
-     those instructions. This option is the default on FreeBSD.  As of
-     revision 2.6.1, these instructions are not generated unless you
-     also use the `-ffast-math' switch.
-
-`-malign-double'
-`-mno-align-double'
-     Control whether GNU CC aligns `double', `long double', and `long
-     long' variables on a two word boundary or a one word boundary.
-     Aligning `double' variables on a two word boundary will produce
-     code that runs somewhat faster on a `Pentium' at the expense of
-     more memory.
-
-     *Warning:* if you use the `-malign-double' switch, structures
-     containing the above types will be aligned differently than the
-     published application binary interface specifications for the 386.
-
-`-msvr3-shlib'
-`-mno-svr3-shlib'
-     Control whether GNU CC places uninitialized locals into `bss' or
-     `data'.  `-msvr3-shlib' places these locals into `bss'.  These
-     options are meaningful only on System V Release 3.
-
-`-mno-wide-multiply'
-`-mwide-multiply'
-     Control whether GNU CC uses the `mul' and `imul' that produce 64
-     bit results in `eax:edx' from 32 bit operands to do `long long'
-     multiplies and 32-bit division by constants.
-
-`-mrtd'
-     Use a different function-calling convention, in which functions
-     that take a fixed number of arguments return with the `ret' NUM
-     instruction, which pops their arguments while returning.  This
-     saves one instruction in the caller since there is no need to pop
-     the arguments there.
-
-     You can specify that an individual function is called with this
-     calling sequence with the function attribute `stdcall'.  You can
-     also override the `-mrtd' option by using the function attribute
-     `cdecl'. *Note Function Attributes::
-
-     *Warning:* this calling convention is incompatible with the one
-     normally used on Unix, so you cannot use it if you need to call
-     libraries compiled with the Unix compiler.
-
-     Also, you must provide function prototypes for all functions that
-     take variable numbers of arguments (including `printf'); otherwise
-     incorrect code will be generated for calls to those functions.
-
-     In addition, seriously incorrect code will result if you call a
-     function with too many arguments.  (Normally, extra arguments are
-     harmlessly ignored.)
-
-`-mreg-alloc=REGS'
-     Control the default allocation order of integer registers.  The
-     string REGS is a series of letters specifying a register.  The
-     supported letters are: `a' allocate EAX; `b' allocate EBX; `c'
-     allocate ECX; `d' allocate EDX; `S' allocate ESI; `D' allocate
-     EDI; `B' allocate EBP.
-
-`-mregparm=NUM'
-     Control how many registers are used to pass integer arguments.  By
-     default, no registers are used to pass arguments, and at most 3
-     registers can be used.  You can control this behavior for a
-     specific function by using the function attribute `regparm'.
-     *Note Function Attributes::
-
-     *Warning:* if you use this switch, and NUM is nonzero, then you
-     must build all modules with the same value, including any
-     libraries.  This includes the system libraries and startup modules.
-
-`-malign-loops=NUM'
-     Align loops to a 2 raised to a NUM byte boundary.  If
-     `-malign-loops' is not specified, the default is 2.
-
-`-malign-jumps=NUM'
-     Align instructions that are only jumped to to a 2 raised to a NUM
-     byte boundary.  If `-malign-jumps' is not specified, the default is
-     2 if optimizing for a 386, and 4 if optimizing for a 486.
-
-`-malign-functions=NUM'
-     Align the start of functions to a 2 raised to NUM byte boundary.
-     If `-malign-jumps' is not specified, the default is 2 if optimizing
-     for a 386, and 4 if optimizing for a 486.
-
-
-File: gcc.info,  Node: HPPA Options,  Next: Intel 960 Options,  Prev: i386 Options,  Up: Submodel Options
-
-HPPA Options
-------------
-
-   These `-m' options are defined for the HPPA family of computers:
-
-`-mpa-risc-1-0'
-     Generate code for a PA 1.0 processor.
-
-`-mpa-risc-1-1'
-     Generate code for a PA 1.1 processor.
-
-`-mjump-in-delay'
-     Fill delay slots of function calls with unconditional jump
-     instructions by modifying the return pointer for the function call
-     to be the target of the conditional jump.
-
-`-mmillicode-long-calls'
-     Generate code which assumes millicode routines can not be reached
-     by the standard millicode call sequence, linker-generated
-     long-calls, or linker-modified millicode calls.  In practice this
-     should only be needed for dynamicly linked executables with
-     extremely large SHLIB_INFO sections.
-
-`-mdisable-fpregs'
-     Prevent floating point registers from being used in any manner.
-     This is necessary for compiling kernels which perform lazy context
-     switching of floating point registers.  If you use this option and
-     attempt to perform floating point operations, the compiler will
-     abort.
-
-`-mdisable-indexing'
-     Prevent the compiler from using indexing address modes.  This
-     avoids some rather obscure problems when compiling MIG generated
-     code under MACH.
-
-`-mfast-indirect-calls'
-     Generate code which performs faster indirect calls.  Such code is
-     suitable for kernels and for static linking.  The fast indirect
-     call code will fail miserably if it's part of a dynamically linked
-     executable and in the presense of nested functions.
-
-`-mportable-runtime'
-     Use the portable calling conventions proposed by HP for ELF
-     systems.
-
-`-mgas'
-     Enable the use of assembler directives only GAS understands.
-
-`-mschedule=CPU TYPE'
-     Schedule code according to the constraints for the machine type
-     CPU TYPE.  The choices for CPU TYPE are `700' for 7N0 machines,
-     `7100' for 7N5 machines, and `7100' for 7N2 machines.  `700' is
-     the default for CPU TYPE.
-
-     Note the `7100LC' scheduling information is incomplete and using
-     `7100LC' often leads to bad schedules.  For now it's probably best
-     to use `7100' instead of `7100LC' for the 7N2 machines.
-
-`-msoft-float'
-     Generate output containing library calls for floating point.
-     *Warning:* the requisite libraries are not available for all HPPA
-     targets.  Normally the facilities of the machine's usual C
-     compiler are used, but this cannot be done directly in
-     cross-compilation.  You must make your own arrangements to provide
-     suitable library functions for cross-compilation.  The embedded
-     target `hppa1.1-*-pro' does provide software floating point
-     support.
-
-     `-msoft-float' changes the calling convention in the output file;
-     therefore, it is only useful if you compile *all* of a program with
-     this option.  In particular, you need to compile `libgcc.a', the
-     library that comes with GNU CC, with `-msoft-float' in order for
-     this to work.
-
-
-File: gcc.info,  Node: Intel 960 Options,  Next: DEC Alpha Options,  Prev: HPPA Options,  Up: Submodel Options
-
-Intel 960 Options
------------------
-
-   These `-m' options are defined for the Intel 960 implementations:
-
-`-mCPU TYPE'
-     Assume the defaults for the machine type CPU TYPE for some of the
-     other options, including instruction scheduling, floating point
-     support, and addressing modes.  The choices for CPU TYPE are `ka',
-     `kb', `mc', `ca', `cf', `sa', and `sb'.  The default is `kb'.
-
-`-mnumerics'
-`-msoft-float'
-     The `-mnumerics' option indicates that the processor does support
-     floating-point instructions.  The `-msoft-float' option indicates
-     that floating-point support should not be assumed.
-
-`-mleaf-procedures'
-`-mno-leaf-procedures'
-     Do (or do not) attempt to alter leaf procedures to be callable
-     with the `bal' instruction as well as `call'.  This will result in
-     more efficient code for explicit calls when the `bal' instruction
-     can be substituted by the assembler or linker, but less efficient
-     code in other cases, such as calls via function pointers, or using
-     a linker that doesn't support this optimization.
-
-`-mtail-call'
-`-mno-tail-call'
-     Do (or do not) make additional attempts (beyond those of the
-     machine-independent portions of the compiler) to optimize
-     tail-recursive calls into branches.  You may not want to do this
-     because the detection of cases where this is not valid is not
-     totally complete.  The default is `-mno-tail-call'.
-
-`-mcomplex-addr'
-`-mno-complex-addr'
-     Assume (or do not assume) that the use of a complex addressing
-     mode is a win on this implementation of the i960.  Complex
-     addressing modes may not be worthwhile on the K-series, but they
-     definitely are on the C-series.  The default is currently
-     `-mcomplex-addr' for all processors except the CB and CC.
-
-`-mcode-align'
-`-mno-code-align'
-     Align code to 8-byte boundaries for faster fetching (or don't
-     bother).  Currently turned on by default for C-series
-     implementations only.
-
-`-mic-compat'
-`-mic2.0-compat'
-`-mic3.0-compat'
-     Enable compatibility with iC960 v2.0 or v3.0.
-
-`-masm-compat'
-`-mintel-asm'
-     Enable compatibility with the iC960 assembler.
-
-`-mstrict-align'
-`-mno-strict-align'
-     Do not permit (do permit) unaligned accesses.
-
-`-mold-align'
-     Enable structure-alignment compatibility with Intel's gcc release
-     version 1.3 (based on gcc 1.37).  Currently this is buggy in that
-     `#pragma align 1' is always assumed as well, and cannot be turned
-     off.
 
 
 File: gcc.info,  Node: DEC Alpha Options,  Next: Clipper Options,  Prev: Intel 960 Options,  Up: Submodel Options
@@ -536,6 +67,181 @@ DEC Alpha Options
      use, and hence need not save and restore, any floating-point
      registers.
 
+`-mieee'
+     The Alpha architecture implements floating-point hardware
+     optimized for maximum performance.  It is mostly compliant with
+     the IEEE floating point standard.  However, for full compliance,
+     software assistance is required.  This option generates code fully
+     IEEE compliant code *except* that the INEXACT FLAG is not
+     maintained (see below).  If this option is turned on, the CPP
+     macro `_IEEE_FP' is defined during compilation.  The option is a
+     shorthand for: `-D_IEEE_FP -mfp-trap-mode=su -mtrap-precision=i
+     -mieee-conformant'.  The resulting code is less efficient but is
+     able to correctly support denormalized numbers and exceptional
+     IEEE values such as not-a-number and plus/minus infinity.  Other
+     Alpha compilers call this option `-ieee_with_no_inexact'.
+
+`-mieee-with-inexact'
+     This is like `-mieee' except the generated code also maintains the
+     IEEE INEXACT FLAG.  Turning on this option causes the generated
+     code to implement fully-compliant IEEE math.  The option is a
+     shorthand for `-D_IEEE_FP -D_IEEE_FP_INEXACT' plus the three
+     following: `-mieee-conformant', `-mfp-trap-mode=sui', and
+     `-mtrap-precision=i'.  On some Alpha implementations the resulting
+     code may execute significantly slower than the code generated by
+     default.  Since there is very little code that depends on the
+     INEXACT FLAG, you should normally not specify this option.  Other
+     Alpha compilers call this option `-ieee_with_inexact'.
+
+`-mfp-trap-mode=TRAP MODE'
+     This option controls what floating-point related traps are enabled.
+     Other Alpha compilers call this option `-fptm 'TRAP MODE.  The
+     trap mode can be set to one of four values:
+
+    `n'
+          This is the default (normal) setting.  The only traps that
+          are enabled are the ones that cannot be disabled in software
+          (e.g., division by zero trap).
+
+    `u'
+          In addition to the traps enabled by `n', underflow traps are
+          enabled as well.
+
+    `su'
+          Like `su', but the instructions are marked to be safe for
+          software completion (see Alpha architecture manual for
+          details).
+
+    `sui'
+          Like `su', but inexact traps are enabled as well.
+
+`-mfp-rounding-mode=ROUNDING MODE'
+     Selects the IEEE rounding mode.  Other Alpha compilers call this
+     option `-fprm 'ROUNDING MODE.  The ROUNDING MODE can be one of:
+
+    `n'
+          Normal IEEE rounding mode.  Floating point numbers are
+          rounded towards the nearest machine number or towards the
+          even machine number in case of a tie.
+
+    `m'
+          Round towards minus infinity.
+
+    `c'
+          Chopped rounding mode.  Floating point numbers are rounded
+          towards zero.
+
+    `d'
+          Dynamic rounding mode.  A field in the floating point control
+          register (FPCR, see Alpha architecture reference manual)
+          controls the rounding mode in effect.  The C library
+          initializes this register for rounding towards plus infinity.
+          Thus, unless your program modifies the FPCR, `d' corresponds
+          to round towards plus infinity.
+
+`-mtrap-precision=TRAP PRECISION'
+     In the Alpha architecture, floating point traps are imprecise.
+     This means without software assistance it is impossible to recover
+     from a floating trap and program execution normally needs to be
+     terminated.  GNU CC can generate code that can assist operating
+     system trap handlers in determining the exact location that caused
+     a floating point trap.  Depending on the requirements of an
+     application, different levels of precisions can be selected:
+
+    `p'
+          Program precision.  This option is the default and means a
+          trap handler can only identify which program caused a
+          floating point exception.
+
+    `f'
+          Function precision.  The trap handler can determine the
+          function that caused a floating point exception.
+
+    `i'
+          Instruction precision.  The trap handler can determine the
+          exact instruction that caused a floating point exception.
+
+     Other Alpha compilers provide the equivalent options called
+     `-scope_safe' and `-resumption_safe'.
+
+`-mieee-conformant'
+     This option marks the generated code as IEEE conformant.  You must
+     not use this option unless you also specify `-mtrap-precision=i'
+     and either `-mfp-trap-mode=su' or `-mfp-trap-mode=sui'.  Its only
+     effect is to emit the line `.eflag 48' in the function prologue of
+     the generated assembly file.  Under DEC Unix, this has the effect
+     that IEEE-conformant math library routines will be linked in.
+
+`-mbuild-constants'
+     Normally GNU CC examines a 32- or 64-bit integer constant to see
+     if it can construct it from smaller constants in two or three
+     instructions.  If it cannot, it will output the constant as a
+     literal and generate code to load it from the data segment at
+     runtime.
+
+     Use this option to require GNU CC to construct *all* integer
+     constants using code, even if it takes more instructions (the
+     maximum is six).
+
+     You would typically use this option to build a shared library
+     dynamic loader.  Itself a shared library, it must relocate itself
+     in memory before it can find the variables and constants in its
+     own data segment.
+
+`-malpha-as'
+`-mgas'
+     Select whether to generate code to be assembled by the
+     vendor-supplied assembler (`-malpha-as') or by the GNU assembler
+     `-mgas'.
+
+`-mbwx'
+`-mno-bwx'
+`-mcix'
+`-mno-cix'
+`-mmax'
+`-mno-max'
+     Indicate whether GNU CC should generate code to use the optional
+     BWX, CIX, and MAX instruction sets.  The default is to use the
+     instruction sets supported by the CPU type specified via `-mcpu='
+     option or that of the CPU on which GNU CC was built if none was
+     specified.
+
+`-mcpu=CPU TYPE'
+
+`-mcpu=CPU_TYPE'
+     Set the instruction set, register set, and instruction scheduling
+     parameters for machine type CPU_TYPE.  You can specify either the
+     `EV' style name or the corresponding chip number.  GNU CC supports
+     scheduling parameters for the EV4 and EV5 family of processors and
+     will choose the default values for the instruction set from the
+     processor you specify.  If you do not specify a processor type,
+     GNU CC will default to the processor on which the compiler was
+     built.
+
+     Supported values for CPU_TYPE are
+
+    `ev4'
+    `21064'
+          Schedules as an EV4 and has no instruction set extensions.
+
+    `ev5'
+    `21164'
+          Schedules as an EV5 and has no instruction set extensions.
+
+    `ev56'
+    `21164a'
+          Schedules as an EV5 and supports the BWX extension.
+
+    `pca56'
+    `21164PC'
+          Schedules as an EV5 and supports the BWX and MAX extensions.
+
+    `ev6'
+    `21264'
+          Schedules as an EV5 (until Digital releases the scheduling
+          parameters for the EV6) and supports the BWX, CIX, and MAX
+          extensions.
+
 
 File: gcc.info,  Node: Clipper Options,  Next: H8/300 Options,  Prev: DEC Alpha Options,  Up: Submodel Options
 
@@ -552,7 +258,7 @@ Clipper Options
      registers f8..f15.
 
 
-File: gcc.info,  Node: H8/300 Options,  Next: System V Options,  Prev: Clipper Options,  Up: Submodel Options
+File: gcc.info,  Node: H8/300 Options,  Next: SH Options,  Prev: Clipper Options,  Up: Submodel Options
 
 H8/300 Options
 --------------
@@ -567,14 +273,60 @@ H8/300 Options
 `-mh'
      Generate code for the H8/300H.
 
+`-ms'
+     Generate code for the H8/S.
+
+`-mint32'
+     Make `int' data 32 bits by default.
+
+`-malign-300'
+     On the h8/300h, use the same alignment rules as for the h8/300.
+     The default for the h8/300h is to align longs and floats on 4 byte
+     boundaries.  `-malign-300' causes them to be aligned on 2 byte
+     boundaries.  This option has no effect on the h8/300.
+
 
-File: gcc.info,  Node: System V Options,  Prev: H8/300 Options,  Up: Submodel Options
+File: gcc.info,  Node: SH Options,  Next: System V Options,  Prev: H8/300 Options,  Up: Submodel Options
+
+SH Options
+----------
+
+   These `-m' options are defined for the SH implementations:
+
+`-m1'
+     Generate code for the SH1.
+
+`-m2'
+     Generate code for the SH2.
+
+`-m3'
+     Generate code for the SH3.
+
+`-m3e'
+     Generate code for the SH3e.
+
+`-mb'
+     Compile code for the processor in big endian mode.
+
+`-ml'
+     Compile code for the processor in little endian mode.
+
+`-mrelax'
+     Shorten some address references at link time, when possible; uses
+     the linker option `-relax'.
+
+
+File: gcc.info,  Node: System V Options,  Next: V850 Options,  Prev: SH Options,  Up: Submodel Options
 
 Options for System V
 --------------------
 
    These additional options are available on System V Release 4 for
 compatibility with other compilers on those systems:
+
+`-G'
+     Create a shared object.  It is recommended that `-symbolic' or
+     `-shared' be used instead.
 
 `-Qy'
      Identify the versions of each tool used by the compiler, in a
@@ -593,6 +345,63 @@ compatibility with other compilers on those systems:
      assembler uses this option.
 
 
+File: gcc.info,  Node: V850 Options,  Prev: System V Options,  Up: Submodel Options
+
+V850 Options
+------------
+
+   These `-m' options are defined for V850 implementations:
+
+`-mlong-calls'
+`-mno-long-calls'
+     Treat all calls as being far away (near).  If calls are assumed to
+     be far away, the compiler will always load the functions address
+     up into a register, and call indirect through the pointer.
+
+`-mno-ep'
+
+`-mep'
+     Do not optimize (do optimize) basic blocks that use the same index
+     pointer 4 or more times to copy pointer into the `ep' register, and
+     use the shorter `sld' and `sst' instructions.  The `-mep' option
+     is on by default if you optimize.
+
+`-mno-prolog-function'
+`-mprolog-function'
+     Do not use (do use) external functions to save and restore
+     registers at the prolog and epilog of a function.  The external
+     functions are slower, but use less code space if more than one
+     function saves the same number of registers.  The
+     `-mprolog-function' option is on by default if you optimize.
+
+`-mspace'
+     Try to make the code as small as possible.  At present, this just
+     turns on the `-mep' and `-mprolog-function' options.
+
+`-mtda=N'
+     Put static or global variables whose size is N bytes or less into
+     the tiny data area that register `ep' points to.  The tiny data
+     area can hold up to 256 bytes in total (128 bytes for byte
+     references).
+
+`-msda=N'
+     Put static or global variables whose size is N bytes or less into
+     the small data area that register `gp' points to.  The small data
+     area can hold up to 64 kilobytes.
+
+`-mzda=N'
+     Put static or global variables whose size is N bytes or less into
+     the first 32 kilobytes of memory.
+
+`-mv850'
+     Specify that the target processor is the V850.
+
+`-mbig-switch'
+     Generate code suitable for big switch tables.  Use this option
+     only if the assembler/linker complain about out of range branches
+     within a switch table.
+
+
 File: gcc.info,  Node: Code Gen Options,  Next: Environment Variables,  Prev: Submodel Options,  Up: Invoking GCC
 
 Options for Code Generation Conventions
@@ -605,6 +414,17 @@ used in code generation.
 of `-ffoo' would be `-fno-foo'.  In the table below, only one of the
 forms is listed--the one which is not the default.  You can figure out
 the other form by either removing `no-' or adding it.
+
+`-fexceptions'
+     Enable exception handling, and generate extra code needed to
+     propagate exceptions.  If you do not specify this option, GNU CC
+     enables it by default for languages like C++ that normally require
+     exception handling, and disabled for languages like C that do not
+     normally require it.  However, when compiling C code that needs to
+     interoperate properly with exception handlers written in C++, you
+     may need to enable this option.  You may also wish to disable this
+     option is you are compiling older C++ programs that don't use
+     exception handling.
 
 `-fpcc-struct-return'
      Return "short" `struct' and `union' values in memory like longer
@@ -684,6 +504,9 @@ the other form by either removing `no-' or adding it.
      those who actually need to read the generated assembly code
      (perhaps while debugging the compiler itself).
 
+     `-fno-verbose-asm', the default, causes the extra information to
+     be omitted and is useful when comparing two assembler files.
+
 `-fvolatile'
      Consider all memory references through pointers to be volatile.
 
@@ -695,28 +518,25 @@ the other form by either removing `no-' or adding it.
      Generate position-independent code (PIC) suitable for use in a
      shared library, if supported for the target machine.  Such code
      accesses all constant addresses through a global offset table
-     (GOT).  If the GOT size for the linked executable exceeds a
-     machine-specific maximum size, you get an error message from the
-     linker indicating that `-fpic' does not work; in that case,
-     recompile with `-fPIC' instead.  (These maximums are 16k on the
-     m88k, 8k on the Sparc, and 32k on the m68k and RS/6000.  The 386
-     has no such limit.)
+     (GOT).  The dynamic loader resolves the GOT entries when the
+     program starts (the dynamic loader is not part of GNU CC; it is
+     part of the operating system).  If the GOT size for the linked
+     executable exceeds a machine-specific maximum size, you get an
+     error message from the linker indicating that `-fpic' does not
+     work; in that case, recompile with `-fPIC' instead.  (These
+     maximums are 16k on the m88k, 8k on the Sparc, and 32k on the m68k
+     and RS/6000.  The 386 has no such limit.)
 
      Position-independent code requires special support, and therefore
      works only on certain machines.  For the 386, GNU CC supports PIC
      for System V but not for the Sun 386i.  Code generated for the IBM
      RS/6000 is always position-independent.
 
-     The GNU assembler does not fully support PIC.  Currently, you must
-     use some other assembler in order for PIC to work.  We would
-     welcome volunteers to upgrade GAS to handle this; the first part
-     of the job is to figure out what the assembler must do differently.
-
 `-fPIC'
      If supported for the target machine, emit position-independent
      code, suitable for dynamic linking and avoiding any limit on the
      size of the global offset table.  This option makes a difference
-     on the m68k, m88k and the Sparc.
+     on the m68k, m88k, and the Sparc.
 
      Position-independent code requires special support, and therefore
      works only on certain machines.
@@ -734,7 +554,7 @@ the other form by either removing `no-' or adding it.
      three-way choice.
 
 `-fcall-used-REG'
-     Treat the register named REG as an allocatable register that is
+     Treat the register named REG as an allocable register that is
      clobbered by function calls.  It may be allocated for temporaries
      or variables that do not live across a call.  Functions compiled
      this way will not save and restore the register REG.
@@ -747,7 +567,7 @@ the other form by either removing `no-' or adding it.
      three-way choice.
 
 `-fcall-saved-REG'
-     Treat the register named REG as an allocatable register saved by
+     Treat the register named REG as an allocable register saved by
      functions.  It may be allocated even for temporaries or variables
      that live across a call.  Functions compiled this way will save
      and restore the register REG if they use it.
@@ -767,6 +587,59 @@ the other form by either removing `no-' or adding it.
      would not want to use this option, since it makes the code
      suboptimal, and the offsets of structure members won't agree with
      system libraries.
+
+`-fcheck-memory-usage'
+     Generate extra code to check each memory access.  GNU CC will
+     generate code that is suitable for a detector of bad memory
+     accesses such as `Checker'.  If you specify this option, you can
+     not use the `asm' or `__asm__' keywords.
+
+     You must also specify this option when you compile functions you
+     call that have side effects.  If you do not, you may get erroneous
+     messages from the detector.  Normally,  you should compile all
+     your code with this option.  If you use functions from a library
+     that have side-effects (such as `read'), you may not be able to
+     recompile the library and specify this option.  In that case, you
+     can enable the `-fprefix-function-name' option, which requests GNU
+     CC to encapsulate your code and make other functions look as if
+     they were compiled with `-fcheck-memory-usage'.  This is done by
+     calling "stubs", which are provided by the detector.  If you
+     cannot find or build stubs for every function you call, you may
+     have to specify `-fcheck-memory-usage' without
+     `-fprefix-function-name'.
+
+`-fprefix-function-name'
+     Request GNU CC to add a prefix to the symbols generated for
+     function names.  GNU CC adds a prefix to the names of functions
+     defined as well as functions called.  Code compiled with this
+     option and code compiled without the option can't be linked
+     together, unless or stubs are used.
+
+     If you compile the following code with `-fprefix-function-name'
+          extern void bar (int);
+          void
+          foo (int a)
+          {
+            return bar (a + 5);
+          
+          }
+
+     GNU CC will compile the code as if it was written:
+          extern void prefix_bar (int);
+          void
+          prefix_foo (int a)
+          {
+            return prefix_bar (a + 5);
+          }
+     This option is designed to be used with `-fcheck-memory-usage'.
+
+`-fstack-check'
+     Generate code to verify that you do not go beyond the boundary of
+     the stack.  You should specify this flag if you are running in an
+     environment with multiple threads, but only rarely need to specify
+     it in a single-threaded environment since stack overflow is
+     automatically detected on nearly all systems if there is only one
+     stack.
 
 `+e0'
 `+e1'

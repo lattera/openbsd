@@ -1,5 +1,5 @@
-This is Info file cpp.info, produced by Makeinfo-1.63 from the input
-file cpp.texi.
+This is Info file cpp.info, produced by Makeinfo version 1.68 from the
+input file cpp.texi.
 
    This file documents the GNU C Preprocessor.
 
@@ -18,6 +18,31 @@ of a permission notice identical to this one.
    Permission is granted to copy and distribute translations of this
 manual into another language, under the above conditions for modified
 versions.
+
+
+File: cpp.info,  Node: Macro Pitfalls,  Prev: Redefining,  Up: Macros
+
+Pitfalls and Subtleties of Macros
+---------------------------------
+
+   In this section we describe some special rules that apply to macros
+and macro expansion, and point out certain cases in which the rules have
+counterintuitive consequences that you must watch out for.
+
+* Menu:
+
+* Misnesting::        Macros can contain unmatched parentheses.
+* Macro Parentheses:: Why apparently superfluous parentheses
+                         may be necessary to avoid incorrect grouping.
+* Swallow Semicolon:: Macros that look like functions
+                         but expand into compound statements.
+* Side Effects::      Unsafe macros that cause trouble when
+                         arguments contain side effects.
+* Self-Reference::    Macros whose definitions use the macros' own names.
+* Argument Prescan::  Actual arguments are checked for macro calls
+                         before they are substituted.
+* Cascaded Macros::   Macros whose definitions use other macros.
+* Newlines in Args::  Sometimes line numbers get confused.
 
 
 File: cpp.info,  Node: Misnesting,  Next: Macro Parentheses,  Prev: Macro Pitfalls,  Up: Macro Pitfalls
@@ -89,10 +114,10 @@ Defining the macro as
 
 provides the desired result.
 
-   However, unintended grouping can result in another way.  Consider
-`sizeof ceil_div(1, 2)'.  That has the appearance of a C expression
-that would compute the size of the type of `ceil_div (1, 2)', but in
-fact it means something very different.  Here is what it expands to:
+   Unintended grouping can result in another way.  Consider `sizeof
+ceil_div(1, 2)'.  That has the appearance of a C expression that would
+compute the size of the type of `ceil_div (1, 2)', but in fact it means
+something very different.  Here is what it expands to:
 
      sizeof ((1) + (2) - 1) / (2)
 
@@ -871,7 +896,7 @@ The `#error' and `#warning' Directives
 
    The directive `#error' causes the preprocessor to report a fatal
 error.  The rest of the line that follows `#error' is used as the error
-message.
+message.  The line must consist of complete tokens.
 
    You would use `#error' inside of a conditional that detects a
 combination of parameters which you know the program does not properly
@@ -879,7 +904,7 @@ support.  For example, if you know that the program will not run
 properly on a Vax, you might write
 
      #ifdef __vax__
-     #error Won't work on Vaxen.  See comments at get_last_object.
+     #error "Won't work on Vaxen.  See comments at get_last_object."
      #endif
 
 *Note Nonstandard Predefined::, for why this works.
@@ -978,8 +1003,8 @@ null directive is that an input line consisting of just a `#' will
 produce no output, rather than a line of output containing just a `#'.
 Supposedly some old C programs contain such lines.
 
-   The ANSI standard specifies that the `#pragma' directive has an
-arbitrary, implementation-defined effect.  In the GNU C preprocessor,
+   The ANSI standard specifies that the effect of the `#pragma'
+directive is implementation-defined.  In the GNU C preprocessor,
 `#pragma' directives are not used, except for `#pragma once' (*note
 Once-Only::.).  However, they are left in the preprocessor output, so
 they are available to the compilation pass.
@@ -1000,8 +1025,9 @@ C Preprocessor Output
    The output from the C preprocessor looks much like the input, except
 that all preprocessing directive lines have been replaced with blank
 lines and all comments with spaces.  Whitespace within a line is not
-altered; however, a space is inserted after the expansions of most
-macro calls.
+altered; however, unless `-traditional' is used, spaces may be inserted
+into the expansions of macro calls to prevent tokens from being
+concatenated.
 
    Source file name and line number information is conveyed by lines of
 the form

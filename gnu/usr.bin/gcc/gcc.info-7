@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -38,17 +38,18 @@ Configurations Supported by GNU CC
    Here are the possible CPU types:
 
      1750a, a29k, alpha, arm, cN, clipper, dsp16xx, elxsi, h8300,
-     hppa1.0, hppa1.1, i370, i386, i486, i586, i860, i960, m68000, m68k,
-     m88k, mips, mipsel, mips64, mips64el, ns32k, powerpc, powerpcle,
-     pyramid, romp, rs6000, sh, sparc, sparclite, sparc64, vax, we32k.
+     hppa1.0, hppa1.1, i370, i386, i486, i586, i860, i960, m32r,
+     m68000, m68k, m88k, mips, mipsel, mips64, mips64el, ns32k,
+     powerpc, powerpcle, pyramid, romp, rs6000, sh, sparc, sparclite,
+     sparc64, vax, we32k.
 
    Here are the recognized company names.  As you can see, customary
 abbreviations are used rather than the longer official names.
 
-     acorn, alliant, altos, apollo, att, bull, cbm, convergent, convex,
-     crds, dec, dg, dolphin, elxsi, encore, harris, hitachi, hp, ibm,
-     intergraph, isi, mips, motorola, ncr, next, ns, omron, plexus,
-     sequent, sgi, sony, sun, tti, unicom, wrs.
+     acorn, alliant, altos, apollo, apple, att, bull, cbm, convergent,
+     convex, crds, dec, dg, dolphin, elxsi, encore, harris, hitachi,
+     hp, ibm, intergraph, isi, mips, motorola, ncr, next, ns, omron,
+     plexus, sequent, sgi, sony, sun, tti, unicom, wrs.
 
    The company name is meaningful only to disambiguate when the rest of
 the information supplied is insufficient.  You can omit it, writing
@@ -57,9 +58,9 @@ is equivalent to `vax-dec-ultrix4.2'.
 
    Here is a list of system types:
 
-     386bsd, aix, acis, amigados, aos, aout, bosx, bsd, clix, coff,
+     386bsd, aix, acis, amigaos, aos, aout, aux, bosx, bsd, clix, coff,
      ctix, cxux, dgux, dynix, ebmon, ecoff, elf, esix, freebsd, hms,
-     genix, gnu, gnu/linux, hiux, hpux, iris, irix, isc, luna, lynxos,
+     genix, gnu, linux-gnu, hiux, hpux, iris, irix, isc, luna, lynxos,
      mach, minix, msdos, mvs, netbsd, newsos, nindy, ns, osf, osfrose,
      ptx, riscix, riscos, rtu, sco, sim, solaris, sunos, sym, sysv,
      udi, ultrix, unicos, uniplus, unos, vms, vsta, vxworks, winnt,
@@ -110,12 +111,11 @@ special things you must know:
 `1750a-*-*'
      MIL-STD-1750A processors.
 
-     Starting with GCC 2.6.1, the MIL-STD-1750A cross configuration no
-     longer supports the Tektronix Assembler, but instead produces
-     output for `as1750', an assembler/linker available under the GNU
-     Public License for the 1750A. Contact *kellogg@space.otn.dasa.de*
-     for more details on obtaining `as1750'.  A similarly licensed
-     simulator for the 1750A is available from same address.
+     The MIL-STD-1750A cross configuration produces output for
+     `as1750', an assembler/linker available under the GNU Public
+     License for the 1750A. `as1750' can be obtained at
+     *ftp://ftp.fta-berlin.de/pub/crossgcc/1750gals/*.  A similarly
+     licensed simulator for the 1750A is available from same address.
 
      You should ignore a fatal error during the building of libgcc
      (libgcc is not yet implemented for the 1750A.)
@@ -146,8 +146,7 @@ special things you must know:
 `alpha-*-osf1'
      Systems using processors that implement the DEC Alpha architecture
      and are running the DEC Unix (OSF/1) operating system, for example
-     the DEC Alpha AXP systems.  (VMS on the Alpha is not currently
-     supported by GNU CC.)
+     the DEC Alpha AXP systems.CC.)
 
      GNU CC writes a `.verstamp' directive to the assembler output file
      unless it is built as a cross-compiler.  It gets the version to
@@ -194,14 +193,26 @@ special things you must know:
      DBX.  DEC is now aware of this problem with the assembler and
      hopes to provide a fix shortly.
 
-`arm'
+`arc-*-elf'
+     Argonaut ARC processor.  This configuration is intended for
+     embedded systems.
+
+`arm-*-aout'
      Advanced RISC Machines ARM-family processors.  These are often
      used in embedded applications.  There are no standard Unix
      configurations.  This configuration corresponds to the basic
-     instruction sequences and will produce a.out format object modules.
+     instruction sequences and will produce `a.out' format object
+     modules.
 
      You may need to make a variant of the file `arm.h' for your
      particular configuration.
+
+`arm-*-linuxaout'
+     Any of the ARM family processors running the Linux-based GNU
+     system with the `a.out' binary format (ELF is not yet supported).
+     You must use version 2.8.1.0.7 or later of the GNU/Linux binutils,
+     which you can download from `sunsite.unc.edu:/pub/Linux/GCC' and
+     other mirror sites for Linux-based GNU systems.
 
 `arm-*-riscix'
      The ARM2 or ARM3 processor running RISC iX, Acorn's port of BSD
@@ -209,7 +220,11 @@ special things you must know:
      you must specify the version number during configuration.  Note
      that the assembler shipped with RISC iX does not support stabs
      debugging information; a new version of the assembler, with stabs
-     support included, is now available from Acorn.
+     support included, is now available from Acorn and via ftp
+     `ftp.acorn.com:/pub/riscix/as+xterm.tar.Z'.  To enable stabs
+     debugging, pass `--with-gnu-as' to configure.
+
+     You will need to install GNU `sed' before you can run configure.
 
 `a29k'
      AMD Am29k-family processors.  These are normally used in embedded
@@ -256,82 +271,55 @@ special things you must know:
      A port to the AT&T DSP1610 family of processors.
 
 `h8300-*-*'
+     Hitachi H8/300 series of processors.
+
      The calling convention and structure layout has changed in release
      2.6.  All code must be recompiled.  The calling convention now
      passes the first three arguments in function calls in registers.
      Structures are no longer a multiple of 2 bytes.
 
 `hppa*-*-*'
-     There are two variants of this CPU, called 1.0 and 1.1, which have
-     different machine descriptions.  You must use the right one for
-     your machine.  All 7NN machines and 8N7 machines use 1.1, while
-     all other 8NN machines use 1.0.
-
-     The easiest way to handle this problem is to use `configure hpNNN'
-     or `configure hpNNN-hpux', where NNN is the model number of the
-     machine.  Then `configure' will figure out if the machine is a 1.0
-     or 1.1.  Use `uname -a' to find out the model number of your
-     machine.
+     There are several variants of the HP-PA processor which run a
+     variety of operating systems.  GNU CC must be configured to use
+     the correct processor type and operating system, or GNU CC will
+     not function correctly.  The easiest way to handle this problem is
+     to *not* specify a target when configuring GNU CC, the `configure'
+     script will try to automatically determine the right processor
+     type and operating system.
 
      `-g' does not work on HP-UX, since that system uses a peculiar
      debugging format which GNU CC does not know about.  However, `-g'
      will work if you also use GAS and GDB in conjunction with GCC.  We
      highly recommend using GAS for all HP-PA configurations.
 
-     You should be using GAS-2.3 (or later) along with GDB-4.12 (or
+     You should be using GAS-2.6 (or later) along with GDB-4.16 (or
      later).  These can be retrieved from all the traditional GNU ftp
      archive sites.
 
-     Build GAS and install the resulting binary as:
+     GAS will need to be installed into a directory before `/bin',
+     `/usr/bin', and `/usr/ccs/bin' in your search path.  You should
+     install GAS before you build GNU CC.
 
-          /usr/local/lib/gcc-lib/CONFIGURATION/GCCVERSION/as
-
-     where CONFIGURATION is the configuration name (perhaps
-     `hpNNN-hpux') and GCCVERSION is the GNU CC version number.  Do
-     this *before* starting the build process, otherwise you will get
-     errors from the HPUX assembler while building `libgcc2.a'.  The
-     command
-
-          make install-dir
-
-     will create the necessary directory hierarchy so you can install
-     GAS before building GCC.
-
-     To enable debugging, configure GNU CC with the `--with-gnu-as'
-     option before building.
-
-     It has been reported that GNU CC produces invalid assembly code for
-     1.1 machines running HP-UX 8.02 when using the HP assembler.
-     Typically the errors look like this:
-          as: bug.s @line#15 [err#1060]
-            Argument 0 or 2 in FARG upper
-                   - lookahead = ARGW1=FR,RTNVAL=GR
-          as: foo.s @line#28 [err#1060]
-            Argument 0 or 2 in FARG upper
-                   - lookahead = ARGW1=FR
-
-     You can check the version of HP-UX you are running by executing
-     the command `uname -r'.   If you are indeed running HP-UX 8.02 on
-     a PA and using the HP assembler then configure GCC with
-     "hpNNN-hpux8.02".
+     To enable debugging, you must configure GNU CC with the
+     `--with-gnu-as' option before building.
 
 `i370-*-*'
      This port is very preliminary and has many known bugs.  We hope to
      have a higher-quality port for this machine soon.
 
-`i386-*-linuxoldld'
-     Use this configuration to generate a.out binaries on Linux if you
-     do not have gas/binutils version 2.5.2 or later installed. This is
-     an obsolete configuration.
+`i386-*-linux-gnuoldld'
+     Use this configuration to generate `a.out' binaries on Linux-based
+     GNU systems if you do not have gas/binutils version 2.5.2 or later
+     installed. This is an obsolete configuration.
 
-`i386-*-linuxaout'
-     Use this configuration to generate a.out binaries on Linux. This
-     configuration is being superseded. You must use gas/binutils
-     version 2.5.2 or later.
+`i386-*-linux-gnuaout'
+     Use this configuration to generate `a.out' binaries on Linux-based
+     GNU systems. This configuration is being superseded. You must use
+     gas/binutils version 2.5.2 or later.
 
-`i386-*-linux'
-     Use this configuration to generate ELF binaries on Linux.  You must
-     use gas/binutils version 2.5.2 or later.
+`i386-*-linux-gnu'
+     Use this configuration to generate ELF binaries on Linux-based GNU
+     systems.  You must use gas/binutils version 2.5.2 or later.
 
 `i386-*-sco'
      Compilation with RCC is recommended.  Also, it may be a good idea
@@ -340,6 +328,27 @@ special things you must know:
 
 `i386-*-sco3.2v4'
      Use this configuration for SCO release 3.2 version 4.
+
+`i386-*-sco3.2v5*'
+     Use this for the SCO OpenServer Release family including 5.0.0,
+     5.0.2, 5.0.4, Internet FastStart 1.0, and Internet FastStart 1.1.
+
+     GNU CC can generate ELF binaries (if you specify `-melf') or COFF
+     binaries (the default).  If you are going to build your compiler
+     in ELF mode (once you have bootstrapped the first stage compiler)
+     you *must* specify `-melf' as part of `CC', *not* `CFLAGS', for
+     example as `CC="stage1/xgcc -melf -Bstage1/" '.  If you do not do
+     this, the bootstrap will generate incorrect versions of `libgcc.a'.
+
+     You must have TLS597 (from ftp.sco.com/TLS) installed for ELF
+     binaries to work correctly. Note that Open Server 5.0.2 *does*
+     need TLS597 installed.
+
+     *NOTE:* You must follow the instructions about invoking `make
+     bootstrap' because the native OpenServer compiler builds a
+     `cc1plus' that will not correctly parse many valid C++ programs.
+     You must do a `make bootstrap' if you are building with the native
+     compiler.
 
 `i386-*-isc'
      It may be a good idea to link with GNU malloc instead of the
@@ -353,13 +362,11 @@ special things you must know:
      that comes with the system.
 
 `i386-ibm-aix'
-     You need to use GAS version 2.1 or later, and and LD from GNU
-     binutils version 2.2 or later.
+     You need to use GAS version 2.1 or later, and LD from GNU binutils
+     version 2.2 or later.
 
 `i386-sequent-bsd'
-     Go to the Berkeley universe before compiling.  In addition, you
-     probably need to create a file named `string.h' containing just
-     one line: `#include <strings.h>'.
+     Go to the Berkeley universe before compiling.
 
 `i386-sequent-ptx1*'
      Sequent DYNIX/ptx 1.x.
@@ -378,7 +385,7 @@ special things you must know:
      Sun systems.
 
 `i[345]86-*-winnt3.5'
-     This version requires a GAS that has not let been released.  Until
+     This version requires a GAS that has not yet been released.  Until
      it is, you can get a prebuilt binary version via anonymous ftp from
      `cs.washington.edu:pub/gnat' or `cs.nyu.edu:pub/gnat'. You must
      also use the Microsoft header files from the Windows NT 3.5 SDK.
@@ -432,8 +439,12 @@ special things you must know:
      You can tell GNU CC to use the GNU assembler and linker, by
      specifying `--with-gnu-as --with-gnu-ld' when configuring.  These
      will produce COFF format object files and executables;  otherwise
-     GNU CC will use the installed tools, which produce a.out format
+     GNU CC will use the installed tools, which produce `a.out' format
      executables.
+
+`m32r-*-elf'
+     Mitsubishi M32R processor.  This configuration is intended for
+     embedded systems.
 
 `m68000-hp-bsd'
      HP 9000 series 200 running BSD.  Note that the C compiler that
@@ -444,6 +455,20 @@ special things you must know:
      Altos 3068.  You must use the GNU assembler, linker and debugger.
      Also, you must fix a kernel bug.  Details in the file
      `README.ALTOS'.
+
+`m68k-apple-aux'
+     Apple Macintosh running A/UX.  You may configure GCC  to use
+     either the system assembler and linker or the GNU assembler and
+     linker.  You should use the GNU configuration if you can,
+     especially if you also want to use GNU C++.  You enabled that
+     configuration with + the `--with-gnu-as' and `--with-gnu-ld'
+     options to `configure'.
+
+     Note the C compiler that comes with this system cannot compile GNU
+     CC.  You can fine binaries of GNU CC for bootstrapping on
+     `jagubox.gsfc.nasa.gov'.  You will also a patched version of
+     `/bin/ld' there that raises some of the arbitrary limits found in
+     the original.
 
 `m68k-att-sysv'
      AT&T 3b1, a.k.a. 7300 PC.  Special procedures are needed to
@@ -456,7 +481,7 @@ special things you must know:
      However, the following procedure might work.  We are unable to
      test it.
 
-       1. Comment out the `#include "config.h"' line on line 37 of
+       1. Comment out the `#include "config.h"' line near the start of
           `cccp.c' and do `make cpp'.  This makes a preliminary version
           of GNU cpp.
 
@@ -691,9 +716,7 @@ special things you must know:
      Emacs.
 
 `ns32k-sequent'
-     Go to the Berkeley universe before compiling.  In addition, you
-     probably need to create a file named `string.h' containing just
-     one line: `#include <strings.h>'.
+     Go to the Berkeley universe before compiling.
 
 `ns32k-utek'
      UTEK ns32000 system ("merlin").  The C compiler that comes with
@@ -751,48 +774,79 @@ special things you must know:
      prevent the linker from producing a correct library or runnable
      executable.
 
+     By default, AIX 4.1 produces code that can be used on either Power
+     or PowerPC processors.
+
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
+
 `powerpc-*-elf'
 `powerpc-*-sysv4'
      PowerPC system in big endian mode, running System V.4.
 
-     This configuration is currently under development.
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
+
+`powerpc-*-linux-gnu'
+     PowerPC system in big endian mode, running the Linux-based GNU
+     system.
+
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
 `powerpc-*-eabiaix'
      Embedded PowerPC system in big endian mode with -mcall-aix
-     selected as the default.  This system is currently under
-     development.
+     selected as the default.
+
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
 `powerpc-*-eabisim'
      Embedded PowerPC system in big endian mode for use in running
-     under the PSIM simulator.  This system is currently under
-     development.
+     under the PSIM simulator.
+
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
 `powerpc-*-eabi'
      Embedded PowerPC system in big endian mode.
 
-     This configuration is currently under development.
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
 `powerpcle-*-elf'
 `powerpcle-*-sysv4'
      PowerPC system in little endian mode, running System V.4.
 
-     This configuration is currently under development.
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
-`powerpcle-*-sysv4'
-     Embedded PowerPC system in little endian mode.
+`powerpcle-*-solaris2*'
+     PowerPC system in little endian mode, running Solaris 2.5.1 or
+     higher.
 
-     This system is currently under development.
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.  Beta
+     versions of the Sun 4.0 compiler do not seem to be able to build
+     GNU CC correctly.  There are also problems with the host assembler
+     and linker that are fixed by using the GNU versions of these tools.
 
 `powerpcle-*-eabisim'
      Embedded PowerPC system in little endian mode for use in running
      under the PSIM simulator.
 
-     This system is currently under development.
-
 `powerpcle-*-eabi'
      Embedded PowerPC system in little endian mode.
 
-     This configuration is currently under development.
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
+
+`powerpcle-*-winnt'
+`powerpcle-*-pe'
+     PowerPC system in little endian mode running Windows NT.
+
+     You can specify a default version for the `-mcpu='CPU_TYPE switch
+     by using the configure option `--with-cpu-'CPU_TYPE.
 
 `vax-dec-ultrix'
      Don't try compiling with Vax C (`vcc').  It produces incorrect code
@@ -1009,10 +1063,10 @@ supports.
 
    If you want to install libraries to use with the cross-compiler,
 such as a standard C library, put them in the directory
-`/usr/local/TARGET/lib'; installation of GNU CC copies all all the
-files in that subdirectory into the proper place for GNU CC to find
-them and link with them.  Here's an example of copying some libraries
-from a target machine:
+`/usr/local/TARGET/lib'; installation of GNU CC copies all the files in
+that subdirectory into the proper place for GNU CC to find them and
+link with them.  Here's an example of copying some libraries from a
+target machine:
 
      ftp TARGET-MACHINE
      lcd /usr/local/TARGET/lib
@@ -1042,143 +1096,4 @@ machine:
      cd /usr/lib
      mget *crt*.o
      quit
-
-
-File: gcc.info,  Node: Cross Runtime,  Next: Build Cross,  Prev: Cross Headers,  Up: Cross-Compiler
-
-`libgcc.a' and Cross-Compilers
-------------------------------
-
-   Code compiled by GNU CC uses certain runtime support functions
-implicitly.  Some of these functions can be compiled successfully with
-GNU CC itself, but a few cannot be.  These problem functions are in the
-source file `libgcc1.c'; the library made from them is called
-`libgcc1.a'.
-
-   When you build a native compiler, these functions are compiled with
-some other compiler-the one that you use for bootstrapping GNU CC.
-Presumably it knows how to open code these operations, or else knows how
-to call the run-time emulation facilities that the machine comes with.
-But this approach doesn't work for building a cross-compiler.  The
-compiler that you use for building knows about the host system, not the
-target system.
-
-   So, when you build a cross-compiler you have to supply a suitable
-library `libgcc1.a' that does the job it is expected to do.
-
-   To compile `libgcc1.c' with the cross-compiler itself does not work.
-The functions in this file are supposed to implement arithmetic
-operations that GNU CC does not know how to open code for your target
-machine.  If these functions are compiled with GNU CC itself, they will
-compile into infinite recursion.
-
-   On any given target, most of these functions are not needed.  If GNU
-CC can open code an arithmetic operation, it will not call these
-functions to perform the operation.  It is possible that on your target
-machine, none of these functions is needed.  If so, you can supply an
-empty library as `libgcc1.a'.
-
-   Many targets need library support only for multiplication and
-division.  If you are linking with a library that contains functions for
-multiplication and division, you can tell GNU CC to call them directly
-by defining the macros `MULSI3_LIBCALL', and the like.  These macros
-need to be defined in the target description macro file.  For some
-targets, they are defined already.  This may be sufficient to avoid the
-need for libgcc1.a; if so, you can supply an empty library.
-
-   Some targets do not have floating point instructions; they need other
-functions in `libgcc1.a', which do floating arithmetic.  Recent
-versions of GNU CC have a file which emulates floating point.  With a
-certain amount of work, you should be able to construct a floating
-point emulator that can be used as `libgcc1.a'.  Perhaps future
-versions will contain code to do this automatically and conveniently.
-That depends on whether someone wants to implement it.
-
-   Some embedded targets come with all the necessary `libgcc1.a'
-routines written in C or assembler.  These targets build `libgcc1.a'
-automatically and you do not need to do anything special for them.
-Other embedded targets do not need any `libgcc1.a' routines since all
-the necessary operations are supported by the hardware.
-
-   If your target system has another C compiler, you can configure GNU
-CC as a native compiler on that machine, build just `libgcc1.a' with
-`make libgcc1.a' on that machine, and use the resulting file with the
-cross-compiler.  To do this, execute the following on the target
-machine:
-
-     cd TARGET-BUILD-DIR
-     ./configure --host=sparc --target=sun3
-     make libgcc1.a
-
-And then this on the host machine:
-
-     ftp TARGET-MACHINE
-     binary
-     cd TARGET-BUILD-DIR
-     get libgcc1.a
-     quit
-
-   Another way to provide the functions you need in `libgcc1.a' is to
-define the appropriate `perform_...' macros for those functions.  If
-these definitions do not use the C arithmetic operators that they are
-meant to implement, you should be able to compile them with the
-cross-compiler you are building.  (If these definitions already exist
-for your target file, then you are all set.)
-
-   To build `libgcc1.a' using the perform macros, use
-`LIBGCC1=libgcc1.a OLDCC=./xgcc' when building the compiler.
-Otherwise, you should place your replacement library under the name
-`libgcc1.a' in the directory in which you will build the
-cross-compiler, before you run `make'.
-
-
-File: gcc.info,  Node: Cross Headers,  Next: Cross Runtime,  Prev: Tools and Libraries,  Up: Cross-Compiler
-
-Cross-Compilers and Header Files
---------------------------------
-
-   If you are cross-compiling a standalone program or a program for an
-embedded system, then you may not need any header files except the few
-that are part of GNU CC (and those of your program).  However, if you
-intend to link your program with a standard C library such as `libc.a',
-then you probably need to compile with the header files that go with
-the library you use.
-
-   The GNU C compiler does not come with these files, because (1) they
-are system-specific, and (2) they belong in a C library, not in a
-compiler.
-
-   If the GNU C library supports your target machine, then you can get
-the header files from there (assuming you actually use the GNU library
-when you link your program).
-
-   If your target machine comes with a C compiler, it probably comes
-with suitable header files also.  If you make these files accessible
-from the host machine, the cross-compiler can use them also.
-
-   Otherwise, you're on your own in finding header files to use when
-cross-compiling.
-
-   When you have found suitable header files, put them in
-`/usr/local/TARGET/include', before building the cross compiler.  Then
-installation will run fixincludes properly and install the corrected
-versions of the header files where the compiler will use them.
-
-   Provide the header files before you build the cross-compiler, because
-the build stage actually runs the cross-compiler to produce parts of
-`libgcc.a'.  (These are the parts that *can* be compiled with GNU CC.)
-Some of them need suitable header files.
-
-   Here's an example showing how to copy the header files from a target
-machine.  On the target machine, do this:
-
-     (cd /usr/include; tar cf - .) > tarfile
-
-   Then, on the host machine, do this:
-
-     ftp TARGET-MACHINE
-     lcd /usr/local/TARGET/include
-     get tarfile
-     quit
-     tar xf tarfile
 

@@ -1,13 +1,13 @@
-This is Info file gcc.info, produced by Makeinfo-1.63 from the input
-file gcc.texi.
+This is Info file gcc.info, produced by Makeinfo version 1.68 from the
+input file gcc.texi.
 
    This file documents the use and the internals of the GNU compiler.
 
    Published by the Free Software Foundation 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995 Free Software
-Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -28,6 +28,480 @@ License," "Funding for Free Software," and "Protect Your Freedom--Fight
 `Look And Feel'", and this permission notice, may be included in
 translations approved by the Free Software Foundation instead of in the
 original English.
+
+
+File: gcc.info,  Node: External Bugs,  Next: Incompatibilities,  Prev: Interoperation,  Up: Trouble
+
+Problems Compiling Certain Programs
+===================================
+
+   Certain programs have problems compiling.
+
+   * Parse errors may occur compiling X11 on a Decstation running
+     Ultrix 4.2 because of problems in DEC's versions of the X11 header
+     files `X11/Xlib.h' and `X11/Xutil.h'.  People recommend adding
+     `-I/usr/include/mit' to use the MIT versions of the header files,
+     using the `-traditional' switch to turn off ANSI C, or fixing the
+     header files by adding this:
+
+          #ifdef __STDC__
+          #define NeedFunctionPrototypes 0
+          #endif
+
+   * If you have trouble compiling Perl on a SunOS 4 system, it may be
+     because Perl specifies `-I/usr/ucbinclude'.  This accesses the
+     unfixed header files.  Perl specifies the options
+
+          -traditional -Dvolatile=__volatile__
+          -I/usr/include/sun -I/usr/ucbinclude
+          -fpcc-struct-return
+
+     most of which are unnecessary with GCC 2.4.5 and newer versions.
+     You can make a properly working Perl by setting `ccflags' to
+     `-fwritable-strings' (implied by the `-traditional' in the
+     original options) and `cppflags' to empty in `config.sh', then
+     typing `./doSH; make depend; make'.
+
+   * On various 386 Unix systems derived from System V, including SCO,
+     ISC, and ESIX, you may get error messages about running out of
+     virtual memory while compiling certain programs.
+
+     You can prevent this problem by linking GNU CC with the GNU malloc
+     (which thus replaces the malloc that comes with the system).  GNU
+     malloc is available as a separate package, and also in the file
+     `src/gmalloc.c' in the GNU Emacs 19 distribution.
+
+     If you have installed GNU malloc as a separate library package,
+     use this option when you relink GNU CC:
+
+          MALLOC=/usr/local/lib/libgmalloc.a
+
+     Alternatively, if you have compiled `gmalloc.c' from Emacs 19, copy
+     the object file to `gmalloc.o' and use this option when you relink
+     GNU CC:
+
+          MALLOC=gmalloc.o
+
+
+File: gcc.info,  Node: Incompatibilities,  Next: Fixed Headers,  Prev: External Bugs,  Up: Trouble
+
+Incompatibilities of GNU CC
+===========================
+
+   There are several noteworthy incompatibilities between GNU C and most
+existing (non-ANSI) versions of C.  The `-traditional' option
+eliminates many of these incompatibilities, *but not all*, by telling
+GNU C to behave like the other C compilers.
+
+   * GNU CC normally makes string constants read-only.  If several
+     identical-looking string constants are used, GNU CC stores only one
+     copy of the string.
+
+     One consequence is that you cannot call `mktemp' with a string
+     constant argument.  The function `mktemp' always alters the string
+     its argument points to.
+
+     Another consequence is that `sscanf' does not work on some systems
+     when passed a string constant as its format control string or
+     input.  This is because `sscanf' incorrectly tries to write into
+     the string constant.  Likewise `fscanf' and `scanf'.
+
+     The best solution to these problems is to change the program to use
+     `char'-array variables with initialization strings for these
+     purposes instead of string constants.  But if this is not possible,
+     you can use the `-fwritable-strings' flag, which directs GNU CC to
+     handle string constants the same way most C compilers do.
+     `-traditional' also has this effect, among others.
+
+   * `-2147483648' is positive.
+
+     This is because 2147483648 cannot fit in the type `int', so
+     (following the ANSI C rules) its data type is `unsigned long int'.
+     Negating this value yields 2147483648 again.
+
+   * GNU CC does not substitute macro arguments when they appear inside
+     of string constants.  For example, the following macro in GNU CC
+
+          #define foo(a) "a"
+
+     will produce output `"a"' regardless of what the argument A is.
+
+     The `-traditional' option directs GNU CC to handle such cases
+     (among others) in the old-fashioned (non-ANSI) fashion.
+
+   * When you use `setjmp' and `longjmp', the only automatic variables
+     guaranteed to remain valid are those declared `volatile'.  This is
+     a consequence of automatic register allocation.  Consider this
+     function:
+
+          jmp_buf j;
+          
+          foo ()
+          {
+            int a, b;
+          
+            a = fun1 ();
+            if (setjmp (j))
+              return a;
+          
+            a = fun2 ();
+            /* `longjmp (j)' may occur in `fun3'. */
+            return a + fun3 ();
+          }
+
+     Here `a' may or may not be restored to its first value when the
+     `longjmp' occurs.  If `a' is allocated in a register, then its
+     first value is restored; otherwise, it keeps the last value stored
+     in it.
+
+     If you use the `-W' option with the `-O' option, you will get a
+     warning when GNU CC thinks such a problem might be possible.
+
+     The `-traditional' option directs GNU C to put variables in the
+     stack by default, rather than in registers, in functions that call
+     `setjmp'.  This results in the behavior found in traditional C
+     compilers.
+
+   * Programs that use preprocessing directives in the middle of macro
+     arguments do not work with GNU CC.  For example, a program like
+     this will not work:
+
+          foobar (
+          #define luser
+                  hack)
+
+     ANSI C does not permit such a construct.  It would make sense to
+     support it when `-traditional' is used, but it is too much work to
+     implement.
+
+   * Declarations of external variables and functions within a block
+     apply only to the block containing the declaration.  In other
+     words, they have the same scope as any other declaration in the
+     same place.
+
+     In some other C compilers, a `extern' declaration affects all the
+     rest of the file even if it happens within a block.
+
+     The `-traditional' option directs GNU C to treat all `extern'
+     declarations as global, like traditional compilers.
+
+   * In traditional C, you can combine `long', etc., with a typedef
+     name, as shown here:
+
+          typedef int foo;
+          typedef long foo bar;
+
+     In ANSI C, this is not allowed: `long' and other type modifiers
+     require an explicit `int'.  Because this criterion is expressed by
+     Bison grammar rules rather than C code, the `-traditional' flag
+     cannot alter it.
+
+   * PCC allows typedef names to be used as function parameters.  The
+     difficulty described immediately above applies here too.
+
+   * PCC allows whitespace in the middle of compound assignment
+     operators such as `+='.  GNU CC, following the ANSI standard, does
+     not allow this.  The difficulty described immediately above
+     applies here too.
+
+   * GNU CC complains about unterminated character constants inside of
+     preprocessing conditionals that fail.  Some programs have English
+     comments enclosed in conditionals that are guaranteed to fail; if
+     these comments contain apostrophes, GNU CC will probably report an
+     error.  For example, this code would produce an error:
+
+          #if 0
+          You can't expect this to work.
+          #endif
+
+     The best solution to such a problem is to put the text into an
+     actual C comment delimited by `/*...*/'.  However, `-traditional'
+     suppresses these error messages.
+
+   * Many user programs contain the declaration `long time ();'.  In the
+     past, the system header files on many systems did not actually
+     declare `time', so it did not matter what type your program
+     declared it to return.  But in systems with ANSI C headers, `time'
+     is declared to return `time_t', and if that is not the same as
+     `long', then `long time ();' is erroneous.
+
+     The solution is to change your program to use `time_t' as the
+     return type of `time'.
+
+   * When compiling functions that return `float', PCC converts it to a
+     double.  GNU CC actually returns a `float'.  If you are concerned
+     with PCC compatibility, you should declare your functions to return
+     `double'; you might as well say what you mean.
+
+   * When compiling functions that return structures or unions, GNU CC
+     output code normally uses a method different from that used on most
+     versions of Unix.  As a result, code compiled with GNU CC cannot
+     call a structure-returning function compiled with PCC, and vice
+     versa.
+
+     The method used by GNU CC is as follows: a structure or union
+     which is 1, 2, 4 or 8 bytes long is returned like a scalar.  A
+     structure or union with any other size is stored into an address
+     supplied by the caller (usually in a special, fixed register, but
+     on some machines it is passed on the stack).  The
+     machine-description macros `STRUCT_VALUE' and
+     `STRUCT_INCOMING_VALUE' tell GNU CC where to pass this address.
+
+     By contrast, PCC on most target machines returns structures and
+     unions of any size by copying the data into an area of static
+     storage, and then returning the address of that storage as if it
+     were a pointer value.  The caller must copy the data from that
+     memory area to the place where the value is wanted.  GNU CC does
+     not use this method because it is slower and nonreentrant.
+
+     On some newer machines, PCC uses a reentrant convention for all
+     structure and union returning.  GNU CC on most of these machines
+     uses a compatible convention when returning structures and unions
+     in memory, but still returns small structures and unions in
+     registers.
+
+     You can tell GNU CC to use a compatible convention for all
+     structure and union returning with the option
+     `-fpcc-struct-return'.
+
+   * GNU C complains about program fragments such as `0x74ae-0x4000'
+     which appear to be two hexadecimal constants separated by the minus
+     operator.  Actually, this string is a single "preprocessing token".
+     Each such token must correspond to one token in C.  Since this
+     does not, GNU C prints an error message.  Although it may appear
+     obvious that what is meant is an operator and two values, the ANSI
+     C standard specifically requires that this be treated as erroneous.
+
+     A "preprocessing token" is a "preprocessing number" if it begins
+     with a digit and is followed by letters, underscores, digits,
+     periods and `e+', `e-', `E+', or `E-' character sequences.
+
+     To make the above program fragment valid, place whitespace in
+     front of the minus sign.  This whitespace will end the
+     preprocessing number.
+
+
+File: gcc.info,  Node: Fixed Headers,  Next: Standard Libraries,  Prev: Incompatibilities,  Up: Trouble
+
+Fixed Header Files
+==================
+
+   GNU CC needs to install corrected versions of some system header
+files.  This is because most target systems have some header files that
+won't work with GNU CC unless they are changed.  Some have bugs, some
+are incompatible with ANSI C, and some depend on special features of
+other compilers.
+
+   Installing GNU CC automatically creates and installs the fixed header
+files, by running a program called `fixincludes' (or for certain
+targets an alternative such as `fixinc.svr4').  Normally, you don't
+need to pay attention to this.  But there are cases where it doesn't do
+the right thing automatically.
+
+   * If you update the system's header files, such as by installing a
+     new system version, the fixed header files of GNU CC are not
+     automatically updated.  The easiest way to update them is to
+     reinstall GNU CC.  (If you want to be clever, look in the makefile
+     and you can find a shortcut.)
+
+   * On some systems, in particular SunOS 4, header file directories
+     contain machine-specific symbolic links in certain places.  This
+     makes it possible to share most of the header files among hosts
+     running the same version of SunOS 4 on different machine models.
+
+     The programs that fix the header files do not understand this
+     special way of using symbolic links; therefore, the directory of
+     fixed header files is good only for the machine model used to
+     build it.
+
+     In SunOS 4, only programs that look inside the kernel will notice
+     the difference between machine models.  Therefore, for most
+     purposes, you need not be concerned about this.
+
+     It is possible to make separate sets of fixed header files for the
+     different machine models, and arrange a structure of symbolic
+     links so as to use the proper set, but you'll have to do this by
+     hand.
+
+   * On Lynxos, GNU CC by default does not fix the header files.  This
+     is because bugs in the shell cause the `fixincludes' script to
+     fail.
+
+     This means you will encounter problems due to bugs in the system
+     header files.  It may be no comfort that they aren't GNU CC's
+     fault, but it does mean that there's nothing for us to do about
+     them.
+
+
+File: gcc.info,  Node: Standard Libraries,  Next: Disappointments,  Prev: Fixed Headers,  Up: Trouble
+
+Standard Libraries
+==================
+
+   GNU CC by itself attempts to be what the ISO/ANSI C standard calls a
+"conforming freestanding implementation".  This means all ANSI C
+language features are available, as well as the contents of `float.h',
+`limits.h', `stdarg.h', and `stddef.h'.  The rest of the C library is
+supplied by the vendor of the operating system.  If that C library
+doesn't conform to the C standards, then your programs might get
+warnings (especially when using `-Wall') that you don't expect.
+
+   For example, the `sprintf' function on SunOS 4.1.3 returns `char *'
+while the C standard says that `sprintf' returns an `int'.  The
+`fixincludes' program could make the prototype for this function match
+the Standard, but that would be wrong, since the function will still
+return `char *'.
+
+   If you need a Standard compliant library, then you need to find one,
+as GNU CC does not provide one.  The GNU C library (called `glibc') has
+been ported to a number of operating systems, and provides ANSI/ISO,
+POSIX, BSD and SystemV compatibility.  You could also ask your operating
+system vendor if newer libraries are available.
+
+
+File: gcc.info,  Node: Disappointments,  Next: C++ Misunderstandings,  Prev: Standard Libraries,  Up: Trouble
+
+Disappointments and Misunderstandings
+=====================================
+
+   These problems are perhaps regrettable, but we don't know any
+practical way around them.
+
+   * Certain local variables aren't recognized by debuggers when you
+     compile with optimization.
+
+     This occurs because sometimes GNU CC optimizes the variable out of
+     existence.  There is no way to tell the debugger how to compute the
+     value such a variable "would have had", and it is not clear that
+     would be desirable anyway.  So GNU CC simply does not mention the
+     eliminated variable when it writes debugging information.
+
+     You have to expect a certain amount of disagreement between the
+     executable and your source code, when you use optimization.
+
+   * Users often think it is a bug when GNU CC reports an error for code
+     like this:
+
+          int foo (struct mumble *);
+          
+          struct mumble { ... };
+          
+          int foo (struct mumble *x)
+          { ... }
+
+     This code really is erroneous, because the scope of `struct
+     mumble' in the prototype is limited to the argument list
+     containing it.  It does not refer to the `struct mumble' defined
+     with file scope immediately below--they are two unrelated types
+     with similar names in different scopes.
+
+     But in the definition of `foo', the file-scope type is used
+     because that is available to be inherited.  Thus, the definition
+     and the prototype do not match, and you get an error.
+
+     This behavior may seem silly, but it's what the ANSI standard
+     specifies.  It is easy enough for you to make your code work by
+     moving the definition of `struct mumble' above the prototype.
+     It's not worth being incompatible with ANSI C just to avoid an
+     error for the example shown above.
+
+   * Accesses to bitfields even in volatile objects works by accessing
+     larger objects, such as a byte or a word.  You cannot rely on what
+     size of object is accessed in order to read or write the bitfield;
+     it may even vary for a given bitfield according to the precise
+     usage.
+
+     If you care about controlling the amount of memory that is
+     accessed, use volatile but do not use bitfields.
+
+   * GNU CC comes with shell scripts to fix certain known problems in
+     system header files.  They install corrected copies of various
+     header files in a special directory where only GNU CC will
+     normally look for them.  The scripts adapt to various systems by
+     searching all the system header files for the problem cases that
+     we know about.
+
+     If new system header files are installed, nothing automatically
+     arranges to update the corrected header files.  You will have to
+     reinstall GNU CC to fix the new header files.  More specifically,
+     go to the build directory and delete the files `stmp-fixinc' and
+     `stmp-headers', and the subdirectory `include'; then do `make
+     install' again.
+
+   * On 68000 and x86 systems, for instance, you can get paradoxical
+     results if you test the precise values of floating point numbers.
+     For example, you can find that a floating point value which is not
+     a NaN is not equal to itself.  This results from the fact that the
+     floating point registers hold a few more bits of precision than
+     fit in a `double' in memory.  Compiled code moves values between
+     memory and floating point registers at its convenience, and moving
+     them into memory truncates them.
+
+     You can partially avoid this problem by using the `-ffloat-store'
+     option (*note Optimize Options::.).
+
+   * On the MIPS, variable argument functions using `varargs.h' cannot
+     have a floating point value for the first argument.  The reason
+     for this is that in the absence of a prototype in scope, if the
+     first argument is a floating point, it is passed in a floating
+     point register, rather than an integer register.
+
+     If the code is rewritten to use the ANSI standard `stdarg.h'
+     method of variable arguments, and the prototype is in scope at the
+     time of the call, everything will work fine.
+
+   * On the H8/300 and H8/300H, variable argument functions must be
+     implemented using the ANSI standard `stdarg.h' method of variable
+     arguments.  Furthermore, calls to functions using `stdarg.h'
+     variable arguments must have a prototype for the called function
+     in scope at the time of the call.
+
+
+File: gcc.info,  Node: C++ Misunderstandings,  Next: Protoize Caveats,  Prev: Disappointments,  Up: Trouble
+
+Common Misunderstandings with GNU C++
+=====================================
+
+   C++ is a complex language and an evolving one, and its standard
+definition (the ANSI C++ draft standard) is also evolving.  As a result,
+your C++ compiler may occasionally surprise you, even when its behavior
+is correct.  This section discusses some areas that frequently give
+rise to questions of this sort.
+
+* Menu:
+
+* Static Definitions::  Static member declarations are not definitions
+* Temporaries::         Temporaries may vanish before you expect
+
+
+File: gcc.info,  Node: Static Definitions,  Next: Temporaries,  Up: C++ Misunderstandings
+
+Declare *and* Define Static Members
+-----------------------------------
+
+   When a class has static data members, it is not enough to *declare*
+the static member; you must also *define* it.  For example:
+
+     class Foo
+     {
+       ...
+       void method();
+       static int bar;
+     };
+
+   This declaration only establishes that the class `Foo' has an `int'
+named `Foo::bar', and a member function named `Foo::method'.  But you
+still need to define *both* `method' and `bar' elsewhere.  According to
+the draft ANSI standard, you must supply an initializer in one (and
+only one) source file, such as:
+
+     int Foo::bar = 0;
+
+   Other C++ compilers may not correctly implement the standard
+behavior.  As a result, when you switch to `g++' from one of these
+compilers, you may discover that a program that appeared to work
+correctly in fact does not conform to the standard: `g++' reports as
+undefined symbols any static data members that lack definitions.
 
 
 File: gcc.info,  Node: Temporaries,  Prev: Static Definitions,  Up: C++ Misunderstandings
@@ -297,6 +771,14 @@ we do not make because we think GNU CC is better without them.
      ANSI C standard says is relevant to the design of plain `gcc'
      without `-ansi' only for pragmatic reasons, not as a requirement.
 
+     GNU CC normally defines `__STDC__' to be 1, and in addition
+     defines `__STRICT_ANSI__' if you specify the `-ansi' option.  On
+     some hosts, system include files use a different convention, where
+     `__STDC__' is normally 0, but is 1 if the user specifies strict
+     conformance to the C Standard.  GNU CC follows the host convention
+     when processing system include files, but when processing user
+     files it follows the usual GNU C convention.
+
    * Undefining `__STDC__' in C++.
 
      Programs written to compile with C++-to-C translators get the
@@ -488,9 +970,9 @@ Where to Report Bugs
    Send bug reports for GNU C to `bug-gcc@prep.ai.mit.edu'.
 
    Send bug reports for GNU C++ to `bug-g++@prep.ai.mit.edu'.  If your
-bug involves the C++ class library libg++, send mail to
-`bug-lib-g++@prep.ai.mit.edu'.  If you're not sure, you can send the
-bug report to both lists.
+bug involves the C++ class library libg++, send mail instead to the
+address `bug-lib-g++@prep.ai.mit.edu'.  If you're not sure, you can
+send the bug report to both lists.
 
    *Do not send bug reports to `help-gcc@prep.ai.mit.edu' or to the
 newsgroup `gnu.gcc.help'.* Most users of GNU CC do not want to receive
@@ -514,597 +996,4 @@ mail to the proper mailing list.
      Free Software Foundation
      59 Temple Place - Suite 330
      Boston, MA 02111-1307, USA
-
-
-File: gcc.info,  Node: Bug Reporting,  Next: Sending Patches,  Prev: Bug Lists,  Up: Bugs
-
-How to Report Bugs
-==================
-
-   The fundamental principle of reporting bugs usefully is this:
-*report all the facts*.  If you are not sure whether to state a fact or
-leave it out, state it!
-
-   Often people omit facts because they think they know what causes the
-problem and they conclude that some details don't matter.  Thus, you
-might assume that the name of the variable you use in an example does
-not matter.  Well, probably it doesn't, but one cannot be sure.
-Perhaps the bug is a stray memory reference which happens to fetch from
-the location where that name is stored in memory; perhaps, if the name
-were different, the contents of that location would fool the compiler
-into doing the right thing despite the bug.  Play it safe and give a
-specific, complete example.  That is the easiest thing for you to do,
-and the most helpful.
-
-   Keep in mind that the purpose of a bug report is to enable someone to
-fix the bug if it is not known.  It isn't very important what happens if
-the bug is already known.  Therefore, always write your bug reports on
-the assumption that the bug is not known.
-
-   Sometimes people give a few sketchy facts and ask, "Does this ring a
-bell?"  This cannot help us fix a bug, so it is basically useless.  We
-respond by asking for enough details to enable us to investigate.  You
-might as well expedite matters by sending them to begin with.
-
-   Try to make your bug report self-contained.  If we have to ask you
-for more information, it is best if you include all the previous
-information in your response, as well as the information that was
-missing.
-
-   Please report each bug in a separate message.  This makes it easier
-for us to track which bugs have been fixed and to forward your bugs
-reports to the appropriate maintainer.
-
-   Do not compress and encode any part of your bug report using programs
-such as `uuencode'.  If you do so it will slow down the processing of
-your bug.  If you must submit multiple large files, use `shar', which
-allows us to read your message without having to run any decompression
-programs.
-
-   To enable someone to investigate the bug, you should include all
-these things:
-
-   * The version of GNU CC.  You can get this by running it with the
-     `-v' option.
-
-     Without this, we won't know whether there is any point in looking
-     for the bug in the current version of GNU CC.
-
-   * A complete input file that will reproduce the bug.  If the bug is
-     in the C preprocessor, send a source file and any header files
-     that it requires.  If the bug is in the compiler proper (`cc1'),
-     run your source file through the C preprocessor by doing `gcc -E
-     SOURCEFILE > OUTFILE', then include the contents of OUTFILE in the
-     bug report.  (When you do this, use the same `-I', `-D' or `-U'
-     options that you used in actual compilation.)
-
-     A single statement is not enough of an example.  In order to
-     compile it, it must be embedded in a complete file of compiler
-     input; and the bug might depend on the details of how this is done.
-
-     Without a real example one can compile, all anyone can do about
-     your bug report is wish you luck.  It would be futile to try to
-     guess how to provoke the bug.  For example, bugs in register
-     allocation and reloading frequently depend on every little detail
-     of the function they happen in.
-
-     Even if the input file that fails comes from a GNU program, you
-     should still send the complete test case.  Don't ask the GNU CC
-     maintainers to do the extra work of obtaining the program in
-     question--they are all overworked as it is.  Also, the problem may
-     depend on what is in the header files on your system; it is
-     unreliable for the GNU CC maintainers to try the problem with the
-     header files available to them.  By sending CPP output, you can
-     eliminate this source of uncertainty and save us a certain
-     percentage of wild goose chases.
-
-   * The command arguments you gave GNU CC or GNU C++ to compile that
-     example and observe the bug.  For example, did you use `-O'?  To
-     guarantee you won't omit something important, list all the options.
-
-     If we were to try to guess the arguments, we would probably guess
-     wrong and then we would not encounter the bug.
-
-   * The type of machine you are using, and the operating system name
-     and version number.
-
-   * The operands you gave to the `configure' command when you installed
-     the compiler.
-
-   * A complete list of any modifications you have made to the compiler
-     source.  (We don't promise to investigate the bug unless it
-     happens in an unmodified compiler.  But if you've made
-     modifications and don't tell us, then you are sending us on a wild
-     goose chase.)
-
-     Be precise about these changes.  A description in English is not
-     enough--send a context diff for them.
-
-     Adding files of your own (such as a machine description for a
-     machine we don't support) is a modification of the compiler source.
-
-   * Details of any other deviations from the standard procedure for
-     installing GNU CC.
-
-   * A description of what behavior you observe that you believe is
-     incorrect.  For example, "The compiler gets a fatal signal," or,
-     "The assembler instruction at line 208 in the output is incorrect."
-
-     Of course, if the bug is that the compiler gets a fatal signal,
-     then one can't miss it.  But if the bug is incorrect output, the
-     maintainer might not notice unless it is glaringly wrong.  None of
-     us has time to study all the assembler code from a 50-line C
-     program just on the chance that one instruction might be wrong.
-     We need *you* to do this part!
-
-     Even if the problem you experience is a fatal signal, you should
-     still say so explicitly.  Suppose something strange is going on,
-     such as, your copy of the compiler is out of synch, or you have
-     encountered a bug in the C library on your system.  (This has
-     happened!)  Your copy might crash and the copy here would not.  If
-     you said to expect a crash, then when the compiler here fails to
-     crash, we would know that the bug was not happening.  If you don't
-     say to expect a crash, then we would not know whether the bug was
-     happening.  We would not be able to draw any conclusion from our
-     observations.
-
-     If the problem is a diagnostic when compiling GNU CC with some
-     other compiler, say whether it is a warning or an error.
-
-     Often the observed symptom is incorrect output when your program
-     is run.  Sad to say, this is not enough information unless the
-     program is short and simple.  None of us has time to study a large
-     program to figure out how it would work if compiled correctly,
-     much less which line of it was compiled wrong.  So you will have
-     to do that.  Tell us which source line it is, and what incorrect
-     result happens when that line is executed.  A person who
-     understands the program can find this as easily as finding a bug
-     in the program itself.
-
-   * If you send examples of assembler code output from GNU CC or GNU
-     C++, please use `-g' when you make them.  The debugging information
-     includes source line numbers which are essential for correlating
-     the output with the input.
-
-   * If you wish to mention something in the GNU CC source, refer to it
-     by context, not by line number.
-
-     The line numbers in the development sources don't match those in
-     your sources.  Your line numbers would convey no useful
-     information to the maintainers.
-
-   * Additional information from a debugger might enable someone to
-     find a problem on a machine which he does not have available.
-     However, you need to think when you collect this information if
-     you want it to have any chance of being useful.
-
-     For example, many people send just a backtrace, but that is never
-     useful by itself.  A simple backtrace with arguments conveys little
-     about GNU CC because the compiler is largely data-driven; the same
-     functions are called over and over for different RTL insns, doing
-     different things depending on the details of the insn.
-
-     Most of the arguments listed in the backtrace are useless because
-     they are pointers to RTL list structure.  The numeric values of the
-     pointers, which the debugger prints in the backtrace, have no
-     significance whatever; all that matters is the contents of the
-     objects they point to (and most of the contents are other such
-     pointers).
-
-     In addition, most compiler passes consist of one or more loops that
-     scan the RTL insn sequence.  The most vital piece of information
-     about such a loop--which insn it has reached--is usually in a
-     local variable, not in an argument.
-
-     What you need to provide in addition to a backtrace are the values
-     of the local variables for several stack frames up.  When a local
-     variable or an argument is an RTX, first print its value and then
-     use the GDB command `pr' to print the RTL expression that it points
-     to.  (If GDB doesn't run on your machine, use your debugger to call
-     the function `debug_rtx' with the RTX as an argument.)  In
-     general, whenever a variable is a pointer, its value is no use
-     without the data it points to.
-
-   Here are some things that are not necessary:
-
-   * A description of the envelope of the bug.
-
-     Often people who encounter a bug spend a lot of time investigating
-     which changes to the input file will make the bug go away and which
-     changes will not affect it.
-
-     This is often time consuming and not very useful, because the way
-     we will find the bug is by running a single example under the
-     debugger with breakpoints, not by pure deduction from a series of
-     examples.  You might as well save your time for something else.
-
-     Of course, if you can find a simpler example to report *instead* of
-     the original one, that is a convenience.  Errors in the output
-     will be easier to spot, running under the debugger will take less
-     time, etc.  Most GNU CC bugs involve just one function, so the
-     most straightforward way to simplify an example is to delete all
-     the function definitions except the one where the bug occurs.
-     Those earlier in the file may be replaced by external declarations
-     if the crucial function depends on them.  (Exception: inline
-     functions may affect compilation of functions defined later in the
-     file.)
-
-     However, simplification is not vital; if you don't want to do this,
-     report the bug anyway and send the entire test case you used.
-
-   * In particular, some people insert conditionals `#ifdef BUG' around
-     a statement which, if removed, makes the bug not happen.  These
-     are just clutter; we won't pay any attention to them anyway.
-     Besides, you should send us cpp output, and that can't have
-     conditionals.
-
-   * A patch for the bug.
-
-     A patch for the bug is useful if it is a good one.  But don't omit
-     the necessary information, such as the test case, on the
-     assumption that a patch is all we need.  We might see problems
-     with your patch and decide to fix the problem another way, or we
-     might not understand it at all.
-
-     Sometimes with a program as complicated as GNU CC it is very hard
-     to construct an example that will make the program follow a
-     certain path through the code.  If you don't send the example, we
-     won't be able to construct one, so we won't be able to verify that
-     the bug is fixed.
-
-     And if we can't understand what bug you are trying to fix, or why
-     your patch should be an improvement, we won't install it.  A test
-     case will help us to understand.
-
-     *Note Sending Patches::, for guidelines on how to make it easy for
-     us to understand and install your patches.
-
-   * A guess about what the bug is or what it depends on.
-
-     Such guesses are usually wrong.  Even I can't guess right about
-     such things without first using the debugger to find the facts.
-
-   * A core dump file.
-
-     We have no way of examining a core dump for your type of machine
-     unless we have an identical system--and if we do have one, we
-     should be able to reproduce the crash ourselves.
-
-
-File: gcc.info,  Node: Sending Patches,  Prev: Bug Reporting,  Up: Bugs
-
-Sending Patches for GNU CC
-==========================
-
-   If you would like to write bug fixes or improvements for the GNU C
-compiler, that is very helpful.  Send suggested fixes to the bug report
-mailing list, `bug-gcc@prep.ai.mit.edu'.
-
-   Please follow these guidelines so we can study your patches
-efficiently.  If you don't follow these guidelines, your information
-might still be useful, but using it will take extra work.  Maintaining
-GNU C is a lot of work in the best of circumstances, and we can't keep
-up unless you do your best to help.
-
-   * Send an explanation with your changes of what problem they fix or
-     what improvement they bring about.  For a bug fix, just include a
-     copy of the bug report, and explain why the change fixes the bug.
-
-     (Referring to a bug report is not as good as including it, because
-     then we will have to look it up, and we have probably already
-     deleted it if we've already fixed the bug.)
-
-   * Always include a proper bug report for the problem you think you
-     have fixed.  We need to convince ourselves that the change is
-     right before installing it.  Even if it is right, we might have
-     trouble judging it if we don't have a way to reproduce the problem.
-
-   * Include all the comments that are appropriate to help people
-     reading the source in the future understand why this change was
-     needed.
-
-   * Don't mix together changes made for different reasons.  Send them
-     *individually*.
-
-     If you make two changes for separate reasons, then we might not
-     want to install them both.  We might want to install just one.  If
-     you send them all jumbled together in a single set of diffs, we
-     have to do extra work to disentangle them--to figure out which
-     parts of the change serve which purpose.  If we don't have time
-     for this, we might have to ignore your changes entirely.
-
-     If you send each change as soon as you have written it, with its
-     own explanation, then the two changes never get tangled up, and we
-     can consider each one properly without any extra work to
-     disentangle them.
-
-     Ideally, each change you send should be impossible to subdivide
-     into parts that we might want to consider separately, because each
-     of its parts gets its motivation from the other parts.
-
-   * Send each change as soon as that change is finished.  Sometimes
-     people think they are helping us by accumulating many changes to
-     send them all together.  As explained above, this is absolutely
-     the worst thing you could do.
-
-     Since you should send each change separately, you might as well
-     send it right away.  That gives us the option of installing it
-     immediately if it is important.
-
-   * Use `diff -c' to make your diffs.  Diffs without context are hard
-     for us to install reliably.  More than that, they make it hard for
-     us to study the diffs to decide whether we want to install them.
-     Unidiff format is better than contextless diffs, but not as easy
-     to read as `-c' format.
-
-     If you have GNU diff, use `diff -cp', which shows the name of the
-     function that each change occurs in.
-
-   * Write the change log entries for your changes.  We get lots of
-     changes, and we don't have time to do all the change log writing
-     ourselves.
-
-     Read the `ChangeLog' file to see what sorts of information to put
-     in, and to learn the style that we use.  The purpose of the change
-     log is to show people where to find what was changed.  So you need
-     to be specific about what functions you changed; in large
-     functions, it's often helpful to indicate where within the
-     function the change was.
-
-     On the other hand, once you have shown people where to find the
-     change, you need not explain its purpose.  Thus, if you add a new
-     function, all you need to say about it is that it is new.  If you
-     feel that the purpose needs explaining, it probably does--but the
-     explanation will be much more useful if you put it in comments in
-     the code.
-
-     If you would like your name to appear in the header line for who
-     made the change, send us the header line.
-
-   * When you write the fix, keep in mind that we can't install a
-     change that would break other systems.
-
-     People often suggest fixing a problem by changing
-     machine-independent files such as `toplev.c' to do something
-     special that a particular system needs.  Sometimes it is totally
-     obvious that such changes would break GNU CC for almost all users.
-     We can't possibly make a change like that.  At best it might tell
-     us how to write another patch that would solve the problem
-     acceptably.
-
-     Sometimes people send fixes that *might* be an improvement in
-     general--but it is hard to be sure of this.  It's hard to install
-     such changes because we have to study them very carefully.  Of
-     course, a good explanation of the reasoning by which you concluded
-     the change was correct can help convince us.
-
-     The safest changes are changes to the configuration files for a
-     particular machine.  These are safe because they can't create new
-     bugs on other machines.
-
-     Please help us keep up with the workload by designing the patch in
-     a form that is good to install.
-
-
-File: gcc.info,  Node: Service,  Next: VMS,  Prev: Bugs,  Up: Top
-
-How To Get Help with GNU CC
-***************************
-
-   If you need help installing, using or changing GNU CC, there are two
-ways to find it:
-
-   * Send a message to a suitable network mailing list.  First try
-     `bug-gcc@prep.ai.mit.edu', and if that brings no response, try
-     `help-gcc@prep.ai.mit.edu'.
-
-   * Look in the service directory for someone who might help you for a
-     fee.  The service directory is found in the file named `SERVICE'
-     in the GNU CC distribution.
-
-
-File: gcc.info,  Node: VMS,  Next: Portability,  Prev: Service,  Up: Top
-
-Using GNU CC on VMS
-*******************
-
-   Here is how to use GNU CC on VMS.
-
-* Menu:
-
-* Include Files and VMS::  Where the preprocessor looks for the include files.
-* Global Declarations::    How to do globaldef, globalref and globalvalue with
-                           GNU CC.
-* VMS Misc::		   Misc information.
-
-
-File: gcc.info,  Node: Include Files and VMS,  Next: Global Declarations,  Up: VMS
-
-Include Files and VMS
-=====================
-
-   Due to the differences between the filesystems of Unix and VMS, GNU
-CC attempts to translate file names in `#include' into names that VMS
-will understand.  The basic strategy is to prepend a prefix to the
-specification of the include file, convert the whole filename to a VMS
-filename, and then try to open the file.  GNU CC tries various prefixes
-one by one until one of them succeeds:
-
-  1. The first prefix is the `GNU_CC_INCLUDE:' logical name: this is
-     where GNU C header files are traditionally stored.  If you wish to
-     store header files in non-standard locations, then you can assign
-     the logical `GNU_CC_INCLUDE' to be a search list, where each
-     element of the list is suitable for use with a rooted logical.
-
-  2. The next prefix tried is `SYS$SYSROOT:[SYSLIB.]'.  This is where
-     VAX-C header files are traditionally stored.
-
-  3. If the include file specification by itself is a valid VMS
-     filename, the preprocessor then uses this name with no prefix in
-     an attempt to open the include file.
-
-  4. If the file specification is not a valid VMS filename (i.e. does
-     not contain a device or a directory specifier, and contains a `/'
-     character), the preprocessor tries to convert it from Unix syntax
-     to VMS syntax.
-
-     Conversion works like this: the first directory name becomes a
-     device, and the rest of the directories are converted into
-     VMS-format directory names.  For example, the name `X11/foobar.h'
-     is translated to `X11:[000000]foobar.h' or `X11:foobar.h',
-     whichever one can be opened.  This strategy allows you to assign a
-     logical name to point to the actual location of the header files.
-
-  5. If none of these strategies succeeds, the `#include' fails.
-
-   Include directives of the form:
-
-     #include foobar
-
-are a common source of incompatibility between VAX-C and GNU CC.  VAX-C
-treats this much like a standard `#include <foobar.h>' directive.  That
-is incompatible with the ANSI C behavior implemented by GNU CC: to
-expand the name `foobar' as a macro.  Macro expansion should eventually
-yield one of the two standard formats for `#include':
-
-     #include "FILE"
-     #include <FILE>
-
-   If you have this problem, the best solution is to modify the source
-to convert the `#include' directives to one of the two standard forms.
-That will work with either compiler.  If you want a quick and dirty fix,
-define the file names as macros with the proper expansion, like this:
-
-     #define stdio <stdio.h>
-
-This will work, as long as the name doesn't conflict with anything else
-in the program.
-
-   Another source of incompatibility is that VAX-C assumes that:
-
-     #include "foobar"
-
-is actually asking for the file `foobar.h'.  GNU CC does not make this
-assumption, and instead takes what you ask for literally; it tries to
-read the file `foobar'.  The best way to avoid this problem is to
-always specify the desired file extension in your include directives.
-
-   GNU CC for VMS is distributed with a set of include files that is
-sufficient to compile most general purpose programs.  Even though the
-GNU CC distribution does not contain header files to define constants
-and structures for some VMS system-specific functions, there is no
-reason why you cannot use GNU CC with any of these functions.  You first
-may have to generate or create header files, either by using the public
-domain utility `UNSDL' (which can be found on a DECUS tape), or by
-extracting the relevant modules from one of the system macro libraries,
-and using an editor to construct a C header file.
-
-   A `#include' file name cannot contain a DECNET node name.  The
-preprocessor reports an I/O error if you attempt to use a node name,
-whether explicitly, or implicitly via a logical name.
-
-
-File: gcc.info,  Node: Global Declarations,  Next: VMS Misc,  Prev: Include Files and VMS,  Up: VMS
-
-Global Declarations and VMS
-===========================
-
-   GNU CC does not provide the `globalref', `globaldef' and
-`globalvalue' keywords of VAX-C.  You can get the same effect with an
-obscure feature of GAS, the GNU assembler.  (This requires GAS version
-1.39 or later.)  The following macros allow you to use this feature in
-a fairly natural way:
-
-     #ifdef __GNUC__
-     #define GLOBALREF(TYPE,NAME)                      \
-       TYPE NAME                                       \
-       asm ("_$$PsectAttributes_GLOBALSYMBOL$$" #NAME)
-     #define GLOBALDEF(TYPE,NAME,VALUE)                \
-       TYPE NAME                                       \
-       asm ("_$$PsectAttributes_GLOBALSYMBOL$$" #NAME) \
-         = VALUE
-     #define GLOBALVALUEREF(TYPE,NAME)                 \
-       const TYPE NAME[1]                              \
-       asm ("_$$PsectAttributes_GLOBALVALUE$$" #NAME)
-     #define GLOBALVALUEDEF(TYPE,NAME,VALUE)           \
-       const TYPE NAME[1]                              \
-       asm ("_$$PsectAttributes_GLOBALVALUE$$" #NAME)  \
-         = {VALUE}
-     #else
-     #define GLOBALREF(TYPE,NAME) \
-       globalref TYPE NAME
-     #define GLOBALDEF(TYPE,NAME,VALUE) \
-       globaldef TYPE NAME = VALUE
-     #define GLOBALVALUEDEF(TYPE,NAME,VALUE) \
-       globalvalue TYPE NAME = VALUE
-     #define GLOBALVALUEREF(TYPE,NAME) \
-       globalvalue TYPE NAME
-     #endif
-
-(The `_$$PsectAttributes_GLOBALSYMBOL' prefix at the start of the name
-is removed by the assembler, after it has modified the attributes of
-the symbol).  These macros are provided in the VMS binaries
-distribution in a header file `GNU_HACKS.H'.  An example of the usage
-is:
-
-     GLOBALREF (int, ijk);
-     GLOBALDEF (int, jkl, 0);
-
-   The macros `GLOBALREF' and `GLOBALDEF' cannot be used
-straightforwardly for arrays, since there is no way to insert the array
-dimension into the declaration at the right place.  However, you can
-declare an array with these macros if you first define a typedef for the
-array type, like this:
-
-     typedef int intvector[10];
-     GLOBALREF (intvector, foo);
-
-   Array and structure initializers will also break the macros; you can
-define the initializer to be a macro of its own, or you can expand the
-`GLOBALDEF' macro by hand.  You may find a case where you wish to use
-the `GLOBALDEF' macro with a large array, but you are not interested in
-explicitly initializing each element of the array.  In such cases you
-can use an initializer like: `{0,}', which will initialize the entire
-array to `0'.
-
-   A shortcoming of this implementation is that a variable declared with
-`GLOBALVALUEREF' or `GLOBALVALUEDEF' is always an array.  For example,
-the declaration:
-
-     GLOBALVALUEREF(int, ijk);
-
-declares the variable `ijk' as an array of type `int [1]'.  This is
-done because a globalvalue is actually a constant; its "value" is what
-the linker would normally consider an address.  That is not how an
-integer value works in C, but it is how an array works.  So treating
-the symbol as an array name gives consistent results--with the
-exception that the value seems to have the wrong type.  *Don't try to
-access an element of the array.*  It doesn't have any elements.  The
-array "address" may not be the address of actual storage.
-
-   The fact that the symbol is an array may lead to warnings where the
-variable is used.  Insert type casts to avoid the warnings.  Here is an
-example; it takes advantage of the ANSI C feature allowing macros that
-expand to use the same name as the macro itself.
-
-     GLOBALVALUEREF (int, ss$_normal);
-     GLOBALVALUEDEF (int, xyzzy,123);
-     #ifdef __GNUC__
-     #define ss$_normal ((int) ss$_normal)
-     #define xyzzy ((int) xyzzy)
-     #endif
-
-   Don't use `globaldef' or `globalref' with a variable whose type is
-an enumeration type; this is not implemented.  Instead, make the
-variable an integer, and use a `globalvaluedef' for each of the
-enumeration values.  An example of this would be:
-
-     #ifdef __GNUC__
-     GLOBALDEF (int, color, 0);
-     GLOBALVALUEDEF (int, RED, 0);
-     GLOBALVALUEDEF (int, BLUE, 1);
-     GLOBALVALUEDEF (int, GREEN, 3);
-     #else
-     enum globaldef color {RED, BLUE, GREEN = 3};
-     #endif
 
