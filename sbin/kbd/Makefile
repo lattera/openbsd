@@ -1,0 +1,21 @@
+#	$OpenBSD: src/sbin/kbd/Makefile,v 1.15 2002/08/12 10:46:54 miod Exp $
+
+.if (${MACHINE} == "alpha") || (${MACHINE} == "hppa") || \
+    (${MACHINE} == "i386") || (${MACHINE} == "macppc") || \
+    (${MACHINE} == "sparc") || (${MACHINE} == "sparc64") || \
+    (${MACHINE} == "vax")
+PROG=	kbd
+
+SRCS=	main.c kbd_wscons.c
+CFLAGS+=-I${.CURDIR}
+LDADD=	-lkvm
+DPADD=	${LIBKVM}
+
+.else
+NOPROG=	Yes
+.endif
+
+MAN=		kbd.8
+MANSUBDIR=	alpha hppa i386 macppc sparc sparc64 vax
+
+.include <bsd.prog.mk>
