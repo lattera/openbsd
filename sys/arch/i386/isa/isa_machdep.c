@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.5 2001/10/28 08:16:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.6 2001/10/29 08:59:11 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -316,48 +316,79 @@ struct intrhand *intrhand[ICU_LEN];
 void
 intr_calculatemasks()
 {
-	int irq, level;
+	int irq, level, unusedirqs;
 	struct intrhand *q;
 
 	/* First, figure out which levels each IRQ uses. */
+	unusedirqs = 0xffff;
 	for (irq = 0; irq < ICU_LEN; irq++) {
-		register int levels = 0;
+		int levels = 0;
 		for (q = intrhand[irq]; q; q = q->ih_next)
-			levels |= 1 << q->ih_level >> 4;
+			levels |= 1 << (q->ih_level>>CPSHIFT);
 		intrlevel[irq] = levels;
+		if (levels)
+			unusedirqs &= ~(1 << irq);
 	}
 
 	/* Then figure out which IRQs use each level. */
-	for (level = 0; level < IPL_HIGH >> 4; level++) {
-		register int irqs = 0;
+	for (level = 0; level < NIPL; level++) {
+		int irqs = 0;
 		for (irq = 0; irq < ICU_LEN; irq++)
 			if (intrlevel[irq] & (1 << level))
 				irqs |= 1 << irq;
-		imask[level] = irqs | SIR_ALLMASK;
+		imask[level] = irqs | unusedirqs;
 	}
 
 	/*
-	 * There are tty, network and disk drivers that use free() at interrupt
-	 * time, so imp > (tty | net | bio).
+	 * Initialize soft interrupt masks to block themselves.
 	 */
-	imask[IPL_IMP >> 4] |= imask[IPL_TTY >> 4] | imask[IPL_NET >> 4] |
-	    imask[IPL_BIO >> 4];
-	imask[IPL_AUDIO >> 4] |= imask[IPL_IMP >> 4];
+#if 0
+	IMASK(IPL_AST) |= 1 << SIR_AST;
+#endif
+	IMASK(IPL_SOFTCLOCK) |= 1 << SIR_CLOCK;
+	IMASK(IPL_SOFTNET) |= 1 << SIR_NET;
+	
+#if 0
+	/*
+	 * IPL_NONE is used for hardware interrupts that are never blocked,
+	 * and do not block anything else.
+	 */
+	IMASK(IPL_NONE) = 0;
+#endif
 
 	/*
 	 * Enforce a hierarchy that gives slow devices a better chance at not
 	 * dropping data.
 	 */
-	imask[IPL_TTY >> 4] |= imask[IPL_NET >> 4] | imask[IPL_BIO >> 4];
-	imask[IPL_NET >> 4] |= imask[IPL_BIO >> 4];
+	for (level = 0; level<(NIPL-1); level++)
+		imask[level+1] |= imask[level];
+	
+#if 0
+	IMASK(IPL_SOFTCLOCK) |= IMASK(IPL_NONE);
+	IMASK(IPL_SOFTNET) |= IMASK(IPL_SOFTCLOCK);
+	IMASK(IPL_BIO) |= IMASK(IPL_SOFTNET);
+	IMASK(IPL_NET) |= IMASK(IPL_BIO);
 
 	/*
-	 * These are pseudo-levels.
+	 * There are tty, network and disk drivers that use free() at interrupt
+	 * time, so imp > (tty | net | bio).
 	 */
-	imask[IPL_NONE >> 4] = 0x00000000;
-	imask[IPL_HIGH >> 4] = 0xffffffff;
+	IMASK(IPL_IMP) |= IMASK(IPL_TTY);
 
-	/* And eventually calculate the complete masks. */
+	IMASK(IPL_AUDIO) |= IMASK(IPL_IMP);
+
+	/*
+	 * Since run queues may be manipulated by both the statclock and tty,
+	 * network, and disk drivers, clock > imp.
+	 */
+	IMASK(IPL_CLOCK) |= IMASK(IPL_AUDIO);
+
+	/*
+	 * IPL_HIGH must block everything that can manipulate a run queue.
+	 */
+	IMASK(IPL_HIGH) |= IMASK(IPL_CLOCK);
+#endif
+
 	/* And eventually calculate the complete masks. */
 	for (irq = 0; irq < ICU_LEN; irq++) {
 		int irqs = 1 << irq;
@@ -377,9 +408,7 @@ intr_calculatemasks()
 			panic("irq %d level %x mask mismatch: %x vs %x", irq, level, irqs, IMASK(level));
 		
 		ilevel[irq] = level;
-
-		/* XXX NetBSD does not have SIR_ALLMASK, why do we?  */
-		intrmask[irq] = irqs | SIR_ALLMASK;
+		intrmask[irq] = irqs;
 #if 0
 		printf("irq %d: level %x, mask 0x%x (%x)\n",
 		    irq, ilevel[irq], intrmask[irq], IMASK(ilevel[irq]));
@@ -388,14 +417,13 @@ intr_calculatemasks()
 
 	/* Lastly, determine which IRQs are actually in use. */
 	{
-		register int irqs = 0;
+		int irqs = 0;
 		for (irq = 0; irq < ICU_LEN; irq++)
 			if (intrhand[irq])
 				irqs |= 1 << irq;
 		if (irqs >= 0x100) /* any IRQs >= 8 in use */
 			irqs |= 1 << IRQ_SLAVE;
 		imen = ~irqs;
-		SET_ICUS();
 	}
 	for (irq = 0; irq < ICU_LEN; irq++)
 		iunmask[irq] = ~imask[irq];
