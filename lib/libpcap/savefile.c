@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/savefile.c,v 1.7 1999/07/20 04:49:56 deraadt Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/savefile.c,v 1.8 2004/01/27 06:58:03 tedu Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1997
@@ -29,11 +29,6 @@
  * The first record in the file contains saved values for the machine
  * dependent values so we can print the dump file on any architecture.
  */
-
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Header: savefile.c,v 1.37 97/10/15 21:58:58 leres Exp $ (LBL)";
-#endif
 
 #include <sys/types.h>
 #include <sys/time.h>

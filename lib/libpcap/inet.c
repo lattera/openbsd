@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/inet.c,v 1.15 2004/01/21 00:30:15 jfb Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/inet.c,v 1.16 2004/01/27 06:58:03 tedu Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996, 1997, 1998
@@ -33,10 +33,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/inet.c,v 1.14 2002/02/19 19:39:37 millert Exp $ (LBL)";
-#endif
 
 #include <sys/param.h>
 #include <sys/file.h>

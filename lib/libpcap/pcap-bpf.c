@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/pcap-bpf.c,v 1.14 2004/01/21 00:30:15 jfb Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/pcap-bpf.c,v 1.15 2004/01/27 06:58:03 tedu Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1998
@@ -20,10 +20,6 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/pcap-bpf.c,v 1.13 2003/11/24 05:39:42 mickey Exp $ (LBL)";
-#endif
 
 #include <sys/param.h>			/* optionally get BSD define */
 #include <sys/time.h>
