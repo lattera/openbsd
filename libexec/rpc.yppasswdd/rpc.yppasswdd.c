@@ -30,18 +30,22 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: rpc.yppasswdd.c,v 1.4 1997/04/23 09:33:43 deraadt Exp $";
+static char rcsid[] = "$Id: rpc.yppasswdd.c,v 1.5 1997/06/17 10:13:13 niklas Exp $";
 #endif
 
-#include <stdio.h>
-#include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
-#include <signal.h>
-#include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+
+#include <signal.h>
+#include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
+#include <util.h>
+
+#include <rpc/rpc.h>
+#include <rpc/pmap_clnt.h>
 
 #include "yppasswd.h"
 
