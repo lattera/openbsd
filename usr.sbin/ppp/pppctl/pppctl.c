@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: pppctl.c,v 1.14 2003/09/07 07:50:29 tedu Exp $
+ *	$Id: pppctl.c,v 1.15 2003/10/31 08:48:16 otto Exp $
  */
 
 #include <sys/types.h>
@@ -120,11 +120,12 @@ Receive(int fd, int display)
             for (last = Buffer+len-2; last > Buffer && *last != ' '; last--)
                 ;
             if (last > Buffer+3 && !strncmp(last-3, " on", 3)) {
-                 /* a password is required ! */
+                 /* a password is required! */
                  if (display & REC_PASSWD) {
                     /* password time */
                     if (!passwd)
-                        passwd = getpass("Password: ");
+                        if ((passwd = getpass("Password: ")) == NULL)
+				err(1, "getpass");
                     snprintf(Buffer, sizeof Buffer, "passwd %s\n", passwd);
                     memset(passwd, '\0', strlen(passwd));
                     if (display & REC_VERBOSE)
