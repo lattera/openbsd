@@ -1,8 +1,6 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/stand/libsa/Attic/Makefile,v 1.4 2004/01/24 22:15:34 miod Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/stand/libsa/Attic/Makefile,v 1.5 2004/01/25 14:47:31 miod Exp $
 
 LIB=sa
-
-CLEANFILES+=SRT0.o SRT1.o
 
 NOPIC=nopic
 NOPROFILE=noprofile
