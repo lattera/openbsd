@@ -1,6 +1,6 @@
-/* icmp.c
+/*	$OpenBSD: src/sbin/dhclient/Attic/icmp.c,v 1.3 2004/02/04 12:16:56 henning Exp $	*/
 
-   ICMP Protocol engine - for sending out pings and receiving
+/* ICMP Protocol engine - for sending out pings and receiving
    responses. */
 
 /*
