@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.2 2000/02/21 21:42:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.3 2000/07/03 14:19:07 niklas Exp $	*/
 /*	$NetBSD: mainbus.c,v 1.21 1997/06/06 23:14:20 thorpej Exp $	*/
 
 /*
@@ -53,7 +53,7 @@
 #if NBIOS > 0
 #include <machine/biosvar.h>
 #endif
-#ifdef SMP
+#ifdef MULTIPROCESSOR
 #include <machine/mp.h>
 #endif
 
@@ -119,7 +119,7 @@ mainbus_attach(parent, self, aux)
 	}
 #endif
 
-#ifdef SMP
+#ifdef MULTIPROCESSOR
 	if (bios_smpinfo != NULL) {
 		struct mp_float *mp = bios_smpinfo;
 

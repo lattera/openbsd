@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.2 2000/02/20 11:56:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.3 2000/07/03 14:19:07 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -90,7 +90,7 @@ bios_pciinfo_t *bios_pciinfo;
 bios_diskinfo_t *bios_diskinfo;
 bios_memmap_t  *bios_memmap;
 u_int32_t	bios_cksumlen;
-#ifdef SMP
+#ifdef MULTIPROCESSOR
 void	       *bios_smpinfo;
 #endif
 
@@ -222,7 +222,7 @@ bios_getopt()
 				cnset(cdp->consdev);
 			}
 			break;
-#ifdef SMP
+#ifdef MULTIPROCESSOR
 		case BOOTARG_SMPINFO:
 			bios_smpinfo = q->ba_arg;
 			printf(" smpinfo %p", bios_smpinfo);
