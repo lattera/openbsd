@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/sparc64/Attic/install.md,v 1.1 2001/09/18 14:27:32 jason Exp $
+#	$OpenBSD: src/distrib/sparc64/common/install.md,v 1.1 2001/10/10 04:21:02 deraadt Exp $
 #	$NetBSD: install.md,v 1.3.2.5 1996/08/26 15:45:28 gwr Exp $
 #
 #
@@ -68,8 +68,7 @@ md_get_msgbuf() {
 
 md_get_diskdevs() {
 	# return available disk devices
-	md_get_msgbuf | sed -n 	-e '/^sd[0-9] /{s/ .*//;p;}' \
-				-e '/^wd[0-9] /{s/ .*//;p;}' 
+	md_get_msgbuf | sed -n 	-e '/^[sw]d[0-9] /{s/ .*//;p;}'
 }
 
 md_get_cddevs() {
@@ -96,9 +95,9 @@ md_installboot() {
 	_rawdev=/dev/r${1}c
 
 	# use extracted mdec if it exists (may be newer)
-	if [ -e /mnt/usr/mdec/boot ]; then
+	if [ -e /mnt/usr/mdec/bootblk ]; then
 		_prefix=/mnt/usr/mdec
-	elif [ -e /usr/mdec/boot ]; then
+	elif [ -e /usr/mdec/bootblk ]; then
 		_prefix=/usr/mdec
 	else
 		echo No boot block prototypes found, you must run installboot manually.
@@ -106,9 +105,19 @@ md_installboot() {
 	fi
 		
 	echo Installing boot block...
-	cp ${_prefix}/boot /mnt/boot
+	${_prefix}/installboot -v ${_prefix}/bootblk ${_rawdev}
 	sync; sync; sync
-	installboot -v /mnt/boot ${_prefix}/bootxx ${_rawdev}
+
+	if [ -e /mnt/usr/mdec/ofwboot ]; then
+		_prefix=/mnt/usr/mdec
+	elif [ -e /usr/mdec/ofwboot ]; then
+		_prefix=/usr/mdec
+	else
+		echo No ofwboot found!
+		return
+	fi
+	echo Copying ofwboot...
+	cp ${_prefix}/ofwboot /mnt/ofwboot
 }
 
 md_native_fstype() {

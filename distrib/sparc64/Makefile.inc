@@ -1,6 +1,3 @@
-#	$OpenBSD: src/distrib/sparc64/Makefile.inc,v 1.1 2001/09/18 14:27:32 jason Exp $
+#	$OpenBSD: src/distrib/sparc64/Makefile.inc,v 1.2 2001/10/10 04:21:02 deraadt Exp $
 
 REV=	${OSrev}
-
-BSDSRCDIR?=     /usr/src
-SRCSYSDIR?=     ${BSDSRCDIR}/sys

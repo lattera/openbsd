@@ -1,4 +1,4 @@
-#       $OpenBSD: src/distrib/sparc64/ramdisk/Attic/dot.profile,v 1.2 2001/09/21 20:09:14 jason Exp $
+#       $OpenBSD: src/distrib/sparc64/common/Attic/dot.profile,v 1.1 2001/10/10 04:21:02 deraadt Exp $
 #
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.
