@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/m4/misc.c,v 1.12 1999/09/14 08:35:17 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/m4/misc.c,v 1.13 1999/11/17 14:51:05 espie Exp $	*/
 /*	$NetBSD: misc.c,v 1.6 1995/09/28 05:37:41 tls Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 #if 0
 static char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/m4/misc.c,v 1.12 1999/09/14 08:35:17 espie Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/m4/misc.c,v 1.13 1999/11/17 14:51:05 espie Exp $";
 #endif
 #endif /* not lint */
 
@@ -243,6 +243,7 @@ getdiv(n)
 	while ((c = getc(outfile[n])) != EOF)
 		putc(c, active);
 	(void) fclose(outfile[n]);
+	outfile[n] = NULL;
 }
 
 void
