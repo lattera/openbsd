@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.3.2.1 2002/06/26 15:30:39 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.3.2.2 2002/10/11 14:51:53 miod Exp $");
 
 #include <util.h>
 #include <utmp.h>
@@ -84,7 +84,7 @@ get_last_login_time(uid_t uid, const char *logname,
  */
 void
 record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
-    const char *host, struct sockaddr * addr)
+    const char *host, struct sockaddr * addr, socklen_t addrlen)
 {
 	int fd;
 	struct lastlog ll;

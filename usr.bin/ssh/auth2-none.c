@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-none.c,v 1.3.4.1 2002/06/26 15:52:13 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-none.c,v 1.3.4.2 2002/10/11 14:51:52 miod Exp $");
 
 #include "auth.h"
 #include "xmalloc.h"
@@ -61,7 +61,7 @@ auth2_read_banner(void)
 	close(fd);
 
 	if (n != len) {
-		free(banner);
+		xfree(banner);
 		return (NULL);
 	}
 	banner[n] = '\0';

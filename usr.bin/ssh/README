@@ -15,6 +15,9 @@ To extract and install this release on your OpenBSD system use:
       # make
       # make install
       # cp ssh_config sshd_config /etc/ssh
+      # mkdir /var/empty
+
+and restart sshd.
 
 OpenSSH is a derivative of the original and free ssh 1.2.12 release
 by Tatu Ylonen.  Aaron Campbell, Bob Beck, Markus Friedl, Niels

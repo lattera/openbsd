@@ -26,7 +26,7 @@
 #include "includes.h"
 #include "uuencode.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.17.2.3 2002/06/26 15:30:38 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.17.2.4 2002/10/11 14:51:52 miod Exp $");
 
 #ifdef AFS
 #include <krb.h>
@@ -93,9 +93,10 @@ int
 radix_to_creds(const char *buf, CREDENTIALS *creds)
 {
 	Buffer b;
-	char c, version, *space, *p;
-	u_int endTime;
-	int len, blen, ret;
+	u_char *space;
+	char c, version, *p;
+	u_int endTime, len;
+	int blen, ret;
 
 	ret = 0;
 	blen = strlen(buf);
