@@ -1,11 +1,3 @@
-/*
- * This software may now be redistributed outside the US.
- *
- * $Source: /usr/src/kerberosIV/lib/krb/RCS/one.c,v $
- *
- * $Locker:  $
- */
-
 /* 
   Copyright (C) 1989 by the Massachusetts Institute of Technology
 
