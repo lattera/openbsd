@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.2.2.1 2001/05/14 22:40:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.2.2.2 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: route6.c,v 1.22 2000/12/03 00:54:00 itojun Exp $	*/
 
 /*
@@ -44,8 +44,8 @@
 
 #include <netinet/icmp6.h>
 
-static int ip6_rthdr0 __P((struct mbuf *, struct ip6_hdr *,
-    struct ip6_rthdr0 *));
+static int ip6_rthdr0(struct mbuf *, struct ip6_hdr *,
+    struct ip6_rthdr0 *);
 
 int
 route6_input(mp, offp, proto)

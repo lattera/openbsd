@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.4 2002/03/06 02:15:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.5 2002/03/28 14:56:45 niklas Exp $	*/
 /*	$NetBSD: ip_icmp.c,v 1.19 1996/02/13 23:42:22 christos Exp $	*/
 
 /*
@@ -108,9 +108,9 @@ int	icmp_rediraccept = 1;
 int	icmp_redirtimeout = 10 * 60;
 static struct rttimer_queue *icmp_redirect_timeout_q = NULL;
 
-void icmp_mtudisc_timeout __P((struct rtentry *, struct rttimer *));
-int icmp_ratelimit __P((const struct in_addr *, const int, const int));
-static void icmp_redirect_timeout __P((struct rtentry *, struct rttimer *));
+void icmp_mtudisc_timeout(struct rtentry *, struct rttimer *);
+int icmp_ratelimit(const struct in_addr *, const int, const int);
+static void icmp_redirect_timeout(struct rtentry *, struct rttimer *);
 
 extern	struct protosw inetsw[];
 
@@ -286,20 +286,14 @@ struct sockaddr_in icmpmask = { 8, 0 };
  * Process a received ICMP message.
  */
 void
-#if __STDC__
 icmp_input(struct mbuf *m, ...)
-#else
-icmp_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register struct icmp *icp;
 	register struct ip *ip = mtod(m, struct ip *);
 	int icmplen = ip->ip_len;
 	register int i;
 	struct in_ifaddr *ia;
-	void *(*ctlfunc) __P((int, struct sockaddr *, void *));
+	void *(*ctlfunc)(int, struct sockaddr *, void *);
 	int code;
 	extern u_char ip_protox[];
 	int hlen;
@@ -952,7 +946,7 @@ icmp_mtudisc_timeout(rt, r)
 		panic("icmp_mtudisc_timeout:  bad route to timeout");
 	if ((rt->rt_flags & (RTF_DYNAMIC | RTF_HOST)) == 
 	    (RTF_DYNAMIC | RTF_HOST)) {
-		void *(*ctlfunc) __P((int, struct sockaddr *, void *));
+		void *(*ctlfunc)(int, struct sockaddr *, void *);
 		extern u_char ip_protox[];
 		struct sockaddr_in sa;
 

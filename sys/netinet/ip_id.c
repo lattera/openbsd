@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_id.c,v 1.2.4.1 2001/07/04 10:54:48 niklas Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_id.c,v 1.2.4.2 2002/03/28 14:56:45 niklas Exp $ */
 
 /*
  * Copyright 1998 Niels Provos <provos@citi.umich.edu>
@@ -83,23 +83,17 @@ static u_int16_t ru_msb = 0;
 static long ru_reseed;
 static u_int32_t tmp;		/* Storage for unused random */
 
-static u_int16_t pmod __P((u_int16_t, u_int16_t, u_int16_t));
-static void ip_initid __P((void));
-u_int16_t ip_randomid __P((void));
+static u_int16_t pmod(u_int16_t, u_int16_t, u_int16_t);
+static void ip_initid(void);
+u_int16_t ip_randomid(void);
 
 /*
  * Do a fast modular exponation, returned value will be in the range
  * of 0 - (mod-1)
  */
 
-#ifdef __STDC__
 static u_int16_t
 pmod(u_int16_t gen, u_int16_t exp, u_int16_t mod)
-#else
-static u_int16_t
-pmod(gen, exp, mod)
-	u_int16_t gen, exp, mod;
-#endif
 {
 	u_int16_t s, t, u;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_var.h,v 1.3.2.1 2001/07/04 10:54:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_var.h,v 1.3.2.2 2002/03/28 14:56:45 niklas Exp $	*/
 /*	$NetBSD: in_var.h,v 1.16 1996/02/13 23:42:15 christos Exp $	*/
 
 /*
@@ -84,7 +84,7 @@ TAILQ_HEAD(in_ifaddrhead, in_ifaddr);
 extern	struct	in_ifaddrhead in_ifaddr;
 extern	struct	ifqueue	ipintrq;		/* ip packet input queue */
 extern	int	inetctlerrmap[];
-void	in_socktrim __P((struct sockaddr_in *));
+void	in_socktrim(struct sockaddr_in *);
 
 
 /*
@@ -210,12 +210,12 @@ struct in_multistep {
 	IN_NEXT_MULTI((step), (inm)); \
 }
 
-int	in_ifinit __P((struct ifnet *,
-	    struct in_ifaddr *, struct sockaddr_in *, int));
-struct	in_multi *in_addmulti __P((struct in_addr *, struct ifnet *));
-void	in_delmulti __P((struct in_multi *));
-void	in_ifscrub __P((struct ifnet *, struct in_ifaddr *));
-int	in_control __P((struct socket *, u_long, caddr_t, struct ifnet *));
+int	in_ifinit(struct ifnet *,
+	    struct in_ifaddr *, struct sockaddr_in *, int);
+struct	in_multi *in_addmulti(struct in_addr *, struct ifnet *);
+void	in_delmulti(struct in_multi *);
+void	in_ifscrub(struct ifnet *, struct in_ifaddr *);
+int	in_control(struct socket *, u_long, caddr_t, struct ifnet *);
 #endif
 
 

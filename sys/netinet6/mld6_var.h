@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/mld6_var.h,v 1.2.2.1 2001/05/14 22:40:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/mld6_var.h,v 1.2.2.2 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: mld6_var.h,v 1.4 2000/03/25 07:23:54 sumikawa Exp $	*/
 
 /*
@@ -43,11 +43,11 @@
 #define MLD6_OTHERLISTENER			0
 #define MLD6_IREPORTEDLAST			1
 
-void	mld6_init __P((void));
-void	mld6_input __P((struct mbuf *, int));
-void	mld6_start_listening __P((struct in6_multi *));
-void	mld6_stop_listening __P((struct in6_multi *));
-void	mld6_fasttimeo __P((void));
+void	mld6_init(void);
+void	mld6_input(struct mbuf *, int);
+void	mld6_start_listening(struct in6_multi *);
+void	mld6_stop_listening(struct in6_multi *);
+void	mld6_fasttimeo(void);
 #endif /* _KERNEL */
 
 #endif /* _NETINET6_MLD6_VAR_H_ */

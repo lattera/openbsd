@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_fddi.h,v 1.2.14.1 2001/07/04 10:54:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_fddi.h,v 1.2.14.2 2002/03/28 14:57:36 niklas Exp $	*/
 /*	$NetBSD: if_fddi.h,v 1.2 1995/08/19 04:35:28 cgd Exp $	*/
 
 /*
@@ -76,9 +76,9 @@ struct	fddi_header {
 #define	fddi_delmulti		ether_delmulti
 #define	fddi_sprintf		ether_sprintf
 
-void    fddi_ifattach __P((struct ifnet *));
-void    fddi_input __P((struct ifnet *, struct fddi_header *, struct mbuf *));
-int     fddi_output __P((struct ifnet *,
-           struct mbuf *, struct sockaddr *, struct rtentry *)); 
+void    fddi_ifattach(struct ifnet *);
+void    fddi_input(struct ifnet *, struct fddi_header *, struct mbuf *);
+int     fddi_output(struct ifnet *,
+           struct mbuf *, struct sockaddr *, struct rtentry *); 
 #endif /* _KERNEL */
 #endif /* _NET_IF_FDDI_H_ */

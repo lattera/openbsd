@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_gif.h,v 1.1.2.1 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_gif.h,v 1.1.2.2 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: in6_gif.h,v 1.5 2000/04/14 08:36:03 itojun Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 #ifndef _NETINET6_IN6_GIF_H_
 #define _NETINET6_IN6_GIF_H_
 
-int in6_gif_input __P((struct mbuf **, int *, int));
-int in6_gif_output __P((struct ifnet *, int, struct mbuf *, struct rtentry *));
+int in6_gif_input(struct mbuf **, int *, int);
+int in6_gif_output(struct ifnet *, int, struct mbuf *, struct rtentry *);
 
 #endif /*_NETINET6_IN6_GIF_H_*/

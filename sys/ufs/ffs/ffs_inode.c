@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.15.2.6 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.15.2.7 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: ffs_inode.c,v 1.10 1996/05/11 18:27:19 mycroft Exp $	*/
 
 /*
@@ -58,8 +58,8 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
-static int ffs_indirtrunc __P((struct inode *, daddr_t, daddr_t, daddr_t, int,
-			       long *));
+static int ffs_indirtrunc(struct inode *, daddr_t, daddr_t, daddr_t, int,
+			       long *);
 
 /*
  * Update the access, modified, and inode change times as specified by the

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf_filter.c,v 1.6.4.1 2001/05/14 22:39:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf_filter.c,v 1.6.4.2 2002/03/28 14:57:36 niklas Exp $	*/
 /*	$NetBSD: bpf_filter.c,v 1.12 1996/02/13 22:00:00 christos Exp $	*/
 
 /*
@@ -78,8 +78,8 @@
 	} \
 }
 
-int	bpf_m_xword __P((struct mbuf *, int, int *));
-int	bpf_m_xhalf __P((struct mbuf *, int, int *));
+int	bpf_m_xword(struct mbuf *, int, int *);
+int	bpf_m_xhalf(struct mbuf *, int, int *);
 
 int
 bpf_m_xword(m, k, err)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.7.4.6 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.7.4.7 2002/03/28 14:54:25 niklas Exp $	*/
 /*	$NetBSD: ext2fs_inode.c,v 1.24 2001/06/19 12:59:18 wiz Exp $	*/
 
 /*
@@ -60,8 +60,8 @@
 #include <ufs/ext2fs/ext2fs.h>
 #include <ufs/ext2fs/ext2fs_extern.h>
 
-static int ext2fs_indirtrunc __P((struct inode *, ufs_daddr_t, ufs_daddr_t,
-				ufs_daddr_t, int, long *));
+static int ext2fs_indirtrunc(struct inode *, ufs_daddr_t, ufs_daddr_t,
+				ufs_daddr_t, int, long *);
 
 /*
  * Last reference to an inode.  If necessary, write or delete it.

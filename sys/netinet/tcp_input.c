@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.5 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.6 2002/03/28 14:56:45 niklas Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -79,6 +79,7 @@
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
+#include <sys/kernel.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -147,10 +148,10 @@ do { \
  * We also ACK immediately if we received a PUSH and the ACK-on-PUSH
  * option is enabled.
  */
-#define	TCP_SETUP_ACK(tp, th) \
+#define	TCP_SETUP_ACK(tp, tiflags) \
 do { \
 	if ((tp)->t_flags & TF_DELACK || \
-	    (tcp_ack_on_push && (th)->th_flags & TH_PUSH)) \
+	    (tcp_ack_on_push && (tiflags) & TH_PUSH)) \
 		tp->t_flags |= TF_ACKNOW; \
 	else \
 		TCP_SET_DELACK(tp); \
@@ -171,12 +172,12 @@ do { \
 
 int
 tcp_reass(tp, th, m, tlen)
-	register struct tcpcb *tp;
-	register struct tcphdr *th;
+	struct tcpcb *tp;
+	struct tcphdr *th;
 	struct mbuf *m;
 	int *tlen;
 {
-	register struct ipqent *p, *q, *nq, *tiqe;
+	struct ipqent *p, *q, *nq, *tiqe;
 	struct socket *so = tp->t_inpcb->inp_socket;
 	int flags;
 
@@ -212,8 +213,8 @@ tcp_reass(tp, th, m, tlen)
 	 * segment.  If it provides all of our data, drop us.
 	 */
 	if (p != NULL) {
-		register struct tcphdr *phdr = p->ipqe_tcp;
-		register int i;
+		struct tcphdr *phdr = p->ipqe_tcp;
+		int i;
 
 		/* conversion to int (in i) handles seq wraparound */
 		i = phdr->th_seq + phdr->th_reseqlen - th->th_seq;
@@ -238,8 +239,8 @@ tcp_reass(tp, th, m, tlen)
 	 * if they are completely covered, dequeue them.
 	 */
 	for (; q != NULL; q = nq) {
-		register struct tcphdr *qhdr = q->ipqe_tcp;
-		register int i = (th->th_seq + *tlen) - qhdr->th_seq;
+		struct tcphdr *qhdr = q->ipqe_tcp;
+		int i = (th->th_seq + *tlen) - qhdr->th_seq;
 
 		if (i <= 0)
 			break;
@@ -308,8 +309,8 @@ tcpdropoldhalfopen(avoidtp, port)
 	struct tcpcb *avoidtp;
 	u_int16_t port;
 {
-	register struct inpcb *inp;
-	register struct tcpcb *tp;
+	struct inpcb *inp;
+	struct tcpcb *tp;
 	int ncheck = 40;
 	int s;
 
@@ -385,20 +386,15 @@ tcp6_input(mp, offp, proto)
  * protocol specification dated September, 1981 very closely.
  */
 void
-#if __STDC__
 tcp_input(struct mbuf *m, ...)
-#else
-tcp_input(m, va_alist)
-	register struct mbuf *m;
-#endif
 {
 	struct ip *ip;
-	register struct inpcb *inp;
+	struct inpcb *inp;
 	caddr_t optp = NULL;
 	int optlen = 0;
 	int len, tlen, off;
-	register struct tcpcb *tp = 0;
-	register int tiflags;
+	struct tcpcb *tp = 0;
+	int tiflags;
 	struct socket *so = NULL;
 	int todrop, acked, ourfinisacked, needoutput = 0;
 	int hdroptlen = 0;
@@ -411,7 +407,7 @@ tcp_input(m, va_alist)
 	int ts_present = 0;
 	int iphlen;
 	va_list ap;
-	register struct tcphdr *th;
+	struct tcphdr *th;
 #ifdef INET6
 	struct in6_addr laddr6;
 	struct ip6_hdr *ipv6 = NULL;
@@ -877,7 +873,7 @@ findpcb:
 	 * Segment received on connection.
 	 * Reset idle time and keep-alive timer.
 	 */
-	tp->t_idle = 0;
+	tp->t_rcvtime = tcp_now;
 	if (tp->t_state != TCPS_SYN_RECEIVED)
 		TCP_TIMER_ARM(tp, TCPT_KEEP, tcp_keepidle);
 
@@ -942,9 +938,10 @@ findpcb:
 				++tcpstat.tcps_predack;
 				if (ts_present)
 					tcp_xmit_timer(tp, tcp_now-ts_ecr+1);
-				else if (tp->t_rtt &&
+				else if (tp->t_rtttime &&
 					    SEQ_GT(th->th_ack, tp->t_rtseq))
-					tcp_xmit_timer(tp, tp->t_rtt);
+					tcp_xmit_timer(tp,
+					    tcp_now - tp->t_rtttime);
 				acked = th->th_ack - tp->snd_una;
 				tcpstat.tcps_rcvackpack++;
 				tcpstat.tcps_rcvackbyte += acked;
@@ -1010,7 +1007,7 @@ findpcb:
 			m_adj(m, iphlen + off);
 			sbappend(&so->so_rcv, m);
 			sorwakeup(so);
-			TCP_SETUP_ACK(tp, th);
+			TCP_SETUP_ACK(tp, tiflags);
 			if (tp->t_flags & TF_ACKNOW)
 				(void) tcp_output(tp);
 			return;
@@ -1054,9 +1051,9 @@ findpcb:
 	 */
 	case TCPS_LISTEN: {
 		struct mbuf *am;
-		register struct sockaddr_in *sin;
+		struct sockaddr_in *sin;
 #ifdef INET6
-		register struct sockaddr_in6 *sin6;
+		struct sockaddr_in6 *sin6;
 #endif /* INET6 */
 
 		if (tiflags & TH_RST)
@@ -1083,21 +1080,19 @@ findpcb:
 
 		/*
 		 * RFC1122 4.2.3.10, p. 104: discard bcast/mcast SYN
-		 * in_broadcast() should never return true on a received
-		 * packet with M_BCAST not set.
 		 */
 		if (m->m_flags & (M_BCAST|M_MCAST))
 			goto drop;
 		switch (af) {
 #ifdef INET6
 		case AF_INET6:
-			/* XXX What about IPv6 Anycasting ?? :-(  rja */
 			if (IN6_IS_ADDR_MULTICAST(&ipv6->ip6_dst))
 				goto drop;
 			break;
 #endif /* INET6 */
 		case AF_INET:
-			if (IN_MULTICAST(ip->ip_dst.s_addr))
+			if (IN_MULTICAST(ip->ip_dst.s_addr) ||
+			    in_broadcast(ip->ip_dst, m->m_pkthdr.rcvif))
 				goto drop;
 			break;
 		}
@@ -1287,8 +1282,8 @@ findpcb:
 			 * if we didn't have to retransmit the SYN,
 			 * use its rtt as our initial srtt & rtt var.
 			 */
-			if (tp->t_rtt)
-				tcp_xmit_timer(tp, tp->t_rtt);
+			if (tp->t_rtttime)
+				tcp_xmit_timer(tp, tcp_now - tp->t_rtttime);
 			/*
 			 * Since new data was acked (the SYN), open the
 			 * congestion window by one MSS.  We do this
@@ -1645,7 +1640,7 @@ trimthenstep6:
 #ifdef TCP_SACK
                     			if (!tp->sack_disable) {
 						TCP_TIMER_DISARM(tp, TCPT_REXMT);
-						tp->t_rtt = 0;
+						tp->t_rtttime = 0;
 						tcpstat.tcps_sndrexmitfast++;
 #if defined(TCP_SACK) && defined(TCP_FACK) 
 						tp->t_dupacks = tcprexmtthresh;
@@ -1668,7 +1663,7 @@ trimthenstep6:
 					}
 #endif /* TCP_SACK */
 					TCP_TIMER_DISARM(tp, TCPT_REXMT);
-					tp->t_rtt = 0;
+					tp->t_rtttime = 0;
 					tp->snd_nxt = th->th_ack;
 					tp->snd_cwnd = tp->t_maxseg;
 					tcpstat.tcps_sndrexmitfast++;
@@ -1778,8 +1773,8 @@ trimthenstep6:
 		 */
 		if (ts_present)
 			tcp_xmit_timer(tp, tcp_now-ts_ecr+1);
-		else if (tp->t_rtt && SEQ_GT(th->th_ack, tp->t_rtseq))
-			tcp_xmit_timer(tp,tp->t_rtt);
+		else if (tp->t_rtttime && SEQ_GT(th->th_ack, tp->t_rtseq))
+			tcp_xmit_timer(tp, tcp_now - tp->t_rtttime);
 
 		/*
 		 * If all outstanding data is acked, stop retransmit
@@ -1992,7 +1987,7 @@ dodata:							/* XXX */
 	    TCPS_HAVERCVDFIN(tp->t_state) == 0) {
 		if (th->th_seq == tp->rcv_nxt && tp->segq.lh_first == NULL &&
 		    tp->t_state == TCPS_ESTABLISHED) {
-			TCP_SETUP_ACK(tp, th);
+			TCP_SETUP_ACK(tp, tiflags);
 			tp->rcv_nxt += tlen;
 			tiflags = th->th_flags & TH_FIN;
 			tcpstat.tcps_rcvpack++;
@@ -2142,7 +2137,8 @@ dropwithreset:
 		break;
 #endif /* INET6 */
 	case AF_INET:
-		if (IN_MULTICAST(ip->ip_dst.s_addr))
+		if (IN_MULTICAST(ip->ip_dst.s_addr) ||
+		    in_broadcast(ip->ip_dst, m->m_pkthdr.rcvif))
 			goto drop;
 	}
 	if (tiflags & TH_ACK) {
@@ -2664,7 +2660,7 @@ tcp_sack_partialack(tp, th)
 	if (SEQ_LT(th->th_ack, tp->snd_last)) {
 		/* Turn off retx. timer (will start again next segment) */
 		TCP_TIMER_DISARM(tp, TCPT_REXMT);
-		tp->t_rtt = 0;
+		tp->t_rtttime = 0;
 #ifndef TCP_FACK
 		/* 
 		 * Partial window deflation.  This statement relies on the 
@@ -2693,7 +2689,7 @@ void
 tcp_pulloutofband(so, urgent, m, off)
 	struct socket *so;
 	u_int urgent;
-	register struct mbuf *m;
+	struct mbuf *m;
 	int off;
 {
         int cnt = off + urgent - 1;
@@ -2723,10 +2719,10 @@ tcp_pulloutofband(so, urgent, m, off)
  */
 void
 tcp_xmit_timer(tp, rtt)
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 	short rtt;
 {
-	register short delta;
+	short delta;
 	short rttmin;
 
 	tcpstat.tcps_rttupdated++;
@@ -2766,7 +2762,7 @@ tcp_xmit_timer(tp, rtt)
 		tp->t_srtt = rtt << (TCP_RTT_SHIFT + 2);
 		tp->t_rttvar = rtt << (TCP_RTTVAR_SHIFT + 2 - 1);
 	}
-	tp->t_rtt = 0;
+	tp->t_rtttime = 0;
 	tp->t_rxtshift = 0;
 
 	/*
@@ -2822,7 +2818,7 @@ tcp_xmit_timer(tp, rtt)
  */
 int
 tcp_mss(tp, offer)
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 	int offer;
 {
 	struct rtentry *rt;
@@ -3085,7 +3081,7 @@ tcp_newreno(tp, th)
 		tcp_seq onxt = tp->snd_nxt;
 		u_long  ocwnd = tp->snd_cwnd;
 		TCP_TIMER_DISARM(tp, TCPT_REXMT);
-		tp->t_rtt = 0;
+		tp->t_rtttime = 0;
 		tp->snd_nxt = th->th_ack;
 		/* 
 		 * Set snd_cwnd to one segment beyond acknowledged offset

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/mfs/mfs_vfsops.c,v 1.12.2.3 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/mfs/mfs_vfsops.c,v 1.12.2.4 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: mfs_vfsops.c,v 1.10 1996/02/09 22:31:28 christos Exp $	*/
 
 /*
@@ -65,7 +65,7 @@ u_long	mfs_rootsize;	/* size of mini-root in bytes */
 
 static	int mfs_minor;	/* used for building internal dev_t */
 
-extern int (**mfs_vnodeop_p) __P((void *));
+extern int (**mfs_vnodeop_p)(void *);
 
 /*
  * mfs vfs operations.
@@ -146,7 +146,7 @@ mfs_initminiroot(base)
 	caddr_t base;
 {
 	struct fs *fs = (struct fs *)(base + SBOFF);
-	extern int (*mountroot) __P((void));
+	extern int (*mountroot)(void);
 
 	/* check for valid super block */
 	if (fs->fs_magic != FS_MAGIC || fs->fs_bsize > MAXBSIZE ||

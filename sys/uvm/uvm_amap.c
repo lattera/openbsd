@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.6 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.7 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: uvm_amap.c,v 1.27 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -69,7 +69,7 @@ struct pool uvm_amap_pool;
  * local functions
  */
 
-static struct vm_amap *amap_alloc1 __P((int, int, int));
+static struct vm_amap *amap_alloc1(int, int, int);
 
 #ifdef UVM_AMAP_PPREF
 /*
@@ -105,8 +105,8 @@ static struct vm_amap *amap_alloc1 __P((int, int, int));
  * here are some in-line functions to help us.
  */
 
-static __inline void pp_getreflen __P((int *, int, int *, int *));
-static __inline void pp_setreflen __P((int *, int, int, int));
+static __inline void pp_getreflen(int *, int, int *, int *);
+static __inline void pp_setreflen(int *, int, int, int);
 
 /*
  * pp_getreflen: get the reference and length for a specific offset

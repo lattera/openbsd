@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/Attic/if_atm.h,v 1.3.16.1 2001/05/14 22:40:07 niklas Exp $       */
+/*      $OpenBSD: src/sys/netinet/Attic/if_atm.h,v 1.3.16.2 2002/03/28 14:56:45 niklas Exp $       */
 
 /*
  *
@@ -36,6 +36,6 @@
  * if_atm.h
  */
 
-void atm_rtrequest __P((int, struct rtentry *, struct rt_addrinfo *));
-int atmresolve __P((struct rtentry *, struct mbuf *, struct sockaddr *, 
-		struct atm_pseudohdr *));
+void atm_rtrequest(int, struct rtentry *, struct rt_addrinfo *);
+int atmresolve(struct rtentry *, struct mbuf *, struct sockaddr *, 
+		struct atm_pseudohdr *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_driver.c,v 1.4.10.1 2001/07/04 10:55:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_driver.c,v 1.4.10.2 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: tp_driver.c,v 1.8 1996/03/16 23:13:45 christos Exp $	*/
 
 #include "tp_states.h"
@@ -41,8 +41,8 @@ static struct act_ent {
 static int trick_hc = 1;
 
 #include "tp_events.h"
-static int _Xebec_action __P((int, struct tp_event *, struct tp_pcb *));
-static int _Xebec_index __P((struct tp_event *, struct tp_pcb *));
+static int _Xebec_action(int, struct tp_event *, struct tp_pcb *);
+static int _Xebec_index(struct tp_event *, struct tp_pcb *);
 
 static int
 _Xebec_action(a, e, p)

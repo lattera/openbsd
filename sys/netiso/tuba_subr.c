@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tuba_subr.c,v 1.4.14.2 2001/07/04 10:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tuba_subr.c,v 1.4.14.3 2002/03/28 14:57:38 niklas Exp $	*/
 /*	$NetBSD: tuba_subr.c,v 1.7 1996/02/13 22:12:32 christos Exp $	*/
 
 /*
@@ -92,8 +92,8 @@ struct addr_arg {
 	u_long          sum;
 };
 
-static void tuba_getaddr __P((struct addr_arg *, struct sockaddr_iso **,
-			      u_long));
+static void tuba_getaddr(struct addr_arg *, struct sockaddr_iso **,
+			      u_long);
 /*
  * Tuba initialization
  */
@@ -255,13 +255,7 @@ tuba_pcbconnect(v, nam)
  * No return value.
  */
 void
-#if __STDC__
 tuba_tcpinput(struct mbuf *m, ...)
-#else
-tuba_tcpinput(m, va_alist)
-	struct mbuf    *m;	/* ptr to first mbuf of pkt */
-	va_dcl
-#endif
 {
 	unsigned long   lindex, findex;
 	register struct tcpiphdr *ti;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.3.4.5 2002/03/06 02:15:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.3.4.6 2002/03/28 14:57:37 niklas Exp $	*/
 /*
  * Synchronous PPP/Cisco link level subroutines.
  * Keepalive protocol implemented in both Cisco and PPP modes.
@@ -801,8 +801,7 @@ nosupport:
 				rv = ENOBUFS;
 		}
 		IF_ENQUEUE (ifq, m);
-	}
-	else
+	} else
 		IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, rv);
 	if (rv != 0) {
 		++ifp->if_oerrors;

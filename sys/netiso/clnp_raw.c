@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_raw.c,v 1.2.16.1 2001/07/04 10:55:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_raw.c,v 1.2.16.2 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: clnp_raw.c,v 1.9 1996/02/13 22:08:42 christos Exp $	*/
 
 /*-
@@ -103,13 +103,7 @@ struct sockproto rclnp_proto = {PF_ISO, 0};
  *			indicating no protocol.
  */
 void
-#if __STDC__
 rclnp_input(struct mbuf *m, ...)
-#else
-rclnp_input(m, va_alist)
-	struct mbuf    *m;	/* ptr to packet */
-	va_dcl
-#endif
 {
 	struct sockaddr_iso *src;	/* ptr to src address */
 	struct sockaddr_iso *dst;	/* ptr to dest address */
@@ -146,13 +140,7 @@ rclnp_input(m, va_alist)
  * NOTES:
  */
 int
-#if __STDC__
 rclnp_output(struct mbuf *m0, ...)
-#else
-rclnp_output(m0, va_alist)
-	struct mbuf    *m0;	/* packet to send */
-	va_dcl
-#endif
 {
 	struct socket  *so;	/* socket to send from */
 	struct rawisopcb *rp;	/* ptr to raw cb */

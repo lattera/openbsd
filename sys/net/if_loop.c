@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.4 2002/03/06 02:15:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.5 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: if_loop.c,v 1.15 1996/05/07 02:40:33 thorpej Exp $	*/
 
 /*
@@ -174,7 +174,7 @@
 #endif
   
 #ifdef ALTQ
-static void lo_altqstart __P((struct ifnet *));
+static void lo_altqstart(struct ifnet *);
 #endif
 
 void

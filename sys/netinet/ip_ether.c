@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.4 2001/12/05 01:02:40 niklas Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.5 2002/03/28 14:56:45 niklas Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
@@ -74,13 +74,7 @@ struct etheripstat etheripstat;
  */
 
 void
-#if __STDC__
 etherip_input(struct mbuf *m, ...)
-#else
-etherip_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	union sockaddr_union ssrc, sdst;
 	struct ether_header eh;

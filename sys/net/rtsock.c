@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.7 2002/03/06 02:15:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.8 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -93,10 +93,10 @@ struct walkarg {
 };
 
 static struct mbuf *
-		rt_msg1 __P((int, struct rt_addrinfo *));
-static int	rt_msg2 __P((int,
-		    struct rt_addrinfo *, caddr_t, struct walkarg *));
-static void	rt_xaddrs __P((caddr_t, caddr_t, struct rt_addrinfo *));
+		rt_msg1(int, struct rt_addrinfo *);
+static int	rt_msg2(int,
+		    struct rt_addrinfo *, caddr_t, struct walkarg *);
+static void	rt_xaddrs(caddr_t, caddr_t, struct rt_addrinfo *);
 
 /* Sleazy use of local variables throughout file, warning!!!! */
 #define dst	info.rti_info[RTAX_DST]
@@ -176,13 +176,7 @@ route_usrreq(so, req, m, nam, control)
 
 /*ARGSUSED*/
 int
-#if __STDC__
 route_output(struct mbuf *m, ...)
-#else
-route_output(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register struct rt_msghdr *rtm = 0;
 	register struct radix_node *rn = 0;

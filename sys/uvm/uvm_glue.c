@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.8 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.9 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -89,7 +89,7 @@
  * local prototypes
  */
 
-static void uvm_swapout __P((struct proc *));
+static void uvm_swapout(struct proc *);
 
 /*
  * XXXCDC: do these really belong here?
@@ -267,7 +267,7 @@ uvm_fork(p1, p2, shared, stack, stacksize, func, arg)
 	boolean_t shared;
 	void *stack;
 	size_t stacksize;
-	void (*func) __P((void *));
+	void (*func)(void *);
 	void *arg;
 {
 	struct user *up = p2->p_addr;

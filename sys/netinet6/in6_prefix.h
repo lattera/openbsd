@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.h,v 1.2.2.1 2001/05/14 22:40:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.h,v 1.2.2.2 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: in6_prefix.h,v 1.10 2001/02/08 16:30:30 itojun Exp $	*/
 
 /*
@@ -86,6 +86,6 @@ LIST_HEAD(rr_prhead, rr_prefix);
 
 extern struct rr_prhead rr_prefix;
 
-void in6_rr_timer __P((void *));
+void in6_rr_timer(void *);
 extern struct timeout in6_rr_timer_ch;
-int delete_each_prefix  __P((struct rr_prefix *rpp, u_char origin));
+int delete_each_prefix(struct rr_prefix *rpp, u_char origin);

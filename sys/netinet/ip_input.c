@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.6 2002/03/06 02:15:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.7 2002/03/28 14:56:45 niklas Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -150,8 +150,8 @@ struct	in_ifaddrhead in_ifaddr;
 struct	ifqueue ipintrq;
 
 int	ipq_locked;
-static __inline int ipq_lock_try __P((void));
-static __inline void ipq_unlock __P((void));
+static __inline int ipq_lock_try(void);
+static __inline void ipq_unlock(void);
 
 struct pool ipqent_pool;
 
@@ -209,7 +209,7 @@ static	struct ip_srcrt {
 	struct	in_addr route[MAX_IPOPTLEN/sizeof(struct in_addr)];
 } ip_srcrt;
 
-static void save_rte __P((u_char *, struct in_addr));
+static void save_rte(u_char *, struct in_addr);
 static int ip_weadvertise(u_int32_t);
 
 /*

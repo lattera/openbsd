@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.12.2.3 2002/03/06 02:15:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.12.2.4 2002/03/28 14:57:36 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -261,14 +261,14 @@ struct bridge_softc {
 
 extern u_int8_t bstp_etheraddr[];
 
-void	bridge_ifdetach __P((struct ifnet *));
-struct mbuf *bridge_input __P((struct ifnet *, struct ether_header *,
-    struct mbuf *));
-int	bridge_output __P((struct ifnet *, struct mbuf *, struct sockaddr *,
-    struct rtentry *rt));
-struct mbuf *bstp_input __P((struct bridge_softc *, struct ifnet *,
-    struct ether_header *, struct mbuf *));
-void	bstp_initialization __P((struct bridge_softc *));
-int	bstp_ioctl __P((struct ifnet *, u_long, caddr_t));
+void	bridge_ifdetach(struct ifnet *);
+struct mbuf *bridge_input(struct ifnet *, struct ether_header *,
+    struct mbuf *);
+int	bridge_output(struct ifnet *, struct mbuf *, struct sockaddr *,
+    struct rtentry *rt);
+struct mbuf *bstp_input(struct bridge_softc *, struct ifnet *,
+    struct ether_header *, struct mbuf *);
+void	bstp_initialization(struct bridge_softc *);
+int	bstp_ioctl(struct ifnet *, u_long, caddr_t);
 #endif /* _KERNEL */
 #endif /* _NET_IF_BRIDGE_H_ */

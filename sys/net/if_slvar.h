@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_slvar.h,v 1.4.14.2 2001/07/04 10:54:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_slvar.h,v 1.4.14.3 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: if_slvar.h,v 1.16 1996/05/07 02:40:46 thorpej Exp $	*/
 
 /*-
@@ -118,14 +118,14 @@ struct ifslstatsreq {
 #define SIOCGSLSTATS	_IOWR('i', 123, struct ifslstatsreq)
 
 #ifdef _KERNEL
-void	slattach __P((int));
-void	slclose __P((struct tty *));
-void	slinput __P((int, struct tty *));
-int	slioctl __P((struct ifnet *, u_long, caddr_t));
-int	slopen __P((dev_t, struct tty *));
-int	sloutput __P((struct ifnet *,
-	    struct mbuf *, struct sockaddr *, struct rtentry *));
-void	slstart __P((struct tty *));
-int	sltioctl __P((struct tty *, u_long, caddr_t, int));
+void	slattach(int);
+void	slclose(struct tty *);
+void	slinput(int, struct tty *);
+int	slioctl(struct ifnet *, u_long, caddr_t);
+int	slopen(dev_t, struct tty *);
+int	sloutput(struct ifnet *,
+	    struct mbuf *, struct sockaddr *, struct rtentry *);
+void	slstart(struct tty *);
+int	sltioctl(struct tty *, u_long, caddr_t, int);
 #endif /* _KERNEL */
 #endif /* _NET_IF_SLVAR_H_ */

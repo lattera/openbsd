@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_alloc.c,v 1.7.6.1 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_alloc.c,v 1.7.6.2 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: lfs_alloc.c,v 1.4 1996/03/25 12:53:37 pk Exp $	*/
 
 /*
@@ -164,7 +164,7 @@ lfs_vcreate(mp, ino, vpp)
 	ino_t ino;
 	struct vnode **vpp;
 {
-	extern int (**lfs_vnodeop_p) __P((void *));
+	extern int (**lfs_vnodeop_p)(void *);
 	struct inode *ip;
 	struct ufsmount *ump;
 	int error;

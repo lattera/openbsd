@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.5 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.6 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: nd6_nbr.c,v 1.61 2001/02/10 16:06:14 jinmei Exp $	*/
 
 /*
@@ -62,13 +62,13 @@
 #define SDL(s) ((struct sockaddr_dl *)s)
 
 struct dadq;
-static struct dadq *nd6_dad_find __P((struct ifaddr *));
-static void nd6_dad_starttimer __P((struct dadq *, int));
-static void nd6_dad_stoptimer __P((struct dadq *));
-static void nd6_dad_timer __P((struct ifaddr *));
-static void nd6_dad_ns_output __P((struct dadq *, struct ifaddr *));
-static void nd6_dad_ns_input __P((struct ifaddr *));
-static void nd6_dad_na_input __P((struct ifaddr *));
+static struct dadq *nd6_dad_find(struct ifaddr *);
+static void nd6_dad_starttimer(struct dadq *, int);
+static void nd6_dad_stoptimer(struct dadq *);
+static void nd6_dad_timer(struct ifaddr *);
+static void nd6_dad_ns_output(struct dadq *, struct ifaddr *);
+static void nd6_dad_ns_input(struct ifaddr *);
+static void nd6_dad_na_input(struct ifaddr *);
 
 static int dad_ignore_ns = 0;	/* ignore NS in DAD - specwise incorrect*/
 static int dad_maxtry = 15;	/* max # of *tries* to transmit DAD packet */
@@ -774,7 +774,7 @@ nd6_na_input(m, off, icmp6len)
 		 */
 		nd6_output(ifp, ifp, ln->ln_hold,
 			   (struct sockaddr_in6 *)rt_key(rt), rt);
-		ln->ln_hold = 0;
+		ln->ln_hold = NULL;
 	}
 
  freeit:
@@ -982,7 +982,7 @@ nd6_dad_starttimer(dp, ticks)
 	int ticks;
 {
 
-	timeout_set(&dp->dad_timer_ch, (void (*) __P((void *)))nd6_dad_timer,
+	timeout_set(&dp->dad_timer_ch, (void (*)(void *))nd6_dad_timer,
 	    (void *)dp->dad_ifa);
 	timeout_add(&dp->dad_timer_ch, ticks);
 }

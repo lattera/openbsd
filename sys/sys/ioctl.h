@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.3.16.2 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.3.16.3 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: ioctl.h,v 1.20 1996/01/30 18:21:47 thorpej Exp $	*/
 
 /*-
@@ -71,7 +71,7 @@ struct ttysize {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int	ioctl __P((int, unsigned long, ...));
+int	ioctl(int, unsigned long, ...);
 __END_DECLS
 #endif /* !_KERNEL */
 #endif /* !_SYS_IOCTL_H_ */

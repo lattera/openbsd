@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.3.2.4 2002/03/06 02:15:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.3.2.5 2002/03/28 14:57:36 niklas Exp $	*/
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -70,12 +70,12 @@
 
 #include "bpfilter.h"
 
-static int faithioctl __P((struct ifnet *, u_long, caddr_t));
-int faithoutput __P((struct ifnet *, struct mbuf *, struct sockaddr *,
-	struct rtentry *));
-static void faithrtrequest __P((int, struct rtentry *, struct rt_addrinfo *));
+static int faithioctl(struct ifnet *, u_long, caddr_t);
+int faithoutput(struct ifnet *, struct mbuf *, struct sockaddr *,
+	struct rtentry *);
+static void faithrtrequest(int, struct rtentry *, struct rt_addrinfo *);
 
-void faithattach __P((int));
+void faithattach(int);
 
 static struct ifnet faithif[NFAITH];
 

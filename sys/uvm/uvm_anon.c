@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.3.4.7 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.3.4.8 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: uvm_anon.c,v 1.10 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -61,7 +61,7 @@ struct uvm_anonblock {
 static LIST_HEAD(anonlist, uvm_anonblock) anonblock_list;
 
 
-static boolean_t anon_pagein __P((struct vm_anon *));
+static boolean_t anon_pagein(struct vm_anon *);
 
 
 /*

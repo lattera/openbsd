@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.2 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.3 2002/03/28 14:52:02 niklas Exp $	*/
 /*	$NetBSD: shm.h,v 1.20 1996/04/09 20:55:35 cgd Exp $	*/
 
 /*
@@ -104,20 +104,20 @@ extern struct shmid_ds *shmsegs;
 
 struct vmspace;
 
-void shminit __P((void));
-void shmfork __P((struct vmspace *, struct vmspace *));
-void shmexit __P((struct vmspace *));
-void shmid_n2o __P((struct shmid_ds *, struct oshmid_ds *));
+void shminit(void);
+void shmfork(struct vmspace *, struct vmspace *);
+void shmexit(struct vmspace *);
+void shmid_n2o(struct shmid_ds *, struct oshmid_ds *);
 
 #else /* !_KERNEL */
 
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-void *shmat __P((int, const void *, int));
-int shmctl __P((int, int, struct shmid_ds *));
-int shmdt __P((const void *));
-int shmget __P((key_t, int, int));
+void *shmat(int, const void *, int);
+int shmctl(int, int, struct shmid_ds *);
+int shmdt(const void *);
+int shmget(key_t, int, int);
 __END_DECLS
 
 #endif /* !_KERNEL */

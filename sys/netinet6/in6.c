@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.6 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.7 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: in6.c,v 1.198 2001/07/18 09:12:38 itojun Exp $	*/
 
 /*
@@ -115,8 +115,8 @@ const struct in6_addr in6mask64 = IN6MASK64;
 const struct in6_addr in6mask96 = IN6MASK96;
 const struct in6_addr in6mask128 = IN6MASK128;
 
-static int in6_lifaddr_ioctl __P((struct socket *, u_long, caddr_t,
-	struct ifnet *, struct proc *));
+static int in6_lifaddr_ioctl(struct socket *, u_long, caddr_t,
+	struct ifnet *, struct proc *);
 
 const struct sockaddr_in6 sa6_any = {sizeof(sa6_any), AF_INET6,
 				     0, 0, IN6ADDR_ANY_INIT, 0};

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.2 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.3 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: lfs_vfsops.c,v 1.11 1996/03/25 12:53:35 pk Exp $	*/
 
 /*
@@ -62,7 +62,7 @@
 #include <ufs/lfs/lfs.h>
 #include <ufs/lfs/lfs_extern.h>
 
-int lfs_mountfs __P((struct vnode *, struct mount *, struct proc *));
+int lfs_mountfs(struct vnode *, struct mount *, struct proc *);
 
 struct vfsops lfs_vfsops = {
 	lfs_mount,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.5 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.6 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: nd6.c,v 1.151 2001/06/19 14:24:41 sumikawa Exp $	*/
 
 /*
@@ -28,14 +28,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- */
-
-/*
- * XXX
- * KAME 970409 note:
- * BSD/OS version heavily modifies this code, related to llinfo.
- * Since we don't have BSD/OS version of net/route.c in our hand,
- * I left the code mostly as it was in 970310.  -- itojun
  */
 
 #include <sys/param.h>
@@ -108,7 +100,7 @@ struct nd_prhead nd_prefix = { 0 };
 int nd6_recalc_reachtm_interval = ND6_RECALC_REACHTM_INTERVAL;
 static struct sockaddr_in6 all1_sa;
 
-static void nd6_slowtimo __P((void *));
+static void nd6_slowtimo(void *);
 
 struct timeout nd6_slowtimo_ch;
 struct timeout nd6_timer_ch;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_alloc.c,v 1.4.6.3 2001/10/31 03:32:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_alloc.c,v 1.4.6.4 2002/03/28 14:54:25 niklas Exp $	*/
 /*	$NetBSD: ext2fs_alloc.c,v 1.10 2001/07/05 08:38:27 toshii Exp $	*/
 
 /*
@@ -56,14 +56,13 @@
 
 u_long ext2gennumber;
 
-static ufs_daddr_t	ext2fs_alloccg __P((struct inode *, int, ufs_daddr_t, int));
-static u_long	ext2fs_dirpref __P((struct m_ext2fs *));
-static void	ext2fs_fserr __P((struct m_ext2fs *, u_int, char *));
-static u_long	ext2fs_hashalloc __P((struct inode *, int, long, int,
-				   ufs_daddr_t (*)(struct inode *, int, ufs_daddr_t,
-						   int)));
-static ufs_daddr_t	ext2fs_nodealloccg __P((struct inode *, int, ufs_daddr_t, int));
-static ufs_daddr_t	ext2fs_mapsearch __P((struct m_ext2fs *, char *, ufs_daddr_t));
+static ufs_daddr_t	ext2fs_alloccg(struct inode *, int, ufs_daddr_t, int);
+static u_long	ext2fs_dirpref(struct m_ext2fs *);
+static void	ext2fs_fserr(struct m_ext2fs *, u_int, char *);
+static u_long	ext2fs_hashalloc(struct inode *, int, long, int,
+		    ufs_daddr_t (*)(struct inode *, int, ufs_daddr_t, int));
+static ufs_daddr_t	ext2fs_nodealloccg(struct inode *, int, ufs_daddr_t, int);
+static ufs_daddr_t	ext2fs_mapsearch(struct m_ext2fs *, char *, ufs_daddr_t);
 
 /*
  * Allocate a block in the file system.
@@ -279,7 +278,7 @@ ext2fs_hashalloc(ip, cg, pref, size, allocator)
 	int cg;
 	long pref;
 	int size;	/* size for data blocks, mode for inodes */
-	ufs_daddr_t (*allocator) __P((struct inode *, int, ufs_daddr_t, int));
+	ufs_daddr_t (*allocator)(struct inode *, int, ufs_daddr_t, int);
 {
 	struct m_ext2fs *fs;
 	long result;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.h,v 1.3.4.2 2001/05/14 22:47:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.h,v 1.3.4.3 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: uvm_loan.h,v 1.7 1999/06/21 17:25:11 thorpej Exp $	*/
 
 /*
@@ -51,9 +51,9 @@
  * loan prototypes
  */
 
-int uvm_loan __P((struct vm_map *, vaddr_t, vsize_t, void **, int));
-void uvm_unloananon __P((struct vm_anon **, int));
-void uvm_unloanpage __P((struct vm_page **, int));
+int uvm_loan(struct vm_map *, vaddr_t, vsize_t, void **, int);
+void uvm_unloananon(struct vm_anon **, int);
+void uvm_unloanpage(struct vm_page **, int);
 
 #endif /* _KERNEL */
 

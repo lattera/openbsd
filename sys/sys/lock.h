@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.5 2001/11/13 23:02:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.6 2002/03/28 14:52:01 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -167,12 +167,12 @@ struct lock {
 
 struct proc;
 
-void	lockinit __P((struct lock *, int prio, char *wmesg, int timo,
-			int flags));
-int	lockmgr __P((__volatile struct lock *, u_int flags,
-			struct simplelock *, struct proc *p));
-void    lockmgr_printinfo __P((struct lock *));
-int	lockstatus __P((struct lock *));
+void	lockinit(struct lock *, int prio, char *wmesg, int timo,
+			int flags);
+int	lockmgr(__volatile struct lock *, u_int flags,
+			struct simplelock *, struct proc *p);
+void    lockmgr_printinfo(struct lock *);
+int	lockstatus(struct lock *);
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
 #define spinlockinit(lkp, name, flags)	lockinit(lkp, 0, name, 0, flags)

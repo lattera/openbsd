@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.h,v 1.3.4.5 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.h,v 1.3.4.6 2002/03/28 14:54:27 niklas Exp $	*/
 /*	$NetBSD: uvm_vnode.h,v 1.9 2000/03/26 20:54:48 kleink Exp $	*/
 
 /*
@@ -102,7 +102,7 @@ struct uvm_vnode {
  * include sys/vnode.h, and files that include sys/vnode.h don't know
  * what a vm_prot_t is.
  */
-struct uvm_object  *uvn_attach __P((void *, vm_prot_t));
+struct uvm_object  *uvn_attach(void *, vm_prot_t);
 #endif
 
 #endif /* _KERNEL */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/bootarg.h,v 1.8 1999/08/25 00:54:18 mickey Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/bootarg.h,v 1.8.4.1 2002/03/28 14:52:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996-1999 Michael Shalayeff
@@ -55,6 +55,6 @@ extern bootarg_t *bootargp;
 #endif
 
 #ifdef _STANDALONE
-void addbootarg __P((int, size_t, void *));
-void makebootargs __P((caddr_t, size_t *));
+void addbootarg(int, size_t, void *);
+void makebootargs(caddr_t, size_t *);
 #endif /* _STANDALONE */

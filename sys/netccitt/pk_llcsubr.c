@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_llcsubr.c,v 1.3.16.2 2001/07/04 10:54:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_llcsubr.c,v 1.3.16.3 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: pk_llcsubr.c,v 1.4 1996/02/13 22:05:26 christos Exp $	*/
 
 /* 
@@ -126,8 +126,8 @@
 #define XIFA(rt) ((struct x25_ifaddr *)((rt)->rt_ifa))
 #define SA(s) ((struct sockaddr *)s)
 
-static int cons_rtrequest_internal __P((int, struct rtentry *,
-    struct rt_addrinfo *));
+static int cons_rtrequest_internal(int, struct rtentry *,
+    struct rt_addrinfo *);
 
 /* 
  * ifa_rtrequest currently does not check the error from the rtrequest call

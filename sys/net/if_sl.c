@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_sl.c,v 1.9.4.2 2001/07/04 10:54:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_sl.c,v 1.9.4.3 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: if_sl.c,v 1.39.4.1 1996/06/02 16:26:31 thorpej Exp $	*/
 
 /*
@@ -186,8 +186,8 @@ int nsl;
 #define TRANS_FRAME_END	 	0xdc		/* transposed frame end */
 #define TRANS_FRAME_ESCAPE 	0xdd		/* transposed frame esc */
 
-static int slinit __P((struct sl_softc *));
-static struct mbuf *sl_btom __P((struct sl_softc *, int));
+static int slinit(struct sl_softc *);
+static struct mbuf *sl_btom(struct sl_softc *, int);
 
 /*
  * Called from boot code to establish sl interfaces.

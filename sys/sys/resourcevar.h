@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/resourcevar.h,v 1.3.16.1 2001/05/14 22:45:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/resourcevar.h,v 1.3.16.2 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: resourcevar.h,v 1.12 1995/11/22 23:01:53 cgd Exp $	*/
 
 /*
@@ -85,13 +85,13 @@ struct plimit {
 	    (p)->p_stats->p_prof.pr_addr, (p)->p_stats->p_prof.pr_ticks)
 
 #ifdef _KERNEL
-void	 addupc_intr __P((struct proc *p, u_long pc, u_int ticks));
-void	 addupc_task __P((struct proc *p, u_long pc, u_int ticks));
-void	 calcru __P((struct proc *p, struct timeval *up, struct timeval *sp,
-	    struct timeval *ip));
-struct plimit *limcopy __P((struct plimit *lim));
-void	limfree __P((struct plimit *));
+void	 addupc_intr(struct proc *p, u_long pc, u_int ticks);
+void	 addupc_task(struct proc *p, u_long pc, u_int ticks);
+void	 calcru(struct proc *p, struct timeval *up, struct timeval *sp,
+	    struct timeval *ip);
+struct plimit *limcopy(struct plimit *lim);
+void	limfree(struct plimit *);
 
-void	 ruadd __P((struct rusage *ru, struct rusage *ru2));
+void	 ruadd(struct rusage *ru, struct rusage *ru2);
 #endif
 #endif	/* !_SYS_RESOURCEVAR_H_ */

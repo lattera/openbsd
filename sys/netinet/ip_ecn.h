@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ecn.h,v 1.1.2.2 2001/07/04 10:54:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ecn.h,v 1.1.2.3 2002/03/28 14:56:45 niklas Exp $	*/
 /*	$KAME: ip_ecn.h,v 1.5 2000/03/27 04:58:38 sumikawa Exp $	*/
 
 /*
@@ -44,11 +44,11 @@
 #define ECN_NOCARE	(-1)	/* no consideration to ECN */
 
 #if defined(_KERNEL)
-extern void ip_ecn_ingress __P((int, u_int8_t *, u_int8_t *));
-extern void ip_ecn_egress __P((int, u_int8_t *, u_int8_t *));
+extern void ip_ecn_ingress(int, u_int8_t *, u_int8_t *);
+extern void ip_ecn_egress(int, u_int8_t *, u_int8_t *);
 #ifdef INET6
-extern void ip6_ecn_ingress __P((int, u_int32_t *, u_int32_t *));
-extern void ip6_ecn_egress __P((int, u_int32_t *, u_int32_t *));
+extern void ip6_ecn_ingress(int, u_int32_t *, u_int32_t *);
+extern void ip6_ecn_egress(int, u_int32_t *, u_int32_t *);
 #endif /* INET6 */
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_ECN_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9.2.4 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9.2.5 2002/03/28 14:56:46 niklas Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -550,7 +550,7 @@ in6_pcbnotify(head, dst, fport_arg, src, lport_arg, cmd, cmdarg, notify)
 	uint lport_arg;
 	int cmd;
 	void *cmdarg;
-	void (*notify) __P((struct inpcb *, int));
+	void (*notify)(struct inpcb *, int);
 {
 	struct inpcb *inp, *ninp;
 	u_short fport = fport_arg, lport = lport_arg;

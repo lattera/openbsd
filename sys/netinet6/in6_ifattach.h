@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.h,v 1.1.2.1 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.h,v 1.1.2.2 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: in6_ifattach.h,v 1.9 2000/04/12 05:35:48 itojun Exp $	*/
 
 /*
@@ -34,8 +34,8 @@
 #define _NETINET6_IN6_IFATTACH_H_
 
 #ifdef _KERNEL
-void in6_ifattach __P((struct ifnet *, struct ifnet *));
-void in6_ifdetach __P((struct ifnet *));
+void in6_ifattach(struct ifnet *, struct ifnet *);
+void in6_ifdetach(struct ifnet *);
 #endif /* _KERNEL */
 
 #endif /* _NETINET6_IN6_IFATTACH_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.6 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.7 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: scsiconf.c,v 1.57 1996/05/02 01:09:01 neil Exp $	*/
 
 /*
@@ -74,8 +74,8 @@
 /*
  * Declarations
  */
-void scsi_probedev __P((struct scsibus_softc *, int, int));
-int scsi_probe_bus __P((int bus, int target, int lun));
+void scsi_probedev(struct scsibus_softc *, int, int);
+int scsi_probe_bus(int bus, int target, int lun);
 
 struct scsi_device probe_switch = {
 	NULL,
@@ -84,13 +84,13 @@ struct scsi_device probe_switch = {
 	NULL,
 };
 
-int scsibusmatch __P((struct device *, void *, void *));
-void scsibusattach __P((struct device *, struct device *, void *));
-int  scsibusactivate __P((struct device *, enum devact));
-int  scsibusdetach __P((struct device *, int));
-void scsibuszeroref __P((struct device *));
+int scsibusmatch(struct device *, void *, void *);
+void scsibusattach(struct device *, struct device *, void *);
+int  scsibusactivate(struct device *, enum devact);
+int  scsibusdetach(struct device *, int);
+void scsibuszeroref(struct device *);
 
-int scsibussubmatch __P((struct device *, void *, void *));
+int scsibussubmatch(struct device *, void *, void *);
 
 
 
@@ -109,7 +109,7 @@ int scsidebug_level = SCSIDEBUG_LEVEL;
 
 int scsi_autoconf = SCSI_AUTOCONF;
 
-int scsibusprint __P((void *, const char *));
+int scsibusprint(void *, const char *);
 
 int
 scsiprint(aux, pnp)
@@ -784,9 +784,11 @@ scsi_probedev(scsi, target, lun)
 	/*
 	 * Tell drivers that are paying attention to avoid
 	 * sync/wide/tags until INQUIRY data and quirks information
-	 * are available.
+	 * are available. Since bits in quirks may have already been
+	 * set by some drivers (e.g. NOLUNS for atapiscsi), just add
+	 * NOTAGS, NOWIDE and NOSYNC.
 	 */
-	sc_link->quirks = SDEV_NOSYNC | SDEV_NOWIDE | SDEV_NOTAGS;
+	sc_link->quirks |= SDEV_NOSYNC | SDEV_NOWIDE | SDEV_NOTAGS;
 
 	/*
 	 * Ask the device what it is

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.5.2.4 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.5.2.5 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: mld6.c,v 1.26 2001/02/16 14:50:35 itojun Exp $	*/
 
 /*
@@ -104,7 +104,7 @@ static int mld6_timers_are_running;
 static struct in6_addr mld6_all_nodes_linklocal = IN6ADDR_LINKLOCAL_ALLNODES_INIT;
 static struct in6_addr mld6_all_routers_linklocal = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
 
-static void mld6_sendpkt __P((struct in6_multi *, int, const struct in6_addr *));
+static void mld6_sendpkt(struct in6_multi *, int, const struct in6_addr *);
 
 void
 mld6_init()

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_bmap.c,v 1.4.4.3 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_bmap.c,v 1.4.4.4 2002/03/28 14:54:25 niklas Exp $	*/
 /*	$NetBSD: ext2fs_bmap.c,v 1.5 2000/03/30 12:41:11 augustss Exp $	*/
 
 /*
@@ -61,8 +61,8 @@
 #include <ufs/ext2fs/ext2fs.h>
 #include <ufs/ext2fs/ext2fs_extern.h>
 
-static int ext2fs_bmaparray __P((struct vnode *, ufs_daddr_t, ufs_daddr_t *,
-								struct indir *, int *, int *));
+static int ext2fs_bmaparray(struct vnode *, ufs_daddr_t, ufs_daddr_t *,
+								struct indir *, int *, int *);
 
 /*
  * Bmap converts a the logical block number of a file to its physical block

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.3 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.4 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -81,6 +81,7 @@
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/domain.h>
+#include <sys/kernel.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -110,7 +111,7 @@ extern int tcp_rst_ppslim;
 /* from in_pcb.c */
 extern	struct baddynamicports baddynamicports;
 
-int tcp_ident __P((void *, size_t *, void *, size_t));
+int tcp_ident(void *, size_t *, void *, size_t);
 
 #ifdef INET6
 int
@@ -479,15 +480,6 @@ tcp_usrreq(so, req, m, nam, control)
 		else
 #endif
 			in_setpeeraddr(inp, nam);
-		break;
-
-	/*
-	 * TCP slow timer went off; going through this
-	 * routine for tracing's sake.
-	 */
-	case PRU_SLOWTIMO:
-		tp = tcp_timers(tp, (long)nam);
-		req |= (long)nam << 8;		/* for debug's sake */
 		break;
 
 	default:

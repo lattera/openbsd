@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.h,v 1.3.2.3 2002/03/06 02:15:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.h,v 1.3.2.4 2002/03/28 14:57:36 niklas Exp $	*/
 /*	$KAME: if_gif.h,v 1.17 2000/09/11 11:36:41 sumikawa Exp $	*/
 
 /*
@@ -67,8 +67,8 @@ extern int ngif;
 extern struct gif_softc *gif_softc;
 
 /* Prototypes */
-int gif_output __P((struct ifnet *, struct mbuf *,
-		    struct sockaddr *, struct rtentry *));
-int gif_ioctl __P((struct ifnet *, u_long, caddr_t));
-void gif_start __P((struct ifnet *));
+int gif_output(struct ifnet *, struct mbuf *,
+		    struct sockaddr *, struct rtentry *);
+int gif_ioctl(struct ifnet *, u_long, caddr_t);
+void gif_start(struct ifnet *);
 #endif /* _NET_IF_GIF_H_ */

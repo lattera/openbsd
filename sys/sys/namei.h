@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/namei.h,v 1.6.10.1 2001/07/04 11:00:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/namei.h,v 1.6.10.2 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: namei.h,v 1.11 1996/02/09 18:25:20 christos Exp $	*/
 
 /*
@@ -175,16 +175,16 @@ struct	namecache {
 
 #ifdef _KERNEL
 u_long	nextvnodeid;
-int	namei __P((struct nameidata *ndp));
-int	lookup __P((struct nameidata *ndp));
-int	relookup __P((struct vnode *dvp, struct vnode **vpp,
-		      struct componentname *cnp));
-void cache_purge __P((struct vnode *));
-int cache_lookup __P((struct vnode *, struct vnode **, struct componentname *));
-void cache_enter __P((struct vnode *, struct vnode *, struct componentname *));
-void nchinit __P((void));
+int	namei(struct nameidata *ndp);
+int	lookup(struct nameidata *ndp);
+int	relookup(struct vnode *dvp, struct vnode **vpp,
+		      struct componentname *cnp);
+void cache_purge(struct vnode *);
+int cache_lookup(struct vnode *, struct vnode **, struct componentname *);
+void cache_enter(struct vnode *, struct vnode *, struct componentname *);
+void nchinit(void);
 struct mount;
-void cache_purgevfs __P((struct mount *));
+void cache_purgevfs(struct mount *);
 
 #endif
 

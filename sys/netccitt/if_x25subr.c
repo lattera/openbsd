@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.2 2001/07/04 10:54:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.3 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: if_x25subr.c,v 1.13 1996/05/09 22:29:25 scottr Exp $	*/
 
 /*
@@ -108,7 +108,7 @@ int x25_autoconnect = 0;
 
 #define senderr(x) {error = x; goto bad;}
 
-static struct llinfo_x25 *x25_lxalloc __P((struct rtentry *));
+static struct llinfo_x25 *x25_lxalloc(struct rtentry *);
 
 /*
  * Ancillary routines
@@ -716,7 +716,7 @@ pk_init()
 struct x25_dgproto {
 	u_char          spi;
 	u_char          spilen;
-	int             (*f) __P((struct mbuf *, void *));
+	int             (*f)(struct mbuf *, void *);
 } x25_dgprototab[] = {
 #if defined(ISO) && defined(TPCONS)
 	{ 0x0, 0, tp_incoming },

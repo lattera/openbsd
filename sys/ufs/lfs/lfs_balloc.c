@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_balloc.c,v 1.5.12.2 2001/11/13 23:02:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_balloc.c,v 1.5.12.3 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: lfs_balloc.c,v 1.3 1996/02/09 22:28:48 christos Exp $	*/
 
 /*
@@ -56,8 +56,8 @@
 
 #include <uvm/uvm_extern.h>
 
-int lfs_fragextend __P((struct vnode *vp, int osize, int nsize, daddr_t lbn,
-	struct buf **bpp));
+int lfs_fragextend(struct vnode *vp, int osize, int nsize, daddr_t lbn,
+	struct buf **bpp);
 
 
 int

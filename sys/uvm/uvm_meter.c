@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.6 2001/12/05 01:23:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.7 2002/03/28 14:54:26 niklas Exp $	*/
 /*	$NetBSD: uvm_meter.c,v 1.21 2001/07/14 06:36:03 matt Exp $	*/
 
 /*
@@ -76,7 +76,7 @@ static fixpt_t cexp[3] = {
  * prototypes
  */
 
-static void uvm_loadav __P((struct loadavg *));
+static void uvm_loadav(struct loadavg *);
 
 /*
  * uvm_meter: calculate load average and wake up the swapper (if needed)

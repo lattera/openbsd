@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_media.c,v 1.2.2.3 2001/05/14 22:40:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_media.c,v 1.2.2.4 2002/03/28 14:57:37 niklas Exp $	*/
 /*	$NetBSD: if_media.c,v 1.10 2000/03/13 23:52:39 soren Exp $	*/
 
 /*-
@@ -103,7 +103,7 @@
 
 #ifdef IFMEDIA_DEBUG
 int	ifmedia_debug = 0;
-static	void ifmedia_printword __P((int));
+static	void ifmedia_printword(int);
 #endif
 
 /*

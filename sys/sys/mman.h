@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mman.h,v 1.7.8.3 2001/11/13 23:02:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mman.h,v 1.7.8.4 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: mman.h,v 1.11 1995/03/26 20:24:23 jtc Exp $	*/
 
 /*-
@@ -113,17 +113,17 @@
 
 __BEGIN_DECLS
 /* Some of these int's should probably be size_t's */
-void *	mmap __P((void *, size_t, int, int, int, off_t));
-int	mprotect __P((void *, size_t, int));
-int	munmap __P((void *, size_t));
-int	msync __P((void *, size_t, int));
-int	mlock __P((const void *, size_t));
-int	munlock __P((const void *, size_t));
-int	mlockall __P((int));
-int	munlockall __P((void));
-int	madvise __P((void *, size_t, int));
-int	mincore __P((void *, size_t, char *));
-int	minherit __P((void *, size_t, int));
+void *	mmap(void *, size_t, int, int, int, off_t);
+int	mprotect(void *, size_t, int);
+int	munmap(void *, size_t);
+int	msync(void *, size_t, int);
+int	mlock(const void *, size_t);
+int	munlock(const void *, size_t);
+int	mlockall(int);
+int	munlockall(void);
+int	madvise(void *, size_t, int);
+int	mincore(void *, size_t, char *);
+int	minherit(void *, size_t, int);
 __END_DECLS
 
 #endif /* !_KERNEL */

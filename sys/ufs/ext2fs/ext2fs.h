@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs.h,v 1.3.12.2 2001/10/31 03:32:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs.h,v 1.3.12.3 2002/03/28 14:54:25 niklas Exp $	*/
 /*	$NetBSD: ext2fs.h,v 1.10 2000/01/28 16:00:23 bouyer Exp $	*/
 
 /*
@@ -219,7 +219,7 @@ struct ext2_gd {
  * a power of 3, 5 or 7
  */
 
-static __inline__ int cg_has_sb __P((int)) __attribute__((__unused__));
+static __inline__ int cg_has_sb(int) __attribute__((__unused__));
 static __inline int
 cg_has_sb(i)
 	int i;
@@ -251,8 +251,8 @@ cg_has_sb(i)
 #define e2fs_sbsave(old, new) memcpy((new), (old), SBSIZE);
 #define e2fs_cgsave(old, new, size) memcpy((new), (old), (size));
 #else
-void e2fs_sb_bswap __P((struct ext2fs *, struct ext2fs *));
-void e2fs_cg_bswap __P((struct ext2_gd *, struct ext2_gd *, int));
+void e2fs_sb_bswap(struct ext2fs *, struct ext2fs *);
+void e2fs_cg_bswap(struct ext2_gd *, struct ext2_gd *, int);
 #define e2fs_sbload(old, new) e2fs_sb_bswap((old), (new))
 #define e2fs_cgload(old, new, size) e2fs_cg_bswap((old), (new), (size));
 #define e2fs_sbsave(old, new) e2fs_sb_bswap((old), (new))

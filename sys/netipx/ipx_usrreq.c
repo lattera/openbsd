@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8.2.2 2001/11/13 22:59:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8.2.3 2002/03/28 14:57:37 niklas Exp $	*/
 
 /*-
  *
@@ -81,13 +81,7 @@ int ipx_recvspace = IPXRCVQ;
  *  This may also be called for raw listeners.
  */
 void
-#if __STDC__
 ipx_input(struct mbuf *m, ...)
-#else
-ipx_input(m, va_alist)
-	struct mbuf *m;
-	va_decl
-#endif
 {
 	register struct ipxpcb *ipxp;
 	register struct ipx *ipx = mtod(m, struct ipx *);
@@ -172,13 +166,7 @@ ipx_drop(ipxp, errno)
 }
 
 int
-#if __STDC__
 ipx_output(struct mbuf *m0, ...)
-#else
-ipx_output(m0, va_alist)
-	struct mbuf *m0;
-	va_decl
-#endif
 {
 	register struct mbuf *m;
 	register struct ipx *ipx;

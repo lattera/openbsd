@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/ip_gre.c,v 1.6.2.3 2001/10/31 03:29:03 nate Exp $ */
+/*      $OpenBSD: src/sys/netinet/ip_gre.c,v 1.6.2.4 2002/03/28 14:56:45 niklas Exp $ */
 /*	$NetBSD: ip_gre.c,v 1.9 1999/10/25 19:18:11 drochner Exp $ */
 
 /*
@@ -84,8 +84,8 @@
 /* Needs IP headers. */
 #include <net/if_gre.h>
 
-struct gre_softc *gre_lookup __P((struct mbuf *, u_int8_t));
-static int gre_input2 __P((struct mbuf *, int, u_char));
+struct gre_softc *gre_lookup(struct mbuf *, u_int8_t);
+static int gre_input2(struct mbuf *, int, u_char);
 
 /*
  * Decapsulate.
@@ -216,13 +216,7 @@ gre_input2(m , hlen, proto)
  * IPPROTO_GRE and a local destination address).
  */
 void
-#if __STDC__
 gre_input(struct mbuf *m, ...)
-#else
-gre_input(m, va_alist)
-        struct mbuf *m;
-        va_dcl
-#endif
 {
 	register int hlen,ret;
 	va_list ap;
@@ -254,13 +248,7 @@ gre_input(m, va_alist)
  */
 
 void
-#if __STDC__
 gre_mobile_input(struct mbuf *m, ...)
-#else
-gre_mobile_input(m, va_alist)
-        struct mbuf *m;
-        va_dcl
-#endif
 {
 	register struct ip *ip = mtod(m, struct ip *);
 	register struct mobip_h *mip = mtod(m, struct mobip_h *);
@@ -301,7 +289,7 @@ gre_mobile_input(m, va_alist)
 	mip->mi.ip_dst.s_addr = mip->mh.odst;
 	mip->mi.ip_p = (ntohs(mip->mh.proto) >> 8);
 	
-	if (gre_in_cksum((u_short*) &mip->mh,msiz) != 0) {
+	if (gre_in_cksum((u_short *) &mip->mh,msiz) != 0) {
 		m_freem(m);
 		return;
 	}

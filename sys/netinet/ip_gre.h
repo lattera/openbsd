@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.1.2.1 2001/07/04 10:54:47 niklas Exp $ */
+/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.1.2.2 2002/03/28 14:56:45 niklas Exp $ */
 /*	$NetBSD: ip_gre.h,v 1.3 1998/10/07 23:33:02 thorpej Exp $ */
 
 /*
@@ -63,14 +63,14 @@
 }
 
 #ifdef _KERNEL
-void gre_input __P((struct mbuf *, ...));
-void gre_mobile_input __P((struct mbuf *, ...));
+void gre_input(struct mbuf *, ...);
+void gre_mobile_input(struct mbuf *, ...);
 
-int     ipmobile_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
-int     gre_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+int     ipmobile_sysctl(int *, u_int, void *, size_t *, void *, size_t);
+int     gre_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 #ifndef MROUTING
-void gre_ipip_input __P((struct mbuf *, ...));
+void gre_ipip_input(struct mbuf *, ...);
 #endif /* MROUTING */
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_GRE_H_ */

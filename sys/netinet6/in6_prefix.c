@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.3 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.4 2002/03/28 14:56:46 niklas Exp $	*/
 /*	$KAME: in6_prefix.c,v 1.47 2001/03/25 08:41:39 itojun Exp $	*/
 
 /*
@@ -88,13 +88,13 @@ struct rr_prhead rr_prefix;
 
 struct timeout in6_rr_timer_ch;
 
-static void	add_each_addr __P((struct socket *so, struct rr_prefix *rpp,
-				   struct rp_addr *rap));
-static int create_ra_entry __P((struct rp_addr **rapp));
-static int add_each_prefix __P((struct socket *so, struct rr_prefix *rpp));
-static void free_rp_entries __P((struct rr_prefix *rpp));
-static int link_stray_ia6s __P((struct rr_prefix *rpp));
-static void	rp_remove __P((struct rr_prefix *rpp));
+static void	add_each_addr(struct socket *so, struct rr_prefix *rpp,
+				   struct rp_addr *rap);
+static int create_ra_entry(struct rp_addr **rapp);
+static int add_each_prefix(struct socket *so, struct rr_prefix *rpp);
+static void free_rp_entries(struct rr_prefix *rpp);
+static int link_stray_ia6s(struct rr_prefix *rpp);
+static void	rp_remove(struct rr_prefix *rpp);
 
 /*
  * Copy bits from src to tgt, from off bit for len bits.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/exec_script.h,v 1.3 1996/03/03 12:11:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/exec_script.h,v 1.3.16.1 2002/03/28 14:52:01 niklas Exp $	*/
 /*	$NetBSD: exec_script.h,v 1.6 1995/03/26 20:24:11 jtc Exp $	*/
 
 /*
@@ -39,6 +39,6 @@
 #ifdef _KERNEL
 
 /* the shell script handler's entry in the exec switch */
-int	exec_script_makecmds __P((struct proc *, struct exec_package *));
+int	exec_script_makecmds(struct proc *, struct exec_package *);
 
 #endif /* _KERNEL */
