@@ -1,9 +1,9 @@
 #	from: @(#)Makefile	5.8.1.1 (Berkeley) 5/8/91
-#	$Id: Makefile,v 1.2 1995/11/06 21:42:19 deraadt Exp $
+#	$Id: Makefile,v 1.3 1995/12/16 11:46:37 deraadt Exp $
 
 SUBDIR=	apply apropos asa at banner basename bdes biff cal calendar cap_mkdb \
 	checknr chflags chpass cksum cmp col colcrt colrm column comm \
-	compress crontab ctags cut dirname du \
+	compress cpp crontab ctags cut dirname du \
 	env error expand false file find finger fmt fold fpr from \
 	fsplit fstat ftp gencat getconf getopt head hexdump id indent \
 	ipcrm ipcs join jot kdump ktrace lam last lastcomm leave lex locate \
