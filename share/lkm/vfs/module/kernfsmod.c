@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/share/lkm/vfs/module/Attic/kernfsmod.c,v 1.3 2000/03/02 14:46:41 todd Exp $	*/
 /*
  * kernfsmod.c
  *
@@ -33,7 +34,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: kernfsmod.c,v 1.1.1.1 1995/10/18 08:44:22 deraadt Exp $
  */
 #include <sys/param.h>
 #include <sys/ioctl.h>

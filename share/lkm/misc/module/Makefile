@@ -1,3 +1,4 @@
+#	$OpenBSD: src/share/lkm/misc/module/Makefile,v 1.3 2000/03/02 14:46:36 todd Exp $
 #
 # Makefile for miscmod
 #
@@ -33,7 +34,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:44:20 deraadt Exp $
 #
 
 SRCS=miscmod.c

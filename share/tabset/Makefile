@@ -1,5 +1,5 @@
+#	$OpenBSD: src/share/tabset/Makefile,v 1.2 2000/03/02 14:46:52 todd Exp $
 #	from: @(#)Makefile	5.3 (Berkeley) 10/22/90
-#	$Id: Makefile,v 1.6 1994/02/10 01:55:11 cgd Exp $
 
 FILES=	3101 9837 aa aed512 beehive diablo dtc382 hp700-wy ibm3101 std \
 	stdcrt tandem653 teleray vt100 wyse-adds xerox1720 xerox1730 \

@@ -1,5 +1,5 @@
+#	$OpenBSD: src/share/ipf/Attic/Makefile,v 1.3 2000/03/02 14:46:34 todd Exp $
 #
-#	$Id: Makefile,v 1.1 1996/01/09 09:29:32 dm Exp $
 #
 FILES=	example.* nat.* firewall.*
 NOOBJ=	noobj

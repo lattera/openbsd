@@ -1,3 +1,4 @@
+#	$OpenBSD: src/share/lkm/syscall/Makefile,v 1.2 2000/03/02 14:46:37 todd Exp $
 #
 # Makefile for sample loadable system call
 #
@@ -33,7 +34,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$Id: Makefile,v 1.1 1993/06/08 03:53:32 cgd Exp $
 #
 
 # Makefile for sample loadable system call

@@ -1,5 +1,5 @@
+#	$OpenBSD: src/share/skel/Attic/Makefile,v 1.2 2000/03/02 14:46:51 todd Exp $
 #	from: @(#)Makefile	5.3 (Berkeley) 6/8/90
-#	$Id: Makefile,v 1.6 1994/02/10 01:55:04 cgd Exp $
 
 FILES=	dot.cshrc dot.login dot.mailrc dot.profile dot.rhosts
 NOOBJ=	noobj

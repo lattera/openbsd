@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/share/lkm/syscall/module/mycall.c,v 1.2 2000/03/02 14:46:37 todd Exp $	*/
 /*
  * mycall.c
  *
@@ -33,7 +34,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mycall.c,v 1.1 1993/06/08 03:53:36 cgd Exp $
  */
 #include <sys/param.h>
 #include <sys/ioctl.h>

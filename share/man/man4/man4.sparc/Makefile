@@ -1,5 +1,5 @@
-# 	from: @(#)Makefile	8.2 (Berkeley) 2/16/94
-#	$Id: Makefile,v 1.16 1999/09/09 02:33:18 jason Exp $
+#	$OpenBSD: src/share/man/man4/man4.sparc/Makefile,v 1.18 2000/03/02 14:46:48 todd Exp $
+#	from: @(#)Makefile	8.2 (Berkeley) 2/16/94
 
 MAN=	intro.4
 MAN+=	audioamd.4 audiocs.4 be.4 bwtwo.4 cgtwo.4 cgthree.4 cgfour.4 cgsix.4

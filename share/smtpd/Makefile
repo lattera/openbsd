@@ -1,5 +1,5 @@
+#	$OpenBSD: src/share/smtpd/Attic/Makefile,v 1.2 2000/03/02 14:46:52 todd Exp $
 #
-#	$Id: Makefile,v 1.2 1996/07/18 05:57:20 dm Exp $
 #
 FILES=	example.* 
 NOOBJ=	noobj

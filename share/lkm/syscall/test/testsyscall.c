@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/share/lkm/syscall/test/testsyscall.c,v 1.2 2000/03/02 14:46:39 todd Exp $	*/
 /*
  * testsyscall.c
  *
@@ -36,7 +37,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: testsyscall.c,v 1.1 1993/06/08 03:53:42 cgd Exp $
  */
 #include <stdio.h>
 
