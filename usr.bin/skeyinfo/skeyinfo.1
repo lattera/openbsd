@@ -1,0 +1,30 @@
+.\" $OpenBSD: src/usr.bin/skeyinfo/skeyinfo.1,v 1.3 2000/03/11 21:40:02 aaron Exp $
+.\"
+.Dd 22 July 1997
+.Dt SKEYINFO 1
+.Os
+.Sh NAME
+.Nm skeyinfo
+.Nd obtain the next S/Key challenge for a user
+.Sh SYNOPSIS
+.Nm skeyinfo
+.Op Fl v
+.Op Ar user
+.Sh DESCRIPTION
+.Nm
+prints out the next S/Key challenge for the specified user or for the
+current user if no user is specified.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Print the hash algorithm as well.
+.El
+.Sh EXAMPLES
+% skey -n <number of passwords to print> `skeyinfo` | lpr
+.Pp
+This would print out a list of S/Key passwords for use over
+an untrusted network (perhaps for use at a conference).
+.Sh SEE ALSO
+.Xr skey 1 ,
+.Xr skeyinit 1
