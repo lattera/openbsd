@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/grep/grep.h,v 1.2 2003/06/22 22:38:50 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1999 James Howard and Dag-Erling Coïdan Smørgrav
  * All rights reserved.
