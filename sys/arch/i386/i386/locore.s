@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.24 2004/03/16 18:29:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.25 2004/04/06 13:31:05 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1793,6 +1793,17 @@ switch_exited:
 switch_restored:
 	/* Restore cr0 (including FPU state). */
 	movl	PCB_CR0(%esi),%ecx
+#ifdef MULTIPROCESSOR
+	/* 
+	 * If our floating point registers are on a different CPU,
+	 * clear CR0_TS so we'll trap rather than reuse bogus state.
+	 */
+	GET_CPUINFO(%ebx)
+	cmpl	PCB_FPCPU(%esi),%ebx
+	jz	1f
+	orl	$CR0_TS,%ecx
+1:	
+#endif	
 	movl	%ecx,%cr0
 
 	/* Record new pcb. */
