@@ -1,4 +1,4 @@
-This is cvs.info, produced by Makeinfo version 3.12f from ./cvs.texinfo.
+This is cvs.info, produced by makeinfo version 4.0 from ./cvs.texinfo.
 
 START-INFO-DIR-ENTRY
 * CVS: (cvs).          Concurrent Versions System
@@ -86,7 +86,7 @@ Log messages
 
    To look through the log messages which have been specified for every
 revision which has been committed, use the `cvs log' command (*note
-log::.).
+log::).
 
 
 File: cvs.info,  Node: history database,  Next: user-defined logging,  Prev: log messages,  Up: History browsing
@@ -94,9 +94,12 @@ File: cvs.info,  Node: history database,  Next: user-defined logging,  Prev: log
 The history database
 ====================
 
-   You can use the history file (*note history file::.) to log various
+   You can use the history file (*note history file::) to log various
 CVS actions.  To retrieve the information from the history file, use
-the `cvs history' command (*note history::.).
+the `cvs history' command (*note history::).
+
+   Note: you can control what is logged to this file by using the
+`LogHistory' keyword in the `CVSROOT/config' file (*note config::).
 
 
 File: cvs.info,  Node: user-defined logging,  Next: annotate,  Prev: history database,  Up: History browsing
@@ -109,17 +112,17 @@ manner you choose.  These mechanisms operate by executing a script at
 various times.  The script might append a message to a file listing the
 information and the programmer who created it, or send mail to a group
 of developers, or, perhaps, post a message to a particular newsgroup.
-To log commits, use the `loginfo' file (*note loginfo::.).  To log
+To log commits, use the `loginfo' file (*note loginfo::).  To log
 commits, checkouts, exports, and tags, respectively, you can also use
 the `-i', `-o', `-e', and `-t' options in the modules file.  For a more
 flexible way of giving notifications to various users, which requires
 less in the way of keeping centralized scripts up to date, use the `cvs
-watch add' command (*note Getting Notified::.); this command is useful
+watch add' command (*note Getting Notified::); this command is useful
 even if you are not using `cvs watch on'.
 
    The `taginfo' file defines programs to execute when someone executes
 a `tag' or `rtag' command.  The `taginfo' file has the standard form
-for administrative files (*note Administrative files::.), where each
+for administrative files (*note Administrative files::), where each
 line is a regular expression followed by a command to execute.  The
 arguments passed to the command are, in order, the TAGNAME, OPERATION
 (`add' for `tag', `mov' for `tag -F', and `del' for `tag -d'),
@@ -159,7 +162,7 @@ Annotate command
      `joe' added a line `ssfile line 2', without modifying the `ssfile
      line 1' line.  This report doesn't tell you anything about lines
      which have been deleted or replaced; you need to use `cvs diff'
-     for that (*note diff::.).
+     for that (*note diff::).
 
 
    The options to `cvs annotate' are listed in *Note Invoking CVS::,
@@ -209,8 +212,8 @@ intended to make.
    Another ability of a version control system is the ability to merge
 two revisions.  For CVS this happens in two contexts.  The first is
 when users make changes in separate working directories (*note Multiple
-developers::.).  The second is when one merges explicitly with the
-`update -j' command (*note Branching and merging::.).
+developers::).  The second is when one merges explicitly with the
+`update -j' command (*note Branching and merging::).
 
    In the case of text files, CVS can merge changes made independently,
 and signal a conflict if the changes conflict.  With binary files, the
@@ -241,7 +244,7 @@ client (for example, carriage return followed by line feed for Windows
 NT).
 
    The second is that a binary file might happen to contain data which
-looks like a keyword (*note Keyword substitution::.), so keyword
+looks like a keyword (*note Keyword substitution::), so keyword
 expansion must be turned off.
 
    The `-kb' option available with some CVS commands insures that
@@ -304,10 +307,10 @@ simultaneously.  One solution, known as "file locking" or "reserved
 checkouts", is to allow only one person to edit each file at a time.
 This is the only solution with some version control systems, including
 RCS and SCCS.  Currently the usual way to get reserved checkouts with
-CVS is the `cvs admin -l' command (*note admin options::.).  This is
-not as nicely integrated into CVS as the watch features, described
-below, but it seems that most people with a need for reserved checkouts
-find it adequate.  It also may be possible to use the watches features
+CVS is the `cvs admin -l' command (*note admin options::).  This is not
+as nicely integrated into CVS as the watch features, described below,
+but it seems that most people with a need for reserved checkouts find
+it adequate.  It also may be possible to use the watches features
 described below, together with suitable procedures (not enforced by
 software), to avoid having two people edit at the same time.
 
@@ -616,7 +619,7 @@ start with `#cvs.rfl', `#cvs.wfl', or `#cvs.lock'.
 
    Note that these locks are to protect CVS's internal data structures
 and have no relationship to the word "lock" in the sense used by
-RCS--which refers to reserved checkouts (*note Multiple developers::.).
+RCS--which refers to reserved checkouts (*note Multiple developers::).
 
    Any number of people can be reading from a given repository at a
 time; only when someone is writing do the locks prevent other people
@@ -694,14 +697,14 @@ are to be watched.
      contents of the directory are processed recursively, unless the
      `-l' option is given.  The `-R' option can be used to force
      recursion if the `-l' option is set in `~/.cvsrc' (*note
-     ~/.cvsrc::.).
+     ~/.cvsrc::).
 
      If FILES is omitted, it defaults to the current directory.
 
 
  - Command: cvs watch off [`-lR'] files ...
-     Do not provide notification about work on FILES.  CVS will create
-     working copies of FILES read-write.
+     Do not create FILES read-only on checkout; thus, developers will
+     not be reminded to use `cvs edit' and `cvs unedit'.
 
      The FILES and options are processed as for `cvs watch on'.
 
@@ -758,16 +761,16 @@ on', so that developers use the `cvs edit' command.
 
    When the conditions exist for notification, CVS calls the `notify'
 administrative file.  Edit `notify' as one edits the other
-administrative files (*note Intro administrative files::.).  This file
+administrative files (*note Intro administrative files::).  This file
 follows the usual conventions for administrative files (*note
-syntax::.), where each line is a regular expression followed by a
+syntax::), where each line is a regular expression followed by a
 command to execute.  The command should contain a single occurrence of
 `%s' which will be replaced by the user to notify; the rest of the
 information regarding the notification will be supplied to the command
 on standard input.  The standard thing to put in the `notify' file is
 the single line:
 
-     ALL mail %s -s \"CVS notification\"
+     ALL mail %s -s "CVS notification"
 
    This causes users to be notified by electronic mail.
 
@@ -798,7 +801,7 @@ How to edit a file which is being watched
 cannot simply edit it.  To make it read-write, and inform others that
 you are planning to edit it, use the `cvs edit' command.  Some systems
 call this a "checkout", but CVS uses that term for obtaining a copy of
-the sources (*note Getting the source::.), an operation which those
+the sources (*note Getting the source::), an operation which those
 systems call a "get" or a "fetch".
 
  - Command: cvs edit [options] files ...
@@ -814,12 +817,6 @@ systems call a "get" or a "fetch".
 
      The FILES and options are processed as for the `cvs watch'
      commands.
-
-     *Caution:* If the `PreservePermissions' option is enabled in the
-     repository (*note config::.), CVS will not change the permissions
-     on any of the FILES.  The reason for this change is to ensure that
-     using `cvs edit' does not interfere with the ability to store file
-     permissions in the CVS repository.
 
 
    Normally when you are done with a set of changes, you use the `cvs
@@ -985,7 +982,7 @@ probably be more common.
    It is common to only commit files after making sure that they can be
 compiled.  Some sites require that the files pass a test suite.
 Policies like this can be enforced using the commitinfo file (*note
-commitinfo::.), but you should think twice before you enforce such a
+commitinfo::), but you should think twice before you enforce such a
 convention.  By making the development environment too controlled it
 might become too regimented and thus counter-productive to the real
 goal, which is to get software written.
@@ -1135,7 +1132,7 @@ CVS interpreting it as a keyword and expanding it into something like
 `$Author: ceder $'.
 
    There is unfortunately no way to selectively turn off keyword
-substitution.  You can use `-ko' (*note Substitution modes::.) to turn
+substitution.  You can use `-ko' (*note Substitution modes::) to turn
 off keyword substitution entirely.
 
    In many cases you can avoid using keywords in the source, even
@@ -1173,7 +1170,7 @@ files::, and *Note Merging and keywords::.
      For example, for the `Revision' keyword, generate the string
      `$Revision$' instead of `$Revision: 5.7 $'.  This option is useful
      to ignore differences due to keyword substitution when comparing
-     different revisions of a file (*note Merging and keywords::.).
+     different revisions of a file (*note Merging and keywords::).
 
 `-ko'
      Generate the old keyword string, present in the working file just
@@ -1200,7 +1197,7 @@ files::, and *Note Merging and keywords::.
      removed, so this option should be used with care.
 
      One often would like to use `-kv' with `cvs export'--*note
-     export::..  But be aware that doesn't handle an export containing
+     export::.  But be aware that doesn't handle an export containing
      binary files correctly.
 
 
@@ -1227,4 +1224,39 @@ inside the file.  This may or may not be a problem in real life.
 _last_ in the file, and not in the files header, if it is to be used at
 all.  That way the long list of change messages will not interfere with
 everyday source file browsing.
+
+
+File: cvs.info,  Node: Tracking sources,  Next: Builds,  Prev: Keyword substitution,  Up: Top
+
+Tracking third-party sources
+****************************
+
+   If you modify a program to better fit your site, you probably want
+to include your modifications when the next release of the program
+arrives.  CVS can help you with this task.
+
+   In the terminology used in CVS, the supplier of the program is
+called a "vendor".  The unmodified distribution from the vendor is
+checked in on its own branch, the "vendor branch".  CVS reserves branch
+1.1.1 for this use.
+
+   When you modify the source and commit it, your revision will end up
+on the main trunk.  When a new release is made by the vendor, you
+commit it on the vendor branch and copy the modifications onto the main
+trunk.
+
+   Use the `import' command to create and update the vendor branch.
+When you import a new file, the vendor branch is made the `head'
+revision, so anyone that checks out a copy of the file gets that
+revision.  When a local modification is committed it is placed on the
+main trunk, and made the `head' revision.
+
+* Menu:
+
+* First import::                Importing for the first time
+* Update imports::              Updating with the import command
+* Reverting local changes::     Reverting to the latest vendor release
+* Binary files in imports::     Binary files require special handling
+* Keywords in imports::         Keyword substitution might be undesirable
+* Multiple vendor branches::    What if you get sources from several places?
 
