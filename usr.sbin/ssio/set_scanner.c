@@ -1,4 +1,4 @@
-static char *rcs_id = "$Id: set_scanner.c,v 1.1 1997/03/11 03:23:17 kstailey Exp $";
+static char *rcs_id = "$Id: set_scanner.c,v 1.2 1997/08/30 07:55:17 matthieu Exp $";
 /*
  * Copyright (c) 1995 Kenneth Stailey
  * All rights reserved.
@@ -82,7 +82,7 @@ main(int argc, char *argv[])
       image_mode =
 	UNINITIALIZED;
 
-  while ((c = getopt(argc, argv, "w:h:x:y:l:b:c:r:i:d")) != EOF) {
+  while ((c = getopt(argc, argv, "w:h:x:y:l:b:c:r:i:d")) != -1) {
     switch (c) {
     case 'w':
       width = inches_to_1200th(optarg);

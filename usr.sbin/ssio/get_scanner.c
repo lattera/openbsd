@@ -1,4 +1,4 @@
-static char *rcs_id = "$Id: get_scanner.c,v 1.1 1997/03/11 03:23:13 kstailey Exp $";
+static char *rcs_id = "$Id: get_scanner.c,v 1.2 1997/08/30 07:55:17 matthieu Exp $";
 /*
  * Copyright (c) 1995 Kenneth Stailey
  * All rights reserved.
@@ -90,7 +90,7 @@ main(int argc, char *argv[])
   extern int optind;
   extern char *optarg;
 
-  while ((c = getopt(argc, argv, "tpql:")) != EOF) {
+  while ((c = getopt(argc, argv, "tpql:")) != -1) {
     switch (c) {
     case 'q':
       quiet = TRUE;

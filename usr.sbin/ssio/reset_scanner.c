@@ -1,4 +1,4 @@
-static char *rcs_id = "$Id: reset_scanner.c,v 1.1 1996/01/14 01:36:57 ken Exp $";
+static char *rcs_id = "$Id: reset_scanner.c,v 1.1 1997/03/11 03:23:15 kstailey Exp $";
 #ifdef _IBMR2
 /*
  *  PINT Pint Is Not TWAIN - common scanner driver interface for UN*X
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
   extern int optind;
   extern char *optarg;
 
-  while ((c = getopt(argc, argv, "fl:")) != EOF) {
+  while ((c = getopt(argc, argv, "fl:")) != -1) {
     switch (c) {
     case 'l':
       logical_name = optarg;
