@@ -1,0 +1,143 @@
+.\"/* Copyright 1988,1990,1993 by Paul Vixie
+.\" * All rights reserved
+.\" *
+.\" * Distribute freely, except: don't remove my name from the source or
+.\" * documentation (don't take credit for my work), mark your changes (don't
+.\" * get me blamed for your possible bugs), don't alter or remove this
+.\" * notice.  May be sold if buildable source is provided to buyer.  No
+.\" * warrantee of any kind, express or implied, is included with this
+.\" * software; use at your own risk, responsibility for damages (if any) to
+.\" * anyone resulting from the use of this software rests entirely with the
+.\" * user.
+.\" *
+.\" * Send bug reports, bug fixes, enhancements, requests, flames, etc., and
+.\" * I'll try to keep a version up to date.  I can be reached as follows:
+.\" * Paul Vixie          <paul@vix.com>          uunet!decwrl!vixie!paul
+.\" */
+.\"
+.\" $Id: crontab.1,v 1.6 2000/03/19 17:57:03 aaron Exp $
+.\"
+.Dd June 8, 1999
+.Dt CRONTAB 1
+.Os
+.Sh NAME
+.Nm crontab
+.Nd maintain crontab files for individual users (V3)
+.Sh SYNOPSIS
+.Nm crontab
+.Op Fl u Ar user
+.Ar file
+.Nm crontab
+.Op Fl u Ar user
+.Oo
+.Fl l No \&|
+.Fl r No \&|
+.Fl e
+.Oc
+.Sh DESCRIPTION
+.Nm
+is the program used to install, deinstall, or list the tables
+used to drive the
+.Xr cron 8
+daemon in Vixie Cron.
+Each user can have their own
+.Xr crontab 5 ,
+and though these are files in
+.Pa /var/cron/tabs ,
+they are not intended to be edited directly.
+.Pp
+If the
+.Pa /var/cron/allow
+file exists, then you must be listed therein in order to use
+.Nm crontab .
+If the
+.Pa /var/cron/allow
+file does not exist but the
+.Pa /var/cron/deny
+file does exist, then you must
+.Em not
+be listed in the
+.Pa /var/cron/deny
+file in order to use
+.Nm crontab .
+If neither of these files exists, then
+depending on site-dependent configuration parameters, only the super user
+will be allowed to use
+.Nm crontab ,
+or all users will be able to use it.
+.Pp
+If the
+.Fl u
+option is given,
+.Ar user
+specifies the name of the user whose
+.Xr crontab 5
+is to be
+tweaked.
+If this option is not given,
+.Nm
+examines
+.Dq your
+.Xr crontab 5 ;
+i.e., the
+crontab of the person executing the command.
+Note that
+.Xr su 8
+can confuse
+.Nm
+and that if you are running inside of
+.Xr su 8
+you should always use the
+.Fl u
+option for safety's sake.
+.Pp
+The first form of this command is used to install a new crontab from some
+named file, or standard input if the pseudo-filename
+.Sq Fl
+is given.
+.Pp
+The
+.Fl l
+option causes the current crontab to be displayed on standard output.
+.Pp
+The
+.Fl r
+option causes the current crontab to be removed.
+.Pp
+The
+.Fl e
+option is used to edit the current crontab using the editor specified by
+the
+.Ev VISUAL
+or
+.Ev EDITOR
+environment variables.
+After you exit from the editor, the modified
+.Xr crontab 5
+will be installed automatically.
+.Sh FILES
+.Bl -tag -width "/var/cron/allow" -compact
+.It Pa /var/cron/allow
+list of users allowed to use crontab
+.It Pa /var/cron/deny
+list of users prohibited from using crontab
+.It Pa /var/cron/tabs
+directory of individual crontabs
+.El
+.Sh SEE ALSO
+.Xr crontab 5 ,
+.Xr cron 8
+.Sh STANDARDS
+The
+.Nm
+utility is compliant with the
+.St -p1003.2-92
+specification.
+This new command syntax
+differs from previous versions of Vixie Cron, as well as from the classic
+SVR3 syntax.
+.Sh DIAGNOSTICS
+A fairly informative usage message appears if you run it with a bad command
+line.
+.Sh AUTHOR
+Paul Vixie <paul@vix.com>
