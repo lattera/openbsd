@@ -39,7 +39,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rlogind.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: rlogind.c,v 1.24 2000/03/09 15:03:29 deraadt Exp $";
+static char *rcsid = "$Id: rlogind.c,v 1.25 2000/11/10 17:46:08 itojun Exp $";
 #endif /* not lint */
 
 /*
@@ -580,7 +580,10 @@ cleanup(signo)
 	(void)chmod(line, 0666);
 	(void)chown(line, 0, 0);
 	shutdown(netf, 2);
-	exit(1);
+	if (signo)
+		_exit(1);
+	else
+		exit(1);
 }
 
 void
