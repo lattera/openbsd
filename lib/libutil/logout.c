@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libutil/logout.c,v 1.4 1998/07/13 02:11:13 millert Exp $	*/
+/*	$OpenBSD: src/lib/libutil/logout.c,v 1.5 2002/06/09 22:18:43 fgsch Exp $	*/
 /*
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,7 +34,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /* from: static char sccsid[] = "@(#)logout.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: logout.c,v 1.3 1996/06/17 07:46:03 downsj Exp $";
+static const char rcsid[] = "$Id: logout.c,v 1.4 1998/07/13 02:11:13 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
