@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.3 2001/07/14 10:02:27 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.4 2001/10/27 09:47:29 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1829,7 +1829,7 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 	movl	%eax,P_BACK(%edi)
 
 	/* Record new process. */
-	movl	%edi,_curproc
+	SET_CURPROC(%edi,%ecx)
 
 	/* It's okay to take interrupts here. */
 	sti

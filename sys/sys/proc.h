@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.4 2001/07/14 10:02:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.5 2001/10/27 09:47:29 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -323,7 +323,11 @@ extern LIST_HEAD(pgrphashhead, pgrp) *pgrphashtbl;
 extern u_long pgrphash;
 
 #ifndef curproc
+#if defined(MULTIPROCESSOR)
+#define	curproc	curcpu()->ci_curproc	/* Current running proc. */
+#else
 extern struct proc *curproc;		/* Current running proc. */
+#endif /* MULTIPROCESSOR */
 #endif
 extern struct proc proc0;		/* Process slot for swapper. */
 extern int nprocs, maxproc;		/* Current and max number of procs. */
