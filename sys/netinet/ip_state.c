@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_state.c,v 1.23 2000/08/10 05:50:26 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_state.c,v 1.23.2.1 2001/04/18 01:02:45 jason Exp $	*/
 
 /*
  * Copyright (C) 1995-1998 by Darren Reed.
@@ -429,7 +429,7 @@ u_int flags;
 #endif
 	RWLOCK_EXIT(&ipf_state);
 	fin->fin_rev = (is->is_dst.s_addr != ip->ip_dst.s_addr);
-	if (fin->fin_fi.fi_fl & FI_FRAG)
+	if ((fin->fin_fi.fi_fl & FI_FRAG) && (pass & FR_KEEPFRAG))
 		ipfr_newfrag(ip, fin, pass ^ FR_KEEPSTATE);
 	return is;
 }
@@ -1023,7 +1023,7 @@ retry_udp:
 		fr_delstate(is);
 #endif
 	RWLOCK_EXIT(&ipf_state);
-	if (fin->fin_fi.fi_fl & FI_FRAG)
+	if ((fin->fin_fi.fi_fl & FI_FRAG) && (pass & FR_KEEPFRAG))
 		ipfr_newfrag(ip, fin, pass ^ FR_KEEPSTATE);
 	return fr;
 }

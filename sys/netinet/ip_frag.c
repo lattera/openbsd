@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_frag.c,v 1.19 2000/09/07 19:45:04 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_frag.c,v 1.19.2.1 2001/04/18 01:02:44 jason Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
@@ -141,9 +141,12 @@ u_int pass;
 ipfr_t *table[];
 {
 	ipfr_t	**fp, *fra, frag;
-	u_int	idx;
+	u_int	idx, off;
 
 	if (ipfr_inuse >= IPFT_SIZE)
+		return NULL;
+
+	if (!(fin->fin_fi.fi_fl & FI_FRAG))
 		return NULL;
 
 	frag.ipfr_p = ip->ip_p;
@@ -198,7 +201,10 @@ ipfr_t *table[];
 	/*
 	 * Compute the offset of the expected start of the next packet.
 	 */
-	fra->ipfr_off = (ip->ip_off & IP_OFFMASK) + (fin->fin_dlen >> 3);
+	off = ip->ip_off & IP_OFFMASK;
+	if (!off)
+		fra->ipfr_seen0 = 1;
+	fra->ipfr_off = off + (fin->fin_dlen >> 3);
 	ATOMIC_INC(ipfr_stats.ifs_new);
 	ATOMIC_INC(ipfr_inuse);
 	return fra;
@@ -250,6 +256,9 @@ ipfr_t *table[];
 	ipfr_t	*f, frag;
 	u_int	idx;
 
+	if (!(fin->fin_fi.fi_fl & FI_FRAG))
+		return NULL;
+
 	/*
 	 * For fragments, we record protocol, packet id, TOS and both IP#'s
 	 * (these should all be the same for all fragments of a packet).
@@ -276,6 +285,19 @@ ipfr_t *table[];
 			  IPFR_CMPSZ)) {
 			u_short	atoff, off;
 
+			/*
+			 * XXX - We really need to be guarding against the
+			 * retransmission of (src,dst,id,offset-range) here
+			 * because a fragmented packet is never resent with
+			 * the same IP ID#.
+			 */
+			off = ip->ip_off & IP_OFFMASK;
+			if (f->ipfr_seen0) {
+				if (!off || (fin->fin_fi.fi_fl & FI_SHORT))
+					continue;
+			} else if (!off)
+				f->ipfr_seen0 = 1;
+
 			if (f != table[idx]) {
 				/*
 				 * move fragment info. to the top of the list
@@ -288,7 +310,6 @@ ipfr_t *table[];
 				f->ipfr_prev = NULL;
 				table[idx] = f;
 			}
-			off = ip->ip_off & IP_OFFMASK;
 			atoff = off + (fin->fin_dlen >> 3);
 			/*
 			 * If we've follwed the fragments, and this is the
