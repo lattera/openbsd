@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.24 2001/06/26 06:27:38 aaron Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.24.2.1 2002/06/27 08:21:32 miod Exp $	*/
 /*	$NetBSD: kern_ktrace.c,v 1.23 1996/02/09 18:59:36 christos Exp $	*/
 
 /*
@@ -52,6 +52,8 @@
 #include <sys/syscallargs.h>
 
 #include <vm/vm.h>
+
+#define ISSET(t, f)    ((t) & (f))
 
 void ktrinitheader __P((struct ktr_header *, struct proc *, int));
 int ktrops __P((struct proc *, struct proc *, int, int, struct vnode *));
@@ -528,7 +530,8 @@ ktrcanset(callp, targetp)
 	    target->p_ruid == target->p_svuid &&
 	    caller->p_rgid == target->p_rgid &&	/* XXX */
 	    target->p_rgid == target->p_svgid &&
-	    (targetp->p_traceflag & KTRFAC_ROOT) == 0) ||
+	    (targetp->p_traceflag & KTRFAC_ROOT) == 0 &&
+	    !ISSET(targetp->p_flag, P_SUGID)) ||
 	    caller->pc_ucred->cr_uid == 0)
 		return (1);
 
