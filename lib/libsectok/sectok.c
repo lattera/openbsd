@@ -1,4 +1,4 @@
-/* $Id: $ */
+/* $Id: sectok.c,v 1.1 2001/06/25 19:59:38 rees Exp $ */
 
 /*
 copyright 2000
@@ -45,6 +45,8 @@ such damages.
 #include "sectok.h"
 
 #define myisprint(x) ((x) >= '!' && (x) <= 'z')
+
+unsigned char root_fid[] = {0x3f, 0x00};
 
 void
 sectok_fmt_fid(char *fname, int f0, int f1)
