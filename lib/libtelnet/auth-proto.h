@@ -31,8 +31,20 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)auth-proto.h	8.1 (Berkeley) 6/4/93
- *	$OpenBSD: src/lib/libtelnet/Attic/auth-proto.h,v 1.2 1996/03/19 23:15:47 niklas Exp $
+ *	$OpenBSD: src/lib/libtelnet/Attic/auth-proto.h,v 1.3 1998/03/12 04:48:43 art Exp $
  *	$NetBSD: auth-proto.h,v 1.5 1996/02/24 01:15:16 jtk Exp $
+ */
+
+/*
+ * This source code is no longer held under any constraint of USA
+ * `cryptographic laws' since it was exported legally.  The cryptographic
+ * functions were removed from the code and a "Bones" distribution was
+ * made.  A Commodity Jurisdiction Request #012-94 was filed with the
+ * USA State Department, who handed it to the Commerce department.  The
+ * code was determined to fall under General License GTDA under ECCN 5D96G,
+ * and hence exportable.  The cryptographic interfaces were re-added by Eric
+ * Young, and then KTH proceeded to maintain the code in the free world.
+ *
  */
 
 /*
@@ -80,14 +92,14 @@ int auth_togdebug __P((int));
 int auth_status __P((void));
 void auth_name __P((unsigned char *, int));
 int auth_sendname __P((unsigned char *, int));
-void auth_finished __P((Authenticator *, int));
-int auth_wait __P((char *));
 void auth_debug __P((int));
 void auth_printsub __P((unsigned char *, int, unsigned char *, int));
 
 #ifdef	KRB4
 int kerberos4_init __P((Authenticator *, int));
-int kerberos4_send __P((Authenticator *));
+int kerberos4_forward __P((Authenticator *));
+int kerberos4_send_oneway __P((Authenticator *));
+int kerberos4_send_mutual __P((Authenticator *));
 void kerberos4_is __P((Authenticator *, unsigned char *, int));
 void kerberos4_reply __P((Authenticator *, unsigned char *, int));
 int kerberos4_status __P((Authenticator *, char *, int));
@@ -96,7 +108,8 @@ void kerberos4_printsub __P((unsigned char *, int, unsigned char *, int));
 
 #ifdef	KRB5
 int kerberos5_init __P((Authenticator *, int));
-int kerberos5_send __P((Authenticator *));
+int kerberos5_send_mutual __P((Authenticator *));
+int kerberos5_send_oneway __P((Authenticator *));
 void kerberos5_is __P((Authenticator *, unsigned char *, int));
 void kerberos5_reply __P((Authenticator *, unsigned char *, int));
 int kerberos5_status __P((Authenticator *, char *, int));

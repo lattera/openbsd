@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libtelnet/Attic/enc-proto.h,v 1.1 1998/03/12 04:48:47 art Exp $	*/
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -30,9 +31,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)auth.h	8.1 (Berkeley) 6/4/93
- *	$OpenBSD: src/lib/libtelnet/Attic/auth.h,v 1.3 1998/03/12 04:48:46 art Exp $
- *	$NetBSD: auth.h,v 1.5 1996/02/24 01:15:18 jtk Exp $
+ *	@(#)enc-proto.h	8.1 (Berkeley) 6/4/93
+ *
+ *	@(#)enc-proto.h	5.2 (Berkeley) 3/22/91
  */
 
 /*
@@ -67,27 +68,79 @@
  * or implied warranty.
  */
 
-#ifndef	__AUTH__
-#define	__AUTH__
+/* $KTH: enc-proto.h,v 1.8 1997/11/02 03:57:10 assar Exp $ */
 
-#define	AUTH_REJECT	0	/* Rejected */
-#define	AUTH_UNKNOWN	1	/* We don't know who he is, but he's okay */
-#define	AUTH_OTHER	2	/* We know him, but not his name */
-#define	AUTH_USER	3	/* We know he name */
-#define	AUTH_VALID	4	/* We know him, and he needs no password */
+#if	defined(ENCRYPTION)
+Encryptions *findencryption __P((int));
+Encryptions *finddecryption __P((int));
+int EncryptAutoDec __P((int));
+int EncryptAutoEnc __P((int));
+int EncryptDebug __P((int));
+int EncryptDisable __P((char*, char*));
+int EncryptEnable __P((char*, char*));
+int EncryptStart __P((char*));
+int EncryptStartInput __P((void));
+int EncryptStartOutput __P((void));
+int EncryptStatus __P((void));
+int EncryptStop __P((char*));
+int EncryptStopInput __P((void));
+int EncryptStopOutput __P((void));
+int EncryptType __P((char*, char*));
+int EncryptVerbose __P((int));
+int net_write __P((unsigned char *, int));
+void decrypt_auto __P((int));
+void encrypt_auto __P((int));
+void encrypt_debug __P((int));
+void encrypt_dec_keyid __P((unsigned char*, int));
+void encrypt_display __P((void));
+void encrypt_enc_keyid __P((unsigned char*, int));
+void encrypt_end __P((void));
+void encrypt_gen_printsub __P((unsigned char*, int, unsigned char*, int));
+void encrypt_init __P((char*, int));
+void encrypt_is __P((unsigned char*, int));
+void encrypt_list_types __P((void));
+void encrypt_not __P((void));
+void encrypt_printsub __P((unsigned char*, int, unsigned char*, int));
+void encrypt_reply __P((unsigned char*, int));
+void encrypt_request_end __P((void));
+void encrypt_request_start __P((unsigned char*, int));
+void encrypt_send_end __P((void));
+void encrypt_send_keyid __P((int, unsigned char*, int, int));
+void encrypt_send_request_end __P((void));
+void encrypt_send_request_start __P((void));
+void encrypt_send_support __P((void));
+void encrypt_session_key __P((Session_Key*, int));
+void encrypt_start __P((unsigned char*, int));
+void encrypt_start_output __P((int));
+void encrypt_support __P((unsigned char*, int));
+void encrypt_verbose_quiet __P((int));
+void encrypt_wait __P((void));
+int encrypt_delay __P((void));
 
-typedef struct XauthP {
-	int	type;
-	int	way;
-	int	(*init) __P((struct XauthP *, int));
-	int	(*send) __P((struct XauthP *));
-	void	(*is) __P((struct XauthP *, unsigned char *, int));
-	void	(*reply) __P((struct XauthP *, unsigned char *, int));
-	int	(*status) __P((struct XauthP *, char *, int));
-	void	(*printsub) __P((unsigned char *, int, unsigned char *, int));
-} Authenticator;
+#ifdef	TELENTD
+void encrypt_wait __P((void));
+#else
+void encrypt_display __P((void));
+#endif
 
-#include "auth-proto.h"
+void cfb64_encrypt __P((unsigned char *, int));
+int cfb64_decrypt __P((int));
+void cfb64_init __P((int));
+int cfb64_start __P((int, int));
+int cfb64_is __P((unsigned char *, int));
+int cfb64_reply __P((unsigned char *, int));
+void cfb64_session __P((Session_Key *, int));
+int cfb64_keyid __P((int, unsigned char *, int *));
+void cfb64_printsub __P((unsigned char *, int, unsigned char *, int));
 
-extern int auth_debug_mode;
+void ofb64_encrypt __P((unsigned char *, int));
+int ofb64_decrypt __P((int));
+void ofb64_init __P((int));
+int ofb64_start __P((int, int));
+int ofb64_is __P((unsigned char *, int));
+int ofb64_reply __P((unsigned char *, int));
+void ofb64_session __P((Session_Key *, int));
+int ofb64_keyid __P((int, unsigned char *, int *));
+void ofb64_printsub __P((unsigned char *, int, unsigned char *, int));
+
 #endif
