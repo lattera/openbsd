@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ipsec_output.c,v 1.28 2003/12/02 23:16:29 markus Exp $ */
+/*	$OpenBSD: src/sys/netinet/ipsec_output.c,v 1.28.2.1 2005/02/19 22:53:58 brad Exp $ */
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -467,6 +467,8 @@ ipsec_hdrsz(struct tdb *tdbp)
 			adjust = sizeof(u_int32_t) + tdbp->tdb_ivlen;
 		else
 			adjust = 2 * sizeof(u_int32_t) + tdbp->tdb_ivlen;
+		if (tdbp->tdb_flags & TDBF_UDPENCAP)
+			adjust += sizeof(struct udphdr);
 		/* Authenticator */
 		if (tdbp->tdb_authalgxform != NULL)
 			adjust += AH_HMAC_HASHLEN;
