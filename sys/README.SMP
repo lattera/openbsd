@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.10 2004/02/03 12:55:42 niklas Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.11 2004/02/19 08:50:45 niklas Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
@@ -60,7 +60,10 @@ you mainly need to carry out the following procedure.
   on cvs.openbsd.org, and the changes won't be reflected locally.
   After removing it locally, two updates are needed, the 1st to
   remove the local CVS/Entries entry, and the second to get it
-  checked out.
+  checked out.  Last, if someone has managed to interleave a commit
+  to any of these files while you have been working, it will be
+  needed to revert it, since that commit will have come into this
+  fixup process instead of the version at $NEW_TAG.
 
   $ fixup() {
   >   cvs -qd cvs.openbsd.org:/cvs ci -m'add file to SMP branch' $1
@@ -68,6 +71,7 @@ you mainly need to carry out the following procedure.
   >   rm $1
   >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
   >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
+  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk -jSMP -j$NEW_TAG $1
   > }
 
   Now you can use the fixup function to fix all the files that are new.
