@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: ypinit.sh,v 1.7 1998/01/18 20:48:48 maja Exp $
+#	$Id: ypinit.sh,v 1.8 2000/08/18 18:50:45 deraadt Exp $
 #
 # ypinit.sh - setup an master or slave server.
 #
@@ -315,7 +315,7 @@ do
 		echo "Update the list of hosts running YP servers in domain ${DOMAIN}."
 		echo "Master for this domain is ${MASTER_NAME}."
 		echo ""
-		echo "First verify old servers, type \\ to remove a server." 
+		echo "First verify old servers, type \\\\ to remove a server." 
 		echo "Then add new servers, one per line. When done type a <control D>." 
 		echo ""
 		echo "	master server   :  ${HOST}"
