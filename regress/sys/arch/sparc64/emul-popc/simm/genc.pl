@@ -1,5 +1,5 @@
-#!/bin/sh
-#	$OpenBSD: src/regress/sys/arch/sparc64/emul-popc/simm/Attic/genc.pl,v 1.2 2003/07/10 14:42:36 jason Exp $
+#!/bin/perl
+#	$OpenBSD: src/regress/sys/arch/sparc64/emul-popc/simm/Attic/genc.pl,v 1.3 2003/07/10 15:21:12 jason Exp $
 #
 # Copyright (c) 2003 Jason L. Wright (jason@thought.net)
 # All rights reserved.
