@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/usr.sbin/ipsend/ipsend/Attic/ipsend.c,v 1.5 1998/01/26 04:17:04 dgregor Exp $     */
+/*     $OpenBSD: src/usr.sbin/ipsend/ipsend/Attic/ipsend.c,v 1.6 1999/03/22 05:33:30 deraadt Exp $     */
 /*
  * ipsend.c (C) 1995-1997 Darren Reed
  *
@@ -13,7 +13,7 @@
  */
 #if !defined(lint)
 static const char sccsid[] = "@(#)ipsend.c	1.5 12/10/95 (C)1995 Darren Reed";
-static const char rcsid[] = "@(#)$Id: ipsend.c,v 2.0.2.19 1997/10/12 09:48:38 darrenr Exp $";
+static const char rcsid[] = "@(#)$Id: ipsend.c,v 1.5 1998/01/26 04:17:04 dgregor Exp $";
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,13 +47,13 @@ int	opts;
 #ifdef	linux
 char	default_device[] = "eth0";
 #else
-# ifdef	sun
+# if defined(sun) || defined(__OpenBSD__)
 char	default_device[] = "le0";
 # else
 #  ifdef	ultrix
 char	default_device[] = "ln0";
 #  else
-#   ifdef	__bsdi__
+#   ifdef __bsdi__
 char	default_device[] = "ef0";
 #   else
 #    ifdef	__sgi
@@ -358,7 +358,7 @@ char	**argv;
 		tcp = (tcphdr_t *)((char *)(ip + 1) + olen);
 	    }
 
-	if (ip->ip_p == IPPROTO_TCP)
+	if (ip->ip_p == IPPROTO_TCP && optind < argc)
 		for (s = argv[optind]; (c = *s); s++)
 			switch(c)
 			{
