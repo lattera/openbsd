@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.38 2000/05/04 02:23:16 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.38.2.1 2000/06/18 02:52:30 jason Exp $	*/
 
 /*
  * Invertex AEON / Hi/fn 7751 driver
@@ -1358,6 +1358,7 @@ hifn_callback(sc, cmd, macbuf)
 	struct cryptop *crp = (struct cryptop *)cmd->private_data;
 	struct cryptodesc *crd;
 	struct mbuf *m;
+	int totlen;
 
 	if ((crp->crp_flags & CRYPTO_F_IMBUF) && (cmd->src_m != cmd->dst_m)) {
 		m_freem(cmd->src_m);
@@ -1365,16 +1366,15 @@ hifn_callback(sc, cmd, macbuf)
 	}
 
 	if ((m = cmd->dst_m) != NULL) {
-		int totlen = cmd->src_l, len;
-
+		totlen = cmd->src_l;
+		hifnstats.hst_obytes += totlen;
 		while (m) {
-			len = dma->dstr[dma->dstk].l & HIFN_D_LENGTH;
-			if (len > totlen)
-				len = totlen;
+			if (totlen < m->m_len) {
+				m->m_len = totlen;
+				totlen = 0;
+			}
 			else
-				totlen -= len;
-			m->m_len = len;
-			hifnstats.hst_obytes += m->m_len;
+				totlen -= m->m_len;
 			m = m->m_next;
 			if (++dma->dstk == HIFN_D_DST_RSIZE)
 				dma->dstk = 0;
