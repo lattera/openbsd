@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_lereg.h,v 1.4 1996/05/10 12:42:24 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_lereg.h,v 1.5 1996/08/20 05:17:09 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
@@ -35,7 +35,7 @@
  * @(#)if_lereg.h	8.2 (Berkeley) 10/30/93
  */
 
-#define MEMSIZE 0x4000
+#define LEMEMSIZE 0x4000
 
 /*
  * LANCE registers.
