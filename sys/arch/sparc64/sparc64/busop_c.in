@@ -1,4 +1,4 @@
-ECHO:/*      $OpenBSD: src/sys/arch/sparc64/sparc64/busop_c.in,v 1.1 2003/02/17 01:29:20 henric Exp $   */
+ECHO:/*      $OpenBSD: src/sys/arch/sparc64/sparc64/busop_c.in,v 1.1.6.1 2003/05/19 21:20:21 tedu Exp $   */
 ECHO:
 ECHO:/*
 ECHO: * Copyright (c) 2003 Henric Jungheim
