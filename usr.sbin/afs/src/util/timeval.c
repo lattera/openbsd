@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/timeval.c,v 1.1.1.1 1998/09/14 21:53:25 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -43,12 +37,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: timeval.c,v 1.3 1998/02/22 11:22:19 assar Exp $");
+RCSID("$arla: timeval.c,v 1.5 2002/02/07 18:00:27 lha Exp $");
 #endif
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include "timeval.h"
+#include "roken.h"
+
+/*
+ * Make `t1' consistent.
+ */
 
 void
 timevalfix(struct timeval *t1)
@@ -63,19 +59,26 @@ timevalfix(struct timeval *t1)
     }
 }
  
+/*
+ * t1 += t2
+ */
+
 void
-timevaladd(struct timeval *t1, struct timeval *t2)
+timevaladd(struct timeval *t1, const struct timeval *t2)
 {
-    t1->tv_sec += t2->tv_sec;
+    t1->tv_sec  += t2->tv_sec;
     t1->tv_usec += t2->tv_usec;
-        timevalfix(t1);
+    timevalfix(t1);
 }
  
+/*
+ * t1 -= t2
+ */
+
 void
-timevalsub(struct timeval *t1, struct timeval *t2)
+timevalsub(struct timeval *t1, const struct timeval *t2)
 {
- 
-        t1->tv_sec -= t2->tv_sec;
-        t1->tv_usec -= t2->tv_usec;
-        timevalfix(t1);
+    t1->tv_sec  -= t2->tv_sec;
+    t1->tv_usec -= t2->tv_usec;
+    timevalfix(t1);
 }

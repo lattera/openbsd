@@ -39,7 +39,7 @@
 
 #include <config.h>
 
-RCSID("$KTH: vstatus.c,v 1.5 2000/10/03 00:20:35 lha Exp $");
+RCSID("$arla: vstatus.c,v 1.6 2002/07/16 20:38:57 lha Exp $");
 
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -73,7 +73,7 @@ vstatus_read (int fd, vstatus *v)
     }
     len = VSTATUS_SIZE;
 
-    ret = lseek (fd, SEEK_SET, 0);
+    ret = lseek (fd, 0, SEEK_SET);
     if (ret) {
 	ret = errno;
 	goto err_out;
@@ -129,7 +129,7 @@ vstatus_write (int fd, vstatus *v)
     }
     len = VSTATUS_SIZE;
 
-    ret = lseek (fd, SEEK_SET, 0);
+    ret = lseek (fd, 0, SEEK_SET);
     if (ret) {
 	ret = errno;
 	goto err_out;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2003 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -13,8 +13,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
- *      Höskolan and its contributors.
  * 
  * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
@@ -36,7 +34,7 @@
 #include <sl.h>
 #include "appl_locl.h"
 
-RCSID("$KTH: pts.c,v 1.50.2.2 2001/07/06 01:40:11 lha Exp $");
+RCSID("$arla: pts.c,v 1.56 2003/04/13 19:02:41 lha Exp $");
 
 static int help_cmd (int argc, char **argv);
 
@@ -241,6 +239,7 @@ pr_name2id(struct rx_connection *conn, const char *name, int32_t *id)
     char rname[PR_MAXNAMELEN];
 
     assert(id);
+    *id = 0;
 
     if (prdebug)
 	printf("pr_name2id(%s, x)", name);
@@ -252,13 +251,16 @@ pr_name2id(struct rx_connection *conn, const char *name, int32_t *id)
 
     error = PR_NameToID(conn, &nlist, &ilist);
 
-    if (error || ilist.len != 1)
-	*id = 0;
-    else
-	*id = *ilist.val;
-	
     if (prdebug)
 	printf(" id = %d, error= %d\n", *id, error);
+
+    if (error)
+	return error;
+	
+    if (ilist.len == 1)
+	*id = *ilist.val;
+    else
+	error = PRBADARG;
 
     free(ilist.val);
     
@@ -1505,6 +1507,7 @@ static SL_cmd cmds[] = {
     {"setfields",   setfields_cmd,  "not yet implemented"},
     {"setmax",      empty_cmd,      "not yet implemented"},
     {"syncdb",      syncdb_cmd,     "sync ptsdb with /etc/passwd"},
+    {"version",	    arlalib_version_cmd, "print version"},
     {NULL}
 };
 
@@ -1525,10 +1528,10 @@ main(int argc, char **argv)
     int pos = 0;
     int i;
 
-    set_progname(argv[0]);
+    setprogname(argv[0]);
     tzset();
 
-    method = log_open (get_progname(), "/dev/stderr:notime");
+    method = log_open (getprogname(), "/dev/stderr:notime");
     if (method == NULL)
 	errx (1, "log_open failed");
     cell_init(0, method);
