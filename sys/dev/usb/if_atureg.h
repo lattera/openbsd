@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_atureg.h,v 1.1 2004/11/08 22:09:11 dlg Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_atureg.h,v 1.2 2004/11/09 14:42:26 dlg Exp $ */
 /*
  * Copyright (c) 2003
  *	Daan Vreeken <Danovitsch@Vitsch.net>.  All rights reserved.
@@ -32,7 +32,7 @@
  *
  */
 
-/* $ATUWI: $Id: if_atuwireg.h,v 1.12 2004/10/05 21:32:50 daan Exp $ */
+/* $ATUWI: $Id: if_atureg.h,v 1.1 2004/11/08 22:09:11 dlg Exp $ */
 
 /************ 		driver options 		************/
 
@@ -337,8 +337,6 @@ struct atu_softc {
 
 	char			atu_dying;
 	struct timeval		atu_rx_notice;
-	caddr_t			atu_rawbpf;
-	caddr_t			atu_airobpf;
 	
 	u_int8_t		atu_mac_addr[ETHER_ADDR_LEN];
 	u_int8_t		atu_bssid[ETHER_ADDR_LEN];
