@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_timeb.h,v 1.4 1999/01/23 00:43:53 espie Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_timeb.h,v 1.4.6.1 2001/05/14 22:04:33 niklas Exp $	*/
 /*	$NetBSD: ibcs2_timeb.h,v 1.2 1996/05/03 17:05:34 christos Exp $	*/
 
 /*
@@ -39,7 +39,7 @@ struct xenix_timeb {
 	unsigned short millitm;
 	short timezone;
 	short dstflag;
-} __attribute((packed));
+} __attribute((__packed__));
 
 #define xenix_timeb_len 10      /* packed struct */
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_socket.c,v 1.1 2000/08/04 15:47:55 ericj Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_socket.c,v 1.1.6.1 2001/05/14 22:05:12 niklas Exp $ */
 /* $NetBSD: osf1_socket.c,v 1.4 1999/05/10 01:58:37 cgd Exp $ */
 
 /*

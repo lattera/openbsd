@@ -32,6 +32,7 @@ struct swcr_data
 	{
             u_int8_t         *SW_ictx;
             u_int8_t         *SW_octx;
+	    u_int32_t         SW_klen;
 	    struct auth_hash *SW_axf;
 	} SWCR_AUTH;
 
@@ -45,6 +46,7 @@ struct swcr_data
 
 #define sw_ictx      SWCR_UN.SWCR_AUTH.SW_ictx
 #define sw_octx      SWCR_UN.SWCR_AUTH.SW_octx
+#define sw_klen      SWCR_UN.SWCR_AUTH.SW_klen
 #define sw_axf       SWCR_UN.SWCR_AUTH.SW_axf
 #define sw_kschedule SWCR_UN.SWCR_ENC.SW_kschedule
 #define sw_iv        SWCR_UN.SWCR_ENC.SW_iv
@@ -62,7 +64,7 @@ extern int swcr_authcompute(struct cryptodesc *, struct swcr_data *,
 			    caddr_t, int);
 extern int swcr_process(struct cryptop *);
 extern int swcr_newsession(u_int32_t *, struct cryptoini *);
-extern int swcr_freesession(u_int32_t);
+extern int swcr_freesession(u_int64_t);
 extern void swcr_init(void);
 #endif /* _KERNEL */
 

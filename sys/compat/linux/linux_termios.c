@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_termios.c,v 1.6 1999/07/18 00:12:04 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_termios.c,v 1.6.4.1 2001/05/14 22:04:53 niklas Exp $	*/
 /*	$NetBSD: linux_termios.c,v 1.3 1996/04/05 00:01:54 christos Exp $	*/
 
 /*
@@ -644,6 +644,9 @@ linux_ioctl_termios(p, uap, retval)
 		break;
 	case LINUX_TIOCNOTTY:
 		SCARG(&ia, com) = TIOCNOTTY;
+		break;
+	case LINUX_TCSBRK:
+		SCARG(&ia, com) = SCARG(uap, data) ? TIOCDRAIN : TIOCSBRK;
 		break;
 	case LINUX_TCXONC:
 		switch ((int)SCARG(uap, data)) {

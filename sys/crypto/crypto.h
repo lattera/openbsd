@@ -41,7 +41,8 @@
 #define BLOWFISH_BLOCK_LEN      8
 #define SKIPJACK_BLOCK_LEN      8
 #define CAST128_BLOCK_LEN       8
-#define EALG_MAX_BLOCK_LEN      8  /* Keep this updated */
+#define RIJNDAEL128_BLOCK_LEN  16
+#define EALG_MAX_BLOCK_LEN     16  /* Keep this updated */
 
 /* Maximum hash algorithm result length */
 #define AALG_MAX_RESULT_LEN     20 /* Keep this updated */
@@ -51,13 +52,15 @@
 #define CRYPTO_BLF_CBC          3
 #define CRYPTO_CAST_CBC         4
 #define CRYPTO_SKIPJACK_CBC     5
-#define CRYPTO_MD5_HMAC96       6
-#define CRYPTO_SHA1_HMAC96      7
-#define CRYPTO_RIPEMD160_HMAC96 8
+#define CRYPTO_MD5_HMAC         6
+#define CRYPTO_SHA1_HMAC        7
+#define CRYPTO_RIPEMD160_HMAC   8
 #define CRYPTO_MD5_KPDK         9
 #define CRYPTO_SHA1_KPDK        10
+#define CRYPTO_RIJNDAEL128_CBC  11 /* 128 bit blocksize */
+#define CRYPTO_AES_CBC          11 /* 128 bit blocksize -- the same as above */
 
-#define CRYPTO_ALGORITHM_MAX    10 /* Keep this updated */
+#define CRYPTO_ALGORITHM_MAX    11 /* Keep this updated */
 
 /* Standard initialization structure beginning */
 struct cryptoini
@@ -66,6 +69,7 @@ struct cryptoini
     int                cri_klen;    /* Key length, in bits */
     int                cri_rnd;     /* Algorithm rounds, where relevant */
     caddr_t            cri_key;     /* key to use */
+    u_int8_t           cri_iv[EALG_MAX_BLOCK_LEN];      /* IV to use */
     struct cryptoini  *cri_next;
 };
 
@@ -78,9 +82,12 @@ struct cryptodesc
     int                crd_flags;
 
 #define CRD_F_ENCRYPT             0x1 /* Set when doing encryption */
-#define CRD_F_HALFIV              0x2
+#define CRD_F_IV_PRESENT          0x2 /* When encrypting, IV is already in
+				         place, so don't copy. */
+#define CRD_F_IV_EXPLICIT         0x4 /* IV explicitly provided */
 
     struct cryptoini   CRD_INI;    /* Initialization/context data */
+#define crd_iv   CRD_INI.cri_iv
 #define crd_key  CRD_INI.cri_key
 #define crd_rnd  CRD_INI.cri_rnd
 #define crd_alg  CRD_INI.cri_alg
@@ -112,10 +119,7 @@ struct cryptop
 
     caddr_t            crp_buf;   /* Data to be processed */
 
-    caddr_t            crp_opaque1;/* Opaque pointer, passed along */
-    caddr_t            crp_opaque2;/* Opaque pointer, passed along */
-    caddr_t            crp_opaque3;/* Opaque pointer, passed along */
-    caddr_t            crp_opaque4;/* Opaque pointer, passed along */
+    caddr_t            crp_opaque;/* Opaque pointer, passed along */
 
     struct cryptodesc *crp_desc;  /* Linked list of processing descriptors */
 
@@ -141,7 +145,7 @@ struct cryptocap
 
     int             (*cc_newsession) (u_int32_t *, struct cryptoini *);
     int             (*cc_process) (struct cryptop *);
-    int             (*cc_freesession) (u_int32_t);
+    int             (*cc_freesession) (u_int64_t);
 };
 
 
@@ -149,9 +153,17 @@ struct cryptocap
 extern int crypto_newsession(u_int64_t *, struct cryptoini *);
 extern int crypto_freesession(u_int64_t);
 extern int crypto_dispatch(struct cryptop *);
-extern int crypto_register(u_int32_t, int, void *, void *, void *);
+extern int crypto_register(u_int32_t, int,
+    int (*)(u_int32_t *, struct cryptoini *), int (*)(u_int64_t),
+    int (*)(struct cryptop *));
 extern int crypto_unregister(u_int32_t, int);
 extern int32_t crypto_get_driverid(void);
+extern void crypto_thread(void);
+extern int crypto_invoke(struct cryptop *);
+extern void crypto_done(struct cryptop *);
+
+struct mbuf;
+int	mbuf2pages(struct mbuf *, int *, long *, int *, int, int *);
 
 extern struct cryptop *crypto_getreq(int);
 extern void crypto_freereq(struct cryptop *);

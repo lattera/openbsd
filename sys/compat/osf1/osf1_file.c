@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_file.c,v 1.1 2000/08/04 15:47:55 ericj Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_file.c,v 1.1.6.1 2001/05/14 22:05:06 niklas Exp $ */
 /* $NetBSD: osf1_file.c,v 1.6 2000/06/06 19:04:17 soren Exp $ */
 
 /*

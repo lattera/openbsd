@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15 1999/11/10 15:55:24 mickey Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.1 2001/05/14 22:05:33 niklas Exp $	*/
 /*	$NetBSD: ultrix_misc.c,v 1.23 1996/04/07 17:23:04 jonathan Exp $	*/
 
 /*
@@ -159,7 +159,7 @@ struct emul emul_ultrix = {
 #ifdef SYSCALL_DEBUG
 	ultrix_syscallnames,
 #else
-	NULL
+	NULL,
 #endif
 	0,
 	copyargs,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_blkio.c,v 1.1 2001/04/09 06:53:44 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_blkio.c,v 1.1.4.1 2001/05/14 22:04:35 niklas Exp $	*/
 /*	$NetBSD: linux_blkio.c,v 1.3 2001/01/18 17:48:04 tv Exp $	*/
 
 /*

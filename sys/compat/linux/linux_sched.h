@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_sched.h,v 1.1 2001/04/02 21:43:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_sched.h,v 1.1.4.1 2001/05/14 22:04:48 niklas Exp $	*/
 /*	$NetBSD: linux_sched.h,v 1.1 1999/05/12 19:49:09 thorpej Exp $	*/
 
 /*-

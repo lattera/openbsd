@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_sysv_ipc.c,v 1.1 2000/08/04 15:47:55 ericj Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_sysv_ipc.c,v 1.1.6.1 2001/05/14 22:05:14 niklas Exp $ */
 /* $NetBSD: osf1_sysv_ipc.c,v 1.1 1999/05/04 04:59:21 cgd Exp $ */
 
 /*

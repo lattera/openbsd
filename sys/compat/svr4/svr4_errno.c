@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_errno.c,v 1.3 2000/08/23 16:37:29 brad Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_errno.c,v 1.3.6.1 2001/05/14 22:05:23 niklas Exp $	*/
 /*	$NetBSD: svr4_errno.c,v 1.7 1998/10/23 04:06:00 erh Exp $	*/
 
 /*

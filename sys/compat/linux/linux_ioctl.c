@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.c,v 1.7 1998/04/26 21:22:22 provos Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.c,v 1.7.8.1 2001/05/14 22:04:43 niklas Exp $	*/
 /*	$NetBSD: linux_ioctl.c,v 1.14 1996/04/05 00:01:28 christos Exp $	*/
 
 /*
@@ -53,7 +53,7 @@
 #define LINUX_TO_OSS(v) (v)	/* do nothing, same ioctl() encoding */
 
 /*
- * Most ioctl command are just converted to their NetBSD values,
+ * Most ioctl command are just converted to their OpenBSD values,
  * and passed on. The ones that take structure pointers and (flag)
  * values need some massaging. This is done the usual way by
  * allocating stackgap memory, letting the actual ioctl call do its
@@ -78,12 +78,20 @@ linux_sys_ioctl(p, v, retval)
 		return oss_ioctl_sequencer(p, LINUX_TO_OSS(v), retval);
 	case 'P':
 		return oss_ioctl_audio(p, LINUX_TO_OSS(v), retval);
-	case 'T':
+	case 't':
+	case 'f':
+	case 'T':	/* XXX MIDI sequencer uses 'T' as well */
 		return linux_ioctl_termios(p, uap, retval);
 	case 'S':
 		return linux_ioctl_cdrom(p, uap, retval);
 	case 0x89:
 		return linux_ioctl_socket(p, uap, retval);
+	case 0x03:
+		return linux_ioctl_hdio(p, uap, retval);
+	case 0x02:
+		return linux_ioctl_fdio(p, uap, retval);
+	case 0x12:
+		return linux_ioctl_blkio(p, uap, retval);
 	default:
 		return linux_machdepioctl(p, uap, retval);
 	}

@@ -1,4 +1,5 @@
-/*      $OpenBSD: src/sys/crypto/cast.c,v 1.1.2.1 2000/03/02 07:04:35 niklas Exp $       */
+/*      $OpenBSD: src/sys/crypto/cast.c,v 1.1.2.2 2001/05/14 22:06:50 niklas Exp $       */
+
 /*
  *	CAST-128 in C
  *	Written by Steve Reid <sreid@sea-to-sky.net>

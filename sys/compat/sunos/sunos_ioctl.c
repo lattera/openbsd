@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.9 1998/04/26 22:54:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.9.8.1 2001/05/14 22:05:20 niklas Exp $	*/
 /*	$NetBSD: sunos_ioctl.c,v 1.23 1996/03/14 19:33:46 christos Exp $	*/
 
 /*
@@ -920,7 +920,7 @@ static struct {
 	{ SUN_FNBIO, O_NONBLOCK },
 	{ SUN_SHLOCK, O_SHLOCK },
 	{ SUN_EXLOCK, O_EXLOCK },
-	{ SUN_FSYNC, O_FSYNC },
+	{ SUN_FSYNC, O_SYNC },
 	{ SUN_FSETBLK, 0 },
 	{ SUN_FNOCTTY, 0 }
 };

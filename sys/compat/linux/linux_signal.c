@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_signal.c,v 1.4.6.1 2000/03/24 09:09:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_signal.c,v 1.4.6.2 2001/05/14 22:04:49 niklas Exp $	*/
 /*	$NetBSD: linux_signal.c,v 1.10 1996/04/04 23:51:36 christos Exp $	*/
 
 /*
@@ -73,12 +73,12 @@ int bsd_to_linux_sig[NSIG] = {
 	LINUX_SIGILL,
 	LINUX_SIGTRAP,
 	LINUX_SIGABRT,
-	0,			/* SIGEMT */
+	LINUX_NSIG,		/* XXX Kludge to get RT signal #32 to work */
 	LINUX_SIGFPE,
 	LINUX_SIGKILL,
 	LINUX_SIGBUS,
 	LINUX_SIGSEGV,
-	0,			/* SIGSYS */
+	LINUX_NSIG + 1,			/* XXX Kludge to get RT signal #32 to work */
 	LINUX_SIGPIPE,
 	LINUX_SIGALRM,
 	LINUX_SIGTERM,
@@ -133,8 +133,8 @@ int linux_to_bsd_sig[LINUX__NSIG] = {
 	SIGIO,
 	0,			/* SIGUNUSED */
 	0,
-	0,
-	0,
+	SIGEMT,			/* XXX Gruesome hack for linuxthreads:       */
+	SIGSYS,			/* Map 1st 2 RT signals onto ones we handle. */
 	0,
 	0,
 	0,
@@ -373,7 +373,7 @@ linux_sys_sigaction(p, v, retval)
 	caddr_t sg;
 	int error;
 
-	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX_NSIG)
+	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX__NSIG)
 		return (EINVAL);
 
 	sg = stackgap_init(p->p_emul);
@@ -388,10 +388,10 @@ linux_sys_sigaction(p, v, retval)
 	if (nlsa != NULL) {
 		nbsa = stackgap_alloc(&sg, sizeof(struct sigaction));
 		if ((error = copyin(nlsa, &tmplsa, sizeof(tmplsa))) != 0)
-			return error;
+			return (error);
 		linux_old_to_bsd_sigaction(&tmplsa, &tmpbsa);
 		if ((error = copyout(&tmpbsa, nbsa, sizeof(tmpbsa))) != 0)
-			return error;
+			return (error);
 	} else
 		nbsa = NULL;
 
@@ -399,18 +399,28 @@ linux_sys_sigaction(p, v, retval)
 	SCARG(&sa, nsa) = nbsa;
 	SCARG(&sa, osa) = obsa;
 
-	if ((error = sys_sigaction(p, &sa, retval)) != 0)
-		return error;
+	/* Silently ignore unknown signals */
+	if (SCARG(&sa, signum) == 0) {
+		if (obsa != NULL) {
+			obsa->sa_handler = SIG_IGN;
+			sigemptyset(&obsa->sa_mask);
+			obsa->sa_flags = 0;
+		}
+	}
+	else {
+		if ((error = sys_sigaction(p, &sa, retval)) != 0)
+			return (error);
+	}
 
 	if (olsa != NULL) {
 		if ((error = copyin(obsa, &tmpbsa, sizeof(tmpbsa))) != 0)
-			return error;
+			return (error);
 		bsd_to_linux_old_sigaction(&tmpbsa, &tmplsa);
 		if ((error = copyout(&tmplsa, olsa, sizeof(tmplsa))) != 0)
-			return error;
+			return (error);
 	}
 
-	return 0;
+	return (0);
 }
 
 int
@@ -434,7 +444,7 @@ linux_sys_rt_sigaction(p, v, retval)
 	if (SCARG(uap, sigsetsize) != sizeof(linux_sigset_t))
 		return (EINVAL);
 
-	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX_NSIG)
+	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX__NSIG)
 		return (EINVAL);
 
 	sg = stackgap_init(p->p_emul);
@@ -449,10 +459,10 @@ linux_sys_rt_sigaction(p, v, retval)
 	if (nlsa != NULL) {
 		nbsa = stackgap_alloc(&sg, sizeof(struct sigaction));
 		if ((error = copyin(nlsa, &tmplsa, sizeof(tmplsa))) != 0)
-			return error;
+			return (error);
 		linux_to_bsd_sigaction(&tmplsa, &tmpbsa);
 		if ((error = copyout(&tmpbsa, nbsa, sizeof(tmpbsa))) != 0)
-			return error;
+			return (error);
 	}
 	else
 		nbsa = NULL;
@@ -461,18 +471,28 @@ linux_sys_rt_sigaction(p, v, retval)
 	SCARG(&sa, nsa) = nbsa;
 	SCARG(&sa, osa) = obsa;
 
-	if ((error = sys_sigaction(p, &sa, retval)) != 0)
-		return error;
+	/* Silently ignore unknown signals */
+	if (SCARG(&sa, signum) == 0) {
+		if (obsa != NULL) {
+			obsa->sa_handler = SIG_IGN;
+			sigemptyset(&obsa->sa_mask);
+			obsa->sa_flags = 0;
+		}
+	}
+	else {
+		if ((error = sys_sigaction(p, &sa, retval)) != 0)
+			return (error);
+	}
 
 	if (olsa != NULL) {
 		if ((error = copyin(obsa, &tmpbsa, sizeof(tmpbsa))) != 0)
-			return error;
+			return (error);
 		bsd_to_linux_sigaction(&tmpbsa, &tmplsa);
 		if ((error = copyout(&tmplsa, olsa, sizeof(tmplsa))) != 0)
-			return error;
+			return (error);
 	}
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -496,7 +516,7 @@ linux_sys_signal(p, v, retval)
 	struct sigaction *osa, *nsa, tmpsa;
 	int error;
 
-	if (SCARG(uap, sig) < 0 || SCARG(uap, sig) >= LINUX_NSIG)
+	if (SCARG(uap, sig) < 0 || SCARG(uap, sig) >= LINUX__NSIG)
 		return (EINVAL);
 
 	sg = stackgap_init(p->p_emul);
@@ -507,19 +527,23 @@ linux_sys_signal(p, v, retval)
 	tmpsa.sa_mask = (sigset_t) 0;
 	tmpsa.sa_flags = SA_RESETHAND | SA_NODEFER;
 	if ((error = copyout(&tmpsa, nsa, sizeof tmpsa)))
-		return error;
+		return (error);
 
 	SCARG(&sa_args, signum) = linux_to_bsd_sig[SCARG(uap, sig)];
 	SCARG(&sa_args, osa) = osa;
 	SCARG(&sa_args, nsa) = nsa;
-	if ((error = sys_sigaction(p, &sa_args, retval)))
-		return error;
+
+	/* Silently ignore unknown signals */
+	if (SCARG(&sa_args, signum) != 0) {
+		if ((error = sys_sigaction(p, &sa_args, retval)))
+			return (error);
+	}
 
 	if ((error = copyin(osa, &tmpsa, sizeof *osa)))
-		return error;
+		return (error);
 	retval[0] = (register_t) tmpsa.sa_handler;
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -546,15 +570,15 @@ linux_sys_sigprocmask(p, v, retval)
 		/* Fix the return value first if needed */
 		bsd_to_linux_old_sigset(&p->p_sigmask, &ss);
 		if ((error = copyout(&ss, SCARG(uap, oset), sizeof(ss))) != 0)
-			return error;
+			return (error);
 	}
 
 	if (SCARG(uap, set) == NULL)
 		/* Just examine */
-		return 0;
+		return (0);
 
 	if ((error = copyin(SCARG(uap, set), &ss, sizeof(ss))) != 0)
-		return error;
+		return (error);
 
 	linux_old_to_bsd_sigset(&ss, &bs);
 
@@ -580,7 +604,7 @@ linux_sys_sigprocmask(p, v, retval)
 
 	(void) spl0();
 
-	return error;
+	return (error);
 }
 
 int
@@ -608,15 +632,15 @@ linux_sys_rt_sigprocmask(p, v, retval)
 		/* Fix the return value first if needed */
 		bsd_to_linux_sigset(&p->p_sigmask, &ls);
 		if ((error = copyout(&ls, SCARG(uap, oset), sizeof(ls))) != 0)
-			return error;
+			return (error);
 	}
 
 	if (SCARG(uap, set) == NULL)
 		/* Just examine */
-		return 0;
+		return (0);
 
 	if ((error = copyin(SCARG(uap, set), &ls, sizeof(ls))) != 0)
-		return error;
+		return (error);
 
 	linux_to_bsd_sigset(&ls, &bs);
 
@@ -642,7 +666,7 @@ linux_sys_rt_sigprocmask(p, v, retval)
 
 	(void) spl0();
 
-	return error;
+	return (error);
 }
 
 /*
@@ -660,7 +684,7 @@ linux_sys_siggetmask(p, v, retval)
 {
 
 	bsd_to_linux_old_sigset(&p->p_sigmask, (linux_old_sigset_t *)retval);
-	return 0;
+	return (0);
 }
 
 /*
@@ -690,7 +714,7 @@ linux_sys_sigsetmask(p, v, retval)
 	p->p_sigmask = bsdsig & ~sigcantmask;
 	spl0();
 
-	return 0;
+	return (0);
 }
 
 int
@@ -708,7 +732,7 @@ linux_sys_sigpending(p, v, retval)
 	bs = p->p_siglist & p->p_sigmask;
 	bsd_to_linux_old_sigset(&bs, &ls);
 
-	return copyout(&ls, SCARG(uap, mask), sizeof(ls));
+	return (copyout(&ls, SCARG(uap, mask), sizeof ls));
 }
 
 int
@@ -730,7 +754,7 @@ linux_sys_rt_sigpending(p, v, retval)
 	bs = p->p_siglist & p->p_sigmask;
 	bsd_to_linux_sigset(&bs, &ls);
 
-	return copyout(&ls, SCARG(uap, set), sizeof(ls));
+	return (copyout(&ls, SCARG(uap, set), sizeof ls));
 }
 
 int
@@ -748,7 +772,7 @@ linux_sys_sigsuspend(p, v, retval)
 	linux_old_sigset_t mask = SCARG(uap, mask);
 
 	linux_old_to_bsd_sigset(&mask, &SCARG(&sa, mask));
-	return sys_sigsuspend(p, &sa, retval);
+	return (sys_sigsuspend(p, &sa, retval));
 }
 
 int
@@ -768,12 +792,59 @@ linux_sys_rt_sigsuspend(p, v, retval)
 	if (SCARG(uap, sigsetsize) != sizeof(linux_sigset_t))
 		return (EINVAL);
 	
-	error = copyin(SCARG(uap, unewset), &mask, sizeof(linux_sigset_t));
+	error = copyin(SCARG(uap, unewset), &mask, sizeof mask);
 	if (error)
 		return (error);
 	
 	linux_to_bsd_sigset(&mask, &SCARG(&sa, mask));
-	return sys_sigsuspend(p, &sa, retval);
+	return (sys_sigsuspend(p, &sa, retval));
+}
+
+/*
+ * Linux' sigaltstack structure is just of a different order than BSD's
+ * so just shuffle the fields around and call our version.
+ */
+int
+linux_sys_sigaltstack(p, v, retval)
+	register struct proc *p;
+	void *v;	
+	register_t *retval;
+{	
+	struct linux_sys_sigaltstack_args /* {
+		syscallarg(const struct linux_sigaltstack *) nss;
+		syscallarg(struct linux_sigaltstack *) oss;
+	} */ *uap = v;
+	struct linux_sigaltstack linux_ss;
+	struct sigaltstack *bsd_nss, *bsd_oss;
+	struct sys_sigaltstack_args sa;
+	int error;
+	caddr_t sg;
+
+	sg = stackgap_init(p->p_emul);
+	bsd_nss = stackgap_alloc(&sg, sizeof *bsd_nss);
+
+	error = copyin(SCARG(uap, nss), &linux_ss, sizeof linux_ss);
+	if (error)
+		return (error);
+
+	bsd_nss->ss_sp = linux_ss.ss_sp;
+	bsd_nss->ss_size = linux_ss.ss_size;
+	bsd_nss->ss_flags = linux_ss.ss_flags;
+	SCARG(&sa, nss) = bsd_nss;
+	if (SCARG(uap, oss) == NULL) {
+		SCARG(&sa, oss) = NULL;
+		return (sys_sigaltstack(p, &sa, retval));
+	}
+	SCARG(&sa, oss) = bsd_oss = stackgap_alloc(&sg, sizeof *bsd_oss);
+
+	error = sys_sigaltstack(p, &sa, retval);
+	if (error)
+		return (error);
+
+	linux_ss.ss_sp = bsd_oss->ss_sp;
+	linux_ss.ss_size = bsd_oss->ss_size;
+	linux_ss.ss_flags = bsd_oss->ss_flags;
+	return (copyout(&linux_ss, SCARG(uap, oss), sizeof linux_ss));
 }
 
 /*
@@ -789,7 +860,7 @@ linux_sys_pause(p, v, retval)
 	struct sys_sigsuspend_args bsa;
 
 	SCARG(&bsa, mask) = p->p_sigmask;
-	return sys_sigsuspend(p, &bsa, retval);
+	return (sys_sigsuspend(p, &bsa, retval));
 }
 
 /*
@@ -808,8 +879,8 @@ linux_sys_kill(p, v, retval)
 	struct sys_kill_args ka;
 
 	SCARG(&ka, pid) = SCARG(uap, pid);
-	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX_NSIG)
+	if (SCARG(uap, signum) < 0 || SCARG(uap, signum) >= LINUX__NSIG)
 		return (EINVAL);
 	SCARG(&ka, signum) = linux_to_bsd_sig[SCARG(uap, signum)];
-	return sys_kill(p, &ka, retval);
+	return (sys_kill(p, &ka, retval));
 }

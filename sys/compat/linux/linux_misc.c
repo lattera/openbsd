@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_misc.c,v 1.25.2.1 2000/03/02 07:04:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_misc.c,v 1.25.2.2 2001/05/14 22:04:45 niklas Exp $	*/
 /*	$NetBSD: linux_misc.c,v 1.27 1996/05/20 01:59:21 fvdl Exp $	*/
 
 /*
@@ -71,24 +71,27 @@
 
 #include <compat/linux/linux_types.h>
 #include <compat/linux/linux_fcntl.h>
+#include <compat/linux/linux_misc.h>
 #include <compat/linux/linux_mmap.h>
+#include <compat/linux/linux_sched.h>
 #include <compat/linux/linux_signal.h>
 #include <compat/linux/linux_syscallargs.h>
 #include <compat/linux/linux_util.h>
 #include <compat/linux/linux_dirent.h>
 
+#include <compat/common/compat_dir.h>
+
 /* linux_misc.c */
-static void bsd_to_linux_wstat __P((int *));
 static void bsd_to_linux_statfs __P((struct statfs *, struct linux_statfs *));
-int linux_select1 __P((struct proc *, register_t *, int, fd_set *, fd_set *,
-		       fd_set *, struct timeval *));
+int	linux_select1 __P((struct proc *, register_t *, int, fd_set *,
+     fd_set *, fd_set *, struct timeval *));
 
 /*
  * The information on a terminated (or stopped) process needs
  * to be converted in order for Linux binaries to get a valid signal
  * number out of it.
  */
-static void
+void
 bsd_to_linux_wstat(status)
 	int *status;
 {
@@ -102,8 +105,8 @@ bsd_to_linux_wstat(status)
 }
 
 /*
- * waitpid(2). Passed on to the NetBSD call, surrounded by code to
- * reserve some space for a NetBSD-style wait status, and converting
+ * waitpid(2). Passed on to the OpenBSD call, surrounded by code to
+ * reserve some space for a OpenBSD-style wait status, and converting
  * it to what Linux wants.
  */
 int
@@ -164,7 +167,7 @@ linux_sys_wait4(p, v, retval)
 		syscallarg(struct rusage *) rusage;
 	} */ *uap = v;
 	struct sys_wait4_args w4a;
-	int error, *status, tstat;
+	int error, *status, tstat, linux_options, options;
 	caddr_t sg;
 
 	if (SCARG(uap, status) != NULL) {
@@ -173,9 +176,22 @@ linux_sys_wait4(p, v, retval)
 	} else
 		status = NULL;
 
+	linux_options = SCARG(uap, options);
+	options = 0;
+	if (linux_options &
+	    ~(LINUX_WAIT4_WNOHANG|LINUX_WAIT4_WUNTRACED|LINUX_WAIT4_WCLONE))
+		return (EINVAL);
+
+	if (linux_options & LINUX_WAIT4_WNOHANG)
+		options |= WNOHANG;
+	if (linux_options & LINUX_WAIT4_WUNTRACED)
+		options |= WUNTRACED;
+	if (linux_options & LINUX_WAIT4_WCLONE)
+		options |= WALTSIG;
+
 	SCARG(&w4a, pid) = SCARG(uap, pid);
 	SCARG(&w4a, status) = status;
-	SCARG(&w4a, options) = SCARG(uap, options);
+	SCARG(&w4a, options) = options;
 	SCARG(&w4a, rusage) = SCARG(uap, rusage);
 
 	if ((error = sys_wait4(p, &w4a, retval)))
@@ -214,7 +230,7 @@ linux_sys_setresgid(p, v, retval)
 	sgid = SCARG(uap, sgid);
 
 	/*
-	 * Note: These checks are a little different than the NetBSD
+	 * Note: These checks are a little different than the OpenBSD
 	 * setregid(2) call performs.  This precisely follows the
 	 * behavior of the Linux kernel.
 	 */
@@ -241,7 +257,7 @@ linux_sys_setresgid(p, v, retval)
 
 	/*
 	 * Now assign the real, effective, and saved GIDs.
-	 * Note that Linux, unlike NetBSD in setregid(2), does not
+	 * Note that Linux, unlike OpenBSD in setregid(2), does not
 	 * set the saved UID in this call unless the user specifies
 	 * it.
 	 */
@@ -314,7 +330,7 @@ linux_sys_break(p, v, retval)
 
 /*
  * Linux brk(2). The check if the new address is >= the old one is
- * done in the kernel in Linux. NetBSD does it in the library.
+ * done in the kernel in Linux. OpenBSD does it in the library.
  */
 int
 linux_sys_brk(p, v, retval)
@@ -494,7 +510,7 @@ linux_sys_fstatfs(p, v, retval)
 /*
  * uname(). Just copy the info from the various strings stored in the
  * kernel, and put it in the Linux utsname structure. That structure
- * is almost the same as the NetBSD one, only it has fields 65 characters
+ * is almost the same as the OpenBSD one, only it has fields 65 characters
  * long, and an extra domainname field.
  */
 int
@@ -625,7 +641,7 @@ linux_sys_mmap(p, v, retval)
 		lmap.lm_prot |= VM_PROT_READ;
  	SCARG(&cma,prot) = lmap.lm_prot;
 	SCARG(&cma,flags) = flags;
-	SCARG(&cma,fd) = lmap.lm_fd;
+	SCARG(&cma,fd) = flags & MAP_ANON ? -1 : lmap.lm_fd;
 	SCARG(&cma,pad) = 0;
 	SCARG(&cma,pos) = lmap.lm_pos;
 
@@ -725,7 +741,7 @@ linux_sys_times(p, v, retval)
 }
 
 /*
- * NetBSD passes fd[0] in retval[0], and fd[1] in retval[1].
+ * OpenBSD passes fd[0] in retval[0], and fd[1] in retval[1].
  * Linux directly passes the pointer.
  */
 int
@@ -771,7 +787,7 @@ linux_sys_pipe(p, v, retval)
 }
 
 /*
- * Alarm. This is a libc call which uses setitimer(2) in NetBSD.
+ * Alarm. This is a libc call which uses setitimer(2) in OpenBSD.
  * Fiddle with the timers to make it work.
  */
 int
@@ -785,13 +801,15 @@ linux_sys_alarm(p, v, retval)
 	} */ *uap = v;
 	int s;
 	struct itimerval *itp, it;
+	int timo;
 
 	itp = &p->p_realtimer;
 	s = splclock();
 	/*
 	 * Clear any pending timer alarms.
 	 */
-	untimeout(realitexpire, p);
+
+	timeout_del(&p->p_realit_to);
 	timerclear(&itp->it_interval);
 	if (timerisset(&itp->it_value) &&
 	    timercmp(&itp->it_value, &time, >))
@@ -824,8 +842,11 @@ linux_sys_alarm(p, v, retval)
 	}
 
 	if (timerisset(&it.it_value)) {
+		timo = hzto(&it.it_value);
+		if (timo <= 0)
+			timo = 1;
 		timeradd(&it.it_value, &time, &it.it_value);
-		timeout(realitexpire, p, hzto(&it.it_value));
+		timeout_add(&p->p_realit_to, timo);
 	}
 	p->p_realtimer = it;
 	splx(s);
@@ -854,6 +875,7 @@ linux_sys_utime(p, v, retval)
 	struct linux_utimbuf lut;
 
 	sg = stackgap_init(p->p_emul);
+	tvp = (struct timeval *) stackgap_alloc(&sg, sizeof(tv));
 	LINUX_CHECK_ALT_EXIST(p, &sg, SCARG(uap, path));
 
 	SCARG(&ua, path) = SCARG(uap, path);
@@ -864,7 +886,6 @@ linux_sys_utime(p, v, retval)
 		tv[0].tv_usec = tv[1].tv_usec = 0;
 		tv[0].tv_sec = lut.l_actime;
 		tv[1].tv_sec = lut.l_modtime;
-		tvp = (struct timeval *) stackgap_alloc(&sg, sizeof(tv));
 		if ((error = copyout(tv, tvp, sizeof tv)))
 			return error;
 		SCARG(&ua, tptr) = tvp;
@@ -897,6 +918,7 @@ linux_sys_readdir(p, v, retval)
 	} */ *uap = v;
 
 	SCARG(uap, count) = 1;
+
 	return linux_sys_getdents(p, uap, retval);
 }
 
@@ -914,151 +936,101 @@ linux_sys_readdir(p, v, retval)
  *
  * Note that this doesn't handle union-mounted filesystems.
  */
+int linux_readdir_callback __P((void *, struct dirent *, off_t));
+
+struct linux_readdir_callback_args {
+	caddr_t outp;
+	int     resid;
+	int     oldcall;
+};
+
+int
+linux_readdir_callback(arg, bdp, cookie)
+	void *arg;
+	struct dirent *bdp;
+	off_t cookie;
+{
+	struct linux_dirent idb;
+	struct linux_readdir_callback_args *cb = arg;
+	int linux_reclen;
+	int error;
+
+	if (cb->oldcall == 2) 
+		return (ENOMEM);
+
+	linux_reclen = LINUX_RECLEN(&idb, bdp->d_namlen);
+	if (cb->resid < linux_reclen)
+		return (ENOMEM);
+
+	/*
+	 * Massage in place to make a Linux-shaped dirent (otherwise
+	 * we have to worry about touching user memory outside of
+	 * the copyout() call).
+	 */
+	idb.d_ino = (linux_ino_t)bdp->d_fileno;
+	
+	/*
+	 * The old readdir() call misuses the offset and reclen fields.
+	 */
+	if (cb->oldcall) {
+		idb.d_off = (linux_off_t)linux_reclen;
+		idb.d_reclen = (u_short)bdp->d_namlen;
+	} else {
+		idb.d_off = (linux_off_t)cookie;
+		idb.d_reclen = (u_short)linux_reclen;
+	}
+	
+	strlcpy(idb.d_name, bdp->d_name, sizeof(idb.d_name));
+	if ((error = copyout((caddr_t)&idb, cb->outp, linux_reclen)))
+		return (error);
+
+	/* advance output past Linux-shaped entry */
+	cb->outp += linux_reclen;
+	cb->resid -= linux_reclen;
+
+	if (cb->oldcall == 1)
+		++cb->oldcall;
+	
+	return (0);
+}
+
 int
 linux_sys_getdents(p, v, retval)
 	struct proc *p;
 	void *v;
 	register_t *retval;
 {
-	struct linux_sys_readdir_args /* {
+	struct linux_sys_getdents_args /* {
 		syscallarg(int) fd;
-		syscallarg(caddr_t) dent;
-		syscallarg(unsigned int) count;
+		syscallarg(void *) dirent;
+		syscallarg(unsigned) count;
 	} */ *uap = v;
-	register struct dirent *bdp;
-	struct vnode *vp;
-	caddr_t	inp, buf;		/* BSD-format */
-	int len, reclen;		/* BSD-format */
-	caddr_t outp;			/* Linux-format */
-	int resid, linux_reclen = 0;	/* Linux-format */
+	struct linux_readdir_callback_args args;
 	struct file *fp;
-	struct uio auio;
-	struct iovec aiov;
-	struct linux_dirent idb;
-	off_t off;		/* true file offset */
-	int buflen, error, eofflag, nbytes, oldcall;
-	struct vattr va;
-	u_long *cookiebuf = NULL, *cookie;
-	int ncookies = 0;
+	int error;
+	int nbytes = SCARG(uap, count);
 
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 
-	if ((fp->f_flag & FREAD) == 0)
-		return (EBADF);
-
-	vp = (struct vnode *)fp->f_data;
-
-	if (vp->v_type != VDIR)	/* XXX  vnode readdir op should do this */
-		return (EINVAL);
-
-	if ((error = VOP_GETATTR(vp, &va, p->p_ucred, p)))
-		return error;
-
-	nbytes = SCARG(uap, count);
 	if (nbytes == 1) {	/* emulating old, broken behaviour */
-		nbytes = sizeof (struct linux_dirent);
-		buflen = max(va.va_blocksize, nbytes);
-		oldcall = 1;
+		nbytes = sizeof(struct linux_dirent);
+		args.oldcall = 1;
 	} else {
-		buflen = min(MAXBSIZE, nbytes);
-		oldcall = 0;
-	}
-	buf = malloc(buflen, M_TEMP, M_WAITOK);
-	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	off = fp->f_offset;
-again:
-	aiov.iov_base = buf;
-	aiov.iov_len = buflen;
-	auio.uio_iov = &aiov;
-	auio.uio_iovcnt = 1;
-	auio.uio_rw = UIO_READ;
-	auio.uio_segflg = UIO_SYSSPACE;
-	auio.uio_procp = p;
-	auio.uio_resid = buflen;
-	auio.uio_offset = off;
-	/*
-	 * First we read into the malloc'ed buffer, then
-	 * we massage it into user space, one record at a time.
-	 */
-	error = VOP_READDIR(vp, &auio, fp->f_cred, &eofflag, &ncookies,
-	    &cookiebuf);
-	if (error)
-		goto out;
-
-	if (!error && !cookiebuf)
-		goto out;
-
-	inp = buf;
-	outp = SCARG(uap, dent);
-	resid = nbytes;
-	if ((len = buflen - auio.uio_resid) == 0)
-		goto eof;
-
-	for (cookie = cookiebuf; len > 0; len -= reclen) {
-		bdp = (struct dirent *)inp;
-		reclen = bdp->d_reclen;
-		if (reclen & 3)
-			panic("linux_readdir: bad reclen");
-		if (bdp->d_fileno == 0) {
-			inp += reclen;	/* it is a hole; squish it out */
-			off = *cookie++;
-			continue;
-		}
-		linux_reclen = LINUX_RECLEN(&idb, bdp->d_namlen);
-		if (reclen > len || resid < linux_reclen) {
-			/* entry too big for buffer, so just stop */
-			outp++;
-			break;
-		}
-
-		/*
-		 * Massage in place to make a Linux-shaped dirent (otherwise
-		 * we have to worry about touching user memory outside of
-		 * the copyout() call).
-		 */
-		idb.d_ino = (linux_ino_t)bdp->d_fileno;
-
-		/*
-		 * The old readdir() call misuses the offset and reclen fields.
-		 */
-		if (oldcall) {
-			idb.d_off = (linux_off_t)linux_reclen;
-			idb.d_reclen = (u_short)bdp->d_namlen;
-		} else {
-			idb.d_off = (linux_off_t)off;
-			idb.d_reclen = (u_short)linux_reclen;
-		}
-		strncpy(idb.d_name, bdp->d_name, sizeof(idb.d_name) - 1);
-		idb.d_name[sizeof(idb.d_name) - 1] = '\0';
-		if ((error = copyout((caddr_t)&idb, outp, linux_reclen)))
-			goto out;
-		/* advance past this real entry */
-		inp += reclen;
-		off = *cookie++;	/* each entry points to itself */
-		/* advance output past Linux-shaped entry */
-		outp += linux_reclen;
-		resid -= linux_reclen;
-		if (oldcall)
-			break;
+		args.oldcall = 0;
 	}
 
-	/* if we squished out the whole block, try again */
-	if (outp == SCARG(uap, dent))
-		goto again;
-	fp->f_offset = off;	/* update the vnode offset */
+	args.resid = nbytes;
+	args.outp = (caddr_t)SCARG(uap, dirent);
 
-	if (oldcall)
-		nbytes = resid + linux_reclen;
+	if ((error = readdir_with_callback(fp, &fp->f_offset, nbytes,
+	    linux_readdir_callback, &args)) != 0)
+		goto exit;
 
-eof:
-	*retval = nbytes - resid;
-out:
-	VOP_UNLOCK(vp, 0, p);
-	if (cookiebuf)
-		free(cookiebuf, M_TEMP);
-	free(buf, M_TEMP);
-	return error;
+	*retval = nbytes - args.resid;
+
+ exit:
+	return (error);
 }
 
 /*
@@ -1358,7 +1330,7 @@ linux_sys_setresuid(p, v, retval)
 	suid = SCARG(uap, suid);
 
 	/*
-	 * Note: These checks are a little different than the NetBSD
+	 * Note: These checks are a little different than the OpenBSD
 	 * setreuid(2) call performs.  This precisely follows the
 	 * behavior of the Linux kernel.
 	 */
@@ -1385,7 +1357,7 @@ linux_sys_setresuid(p, v, retval)
 
 	/*
 	 * Now assign the new real, effective, and saved UIDs.
-	 * Note that Linux, unlike NetBSD in setreuid(2), does not
+	 * Note that Linux, unlike OpenBSD in setreuid(2), does not
 	 * set the saved UID in this call unless the user specifies
 	 * it.
 	 */
@@ -1439,6 +1411,38 @@ linux_sys_getresuid(p, v, retval)
 
 	return (copyout(&pc->p_svuid, SCARG(uap, suid), sizeof(uid_t)));
 }
+
+/*
+ * We have nonexistent fsuid equal to uid.
+ * If modification is requested, refuse.
+ */
+int
+linux_sys_setfsuid(p, v, retval)
+	 struct proc *p;
+	 void *v;
+	 register_t *retval;
+{
+	 struct linux_sys_setfsuid_args /* {
+		 syscallarg(uid_t) uid;
+	 } */ *uap = v;
+	 uid_t uid;
+
+	 uid = SCARG(uap, uid);
+	 if (p->p_cred->p_ruid != uid)
+		 return sys_nosys(p, v, retval);
+	 else
+		 return (0);
+}
+
+int
+linux_sys_getfsuid(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+	return sys_getuid(p, v, retval);
+}
+
 
 int
 linux_sys_nice(p, v, retval)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_mmap.c,v 1.2 2000/11/08 20:32:50 art Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_mmap.c,v 1.2.4.1 2001/05/14 22:05:09 niklas Exp $ */
 /* $NetBSD: osf1_mmap.c,v 1.5 2000/04/11 05:26:27 chs Exp $ */
 
 /*

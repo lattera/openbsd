@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/rijndael.h,v 1.3 2001/05/09 23:01:32 markus Exp $	*/
+/*	$OpenBSD: src/sys/crypto/rijndael.h,v 1.3.2.1 2001/05/14 22:06:53 niklas Exp $	*/
 
 /* This is an independent implementation of the encryption algorithm:   */
 /*                                                                      */
@@ -40,8 +40,7 @@ typedef struct _rijndael_ctx {
 /* These are all based on 32 bit unsigned values and will therefore */
 /* require endian conversions for big-endian architectures          */
 
-rijndael_ctx *
-rijndael_set_key  __P((rijndael_ctx *, const u4byte *, const u4byte, int));
+rijndael_ctx *rijndael_set_key  __P((rijndael_ctx *, const u4byte *, u4byte, int));
 void rijndael_encrypt __P((rijndael_ctx *, const u4byte *, u4byte *));
 void rijndael_decrypt __P((rijndael_ctx *, const u4byte *, u4byte *));
 

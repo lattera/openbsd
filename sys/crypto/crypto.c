@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.2 2001/05/14 22:06:51 niklas Exp $	*/
+
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -40,8 +42,12 @@ int crypto_drivers_num = 0;
 
 struct cryptop *cryptop_queue = NULL;
 struct cryptodesc *cryptodesc_queue = NULL;
+
 int crypto_queue_num = 0;
 int crypto_queue_max = CRYPTO_MAX_CACHED;
+
+struct cryptop *crp_req_queue = NULL;
+struct cryptop **crp_req_queue_tail = NULL;
 
 /*
  * Create a new session.
@@ -100,7 +106,7 @@ crypto_newsession(u_int64_t *sid, struct cryptoini *cri)
     if (err == 0)
     {
 	(*sid) = hid;
-	(*sid) <<= 31;
+	(*sid) <<= 32;
 	(*sid) |= (lid & 0xffffffff);
         crypto_drivers[hid].cc_sessions++;
     }
@@ -115,15 +121,14 @@ crypto_newsession(u_int64_t *sid, struct cryptoini *cri)
 int
 crypto_freesession(u_int64_t sid)
 {
-    u_int32_t hid, lid;
+    u_int32_t hid;
     int err = 0;
 
     if (crypto_drivers == NULL)
       return EINVAL;
 
     /* Determine two IDs */
-    hid = (sid >> 31) & 0xffffffff;
-    lid = sid & 0xffffffff;
+    hid = (sid >> 32) & 0xffffffff;
 
     if (hid >= crypto_drivers_num)
       return ENOENT;
@@ -133,7 +138,7 @@ crypto_freesession(u_int64_t sid)
 
     /* Call the driver cleanup routine, if available */
     if (crypto_drivers[hid].cc_freesession)
-      err = crypto_drivers[hid].cc_freesession(lid);
+      err = crypto_drivers[hid].cc_freesession(sid);
 
     /*
      * If this was the last session of a driver marked as invalid, make
@@ -157,10 +162,9 @@ crypto_get_driverid(void)
 
     if (crypto_drivers_num == 0)
     {
-        crypto_drivers_num = CRYPTO_DRIVERS_INITIAL;
-	MALLOC(crypto_drivers, struct cryptocap *, 
-	       crypto_drivers_num * sizeof(struct cryptocap), M_XDATA,
-	       M_DONTWAIT);
+	crypto_drivers_num = CRYPTO_DRIVERS_INITIAL;
+	crypto_drivers = malloc(crypto_drivers_num * sizeof(struct cryptocap),
+				M_XDATA, M_NOWAIT);
 	if (crypto_drivers == NULL)
 	{
 	    crypto_drivers_num = 0;
@@ -183,9 +187,8 @@ crypto_get_driverid(void)
 	if (2 * crypto_drivers_num <= crypto_drivers_num)
 	  return -1;
 
-	MALLOC(newdrv, struct cryptocap *,
-	       2 * crypto_drivers_num * sizeof(struct cryptocap),
-	       M_XDATA, M_DONTWAIT);
+	newdrv = malloc(2 * crypto_drivers_num * sizeof(struct cryptocap),
+			M_XDATA, M_NOWAIT);
 	if (newdrv == NULL)
 	  return -1;
 
@@ -206,8 +209,9 @@ crypto_get_driverid(void)
  * supported by the driver.
  */
 int
-crypto_register(u_int32_t driverid, int alg, void *newses, void *freeses,
-		void *process)
+crypto_register(u_int32_t driverid, int alg,
+    int (*newses)(u_int32_t *, struct cryptoini *),
+    int (*freeses)(u_int64_t), int (*process)(struct cryptop *))
 {
     if ((driverid >= crypto_drivers_num) || (alg <= 0) ||
 	(alg > CRYPTO_ALGORITHM_MAX) || (crypto_drivers == NULL))
@@ -223,12 +227,9 @@ crypto_register(u_int32_t driverid, int alg, void *newses, void *freeses,
 
     if (crypto_drivers[driverid].cc_process == NULL)
     {
-	crypto_drivers[driverid].cc_newsession =
-			(int (*) (u_int32_t *, struct cryptoini *)) newses;
-	crypto_drivers[driverid].cc_process =
-			(int (*) (struct cryptop *)) process;
-	crypto_drivers[driverid].cc_freesession =
-			(int (*) (u_int32_t)) freeses;
+	crypto_drivers[driverid].cc_newsession = newses;
+	crypto_drivers[driverid].cc_process = process;
+	crypto_drivers[driverid].cc_freesession = freeses;
     }
 
     return 0;
@@ -276,10 +277,30 @@ crypto_unregister(u_int32_t driverid, int alg)
 }
 
 /*
- * Dispatch a crypto request to the appropriate crypto devices.
+ * Add crypto request to a queue, to be processed by a kernel thread.
  */
 int
 crypto_dispatch(struct cryptop *crp)
+{
+    int s = splhigh();
+
+    if (crp_req_queue == NULL) {
+	crp_req_queue = crp;
+	crp_req_queue_tail = &(crp->crp_next);
+	wakeup((caddr_t) &crp_req_queue);
+    } else {
+	*crp_req_queue_tail = crp;
+	crp_req_queue_tail = &(crp->crp_next);
+    }
+    splx(s);
+    return 0;
+}
+
+/*
+ * Dispatch a crypto request to the appropriate crypto devices.
+ */
+int
+crypto_invoke(struct cryptop *crp)
 {
     struct cryptodesc *crd;
     u_int64_t nid;
@@ -292,21 +313,24 @@ crypto_dispatch(struct cryptop *crp)
     if ((crp->crp_desc == NULL) || (crypto_drivers == NULL))
     {
 	crp->crp_etype = EINVAL;
-	return crp->crp_callback(crp);
+	crypto_done(crp);
+	return 0;
     }
 
-    hid = (crp->crp_sid >> 31) & 0xffffffff;
+    hid = (crp->crp_sid >> 32) & 0xffffffff;
 
     if (hid >= crypto_drivers_num)
     {
 	/* Migrate session */
 	for (crd = crp->crp_desc; crd->crd_next; crd = crd->crd_next)
 	  crd->CRD_INI.cri_next = &(crd->crd_next->CRD_INI);
+
 	if (crypto_newsession(&nid, &(crp->crp_desc->CRD_INI)) == 0)
 	  crp->crp_sid = nid;
 
 	crp->crp_etype = EAGAIN;
-	return crp->crp_callback(crp);
+	crypto_done(crp);
+	return 0;
     }
 
     if (crypto_drivers[hid].cc_flags & CRYPTOCAP_F_CLEANUP)
@@ -317,14 +341,17 @@ crypto_dispatch(struct cryptop *crp)
 	/* Migrate session */
 	for (crd = crp->crp_desc; crd->crd_next; crd = crd->crd_next)
 	  crd->CRD_INI.cri_next = &(crd->crd_next->CRD_INI);
+
 	if (crypto_newsession(&nid, &(crp->crp_desc->CRD_INI)) == 0)
 	  crp->crp_sid = nid;
 
 	crp->crp_etype = EAGAIN;
-	return crp->crp_callback(crp);
+	crypto_done(crp);
+	return 0;
     }
 
-    return crypto_drivers[hid].cc_process(crp);
+    crypto_drivers[hid].cc_process(crp);
+    return 0;
 }
 
 /*
@@ -334,9 +361,12 @@ void
 crypto_freereq(struct cryptop *crp)
 {
     struct cryptodesc *crd;
+    int s;
 
     if (crp == NULL)
       return;
+
+    s = splhigh();
 
     while ((crd = crp->crp_desc) != NULL)
     {
@@ -360,6 +390,8 @@ crypto_freereq(struct cryptop *crp)
         cryptop_queue = crp;
         crypto_queue_num++;
     }
+
+    splx(s);
 }
 
 /*
@@ -370,13 +402,17 @@ crypto_getreq(int num)
 {
     struct cryptodesc *crd;
     struct cryptop *crp;
+    int s = splhigh();
 
     if (cryptop_queue == NULL)
     {
         MALLOC(crp, struct cryptop *, sizeof(struct cryptop), M_XDATA,
-	       M_DONTWAIT);
+	       M_NOWAIT);
         if (crp == NULL)
-          return NULL;
+        {
+            splx(s);
+            return NULL;
+        }
     }
     else
     {
@@ -392,9 +428,10 @@ crypto_getreq(int num)
         if (cryptodesc_queue == NULL)
 	{
 	    MALLOC(crd, struct cryptodesc *, sizeof(struct cryptodesc),
-		   M_XDATA, M_DONTWAIT);
+		   M_XDATA, M_NOWAIT);
 	    if (crd == NULL)
 	    {
+                splx(s);
 		crypto_freereq(crp);
 	        return NULL;
 	    }
@@ -411,5 +448,45 @@ crypto_getreq(int num)
 	crp->crp_desc = crd;
     }
 
+    splx(s);
     return crp;
+}
+
+/*
+ * Crypto thread, runs as a kernel thread to process crypto requests.
+ */
+void
+crypto_thread(void)
+{
+    struct cryptop *crp;
+    int s;
+
+    s = splhigh();
+
+    for (;;)
+    {
+	crp = crp_req_queue;
+	if (crp == NULL) /* No work to do */
+	{
+	    (void) tsleep(&crp_req_queue, PLOCK, "crypto_wait", 0);
+	    continue;
+	}
+
+	/* Remove from the queue */
+	crp_req_queue = crp->crp_next;
+	splx(s);
+
+	crypto_invoke(crp);
+
+	s = splhigh();
+    }
+}
+
+/*
+ * Invoke the callback on behalf of the driver.
+ */
+void
+crypto_done(struct cryptop *crp)
+{
+    crp->crp_callback(crp);
 }

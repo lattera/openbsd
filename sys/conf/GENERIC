@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.1 2000/03/24 09:09:04 niklas Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.2 2001/05/14 22:06:47 niklas Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -38,8 +38,8 @@ option		COMPAT_43	# and 4.3BSD
 option		LKM		# loadable kernel modules
 
 option		FFS		# UFS
+option		FFS_SOFTUPDATES	# Soft updates
 option		QUOTA		# UFS quotas
-#option		LFS		# log-structured file system
 option		EXT2FS		# Second Extended Filesystem
 option		MFS		# memory file system
 #option		XFS		# xfs filesystem
@@ -65,6 +65,7 @@ option		UNION		# union file system
 #option		GATEWAY		# packet forwarding
 option		INET		# IP + ICMP + TCP + UDP
 option		INET6		# IPv6 (needs INET)
+option		PULLDOWN_TEST	# use m_pulldown for IPv6 packet parsing
 option		IPSEC		# IPsec
 #option		KEY		# PF_KEY (implied by IPSEC)
 #option		NS		# XNS
@@ -79,6 +80,7 @@ option		IPFILTER	# IP packet filter for security
 option		IPFILTER_LOG	# use /dev/ipl to log IPF
 option		PPP_BSDCOMP	# PPP BSD compression
 option		PPP_DEFLATE
+#option		MROUTING	# Multicast router
 
 pseudo-device	loop	2	# network loopback
 pseudo-device	bpfilter 8	# packet filter
@@ -86,7 +88,7 @@ pseudo-device	sl	2	# CSLIP
 pseudo-device	ppp	2	# PPP
 pseudo-device	sppp		# Sync PPP/HDLC
 pseudo-device	tun	2	# network tunneling over tty
-pseudo-device	enc	4	# IPSEC needs the encapsulation interface
+pseudo-device	enc	1	# IPSEC needs the encapsulation interface
 #pseudo-device	strip	1	# Starmode Radio IP interface
 
 pseudo-device	pty	64	# pseudo-terminals
@@ -95,6 +97,11 @@ pseudo-device	vnd	4	# paging to files
 pseudo-device	ccd	4	# concatenated disk devices
 pseudo-device	ksyms	1	# kernel symbols device
 pseudo-device	bridge	2	# network bridging support
+#pseudo-device	vlan 	2	# IEEE 802.1Q VLAN 
 pseudo-device	gre	1	# GRE encapsulation interface
+
+# for IPv6
+pseudo-device	gif	4	# IPv[46] over IPv[46] tunnel (RFC1933)
+#pseudo-device	faith	1	# IPv[46] tcp relay translation i/f
 
 option		BOOT_CONFIG	# add support for boot -c

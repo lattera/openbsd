@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7 1997/11/04 07:45:34 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7.10.1 2001/05/14 22:05:25 niklas Exp $	 */
 /*	$NetBSD: svr4_ioctl.c,v 1.16 1996/04/11 12:54:41 christos Exp $	 */
 
 /*
@@ -37,7 +37,6 @@
 #include <sys/termios.h>
 #include <sys/tty.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <net/if.h>
 #include <sys/malloc.h>

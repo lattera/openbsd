@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_elf.c,v 1.2 2001/03/15 07:35:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_elf.c,v 1.2.4.1 2001/05/14 22:06:57 niklas Exp $	*/
 /*	$NetBSD: db_elf.c,v 1.13 2000/07/07 21:55:18 jhawk Exp $	*/
 
 /*-

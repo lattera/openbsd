@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/compat/common/compat_dir.c,v 1.2 2001/04/10 17:35:40 csapuntz Exp $	*/
+/* 	$OpenBSD: src/sys/compat/common/compat_dir.c,v 1.2.4.1 2001/05/14 22:04:17 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Constantine Sapuntzakis

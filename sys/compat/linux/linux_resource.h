@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_resource.h,v 1.1 2000/06/07 13:35:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_resource.h,v 1.1.6.1 2001/05/14 22:04:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Niklas Hallqvist

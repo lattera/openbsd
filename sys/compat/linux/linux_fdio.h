@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_fdio.h,v 1.1 2001/04/09 06:53:44 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_fdio.h,v 1.1.4.1 2001/05/14 22:04:39 niklas Exp $	*/
 /*	$NetBSD: linux_fdio.h,v 1.1 2000/12/10 14:12:16 fvdl Exp $	*/
 
 /*

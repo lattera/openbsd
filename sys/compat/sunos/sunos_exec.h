@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.h,v 1.1 2000/08/15 17:26:05 brad Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.h,v 1.1.6.1 2001/05/14 22:05:19 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.4 1994/10/25 23:03:22 deraadt Exp $	*/
 
 /*

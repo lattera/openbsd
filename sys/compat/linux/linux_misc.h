@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_misc.h,v 1.1 2001/04/02 21:43:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_misc.h,v 1.1.4.1 2001/05/14 22:04:46 niklas Exp $	*/
 /*	$NetBSD: linux_misc.h,v 1.3 1999/05/13 00:31:57 thorpej Exp $	*/
 
 /*-

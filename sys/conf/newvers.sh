@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22 1999/11/27 20:51:48 deraadt Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.1 2001/05/14 22:06:48 niklas Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -52,7 +52,7 @@ id=`basename ${d}`
 #	src/share/tmac/mdoc/doc-common
 #		change	.       ds oS OpenBSD X.X
 #		add	.	if "\\$2"X.X"  .as oS \0X.X
-#	src/share/tmac/mdocs/doc-syms
+#	src/share/tmac/mdoc/doc-syms
 #		ensure new release is listed
 #	src/share/mk/sys.mk
 #		OSMAJOR
@@ -62,15 +62,15 @@ id=`basename ${d}`
 #
 
 ost="OpenBSD"
-osr="2.6"
+osr="2.9"
 
-echo "char ostype[] = \"${ost}\";" > vers.c
-echo "char osrelease[] = \"${osr}\";" >> vers.c
-echo "char osversion[] = \"${id}#${v}\";" >> vers.c
-echo "char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };" >> vers.c
-echo \
-  "char version[] = \
-    \"${ost} ${osr}-current (${id}) #${v}: ${t}\\n    ${u}@${h}:${d}\\n\";" \
-  >> vers.c
+cat >vers.c <<eof
+char ostype[] = "${ost}";
+char osrelease[] = "${osr}";
+char osversion[] = "${id}#${v}";
+char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };
+char version[] =
+    "${ost} ${osr}-beta (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
+eof
 
-echo `expr ${v} + 1` > version
+expr ${v} + 1 > version

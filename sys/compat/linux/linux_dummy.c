@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4 2001/04/02 21:43:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.1 2001/05/14 22:04:36 niklas Exp $ */
 
 /*-
  * Copyright (c) 1994-1995 Søren Schmidt

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_cvt_errno.c,v 1.1 2000/08/04 15:47:54 ericj Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_cvt_errno.c,v 1.1.6.1 2001/05/14 22:05:04 niklas Exp $ */
 /* $NetBSD: osf1_cvt_errno.c,v 1.4 1999/05/01 02:16:01 cgd Exp $ */
 
 /*

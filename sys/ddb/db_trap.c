@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5 1997/07/19 22:31:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5.12.1 2001/05/14 22:07:01 niklas Exp $	*/
 /*	$NetBSD: db_trap.c,v 1.9 1996/02/05 01:57:18 christos Exp $	*/
 
 /* 
@@ -35,6 +35,7 @@
  */
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/systm.h>
 
 #include <vm/vm.h>
 
@@ -71,6 +72,13 @@ db_trap(type, code)
 			db_printf("Stopped at\t");
 		db_dot = PC_REGS(DDB_REGS);
 		db_print_loc_and_inst(db_dot);
+
+		if (panicstr != NULL) {
+			if (db_print_position() != 0)
+				db_printf("\n");
+			db_printf("Run at least 'trace' and 'ps' and include "
+			    "the output when reporting this panic.\n");
+		}
 
 		db_command_loop();
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_termios.c,v 1.10 1998/02/10 15:01:42 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_termios.c,v 1.10.10.1 2001/05/14 22:05:30 niklas Exp $	 */
 /*	$NetBSD: svr4_termios.c,v 1.9 1996/04/11 12:53:48 christos Exp $	 */
 
 /*
@@ -37,7 +37,6 @@
 #include <sys/termios.h>
 #include <sys/tty.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <net/if.h>
 #include <sys/malloc.h>

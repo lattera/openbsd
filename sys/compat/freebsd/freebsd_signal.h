@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_signal.h,v 1.1 2001/02/02 19:48:08 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_signal.h,v 1.1.4.1 2001/05/14 22:04:24 niklas Exp $	*/
 /*	$NetBSD: signal.h,v 1.42 1998/12/21 10:35:00 drochner Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/crypto/Attic/mbuf.c,v 1.3 2000/04/24 04:54:19 deraadt Exp $	*/
+/*      $OpenBSD: src/sys/crypto/Attic/mbuf.c,v 1.3.8.1 2001/05/14 22:06:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Theo de Raadt

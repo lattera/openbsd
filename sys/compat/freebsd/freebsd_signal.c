@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_signal.c,v 1.1 2001/02/02 19:48:07 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_signal.c,v 1.1.4.1 2001/05/14 22:04:23 niklas Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*

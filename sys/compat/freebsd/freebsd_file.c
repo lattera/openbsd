@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8 1999/10/27 07:32:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8.2.1 2001/05/14 22:04:21 niklas Exp $	*/
 /*	$NetBSD: freebsd_file.c,v 1.3 1996/05/03 17:03:09 christos Exp $	*/
 
 /*
@@ -49,6 +49,7 @@
 
 #include <sys/syscallargs.h>
 
+#include <compat/freebsd/freebsd_signal.h>
 #include <compat/freebsd/freebsd_syscallargs.h>
 #include <compat/freebsd/freebsd_util.h>
 
@@ -83,7 +84,7 @@ static char *
 convert_from_freebsd_mount_type(type)
 	int type;
 {
-	static char *netbsd_mount_type[] = {
+	static char *freebsd_mount_type[] = {
 		NULL,     /*  0 = MOUNT_NONE */
 		"ffs",	  /*  1 = "Fast" Filesystem */
 		"nfs",	  /*  2 = Network Filesystem */
@@ -106,9 +107,9 @@ convert_from_freebsd_mount_type(type)
 #endif
 	};
 
-	if (type < 0 || type >= ARRAY_LENGTH(netbsd_mount_type))
+	if (type < 0 || type >= ARRAY_LENGTH(freebsd_mount_type))
 		return (NULL);
-	return (netbsd_mount_type[type]);
+	return (freebsd_mount_type[type]);
 }
 
 int

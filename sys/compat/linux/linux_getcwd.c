@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1 2000/03/27 22:38:12 jasoni Exp $ */
+/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1.8.1 2001/05/14 22:04:41 niklas Exp $ */
 /* $NetBSD: vfs_getcwd.c,v 1.3.2.3 1999/07/11 10:24:09 sommerfeld Exp $ */
 
 /*-
