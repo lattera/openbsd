@@ -1,0 +1,32 @@
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		cd{:--:}OSrev.fs The standard MACHINE boot and installation
+				CD image; see below.
+
+DistributionDescription(ten)
+
+OpenBSDbase(25.8,74.4,shared)
+
+OpenBSDcomp(21.4,71.4,shared)
+
+OpenBSDetc(1.2,3.9)
+
+OpenBSDgame(2.8,6.3)
+
+OpenBSDman(5.8,20.7)
+
+OpenBSDmisc(1.7,5.6)
+
+OpenBSDxbase(8.6,24.5)
+
+OpenBSDxfont(32.3,35.9)
+
+OpenBSDxserv(7.7,21.4)
+
+OpenBSDxshare(1.9,9.4)
