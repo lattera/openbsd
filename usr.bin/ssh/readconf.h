@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.30.2.1 2001/09/27 19:03:55 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.30.2.2 2001/11/15 00:15:19 miod Exp $"); */
 
 #ifndef READCONF_H
 #define READCONF_H
@@ -101,6 +101,7 @@ typedef struct {
 	int     num_remote_forwards;
 	Forward remote_forwards[SSH_MAX_FORWARDS_PER_DIRECTION];
 	int	clear_forwardings;
+	int	no_host_authentication_for_localhost;
 }       Options;
 
 

@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.31.2.1 2001/09/27 19:03:55 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.31.2.2 2001/11/15 00:15:19 miod Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/evp.h>
@@ -820,9 +820,9 @@ try_challenge_response_authentication(void)
 	u_int clen;
 	char prompt[1024];
 	char *challenge, *response;
-	
-	debug("Doing challenge reponse authentication.");
-	
+
+	debug("Doing challenge response authentication.");
+
 	for (i = 0; i < options.number_of_password_prompts; i++) {
 		/* request a challenge */
 		packet_start(SSH_CMSG_AUTH_TIS);
@@ -982,7 +982,7 @@ ssh_kex(char *host, struct sockaddr *hostaddr)
 	k.type = KEY_RSA1;
 	k.rsa = host_key;
 	if (verify_host_key(host, hostaddr, &k) == -1)
-		fatal("host_key verification failed");
+		fatal("Host key verification failed.");
 
 	client_flags = SSH_PROTOFLAG_SCREEN_NUMBER | SSH_PROTOFLAG_HOST_IN_FWD_OPEN;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.9.2.1 2001/09/27 19:03:55 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.9.2.2 2001/11/15 00:15:19 miod Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -27,7 +27,7 @@
 #define SSHCONNECT_H
 
 int
-ssh_connect(const char *, struct sockaddr_storage *, u_short, int,
+ssh_connect(const char *, struct sockaddr_storage *, u_short, int, int,
     int, struct passwd *, const char *);
 
 void

@@ -40,7 +40,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.195.2.1 2001/09/27 19:03:55 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.195.2.2 2001/11/15 00:15:19 miod Exp $");
 
 #include <openssl/dh.h>
 #include <openssl/bn.h>
@@ -71,6 +71,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.195.2.1 2001/09/27 19:03:55 jason Ex
 #include "auth.h"
 #include "misc.h"
 #include "dispatch.h"
+#include "channels.h"
 
 #ifdef LIBWRAP
 #include <tcpd.h>
@@ -656,6 +657,7 @@ main(int ac, char **av)
 		}
 	}
 	SSLeay_add_all_algorithms();
+	channel_set_af(IPv4or6);
 
 	/*
 	 * Force logging to stderr until we have loaded the private host

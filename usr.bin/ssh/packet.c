@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.61.2.1 2001/09/27 19:03:54 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.61.2.2 2001/11/15 00:15:19 miod Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -1226,6 +1226,7 @@ packet_set_maxsize(int s)
 		log("packet_set_maxsize: bad size %d", s);
 		return -1;
 	}
+	called = 1;
 	debug("packet_set_maxsize: setting to %d", s);
 	max_packet_size = s;
 	return s;
