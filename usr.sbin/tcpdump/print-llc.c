@@ -24,7 +24,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /usr/src/usr.sbin/tcpdump/RCS/print-llc.c,v 1.2 1997/07/20 17:16:38 denny Exp denny $";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-llc.c,v 1.6 1997/07/23 02:59:02 denny Exp $";
 #endif
 
 #include <sys/param.h>
@@ -164,6 +164,10 @@ llc_print(const u_char *p, u_int length, u_int caplen,
 
 		printf("%s/%c", m, f);
 
+		if (caplen < 6) {
+			default_print_unaligned(p, caplen);
+			return (0);
+		}
 		p += 3;
 		length -= 3;
 		caplen -= 3;
