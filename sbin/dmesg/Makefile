@@ -1,9 +1,7 @@
-#	$OpenBSD: src/sbin/dmesg/Makefile,v 1.3 1997/09/21 11:36:15 deraadt Exp $
+#	$OpenBSD: src/sbin/dmesg/Makefile,v 1.4 2001/06/22 22:06:22 mickey Exp $
 
 PROG=	dmesg
 MAN=	dmesg.8
-BINGRP=	kmem
-BINMODE=2555
 LDADD=	-lkvm
 DPADD=	${LIBKVM}
 
