@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.51.2.2 2004/03/03 08:37:05 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.51.2.3 2004/03/04 03:28:09 brad Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -81,8 +81,8 @@ struct tcpcb {
 #define TF_RCVD_CE	0x00010000	/* send ECE in subsequent segs */
 #define TF_SEND_CWR	0x00020000	/* send CWR in next seg */
 #define TF_DISABLE_ECN	0x00040000	/* disable ECN for this connection */
-#define TF_REASSLOCK	0x00080000	/* reassembling or draining */
 #endif
+#define TF_REASSLOCK	0x00080000	/* reassembling or draining */
 
 	struct	mbuf *t_template;	/* skeletal packet for transmit */
 	struct	inpcb *t_inpcb;		/* back pointer to internet pcb */
