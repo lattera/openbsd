@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/hp300/stand/Attic/ite_hy.c,v 1.3 1997/01/17 08:32:49 downsj Exp $	*/
 /*	$NetBSD: ite_hy.c,v 1.3 1996/03/03 04:23:37 thorpej Exp $	*/
 
 /*
