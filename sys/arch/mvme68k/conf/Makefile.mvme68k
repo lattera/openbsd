@@ -1,3 +1,5 @@
+#	$Id$
+
 # This makefile is constructed from a machine description:
 #	config machineid
 # Most changes should be made in the machine description
