@@ -1,0 +1,344 @@
+.\"	$OpenBSD: src/sbin/atactl/atactl.8,v 1.6 2001/04/23 15:30:26 aaron Exp $
+.\"	$NetBSD: atactl.8,v 1.5 1999/02/24 18:49:14 jwise Exp $
+.\"
+.\" Copyright (c) 1998 The NetBSD Foundation, Inc.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to The NetBSD Foundation
+.\" by Ken Hornstein.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"        This product includes software developed by the NetBSD
+.\"        Foundation, Inc. and its contributors.
+.\" 4. Neither the name of The NetBSD Foundation nor the names of its
+.\"    contributors may be used to endorse or promote products derived
+.\"    from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+.\" TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+.\" PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 18, 1998
+.Dt ATACTL 8
+.Os
+.Sh NAME
+.Nm atactl
+.Nd a program to manipulate ATA (IDE) devices
+.Sh SYNOPSIS
+.Nm
+.Ar device
+.Ar command
+.Oo
+.Ar arg Oo ...
+.Oc
+.Oc
+.Sh DESCRIPTION
+.Nm
+allows a user or system administrator to issue commands to and otherwise
+control devices which reside on standard IDE and ATA controllers.
+It is used by specifying
+a device to manipulate, the command to perform, and any arguments
+the command may require.
+.Pp
+The following commands may be used on IDE and ATA devices.
+Note that not all devices support all commands.
+.Pp
+If the
+.Ar device
+is specified without a
+.Ar command ,
+the
+.Cm identify
+command is implied.
+.Pp
+.Cm identify
+.Pp
+Identify the specified device, displaying the device's vendor, product,
+revision strings, supported capabilities and enabled capabilities.
+.Pp
+.Cm idle
+.Pp
+Place the specified device into Idle mode.
+This mode may consume less power than Active mode.
+.Pp
+.Cm standby
+.Pp
+Place the specified device into Standby mode.
+This mode will consume less power than Idle mode.
+.Pp
+.Cm sleep
+.Pp
+Place the specified device into Sleep mode.
+This mode will consume less power than Standby mode,
+but requires a device reset to resume operation.
+Typically the
+.Xr wd 4
+driver performs this reset automatically, but this should still be
+used with caution.
+.Pp
+.Cm setidle
+.Ar standby-timer
+.Pp
+Places the specified device into Idle mode, and sets the Standby timer
+to
+.Ar standby-timer
+seconds.
+A value of 0 will disable the Standby timer.
+.Pp
+.Cm setstandby
+.Ar standby-timer
+.Pp
+Places the specified device into Standby mode, and sets the Standby timer
+to
+.Ar standby-timer
+seconds.
+A value of 0 will disable the Standby timer.
+.Pp
+.Cm checkpower
+.Pp
+Will print out if the device is in Active, Idle, or Standby power
+management mode.
+.Pp
+.Cm apmset
+.Ar power-management-level
+.Pp
+Enables and sets the advanced power management level to the requested
+level on the specified device (if supported). Device performance may
+increase with increasing power management levels at the cost of
+potentially requiring more power. Values up to and including 126 allow
+the device to go into standby mode and spin-down the disk. This 
+.Em may cause disk time-outs
+and is therefor
+.Em not
+recommended. These values are more suitable optimization for low power
+usage on infrequently used devices. Values 127 up to and including 253
+do not allow the device to go to standby mode and are more suitable for
+optimization for performance. Support for advanced power management is
+indicated by the device with
+.Sq Advanced Power Management feature set
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm apmdisable
+.Pp
+Disables support for advanced power management on the specified device.
+Note that devices supporting advanced powermanagement may refuse to
+disable it, resulting in an 
+.Sq ATA device returned Aborted Command
+warning.
+.Pp
+.Cm acousticset
+.Ar acoustic-management-level
+.Pp
+Enables and sets the automatic acoustic management level to the requested
+level on the specified device (if supported). Device performance may
+increase with increasing automatic acoustic management levels at the cost of
+potentially generating more noise and requiring more power. Valid values are
+0 up to and including 126. Support for automatic acoustic management is
+indicated by the device with
+.Sq Automatic Acoustic Management feature set
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm acousticdisable
+.Pp
+Disables support for automatic acoustic management on the specified device.
+Note that devices supporting automatic acoustic management may refuse to
+disable it, resulting in an
+.Sq ATA device returned Aborted Command
+warning.
+.Pp
+.Cm podenable
+.Pp
+Allows the specified device to revert to power-on default (pod) settings
+after a reset.
+.Pp
+.Cm poddisable
+.Pp
+Disallows the specified device to revert to power-on default (pod) settings
+after a reset.
+.Pp
+.Cm puisenable
+.Pp
+Enables power-up in standby (puis) on the specified device, causing the 
+device to wait with spinning up the disks after power-up. This may cause
+problems at boot if the device is to slow in spin-up. This options is
+therefor
+.Em not recommended
+unless really understand the implications. Note that the power-up in
+standby mode stays enabled over power-downs, hardware and software
+resets. 
+Support for power-up in standby is indicated by the device with
+.Sq Power-up in standby feature set
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm puisdisable
+.Pp
+Disables power-up in standby (puis) on the specified device, causing the 
+device to spin up the disks after power-up. This should be the factory
+default setting of the device and it is recommended to leave this
+setting disabled.
+.Pp
+.Cm puisspinup
+.Pp
+Explicitly spins up the device if it powered-up into standby mode (i.e.
+power-up in standby was enabled).
+.Pp
+.Cm readaheadenable
+.Pp
+Enables read look-ahead on the specified device. This may increase
+performance. Support for and status of read look-ahead is indicated by
+the device with
+.Sq read look-ahead
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm readaheaddisable
+.Pp
+Disables read look-ahead on the specified device. This may decrease
+performance. Note that the device may use
+.Sq vendor specific
+behaviour in implementing this, so it is
+.Em not
+recommended to issue this command on a disk containing any currently
+mounted filesystems.
+.Pp
+.Cm smartenable
+.Pp
+Enables SMART (Self-Monitoring, Analysis, and Reporting Technology) on the
+specified device (if supported). This causes the device to record information
+for prediction of device degradation and/or faults. Support for SMART is
+indicated by the device with
+.Sq SMART feature set
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm smartdisable
+.Pp
+Disables support for SMART on the specified device. Note that this means that
+the device will no longer record any SMART information. 
+.Pp
+.Cm smartstatus
+.Pp
+Reads the reliability status of the specified device. If the device reports
+that one of its thresholds is exceeded (a strong indication of imminent
+failure), the warning
+.Sq SMART threshold exceeded!
+is printed to stderr and a status of 2 is returned. Note that SMART
+.Em must
+be enabled or the device will return an error.
+.Pp
+.Cm writecachedisable
+.Pp
+Disable the write cache on the specified device (if supported). This may
+decrease performance.  Support for and status of write caching is
+indicated by the device with
+.Sq write cache
+in the output of the
+.Cm identify
+command. 
+.Pp
+.Cm writecacheenable
+.Pp
+Enables the write cache on the specified device (if supported). This may
+increase performance, however data still in the device's cache at
+powerdown
+.Em may be lost.
+The
+.Xr wd 4
+driver performs a cache flush automatically before shutdown.
+.Sh EXAMPLES
+.Cm atactl /dev/wd0c identify
+.Pp
+Displays the vendor, product, revision strings and capabilities (such as
+support for SMART) as reported by
+.Pa /dev/wd0 .
+.Pp
+.Cm atactl /dev/wd1c smartenable
+.Pp
+Enables the SMART support on
+.Pa /dev/wd1
+for detection of early warning signs of device failure.
+.Pp
+.Cm 0 * * * * /sbin/atactl /dev/wd0c smartstatus >/dev/null
+.Pp
+In a
+.Xr crontab 5
+entry queries
+.Pa /dev/wd0
+each hour for early warning signs of failure. If the device exceeded one
+of the SMART thresholds,
+.Nm
+will output
+.Sq SMART threshold exceeded!
+to stderr and 
+.Xr cron 8
+will mail it.
+.Sh DIAGNOSTICS
+.Pp
+Not all devices are created equally. Some may not support the feature sets 
+and/or commands needed to perform the requested action, even when the
+.Cm identify
+command indicates support for the requested action. The device will
+typically respond with an
+.Sq ATA device returned Aborted Command
+if the requested action is not supported. Similarly a device might
+not implement all commands in a feature set, so even though disabling a
+feature works, enabling might not.
+.Sh SEE ALSO
+.Xr ioctl 2 ,
+.Xr wd 4
+.Sh AUTHOR
+The
+.Nm
+command was written by Ken Hornstein.
+It was based heavily on the
+.Xr scsictl 8
+command written by Jason R. Thorpe.
+Support for acoustic management, advanced power management, power-up in
+standby, read look-ahead and SMART was added by Wouter Slegers.
+.Sh HISTORY
+The
+.Nm
+command first appeared in
+.Ox 2.6 .
+Support for acoustic management, advanced power management, power-up in
+standby, read look-ahead and SMART was added in
+.Ox 2.9 .
+.Sh BUGS
+The output from the
+.Cm identify
+command is rather ugly.
+.Pp
+Disabling read look-head with the
+.Cm readaheaddisable
+might cause problems with mounted filesystems on that device.
+.Pp
+There is no support for reading SMART logs or initiating a SMART
+selftest.
+.Pp
+There is no support for the Secure Mode commands (in particular the
+Security Erase Unit).
