@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootsd/Attic/filesystem.c,v 1.3 1996/04/28 10:48:19 deraadt Exp $ */
 
 /*
  * Copyright (c) 1993 Philip A. Nelson.

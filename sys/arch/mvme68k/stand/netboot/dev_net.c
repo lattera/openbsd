@@ -1,4 +1,4 @@
-/*	$Id: dev_net.c,v 1.3 1995/11/07 08:50:59 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/dev_net.c,v 1.5 1996/04/28 10:49:19 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Gordon W. Ross

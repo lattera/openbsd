@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/sboot.c,v 1.4 1996/04/28 10:49:43 deraadt Exp $ */
+
 /*
  * Copyright (c) 1995 Theo de Raadt
  * 

@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/10/93
-#	     $Id: Makefile,v 1.1.1.1 1995/10/18 10:44:12 deraadt Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/bootsd/Makefile,v 1.3 1996/04/28 10:48:15 deraadt Exp $
 
 RELOC=0x3F0000 
 

@@ -1,4 +1,4 @@
-/*	$Id: if_le.c,v 1.3 1995/11/07 08:51:02 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/if_le.c,v 1.5 1996/04/28 10:49:24 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

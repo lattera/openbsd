@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.6 1995/12/07 03:28:33 deraadt Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/Makefile,v 1.8 1996/04/28 10:48:52 deraadt Exp $
 
 LIB=sa
 

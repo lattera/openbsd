@@ -1,4 +1,4 @@
-|	$Id$
+|	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/oc_cksum.S,v 1.3 1996/04/28 10:49:42 deraadt Exp $
 
 | Copyright (c) 1988 Regents of the University of California.
 | All rights reserved.

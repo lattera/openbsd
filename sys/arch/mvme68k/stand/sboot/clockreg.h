@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/clockreg.h,v 1.3 1996/04/28 10:49:35 deraadt Exp $ */
 
 /*
  * Copyright (c) 1992, 1993

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bugcrt/m88k/Attic/bugcrt.c,v 1.3 1996/04/28 10:48:30 deraadt Exp $ */
+
 #include <sys/types.h>
 #include <machine/prom.h>
 

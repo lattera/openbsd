@@ -1,4 +1,4 @@
-/*	$Id: boot.c,v 1.5 1995/12/06 10:54:55 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootsd/boot.c,v 1.7 1996/04/28 10:48:17 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

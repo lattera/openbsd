@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/Attic/config.h,v 1.3 1996/04/28 10:48:59 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

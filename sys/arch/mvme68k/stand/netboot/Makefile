@@ -1,4 +1,4 @@
-#	$Id$
+#	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/Makefile,v 1.3 1996/04/28 10:49:16 deraadt Exp $
 
 RELOC=0x3F0000
 

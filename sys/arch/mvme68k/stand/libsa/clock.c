@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/clock.c,v 1.2 1996/04/28 10:48:57 deraadt Exp $ */
+
 #include <sys/types.h>
 
 #include "clockreg.h"

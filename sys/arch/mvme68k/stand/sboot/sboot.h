@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/sboot.h,v 1.2 1996/04/28 10:49:44 deraadt Exp $ */
+
 /*
  * Copyright (c) 1995 Charles D. Cranor and Seth Widoff
  * All rights reserved.

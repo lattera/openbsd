@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/Attic/gets.c,v 1.3 1996/04/28 10:49:05 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

@@ -1,4 +1,4 @@
-#	$Id$
+#	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/Makefile,v 1.3 1996/04/28 10:49:31 deraadt Exp $
 
 S=	${.CURDIR}/../../../..
 INCL?= -I${.CURDIR} -I${.CURDIR}/../libsa -I${S}/lib/libsa -I${S}
