@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/window/Attic/wwdelline.c,v 1.2 1996/06/26 05:43:40 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/window/Attic/wwdelline.c,v 1.3 1997/02/25 00:04:47 downsj Exp $	*/
 /*	$NetBSD: wwdelline.c,v 1.3 1995/09/28 10:35:24 tls Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 #if 0
 static char sccsid[] = "@(#)wwdelline.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/window/Attic/wwdelline.c,v 1.2 1996/06/26 05:43:40 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/window/Attic/wwdelline.c,v 1.3 1997/02/25 00:04:47 downsj Exp $";
 #endif
 #endif /* not lint */
 
