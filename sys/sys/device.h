@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.7 2003/06/07 11:09:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.8 2004/06/06 21:57:11 deraadt Exp $	*/
 /*	$NetBSD: device.h,v 1.15 1996/04/09 20:55:24 cgd Exp $	*/
 
 /*
@@ -66,6 +66,8 @@ enum devact {
 	DVACT_ACTIVATE,		/* activate the device */
 	DVACT_DEACTIVATE	/* deactivate the device */
 };
+
+#include <sys/lock.h>
 
 struct device {
 	enum	devclass dv_class;	/* this device's classification */
