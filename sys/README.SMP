@@ -32,4 +32,25 @@ you mainly need to carry out the following procedure.
 * Commit to the SMP branch in pieces to not lock too much of the sys tree
   in the repository, Nice chunks are perhaps 100-300 files.
 
-  
+  [ There are some bugs in cvs related to brach merges:
+    I) Readdition of files that have gone dead.  They need to have
+       the timestamp in the Entries file changed to /dummy timestamp/
+       in order to be accepted by commit.
+    II) Under som circumstances cvs just bombs on a file leaving it
+        updated and locked in the repository.  In that case something
+        like this is needed:
+
+	x=path/to/file/relative/to/sys
+	ssh cvs.openbsd.org "rcs -u /cvs/src/sys/$x,v"
+        rm $x
+        cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $x
+        cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $x
+
+    Readdition of directories is not working at all, they need to be
+    manually added. ]
+
+* A nice check is to browse the output of:
+
+  $ cvs -q rdiff -u -r$NEW_TAG -rSMP
+
+  It should just by differences related to multiprocessor support.
