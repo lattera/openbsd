@@ -1,0 +1,34 @@
+#!/bin/sh
+#	$OpenBSD: src/distrib/sets/maketars,v 1.14 2002/03/01 01:38:58 miod Exp $
+
+
+RELEASE=$1
+
+if [ "X${RELEASE}" == "X" ]; then
+	echo "Usage: `basename $0` <OSREVISION>"
+	exit 1
+fi
+
+if [ "X${RELEASEDIR}" = "X" ]; then
+	echo RELEASEDIR must be set
+	exit 1
+fi
+
+if [ "X${DESTDIR}" = "X" ]; then
+	echo DESTDIR must be set
+	exit 1
+fi
+
+arch=`machine`
+lists=`pwd`/lists
+tardir=$RELEASEDIR
+fsdir=$DESTDIR
+
+cd $fsdir
+
+for i in base comp etc game man misc; do
+	echo -n "$i: "
+	cat ${lists}/$i/mi ${lists}/$i/md.${arch} | sort | \
+	    pax -w -d | gzip -9 > ${tardir}/$i${RELEASE}.tgz
+	echo    "done."
+done
