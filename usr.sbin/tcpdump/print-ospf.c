@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf.c,v 1.8 2000/10/03 14:31:58 ho Exp $	*/
+
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
@@ -23,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ospf.c,v 1.6 1999/07/28 20:41:36 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ospf.c,v 1.7 2000/04/26 21:35:42 jakob Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>

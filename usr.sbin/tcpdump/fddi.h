@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/fddi.h,v 1.6 2000/10/03 14:31:55 ho Exp $	*/
+
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996
  *	The Regents of the University of California.  All rights reserved.
@@ -18,7 +20,7 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: fddi.h,v 1.8 96/06/03 03:06:04 leres Exp $ (LBL)
+ * @(#) $Header: /cvs/src/usr.sbin/tcpdump/fddi.h,v 1.5 1996/12/12 16:22:55 bitblt Exp $ (LBL)
  */
 
 /*

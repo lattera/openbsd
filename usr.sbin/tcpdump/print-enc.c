@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-enc.c,v 1.6 2000/10/03 14:31:57 ho Exp $	*/
+
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996
  *	The Regents of the University of California.  All rights reserved.
@@ -21,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-enc.c,v 1.4 1999/12/08 21:45:00 angelos Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-enc.c,v 1.5 2000/04/18 06:06:17 angelos Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>

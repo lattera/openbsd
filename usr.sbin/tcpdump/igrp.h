@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/igrp.h,v 1.4 2000/10/03 14:31:55 ho Exp $	*/
+
 /* Cisco IGRP definitions */
 
 /* IGRP Header */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-sl.c,v 1.10 2000/10/03 14:31:58 ho Exp $	*/
+
 /*
  * Copyright (c) 1989, 1990, 1991, 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
@@ -21,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-sl.c,v 1.8 1999/09/16 20:58:47 brad Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-sl.c,v 1.9 2000/04/26 21:35:43 jakob Exp $ (LBL)";
 #endif
 
 #ifdef HAVE_NET_SLIP_H

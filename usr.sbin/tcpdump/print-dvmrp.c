@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-dvmrp.c,v 1.4 2000/10/03 14:31:56 ho Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996
  *	The Regents of the University of California.  All rights reserved.
@@ -21,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-dvmrp.c,v 1.2 1996/12/12 16:22:39 bitblt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-dvmrp.c,v 1.3 2000/04/26 21:35:40 jakob Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
