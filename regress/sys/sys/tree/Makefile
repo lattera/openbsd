@@ -1,5 +1,5 @@
-#	$OpenBSD: src/regress/sys/sys/tree/Makefile,v 1.1 2002/06/11 21:55:57 provos Exp $
+#	$OpenBSD: src/regress/sys/sys/tree/Makefile,v 1.2 2002/06/11 22:10:22 provos Exp $
 
-PROG=	splay-test
+SUBDIRS= splay rb
 
 .include <bsd.regress.mk>
