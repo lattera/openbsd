@@ -1,0 +1,90 @@
+TopPart
+
+OpenBSDfloppy
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+As well you may be interested in
+
+.../OSREV/tools/
+		miscellaneous i386 installation utilities like
+		rawrite.exe, ntrw.exe, gzip.exe, and pfdisk.exe; 
+		see installation section, below.
+
+There are several ways to boot a supported PowerPC Macintosh system into
+the OpenBSD installer.  Unfortunately they all currently require some
+limited knowledge of Open Firmware commands.  Examples are provided below
+for common configurations.
+
+To access Open Firmware:
+Upon booting, simultaneously hold down the Command, Option, O and F
+keys until you are presented with a > prompt at which you can enter
+commands, such as the "boot" command or others that allow you to view the
+structure of the device tree. (cd /devalias, .properties)
+
+Typical boot commands can be used by entering them at the Open Firmware
+prompt and pressing enter/return.
+
+To netboot from a pre-configured bootp/tftp/nfs server containing the
+"ofwboot" and "bsd.rd" files at the root directory of the tftp server:
+
+	boot enet:,ofwboot /bsd.rd
+
+To boot from a HFS formatted CD containing the "ofwboot", "bsd.rd" and all
+other installation files at the root directory of the CD:
+
+	boot cd:,ofwboot /OSREV/powerpc/bsd.rd
+
+Post-install, you will need to boot into OpenBSD from a hard drive, and
+may need to reboot to Mac OS if you have it installed on another drive
+connected to the system.  Typical commands for this are as follows:
+
+To boot to an OpenBSD system installed on an ATA drive configured 
+as a slave and connected to the same bus as the CD/DVD drive on a Power
+Macintosh G4 (Tower):
+	
+	boot ide1:,ofwboot /bsd
+
+To reboot to Mac OS:
+
+	boot boot hd:,\\:tbxi
+
+Typically, substituting the device alias (devalias) will allow for easy to
+understand device selection.  Typical examples from a Power Macintosh G4
+(Tower):
+
+ultra0 = hd = master device, primary ATA bus (factory-installed drive)
+ultra1 = slave device, primary ATA bus
+ide0 = cd = master device, secondary ATA bus (CD/DVD drive)
+ide1 = slave device, secondary ATA bus (Zip drive, if installed)
+enet = motherboard ethernet device
+
+NOTE:
+The powerpc port does not currently support sharing the disk with MacOS
+This is an important fact on the iMac which does not support more than
+one disk.
+
+DistributionDescription
+
+OpenBSDbase(40.4M,101.3M)
+
+OpenBSDcomp(14.3M,48.3M)
+
+OpenBSDetc(164.4K,740.0K)
+
+OpenBSDgame(6.1M,14.2M)
+
+OpenBSDman(3.4M,13.1M)
+
+OpenBSDmisc(1.6M,5.4M)
+
+OpenBSDxbase(35.2M,85.6M)
+
+OpenBSDxshare(1.4M,8.3M)
+
+OpenBSDxfont(1.4M,8.3M)
+
+OpenBSDxserv(2.7M,7.4M)
+
