@@ -52,7 +52,7 @@
 
 #ifndef lint
 static  char    sccsid[] ="@(#)ipnat.c	1.9 6/5/96 (C) 1993 Darren Reed";
-static	char	rcsid[] = "$Id: ipnat.c,v 1.3 1996/07/18 05:08:39 dm Exp $";
+static	char	rcsid[] = "$Id: ipnat.c,v 1.4 1996/10/08 07:33:33 niklas Exp $";
 #endif
 
 #if	SOLARIS
@@ -513,7 +513,7 @@ char *line;
 				ipn.in_flags = IPN_TCP;
 			else if (!strcasecmp(s, "udp"))
 				ipn.in_flags = IPN_UDP;
-			else if (!strcasecmp(s, "tcpudp"))
+			else if (!strcasecmp(s, "tcp/udp"))
 				ipn.in_flags = IPN_TCPUDP;
 			else {
 				fprintf(stderr,
