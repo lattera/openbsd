@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.4 2000/07/07 13:22:42 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.5 2000/07/08 19:53:12 rahnds Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
