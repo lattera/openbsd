@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/lib/libz/gzio.c,v 1.6 2001/09/19 10:58:07 mpech Exp $	*/
+/*	$OpenBSD: src/lib/libz/gzio.c,v 1.6.2.1 2002/03/13 16:07:26 jason Exp $	*/
 /* gzio.c -- IO on .gz files
- * Copyright (C) 1995-1998 Jean-loup Gailly.
+ * Copyright (C) 1995-2002 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  *
  * Compile this file with -DNO_DEFLATE to avoid the compression code.

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libz/inffixed.h,v 1.1.14.1 2002/03/13 16:07:26 jason Exp $	*/
 /* inffixed.h -- table for decoding fixed codes
  * Generated automatically by the maketree.c program
  */

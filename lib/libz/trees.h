@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libz/trees.h,v 1.1.14.1 2002/03/13 16:07:26 jason Exp $	*/
 /* header created automatically with -DGEN_TREES_H */
 
 local const ct_data static_ltree[L_CODES+2] = {

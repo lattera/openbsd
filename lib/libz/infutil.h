@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/lib/libz/Attic/infutil.h,v 1.2.14.1 2002/03/13 16:07:26 jason Exp $	*/
 /* infutil.h -- types and macros common to blocks and codes
- * Copyright (C) 1995-1998 Mark Adler
+ * Copyright (C) 1995-2002 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
