@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/user/user.c,v 1.13.2.2 2000/07/12 13:55:23 jason Exp $ */
+/* $OpenBSD: src/usr.sbin/user/user.c,v 1.13.2.3 2000/11/29 02:43:27 jason Exp $ */
 /* $NetBSD: user.c,v 1.17 2000/04/14 06:26:55 simonb Exp $ */
 
 /*
@@ -911,8 +911,10 @@ moduser(char *login, char *newlogin, user_t *up)
 		if (up->u_uid == -1) {
 			up->u_uid = pwp->pw_uid;
 		}
-		/* if -g=uid was specified, check gid is unused */
-		if (strcmp(up->u_primgrp, "=uid") == 0) {
+		if (up->u_primgrp == NULL) {
+			gid = pwp->pw_gid;
+		} else if (strcmp(up->u_primgrp, "=uid") == 0) {
+		  	/* if -g=uid was specified, check gid is unused */
 			if (getgrgid((gid_t)(up->u_uid)) != (struct group *) NULL) {
 				(void) close(ptmpfd);
 				(void) pw_abort();
@@ -938,6 +940,8 @@ moduser(char *login, char *newlogin, user_t *up)
 		/* if home directory hasn't been given, use the old one */
 		if (!up->u_homeset) {
 			(void) strlcpy(home, pwp->pw_dir, sizeof(home));
+		} else {
+		  	(void) strlcpy(home, up->u_home, sizeof(home));
 		}
 		expire = 0;
 		if (up->u_expire != NULL) {
@@ -1251,6 +1255,8 @@ usermod(int argc, char **argv)
 	(void) memset(newuser, 0, sizeof(newuser));
 	read_defaults(&u);
 	u.u_uid = -1;
+	free(u.u_primgrp);
+	u.u_primgrp = NULL;
 	have_new_user = 0;
 	while ((c = getopt(argc, argv, "G:c:d:e:f:g:l:mos:u:" MOD_OPT_EXTENSIONS)) != -1) {
 		switch(c) {
