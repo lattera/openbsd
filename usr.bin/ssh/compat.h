@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/compat.h,v 1.11.2.6 2002/03/08 17:04:42 brad Exp $	*/
+
 /*
  * Copyright (c) 1999, 2000, 2001 Markus Friedl.  All rights reserved.
  *
@@ -21,7 +23,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/compat.h,v 1.11.2.5 2001/09/27 00:15:41 miod Exp $"); */
 
 #ifndef COMPAT_H
 #define COMPAT_H

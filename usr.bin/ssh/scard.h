@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.2.2 2002/03/08 17:04:42 brad Exp $	*/
+
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -21,8 +23,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-/* $OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.2.1 2001/09/27 18:27:43 miod Exp $ */
 
 #include <openssl/engine.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sftp.h,v 1.2.2.5 2001/09/27 00:15:42 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sftp.h,v 1.2.2.6 2002/03/08 17:04:43 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -38,6 +38,7 @@
 #define SSH2_FXP_READ			5
 #define SSH2_FXP_WRITE			6
 #define SSH2_FXP_LSTAT			7
+#define SSH2_FXP_STAT_VERSION_0		7
 #define SSH2_FXP_FSTAT			8
 #define SSH2_FXP_SETSTAT		9
 #define SSH2_FXP_FSETSTAT		10

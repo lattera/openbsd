@@ -1,4 +1,3 @@
-/* $OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.1.4.2 2001/09/27 00:15:43 miod Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -36,6 +35,7 @@
  */
 
 #include "includes.h"
+RCSID("$OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.1.4.3 2002/03/08 17:04:43 brad Exp $");
 
 #include "sshtty.h"
 #include "log.h"
@@ -46,7 +46,7 @@ static int _in_raw_mode = 0;
 int
 in_raw_mode(void)
 {
-	return _in_raw_mode;	
+	return _in_raw_mode;
 }
 
 struct termios

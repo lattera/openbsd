@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/fatal.c,v 1.1 2002/02/22 12:20:34 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/fatal.c,v 1.1.4.1 2002/03/08 17:04:42 brad Exp $");
 
 #include "log.h"
 

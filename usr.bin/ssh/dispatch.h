@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.3.2.5 2001/09/27 00:15:42 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.3.2.6 2002/03/08 17:04:42 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -28,9 +28,11 @@ enum {
 	DISPATCH_NONBLOCK
 };
 
-typedef void dispatch_fn(int, int, void *);
+typedef void dispatch_fn(int, u_int32_t, void *);
 
 void	 dispatch_init(dispatch_fn *);
 void	 dispatch_set(int, dispatch_fn *);
+void	 dispatch_range(u_int, u_int, dispatch_fn *);
 void	 dispatch_run(int, int *, void *);
-void	 dispatch_protocol_error(int, int, void *);
+void	 dispatch_protocol_error(int, u_int32_t, void *);
+void	 dispatch_protocol_ignore(int, u_int32_t, void *);

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.5.2.3 2002/03/08 17:04:43 brad Exp $	*/
+
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -52,7 +54,21 @@
  *
  *     192-255  Local extensions
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.5.2.2 2001/09/27 00:15:43 miod Exp $"); */
+
+/* ranges */
+
+#define SSH2_MSG_TRANSPORT_MIN				1
+#define SSH2_MSG_TRANSPORT_MAX				49
+#define SSH2_MSG_USERAUTH_MIN				50
+#define SSH2_MSG_USERAUTH_MAX				79
+#define SSH2_MSG_CONNECTION_MIN				80
+#define SSH2_MSG_CONNECTION_MAX				127
+#define SSH2_MSG_RESERVED_MIN				128
+#define SSH2_MSG_RESERVED_MAX				191
+#define SSH2_MSG_LOCAL_MIN				192
+#define SSH2_MSG_LOCAL_MAX				255
+#define SSH2_MSG_MIN					1
+#define SSH2_MSG_MAX					255
 
 /* transport layer: generic */
 

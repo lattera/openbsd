@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/match.h,v 1.4.2.5 2001/09/27 00:15:42 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/match.h,v 1.4.2.6 2002/03/08 17:04:42 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -14,8 +14,9 @@
 #ifndef MATCH_H
 #define MATCH_H
 
-int      match_pattern(const char *, const char *);
-int      match_hostname(const char *, const char *, u_int);
+int	 match_pattern(const char *, const char *);
+int	 match_pattern_list(const char *, const char *, u_int, int);
+int	 match_hostname(const char *, const char *, u_int);
 int	 match_host_and_ip(const char *, const char *, const char *);
 int	 match_user(const char *, const char *, const char *, const char *);
 char	*match_list(const char *, const char *, u_int *);

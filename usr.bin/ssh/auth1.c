@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.6.2.6 2001/09/27 00:15:41 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.6.2.7 2002/03/08 17:04:41 brad Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -22,6 +22,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.6.2.6 2001/09/27 00:15:41 miod Exp 
 #include "servconf.h"
 #include "compat.h"
 #include "auth.h"
+#include "channels.h"
 #include "session.h"
 #include "misc.h"
 #include "uidswap.h"
@@ -66,18 +67,17 @@ do_authloop(Authctxt *authctxt)
 {
 	int authenticated = 0;
 	u_int bits;
-	RSA *client_host_key;
+	Key *client_host_key;
 	BIGNUM *n;
 	char *client_user, *password;
 	char info[1024];
 	u_int dlen;
-	int plen, nlen, elen;
 	u_int ulen;
 	int type = 0;
 	struct passwd *pw = authctxt->pw;
 
 	debug("Attempting authentication for %s%.100s.",
-	     authctxt->valid ? "" : "illegal user ", authctxt->user);
+	    authctxt->valid ? "" : "illegal user ", authctxt->user);
 
 	/* If the user has no password, accept authentication immediately. */
 	if (options.password_authentication &&
@@ -88,7 +88,7 @@ do_authloop(Authctxt *authctxt)
 		auth_log(authctxt, 1, "without authentication", "");
 		return;
 	}
-	
+
 	/* Indicate that authentication is needed. */
 	packet_start(SSH_SMSG_FAILURE);
 	packet_send();
@@ -101,7 +101,7 @@ do_authloop(Authctxt *authctxt)
 		info[0] = '\0';
 
 		/* Get a packet from the client. */
-		type = packet_read(&plen);
+		type = packet_read();
 
 		/* Process the packet. */
 		switch (type) {
@@ -112,17 +112,16 @@ do_authloop(Authctxt *authctxt)
 				verbose("Kerberos authentication disabled.");
 			} else {
 				char *kdata = packet_get_string(&dlen);
-				
-				packet_integrity_check(plen, 4 + dlen, type);
-				
+				packet_check_eom();
+
 				if (kdata[0] == 4) { /* KRB_PROT_VERSION */
 #ifdef KRB4
 					KTEXT_ST tkt;
-					
+
 					tkt.length = dlen;
 					if (tkt.length < MAX_KTXT_LEN)
 						memcpy(tkt.dat, kdata, tkt.length);
-					
+
 					if (auth_krb4(authctxt, &tkt, &client_user)) {
 						authenticated = 1;
 						snprintf(info, sizeof(info),
@@ -136,7 +135,7 @@ do_authloop(Authctxt *authctxt)
 					krb5_data tkt;
 					tkt.length = dlen;
 					tkt.data = kdata;
-					
+
 					if (auth_krb5(authctxt, &tkt, &client_user)) {
 						authenticated = 1;
 						snprintf(info, sizeof(info),
@@ -150,7 +149,7 @@ do_authloop(Authctxt *authctxt)
 			}
 			break;
 #endif /* KRB4 || KRB5 */
-			
+
 #if defined(AFS) || defined(KRB5)
 			/* XXX - punt on backward compatibility here. */
 		case SSH_CMSG_HAVE_KERBEROS_TGT:
@@ -162,7 +161,7 @@ do_authloop(Authctxt *authctxt)
 			break;
 #endif /* AFS */
 #endif /* AFS || KRB5 */
-			
+
 		case SSH_CMSG_AUTH_RHOSTS:
 			if (!options.rhosts_authentication) {
 				verbose("Rhosts authentication disabled.");
@@ -175,7 +174,7 @@ do_authloop(Authctxt *authctxt)
 			 * IP-spoofing on a local network.)
 			 */
 			client_user = packet_get_string(&ulen);
-			packet_integrity_check(plen, 4 + ulen, type);
+			packet_check_eom();
 
 			/* Try to authenticate using /etc/hosts.equiv and .rhosts. */
 			authenticated = auth_rhosts(pw, client_user);
@@ -197,24 +196,20 @@ do_authloop(Authctxt *authctxt)
 			client_user = packet_get_string(&ulen);
 
 			/* Get the client host key. */
-			client_host_key = RSA_new();
-			if (client_host_key == NULL)
-				fatal("RSA_new failed");
-			client_host_key->e = BN_new();
-			client_host_key->n = BN_new();
-			if (client_host_key->e == NULL || client_host_key->n == NULL)
-				fatal("BN_new failed");
+			client_host_key = key_new(KEY_RSA1);
 			bits = packet_get_int();
-			packet_get_bignum(client_host_key->e, &elen);
-			packet_get_bignum(client_host_key->n, &nlen);
+			packet_get_bignum(client_host_key->rsa->e);
+			packet_get_bignum(client_host_key->rsa->n);
 
-			if (bits != BN_num_bits(client_host_key->n))
+			if (bits != BN_num_bits(client_host_key->rsa->n))
 				verbose("Warning: keysize mismatch for client_host_key: "
-				    "actual %d, announced %d", BN_num_bits(client_host_key->n), bits);
-			packet_integrity_check(plen, (4 + ulen) + 4 + elen + nlen, type);
+				    "actual %d, announced %d",
+				     BN_num_bits(client_host_key->rsa->n), bits);
+			packet_check_eom();
 
-			authenticated = auth_rhosts_rsa(pw, client_user, client_host_key);
-			RSA_free(client_host_key);
+			authenticated = auth_rhosts_rsa(pw, client_user,
+			    client_host_key);
+			key_free(client_host_key);
 
 			snprintf(info, sizeof info, " ruser %.100s", client_user);
 			xfree(client_user);
@@ -226,9 +221,10 @@ do_authloop(Authctxt *authctxt)
 				break;
 			}
 			/* RSA authentication requested. */
-			n = BN_new();
-			packet_get_bignum(n, &nlen);
-			packet_integrity_check(plen, nlen, type);
+			if ((n = BN_new()) == NULL)
+				fatal("do_authloop: BN_new failed");
+			packet_get_bignum(n);
+			packet_check_eom();
 			authenticated = auth_rsa(pw, n);
 			BN_clear_free(n);
 			break;
@@ -244,7 +240,7 @@ do_authloop(Authctxt *authctxt)
 			 * not visible to an outside observer.
 			 */
 			password = packet_get_string(&dlen);
-			packet_integrity_check(plen, 4 + dlen, type);
+			packet_check_eom();
 
 			/* Try authentication with the password. */
 			authenticated = auth_password(authctxt, password);
@@ -273,7 +269,7 @@ do_authloop(Authctxt *authctxt)
 			if (options.challenge_response_authentication == 1) {
 				char *response = packet_get_string(&dlen);
 				debug("got response '%s'", response);
-				packet_integrity_check(plen, 4 + dlen, type);
+				packet_check_eom();
 				authenticated = verify_response(authctxt, response);
 				memset(response, 'r', dlen);
 				xfree(response);
@@ -323,20 +319,19 @@ do_authloop(Authctxt *authctxt)
  * been exchanged and encryption is enabled.
  */
 void
-do_authentication()
+do_authentication(void)
 {
 	Authctxt *authctxt;
 	struct passwd *pw;
-	int plen;
 	u_int ulen;
 	char *p, *user, *style = NULL;
 
 	/* Get the name of the user that we wish to log in as. */
-	packet_read_expect(&plen, SSH_CMSG_USER);
+	packet_read_expect(SSH_CMSG_USER);
 
 	/* Get the user name. */
 	user = packet_get_string(&ulen);
-	packet_integrity_check(plen, (4 + ulen), SSH_CMSG_USER);
+	packet_check_eom();
 
 	if ((style = strchr(user, ':')) != NULL)
 		*style++ = '\0';
@@ -344,7 +339,7 @@ do_authentication()
 	/* XXX - SSH.com Kerberos v5 braindeath. */
 	if ((p = strchr(user, '@')) != NULL)
 		*p = '\0';
-	
+
 	authctxt = authctxt_new();
 	authctxt->user = user;
 	authctxt->style = style;

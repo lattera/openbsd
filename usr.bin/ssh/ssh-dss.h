@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-dss.h,v 1.3.2.5 2001/09/27 00:15:42 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-dss.h,v 1.3.2.6 2002/03/08 17:04:43 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -26,7 +26,7 @@
 #ifndef DSA_H
 #define DSA_H
 
-int	 ssh_dss_sign(Key *, u_char **, int *, u_char *, int);
-int	 ssh_dss_verify(Key *, u_char *, int, u_char *, int);
+int	 ssh_dss_sign(Key *, u_char **, u_int *, u_char *, u_int);
+int	 ssh_dss_verify(Key *, u_char *, u_int, u_char *, u_int);
 
 #endif

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/sshpty.h,v 1.1.4.4 2002/03/08 17:04:43 brad Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -11,8 +13,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.h,v 1.1.4.3 2001/09/27 00:15:43 miod Exp $"); */
 
 #ifndef SSHPTY_H
 #define SSHPTY_H

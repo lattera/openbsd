@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001 Damien Miller.  All rights reserved.
+ * Copyright (c) 2001,2002 Damien Miller.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.2.4.3 2001/09/27 00:15:42 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.2.4.4 2002/03/08 17:04:43 brad Exp $");
 
 #include <glob.h>
 
@@ -43,18 +43,17 @@ struct SFTP_OPENDIR {
 };
 
 static struct {
-	int fd_in;
-	int fd_out;
+	struct sftp_conn *conn;
 } cur;
 
 static void *
 fudge_opendir(const char *path)
 {
 	struct SFTP_OPENDIR *r;
-	
+
 	r = xmalloc(sizeof(*r));
-	
-	if (do_readdir(cur.fd_in, cur.fd_out, (char*)path, &r->dir))
+
+	if (do_readdir(cur.conn, (char*)path, &r->dir))
 		return(NULL);
 
 	r->offset = 0;
@@ -66,7 +65,7 @@ static struct dirent *
 fudge_readdir(struct SFTP_OPENDIR *od)
 {
 	static struct dirent ret;
-	
+
 	if (od->dir[od->offset] == NULL)
 		return(NULL);
 
@@ -88,7 +87,7 @@ static void
 attrib_to_stat(Attrib *a, struct stat *st)
 {
 	memset(st, 0, sizeof(*st));
-	
+
 	if (a->flags & SSH2_FILEXFER_ATTR_SIZE)
 		st->st_size = a->size;
 	if (a->flags & SSH2_FILEXFER_ATTR_UIDGID) {
@@ -107,12 +106,12 @@ static int
 fudge_lstat(const char *path, struct stat *st)
 {
 	Attrib *a;
-	
-	if (!(a = do_lstat(cur.fd_in, cur.fd_out, (char*)path, 0)))
+
+	if (!(a = do_lstat(cur.conn, (char*)path, 0)))
 		return(-1);
-	
+
 	attrib_to_stat(a, st);
-	
+
 	return(0);
 }
 
@@ -120,17 +119,17 @@ static int
 fudge_stat(const char *path, struct stat *st)
 {
 	Attrib *a;
-	
-	if (!(a = do_stat(cur.fd_in, cur.fd_out, (char*)path, 0)))
+
+	if (!(a = do_stat(cur.conn, (char*)path, 0)))
 		return(-1);
-	
+
 	attrib_to_stat(a, st);
-	
+
 	return(0);
 }
 
 int
-remote_glob(int fd_in, int fd_out, const char *pattern, int flags,
+remote_glob(struct sftp_conn *conn, const char *pattern, int flags,
     int (*errfunc)(const char *, int), glob_t *pglob)
 {
 	pglob->gl_opendir = fudge_opendir;
@@ -138,11 +137,9 @@ remote_glob(int fd_in, int fd_out, const char *pattern, int flags,
 	pglob->gl_closedir = (void (*)(void *))fudge_closedir;
 	pglob->gl_lstat = fudge_lstat;
 	pglob->gl_stat = fudge_stat;
-	
-	memset(&cur, 0, sizeof(cur));
-	cur.fd_in = fd_in;
-	cur.fd_out = fd_out;
 
-	return(glob(pattern, flags | GLOB_ALTDIRFUNC, errfunc,
-	    pglob));
+	memset(&cur, 0, sizeof(cur));
+	cur.conn = conn;
+
+	return(glob(pattern, flags | GLOB_ALTDIRFUNC, errfunc, pglob));
 }

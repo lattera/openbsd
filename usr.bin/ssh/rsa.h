@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.6 2002/03/08 17:04:42 brad Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -10,8 +12,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.5 2001/09/27 00:15:42 miod Exp $"); */
 
 #ifndef RSA_H
 #define RSA_H

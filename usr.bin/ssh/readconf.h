@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.22.2.7 2002/03/08 17:04:42 brad Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -10,8 +12,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.22.2.6 2001/11/15 00:14:59 miod Exp $"); */
 
 #ifndef READCONF_H
 #define READCONF_H

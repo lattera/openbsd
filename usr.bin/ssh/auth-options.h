@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.5.2.6 2002/03/08 17:04:41 brad Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -10,8 +12,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* $OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.5.2.5 2001/09/27 00:15:41 miod Exp $ */
 
 #ifndef AUTH_OPTIONS_H
 #define AUTH_OPTIONS_H

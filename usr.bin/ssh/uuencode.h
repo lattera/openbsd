@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/uuencode.h,v 1.3.2.5 2001/09/27 00:15:43 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/uuencode.h,v 1.3.2.6 2002/03/08 17:04:44 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -28,5 +28,5 @@
 #define UUENCODE_H
 int	 uuencode(u_char *, u_int, char *, size_t);
 int	 uudecode(const char *, u_char *, size_t);
-void	 dump_base64(FILE *, u_char *, int);
+void	 dump_base64(FILE *, u_char *, u_int);
 #endif

@@ -1,5 +1,3 @@
-/*	$OpenBSD: src/usr.bin/ssh/groupaccess.c,v 1.3.2.5 2001/09/27 00:15:42 miod Exp $	*/
-
 /*
  * Copyright (c) 2001 Kevin Steves.  All rights reserved.
  *
@@ -25,6 +23,7 @@
  */
 
 #include "includes.h"
+RCSID("$OpenBSD: src/usr.bin/ssh/groupaccess.c,v 1.3.2.6 2002/03/08 17:04:42 brad Exp $");
 
 #include "groupaccess.h"
 #include "xmalloc.h"

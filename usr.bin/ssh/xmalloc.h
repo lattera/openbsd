@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.5.2.2 2002/03/08 17:04:44 brad Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -13,8 +15,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.5.2.1 2001/09/27 00:15:43 miod Exp $"); */
 
 #ifndef XMALLOC_H
 #define XMALLOC_H
