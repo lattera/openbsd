@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/malloc.h,v 1.49.2.4 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/malloc.h,v 1.49.2.5 2002/10/29 01:11:09 art Exp $	*/
 /*	$NetBSD: malloc.h,v 1.39 1998/07/12 19:52:01 augustss Exp $	*/
 
 /*
@@ -201,7 +201,7 @@
 	"UFS mount",	/* 28 M_UFSMNT */ \
 	"shm",		/* 29 M_SHM */ \
 	"VM map",	/* 30 M_VMMAP */ \
-	"VM page",	/* 31 M_VMMAP */ \
+	"VM page",	/* 31 M_VMPAGE */ \
 	NULL, \
 	NULL, \
 	"VM pmap",	/* 34 M_VMPMAP */ \
@@ -414,8 +414,6 @@ extern void *malloc(unsigned long size, int type, int flags);
 extern void free(void *addr, int type);
 extern int sysctl_malloc(int *, u_int, void *, size_t *, void *, size_t,
 			      struct proc *);
-
-size_t malloc_roundup(size_t);
 
 size_t malloc_roundup(size_t);
 

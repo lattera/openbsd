@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cache.h,v 1.5.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cache.h,v 1.5.2.2 2002/10/29 01:11:09 art Exp $	*/
 /*	$NetBSD: cache.h,v 1.16 1997/07/06 21:15:14 pk Exp $ */
 
 /*
@@ -150,7 +150,6 @@ extern int cache_alias_bits;
 /*
  * Routines for dealing with the cache.
  */
-<<<<<<< cache.h
 void	sun4_cache_enable(void);		/* turn it on */
 void	ms1_cache_enable(void);			/* turn it on */
 void	viking_cache_enable(void);		/* turn it on */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vnops.c,v 1.16.2.1 2002/06/11 03:30:21 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vnops.c,v 1.16.2.2 2002/10/29 01:11:09 art Exp $	*/
 /*	$NetBSD: union_vnops.c,v 1.30.4.1 1996/05/25 22:10:14 jtc Exp $	*/
 
 /*

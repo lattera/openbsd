@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/mfs/mfsnode.h,v 1.8 2001/12/04 22:44:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/mfs/mfsnode.h,v 1.8.2.1 2002/10/29 01:11:09 art Exp $	*/
 /*	$NetBSD: mfsnode.h,v 1.3 1996/02/09 22:31:31 christos Exp $	*/
 
 /*

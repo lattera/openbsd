@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.21.2.2 2002/10/29 00:28:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.21.2.3 2002/10/29 01:11:09 art Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.13 1997/07/12 16:20:03 perry Exp $	*/
 
 /*
@@ -114,6 +114,8 @@
 /*
  * pmap specific data stored in the vm_physmem[] array
  */
+
+
 /* XXX - belongs in pmap.h, but put here because of ordering issues */
 struct pvlist {
 	struct		pvlist *pv_next;	/* next pvlist, if any */
