@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.6 2001/06/24 04:31:06 fgsch Exp $	*/
 /*	$NetBSD: awi.c,v 1.26 2000/07/21 04:48:55 onoe Exp $	*/
 
 /*-
