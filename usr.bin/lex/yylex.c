@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/yylex.c,v 1.2 1996/06/26 05:35:44 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/yylex.c,v 1.3 1996/07/13 22:22:15 millert Exp $	*/
 
 /* yylex - scanner front-end for flex */
 
@@ -28,7 +28,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* $Header: /cvs/src/usr.bin/lex/yylex.c,v 1.1.1.1 1995/10/18 08:45:32 deraadt Exp $ */
+/* $Header: /home/daffy/u0/vern/flex/RCS/yylex.c,v 2.13 95/03/04 16:10:41 vern Exp $ */
 
 #include <ctype.h>
 #include "flexdef.h"

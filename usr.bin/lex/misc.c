@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/misc.c,v 1.2 1996/06/26 05:35:38 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/misc.c,v 1.3 1996/07/13 22:22:09 millert Exp $	*/
 
 /* misc - miscellaneous flex routines */
 
@@ -28,7 +28,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* $Header: /cvs/src/usr.bin/lex/misc.c,v 1.1.1.1 1995/10/18 08:45:31 deraadt Exp $ */
+/* $Header: /home/daffy/u0/vern/flex/RCS/misc.c,v 2.47 95/04/28 11:39:39 vern Exp $ */
 
 #include "flexdef.h"
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/ccl.c,v 1.2 1996/06/26 05:35:28 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/ccl.c,v 1.3 1996/07/13 22:21:56 millert Exp $	*/
 
 /* ccl - routines for character classes */
 
@@ -28,7 +28,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* $Header: /cvs/src/usr.bin/lex/ccl.c,v 1.1.1.1 1995/10/18 08:45:29 deraadt Exp $ */
+/* $Header: /home/daffy/u0/vern/flex/RCS/ccl.c,v 2.9 93/09/16 20:32:14 vern Exp $ */
 
 #include "flexdef.h"
 

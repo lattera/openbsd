@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/tblcmp.c,v 1.2 1996/06/26 05:35:43 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/tblcmp.c,v 1.3 1996/07/13 22:22:14 millert Exp $	*/
 
 /* tblcmp - table compression routines */
 
@@ -28,7 +28,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* $Header: /cvs/src/usr.bin/lex/tblcmp.c,v 1.1.1.1 1995/10/18 08:45:32 deraadt Exp $ */
+/* $Header: /home/daffy/u0/vern/flex/RCS/tblcmp.c,v 2.11 94/11/05 17:08:28 vern Exp $ */
 
 #include "flexdef.h"
 
