@@ -1,0 +1,143 @@
+.\"	$OpenBSD: src/share/man/man4/gif.4,v 1.10 2000/12/31 00:25:38 angelos Exp $
+.\"	$KAME: gif.4,v 1.15 2000/04/19 09:39:42 itojun Exp $
+.\"
+.\" Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the project nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd April 10, 1999
+.Dt GIF 4
+.Os
+.Sh NAME
+.Nm gif
+.Nd generic tunnel interface
+.Sh SYNOPSIS
+.Cd "pseudo-device gif" Op Ar count
+.Sh DESCRIPTION
+The
+.Nm
+interface is a generic tunnelling pseudo-device for IPv4 and IPv6.
+It can tunnel IPv[46] traffic over IPv[46], for a total of four
+possible combinations.
+The behavior of
+.Nm
+is mainly based on RFC1933 IPv6-over-IPv4 configured tunnel.
+.Pp
+To use
+.Nm gif ,
+the administrator needs to configure the addresses used for the outer header.
+This can be done by using
+.Xr ifconfig 8 ,
+or through the
+.Dv SIOCSIFPHYADDR
+ioctl.
+The administrator needs to also configure the addresses used for the
+inner header, by using
+.Xr ifconfig 8 .
+Note that IPv6 link-local address
+.Pq those start with Li fe80::
+will be automatically configured whenever possible.
+One may need to remove any IPv6 link-local address manually using
+.Xr ifconfig 8 ,
+to disable the use of IPv6 as inner header
+.Pq e.g., when a pure IPv4-over-IPv6 tunnel is required .
+Also, the routing table may be used to route the packets toward the
+.Nm
+interface.
+.Pp
+Finally, the
+.Nm gif
+interface may be used as a
+.Xr bridge 4
+member.
+Ethernet frames forwarded by the bridge to the
+.Nm gif
+interface are encapsulated inside an IPv4 or IPv6 header (depending on
+how the interface is configured), with transport protocol number 97
+(etherip).
+IPv4 or IPv6 packets carrying transport protocol 97 are delivered to
+the
+.Nm gif
+interface whose "physical" addresses match the source/destination
+addresses of the packet (the source address of the packet must match
+the destination "physical" address, and vice versa).
+.\"
+.Sh SEE ALSO
+.Xr inet 4 ,
+.Xr inet6 4 ,
+.Xr ifconfig 8
+.Rs
+.%A	R. Gilligan
+.%A	E. Nordmark
+.%B	RFC1933
+.%T	Transition Mechanisms for IPv6 Hosts and Routers
+.%D	April 1996
+.%O	ftp://ftp.isi.edu/in-notes/rfc1933.txt
+.Re
+.Rs
+.%A	Sally Floyd
+.%A	David L. Black
+.%A	K. K. Ramakrishnan
+.%T	"IPsec Interactions with ECN"
+.%D	December 1999
+.%O	draft-ietf-ipsec-ecn-02.txt
+.Re
+.\"
+.Sh HISTORY
+The
+.Nm
+device first appeared in WIDE hydrangea IPv6 kit.
+.\"
+.Sh BUGS
+There are many tunnelling protocol specifications,
+defined differently from each other.
+.Nm
+may not interoperate with peers which are based on different specifications,
+and are picky about outer header fields.
+For example, you cannot usually use
+.Nm
+to talk with IPsec devices that use IPsec tunnel mode.
+.Pp
+The current code does not check if the ingress address
+.Pq outer source address
+configured to
+.Nm
+makes sense.
+Make sure to configure an address which belongs to your node.
+Otherwise, your node will not be able to receive packets from the peer,
+and your node will generate packets with a spoofed source address.
+.Pp
+If the outer protocol is IPv6, path MTU discovery for encapsulated packet
+may affect communication over the interface.
+.Pp
+When used in conjunction with the
+.Xr bridge 4 ,
+only one bridge tunnel may be operational for every pair of
+source/destination addresses.
+If more than one
+.Nm gif
+interface is configured with the same pair of outer addresses, the
+one with the lowest index number will receive all traffic.
