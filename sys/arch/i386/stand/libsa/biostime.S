@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/biostime.S,v 1.7 1997/04/29 00:16:13 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/biostime.S,v 1.7.2.1 1997/06/01 09:53:08 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -45,7 +45,7 @@
  *	returns nonzero if failed
  */
 ENTRY(usleep)
-	pushl	%ecx
+	pushl	%ebx
 
 	movl	8(%esp), %ecx
 	movw	%cx, %dx
@@ -58,7 +58,7 @@ ENTRY(usleep)
 	movl	%ah, %al
 1:	movzbl	%al, %eax
 
-	popl	%ecx
+	popl	%ebx
 	ret
 
 

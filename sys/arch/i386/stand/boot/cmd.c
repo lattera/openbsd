@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/boot/Attic/cmd.c,v 1.13 1997/04/28 07:39:00 weingart Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/boot/Attic/cmd.c,v 1.13.2.1 1997/06/01 09:53:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -33,7 +33,6 @@
  */
 
 #include <sys/param.h>
-#include <string.h>
 #include <libsa.h>
 #include <debug.h>
 #include <sys/reboot.h>
@@ -131,7 +130,7 @@ read_conf(cmd)
 	int fd, eof = 0;
 
 	if ((fd = open(qualify(cmd, cmd->conf), 0)) < 0) {
-		if (errno != ENOENT) {
+		if (errno != ENOENT && errno != ENXIO) {
 			printf("open(%s): %s\n", cmd->path, strerror(errno));
 			return 0;
 		}
@@ -214,6 +213,9 @@ docmd(cmd)
 	return (*cmd->cmd->cmd_exec)(cmd);
 }
 
+int strncmp __P((char *, char *, int));
+int sleep __P((int));
+
 static char *
 whatcmd(ct, p)
 	register const struct cmd_table **ct;
@@ -241,16 +243,12 @@ readline(buf, to)
 	register char *buf;
 	int	to;
 {
-	char *p = buf, *pe = buf, ch;
-	int i;
+	register char *p = buf, *pe = buf, ch;
+	register int i;
 
 	for (i = to; i-- && !ischar(); )
 #ifndef _TEST
-		if ((to = usleep(100000))) {
-			printf ("usleep failed (%d)\n", to);
-			i = 1;
-			break;
-		}
+		sleep(1);
 #else
 		;
 #endif

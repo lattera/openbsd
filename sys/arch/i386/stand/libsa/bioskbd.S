@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/bioskbd.S,v 1.5 1997/04/21 19:47:32 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/bioskbd.S,v 1.5.2.1 1997/06/01 09:53:07 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -64,6 +64,7 @@ ENTRY(kbd_probe)
 ENTRY(kbd_putc)
 	pushl	%ebx
 
+	xorl	%eax, %eax
 	movb	8(%esp), %al
 	movb	$0x0e, %ah
 	xorl	%ebx, %ebx
@@ -77,9 +78,13 @@ ENTRY(kbd_putc)
  *	read character from keyboard
  */
 ENTRY(kbd_getc)
-	movb	$0, %ah
+	pushl	%ebx
+	pushl	%ecx
+	xorl	%eax, %eax
 	BIOSINT(0x16)
 	movzbl	%al, %eax
+	popl	%ecx
+	popl	%ebx
 	ret
 
 /*
@@ -87,9 +92,14 @@ ENTRY(kbd_getc)
  *	check if there is character available from keyboard
  */
 ENTRY(kbd_ischar)
-	movb	$1, %ah
+	pushl	%ebx
+	pushl	%ecx
+	xorl	%eax, %eax
+	incb	%ah
 	BIOSINT(0x16)
 	setnz	%al
 	movzbl	%al, %eax
+	popl	%ecx
+	popl	%ebx
 	ret
 
