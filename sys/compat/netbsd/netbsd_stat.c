@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5 1999/09/22 01:35:01 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.10.1 2001/05/31 05:08:33 jason Exp $	*/
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -212,8 +212,7 @@ netbsd_sys___fstat13(p, v, retval)
 #endif
 
 	default:
-		panic("fstat");
-		/*NOTREACHED*/
+		return (EOPNOTSUPP);
 	}
 	if (error)
 		return (error);

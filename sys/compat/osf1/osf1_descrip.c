@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_descrip.c,v 1.1 2000/08/04 15:47:54 ericj Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_descrip.c,v 1.1.4.1 2001/05/31 05:08:34 jason Exp $ */
 /* $NetBSD: osf1_descrip.c,v 1.5 1999/06/26 01:24:41 cgd Exp $ */
 
 /*
@@ -260,8 +260,7 @@ osf1_sys_fstat(p, v, retval)
 		break;
 
 	default:
-		panic("ofstat");
-		/*NOTREACHED*/
+		return (EOPNOTSUPP);
 	}
 	osf1_cvt_stat_from_native(&ub, &oub);
 	if (error == 0)

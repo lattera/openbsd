@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.23 2000/11/16 20:02:16 provos Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.23.2.1 2001/05/31 05:08:29 jason Exp $	*/
 /*	$NetBSD: kern_descrip.c,v 1.42 1996/03/30 22:24:38 christos Exp $	*/
 
 /*
@@ -530,8 +530,7 @@ sys_fstat(p, v, retval)
 #endif
 
 	default:
-		panic("fstat");
-		/*NOTREACHED*/
+		return (EOPNOTSUPP);
 	}
 	if (error == 0) {
 		/* Don't let non-root see generation numbers
@@ -582,7 +581,7 @@ sys_fpathconf(p, v, retval)
 		return (VOP_PATHCONF(vp, SCARG(uap, name), retval));
 
 	default:
-		panic("fpathconf");
+		return (EOPNOTSUPP);
 	}
 	/*NOTREACHED*/
 }

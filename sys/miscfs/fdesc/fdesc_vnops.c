@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16 1999/10/13 06:32:23 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.10.1 2001/05/31 05:08:31 jason Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -516,8 +516,7 @@ fdesc_attr(fd, vap, cred, p)
 		break;
 
 	default:
-		panic("fdesc attr");
-		break;
+		return (EOPNOTSUPP);
 	}
 
 	return (error);
@@ -650,16 +649,11 @@ fdesc_setattr(v)
 		error = VOP_SETATTR((struct vnode *) fp->f_data, ap->a_vap, ap->a_cred, ap->a_p);
 		break;
 
-	case DTYPE_PIPE:
-	case DTYPE_SOCKET:
+	default:
 		if (vap->va_flags != VNOVAL)
 			error = EOPNOTSUPP;
 		else
 			error = 0;
-		break;
-
-	default:
-		panic("fdesc setattr");
 		break;
 	}
 
