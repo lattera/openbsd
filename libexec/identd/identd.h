@@ -1,11 +1,11 @@
-/*	$OpenBSD: src/libexec/identd/Attic/identd.h,v 1.15 2003/06/07 18:31:17 henning Exp $*/
+/*	$OpenBSD: src/libexec/identd/Attic/identd.h,v 1.16 2004/01/04 04:18:11 deraadt Exp $*/
 
 /*
 **
 ** identd.h		    Common variables for the Pidentd daemon
 **
 ** This program is in the public domain and may be used freely by anyone
-** who wants to. 
+** who wants to.
 **
 ** Last update: 6 Dec 1992
 **
