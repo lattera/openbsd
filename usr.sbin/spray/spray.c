@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: spray.c,v 1.3 2002/06/02 06:42:29 deraadt Exp $
+ *	$Id: spray.c,v 1.4 2003/06/25 21:10:19 deraadt Exp $
  */
 
 #include <stdio.h>
@@ -41,7 +41,7 @@
 #define SPRAYOVERHEAD	86
 #endif
 
-void usage();
+void usage(void);
 void print_xferstats(int, int, double);
 
 /* spray buffer */
