@@ -1,8 +1,7 @@
-/* $NetBSD: alloca.S,v 1.2 1996/05/12 20:25:46 mark Exp $ */
+/* $NetBSD: fabs.c,v 1.1 1996/05/12 20:29:41 mark Exp $ */
 
 /*
- * Copyright (c) 1995 Mark Brinicombe
- * All rights reserved.
+ * Copyright (c) 1996 Mark Brinicombe
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,20 +29,20 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id: alloca.S,v 1.1 1996/05/01 12:51:17 deraadt Exp $
  */
 
-/* like alloc, but automatic automatic free in return */
+/*
+ * fabs(x) returns the absolute value of x.
+ */
 
-# include "DEFS.h"
-
-	.text
-	.align	0
-
-ENTRY(alloca)
-	add	r0, r0, #0x00000003	/* round up to next word */
-	bic	r0, r0, #0x00000003
-	sub	r13, r13, r0		/* Adjust the stack pointer */
-	mov	r0, r13			/* r0 = base of new space */
-	mov	r15, r14		/* return */ 
+#ifdef __STDC__
+	double fabs(double x)
+#else
+	double fabs(x)
+	double x;
+#endif
+{
+	if (x < 0)
+		x = -x;
+	return(x);
+}
