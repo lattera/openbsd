@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/Attic/elfXX_exec.c,v 1.2 2001/08/20 19:55:33 jason Exp $	*/
 /*	$NetBSD: elfXX_exec.c,v 1.2 2001/08/15 20:08:15 eeh Exp $	*/
 
 /*
