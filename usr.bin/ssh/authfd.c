@@ -14,7 +14,7 @@ Functions for connecting the local authentication agent.
 */
 
 #include "includes.h"
-RCSID("$Id: authfd.c,v 1.4 1999/09/30 08:34:24 deraadt Exp $");
+RCSID("$Id: authfd.c,v 1.5 1999/10/03 19:22:38 deraadt Exp $");
 
 #include "ssh.h"
 #include "rsa.h"
@@ -34,13 +34,6 @@ ssh_get_authentication_fd()
   const char *authfd, *authsocket;
   int sock;
   struct sockaddr_un sunaddr;
-
-  /* Get the file descriptor number from environment. */
-  authfd = getenv(SSH_AUTHFD_ENV_NAME);
-
-  /* Convert the value to an integer and return it if we got a value. */
-  if (authfd)
-    return atoi(authfd);
 
   authsocket = getenv(SSH_AUTHSOCKET_ENV_NAME);
   if (!authsocket)
