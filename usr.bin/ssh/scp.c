@@ -45,7 +45,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: scp.c,v 1.19 1999/11/24 00:26:03 deraadt Exp $");
+RCSID("$Id: scp.c,v 1.20 1999/11/24 19:53:50 markus Exp $");
 
 #include "ssh.h"
 #include "xmalloc.h"
@@ -974,7 +974,7 @@ run_err(const char *fmt,...)
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: scp.c,v 1.19 1999/11/24 00:26:03 deraadt Exp $
+ *	$Id: scp.c,v 1.20 1999/11/24 19:53:50 markus Exp $
  */
 
 char *
@@ -1146,7 +1146,7 @@ progressmeter(int flag)
 	(void) gettimeofday(&now, (struct timezone *) 0);
 	cursize = statbytes;
 	if (totalbytes != 0) {
-		ratio = cursize * 100 / totalbytes;
+		ratio = 100.0 * cursize / totalbytes;
 		ratio = MAX(ratio, 0);
 		ratio = MIN(ratio, 100);
 	} else
