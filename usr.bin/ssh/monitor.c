@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.11.2.2 2002/06/22 07:23:17 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.11.2.3 2002/06/26 18:22:35 miod Exp $");
 
 #include <openssl/dh.h>
 
@@ -944,13 +944,13 @@ mm_answer_keyverify(int socket, Buffer *m)
 	xfree(signature);
 	xfree(data);
 
+	auth_method = key_blobtype == MM_USERKEY ? "publickey" : "hostbased";
+
 	monitor_reset_key_state();
 
 	buffer_clear(m);
 	buffer_put_int(m, verified);
 	mm_request_send(socket, MONITOR_ANS_KEYVERIFY, m);
-
-	auth_method = key_blobtype == MM_USERKEY ? "publickey" : "hostbased";
 
 	return (verified);
 }
@@ -1418,9 +1418,13 @@ mm_get_keystate(struct monitor *pmonitor)
 void *
 mm_zalloc(struct mm_master *mm, u_int ncount, u_int size)
 {
+	int len = size * ncount;
 	void *address;
 
-	address = mm_malloc(mm, size * ncount);
+	if (len <= 0)
+		fatal("%s: mm_zalloc(%u, %u)", __func__, ncount, size);
+
+	address = mm_malloc(mm, len);
 
 	return (address);
 }

@@ -26,7 +26,7 @@
 /* XXX: recursive operations */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.40.2.2 2002/05/17 00:03:24 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.40.2.3 2002/06/26 18:22:36 miod Exp $");
 
 #include <glob.h>
 
@@ -837,7 +837,7 @@ parse_dispatch_command(struct sftp_conn *conn, const char *cmd, char **pwd)
 		help();
 		break;
 	case I_VERSION:
-		printf("SFTP protocol version %d\n", sftp_proto_version(conn));
+		printf("SFTP protocol version %u\n", sftp_proto_version(conn));
 		break;
 	default:
 		fatal("%d is not implemented", cmdnum);

@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.39.2.2 2002/06/22 07:23:17 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.39.2.3 2002/06/26 18:22:34 miod Exp $");
 
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -270,7 +270,7 @@ key_load_public_rsa1(int fd, const char *filename, char **commentp)
 	(void) buffer_get_int(&buffer);		/* reserved */
 
 	/* Read the public key from the buffer. */
-	buffer_get_int(&buffer);
+	(void) buffer_get_int(&buffer);
 	pub = key_new(KEY_RSA1);
 	buffer_get_bignum(&buffer, pub->rsa->n);
 	buffer_get_bignum(&buffer, pub->rsa->e);
@@ -357,7 +357,7 @@ key_load_private_rsa1(int fd, const char *filename, const char *passphrase,
 	(void) buffer_get_int(&buffer);	/* Reserved data. */
 
 	/* Read the public key from the buffer. */
-	buffer_get_int(&buffer);
+	(void) buffer_get_int(&buffer);
 	prv = key_new_private(KEY_RSA1);
 
 	buffer_get_bignum(&buffer, prv->rsa->n);

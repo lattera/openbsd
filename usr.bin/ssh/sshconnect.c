@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.115.2.2 2002/06/22 07:23:18 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.115.2.3 2002/06/26 18:22:36 miod Exp $");
 
 #include <openssl/bn.h>
 
@@ -262,7 +262,7 @@ ssh_connect(const char *host, struct sockaddr_storage * hostaddr,
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
 	hints.ai_socktype = SOCK_STREAM;
-	snprintf(strport, sizeof strport, "%d", port);
+	snprintf(strport, sizeof strport, "%u", port);
 	if ((gaierr = getaddrinfo(host, strport, &hints, &aitop)) != 0)
 		fatal("%s: %.100s: %s", __progname, host,
 		    gai_strerror(gaierr));
@@ -485,7 +485,6 @@ confirm(const char *prompt)
  * check whether the supplied host key is valid, return -1 if the key
  * is not valid. the user_hostfile will not be updated if 'readonly' is true.
  */
-
 static int
 check_host_key(char *host, struct sockaddr *hostaddr, Key *host_key,
     int readonly, const char *user_hostfile, const char *system_hostfile)

@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/ssh_config.5,v 1.1.2.1 2002/06/22 07:23:18 miod Exp $
+.\" $OpenBSD: src/usr.bin/ssh/ssh_config.5,v 1.1.2.2 2002/06/26 18:22:36 miod Exp $
 .Dd September 25, 1999
 .Dt SSH_CONFIG 5
 .Os
@@ -44,7 +44,7 @@
 .Sh SYNOPSIS
 .Bl -tag -width Ds -compact
 .It Pa $HOME/.ssh/config
-.It Pa /etc/ssh/ssh_config
+.It Pa /etc/ssh_config
 .El
 .Sh DESCRIPTION
 .Nm ssh
@@ -53,7 +53,7 @@ the following order:
 command line options, user's configuration file
 .Pq Pa $HOME/.ssh/config ,
 and system-wide configuration file
-.Pq Pa /etc/ssh/ssh_config .
+.Pq Pa /etc/ssh_config .
 .Pp
 For each parameter, the first obtained value
 will be used.
@@ -284,7 +284,7 @@ The default is
 .It Cm GlobalKnownHostsFile
 Specifies a file to use for the global
 host key database instead of
-.Pa /etc/ssh/ssh_known_hosts .
+.Pa /etc/ssh_known_hosts .
 .It Cm HostbasedAuthentication
 Specifies whether to try rhosts based authentication with public key
 authentication.
@@ -533,7 +533,7 @@ will never automatically add host keys to the
 file, and refuses to connect to hosts whose host key has changed.
 This provides maximum protection against trojan horse attacks,
 however, can be annoying when the
-.Pa /etc/ssh/ssh_known_hosts
+.Pa /etc/ssh_known_hosts
 file is poorly maintained, or connections to new hosts are
 frequently made.
 This option forces the user to manually
@@ -601,7 +601,7 @@ client.
 This file does not usually contain any sensitive information,
 but the recommended permissions are read/write for the user, and not
 accessible by others.
-.It Pa /etc/ssh/ssh_config
+.It Pa /etc/ssh_config
 Systemwide configuration file.
 This file provides defaults for those
 values that are not specified in the user's configuration file, and

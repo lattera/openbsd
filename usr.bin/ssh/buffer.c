@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.13.4.1 2002/03/07 17:37:46 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.13.4.2 2002/06/26 18:22:34 miod Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -71,6 +71,9 @@ buffer_append_space(Buffer *buffer, u_int len)
 {
 	void *p;
 
+	if (len > 0x100000)
+		fatal("buffer_append_space: len %u not supported", len);
+
 	/* If the buffer is empty, start using it from the beginning. */
 	if (buffer->offset == buffer->end) {
 		buffer->offset = 0;
@@ -96,6 +99,9 @@ restart:
 	}
 	/* Increase the size of the buffer and retry. */
 	buffer->alloc += len + 32768;
+	if (buffer->alloc > 0xa00000)
+		fatal("buffer_append_space: alloc %u not supported",
+		    buffer->alloc);
 	buffer->buf = xrealloc(buffer->buf, buffer->alloc);
 	goto restart;
 	/* NOTREACHED */

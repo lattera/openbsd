@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfd.c,v 1.45.2.3 2002/06/22 07:23:17 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfd.c,v 1.45.2.4 2002/06/26 18:22:34 miod Exp $");
 
 #include <openssl/evp.h>
 
@@ -144,7 +144,7 @@ ssh_request_reply(AuthenticationConnection *auth, Buffer *request, Buffer *reply
 			error("Error reading response from authentication socket.");
 			return 0;
 		}
-		buffer_append(reply, (char *) buf, l);
+		buffer_append(reply, buf, l);
 		len -= l;
 	}
 	return 1;

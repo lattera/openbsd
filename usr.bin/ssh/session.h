@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.13.2.2 2002/05/17 00:03:24 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.13.2.3 2002/06/26 18:22:35 miod Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -37,15 +37,15 @@ struct Session {
 	/* tty */
 	char	*term;
 	int	ptyfd, ttyfd, ptymaster;
-	int	row, col, xpixel, ypixel;
+	u_int	row, col, xpixel, ypixel;
 	char	tty[TTYSZ];
 	/* last login */
 	char	hostname[MAXHOSTNAMELEN];
 	time_t	last_login_time;
 	/* X11 */
-	int	display_number;
+	u_int	display_number;
 	char	*display;
-	int	screen;
+	u_int	screen;
 	char	*auth_display;
 	char	*auth_proto;
 	char	*auth_data;
