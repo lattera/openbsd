@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-icmp.c,v 1.14 2002/02/19 19:39:40 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-icmp.c,v 1.15 2003/09/08 17:35:57 cedric Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1993, 1994, 1995, 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-icmp.c,v 1.13 2001/11/07 18:48:16 deraadt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-icmp.c,v 1.14 2002/02/19 19:39:40 millert Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -190,10 +190,11 @@ icmp_print(register const u_char *bp, register const u_char *bp2)
 		if (vflag) {
 			TCHECK(dp->icmp_seq);
 			(void)snprintf(buf, sizeof buf,
-				       "echo %s (id:%d seq:%d)",
+				       "echo %s (id:%04x seq:%d)",
 				       (dp->icmp_type == ICMP_ECHO)?
 				       "request": "reply",
-				       dp->icmp_id, dp->icmp_seq);
+				       ntohs(dp->icmp_id),
+				       ntohs(dp->icmp_seq));
 		} else
 			str = tok2str(icmp2str, "type-#%d", dp->icmp_type);
 		break;
