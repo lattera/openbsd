@@ -20,7 +20,7 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-ether.c,v 1.43 96/09/26 23:36:43 leres Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ether.c,v 1.6 1996/12/12 16:22:38 bitblt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -178,7 +178,7 @@ ether_encap_print(u_short ethertype, const u_char *p,
 	case ETHERTYPE_ATALK:
 		if (vflag)
 			fputs("et1 ", stdout);
-		atalk_print(p, length);
+		atalk_print_llap(p, length);
 		return (1);
 
 	case ETHERTYPE_AARP:
