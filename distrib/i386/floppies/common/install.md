@@ -1,7 +1,7 @@
-#	$OpenBSD: src/distrib/i386/floppies/common/Attic/install.md,v 1.14 2001/12/23 01:51:52 krw Exp $
+#	$OpenBSD: src/distrib/i386/floppies/common/Attic/install.md,v 1.15 2002/02/14 03:26:05 deraadt Exp $
 #
 #
-# Copyright rc) 1996 The NetBSD Foundation, Inc.
+# Copyright (c) 1996 The NetBSD Foundation, Inc.
 # All rights reserved.
 #
 # This code is derived from software contributed to The NetBSD Foundation
