@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.20 1997/10/18 05:13:17 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.21 1997/10/22 23:34:39 mickey Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -38,7 +38,6 @@
 #include "debug.h"
 
 struct BIOS_regs	BIOS_regs;
-struct BIOS_vars	BIOS_vars;
 int bootdev;
 
 #if defined(DEBUG) && !defined(_TEST)
