@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/timeprio.c,v 1.1.1.1 1998/09/14 21:53:24 art Exp $	*/
+/*	$OpenBSD: src/usr.sbin/afs/src/appl/Attic/vos_syncsite.c,v 1.1 1999/04/30 01:59:06 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,78 +37,62 @@
  * SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-RCSID("$KTH: timeprio.c,v 1.1 1998/07/07 15:57:11 lha Exp $");
-#endif
+#include "appl_locl.h"
+#include <sl.h>
+#include "vos_local.h"
 
-#include <stdlib.h>
-#include "bool.h"
-#include "timeprio.h"
+RCSID("$KTH: vos_syncsite.c,v 1.2 1999/03/06 16:41:02 lha Exp $");
 
+static int helpflag;
+static char *cell;
+static int resolvep = 1;
 
-static int 
-timeprio_cmp(void *a1, void *b1)
+static struct getargs args[] = {
+    {"cell",	'c',  arg_string,	    &cell, "cell", NULL},
+    {"help",	'h',  arg_flag,             &helpflag, NULL, NULL},
+    {"resolve", 'n',  arg_negative_flag,    &resolvep, NULL, NULL}
+};
+
+static void
+usage(void)
 {
-    Tpel *a = a1, *b = b1;
-
-    return a->time > b->time;
+    arg_printusage(args, "vos syncsite", "", ARG_AFSSTYLE);
 }
 
-
-Timeprio *
-timeprionew(unsigned size)
+int 
+vos_syncsite (int argc, char **argv)
 {
-    return (Timeprio *) prionew(size, timeprio_cmp);
-}
+    struct in_addr saddr;
+    int error;
+    int optind = 0;
 
-void
-timepriofree(Timeprio *prio)
-{
-    priofree(prio);
-}
+    helpflag = 0;
+    cell = NULL;
 
-int
-timeprioinsert(Timeprio *prio, time_t time, void *data)
-{
-    Tpel *el = malloc(sizeof(Tpel));
-    if (!el)
-	return -1;
-
-    el->time = time;
-    el->data = data;
-    if (prioinsert(prio, el)) {
-	free(el);
-	el = NULL;
+    if (getarg (args, argc, argv, &optind, ARG_AFSSTYLE)) {
+	usage ();
+	return 0;
     }
-    return el ? 0 : -1;
-}
+	
+    if (helpflag) {
+	usage ();
+	return 0;
+    }
 
-void *
-timepriohead(Timeprio *prio)
-{
-    Tpel *el = priohead(prio);
+    if (cell == NULL)
+	cell = (char *)cell_getthiscell();
+
+    error = arlalib_getsyncsite(cell, NULL, afsvldbport, &saddr.s_addr, 0);
+    if (error) {
+	fprintf(stderr, "syncsite: %s (%d)\n", koerr_gettext(error), error);
+	return 0;
+    }
     
-    return el->data;
+    if (!resolvep)
+	printf("%s's vldb syncsite is %s.\n", cell, inet_ntoa(saddr));
+    else {
+	const char *name = ipgetname(&saddr);
+	printf("%s's vldb syncsite is %s (%s).\n", cell, name, inet_ntoa(saddr));
+    }
+    return 0;
 }
-
-void
-timeprioremove(Timeprio *prio)
-{
-    void *el;
-
-    if (timeprioemptyp((Prio *)prio))
-	return;
-
-    el = priohead(prio);
-    if (el) free (el);
-    
-    prioremove((Prio *)prio);
-}
-    
-Bool 
-timeprioemptyp(Timeprio *prio)
-{
-    return prioemptyp(prio); 
-}
-

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/prio.h,v 1.1.1.1 1998/09/14 21:53:26 art Exp $	*/
 /*
  * Copyright (c) 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -37,33 +36,30 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _PRIO_H
-#define _PRIO_H 1
+/* $Id: xfs_debug.h,v 1.2 1998/12/06 19:53:11 assar Exp $ */
 
-#include <time.h>
-#include <bool.h>
+#ifndef __XFS_DEBUG_H
+#define __XFS_DEBUG_H
 
-typedef int (*prio_cmp)(void *, void *);
+/* 
+ * These are GLOBAL xfs debugging masks
+ *
+ *   Define HAVE_XDEB in your local xfs_deb.h if
+ *   you want your fs to handle the debugging flags.
+ */
 
-typedef struct prio {
-    unsigned sz;	/* current size */
-    unsigned size;	/* max size */
-    prio_cmp cmp;
-    void **heap;
-} Prio;
-
-Prio *prionew(unsigned size, prio_cmp cmp);
-
-void priofree(Prio *prio);
-
-int  prioinsert(Prio *prio, void *data);
-
-void *priohead(Prio *prio);
-
-void prioremove(Prio *prio);
-
-Bool prioemptyp(Prio *prio);
+/* Masks for the debug macro */
+#define XDEBDEV		0x00000001	/* device handling */
+#define XDEBMSG		0x00000002	/* message sending */
+#define XDEBDNLC	0x00000004	/* name cache */
+#define XDEBNODE	0x00000008	/* xfs nodes */
+#define XDEBVNOPS	0x00000010	/* vnode operations */
+#define XDEBVFOPS	0x00000020	/* vfs operations */
+#define XDEBLKM         0x00000040	/* LKM handling */
+#define XDEBSYS	        0x00000080	/* syscalls */
+#define XDEBMEM		0x00000100	/* memory allocation */
+#define XDEBREADDIR     0x00000200      /* readdir (linux) */
+#define XDEBLOCK	0x00000400	/* locking (linux) */
+#define XDEBCACHE       0x00000800      /* Cache handeling (linux) */
 
 #endif
-
-

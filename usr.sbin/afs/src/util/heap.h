@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/timeprio.h,v 1.1.1.1 1998/09/14 21:53:26 art Exp $	*/
+/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/heap.h,v 1.1 1999/04/30 01:59:17 art Exp $	*/
 /*
  * Copyright (c) 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -37,34 +37,55 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _TIMEPRIO_H
-#define _TIMEPRIO_H 1
+/*
+ * an abstract heap implementation
+ */
 
-#include <time.h>
-#include "prio.h"
+/* $KTH: heap.h,v 1.1 1998/12/28 00:14:41 assar Exp $ */
+
+#ifndef _HEAP_
+#define _HEAP_
+
 #include "bool.h"
 
-typedef struct tpel {
-    time_t time;
-    void *data;
-} Tpel;
+typedef int (*heap_cmp_fn)(const void *, const void *);
 
-typedef Prio	Timeprio;
+typedef unsigned heap_ptr;
 
-Timeprio *timeprionew(unsigned size);
+struct heap_element {
+    const void *data;
+    heap_ptr *ptr;
+};
 
-void timepriofree(Timeprio *prio);
+typedef struct heap_element heap_element;
 
-int  timeprioinsert(Timeprio *prio, time_t time, void *data);
+struct heap {
+    heap_cmp_fn cmp;
+    unsigned max_sz;
+    unsigned sz;
+    heap_element *data;
+};
 
-void *timepriohead(Timeprio *prio);
+typedef struct heap Heap;
 
-void timeprioremove(Timeprio *prio);
+Heap *heap_new (unsigned sz, heap_cmp_fn cmp);
 
-Bool timeprioemptyp(Timeprio *prio);
+int
+heap_insert (Heap *h, const void *data, heap_ptr *ptr);
 
-time_t timepriotimehead(Timeprio *prio);
+const void *
+heap_head (Heap *h);
 
-#endif
+void
+heap_remove_head (Heap *h);
 
+int
+heap_remove (Heap *h, heap_ptr ptr);
 
+void
+heap_delete (Heap *h);
+
+Bool
+heap_verify (Heap *h);
+
+#endif /* _HEAP_ */

@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/mem.c,v 1.1.1.1 1998/09/14 21:53:24 art Exp $	*/
+/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/heaptest.c,v 1.1 1999/04/30 01:59:17 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,53 +37,84 @@
  * SUCH DAMAGE.
  */
 
-/*
- *
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: mem.c,v 1.3 1998/02/22 11:22:17 assar Exp $");
 #endif
 
+RCSID("$KTH: heaptest.c,v 1.2 1999/02/13 05:03:25 assar Exp $");
+
 #include <stdio.h>
-#include "mem.h"
+#include <stdlib.h>
+#include <assert.h>
+#include <err.h>
+#include "heap.h"
 
-/*
- * Like malloc, but write an error message if not succesful.
- */
+struct foo {
+    int i;
+    heap_ptr hptr;
+};
 
-void *
-emalloc(size_t sz)
+static int
+cmp(const void *v1, const void *v2)
 {
-     void *tmp = malloc(sz);
-     
-     if( tmp )
-	  return tmp;
-     else {
-	  fprintf(stderr, "malloc for %u bytes failed\n", sz);
-	  exit(1);
-     }
+    const struct foo *foo1 = (const struct foo *)v1;
+    const struct foo *foo2 = (const struct foo *)v2;
+
+    return foo1->i - foo2->i;
 }
 
-/*
- * Like realloc, but write an error message if not succesful.
- */
-
-void *
-erealloc (void *ptr, size_t sz)
+static int
+testit (unsigned n)
 {
-     void *tmp;
+    struct foo *foos, *bars;
+    Heap *h1, *h2;
+    int i;
 
-     if (ptr)
-	  tmp = realloc (ptr, sz);
-     else
-	  tmp = malloc (sz);
+    foos = malloc (n * sizeof(*foos));
+    bars = malloc (n * sizeof(*bars));
+    assert (foos != NULL && bars != NULL);
+    h1 = heap_new (n, cmp);
+    h2 = heap_new (n, cmp);
+    assert (h1 != NULL && h2 != NULL);
+    for (i = 0; i < n; ++i) {
+	foos[i].i = bars[i].i = rand();
+	heap_insert (h1, (void *)&foos[i], NULL);
+	heap_insert (h2, (void *)&foos[i], &foos[i].hptr);
+	if (!heap_verify(h1) || !heap_verify(h2))
+	    abort ();
+    }
+    for (i = 0; i < n; ++i) {
+	heap_remove (h2, foos[i].hptr);
+	if (!heap_verify(h2))
+	    abort ();
+    }
+    qsort (bars, n, sizeof(*bars), cmp);
+    for (i = 0; i < n; ++i) {
+	struct foo *f = (struct foo *)heap_head (h1);
 
-     if (tmp)
-	  return tmp;
-     else {
-	  fprintf (stderr, "realloc for %u bytes failed\n", sz);
-	  exit (1);
-     }
+	if (bars[i].i != f->i)
+	    abort ();
+	heap_remove_head (h1);
+	if (!heap_verify(h1))
+	    abort ();
+    }
+    heap_delete (h1);
+    heap_delete (h2);
+    free (foos);
+    free (bars);
+    return 0;
+}
+
+int
+main(int argc, char **argv)
+{
+    int i, n;
+
+    if (argc != 2)
+	errx (1, "argc != 2");
+
+    n = atoi (argv[1]);
+    for (i = 0; i < n; ++i)
+	testit (rand () % 1000);
+    return 0;
 }
