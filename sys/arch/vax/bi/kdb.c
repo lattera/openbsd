@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/kdb.c,v 1.2 1997/05/29 00:04:17 niklas Exp $ */
 /*	$NetBSD: kdb.c,v 1.5 1997/01/11 11:34:39 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.

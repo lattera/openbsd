@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/include/stdarg.h,v 1.3 1997/05/29 00:04:53 niklas Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.8 1995/12/25 23:15:37 mycroft Exp $	*/
 
 /*-

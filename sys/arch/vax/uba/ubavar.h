@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ubavar.h,v 1.7 1997/05/29 00:05:10 niklas Exp $	*/
 /*	$NetBSD: ubavar.h,v 1.18 1996/08/20 13:38:04 ragge Exp $	*/
 
 /*

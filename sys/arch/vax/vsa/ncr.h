@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/ncr.h,v 1.2 1997/05/29 00:05:35 niklas Exp $	*/
 /*	$NetBSD: ncr.h,v 1.1 1996/07/20 18:55:15 ragge Exp $	*/
 
 /*

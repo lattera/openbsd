@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/stand/Attic/tmscp.c,v 1.4 1997/05/29 00:04:28 niklas Exp $ */
 /*	$NetBSD: tmscp.c,v 1.3 1996/08/02 11:22:53 ragge Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.

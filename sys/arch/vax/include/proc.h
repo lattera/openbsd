@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/include/proc.h,v 1.2 1997/05/29 00:04:46 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.2 1994/10/26 08:02:21 cgd Exp $	*/
 
 /*
