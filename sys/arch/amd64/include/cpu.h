@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.5 2004/06/06 21:58:49 tedu Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.6 2004/06/07 18:36:34 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 2003/04/26 18:39:39 fvdl Exp $	*/
 
 /*-
@@ -193,7 +193,7 @@ extern struct cpu_info cpu_info_primary;
 
 #define need_resched(ci)						\
 do {									\
-	struct cpu_info *__ci = (ci);					\
+	struct cpu_info *__ci = curcpu();					\
 	__ci->ci_want_resched = 1;					\
 	if (__ci->ci_curproc != NULL)					\
 		aston(__ci->ci_curproc);				\
