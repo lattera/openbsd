@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ne2000.c,v 1.8 2000/05/30 14:31:39 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ne2000.c,v 1.8.2.1 2001/03/14 02:30:09 jason Exp $	*/
 /*	$NetBSD: ne2000.c,v 1.12 1998/06/10 01:15:50 thorpej Exp $	*/
 
 /*-
@@ -158,8 +158,7 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 		dsc->sc_reg_map[i] = i;
 
 	/*
-	 * 8k of memory for NE1000, 16k for NE2000 and 24k for the
-	 * card uses DL10019.
+	 * 8k of memory for NE1000, 16k otherwise.
 	 */
 	switch (nsc->sc_type) {
 	case NE2000_TYPE_NE1000:
@@ -167,10 +166,8 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 		break;
 	case NE2000_TYPE_NE2000:
 	case NE2000_TYPE_AX88190:		/* XXX really? */
-		memsize = 8192 * 2;
-		break;
 	case NE2000_TYPE_DL10019:
-		memsize = 8192 * 3;
+		memsize = 8192 * 2;
 		break;
 	}
 
