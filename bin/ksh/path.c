@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/bin/ksh/path.c,v 1.4 1998/06/25 19:02:14 millert Exp $	*/
+/*	$OpenBSD: src/bin/ksh/path.c,v 1.5 1998/10/29 04:09:21 millert Exp $	*/
 
 #include "sh.h"
 #include "ksh_stat.h"
 
 /*
- *	Contains a routine to search a : seperated list of
+ *	Contains a routine to search a : separated list of
  *	paths (a la CDPATH) and make appropiate file names.
  *	Also contains a routine to simplify .'s and ..'s out of
  *	a path name.
@@ -14,6 +14,9 @@
 
 /*
  * $Log: path.c,v $
+ * Revision 1.4  1998/06/25 19:02:14  millert
+ * pdksh-5.2.13 + local changes
+ *
  * Revision 1.2  1994/05/19  18:32:40  michael
  * Merge complete, stdio replaced, various fixes. (pre autoconf)
  *
@@ -69,7 +72,7 @@ int
 make_path(cwd, file, cdpathp, xsp, phys_pathp)
 	const char *cwd;
 	const char *file;
-	char	**cdpathp;	/* & of : seperated list */
+	char	**cdpathp;	/* & of : separated list */
 	XString	*xsp;
 	int	*phys_pathp;
 {
