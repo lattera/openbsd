@@ -1,0 +1,17 @@
+# $OpenBSD: src/kerberosIV/usr.sbin/kdb_destroy/Attic/Makefile,v 1.5 2001/07/09 16:45:29 deraadt Exp $
+
+PROG	= kdb_destroy
+
+KRBDEPTH=../..
+.include "../../Makefile.inc"
+
+.PATH:	${KRBSRC}/admin
+
+CFLAGS	+= -I. -I${KRBSRC}/lib/kadm -I${KRBSRC}/lib/kdb
+LDADD	+= -lkafs -lkrb5 -lkrb -lkdb -ldes -lcrypto -lasn1 ${LIBROKEN}
+
+SRCS	= kdb_destroy.c
+
+MAN	= ${PROG}.8
+
+.include <bsd.prog.mk>
