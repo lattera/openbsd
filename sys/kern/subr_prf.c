@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.15 2003/05/25 19:26:49 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.16 2003/05/29 14:35:58 ho Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -290,8 +290,8 @@ splassert_fail(int wantipl, int haveipl, const char *func)
 #ifdef DDB
 		db_stack_dump();
 		Debugger();
-		break;
 #endif
+		break;
 	default:
 		panic("spl assertion failure in %s", func);
 	}
