@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-keysign/Makefile,v 1.3 2002/05/31 10:30:33 markus Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-keysign/Makefile,v 1.3.2.1 2002/06/22 07:23:42 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
