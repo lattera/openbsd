@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/lm_isa.c,v 1.1 2003/04/25 21:24:15 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/lm_isa.c,v 1.1.2.1 2003/05/12 20:00:33 ho Exp $	*/
 /*	$NetBSD: lm_isa.c,v 1.9 2002/11/15 14:55:44 ad Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/loadfile_machdep.h,v 1.1 2003/04/17 03:42:14 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/loadfile_machdep.h,v 1.1.2.1 2003/05/12 19:56:44 ho Exp $	*/
 /*	$NetBSD: loadfile_machdep.h,v 1.1 1999/04/29 03:17:12 tsubai Exp $	*/
 
 /*-

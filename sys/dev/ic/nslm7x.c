@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/nslm7x.c,v 1.1 2003/04/25 21:24:15 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/nslm7x.c,v 1.1.2.1 2003/05/12 19:59:12 ho Exp $	*/
 /*	$NetBSD: nslm7x.c,v 1.17 2002/11/15 14:55:41 ad Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/viaenv.c,v 1.1 2003/04/25 21:46:44 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/viaenv.c,v 1.1.2.1 2003/05/12 20:01:41 ho Exp $	*/
 /*	$NetBSD: viaenv.c,v 1.9 2002/10/02 16:51:59 thorpej Exp $	*/
 
 /*
