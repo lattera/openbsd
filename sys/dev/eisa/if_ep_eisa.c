@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/if_ep_eisa.c,v 1.11.8.3 2001/10/31 03:22:41 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/if_ep_eisa.c,v 1.11.8.4 2002/03/28 12:29:45 niklas Exp $	*/
 /*	$NetBSD: if_ep_eisa.c,v 1.13 1997/04/18 00:50:33 cgd Exp $	*/
 
 /*
@@ -77,8 +77,8 @@
 #include <dev/eisa/eisavar.h>
 #include <dev/eisa/eisadevs.h>
 
-int ep_eisa_match __P((struct device *, void *, void *));
-void ep_eisa_attach __P((struct device *, struct device *, void *));
+int ep_eisa_match(struct device *, void *, void *);
+void ep_eisa_attach(struct device *, struct device *, void *);
 
 struct cfattach ep_eisa_ca = {
 	sizeof(struct ep_softc), ep_eisa_match, ep_eisa_attach

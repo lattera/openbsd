@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.4 2001/11/13 21:09:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.5 2002/03/28 12:29:44 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  * Copyright (c) 2001 Artur Grabowski <art@openbsd.org>
@@ -55,10 +55,10 @@ static caddr_t ksym_syms;
 static size_t ksym_head_size;
 static size_t ksym_syms_size;
 
-void	ksymsattach __P((int));
-int	ksymsopen __P((dev_t, int, int));
-int	ksymsclose __P((dev_t, int, int));
-int	ksymsread __P((dev_t, struct uio *, int));
+void	ksymsattach(int);
+int	ksymsopen(dev_t, int, int);
+int	ksymsclose(dev_t, int, int);
+int	ksymsread(dev_t, struct uio *, int);
 
 /*
  * We assume __LDPGSZ is a multiple of PAGE_SIZE (it is)

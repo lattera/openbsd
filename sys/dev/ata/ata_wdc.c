@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ata/ata_wdc.c,v 1.4.2.3 2001/12/05 00:43:29 niklas Exp $	*/
+/*      $OpenBSD: src/sys/dev/ata/ata_wdc.c,v 1.4.2.4 2002/03/28 12:29:45 niklas Exp $	*/
 /*	$NetBSD: ata_wdc.c,v 1.21 1999/08/09 09:43:11 bouyer Exp $	*/
 
 /*
@@ -114,13 +114,13 @@ struct cfdriver wdc_cd = {
 };
 #endif
 
-void  wdc_ata_bio_start  __P((struct channel_softc *,struct wdc_xfer *));
-void  _wdc_ata_bio_start  __P((struct channel_softc *,struct wdc_xfer *));
-int   wdc_ata_bio_intr   __P((struct channel_softc *, struct wdc_xfer *, int));
-void  wdc_ata_bio_kill_xfer __P((struct channel_softc *,struct wdc_xfer *));
-void  wdc_ata_bio_done   __P((struct channel_softc *, struct wdc_xfer *)); 
-int   wdc_ata_ctrl_intr __P((struct channel_softc *, struct wdc_xfer *, int));
-int   wdc_ata_err __P((struct ata_drive_datas *, struct ata_bio *));
+void  wdc_ata_bio_start(struct channel_softc *,struct wdc_xfer *);
+void  _wdc_ata_bio_start(struct channel_softc *,struct wdc_xfer *);
+int   wdc_ata_bio_intr(struct channel_softc *, struct wdc_xfer *, int);
+void  wdc_ata_bio_kill_xfer(struct channel_softc *,struct wdc_xfer *);
+void  wdc_ata_bio_done(struct channel_softc *, struct wdc_xfer *); 
+int   wdc_ata_ctrl_intr(struct channel_softc *, struct wdc_xfer *, int);
+int   wdc_ata_err(struct ata_drive_datas *, struct ata_bio *);
 #define WDC_ATA_NOERR 0x00 /* Drive doesn't report an error */
 #define WDC_ATA_RECOV 0x01 /* There was a recovered error */
 #define WDC_ATA_ERR   0x02 /* Drive reports an error */
@@ -204,7 +204,7 @@ _wdc_ata_bio_start(chp, xfer)
 			panic("_wdc_ata_bio_start: bad state");
 		}
 		xfer->c_intr = wdc_ata_ctrl_intr;
-		CHP_WRITE_REG(chp, wdr_sdh, WDSD_IBM | (xfer->drive << 4));
+		wdc_set_drive(chp, xfer->drive);
 		if (wdcwait(chp, WDCS_DRDY, WDCS_DRDY, ATA_DELAY) != 0)
 			goto timeout;
 		wdccommandshort(chp, xfer->drive, WDCC_RECAL);
@@ -294,8 +294,7 @@ again:
 				return;
 			}
 			/* Initiate command */
-			CHP_WRITE_REG(chp, wdr_sdh, 
-			    WDSD_IBM | (xfer->drive << 4));
+			wdc_set_drive(chp, xfer->drive);
 			if (wait_for_ready(chp, ata_delay) < 0)
 				goto timeout;
 			wdccommand(chp, xfer->drive, cmd, cyl,
@@ -316,7 +315,7 @@ again:
 			    WDCC_READ : WDCC_WRITE;
 		}
 		/* Initiate command! */
-		CHP_WRITE_REG(chp, wdr_sdh, WDSD_IBM | (xfer->drive << 4));
+		wdc_set_drive(chp, xfer->drive);
 		if (wait_for_ready(chp, ata_delay) < 0)
 			goto timeout;
 		wdccommand(chp, xfer->drive, cmd, cyl,
