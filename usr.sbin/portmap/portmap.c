@@ -40,7 +40,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)portmap.c	5.4 (Berkeley) 4/19/91";*/
-static char rcsid[] = "$Id: portmap.c,v 1.10 1996/07/31 11:09:15 deraadt Exp $";
+static char rcsid[] = "$Id: portmap.c,v 1.11 1996/10/06 04:13:12 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -121,7 +121,7 @@ main(argc, argv)
 	int len = sizeof(struct sockaddr_in);
 	register struct pmaplist *pml;
 
-	while ((c = getopt(argc, argv, "d")) != EOF) {
+	while ((c = getopt(argc, argv, "d")) != -1) {
 		switch (c) {
 
 		case 'd':

@@ -19,7 +19,7 @@
  * improvements that they make and grant CSS redistribution rights.
  *
  * 	from: Utah $Hdr: grfinfo.c 1.3 94/04/04$
- *	$Id: grfinfo.c,v 1.1 1994/04/04 21:53:25 cgd Exp $
+ *	$Id: grfinfo.c,v 1.1.1.1 1995/10/18 08:47:34 deraadt Exp $
  */
 
 #include <stdio.h>
@@ -52,7 +52,7 @@ main(argc, argv)
 	register int c;
 
 	pname = argv[0];
-	while ((c = getopt(argc, argv, "at")) != EOF)
+	while ((c = getopt(argc, argv, "at")) != -1)
 		switch (c) {
 		/* everything */
 		case 'a':
