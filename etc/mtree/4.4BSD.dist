@@ -1,5 +1,5 @@
 #	from: @(#)4.4BSD.dist	8.1 (Berkeley) 6/13/93
-#	$Id: 4.4BSD.dist,v 1.10.2.1 1995/10/17 21:04:26 leo Exp $
+#	$Id: 4.4BSD.dist,v 1.2 1995/10/27 23:58:33 deraadt Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -1281,6 +1281,11 @@ spool		mode=0700
 # ./var/backups
 backups
 # ./var/backups
+..
+
+# ./var/yp.no
+yp.no		mode=775
+# ./var/yp.no
 ..
 
 # ./var/crash
