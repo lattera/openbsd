@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/libexec/telnetd/Attic/defs.h,v 1.2 1996/03/28 23:21:55 niklas Exp $	*/
+/*	$NetBSD: defs.h,v 1.6 1996/02/28 20:38:10 thorpej Exp $	*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +34,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)defs.h	8.1 (Berkeley) 6/4/93
- *	$Id: defs.h,v 1.4 1994/02/25 03:20:46 cgd Exp $
  */
 
 /*
