@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: state.h,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $ */
+/* $Id: state.h,v 1.2 1997/07/23 12:28:56 provos Exp $ */
 /*
  * state.h: 
  * state object
@@ -112,6 +112,8 @@ struct stateob {
   mpz_t generator;                  /* Generator for look up in cache */
   u_int8_t *texchange;              /* Their exchange value */
   u_int16_t texchangesize;
+  u_int8_t *exchangevalue;          /* Our exchange value */
+  u_int16_t exchangesize;
   u_int8_t *shared;                 /* Shared secret */
   u_int16_t sharedsize;
 

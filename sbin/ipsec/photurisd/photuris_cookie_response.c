@@ -34,7 +34,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: photuris_cookie_response.c,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $";
+static char rcsid[] = "$Id: photuris_cookie_response.c,v 1.2 1997/07/22 11:18:23 provos Exp $";
 #endif
 
 #include <stdio.h>
@@ -83,7 +83,7 @@ photuris_cookie_response(struct stateob *st, u_char *buffer, int *size,
 	if (tempst.counter == 0)
 	     tempst.counter = 1;
 
-	cookie_generate(&tempst, header->rcookie, COOKIE_SIZE);
+	cookie_generate(&tempst, header->rcookie, COOKIE_SIZE, schemes, ssize);
 
 	header->counter = tempst.counter;		
 
