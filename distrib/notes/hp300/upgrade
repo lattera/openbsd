@@ -1,6 +1,0 @@
-There is no upgrade mechanism supported by this release of OpenBSD/hp300,
-since it is the first official release for this architecture, and is not
-compatible with other operating systems.
-
-Be sure to back up any important data from your system, and then do an
-install from scratch.
