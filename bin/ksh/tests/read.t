@@ -1,3 +1,5 @@
+#	$OpenBSD: src/bin/ksh/tests/Attic/read.t,v 1.2 2001/01/28 23:04:56 niklas Exp $
+
 #
 # To test:
 #   POSIX:
