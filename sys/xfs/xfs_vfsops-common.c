@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -38,7 +33,7 @@
 
 #include <xfs/xfs_locl.h>
 
-RCSID("$Id: xfs_vfsops-common.c,v 1.18 1999/03/19 04:54:55 lha Exp $");
+RCSID("$Id: xfs_vfsops-common.c,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $");
 
 /*
  * XFS vfs operations.
@@ -51,6 +46,13 @@ RCSID("$Id: xfs_vfsops-common.c,v 1.18 1999/03/19 04:54:55 lha Exp $");
 #include <xfs/xfs_deb.h>
 #include <xfs/xfs_syscalls.h>
 #include <xfs/xfs_vfsops.h>
+
+#ifdef HAVE_KERNEL_UDEV2DEV
+#define VA_RDEV_TO_DEV(x) udev2dev(x, 0) /* XXX what is the 0 */
+#else
+#define VA_RDEV_TO_DEV(x) x
+#endif
+
 
 struct xfs xfs[NXFS];
 
@@ -67,19 +69,19 @@ xfs_mount_common(struct mount *mp,
     struct vattr vat;
     char path[MAXPATHLEN];
     char data[MAXPATHLEN];
-    size_t len;
+    size_t count;
 
-    error = copyinstr(user_path, path, MAXPATHLEN, &len);
+    error = copyinstr(user_path, path, MAXPATHLEN, &count);
     if (error)
 	return error;
 
-    error = copyinstr(user_data, data, MAXPATHLEN, &len);
+    error = copyinstr(user_data, data, MAXPATHLEN, &count);
     if (error)
 	return error;
 
     XFSDEB(XDEBVFOPS, ("xfs_mount: "
-		       "struct mount mp = %p path = '%s' data = '%s'\n",
-		       mp, path, data));
+		       "struct mount mp = %lx path = '%s' data = '%s'\n",
+		       (unsigned long)mp, path, data));
 
 #ifdef ARLA_KNFS
     XFSDEB(XDEBVFOPS, ("xfs_mount: mount flags = %x\n", mp->mnt_flag));
@@ -122,28 +124,16 @@ xfs_mount_common(struct mount *mp,
 	XFSDEB(XDEBVFOPS, ("VOP_GETATTR failed, error = %d\n", error));
 	return error;
     }
-    dev = vat.va_rdev;
+
+    dev = VA_RDEV_TO_DEV(vat.va_rdev);
+
     XFSDEB(XDEBVFOPS, ("dev = %d.%d\n", major(dev), minor(dev)));
 
-    /* Check that this device really is an xfs_dev */
-    if (major(dev) < 0 || major(dev) > nchrdev) {
-	XFSDEB(XDEBVFOPS, ("major out of range (0 < %d < %d)\n", 
-			   major(dev), nchrdev));
+    if (!xfs_is_xfs_dev (dev)) {
+	XFSDEB(XDEBVFOPS, ("%s is not a xfs device\n",
+			   data));
 	return ENXIO;
     }
-    if (minor(dev) < 0 || NXFS < minor(dev)) {
-	XFSDEB(XDEBVFOPS, ("minor out of range (0 < %d < %d)\n", 
-			   minor(dev), NXFS));
-	return ENXIO;
-    }
-#if defined(__NetBSD__) || defined(__OpenBSD__)
-    if(!xfs_func_is_devopen(cdevsw[major(dev)].d_open))
-	return ENXIO;
-#elif defined(__FreeBSD__)
-    if (cdevsw[major(dev)] == NULL
-	|| !xfs_func_is_devopen(cdevsw[major(dev)]->d_open))
-	return ENXIO;
-#endif
 
     if (xfs[minor(dev)].status & XFS_MOUNTED)
 	return EBUSY;
@@ -160,13 +150,8 @@ xfs_mount_common(struct mount *mp,
     vfs_getnewfsid(mp, MOUNT_AFS);
 #else
     vfs_getnewfsid(mp);
-#endif
-#elif defined(__NetBSD__) || defined(__OpenBSD__)
-    getnewfsid(mp, makefstype(MOUNT_AFS));
-#elif defined(__FreeBSD__)
-    getnewfsid(mp, MOUNT_AFS);
-    mp->mnt_stat.f_type = MOUNT_AFS;
-#endif
+#endif HAVE_TWO_ARGUMENT_VFS_GETNEWFSID
+#endif HAVE_KERNEL_VFS_GETNEWFSID
 
     mp->mnt_stat.f_bsize = DEV_BSIZE;
 #ifndef __osf__
@@ -200,15 +185,17 @@ xfs_mount_common(struct mount *mp,
 	    "arla",
 	    sizeof(mp->mnt_stat.f_mntfromname));
 
-#if defined(__NetBSD__) || defined(__OpenBSD__)
     strncpy(mp->mnt_stat.f_fstypename,
 	    "xfs",
 	    sizeof(mp->mnt_stat.f_fstypename));
-#endif
 #endif /* __osf__ */
 
     return 0;
 }
+
+#ifdef HAVE_KERNEL_DOFORCE
+extern int doforce;
+#endif
 
 int
 xfs_unmount_common(struct mount *mp, int mntflags)
@@ -219,7 +206,6 @@ xfs_unmount_common(struct mount *mp, int mntflags)
 
     if (mntflags & MNT_FORCE) {
 #ifdef HAVE_KERNEL_DOFORCE
-	extern int doforce;
 	if (!doforce)
 	    return EINVAL;
 #endif
@@ -246,13 +232,13 @@ xfs_root_common(struct mount *mp, struct vnode **vpp,
     do {
 	if (xfsp->root != NULL) {
 	    *vpp = XNODE_TO_VNODE(xfsp->root);
-	    xfs_do_vget(*vpp, LK_INTERLOCK|LK_EXCLUSIVE, proc);
+	    xfs_do_vget(*vpp, LK_EXCLUSIVE, proc);
 	    return 0;
 	}
 	msg.header.opcode = XFS_MSG_GETROOT;
 	msg.cred.uid = cred->cr_uid;
 	msg.cred.pag = xfs_get_pag(cred);
-	error = xfs_message_rpc(xfsp->fd, &msg.header, sizeof(msg));
+	error = xfs_message_rpc(xfsp->fd, &msg.header, sizeof(msg), proc);
 	if (error == 0)
 	    error = ((struct xfs_message_wakeup *) & msg)->error;
     } while (error == 0);

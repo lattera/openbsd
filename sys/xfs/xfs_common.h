@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/sys/xfs/Attic/xfs_common.h,v 1.1 1998/08/30 16:47:20 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,21 +31,42 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: xfs_common.h,v 1.5 1998/07/13 20:36:36 art Exp $ */
+/* $Id: xfs_common.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
 #ifndef _xfs_common_h
 #define _xfs_common_h
 
-#include <sys/malloc.h>
+#if defined(MALLOC_DECLARE)
+MALLOC_DECLARE(M_XFS);
+#elif !defined(M_XFS)
+#define M_XFS M_TEMP
+#endif
 
-#ifdef DEBUG
+#ifdef XFS_DEBUG
 void *xfs_alloc(u_int size);
 void xfs_free(void *, u_int size);
 #else
-#define xfs_alloc(s) malloc((s), M_TEMP, M_WAITOK) /* XXX - what kind? */
-#define xfs_free(p, s) free((p), M_TEMP)
+#ifdef __osf__
+#define xfs_alloc(a) malloc((a), BUCKETINDEX(a), M_XFS, M_WAITOK)
+#else
+#define xfs_alloc(a) malloc((a), M_XFS, M_WAITOK)
+#endif
+#define xfs_free(a, size) free(a, M_XFS)
+#endif /* XFS_DEBUG */
+
+int xfs_suser(struct proc *p);
+
+#ifndef HAVE_KERNEL_MEMCPY
+void *
+memcpy (void *s1, const void *s2, size_t n);
 #endif
 
-#define RCSID(x)
+const char *
+xfs_devtoname_r (dev_t dev, char *buf, size_t sz);
 
-#endif				       /* _xfs_common_h */
+#ifndef HAVE_KERNEL_STRLCPY
+size_t
+strlcpy (char *dst, const char *src, size_t dst_sz);
+#endif
+
+#endif /* _xfs_common_h */

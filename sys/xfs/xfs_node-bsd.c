@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -40,10 +35,15 @@
 #include <xfs/xfs_common.h>
 #include <xfs/xfs_fs.h>
 #include <xfs/xfs_deb.h>
+#include <xfs/xfs_vnodeops.h>
 
-RCSID("$Id: xfs_node-bsd.c,v 1.24 1999/02/26 00:47:48 lha Exp $");
+RCSID("$Id: xfs_node-bsd.c,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $");
 
 extern vop_t **xfs_vnodeop_p;
+
+#ifndef LK_NOPAUSE
+#define LK_NOPAUSE 0
+#endif
 
 /*
  * Allocate a new vnode with handle `handle' in `mp' and return it in
@@ -70,10 +70,14 @@ xfs_getnewvnode(struct mount *mp, struct vnode **vpp,
     result->handle = *handle;
     result->flags = 0;
     result->tokens = 0;
+#if defined(HAVE_KERNEL_LOCKMGR) || defined(HAVE_KERNEL_DEBUGLOCKMGR)
+    lockinit (&result->lock, PVFS, "xfs_lock", 0, LK_NOPAUSE);
+#else
     result->vnlocks = 0;
-
+#endif
     result->anonrights = 0;
-    
+    result->cred = NULL;
+
     return 0;
 }
 
@@ -90,18 +94,17 @@ new_xfs_node(struct xfs *xfsp,
 	     struct xfs_node **xpp,
 	     struct proc *p)
 {
-    int do_vget = 0;
     struct xfs_node *result;
 
-    XFSDEB(XDEBNODE, ("new_xfs_node %d.%d.%d.%d\n",
+    XFSDEB(XDEBNODE, ("new_xfs_node (%d,%d,%d,%d)\n",
 		      node->handle.a,
 		      node->handle.b,
 		      node->handle.c,
 		      node->handle.d));
- again:
+
+retry:
     /* Does not allow duplicates */
     result = xfs_node_find(xfsp, &node->handle);
-
     if (result == 0) {
 	int error;
 	struct vnode *v;
@@ -116,29 +119,21 @@ new_xfs_node(struct xfs *xfsp,
 	xfsp->nnodes++;
     } else {
 	/* Node is already cached */
-#ifdef HAVE_LK_INTERLOCK
-	simple_lock(&(XNODE_TO_VNODE(result)->v_interlock));
-#endif
-	do_vget = 1;
+	if(xfs_do_vget(XNODE_TO_VNODE(result), 0, p))
+	    goto retry;
     }
 
     /* Init other fields */
-    xfs_attr2vattr(&node->attr, &result->attr);
+    xfs_attr2vattr(&node->attr, &result->attr, 1);
     result->vn->v_type = result->attr.va_type;
-    XFS_TOKEN_SET(result, XFS_ATTR_R, XFS_ATTR_MASK);
+    result->tokens = node->tokens;
     bcopy(node->id, result->id, sizeof(result->id));
     bcopy(node->rights, result->rights, sizeof(result->rights));
 
-    /*
-     * We need to postpone this until here because (on FreeBSD) vget
-     * tries to install a pager on the vnode and for that it wants to
-     * retrieve the size with getattr.
-     */
-
-    if (do_vget) {
-	if (xfs_do_vget(XNODE_TO_VNODE(result), LK_INTERLOCK, p))
-	    goto again;
-    }
+#ifdef __APPLE__
+    if (result->vn->v_type == VREG && (!UBCINFOEXISTS(result->vn)))
+	ubc_info_init(result->vn);
+#endif
 
     *xpp = result;
     XFSDEB(XDEBNODE, ("return: new_xfs_node\n"));
@@ -150,7 +145,12 @@ free_xfs_node(struct xfs_node *node)
 {
     struct xfs *xfsp = XFS_FROM_XNODE(node);
 
-    XFSDEB(XDEBNODE, ("free_xfs_node starting: node = %p\n", node));
+    XFSDEB(XDEBNODE, ("free_xfs_node(%lx) (%d,%d,%d,%d)\n",
+		      (unsigned long)node,
+		      node->handle.a,
+		      node->handle.b,
+		      node->handle.c,
+		      node->handle.d));
 
     /* XXX Really need to put back dirty data first. */
 
@@ -160,9 +160,28 @@ free_xfs_node(struct xfs_node *node)
     }
     xfsp->nnodes--;
     XNODE_TO_VNODE(node)->v_data = NULL;
+    if (node->cred) {
+	crfree (node->cred);
+	node->cred = NULL;
+    }
+
     xfs_free(node, sizeof(*node));
 
     XFSDEB(XDEBNODE, ("free_xfs_node done\n"));
+}
+
+/*
+ * FreeBSD 4.4 and newer changed to API to vflush around June 2001
+ */
+
+static int
+xfs_vflush(struct mount *mp, int flags)
+{
+#if __FreeBSD__ && __FreeBSD_version > 430000
+    return vflush(mp, 0, flags);
+#else
+    return vflush(mp, NULL, flags);
+#endif
 }
 
 int
@@ -184,21 +203,48 @@ free_all_xfs_nodes(struct xfs *xfsp, int flags, int unmountp)
 	XFSDEB(XDEBNODE, ("free_all_xfs_nodes now removing root\n"));
 
 	vgone(XNODE_TO_VNODE(xfsp->root));
-	xfsp->root = 0;
+	xfsp->root = NULL;
     }
 
     XFSDEB(XDEBNODE, ("free_all_xfs_nodes root removed\n"));
     XFSDEB(XDEBNODE, ("free_all_xfs_nodes now killing all remaining nodes\n"));
 
+    /*
+     * If we have a syncer vnode, release it (to emulate dounmount)
+     * and the create it again when if we are going to need it.
+     */
+
+#ifdef HAVE_STRUCT_MOUNT_MNT_SYNCER
+    if (!unmountp) {
+	if (mp->mnt_syncer != NULL) {
+#ifdef HAVE_KERNEL_VFS_DEALLOCATE_SYNCVNODE
+	    vfs_deallocate_syncvnode(mp);
+#else
+           /* 
+            * FreeBSD and OpenBSD uses different semantics,
+            * FreeBSD does vrele, and OpenBSD does vgone.
+            */
+#if defined(__OpenBSD__)
+           vgone(mp->mnt_syncer);
+#elif defined(__FreeBSD__)
+            vrele(mp->mnt_syncer);
+#else
+#error what os do you use ?
+#endif
+	    mp->mnt_syncer = NULL;
+#endif
+	}
+    }
+#endif
+    error = xfs_vflush(mp, flags);
 #ifdef HAVE_STRUCT_MOUNT_MNT_SYNCER
     if (!unmountp) {
 	XFSDEB(XDEBNODE, ("free_all_xfs_nodes not flushing syncer vnode\n"));
-	error = vflush(mp, mp->mnt_syncer, flags);
-    } else
-#endif
-    {
-	error = vflush(mp, NULL, flags);
+	if (mp->mnt_syncer == NULL)
+	    if (vfs_allocate_syncvnode(mp))
+		panic("failed to allocate syncer node when xfs daemon died");
     }
+#endif
 
     if (error) {
 	XFSDEB(XDEBNODE, ("xfree_all_xfs_nodes: vflush() error == %d\n",
@@ -216,16 +262,40 @@ xfs_node_find(struct xfs *xfsp, xfs_handle *handlep)
     struct vnode *t;
     struct xfs_node *xn = NULL;
 
-    XFSDEB(XDEBNODE, ("xfs_node_find: xfsp = %p handlep = %p\n", 
-		      xfsp, handlep));
+    XFSDEB(XDEBNODE, ("xfs_node_find: xfsp = %lx "
+		      " handlep = (%d,%d,%d,%d)\n", 
+		      (unsigned long)xfsp,
+		      handlep->a,
+		      handlep->b,
+		      handlep->c,
+		      handlep->d));
 
-    for(t = XFS_TO_VFS(xfsp)->mnt_vnodelist.lh_first;
-	t != NULL; 
-	t = t->v_mntvnodes.le_next) {
+    /*
+     * XXXSMP - the vnodes on mnt_vnodelist are invalid unless we hold
+     *          mntvnode_slock (same on Open,Free and Net - current).
+     * XXX - Another problem here is that the data in the vnode doesn't
+     *       have to be correct unless we do a vget first (if usecount on
+     *       vnode == 0). This should only be a problem when someone uses
+     *       revoke, when unmounting or when arlad dies or on systems
+     *       with a shortage of vnodes.
+     *       We might want to vget here, but that was a problem
+     *       on FreeBSD once.
+     */
+
+/* FreeBSD 4.5 and above did rename mnt_vnodelist to mnt_nvnodelist */
+#ifdef HAVE_STRUCT_MOUNT_MNT_NVNODELIST
+    TAILQ_FOREACH(t, &XFS_TO_VFS(xfsp)->mnt_nvnodelist, v_nmntvnodes) {
 	xn = VNODE_TO_XNODE(t);
 	if (xn && xfs_handle_eq(&xn->handle, handlep))
 	    break;
     }
+#else
+    LIST_FOREACH(t, &XFS_TO_VFS(xfsp)->mnt_vnodelist, v_mntvnodes) {
+	xn = VNODE_TO_XNODE(t);
+	if (xn && xfs_handle_eq(&xn->handle, handlep))
+	    break;
+    }
+#endif
 
     if (t != NULL)
 	return xn;
@@ -291,9 +361,10 @@ vattr2xfs_attr(const struct vattr *va, struct xfs_attr *xa)
 #define SET_TIMEVAL(X, S, N) do { (X)->tv_sec = (S); (X)->tv_nsec = (N); } while(0)
 
 void
-xfs_attr2vattr(const struct xfs_attr *xa, struct vattr *va)
+xfs_attr2vattr(const struct xfs_attr *xa, struct vattr *va, int clear_node)
 {
-    VATTR_NULL(va);
+    if (clear_node)
+	VATTR_NULL(va);
     if (XA_VALID_MODE(xa))
 	va->va_mode = xa->xa_mode;
     if (XA_VALID_NLINK(xa))
@@ -397,17 +468,21 @@ tbl_enter (size_t len, const char *name, struct vnode *dvp, struct vnode *vp)
 }
 
 /*
- * Lookup in tbl
+ * Lookup in tbl (`dvp', `name', `len') and return result in `res'.
+ * Return -1 if succesful, otherwise 0.
  */
 
 static int
-tbl_lookup (size_t len, const char *name, struct vnode *dvp, struct vnode **res)
+tbl_lookup (struct componentname *cnp,
+	    struct vnode *dvp,
+	    struct vnode **res)
 {
     if (tbl.dvp == dvp
-	&& tbl.len == len
-	&& strncmp(tbl.name, name, len) == 0
+	&& tbl.len == cnp->cn_namelen
+	&& strncmp(tbl.name, cnp->cn_nameptr, tbl.len) == 0
 	&& tbl.dvpid == tbl.dvp->v_id
 	&& tbl.vpid == tbl.vp->v_id) {
+
 	*res = tbl.vp;
 	return -1;
     } else
@@ -423,13 +498,18 @@ xfs_dnlc_enter(struct vnode *dvp,
 	       xfs_componentname *cnp,
 	       struct vnode *vp)
 {
-    XFSDEB(XDEBDNLC, ("xfs_dnlc_enter_cnp(%p, %p, %p)\n", dvp, cnp, vp));
+    XFSDEB(XDEBDNLC, ("xfs_dnlc_enter_cnp(%lx, %lx, %lx)\n",
+		      (unsigned long)dvp,
+		      (unsigned long)cnp,
+		      (unsigned long)vp));
     XFSDEB(XDEBDNLC, ("xfs_dnlc_enter: v_id = %ld\n", dvp->v_id));
 
     XFSDEB(XDEBDNLC, ("xfs_dnlc_enter: calling cache_enter:"
-		      "dvp = %p, vp = %p, cnp = (%s, %ld, %lu), "
+		      "dvp = %lx, vp = %lx, cnp = (%s, %ld), "
 		      "nameiop = %lu, flags = %lx\n",
-		      dvp, vp, cnp->cn_nameptr, cnp->cn_namelen, cnp->cn_hash,
+		      (unsigned long)dvp,
+		      (unsigned long)vp,
+		      cnp->cn_nameptr, cnp->cn_namelen,
 		      cnp->cn_nameiop, cnp->cn_flags));
 
 #ifdef NCHNAMLEN
@@ -440,17 +520,35 @@ xfs_dnlc_enter(struct vnode *dvp,
 	 * This is to make sure there's no negative entry already in the dnlc
 	 */
 	u_long save_nameiop;
+	u_long save_flags;
 	struct vnode *dummy;
 
-	save_nameiop = cnp->cn_nameiop;
+	save_nameiop    = cnp->cn_nameiop;
+	save_flags      = cnp->cn_flags;
 	cnp->cn_nameiop = CREATE;
+	cnp->cn_flags  &= ~MAKEENTRY;
 
+/*
+ * The version number here is not entirely correct, but it's conservative.
+ * The real change is sys/kern/vfs_cache:1.20
+ */
+
+#if __NetBSD_Version__ >= 104120000
+	if (cache_lookup(dvp, &dummy, cnp) != -1) {
+	    VOP_UNLOCK(dummy, 0);
+	    printf ("XFS PANIC WARNING! xfs_dnlc_enter: %s already in cache\n",
+		    cnp->cn_nameptr);
+	}
+#else
 	if (cache_lookup(dvp, &dummy, cnp) != 0) {
 	    printf ("XFS PANIC WARNING! xfs_dnlc_enter: %s already in cache\n",
 		    cnp->cn_nameptr);
 	}
+#endif
+
 
 	cnp->cn_nameiop = save_nameiop;
+	cnp->cn_flags   = save_flags;
 	cache_enter(dvp, vp, cnp);
     }
 
@@ -461,21 +559,31 @@ xfs_dnlc_enter(struct vnode *dvp,
 }
 		   
 
-void
+static void
 xfs_cnp_init (struct componentname *cn,
-	      const char *name, struct vnode *vp, struct vnode *dvp,
+	      const char *name,
 	      struct proc *proc, struct ucred *cred,
 	      int nameiop)
 {
-    char *p ;
+    const unsigned char *p;
 
     bzero(cn, sizeof(*cn));
     cn->cn_nameptr = (char *)name;
     cn->cn_namelen = strlen(name);
     cn->cn_flags   = 0;
+#if __APPLE__
+    {
+	int i;
+
+	cn->cn_hash = 0;
+	for (p = cn->cn_nameptr, i = 1; *p; ++p, ++i)
+	    cn->cn_hash += *p * i;
+    }
+#elif defined(HAVE_STRUCT_COMPONENTNAME_CN_HASH)
     cn->cn_hash = 0;
     for (p = cn->cn_nameptr; *p; ++p)
 	cn->cn_hash += *p;
+#endif
     cn->cn_nameiop = nameiop;
     cn->cn_proc = proc;
     cn->cn_cred = cred;
@@ -492,58 +600,147 @@ xfs_dnlc_enter_name(struct vnode *dvp,
 		    struct vnode *vp)
 {
     struct componentname cn;
-    const char *p;
 
-    XFSDEB(XDEBDNLC, ("xfs_dnlc_enter_name(%p, \"%s\", %p)\n", dvp, name, vp));
+    XFSDEB(XDEBDNLC, ("xfs_dnlc_enter_name(%lx, \"%s\", %lx)\n",
+		      (unsigned long)dvp,
+		      name,
+		      (unsigned long)vp));
 
-    cn.cn_nameiop = LOOKUP;
-    cn.cn_flags   = 0;
-    cn.cn_namelen = strlen(name);
-    cn.cn_nameptr = (char *)name;
-    cn.cn_hash = 0;
-    for (p = cn.cn_nameptr; *p; ++p)
-	cn.cn_hash += *p;
-
+    xfs_cnp_init (&cn, name, NULL, NULL, LOOKUP);
     return xfs_dnlc_enter (dvp, &cn, vp);
 }
 
 /*
  * Lookup (dvp, cnp) in the DNLC and return the result in `res'.
- * Return -1 if succesful, 0 if not and ENOENT if we're sure it doesn't exist.
+ * Return the result from cache_lookup.
  */
 
-int
-xfs_dnlc_lookup(struct vnode *dvp,
-		xfs_componentname *cnp,
-		struct vnode **res)
+static int
+xfs_dnlc_lookup_int(struct vnode *dvp,
+		    xfs_componentname *cnp,
+		    struct vnode **res)
 {
     int error;
     u_long saved_flags;
 
-    XFSDEB(XDEBDNLC, ("xfs_dnlc_lookup(%p, \"%s\")\n", dvp, cnp->cn_nameptr));
+    XFSDEB(XDEBDNLC, ("xfs_dnlc_lookup(%lx, \"%s\")\n",
+		      (unsigned long)dvp, cnp->cn_nameptr));
     
     XFSDEB(XDEBDNLC, ("xfs_dnlc_lookup: v_id = %ld\n", dvp->v_id));
     
     XFSDEB(XDEBDNLC, ("xfs_dnlc_lookup: calling cache_lookup:"
-		      "dvp = %p, cnp = (%s, %ld, %lu), flags = %lx\n",
-		      dvp, cnp->cn_nameptr, cnp->cn_namelen, cnp->cn_hash,
+		      "dvp = %lx, cnp = (%s, %ld), flags = %lx\n",
+		      (unsigned long)dvp,
+		      cnp->cn_nameptr, cnp->cn_namelen,
 		      cnp->cn_flags));
 
     saved_flags = cnp->cn_flags;
-    cnp->cn_flags |= MAKEENTRY;
+    cnp->cn_flags |= MAKEENTRY | LOCKPARENT | ISLASTCN;
 
     error = cache_lookup(dvp, res, cnp);
 
     cnp->cn_flags = saved_flags;
 
     XFSDEB(XDEBDNLC, ("xfs_dnlc_lookup: cache_lookup returned. "
-		      "error = %d, *res = %p\n", error, *res));
+		      "error = %d, *res = %lx\n", error,
+		      (unsigned long)*res));
+    return error;
+}
 
-    if (error == -1 || error == ENOENT)
+/*
+ * do the last (and locking protocol) portion of xnlc_lookup
+ *
+ * return:
+ * -1 for succesful
+ * 0  for failed
+ */
+
+static int
+xfs_dnlc_lock(struct vnode *dvp,
+	      xfs_componentname *cnp,
+	      struct vnode **res)
+{
+    int error = 0;
+
+    /*
+     * Try to handle the (complex) BSD locking protocol.
+     */
+
+    if (*res == dvp) {		/* "." */
+	VREF(dvp);
+    } else if (cnp->cn_flags & ISDOTDOT) { /* ".." */
+	u_long vpid = dvp->v_id;
+
+	xfs_vfs_unlock(dvp, xfs_cnp_to_proc(cnp));
+	error = xfs_do_vget(*res, LK_EXCLUSIVE, xfs_cnp_to_proc(cnp));
+	xfs_vfs_writelock(dvp, xfs_cnp_to_proc(cnp));
+
+	if (error == 0 && dvp->v_id != vpid) {
+	    vput(*res);
+	    return 0;
+	}
+    } else {
+	error = xfs_do_vget(*res, LK_EXCLUSIVE, xfs_cnp_to_proc(cnp));
+    }
+
+    if (error == 0)
+	return -1;
+    else
+	return 0;
+}
+
+/*
+ * Lookup (`dvp', `cnp') in the DNLC (and the local cache).
+ *
+ * Return -1 if succesful, 0 if not and ENOENT if the entry is known
+ * not to exist.
+ *
+ * On modern NetBSD, cache_lookup has been changed to return 0 for
+ * succesful and -1 for not.
+ * (see the comment above for version information).
+ */
+
+#if __NetBSD_Version__ >= 104120000
+
+int
+xfs_dnlc_lookup(struct vnode *dvp,
+		xfs_componentname *cnp,
+		struct vnode **res)
+{
+    int error = xfs_dnlc_lookup_int (dvp, cnp, res);
+
+    if (error == 0)
+	return -1;
+    else if (error == ENOENT)
 	return error;
 
-    return tbl_lookup (cnp->cn_namelen, cnp->cn_nameptr, dvp, res);
+    error = tbl_lookup (cnp, dvp, res);
+
+    if (error != -1)
+	return error;
+
+    return xfs_dnlc_lock (dvp, cnp, res);
 }
+
+#else /* !  __NetBSD_Version__ >= 104120000 */
+
+int
+xfs_dnlc_lookup(struct vnode *dvp,
+		xfs_componentname *cnp,
+		struct vnode **res)
+{
+    int error = xfs_dnlc_lookup_int (dvp, cnp, res);
+
+    if (error == 0)
+	error = tbl_lookup (cnp, dvp, res);
+
+    if (error != -1)
+	return error;
+
+    return xfs_dnlc_lock (dvp, cnp, res);
+}
+
+#endif /*  __NetBSD_Version__ >= 104120000 */
 
 /*
  * Remove one entry from the DNLC
@@ -578,7 +775,7 @@ xfs_dnlc_purge_mp(struct mount *mp)
  */
 
 int
-xfs_has_pag(const struct xfs_node *xn, pag_t pag)
+xfs_has_pag(const struct xfs_node *xn, xfs_pag_t pag)
 {
     int i;
 

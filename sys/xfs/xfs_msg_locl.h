@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/sys/xfs/Attic/xfs_msg_locl.h,v 1.1 1998/08/30 16:47:21 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,20 +31,57 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: xfs_msg_locl.h,v 1.1 1998/03/26 02:25:53 assar Exp $ */
+/* $Id: xfs_msg_locl.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
 #ifndef _xfs_msg_locl_h
 #define _xfs_msg_locl_h
 
-int xfs_message_installroot(int fd, struct xfs_message_installroot * message,
-			    u_int size, struct proc *p);
-int xfs_message_installnode(int fd, struct xfs_message_installnode * message,
-			    u_int size,struct proc *p);
-int xfs_message_installattr(int fd, struct xfs_message_installattr * message,
-			    u_int size,struct proc *p);
-int xfs_message_installdata(int fd, struct xfs_message_installdata * message,
-			    u_int size, struct proc *p);
-int xfs_message_invalidnode(int fd, struct xfs_message_invalidnode * message,
-			    u_int size, struct proc *p);
+int
+xfs_message_installroot(int fd,
+			struct xfs_message_installroot * message,
+			u_int size,
+			struct proc *p);
+
+int
+xfs_message_installnode(int fd,
+			struct xfs_message_installnode * message,
+			u_int size,
+			struct proc *p);
+
+int
+xfs_message_installattr(int fd,
+			struct xfs_message_installattr * message,
+			u_int size,
+			struct proc *p);
+
+int
+xfs_message_installdata(int fd,
+			struct xfs_message_installdata * message,
+			u_int size,
+			struct proc *p);
+
+int
+xfs_message_invalidnode(int fd,
+			struct xfs_message_invalidnode * message,
+			u_int size,
+			struct proc *p);
+
+int
+xfs_message_updatefid(int fd,
+		      struct xfs_message_updatefid * message,
+		      u_int size,
+		      struct proc *p);
+
+int
+xfs_message_gc_nodes(int fd,
+		     struct xfs_message_gc_nodes * message,
+		     u_int size,
+		     struct proc *p);
+
+int
+xfs_message_version(int fd,
+		    struct xfs_message_version *message,
+		    u_int size,
+		    struct proc *p);
 
 #endif				       /* _xfs_msg_locl_h */

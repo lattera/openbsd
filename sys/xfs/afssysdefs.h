@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -31,30 +31,73 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_debug.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
+/* $Id: afssysdefs.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
-#ifndef __XFS_DEBUG_H
-#define __XFS_DEBUG_H
-
-/* 
- * These are GLOBAL xfs debugging masks
+/*
+ * This section is for machines using single entry point AFS syscalls!
+ * and/or
+ * This section is for machines using multiple entry point AFS syscalls!
  *
- *   Define HAVE_XDEB in your local xfs_deb.h if
- *   you want your fs to handle the debugging flags.
+ * SunOS 4 is an example of single entry point and sgi of multiple
+ * entry point syscalls.
  */
 
-/* Masks for the debug macro */
-#define XDEBDEV		0x00000001	/* device handling */
-#define XDEBMSG		0x00000002	/* message sending */
-#define XDEBDNLC	0x00000004	/* name cache */
-#define XDEBNODE	0x00000008	/* xfs nodes */
-#define XDEBVNOPS	0x00000010	/* vnode operations */
-#define XDEBVFOPS	0x00000020	/* vfs operations */
-#define XDEBLKM         0x00000040	/* LKM handling */
-#define XDEBSYS	        0x00000080	/* syscalls */
-#define XDEBMEM		0x00000100	/* memory allocation */
-#define XDEBREADDIR     0x00000200      /* readdir (linux) */
-#define XDEBLOCK	0x00000400	/* locking (linux) */
-#define XDEBCACHE       0x00000800      /* Cache handeling (linux) */
+#if SunOS == 40
+#define AFS_SYSCALL	31
+#endif
 
+#if SunOS >= 50 && SunOS < 57
+#define AFS_SYSCALL	105
+#endif
+
+#if SunOS >= 57
+#define AFS_SYSCALL	73
+#endif
+
+#if SunOS >= 58
+#define AFS_SYSCALL     65
+#endif
+
+#if defined(__hpux)
+#define AFS_SYSCALL	50
+#define AFS_SYSCALL2	49
+#define AFS_SYSCALL3	48
+#endif
+
+#if defined(_AIX)
+/* _AIX is too weird */
+#endif
+
+#if defined(__sgi)
+#define AFS_PIOCTL      (64+1000)
+#define AFS_SETPAG      (65+1000)
+#endif
+
+#if defined(__osf__)
+#define AFS_SYSCALL	232
+#define AFS_SYSCALL2	258
+#endif
+
+#if defined(__ultrix)
+#define AFS_SYSCALL	31
+#endif
+
+#if defined(__NetBSD__)
+#define AFS_SYSCALL 210
+#endif
+
+#if defined(__FreeBSD__)
+#define AFS_SYSCALL 339
+#endif
+
+#if defined(__OpenBSD__)
+#define AFS_SYSCALL 208
+#endif
+
+#ifdef __APPLE__		/* MacOS X */
+#define AFS_SYSCALL 230
+#endif
+
+#ifdef SYS_afs_syscall
+#define AFS_SYSCALL3	SYS_afs_syscall
 #endif

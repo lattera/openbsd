@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -44,7 +39,7 @@
 #include <xfs/xfs_dev.h>
 #include <xfs/xfs_deb.h>
 
-RCSID("$Id: xfs_dev-common.c,v 1.22 1999/04/06 13:58:12 lha Exp $");
+RCSID("$Id: xfs_dev-common.c,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $");
 
 struct xfs_channel xfs_channel[NXFS];
 
@@ -57,14 +52,14 @@ xfs_initq(struct xfs_link *q)
 
 /* Is this queue empty? */
 int
-xfs_emptyq(struct xfs_link *q)
+xfs_emptyq(const struct xfs_link *q)
 {
     return q->next == q;
 }
 
 /* Is this link on any queue? Link *must* be inited! */
 int
-xfs_onq(struct xfs_link *link)
+xfs_onq(const struct xfs_link *link)
 {
     return link->next != NULL || link->prev != NULL;
 }
@@ -79,19 +74,20 @@ xfs_appendq(struct xfs_link *q, struct xfs_link *p)
     q->prev = p;
 }
 
+/* remove `p' from its queue */
 void
 xfs_outq(struct xfs_link *p)
 {
     p->next->prev = p->prev;
     p->prev->next = p->next;
-    p->next = p->prev = 0;
+    p->next = p->prev = NULL;
 }
 
 /*
  * Only allow one open.
  */
 int
-xfs_devopen_common(dev_t dev)
+xfs_devopen_common(dev_t dev, struct proc *p)
 {
     struct xfs_channel *chan;
 
@@ -104,8 +100,9 @@ xfs_devopen_common(dev_t dev)
     if (chan->status & CHANNEL_OPENED) {
 	XFSDEB(XDEBDEV, ("xfs_devopen: already open\n"));
 	return EBUSY;
-    } else
+    } else {
 	chan->status |= CHANNEL_OPENED;
+    }
 
     chan->message_buffer = xfs_alloc(MAX_XMSG_SIZE);
 
@@ -192,20 +189,47 @@ xfs_devclose_common(dev_t dev, struct proc *proc)
     return 0;
 }
 
+#ifdef XFS_DEBUG
+/*
+ * osf glue for CURSIG
+ */
+
+static long
+xfs_cursig (struct proc *p)
+{
+#ifdef __osf__
+    thread_t th 	= current_thread();
+    struct np_uthread	*npu = thread_to_np_uthread(th);
+    return CURSIG(p,npu);
+#else
+    return CURSIG(p);
+#endif
+}
+#endif
+
 /*
  * Move messages from kernel to user space.
  */
+
 int
 xfs_devread(dev_t dev, struct uio * uiop, int ioflag)
 {
     struct xfs_channel *chan = &xfs_channel[minor(dev)];
     struct xfs_link *first;
     int error = 0;
+#ifdef XFS_DEBUG
+    char devname[64];
+#endif
 
-    XFSDEB(XDEBDEV, ("xfs_devread dev = %d\n", dev));
+    XFSDEB(XDEBDEV, ("xfs_devread dev = %s\n",
+		     xfs_devtoname_r(dev, devname, sizeof(devname))));
 
-    XFSDEB(XDEBDEV, ("xfs_devread: m = %p, m->prev = %p, m->next = %p\n",
-		&chan->messageq, chan->messageq.prev, chan->messageq.next));
+    XFSDEB(XDEBDEV, ("xfs_devread: m = %lx, m->prev = %lx, m->next = %lx\n",
+		     (unsigned long)&chan->messageq,
+		     (unsigned long)chan->messageq.prev,
+		     (unsigned long)chan->messageq.next));
+
+    chan->proc = xfs_uio_to_proc(uiop);
 
  again:
 
@@ -213,13 +237,18 @@ xfs_devread(dev_t dev, struct uio * uiop, int ioflag)
 	while (!xfs_emptyq (&chan->messageq)) {
 	    /* Remove message */
 	    first = chan->messageq.next;
-	    XFSDEB(XDEBDEV, ("xfs_devread: first = %p, "
-			     "first->prev = %p, first->next = %p\n",
-			     first, first->prev, first->next));
+	    XFSDEB(XDEBDEV, ("xfs_devread: first = %lx, "
+			     "first->prev = %lx, first->next = %lx\n",
+			     (unsigned long)first,
+			     (unsigned long)first->prev,
+			     (unsigned long)first->next));
 	    
 	    XFSDEB(XDEBDEV, ("xfs_devread: message->size = %u\n",
 			     first->message->size));
 	    
+	    if (first->message->size > uiop->uio_resid)
+		break;
+
 	    error = uiomove((caddr_t) first->message, first->message->size, 
 			    uiop);
 	    if (error)
@@ -232,15 +261,16 @@ xfs_devread(dev_t dev, struct uio * uiop, int ioflag)
 	}
     } else {
 	chan->status |= CHANNEL_WAITING;
-	if (tsleep((caddr_t) chan, (PZERO + 1) | PCATCH, "xfsr", 0)) {
-	    XFSDEB(XDEBMSG, ("caught signal xfs_devread\n"));
+	if (tsleep((caddr_t) chan, (PZERO + 1) | PCATCH, "xfsread", 0)) {
+	    XFSDEB(XDEBMSG,
+		   ("caught signal xfs_devread: %ld\n",
+		    xfs_cursig(xfs_uio_to_proc(uiop))));
 	    error = EINTR;
 	} else if ((chan->status & CHANNEL_WAITING) == 0) {
 	    goto again;
 	} else
 	    error = EIO;
     }
-    
     
     XFSDEB(XDEBDEV, ("xfs_devread done error = %d\n", error));
 
@@ -259,9 +289,14 @@ xfs_devwrite(dev_t dev, struct uio *uiop, int ioflag)
     int error;
     u_int cnt;
     struct xfs_message_header *msg_buf;
+#ifdef XFS_DEBUG
+    char devname[64];
+#endif
 
-    XFSDEB(XDEBDEV, ("xfs_devwrite dev = %d\n", dev));
+    XFSDEB(XDEBDEV, ("xfs_devwrite dev = %s\n",
+		     xfs_devtoname_r (dev, devname, sizeof(devname))));
 
+    chan->proc = xfs_uio_to_proc(uiop);
     cnt = uiop->uio_resid;
     error = uiomove((caddr_t) chan->message_buffer, MAX_XMSG_SIZE, uiop);
     if (error != 0)
@@ -323,25 +358,68 @@ xfs_message_send(int fd, struct xfs_message_header * message, u_int size)
     return 0;
 }
 
+#if defined(SWEXIT)
+#define XFS_P_EXIT SWEXIT
+#elif defined(P_WEXIT)
+#define XFS_P_EXIT P_WEXIT
+#else
+#error what is your exit named ?
+#endif
+
+#if defined(HAVE_STRUCT_PROC_P_SIGMASK) || defined(HAVE_STRUCT_PROC_P_SIGCTX)
+static void
+xfs_block_sigset (sigset_t *sigset)
+{
+#if defined(__sigaddset)
+    __sigaddset(sigset, SIGIO);
+    __sigaddset(sigset, SIGALRM);
+    __sigaddset(sigset, SIGVTALRM);
+#elif defined(SIGADDSET)
+    SIGADDSET(*sigset, SIGIO);
+    SIGADDSET(*sigset, SIGALRM);
+    SIGADDSET(*sigset, SIGVTALRM);
+#else
+    *sigset |= sigmask(SIGIO);
+    *sigset |= sigmask(SIGALRM);
+    *sigset |= sigmask(SIGVTALRM);
+#endif /* __sigaddset */
+}
+#endif
+
 /*
  * Send a message to user space and wait for reply.
  */
+
 int
-xfs_message_rpc(int fd, struct xfs_message_header * message, u_int size)
+xfs_message_rpc(int fd, struct xfs_message_header * message, u_int size,
+		struct proc *proc)
 {
     int ret;
     struct xfs_channel *chan = &xfs_channel[fd];
     struct xfs_link *this_message;
     struct xfs_link *this_process;
     struct xfs_message_header *msg;
-#if defined(HAVE_STRUCT_PROC_P_SIGMASK)
+#if defined(HAVE_STRUCT_PROC_P_SIGMASK) || defined(HAVE_STRUCT_PROC_P_SIGCTX) || defined(__osf__)
     sigset_t oldsigmask;
-#endif /* HAVE_STRUCT_PROC_P_SIGMASK */
+#endif
+    int catch;
 
     XFSDEB(XDEBMSG, ("xfs_message_rpc opcode = %d\n", message->opcode));
 
+    if (proc == NULL)
+	proc = xfs_curproc();
+
     if (!(chan->status & CHANNEL_OPENED))	/* No receiver? */
 	return ENODEV;
+
+    if (chan->proc != NULL && proc->p_pid == chan->proc->p_pid) {
+	printf("xfs_message_rpc: deadlock avoided "
+	       "pid = %u == %u\n", proc->p_pid, chan->proc->p_pid);
+#if 0
+	psignal (proc, SIGABRT);
+#endif
+	return EDEADLK;
+    }
 
     if (size < sizeof(struct xfs_message_wakeup)) {
 	printf("XFS PANIC Error: Message to small to receive wakeup, opcode = %d\n", message->opcode);
@@ -373,31 +451,60 @@ xfs_message_rpc(int fd, struct xfs_message_header * message, u_int size)
      */
 
 #ifdef HAVE_STRUCT_PROC_P_SIGMASK
-    oldsigmask = xfs_curproc()->p_sigmask;
-#ifdef __sigaddset
-    __sigaddset(&xfs_curproc()->p_sigmask, SIGIO);
-#else
-    xfs_curproc()->p_sigmask |= sigmask(SIGIO);
-#endif /* __sigaddset */
+    /* NetBSD 1.5, Darwin 1.3, FreeBSD 4.3, 5.0, OpenBSD 2.8 */
+    oldsigmask = proc->p_sigmask;
+    xfs_block_sigset (&proc->p_sigmask);
+#elif defined(HAVE_STRUCT_PROC_P_SIGCTX)
+    /* NetBSD 1.6 */
+    oldsigmask = proc->p_sigctx.ps_sigmask;
+    xfs_block_sigset (&proc->p_sigctx.ps_sigmask);
 #elif defined(HAVE_STRUCT_PROC_P_SIGWAITMASK)
-    oldsigmask = xfs_curproc()->p_sigwaitmask;
-    sigaddset(&xfs_curproc()->p_sigwaitmask, SIGIO);
+    /* OSF 4.0 */
+    oldsigmask = proc->p_sigwaitmask;
+    sigaddset(&proc->p_sigwaitmask, SIGIO);
+    sigaddset(&proc->p_sigwaitmask, SIGALRM);
+    sigaddset(&proc->p_sigwaitmask, SIGVTALRM);
+#elif defined(__osf__)
+    oldsigmask = u.u_sigmask;
+    sigaddset(&u.u_sigmask, SIGIO);
+    sigaddset(&u.u_sigmask, SIGALRM);
+    sigaddset(&u.u_sigmask, SIGVTALRM);
 #endif
+
+    /*
+     * if we are exiting we should not try to catch signals, since
+     * there might not be enough context left in the process to handle
+     * signal delivery, and besides, most BSD-variants ignore all
+     * signals while closing anyway.
+     */
+
+    catch = 0;
+    if (!(proc->p_flag & XFS_P_EXIT))
+	catch |= PCATCH;
+
     /*
      * We have to check if we have a receiver here too because the
      * daemon could have terminated before we sleep. This seems to
-     * happen sometimes when rebooting.
-     */
-    if (!(chan->status & CHANNEL_OPENED) ||
-	tsleep((caddr_t) this_process, (PZERO + 1) | PCATCH, "xfs", 0)) {
-	XFSDEB(XDEBMSG, ("caught signal\n"));
+     * happen sometimes when rebooting.  */
+
+    if (!(chan->status & CHANNEL_OPENED)) {
+	XFSDEB(XDEBMSG, ("xfs_message_rpc: channel went away\n"));
+	this_process->error_or_size = EINTR;
+    } else if ((ret = tsleep((caddr_t) this_process,
+			     (PZERO + 1) | catch, "xfs", 0)) != 0) {
+	XFSDEB(XDEBMSG, ("caught signal (%d): %ld\n",
+			 ret, xfs_cursig(proc)));
 	this_process->error_or_size = EINTR;
     }
 
 #ifdef HAVE_STRUCT_PROC_P_SIGMASK
-    xfs_curproc()->p_sigmask = oldsigmask;
+    proc->p_sigmask = oldsigmask;
+#elif defined(HAVE_STRUCT_PROC_P_SIGCTX)
+    proc->p_sigctx.ps_sigmask = oldsigmask;
 #elif defined(HAVE_STRUCT_PROC_P_SIGWAITMASK)
-    xfs_curproc()->p_sigwaitmask = oldsigmask;
+    proc->p_sigwaitmask = oldsigmask;
+#elif defined(__osf__)
+    u.u_sigmask = oldsigmask;
 #endif
 
     /*
@@ -480,6 +587,16 @@ xfs_message_receive(int fd,
 				     (struct xfs_message_updatefid *)message,
 				     message->size,
 				     p);
+    case XFS_MSG_GC_NODES:
+	return xfs_message_gc_nodes(fd,
+				    (struct xfs_message_gc_nodes *)message,
+				    message->size,
+				    p);
+    case XFS_MSG_VERSION:
+	return xfs_message_version(fd,
+				   (struct xfs_message_version *)message,
+				   message->size,
+				   p);
     default:
 	printf("XFS PANIC Warning xfs_dev: Unknown message opcode == %d\n",
 	       message->opcode);
@@ -550,10 +667,10 @@ xfs_uprintf_device(void)
 
     for (i = 0; i < NXFS; i++) {
 	uprintf("xfs_channel[%d] = {\n", i);
-	uprintf("messageq.next = %p ", xfs_channel[i].messageq.next);
-	uprintf("messageq.prev = %p ", xfs_channel[i].messageq.prev);
-	uprintf("sleepq.next = %p ", xfs_channel[i].sleepq.next);
-	uprintf("sleepq.prev = %p ", xfs_channel[i].sleepq.prev);
+	uprintf("messageq.next = %lx ", xfs_channel[i].messageq.next);
+	uprintf("messageq.prev = %lx ", xfs_channel[i].messageq.prev);
+	uprintf("sleepq.next = %lx ", xfs_channel[i].sleepq.next);
+	uprintf("sleepq.prev = %lx ", xfs_channel[i].sleepq.prev);
 	uprintf("nsequence = %d status = %d\n",
 		xfs_channel[i].nsequence,
 		xfs_channel[i].status);

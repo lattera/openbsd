@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/sys/xfs/Attic/xfs_syscalls.h,v 1.1 1998/08/30 16:47:22 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,14 +31,63 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: xfs_syscalls.h,v 1.2 1998/01/21 01:03:57 mho Exp $ */
+/* $Id: xfs_syscalls.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
 #ifndef  __xfs_syscalls
 #define  __xfs_syscalls
 
+#include <xfs/xfs_common.h>
+#include <xfs/xfs_message.h>
+
+#include <xfs/afssysdefs.h>
+
+struct sys_pioctl_args {
+    syscallarg(int) operation;
+    syscallarg(char *) a_pathP;
+    syscallarg(int) a_opcode;
+    syscallarg(struct ViceIoctl *) a_paramsP;
+    syscallarg(int) a_followSymlinks;
+};
+
+#define XFS_FHMAXDATA 40
+
+struct xfs_fhandle_t {
+    u_short	len;
+    u_short	pad;
+    char	fhdata[XFS_FHMAXDATA];
+};
+
+struct xfs_fh_args {
+    syscallarg(fsid_t) fsid;
+    syscallarg(long)   fileid;
+    syscallarg(long)   gen;
+};
+
 int xfs_install_syscalls(void);
 int xfs_uninstall_syscalls(void);
 int xfs_stat_syscalls(void);
-pag_t xfs_get_pag(struct ucred *);
+xfs_pag_t xfs_get_pag(struct ucred *);
+
+int xfs_setpag_call(struct ucred **ret_cred);
+int xfs_pioctl_call(struct proc *proc,
+		    struct sys_pioctl_args *args,
+		    register_t *return_value);
+
+int xfspioctl(struct proc *proc, void *varg, register_t *retval);
+
+int xfs_setgroups (struct proc *p,
+		   void *varg);
+
+extern int (*old_setgroups_func)(struct proc *, void *);
+extern int xfs_syscall_num; /* The old syscall number */
+
+
+#ifndef HAVE_KERNEL_SYS_LKMNOSYS
+#define sys_lkmnosys nosys
+#endif
+
+#ifndef SYS_MAXSYSCALL
+#define SYS_MAXSYSCALL nsysent
+#endif
 
 #endif				       /* __xfs_syscalls */

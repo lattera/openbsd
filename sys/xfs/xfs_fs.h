@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/sys/xfs/Attic/xfs_fs.h,v 1.1 1998/08/30 16:47:21 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,17 +31,18 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: xfs_fs.h,v 1.8 1998/04/04 01:17:26 art Exp $ */
+/* $Id: xfs_fs.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
 #ifndef _xfs_h
 #define _xfs_h
 
 #include <sys/types.h>
 
+#include <xfs/xfs_common.h>
 #include <xfs/xfs_node.h>
-#include <sys/xfs_attr.h>
+#include <xfs/xfs_attr.h>
 
-#define NXFS 2 /* maximal number of filesystems on a single device */
+#include <xfs/nxfs.h>
 
 /*
  * Filesystem struct.
@@ -58,11 +53,18 @@ struct xfs {
     struct mount *mp;
     struct xfs_node *root;
     u_int nnodes;
-
     int fd;
 };
 
+#ifdef __osf__
+#ifdef HAVE_STRUCT_MOUNT_M_INFO
+#define VFS_TO_XFS(v)      ((struct xfs *) ((v)->m_info))
+#else
+#define VFS_TO_XFS(v)      ((struct xfs *) ((v)->m_data))
+#endif
+#else
 #define VFS_TO_XFS(v)      ((struct xfs *) ((v)->mnt_data))
+#endif
 #define XFS_TO_VFS(x)      ((x)->mp)
 
 #define XFS_FROM_VNODE(vp) VFS_TO_XFS((vp)->v_mount)
@@ -76,15 +78,18 @@ struct xfs_node *xfs_node_find(struct xfs *, struct xfs_handle *);
 int new_xfs_node(struct xfs *, struct xfs_msg_node *, struct xfs_node **,
 		 struct proc *);
 void free_xfs_node(struct xfs_node *);
-int free_all_xfs_nodes(struct xfs *, int);
+int free_all_xfs_nodes(struct xfs *, int, int);
 
-int xfs_dnlc_enter(struct vnode *, char *, struct vnode *);
-void xfs_dnlc_purge(struct mount *);
-int xfs_dnlc_lookup(struct vnode *, struct componentname *, struct vnode **);
+int xfs_dnlc_enter(struct vnode *, xfs_componentname *, struct vnode *);
+int xfs_dnlc_enter_name(struct vnode *, const char *, struct vnode *);
+void xfs_dnlc_purge_mp(struct mount *);
+void xfs_dnlc_purge(struct vnode *);
+int xfs_dnlc_lookup(struct vnode *, xfs_componentname *, struct vnode **);
+int xfs_dnlc_lookup_name(struct vnode *, const char *, struct vnode **);
 
-void vattr2xfs_attr(const struct vattr * va, struct xfs_attr *xa);
-void xfs_attr2vattr(const struct xfs_attr *xa, struct vattr * va);
+void vattr2xfs_attr(const struct vattr *, struct xfs_attr *);
+void xfs_attr2vattr(const struct xfs_attr *, struct vattr *, int);
 
-int xfs_has_pag(const struct xfs_node *xn, pag_t pag);
+int xfs_has_pag(const struct xfs_node *, xfs_pag_t);
 
 #endif				       /* _xfs_h */

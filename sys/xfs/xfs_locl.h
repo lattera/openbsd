@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,9 +31,11 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_locl.h,v 1.21 1999/01/19 19:55:21 art Exp $ */
+/* $Id: xfs_locl.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
-#if 1 /* XXX - ugly hack */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#else
 #include <xfs/xfs_config.h>
 #endif
 
@@ -69,6 +66,7 @@
 #include <vm/vm_ubc.h>
 
 typedef short int16_t;
+typedef unsigned short u_int16_t;
 typedef int int32_t;
 typedef unsigned int u_int32_t;
 
@@ -108,15 +106,28 @@ typedef struct nameidata xfs_componentname;
 #define xfs_uio_to_proc(uiop) (u.u_procp)
 #define xfs_cnp_to_proc(cnp) (u.u_procp)
 #define xfs_proc_to_cred(p) ((p)->p_rcred)
+#define xfs_proc_to_euid(p) ((p)->p_rcred->cr_uid)
 
 #define xfs_curproc() (u.u_procp)
 
-#else /* __osf__ */
+#define xfs_vop_read VOP_READ
+#define xfs_vop_write VOP_WRITE
+#define xfs_vop_getattr(t, attr, cred, proc, error) VOP_GETATTR((t), (attr), (cred), (error))
+#define xfs_vop_access(dvp, mode, cred, proc, error) VOP_ACCESS((dvp), (mode), (cred), (error))
+
+struct vop_generic_args;
+
+typedef u_long va_size_t;
+
+#else /* !__osf__ */
 
 typedef struct componentname xfs_componentname;
 
 #include <sys/types.h>
 #include <sys/param.h>
+#if 0
+#include <sys/ioctl.h>
+#endif
 #include <sys/proc.h>
 #include <sys/filedesc.h>
 #include <sys/kernel.h>
@@ -134,7 +145,9 @@ typedef struct componentname xfs_componentname;
 #ifdef HAVE_SYS_SYSENT_H
 #include <sys/sysent.h>
 #endif
+#ifdef HAVE_SYS_LKM_H
 #include <sys/lkm.h>
+#endif
 #include <sys/errno.h>
 #include <sys/file.h>
 #include <sys/namei.h>
@@ -145,12 +158,23 @@ typedef struct componentname xfs_componentname;
 #ifdef HAVE_SYS_POLL_H
 #include <sys/poll.h>
 #endif
+#ifdef HAVE_SYS_SIGNALVAR_H
+#include <sys/signalvar.h>
+#endif
 #include <sys/syscall.h>
 #include <sys/queue.h>
 #include <sys/malloc.h>
+#ifdef HAVE_SYS_SYSCALLARGS_H
+#include <sys/syscallargs.h>
+#endif
+#ifdef HAVE_SYS_ATTR_H
+#include <sys/attr.h>
+#endif
+
 #ifdef HAVE_MISCFS_GENFS_GENFS_H
 #include <miscfs/genfs/genfs.h>
 #endif
+#ifndef HAVE_KERNEL_UVM_ONLY
 #ifdef HAVE_VM_VM_H
 #include <vm/vm.h>
 #endif
@@ -160,14 +184,103 @@ typedef struct componentname xfs_componentname;
 #ifdef HAVE_VM_VM_ZONE_H
 #include <vm/vm_zone.h>
 #endif
+#ifdef HAVE_VM_VM_OBJECT_H
+#include <vm/vm_object.h>
+#endif
+#endif
+#ifdef HAVE_UVM_UVM_EXTERN_H
+#include <uvm/uvm_extern.h>
+#endif
+
+#if defined(__APPLE__)
+#include <machine/machine_routines.h>
+#include <mach/machine/vm_types.h>
+#include <sys/ubc.h>
+void cache_purge(struct vnode *);
+int cache_lookup(struct vnode *, struct vnode **, struct componentname *);
+void cache_enter(struct vnode *, struct vnode *, struct componentname *);
+void cache_purgevfs(struct mount *);
+#endif
 
 #define xfs_uio_to_proc(uiop) ((uiop)->uio_procp)
 #define xfs_cnp_to_proc(cnp) ((cnp)->cn_proc)
 #define xfs_proc_to_cred(p) ((p)->p_ucred)
+#define xfs_proc_to_euid(p) ((p)->p_ucred->cr_uid)
 
+#ifdef __APPLE__
+#define xfs_curproc() (current_proc())
+#else
 #define xfs_curproc() (curproc)
+#endif
 
-#endif /* __osf__ */
+#define xfs_vop_read(t, uio, ioflag, cred, error) (error) = VOP_READ((t), (uio), (ioflag), (cred))
+#define xfs_vop_write(t, uio, ioflag, cred, error) (error) = VOP_WRITE((t), (uio), (ioflag), (cred))
+#define xfs_vop_getattr(t, attr, cred, proc, error) (error) = VOP_GETATTR((t), (attr), (cred), (proc))
+#define xfs_vop_access(dvp, mode, cred, proc, error) (error) = VOP_ACCESS((dvp), (mode), (cred), (proc))
+
+typedef u_quad_t va_size_t;
+
+#endif /* !__osf__ */
+
+/*
+ * XXX
+ */
+
+#ifndef SCARG
+#define SCARG(a, b) ((a)->b.datum)
+#define syscallarg(x)   union { x datum; register_t pad; }
+#endif
+
+#ifndef syscallarg
+#define syscallarg(x)   x
+#endif
+
+#ifndef HAVE_REGISTER_T
+typedef int register_t;
+#endif
+
+#if defined(HAVE_DEF_STRUCT_SETGROUPS_ARGS)
+#define xfs_setgroups_args setgroups_args
+#elif defined(HAVE_DEF_STRUCT_SYS_SETGROUPS_ARGS)
+#define xfs_setgroups_args sys_setgroups_args
+#elif __osf__
+struct xfs_setgroups_args {
+    syscallarg(int) gidsetsize;
+    syscallarg(gid_t) *gidset;
+};
+#elif defined(__APPLE__)
+struct xfs_setgroups_args{
+        syscallarg(u_int)   gidsetsize;
+        syscallarg(gid_t)   *gidset;
+};
+#else
+#error what is you setgroups named ?
+#endif
+
+
+#ifdef HAVE_KERNEL_VFS_GETVFS
+#define xfs_vfs_getvfs vfs_getvfs
+#else
+#define xfs_vfs_getvfs getvfs
+#endif
+
+#ifdef HAVE_FOUR_ARGUMENT_VFS_OBJECT_CREATE
+#define xfs_vfs_object_create(vp,proc,ucred) vfs_object_create(vp,proc,ucred,TRUE)
+#else
+#define xfs_vfs_object_create(vp,proc,ucred) vfs_object_create(vp,proc,ucred)
+#endif
+
+#ifdef UVM
+#define xfs_set_vp_size(vp, sz) uvm_vnp_setsize(vp, sz)
+#elif HAVE_KERNEL_VNODE_PAGER_SETSIZE
+#define xfs_set_vp_size(vp, sz) vnode_pager_setsize(vp, sz)
+#elif defined(__APPLE__)
+#define xfs_set_vp_size(vp, sz) ubc_setsize(vp, sz)
+#else
+#define xfs_set_vp_size(vp, sz)
+#endif
+
+#include <xfs/xfs_syscalls.h>
 
 /* 
  *  The VOP table

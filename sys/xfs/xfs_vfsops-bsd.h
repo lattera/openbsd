@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- *
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_vfsops-bsd.h,v 1.2 1999/01/19 19:55:56 art Exp $ */
+/* $Id: xfs_vfsops-bsd.h,v 1.1.1.1 2002/06/05 17:24:11 hin Exp $ */
 
 #ifndef _xfs_vfsops_bsd_h
 #define _xfs_vfsops_bsd_h
@@ -44,7 +39,11 @@
 int
 xfs_mount(struct mount * mp,
 	  const char *user_path,
+#ifdef __OpenBSD__
+	  void *user_data,
+#else
 	  caddr_t user_data,
+#endif
 	  struct nameidata * ndp,
 	  struct proc * p);
 
@@ -68,9 +67,19 @@ xfs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p);
 
 int
 xfs_vget(struct mount * mp,
+#ifdef __APPLE__
+	 void *ino,
+#else
 	 ino_t ino,
+#endif
 	 struct vnode ** vpp);
 
+#ifdef HAVE_STRUCT_VFSOPS_VFS_CHECKEXP
+int
+xfs_fhtovp(struct mount * mp,
+	   struct fid * fhp,
+	   struct vnode ** vpp);
+#else
 int
 xfs_fhtovp(struct mount * mp,
 	   struct fid * fhp,
@@ -78,6 +87,18 @@ xfs_fhtovp(struct mount * mp,
 	   struct vnode ** vpp,
 	   int *exflagsp,
 	   struct ucred ** credanonp);
+#endif
+
+struct mbuf;
+int
+xfs_checkexp (struct mount *mp,
+#ifdef __FreeBSD__
+	      struct sockaddr *nam,
+#else
+	      struct mbuf *nam,
+#endif
+	      int *exflagsp,
+	      struct ucred **credanonp);
 
 int
 xfs_vptofh(struct vnode * vp,
