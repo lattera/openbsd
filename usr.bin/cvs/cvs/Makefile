@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2004/08/03 04:58:46 jfb Exp $
+# $Id: Makefile,v 1.9 2004/11/18 15:48:53 jfb Exp $
 
 .PATH:	${.CURDIR}/..
 
@@ -14,11 +14,13 @@ BINOWN=root
 BINGRP=_cvsd
 BINMODE=555
 
+CFLAGS= -g -ggdb
 CFLAGS+= -Wall
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+= -Wsign-compare
 CFLAGS+= -DCVS
 
+INSTALL_STRIP=
 
 
 .include <bsd.prog.mk>
