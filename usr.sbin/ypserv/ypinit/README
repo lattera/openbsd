@@ -1,0 +1,10 @@
+ $OpenBSD: src/usr.sbin/ypserv/ypinit/README,v 1.2 1999/09/14 06:21:24 pjanzen Exp $
+
+The files Makefile.yp.dist and Makefile.main.dist should NEVER be changed,
+since they will be overwritten by, for example, 'make build'.
+
+Local changes can be done in Makefile.yp and Makefile.main. They are replaced
+by 'make' in /usr/src/etc, which normally isn't done.
+
+-moj
+
