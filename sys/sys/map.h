@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/sys/Attic/map.h,v 1.2 1996/03/03 12:11:59 niklas Exp $	*/
 /*	$NetBSD: map.h,v 1.10 1995/09/15 05:32:45 jtc Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/sys/unpcb.h,v 1.2 1996/03/03 12:12:41 niklas Exp $	*/
 /*	$NetBSD: unpcb.h,v 1.6 1994/06/29 06:46:08 cgd Exp $	*/
 
 /*

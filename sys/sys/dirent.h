@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/sys/dirent.h,v 1.2 1996/03/03 12:11:32 niklas Exp $	*/
 /*	$NetBSD: dirent.h,v 1.9 1994/12/13 15:58:20 mycroft Exp $	*/
 
 /*-
