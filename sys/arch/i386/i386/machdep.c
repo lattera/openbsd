@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.27 2004/06/05 23:08:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.28 2004/06/06 22:26:33 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -4304,18 +4304,21 @@ i386_softintunlock(void)
 }
 #endif
 
-#if 0
 /*
  * Software interrupt registration
  *
  * We hand-code this to ensure that it's atomic.
  */
 void
-softintr(mask)
-	int mask;
+softintr(sir, vec)
+	int sir;
+	int vec;
 {
-	__asm __volatile("orl %1, %0" : "=m"(ipending) : "ir" (mask));
-
+	__asm __volatile("orl %1, %0" : "=m" (ipending) : "ir" (sir));
+#ifdef MULTIPROCESSOR
+	i82489_writereg(LAPIC_ICRLO,
+	    vec | LAPIC_DLMODE_FIXED | LAPIC_LVL_ASSERT | LAPIC_DEST_SELF);
+#endif
 }
 
 /*
@@ -4325,10 +4328,10 @@ int
 splraise(ncpl)
 	int ncpl;
 {
-	int ocpl = cpl;
+	int ocpl = lapic_tpr;
 
 	if (ncpl > ocpl)
-		cpl = ncpl;
+		lapic_tpr = ncpl;
 	return (ocpl);
 }
 
@@ -4340,7 +4343,7 @@ void
 splx(ncpl)
 	int ncpl;
 {
-	cpl = ncpl;
+	lapic_tpr = ncpl;
 	if (ipending & IUNMASK(ncpl))
 		Xspllower();
 }
@@ -4353,9 +4356,9 @@ int
 spllower(ncpl)
 	int ncpl;
 {
-	int ocpl = cpl;
+	int ocpl = lapic_tpr;
 
 	splx(ncpl);
 	return (ocpl);
 }
-#endif
+

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.20 2004/03/18 02:07:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.21 2004/06/06 22:26:34 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -57,10 +57,10 @@ extern int iunmask[];	/* Bitmasks telling what interrupts are accepted. */
 
 extern void Xspllower(void);
 
-static __inline int splraise(int);
-static __inline int spllower(int);
-#define SPLX_DECL void splx(int);
-static __inline void softintr(int, int);
+extern int splraise(int);
+extern int spllower(int);
+extern void splx(int);
+extern void softintr(int, int);
 
 /* SPL asserts */
 #ifdef DIAGNOSTIC
@@ -79,63 +79,6 @@ void splassert_check(int, const char *);
 #else
 #define splassert(wantipl) do { /* nada */ } while (0)
 #endif
-
-/*
- * Raise current interrupt priority level, and return the old one.
- */
-static __inline int
-splraise(ncpl)
-	int ncpl;
-{
-	int ocpl = lapic_tpr;
-
-	if (ncpl > ocpl)
-		lapic_tpr = ncpl;
-	__asm __volatile("":::"memory");
-	return (ocpl);
-}
-
-/*
- * Restore an old interrupt priority level.  If any thereby unmasked
- * interrupts are pending, call Xspllower() to process them.
- */
-#define SPLX_BODY							\
-void									\
-splx(ncpl)								\
-	int ncpl;							\
-{									\
-	__asm __volatile("":::"memory");				\
-	lapic_tpr = ncpl;						\
-	if (ipending & IUNMASK(ncpl))					\
-		Xspllower();						\
-}
-
-/* If SMALL_KERNEL make splx out of line, otherwise inline it.  */
-#ifdef SMALL_KERNEL
-#define SPLX_INLINED_BODY
-#define SPLX_OUTLINED_BODY	SPLX_BODY
-SPLX_DECL
-#else
-#define SPLX_INLINED_BODY	static __inline SPLX_BODY
-#define SPLX_OUTLINED_BODY
-static __inline SPLX_DECL
-#endif
-
-SPLX_INLINED_BODY
-
-/*
- * Same as splx(), but we return the old value of spl, for the
- * benefit of some splsoftclock() callers.
- */
-static __inline int
-spllower(ncpl)
-	int ncpl;
-{
-	int ocpl = lapic_tpr;
-
-	splx(ncpl);
-	return (ocpl);
-}
 
 /*
  * Hardware interrupt masks
@@ -168,23 +111,6 @@ spllower(ncpl)
 #define	splsched()	splraise(IPL_SCHED)
 #define spllock() 	splhigh()
 #define	spl0()		spllower(IPL_NONE)
-
-/*
- * Software interrupt registration
- *
- * We hand-code this to ensure that it's atomic.
- */
-static __inline void
-softintr(sir, vec)
-	register int sir;
-	register int vec;
-{
-	__asm __volatile("orl %0,ipending" : : "ir" (sir));
-#ifdef MULTIPROCESSOR
-	i82489_writereg(LAPIC_ICRLO,
-	    vec | LAPIC_DLMODE_FIXED | LAPIC_LVL_ASSERT | LAPIC_DEST_SELF);
-#endif
-}
 
 #define	setsoftast()	(astpending = 1)
 #define	setsoftclock()	softintr(1 << SIR_CLOCK, IPL_SOFTCLOCK)
