@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.163.2.3 2001/12/13 19:52:37 jason Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.163.2.4 2002/02/21 04:23:24 jason Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1982,12 +1982,16 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 	}
 
 	case DIOCCLRSTATUS: {
-		u_int8_t running = pf_status.running;
+		u_int32_t running = pf_status.running;
 		u_int32_t states = pf_status.states;
+		u_int32_t since = pf_status.since;
+		u_int32_t debug = pf_status.debug;
 
 		bzero(&pf_status, sizeof(struct pf_status));
 		pf_status.running = running;
 		pf_status.states = states;
+		pf_status.since = since;
+		pf_status.debug = debug;
 		break;
 	}
 
