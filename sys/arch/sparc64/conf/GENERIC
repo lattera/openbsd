@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27 2001/10/28 02:21:47 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27.2.1 2001/10/31 03:07:57 nate Exp $
 # 	$NetBSD: GENERIC32,v 1.18 2001/07/20 00:07:12 eeh Exp $
 
 machine		sparc64
@@ -36,10 +36,6 @@ scsibus* at siop?
 
 auxio*	at ebus?
 beeper*	at ebus?
-
-# SAB82532 based serial ports
-#sab*	at ebus?
-#sabtty* at sab?
 
 #com*	at ebus?	#*BROKEN*
 

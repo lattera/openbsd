@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3 2001/08/21 21:42:30 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: zs.c,v 1.29 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-

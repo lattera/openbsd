@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/subyte.c,v 1.2.14.1 2001/07/04 10:23:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/subyte.c,v 1.2.14.2 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: subyte.c,v 1.1 1996/09/30 16:34:54 ws Exp $	*/
 
 /*-
@@ -40,8 +40,8 @@
  */
 int
 subyte(addr,c)
-void *addr;
-unsigned char c;
+	void *addr;
+	unsigned char c;
 {
 	if (copyout(&c,addr,sizeof(c)))
 		return -1;

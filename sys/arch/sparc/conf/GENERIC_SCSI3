@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/Attic/GENERIC_SCSI3,v 1.32.2.2 2001/07/04 10:23:13 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/Attic/GENERIC_SCSI3,v 1.32.2.3 2001/10/31 03:07:56 nate Exp $
 # 	$NetBSD: GENERIC,v 1.48 1997/08/23 19:19:01 mjacob Exp $
 
 # Machine architecture; required by config(8)
@@ -297,4 +297,3 @@ fd*	at fdc0					# the drive itself
 
 pseudo-device	kbd		# Sun keyboard
 #pseudo-device	strip	1	# radio clock
-pseudo-device	rd 2

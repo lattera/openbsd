@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/Makefile,v 1.1 2001/08/31 10:55:43 art Exp $
+#	$OpenBSD: src/sys/arch/sparc64/Makefile,v 1.1.4.1 2001/10/31 03:07:57 nate Exp $
 
 NOPROG=	noprog
 NOMAN=	noman

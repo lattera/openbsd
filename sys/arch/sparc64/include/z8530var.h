@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/z8530var.h,v 1.3 2001/08/21 21:42:30 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/z8530var.h,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: z8530var.h,v 1.4 2000/11/08 23:41:42 eeh Exp $	*/
 
 /*

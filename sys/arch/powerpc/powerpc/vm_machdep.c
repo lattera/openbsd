@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.2 2001/07/04 10:23:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.3 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*
@@ -40,11 +40,11 @@
 #include <sys/vnode.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <uvm/uvm_extern.h>
 
 #include <machine/pcb.h>
+#include <machine/fpu.h>
 
 /*
  * Finish a fork operation, with process p2 nearly set up.
@@ -82,8 +82,10 @@ cpu_fork(p1, p2, stack, stacksize)
 	/*
 	 * If specified, give the child a different stack.
 	 */
-	if (stack != NULL)
+	if (stack != NULL) {
+		tf = trapframe(p2);
 		tf->fixreg[1] = (register_t)stack + stacksize;
+	}
 
 	stktop2 = (caddr_t)((u_long)stktop2 & ~15);	/* Align stack pointer */
 	
@@ -153,10 +155,9 @@ pagemove(from, to, size)
 	
 	for (va = (vm_offset_t)from; size > 0; size -= NBPG) {
 		pmap_extract(pmap_kernel(), va, &pa);
-		pmap_remove(pmap_kernel(), va, va + NBPG);
-		pmap_enter(pmap_kernel(), (vm_offset_t)to, pa,
-			   VM_PROT_READ | VM_PROT_WRITE, 1,
-			   VM_PROT_READ | VM_PROT_WRITE);
+		pmap_kremove(va, NBPG);
+		pmap_kenter_pa((vm_offset_t)to, pa,
+			   VM_PROT_READ | VM_PROT_WRITE );
 		va += NBPG;
 		to += NBPG;
 	}
@@ -207,13 +208,13 @@ cpu_coredump(p, vp, cred, chdr)
 	cseg.c_addr = 0;
 	cseg.c_size = chdr->c_cpusize;
 
-	if (error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&cseg, chdr->c_seghdrsize,
+	if ((error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&cseg, chdr->c_seghdrsize,
 			    (off_t)chdr->c_hdrsize, UIO_SYSSPACE,
-			    IO_NODELOCKED|IO_UNIT, cred, NULL, p))
+			    IO_NODELOCKED|IO_UNIT, cred, NULL, p)))
 		return error;
-	if (error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&md_core, sizeof md_core,
-			    (off_t)(chdr->c_hdrsize + chdr->c_seghdrsize), UIO_SYSSPACE,
-			    IO_NODELOCKED|IO_UNIT, cred, NULL, p))
+	if ((error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&md_core, sizeof md_core,
+			    (off_t)(chdr->c_hdrsize + chdr->c_seghdrsize),
+			    UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, NULL, p)))
 		return error;
 
 	chdr->c_nseg++;
@@ -243,7 +244,7 @@ vmapbuf(bp, len)
 	for (; len > 0; len -= NBPG) {
 		pmap_extract(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map), faddr, &pa);
 		pmap_enter(vm_map_pmap(phys_map), taddr, pa,
-			   VM_PROT_READ | VM_PROT_WRITE, 1, 0);
+			   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 		faddr += NBPG;
 		taddr += NBPG;
 	}

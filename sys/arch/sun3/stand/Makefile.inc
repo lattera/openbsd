@@ -1,3 +1,4 @@
+#	$OpenBSD: src/sys/arch/sun3/stand/Attic/Makefile.inc,v 1.4.14.1 2001/10/31 03:08:00 nate Exp $
 #	$NetBSD: Makefile.inc,v 1.6 1995/11/17 23:23:44 gwr Exp $
 
 .if defined(SA_PROG)

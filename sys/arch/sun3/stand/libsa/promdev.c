@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/promdev.c,v 1.5.6.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: promdev.c,v 1.7 1996/01/29 23:41:10 gwr Exp $ */
 
 /*

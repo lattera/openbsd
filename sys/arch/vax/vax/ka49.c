@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka49.c,v 1.1.8.2 2001/07/04 10:24:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka49.c,v 1.1.8.3 2001/10/31 03:08:01 nate Exp $	*/
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -60,7 +60,7 @@ struct	cpu_dep ka49_calls = {
 	ka49_conf,
 	chip_clkread,
 	chip_clkwrite,
-	16,      /* ~VUPS */
+	32,      /* ~VUPS */
 	2,	/* SCB pages */
 	ka49_halt,
 	ka49_reboot,
@@ -209,12 +209,11 @@ ka49_mchk(addr)
 void
 ka49_steal_pages()
 {
-
 	/*
 	 * Get the soft and hard memory error vectors now.
 	 */
-	scb_vecalloc(0x54, ka49_softmem, 0, 0);
-	scb_vecalloc(0x60, ka49_hardmem, 0, 0);
+	scb_vecalloc(0x54, ka49_softmem, NULL, 0, NULL);
+	scb_vecalloc(0x60, ka49_hardmem, NULL, 0, NULL);
 
 	/* Turn on caches (to speed up execution a bit) */
 	ka49_cache_enable();

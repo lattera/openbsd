@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/be.c,v 1.22.2.2 2001/07/04 10:23:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/be.c,v 1.22.2.3 2001/10/31 03:07:56 nate Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -219,6 +219,9 @@ beattach(parent, self, aux)
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS |
 	    IFF_MULTICAST;
 
+	IFQ_SET_MAXLEN(&ifp->if_snd, BE_TX_RING_SIZE);
+	IFQ_SET_READY(&ifp->if_snd);
+
 	/* Attach the interface. */
 	if_attach(ifp);
 	ether_ifattach(ifp);
@@ -255,8 +258,8 @@ bestart(ifp)
 	bix = sc->sc_last_td;
 
 	for (;;) {
-		IF_DEQUEUE(&ifp->if_snd, m);
-		if (m == 0)
+		IFQ_DEQUEUE(&ifp->if_snd, m);
+		if (m == NULL)
 			break;
 
 #if NBPFILTER > 0

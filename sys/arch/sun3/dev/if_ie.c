@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11.4.1 2001/05/14 21:37:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11.4.2 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.15 1996/10/30 00:24:33 gwr Exp $ */
 
 /*-
@@ -1215,6 +1215,7 @@ command_and_wait(sc, cmd, pcmd, mask)
 	volatile struct ie_cmd_common *cc = pcmd;
 	volatile struct ie_sys_ctl_block *scb = sc->scb;
 	volatile int timedout = 0;
+	struct timeout chan_tmo;
 	extern int hz;
 
 	scb->ie_command = (u_short)cmd;
@@ -1234,7 +1235,8 @@ command_and_wait(sc, cmd, pcmd, mask)
 		 * .369 seconds, which we round up to .4.
 		 */
 
-		timeout(chan_attn_timeout, (caddr_t)&timedout, 2 * hz / 5);
+		timeout_set(&chan_tmo, chan_attn_timeout, (caddr_t)&timedout);
+		timeout_add(&chan_tmo, 2 * hz / 5);
 
 		/*
 		 * Now spin-lock waiting for status.  This is not a very nice
@@ -1247,7 +1249,7 @@ command_and_wait(sc, cmd, pcmd, mask)
 			if ((cc->ie_cmd_status & mask) || timedout)
 				break;
 
-		untimeout(chan_attn_timeout, (caddr_t)&timedout);
+		timeout_del(&chan_tmo);
 
 		return timedout;
 	} else {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/loadfile_machdep.h,v 1.1 2001/09/06 19:31:35 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/loadfile_machdep.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: loadfile_machdep.h,v 1.3 2000/08/16 08:16:58 mrg Exp $	 */
 
 /*-

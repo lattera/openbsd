@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.2 2001/07/04 10:22:24 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.3 2001/10/31 03:07:55 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB and RTMX Inc, USA.
@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef _MACHINE_INTR_H_
-#define _MACHINE_INTR_H_
+#ifndef _POWERPC_INTR_H_
+#define _POWERPC_INTR_H_
 
 #define	IPL_BIO		0
 #define	IPL_NET		1
@@ -167,4 +167,4 @@ void softnet(int isr);
 #endif /* _LOCORE */
 
 
-#endif /* _MACHINE_INTR_H_ */
+#endif /* _POWERPC_INTR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ebus.c,v 1.5 2001/10/07 15:27:12 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ebus.c,v 1.5.4.1 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: ebus.c,v 1.24 2001/07/25 03:49:54 eeh Exp $	*/
 
 /*

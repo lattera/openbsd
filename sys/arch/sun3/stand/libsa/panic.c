@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/panic.c,v 1.3.14.1 2001/10/31 03:08:00 nate Exp $	*/
+
 
 #include <stdarg.h>
 #include "stand.h"

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/bus_mem.c,v 1.2.6.1 2001/05/14 21:38:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/bus_mem.c,v 1.2.6.2 2001/10/31 03:08:01 nate Exp $	*/
 /*	$NetBSD: bus_mem.c,v 1.8 2000/06/29 07:14:23 mrg Exp $ */
 /*
  * Copyright (c) 1998 Matt Thomas
@@ -40,7 +40,7 @@
 #include <sys/systm.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/pmap.h>

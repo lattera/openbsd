@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/upavar.h,v 1.2 2001/08/18 21:30:00 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/upavar.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: upavar.h,v 1.2 2000/01/14 14:33:31 pk Exp $ */
 
 /*-

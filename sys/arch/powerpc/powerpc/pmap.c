@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.3 2001/07/04 10:23:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.4 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: pmap.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -40,7 +40,6 @@
 #include <sys/pool.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <uvm/uvm.h>
 
@@ -66,6 +65,9 @@ static int npgs;
 static u_int nextavail;
 
 static struct mem_region *mem, *avail;
+/*
+#define USE_PMAP_VP
+*/
 
 #if 0
 void
@@ -90,6 +92,9 @@ dump_avail()
 }
 #endif
 
+#ifdef USE_PMAP_VP
+struct pool pmap_vp_pool;
+
 int pmap_vp_valid(pmap_t pm, vaddr_t va);
 void pmap_vp_enter(pmap_t pm, vaddr_t va, paddr_t pa);
 int pmap_vp_remove(pmap_t pm, vaddr_t va);
@@ -110,7 +115,7 @@ VP_IDX1(paddr_t va)
 static inline int
 VP_IDX2(paddr_t va)
 {
-	return (va >> VP_IDX2_POS) & VP_SR_MASK;
+	return (va >> VP_IDX2_POS) & VP_IDX2_MASK;
 }
 
 int
@@ -164,10 +169,13 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, paddr_t pa)
 #endif
 		if (pm == pmap_kernel()) {
 			printf(" irk kernel allocating map?");
-		} else {
-			if (!(mem1 = (pmapv_t *)uvm_km_zalloc(kernel_map, NBPG)))
-				panic("pmap_vp_enter: uvm_km_zalloc() failed");
 		}
+		s = splimp();
+		mem1 = pool_get(&pmap_vp_pool, PR_NOWAIT);
+		splx(s);
+
+		bzero (mem1, PAGE_SIZE);
+
 		pm->vps[idx] = mem1;
 #ifdef DEBUG
 		printf("got %x ", mem1);
@@ -189,6 +197,7 @@ pmap_vp_destroy(pm)
 	pmap_t pm;
 {
 	pmapv_t *vp1;
+	int s;
 	int sr;
 #ifdef SANITY
 	int idx1;
@@ -209,7 +218,9 @@ pmap_vp_destroy(pm)
 			}
 		}
 #endif
-		uvm_km_free(kernel_map, (vaddr_t)vp1, NBPG);
+		s = splimp();
+		pool_put(&pmap_vp_pool, vp1);
+		splx(s);
 		pm->vps[sr] = 0;
 	}
 }
@@ -225,6 +236,7 @@ pmap_vp_preinit()
 	pm->vps[VP_SR(0xe0000000)] = vp_page0;
 	pm->vps[VP_SR(0xe8000000)] = vp_page1;
 }
+#endif
 
 
 /*
@@ -240,8 +252,6 @@ struct pv_entry {
 	vm_offset_t pv_va;		/* virtual address of mapping */
 	struct pmap *pv_pmap;		/* pmap associated with this map */
 };
-
-struct pv_entry *pv_table;
 
 struct pool pmap_pv_pool;
 struct pv_entry *pmap_alloc_pv __P((void));
@@ -276,7 +286,6 @@ void pmap_remove_pv(struct pmap *pm, int pteidx, vm_offset_t va,
 pte_t * pte_find(struct pmap *pm, vm_offset_t va);
 
 /* XXX */
-void pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot);
 void pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs);
 void pmap_kremove(vaddr_t va, vsize_t len);
 void addbatmap(u_int32_t vaddr, u_int32_t raddr, u_int32_t wimg);
@@ -661,7 +670,9 @@ avail_end = npgs * NBPG;
 	asm volatile ("sync; mtsdr1 %0; isync"
 		      :: "r"((u_int)ptable | (ptab_mask >> 10)));
 	tlbia();
+#ifdef USE_PMAP_VP
 	pmap_vp_preinit();
+#endif /*  USE_PMAP_VP */
 	nextavail = avail->start;
 }
 
@@ -708,16 +719,20 @@ pmap_init()
 	sz = round_page(sz);
 	addr = uvm_km_zalloc(kernel_map, sz);
 	s = splimp();
-	pv = pv_table = (struct pv_entry *)addr;
+	pv = (struct pv_entry *)addr;
 	for (i = npgs; --i >= 0;)
 		pv++->pv_idx = -1;
+#ifdef USE_PMAP_VP
+	pool_init(&pmap_vp_pool, PAGE_SIZE, 0, 0, 0, "ppvl",
+            0, NULL, NULL, M_VMPMAP);
+#endif
 	pool_init(&pmap_pv_pool, sizeof(struct pv_entry), 0, 0, 0, "pvpl",
             0, NULL, NULL, M_VMPMAP);
 	pool_init(&pmap_po_pool, sizeof(struct pte_ovfl), 0, 0, 0, "popl",
             0, NULL, NULL, M_VMPMAP);
 	pmap_attrib = (char *)pv;
 	bzero(pv, npgs);
-	pv = pv_table;
+	pv = (struct pv_entry *)addr;
 	attr = pmap_attrib;
 	for (bank = 0; bank < vm_nphysseg; bank++) {
 		sz = vm_physmem[bank].end - vm_physmem[bank].start;
@@ -826,14 +841,8 @@ pmap_next_page(paddr)
 /*
  * Create and return a physical map.
  */
-#if defined(PMAP_NEW)
 struct pmap *
 pmap_create()
-#else 
-struct pmap *
-pmap_create(size)
-	vsize_t size;
-#endif
 {
 	struct pmap *pm;
 	
@@ -907,7 +916,9 @@ pmap_release(pm)
 	int i, j;
 	int s;
 
+#ifdef USE_PMAP_VP
 	pmap_vp_destroy(pm);
+#endif /*  USE_PMAP_VP */
 	if (!pm->pm_sr[0])
 		panic("pmap_release");
 	i = pm->pm_sr[0] / 16;
@@ -1174,16 +1185,31 @@ pmap_remove_pv(pm, pteidx, va, pte_lo)
 	}
 }
 
+int
+pmap_enter_c_pv(struct pmap *pm, vm_offset_t va, vm_offset_t pa,
+	vm_prot_t prot, int flags, int cacheable, int pv);
+
 /*
  * Insert physical page at pa into the given pmap at virtual address va.
  */
-void
-pmap_enter(pm, va, pa, prot, wired, access_type)
+int
+pmap_enter(pm, va, pa, prot, flags)
 	struct pmap *pm;
 	vm_offset_t va, pa;
 	vm_prot_t prot;
-	int wired;
-	vm_prot_t access_type;
+	int flags;
+{
+	return pmap_enter_c_pv(pm, va, pa, prot, flags, PMAP_CACHE_DEFAULT,
+		TRUE);
+}
+int
+pmap_enter_c_pv(pm, va, pa, prot, flags, cacheable, pv)
+	struct pmap *pm;
+	vm_offset_t va, pa;
+	vm_prot_t prot;
+	int flags;
+	int cacheable;
+	int pv;
 {
 	sr_t sr;
 	int idx, s;
@@ -1198,7 +1224,9 @@ pmap_enter(pm, va, pa, prot, wired, access_type)
 
 	pm->pm_stats.resident_count++;
 
+#ifdef USE_PMAP_VP
 	pmap_vp_enter(pm, va, pa);
+#endif /*  USE_PMAP_VP */
 	
 	/*
 	 * Compute the HTAB index.
@@ -1212,12 +1240,22 @@ pmap_enter(pm, va, pa, prot, wired, access_type)
 	 */
 	pte.pte_hi = ((sr & SR_VSID) << PTE_VSID_SHFT)
 		| ((va & ADDR_PIDX) >> ADDR_API_SHFT);
-	pte.pte_lo = (pa & PTE_RPGN) | PTE_M | PTE_I | PTE_G;
-	for (mp = mem; mp->size; mp++) {
-		if (pa >= mp->start && pa < mp->start + mp->size) {
-			pte.pte_lo &= ~(PTE_I | PTE_G);
-			break;
+	if (cacheable == PMAP_CACHE_DEFAULT) {
+		pte.pte_lo = (pa & PTE_RPGN) | PTE_M | PTE_I | PTE_G;
+		for (mp = mem; mp->size; mp++) {
+			if (pa >= mp->start && pa < mp->start + mp->size) {
+				pte.pte_lo &= ~(PTE_I | PTE_G);
+				break;
+			}
 		}
+	} else if (cacheable == PMAP_CACHE_CI) {
+		pte.pte_lo = (pa & PTE_RPGN) | PTE_M | PTE_I | PTE_G;
+	} else if (cacheable == PMAP_CACHE_WT) {
+		pte.pte_lo = (pa & PTE_RPGN) | PTE_M | PTE_W | PTE_G;
+	} else if (cacheable == PMAP_CACHE_WB) {
+		pte.pte_lo = (pa & PTE_RPGN) | PTE_M;
+	} else {
+		panic("pmap_enter_c_pv: invalid cacheable %x\n", cacheable);
 	}
 	if (prot & VM_PROT_WRITE)
 		pte.pte_lo |= PTE_RW;
@@ -1227,11 +1265,13 @@ pmap_enter(pm, va, pa, prot, wired, access_type)
 	/*
 	 * Now record mapping for later back-translation.
 	 */
-	if (pmap_enter_pv(pm, idx, va, pa)) {
-		/* 
-		 * Flush the real memory from the cache.
-		 */
-		syncicache((void *)pa, NBPG);
+	if (pv == TRUE) {
+		if (pmap_enter_pv(pm, idx, va, pa)) {
+			/* 
+			 * Flush the real memory from the cache.
+			 */
+			syncicache((void *)pa, NBPG);
+		}
 	}
 	
 	s = splimp();
@@ -1240,7 +1280,7 @@ pmap_enter(pm, va, pa, prot, wired, access_type)
 	 */
 	if (pte_insert(idx, &pte)) {
 		splx(s);
-		return;
+		return (KERN_SUCCESS);
 	}
 	
 	/*
@@ -1252,15 +1292,30 @@ pmap_enter(pm, va, pa, prot, wired, access_type)
 	po->po_pte = pte;
 	LIST_INSERT_HEAD(potable + idx, po, po_list);
 	splx(s);
+
+	return (KERN_SUCCESS);
 }
 
+#define KERN_MAP_PV TRUE
+
+void
+pmap_kenter_cache(va, pa, prot, cacheable)
+	vaddr_t va;
+	paddr_t pa;
+	vm_prot_t prot;
+	int cacheable;
+{
+	pmap_enter_c_pv(pmap_kernel(), va, pa, prot, PMAP_WIRED, cacheable,
+		KERN_MAP_PV);
+}
 void
 pmap_kenter_pa(va, pa, prot)
 	vaddr_t va;
 	paddr_t pa;
 	vm_prot_t prot;
 {
-	pmap_enter(pmap_kernel(), va, pa, prot, 1, 0);
+	pmap_enter_c_pv(pmap_kernel(), va, pa, prot, PMAP_WIRED,
+		PMAP_CACHE_DEFAULT, KERN_MAP_PV);
 }
 
 void
@@ -1272,19 +1327,32 @@ pmap_kenter_pgs(va, pgs, npgs)
 	int i;
 
 	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
-		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
-				VM_PROT_READ|VM_PROT_WRITE, 1, 0);
+		pmap_enter_c_pv(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
+				VM_PROT_READ|VM_PROT_WRITE, PMAP_WIRED,
+				PMAP_CACHE_DEFAULT, KERN_MAP_PV);
 	}
 }
 
+void pmap_remove_pvl( struct pmap *pm, vm_offset_t va, vm_offset_t endva,
+	int pv);
 void
 pmap_kremove(va, len)
 	vaddr_t va;
 	vsize_t len;
 {
 	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
-		pmap_remove(pmap_kernel(), va, va + PAGE_SIZE);
+		pmap_remove_pvl(pmap_kernel(), va, va + PAGE_SIZE, KERN_MAP_PV);
 	}
+}
+
+void pmap_pte_invalidate(vaddr_t va, pte_t *ptp);
+void
+pmap_pte_invalidate(vaddr_t va, pte_t *ptp)
+{
+	ptp->pte_hi &= ~PTE_VALID;
+	asm volatile ("sync");
+	tlbie(va);
+	tlbsync();
 }
 
 
@@ -1296,6 +1364,15 @@ pmap_remove(pm, va, endva)
 	struct pmap *pm;
 	vm_offset_t va, endva;
 {
+	pmap_remove_pvl(pm, va, endva, TRUE);
+}
+
+void
+pmap_remove_pvl(pm, va, endva, pv)
+	struct pmap *pm;
+	vm_offset_t va, endva;
+	int pv;
+{
 	int idx, i, s;
 	int found; /* if found, we are done, only one mapping per va */
 	sr_t sr;
@@ -1304,20 +1381,22 @@ pmap_remove(pm, va, endva)
 	
 	s = splimp();
 	for (; va < endva; va += NBPG) {
+#ifdef USE_PMAP_VP
 		if (0 == pmap_vp_remove(pm, va)) {
 			/* no mapping */
 			continue;
 		}
+#endif /*  USE_PMAP_VP */
 		found = 0;
 		sr = ptesr(pm->pm_sr, va);
 		idx = pteidx(sr, va);
 		for (ptp = ptable + idx * 8, i = 8; --i >= 0; ptp++)
 			if (ptematch(ptp, sr, va, PTE_VALID)) {
-				ptp->pte_hi &= ~PTE_VALID;
-				asm volatile ("sync");
-				tlbie(va);
-				tlbsync();
-				pmap_remove_pv(pm, idx, va, ptp->pte_lo);
+				pmap_pte_invalidate(va, ptp);
+				if (pv == TRUE) {
+					pmap_remove_pv(pm, idx, va,
+						ptp->pte_lo);
+				}
 				pm->pm_stats.resident_count--;
 				found = 1;
 				break;
@@ -1327,11 +1406,11 @@ pmap_remove(pm, va, endva)
 		}
 		for (ptp = ptable + (idx ^ ptab_mask) * 8, i = 8; --i >= 0; ptp++)
 			if (ptematch(ptp, sr, va, PTE_VALID | PTE_HID)) {
-				ptp->pte_hi &= ~PTE_VALID;
-				asm volatile ("sync");
-				tlbie(va);
-				tlbsync();
-				pmap_remove_pv(pm, idx, va, ptp->pte_lo);
+				pmap_pte_invalidate(va, ptp);
+				if (pv == TRUE) {
+					pmap_remove_pv(pm, idx, va,
+						ptp->pte_lo);
+				}
 				pm->pm_stats.resident_count--;
 				found = 1;
 				break;
@@ -1342,7 +1421,10 @@ pmap_remove(pm, va, endva)
 		for (po = potable[idx].lh_first; po; po = npo) {
 			npo = po->po_list.le_next;
 			if (ptematch(&po->po_pte, sr, va, 0)) {
-				pmap_remove_pv(pm, idx, va, po->po_pte.pte_lo);
+				if (pv == TRUE) {
+					pmap_remove_pv(pm, idx, va,
+						po->po_pte.pte_lo);
+				}
 				LIST_REMOVE(po, po_list);
 				pofree(po, 1);
 				pm->pm_stats.resident_count--;
@@ -1443,9 +1525,9 @@ pmap_protect(pm, sva, eva, prot)
 	pmap_remove(pm, sva, eva);
 }
 
-void
+boolean_t
 ptemodify(pa, mask, val)
-	vm_offset_t pa;
+	paddr_t pa;
 	u_int mask;
 	u_int val;
 {
@@ -1454,10 +1536,13 @@ ptemodify(pa, mask, val)
 	struct pte_ovfl *po;
 	int i, s;
 	char * pattr;
+	boolean_t ret;
+
+	ret = ptebits(pa, mask);
 	
 	pv = pmap_find_pv(pa);
 	if (pv == NULL) 
-		return;
+		return (ret);
 	pattr = pmap_find_attr(pa);
 
 	/*
@@ -1467,7 +1552,7 @@ ptemodify(pa, mask, val)
 	*pattr |= val >> ATTRSHFT;
 	
 	if (pv->pv_idx < 0)
-		return;
+		return (ret);
 
 	s = splimp();
 	for (; pv; pv = pv->pv_next) {
@@ -1502,6 +1587,8 @@ ptemodify(pa, mask, val)
 			}
 	}
 	splx(s);
+
+	return (ret);
 }
 
 int
@@ -1527,7 +1614,6 @@ ptebits(pa, bit)
 	if (bits == bit)
 		return bits;
 
-	pv = pv_table;
 	if (pv->pv_idx < 0)
 		return 0;
 	
@@ -1570,25 +1656,22 @@ ptebits(pa, bit)
  * There are only two cases: either the protection is going to 0,
  * or it is going to read-only.
  */
-#if defined(PMAP_NEW)
 void
 pmap_page_protect(pg, prot)
 	struct vm_page *pg;
 	vm_prot_t prot;
-#else
-void
-pmap_page_protect(pa, prot)
-	vm_offset_t pa;
-	vm_prot_t prot;
-#endif
 {
-#if defined(PMAP_NEW)
 	vm_offset_t pa = VM_PAGE_TO_PHYS(pg);
-#endif
 	vm_offset_t va;
 	int s;
 	struct pmap *pm;
-	struct pv_entry *pv;
+	struct pv_entry *pv, *npv;
+	int idx, i;
+	sr_t sr;
+	pte_t *ptp;
+	struct pte_ovfl *po, *npo;
+	int found;
+	char *pattr;
 	
 	pa &= ~ADDR_POFF;
 	if (prot & VM_PROT_READ) {
@@ -1596,6 +1679,7 @@ pmap_page_protect(pa, prot)
 		return;
 	}
 
+	pattr = pmap_find_attr(pa);
 	pv = pmap_find_pv(pa);
 	if (pv == NULL) 
 		return;
@@ -1604,10 +1688,60 @@ pmap_page_protect(pa, prot)
 	while (pv->pv_idx != -1) {
 		va = pv->pv_va;
 		pm = pv->pv_pmap;
-		if ((va >=uvm.pager_sva) && (va < uvm.pager_eva)) {
-				continue;
+#ifdef USE_PMAP_VP
+		pmap_vp_remove(pm, va);
+#endif /*  USE_PMAP_VP */
+
+		npv = pv->pv_next;
+		if (npv) {
+			*pv = *npv;
+			pmap_free_pv(npv);
+		} else {
+			pv->pv_pmap = 0;
+			pv->pv_idx = -1;
 		}
-		pmap_remove(pm, va, va + NBPG);
+
+		/* now remove this entry from the table */
+		found = 0;
+		sr = ptesr(pm->pm_sr, va);
+		idx = pteidx(sr, va);
+		for (ptp = ptable + idx * 8, i = 8; --i >= 0; ptp++) {
+			if (ptematch(ptp, sr, va, PTE_VALID)) {
+				pmap_pte_invalidate(va, ptp);
+				*pattr |= (ptp->pte_lo & (PTE_REF | PTE_CHG))
+					>> ATTRSHFT;
+				pm->pm_stats.resident_count--;
+				found = 1;
+				break;
+			}
+		}
+		if (found)
+			continue;
+		for (ptp = ptable + (idx ^ ptab_mask) * 8, i = 8; --i >= 0;
+			ptp++)
+		{
+			if (ptematch(ptp, sr, va, PTE_VALID | PTE_HID)) {
+				pmap_pte_invalidate(va, ptp);
+				*pattr |= (ptp->pte_lo & (PTE_REF | PTE_CHG))
+					>> ATTRSHFT;
+				pm->pm_stats.resident_count--;
+				found = 1;
+				break;
+			}
+		}
+		if (found)
+			continue;
+		for (po = potable[idx].lh_first; po; po = npo) {
+			npo = po->po_list.le_next;
+			if (ptematch(&po->po_pte, sr, va, 0)) {
+				LIST_REMOVE(po, po_list);
+				pofree(po, 1);
+				pm->pm_stats.resident_count--;
+				break;
+			}
+		}
+
+		
 	}
 	splx(s);
 }

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/tapeboot/Attic/boot.c,v 1.3.14.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: boot.c,v 1.2 1995/10/17 22:58:14 gwr Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.4 2001/09/05 22:32:39 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.4.4.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.13 2001/06/21 00:08:02 eeh Exp $	*/
 
 /*

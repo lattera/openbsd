@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_implode.c,v 1.3 2001/09/10 16:05:17 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_implode.c,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: fpu_implode.c,v 1.7 2000/08/03 18:32:08 eeh Exp $ */
 
 /*

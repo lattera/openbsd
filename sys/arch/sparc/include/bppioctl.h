@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sparc/include/bppioctl.h,v 1.1.4.1 2001/10/31 03:07:57 nate Exp $	*/
+
 /*
  * Copyright (c) 1998 Iain Hibbert
  * All rights reserved.

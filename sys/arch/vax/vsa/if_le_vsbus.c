@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3.4.1 2001/05/14 21:39:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3.4.2 2001/10/31 03:08:02 nate Exp $	*/
 /*	$NetBSD: if_le_vsbus.c,v 1.10 2000/06/29 07:14:18 mrg Exp $	*/
 
 /*-
@@ -84,7 +84,6 @@
 #include <sys/reboot.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <net/if.h>
 #include <net/if_media.h>
@@ -225,7 +224,9 @@ le_vsbus_attach(parent, self, aux)
 	sc->sc_am7990.sc_wrcsr = lewrcsr;
 	sc->sc_am7990.sc_nocarrier = NULL;
 
-	scb_vecalloc(va->va_cvec, (void (*)(void *)) am7990_intr, sc, SCB_ISTACK);
+	scb_vecalloc(va->va_cvec, (void (*)(void *)) am7990_intr, sc,
+	    SCB_ISTACK, &sc->sc_intrcnt);
+	evcnt_attach(self, "intr", &sc->sc_intrcnt);
 
         /*
          * Allocate a (DMA-safe) block for all descriptors and buffers.

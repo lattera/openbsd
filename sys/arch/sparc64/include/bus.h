@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/bus.h,v 1.7 2001/09/26 21:30:27 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/bus.h,v 1.7.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: bus.h,v 1.28 2001/07/19 15:32:19 thorpej Exp $	*/
 
 /*-

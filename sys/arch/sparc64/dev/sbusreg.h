@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sbusreg.h,v 1.2 2001/08/18 21:30:00 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sbusreg.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: sbusreg.h,v 1.7 1999/06/07 05:28:03 eeh Exp $ */
 
 /*

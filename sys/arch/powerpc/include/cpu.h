@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.3.12.2 2001/07/04 10:22:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.3.12.3 2001/10/31 03:07:55 nate Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*
@@ -31,8 +31,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef	_MACHINE_CPU_H_
-#define	_MACHINE_CPU_H_
+#ifndef	_POWERPC_CPU_H_
+#define	_POWERPC_CPU_H_
 
 #include <machine/frame.h>
 
@@ -46,7 +46,7 @@
 #define	cpu_swapout(p)
 #define cpu_wait(p)
 
-extern void delay __P((unsigned));
+void	delay __P((unsigned));
 #define	DELAY(n)		delay(n)
 
 extern volatile int want_resched;
@@ -56,28 +56,6 @@ extern volatile int astpending;
 #define	need_proftick(p)	((p)->p_flag |= P_OWEUPC, astpending = 1)
 #define	signotify(p)		(astpending = 1)
 
-#define	CACHELINESIZE	32			/* For now		XXX */
-
-static __inline void
-syncicache(void *from, int len)
-{
-	int l = len;
-	char *p = from;
-	
-	do {
-		__asm__ __volatile__ ("dcbst 0,%0" :: "r"(p));
-		p += CACHELINESIZE;
-	} while ((l -= CACHELINESIZE) > 0);
-	__asm__ __volatile__ ("sync");
-	p = from;
-	l = len;
-	do {
-		__asm__ __volatile__ ("icbi 0,%0" :: "r"(p));
-		p += CACHELINESIZE;
-	} while ((l -= CACHELINESIZE) > 0);
-	__asm__ __volatile__ ("isync");
-}
-
 extern char *bootpath;
 
-#endif	/* _MACHINE_CPU_H_ */
+#endif	/* _POWERPC_CPU_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/ctlreg.h,v 1.3 2001/09/20 21:08:50 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/ctlreg.h,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: ctlreg.h,v 1.28 2001/08/06 23:55:34 eeh Exp $ */
 
 /*

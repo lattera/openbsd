@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.1 2001/05/14 21:37:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.2 2001/10/31 03:07:56 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -455,6 +455,9 @@ sttyioctl(dev, cmd, data, flags, p)
 		break;
 	case TIOCMGET:
 		*((int *)data) = stty_modem_control(sp, 0, DMGET);
+		break;
+	case TIOCMSET:
+		stty_modem_control(sp, *((int *)data), DMSET);
 		break;
 	case TIOCGFLAGS:
 		*((int *)data) = sp->sp_openflags;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6 2001/10/12 14:57:04 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.22 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*

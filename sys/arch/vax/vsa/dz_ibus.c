@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4.4.2 2001/07/04 10:24:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4.4.3 2001/10/31 03:08:02 nate Exp $	*/
 /*	$NetBSD: dz_ibus.c,v 1.15 1999/08/27 17:50:42 ragge Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
@@ -14,8 +14,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed at Ludd, University of 
- *      Lule}, Sweden and its contributors.
+ *     This product includes software developed at Ludd, University of 
+ *     Lule}, Sweden and its contributors.
  * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission
  *
@@ -51,6 +51,7 @@
 #include <machine/vsbus.h>
 #include <machine/cpu.h>
 #include <machine/scb.h>
+#include <machine/nexus.h>
 
 #include <machine/../vax/gencons.h>
 
@@ -62,8 +63,8 @@
 #include "dzkbd.h"
 #include "dzms.h"
 
-static  int     dz_vsbus_match __P((struct device *, struct cfdata *, void *));
-static  void    dz_vsbus_attach __P((struct device *, struct device *, void *));
+static  int     dz_vsbus_match(struct device *, struct cfdata *, void *);
+static  void    dz_vsbus_attach(struct device *, struct device *, void *);
 
 static	vaddr_t dz_regs; /* Used for console */
 
@@ -89,6 +90,7 @@ cdev_decl(dz);
 
 extern int getmajor __P((void *));	/* conf.c */
 
+#if 0
 #if NDZKBD > 0 || NDZMS > 0
 static int
 dz_print(void *aux, const char *name)
@@ -111,6 +113,7 @@ dz_print(void *aux, const char *name)
 	return (UNCONF);
 }
 #endif
+#endif /* 0 */
 
 static int
 dz_vsbus_match(parent, cf, aux)
@@ -122,10 +125,11 @@ dz_vsbus_match(parent, cf, aux)
 	struct ss_dz *dzP;
 	short i;
 
-#if VAX53
-	if (vax_boardtype == VAX_BTYP_1303)
+#if VAX53 || VAX49
+	if (vax_boardtype == VAX_BTYP_49 ||
+	    vax_boardtype == VAX_BTYP_1303)
 		if (cf->cf_loc[0] != 0x25000000)
-			return 0; /* Ugly */
+			return 0; /* don't probe unnecessarily */
 #endif
 
 	dzP = (struct ss_dz *)va->va_addr;
@@ -149,9 +153,11 @@ dz_vsbus_attach(parent, self, aux)
 {
 	struct dz_softc *sc = (void *)self;
 	struct vsbus_attach_args *va = aux;
+#if 0
 #if NDZKBD > 0 || NDZMS > 0
 	struct dzkm_attach_args daa;
 #endif
+#endif /* 0 */
 
 	/* 
 	 * XXX - This is evil and ugly, but...
@@ -175,12 +181,16 @@ dz_vsbus_attach(parent, self, aux)
 	sc->sc_type = DZ_DZV;
 
 	sc->sc_dsr = 0x0f; /* XXX check if VS has modem ctrl bits */
-	scb_vecalloc(va->va_cvec, dzxint, sc, SCB_ISTACK);
-	scb_vecalloc(va->va_cvec - 4, dzrint, sc, SCB_ISTACK);
+	scb_vecalloc(va->va_cvec, dzxint, sc, SCB_ISTACK,
+	    &sc->sc_tintrcnt);
+	scb_vecalloc(va->va_cvec - 4, dzrint, sc, SCB_ISTACK,
+	    &sc->sc_rintrcnt);
+
 	printf("\n%s: 4 lines", self->dv_xname);
 
 	dzattach(sc);
 
+#if 0
 #if NDZKBD > 0
 	/* Don't change speed if this is the console */
 	if (cn_tab->cn_dev != makedev(getmajor(dzopen), 0))
@@ -197,6 +207,7 @@ dz_vsbus_attach(parent, self, aux)
 	daa.daa_flags = 0;
 	config_found(self, &daa, dz_print);
 #endif
+#endif /* 0 */
 #if 0
 	s = spltty();
 	dzrint(sc);

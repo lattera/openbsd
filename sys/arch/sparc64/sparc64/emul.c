@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/emul.c,v 1.2 2001/08/20 20:23:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/emul.c,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: emul.c,v 1.8 2001/06/29 23:58:40 eeh Exp $	*/
 
 /*-

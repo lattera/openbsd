@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/psychoreg.h,v 1.5 2001/09/15 07:08:04 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/psychoreg.h,v 1.5.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: psychoreg.h,v 1.6.4.2 2001/09/13 01:14:40 thorpej Exp $ */
 
 /*

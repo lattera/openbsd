@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cdefs.h,v 1.2 2001/08/23 16:10:46 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cdefs.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: cdefs.h,v 1.3 1999/03/20 01:40:26 thorpej Exp $	*/
 
 #ifndef	_MACHINE_CDEFS_H_

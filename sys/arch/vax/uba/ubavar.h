@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ubavar.h,v 1.7.12.1 2001/05/14 21:38:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ubavar.h,v 1.7.12.2 2001/10/31 03:08:01 nate Exp $	*/
 /*	$NetBSD: ubavar.h,v 1.21 1999/01/19 21:04:48 ragge Exp $	*/
 
 /*
@@ -182,4 +182,4 @@ void	ubareset __P((int));
 int	ubasetup __P((struct uba_softc *, struct buf *, int));
 
 #endif /* _KERNEL */
-#endif !_LOCORE
+#endif /* !_LOCORE */

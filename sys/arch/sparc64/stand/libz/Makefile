@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/libz/Makefile,v 1.3 2001/09/06 19:12:34 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/libz/Makefile,v 1.3.4.1 2001/10/31 03:07:59 nate Exp $
 
 LIB=	z
 

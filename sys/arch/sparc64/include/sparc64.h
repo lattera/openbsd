@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/sparc64.h,v 1.3 2001/09/26 17:32:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/sparc64.h,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: sparc64.h,v 1.3 2000/10/20 05:47:03 mrg Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/disklabel.h,v 1.2 2001/09/18 21:04:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/disklabel.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.1.1.1 1998/06/20 04:58:51 eeh Exp $	*/
 
 /*

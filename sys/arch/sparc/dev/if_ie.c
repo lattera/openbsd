@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.2 2001/07/04 10:23:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.3 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.33 1997/07/29 17:55:38 fair Exp $	*/
 
 /*-
@@ -565,7 +565,7 @@ ieattach(parent, self, aux)
 			panic("ie pmap_extract");
 		pmap_enter(pmap_kernel(), trunc_page(IEOB_ADBASE+IE_SCP_ADDR),
                     (paddr_t)pa | PMAP_NC /*| PMAP_IOC*/,
-                    VM_PROT_READ | VM_PROT_WRITE, 1, 0);
+                    VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 
 		sc->scp = (volatile struct ie_sys_conf_ptr *)
 			(IEOB_ADBASE + IE_SCP_ADDR);

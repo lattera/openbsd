@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/suword.c,v 1.2 1996/12/28 06:22:22 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/suword.c,v 1.2.14.1 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: suword.c,v 1.1 1996/09/30 16:34:55 ws Exp $	*/
 
 /*-
@@ -32,13 +32,16 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/param.h>
+#include <sys/systm.h>
+
 /*
  * Emulate suword
  */
 int
 suword(addr,l)
-char *addr;
-unsigned long l;
+	void *addr;
+	long l;
 {
 	if (copyout(&l,addr,sizeof(l)))
 		return -1;

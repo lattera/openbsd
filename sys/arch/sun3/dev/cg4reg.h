@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg4reg.h,v 1.2.14.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: cg4reg.h,v 1.3 1996/10/29 19:54:21 gwr Exp $	*/
 
 /*

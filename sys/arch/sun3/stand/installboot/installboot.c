@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/installboot/Attic/installboot.c,v 1.5.14.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*

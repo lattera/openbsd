@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/oldmon.h,v 1.4.12.1 2001/05/14 21:37:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/oldmon.h,v 1.4.12.2 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: oldmon.h,v 1.11 1996/03/31 22:21:38 pk Exp $ */
 
 /*
@@ -234,8 +234,7 @@ struct om_vector {
 	long	*resetMap;		/* pgmap entry for resetaddr */
 					/* Really struct pgmapent *  */
 
-	__dead void (*exitToMon)
-	    __P((void)) __attribute__((__noreturn__));/* Exit from user program */
+	void	(*exitToMon) __P((void)) __attribute__((__noreturn__));/* Exit from user program */
 	u_char	**memorybitmap;		/* V1: &{0 or &bits} */
 	void	(*setcxsegmap)		/* Set seg in any context */
 		    __P((int, caddr_t, int));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530tty.c,v 1.1 2001/08/21 21:42:30 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530tty.c,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: z8530tty.c,v 1.77 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-

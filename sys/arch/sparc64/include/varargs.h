@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/varargs.h,v 1.1 2001/09/10 22:46:47 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/varargs.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: varargs.h,v 1.10 1995/12/29 18:53:02 mycroft Exp $ */
 
 /*

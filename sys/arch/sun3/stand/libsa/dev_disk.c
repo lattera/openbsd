@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/dev_disk.c,v 1.4.14.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: dev_disk.c,v 1.4 1996/04/10 18:31:14 gwr Exp $ */
 
 /*

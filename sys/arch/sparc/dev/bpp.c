@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/bpp.c,v 1.1.6.1 2001/10/31 03:07:56 nate Exp $	*/
+
 /*
  * Copyright (c) 1997, Jason Downs.  All rights reserved.
  *

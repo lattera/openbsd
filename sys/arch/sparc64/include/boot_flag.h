@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/boot_flag.h,v 1.1 2001/08/18 16:19:28 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/boot_flag.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: boot_flag.h,v 1.3 2001/07/01 02:56:21 gmcgarry Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5 2001/09/26 17:32:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: pmap.c,v 1.107 2001/08/31 16:47:41 eeh Exp $	*/
 #undef	NO_VCACHE /* Don't forget the locked TLB in dostart */
 #define	HWREF

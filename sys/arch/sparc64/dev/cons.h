@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/cons.h,v 1.1 2001/08/19 05:21:37 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/cons.h,v 1.1.4.1 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: cons.h,v 1.3 2000/05/19 05:26:17 eeh Exp $	*/
 
 /*-

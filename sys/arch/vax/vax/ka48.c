@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.1 2001/05/14 21:38:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.2 2001/10/31 03:08:01 nate Exp $	*/
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -41,7 +41,6 @@
 #include <sys/systm.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <machine/pte.h>
 #include <machine/cpu.h>
@@ -95,7 +94,7 @@ ka48_conf()
 		cpuname = "KA48";
 		break;
 	default:
-		cpuname = "unknown SOC";
+		cpuname = "Unknown SOC";
 	}
 	printf("cpu: %s\n", cpuname);
 	ka48_cpu = (void *)vax_map_physmem(VS_REGS, 1);

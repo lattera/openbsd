@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.5 2001/07/04 10:23:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.6 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -63,7 +63,7 @@
 #include <sys/extent.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/frame.h>
@@ -90,11 +90,8 @@ pagemove(from, to, size)
 	while (size > 0) {
 		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
 			panic("pagemove 2");
-		pmap_remove(pmap_kernel(),
-		    (vaddr_t)from, (vaddr_t)from + PAGE_SIZE);
-		pmap_enter(pmap_kernel(),
-		    (vaddr_t)to, pa, VM_PROT_READ | VM_PROT_WRITE, 1,
-		     VM_PROT_READ | VM_PROT_WRITE);
+		pmap_kremove((vaddr_t)from, PAGE_SIZE);
+		pmap_kenter_pa((vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
@@ -201,14 +198,14 @@ dvma_mapin_space(map, va, len, canwait, space)
 
 	s = splhigh();
 	if (space & M_SPACE_D24)
-		error = extent_alloc_subregion1(dvmamap_extent,
+		error = extent_alloc_subregion(dvmamap_extent,
 		    DVMA_D24_BASE, DVMA_D24_END, len, dvma_cachealign,
 		    va & (dvma_cachealign - 1), 0,
-		    canwait ? EX_WAITSPACE : EX_WAITOK, &tva);
+		    canwait ? EX_WAITSPACE : EX_NOWAIT, &tva);
 	else
-		error = extent_alloc1(dvmamap_extent, len, dvma_cachealign, 
+		error = extent_alloc(dvmamap_extent, len, dvma_cachealign, 
 		    va & (dvma_cachealign - 1), 0,
-		    canwait ? EX_WAITSPACE : EX_WAITOK, &tva);
+		    canwait ? EX_WAITSPACE : EX_NOWAIT, &tva);
 	splx(s);
 	if (error)
 		return NULL;
@@ -236,8 +233,7 @@ dvma_mapin_space(map, va, len, canwait, space)
 #endif
 #endif
 			pmap_enter(pmap_kernel(), tva, pa | PMAP_NC,
-				   VM_PROT_READ | VM_PROT_WRITE, 1,
-				   0);
+				   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 		}
 
 		tva += PAGE_SIZE;
@@ -343,7 +339,7 @@ vmapbuf(bp, sz)
 		 * contexts... maybe we should avoid this extra work
 		 */
 		pmap_enter(pmap_kernel(), kva, pa,
-			   VM_PROT_READ | VM_PROT_WRITE, 1, 0);
+			   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 
 		uva += PAGE_SIZE;
 		kva += PAGE_SIZE;

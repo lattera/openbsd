@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.3 2001/07/04 10:24:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.4 2001/10/31 03:08:00 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.35 1996/04/26 18:38:06 gwr Exp $	*/
 
 /*
@@ -55,10 +55,6 @@
 #include <sys/user.h>
 #include <sys/core.h>
 #include <sys/exec.h>
-
-#include <vm/vm.h>
-#include <vm/vm_kern.h>
-/* #include <vm/vm_map.h> */
 
 #include <uvm/uvm_extern.h>
 
@@ -306,8 +302,8 @@ pagemove(from, to, size)
 		pmap_remove(pmap_kernel(),
 			(vm_offset_t)from, (vm_offset_t)from + NBPG);
 		pmap_enter(pmap_kernel(),
-			(vm_offset_t)to, pa, VM_PROT_READ|VM_PROT_WRITE, 1,
-			VM_PROT_READ|VM_PROT_WRITE);
+			(vm_offset_t)to, pa, VM_PROT_READ|VM_PROT_WRITE,
+			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 		from += NBPG;
 		to += NBPG;
 		size -= NBPG;
@@ -376,7 +372,7 @@ vmapbuf(bp, sz)
 #endif
 		pmap_enter(pmap_kernel(), kva,
 			pa | PMAP_NC,
-			VM_PROT_READ|VM_PROT_WRITE, TRUE, 0);
+			VM_PROT_READ|VM_PROT_WRITE, PMAP_WIRED);
 		addr += NBPG;
 		kva  += NBPG;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6 2001/10/15 04:03:45 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.13 2000/12/17 22:39:18 pk Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/SUN4,v 1.22.2.1 2001/07/04 10:23:15 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/SUN4,v 1.22.2.2 2001/10/31 03:07:56 nate Exp $
 # 	$NetBSD: GENERIC,v 1.28.2.1 1996/07/02 23:55:22 jtc Exp $
 
 # Machine architecture; required by config(8)
@@ -169,5 +169,4 @@ uk*	at scsibus? target ? lun ?		# unknown SCSI devices
 
 pseudo-device	kbd		# Sun keyboard
 #pseudo-device	strip	1	# radio clock
-pseudo-device	rd 2
 

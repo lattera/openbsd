@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.21.2.2 2001/07/04 10:23:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.21.2.3 2001/10/31 03:07:56 nate Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -160,6 +160,7 @@ hmeattach(parent, self, aux)
 	struct hme_softc *sc = (struct hme_softc *)self;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int pri;
+	struct bootpath *bp;
 	/* XXX the following declaration should be elsewhere */
 	extern void myetheraddr __P((u_char *));
 
@@ -246,10 +247,19 @@ hmeattach(parent, self, aux)
 	ifp->if_watchdog = hmewatchdog;
 	ifp->if_flags =
 		IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
+	IFQ_SET_MAXLEN(&ifp->if_snd, HME_TX_RING_SIZE);
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Attach the interface. */
 	if_attach(ifp);
 	ether_ifattach(ifp);
+
+	bp = ca->ca_ra.ra_bp;
+	if (bp != NULL && sc->sc_dev.dv_unit == bp->val[1] &&
+	    ((strcmp(bp->name, hme_cd.cd_name) == 0) ||
+	     (strcmp(bp->name, "qfe") == 0) ||
+	     (strcmp(bp->name, "SUNW,hme") == 0)))
+		bp->dev = &sc->sc_dev;
 }
 
 /*
@@ -275,7 +285,7 @@ hmestart(ifp)
 	bix = sc->sc_last_td;
 
 	for (;;) {
-		IF_DEQUEUE(&ifp->if_snd, m);
+		IFQ_DEQUEUE(&ifp->if_snd, m);
 		if (m == NULL)
 			break;
 #if NBPFILTER > 0

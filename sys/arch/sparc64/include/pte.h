@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/pte.h,v 1.2 2001/08/20 20:23:52 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/pte.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: pte.h,v 1.7 2001/07/31 06:55:46 eeh Exp $ */
 
 /*

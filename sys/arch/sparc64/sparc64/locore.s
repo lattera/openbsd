@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9 2001/09/17 04:20:27 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.4.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: locore.s,v 1.137 2001/08/13 06:10:10 jdolecek Exp $	*/
 
 /*

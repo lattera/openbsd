@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/iommureg.h,v 1.2 2001/08/18 21:30:00 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/iommureg.h,v 1.2.4.1 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: iommureg.h,v 1.6 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*

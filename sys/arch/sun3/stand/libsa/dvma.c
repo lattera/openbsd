@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/dvma.c,v 1.3.12.1 2001/10/31 03:08:00 nate Exp $	*/
 /*	$NetBSD: dvma.c,v 1.6 1996/01/31 17:20:39 gwr Exp $	*/
 
 /*

@@ -1,11 +1,11 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/ieeefp.h,v 1.2.12.1 2001/04/18 16:13:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/ieeefp.h,v 1.2.12.2 2001/10/31 03:07:55 nate Exp $	*/
 /* 
  * Written by J.T. Conklin, Apr 6, 1995
  * Public domain.
  */
 
-#ifndef _MACHINE_IEEEFP_H_
-#define _MACHINE_IEEEFP_H_
+#ifndef _POWERPC_IEEEFP_H_
+#define _POWERPC_IEEEFP_H_
 
 typedef int fp_except;
 #define FP_X_IMP	0x01	/* imprecise (loss of precision) */
@@ -21,4 +21,4 @@ typedef enum {
     FP_RP=3			/* round toward positive infinity */
 } fp_rnd;
 
-#endif /* _MACHINE_IEEEFP_H_ */
+#endif /* _POWERPC_IEEEFP_H_ */

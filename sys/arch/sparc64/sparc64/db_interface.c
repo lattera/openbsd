@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4 2001/08/22 05:08:11 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.61 2001/07/31 06:55:47 eeh Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/limits.h,v 1.2 2001/08/23 16:12:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/limits.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: limits.h,v 1.8 2000/08/08 22:31:14 tshiozak Exp $ */
 
 /*

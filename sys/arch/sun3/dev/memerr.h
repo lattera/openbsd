@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/memerr.h,v 1.1.16.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: memerr.h,v 1.1 1996/03/26 14:57:44 gwr Exp $ */
 
 /*

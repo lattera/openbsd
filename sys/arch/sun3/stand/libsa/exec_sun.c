@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/exec_sun.c,v 1.3.14.1 2001/10/31 03:08:00 nate Exp $ */
 /*	$NetBSD: exec_sun.c,v 1.6 1996/06/20 03:59:41 gwr Exp $ */
 
 /*-

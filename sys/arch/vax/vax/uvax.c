@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvax.c,v 1.4.6.1 2001/07/04 10:24:48 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvax.c,v 1.4.6.2 2001/10/31 03:08:02 nate Exp $ */
 /*	$NetBSD: uvax.c,v 1.4 1997/02/19 10:04:27 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -42,7 +42,6 @@
 #include <sys/types.h>
 #include <sys/device.h>
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <machine/pte.h>
 #include <machine/mtpr.h>

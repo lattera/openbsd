@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_div.c,v 1.1 2001/09/08 22:33:51 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_div.c,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: fpu_div.c,v 1.2 1994/11/20 20:52:38 deraadt Exp $ */
 
 /*

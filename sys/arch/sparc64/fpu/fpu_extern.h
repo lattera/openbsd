@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_extern.h,v 1.2 2001/09/09 22:44:44 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_extern.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: fpu_extern.h,v 1.4 2000/08/03 18:32:08 eeh Exp $	*/
 
 /*-

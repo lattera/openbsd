@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.2 2001/07/04 10:24:28 niklas Exp $     */
+/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.3 2001/10/31 03:08:01 nate Exp $     */
 /*	$NetBSD: pmap.h,v 1.37 1999/08/01 13:48:07 ragge Exp $	   */
 
 /* 
@@ -145,8 +145,7 @@ extern	struct pmap kernel_pmap_store;
 void	pmap_bootstrap __P((void));
 vaddr_t pmap_map __P((vm_offset_t, vm_offset_t, vm_offset_t, int));
 void	pmap_pinit __P((pmap_t));
-void	pmap_activate __P((struct proc *));
 
 #endif	/* _KERNEL */
 
-#endif PMAP_H
+#endif /* PMAP_H */

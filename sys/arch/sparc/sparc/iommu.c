@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.6.2.1 2001/07/04 10:23:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.6.2.2 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: iommu.c,v 1.13 1997/07/29 09:42:04 fair Exp $ */
 
 /*
@@ -40,8 +40,8 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/device.h>
+
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <uvm/uvm.h>
 
 #include <machine/pmap.h>
@@ -198,8 +198,8 @@ iommu_attach(parent, self, aux)
 		/* XXX - art, pagewire breaks the tailq */
 		uvm_pagewire(m);
 		pmap_enter(pmap_kernel(), iopte_va, VM_PAGE_TO_PHYS(m),
-			   VM_PROT_READ|VM_PROT_WRITE, 1,
-			   VM_PROT_READ|VM_PROT_WRITE);
+			   VM_PROT_READ|VM_PROT_WRITE,
+			   VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 		iopte_va += NBPG;
 		m = TAILQ_NEXT(m, pageq);
 	}

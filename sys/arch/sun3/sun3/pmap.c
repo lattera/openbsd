@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18.2.3 2001/07/04 10:24:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18.2.4 2001/10/31 03:08:00 nate Exp $	*/
 /*	$NetBSD: pmap.c,v 1.64 1996/11/20 18:57:35 gwr Exp $	*/
 
 /*-
@@ -79,7 +79,6 @@
 #include <sys/queue.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
@@ -1623,7 +1622,7 @@ pmap_map(virt, start, end, prot)
 	int		prot;
 {
 	while (start < end) {
-		pmap_enter(kernel_pmap, virt, start, prot, FALSE, 0);
+		pmap_enter(kernel_pmap, virt, start, prot, 0);
 		virt += NBPG;
 		start += NBPG;
 	}
@@ -1678,16 +1677,12 @@ pmap_page_upload()
  *	the map will be used in software only, and
  *	is bounded by that size.
  */
-pmap_t
-pmap_create(size)
-	vm_size_t	size;
+struct pmap *
+pmap_create(void)
 {
-	pmap_t pmap;
+	struct pmap *pmap;
 
-	if (size)
-		return NULL;
-
-	pmap = (pmap_t) malloc(sizeof(struct pmap), M_VMPMAP, M_WAITOK);
+	pmap = (struct pmap *) malloc(sizeof(struct pmap), M_VMPMAP, M_WAITOK);
 	pmap_common_init(pmap);
 	pmap_user_pmap_init(pmap);
 	return pmap;
@@ -1748,11 +1743,12 @@ pmap_destroy(pmap)
  *	  Lower the permission for all mappings to a given page.
  */
 void
-pmap_page_protect(pa, prot)
-	vm_offset_t	 pa;
-	vm_prot_t	   prot;
+pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
 	int s;
+	paddr_t pa;
+
+	pa = VM_PAGE_TO_PHYS(pg);
 
 	PMAP_LOCK();
 
@@ -2464,20 +2460,18 @@ pmap_enter_user(pmap, va, pa, prot, wired, new_pte)
  *	insert this page into the given map NOW.
  */
 
-void
-pmap_enter(pmap, va, pa, prot, wired, access_type)
+int
+pmap_enter(pmap, va, pa, prot, flags)
 	pmap_t pmap;
 	vm_offset_t va;
 	vm_offset_t pa;
 	vm_prot_t prot;
-	boolean_t wired;
-	vm_prot_t access_type;
+	int flags;
 {
 	int pte_proto;
 	int s;
+	boolean_t wired = (flags & PMAP_WIRED) != 0;
 
-	if (pmap == NULL)
-		return;
 #ifdef	PMAP_DEBUG
 	if ((pmap_debug & PMD_ENTER) ||
 		(va == pmap_db_watchva))
@@ -2513,6 +2507,8 @@ pmap_enter(pmap, va, pa, prot, wired, access_type)
 		pmap_enter_user(pmap, va, pa, prot, wired, pte_proto);
 	}
 	PMAP_UNLOCK();
+
+	return (KERN_SUCCESS);
 }
 
 /*
@@ -2584,35 +2580,36 @@ int pmap_fault_reload(pmap, va, ftype)
 /*
  * Clear the modify bit for the given physical page.
  */
-void
-pmap_clear_modify(pa)
-	register vm_offset_t pa;
+boolean_t
+pmap_clear_modify(struct vm_page *pg)
 {
-	register pv_entry_t	pvhead;
+	pv_entry_t	pvhead;
+	paddr_t 	pa = VM_PAGE_TO_PHYS(pg);
+	boolean_t	ret;
 
 	if (!pv_initialized)
-		return;
-	if (!managed(pa))
-		return;
+		return (0);
 
 	pvhead = pa_to_pvp(pa);
 	pv_syncflags(pvhead);
+	ret = pvhead->pv_flags & PV_MOD;
 	pvhead->pv_flags &= ~PV_MOD;
+
+	return (ret);
 }
 
 /*
  * Tell whether the given physical page has been modified.
  */
 int
-pmap_is_modified(pa)
-	register vm_offset_t pa;
+pmap_is_modified(struct vm_page *pg)
 {
-	register pv_entry_t	pvhead;
+	pv_entry_t	pvhead;
+	paddr_t 	pa = VM_PAGE_TO_PHYS(pg);
 
 	if (!pv_initialized)
 		return (0);
-	if (!managed(pa))
-		return (0);
+
 	pvhead = pa_to_pvp(pa);
 	if ((pvhead->pv_flags & PV_MOD) == 0)
 		pv_syncflags(pvhead);
@@ -2623,20 +2620,24 @@ pmap_is_modified(pa)
  * Clear the reference bit for the given physical page.
  * It's OK to just remove mappings if that's easier.
  */
-void
-pmap_clear_reference(pa)
-	register vm_offset_t pa;
+boolean_t
+pmap_clear_reference(struct vm_page *pg)
 {
-	register pv_entry_t	pvhead;
+	pv_entry_t	pvhead;
+	paddr_t		pa;
+	boolean_t	ret;
+
+	pa = VM_PAGE_TO_PHYS(pg);
 
 	if (!pv_initialized)
-		return;
-	if (!managed(pa))
-		return;
+		return (0);
 
 	pvhead = pa_to_pvp(pa);
 	pv_syncflags(pvhead);
+	ret = pvhead->pv_flags & PV_REF;
 	pvhead->pv_flags &= ~PV_REF;
+
+	return (ret);
 }
 
 /*
@@ -2644,15 +2645,16 @@ pmap_clear_reference(pa)
  * It's OK to just return FALSE if page is not mapped.
  */
 int
-pmap_is_referenced(pa)
-	vm_offset_t	pa;
+pmap_is_referenced(struct vm_page *pg)
 {
-	register pv_entry_t	pvhead;
+	pv_entry_t	pvhead;
+	paddr_t		pa;
+
+	pa = VM_PAGE_TO_PHYS(pg);
 
 	if (!pv_initialized)
 		return (0);
-	if (!managed(pa))
-		return (0);
+
 	pvhead = pa_to_pvp(pa);
 	if ((pvhead->pv_flags & PV_REF) == 0)
 		pv_syncflags(pvhead);
@@ -3357,4 +3359,30 @@ pmap_deactivate(p)
 	struct proc *p;
 {
 	/* not implemented. */
+}
+
+void
+pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
+{
+	pmap_enter(pmap_kernel(), va, pa, prot, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+}
+
+void
+pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs)
+{
+	int i;
+
+	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
+		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
+			VM_PROT_READ|VM_PROT_WRITE,
+			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+	}
+}
+
+void
+pmap_kremove(vaddr_t va, vsize_t len)
+{
+	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
+		pmap_remove(pmap_kernel(), va, va + PAGE_SIZE);
+	}
 }

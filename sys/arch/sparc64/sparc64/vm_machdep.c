@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3 2001/09/19 20:50:58 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3.4.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.38 2001/06/30 00:02:20 eeh Exp $ */
 
 /*

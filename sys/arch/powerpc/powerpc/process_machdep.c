@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/process_machdep.c,v 1.3 1998/08/07 02:22:08 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/process_machdep.c,v 1.3.8.1 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.1 1996/09/30 16:34:53 ws Exp $	*/
 
 /*
@@ -32,7 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/ptrace.h>
 #include <machine/reg.h>
 
 /*

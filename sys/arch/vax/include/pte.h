@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/pte.h,v 1.5.12.1 2001/05/14 21:38:04 niklas Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/pte.h,v 1.5.12.2 2001/10/31 03:08:01 nate Exp $      */
 /*      $NetBSD: pte.h,v 1.13 1999/08/03 19:53:23 ragge Exp $      */
 
 /*
@@ -53,7 +53,7 @@ struct pte {
 
 typedef struct pte	pt_entry_t;	/* Mach page table entry */
 
-#endif _LOCORE
+#endif /* _LOCORE */
 
 #define	PT_ENTRY_NULL	((pt_entry_t *) 0)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2 2001/08/20 19:55:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
 /*	$NetBSD: srt0.s,v 1.1 2000/08/20 14:58:42 mrg Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/Attic/NANCY,v 1.5.12.1 2001/07/04 10:24:21 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/Attic/NANCY,v 1.5.12.2 2001/10/31 03:08:01 nate Exp $
 #
 # NANCY MV3600 configuration file.
 #
@@ -23,10 +23,6 @@ option		"VAX43"		# VS 3100/76
 
 # Max users on system; this is just a hint
 maxusers	8
-
-# standard system options
-options		SWAPPAGER	# swap and anonymous memory
-options		DEVPAGER	# mapped devices
 
 # Kernel compiled-in symbolic debugger & system call tracer
 option		DDB

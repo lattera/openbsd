@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.11.12.2 2001/07/04 10:24:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.11.12.3 2001/10/31 03:08:01 nate Exp $ */
 /*      $NetBSD: param.h,v 1.39 1999/10/22 21:14:34 ragge Exp $    */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -106,7 +106,7 @@
  */
 
 #ifndef	MSIZE
-#define	MSIZE		128		/* size of an mbuf */
+#define	MSIZE		256		/* size of an mbuf */
 #endif	/* MSIZE */
 
 #ifndef	MCLSHIFT

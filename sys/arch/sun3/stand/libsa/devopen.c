@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/devopen.c,v 1.2.14.1 2001/10/31 03:08:00 nate Exp $	*/
+
 
 #include <sys/param.h>
 #include <machine/mon.h>

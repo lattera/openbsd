@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/xy.c,v 1.13.4.1 2001/05/14 21:37:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/xy.c,v 1.13.4.2 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: xy.c,v 1.26 1997/07/19 21:43:56 pk Exp $	*/
 
 /*
@@ -77,7 +77,6 @@
 #include <sys/timeout.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <machine/autoconf.h>
 #include <machine/sun_disklabel.h>

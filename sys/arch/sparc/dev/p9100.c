@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3 1999/09/07 02:58:49 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3.4.1 2001/10/31 03:07:56 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -82,9 +82,6 @@ struct p9100_softc {
 void	p9100attach(struct device *, struct device *, void *);
 int	p9100match(struct device *, void *, void *);
 void	p9100unblank(struct device *);
-
-/* cdevsw prototypes */
-cdev_decl(p9100);
 
 struct cfattach pnozz_ca = {
 	sizeof(struct p9100_softc), p9100match, p9100attach

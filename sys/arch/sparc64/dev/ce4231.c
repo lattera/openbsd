@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2 2001/10/02 00:26:24 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2.4.1 2001/10/31 03:07:57 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.3 2001/07/04 10:24:39 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.4 2001/10/31 03:08:01 nate Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -72,7 +72,7 @@
 #include <dev/cons.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
+#include <uvm/uvm_extern.h>
 
 #ifdef SYSVMSG
 #include <sys/msg.h>
@@ -246,8 +246,8 @@ cpu_startup()
 				panic("cpu_startup: "
 				    "not enough RAM for buffer cache");
 			pmap_enter(kernel_map->pmap, curbuf,
-			    VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE, TRUE, 
-			    VM_PROT_READ|VM_PROT_WRITE);
+			    VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE,
+			    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -267,11 +267,9 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr, 
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr, 
 		VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 	
-	timeout_init();
-
 	printf("avail memory = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n", nbuf, bufpages * PAGE_SIZE);
 
@@ -280,6 +278,17 @@ cpu_startup()
 	 */
 
 	bufinit();
+
+	/*
+	 * Configure the system.
+	 */
+	if (boothowto & RB_CONFIG) {
+#ifdef BOOT_CONFIG
+		user_config();
+#else
+		printf("kernel does not support -c; continuing..\n");
+#endif
+	}
 }
 
 long	dumplo = 0;
@@ -760,10 +769,6 @@ allocsys(v)
     register caddr_t v;
 {
 
-#ifdef REAL_CLISTS
-    VALLOC(cfree, struct cblock, nclist);
-#endif
-    VALLOC(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
     VALLOC(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif

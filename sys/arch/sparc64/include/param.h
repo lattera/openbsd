@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.4 2001/09/11 03:50:46 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.4.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: param.h,v 1.25 2001/05/30 12:28:51 mrg Exp $ */
 
 /*

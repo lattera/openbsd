@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/trap.h,v 1.1.1.1.14.2 2001/07/04 10:22:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/trap.h,v 1.1.1.1.14.3 2001/10/31 03:07:55 nate Exp $	*/
 /*	$NetBSD: trap.h,v 1.1 1996/09/30 16:34:35 ws Exp $	*/
 
 /*
@@ -31,8 +31,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef	_MACHINE_TRAP_H_
-#define	_MACHINE_TRAP_H_
+#ifndef	_POWERPC_TRAP_H_
+#define	_POWERPC_TRAP_H_
 
 #define	EXC_RSVD	0x0000		/* Reserved */
 #define	EXC_RST		0x0100		/* Reset */
@@ -77,9 +77,10 @@
 #define EXC_ALI_OPCODE_INDICATOR(dsisr) ((dsisr >> 10) & 0x7f)
 #define EXC_ALI_LFD	0x09
 #define EXC_ALI_STFD	0x0b
+#define EXC_ALI_DCBZ	0x5f
 
 /* Macros to extract register information */
 #define EXC_ALI_RST(dsisr) ((dsisr >> 5) & 0x1f)   /* source or target */
 #define EXC_ALI_RA(dsisr) (dsisr & 0x1f)
 
-#endif	/* _MACHINE_TRAP_H_ */
+#endif	/* _POWERPC_TRAP_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.5.12.1 2001/04/18 16:13:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.5.12.2 2001/10/31 03:07:55 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB.
@@ -30,11 +30,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: exec.h,v 1.6 2001/01/22 14:51:06 art Exp $
+ *	$Id: exec.h,v 1.5.12.1 2001/04/18 16:13:02 niklas Exp $
  */
 
-#ifndef _MACHINE_EXEC_H_
-#define _MACHINE_EXEC_H_
+#ifndef _POWERPC_EXEC_H_
+#define _POWERPC_EXEC_H_
 
 #define __LDPGSZ	4096	/* linker page size */
 
@@ -54,4 +54,4 @@
 
 #define _KERN_DO_ELF
 
-#endif  /* _MACHINE_EXEC_H_ */
+#endif  /* _POWERPC_EXEC_H_ */

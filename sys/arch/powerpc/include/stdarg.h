@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/stdarg.h,v 1.2.12.1 2001/04/18 16:13:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/stdarg.h,v 1.2.12.2 2001/10/31 03:07:55 nate Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.1 1996/09/30 16:34:35 ws Exp $	*/
 
 /*-
@@ -36,8 +36,8 @@
  *	@(#)stdarg.h	8.1 (Berkeley) 6/10/93
  */
 
-#ifndef _MACHINE_STDARG_H_
-#define	_MACHINE_STDARG_H_
+#ifndef _POWERPC_STDARG_H_
+#define	_POWERPC_STDARG_H_
 
 #include <machine/ansi.h>
 
@@ -48,4 +48,4 @@
 
 typedef _BSD_VA_LIST_	va_list;
 
-#endif /* !_MACHINE_STDARG_H_ */
+#endif /* !_POWERPC_STDARG_H_ */

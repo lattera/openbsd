@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.4 2001/10/28 03:14:59 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.4.2.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: conf.h,v 1.9 2001/03/26 12:33:26 lukem Exp $	*/
 
 /*-
@@ -98,8 +98,6 @@ cdev_decl(scsibus);
 
 bdev_decl(wd);
 cdev_decl(wd);
-
-cdev_decl(sabtty);
 
 cdev_decl(pcons);
 

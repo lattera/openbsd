@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_emu.h,v 1.3 2001/10/05 17:43:09 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_emu.h,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: fpu_emu.h,v 1.4 2000/08/03 18:32:07 eeh Exp $ */
 
 /*

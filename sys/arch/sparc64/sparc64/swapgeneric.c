@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/Attic/swapgeneric.c,v 1.2 2001/09/29 18:40:32 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/Attic/swapgeneric.c,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $ */
 /*	$NetBSD: swapgeneric.c,v 1.8 1996/03/14 21:09:32 christos Exp $ */
 
 /*-

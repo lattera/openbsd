@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/bootblk/Makefile,v 1.6 2001/10/08 22:19:38 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/bootblk/Makefile,v 1.6.4.1 2001/10/31 03:07:59 nate Exp $
 #	$NetBSD: Makefile,v 1.1 2000/08/20 14:58:45 mrg Exp $
 
 CURDIR=	${.CURDIR}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/ka650.h,v 1.7.12.1 2001/05/14 21:38:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/ka650.h,v 1.7.12.2 2001/10/31 03:08:01 nate Exp $	*/
 /*	$NetBSD: ka650.h,v 1.6 1997/07/26 10:12:43 ragge Exp $	*/
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -209,7 +209,7 @@ struct ka650_ipcr {
 };
 #define KA650_IPCR	0x20001e00
 
-#endif	_LOCORE
+#endif /* _LOCORE */
 
 /*
  * Physical start address of the Qbus memory.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/cache.c,v 1.2 2001/08/20 20:23:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/cache.c,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: cache.c,v 1.5 2000/12/06 01:47:50 mrg Exp $ */
 
 /*

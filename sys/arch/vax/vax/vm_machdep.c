@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.2 2001/07/04 10:24:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.3 2001/10/31 03:08:02 nate Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.67 2000/06/29 07:14:34 mrg Exp $	     */
 
 /*
@@ -44,8 +44,9 @@
 #include <sys/device.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
+
+#include <uvm/uvm_extern.h>
 
 #include <machine/vmparam.h>
 #include <machine/mtpr.h>
@@ -316,8 +317,6 @@ iounaccess(vaddr, npgs)
 	mtpr(0, PR_TBIA);
 }
 
-extern vm_map_t phys_map;
-
 /*
  * Map a user I/O request into kernel virtual address space.
  * Note: the pages are already locked by uvm_vslock(), so we
@@ -352,7 +351,7 @@ vmapbuf(bp, len)
 				&pa) == FALSE)
 			panic("vmapbuf: null page frame");
 		pmap_enter(vm_map_pmap(phys_map), taddr, trunc_page(pa),
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE, VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 		faddr += PAGE_SIZE;
 		taddr += PAGE_SIZE;
 	}

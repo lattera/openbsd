@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/netboot/Attic/dev_net.c,v 1.3.14.1 2001/10/31 03:08:00 nate Exp $	*/
 /*	$NetBSD: dev_net.c,v 1.4 1996/01/29 23:54:15 gwr Exp $	*/
 
 /*

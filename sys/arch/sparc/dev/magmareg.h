@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/magmareg.h,v 1.2.8.2 2001/10/31 03:07:56 nate Exp $	*/
+
 /* magmareg.h
  *
  *  Copyright (c) 1998 Iain Hibbert

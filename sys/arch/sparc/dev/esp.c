@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15.6.1 2001/05/14 21:37:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15.6.2 2001/10/31 03:07:56 nate Exp $	*/
 /*	$NetBSD: esp.c,v 1.69 1997/08/27 11:24:18 bouyer Exp $	*/
 
 /*
@@ -402,7 +402,7 @@ espattach(parent, self, aux)
 	ncr53c9x_attach(sc, &esp_switch, &esp_dev);
 
 	/* Turn on target selection using the `dma' method */
-	ncr53c9x_dmaselect = 1;
+	sc->sc_features |= NCR_F_DMASELECT;
 
 	bootpath_store(1, NULL);
 }

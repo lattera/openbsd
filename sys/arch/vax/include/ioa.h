@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/vax/include/Attic/ioa.h,v 1.4.12.1 2001/05/14 21:37:59 niklas Exp $	*/
-/*	$NetBSD: ioa.h,v 1.5 1999/04/12 20:57:52 pk Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/Attic/ioa.h,v 1.4.12.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$NetBSD: ioa.h,v 1.6 2000/01/24 02:40:32 matt Exp $	*/
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.
  * All rights reserved.
@@ -116,4 +116,4 @@ struct	ioa {
 #define IOA_TYPMSK 0xf0
 #define IOA_SBIA	0x10
 
-#endif VAX8600
+#endif /* VAX8600 */

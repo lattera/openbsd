@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/int_types.h,v 1.2 2001/09/26 17:32:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/int_types.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: int_types.h,v 1.7 2001/04/28 15:41:33 kleink Exp $	*/
 
 /*

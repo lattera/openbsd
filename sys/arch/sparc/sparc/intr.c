@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/sparc/intr.c,v 1.12.2.3 2001/10/31 03:07:57 nate Exp $ */
 /*	$NetBSD: intr.c,v 1.20 1997/07/29 09:42:03 fair Exp $ */
 
 /*

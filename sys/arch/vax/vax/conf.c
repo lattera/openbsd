@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.2 2001/07/04 10:24:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.3 2001/10/31 03:08:01 nate Exp $ */
 /*	$NetBSD: conf.c,v 1.44 1999/10/27 16:38:54 ragge Exp $	*/
 
 /*-
@@ -54,8 +54,6 @@ bdev_decl(ht);
 
 #include "rk.h"
 bdev_decl(rk);
-
-bdev_decl(sw);
 
 #include "te.h"
 bdev_decl(tm);
@@ -289,7 +287,6 @@ cdev_decl(ctty);
 #define mmread	mmrw
 #define mmwrite mmrw
 cdev_decl(mm);
-cdev_decl(sw);
 #include "pty.h"
 #define ptstty		ptytty
 #define ptsioctl	ptyioctl
@@ -436,7 +433,6 @@ dev_decl(filedesc,open);
 #include "wsmouse.h"
 
 #include "pf.h"
-cdev_decl(pf);
 
 #include <altq/altqconf.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/spinlock.h,v 1.1 2001/09/10 20:00:14 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/spinlock.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 
 #ifndef _MACHINE_SPINLOCK_H_
 #define _MACHINE_SPINLOCK_H_

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/Attic/VOX,v 1.2.12.1 2001/07/04 10:24:22 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/Attic/VOX,v 1.2.12.2 2001/10/31 03:08:01 nate Exp $
 #
 # simple VS2000 configuration file.
 #
@@ -13,10 +13,6 @@ option		"VAX410"	# VS 2000
 
 # Max users on system; this is just a hint
 maxusers	8
-
-# pagers
-option		SWAPPAGER
-option		DEVPAGER
 
 # Kernel compiled-in symbolic debugger & system call tracer
 option		DDB

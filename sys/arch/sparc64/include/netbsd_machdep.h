@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/netbsd_machdep.h,v 1.1 2001/09/06 10:45:41 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/netbsd_machdep.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 
 #ifndef _NETBSD_MACHDEP_H
 #define _NETBSD_MACHDEP_H

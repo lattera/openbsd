@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.1 2001/07/04 10:23:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.2 2001/10/31 03:07:57 nate Exp $	*/
 /*	$NetBSD: conf.h,v 1.8 1996/12/31 07:12:43 mrg Exp $	*/
 
 /*
@@ -75,6 +75,8 @@ cdev_decl(cgeight);
 cdev_decl(tcx);
 
 cdev_decl(cgfourteen);
+
+cdev_decl(p9100);
 
 bdev_decl(xd);
 cdev_decl(xd);

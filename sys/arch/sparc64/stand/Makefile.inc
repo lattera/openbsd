@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/Makefile.inc,v 1.2 2001/08/20 19:55:33 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/Makefile.inc,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $
 #	$NetBSD: Makefile.inc,v 1.7 2000/08/20 14:57:16 mrg Exp $
 
 .ifndef __INCLUDED_STAND_MAKEFILE_INC

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.6.8.1 2001/05/14 21:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.6.8.2 2001/10/31 03:08:01 nate Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.13 1996/10/13 03:36:01 christos Exp $	*/
 
 /*-
@@ -36,69 +36,19 @@
  *	@(#)swapgeneric.c	7.11 (Berkeley) 5/9/91
  */
 
+/*
+ * fake swapgeneric.c -- should do this differently.
+ */
+
 #include <sys/param.h>
 #include <sys/conf.h>
-#include <sys/buf.h>
-#include <sys/systm.h>
-#include <sys/reboot.h>
-#include <sys/device.h>
-
-#include <dev/cons.h>
-
-#include <machine/pte.h>
-#include <machine/mtpr.h>
-#include <machine/cpu.h>
-
-#include "hp.h"
-#include "ra.h"
-#include "hdc.h"
-#include "sd.h"
-#include "st.h"
-
-void	gets __P((char *));
-
-/*
- * Generic configuration;  all in one
- */
-dev_t	rootdev = NODEV;
-dev_t	argdev = NODEV;
-dev_t	dumpdev = NODEV;
-int	nswap;
-struct	swdevt swdevt[] = {
-	{ -1,	1,	0 },
-	{ -1,	1,	0 },
-	{ -1,	1,	0 },
-	{ 0,	0,	0 },
-};
-long	dumplo;
-int	dmmin, dmmax, dmtext;
 
 int (*mountroot) __P((void)) = NULL;
 
-extern	struct cfdriver hp_cd;
-extern	struct cfdriver ra_cd;
-extern	struct cfdriver hd_cd;
-extern	struct cfdriver sd_cd;
-extern	struct cfdriver st_cd;
+dev_t	rootdev = NODEV;
+dev_t	dumpdev = NODEV;
 
-struct	ngcconf {
-	struct	cfdriver *ng_cf;
-	dev_t	ng_root;
-} ngcconf[] = {
-#if NHP > 0
-	{ &hp_cd,	makedev(0, 0), },
-#endif
-#if NRA > 0
-	{ &ra_cd,	makedev(9, 0), },
-#endif
-#if NHDC > 0
-	{ &hd_cd,	makedev(19, 0), },
-#endif
-#if NSD > 0
-	{ &sd_cd,	makedev(20, 0), },
-#endif
-#if NST > 0
-	{ &st_cd,	makedev(21, 0), },
-#endif
-	{ 0 },
+struct	swdevt swdevt[] = {
+	{ NODEV, 0, 0 },	/* to be filled in */
+	{ NODEV, 0, 0 }
 };

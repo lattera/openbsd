@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_add.c,v 1.1 2001/09/08 22:33:51 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_add.c,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
 /*	$NetBSD: fpu_add.c,v 1.3 1996/03/14 19:41:52 christos Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8.2.2 2001/07/04 10:24:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8.2.3 2001/10/31 03:08:00 nate Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.37 1996/11/20 18:57:22 gwr Exp $	*/
 
 /*-
@@ -60,9 +60,6 @@
 #include <scsi/scsiconf.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_map.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
@@ -290,7 +287,7 @@ bus_mapin(bustype, paddr, sz)
 	pmap_map((int)va, pa | pmt, pa + sz, VM_PROT_ALL);
 #else
 	do {
-		pmap_enter(pmap_kernel(), va, pa | pmt, VM_PROT_ALL, FALSE, 0);
+		pmap_enter(pmap_kernel(), va, pa | pmt, VM_PROT_ALL, 0);
 		va += NBPG;
 		pa += NBPG;
 	} while ((sz -= NBPG) > 0);
