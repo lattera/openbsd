@@ -21,7 +21,7 @@ SOFTWARE.
 ************************************************************************/
 
 #ifndef lint
-static char rcsid[] = "$Id: bootpd.c,v 1.3 1996/07/11 10:54:50 mickey Exp $";
+static char rcsid[] = "$Id: bootpd.c,v 1.4 1998/06/07 06:04:25 deraadt Exp $";
 #endif
 
 /*
@@ -99,7 +99,7 @@ static char rcsid[] = "$Id: bootpd.c,v 1.3 1996/07/11 10:54:50 mickey Exp $";
 #define CONFIG_FILE		"/etc/bootptab"
 #endif
 #ifndef DUMPTAB_FILE
-#define DUMPTAB_FILE		"/tmp/bootpd.dump"
+#define DUMPTAB_FILE		"/var/run/bootpd.dump"
 #endif
 
 
