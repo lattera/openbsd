@@ -1,5 +1,5 @@
-# $OpenBSD: src/lib/libpthread/thread/Attic/Makefile.inc,v 1.1 2000/01/06 07:25:15 d Exp $
+# $OpenBSD: src/lib/libpthread/thread/Attic/Makefile.inc,v 1.2 2002/11/03 20:36:43 marc Exp $
 
 .PATH: ${LIBC_RSRCDIR}/thread
 
-SRCS+=	thread_storage.c
+SRCS+=	thread_storage.c thread_malloc_lock.c
