@@ -26,35 +26,43 @@
 
 S=	${.CURDIR}/../../..
 
-machine-links:
-	-rm -f machine && \
-	    ln -s ${.CURDIR}/../include machine
-	-rm -f ${MACHINE_ARCH} && \
-	    ln -s ${.CURDIR}/../include ${MACHINE_ARCH}
+LOADSZ=15
+
+DEBUG=	-g -DDEBUG
+
+OBJDUMP=/usr/i386-unknown-openbsd1.2/bin/objdump
+AFLAGS+=-v -Wa,-a -DLOADSZ=${LOADSZ} -B/usr/i386-unknown-openbsd1.2/bin
+CFLAGS+=-Werror -m386 -O2 -DNO_SPRINTF
+#	-DDO_BAD144
+# no 16-bit-code flag yet
+OBJDUMPFLAGS=-d
+
+# Uncomment this to make the boot block talk to a serial port.
+#CPPFLAGS+=-DSERIAL=0
+CPPFLAGS=${DEBUG} -I. -I${.CURDIR} -I$S -I${.CURDIR}/../..
+
+# SA lib stuff
+SAREL=
+.include "$S/lib/libsa/Makefile.inc"
+
+# start.o should be first
+OBJS=	start.o table.o boot.o asm.o bios.o io.o disk.o sys.o
+CLEANFILES+=bootbios boot biosboot boot.sym machine ${MACHINE_ARCH}
 
 all: machine-links biosboot bootbios
 
-NOPROG=	noprog
-NOMAN=	noman
+machine-links:
+	ln -fs ${.CURDIR}/../include machine
+	ln -fs ${.CURDIR}/../include ${MACHINE_ARCH}
 
-CFLAGS=	-O6 -D_KERNEL -DI386_CPU -DI486_CPU -DI586_CPU
-CFLAGS+=-DDO_BAD144 -I. -I${.CURDIR} -I$S -I${.CURDIR}/../..
-
-# Uncomment this to make the boot block talk to a serial port.
-#CPPFLAGS+=-DSERIAL
-
-# start.o should be first
-OBJS=	start.o table.o boot.o asm.o bios.o io.o disk.o sys.o version.o
-
-boot:	${OBJS}
-	${LD} -Bstatic -e start -N -T 0 -o boot ${OBJS}
+boot:	${OBJS} ${SALIB}
+	${LD} -Bstatic -e _boot1 -N -T 0 -o ${.TARGET} ${OBJS} ${SALIB} version.o
 	cp boot boot.sym
-	@if [ `size boot | awk 'BEGIN {getline} {print $$1+$$2}'` -gt 7680 ];\
-	then \
-		echo BOOT BLOCKS ARE TOO BIG;\
-		fail;\
-	fi
 	@strip boot
+	@size boot | \
+	awk 'BEGIN {getline} \
+		{if($$1+$$2>${LOADSZ}*512){\
+			print "BOOT BLOCKS ARE TOO BIG"; exit(1)}}'
 	@sh ${.CURDIR}/rmaouthdr boot boot.tmp
 	@mv -f boot.tmp boot
 	@ls -l boot
@@ -72,20 +80,16 @@ ${DESTDIR}/usr/mdec/sdboot:	biosboot
 	cp biosboot ${DESTDIR}/usr/mdec/sdboot
 
 ${DESTDIR}/usr/mdec/bootwd:	${DESTDIR}/usr/mdec/bootsd
-	rm -f ${DESTDIR}/usr/mdec/bootwd
-	ln ${DESTDIR}/usr/mdec/bootsd ${DESTDIR}/usr/mdec/bootwd
+	ln -f ${DESTDIR}/usr/mdec/bootsd ${DESTDIR}/usr/mdec/bootwd
 
 ${DESTDIR}/usr/mdec/wdboot:	${DESTDIR}/usr/mdec/sdboot
-	rm -f ${DESTDIR}/usr/mdec/wdboot
-	ln ${DESTDIR}/usr/mdec/sdboot ${DESTDIR}/usr/mdec/wdboot
+	ln -f ${DESTDIR}/usr/mdec/sdboot ${DESTDIR}/usr/mdec/wdboot
 
 ${DESTDIR}/usr/mdec/bootfd:	${DESTDIR}/usr/mdec/bootsd
-	rm -f ${DESTDIR}/usr/mdec/bootfd
-	ln ${DESTDIR}/usr/mdec/bootsd ${DESTDIR}/usr/mdec/bootfd
+	ln -f ${DESTDIR}/usr/mdec/bootsd ${DESTDIR}/usr/mdec/bootfd
 
 ${DESTDIR}/usr/mdec/fdboot:	${DESTDIR}/usr/mdec/sdboot
-	rm -f ${DESTDIR}/usr/mdec/fdboot
-	ln ${DESTDIR}/usr/mdec/sdboot ${DESTDIR}/usr/mdec/fdboot
+	ln -f ${DESTDIR}/usr/mdec/sdboot ${DESTDIR}/usr/mdec/fdboot
 
 sd:	${DESTDIR}/usr/mdec/bootsd ${DESTDIR}/usr/mdec/sdboot
 wd:	${DESTDIR}/usr/mdec/bootwd ${DESTDIR}/usr/mdec/wdboot
@@ -93,11 +97,9 @@ fd:	${DESTDIR}/usr/mdec/bootfd ${DESTDIR}/usr/mdec/fdboot
 
 install: wd sd fd
 
-CLEANFILES+=bootbios boot biosboot boot.sym machine ${MACHINE_ARCH}
+depend::
 
 clean::
 	rm -f a.out [Ee]rrs mklog core *.core
-	rm -f ${PROG} ${OBJS} ${LOBJS} ${CLEANFILES}
+	rm -f ${OBJS} ${LOBJS} ${CLEANFILES}
 
-
-.include <bsd.prog.mk>

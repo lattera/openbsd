@@ -83,57 +83,6 @@ gateA20(on)
 #endif	IBM_L40
 }
 
-/* printf - only handles %d as decimal, %c as char, %s as string */
-void
-printf(format, data)
-	const char *format;
-	int data;
-{
-	int *dataptr = &data;
-	char c;
-
-	while (c = *format++) {
-		if (c != '%') {
-			putchar(c);
-			continue;
-		}
-		c = *format++;
-		if (c == 'd') {
-			int num = *dataptr++, dig;
-			char buf[10], *ptr = buf;
-			if (num < 0) {
-				num = -num;
-				putchar('-');
-			}
-			do {
-				dig = num % 10;
-				*ptr++ = '0' + dig;
-			} while (num /= 10);
-			do
-				putchar(*--ptr);
-			while (ptr != buf);
-		} else if (c == 'x') {
-			unsigned int num = (unsigned int)*dataptr++, dig;
-			char buf[8], *ptr = buf;
-			do {
-				dig = num & 0xf;
-				*ptr++ = dig > 9 ?
-					 'a' + dig - 10 :
-					 '0' + dig;
-			} while (num >>= 4);
-			do
-				putchar(*--ptr);
-			while (ptr != buf);
-		} else if (c == 'c') {
-			putchar((char)*dataptr++);
-		} else if (c == 's') {
-			char *ptr = (char *)*dataptr++;
-			while (c = *ptr++)
-				putchar(c);
-		}
-	}
-}
-
 void
 putchar(c)
 	int c;
@@ -211,34 +160,6 @@ gets(buf)
 	/* shouldn't ever be reached; we have to return in the loop. */
 }
 
-int
-strcmp(s1, s2)
-	const char *s1, *s2;
-{
-	while (*s1 == *s2) {
-		if (!*s1++)
-			return 0;
-		s2++;
-	}
-	return 1;
-}
-
-void
-bcopy(from, to, len)
-	char *from, *to;
-	int len;
-{
-	if (from > to)
-		while (--len >= 0)
-			*to++ = *from++;
-	else {
-		to += len;
-		from += len;
-		while (--len >= 0)
-			*--to = *--from;
-	}
-}
-
 /* Number of milliseconds to sleep during each microsleep */
 #define NAPTIME 50
 
@@ -270,11 +191,3 @@ awaitkey(seconds)
 	return (i != 0);
 }
 
-void
-twiddle()
-{
-	static int pos;
-
-	putchar("|/-\\"[pos++ & 3]);
-	putchar('\b');
-}
