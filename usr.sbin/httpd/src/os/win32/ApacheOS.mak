@@ -26,14 +26,12 @@ NULL=
 NULL=nul
 !ENDIF 
 
-CPP=cl.exe
-
 !IF  "$(CFG)" == "ApacheOS - Win32 Release"
 
-OUTDIR=.\ApacheOSR
-INTDIR=.\ApacheOSR
+OUTDIR=.\LibR
+INTDIR=.\LibR
 # Begin Custom Macros
-OutDir=.\ApacheOSR
+OutDir=.\LibR
 # End Custom Macros
 
 !IF "$(RECURSE)" == "0" 
@@ -47,76 +45,19 @@ ALL : "$(OUTDIR)\ApacheOS.lib"
 !ENDIF 
 
 CLEAN :
+	-@erase "$(INTDIR)\ApacheOS.idb"
 	-@erase "$(INTDIR)\os.obj"
-	-@erase "$(INTDIR)\vc50.idb"
 	-@erase "$(OUTDIR)\ApacheOS.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP_PROJ=/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS"\
- /Fp"$(INTDIR)\ApacheOS.pch" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\ApacheOSR/
+RSC=rc.exe
+CPP=cl.exe
+CPP_PROJ=/nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS"\
+ /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\ApacheOS" /FD /c 
+CPP_OBJS=.\LibR/
 CPP_SBRS=.
-BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\ApacheOS.bsc" 
-BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"$(OUTDIR)\ApacheOS.lib" 
-LIB32_OBJS= \
-	"$(INTDIR)\os.obj"
-
-"$(OUTDIR)\ApacheOS.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
-    $(LIB32) @<<
-  $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
-<<
-
-!ELSEIF  "$(CFG)" == "ApacheOS - Win32 Debug"
-
-OUTDIR=.\ApacheOSD
-INTDIR=.\ApacheOSD
-# Begin Custom Macros
-OutDir=.\ApacheOSD
-# End Custom Macros
-
-!IF "$(RECURSE)" == "0" 
-
-ALL : "$(OUTDIR)\ApacheOS.lib"
-
-!ELSE 
-
-ALL : "$(OUTDIR)\ApacheOS.lib"
-
-!ENDIF 
-
-CLEAN :
-	-@erase "$(INTDIR)\os.obj"
-	-@erase "$(INTDIR)\vc50.idb"
-	-@erase "$(OUTDIR)\ApacheOS.lib"
-
-"$(OUTDIR)" :
-    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
-
-CPP_PROJ=/nologo /MDd /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS"\
- /Fp"$(INTDIR)\ApacheOS.pch" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\ApacheOSD/
-CPP_SBRS=.
-BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\ApacheOS.bsc" 
-BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"$(OUTDIR)\ApacheOS.lib" 
-LIB32_OBJS= \
-	"$(INTDIR)\os.obj"
-
-"$(OUTDIR)\ApacheOS.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
-    $(LIB32) @<<
-  $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
-<<
-
-!ENDIF 
 
 .c{$(CPP_OBJS)}.obj::
    $(CPP) @<<
@@ -147,6 +88,100 @@ LIB32_OBJS= \
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
+
+BSC32=bscmake.exe
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\ApacheOS.bsc" 
+BSC32_SBRS= \
+	
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"$(OUTDIR)\ApacheOS.lib" 
+LIB32_OBJS= \
+	"$(INTDIR)\os.obj"
+
+"$(OUTDIR)\ApacheOS.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+    $(LIB32) @<<
+  $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
+<<
+
+!ELSEIF  "$(CFG)" == "ApacheOS - Win32 Debug"
+
+OUTDIR=.\LibD
+INTDIR=.\LibD
+# Begin Custom Macros
+OutDir=.\LibD
+# End Custom Macros
+
+!IF "$(RECURSE)" == "0" 
+
+ALL : "$(OUTDIR)\ApacheOS.lib"
+
+!ELSE 
+
+ALL : "$(OUTDIR)\ApacheOS.lib"
+
+!ENDIF 
+
+CLEAN :
+	-@erase "$(INTDIR)\ApacheOS.idb"
+	-@erase "$(INTDIR)\ApacheOS.pdb"
+	-@erase "$(INTDIR)\os.obj"
+	-@erase "$(OUTDIR)\ApacheOS.lib"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+RSC=rc.exe
+CPP=cl.exe
+CPP_PROJ=/nologo /MDd /W3 /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS"\
+ /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\ApacheOS" /FD /c 
+CPP_OBJS=.\LibD/
+CPP_SBRS=.
+
+.c{$(CPP_OBJS)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp{$(CPP_OBJS)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx{$(CPP_OBJS)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.c{$(CPP_SBRS)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp{$(CPP_SBRS)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx{$(CPP_SBRS)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+BSC32=bscmake.exe
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\ApacheOS.bsc" 
+BSC32_SBRS= \
+	
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"$(OUTDIR)\ApacheOS.lib" 
+LIB32_OBJS= \
+	"$(INTDIR)\os.obj"
+
+"$(OUTDIR)\ApacheOS.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+    $(LIB32) @<<
+  $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
+<<
+
+!ENDIF 
 
 
 !IF "$(CFG)" == "ApacheOS - Win32 Release" || "$(CFG)" ==\

@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -148,7 +149,7 @@ static server_addr_rec **name_vhost_list_tail;
 
 
 /* called at the beginning of the config */
-void ap_init_vhost_config(pool *p)
+API_EXPORT(void) ap_init_vhost_config(pool *p)
 {
     memset(iphash_table, 0, sizeof(iphash_table));
     default_list = NULL;
@@ -241,7 +242,7 @@ static const char *get_addresses(pool *p, char *w, server_addr_rec ***paddr,
 
 
 /* parse the <VirtualHost> addresses */
-const char *ap_parse_vhost_addrs(pool *p, const char *hostname, server_rec *s)
+API_EXPORT(const char *) ap_parse_vhost_addrs(pool *p, const char *hostname, server_rec *s)
 {
     server_addr_rec **addrs;
     const char *err;
@@ -267,7 +268,7 @@ const char *ap_parse_vhost_addrs(pool *p, const char *hostname, server_rec *s)
 }
 
 
-const char *ap_set_name_virtual_host (cmd_parms *cmd, void *dummy, char *arg)
+API_EXPORT_NONSTD(const char *) ap_set_name_virtual_host (cmd_parms *cmd, void *dummy, char *arg)
 {
     /* use whatever port the main server has at this point */
     return get_addresses(cmd->pool, arg, &name_vhost_list_tail,
@@ -409,66 +410,127 @@ static ipaddr_chain *find_default_server(unsigned port)
     return NULL;
 }
 
+static void dump_a_vhost(FILE *f, ipaddr_chain *ic)
+{
+    name_chain *nc;
+    int len;
+    char buf[MAX_STRING_LEN];
+
+    if (ic->sar->host_addr.s_addr == DEFAULT_VHOST_ADDR) {
+	len = ap_snprintf(buf, sizeof(buf), "_default_:%u",
+		ic->sar->host_port);
+    }
+    else if (ic->sar->host_addr.s_addr == INADDR_ANY) {
+	len = ap_snprintf(buf, sizeof(buf), "*:%u",
+		ic->sar->host_port);
+    }
+    else {
+	len = ap_snprintf(buf, sizeof(buf), "%pA:%u",
+		&ic->sar->host_addr, ic->sar->host_port);
+    }
+    if (ic->sar->host_port == 0) {
+	buf[len-1] = '*';
+    }
+    if (ic->names == NULL) {
+	if (ic->server == NULL)
+	    fprintf(f, "%-22s WARNING: No <VirtualHost> defined for this NameVirtualHost!\n", buf);
+	else
+	    fprintf(f, "%-22s %s (%s:%u)\n", buf, ic->server->server_hostname,
+		ic->server->defn_name, ic->server->defn_line_number);
+	return;
+    }
+    fprintf(f, "%-22s is a NameVirtualHost\n"
+	    "%22s default server %s (%s:%u)\n",
+	    buf, "", ic->server->server_hostname,
+	    ic->server->defn_name, ic->server->defn_line_number);
+    for (nc = ic->names; nc; nc = nc->next) {
+	if (nc->sar->host_port) {
+	    fprintf(f, "%22s port %u ", "", nc->sar->host_port);
+	}
+	else {
+	    fprintf(f, "%22s port * ", "");
+	}
+	fprintf(f, "namevhost %s (%s:%u)\n", nc->server->server_hostname,
+		nc->server->defn_name, nc->server->defn_line_number);
+    }
+}
 
 static void dump_vhost_config(FILE *f)
 {
-    int i;
     ipaddr_chain *ic;
-    name_chain *nc;
-    char buf[MAX_STRING_LEN];
+    int i;
 
     fprintf(f, "VirtualHost configuration:\n");
     for (i = 0; i < IPHASH_TABLE_SIZE; ++i) {
 	for (ic = iphash_table[i]; ic; ic = ic->next) {
-	    if (ic->sar->host_port == 0) {
-		ap_snprintf(buf, sizeof(buf), "%pA:*", &ic->sar->host_addr);
-	    }
-	    else {
-		ap_snprintf(buf, sizeof(buf), "%pA:%u", &ic->sar->host_addr,
-		    ic->sar->host_port);
-	    }
-	    if (ic->names == NULL) {
-		fprintf(f, "%-22s %s (%s:%u)\n", buf,
-		    ic->server->server_hostname, ic->server->defn_name,
-		    ic->server->defn_line_number);
-		continue;
-	    }
-	    fprintf(f, "%-22s is a NameVirtualHost\n"
-	               "%22s default server %s (%s:%u)\n",
-		       buf, "", ic->server->server_hostname,
-		       ic->server->defn_name, ic->server->defn_line_number);
-	    for (nc = ic->names; nc; nc = nc->next) {
-		if (nc->sar->host_port) {
-		    fprintf(f, "%22s port %u ", "", nc->sar->host_port);
-		}
-		else {
-		    fprintf(f, "%22s port * ", "");
-		}
-		fprintf(f, "namevhost %s (%s:%u)\n",
-			nc->server->server_hostname,
-			nc->server->defn_name,
-			nc->server->defn_line_number);
-	    }
+	    dump_a_vhost(f, ic);
 	}
     }
     if (default_list) {
-	fprintf(f, "_default_ servers:\n");
+	fprintf(f, "wildcard NameVirtualHosts and _default_ servers:\n");
 	for (ic = default_list; ic; ic = ic->next) {
-	    if (ic->sar->host_port == 0) {
-		fprintf(f, "port * ");
-	    }
-	    else {
-		fprintf(f, "port %u ", ic->sar->host_port);
-	    }
-	    fprintf(f, "server %s (%s:%u)\n",
-		ic->server->server_hostname, ic->server->defn_name,
-		ic->server->defn_line_number);
+	    dump_a_vhost(f, ic);
+	}
+    }
+}
+
+/*
+ * Helper functions for ap_fini_vhost_config()
+ */
+static int add_name_vhost_config(pool *p, server_rec *main_s, server_rec *s,
+				 server_addr_rec *sar, ipaddr_chain *ic)
+{
+    /* the first time we encounter a NameVirtualHost address
+     * ic->server will be NULL, on subsequent encounters
+     * ic->names will be non-NULL.
+     */
+    if (ic->names || ic->server == NULL) {
+	name_chain *nc = new_name_chain(p, s, sar);
+	nc->next = ic->names;
+	ic->names = nc;
+	ic->server = s;
+	if (sar->host_port != ic->sar->host_port) {
+	    /* one of the two is a * port, the other isn't */
+	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, main_s,
+		    "VirtualHost %s:%u -- mixing * "
+		    "ports and non-* ports with "
+		    "a NameVirtualHost address is not supported,"
+		    " proceeding with undefined results",
+		    sar->virthost, sar->host_port);
+	}
+	return 1;
+    }
+    else {
+	/* IP-based vhosts are handled by the caller */
+	return 0;
+    }
+}
+
+static void remove_unused_name_vhosts(server_rec *main_s, ipaddr_chain **pic)
+{
+    while (*pic) {
+	ipaddr_chain *ic = *pic;
+	
+	if (ic->server == NULL) {
+	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, main_s,
+			 "NameVirtualHost %s:%u has no VirtualHosts",
+			 ic->sar->virthost, ic->sar->host_port);
+	    *pic = ic->next;
+	}
+	else if (ic->names == NULL) {
+	    /* if server != NULL and names == NULL then we're done
+	     * looking at NameVirtualHosts
+	     */
+	    break;
+	}
+	else {
+	    pic = &ic->next;
 	}
     }
 }
 
 /* compile the tables and such we need to do the run-time vhost lookups */
-void ap_fini_vhost_config(pool *p, server_rec *main_s)
+API_EXPORT(void) ap_fini_vhost_config(pool *p, server_rec *main_s)
 {
     server_addr_rec *sar;
     int has_default_vhost_addr;
@@ -497,13 +559,22 @@ void ap_fini_vhost_config(pool *p, server_rec *main_s)
      */
     for (sar = name_vhost_list; sar; sar = sar->next) {
 	unsigned bucket = hash_inaddr(sar->host_addr.s_addr);
-	ipaddr_chain *new = new_ipaddr_chain(p, NULL, sar);
+	ipaddr_chain *ic = new_ipaddr_chain(p, NULL, sar);
 
-	*iphash_table_tail[bucket] = new;
-	iphash_table_tail[bucket] = &new->next;
-
+	if (sar->host_addr.s_addr != INADDR_ANY) {
+	    *iphash_table_tail[bucket] = ic;
+	    iphash_table_tail[bucket] = &ic->next;
+	}
+	else {
+	    /* A wildcard NameVirtualHost goes on the default_list so
+	     * that it can catch incoming requests on any address.
+	     */
+	    ic->next = default_list;
+	    default_list = ic;
+	}
 	/* Notice that what we've done is insert an ipaddr_chain with
-	 * both server and names NULL.  Remember that.
+	 * both server and names NULL. This fact is used to spot name-
+	 * based vhosts in add_name_vhost_config().
 	 */
     }
 
@@ -520,46 +591,31 @@ void ap_fini_vhost_config(pool *p, server_rec *main_s)
 
 	    if (sar->host_addr.s_addr == DEFAULT_VHOST_ADDR
 		|| sar->host_addr.s_addr == INADDR_ANY) {
-		/* add it to default bucket for each appropriate sar
-		 * since we need to do a port test
-		 */
-		ipaddr_chain *other;
-
-		other = find_default_server(sar->host_port);
-		if (other && other->sar->host_port != 0) {
-		    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, main_s,
-			    "_default_ VirtualHost overlap on port %u,"
+		ic = find_default_server(sar->host_port);
+		if (!ic || !add_name_vhost_config(p, main_s, s, sar, ic)) {
+		    if (ic && ic->sar->host_port != 0) {
+			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING,
+			    main_s, "_default_ VirtualHost overlap on port %u,"
 			    " the first has precedence", sar->host_port);
+		    }
+		    ic = new_ipaddr_chain(p, s, sar);
+		    ic->next = default_list;
+		    default_list = ic;
 		}
 		has_default_vhost_addr = 1;
-		ic = new_ipaddr_chain(p, s, sar);
-		ic->next = default_list;
-		default_list = ic;
 	    }
 	    else {
 		/* see if it matches something we've already got */
 		ic = find_ipaddr(&sar->host_addr, sar->host_port);
 
-		/* the first time we encounter a NameVirtualHost address
-		 * ic->server will be NULL, on subsequent encounters
-		 * ic->names will be non-NULL.
-		 */
-		if (ic && (ic->names || ic->server == NULL)) {
-		    name_chain *nc = new_name_chain(p, s, sar);
-		    nc->next = ic->names;
-		    ic->names = nc;
-		    ic->server = s;
-		    if (sar->host_port != ic->sar->host_port) {
-			/* one of the two is a * port, the other isn't */
-			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, main_s,
-				"VirtualHost %s:%u -- mixing * "
-				"ports and non-* ports with "
-				"a NameVirtualHost address is not supported,"
-				" proceeding with undefined results",
-				sar->virthost, sar->host_port);
-		    }
+		if (!ic) {
+		    unsigned bucket = hash_inaddr(sar->host_addr.s_addr);
+
+		    ic = new_ipaddr_chain(p, s, sar);
+		    ic->next = *iphash_table_tail[bucket];
+		    *iphash_table_tail[bucket] = ic;
 		}
-		else if (ic) {
+		else if (!add_name_vhost_config(p, main_s, s, sar, ic)) {
 		    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, main_s,
 			    "VirtualHost %s:%u overlaps with "
 			    "VirtualHost %s:%u, the first has precedence, "
@@ -568,13 +624,6 @@ void ap_fini_vhost_config(pool *p, server_rec *main_s)
 			    ic->sar->virthost, ic->sar->host_port);
 		    ic->sar = sar;
 		    ic->server = s;
-		}
-		else {
-		    unsigned bucket = hash_inaddr(sar->host_addr.s_addr);
-
-		    ic = new_ipaddr_chain(p, s, sar);
-		    ic->next = *iphash_table_tail[bucket];
-		    *iphash_table_tail[bucket] = ic;
 		}
 	    }
 	}
@@ -621,28 +670,9 @@ void ap_fini_vhost_config(pool *p, server_rec *main_s)
      * hosts associated with them.  Lamers.
      */
     for (i = 0; i < IPHASH_TABLE_SIZE; ++i) {
-	ipaddr_chain **pic = &iphash_table[i];
-
-	while (*pic) {
-	    ipaddr_chain *ic = *pic;
-
-	    if (ic->server == NULL) {
-		ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, main_s,
-			"NameVirtualHost %s:%u has no VirtualHosts",
-			ic->sar->virthost, ic->sar->host_port);
-		*pic = ic->next;
-	    }
-	    else if (ic->names == NULL) {
-		/* if server != NULL and names == NULL then we're done
-		 * looking at NameVirtualHosts
-		 */
-		break;
-	    }
-	    else {
-		pic = &ic->next;
-	    }
-	}
+	remove_unused_name_vhosts(main_s, &iphash_table[i]);
     }
+    remove_unused_name_vhosts(main_s, &default_list);
 
 #ifdef IPHASH_STATISTICS
     dump_iphash_statistics(main_s);
@@ -657,22 +687,69 @@ void ap_fini_vhost_config(pool *p, server_rec *main_s)
  * run-time vhost matching functions
  */
 
-/* Remove :port and optionally a single trailing . from the hostname, this
- * canonicalizes it somewhat.
+/* Lowercase and remove any trailing dot and/or :port from the hostname,
+ * and check that it is sane.
+ *
+ * In most configurations the exact syntax of the hostname isn't
+ * important so strict sanity checking isn't necessary. However, in
+ * mass hosting setups (using mod_vhost_alias or mod_rewrite) where
+ * the hostname is interpolated into the filename, we need to be sure
+ * that the interpolation doesn't expose parts of the filesystem.
+ * We don't do strict RFC 952 / RFC 1123 syntax checking in order
+ * to support iDNS and people who erroneously use underscores.
+ * Instead we just check for filesystem metacharacters: directory
+ * separators / and \ and sequences of more than one dot.
  */
 static void fix_hostname(request_rec *r)
 {
-    const char *hostname = r->hostname;
-    char *host = ap_getword(r->pool, &hostname, ':');	/* get rid of port */
-    size_t l;
+    char *host = ap_palloc(r->pool, strlen(r->hostname) + 1);
+    const char *src;
+    char *dst;
 
-    /* trim a trailing . */
-    l = strlen(host);
-    if (l > 0 && host[l-1] == '.') {
-        host[l-1] = '\0';
+    /* check and copy the host part */
+    src = r->hostname;
+
+    dst = host;
+    while (*src) {
+	if (*src == '.') {
+	    *dst++ = *src++;
+	    if (*src == '.')
+		goto bad;
+	    else
+		continue;
+	}
+	if (*src == '/' || *src == '\\') {
+	    goto bad;
+	}
+        if (*src == ':') {
+            /* check the port part */
+            while (*++src) {
+                if (!ap_isdigit(*src)) {
+                    goto bad;
+                }
+            }
+            if (src[-1] == ':')
+                goto bad;
+            else
+                break;
+        }
+	*dst++ = *src++;
+    }
+    /* strip trailing gubbins */
+    if (dst > host && dst[-1] == '.') {
+	dst[-1] = '\0';
+    } else {
+	dst[0] = '\0';
     }
 
     r->hostname = host;
+    return;
+
+bad:
+    r->status = HTTP_BAD_REQUEST;
+    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
+		  "Client sent malformed Host header");
+    return;
 }
 
 
@@ -869,11 +946,13 @@ static void check_serverpath(request_rec *r)
 }
 
 
-void ap_update_vhost_from_headers(request_rec *r)
+API_EXPORT(void) ap_update_vhost_from_headers(request_rec *r)
 {
     /* must set this for HTTP/1.1 support */
     if (r->hostname || (r->hostname = ap_table_get(r->headers_in, "Host"))) {
 	fix_hostname(r);
+	if (r->status != HTTP_OK)
+	    return;
     }
     /* check if we tucked away a name_chain */
     if (r->connection->vhost_lookup_data) {
@@ -888,7 +967,7 @@ void ap_update_vhost_from_headers(request_rec *r)
 /* Called for a new connection which has a known local_addr.  Note that the
  * new connection is assumed to have conn->server == main server.
  */
-void ap_update_vhost_given_ip(conn_rec *conn)
+API_EXPORT(void) ap_update_vhost_given_ip(conn_rec *conn)
 {
     ipaddr_chain *trav;
     unsigned port = ntohs(conn->local_addr.sin_port);
@@ -902,16 +981,18 @@ void ap_update_vhost_given_ip(conn_rec *conn)
 	return;
     }
 
-    /* There's certainly no name-vhosts with this address, they would have
-     * been matched above.
+    /* maybe there's a default server or wildcard name-based vhost
+     * matching this port
      */
-    conn->vhost_lookup_data = NULL;
-
-    /* maybe there's a default server matching this port */
     trav = find_default_server(port);
     if (trav) {
+	conn->vhost_lookup_data = trav->names;
 	conn->server = trav->server;
+	return;
     }
 
-    /* otherwise we're stuck with just the main server */
+    /* otherwise we're stuck with just the main server
+     * and no name-based vhosts
+     */
+    conn->vhost_lookup_data = NULL;
 }

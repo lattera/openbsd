@@ -1,9 +1,9 @@
 
                      The Apache HTTP Server Project
 
-                         http://www.apache.org/
+                        http://httpd.apache.org/
 
-                               July 1998
+                             February 2002
 
 The Apache Project is a collaborative software development effort aimed
 at creating a robust, commercial-grade, featureful, and freely-available
@@ -65,54 +65,75 @@ December 1, 1995.
 Less than a year after the group was formed, the Apache server passed
 NCSA's httpd as the #1 server on the Internet.
 
+The survey by Netcraft (http://www.netcraft.com/survey/) shows that Apache
+is today more widely used than all other web servers combined.
+
  ============================================================================
 
-Current Apache Group in alphabetical order as of 14 July 1998:
+Current Apache Group in alphabetical order as of 18 December 2001:
 
-   Brian Behlendorf       Organic Online, California 
-   Ken Coar               MeepZor Consulting, New England, USA 
-   Mark J. Cox            C2Net Europe, UK 
-   Lars Eilebrecht        Kreuztal, Germany 
-   Ralf S. Engelschall    Munich, Germany.
-   Roy T. Fielding        UC Irvine, California 
+   Greg Ames              IBM Corporation, Research Triangle Park, NC, USA
+   Aaron Bannert          Covalent Technologies, California
+   Brian Behlendorf       Collab.Net, California 
+   Ryan Bloom             Covalent Technologies, California 
+   Ken Coar               IBM Corporation, Research Triangle Park, NC, USA
+   Mark J. Cox            Red Hat, England
+   Lars Eilebrecht        Freelance Consultant, Munich, Germany 
+   Ralf S. Engelschall    Cable & Wireless Deutschland, Munich, Germany
+   Justin Erenkrantz      University of California, Irvine
+   Roy T. Fielding        Day Software, California 
+   Tony Finch             Covalent Technologies, California
    Dean Gaudet            Transmeta Corporation, California 
-   Rob Hartill            Internet Movie DB, UK 
+   Dirk-Willem van Gulik  Covalent Technologies, California 
+   Brian Havard           Australia
+   Ian Holsman            CNET, California
    Ben Hyde               Gensym, Massachusetts
-   Jim Jagielski          jaguNET ISP, Maryland 
+   Jim Jagielski          jaguNET Access Services, Maryland 
+   Manoj Kasichainula     Collab.Net, California
    Alexei Kosut           Stanford University, California 
    Martin Kraemer         Munich, Germany
    Ben Laurie             Freelance Consultant, UK 
-   Doug MacEachern        Freelance Consultant, Summer Seasons, Earth
-   Aram W. Mirzadeh       Qosina Corporation, New York 
-   Sameer Parekh          C2Net, California 
-   Marc Slemko            Canada 
-   Cliff Skolnick         Freelance, California
-   Paul Sutton            C2Net Europe, UK 
-   Randy Terbush          Zyzzyva ISP, Nebraska 
-   Dirk-Willem van Gulik  Freelance Consultant, Italy 
-
-Apache Emeritae (old group members now off doing other things)
-
+   Rasmus Lerdorf         Linuxcare, California
+   Daniel Lopez Ridruejo  Covalent Technologies, California
+   Doug MacEachern        Covalent Technologies, California
+   Aram W. Mirzadeh       CableVision, New York 
    Chuck Murcko           The Topsail Group, Pennsylvania 
+   Sameer Parekh          California 
+   David Reid             UK
+   William A. Rowe, Jr.   Covalent, Illinois
+   Wilfredo Sanchez       Apple Computer, California
+   Cliff Skolnick         California
+   Marc Slemko            Canada 
+   Joshua Slive           Canada
+   Greg Stein             California
+   Bill Stoddard          IBM Corporation, Research Triangle Park, NC
+   Paul Sutton            Seattle
+   Randy Terbush          Covalent Technologies, California 
+   Jeff Trawick           IBM Corporation, Research Triangle Park, NC
+   Cliff Woolley          University of Virginia
+
+Apache Emeritus (old group members now off doing other things)
+
+   Rob Hartill            Internet Movie DB, UK 
    David Robinson         Cambridge University, UK
    Robert S. Thau         MIT, Massachusetts
    Andrew Wilson          Freelance Consultant, UK 
    
 Other major contributors
 
-   Rob McCool (original author of the NCSA httpd),
-   Brandon Long and Beth Frank (NCSA Server Development Team, post-1.3),
-   Paul Richards (convinced the group to use remote CVS after 1.0),
+   Howard Fear (mod_include), Florent Guillaume (language negotiation),
+   Koen Holtman (rewrite of mod_negotiation),
    Kevin Hughes (creator of all those nifty icons),
-   Henry Spencer (author of the regex library), Garey Smiley (OS/2 port),
-   Howard Fear (mod_include), Florent Guillaume (language negotiation), 
-   Ambarish Malpani (NT port).
+   Brandon Long and Beth Frank (NCSA Server Development Team, post-1.3),
+   Ambarish Malpani (Beginning of the NT port),
+   Rob McCool (original author of the NCSA httpd 1.3),
+   Paul Richards (convinced the group to use remote CVS after 1.0),
+   Garey Smiley (OS/2 port), Henry Spencer (author of the regex library).
 
 Many 3rd-party modules, frequently used and recommended, are also
 freely-available and linked from the related projects page:
 <http://modules.apache.org/>, and their authors frequently
-contribute ideas, patches, and testing.  In particular, Doug MacEachern
-(mod_perl) and Rasmus Lerdorf (mod_php).
+contribute ideas, patches, and testing.
 
 Hundreds of people have made individual contributions to the Apache
 project.  Patch contributors are listed in the src/CHANGES file.
@@ -127,25 +148,27 @@ How to become involved in the Apache project
 
 There are several levels of contributing.  If you just want to send
 in an occasional suggestion/fix, then you can just use the bug reporting
-form at <http://www.apache.org/bug_report.html>.  You can also subscribe
-to the announcements mailing list (apache-announce@apache.org) which we
-use to broadcast information about new releases, bugfixes, and upcoming
-events.  There's a lot of information about the development process (much
-of it in serious need of updating) to be found at <http://dev.apache.org/>.
+form at <http://httpd.apache.org/bug_report.html>.  You can also subscribe
+to the announcements mailing list (announce-subscribe@httpd.apache.org) which
+we use to broadcast information about new releases, bugfixes, and upcoming
+events.  There's a lot of information about the development process (much of
+it in serious need of updating) to be found at <http://httpd.apache.org/dev/>.
 
 If you'd like to become an active contributor to the Apache project (the
 group of volunteers who vote on changes to the distributed server), then
-you need to start by subscribing to the new-httpd@apache.org mailing list.
+you need to start by subscribing to the dev@httpd.apache.org mailing list.
 One warning though: traffic is high, 1000 to 1500 messages/month.
-To subscribe to the list, send "subscribe new-httpd" in the body of
-a message to <majordomo@apache.org>.  We recommend reading the list for
-a while before trying to jump in to development.
+To subscribe, send an email to dev-subscribe@httpd.apache.org.  We 
+recommend reading the list for a while before trying to jump in to 
+development.
 
-   NOTE: The developer mailing list (new-httpd@apache.org) is not
+   NOTE: The developer mailing list (dev@httpd.apache.org) is not
    a user support forum; it is for people actively working on development
    of the server code and documentation, and for planning future
    directions.  If you have user/configuration questions, send them
-   to the USENET newsgroup "comp.infosystems.www.servers.unix".
+   to users list <http://httpd.apache.org/userslist> or to the USENET
+   newsgroup "comp.infosystems.www.servers.unix".or for windows users,
+   the newsgroup "comp.infosystems.www.servers.ms-windows".
 
 There is a core group of contributors (informally called the "core")
 which was formed from the project founders and is augmented from time
@@ -158,7 +181,7 @@ technically refers to this core of project contributors.
 The Apache project is a meritocracy -- the more work you have done, the more
 you are allowed to do.  The group founders set the original rules, but
 they can be changed by vote of the active members.  There is a group
-of people who have logins on our server (hyperreal.com) and access to the
+of people who have logins on our server (apache.org) and access to the
 CVS repository.  Everyone has access to the CVS snapshots.  Changes to
 the code are proposed on the mailing list and usually voted on by active
 members -- three +1 (yes votes) and no -1 (no votes, or vetoes) are needed
@@ -182,9 +205,29 @@ nominated by one member and unanimously approved by the voting members.
 In most cases, this "new" member has been actively contributing to the
 group's work for over six months, so it's usually an easy decision.
 
-The above describes our past and current (as of April 1998) guidelines,
+The above describes our past and current (as of July 2000) guidelines,
 which will probably change over time as the membership of the group
 changes and our development/coordination tools improve.
+
+ ============================================================================
+
+The Apache Software Foundation (www.apache.org)
+
+The Apache Software Foundation exists to provide organizational, legal,
+and financial support for the Apache open-source software projects.
+Founded in June 1999 by the Apache Group, the Foundation has been
+incorporated as a membership-based, not-for-profit corporation in order
+to ensure that the Apache projects continue to exist beyond the participation
+of individual volunteers, to enable contributions of intellectual property
+and funds on a sound basis, and to provide a vehicle for limiting legal
+exposure while participating in open-source software projects. 
+
+You are invited to participate in The Apache Software Foundation. We welcome
+contributions in many forms.  Our membership consists of those individuals
+who have demonstrated a commitment to collaborative open-source software
+development through sustained participation and contributions within the
+Foundation's projects.  Many people and companies have contributed towards
+the success of the Apache projects. 
 
  ============================================================================
 
@@ -230,7 +273,3 @@ as described in the LICENSE file.
 
 Thanks for using Apache!
 
- ============================================================================
-Roy Fielding, June 1997
-
-If you are interested in other WWW history, see <http://www.webhistory.org/>

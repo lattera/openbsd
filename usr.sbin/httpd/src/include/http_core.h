@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #ifndef APACHE_HTTP_CORE_H
@@ -128,11 +129,12 @@ API_EXPORT(const char *) ap_get_remote_logname(request_rec *r);
 /* Used for constructing self-referencing URLs, and things like SERVER_PORT,
  * and SERVER_NAME.
  */
-API_EXPORT(char *) ap_construct_url(pool *p, const char *uri, const request_rec *r);
-API_EXPORT(const char *) ap_get_server_name(const request_rec *r);
+API_EXPORT(char *) ap_construct_url(pool *p, const char *uri, request_rec *r);
+API_EXPORT(const char *) ap_get_server_name(request_rec *r);
 API_EXPORT(unsigned) ap_get_server_port(const request_rec *r);
 API_EXPORT(unsigned long) ap_get_limit_req_body(const request_rec *r);
 API_EXPORT(void) ap_custom_response(request_rec *r, int status, char *string);
+API_EXPORT(int) ap_exists_config_define(char *name);
 
 /* Authentication stuff.  This is one of the places where compatibility
  * with the old config files *really* hurts; they don't discriminate at
@@ -151,15 +153,26 @@ API_EXPORT(const char *) ap_auth_name (request_rec *);
 API_EXPORT(int) ap_satisfies (request_rec *r);
 API_EXPORT(const array_header *) ap_requires (request_rec *);    
 
+#ifdef WIN32
+/* 
+ * CGI Script stuff for Win32...
+ */
+typedef enum { eFileTypeUNKNOWN, eFileTypeBIN, eFileTypeEXE16, eFileTypeEXE32, 
+               eFileTypeSCRIPT, eCommandShell16, eCommandShell32 } file_type_e;
+typedef enum { INTERPRETER_SOURCE_UNSET, INTERPRETER_SOURCE_REGISTRY, 
+               INTERPRETER_SOURCE_SHEBANG } interpreter_source_e;
+API_EXPORT(file_type_e) ap_get_win32_interpreter(const request_rec *, char **);
+#endif
+
 #ifdef CORE_PRIVATE
 
 /*
  * Core is also unlike other modules in being implemented in more than
  * one file... so, data structures are declared here, even though most of
- * the code that cares really is in http_core.c.  Also, anothre accessor.
+ * the code that cares really is in http_core.c.  Also, another accessor.
  */
 
-char *ap_response_code_string (request_rec *r, int error_index);
+API_EXPORT(char *) ap_response_code_string (request_rec *r, int error_index);
 
 extern API_VAR_EXPORT module core_module;
 
@@ -167,6 +180,27 @@ extern API_VAR_EXPORT module core_module;
 
 typedef unsigned char allow_options_t;
 typedef unsigned char overrides_t;
+/*
+ * Bits of info that go into making an ETag for a file
+ * document.  Why a long?  Because char historically
+ * proved too short for Options, and int can be different
+ * sizes on different platforms.
+ */
+typedef unsigned long etag_components_t;
+
+#define ETAG_UNSET 0
+#define ETAG_NONE  (1 << 0)
+#define ETAG_MTIME (1 << 1)
+#define ETAG_INODE (1 << 2)
+#define ETAG_SIZE  (1 << 3)
+#define ETAG_BACKWARD (ETAG_MTIME | ETAG_INODE | ETAG_SIZE)
+#define ETAG_ALL   (ETAG_MTIME | ETAG_INODE | ETAG_SIZE)
+
+typedef enum {
+    AP_FLAG_UNSET = 0,
+    AP_FLAG_ON = 1,
+    AP_FLAG_OFF = 2
+} ap_flag_e;
 
 typedef struct {
     /* path of the directory/regex/etc.  see also d_is_fnmatch below */
@@ -219,13 +253,26 @@ typedef struct {
 
     signed int content_md5 : 2;  /* calculate Content-MD5? */
 
-    unsigned use_canonical_name : 2; /* bit 0 = on/off, bit 1 = unset/set */
+#define USE_CANONICAL_NAME_OFF   (0)
+#define USE_CANONICAL_NAME_ON    (1)
+#define USE_CANONICAL_NAME_DNS   (2)
+#define USE_CANONICAL_NAME_UNSET (3)
+    unsigned use_canonical_name : 2;
 
     /* since is_fnmatch(conf->d) was being called so frequently in
      * directory_walk() and its relatives, this field was created and
      * is set to the result of that call.
      */
     unsigned d_is_fnmatch : 1;
+
+    /* should we force a charset on any outgoing parameterless content-type?
+     * if so, which charset?
+     */
+#define ADD_DEFAULT_CHARSET_OFF   (0)
+#define ADD_DEFAULT_CHARSET_ON    (1)
+#define ADD_DEFAULT_CHARSET_UNSET (2)
+    unsigned add_default_charset : 2;
+    char *add_default_charset_name;
 
     /* System Resource Control */
 #ifdef RLIMIT_CPU
@@ -240,12 +287,61 @@ typedef struct {
     unsigned long limit_req_body;  /* limit on bytes in request msg body */
 
     /* logging options */
-    enum { srv_sig_off, srv_sig_on, srv_sig_withmail } server_signature;
+    enum { srv_sig_unset, srv_sig_off, srv_sig_on,
+	    srv_sig_withmail } server_signature;
     int loglevel;
     
     /* Access control */
     array_header *sec;
     regex_t *r;
+
+#ifdef WIN32
+    /* Where to find interpreter to run scripts */
+    interpreter_source_e script_interpreter_source;
+#endif    
+    
+#ifdef CHARSET_EBCDIC
+    /* Configurable EBCDIC Conversion stuff */
+    /* Direction specific conversion: */
+#define dir_Out 0               /* 0utput (returned contents in a GET or POST) */
+#define dir_In  1               /* 1nput  (uploaded contents in a PUT / POST) */
+
+    /* Conversion Enabled/Disabled: */
+#define conv_Unset '?'          /* Conversion unconfigured */
+#define conv_Off   '0'          /* BINARY or ASCII file (no conversion) */
+#define conv_On    '1'          /* TEXT file (EBCDIC->ASCII for dir_Out; ASCII->EBCDIC for dir_In) */
+
+    /* The configuration args {On|Off}[={In|Out|InOut}] are currently stored
+     * as character strings ("0" = conv_Off, "1" = conv_On)
+     */
+    table *ebcdicconversion_by_ext_in;
+    table *ebcdicconversion_by_ext_out;
+    table *ebcdicconversion_by_type_in;
+    table *ebcdicconversion_by_type_out;
+
+#define LEGACY_KLUDGE 1 /* After a couple of versions this legacy kludge should be set to 0 */
+#ifndef ASCIITEXT_MAGIC_TYPE_PREFIX
+#define ASCIITEXT_MAGIC_TYPE_PREFIX "text/x-ascii-"     /* Text files whose content-type starts with this are passed thru unconverted */
+#endif
+    int x_ascii_magic_kludge;   /* whether to handle the text/x-ascii- kludge */
+
+#if ADD_EBCDICCONVERT_DEBUG_HEADER
+    int ebcdicconversion_debug_header; /* whether to add an X-EBCDIC-Debug-{In,Out} header to the response */
+#endif
+#endif /* CHARSET_EBCDIC */
+
+    /*
+     * What attributes/data should be included in ETag generation?
+     */
+    etag_components_t etag_bits;
+    etag_components_t etag_add;
+    etag_components_t etag_remove;
+
+    /*
+     * Do we allow ISINDEX CGI scripts to pass their query argument as
+     * direct command line parameters or argv elements?
+     */
+    ap_flag_e cgi_command_args;
 
 } core_dir_config;
 
@@ -271,11 +367,12 @@ typedef struct {
 } core_server_config;
 
 /* for http_config.c */
-void ap_core_reorder_directories(pool *, server_rec *);
+CORE_EXPORT(void) ap_core_reorder_directories(pool *, server_rec *);
 
 /* for mod_perl */
 CORE_EXPORT(void) ap_add_per_dir_conf (server_rec *s, void *dir_config);
 CORE_EXPORT(void) ap_add_per_url_conf (server_rec *s, void *url_config);
+CORE_EXPORT(void) ap_add_file_conf(core_dir_config *conf, void *url_config);
 CORE_EXPORT_NONSTD(const char *) ap_limit_section (cmd_parms *cmd, void *dummy, const char *arg);
 
 #endif

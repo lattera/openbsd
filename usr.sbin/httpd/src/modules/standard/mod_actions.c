@@ -1,62 +1,63 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
- * mod_actions.c: executes scripts based on MIME type
+ * mod_actions.c: executes scripts based on MIME type or HTTP method
  *
  * by Alexei Kosut; based on mod_cgi.c, mod_mime.c and mod_includes.c,
  * adapted by rst from original NCSA code by Rob McCool
@@ -69,6 +70,12 @@
  * requested. It sends the URL and file path of the requested document using 
  * the standard CGI PATH_INFO and PATH_TRANSLATED environment variables.
  *
+ * Script PUT /cgi-bin/script
+ *
+ * will activate /cgi-bin/script when a request is received with the
+ * HTTP method "PUT".  The available method names are defined in httpd.h.
+ * If the method is GET, the script will only be activated if the requested
+ * URI includes query information (stuff after a ?-mark).
  */
 
 #include "httpd.h"
@@ -81,11 +88,18 @@
 #include "util_script.h"
 
 typedef struct {
-    table *action_types;	/* Added with Action... */
-    char *get;			/* Added with Script GET */
-    char *post;			/* Added with Script POST */
-    char *put;			/* Added with Script PUT */
-    char *delete;		/* Added with Script DELETE */
+    char *method;
+    char *script;
+} xmethod_t;
+
+/*
+ * HTTP methods are case-sensitive, so we can't use a table structure to
+ * track extension method mappings -- table keys are case-INsensitive.
+ */
+typedef struct {
+    table *action_types;       /* Added with Action... */
+    char *scripted[METHODS];   /* Added with Script... */
+    array_header *xmethods;    /* Added with Script -- extension methods */
 } action_dir_config;
 
 module action_module;
@@ -93,14 +107,11 @@ module action_module;
 static void *create_action_dir_config(pool *p, char *dummy)
 {
     action_dir_config *new =
-    (action_dir_config *) ap_palloc(p, sizeof(action_dir_config));
+	(action_dir_config *) ap_palloc(p, sizeof(action_dir_config));
 
     new->action_types = ap_make_table(p, 4);
-    new->get = NULL;
-    new->post = NULL;
-    new->put = NULL;
-    new->delete = NULL;
-
+    memset(new->scripted, 0, sizeof(new->scripted));
+    new->xmethods = ap_make_array(p, 4, sizeof(xmethod_t));
     return new;
 }
 
@@ -108,41 +119,67 @@ static void *merge_action_dir_configs(pool *p, void *basev, void *addv)
 {
     action_dir_config *base = (action_dir_config *) basev;
     action_dir_config *add = (action_dir_config *) addv;
-    action_dir_config *new =
-    (action_dir_config *) ap_palloc(p, sizeof(action_dir_config));
+    action_dir_config *new = (action_dir_config *) ap_palloc(p,
+                                  sizeof(action_dir_config));
+    int i;
 
     new->action_types = ap_overlay_tables(p, add->action_types,
 				       base->action_types);
 
-    new->get = add->get ? add->get : base->get;
-    new->post = add->post ? add->post : base->post;
-    new->put = add->put ? add->put : base->put;
-    new->delete = add->delete ? add->delete : base->delete;
-
+    for (i = 0; i < METHODS; ++i) {
+        new->scripted[i] = add->scripted[i] ? add->scripted[i]
+                                            : base->scripted[i];
+    }
+    new->xmethods = ap_append_arrays(p, add->xmethods, base->xmethods);
     return new;
 }
 
-static const char *add_action(cmd_parms *cmd, action_dir_config * m, char *type,
+static const char *add_action(cmd_parms *cmd, action_dir_config *m, char *type,
 			      char *script)
 {
     ap_table_setn(m->action_types, type, script);
     return NULL;
 }
 
-static const char *set_script(cmd_parms *cmd, action_dir_config * m, char *method,
-			      char *script)
+static const char *set_script(cmd_parms *cmd, action_dir_config *m,
+                              char *method, char *script)
 {
-    if (!strcmp(method, "GET"))
-	m->get = script;
-    else if (!strcmp(method, "POST"))
-	m->post = script;
-    else if (!strcmp(method, "PUT"))
-	m->put = script;
-    else if (!strcmp(method, "DELETE"))
-	m->delete = script;
-    else
-	return "Unknown method type for Script";
+    int methnum;
 
+    methnum = ap_method_number_of(method);
+    if (methnum == M_TRACE) {
+	return "TRACE not allowed for Script";
+    }
+    else if (methnum != M_INVALID) {
+        m->scripted[methnum] = script;
+    }
+    else {
+	/*
+	 * We used to return "Unknown method type for Script"
+	 * but now we actually handle unknown methods.
+	 */
+	xmethod_t *xm;
+	xmethod_t *list;
+	int i;
+
+	/*
+	 * Scan through the list; if the method already has a script
+	 * defined, overwrite it.  Otherwise, add it.
+	 */
+	list = (xmethod_t *) m->xmethods->elts;
+	for (i = 0; i < m->xmethods->nelts; ++i) {
+	    xm = &list[i];
+	    if (strcmp(method, xm->method) == 0) {
+		xm->script = script;
+		break;
+	    }
+	}
+	if (i <= m->xmethods->nelts) {
+	    xm = ap_push_array(m->xmethods);
+	    xm->method = method;
+	    xm->script = script;
+	}
+    }
     return NULL;
 }
 
@@ -157,51 +194,70 @@ static const command_rec action_cmds[] =
 
 static int action_handler(request_rec *r)
 {
-    action_dir_config *conf =
-    (action_dir_config *) ap_get_module_config(r->per_dir_config, &action_module);
-    const char *t, *action = r->handler ? r->handler : r->content_type;
-    const char *script = NULL;
+    action_dir_config *conf = (action_dir_config *)
+        ap_get_module_config(r->per_dir_config, &action_module);
+    const char *t, *action = r->handler ? r->handler : 
+	ap_field_noparam(r->pool, r->content_type);
+    const char *script;
+    int i;
 
     /* Set allowed stuff */
-    if (conf->get)
-	r->allowed |= (1 << M_GET);
-    if (conf->post)
-	r->allowed |= (1 << M_POST);
-    if (conf->put)
-	r->allowed |= (1 << M_PUT);
-    if (conf->delete)
-	r->allowed |= (1 << M_DELETE);
-
-    /* First, check for the method-handling scripts */
-    if ((r->method_number == M_GET) && r->args && conf->get)
-	script = conf->get;
-    else if ((r->method_number == M_POST) && conf->post)
-	script = conf->post;
-    else if ((r->method_number == M_PUT) && conf->put)
-	script = conf->put;
-    else if ((r->method_number == M_DELETE) && conf->delete)
-	script = conf->delete;
-
-    /* Check for looping, which can happen if the CGI script isn't */
-    if (script && r->prev && r->prev->prev)
-	return DECLINED;
-
-    /* Second, check for actions (which override the method scripts) */
-    if ((t = ap_table_get(conf->action_types,
-		       action ? action : ap_default_type(r)))) {
-	script = t;
-	if (r->finfo.st_mode == 0) {
-	    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-			"File does not exist: %s", r->filename);
-	    return NOT_FOUND;
+    for (i = 0; i < METHODS; ++i) {
+	if (conf->scripted[i]) {
+	    r->allowed |= (1 << i);
 	}
     }
 
-    if (script == NULL)
-	return DECLINED;
+    /* First, check for the method-handling scripts */
+    if (r->method_number == M_GET) {
+        if (r->args) {
+            script = conf->scripted[M_GET];
+	}
+        else {
+            script = NULL;
+	}
+    }
+    else {
+	if (r->method_number != M_INVALID) {
+	    script = conf->scripted[r->method_number];
+	}
+	else {
+	    int j;
+	    xmethod_t *xm;
+	    xmethod_t *list;
 
-    ap_internal_redirect_handler(ap_pstrcat(r->pool, script, escape_uri(r->pool,
-			  r->uri), r->args ? "?" : NULL, r->args, NULL), r);
+	    script = NULL;
+	    list = (xmethod_t *) conf->xmethods->elts;
+	    for (j = 0; j < conf->xmethods->nelts; ++j) {
+		xm = &list[j];
+		if (strcmp(r->method, xm->method) == 0) {
+		    script = xm->script;
+		    break;
+		}
+	    }
+	}
+    }
+
+    /* Check for looping, which can happen if the CGI script isn't */
+    if (script && r->prev && r->prev->prev) {
+	return DECLINED;
+    }
+
+    /* Second, check for actions (which override the method scripts) */
+    if ((t = ap_table_get(conf->action_types,
+			  action ? action : ap_default_type(r)))) {
+	script = t;
+    }
+
+    if (script == NULL) {
+	return DECLINED;
+    }
+
+    ap_internal_redirect_handler(ap_pstrcat(r->pool, script,
+					    ap_escape_uri(r->pool,
+							  r->uri),
+					    r->args ? "?" : NULL,
+					    r->args, NULL), r);
     return OK;
 }
 

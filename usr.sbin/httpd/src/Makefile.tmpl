@@ -14,6 +14,11 @@ OBJS= \
 .c.o:
 	$(CC) -c $(INCLUDES) $(CFLAGS) $<
 
+# Used to generate import library for OS/2
+.SUFFIXES: .def
+.def.a:
+	emximp -o $@ $<
+
 all: @@Configuration@@ $(TARGET)
 
 @@Configuration@@: Configuration.tmpl
@@ -28,33 +33,40 @@ $(TARGET): $(EXTRA_DEPS) $(SUBTARGET)
 target_static: subdirs modules.o
 	$(CC) -c $(INCLUDES) $(CFLAGS) buildmark.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SHLIB_EXPORT) \
-	      -o $(TARGET) buildmark.o $(OBJS) $(REGLIB) $(LIBS)
+	      -o $(TARGET) buildmark.o $(OBJS) $(REGLIB) $(EXPATLIB) $(LIBS)
 
-target_shared: libhttpd.ep
-	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SHLIB_EXPORT) \
-	      -o $(TARGET) -DSHARED_CORE_BOOTSTRAP main/http_main.c
-
-libhttpd.ep: libhttpd.$(SHLIB_SUFFIX_NAME)
-	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SHLIB_EXPORT) \
-	      -o libhttpd.ep -DSHARED_CORE_TIESTATIC main/http_main.c \
-		  -L. -lhttpd $(LIBS)
-
-libhttpd.$(SHLIB_SUFFIX_NAME): subdirs modules.o
+target_compile_only: subdirs modules.o
 	$(CC) -c $(INCLUDES) $(CFLAGS) buildmark.c
-	$(LD_SHLIB) $(LDFLAGS_SHLIB) -o libhttpd.$(SHLIB_SUFFIX_NAME) buildmark.o $(OBJS) $(REGLIB)
+
+target_shared: $(SHCORE_IMPLIB) $(SHARED_CORE_EP) lib$(TARGET).$(SHLIB_SUFFIX_NAME)
+	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SHLIB_EXPORT) \
+	      -o $(TARGET) -DSHARED_CORE_BOOTSTRAP main/http_main.c \
+	      ap/libap.a $(LIBS) $(SHCORE_IMPLIB)
+
+lib$(TARGET).ep: lib$(TARGET).$(SHLIB_SUFFIX_NAME)
+	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SHLIB_EXPORT) \
+	      -o lib$(TARGET).ep -DSHARED_CORE_TIESTATIC main/http_main.c \
+		  -L. -l$(TARGET) $(LIBS)
+
+lib$(TARGET).$(SHLIB_SUFFIX_NAME): subdirs modules.o
+	$(CC) -c $(INCLUDES) $(CFLAGS) buildmark.c
+	$(LD_SHLIB) $(LDFLAGS_SHLIB) -o lib$(TARGET).$(SHLIB_SUFFIX_NAME) buildmark.o $(OBJS) $(REGLIB) $(EXPATLIB) $(LD_SHCORE_DEF) $(LD_SHCORE_LIBS)
 	@if [ ".$(SHLIB_SUFFIX_LIST)" != . ]; then \
-		rm -f libhttpd.$(SHLIB_SUFFIX_NAME).*; \
+		rm -f lib$(TARGET).$(SHLIB_SUFFIX_NAME).*; \
 		for suffix in $(SHLIB_SUFFIX_LIST) ""; do \
 			[ ".$$suffix" = . ] && continue; \
-		    echo "ln libhttpd.$(SHLIB_SUFFIX_NAME) libhttpd.$(SHLIB_SUFFIX_NAME).$$suffix"; \
-		    ln libhttpd.$(SHLIB_SUFFIX_NAME) libhttpd.$(SHLIB_SUFFIX_NAME).$$suffix; \
+		    echo "ln lib$(TARGET).$(SHLIB_SUFFIX_NAME) lib$(TARGET).$(SHLIB_SUFFIX_NAME).$$suffix"; \
+		    ln lib$(TARGET).$(SHLIB_SUFFIX_NAME) lib$(TARGET).$(SHLIB_SUFFIX_NAME).$$suffix; \
 		done; \
 	fi
 
 subdirs:
 	@for i in $(SUBDIRS); do \
 		echo "===> $(SDP)$$i"; \
-		( cd $$i && $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)') || exit 1; \
+		case ".$(OS)" in \
+		  .OS390 | .TPF) ( cd $$i && $(MAKE) SDP='$(SDP)' OPTIM='$(OPTIM)') || exit 1;; \
+		              *) ( cd $$i && $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' OPTIM='$(OPTIM)') || exit 1;; \
+		esac; \
 		echo "<=== $(SDP)$$i"; \
 	done
 
@@ -62,19 +74,19 @@ support: support-dir
 
 support-dir:
 	@echo "===> $(SDP)support"; \
-	cd support; $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)'; \
+	cd support; $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' OPTIM='$(OPTIM)' || exit 1; \
 	echo "<=== $(SDP)support"
 
 clean:
-	-rm -f $(TARGET) libhttpd.* *.o
+	-rm -f $(TARGET) lib$(TARGET).* *.o
 	@for i in $(SUBDIRS); do \
 		echo "===> $(SDP)$$i"; \
-		( cd $$i && $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' $@ ) || exit 1; \
+		( cd $$i && $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' OPTIM='$(OPTIM)' $@ ) || exit 1; \
 		echo "<=== $(SDP)$$i"; \
 	done
 
 distclean:
-	-rm -f $(TARGET) libhttpd.* *.o
+	-rm -f $(TARGET) lib$(TARGET).* *.o
 	@for i in $(SUBDIRS); do \
 		echo "===> $(SDP)$$i"; \
 		( cd $$i && $(MAKE) $(MFLAGS_STATIC) SDP='$(SDP)' $@ ) || exit 1; \
@@ -84,6 +96,7 @@ distclean:
 	-rm -f modules.c
 	-rm -f modules/Makefile
 	-rm -f regex/Makefile
+	-rm -f lib/Makefile
 	-rm -f Makefile.config
 	-rm -f Makefile
 
@@ -103,7 +116,7 @@ depend:
 		> Makefile.tmpl \
 	    && rm Makefile.new
 	for i in $(SUBDIRS); do \
-	    ( cd $$i && $(MAKE) CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' depend ) || exit 1; \
+	    ( cd $$i && $(MAKE) CC='$(CC)' AUX_CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' OPTIM='$(OPTIM)' depend ) || exit 1; \
 	done
 
 #Dependencies
@@ -113,9 +126,9 @@ $(OBJS): Makefile subdirs
 # DO NOT REMOVE
 buildmark.o: buildmark.c include/ap_config.h include/ap_mmn.h \
  include/ap_config_auto.h os/unix/os.h include/ap_ctype.h \
- include/hsregex.h include/httpd.h include/alloc.h include/buff.h \
+ include/hsregex.h include/httpd.h include/ap_alloc.h include/buff.h \
  include/ap.h include/util_uri.h
 modules.o: modules.c include/httpd.h include/ap_config.h \
  include/ap_mmn.h include/ap_config_auto.h os/unix/os.h \
- include/ap_ctype.h include/hsregex.h include/alloc.h include/buff.h \
+ include/ap_ctype.h include/hsregex.h include/ap_alloc.h include/buff.h \
  include/ap.h include/util_uri.h include/http_config.h

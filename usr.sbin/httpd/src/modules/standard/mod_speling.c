@@ -1,6 +1,9 @@
 #define WANT_BASENAME_MATCH
 /* ====================================================================
- * Copyright (c) 1996-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,46 +17,44 @@
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #include "httpd.h"
@@ -244,7 +245,7 @@ static int check_speling(request_rec *r)
     }
 
     /* We've already got a file of some kind or another */
-    if (r->proxyreq || (r->finfo.st_mode != 0)) {
+    if (r->proxyreq != NOT_PROXY || (r->finfo.st_mode != 0)) {
         return DECLINED;
     }
 
@@ -408,10 +409,11 @@ static int check_speling(request_rec *r)
 	    && (candidates->nelts == 1
 		|| variant[0].quality != variant[1].quality)) {
 
-            nuri = ap_pstrcat(r->pool, url, variant[0].name, r->path_info,
-			      r->parsed_uri.query ? "?" : "",
-			      r->parsed_uri.query ? r->parsed_uri.query : "",
-			      NULL);
+            nuri = ap_escape_uri(r->pool, ap_pstrcat(r->pool, url,
+						     variant[0].name,
+						     r->path_info, NULL));
+	    if (r->parsed_uri.query)
+		nuri = ap_pstrcat(r->pool, nuri, "?", r->parsed_uri.query, NULL);
 
             ap_table_setn(r->headers_out, "Location",
 			  ap_construct_url(r->pool, nuri, r));
@@ -428,9 +430,12 @@ static int check_speling(request_rec *r)
          * returned.
          */
         else {
-            char *t;
             pool *p;
             table *notes;
+	    pool *sub_pool;
+	    array_header *t;
+	    array_header *v;
+
 
             if (r->main == NULL) {
                 p = r->pool;
@@ -441,30 +446,47 @@ static int check_speling(request_rec *r)
                 notes = r->main->notes;
             }
 
+	    sub_pool = ap_make_sub_pool(p);
+	    t = ap_make_array(sub_pool, candidates->nelts * 8 + 8,
+			      sizeof(char *));
+	    v = ap_make_array(sub_pool, candidates->nelts * 5,
+			      sizeof(char *));
+
             /* Generate the response text. */
-            /*
-	     * Since the text is expanded by repeated calls of
-             * t = pstrcat(p, t, ".."), we can avoid a little waste
-             * of memory by adding the header AFTER building the list.
-             * XXX: FIXME: find a way to build a string concatenation
-             *             without repeatedly requesting new memory
-             * XXX: FIXME: Limit the list to a maximum number of entries
-             */
-            t = "";
+
+	    *(const char **)ap_push_array(t) =
+			  "The document name you requested (<code>";
+	    *(const char **)ap_push_array(t) = ap_escape_html(sub_pool, r->uri);
+	    *(const char **)ap_push_array(t) =
+			   "</code>) could not be found on this server.\n"
+			   "However, we found documents with names similar "
+			   "to the one you requested.<p>"
+			   "Available documents:\n<ul>\n";
 
             for (i = 0; i < candidates->nelts; ++i) {
+		char *vuri;
+		const char *reason;
 
+		reason = sp_reason_str[(int) (variant[i].quality)];
                 /* The format isn't very neat... */
-                t = ap_pstrcat(p, t, "<li><a href=\"", url,
-			       variant[i].name, r->path_info,
-			       r->parsed_uri.query ? "?" : "",
-			       r->parsed_uri.query ? r->parsed_uri.query : "",
-			       "\">", variant[i].name, r->path_info,
-			       r->parsed_uri.query ? "?" : "",
-			       r->parsed_uri.query ? r->parsed_uri.query : "",
-			       "</a> (",
-			       sp_reason_str[(int) (variant[i].quality)],
-			       ")\n", NULL);
+		vuri = ap_pstrcat(sub_pool, url, variant[i].name, r->path_info,
+				  (r->parsed_uri.query != NULL) ? "?" : "",
+				  (r->parsed_uri.query != NULL)
+				      ? r->parsed_uri.query : "",
+				  NULL);
+		*(const char **)ap_push_array(v) = "\"";
+		*(const char **)ap_push_array(v) = ap_escape_uri(sub_pool, vuri);
+		*(const char **)ap_push_array(v) = "\";\"";
+		*(const char **)ap_push_array(v) = reason;
+		*(const char **)ap_push_array(v) = "\"";
+
+		*(const char **)ap_push_array(t) = "<li><a href=\"";
+		*(const char **)ap_push_array(t) = ap_escape_uri(sub_pool, vuri);
+		*(const char **)ap_push_array(t) = "\">";
+		*(const char **)ap_push_array(t) = ap_escape_html(sub_pool, vuri);
+		*(const char **)ap_push_array(t) = "</a> (";
+		*(const char **)ap_push_array(t) = reason;
+		*(const char **)ap_push_array(t) = ")\n";
 
                 /*
                  * when we have printed the "close matches" and there are
@@ -476,30 +498,31 @@ static int check_speling(request_rec *r)
                 if (i > 0 && i < candidates->nelts - 1
                     && variant[i].quality != SP_VERYDIFFERENT
                     && variant[i + 1].quality == SP_VERYDIFFERENT) {
-                    t = ap_pstrcat(p, t, 
+		    *(const char **)ap_push_array(t) = 
 				   "</ul>\nFurthermore, the following related "
-				   "documents were found:\n<ul>\n", NULL);
+				   "documents were found:\n<ul>\n";
                 }
             }
-            t = ap_pstrcat(p, "The document name you requested (<code>",
-			   r->uri,
-			   "</code>) could not be found on this server.\n"
-			   "However, we found documents with names similar "
-			   "to the one you requested.<p>"
-			   "Available documents:\n<ul>\n", t, "</ul>\n", NULL);
+	    *(const char **)ap_push_array(t) = "</ul>\n";
 
             /* If we know there was a referring page, add a note: */
             if (ref != NULL) {
-                t = ap_pstrcat(p, t,
+                *(const char **)ap_push_array(t) =
 			       "Please consider informing the owner of the "
-			       "<a href=\"", ref, 
-			       "\">referring page</a> "
-			       "about the broken link.\n",
-			       NULL);
+			       "<a href=\"";
+		*(const char **)ap_push_array(t) = ap_escape_uri(sub_pool, ref);
+                *(const char **)ap_push_array(t) = "\">referring page</a> "
+			       "about the broken link.\n";
 	    }
 
+
             /* Pass our table to http_protocol.c (see mod_negotiation): */
-            ap_table_setn(notes, "variant-list", t);
+            ap_table_setn(notes, "variant-list", ap_array_pstrcat(p, t, 0));
+
+	    ap_table_mergen(r->subprocess_env, "VARIANTS",
+			    ap_array_pstrcat(p, v, ','));
+	  
+	    ap_destroy_pool(sub_pool);
 
             ap_log_rerror(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, r,
 			 ref ? "Spelling fix: %s: %d candidates from %s"
@@ -535,3 +558,4 @@ module MODULE_VAR_EXPORT speling_module =
     NULL,                       /* child_exit */
     NULL                        /* post read-request */
 };
+

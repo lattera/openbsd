@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -99,7 +100,7 @@
 #undef execle
 #undef execve
 
-static const char **hashbang(const char *filename, char **argv);
+static const char **hashbang(const char *filename, char * const *argv);
 
 
 /* Historically, a list of arguments on the stack was often treated as
@@ -126,11 +127,14 @@ int ap_execle(const char *filename, const char *argv0, ...)
     }
     va_end(adummy);
 
-    argv = (char **) malloc((argc + 2) * sizeof(*argv));
+    if ((argv = (char **) malloc((argc + 2) * sizeof(*argv))) == NULL) {
+	fprintf(stderr, "Ouch!  Out of memory in ap_execle()!\n");
+	return -1;
+    }
 
     /* Pass two --- copy the argument strings into the result space */
     va_start(adummy, argv0);
-    argv[0] = argv0;
+    argv[0] = (char *)argv0;
     for (argc = 1; (argv[argc] = va_arg(adummy, char *)) != NULL; ++argc) {
 	continue;
     }
@@ -143,14 +147,31 @@ int ap_execle(const char *filename, const char *argv0, ...)
     return ret;
 }
 
-int ap_execve(const char *filename, const char *argv[],
-	      const char *envp[])
+/* Count number of entries in vector "args", including the trailing NULL entry
+ */
+static int
+count_args(char * const *args)
 {
-    const char *argv0 = argv[0];
+    int i;
+    for (i = 0; args[i] != NULL; ++i) {
+	continue;
+    }
+    return i+1;
+}
+
+/* Emulate the execve call, respecting a #!/interpreter line if present.
+ * On "real" unixes, the kernel does this.
+ * We have to fiddle with the argv array to make it work on platforms
+ * which don't support the "hashbang" interpreter line by default.
+ */
+int ap_execve(const char *filename, char * const argv[],
+	      char * const envp[])
+{
+    char **script_argv;
     extern char **environ;
 
     if (envp == NULL) {
-	envp = (const char **) environ;
+	envp = (char * const *) environ;
     }
 
     /* Try to execute the file directly first: */
@@ -174,26 +195,52 @@ int ap_execve(const char *filename, const char *argv[],
      * ELOOP  filename contains a circular reference (i.e., via a symbolic link)
      */
 
-    if (errno == ENOEXEC
-    /* Probably a script.
-     * Have a look; if there's a "#!" header then try to emulate
-     * the feature found in all modern OS's:
-     * Interpret the line following the #! as a command line
-     * in shell style.
-     */
-	&& (argv = hashbang(filename, argv)) != NULL) {
+    if (errno == ENOEXEC) {
+	/* Probably a script.
+	 * Have a look; if there's a "#!" header then try to emulate
+	 * the feature found in all modern OS's:
+	 * Interpret the line following the #! as a command line
+	 * in shell style.
+	 */
+	if ((script_argv = (char **)hashbang(filename, argv)) != NULL) {
 
-	/* new filename is the interpreter to call */
-	filename = argv[0];
+	    /* new filename is the interpreter to call */
+	    filename = script_argv[0];
 
-	/* Restore argv[0] as on entry */
-	if (argv0 != NULL) {
-	    argv[0] = argv0;
+	    /* Restore argv[0] as on entry */
+	    if (argv[0] != NULL) {
+		script_argv[0] = argv[0];
+	    }
+
+	    execve(filename, script_argv, envp);
+
+	    free(script_argv);
 	}
+	/*
+	 * Script doesn't start with a hashbang line!
+	 * So, try to have the default shell execute it.
+	 * For this, the size of argv must be increased by one
+	 * entry: the shell's name. The remaining args are appended.
+	 */
+	else {
+	    int i = count_args(argv) + 1;   /* +1 for leading SHELL_PATH */
 
-	execve(filename, argv, envp);
+	    if ((script_argv = malloc(sizeof(*script_argv) * i)) == NULL) {
+		fprintf(stderr, "Ouch!  Out of memory in ap_execve()!\n");
+		return -1;
+	    }
 
-	free(argv);
+	    script_argv[0] = SHELL_PATH;
+
+	    while (i > 0) {
+		script_argv[i] = argv[i-1];
+		--i;
+	    }
+
+	    execve(SHELL_PATH, script_argv, envp);
+
+	    free(script_argv);
+	}
     }
     return -1;
 }
@@ -211,7 +258,7 @@ int ap_execve(const char *filename, const char *argv[],
  */
 #define HACKBUFSZ 1024		/* Max chars in #! vector */
 #define HACKVECSZ 128		/* Max words in #! vector */
-static const char **hashbang(const char *filename, char **argv)
+static const char **hashbang(const char *filename, char * const *argv)
 {
     char lbuf[HACKBUFSZ];
     char *sargv[HACKVECSZ];
@@ -301,8 +348,12 @@ static const char **hashbang(const char *filename, char **argv)
 	    }
 	    ++i;
 
-	    newargv = (char **) malloc((p - lbuf + 1)
+	    newargv = (const char **) malloc((p - lbuf + 1)
                       + (i + sargc + 1) * sizeof(*newargv));
+	    if (newargv == NULL) {
+		fprintf(stderr, "Ouch!  Out of memory in hashbang()!\n");
+		return NULL;
+	    }
 	    ws = &((char *) newargv)[(i + sargc + 1) * sizeof(*newargv)];
 
 	    /* Copy entries to allocated memory */

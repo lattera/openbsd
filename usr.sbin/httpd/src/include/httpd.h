@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #ifndef APACHE_HTTPD_H
@@ -69,7 +70,7 @@ extern "C" {
 /* Headers in which EVERYONE has an interest... */
 
 #include "ap_config.h"
-#include "alloc.h"
+#include "ap_alloc.h"
 #include "buff.h"
 #include "ap.h"
 
@@ -85,6 +86,10 @@ extern "C" {
 #elif defined(WIN32)
 /* Set default for Windows file system */
 #define HTTPD_ROOT "/apache"
+#elif defined(BEOS) || defined(BONE)
+#define HTTPD_ROOT "/boot/home/apache"
+#elif defined(NETWARE)
+#define HTTPD_ROOT "sys:/apache"
 #else
 #define HTTPD_ROOT "/usr/local/apache"
 #endif
@@ -110,6 +115,11 @@ extern "C" {
 /* Default administrator's address */
 #define DEFAULT_ADMIN "[no address given]"
 
+/* The target name of the installed Apache */
+#ifndef TARGET
+#define TARGET "httpd"
+#endif
+
 /* 
  * --------- You shouldn't have to edit anything below this line ----------
  *
@@ -131,7 +141,11 @@ extern "C" {
 #define DEFAULT_HTTP_PORT	80
 #define DEFAULT_HTTPS_PORT	443
 #define ap_is_default_port(port,r)	((port) == ap_default_port(r))
+#ifdef NETWARE
+#define ap_http_method(r) ap_os_http_method(r)
+#else
 #define ap_http_method(r)	"http"
+#endif
 #define ap_default_port(r)	DEFAULT_HTTP_PORT
 
 /* --------- Default user name and group name running standalone ---------- */
@@ -144,19 +158,8 @@ extern "C" {
 #define DEFAULT_GROUP "#-1"
 #endif
 
-/* The name of the log files */
-#ifndef DEFAULT_XFERLOG
-#ifdef OS2
-/* Set default for OS/2 file system */
-#define DEFAULT_XFERLOG "logs/access.log"
-#else
-#define DEFAULT_XFERLOG "logs/access_log"
-#endif
-#endif /* DEFAULT_XFERLOG */
-
 #ifndef DEFAULT_ERRORLOG
-#ifdef OS2
-/* Set default for OS/2 file system */
+#if defined(OS2) || defined(WIN32)
 #define DEFAULT_ERRORLOG "logs/error.log"
 #else
 #define DEFAULT_ERRORLOG "logs/error_log"
@@ -245,7 +248,7 @@ extern "C" {
 
 /* The path to the suExec wrapper, can be overridden in Configuration */
 #ifndef SUEXEC_BIN
-#define SUEXEC_BIN  HTTPD_ROOT "/sbin/suexec"
+#define SUEXEC_BIN  HTTPD_ROOT "/bin/suexec"
 #endif
 
 /* The default string lengths */
@@ -303,7 +306,13 @@ extern "C" {
  * the overhead.
  */
 #ifndef HARD_SERVER_LIMIT
+#ifdef WIN32
+#define HARD_SERVER_LIMIT 1024
+#elif defined(NETWARE)
+#define HARD_SERVER_LIMIT 2048
+#else
 #define HARD_SERVER_LIMIT 256
+#endif
 #endif
 
 /*
@@ -398,6 +407,12 @@ extern "C" {
 #endif /* default limit on number of request header fields */
 
 /*
+ * The default default character set name to add if AddDefaultCharset is 
+ * enabled.  Overridden with AddDefaultCharsetName.
+ */
+#define DEFAULT_ADD_DEFAULT_CHARSET_NAME "iso-8859-1"
+
+/*
  * The below defines the base string of the Server: header. Additional
  * tokens can be added via the ap_add_version_component() API call.
  *
@@ -410,24 +425,30 @@ extern "C" {
  * Example: "Apache/1.1.0 MrWidget/0.1-alpha" 
  */
 
-#define SERVER_BASEVERSION "Apache/1.3.2"	/* SEE COMMENTS ABOVE */
-#define SERVER_VERSION  SERVER_BASEVERSION
+#define SERVER_BASEVENDOR   "Apache Group"
+#define SERVER_BASEPRODUCT  "Apache"
+#define SERVER_BASEREVISION "1.3.26"
+#define SERVER_BASEVERSION  SERVER_BASEPRODUCT "/" SERVER_BASEREVISION
+
+#define SERVER_PRODUCT  SERVER_BASEPRODUCT
+#define SERVER_REVISION SERVER_BASEREVISION
+#define SERVER_VERSION  SERVER_PRODUCT "/" SERVER_REVISION
 enum server_token_type {
     SrvTk_MIN,		/* eg: Apache/1.3.0 */
     SrvTk_OS,		/* eg: Apache/1.3.0 (UNIX) */
-    SrvTk_FULL		/* eg: Apache/1.3.0 (UNIX) PHP/3.0 FooBar/1.2b */
+    SrvTk_FULL,		/* eg: Apache/1.3.0 (UNIX) PHP/3.0 FooBar/1.2b */
+    SrvTk_PRODUCT_ONLY	/* eg: Apache */
 };
 
 API_EXPORT(const char *) ap_get_server_version(void);
 API_EXPORT(void) ap_add_version_component(const char *component);
 API_EXPORT(const char *) ap_get_server_built(void);
 
-/* Numeric release version identifier: major minor bugfix betaseq
+/* Numeric release version identifier: MMNNFFRBB: major minor fix final beta
  * Always increases along the same track as the source branch.
- * For a final release, 'betaseq' should be set to '99'.
- * For example, Apache 1.4.2 should be '1040299'
+ * For example, Apache 1.4.2 would be '10402100', 2.5b7 would be '20500007'.
  */
-#define APACHE_RELEASE 1030299
+#define APACHE_RELEASE 10326100
 
 #define SERVER_PROTOCOL "HTTP/1.1"
 #ifndef SERVER_SUPPORT
@@ -443,10 +464,15 @@ API_EXPORT(const char *) ap_get_server_built(void);
 
 /* ----------------------- HTTP Status Codes  ------------------------- */
 
-#define RESPONSE_CODES 38
+/* The size of the static array in http_protocol.c for storing
+ * all of the potential response status-lines (a sparse table).
+ * A future version should dynamically generate the table at startup.
+ */
+#define RESPONSE_CODES 55
 
 #define HTTP_CONTINUE                      100
 #define HTTP_SWITCHING_PROTOCOLS           101
+#define HTTP_PROCESSING                    102
 #define HTTP_OK                            200
 #define HTTP_CREATED                       201
 #define HTTP_ACCEPTED                      202
@@ -454,12 +480,14 @@ API_EXPORT(const char *) ap_get_server_built(void);
 #define HTTP_NO_CONTENT                    204
 #define HTTP_RESET_CONTENT                 205
 #define HTTP_PARTIAL_CONTENT               206
+#define HTTP_MULTI_STATUS                  207
 #define HTTP_MULTIPLE_CHOICES              300
 #define HTTP_MOVED_PERMANENTLY             301
 #define HTTP_MOVED_TEMPORARILY             302
 #define HTTP_SEE_OTHER                     303
 #define HTTP_NOT_MODIFIED                  304
 #define HTTP_USE_PROXY                     305
+#define HTTP_TEMPORARY_REDIRECT            307
 #define HTTP_BAD_REQUEST                   400
 #define HTTP_UNAUTHORIZED                  401
 #define HTTP_PAYMENT_REQUIRED              402
@@ -476,6 +504,11 @@ API_EXPORT(const char *) ap_get_server_built(void);
 #define HTTP_REQUEST_ENTITY_TOO_LARGE      413
 #define HTTP_REQUEST_URI_TOO_LARGE         414
 #define HTTP_UNSUPPORTED_MEDIA_TYPE        415
+#define HTTP_RANGE_NOT_SATISFIABLE         416
+#define HTTP_EXPECTATION_FAILED            417
+#define HTTP_UNPROCESSABLE_ENTITY          422
+#define HTTP_LOCKED                        423
+#define HTTP_FAILED_DEPENDENCY             424
 #define HTTP_INTERNAL_SERVER_ERROR         500
 #define HTTP_NOT_IMPLEMENTED               501
 #define HTTP_BAD_GATEWAY                   502
@@ -483,6 +516,8 @@ API_EXPORT(const char *) ap_get_server_built(void);
 #define HTTP_GATEWAY_TIME_OUT              504
 #define HTTP_VERSION_NOT_SUPPORTED         505
 #define HTTP_VARIANT_ALSO_VARIES           506
+#define HTTP_INSUFFICIENT_STORAGE          507
+#define HTTP_NOT_EXTENDED                  510
 
 #define DOCUMENT_FOLLOWS    HTTP_OK
 #define PARTIAL_CONTENT     HTTP_PARTIAL_CONTENT
@@ -510,7 +545,8 @@ API_EXPORT(const char *) ap_get_server_built(void);
 #define ap_is_HTTP_CLIENT_ERROR(x) (((x) >= 400)&&((x) < 500))
 #define ap_is_HTTP_SERVER_ERROR(x) (((x) >= 500)&&((x) < 600))
 
-#define status_drops_connection(x) (((x) == HTTP_BAD_REQUEST)           || \
+#define ap_status_drops_connection(x) \
+                                   (((x) == HTTP_BAD_REQUEST)           || \
                                     ((x) == HTTP_REQUEST_TIME_OUT)      || \
                                     ((x) == HTTP_LENGTH_REQUIRED)       || \
                                     ((x) == HTTP_REQUEST_ENTITY_TOO_LARGE) || \
@@ -519,16 +555,28 @@ API_EXPORT(const char *) ap_get_server_built(void);
                                     ((x) == HTTP_SERVICE_UNAVAILABLE) || \
 				    ((x) == HTTP_NOT_IMPLEMENTED))
 
+/* Methods recognized (but not necessarily handled) by the server.
+ * These constants are used in bit shifting masks of size int, so it is
+ * unsafe to have more methods than bits in an int.  HEAD == M_GET.
+ */
+#define M_GET        0
+#define M_PUT        1
+#define M_POST       2
+#define M_DELETE     3
+#define M_CONNECT    4
+#define M_OPTIONS    5
+#define M_TRACE      6
+#define M_PATCH      7
+#define M_PROPFIND   8
+#define M_PROPPATCH  9
+#define M_MKCOL     10
+#define M_COPY      11
+#define M_MOVE      12
+#define M_LOCK      13
+#define M_UNLOCK    14
+#define M_INVALID   15
 
-#define METHODS 8
-#define M_GET 0
-#define M_PUT 1
-#define M_POST 2
-#define M_DELETE 3
-#define M_CONNECT 4
-#define M_OPTIONS 5
-#define M_TRACE 6
-#define M_INVALID 7
+#define METHODS     16
 
 #define CGI_MAGIC_TYPE "application/x-httpd-cgi"
 #define INCLUDES_MAGIC_TYPE "text/x-server-parsed-html"
@@ -541,12 +589,31 @@ API_EXPORT(const char *) ap_get_server_built(void);
 #define DIR_MAGIC_TYPE "httpd/unix-directory"
 #define STATUS_MAGIC_TYPE "application/x-httpd-status"
 
+/*
+ * Define the HTML doctype strings centrally.
+ */
+#define DOCTYPE_HTML_2_0  "<!DOCTYPE HTML PUBLIC \"-//IETF//" \
+                          "DTD HTML 2.0//EN\">\n"
+#define DOCTYPE_HTML_3_2  "<!DOCTYPE HTML PUBLIC \"-//W3C//" \
+                          "DTD HTML 3.2 Final//EN\">\n"
+#define DOCTYPE_HTML_4_0S "<!DOCTYPE HTML PUBLIC \"-//W3C//" \
+                          "DTD HTML 4.0//EN\"\n" \
+                          "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+#define DOCTYPE_HTML_4_0T "<!DOCTYPE HTML PUBLIC \"-//W3C//" \
+                          "DTD HTML 4.0 Transitional//EN\"\n" \
+                          "\"http://www.w3.org/TR/REC-html40/loose.dtd\">\n"
+#define DOCTYPE_HTML_4_0F "<!DOCTYPE HTML PUBLIC \"-//W3C//" \
+                          "DTD HTML 4.0 Frameset//EN\"\n" \
+                          "\"http://www.w3.org/TR/REC-html40/frameset.dtd\">\n"
+
 /* Just in case your linefeed isn't the one the other end is expecting. */
 #ifndef CHARSET_EBCDIC
 #define LF 10
 #define CR 13
+#define CRLF "\015\012"
+#define OS_ASC(c) (c)
 #else /* CHARSET_EBCDIC */
-#include "ebcdic.h"
+#include "ap_ebcdic.h"
 /* OSD_POSIX uses the EBCDIC charset. The transition ASCII->EBCDIC is done in
  * the buff package (bread/bputs/bwrite), so everywhere else, we use
  * "native EBCDIC" CR and NL characters. These are therefore defined as
@@ -556,6 +623,8 @@ API_EXPORT(const char *) ap_get_server_built(void);
  */
 #define CR '\r'
 #define LF '\n'
+#define CRLF "\r\n"
+#define OS_ASC(c) (os_toascii[c])
 #endif /* CHARSET_EBCDIC */
 
 /* Possible values for request_rec.read_body (set by handling module):
@@ -600,6 +669,12 @@ typedef struct listen_rec listen_rec;
 
 #include "util_uri.h"
 
+enum proxyreqtype {
+    NOT_PROXY=0,
+    STD_PROXY,
+    PROXY_PASS
+};
+
 struct request_rec {
 
     ap_pool *pool;
@@ -623,7 +698,7 @@ struct request_rec {
 
     char *the_request;		/* First line of request, so we can log it */
     int assbackwards;		/* HTTP/0.9, "simple" request */
-    int proxyreq;		/* A proxy request (calculated during
+    enum proxyreqtype proxyreq;/* A proxy request (calculated during
 				 * post_read_request or translate_name) */
     int header_only;		/* HEAD request, as opposed to GET */
     char *protocol;		/* Protocol, as given to us, or HTTP/0.9 */
@@ -632,14 +707,14 @@ struct request_rec {
 
     time_t request_time;	/* When the request started */
 
-    char *status_line;		/* Status line, if set by script */
+    const char *status_line;	/* Status line, if set by script */
     int status;			/* In any case */
 
     /* Request method, two ways; also, protocol, etc..  Outside of protocol.c,
      * look, but don't touch.
      */
 
-    char *method;		/* GET, HEAD, POST, etc. */
+    const char *method;		/* GET, HEAD, POST, etc. */
     int method_number;		/* M_GET, M_POST, etc. */
 
     /*
@@ -680,6 +755,7 @@ struct request_rec {
     long read_length;		/* bytes that have been read */
     int read_body;		/* how the request body should be read */
     int read_chunked;		/* reading chunked transfer-coding */
+    unsigned expecting_100;	/* is client waiting for a 100 response? */
 
     /* MIME header environments, in and out.  Also, an array containing
      * environment variables to be passed to subprocesses, so people can
@@ -710,6 +786,8 @@ struct request_rec {
     const char *content_language;	/* for back-compat. only -- do not use */
     array_header *content_languages;	/* array of (char*) */
 
+    char *vlist_validator;      /* variant list validator (if negotiated) */
+
     int no_cache;
     int no_local_copy;
 
@@ -719,7 +797,7 @@ struct request_rec {
 
     char *unparsed_uri;		/* the uri without any parsing performed */
     char *uri;			/* the path portion of the URI */
-    char *filename;
+    char *filename;		/* filename if found, otherwise NULL */
     char *path_info;
     char *args;			/* QUERY_ARGS, if any */
     struct stat finfo;		/* ST_MODE set to zero if no such file */
@@ -740,6 +818,34 @@ struct request_rec {
  * that way, a sub request's list can (temporarily) point to a parent's list
  */
     const struct htaccess_result *htaccess;
+
+    /* On systems with case insensitive file systems (Windows, OS/2, etc.), 
+     * r->filename is case canonicalized (folded to either lower or upper 
+     * case, depending on the specific system) to accomodate file access
+     * checking. case_preserved_filename is the same as r->filename 
+     * except case is preserved. There is at least one instance where Apache 
+     * needs access to the case preserved filename: Java class files published 
+     * with WebDAV need to preserve filename case to make the Java compiler 
+     * happy.
+     */
+    char *case_preserved_filename;
+
+#ifdef CHARSET_EBCDIC
+    /* We don't want subrequests to modify our current conversion flags.
+     * These flags save the state of the conversion flags when subrequests
+     * are run.
+     */
+    struct {
+        unsigned conv_in:1;    /* convert ASCII->EBCDIC when read()ing? */
+        unsigned conv_out:1;   /* convert EBCDIC->ASCII when write()ing? */
+    } ebcdic;
+#endif
+
+/* Things placed at the end of the record to avoid breaking binary
+ * compatibility.  It would be nice to remember to reorder the entire
+ * record to improve 64bit alignment the next time we need to break
+ * binary compatibility for some other reason.
+ */
 };
 
 
@@ -784,6 +890,10 @@ struct conn_rec {
     signed int double_reverse:2;/* have we done double-reverse DNS?
 				 * -1 yes/failure, 0 not yet, 1 yes/success */
     int keepalives;		/* How many times have we used it? */
+    char *local_ip;		/* server IP address */
+    char *local_host;		/* used for ap_get_server_name when
+				 * UseCanonicalName is set to DNS
+				 * (ignores setting of HostnameLookups) */
 };
 
 /* Per-vhost config... */
@@ -863,7 +973,7 @@ struct listen_rec {
     listen_rec *next;
     struct sockaddr_in local_addr;	/* local IP address and port */
     int fd;
-    int used;			/* Only used during restart */
+    int used;			/* Only used during restart */        
 /* more stuff here, like which protocol is bound to the port */
 };
 
@@ -878,6 +988,7 @@ extern API_VAR_EXPORT const char ap_day_snames[7][4];
 
 API_EXPORT(struct tm *) ap_get_gmtoff(int *tz);
 API_EXPORT(char *) ap_get_time(void);
+API_EXPORT(char *) ap_field_noparam(pool *p, const char *intype);
 API_EXPORT(char *) ap_ht_time(pool *p, time_t t, const char *fmt, int gmt);
 API_EXPORT(char *) ap_gm_timestr_822(pool *p, time_t t);
 
@@ -894,6 +1005,10 @@ API_EXPORT(char *) ap_getword_nulls_nc(pool *p, char **line, char stop);
 API_EXPORT(char *) ap_getword_conf(pool *p, const char **line);
 API_EXPORT(char *) ap_getword_conf_nc(pool *p, char **line);
 
+API_EXPORT(const char *) ap_size_list_item(const char **field, int *len);
+API_EXPORT(char *) ap_get_list_item(pool *p, const char **field);
+API_EXPORT(int) ap_find_list_item(pool *p, const char *line, const char *tok);
+
 API_EXPORT(char *) ap_get_token(pool *p, const char **accept_line, int accept_white);
 API_EXPORT(int) ap_find_token(pool *p, const char *line, const char *tok);
 API_EXPORT(int) ap_find_last_token(pool *p, const char *line, const char *tok);
@@ -904,10 +1019,11 @@ API_EXPORT(void) ap_no2slash(char *name);
 API_EXPORT(void) ap_getparents(char *name);
 API_EXPORT(char *) ap_escape_path_segment(pool *p, const char *s);
 API_EXPORT(char *) ap_os_escape_path(pool *p, const char *path, int partial);
-#define escape_uri(ppool,path) ap_os_escape_path(ppool,path,1)
+#define ap_escape_uri(ppool,path) ap_os_escape_path(ppool,path,1)
 API_EXPORT(char *) ap_escape_html(pool *p, const char *s);
 API_EXPORT(char *) ap_construct_server(pool *p, const char *hostname,
 				    unsigned port, const request_rec *r);
+API_EXPORT(char *) ap_escape_logitem(pool *p, const char *str);
 API_EXPORT(char *) ap_escape_shell_cmd(pool *p, const char *s);
 
 API_EXPORT(int) ap_count_dirs(const char *path);
@@ -920,14 +1036,28 @@ API_EXPORT(char *) ap_make_full_path(pool *a, const char *dir, const char *f);
 API_EXPORT(int) ap_is_matchexp(const char *str);
 API_EXPORT(int) ap_strcmp_match(const char *str, const char *exp);
 API_EXPORT(int) ap_strcasecmp_match(const char *str, const char *exp);
-API_EXPORT(char *) ap_uudecode(pool *, const char *);
+API_EXPORT(char *) ap_stripprefix(const char *bigstring, const char *prefix);
+API_EXPORT(char *) ap_strcasestr(const char *s1, const char *s2);
+API_EXPORT(char *) ap_pbase64decode(pool *p, const char *bufcoded);
+API_EXPORT(char *) ap_pbase64encode(pool *p, char *string); 
+API_EXPORT(char *) ap_uudecode(pool *p, const char *bufcoded);
 API_EXPORT(char *) ap_uuencode(pool *p, char *string); 
+
+#if defined(OS2) || defined(WIN32)
+API_EXPORT(char *) ap_double_quotes(pool *p, const char *str);
+API_EXPORT(char *) ap_caret_escape_args(pool *p, const char *str);
+#endif
+
 #ifdef OS2
 void os2pathname(char *path);
 #endif
 
+API_EXPORT(int)    ap_regexec(const regex_t *preg, const char *string,
+                              size_t nmatch, regmatch_t pmatch[], int eflags);
+API_EXPORT(size_t) ap_regerror(int errcode, const regex_t *preg, 
+                               char *errbuf, size_t errbuf_size);
 API_EXPORT(char *) ap_pregsub(pool *p, const char *input, const char *source,
-			   size_t nmatch, regmatch_t pmatch[]);
+                              size_t nmatch, regmatch_t pmatch[]);
 
 API_EXPORT(void) ap_content_type_tolower(char *);
 API_EXPORT(void) ap_str_tolower(char *);
@@ -935,6 +1065,7 @@ API_EXPORT(int) ap_ind(const char *, char);	/* Sigh... */
 API_EXPORT(int) ap_rind(const char *, char);
 
 API_EXPORT(char *) ap_escape_quotes (pool *p, const char *instring);
+API_EXPORT(void) ap_remove_spaces(char *dest, char *src);
 
 /* Common structure for reading of config files / passwd files etc. */
 typedef struct {
@@ -974,22 +1105,41 @@ char *strerror(int err);
 API_EXPORT(uid_t) ap_uname2id(const char *name);
 API_EXPORT(gid_t) ap_gname2id(const char *name);
 API_EXPORT(int) ap_is_directory(const char *name);
+API_EXPORT(int) ap_is_rdirectory(const char *name);
 API_EXPORT(int) ap_can_exec(const struct stat *);
 API_EXPORT(void) ap_chdir_file(const char *file);
 
 #ifndef HAVE_CANONICAL_FILENAME
+/*
+ *  We can't define these in os.h because of dependence on pool pointer.
+ */
 #define ap_os_canonical_filename(p,f)  (f)
+#define ap_os_case_canonical_filename(p,f)  (f)
+#define ap_os_systemcase_filename(p,f)  (f)
 #else
 API_EXPORT(char *) ap_os_canonical_filename(pool *p, const char *file);
+#ifdef WIN32
+API_EXPORT(char *) ap_os_case_canonical_filename(pool *pPool, const char *szFile);
+API_EXPORT(char *) ap_os_systemcase_filename(pool *pPool, const char *szFile);
+#elif defined(OS2)
+API_EXPORT(char *) ap_os_case_canonical_filename(pool *pPool, const char *szFile);
+API_EXPORT(char *) ap_os_systemcase_filename(pool *pPool, const char *szFile);
+#elif defined(NETWARE)
+API_EXPORT(char *) ap_os_case_canonical_filename(pool *pPool, const char *szFile);
+#define ap_os_systemcase_filename(p,f) ap_os_case_canonical_filename(p,f)
+#else
+#define ap_os_case_canonical_filename(p,f) ap_os_canonical_filename(p,f)
+#define ap_os_systemcase_filename(p,f) ap_os_canonical_filename(p,f)
+#endif
 #endif
 
-#ifdef _OSD_POSIX
-extern const char *os_set_account(pool *p, const char *account);
-extern int os_init_job_environment(server_rec *s, const char *user_name);
-#endif /* _OSD_POSIX */
+#ifdef CHARSET_EBCDIC
+API_EXPORT(int)    ap_checkconv(struct request_rec *r);    /* for downloads */
+API_EXPORT(int)    ap_checkconv_in(struct request_rec *r); /* for uploads */
+#endif /*#ifdef CHARSET_EBCDIC*/
 
-char *ap_get_local_host(pool *);
-unsigned long ap_get_virthost_addr(char *hostname, unsigned short *port);
+API_EXPORT(char *) ap_get_local_host(pool *);
+API_EXPORT(unsigned long) ap_get_virthost_addr(char *hostname, unsigned short *port);
 
 extern API_VAR_EXPORT time_t ap_restart_time;
 
@@ -1032,7 +1182,7 @@ API_EXPORT(char *) ap_escape_quotes(pool *p, const char *instr);
  */
 API_EXPORT(void) ap_log_assert(const char *szExp, const char *szFile, int nLine)
 			    __attribute__((noreturn));
-#define ap_assert(exp) (void)( (exp) || (ap_log_assert(#exp, __FILE__, __LINE__), 0) )
+#define ap_assert(exp) ((exp) ? (void)0 : ap_log_assert(#exp,__FILE__,__LINE__))
 
 /* The optimized timeout code only works if we're not MULTITHREAD and we're
  * also not using a scoreboard file

@@ -1,5 +1,8 @@
 /* ====================================================================
- * Copyright (c) 1996-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -13,46 +16,44 @@
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 
@@ -101,10 +102,13 @@
 #include <signal.h>
 #include <errno.h>
 #include <ctype.h>
+#ifndef NETWARE
 #include <sys/types.h>
+#endif
 #include <sys/stat.h>
 
     /* Include from the Apache server ... */
+#define CORE_PRIVATE
 #include "httpd.h"
 #include "http_config.h"
 #include "http_conf_globals.h"
@@ -127,7 +131,9 @@
      */
 #ifndef NO_DBM_REWRITEMAP
 #include <ndbm.h>
-#if (__FreeBSD__)
+#if defined(DBM_SUFFIX)
+#define NDBM_FILE_SUFFIX DBM_SUFFIX
+#elif defined(__FreeBSD__) || (defined(DB_LOCK) && defined(DB_SHMEM))
 #define NDBM_FILE_SUFFIX ".db"
 #else
 #define NDBM_FILE_SUFFIX ".pag"
@@ -138,18 +144,19 @@
     /* The locking support:
      * Try to determine whether we should use fcntl() or flock().
      * Would be better ap_config.h could provide this... :-(
+     * Small monkey business to ensure that fcntl is preferred,
+     * unless we specified USE_FLOCK_SERIALIZED_ACCEPT during compile.
      */
-#if defined(USE_FCNTL_SERIALIZED_ACCEPT)
+#if defined(HAVE_FCNTL_SERIALIZED_ACCEPT) && !defined(USE_FLOCK_SERIALIZED_ACCEPT)
 #define USE_FCNTL 1
 #include <fcntl.h>
-#endif
-#if defined(USE_FLOCK_SERIALIZED_ACCEPT)
+#elif defined(HAVE_FLOCK_SERIALIZED_ACCEPT)
 #define USE_FLOCK 1
 #include <sys/file.h>
 #endif
 #if !defined(USE_FCNTL) && !defined(USE_FLOCK)
 #define USE_FLOCK 1
-#if !defined(MPE) && !defined(WIN32)
+#if !defined(MPE) && !defined(WIN32) && !defined(__TANDEM) && !defined(NETWARE)
 #include <sys/file.h>
 #endif
 #ifndef LOCK_UN
@@ -158,7 +165,7 @@
 #include <fcntl.h>
 #endif
 #endif
-#ifdef AIX
+#if defined(AIX) || defined(AIXIA64)
 #undef USE_FLOCK
 #define USE_FCNTL 1
 #include <fcntl.h>
@@ -202,6 +209,11 @@
 #define RULEFLAG_FORBIDDEN          1<<9
 #define RULEFLAG_GONE               1<<10
 #define RULEFLAG_QSAPPEND           1<<11
+#define RULEFLAG_NOCASE             1<<12
+#define RULEFLAG_NOESCAPE           1<<13
+
+#define ACTION_NORMAL               1<<0
+#define ACTION_NOESCAPE             1<<1
 
 #define MAPTYPE_TXT                 1<<0
 #define MAPTYPE_DBM                 1<<1
@@ -217,6 +229,9 @@
 
 #define CACHEMODE_TS                1<<0
 #define CACHEMODE_TTL               1<<1
+
+#define CACHE_TLB_ROWS 1024
+#define CACHE_TLB_COLS 4
 
 #ifndef FALSE
 #define FALSE 0
@@ -239,10 +254,6 @@
 #define MAX_ENV_FLAGS 15
 
 #define MAX_NMATCH    10
-
-#define MAPFILE_PATTERN "^([^ \t]+)[ \t]+([^ \t]+).*$"
-#define MAPFILE_OUTPUT  "$1,$2"
-
 
 /*
 **
@@ -294,8 +305,6 @@ typedef struct {
     char         *rewritelogfile;  /* the RewriteLog filename */
     int           rewritelogfp;    /* the RewriteLog open filepointer */
     int           rewriteloglevel; /* the RewriteLog level of verbosity */
-    char         *rewritelockfile; /* the RewriteLock filename */
-    int           rewritelockfp;   /* the RewriteLock open filepointer */
     array_header *rewritemaps;     /* the RewriteMap entries */
     array_header *rewriteconds;    /* the RewriteCond entries (temporary) */
     array_header *rewriterules;    /* the RewriteRule entries */
@@ -316,17 +325,23 @@ typedef struct {
 } rewrite_perdir_conf;
 
 
-    /* the cache structures */
-
+    /* the cache structures,
+     * a 4-way hash table with LRU functionality
+     */
 typedef struct cacheentry {
     time_t time;
     char  *key;
     char  *value;
 } cacheentry;
 
+typedef struct tlbentry {
+    int t[CACHE_TLB_COLS];
+} cachetlbentry;
+
 typedef struct cachelist {
     char         *resource;
     array_header *entries;
+    array_header *tlb;
 } cachelist;
 
 typedef struct cache {
@@ -334,9 +349,10 @@ typedef struct cache {
     array_header *lists;
 } cache;
 
-    /* the regex structure for the
-       substitution of backreferences */
 
+    /* the regex structure for the
+     * substitution of backreferences
+     */
 typedef struct backrefinfo {
     char *source;
     int nsub;
@@ -405,14 +421,17 @@ static int apply_rewrite_cond(request_rec *r, rewritecond_entry *p,
                               char *perdir, backrefinfo *briRR,
                               backrefinfo *briRC);
 
+static void do_expand(request_rec *r, char *input, char *buffer, int nbuf,
+		       backrefinfo *briRR, backrefinfo *briRC);
+static void do_expand_env(request_rec *r, char *env[],
+			  backrefinfo *briRR, backrefinfo *briRC);
+
     /* URI transformation function */
 static void  splitout_queryargs(request_rec *r, int qsappend);
 static void  fully_qualify_uri(request_rec *r);
 static void  reduce_uri(request_rec *r);
-static void  expand_backref_inbuffer(pool *p, char *buf, int nbuf,
-                                     backrefinfo *bri, char c);
+static int   is_absolute_uri(char *uri);
 static char *expand_tildepaths(request_rec *r, char *uri);
-static void  expand_map_lookups(request_rec *r, char *uri, int uri_len);
 
     /* rewrite map support functions */
 static char *lookup_map(request_rec *r, char *name, char *key);
@@ -427,6 +446,8 @@ static char *lookup_map_internal(request_rec *r,
                                  char *key);
 static char *rewrite_mapfunc_toupper(request_rec *r, char *key);
 static char *rewrite_mapfunc_tolower(request_rec *r, char *key);
+static char *rewrite_mapfunc_escape(request_rec *r, char *key);
+static char *rewrite_mapfunc_unescape(request_rec *r, char *key);
 static char *select_random_value_part(request_rec *r, char *value);
 static void  rewrite_rand_init(void);
 static int   rewrite_rand(int l, int h);
@@ -449,8 +470,6 @@ static void  run_rewritemap_programs(server_rec *s, pool *p);
 static int   rewritemap_program_child(void *cmd, child_info *pinfo);
 
     /* env variable support */
-static void  expand_variables_inbuffer(request_rec *r, char *buf, int buf_len);
-static char *expand_variables(request_rec *r, char *str);
 static char *lookup_variable(request_rec *r, char *var);
 static char *lookup_header(request_rec *r, const char *name);
 
@@ -469,6 +488,7 @@ static char  *subst_prefix_path(request_rec *r, char *input, char *match,
 static int    parseargline(char *str, char **a1, char **a2, char **a3);
 static int    prefix_stat(const char *path, struct stat *sb);
 static void   add_env_variable(request_rec *r, char *s);
+static int    subreq_ok(request_rec *r);
 
     /* File locking */
 static void fd_lock(request_rec *r, int fd);
@@ -476,6 +496,10 @@ static void fd_unlock(request_rec *r, int fd);
 
     /* Lexicographic Comparison */
 static int compare_lexicography(char *cpNum1, char *cpNum2);
+
+    /* Bracketed expression handling */
+static char *find_closing_bracket(char *s, int left, int right);
+static char *find_char_in_brackets(char *s, int c, int left, int right);
 
 #endif /* _MOD_REWRITE_H */
 

@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -108,15 +109,12 @@
 
 module MODULE_VAR_EXPORT includes_module;
 
-/* just need some arbitrary non-NULL pointer which can't also be a request_rec */
-#define NESTED_INCLUDE_MAGIC	(&includes_module)
-
 /* ------------------------ Environment function -------------------------- */
 
 /* XXX: could use ap_table_overlap here */
 static void add_include_vars(request_rec *r, char *timefmt)
 {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     struct passwd *pw;
 #endif /* ndef WIN32 */
     table *e = r->subprocess_env;
@@ -129,7 +127,7 @@ static void add_include_vars(request_rec *r, char *timefmt)
               ap_ht_time(r->pool, r->finfo.st_mtime, timefmt, 0));
     ap_table_setn(e, "DOCUMENT_URI", r->uri);
     ap_table_setn(e, "DOCUMENT_PATH_INFO", r->path_info);
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     pw = getpwuid(r->finfo.st_uid);
     if (pw) {
         ap_table_setn(e, "USER_NAME", ap_pstrdup(r->pool, pw->pw_name));
@@ -457,7 +455,7 @@ static int get_directive(FILE *in, char *dest, size_t len, pool *p)
     }
     /* now get directive */
     while (1) {
-	if (d - dest == len) {
+	if (d == len + dest) {
 	    return 1;
 	}
         *d++ = ap_tolower(c);
@@ -554,7 +552,7 @@ static void parse_string(request_rec *r, const char *in, char *out,
 		    /* zero-length variable name causes just the $ to be copied */
 		    l = 1;
 		}
-		l = (l > end_out - next) ? (end_out - next) : l;
+		l = (l + next > end_out) ? (end_out - next) : l;
 		memcpy(next, expansion, l);
 		next += l;
                 break;
@@ -614,7 +612,7 @@ static int include_cgi(char *s, request_rec *r)
     }
 
     ap_destroy_sub_req(rr);
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     ap_chdir_file(r->filename);
 #endif
 
@@ -625,11 +623,16 @@ static int include_cgi(char *s, request_rec *r)
  * ensentially ensure that it does not match the regex:
  * (^/|(^|/)\.\.(/|$))
  * XXX: this needs os abstraction... consider c:..\foo in win32
+ * ???: No, c:../foo is not relative to ., it's potentially on another volume
  */
 static int is_only_below(const char *path)
 {
-#if WIN32
+#ifdef HAVE_DRIVE_LETTERS
     if (path[1] == ':')
+	return 0;
+#endif
+#ifdef NETWARE
+    if (strchr(path, ':'))
 	return 0;
 #endif
     if (path[0] == '/') {
@@ -688,13 +691,41 @@ static int handle_include(FILE *in, request_rec *r, const char *error, int noexe
                     "in parsed file %s";
             }
             if (error_fmt == NULL) {
+		/* try to avoid recursive includes.  We do this by walking
+		 * up the r->main list of subrequests, and at each level
+		 * walking back through any internal redirects.  At each
+		 * step, we compare the filenames and the URIs.  
+		 *
+		 * The filename comparison catches a recursive include
+		 * with an ever-changing URL, eg.
+		 * <!--#include virtual=
+		 *      "$REQUEST_URI/$QUERY_STRING?$QUERY_STRING/x"-->
+		 * which, although they would eventually be caught because
+		 * we have a limit on the length of files, etc., can 
+		 * recurse for a while.
+		 *
+		 * The URI comparison catches the case where the filename
+		 * is changed while processing the request, so the 
+		 * current name is never the same as any previous one.
+		 * This can happen with "DocumentRoot /foo" when you
+		 * request "/" on the server and it includes "/".
+		 * This only applies to modules such as mod_dir that 
+		 * (somewhat improperly) mess with r->filename outside 
+		 * of a filename translation phase.
+		 */
+		int founddupe = 0;
                 request_rec *p;
+                for (p = r; p != NULL && !founddupe; p = p->main) {
+		    request_rec *q;
+		    for (q = p; q != NULL; q = q->prev) {
+			if ( (q->filename && strcmp(q->filename, rr->filename) == 0) ||
+			     (strcmp(q->uri, rr->uri) == 0) ){
+			    founddupe = 1;
+			    break;
+			}
+		    }
+		}
 
-                for (p = r; p != NULL; p = p->main) {
-                    if (strcmp(p->filename, rr->filename) == 0) {
-                        break;
-                    }
-                }
                 if (p != NULL) {
                     error_fmt = "Recursive include of \"%s\" "
                         "in parsed file %s";
@@ -708,7 +739,7 @@ static int handle_include(FILE *in, request_rec *r, const char *error, int noexe
             if (!error_fmt && ap_run_sub_req(rr)) {
                 error_fmt = "unable to include \"%s\" in parsed file %s";
             }
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
             ap_chdir_file(r->filename);
 #endif
             if (error_fmt) {
@@ -717,10 +748,7 @@ static int handle_include(FILE *in, request_rec *r, const char *error, int noexe
                 ap_rputs(error, r);
             }
 
-	    /* destroy the sub request if it's not a nested include */
-            if (rr != NULL
-		&& ap_get_module_config(rr->request_config, &includes_module)
-		    != NESTED_INCLUDE_MAGIC) {
+	    if (rr != NULL) {
 		ap_destroy_sub_req(rr);
             }
         }
@@ -737,6 +765,9 @@ static int handle_include(FILE *in, request_rec *r, const char *error, int noexe
 }
 
 typedef struct {
+#ifdef TPF
+    TPF_FORK_CHILD t;
+#endif
     request_rec *r;
     char *s;
 } include_cmd_arg;
@@ -755,7 +786,7 @@ static int include_cmd_child(void *arg, child_info *pinfo)
     FILE *dbg = fopen("/dev/tty", "w");
 #endif
 #endif
-#ifndef WIN32
+#if !defined(WIN32) && !defined(OS2)
     char err_string[MAX_STRING_LEN];
 #endif
 
@@ -768,7 +799,7 @@ static int include_cmd_child(void *arg, child_info *pinfo)
 
         ap_table_setn(env, "PATH_INFO", ap_escape_shell_cmd(r->pool, r->path_info));
 
-        pa_req = ap_sub_req_lookup_uri(escape_uri(r->pool, r->path_info), r);
+        pa_req = ap_sub_req_lookup_uri(ap_escape_uri(r->pool, r->path_info), r);
         if (pa_req->filename) {
             ap_table_setn(env, "PATH_TRANSLATED",
                       ap_pstrcat(r->pool, pa_req->filename, pa_req->path_info,
@@ -790,11 +821,14 @@ static int include_cmd_child(void *arg, child_info *pinfo)
 #ifdef DEBUG_INCLUDE_CMD
     fprintf(dbg, "Attempting to exec '%s'\n", s);
 #endif
+#ifdef TPF
+    return (0);
+#else
     ap_cleanup_for_exec();
     /* set shellcmd flag to pass arg to SHELL_PATH */
     child_pid = ap_call_exec(r, pinfo, s, ap_create_environment(r->pool, env),
 			     1);
-#ifdef WIN32
+#if defined(WIN32) || defined(OS2)
     return (child_pid);
 #else
     /* Oh, drat.  We're still here.  The log file descriptors are closed,
@@ -805,13 +839,14 @@ static int include_cmd_child(void *arg, child_info *pinfo)
     fprintf(dbg, "Exec failed\n");
 #endif
     ap_snprintf(err_string, sizeof(err_string),
-                "httpd: exec of %s failed, reason: %s (errno = %d)\n",
+                "exec of %s failed, reason: %s (errno = %d)\n",
                 SHELL_PATH, strerror(errno), errno);
     write(STDERR_FILENO, err_string, strlen(err_string));
     exit(0);
     /* NOT REACHED */
     return (child_pid);
 #endif /* WIN32 */
+#endif /* TPF */
 }
 
 static int include_cmd(char *s, request_rec *r)
@@ -821,6 +856,11 @@ static int include_cmd(char *s, request_rec *r)
 
     arg.r = r;
     arg.s = s;
+#ifdef TPF
+    arg.t.filename = r->filename;
+    arg.t.subprocess_env = r->subprocess_env;
+    arg.t.prog_type = FORK_FILE;
+#endif
 
     if (!ap_bspawn_child(r->pool, include_cmd_child, &arg,
 			 kill_after_timeout, NULL, &script_in, NULL)) {
@@ -855,7 +895,7 @@ static int handle_exec(FILE *in, request_rec *r, const char *error)
                 ap_rputs(error, r);
             }
             /* just in case some stooge changed directories */
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
             ap_chdir_file(r->filename);
 #endif
         }
@@ -867,7 +907,7 @@ static int handle_exec(FILE *in, request_rec *r, const char *error)
                 ap_rputs(error, r);
             }
             /* grumble groan */
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
             ap_chdir_file(r->filename);
 #endif
         }
@@ -888,6 +928,9 @@ static int handle_echo(FILE *in, request_rec *r, const char *error)
 {
     char tag[MAX_STRING_LEN];
     char *tag_val;
+    enum {E_NONE, E_URL, E_ENTITY} encode;
+
+    encode = E_ENTITY;
 
     while (1) {
         if (!(tag_val = get_tag(r->pool, in, tag, sizeof(tag), 1))) {
@@ -897,7 +940,15 @@ static int handle_echo(FILE *in, request_rec *r, const char *error)
             const char *val = ap_table_get(r->subprocess_env, tag_val);
 
             if (val) {
-                ap_rputs(val, r);
+		if (encode == E_NONE) {
+		    ap_rputs(val, r);
+		}
+		else if (encode == E_URL) {
+		    ap_rputs(ap_escape_uri(r->pool, val), r);
+		}
+		else if (encode == E_ENTITY) {
+		    ap_rputs(ap_escape_html(r->pool, val), r);
+		}
             }
             else {
                 ap_rputs("(none)", r);
@@ -906,6 +957,19 @@ static int handle_echo(FILE *in, request_rec *r, const char *error)
         else if (!strcmp(tag, "done")) {
             return 0;
         }
+	else if (!strcmp(tag, "encoding")) {
+	    if (!strcasecmp(tag_val, "none")) encode = E_NONE;
+	    else if (!strcasecmp(tag_val, "url")) encode = E_URL;
+	    else if (!strcasecmp(tag_val, "entity")) encode = E_ENTITY;
+	    else {
+		ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
+			    "unknown value \"%s\" to parameter \"encoding\" of "
+			    "tag echo in %s",
+			    tag_val, r->filename);
+		ap_rputs(error, r);
+	    }
+	}
+
         else {
             ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
                         "unknown parameter \"%s\" to tag echo in %s",
@@ -924,10 +988,10 @@ static int handle_perl(FILE *in, request_rec *r, const char *error)
     SV *sub = Nullsv;
     AV *av = newAV();
 
-    if (!(ap_allow_options(r) & OPT_INCLUDES)) {
+    if (ap_allow_options(r) & OPT_INCNOEXEC) {
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-                    "httpd: #perl SSI disallowed by IncludesNoExec in %s",
-                    r->filename);
+		      "#perl SSI disallowed by IncludesNoExec in %s",
+		      r->filename);
         return DECLINED;
     }
     while (1) {
@@ -946,6 +1010,7 @@ static int handle_perl(FILE *in, request_rec *r, const char *error)
         }
     }
     perl_stdout2client(r);
+    perl_setup_env(r);
     perl_call_handler(sub, r, av);
     return OK;
 }
@@ -1004,35 +1069,41 @@ static int handle_config(FILE *in, request_rec *r, char *error, char *tf,
 static int find_file(request_rec *r, const char *directive, const char *tag,
                      char *tag_val, struct stat *finfo, const char *error)
 {
-    char *to_send;
-    request_rec *rr;
+    char *to_send = tag_val;
+    request_rec *rr = NULL;
     int ret=0;
+    char *error_fmt = NULL;
 
     if (!strcmp(tag, "file")) {
-        ap_getparents(tag_val);    /* get rid of any nasties */
-        
-        rr = ap_sub_req_lookup_file(tag_val, r);
-
-        if (rr->status == HTTP_OK && rr->finfo.st_mode != 0) {
-            to_send = rr->filename;
-            if ((ret = stat(to_send, finfo)) == -1) {
-                ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
-                            "unable to get information about \"%s\" "
-                            "in parsed file %s",
-                            to_send, r->filename);
-                ap_rputs(error, r);
-            }
+        /* be safe; only files in this directory or below allowed */
+        if (!is_only_below(tag_val)) {
+            error_fmt = "unable to access file \"%s\" "
+                        "in parsed file %s";
         }
         else {
+            ap_getparents(tag_val);    /* get rid of any nasties */
+            rr = ap_sub_req_lookup_file(tag_val, r);
+
+            if (rr->status == HTTP_OK && rr->finfo.st_mode != 0) {
+                to_send = rr->filename;
+                if (stat(to_send, finfo)) {
+                    error_fmt = "unable to get information about \"%s\" "
+                                "in parsed file %s";
+                }
+            }
+            else {
+                error_fmt = "unable to lookup information about \"%s\" "
+                            "in parsed file %s";
+            }
+        }
+
+        if (error_fmt) {
             ret = -1;
-            ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
-                        "unable to lookup information about \"%s\" "
-                        "in parsed file %s",
-                        tag_val, r->filename);
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, r, error_fmt, to_send, r->filename);
             ap_rputs(error, r);
         }
-        
-        ap_destroy_sub_req(rr);
+
+        if (rr) ap_destroy_sub_req(rr);
         
         return ret;
     }
@@ -1087,9 +1158,8 @@ static int handle_fsize(FILE *in, request_rec *r, const char *error, int sizefmt
                 }
                 else {
                     int l, x;
-#if defined(BSD) && BSD > 199305
-                    /* ap_snprintf can't handle %qd */
-                    sprintf(tag, "%qd", finfo.st_size);
+#if defined(AP_OFF_T_IS_QUAD)
+                    ap_snprintf(tag, sizeof(tag), "%qd", finfo.st_size);
 #else
                     ap_snprintf(tag, sizeof(tag), "%ld", finfo.st_size);
 #endif
@@ -1140,7 +1210,7 @@ static int re_check(request_rec *r, char *string, char *rexp)
                     "unable to compile pattern \"%s\"", rexp);
         return -1;
     }
-    regex_error = regexec(compiled, string, 0, (regmatch_t *) NULL, 0);
+    regex_error = ap_regexec(compiled, string, 0, (regmatch_t *) NULL, 0);
     ap_pregfree(r->pool, compiled);
     return (!regex_error);
 }
@@ -1472,6 +1542,7 @@ static int parse_expr(request_rec *r, const char *expr, const char *error)
                     goto RETURN;
                 }
                 break;
+            /* NOTREACHED */
             }
             if (current == (struct parse_node *) NULL) {
                 new->left = root;
@@ -1596,6 +1667,7 @@ static int parse_expr(request_rec *r, const char *expr, const char *error)
                     goto RETURN;
                 }
                 break;
+            /* NOTREACHED */
             }
             if (current == (struct parse_node *) NULL) {
                 new->left = root;
@@ -1887,7 +1959,7 @@ static int handle_if(FILE *in, request_rec *r, const char *error,
     expr = NULL;
     while (1) {
         tag_val = get_tag(r->pool, in, tag, sizeof(tag), 0);
-        if (*tag == '\0') {
+        if (!tag_val || *tag == '\0') {
             return 1;
         }
         else if (!strcmp(tag, "done")) {
@@ -1930,7 +2002,7 @@ static int handle_elif(FILE *in, request_rec *r, const char *error,
     expr = NULL;
     while (1) {
         tag_val = get_tag(r->pool, in, tag, sizeof(tag), 0);
-        if (*tag == '\0') {
+        if (!tag_val || *tag == '\0') {
             return 1;
         }
         else if (!strcmp(tag, "done")) {
@@ -2076,7 +2148,8 @@ static int handle_printenv(FILE *in, request_rec *r, const char *error)
     }
     else if (!strcmp(tag, "done")) {
         for (i = 0; i < arr->nelts; ++i) {
-            ap_rvputs(r, elts[i].key, "=", elts[i].val, "\n", NULL);
+            ap_rvputs(r, ap_escape_html(r->pool, elts[i].key), "=", 
+		ap_escape_html(r->pool, elts[i].val), "\n", NULL);
         }
         return 0;
     }
@@ -2097,8 +2170,22 @@ static int handle_printenv(FILE *in, request_rec *r, const char *error)
 
 static void send_parsed_content(FILE *f, request_rec *r)
 {
+#ifdef NETWARE
+    /* NetWare has a fixed lengh stack.  Since MAX_STRING_LEN is set
+       to 8k, one call to this function allocates 24k of stack space.
+       During a server-side include evaluation this function is
+       called recusively, allocating 24k each time.  Obviously it 
+       doesn't take long to blow a 64k stack which is the default
+       for Apache for NetWare.  Since MAX_STRING_LEN is used all
+       throughout the Apache code, we should rethink using a default
+       of 8k especially in recursive functions.
+    */
+    char directive[512], error[512];
+    char timefmt[512];
+#else
     char directive[MAX_STRING_LEN], error[MAX_STRING_LEN];
     char timefmt[MAX_STRING_LEN];
+#endif
     int noexec = ap_allow_options(r) & OPT_INCNOEXEC;
     int ret, sizefmt;
     int if_nesting;
@@ -2113,7 +2200,7 @@ static void send_parsed_content(FILE *f, request_rec *r)
     printing = conditional_status = 1;
     if_nesting = 0;
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     ap_chdir_file(r->filename);
 #endif
     if (r->args) {              /* add QUERY stuff to env cause it ain't yet */
@@ -2135,6 +2222,7 @@ static void send_parsed_content(FILE *f, request_rec *r)
                 return;
             }
             if (!strcmp(directive, "if")) {
+                ret = 0;
                 if (!printing) {
                     if_nesting++;
                 }
@@ -2143,23 +2231,23 @@ static void send_parsed_content(FILE *f, request_rec *r)
                                     &printing);
                     if_nesting = 0;
                 }
-                continue;
             }
             else if (!strcmp(directive, "else")) {
+                ret = 0;
                 if (!if_nesting) {
                     ret = handle_else(f, r, error, &conditional_status,
                                       &printing);
                 }
-                continue;
             }
             else if (!strcmp(directive, "elif")) {
+                ret = 0;
                 if (!if_nesting) {
                     ret = handle_elif(f, r, error, &conditional_status,
                                       &printing);
                 }
-                continue;
             }
             else if (!strcmp(directive, "endif")) {
+                ret = 0;
                 if (!if_nesting) {
                     ret = handle_endif(f, r, error, &conditional_status,
                                        &printing);
@@ -2167,16 +2255,15 @@ static void send_parsed_content(FILE *f, request_rec *r)
                 else {
                     if_nesting--;
                 }
+            }
+            else if (!printing) {
                 continue;
             }
-            if (!printing) {
-                continue;
-            }
-            if (!strcmp(directive, "exec")) {
+            else if (!strcmp(directive, "exec")) {
                 if (noexec) {
                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-                                "httpd: exec used but not allowed in %s",
-                                r->filename);
+				  "exec used but not allowed in %s",
+				  r->filename);
                     if (printing) {
                         ap_rputs(error, r);
                     }
@@ -2214,9 +2301,9 @@ static void send_parsed_content(FILE *f, request_rec *r)
 #endif
             else {
                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-                            "httpd: unknown directive \"%s\" "
-                            "in parsed doc %s",
-                            directive, r->filename);
+			      "unknown directive \"%s\" "
+			      "in parsed doc %s",
+			      directive, r->filename);
                 if (printing) {
                     ap_rputs(error, r);
                 }
@@ -2224,8 +2311,8 @@ static void send_parsed_content(FILE *f, request_rec *r)
             }
             if (ret) {
                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-                            "httpd: premature EOF in parsed file %s",
-                            r->filename);
+			      "premature EOF in parsed file %s",
+			      r->filename);
                 return;
             }
         }
@@ -2310,7 +2397,7 @@ static int send_parsed_file(request_rec *r)
     }
 
     if ((*state == xbithack_full)
-#if !defined(OS2) && !defined(WIN32)
+#if !defined(OS2) && !defined(WIN32) && !defined(NETWARE)
     /*  OS/2 dosen't support Groups. */
         && (r->finfo.st_mode & S_IXGRP)
 #endif
@@ -2327,6 +2414,53 @@ static int send_parsed_file(request_rec *r)
     if (r->header_only) {
         ap_pfclose(r->pool, f);
         return OK;
+    }
+
+#define SUB_REQ_STRING	"Sub request to mod_include"
+#define PARENT_STRING	"Parent request to mod_include"
+
+    if (ap_table_get(r->notes, SUB_REQ_STRING)) {
+	/*
+	 * The note is a flag to mod_include that this request
+	 * should be treated as if it was a subrequest originating
+	 * in the handle_include() procedure of mod_include.
+	 */
+
+	/*
+	 * There is no good way to pass the parent request_rec to mod_include.
+	 * Tables only take string values and there is nowhere appropriate in
+	 * in the request_rec that can safely be used. So, search for the
+	 * parent note by walking up the r->main list of subrequests, and at
+	 * each level walking back through any internal redirects. This is
+	 * the same request walking that mod_include uses in the procedure
+	 * handle_include().
+	 */
+	request_rec *p = r->main;
+	request_rec *q = p;
+
+	while (q) {
+	    if (ap_table_get(q->notes, PARENT_STRING)) {
+		/* Kludge --- See below */
+		ap_set_module_config(r->request_config, &includes_module, q);
+
+		/* Create the initial environment in the parent */
+		ap_add_common_vars(q);
+		ap_add_cgi_vars(q);
+		add_include_vars(q, DEFAULT_TIME_FORMAT);
+
+		/* Cleanup - This should allow this technique to nest */
+		ap_table_unset(r->notes, SUB_REQ_STRING);
+		ap_table_unset(q->notes, PARENT_STRING);
+		break;
+	    }
+	    if (q->prev != NULL) {
+		q = q->prev;
+	    }
+	    else {
+		p = p->main;
+		q = p;
+	    }
+	}
     }
 
     if ((parent = ap_get_module_config(r->request_config, &includes_module))) {
@@ -2364,9 +2498,16 @@ static int send_parsed_file(request_rec *r)
     send_parsed_content(f, r);
 
     if (parent) {
-	/* signify that the sub request should not be killed */
-	ap_set_module_config(r->request_config, &includes_module,
-	    NESTED_INCLUDE_MAGIC);
+	/*
+	 * All the work is finished for this subrequest. The following
+	 * makes it safe for the creator of the subrequest to destroy it
+	 * via ap_destroy_sub_req() once the call to ap_run_sub_req()
+	 * returns. This is required since the original pool of the
+	 * subrequest has been merged into the pool of the parent request
+	 * of the subrequest (see Kludge above). The alternative is to
+	 * NOT destroy the subrequest.
+	 */
+	r->pool = ap_make_sub_pool(r->pool);
     }
 
     ap_kill_timeout(r);
@@ -2381,7 +2522,7 @@ static int send_shtml_file(request_rec *r)
 
 static int xbithack_handler(request_rec *r)
 {
-#if defined(OS2) || defined(WIN32)
+#if defined(OS2) || defined(WIN32) || defined(NETWARE)
     /* OS/2 dosen't currently support the xbithack. This is being worked on. */
     return DECLINED;
 #else

@@ -5,13 +5,26 @@
 # Apache, it follows under Apache's regular licensing
 # (see http://www.apache.org/docs/LICENSE)  with one specific
 # addition: Any changes or additions to this script should be
-# Emailed to the Apache group (apache@apache.org) in general
-# and to Jim Jagielski (jim@apache.org) in specific.
+# Emailed to the Apache group (apache@apache.org).
 #
-# Blame Jim; he wrote it (plus a cast of dozens)
+# Initially written by Jim Jagielski for the Apache configuration mechanism
 #
 # Be as similar to the output of config.guess/config.sub
 # as possible.
+
+# Handle TPF before handling other OSes.  This
+# is being done because TPF is sometimes compiled
+# on OS/390.  When that is the case, if we don't
+# handle TPF ahead of the other OSes, TPF will
+# fall into the OS/390 case and this script would
+# return an incorrect value for the platform.
+#
+# Apache is not compiled on the TPF platform
+# therefore an environment variable is used
+if [ "x$TPF" = "xYES" ]; then
+    echo "TPF"
+    exit 0	
+fi
 
 # First get uname entries that we use below
 
@@ -20,6 +33,8 @@ RELEASE=`(uname -r) 2>/dev/null` || RELEASE="unknown"
 SYSTEM=`(uname -s) 2>/dev/null`  || SYSTEM="unknown"
 VERSION=`(uname -v) 2>/dev/null` || VERSION="unknown"
 
+# Some HP machines have slashes.
+MACHINE=`echo ${MACHINE}|sed -e 's/\//_/'`
 
 # Now test for ISC and SCO, since it is has a braindamaged uname.
 #
@@ -53,9 +68,11 @@ if [ "x$XREL" != "x" ]; then
 		echo "whatever-whatever-unixware1"; exit 0
 		;;
 	    5)
-		if [ "x$VERSION" = "x7" ]; then
-		    echo "${MACHINE}-whatever-unixware7"; exit 0
-		fi
+	    	case "$VERSION" in
+		    7*)
+			echo "${MACHINE}-whatever-unixware7"; exit 0
+			;;
+		esac
 		;;
 	esac
     fi
@@ -99,12 +116,22 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	echo "${MACHINE}-sgi-irix64"; exit 0
 	;;
 
+    Linux:2.0.*)
+    	echo "${MACHINE}-whatever-linux20"; exit 0
+	;;
+
     Linux:[2-9].*)
-	echo "${MACHINE}-whatever-linux2"; exit 0
+        # This handles linux 2.2 and above (2.4, ...)
+	# Don't worry if you don't really have a Linux-2.2
+	echo "${MACHINE}-whatever-linux22"; exit 0
 	;;
 
     Linux:1.*)
 	echo "${MACHINE}-whatever-linux1"; exit 0
+	;;
+
+    GNU:*)
+	echo "${MACHINE}-GNU-GNU/Hurd"; exit 0
 	;;
 
     LynxOS:*)
@@ -115,7 +142,11 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	echo "i486-whatever-bsdi"; exit 0
 	;;
 
-    BSD/386:*|BSD/OS:*)
+	BSD/386|BSD/OS:3.*)
+	echo "${MACHINE}-whatever-bsdi3"; exit 0
+	;;
+
+	BSD/386:*|BSD/OS:*)
 	echo "${MACHINE}-whatever-bsdi"; exit 0
 	;;
 
@@ -138,11 +169,16 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	;;
 
     OpenBSD:*)
-	echo "${MACHINE}-whatever-openbsd"; exit 0
+	OPENBSDVERS=`echo ${RELEASE}|sed -e 's/[-(].*//'`
+	echo "${MACHINE}-whatever-openbsd${OPENBSDVERS}"; exit 0
 	;;
 
     OSF1:*:*:*alpha*)
 	echo "${MACHINE}-dec-osf"; exit 0
+	;;
+
+	NONSTOP_KERNEL:*:*:*)
+	echo "${MACHINE}-tandem-oss"; exit 0; 
 	;;
 
     QNX:*)
@@ -189,8 +225,15 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	echo "${MACHINE}-whatever-unixware212"; exit 0
 	;;
 
-    DYNIX/ptx:4*:*)
-	echo "${MACHINE}-whatever-sysv4"; exit 0
+    DYNIX/ptx:4*:*:i386)
+	PTXVER=`echo ${VERSION}|sed -e 's/[^.]//'`
+	echo "${MACHINE}-sequent-ptx${PTXVER}"; exit 0
+	;;
+
+    *:3.2.0:*:i386)
+	# uname on DYNIX/ptx below V4.0.0 is brain dead
+	PTXVER=`echo ${VERSION}|sed -e 's/[^.]//'`
+	echo "${MACHINE}-sequent-ptx${PTXVER}"; exit 0
 	;;
 
     *:4.0:3.0:[345][0-9]?? | *:4.0:3.0:3[34]??[/,]* | library:*)
@@ -202,11 +245,11 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	;;
 
     SINIX-?:* | ReliantUNIX-?:*)
-	echo "${MACHINE}-sni-sysv4"; exit 0
+	echo "${MACHINE}-siemens-sysv4"; exit 0
 	;;
 
     POSIX*BS2000)
-	echo "${MACHINE}-sni-sysv4"; exit 0
+	echo "${MACHINE}-siemens-sysv4"; exit 0
 	;;
 
     machten:*)
@@ -220,6 +263,11 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
     UNIX_SV:*:*:maxion)
 	echo "${MACHINE}-ccur-sysv4"; exit 0;
 	;;
+
+    PowerMAX_OS:*:*:Night_Hawk)
+        MACHINE=`uname -p`
+        echo "${MACHINE}-concurrent-powermax"; exit 0;
+        ;;
     
     UNIX_SV:*)
 	if [ -d /usr/nec ];then
@@ -231,11 +279,20 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	echo "${MACHINE}-tandem-sysv4"; exit 0;
 	;;
 
+    NonStop-UX:*:*:*)
+	echo "${MACHINE}-compaq-sysv4"; exit 0;
+	;;
+
     Rhapsody:*:*:*)
 	case "${MACHINE}" in
 	    Power*) MACHINE=powerpc ;;
 	esac
 	echo "${MACHINE}-apple-rhapsody${RELEASE}"; exit 0
+	;;
+
+    Darwin:*:*:*)
+	MACHINE=`uname -p`
+	echo "${MACHINE}-apple-darwin${RELEASE}"; exit 0
 	;;
 
     "RISC iX":*)
@@ -246,6 +303,22 @@ case "${SYSTEM}:${RELEASE}:${VERSION}:${MACHINE}" in
 	echo "whatever-unisys-sysv4"; exit 0;
 	;;
 
+    *:*:dcosx:NILE*)
+	echo "pyramid-pyramid-svr4"; exit 0;
+	;;
+
+    *:*:*:"DRS 6000")
+        echo "drs6000-whatever-whatever"; exit 0;
+	;;
+    OS/390:*)
+        echo "${MACHINE}-IBM-OS390-${RELEASE}-${VERSION}"; exit 0;
+        ;;
+    CYGWIN*:*:*:*)
+	echo "${MACHINE}-whatever-cygwin"; exit 0
+	;;
+    atheos:*)
+	echo "${MACHINE}-whatever-atheos"; exit 0
+	;;
 esac
 
 #
@@ -286,5 +359,5 @@ esac
 # At this point we gone through all the one's
 # we know of: Punt
 
-echo "${MACHINE}-whatever-${SYSTEM}|${RELEASE}|${VERSION}" 
+echo "${MACHINE}-whatever-${SYSTEM},${RELEASE},${VERSION}" 
 exit 0

@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -72,6 +73,7 @@
 #include "http_log.h"
 #include "http_main.h"
 #include "util_script.h"
+#include "fnmatch.h"
 
 module MODULE_VAR_EXPORT autoindex_module;
 
@@ -93,9 +95,17 @@ module MODULE_VAR_EXPORT autoindex_module;
 #define SUPPRESS_DESC 32
 #define SUPPRESS_PREAMBLE 64
 #define SUPPRESS_COLSORT 128
+#define NO_OPTIONS 256
+#define FOLDERS_FIRST 512
+#define TRACK_MODIFIED 1024
+#define SORT_NOCASE 2048
 
 #define K_PAD 1
 #define K_NOPAD 0
+
+#define K_NOADJUST 0
+#define K_ADJUST 1
+#define K_UNSET 2
 
 /*
  * Define keys for sorting.
@@ -118,6 +128,7 @@ module MODULE_VAR_EXPORT autoindex_module;
  * Other default dimensions.
  */
 #define DEFAULT_NAME_WIDTH 23
+#define DEFAULT_DESC_WIDTH 23
 
 struct item {
     char *type;
@@ -126,17 +137,32 @@ struct item {
     char *data;
 };
 
-typedef struct autoindex_config_struct {
+typedef struct ai_desc_t {
+    char *pattern;
+    char *description;
+    int full_path;
+    int wildcards;
+} ai_desc_t;
 
+typedef struct autoindex_config_struct {
     char *default_icon;
     int opts;
+    int incremented_opts;
+    int decremented_opts;
     int name_width;
     int name_adjust;
+    int desc_width;
+    int desc_adjust;
     int icon_width;
     int icon_height;
+    char *default_order;
 
-    array_header *icon_list, *alt_list, *desc_list, *ign_list;
-    array_header *hdr_list, *rdme_list;
+    array_header *icon_list;
+    array_header *alt_list;
+    array_header *desc_list;
+    array_header *ign_list;
+    array_header *hdr_list;
+    array_header *rdme_list;
 
 } autoindex_config_rec;
 
@@ -172,7 +198,7 @@ static ap_inline int is_parent(const char *name)
  */
 static void emit_preamble(request_rec *r, char *title)
 {
-    ap_rvputs(r, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",
+    ap_rvputs(r, DOCTYPE_HTML_3_2,
 	      "<HTML>\n <HEAD>\n  <TITLE>Index of ", title,
 	      "</TITLE>\n </HEAD>\n <BODY>\n", NULL);
 }
@@ -249,10 +275,48 @@ static const char *add_icon(cmd_parms *cmd, void *d, char *icon, char *to)
     return NULL;
 }
 
+/*
+ * Add description text for a filename pattern.  If the pattern has
+ * wildcards already (or we need to add them), add leading and
+ * trailing wildcards to it to ensure substring processing.  If the
+ * pattern contains a '/' anywhere, force wildcard matching mode,
+ * add a slash to the prefix so that "bar/bletch" won't be matched
+ * by "foobar/bletch", and make a note that there's a delimiter;
+ * the matching routine simplifies to just the actual filename
+ * whenever it can.  This allows definitions in parent directories
+ * to be made for files in subordinate ones using relative paths.
+ */
+
+/*
+ * Absent a strcasestr() function, we have to force wildcards on
+ * systems for which "AAA" and "aaa" mean the same file.
+ */
+#ifdef CASE_BLIND_FILESYSTEM
+#define WILDCARDS_REQUIRED 1
+#else
+#define WILDCARDS_REQUIRED 0
+#endif
+
 static const char *add_desc(cmd_parms *cmd, void *d, char *desc, char *to)
 {
-    push_item(((autoindex_config_rec *) d)->desc_list, cmd->info, to,
-	      cmd->path, desc);
+    autoindex_config_rec *dcfg = (autoindex_config_rec *) d;
+    ai_desc_t *desc_entry;
+    char *prefix = "";
+
+    desc_entry = (ai_desc_t *) ap_push_array(dcfg->desc_list);
+    desc_entry->full_path = (strchr(to, '/') == NULL) ? 0 : 1;
+    desc_entry->wildcards = (WILDCARDS_REQUIRED
+			     || desc_entry->full_path
+			     || ap_is_fnmatch(to));
+    if (desc_entry->wildcards) {
+	prefix = desc_entry->full_path ? "*/" : "*";
+	desc_entry->pattern = ap_pstrcat(dcfg->desc_list->pool,
+					 prefix, to, "*", NULL);
+    }
+    else {
+	desc_entry->pattern = ap_pstrdup(dcfg->desc_list->pool, to);
+    }
+    desc_entry->description = ap_pstrdup(dcfg->desc_list->pool, desc);
     return NULL;
 }
 
@@ -264,9 +328,6 @@ static const char *add_ignore(cmd_parms *cmd, void *d, char *ext)
 
 static const char *add_header(cmd_parms *cmd, void *d, char *name)
 {
-    if (strchr(name, '/')) {
-	return "HeaderName cannot contain a /";
-    }
     push_item(((autoindex_config_rec *) d)->hdr_list, 0, NULL, cmd->path,
 	      name);
     return NULL;
@@ -274,9 +335,6 @@ static const char *add_header(cmd_parms *cmd, void *d, char *name)
 
 static const char *add_readme(cmd_parms *cmd, void *d, char *name)
 {
-    if (strchr(name, '/')) {
-	return "ReadmeName cannot contain a /";
-    }
     push_item(((autoindex_config_rec *) d)->rdme_list, 0, NULL, cmd->path,
 	      name);
     return NULL;
@@ -293,7 +351,11 @@ static const char *fancy_indexing(cmd_parms *cmd, void *d, int arg)
 
     cfg = (autoindex_config_rec *) d;
     curopts = cfg->opts;
-    newopts = (arg ? (curopts | FANCY_INDEXING) : (curopts & !FANCY_INDEXING));
+    if (curopts & NO_OPTIONS) {
+	return "FancyIndexing directive conflicts with existing "
+	       "IndexOptions None";
+    }
+    newopts = (arg ? (curopts | FANCY_INDEXING) : (curopts & ~FANCY_INDEXING));
     cfg->opts = newopts;
     return NULL;
 }
@@ -301,68 +363,209 @@ static const char *fancy_indexing(cmd_parms *cmd, void *d, int arg)
 static const char *add_opts(cmd_parms *cmd, void *d, const char *optstr)
 {
     char *w;
-    int opts = 0;
+    int opts;
+    int opts_add;
+    int opts_remove;
+    char action;
     autoindex_config_rec *d_cfg = (autoindex_config_rec *) d;
 
+    opts = d_cfg->opts;
+    opts_add = d_cfg->incremented_opts;
+    opts_remove = d_cfg->decremented_opts;
     while (optstr[0]) {
+	int option = 0;
+
 	w = ap_getword_conf(cmd->pool, &optstr);
+	if ((*w == '+') || (*w == '-')) {
+	    action = *(w++);
+	}
+	else {
+	    action = '\0';
+	}
 	if (!strcasecmp(w, "FancyIndexing")) {
-	    opts |= FANCY_INDEXING;
+	    option = FANCY_INDEXING;
 	}
 	else if (!strcasecmp(w, "IconsAreLinks")) {
-	    opts |= ICONS_ARE_LINKS;
+	    option = ICONS_ARE_LINKS;
 	}
 	else if (!strcasecmp(w, "ScanHTMLTitles")) {
-	    opts |= SCAN_HTML_TITLES;
+	    option = SCAN_HTML_TITLES;
 	}
 	else if (!strcasecmp(w, "SuppressLastModified")) {
-	    opts |= SUPPRESS_LAST_MOD;
+	    option = SUPPRESS_LAST_MOD;
 	}
 	else if (!strcasecmp(w, "SuppressSize")) {
-	    opts |= SUPPRESS_SIZE;
+	    option = SUPPRESS_SIZE;
 	}
 	else if (!strcasecmp(w, "SuppressDescription")) {
-	    opts |= SUPPRESS_DESC;
+	    option = SUPPRESS_DESC;
 	}
 	else if (!strcasecmp(w, "SuppressHTMLPreamble")) {
-	    opts |= SUPPRESS_PREAMBLE;
+	    option = SUPPRESS_PREAMBLE;
 	}
         else if (!strcasecmp(w, "SuppressColumnSorting")) {
-            opts |= SUPPRESS_COLSORT;
+            option = SUPPRESS_COLSORT;
 	}
-	else if (!strcasecmp(w, "None")) {
-	    opts = 0;
+        else if (!strcasecmp(w, "FoldersFirst")) {
+            option = FOLDERS_FIRST;
+	}
+	else if (!strcasecmp(w, "TrackModified")) {
+            option = TRACK_MODIFIED;
+	}
+	else if (!strcasecmp(w, "IgnoreCase")) {
+            option = SORT_NOCASE;
+	}
+        else if (!strcasecmp(w, "None")) {
+	    if (action != '\0') {
+		return "Cannot combine '+' or '-' with 'None' keyword";
+	    }
+	    opts = NO_OPTIONS;
+	    opts_add = 0;
+	    opts_remove = 0;
 	}
 	else if (!strcasecmp(w, "IconWidth")) {
-	    d_cfg->icon_width = DEFAULT_ICON_WIDTH;
+	    if (action != '-') {
+		d_cfg->icon_width = DEFAULT_ICON_WIDTH;
+	    }
+	    else {
+		d_cfg->icon_width = 0;
+	    }
 	}
 	else if (!strncasecmp(w, "IconWidth=", 10)) {
+	    if (action == '-') {
+		return "Cannot combine '-' with IconWidth=n";
+	    }
 	    d_cfg->icon_width = atoi(&w[10]);
 	}
 	else if (!strcasecmp(w, "IconHeight")) {
-	    d_cfg->icon_height = DEFAULT_ICON_HEIGHT;
+	    if (action != '-') {
+		d_cfg->icon_height = DEFAULT_ICON_HEIGHT;
+	    }
+	    else {
+		d_cfg->icon_height = 0;
+	    }
 	}
 	else if (!strncasecmp(w, "IconHeight=", 11)) {
+	    if (action == '-') {
+		return "Cannot combine '-' with IconHeight=n";
+	    }
 	    d_cfg->icon_height = atoi(&w[11]);
 	}
+	else if (!strcasecmp(w, "NameWidth")) {
+	    if (action != '-') {
+		return "NameWidth with no value may only appear as "
+		       "'-NameWidth'";
+	    }
+	    d_cfg->name_width = DEFAULT_NAME_WIDTH;
+	    d_cfg->name_adjust = K_NOADJUST;
+	}
 	else if (!strncasecmp(w, "NameWidth=", 10)) {
+	    if (action == '-') {
+		return "Cannot combine '-' with NameWidth=n";
+	    }
 	    if (w[10] == '*') {
-		d_cfg->name_adjust = 1;
+		d_cfg->name_adjust = K_ADJUST;
 	    }
 	    else {
 		int width = atoi(&w[10]);
 
-		if (width < 1) {
-		    return "NameWidth value must be greater than 1";
+		if (width < 5) {
+		    return "NameWidth value must be greater than 5";
 		}
 		d_cfg->name_width = width;
+		d_cfg->name_adjust = K_NOADJUST;
 	    }
 	}
-	else {
+	else if (!strcasecmp(w, "DescriptionWidth")) {
+	    if (action != '-') {
+		return "DescriptionWidth with no value may only appear as "
+		       "'-DescriptionWidth'";
+	    }
+	    d_cfg->desc_width = DEFAULT_DESC_WIDTH;
+	    d_cfg->desc_adjust = K_NOADJUST;
+	}
+	else if (!strncasecmp(w, "DescriptionWidth=", 17)) {
+	    if (action == '-') {
+		return "Cannot combine '-' with DescriptionWidth=n";
+	    }
+	    if (w[17] == '*') {
+		d_cfg->desc_adjust = K_ADJUST;
+	    }
+	    else {
+		int width = atoi(&w[17]);
+
+		if (width < 12) {
+		    return "DescriptionWidth value must be greater than 12";
+		}
+		d_cfg->desc_width = width;
+		d_cfg->desc_adjust = K_NOADJUST;
+	    }
+	}
+        else {
 	    return "Invalid directory indexing option";
 	}
+	if (action == '\0') {
+	    opts |= option;
+	    opts_add = 0;
+	    opts_remove = 0;
+	}
+	else if (action == '+') {
+	    opts_add |= option;
+	    opts_remove &= ~option;
+	}
+	else {
+	    opts_remove |= option;
+	    opts_add &= ~option;
+	}
     }
+    if ((opts & NO_OPTIONS) && (opts & ~NO_OPTIONS)) {
+	return "Cannot combine other IndexOptions keywords with 'None'";
+    }
+    d_cfg->incremented_opts = opts_add;
+    d_cfg->decremented_opts = opts_remove;
     d_cfg->opts = opts;
+    return NULL;
+}
+
+static const char *set_default_order(cmd_parms *cmd, void *m, char *direction,
+				     char *key)
+{
+    char temp[4];
+    autoindex_config_rec *d_cfg = (autoindex_config_rec *) m;
+
+    ap_cpystrn(temp, "k=d", sizeof(temp));
+    if (!strcasecmp(direction, "Ascending")) {
+	temp[2] = D_ASCENDING;
+    }
+    else if (!strcasecmp(direction, "Descending")) {
+	temp[2] = D_DESCENDING;
+    }
+    else {
+	return "First keyword must be 'Ascending' or 'Descending'";
+    }
+
+    if (!strcasecmp(key, "Name")) {
+	temp[0] = K_NAME;
+    }
+    else if (!strcasecmp(key, "Date")) {
+	temp[0] = K_LAST_MOD;
+    }
+    else if (!strcasecmp(key, "Size")) {
+	temp[0] = K_SIZE;
+    }
+    else if (!strcasecmp(key, "Description")) {
+	temp[0] = K_DESC;
+    }
+    else {
+	return "Second keyword must be 'Name', 'Date', 'Size', or "
+	    "'Description'";
+    }
+
+    if (d_cfg->default_order == NULL) {
+	d_cfg->default_order = ap_palloc(cmd->pool, 4);
+	d_cfg->default_order[3] = '\0';
+    }
+    ap_cpystrn(d_cfg->default_order, temp, sizeof(temp));
     return NULL;
 }
 
@@ -384,6 +587,8 @@ static const command_rec autoindex_cmds[] =
      "alternate descriptive text followed by one or more content encodings"},
     {"IndexOptions", add_opts, NULL, DIR_CMD_PERMS, RAW_ARGS,
      "one or more index options"},
+    {"IndexOrderDefault", set_default_order, NULL, DIR_CMD_PERMS, TAKE2,
+     "{Ascending,Descending} {Name,Size,Description,Date}"},
     {"IndexIgnore", add_ignore, NULL, DIR_CMD_PERMS, ITERATE,
      "one or more file extensions"},
     {"AddDescription", add_desc, BY_PATH, DIR_CMD_PERMS, ITERATE2,
@@ -406,14 +611,19 @@ static void *create_autoindex_config(pool *p, char *dummy)
     new->icon_width = 0;
     new->icon_height = 0;
     new->name_width = DEFAULT_NAME_WIDTH;
-    new->name_adjust = 0;
+    new->name_adjust = K_UNSET;
+    new->desc_width = DEFAULT_DESC_WIDTH;
+    new->desc_adjust = K_UNSET;
     new->icon_list = ap_make_array(p, 4, sizeof(struct item));
     new->alt_list = ap_make_array(p, 4, sizeof(struct item));
-    new->desc_list = ap_make_array(p, 4, sizeof(struct item));
+    new->desc_list = ap_make_array(p, 4, sizeof(ai_desc_t));
     new->ign_list = ap_make_array(p, 4, sizeof(struct item));
     new->hdr_list = ap_make_array(p, 4, sizeof(struct item));
     new->rdme_list = ap_make_array(p, 4, sizeof(struct item));
     new->opts = 0;
+    new->incremented_opts = 0;
+    new->decremented_opts = 0;
+    new->default_order = NULL;
 
     return (void *) new;
 }
@@ -436,10 +646,75 @@ static void *merge_autoindex_configs(pool *p, void *basev, void *addv)
     new->desc_list = ap_append_arrays(p, add->desc_list, base->desc_list);
     new->icon_list = ap_append_arrays(p, add->icon_list, base->icon_list);
     new->rdme_list = ap_append_arrays(p, add->rdme_list, base->rdme_list);
-    new->opts = add->opts;
-    new->name_width = add->name_width;
-    new->name_adjust = add->name_adjust;
+    if (add->opts & NO_OPTIONS) {
+	/*
+	 * If the current directory says 'no options' then we also
+	 * clear any incremental mods from being inheritable further down.
+	 */
+	new->opts = NO_OPTIONS;
+	new->incremented_opts = 0;
+	new->decremented_opts = 0;
+    }
+    else {
+	/*
+	 * If there were any non-incremental options selected for
+	 * this directory, they dominate and we don't inherit *anything.*
+	 * Contrariwise, we *do* inherit if the only settings here are
+	 * incremental ones.
+	 */
+	if (add->opts == 0) {
+	    new->incremented_opts = (base->incremented_opts 
+				     | add->incremented_opts)
+		                    & ~add->decremented_opts;
+	    new->decremented_opts = (base->decremented_opts
+				     | add->decremented_opts);
+	    /*
+	     * We may have incremental settings, so make sure we don't
+	     * inadvertently inherit an IndexOptions None from above.
+	     */
+	    new->opts = (base->opts & ~NO_OPTIONS);
+	}
+	else {
+	    /*
+	     * There are local non-incremental settings, which clear
+	     * all inheritance from above.  They *are* the new base settings.
+	     */
+	    new->opts = add->opts;;
+	}
+	/*
+	 * We're guaranteed that there'll be no overlap between
+	 * the add-options and the remove-options.
+	 */
+	new->opts |= new->incremented_opts;
+	new->opts &= ~new->decremented_opts;
+    }
+    /*
+     * Inherit the NameWidth settings if there aren't any specific to
+     * the new location; otherwise we'll end up using the defaults set in the
+     * config-rec creation routine.
+     */
+    if (add->name_adjust == K_UNSET) {
+	new->name_width = base->name_width;
+	new->name_adjust = base->name_adjust;
+    }
+    else {
+	new->name_width = add->name_width;
+	new->name_adjust = add->name_adjust;
+    }
+    /*
+     * Likewise for DescriptionWidth.
+     */
+    if (add->desc_adjust == K_UNSET) {
+	new->desc_width = base->desc_width;
+	new->desc_adjust = base->desc_adjust;
+    }
+    else {
+	new->desc_width = add->desc_width;
+	new->desc_adjust = add->desc_adjust;
+    }
 
+    new->default_order = (add->default_order != NULL)
+	? add->default_order : base->default_order;
     return new;
 }
 
@@ -455,16 +730,19 @@ struct ent {
     char *icon;
     char *alt;
     char *desc;
-    size_t size;
+    off_t size;
     time_t lm;
     struct ent *next;
     int ascending;
+    int isdir;
+    int checkdir;
+    int ignorecase;
     char key;
 };
 
 static char *find_item(request_rec *r, array_header *list, int path_only)
 {
-    const char *content_type = r->content_type;
+    const char *content_type = ap_field_noparam(r->pool, r->content_type);
     const char *content_encoding = r->content_encoding;
     char *path = r->filename;
 
@@ -510,7 +788,6 @@ static char *find_item(request_rec *r, array_header *list, int path_only)
 
 #define find_icon(d,p,t) find_item(p,d->icon_list,t)
 #define find_alt(d,p,t) find_item(p,d->alt_list,t)
-#define find_desc(d,p) find_item(p,d->desc_list,0)
 #define find_header(d,p) find_item(p,d->hdr_list,0)
 #define find_readme(d,p) find_item(p,d->rdme_list,0)
 
@@ -527,6 +804,63 @@ static char *find_default_icon(autoindex_config_rec *d, char *bogus_name)
     r.content_type = r.content_encoding = NULL;
 
     return find_item(&r, d->icon_list, 1);
+}
+
+/*
+ * Look through the list of pattern/description pairs and return the first one
+ * if any) that matches the filename in the request.  If multiple patterns
+ * match, only the first one is used; since the order in the array is the
+ * same as the order in which directives were processed, earlier matching
+ * directives will dominate.
+ */
+
+#ifdef CASE_BLIND_FILESYSTEM
+#define MATCH_FLAGS FNM_CASE_BLIND
+#else
+#define MATCH_FLAGS 0
+#endif
+
+static char *find_desc(autoindex_config_rec *dcfg, request_rec *r)
+{
+    int i;
+    ai_desc_t *list = (ai_desc_t *) dcfg->desc_list->elts;
+    const char *filename_full = r->filename;
+    const char *filename_only;
+    const char *filename;
+
+    /*
+     * If the filename includes a path, extract just the name itself
+     * for the simple matches.
+     */
+    if ((filename_only = strrchr(filename_full, '/')) == NULL) {
+	filename_only = filename_full;
+    }
+    else {
+	filename_only++;
+    }
+    for (i = 0; i < dcfg->desc_list->nelts; ++i) {
+	ai_desc_t *tuple = &list[i];
+	int found;
+
+	/*
+	 * Only use the full-path filename if the pattern contains '/'s.
+	 */
+	filename = (tuple->full_path) ? filename_full : filename_only;
+	/*
+	 * Make the comparison using the cheapest method; only do
+	 * wildcard checking if we must.
+	 */
+	if (tuple->wildcards) {
+	    found = (ap_fnmatch(tuple->pattern, filename, MATCH_FLAGS) == 0);
+	}
+	else {
+	    found = (strstr(filename, tuple->pattern) != NULL);
+	}
+	if (found) {
+	    return tuple->description;
+	}
+    }
+    return NULL;
 }
 
 static int ignore_entry(autoindex_config_rec *d, char *path)
@@ -580,99 +914,233 @@ static int ignore_entry(autoindex_config_rec *d, char *path)
  */
 
 /*
- * Look for the specified file, and pump it into the response stream if we
- * find it.
+ * Elements of the emitted document:
+ *	Preamble
+ *		Emitted unless SUPPRESS_PREAMBLE is set AND ap_run_sub_req
+ *		succeeds for the (content_type == text/html) header file.
+ *	Header file
+ *		Emitted if found (and able).
+ *	H1 tag line
+ *		Emitted if a header file is NOT emitted.
+ *	Directory stuff
+ *		Always emitted.
+ *	HR
+ *		Emitted if FANCY_INDEXING is set.
+ *	Readme file
+ *		Emitted if found (and able).
+ *	ServerSig
+ *		Emitted if ServerSignature is not Off AND a readme file
+ *		is NOT emitted.
+ *	Postamble
+ *		Emitted unless SUPPRESS_PREAMBLE is set AND ap_run_sub_req
+ *		succeeds for the (content_type == text/html) readme file.
  */
-static int insert_readme(char *name, char *readme_fname, char *title,
-			 int hrule, int whichend, request_rec *r)
-{
-    char *fn;
-    FILE *f;
-    struct stat finfo;
-    int plaintext = 0;
-    request_rec *rr;
-    autoindex_config_rec *cfg;
-    int autoindex_opts;
 
-    cfg = (autoindex_config_rec *) ap_get_module_config(r->per_dir_config,
-							&autoindex_module);
-    autoindex_opts = cfg->opts;
-    /* XXX: this is a load of crap, it needs to do a full sub_req_lookup_uri */
-    fn = ap_make_full_path(r->pool, name, readme_fname);
-    fn = ap_pstrcat(r->pool, fn, ".html", NULL);
-    if (stat(fn, &finfo) == -1) {
-	/* A brief fake multiviews search for README.html */
-	fn[strlen(fn) - 5] = '\0';
-	if (stat(fn, &finfo) == -1) {
-	    return 0;
+
+/*
+ * emit a plain text file
+ */
+static void do_emit_plain(request_rec *r, FILE *f)
+{
+    char buf[IOBUFSIZE + 1];
+    int i, n, c, ch;
+
+    ap_rputs("<PRE>\n", r);
+    while (!feof(f)) {
+	do {
+	    n = fread(buf, sizeof(char), IOBUFSIZE, f);
 	}
-	plaintext = 1;
-	if (hrule) {
-	    ap_rputs("<HR>\n", r);
+	while (n == -1 && ferror(f) && errno == EINTR);
+	if (n == -1 || n == 0) {
+	    break;
+	}
+	buf[n] = '\0';
+	c = 0;
+	while (c < n) {
+	    for (i = c; i < n; i++) {
+		if (buf[i] == '<' || buf[i] == '>' || buf[i] == '&') {
+		    break;
+		}
+	    }
+	    ch = buf[i];
+	    buf[i] = '\0';
+	    ap_rputs(&buf[c], r);
+	    if (ch == '<') {
+		ap_rputs("&lt;", r);
+	    }
+	    else if (ch == '>') {
+		ap_rputs("&gt;", r);
+	    }
+	    else if (ch == '&') {
+		ap_rputs("&amp;", r);
+	    }
+	    c = i + 1;
 	}
     }
-    else if (hrule) {
-	ap_rputs("<HR>\n", r);
+    ap_rputs("</PRE>\n", r);
+}
+
+/* See mod_include */
+#define SUB_REQ_STRING	"Sub request to mod_include"
+#define PARENT_STRING	"Parent request to mod_include"
+
+/*
+ * Handle the preamble through the H1 tag line, inclusive.  Locate
+ * the file with a subrequests.  Process text/html documents by actually
+ * running the subrequest; text/xxx documents get copied verbatim,
+ * and any other content type is ignored.  This means that a non-text
+ * document (such as HEADER.gif) might get multiviewed as the result
+ * instead of a text document, meaning nothing will be displayed, but
+ * oh well.
+ */
+static void emit_head(request_rec *r, char *header_fname, int suppress_amble,
+		      char *title)
+{
+    FILE *f;
+    request_rec *rr = NULL;
+    int emit_amble = 1;
+    int emit_H1 = 1;
+
+    /*
+     * If there's a header file, send a subrequest to look for it.  If it's
+     * found and a text file, handle it -- otherwise fall through and
+     * pretend there's nothing there.
+     */
+    if ((header_fname != NULL)
+	&& (rr = ap_sub_req_lookup_uri(header_fname, r))
+	&& (rr->status == HTTP_OK)
+	&& (rr->filename != NULL)
+	&& S_ISREG(rr->finfo.st_mode)) {
+	/*
+	 * Check for the two specific cases we allow: text/html and
+	 * text/anything-else.  The former is allowed to be processed for
+	 * SSIs.
+	 */
+	if (rr->content_type != NULL) {
+	    if (!strcasecmp(ap_field_noparam(r->pool, rr->content_type),
+			    "text/html")) {
+		/* Hope everything will work... */
+		emit_amble = 0;
+		emit_H1 = 0;
+
+		if (! suppress_amble) {
+		    emit_preamble(r, title);
+		}
+
+		/* See mod_include */
+		ap_table_add(r->notes, PARENT_STRING, "");
+		ap_table_add(rr->notes, SUB_REQ_STRING, "");
+
+		/*
+		 * If there's a problem running the subrequest, display the
+		 * preamble if we didn't do it before -- the header file
+		 * didn't get displayed.
+		 */
+		if (ap_run_sub_req(rr) != OK) {
+		    /* It didn't work */
+		    emit_amble = suppress_amble;
+		    emit_H1 = 1;
+		}
+		ap_table_unset(r->notes, PARENT_STRING);	/* cleanup */
+	    }
+	    else if (!strncasecmp("text/", rr->content_type, 5)) {
+		/*
+		 * If we can open the file, prefix it with the preamble
+		 * regardless; since we'll be sending a <PRE> block around
+		 * the file's contents, any HTML header it had won't end up
+		 * where it belongs.
+		 */
+		if ((f = ap_pfopen(r->pool, rr->filename, "r")) != 0) {
+		    emit_preamble(r, title);
+		    emit_amble = 0;
+		    do_emit_plain(r, f);
+		    ap_pfclose(r->pool, f);
+		    emit_H1 = 0;
+		}
+	    }
+	}
     }
-    /* XXX: when the above is rewritten properly, this necessary security
-     * check will be redundant. -djg */
-    rr = ap_sub_req_lookup_file(fn, r);
-    if (rr->status != HTTP_OK) {
-	ap_destroy_sub_req(rr);
-	return 0;
-    }
-    ap_destroy_sub_req(rr);
-    if (!(f = ap_pfopen(r->pool, fn, "r"))) {
-        return 0;
-    }
-    if ((whichend == FRONT_MATTER)
-	&& (!(autoindex_opts & SUPPRESS_PREAMBLE))) {
+
+    if (emit_amble) {
 	emit_preamble(r, title);
     }
-    if (!plaintext) {
-	ap_send_fd(f, r);
+    if (emit_H1) {
+	ap_rvputs(r, "<H1>Index of ", title, "</H1>\n", NULL);
     }
-    else {
-	char buf[IOBUFSIZE + 1];
-	int i, n, c, ch;
-	ap_rputs("<PRE>\n", r);
-	while (!feof(f)) {
-	    do {
-		n = fread(buf, sizeof(char), IOBUFSIZE, f);
+    if (rr != NULL) {
+	ap_destroy_sub_req(rr);
+    }
+}
+
+
+/*
+ * Handle the Readme file through the postamble, inclusive.  Locate
+ * the file with a subrequests.  Process text/html documents by actually
+ * running the subrequest; text/xxx documents get copied verbatim,
+ * and any other content type is ignored.  This means that a non-text
+ * document (such as FOOTER.gif) might get multiviewed as the result
+ * instead of a text document, meaning nothing will be displayed, but
+ * oh well.
+ */
+static void emit_tail(request_rec *r, char *readme_fname, int suppress_amble)
+{
+    FILE *f;
+    request_rec *rr = NULL;
+    int suppress_post = 0;
+    int suppress_sig = 0;
+
+    /*
+     * If there's a readme file, send a subrequest to look for it.  If it's
+     * found and a text file, handle it -- otherwise fall through and
+     * pretend there's nothing there.
+     */
+    if ((readme_fname != NULL)
+	&& (rr = ap_sub_req_lookup_uri(readme_fname, r))
+	&& (rr->status == HTTP_OK)
+	&& (rr->filename != NULL)
+	&& S_ISREG(rr->finfo.st_mode)) {
+	/*
+	 * Check for the two specific cases we allow: text/html and
+	 * text/anything-else.  The former is allowed to be processed for
+	 * SSIs.
+	 */
+	if (rr->content_type != NULL) {
+	    if (!strcasecmp(ap_field_noparam(r->pool, rr->content_type),
+			    "text/html")) {
+
+		/* See mod_include */
+		ap_table_add(r->notes, PARENT_STRING, "");
+		ap_table_add(rr->notes, SUB_REQ_STRING, "");
+
+		if (ap_run_sub_req(rr) == OK) {
+		    /* worked... */
+		    suppress_sig = 1;
+		    suppress_post = suppress_amble;
+		}
+		ap_table_unset(r->notes, PARENT_STRING);	/* cleanup */
 	    }
-	    while (n == -1 && ferror(f) && errno == EINTR);
-	    if (n == -1 || n == 0) {
-		break;
-	    }
-	    buf[n] = '\0';
-	    c = 0;
-	    while (c < n) {
-	        for (i = c; i < n; i++) {
-		    if (buf[i] == '<' || buf[i] == '>' || buf[i] == '&') {
-			break;
-		    }
+	    else if (!strncasecmp("text/", rr->content_type, 5)) {
+		/*
+		 * If we can open the file, suppress the signature.
+		 */
+		if ((f = ap_pfopen(r->pool, rr->filename, "r")) != 0) {
+		    do_emit_plain(r, f);
+		    ap_pfclose(r->pool, f);
+		    suppress_sig = 1;
 		}
-		ch = buf[i];
-		buf[i] = '\0';
-		ap_rputs(&buf[c], r);
-		if (ch == '<') {
-		    ap_rputs("&lt;", r);
-		}
-		else if (ch == '>') {
-		    ap_rputs("&gt;", r);
-		}
-		else if (ch == '&') {
-		    ap_rputs("&amp;", r);
-		}
-		c = i + 1;
 	    }
 	}
     }
-    ap_pfclose(r->pool, f);
-    if (plaintext) {
-	ap_rputs("</PRE>\n", r);
+    
+    if (!suppress_sig) {
+	ap_rputs(ap_psignature("", r), r);
     }
-    return 1;
+    if (!suppress_post) {
+	ap_rputs("</BODY></HTML>\n", r);
+    }
+    if (rr != NULL) {
+	ap_destroy_sub_req(rr);
+    }
 }
 
 
@@ -685,8 +1153,9 @@ static char *find_title(request_rec *r)
     if (r->status != HTTP_OK) {
 	return NULL;
     }
-    if (r->content_type
-	&& (!strcmp(r->content_type, "text/html")
+    if ((r->content_type != NULL)
+	&& (!strcasecmp(ap_field_noparam(r->pool, r->content_type),
+			"text/html")
 	    || !strcmp(r->content_type, INCLUDES_MAGIC_TYPE))
 	&& !r->content_encoding) {
         if (!(thefile = ap_pfopen(r->pool, r->filename, "r"))) {
@@ -745,11 +1214,20 @@ static struct ent *make_autoindex_entry(char *name, int autoindex_opts,
 
     p = (struct ent *) ap_pcalloc(r->pool, sizeof(struct ent));
     p->name = ap_pstrdup(r->pool, name);
-    p->size = 0;
+    p->size = -1;
     p->icon = NULL;
     p->alt = NULL;
     p->desc = NULL;
     p->lm = -1;
+    p->isdir = 0;
+    /*
+     * It's obnoxious to have to include this in every entry, but the qsort()
+     * comparison routine only takes two arguments..  The alternative would
+     * add another function call to each invocation.  Let's use memory
+     * rather than CPU.
+     */
+    p->checkdir = ((d->opts & FOLDERS_FIRST) != 0);
+    p->ignorecase = ((d->opts & SORT_NOCASE) != 0);
     p->key = ap_toupper(keyid);
     p->ascending = (ap_toupper(direction) == D_ASCENDING);
 
@@ -759,13 +1237,14 @@ static struct ent *make_autoindex_entry(char *name, int autoindex_opts,
 	if (rr->finfo.st_mode != 0) {
 	    p->lm = rr->finfo.st_mtime;
 	    if (S_ISDIR(rr->finfo.st_mode)) {
+		p->isdir = 1;
 	        if (!(p->icon = find_icon(d, rr, 1))) {
 		    p->icon = find_default_icon(d, "^^DIRECTORY^^");
 		}
 		if (!(p->alt = find_alt(d, rr, 1))) {
 		    p->alt = "DIR";
 		}
-		p->size = 0;
+		p->size = -1;
 		p->name = ap_pstrcat(r->pool, name, "/", NULL);
 	    }
 	    else {
@@ -796,19 +1275,27 @@ static struct ent *make_autoindex_entry(char *name, int autoindex_opts,
 }
 
 static char *terminate_description(autoindex_config_rec *d, char *desc,
-				   int autoindex_opts)
+				   int autoindex_opts, int desc_width)
 {
-    int maxsize = 23;
+    int maxsize = desc_width;
     register int x;
 
-    if (autoindex_opts & SUPPRESS_LAST_MOD) {
-	maxsize += 19;
-    }
-    if (autoindex_opts & SUPPRESS_SIZE) {
-	maxsize += 7;
+    /*
+     * If there's no DescriptionWidth in effect, default to the old
+     * behaviour of adjusting the description size depending upon
+     * what else is being displayed.  Otherwise, stick with the
+     * setting.
+     */
+    if (d->desc_adjust == K_UNSET) {
+	if (autoindex_opts & SUPPRESS_LAST_MOD) {
+	    maxsize += 19;
+	}
+	if (autoindex_opts & SUPPRESS_SIZE) {
+	    maxsize += 7;
+	}
     }
 
-    for (x = 0; desc[x] && (maxsize > 0 || desc[x]=='<'); x++) {
+    for (x = 0; desc[x] && ((maxsize > 0) || (desc[x] == '<')); x++) {
 	if (desc[x] == '<') {
 	    while (desc[x] != '>') {
 		if (!desc[x]) {
@@ -864,41 +1351,6 @@ static void emit_link(request_rec *r, char *anchor, char fname, char curkey,
     }
 }
 
-/*
- * Fit a string into a specified buffer width, marking any
- * truncation.  The size argument is the actual buffer size, including
- * the \0 termination byte.  The buffer will be prefilled with blanks.
- * If the pad argument is false, any extra spaces at the end of the
- * buffer are omitted.  (Used when constructing anchors.)
- */
-static ap_inline char *widthify(const char *s, char *buff, int size, int pad)
-{
-    int s_len;
-
-    memset(buff, ' ', size);
-    buff[size - 1] = '\0';
-    s_len = strlen(s);
-    if (s_len > (size - 1)) {
-	ap_cpystrn(buff, s, size);
-	if (size > 1) {
-	    buff[size - 2] = '>';
-	}
-	if (size > 2) {
-	    buff[size - 3] = '.';
-	}
-	if (size > 3) {
-	    buff[size - 4] = '.';
-	}
-    }
-    else {
-	ap_cpystrn(buff, s, s_len + 1);
-	if (pad) {
-	    buff[s_len] = ' ';
-	}
-    }
-    return buff;
-}
-
 static void output_directories(struct ent **ar, int n,
 			       autoindex_config_rec *d, request_rec *r,
 			       int autoindex_opts, char keyid, char direction)
@@ -909,14 +1361,27 @@ static void output_directories(struct ent **ar, int n,
     int static_columns = (autoindex_opts & SUPPRESS_COLSORT);
     pool *scratch = ap_make_sub_pool(r->pool);
     int name_width;
+    int desc_width;
     char *name_scratch;
+    char *pad_scratch;
 
     if (name[0] == '\0') {
 	name = "/";
     }
 
+    desc_width = d->desc_width;
+    if (d->desc_adjust == K_ADJUST) {
+	for (x = 0; x < n; x++) {
+	    if (ar[x]->desc != NULL) {
+		int t = strlen(ar[x]->desc);
+		if (t > desc_width) {
+		    desc_width = t;
+		}
+	    }
+	}
+    }
     name_width = d->name_width;
-    if (d->name_adjust) {
+    if (d->name_adjust == K_ADJUST) {
 	for (x = 0; x < n; x++) {
 	    int t = strlen(ar[x]->name);
 	    if (t > name_width) {
@@ -924,10 +1389,10 @@ static void output_directories(struct ent **ar, int n,
 	    }
 	}
     }
-    ++name_width;
     name_scratch = ap_palloc(r->pool, name_width + 1);
-    memset(name_scratch, ' ', name_width);
-    name_scratch[name_width] = '\0';
+    pad_scratch = ap_palloc(r->pool, name_width + 1);
+    memset(pad_scratch, ' ', name_width);
+    pad_scratch[name_width] = '\0';
 
     if (autoindex_opts & FANCY_INDEXING) {
 	ap_rputs("<PRE>", r);
@@ -945,14 +1410,8 @@ static void output_directories(struct ent **ar, int n,
 	    }
 	    ap_rputs("> ", r);
 	}
-        emit_link(r, widthify("Name", name_scratch,
-			      (name_width > 5) ? 5 : name_width, K_NOPAD),
-		  K_NAME, keyid, direction, static_columns);
-	if (name_width > 5) {
-	    memset(name_scratch, ' ', name_width);
-	    name_scratch[name_width] = '\0';
-	    ap_rputs(&name_scratch[5], r);
-	}
+        emit_link(r, "Name", K_NAME, keyid, direction, static_columns);
+	ap_rputs(pad_scratch + 4, r);
 	/*
 	 * Emit the guaranteed-at-least-one-space-between-columns byte.
 	 */
@@ -978,7 +1437,6 @@ static void output_directories(struct ent **ar, int n,
 
     for (x = 0; x < n; x++) {
 	char *anchor, *t, *t2;
-	char *pad;
 	int nwidth;
 
 	ap_clear_pool(scratch);
@@ -989,15 +1447,12 @@ static void output_directories(struct ent **ar, int n,
 	    if (t[0] == '\0') {
 		t = "/";
 	    }
-	       /* 1234567890123456 */
 	    t2 = "Parent Directory";
-	    pad = name_scratch + 16;
 	    anchor = ap_escape_html(scratch, ap_os_escape_path(scratch, t, 0));
 	}
 	else {
 	    t = ar[x]->name;
-	    pad = name_scratch + strlen(t);
-	    t2 = ap_escape_html(scratch, t);
+	    t2 = t;
 	    anchor = ap_escape_html(scratch, ap_os_escape_path(scratch, t, 0));
 	}
 
@@ -1022,18 +1477,19 @@ static void output_directories(struct ent **ar, int n,
 		ap_rputs("</A>", r);
 	    }
 
-	    ap_rvputs(r, " <A HREF=\"", anchor, "\">",
-		      widthify(t2, name_scratch, name_width, K_NOPAD),
-		      "</A>", NULL);
-	    /*
-	     * We know that widthify() prefilled the buffer with spaces
-	     * before doing its thing, so use them.
-	     */
 	    nwidth = strlen(t2);
-	    if (nwidth < (name_width - 1)) {
-		name_scratch[nwidth] = ' ';
-		ap_rputs(&name_scratch[nwidth], r);
+	    if (nwidth > name_width) {
+		memcpy(name_scratch, t2, name_width - 3);
+		name_scratch[name_width - 3] = '.';
+		name_scratch[name_width - 2] = '.';
+		name_scratch[name_width - 1] = '>';
+		name_scratch[name_width] = 0;
+		t2 = name_scratch;
+		nwidth = name_width;
 	    }
+	    ap_rvputs(r, " <A HREF=\"", anchor, "\">",
+		      ap_escape_html(scratch, t2), "</A>",
+		      pad_scratch + nwidth, NULL);
 	    /*
 	     * The blank before the storm.. er, before the next field.
 	     */
@@ -1046,7 +1502,8 @@ static void output_directories(struct ent **ar, int n,
 		    ap_rputs(time_str, r);
 		}
 		else {
-		    ap_rputs("                 ", r);
+		    /*Length="22-Feb-1998 23:42  " (see 4 lines above) */
+		    ap_rputs("                   ", r);
 		}
 	    }
 	    if (!(autoindex_opts & SUPPRESS_SIZE)) {
@@ -1056,13 +1513,14 @@ static void output_directories(struct ent **ar, int n,
 	    if (!(autoindex_opts & SUPPRESS_DESC)) {
 		if (ar[x]->desc) {
 		    ap_rputs(terminate_description(d, ar[x]->desc,
-						   autoindex_opts), r);
+						   autoindex_opts,
+						   desc_width), r);
 		}
 	    }
 	}
 	else {
 	    ap_rvputs(r, "<LI><A HREF=\"", anchor, "\"> ", t2,
-		      "</A>", pad, NULL);
+		      "</A>", NULL);
 	}
 	ap_rputc('\n', r);
     }
@@ -1084,6 +1542,7 @@ static int dsortf(struct ent **e1, struct ent **e2)
     struct ent *c1;
     struct ent *c2;
     int result = 0;
+    int ignorecase;
 
     /*
      * First, see if either of the entries is for the parent directory.
@@ -1094,6 +1553,15 @@ static int dsortf(struct ent **e1, struct ent **e2)
     }
     if (is_parent((*e2)->name)) {
         return 1;
+    }
+    /*
+     * Now see if one's a directory and one isn't, AND we're listing
+     * directories first.
+     */
+    if ((*e1)->checkdir) {
+	if ((*e1)->isdir != (*e2)->isdir) {
+	    return (*e1)->isdir ? -1 : 1;
+	}
     }
     /*
      * All of our comparisons will be of the c1 entry against the c2 one,
@@ -1131,7 +1599,25 @@ static int dsortf(struct ent **e1, struct ent **e2)
         }
         break;
     }
-    return strcmp(c1->name, c2->name);
+
+    ignorecase = c1->ignorecase;
+    if (ignorecase) {
+        result = strcasecmp(c1->name, c2->name);
+        if (result == 0) {
+            /*
+             * They're identical when treated case-insensitively, so
+             * pretend they weren't and let strcmp() put them in a
+             * deterministic order.  This means that 'ABC' and 'abc'
+             * will always appear in the same order, rather than
+             * unpredictably 'ABC abc' or 'abc ABC'.
+             */
+            ignorecase = 0;
+        }
+    }
+    if (! ignorecase) {
+        result = strcmp(c1->name, c2->name);
+    }
+    return result;
 }
 
 
@@ -1147,7 +1633,6 @@ static int index_directory(request_rec *r,
     int num_ent = 0, x;
     struct ent *head, *p;
     struct ent **ar = NULL;
-    char *tmp;
     const char *qstring;
     int autoindex_opts = autoindex_conf->opts;
     char keyid;
@@ -1160,8 +1645,17 @@ static int index_directory(request_rec *r,
     }
 
     r->content_type = "text/html";
-
+    if (autoindex_opts & TRACK_MODIFIED) {
+        ap_update_mtime(r, r->finfo.st_mtime);
+        ap_set_last_modified(r);
+        ap_set_etag(r);
+    }
     ap_send_http_header(r);
+
+#ifdef CHARSET_EBCDIC
+    /* Server-generated response, converted */
+    ap_bsetflag(r->connection->client, B_EBCDIC2ASCII, r->ebcdic.conv_out = 1);
+#endif
 
     if (r->header_only) {
 	ap_pclosedir(r->pool, d);
@@ -1177,40 +1671,38 @@ static int index_directory(request_rec *r,
 	*title_endp-- = '\0';
     }
 
-    if ((!(tmp = find_header(autoindex_conf, r)))
-	|| (!(insert_readme(name, tmp, title_name, NO_HRULE, FRONT_MATTER, r)))
-	) {
-	emit_preamble(r, title_name);
-	ap_rvputs(r, "<H1>Index of ", title_name, "</H1>\n", NULL);
-    }
+    emit_head(r, find_header(autoindex_conf, r),
+	      autoindex_opts & SUPPRESS_PREAMBLE, title_name);
 
     /*
      * Figure out what sort of indexing (if any) we're supposed to use.
+     *
+     * If no QUERY_STRING was specified or column sorting has been
+     * explicitly disabled, we use the default specified by the
+     * IndexOrderDefault directive (if there is one); otherwise,
+     * we fall back to ascending by name.
      */
-    if (autoindex_opts & SUPPRESS_COLSORT) {
+    qstring = r->args;
+    if ((autoindex_opts & SUPPRESS_COLSORT)
+	|| ((qstring == NULL) || (*qstring == '\0'))) {
+	qstring = autoindex_conf->default_order;
+    }
+    /*
+     * If there is no specific ordering defined for this directory,
+     * default to ascending by filename.
+     */
+    if ((qstring == NULL) || (*qstring == '\0')) {
 	keyid = K_NAME;
 	direction = D_ASCENDING;
     }
     else {
-	qstring = r->args;
-
-	/*
-	 * If no QUERY_STRING was specified, we use the default: ascending
-	 * by name.
-	 */
-	if ((qstring == NULL) || (*qstring == '\0')) {
-	    keyid = K_NAME;
-	    direction = D_ASCENDING;
+	keyid = *qstring;
+	ap_getword(r->pool, &qstring, '=');
+	if (*qstring == D_DESCENDING) {
+	    direction = D_DESCENDING;
 	}
 	else {
-	    keyid = *qstring;
-	    ap_getword(r->pool, &qstring, '=');
-	    if (qstring != '\0') {
-		direction = *qstring;
-	    }
-	    else {
-		direction = D_ASCENDING;
-	    }
+	    direction = D_ASCENDING;
 	}
     }
 
@@ -1245,15 +1737,11 @@ static int index_directory(request_rec *r,
 		       direction);
     ap_pclosedir(r->pool, d);
 
-    if ((tmp = find_readme(autoindex_conf, r))) {
-	if (!insert_readme(name, tmp, "",
-			   ((autoindex_opts & FANCY_INDEXING) ? HRULE
-			                                      : NO_HRULE),
-			   END_MATTER, r)) {
-	    ap_rputs(ap_psignature("<HR>\n", r), r);
-	}
+    if (autoindex_opts & FANCY_INDEXING) {
+	ap_rputs("<HR>\n", r);
     }
-    ap_rputs("</BODY></HTML>\n", r);
+    emit_tail(r, find_readme(autoindex_conf, r),
+	      autoindex_opts & SUPPRESS_PREAMBLE);
 
     ap_kill_timeout(r);
     return 0;

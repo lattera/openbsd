@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #define CORE_PRIVATE
@@ -66,6 +67,11 @@
 #include "http_request.h"	/* for sub_req_lookup_uri() */
 #include "util_script.h"
 #include "util_date.h"		/* For parseHTTPdate() */
+
+#ifdef OS2
+#define INCL_DOS
+#include <os2.h>
+#endif
 
 /*
  * Various utility functions which are common to a whole lot of
@@ -84,11 +90,6 @@
  * group are the first three arguments to be passed; if not, all three
  * must be NULL.  The query info is split into separate arguments, where
  * "+" is the separator between keyword arguments.
- *
- * XXXX: note that the WIN32 code uses one of the suexec strings 
- * to pass an interpreter name.  Remember this if changing the way they
- * are handled in create_argv.
- *
  */
 static char **create_argv(pool *p, char *path, char *user, char *group,
 			  char *av0, const char *args)
@@ -195,7 +196,7 @@ API_EXPORT(void) ap_add_common_vars(request_rec *r)
     conn_rec *c = r->connection;
     const char *rem_logname;
     char *env_path;
-#ifdef WIN32
+#if defined(WIN32) || defined(OS2)
     char *env_temp;
 #endif
     const char *host;
@@ -245,7 +246,7 @@ API_EXPORT(void) ap_add_common_vars(request_rec *r)
 	}
     }
 
-    if (!(env_path = getenv("PATH"))) {
+    if (!(env_path = ap_pstrdup(r->pool, getenv("PATH")))) {
 	env_path = DEFAULT_PATH;
     }
 
@@ -261,9 +262,26 @@ API_EXPORT(void) ap_add_common_vars(request_rec *r)
     }
 #endif
 
+#ifdef OS2
+    if ((env_temp = getenv("COMSPEC")) != NULL) {
+        ap_table_addn(e, "COMSPEC", env_temp);            
+    }
+    if ((env_temp = getenv("ETC")) != NULL) {
+        ap_table_addn(e, "ETC", env_temp);            
+    }
+    if ((env_temp = getenv("DPATH")) != NULL) {
+        ap_table_addn(e, "DPATH", env_temp);            
+    }
+    if ((env_temp = getenv("PERLLIB_PREFIX")) != NULL) {
+        ap_table_addn(e, "PERLLIB_PREFIX", env_temp);            
+    }
+#endif
+
     ap_table_addn(e, "PATH", env_path);
+    ap_table_addn(e, "SERVER_SIGNATURE", ap_psignature("", r));
     ap_table_addn(e, "SERVER_SOFTWARE", ap_get_server_version());
     ap_table_addn(e, "SERVER_NAME", ap_get_server_name(r));
+    ap_table_addn(e, "SERVER_ADDR", r->connection->local_ip);	/* Apache */
     ap_table_addn(e, "SERVER_PORT",
 		  ap_psprintf(r->pool, "%u", ap_get_server_port(r)));
     host = ap_get_remote_host(c, r->per_dir_config, REMOTE_HOST);
@@ -395,7 +413,7 @@ API_EXPORT(void) ap_add_cgi_vars(request_rec *r)
 	 */
 	request_rec *pa_req;
 
-	pa_req = ap_sub_req_lookup_uri(escape_uri(r->pool, r->path_info), r);
+	pa_req = ap_sub_req_lookup_uri(ap_escape_uri(r->pool, r->path_info), r);
 
 	if (pa_req->filename) {
 #ifdef WIN32
@@ -458,16 +476,18 @@ API_EXPORT(int) ap_scan_script_header_err_core(request_rec *r, char *buffer,
 	    ap_kill_timeout(r);
 	    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
 			  "Premature end of script headers: %s", r->filename);
-	    ap_table_setn(r->notes, "error-notes",
-			  "Premature end of script headers");
 	    return HTTP_INTERNAL_SERVER_ERROR;
 	}
 
 	/* Delete terminal (CR?)LF */
 
 	p = strlen(w);
+        /* Indeed, the host's '\n':
+           '\012' for UNIX; '\015' for MacOS; '\025' for OS/390
+           -- whatever the script generates.
+        */
 	if (p > 0 && w[p - 1] == '\n') {
-	    if (p > 1 && w[p - 2] == '\015') {
+	    if (p > 1 && w[p - 2] == CR) {
 		w[p - 2] = '\0';
 	    }
 	    else {
@@ -497,6 +517,8 @@ API_EXPORT(int) ap_scan_script_header_err_core(request_rec *r, char *buffer,
 	    ap_overlap_tables(r->err_headers_out, merge,
 		AP_OVERLAP_TABLES_MERGE);
 	    if (!ap_is_empty_table(cookie_table)) {
+		/* the cookies have already been copied to the cookie_table */
+		ap_table_unset(r->err_headers_out, "Set-Cookie");
 		r->err_headers_out = ap_overlay_tables(r->pool,
 		    r->err_headers_out, cookie_table);
 	    }
@@ -543,8 +565,6 @@ API_EXPORT(int) ap_scan_script_header_err_core(request_rec *r, char *buffer,
 	    ap_kill_timeout(r);
 	    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
 			  "%s: %s", malformed, r->filename);
-	    ap_table_setn(r->notes, "error-notes",
-			  ap_pstrdup(r->pool, malformed));
 	    return HTTP_INTERNAL_SERVER_ERROR;
 	}
 
@@ -625,6 +645,63 @@ API_EXPORT(int) ap_scan_script_header_err_buff(request_rec *r, BUFF *fb,
     return ap_scan_script_header_err_core(r, buffer, getsfunc_BUFF, fb);
 }
 
+struct vastrs {
+    va_list args;
+    int arg;
+    const char *curpos;
+};
+
+static int getsfunc_STRING(char *w, int len, void *pvastrs)
+{
+    struct vastrs *strs = (struct vastrs*) pvastrs;
+    char *p;
+    int t;
+    
+    if (!strs->curpos || !*strs->curpos) 
+        return 0;
+    p = strchr(strs->curpos, '\n');
+    if (p)
+        ++p;
+    else
+        p = strchr(strs->curpos, '\0');
+    t = p - strs->curpos;
+    if (t > len)
+        t = len;
+    strncpy (w, strs->curpos, t);
+    w[t] = '\0';
+    if (!strs->curpos[t]) {
+        ++strs->arg;
+        strs->curpos = va_arg(strs->args, const char *);
+    }
+    else
+        strs->curpos += t;
+    return t;    
+}
+
+/* ap_scan_script_header_err_strs() accepts additional const char* args...
+ * each is treated as one or more header lines, and the first non-header
+ * character is returned to **arg, **data.  (The first optional arg is
+ * counted as 0.)
+ */
+API_EXPORT_NONSTD(int) ap_scan_script_header_err_strs(request_rec *r, 
+                                                      char *buffer, 
+                                                      const char **termch,
+                                                      int *termarg, ...)
+{
+    struct vastrs strs;
+    int res;
+
+    va_start(strs.args, termarg);
+    strs.arg = 0;
+    strs.curpos = va_arg(strs.args, char*);
+    res = ap_scan_script_header_err_core(r, buffer, getsfunc_STRING, (void *) &strs);
+    if (termch)
+        *termch = strs.curpos;
+    if (termarg)
+        *termarg = strs.arg;
+    va_end(strs.args);
+    return res;
+}
 
 API_EXPORT(void) ap_send_size(size_t size, request_rec *r)
 {
@@ -639,64 +716,25 @@ API_EXPORT(void) ap_send_size(size_t size, request_rec *r)
 	ap_rputs("   1k", r);
     }
     else if (size < 1048576) {
-	ap_rprintf(r, "%4dk", (size + 512) / 1024);
+	ap_rprintf(r, "%4dk", (int)((size + 512) / 1024));
     }
     else if (size < 103809024) {
 	ap_rprintf(r, "%4.1fM", size / 1048576.0);
     }
     else {
-	ap_rprintf(r, "%4dM", (size + 524288) / 1048576);
+	ap_rprintf(r, "%4dM", (int)((size + 524288) / 1048576));
     }
 }
-
-#if defined(OS2) || defined(WIN32)
-static char **create_argv_cmd(pool *p, char *av0, const char *args, char *path)
-{
-    register int x, n;
-    char **av;
-    char *w;
-
-    for (x = 0, n = 2; args[x]; x++) {
-        if (args[x] == '+') {
-	    ++n;
-	}
-    }
-
-    /* Add extra strings to array. */
-    n = n + 2;
-
-    av = (char **) ap_palloc(p, (n + 1) * sizeof(char *));
-    av[0] = av0;
-
-    /* Now insert the extra strings we made room for above. */
-    av[1] = strdup("/C");
-    av[2] = strdup(path);
-
-    for (x = (1 + 2); x < n; x++) {
-	w = ap_getword(p, &args, '+');
-	ap_unescape_url(w);
-	av[x] = ap_escape_shell_cmd(p, w);
-    }
-    av[n] = NULL;
-    return av;
-}
-#endif
-
 
 API_EXPORT(int) ap_call_exec(request_rec *r, child_info *pinfo, char *argv0,
 			     char **env, int shellcmd)
 {
     int pid = 0;
-#if defined(RLIMIT_CPU)  || defined(RLIMIT_NPROC) || \
-    defined(RLIMIT_DATA) || defined(RLIMIT_VMEM) || defined (RLIMIT_AS)
-
     core_dir_config *conf;
     conf = (core_dir_config *) ap_get_module_config(r->per_dir_config,
 						    &core_module);
 
-#endif
-
-#ifndef WIN32
+#if !defined(WIN32) && !defined(OS2)
     /* the fd on r->server->error_log is closed, but we need somewhere to
      * put the error messages from the log_* functions. So, we use stderr,
      * since that is better than allowing errors to go unnoticed.  Don't do
@@ -750,278 +788,332 @@ API_EXPORT(int) ap_call_exec(request_rec *r, child_info *pinfo, char *argv0,
 #ifdef OS2
     {
 	/* Additions by Alec Kloss, to allow exec'ing of scripts under OS/2 */
-	int is_script;
+	int is_script = 0;
 	char interpreter[2048];	/* hope it's enough for the interpreter path */
+	char error_object[260];
 	FILE *program;
+        char *cmdline = r->filename, *cmdline_pos;
+        int cmdlen;
+	char *args = "", *args_end;
+	ULONG rc;
+        RESULTCODES rescodes;
+        int env_len, e;
+        char *env_block, *env_block_pos;
 
+	if ((conf->cgi_command_args != AP_FLAG_OFF)
+            && r->args && r->args[0]
+            && !strchr(r->args, '=')) {
+	    args = r->args;
+        }
+	    
 	program = fopen(r->filename, "rt");
+	
 	if (!program) {
 	    ap_log_rerror(APLOG_MARK, APLOG_ERR, r, "fopen(%s) failed",
 			 r->filename);
 	    return (pid);
 	}
+	
 	fgets(interpreter, sizeof(interpreter), program);
 	fclose(program);
+	
 	if (!strncmp(interpreter, "#!", 2)) {
 	    is_script = 1;
-	    interpreter[strlen(interpreter) - 1] = '\0';
+            interpreter[strlen(interpreter) - 1] = '\0';
+            if (interpreter[2] != '/' && interpreter[2] != '\\' && interpreter[3] != ':') {
+                char buffer[300];
+                if (DosSearchPath(SEARCH_ENVIRONMENT, "PATH", interpreter+2, buffer, sizeof(buffer)) == 0) {
+                    strcpy(interpreter+2, buffer);
+                } else {
+                    strcat(interpreter, ".exe");
+                    if (DosSearchPath(SEARCH_ENVIRONMENT, "PATH", interpreter+2, buffer, sizeof(buffer)) == 0) {
+                        strcpy(interpreter+2, buffer);
+                    }
+                }
+            }
 	}
-	else {
-	    is_script = 0;
+
+        if (is_script) {
+            cmdline = ap_pstrcat(r->pool, interpreter+2, " ", r->filename, NULL);
+        }
+        else if (strstr(strupr(r->filename), ".CMD") > 0) {
+            /* Special case to allow use of REXX commands as scripts. */
+            os2pathname(r->filename);
+            cmdline = ap_pstrcat(r->pool, SHELL_PATH, " /C ", r->filename, NULL);
+        }
+        else {
+            cmdline = r->filename;
+	}
+	
+        args = ap_pstrdup(r->pool, args);
+        ap_unescape_url(args);
+        args = ap_double_quotes(r->pool, args);
+        args_end = args + strlen(args);
+
+        if (args_end - args > 4000) { /* cmd.exe won't handle lines longer than 4k */
+            args_end = args + 4000;
+            *args_end = 0;
+        }
+
+        /* +4 = 1 space between progname and args, 2 for double null at end, 2 for possible quote on first arg */
+        cmdlen = strlen(cmdline) + strlen(args) + 4; 
+        cmdline_pos = cmdline;
+
+        while (*cmdline_pos) {
+            cmdlen += 2 * (*cmdline_pos == '+');  /* Allow space for each arg to be quoted */
+            cmdline_pos++;
+        }
+
+        cmdline = ap_pstrndup(r->pool, cmdline, cmdlen);
+        cmdline_pos = cmdline + strlen(cmdline);
+
+	while (args < args_end) {
+            char *arg;
+	    
+            arg = ap_getword_nc(r->pool, &args, '+');
+
+            if (strpbrk(arg, "&|<> "))
+                arg = ap_pstrcat(r->pool, "\"", arg, "\"", NULL);
+
+            *(cmdline_pos++) = ' ';
+            strcpy(cmdline_pos, arg);
+            cmdline_pos += strlen(cmdline_pos);
+        }
+
+        *(++cmdline_pos) = 0; /* Add required second terminator */
+	args = strchr(cmdline, ' ');
+	
+	if (args) {
+	    *args = 0;
+	    args++;
 	}
 
-	if ((!r->args) || (!r->args[0]) || strchr(r->args, '=')) {
-	    int emxloop;
-	    char *emxtemp;
+        /* Create environment block from list of envariables */
+        for (env_len=1, e=0; env[e]; e++)
+            env_len += strlen(env[e]) + 1;
 
-	    /* For OS/2 place the variables in the current
-	     * environment then it will be inherited. This way
-	     * the program will also get all of OS/2's other SETs.
-	     */
-	    for (emxloop = 0; ((emxtemp = env[emxloop]) != NULL); emxloop++) {
-		putenv(emxtemp);
-	    }
+        env_block = ap_palloc(r->pool, env_len);
+        env_block_pos = env_block;
 
-	    /* More additions by Alec Kloss for OS/2 */
-	    if (is_script) {
-		/* here's the stuff to run the interpreter */
-		execl(interpreter + 2, interpreter + 2, r->filename, NULL);
-	    }
-	    else if (strstr(strupr(r->filename), ".CMD") > 0) {
-		/* Special case to allow use of REXX commands as scripts. */
-		os2pathname(r->filename);
-		execl(SHELL_PATH, SHELL_PATH, "/C", r->filename, NULL);
-	    }
-	    else {
-		execl(r->filename, argv0, NULL);
-	    }
+        for (e=0; env[e]; e++) {
+            strcpy(env_block_pos, env[e]);
+            env_block_pos += strlen(env_block_pos) + 1;
+        }
+
+        *env_block_pos = 0; /* environment block is terminated by a double null */
+
+	rc = DosExecPgm(error_object, sizeof(error_object), EXEC_ASYNC, cmdline, env_block, &rescodes, cmdline);
+	
+	if (rc) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, r, "DosExecPgm(%s %s) failed, %s - %s",
+                          cmdline, args ? args : "", ap_os_error_message(rc), error_object );
+	    return -1;
 	}
-	else {
-	    int emxloop;
-	    char *emxtemp;
-
-	    /* For OS/2 place the variables in the current
-	     * environment so that they will be inherited. This way
-	     * the program will also get all of OS/2's other SETs.
-	     */
-	    for (emxloop = 0; ((emxtemp = env[emxloop]) != NULL); emxloop++) {
-		putenv(emxtemp);
-	    }
-
-	    if (strstr(strupr(r->filename), ".CMD") > 0) {
-		/* Special case to allow use of REXX commands as scripts. */
-		os2pathname(r->filename);
-		execv(SHELL_PATH, create_argv_cmd(r->pool, argv0, r->args,
-						  r->filename));
-	    }
-	    else {
-		execv(r->filename,
-		      create_argv(r->pool, NULL, NULL, NULL, argv0, r->args));
-	    }
-	}
-	return (pid);
+	
+	return rescodes.codeTerminate;
     }
 #elif defined(WIN32)
     {
-	/* Adapted from Alec Kloss' work for OS/2 */
-	int is_script = 0;
-	int is_binary = 0;
-	char interpreter[2048];	/* hope it's enough for the interpreter path */
-	FILE *program;
-	int i, sz;
-	char *dot;
-	char *exename;
-        char *quoted_filename;
-	int is_exe = 0;
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
+        /* Adapted from Alec Kloss' work for OS/2 */
+        char *interpreter = NULL;
+        char *invokename = NULL;
+        char *arguments = NULL;
+        char *ext = NULL;
+        char *s = NULL;
+        char *t = NULL;
         char *pCommand;
         char *pEnvBlock, *pNext;
+
+        int i;
         int iEnvBlockLen;
 
-	memset(&si, 0, sizeof(si));
-	memset(&pi, 0, sizeof(pi));
+        file_type_e fileType;
 
-	interpreter[0] = 0;
-	pid = -1;
+        STARTUPINFO si;
+        PROCESS_INFORMATION pi;
 
-        quoted_filename = ap_pstrcat(r->pool, "\"", r->filename, "\"", NULL);
+        memset(&si, 0, sizeof(si));
+        memset(&pi, 0, sizeof(pi));
+
+        pid = -1;
 
         if (!shellcmd) {
-            exename = strrchr(r->filename, '/');
-            if (!exename) {
-                exename = strrchr(r->filename, '\\');
-            }
-            if (!exename) {
-                exename = r->filename;
-            }
-            else {
-                exename++;
-            }
-            dot = strrchr(exename, '.');
-            if (dot) {
-                if (!strcasecmp(dot, ".BAT")
-                    || !strcasecmp(dot, ".CMD")
-                    || !strcasecmp(dot, ".EXE")
-                    ||  !strcasecmp(dot, ".COM")) {
-                    is_exe = 1;
-                }
-            }
 
-            if (!is_exe) {
-                program = fopen(r->filename, "rb");
-                if (!program) {
-                    ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
-                                 "fopen(%s) failed", r->filename);
-                    return (pid);
-                }
-                sz = fread(interpreter, 1, sizeof(interpreter) - 1, program);
-                if (sz < 0) {
-                    ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
-                                 "fread of %s failed", r->filename);
-                    fclose(program);
-                    return (pid);
-                }
-                interpreter[sz] = 0;
-                fclose(program);
-                if (!strncmp(interpreter, "#!", 2)) {
-                    is_script = 1;
-                    for (i = 2; i < sizeof(interpreter); i++) {
-                        if ((interpreter[i] == '\r')
-                            || (interpreter[i] == '\n')) {
-                            break;
-                        }
-                    }
-                    interpreter[i] = 0;
-                    for (i = 2; interpreter[i] == ' '; ++i)
-                        ;
-                    memmove(interpreter+2,interpreter+i,strlen(interpreter+i)+1);
-                }
-                else {
-                    /* Check to see if it's a executable */
-                    IMAGE_DOS_HEADER *hdr = (IMAGE_DOS_HEADER*)interpreter;
-                    if (hdr->e_magic == IMAGE_DOS_SIGNATURE && hdr->e_cblp < 512) {
-                        is_binary = 1;
-                    }
-                }
-            }
-            /* Bail out if we haven't figured out what kind of
-             * file this is by now..
-             */
-            if (!is_exe && !is_script && !is_binary) {
+            fileType = ap_get_win32_interpreter(r, &interpreter);
+
+            if (fileType == eFileTypeUNKNOWN) {
                 ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, r,
-                             "%s is not executable; ensure interpreted scripts have "
-                             "\"#!\" first line", 
-                             r->filename);
+                              "%s is not executable; ensure interpreted scripts have "
+                              "\"#!\" first line", 
+                              r->filename);
                 return (pid);
             }
-        }
 
-        if (shellcmd) {
-            char *shell_cmd = "CMD.EXE /C ";
-            OSVERSIONINFO osver;
-            osver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-         
-            /*
-             * Use CMD.EXE for NT, COMMAND.COM for WIN95
-             */
-            if (GetVersionEx(&osver)) {
-                if (osver.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-                    shell_cmd = "COMMAND.COM /C ";
+            if (interpreter && *interpreter 
+                    && (s = strstr(interpreter, "\"%1\""))) {
+                s[1] = '\0';
+                s += 3;
+                invokename = ap_pstrdup(r->pool, r->filename);
+            }
+            else
+            {
+                char shortname[MAX_PATH];
+                DWORD rv = GetShortPathName(r->filename, shortname, MAX_PATH);
+                if (!rv || rv >= MAX_PATH) {
+                    ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, r,
+                                  "%s is not executable; cannot translate "
+                                  "to a short path name.", r->filename);
+                    return (pid);
                 }
-            }       
-            pCommand = ap_pstrcat(r->pool, shell_cmd, argv0, NULL);
-        }
- 	else if ((!r->args) || (!r->args[0]) || strchr(r->args, '=')) { 
-	    if (is_exe || is_binary) {
-	        /*
-	         * When the CGI is a straight binary executable, 
-		 * we can run it as is
-	         */
-	        pCommand = quoted_filename;
-	    }
-	    else if (is_script) {
-                /* When an interpreter is needed, we need to create 
-                 * a command line that has the interpreter name
-                 * followed by the CGI script name.  
-		 */
-	        pCommand = ap_pstrcat(r->pool, interpreter + 2, " ", 
-				      quoted_filename, NULL);
-	    }
-	    else {
-	        /* If not an executable or script, just execute it
-                 * from a command prompt.  
+                invokename = ap_pstrdup(r->pool, shortname);
+
+                if (interpreter && *interpreter
+                        && (s = strstr(interpreter, "%1"))) {
+                    s[0] = '\0';
+                    s += 2;
+                }
+            }
+            for (t = invokename; *t; ++t) {
+                if (*t == '/')
+                    *t = '\\';
+            }
+
+            /*
+             * Look at the arguments...
+             */
+            arguments = "";
+            if ((conf->cgi_command_args != AP_FLAG_OFF)
+                 && (r->args) && (r->args[0])
+                 && !strchr(r->args, '=')) { 
+                /* If we are in this leg, there are some other arguments
+                 * that we must include in the execution of the CGI.
+                 * Because CreateProcess is the way it is, we have to
+                 * create a command line like format for the execution
+                 * of the CGI.  This means we need to create on long
+                 * string with the executable and arguments.
+                 *
+                 * The arguments string comes in the request structure,
+                 * and each argument is separated by a '+'.  We'll replace
+                 * these pluses with spaces.
                  */
-	        pCommand = ap_pstrcat(r->pool, SHELL_PATH, " /C ", 
-				      quoted_filename, NULL);
-	    }
-	}
-	else {
 
-            /* If we are in this leg, there are some other arguments
-             * that we must include in the execution of the CGI.
-             * Because CreateProcess is the way it is, we have to
-             * create a command line like format for the execution
-             * of the CGI.  This means we need to create on long
-             * string with the executable and arguments.
-             *
-             * The arguments string comes in the request structure,
-             * and each argument is separated by a '+'.  We'll replace
-             * these pluses with spaces.
-	     */
-	    char *arguments=NULL;
-	    int iStringSize = 0;
-	    int x;
+                int iStringSize = 0;
+                int x;
 	    
-	    /*
-	     *  Duplicate the request structure string so we don't change it.
-	     */                                   
-	    arguments = ap_pstrdup(r->pool, r->args);
+                /*
+                 *  Duplicate the request structure string so we don't change it.
+                 */                                   
+                arguments = ap_pstrdup(r->pool, r->args);
+                
+                /*
+                 *  Change the '+' to ' '
+                 */
+                for (x=0; arguments[x]; x++) {
+                    if ('+' == arguments[x]) {
+                        arguments[x] = ' ';
+                    }
+                }
        
-	    /*
-	     *  Change the '+' to ' '
-	     */
-	    for (x=0; arguments[x]; x++) {
-	        if ('+' == arguments[x]) {
-		  arguments[x] = ' ';
-		}
-	    }
-       
-	    /*
-	     * We need to unescape any characters that are 
-             * in the arguments list.
-	     */
-	    ap_unescape_url(arguments);
-	    arguments = ap_escape_shell_cmd(r->pool, arguments);
-           
-	    /*
-	     * The argument list should now be good to use, 
-	     * so now build the command line.
-	     */
-	    if (is_exe || is_binary) {
-	        pCommand = ap_pstrcat(r->pool, quoted_filename, " ", 
-				      arguments, NULL);
-	    }
-	    else if (is_script) {
-	        pCommand = ap_pstrcat(r->pool, interpreter + 2, " ", 
-				      quoted_filename, " ", arguments, NULL);
-	    }
-	    else {
-	        pCommand = ap_pstrcat(r->pool, SHELL_PATH, " /C ", 
-				      quoted_filename, " ", arguments, NULL);
-	    }
-	}
+                /*
+                 * We need to unescape any characters that are 
+                 * in the arguments list.  Truncate to 4000
+                 * characters for safety, being careful of the
+                 * now-escaped characters.
+                 */
+                ap_unescape_url(arguments);
+                arguments = ap_escape_shell_cmd(r->pool, arguments);
+                if (strlen(arguments) > 4000)
+                {
+                    int len = 4000;
+                    while (len && arguments[len - 1] == '\\') {
+                        --len;
+                    }
+                    arguments[len] = '\0';
+                }
 
-	/*
-	 * Make child process use hPipeOutputWrite as standard out,
-	 * and make sure it does not show on screen.
-	 */
-	si.cb = sizeof(si);
-	si.dwFlags     = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-	si.wShowWindow = SW_HIDE;
-	si.hStdInput   = pinfo->hPipeInputRead;
-	si.hStdOutput  = pinfo->hPipeOutputWrite;
-	si.hStdError   = pinfo->hPipeErrorWrite;
+                /*
+                 * Now that the arguments list is 'shell' escaped with
+                 * backslashes, we need to make cmd.exe/command.com 
+                 * safe from this same set of characters.
+                 */
+                if (fileType == eCommandShell32) {
+                    arguments = ap_caret_escape_args(r->pool, arguments);
+                }
+                else if (fileType == eCommandShell16) {
+                    arguments = ap_pstrcat(r->pool, "\"", 
+                            ap_double_quotes(r->pool, arguments), "\"", NULL);
+                }
+            }
+
+            /*
+             * The remaining code merges the interpreter, the backslashed
+             * and potentially shortened invoke name, the various
+             * interpreter segments and the arguments.
+             *
+             * Note that interpreter started out with %1 %* arguments,
+             * so the *t character skips the %* arguments list, and the
+             * *s already skipped the %1 argument (quoted or not.)
+             */
+
+            if (s && (t = strstr(s, "%*"))) {
+                /* interpreter formatted: prog [opts] %1 [opts] %* [opts] 
+                 */
+                t[0] = '\0';
+                t += 2;
+                pCommand = ap_pstrcat(r->pool, interpreter, invokename,
+                                               s, arguments, t, NULL);
+            }
+            else if (s) {
+                /* interpreter formatted: prog [opts] %1 [opts] 
+                 */
+                pCommand = ap_pstrcat(r->pool, interpreter, invokename,
+                                               s, " ", arguments, NULL);
+            }
+            else if (interpreter) {
+                /* interpreter formatted: prog [opts]
+                 */
+                pCommand = ap_pstrcat(r->pool, interpreter, " ", invokename,
+                                               " ", arguments, NULL);
+            }
+            else {
+                /* no interpreter required
+                 */
+                pCommand = ap_pstrcat(r->pool, invokename, 
+                                               " ", arguments, NULL);
+            }
+
+        }
+        else /* shellcmd */
+        {
+            char *p, *comspec = getenv("COMSPEC");
+            const char *quotecomspec;
+            const char *quoteargv0;
+            if (!comspec)
+                comspec = SHELL_PATH;
+            p = strchr(comspec, '\0');
+            quotecomspec = (strchr(comspec, ' ') && comspec[0] != '\"')
+                         ? "\"" : "";
+            quoteargv0 = (strchr(argv0, ' ') && argv0[0] != '\"') ? "\"" : "";
+            pCommand = ap_pstrcat(r->pool, quotecomspec, comspec, quotecomspec,
+                                  " /c ", quoteargv0, argv0, quoteargv0, NULL);
+            /* Forward slash argv[0] only */
+            for (p = pCommand + strlen(pCommand) - strlen(argv0) 
+                              - strlen(quoteargv0); *p; ++p) {
+                if (*p == '/')
+                    *p = '\\';
+            }
+        }
+
+        /*
+         * Make child process use hPipeOutputWrite as standard out,
+         * and make sure it does not show on screen.
+         */
+        si.cb = sizeof(si);
+        si.dwFlags     = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
+        si.hStdInput   = pinfo->hPipeInputRead;
+        si.hStdOutput  = pinfo->hPipeOutputWrite;
+        si.hStdError   = pinfo->hPipeErrorWrite;
   
         /*
          * Win32's CreateProcess call requires that the environment
@@ -1045,51 +1137,40 @@ API_EXPORT(int) ap_call_exec(request_rec *r, child_info *pinfo, char *argv0,
             i++;
         }
 
-        if (CreateProcess(NULL, pCommand, NULL, NULL, TRUE, 0, pEnvBlock,
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, r->server,
+                     "Invoking CGI Command '%s'", pCommand);
+        for (i = 0; env[i]; ++i) {
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r->server,
+                         "  CGI env[%d] = '%s'", i, env[i]);
+        }
+
+        if (CreateProcess(NULL, pCommand, NULL, NULL, TRUE, 
+                          0,
+                          pEnvBlock,
                           ap_make_dirstr_parent(r->pool, r->filename),
                           &si, &pi)) {
-            pid = pi.dwProcessId;
-            /*
-             * We must close the handles to the new process and its main thread
-             * to prevent handle and memory leaks.
-             */ 
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
+            if (fileType == eFileTypeEXE16 || fileType == eCommandShell16) {
+                /* Hack to get 16-bit CGI's working. It works for all the 
+                 * standard modules shipped with Apache. pi.dwProcessId is 0 
+                 * for 16-bit CGIs and all the Unix specific code that calls 
+                 * ap_call_exec interprets this as a failure case. And we can't 
+                 * use -1 either because it is mapped to 0 by the caller.
+                 */
+                pid = -2;
+            }
+            else {
+                pid = pi.dwProcessId;
+                /*
+                 * We must close the handles to the new process and its main thread
+                 * to prevent handle and memory leaks.
+                 */ 
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
         }
-#if 0
-	if ((!r->args) || (!r->args[0]) || strchr(r->args, '=')) {
-	    if (is_exe || is_binary) {
-		pid = spawnle(_P_NOWAIT, r->filename, r->filename, NULL, env);
-	    }
-	    else if (is_script) {
-		pid = spawnle(_P_NOWAIT, interpreter + 2, interpreter + 2,
-			      r->filename, NULL, env);
-	    }
-	    else {
-		pid = spawnle(_P_NOWAIT, SHELL_PATH, SHELL_PATH, "/C",
-			      r->filename, NULL, env);
-	    }
-	}
-	else {
-	    if (is_exe || is_binary) {
-		pid = spawnve(_P_NOWAIT, r->filename,
-			      create_argv(r->pool, NULL, NULL, NULL, argv0, 
-					  r->args), env);
-	    }
-	    else if (is_script) {
-		pid = spawnve(_P_NOWAIT, interpreter + 2,
-			      create_argv(r->pool, interpreter + 2, NULL, NULL,
-					  r->filename, r->args), env);
-	    }
-	    else {
-		pid = spawnve(_P_NOWAIT, SHELL_PATH,
-			      create_argv_cmd(r->pool, argv0, r->args,
-					      r->filename), env);
-	    }
-	}
-#endif
-	return (pid);
+        return (pid);
     }
+#elif defined(NETWARE)
 #else
     if (ap_suexec_enabled
 	&& ((r->server->server_uid != ap_user_id)
@@ -1152,7 +1233,9 @@ API_EXPORT(int) ap_call_exec(request_rec *r, child_info *pinfo, char *argv0,
 		   NULL, env);
 	}
 
-	else if ((!r->args) || (!r->args[0]) || strchr(r->args, '=')) {
+	else if ((conf->cgi_command_args == AP_FLAG_OFF)
+            || (!r->args) || (!r->args[0])
+            || strchr(r->args, '=')) {
 	    execle(SUEXEC_BIN, SUEXEC_BIN, execuser, grpname, argv0,
 		   NULL, env);
 	}
@@ -1169,7 +1252,9 @@ API_EXPORT(int) ap_call_exec(request_rec *r, child_info *pinfo, char *argv0,
 	    execle(SHELL_PATH, SHELL_PATH, "-c", argv0, NULL, env);
 	}
 
-	else if ((!r->args) || (!r->args[0]) || strchr(r->args, '=')) {
+	else if ((conf->cgi_command_args == AP_FLAG_OFF)
+            || (!r->args) || (!r->args[0])
+            || strchr(r->args, '=')) {
 	    execle(r->filename, argv0, NULL, env);
 	}
 

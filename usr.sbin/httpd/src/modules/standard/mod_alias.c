@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -64,7 +65,9 @@
  */
 
 #include "httpd.h"
+#include "http_core.h"
 #include "http_config.h"
+#include "http_log.h"
 
 typedef struct {
     char *real;
@@ -137,10 +140,15 @@ static const char *add_alias_internal(cmd_parms *cmd, void *dummy, char *f, char
 	new->regexp = ap_pregcomp(cmd->pool, f, REG_EXTENDED);
 	if (new->regexp == NULL)
 	    return "Regular expression could not be compiled.";
+        new->real = r;
     }
-
-    new->fake = f;
+#ifndef OS2
+    else
+        new->real = ap_os_canonical_filename(cmd->pool, r);
+#else
     new->real = r;
+#endif
+    new->fake = f;
     new->handler = cmd->info;
 
     return NULL;
@@ -233,7 +241,7 @@ static const command_rec alias_cmds[] =
      "a fakename and a realname"},
     {"Redirect", add_redirect, (void *) HTTP_MOVED_TEMPORARILY,
      OR_FILEINFO, TAKE23,
-  "an optional status, then document to be redirected and destination URL"},
+     "an optional status, then document to be redirected and destination URL"},
     {"AliasMatch", add_alias_regex, NULL, RSRC_CONF, TAKE2,
      "a regular expression and a filename"},
     {"ScriptAliasMatch", add_alias_regex, "cgi-script", RSRC_CONF, TAKE2,
@@ -300,12 +308,12 @@ static char *try_alias_list(request_rec *r, array_header *aliases, int doesc, in
 	int l;
 
 	if (p->regexp) {
-	    if (!regexec(p->regexp, r->uri, p->regexp->re_nsub + 1, regm, 0)) {
+	    if (!ap_regexec(p->regexp, r->uri, p->regexp->re_nsub + 1, regm, 0)) {
 		if (p->real) {
 		    found = ap_pregsub(r->pool, p->real, r->uri,
 				    p->regexp->re_nsub + 1, regm);
 		    if (found && doesc) {
-			found = escape_uri(r->pool, found);
+			found = ap_escape_uri(r->pool, found);
 		    }
 		}
 		else {
@@ -339,7 +347,6 @@ static char *try_alias_list(request_rec *r, array_header *aliases, int doesc, in
 
 	    return found;
 	}
-
     }
 
     return NULL;
@@ -386,8 +393,27 @@ static int fixup_redir(request_rec *r)
     /* It may have changed since last time, so try again */
 
     if ((ret = try_alias_list(r, dirconf->redirects, 1, &status)) != NULL) {
-	if (ap_is_HTTP_REDIRECT(status))
-	    ap_table_setn(r->headers_out, "Location", ret);
+        if (ap_is_HTTP_REDIRECT(status)) {
+            if (ret[0] == '/') {
+                char *orig_target = ret;
+
+                ret = ap_construct_url(r->pool, ret, r);
+                ap_log_rerror(APLOG_MARK, APLOG_DEBUG|APLOG_NOERRNO, r,
+                              "incomplete redirection target of '%s' for "
+                              "URI '%s' modified to '%s'",
+                              orig_target, r->uri, ret);
+            }
+            if (!ap_is_url(ret)) {
+                status = HTTP_INTERNAL_SERVER_ERROR;
+                ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, r,
+                              "cannot redirect '%s' to '%s'; "
+                              "target is not a valid absoluteURI or abs_path",
+                              r->uri, ret);
+            }
+            else {
+                ap_table_setn(r->headers_out, "Location", ret);
+            }
+        }
 	return status;
     }
 

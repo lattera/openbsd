@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -74,9 +75,6 @@
 #include "http_core.h"
 #include "http_log.h"
 #include "http_protocol.h"
-#if defined(HAVE_CRYPT_H)
-#include <crypt.h>
-#endif
 
 typedef struct auth_config_struct {
     char *auth_pwfile;
@@ -113,7 +111,8 @@ static const command_rec auth_cmds[] =
     {"AuthAuthoritative", ap_set_flag_slot,
      (void *) XtOffsetOf(auth_config_rec, auth_authoritative),
      OR_AUTHCFG, FLAG,
-     "Set to 'no' to allow access control to be passed along to lower modules if the UserID is not known to this module"},
+     "Set to 'off' to allow access control to be passed along to "
+     "lower modules if the UserID is not known to this module"},
     {NULL}
 };
 
@@ -203,6 +202,7 @@ static int authenticate_basic_user(request_rec *r)
     conn_rec *c = r->connection;
     const char *sent_pw;
     char *real_pw;
+    char *invalid_pw;
     int res;
 
     if ((res = ap_get_basic_auth_pw(r, &sent_pw)))
@@ -219,10 +219,11 @@ static int authenticate_basic_user(request_rec *r)
 	ap_note_basic_auth_failure(r);
 	return AUTH_REQUIRED;
     }
-    /* anyone know where the prototype for crypt is? */
-    if (strcmp(real_pw, (char *) crypt(sent_pw, real_pw))) {
+    invalid_pw = ap_validate_password(sent_pw, real_pw);
+    if (invalid_pw != NULL) {
 	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-		    "user %s: password mismatch: %s", c->user, r->uri);
+		      "user %s: authentication failure for \"%s\": %s",
+		      c->user, r->uri, invalid_pw);
 	ap_note_basic_auth_failure(r);
 	return AUTH_REQUIRED;
     }
@@ -247,54 +248,167 @@ static int check_user_access(request_rec *r)
     /* BUG FIX: tadc, 11-Nov-1995.  If there is no "requires" directive, 
      * then any user will do.
      */
-    if (!reqs_arr)
+    if (reqs_arr == NULL) {
 	return (OK);
+    }
     reqs = (require_line *) reqs_arr->elts;
 
-    if (sec->auth_grpfile)
+    if (sec->auth_grpfile) {
 	grpstatus = groups_for_user(r->pool, user, sec->auth_grpfile);
-    else
+    }
+    else {
 	grpstatus = NULL;
+    }
 
     for (x = 0; x < reqs_arr->nelts; x++) {
 
-	if (!(reqs[x].method_mask & (1 << m)))
-	    continue;
+        if (! (reqs[x].method_mask & (1 << m))) {
+            continue;
+        }
 
 	method_restricted = 1;
 
 	t = reqs[x].requirement;
-	w = ap_getword(r->pool, &t, ' ');
-	if (!strcmp(w, "valid-user"))
+	w = ap_getword_white(r->pool, &t);
+	if (strcmp(w, "valid-user") == 0) {
 	    return OK;
-	if (!strcmp(w, "user")) {
-	    while (t[0]) {
+        }
+        /*
+         * If requested, allow access if the user is valid and the
+         * owner of the document.
+         */
+	if (strcmp(w, "file-owner") == 0) {
+#if defined(WIN32) || defined(NETWARE) || defined(OS2)
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, r,
+                          "'Require file-user' not supported "
+                          "on this platform, ignored");
+            continue;
+#else
+            struct passwd *pwent;
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                          "checking for 'owner' access for file '%s'",
+                          r->filename);
+            if (r->finfo.st_ino == 0) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "no stat info for '%s'", r->filename);
+                continue;
+            }
+            pwent = getpwuid(r->finfo.st_uid);
+            if (pwent == NULL) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "no username for UID %d (owner of '%s')",
+                              r->finfo.st_uid, r->filename);
+            }
+            else {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "checking authenticated user '%s' "
+                              "against owner '%s' of '%s'",
+                              user, pwent->pw_name, r->filename);
+                if (strcmp(user, pwent->pw_name) == 0) {
+                    return OK;
+                }
+                else {
+                    continue;
+                }
+            }
+#endif
+        }
+	if (strcmp(w, "file-group") == 0) {
+#if defined(WIN32) || defined(NETWARE) || defined(OS2)
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, r,
+                          "'Require file-group' not supported "
+                          "on this platform, ignored");
+            continue;
+#else
+            struct group *grent;
+            if (sec->auth_grpfile == NULL) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, r,
+                              "no AuthGroupFile, so 'file-group' "
+                              "requirement cannot succeed for file '%s'",
+                              r->filename);
+                continue;
+            }
+            if (grpstatus == NULL) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, r,
+                              "authenticated user '%s' not a member of "
+                              "any groups, so 'file-group' requirement "
+                              "cannot succeed for file '%s'",
+                              user, r->filename);
+                continue;
+            }
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                          "checking for 'group' access for file '%s'",
+                          r->filename);
+            if (r->finfo.st_ino == 0) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "no stat info for '%s'", r->filename);
+                continue;
+            }
+            grent = getgrgid(r->finfo.st_gid);
+            if (grent == NULL) {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "no group name for GID %d (owner of '%s')",
+                              r->finfo.st_gid, r->filename);
+            }
+            else {
+                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
+                              "checking groups of authenticated user '%s' "
+                              "against owner group '%s' of '%s'",
+                              user, grent->gr_name, r->filename);
+                if (ap_table_get(grpstatus, grent->gr_name) != NULL) {
+                    return OK;
+                }
+                else {
+                    continue;
+                }
+            }
+#endif
+        }
+	if (strcmp(w, "user") == 0) {
+	    while (t[0] != '\0') {
 		w = ap_getword_conf(r->pool, &t);
-		if (!strcmp(user, w))
+		if (strcmp(user, w) == 0) {
 		    return OK;
+                }
 	    }
 	}
-	else if (!strcmp(w, "group")) {
-	    if (!grpstatus)
+	else if (strcmp(w, "group") == 0) {
+	    if (grpstatus == NULL) {
 		return DECLINED;	/* DBM group?  Something else? */
+            }
 
 	    while (t[0]) {
 		w = ap_getword_conf(r->pool, &t);
-		if (ap_table_get(grpstatus, w))
+		if (ap_table_get(grpstatus, w)) {
 		    return OK;
+                }
 	    }
+	}
+        else if (sec->auth_authoritative) {
+	    /* if we aren't authoritative, any require directive could be
+	     * valid even if we don't grok it.  However, if we are 
+	     * authoritative, we can warn the user they did something wrong.
+	     * That something could be a missing "AuthAuthoritative off", but
+	     * more likely is a typo in the require directive.
+	     */
+	    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
+                          "access to %s failed, "
+                          "reason: unknown require directive:"
+                          "\"%s\"", r->uri, reqs[x].requirement);
 	}
     }
 
-    if (!method_restricted)
+    if (! method_restricted) {
 	return OK;
+    }
 
-    if (!(sec->auth_authoritative))
+    if (! sec->auth_authoritative) {
 	return DECLINED;
+    }
 
     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, r,
-	"access to %s failed, reason: user %s not allowed access",
-	r->uri, user);
+                  "access to %s failed, reason: user %s not allowed access",
+                  r->uri, user);
 	
     ap_note_basic_auth_failure(r);
     return AUTH_REQUIRED;

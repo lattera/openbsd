@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -210,8 +211,19 @@ static int log_script(request_rec *r, cgi_server_conf * conf, int ret,
 	/* Soak up script output */
 	while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_in) > 0)
 	    continue;
+#if defined(WIN32) || defined(NETWARE)
+        /* Soak up stderr and redirect it to the error log.
+         * Script output to stderr is already directed to the error log
+         * on Unix, thanks to the magic of fork().
+         */
+        while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, r, 
+                          "%s", argsbuffer);            
+        }
+#else
 	while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0)
 	    continue;
+#endif
 	return ret;
     }
 
@@ -228,7 +240,7 @@ static int log_script(request_rec *r, cgi_server_conf * conf, int ret,
 	fprintf(f, "%s: %s\n", hdrs[i].key, hdrs[i].val);
     }
     if ((r->method_number == M_POST || r->method_number == M_PUT)
-	&& *dbuf) {
+	&& dbuf && *dbuf) {
 	fprintf(f, "\n%s\n", dbuf);
     }
 
@@ -275,6 +287,9 @@ static int log_script(request_rec *r, cgi_server_conf * conf, int ret,
 
 
 struct cgi_child_stuff {
+#ifdef TPF
+    TPF_FORK_CHILD t;
+#endif
     request_rec *r;
     int nph;
     int debug;
@@ -325,10 +340,13 @@ static int cgi_child(void *child_stuff, child_info *pinfo)
      * NB only ISINDEX scripts get decoded arguments.
      */
 
+#ifdef TPF
+    return (0);
+#else
     ap_cleanup_for_exec();
 
     child_pid = ap_call_exec(r, pinfo, argv0, env, 0);
-#ifdef WIN32
+#if defined(WIN32) || defined(OS2)
     return (child_pid);
 #else
 
@@ -346,6 +364,7 @@ static int cgi_child(void *child_stuff, child_info *pinfo)
     /* NOT REACHED */
     return (0);
 #endif
+#endif  /* TPF */
 }
 
 static int cgi_handler(request_rec *r)
@@ -386,12 +405,15 @@ static int cgi_handler(request_rec *r)
     /* Allow for cgi files without the .EXE extension on them under OS/2 */
     if (r->finfo.st_mode == 0) {
 	struct stat statbuf;
+	char *newfile;
 
-	r->filename = ap_pstrcat(r->pool, r->filename, ".EXE", NULL);
+	newfile = ap_pstrcat(r->pool, r->filename, ".EXE", NULL);
 
-	if ((stat(r->filename, &statbuf) != 0) || (!S_ISREG(statbuf.st_mode))) {
+	if ((stat(newfile, &statbuf) != 0) || (!S_ISREG(statbuf.st_mode))) {
 	    return log_scripterror(r, conf, NOT_FOUND, 0,
 				   "script not found or unable to stat");
+	} else {
+	    r->filename = newfile;
 	}
     }
 #else
@@ -416,11 +438,20 @@ static int cgi_handler(request_rec *r)
     cld.r = r;
     cld.nph = nph;
     cld.debug = conf->logname ? 1 : 0;
+#ifdef TPF
+    cld.t.filename = r->filename;
+    cld.t.subprocess_env = r->subprocess_env;
+    cld.t.prog_type = FORK_FILE;
+#endif   /* TPF */
 
 #ifdef CHARSET_EBCDIC
-    /* XXX:@@@ Is the generated/included output ALWAYS in text/ebcdic format? */
-    /* Or must we check the Content-Type first? */
-    ap_bsetflag(r->connection->client, B_EBCDIC2ASCII, 1);
+    /* The included MIME headers must ALWAYS be in text/ebcdic format.
+     * Only after reading the MIME headers, we check the Content-Type
+     * and switch to the necessary conversion mode.
+     * Until then (and in case an nph- script was called), use the
+     * configured default conversion:
+     */
+    ap_bsetflag(r->connection->client, B_EBCDIC2ASCII, r->ebcdic.conv_out);
 #endif /*CHARSET_EBCDIC*/
 
     /*
@@ -433,21 +464,14 @@ static int cgi_handler(request_rec *r)
 			 &script_out, &script_in, &script_err)) {
 	ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
 		    "couldn't spawn child process: %s", r->filename);
-	ap_table_setn(r->notes, "error-notes", "Couldn't spawn child process");
 	return HTTP_INTERNAL_SERVER_ERROR;
     }
 
     /* Transfer any put/post args, CERN style...
-     * Note that if a buggy script fails to read everything we throw
-     * at it, or a buggy client sends too much, we get a SIGPIPE, so
-     * we have to ignore SIGPIPE while doing this.  CERN does the same
-     * (and in fact, they pretty nearly guarantee themselves a SIGPIPE
-     * on every invocation by chasing the real client data with a
-     * spurious newline).
+     * Note that we already ignore SIGPIPE in the core server.
      */
 
     if (ap_should_client_block(r)) {
-	void (*handler) (int);
 	int dbsize, len_read;
 
 	if (conf->logname) {
@@ -456,9 +480,6 @@ static int cgi_handler(request_rec *r)
 	}
 
 	ap_hard_timeout("copy script args", r);
-#ifdef SIGPIPE
-	handler = signal(SIGPIPE, SIG_IGN);
-#endif
 
 	while ((len_read =
 		ap_get_client_block(r, argsbuffer, HUGE_STRING_LEN)) > 0) {
@@ -483,7 +504,6 @@ static int cgi_handler(request_rec *r)
 	}
 
 	ap_bflush(script_out);
-	signal(SIGPIPE, handler);
 
 	ap_kill_timeout(r);
     }
@@ -500,11 +520,6 @@ static int cgi_handler(request_rec *r)
 	    return log_script(r, conf, ret, dbuf, sbuf, script_in, script_err);
 	}
 
-#ifdef CHARSET_EBCDIC
-        /* Now check the Content-Type to decide if conversion is needed */
-        ap_checkconv(r);
-#endif /*CHARSET_EBCDIC*/
-
 	location = ap_table_get(r->headers_out, "Location");
 
 	if (location && location[0] == '/' && r->status == 200) {
@@ -514,9 +529,20 @@ static int cgi_handler(request_rec *r)
 	    while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_in) > 0) {
 		continue;
 	    }
+#if defined(WIN32) || defined(NETWARE)
+            /* Soak up stderr and redirect it to the error log.
+             * Script output to stderr is already directed to the error log
+             * on Unix, thanks to the magic of fork().
+             */
+            while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0) {
+                ap_log_rerror(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, r, 
+                              "%s", argsbuffer);            
+            }
+#else
 	    while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0) {
-		continue;
+	        continue;
 	    }
+#endif
 	    ap_kill_timeout(r);
 
 
@@ -549,9 +575,19 @@ static int cgi_handler(request_rec *r)
 	ap_bclose(script_in);
 
 	ap_soft_timeout("soaking script stderr", r);
+#if defined(WIN32) || defined(NETWARE)
+        /* Script output to stderr is already directed to the error log
+         * on Unix, thanks to the magic of fork().
+         */
+        while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, r, 
+                          "%s", argsbuffer);            
+        }
+#else
 	while (ap_bgets(argsbuffer, HUGE_STRING_LEN, script_err) > 0) {
 	    continue;
 	}
+#endif
 	ap_kill_timeout(r);
 	ap_bclose(script_err);
     }

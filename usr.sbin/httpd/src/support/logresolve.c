@@ -1,7 +1,7 @@
 /*
  * logresolve 1.1
  *
- * Tom Rathborne - tomr@uunet.ca - http://www.uunet.ca/~tomr/
+ * Tom Rathborne - tomr@aceldama.com - http://www.aceldama.com/~tomr/
  * UUNET Canada, April 16, 1995
  *
  * Rewritten by David Robinson. (drtr@ast.cam.ac.uk)
@@ -44,9 +44,15 @@
 
 #include <ctype.h>
 
-#ifndef MPE
+#if !defined(MPE) && !defined(WIN32)
+#ifndef BEOS
 #include <arpa/inet.h>
-#endif
+#else
+/* BeOS lacks the necessary files until we get the new networking */
+#include <netinet/in.h>
+#define NO_ADDRESS 4
+#endif /* BEOS */
+#endif /* !MPE && !WIN32*/
 
 static void cgethost(struct in_addr ipnum, char *string, int check);
 static int getline(char *s, int n);
@@ -95,11 +101,11 @@ struct nsrec {
  * statistics - obvious
  */
 
-#ifndef h_errno
+#if !defined(h_errno) && !defined(CYGWIN)
 extern int h_errno; /* some machines don't have this in their headers */
 #endif
 
-/* largeste value for h_errno */
+/* largest value for h_errno */
 #define MAX_ERR (NO_ADDRESS)
 #define UNKNOWN_ERR (MAX_ERR+1)
 #define NO_REVERSE  (MAX_ERR+2)
@@ -274,6 +280,11 @@ int main (int argc, char *argv[])
     char *bar, hoststring[MAXDNAME + 1], line[MAXLINE], *statfile;
     int i, check;
 
+#ifdef WIN32
+    WSADATA wsaData;
+    WSAStartup(0x101, &wsaData);
+#endif
+
     check = 0;
     statfile = NULL;
     for (i = 1; i < argc; i++) {
@@ -303,7 +314,7 @@ int main (int argc, char *argv[])
 	if (line[0] == '\0')
 	    continue;
 	entries++;
-	if (!isdigit(line[0])) {	/* short cut */
+	if (!isdigit((int)line[0])) {	/* short cut */
 	    puts(line);
 	    withname++;
 	    continue;
@@ -328,6 +339,10 @@ int main (int argc, char *argv[])
 	else
 	    puts(hoststring);
     }
+
+#ifdef WIN32
+     WSACleanup();
+#endif
 
     if (statfile != NULL) {
 	FILE *fp;

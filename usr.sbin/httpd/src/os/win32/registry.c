@@ -1,3 +1,62 @@
+/* ====================================================================
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
+ *
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
+ *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
+ */
+
+#ifdef WIN32
 /*
  * Functions to handle interacting with the Win32 registry
  */
@@ -15,22 +74,38 @@
  * release to a development or beta version.
  */
 
+/* To allow for multiple services, store the configuration file's full path
+ * under each service entry:
+ *
+ * HKLM\System\CurrentControlSet\Services\[service name]\Parameters\ConfPath
+ *
+ * The default configuration path (for console apache) is still stored:
+ * 
+ * HKLM\Software\[Vendor]\[Software]\[Version]\ServerRoot
+ */
+
 #include <windows.h>
 #include <stdio.h>
 
 #include "httpd.h"
 #include "http_log.h"
+#include "service.h"
 
 /* Define where the Apache values are stored in the registry. In general
  * VERSION will be the same across all beta releases for a particular
  * major release, but will change when the final release is made.
  */
 
-#define VENDOR   "Apache Group"
-#define SOFTWARE "Apache"
-#define VERSION  "1.3.2"
+/* Define where the Apache values are stored in the registry. 
+ *
+ * If you are looking here to roll the tarball, you didn't need to visit.
+ * registry.c now picks up the version from include/httpd.h
+ */
 
-#define REGKEY "SOFTWARE\\" VENDOR "\\" SOFTWARE "\\" VERSION
+#define REGKEY "SOFTWARE\\" SERVER_BASEVENDOR "\\" SERVER_BASEPRODUCT "\\" SERVER_BASEREVISION
+
+#define SERVICEKEYPRE  "System\\CurrentControlSet\\Services\\"
+#define SERVICEKEYPOST "\\Parameters"
 
 /*
  * The Windows API registry key functions don't set the last error
@@ -79,7 +154,7 @@
  * message will be logged at priority "warning".
  */
 
-static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeBuffer, char **ppValue)
+static int ap_registry_get_key_int(pool *p, char *key, char *name, char *pBuffer, int nSizeBuffer, char **ppValue)
 {
     long rv;
     HKEY hKey;
@@ -88,19 +163,18 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
     int retval;
 
     rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		      REGKEY,
+                      key,
 		      0,
 		      KEY_READ,
 		      &hKey);
 
     if (rv == ERROR_FILE_NOT_FOUND) {
 	ap_log_error(APLOG_MARK,APLOG_WARNING|APLOG_NOERRNO,NULL,
-	    "Registry does not contain key " REGKEY);
+        "Registry does not contain key %s",key);
 	return -1;
     }
     if (rv != ERROR_SUCCESS) {
-	do_error(rv, "RegOpenKeyEx HKLM\\" REGKEY,
-		 NULL);
+        do_error(rv, "RegOpenKeyEx HKLM\\%s",key);
 	return -4;
     }
 
@@ -110,7 +184,7 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
 	 * buffer if the return value is ERROR_SUCCESS.
 	 */
 	rv = RegQueryValueEx(hKey, 
-			     key,		/* key name */
+			     name,		/* key name */
 			     NULL,		/* reserved */
 			     NULL,		/* type */
 			     NULL,		/* for value */
@@ -139,7 +213,7 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
     }
 
     rv = RegQueryValueEx(hKey, 
-			 key,		/* key name */
+			 name,		/* key name */
 			 NULL,		/* reserved */
 			 NULL,		/* type */
 			 pValue,		/* for value */
@@ -149,7 +223,7 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
 
     if (rv == ERROR_FILE_NOT_FOUND) {
 	ap_log_error(APLOG_MARK,APLOG_WARNING|APLOG_NOERRNO,NULL,
-	    "Registry does not contain value " REGKEY "\\%s", key);
+        "Registry does not contain value %s\\%s", key, name);
 	retval = -1;
     }
     else if (rv == ERROR_MORE_DATA) {
@@ -169,7 +243,7 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
 
     rv = RegCloseKey(hKey);
     if (rv != ERROR_SUCCESS) {
-	do_error(rv, "RegCloseKey HKLM\\" REGKEY, NULL);
+    do_error(rv, "RegCloseKey HKLM\\%s", key);
 	if (retval == 0) {
 	    /* Keep error status from RegQueryValueEx, if any */
 	    retval = -4;  
@@ -187,21 +261,65 @@ static int ap_registry_get_key_int(pool *p, char *key, char *pBuffer, int nSizeB
  * an error getting the key.
  */
 
-int ap_registry_get_server_root(pool *p, char *dir, int size)
+API_EXPORT(int) ap_registry_get_server_root(pool *p, char *dir, int size)
 {
     int rv;
 
-    rv = ap_registry_get_key_int(p, "ServerRoot", dir, size, NULL);
+    rv = ap_registry_get_key_int(p, REGKEY, "ServerRoot", dir, size, NULL);
     if (rv < 0) {
 	dir[0] = '\0';
     }
 
-    return (rv < -1) ? -1 : 0;
+    return (rv < 0) ? -1 : 0;
+}
+
+API_EXPORT(char *) ap_get_service_key(char *display_name)
+{
+    char *key, *service_name;
+    
+    if (display_name == NULL)
+        return strdup("");
+
+    service_name = get_service_name(display_name);
+    
+    key = malloc(strlen(SERVICEKEYPRE) +
+                 strlen(service_name) +
+                 strlen(SERVICEKEYPOST) + 1);
+
+    sprintf(key,"%s%s%s", SERVICEKEYPRE, service_name, SERVICEKEYPOST);
+
+    return(key);
 }
 
 /**********************************************************************
  * The rest of this file deals with storing keys or values in the registry
  */
+
+char *ap_registry_parse_key(int index, char *key)
+{
+    char *head = key, *skey;
+    int i;
+    
+    if(!key)
+        return(NULL);
+
+    for(i = 0; i <= index; i++)
+    {
+        if(key && key[0] == '\\')
+            key++;
+        if (!key)
+            return(NULL);
+        head = key;
+        key = strchr(head, '\\');
+    }
+
+    if(!key)
+        return(strdup(head));
+    *key = '\0';
+    skey = strdup(head);
+    *key = '\\';
+    return(skey);
+}
 
 /*
  * ap_registry_create_apache_key() creates the Apache registry key
@@ -215,31 +333,25 @@ int ap_registry_get_server_root(pool *p, char *dir, int size)
  * already have been logged.
  */
 
-static int ap_registry_create_apache_key(void)
+static int ap_registry_create_key(char *longkey)
 {
-    static char *keys[] = 
-    { "SOFTWARE",
-	VENDOR,
-	SOFTWARE,
-	VERSION,
-	NULL
-    };
     int index;
     HKEY hKey;
     HKEY hKeyNext;
     int retval;
     int rv;
+    char *key;
 
     hKey = HKEY_LOCAL_MACHINE;
     index = 0;
     retval = 0;
 
     /* Walk the tree, creating at each stage if necessary */
-    while (keys[index]) {
+    while (key=ap_registry_parse_key(index,longkey)) {
 	int result;
 
 	rv = RegCreateKeyEx(hKey,
-			    keys[index], /* subkey */
+			    key,         /* subkey */
 			    0,	         /* reserved */
 			    NULL,        /* class */
 			    REG_OPTION_NON_VOLATILE,
@@ -248,7 +360,7 @@ static int ap_registry_create_apache_key(void)
 			    &hKeyNext,
 			    &result);
 	if (rv != ERROR_SUCCESS) {
-	    do_error(rv, "RegCreateKeyEx(%s)", keys[index]);
+	    do_error(rv, "RegCreateKeyEx(%s)", longkey);
 	    retval = -4;
 	}
 
@@ -266,11 +378,12 @@ static int ap_registry_create_apache_key(void)
 	    break;
 	}
 
+    free(key);
 	hKey = hKeyNext;
 	index++;
     }
 
-    if (keys[index] == NULL) {
+    if (!key) {
 	/* Close the final key we opened, if we walked the entire
 	 * tree
 	 */
@@ -283,6 +396,8 @@ static int ap_registry_create_apache_key(void)
 	    }
 	}
     }
+    else
+        free(key);
 
     return retval;
 }
@@ -302,14 +417,14 @@ static int ap_registry_create_apache_key(void)
  * logged via aplog_error().
  */
 
-static int ap_registry_store_key_int(char *key, DWORD type, void *value, int value_size)
+static int ap_registry_store_key_int(char *key, char *name, DWORD type, void *value, int value_size)
 {
     long rv;
     HKEY hKey;
     int retval;
 
     rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		      REGKEY,
+		      key,
 		      0,
 	 	      KEY_WRITE,
 		      &hKey);
@@ -317,7 +432,7 @@ static int ap_registry_store_key_int(char *key, DWORD type, void *value, int val
     if (rv == ERROR_FILE_NOT_FOUND) {
 	/* Key could not be opened -- try to create it 
 	 */
-	if (ap_registry_create_apache_key() < 0) {
+        if (ap_registry_create_key(key) < 0) {
 	    /* Creation failed (error already reported) */
 	    return -4;
 	}
@@ -325,28 +440,26 @@ static int ap_registry_store_key_int(char *key, DWORD type, void *value, int val
 	/* Now it has been created we should be able to open it
 	 */
 	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		  REGKEY,
+		  key,
 		  0,
 	 	  KEY_WRITE,
 		  &hKey);
 
 	if (rv == ERROR_FILE_NOT_FOUND) {
-	    ap_log_error(APLOG_MARK,APLOG_WARNING|APLOG_NOERRNO,NULL,
-		"Registry does not contain key " REGKEY " after creation");
-
+            ap_log_error(APLOG_MARK,APLOG_WARNING|APLOG_NOERRNO,NULL,
+                         "Registry does not contain key %s after creation",key);
 	    return -1;
 	}
     }
 
     if (rv != ERROR_SUCCESS) {
-	do_error(rv, "RegOpenKeyEx HKLM\\" REGKEY,
-		 NULL);
-	return -4;
+        do_error(rv, "RegOpenKeyEx HKLM\\%s", key);
+        return -4;
     }
 
     /* Now set the value and data */
     rv = RegSetValueEx(hKey, 
-		       key,	/* value key name */
+                       name,	/* value key name */
 		       0,	/* reserved */
 		       type,	/* type */
 		       value,	/* value data */
@@ -369,11 +482,11 @@ static int ap_registry_store_key_int(char *key, DWORD type, void *value, int val
      */
     rv = RegCloseKey(hKey);
     if (rv != ERROR_SUCCESS) {
-	do_error(rv, "RegCloseKey HKLM\\" REGKEY, NULL);
-	if (retval == 0) {
-	    /* Keep error status from RegQueryValueEx, if any */
-	    retval = -4;  
-	}
+        do_error(rv, "RegCloseKey HKLM\\%s", key);
+        if (retval == 0) {
+            /* Keep error status from RegQueryValueEx, if any */
+            retval = -4;  
+        }
     }
 
     return retval;
@@ -389,7 +502,109 @@ int ap_registry_set_server_root(char *dir)
 {
     int rv;
 
-    rv = ap_registry_store_key_int("ServerRoot", REG_SZ, dir, strlen(dir)+1);
+    rv = ap_registry_store_key_int(REGKEY, "ServerRoot", REG_SZ, dir, strlen(dir)+1);
 
     return rv < 0 ? -1 : 0;
 }
+
+/* Creates and fills array pointed to by parray with the requested registry string
+ *
+ * Returns 0 on success, machine specific error code on error 
+ */
+int ap_registry_get_array(pool *p, char *key, char *name, 
+                          array_header **pparray)
+{
+    char *pValue;
+    char *tmp;
+    char **newelem;
+    int ret;
+    int nSize = 0;
+
+    ret = ap_registry_get_key_int(p, key, name, NULL, 0, &pValue);
+    if (ret < 0)
+        return ret;
+
+    tmp = pValue;
+    if ((ret > 2) && (tmp[0] || tmp[1]))
+        nSize = 1;    /* Element Count */
+    while ((tmp < pValue + ret) && (tmp[0] || tmp[1]))
+    {
+        if (!tmp[0])
+            ++nSize;
+        ++tmp;
+    }
+
+    *pparray = ap_make_array(p, nSize, sizeof(char *));
+    tmp = pValue;
+    if (tmp[0] || tmp[1]) {
+        newelem = (char **) ap_push_array(*pparray);
+        *newelem = tmp;
+    }
+    while ((tmp < pValue + ret) && (tmp[0] || tmp[1]))
+    {
+        if (!tmp[0]) {
+            newelem = (char **) ap_push_array(*pparray);
+            *newelem = tmp + 1;
+        }
+        ++tmp;
+    }
+    
+    return nSize;
+}
+
+int ap_registry_get_service_args(pool *p, int *argc, char ***argv, char *display_name)
+{
+    int ret;
+    array_header *parray;
+    char *key = ap_get_service_key(display_name);
+    ret = ap_registry_get_array(p, key, "ConfigArgs", &parray);
+    if (ret > 0) {
+        *argc = parray->nelts;
+        *argv = (char**) parray->elts;
+    }
+    else {
+        *argc = 0;
+        *argv = NULL;
+    }
+    free(key);
+    return ret;
+}
+
+int ap_registry_store_array(pool *p, char *key, char *name,
+                            int nelts, char **elts)
+{
+    int  bufsize, i;
+    char *buf, *tmp;
+
+    bufsize = 1; /* For trailing second null */
+    for (i = 0; i < nelts; ++i)
+    {
+        bufsize += strlen(elts[i]) + 1;
+    }
+    if (!nelts) 
+        ++bufsize;
+
+    buf = ap_palloc(p, bufsize);
+    tmp = buf;
+    for (i = 0; i < nelts; ++i)
+    {
+        strcpy(tmp, elts[i]);
+        tmp += strlen(elts[i]) + 1;
+    }
+    if (!nelts) 
+        *(tmp++) = '\0';
+    *(tmp++) = '\0'; /* Trailing second null */
+
+    return ap_registry_store_key_int(key, name, REG_MULTI_SZ, buf, tmp - buf);
+}
+
+int ap_registry_set_service_args(pool *p, int argc, char **argv, char *display_name)
+{
+    int ret;
+    char *key = ap_get_service_key(display_name);
+    ret = ap_registry_store_array(p, key, "ConfigArgs", argc, argv);
+    free(key);
+    return ret;
+}
+
+#endif /* WIN32 */

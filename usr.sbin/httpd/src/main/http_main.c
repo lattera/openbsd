@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -116,10 +117,9 @@ int ap_main(int argc, char *argv[]);
 #endif
 #ifdef WIN32
 #include "../os/win32/getopt.h"
-#elif !defined(BEOS)
+#elif !defined(BEOS) && !defined(TPF) && !defined(NETWARE) && !defined(OS390) && !defined(CYGWIN)
 #include <netinet/tcp.h>
 #endif
-
 #ifdef HAVE_BSTRING_H
 #include <bstring.h>		/* for IRIX, FD_SET calls bzero() */
 #endif
@@ -166,8 +166,8 @@ int ap_main(int argc, char *argv[]);
  * main/util_script.c would not be linked into a minimal httpd.
  * And the extra prototype is to make gcc -Wmissing-prototypes quiet.
  */
-extern void ap_force_library_loading(void);
-void ap_force_library_loading(void) {
+API_EXPORT(void) ap_force_library_loading(void);
+API_EXPORT(void) ap_force_library_loading(void) {
     ap_add_cgi_vars(NULL);
 }
 
@@ -180,6 +180,10 @@ void ap_force_library_loading(void) {
 #ifdef WIN32
 #include "../os/win32/service.h"
 #include "../os/win32/registry.h"
+#define DEFAULTSERVICENAME "Apache"
+#define PATHSEPARATOR '\\'
+#else
+#define PATHSEPARATOR '/'
 #endif
 
 
@@ -224,30 +228,56 @@ void *ap_dummy_mutex = &ap_dummy_mutex;
  * Actual definitions of config globals... here because this is
  * for the most part the only code that acts on 'em.  (Hmmm... mod_main.c?)
  */
-
-int ap_standalone;
-uid_t ap_user_id;
-char *ap_user_name;
-gid_t ap_group_id;
+#ifdef NETWARE
+BOOL ap_main_finished = FALSE;
+unsigned int ap_thread_stack_size = 65536;
+#endif
+int ap_thread_count = 0;
+API_VAR_EXPORT int ap_standalone=0;
+API_VAR_EXPORT int ap_configtestonly=0;
+int ap_docrootcheck=1;
+API_VAR_EXPORT uid_t ap_user_id=0;
+API_VAR_EXPORT char *ap_user_name=NULL;
+API_VAR_EXPORT gid_t ap_group_id=0;
 #ifdef MULTIPLE_GROUPS
 gid_t group_id_list[NGROUPS_MAX];
 #endif
-int ap_max_requests_per_child;
-int ap_threads_per_child;
-int ap_excess_requests_per_child;
-char *ap_pid_fname;
-char *ap_scoreboard_fname;
-char *ap_lock_fname;
-char *ap_server_argv0;
-struct in_addr ap_bind_address;
-int ap_daemons_to_start;
-int ap_daemons_min_free;
-int ap_daemons_max_free;
-int ap_daemons_limit;
-time_t ap_restart_time;
-int ap_suexec_enabled = 0;
-int ap_listenbacklog;
-int ap_dump_settings;
+API_VAR_EXPORT int ap_max_requests_per_child=0;
+API_VAR_EXPORT int ap_threads_per_child=0;
+API_VAR_EXPORT int ap_excess_requests_per_child=0;
+API_VAR_EXPORT char *ap_pid_fname=NULL;
+API_VAR_EXPORT char *ap_scoreboard_fname=NULL;
+API_VAR_EXPORT char *ap_lock_fname=NULL;
+API_VAR_EXPORT char *ap_server_argv0=NULL;
+API_VAR_EXPORT struct in_addr ap_bind_address={0};
+API_VAR_EXPORT int ap_daemons_to_start=0;
+API_VAR_EXPORT int ap_daemons_min_free=0;
+API_VAR_EXPORT int ap_daemons_max_free=0;
+API_VAR_EXPORT int ap_daemons_limit=0;
+API_VAR_EXPORT time_t ap_restart_time=0;
+API_VAR_EXPORT int ap_suexec_enabled = 0;
+API_VAR_EXPORT int ap_listenbacklog=0;
+
+struct accept_mutex_methods_s {
+    void (*child_init)(pool *p);
+    void (*init)(pool *p);
+    void (*on)(void);
+    void (*off)(void);
+    char *name;
+};
+typedef struct accept_mutex_methods_s accept_mutex_methods_s;
+accept_mutex_methods_s *amutex;
+
+#ifdef SO_ACCEPTFILTER
+int ap_acceptfilter =
+#ifdef AP_ACCEPTFILTER_OFF
+	0;
+#else
+	1;
+#endif
+#endif
+
+int ap_dump_settings = 0;
 API_VAR_EXPORT int ap_extended_status = 0;
 
 /*
@@ -274,25 +304,29 @@ static int max_daemons_limit = -1;
  *
  * Note that listeners != NULL is ensured by read_config().
  */
-listen_rec *ap_listeners;
+listen_rec *ap_listeners=NULL;
 static listen_rec *head_listener;
 
-API_VAR_EXPORT char ap_server_root[MAX_STRING_LEN];
-char ap_server_confname[MAX_STRING_LEN];
-char ap_coredump_dir[MAX_STRING_LEN];
+API_VAR_EXPORT char ap_server_root[MAX_STRING_LEN]="";
+API_VAR_EXPORT char ap_server_confname[MAX_STRING_LEN]="";
+API_VAR_EXPORT char ap_coredump_dir[MAX_STRING_LEN]="";
 
-array_header *ap_server_pre_read_config;
-array_header *ap_server_post_read_config;
-array_header *ap_server_config_defines;
+API_VAR_EXPORT array_header *ap_server_pre_read_config=NULL;
+API_VAR_EXPORT array_header *ap_server_post_read_config=NULL;
+API_VAR_EXPORT array_header *ap_server_config_defines=NULL;
 
 /* *Non*-shared http_main globals... */
 
 static server_rec *server_conf;
+#ifndef NETWARE
 static JMP_BUF APACHE_TLS jmpbuffer;
+#endif
 static int sd;
 static fd_set listenfds;
 static int listenmaxfd;
+#ifndef NETWARE
 static pid_t pgrp;
+#endif
 
 /* one_process --- debugging mode variable; can be set from the command line
  * with the -X flag.  If set, this gets you the child_main loop running
@@ -307,10 +341,14 @@ static pid_t pgrp;
 
 static int one_process = 0;
 
+static int do_detach = 1;
+
 /* set if timeouts are to be handled by the children and not by the parent.
  * i.e. child_timeouts = !standalone || one_process.
  */
+#ifndef NETWARE
 static int child_timeouts;
+#endif
 
 #ifdef DEBUG_SIGSTOP
 int raise_sigstop_flags;
@@ -329,15 +367,24 @@ struct other_child_rec {
 static other_child_rec *other_children;
 #endif
 
+static pool *pglobal;		/* Global pool */
 static pool *pconf;		/* Pool for config stuff */
+static pool *plog;		/* Pool for error-logging files */
 static pool *ptrans;		/* Pool for per-transaction stuff */
 static pool *pchild;		/* Pool for httpd child stuff */
 static pool *pcommands;	/* Pool for -C and -c switches */
 
+#ifndef NETWARE
 static int APACHE_TLS my_pid;	/* it seems silly to call getpid all the time */
+#endif
 #ifndef MULTITHREAD
 static int my_child_num;
 #endif
+
+#ifdef TPF
+int tpf_child = 0;
+char tpf_server_name[INETD_SERVNAME_LENGTH+1];
+#endif /* TPF */
 
 scoreboard *ap_scoreboard_image = NULL;
 
@@ -398,7 +445,10 @@ API_EXPORT(void) ap_add_version_component(const char *component)
  */
 static void ap_set_version(void)
 {
-    if (ap_server_tokens == SrvTk_MIN) {
+    if (ap_server_tokens == SrvTk_PRODUCT_ONLY) {
+	ap_add_version_component(SERVER_PRODUCT);
+    }
+    else if (ap_server_tokens == SrvTk_MIN) {
 	ap_add_version_component(SERVER_BASEVERSION);
     }
     else {
@@ -413,7 +463,9 @@ static void ap_set_version(void)
     }
 }
 
+#ifndef NETWARE
 static APACHE_TLS int volatile exit_after_unblock = 0;
+#endif
 
 #ifdef GPROF
 /* 
@@ -463,7 +515,20 @@ static void clean_child_exit(int code)
     exit(code);
 }
 
-#if defined(USE_FCNTL_SERIALIZED_ACCEPT) || defined(USE_FLOCK_SERIALIZED_ACCEPT)
+/*
+ * Start of accept() mutex fluff:
+ *  Concept: Each method has it's own distinct set of mutex functions,
+ *   which it shoves in a nice struct for us. We then pick
+ *   which struct to use. We tell Apache which methods we
+ *   support via HAVE_FOO_SERIALIZED_ACCEPT. We can
+ *   specify the default via USE_FOO_SERIALIZED_ACCEPT
+ *   (this pre-1.3.21 builds which use that at the command-
+ *   line during builds work as expected). Without a set
+ *   method, we pick the 1st from the following order:
+ *   uslock, pthread, sysvsem, fcntl, flock, os2sem, tpfcore and none.
+ */
+
+#if defined(HAVE_FCNTL_SERIALIZED_ACCEPT) || defined(HAVE_FLOCK_SERIALIZED_ACCEPT)
 static void expand_lock_fname(pool *p)
 {
     /* XXXX possibly bogus cast */
@@ -472,15 +537,13 @@ static void expand_lock_fname(pool *p)
 }
 #endif
 
-#if defined (USE_USLOCK_SERIALIZED_ACCEPT)
-
+#if defined (HAVE_USLOCK_SERIALIZED_ACCEPT)
 #include <ulocks.h>
-
 static ulock_t uslock = NULL;
 
-#define accept_mutex_child_init(x)
+#define accept_mutex_child_init_uslock(x)
 
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_uslock(pool *p)
 {
     ptrdiff_t old;
     usptr_t *us;
@@ -511,7 +574,7 @@ static void accept_mutex_init(pool *p)
     }
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_uslock(void)
 {
     switch (ussetlock(uslock)) {
     case 1:
@@ -526,7 +589,7 @@ static void accept_mutex_on(void)
     }
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_uslock(void)
 {
     if (usunsetlock(uslock) == -1) {
 	perror("usunsetlock");
@@ -534,7 +597,16 @@ static void accept_mutex_off(void)
     }
 }
 
-#elif defined (USE_PTHREAD_SERIALIZED_ACCEPT)
+accept_mutex_methods_s accept_mutex_uslock_s = {
+    NULL,
+    accept_mutex_init_uslock,
+    accept_mutex_on_uslock,
+    accept_mutex_off_uslock,
+    "uslock"
+};
+#endif
+
+#if defined (HAVE_PTHREAD_SERIALIZED_ACCEPT)
 
 /* This code probably only works on Solaris ... but it works really fast
  * on Solaris.  Note that pthread mutexes are *NOT* released when a task
@@ -549,7 +621,7 @@ static int have_accept_mutex;
 static sigset_t accept_block_mask;
 static sigset_t accept_previous_mask;
 
-static void accept_mutex_child_cleanup(void *foo)
+static void accept_mutex_child_cleanup_pthread(void *foo)
 {
     if (accept_mutex != (void *)(caddr_t)-1
 	&& have_accept_mutex) {
@@ -557,12 +629,12 @@ static void accept_mutex_child_cleanup(void *foo)
     }
 }
 
-static void accept_mutex_child_init(pool *p)
+static void accept_mutex_child_init_pthread(pool *p)
 {
-    ap_register_cleanup(p, NULL, accept_mutex_child_cleanup, ap_null_cleanup);
+    ap_register_cleanup(p, NULL, accept_mutex_child_cleanup_pthread, ap_null_cleanup);
 }
 
-static void accept_mutex_cleanup(void *foo)
+static void accept_mutex_cleanup_pthread(void *foo)
 {
     if (accept_mutex != (void *)(caddr_t)-1
 	&& munmap((caddr_t) accept_mutex, sizeof(*accept_mutex))) {
@@ -571,7 +643,7 @@ static void accept_mutex_cleanup(void *foo)
     accept_mutex = (void *)(caddr_t)-1;
 }
 
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_pthread(pool *p)
 {
     pthread_mutexattr_t mattr;
     int fd;
@@ -584,7 +656,7 @@ static void accept_mutex_init(pool *p)
     accept_mutex = (pthread_mutex_t *) mmap((caddr_t) 0, sizeof(*accept_mutex),
 				 PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (accept_mutex == (void *) (caddr_t) - 1) {
-	perror("mmap");
+	perror("mmap /dev/zero");
 	exit(APEXIT_INIT);
     }
     close(fd);
@@ -592,11 +664,16 @@ static void accept_mutex_init(pool *p)
 	perror("pthread_mutexattr_init");
 	exit(APEXIT_INIT);
     }
+#if !defined(CYGWIN)
+    /* Cygwin has problems with this pthread call claiming that these 
+     * are "Invalid arguements", Stipe Tolj <tolj@wapme-systems.de>
+     */
     if ((errno = pthread_mutexattr_setpshared(&mattr,
 						PTHREAD_PROCESS_SHARED))) {
 	perror("pthread_mutexattr_setpshared");
 	exit(APEXIT_INIT);
     }
+#endif
     if ((errno = pthread_mutex_init(accept_mutex, &mattr))) {
 	perror("pthread_mutex_init");
 	exit(APEXIT_INIT);
@@ -605,10 +682,10 @@ static void accept_mutex_init(pool *p)
     sigdelset(&accept_block_mask, SIGHUP);
     sigdelset(&accept_block_mask, SIGTERM);
     sigdelset(&accept_block_mask, SIGUSR1);
-    ap_register_cleanup(p, NULL, accept_mutex_cleanup, ap_null_cleanup);
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_pthread, ap_null_cleanup);
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_pthread(void)
 {
     int err;
 
@@ -616,44 +693,52 @@ static void accept_mutex_on(void)
 	perror("sigprocmask(SIG_BLOCK)");
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
+    /* We need to block alarms here, since if we get killed *right* after 
+     * locking the mutex, have_accept_mutex will not be set, and our
+     * child cleanup will not work.
+     */
+    ap_block_alarms();
     if ((err = pthread_mutex_lock(accept_mutex))) {
 	errno = err;
 	perror("pthread_mutex_lock");
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
     have_accept_mutex = 1;
+    ap_unblock_alarms();
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_pthread(void)
 {
     int err;
 
+    /* Have to block alarms here, or else we might have a double-unlock, which
+     * is possible with pthread mutexes, since they are designed to be fast,
+     * and hence not necessarily make checks for ownership or multiple unlocks.
+     */
+    ap_block_alarms(); 
     if ((err = pthread_mutex_unlock(accept_mutex))) {
 	errno = err;
 	perror("pthread_mutex_unlock");
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
-    /* There is a slight race condition right here... if we were to die right
-     * now, we'd do another pthread_mutex_unlock.  Now, doing that would let
-     * another process into the mutex.  pthread mutexes are designed to be
-     * fast, as such they don't have protection for things like testing if the
-     * thread owning a mutex is actually unlocking it (or even any way of
-     * testing who owns the mutex).
-     *
-     * If we were to unset have_accept_mutex prior to releasing the mutex
-     * then the race could result in the server unable to serve hits.  Doing
-     * it this way means that the server can continue, but an additional
-     * child might be in the critical section ... at least it's still serving
-     * hits.
-     */
     have_accept_mutex = 0;
+    ap_unblock_alarms();
     if (sigprocmask(SIG_SETMASK, &accept_previous_mask, NULL)) {
 	perror("sigprocmask(SIG_SETMASK)");
 	clean_child_exit(1);
     }
 }
 
-#elif defined (USE_SYSVSEM_SERIALIZED_ACCEPT)
+accept_mutex_methods_s accept_mutex_pthread_s = {
+    accept_mutex_child_init_pthread,
+    accept_mutex_init_pthread,
+    accept_mutex_on_pthread,
+    accept_mutex_off_pthread,
+    "pthread"
+};
+#endif
+
+#if defined (HAVE_SYSVSEM_SERIALIZED_ACCEPT)
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -677,7 +762,7 @@ static struct sembuf op_off;
  * means we have to be sure to clean this up or else we'll leak
  * semaphores.
  */
-static void accept_mutex_cleanup(void *foo)
+static void accept_mutex_cleanup_sysvsem(void *foo)
 {
     union semun ick;
 
@@ -688,9 +773,9 @@ static void accept_mutex_cleanup(void *foo)
     semctl(sem_id, 0, IPC_RMID, ick);
 }
 
-#define accept_mutex_child_init(x)
+#define accept_mutex_child_init_sysvsem(x)
 
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_sysvsem(pool *p)
 {
     union semun ick;
     struct semid_ds buf;
@@ -719,7 +804,7 @@ static void accept_mutex_init(pool *p)
 	    exit(APEXIT_INIT);
 	}
     }
-    ap_register_cleanup(p, NULL, accept_mutex_cleanup, ap_null_cleanup);
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_sysvsem, ap_null_cleanup);
 
     /* pre-initialize these */
     op_on.sem_num = 0;
@@ -730,35 +815,48 @@ static void accept_mutex_init(pool *p)
     op_off.sem_flg = SEM_UNDO;
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_sysvsem(void)
 {
-    if (semop(sem_id, &op_on, 1) < 0) {
-	perror("accept_mutex_on");
-	clean_child_exit(APEXIT_CHILDFATAL);
+    while (semop(sem_id, &op_on, 1) < 0) {
+	if (errno != EINTR) {
+	    perror("accept_mutex_on");
+	    clean_child_exit(APEXIT_CHILDFATAL);
+	}
     }
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_sysvsem(void)
 {
-    if (semop(sem_id, &op_off, 1) < 0) {
-	perror("accept_mutex_off");
-	clean_child_exit(APEXIT_CHILDFATAL);
+    while (semop(sem_id, &op_off, 1) < 0) {
+	if (errno != EINTR) {
+	    perror("accept_mutex_off");
+	    clean_child_exit(APEXIT_CHILDFATAL);
+	}
     }
 }
 
-#elif defined(USE_FCNTL_SERIALIZED_ACCEPT)
+accept_mutex_methods_s accept_mutex_sysvsem_s = {
+    NULL,
+    accept_mutex_init_sysvsem,
+    accept_mutex_on_sysvsem,
+    accept_mutex_off_sysvsem,
+    "sysvsem"
+};
+#endif
+
+#if defined(HAVE_FCNTL_SERIALIZED_ACCEPT)
 static struct flock lock_it;
 static struct flock unlock_it;
 
 static int lock_fd = -1;
 
-#define accept_mutex_child_init(x)
+#define accept_mutex_child_init_fcntl(x)
 
 /*
  * Initialize mutex lock.
  * Must be safe to call this on a restart.
  */
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_fcntl(pool *p)
 {
 
     lock_it.l_whence = SEEK_SET;	/* from current point */
@@ -782,7 +880,7 @@ static void accept_mutex_init(pool *p)
     unlink(ap_lock_fname);
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_fcntl(void)
 {
     int ret;
 
@@ -799,7 +897,7 @@ static void accept_mutex_on(void)
     }
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_fcntl(void)
 {
     int ret;
 
@@ -815,11 +913,20 @@ static void accept_mutex_off(void)
     }
 }
 
-#elif defined(USE_FLOCK_SERIALIZED_ACCEPT)
+accept_mutex_methods_s accept_mutex_fcntl_s = {
+    NULL,
+    accept_mutex_init_fcntl,
+    accept_mutex_on_fcntl,
+    accept_mutex_off_fcntl,
+    "fcntl"
+};
+#endif
 
-static int lock_fd = -1;
+#if defined(HAVE_FLOCK_SERIALIZED_ACCEPT)
 
-static void accept_mutex_cleanup(void *foo)
+static int flock_fd = -1;
+
+static void accept_mutex_cleanup_flock(void *foo)
 {
     unlink(ap_lock_fname);
 }
@@ -828,11 +935,11 @@ static void accept_mutex_cleanup(void *foo)
  * Initialize mutex lock.
  * Done by each child at it's birth
  */
-static void accept_mutex_child_init(pool *p)
+static void accept_mutex_child_init_flock(pool *p)
 {
 
-    lock_fd = ap_popenf(p, ap_lock_fname, O_WRONLY, 0600);
-    if (lock_fd == -1) {
+    flock_fd = ap_popenf(p, ap_lock_fname, O_WRONLY, 0600);
+    if (flock_fd == -1) {
 	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
 		    "Child cannot open lock file: %s", ap_lock_fname);
 	clean_child_exit(APEXIT_CHILDINIT);
@@ -843,24 +950,24 @@ static void accept_mutex_child_init(pool *p)
  * Initialize mutex lock.
  * Must be safe to call this on a restart.
  */
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_flock(pool *p)
 {
     expand_lock_fname(p);
     unlink(ap_lock_fname);
-    lock_fd = ap_popenf(p, ap_lock_fname, O_CREAT | O_WRONLY | O_EXCL, 0600);
-    if (lock_fd == -1) {
+    flock_fd = ap_popenf(p, ap_lock_fname, O_CREAT | O_WRONLY | O_EXCL, 0600);
+    if (flock_fd == -1) {
 	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
 		    "Parent cannot open lock file: %s", ap_lock_fname);
 	exit(APEXIT_INIT);
     }
-    ap_register_cleanup(p, NULL, accept_mutex_cleanup, ap_null_cleanup);
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_flock, ap_null_cleanup);
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_flock(void)
 {
     int ret;
 
-    while ((ret = flock(lock_fd, LOCK_EX)) < 0 && errno == EINTR)
+    while ((ret = flock(flock_fd, LOCK_EX)) < 0 && errno == EINTR)
 	continue;
 
     if (ret < 0) {
@@ -870,20 +977,29 @@ static void accept_mutex_on(void)
     }
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_flock(void)
 {
-    if (flock(lock_fd, LOCK_UN) < 0) {
+    if (flock(flock_fd, LOCK_UN) < 0) {
 	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
 		    "flock: LOCK_UN: Error freeing accept lock. Exiting!");
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
 }
 
-#elif defined(USE_OS2SEM_SERIALIZED_ACCEPT)
+accept_mutex_methods_s accept_mutex_flock_s = {
+    accept_mutex_child_init_flock,
+    accept_mutex_init_flock,
+    accept_mutex_on_flock,
+    accept_mutex_off_flock,
+    "flock"
+};
+#endif
+
+#if defined(HAVE_OS2SEM_SERIALIZED_ACCEPT)
 
 static HMTX lock_sem = -1;
 
-static void accept_mutex_cleanup(void *foo)
+static void accept_mutex_cleanup_os2sem(void *foo)
 {
     DosReleaseMutexSem(lock_sem);
     DosCloseMutexSem(lock_sem);
@@ -893,14 +1009,16 @@ static void accept_mutex_cleanup(void *foo)
  * Initialize mutex lock.
  * Done by each child at it's birth
  */
-static void accept_mutex_child_init(pool *p)
+static void accept_mutex_child_init_os2sem(pool *p)
 {
     int rc = DosOpenMutexSem(NULL, &lock_sem);
 
     if (rc != 0) {
-	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
-		    "Child cannot open lock semaphore");
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
+		    "Child cannot open lock semaphore, rc=%d", rc);
 	clean_child_exit(APEXIT_CHILDINIT);
+    } else {
+        ap_register_cleanup(p, NULL, accept_mutex_cleanup_os2sem, ap_null_cleanup);
     }
 }
 
@@ -908,55 +1026,308 @@ static void accept_mutex_child_init(pool *p)
  * Initialize mutex lock.
  * Must be safe to call this on a restart.
  */
-static void accept_mutex_init(pool *p)
+static void accept_mutex_init_os2sem(pool *p)
 {
     int rc = DosCreateMutexSem(NULL, &lock_sem, DC_SEM_SHARED, FALSE);
 
     if (rc != 0) {
-	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
-		    "Parent cannot create lock semaphore");
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
+		    "Parent cannot create lock semaphore, rc=%d", rc);
 	exit(APEXIT_INIT);
     }
 
-    ap_register_cleanup(p, NULL, accept_mutex_cleanup, ap_null_cleanup);
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_os2sem, ap_null_cleanup);
 }
 
-static void accept_mutex_on(void)
+static void accept_mutex_on_os2sem(void)
 {
     int rc = DosRequestMutexSem(lock_sem, SEM_INDEFINITE_WAIT);
 
     if (rc != 0) {
-	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
 		    "OS2SEM: Error %d getting accept lock. Exiting!", rc);
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
 }
 
-static void accept_mutex_off(void)
+static void accept_mutex_off_os2sem(void)
 {
     int rc = DosReleaseMutexSem(lock_sem);
     
     if (rc != 0) {
-	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
 		    "OS2SEM: Error %d freeing accept lock. Exiting!", rc);
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
 }
 
-#else
-/* Default --- no serialization.  Other methods *could* go here,
- * as #elifs...
- */
+accept_mutex_methods_s accept_mutex_os2sem_s = {
+    accept_mutex_child_init_os2sem,
+    accept_mutex_init_os2sem,
+    accept_mutex_on_os2sem,
+    accept_mutex_off_os2sem,
+    "os2sem"
+};
+#endif
+
+#if defined(HAVE_TPF_CORE_SERIALIZED_ACCEPT)
+
+static int tpf_core_held;
+
+static void accept_mutex_cleanup_tpfcore(void *foo)
+{
+    if(tpf_core_held)
+        coruc(RESOURCE_KEY);
+}
+
+#define accept_mutex_init_tpfcore(x)
+
+static void accept_mutex_child_init_tpfcore(pool *p)
+{
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_tpfcore, ap_null_cleanup);
+    tpf_core_held = 0;
+}
+
+static void accept_mutex_on_tpfcore(void)
+{
+    corhc(RESOURCE_KEY);
+    tpf_core_held = 1;
+    ap_check_signals();
+}
+
+static void accept_mutex_off_tpfcore(void)
+{
+    coruc(RESOURCE_KEY);
+    tpf_core_held = 0;
+    ap_check_signals();
+}
+
+accept_mutex_methods_s accept_mutex_tpfcore_s = {
+    accept_mutex_child_init_tpfcore,
+    NULL,
+    accept_mutex_on_tpfcore,
+    accept_mutex_off_tpfcore,
+    "tpfcore"
+};
+#endif
+
+#ifdef HAVE_BEOS_SERIALIZED_ACCEPT
+static sem_id _sem = -1;
+static int  locked = 0;
+
+static void accept_mutex_child_cleanup_beos(void *foo)
+{
+    if (_sem > 0 && locked)
+        release_sem(_sem);
+}
+
+static void accept_mutex_child_init_beos(pool *p)
+{
+    ap_register_cleanup(p, NULL, accept_mutex_child_cleanup_beos, ap_null_cleanup);
+    locked = 0;
+}
+
+static void accept_mutex_cleanup_beos(void *foo)
+{
+    if (_sem > 0)
+        delete_sem(_sem);
+}
+
+static void accept_mutex_init_beos(pool *p)
+{
+    _sem = create_sem(1, "httpd_accept");
+    if (_sem < 0) {
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
+                    "Parent cannot create lock semaphore, sem=%ld", _sem);
+        exit(APEXIT_INIT);
+    }
+
+    ap_register_cleanup(p, NULL, accept_mutex_cleanup_beos, ap_null_cleanup);
+}                                                                                                        
+void accept_mutex_on_beos(void)
+{
+    if (locked == 0) {
+        if (acquire_sem(_sem) == B_OK)
+            locked = 1;
+    }
+}
+
+static void accept_mutex_off_beos(void)
+{
+    if (locked == 1) {
+        if (release_sem(_sem) == B_OK)
+            locked = 0; 
+    }
+}
+
+accept_mutex_methods_s accept_mutex_beos_s = {
+    accept_mutex_child_init_beos,
+    accept_mutex_init_beos,
+    accept_mutex_on_beos,
+    accept_mutex_off_beos,
+    "beos_sem"
+};
+#endif /* HAVE_BEOS_SERIALIZED_ACCEPT */
+
+
+/* Generally, HAVE_NONE_SERIALIZED_ACCEPT simply won't work but
+ * for testing purposes, here it is... */
+#if defined HAVE_NONE_SERIALIZED_ACCEPT
 #if !defined(MULTITHREAD)
 /* Multithreaded systems don't complete between processes for
  * the sockets. */
 #define NO_SERIALIZED_ACCEPT
-#define accept_mutex_child_init(x)
-#define accept_mutex_init(x)
-#define accept_mutex_on()
-#define accept_mutex_off()
+#endif 
+
+accept_mutex_methods_s accept_mutex_none_s = {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "none"
+};
 #endif
+
+#define AP_FPTR1(x,y)	{ if (x) ((* x)(y)); }
+#define AP_FPTR0(x)	{ if (x) ((* x)()); }
+
+#define accept_mutex_child_init(x) 	AP_FPTR1(amutex->child_init,x)
+#define accept_mutex_init(x) 		AP_FPTR1(amutex->init,x)
+#define accept_mutex_off() 		AP_FPTR0(amutex->off)
+#define accept_mutex_on() 		AP_FPTR0(amutex->on)
+
+char *ap_default_mutex_method(void)
+{
+    char *t;
+#if defined USE_USLOCK_SERIALIZED_ACCEPT
+    t = "uslock";
+#elif defined USE_PTHREAD_SERIALIZED_ACCEPT
+    t = "pthread";
+#elif defined USE_SYSVSEM_SERIALIZED_ACCEPT
+    t = "sysvsem";
+#elif defined USE_FCNTL_SERIALIZED_ACCEPT
+    t = "fcntl";
+#elif defined USE_FLOCK_SERIALIZED_ACCEPT
+    t = "flock";
+#elif defined USE_OS2SEM_SERIALIZED_ACCEPT
+    t = "os2sem";
+#elif defined USE_TPF_CORE_SERIALIZED_ACCEPT
+    t = "tpfcore";
+#elif defined USE_BEOS_SERIALIZED_ACCEPT
+    t = "beos_sem";
+#elif defined USE_NONE_SERIALIZED_ACCEPT
+    t = "none";
+#else
+    t = "default";
 #endif
+#if defined HAVE_USLOCK_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"uslock"))))
+    	return "uslock";
+#endif
+#if defined HAVE_PTHREAD_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"pthread"))))
+    	return "pthread";
+#endif
+#if defined HAVE_SYSVSEM_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"sysvsem"))))
+    	return "sysvsem";
+#endif
+#if defined HAVE_FCNTL_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"fcntl"))))
+    	return "fcntl";
+#endif
+#if defined HAVE_FLOCK_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"flock"))))
+    	return "flock";
+#endif
+#if defined HAVE_OS2SEM_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"os2sem"))))
+    	return "os2sem";
+#endif
+#if defined HAVE_TPF_CORE_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"tpfcore"))))
+    	return "tpfcore";
+#endif
+#if defined HAVE_BEOS_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"beos_sem"))))
+        return "beos_sem";
+#endif
+#if defined HAVE_NONE_SERIALIZED_ACCEPT
+    if ((!(strcasecmp(t,"default"))) || (!(strcasecmp(t,"none"))))
+    	return "none";
+#endif
+
+    fprintf(stderr, "No default accept serialization known!!\n");
+    exit(APEXIT_INIT);
+    /*NOTREACHED */
+    return "unknown";
+}
+
+char *ap_init_mutex_method(char *t)
+{
+    if (!(strcasecmp(t,"default")))
+	t = ap_default_mutex_method();
+
+#if defined HAVE_USLOCK_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"uslock"))) {
+    	amutex = &accept_mutex_uslock_s;
+    } else 
+#endif
+#if defined HAVE_PTHREAD_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"pthread"))) {
+    	amutex = &accept_mutex_pthread_s;
+    } else 
+#endif
+#if defined HAVE_SYSVSEM_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"sysvsem"))) {
+    	amutex = &accept_mutex_sysvsem_s;
+    } else 
+#endif
+#if defined HAVE_FCNTL_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"fcntl"))) {
+    	amutex = &accept_mutex_fcntl_s;
+    } else
+#endif
+#if defined HAVE_FLOCK_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"flock"))) {
+    	amutex = &accept_mutex_flock_s;
+    } else 
+#endif
+#if defined HAVE_OS2SEM_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"os2sem"))) {
+    	amutex = &accept_mutex_os2sem_s;
+    } else 
+#endif
+#if defined HAVE_TPF_CORE_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"tpfcore"))) {
+    	amutex = &accept_mutex_tpfcore_s;
+    } else 
+#endif
+#if defined HAVE_BEOS_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"beos_sem"))) {
+        amutex = &accept_mutex_beos_s;
+    } else
+#endif
+#if defined HAVE_NONE_SERIALIZED_ACCEPT
+    if (!(strcasecmp(t,"none"))) {
+    	amutex = &accept_mutex_none_s;
+    } else
+#endif
+    {
+/* Ignore this directive on Windows */
+#ifndef WIN32
+    if (server_conf) {
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, server_conf,
+                    "Requested serialization method '%s' not available",t);
+        exit(APEXIT_INIT);
+    } else {
+        fprintf(stderr, "Requested serialization method '%s' not available\n", t);
+        exit(APEXIT_INIT);
+    }
+#endif
+    }
+    return NULL;
+}
 
 /* On some architectures it's safe to do unserialized accept()s in the single
  * Listen case.  But it's never safe to do it in the case where there's
@@ -977,17 +1348,23 @@ static void usage(char *bin)
     for (i = 0; i < strlen(bin); i++)
 	pad[i] = ' ';
     pad[i] = '\0';
+#ifdef WIN32
+    fprintf(stderr, "Usage: %s [-D name] [-d directory] [-f file] [-n service]\n", bin);
+    fprintf(stderr, "       %s [-C \"directive\"] [-c \"directive\"] [-k signal]\n", pad);
+    fprintf(stderr, "       %s [-v] [-V] [-h] [-l] [-L] [-S] [-t] [-T]\n", pad);
+#else /* !WIN32 */
 #ifdef SHARED_CORE
-    fprintf(stderr, "Usage: %s [-L directory] [-d directory] [-f file]\n", bin);
+    fprintf(stderr, "Usage: %s [-R directory] [-D name] [-d directory] [-f file]\n", bin);
 #else
-    fprintf(stderr, "Usage: %s [-d directory] [-f file]\n", bin);
+    fprintf(stderr, "Usage: %s [-D name] [-d directory] [-f file]\n", bin);
 #endif
     fprintf(stderr, "       %s [-C \"directive\"] [-c \"directive\"]\n", pad);
-    fprintf(stderr, "       %s [-v] [-V] [-h] [-l] [-S] [-t]\n", pad);
+    fprintf(stderr, "       %s [-v] [-V] [-h] [-l] [-L] [-S] [-t] [-T] [-F]\n", pad);
     fprintf(stderr, "Options:\n");
 #ifdef SHARED_CORE
-    fprintf(stderr, "  -L directory     : specify an alternate location for shared object files\n");
+    fprintf(stderr, "  -R directory     : specify an alternate location for shared object files\n");
 #endif
+#endif /* !WIN32 */
     fprintf(stderr, "  -D name          : define a name for use in <IfDefine name> directives\n");
     fprintf(stderr, "  -d directory     : specify an alternate initial ServerRoot\n");
     fprintf(stderr, "  -f file          : specify an alternate ServerConfigFile\n");
@@ -995,13 +1372,77 @@ static void usage(char *bin)
     fprintf(stderr, "  -c \"directive\"   : process directive after  reading config files\n");
     fprintf(stderr, "  -v               : show version number\n");
     fprintf(stderr, "  -V               : show compile settings\n");
-    fprintf(stderr, "  -h               : list available configuration directives\n");
+    fprintf(stderr, "  -h               : list available command line options (this page)\n");
     fprintf(stderr, "  -l               : list compiled-in modules\n");
+    fprintf(stderr, "  -L               : list available configuration directives\n");
     fprintf(stderr, "  -S               : show parsed settings (currently only vhost settings)\n");
-    fprintf(stderr, "  -t               : run syntax test for configuration files only\n");
+#ifdef NETWARE
+    fprintf(stderr, "  -e               : force the display of configuration file errors to the logger screen\n");
+    fprintf(stderr, "  -s               : load Apache without a screen\n");
+#endif
+    fprintf(stderr, "  -t               : run syntax check for config files (with docroot check)\n");
+    fprintf(stderr, "  -T               : run syntax check for config files (without docroot check)\n");
+#ifndef WIN32
+    fprintf(stderr, "  -F               : run main process in foreground, for process supervisors\n");
+#endif
+#ifdef WIN32
+    fprintf(stderr, "  -n name          : name the Apache service for -k options below;\n");
+    fprintf(stderr, "  -k stop|shutdown : tell running Apache to shutdown\n");
+    fprintf(stderr, "  -k restart       : tell running Apache to do a graceful restart\n");
+    fprintf(stderr, "  -k start         : tell Apache to start\n");
+    fprintf(stderr, "  -k install   | -i: install an Apache service\n");
+    fprintf(stderr, "  -k config        : reconfigure an installed Apache service\n");
+    fprintf(stderr, "  -k uninstall | -u: uninstall an Apache service\n");
+    fprintf(stderr, "  -W service       : after -k config|install; Apache starts after 'service'\n");
+    fprintf(stderr, "  -w               : holds the window open for 30 seconds for fatal errors.\n");
+#endif
+
+#if defined(NETWARE)
+    clean_parent_exit(0);
+#else
     exit(1);
+#endif
 }
 
+
+
+#ifdef NETWARE
+/* Thread Storage Data */
+typedef struct _TSD {
+    conn_rec*		current_conn;
+    int 			alarms_blocked;
+    int				alarm_pending;
+    request_rec*	timeout_req;
+    char*			timeout_name;
+    JMP_BUF			jmpbuffer;
+    int				exit_after_unblock;
+    void 			(*alarm_fn) (int);
+    unsigned int 	alarm_expiry_time;
+} TSD;
+
+static TSD Tsd;
+
+void init_tsd()
+{    
+    int *thread_ptr;
+
+    memset(&Tsd, 0, sizeof(TSD));
+    thread_ptr = __get_thread_data_area_ptr();
+    *thread_ptr = (int) &Tsd;
+}
+
+#define get_tsd            TSD* tsd = (TSD*) Thread_Data_Area;
+#define current_conn       tsd->current_conn
+#define alarms_blocked     tsd->alarms_blocked
+#define alarm_pending      tsd->alarm_pending
+#define timeout_req        tsd->timeout_req
+#define timeout_name       tsd->timeout_name
+#define jmpbuffer          tsd->jmpbuffer
+#define exit_after_unblock tsd->exit_after_unblock
+#define alarm_fn           tsd->alarm_fn
+#define alarm_expiry_time  tsd->alarm_expiry_time
+
+#else
 /*****************************************************************
  *
  * Timeout handling.  DISTINCTLY not thread-safe, but all this stuff
@@ -1014,12 +1455,15 @@ static APACHE_TLS request_rec *volatile timeout_req;
 static APACHE_TLS const char *volatile timeout_name = NULL;
 static APACHE_TLS int volatile alarms_blocked = 0;
 static APACHE_TLS int volatile alarm_pending = 0;
+#endif
+
 
 static void timeout(int sig)
-{				/* Also called on SIGPIPE */
+{
     void *dirconf;
-
-    signal(SIGPIPE, SIG_IGN);	/* Block SIGPIPE */
+#ifdef NETWARE
+    get_tsd
+#endif    
     if (alarms_blocked) {
 	alarm_pending = 1;
 	return;
@@ -1037,27 +1481,16 @@ static void timeout(int sig)
     else
 	dirconf = current_conn->server->lookup_defaults;
     if (!current_conn->keptalive) {
-	if (sig == SIGPIPE) {
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO,
-			current_conn->server,
-			"(client %s) stopped connection before %s completed",
-			current_conn->remote_ip,
-			timeout_name ? timeout_name : "request");
-	}
-	else {
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO,
-			current_conn->server,
-			"(client %s) %s timed out",
-			current_conn->remote_ip,
-			timeout_name ? timeout_name : "request");
-	}
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO,
+		     current_conn->server, "[client %s] %s timed out",
+		     current_conn->remote_ip,
+		     timeout_name ? timeout_name : "request");
     }
 
     if (timeout_req) {
 	/* Someone has asked for this transaction to just be aborted
 	 * if it times out...
 	 */
-
 	request_rec *log_req = timeout_req;
 	request_rec *save_req = timeout_req;
 
@@ -1067,6 +1500,9 @@ static void timeout(int sig)
 	timeout_req = NULL;
 
 	while (log_req->main || log_req->prev) {
+#ifdef NETWARE
+            ThreadSwitch();
+#endif
 	    /* Get back to original request... */
 	    if (log_req->main)
 		log_req = log_req->main;
@@ -1074,16 +1510,20 @@ static void timeout(int sig)
 		log_req = log_req->prev;
 	}
 
-	if (!current_conn->keptalive)
+	if (!current_conn->keptalive) {
+	    /* in some cases we come here before setting the time */
+	    if (log_req->request_time == 0) {
+                log_req->request_time = time(NULL);
+	    }
 	    ap_log_transaction(log_req);
+	}
 
 	ap_bsetflag(save_req->connection->client, B_EOUT, 1);
 	ap_bclose(save_req->connection->client);
-
+	
 	if (!ap_standalone)
 	    exit(0);
-
-	ap_longjmp(jmpbuffer, 1);
+        ap_longjmp(jmpbuffer, 1);
     }
     else {			/* abort the connection */
 	ap_bsetflag(current_conn->client, B_EOUT, 1);
@@ -1092,6 +1532,8 @@ static void timeout(int sig)
     }
 }
 
+
+#ifndef TPF
 /*
  * These two called from alloc.c to protect its critical sections...
  * Note that they can nest (as when destroying the sub_pools of a pool
@@ -1100,11 +1542,17 @@ static void timeout(int sig)
 
 API_EXPORT(void) ap_block_alarms(void)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     ++alarms_blocked;
 }
 
 API_EXPORT(void) ap_unblock_alarms(void)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     --alarms_blocked;
     if (alarms_blocked == 0) {
 	if (exit_after_unblock) {
@@ -1125,14 +1573,16 @@ API_EXPORT(void) ap_unblock_alarms(void)
 	}
     }
 }
+#endif /* TPF */
 
-
+#ifndef NETWARE
 static APACHE_TLS void (*volatile alarm_fn) (int) = NULL;
-#ifdef WIN32
+#endif
+#if defined(WIN32) || defined(CYGWIN_WINSOCK) 
 static APACHE_TLS unsigned int alarm_expiry_time = 0;
 #endif /* WIN32 */
 
-#ifndef WIN32
+#if !defined(WIN32)  && !defined(NETWARE)
 static void alrm_handler(int sig)
 {
     if (alarm_fn) {
@@ -1141,21 +1591,26 @@ static void alrm_handler(int sig)
 }
 #endif
 
-unsigned int ap_set_callback_and_alarm(void (*fn) (int), int x)
+API_EXPORT(unsigned int) ap_set_callback_and_alarm(void (*fn) (int), int x)
 {
     unsigned int old;
 
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
+    time_t now = time(NULL);
+#ifdef NETWARE
+    get_tsd
+#endif
     old = alarm_expiry_time;
+
     if (old)
-	old -= time(0);
+	old -= now;
     if (x == 0) {
 	alarm_fn = NULL;
 	alarm_expiry_time = 0;
     }
     else {
 	alarm_fn = fn;
-	alarm_expiry_time = time(NULL) + x;
+	alarm_expiry_time = now + x;
     }
 #else
     if (alarm_fn && x && fn != alarm_fn) {
@@ -1173,6 +1628,7 @@ unsigned int ap_set_callback_and_alarm(void (*fn) (int), int x)
 	/* Just note the timeout in our scoreboard, no need to call the system.
 	 * We also note that the virtual time has gone forward.
 	 */
+	ap_check_signals();
 	old = ap_scoreboard_image->servers[my_child_num].timeout_len;
 	ap_scoreboard_image->servers[my_child_num].timeout_len = x;
 	++ap_scoreboard_image->servers[my_child_num].cur_vtime;
@@ -1183,9 +1639,12 @@ unsigned int ap_set_callback_and_alarm(void (*fn) (int), int x)
 }
 
 
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE) || defined(CYGWIN_WINSOCK) 
 API_EXPORT(int) ap_check_alarm(void)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     if (alarm_expiry_time) {
 	unsigned int t;
 
@@ -1213,7 +1672,9 @@ API_EXPORT(int) ap_check_alarm(void)
 API_EXPORT(void) ap_reset_timeout(request_rec *r)
 {
     int i;
-
+#ifdef NETWARE
+    get_tsd
+#endif
     if (timeout_name) {		/* timeout has been set */
 	i = ap_set_callback_and_alarm(alarm_fn, r->server->timeout);
 	if (i == 0)		/* timeout already expired, so set it back to 0 */
@@ -1224,40 +1685,46 @@ API_EXPORT(void) ap_reset_timeout(request_rec *r)
 
 
 
-void ap_keepalive_timeout(char *name, request_rec *r)
+API_EXPORT(void) ap_keepalive_timeout(char *name, request_rec *r)
 {
     unsigned int to;
-
+#ifdef NETWARE
+    get_tsd
+#endif
     timeout_req = r;
     timeout_name = name;
-
     if (r->connection->keptalive)
 	to = r->server->keep_alive_timeout;
     else
 	to = r->server->timeout;
     ap_set_callback_and_alarm(timeout, to);
-
 }
 
 API_EXPORT(void) ap_hard_timeout(char *name, request_rec *r)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     timeout_req = r;
     timeout_name = name;
-
     ap_set_callback_and_alarm(timeout, r->server->timeout);
-
 }
 
 API_EXPORT(void) ap_soft_timeout(char *name, request_rec *r)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     timeout_name = name;
-
     ap_set_callback_and_alarm(timeout, r->server->timeout);
-
 }
 
 API_EXPORT(void) ap_kill_timeout(request_rec *dummy)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
+    ap_check_signals();
     ap_set_callback_and_alarm(NULL, 0);
     timeout_req = NULL;
     timeout_name = NULL;
@@ -1316,6 +1783,9 @@ static void sock_enable_linger(int s)
 
 static void lingerout(int sig)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     if (alarms_blocked) {
 	alarm_pending = 1;
 	return;
@@ -1330,8 +1800,10 @@ static void lingerout(int sig)
 
 static void linger_timeout(void)
 {
+#ifdef NETWARE
+    get_tsd
+#endif
     timeout_name = "lingering close";
-
     ap_set_callback_and_alarm(lingerout, MAX_SECS_TO_LINGER);
 }
 
@@ -1392,6 +1864,10 @@ static void lingering_close(request_rec *r)
 	 * These parameters are reset on each pass, since they might be
 	 * changed by select.
 	 */
+#ifdef NETWARE
+        ThreadSwitch();
+#endif
+
 	FD_SET(lsd, &lfds);
 	tv.tv_sec = 2;
 	tv.tv_usec = 0;
@@ -1399,7 +1875,11 @@ static void lingering_close(request_rec *r)
 	select_rv = ap_select(lsd + 1, &lfds, NULL, NULL, &tv);
 
     } while ((select_rv > 0) &&
-             (read(lsd, dummybuf, sizeof dummybuf) > 0));
+#if defined(WIN32) || defined(NETWARE)
+             (recv(lsd, dummybuf, sizeof(dummybuf), 0) > 0));
+#else
+             (read(lsd, dummybuf, sizeof(dummybuf)) > 0));
+#endif
 
     /* Should now have seen final ack.  Safe to finally kill socket */
 
@@ -1440,7 +1920,7 @@ API_EXPORT(void) ap_unregister_other_child(void *data)
     for (pocr = &other_children; *pocr; pocr = &(*pocr)->next) {
 	if ((*pocr)->data == data) {
 	    nocr = (*pocr)->next;
-	    (*(*pocr)->maintenance) (OC_REASON_UNREGISTER, (*pocr)->data, -1);
+	    (*(*pocr)->maintenance) (OC_REASON_UNREGISTER, (*pocr)->data, (ap_wait_t)-1);
 	    *pocr = nocr;
 	    /* XXX: um, well we've just wasted some space in pconf ? */
 	    return;
@@ -1496,7 +1976,7 @@ static void probe_writable_fds(void)
 	    continue;
 	if (FD_ISSET(ocr->write_fd, &writable_fds))
 	    continue;
-	(*ocr->maintenance) (OC_REASON_UNWRITABLE, ocr->data, -1);
+	(*ocr->maintenance) (OC_REASON_UNWRITABLE, ocr->data, (ap_wait_t)-1);
     }
 }
 
@@ -1538,6 +2018,9 @@ static void reinit_scoreboard(pool *p)
 {
     ap_assert(!ap_scoreboard_image);
     ap_scoreboard_image = (scoreboard *) malloc(SCOREBOARD_SIZE);
+    if (ap_scoreboard_image == NULL) {
+	fprintf(stderr, "Ouch!  Out of memory reiniting scoreboard!\n");
+    }
     memset(ap_scoreboard_image, 0, SCOREBOARD_SIZE);
 }
 
@@ -1607,16 +2090,19 @@ static void setup_shared_mem(pool *p)
 
     m = (caddr_t) create_shared_heap("\\SHAREMEM\\SCOREBOARD", SCOREBOARD_SIZE);
     if (m == 0) {
-	fprintf(stderr, "httpd: Could not create OS/2 Shared memory pool.\n");
+	fprintf(stderr, "%s: Could not create OS/2 Shared memory pool.\n",
+		ap_server_argv0);
 	exit(APEXIT_INIT);
     }
 
     rc = _uopen((Heap_t) m);
     if (rc != 0) {
-	fprintf(stderr, "httpd: Could not uopen() newly created OS/2 Shared memory pool.\n");
+	fprintf(stderr,
+		"%s: Could not uopen() newly created OS/2 Shared memory pool.\n",
+		ap_server_argv0);
     }
     ap_scoreboard_image = (scoreboard *) m;
-    ap_scoreboard_image->global.exit_generation = 0;
+    ap_scoreboard_image->global.running_generation = 0;
 }
 
 static void reopen_scoreboard(pool *p)
@@ -1626,7 +2112,8 @@ static void reopen_scoreboard(pool *p)
 
     m = (caddr_t) get_shared_heap("\\SHAREMEM\\SCOREBOARD");
     if (m == 0) {
-	fprintf(stderr, "httpd: Could not find existing OS/2 Shared memory pool.\n");
+	fprintf(stderr, "%s: Could not find existing OS/2 Shared memory pool.\n",
+		ap_server_argv0);
 	exit(APEXIT_INIT);
     }
 
@@ -1672,30 +2159,37 @@ static void cleanup_shared_mem(void *d)
 
 static void setup_shared_mem(pool *p)
 {
+    char buf[512];
     caddr_t m;
     int fd;
 
     fd = shm_open(ap_scoreboard_fname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-	perror("httpd: could not open(create) scoreboard");
+	ap_snprintf(buf, sizeof(buf), "%s: could not open(create) scoreboard",
+		    ap_server_argv0);
+	perror(buf);
 	exit(APEXIT_INIT);
     }
     if (ltrunc(fd, (off_t) SCOREBOARD_SIZE, SEEK_SET) == -1) {
-	perror("httpd: could not ltrunc scoreboard");
+	ap_snprintf(buf, sizeof(buf), "%s: could not ltrunc scoreboard",
+		    ap_server_argv0);
+	perror(buf);
 	shm_unlink(ap_scoreboard_fname);
 	exit(APEXIT_INIT);
     }
     if ((m = (caddr_t) mmap((caddr_t) 0,
 			    (size_t) SCOREBOARD_SIZE, PROT_READ | PROT_WRITE,
 			    MAP_SHARED, fd, (off_t) 0)) == (caddr_t) - 1) {
-	perror("httpd: cannot mmap scoreboard");
+	ap_snprintf(buf, sizeof(buf), "%s: cannot mmap scoreboard",
+		    ap_server_argv0);
+	perror(buf);
 	shm_unlink(ap_scoreboard_fname);
 	exit(APEXIT_INIT);
     }
     close(fd);
     ap_register_cleanup(p, NULL, cleanup_shared_mem, ap_null_cleanup);
     ap_scoreboard_image = (scoreboard *) m;
-    ap_scoreboard_image->global.exit_generation = 0;
+    ap_scoreboard_image->global.running_generation = 0;
 }
 
 static void reopen_scoreboard(pool *p)
@@ -1733,14 +2227,14 @@ static void setup_shared_mem(pool *p)
 	int fd = mkstemp(mfile);
 	if (fd == -1) {
 	    perror("open");
-	    fprintf(stderr, "httpd: Could not open %s\n", mfile);
+	    fprintf(stderr, "%s: Could not open %s\n", ap_server_argv0, mfile);
 	    exit(APEXIT_INIT);
 	}
 	m = mmap((caddr_t) 0, SCOREBOARD_SIZE,
 		PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (m == (caddr_t) - 1) {
 	    perror("mmap");
-	    fprintf(stderr, "httpd: Could not mmap %s\n", mfile);
+	    fprintf(stderr, "%s: Could not mmap %s\n", ap_server_argv0, mfile);
 	    exit(APEXIT_INIT);
 	}
 	close(fd);
@@ -1752,7 +2246,7 @@ static void setup_shared_mem(pool *p)
 #endif
     if (m == (caddr_t) - 1) {
 	perror("mmap");
-	fprintf(stderr, "httpd: Could not mmap memory\n");
+	fprintf(stderr, "%s: Could not mmap memory\n", ap_server_argv0);
 	exit(APEXIT_INIT);
     }
 #else
@@ -1762,20 +2256,20 @@ static void setup_shared_mem(pool *p)
     fd = open("/dev/zero", O_RDWR);
     if (fd == -1) {
 	perror("open");
-	fprintf(stderr, "httpd: Could not open /dev/zero\n");
+	fprintf(stderr, "%s: Could not open /dev/zero\n", ap_server_argv0);
 	exit(APEXIT_INIT);
     }
     m = mmap((caddr_t) 0, SCOREBOARD_SIZE,
 	     PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (m == (caddr_t) - 1) {
 	perror("mmap");
-	fprintf(stderr, "httpd: Could not mmap /dev/zero\n");
+	fprintf(stderr, "%s: Could not mmap /dev/zero\n", ap_server_argv0);
 	exit(APEXIT_INIT);
     }
     close(fd);
 #endif
     ap_scoreboard_image = (scoreboard *) m;
-    ap_scoreboard_image->global.exit_generation = 0;
+    ap_scoreboard_image->global.running_generation = 0;
 }
 
 static void reopen_scoreboard(pool *p)
@@ -1797,12 +2291,13 @@ static void setup_shared_mem(pool *p)
 #ifdef LINUX
 	if (errno == ENOSYS) {
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_EMERG, server_conf,
-		    "httpd: Your kernel was built without CONFIG_SYSVIPC\n"
-		    "httpd: please consult the Apache FAQ for details");
+			 "Your kernel was built without CONFIG_SYSVIPC\n"
+			 "%s: Please consult the Apache FAQ for details",
+			 ap_server_argv0);
 	}
 #endif
 	ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
-		    "could not call shmget");
+                     "could not call shmget");
 	exit(APEXIT_INIT);
     }
 
@@ -1866,11 +2361,42 @@ static void setup_shared_mem(pool *p)
 	    "sbrk() could not move break back");
     }
 #endif
-    ap_scoreboard_image->global.exit_generation = 0;
+    ap_scoreboard_image->global.running_generation = 0;
 }
 
 static void reopen_scoreboard(pool *p)
 {
+}
+
+#elif defined(USE_TPF_SCOREBOARD)
+
+static void cleanup_scoreboard_heap()
+{
+    int rv;
+    rv = rsysc(ap_scoreboard_image, SCOREBOARD_FRAMES, SCOREBOARD_NAME);
+    if(rv == RSYSC_ERROR) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
+            "rsysc() could not release scoreboard system heap");
+    }
+}
+
+static void setup_shared_mem(pool *p)
+{
+    cinfc(CINFC_WRITE, CINFC_CMMCTK2);
+    ap_scoreboard_image = (scoreboard *) gsysc(SCOREBOARD_FRAMES, SCOREBOARD_NAME);
+
+    if (!ap_scoreboard_image) {
+        fprintf(stderr, "httpd: Could not create scoreboard system heap storage.\n");
+        exit(APEXIT_INIT);
+    }
+
+    ap_register_cleanup(p, NULL, cleanup_scoreboard_heap, ap_null_cleanup);
+    ap_scoreboard_image->global.running_generation = 0;
+}
+
+static void reopen_scoreboard(pool *p)
+{
+    cinfc(CINFC_WRITE, CINFC_CMMCTK2);
 }
 
 #else
@@ -1921,6 +2447,9 @@ void reopen_scoreboard(pool *p)
     if (scoreboard_fd != -1)
 	ap_pclosef(p, scoreboard_fd);
 
+#ifdef TPF
+    ap_scoreboard_fname = ap_server_root_relative(p, ap_scoreboard_fname);
+#endif /* TPF */
     scoreboard_fd = ap_popenf(p, ap_scoreboard_fname, O_CREAT | O_BINARY | O_RDWR, 0666);
     if (scoreboard_fd == -1) {
 	perror(ap_scoreboard_fname);
@@ -1933,16 +2462,16 @@ void reopen_scoreboard(pool *p)
 /* Called by parent process */
 static void reinit_scoreboard(pool *p)
 {
-    int exit_gen = 0;
+    int running_gen = 0;
     if (ap_scoreboard_image)
-	exit_gen = ap_scoreboard_image->global.exit_generation;
+	running_gen = ap_scoreboard_image->global.running_generation;
 
 #ifndef SCOREBOARD_FILE
     if (ap_scoreboard_image == NULL) {
 	setup_shared_mem(p);
     }
     memset(ap_scoreboard_image, 0, SCOREBOARD_SIZE);
-    ap_scoreboard_image->global.exit_generation = exit_gen;
+    ap_scoreboard_image->global.running_generation = running_gen;
 #else
     ap_scoreboard_image = &_scoreboard_image;
     ap_scoreboard_fname = ap_server_root_relative(p, ap_scoreboard_fname);
@@ -1956,7 +2485,7 @@ static void reinit_scoreboard(pool *p)
     ap_register_cleanup(p, NULL, cleanup_scoreboard_file, ap_null_cleanup);
 
     memset((char *) ap_scoreboard_image, 0, sizeof(*ap_scoreboard_image));
-    ap_scoreboard_image->global.exit_generation = exit_gen;
+    ap_scoreboard_image->global.running_generation = running_gen;
     force_write(scoreboard_fd, ap_scoreboard_image, sizeof(*ap_scoreboard_image));
 #endif
 }
@@ -1997,15 +2526,43 @@ static ap_inline void put_scoreboard_info(int child_num,
 }
 
 /* a clean exit from the parent with proper cleanup */
+#ifdef NETWARE
+void clean_shutdown_on_exit(void)
+{
+    if (!ap_main_finished) {
+        AMCSocketCleanup();
+        ap_destroy_pool(pcommands);    
+        free(ap_loaded_modules);    
+        ap_cleanup_method_ptrs();    
+        ap_destroy_pool(pglobal);
+        ap_cleanup_alloc();
+        ap_main_finished = TRUE;
+    }
+}
+
+void clean_parent_exit(int code) __attribute__((noreturn));
+void clean_parent_exit(int code)
+#else
 static void clean_parent_exit(int code) __attribute__((noreturn));
 static void clean_parent_exit(int code)
+#endif
 {
+#ifdef NETWARE
+    AMCSocketCleanup();
+    ap_destroy_pool(pcommands);    
+    free(ap_loaded_modules);    
+    ap_cleanup_method_ptrs();    
+    ap_destroy_pool(pglobal);
+    ap_cleanup_alloc();
+    ap_main_finished = TRUE;
+#else
     /* Clear the pool - including any registered cleanups */
-    ap_destroy_pool(pconf);
+    ap_destroy_pool(pglobal);
+#endif
     exit(code);
 }
 
-int ap_update_child_status(int child_num, int status, request_rec *r)
+API_EXPORT(int) ap_update_child_status(int child_num, int status, request_rec *r)
 {
     int old_status;
     short_score *ss;
@@ -2013,10 +2570,16 @@ int ap_update_child_status(int child_num, int status, request_rec *r)
     if (child_num < 0)
 	return -1;
 
+    ap_check_signals();
+
     ap_sync_scoreboard_image();
     ss = &ap_scoreboard_image->servers[child_num];
     old_status = ss->status;
     ss->status = status;
+#ifdef NETWARE
+    ap_scoreboard_image->parent[child_num].pid = GetThreadID();
+#endif
+
 #ifdef OPTIMIZE_TIMEOUTS
     ++ss->cur_vtime;
 #endif
@@ -2051,8 +2614,20 @@ int ap_update_child_status(int child_num, int status, request_rec *r)
 					       r->assbackwards ? NULL : " ", r->protocol, NULL),
 				       sizeof(ss->request));
 	    }
-	    ap_cpystrn(ss->vhost, r->server->server_hostname, sizeof(ss->vhost));
+	    ss->vhostrec =  r->server;
 	}
+    }
+    if (status == SERVER_STARTING && r == NULL) {
+	/* clean up the slot's vhostrec pointer (maybe re-used)
+	 * and mark the slot as belonging to a new generation.
+	 */
+	ss->vhostrec = NULL;
+	ap_scoreboard_image->parent[child_num].generation = ap_my_generation;
+#ifdef SCOREBOARD_FILE
+	lseek(scoreboard_fd, XtOffsetOf(scoreboard, parent[child_num]), 0);
+	force_write(scoreboard_fd, &ap_scoreboard_image->parent[child_num],
+	    sizeof(parent_score));
+#endif
     }
     put_scoreboard_info(child_num, ss);
 
@@ -2156,21 +2731,25 @@ static void reclaim_child_processes(int terminate)
     struct timeval tv;
     int waitret, tries;
     int not_dead_yet;
+    int ret;
 #ifndef NO_OTHER_CHILD
     other_child_rec *ocr, *nocr;
 #endif
 
     ap_sync_scoreboard_image();
 
-    for (tries = terminate ? 4 : 1; tries <= 9; ++tries) {
+    for (tries = terminate ? 4 : 1; tries <= 12; ++tries) {
 	/* don't want to hold up progress any more than 
 	 * necessary, but we need to allow children a few moments to exit.
-	 * Set delay with an exponential backoff.
+	 * Set delay with an exponential backoff. NOTE: if we get
+ 	 * interupted, we'll wait longer than expected...
 	 */
 	tv.tv_sec = waittime / 1000000;
 	tv.tv_usec = waittime % 1000000;
 	waittime = waittime * 4;
-	ap_select(0, NULL, NULL, NULL, &tv);
+	do {
+	    ret = ap_select(0, NULL, NULL, NULL, &tv);
+	} while (ret == -1 && errno == EINTR);
 
 	/* now see who is done */
 	not_dead_yet = 0;
@@ -2217,8 +2796,13 @@ static void reclaim_child_processes(int terminate)
 		   "child process %d still did not exit, sending a SIGKILL",
 			    pid);
 		kill(pid, SIGKILL);
+		waittime = 1024 * 16; /* give them some time to die */
 		break;
-	    case 9:     /* 14 sec */
+	    case 9:     /*   6 sec */
+	    case 10:    /* 6.1 sec */
+	    case 11:    /* 6.4 sec */
+		break;
+	    case 12:    /* 7.4 sec */
 		/* gave it our best shot, but alas...  If this really 
 		 * is a child we are trying to kill and it really hasn't
 		 * exited, we will likely fail to bind to the port
@@ -2239,16 +2823,16 @@ static void reclaim_child_processes(int terminate)
 	    waitret = waitpid(ocr->pid, &status, WNOHANG);
 	    if (waitret == ocr->pid) {
 		ocr->pid = -1;
-		(*ocr->maintenance) (OC_REASON_DEATH, ocr->data, status);
+		(*ocr->maintenance) (OC_REASON_RESTART, ocr->data, (ap_wait_t)status);
 	    }
 	    else if (waitret == 0) {
-		(*ocr->maintenance) (OC_REASON_RESTART, ocr->data, -1);
+		(*ocr->maintenance) (OC_REASON_RESTART, ocr->data, (ap_wait_t)-1);
 		++not_dead_yet;
 	    }
 	    else if (waitret == -1) {
 		/* uh what the heck? they didn't call unregister? */
 		ocr->pid = -1;
-		(*ocr->maintenance) (OC_REASON_LOST, ocr->data, -1);
+		(*ocr->maintenance) (OC_REASON_LOST, ocr->data, (ap_wait_t)-1);
 	    }
 	}
 #endif
@@ -2288,6 +2872,7 @@ int reap_children(ap_wait_t *status)
  * a while...
  */
 
+#ifndef NETWARE
 /* number of calls to wait_or_timeout between writable probes */
 #ifndef INTERVAL_OF_WRITABLE_PROBES
 #define INTERVAL_OF_WRITABLE_PROBES 10
@@ -2324,7 +2909,6 @@ static int wait_or_timeout(ap_wait_t *status)
 	}
     }
     return (-1);
-
 #else /* WIN32 */
     struct timeval tv;
     int ret;
@@ -2354,7 +2938,7 @@ static int wait_or_timeout(ap_wait_t *status)
     return -1;
 #endif /* WIN32 */
 }
-
+#endif
 
 #if defined(NSIG)
 #define NumSIG NSIG
@@ -2493,7 +3077,7 @@ static void sig_coredump(int sig)
 {
     chdir(ap_coredump_dir);
     signal(sig, SIG_DFL);
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     kill(getpid(), sig);
 #else
     raise(sig);
@@ -2515,6 +3099,9 @@ static void just_die(int sig)
 {				/* SIGHUP to child process??? */
     /* if alarms are blocked we have to wait to die otherwise we might
      * end up with corruption in alloc.c's internal structures */
+#ifdef NETWARE
+    get_tsd
+#endif
     if (alarms_blocked) {
 	exit_after_unblock = 1;
     }
@@ -2538,21 +3125,45 @@ static void usr1_handler(int sig)
 static int volatile shutdown_pending;
 static int volatile restart_pending;
 static int volatile is_graceful;
-static int volatile generation;
+API_VAR_EXPORT ap_generation_t volatile ap_my_generation=0;
 
 #ifdef WIN32
 /*
- * signal_parent() tells the parent process to wake up and do something.
- * Once woken it will look at shutdown_pending and restart_pending to decide
- * what to do. If neither variable is set, it will do a shutdown. This function
- * if called by start_shutdown() or start_restart() in the parent's process
- * space, so that the variables get set. However it can also be called 
- * by child processes to force the parent to exit in an emergency.
+ * Signalling Apache on NT.
+ *
+ * Under Unix, Apache can be told to shutdown or restart by sending various
+ * signals (HUP, USR, TERM). On NT we don't have easy access to signals, so
+ * we use "events" instead. The parent apache process goes into a loop
+ * where it waits forever for a set of events. Two of those events are
+ * called
+ *
+ *    apPID_shutdown
+ *    apPID_restart
+ *
+ * (where PID is the PID of the apache parent process). When one of these
+ * is signalled, the Apache parent performs the appropriate action. The events
+ * can become signalled through internal Apache methods (e.g. if the child
+ * finds a fatal error and needs to kill its parent), via the service
+ * control manager (the control thread will signal the shutdown event when
+ * requested to stop the Apache service), from the -k Apache command line,
+ * or from any external program which finds the Apache PID from the
+ * httpd.pid file.
+ *
+ * The signal_parent() function, below, is used to signal one of these events.
+ * It can be called by any child or parent process, since it does not
+ * rely on global variables.
+ *
+ * On entry, type gives the event to signal. 0 means shutdown, 1 means 
+ * graceful restart.
  */
 
-static void signal_parent(void)
+static void signal_parent(int type)
 {
     HANDLE e;
+    char *signal_name;
+    extern char signal_shutdown_name[];
+    extern char signal_restart_name[];
+
     /* after updating the shutdown_pending or restart flags, we need
      * to wake up the parent process so it can see the changes. The
      * parent will normally be waiting for either a child process
@@ -2560,25 +3171,33 @@ static void signal_parent(void)
      * "apache-signal" event here.
      */
 
+    /* XXX: This is no good, can't we please die in -X mode :-? */
     if (one_process) {
 	return;
     }
 
-    APD1("*** SIGNAL_PARENT SET ***");
+    switch(type) {
+    case 0: signal_name = signal_shutdown_name; break;
+    case 1: signal_name = signal_restart_name; break;
+    default: return;
+    }
 
-    e = OpenEvent(EVENT_ALL_ACCESS, FALSE, "apache-signal");
+    APD2("signal_parent signalling event \"%s\"", signal_name);
+
+    e = OpenEvent(EVENT_ALL_ACCESS, FALSE, signal_name);
     if (!e) {
-	/* Um, problem, can't signal the main loop, which means we can't
+	/* Um, problem, can't signal the parent, which means we can't
 	 * signal ourselves to die. Ignore for now...
 	 */
 	ap_log_error(APLOG_MARK, APLOG_EMERG|APLOG_WIN32ERROR, server_conf,
-	    "OpenEvent on apache-signal event");
+	    "OpenEvent on %s event", signal_name);
 	return;
     }
     if (SetEvent(e) == 0) {
 	/* Same problem as above */
 	ap_log_error(APLOG_MARK, APLOG_EMERG|APLOG_WIN32ERROR, server_conf,
-	    "SetEvent on apache-signal event");
+	    "SetEvent on %s event", signal_name);
+	CloseHandle(e);
 	return;
     }
     CloseHandle(e);
@@ -2586,24 +3205,19 @@ static void signal_parent(void)
 #endif
 
 /*
- * start_shutdown() and start_restart(), below, are a first stab at
+ * ap_start_shutdown() and ap_start_restart(), below, are a first stab at
  * functions to initiate shutdown or restart without relying on signals. 
  * Previously this was initiated in sig_term() and restart() signal handlers, 
  * but we want to be able to start a shutdown/restart from other sources --
  * e.g. on Win32, from the service manager. Now the service manager can
- * call start_shutdown() or start_restart() as appropiate. 
- *
- * These should only be called from the parent process itself, since the
- * parent process will use the shutdown_pending and restart_pending variables
- * to determine whether to shutdown or restart. The child process should
- * call signal_parent() directly to tell the parent to die -- this will
- * cause neither of those variable to be set, which the parent will
- * assume means something serious is wrong (which it will be, for the
- * child to force an exit) and so do an exit anyway.
+ * call ap_start_shutdown() or ap_start_restart() as appropiate.  Note that
+ * these functions can also be called by the child processes, since global
+ * variables are no longer used to pass on the required action to the parent.
  */
 
-void ap_start_shutdown(void)
+API_EXPORT(void) ap_start_shutdown(void)
 {
+#ifndef WIN32
     if (shutdown_pending == 1) {
 	/* Um, is this _probably_ not an error, if the user has
 	 * tried to do a shutdown twice quickly, so we won't
@@ -2612,24 +3226,23 @@ void ap_start_shutdown(void)
 	return;
     }
     shutdown_pending = 1;
-
-#ifdef WIN32
-    signal_parent();	    /* get the parent process to wake up */
+#else
+    signal_parent(0);	    /* get the parent process to wake up */
 #endif
 }
 
 /* do a graceful restart if graceful == 1 */
-void ap_start_restart(int graceful)
+API_EXPORT(void) ap_start_restart(int graceful)
 {
+#ifndef WIN32
     if (restart_pending == 1) {
 	/* Probably not an error - don't bother reporting it */
 	return;
     }
     restart_pending = 1;
     is_graceful = graceful;
-
-#ifdef WIN32
-    signal_parent();	    /* get the parent process to wake up */
+#else
+    signal_parent(1);	    /* get the parent process to wake up */
 #endif /* WIN32 */
 }
 
@@ -2640,7 +3253,7 @@ static void sig_term(int sig)
 
 static void restart(int sig)
 {
-#ifndef WIN32
+#if !defined (WIN32) && !defined(NETWARE)
     ap_start_restart(sig == SIGUSR1);
 #else
     ap_start_restart(1);
@@ -2699,6 +3312,11 @@ static void set_signals(void)
     if (sigaction(SIGXFSZ, &sa, NULL) < 0)
 	ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf, "sigaction(SIGXFSZ)");
 #endif
+#ifdef SIGPIPE
+    sa.sa_handler = SIG_IGN;
+    if (sigaction(SIGPIPE, &sa, NULL) < 0)
+	ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf, "sigaction(SIGPIPE)");
+#endif
 
     /* we want to ignore HUPs and USR1 while we're busy processing one */
     sigaddset(&sa.sa_mask, SIGHUP);
@@ -2730,14 +3348,19 @@ static void set_signals(void)
 	signal(SIGXFSZ, SIG_DFL);
 #endif /* SIGXFSZ */
     }
-
+#ifndef NETWARE
     signal(SIGTERM, sig_term);
+#endif
 #ifdef SIGHUP
     signal(SIGHUP, restart);
 #endif /* SIGHUP */
 #ifdef SIGUSR1
     signal(SIGUSR1, restart);
 #endif /* SIGUSR1 */
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif /* SIGPIPE */
+
 #endif
 }
 
@@ -2748,52 +3371,65 @@ static void set_signals(void)
 
 static void detach(void)
 {
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(NETWARE)
     int x;
 
     chdir("/");
-#if !defined(MPE) && !defined(OS2)
+#if !defined(MPE) && !defined(OS2) && !defined(TPF) && !defined(BEOS) && \
+    !defined(BONE)
 /* Don't detach for MPE because child processes can't survive the death of
    the parent. */
-    if ((x = fork()) > 0)
-	exit(0);
-    else if (x == -1) {
-	perror("fork");
-	fprintf(stderr, "httpd: unable to fork new process\n");
-	exit(1);
+    if (do_detach) {
+        if ((x = fork()) > 0)
+            exit(0);
+        else if (x == -1) {
+            perror("fork");
+	    fprintf(stderr, "%s: unable to fork new process\n", ap_server_argv0);
+	    exit(1);
+        }
+        RAISE_SIGSTOP(DETACH);
     }
-    RAISE_SIGSTOP(DETACH);
 #endif
 #ifndef NO_SETSID
     if ((pgrp = setsid()) == -1) {
 	perror("setsid");
-	fprintf(stderr, "httpd: setsid failed\n");
+	fprintf(stderr, "%s: setsid failed\n", ap_server_argv0);
+	if (!do_detach) 
+	    fprintf(stderr, "setsid() failed probably because you aren't "
+		"running under a process management tool like daemontools\n");
 	exit(1);
     }
 #elif defined(NEXT) || defined(NEWSOS)
     if (setpgrp(0, getpid()) == -1 || (pgrp = getpgrp(0)) == -1) {
 	perror("setpgrp");
-	fprintf(stderr, "httpd: setpgrp or getpgrp failed\n");
+	fprintf(stderr, "%s: setpgrp or getpgrp failed\n", ap_server_argv0);
 	exit(1);
     }
-#elif defined(OS2)
-    /* OS/2 don't support process group IDs */
+#elif defined(OS2) || defined(TPF)
+    /* OS/2 and TPF don't support process group IDs */
     pgrp = getpid();
 #elif defined(MPE)
     /* MPE uses negative pid for process group */
     pgrp = -getpid();
+#elif defined(CYGWIN)
+    /* Cygwin does not take any argument for setpgrp() */
+    if ((pgrp = setpgrp()) == -1) {
+        perror("setpgrp");
+        fprintf(stderr, "%s: setpgrp failed\n", ap_server_argv0);
+        exit(1);
+    }
 #else
     if ((pgrp = setpgrp(getpid(), 0)) == -1) {
 	perror("setpgrp");
-	fprintf(stderr, "httpd: setpgrp failed\n");
+	fprintf(stderr, "%s: setpgrp failed\n", ap_server_argv0);
 	exit(1);
     }
 #endif
 
     /* close out the standard file descriptors */
     if (freopen("/dev/null", "r", stdin) == NULL) {
-	fprintf(stderr, "httpd: unable to replace stdin with /dev/null: %s\n",
-		strerror(errno));
+	fprintf(stderr, "%s: unable to replace stdin with /dev/null: %s\n",
+		ap_server_argv0, strerror(errno));
 	/* continue anyhow -- note we can't close out descriptor 0 because we
 	 * have nothing to replace it with, and if we didn't have a descriptor
 	 * 0 the next file would be created with that value ... leading to
@@ -2801,8 +3437,8 @@ static void detach(void)
 	 */
     }
     if (freopen("/dev/null", "w", stdout) == NULL) {
-	fprintf(stderr, "httpd: unable to replace stdout with /dev/null: %s\n",
-		strerror(errno));
+	fprintf(stderr, "%s: unable to replace stdout with /dev/null: %s\n",
+		ap_server_argv0, strerror(errno));
     }
     /* stderr is a tricky one, we really want it to be the error_log,
      * but we haven't opened that yet.  So leave it alone for now and it'll
@@ -2820,7 +3456,7 @@ static void detach(void)
 
 static void set_group_privs(void)
 {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE) && !defined(BEOS) && !defined(BONE)
     if (!geteuid()) {
 	char *name;
 
@@ -2843,8 +3479,28 @@ static void set_group_privs(void)
 	else
 	    name = ap_user_name;
 
-#ifndef OS2
-	/* OS/2 dosen't support groups. */
+#if !defined(OS2) && !defined(TPF)
+	/* OS/2 and TPF don't support groups. */
+
+	/*
+	 * Set the GID before initgroups(), since on some platforms
+	 * setgid() is known to zap the group list.
+	 */
+#ifdef MPE
+	GETPRIVMODE();
+#endif
+	if (setgid(ap_group_id) == -1) {
+#ifdef MPE
+	    GETUSERMODE();
+#endif
+	    ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
+			"setgid: unable to set group id to Group %u",
+			(unsigned)ap_group_id);
+	    clean_child_exit(APEXIT_CHILDFATAL);
+	}
+#ifdef MPE
+	GETUSERMODE();
+#endif
 
 	/* Reset `groups' attributes. */
 
@@ -2860,32 +3516,28 @@ static void set_group_privs(void)
 			"getgroups: unable to get group list");
 	    clean_child_exit(APEXIT_CHILDFATAL);
 	}
-#endif
-	if (setgid(ap_group_id) == -1) {
-	    ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
-			"setgid: unable to set group id to Group %u",
-			(unsigned)ap_group_id);
-	    clean_child_exit(APEXIT_CHILDFATAL);
-	}
-#endif
+#endif /* MULTIPLE_GROUPS */
+#endif /* !defined(OS2) && !defined(TPF) */
     }
-#endif /* ndef WIN32 */
+#endif /* !defined(WIN32) && !defined(NETWARE) && !defined(BEOS) */
 }
 
 /* check to see if we have the 'suexec' setuid wrapper installed */
 static int init_suexec(void)
 {
-#ifndef WIN32
+    int result = 0;
+
+#if !defined(WIN32) && !defined(NETWARE) && !defined(TPF)
     struct stat wrapper;
 
-    if ((stat(SUEXEC_BIN, &wrapper)) != 0)
-	return (ap_suexec_enabled);
-
-    if ((wrapper.st_mode & S_ISUID) && wrapper.st_uid == 0) {
-	ap_suexec_enabled = 1;
+    if ((stat(SUEXEC_BIN, &wrapper)) != 0) {
+	result = 0;
+    }
+    else if ((wrapper.st_mode & S_ISUID) && (wrapper.st_uid == 0)) {
+	result = 1;
     }
 #endif /* ndef WIN32 */
-    return (ap_suexec_enabled);
+    return result;
 }
 
 /*****************************************************************
@@ -2908,6 +3560,8 @@ static conn_rec *new_connection(pool *p, server_rec *server, BUFF *inout,
 
     conn->pool = p;
     conn->local_addr = *saddr;
+    conn->local_ip = ap_pstrdup(conn->pool,
+				inet_ntoa(conn->local_addr.sin_addr));
     conn->server = server; /* just a guess for now */
     ap_update_vhost_given_ip(conn);
     conn->base_server = conn->server;
@@ -2920,7 +3574,7 @@ static conn_rec *new_connection(pool *p, server_rec *server, BUFF *inout,
     return conn;
 }
 
-#if defined(TCP_NODELAY) && !defined(MPE)
+#if defined(TCP_NODELAY) && !defined(MPE) && !defined(TPF)
 static void sock_disable_nagle(int s)
 {
     /* The Nagle algorithm says that we should delay sending partial
@@ -2936,6 +3590,9 @@ static void sock_disable_nagle(int s)
 
     if (setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *) &just_say_no,
 		   sizeof(int)) < 0) {
+#ifdef NETWARE
+        errno = WSAGetLastError();
+#endif
 	ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf,
 		    "setsockopt: (TCP_NODELAY)");
     }
@@ -2944,7 +3601,6 @@ static void sock_disable_nagle(int s)
 #else
 #define sock_disable_nagle(s)	/* NOOP */
 #endif
-
 
 static int make_sock(pool *p, const struct sockaddr_in *server)
 {
@@ -2961,10 +3617,11 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
     /* note that because we're about to slack we don't use psocket */
     ap_block_alarms();
     if ((s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-	ap_log_error(APLOG_MARK, APLOG_CRIT, server_conf,
+	    ap_log_error(APLOG_MARK, APLOG_CRIT, server_conf,
 		    "make_sock: failed to get a socket for %s", addr);
-	ap_unblock_alarms();
-	exit(1);
+
+	    ap_unblock_alarms();
+	    exit(1);
     }
 
     /* Solaris (probably versions 2.4, 2.5, and 2.5.1 with various levels
@@ -2987,33 +3644,43 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
 #endif
 
 #ifndef WORKAROUND_SOLARIS_BUG
+#ifndef BEOS /* this won't work for BeOS sockets!! */
     s = ap_slack(s, AP_SLACK_HIGH);
-
-    ap_note_cleanups_for_socket(p, s);	/* arrange to close on exec or restart */
 #endif
 
-#ifndef MPE
-/* MPE does not support SO_REUSEADDR and SO_KEEPALIVE */
+    ap_note_cleanups_for_socket(p, s);	/* arrange to close on exec or restart */
+#ifdef TPF
+    os_note_additional_cleanups(p, s);
+#endif /* TPF */
+#endif
+
 #ifndef _OSD_POSIX
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *) &one, sizeof(int)) < 0) {
 	ap_log_error(APLOG_MARK, APLOG_CRIT, server_conf,
 		    "make_sock: for %s, setsockopt: (SO_REUSEADDR)", addr);
+#ifdef BEOS
+	closesocket(s);
+#else
 	close(s);
+#endif
 	ap_unblock_alarms();
-	return -1;
+	exit(1);
     }
 #endif /*_OSD_POSIX*/
     one = 1;
-#ifndef BEOS
-/* BeOS does not support SO_KEEPALIVE */
+#if defined(SO_KEEPALIVE) && !defined(MPE)
     if (setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char *) &one, sizeof(int)) < 0) {
 	ap_log_error(APLOG_MARK, APLOG_CRIT, server_conf,
 		    "make_sock: for %s, setsockopt: (SO_KEEPALIVE)", addr);
+#ifdef BEOS
+	closesocket(s);
+#else
 	close(s);
-	ap_unblock_alarms();
-	return -1;
-    }
 #endif
+
+	ap_unblock_alarms();
+	exit(1);
+    }
 #endif
 
     sock_disable_nagle(s);
@@ -3055,6 +3722,7 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
     if (ntohs(server->sin_port) < 1024)
 	GETPRIVMODE();
 #endif
+
     if (bind(s, (struct sockaddr *) server, sizeof(struct sockaddr_in)) == -1) {
 	ap_log_error(APLOG_MARK, APLOG_CRIT, server_conf,
 	    "make_sock: could not bind to %s", addr);
@@ -3062,7 +3730,12 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
 	if (ntohs(server->sin_port) < 1024)
 	    GETUSERMODE();
 #endif
+
+#ifdef BEOS
+	closesocket(s);
+#else
 	close(s);
+#endif
 	ap_unblock_alarms();
 	exit(1);
     }
@@ -3074,10 +3747,44 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
     if (listen(s, ap_listenbacklog) == -1) {
 	ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
 	    "make_sock: unable to listen for connections on %s", addr);
+#ifdef BEOS
+	closesocket(s);
+#else
 	close(s);
+#endif
 	ap_unblock_alarms();
 	exit(1);
     }
+
+#ifdef SO_ACCEPTFILTER
+    if (ap_acceptfilter) {
+#ifndef ACCEPT_FILTER_NAME
+#define ACCEPT_FILTER_NAME "httpready"
+#ifdef __FreeBSD_version
+#if __FreeBSD_version < 411000 /* httpready broken before 4.1.1 */
+#undef ACCEPT_FILTER_NAME
+#define ACCEPT_FILTER_NAME "dataready"
+#endif
+#endif
+#endif /* ! ACCEPT_FILTER_NAME */
+	/*
+	 * See htdocs/manual/misc/perf-bsd44.html for a discussion of
+	 * how to enable this feature and various issues with it.
+	 */
+	struct accept_filter_arg af = {
+	    ACCEPT_FILTER_NAME, ""
+	};
+	if (setsockopt(s, SOL_SOCKET, SO_ACCEPTFILTER, &af, sizeof(af)) < 0) {
+            if (errno == ENOPROTOOPT) {
+	    	ap_log_error(APLOG_MARK, APLOG_INFO | APLOG_NOERRNO, server_conf,
+			 "socket option SO_ACCEPTFILTER unkown on this machine. Continuing.");
+	     } else {
+	    	ap_log_error(APLOG_MARK, APLOG_WARNING | APLOG_INFO, server_conf,
+			 "make_sock: for %s, setsockopt: (SO_ACCEPTFILTER)", addr);
+	     }
+	}
+    }
+#endif
 
 #ifdef WORKAROUND_SOLARIS_BUG
     s = ap_slack(s, AP_SLACK_HIGH);
@@ -3086,7 +3793,7 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
 #endif
     ap_unblock_alarms();
 
-#ifndef WIN32
+#ifdef CHECK_FD_SETSIZE
     /* protect various fd_sets */
     if (s >= FD_SETSIZE) {
 	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, NULL,
@@ -3094,8 +3801,12 @@ static int make_sock(pool *p, const struct sockaddr_in *server)
 	    "larger than FD_SETSIZE (%u) "
 	    "found, you probably need to rebuild Apache with a "
 	    "larger FD_SETSIZE", addr, s, FD_SETSIZE);
+#ifdef BEOS
+	closesocket(s);
+#else
 	close(s);
-	return -1;
+#endif
+	exit(1);
     }
 #endif
 
@@ -3127,10 +3838,11 @@ static void copy_listeners(pool *p)
     lr = ap_listeners;
     do {
 	listen_rec *nr = malloc(sizeof *nr);
-	if (nr == NULL) {
-	    fprintf(stderr, "Ouch!  malloc failed in copy_listeners()\n");
-	    exit(1);
-	}
+
+        if (nr == NULL) {
+            fprintf(stderr, "Ouch!  malloc failed in copy_listeners()\n");
+            exit(1);
+        }
 	*nr = *lr;
 	ap_kill_cleanups_for_socket(p, nr->fd);
 	nr->next = old_listeners;
@@ -3186,11 +3898,10 @@ static void setup_listeners(pool *p)
 	else {
 	    ap_note_cleanups_for_socket(p, fd);
 	}
-	if (fd >= 0) {
-	    FD_SET(fd, &listenfds);
-	    if (fd > listenmaxfd)
-		listenmaxfd = fd;
-	}
+	/* if we get here, (fd >= 0) && (fd < FD_SETSIZE) */
+	FD_SET(fd, &listenfds);
+	if (fd > listenmaxfd)
+	    listenmaxfd = fd;
 	lr->fd = fd;
 	if (lr->next == NULL)
 	    break;
@@ -3235,7 +3946,7 @@ static ap_inline listen_rec *find_ready_listener(fd_set * main_fds)
 }
 
 
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
 static int s_iInitCount = 0;
 
 static int AMCSocketInitialize(void)
@@ -3252,22 +3963,23 @@ static int AMCSocketInitialize(void)
 	return (s_iInitCount);
 
     /* s_iInitCount == 0. Do the initailization */
-    iVersionRequested = MAKEWORD(1, 1);
+    iVersionRequested = MAKEWORD(2, 0);
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
     if (err) {
+        printf("WSAStartup failed with error %d\n", err);
 	s_iInitCount = -1;
 	return (s_iInitCount);
     }
-    if (LOBYTE(wsaData.wVersion) != 1 ||
-	HIBYTE(wsaData.wVersion) != 1) {
+
+    if (LOBYTE(wsaData.wVersion) != 2 ||
+	HIBYTE(wsaData.wVersion) != 0) {
+        printf("Apache requires Winsock 2. Please see the Apache FAQ for more information.\n");
 	s_iInitCount = -2;
 	WSACleanup();
 	return (s_iInitCount);
     }
-
     s_iInitCount++;
     return (s_iInitCount);
-
 }
 
 
@@ -3286,6 +3998,9 @@ static void show_compile_settings(void)
     printf("Server's Module Magic Number: %u:%u\n",
 	   MODULE_MAGIC_NUMBER_MAJOR, MODULE_MAGIC_NUMBER_MINOR);
     printf("Server compiled with....\n");
+#ifdef TPF
+    show_os_specific_compile_settings();
+#endif
 #ifdef BIG_SECURITY_HOLE
     printf(" -D BIG_SECURITY_HOLE\n");
 #endif
@@ -3322,20 +4037,32 @@ static void show_compile_settings(void)
 #ifdef NO_LINGCLOSE
     printf(" -D NO_LINGCLOSE\n");
 #endif
-#ifdef USE_FCNTL_SERIALIZED_ACCEPT
-    printf(" -D USE_FCNTL_SERIALIZED_ACCEPT\n");
+#ifdef HAVE_FCNTL_SERIALIZED_ACCEPT
+    printf(" -D HAVE_FCNTL_SERIALIZED_ACCEPT\n");
 #endif
-#ifdef USE_FLOCK_SERIALIZED_ACCEPT
-    printf(" -D USE_FLOCK_SERIALIZED_ACCEPT\n");
+#ifdef HAVE_FLOCK_SERIALIZED_ACCEPT
+    printf(" -D HAVE_FLOCK_SERIALIZED_ACCEPT\n");
 #endif
-#ifdef USE_USLOCK_SERIALIZED_ACCEPT
-    printf(" -D USE_USLOCK_SERIALIZED_ACCEPT\n");
+#ifdef HAVE_USLOCK_SERIALIZED_ACCEPT
+    printf(" -D HAVE_USLOCK_SERIALIZED_ACCEPT\n");
 #endif
-#ifdef USE_SYSVSEM_SERIALIZED_ACCEPT
-    printf(" -D USE_SYSVSEM_SERIALIZED_ACCEPT\n");
+#ifdef HAVE_SYSVSEM_SERIALIZED_ACCEPT
+    printf(" -D HAVE_SYSVSEM_SERIALIZED_ACCEPT\n");
 #endif
-#ifdef USE_PTHREAD_SERIALIZED_ACCEPT
-    printf(" -D USE_PTHREAD_SERIALIZED_ACCEPT\n");
+#ifdef HAVE_PTHREAD_SERIALIZED_ACCEPT
+    printf(" -D HAVE_PTHREAD_SERIALIZED_ACCEPT\n");
+#endif
+#ifdef HAVE_OS2SEM_SERIALIZED_ACCEPT
+    printf(" -D HAVE_OS2SEM_SERIALIZED_ACCEPT\n");
+#endif
+#ifdef HAVE_TPF_CORE_SERIALIZED_ACCEPT
+    printf(" -D HAVE_TPF_CORE_SERIALIZED_ACCEPT\n");
+#endif
+#ifdef HAVE_BEOS_SERIALIZED_ACCEPT
+    printf(" -D HAVE_BEOS_SERIALIZED_ACCEPT\n");
+#endif  
+#ifdef HAVE_NONE_SERIALIZED_ACCEPT
+    printf(" -D HAVE_NONE_SERIALIZED_ACCEPT\n");
 #endif
 #ifdef SINGLE_LISTEN_UNSERIALIZED_ACCEPT
     printf(" -D SINGLE_LISTEN_UNSERIALIZED_ACCEPT\n");
@@ -3364,15 +4091,25 @@ static void show_compile_settings(void)
 #ifdef SHARED_CORE
     printf(" -D SHARED_CORE\n");
 #endif
+#ifdef SO_ACCEPTFILTER
+    printf(" -D SO_ACCEPTFILTER\n");
+    printf(" -D ACCEPT_FILTER_NAME=\"" ACCEPT_FILTER_NAME "\"\n");
+#endif
+#ifdef AP_ACCEPTFILTER_OFF
+    printf(" -D AP_ACCEPTFILTER_OFF\n");
+#endif
+#ifdef CYGWIN_WINSOCK 
+    printf(" -D CYGWIN_WINSOCK\n"); 
+#endif 
 
 /* This list displays the compiled-in default paths: */
 #ifdef HTTPD_ROOT
     printf(" -D HTTPD_ROOT=\"" HTTPD_ROOT "\"\n");
 #endif
-#ifdef SUEXEC_BIN
+#if defined(SUEXEC_BIN) && !defined(TPF)
     printf(" -D SUEXEC_BIN=\"" SUEXEC_BIN "\"\n");
 #endif
-#ifdef SHARED_CORE_DIR
+#if defined(SHARED_CORE) && defined(SHARED_CORE_DIR)
     printf(" -D SHARED_CORE_DIR=\"" SHARED_CORE_DIR "\"\n");
 #endif
 #ifdef DEFAULT_PIDLOG
@@ -3383,9 +4120,6 @@ static void show_compile_settings(void)
 #endif
 #ifdef DEFAULT_LOCKFILE
     printf(" -D DEFAULT_LOCKFILE=\"" DEFAULT_LOCKFILE "\"\n");
-#endif
-#ifdef DEFAULT_XFERLOG
-    printf(" -D DEFAULT_XFERLOG=\"" DEFAULT_XFERLOG "\"\n");
 #endif
 #ifdef DEFAULT_ERRORLOG
     printf(" -D DEFAULT_ERRORLOG=\"" DEFAULT_ERRORLOG "\"\n");
@@ -3416,12 +4150,14 @@ static void common_init(void)
     (void) set42sig();
 #endif
 
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
     /* Initialize the stupid sockets */
     AMCSocketInitialize();
 #endif /* WIN32 */
 
-    pconf = ap_init_alloc();
+    pglobal = ap_init_alloc();
+    pconf = ap_make_sub_pool(pglobal);
+    plog = ap_make_sub_pool(pglobal);
     ptrans = ap_make_sub_pool(pconf);
 
     ap_util_init();
@@ -3488,26 +4224,31 @@ static void child_main(int child_num_arg)
 
     set_group_privs();
 #ifdef MPE
-    /* Only try to switch if we're running as MANAGER.SYS */
-    if (geteuid() == 1 && ap_user_id > 1) {
-	GETPRIVMODE();
-	if (setuid(ap_user_id) == -1) {
-	    GETUSERMODE();
-	    ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
-			"setuid: unable to change uid");
-	    exit(1);
-	}
+    /* No such thing as root on MPE, so try to switch unconditionally */
+    GETPRIVMODE();
+    if (setuid(ap_user_id) == -1) {
 	GETUSERMODE();
+	ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
+		    "setuid: unable to change to uid: %d", ap_user_id);
+	exit(1);
     }
+    GETUSERMODE();
 #else
-    /* Only try to switch if we're running as root */
+    /* 
+     * Only try to switch if we're running as root
+     * In case of Cygwin we have the special super-user named SYSTEM
+     */
+#ifdef CYGWIN
+    if (getuid() == SYSTEM_UID && (
+#else
     if (!geteuid() && (
+#endif
 #ifdef _OSD_POSIX
-	os_init_job_environment(server_conf, ap_user_name) != 0 || 
+	os_init_job_environment(server_conf, ap_user_name, one_process) != 0 || 
 #endif
 	setuid(ap_user_id) == -1)) {
 	ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
-		    "setuid: unable to change uid");
+		    "setuid: unable to change to uid: %ld", (long) ap_user_id);
 	clean_child_exit(APEXIT_CHILDFATAL);
     }
 #endif
@@ -3520,8 +4261,7 @@ static void child_main(int child_num_arg)
     (void) ap_update_child_status(my_child_num, SERVER_READY, (request_rec *) NULL);
 
     /*
-     * Setup the jump buffers so that we can return here after
-     * a signal or a timeout (yeah, I know, same thing).
+     * Setup the jump buffers so that we can return here after a timeout 
      */
     ap_setjmp(jmpbuffer);
 #ifndef OS2
@@ -3529,8 +4269,12 @@ static void child_main(int child_num_arg)
     signal(SIGURG, timeout);
 #endif
 #endif
-    signal(SIGPIPE, timeout);
     signal(SIGALRM, alrm_handler);
+#ifdef TPF
+    signal(SIGHUP, just_die);
+    signal(SIGTERM, just_die);
+    signal(SIGUSR1, just_die);
+#endif /* TPF */
 
 #ifdef OS2
 /* Stop Ctrl-C/Ctrl-Break signals going to child processes */
@@ -3561,13 +4305,13 @@ static void child_main(int child_num_arg)
 	ap_clear_pool(ptrans);
 
 	ap_sync_scoreboard_image();
-	if (ap_scoreboard_image->global.exit_generation >= generation) {
+	if (ap_scoreboard_image->global.running_generation != ap_my_generation) {
 	    clean_child_exit(0);
 	}
 
 #ifndef WIN32
 	if ((ap_max_requests_per_child > 0
-	     && ++requests_this_child >= ap_max_requests_per_child)) {
+	     && requests_this_child++ >= ap_max_requests_per_child)) {
 	    clean_child_exit(0);
 	}
 #else
@@ -3620,7 +4364,7 @@ static void child_main(int child_num_arg)
 	    usr1_just_die = 0;
 	    for (;;) {
 		clen = sizeof(sa_client);
-		csd = accept(sd, &sa_client, &clen);
+		csd = ap_accept(sd, &sa_client, &clen);
 		if (csd >= 0 || errno != EINTR)
 		    break;
 		if (deferred_die) {
@@ -3644,6 +4388,19 @@ static void child_main(int child_num_arg)
 		 * to just exit in most cases.
 		 */
                 switch (errno) {
+
+#if defined(HPUX11) && defined(ENOBUFS)
+                    /* On HPUX 11.x, the 'ENOBUFS, No buffer space available'
+                     * error occures because the accept() cannot complete.
+                     * You will not see ENOBUFS at 10.20 because the kernel
+                     * hides any occurrence from being returned from user space.
+                     * ENOBUFS at 11.0 TCP/IP is quite possible, and could
+                     * occur intermittently. As a work-around, we are going to
+                     * ingnore ENOBUFS.
+                     */
+                case ENOBUFS:
+#endif
+
 #ifdef EPROTO
 		    /* EPROTO on certain older kernels really means
 		     * ECONNABORTED, so we need to ignore it for them.
@@ -3684,11 +4441,43 @@ static void child_main(int child_num_arg)
 		case ENETUNREACH:
 #endif
                     break;
+#ifdef ENETDOWN
+		case ENETDOWN:
+		     /*
+		      * When the network layer has been shut down, there
+		      * is not much use in simply exiting: the parent
+		      * would simply re-create us (and we'd fail again).
+		      * Use the CHILDFATAL code to tear the server down.
+		      * @@@ Martin's idea for possible improvement:
+		      * A different approach would be to define
+		      * a new APEXIT_NETDOWN exit code, the reception
+		      * of which would make the parent shutdown all
+		      * children, then idle-loop until it detected that
+		      * the network is up again, and restart the children.
+		      * Ben Hyde noted that temporary ENETDOWN situations
+		      * occur in mobile IP.
+		      */
+		    ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
+			"accept: giving up.");
+		    clean_child_exit(APEXIT_CHILDFATAL);
+#endif /*ENETDOWN*/
 
+#ifdef TPF
+		case EINACT:
+		    ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
+			"offload device inactive");
+		    clean_child_exit(APEXIT_CHILDFATAL);
+		    break;
+		default:
+		    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, server_conf,
+			"select/accept error (%u)", errno);
+		    clean_child_exit(APEXIT_CHILDFATAL);
+#else
 		default:
 		    ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
 				"accept: (client socket)");
 		    clean_child_exit(1);
+#endif
 		}
 	    }
 
@@ -3702,12 +4491,17 @@ static void child_main(int child_num_arg)
 	     * without reliable signals
 	     */
 	    ap_sync_scoreboard_image();
-	    if (ap_scoreboard_image->global.exit_generation >= generation) {
+	    if (ap_scoreboard_image->global.running_generation != ap_my_generation) {
 		clean_child_exit(0);
 	    }
 	}
 
 	SAFE_ACCEPT(accept_mutex_off());	/* unlock after "accept" */
+
+#ifdef TPF
+	if (csd == 0)                       /* 0 is invalid socket for TPF */
+	    continue;
+#endif
 
 	/* We've got a socket, let's at least process one request off the
 	 * socket before we accept a graceful restart request.
@@ -3717,6 +4511,7 @@ static void child_main(int child_num_arg)
 	ap_note_cleanups_for_fd(ptrans, csd);
 
 	/* protect various fd_sets */
+#ifdef CHECK_FD_SETSIZE
 	if (csd >= FD_SETSIZE) {
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, NULL,
 		"[csd] filedescriptor (%u) larger than FD_SETSIZE (%u) "
@@ -3724,6 +4519,7 @@ static void child_main(int child_num_arg)
 		"larger FD_SETSIZE", csd, FD_SETSIZE);
 	    continue;
 	}
+#endif
 
 	/*
 	 * We now have a connection, so set it up with the appropriate
@@ -3763,6 +4559,7 @@ static void child_main(int child_num_arg)
 	ap_note_cleanups_for_fd(ptrans, dupped_csd);
 
 	/* protect various fd_sets */
+#ifdef CHECK_FD_SETSIZE
 	if (dupped_csd >= FD_SETSIZE) {
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, NULL,
 		"[dupped_csd] filedescriptor (%u) larger than FD_SETSIZE (%u) "
@@ -3770,6 +4567,7 @@ static void child_main(int child_num_arg)
 		"larger FD_SETSIZE", dupped_csd, FD_SETSIZE);
 	    continue;
 	}
+#endif
 #endif
 	ap_bpushfd(conn_io, csd, dupped_csd);
 
@@ -3799,6 +4597,17 @@ static void child_main(int child_num_arg)
 	    if(ap_extended_status)
 		increment_counts(my_child_num, r);
 
+#ifdef TPF_HAVE_NSD
+            /* Update the TPF Network Services Database message counters */
+            tpf_tcpip_message_cnt(NSDB_INPUT_CNT,
+                ((struct sockaddr_in *)&sa_server)->sin_port,
+                NSDB_TCP_S, 1);
+
+            tpf_tcpip_message_cnt(NSDB_OUTPUT_CNT,
+                ((struct sockaddr_in *)&sa_server)->sin_port,
+                NSDB_TCP_S, 1);
+#endif /* TPF_HAVE_NSD */
+
 	    if (!current_conn->keepalive || current_conn->aborted)
 		break;
 
@@ -3807,7 +4616,7 @@ static void child_main(int child_num_arg)
 				       (request_rec *) NULL);
 
 	    ap_sync_scoreboard_image();
-	    if (ap_scoreboard_image->global.exit_generation >= generation) {
+	    if (ap_scoreboard_image->global.running_generation != ap_my_generation) {
 		ap_bclose(conn_io);
 		clean_child_exit(0);
 	    }
@@ -3853,6 +4662,36 @@ static void child_main(int child_num_arg)
     }
 }
 
+#ifdef TPF
+static void reset_tpf_listeners(APACHE_TPF_INPUT *input_parms)
+{
+    int count;
+    listen_rec *lr;
+
+    count = 0;
+    listenmaxfd = -1;
+    FD_ZERO(&listenfds);
+    lr = ap_listeners;
+
+    for(;;) {
+        lr->fd = input_parms->listeners[count];
+        if(lr->fd >= 0) {
+            FD_SET(lr->fd, &listenfds);
+            if(lr->fd > listenmaxfd)
+                listenmaxfd = lr->fd;
+        }
+        if(lr->next == NULL)
+            break;
+        lr = lr->next;
+        count++;
+    }
+    lr->next = ap_listeners;
+    head_listener = ap_listeners;
+    close_unused_listeners();
+}
+
+#endif /* TPF */
+
 static int make_child(server_rec *s, int slot, time_t now)
 {
     int pid;
@@ -3864,7 +4703,9 @@ static int make_child(server_rec *s, int slot, time_t now)
     if (one_process) {
 	signal(SIGHUP, just_die);
 	signal(SIGINT, just_die);
+#ifdef SIGQUIT
 	signal(SIGQUIT, SIG_DFL);
+#endif
 	signal(SIGTERM, just_die);
 	child_main(slot);
     }
@@ -3875,7 +4716,15 @@ static int make_child(server_rec *s, int slot, time_t now)
     Explain1("Starting new child in slot %d", slot);
     (void) ap_update_child_status(slot, SERVER_STARTING, (request_rec *) NULL);
 
+
+#ifdef _OSD_POSIX
+    /* BS2000 requires a "special" version of fork() before a setuid() call */
+    if ((pid = os_fork(ap_user_name)) == -1) {
+#elif defined(TPF)
+    if ((pid = os_fork(s, slot)) == -1) {
+#else
     if ((pid = fork()) == -1) {
+#endif
 	ap_log_error(APLOG_MARK, APLOG_ERR, s, "fork: Unable to fork new process");
 
 	/* fork didn't succeed. Fix the scoreboard or else
@@ -3934,7 +4783,7 @@ static int make_child(server_rec *s, int slot, time_t now)
 static void startup_children(int number_to_start)
 {
     int i;
-    time_t now = time(0);
+    time_t now = time(NULL);
 
     for (i = 0; number_to_start && i < ap_daemons_limit; ++i) {
 	if (ap_scoreboard_image->servers[i].status != SERVER_DEAD) {
@@ -3960,13 +4809,30 @@ static int idle_spawn_rate = 1;
 #endif
 static int hold_off_on_exponential_spawning;
 
+/*
+ * Define the signal that is used to kill off children if idle_count
+ * is greater then ap_daemons_max_free. Usually we will use SIGUSR1
+ * to gracefully shutdown, but unfortunatly some OS will need other 
+ * signals to ensure that the child process is terminated and the 
+ * scoreboard pool is not growing to infinity. Also set the signal we
+ * use to kill of childs that exceed timeout. This effect has been
+* seen at least on Cygwin 1.x. -- Stipe Tolj <tolj@wapme-systems.de>
+ */
+#if defined(CYGWIN)
+#define SIG_IDLE_KILL SIGKILL
+#define SIG_TIMEOUT_KILL SIGUSR2
+#else
+#define SIG_IDLE_KILL SIGUSR1
+#define SIG_TIMEOUT_KILL SIGALRM
+#endif
+
 static void perform_idle_server_maintenance(void)
 {
     int i;
     int to_kill;
     int idle_count;
     short_score *ss;
-    time_t now = time(0);
+    time_t now = time(NULL);
     int free_length;
     int free_slots[MAX_SPAWN_RATE];
     int last_non_dead;
@@ -4029,7 +4895,7 @@ static void perform_idle_server_maintenance(void)
 		else if (ps->last_rtime + ss->timeout_len < now) {
 		    /* no progress, and the timeout length has been exceeded */
 		    ss->timeout_len = 0;
-		    kill(ps->pid, SIGALRM);
+		    kill(ps->pid, SIG_TIMEOUT_KILL);
 		}
 	    }
 #endif
@@ -4039,9 +4905,10 @@ static void perform_idle_server_maintenance(void)
     if (idle_count > ap_daemons_max_free) {
 	/* kill off one child... we use SIGUSR1 because that'll cause it to
 	 * shut down gracefully, in case it happened to pick up a request
-	 * while we were counting
+	 * while we were counting. Use the define SIG_IDLE_KILL to reflect
+	 * which signal should be used on the specific OS.
 	 */
-	kill(ap_scoreboard_image->parent[to_kill].pid, SIGUSR1);
+	kill(ap_scoreboard_image->parent[to_kill].pid, SIG_IDLE_KILL);
 	idle_spawn_rate = 1;
     }
     else if (idle_count < ap_daemons_min_free) {
@@ -4068,7 +4935,17 @@ static void perform_idle_server_maintenance(void)
 		    idle_count, total_non_dead);
 	    }
 	    for (i = 0; i < free_length; ++i) {
+#ifdef TPF
+        if(make_child(server_conf, free_slots[i], now) == -1) {
+            if(free_length == 1) {
+                shutdown_pending = 1;
+                ap_log_error(APLOG_MARK, APLOG_EMERG, server_conf,
+                "No active child processes: shutting down");
+            }
+        }
+#else
 		make_child(server_conf, free_slots[i], now);
+#endif /* TPF */
 	    }
 	    /* the next time around we want to spawn twice as many if this
 	     * wasn't good enough, but not if we've just done a graceful
@@ -4112,27 +4989,27 @@ static void process_child_status(int pid, ap_wait_t status)
 #ifdef WCOREDUMP
 	    if (WCOREDUMP(status)) {
 		ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE,
-		    server_conf,
-		    "httpd: child pid %d exit signal %s (%d), "
-		    "possible coredump in %s",
-		    pid, (WTERMSIG(status) >= NumSIG) ? "" : 
-		    SYS_SIGLIST[WTERMSIG(status)], WTERMSIG(status),
-		    ap_coredump_dir);
+			     server_conf,
+			     "child pid %d exit signal %s (%d), "
+			     "possible coredump in %s",
+			     pid, (WTERMSIG(status) >= NumSIG) ? "" : 
+			     SYS_SIGLIST[WTERMSIG(status)], WTERMSIG(status),
+			     ap_coredump_dir);
 	    }
 	    else {
 #endif
 		ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE,
-		    server_conf,
-		    "httpd: child pid %d exit signal %s (%d)",
-		    pid, SYS_SIGLIST[WTERMSIG(status)], WTERMSIG(status));
+			     server_conf,
+			     "child pid %d exit signal %s (%d)", pid,
+			     SYS_SIGLIST[WTERMSIG(status)], WTERMSIG(status));
 #ifdef WCOREDUMP
 	    }
 #endif
 #else
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE,
-		server_conf,
-		"httpd: child pid %d exit signal %d",
-		pid, WTERMSIG(status));
+			 server_conf,
+			 "child pid %d exit signal %d",
+			 pid, WTERMSIG(status));
 #endif
 	}
     }
@@ -4157,7 +5034,6 @@ static void standalone_main(int argc, char **argv)
     ap_standalone = 1;
 
     is_graceful = 0;
-    ++generation;
 
     if (!one_process) {
 	detach();
@@ -4182,9 +5058,12 @@ static void standalone_main(int argc, char **argv)
 	ap_clear_pool(pconf);
 	ptrans = ap_make_sub_pool(pconf);
 
+	ap_init_mutex_method(ap_default_mutex_method());
+
 	server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
 	setup_listeners(pconf);
-	ap_open_logs(server_conf, pconf);
+	ap_clear_pool(plog);
+	ap_open_logs(server_conf, plog);
 	ap_log_pid(pconf, ap_pid_fname);
 	ap_set_version();	/* create our server_version string */
 	ap_init_modules(pconf, server_conf);
@@ -4236,6 +5115,9 @@ static void standalone_main(int argc, char **argv)
 	}
 	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf,
 		    "Server built: %s", ap_get_server_built());
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, server_conf,
+		    "Accept mutex: %s (Default: %s)",
+		     amutex->name, ap_default_mutex_method());
 	restart_pending = shutdown_pending = 0;
 
 	while (!restart_pending && !shutdown_pending) {
@@ -4261,7 +5143,7 @@ static void standalone_main(int argc, char **argv)
 			/* we're still doing a 1-for-1 replacement of dead
 			 * children with new children
 			 */
-			make_child(server_conf, child_slot, time(0));
+			make_child(server_conf, child_slot, time(NULL));
 			--remaining_children_to_start;
 		    }
 #ifndef NO_OTHER_CHILD
@@ -4300,6 +5182,17 @@ static void standalone_main(int argc, char **argv)
 	    }
 
 	    perform_idle_server_maintenance();
+#ifdef TPF
+            ap_check_signals();
+            if (!shutdown_pending) {
+                if (os_check_server(tpf_server_name)) {
+                    shutdown_pending++;
+                } else {
+                    sleep(1);
+                    ap_check_signals();
+                }
+            }
+#endif /*TPF */
 	}
 
 	if (shutdown_pending) {
@@ -4318,12 +5211,12 @@ static void standalone_main(int argc, char **argv)
 		if ( pidfile != NULL && unlink(pidfile) == 0)
 		    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO,
 				 server_conf,
-				 "httpd: removed PID file %s (pid=%ld)",
+				 "removed PID file %s (pid=%ld)",
 				 pidfile, (long)getpid());
 	    }
 
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, server_conf,
-			"httpd: caught SIGTERM, shutting down");
+			"caught SIGTERM, shutting down");
 	    clean_parent_exit(0);
 	}
 
@@ -4336,16 +5229,18 @@ static void standalone_main(int argc, char **argv)
 	    clean_parent_exit(0);
 	}
 
+	/* advance to the next generation */
+	/* XXX: we really need to make sure this new generation number isn't in
+	 * use by any of the children.
+	 */
+	++ap_my_generation;
+	ap_scoreboard_image->global.running_generation = ap_my_generation;
+	update_scoreboard_global();
+
 	if (is_graceful) {
 #ifndef SCOREBOARD_FILE
 	    int i;
 #endif
-
-	    /* USE WITH CAUTION:  Graceful restarts are not known to work
-	     * in various configurations on the architectures we support. */
-	    ap_scoreboard_image->global.exit_generation = generation;
-	    update_scoreboard_global();
-
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, server_conf,
 			"SIGUSR1 received.  Doing graceful restart");
 
@@ -4376,7 +5271,6 @@ static void standalone_main(int argc, char **argv)
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, server_conf,
 			"SIGHUP received.  Attempting to restart");
 	}
-	++generation;
     } while (restart_pending);
 
     /*add_common_vars(NULL);*/
@@ -4389,11 +5283,22 @@ void STANDALONE_MAIN(int argc, char **argv);
 extern char *optarg;
 extern int optind;
 
+/* Cygwin 1.x SHARED_CORE support needs REALMAIN to be declared as dllexport,
+ * so we can later while SHARED_CORE_BOOTSTRAP is compiled and linked see the 
+ * dllimport for it. -- Stipe Tolj <tolj@wapme-systems.de>
+ */
+
+#if defined(CYGWIN)
+__declspec(dllexport)  
+#endif
+
 int REALMAIN(int argc, char *argv[])
 {
     int c;
-    int configtestonly = 0;
-
+    int sock_in;
+    int sock_out;
+    char *s;
+    
 #ifdef SecureWare
     if (set_auth_parameters(argc, argv) < 0)
 	perror("set_auth_parameters");
@@ -4408,18 +5313,30 @@ int REALMAIN(int argc, char *argv[])
     SOCKSinit(argv[0]);
 #endif
 
+#ifdef TPF
+    EBW_AREA input_parms;
+    ecbptr()->ebrout = PRIMECRAS;
+    input_parms = * (EBW_AREA *)(&(ecbptr()->ebw000));
+#endif
+
     MONCONTROL(0);
 
     common_init();
     
-    ap_server_argv0 = argv[0];
+    if ((s = strrchr(argv[0], PATHSEPARATOR)) != NULL) {
+	ap_server_argv0 = ++s;
+    }
+    else {
+	ap_server_argv0 = argv[0];
+    }
+    
     ap_cpystrn(ap_server_root, HTTPD_ROOT, sizeof(ap_server_root));
     ap_cpystrn(ap_server_confname, SERVER_CONFIG_FILE, sizeof(ap_server_confname));
 
     ap_setup_prelinked_modules();
 
     while ((c = getopt(argc, argv,
-				    "D:C:c:Xd:f:vVhlL:St"
+				    "D:C:c:xXd:Ff:vVlLR:StTh"
 #ifdef DEBUG_SIGSTOP
 				    "Z:"
 #endif
@@ -4441,6 +5358,9 @@ int REALMAIN(int argc, char *argv[])
 	case 'd':
 	    ap_cpystrn(ap_server_root, optarg, sizeof(ap_server_root));
 	    break;
+	case 'F':
+	    do_detach = 0;
+	    break;
 	case 'f':
 	    ap_cpystrn(ap_server_confname, optarg, sizeof(ap_server_confname));
 	    break;
@@ -4453,22 +5373,29 @@ int REALMAIN(int argc, char *argv[])
 	    ap_set_version();
 	    show_compile_settings();
 	    exit(0);
-	case 'h':
-	    ap_show_directives();
-	    exit(0);
 	case 'l':
+	    ap_suexec_enabled = init_suexec();
 	    ap_show_modules();
+	    exit(0);
+	case 'L':
+	    ap_show_directives();
 	    exit(0);
 	case 'X':
 	    ++one_process;	/* Weird debugging mode. */
 	    break;
+#ifdef TPF
+	case 'x':
+	    os_tpf_child(&input_parms.child);
+	    set_signals();
+	    break;
+#endif
 #ifdef DEBUG_SIGSTOP
 	case 'Z':
 	    raise_sigstop_flags = atoi(optarg);
 	    break;
 #endif
 #ifdef SHARED_CORE
-	case 'L':
+	case 'R':
 	    /* just ignore this option here, because it has only
 	     * effect when SHARED_CORE is used and then it was
 	     * already handled in the Shared Core Bootstrap
@@ -4480,8 +5407,15 @@ int REALMAIN(int argc, char *argv[])
 	    ap_dump_settings = 1;
 	    break;
 	case 't':
-	    configtestonly = 1;
+	    ap_configtestonly = 1;
+	    ap_docrootcheck = 1;
 	    break;
+	case 'T':
+	    ap_configtestonly = 1;
+	    ap_docrootcheck = 0;
+	    break;
+	case 'h':
+	    usage(argv[0]);
 	case '?':
 	    usage(argv[0]);
 	}
@@ -4490,20 +5424,67 @@ int REALMAIN(int argc, char *argv[])
     ap_suexec_enabled = init_suexec();
     server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
 
-    if (configtestonly) {
+    if (ap_configtestonly) {
         fprintf(stderr, "Syntax OK\n");
+        exit(0);
+    }
+    if (ap_dump_settings) {
         exit(0);
     }
 
     child_timeouts = !ap_standalone || one_process;
 
+#ifdef BEOS
+    /* make sure we're running in single_process mode - Yuck! */
+    one_process = 1;
+#endif
+
+#ifndef TPF
     if (ap_standalone) {
-	ap_open_logs(server_conf, pconf);
+	ap_open_logs(server_conf, plog);
 	ap_set_version();
 	ap_init_modules(pconf, server_conf);
 	version_locked++;
 	STANDALONE_MAIN(argc, argv);
     }
+#else
+    if (!tpf_child) {
+        memcpy(tpf_server_name, input_parms.parent.servname,
+               INETD_SERVNAME_LENGTH);
+        tpf_server_name[INETD_SERVNAME_LENGTH + 1] = '\0';
+        ap_open_logs(server_conf, plog);
+        ap_tpf_zinet_checks(ap_standalone, tpf_server_name, server_conf);
+        ap_tpf_save_argv(argc, argv);    /* save argv parms for children */
+    }
+    if (ap_standalone) {
+        ap_set_version();
+        ap_init_modules(pconf, server_conf);
+        version_locked++;
+        if(tpf_child) {
+           server_conf->error_log = stderr;
+#ifdef HAVE_SYSLOG
+            /* if ErrorLog is syslog call ap_open_logs from the child since
+               syslog isn't redirected to stderr by the Apache parent */
+            if (strncasecmp(server_conf->error_fname, "syslog", 6) == 0) {
+               ap_open_logs(server_conf, plog);
+            }
+#endif /* HAVE_SYSLOG */
+            copy_listeners(pconf);
+            reset_tpf_listeners(&input_parms.child);
+#ifdef SCOREBOARD_FILE
+            scoreboard_fd = input_parms.child.scoreboard_fd;
+            ap_scoreboard_image = &_scoreboard_image;
+#else /* must be USE_TPF_SCOREBOARD or USE_SHMGET_SCOREBOARD */
+            ap_scoreboard_image =
+                (scoreboard *)input_parms.child.scoreboard_heap;
+#endif
+            ap_init_mutex_method(ap_default_mutex_method());
+            child_main(input_parms.child.slot);
+        }
+        else
+            STANDALONE_MAIN(argc, argv);
+    }
+#endif
     else {
 	conn_rec *conn;
 	request_rec *r;
@@ -4511,29 +5492,38 @@ int REALMAIN(int argc, char *argv[])
 	BUFF *cio;
 	NET_SIZE_T l;
 
+	ap_set_version();
 	/* Yes this is called twice. */
 	ap_init_modules(pconf, server_conf);
-	ap_open_logs(server_conf, pconf);
+	version_locked++;
+	ap_open_logs(server_conf, plog);
 	ap_init_modules(pconf, server_conf);
 	set_group_privs();
 
 #ifdef MPE
-	/* Only try to switch if we're running as MANAGER.SYS */
-	if (geteuid() == 1 && ap_user_id > 1) {
-	    GETPRIVMODE();
-	    if (setuid(ap_user_id) == -1) {
-		GETUSERMODE();
-		ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
-			    "setuid: unable to change uid");
-		exit(1);
-	    }
+	/* No such thing as root on MPE, so try to switch unconditionally */
+	GETPRIVMODE();
+	if (setuid(ap_user_id) == -1) {
 	    GETUSERMODE();
-	}
-#else
-	/* Only try to switch if we're running as root */
-	if (!geteuid() && setuid(ap_user_id) == -1) {
 	    ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
-			"setuid: unable to change uid");
+			"setuid: unable to change to uid: %d", ap_user_id);
+	    exit(1);
+	}
+	GETUSERMODE();
+#else
+    /* 
+     * Only try to switch if we're running as root
+     * In case of Cygwin we have the special super-user named SYSTEM
+     * with a pre-defined uid.
+     */
+#ifdef CYGWIN
+    if ((getuid() == SYSTEM_UID) && setuid(ap_user_id) == -1) {
+#else
+	if (!geteuid() && setuid(ap_user_id) == -1) {
+#endif
+	    ap_log_error(APLOG_MARK, APLOG_ALERT, server_conf,
+			"setuid: unable to change to uid: %ld",
+			(long) ap_user_id);
 	    exit(1);
 	}
 #endif
@@ -4541,33 +5531,36 @@ int REALMAIN(int argc, char *argv[])
 	    exit(0);
 	}
 
-	l = sizeof(sa_client);
-	if ((getpeername(fileno(stdin), &sa_client, &l)) < 0) {
-/* get peername will fail if the input isn't a socket */
-	    perror("getpeername");
-	    memset(&sa_client, '\0', sizeof(sa_client));
-	}
-
-	l = sizeof(sa_server);
-	if (getsockname(fileno(stdin), &sa_server, &l) < 0) {
-	    perror("getsockname");
-	    fprintf(stderr, "Error getting local address\n");
-	    exit(1);
-	}
-	server_conf->port = ntohs(((struct sockaddr_in *) &sa_server)->sin_port);
-	cio = ap_bcreate(ptrans, B_RDWR | B_SOCKET);
 #ifdef MPE
 /* HP MPE 5.5 inetd only passes the incoming socket as stdin (fd 0), whereas
    HPUX inetd passes the incoming socket as stdin (fd 0) and stdout (fd 1).
    Go figure.  SR 5003355016 has been submitted to request that the existing
    functionality be documented, and then to enhance the functionality to be
    like HPUX. */
-
-	cio->fd = fileno(stdin);
+    sock_in = fileno(stdin);
+    sock_out = fileno(stdin);
 #else
-	cio->fd = fileno(stdout);
+    sock_in = fileno(stdin);
+    sock_out = fileno(stdout);
 #endif
-	cio->fd_in = fileno(stdin);
+
+	l = sizeof(sa_client);
+	if ((getpeername(sock_in, &sa_client, &l)) < 0) {
+/* get peername will fail if the input isn't a socket */
+	    perror("getpeername");
+	    memset(&sa_client, '\0', sizeof(sa_client));
+	}
+
+	l = sizeof(sa_server);
+	if (getsockname(sock_in, &sa_server, &l) < 0) {
+	    perror("getsockname");
+	    fprintf(stderr, "Error getting local address\n");
+	    exit(1);
+	}
+	server_conf->port = ntohs(((struct sockaddr_in *) &sa_server)->sin_port);
+	cio = ap_bcreate(ptrans, B_RDWR | B_SOCKET);
+        cio->fd = sock_out;
+        cio->fd_in = sock_in;
 	conn = new_connection(ptrans, server_conf, cio,
 			          (struct sockaddr_in *) &sa_client,
 			          (struct sockaddr_in *) &sa_server, -1);
@@ -4633,11 +5626,13 @@ int REALMAIN(int argc, char *argv[])
  *
  * Signalling between the parent and working process uses a Win32
  * event. Each child has a unique name for the event, which is
- * passed to it with the -c argument when the child is spawned. The
+ * passed to it with the -Z argument when the child is spawned. The
  * parent sets (signals) this event to tell the child to die.
  * At present all children do a graceful die - they finish all
  * current jobs _and_ empty the listen queue before they exit.
- * A non-graceful die would need a second event.
+ * A non-graceful die would need a second event. The -Z argument in
+ * the child is also used to create the shutdown and restart events,
+ * since the prefix (apPID) contains the parent process PID.
  *
  * The code below starts with functions at the lowest level -
  * worker threads, and works up to the top level - the main()
@@ -4700,11 +5695,15 @@ globals allowed_globals =
 void add_job(int sock)
 {
     joblist *new_job;
-
+    
     ap_assert(allowed_globals.jobmutex);
+
     /* TODO: If too many jobs in queue, sleep, check for problems */
     ap_acquire_mutex(allowed_globals.jobmutex);
     new_job = (joblist *) malloc(sizeof(joblist));
+    if (new_job == NULL) {
+	fprintf(stderr, "Ouch!  Out of memory in add_job()!\n");
+    }
     new_job->next = NULL;
     new_job->sock = sock;
     if (allowed_globals.jobtail != NULL)
@@ -4717,10 +5716,20 @@ void add_job(int sock)
     ap_release_mutex(allowed_globals.jobmutex);
 }
 
-int remove_job(void)
+int remove_job(int csd)
 {
+    static reported = 0;
+    static active_threads = 0;
     joblist *job;
     int sock;
+
+    /* Decline decrementing active_threads count on the first call
+     * to remove_job.  csd == -1 implies that this is the thread's
+     * first call to remove_job.
+     */
+    if (csd != -1) {
+        active_threads--;
+    }
 
 #ifdef UNGRACEFUL_RESTART
     HANDLE hObjects[2];
@@ -4751,14 +5760,29 @@ int remove_job(void)
 	ap_release_mutex(allowed_globals.jobmutex);
 	return (-1);
     }
+
     job = allowed_globals.jobhead;
     ap_assert(job);
     allowed_globals.jobhead = job->next;
     if (allowed_globals.jobhead == NULL)
 	allowed_globals.jobtail = NULL;
+
     ap_release_mutex(allowed_globals.jobmutex);
     sock = job->sock;
     free(job);
+
+    /* If sock == -1 then the thread is about to exit so 
+     * don't count it as active.
+     */
+    if (sock != -1)
+        active_threads++;
+
+    if (!reported && (active_threads == ap_threads_per_child)) {
+        reported = 1;
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, server_conf,
+                     "Server ran out of threads to serve requests. Consider "
+                     "raising the ThreadsPerChild setting");
+    }
     return (sock);
 }
 
@@ -4792,48 +5816,62 @@ static void child_sub_main(int child_num)
     int dupped_csd = -1;
     int srv = 0;
 
+#ifdef NETWARE
+    TSD* tsd = NULL;
+
+    while(tsd == NULL) {
+        tsd = (TSD*) Thread_Data_Area;
+        ThreadSwitchWithDelay();
+    }
+    init_name_space();
+#endif
+    ap_thread_count++;
     ptrans = ap_make_sub_pool(pconf);
 
     (void) ap_update_child_status(child_num, SERVER_READY, (request_rec *) NULL);
 
     /*
-     * Setup the jump buffers so that we can return here after
-     * a signal or a timeout (yeah, I know, same thing).
+     * Setup the jump buffers so that we can return here after a timeout.
      */
 #if defined(USE_LONGJMP)
     setjmp(jmpbuffer);
 #else
     sigsetjmp(jmpbuffer, 1);
 #endif
-#ifdef SIGURG
+#if defined(SIGURG)
     signal(SIGURG, timeout);
+#endif
+
+#ifdef NETWARE
+    tsd = (TSD*) Thread_Data_Area;
 #endif
 
     while (1) {
 	BUFF *conn_io;
 	request_rec *r;
-
+	
+#ifdef NETWARE
+        ThreadSwitch();
+#endif
 	/*
 	 * (Re)initialize this child to a pre-connection state.
 	 */
-
-	ap_set_callback_and_alarm(NULL, 0);	/* Cancel any outstanding alarms. */
-	timeout_req = NULL;	/* No request in progress */
+	 
+	ap_set_callback_and_alarm(NULL, 0); /* Cancel any outstanding alarms */
+	timeout_req = NULL;                 /* No request in progress */
 	current_conn = NULL;
-#ifdef SIGPIPE
-	signal(SIGPIPE, timeout);
-#endif
-
 	ap_clear_pool(ptrans);
 
-	(void) ap_update_child_status(child_num, SERVER_READY, (request_rec *) NULL);
+	(void) ap_update_child_status(child_num, SERVER_READY,
+	                              (request_rec *) NULL);
 
 	/* Get job from the job list. This will block until a job is ready.
 	 * If -1 is returned then the main thread wants us to exit.
 	 */
-	csd = remove_job();
+	csd = remove_job(csd);
 	if (csd == -1)
 	    break;		/* time to exit */
+
 	requests_this_child++;
 
 	ap_note_cleanups_for_socket(ptrans, csd);
@@ -4843,7 +5881,7 @@ static void child_sub_main(int child_num)
 	 * socket options, file descriptors, and read/write buffers.
 	 */
 
-	clen = sizeof(sa_server);
+	clen = sizeof(sa_server);	
 	if (getsockname(csd, &sa_server, &clen) < 0) {
 	    ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf, "getsockname");
 	    continue;
@@ -4876,24 +5914,29 @@ static void child_sub_main(int child_num)
 				          (struct sockaddr_in *) &sa_client,
 				          (struct sockaddr_in *) &sa_server,
 				          child_num);
-
+				          
 	/*
 	 * Read and process each request found on our connection
 	 * until no requests are left or we decide to close.
 	 */
-
 	while ((r = ap_read_request(current_conn)) != NULL) {
-	    (void) ap_update_child_status(child_num, SERVER_BUSY_WRITE, r);
+            (void) ap_update_child_status(child_num, SERVER_BUSY_WRITE, r);
 
 	    if (r->status == HTTP_OK)
 		ap_process_request(r);
 
 	    if (ap_extended_status)
 		increment_counts(child_num, r);
-
 	    if (!current_conn->keepalive || current_conn->aborted)
 		break;
-
+            /* If the server is shutting down, do not allow anymore requests 
+             * to be handled on the keepalive connection. Leave the thread 
+             * alive to drain the job queue. This check is particularly 
+             * important on the threaded server to allow the process to be 
+             * quickly taken down cleanly.
+             */
+            if (allowed_globals.exit_now)
+                break;
 	    ap_destroy_pool(r->pool);
 	    (void) ap_update_child_status(child_num, SERVER_BUSY_KEEPALIVE,
 				       (request_rec *) NULL);
@@ -4926,10 +5969,16 @@ static void child_sub_main(int child_num)
     }
     ap_destroy_pool(ptrans);
     (void) ap_update_child_status(child_num, SERVER_DEAD, NULL);
+    
+    ap_thread_count--;
 }
 
 
+#ifdef NETWARE
+void child_main(void* child_num_arg)
+#else
 void child_main(int child_num_arg)
+#endif
 {
     /*
      * Only reason for this function, is to pass in
@@ -4938,7 +5987,16 @@ void child_main(int child_num_arg)
      * variables and I don't need to make those
      * damn variables static/global
      */
+#ifdef NETWARE
+    TSD Tsd;
+    int *thread_ptr;
+    memset(&Tsd, 0, sizeof(TSD));
+    thread_ptr = __get_thread_data_area_ptr();
+    *thread_ptr = (int) &Tsd;
+	child_sub_main((int)child_num_arg);
+#else
     child_sub_main(child_num_arg);
+#endif
 }
 
 
@@ -4960,7 +6018,7 @@ void cleanup_thread(thread **handles, int *thread_cnt, int thread_to_clean)
  * we are restricted to a maximum of 64 threads.  This is a simplistic 
  * routine that will increase this size.
  */
-DWORD wait_for_many_objects(DWORD nCount, CONST HANDLE *lpHandles, 
+static DWORD wait_for_many_objects(DWORD nCount, CONST HANDLE *lpHandles, 
                             DWORD dwSeconds)
 {
     time_t tStopTime;
@@ -5001,17 +6059,276 @@ extern void main_control_server(void *); /* in hellop.c */
 event *exit_event;
 mutex *start_mutex;
 
+#define MAX_SIGNAL_NAME 30  /* Long enough for apPID_shutdown, where PID is an int */
+char signal_name_prefix[MAX_SIGNAL_NAME];
+char signal_restart_name[MAX_SIGNAL_NAME]; 
+char signal_shutdown_name[MAX_SIGNAL_NAME];
+
 #define MAX_SELECT_ERRORS 100
 
+/*
+ * Initialise the signal names, in the global variables signal_name_prefix, 
+ * signal_restart_name and signal_shutdown_name.
+ */
+
+void setup_signal_names(char *prefix)
+{
+    ap_snprintf(signal_name_prefix, sizeof(signal_name_prefix), prefix);    
+    ap_snprintf(signal_shutdown_name, sizeof(signal_shutdown_name), 
+	"%s_shutdown", signal_name_prefix);    
+    ap_snprintf(signal_restart_name, sizeof(signal_restart_name), 
+	"%s_restart", signal_name_prefix);    
+
+    APD2("signal prefix %s", signal_name_prefix);
+}
+
+#ifndef NETWARE
+static void setup_inherited_listeners(pool *p)
+{
+    HANDLE pipe;
+    listen_rec *lr;
+    int fd;
+    WSAPROTOCOL_INFO WSAProtocolInfo;
+    DWORD BytesRead;
+
+    /* Setup the listeners */
+    listenmaxfd = -1;
+    FD_ZERO(&listenfds);
+
+    /* Open the pipe to the parent process to receive the inherited socket
+     * data. The sockets have been set to listening in the parent process.
+     */
+    pipe = GetStdHandle(STD_INPUT_HANDLE);
+    for (lr = ap_listeners; lr; lr = lr->next) {
+        if (!ReadFile(pipe, &WSAProtocolInfo, sizeof(WSAPROTOCOL_INFO), 
+                      &BytesRead, (LPOVERLAPPED) NULL)) {
+            ap_log_error(APLOG_MARK, APLOG_WIN32ERROR|APLOG_CRIT, server_conf,
+                         "setup_inherited_listeners: Unable to read socket data from parent");
+            signal_parent(0);	/* tell parent to die */
+            exit(1);
+        }
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf,
+                         "BytesRead = %d WSAProtocolInfo = %x20", BytesRead, WSAProtocolInfo);
+        fd = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO,
+                       &WSAProtocolInfo, 0, 0);
+        if (fd == INVALID_SOCKET) {
+            ap_log_error(APLOG_MARK, APLOG_WIN32ERROR|APLOG_CRIT, server_conf,
+                         "setup_inherited_listeners: WSASocket failed to open the inherited socket.");
+            signal_parent(0);	/* tell parent to die */
+            exit(1);
+        }
+        if (fd >= 0) {
+            FD_SET(fd, &listenfds);
+            if (fd > listenmaxfd)
+                listenmaxfd = fd;
+        }
+        ap_note_cleanups_for_socket(p, fd);
+        lr->fd = fd;
+        if (lr->next == NULL) {
+            /* turn the list into a ring */
+            lr->next = ap_listeners;
+            break;
+        }
+    }
+    head_listener = ap_listeners;
+    close_unused_listeners();
+    CloseHandle(pipe);
+    return;
+}
+#endif
+
+/*
+ * worker_main() is main loop for the child process. The loop in
+ * this function becomes the controlling thread for the actually working
+ * threads (which run in a loop in child_sub_main()).
+ */
+ 
+#ifdef NETWARE
 void worker_main(void)
 {
+    int nthreads;
+    fd_set main_fds;
+    int srv;
+    int clen;
+    int csd;
+    struct sockaddr_in sa_client;
+    thread **child_handles;
+    int rv;
+    int i;
+    struct timeval tv;
+    int my_pid;
+    int count_select_errors = 0;
+    pool *pchild;
+    module **m;    
+    listen_rec* lr;
+    
+
+    pchild = ap_make_sub_pool(pconf);
+
+    ap_standalone = 1;
+    sd = -1;
+    nthreads = ap_threads_per_child;
+    
+    if (nthreads <= 0)
+        nthreads = 40;
+	    
+    my_pid = getpid();
+
+    ++ap_my_generation;
+
+    copy_listeners(pconf);
+    ap_restart_time = time(NULL);
+
+    reinit_scoreboard(pconf);
+    setup_listeners(pconf);
+
+    if (listenmaxfd == -1) {
+        /* Help, no sockets were made, better log something and exit */
+        ap_log_error(APLOG_MARK, APLOG_CRIT|APLOG_NOERRNO, NULL,
+                     "No sockets were created for listening");
+        
+        ap_destroy_pool(pchild);
+        cleanup_scoreboard();
+        exit(1);
+    }
+    
+    set_signals();
+
+    /* Display listening ports */
+    printf("   Listening on port(s):");
+    lr = ap_listeners;
+    do {
+       printf(" %d", ntohs(lr->local_addr.sin_port));
+       lr = lr->next;
+    } while(lr && lr != ap_listeners);
+    
+    /* Display dynamic modules loaded */
+    printf("\n");    
+    for (m = ap_loaded_modules; *m != NULL; m++) {
+        if (((module*)*m)->dynamic_load_handle) {
+            printf("   Loaded dynamic module %s\n", ap_find_module_name(*m));
+        }
+    }
+
     /*
-     * I am writing this stuff specifically for NT.
-     * have pulled out a lot of the restart and
-     * graceful restart stuff, because that is only
-     * useful on Unix (not sure it even makes sense
-     * in a multi-threaded env.
+     * - Initialize allowed_globals
+     * - Create the thread table
+     * - Spawn off threads
+     * - Create listen socket set (done above)
+     * - loop {
+     *       wait for request
+     *       create new job
+     *   } while (!time to exit)
+     * - Close all listeners
+     * - Wait for all threads to complete
+     * - Exit
      */
+
+    ap_child_init_modules(pconf, server_conf);
+    allowed_globals.jobmutex = ap_create_mutex(NULL);
+    allowed_globals.jobsemaphore = create_semaphore(0);
+
+    /* spawn off the threads */
+    child_handles = (thread *) malloc(nthreads * sizeof(int));
+    
+    for (i = 0; i < nthreads; i++) {
+        child_handles[i] = create_thread((void (*)(void *)) child_main, (void *) i);
+    }
+    
+    if (nthreads > max_daemons_limit) {
+        max_daemons_limit = nthreads;
+    }
+
+    while (1) {    
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        
+        ThreadSwitch();
+        
+        if (shutdown_pending)
+            break;
+            
+        memcpy(&main_fds, &listenfds, sizeof(fd_set));
+        srv = ap_select(listenmaxfd + 1, &main_fds, NULL, NULL, &tv);
+
+        if (srv == 0) {
+            count_select_errors = 0;    /* reset count of errors */
+            continue;
+        }
+        else if (srv == SOCKET_ERROR) {
+            if (h_errno != WSAEINTR) {
+                /* A "real" error occurred, log it and increment the count of
+                 * select errors. This count is used to ensure we don't go into
+                 * a busy loop of continuous errors.
+                 */
+                ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf, 
+                             "select failed with errno %d", h_errno);
+                count_select_errors++;
+                if (count_select_errors > MAX_SELECT_ERRORS) {
+                    ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, server_conf,
+                                 "Too many errors in select loop. Child process exiting.");
+                    break;
+                }
+            }
+            continue;
+        } else {
+            listen_rec *lr;
+            
+            lr = find_ready_listener(&main_fds);
+	    
+            if (lr != NULL) {
+                sd = lr->fd;
+            }
+        }
+
+        do {
+            clen = sizeof(sa_client);
+            csd = accept(sd, (struct sockaddr *) &sa_client, &clen);
+            
+            if (csd == INVALID_SOCKET) {
+                csd = -1;
+            }
+        } while (csd < 0 && h_errno == EINTR);
+	
+        if (csd == INVALID_SOCKET) {
+            if (h_errno != WSAECONNABORTED) {
+                ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
+                             "accept: (client socket) failed with errno = %d",h_errno);
+            }
+        }
+        else {
+            add_job(csd);
+        }
+    }
+
+    APD2("process PID %d exiting", my_pid);
+
+    /* Get ready to shutdown and exit */
+    allowed_globals.exit_now = 1;
+    
+    for (i = 0; i < nthreads; i++) {
+        add_job(-1);
+    }
+
+    APD2("process PID %d waiting for worker threads to exit", my_pid);
+    while(ap_thread_count)
+        ThreadSwitch();
+    
+    destroy_semaphore(allowed_globals.jobsemaphore);
+    ap_destroy_mutex(allowed_globals.jobmutex);
+    
+    ap_child_exit_modules(pconf, server_conf);
+    ap_destroy_pool(pchild);
+    free(child_handles);
+    cleanup_scoreboard();
+
+    APD2("process PID %d exited", my_pid);
+    clean_parent_exit(0);
+
+}
+#else
+void worker_main(void)
+{
     int nthreads;
     fd_set main_fds;
     int srv;
@@ -5025,11 +6342,10 @@ void worker_main(void)
     int i;
     struct timeval tv;
     int wait_time = 1;
-    int start_exit = 0;
-    int start_mutex_released = 0;
     int max_jobs_per_exe;
     int max_jobs_after_exit_request;
     HANDLE hObjects[2];
+
     int count_select_errors = 0;
     pool *pchild;
 
@@ -5052,24 +6368,30 @@ void worker_main(void)
 
     my_pid = getpid();
 
-    ++generation;
+    ++ap_my_generation;
 
     copy_listeners(pconf);
     ap_restart_time = time(NULL);
 
     reinit_scoreboard(pconf);
-
-    //ap_acquire_mutex(start_mutex);
+    
+    /*
+     * Wait until we have permission to start accepting connections.
+     * start_mutex is used to ensure that only one child ever
+     * goes into the listen/accept loop at once. Also wait on exit_event,
+     * in case we (this child) is told to die before we get a chance to
+     * serve any requests.
+     */
     hObjects[0] = (HANDLE)start_mutex;
     hObjects[1] = (HANDLE)exit_event;
     rv = WaitForMultipleObjects(2, hObjects, FALSE, INFINITE);
     if (rv == WAIT_FAILED) {
 	ap_log_error(APLOG_MARK,APLOG_ERR|APLOG_WIN32ERROR, server_conf,
-	    "Waiting for start_mutex or exit_event -- process will exit");
+                     "Waiting for start_mutex or exit_event -- process will exit");
 
 	ap_destroy_pool(pchild);
 	cleanup_scoreboard();
-	exit(0);
+	exit(1);
     }
     if (rv == WAIT_OBJECT_0 + 1) {
 	/* exit event signalled - exit now */
@@ -5078,18 +6400,23 @@ void worker_main(void)
 	exit(0);
     }
     /* start_mutex obtained, continue into the select() loop */
+    if (one_process) {
+        setup_listeners(pconf);
+    } else {
+        /* Get listeners from the parent process */
+        setup_inherited_listeners(pconf);
+    }
 
-    setup_listeners(pconf);
     if (listenmaxfd == -1) {
 	/* Help, no sockets were made, better log something and exit */
 	ap_log_error(APLOG_MARK, APLOG_CRIT|APLOG_NOERRNO, NULL,
 		    "No sockets were created for listening");
 
-	signal_parent();	/* tell parent to die */
+	signal_parent(0);	/* tell parent to die */
 
 	ap_destroy_pool(pchild);
 	cleanup_scoreboard();
-	exit(0);
+	exit(1);
     }
     set_signals();
 
@@ -5114,94 +6441,61 @@ void worker_main(void)
 
     /* spawn off the threads */
     child_handles = (thread *) alloca(nthreads * sizeof(int));
-    {
-	int i;
-
-	for (i = 0; i < nthreads; i++) {
-	    child_handles[i] = create_thread((void (*)(void *)) child_main, (void *) i);
-	}
-	if (nthreads > max_daemons_limit) {
-	    max_daemons_limit = nthreads;
-	}
+    for (i = 0; i < nthreads; i++) {
+	child_handles[i] = create_thread((void (*)(void *)) child_main, (void *) i);
+        if (child_handles[i] == 0) {
+            ap_log_error(APLOG_MARK, APLOG_ERR, server_conf, 
+                         "create_thread rc = %d", errno);
+        }
+    }
+    if (nthreads > max_daemons_limit) {
+	max_daemons_limit = nthreads;
     }
 
     while (1) {
-#if SEVERELY_VERBOSE
-	APD4("child PID %d: thread_main total_jobs=%d start_exit=%d",
-		my_pid, total_jobs, start_exit);
-#endif
-	if ((max_jobs_per_exe && (total_jobs > max_jobs_per_exe) && !start_exit)) {
-	    start_exit = 1;
-	    wait_time = 1;
-	    ap_release_mutex(start_mutex);
-	    start_mutex_released = 1;
-	    APD2("process PID %d: start mutex released\n", my_pid);
+        if (max_jobs_per_exe && (total_jobs > max_jobs_per_exe)) {
+            /* Reached MaxRequestsPerChild. Stop accepting new connections
+             * and signal the parent to start a new child process.
+             */
+            ap_start_restart(1);
+            break;
 	}
-	if (!start_exit) {
-	    rv = WaitForSingleObject(exit_event, 0);
-	    ap_assert((rv == WAIT_TIMEOUT) || (rv == WAIT_OBJECT_0));
-	    if (rv == WAIT_OBJECT_0) {
-		APD1("child: exit event signalled, exiting");
-		start_exit = 1;
-		/* Lets not break yet - we may have threads to clean up */
-		/* break;*/
-	    }
-	    rv = wait_for_many_objects(nthreads, child_handles, 0);
-	    ap_assert(rv != WAIT_FAILED);
-	    if (rv != WAIT_TIMEOUT) {
-		rv = rv - WAIT_OBJECT_0;
-		ap_assert((rv >= 0) && (rv < nthreads));
-		cleanup_thread(child_handles, &nthreads, rv);
-		break;
-	    }
-	}
+        /* Always check for the exit event being signaled.
+         */
+        rv = WaitForSingleObject(exit_event, 0);
+        ap_assert((rv == WAIT_TIMEOUT) || (rv == WAIT_OBJECT_0));
+        if (rv == WAIT_OBJECT_0) {
+            APD1("child: exit event signalled, exiting");
+            break;
+        }
 
-#if 0
-	/* Um, this made us exit before all the connections in our
-	 * listen queue were dealt with. 
-	 */
-	if (start_exit && max_jobs_after_exit_request && (count_down-- < 0))
-	    break;
-#endif
 	tv.tv_sec = wait_time;
 	tv.tv_usec = 0;
-
 	memcpy(&main_fds, &listenfds, sizeof(fd_set));
+
 	srv = ap_select(listenmaxfd + 1, &main_fds, NULL, NULL, &tv);
-#ifdef WIN32
-	if (srv == SOCKET_ERROR) {
-	    /* Map the Win32 error into a standard Unix error condition */
-	    errno = WSAGetLastError();
-	    srv = -1;
-	}
-#endif /* WIN32 */
 
-	if (srv < 0) {
-	    /* Error occurred - if EINTR, loop around with problem */
-	    if (errno != EINTR) {
-		/* A "real" error occurred, log it and increment the count of
-		 * select errors. This count is used to ensure we don't go into
-		 * a busy loop of continuour errors.
-		 */
-		ap_log_error(APLOG_MARK, APLOG_ERR, server_conf, "select: (listen)");
-		count_select_errors++;
-		if (count_select_errors > MAX_SELECT_ERRORS) {
-		    ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, server_conf,
-			"Too many errors in select loop. Child process exiting.");
-		    break;
-		}
-	    }
-	    continue;
-	}
-	count_select_errors = 0;    /* reset count of errors */
-	if (srv == 0) {
-	    if (start_exit)
-		break;
-	    else
-		continue;
-	}
-
-	{
+        if (srv == 0) {
+            count_select_errors = 0;    /* reset count of errors */            
+            continue;
+        }
+	else if (srv == SOCKET_ERROR) {
+            if (h_errno != WSAEINTR) {
+                /* A "real" error occurred, log it and increment the count of
+                 * select errors. This count is used to ensure we don't go into
+                 * a busy loop of continuous errors.
+                 */
+                ap_log_error(APLOG_MARK, APLOG_WARNING, server_conf, 
+                             "select failed with errno %d", h_errno);
+                count_select_errors++;
+                if (count_select_errors > MAX_SELECT_ERRORS) {
+                    ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, server_conf,
+                                 "Too many errors in select loop. Child process exiting.");
+                    break;
+                }
+            }
+            continue;
+	} else {
 	    listen_rec *lr;
 
 	    lr = find_ready_listener(&main_fds);
@@ -5212,38 +6506,28 @@ void worker_main(void)
 	do {
 	    clen = sizeof(sa_client);
 	    csd = accept(sd, (struct sockaddr *) &sa_client, &clen);
-#ifdef WIN32
 	    if (csd == INVALID_SOCKET) {
 		csd = -1;
-		errno = WSAGetLastError();
 	    }
-#endif /* WIN32 */
-	} while (csd < 0 && errno == EINTR);
+	} while (csd < 0 && h_errno == WSAEINTR);
 
 	if (csd < 0) {
-#if defined(EPROTO) && defined(ECONNABORTED)
-	    if ((errno != EPROTO) && (errno != ECONNABORTED))
-#elif defined(EPROTO)
-	    if (errno != EPROTO)
-#elif defined(ECONNABORTED)
-	    if (errno != ECONNABORTED)
-#endif
+	    if (h_errno != WSAECONNABORTED) {
 		ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
-			    "accept: (client socket)");
+                             "accept: (client socket) failed with errno = %d",h_errno);
+            }
 	}
 	else {
 	    add_job(csd);
 	    total_jobs++;
 	}
     }
-      
+
     APD2("process PID %d exiting", my_pid);
 
     /* Get ready to shutdown and exit */
     allowed_globals.exit_now = 1;
-    if (!start_mutex_released) {
-	ap_release_mutex(start_mutex);
-    }
+    ap_release_mutex(start_mutex);
 
 #ifdef UNGRACEFUL_RESTART
     SetEvent(allowed_globals.thread_exit_event);
@@ -5288,69 +6572,22 @@ void worker_main(void)
     clean_parent_exit(0);
 }				/* standalone_main */
 
-/* Spawn a child Apache process. The child process has the command
- * line arguments from argc and argv[], plus a -Z argument giving the
- * name of an event. The child should open and poll or wait on this
- * event. When it is signalled, the child should die.  prefix is a
- * prefix string for the event name.
+/*
+ * Spawn a child Apache process. The child process has the command line arguments from
+ * argc and argv[], plus a -Z argument giving the name of an event. The child should
+ * open and poll or wait on this event. When it is signalled, the child should die.
+ * prefix is a prefix string for the event name.
  * 
- * The child_num argument on entry contains a serial number for this
- * child (used to create a unique event name). On exit, this number
- * will have been incremented by one, ready for the next call.
+ * The child_num argument on entry contains a serial number for this child (used to create
+ * a unique event name). On exit, this number will have been incremented by one, ready
+ * for the next call. 
  *
  * On exit, the value pointed to be *ev will contain the event created
  * to signal the new child process.
  *
- * The return value is the handle to the child process if successful,
- * else -1. If -1 is returned the error will already have been logged
- * by ap_log_error(). 
+ * The return value is the handle to the child process if successful, else -1. If -1 is
+ * returned the error will already have been logged by ap_log_error().
  */
-
-int create_event_and_spawn(int argc, char **argv, event **ev, int *child_num, char *prefix)
-{
-    char buf[40], mod[200];
-    int i, rv;
-    char **pass_argv = (char **) alloca(sizeof(char *) * (argc + 3));
-
-    ap_snprintf(buf, sizeof(buf), "%s_%d", prefix, ++(*child_num));
-    _flushall();
-    *ev = CreateEvent(NULL, TRUE, FALSE, buf);
-    if (!*ev) {
-	ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, NULL,
-	    "could not create event for child process");
-	return -1;
-    }
-    APD2("create_event_and_spawn(): created process kill event %s", buf);
-
-    pass_argv[0] = argv[0];
-    pass_argv[1] = "-Z";
-    pass_argv[2] = buf;
-    for (i = 1; i < argc; i++) {
-	pass_argv[i + 2] = argv[i];
-    }
-    pass_argv[argc + 2] = NULL;
-
-    rv = GetModuleFileName(NULL, mod, sizeof(mod));
-    if (rv == sizeof(mod)) {
-	/* mod[] was not big enough for our pathname */
-	ap_log_error(APLOG_MARK, APLOG_ERR, NULL,
-	    "Internal error: path to Apache process too long");
-	return -1;
-    }
-    if (rv == 0) {
-	ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, NULL,
-	    "GetModuleFileName() for current process");
-	return -1;
-    }
-    rv = spawnv(_P_NOWAIT, mod, pass_argv);
-    if (rv == -1) {
-	ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, NULL,
-	    "spawn of child process %s failed", mod);
-	return -1;
-    }
-
-    return rv;
-}
 
 /**********************************************************************
  * master_main - this is the parent (main) process. We create a
@@ -5363,7 +6600,7 @@ int create_event_and_spawn(int argc, char **argv, event **ev, int *child_num, ch
 
 #define MAX_PROCESSES 50 /* must be < MAX_WAIT_OBJECTS-1 */
 
-void cleanup_process(HANDLE *handles, HANDLE *events, int position, int *processes)
+static void cleanup_process(HANDLE *handles, HANDLE *events, int position, int *processes)
 {
     int i;
     int handle = 0;
@@ -5382,37 +6619,243 @@ void cleanup_process(HANDLE *handles, HANDLE *events, int position, int *process
     APD4("cleanup_processes: removed child in slot %d handle %d, max=%d", position, handle, *processes);
 }
 
-int create_process(HANDLE *handles, HANDLE *events, int *processes, int *child_num, char *kill_event_name, int argc, char **argv)
+static int create_process(pool *p, HANDLE *handles, HANDLE *events, 
+                          int *processes, int *child_num, char *kill_event_name, int argc, char **argv)
 {
-    int i = *processes;
+
+    int rv, i;
     HANDLE kill_event;
-    int child_handle;
+    char buf[1024];
+    char exit_event_name[40]; /* apPID_C# */
+    char *pCommand;
 
-    child_handle = create_event_and_spawn(argc, argv, &kill_event, child_num, kill_event_name);
-    if (child_handle <= 0) {
-	return -1;
+    STARTUPINFO si;           /* Filled in prior to call to CreateProcess */
+    PROCESS_INFORMATION pi;   /* filled in on call to CreateProces */
+    LPWSAPROTOCOL_INFO  lpWSAProtocolInfo;
+    listen_rec *lr;
+    DWORD BytesWritten;
+    HANDLE hPipeRead = NULL;
+    HANDLE hPipeWrite = NULL;
+    HANDLE hPipeWriteDup;
+    HANDLE hNullOutput = NULL;
+    HANDLE hShareError = NULL;
+    HANDLE hCurrentProcess;
+    SECURITY_ATTRIBUTES sa = {0};  
+
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
+
+    /* Build the command line. Should look something like this:
+     * C:/apache/bin/apache.exe -Z exit_event -f ap_server_confname 
+     * First, get the path to the executable...
+     */
+    rv = GetModuleFileName(NULL, buf, sizeof(buf));
+    if (rv == sizeof(buf)) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: Path to Apache process too long");
+        return -1;
+    } else if (rv == 0) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: GetModuleFileName() returned NULL for current process.");
+        return -1;
     }
-    handles[i] = (HANDLE)child_handle;
-    events[i] = kill_event;
-    (*processes)++;
+    
+    /* Create the exit event (apPID_C#). Parent signals this event to tell the
+     * child to exit 
+     */
+    ap_snprintf(exit_event_name, sizeof(exit_event_name), "%s_C%d", kill_event_name, ++(*child_num));
+    kill_event = CreateEvent(NULL, TRUE, FALSE, exit_event_name);
+    if (!kill_event) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: Could not create exit event for child process");
+        return -1;
+    }
+    
+	/* service children must be created with the -z option,
+	 * while console mode (interactive apache) children are created
+	 * with the -Z option
+	 */
+    pCommand = ap_psprintf(p, "\"%s\" -%c %s -f \"%s\"", buf, 
+		                   isProcessService() ? 'z' : 'Z',
+		                   exit_event_name, ap_server_confname);  
 
-    APD4("create_processes: created child in slot %d handle %d, max=%d", 
-	(*processes)-1, handles[(*processes)-1], *processes);
+    for (i = 1; i < argc; i++) {
+        if ((argv[i][0] == '-') && ((argv[i][1] == 'k') || (argv[i][1] == 'n')))
+            ++i;
+        else
+            pCommand = ap_pstrcat(p, pCommand, " \"", argv[i], "\"", NULL);
+    }
+
+    /* Create a pipe to send socket info to the child */
+    if (!CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0)) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: Unable to create pipe to child process.\n");
+        return -1;
+    }
+
+    /* Open a null handle to soak info from the child */
+    hNullOutput = CreateFile("nul", GENERIC_READ | GENERIC_WRITE, 
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, 
+                             &sa, OPEN_EXISTING, 0, NULL);
+    if (hNullOutput == INVALID_HANDLE_VALUE) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: Unable to create null output pipe for child process.\n");
+        return -1;
+    }
+
+    /* Child's initial stderr -> our main server error log (or, failing that, stderr) */
+    if (server_conf->error_log) {
+        hShareError = (HANDLE)_get_osfhandle(fileno(server_conf->error_log));
+        if (hShareError == INVALID_HANDLE_VALUE) {
+            hShareError = GetStdHandle(STD_ERROR_HANDLE);
+        }
+    }
+
+    hCurrentProcess = GetCurrentProcess();
+    if (DuplicateHandle(hCurrentProcess, hPipeWrite, hCurrentProcess,
+                        &hPipeWriteDup, 0, FALSE, DUPLICATE_SAME_ACCESS))
+    {
+        CloseHandle(hPipeWrite);
+        hPipeWrite = hPipeWriteDup;
+    }
+
+    /* Give the read in of the pipe (hPipeRead) to the child as stdin. The 
+     * parent will write the socket data to the child on this pipe.
+     */
+    memset(&si, 0, sizeof(si));
+    memset(&pi, 0, sizeof(pi));
+    si.cb = sizeof(si);
+    si.dwFlags     = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdInput   = hPipeRead;
+    si.hStdOutput  = hNullOutput;
+    si.hStdError   = hShareError;
+
+    if (!CreateProcess(NULL, pCommand, NULL, NULL, 
+                       TRUE,      /* Inherit handles */
+                       0,         /* Creation flags */
+                       NULL, NULL,
+                       &si, &pi)) {
+        ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                     "Parent: Not able to create the child process.");
+        /*
+         * We must close the handles to the new process and its main thread
+         * to prevent handle and memory leaks.
+         */ 
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        CloseHandle(hPipeRead);
+        CloseHandle(hPipeWrite);        
+        CloseHandle(hNullOutput);
+
+        return -1;
+    }
+    else {
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, server_conf,
+                     "Parent: Created child process %d", pi.dwProcessId);
+
+        /* Assume the child process lives. Update the process and event tables */
+        handles[*processes] = pi.hProcess;
+        events[*processes] = kill_event;
+        (*processes)++;
+
+        /* We never store the thread's handle, so close it now. */
+        CloseHandle(pi.hThread);
+
+        /* Run the chain of open sockets. For each socket, duplicate it 
+         * for the target process then send the WSAPROTOCOL_INFO 
+         * (returned by dup socket) to the child */
+        lr = ap_listeners;
+        while (lr != NULL) {
+            lpWSAProtocolInfo = ap_pcalloc(p, sizeof(WSAPROTOCOL_INFO));
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, server_conf,
+                         "Parent: Duplicating socket %d and sending it to child process %d", lr->fd, pi.dwProcessId);
+            if (WSADuplicateSocket(lr->fd, 
+                                   pi.dwProcessId,
+                                   lpWSAProtocolInfo) == SOCKET_ERROR) {
+                ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                             "Parent: WSADuplicateSocket failed for socket %d.", lr->fd );
+                return -1;
+            }
+
+            if (!WriteFile(hPipeWrite, lpWSAProtocolInfo, (DWORD) sizeof(WSAPROTOCOL_INFO),
+                           &BytesWritten,
+                           (LPOVERLAPPED) NULL)) {
+                ap_log_error(APLOG_MARK, APLOG_WIN32ERROR | APLOG_CRIT, server_conf,
+                             "Parent: Unable to write duplicated socket %d to the child.", lr->fd );
+                return -1;
+            }
+
+            lr = lr->next;
+            if (lr == ap_listeners)
+                break;
+        }
+    }
+    CloseHandle(hPipeRead);
+    CloseHandle(hPipeWrite);        
+    CloseHandle(hNullOutput);
 
     return 0;
 }
 
+/* To share the semaphores with other processes, we need a NULL ACL
+ * Code from MS KB Q106387
+ */
+
+static PSECURITY_ATTRIBUTES GetNullACL()
+{
+    PSECURITY_DESCRIPTOR pSD;
+    PSECURITY_ATTRIBUTES sa;
+
+    sa  = (PSECURITY_ATTRIBUTES) LocalAlloc(LPTR, sizeof(SECURITY_ATTRIBUTES));
+    pSD = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR,
+					    SECURITY_DESCRIPTOR_MIN_LENGTH);
+    if (pSD == NULL || sa == NULL) {
+        return NULL;
+    }
+    /*
+     * Win98 returns nonzero on failure; check LastError to make sure.
+     */
+    SetLastError(0);
+    if (!InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION)
+	|| GetLastError()) {
+        LocalFree( pSD );
+        LocalFree( sa );
+        return NULL;
+    }
+    if (!SetSecurityDescriptorDacl(pSD, TRUE, (PACL) NULL, FALSE)
+	|| GetLastError()) {
+        LocalFree( pSD );
+        LocalFree( sa );
+        return NULL;
+    }
+    sa->nLength = sizeof(sa);
+    sa->lpSecurityDescriptor = pSD;
+    sa->bInheritHandle = TRUE;
+    return sa;
+}
+
+
+static void CleanNullACL( void *sa ) {
+    if( sa ) {
+        LocalFree( ((PSECURITY_ATTRIBUTES)sa)->lpSecurityDescriptor);
+        LocalFree( sa );
+    }
+}
+
 int master_main(int argc, char **argv)
 {
+    /* returns NULL if invalid (Win95?) */
+    PSECURITY_ATTRIBUTES sa = GetNullACL();
     int nchild = ap_daemons_to_start;
-    event **ev;
-    int *child;
     int child_num = 0;
     int rv, cld;
-    char buf[100];
+    char signal_prefix_string[100];
     int i;
     time_t tmstart;
-    HANDLE signal_event;	/* used to signal shutdown/restart to parent */
+    HANDLE signal_shutdown_event;	/* used to signal shutdown to parent */
+    HANDLE signal_restart_event;	/* used to signal a restart to parent */
     HANDLE process_handles[MAX_PROCESSES];
     HANDLE process_kill_events[MAX_PROCESSES];
     int current_live_processes = 0; /* number of child process we know about */
@@ -5423,134 +6866,148 @@ int master_main(int argc, char **argv)
     processes_to_create = nchild;
 
     is_graceful = 0;
-    ++generation;
 
-    signal_event = OpenEvent(EVENT_ALL_ACCESS, FALSE, "apache-signal");
-    if (!signal_event) {
+    ap_snprintf(signal_prefix_string, sizeof(signal_prefix_string),
+	        "ap%d", getpid());
+    setup_signal_names(signal_prefix_string);
+
+    /* Create shutdown event, apPID_shutdown, where PID is the parent 
+     * Apache process ID. Shutdown is signaled by 'apache -k shutdown'.
+     */
+    signal_shutdown_event = CreateEvent(sa, TRUE, FALSE, signal_shutdown_name);
+    if (!signal_shutdown_event) {
 	ap_log_error(APLOG_MARK, APLOG_EMERG|APLOG_WIN32ERROR, server_conf,
-		    "Cannot open apache-signal event");
+		    "master_main: Cannot create shutdown event %s", signal_shutdown_name);
+        CleanNullACL((void *)sa);
 	exit(1);
     }
 
-    sprintf(buf, "Apache%d", getpid());
-    start_mutex = ap_create_mutex(buf);
-    ev = (event **) alloca(sizeof(event *) * nchild);
-    child = (int *) alloca(sizeof(int) * (nchild+1));
-
-    while (processes_to_create--) {
-	service_set_status(SERVICE_START_PENDING);
-	if (create_process(process_handles, process_kill_events, 
-	    &current_live_processes, &child_num, buf, argc, argv) < 0) {
-	    goto die_now;
-	}
+    /* Create restart event, apPID_restart, where PID is the parent 
+     * Apache process ID. Restart is signaled by 'apache -k restart'.
+     */
+    signal_restart_event = CreateEvent(sa, TRUE, FALSE, signal_restart_name);
+    if (!signal_restart_event) {
+	CloseHandle(signal_shutdown_event);
+	ap_log_error(APLOG_MARK, APLOG_EMERG|APLOG_WIN32ERROR, server_conf,
+		    "master_main: Cannot create restart event %s", signal_restart_name);
+        CleanNullACL((void *)sa);
+	exit(1);
     }
+    CleanNullACL((void *)sa);
 
-    service_set_status(SERVICE_RUNNING);
-
+    /* Create the start mutex, apPID, where PID is the parent Apache process ID.
+     * Ths start mutex is used during a restart to prevent more than one 
+     * child process from entering the accept loop at once.
+     */
+    start_mutex = ap_create_mutex(signal_prefix_string);
     restart_pending = shutdown_pending = 0;
 
     do { /* restart-pending */
 	if (!is_graceful) {
 	    ap_restart_time = time(NULL);
 	}
+        copy_listeners(pconf);
 	ap_clear_pool(pconf);
 	pparent = ap_make_sub_pool(pconf);
 
 	server_conf = ap_read_config(pconf, pparent, ap_server_confname);
-	ap_open_logs(server_conf, pconf);
+        setup_listeners(pconf);
+	ap_clear_pool(plog);
+	ap_open_logs(server_conf, plog);
 	ap_set_version();
 	ap_init_modules(pconf, server_conf);
 	version_locked++;
-	if (!is_graceful)
-	    reinit_scoreboard(pconf);
-
+        service_set_status(SERVICE_START_PENDING);
+        /* Create child processes */
+        while (processes_to_create--) {
+            if (create_process(pconf, process_handles, process_kill_events, 
+                               &current_live_processes, &child_num, signal_prefix_string, argc, argv) < 0) {
+                ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
+                             "master_main: create child process failed. Exiting.");
+                goto die_now;
+            }
+        }
+        service_set_status(SERVICE_RUNNING);
 	restart_pending = shutdown_pending = 0;
 
-	/* Wait for either a child process to die, or for the stop_event
-	 * to be signalled by the service manager or rpc server */
-	while (1) {
-	    /* Next line will block forever until either a child dies, or we
-	     * get signalled on the "apache-signal" event (e.g. if the user is
-	     * requesting a shutdown/restart)
-	     */
-	    if (current_live_processes == 0) {
-		/* Shouldn't happen, but better safe than sorry */
-		ap_log_error(APLOG_MARK,APLOG_ERR|APLOG_NOERRNO, server_conf,
- 			"master_main: no child processes alive! creating one");
-		if (create_process(process_handles, process_kill_events, 
-		    &current_live_processes, &child_num, buf, argc, argv) < 0) {
-		    goto die_now;
-		}
-		if (processes_to_create) {
-		    processes_to_create--;
-		}
+        /* Wait for either the shutdown or restart events to be signaled */
+        process_handles[current_live_processes] = signal_shutdown_event;
+        process_handles[current_live_processes+1] = signal_restart_event;
+        rv = WaitForMultipleObjects(current_live_processes+2, (HANDLE *)process_handles, 
+                                    FALSE, INFINITE);
+        if (rv == WAIT_FAILED) {
+            /* Something serious is wrong */
+            ap_log_error(APLOG_MARK,APLOG_CRIT|APLOG_WIN32ERROR, server_conf,
+                         "master_main: : WaitForMultipeObjects on process handles and apache-signal -- doing shutdown");
+            shutdown_pending = 1;
+            break;
+        }
+        if (rv == WAIT_TIMEOUT) {
+            /* Hey, this cannot happen */
+            ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
+                         "master_main: WaitForMultipeObjects with INFINITE wait exited with WAIT_TIMEOUT");
+            shutdown_pending = 1;
+        }
+
+        cld = rv - WAIT_OBJECT_0;
+        APD4("main process: wait finished, cld=%d handle %d (max=%d)", cld, process_handles[cld], current_live_processes);
+        if (cld == current_live_processes) {
+            /* apPID_shutdown event signalled, we should exit now */
+            shutdown_pending = 1;
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf, 
+                         "master_main: Shutdown event signaled. Shutting the server down.");
+            if (ResetEvent(signal_shutdown_event) == 0) {
+                ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, server_conf,
+                             "ResetEvent(signal_shutdown_event)");
+            }
+	    /* Signal each child processes to die */
+	    for (i = 0; i < current_live_processes; i++) {
+		APD3("master_main: signalling child %d, handle %d to die", i, process_handles[i]);
+		if (SetEvent(process_kill_events[i]) == 0)
+		    ap_log_error(APLOG_MARK,APLOG_ERR|APLOG_WIN32ERROR, server_conf,
+                                 "master_main: SetEvent for child process in slot #%d failed", i);
 	    }
-	    process_handles[current_live_processes] = signal_event;
-	    rv = WaitForMultipleObjects(current_live_processes+1, (HANDLE *)process_handles, 
-			FALSE, INFINITE);
-	    if (rv == WAIT_FAILED) {
-		/* Something serious is wrong */
-		ap_log_error(APLOG_MARK,APLOG_CRIT|APLOG_WIN32ERROR, server_conf,
-		    "WaitForMultipeObjects on process handles and apache-signal -- doing shutdown");
-		shutdown_pending = 1;
-		break;
+            break;
+        } else if (cld == current_live_processes+1) {
+            /* apPID_restart event signalled. 
+             * Signal the child to shutdown and start a new child process.
+             * The restart event can be signaled by a command line restart or
+             * by the child process when it handles MaxRequestPerChild connections.
+             */
+            int children_to_kill = current_live_processes;
+            restart_pending = 1;
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf, 
+                         "master_main: Restart event signaled. Doing a graceful restart.");
+            if (ResetEvent(signal_restart_event) == 0) {
+                ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, server_conf,
+                             "master_main: ResetEvent(signal_restart_event) failed.");
+            }
+            /* Signal each child process to die */
+	    for (i = 0; i < children_to_kill; i++) {
+		APD3("master_main: signalling child #%d handle %d to die", i, process_handles[i]);
+		if (SetEvent(process_kill_events[i]) == 0)
+		    ap_log_error(APLOG_MARK, APLOG_ERR|APLOG_WIN32ERROR, server_conf,
+                                 "master_main: SetEvent for child process in slot #%d failed", i);
+                /* Remove the process (and event) from the process table */
+                cleanup_process(process_handles, process_kill_events, i, &current_live_processes);
 	    }
-	    ap_assert(rv != WAIT_TIMEOUT);
-	    cld = rv - WAIT_OBJECT_0;
-	    APD4("main process: wait finished, cld=%d handle %d (max=%d)", cld, process_handles[cld], current_live_processes);
-	    if (cld == current_live_processes) {
-		/* stop_event is signalled, we should exit now */
-		if (ResetEvent(signal_event) == 0)
-		    APD1("main process: *** ERROR: ResetEvent(stop_event) failed ***");
-		APD3("main process: stop_event signalled: shutdown_pending=%d, restart_pending=%d",
-		    shutdown_pending, restart_pending);
-		break;
-	    }
+	    processes_to_create = 1;
+            ++ap_my_generation;
+            continue;
+        } else {
+            /* The child process exited premeturely because of a fatal error condition
+             * (eg, seg fault). Cleanup and restart the child process.
+             */
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO, server_conf, 
+                         "master_main: Child processed exited prematurely. Restarting the child process.");
 	    ap_assert(cld < current_live_processes);
 	    cleanup_process(process_handles, process_kill_events, cld, &current_live_processes);
 	    APD2("main_process: child in slot %d died", rv);
-	    if (processes_to_create) {
-		create_process(process_handles, process_kill_events, &current_live_processes, &child_num, buf, argc, argv);
-		processes_to_create--;
-	    }
+            processes_to_create = 1;
+            continue;
 	}
-	if (!shutdown_pending && !restart_pending) {
-	    ap_log_error(APLOG_MARK,APLOG_CRIT|APLOG_NOERRNO, server_conf,
-		"master_main: no shutdown or restart variables set -- doing shutdown");
-	    shutdown_pending = 1;
-	}
-	if (shutdown_pending) {
-	    /* tell all child processes to die */
-	    for (i = 0; i < current_live_processes; i++) {
-		APD3("main process: signalling child #%d handle %d to die", i, process_handles[i]);
-		if (SetEvent(process_kill_events[i]) == 0)
-		    ap_log_error(APLOG_MARK,APLOG_WIN32ERROR, server_conf,
-			"SetEvent for child process in slot #%d", i);
-	    }
 
-	    break;
-	}
-	if (restart_pending) {
-	    int children_to_kill = current_live_processes;
-
-	    APD1("--- Doing graceful restart ---");
-
-	    processes_to_create = nchild;
-	    for (i = 0; i < nchild; ++i) {
-		if (current_live_processes >= MAX_PROCESSES)
-		    break;
-		create_process(process_handles, process_kill_events, &current_live_processes, &child_num, buf, argc, argv);
-		processes_to_create--;
-	    }
-	    for (i = 0; i < children_to_kill; i++) {
-		APD3("main process: signalling child #%d handle %d to die", i, process_handles[i]);
-		if (SetEvent(process_kill_events[i]) == 0)
-		    ap_log_error(APLOG_MARK,APLOG_WIN32ERROR, server_conf,
- 			"SetEvent for child process in slot #%d", i);
-	    }
-	}
-	++generation;
-    } while (restart_pending);
+    } while (1);
 
     /* If we dropped out of the loop we definitly want to die completely. We need to
      * make sure we wait for all the child process to exit first.
@@ -5559,7 +7016,6 @@ int master_main(int argc, char **argv)
     APD2("*** main process shutdown, processes=%d ***", current_live_processes);
 
 die_now:
-    CloseHandle(signal_event);
 
     tmstart = time(NULL);
     while (current_live_processes && ((tmstart+60) > time(NULL))) {
@@ -5579,7 +7035,9 @@ die_now:
  	    "forcing termination of child #%d (handle %d)", i, process_handles[i]);
 	TerminateProcess((HANDLE) process_handles[i], 1);
     }
-    service_set_status(SERVICE_STOPPED);
+
+    CloseHandle(signal_restart_event);
+    CloseHandle(signal_shutdown_event);
 
     /* cleanup pid file on normal shutdown */
     {
@@ -5588,7 +7046,7 @@ die_now:
 	if ( pidfile != NULL && unlink(pidfile) == 0)
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_INFO,
 			 server_conf,
-			 "httpd: removed PID file %s (pid=%ld)",
+			 "removed PID file %s (pid=%ld)",
 			 pidfile, (long)getpid());
     }
 
@@ -5599,10 +7057,93 @@ die_now:
     ap_destroy_mutex(start_mutex);
     return (0);
 }
+#endif
 
-#ifdef WIN32
-__declspec(dllexport)
-     int apache_main(int argc, char *argv[])
+/*
+ * Send signal to a running Apache. On entry signal should contain
+ * either "shutdown" or "restart"
+ */
+
+int send_signal(pool *p, char *signal)
+{
+    char prefix[20];
+    FILE *fp;
+    int nread;
+    char *fname;
+    int end;
+
+    fname = ap_server_root_relative (p, ap_pid_fname);
+
+    fp = fopen(fname, "r");
+    if (!fp) {
+	printf("Cannot read apache PID file %s\n", fname);
+        return FALSE;
+    }
+    prefix[0] = 'a';
+    prefix[1] = 'p';
+
+    nread = fread(prefix+2, 1, sizeof(prefix)-3, fp);
+    if (nread == 0) {
+	fclose(fp);
+	printf("PID file %s was empty\n", fname);
+        return FALSE;
+    }
+    fclose(fp);
+
+    /* Terminate the prefix string */
+    end = 2 + nread - 1;
+    while (end > 0 && (prefix[end] == '\r' || prefix[end] == '\n'))
+	end--;
+    prefix[end + 1] = '\0';
+
+    setup_signal_names(prefix);
+
+    if (!strcasecmp(signal, "shutdown"))
+	ap_start_shutdown();
+    else if (!strcasecmp(signal, "restart"))
+	ap_start_restart(1);
+    else {
+	printf("Unknown signal name \"%s\". Use either shutdown or restart.\n",
+	    signal);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void post_parse_init()
+{
+    ap_set_version();
+    ap_init_modules(pconf, server_conf);
+    ap_suexec_enabled = init_suexec();
+    version_locked++;
+    ap_open_logs(server_conf, plog);
+    set_group_privs();
+}
+
+
+#ifdef NETWARE
+extern char *optarg;
+
+void signal_handler(int sig)
+{
+    switch (sig) {
+    case SIGTERM:
+        shutdown_pending = 1;
+
+        while(!ap_main_finished)
+            ThreadSwitchWithDelay();
+
+        break;
+    }
+    return;
+}
+#endif
+
+#if defined(NETWARE)
+int apache_main(int argc, char *argv[])
+#elif defined(WIN32)
+ __declspec(dllexport)
+int apache_main(int argc, char *argv[])
 #else
 int REALMAIN(int argc, char *argv[]) 
 #endif
@@ -5610,34 +7151,117 @@ int REALMAIN(int argc, char *argv[])
     int c;
     int child = 0;
     char *cp;
-    int run_as_service = 1;
-    int install = 0;
-    int configtestonly = 0;
+    char *s;
+    int conf_specified = 0;
     
-    common_init();
+#ifdef WIN32
+    jmp_buf reparse_args;
+    char *service_name = NULL;
+    int install = 0;
+    int reparsed = 0;
+    int is_child_of_service = 0;
+    char *signal_to_send = NULL;
 
-    ap_server_argv0 = argv[0];
-
-    /* Get the serverroot from the registry, if it exists. This can be
-     * overridden by a command line -d argument.
+    /* Service application under WinNT the first time through only...
+     * service_main immediately resets real_exit_code to zero
      */
-    if (ap_registry_get_server_root(pconf, ap_server_root, sizeof(ap_server_root)) < 0) {
-	/* The error has already been logged. Actually it won't have been,
-	 * because we haven't read the config files to find out where our 
-	 * error log is. But we can't just ignore the error since we might
-	 * end up using totally the wrong server root.
-	 */
-	exit(1);
+    if (real_exit_code && isWindowsNT()) 
+    {
+        if (((argc == 1) && isProcessService()) 
+            || ((argc == 2) && !strcmp(argv[1], "--ntservice")))
+        {
+            service_main(apache_main, argc, argv);
+            /* this was the end of the service control thread... 
+             * cleanups already ran when second thread of apache_main
+             * terminated, so simply...
+             */
+            exit(0);
+        }
     }
 
-    if (!*ap_server_root) {
-	ap_cpystrn(ap_server_root, HTTPD_ROOT, sizeof(ap_server_root));
-    }
-    ap_cpystrn(ap_server_confname, SERVER_CONFIG_FILE, sizeof(ap_server_confname));
+    /* This behavior is voided by setting real_exit_code to 0 */
+    atexit(hold_console_open_on_error);
+#endif
 
+#ifdef NETWARE
+    int currentScreen = GetCurrentScreen();
+    /* If top_module is not NULL then APACHEC was not exited cleanly
+     * and is in a bad state.  Simply clean up and exit.
+     */
+    check_clean_load (top_module);
+    init_name_space();
+    signal(SIGTERM, signal_handler);
+    atexit(clean_shutdown_on_exit);
+    init_tsd();
+#endif
+
+    /* Console application or a child process. */
+
+    if ((s = strrchr(argv[0], PATHSEPARATOR)) != NULL) {
+        ap_server_argv0 = ++s;
+    }
+    else {
+        ap_server_argv0 = argv[0];
+    }
+
+    common_init();
     ap_setup_prelinked_modules();
 
-    while ((c = getopt(argc, argv, "D:C:c:Xd:f:vVhlZ:iusSt")) != -1) {
+    /* initialize ap_server_root to the directory of the executable, in case
+     * the user chooses a relative path for the -d serverroot arg a bit later
+     */
+
+#ifdef NETWARE
+    if(!*ap_server_root) {
+        ap_cpystrn(ap_server_root, bslash2slash(remove_filename(argv[0])),
+                   sizeof(ap_server_root));
+    }
+#endif
+
+#ifdef WIN32
+    if(!*ap_server_root) {
+        if (GetModuleFileName(NULL, ap_server_root, sizeof(ap_server_root))) {
+            ap_cpystrn(ap_server_root,
+                       ap_os_canonical_filename(pcommands, ap_server_root), 
+                       sizeof(ap_server_root));
+            if (ap_os_is_path_absolute(ap_server_root) 
+                    && strchr(ap_server_root, '/'))
+                *strrchr(ap_server_root, '/') = '\0';
+            else 
+                *ap_server_root = '\0';
+        }
+    }
+#endif
+
+    /* Fallback position if argv[0] wasn't deciphered
+     */
+    if (!*ap_server_root)
+        ap_cpystrn(ap_server_root, HTTPD_ROOT, sizeof(ap_server_root));
+
+    chdir (ap_server_root);
+
+#ifdef WIN32
+    /* If this is a service, we will need to fall back here and 
+     * reparse the entire options list.
+     */
+    if (setjmp(reparse_args)) {
+        /* Reset and reparse the command line */
+        ap_server_pre_read_config  = ap_make_array(pcommands, 1, sizeof(char *));
+        ap_server_post_read_config = ap_make_array(pcommands, 1, sizeof(char *));
+        ap_server_config_defines   = ap_make_array(pcommands, 1, sizeof(char *));
+
+        /* Reset optreset and optind to allow getopt to work correctly
+         * the second time around, and assure we never come back here.
+         */
+        optreset = 1;
+        optind = 1;
+        reparsed = 1;
+    }
+
+    while ((c = getopt(argc, argv, "D:C:c:Xd:f:vVlLz:Z:wiuStThk:n:W:")) != -1) {
+#else /* !WIN32 */
+    while ((c = getopt(argc, argv, "D:C:c:Xd:fF:vVlLesStTh")) != -1) {
+#endif
         char **new;
 	switch (c) {
 	case 'c':
@@ -5653,94 +7277,362 @@ int REALMAIN(int argc, char *argv[])
 	    *new = ap_pstrdup(pcommands, optarg);
 	    break;
 #ifdef WIN32
-	case 'Z':
+        /* Shortcuts; include the -w option to hold the window open on error.
+         * This must not be toggled once we reset real_exit_code to 0!
+         */
+        case 'w':
+            if (real_exit_code)
+                real_exit_code = 2;
+            break;
+	/* service children must be created with the -z option,
+	 * while console mode (interactive apache) children are created
+	 * with the -Z option
+	 */
+        case 'z':
+            is_child_of_service = 1;
+        case 'Z':
+            /* Prevent holding open the (nonexistant) console */
+            real_exit_code = 0;
 	    exit_event = open_event(optarg);
 	    APD2("child: opened process event %s", optarg);
 	    cp = strchr(optarg, '_');
 	    ap_assert(cp);
 	    *cp = 0;
-	    start_mutex = ap_open_mutex(optarg);
+	    setup_signal_names(optarg);
+	    start_mutex = ap_open_mutex(signal_name_prefix);
+	    ap_assert(start_mutex);
 	    child = 1;
 	    break;
+        case 'n':
+            service_name = ap_pstrdup(pcommands, optarg);
+            break;
 	case 'i':
-	    install = 1;
+            install = 2;
 	    break;
 	case 'u':
-	    install = -1;
+            install = -1;
 	    break;
-	case 's':
-	    run_as_service = 0;
+	case 'k':
+            if (!strcasecmp(optarg, "stop"))
+                signal_to_send = "shutdown";
+            else if (!strcasecmp(optarg, "install"))
+                install = 2;
+            else if (!strcasecmp(optarg, "config"))
+                install = 1;
+            else if (!strcasecmp(optarg, "uninstall"))
+                install = -1;
+            else
+                signal_to_send = optarg;
 	    break;
+        case 'W':
+            /* -With a dependent service */
+            if (install < 1) {
+	        fprintf(stderr, "%s: invalid option: -W %s ignored\n"
+                        "\t-W only modifies -k install or -k config\n",
+                        argv[0], optarg);
+            }
+            else if (!isWindowsNT()) {
+                fprintf(stderr, "%s: invalid option: -W %s ignored\n"
+                        "\t-W is only supported for Windows NT/2000\n",
+                        argv[0], optarg);
+            }
+            break;
+#endif /* WIN32 */
+#ifdef NETWARE
+        case 'e':
+            {
+                int screenHandle;  
+
+                /* Get a screen handle for the console screen. */
+                if ((screenHandle = CreateScreen("System Console", 0)) != NULL)
+                {
+                    SetAutoScreenDestructionMode(1); 
+                    SetCurrentScreen(screenHandle);  /* switch to console screen I/O */
+                }
+            }
+            break;
+        case 's':
+            if (DestroyScreen(GetCurrentScreen()) == 0)
+            {
+                int screenHandle;  
+
+                /* Create a screen handle for the console screen, 
+                even though the console screen exists. */
+                if ((screenHandle = CreateScreen("System Console", 0)) != NULL)
+                {
+                    SetCurrentScreen(screenHandle);  /* switch to console screen I/O */
+                    currentScreen = GetCurrentScreen();
+                }
+            }
+            break;
+#endif
 	case 'S':
 	    ap_dump_settings = 1;
 	    break;
-#endif /* WIN32 */
 	case 'd':
-	    ap_cpystrn(ap_server_root, ap_os_canonical_filename(pconf, optarg), sizeof(ap_server_root));
+            optarg = ap_os_canonical_filename(pcommands, optarg);
+            if (!ap_os_is_path_absolute(optarg)) {
+	        optarg = ap_pstrcat(pcommands, ap_server_root, "/", 
+                                    optarg, NULL);
+            }
+            ap_cpystrn(ap_server_root, optarg, sizeof(ap_server_root));
+            ap_getparents(ap_server_root);
+            ap_no2slash(ap_server_root);
+            if (ap_server_root[0] 
+                    && ap_server_root[strlen(ap_server_root) - 1] == '/')
+                ap_server_root[strlen(ap_server_root) - 1] = '\0';
 	    break;
+#ifndef WIN32
+	case 'F':
+	    do_detach = 0;
+	    break;
+#endif
 	case 'f':
-	    ap_cpystrn(ap_server_confname, ap_os_canonical_filename(pconf, optarg), sizeof(ap_server_confname));
+            ap_cpystrn(ap_server_confname,
+                       ap_os_canonical_filename(pcommands, optarg),
+                       sizeof(ap_server_confname));
+            conf_specified = 1;
 	    break;
 	case 'v':
 	    ap_set_version();
 	    printf("Server version: %s\n", ap_get_server_version());
 	    printf("Server built:   %s\n", ap_get_server_built());
-	    exit(0);
-	case 'V':
+#ifdef WIN32
+            clean_parent_exit(1);
+#else
+            clean_parent_exit(0);
+#endif
+
+        case 'V':
 	    ap_set_version();
 	    show_compile_settings();
-	    exit(0);
-	case 'h':
-	    ap_show_directives();
-	    exit(0);
+#ifdef WIN32
+            clean_parent_exit(1);
+#else
+            clean_parent_exit(0);
+#endif
+
 	case 'l':
 	    ap_show_modules();
-	    exit(0);
+#ifdef WIN32
+            clean_parent_exit(1);
+#else
+            clean_parent_exit(0);
+#endif
+
+	case 'L':
+	    ap_show_directives();
+#ifdef WIN32
+            clean_parent_exit(1);
+#else
+            clean_parent_exit(0);
+#endif
+
 	case 'X':
 	    ++one_process;	/* Weird debugging mode. */
 	    break;
 	case 't':
-	    configtestonly = 1;
+	    ap_configtestonly = 1;
+	    ap_docrootcheck = 1;
 	    break;
+	case 'T':
+	    ap_configtestonly = 1;
+	    ap_docrootcheck = 0;
+	    break;
+	case 'h':
+	    usage(ap_server_argv0);
 	case '?':
-	    usage(argv[0]);
-	}
-    }
-
-    if (!child && run_as_service) {
-	service_cd();
-    }
-
-    server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
-
-    if (configtestonly) {
-        fprintf(stderr, "Syntax OK\n");
-        exit(0);
-    }
-
-    if (!child) {
-	ap_log_pid(pconf, ap_pid_fname);
-    }
-    ap_set_version();
-    ap_init_modules(pconf, server_conf);
-    ap_suexec_enabled = init_suexec();
-    version_locked++;
-    ap_open_logs(server_conf, pconf);
-    set_group_privs();
-
-#ifdef OS2
-    printf("%s \n", ap_get_server_version());
+	    usage(ap_server_argv0);
+        }   /* switch */
+#ifdef NETWARE
+        ThreadSwitch();
 #endif
+    }       /* while  */
+
 #ifdef WIN32
-    if (!child) {
-	printf("%s \n", ap_get_server_version());
+
+    if (!service_name && install) {
+        service_name = DEFAULTSERVICENAME;
+    }
+
+    if (service_name) {
+        service_name = get_display_name(service_name);
+    }
+
+    if (service_name && isValidService(service_name)) 
+    {
+        if (install == 2) {
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, NULL,
+                         "Service \"%s\" is already installed!", service_name);
+            clean_parent_exit(1);
+        }
+        /* Don't proceed if we are configuring, uninstalling 
+         * or already merged and reparsed the service args
+         */
+        if (!install && !reparsed)
+        {
+            int svcargc;
+            char **newargv, **svcargv;
+            if (ap_configtestonly)
+                fprintf(stderr, "Default command options for service %s:\n", 
+                        service_name);
+                    
+            /* Merge the service's default args */
+            if (ap_registry_get_service_args(pcommands, &svcargc, &svcargv, 
+                                             service_name) > 0) {
+                newargv = (char**)malloc((svcargc + argc + 1) * sizeof(char*));
+                newargv[0] = argv[0];  /* The true executable name */
+                memcpy(newargv + 1, svcargv, svcargc * sizeof(char*)); 
+                memcpy(newargv + 1 + svcargc, argv + 1, 
+                       (argc - 1) * sizeof(char*));
+                argc += svcargc; /* Add the startup options args */
+                argv = newargv;
+                argv[argc] = NULL;
+
+                if (ap_configtestonly) {
+                    while (svcargc-- > 0) {
+                        if ((**svcargv == '-') && strchr("dfDCc", svcargv[0][1])
+                            && svcargc) {
+                            fprintf(stderr, "    %s %s\n", 
+                                    *svcargv, *(svcargv + 1));
+                            svcargv += 2; --svcargc;
+                        }
+                        else
+                            fprintf(stderr, "    %s\n", *(svcargv++));
+                    }
+                }
+                /* Run through the command line args all over again */
+                longjmp(reparse_args, 1);
+            }
+            else if (ap_configtestonly)
+                fprintf (stderr, "    (none)\n");
+        }
+    }
+    else if (service_name && (install <= 1))
+    {
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, NULL,
+                     "Service \"%s\" is not installed!", service_name);
+        clean_parent_exit(1);
     }
 #endif
 
+    /* ServerRoot/ServerConfFile are found in this order:
+     * (1) serverroot set to Apache.exe's path, or HTTPD_ROOT if unparsable
+     * (2) arguments are grabbed for the -n named service, if given
+     * (3) the -d argument is taken from the given command line
+     * (4) the -d argument is taken from the service's default args
+     * (5) the -f argument is taken from the given command line
+     * (6) the -f argument is taken from the service's default args
+     * (7) if -f is omitted, then initialized to SERVER_CONFIG_FILE
+     * (8) if ap_server_confname is not absolute, then merge it to serverroot
+     */
+    
+    if (!conf_specified)
+        ap_cpystrn(ap_server_confname, SERVER_CONFIG_FILE, sizeof(ap_server_confname));
+
+    if (!ap_os_is_path_absolute(ap_server_confname))
+        ap_cpystrn(ap_server_confname,
+                   ap_server_root_relative(pcommands, ap_server_confname),
+                   sizeof(ap_server_confname));
+    ap_getparents(ap_server_confname);
+    ap_no2slash(ap_server_confname);
+    
+#ifdef WIN32
+    /* Read the conf now unless we are uninstalling the service,
+     * or shutting down a running service 
+     * (but do read the conf for the pidfile if we shutdown the console)
+     */
+    if ((install >= 0) && (!service_name || !signal_to_send 
+                            || strcasecmp(signal_to_send,"shutdown"))) {
+        server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
+    }
+
+    if (install) {
+        if (install > 0) 
+            InstallService(pconf, service_name, argc, argv, install == 1);
+        else
+            RemoveService(service_name);
+        clean_parent_exit(0);
+    }
+
+    /* All NT signals, and all but the 9x start signal are handled entirely.
+     * Die if we failed, are on NT, or are not "start"ing the service
+     */
+    if (service_name && signal_to_send) {
+        if (send_signal_to_service(service_name, signal_to_send, argc, argv))
+            clean_parent_exit(0);
+        if (isWindowsNT() || strcasecmp(signal_to_send, "start"))
+            clean_parent_exit(1);
+        /* Still here?  Then we are hanging around to detach the console 
+         * and use this process as the Windows 9x service.
+         */
+    }
+#else /* ndef WIN32 */
+    server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
+#endif
+
+    if (ap_configtestonly) {
+        fprintf(stderr, "%s: Syntax OK\n", ap_server_root_relative(pcommands, ap_server_confname));
+#ifdef WIN32
+        clean_parent_exit(1);
+#else
+        clean_parent_exit(0);
+#endif
+    }
+
+    if (ap_dump_settings) {
+#ifdef WIN32
+        clean_parent_exit(1);
+#else
+        clean_parent_exit(0);
+#endif
+    }
+
+#ifdef WIN32
+    /* Non-service Signals.  (Ignore -k start for now [with or without -n arg]) */
+    if (signal_to_send && strcasecmp(signal_to_send, "start")) {
+        send_signal(pconf, signal_to_send);
+        clean_parent_exit(0);
+    }
+#endif
+
+#ifndef NETWARE
+    if (!child && !ap_dump_settings) { 
+        ap_log_pid(pconf, ap_pid_fname);
+    }
+#endif
+
+    post_parse_init();
+
+#if defined(OS2)
+    printf("%s running...\n", ap_get_server_version());
+#elif defined(WIN32)
+    if (!child) {
+        printf("%s running...\n", ap_get_server_version());
+    }
+#elif defined(NETWARE)
+    if (currentScreen != GetCurrentScreen()) {
+        SetCurrentScreen(currentScreen);  /* switch to console screen I/O */
+        SetAutoScreenDestructionMode(0); 
+    }
+
+    printf("%s running...\n", ap_get_server_version());
+#endif
+
+#ifndef NETWARE
     if (one_process && !exit_event)
 	exit_event = create_event(0, 0, NULL);
     if (one_process && !start_mutex)
 	start_mutex = ap_create_mutex(NULL);
+#endif
+
+#ifdef NETWARE
+    worker_main();
+    destroy_semaphore(allowed_globals.jobsemaphore);
+
+    while((ap_thread_count) || (!shutdown_pending))
+        ThreadSwitchWithDelay();
+#else 
     /*
      * In the future, the main will spawn off a couple
      * of children and monitor them. As soon as a child
@@ -5749,14 +7641,44 @@ int REALMAIN(int argc, char *argv[])
     if (child || one_process) {
 	if (!exit_event || !start_mutex)
 	    exit(-1);
+#ifdef WIN32
+        if (child)
+            ap_start_child_console(is_child_of_service);
+        else
+            ap_start_console_monitor();
+#endif
 	worker_main();
 	ap_destroy_mutex(start_mutex);
 	destroy_event(exit_event);
+    } 
+#ifdef WIN32
+    /* Windows NT service second time around ... we have all the overrides 
+     * from the NT SCM, so go to town and return to the SCM when we quit.
+     */
+    if (isWindowsNT() && isProcessService())
+    {
+        master_main(argc, argv);
     }
-    else {
-	service_main(master_main, argc, argv,
-			"Apache", install, run_as_service);
+    else if (service_name && signal_to_send && !isWindowsNT()
+             && !strcasecmp(signal_to_send, "start")) {
+        /* service95_main will call master_main() */
+        service95_main(master_main, argc, argv, service_name);
     }
+    else 
+    {
+	/* Let's go fishing for some signals including ctrl+c, ctrl+break,
+         * logoff, close and shutdown, while the server is running
+	 */
+	ap_start_console_monitor();
+        master_main(argc, argv);
+    }
+#else /* ndef WIN32 */
+    else 
+    {
+        master_main(argc, argv);
+    }
+#endif /* ndef WIN32 */
+#endif /* ndef NETWARE */
 
     clean_parent_exit(0);
     return 0;	/* purely to avoid a warning */
@@ -5784,6 +7706,23 @@ int main(int argc, char *argv[])
 
 #endif /* ndef SHARED_CORE_TIESTATIC */
 #else  /* ndef SHARED_CORE_BOOTSTRAP */
+
+#if defined(OS2) || defined(CYGWIN)
+/* Shared core loader for OS/2 and Cygwin */
+
+#if defined(CYGWIN)
+__declspec(dllimport) 
+#endif
+
+
+int ap_main(int argc, char *argv[]); /* Load time linked from cyghttpd.dll */
+
+int main(int argc, char *argv[])
+{
+    return ap_main(argc, argv);
+}
+
+#else
 
 /*
 **  Standalone Bootstrap Program for Shared Core support
@@ -5813,7 +7752,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef SHARED_CORE_EXECUTABLE_PROGRAM
-#define SHARED_CORE_EXECUTABLE_PROGRAM "libhttpd.ep"
+#define SHARED_CORE_EXECUTABLE_PROGRAM "lib" TARGET ".ep"
 #endif
 
 extern char *optarg;
@@ -5829,38 +7768,57 @@ int main(int argc, char *argv[], char *envp[])
     char **envpnew;
     int c, i, l;
 
+#ifdef MPE
+    /*
+     * MPE doesn't currently initialize the envp parameter.  Instead, we must
+     * use the global variable environ. 
+     */
+    envp = environ;
+#endif
+	
     /* 
      * parse argument line, 
      * but only handle the -L option 
      */
     llp_dir = SHARED_CORE_DIR;
-    while ((c = getopt(argc, argv, "D:C:c:Xd:f:vVhlL:SZ:t")) != -1) {
+    while ((c = getopt(argc, argv, "D:C:c:Xd:Ff:vVlLR:SZ:tTh")) != -1) {
 	switch (c) {
 	case 'D':
 	case 'C':
 	case 'c':
 	case 'X':
 	case 'd':
+	case 'F':
 	case 'f':
 	case 'v':
 	case 'V':
-	case 'h':
 	case 'l':
+	case 'L':
 	case 'S':
 	case 'Z':
 	case 't':
+	case 'T':
+	case 'h':
 	case '?':
 	    break;
-	case 'L':
+	case 'R':
 	    llp_dir = strdup(optarg);
 	    break;
 	}
     }
 
+#ifdef MPE
+    /*
+     * MPE doesn't currently initialize the envp parameter.  Instead, we must
+     * use the global variable environ. 
+     */
+    envp = environ;
+#endif
+	
     /* 
      * create path to SHARED_CORE_EXECUTABLE_PROGRAM
      */
-    sprintf(prog, "%s/%s", llp_dir, SHARED_CORE_EXECUTABLE_PROGRAM);
+    ap_snprintf(prog, sizeof(prog), "%s/%s", llp_dir, SHARED_CORE_EXECUTABLE_PROGRAM);
 
     /* 
      * adjust process environment therewith the Unix loader 
@@ -5877,15 +7835,18 @@ int main(int argc, char *argv[], char *envp[])
     }
     if (llp_slot == NULL) {
 	envpnew = (char **)malloc(sizeof(char *)*(i + 2));
+	if (envpnew == NULL) {
+	    fprintf(stderr, "Ouch!  Out of memory generating envpnew!\n");
+	}
 	memcpy(envpnew, envp, sizeof(char *)*i);
 	envp = envpnew;
 	llp_slot = &envp[i++];
 	envp[i] = NULL;
     }
     if (llp_existing != NULL)
-	 sprintf(llp_buf, "%s=%s:%s", VARNAME, llp_dir, llp_existing);
+	 ap_snprintf(llp_buf, sizeof(llp_buf), "%s=%s:%s", VARNAME, llp_dir, llp_existing);
     else
-	 sprintf(llp_buf, "%s=%s", VARNAME, llp_dir);
+	 ap_snprintf(llp_buf, sizeof(llp_buf), "%s=%s", VARNAME, llp_dir);
     *llp_slot = strdup(llp_buf);
 
     /* 
@@ -5894,13 +7855,37 @@ int main(int argc, char *argv[], char *envp[])
      */
     if (execve(prog, argv, envp) == -1) {
 	fprintf(stderr, 
-		"httpd: Unable to exec Shared Core Executable Program `%s'\n",
-		prog);
+		"%s: Unable to exec Shared Core Executable Program `%s'\n",
+		argv[0], prog);
 	return 1;
     }
     else
 	return 0;
 }
 
+#endif /* def OS2 */
 #endif /* ndef SHARED_CORE_BOOTSTRAP */
+
+#ifndef SHARED_CORE_BOOTSTRAP
+#include "httpd.h"
+/*
+ * Force ap_validate_password() into the image so that modules like
+ * mod_auth can use it even if they're dynamically loaded.
+ */
+void suck_in_ap_validate_password(void);
+void suck_in_ap_validate_password(void)
+{
+    ap_validate_password("a", "b");
+}
+#endif
+
+/* force Expat to be linked into the server executable */
+#if defined(USE_EXPAT) && !defined(SHARED_CORE_BOOTSTRAP)
+#include "xmlparse.h"
+const XML_LChar *suck_in_expat(void);
+const XML_LChar *suck_in_expat(void)
+{
+    return XML_ErrorString(XML_ERROR_NONE);
+}
+#endif /* USE_EXPAT */
 

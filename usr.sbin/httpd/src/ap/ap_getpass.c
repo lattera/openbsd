@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1999 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 /*
  * ap_getpass.c: abstraction to provide for obtaining a password from the
@@ -62,7 +63,9 @@
  */
 
 #include "ap_config.h"
+#ifndef NETWARE
 #include <sys/types.h>
+#endif
 #include <errno.h>
 #include "ap.h"
 
@@ -82,29 +85,56 @@
 
 #define ERR_OVERFLOW 5
 
-#ifdef MPE
-/*
- * MPE lacks getpass() and a way to suppress stdin echo.  So for now, just
- * issue the prompt and read the results with echo.  (Ugh).
- */
+#if defined(MPE) || defined(BEOS) || defined(BONE)
+#include <termios.h>
 
-static char *getpass(const char *prompt)
+char *
+getpass(const char *prompt)
 {
-    static char password[MAX_STRING_LEN];
+	static char		buf[MAX_STRING_LEN+1];	/* null byte at end */
+	char			*ptr;
+	sigset_t		sig, sigsave;
+	struct termios	term, termsave;
+	FILE			*fp,*outfp;
+	int				c;
 
-    fputs(prompt, stderr);
-    gets((char *) &password);
+        if ((outfp = fp = fopen("/dev/tty", "w+")) == NULL) {
+                outfp = stderr;
+                fp = stdin;
+        }
 
-    if (strlen((char *) &password) > (MAX_STRING_LEN - 1)) {
-	password[MAX_STRING_LEN - 1] = '\0';
-    }
+	sigemptyset(&sig);	/* block SIGINT & SIGTSTP, save signal mask */
+	sigaddset(&sig, SIGINT);
+	sigaddset(&sig, SIGTSTP);
+	sigprocmask(SIG_BLOCK, &sig, &sigsave);
 
-    return (char *) &password;
+	tcgetattr(fileno(fp), &termsave);	/* save tty state */
+	term = termsave;			/* structure copy */
+	term.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+	tcsetattr(fileno(fp), TCSAFLUSH, &term);
+
+	fputs(prompt, outfp);
+
+	ptr = buf;
+	while ( (c = getc(fp)) != EOF && c != '\n') {
+		if (ptr < &buf[MAX_STRING_LEN])
+			*ptr++ = c;
+	}
+	*ptr = 0;			/* null terminate */
+	putc('\n', outfp);		/* we echo a newline */
+
+						/* restore tty state */
+	tcsetattr(fileno(fp), TCSAFLUSH, &termsave);
+
+						/* restore signal mask */
+	sigprocmask(SIG_SETMASK, &sigsave, NULL);
+	if (fp != stdin) fclose(fp);
+
+	return(buf);
 }
+#endif /* MPE */
 
-#endif
-
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
 /*
  * Windows lacks getpass().  So we'll re-implement it here.
  */

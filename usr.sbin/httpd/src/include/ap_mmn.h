@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #ifndef APACHE_AP_MMN_H
@@ -159,6 +160,9 @@
  *			  4. compat.h    -> ap_compat.h
  *			  5. apctype.h   -> ap_ctype.h
  * 19980806 (1.3.2-dev) - add ap_log_rerror()
+ *                      - add ap_scan_script_header_err_core()
+ *                      - add ap_uuencode()
+ *                      - add ap_custom_response()
  * 19980811 (1.3.2-dev)	- added limit_req_line, limit_req_fieldsize, and
  *			  limit_req_fields to server_rec.
  *			  added limit_req_body to core_dir_config and
@@ -178,29 +182,90 @@
  *                        (for implementing better error reporting).
  * 19980906 (1.3.2-dev) - added ap_md5_binary()
  * 19980917 (1.3.2-dev) - bs2000: changed os_set_authfile() to os_set_account()
+ * 19981108 (1.3.4-dev) - added ap_method_number_of()
+ *                      - changed value of M_INVALID and added WebDAV methods
+ * 19981108.1           - ap_exists_config_define() is now public (minor bump)
+ * 19981204             - scoreboard changes -- added generation, changed
+ *                        exit_generation to running_generation.  Somewhere
+ *                        earlier vhostrec was added, but it's only safe to use
+ *                        as of this rev.  See scoreboard.h for documentation.
+ * 19981211             - DSO changes -- added ap_single_module_configure()
+ *                                    -- added ap_single_module_init()
+ * 19981229             - mod_negotiation overhaul -- added ap_make_etag()
+ *                        and added vlist_validator to request_rec.
+ * 19990101             - renamed macro escape_uri() to ap_escape_uri()
+ *                      - added MODULE_MAGIC_COOKIE to identify module structs
+ * 19990103 (1.3.4-dev) - added ap_array_pstrcat()
+ * 19990105 (1.3.4-dev) - added ap_os_is_filename_valid()
+ * 19990106 (1.3.4-dev) - Move MODULE_MAGIC_COOKIE to the end of the
+ *                        STANDARD_MODULE_STUFF macro so the version
+ *                        numbers and file name remain at invariant offsets
+ * 19990108 (1.3.4-dev) - status_drops_connection -> ap_status_drops_connection
+ *                        scan_script_header -> ap_scan_script_header_err
+ *                      - reordered entries in request_rec that were waiting
+ *                        for a non-binary-compatible release.
+ *          (1.3.5-dev)
+ * 19990108.1           - add ap_MD5Encode() for MD5 password handling.
+ * 19990108.2           - add ap_validate_password() and change ap_MD5Encode()
+ *                        to use a stronger algorithm.
+ * 19990108.4           - add ap_size_list_item(), ap_get_list_item(), and
+ *                        ap_find_list_item()
+ * 19990108.5           - added ap_sub_req_method_uri() and added const to the
+ *                        definition of method in request_rec.
+ * 19990108.6           - SIGPIPE is now ignored by the core server.
+ * 19990108.7           - ap_isxdigit added
+ * 19990320             - METHODS and M_INVALID symbol values modified
+ * 19990320.1           - add ap_vrprintf()
+ * 19990320.2           - add cmd_parms.context, ap_set_config_vectors, 
+ *                        export ap_add_file_conf
+ * 19990320.3           - add ap_regexec() and ap_regerror()
+ * 19990320.4           - add ap_field_noparam()
+ * 19990320.5           - add local_ip/host to conn_rec for mass-vhost
+ * 19990320.6           - add ap_SHA1Final(), ap_SHA1Init(),
+ *                        ap_SHA1Update_binary(), ap_SHA1Update(),
+ *                        ap_base64encode(), ap_base64encode_binary(),
+ *                        ap_base64encode_len(), ap_base64decode(),
+ *                        ap_base64decode_binary(), ap_base64decode_len(),
+ *                        ap_pbase64decode(), ap_pbase64encode()
+ * 19990320.7           - add ap_strcasestr()
+ * 19990320.8           - add request_rec.case_preserved_filename
+ * 19990320.9           - renamed alloc.h to ap_alloc.h
+ * 19990320.10          - add ap_is_rdirectory() and ap_stripprefix()
+ * 19990320.11          - Add a couple of fields, callback_data and
+ *                        filter_callback to the end of buff.h
+ * 19990320.11          - Add some fields to the end of the core_dir_config
+ *                        structure
+ * 19990320.12		- add ap_getline(), ap_get_chunk_size()
+ * 19990320.13          - add ap_strtol()
  */
 
+#define MODULE_MAGIC_COOKIE 0x41503133UL /* "AP13" */
+
 #ifndef MODULE_MAGIC_NUMBER_MAJOR
-#define MODULE_MAGIC_NUMBER_MAJOR 19980917
+#define MODULE_MAGIC_NUMBER_MAJOR 19990320
 #endif
-#define MODULE_MAGIC_NUMBER_MINOR 0                     /* 0...n */
-#define MODULE_MAGIC_NUMBER MODULE_MAGIC_NUMBER_MAJOR	/* backward compat */
+#define MODULE_MAGIC_NUMBER_MINOR 13                    /* 0...n */
 
 /* Useful for testing for features. */
-#define MODULE_MAGIC_AT_LEAST(major,minor)		\
-    ((major) > MODULE_MAGIC_NUMBER_MAJOR 		\
+#define AP_MODULE_MAGIC_AT_LEAST(major,minor)		\
+    ((major) < MODULE_MAGIC_NUMBER_MAJOR 		\
 	|| ((major) == MODULE_MAGIC_NUMBER_MAJOR 	\
-	    && (minor) >= MODULE_MAGIC_NUMBER_MINOR))
+	    && (minor) <= MODULE_MAGIC_NUMBER_MINOR))
 
-/* For example, suppose you wish to use the ap_overlap_tables
-   function.  You can do this:
+/*
+ * For example, suppose you wish to use the ap_overlap_tables
+ * function.  You can do this:
+ *
+ * #if AP_MODULE_MAGIC_AT_LEAST(19980812,2)
+ *    ... use ap_overlap_tables()
+ * #else
+ *    ... alternative code which doesn't use ap_overlap_tables()
+ * #endif
+ *
+ */
 
-#if MODULE_MAGIC_AT_LEAST(19980812,2)
-    ... use ap_overlap_tables()
-#else
-    ... alternative code which doesn't use ap_overlap_tables()
-#endif
-
-*/
+/* deprecated. present for backwards compatibility */
+#define MODULE_MAGIC_NUMBER MODULE_MAGIC_NUMBER_MAJOR
+#define MODULE_MAGIC_AT_LEAST old_broken_macro_we_hope_you_are_not_using
 
 #endif /* !APACHE_AP_MMN_H */

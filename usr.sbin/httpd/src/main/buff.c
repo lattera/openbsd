@@ -1,63 +1,65 @@
 /* ====================================================================
- * Copyright (c) 1996-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #include "httpd.h"
 #include "http_main.h"
 #include "http_log.h"
+#include "buff.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -82,6 +84,7 @@
 #define CHUNK_HEADER_SIZE (5)
 #endif
 
+#define ascii_CRLF "\015\012" /* A CRLF which won't pass the conversion machinery */
 
 /* bwrite()s of greater than this size can result in a large_write() call,
  * which can result in a writev().  It's a little more work to set up the
@@ -119,13 +122,13 @@
  * futher I/O will be done
  */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE) || defined(CYGWIN_WINSOCK) 
 
 /*
   select() sometimes returns 1 even though the write will block. We must work around this.
 */
 
-int sendwithtimeout(int sock, const char *buf, int len, int flags)
+API_EXPORT(int) ap_sendwithtimeout(int sock, const char *buf, int len, int flags)
 {
     int iostate = 1;
     fd_set fdset;
@@ -134,15 +137,26 @@ int sendwithtimeout(int sock, const char *buf, int len, int flags)
     int rv;
     int retry;
 
-    if (!(tv.tv_sec = ap_check_alarm()))
-	return (send(sock, buf, len, flags));
+    tv.tv_sec = ap_check_alarm();
 
-    rv = ioctlsocket(sock, FIONBIO, &iostate);
+    /* If ap_sendwithtimeout is called with an invalid timeout
+     * set a default timeout of 300 seconds. This hack is needed
+     * to emulate the non-blocking send() that was removed in 
+     * the previous patch to this function. Network servers
+     * should never make network i/o calls w/o setting a timeout.
+     * (doing otherwise opens a DoS attack exposure)
+     */
+    if (tv.tv_sec <= 0) {
+        tv.tv_sec = 300;
+    }
+
+    rv = ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
     iostate = 0;
     if (rv) {
 	err = WSAGetLastError();
 	ap_assert(0);
     }
+
     rv = send(sock, buf, len, flags);
     if (rv == SOCKET_ERROR) {
 	err = WSAGetLastError();
@@ -157,71 +171,106 @@ int sendwithtimeout(int sock, const char *buf, int len, int flags)
 		if (rv == SOCKET_ERROR)
 		    err = WSAGetLastError();
 		else if (rv == 0) {
- 		    ioctlsocket(sock, FIONBIO, &iostate);
+ 		    ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
 		    if(ap_check_alarm() < 0) {
 			WSASetLastError(EINTR);	/* Simulate an alarm() */
 			return (SOCKET_ERROR);
 		    }
-		}
+ 		}
 		else {
 		    rv = send(sock, buf, len, flags);
 		    if (rv == SOCKET_ERROR) {
 		        err = WSAGetLastError();
 			if(err == WSAEWOULDBLOCK) {
-			    ap_log_error(APLOG_MARK,APLOG_DEBUG,NULL,
-				"select claimed we could write, but in fact we couldn't. This is a bug in Windows.");
+			    
 			    retry=1;
+                            ap_log_error(APLOG_MARK,APLOG_DEBUG,NULL,
+                                         "select claimed we could write, but in fact we couldn't.");
+#ifdef NETWARE
+                            ThreadSwitchWithDelay();
+#else
 			    Sleep(100);
+#endif
 			}
 		    }
 		}
 	    } while(retry);
     }
-    ioctlsocket(sock, FIONBIO, &iostate);
+
+    ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
+
     if (rv == SOCKET_ERROR)
 	WSASetLastError(err);
     return (rv);
 }
 
 
-int recvwithtimeout(int sock, char *buf, int len, int flags)
+API_EXPORT(int) ap_recvwithtimeout(int sock, char *buf, int len, int flags)
 {
     int iostate = 1;
     fd_set fdset;
     struct timeval tv;
     int err = WSAEWOULDBLOCK;
     int rv;
+    int retry;
 
-    if (!(tv.tv_sec = ap_check_alarm()))
-	return (recv(sock, buf, len, flags));
+    tv.tv_sec = ap_check_alarm();
 
-    rv = ioctlsocket(sock, FIONBIO, &iostate);
+    /* If ap_recvwithtimeout is called with an invalid timeout
+     * set a default timeout of 300 seconds. This hack is needed
+     * to emulate the non-blocking recv() that was removed in 
+     * the previous patch to this function. Network servers
+     * should never make network i/o calls w/o setting a timeout.
+     * (doing otherwise opens a DoS attack exposure)
+     */
+    if (tv.tv_sec <= 0) {
+        tv.tv_sec = 300;
+    }
+
+    rv = ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
     iostate = 0;
     ap_assert(!rv);
+
     rv = recv(sock, buf, len, flags);
     if (rv == SOCKET_ERROR) {
 	err = WSAGetLastError();
 	if (err == WSAEWOULDBLOCK) {
-	    FD_ZERO(&fdset);
-	    FD_SET(sock, &fdset);
-	    tv.tv_usec = 0;
-	    rv = select(FD_SETSIZE, &fdset, NULL, NULL, &tv);
-	    if (rv == SOCKET_ERROR)
-		err = WSAGetLastError();
-	    else if (rv == 0) {
-		ioctlsocket(sock, FIONBIO, &iostate);
-		ap_check_alarm();
-		WSASetLastError(WSAEWOULDBLOCK);
-		return (SOCKET_ERROR);
-	    }
-	    else {
-		rv = recv(sock, buf, len, flags);
-		if (rv == SOCKET_ERROR)
-		    err = WSAGetLastError();
-	    }
-	}
+            do {
+                retry = 0;
+                FD_ZERO(&fdset);
+                FD_SET(sock, &fdset);
+                tv.tv_usec = 0;
+                rv = select(FD_SETSIZE, &fdset, NULL, NULL, &tv);
+                if (rv == SOCKET_ERROR)
+                    err = WSAGetLastError();
+                else if (rv == 0) {
+                    ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
+                    ap_check_alarm();
+                    WSASetLastError(WSAEWOULDBLOCK);
+                    return (SOCKET_ERROR);
+                }
+                else {
+                    rv = recv(sock, buf, len, flags);
+                    if (rv == SOCKET_ERROR) {
+                        err = WSAGetLastError();
+                        if (err == WSAEWOULDBLOCK) {
+                            ap_log_error(APLOG_MARK, APLOG_DEBUG, NULL,
+                                         "select claimed we could read, but in fact we couldn't.");
+                            retry = 1;
+#ifdef NETWARE
+                            ThreadSwitchWithDelay();
+#else
+                            Sleep(100);
+#endif
+                        }
+                    }
+                }
+            } while (retry);
+        }
     }
-    ioctlsocket(sock, FIONBIO, &iostate);
+
+    ioctlsocket(sock, FIONBIO, (u_long*)&iostate);
+
     if (rv == SOCKET_ERROR)
 	WSASetLastError(err);
     return (rv);
@@ -237,8 +286,10 @@ static int ap_read(BUFF *fb, void *buf, int nbyte)
     
 #ifdef WIN32
     if (fb->hFH != INVALID_HANDLE_VALUE) {
-        if (!ReadFile(fb->hFH,buf,nbyte,&rv,NULL))
+        if (!ReadFile(fb->hFH,buf,nbyte,&rv,NULL)) {
+            errno = GetLastError();
             rv = -1;
+        }
     }
     else
 #endif
@@ -251,14 +302,35 @@ static ap_inline int buff_read(BUFF *fb, void *buf, int nbyte)
 {
     int rv;
 
-#if defined (WIN32)
+#if defined (WIN32) || defined(NETWARE) || defined(CYGWIN_WINSOCK) 
     if (fb->flags & B_SOCKET) {
-	rv = recvwithtimeout(fb->fd_in, buf, nbyte, 0);
+	rv = ap_recvwithtimeout(fb->fd_in, buf, nbyte, 0);
 	if (rv == SOCKET_ERROR)
 	    errno = WSAGetLastError();
     }
     else
 	rv = ap_read(fb, buf, nbyte);
+#elif defined (BEOS)
+    if (fb->flags & B_SOCKET) {
+        rv = recv(fb->fd_in, buf, nbyte, 0);
+    } else
+        rv = ap_read(fb,buf,nbyte);
+#elif defined(TPF)
+    fd_set fds;
+    struct timeval tv;
+
+    ap_check_signals();
+    if (fb->flags & B_SOCKET) {
+        FD_ZERO(&fds);
+        FD_SET(fb->fd_in, &fds);
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        rv = ap_select(fb->fd_in + 1, &fds, NULL, NULL, &tv);
+        if (rv > 0)
+            rv = ap_read(fb, buf, nbyte);
+    }
+    else
+        rv = ap_read(fb, buf, nbyte);
 #else
     rv = ap_read(fb, buf, nbyte);
 #endif /* WIN32 */
@@ -272,14 +344,27 @@ static int ap_write(BUFF *fb, const void *buf, int nbyte)
     
 #ifdef WIN32
     if (fb->hFH != INVALID_HANDLE_VALUE) {
-        if (!WriteFile(fb->hFH,buf,nbyte,&rv,NULL))
-          rv = -1;
+        if (!WriteFile(fb->hFH,buf,nbyte,&rv,NULL)) {
+            errno = GetLastError();
+            rv = -1;
+        }
     }
     else
 #endif
 #if defined (B_SFIO)
 	rv = sfwrite(fb->sf_out, buf, nbyte);
 #else
+#ifdef _OSD_POSIX
+        /* Sorry, but this is a hack: On BS2000, currently the send() call
+         * has slightly better performance, and it doesn't have a maximum
+	 * transfer size of 16kB per write. Both write() and writev()
+	 * currently have such a limit and therefore don't work
+	 * too well with MMAP files.
+	 */
+	if (fb->flags & B_SOCKET)
+	    rv = send(fb->fd, buf, nbyte, 0);
+	else
+#endif
 	rv = write(fb->fd, buf, nbyte);
 #endif
     
@@ -290,14 +375,23 @@ static ap_inline int buff_write(BUFF *fb, const void *buf, int nbyte)
 {
     int rv;
 
-#if defined(WIN32)
+    if (fb->filter_callback != NULL) {
+        fb->filter_callback(fb, buf, nbyte);
+    }
+   
+#if defined(WIN32) || defined(NETWARE)
     if (fb->flags & B_SOCKET) {
-	rv = sendwithtimeout(fb->fd, buf, nbyte, 0);
+	rv = ap_sendwithtimeout(fb->fd, buf, nbyte, 0);
 	if (rv == SOCKET_ERROR)
 	    errno = WSAGetLastError();
     }
     else
 	rv = ap_write(fb, buf, nbyte);
+#elif defined(BEOS)
+    if(fb->flags & B_SOCKET) {
+        rv = send(fb->fd, buf, nbyte, 0);
+    } else 
+        rv = ap_write(fb, buf,nbyte);
 #else
     rv = ap_write(fb, buf, nbyte);
 #endif /* WIN32 */
@@ -366,6 +460,9 @@ API_EXPORT(BUFF *) ap_bcreate(pool *p, int flags)
     fb->sf_out = sfnew(fb->sf_out, NIL(Void_t *),
 		       (size_t) SF_UNBOUND, 1, SF_WRITE);
 #endif
+
+    fb->callback_data = NULL;
+    fb->filter_callback = NULL;
 
     return fb;
 }
@@ -486,16 +583,18 @@ static void end_chunk(BUFF *fb)
 	*strp++ = ' ';
 	++i;
     }
-    *strp++ = '\015';
-    *strp = '\012';
+    *strp++ = CR;
+    *strp = LF;
+
+    /* tack on the trailing CRLF, we've reserved room for this */
+    fb->outbase[fb->outcnt++] = CR;
+    fb->outbase[fb->outcnt++] = LF;
+
 #ifdef CHARSET_EBCDIC
     /* Chunks are an HTTP/1.1 Protocol feature. They must ALWAYS be in ASCII */
     ebcdic2ascii(&fb->outbase[fb->outchunk], &fb->outbase[fb->outchunk], CHUNK_HEADER_SIZE);
+    ebcdic2ascii(&fb->outbase[fb->outcnt-2], &fb->outbase[fb->outcnt-2], 2);
 #endif /*CHARSET_EBCDIC*/
-
-    /* tack on the trailing CRLF, we've reserved room for this */
-    fb->outbase[fb->outcnt++] = '\015';
-    fb->outbase[fb->outcnt++] = '\012';
 
     fb->outchunk = -1;
 }
@@ -562,14 +661,22 @@ static int saferead(BUFF *fb, char *buf, int nbyte)
 #endif
 
 
-/* note we assume the caller has ensured that fb->fd_in <= FD_SETSIZE */
+/* Test the descriptor and flush the output buffer if it looks like
+ * we will block on the next read.
+ *
+ * Note we assume the caller has ensured that fb->fd_in <= FD_SETSIZE
+ */
 API_EXPORT(void) ap_bhalfduplex(BUFF *fb)
 {
     int rv;
     fd_set fds;
     struct timeval tv;
 
-    if (fb->incnt > 0 || fb->outcnt == 0) {
+    /* We don't need to do anything if the connection has been closed
+     * or there is something readable in the incoming buffer
+     * or there is nothing flushable in the output buffer.
+     */
+    if (fb == NULL || fb->fd_in < 0 || fb->incnt > 0 || fb->outcnt == 0) {
 	return;
     }
     /* test for a block */
@@ -579,7 +686,8 @@ API_EXPORT(void) ap_bhalfduplex(BUFF *fb)
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
 	rv = ap_select(fb->fd_in + 1, &fds, NULL, NULL, &tv);
-    } while (rv < 0 && errno == EINTR);
+    } while (rv < 0 && errno == EINTR && !(fb->flags & B_EOUT));
+
     /* treat any error as if it would block as well */
     if (rv != 1) {
 	ap_bflush(fb);
@@ -654,6 +762,7 @@ static int read_with_errors(BUFF *fb, void *buf, int nbyte)
     }
     return rv;
 }
+
 
 /*
  * Read up to nbyte bytes into buf.
@@ -810,27 +919,15 @@ API_EXPORT(int) ap_bgets(char *buff, int n, BUFF *fb)
 	}
 
 	ch = fb->inptr[i++];
-#ifndef CHARSET_EBCDIC
-	if (ch == '\012') {	/* got LF */
-	    if (ct == 0)
-		buff[ct++] = '\n';
-/* if just preceeded by CR, replace CR with LF */
-	    else if (buff[ct - 1] == '\015')
-		buff[ct - 1] = '\n';
-	    else if (ct < n - 1)
-		buff[ct++] = '\n';
-	    else
-		i--;		/* no room for LF */
-	    break;
-	}
-#else /* an EBCDIC machine: do the same, but convert to EBCDIC on the fly: */
+#ifdef CHARSET_EBCDIC
 	if (fb->flags & B_ASCII2EBCDIC)
 	    ch = os_toebcdic[(unsigned char)ch];
-	if (ch == os_toebcdic['\012']) {  /* got LF */
+#endif
+	if (ch == LF) {  /* got LF */
 	    if (ct == 0)
 		buff[ct++] = '\n';
 /* if just preceeded by CR, replace CR with LF */
-	    else if (buff[ct - 1] == os_toebcdic['\015'])
+	    else if (buff[ct - 1] == CR)
 		buff[ct - 1] = '\n';
 	    else if (ct < n - 1)
 		buff[ct++] = '\n';
@@ -838,7 +935,6 @@ API_EXPORT(int) ap_bgets(char *buff, int n, BUFF *fb)
 		i--;		/* no room for LF */
 	    break;
 	}
-#endif
 	if (ct == n - 1) {
 	    i--;		/* push back ch */
 	    break;
@@ -1007,6 +1103,12 @@ static int write_it_all(BUFF *fb, const void *buf, int nbyte)
 static int writev_it_all(BUFF *fb, struct iovec *vec, int nvec)
 {
     int i, rv;
+    
+    if (fb->filter_callback != NULL) {
+        for (i = 0; i < nvec; i++) {
+            fb->filter_callback(fb, vec[i].iov_base, vec[i].iov_len);
+        }
+    }
 
     /* while it's nice an easy to build the vector and crud, it's painful
      * to deal with a partial writev()
@@ -1095,7 +1197,7 @@ static int bcwrite(BUFF *fb, const void *buf, int nbyte)
 #ifdef NO_WRITEV
     /* without writev() this has poor performance, too bad */
 
-    ap_snprintf(chunksize, sizeof(chunksize), "%x\015\012", nbyte);
+    ap_snprintf(chunksize, sizeof(chunksize), "%x" CRLF, nbyte);
 #ifdef CHARSET_EBCDIC
     /* Chunks are an HTTP/1.1 Protocol feature. They must ALWAYS be in ASCII */
     ebcdic2ascii(chunksize, chunksize, strlen(chunksize));
@@ -1104,12 +1206,12 @@ static int bcwrite(BUFF *fb, const void *buf, int nbyte)
 	return -1;
     if (write_it_all(fb, buf, nbyte) == -1)
 	return -1;
-    if (write_it_all(fb, "\015\012", 2) == -1)
+    if (write_it_all(fb, ascii_CRLF, 2) == -1)
 	return -1;
     return nbyte;
 #else
     vec[0].iov_base = chunksize;
-    vec[0].iov_len = ap_snprintf(chunksize, sizeof(chunksize), "%x\015\012",
+    vec[0].iov_len = ap_snprintf(chunksize, sizeof(chunksize), "%x" CRLF,
 				 nbyte);
 #ifdef CHARSET_EBCDIC
     /* Chunks are an HTTP/1.1 Protocol feature. They must ALWAYS be in ASCII */
@@ -1117,7 +1219,7 @@ static int bcwrite(BUFF *fb, const void *buf, int nbyte)
 #endif /*CHARSET_EBCDIC*/
     vec[1].iov_base = (void *) buf;	/* cast is to avoid const warning */
     vec[1].iov_len = nbyte;
-    vec[2].iov_base = "\015\012";
+    vec[2].iov_base = ascii_CRLF;
     vec[2].iov_len = 2;
 
     return writev_it_all(fb, vec, (sizeof(vec) / sizeof(vec[0]))) ? -1 : nbyte;
@@ -1149,7 +1251,7 @@ static int large_write(BUFF *fb, const void *buf, int nbyte)
     if (fb->flags & B_CHUNK) {
 	vec[nvec].iov_base = chunksize;
 	vec[nvec].iov_len = ap_snprintf(chunksize, sizeof(chunksize),
-					"%x\015\012", nbyte);
+					"%x" CRLF, nbyte);
 #ifdef CHARSET_EBCDIC
     /* Chunks are an HTTP/1.1 Protocol feature. They must ALWAYS be in ASCII */
 	ebcdic2ascii(chunksize, chunksize, strlen(chunksize));
@@ -1158,7 +1260,7 @@ static int large_write(BUFF *fb, const void *buf, int nbyte)
 	vec[nvec].iov_base = (void *) buf;
 	vec[nvec].iov_len = nbyte;
 	++nvec;
-	vec[nvec].iov_base = "\015\012";
+	vec[nvec].iov_base = ascii_CRLF;
 	vec[nvec].iov_len = 2;
 	++nvec;
     }
@@ -1206,8 +1308,10 @@ API_EXPORT(int) ap_bwrite(BUFF *fb, const void *buf, int nbyte)
             if (cbuf != NULL)
                 free(cbuf);
             cbuf = malloc(csize = nbyte+HUGE_STRING_LEN);
-            if (cbuf == NULL)
+            if (cbuf == NULL) {
+                fprintf(stderr, "Ouch!  Out of memory in ap_bwrite()!\n");
                 csize = 0;
+            }
         }
         ebcdic2ascii((cbuf) ? cbuf : (void*)buf, buf, nbyte);
         buf = (cbuf) ? cbuf : buf;
@@ -1393,7 +1497,7 @@ API_EXPORT(int) ap_bclose(BUFF *fb)
 	rc1 = ap_bflush(fb);
     else
 	rc1 = 0;
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE) || defined(CYGWIN_WINSOCK) 
     if (fb->flags & B_SOCKET) {
 	rc2 = ap_pclosesocket(fb->pool, fb->fd);
 	if (fb->fd_in != fb->fd) {
@@ -1403,11 +1507,23 @@ API_EXPORT(int) ap_bclose(BUFF *fb)
 	    rc3 = 0;
 	}
     }
+#if !defined(NETWARE) && !defined(CYGWIN_WINSOCK) 
     else if (fb->hFH != INVALID_HANDLE_VALUE) {
-	    rc2 = ap_pcloseh(fb->pool, fb->hFH);
-	    rc3 = 0;
+        rc2 = ap_pcloseh(fb->pool, fb->hFH);
+        rc3 = 0;
     }
+#endif
     else {
+#elif defined(BEOS)
+    if (fb->flags & B_SOCKET) {
+	rc2 = ap_pclosesocket(fb->pool, fb->fd);
+	if (fb->fd_in != fb->fd) {
+	    rc3 = ap_pclosesocket(fb->pool, fb->fd_in);
+	}
+	else {
+	    rc3 = 0;
+	}
+    } else {
 #endif
 	rc2 = ap_pclosef(fb->pool, fb->fd);
 	if (fb->fd_in != fb->fd) {
@@ -1416,7 +1532,7 @@ API_EXPORT(int) ap_bclose(BUFF *fb)
 	else {
 	    rc3 = 0;
 	}
-#ifdef WIN32
+#if defined(WIN32) || defined (BEOS) || defined(NETWARE) || defined(CYGWIN_WINSOCK) 
     }
 #endif
 
@@ -1569,3 +1685,4 @@ API_EXPORT(int) ap_vbprintf(BUFF *fb, const char *fmt, va_list ap)
     }
     return res;
 }
+ 

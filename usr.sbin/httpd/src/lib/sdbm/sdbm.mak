@@ -27,10 +27,10 @@ NULL=nul
 
 !IF  "$(CFG)" == "sdbm - Win32 Release"
 
-OUTDIR=.\Release
-INTDIR=.\Release
+OUTDIR=.\LibR
+INTDIR=.\LibR
 # Begin Custom Macros
-OutDir=.\Release
+OutDir=.\LibR
 # End Custom Macros
 
 !IF "$(RECURSE)" == "0" 
@@ -44,11 +44,11 @@ ALL : "$(OUTDIR)\sdbm.lib"
 !ENDIF 
 
 CLEAN :
+	-@erase "$(INTDIR)\sdbm.idb"
 	-@erase "$(INTDIR)\sdbm.obj"
 	-@erase "$(INTDIR)\sdbm_hash.obj"
 	-@erase "$(INTDIR)\sdbm_lock.obj"
 	-@erase "$(INTDIR)\sdbm_pair.obj"
-	-@erase "$(INTDIR)\vc50.idb"
 	-@erase "$(OUTDIR)\sdbm.lib"
 
 "$(OUTDIR)" :
@@ -56,9 +56,9 @@ CLEAN :
 
 RSC=rc.exe
 CPP=cl.exe
-CPP_PROJ=/nologo /MD /W3 /GX /O2 /I "..\..\include" /I "..\..\os\win32" /D\
- "WIN32" /D "NDEBUG" /D "_WINDOWS" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\Release/
+CPP_PROJ=/nologo /MD /W3 /O2 /I "..\..\include" /I "..\..\os\win32" /D "WIN32"\
+ /D "NDEBUG" /D "_WINDOWS" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\sdbm" /FD /c 
+CPP_OBJS=.\LibR/
 CPP_SBRS=.
 
 .c{$(CPP_OBJS)}.obj::
@@ -110,10 +110,10 @@ LIB32_OBJS= \
 
 !ELSEIF  "$(CFG)" == "sdbm - Win32 Debug"
 
-OUTDIR=.\Debug
-INTDIR=.\Debug
+OUTDIR=.\LibD
+INTDIR=.\LibD
 # Begin Custom Macros
-OutDir=.\Debug
+OutDir=.\LibD
 # End Custom Macros
 
 !IF "$(RECURSE)" == "0" 
@@ -127,12 +127,12 @@ ALL : "$(OUTDIR)\sdbm.lib"
 !ENDIF 
 
 CLEAN :
+	-@erase "$(INTDIR)\sdbm.idb"
 	-@erase "$(INTDIR)\sdbm.obj"
+	-@erase "$(INTDIR)\sdbm.pdb"
 	-@erase "$(INTDIR)\sdbm_hash.obj"
 	-@erase "$(INTDIR)\sdbm_lock.obj"
 	-@erase "$(INTDIR)\sdbm_pair.obj"
-	-@erase "$(INTDIR)\vc50.idb"
-	-@erase "$(INTDIR)\vc50.pdb"
 	-@erase "$(OUTDIR)\sdbm.lib"
 
 "$(OUTDIR)" :
@@ -140,10 +140,10 @@ CLEAN :
 
 RSC=rc.exe
 CPP=cl.exe
-CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\include" /I\
- "..\..\os\win32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "SHARED_MODULE"\
- /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-CPP_OBJS=.\Debug/
+CPP_PROJ=/nologo /MDd /W3 /GX /Zi /Od /I "..\..\include" /I "..\..\os\win32" /D\
+ "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "SHARED_MODULE" /Fo"$(INTDIR)\\"\
+ /Fd"$(INTDIR)\sdbm" /FD /c 
+CPP_OBJS=.\LibD/
 CPP_SBRS=.
 
 .c{$(CPP_OBJS)}.obj::

@@ -1,58 +1,62 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
+ */
+
+/*
  * This code is based on, and used with the permission of, the
  * SIO stdio-replacement strx_* functions by Panos Tsirigotis
  * <panos@alumni.cs.colorado.edu> for xinetd.
@@ -62,11 +66,16 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#ifndef NETWARE
 #include <sys/types.h>
+#endif
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef WIN32
+#include <float.h>
+#endif
 
 typedef enum {
     NO = 0, YES = 1
@@ -78,12 +87,22 @@ typedef enum {
 #ifndef TRUE
 #define TRUE			1
 #endif
+#ifndef AP_LONGEST_LONG
+#define AP_LONGEST_LONG		long
+#endif
 #define NUL			'\0'
-#define INT_NULL		((int *)0)
 #define WIDE_INT		long
+#define WIDEST_INT		AP_LONGEST_LONG
 
 typedef WIDE_INT wide_int;
 typedef unsigned WIDE_INT u_wide_int;
+typedef WIDEST_INT widest_int;
+#ifdef __TANDEM
+/* Although Tandem supports "long long" there is no unsigned variant. */
+typedef unsigned long       u_widest_int;
+#else
+typedef unsigned WIDEST_INT u_widest_int;
+#endif
 typedef int bool_int;
 
 #define S_NULL			"(null)"
@@ -119,7 +138,7 @@ static char *ap_cvt(double arg, int ndigits, int *decpt, int *sign, int eflag, c
     register int r2;
     double fi, fj;
     register char *p, *p1;
-
+    
     if (ndigits >= NDIG - 1)
 	ndigits = NDIG - 2;
     r2 = 0;
@@ -136,7 +155,7 @@ static char *ap_cvt(double arg, int ndigits, int *decpt, int *sign, int eflag, c
      */
     if (fi != 0) {
 	p1 = &buf[NDIG];
-	while (fi != 0) {
+	while (p1 > &buf[0] && fi != 0) {
 	    fj = modf(fi / 10, &fi);
 	    *--p1 = (int) ((fj + .03) * 10) + '0';
 	    r2++;
@@ -338,6 +357,10 @@ static char *ap_gcvt(double number, int ndigit, char *buf, boolean_e altform)
  * The caller provides a buffer for the string: that is the buf_end argument
  * which is a pointer to the END of the buffer + 1 (i.e. if the buffer
  * is declared as buf[ 100 ], buf_end should be &buf[ 100 ])
+ *
+ * Note: we have 2 versions. One is used when we need to use quads
+ * (conv_10_quad), the other when we don't (conv_10). We're assuming the
+ * latter is faster.
  */
 static char *conv_10(register wide_int num, register bool_int is_unsigned,
 		     register bool_int *is_negative, char *buf_end,
@@ -376,6 +399,62 @@ static char *conv_10(register wide_int num, register bool_int is_unsigned,
      */
     do {
 	register u_wide_int new_magnitude = magnitude / 10;
+
+	*--p = (char) (magnitude - new_magnitude * 10 + '0');
+	magnitude = new_magnitude;
+    }
+    while (magnitude);
+
+    *len = buf_end - p;
+    return (p);
+}
+
+static char *conv_10_quad(widest_int num, register bool_int is_unsigned,
+		     register bool_int *is_negative, char *buf_end,
+		     register int *len)
+{
+    register char *p = buf_end;
+    u_widest_int magnitude;
+
+    /*
+     * We see if we can use the faster non-quad version by checking the
+     * number against the largest long value it can be. If <=, we
+     * punt to the quicker version.
+     */
+    if ((num <= ULONG_MAX && is_unsigned) || (num <= LONG_MAX && !is_unsigned))
+    	return(conv_10( (wide_int)num, is_unsigned, is_negative,
+	       buf_end, len));
+
+    if (is_unsigned) {
+	magnitude = (u_widest_int) num;
+	*is_negative = FALSE;
+    }
+    else {
+	*is_negative = (num < 0);
+
+	/*
+	 * On a 2's complement machine, negating the most negative integer 
+	 * results in a number that cannot be represented as a signed integer.
+	 * Here is what we do to obtain the number's magnitude:
+	 *      a. add 1 to the number
+	 *      b. negate it (becomes positive)
+	 *      c. convert it to unsigned
+	 *      d. add 1
+	 */
+	if (*is_negative) {
+	    widest_int t = num + 1;
+
+	    magnitude = ((u_widest_int) -t) + 1;
+	}
+	else
+	    magnitude = (u_widest_int) num;
+    }
+
+    /*
+     * We use a do-while loop so that we write at least 1 digit 
+     */
+    do {
+	u_widest_int new_magnitude = magnitude / 10;
 
 	*--p = (char) (magnitude - new_magnitude * 10 + '0');
 	magnitude = new_magnitude;
@@ -525,6 +604,9 @@ static char *conv_fp(register char format, register double num,
  * The caller provides a buffer for the string: that is the buf_end argument
  * which is a pointer to the END of the buffer + 1 (i.e. if the buffer
  * is declared as buf[ 100 ], buf_end should be &buf[ 100 ])
+ *
+ * As with conv_10, we have a faster version which is used when
+ * the number isn't quad size.
  */
 static char *conv_p2(register u_wide_int num, register int nbits,
 		     char format, char *buf_end, register int *len)
@@ -534,6 +616,28 @@ static char *conv_p2(register u_wide_int num, register int nbits,
     static const char low_digits[] = "0123456789abcdef";
     static const char upper_digits[] = "0123456789ABCDEF";
     register const char *digits = (format == 'X') ? upper_digits : low_digits;
+
+    do {
+	*--p = digits[num & mask];
+	num >>= nbits;
+    }
+    while (num);
+
+    *len = buf_end - p;
+    return (p);
+}
+
+static char *conv_p2_quad(u_widest_int num, register int nbits,
+		     char format, char *buf_end, register int *len)
+{
+    register int mask = (1 << nbits) - 1;
+    register char *p = buf_end;
+    static const char low_digits[] = "0123456789abcdef";
+    static const char upper_digits[] = "0123456789ABCDEF";
+    register const char *digits = (format == 'X') ? upper_digits : low_digits;
+
+    if (num <= ULONG_MAX)
+    	return(conv_p2( (u_wide_int)num, nbits, format, buf_end, len));
 
     do {
 	*--p = digits[num & mask];
@@ -570,16 +674,22 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
     char prefix_char;
 
     double fp_num;
+    widest_int i_quad = (widest_int) 0;
+    u_widest_int ui_quad;
     wide_int i_num = (wide_int) 0;
     u_wide_int ui_num;
 
     char num_buf[NUM_BUF_SIZE];
     char char_buf[2];		/* for printing %% and %<unknown> */
 
+    enum var_type_enum {
+    	IS_QUAD, IS_LONG, IS_SHORT, IS_INT
+    };
+    enum var_type_enum var_type = IS_INT;
+
     /*
      * Flag variables
      */
-    boolean_e is_long;
     boolean_e alternate_form;
     boolean_e print_sign;
     boolean_e print_blank;
@@ -677,14 +787,20 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 	    /*
 	     * Modifier check
 	     */
-	    if (*fmt == 'l') {
-		is_long = YES;
+	    if (*fmt == 'q') {
+		var_type = IS_QUAD;
+		fmt++;
+	    }
+	    else if (*fmt == 'l') {
+		var_type = IS_LONG;
+		fmt++;
+	    }
+	    else if (*fmt == 'h') {
+		var_type = IS_SHORT;
 		fmt++;
 	    }
 	    else {
-		if (*fmt == 'h')  /* "short" backward compatibility */
-		    ++fmt;
-		is_long = NO;
+		var_type = IS_INT;
 	    }
 
 	    /*
@@ -700,23 +816,41 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 	     */
 	    switch (*fmt) {
 	    case 'u':
-		if (is_long)
-		    i_num = va_arg(ap, u_wide_int);
-		else
-		    i_num = (wide_int) va_arg(ap, unsigned int);
-		s = conv_10(i_num, 1, &is_negative,
+	    	if (var_type == IS_QUAD) {
+		    i_quad = va_arg(ap, u_widest_int);
+		    s = conv_10_quad(i_quad, 1, &is_negative,
 			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
+		else {
+		    if (var_type == IS_LONG)
+			i_num = (wide_int) va_arg(ap, u_wide_int);
+		    else if (var_type == IS_SHORT)
+			i_num = (wide_int) (unsigned short) va_arg(ap, unsigned int);
+		    else
+			i_num = (wide_int) va_arg(ap, unsigned int);
+		    s = conv_10(i_num, 1, &is_negative,
+			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 		break;
 
 	    case 'd':
 	    case 'i':
-		if (is_long)
-		    i_num = va_arg(ap, wide_int);
-		else
-		    i_num = (wide_int) va_arg(ap, int);
-		s = conv_10(i_num, 0, &is_negative,
+	    	if (var_type == IS_QUAD) {
+		    i_quad = va_arg(ap, widest_int);
+		    s = conv_10_quad(i_quad, 0, &is_negative,
 			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
+		else {
+		    if (var_type == IS_LONG)
+			i_num = (wide_int) va_arg(ap, wide_int);
+		    else if (var_type == IS_SHORT)
+			i_num = (wide_int) (short) va_arg(ap, int);
+		    else
+			i_num = (wide_int) va_arg(ap, int);
+		    s = conv_10(i_num, 0, &is_negative,
+			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 
 		if (is_negative)
@@ -729,12 +863,21 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 
 
 	    case 'o':
-		if (is_long)
-		    ui_num = va_arg(ap, u_wide_int);
-		else
-		    ui_num = (u_wide_int) va_arg(ap, unsigned int);
-		s = conv_p2(ui_num, 3, *fmt,
+		if (var_type == IS_QUAD) {
+		    ui_quad = va_arg(ap, u_widest_int);
+		    s = conv_p2_quad(ui_quad, 3, *fmt,
 			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
+		else {
+		    if (var_type == IS_LONG)
+			ui_num = (u_wide_int) va_arg(ap, u_wide_int);
+		    else if (var_type == IS_SHORT)
+			ui_num = (u_wide_int) (unsigned short) va_arg(ap, unsigned int);
+		    else
+			ui_num = (u_wide_int) va_arg(ap, unsigned int);
+		    s = conv_p2(ui_num, 3, *fmt,
+			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 		if (alternate_form && *s != '0') {
 		    *--s = '0';
@@ -745,12 +888,21 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 
 	    case 'x':
 	    case 'X':
-		if (is_long)
-		    ui_num = (u_wide_int) va_arg(ap, u_wide_int);
-		else
-		    ui_num = (u_wide_int) va_arg(ap, unsigned int);
-		s = conv_p2(ui_num, 4, *fmt,
+		if (var_type == IS_QUAD) {
+		    ui_quad = va_arg(ap, u_widest_int);
+		    s = conv_p2_quad(ui_quad, 4, *fmt,
 			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
+		else {
+		    if (var_type == IS_LONG)
+			ui_num = (u_wide_int) va_arg(ap, u_wide_int);
+		    else if (var_type == IS_SHORT)
+			ui_num = (u_wide_int) (unsigned short) va_arg(ap, unsigned int);
+		    else
+			ui_num = (u_wide_int) va_arg(ap, unsigned int);
+		    s = conv_p2(ui_num, 4, *fmt,
+			    &num_buf[NUM_BUF_SIZE], &s_len);
+		}
 		FIX_PRECISION(adjust_precision, precision, s, s_len);
 		if (alternate_form && i_num != 0) {
 		    *--s = *fmt;	/* 'x' or 'X' */
@@ -782,16 +934,32 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 		/*
 		 * * We use &num_buf[ 1 ], so that we have room for the sign
 		 */
-		s = conv_fp(*fmt, fp_num, alternate_form,
-			(adjust_precision == NO) ? FLOAT_DIGITS : precision,
-			    &is_negative, &num_buf[1], &s_len);
-		if (is_negative)
-		    prefix_char = '-';
-		else if (print_sign)
-		    prefix_char = '+';
-		else if (print_blank)
-		    prefix_char = ' ';
-		break;
+#ifdef HAVE_ISNAN
+		if (isnan(fp_num)) {
+		    s = "nan";
+		    s_len = 3;
+		}
+		else
+#endif
+#ifdef HAVE_ISINF
+		if (isinf(fp_num)) {
+		    s = "inf";
+		    s_len = 3;
+		}
+		else
+#endif
+		{
+		    s = conv_fp(*fmt, fp_num, alternate_form,
+			    (adjust_precision == NO) ? FLOAT_DIGITS : precision,
+				&is_negative, &num_buf[1], &s_len);
+		    if (is_negative)
+			prefix_char = '-';
+		    else if (print_sign)
+			prefix_char = '+';
+		    else if (print_blank)
+			prefix_char = ' ';
+		}
+	        break;
 
 
 	    case 'g':
@@ -840,7 +1008,14 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 
 
 	    case 'n':
-		*(va_arg(ap, int *)) = cc;
+	    	if (var_type == IS_QUAD)
+		    *(va_arg(ap, widest_int *)) = cc;
+		else if (var_type == IS_LONG)
+		    *(va_arg(ap, long *)) = cc;
+		else if (var_type == IS_SHORT)
+		    *(va_arg(ap, short *)) = cc;
+		else
+		    *(va_arg(ap, int *)) = cc;
 		break;
 
 		/*
@@ -850,16 +1025,25 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 	    case 'p':
 		switch(*++fmt) {
 		    /*
-		     * If the pointer size is equal to the size of an unsigned
-		     * integer we convert the pointer to a hex number, otherwise 
-		     * we print "%p" to indicate that we don't handle "%p".
+		     * If the pointer size is equal to or smaller than the size
+		     * of the largest unsigned int, we convert the pointer to a
+		     * hex number, otherwise we print "%p" to indicate that we
+		     * don't handle "%p".
 		     */
 		case 'p':
-		    ui_num = (u_wide_int) va_arg(ap, void *);
-
-		    if (sizeof(char *) <= sizeof(u_wide_int))
-				s = conv_p2(ui_num, 4, 'x',
-					    &num_buf[NUM_BUF_SIZE], &s_len);
+#ifdef AP_VOID_P_IS_QUAD
+		    if (sizeof(void *) <= sizeof(u_widest_int)) {
+		    	ui_quad = (u_widest_int) va_arg(ap, void *);
+			s = conv_p2_quad(ui_quad, 4, 'x',
+				&num_buf[NUM_BUF_SIZE], &s_len);
+		    }
+#else
+		    if (sizeof(void *) <= sizeof(u_wide_int)) {
+		    	ui_num = (u_wide_int) va_arg(ap, void *);
+			s = conv_p2(ui_num, 4, 'x',
+				&num_buf[NUM_BUF_SIZE], &s_len);
+		    }
+#endif
 		    else {
 			s = "%p";
 			s_len = 2;
@@ -974,6 +1158,10 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
 	fmt++;
     }
     vbuff->curpos = sp;
+    if (sp >= bep) {
+	if (flush_func(vbuff))
+	    return -1;
+    }
     return cc;
 }
 
@@ -987,7 +1175,7 @@ static int snprintf_flush(ap_vformatter_buff *vbuff)
 }
 
 
-API_EXPORT(int) ap_snprintf(char *buf, size_t len, const char *format,...)
+API_EXPORT_NONSTD(int) ap_snprintf(char *buf, size_t len, const char *format,...)
 {
     int cc;
     va_list ap;

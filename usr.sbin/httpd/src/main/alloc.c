@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -67,6 +68,11 @@
 #include "http_log.h"
 
 #include <stdarg.h>
+
+#ifdef OS2
+#define INCL_DOS
+#include <os2.h>
+#endif
 
 /* debugging support, define this to enable code which helps detect re-use
  * of freed memory and other such nonsense.
@@ -110,6 +116,11 @@
  * possibly too small an initial table size guess.
  */
 /* #define MAKE_TABLE_PROFILE */
+
+/* Provide some statistics on the cost of allocations.  It requires a
+ * bit of an understanding of how alloc.c works.
+ */
+/* #define ALLOC_STATS */
 
 #ifdef POOL_DEBUG
 #ifdef ALLOC_USE_MALLOC
@@ -171,6 +182,13 @@ static int stack_direction;
 static union block_hdr *global_block_list;
 #define FREE_POOL	((struct pool *)(-1))
 #endif
+#ifdef ALLOC_STATS
+static unsigned long long num_free_blocks_calls;
+static unsigned long long num_blocks_freed;
+static unsigned max_blocks_in_one_free;
+static unsigned num_malloc_calls;
+static unsigned num_malloc_bytes;
+#endif
 
 #ifdef ALLOC_DEBUG
 #define FILL_BYTE	((char)(0xa5))
@@ -207,6 +225,10 @@ static union block_hdr *malloc_block(int size)
      * always filled
      */
     size += CLICK_SZ;
+#endif
+#ifdef ALLOC_STATS
+    ++num_malloc_calls;
+    num_malloc_bytes += size + sizeof(union block_hdr);
 #endif
     blok = (union block_hdr *) malloc(size + sizeof(union block_hdr));
     if (blok == NULL) {
@@ -261,6 +283,9 @@ static void free_blocks(union block_hdr *blok)
 	free(blok);
     }
 #else
+#ifdef ALLOC_STATS
+    unsigned num_blocks;
+#endif
     /* First, put new blocks at the head of the free list ---
      * we'll eventually bash the 'next' pointer of the last block
      * in the chain to point to the free blocks we already had.
@@ -281,7 +306,13 @@ static void free_blocks(union block_hdr *blok)
      * now.
      */
 
+#ifdef ALLOC_STATS
+    num_blocks = 1;
+#endif
     while (blok->h.next != NULL) {
+#ifdef ALLOC_STATS
+	++num_blocks;
+#endif
 	chk_on_blk_list(blok, old_free_list);
 	blok->h.first_avail = (char *) (blok + 1);
 	debug_fill(blok->h.first_avail, blok->h.endp - blok->h.first_avail);
@@ -301,6 +332,15 @@ static void free_blocks(union block_hdr *blok)
     /* Finally, reset next pointer to get the old free blocks back */
 
     blok->h.next = old_free_list;
+
+#ifdef ALLOC_STATS
+    if (num_blocks > max_blocks_in_one_free) {
+	max_blocks_in_one_free = num_blocks;
+    }
+    ++num_free_blocks_calls;
+    num_blocks_freed += num_blocks;
+#endif
+
     (void) ap_release_mutex(alloc_mutex);
 #endif
 }
@@ -448,7 +488,21 @@ static void stack_var_init(char *s)
 }
 #endif
 
-pool *ap_init_alloc(void)
+#ifdef ALLOC_STATS
+static void dump_stats(void)
+{
+    fprintf(stderr,
+	"alloc_stats: [%d] #free_blocks %llu #blocks %llu max %u #malloc %u #bytes %u\n",
+	(int)getpid(),
+	num_free_blocks_calls,
+	num_blocks_freed,
+	max_blocks_in_one_free,
+	num_malloc_calls,
+	num_malloc_bytes);
+}
+#endif
+
+API_EXPORT(pool *) ap_init_alloc(void)
 {
 #ifdef POOL_DEBUG
     char s;
@@ -459,8 +513,17 @@ pool *ap_init_alloc(void)
     alloc_mutex = ap_create_mutex(NULL);
     spawn_mutex = ap_create_mutex(NULL);
     permanent_pool = ap_make_sub_pool(NULL);
+#ifdef ALLOC_STATS
+    atexit(dump_stats);
+#endif
 
     return permanent_pool;
+}
+
+void ap_cleanup_alloc(void)
+{
+    ap_destroy_mutex(alloc_mutex);
+    ap_destroy_mutex(spawn_mutex);
 }
 
 API_EXPORT(void) ap_clear_pool(struct pool *a)
@@ -1047,6 +1110,60 @@ API_EXPORT(array_header *) ap_append_arrays(pool *p,
     return res;
 }
 
+/* ap_array_pstrcat generates a new string from the pool containing
+ * the concatenated sequence of substrings referenced as elements within
+ * the array.  The string will be empty if all substrings are empty or null,
+ * or if there are no elements in the array.
+ * If sep is non-NUL, it will be inserted between elements as a separator.
+ */
+API_EXPORT(char *) ap_array_pstrcat(pool *p, const array_header *arr,
+                                    const char sep)
+{
+    char *cp, *res, **strpp;
+    int i, len;
+
+    if (arr->nelts <= 0 || arr->elts == NULL)      /* Empty table? */
+        return (char *) ap_pcalloc(p, 1);
+
+    /* Pass one --- find length of required string */
+
+    len = 0;
+    for (i = 0, strpp = (char **) arr->elts; ; ++strpp) {
+        if (strpp && *strpp != NULL) {
+            len += strlen(*strpp);
+        }
+        if (++i >= arr->nelts)
+            break;
+        if (sep)
+            ++len;
+    }
+
+    /* Allocate the required string */
+
+    res = (char *) ap_palloc(p, len + 1);
+    cp = res;
+
+    /* Pass two --- copy the argument strings into the result space */
+
+    for (i = 0, strpp = (char **) arr->elts; ; ++strpp) {
+        if (strpp && *strpp != NULL) {
+            len = strlen(*strpp);
+            memcpy(cp, *strpp, len);
+            cp += len;
+        }
+        if (++i >= arr->nelts)
+            break;
+        if (sep)
+            *cp++ = sep;
+    }
+
+    *cp = '\0';
+
+    /* Return the result string */
+
+    return res;
+}
+
 
 /*****************************************************************
  *
@@ -1054,7 +1171,7 @@ API_EXPORT(array_header *) ap_append_arrays(pool *p,
  */
 
 /* XXX: if you tweak this you should look at is_empty_table() and table_elts()
- * in alloc.h */
+ * in ap_alloc.h */
 struct table {
     /* This has to be first to promote backwards compatibility with
      * older modules which cast a table * to an array_header *...
@@ -1363,8 +1480,8 @@ API_EXPORT(table *) ap_overlay_tables(pool *p, const table *overlay, const table
  * Note that rec is simply passed-on to the comp function, so that the
  * caller can pass additional info for the task.
  */
-API_EXPORT(void) ap_table_do(int (*comp) (void *, const char *, const char *), void *rec,
-	      const table *t,...)
+API_EXPORT_NONSTD(void) ap_table_do(int (*comp) (void *, const char *, const char *), 
+	                            void *rec, const table *t,...)
 {
     va_list vp;
     char *argp;
@@ -1617,9 +1734,9 @@ static void cleanup_pool_for_exec(pool *p)
 
 API_EXPORT(void) ap_cleanup_for_exec(void)
 {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(OS2)
     /*
-     * Don't need to do anything on NT, because I
+     * Don't need to do anything on NT or OS/2, because I
      * am actually going to spawn the new process - not
      * exec it. All handles that are not inheritable, will
      * be automajically closed. The only problem is with
@@ -1744,6 +1861,7 @@ API_EXPORT(FILE *) ap_pfopen(pool *a, const char *name, const char *mode)
     FILE *fd = NULL;
     int baseFlag, desc;
     int modeFlags = 0;
+    int saved_errno;
 
 #ifdef WIN32
     modeFlags = _S_IREAD | _S_IWRITE;
@@ -1766,22 +1884,26 @@ API_EXPORT(FILE *) ap_pfopen(pool *a, const char *name, const char *mode)
     else {
 	fd = fopen(name, mode);
     }
-
+    saved_errno = errno;
     if (fd != NULL)
 	ap_note_cleanups_for_file(a, fd);
     ap_unblock_alarms();
+    errno = saved_errno;
     return fd;
 }
 
 API_EXPORT(FILE *) ap_pfdopen(pool *a, int fd, const char *mode)
 {
     FILE *f;
+    int saved_errno;
 
     ap_block_alarms();
     f = ap_fdopen(fd, mode);
+    saved_errno = errno;
     if (f != NULL)
 	ap_note_cleanups_for_file(a, f);
     ap_unblock_alarms();
+    errno = saved_errno;
     return f;
 }
 
@@ -1877,7 +1999,7 @@ API_EXPORT(int) ap_pclosesocket(pool *a, int sock)
 
     ap_block_alarms();
     res = closesocket(sock);
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
     errno = WSAGetLastError();
 #endif /* WIN32 */
     save_errno = errno;
@@ -1939,8 +2061,8 @@ struct process_chain {
     struct process_chain *next;
 };
 
-API_EXPORT(void) ap_note_subprocess(pool *a, int pid, enum kill_conditions how)
-{
+API_EXPORT(void) ap_note_subprocess(pool *a, pid_t pid, enum kill_conditions 
+how) {
     struct process_chain *new =
     (struct process_chain *) ap_palloc(a, sizeof(struct process_chain));
 
@@ -1957,17 +2079,17 @@ API_EXPORT(void) ap_note_subprocess(pool *a, int pid, enum kill_conditions how)
 #endif /* WIN32 */
 
 /* for ap_fdopen, to get binary mode */
-#if defined (OS2) || defined (WIN32)
+#if defined (OS2) || defined (WIN32) || defined (NETWARE)
 #define BINMODE	"b"
 #else
 #define BINMODE
 #endif
 
-static int spawn_child_core(pool *p, int (*func) (void *, child_info *),
+static pid_t spawn_child_core(pool *p, int (*func) (void *, child_info *),
 			    void *data,enum kill_conditions kill_how,
 			    int *pipe_in, int *pipe_out, int *pipe_err)
 {
-    int pid;
+    pid_t pid;
     int in_fds[2];
     int out_fds[2];
     int err_fds[2];
@@ -2030,7 +2152,7 @@ static int spawn_child_core(pool *p, int (*func) (void *, child_info *),
 	if (pipe_err) {
 	    hStdErr = dup(fileno(stderr));
 	    if(dup2(err_fds[1], fileno(stderr)))
-		ap_log_error(APLOG_MARK, APLOG_ERR, NULL, "dup2(stdin) failed");
+		ap_log_error(APLOG_MARK, APLOG_ERR, NULL, "dup2(stderr) failed");
 	    close(err_fds[1]);
 	}
 
@@ -2082,6 +2204,64 @@ static int spawn_child_core(pool *p, int (*func) (void *, child_info *),
 	 */
 
     }
+#elif defined(NETWARE)
+     /* NetWare currently has no pipes yet. This will
+        be solved with the new libc for NetWare soon. */
+     pid = 0;
+#elif defined(OS2)
+    {
+        int save_in=-1, save_out=-1, save_err=-1;
+        
+        if (pipe_out) {
+            save_out = dup(STDOUT_FILENO);
+            dup2(out_fds[1], STDOUT_FILENO);
+            close(out_fds[1]);
+            DosSetFHState(out_fds[0], OPEN_FLAGS_NOINHERIT);
+        }
+
+        if (pipe_in) {
+            save_in = dup(STDIN_FILENO);
+            dup2(in_fds[0], STDIN_FILENO);
+            close(in_fds[0]);
+            DosSetFHState(in_fds[1], OPEN_FLAGS_NOINHERIT);
+        }
+
+        if (pipe_err) {
+            save_err = dup(STDERR_FILENO);
+            dup2(err_fds[1], STDERR_FILENO);
+            close(err_fds[1]);
+            DosSetFHState(err_fds[0], OPEN_FLAGS_NOINHERIT);
+        }
+        
+        pid = func(data, NULL);
+    
+        if ( pid )
+            ap_note_subprocess(p, pid, kill_how);
+
+        if (pipe_out) {
+            close(STDOUT_FILENO);
+            dup2(save_out, STDOUT_FILENO);
+            close(save_out);
+            *pipe_out = out_fds[0];
+        }
+
+        if (pipe_in) {
+            close(STDIN_FILENO);
+            dup2(save_in, STDIN_FILENO);
+            close(save_in);
+            *pipe_in = in_fds[1];
+        }
+
+        if (pipe_err) {
+            close(STDERR_FILENO);
+            dup2(save_err, STDERR_FILENO);
+            close(save_err);
+            *pipe_err = err_fds[0];
+        }
+    }
+#elif defined(TPF)
+   return (pid = ap_tpf_spawn_child(p, func, data, kill_how,	
+                 pipe_in, pipe_out, pipe_err, out_fds, in_fds, err_fds));		
 #else
 
     if ((pid = fork()) < 0) {
@@ -2161,7 +2341,8 @@ API_EXPORT(int) ap_spawn_child(pool *p, int (*func) (void *, child_info *),
 			       FILE **pipe_err)
 {
     int fd_in, fd_out, fd_err;
-    int pid, save_errno;
+    pid_t pid;
+    int save_errno;
 
     ap_block_alarms();
 
@@ -2217,7 +2398,11 @@ API_EXPORT(int) ap_bspawn_child(pool *p, int (*func) (void *, child_info *), voi
     HANDLE hPipeInputWrite  = NULL;
     HANDLE hPipeErrorRead   = NULL;
     HANDLE hPipeErrorWrite  = NULL;
-    int pid = 0;
+    HANDLE hPipeInputWriteDup = NULL;
+    HANDLE hPipeOutputReadDup = NULL;
+    HANDLE hPipeErrorReadDup  = NULL;
+    HANDLE hCurrentProcess;
+    pid_t pid = 0;
     child_info info;
 
 
@@ -2254,6 +2439,57 @@ API_EXPORT(int) ap_bspawn_child(pool *p, int (*func) (void *, child_info *), voi
 	    CloseHandle(hPipeOutputWrite);
 	}
 	return 0;
+    }
+    /*
+     * When the pipe handles are created, the security descriptor
+     * indicates that the handle can be inherited.  However, we do not
+     * want the server side handles to the pipe to be inherited by the
+     * child CGI process. If the child CGI does inherit the server
+     * side handles, then the child may be left around if the server
+     * closes its handles (e.g. if the http connection is aborted),
+     * because the child will have a valid copy of handles to both
+     * sides of the pipes, and no I/O error will occur.  Microsoft
+     * recommends using DuplicateHandle to turn off the inherit bit
+     * under NT and Win95.
+     */
+    hCurrentProcess = GetCurrentProcess();
+    if ((pipe_in && !DuplicateHandle(hCurrentProcess, hPipeInputWrite,
+				     hCurrentProcess,
+				     &hPipeInputWriteDup, 0, FALSE,
+				     DUPLICATE_SAME_ACCESS))
+	|| (pipe_out && !DuplicateHandle(hCurrentProcess, hPipeOutputRead,
+					 hCurrentProcess, &hPipeOutputReadDup,
+					 0, FALSE, DUPLICATE_SAME_ACCESS))
+	|| (pipe_err && !DuplicateHandle(hCurrentProcess, hPipeErrorRead,
+					 hCurrentProcess, &hPipeErrorReadDup,
+					 0, FALSE, DUPLICATE_SAME_ACCESS))) {
+	if (pipe_in) {
+	    CloseHandle(hPipeInputRead);
+	    CloseHandle(hPipeInputWrite);
+	}
+	if (pipe_out) {
+	    CloseHandle(hPipeOutputRead);
+	    CloseHandle(hPipeOutputWrite);
+	}
+	if (pipe_err) {
+	    CloseHandle(hPipeErrorRead);
+	    CloseHandle(hPipeErrorWrite);
+	}
+	return 0;
+    }
+    else {
+	if (pipe_in) {
+	    CloseHandle(hPipeInputWrite);
+	    hPipeInputWrite = hPipeInputWriteDup;
+	}
+	if (pipe_out) {
+	    CloseHandle(hPipeOutputRead);
+	    hPipeOutputRead = hPipeOutputReadDup;
+	}
+	if (pipe_err) {
+	    CloseHandle(hPipeErrorRead);
+	    hPipeErrorRead = hPipeErrorReadDup;
+	}
     }
 
     /* The script writes stdout to this pipe handle */
@@ -2338,7 +2574,8 @@ API_EXPORT(int) ap_bspawn_child(pool *p, int (*func) (void *, child_info *), voi
 
 #else
     int fd_in, fd_out, fd_err;
-    int pid, save_errno;
+    pid_t pid;
+    int save_errno;
 
     ap_block_alarms();
 
@@ -2432,6 +2669,7 @@ static void free_proc_chain(struct process_chain *procs)
     for (p = procs; p; p = p->next) {
 	CloseHandle((HANDLE) p->pid);
     }
+#elif defined(NETWARE)
 #else
 #ifndef NEED_WAITPID
     /* Pick up all defunct processes */
@@ -2446,7 +2684,7 @@ static void free_proc_chain(struct process_chain *procs)
 	if ((p->kill_how == kill_after_timeout)
 	    || (p->kill_how == kill_only_once)) {
 	    /* Subprocess may be dead already.  Only need the timeout if not. */
-	    if (kill(p->pid, SIGTERM) != -1)
+	    if (ap_os_kill(p->pid, SIGTERM) != -1)
 		need_timeout = 1;
 	}
 	else if (p->kill_how == kill_always) {

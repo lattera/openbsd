@@ -1,5 +1,89 @@
-Microsoft Developer Studio Workspace File, Format Version 5.00
+Microsoft Developer Studio Workspace File, Format Version 6.00
 # WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "InstallBin"=".\InstallBin.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name Apache
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ApacheCore
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_auth_anon
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_auth_dbm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_auth_digest
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_cern_meta
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_digest
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_expires
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_headers
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_info
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_mime_magic
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_proxy
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_rewrite
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_speling
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_status
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_unique_id
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_usertrack
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mod_vhost_alias
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name htdigest
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name htpasswd
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name logresolve
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rotatelogs
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name xmlparse
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Win9xConHook
+    End Project Dependency
+}}}
 
 ###############################################################################
 
@@ -41,11 +125,14 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name regex
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Win9xConHook
+    End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "ApacheModuleAuthAnon"=".\os\win32\ApacheModuleAuthAnon.dsp" - Package Owner=<4>
+Project: "mod_auth_anon"=".\os\win32\mod_auth_anon.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -60,7 +147,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleAuthDBM"=".\os\win32\ApacheModuleAuthDBM.dsp" - Package Owner=<4>
+Project: "mod_auth_dbm"=".\os\win32\mod_auth_dbm.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -78,7 +165,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleAuthDigest"=".\os\win32\ApacheModuleAuthDigest.dsp" - Package Owner=<4>
+Project: "mod_auth_digest"=".\os\win32\mod_auth_digest.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -93,7 +180,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleCERNMeta"=".\os\win32\ApacheModuleCERNMeta.dsp" - Package Owner=<4>
+Project: "mod_cern_meta"=".\os\win32\mod_cern_meta.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -108,7 +195,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleDigest"=".\os\win32\ApacheModuleDigest.dsp" - Package Owner=<4>
+Project: "mod_digest"=".\os\win32\mod_digest.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -123,7 +210,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleExpires"=".\os\win32\ApacheModuleExpires.dsp" - Package Owner=<4>
+Project: "mod_expires"=".\os\win32\mod_expires.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -138,7 +225,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleHeaders"=".\os\win32\ApacheModuleHeaders.dsp" - Package Owner=<4>
+Project: "mod_headers"=".\os\win32\mod_headers.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -153,7 +240,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleInfo"=".\os\win32\ApacheModuleInfo.dsp" - Package Owner=<4>
+Project: "mod_info"=".\os\win32\mod_info.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -168,7 +255,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleProxy"=".\modules\proxy\ApacheModuleProxy.dsp" - Package Owner=<4>
+Project: "mod_mime_magic"=".\os\win32\mod_mime_magic.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -183,7 +270,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleRewrite"=".\os\win32\ApacheModuleRewrite.dsp" - Package Owner=<4>
+Project: "mod_proxy"=".\os\win32\mod_proxy.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -198,7 +285,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleSpeling"=".\os\win32\ApacheModuleSpeling.dsp" - Package Owner=<4>
+Project: "mod_rewrite"=".\os\win32\mod_rewrite.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -213,7 +300,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleStatus"=".\os\win32\ApacheModuleStatus.dsp" - Package Owner=<4>
+Project: "mod_speling"=".\os\win32\mod_speling.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -228,7 +315,52 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ApacheModuleUserTrack"=".\os\win32\ApacheModuleUserTrack.dsp" - Package Owner=<4>
+Project: "mod_status"=".\os\win32\mod_status.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name ApacheCore
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mod_unique_id"=".\os\win32\mod_unique_id.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name ApacheCore
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mod_usertrack"=".\os\win32\mod_usertrack.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name ApacheCore
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mod_vhost_alias"=".\os\win32\mod_vhost_alias.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -255,7 +387,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "InstallBin"=".\InstallBin.dsp" - Package Owner=<4>
+Project: "Win9xConHook"=".\os\win32\Win9xConHook.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -263,66 +395,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name Apache
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheCore
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleAuthAnon
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleAuthDigest
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleCERNMeta
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleDigest
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleExpires
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleHeaders
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleInfo
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleProxy
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleRewrite
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleSpeling
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleStatus
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleUserTrack
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name htdigest
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name htpasswd
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name logresolve
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name rotatelogs
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name xmlparse
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name ApacheModuleAuthDBM
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -376,18 +448,6 @@ Package=<4>
 ###############################################################################
 
 Project: "htpasswd"=".\support\htpasswd.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "install"=".\os\win32\installer\installdll\install.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

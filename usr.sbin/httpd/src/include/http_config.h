@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 #ifndef APACHE_HTTP_CONFIG_H
@@ -170,6 +171,8 @@ typedef struct {
 				 */
     const command_rec *cmd;	/* configuration command */
     const char *end_token;	/* end token required to end a nested section */
+    void *context;		/* per_dir_config vector passed 
+				 * to handle_command */
 } cmd_parms;
 
 /* This structure records the existence of handlers in a module... */
@@ -198,10 +201,14 @@ typedef struct module_struct {
 				 */
 
     const char *name;
-
     void *dynamic_load_handle;
 
     struct module_struct *next;
+
+    unsigned long magic;        /* Magic Cookie to identify a module structure;
+                                 * It's mainly important for the DSO facility
+                                 * (see also mod_so).
+                                 */
 
     /* init() occurs after config parsing, but before any children are
      * forked.
@@ -286,7 +293,8 @@ typedef struct module_struct {
 				-1, \
 				__FILE__, \
 				NULL, \
-				NULL
+				NULL, \
+				MODULE_MAGIC_COOKIE
 
 /* Generic accessors for other modules to get at their own module-specific
  * data
@@ -336,35 +344,40 @@ extern module *ap_prelinked_modules[];
 extern module *ap_preloaded_modules[];
 extern API_VAR_EXPORT module **ap_loaded_modules;
 
+/* For mod_so.c... */
+
+API_EXPORT(void) ap_single_module_configure(pool *p, server_rec *s, module *m);
+
 /* For http_main.c... */
 
-server_rec *ap_read_config(pool *conf_pool, pool *temp_pool, char *config_name);
-void ap_init_modules(pool *p, server_rec *s);
-void ap_child_init_modules(pool *p, server_rec *s);
-void ap_child_exit_modules(pool *p, server_rec *s);
-void ap_setup_prelinked_modules(void);
-void ap_show_directives(void);
-void ap_show_modules(void);
+API_EXPORT(server_rec *) ap_read_config(pool *conf_pool, pool *temp_pool, char *config_name);
+API_EXPORT(void) ap_init_modules(pool *p, server_rec *s);
+API_EXPORT(void) ap_child_init_modules(pool *p, server_rec *s);
+API_EXPORT(void) ap_child_exit_modules(pool *p, server_rec *s);
+API_EXPORT(void) ap_setup_prelinked_modules(void);
+API_EXPORT(void) ap_show_directives(void);
+API_EXPORT(void) ap_show_modules(void);
+void ap_cleanup_method_ptrs(void);
 
 /* For http_request.c... */
 
-void *ap_create_request_config(pool *p);
+CORE_EXPORT(void *) ap_create_request_config(pool *p);
 CORE_EXPORT(void *) ap_create_per_dir_config(pool *p);
-void *ap_merge_per_dir_configs(pool *p, void *base, void *new);
+CORE_EXPORT(void *) ap_merge_per_dir_configs(pool *p, void *base, void *new);
 
 /* For http_core.c... (<Directory> command and virtual hosts) */
 
-int ap_parse_htaccess(void **result, request_rec *r, int override,
+CORE_EXPORT(int) ap_parse_htaccess(void **result, request_rec *r, int override,
 		const char *path, const char *access_name);
 
 CORE_EXPORT(const char *) ap_init_virtual_host(pool *p, const char *hostname,
 				server_rec *main_server, server_rec **);
-void ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp);
+CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp);
 
-/* check_cmd_context() definitions: */
+/* ap_check_cmd_context() definitions: */
 API_EXPORT(const char *) ap_check_cmd_context(cmd_parms *cmd, unsigned forbidden);
 
-/* check_cmd_context():                  Forbidden in: */
+/* ap_check_cmd_context():              Forbidden in: */
 #define  NOT_IN_VIRTUALHOST     0x01 /* <Virtualhost> */
 #define  NOT_IN_LIMIT           0x02 /* <Limit> */
 #define  NOT_IN_DIRECTORY       0x04 /* <Directory> */
@@ -376,21 +389,22 @@ API_EXPORT(const char *) ap_check_cmd_context(cmd_parms *cmd, unsigned forbidden
 
 /* Module-method dispatchers, also for http_request.c */
 
-int ap_translate_name(request_rec *);
-int ap_check_access(request_rec *);	/* check access on non-auth basis */
-int ap_check_user_id(request_rec *);	/* obtain valid username from client auth */
-int ap_check_auth(request_rec *);	/* check (validated) user is authorized here */
-int ap_find_types(request_rec *);	/* identify MIME type */
-int ap_run_fixups(request_rec *);	/* poke around for other metainfo, etc.... */
-int ap_invoke_handler(request_rec *);
-int ap_log_transaction(request_rec *r);
-int ap_header_parse(request_rec *);
-int ap_run_post_read_request(request_rec *);
+API_EXPORT(int) ap_translate_name(request_rec *);
+API_EXPORT(int) ap_check_access(request_rec *);	/* check access on non-auth basis */
+API_EXPORT(int) ap_check_user_id(request_rec *);	/* obtain valid username from client auth */
+API_EXPORT(int) ap_check_auth(request_rec *);	/* check (validated) user is authorized here */
+API_EXPORT(int) ap_find_types(request_rec *);	/* identify MIME type */
+API_EXPORT(int) ap_run_fixups(request_rec *);	/* poke around for other metainfo, etc.... */
+API_EXPORT(int) ap_invoke_handler(request_rec *);
+API_EXPORT(int) ap_log_transaction(request_rec *r);
+API_EXPORT(int) ap_header_parse(request_rec *);
+API_EXPORT(int) ap_run_post_read_request(request_rec *);
 
 /* for mod_perl */
 
 CORE_EXPORT(const command_rec *) ap_find_command(const char *name, const command_rec *cmds);
 CORE_EXPORT(const command_rec *) ap_find_command_in_modules(const char *cmd_name, module **mod);
+CORE_EXPORT(void *) ap_set_config_vectors(cmd_parms *parms, void *config, module *mod);
 CORE_EXPORT(const char *) ap_handle_command(cmd_parms *parms, void *config, const char *l);
 
 #endif

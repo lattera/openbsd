@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -108,7 +109,7 @@ API_VAR_EXPORT const char ap_day_snames[7][4] =
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
-API_EXPORT(char *) ap_get_time()
+API_EXPORT(char *) ap_get_time(void)
 {
     time_t t;
     char *time_string;
@@ -117,6 +118,28 @@ API_EXPORT(char *) ap_get_time()
     time_string = ctime(&t);
     time_string[strlen(time_string) - 1] = '\0';
     return (time_string);
+}
+
+/*
+ * Examine a field value (such as a media-/content-type) string and return
+ * it sans any parameters; e.g., strip off any ';charset=foo' and the like.
+ */
+API_EXPORT(char *) ap_field_noparam(pool *p, const char *intype)
+{
+    const char *semi;
+
+    if (intype == NULL) return NULL;
+
+    semi = strchr(intype, ';');
+    if (semi == NULL) {
+	return ap_pstrdup(p, intype);
+    } 
+    else {
+	while ((semi > intype) && ap_isspace(semi[-1])) {
+	    semi--;
+	}
+	return ap_pstrndup(p, intype, semi - intype);
+    }
 }
 
 API_EXPORT(char *) ap_ht_time(pool *p, time_t t, const char *fmt, int gmt)
@@ -210,6 +233,14 @@ API_EXPORT(struct tm *) ap_get_gmtoff(int *tz)
 }
 #endif
 
+/* Roy owes Rob beer. */
+/* Rob owes Roy dinner. */
+
+/* These legacy comments would make a lot more sense if Roy hadn't
+ * replaced the old later_than() routine with util_date.c.
+ *
+ * Well, okay, they still wouldn't make any sense.
+ */
 
 /* Match = 0, NoMatch = 1, Abort = -1
  * Based loosely on sections of wildmat.c by Rich Salz
@@ -273,9 +304,85 @@ API_EXPORT(int) ap_is_matchexp(const char *str)
     return 0;
 }
 
+/*
+ * Similar to standard strstr() but we ignore case in this version.
+ * Based on the strstr() implementation further below.
+ */
+API_EXPORT(char *) ap_strcasestr(const char *s1, const char *s2)
+{
+    char *p1, *p2;
+    if (*s2 == '\0') {
+	/* an empty s2 */
+        return((char *)s1);
+    }
+    while(1) {
+	for ( ; (*s1 != '\0') && (ap_tolower(*s1) != ap_tolower(*s2)); s1++);
+	if (*s1 == '\0') return(NULL);
+	/* found first character of s2, see if the rest matches */
+        p1 = (char *)s1;
+        p2 = (char *)s2;
+        while (ap_tolower(*++p1) == ap_tolower(*++p2)) {
+            if (*p1 == '\0') {
+                /* both strings ended together */
+                return((char *)s1);
+            }
+        }
+        if (*p2 == '\0') {
+            /* second string ended, a match */
+            break;
+        }
+	/* didn't find a match here, try starting at next character in s1 */
+        s1++;
+    }
+    return((char *)s1);
+}
+
+/*
+ * Returns an offsetted pointer in bigstring immediately after
+ * prefix. Returns bigstring if bigstring doesn't start with
+ * prefix or if prefix is longer than bigstring while still matching.
+ * NOTE: pointer returned is relative to bigstring, so we
+ * can use standard pointer comparisons in the calling function
+ * (eg: test if ap_stripprefix(a,b) == a)
+ */
+API_EXPORT(char *) ap_stripprefix(const char *bigstring, const char *prefix)
+{
+    char *p1;
+    if (*prefix == '\0') {
+        return( (char *)bigstring);
+    }
+    p1 = (char *)bigstring;
+    while(*p1 && *prefix) {
+        if (*p1++ != *prefix++)
+            return( (char *)bigstring);
+    }
+    if (*prefix == '\0')
+        return(p1);
+    else /* hit the end of bigstring! */
+        return( (char *)bigstring);
+}
+
+/* 
+ * Apache stub function for the regex libraries regexec() to make sure the
+ * whole regex(3) API is available through the Apache (exported) namespace.
+ * This is especially important for the DSO situations of modules.
+ * DO NOT MAKE A MACRO OUT OF THIS FUNCTION!
+ */
+API_EXPORT(int) ap_regexec(const regex_t *preg, const char *string,
+                           size_t nmatch, regmatch_t pmatch[], int eflags)
+{
+    return regexec(preg, string, nmatch, pmatch, eflags);
+}
+
+API_EXPORT(size_t) ap_regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
+{
+    return regerror(errcode, preg, errbuf, errbuf_size);
+}
+
+
 /* This function substitutes for $0-$9, filling in regular expression
  * submatches. Pass it the same nmatch and pmatch arguments that you
- * passed regexec(). pmatch should not be greater than the maximum number
+ * passed ap_regexec(). pmatch should not be greater than the maximum number
  * of subexpressions - i.e. one more than the re_nsub member of regex_t.
  *
  * input should be the string with the $-expressions, source should be the
@@ -362,7 +469,7 @@ API_EXPORT(void) ap_getparents(char *name)
 {
     int l, w;
 
-    /* Four paseses, as per RFC 1808 */
+    /* Four passes, as per RFC 1808 */
     /* a) remove ./ path segments */
 
     for (l = 0, w = 0; name[l] != '\0';) {
@@ -424,6 +531,13 @@ API_EXPORT(void) ap_no2slash(char *name)
     char *d, *s;
 
     s = d = name;
+
+#ifdef HAVE_UNC_PATHS
+    /* Check for UNC names.  Leave leading two slashes. */
+    if (s[0] == '/' && s[1] == '/')
+        *d++ = *s++;
+#endif
+
     while (*s) {
 	if ((*d++ = *s) == '/') {
 	    do {
@@ -449,9 +563,21 @@ API_EXPORT(void) ap_no2slash(char *name)
  *    /a/b, 2  ==> /a/
  *    /a/b, 3  ==> /a/b/
  *    /a/b, 4  ==> /a/b/
+ *
+ * MODIFIED FOR HAVE_DRIVE_LETTERS and NETWARE environments, 
+ * so that if n == 0, "/" is returned in d with n == 1 
+ * and s == "e:/test.html", "e:/" is returned in d
+ * *** See also directory_walk in src/main/http_request.c
  */
 API_EXPORT(char *) ap_make_dirstr_prefix(char *d, const char *s, int n)
 {
+#if defined(HAVE_DRIVE_LETTERS) || defined(NETWARE)
+    if (!n) {
+        *d = '/';
+        *++d = '\0';
+        return (d);
+    }
+#endif /* def HAVE_DRIVE_LETTERS || NETWARE */
     for (;;) {
 	*d = *s;
 	if (*d == '\0') {
@@ -685,6 +811,9 @@ API_EXPORT(char *) ap_getword_conf(pool *p, const char **line)
 	    ++strend;
     }
     else {
+	if (*str == '#')
+	    ap_log_error(APLOG_MARK, APLOG_WARNING|APLOG_NOERRNO, NULL, 
+			 "Apache does not support line-end comments. Consider using quotes around argument: \"%s\"", str);
 	strend = str;
 	while (*strend && !ap_isspace(*strend))
 	    ++strend;
@@ -738,6 +867,7 @@ API_EXPORT(configfile_t *) ap_pcfg_openfile(pool *p, const char *name)
     poolfile_t *new_pfile;
     FILE *file;
     struct stat stbuf;
+    int saved_errno;
 
     if (name == NULL) {
         ap_log_error(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, NULL,
@@ -745,26 +875,44 @@ API_EXPORT(configfile_t *) ap_pcfg_openfile(pool *p, const char *name)
         return NULL;
     }
 
+    if (!ap_os_is_filename_valid(name)) {
+        ap_log_error(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, NULL,
+                    "Access to config file %s denied: not a valid filename",
+                    name);
+	errno = EACCES;
+        return NULL;
+    }
+
+#ifdef FOPEN_REQUIRES_T
+    file = ap_pfopen(p, name, "rt");
+#else
     file = ap_pfopen(p, name, "r");
+#endif
 #ifdef DEBUG
+    saved_errno = errno;
     ap_log_error(APLOG_MARK, APLOG_DEBUG | APLOG_NOERRNO, NULL,
                 "Opening config file %s (%s)",
                 name, (file == NULL) ? strerror(errno) : "successful");
+    errno = saved_errno;
 #endif
     if (file == NULL)
         return NULL;
 
     if (fstat(fileno(file), &stbuf) == 0 &&
         !S_ISREG(stbuf.st_mode) &&
-#ifdef WIN32
-        strcasecmp(name, "nul") != 0) {
+#if defined(WIN32) || defined(OS2)
+        !(strcasecmp(name, "nul") == 0 ||
+          (strlen(name) >= 4 &&
+           strcasecmp(name + strlen(name) - 4, "/nul") == 0))) {
 #else
         strcmp(name, "/dev/null") != 0) {
-#endif
+#endif /* WIN32 || OS2 */
+	saved_errno = errno;
         ap_log_error(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, NULL,
                     "Access to file %s denied by server: not a regular file",
                     name);
         ap_pfclose(p, file);
+	errno = saved_errno;
         return NULL;
     }
 
@@ -847,8 +995,8 @@ API_EXPORT(int) ap_cfg_getline(char *buf, size_t bufsize, configfile_t *cfp)
 			 * line continuation requested -
 			 * then remove backslash and continue
 			 */
-			cbuf = cp;
 			cbufsize -= (cp-cbuf);
+			cbuf = cp;
 			continue;
 		    }
 		    else {
@@ -948,6 +1096,258 @@ API_EXPORT(int) ap_cfg_getline(char *buf, size_t bufsize, configfile_t *cfp)
     }
 }
 
+/* Size an HTTP header field list item, as separated by a comma.
+ * The return value is a pointer to the beginning of the non-empty list item
+ * within the original string (or NULL if there is none) and the address
+ * of field is shifted to the next non-comma, non-whitespace character.
+ * len is the length of the item excluding any beginning whitespace.
+ */
+API_EXPORT(const char *) ap_size_list_item(const char **field, int *len)
+{
+    const unsigned char *ptr = (const unsigned char *)*field;
+    const unsigned char *token;
+    int in_qpair, in_qstr, in_com;
+
+    /* Find first non-comma, non-whitespace byte */
+
+    while (*ptr == ',' || ap_isspace(*ptr))
+        ++ptr;
+
+    token = ptr;
+
+    /* Find the end of this item, skipping over dead bits */
+
+    for (in_qpair = in_qstr = in_com = 0;
+         *ptr && (in_qpair || in_qstr || in_com || *ptr != ',');
+         ++ptr) {
+
+        if (in_qpair) {
+            in_qpair = 0;
+        }
+        else {
+            switch (*ptr) {
+                case '\\': in_qpair = 1;      /* quoted-pair         */
+                           break;
+                case '"' : if (!in_com)       /* quoted string delim */
+                               in_qstr = !in_qstr;
+                           break;
+                case '(' : if (!in_qstr)      /* comment (may nest)  */
+                               ++in_com;
+                           break;
+                case ')' : if (in_com)        /* end comment         */
+                               --in_com;
+                           break;
+                default  : break;
+            }
+        }
+    }
+
+    if ((*len = (ptr - token)) == 0) {
+        *field = (const char *)ptr;
+        return NULL;
+    }
+
+    /* Advance field pointer to the next non-comma, non-white byte */
+
+    while (*ptr == ',' || ap_isspace(*ptr))
+	++ptr;
+
+    *field = (const char *)ptr;
+    return (const char *)token;
+}
+
+/* Retrieve an HTTP header field list item, as separated by a comma,
+ * while stripping insignificant whitespace and lowercasing anything not in
+ * a quoted string or comment.  The return value is a new string containing
+ * the converted list item (or NULL if none) and the address pointed to by
+ * field is shifted to the next non-comma, non-whitespace.
+ */
+API_EXPORT(char *) ap_get_list_item(pool *p, const char **field)
+{
+    const char *tok_start;
+    const unsigned char *ptr;
+    unsigned char *pos;
+    char *token;
+    int addspace = 0, in_qpair = 0, in_qstr = 0, in_com = 0, tok_len = 0;
+
+    /* Find the beginning and maximum length of the list item so that
+     * we can allocate a buffer for the new string and reset the field.
+     */
+    if ((tok_start = ap_size_list_item(field, &tok_len)) == NULL) {
+        return NULL;
+    }
+    token = ap_palloc(p, tok_len + 1);
+
+    /* Scan the token again, but this time copy only the good bytes.
+     * We skip extra whitespace and any whitespace around a '=', '/',
+     * or ';' and lowercase normal characters not within a comment,
+     * quoted-string or quoted-pair.
+     */
+    for (ptr = (const unsigned char *)tok_start, pos = (unsigned char *)token;
+         *ptr && (in_qpair || in_qstr || in_com || *ptr != ',');
+         ++ptr) {
+
+        if (in_qpair) {
+            in_qpair = 0;
+            *pos++ = *ptr;
+        }
+        else {
+            switch (*ptr) {
+                case '\\': in_qpair = 1;
+                           if (addspace == 1)
+                               *pos++ = ' ';
+                           *pos++ = *ptr;
+                           addspace = 0;
+                           break;
+                case '"' : if (!in_com)
+                               in_qstr = !in_qstr;
+                           if (addspace == 1)
+                               *pos++ = ' ';
+                           *pos++ = *ptr;
+                           addspace = 0;
+                           break;
+                case '(' : if (!in_qstr)
+                               ++in_com;
+                           if (addspace == 1)
+                               *pos++ = ' ';
+                           *pos++ = *ptr;
+                           addspace = 0;
+                           break;
+                case ')' : if (in_com)
+                               --in_com;
+                           *pos++ = *ptr;
+                           addspace = 0;
+                           break;
+                case ' ' :
+                case '\t': if (addspace)
+                               break;
+                           if (in_com || in_qstr)
+                               *pos++ = *ptr;
+                           else
+                               addspace = 1;
+                           break;
+                case '=' :
+                case '/' :
+                case ';' : if (!(in_com || in_qstr))
+                               addspace = -1;
+                           *pos++ = *ptr;
+                           break;
+                default  : if (addspace == 1)
+                               *pos++ = ' ';
+                           *pos++ = (in_com || in_qstr) ? *ptr
+                                                        : ap_tolower(*ptr);
+                           addspace = 0;
+                           break;
+            }
+        }
+    }
+    *pos = '\0';
+
+    return token;
+}
+
+/* Find an item in canonical form (lowercase, no extra spaces) within
+ * an HTTP field value list.  Returns 1 if found, 0 if not found.
+ * This would be much more efficient if we stored header fields as
+ * an array of list items as they are received instead of a plain string.
+ */
+API_EXPORT(int) ap_find_list_item(pool *p, const char *line, const char *tok)
+{
+    const unsigned char *pos;
+    const unsigned char *ptr = (const unsigned char *)line;
+    int good = 0, addspace = 0, in_qpair = 0, in_qstr = 0, in_com = 0;
+
+    if (!line || !tok)
+        return 0;
+
+    do {  /* loop for each item in line's list */
+
+        /* Find first non-comma, non-whitespace byte */
+
+        while (*ptr == ',' || ap_isspace(*ptr))
+            ++ptr;
+
+        if (*ptr)
+            good = 1;  /* until proven otherwise for this item */
+        else
+            break;     /* no items left and nothing good found */
+
+        /* We skip extra whitespace and any whitespace around a '=', '/',
+         * or ';' and lowercase normal characters not within a comment,
+         * quoted-string or quoted-pair.
+         */
+        for (pos = (const unsigned char *)tok;
+             *ptr && (in_qpair || in_qstr || in_com || *ptr != ',');
+             ++ptr) {
+
+            if (in_qpair) {
+                in_qpair = 0;
+                if (good)
+                    good = (*pos++ == *ptr);
+            }
+            else {
+                switch (*ptr) {
+                    case '\\': in_qpair = 1;
+                               if (addspace == 1)
+                                   good = good && (*pos++ == ' ');
+                               good = good && (*pos++ == *ptr);
+                               addspace = 0;
+                               break;
+                    case '"' : if (!in_com)
+                                   in_qstr = !in_qstr;
+                               if (addspace == 1)
+                                   good = good && (*pos++ == ' ');
+                               good = good && (*pos++ == *ptr);
+                               addspace = 0;
+                               break;
+                    case '(' : if (!in_qstr)
+                                   ++in_com;
+                               if (addspace == 1)
+                                   good = good && (*pos++ == ' ');
+                               good = good && (*pos++ == *ptr);
+                               addspace = 0;
+                               break;
+                    case ')' : if (in_com)
+                                   --in_com;
+                               good = good && (*pos++ == *ptr);
+                               addspace = 0;
+                               break;
+                    case ' ' :
+                    case '\t': if (addspace || !good)
+                                   break;
+                               if (in_com || in_qstr)
+                                   good = (*pos++ == *ptr);
+                               else
+                                   addspace = 1;
+                               break;
+                    case '=' :
+                    case '/' :
+                    case ';' : if (!(in_com || in_qstr))
+                                   addspace = -1;
+                               good = good && (*pos++ == *ptr);
+                               break;
+                    default  : if (!good)
+                                   break;
+                               if (addspace == 1)
+                                   good = (*pos++ == ' ');
+                               if (in_com || in_qstr)
+                                   good = good && (*pos++ == *ptr);
+                               else
+                                   good = good && (*pos++ == ap_tolower(*ptr));
+                               addspace = 0;
+                               break;
+                }
+            }
+        }
+        if (good && *pos)
+            good = 0;          /* not good if only a prefix was matched */
+
+    } while (*ptr && !good);
+
+    return good;
+}
+
+
 /* Retrieve a token, spacing over it and returning a pointer to
  * the first non-white byte afterwards.  Note that these tokens
  * are delimited by semis and commas; and can also be delimited
@@ -1046,6 +1446,81 @@ API_EXPORT(int) ap_find_last_token(pool *p, const char *line, const char *tok)
     return (strncasecmp(&line[lidx], tok, tlen) == 0);
 }
 
+/* c2x takes an unsigned, and expects the caller has guaranteed that
+ * 0 <= what < 256... which usually means that you have to cast to
+ * unsigned char first, because (unsigned)(char)(x) first goes through
+ * signed extension to an int before the unsigned cast.
+ *
+ * The reason for this assumption is to assist gcc code generation --
+ * the unsigned char -> unsigned extension is already done earlier in
+ * both uses of this code, so there's no need to waste time doing it
+ * again.
+ */
+static const char c2x_table[] = "0123456789abcdef";
+
+static ap_inline unsigned char *c2x(unsigned what, unsigned char *where)
+{
+#ifdef CHARSET_EBCDIC
+    what = os_toascii[what];
+#endif /*CHARSET_EBCDIC*/
+    *where++ = '%';
+    *where++ = c2x_table[what >> 4];
+    *where++ = c2x_table[what & 0xf];
+    return where;
+}
+
+/* escape a string for logging */
+API_EXPORT(char *) ap_escape_logitem(pool *p, const char *str)
+{
+    char *ret;
+    unsigned char *d;
+    const unsigned char *s;
+
+    if (str == NULL)
+        return NULL;
+
+    ret = ap_palloc(p, 4 * strlen(str) + 1);	/* Be safe */
+    d = (unsigned char *)ret;
+    s = (const unsigned char *)str;
+    for (; *s; ++s) {
+
+	if (TEST_CHAR(*s, T_ESCAPE_LOGITEM)) {
+	    *d++ = '\\';
+            switch(*s) {
+            case '\b':
+                *d++ = 'b';
+	        break;
+            case '\n':
+                *d++ = 'n';
+	        break;
+            case '\r':
+                *d++ = 'r';
+	        break;
+            case '\t':
+                *d++ = 't';
+	        break;
+            case '\v':
+                *d++ = 'v';
+	        break;
+            case '\\':
+            case '"':
+                *d++ = *s;
+	        break;
+	    default:
+                c2x(*s, d);
+	        *d = 'x';
+		d += 3;
+	    }
+	}
+	else
+            *d++ = *s;
+    }
+    *d = '\0';
+
+    return ret;
+}
+
+
 API_EXPORT(char *) ap_escape_shell_cmd(pool *p, const char *str)
 {
     char *cmd;
@@ -1057,10 +1532,13 @@ API_EXPORT(char *) ap_escape_shell_cmd(pool *p, const char *str)
     s = (const unsigned char *)str;
     for (; *s; ++s) {
 
-#if defined(OS2) || defined(WIN32)
-	/* Don't allow '&' in parameters under OS/2. */
-	/* This can be used to send commands to the shell. */
-	if (*s == '&') {
+#if defined(WIN32) || defined(OS2)
+        /* 
+         * Newlines to Win32/OS2 CreateProcess() are ill advised.
+         * Convert them to spaces since they are effectively white
+         * space to most applications
+         */
+	if (*s == '\r' || *s == '\n') {
 	    *d++ = ' ';
 	    continue;
 	}
@@ -1091,7 +1569,7 @@ static char x2c(const char *what)
     xstr[2]=what[0];
     xstr[3]=what[1];
     xstr[4]='\0';
-    digit = os_toebcdic[0xFF & strtol(xstr, NULL, 16)];
+    digit = os_toebcdic[0xFF & ap_strtol(xstr, NULL, 16)];
 #endif /*CHARSET_EBCDIC*/
     return (digit);
 }
@@ -1102,7 +1580,7 @@ static char x2c(const char *what)
  * Failure is due to
  *   bad % escape       returns BAD_REQUEST
  *
- *   decoding %00 -> \0
+ *   decoding %00 -> \0  (the null character)
  *   decoding %2f -> /   (a special character)
  *                      returns NOT_FOUND
  */
@@ -1116,7 +1594,7 @@ API_EXPORT(int) ap_unescape_url(char *url)
 	if (url[y] != '%')
 	    url[x] = url[y];
 	else {
-	    if (!isxdigit(url[y + 1]) || !isxdigit(url[y + 2])) {
+	    if (!ap_isxdigit(url[y + 1]) || !ap_isxdigit(url[y + 2])) {
 		badesc = 1;
 		url[x] = '%';
 	    }
@@ -1145,26 +1623,6 @@ API_EXPORT(char *) ap_construct_server(pool *p, const char *hostname,
     else {
 	return ap_psprintf(p, "%s:%u", hostname, port);
     }
-}
-
-/* c2x takes an unsigned, and expects the caller has guaranteed that
- * 0 <= what < 256... which usually means that you have to cast to
- * unsigned char first, because (unsigned)(char)(x) fist goes through
- * signed extension to an int before the unsigned cast.
- *
- * The reason for this assumption is to assist gcc code generation --
- * the unsigned char -> unsigned extension is already done earlier in
- * both uses of this code, so there's no need to waste time doing it
- * again.
- */
-static const char c2x_table[] = "0123456789abcdef";
-
-static ap_inline unsigned char *c2x(unsigned what, unsigned char *where)
-{
-    *where++ = '%';
-    *where++ = c2x_table[what >> 4];
-    *where++ = c2x_table[what & 0xf];
-    return where;
 }
 
 /*
@@ -1231,7 +1689,7 @@ API_EXPORT(char *) ap_os_escape_path(pool *p, const char *path, int partial)
     return copy;
 }
 
-/* escape_uri is now a macro for os_escape_path */
+/* ap_escape_uri is now a macro for os_escape_path */
 
 API_EXPORT(char *) ap_escape_html(pool *p, const char *s)
 {
@@ -1246,7 +1704,8 @@ API_EXPORT(char *) ap_escape_html(pool *p, const char *s)
 	    j += 4;
 
     if (j == 0)
-	return ap_pstrdup(p, s);
+	return ap_pstrndup(p, s, i);
+
     x = ap_palloc(p, i + j + 1);
     for (i = 0, j = 0; s[i] != '\0'; i++, j++)
 	if (s[i] == '<') {
@@ -1276,6 +1735,20 @@ API_EXPORT(int) ap_is_directory(const char *path)
 	return 0;		/* in error condition, just return no */
 
     return (S_ISDIR(finfo.st_mode));
+}
+
+/*
+ * see ap_is_directory() except this one is symlink aware, so it
+ * checks for a "real" directory
+ */
+API_EXPORT(int) ap_is_rdirectory(const char *path)
+{
+    struct stat finfo;
+
+    if (lstat(path, &finfo) == -1)
+	return 0;		/* in error condition, just return no */
+
+    return ((!(S_ISLNK(finfo.st_mode))) && (S_ISDIR(finfo.st_mode)));
 }
 
 API_EXPORT(char *) ap_make_full_path(pool *a, const char *src1,
@@ -1316,7 +1789,7 @@ API_EXPORT(int) ap_can_exec(const struct stat *finfo)
 #ifdef MULTIPLE_GROUPS
     int cnt;
 #endif
-#if defined(OS2) || defined(WIN32)
+#if defined(OS2) || defined(WIN32) || defined(NETWARE)
     /* OS/2 dosen't have Users and Groups */
     return 1;
 #else
@@ -1333,7 +1806,7 @@ API_EXPORT(int) ap_can_exec(const struct stat *finfo)
 		return 1;
     }
 #endif
-    return (finfo->st_mode & S_IXOTH);
+    return ((finfo->st_mode & S_IXOTH) != 0);
 #endif
 }
 
@@ -1342,8 +1815,10 @@ char *strdup(const char *str)
 {
     char *sdup;
 
-    if (!(sdup = (char *) malloc(strlen(str) + 1)))
+    if (!(sdup = (char *) malloc(strlen(str) + 1))) {
+	fprintf(stderr, "Ouch!  Out of memory in our strdup()!\n");
 	return NULL;
+    }
     sdup = strcpy(sdup, str);
 
     return sdup;
@@ -1423,7 +1898,7 @@ char *strstr(char *s1, char *s2)
 #ifdef NEED_INITGROUPS
 int initgroups(const char *name, gid_t basegid)
 {
-#if defined(QNX) || defined(MPE) || defined(BEOS) || defined(_OSD_POSIX)
+#if defined(QNX) || defined(MPE) || defined(BEOS) || defined(TPF) || defined(__TANDEM) || defined(NETWARE) || defined(BONE)
 /* QNX, MPE and BeOS do not appear to support supplementary groups. */
     return 0;
 #else /* ndef QNX */
@@ -1503,7 +1978,7 @@ API_EXPORT(void) ap_str_tolower(char *str)
 
 API_EXPORT(uid_t) ap_uname2id(const char *name)
 {
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
     return (1);
 #else
     struct passwd *ent;
@@ -1512,7 +1987,7 @@ API_EXPORT(uid_t) ap_uname2id(const char *name)
 	return (atoi(&name[1]));
 
     if (!(ent = getpwnam(name))) {
-	fprintf(stderr, "httpd: bad user name %s\n", name);
+	fprintf(stderr, "%s: bad user name %s\n", ap_server_argv0, name);
 	exit(1);
     }
     return (ent->pw_uid);
@@ -1521,7 +1996,7 @@ API_EXPORT(uid_t) ap_uname2id(const char *name)
 
 API_EXPORT(gid_t) ap_gname2id(const char *name)
 {
-#ifdef WIN32
+#if defined(WIN32) || defined(NETWARE)
     return (1);
 #else
     struct group *ent;
@@ -1530,7 +2005,7 @@ API_EXPORT(gid_t) ap_gname2id(const char *name)
 	return (atoi(&name[1]));
 
     if (!(ent = getgrnam(name))) {
-	fprintf(stderr, "httpd: bad group name %s\n", name);
+	fprintf(stderr, "%s: bad group name %s\n", ap_server_argv0, name);
 	exit(1);
     }
     return (ent->gr_gid);
@@ -1542,7 +2017,7 @@ API_EXPORT(gid_t) ap_gname2id(const char *name)
  * Parses a host of the form <address>[:port]
  * :port is permitted if 'port' is not NULL
  */
-unsigned long ap_get_virthost_addr(char *w, unsigned short *ports)
+API_EXPORT(unsigned long) ap_get_virthost_addr(char *w, unsigned short *ports)
 {
     struct hostent *hep;
     unsigned long my_addr;
@@ -1596,158 +2071,168 @@ static char *find_fqdn(pool *a, struct hostent *p)
     int x;
 
     if (!strchr(p->h_name, '.')) {
-	for (x = 0; p->h_aliases[x]; ++x) {
-	    if (strchr(p->h_aliases[x], '.') &&
-		(!strncasecmp(p->h_aliases[x], p->h_name, strlen(p->h_name))))
-		return ap_pstrdup(a, p->h_aliases[x]);
-	}
-	return NULL;
+        if (p->h_aliases) {
+        	for (x = 0; p->h_aliases[x]; ++x) {
+                if (p->h_aliases[x] && strchr(p->h_aliases[x], '.') &&
+            		(!strncasecmp(p->h_aliases[x], p->h_name, strlen(p->h_name))))
+		            return ap_pstrdup(a, p->h_aliases[x]);
+            }
+	    }
+	    return NULL;
     }
     return ap_pstrdup(a, (void *) p->h_name);
 }
 
-char *ap_get_local_host(pool *a)
+API_EXPORT(char *) ap_get_local_host(pool *a)
 {
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 256
 #endif
-    char str[MAXHOSTNAMELEN + 1];
-    char *server_hostname;
+    char str[MAXHOSTNAMELEN];
+    char *server_hostname = NULL;
     struct hostent *p;
 
+#ifdef BEOS /* BeOS returns zero as an error for gethostname */
+    if (gethostname(str, sizeof(str) - 1) == 0) {
+#else    
     if (gethostname(str, sizeof(str) - 1) != 0) {
-	perror("Unable to gethostname");
-	exit(1);
+#endif /* BeOS */
+	ap_log_error(APLOG_MARK, APLOG_WARNING, NULL,
+	             "%s: gethostname() failed to determine ServerName\n",
+                     ap_server_argv0);
     }
-    str[MAXHOSTNAMELEN] = '\0';
-    if ((!(p = gethostbyname(str))) || (!(server_hostname = find_fqdn(a, p)))) {
-	fprintf(stderr, "httpd: cannot determine local host name.\n");
-	fprintf(stderr, "Use the ServerName directive to set it manually.\n");
-	exit(1);
+    else 
+    {
+        str[sizeof(str) - 1] = '\0';
+        if ((!(p = gethostbyname(str))) 
+            || (!(server_hostname = find_fqdn(a, p)))) {
+            /* Recovery - return the default servername by IP: */
+            if (p && p->h_addr_list && p->h_addr_list[0]) {
+                ap_snprintf(str, sizeof(str), "%pA", p->h_addr_list[0]);
+	        server_hostname = ap_pstrdup(a, str);
+                /* We will drop through to report the IP-named server */
+            }
+        }
+	else
+            /* Since we found a fqdn, return it with no logged message. */
+            return server_hostname;
     }
 
+    /* If we don't have an fdqn or IP, fall back to the loopback addr */
+    if (!server_hostname) 
+        server_hostname = ap_pstrdup(a, "127.0.0.1");
+    
+    ap_log_error(APLOG_MARK, APLOG_ALERT|APLOG_NOERRNO, NULL,
+	         "%s: Could not determine the server's fully qualified "
+                 "domain name, using %s for ServerName",
+                 ap_server_argv0, server_hostname);
+    
     return server_hostname;
 }
 
-/* aaaack but it's fast and const should make it shared text page. */
-static const unsigned char pr2six[256] =
+/* simple 'pool' alloc()ing glue to ap_base64.c
+ */
+API_EXPORT(char *) ap_pbase64decode(pool *p, const char *bufcoded)
 {
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63, 52, 53, 54,
-    55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64, 64, 0, 1, 2, 3,
-    4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-    22, 23, 24, 25, 64, 64, 64, 64, 64, 64, 26, 27, 28, 29, 30, 31, 32,
-    33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-    50, 51, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
-};
+    char *decoded;
+    int l;
 
-API_EXPORT(char *) ap_uudecode(pool *p, const char *bufcoded)
-{
-    int nbytesdecoded;
-    register const unsigned char *bufin;
-    register char *bufplain;
-    register unsigned char *bufout;
-    register int nprbytes;
+    decoded = (char *) ap_palloc(p, 1 + ap_base64decode_len(bufcoded));
+    l = ap_base64decode(decoded, bufcoded);
+    decoded[l] = '\0'; /* make binary sequence into string */
 
-    /* Strip leading whitespace. */
-
-    while (*bufcoded == ' ' || *bufcoded == '\t')
-	bufcoded++;
-
-    /* Figure out how many characters are in the input buffer.
-     * Allocate this many from the per-transaction pool for the result.
-     */
-#ifndef CHARSET_EBCDIC
-    bufin = (const unsigned char *) bufcoded;
-    while (pr2six[*(bufin++)] <= 63);
-    nprbytes = (bufin - (const unsigned char *) bufcoded) - 1;
-    nbytesdecoded = ((nprbytes + 3) / 4) * 3;
-
-    bufplain = ap_palloc(p, nbytesdecoded + 1);
-    bufout = (unsigned char *) bufplain;
-
-    bufin = (const unsigned char *) bufcoded;
-
-    while (nprbytes > 0) {
-	*(bufout++) =
-	    (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
-	*(bufout++) =
-	    (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
-	*(bufout++) =
-	    (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
-	bufin += 4;
-	nprbytes -= 4;
-    }
-
-    if (nprbytes & 03) {
-	if (pr2six[bufin[-2]] > 63)
-	    nbytesdecoded -= 2;
-	else
-	    nbytesdecoded -= 1;
-    }
-    bufplain[nbytesdecoded] = '\0';
-#else /*CHARSET_EBCDIC*/
-    bufin = (const unsigned char *) bufcoded;
-    while (pr2six[os_toascii[(unsigned char)*(bufin++)]] <= 63);
-    nprbytes = (bufin - (const unsigned char *) bufcoded) - 1;
-    nbytesdecoded = ((nprbytes + 3) / 4) * 3;
-
-    bufplain = ap_palloc(p, nbytesdecoded + 1);
-    bufout = (unsigned char *) bufplain;
-
-    bufin = (const unsigned char *) bufcoded;
-
-    while (nprbytes > 0) {
-	*(bufout++) = os_toebcdic[
-	    (unsigned char) (pr2six[os_toascii[*bufin]] << 2 | pr2six[os_toascii[bufin[1]]] >> 4)];
-	*(bufout++) = os_toebcdic[
-	    (unsigned char) (pr2six[os_toascii[bufin[1]]] << 4 | pr2six[os_toascii[bufin[2]]] >> 2)];
-	*(bufout++) = os_toebcdic[
-	    (unsigned char) (pr2six[os_toascii[bufin[2]]] << 6 | pr2six[os_toascii[bufin[3]]])];
-	bufin += 4;
-	nprbytes -= 4;
-    }
-
-    if (nprbytes & 03) {
-	if (pr2six[os_toascii[bufin[-2]]] > 63)
-	    nbytesdecoded -= 2;
-	else
-	    nbytesdecoded -= 1;
-    }
-    bufplain[nbytesdecoded] = '\0';
-#endif /*CHARSET_EBCDIC*/
-    return bufplain;
+    return decoded;
 }
 
-static const char basis_64[] = 
-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; 
- 
-API_EXPORT(char *) ap_uuencode(pool *a, char *string) 
+API_EXPORT(char *) ap_pbase64encode(pool *p, char *string) 
 { 
-    int i, len = strlen(string); 
-    char *p; 
-    char *encoded = (char *) ap_pcalloc(a, (len+2) / 3 * 4); 
- 
-    p = encoded; 
-    for (i = 0; i < len; i += 3) { 
-        *p++ = basis_64[string[i] >> 2]; 
-        *p++ = basis_64[((string[i] & 0x3) << 4) | ((int) (string[i + 1] & 0xF0) >> 4)]; 
-        *p++ = basis_64[((string[i + 1] & 0xF) << 2) | ((int) (string[i + 2] & 0xC0) >> 6)]; 
-        *p++ = basis_64[string[i + 2] & 0x3F]; 
-    } 
-    *p-- = '\0'; 
-    *p-- = '='; 
-    *p-- = '='; 
-    return encoded; 
-} 
+    char *encoded;
+    int l = strlen(string);
+
+    encoded = (char *) ap_palloc(p, 1 + ap_base64encode_len(l));
+    l = ap_base64encode(encoded, string, l);
+    encoded[l] = '\0'; /* make binary sequence into string */
+
+    return encoded;
+}
+
+/* deprecated names for the above two functions, here for compatibility
+ */
+API_EXPORT(char *) ap_uudecode(pool *p, const char *bufcoded)
+{
+    return ap_pbase64decode(p, bufcoded);
+}
+
+API_EXPORT(char *) ap_uuencode(pool *p, char *string) 
+{ 
+    return ap_pbase64encode(p, string);
+}
+
+#if defined(OS2) || defined(WIN32)
+/* quotes in the string are doubled up.
+ * Used to escape quotes in args passed to OS/2's cmd.exe
+ * and Win32's command.com
+ */
+API_EXPORT(char *) ap_double_quotes(pool *p, const char *str)
+{
+    int num_quotes = 0;
+    int len = 0;
+    char *quote_doubled_str, *dest;
+    
+    while (str[len]) {
+        if (str[len++] == '\"') {
+            num_quotes++;
+        }
+    }
+    
+    quote_doubled_str = ap_palloc(p, len + num_quotes + 1);
+    dest = quote_doubled_str;
+    
+    while (*str) {
+        if (*str == '\"')
+            *(dest++) = '\"';
+        *(dest++) = *(str++);
+    }
+    
+    *dest = 0;
+    return quote_doubled_str;
+}
+
+/*
+ * If ap_caret_escape_args resembles ap_escape_shell_cmd, it aught to.
+ * Taken verbatim so we can trust the integrety of this function.
+ */
+API_EXPORT(char *) ap_caret_escape_args(pool *p, const char *str)
+{
+    char *cmd;
+    unsigned char *d;
+    const unsigned char *s;
+
+    cmd = ap_palloc(p, 2 * strlen(str) + 1);	/* Be safe */
+    d = (unsigned char *)cmd;
+    s = (const unsigned char *)str;
+    for (; *s; ++s) {
+
+        /* 
+         * Newlines to Win32/OS2 CreateProcess() are ill advised.
+         * Convert them to spaces since they are effectively white
+         * space to most applications
+         */
+	if (*s == '\r' || *s == '\n') {
+	    *d++ = ' ';
+            continue;
+	}
+
+	if (TEST_CHAR(*s, T_ESCAPE_SHELL_CMD)) {
+	    *d++ = '^';
+	}
+	*d++ = *s;
+    }
+    *d = '\0';
+
+    return cmd;
+}
+#endif
 
 #ifdef OS2
 void os2pathname(char *path)
@@ -1845,6 +2330,7 @@ API_EXPORT(char *) ap_escape_quotes (pool *p, const char *instring)
 	 */
 	if ((*inchr == '\\') && (inchr[1] != '\0')) {
 	    inchr++;
+	    newlen++;
 	}
 	inchr++;
     }
@@ -1869,4 +2355,17 @@ API_EXPORT(char *) ap_escape_quotes (pool *p, const char *instring)
     }
     *outchr = '\0';
     return outstring;
+}
+
+/* dest = src with whitespace removed
+ * length of dest assumed >= length of src
+ */
+API_EXPORT(void) ap_remove_spaces(char *dest, char *src)
+{
+    while (*src) {
+        if (!ap_isspace(*src)) 
+            *dest++ = *src;
+        src++;
+    }
+    *dest = 0;
 }

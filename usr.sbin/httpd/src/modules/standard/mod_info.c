@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /* 
@@ -68,7 +69,7 @@
  * GET /server-info?module_name - Returns configuration for a single module
  * GET /server-info?list - Returns quick list of included modules
  *
- * Rasmus Lerdorf <rasmus@vex.net>, May 1996
+ * Rasmus Lerdorf <rasmus@php.net>, May 1996
  *
  * 05.01.96 Initial Version
  *
@@ -102,8 +103,26 @@ typedef struct info_cfg_lines {
     struct info_cfg_lines *next;
 } info_cfg_lines;
 
+typedef struct {                /* shamelessly lifted from http_config.c */
+    char *fname;
+} info_fnames;
+
+typedef struct {
+    info_cfg_lines *clines;
+    char *fname;
+} info_clines;
+
 module MODULE_VAR_EXPORT info_module;
-extern module *top_module;
+extern module API_VAR_EXPORT *top_module;
+
+/* shamelessly lifted from http_config.c */
+static int fname_alphasort(const void *fn1, const void *fn2)
+{
+    const info_fnames *f1 = fn1;
+    const info_fnames *f2 = fn2;
+
+    return strcmp(f1->fname,f2->fname);
+}
 
 static void *create_info_config(pool *p, server_rec *s)
 {
@@ -153,10 +172,10 @@ static char *mod_info_html_cmd_string(const char *string, char *buf, size_t buf_
     }
     /* oops, overflowed... don't overwrite */
     if (t > end_buf) {
-	*end_buf = '\0';
+        *end_buf = '\0';
     }
     else {
-	*t = '\0';
+        *t = '\0';
     }
     return (buf);
 }
@@ -172,8 +191,8 @@ static info_cfg_lines *mod_info_load_config(pool *p, const char *filename,
     fp = ap_pcfg_openfile(p, filename);
     if (!fp) {
         ap_log_rerror(APLOG_MARK, APLOG_WARNING, r, 
-		    "mod_info: couldn't open config file %s",
-		    filename);
+                    "mod_info: couldn't open config file %s",
+                    filename);
         return NULL;
     }
     ret = NULL;
@@ -190,14 +209,14 @@ static info_cfg_lines *mod_info_load_config(pool *p, const char *filename,
         if (prev) {
             prev->next = new;
         }
-	t = s;
-	new->cmd = ap_getword_conf(p, &t);
-	if (*t) {
-	    new->line = ap_pstrdup(p, t);
-	}
-	else {
-	    new->line = NULL;
-	}
+        t = s;
+        new->cmd = ap_getword_conf(p, &t);
+        if (*t) {
+            new->line = ap_pstrdup(p, t);
+        }
+        else {
+            new->line = NULL;
+        }
         prev = new;
     }
     ap_cfg_closefile(fp);
@@ -324,7 +343,7 @@ static void mod_info_module_cmds(request_rec *r, info_cfg_lines *cfg,
                         ap_rputs(mod_info_html_cmd_string(li->line, buf, sizeof(buf)), r);
                         ap_rputs("</i>", r);
                     }
-		    ap_rputs("</tt>", r);
+                    ap_rputs("</tt>", r);
                 }
             }
             else
@@ -354,6 +373,53 @@ static char *find_more_info(server_rec *s, const char *module_name)
     return 0;
 }
 
+static void mod_info_dirwalk(pool *p, const char *fname,
+                             request_rec *r, array_header *carray)
+{
+    info_clines *cnew = NULL;
+    info_cfg_lines *mod_info_cfg_tmp = NULL;
+
+    if (!ap_is_rdirectory(fname)) {
+        mod_info_cfg_tmp = mod_info_load_config(p, fname, r);
+        cnew = (info_clines *) ap_push_array(carray);
+        cnew->fname = ap_pstrdup(p, fname);
+        cnew->clines = mod_info_cfg_tmp;
+    } else {
+        DIR *dirp;
+        struct DIR_TYPE *dir_entry;
+        int current;
+        array_header *candidates = NULL;
+        info_fnames *fnew;
+
+        dirp = ap_popendir(p, fname);
+        if (dirp == NULL) {
+            ap_log_rerror(APLOG_MARK, APLOG_WARNING, r, 
+                    "mod_info: couldn't open config directory %s",
+                    fname);
+            return;
+        }
+        candidates = ap_make_array(p, 1, sizeof(info_fnames));
+        while ((dir_entry = readdir(dirp)) != NULL) {
+            /* strip out '.' and '..' */
+            if (strcmp(dir_entry->d_name, ".") &&
+                strcmp(dir_entry->d_name, "..")) {
+                fnew = (info_fnames *) ap_push_array(candidates);
+                fnew->fname = ap_make_full_path(p, fname, dir_entry->d_name);
+            }
+        }
+        ap_pclosedir(p, dirp);
+        if (candidates->nelts != 0) {
+            qsort((void *) candidates->elts, candidates->nelts,
+              sizeof(info_fnames), fname_alphasort);
+            for (current = 0; current < candidates->nelts; ++current) {
+                fnew = &((info_fnames *) candidates->elts)[current];
+                mod_info_dirwalk(p, fnew->fname, r, carray);
+            }
+        }
+    }
+    return;
+}
+
 static int display_info(request_rec *r)
 {
     module *modp = NULL;
@@ -363,30 +429,37 @@ static int display_info(request_rec *r)
     const handler_rec *hand = NULL;
     server_rec *serv = r->server;
     int comma = 0;
-    info_cfg_lines *mod_info_cfg_httpd = NULL;
-    info_cfg_lines *mod_info_cfg_srm = NULL;
-    info_cfg_lines *mod_info_cfg_access = NULL;
+    array_header *allconfigs = NULL;
+    info_clines *cnew = NULL;
+    int current;
+    char *relpath;
 
     r->allowed |= (1 << M_GET);
     if (r->method_number != M_GET)
-	return DECLINED;
+        return DECLINED;
 
     r->content_type = "text/html";
     ap_send_http_header(r);
     if (r->header_only) {
         return 0;
     }
+#ifdef CHARSET_EBCDIC
+    /* Server-generated response, converted */
+    ap_bsetflag(r->connection->client, B_EBCDIC2ASCII, r->ebcdic.conv_out = 1);
+#endif
     ap_hard_timeout("send server info", r);
 
-    ap_rputs("<html><head><title>Server Information</title></head>\n", r);
+    ap_rputs(DOCTYPE_HTML_3_2
+             "<html><head><title>Server Information</title></head>\n", r);
     ap_rputs("<body><h1 align=center>Apache Server Information</h1>\n", r);
     if (!r->args || strcasecmp(r->args, "list")) {
+        allconfigs = ap_make_array(r->pool, 1, sizeof(info_clines));
         cfname = ap_server_root_relative(r->pool, ap_server_confname);
-        mod_info_cfg_httpd = mod_info_load_config(r->pool, cfname, r);
+        mod_info_dirwalk(r->pool, cfname, r, allconfigs);
         cfname = ap_server_root_relative(r->pool, serv->srm_confname);
-        mod_info_cfg_srm = mod_info_load_config(r->pool, cfname, r);
+        mod_info_dirwalk(r->pool, cfname, r, allconfigs);
         cfname = ap_server_root_relative(r->pool, serv->access_confname);
-        mod_info_cfg_access = mod_info_load_config(r->pool, cfname, r);
+        mod_info_dirwalk(r->pool, cfname, r, allconfigs);
         if (!r->args) {
             ap_rputs("<tt><a href=\"#server\">Server Settings</a>, ", r);
             for (modp = top_module; modp; modp = modp->next) {
@@ -589,8 +662,8 @@ static int display_info(request_rec *r)
                     while (cmd) {
                         if (cmd->name) {
                             ap_rprintf(r, "<dd><tt>%s - <i>",
-				    mod_info_html_cmd_string(cmd->name,
-					buf, sizeof(buf)));
+                                    mod_info_html_cmd_string(cmd->name,
+                                        buf, sizeof(buf)));
                             if (cmd->errmsg) {
                                 ap_rputs(cmd->errmsg, r);
                             }
@@ -602,12 +675,16 @@ static int display_info(request_rec *r)
                         cmd++;
                     }
                     ap_rputs("<dt><strong>Current Configuration:</strong>\n", r);
-                    mod_info_module_cmds(r, mod_info_cfg_httpd, modp->cmds,
-                                         "httpd.conf");
-                    mod_info_module_cmds(r, mod_info_cfg_srm, modp->cmds,
-                                         "srm.conf");
-                    mod_info_module_cmds(r, mod_info_cfg_access, modp->cmds,
-                                         "access.conf");
+                    for (current = 0; current < allconfigs->nelts; ++current) {
+                        cnew = &((info_clines *) allconfigs->elts)[current];
+                        /* get relative pathname with some safeguards */
+			relpath = ap_stripprefix(cnew->fname,ap_server_root);
+			if (*relpath != '\0' && relpath != cnew->fname &&
+                            *relpath == '/')
+                            relpath++;
+                        mod_info_module_cmds(r, cnew->clines, modp->cmds,
+                                             relpath);
+                    }
                 }
                 else {
                     ap_rputs("<tt> none</tt>\n", r);
@@ -692,3 +769,4 @@ module MODULE_VAR_EXPORT info_module =
     NULL,                       /* child_exit */
     NULL                        /* post read-request */
 };
+

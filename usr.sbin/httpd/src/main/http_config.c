@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /*
@@ -99,7 +100,7 @@ static int total_modules = 0;
  */
 static int dynamic_modules = 0;
 API_VAR_EXPORT module *top_module = NULL;
-API_VAR_EXPORT module **ap_loaded_modules;
+API_VAR_EXPORT module **ap_loaded_modules=NULL;
 
 typedef int (*handler_func) (request_rec *);
 typedef void *(*dir_maker_func) (pool *, char *);
@@ -154,7 +155,7 @@ static void *create_default_per_dir_config(pool *p)
     return (void *) conf_vector;
 }
 
-void *
+CORE_EXPORT(void *)
      ap_merge_per_dir_configs(pool *p, void *base, void *new)
 {
     void **conf_vector = (void **) ap_palloc(p, sizeof(void *) * total_modules);
@@ -209,7 +210,7 @@ static void merge_server_configs(pool *p, void *base, void *virt)
     }
 }
 
-void *ap_create_request_config(pool *p)
+CORE_EXPORT(void *) ap_create_request_config(pool *p)
 {
     return create_empty_config(p);
 }
@@ -300,6 +301,14 @@ static struct {
  */
 static handler_func *method_ptrs;
 
+
+void ap_cleanup_method_ptrs()
+{
+    if (method_ptrs) {
+        free(method_ptrs);
+    }
+}
+
 /* routine to reconstruct all these shortcuts... called after every
  * add_module.
  * XXX: this breaks if modules dink with their methods pointers
@@ -327,6 +336,9 @@ static void build_method_shortcuts(void)
 	}
     }
     method_ptrs = malloc((how_many_ptrs + NMETHODS) * sizeof(handler_func));
+    if (method_ptrs == NULL) {
+	fprintf(stderr, "Ouch!  Out of memory in build_method_shortcuts()!\n");
+    }
     next_ptr = 0;
     for (i = 0; i < NMETHODS; ++i) {
 	/* XXX: This is an itsy bit presumptuous about the alignment
@@ -364,37 +376,37 @@ static int run_method(request_rec *r, int offset, int run_all)
     return run_all ? OK : DECLINED;
 }
 
-int ap_translate_name(request_rec *r)
+API_EXPORT(int) ap_translate_name(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.translate_handler, 0);
 }
 
-int ap_check_access(request_rec *r)
+API_EXPORT(int) ap_check_access(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.access_checker, 1);
 }
 
-int ap_find_types(request_rec *r)
+API_EXPORT(int) ap_find_types(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.type_checker, 0);
 }
 
-int ap_run_fixups(request_rec *r)
+API_EXPORT(int) ap_run_fixups(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.fixer_upper, 1);
 }
 
-int ap_log_transaction(request_rec *r)
+API_EXPORT(int) ap_log_transaction(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.logger, 1);
 }
 
-int ap_header_parse(request_rec *r)
+API_EXPORT(int) ap_header_parse(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.header_parser, 1);
 }
 
-int ap_run_post_read_request(request_rec *r)
+API_EXPORT(int) ap_run_post_read_request(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.post_read_request, 1);
 }
@@ -404,12 +416,12 @@ int ap_run_post_read_request(request_rec *r)
  * separate from check_access to make catching some config errors easier.
  */
 
-int ap_check_user_id(request_rec *r)
+API_EXPORT(int) ap_check_user_id(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.ap_check_user_id, 0);
 }
 
-int ap_check_auth(request_rec *r)
+API_EXPORT(int) ap_check_auth(request_rec *r)
 {
     return run_method(r, offsets_into_method_ptrs.auth_checker, 0);
 }
@@ -473,13 +485,13 @@ static void init_handlers(pool *p)
     ph->hr.handler = NULL;
 }
 
-int ap_invoke_handler(request_rec *r)
+API_EXPORT(int) ap_invoke_handler(request_rec *r)
 {
     fast_handler_rec *handp;
     const char *handler;
     char *p;
     size_t handler_len;
-    int result = NOT_IMPLEMENTED;
+    int result = HTTP_INTERNAL_SERVER_ERROR;
 
     if (r->handler) {
 	handler = r->handler;
@@ -509,11 +521,6 @@ int ap_invoke_handler(request_rec *r)
         }
     }
 
-    if (result == NOT_IMPLEMENTED && r->handler) {
-        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, r,
-            "handler \"%s\" not found for: %s", r->handler, r->filename);
-    }
-
     /* Pass two --- wildcard matches */
 
     for (handp = wildhandlers; handp->hr.content_type; ++handp) {
@@ -526,7 +533,11 @@ int ap_invoke_handler(request_rec *r)
          }
     }
 
-    return NOT_IMPLEMENTED;
+    if (result == HTTP_INTERNAL_SERVER_ERROR && r->handler && r->filename) {
+        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, r,
+            "handler \"%s\" not found for: %s", r->handler, r->filename);
+    }
+    return HTTP_INTERNAL_SERVER_ERROR;
 }
 
 /* One-time setup for precompiled modules --- NOT to be done on restart */
@@ -539,10 +550,14 @@ API_EXPORT(void) ap_add_module(module *m)
      */
 
     if (m->version != MODULE_MAGIC_NUMBER_MAJOR) {
-	fprintf(stderr, "httpd: module \"%s\" is not compatible with this "
-		"version of Apache.\n", m->name);
+	fprintf(stderr, "%s: module \"%s\" is not compatible with this "
+		"version of Apache.\n", ap_server_argv0, m->name);
 	fprintf(stderr, "Please contact the vendor for the correct version.\n");
+#ifdef NETWARE
+        clean_parent_exit(1);
+#else    
 	exit(1);
+#endif
     }
 
     if (m->next == NULL) {
@@ -554,11 +569,15 @@ API_EXPORT(void) ap_add_module(module *m)
 	dynamic_modules++;
 
 	if (dynamic_modules > DYNAMIC_MODULE_LIMIT) {
-	    fprintf(stderr, "httpd: module \"%s\" could not be loaded, because"
-		    " the dynamic\n", m->name);
+	    fprintf(stderr, "%s: module \"%s\" could not be loaded, because"
+		    " the dynamic\n", ap_server_argv0, m->name);
 	    fprintf(stderr, "module limit was reached. Please increase "
 		    "DYNAMIC_MODULE_LIMIT and recompile.\n");
+#ifdef NETWARE
+            clean_parent_exit(1);
+#else
 	    exit(1);
+#endif
 	}
     }
 
@@ -622,6 +641,7 @@ API_EXPORT(void) ap_remove_module(module *m)
     m->module_index = -1;	/* simulate being unloaded, should
 				 * be unnecessary */
     dynamic_modules--;
+    total_modules--;
 }
 
 API_EXPORT(void) ap_add_loaded_module(module *mod)
@@ -676,7 +696,7 @@ API_EXPORT(void) ap_remove_loaded_module(module *mod)
     *m = NULL;
 }
 
-void ap_setup_prelinked_modules()
+API_EXPORT(void) ap_setup_prelinked_modules(void)
 {
     module **m;
     module **m2;
@@ -693,6 +713,14 @@ void ap_setup_prelinked_modules()
      */
     ap_loaded_modules = (module **)malloc(
         sizeof(module *)*(total_modules+DYNAMIC_MODULE_LIMIT+1));
+    if (ap_loaded_modules == NULL) {
+	fprintf(stderr, "Ouch!  Out of memory in ap_setup_prelinked_modules()!\n");
+#ifdef NETWARE
+        clean_parent_exit(1);
+#else
+	exit(1);
+#endif
+    }
     for (m = ap_preloaded_modules, m2 = ap_loaded_modules; *m != NULL; )
         *m2++ = *m++;
     *m2 = NULL;
@@ -874,7 +902,7 @@ static const char *invoke_cmd(const command_rec *cmd, cmd_parms *parms,
 	w2 = *args ? ap_getword_conf(parms->pool, &args) : NULL;
 	w3 = *args ? ap_getword_conf(parms->pool, &args) : NULL;
 
-	if (*w == '\0' || (*w2 && !w3) || *args != 0)
+	if (*w == '\0' || (w2 && *w2 && !w3) || *args != 0)
 	    return ap_pstrcat(parms->pool, cmd->name,
 			    " takes one or three arguments",
 			    cmd->errmsg ? ", " : NULL, cmd->errmsg, NULL);
@@ -954,8 +982,26 @@ CORE_EXPORT(const command_rec *) ap_find_command_in_modules(const char *cmd_name
     return NULL;
 }
 
+CORE_EXPORT(void *) ap_set_config_vectors(cmd_parms *parms, void *config, module *mod)
+{
+    void *mconfig = ap_get_module_config(config, mod);
+    void *sconfig = ap_get_module_config(parms->server->module_config, mod);
+
+    if (!mconfig && mod->create_dir_config) {
+	mconfig = (*mod->create_dir_config) (parms->pool, parms->path);
+	ap_set_module_config(config, mod, mconfig);
+    }
+
+    if (!sconfig && mod->create_server_config) {
+	sconfig = (*mod->create_server_config) (parms->pool, parms->server);
+	ap_set_module_config(parms->server->module_config, mod, sconfig);
+    }
+    return mconfig;
+}
+
 CORE_EXPORT(const char *) ap_handle_command(cmd_parms *parms, void *config, const char *l)
 {
+    void *oldconfig;
     const char *args, *cmd_name, *retval;
     const command_rec *cmd;
     module *mod = top_module;
@@ -968,6 +1014,8 @@ CORE_EXPORT(const char *) ap_handle_command(cmd_parms *parms, void *config, cons
     if (*cmd_name == '\0')
 	return NULL;
 
+    oldconfig = parms->context;
+    parms->context = config;
     do {
 	if (!(cmd = ap_find_command_in_modules(cmd_name, &mod))) {
             errno = EINVAL;
@@ -976,25 +1024,13 @@ CORE_EXPORT(const char *) ap_handle_command(cmd_parms *parms, void *config, cons
                            "not included in the server configuration", NULL);
 	}
 	else {
-	    void *mconfig = ap_get_module_config(config, mod);
-	    void *sconfig =
-		ap_get_module_config(parms->server->module_config, mod);
-
-	    if (!mconfig && mod->create_dir_config) {
-		mconfig = (*mod->create_dir_config) (parms->pool, parms->path);
-		ap_set_module_config(config, mod, mconfig);
-	    }
-
-	    if (!sconfig && mod->create_server_config) {
-		sconfig =
-		    (*mod->create_server_config) (parms->pool, parms->server);
-		ap_set_module_config(parms->server->module_config, mod, sconfig);
-	    }
+	    void *mconfig = ap_set_config_vectors(parms,config, mod);
 
 	    retval = invoke_cmd(cmd, parms, mconfig, args);
 	    mod = mod->next;	/* Next time around, skip this one */
 	}
     } while (retval && !strcmp(retval, DECLINE_CMD));
+    parms->context = oldconfig;
 
     return retval;
 }
@@ -1055,6 +1091,9 @@ API_EXPORT_NONSTD(const char *) ap_set_file_slot(cmd_parms *cmd, char *struct_pt
        so the server can be moved or mirrored with less pain.  */
     char *p;
     int offset = (int) (long) cmd->info;
+#ifndef OS2
+    arg = ap_os_canonical_filename(cmd->pool, arg);
+#endif
     if (ap_os_is_path_absolute(arg))
 	p = arg;
     else
@@ -1069,10 +1108,13 @@ API_EXPORT_NONSTD(const char *) ap_set_file_slot(cmd_parms *cmd, char *struct_pt
  */
 
 static cmd_parms default_parms =
-{NULL, 0, -1, NULL, NULL, NULL, NULL, NULL, NULL};
+{NULL, 0, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 API_EXPORT(char *) ap_server_root_relative(pool *p, char *file)
 {
+#ifndef OS2
+    file = ap_os_canonical_filename(p, file);
+#endif
     if(ap_os_is_path_absolute(file))
 	return file;
     return ap_make_full_path(p, ap_server_root, file);
@@ -1142,13 +1184,29 @@ static void process_command_config(server_rec *s, array_header *arr, pool *p,
 
     if (errmsg) {
         fprintf(stderr, "Syntax error in -C/-c directive:\n%s\n", errmsg);
+#ifdef NETWARE
+        clean_parent_exit(1);
+#else
         exit(1);
+#endif
     }
 
     ap_cfg_closefile(parms.config_file);
 }
 
-void ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp)
+typedef struct {
+    char *fname;
+} fnames;
+
+static int fname_alphasort(const void *fn1, const void *fn2)
+{
+    const fnames *f1 = fn1;
+    const fnames *f2 = fn2;
+
+    return strcmp(f1->fname,f2->fname);
+}
+
+CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp)
 {
     const char *errmsg;
     cmd_parms parms;
@@ -1169,6 +1227,62 @@ void ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp
 	    return;
     }
 
+    /* 
+     * here we want to check if the candidate file is really a
+     * directory, and most definitely NOT a symlink (to prevent
+     * horrible loops).  If so, let's recurse and toss it back into
+     * the function.
+     */
+    if (ap_is_rdirectory(fname)) {
+	DIR *dirp;
+	struct DIR_TYPE *dir_entry;
+	int current;
+	array_header *candidates = NULL;
+	fnames *fnew;
+
+	/*
+	 * first course of business is to grok all the directory
+	 * entries here and store 'em away. Recall we need full pathnames
+	 * for this.
+	 */
+	fprintf(stderr, "Processing config directory: %s\n", fname);
+	dirp = ap_popendir(p, fname);
+	if (dirp == NULL) {
+	    perror("fopen");
+	    fprintf(stderr, "%s: could not open config directory %s\n",
+		ap_server_argv0, fname);
+#ifdef NETWARE
+	    clean_parent_exit(1);
+#else
+	    exit(1);
+#endif
+	}
+	candidates = ap_make_array(p, 1, sizeof(fnames));
+	while ((dir_entry = readdir(dirp)) != NULL) {
+	    /* strip out '.' and '..' */
+	    if (strcmp(dir_entry->d_name, ".") &&
+		strcmp(dir_entry->d_name, "..")) {
+		fnew = (fnames *) ap_push_array(candidates);
+		fnew->fname = ap_make_full_path(p, fname, dir_entry->d_name);
+	    }
+	}
+	ap_pclosedir(p, dirp);
+	if (candidates->nelts != 0) {
+            qsort((void *) candidates->elts, candidates->nelts,
+              sizeof(fnames), fname_alphasort);
+	    /*
+	     * Now recurse these... we handle errors and subdirectories
+	     * via the recursion, which is nice
+	     */
+	    for (current = 0; current < candidates->nelts; ++current) {
+	        fnew = &((fnames *) candidates->elts)[current];
+		fprintf(stderr, " Processing config file: %s\n", fnew->fname);
+		ap_process_resource_config(s, fnew->fname, p, ptemp);
+	    }
+	}
+	return;
+    }
+    
     /* GCC's initialization extensions are soooo nice here... */
 
     parms = default_parms;
@@ -1179,25 +1293,32 @@ void ap_process_resource_config(server_rec *s, char *fname, pool *p, pool *ptemp
 
     if (!(parms.config_file = ap_pcfg_openfile(p,fname))) {
 	perror("fopen");
-	fprintf(stderr, "httpd: could not open document config file %s\n",
-		fname);
+	fprintf(stderr, "%s: could not open document config file %s\n",
+		ap_server_argv0, fname);
+#ifdef NETWARE
+        clean_parent_exit(1);
+#else
 	exit(1);
+#endif
     }
 
     errmsg = ap_srm_command_loop(&parms, s->lookup_defaults);
 
     if (errmsg) {
 	fprintf(stderr, "Syntax error on line %d of %s:\n",
-		parms.config_file->line_number, fname);
+		parms.config_file->line_number, parms.config_file->name);
 	fprintf(stderr, "%s\n", errmsg);
+#ifdef NETWARE
+        clean_parent_exit(1);
+#else
 	exit(1);
+#endif
     }
 
     ap_cfg_closefile(parms.config_file);
 }
 
-
-int ap_parse_htaccess(void **result, request_rec *r, int override,
+CORE_EXPORT(int) ap_parse_htaccess(void **result, request_rec *r, int override,
 		   const char *d, const char *access_name)
 {
     configfile_t *f = NULL;
@@ -1206,7 +1327,7 @@ int ap_parse_htaccess(void **result, request_rec *r, int override,
     char *filename = NULL;
     const struct htaccess_result *cache;
     struct htaccess_result *new;
-    void *dc;
+    void *dc = NULL;
 
 /* firstly, search cache */
     for (cache = r->htaccess; cache != NULL; cache = cache->next)
@@ -1224,41 +1345,39 @@ int ap_parse_htaccess(void **result, request_rec *r, int override,
     parms.path = ap_pstrdup(r->pool, d);
 
     /* loop through the access names and find the first one */
-    while (!f && access_name[0]) {
-	char *w = ap_getword_conf(r->pool, &access_name);
-	filename = ap_make_full_path(r->pool, d, w);
-	f = ap_pcfg_openfile(r->pool, filename);
-    }
-    if (f) {
-	dc = ap_create_per_dir_config(r->pool);
 
-	parms.config_file = f;
+    while (access_name[0]) {
+        filename = ap_make_full_path(r->pool, d,
+                                     ap_getword_conf(r->pool, &access_name));
 
-	errmsg = ap_srm_command_loop(&parms, dc);
+        if ((f = ap_pcfg_openfile(r->pool, filename)) != NULL) {
 
-	ap_cfg_closefile(f);
+            dc = ap_create_per_dir_config(r->pool);
 
-	if (errmsg) {
-	    ap_log_rerror(APLOG_MARK, APLOG_ALERT|APLOG_NOERRNO, r, "%s: %s",
-                        filename, errmsg);
-	    ap_table_setn(r->notes, "error-notes", errmsg);
-            return HTTP_INTERNAL_SERVER_ERROR;
-	}
+            parms.config_file = f;
 
-	*result = dc;
-    }
-    else {
-	if (errno == ENOENT || errno == ENOTDIR)
-	    dc = NULL;
-	else {
-	    ap_log_rerror(APLOG_MARK, APLOG_CRIT, r,
-			"%s pcfg_openfile: unable to check htaccess file, ensure it is readable",
-			filename);
-	    ap_table_setn(r->notes, "error-notes",
-			  "Server unable to read htaccess file, denying "
-			  "access to be safe");
-	    return HTTP_FORBIDDEN;
-	}
+            errmsg = ap_srm_command_loop(&parms, dc);
+
+            ap_cfg_closefile(f);
+
+            if (errmsg) {
+                ap_log_rerror(APLOG_MARK, APLOG_ALERT|APLOG_NOERRNO, r,
+                              "%s: %s", filename, errmsg);
+                return HTTP_INTERNAL_SERVER_ERROR;
+            }
+            *result = dc;
+            break;
+        }
+        else if (errno != ENOENT && errno != ENOTDIR) {
+            ap_log_rerror(APLOG_MARK, APLOG_CRIT, r,
+                          "%s pcfg_openfile: unable to check htaccess file, "
+                          "ensure it is readable",
+                          filename);
+            ap_table_setn(r->notes, "error-notes",
+                          "Server unable to read htaccess file, denying "
+                          "access to be safe");
+            return HTTP_FORBIDDEN;
+        }
     }
 
 /* cache it */
@@ -1447,7 +1566,9 @@ static void default_listeners(pool *p, server_rec *s)
     new = ap_pcalloc(p, sizeof(listen_rec));
     new->local_addr.sin_family = AF_INET;
     new->local_addr.sin_addr = ap_bind_address;
-    new->local_addr.sin_port = htons(s->port ? s->port : DEFAULT_HTTP_PORT);
+    /* Buck ugly cast to get around terniary op bug in some (MS) compilers */
+    new->local_addr.sin_port = htons((unsigned short)(s->port ? s->port 
+                                                        : DEFAULT_HTTP_PORT));
     new->fd = -1;
     new->used = 0;
     new->next = NULL;
@@ -1455,7 +1576,7 @@ static void default_listeners(pool *p, server_rec *s)
 }
 
 
-server_rec *ap_read_config(pool *p, pool *ptemp, char *confname)
+API_EXPORT(server_rec *) ap_read_config(pool *p, pool *ptemp, char *confname)
 {
     server_rec *s = init_server_config(p);
 
@@ -1478,8 +1599,17 @@ server_rec *ap_read_config(pool *p, pool *ptemp, char *confname)
     return s;
 }
 
+API_EXPORT(void) ap_single_module_configure(pool *p, server_rec *s, module *m)
+{
+    if (m->create_server_config)
+        ap_set_module_config(s->module_config, m,
+                             (*m->create_server_config)(p, s));
+    if (m->create_dir_config)
+        ap_set_module_config(s->lookup_defaults, m,
+                             (*m->create_dir_config)(p, NULL));
+}
 
-void ap_init_modules(pool *p, server_rec *s)
+API_EXPORT(void) ap_init_modules(pool *p, server_rec *s)
 {
     module *m;
 
@@ -1490,7 +1620,7 @@ void ap_init_modules(pool *p, server_rec *s)
     init_handlers(p);
 }
 
-void ap_child_init_modules(pool *p, server_rec *s)
+API_EXPORT(void) ap_child_init_modules(pool *p, server_rec *s)
 {
     module *m;
 
@@ -1499,7 +1629,7 @@ void ap_child_init_modules(pool *p, server_rec *s)
 	    (*m->child_init) (s, p);
 }
 
-void ap_child_exit_modules(pool *p, server_rec *s)
+API_EXPORT(void) ap_child_exit_modules(pool *p, server_rec *s)
 {
     module *m;
 
@@ -1542,9 +1672,9 @@ static void show_overrides(const command_rec *pc, module *pm)
 	 ((pc->req_override & (ACCESS_CONF | OR_AUTHCFG | OR_LIMIT)))))
 	printf("anywhere");
     else if (pc->req_override & RSRC_CONF)
-	printf("only outside <Directory> or <Location>");
+	printf("only outside <Directory>, <Files> or <Location>");
     else
-	printf("only inside <Directory> or <Location>");
+	printf("only inside <Directory>, <Files> or <Location>");
 
     /* Warn if the directive is allowed inside <Directory> or .htaccess
      * but module doesn't support per-dir configuration */
@@ -1592,9 +1722,9 @@ static void show_overrides(const command_rec *pc, module *pm)
 
 /* Show the preloaded configuration directives, the help string explaining
  * the directive arguments, in what module they are handled, and in
- * what parts of the configuration they are allowed.  Used for httpd -h.
+ * what parts of the configuration they are allowed.  Used for httpd -L.
  */
-void ap_show_directives()
+API_EXPORT(void) ap_show_directives(void)
 {
     const command_rec *pc;
     int n;
@@ -1609,11 +1739,18 @@ void ap_show_directives()
 }
 
 /* Show the preloaded module names.  Used for httpd -l. */
-void ap_show_modules()
+API_EXPORT(void) ap_show_modules(void)
 {
     int n;
 
     printf("Compiled-in modules:\n");
-    for (n = 0; ap_loaded_modules[n]; ++n)
+    for (n = 0; ap_loaded_modules[n]; ++n) {
 	printf("  %s\n", ap_loaded_modules[n]->name);
+    }
+#if !defined(WIN32) && !defined(NETWARE) && !defined(TPF)
+    printf("suexec: %s\n",
+	   ap_suexec_enabled
+	       ? "enabled; valid wrapper " SUEXEC_BIN
+	       : "disabled; invalid wrapper " SUEXEC_BIN);
+#endif
 }

@@ -1,8 +1,8 @@
 
-  A P A C H E   I N S T A L L A T I O N
+  APACHE INSTALLATION
 
-  NOTE: Windows users please read the documents README.NT and
-        http://www.apache.org/docs/windows.html, (or the
+  NOTE: Windows users please read the documents README-WIN.txt and
+        http://httpd.apache.org/docs/windows.html, (or the
         htdocs/manual/windows.html file included with Apache). 
         The following applies only to Unix users.
 
@@ -29,7 +29,7 @@
      $ ./configure --prefix=PREFIX
      $ make
      $ make install
-     $ PREFIX/sbin/apachectl start
+     $ PREFIX/bin/apachectl start
 
      NOTE: PREFIX is not the string "PREFIX". Instead use the Unix
            filesystem path under which Apache should be installed. For
@@ -76,15 +76,14 @@
         under all operating systems therefore you cannot use the DSO mechanism
         on all platforms. And Apache currently has only limited built-in
         knowledge on how to compile shared objects because this is heavily
-        platform-dependend. The current state is this:
+        platform-dependent. The current state is this:
 
         o Out-of-the-box supported platforms are:
-           - Linux     - IRIX
-           - FreeBSD   - HPUX
-           - OpenBSD   - Digital UNIX
-           - NetBSD    - UnixWare
-           - SunOS     - AIX
-           - Solaris   - SCO
+           - Linux     - SunOS         - UnixWare     - Darwin/Mac OS
+           - FreeBSD   - Solaris       - AIX          - OpenStep/Mach
+           - OpenBSD   - IRIX          - SCO          - DYNIX/ptx
+           - NetBSD    - HPUX          - ReliantUNIX
+           - BSDI      - Digital Unix  - DGUX
 
         o Entirely unsupported platforms are:
            - Ultrix
@@ -135,37 +134,40 @@
 
      Reference:
 
-     $ [CC=...]        [CFLAGS_SHLIB=...]         
+     $ [CC=...]        [CFLAGS_SHLIB=...]           [TARGET=...]
        [OPTIM=...]     [LD_SHLIB=...]
        [CFLAGS=...]    [LDFLAGS_SHLIB=...]        
        [INCLUDES=...]  [LDFLAGS_SHLIB_EXPORT=...] 
        [LDFLAGS=...]   [RANLIB=...]  
-       [LIBS=...] 
-       ./configure [--quiet]   [--prefix=DIR]         [--enable-rule=NAME]    
-                   [--verbose] [--exec-prefix=PREFIX] [--disable-rule=NAME]   
-                   [--shadow]  [--bindir=EPREFIX]     [--add-module=FILE]     
-                   [--help]    [--sbindir=DIR]        [--activate-module=FILE]
-                   [--layout]  [--libexecdir=DIR]     [--enable-module=NAME]  
-                               [--mandir=DIR]         [--disable-module=NAME] 
-                               [--sysconfdir=DIR]     [--enable-shared=NAME]  
-                               [--datadir=DIR]        [--disable-shared=NAME] 
-                               [--includedir=DIR]     
-                               [--localstatedir=DIR]  [--enable-suexec]     
-                               [--runtimedir=DIR]     [--suexec-caller=UID] 
-                               [--logfiledir=DIR]     [--suexec-userdir=DIR]
-                               [--proxycachedir=DIR]  [--suexec-uidmin=UID]
-                               [--compat]             [--suexec-gidmin=GID]
-                                                      [--suexec-safepath=PATH] 
-
-                                                      [--with-perl=FILE]   
-                                                      [--without-support]  
-                                                      [--without-confadjust]
+       [LIBS=...]      [DEPS=...]
+       ./configure
+           [--quiet]         [--prefix=DIR]            [--enable-rule=NAME]    
+           [--verbose]       [--exec-prefix=PREFIX]    [--disable-rule=NAME]   
+           [--shadow[=DIR]]  [--bindir=EPREFIX]        [--add-module=FILE]     
+           [--show-layout]   [--sbindir=DIR]           [--activate-module=FILE]
+           [--help]          [--libexecdir=DIR]        [--enable-module=NAME]  
+                             [--mandir=DIR]            [--disable-module=NAME] 
+                             [--sysconfdir=DIR]        [--enable-shared=NAME]  
+                             [--datadir=DIR]           [--disable-shared=NAME] 
+                             [--includedir=DIR]        [--permute-module=N1:N2]
+                             [--localstatedir=DIR]
+                             [--runtimedir=DIR]        [--enable-suexec]
+                             [--logfiledir=DIR]        [--suexec-caller=UID]
+                             [--proxycachedir=DIR]     [--suexec-docroot=DIR]
+                             [--with-layout=[FILE:]ID] [--suexec-logfile=FILE]
+                                                       [--suexec-userdir=DIR]
+                             [--with-perl=FILE]        [--suexec-uidmin=UID]
+                             [--without-support]       [--suexec-gidmin=GID]
+                             [--without-confadjust]    [--suexec-safepath=PATH]
+                             [--without-execstrip]
+			     [--server-uid=UID]
+			     [--server-gid=GID]
 
      Use the CC, OPTIM, CFLAGS, INCLUDES, LDFLAGS, LIBS, CFLAGS_SHLIB,
-     LD_SHLIB, LDFLAGS_SHLIB, LDFLAGS_SHLIB_EXPORT and RANLIB environment
-     variables to override the corresponding default entries in the
-     src/Configuration.tmpl file (see there for more information about their
-     usage).
+     LD_SHLIB, LDFLAGS_SHLIB, LDFLAGS_SHLIB_EXPORT, RANLIB, DEPS and TARGET
+     environment variables to override the corresponding default entries in
+     the src/Configuration.tmpl file (see there for more information about
+     their usage).
 
          Note: The syntax ``KEY=VALUE ./configure ...'' (one single line!) is
                the GNU Autoconf compatible way of specifying defines and can
@@ -213,11 +215,17 @@
                make sure the paths fit your situation by checking the finally
                chosen paths via the --layout option.
 
-     Use the --compat option to install Apache into a installation tree which
-     has a similar layout than the one used with Apache 1.2.
+     Use the --with-layout=[F:]ID option to select a particular installation
+     path base-layout. You always _HAVE_ to select a base-layout. There are
+     currently two layouts pre-defined in the file config.layout: `Apache' for
+     the classical Apache path layout and `GNU' for a path layout conforming
+     to the GNU `standards' document. When you want to use your own custom
+     layout FOO, either add a corresponding "<Layout FOO>...</Layout>" section
+     to config.layout and use --with-layout=FOO or place it into your own
+     file, say config.mypaths, and use --with-layout=config.mypaths:FOO.
  
-     Use the --layout option to check the final installation path layout while
-     fiddling with the options above.
+     Use the --show-layout option to check the final installation path layout
+     while fiddling with the options above.
  
      Use the --enable-rule=NAME and --disable-rule=NAME options to enable or
      disable a particular Rule from the Apache src/Configuration.tmpl file. The
@@ -228,20 +236,23 @@
      Use the --add-module=FILE option to copy a module source file to the
      Apache src/modules/extra/ directory and on-the-fly add an entry for it in
      the configuration file. FILE has to be a valid path to a C source file
-     outside the Apache source tree, for instance /path/to/mod_foo.c. The added
-     module this is way is automatically activated and enabled. Use this option
-     to automatically include a simple third-party module to the Apache build
-     process.
- 
-     Use the --activate-module=FILE option to on-the-fly add an entry for an
-     existing module source file in the configuration file. FILE has to be a
-     valid path under src/modules/ of the Apache source tree, i.e. it already
-     has to be copied to this location before.  The module is automatically
+     outside the Apache source tree, for instance /path/to/mod_foo.c, or a
+     path to an already existing C source code file in src/modules/extra/, such
+     as src/modules/extra/mod_foo.c, in which case no copying will be done.
+     The added module this is way is automatically activated and enabled. Use
+     this option to automatically include a simple third-party module to the
+     Apache build process.
+
+     Use the --activate-module=FILE option to add an entry for an existing
+     module object or library file into the configuration file on-the-fly.
+     FILE has to be a valid path beginning with "src/modules/", and the
+     corresponding file has to have been copied to this location in the Apache
+     source tree before running configure.  The module is automatically
      enabled. Use this option to automatically include a complex third-party
      module to the Apache build process where, for instance a module like
-     mod_perl or mod_php3 consisting of more than one file which are created by
-     a third-party configuration scheme.
- 
+     mod_perl or mod_php3 consisting of more than one file which are created
+     by a third-party configuration scheme.
+
      Use the --enable-module=NAME and --disable-module=NAME options to enable
      or disable a particular already distributed module from the Apache
      src/Configuration.tmpl file. The correct module names (no `mod_' prefix!)
@@ -271,7 +282,7 @@
       (-) mod_speling ...... Correction of misspelled URLs
      Directory Handling
       (+) mod_dir .......... Directory and directory default file handling
-      (+) mod_auto_index ... Automated directory index file generation
+      (+) mod_autoindex .... Automated directory index file generation
      Access Control
       (+) mod_access ....... Access Control (user, host, network)
       (+) mod_auth ......... HTTP Basic Authentication (user, passwd)
@@ -282,6 +293,7 @@
      HTTP response
       (-) mod_headers ...... Arbitrary HTTP response headers (configured)
       (-) mod_cern_meta .... Arbitrary HTTP response headers (CERN-style files)
+      (-) mod_expires ...... Expires HTTP responses 
       (+) mod_asis ......... Raw HTTP responses 
      Scripting
       (+) mod_include ...... Server Side Includes (SSI) support
@@ -293,13 +305,13 @@
      Request Logging
       (+) mod_log_config ... Customizable logging of requests
       (-) mod_log_agent .... Specialized HTTP User-Agent logging (deprecated)
-      (-) mod_log_refer .... Specialized HTTP Referrer logging   (deprecated)
+      (-) mod_log_referer .. Specialized HTTP Referrer logging   (deprecated)
       (-) mod_usertrack .... Logging of user click-trails via HTTP Cookies
      Miscellaneous
       (+) mod_imap ......... Server-side Image Map support
       (-) mod_proxy ........ Caching Proxy Module (HTTP, HTTPS, FTP)
-     Experimental
       (-) mod_so ........... Dynamic Shared Object (DSO) bootstrapping
+     Experimental
       (-) mod_mmap_static .. Caching of frequently served pages via mmap()
      Development
       (-) mod_example ...... Apache API demonstration (developers only)
@@ -318,7 +330,7 @@
      this way implicitly enables them itself). 
      
          Note 1: The --enable-shared option DOES NOT AUTOMATICALLY enable the
-                 module because there are variants like `--enable-shared=all'
+                 module because there are variants like `--enable-shared=max'
                  which should not imply `--enable-module=all'.  
 
          Note 2: Per default the DSO mechanism is globally disabled, i.e. no
@@ -340,6 +352,15 @@
                  have to enable the SHARED_CORE rule. For more details please
                  read the document `htdocs/manual/dso.html'.
 
+     Use the --permute-module=N1:N2 option to permutate the AddModule lines of
+     modules mod_N1 and mod_N2 in the Configuration file. This way one can
+     give modules different priorities.  Two special and important variants
+     are supported for the option argument: first BEGIN:N which permutes
+     module mod_N with the begin of the module list, i.e. it `moves' the
+     module to the begin of the list (gives it lowest priority).  And second
+     N:END which permutes mod_N with the end of the module list, i.e. it
+     `moves' the module to the end of the list (gives it highest priority).
+
      Use the --with-perl=FILE option to select a particular Perl interpreter
      executable to be used with Apache. Per default APACI tries to find it
      automatically. But if multiple Perl instances exist on your system you
@@ -354,15 +375,22 @@
      user/situation dependent adjustments to the config files (Group, Port,
      ServerAdmin, ServerName, etc.).  This is usually only interesting for
      vendor package maintainers who wants to force the keeping of defaults.
+
+     Use the --without-execstrip option to disable the stripping of
+     executables on installation. This can be important on some platforms in
+     combination with --enable-rule=SHARED_CORE or when Apache was built with
+     debugging symbols which shouldn't be lost.
  
      Use the --enable-suexec option to enable the suEXEC feature by building
      and installing the "suexec" support program. Use --suexec-caller=UID to
-     set the allowed caller user id, the --suexec-userdir=DIR to set the user
-     subdirectory, the --suexec-uidmin=UID/--suexec-gidmin=GID to set the
-     minimal allowed UID/GID and --suexec-safepath=PATH to set the safe shell
-     PATH for the suEXEC feature. At least one --suexec-xxxxx option has
-     to be provided together with --enable-suexec option to let APACI accept
-     your request for using the suEXEC feature.
+     set the allowed caller user id, --suexec-userdir=DIR to set the user
+     subdirectory, --suexec-docroot=DIR to set the suexec root directory,
+     --suexec-uidmin=UID/--suexec-gidmin=GID to set the minimal allowed
+     UID/GID, --suexec-logfile=FILE to set the logfile and
+     --suexec-safepath=PATH to set the safe shell PATH for the suEXEC
+     feature. At least one --suexec-xxxxx option has to be provided together
+     with the --enable-suexec option to let APACI accept your request for
+     using the suEXEC feature.
 
      CAUTION: FOR DETAILS ABOUT THE SUEXEC FEATURE WE HIGHLY RECOMMEND YOU TO
               FIRST READ THE DOCUMENT htdocs/manual/suexec.html BEFORE USING
@@ -380,12 +408,21 @@
      Use the --shadow option to let APACI create a shadow source tree of the
      sources for building. This is useful when you want to build for different
      platforms in parallel (usually through a NFS, AFS or DFS mounted
-     filesystem).
+     filesystem).  You may specify a directory to the --shadow option into
+     which the shadow tree will be created.
  
      Use the --quiet option to disable all configuration verbose messages.
  
      Use the --verbose option to enable additional verbose messages.
      
+     Use the --server-uid option to specify the user ID you want the server to run
+     as. If not specified the server will run as user nobody.  If the user ID
+     specified is different than the ID of the user starting the server, you need to
+     start the server as root.
+
+     Use the --server-gid option to specify the group ID you want the server user ID to
+     be a member of.  If not specified, the group ID will be #-1.
+
   4. Building the package
      --------------------
      
@@ -432,12 +469,15 @@
  
      Now you can fire up your Apache HTTP server by immediately running
  
-        $ PREFIX/sbin/apachectl start
+        $ PREFIX/bin/apachectl start
  
      and then you should be able to request your first document via URL
-     http://localhost/. Then stop the server again by running:
-  
-        $ PREFIX/sbin/apachectl stop
+     http://localhost/ (when you built and installed Apache as root or at
+     least used the --without-confadjust option) or http://localhost:8080/
+     (when you built and installed Apache as a regular user). Then stop the
+     server again by running: 
+
+        $ PREFIX/bin/apachectl stop
  
   7. Customizing the package
      -----------------------
@@ -449,7 +489,7 @@
         $ vi PREFIX/etc/access.conf
         $ vi PREFIX/etc/srm.conf
  
-     Have a look at the Apache manual under http://localhost/manual/ or
+     Have a look at the Apache manual under htdocs/manual/ or
      http://www.apache.org/docs/ for a complete reference of available
      configuration directives.
 
@@ -494,7 +534,7 @@
        http://www.apache.org/bug_report.html
 
      o If you want to participate in actively developing Apache please
-       subscribe to the `new-httpd' mailing list as described at
+       subscribe to the `dev@httpd.apache.org' mailing list as described at
        http://dev.apache.org/mailing-lists
 
      Thanks for running Apache.

@@ -1,58 +1,59 @@
 /* ====================================================================
- * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
  *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
  *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
  *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
  *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
  */
 
 /* Status Module.  Display lots of internal data about how Apache is
@@ -135,24 +136,19 @@ module MODULE_VAR_EXPORT status_module;
  *command-related code. This is here to prevent use of ExtendedStatus
  * without status_module included.
  */
-static const char *set_extended_status(cmd_parms *cmd, void *dummy, char *arg) 
+static const char *set_extended_status(cmd_parms *cmd, void *dummy, int arg) 
 {
     const char *err = ap_check_cmd_context(cmd, GLOBAL_ONLY);
     if (err != NULL) {
         return err;
     }
-    if (!strcasecmp(arg, "off") || !strcmp(arg, "0")) {
-	ap_extended_status = 0;
-    }
-    else {
-	ap_extended_status = 1;
-    }
+    ap_extended_status = arg;
     return NULL;
 }
 
 static const command_rec status_module_cmds[] =
 {
-    { "ExtendedStatus", set_extended_status, NULL, RSRC_CONF, TAKE1,
+    { "ExtendedStatus", set_extended_status, NULL, RSRC_CONF, FLAG,
       "\"On\" to enable extended status information, \"Off\" to disable" },
     {NULL}
 };
@@ -240,10 +236,12 @@ static int status_handler(request_rec *r)
     unsigned long bcount = 0;
     unsigned long kbcount = 0;
     long req_time;
-#if defined(NEXT)
-    float tick = HZ;
-#elif !defined(NO_TIMES)
+#ifndef NO_TIMES
+#ifdef _SC_CLK_TCK
     float tick = sysconf(_SC_CLK_TCK);
+#else
+    float tick = HZ;
+#endif
 #endif
     int short_report = 0;
     int no_table_report = 0;
@@ -252,6 +250,7 @@ static int status_handler(request_rec *r)
     char stat_buffer[HARD_SERVER_LIMIT];
     int pid_buffer[HARD_SERVER_LIMIT];
     clock_t tu, ts, tcu, tcs;
+    server_rec *vhost;
 
     tu = ts = tcu = tcs = 0;
 
@@ -276,7 +275,9 @@ static int status_handler(request_rec *r)
 	    if ((loc = strstr(r->args, status_options[i].form_data_str)) != NULL) {
 		switch (status_options[i].id) {
 		case STAT_OPT_REFRESH:
-		    if (*(loc + strlen(status_options[i].form_data_str)) == '=')
+		    if (*(loc + strlen(status_options[i].form_data_str)) == '='
+                        && atol(loc + strlen(status_options[i].form_data_str) 
+                                    + 1) > 0)
 			ap_table_set(r->headers_out,
 			      status_options[i].hdr_out_str,
 			      loc + strlen(status_options[i].hdr_out_str) + 1);
@@ -298,6 +299,10 @@ static int status_handler(request_rec *r)
     }
 
     ap_send_http_header(r);
+#ifdef CHARSET_EBCDIC
+    /* Server-generated response, converted */
+    ap_bsetflag(r->connection->client, B_EBCDIC2ASCII, r->ebcdic.conv_out = 1);
+#endif
 
     if (r->header_only)
 	return 0;
@@ -338,7 +343,9 @@ static int status_handler(request_rec *r)
     ap_hard_timeout("send status info", r);
 
     if (!short_report) {
-	ap_rputs("<HTML><HEAD>\n<TITLE>Apache Status</TITLE>\n</HEAD><BODY>\n", r);
+	ap_rputs(DOCTYPE_HTML_3_2
+		 "<HTML><HEAD>\n<TITLE>Apache Status</TITLE>\n</HEAD><BODY>\n",
+		 r);
 	ap_rputs("<H1>Apache Server Status for ", r);
 	ap_rvputs(r, ap_get_server_name(r), "</H1>\n\n", NULL);
 	ap_rvputs(r, "Server Version: ",
@@ -350,6 +357,7 @@ static int status_handler(request_rec *r)
 	ap_rvputs(r, "Restart Time: ",
 	  ap_ht_time(r->pool, ap_restart_time, DEFAULT_TIME_FORMAT, 0), 
 	  "<br>\n", NULL);
+	ap_rprintf(r, "Parent Server Generation: %d <br>\n", (int) ap_my_generation);
 	ap_rputs("Server uptime: ", r);
 	show_time(r, up_time);
 	ap_rputs("<br>\n", r);
@@ -402,12 +410,14 @@ static int status_handler(request_rec *r)
 			(float) count / (float) up_time);
 
 	    if (up_time > 0) {
-		format_byte_out(r, KBYTE * (float) kbcount / (float) up_time);
+		format_byte_out(r, (unsigned long) (KBYTE * (float) kbcount 
+                                                          / (float) up_time));
 		ap_rputs("/second - ", r);
 	    }
 
 	    if (count > 0) {
-		format_byte_out(r, KBYTE * (float) kbcount / (float) count);
+		format_byte_out(r, (unsigned long) (KBYTE * (float) kbcount 
+                                                          / (float) count));
 		ap_rputs("/request", r);
 	    }
 
@@ -485,6 +495,10 @@ static int status_handler(request_rec *r)
 	for (i = 0; i < HARD_SERVER_LIMIT; ++i) {
 	    score_record = ap_scoreboard_image->servers[i];
 	    ps_record = ap_scoreboard_image->parent[i];
+	    vhost = score_record.vhostrec;
+	    if (ps_record.generation != ap_my_generation) {
+		vhost = NULL;
+	    }
 
 #if defined(NO_GETTIMEOFDAY)
 #ifndef NO_TIMES
@@ -520,11 +534,16 @@ static int status_handler(request_rec *r)
 		if (!short_report) {
 		    if (no_table_report) {
 			if (score_record.status == SERVER_DEAD)
-			    ap_rprintf(r, "<b>Server %d</b> (-): %d|%lu|%lu [",
-				    i, (int) conn_lres, my_lres, lres);
+			    ap_rprintf(r,
+				"<b>Server %d-%d</b> (-): %d|%lu|%lu [",
+				i, (int) ps_record.generation, (int) conn_lres,
+				my_lres, lres);
 			else
-			    ap_rprintf(r, "<b>Server %d</b> (%d): %d|%lu|%lu [",
-				    i, (int) ps_record.pid, (int) conn_lres, my_lres, lres);
+			    ap_rprintf(r,
+				"<b>Server %d-%d</b> (%d): %d|%lu|%lu [",
+				i, (int) ps_record.generation,
+				(int) ps_record.pid,
+				(int) conn_lres, my_lres, lres);
 
 			switch (score_record.status) {
 			case SERVER_READY:
@@ -581,17 +600,24 @@ static int status_handler(request_rec *r)
 			ap_rputs("|", r);
 			format_byte_out(r, bytes);
 			ap_rputs(")\n", r);
-			ap_rprintf(r, " <i>%s {%s}</i><br>\n\n",
-				score_record.client,
-				ap_escape_html(r->pool, score_record.request));
+			ap_rprintf(r, " <i>%s {%s}</i> <b>[%s]</b><br>\n\n",
+			    ap_escape_html(r->pool, score_record.client),
+			    ap_escape_html(r->pool, score_record.request),
+			    vhost ? ap_escape_html(r->pool, 
+				vhost->server_hostname) : "(unavailable)");
 		    }
 		    else {		/* !no_table_report */
 			if (score_record.status == SERVER_DEAD)
-			    ap_rprintf(r, "<tr><td><b>%d</b><td>-<td>%d/%lu/%lu",
-				    i, (int) conn_lres, my_lres, lres);
+			    ap_rprintf(r,
+				"<tr><td><b>%d-%d</b><td>-<td>%d/%lu/%lu",
+				i, (int) ps_record.generation,
+				(int) conn_lres, my_lres, lres);
 			else
-			    ap_rprintf(r, "<tr><td><b>%d</b><td>%d<td>%d/%lu/%lu",
-				    i, (int) ps_record.pid, (int) conn_lres, my_lres, lres);
+			    ap_rprintf(r,
+				"<tr><td><b>%d-%d</b><td>%d<td>%d/%lu/%lu",
+				i, (int) ps_record.generation,
+				(int) ps_record.pid, (int) conn_lres,
+				my_lres, lres);
 
 			switch (score_record.status) {
 			case SERVER_READY:
@@ -650,7 +676,9 @@ static int status_handler(request_rec *r)
 			else
 			    ap_rprintf(r,
 			     "<td>%s<td nowrap>%s<td nowrap>%s</tr>\n\n",
-			     score_record.client, score_record.vhost,
+			     ap_escape_html(r->pool, score_record.client),
+			     vhost ? ap_escape_html(r->pool, 
+				vhost->server_hostname) : "(unavailable)",
 			     ap_escape_html(r->pool, score_record.request));
 		    }		/* no_table_report */
 		}			/* !short_report */
@@ -662,7 +690,7 @@ static int status_handler(request_rec *r)
 	    ap_rputs("</table>\n \
 <hr> \
 <table>\n \
-<tr><th>Srv<td>Server number\n \
+<tr><th>Srv<td>Child Server number - generation\n \
 <tr><th>PID<td>OS process ID\n \
 <tr><th>Acc<td>Number of accesses this connection / this child / this slot\n \
 <tr><th>M<td>Mode of operation\n \
@@ -676,7 +704,7 @@ static int status_handler(request_rec *r)
 	    ap_rputs("</table>\n \
 <hr> \
 <table>\n \
-<tr><th>Srv<td>Server number\n \
+<tr><th>Srv<td>Child Server number - generation\n \
 <tr><th>PID<td>OS process ID\n \
 <tr><th>Acc<td>Number of accesses this connection / this child / this slot\n \
 <tr><th>M<td>Mode of operation\n \
@@ -692,8 +720,10 @@ static int status_handler(request_rec *r)
 
     } else {
 
-    ap_rputs("<hr>To obtain a full report with current status information ", r);
-    ap_rputs("you need to use the <code>ExtendedStatus On</code> directive. \n", r);
+	if (!short_report) {
+	    ap_rputs("<hr>To obtain a full report with current status information ", r);
+	    ap_rputs("you need to use the <code>ExtendedStatus On</code> directive. \n", r);
+	}
 
     }
 
@@ -749,3 +779,4 @@ module MODULE_VAR_EXPORT status_module =
     NULL,			/* child_exit */
     NULL			/* post read-request */
 };
+

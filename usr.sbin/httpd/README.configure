@@ -1,5 +1,5 @@
                               
-  A P A C H E   C O N F I G U R A T I O N
+  APACHE CONFIGURATION
 
   Apache 1.3 Autoconf-style Interface (APACI)
   ===========================================
@@ -13,7 +13,7 @@
   The basic goal is to provide the following commonly known and expected
   procedure for out-of-the-box building and installing a package like Apache:
 
-    $ gunzip <apache-1.3.X.tar.gz | tar xvf -
+    $ gunzip <apache_1.3.X.tar.gz | tar xvf -
     $ ./configure --prefix=PREFIX [...]
     $ make
     $ make install
@@ -43,8 +43,8 @@
 
      $ ./configure --help
 
-  for a compact one-page summary of the possibilities you have. Additionally
-  you can let you be motivated by the following examples.
+  for a compact one-page summary of the possibilities you have.
+  Alternatively, you can start from the following examples.
 
   Examples
   ========
@@ -64,27 +64,27 @@
     $ make install
 
   This builds Apache 1.3 with the standard set of enabled modules
-  (automatically determined from src/Configuration.tmpl) with a GNU-conforming
-  subdirectory layout under /path/to/apache. For using the old Apache 1.2
-  subdirectory layout additionally use the --compat option:
+  (automatically determined from src/Configuration.tmpl) with an Apache 1.2
+  conforming subdirectory layout under /path/to/apache. For using the GNU
+  style subdirectory layout additionally use the --with-layout=GNU option:
 
-    $ ./configure --compat --prefix=/path/to/apache
+    $ ./configure --with-layout=GNU --prefix=/path/to/apache
     $ make
     $ make install
 
   If you are not sure which directory layout you want, you can use the
-  --layout option. It displays the directory layout which would be used but
-  immediately exits without configuring anything. Examples:
+  --show-layout option. It displays the directory layout which would be used
+  but immediately exits without configuring anything. Examples:
 
-    $ ./configure --layout
-    $ ./configure --prefix=/path/to/apache --layout
-    $ ./configure --compat --prefix=/path/to/apache --layout
+    $ ./configure --show-layout
+    $ ./configure --prefix=/path/to/apache --show-layout
+    $ ./configure --with-layout=GNU --prefix=/path/to/apache --show-layout
 
   Additionally if some of the shown paths still don't fit for your particular
   situation, you can use the --bindir, --sbindir, --libexecdir, --mandir,
   --sysconfdir, --datadir, --localstatedir, --runtimedir, --logfiledir and
   --proxycachedir options to adjust the layout as required. Always check with
-  --layout the resulting directory layout which would be used for
+  --show-layout the resulting directory layout which would be used for
   installation.
 
   suEXEC support
@@ -98,7 +98,9 @@
      $ ./configure --prefix=/path/to/apache \
                    --enable-suexec \
                    --suexec-caller=www \
-                   --suexec-userdir=.www
+                   --suexec-userdir=.www \
+                   --suexec-docroot=/path/to/root/dir \
+                   --suexec-logfile=/path/to/logdir/suexec_log \
                    --suexec-uidmin=1000 \
                    --suexec-gidmin=1000 \
                    --suexec-safepath="/bin:/usr/bin"
@@ -106,9 +108,12 @@
      $ make install
 
   This automatically builds and installs Apache 1.3 with suEXEC support for
-  the caller uid "www" and the user's homedir subdirs ".www".  The access
-  paths for the suexec program are automatically adjusted and the suexec
-  program is installed, so Apache can find it on startup.
+  the caller uid "www" and the user's homedir subdirs ".www". The default
+  paths for --suexec-docroot is the value from the --datadir option with
+  the suffix "/htdocs" and the --logfiledir value with the suffix
+  "/suexec_log" for the --suexec-logfile option. The access paths for the
+  suexec program are automatically adjusted and the suexec program is
+  installed, so Apache can find it on startup.
 
   Building multiple platforms in parallel
   ---------------------------------------
@@ -170,7 +175,7 @@
   every platform or mod_log_agent and mod_log_referer which are deprecated)
   and then enables DSO support for all of them. This way you get all these
   modules installed and you then can decide under runtime (via the
-  `LoadModule') directives which ones are actually used. Especially a very
+  `LoadModule') directives which ones are actually used. This is especially 
   useful for vendor package maintainers to provide a flexible Apache package.
 
   On-the-fly added additional/private module
@@ -224,7 +229,7 @@
     [optionally you now have the chance to prepare or add more 
      third-party modules to the Apache source tree]
 
-    $ cd ../apache-1.3.X
+    $ cd ../apache_1.3.X
     $ ./configure --prefix=/path/to/apache \
                   --activate-module=src/modules/perl/libperl.a \
                   [--enable-shared=perl]
@@ -236,46 +241,48 @@
 
   The PHP language (http://www.php.net) is an HTML-embedded scripting language 
   which can be directly integrated into the Apache HTTP server for powerful HTML 
-  scripting.  The package can be found at http://www.php.net/download-php.php3. 
+  scripting.  The package can be found at http://www.php.net/downloads.php 
 
   1. How you can install Apache with a statically linked PHP:
 
     $ gunzip <apache_1.3.X.tar.gz | tar xvf -
     $ gunzip <php-3.0.tar.gz | tar xvf -
-    $ cd apache-1.3.X
+    $ cd apache_1.3.X
     $ ./configure --prefix=/path/to/apache
     $ cd ../php-3.0
-    $ ./configure --with-apache=../apache-1.3.X
+    $ ./configure --with-apache=../apache_1.3.X
     $ make
     $ make install
 
     [optionally you now have the chance to prepare or add more 
      third-party modules to the Apache source tree]
 
-    $ cd ../apache-1.3.X
+    $ cd ../apache_1.3.X
     $ ./configure --prefix=/path/to/apache \
                   --activate-module=src/modules/php3/libphp3.a
     $ make 
     $ make install
     
-  2. How you can install Apache with a dynamically linked PHP:
+  2. You can also use APXS:
 
-    $ gunzip <apache_1.3.X.tar.gz | tar xvf -
-    $ gunzip <php-3.0.tar.gz | tar xvf -
     $ cd apache-1.3.X
-    $ ./configure --prefix=/path/to/apache
-    $ cd ../php-3.0
-    $ ./configure --with-shared-apache=../apache-1.3.X
+    $ ./configure --prefix=/path/to/apache --enable-shared=max
     $ make
     $ make install
 
-    [optionally you now have the chance to prepare or add more 
-     third-party modules to the Apache source tree]
-
-    $ cd ../apache-1.3.X
-    $ ./configure --prefix=/path/to/apache \
-                  --activate-module=src/modules/php3/libphp3.a \
-                  --enable-shared=php3
-    $ make 
+    $ cd php-3.0.X
+    $ ./configure --with-apxs=/path/to/apache/bin/apxs \
+                  --with-config-file-path=/path/to/apache
+    $ make
     $ make install
 
+  At this point don't forget to edit your conf/httpd.conf file and
+  make sure the file contains the line for PHP 3:
+
+    AddType application/x-httpd-php3 .php3
+
+  Or this line for PHP 4:
+
+    AddType application/x-httpd-php .php
+
+  Then restart your server.

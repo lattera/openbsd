@@ -1,3 +1,60 @@
+/* ====================================================================
+ * The Apache Software License, Version 1.1
+ *
+ * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Apache" and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact apache@apache.org.
+ *
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
+ *
+ * Portions of this software are based upon public domain software
+ * originally written at the National Center for Supercomputing Applications,
+ * University of Illinois, Urbana-Champaign.
+ */
 /******************************************************************************
  ******************************************************************************
  * NOTE! This program is not safe as a setuid executable!  Do not make it
@@ -11,31 +68,34 @@
  */
 
 #include "ap_config.h"
+#ifndef NETWARE
 #include <sys/types.h>
-#ifdef MPE
+#endif
+#include "ap.h"
+#include "ap_md5.h"
+#if defined(MPE) || defined(QNX) || defined(WIN32) || defined(__TANDEM) || defined(OS390) || defined(BEOS) || defined(BONE)
 #include <signal.h>
 #else
 #include <sys/signal.h>
 #endif
 
-/* This is probably the easiest way to do it */
-#include "../main/md5c.c"
+#ifdef WIN32
+#include <conio.h>
+#define unlink _unlink
+#endif
 
+#ifdef CHARSET_EBCDIC
+#define LF '\n'
+#define CR '\r'
+#else
 #define LF 10
 #define CR 13
+#endif /* CHARSET_EBCDIC */
 
 #define MAX_STRING_LEN 256
 
 char *tn;
 
-static char *strd(char *s)
-{
-    char *d;
-
-    d = (char *) malloc(strlen(s) + 1);
-    strcpy(d, s);
-    return (d);
-}
 
 static void getword(char *word, char *line, char stop)
 {
@@ -86,15 +146,23 @@ static void add_password(char *user, char *realm, FILE *f)
     AP_MD5_CTX context;
     unsigned char digest[16];
     char string[MAX_STRING_LEN];
+    char pwin[MAX_STRING_LEN];
+    char pwv[MAX_STRING_LEN];
     unsigned int i;
 
-    pw = strd((char *) getpass("New password:"));
-    if (strcmp(pw, (char *) getpass("Re-type new password:"))) {
+    if (ap_getpass("New password: ", pwin, sizeof(pwin)) != 0) {
+	fprintf(stderr, "password too long");
+	exit(5);
+    }
+    ap_getpass("Re-type new password: ", pwv, sizeof(pwv));
+    if (strcmp(pwin, pwv) != 0) {
 	fprintf(stderr, "They don't match, sorry.\n");
-	if (tn)
+	if (tn) {
 	    unlink(tn);
+	}
 	exit(1);
     }
+    pw = pwin;
     fprintf(f, "%s:%s:", user, realm);
 
     /* Do MD5 stuff */
@@ -125,6 +193,18 @@ static void interrupted(void)
     exit(1);
 }
 
+
+#ifdef NETWARE
+static void copy_file(FILE *target, FILE *source)
+{
+    static char line[MAX_STRING_LEN];
+
+    while (!(getline(line, MAX_STRING_LEN, source))) {  
+	putline(target, line);
+    }
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     FILE *tfp, *f;
@@ -138,10 +218,15 @@ int main(int argc, char *argv[])
     int found;
 
     tn = NULL;
-    signal(SIGINT, (void (*)()) interrupted);
+    signal(SIGINT, (void (*)(int)) interrupted);
     if (argc == 5) {
 	if (strcmp(argv[1], "-c"))
 	    usage();
+#ifdef NETWARE
+    UnAugmentAsterisk(TRUE);
+    SetCurrentNameSpace(NW_NS_LONG);
+    SetTargetNameSpace(NW_NS_LONG);
+#endif
 	if (!(tfp = fopen(argv[2], "w"))) {
 	    fprintf(stderr, "Could not open passwd file %s for writing.\n",
 		    argv[2]);
@@ -193,15 +278,29 @@ int main(int argc, char *argv[])
     if (!found) {
 	printf("Adding user %s in realm %s\n", user, realm);
 	add_password(user, realm, tfp);
-    }
+    }   
     fclose(f);
     fclose(tfp);
+#ifndef NETWARE
 #if defined(OS2) || defined(WIN32)
     sprintf(command, "copy \"%s\" \"%s\"", tn, argv[1]);
 #else
     sprintf(command, "cp %s %s", tn, argv[1]);
 #endif
     system(command);
+#else
+    if (!(tfp = fopen(tn, "r"))) {
+    fprintf(stderr, "Could not open temp file.\n");
+    exit(1);
+    }
+    
+    if (!(f = fopen(argv[1], "w"))) {
+    fprintf(stderr, "Could not open %s.\n", argv[1]);    
+    exit(1);    
+    }
+    
+    copy_file(f, tfp);
+#endif
     unlink(tn);
-    exit(0);
+    return 0;
 }

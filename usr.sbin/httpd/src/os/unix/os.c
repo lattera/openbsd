@@ -14,10 +14,13 @@ extern void ap_is_not_here(void);
 void ap_is_not_here(void) {}
 
 /*
- * Insert the DSO emulation code for AIX
+ * Insert the DSO emulation code for AIX for releases of AIX prior
+ * to 4.3. Use the native DSO code for 4.3 and later.
  */
-#ifdef AIX
+#if defined(AIX) && !defined(NO_DL_NEEDED)
+#if AIX < 43
 #include "os-aix-dso.c"
+#endif
 #endif
 
 /*
@@ -26,8 +29,15 @@ void ap_is_not_here(void) {}
  *  dynamic shared object (DSO) mechanism
  */
 
-#ifdef RHAPSODY
+#ifdef HAVE_DYLD		/* NeXT/Apple dynamic linker */
 #include <mach-o/dyld.h>
+
+/*
+ * NSUnlinkModule() is a noop in old versions of dyld.
+ * Let's install an error handler to deal with "multiply defined
+ * symbol" runtime errors.
+ */
+#ifdef DYLD_CANT_UNLOAD
 #include "httpd.h"
 #include "http_log.h"
 
@@ -49,7 +59,6 @@ NSModule multiple_symbol_handler (NSSymbol s, NSModule old, NSModule new)
      * every time we reload a module. Workaround here is to just
      * rebind to the new symbol, and forget about the old one.
      * This is crummy, because it's basically a memory leak.
-     * (See Radar 2262020 against dyld).
      */
 
 #ifdef DEBUG
@@ -73,11 +82,12 @@ void linkEdit_symbol_handler (NSLinkEditErrors c, int errorNumber,
     abort();
 }
 
-#endif /*RHAPSODY*/
+#endif /* DYLD_CANT_UNLOAD */
+#endif /* HAVE_DYLD */
 
 void ap_os_dso_init(void)
 {
-#if defined(RHAPSODY)
+#if defined(HAVE_DYLD) && defined(DYLD_CANT_UNLOAD)
     NSLinkEditErrorHandlers handlers;
 
     handlers.undefined = undefined_symbol_handler;
@@ -90,19 +100,28 @@ void ap_os_dso_init(void)
 
 void *ap_os_dso_load(const char *path)
 {
-#if defined(HPUX) || defined(HPUX10)
+#if defined(HPUX) || defined(HPUX10) || defined(HPUX11)
     shl_t handle;
     handle = shl_load(path, BIND_IMMEDIATE|BIND_VERBOSE|BIND_NOSTART, 0L);
     return (void *)handle;
 
-#elif defined(RHAPSODY)
+#elif defined(HAVE_DYLD)
     NSObjectFileImage image;
+    NSModule handle;
     if (NSCreateObjectFileImageFromFile(path, &image) !=
         NSObjectFileImageSuccess)
         return NULL;
-    return NSLinkModule(image, path, TRUE);
+#if defined(NSLINKMODULE_OPTION_RETURN_ON_ERROR) && defined(NSLINKMODULE_OPTION_NONE)
+    handle = NSLinkModule(image, path,
+                          NSLINKMODULE_OPTION_RETURN_ON_ERROR |
+                          NSLINKMODULE_OPTION_NONE);
+#else
+    handle = NSLinkModule(image, path, FALSE);
+#endif
+    NSDestroyObjectFileImage(image);
+    return handle;
 
-#elif defined(OSF1) ||\
+#elif defined(OSF1) || defined(SEQUENT) ||\
     (defined(__FreeBSD_version) && (__FreeBSD_version >= 220000))
     return dlopen((char *)path, RTLD_NOW | RTLD_GLOBAL);
 
@@ -113,10 +132,10 @@ void *ap_os_dso_load(const char *path)
 
 void ap_os_dso_unload(void *handle)
 {
-#if defined(HPUX) || defined(HPUX10)
+#if defined(HPUX) || defined(HPUX10) || defined(HPUX11)
     shl_unload((shl_t)handle);
 
-#elif defined(RHAPSODY)
+#elif defined(HAVE_DYLD)
     NSUnLinkModule(handle,FALSE);
 
 #else
@@ -128,7 +147,7 @@ void ap_os_dso_unload(void *handle)
 
 void *ap_os_dso_sym(void *handle, const char *symname)
 {
-#if defined(HPUX) || defined(HPUX10)
+#if defined(HPUX) || defined(HPUX10) || defined(HPUX11)
     void *symaddr = NULL;
     int status;
 
@@ -138,7 +157,7 @@ void *ap_os_dso_sym(void *handle, const char *symname)
         status = shl_findsym((shl_t *)&handle, symname, TYPE_DATA, &symaddr);
     return (status == -1 ? NULL : symaddr);
 
-#elif defined(RHAPSODY)
+#elif defined(HAVE_DYLD)
     NSSymbol symbol;
     char *symname2 = (char*)malloc(sizeof(char)*(strlen(symname)+2));
     sprintf(symname2, "_%s", symname);
@@ -154,6 +173,9 @@ void *ap_os_dso_sym(void *handle, const char *symname)
     free(symbol);
     return retval;
 
+#elif defined(SEQUENT)
+    return dlsym(handle, (char *)symname);
+
 #else
     return dlsym(handle, symname);
 #endif
@@ -161,9 +183,9 @@ void *ap_os_dso_sym(void *handle, const char *symname)
 
 const char *ap_os_dso_error(void)
 {
-#if defined(HPUX) || defined(HPUX10)
+#if defined(HPUX) || defined(HPUX10) || defined(HPUX11)
     return strerror(errno);
-#elif defined(RHAPSODY)
+#elif defined(HAVE_DYLD)
     return NULL;
 #else
     return dlerror();
