@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/tinfo/home_terminfo.c,v 1.2 1999/03/02 06:23:28 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/tinfo/home_terminfo.c,v 1.2.6.1 2000/10/10 05:15:37 jason Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -51,8 +51,8 @@ _nc_home_terminfo(void)
 	char *home;
 	static char *temp = 0;
 
-	if (temp == 0) {
-		if ((home = getenv("HOME")) != 0
+	if (temp == 0 && !issetugid()) {
+		if ((home = getenv("HOME")) != 0 && *home != '\0'
 		 && my_length <= PATH_MAX) {
 			temp = typeMalloc(char, my_length);
 			if (temp == 0)
