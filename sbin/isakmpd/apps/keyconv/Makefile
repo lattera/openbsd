@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1 2001/08/15 12:31:40 ho Exp $
+#	$OpenBSD: src/sbin/isakmpd/apps/keyconv/Attic/Makefile,v 1.3 2001/08/22 15:29:54 ho Exp $
 
 #
 # Copyright (c) 2000 Håkan Olsson.  All rights reserved.
@@ -28,6 +28,7 @@
 
 PROG=		keyconv
 SRCS=		keyconv.c base64.c
+MAN=		keyconv.8
 BINDIR=		/usr/sbin
 
 TOPSRC=		${.CURDIR}/../..
@@ -38,7 +39,6 @@ CFLAGS+=	-I${TOPSRC} -I${TOPSRC}/sysdep/${OS} -I${TOPOBJ} -Wall
 CFLAGS+=	-I/usr/local/include
 LDADD+=		-lcrypto
 DPADD+=		${LIBCRYPTO}
-NOMAN=		yes
 
 .include "${TOPSRC}/sysdep/${OS}/Makefile.sysdep"
 # Override LIBSYSDEPDIR definition from Makefile.sysdep
