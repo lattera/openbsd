@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-dvmrp.c,v 1.13 96/12/10 23:16:30 leres Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-dvmrp.c,v 1.2 1996/12/12 16:22:39 bitblt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -35,7 +35,6 @@ static const char rcsid[] =
 #include <netinet/udp.h>
 #include <netinet/udp_var.h>
 #include <netinet/tcp.h>
-#include <netinet/tcpip.h>
 
 #include <stdio.h>
 #include <string.h>

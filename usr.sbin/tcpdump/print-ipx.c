@@ -24,7 +24,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-ipx.c,v 1.19 96/12/10 23:23:52 leres Exp $";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ipx.c,v 1.5 1996/12/12 16:22:35 bitblt Exp $";
 #endif
 
 #include <sys/param.h>
@@ -38,7 +38,6 @@ static const char rcsid[] =
 #include <netinet/udp.h>
 #include <netinet/udp_var.h>
 #include <netinet/tcp.h>
-#include <netinet/tcpip.h>
 
 #ifdef __STDC__
 #include <stdlib.h>

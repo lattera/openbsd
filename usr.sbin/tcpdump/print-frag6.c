@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-frag6.c,v 1.1 2000/04/26 21:35:40 jakob Exp $	*/
+
 /*
- * Copyright (c) 1996
+ * Copyright (c) 1988, 1989, 1990, 1991, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,67 +23,80 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-raw.c,v 1.1 1999/09/16 17:27:59 brad Exp $ (LBL)";
+    "@(#) /master/usr.sbin/tcpdump/tcpdump/print-icmp.c,v 2.1 1995/02/03 18:14:42 polk Exp (LBL)";
 #endif
+
+#ifdef INET6
 
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
 
-#ifdef __STDC__
-struct mbuf;
-struct rtentry;
-#endif
 #include <net/if.h>
 
 #include <netinet/in.h>
+#include <netinet/if_ether.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
-#include <netinet/if_ether.h>
+#include <netinet/ip_icmp.h>
 #include <netinet/ip_var.h>
 #include <netinet/udp.h>
 #include <netinet/udp_var.h>
 #include <netinet/tcp.h>
 
-#include <pcap.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "addrtoname.h"
+#include <netinet/ip6.h>
+
 #include "interface.h"
+#include "addrtoname.h"
 
-#ifndef AF_NS
-#define AF_NS		6		/* XEROX NS protocols */
+int
+frag6_print(register const u_char *bp, register const u_char *bp2)
+{
+	register const struct ip6_frag *dp;
+	register const struct ip6_hdr *ip6;
+	register const u_char *ep;
+
+#if 0
+#define TCHECK(var) if ((u_char *)&(var) >= ep - sizeof(var)) goto trunc
 #endif
 
-/*
- * The DLT_RAW packet has no header. It contains a raw IP packet.
- */
+	dp = (struct ip6_frag *)bp;
+	ip6 = (struct ip6_hdr *)bp2;
 
-void
-raw_if_print(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
-{
-	u_int length = h->len;
-	u_int caplen = h->caplen;
+	/* 'ep' points to the end of avaible data. */
+	ep = snapend;
 
-	ts_print(&h->ts);
+	TCHECK(dp->ip6f_offlg);
 
-	/*
-	 * Some printers want to get back at the link level addresses,
-	 * and/or check that they're not walking off the end of the packet.
-	 * Rather than pass them all the way down, we set these globals.
-	 */
-	packetp = p;
-	snapend = p + caplen;
+	if (vflag) {
+		printf("frag (0x%08x:%d|%ld)",
+		       ntohl(dp->ip6f_ident),
+		       ntohs(dp->ip6f_offlg & IP6F_OFF_MASK),
+		       sizeof(struct ip6_hdr) + ntohs(ip6->ip6_plen) -
+			       (long)(bp - bp2) - sizeof(struct ip6_frag));
+	} else {
+		printf("frag (%d|%ld)",
+		       ntohs(dp->ip6f_offlg & IP6F_OFF_MASK),
+		       sizeof(struct ip6_hdr) + ntohs(ip6->ip6_plen) -
+			       (long)(bp - bp2) - sizeof(struct ip6_frag));
+	}
 
-	if (eflag)
-		printf("ip: ");
-
-	ip_print(p, length);
-
-	if (xflag)
-		default_print(p, caplen);
-	putchar('\n');
+#if 0
+	/* it is meaningless to decode non-first fragment */
+	if (ntohs(dp->ip6f_offlg & IP6F_OFF_MASK) != 0)
+		return 65535;
+	else
+#endif
+	{
+		fputs(" ", stdout);
+		return sizeof(struct ip6_frag);
+	}
+trunc:
+	fputs("[|frag]", stdout);
+	return 65535;
+#undef TCHECK
 }
+#endif /* INET6 */

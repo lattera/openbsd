@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.8 1999/10/06 01:46:40 deraadt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.9 2000/01/16 11:20:14 jakob Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -455,6 +455,24 @@ ip_print(register const u_char *bp, register u_int length)
 				return;
 			}
 			break;
+
+#ifdef INET6
+#ifndef IP6PROTO_ENCAP
+#define IP6PROTO_ENCAP 41
+#endif
+		case IP6PROTO_ENCAP:
+			/* ip6-in-ip encapsulation */
+			if (vflag)
+				(void)printf("%s > %s: ",
+					     ipaddr_string(&ip->ip_src),
+					     ipaddr_string(&ip->ip_dst));
+			ip6_print(cp, len);
+			if (! vflag) {
+ 				printf(" (encap)");
+ 				return;
+ 			}
+ 			break;
+#endif /*INET6*/
 
 #ifndef IPPROTO_GRE
 #define IPPROTO_GRE 47
