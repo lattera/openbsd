@@ -1,0 +1,24 @@
+#	$OpenBSD: src/usr.bin/nm/Makefile,v 1.5 2004/01/05 01:27:22 mickey Exp $
+
+TARGET_MACHINE_ARCH?=	${MACHINE_ARCH}
+
+.if ${TARGET_MACHINE_ARCH} != ${MACHINE_ARCH}
+# XXX should make this automatic
+.if ${TARGET_MACHINE_ARCH} == "i386"
+CFLAGS+=	-DMID_MACHINE_OVERRIDE=MID_I386
+.elif ${TARGET_MACHINE_ARCH} == "m68k"
+CFLAGS+=	-DMID_MACHINE_OVERRIDE=MID_M68K
+.elif ${TARGET_MACHINE_ARCH} == "ns32k"
+CFLAGS+=	-DMID_MACHINE_OVERRIDE=MID_NS32K
+.elif ${TARGET_MACHINE_ARCH} == "sparc"
+CFLAGS+=	-DMID_MACHINE_OVERRIDE=MID_SPARC
+.elif ${TARGET_MACHINE_ARCH} == "vax"
+CFLAGS+=	-DMID_MACHINE_OVERRIDE=MID_VAX
+.endif
+.endif
+
+PROG=	nm
+LINKS=	${BINDIR}/nm ${BINDIR}/size
+MAN=	nm.1 size.1
+
+.include <bsd.prog.mk>
