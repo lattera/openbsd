@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/finger/finger.c,v 1.15 2003/10/17 10:56:09 jmc Exp $	*/
+/*	$OpenBSD: src/usr.bin/finger/finger.c,v 1.16 2004/03/15 02:50:29 tedu Exp $	*/
 
 /*
  * Copyright (c) 1989 The Regents of the University of California.
@@ -43,14 +43,14 @@
  */
 
 #ifndef lint
-char copyright[] =
+static const char copyright[] =
 "@(#) Copyright (c) 1989 The Regents of the University of California.\n\
  All rights reserved.\n";
 #endif /* not lint */
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)finger.c	5.22 (Berkeley) 6/29/90";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/finger/finger.c,v 1.15 2003/10/17 10:56:09 jmc Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/finger/finger.c,v 1.16 2004/03/15 02:50:29 tedu Exp $";
 #endif /* not lint */
 
 /*
@@ -82,6 +82,8 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/finger/finger.c,v 1.15 2003/10/17 1
 time_t now;
 int entries, lflag, sflag, mflag, oflag, pplan, Mflag;
 char tbuf[1024];
+PERSON *htab[HSIZE];
+PERSON *phead, *ptail;
 
 int
 main(int argc, char *argv[])
