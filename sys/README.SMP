@@ -1,7 +1,7 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.12 2004/02/19 10:57:00 niklas Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.13 2004/02/19 10:59:30 niklas Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
-you mainly need to carry out the following procedure.
+you mainly need to carry out the following procedure:
 
 * Determine the new synchronization tag to use.  There are two used
   alternately; SMP_SYNC_A and SMP_SYNC_B.  You can use several heuristics
@@ -51,50 +51,11 @@ you mainly need to carry out the following procedure.
 * Build and test an i386 GENERIC.MP kernel as well as an alpha GENERIC,
   fix every regression you can find.
 
-* Time to fixup some cvs bugs.  Files that has got added since last
-  synchronization will make cvs choke in two different ways.
-  Readdition of files that have gone dead need to have
-  the timestamp in the Entries file changed to /dummy timestamp/
-  in order to be accepted by commit.  Other new files will be committed
-  but then crash before cleaning things up.  They leave the RCS file locked
-  on cvs.openbsd.org, and the changes won't be reflected locally.
-  After removing it locally, two updates are needed, the 1st to
-  remove the local CVS/Entries entry, and the second to get it
-  checked out.  Last, if someone has managed to interleave a commit
-  to any of these files while you have been working, it will be
-  needed to revert it, since that commit will have come into this
-  fixup process instead of the version at $NEW_TAG.
-
-  $ fixup() {
-  >   cvs -qd cvs.openbsd.org:/cvs ci -m'add file to SMP branch' $1
-  >   ssh cvs.openbsd.org 'rcs -u /cvs/src/sys/'$1',v'
-  >   rm $1
-  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
-  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
-  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk -jSMP -j$NEW_TAG $1
-  > }
-
-  Now you can use the fixup function to fix all the files that are new.
-  This command will make you a script you can source:
-
-  $ find . -path "*/CVS/Entries" |xargs grep /0/ \
-  >   |sed -e 's#CVS/Entries:/##' -e 's#/0/.*##' -e 's/^/fixup /' >fixups
-  $ . ./fixups
-
-  It will go slow and report stuff like:
-
-  Checking in ./foo/bar;
-  /cvs/src/sys/foo/bar,v  <--  bar
-  cvs server: bar: No such file or directory
-  cvs [server aborted]: error diffing bar
-  RCS file: /cvs/src/sys/./foo/bar,v
-  1.1 unlocked
-  done
-  cvs server: warning: new-born ./foo/bar has disappeared
-  U ./foo/bar
-
-  All other reports are abnormal and you should check them closer.
-  Also this will make /tmp dirty on cvs, please login and clean your stuff.
+* Cvs contains nasty bugs in its client/server invocation.  Earlier this
+  documentation has contained bug fixup instructions for the remote cvs
+  use.  However this is error-prone and slow.  It's much better to do the
+  last step locally *on* cvs.openbsd.org.  I.e. transfer your tree to commit
+  to cvs.openbsd.org and commit from there!
 
 * Commit to the SMP branch in pieces to not lock too much of the sys tree
   in the repository, Nice chunks are perhaps 100-300 files.
