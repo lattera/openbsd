@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/at/at.c,v 1.30 2002/07/15 19:13:29 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/at/at.c,v 1.30.2.1 2003/03/18 04:06:47 margarida Exp $	*/
 /*	$NetBSD: at.c,v 1.4 1995/03/25 18:13:31 glass Exp $	*/
 
 /*
@@ -43,6 +43,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <locale.h>
 #include <pwd.h>
 #include <signal.h>
@@ -73,7 +74,7 @@
 #define TIMESIZE 50		/* Size of buffer passed to strftime() */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.bin/at/at.c,v 1.30 2002/07/15 19:13:29 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/at/at.c,v 1.30.2.1 2003/03/18 04:06:47 margarida Exp $";
 #endif
 
 /* Variables to remove from the job's environment. */
@@ -146,6 +147,7 @@ newjob(time_t runtimer, int queue)
 		fd = open(atfile, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR);
 		if (fd >= 0)
 			return (fd);
+		runtimer++;
 	}
 	return (-1);
 }
@@ -407,7 +409,7 @@ byjobno(const void *v1, const void *v2)
 }
 
 static void
-print_job(struct atjob *job, int n, struct stat *st, int shortformat)
+print_job(struct atjob *job, int n, int shortformat)
 {
 	struct passwd *pw;
 	struct tm runtime;
@@ -422,7 +424,7 @@ print_job(struct atjob *job, int n, struct stat *st, int shortformat)
 		(void)printf("%ld.%c\t%s\n", (long)job->runtimer,
 		    job->queue, timestr);
 	} else {
-		pw = getpwuid(st->st_uid);
+		pw = getpwuid(job->uid);
 		/* Rank hack shamelessly stolen from lpq */
 		if (n / 10 == 1)
 			printf("%3d%-5s", n,"th");
@@ -432,7 +434,7 @@ print_job(struct atjob *job, int n, struct stat *st, int shortformat)
 		(void)printf("%-21.18s%-11.8s%10ld.%c   %c%s\n",
 		    timestr, pw ? pw->pw_name : "???",
 		    (long)job->runtimer, job->queue, job->queue,
-		    (S_IXUSR & st->st_mode) ? "" : " (done)");
+		    (S_IXUSR & job->mode) ? "" : " (done)");
 	}
 }
 
@@ -547,6 +549,8 @@ list_jobs(int argc, char **argv, int count_only, int csort)
 			err(EXIT_FAILURE, "malloc");
 		job->runtimer = runtimer;
 		job->ctime = stbuf.st_ctime;
+		job->uid = stbuf.st_uid;
+		job->mode = stbuf.st_mode;
 		job->queue = queue;
 		if (numjobs == maxjobs) {
 		    maxjobs *= 2;
@@ -576,7 +580,7 @@ list_jobs(int argc, char **argv, int count_only, int csort)
 		    "Job       Queue");
 
 	for (i = 0; i < numjobs; i++) {
-		print_job(atjobs[i], i + 1, &stbuf, shortformat);
+		print_job(atjobs[i], i + 1, shortformat);
 		free(atjobs[i]);
 	}
 	free(atjobs);
@@ -674,7 +678,8 @@ process_jobs(int argc, char **argv, int what)
 		job_matches = (argc == 0) ? 1 : 0;
 		if (!job_matches) {
 			for (i = 0; i < jobs_len; i++) {
-				if (strcmp(dirent->d_name, jobs[i]) == 0) {
+				if (jobs[i] != NULL &&
+				    strcmp(dirent->d_name, jobs[i]) == 0) {
 					jobs[i] = NULL;
 					job_matches = 1;
 					break;
