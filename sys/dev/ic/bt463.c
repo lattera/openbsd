@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/bt463.c,v 1.4 2001/06/27 04:45:57 art Exp $ */
+/* $OpenBSD: src/sys/dev/ic/bt463.c,v 1.5 2001/11/06 19:53:18 miod Exp $ */
 /* $NetBSD: bt463.c,v 1.2 2000/06/13 17:21:06 nathanw Exp $ */
 
 /*-
@@ -76,7 +76,7 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcivar.h>
 #include <dev/pci/tgareg.h>

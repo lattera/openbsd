@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.29 2001/07/04 08:52:45 niklas Exp $        */
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.30 2001/11/06 19:53:14 miod Exp $        */
 /*    $NetBSD: if_sn.c,v 1.13 1997/04/25 03:40:10 briggs Exp $        */
 
 /*
@@ -39,7 +39,7 @@
 #include <netinet/if_ether.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include "bpfilter.h"
 #if NBPFILTER > 0

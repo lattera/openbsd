@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.36 2001/11/06 18:41:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.37 2001/11/06 19:53:15 miod Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -55,8 +55,6 @@
 #include <sys/user.h>
 #include <sys/vnode.h>
 #include <sys/extent.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

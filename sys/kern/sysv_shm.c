@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.20 2001/08/12 22:50:12 millert Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.21 2001/11/06 19:53:20 miod Exp $	*/
 /*	$NetBSD: sysv_shm.c,v 1.50 1998/10/21 22:24:29 tron Exp $	*/
 
 /*
@@ -46,7 +46,6 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 struct shminfo shminfo;
