@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.45 2001/07/01 20:43:39 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.45.2.1 2002/03/27 04:24:22 jason Exp $	*/
 /*	$EOM: message.c,v 1.156 2000/10/10 12:36:39 provos Exp $	*/
 
 /*
@@ -880,9 +880,6 @@ message_recv (struct message *msg)
   struct proto tmp_proto;
   struct sa tmp_sa;
 
-  /* Possibly dump a raw hex image of the message to the log channel.  */
-  message_dump_raw ("message_recv", msg, LOG_MESSAGE);
-
   /* Messages shorter than an ISAKMP header are bad.  */
   if (sz < ISAKMP_HDR_SZ || sz != GET_ISAKMP_HDR_LENGTH (buf))
     {
@@ -890,6 +887,11 @@ message_recv (struct message *msg)
       message_drop (msg, ISAKMP_NOTIFY_UNEQUAL_PAYLOAD_LENGTHS, 0, 1, 1);
       return -1;
     }
+
+#ifdef USE_DEBUG
+  /* Possibly dump a raw hex image of the message to the log channel.  */
+  message_dump_raw ("message_recv", msg, LOG_MESSAGE);
+#endif
 
   /*
    * If the responder cookie is zero, this is a request to setup an ISAKMP SA.
