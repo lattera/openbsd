@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.16 2004/06/07 19:19:18 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.17 2004/06/11 15:01:46 grange Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -549,6 +549,15 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
  				break;
  			}
  		}
+		if (mip == NULL && mp_eisa_bus != -1) {
+			for (mip = mp_busses[mp_eisa_bus].mb_intrs;
+			    mip != NULL; mip=mip->next) {
+				if (mip->bus_pin == mpspec_pin) {
+					airq = mip->ioapic_ih | irq;
+					break;
+				}
+			}
+		}
  		if (mip == NULL)
 			printf("isa_intr_establish: no MP mapping found\n");
  		else
