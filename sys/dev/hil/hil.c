@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hil.c,v 1.9 2003/03/28 00:20:03 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hil.c,v 1.9.2.1 2003/04/19 19:17:49 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -225,7 +225,7 @@ hil_attach_deferred(void *v)
         }
 
 	if (tries == 0 || (db & LPS_CONFFAIL)) {
-		printf("%s: no devices\n", sc->sc_dev.dv_xname);
+		printf("%s: loop failed to reconfigure\n", sc->sc_dev.dv_xname);
 		return;
 	}
 

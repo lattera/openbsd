@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.h,v 1.1.4.2 2003/03/28 00:38:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.h,v 1.1.4.3 2003/04/19 19:17:49 niklas Exp $ */
 /*      $NetBSD: adwmcode.h,v 1.5 2000/05/27 18:24:51 dante Exp $        */
 
 /*
@@ -204,7 +204,7 @@ struct adw_mcode {
 
 /******************************************************************************/
 
-ADW_CARRIER *AdwInitCarriers __P((bus_dmamap_t, ADW_CARRIER *));
+ADW_CARRIER *AdwInitCarriers(bus_dmamap_t, ADW_CARRIER *);
 
 extern const struct adw_mcode adw_asc3550_mcode_data;
 extern const struct adw_mcode adw_asc38C0800_mcode_data;

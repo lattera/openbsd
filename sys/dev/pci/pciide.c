@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.8 2003/03/28 00:38:24 niklas Exp $     */
+/*	$OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.9 2003/04/19 19:17:49 niklas Exp $	*/
 /*	$NetBSD: pciide.c,v 1.127 2001/08/03 01:31:08 tsutsui Exp $	*/
 
 /*

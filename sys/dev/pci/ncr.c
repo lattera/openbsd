@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.7 2003/03/28 00:38:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.8 2003/04/19 19:17:49 niklas Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -240,7 +240,7 @@
 #include <dev/pci/ncrreg.h>
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
-#if !defined(__alpha__) && !defined(__mips__) && !defined(__powerpc__) && !defined(__i386__)
+#if !defined(__alpha__) && !defined(__mips__) && !defined(__powerpc__)
 #define DELAY(x)	delay(x)
 #endif
 #include <scsi/scsi_all.h>
@@ -1466,7 +1466,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.7 2003/03/28 00:38:23 niklas Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.8 2003/04/19 19:17:49 niklas Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_upa.c,v 1.5 2003/03/27 18:17:58 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/creator_upa.c,v 1.5.2.1 2003/04/19 19:17:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -88,26 +88,20 @@ creator_upa_attach(parent, self, aux)
 
 	if (nregs < FFB_REG_DFB24) {
 		printf(": no dfb24 regs found\n");
-		return;
+		goto fail;
 	}
 
 	if (bus_space_map(sc->sc_bt, ma->ma_reg[FFB_REG_DFB24].ur_paddr,
 	    ma->ma_reg[FFB_REG_DFB24].ur_len, BUS_SPACE_MAP_LINEAR,
 	    &sc->sc_pixel_h)) {
 		printf(": failed to map dfb24\n");
-		return;
+		goto fail;
 	}
 
 	if (bus_space_map(sc->sc_bt, ma->ma_reg[FFB_REG_FBC].ur_paddr,
 	    ma->ma_reg[FFB_REG_FBC].ur_len, 0, &sc->sc_fbc_h)) {
 		printf(": failed to map fbc\n");
-		goto unmap_dfb24;
-	}
-
-	if (bus_space_map(sc->sc_bt, ma->ma_reg[FFB_REG_DAC].ur_paddr,
-	    ma->ma_reg[FFB_REG_DAC].ur_len, 0, &sc->sc_dac_h)) {
-		printf(": failed to map dac\n");
-		goto unmap_fbc;
+		goto fail;
 	}
 
 	for (i = 0; i < nregs; i++) {
@@ -123,12 +117,14 @@ creator_upa_attach(parent, self, aux)
 		sc->sc_type = FFB_AFB;
 
 	creator_attach(sc);
+
 	return;
 
-unmap_fbc:
-	bus_space_unmap(sc->sc_bt, sc->sc_fbc_h,
-	    ma->ma_reg[FFB_REG_FBC].ur_len);
-unmap_dfb24:
-	bus_space_unmap(sc->sc_bt, sc->sc_pixel_h,
-	    ma->ma_reg[FFB_REG_DFB24].ur_len);
+fail:
+	if (bus_space_vaddr(sc->sc_bt, sc->sc_fbc_h))
+		bus_space_unmap(sc->sc_bt, sc->sc_fbc_h,
+		    ma->ma_reg[FFB_REG_FBC].ur_len);
+	if (bus_space_vaddr(sc->sc_bt, sc->sc_pixel_h))
+		bus_space_unmap(sc->sc_bt, sc->sc_pixel_h,
+		    ma->ma_reg[FFB_REG_DFB24].ur_len);
 }
