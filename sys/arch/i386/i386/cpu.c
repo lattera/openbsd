@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.16 2004/06/08 19:57:15 markus Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.17 2004/06/08 21:41:37 grange Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -258,6 +258,8 @@ cpu_attach(parent, self, aux)
 
 	/* further PCB init done later. */
 
+/* XXXSMP: must be shared with UP */
+#ifdef MULTIPROCESSOR
 	printf(": ");
 
 	switch (caa->cpu_role) {
@@ -308,6 +310,9 @@ cpu_attach(parent, self, aux)
 	default:
 		panic("unknown processor type??\n");
 	}
+#else	/* MULTIPROCESSOR */
+	printf("\n");
+#endif	/* !MULTIPROCESSOR */
 
 #ifdef MULTIPROCESSOR
 	if (mp_verbose) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.30 2004/06/08 21:38:02 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.31 2004/06/08 21:41:38 grange Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -1507,6 +1507,8 @@ cyrix3_cpu_name(model, step)
 	return name;
 }
 
+/* XXXSMP: must be shared with UP */
+#ifdef MULTIPROCESSOR
 /*
  * Print identification for the given CPU.
  * XXX XXX
@@ -1737,6 +1739,7 @@ identifycpu(struct cpu_info *ci)
 	}
 
 }
+#endif	/* MULTIPROCESSOR */
 
 char *
 tm86_cpu_name(model)
