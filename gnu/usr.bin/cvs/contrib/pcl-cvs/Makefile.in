@@ -1,7 +1,7 @@
 #
 #ident	"@(#)original: dist-makefile,v 1.19 1993/05/31 22:43:45 ceder Exp "
 #
-#ident	"@(#)elisp/pcl-cvs:$Name:  $:$Id: Makefile.in,v 1.4 1996/01/16 20:30:27 kingdon Exp $"
+#ident	"@(#)elisp/pcl-cvs:$Name:  $:$Id: Makefile.in,v 1.5 1996/02/09 19:29:47 jimb Exp $"
 #
 # Makefile for pcl-cvs release 1.05-CVS-$Name:  $.
 # Copyright (C) 1992, 1993  Per Cederqvist
@@ -177,7 +177,7 @@ pcl-cvs.dvi pcl-cvs.aux: pcl-cvs.texinfo
 pcl-cvs.ps: pcl-cvs.dvi
 	$(DVIPS) $(DVIPSFLAGS) pcl-cvs.dvi -o pcl-cvs.ps
 
-mostlyclean clean realclean:
+mostlyclean clean:
 	rm -f *~ core $(ELCFILES) $(INFOFILES) $(TEXTMPS)
 .PHONY: mostlyclean clean
 
