@@ -700,7 +700,11 @@ prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
 						addr[MAXNAME] = '\0';
 	returnnull:
 					if (delimptr != NULL)
+					{
+						if (p > addr)
+							p--;
 						*delimptr = p;
+					}
 					CurEnv->e_to = saveto;
 					return NULL;
 				}
@@ -999,6 +1003,8 @@ rewrite(pvp, ruleset, reclevel, e, maxatom)
 		return EX_CONFIG;
 	}
 	if (pvp == NULL)
+		return EX_USAGE;
+	if (maxatom <= 0)
 		return EX_USAGE;
 
 	/*
@@ -1866,6 +1872,7 @@ buildaddr(tv, a, flags, e)
 	register ENVELOPE *e;
 {
 	bool tempfail = false;
+	int maxatom;
 	struct mailer **mp;
 	register struct mailer *m;
 	register char *p;
@@ -1880,6 +1887,7 @@ buildaddr(tv, a, flags, e)
 		printav(tv);
 	}
 
+	maxatom = MAXATOM;
 	if (a == NULL)
 		a = (ADDRESS *) sm_rpool_malloc_x(e->e_rpool, sizeof *a);
 	memset((char *) a, '\0', sizeof *a);
@@ -1919,14 +1927,22 @@ badaddr:
 		return a;
 	}
 	mname = *++tv;
+	--maxatom;
 
 	/* extract host and user portions */
 	if (*++tv != NULL && (**tv & 0377) == CANONHOST)
+	{
 		hostp = ++tv;
+		--maxatom;
+	}
 	else
 		hostp = NULL;
+	--maxatom;
 	while (*tv != NULL && (**tv & 0377) != CANONUSER)
+	{
 		tv++;
+		--maxatom;
+	}
 	if (*tv == NULL)
 	{
 		syserr("554 5.3.5 buildaddr: no user");
@@ -1937,6 +1953,7 @@ badaddr:
 	else if (hostp != NULL)
 		cataddr(hostp, tv - 1, hbuf, sizeof hbuf, '\0');
 	cataddr(++tv, NULL, ubuf, sizeof ubuf, ' ');
+	--maxatom;
 
 	/* save away the host name */
 	if (sm_strcasecmp(mname, "error") == 0)
@@ -2041,6 +2058,7 @@ badaddr:
 	{
 		p++;
 		tv++;
+		--maxatom;
 		a->q_flags |= QNOTREMOTE;
 	}
 
@@ -2071,11 +2089,11 @@ badaddr:
 	    !bitset(RF_SENDERADDR|RF_HEADERADDR, flags))
 	{
 		/* sender addresses done later */
-		(void) REWRITE(tv, 2, e);
+		(void) rewrite(tv, 2, 0, e, maxatom);
 		if (m->m_re_rwset > 0)
-		       (void) REWRITE(tv, m->m_re_rwset, e);
+		       (void) rewrite(tv, m->m_re_rwset, 0, e, maxatom);
 	}
-	(void) REWRITE(tv, 4, e);
+	(void) rewrite(tv, 4, 0, e, maxatom);
 
 	/* save the result for the command line/RCPT argument */
 	cataddr(tv, NULL, ubuf, sizeof ubuf, '\0');
