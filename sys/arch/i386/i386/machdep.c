@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.6 2001/07/16 21:40:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.7 2001/10/27 09:48:47 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -445,7 +445,7 @@ i386_proc0_tss_ldt_init()
 	struct pcb *pcb;
 
 	gdt_init();
-	pcb = &proc0.p_addr->u_pcb;
+	curpcb = pcb = &proc0.p_addr->u_pcb;
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = (int)proc0.p_addr + USPACE - 16;
 
