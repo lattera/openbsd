@@ -1,5 +1,6 @@
 /* This file is tc-h8300.h
-   Copyright (C) 1987-1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1987-1992, 93, 94, 95, 96, 97, 1998
+   Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -23,6 +24,12 @@
 
 #define TARGET_BYTES_BIG_ENDIAN 1
 
+#if ANSI_PROTOTYPES
+struct internal_reloc;
+#endif
+
+#define WORKING_DOT_WORD
+
 /* This macro translates between an internal fix and an coff reloc type */
 #define TC_COFF_FIX2RTYPE(fixP) abort();
 
@@ -33,7 +40,8 @@
 
 #define tc_coff_symbol_emit_hook(a) ; /* not used */
 #define TC_RELOC_MANGLE(s,a,b,c) tc_reloc_mangle(a,b,c)
-extern void tc_reloc_mangle ();
+extern void tc_reloc_mangle
+  PARAMS ((struct fix *, struct internal_reloc *, bfd_vma));
 
 #define TC_CONS_RELOC          (Hmode ? R_RELLONG: R_RELWORD)
 

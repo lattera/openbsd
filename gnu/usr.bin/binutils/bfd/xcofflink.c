@@ -1,5 +1,5 @@
 /* POWER/PowerPC XCOFF linker support.
-   Copyright 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright 1995, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
    Written by Ian Lance Taylor <ian@cygnus.com>, Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -613,7 +613,8 @@ xcoff_get_section_contents (abfd, sec)
 
   if (coff_section_data (abfd, sec)->contents == NULL)
     {
-      coff_section_data (abfd, sec)->contents = bfd_malloc (sec->_raw_size);
+      coff_section_data (abfd, sec)->contents =
+	(bfd_byte *) bfd_malloc (sec->_raw_size);
       if (coff_section_data (abfd, sec)->contents == NULL)
 	return false;
 
@@ -720,7 +721,7 @@ _bfd_xcoff_canonicalize_dynamic_symtab (abfd, psyms)
 	    if (ldsym._l._l_name[i] == '\0')
 	      break;
 	  if (i < SYMNMLEN)
-	    symbuf->symbol.name = elsym->_l._l_name;
+	    symbuf->symbol.name = (char *) elsym->_l._l_name;
 	  else
 	    {
 	      char *c;
@@ -1477,7 +1478,8 @@ xcoff_link_add_symbols (abfd, info)
 	  dsec->alignment_power = 2;
 	}
       /* Likewise for the .debug section.  */
-      if (xcoff_hash_table (info)->debug_section == NULL)
+      if (xcoff_hash_table (info)->debug_section == NULL
+	  && info->strip != strip_all)
 	{
 	  asection *dsec;
 
@@ -1656,7 +1658,7 @@ xcoff_link_add_symbols (abfd, info)
 	      if (enclosing == NULL)
 		{
 		  (*_bfd_error_handler)
-		    ("%s: `%s' has line numbers but no enclosing section",
+		    (_("%s: `%s' has line numbers but no enclosing section"),
 		     bfd_get_filename (abfd), name);
 		  bfd_set_error (bfd_error_bad_value);
 		  goto error_return;
@@ -1708,7 +1710,7 @@ xcoff_link_add_symbols (abfd, info)
       if (sym.n_numaux == 0)
 	{
 	  (*_bfd_error_handler)
-	    ("%s: class %d symbol `%s' has no aux entries",
+	    (_("%s: class %d symbol `%s' has no aux entries"),
 	     bfd_get_filename (abfd), sym.n_sclass, name);
 	  bfd_set_error (bfd_error_bad_value);
 	  goto error_return;
@@ -1731,7 +1733,7 @@ xcoff_link_add_symbols (abfd, info)
 	{
 	default:
 	  (*_bfd_error_handler)
-	    ("%s: symbol `%s' has unrecognized csect type %d",
+	    (_("%s: symbol `%s' has unrecognized csect type %d"),
 	     bfd_get_filename (abfd), name, smtyp);
 	  bfd_set_error (bfd_error_bad_value);
 	  goto error_return;
@@ -1743,7 +1745,7 @@ xcoff_link_add_symbols (abfd, info)
 	      || aux.x_csect.x_scnlen.l != 0)
 	    {
 	      (*_bfd_error_handler)
-		("%s: bad XTY_ER symbol `%s': class %d scnum %d scnlen %d",
+		(_("%s: bad XTY_ER symbol `%s': class %d scnum %d scnlen %d"),
 		 bfd_get_filename (abfd), name, sym.n_sclass, sym.n_scnum,
 		 aux.x_csect.x_scnlen.l);
 	      bfd_set_error (bfd_error_bad_value);
@@ -1782,7 +1784,7 @@ xcoff_link_add_symbols (abfd, info)
 		  || aux.x_csect.x_scnlen.l != 0)
 		{
 		  (*_bfd_error_handler)
-		    ("%s: XMC_TC0 symbol `%s' is class %d scnlen %d",
+		    (_("%s: XMC_TC0 symbol `%s' is class %d scnlen %d"),
 		     bfd_get_filename (abfd), name, sym.n_sclass,
 		     aux.x_csect.x_scnlen.l);
 		  bfd_set_error (bfd_error_bad_value);
@@ -1906,7 +1908,7 @@ xcoff_link_add_symbols (abfd, info)
 		|| csect_name_by_class[aux.x_csect.x_smclas] == NULL)
 	      {
 		(*_bfd_error_handler)
-		  ("%s: symbol `%s' has unrecognized smclas %d",
+		  (_("%s: symbol `%s' has unrecognized smclas %d"),
 		   bfd_get_filename (abfd), name, aux.x_csect.x_smclas);
 		bfd_set_error (bfd_error_bad_value);
 		goto error_return;
@@ -1925,7 +1927,7 @@ xcoff_link_add_symbols (abfd, info)
 			> enclosing->vma + enclosing->_raw_size)))
 	      {
 		(*_bfd_error_handler)
-		  ("%s: csect `%s' not in enclosing section",
+		  (_("%s: csect `%s' not in enclosing section"),
 		   bfd_get_filename (abfd), name);
 		bfd_set_error (bfd_error_bad_value);
 		goto error_return;
@@ -1941,8 +1943,7 @@ xcoff_link_add_symbols (abfd, info)
 	    /* Record the enclosing section in the tdata for this new
 	       section.  */
 	    csect->used_by_bfd =
-	      ((struct coff_section_tdata *)
-	       bfd_zalloc (abfd, sizeof (struct coff_section_tdata)));
+	      (PTR) bfd_zalloc (abfd, sizeof (struct coff_section_tdata));
 	    if (csect->used_by_bfd == NULL)
 	      goto error_return;
 	    coff_section_data (abfd, csect)->tdata =
@@ -2030,7 +2031,7 @@ xcoff_link_add_symbols (abfd, info)
 	    if (bad)
 	      {
 		(*_bfd_error_handler)
-		  ("%s: misplaced XTY_LD `%s'",
+		  (_("%s: misplaced XTY_LD `%s'"),
 		   bfd_get_filename (abfd), name);
 		bfd_set_error (bfd_error_bad_value);
 		goto error_return;
@@ -2042,8 +2043,11 @@ xcoff_link_add_symbols (abfd, info)
 
 	case XTY_CM:
 	  /* This is an unitialized csect.  We could base the name on
-             the storage mapping class, but we don't bother.  If this
-             csect is externally visible, it is a common symbol.  */
+             the storage mapping class, but we don't bother except for
+             an XMC_TD symbol.  If this csect is externally visible,
+             it is a common symbol.  We put XMC_TD symbols in sections
+             named .tocbss, and rely on the linker script to put that
+             in the TOC area.  */
 
 	  if (csect != NULL)
 	    {
@@ -2053,7 +2057,10 @@ xcoff_link_add_symbols (abfd, info)
 		 / symesz);
 	    }
 
-	  csect = bfd_make_section_anyway (abfd, ".bss");
+	  if (aux.x_csect.x_smclas == XMC_TD)
+	    csect = bfd_make_section_anyway (abfd, ".tocbss");
+	  else
+	    csect = bfd_make_section_anyway (abfd, ".bss");
 	  if (csect == NULL)
 	    goto error_return;
 	  csect->vma = sym.n_value;
@@ -2068,8 +2075,7 @@ xcoff_link_add_symbols (abfd, info)
 			 / symesz);
 
 	  csect->used_by_bfd =
-	    ((struct coff_section_tdata *)
-	     bfd_zalloc (abfd, sizeof (struct coff_section_tdata)));
+	    (PTR) bfd_zalloc (abfd, sizeof (struct coff_section_tdata));
 	  if (csect->used_by_bfd == NULL)
 	    goto error_return;
 	  coff_section_data (abfd, csect)->tdata =
@@ -2149,6 +2155,14 @@ xcoff_link_add_symbols (abfd, info)
 	     file actually defines an initialized array, so we have to
 	     actually permit that to work.
 
+	     Just to make matters even more confusing, the AIX linker
+	     appears to permit multiple symbol definitions whenever
+	     the second definition is in an archive rather than an
+	     object file.  This may be a consequence of the manner in
+	     which it handles archives: I think it may load the entire
+	     archive in as separate csects, and then let garbage
+	     collection discard symbols.
+
 	     We also have to handle the case of statically linking a
 	     shared object, which will cause symbol redefinitions,
 	     although this is an easier case to detect.  */
@@ -2193,6 +2207,14 @@ xcoff_link_add_symbols (abfd, info)
 		      (*sym_hash)->root.type = bfd_link_hash_undefined;
 		      (*sym_hash)->root.u.undef.abfd =
 			(*sym_hash)->root.u.def.section->owner;
+		    }
+		  else if (abfd->my_archive != NULL)
+		    {
+		      /* This is a redefinition in an object contained
+                         in an archive.  Just ignore it.  See the
+                         comment above.  */
+		      section = bfd_und_section_ptr;
+		      value = 0;
 		    }
 		  else if ((*sym_hash)->root.next != NULL
 			   || info->hash->undefs_tail == &(*sym_hash)->root)
@@ -2320,7 +2342,7 @@ xcoff_link_add_symbols (abfd, info)
 	      if (*rel_csect == NULL)
 		{
 		  (*_bfd_error_handler)
-		    ("%s: reloc %s:%d not in csect",
+		    (_("%s: reloc %s:%d not in csect"),
 		     bfd_get_filename (abfd), o->name, i);
 		  bfd_set_error (bfd_error_bad_value);
 		  goto error_return;
@@ -2455,7 +2477,7 @@ xcoff_link_add_dynamic_symbols (abfd, info)
   if (info->hash->creator != abfd->xvec)
     {
       (*_bfd_error_handler)
-	("%s: XCOFF shared object when not producing XCOFF output",
+	(_("%s: XCOFF shared object when not producing XCOFF output"),
 	 bfd_get_filename (abfd));
       bfd_set_error (bfd_error_invalid_operation);
       return false;
@@ -2476,7 +2498,7 @@ xcoff_link_add_dynamic_symbols (abfd, info)
   if (lsec == NULL)
     {
       (*_bfd_error_handler)
-	("%s: dynamic object with no .loader section",
+	(_("%s: dynamic object with no .loader section"),
 	 bfd_get_filename (abfd));
       bfd_set_error (bfd_error_no_symbols);
       return false;
@@ -2691,7 +2713,8 @@ xcoff_mark_symbol (info, h)
       asection *hsec;
 
       hsec = h->root.u.def.section;
-      if ((hsec->flags & SEC_MARK) == 0)
+      if (! bfd_is_abs_section (hsec)
+	  && (hsec->flags & SEC_MARK) == 0)
 	{
 	  if (! xcoff_mark (info, hsec))
 	    return false;
@@ -2719,7 +2742,8 @@ xcoff_mark (info, sec)
      struct bfd_link_info *info;
      asection *sec;
 {
-  if ((sec->flags & SEC_MARK) != 0)
+  if (bfd_is_abs_section (sec)
+      || (sec->flags & SEC_MARK) != 0)
     return true;
 
   sec->flags |= SEC_MARK;
@@ -2930,6 +2954,42 @@ bfd_xcoff_import_symbol (output_bfd, info, harg, val, imppath, impfile,
   if (! XCOFF_XVECP (output_bfd->xvec))
     return true;
 
+  /* A symbol name which starts with a period is the code for a
+     function.  If the symbol is undefined, then add an undefined
+     symbol for the function descriptor, and import that instead.  */
+  if (h->root.root.string[0] == '.'
+      && h->root.type == bfd_link_hash_undefined
+      && val == (bfd_vma) -1)
+    {
+      struct xcoff_link_hash_entry *hds;
+
+      hds = h->descriptor;
+      if (hds == NULL)
+	{
+	  hds = xcoff_link_hash_lookup (xcoff_hash_table (info),
+					h->root.root.string + 1,
+					true, false, true);
+	  if (hds == NULL)
+	    return false;
+	  if (hds->root.type == bfd_link_hash_new)
+	    {
+	      hds->root.type = bfd_link_hash_undefined;
+	      hds->root.u.undef.abfd = h->root.u.undef.abfd;
+	    }
+	  hds->flags |= XCOFF_DESCRIPTOR;
+	  BFD_ASSERT ((hds->flags & XCOFF_CALLED) == 0
+		      && (h->flags & XCOFF_DESCRIPTOR) == 0);
+	  hds->descriptor = h;
+	  h->descriptor = hds;
+	}
+
+      /* Now, if the descriptor is undefined, import the descriptor
+         rather than the symbol we were told to import.  FIXME: Is
+         this correct in all cases?  */
+      if (hds->root.type == bfd_link_hash_undefined)
+	h = hds;
+    }
+
   h->flags |= XCOFF_IMPORT;
 
   if (val != (bfd_vma) -1)
@@ -3001,7 +3061,7 @@ bfd_xcoff_export_symbol (output_bfd, info, harg, syscall)
      bfd *output_bfd;
      struct bfd_link_info *info;
      struct bfd_link_hash_entry *harg;
-     boolean syscall;
+     boolean syscall ATTRIBUTE_UNUSED;
 {
   struct xcoff_link_hash_entry *h = (struct xcoff_link_hash_entry *) harg;
 
@@ -3078,7 +3138,7 @@ bfd_xcoff_link_count_reloc (output_bfd, info, name)
 				     false));
   if (h == NULL)
     {
-      (*_bfd_error_handler) ("%s: no such symbol", name);
+      (*_bfd_error_handler) (_("%s: no such symbol"), name);
       bfd_set_error (bfd_error_no_symbols);
       return false;
     }
@@ -3212,10 +3272,15 @@ bfd_xcoff_size_dynamic_sections (output_bfd, info, libpath, entry,
   xcoff_hash_table (info)->file_align = file_align;
   xcoff_hash_table (info)->textro = textro;
 
-  hentry = xcoff_link_hash_lookup (xcoff_hash_table (info), entry,
-				   false, false, true);
-  if (hentry != NULL)
-    hentry->flags |= XCOFF_ENTRY;
+  if (entry == NULL)
+    hentry = NULL;
+  else
+    {
+      hentry = xcoff_link_hash_lookup (xcoff_hash_table (info), entry,
+				       false, false, true);
+      if (hentry != NULL)
+	hentry->flags |= XCOFF_ENTRY;
+    }
 
   /* Garbage collect unused sections.  */
   if (info->relocateable
@@ -3481,8 +3546,9 @@ bfd_xcoff_size_dynamic_sections (output_bfd, info, libpath, entry,
 	}
     }
 
-  xcoff_hash_table (info)->debug_section->_raw_size =
-    _bfd_stringtab_size (debug_strtab);
+  if (info->strip != strip_all)
+    xcoff_hash_table (info)->debug_section->_raw_size =
+      _bfd_stringtab_size (debug_strtab);
 
   return true;
 
@@ -3513,7 +3579,8 @@ xcoff_build_ldsyms (h, p)
       && (h->flags & XCOFF_DEF_REGULAR) == 0
       && (h->flags & XCOFF_REF_REGULAR) != 0
       && (h->flags & XCOFF_DEF_DYNAMIC) == 0
-      && (h->root.u.def.section->owner->flags & DYNAMIC) == 0)
+      && (bfd_is_abs_section (h->root.u.def.section)
+	  || (h->root.u.def.section->owner->flags & DYNAMIC) == 0))
     h->flags |= XCOFF_DEF_REGULAR;
 
   /* If all defined symbols should be exported, mark them now.  We
@@ -3663,7 +3730,7 @@ xcoff_build_ldsyms (h, p)
       else
 	{
 	  (*_bfd_error_handler)
-	    ("warning: attempt to export undefined symbol `%s'",
+	    (_("warning: attempt to export undefined symbol `%s'"),
 	     h->root.root.string);
 	  h->ldsym = NULL;
 	  return true;
@@ -4003,9 +4070,17 @@ _bfd_xcoff_bfd_final_link (abfd, info)
 	o->rel_filepos = 0;
       else
 	{
-	  o->flags |= SEC_RELOC;
-	  o->rel_filepos = rel_filepos;
-	  rel_filepos += o->reloc_count * relsz;
+	  /* A stripped file has no relocs.  However, we still
+             allocate the buffers, so that later code doesn't have to
+             worry about whether we are stripping or not.  */
+	  if (info->strip == strip_all)
+	    o->rel_filepos = 0;
+	  else
+	    {
+	      o->flags |= SEC_RELOC;
+	      o->rel_filepos = rel_filepos;
+	      rel_filepos += o->reloc_count * relsz;
+	    }
 
 	  /* We don't know the indices of global symbols until we have
              written out all the local symbols.  For each section in
@@ -4199,6 +4274,13 @@ _bfd_xcoff_bfd_final_link (abfd, info)
       struct xcoff_link_hash_entry **rel_hash;
       struct xcoff_toc_rel_hash *toc_rel_hash;
       bfd_byte *erel;
+
+      /* A stripped file has no relocs.  */
+      if (info->strip == strip_all)
+	{
+	  o->reloc_count = 0;
+	  continue;
+	}
 
       if (o->reloc_count == 0)
 	continue;
@@ -4615,7 +4697,8 @@ xcoff_link_input_bfd (finfo, input_bfd)
                  of the TOC using a 16 bit offset from tocval.  This
                  test assumes that the TOC comes at the end of the
                  output section, as it does in the default linker
-                 script.  */
+                 script.  FIXME: This doesn't handle .tocbss sections
+                 created from XMC_TD common symbols correctly.  */
 
 	      tocend = ((*csectpp)->output_section->vma
 			+ (*csectpp)->output_section->_raw_size);
@@ -4623,7 +4706,7 @@ xcoff_link_input_bfd (finfo, input_bfd)
 	      if (tocval + 0x10000 < tocend)
 		{
 		  (*_bfd_error_handler)
-		    ("TOC overflow: 0x%lx > 0x10000; try -mminimal-toc when compiling",
+		    (_("TOC overflow: 0x%lx > 0x10000; try -mminimal-toc when compiling"),
 		     (unsigned long) (tocend - tocval));
 		  bfd_set_error (bfd_error_file_too_big);
 		  return false;
@@ -5285,9 +5368,13 @@ xcoff_link_input_bfd (finfo, input_bfd)
 
 	      r_symndx = irel->r_symndx;
 
-	      if (r_symndx != -1)
+	      if (r_symndx == -1)
+		h = NULL;
+	      else
+		h = obj_xcoff_sym_hashes (input_bfd)[r_symndx];
+
+	      if (r_symndx != -1 && finfo->info->strip != strip_all)
 		{
-		  h = obj_xcoff_sym_hashes (input_bfd)[r_symndx];
 		  if (h != NULL
 		      && h->smclas != XMC_TD
 		      && (irel->r_type == R_TOC
@@ -5444,7 +5531,7 @@ xcoff_link_input_bfd (finfo, input_bfd)
 		      else
 			{
 			  (*_bfd_error_handler)
-			    ("%s: loader reloc in unrecognized section `%s'",
+			    (_("%s: loader reloc in unrecognized section `%s'"),
 			     bfd_get_filename (input_bfd),
 			     sec->name);
 			  bfd_set_error (bfd_error_nonrepresentable_section);
@@ -5466,7 +5553,7 @@ xcoff_link_input_bfd (finfo, input_bfd)
 		      if (h->ldindx < 0 && ! quiet)
 			{
 			  (*_bfd_error_handler)
-			    ("%s: `%s' in loader reloc but not loader sym",
+			    (_("%s: `%s' in loader reloc but not loader sym"),
 			     bfd_get_filename (input_bfd),
 			     h->root.root.string);
 			  bfd_set_error (bfd_error_bad_value);
@@ -5481,7 +5568,7 @@ xcoff_link_input_bfd (finfo, input_bfd)
 		      && ! quiet)
 		    {
 		      (*_bfd_error_handler)
-			("%s: loader reloc in read-only section %s",
+			(_("%s: loader reloc in read-only section %s"),
 			 bfd_get_filename (input_bfd),
 			 bfd_get_section_name (finfo->output_bfd,
 					       o->output_section));
@@ -5686,59 +5773,62 @@ xcoff_write_global_symbol (h, p)
 
       /* We need to emit a symbol to define a csect which holds the
          reloc.  */
-      if (strlen (h->root.root.string) <= SYMNMLEN)
-	strncpy (irsym._n._n_name, h->root.root.string, SYMNMLEN);
-      else
+      if (finfo->info->strip != strip_all)
 	{
-	  boolean hash;
-	  bfd_size_type indx;
+	  if (strlen (h->root.root.string) <= SYMNMLEN)
+	    strncpy (irsym._n._n_name, h->root.root.string, SYMNMLEN);
+	  else
+	    {
+	      boolean hash;
+	      bfd_size_type indx;
 
-	  hash = true;
-	  if ((output_bfd->flags & BFD_TRADITIONAL_FORMAT) != 0)
-	    hash = false;
-	  indx = _bfd_stringtab_add (finfo->strtab, h->root.root.string, hash,
-				     false);
-	  if (indx == (bfd_size_type) -1)
-	    return false;
-	  irsym._n._n_n._n_zeroes = 0;
-	  irsym._n._n_n._n_offset = STRING_SIZE_SIZE + indx;
-	}
+	      hash = true;
+	      if ((output_bfd->flags & BFD_TRADITIONAL_FORMAT) != 0)
+		hash = false;
+	      indx = _bfd_stringtab_add (finfo->strtab, h->root.root.string,
+					 hash, false);
+	      if (indx == (bfd_size_type) -1)
+		return false;
+	      irsym._n._n_n._n_zeroes = 0;
+	      irsym._n._n_n._n_offset = STRING_SIZE_SIZE + indx;
+	    }
 
-      irsym.n_value = irel->r_vaddr;
-      irsym.n_scnum = osec->target_index;
-      irsym.n_sclass = C_HIDEXT;
-      irsym.n_type = T_NULL;
-      irsym.n_numaux = 1;
+	  irsym.n_value = irel->r_vaddr;
+	  irsym.n_scnum = osec->target_index;
+	  irsym.n_sclass = C_HIDEXT;
+	  irsym.n_type = T_NULL;
+	  irsym.n_numaux = 1;
 
-      bfd_coff_swap_sym_out (output_bfd, (PTR) &irsym, (PTR) outsym);
-      outsym += bfd_coff_symesz (output_bfd);
+	  bfd_coff_swap_sym_out (output_bfd, (PTR) &irsym, (PTR) outsym);
+	  outsym += bfd_coff_symesz (output_bfd);
 
-      memset (&iraux, 0, sizeof iraux);
-      iraux.x_csect.x_smtyp = XTY_SD;
-      iraux.x_csect.x_scnlen.l = 4;
-      iraux.x_csect.x_smclas = XMC_TC;
+	  memset (&iraux, 0, sizeof iraux);
+	  iraux.x_csect.x_smtyp = XTY_SD;
+	  iraux.x_csect.x_scnlen.l = 4;
+	  iraux.x_csect.x_smclas = XMC_TC;
 
-      bfd_coff_swap_aux_out (output_bfd, (PTR) &iraux, T_NULL, C_HIDEXT, 0, 1,
-			     (PTR) outsym);
-      outsym += bfd_coff_auxesz (output_bfd);
+	  bfd_coff_swap_aux_out (output_bfd, (PTR) &iraux, T_NULL, C_HIDEXT,
+				 0, 1, (PTR) outsym);
+	  outsym += bfd_coff_auxesz (output_bfd);
 
-      if (h->indx >= 0)
-	{
-	  /* We aren't going to write out the symbols below, so we
-             need to write them out now.  */
-	  if (bfd_seek (output_bfd,
-			(obj_sym_filepos (output_bfd)
-			 + (obj_raw_syment_count (output_bfd)
-			    * bfd_coff_symesz (output_bfd))),
-			SEEK_SET) != 0
-	      || (bfd_write (finfo->outsyms, outsym - finfo->outsyms, 1,
-			     output_bfd)
-		  != (bfd_size_type) (outsym - finfo->outsyms)))
-	    return false;
-	  obj_raw_syment_count (output_bfd) +=
-	    (outsym - finfo->outsyms) / bfd_coff_symesz (output_bfd);
+	  if (h->indx >= 0)
+	    {
+	      /* We aren't going to write out the symbols below, so we
+		 need to write them out now.  */
+	      if (bfd_seek (output_bfd,
+			    (obj_sym_filepos (output_bfd)
+			     + (obj_raw_syment_count (output_bfd)
+				* bfd_coff_symesz (output_bfd))),
+			    SEEK_SET) != 0
+		  || (bfd_write (finfo->outsyms, outsym - finfo->outsyms, 1,
+				 output_bfd)
+		      != (bfd_size_type) (outsym - finfo->outsyms)))
+		return false;
+	      obj_raw_syment_count (output_bfd) +=
+		(outsym - finfo->outsyms) / bfd_coff_symesz (output_bfd);
 
-	  outsym = finfo->outsyms;
+	      outsym = finfo->outsyms;
+	    }
 	}
     }
 
@@ -5797,7 +5887,7 @@ xcoff_write_global_symbol (h, p)
       else
 	{
 	  (*_bfd_error_handler)
-	    ("%s: loader reloc in unrecognized section `%s'",
+	    (_("%s: loader reloc in unrecognized section `%s'"),
 	     bfd_get_filename (output_bfd),
 	     esec->output_section->name);
 	  bfd_set_error (bfd_error_nonrepresentable_section);
@@ -5834,7 +5924,7 @@ xcoff_write_global_symbol (h, p)
       else
 	{
 	  (*_bfd_error_handler)
-	    ("%s: loader reloc in unrecognized section `%s'",
+	    (_("%s: loader reloc in unrecognized section `%s'"),
 	     bfd_get_filename (output_bfd),
 	     tsec->output_section->name);
 	  bfd_set_error (bfd_error_nonrepresentable_section);
@@ -5846,7 +5936,7 @@ xcoff_write_global_symbol (h, p)
       ++finfo->ldrel;
     }
 
-  if (h->indx >= 0)
+  if (h->indx >= 0 || finfo->info->strip == strip_all)
     {
       BFD_ASSERT (outsym == finfo->outsyms);
       return true;
@@ -6151,7 +6241,7 @@ xcoff_reloc_link_order (output_bfd, finfo, output_section, link_order)
       else
 	{
 	  (*_bfd_error_handler)
-	    ("%s: loader reloc in unrecognized section `%s'",
+	    (_("%s: loader reloc in unrecognized section `%s'"),
 	     bfd_get_filename (output_bfd), secname);
 	  bfd_set_error (bfd_error_nonrepresentable_section);
 	  return false;
@@ -6162,7 +6252,7 @@ xcoff_reloc_link_order (output_bfd, finfo, output_section, link_order)
       if (h->ldindx < 0)
 	{
 	  (*_bfd_error_handler)
-	    ("%s: `%s' in loader reloc but not loader sym",
+	    (_("%s: `%s' in loader reloc but not loader sym"),
 	     bfd_get_filename (output_bfd),
 	     h->root.root.string);
 	  bfd_set_error (bfd_error_bad_value);
@@ -6331,7 +6421,7 @@ _bfd_ppc_xcoff_relocate_section (output_bfd, info, input_bfd,
 	    {
 	      if (! ((*info->callbacks->undefined_symbol)
 		     (info, h->root.root.string, input_bfd, input_section,
-		      rel->r_vaddr - input_section->vma)))
+		      rel->r_vaddr - input_section->vma, true)))
 		return false;
 
 	      /* Don't try to process the reloc.  It can't help, and
@@ -6358,7 +6448,7 @@ _bfd_ppc_xcoff_relocate_section (output_bfd, info, input_bfd,
              not defined by the PowerOpen ABI.  */
 	default:
 	  (*_bfd_error_handler)
-	    ("%s: unsupported relocation type 0x%02x",
+	    (_("%s: unsupported relocation type 0x%02x"),
 	     bfd_get_filename (input_bfd), (unsigned int) rel->r_type);
 	  bfd_set_error (bfd_error_bad_value);
 	  return false;
@@ -6404,7 +6494,7 @@ _bfd_ppc_xcoff_relocate_section (output_bfd, info, input_bfd,
 	      if (h->toc_section == NULL)
 		{
 		  (*_bfd_error_handler)
-		    ("%s: TOC reloc at 0x%x to symbol `%s' with no TOC entry",
+		    (_("%s: TOC reloc at 0x%x to symbol `%s' with no TOC entry"),
 		     bfd_get_filename (input_bfd), rel->r_vaddr,
 		     h->root.root.string);
 		  bfd_set_error (bfd_error_bad_value);

@@ -47,7 +47,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  *
    A breakpoint instruction uses OP, CODE and SPEC (10 bits of the
    breakpoint instruction are not defined; Kane says the breakpoint
    code field in BREAK is 20 bits; yet MIPS assemblers and debuggers
-   only use ten bits).
+   only use ten bits).  An optional two-operand form of break/sdbbp
+   allows the lower ten bits to be set too.
 
    The syscall instruction uses SYSCALL.
 
@@ -65,6 +66,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  *
 #define OP_SH_BCC		18
 #define OP_MASK_CODE		0x3ff
 #define OP_SH_CODE		16
+#define OP_MASK_CODE2		0x3ff
+#define OP_SH_CODE2		6
 #define OP_MASK_RT		0x1f
 #define OP_SH_RT		16
 #define OP_MASK_FT		0x1f
@@ -120,7 +123,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  *
 #define OP_SH_MMI               0       /* Multimedia (parallel) op */
 #define OP_MASK_MMI             0x3f 
 #define OP_SH_MMISUB            6
-#define OP_MASK_MMISUB          0x1f 
+#define OP_MASK_MMISUB          0x1f
+#define OP_MASK_PERFREG		0x1f	/* Performance monitoring */
+#define OP_SH_PERFREG		1
 
 /* This structure holds information for a particular instruction.  */
 
@@ -132,9 +137,7 @@ struct mips_opcode
   const char *args;
   /* The basic opcode for the instruction.  When assembling, this
      opcode is modified by the arguments to produce the actual opcode
-     that is used.  If pinfo is INSN_MACRO, then this is instead the
-     ISA level of the macro (0 or 1 is always supported, 2 is ISA 2,
-     etc.).  */
+     that is used.  If pinfo is INSN_MACRO, then this is 0.  */
   unsigned long match;
   /* If pinfo is not INSN_MACRO, then this is a bit mask for the
      relevant portions of the opcode when disassembling.  If the
@@ -146,6 +149,9 @@ struct mips_opcode
      of bits describing the instruction, notably any relevant hazard
      information.  */
   unsigned long pinfo;
+  /* A collection of bits describing the instruction sets of which this
+     instruction or macro is a member. */
+  unsigned long membership;
 };
 
 /* These are the characters which may appears in the args field of an
@@ -168,6 +174,7 @@ struct mips_opcode
    "k" 5 bit cache opcode in target register position (OP_*_CACHE)
    "o" 16 bit signed offset (OP_*_DELTA)
    "p" 16 bit PC relative branch target address (OP_*_DELTA)
+   "q" 10 bit extra breakpoint code (OP_*_CODE2)
    "r" 5 bit same register used as both source and target (OP_*_RS)
    "s" 5 bit source register specifier (OP_*_RS)
    "t" 5 bit target register (OP_*_RT)
@@ -192,6 +199,7 @@ struct mips_opcode
    Coprocessor instructions:
    "E" 5 bit target register (OP_*_RT)
    "G" 5 bit destination register (OP_*_RD)
+   "P" 5 bit performance-monitor register (OP_*_PERFREG)
 
    Macro instructions:
    "A" General 32 bit expression
@@ -200,6 +208,15 @@ struct mips_opcode
    "L" 64 bit floating point constant in .lit8
    "f" 32 bit floating point constant
    "l" 32 bit floating point constant in .lit4
+
+   Other:
+   "()" parens surrounding optional value
+   ","  separates operands
+
+   Characters used so far, for quick reference when adding more:
+   "<>(),"
+   "ABCDEFGILMNSTRVW"
+   "abcdfhijklopqrstuvwxz"
 */
 
 /* These are the bits which may be set in the pinfo field of an
@@ -261,24 +278,73 @@ struct mips_opcode
 #define INSN_TRAP                   0x04000000
 /* Instruction stores value into memory.  */
 #define INSN_STORE_MEMORY	    0x08000000
-/* MIPS ISA field--CPU level at which insn is supported.  */
-#define INSN_ISA		    0x70000000
-/* MIPS ISA 2 instruction (R6000 or R4000).  */
-#define INSN_ISA2		    0x10000000
-/* MIPS ISA 3 instruction (R4000).  */
-#define INSN_ISA3		    0x20000000
-/* MIPS R4650 instruction.  */
-#define INSN_4650		    0x30000000
-/* MIPS ISA 4 instruction (R8000).  */
-#define INSN_ISA4		    0x40000000
-/* LSI R4010 instruction.  */
-#define INSN_4010		    0x50000000
-/* NEC VR4100 instruction. */
-#define INSN_4100                   0x60000000
+/* Instruction uses single precision floating point.  */
+#define FP_S			    0x10000000
+/* Instruction uses double precision floating point.  */
+#define FP_D			    0x20000000
+/* Instruction is part of the tx39's integer multiply family.    */
+#define INSN_MULT                   0x40000000
+/* Instruction synchronize shared memory.  */
+#define INSN_SYNC		    0x80000000
 
 /* Instruction is actually a macro.  It should be ignored by the
    disassembler, and requires special treatment by the assembler.  */
 #define INSN_MACRO                  0xffffffff
+
+
+
+
+
+/* MIPS ISA field--CPU level at which insn is supported.  */
+#define INSN_ISA		    0x0000000F
+/* An instruction which is not part of any basic MIPS ISA.
+   (ie it is a chip specific instruction)  */
+#define INSN_NO_ISA		    0x00000000
+/* MIPS ISA 1 instruction.  */
+#define INSN_ISA1		    0x00000001
+/* MIPS ISA 2 instruction (R6000 or R4000).  */
+#define INSN_ISA2		    0x00000002
+/* MIPS ISA 3 instruction (R4000).  */
+#define INSN_ISA3		    0x00000003
+/* MIPS ISA 4 instruction (R8000).  */
+#define INSN_ISA4		    0x00000004
+#define INSN_ISA5		    0x00000005
+
+/* Chip specific instructions.  These are bitmasks.  */
+/* MIPS R4650 instruction.  */
+#define INSN_4650		    0x00000010
+/* LSI R4010 instruction.  */
+#define INSN_4010		    0x00000020
+/* NEC VR4100 instruction. */
+#define INSN_4100                   0x00000040
+/* Toshiba R3900 instruction.  */
+#define INSN_3900                   0x00000080
+
+/* 32-bit code running on a ISA3+ CPU. */
+#define INSN_GP32                   0x00001000
+
+/* Test for membership in an ISA including chip specific ISAs.
+   INSN is pointer to an element of the opcode table; ISA is the
+   specified ISA to test against; and CPU is the CPU specific ISA
+   to test, or zero if no CPU specific ISA test is desired.  
+   The gp32 arg is set when you need to force 32-bit register usage on
+   a machine with 64-bit registers; see the documentation under -mgp32
+   in the MIPS gas docs. */
+
+#define OPCODE_IS_MEMBER(insn,isa,cpu,gp32) 	       		\
+    ((((insn)->membership & INSN_ISA) != 0			\
+      && ((insn)->membership & INSN_ISA) <= isa			\
+      && ((insn)->membership & INSN_GP32 ? gp32 : 1))		\
+     || (cpu == 4650						\
+	 && ((insn)->membership & INSN_4650) != 0)		\
+     || (cpu == 4010						\
+	 && ((insn)->membership & INSN_4010) != 0)		\
+     || ((cpu == 4100						\
+	  || cpu == 4111					\
+	  )							\
+	 && ((insn)->membership & INSN_4100) != 0)		\
+     || (cpu == 3900						\
+	 && ((insn)->membership & INSN_3900) != 0))
 
 /* This is a list of macro expanded instructions.
  *
@@ -661,6 +727,8 @@ extern int bfd_mips_num_opcodes;
 #define MIPS16_INSN_READ_PC		    0x00002000
 /* Reads the general purpose register in MIPS16OP_*_REGR32.  */
 #define MIPS16_INSN_READ_GPR_X		    0x00004000
+/* Is a branch insn. */
+#define MIPS16_INSN_BRANCH                  0x00010000
 
 /* The following flags have the same value for the mips16 opcode
    table:

@@ -1,5 +1,6 @@
 /* strings -- print the strings of printable characters in files
-   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 97, 98, 99, 2000
+   Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -57,6 +58,23 @@
 #include <errno.h>
 #include "bucomm.h"
 #include "libiberty.h"
+
+/* Some platforms need to put stdin into binary mode, to read
+    binary files.  */
+#ifdef HAVE_SETMODE
+#ifndef O_BINARY
+#ifdef _O_BINARY
+#define O_BINARY _O_BINARY
+#define setmode _setmode
+#else
+#define O_BINARY 0
+#endif
+#endif
+#if O_BINARY
+#include <io.h>
+#define SET_BINARY(f) do { if (!isatty(f)) setmode(f,O_BINARY); } while (0)
+#endif
+#endif
 
 #ifdef isascii
 #define isgraphic(c) (isascii (c) && isprint (c))
@@ -122,6 +140,12 @@ main (argc, argv)
   int exit_status = 0;
   boolean files_given = false;
 
+#if defined (HAVE_SETLOCALE) && defined (HAVE_LC_MESSAGES)
+  setlocale (LC_MESSAGES, "");
+#endif
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+
   program_name = argv[0];
   xmalloc_set_program_name (program_name);
   string_min = -1;
@@ -150,9 +174,7 @@ main (argc, argv)
 	  string_min = integer_arg (optarg);
 	  if (string_min < 1)
 	    {
-	      fprintf (stderr, "%s: invalid number %s\n",
-		       program_name, optarg);
-	      exit (1);
+	      fatal (_("invalid number %s"), optarg);
 	    }
 	  break;
 
@@ -197,7 +219,7 @@ main (argc, argv)
 
 	default:
 	  if (string_min < 0)
-	    string_min = optc;
+	    string_min = optc - '0';
 	  else
 	    string_min = string_min * 10 + optc - '0';
 	  break;
@@ -213,6 +235,9 @@ main (argc, argv)
   if (optind >= argc)
     {
       datasection_only = false;
+#ifdef SET_BINARY
+      SET_BINARY (fileno (stdin));
+#endif
       print_strings ("{standard input}", stdin, 0, 0, 0, (char *) NULL);
       files_given = true;
     }
@@ -485,8 +510,7 @@ integer_arg (s)
 
   if (*p)
     {
-      fprintf (stderr, "%s: invalid integer argument %s\n", program_name, s);
-      exit (1);
+      fatal (_("invalid integer argument %s"), s);
     }
   return value;
 }
@@ -496,13 +520,13 @@ usage (stream, status)
      FILE *stream;
      int status;
 {
-  fprintf (stream, "\
+  fprintf (stream, _("\
 Usage: %s [-afov] [-n min-len] [-min-len] [-t {o,x,d}] [-]\n\
        [--all] [--print-file-name] [--bytes=min-len] [--radix={o,x,d}]\n\
-       [--target=bfdname] [--help] [--version] file...\n",
+       [--target=bfdname] [--help] [--version] file...\n"),
 	   program_name);
   list_supported_targets (program_name, stream);
   if (status == 0)
-    fprintf (stream, "Report bugs to bug-gnu-utils@prep.ai.mit.edu\n");
+    fprintf (stream, _("Report bugs to %s\n"), REPORT_BUGS_TO);
   exit (status);
 }

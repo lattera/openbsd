@@ -1,5 +1,5 @@
 /* This file is tc-m68k.h
-   Copyright (C) 1987, 89, 90, 91, 92, 93, 94, 95, 96, 1997
+   Copyright (C) 1987, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 2000
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -22,7 +22,6 @@
 #define TC_M68K 1
 
 #ifdef ANSI_PROTOTYPES
-struct symbol;
 struct fix;
 #endif
 
@@ -124,7 +123,7 @@ extern const char *m68k_comment_chars;
 #define LEX_TILDE LEX_BEGIN_NAME
 #define tc_canonicalize_symbol_name(s) ((*(s) == '~' ? *(s) = '.' : '.'), s)
 /* On the Delta, dots are not required before pseudo-ops.  */
-#define NO_PSEUDO_DOT
+#define NO_PSEUDO_DOT 1
 #ifndef BFD_ASSEMBLER
 #undef LOCAL_LABEL
 #define LOCAL_LABEL(name) \
@@ -138,13 +137,13 @@ extern void m68k_mri_mode_change PARAMS ((int));
 extern int m68k_conditional_pseudoop PARAMS ((pseudo_typeS *));
 #define tc_conditional_pseudoop(pop) m68k_conditional_pseudoop (pop)
 
-extern void m68k_frob_label PARAMS ((struct symbol *));
+extern void m68k_frob_label PARAMS ((symbolS *));
 #define tc_frob_label(sym) m68k_frob_label (sym)
 
 extern void m68k_flush_pending_output PARAMS ((void));
 #define md_flush_pending_output() m68k_flush_pending_output ()
 
-extern void m68k_frob_symbol PARAMS ((struct symbol *));
+extern void m68k_frob_symbol PARAMS ((symbolS *));
 
 #ifdef BFD_ASSEMBLER
 
@@ -163,19 +162,26 @@ while (0)
 
 /* This expression evaluates to false if the relocation is for a local object
    for which we still want to do the relocation at runtime.  True if we
-   are willing to perform this relocation while building the .o file.  */
+   are willing to perform this relocation while building the .o file.  If
+   the reloc is against an externally visible symbol, then the assembler
+   should never do the relocation.  */
 
 #define TC_RELOC_RTSYM_LOC_FIXUP(FIX)			\
-	((FIX)->fx_r_type != BFD_RELOC_8_PLT_PCREL	\
-	 && (FIX)->fx_r_type != BFD_RELOC_16_PLT_PCREL	\
-	 && (FIX)->fx_r_type != BFD_RELOC_32_PLT_PCREL	\
-	 && (FIX)->fx_r_type != BFD_RELOC_8_GOT_PCREL	\
-	 && (FIX)->fx_r_type != BFD_RELOC_16_GOT_PCREL	\
-	 && (FIX)->fx_r_type != BFD_RELOC_32_GOT_PCREL)
+	((FIX)->fx_addsy == NULL			\
+	 || (! S_IS_EXTERNAL ((FIX)->fx_addsy)		\
+	     && ! S_IS_WEAK ((FIX)->fx_addsy)		\
+	     && S_IS_DEFINED ((FIX)->fx_addsy)		\
+	     && ! S_IS_COMMON ((FIX)->fx_addsy)))
 
 #define tc_fix_adjustable(X) tc_m68k_fix_adjustable(X)
 extern int tc_m68k_fix_adjustable PARAMS ((struct fix *));
+#define elf_tc_final_processing m68k_elf_final_processing
+extern void m68k_elf_final_processing PARAMS ((void));
 #endif
+
+#define TC_FORCE_RELOCATION(FIX)			\
+	((FIX)->fx_r_type == BFD_RELOC_VTABLE_INHERIT	\
+	 || (FIX)->fx_r_type == BFD_RELOC_VTABLE_ENTRY)
 
 #else /* ! BFD_ASSEMBLER */
 

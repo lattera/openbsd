@@ -1,5 +1,5 @@
 /* Routines to link ECOFF debugging information.
-   Copyright 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 96, 97, 1999 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support, <ian@cygnus.com>.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -491,9 +491,9 @@ add_memory_shuffle (ainfo, head, tail, data, size)
 /*ARGSUSED*/
 PTR
 bfd_ecoff_debug_init (output_bfd, output_debug, output_swap, info)
-     bfd *output_bfd;
+     bfd *output_bfd ATTRIBUTE_UNUSED;
      struct ecoff_debug_info *output_debug;
-     const struct ecoff_debug_swap *output_swap;
+     const struct ecoff_debug_swap *output_swap ATTRIBUTE_UNUSED;
      struct bfd_link_info *info;
 {
   struct accumulate *ainfo;
@@ -551,9 +551,9 @@ bfd_ecoff_debug_init (output_bfd, output_debug, output_swap, info)
 void
 bfd_ecoff_debug_free (handle, output_bfd, output_debug, output_swap, info)
      PTR handle;
-     bfd *output_bfd;
-     struct ecoff_debug_info *output_debug;
-     const struct ecoff_debug_swap *output_swap;
+     bfd *output_bfd ATTRIBUTE_UNUSED;
+     struct ecoff_debug_info *output_debug ATTRIBUTE_UNUSED;
+     const struct ecoff_debug_swap *output_swap ATTRIBUTE_UNUSED;
      struct bfd_link_info *info;
 {
   struct accumulate *ainfo = (struct accumulate *) handle;
@@ -706,17 +706,18 @@ bfd_ecoff_debug_accumulate (handle, output_bfd, output_debug, output_swap,
 	  struct string_hash_entry *fh;
 
 	  /* We look up a string formed from the file name and the
-	     number of symbols.  Sometimes an include file will
-	     conditionally define a typedef or something based on the
-	     order of include files.  Using the number of symbols as a
-	     hash reduces the chance that we will merge symbol
-	     information that should not be merged.  */
+	     number of symbols and aux entries.  Sometimes an include
+	     file will conditionally define a typedef or something
+	     based on the order of include files.  Using the number of
+	     symbols and aux entries as a hash reduces the chance that
+	     we will merge symbol information that should not be
+	     merged.  */
 	  name = input_debug->ss + fdr.issBase + fdr.rss;
 
 	  lookup = (char *) bfd_malloc (strlen (name) + 20);
 	  if (lookup == NULL)
 	    return false;
-	  sprintf (lookup, "%s %lx", name, fdr.csym);
+	  sprintf (lookup, "%s %lx %lx", name, fdr.csym, fdr.caux);
 
 	  fh = string_hash_lookup (&ainfo->fdr_hash, lookup, true, true);
 	  free (lookup);
@@ -1411,7 +1412,7 @@ bfd_ecoff_debug_one_external (abfd, debug, swap, name, esym)
 /*ARGSUSED*/
 static void
 ecoff_align_debug (abfd, debug, swap)
-     bfd *abfd;
+     bfd *abfd ATTRIBUTE_UNUSED;
      struct ecoff_debug_info *debug;
      const struct ecoff_debug_swap *swap;
 {

@@ -23,8 +23,6 @@ gas_test "float.s" ""   "" "simple FP constants"
 # This test is meaningless for the PA; the difference of two undefined
 # symbols is something that is (and must be) supported on the PA.
 if ![istarget hppa*-*-*] then {
-    setup_xfail "mn10300*-*-*"
-    setup_xfail "mn10200*-*-*"
     gas_test_error "diff1.s" "" "difference of two undefined symbols"
 }
 
@@ -67,9 +65,9 @@ proc do_930509a {} {
 # If ".long" means an 8-byte value on some target someday, this test will have
 # to be fixed.
 	expect {
-	    -re "^ +1 .... 0000 *0000" { fail $testname; set x 1 }
-	    -re "^ +1 .... 0400 *0000" { pass $testname; set x 1 }
-	    -re "^ +1 .... 0000 *0004" { pass $testname; set x 1 }
+	    -re "^ +1 .... 00 ?00 ?00 ?00" { fail $testname; set x 1 }
+	    -re "^ +1 .... 04 ?00 ?00 ?00" { pass $testname; set x 1 }
+	    -re "^ +1 .... 00 ?00 ?00 ?04" { pass $testname; set x 1 }
 	    -re "\[^\n\]*\n" { }
 	    timeout { perror "timeout\n"; break }
 	    eof { break }
@@ -90,14 +88,20 @@ if ![istarget hppa*-*-*] then {
     do_930509a
 }
 
-if ![istarget hppa*-*-*] then {
-    run_dump_test struct
-    run_dump_test align
+case $target_triplet in {
+    { hppa*-*-* } { }
+    default {
+	run_dump_test struct
+	run_dump_test align
+    }
 }
 
 # This test is for any COFF target.
-if { [istarget *-*-coff*] \
-     || [istarget *-*-pe*] \
+# We omit m88k COFF because it uses weird pseudo-op names.
+# We omit the ARM toolchains because they define locals to
+#  start with '.', which eliminates .eos, .text etc from the output.
+if {   ([istarget *-*-coff*] && ![istarget m88*-*-*] && ![istarget *arm*-*-coff] && ![istarget thumb*-*-coff]) \
+     ||([istarget *-*-pe*] && ![istarget arm*-*-pe*] && ![istarget thumb*-*-pe*]) \
      || [istarget a29k-*-udi*] \
      || [istarget a29k-*-ebmon*] \
      || [istarget a29k-*-sym*] \
@@ -108,6 +112,7 @@ if { [istarget *-*-coff*] \
      || [istarget i*86-*-go32*] \
      || [istarget i*86-*-cygwin*] \
      || [istarget i*86-*-*nt] \
+     || [istarget i*86-*-interix*] \
      || ([istarget i960-*-vxworks5.*] && ![istarget i960-*-vxworks5.0*]) } {
     run_dump_test cofftag
 }
@@ -119,7 +124,7 @@ proc test_cond {} {
     global subdir
 
     set testname "conditional listings"
-    gas_run cond.s -alc ">dump.out"
+    gas_run cond.s "-alc" ">dump.out"
     if ![string match "" $comp_output] {
 	send_log "$comp_output\n"
 	fail $testname
