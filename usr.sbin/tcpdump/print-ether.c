@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,14 +20,14 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ether.c,v 1.7 1997/07/27 01:34:34 denny Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ether.c,v 1.8 1999/07/28 20:41:36 jakob Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#if __STDC__
+#ifdef __STDC__
 struct mbuf;
 struct rtentry;
 #endif
