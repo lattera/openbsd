@@ -33,7 +33,7 @@
  */
 
 /*
- * $Id: config.h,v 6.41 1995/12/13 21:56:11 mcooper Exp $
+ * $Id: config.h,v 1.2 1996/03/05 03:16:01 dm Exp $
  * @(#)config.h
  */
 
@@ -65,7 +65,7 @@
  * don't have the old rdist, then uncomment the "#undef" line.
  */
 #ifndef _PATH_OLDRDIST
-#define _PATH_OLDRDIST	"/usr/ucb/oldrdist"	/* Enable compat */
+#define _PATH_OLDRDIST	"/usr/bin/oldrdist"	/* Enable compat */
 #endif
 /*#undef  _PATH_OLDRDIST*/				/* Disable compat */
 
