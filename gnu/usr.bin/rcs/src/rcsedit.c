@@ -36,6 +36,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rcsedit.c,v $
+ * Revision 1.1  1996/08/12 04:08:16  millert
+ * rcs 5.7 + OpenBSD changes
+ *
  * Revision 5.19  1995/06/16 06:19:24  eggert
  * Update FSF address.
  *
@@ -202,7 +205,7 @@ Report problems and direct all questions to:
 
 #include "rcsbase.h"
 
-libId(editId, "$Id: rcsedit.c,v 5.19 1995/06/16 06:19:24 eggert Exp $")
+libId(editId, "$Id: rcsedit.c,v 1.1 1996/08/12 04:08:16 millert Exp $")
 
 static void editEndsPrematurely P((void)) exiting;
 static void editLineNumberOverflow P((void)) exiting;
@@ -1053,7 +1056,7 @@ keyreplace(marker, delta, delimstuffed, infile, out, dolog)
 	    case LocalId:
 	    case Header:
 		escape_string(out,
-			marker==Id || RCSv<VERSION(4)
+			marker!=Header || RCSv<VERSION(4)
 			? basefilename(RCSname)
 			: getfullRCSname()
 		);
