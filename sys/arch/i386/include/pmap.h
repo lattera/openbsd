@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.8 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.9 2003/04/05 20:43:39 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -236,6 +236,12 @@
 #define PG_PVLIST	PG_AVAIL2	/* mapping has entry on pvlist */
 #define	PG_X		PG_AVAIL3	/* executable mapping */
 
+/*
+ * Number of PTE's per cache line.  4 byte pte, 32-byte cache line
+ * Used to avoid false sharing of cache lines.
+ */
+#define NPTECL			8
+
 #ifdef _KERNEL
 /*
  * pmap data structures: see pmap.c for details of locking.
@@ -272,6 +278,7 @@ struct pmap {
 	union descriptor *pm_ldt;	/* user-set LDT */
 	int pm_ldt_len;			/* number of LDT entries */
 	int pm_ldt_sel;			/* LDT selector */
+	uint32_t pm_cpus;		/* mask oc CPUs using map */
 };
 
 /* pm_flags */
