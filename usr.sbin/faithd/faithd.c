@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/faithd/Attic/faithd.c,v 1.4 2000/02/25 10:25:46 itojun Exp $	*/
+/*	$OpenBSD: src/usr.sbin/faithd/Attic/faithd.c,v 1.4.2.1 2000/10/07 04:20:44 jason Exp $	*/
 
 /*
  * Copyright (C) 1997 and 1998 WIDE Project.
@@ -304,7 +304,7 @@ play_service(int s_wld)
 	 * Wait, accept, fork, faith....
 	 */
 again:
-	setproctitle(procname);
+	setproctitle("%s", procname);
 
 	FD_ZERO(&rfds);
 	FD_SET(s_wld, &rfds);
@@ -665,7 +665,7 @@ exit_failure(const char *fmt, ...)
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
-	syslog(LOG_ERR, buf);
+	syslog(LOG_ERR, "%s", buf);
 	exit(EXIT_FAILURE);
 }
 
@@ -678,7 +678,7 @@ exit_success(const char *fmt, ...)
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
-	syslog(LOG_INFO, buf);
+	syslog(LOG_INFO, "%s", buf);
 	exit(EXIT_SUCCESS);
 }
 
