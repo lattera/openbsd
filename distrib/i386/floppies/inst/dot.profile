@@ -27,7 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#       $Id: dot.profile,v 1.1.1.1.6.1 1995/11/20 21:50:48 perry Exp $
+#       $Id: dot.profile,v 1.2 1995/11/28 23:57:24 jtc Exp $
 
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export PATH

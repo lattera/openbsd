@@ -27,7 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#       $Id: dot.hdprofile,v 1.1.6.1 1995/11/20 21:49:08 perry Exp $
+#       $Id: dot.hdprofile,v 1.2 1995/11/28 23:57:23 jtc Exp $
 
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export PATH

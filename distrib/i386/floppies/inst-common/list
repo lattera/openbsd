@@ -1,4 +1,4 @@
-#	$Id: list,v 1.4.4.1 1995/11/20 22:10:35 perry Exp $
+#	$Id: list,v 1.5 1995/11/28 23:57:31 jtc Exp $
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin	instbin
