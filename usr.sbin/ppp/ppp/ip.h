@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ip.h,v 1.2 1999/02/06 03:22:38 brian Exp $
+ * $Id: ip.h,v 1.3 1999/05/08 11:06:35 brian Exp $
  *
  */
 
@@ -31,4 +31,4 @@ extern int  PacketCheck(struct bundle *, char *, int, struct filter *);
 extern void ip_Enqueue(struct ipcp *, int, char *, int);
 extern struct mbuf *ip_Input(struct bundle *, struct link *, struct mbuf *);
 extern void ip_DeleteQueue(struct ipcp *);
-extern int  ip_QueueLen(struct ipcp *);
+extern size_t ip_QueueLen(struct ipcp *);

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: udp.h,v 1.1 1999/05/12 10:03:55 brian Exp $
+ *	$Id: udp.h,v 1.2 1999/06/05 21:36:04 brian Exp $
  */
 
 struct physical;
@@ -31,5 +31,5 @@ struct device;
 
 extern struct device *udp_Create(struct physical *);
 extern struct device *udp_iov2device(int, struct physical *,
-                                     struct iovec *, int *, int);
+                                     struct iovec *, int *, int, int *, int *);
 extern int udp_DeviceSize(void);
