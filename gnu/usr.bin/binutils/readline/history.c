@@ -623,7 +623,7 @@ history_truncate_file (fname, lines)
 	break;
       }
 
-  file = open (filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+  file = open (filename, O_WRONLY | O_TRUNC | O_CREAT, 0600);
   if (file == -1)
     goto truncate_exit;
 
@@ -658,7 +658,7 @@ history_do_write (filename, nelements, overwrite)
   else
     mode = O_WRONLY | O_APPEND;
 
-  if (!output || (file = open (output, mode, 0666)) == -1)
+  if (!output || (file = open (output, mode, 0600)) == -1)
     {
       if (output)
 	free (output);
