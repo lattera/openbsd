@@ -1,0 +1,28 @@
+#	$OpenBSD: src/sys/arch/i386/stand/etc/Attic/Makefile,v 1.7 1997/10/15 13:59:58 mickey Exp $
+
+S=	${.CURDIR}/../../../..
+I386=	${.CURDIR}/../..
+
+all:	machine-links assym.h
+
+machine-links:
+	@rm -f machine i386
+	@ln -fs ${.CURDIR}/../.. i386
+	@ln -fs ${.CURDIR}/../../include machine
+
+depend:: machine-links assym.h
+
+assym.h: $S/kern/genassym.sh ${.CURDIR}/genassym.cf
+	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
+	    ${PARAM} < ${.CURDIR}/genassym.cf > assym.h.tmp && \
+	    mv -f assym.h.tmp assym.h
+
+cleandir: clean
+
+clean:
+	@rm -f isa.h apm.h assym.h
+
+.include <bsd.obj.mk>
+.include <bsd.subdir.mk>
+.include "../Makefile.inc"
+CFLAGS+=${SACFLAGS}
