@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_interface.h,v 1.3.16.1 2002/03/28 11:43:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_interface.h,v 1.3.16.2 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_interface.h,v 1.1 1996/02/05 01:57:03 christos Exp $	*/
 
 /*
@@ -33,7 +33,8 @@
 #define _DDB_DB_INTERFACE_H_
 
 /* arch/<arch>/<arch>/db_trace.c */
-void db_stack_trace_cmd(db_expr_t, int, db_expr_t, char *);
+void db_stack_trace_print(db_expr_t, int, db_expr_t, char *,
+    int (*)(const char *, ...));
 
 /* arch/<arch>/<arch>/db_disasm.c */
 db_addr_t db_disasm(db_addr_t, boolean_t);

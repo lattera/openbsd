@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vnops.c,v 1.12.8.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vnops.c,v 1.12.8.4 2003/03/28 00:00:21 niklas Exp $	*/
 /*	$NetBSD: union_vnops.c,v 1.30.4.1 1996/05/25 22:10:14 jtc Exp $	*/
 
 /*
@@ -1617,7 +1617,7 @@ start:
 			panic("union: locking against myself");
 #endif
 		un->un_flags |= UN_WANTED;
-		sleep((caddr_t)un, PINOD);
+		tsleep((caddr_t)un, PINOD, "unionlk", 0);
 		goto start;
 	}
 

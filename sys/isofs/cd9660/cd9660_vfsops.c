@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19.2.6 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19.2.7 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: cd9660_vfsops.c,v 1.26 1997/06/13 15:38:58 pk Exp $	*/
 
 /*-
@@ -160,7 +160,8 @@ cd9660_mount(mp, path, data, ndp, p)
 	if (mp->mnt_flag & MNT_UPDATE) {
 		imp = VFSTOISOFS(mp);
 		if (args.fspec == 0)
-			return (vfs_export(mp, &imp->im_export, &args.export));
+			return (vfs_export(mp, &imp->im_export, 
+			    &args.export_info));
 	}
 	/*
 	 * Not an update, or updating the name: look up the name

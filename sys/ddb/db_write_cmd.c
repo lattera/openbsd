@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_write_cmd.c,v 1.5.12.1 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_write_cmd.c,v 1.5.12.2 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_write_cmd.c,v 1.6 1996/02/05 01:57:25 christos Exp $	*/
 
 /* 
@@ -84,7 +84,7 @@ db_write_cmd(address, have_addr, count, modif)
 
 	while (db_expression(&new_value)) {
 	    old_value = db_get_value(addr, size, FALSE);
-	    db_printsym(addr, DB_STGY_ANY);
+	    db_printsym(addr, DB_STGY_ANY, db_printf);
 	    db_printf("\t\t%#8n\t=\t%#8n\n", old_value, new_value);
 	    db_put_value(addr, size, new_value);
 	    addr += size;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.15.10.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.15.10.4 2003/03/28 00:00:20 niklas Exp $	*/
 /*	$NetBSD: spec_vnops.c,v 1.29 1996/04/22 01:42:38 christos Exp $	*/
 
 /*
@@ -56,6 +56,8 @@
 
 #define v_lastr v_specinfo->si_lastr
 
+struct vnode *speclisth[SPECHSZ];
+
 /* symbolic sleep message strings for devices */
 char	devopn[] = "devopn";
 char	devio[] = "devio";
@@ -104,10 +106,18 @@ struct vnodeopv_entry_desc spec_vnodeop_entries[] = {
 	{ &vop_pathconf_desc, spec_pathconf },		/* pathconf */
 	{ &vop_advlock_desc, spec_advlock },		/* advlock */
 	{ &vop_bwrite_desc, spec_bwrite },		/* bwrite */
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc spec_vnodeop_opv_desc =
 	{ &spec_vnodeop_p, spec_vnodeop_entries };
+
+int
+spec_vnoperate(void *v)
+{
+	struct vop_generic_args *ap = v;
+
+	return (VOCALL(spec_vnodeop_p, ap->a_desc->vdesc_offset, ap));
+}
 
 /*
  * Trivial lookup routine that always fails.

@@ -1,5 +1,5 @@
 	.file	"div_small.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/div_small.s,v 1.1 1996/08/27 10:32:41 downsj Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/div_small.s,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
 /*
  *  div_small.S
  *
@@ -71,11 +71,15 @@
 #include <gnu/arch/i386/fpemul/fpu_asm.h>
 
 .text
+#ifdef __ELF__
+	.align 4,144
+#else
 	.align 2,144
+#endif
 
-.globl _div_small
+.globl _C_LABEL(div_small)
 
-_div_small:
+_C_LABEL(div_small):
 	pushl	%ebp
 	movl	%esp,%ebp
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_print.c,v 1.6.12.1 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_print.c,v 1.6.12.2 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_print.c,v 1.5 1996/02/05 01:57:11 christos Exp $	*/
 
 /* 
@@ -45,8 +45,6 @@
 #include <ddb/db_sym.h>
 #include <ddb/db_output.h>
 #include <ddb/db_extern.h>
-
-extern unsigned int	db_maxoff;
 
 /*ARGSUSED*/
 void

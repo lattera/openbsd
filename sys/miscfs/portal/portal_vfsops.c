@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.3 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.4 2003/03/28 00:00:20 niklas Exp $	*/
 /*	$NetBSD: portal_vfsops.c,v 1.14 1996/02/09 22:40:41 christos Exp $	*/
 
 /*
@@ -105,10 +105,10 @@ portal_mount(mp, path, data, ndp, p)
 	if ((error = getsock(p->p_fd, args.pa_socket, &fp)) != 0)
 		return (error);
 	so = (struct socket *) fp->f_data;
-	if (so->so_proto->pr_domain->dom_family != AF_UNIX)
+	if (so->so_proto->pr_domain->dom_family != AF_UNIX) {
+		FRELE(fp);
 		return (ESOCKTNOSUPPORT);
-
-	FREF(fp);
+	}
 
 	error = getnewvnode(VT_PORTAL, mp, portal_vnodeop_p, &rvp); /* XXX */
 	if (error) {
@@ -119,7 +119,7 @@ portal_mount(mp, path, data, ndp, p)
 		M_TEMP, M_WAITOK);
 
 	fmp = (struct portalmount *) malloc(sizeof(struct portalmount),
-				 M_UFSMNT, M_WAITOK);	/* XXX */
+				 M_MISCFSMNT, M_WAITOK);
 	rvp->v_type = VDIR;
 	rvp->v_flag |= VROOT;
 	VTOPORTAL(rvp)->pt_arg = 0;
@@ -203,7 +203,7 @@ portal_unmount(mp, mntflags, p)
 	/*
 	 * Finally, throw away the portalmount structure
 	 */
-	free(mp->mnt_data, M_UFSMNT);	/* XXX */
+	free(mp->mnt_data, M_MISCFSMNT);
 	mp->mnt_data = 0;
 	return (0);
 }

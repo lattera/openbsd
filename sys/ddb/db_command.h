@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.h,v 1.9.8.4 2002/03/28 11:43:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.h,v 1.9.8.5 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_command.h,v 1.8 1996/02/05 01:56:55 christos Exp $	*/
 
 /* 
@@ -56,13 +56,9 @@ void db_boot_dump_cmd(db_expr_t, int, db_expr_t, char *);
 void db_boot_halt_cmd(db_expr_t, int, db_expr_t, char *);
 void db_boot_reboot_cmd(db_expr_t, int, db_expr_t, char *);
 void db_boot_poweroff_cmd(db_expr_t, int, db_expr_t, char *);
+void db_stack_trace_cmd(db_expr_t, int, db_expr_t, char *);
 
-db_addr_t	db_dot;		/* current location */
-db_addr_t	db_last_addr;	/* last explicit address typed */
-db_addr_t	db_prev;	/* last address examined
-				   or written */
-db_addr_t	db_next;	/* next address to be examined
-				   or written */
+extern	db_addr_t db_dot, db_last_addr, db_prev, db_next;
 
 /*
  * Command table

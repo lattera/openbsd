@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vfsops.c,v 1.10.2.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vfsops.c,v 1.10.2.4 2003/03/28 00:00:21 niklas Exp $	*/
 /*	$NetBSD: union_vfsops.c,v 1.10 1995/06/18 14:47:47 cgd Exp $	*/
 
 /*
@@ -133,7 +133,7 @@ union_mount(mp, path, data, ndp, p)
 	}
 	
 	um = (struct union_mount *) malloc(sizeof(struct union_mount),
-				M_UFSMNT, M_WAITOK);	/* XXX */
+				M_MISCFSMNT, M_WAITOK);
 
 	/*
 	 * Keep a held reference to the target vnodes.
@@ -247,7 +247,7 @@ union_mount(mp, path, data, ndp, p)
 
 bad:
 	if (um)
-		free(um, M_UFSMNT);
+		free(um, M_MISCFSMNT);
 	if (cred)
 		crfree(cred);
 	if (upperrootvp)
@@ -361,7 +361,7 @@ union_unmount(mp, mntflags, p)
 	/*
 	 * Finally, throw away the union_mount structure
 	 */
-	free(mp->mnt_data, M_UFSMNT);	/* XXX */
+	free(mp->mnt_data, M_MISCFSMNT);
 	mp->mnt_data = 0;
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/specdev.h,v 1.7.8.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/specdev.h,v 1.7.8.4 2003/03/28 00:00:20 niklas Exp $	*/
 /*	$NetBSD: specdev.h,v 1.12 1996/02/13 13:13:01 mycroft Exp $	*/
 
 /*
@@ -68,7 +68,7 @@ struct specinfo {
 #define	SPECHASH(rdev)	(((unsigned)((rdev>>5)+(rdev)))%SPECHSZ)
 #endif
 
-struct vnode *speclisth[SPECHSZ];
+extern struct vnode *speclisth[SPECHSZ];
 
 /*
  * Prototypes for special file operations on vnodes.
@@ -121,3 +121,5 @@ int	spec_advlock(void *);
 #define	spec_reallocblks spec_badop
 #define	spec_bwrite	vop_generic_bwrite
 #define spec_revoke     vop_generic_revoke
+
+int	spec_vnoperate(void *);

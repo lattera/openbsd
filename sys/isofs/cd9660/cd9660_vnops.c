@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.12.2.5 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.12.2.6 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: cd9660_vnops.c,v 1.42 1997/10/16 23:56:57 christos Exp $	*/
 
 /*-
@@ -320,7 +320,7 @@ cd9660_read(v)
 	struct buf *bp;
 	daddr_t lbn, rablock;
 	off_t diff;
-	int rasize, error = 0;
+	int error = 0;
 	long size, n, on;
 
 	if (uio->uio_resid == 0)
@@ -330,6 +330,8 @@ cd9660_read(v)
 	ip->i_flag |= IN_ACCESS;
 	imp = ip->i_mnt;
 	do {
+		struct cluster_info *ci = &ip->i_ci;
+
 		lbn = lblkno(imp, uio->uio_offset);
 		on = blkoff(imp, uio->uio_offset);
 		n = min((u_int)(imp->logical_block_size - on),
@@ -348,15 +350,24 @@ cd9660_read(v)
 			else
 				error = bread(vp, lbn, size, NOCRED, &bp);
 		} else {
-			if (ip->i_ci.ci_lastr + 1 == lbn &&
-			    lblktosize(imp, rablock) < ip->i_size) {
-				rasize = blksize(imp, ip, rablock);
-				error = breadn(vp, lbn, size, &rablock,
-					       &rasize, 1, NOCRED, &bp);
+#define MAX_RA 32
+			if (ci->ci_lastr + 1 == lbn) {
+				daddr_t rablks[MAX_RA];
+				int rasizes[MAX_RA];
+				int i;
+
+				for (i = 0; i < MAX_RA &&
+				    lblktosize(imp, (rablock + i)) < ip->i_size;
+				    i++) {
+					rablks[i] = rablock + i;
+					rasizes[i] = blksize(imp, ip, rablock + i);
+				}
+				error = breadn(vp, lbn, size, rablks,
+				    rasizes, i, NOCRED, &bp);
 			} else
 				error = bread(vp, lbn, size, NOCRED, &bp);
 		}
-		ip->i_ci.ci_lastr = lbn;
+		ci->ci_lastr = lbn;
 		n = min(n, size - bp->b_resid);
 		if (error) {
 			brelse(bp);
@@ -884,10 +895,11 @@ cd9660_strategy(v)
 	struct vop_strategy_args /* {
 		struct buf *a_bp;
 	} */ *ap = v;
-	register struct buf *bp = ap->a_bp;
-	register struct vnode *vp = bp->b_vp;
-	register struct iso_node *ip;
+	struct buf *bp = ap->a_bp;
+	struct vnode *vp = bp->b_vp;
+	struct iso_node *ip;
 	int error;
+	int s;
 
 	ip = VTOI(vp);
 	if (vp->v_type == VBLK || vp->v_type == VCHR)
@@ -897,14 +909,18 @@ cd9660_strategy(v)
 		if (error) {
 			bp->b_error = error;
 			bp->b_flags |= B_ERROR;
+			s = splbio();
 			biodone(bp);
+			splx(s);
 			return (error);
 		}
 		if ((long)bp->b_blkno == -1)
 			clrbuf(bp);
 	}
 	if ((long)bp->b_blkno == -1) {
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		return (0);
 	}
 	vp = ip->i_devvp;
@@ -1045,7 +1061,7 @@ struct vnodeopv_entry_desc cd9660_vnodeop_entries[] = {
 	{ &vop_pathconf_desc, cd9660_pathconf },/* pathconf */
 	{ &vop_advlock_desc, cd9660_advlock },	/* advlock */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc cd9660_vnodeop_opv_desc =
 	{ &cd9660_vnodeop_p, cd9660_vnodeop_entries };
@@ -1055,43 +1071,17 @@ struct vnodeopv_desc cd9660_vnodeop_opv_desc =
  */
 int (**cd9660_specop_p)(void *);
 struct vnodeopv_entry_desc cd9660_specop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
-	{ &vop_lookup_desc, spec_lookup },	/* lookup */
-	{ &vop_create_desc, spec_create },	/* create */
-	{ &vop_mknod_desc, spec_mknod },	/* mknod */
-	{ &vop_open_desc, spec_open },		/* open */
-	{ &vop_close_desc, spec_close },	/* close */
+	{ &vop_default_desc, spec_vnoperate },
 	{ &vop_access_desc, cd9660_access },	/* access */
 	{ &vop_getattr_desc, cd9660_getattr },	/* getattr */
 	{ &vop_setattr_desc, cd9660_setattr },	/* setattr */
-	{ &vop_read_desc, spec_read },		/* read */
-	{ &vop_write_desc, spec_write },	/* write */
-	{ &vop_lease_desc, spec_lease_check },	/* lease */
-	{ &vop_ioctl_desc, spec_ioctl },	/* ioctl */
-	{ &vop_select_desc, spec_select },	/* select */
-	{ &vop_revoke_desc, spec_revoke },    /* revoke */
-	{ &vop_fsync_desc, spec_fsync },	/* fsync */
-	{ &vop_remove_desc, spec_remove },	/* remove */
-	{ &vop_link_desc, spec_link },		/* link */
-	{ &vop_rename_desc, spec_rename },	/* rename */
-	{ &vop_mkdir_desc, spec_mkdir },	/* mkdir */
-	{ &vop_rmdir_desc, spec_rmdir },	/* rmdir */
-	{ &vop_symlink_desc, spec_symlink },	/* symlink */
-	{ &vop_readdir_desc, spec_readdir },	/* readdir */
-	{ &vop_readlink_desc, spec_readlink },	/* readlink */
-	{ &vop_abortop_desc, spec_abortop },	/* abortop */
 	{ &vop_inactive_desc, cd9660_inactive },/* inactive */
 	{ &vop_reclaim_desc, cd9660_reclaim },	/* reclaim */
 	{ &vop_lock_desc, cd9660_lock },	/* lock */
 	{ &vop_unlock_desc, cd9660_unlock },	/* unlock */
-	{ &vop_bmap_desc, spec_bmap },		/* bmap */
-	{ &vop_strategy_desc, spec_strategy },	/* strategy */
 	{ &vop_print_desc, cd9660_print },	/* print */
 	{ &vop_islocked_desc, cd9660_islocked },/* islocked */
-	{ &vop_pathconf_desc, spec_pathconf },	/* pathconf */
-	{ &vop_advlock_desc, spec_advlock },	/* advlock */
-	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc cd9660_specop_opv_desc =
 	{ &cd9660_specop_p, cd9660_specop_entries };
@@ -1099,43 +1089,18 @@ struct vnodeopv_desc cd9660_specop_opv_desc =
 #ifdef FIFO
 int (**cd9660_fifoop_p)(void *);
 struct vnodeopv_entry_desc cd9660_fifoop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
-	{ &vop_lookup_desc, fifo_lookup },	/* lookup */
-	{ &vop_create_desc, fifo_create },	/* create */
-	{ &vop_mknod_desc, fifo_mknod },	/* mknod */
-	{ &vop_open_desc, fifo_open },		/* open */
-	{ &vop_close_desc, fifo_close },	/* close */
+	{ &vop_default_desc, fifo_vnoperate },
 	{ &vop_access_desc, cd9660_access },	/* access */
 	{ &vop_getattr_desc, cd9660_getattr },	/* getattr */
 	{ &vop_setattr_desc, cd9660_setattr },	/* setattr */
-	{ &vop_read_desc, fifo_read },		/* read */
-	{ &vop_write_desc, fifo_write },	/* write */
-	{ &vop_lease_desc, fifo_lease_check },	/* lease */
-	{ &vop_ioctl_desc, fifo_ioctl },	/* ioctl */
-	{ &vop_select_desc, fifo_select },	/* select */
-	{ &vop_revoke_desc, fifo_revoke },      /* revoke */
-	{ &vop_fsync_desc, fifo_fsync },	/* fsync */
-	{ &vop_remove_desc, fifo_remove },	/* remove */
-	{ &vop_link_desc, fifo_link }	,	/* link */
-	{ &vop_rename_desc, fifo_rename },	/* rename */
-	{ &vop_mkdir_desc, fifo_mkdir },	/* mkdir */
-	{ &vop_rmdir_desc, fifo_rmdir },	/* rmdir */
-	{ &vop_symlink_desc, fifo_symlink },	/* symlink */
-	{ &vop_readdir_desc, fifo_readdir },	/* readdir */
-	{ &vop_readlink_desc, fifo_readlink },	/* readlink */
-	{ &vop_abortop_desc, fifo_abortop },	/* abortop */
 	{ &vop_inactive_desc, cd9660_inactive },/* inactive */
 	{ &vop_reclaim_desc, cd9660_reclaim },	/* reclaim */
 	{ &vop_lock_desc, cd9660_lock },	/* lock */
 	{ &vop_unlock_desc, cd9660_unlock },	/* unlock */
-	{ &vop_bmap_desc, fifo_bmap },		/* bmap */
-	{ &vop_strategy_desc, fifo_strategy },	/* strategy */
 	{ &vop_print_desc, cd9660_print },	/* print */
 	{ &vop_islocked_desc, cd9660_islocked },/* islocked */
-	{ &vop_pathconf_desc, fifo_pathconf },	/* pathconf */
-	{ &vop_advlock_desc, fifo_advlock },	/* advlock */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc cd9660_fifoop_opv_desc =
 	{ &cd9660_fifoop_p, cd9660_fifoop_entries };

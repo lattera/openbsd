@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.7.6.2 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.7.6.3 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: dead_vnops.c,v 1.16 1996/02/13 13:12:48 mycroft Exp $	*/
 
 /*
@@ -248,9 +248,13 @@ dead_strategy(v)
 	struct vop_strategy_args /* {
 		struct buf *a_bp;
 	} */ *ap = v;
+	int s;
+
 	if (ap->a_bp->b_vp == NULL || !chkvnlock(ap->a_bp->b_vp)) {
 		ap->a_bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(ap->a_bp);
+		splx(s);
 		return (EIO);
 	}
 	return (VOP_STRATEGY(ap->a_bp));
@@ -353,7 +357,7 @@ chkvnlock(vp)
 
 	while (vp->v_flag & VXLOCK) {
 		vp->v_flag |= VXWANT;
-		sleep((caddr_t)vp, PINOD);
+		tsleep(vp, PINOD, "chkvnlock", 0);
 		locked = 1;
 	}
 	return (locked);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_lex.c,v 1.6.12.1 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_lex.c,v 1.6.12.2 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_lex.c,v 1.8 1996/02/05 01:57:05 christos Exp $	*/
 
 /* 
@@ -45,9 +45,13 @@
 #include <ddb/db_command.h>
 #include <ddb/db_sym.h>
 #include <ddb/db_extern.h>
+#include <ddb/db_var.h>
 
 char	db_line[120];
 char *	db_lp, *db_endlp;
+
+db_expr_t db_tok_number;
+char	db_tok_string[TOK_STRING_SIZE];
 
 int
 db_read_line()

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.7.10.3 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.7.10.4 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: fifo_vnops.c,v 1.18 1996/03/16 23:52:42 christos Exp $	*/
 
 /*
@@ -103,8 +103,19 @@ struct vnodeopv_entry_desc fifo_vnodeop_entries[] = {
 	{ &vop_pathconf_desc, fifo_pathconf },		/* pathconf */
 	{ &vop_advlock_desc, fifo_advlock },		/* advlock */
 	{ &vop_bwrite_desc, fifo_bwrite },		/* bwrite */
-	{ (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
+	{ NULL, NULL }
 };
+
+struct vnodeopv_desc fifo_vnodeop_opv_desc =
+	{ &fifo_vnodeop_p, fifo_vnodeop_entries };
+
+int
+fifo_vnoperate(void *v)
+{
+	struct vop_generic_args *ap = v;
+
+	return (VOCALL(fifo_vnodeop_p, ap->a_desc->vdesc_offset, ap));
+}
 
 void	filt_fifordetach(struct knote *kn);
 int	filt_fiforead(struct knote *kn, long hint);
@@ -115,9 +126,6 @@ struct filterops fiforead_filtops =
 	{ 1, NULL, filt_fifordetach, filt_fiforead };
 struct filterops fifowrite_filtops =
 	{ 1, NULL, filt_fifowdetach, filt_fifowrite };
-
-struct vnodeopv_desc fifo_vnodeop_opv_desc =
-	{ &fifo_vnodeop_p, fifo_vnodeop_entries };
 
 /*
  * Trivial lookup routine that always fails.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/union/Attic/union_subr.c,v 1.8.6.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/union/Attic/union_subr.c,v 1.8.6.4 2003/03/28 00:00:21 niklas Exp $	*/
 /*	$NetBSD: union_subr.c,v 1.18 1996/02/09 22:41:10 christos Exp $	*/
 
 /*
@@ -160,7 +160,7 @@ union_list_lock(ix)
 
 	if (unvplock[ix] & UN_LOCKED) {
 		unvplock[ix] |= UN_WANTED;
-		sleep((caddr_t) &unvplock[ix], PINOD);
+		tsleep((caddr_t) &unvplock[ix], PINOD, "unlstlk", 0);
 		return (1);
 	}
 
@@ -453,7 +453,7 @@ loop:
 			if (un->un_flags & UN_LOCKED) {
 				vrele(UNIONTOV(un));
 				un->un_flags |= UN_WANTED;
-				sleep((caddr_t)un, PINOD);
+				tsleep((caddr_t)un, PINOD, "unallvp", 0);
 				goto loop;
 			}
 			un->un_flags |= UN_LOCKED;

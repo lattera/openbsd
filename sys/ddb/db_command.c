@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.7 2002/03/28 11:43:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.8 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_command.c,v 1.20 1996/03/30 22:30:05 christos Exp $	*/
 
 /* 
@@ -65,6 +65,13 @@ label_t		*db_recover;
  * Otherwise: 'dot' points to next item, '..' points to last.
  */
 boolean_t	db_ed_style = TRUE;
+
+db_addr_t	db_dot;		/* current location */
+db_addr_t	db_last_addr;	/* last explicit address typed */
+db_addr_t	db_prev;	/* last address examined
+				   or written */
+db_addr_t	db_next;	/* next address to be examined
+				   or written */
 
 /*
  * Utility routine - discard tokens through end-of-line.
@@ -638,4 +645,11 @@ db_boot_poweroff_cmd(addr, haddr, count, modif)
 	char *modif;
 {
 	boot(RB_NOSYNC | RB_HALT | RB_POWERDOWN | RB_TIMEBAD);
+}
+
+void
+db_stack_trace_cmd(db_expr_t addr, boolean_t have_addr, db_expr_t count,
+    char *modif)
+{
+	db_stack_trace_print(addr, have_addr, count, modif, db_printf);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.21.12.3 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.21.12.4 2003/03/28 00:00:19 niklas Exp $	*/
 /*	$NetBSD: db_sym.c,v 1.24 2000/08/11 22:50:47 tv Exp $	*/
 
 /* 
@@ -538,9 +538,8 @@ unsigned int	db_maxoff = 0x10000000;
 
 
 void
-db_printsym(off, strategy)
-	db_expr_t	off;
-	db_strategy_t	strategy;
+db_printsym(db_expr_t off, db_strategy_t strategy,
+    int (*pr)(const char *, ...))
 {
 	db_expr_t	d;
 	char 		*filename;
@@ -548,36 +547,38 @@ db_printsym(off, strategy)
 	db_expr_t	value;
 	int 		linenum;
 	db_sym_t	cursym;
+	char		buf[DB_FORMAT_BUF_SIZE];
 
 	if (off <= db_lastsym) {
 		cursym = db_search_symbol(off, strategy, &d);
 		db_symbol_values(cursym, &name, &value);
 		if (name && (d < db_maxoff) && value) {
-			db_printf("%s", name);
+			(*pr)("%s", name);
 			if (d) {
-				db_printf("+%#r", d);
+				(*pr)("+%s", db_format(buf, sizeof(buf),
+				    d, DB_FORMAT_R, 1, 0));
 			}
 			if (strategy == DB_STGY_PROC) {
 				if (db_line_at_pc(cursym, &filename, &linenum, off))
-					db_printf(" [%s:%d]", filename, linenum);
+					(*pr)(" [%s:%d]", filename, linenum);
 			}
 			return;
 		}
 	}
 
-	db_printf("%#ln", off);
+	(*pr)("%s", db_format(buf, sizeof(buf), off, DB_FORMAT_N, 1, 0));
 	return;
 }
 
 
 boolean_t
-db_line_at_pc( sym, filename, linenum, pc)
+db_line_at_pc(sym, filename, linenum, pc)
 	db_sym_t	sym;
 	char		**filename;
 	int		*linenum;
 	db_expr_t	pc;
 {
-	return X_db_line_at_pc( db_last_symtab, sym, filename, linenum, pc);
+	return X_db_line_at_pc(db_last_symtab, sym, filename, linenum, pc);
 }
 
 int

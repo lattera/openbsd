@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_var.h,v 1.4.10.1 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_var.h,v 1.4.10.2 2003/03/28 00:00:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff.  All rights reserved.
@@ -59,7 +59,6 @@
 }
 
 #ifdef	_KERNEL
-extern u_int	db_maxoff;
 extern int	db_radix;
 extern int	db_max_width;
 extern int	db_tab_stop_width;

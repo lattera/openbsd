@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vfsops.c,v 1.19.2.5 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vfsops.c,v 1.19.2.6 2003/03/28 00:00:21 niklas Exp $	*/
 /*	$NetBSD: msdosfs_vfsops.c,v 1.48 1997/10/18 02:54:57 briggs Exp $	*/
 
 /*-
@@ -159,7 +159,8 @@ msdosfs_mount(mp, path, data, ndp, p)
 			/*
 			 * Process export requests.
 			 */
-			return (vfs_export(mp, &pmp->pm_export, &args.export));
+			return (vfs_export(mp, &pmp->pm_export, 
+			    &args.export_info));
 		}
 	}
 	/*

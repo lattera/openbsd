@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.2 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.3 2003/03/28 00:00:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff.  All rights reserved.
@@ -37,8 +37,6 @@
 #include <sys/sysctl.h>
 
 #include <ddb/db_var.h>
-
-extern int securelevel;
 
 int
 ddb_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
