@@ -1,4 +1,4 @@
-/* $RCSfile: walk.c,v $$Revision: 4.1 $$Date: 92/08/07 18:29:31 $
+/* $RCSfile: walk.c,v $$Revision: 1.7 $$Date: 2003/12/03 03:02:53 $
  *
  *    Copyright (C) 1991, 1992, 1993, 1994, 1995, 1997, 1998, 1999,
  *    2000, 2001, 2002, by Larry Wall and others
@@ -6,7 +6,10 @@
  *    You may distribute under the terms of either the GNU General Public
  *    License or the Artistic License, as specified in the README file.
  *
- * $Log:	walk.c,v $
+ * $Log: walk.c,v $
+ * Revision 1.7  2003/12/03 03:02:53  millert
+ * Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
+ *
  */
 
 #include "EXTERN.h"

@@ -9,9 +9,12 @@
 #
 # Suggested alternative: Cwd
 #
-;# $RCSfile: pwd.pl,v $$Revision: 4.1 $$Date: 92/08/07 18:24:11 $
+;# $RCSfile: pwd.pl,v $$Revision: 1.7 $$Date: 2003/12/03 03:02:36 $
 ;#
-;# $Log:	pwd.pl,v $
+;# $Log: pwd.pl,v $
+;# Revision 1.7  2003/12/03 03:02:36  millert
+;# Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
+;#
 ;#
 ;# Usage:
 ;#	require "pwd.pl";

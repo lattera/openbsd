@@ -2,7 +2,7 @@
 
 package Getopt::Long;
 
-# RCS Status      : $Id: GetoptLong.pm,v 2.68 2003-09-23 15:24:53+02 jv Exp $
+# RCS Status      : $Id: Long.pm,v 1.7 2003/12/03 03:02:38 millert Exp $
 # Author          : Johan Vromans
 # Created On      : Tue Sep 11 15:00:12 1990
 # Last Modified By: Johan Vromans
@@ -264,7 +264,7 @@ sub GetOptions(@) {
 	local ($^W) = 0;
 	print STDERR
 	  ("Getopt::Long $Getopt::Long::VERSION (",
-	   '$Revision: 2.68 $', ") ",
+	   '$Revision: 1.7 $', ") ",
 	   "called from package \"$pkg\".",
 	   "\n  ",
 	   "ARGV: (@ARGV)",

@@ -862,7 +862,7 @@ changes.  Modifying the $0 is more useful as a way of indicating the
 current program state than it is for hiding the program you're
 running.  (Mnemonic: same as B<sh> and B<ksh>.)
 
-Note that there are platform specific limitations on the the maximum
+Note that there are platform specific limitations on the maximum
 length of C<$0>.  In the most extreme case it may be limited to the
 space occupied by the original C<$0>.
 
