@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/sboot.c,v 1.6 1996/08/20 04:01:09 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/sboot.c,v 1.7 1996/10/16 13:50:01 mickey Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -61,6 +61,7 @@
  */
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 #include "sboot.h"
 
 void
