@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/alpha/include/atomic.h,v 1.2 2000/11/08 21:27:16 ericj Exp $ */
 /* $NetBSD: atomic.h,v 1.5 2000/06/08 02:54:55 thorpej Exp $ */
 
 /*-
