@@ -1,4 +1,4 @@
-/*	$Id: site.h,v 1.2 1995/12/14 08:43:43 tholo Exp $	*/
+/*	$Id: site.h,v 1.3 1996/01/29 19:18:40 tholo Exp $	*/
 
 /* 
  * Site-specific definitions.
@@ -31,6 +31,7 @@
 #define	ADD_ACL_FILE		"admin_acl.add"
 #define	GET_ACL_FILE		"admin_acl.get"
 #define	MOD_ACL_FILE		"admin_acl.mod"
+#define DEL_ACL_FILE		"admin_acl.del"
 
 /*
  * Set ORGANIZATION to be the desired organization string printed
