@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_extern.h,v 1.9.2.3 2001/12/05 01:02:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_extern.h,v 1.9.2.4 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: ffs_extern.h,v 1.4 1996/02/09 22:22:22 christos Exp $	*/
 
 /*-
@@ -40,7 +40,19 @@
 #define FFS_CLUSTERWRITE	2	/* cluster writing enabled */
 #define FFS_REALLOCBLKS		3	/* block reallocation enabled */
 #define FFS_ASYNCFREE		4	/* asynchronous block freeing enabled */
-#define	FFS_MAXID		5	/* number of valid ffs ids */
+#define	FFS_MAX_SOFTDEPS	5	/* maximum structs before slowdown */
+#define	FFS_SD_TICKDELAY	6	/* ticks to pause during slowdown */
+#define	FFS_SD_WORKLIST_PUSH	7	/* # of worklist cleanups */
+#define	FFS_SD_BLK_LIMIT_PUSH	8	/* # of times block limit neared */
+#define	FFS_SD_INO_LIMIT_PUSH	9	/* # of times inode limit neared */
+#define	FFS_SD_BLK_LIMIT_HIT	10	/* # of times block slowdown imposed */
+#define	FFS_SD_INO_LIMIT_HIT	11	/* # of times inode slowdown imposed */
+#define	FFS_SD_SYNC_LIMIT_HIT	12	/* # of synchronous slowdowns imposed */
+#define	FFS_SD_INDIR_BLK_PTRS	13	/* bufs redirtied as indir ptrs not written */
+#define	FFS_SD_INODE_BITMAP	14	/* bufs redirtied as inode bitmap not written */
+#define	FFS_SD_DIRECT_BLK_PTRS	15	/* bufs redirtied as direct ptrs not written */
+#define	FFS_SD_DIR_ENTRY	16	/* bufs redirtied as dir entry cannot write */
+#define	FFS_MAXID		17	/* number of valid ffs ids */
 
 #define FFS_NAMES { \
 	{ 0, 0 }, \
@@ -48,6 +60,18 @@
 	{ "doclusterwrite", CTLTYPE_INT }, \
 	{ "doreallocblks", CTLTYPE_INT }, \
 	{ "doasyncfree", CTLTYPE_INT }, \
+	{ "max_softdeps", CTLTYPE_INT }, \
+	{ "sd_tickdelay", CTLTYPE_INT }, \
+	{ "sd_worklist_push", CTLTYPE_INT }, \
+	{ "sd_blk_limit_push", CTLTYPE_INT }, \
+	{ "sd_ino_limit_push", CTLTYPE_INT }, \
+	{ "sd_blk_limit_hit", CTLTYPE_INT }, \
+	{ "sd_ino_limit_hit", CTLTYPE_INT }, \
+	{ "sd_sync_limit_hit", CTLTYPE_INT }, \
+	{ "sd_indir_blk_ptrs", CTLTYPE_INT }, \
+	{ "sd_inode_bitmap", CTLTYPE_INT }, \
+	{ "sd_direct_blk_ptrs", CTLTYPE_INT }, \
+	{ "sd_dir_entry", CTLTYPE_INT }, \
 }
 
 
@@ -87,7 +111,6 @@ void ffs_clusteracct __P((struct fs *, struct cg *, daddr_t, int));
 
 /* ffs_balloc.c */
 int ffs_balloc(struct inode *, off_t, int, struct ucred *, int, struct buf **);
-int ffs_ballocn(void *);
 
 /* ffs_inode.c */
 int ffs_init __P((struct vfsconf *));
@@ -129,7 +152,7 @@ int ffs_read __P((void *));
 int ffs_write __P((void *));
 int ffs_fsync __P((void *));
 int ffs_reclaim __P((void *));
-int ffs_size __P((void *));
+
 
 /*
  * Soft dependency function prototypes.

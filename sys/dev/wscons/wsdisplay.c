@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.5 2001/12/05 01:02:39 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.6 2002/03/06 02:11:48 niklas Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -206,10 +206,6 @@ int wsdisplayparam __P((struct tty *, struct termios *));
 
 
 /* Internal macros, functions, and variables. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
-
 #define	WSDISPLAYUNIT(dev)		(minor(dev) >> 8)
 #define	WSDISPLAYSCREEN(dev)		(minor(dev) & 0xff)
 #define ISWSDISPLAYCTL(dev)		(WSDISPLAYSCREEN(dev) == 255)

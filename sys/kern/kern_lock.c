@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.1 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.2 2002/03/06 02:13:23 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -526,6 +526,7 @@ _simple_unlock(lkp, id, l)
 void
 _simple_lock_assert(lkp, state, id, l)
 	__volatile struct simplelock *lkp;
+	int state;
 	const char *id;
 	int l;
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.6 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.7 2002/03/06 02:13:23 niklas Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -70,7 +70,7 @@
  * to it. Must be a n^2. If non-zero, the stack gap will be calculated as:
  * (arc4random() * ALIGNBYTES) & (stackgap_random - 1) + STACKGAPLEN.
  */
-int stackgap_random;
+int stackgap_random = 1024;
 
 /*
  * check exec:
@@ -150,7 +150,6 @@ check_exec(p, epp)
 		goto bad1;
 
 	/* now we have the file, get the exec header */
-	uvn_attach(vp, VM_PROT_READ);
 	error = vn_rdwr(UIO_READ, vp, epp->ep_hdr, epp->ep_hdrlen, 0,
 	    UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred, &resid, p);
 	if (error)
@@ -249,6 +248,12 @@ sys_execve(p, v, retval)
 	char **tmpfap;
 	int szsigcode;
 	extern struct emul emul_native;
+
+	/*
+	 * Cheap solution to complicated problems.
+	 * Mark this process as "leave me alone, I'm execing".
+	 */
+	p->p_flag |= P_INEXEC;
 
 	/*
 	 * figure out the maximum size of an exec header, if necessary.
@@ -545,13 +550,13 @@ sys_execve(p, v, retval)
 					panic("sys_execve: falloc indx != i");
 #endif
 				if ((error = cdevvp(getnulldev(), &vp)) != 0) {
-					ffree(fp);
 					fdremove(p->p_fd, indx);
+					closef(fp, p);
 					break;
 				}
 				if ((error = VOP_OPEN(vp, flags, p->p_ucred, p)) != 0) {
-					ffree(fp);
 					fdremove(p->p_fd, indx);
+					closef(fp, p);
 					vrele(vp);
 					break;
 				}
@@ -615,6 +620,7 @@ sys_execve(p, v, retval)
 	if (KTRPOINT(p, KTR_EMUL))
 		ktremul(p, p->p_emul->e_name);
 #endif
+	p->p_flag &= ~P_INEXEC;
 	return (0);
 
 bad:
@@ -633,6 +639,7 @@ bad:
 
 freehdr:
 	free(pack.ep_hdr, M_EXEC);
+	p->p_flag &= ~P_INEXEC;
 	return (error);
 
 exec_abort:
@@ -656,6 +663,7 @@ free_pack_abort:
 	exit1(p, -1);
 
 	/* NOTREACHED */
+	p->p_flag &= ~P_INEXEC;
 	return (0);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.16.4.3 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.16.4.4 2002/03/06 02:13:25 niklas Exp $	*/
 /*	$NetBSD: msdosfs_denode.c,v 1.23 1997/10/17 11:23:58 ws Exp $	*/
 
 /*-
@@ -71,8 +71,6 @@ struct denode **dehashtbl;
 u_long dehash;			/* size of hash table - 1 */
 #define	DEHASH(dev, dcl, doff)	(((dev) + (dcl) + (doff) / sizeof(struct direntry)) \
 				 & dehash)
-
-extern int prtactive;
 
 static struct denode *msdosfs_hashget __P((dev_t, u_long, u_long));
 static int msdosfs_hashins __P((struct denode *));
@@ -334,7 +332,6 @@ retry:
 		nvp->v_type = VREG;
 	VREF(ldep->de_devvp);
 	*depp = ldep;
-	nvp->v_uvm.u_size = ldep->de_FileSize;
 	return (0);
 }
 
@@ -464,7 +461,7 @@ detrunc(dep, length, flags, cred, p)
 #endif
 			return (error);
 		}
-
+		uvm_vnp_uncache(DETOV(dep));
 		/*
 		 * is this the right place for it?
 		 */
@@ -527,7 +524,7 @@ deextend(dep, length, cred)
 	struct ucred *cred;
 {
 	struct msdosfsmount *pmp = dep->de_pmp;
-	u_long count, osize;
+	u_long count;
 	int error;
 	
 	/*
@@ -560,12 +557,8 @@ deextend(dep, length, cred)
 		}
 	}
 		
-	osize = dep->de_FileSize;
 	dep->de_FileSize = length;
-	uvm_vnp_setsize(DETOV(dep), (voff_t)dep->de_FileSize);
 	dep->de_flag |= DE_UPDATE|DE_MODIFIED;
-	uvm_vnp_zerorange(DETOV(dep), (off_t)osize,
-	    (size_t)(dep->de_FileSize - osize));
 	return (deupdat(dep, 1));
 }
 
@@ -600,6 +593,7 @@ msdosfs_reclaim(v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct denode *dep = VTODE(vp);
+	extern int prtactive;
 	
 #ifdef MSDOSFS_DEBUG
 	printf("msdosfs_reclaim(): dep %08x, file %s, refcnt %d\n",
@@ -640,6 +634,7 @@ msdosfs_inactive(v)
 	struct denode *dep = VTODE(vp);
 	struct proc *p = ap->a_p;
 	int error;
+	extern int prtactive;
 	
 #ifdef MSDOSFS_DEBUG
 	printf("msdosfs_inactive(): dep %08x, de_Name[0] %x\n", dep, dep->de_Name[0]);
@@ -666,9 +661,7 @@ msdosfs_inactive(v)
 	       dep, dep->de_refcnt, vp->v_mount->mnt_flag, MNT_RDONLY);
 #endif
 	if (dep->de_refcnt <= 0 && (vp->v_mount->mnt_flag & MNT_RDONLY) == 0) {
-		if (dep->de_FileSize != 0) {
-			error = detrunc(dep, (u_long)0, 0, NOCRED, NULL);
-		}
+		error = detrunc(dep, (u_long)0, 0, NOCRED, NULL);
 		dep->de_Name[0] = SLOT_DELETED;
 	}
 	deupdat(dep, 0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.3 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.4 2002/03/06 02:11:44 niklas Exp $	*/
 /*	$NetBSD: ad1848.c,v 1.45 1998/01/30 02:02:38 augustss Exp $	*/
 
 /*
@@ -1640,9 +1640,10 @@ ad1848_intr(arg)
 }
 
 void *
-ad1848_malloc(addr, size, pool, flags)
+ad1848_malloc(addr, direction, size, pool, flags)
 	void *addr;
-	unsigned long size;
+	int direction;
+	size_t size;
 	int pool;
 	int flags;
 {
@@ -1660,10 +1661,11 @@ ad1848_free(addr, ptr, pool)
 	isa_free(ptr, pool);
 }
 
-unsigned long
-ad1848_round(addr, size)
+size_t
+ad1848_round(addr, direction, size)
 	void *addr;
-	unsigned long size;
+	int direction;
+	size_t size;
 {
 	if (size > MAX_ISADMA)
 		size = MAX_ISADMA;

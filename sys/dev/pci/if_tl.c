@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.10.4.5 2001/11/13 21:10:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.10.4.6 2002/03/06 02:11:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -1707,7 +1707,7 @@ void tl_init(xsc)
 	/* Send the RX go command */
 	CMD_SET(sc, TL_CMD_GO|TL_CMD_NES|TL_CMD_RT);
 
-	(void)splx(s);
+	splx(s);
 
 	/* Start the stats update counter */
 	timeout_set(&sc->tl_stats_tmo, tl_stats_update, sc);
@@ -1849,7 +1849,7 @@ int tl_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }

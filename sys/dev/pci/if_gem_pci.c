@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.2.4.3 2002/03/06 02:11:45 niklas Exp $	*/
 /*	$NetBSD: if_gem_pci.c,v 1.1 2001/09/16 00:11:42 eeh Exp $ */
 
 /*
@@ -160,6 +161,9 @@ gem_attach_pci(parent, self, aux)
 #endif
 #ifdef __sparc__
 	myetheraddr(sc->sc_enaddr);
+#endif
+#ifdef __powerpc__ 
+        pci_ether_hw_addr(pa->pa_pc, sc->sc_enaddr);
 #endif
 
 	sc->sc_burst = 16;	/* XXX */

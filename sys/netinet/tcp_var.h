@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.2 2001/07/04 10:55:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.3 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -83,6 +83,7 @@ struct tcpcb {
 
 	struct	mbuf *t_template;	/* skeletal packet for transmit */
 	struct	inpcb *t_inpcb;		/* back pointer to internet pcb */
+	struct	timeout t_delack_to;	/* delayed ACK callback */
 /*
  * The following fields are used as in the protocol specification.
  * See RFC783, Dec. 1981, page 21.
@@ -176,6 +177,33 @@ struct tcpcb {
 
 #define	intotcpcb(ip)	((struct tcpcb *)(ip)->inp_ppcb)
 #define	sototcpcb(so)	(intotcpcb(sotoinpcb(so)))
+
+#ifdef _KERNEL
+extern int tcp_delack_ticks;
+void	tcp_delack(void *);
+
+#define TCP_INIT_DELACK(tp)						\
+	timeout_set(&(tp)->t_delack_to, tcp_delack, tp)
+
+#define TCP_RESTART_DELACK(tp)						\
+	timeout_add(&(tp)->t_delack_to, tcp_delack_ticks)
+
+#define	TCP_SET_DELACK(tp)						\
+do {									\
+	if (((tp)->t_flags & TF_DELACK) == 0) {				\
+		(tp)->t_flags |= TF_DELACK;				\
+		TCP_RESTART_DELACK(tp);					\
+	}								\
+} while (/*CONSTCOND*/0)
+
+#define	TCP_CLEAR_DELACK(tp)						\
+do {									\
+	if ((tp)->t_flags & TF_DELACK) {				\
+		(tp)->t_flags &= ~TF_DELACK;				\
+		timeout_del(&(tp)->t_delack_to);			\
+	}								\
+} while (/*CONSTCOND*/0)
+#endif /* _KERNEL */
 
 /*
  * The smoothed round-trip time and estimated variance
@@ -295,7 +323,8 @@ struct	tcpstat {
 #define	TCPCTL_SACK	       10 /* selective acknowledgement, rfc 2018 */
 #define TCPCTL_MSSDFLT	       11 /* Default maximum segment size */
 #define	TCPCTL_RSTPPSLIMIT     12 /* RST pps limit */
-#define	TCPCTL_MAXID	       13
+#define	TCPCTL_ACK_ON_PUSH     13 /* ACK immediately on PUSH */
+#define	TCPCTL_MAXID	       14
 
 #define	TCPCTL_NAMES { \
 	{ 0, 0 }, \
@@ -311,6 +340,7 @@ struct	tcpstat {
 	{ "sack",	CTLTYPE_INT }, \
 	{ "mssdflt",	CTLTYPE_INT }, \
 	{ "rstppslimit",	CTLTYPE_INT }, \
+	{ "ackonpush",	CTLTYPE_INT }, \
 }
 
 struct tcp_ident_mapping {
@@ -324,8 +354,10 @@ extern	struct tcpstat tcpstat;	/* tcp statistics */
 u_int32_t tcp_now;		/* for RFC 1323 timestamps */
 extern	int tcp_do_rfc1323;	/* enabled/disabled? */
 extern	int tcp_mssdflt;	/* default maximum segment size */
+extern	int tcp_ack_on_push;	/* ACK immediately on PUSH */
 #ifdef TCP_SACK
 extern	int tcp_do_sack;	/* SACK enabled/disabled */
+extern	struct pool sackhl_pool;
 #endif
 
 int	 tcp_attach __P((struct socket *));
@@ -344,7 +376,6 @@ struct tcpcb *
 void	 tcp_dooptions __P((struct tcpcb *, u_char *, int, struct tcphdr *,
 		int *, u_int32_t *, u_int32_t *)); 
 void	 tcp_drain __P((void));
-void	 tcp_fasttimo __P((void));
 void	 tcp_init __P((void));
 #if defined(INET6) && !defined(TCP6)
 int	 tcp6_input __P((struct mbuf **, int *, int));

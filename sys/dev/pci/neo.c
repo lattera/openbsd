@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5.4.3 2001/10/31 03:22:46 nate Exp $       */
+/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5.4.4 2002/03/06 02:11:46 niklas Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>
@@ -270,15 +270,13 @@ struct audio_hw_if neo_hw_if = {
 	neo_mixer_set_port,
 	neo_mixer_get_port,
 	neo_query_devinfo,
-	NULL, /* neo_malloc_old, */
+	neo_malloc,
 	neo_free,
-	NULL, /* neo_round_buffersize_old, */
-	0, /* neo_mappage, */
+	neo_round_buffersize,
+	0,				/* neo_mappage, */
 	neo_get_props,
 	neo_trigger_output,
 	neo_trigger_input,
-	neo_malloc,
-	neo_round_buffersize,
 
 };
 

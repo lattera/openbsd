@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.3 2001/12/05 01:02:40 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.4 2002/03/06 02:15:07 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -47,9 +47,11 @@ enum	{ PF_CHANGE_ADD_HEAD=1, PF_CHANGE_ADD_TAIL=2,
 enum	{ PFTM_TCP_FIRST_PACKET=0, PFTM_TCP_OPENING=1, PFTM_TCP_ESTABLISHED=2,
 	  PFTM_TCP_CLOSING=3, PFTM_TCP_FIN_WAIT=4, PFTM_TCP_CLOSED=5,
 	  PFTM_UDP_FIRST_PACKET=6, PFTM_UDP_SINGLE=7, PFTM_UDP_MULTIPLE=8,
-	  PFTM_ICMP_FIRST_PACKET=9, PFTM_ICMP_ERROR_REPLY=10, PFTM_FRAG=11,
-	  PFTM_INTERVAL=12, PFTM_MAX=13 };
+	  PFTM_ICMP_FIRST_PACKET=9, PFTM_ICMP_ERROR_REPLY=10,
+	  PFTM_OTHER_FIRST_PACKET=11, PFTM_OTHER_SINGLE=12,
+	  PFTM_OTHER_MULTIPLE=13, PFTM_FRAG=14, PFTM_INTERVAL=15, PFTM_MAX=16 };
 enum	{ PF_FASTROUTE=1, PF_ROUTETO=2, PF_DUPTO=3 };
+enum	{ PF_LIMIT_STATES=0, PF_LIMIT_FRAGS=1, PF_LIMIT_MAX=2 };
 
 struct pf_addr {
 	union {
@@ -190,20 +192,24 @@ struct pf_rule_addr {
 struct pf_rule {
 	char		 ifname[IFNAMSIZ];
 	char		 rt_ifname[IFNAMSIZ];
+#define PF_RULE_LABEL_SIZE	32
+	char		 label[PF_RULE_LABEL_SIZE];
 	struct ifnet	*ifp;
 	struct ifnet	*rt_ifp;
 	struct pf_rule_addr src;
 	struct pf_rule_addr dst;
 	struct pf_addr	 rt_addr;
 
-#define PF_SKIP_IFP		0
-#define PF_SKIP_AF		1
-#define PF_SKIP_PROTO		2
-#define PF_SKIP_SRC_ADDR	3
-#define PF_SKIP_SRC_PORT	4
-#define PF_SKIP_DST_ADDR	5
-#define PF_SKIP_DST_PORT	6
-#define PF_SKIP_COUNT		7
+#define PF_SKIP_ACTION		0
+#define PF_SKIP_IFP		1
+#define PF_SKIP_DIR		2
+#define PF_SKIP_AF		3
+#define PF_SKIP_PROTO		4
+#define PF_SKIP_SRC_ADDR	5
+#define PF_SKIP_SRC_PORT	6
+#define PF_SKIP_DST_ADDR	7
+#define PF_SKIP_DST_PORT	8
+#define PF_SKIP_COUNT		9
 	struct pf_rule	*skip[PF_SKIP_COUNT];
 	TAILQ_ENTRY(pf_rule)	entries;
 
@@ -242,6 +248,7 @@ struct pf_rule {
 struct pf_state_host {
 	struct pf_addr	addr;
 	u_int16_t	port;
+	u_int16_t	pad;
 };
 
 struct pf_state_peer {
@@ -250,6 +257,7 @@ struct pf_state_peer {
 	u_int32_t	seqdiff;	/* Sequence number modulator	*/
 	u_int16_t	max_win;
 	u_int8_t	state;
+	u_int8_t	pad;
 };
 
 struct pf_state {
@@ -271,19 +279,6 @@ struct pf_state {
 	u_int8_t	 allow_opts;
 };
 
-#define		MATCH_TUPLE(h,r,d,i,a) \
-		( \
-		  (r->direction == d) && \
-		  (r->ifp == NULL || r->ifp == i) && \
-		  (!r->proto || r->proto == h->ip_p) && \
-		  (!r->src.mask.addr32[0] || \
-		   pf_match_addr(r->src.not, &(r)->src.addr, \
-		   &(r)->src.mask, (struct pf_addr *)&h->ip_src.s_addr, a)) && \
-		  (!r->dst.mask.addr32[0] || \
-		   pf_match_addr(r->dst.not, &(r)->dst.addr, \
-		   &(r)->dst.mask, (struct pf_addr *)&h->ip_dst.s_addr, a)) \
-		)
-
 struct pf_nat {
 	char		 ifname[IFNAMSIZ];
 	struct ifnet	*ifp;
@@ -298,6 +293,7 @@ struct pf_nat {
 	u_int8_t	 snot;
 	u_int8_t	 dnot;
 	u_int8_t	 ifnot;
+	u_int8_t	 no;
 };
 
 struct pf_binat {
@@ -311,6 +307,7 @@ struct pf_binat {
 	u_int8_t	 af;
 	u_int8_t	 proto;
 	u_int8_t	 dnot;
+	u_int8_t	 no;
 };
 
 struct pf_rdr {
@@ -331,6 +328,7 @@ struct pf_rdr {
 	u_int8_t	 dnot;
 	u_int8_t	 ifnot;
 	u_int8_t	 opts;
+	u_int8_t	 no;
 };
 
 struct pf_tree_key {
@@ -343,16 +341,7 @@ struct pf_tree_key {
 TAILQ_HEAD(pf_rulequeue, pf_rule);
 
 struct pf_pdesc {
-	struct pf_addr	*src;
-	struct pf_addr	*dst;
-	u_int16_t	*ip_sum;
 	u_int64_t	 tot_len; 	/* Make Mickey money */
-	u_int32_t	 p_len; 	/* total length of payload */
-
-	u_int16_t	 flags;		/* Let SCRUB trigger behavior in
-					 * state code. Easier than tags */
-	u_int8_t	 af;
-	u_int8_t	 proto;
 	union {
 		struct tcphdr		*tcp;
 		struct udphdr		*udp;
@@ -362,6 +351,14 @@ struct pf_pdesc {
 #endif /* INET6 */
 		void			*any;
 	} hdr;
+	struct pf_addr	*src;
+	struct pf_addr	*dst;
+	u_int16_t	*ip_sum;
+	u_int32_t	 p_len; 	/* total length of payload */
+	u_int16_t	 flags;		/* Let SCRUB trigger behavior in
+					 * state code. Easier than tags */
+	u_int8_t	 af;
+	u_int8_t	 proto;
 };
 
 /* flags for RDR options */
@@ -423,6 +420,9 @@ struct pf_status {
 	u_int32_t	since;
 	u_int32_t	debug;
 };
+
+#define PFFRAG_FRENT_HIWAT	5000	/* Number of fragment entries */  
+#define PFFRAG_FRAG_HIWAT	1000	/* Number of fragmented packets */
 
 /*
  * ioctl parameter structures
@@ -514,6 +514,11 @@ struct pfioc_tm {
 	int		 seconds;
 };
 
+struct pfioc_limit {
+	int		 index;
+	unsigned	 limit;
+};
+
 /*
  * ioctl operations
  */
@@ -554,6 +559,10 @@ struct pfioc_tm {
 #define DIOCGETBINATS	_IOWR('D', 34, struct pfioc_binat)
 #define DIOCGETBINAT	_IOWR('D', 35, struct pfioc_binat)
 #define DIOCCHANGEBINAT	_IOWR('D', 36, struct pfioc_changebinat)
+#define DIOCADDSTATE	_IOWR('D', 37, struct pfioc_state)
+#define DIOCCLRRULECTRS	_IO  ('D', 38)
+#define DIOCGETLIMIT	_IOWR('D', 39, struct pfioc_limit)
+#define DIOCSETLIMIT	_IOWR('D', 40, struct pfioc_limit)
 
 #ifdef _KERNEL
 
@@ -585,6 +594,8 @@ void	pf_purge_expired_fragments(void);
 
 extern struct pf_rulequeue *pf_rules_active;
 extern struct pf_status pf_status;
+extern struct pool pf_frent_pl, pf_frag_pl;
+
 #endif /* _KERNEL */
 
 #endif /* _NET_PFVAR_H_ */

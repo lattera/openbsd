@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/audio.c,v 1.20.2.3 2001/11/13 21:09:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/audio.c,v 1.20.2.4 2002/03/06 02:11:42 niklas Exp $	*/
 /*	$NetBSD: audio.c,v 1.105 1998/09/27 16:43:56 christos Exp $	*/
 
 /*
@@ -317,7 +317,7 @@ audioattach(parent, self, aux)
 		au_check_ports(sc, &sc->sc_outports, &mi, oclass, 
 			       AudioNoutput, AudioNmaster, otable);
 		if (mi.mixer_class == oclass && 
-		    strcmp(mi.label.name, AudioNmonitor))
+		    strcmp(mi.label.name, AudioNmonitor) == 0)
 			sc->sc_monitor_port = mi.index;
 	}
 	DPRINTF(("audio_attach: inputs ports=0x%x, output ports=0x%x\n",
@@ -551,14 +551,10 @@ audio_alloc_ring(sc, r, direction, bufsize)
 	ROUNDSIZE(bufsize);
 	if (hw->round_buffersize)
 		bufsize = hw->round_buffersize(hdl, direction, bufsize);
-	else if (hw->round_buffersize_old)
-		bufsize = hw->round_buffersize_old(hdl, bufsize);
 	r->bufsize = bufsize;
 	if (hw->allocm)
 		r->start = hw->allocm(hdl, direction, r->bufsize, M_DEVBUF, 
 		    M_WAITOK);
-	else if (hw->allocm_old)
-		r->start = hw->allocm_old(hdl, r->bufsize, M_DEVBUF, M_WAITOK);
 	else
 		r->start = malloc(bufsize, M_DEVBUF, M_WAITOK);
 	if (r->start == 0)
@@ -1776,7 +1772,7 @@ audio_ioctl(dev, cmd, addr, flag, p)
 
 	default:
 		DPRINTF(("audio_ioctl: unknown ioctl\n"));
-		error = EINVAL;
+		error = ENOTTY;
 		break;
 	}
 	DPRINTF(("audio_ioctl(%d,'%c',%d) result %d\n",
@@ -2721,7 +2717,7 @@ audiosetinfo(sc, ai)
 		ct.type = AUDIO_MIXER_VALUE;
 		ct.un.value.num_channels = 1;
 		ct.un.value.level[AUDIO_MIXER_LEVEL_MONO] = ai->monitor_gain;
-		error = sc->hw_if->get_port(sc->hw_hdl, &ct);
+		error = sc->hw_if->set_port(sc->hw_hdl, &ct);
 		if (error)
 			return(error);
 	}
@@ -3014,6 +3010,8 @@ mixer_ioctl(dev, cmd, addr, flag, p)
 		break;
 
 	case AUDIO_MIXER_WRITE:
+		if (!(flag & FWRITE))
+			return (EACCES);
 		DPRINTF(("AUDIO_MIXER_WRITE\n"));
 		error = hw->set_port(sc->hw_hdl, (mixer_ctrl_t *)addr);
 		if (!error && hw->commit_settings)
@@ -3023,7 +3021,7 @@ mixer_ioctl(dev, cmd, addr, flag, p)
 		break;
 
 	default:
-		error = EINVAL;
+		error = ENOTTY;
 		break;
 	}
 	DPRINTF(("mixer_ioctl(%d,'%c',%d) result %d\n",

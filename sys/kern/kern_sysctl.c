@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.8 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.9 2002/03/06 02:13:23 niklas Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -246,6 +246,10 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	extern int usermount, nosuidcoredump;
 	extern long cp_time[CPUSTATES];
 	extern int stackgap_random;
+#ifdef CRYPTO
+	extern int usercrypto;
+	extern int cryptodevallowsoft;
+#endif
 
 	/* all sysctl names at this level are terminal */
 	if (namelen != 1 && !(name[0] == KERN_PROC || name[0] == KERN_PROF ||
@@ -422,6 +426,13 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 #if defined(SYSVMSG) || defined(SYSVSEM) || defined(SYSVSHM)  
 	case KERN_SYSVIPC_INFO:
 		return (sysctl_sysvipc(name + 1, namelen - 1, oldp, oldlenp));
+#endif
+#ifdef CRYPTO
+	case KERN_USERCRYPTO:
+		return (sysctl_int(oldp, oldlenp, newp, newlen, &usercrypto));
+	case KERN_CRYPTODEVALLOWSOFT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+			    &cryptodevallowsoft));
 #endif
 	default:
 		return (EOPNOTSUPP);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.3 2001/11/13 23:04:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.4 2002/03/06 02:13:24 niklas Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -352,7 +352,7 @@ fdesc_lookup(v)
 			goto bad;
 		}
 
-		if (fd >= nfiles || p->p_fd->fd_ofiles[fd] == NULL) {
+		if (fd_getfile(p->p_fd, fd) == NULL) {
 			error = EBADF;
 			goto bad;
 		}
@@ -483,7 +483,9 @@ fdesc_getattr(v)
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
 			return (EBADF);
 		memset(&stb, 0, sizeof(stb));
+		FREF(fp);
 		error = (*fp->f_ops->fo_stat)(fp, &stb, ap->a_p);
+		FRELE(fp);
 		if (error != 0)
 			break;
 		vattr_null(vap);
@@ -568,17 +570,24 @@ fdesc_setattr(v)
 		}
 		return (error);
 	}
+	FREF(fp);
 	vp = (struct vnode *)fp->f_data;
-	if (vp->v_mount->mnt_flag & MNT_RDONLY)
-		return (EROFS);
+	if (vp->v_mount->mnt_flag & MNT_RDONLY) {
+		error = EROFS;
+		goto out;
+	}
 	/*
 	 * Directories can cause deadlocks.
 	 */
-	if (vp->v_type == VDIR)
-		return (EOPNOTSUPP);
+	if (vp->v_type == VDIR) {
+		error = EOPNOTSUPP;
+		goto out;
+	}
 	vn_lock(vp, LK_EXCLUSIVE|LK_RETRY, p);
 	error = VOP_SETATTR(vp, vap, ap->a_cred, p);
 	VOP_UNLOCK(vp, 0, p);
+out:
+	FRELE(fp);
 	return (error);
 }
 
@@ -658,7 +667,7 @@ fdesc_readdir(v)
 			case FD_STDERR:
 				if ((ft->ft_fileno - FD_STDIN) >= fdp->fd_nfiles)
 					continue;
-				if (fdp->fd_ofiles[ft->ft_fileno - FD_STDIN] == NULL)
+				if (fd_getfile(fdp, ft->ft_fileno - FD_STDIN) == NULL)
 					continue;
 				break;
 			}
@@ -685,7 +694,7 @@ fdesc_readdir(v)
 				break;
 	
 			default:
-				if (fdp->fd_ofiles[i - 2] == NULL)
+				if (fd_getfile(fdp, i - 2) == NULL)
 					continue;
 				d.d_fileno = i - 2 + FD_STDIN;
 				d.d_namlen = sprintf(d.d_name, "%d", i - 2);

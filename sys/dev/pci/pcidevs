@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.8 2001/12/05 00:43:30 niklas Exp $
+	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.9 2002/03/06 02:11:46 niklas Exp $
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
 /*
@@ -527,12 +527,14 @@ vendor PCTEL		0x134d	PCTEL
 vendor KAWASAKI		0x136b	Kawasaki
 vendor LMC		0x1376	LAN Media Corp
 vendor NETGEAR		0x1385	Netgear
+vendor MOXA		0x1393	Moxa
 vendor LEVEL1		0x1394	Level 1
 vendor HIFN		0x13a3	Hifn
 vendor TRIWARE		0x13c1	3ware
 vendor SUNDANCE		0x13f0	Sundance
 vendor CMI		0x13f6	C-Media Electronics
 vendor LAVA		0x1407	Lava
+vendor SUNIX		0x1409	Sunix
 vendor OXFORD2		0x1415	Oxford
 vendor TAMARACK		0x143d	Tamarack Microelectronics
 vendor OXFORD		0x14d2	Oxford
@@ -546,6 +548,8 @@ vendor DELTA		0x1500	Delta
 vendor TOPIC		0x151f	Topic/SmartLink
 vendor BLUESTEEL	0x15ab	Bluesteel Networks
 vendor VMWARE		0x15ad	VMware
+vendor COREGA		0x15e8	Corega
+vendor SYBA		0x1592	Syba
 vendor EUMITCOM		0x1638	Eumitcom
 vendor NETSEC		0x1660	NetSec
 vendor GLOBALSUN	0x16ab	Global Sun
@@ -572,6 +576,7 @@ vendor KTI		0x8e2e	KTI
 vendor ADP		0x9004	Adaptec
 vendor ADP2		0x9005	Adaptec
 vendor ATRONICS		0x907f	Atronics
+vendor NETMOS		0x9710	NetMos
 vendor ARC		0xedd8	ARC Logic
 vendor CHRYSALIS	0xcafe	Chrysalis-ITS
 vendor INVALID		0xffff	INVALID VENDOR ID
@@ -809,10 +814,10 @@ product APPLE GC		0x0002	GC
 product APPLE OHARE		0x0007	OHare
 product APPLE HEATHROW		0x0010	Heathrow
 product APPLE PADDINGTON	0x0017	Paddington
-product APPLE UNINORTHETH	0x001e	Uni-North Eth
-product APPLE UNINORTH		0x001f	Uni-North
+product APPLE UNINORTHETH	0x001e	Uni-N Eth
+product APPLE UNINORTH		0x001f	Uni-N
 product APPLE USB		0x0019	USB
-product APPLE UNINORTHAGP	0x0020	Uni-North AGP
+product APPLE UNINORTHAGP	0x0020	Uni-N AGP
 product APPLE GMAC		0x0021	GMAC
 product APPLE KEYLARGO		0x0022	Keylargo
 product APPLE GMAC2		0x0024	GMAC
@@ -821,6 +826,9 @@ product APPLE PANGEA_OHCI	0x0026	Pangea USB
 product APPLE PANGEA_AGP	0x0027	Pangea AGP
 product APPLE PANGEA_PCI1	0x0028	Pangea Host-PCI
 product APPLE PANGEA_PCI2	0x0029	Pangea Host-PCI
+product APPLE UNINORTH2AGP	0x002d  Uni-N2 AGP
+product APPLE UNINORTH2		0x002e  Uni-N2 Host
+product APPLE UNINORTH2ETH	0x002f  Uni-N2 Host
 product APPLE PANGEA_FW		0x0030	Pangea FireWire
 
 /* ARC Logic products */
@@ -1026,12 +1034,18 @@ product CONEXANT SOFTK56_PCI	0x2443	SoftK56 PCI
 product CONTAQ 82C599		0x0600	82C599 PCI-VLB
 product CONTAQ 82C693		0xc693	CY82C693U PCI-ISA
 
+/* Corega products */
+product COREGA CGWLPCIA11 	0x0130	WLAN 11Mb
+
 /* Corollary Products */
 product COROLLARY CBUSII_PCIB	0x0014	C-Bus II-PCI
 
 /* Creative Labs */
 product CREATIVELABS SBLIVE	0x0002	SoundBlaster Live
-product CREATIVELABS DIGIN	0x7002	SoundBlaster Digital Input
+product CREATIVELABS AUDIGY	0x0004	SoundBlaster Audigy
+product CREATIVELABS FIWIRE	0x4001	Firewire
+product CREATIVELABS DIGIN	0x7002	SoundBlaster Live Digital Input
+product CREATIVELABS AUDIGIN	0x7003	SoundBlaster Audigy Digital Input
 product CREATIVELABS EV1938	0x8938	Ectiva 1938
 
 /* Cyclades products */
@@ -1173,13 +1187,16 @@ product GLOBALSUN GL24110P02	0x1102	GL24110P02
 product GUILLEMOT MAXIRADIO	0x1001	MAXIRADIO
 
 /* Hewlett-Packard products */
+product HP A4977A		0x1005	A4977A Visualize EG
 product HP J2585A		0x1030	J2585A
 product HP J2585B		0x1031	J2585B
+product HP 82557B		0x1200	82557B 10/100 NIC
 product HP NETRAID_4M		0x10c2	NetRaid-4M
 
 /* Hifn products */
 product HIFN 7751		0x0005	7751
 product HIFN 6500		0x0006	6500
+product	HIFN 7811		0x0007	7811
 product HIFN 7951		0x0012	7951
 
 /* Hint */
@@ -1236,6 +1253,7 @@ product INTEL 82452		0x1000	PRO 1000
 product INTEL 82452_SC		0x1001	PRO 1000SC
 product INTEL 82453		0x1001	PRO 1000F
 product INTEL 82453_CU		0x1004	PRO 1000T
+product INTEL 82544		0x1008	PRO 1000XT
 product INTEL PRO_100_VE_0	0x1031	PRO/100 VE
 product INTEL PRO_100_VE_1	0x1032	PRO/100 VE
 product INTEL PRO_100_VM_0	0x1033	PRO/100 VM
@@ -1277,6 +1295,8 @@ product INTEL 80960RP_ATU	0x1960	80960RP ATU
 product INTEL 82840_HB		0x1a21	82840 Host
 product INTEL 82840_AGP		0x1a23	82840 AGP
 product INTEL 82840_PCI		0x1a24	82840 PCI
+product INTEL 82845_HB		0x1a30	82845 Host
+product INTEL 82845_AGP		0x1a31	82845 AGP
 product INTEL 82801AA_LPC	0x2410	82801AA LPC
 product INTEL 82801AA_IDE	0x2411	82801AA IDE
 product INTEL 82801AA_USB	0x2412	82801AA USB
@@ -1435,7 +1455,9 @@ product LUCENT LTMODEM_045A	0x045a	LTMODEM
 product LUCENT LTMODEM_045C	0x045c	LTMODEM
 product LUCENT VENUSMODEM	0x0480	Venus Modem
 product LUCENT USBHC		0x5801	USB
+product LUCENT USBHC2		0x5802	USB 2-port
 product LUCENT USBQBUS		0x5803  USB QuadraBus
+product LUCENT FW322		0x5811  FW322 1394
 
 /* LuxSonor */
 product LUXSONOR LS242		0x0020	LS242 DVD Decoder
@@ -1484,6 +1506,10 @@ product MOT MPC106		0x0002	MPC106 Host-PCI
 product MOT SM56		0x5600	SM56
 product MOT RAVEN		0x4801	Raven Host-PCI
 
+/* Moxa */
+product MOXA CP114 		0x1141	CP-114
+product MOXA C168H		0x1680	C168H
+
 /* Mylex products */
 product MYLEX 960P		0x0001	DAC960P RAID
 product MYLEX ACCELERAID	0x0050	AcceleRAID
@@ -1503,6 +1529,7 @@ product NEC USB			0x0035	USB
 product NEC POWERVR2		0x0046	PowerVR PCX2
 product NEC MARTH		0x0074	I/O
 product NEC PKUG		0x007d	I/O
+product NEC USB2		0x00e0	USB 2.0
 product NEC VERSAMAESTRO	0x8058	Versa Maestro
 product NEC VERSAPRONXVA26D	0x803c	Versa Va26D Maestro
 
@@ -1522,6 +1549,9 @@ product NEOMAGIC NM256ZX	0x8006	MagicMedia 256ZX
 product NETGEAR MA301		0x4100	MA301
 product NETGEAR GA620		0x620a	GA620
 product NETGEAR GA620T		0x630a	GA620T
+
+/* NetMos */
+product NETMOS 2S1P		0x9835	2S1P
 
 /* Network Security Technologies, Inc. */
 product NETSEC 7751		0x7751	7751
@@ -1625,6 +1655,7 @@ product NVIDIA VANTA2		0x002d	Vanta
 product NVIDIA GEFORCE256	0x0100	GeForce256
 product NVIDIA GEFORCE256_DDR	0x0101	GeForce256 DDR
 product NVIDIA GEFORCE2MX	0x0110	GeForce2 MX
+product NVIDIA GEFORCE2MX_100	0x0111	GeForce2 MX 100
 product NVIDIA GEFORCE2GO	0x0112	GeForce2 Go
 product NVIDIA GEFORCE2GTS	0x0150	GeForce2 GTS
 product NVIDIA GEFORCE2ULTRA	0x0152	GeForce2 Ultra
@@ -1712,7 +1743,9 @@ product PROMISE PDC20246	0x4d33	PDC20246
 product PROMISE PDC20262	0x4d38	PDC20262
 product PROMISE PDC20265	0x0d30	PDC20265
 product PROMISE	PDC20267	0x4d30	PDC20267
-product	PROMISE PDC20268	0x4d68	PDC20268
+product PROMISE PDC20268	0x4d68	PDC20268
+product PROMISE PDC20268R	0x6268	PDC20268R
+product PROMISE PDC20269	0x4d69	PDC20269
 
 /* QLogic products */
 product QLOGIC ISP1020		0x1020	ISP1020
@@ -1818,13 +1851,14 @@ product SIS 85C601		0x0601	85C601 EIDE
 product SIS 620			0x0620	620 Host-PCI
 product SIS 630			0x0630	630 Host-PCI
 product SIS 730			0x0730	730 Host-PCI
+product SIS 735			0x0735	735 Host-PCI
 product SIS 900			0x0900	900 10/100BaseTX
 product SIS 7016		0x7016	7016 10/100BaseTX
 product SIS 7018		0x7018	Trident 4D WAVE
 product SIS 5511		0x5511	5511
 product SIS 5512		0x5512	5512
 product SIS 5513		0x5513	5513 EIDE
-product SIS 5571		0x5571	5571
+product SIS 5571		0x5571	5571 Host-PCI
 product SIS 5581		0x5581	5581
 product SIS 5582		0x5582	5582
 product SIS 5591		0x5591	5591 Host-PCI
@@ -1884,8 +1918,14 @@ product SUN US_IIe		0xa001	UltraSPARC IIe PCI
 product SUNDANCE ST201		0x0201	ST201
 product SUNDANCE ST2021		0x2021	ST2021 Gigabit Ethernet
 
+/* Sunix */
+product SUNIX 4065A		0x4065	4065A
+
 /* Surecom products */
 product SURECOM NE34		0x0e34	Surecom NE-34
+
+/* Syba */
+product SYBA 4S2P		0x0781	4S2P
 
 /* Symphony Labs products */
 product SYMPHONY 82C101		0x0001	82C101
@@ -1903,6 +1943,7 @@ product TEKRAM 	DC290		0xdc29	DC-290(M)
 
 /* Tekram Technology products(2) */
 product TEKRAM2	DC690C		0x690c	DC-690C
+product TEKRAM2 DC3X5U		0x0391	DC-3x5U
 
 /* Texas Instruments products */
 product TI TLAN			0x0500	TLAN
@@ -2052,8 +2093,11 @@ product VIATECH RHINE		0x3043	Rhine/RhineII
 product VIATECH VT82C596	0x3050	VT82C596 Power Mgmt
 product VIATECH	VT82C686A_SMB	0x3057	VT82C686 SMBus
 product VIATECH	VT82C686A_AC97	0x3058	VT82C686 AC97 Audio
+product VIATECH	VT8233_AC97	0x3059	VT8233 AC97 Audio
 product VIATECH RHINEII_2	0x3065	RhineII-2
 product VIATECH	VT82C686A_ACM	0x3068	VT82C686 AC97 Modem
+product VIATECH VT8366_ISA	0x3074	VT8366 PCI-ISA
+product VIATECH VT8366		0x3099	VT8366 Host-PCI
 product VIATECH RHINEII		0x6100	RhineII
 product VIATECH VT8363_AGP	0x8305	VT8363 PCI-AGP
 product VIATECH	VT8371_PPB	0x8391	VT8371 PCI-PCI
@@ -2062,6 +2106,7 @@ product VIATECH VT82C601	0x8601	VT82C601 PCI-AGP
 product VIATECH VT82C597AGP	0x8597	VT82C597 PCI-AGP
 product VIATECH VT82C598AGP	0x8598	VT82C598 PCI-AGP
 product VIATECH VT8605_AGP	0x8605	VT8605 PCI-AGP
+product VIATECH VT8366_AGP	0xb099	VT8366 PCI-AGP
 
 /* Vortex Computer Systems products */
 product VORTEX GDT_60x0		0x0000	GDT6000/6020/6050

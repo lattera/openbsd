@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23.4.4 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23.4.5 2002/03/06 02:11:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -867,6 +867,7 @@ void xl_setmode(sc, media)
 
 void xl_reset(sc, hard)
 	struct xl_softc		*sc;
+	int hard;
 {
 	register int		i;
 
@@ -2098,7 +2099,7 @@ void xl_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 
 	timeout_add(&sc->xl_stsup_tmo, hz);
 
@@ -2322,7 +2323,7 @@ xl_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }
@@ -2698,6 +2699,7 @@ xl_detach(sc)
 	if_detach(ifp);
 
 	shutdownhook_disestablish(sc->sc_sdhook);
+	powerhook_disestablish(sc->sc_pwrhook);
 
 	return (0);
 }

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.6 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.7 2002/03/06 02:11:45 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.24 2001/11/13 16:49:22 jason Exp 
+ *	OpenBSD: miidevs,v 1.26 2001/12/15 02:41:33 deraadt Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -86,6 +86,7 @@
 /* Level 1 is completely different - from right to left.
 	(Two bits get lost in the third OUI byte.) */
 #define	MII_OUI_xxLEVEL1	0x1e0400	/* Level 1 */
+#define	MII_OUI_xxLEVEL1a	0x0004de	/* Level 1 */
 
 /* Don't know what's going on here. */
 #define	MII_OUI_xxDAVICOM	0x006040	/* Davicom Semiconductor */
@@ -133,6 +134,12 @@
 #define	MII_MODEL_xxDAVICOM_DM9101	0x0000
 #define	MII_STR_xxDAVICOM_DM9101	"DM9101 10/100 media interface"
 
+/* Enable Semiconductor PHYs */
+#define	MII_MODEL_ENABLESEMI_88E1000	0x0005
+#define	MII_STR_ENABLESEMI_88E1000	"Enable 88E1000"
+#define	MII_MODEL_ENABLESEMI_88E1000S	0x0004
+#define	MII_STR_ENABLESEMI_88E1000S	"Enable 88E1000S"
+
 /* Marvell Semiconductor PHYs */
 #define	MII_MODEL_MARVELL_E1000	0x0000
 #define	MII_STR_MARVELL_E1000	"Marvell Semiconductor 88E1000* Gigabit"
@@ -162,6 +169,8 @@
 /* Level 1 PHYs */
 #define	MII_MODEL_xxLEVEL1_LXT970	0x0000
 #define	MII_STR_xxLEVEL1_LXT970	"LXT970 10/100 media interface"
+#define	MII_MODEL_xxLEVEL1a_LXT971	0x000e
+#define	MII_STR_xxLEVEL1a_LXT971	"LXT971 10/100 media interface"
 
 /* Myson Technology PHYs */
 #define	MII_MODEL_MYSON_MTD972	0x0000

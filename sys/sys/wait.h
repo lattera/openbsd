@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/wait.h,v 1.5.14.1 2001/05/14 22:45:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/wait.h,v 1.5.14.2 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: wait.h,v 1.11 1996/04/09 20:55:51 cgd Exp $	*/
 
 /*
@@ -86,7 +86,7 @@
 #endif
 
 #ifndef _POSIX_SOURCE
-/* POSIX extensions and 4.2/4.3 compatability: */
+/* POSIX extensions and 4.2/4.3 compatibility: */
 
 /*
  * Tokens for special values of the "pid" parameter to wait4.

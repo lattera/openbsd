@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.4 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.5 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$KAME: ip6_output.c,v 1.172 2001/03/25 09:55:56 itojun Exp $	*/
 
 /*
@@ -398,61 +398,6 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 			   nexthdrp, IPPROTO_DSTOPTS);
 		MAKE_CHAIN(exthdrs.ip6e_rthdr, mprev,
 			   nexthdrp, IPPROTO_ROUTING);
-
-#if 0 /*KAME IPSEC*/
-		if (!needipsec)
-			goto skip_ipsec2;
-
-		/*
-		 * pointers after IPsec headers are not valid any more.
-		 * other pointers need a great care too.
-		 * (IPsec routines should not mangle mbufs prior to AH/ESP)
-		 */
-		exthdrs.ip6e_dest2 = NULL;
-
-	    {
-		struct ip6_rthdr *rh = NULL;
-		int segleft_org = 0;
-		struct ipsec_output_state state;
-
-		if (exthdrs.ip6e_rthdr) {
-			rh = mtod(exthdrs.ip6e_rthdr, struct ip6_rthdr *);
-			segleft_org = rh->ip6r_segleft;
-			rh->ip6r_segleft = 0;
-		}
-
-		bzero(&state, sizeof(state));
-		state.m = m;
-		error = ipsec6_output_trans(&state, nexthdrp, mprev, sp, flags,
-			&needipsectun);
-		m = state.m;
-		if (error) {
-			/* mbuf is already reclaimed in ipsec6_output_trans. */
-			m = NULL;
-			switch (error) {
-			case EHOSTUNREACH:
-			case ENETUNREACH:
-			case EMSGSIZE:
-			case ENOBUFS:
-			case ENOMEM:
-				break;
-			default:
-				printf("ip6_output (ipsec): error code %d\n", error);
-				/*fall through*/
-			case ENOENT:
-				/* don't show these error codes to the user */
-				error = 0;
-				break;
-			}
-			goto bad;
-		}
-		if (exthdrs.ip6e_rthdr) {
-			/* ah6_output doesn't modify mbuf chain */
-			rh->ip6r_segleft = segleft_org;
-		}
-	    }
-skip_ipsec2:;
-#endif
 	}
 
 	/*
@@ -560,7 +505,7 @@ skip_ipsec2:;
 
 		/* Latch to PCB */
 		if (inp)
-		        tdb_add_inp(tdb, inp, 0);
+			tdb_add_inp(tdb, inp, 0);
 
 		m->m_flags &= ~(M_BCAST | M_MCAST);	/* just in case */
 
@@ -817,9 +762,8 @@ skip_ipsec2:;
 		 * We eventually have sockaddr_in6 and use the sin6_scope_id
 		 * field of the structure here.
 		 * We rely on the consistency between two scope zone ids
-		 * of source add destination, which should already be assured
-		 * Larger scopes than link will be supported in the near
-		 * future.
+		 * of source and destination, which should already be assured.
+		 * Larger scopes than link will be supported in the future. 
 		 */
 		origifp = NULL;
 		if (IN6_IS_SCOPE_LINKLOCAL(&ip6->ip6_src))
@@ -969,7 +913,8 @@ skip_ipsec2:;
 
 		/*
 		 * Loop through length of segment after first fragment,
-		 * make new header and copy data of each part and link onto chain.
+		 * make new header and copy data of each part and link onto
+		 * chain.
 		 */
 		m0 = m;
 		for (off = hlen; off < tlen; off += len) {
@@ -1381,18 +1326,6 @@ ip6_ctloutput(op, so, level, optname, mp)
 # undef in6p_flags
 				break;
 
-#if 0 /*KAME IPSEC*/
-			case IPV6_IPSEC_POLICY:
-			    {
-				caddr_t req = NULL;
-				if (m != 0)
-					req = mtod(m, caddr_t);
-				error = ipsec6_set_policy(in6p, optname, req,
-				                          privileged);
-			    }
-				break;
-#endif /* IPSEC */
-
 			case IPSEC6_OUTSA:
 #ifndef IPSEC
 				error = EINVAL;
@@ -1604,21 +1537,6 @@ ip6_ctloutput(op, so, level, optname, mp)
 			case IPV6_LEAVE_GROUP:
 				error = ip6_getmoptions(optname, inp->inp_moptions6, mp);
 				break;
-
-#if 0 /*KAME IPSEC*/
-			case IPV6_IPSEC_POLICY:
-			  {
-				caddr_t req = NULL;
-				int len = 0;
-
-				if (m != 0) {
-					req = mtod(m, caddr_t);
-					len = m->m_len;
-				}
-				error = ipsec6_get_policy(in6p, req, mp);
-				break;
-			  }
-#endif /* IPSEC */
 
 			case IPSEC6_OUTSA:
 #ifndef IPSEC
@@ -1839,7 +1757,8 @@ ip6_setmoptions(optname, im6op, m)
 			 * all multicast addresses. Only super user is allowed
 			 * to do this.
 			 */
-			if (suser(p->p_ucred, &p->p_acflag)) {
+			if (suser(p->p_ucred, &p->p_acflag))
+			{
 				error = EACCES;
 				break;
 			}
@@ -1943,7 +1862,8 @@ ip6_setmoptions(optname, im6op, m)
 		}
 		mreq = mtod(m, struct ipv6_mreq *);
 		if (IN6_IS_ADDR_UNSPECIFIED(&mreq->ipv6mr_multiaddr)) {
-			if (suser(p->p_ucred, &p->p_acflag)) {
+			if (suser(p->p_ucred, &p->p_acflag))
+			{
 				error = EACCES;
 				break;
 			}

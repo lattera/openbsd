@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_nge.c,v 1.4.2.3 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_nge.c,v 1.4.2.4 2002/03/06 02:11:45 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -1689,7 +1689,7 @@ void nge_init(xsc)
 		printf("%s: initialization failed: no "
 			"memory for rx buffers\n", sc->sc_dv.dv_xname);
 		nge_stop(sc);
-		(void)splx(s);
+		splx(s);
 		return;
 	}
 
@@ -1815,7 +1815,7 @@ void nge_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 }
 
 /*
@@ -1954,7 +1954,7 @@ int nge_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }

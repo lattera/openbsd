@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.8.2.4 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.8.2.5 2002/03/06 02:11:45 niklas Exp $	*/
 /*	$NetBSD: eso.c,v 1.3 1999/08/02 17:37:43 augustss Exp $	*/
 
 /*
@@ -161,25 +161,13 @@ HIDE struct audio_hw_if eso_hw_if = {
 	eso_set_port,
 	eso_get_port,
 	eso_query_devinfo,
-#ifdef __OpenBSD__
-	0,
-#else
 	eso_allocm,
-#endif
 	eso_freem,
-#ifdef __OpenBSD__
-	0, 
-#else
 	eso_round_buffersize,
-#endif
 	eso_mappage,
 	eso_get_props,
 	eso_trigger_output,
 	eso_trigger_input,
-#ifdef __OpenBSD__
-	eso_allocm,
-	eso_round_buffersize
-#endif
 };
 
 HIDE const char * const eso_rev2model[] = {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.4 2001/11/13 21:10:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.5 2002/03/06 02:11:47 niklas Exp $	*/
 /*	$NetBSD: if_ne_pcmcia.c,v 1.17 1998/08/15 19:00:04 thorpej Exp $	*/
 
 /*
@@ -398,6 +398,10 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
       PCMCIA_CIS_NETGEAR_FA410TXC,
       0, -1, { 0x00, 0x48, 0x54 } },
+
+    { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA411,
+      PCMCIA_CIS_NETGEAR_FA411,
+      0, -1, { 0x00, 0x40, 0xf4 } },
 
 #if 0
     /* the rest of these are stolen from the linux pcnet pcmcia device

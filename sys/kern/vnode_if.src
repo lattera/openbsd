@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.9.6.4 2001/12/05 01:02:39 niklas Exp $
+#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.9.6.5 2002/03/06 02:13:24 niklas Exp $
 #	$NetBSD: vnode_if.src,v 1.10 1996/05/11 18:26:27 mycroft Exp $
 #
 # Copyright (c) 1992, 1993
@@ -467,48 +467,27 @@ vop_whiteout {
 #vop_bwrite {
 #	IN struct buf *bp;
 #};
-
 #
-#% ballocn    vp      L L L
+#% getextattr	vp	L L L
 #
-vop_ballocn {
+vop_getextattr {
 	IN struct vnode *vp;
-	IN off_t offset;
-	IN off_t length;
+	IN int attrnamespace;
+	IN const char *name;
+	INOUT struct uio *uio;
+	OUT size_t *size;
 	IN struct ucred *cred;
-	IN int flags;
+	IN struct proc *p;
 };
 
 #
-#% getpages    vp L L L
+#% setextattr	vp	L L L
 #
-vop_getpages {
+vop_setextattr {
 	IN struct vnode *vp;
-	IN voff_t offset;
-	IN struct vm_page **m;
-	IN int *count;
-	IN int centeridx;
-	IN vm_prot_t access_type;
-	IN int advice;
-	IN int flags;
-};
-
-#
-#% putpages    vp L L L
-#
-vop_putpages {
-	IN struct vnode *vp;
-	IN struct vm_page **m;
-	IN int count;
-	IN int flags;
-	IN int *rtvals;
-};
-
-#
-#% size                vp = = =
-#
-vop_size {
-	IN struct vnode *vp;
-	IN off_t size;
-	OUT off_t *eobp;
+	IN int attrnamespace;
+	IN const char *name;
+	INOUT struct uio *uio;
+	IN struct ucred *cred;
+	IN struct proc *p;
 };

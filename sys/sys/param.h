@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/param.h,v 1.27.2.4 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/param.h,v 1.27.2.5 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.23 1996/03/17 01:02:29 thorpej Exp $	*/
 
 /*-
@@ -158,6 +158,13 @@
 #define	MAXPATHLEN	PATH_MAX
 #define MAXSYMLINKS	32
 
+/* Macros to set/clear/test flags. */
+#ifdef _KERNEL
+#define SET(t, f)	((t) |= (f))
+#define CLR(t, f)	((t) &= ~(f))
+#define ISSET(t, f)	((t) & (f))
+#endif
+
 /* Bit map related macros. */
 #define	setbit(a,i)	((a)[(i)/NBBY] |= 1<<((i)%NBBY))
 #define	clrbit(a,i)	((a)[(i)/NBBY] &= ~(1<<((i)%NBBY)))
@@ -227,16 +234,3 @@
 #define RFCNAMEG	(1<<10) /* UNIMPL zero plan9 `name space' */
 #define RFCENVG		(1<<11) /* UNIMPL zero plan9 `env space' */
 #define RFCFDG		(1<<12)	/* zero fd table */
-
-#ifdef _KERNEL
-/*
- * Defaults for Unified Buffer Cache parameters.
- */
-
-#ifndef UBC_WINSHIFT
-#define UBC_WINSHIFT 13
-#endif
-#ifndef UBC_NWINS
-#define UBC_NWINS 1024
-#endif
-#endif /* _KERNEL */

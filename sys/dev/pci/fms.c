@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2.6.4 2001/11/13 21:10:01 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2.6.5 2002/03/06 02:11:45 niklas Exp $ */
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-
@@ -137,15 +137,13 @@ struct audio_hw_if fms_hw_if = {
 	fms_set_port,
 	fms_get_port,
 	fms_query_devinfo,
-	NULL,
+	fms_malloc,
 	fms_free,
-	NULL,
+	fms_round_buffersize,
 	fms_mappage,
 	fms_get_props,
 	fms_trigger_output,
-	fms_trigger_input,
-	fms_malloc,
-	fms_round_buffersize,
+	fms_trigger_input
 };
 
 int	fms_attach_codec __P((void *, struct ac97_codec_if *));

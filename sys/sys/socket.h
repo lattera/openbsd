@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.5 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.6 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: socket.h,v 1.14 1996/02/09 18:25:36 christos Exp $	*/
 
 /*
@@ -184,7 +184,6 @@ struct sockproto {
 #define	PF_LOCAL	AF_LOCAL
 #define	PF_UNIX		PF_LOCAL	/* backward compatibility */
 #define	PF_INET		AF_INET
-#define	PF_INET6	AF_INET6
 #define	PF_IMPLINK	AF_IMPLINK
 #define	PF_PUP		AF_PUP
 #define	PF_CHAOS	AF_CHAOS

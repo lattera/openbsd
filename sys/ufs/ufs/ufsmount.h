@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufsmount.h,v 1.5.4.1 2001/12/05 01:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufsmount.h,v 1.5.4.2 2002/03/06 02:17:14 niklas Exp $	*/
 /*	$NetBSD: ufsmount.h,v 1.4 1994/12/21 20:00:23 mycroft Exp $	*/
 
 /*
@@ -64,7 +64,6 @@ struct ufsmount {
 	struct	vnode *um_quotas[MAXQUOTAS];	/* pointer to quota files */
 	struct	ucred *um_cred[MAXQUOTAS];	/* quota file access cred */
 	u_long	um_nindir;			/* indirect ptrs per block */
-	u_long	um_lognindir;			/* log2 of um_nindir */
 	u_long	um_bptrtodb;			/* indir ptr to disk block */
 	u_long	um_seqinc;			/* inc between seq blocks */
 	time_t	um_btime[MAXQUOTAS];		/* block quota time limit */
@@ -72,6 +71,7 @@ struct ufsmount {
 	char	um_qflags[MAXQUOTAS];		/* quota specific flags */
 	struct	netexport um_export;		/* export information */
 	u_int64_t um_savedmaxfilesize;		/* XXX - limit maxfilesize */
+	struct  ufs_extattr_per_mount um_extattr;       /* extended attrs */
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket.c,v 1.27.4.3 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket.c,v 1.27.4.4 2002/03/06 02:13:23 niklas Exp $	*/
 /*	$NetBSD: uipc_socket.c,v 1.21 1996/02/04 02:17:52 christos Exp $	*/
 
 /*
@@ -79,8 +79,7 @@ void
 soinit(void)
 {
 
-	pool_init(&socket_pool, sizeof(struct socket), 0, 0, 0,
-	    "sockpl", 0, NULL, NULL, M_SOCKET);
+	pool_init(&socket_pool, sizeof(struct socket), 0, 0, 0, "sockpl", NULL);
 }
 
 /*
@@ -936,7 +935,9 @@ sosetopt(so, level, optname, m0)
 		switch (optname) {
 
 		case SO_LINGER:
-			if (m == NULL || m->m_len != sizeof (struct linger)) {
+			if (m == NULL || m->m_len != sizeof (struct linger) ||
+			    mtod(m, struct linger *)->l_linger < 0 ||
+			    mtod(m, struct linger *)->l_linger > SHRT_MAX) {
 				error = EINVAL;
 				goto bad;
 			}

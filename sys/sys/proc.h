@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.8 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.9 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -234,6 +234,7 @@ struct	proc {
 #define	P_TIMEOUT	0x000400	/* Timing out during sleep. */
 #define	P_TRACED	0x000800	/* Debugged process being traced. */
 #define	P_WAITED	0x001000	/* Debugging proc has waited for child. */
+/* XXX - Should be merged with INEXEC */
 #define	P_WEXIT		0x002000	/* Working on exiting. */
 #define	P_EXEC		0x004000	/* Process called exec. */
 
@@ -247,6 +248,7 @@ struct	proc {
 
 #define	P_NOCLDWAIT	0x080000	/* Let pid 1 wait for my children */
 #define	P_NOZOMBIE	0x100000	/* Pid 1 waits for me instead of dad */
+#define P_INEXEC	0x200000	/* Process is doing an exec right now */
 
 /* Macro to compute the exit signal to be delivered. */
 #define P_EXITSIG(p) \
@@ -290,7 +292,7 @@ struct	pcred {
 #define	SESSHOLD(s)	((s)->s_count++)
 #define	SESSRELE(s) {							\
 	if (--(s)->s_count == 0)					\
-		FREE(s, M_SESSION);					\
+		pool_put(&session_pool, s);				\
 }
 
 #define	PHOLD(p) {							\
@@ -343,6 +345,10 @@ extern struct proc *initproc;		/* Process slots for init, pager. */
 extern struct proc *syncerproc;		/* filesystem syncer daemon */
 
 extern struct pool proc_pool;		/* memory pool for procs */
+extern struct pool rusage_pool;		/* memory pool for zombies */
+extern struct pool ucred_pool;		/* memory pool for ucreds */
+extern struct pool session_pool;	/* memory pool for sessions */
+extern struct pool pcred_pool;		/* memory pool for pcreds */
 
 #define	NQS	32			/* 32 run queues. */
 int	whichqs;			/* Bit mask summary of non-empty Q's. */
@@ -387,7 +393,9 @@ int	fork1 __P((struct proc *, int, int, void *, size_t, void (*)(void *),
 void	rqinit __P((void));
 int	groupmember __P((gid_t, struct ucred *));
 void	cpu_switch __P((struct proc *));
+#if !defined(cpu_wait)
 void	cpu_wait __P((struct proc *));
+#endif
 void	cpu_exit __P((struct proc *));
 
 void	child_return __P((void *));

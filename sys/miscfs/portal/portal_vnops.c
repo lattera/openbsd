@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.8.2.1 2001/07/04 10:49:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.8.2.2 2002/03/06 02:13:24 niklas Exp $	*/
 /*	$NetBSD: portal_vnops.c,v 1.17 1996/02/13 13:12:57 mycroft Exp $	*/
 
 /*
@@ -144,7 +144,7 @@ struct vnodeopv_entry_desc portal_vnodeop_entries[] = {
 	{ &vop_pathconf_desc, portal_pathconf },	/* pathconf */
 	{ &vop_advlock_desc, portal_advlock },		/* advlock */
 	{ &vop_bwrite_desc, portal_bwrite },		/* bwrite */
-	{ (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc portal_vnodeop_opv_desc =
 	{ &portal_vnodeop_p, portal_vnodeop_entries };
@@ -475,7 +475,11 @@ portal_open(v)
 	 * Check that the mode the file is being opened for is a subset 
 	 * of the mode of the existing descriptor.
 	 */
- 	fp = p->p_fd->fd_ofiles[fd];
+	if ((fp = fd_getfile(p->p_fd, fd)) == NULL) {
+		portal_closefd(p, fd);
+		error = EBADF;
+		goto bad;
+	}
 	if (((ap->a_mode & (FREAD|FWRITE)) | fp->f_flag) != fp->f_flag) {
 		portal_closefd(p, fd);
 		error = EACCES;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.5 2001/11/13 23:02:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.6 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -165,7 +165,9 @@ struct ctlname {
 #define	KERN_POOL		49	/* struct: pool information */
 #define	KERN_STACKGAPRANDOM	50	/* int: stackgap_random */
 #define	KERN_SYSVIPC_INFO	51	/* struct: SysV sem/shm/msg info */
-#define	KERN_MAXID		52	/* number of valid kern ids */
+#define KERN_USERCRYPTO		52	/* int: usercrypto */
+#define KERN_CRYPTODEVALLOWSOFT	53	/* int: cryptodevallowsoft */
+#define	KERN_MAXID		54	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -220,6 +222,8 @@ struct ctlname {
 	{ "pool", CTLTYPE_NODE }, \
 	{ "stackgap_random", CTLTYPE_INT }, \
 	{ "sysvipc_info", CTLTYPE_INT }, \
+	{ "usercrypto", CTLTYPE_INT }, \
+	{ "cryptodevallowsoft", CTLTYPE_INT }, \
 }
 
 /*

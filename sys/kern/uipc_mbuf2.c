@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6.4.2 2001/07/04 10:48:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.6.4.3 2002/03/06 02:13:23 niklas Exp $	*/
 /*	$KAME: uipc_mbuf2.c,v 1.29 2001/02/14 13:42:10 itojun Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.40 1999/04/01 00:23:25 thorpej Exp $	*/
 
@@ -277,8 +277,7 @@ m_tag_get(type, len, wait)
 
 	if (len < 0)
 		return (NULL);
-	MALLOC(t, struct m_tag *, len + sizeof(struct m_tag), M_PACKET_TAGS,
-	    wait);
+	t = malloc(len + sizeof(struct m_tag), M_PACKET_TAGS, wait);
 	if (t == NULL)
 		return (NULL);
 	t->m_tag_id = type;
@@ -291,7 +290,7 @@ void
 m_tag_free(t)
 	struct m_tag *t;
 {
-	FREE(t, M_PACKET_TAGS);
+	free(t, M_PACKET_TAGS);
 }
 
 /* Prepend a packet tag. */

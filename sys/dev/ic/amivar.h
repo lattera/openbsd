@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/amivar.h,v 1.3.2.2 2001/07/04 10:40:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/amivar.h,v 1.3.2.3 2002/03/06 02:11:42 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -77,7 +77,7 @@ struct ami_softc {
 	volatile struct ami_iocmd *sc_mbox;
 	paddr_t		sc_mbox_pa;
 	struct ami_ccb	sc_ccbs[AMI_MAXCMDS];
-	ami_queue_head	sc_free_ccb, sc_ccbq, sc_ccb2q, sc_ccbdone;
+	ami_queue_head	sc_free_ccb, sc_ccbq, sc_ccbdone;
 
 	void		*sc_cmds;
 	bus_dmamap_t	sc_cmdmap;

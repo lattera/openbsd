@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.2 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.3 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -266,7 +266,8 @@ struct statfs {
 	uid_t	   f_owner;		/* user that mounted the file system */
 	u_int32_t  f_syncwrites;	/* count of sync writes since mount */
 	u_int32_t  f_asyncwrites;	/* count of async writes since mount */
-	u_int32_t  f_spare[4];		/* spare for later */
+	u_int32_t  f_ctime;		/* last mount [-u] time */
+	u_int32_t  f_spare[3];		/* spare for later */
 	char	   f_fstypename[MFSNAMELEN]; /* fs type name */
 	char	   f_mntonname[MNAMELEN];    /* directory on which mounted */
 	char	   f_mntfromname[MNAMELEN];  /* mounted file system */
@@ -336,8 +337,6 @@ struct mount {
 	struct lock     mnt_lock;               /* mount structure lock */
 	int		mnt_flag;		/* flags */
 	int		mnt_maxsymlinklen;	/* max size of short symlink */
-	int		mnt_fs_bshift;		/* offset shift for lblkno */
-	int		mnt_dev_bshift;		/* shift for device sectors */
 	struct statfs	mnt_stat;		/* cache of filesystem stats */
 	qaddr_t		mnt_data;		/* private data */
 };
@@ -474,6 +473,10 @@ struct vfsops {
 				     size_t, struct proc *));
 	int	(*vfs_checkexp) __P((struct mount *mp, struct mbuf *nam,
 				    int *extflagsp, struct ucred **credanonp));
+	int     (*vfs_extattrctl) __P((struct mount *mp, int cmd,
+				    struct vnode *filename_vp,
+				    int attrnamespace, const char *attrname,
+				    struct proc *p));
 };
 
 #define VFS_MOUNT(MP, PATH, DATA, NDP, P) \
@@ -490,6 +493,18 @@ struct vfsops {
 #define	VFS_VPTOFH(VP, FIDP)	  (*(VP)->v_mount->mnt_op->vfs_vptofh)(VP, FIDP)
 #define VFS_CHECKEXP(MP, NAM, EXFLG, CRED) \
 	(*(MP)->mnt_op->vfs_checkexp)(MP, NAM, EXFLG, CRED)
+#define VFS_EXTATTRCTL(MP, C, FN, NS, N, P) \
+	(*(MP)->mnt_op->vfs_extattrctl)(MP, C, FN, NS, N, P)
+
+/* 
+ * Declarations for these vfs default operations are located in 
+ * kern/vfs_default.c, they should be used instead of making "dummy" 
+ * functions or casting entries in the VFS op table to "enopnotsupp()".
+ */ 
+int	vfs_stdextattrctl __P((struct mount *mp, int cmd,
+	    struct vnode *filename_vp, int attrnamespace, const char *attrname,
+	    struct proc *p));
+
 #endif /* _KERNEL */
 
 /*

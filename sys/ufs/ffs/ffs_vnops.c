@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.10.2.5 2001/12/05 01:02:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.10.2.6 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -56,6 +56,7 @@
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/fifofs/fifo.h>
 
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/dir.h>
@@ -107,13 +108,12 @@ struct vnodeopv_entry_desc ffs_vnodeop_entries[] = {
 	{ &vop_advlock_desc, ufs_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, ffs_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ &vop_ballocn_desc, ffs_ballocn },
-	{ &vop_getpages_desc, genfs_getpages },
-	{ &vop_putpages_desc, genfs_putpages },
-	{ &vop_size_desc, ffs_size },
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
 	{ NULL, NULL }
 };
-
 struct vnodeopv_desc ffs_vnodeop_opv_desc =
 	{ &ffs_vnodeop_p, ffs_vnodeop_entries };
 
@@ -157,7 +157,11 @@ struct vnodeopv_entry_desc ffs_specop_entries[] = {
 	{ &vop_advlock_desc, spec_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, spec_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
+	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_specop_opv_desc =
 	{ &ffs_specop_p, ffs_specop_entries };
@@ -203,7 +207,11 @@ struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_advlock_desc, fifo_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, fifo_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
+	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_fifoop_opv_desc =
 	{ &ffs_fifoop_p, ffs_fifoop_entries };
@@ -234,7 +242,6 @@ ffs_fsync(v)
 	struct vnode *vp = ap->a_vp;
 	struct buf *bp, *nbp;
 	int s, error, passes, skipmeta;
-	struct uvm_object *uobj;
 
 	if (vp->v_type == VBLK &&
 	    vp->v_specmountpoint != NULL &&
@@ -242,22 +249,13 @@ ffs_fsync(v)
 		softdep_fsync_mountdev(vp);
 
 	/*
-	 * Flush all dirty data associated with a vnode.
+	 * Flush all dirty buffers associated with a vnode.
 	 */
 	passes = NIADDR + 1;
 	skipmeta = 0;
 	if (ap->a_waitfor == MNT_WAIT)
 		skipmeta = 1;
 	s = splbio();
-
-	if (vp->v_type == VREG) {
-		uobj = &vp->v_uvm.u_obj;
-		simple_lock(&uobj->vmobjlock);
-		(uobj->pgops->pgo_flush)(uobj, 0, 0, PGO_ALLPAGES|PGO_CLEANIT|
-		    ((ap->a_waitfor == MNT_WAIT) ? PGO_SYNCIO : 0));
-		simple_unlock(&uobj->vmobjlock);
-	}
-
 loop:
 	for (bp = LIST_FIRST(&vp->v_dirtyblkhd); bp;
 	     bp = LIST_NEXT(bp, b_vnbufs))
@@ -296,10 +294,8 @@ loop:
 		 */
 		if (passes > 0 || ap->a_waitfor != MNT_WAIT)
 			(void) bawrite(bp);
-		else if ((error = bwrite(bp)) != 0) {
-			printf("ffs_fsync: bwrite failed %d\n", error);
+		else if ((error = bwrite(bp)) != 0)
 			return (error);
-		}
 		s = splbio();
 		/*
 		 * Since we may have slept during the I/O, we need
@@ -342,11 +338,7 @@ loop:
 		}
 	}
 	splx(s);
-	
-	error = (UFS_UPDATE(VTOI(vp), ap->a_waitfor == MNT_WAIT));
-	if (error)
-		printf("ffs_fsync: UFS_UPDATE failed. %d\n", error);
-	return (error);
+	return (UFS_UPDATE(VTOI(vp), ap->a_waitfor == MNT_WAIT));
 }
 
 /*
@@ -369,32 +361,4 @@ ffs_reclaim(v)
 	pool_put(&ffs_ino_pool, vp->v_data);
 	vp->v_data = NULL;
 	return (0);
-}
-
-/*
- * Return the last logical file offset that should be written for this file
- * if we're doing a write that ends at "size".
- */
-int
-ffs_size(v)
-	void *v;
-{
-	struct vop_size_args /* {
-		struct vnode *a_vp;
-		off_t a_size;
-		off_t *a_eobp;
-	} */ *ap = v;
-	struct inode *ip = VTOI(ap->a_vp);
-	struct fs *fs = ip->i_fs;
-	ufs_lbn_t olbn, nlbn;
-
-	olbn = lblkno(fs, ip->i_ffs_size);
-	nlbn = lblkno(fs, ap->a_size);
-
-	if (nlbn < NDADDR && olbn <= nlbn) {
-		*ap->a_eobp = fragroundup(fs, ap->a_size);
-	} else {
-		*ap->a_eobp = blkroundup(fs, ap->a_size);
-	}
-	return 0;
 }

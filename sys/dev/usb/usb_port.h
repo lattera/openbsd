@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.5 2002/03/06 02:11:47 niklas Exp $ */
 /*	$NetBSD: usb_port.h,v 1.44 2001/05/14 20:35:29 bouyer Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb_port.h,v 1.21 1999/11/17 22:33:47 n_hibma Exp $	*/
 
@@ -236,8 +236,6 @@ __CONCAT(dname,_detach)(self, flags) \
 #define xs_control		flags
 #define xs_status		status
 
-#define	memcpy(d, s, l)		bcopy((s),(d),(l))
-#define	memset(d, v, l)		bzero((d),(l))
 #define bswap32(x)		swap32(x)
 #define bswap16(x)		swap16(x)
 

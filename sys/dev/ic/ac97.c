@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.5 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.6 2002/03/06 02:11:42 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -335,6 +335,8 @@ const struct ac97_codecid {
 	{ 0x40,	0xf8, 7, 0,	"CS4201" },
 	{ 0x50,	0xf8, 7, 0,	"CS4205" },
 	{ 0x60,	0xf8, 7, 0,	"CS4291" },
+}, ac97_es[] = {
+	{ 0x08, 0xff, 0, 0,	"ES1921" },
 }, ac97_is[] = {
 	{ 0x00, 0xff, 0, 0,	"HMP9701" },
 }, ac97_ic[] = {
@@ -385,6 +387,7 @@ const struct ac97_vendorid {
 	{ 0x414c4700, "Avance Logic",		cl(ac97_av) },
 	{ 0x414c4300, "Realtek",		cl(ac97_rl) },
 	{ 0x43525900, "Cirrus Logic",		cl(ac97_cs) },
+	{ 0x45838300, "ESS Technology",		cl(ac97_es) },
 	{ 0x48525300, "Intersil",		cl(ac97_is) },
 	{ 0x49434500, "ICEnsemble",		cl(ac97_ic) },
 	{ 0x4e534300, "National Semiconductor", cl(ac97_ns) },
@@ -709,9 +712,12 @@ ac97_attach(host_if)
 	if (as->ext_id)
 		DPRINTF(("ac97: ext id %b\n", as->ext_id,
 		    AC97_EXT_AUDIO_BITS));
+	ac97_read(as, AC97_REG_EXT_AUDIO_ID, &id1);
 	if (as->ext_id & AC97_EXT_AUDIO_VRA)
-		ac97_write(as, AC97_REG_EXT_AUDIO_CTRL,
-		    AC97_EXT_AUDIO_VRA | AC97_EXT_AUDIO_VRM);
+		id1 |= AC97_EXT_AUDIO_VRA;
+	if (as->ext_id & AC97_EXT_AUDIO_VRM)
+		id1 |= AC97_EXT_AUDIO_VRM;
+	ac97_write(as, AC97_REG_EXT_AUDIO_CTRL, id1);
 
 	ac97_setup_source_info(as);
 

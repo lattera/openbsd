@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.1 2001/07/04 10:54:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.2 2002/03/06 02:15:06 niklas Exp $	*/
 /*	$NetBSD: if_tokensubr.c,v 1.7 1999/05/30 00:39:07 bad Exp $	*/
 
 /*
@@ -694,8 +694,7 @@ token_ifattach(ifp)
 #ifdef IFF_NOTRAILERS
 	ifp->if_flags |= IFF_NOTRAILERS;
 #endif
-	for (ifa = ifp->if_addrlist.tqh_first; ifa != 0;
-	    ifa = ifa->ifa_list.tqe_next)
+	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
 		if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
 		    sdl->sdl_family == AF_LINK) {
 			sdl->sdl_type = IFT_ISO88025;
@@ -704,4 +703,5 @@ token_ifattach(ifp)
 			    LLADDR(sdl), ifp->if_addrlen);
 			break;
 		}
+	}
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.2 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.3 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -725,13 +725,13 @@ gem_init(struct ifnet *ifp)
 	gem_setladrf(sc);
 
 	/* step 6 & 7. Program Descriptor Ring Base Addresses */
-	bus_space_write_8(t, h, GEM_TX_RING_PTR,
-		GEM_CDTXADDR(sc, 0));
-	/* Yeeech.  The following has endianness issues. */
-	bus_space_write_4(t, h, GEM_RX_RING_PTR_HI,
-		(((uint64_t)GEM_CDRXADDR(sc, 0))>>32));
-	bus_space_write_4(t, h, GEM_RX_RING_PTR_LO,
-		GEM_CDRXADDR(sc, 0));
+	bus_space_write_4(t, h, GEM_TX_RING_PTR_HI, 
+	    (((uint64_t)GEM_CDTXADDR(sc,0)) >> 32));
+	bus_space_write_4(t, h, GEM_TX_RING_PTR_LO, GEM_CDTXADDR(sc, 0));
+
+	bus_space_write_4(t, h, GEM_RX_RING_PTR_HI, 
+	    (((uint64_t)GEM_CDRXADDR(sc,0)) >> 32));
+	bus_space_write_4(t, h, GEM_RX_RING_PTR_LO, GEM_CDRXADDR(sc, 0));
 
 	/* step 8. Global Configuration & Interrupt Mask */
 	bus_space_write_4(t, h, GEM_INTMASK,
@@ -1304,7 +1304,6 @@ gem_mediastatus(ifp, ifmr)
 	ifmr->ifm_status = sc->sc_mii.mii_media_status;
 }
 
-int gem_ioctldebug = 0;
 /*
  * Process an ioctl request.
  */
@@ -1320,6 +1319,11 @@ gem_ioctl(ifp, cmd, data)
 	int s, error = 0;
 
 	s = splimp();
+
+	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, cmd, data)) > 0) {
+		splx(s);
+		return (error);
+	}
 
 	switch (cmd) {
 
@@ -1566,6 +1570,9 @@ gem_encap(sc, mhead, bixp)
 		return (ENOBUFS);
 	}
 
+	bus_dmamap_sync(sc->sc_dmatag, map, 0, map->dm_mapsize,
+	    BUS_DMASYNC_PREWRITE);
+
 	for (i = 0; i < map->dm_nsegs; i++) {
 		sc->sc_txdescs[frag].gd_addr =
 		    GEM_DMA_WRITE(sc, map->dm_segs[i].ds_addr);
@@ -1580,8 +1587,7 @@ gem_encap(sc, mhead, bixp)
 		if (++frag == GEM_NTXDESC)
 			frag = 0;
 	}
-	bus_dmamap_sync(sc->sc_dmatag, map, 0, map->dm_mapsize,
-	    BUS_DMASYNC_PREWRITE);
+
 	sc->sc_tx_cnt += map->dm_nsegs;
 	sc->sc_txd[cur].sd_map = map;
 	sc->sc_txd[cur].sd_mbuf = mhead;

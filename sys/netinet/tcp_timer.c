@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.2 2001/07/04 10:55:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.3 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -36,13 +36,13 @@
  *	@(#)tcp_timer.c	8.1 (Berkeley) 6/10/93
  */
 
-#ifndef TUBA_INCLUDE
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/protosw.h>
+#include <sys/kernel.h>
 
 #include <net/route.h>
 
@@ -57,34 +57,55 @@
 #include <netinet/tcp_var.h>
 #include <netinet/ip_icmp.h>
 
-int	tcp_keepidle = TCPTV_KEEP_IDLE;
-int	tcp_keepintvl = TCPTV_KEEPINTVL;
-int	tcp_maxpersistidle = TCPTV_KEEP_IDLE;	/* max idle time in persist */
+int	tcp_keepidle;
+int	tcp_keepintvl;
+int	tcp_maxpersistidle;	/* max idle time in persist */
 int	tcp_maxidle;
-#endif /* TUBA_INCLUDE */
+
 /*
- * Fast timeout routine for processing delayed acks
+ * Time to delay the ACK.  This is initialized in tcp_init(), unless
+ * its patched.
+ */
+int	tcp_delack_ticks;
+
+/*
+ * Timer state initialization, called from tcp_init().
  */
 void
-tcp_fasttimo()
+tcp_timer_init(void)
 {
-	register struct inpcb *inp;
-	register struct tcpcb *tp;
+
+	if (tcp_keepidle == 0)
+		tcp_keepidle = TCPTV_KEEP_IDLE;
+
+	if (tcp_keepintvl == 0)
+		tcp_keepintvl = TCPTV_KEEPINTVL;
+
+	if (tcp_maxpersistidle == 0)
+		tcp_maxpersistidle = TCPTV_KEEP_IDLE;
+
+	if (tcp_delack_ticks == 0)
+		tcp_delack_ticks = TCP_DELACK_TICKS;
+}
+
+/*
+ * Callout to process delayed ACKs for a TCPCB.
+ */
+void
+tcp_delack(void *arg)
+{
+	struct tcpcb *tp = arg;
 	int s;
 
+	/*
+	 * If tcp_output() wasn't able to transmit the ACK
+	 * for whatever reason, it will restart the delayed
+	 * ACK callout.
+	 */
+
 	s = splsoftnet();
-	inp = tcbtable.inpt_queue.cqh_first;
-	if (inp)						/* XXX */
-	for (; inp != (struct inpcb *)&tcbtable.inpt_queue;
-	    inp = inp->inp_queue.cqe_next) {
-		if ((tp = (struct tcpcb *)inp->inp_ppcb) &&
-		    (tp->t_flags & TF_DELACK)) {
-			tp->t_flags &= ~TF_DELACK;
-			tp->t_flags |= TF_ACKNOW;
-			tcpstat.tcps_delack++;
-			(void) tcp_output(tp);
-		}
-	}
+	tp->t_flags |= TF_ACKNOW;
+	(void) tcp_output(tp);
 	splx(s);
 }
 
@@ -154,7 +175,7 @@ tcp_canceltimers(tp)
 	register int i;
 
 	for (i = 0; i < TCPT_NTIMERS; i++)
-		tp->t_timer[i] = 0;
+		TCP_TIMER_DISARM(tp, i);
 }
 
 int	tcp_backoff[TCP_MAXRXTSHIFT + 1] =
@@ -177,11 +198,11 @@ tcp_timers(tp, timer)
 	 * Free SACK holes for 2MSL and REXMT timers.
 	 */
 	if (timer == TCPT_2MSL || timer == TCPT_REXMT) {
-		q = p = tp->snd_holes;
-		while (p != 0) {
-			q = p->next;
-			free(p, M_PCB);
+		q = tp->snd_holes;
+		while (q != NULL) {
 			p = q;
+			q = q->next;
+			pool_put(&sackhl_pool, p);
 		}
 		tp->snd_holes = 0;
 #if defined(TCP_SACK) && defined(TCP_FACK)
@@ -203,7 +224,7 @@ tcp_timers(tp, timer)
 	case TCPT_2MSL:
 		if (tp->t_state != TCPS_TIME_WAIT &&
 		    tp->t_idle <= tcp_maxidle)
-			tp->t_timer[TCPT_2MSL] = tcp_keepintvl;
+			TCP_TIMER_ARM(tp, TCPT_2MSL, tcp_keepintvl);
 		else
 			tp = tcp_close(tp);
 		break;
@@ -228,7 +249,7 @@ tcp_timers(tp, timer)
 		TCPT_RANGESET((long) tp->t_rxtcur,
 		    rto * tcp_backoff[tp->t_rxtshift],
 		    tp->t_rttmin, TCPTV_REXMTMAX);
-		tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
+		TCP_TIMER_ARM(tp, TCPT_REXMT, tp->t_rxtcur);
 
 		/* 
 		 * If we are losing and we are trying path MTU discovery,
@@ -284,6 +305,7 @@ tcp_timers(tp, timer)
 				rtfree(rt);
 			}
 			out:
+				;
 		}
 
 		/*
@@ -415,9 +437,9 @@ tcp_timers(tp, timer)
 				(struct mbuf *)NULL,
 				tp->rcv_nxt, tp->snd_una - 1, 0);
 #endif
-			tp->t_timer[TCPT_KEEP] = tcp_keepintvl;
+			TCP_TIMER_ARM(tp, TCPT_KEEP, tcp_keepintvl);
 		} else
-			tp->t_timer[TCPT_KEEP] = tcp_keepidle;
+			TCP_TIMER_ARM(tp, TCPT_KEEP, tcp_keepidle);
 		break;
 	dropit:
 		tcpstat.tcps_keepdrops++;

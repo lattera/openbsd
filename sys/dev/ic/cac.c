@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5.4.4 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5.4.5 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: cac.c,v 1.15 2000/11/08 19:20:35 ad Exp $	*/
 
 /*
@@ -330,7 +330,7 @@ cac_cmd(struct cac_softc *sc, int command, void *data, int datasize,
 #endif
 
 	if ((ccb = cac_ccb_alloc(sc, 0)) == NULL) {
-		printf("%s: unable to alloc CCB", sc->sc_dv.dv_xname);
+		printf("%s: unable to alloc CCB\n", sc->sc_dv.dv_xname);
 		return (ENOMEM);
 	}
 

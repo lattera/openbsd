@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9.2.5 2001/11/13 21:10:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9.2.6 2002/03/06 02:11:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -1071,6 +1071,8 @@ void ti_setmulti(sc)
 	ETHER_FIRST_MULTI(step, ac, enm);
 	while (enm != NULL) {
 		mc = malloc(sizeof(struct ti_mc_entry), M_DEVBUF, M_NOWAIT);
+		if (mc == NULL)
+			panic("ti_setmulti");
 		bcopy(enm->enm_addrlo, (char *)&mc->mc_addr, ETHER_ADDR_LEN);
 		LIST_INSERT_HEAD(&sc->ti_mc_listhead, mc, mc_entries);
 		ti_add_mcast(sc, &mc->mc_addr);
@@ -2120,7 +2122,8 @@ void ti_init2(sc)
 	}
 
 	/* Init RX ring. */
-	ti_init_rx_ring_std(sc);
+	if (ti_init_rx_ring_std(sc) == ENOBUFS)
+		panic("not enough mbufs for rx ring");
 
 	/* Init jumbo RX ring. */
 	if (ifp->if_mtu > (ETHERMTU + ETHER_HDR_LEN + ETHER_CRC_LEN))
@@ -2362,7 +2365,7 @@ int ti_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.5 2001/11/13 22:59:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.6 2002/03/06 02:15:07 niklas Exp $	*/
 /*	$NetBSD: if_ether.c,v 1.31 1996/05/11 12:59:58 mycroft Exp $	*/
 
 /*
@@ -43,6 +43,8 @@
  */
 
 #ifdef INET
+
+#include "bridge.h"
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -450,7 +452,10 @@ in_arpinput(m)
 	struct ether_header *eh;
 	register struct llinfo_arp *la = 0;
 	register struct rtentry *rt;
-	struct in_ifaddr *ia, *maybe_ia = 0;
+	struct in_ifaddr *ia;
+#if NBRIDGE > 0
+	struct in_ifaddr *bridge_ia = NULL;
+#endif
 	struct sockaddr_dl *sdl;
 	struct sockaddr sa;
 	struct in_addr isaddr, itaddr, myaddr;
@@ -467,20 +472,51 @@ in_arpinput(m)
 		goto out;
 	}
 #endif
-	bcopy((caddr_t)ea->arp_spa, (caddr_t)&isaddr, sizeof (isaddr));
-	bcopy((caddr_t)ea->arp_tpa, (caddr_t)&itaddr, sizeof (itaddr));
-	for (ia = in_ifaddr.tqh_first; ia != 0; ia = ia->ia_list.tqe_next)
-		if (ia->ia_ifp == &ac->ac_if ||
-		    (ia->ia_ifp->if_bridge &&
-		    ia->ia_ifp->if_bridge == ac->ac_if.if_bridge)) {
-			maybe_ia = ia;
-			if (itaddr.s_addr == ia->ia_addr.sin_addr.s_addr ||
-			    isaddr.s_addr == ia->ia_addr.sin_addr.s_addr)
+
+	bcopy((caddr_t)ea->arp_tpa, (caddr_t)&itaddr, sizeof(itaddr));
+	bcopy((caddr_t)ea->arp_spa, (caddr_t)&isaddr, sizeof(isaddr));
+
+	TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
+		if (itaddr.s_addr != ia->ia_addr.sin_addr.s_addr)
+			continue;
+
+		if (ia->ia_ifp == m->m_pkthdr.rcvif)
+			break;
+#if NBRIDGE > 0
+		/*
+		 * If the interface we received the packet on
+		 * is part of a bridge, check to see if we need
+		 * to "bridge" the packet to ourselves at this
+		 * layer.  Note we still prefer a perfect match,
+		 * but allow this weaker match if necessary.
+		 */
+		if (m->m_pkthdr.rcvif->if_bridge != NULL &&
+		    m->m_pkthdr.rcvif->if_bridge == ia->ia_ifp->if_bridge)
+			bridge_ia = ia;
+#endif
+	}
+
+#if NBRIDGE > 0
+	if (ia == NULL && bridge_ia != NULL) {
+		ia = bridge_ia;
+		ac = (struct arpcom *)bridge_ia->ia_ifp;
+	}
+#endif
+
+	if (ia == NULL) {
+		TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
+			if (isaddr.s_addr != ia->ia_addr.sin_addr.s_addr)
+				continue;
+			if (ia->ia_ifp == m->m_pkthdr.rcvif)
 				break;
 		}
-	if (maybe_ia == 0)
+	}
+
+	if (ia == NULL)
 		goto out;
-	myaddr = ia ? ia->ia_addr.sin_addr : maybe_ia->ia_addr.sin_addr;
+
+	myaddr = ia->ia_addr.sin_addr;
+
 	if (!bcmp((caddr_t)ea->arp_sha, (caddr_t)ac->ac_enaddr,
 	    sizeof (ea->arp_sha)))
 		goto out;	/* it's from me, ignore it. */
@@ -513,7 +549,7 @@ in_arpinput(m)
 				   "entry for %s by %s on %s\n", 
 				   inet_ntoa(isaddr),
 				   ether_sprintf(ea->arp_sha),
-				   (&ac->ac_if)->if_xname);
+				   ac->ac_if.if_xname);
 				goto out;
 			} else if (rt->rt_ifp != &ac->ac_if) {
 			        log(LOG_WARNING,
@@ -521,14 +557,14 @@ in_arpinput(m)
 				   "on %s by %s on %s\n",
 				   inet_ntoa(isaddr), rt->rt_ifp->if_xname,
 				   ether_sprintf(ea->arp_sha),
-				   (&ac->ac_if)->if_xname);
+				   ac->ac_if.if_xname);
 				goto out;
 			} else {
 				log(LOG_INFO,
 				   "arp info overwritten for %s by %s on %s\n",
 			    	   inet_ntoa(isaddr), 
 				   ether_sprintf(ea->arp_sha),
-				   (&ac->ac_if)->if_xname);
+				   ac->ac_if.if_xname);
 				rt->rt_expire = 1; /* no longer static */
 			}
 		    }
@@ -539,7 +575,7 @@ in_arpinput(m)
 			"on %s by %s on %s\n",
 			inet_ntoa(isaddr), rt->rt_ifp->if_xname,
 			ether_sprintf(ea->arp_sha),
-			(&ac->ac_if)->if_xname);
+			ac->ac_if.if_xname);
 		    goto out;
 		}
 		bcopy((caddr_t)ea->arp_sha, LLADDR(sdl),

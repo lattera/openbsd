@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.5 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.6 2002/03/06 02:11:45 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -150,6 +150,7 @@ struct hifn_softc {
 	int sc_flags;
 #define	HIFN_HAS_RNG		1
 #define	HIFN_HAS_PUBLIC		2
+#define	HIFN_IS_7811		4
 	struct timeout sc_rngto, sc_tickto;
 	int sc_rngfirst;
 	int sc_rnghz;

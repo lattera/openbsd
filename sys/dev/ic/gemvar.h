@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/gemvar.h,v 1.3.4.2 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: gemvar.h,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemulvar.h,v 1.3.4.2 2001/12/05 01:02:39 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemulvar.h,v 1.3.4.3 2002/03/06 02:11:48 niklas Exp $ */
 /* $NetBSD: wsemulvar.h,v 1.6 1999/01/17 15:46:15 drochner Exp $ */
 
 /*
@@ -57,7 +57,7 @@ struct wsemul_ops {
 #ifdef WSEMUL_DUMB
 extern const struct wsemul_ops wsemul_dumb_ops;
 #endif
-#ifdef WSEMUL_SUN
+#if defined(WSEMUL_SUN) || NWSEMUL_SUN > 0
 extern const struct wsemul_ops wsemul_sun_ops;
 #endif
 #ifndef WSEMUL_NO_VT100

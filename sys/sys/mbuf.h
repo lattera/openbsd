@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.4 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.5 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -201,7 +201,10 @@ struct mbuf {
  * and internal data.
  */
 #define	_MGET(m, how, type) do { \
-	MBUFLOCK((m) = pool_get(&mbpool, (how) == M_WAIT ? PR_WAITOK|PR_LIMITFAIL : 0);); \
+	MBUFLOCK( \
+	    	(m) = pool_get(&mbpool, \
+		    (how) == M_WAIT ? PR_WAITOK|PR_LIMITFAIL : 0); \
+	); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -209,8 +212,7 @@ struct mbuf {
 		(m)->m_nextpkt = (struct mbuf *)NULL; \
 		(m)->m_data = (m)->m_dat; \
 		(m)->m_flags = 0; \
-	} else \
-		(m) = m_retry((how), (type)); \
+	} \
 } while(/* CONSTCOND */ 0)
 
 #ifdef SMALL_KERNEL
@@ -221,7 +223,10 @@ struct mbuf *_sk_mget(int, int);
 #endif
 
 #define	_MGETHDR(m, how, type) do { \
-	MBUFLOCK((m) = pool_get(&mbpool, (how) == M_WAIT ? PR_WAITOK|PR_LIMITFAIL : 0);); \
+	MBUFLOCK( \
+		(m) = pool_get(&mbpool, \
+		    (how) == M_WAIT ? PR_WAITOK|PR_LIMITFAIL : 0); \
+	); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -231,8 +236,7 @@ struct mbuf *_sk_mget(int, int);
 		(m)->m_flags = M_PKTHDR; \
 		SLIST_INIT(&(m)->m_pkthdr.tags); \
 		(m)->m_pkthdr.csum = 0; \
-	} else \
-		(m) = m_retryhdr((how), (type)); \
+	} \
 } while (/* CONSTCOND */ 0)
 
 #ifdef SMALL_KERNEL
@@ -300,15 +304,8 @@ struct mbuf *_sk_mgethdr(int, int);
  */
 #define	_MCLGET(m, how) do { \
 	MBUFLOCK( \
-		(m)->m_ext.ext_buf = \
-		    pool_get(&mclpool, (how) == M_WAIT ? \
+		(m)->m_ext.ext_buf = pool_get(&mclpool, (how) == M_WAIT ? \
 		    (PR_WAITOK|PR_LIMITFAIL) : 0); \
-		if ((m)->m_ext.ext_buf == NULL) { \
-			m_reclaim(); \
-			(m)->m_ext.ext_buf = \
-			    pool_get(&mclpool, \
-			    (how) == M_WAIT ? PR_WAITOK : 0); \
-		} \
 	); \
 	if ((m)->m_ext.ext_buf != NULL) { \
 		(m)->m_data = (m)->m_ext.ext_buf; \
@@ -532,7 +529,7 @@ struct mbstat {
 
 #ifdef	_KERNEL
 struct	mbstat mbstat;
-extern	int nmbclusters;		/* limit on the # of clusters */
+extern	int nmbclust;			/* limit on the # of clusters */
 extern	int mblowat;			/* mbuf low water mark */
 extern	int mcllowat;			/* mbuf cluster low water mark */
 int	max_linkhdr;			/* largest link-level header */
@@ -540,8 +537,6 @@ int	max_protohdr;			/* largest protocol header */
 int	max_hdr;			/* largest link+protocol header */
 int	max_datalen;			/* MHLEN - max_hdr */
 extern	int mbtypes[];			/* XXX */
-extern	int needqueuedrain;		/* True if allocation failed at */
-					/* interrupt level */
 extern struct pool mbpool;
 extern struct pool mclpool;
 
@@ -556,8 +551,6 @@ struct	mbuf *m_prepend __P((struct mbuf *, int, int));
 struct	mbuf *m_pulldown __P((struct mbuf *, int, int, int *));
 struct	mbuf *m_pullup __P((struct mbuf *, int));
 struct	mbuf *m_pullup2 __P((struct mbuf *, int));
-struct	mbuf *m_retry __P((int, int));
-struct	mbuf *m_retryhdr __P((int, int));
 struct	mbuf *m_split __P((struct mbuf *, int, int));
 struct  mbuf *m_inject __P((struct mbuf *, int, int, int));
 struct  mbuf *m_getptr __P((struct mbuf *, int, int *));
@@ -565,7 +558,7 @@ void	m_adj __P((struct mbuf *, int));
 int	m_clalloc __P((int, int));
 void	m_copyback __P((struct mbuf *, int, int, caddr_t));
 void	m_freem __P((struct mbuf *));
-void	m_reclaim __P((void));
+void	m_reclaim __P((void *, int));
 void	m_copydata __P((struct mbuf *, int, int, caddr_t));
 void	m_cat __P((struct mbuf *, struct mbuf *));
 struct mbuf *m_devget __P((char *, int, int, struct ifnet *,
@@ -573,7 +566,6 @@ struct mbuf *m_devget __P((char *, int, int, struct ifnet *,
 void	m_zero __P((struct mbuf *));
 int	m_apply __P((struct mbuf *, int, int,
 	    int (*)(caddr_t, caddr_t, unsigned int), caddr_t));
-void	mbinit __P((void));
 
 /* Packet tag routines */
 struct m_tag *m_tag_get __P((int, int, int));

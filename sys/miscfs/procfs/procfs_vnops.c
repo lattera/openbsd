@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vnops.c,v 1.14.4.3 2001/11/13 23:04:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vnops.c,v 1.14.4.4 2002/03/06 02:13:24 niklas Exp $	*/
 /*	$NetBSD: procfs_vnops.c,v 1.40 1996/03/16 23:52:55 christos Exp $	*/
 
 /*
@@ -194,7 +194,7 @@ struct vnodeopv_entry_desc procfs_vnodeop_entries[] = {
 	{ &vop_islocked_desc, procfs_islocked },	/* islocked */
 	{ &vop_pathconf_desc, procfs_pathconf },	/* pathconf */
 	{ &vop_advlock_desc, procfs_advlock },		/* advlock */
-	{ (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
+	{ NULL, NULL }
 };
 struct vnodeopv_desc procfs_vnodeop_opv_desc =
 	{ &procfs_vnodeop_p, procfs_vnodeop_entries };
@@ -224,7 +224,7 @@ procfs_open(v)
 	struct proc *p2;		/* traced */
 	int error;
 
-	if ((p2 = PFIND(pfs->pfs_pid)) == 0)
+	if ((p2 = pfind(pfs->pfs_pid)) == 0)
 		return (ENOENT);	/* was ESRCH, jsp */
 
 	switch (pfs->pfs_type) {
@@ -345,7 +345,7 @@ procfs_bmap(v)
  * the vnode by calling vgone().  this may
  * be overkill and a waste of time since the
  * chances are that the process will still be
- * there and PFIND is not free.
+ * there and pfind is not free.
  *
  * (vp) is not locked on entry or exit.
  */
@@ -358,7 +358,7 @@ procfs_inactive(v)
 	} */ *ap = v;
 	struct pfsnode *pfs = VTOPFS(ap->a_vp);
 
-	if (PFIND(pfs->pfs_pid) == 0)
+	if (pfind(pfs->pfs_pid) == 0)
 		vgone(ap->a_vp);
 
 	return (0);
@@ -519,7 +519,7 @@ procfs_getattr(v)
 		break;
 
 	default:
-		procp = PFIND(pfs->pfs_pid);
+		procp = pfind(pfs->pfs_pid);
 		if (procp == 0)
 			return (ENOENT);
 	}
@@ -802,7 +802,7 @@ procfs_lookup(v)
 		if (pid == NO_PID)
 			break;
 
-		p = PFIND(pid);
+		p = pfind(pid);
 		if (p == 0)
 			break;
 
@@ -812,7 +812,7 @@ procfs_lookup(v)
 		if (cnp->cn_flags & ISDOTDOT)
 			return (procfs_root(dvp->v_mount, vpp));
 
-		p = PFIND(pfs->pfs_pid);
+		p = pfind(pfs->pfs_pid);
 		if (p == 0)
 			break;
 
@@ -920,7 +920,7 @@ procfs_readdir(v)
 		struct proc *p;
 		struct proc_target *pt;
 
-		p = PFIND(pfs->pfs_pid);
+		p = pfind(pfs->pfs_pid);
 		if (p == NULL)
 			break;
 

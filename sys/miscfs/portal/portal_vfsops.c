@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.1 2001/05/14 22:32:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.2 2002/03/06 02:13:24 niklas Exp $	*/
 /*	$NetBSD: portal_vfsops.c,v 1.14 1996/02/09 22:40:41 christos Exp $	*/
 
 /*
@@ -108,9 +108,13 @@ portal_mount(mp, path, data, ndp, p)
 	if (so->so_proto->pr_domain->dom_family != AF_UNIX)
 		return (ESOCKTNOSUPPORT);
 
+	FREF(fp);
+
 	error = getnewvnode(VT_PORTAL, mp, portal_vnodeop_p, &rvp); /* XXX */
-	if (error)
+	if (error) {
+		FRELE(fp);
 		return (error);
+	}
 	MALLOC(rvp->v_data, void *, sizeof(struct portalnode),
 		M_TEMP, M_WAITOK);
 
@@ -122,7 +126,9 @@ portal_mount(mp, path, data, ndp, p)
 	VTOPORTAL(rvp)->pt_size = 0;
 	VTOPORTAL(rvp)->pt_fileid = PORTAL_ROOTFILEID;
 	fmp->pm_root = rvp;
-	fmp->pm_server = fp; fp->f_count++;
+	fmp->pm_server = fp;
+	fp->f_count++;
+	FRELE(fp);
 
 	mp->mnt_flag |= MNT_LOCAL;
 	mp->mnt_data = (qaddr_t)fmp;
@@ -187,12 +193,13 @@ portal_unmount(mp, mntflags, p)
 	 * daemon to wake up, and then the accept will get ECONNABORTED
 	 * which it interprets as a request to go and bury itself.
 	 */
+	FREF(VFSTOPORTAL(mp)->pm_server);
 	soshutdown((struct socket *) VFSTOPORTAL(mp)->pm_server->f_data, 2);
 	/*
 	 * Discard reference to underlying file.  Must call closef because
 	 * this may be the last reference.
 	 */
-	closef(VFSTOPORTAL(mp)->pm_server, (struct proc *) 0);
+	closef(VFSTOPORTAL(mp)->pm_server, NULL);
 	/*
 	 * Finally, throw away the portalmount structure
 	 */

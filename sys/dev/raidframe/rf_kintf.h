@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_kintf.h,v 1.5.2.1 2001/05/14 22:26:11 niklas Exp $	*/
-/*	$NetBSD: rf_kintf.h,v 1.14 2000/06/04 02:05:13 oster Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_kintf.h,v 1.5.2.2 2002/03/06 02:11:47 niklas Exp $	*/
+/*	$NetBSD: rf_kintf.h,v 1.15 2000/10/20 02:24:45 oster Exp $	*/
 /*
  * rf_kintf.h
  *
@@ -54,4 +54,5 @@ void raid_init_component_label(RF_Raid_t *, RF_ComponentLabel_t *);
 void rf_print_component_label(RF_ComponentLabel_t *);
 void rf_UnconfigureVnodes( RF_Raid_t * );
 void rf_close_component( RF_Raid_t *, struct vnode *, int);
+void rf_disk_unbusy(RF_RaidAccessDesc_t *);
 #endif				/* _RF__RF_KINTF_H_ */

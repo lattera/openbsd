@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pci.c,v 1.15.4.3 2001/10/31 03:22:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pci.c,v 1.15.4.4 2002/03/06 02:11:46 niklas Exp $	*/
 /*	$NetBSD: pci.c,v 1.31 1997/06/06 23:48:04 thorpej Exp $	*/
 
 /*
@@ -50,7 +50,12 @@ void pciattach __P((struct device *, struct device *, void *));
 struct pci_softc {
 	struct device sc_dev;
 	pci_chipset_tag_t sc_pc;
+	int sc_bus;		/* PCI configuration space bus # */
 };
+#endif
+
+#ifdef APERTURE
+extern int allowaperture;
 #endif
 
 struct cfattach pci_ca = {
@@ -151,6 +156,7 @@ pciattach(parent, self, aux)
 
 #ifdef USER_PCICONF
 	sc->sc_pc = pba->pba_pc;
+	sc->sc_bus = bus;
 #endif
 
 	if (bus == 0)
@@ -384,9 +390,15 @@ pciopen(dev_t dev, int oflags, int devtype, struct proc *p)
 {
 	PCIDEBUG(("pciopen ndevs: %d\n" , pci_cd.cd_ndevs));
 
+#ifndef APERTURE
 	if ((oflags & FWRITE) && securelevel > 0) {
 		return EPERM;
 	}
+#else
+	if ((oflags & FWRITE) && securelevel > 0 && allowaperture == 0) {
+		return EPERM;
+	}
+#endif
 	return 0;
 }
 
@@ -424,18 +436,15 @@ pciioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		error = ENXIO;
 		goto done;
 	}
-#ifdef __i386__
-	/* The i386 pci_make_tag function can panic if called with wrong 
-	   args, try to avoid that */
-	if (io->pi_sel.pc_bus >= 256 || 
-	    io->pi_sel.pc_dev >= pci_bus_maxdevs(pc, io->pi_sel.pc_bus) ||
+	/* Check bounds */
+	if (pci->sc_bus >= 256 || 
+	    io->pi_sel.pc_dev >= pci_bus_maxdevs(pc, pci->sc_bus) ||
 	    io->pi_sel.pc_func >= 8) {
 		error = EINVAL;
 		goto done;
 	}
-#endif
 
-	tag = pci_make_tag(pc, io->pi_sel.pc_bus, io->pi_sel.pc_dev,
+	tag = pci_make_tag(pc, pci->sc_bus, io->pi_sel.pc_dev,
 			   io->pi_sel.pc_func);
 
 	switch(cmd) {

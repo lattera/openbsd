@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.9.2.3 2001/10/31 03:22:41 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.9.2.4 2002/03/06 02:11:43 niklas Exp $	*/
 
 /*
  * cy.c
@@ -55,12 +55,6 @@
 
 #include <dev/ic/cd1400reg.h>
 #include <dev/ic/cyreg.h>
-
-
-/* Macros to clear/set/test flags. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
 
 
 void	cy_attach __P((struct device *, struct device *, void *));

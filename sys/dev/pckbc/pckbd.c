@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pckbd.c,v 1.2.4.1 2001/05/14 22:26:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pckbd.c,v 1.2.4.2 2002/03/06 02:11:47 niklas Exp $ */
 /* $NetBSD: pckbd.c,v 1.24 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-
@@ -87,7 +87,9 @@
 
 #include <machine/bus.h>
 
+#ifndef __sparc64__
 #include <dev/isa/isavar.h>		/* XXX XXX XXX */
+#endif
 
 #include <dev/ic/pckbcvar.h>
 

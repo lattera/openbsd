@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7.2.3 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7.2.4 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$KAME: in6_gif.c,v 1.43 2001/01/22 07:27:17 itojun Exp $	*/
 
 /*
@@ -28,10 +28,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- */
-
-/*
- * in6_gif.c
  */
 
 #include <sys/param.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.13.4.2 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.13.4.3 2002/03/06 02:17:12 niklas Exp $	*/
 /*	$NetBSD: nfs_node.c,v 1.16 1996/02/18 11:53:42 fvdl Exp $	*/
 
 /*
@@ -79,7 +79,7 @@ nfs_nhinit()
 	lockinit(&nfs_hashlock, PINOD, "nfs_hashlock", 0, 0);
 
 	pool_init(&nfs_node_pool, sizeof(struct nfsnode), 0, 0, 0, "nfsnodepl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_NFSNODE);
+	    &pool_allocator_nointr);
 }
 
 /*
@@ -124,7 +124,7 @@ nfs_nget(mntp, fhp, fhsize, npp)
 
 	nhpp = NFSNOHASH(nfs_hash(fhp, fhsize));
 loop:
-	for (np = nhpp->lh_first; np != 0; np = np->n_hash.le_next) {
+	for (np = LIST_FIRST(nhpp); np != NULL; np = LIST_NEXT(np, n_hash)) {
 		if (mntp != NFSTOV(np)->v_mount || np->n_fhsize != fhsize ||
 		    bcmp((caddr_t)fhp, (caddr_t)np->n_fhp, fhsize))
 			continue;
@@ -145,7 +145,6 @@ loop:
 	vp = nvp;
 	np = pool_get(&nfs_node_pool, PR_WAITOK);
 	bzero((caddr_t)np, sizeof *np);
-	lockinit(&np->n_commitlock, PINOD, "nfsclock", 0, 0);
 	vp->v_data = np;
 	np->n_vnode = vp;
 
@@ -170,19 +169,6 @@ loop:
 		np->n_fhp = &np->n_fh;
 	bcopy((caddr_t)fhp, (caddr_t)np->n_fhp, fhsize);
 	np->n_fhsize = fhsize;
-
-	/*
-	 * XXXUBC doing this while holding the nfs_hashlock is bad,
-	 * but there's no alternative at the moment.
-	 */
-	error = VOP_GETATTR(vp, &np->n_vattr, curproc->p_ucred, curproc);
-	if (error) {
-		lockmgr(&nfs_hashlock, LK_RELEASE, 0, p);
-		vrele(vp);
-		return error;
-	}
-	uvm_vnp_setsize(vp, np->n_vattr.va_size);
-
 	lockmgr(&nfs_hashlock, LK_RELEASE, 0, p);
 	*npp = np;
 	return (0);
@@ -199,12 +185,11 @@ nfs_inactive(v)
 	struct nfsnode *np;
 	struct sillyrename *sp;
 	struct proc *p = curproc;	/* XXX */
-	struct vnode *vp = ap->a_vp;
 
-	np = VTONFS(vp);
-	if (prtactive && vp->v_usecount != 0)
-		vprint("nfs_inactive: pushing active", vp);
-	if (vp->v_type != VDIR) {
+	np = VTONFS(ap->a_vp);
+	if (prtactive && ap->a_vp->v_usecount != 0)
+		vprint("nfs_inactive: pushing active", ap->a_vp);
+	if (ap->a_vp->v_type != VDIR) {
 		sp = np->n_sillyrename;
 		np->n_sillyrename = (struct sillyrename *)0;
 	} else
@@ -213,7 +198,7 @@ nfs_inactive(v)
 		/*
 		 * Remove the silly file that was rename'd earlier
 		 */
-		(void) nfs_vinvalbuf(vp, 0, sp->s_cred, p, 1);
+		(void) nfs_vinvalbuf(ap->a_vp, 0, sp->s_cred, p, 1);
 		nfs_removeit(sp);
 		crfree(sp->s_cred);
 		vrele(sp->s_dvp);
@@ -221,7 +206,7 @@ nfs_inactive(v)
 	}
 	np->n_flag &= (NMODIFIED | NFLUSHINPROG | NFLUSHWANT);
 
-	VOP_UNLOCK(vp, 0, ap->a_p);
+	VOP_UNLOCK(ap->a_vp, 0, ap->a_p);
 	return (0);
 }
 
@@ -251,7 +236,7 @@ nfs_reclaim(v)
 	 * this nfs node.
 	 */
 	if (vp->v_type == VDIR) {
-		dp = np->n_cookies.lh_first;
+		dp = LIST_FIRST(&np->n_cookies);
 		while (dp) {
 			dp2 = dp;
 			dp = dp->ndm_list.le_next;

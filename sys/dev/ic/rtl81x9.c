@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.4 2001/11/13 21:10:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.5 2002/03/06 02:11:43 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -1028,7 +1028,7 @@ void rl_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 
 	timeout_set(&sc->sc_tick_tmo, rl_tick, sc);
 	timeout_add(&sc->sc_tick_tmo, hz);
@@ -1092,6 +1092,13 @@ int rl_ioctl(ifp, command, data)
 			break;
 		}
 		break;
+	case SIOCSIFMTU:
+		if (ifr->ifr_mtu > ETHERMTU || ifr->ifr_mtu < ETHERMIN) {
+			error = EINVAL;
+		} else if (ifp->if_mtu != ifr->ifr_mtu) {
+			ifp->if_mtu = ifr->ifr_mtu;
+		}
+		break;
 	case SIOCSIFFLAGS:
 		if (ifp->if_flags & IFF_UP) {
 			rl_init(sc);
@@ -1125,7 +1132,7 @@ int rl_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }

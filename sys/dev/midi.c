@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/midi.c,v 1.3.2.1 2001/05/14 22:23:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/midi.c,v 1.3.2.2 2002/03/06 02:11:42 niklas Exp $	*/
 /*	$NetBSD: midi.c,v 1.10 1998/12/20 14:26:44 drochner Exp $	*/
 
 /*
@@ -688,7 +688,7 @@ midiioctl(dev, cmd, addr, flag, p)
 		if (hw->ioctl)
 			error = hw->ioctl(sc->hw_hdl, cmd, addr, flag, p);
 		else
-			error = EINVAL;
+			error = ENOTTY;
 		break;
 	}
 	return (error);

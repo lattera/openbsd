@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5.4.4 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5.4.5 2002/03/06 02:11:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -37,6 +37,8 @@
  *	X11 support.
  */
 
+#include "wsdisplay.h"
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/device.h>
@@ -48,8 +50,6 @@
 
 #include <dev/wscons/wsdisplayvar.h>
 #include <dev/wscons/wsconsio.h>
-
-#include <hppa/dev/cpudevs.h>
 
 #include <dev/ic/stireg.h>
 #include <dev/ic/stivar.h>
@@ -127,7 +127,6 @@ sti_attach_common(sc)
 {
 	struct sti_inqconfout cfg;
 	bus_space_handle_t fbh;
-	struct wsemuldisplaydev_attach_args waa;
 	struct sti_dd *dd;
 	struct sti_cfg *cc;
 	struct sti_fontcfg *ff;
@@ -253,6 +252,7 @@ sti_attach_common(sc)
 
 	pmap_protect(pmap_kernel(), sc->sc_code,
 	    sc->sc_code + round_page(size), VM_PROT_READ|VM_PROT_EXECUTE);
+	pmap_update(pmap_kernel());
 
 	cc = &sc->sc_cfg;
 	bzero(cc, sizeof (*cc));
@@ -347,16 +347,20 @@ sti_attach_common(sc)
 	sti_default_screen.fontwidth = ff->width;
 	sti_default_screen.fontheight = ff->height;
 
-	/* attach WSDISPLAY */
-	bzero(&waa, sizeof(waa));
-#if notyet
-	waa.console = sc->sc_dev.dv_unit == 0;
-#endif
-	waa.scrdata = &sti_default_screenlist;
-	waa.accessops = &sti_accessops;
-	waa.accesscookie = sc;
+#if NWSDISPLAY > 0
+	{
+		struct wsemuldisplaydev_attach_args waa;
 
-	config_found(&sc->sc_dev, &waa, wsemuldisplaydevprint);
+		/* attach WSDISPLAY */
+		bzero(&waa, sizeof(waa));
+		waa.console = sc->sc_flags & STI_CONSOLE? 1 : 0;
+		waa.scrdata = &sti_default_screenlist;
+		waa.accessops = &sti_accessops;
+		waa.accesscookie = sc;
+
+		config_found(&sc->sc_dev, &waa, wsemuldisplaydevprint);
+	}
+#endif
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.1.4.2 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.1.4.3 2002/03/06 02:11:48 niklas Exp $ */
 /*	$NetBSD: uyap.c,v 1.4 2001/07/11 04:53:18 augustss Exp $	*/
 
 /*
@@ -51,7 +51,7 @@
 #include <dev/usb/ezload.h>
 
 const struct ezdata uyap_firmware[] = {
-#include "dev/usb/uyap_firmware.h"
+#include "dev/microcode/uyap/uyap_firmware.h"
 };
 const struct ezdata *uyap_firmwares[] = { uyap_firmware, NULL };
 

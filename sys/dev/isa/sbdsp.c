@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sbdsp.c,v 1.14.4.2 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sbdsp.c,v 1.14.4.3 2002/03/06 02:11:44 niklas Exp $	*/
 
 /*
  * Copyright (c) 1991-1993 Regents of the University of California.
@@ -570,7 +570,7 @@ sbdsp_set_params(addr, setmode, usemode, play, rec)
 			    p->channels == m->channels &&
 			    p->precision == m->precision &&
 			    p->sample_rate >= m->lowrate &&
-			    p->sample_rate < m->highrate)
+			    p->sample_rate <= m->highrate)
 				break;
 		}
 		if (m->model == -1)
@@ -2189,9 +2189,10 @@ sbdsp_mixer_query_devinfo(addr, dip)
 }
 
 void *
-sb_malloc(addr, size, pool, flags)
+sb_malloc(addr, direction, size, pool, flags)
 	void *addr;
-	unsigned long size;
+	int direction;
+	size_t size;
 	int pool;
 	int flags;
 {
@@ -2216,10 +2217,11 @@ sb_free(addr, ptr, pool)
 	isa_free(ptr, pool);
 }
 
-unsigned long
-sb_round(addr, size)
+size_t
+sb_round(addr, direction, size)
 	void *addr;
-	unsigned long size;
+	int direction;
+	size_t size;
 {
 	if (size > MAX_ISADMA)
 		size = MAX_ISADMA;

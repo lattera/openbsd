@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.2 2001/07/04 11:00:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.3 2002/03/06 02:17:13 niklas Exp $	*/
 /*	$NetBSD: scsi_ioctl.c,v 1.23 1996/10/12 23:23:17 christos Exp $	*/
 
 /*
@@ -418,7 +418,7 @@ scsi_do_safeioctl(sc_link, dev, cmd, addr, flag, p)
 	default:
 		if (sc_link->adapter->ioctl)
 			return (sc_link->adapter->ioctl)(sc_link, cmd, addr, 
-			    flag);
+			    flag, p);
 		else
 			return ENOTTY;
 	}

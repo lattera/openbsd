@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.4 2001/11/13 23:04:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.5 2002/03/06 02:13:24 niklas Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -56,8 +56,6 @@
 
 #include <uvm/uvm_extern.h>
 
-#define	ISSET(t, f)	((t) & (f))
-
 /*
  * Copy data in and out of the target process.
  * We do this by mapping the process's page into
@@ -104,6 +102,8 @@ procfs_domem(curp, p, pfs, uio)
  *	    of the entire system, and the system was not
  *	    compiled with permanently insecure mode turned
  *	    on.
+ *
+ *      (3) It's currently execing.
  */
 int
 procfs_checkioperm(p, t)
@@ -118,6 +118,9 @@ procfs_checkioperm(p, t)
 
 	if ((t->p_pid == 1) && (securelevel > -1))
 		return (EPERM);
+
+	if (t->p_flag & P_INEXEC)
+		return (EAGAIN);
 
 	return (0);
 }

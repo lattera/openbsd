@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.3.2.3 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.3.2.4 2002/03/06 02:11:48 niklas Exp $ */
 /*	$NetBSD: uscanner.c,v 1.18 2001/10/11 12:05:10 augustss Exp $	*/
 /*	$FreeBSD$	*/
 
@@ -126,7 +126,7 @@ static const struct scanner_id {
 
 	/* Mustek */
 	{ USB_VENDOR_MUSTEK, USB_PRODUCT_MUSTEK_1200CU },
-	{ USB_VENDOR_NATIONAL, USB_PRODUCT_NATIONAL_BEARPAW },
+	{ USB_VENDOR_NATIONAL, USB_PRODUCT_NATIONAL_BEARPAW1200 },
 	{ USB_VENDOR_NATIONAL, USB_PRODUCT_MUSTEK_600CU },
 	{ USB_VENDOR_NATIONAL, USB_PRODUCT_MUSTEK_1200USB },
 	{ USB_VENDOR_NATIONAL, USB_PRODUCT_MUSTEK_1200UB },

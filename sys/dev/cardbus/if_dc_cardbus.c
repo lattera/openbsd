@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5.4.2 2001/10/31 03:22:40 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5.4.3 2002/03/06 02:11:42 niklas Exp $	*/
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -70,6 +70,7 @@ struct dc_type dc_cardbus_devs[] = {
 	{ PCI_VENDOR_DEC, PCI_PRODUCT_DEC_21142 },
 	{ PCI_VENDOR_XIRCOM, PCI_PRODUCT_XIRCOM_X3201_3_21143 },
 	{ PCI_VENDOR_ADMTEK, PCI_PRODUCT_ADMTEK_AN985 },
+	{ PCI_VENDOR_ACCTON, PCI_PRODUCT_ACCTON_EN2242 },
 	{ CARDBUS_VENDOR_ABOCOM, CARDBUS_PRODUCT_ABOCOM_FE2500 },
 	{ CARDBUS_VENDOR_ABOCOM, CARDBUS_PRODUCT_ABOCOM_PCM200 },
 	{ 0 }
@@ -106,6 +107,7 @@ dc_cardbus_attach(parent, self, aux)
 	cardbusreg_t reg;
 	bus_addr_t addr;
 
+	sc->sc_dmat = ca->ca_dmat;
 	sc->dc_unit = sc->sc_dev.dv_unit;
 	csc->sc_ct = ct;
 	csc->sc_tag = ca->ca_tag;
@@ -156,8 +158,10 @@ dc_cardbus_attach(parent, self, aux)
 		}
 		break;
 	case PCI_VENDOR_ADMTEK:
+	case PCI_VENDOR_ACCTON:
 	case CARDBUS_VENDOR_ABOCOM:
 		if (PCI_PRODUCT(ca->ca_id) == PCI_PRODUCT_ADMTEK_AN985 ||
+		    PCI_PRODUCT(ca->ca_id) == PCI_PRODUCT_ACCTON_EN2242 ||
 		    PCI_PRODUCT(ca->ca_id) == CARDBUS_PRODUCT_ABOCOM_FE2500 ||
 		    PCI_PRODUCT(ca->ca_id) == CARDBUS_PRODUCT_ABOCOM_PCM200) {
 			sc->dc_type = DC_TYPE_AN983;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/sequencer.c,v 1.2.4.2 2001/07/04 10:40:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/sequencer.c,v 1.2.4.3 2002/03/06 02:11:42 niklas Exp $	*/
 /*	$NetBSD: sequencer.c,v 1.13 1998/11/25 22:17:07 augustss Exp $	*/
 
 /*
@@ -625,7 +625,7 @@ sequencerioctl(dev, cmd, addr, flag, p)
 
 	default:
 		DPRINTFN(-1,("sequencer_ioctl: unimpl %08lx\n", cmd));
-		error = EINVAL;
+		error = ENOTTY;
 		break;
 	}
 	return (error);

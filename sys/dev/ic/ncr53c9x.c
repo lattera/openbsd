@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr53c9x.c,v 1.6.8.2 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr53c9x.c,v 1.6.8.3 2002/03/06 02:11:43 niklas Exp $	*/
 /*     $NetBSD: ncr53c9x.c,v 1.56 2000/11/30 14:41:46 thorpej Exp $    */
 
 /*
@@ -376,7 +376,7 @@ ncr53c9x_init(sc, doreset)
 	if (!ecb_pool_initialized) {
 		/* All instances share this pool */
 		pool_init(&ecb_pool, sizeof(struct ncr53c9x_ecb), 0, 0, 0,
-		    "ncr53c9x_ecb", 0, NULL, NULL, 0);
+		    "ncr53c9x_ecb", NULL);
 		ecb_pool_initialized = 1;
 	}
 
@@ -589,7 +589,7 @@ ncr53c9x_select(sc, ecb)
 	if ((ecb->xs->flags & SCSI_POLL) == 0) {
 		int timeout = ecb->timeout;
 
-		if (hz > 100 && timeout > 1000)
+		if (timeout > 1000000)
 			timeout = (timeout / 1000) * hz;
 		else
 			timeout = (timeout * hz) / 1000;
@@ -2711,7 +2711,7 @@ ncr53c9x_abort(sc, ecb)
 	ecb->flags |= ECB_ABORT;
 
 	if (ecb == sc->sc_nexus) {
-		int timeout;
+		int timeout = ecb->timeout;
 
 		/*
 		 * If we're still selecting, the message will be scheduled
@@ -2723,7 +2723,7 @@ ncr53c9x_abort(sc, ecb)
 		/*
 		 * Reschedule timeout.
 		 */
-		if (hz > 100 && timeout > 1000)
+		if (timeout > 1000000)
 			timeout = (timeout / 1000) * hz;
 		else
 			timeout = (timeout * hz) / 1000;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.5 2001/11/13 21:10:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.6 2002/03/06 02:11:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -1573,7 +1573,7 @@ void wb_init(xsc)
 		printf("%s: initialization failed: no "
 			"memory for rx buffers\n", sc->sc_dev.dv_xname);
 		wb_stop(sc);
-		(void)splx(s);
+		splx(s);
 		return;
 	}
 
@@ -1624,7 +1624,7 @@ void wb_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 
 	timeout_set(&sc->wb_tick_tmo, wb_tick, sc);
 	timeout_add(&sc->wb_tick_tmo, hz);
@@ -1726,7 +1726,7 @@ int wb_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }

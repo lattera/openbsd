@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.6 2001/11/13 21:10:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.7 2002/03/06 02:11:45 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -544,7 +544,7 @@ int sf_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }
@@ -1067,7 +1067,7 @@ void sf_init(xsc)
 	if (sf_init_rx_ring(sc) == ENOBUFS) {
 		printf("sf%d: initialization failed: no "
 		    "memory for rx buffers\n", sc->sf_unit);
-		(void)splx(s);
+		splx(s);
 		return;
 	}
 

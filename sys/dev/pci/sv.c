@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/sv.c,v 1.7.4.3 2001/11/13 21:10:03 niklas Exp $ */
+/*      $OpenBSD: src/sys/dev/pci/sv.c,v 1.7.4.4 2002/03/06 02:11:47 niklas Exp $ */
 
 /*
  * Copyright (c) 1998 Constantine Paul Sapuntzakis
@@ -157,9 +157,9 @@ int	sv_getdev __P((void *, struct audio_device *));
 int	sv_mixer_set_port __P((void *, mixer_ctrl_t *));
 int	sv_mixer_get_port __P((void *, mixer_ctrl_t *));
 int	sv_query_devinfo __P((void *, mixer_devinfo_t *));
-void   *sv_malloc __P((void *, u_long, int, int));
+void   *sv_malloc __P((void *, int, size_t, int, int));
 void	sv_free __P((void *, void *, int));
-u_long	sv_round __P((void *, u_long));
+size_t	sv_round __P((void *, int, size_t));
 paddr_t	sv_mappage __P((void *, void *, off_t, int));
 int	sv_get_props __P((void *));
 
@@ -1441,9 +1441,10 @@ sv_init_mixer(sc)
 }
 
 void *
-sv_malloc(addr, size, pool, flags)
+sv_malloc(addr, direction, size, pool, flags)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 	int pool;
 	int flags;
 {
@@ -1483,10 +1484,11 @@ sv_free(addr, ptr, pool)
         }
 }
 
-u_long
-sv_round(addr, size)
+size_t
+sv_round(addr, direction, size)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 {
 	return (size);
 }

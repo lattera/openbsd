@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.4 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.5 2002/03/06 02:11:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Michael Shalayeff.  All rights reserved.
@@ -397,9 +397,21 @@ twe_attach(sc)
 
 	config_found(&sc->sc_dev, &sc->sc_link, scsiprint);
 
+	TWE_DPRINTF(TWE_D_CMD, ("stat=%b ",
+	    bus_space_read_4(sc->iot, sc->ioh, TWE_STATUS), TWE_STAT_BITS));
+	/*
+	 * ack all before enable, cannot be done in one
+	 * operation as it seems clear is not processed
+	 * if enable is specified.
+	 */
+	bus_space_write_4(sc->iot, sc->ioh, TWE_CONTROL,
+	    TWE_CTRL_CHOSTI | TWE_CTRL_CATTNI | TWE_CTRL_CERR);
+	TWE_DPRINTF(TWE_D_CMD, ("stat=%b ",
+	    bus_space_read_4(sc->iot, sc->ioh, TWE_STATUS), TWE_STAT_BITS));
 	/* enable interrupts */
-	bus_space_write_4(sc->iot, sc->ioh, TWE_CONTROL, TWE_CTRL_EINT |
-	    /*TWE_CTRL_HOSTI |*/ TWE_CTRL_CATTNI | TWE_CTRL_ERDYI);
+	bus_space_write_4(sc->iot, sc->ioh, TWE_CONTROL,
+	    TWE_CTRL_EINT | TWE_CTRL_ERDYI |
+	    /*TWE_CTRL_HOSTI |*/ TWE_CTRL_MCMDI);
 
 	return 0;
 }
@@ -660,13 +672,13 @@ twe_done(sc, idx)
 	lock = TWE_LOCK_TWE(sc);
 	TAILQ_REMOVE(&sc->sc_ccbq, ccb, ccb_link);
 	twe_put_ccb(ccb);
-	TWE_UNLOCK_TWE(sc, lock);
 
 	if (xs) {
 		xs->resid = 0;
 		xs->flags |= ITSDONE;
 		scsi_done(xs);
 	}
+	TWE_UNLOCK_TWE(sc, lock);
 
 	return 0;
 }
@@ -843,12 +855,12 @@ twe_scsi_cmd(xs)
 			}
 			if (blockno >= sc->sc_hdr[target].hd_size ||
 			    blockno + blockcnt > sc->sc_hdr[target].hd_size) {
-				TWE_UNLOCK_TWE(sc, lock);
 				printf("%s: out of bounds %u-%u >= %u\n",
 				    sc->sc_dev.dv_xname, blockno, blockcnt,
 				    sc->sc_hdr[target].hd_size);
 				xs->error = XS_DRIVER_STUFFUP;
 				scsi_done(xs);
+				TWE_UNLOCK_TWE(sc, lock);
 				return (COMPLETE);
 			}
 		}
@@ -862,9 +874,9 @@ twe_scsi_cmd(xs)
 		}
 
 		if ((ccb = twe_get_ccb(sc)) == NULL) {
-			TWE_UNLOCK_TWE(sc, lock);
 			xs->error = XS_DRIVER_STUFFUP;
 			scsi_done(xs);
+			TWE_UNLOCK_TWE(sc, lock);
 			return (COMPLETE);
 		}
 

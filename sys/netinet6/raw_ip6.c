@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5.4.1 2001/05/14 22:40:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5.4.2 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$KAME: raw_ip6.c,v 1.69 2001/03/04 15:55:44 itojun Exp $	*/
 
 /*
@@ -93,14 +93,6 @@
 #include <netinet6/scope6_var.h>
 #endif
 
-#ifdef __OpenBSD__
-#undef IPSEC
-#endif
-
-#ifdef IPSEC
-#include <netinet6/ipsec.h>
-#endif /*IPSEC*/
-
 #include <machine/stdarg.h>
 
 #include "faith.h"
@@ -180,7 +172,7 @@ rip6_input(mp, offp, proto)
 	bzero(&rip6src, sizeof(rip6src));
 	rip6src.sin6_len = sizeof(struct sockaddr_in6);
 	rip6src.sin6_family = AF_INET6;
-#if 0 /*XXX inbound flowlabel */
+#if 0 /* XXX inbound flowlabel */
 	rip6src.sin6_flowinfo = ip6->ip6_flow & IPV6_FLOWINFO_MASK;
 #endif
 	/* KAME hack: recover scopeid */
@@ -491,13 +483,6 @@ rip6_output(m, va_alist)
 		m_copyback(m, off, sizeof(sum), (caddr_t)&sum);
 	}
 
-#ifdef IPSEC
-	if (ipsec_setsocket(m, so) != 0) {
-		error = ENOBUFS;
-		goto bad;
-	}
-#endif /*IPSEC*/
-
 	flags = 0;
 #ifdef IN6P_MINMTU
 	if (in6p->in6p_flags & IN6P_MINMTU)
@@ -621,13 +606,6 @@ rip6_usrreq(so, req, m, nam, control, p)
 		in6p = sotoin6pcb(so);
 		in6p->in6p_ip6.ip6_nxt = (long)nam;
 		in6p->in6p_cksum = -1;
-#ifdef IPSEC
-		error = ipsec_init_policy(so, &in6p->in6p_sp);
-		if (error != 0) {
-			in6_pcbdetach(in6p);
-			break;
-		}
-#endif /*IPSEC*/
 		
 		MALLOC(in6p->in6p_icmp6filt, struct icmp6_filter *,
 			sizeof(struct icmp6_filter), M_PCB, M_NOWAIT);
@@ -712,9 +690,9 @@ rip6_usrreq(so, req, m, nam, control, p)
 		in6p->in6p_laddr = addr->sin6_addr;
 		break;
 	    }
-		
+
 	case PRU_CONNECT:
-	    {
+	{
 		struct sockaddr_in6 *addr = mtod(nam, struct sockaddr_in6 *);
 		struct in6_addr *in6a = NULL;
 #ifdef ENABLE_DEFAULT_SCOPE
@@ -760,7 +738,7 @@ rip6_usrreq(so, req, m, nam, control, p)
 		in6p->in6p_faddr = addr->sin6_addr;
 		soisconnected(so);
 		break;
-	    }
+	}
 
 	case PRU_CONNECT2:
 		error = EOPNOTSUPP;
@@ -777,7 +755,7 @@ rip6_usrreq(so, req, m, nam, control, p)
 	 * routine handles any messaging necessary.
 	 */
 	case PRU_SEND:
-	    {
+	{
 		struct sockaddr_in6 tmp;
 		struct sockaddr_in6 *dst;
 
@@ -811,7 +789,7 @@ rip6_usrreq(so, req, m, nam, control, p)
 		error = rip6_output(m, so, dst, control);
 		m = NULL;
 		break;
-	    }
+	}
 
 	case PRU_SENSE:
 		/*

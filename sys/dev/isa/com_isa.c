@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/com_isa.c,v 1.1.4.1 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/com_isa.c,v 1.1.4.2 2002/03/06 02:11:44 niklas Exp $	*/
 /*
  * Copyright (c) 1997 - 1999, Jason Downs.  All rights reserved.
  *
@@ -75,6 +75,11 @@
 #include <dev/ic/comvar.h>
 
 #include <dev/isa/isavar.h>
+
+#ifdef KGDB
+extern int com_kgdb_addr;
+static bus_space_handle_t com_kgdb_ioh;
+#endif
 
 int com_isa_probe(struct device *, void *, void *);
 void com_isa_attach(struct device *, struct device *, void *);

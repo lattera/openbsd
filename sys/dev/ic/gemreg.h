@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/gemreg.h,v 1.3.4.2 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: gemreg.h,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -111,7 +112,8 @@
 /* GEM TX DMA registers */
 #define	GEM_TX_KICK		0x2000		/* Write last valid desc + 1 */
 #define	GEM_TX_CONFIG		0x2004
-#define	GEM_TX_RING_PTR		0x2008		/* 64-bits */
+#define	GEM_TX_RING_PTR_LO	0x2008
+#define	GEM_TX_RING_PTR_HI	0x200c
 
 #define	GEM_TX_FIFO_WR_PTR	0x2014		/* FIFO write pointer */
 #define	GEM_TX_FIFO_SDWR_PTR	0x2018		/* FIFO shadow write pointer */

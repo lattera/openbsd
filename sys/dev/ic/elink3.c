@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.4 2001/10/31 03:22:42 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.5 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: elink3.c,v 1.32 1997/05/14 00:22:00 thorpej Exp $	*/
 
 /*
@@ -1244,8 +1244,8 @@ epintr(arg)
 		if (status & S_RX_COMPLETE)
 			epread(sc);
 		if (status & S_TX_AVAIL) {
-			sc->sc_arpcom.ac_if.if_flags &= ~IFF_OACTIVE;
-			epstart(&sc->sc_arpcom.ac_if);
+			ifp->if_flags &= ~IFF_OACTIVE;
+			epstart(ifp);
 		}
 		if (status & S_CARD_FAILURE) {
 			epreset(sc);
@@ -1395,6 +1395,7 @@ epget(sc, totlen)
 		m->m_data = m->m_pktdat;
 		m->m_flags = M_PKTHDR;
 		m_tag_init(m);
+		m->m_pkthdr.csum = 0;
 	}
 	m->m_pkthdr.rcvif = ifp;
 	m->m_pkthdr.len = totlen;

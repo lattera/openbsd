@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.5 2002/03/06 02:11:47 niklas Exp $ */
 /*	$NetBSD: if_kue.c,v 1.43 2001/10/08 03:37:53 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -135,7 +135,7 @@
 #include <dev/usb/usbdevs.h>
 
 #include <dev/usb/if_kuereg.h>
-#include <dev/usb/kue_fw.h>
+#include <dev/microcode/kue/kue_fw.h>
 
 #ifdef KUE_DEBUG
 #define DPRINTF(x)	if (kuedebug) logprintf x

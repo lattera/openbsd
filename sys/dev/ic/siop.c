@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.4 2001/11/13 21:10:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.5 2002/03/06 02:11:43 niklas Exp $ */
 /*	$NetBSD: siop.c,v 1.39 2001/02/11 18:04:49 bouyer Exp $	*/
 
 /*
@@ -1090,7 +1090,7 @@ siop_scsicmd_end(siop_cmd)
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    BUS_DMASYNC_PREREAD);
 		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
-		    0, siop_cmd->dmamap_data->dm_mapsize,
+		    0, siop_cmd->dmamap_cmd->dm_mapsize,
 		    BUS_DMASYNC_PREWRITE);
 
 		siop_setuptables(siop_cmd);
@@ -1354,7 +1354,7 @@ siop_scsicmd(xs)
 		    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
 	}
 	bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
-	    0, siop_cmd->dmamap_data->dm_mapsize,
+	    0, siop_cmd->dmamap_cmd->dm_mapsize,
 	    BUS_DMASYNC_PREWRITE);
 
 	siop_setuptables(siop_cmd);

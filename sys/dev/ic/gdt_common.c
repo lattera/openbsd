@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.4.2.4 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.4.2.5 2002/03/06 02:11:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
@@ -600,16 +600,12 @@ gdt_scsi_cmd(xs)
 
 			ccb = gdt_get_ccb(gdt, xs->flags);
 			/*
-			 * Are we out of commands, something is wrong.
-			 * 
+			 * We are out of commands, try again in a little while.
 			 */
 			if (ccb == NULL) {
-				printf("%s: no ccb in gdt_scsi_cmd",
-				    gdt->sc_dev.dv_xname);
 				xs->error = XS_DRIVER_STUFFUP;
-				xs->flags |= ITSDONE;
-				scsi_done(xs);
-				goto ready;
+				GDT_UNLOCK_GDT(gdt, lock);
+				return (TRY_AGAIN_LATER);
 			}
 
 			ccb->gc_blockno = blockno;

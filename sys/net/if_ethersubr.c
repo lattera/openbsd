@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.4 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.5 2002/03/06 02:15:06 niklas Exp $	*/
 /*	$NetBSD: if_ethersubr.c,v 1.19 1996/05/07 02:40:30 thorpej Exp $	*/
 
 /*
@@ -367,7 +367,7 @@ ether_output(ifp, m0, dst, rt0)
 		 */
 		aa = (struct at_ifaddr *)at_ifawithnet(
 			(struct sockaddr_at *)dst,
-			ifp->if_addrlist.tqh_first);
+			TAILQ_FIRST(&ifp->if_addrlist));
 		if (aa == 0)
 			goto bad;
 
@@ -652,8 +652,10 @@ altq_etherclassify(struct ifaltq *ifq, struct mbuf *m,
 		 * now (but it shouldn't ever happen, really, anyhow).
 		 * XXX Should use m_pulldown().
 		 */
+#ifdef DEBUG
 		printf("altq_etherclassify: headers span multiple mbufs: "
 		    "%d < %d\n", m->m_len, (hlen + hdrsize));
+#endif
 		goto bad;
 	}
 
@@ -722,12 +724,11 @@ ether_input(ifp, eh, m)
 			struct ifaddr *ifa;
 			struct sockaddr_dl *sdl = NULL;
 
-			for (ifa = ifp->if_addrlist.tqh_first; ifa != 0;
-			    ifa = ifa->ifa_list.tqe_next)
+			TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
 				if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
 				    sdl->sdl_family == AF_LINK)
 					break;
-
+			}
 			/*
 			 * If this is not a simplex interface, drop the packet
 			 * if it came from us.

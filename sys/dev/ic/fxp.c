@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.4 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.5 2002/03/06 02:11:43 niklas Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*
@@ -1548,7 +1548,7 @@ fxp_ioctl(ifp, command, data)
 	default:
 		error = EINVAL;
 	}
-	(void) splx(s);
+	splx(s);
 	return (error);
 }
 

@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.473 2001/12/04 14:33:21 mickey Exp 
+ *		OpenBSD: pcidevs,v 1.490 2002/02/18 10:15:44 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -768,11 +768,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTHETH,
-	    "Uni-North Eth",
+	    "Uni-N Eth",
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH,
-	    "Uni-North",
+	    "Uni-N",
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_USB,
@@ -780,7 +780,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTHAGP,
-	    "Uni-North AGP",
+	    "Uni-N AGP",
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GMAC,
@@ -813,6 +813,18 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_PANGEA_PCI2,
 	    "Pangea Host-PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH2AGP,
+	    "Uni-N2 AGP",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH2,
+	    "Uni-N2 Host",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH2ETH,
+	    "Uni-N2 Host",
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_PANGEA_FW,
@@ -1447,6 +1459,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "CY82C693U PCI-ISA",
 	},
 	{
+	    PCI_VENDOR_COREGA, PCI_PRODUCT_COREGA_CGWLPCIA11,
+	    "WLAN 11Mb",
+	},
+	{
 	    PCI_VENDOR_COROLLARY, PCI_PRODUCT_COROLLARY_CBUSII_PCIB,
 	    "C-Bus II-PCI",
 	},
@@ -1455,8 +1471,20 @@ static const struct pci_known_product pci_known_products[] = {
 	    "SoundBlaster Live",
 	},
 	{
+	    PCI_VENDOR_CREATIVELABS, PCI_PRODUCT_CREATIVELABS_AUDIGY,
+	    "SoundBlaster Audigy",
+	},
+	{
+	    PCI_VENDOR_CREATIVELABS, PCI_PRODUCT_CREATIVELABS_FIWIRE,
+	    "Firewire",
+	},
+	{
 	    PCI_VENDOR_CREATIVELABS, PCI_PRODUCT_CREATIVELABS_DIGIN,
-	    "SoundBlaster Digital Input",
+	    "SoundBlaster Live Digital Input",
+	},
+	{
+	    PCI_VENDOR_CREATIVELABS, PCI_PRODUCT_CREATIVELABS_AUDIGIN,
+	    "SoundBlaster Audigy Digital Input",
 	},
 	{
 	    PCI_VENDOR_CREATIVELABS, PCI_PRODUCT_CREATIVELABS_EV1938,
@@ -1819,12 +1847,20 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MAXIRADIO",
 	},
 	{
+	    PCI_VENDOR_HP, PCI_PRODUCT_HP_A4977A,
+	    "A4977A Visualize EG",
+	},
+	{
 	    PCI_VENDOR_HP, PCI_PRODUCT_HP_J2585A,
 	    "J2585A",
 	},
 	{
 	    PCI_VENDOR_HP, PCI_PRODUCT_HP_J2585B,
 	    "J2585B",
+	},
+	{
+	    PCI_VENDOR_HP, PCI_PRODUCT_HP_82557B,
+	    "82557B 10/100 NIC",
 	},
 	{
 	    PCI_VENDOR_HP, PCI_PRODUCT_HP_NETRAID_4M,
@@ -1837,6 +1873,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_HIFN, PCI_PRODUCT_HIFN_6500,
 	    "6500",
+	},
+	{
+	    PCI_VENDOR_HIFN, PCI_PRODUCT_HIFN_7811,
+	    "7811",
 	},
 	{
 	    PCI_VENDOR_HIFN, PCI_PRODUCT_HIFN_7951,
@@ -2007,6 +2047,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "PRO 1000T",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544,
+	    "PRO 1000XT",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_0,
 	    "PRO/100 VE",
 	},
@@ -2169,6 +2213,14 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82840_PCI,
 	    "82840 PCI",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82845_HB,
+	    "82845 Host",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82845_AGP,
+	    "82845 AGP",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_LPC,
@@ -2699,8 +2751,16 @@ static const struct pci_known_product pci_known_products[] = {
 	    "USB",
 	},
 	{
+	    PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_USBHC2,
+	    "USB 2-port",
+	},
+	{
 	    PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_USBQBUS,
 	    "USB QuadraBus",
+	},
+	{
+	    PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_FW322,
+	    "FW322 1394",
 	},
 	{
 	    PCI_VENDOR_LUXSONOR, PCI_PRODUCT_LUXSONOR_LS242,
@@ -2835,6 +2895,14 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Raven Host-PCI",
 	},
 	{
+	    PCI_VENDOR_MOXA, PCI_PRODUCT_MOXA_CP114,
+	    "CP-114",
+	},
+	{
+	    PCI_VENDOR_MOXA, PCI_PRODUCT_MOXA_C168H,
+	    "C168H",
+	},
+	{
 	    PCI_VENDOR_MYLEX, PCI_PRODUCT_MYLEX_960P,
 	    "DAC960P RAID",
 	},
@@ -2881,6 +2949,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_NEC, PCI_PRODUCT_NEC_PKUG,
 	    "I/O",
+	},
+	{
+	    PCI_VENDOR_NEC, PCI_PRODUCT_NEC_USB2,
+	    "USB 2.0",
 	},
 	{
 	    PCI_VENDOR_NEC, PCI_PRODUCT_NEC_VERSAMAESTRO,
@@ -2941,6 +3013,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_NETGEAR, PCI_PRODUCT_NETGEAR_GA620T,
 	    "GA620T",
+	},
+	{
+	    PCI_VENDOR_NETMOS, PCI_PRODUCT_NETMOS_2S1P,
+	    "2S1P",
 	},
 	{
 	    PCI_VENDOR_NETSEC, PCI_PRODUCT_NETSEC_7751,
@@ -3259,6 +3335,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "GeForce2 MX",
 	},
 	{
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE2MX_100,
+	    "GeForce2 MX 100",
+	},
+	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE2GO,
 	    "GeForce2 Go",
 	},
@@ -3497,6 +3577,14 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20268,
 	    "PDC20268",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20268R,
+	    "PDC20268R",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20269,
+	    "PDC20269",
 	},
 	{
 	    PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1020,
@@ -3831,6 +3919,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "730 Host-PCI",
 	},
 	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_735,
+	    "735 Host-PCI",
+	},
+	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_900,
 	    "900 10/100BaseTX",
 	},
@@ -3856,7 +3948,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5571,
-	    "5571",
+	    "5571 Host-PCI",
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5581,
@@ -4035,8 +4127,16 @@ static const struct pci_known_product pci_known_products[] = {
 	    "ST2021 Gigabit Ethernet",
 	},
 	{
+	    PCI_VENDOR_SUNIX, PCI_PRODUCT_SUNIX_4065A,
+	    "4065A",
+	},
+	{
 	    PCI_VENDOR_SURECOM, PCI_PRODUCT_SURECOM_NE34,
 	    "Surecom NE-34",
+	},
+	{
+	    PCI_VENDOR_SYBA, PCI_PRODUCT_SYBA_4S2P,
+	    "4S2P",
 	},
 	{
 	    PCI_VENDOR_SYMPHONY, PCI_PRODUCT_SYMPHONY_82C101,
@@ -4073,6 +4173,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_TEKRAM2, PCI_PRODUCT_TEKRAM2_DC690C,
 	    "DC-690C",
+	},
+	{
+	    PCI_VENDOR_TEKRAM2, PCI_PRODUCT_TEKRAM2_DC3X5U,
+	    "DC-3x5U",
 	},
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_TLAN,
@@ -4559,12 +4663,24 @@ static const struct pci_known_product pci_known_products[] = {
 	    "VT82C686 AC97 Audio",
 	},
 	{
+	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8233_AC97,
+	    "VT8233 AC97 Audio",
+	},
+	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII_2,
 	    "RhineII-2",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_ACM,
 	    "VT82C686 AC97 Modem",
+	},
+	{
+	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8366_ISA,
+	    "VT8366 PCI-ISA",
+	},
+	{
+	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8366,
+	    "VT8366 Host-PCI",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII,
@@ -4597,6 +4713,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8605_AGP,
 	    "VT8605 PCI-AGP",
+	},
+	{
+	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8366_AGP,
+	    "VT8366 PCI-AGP",
 	},
 	{
 	    PCI_VENDOR_VORTEX, PCI_PRODUCT_VORTEX_GDT_60x0,
@@ -6959,6 +7079,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	    "Netgear",
 	},
 	{
+	    PCI_VENDOR_MOXA,
+	    "Moxa",
+	},
+	{
 	    PCI_VENDOR_LEVEL1,
 	    "Level 1",
 	},
@@ -6981,6 +7105,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_LAVA,
 	    "Lava",
+	},
+	{
+	    PCI_VENDOR_SUNIX,
+	    "Sunix",
 	},
 	{
 	    PCI_VENDOR_OXFORD2,
@@ -7033,6 +7161,14 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_VMWARE,
 	    "VMware",
+	},
+	{
+	    PCI_VENDOR_COREGA,
+	    "Corega",
+	},
+	{
+	    PCI_VENDOR_SYBA,
+	    "Syba",
 	},
 	{
 	    PCI_VENDOR_EUMITCOM,
@@ -7137,6 +7273,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_ATRONICS,
 	    "Atronics",
+	},
+	{
+	    PCI_VENDOR_NETMOS,
+	    "NetMos",
 	},
 	{
 	    PCI_VENDOR_ARC,

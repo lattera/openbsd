@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.3 2001/10/31 03:29:02 nate Exp $ */
+/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.4 2002/03/06 02:15:06 niklas Exp $ */
 /*
  * Copyright 1998 Massachusetts Institute of Technology
  *
@@ -116,8 +116,8 @@ int vlan_setmulti(struct ifnet *ifp)
 	ifr_p = (struct ifreq *)&sc->ifv_p->if_data;
 
 	/* First, remove any existing filter entries. */
-	while(sc->vlan_mc_listhead.slh_first != NULL) {
-		mc = sc->vlan_mc_listhead.slh_first;
+	while (!SLIST_EMPTY(&sc->vlan_mc_listhead)) {
+		mc = SLIST_FIRST(&sc->vlan_mc_listhead);
 		error = ether_delmulti(ifr_p, &sc->ifv_ac);
 		if (error)
 			return(error);
@@ -180,7 +180,6 @@ vlan_start(struct ifnet *ifp)
 {
 	struct ifvlan *ifv;
 	struct ifnet *p;
-	struct ether_vlan_header *evl;
 	struct mbuf *m, *m0;
 	int error;
 	ALTQ_DECL(struct altq_pktattr pktattr;)
@@ -250,41 +249,29 @@ vlan_start(struct ifnet *ifp)
 			m->m_pkthdr.rcvif = ifp;
 			m->m_flags |= M_PROTO1;
 		} else {
-			if (m->m_len < sizeof(struct ether_header) &&
-			    (m = m_pullup(m, sizeof(struct ether_header)))
-			    == NULL) {
-				ifp->if_ierrors++;
-				continue;
-			}
+			struct ether_vlan_header evh;
 
-			if (m->m_flags & M_PKTHDR) {
-				MGETHDR(m0, MT_DATA, M_DONTWAIT);
-			} else {
-				MGET(m0, MT_DATA, M_DONTWAIT);
-			}
+			m_copydata(m, 0, sizeof(struct ether_header),
+			    (caddr_t)&evh);
+			evh.evl_proto = evh.evl_encap_proto;
+			evh.evl_encap_proto = htons(ETHERTYPE_8021Q);
+			evh.evl_tag = htons(ifv->ifv_tag);
+			m_adj(m, sizeof(struct ether_header));
 
+			m0 = m_prepend(m, sizeof(struct ether_vlan_header),
+			    M_DONTWAIT);
 			if (m0 == NULL) {
 				ifp->if_ierrors++;
-				m_freem(m);
 				continue;
 			}
 
+			/* m_prepend() doesn't adjust m_pkthdr.len */
 			if (m0->m_flags & M_PKTHDR)
-				M_MOVE_PKTHDR(m0, m);
+				m0->m_pkthdr.len +=
+				    sizeof(struct ether_vlan_header);
 
-			m0->m_flags &= ~M_PROTO1;
-			m0->m_next = m;
-			m0->m_len = sizeof(struct ether_vlan_header);
-
-			evl = mtod(m0, struct ether_vlan_header *);
-			bcopy(mtod(m, char *),
-			    evl, sizeof(struct ether_header));
-			evl->evl_proto = evl->evl_encap_proto;
-			evl->evl_encap_proto = htons(ETHERTYPE_8021Q);
-			evl->evl_tag = htons(ifv->ifv_tag);
-
-			m->m_len -= sizeof(struct ether_header);
-			m->m_data += sizeof(struct ether_header);
+			m_copyback(m0, 0, sizeof(struct ether_vlan_header),
+			    (caddr_t)&evh);
 
 			m = m0;
 		}
@@ -528,9 +515,8 @@ vlan_unconfig(struct ifnet *ifp)
 	 * while we were alive and remove them from the parent's list
 	 * as well.
 	 */
-	while(ifv->vlan_mc_listhead.slh_first != NULL) {
-
-		mc = ifv->vlan_mc_listhead.slh_first;
+	while (!SLIST_EMPTY(&ifv->vlan_mc_listhead)) {
+		mc = SLIST_FIRST(&ifv->vlan_mc_listhead);
 		error = ether_delmulti(ifr_p, &ifv->ifv_ac);
 		error = ether_delmulti(ifr, &ifv->ifv_ac);
 		if (error)

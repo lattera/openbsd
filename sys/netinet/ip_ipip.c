@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2.2.3 2001/10/31 03:29:03 nate Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2.2.4 2002/03/06 02:15:07 niklas Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -207,6 +207,13 @@ ipip_input(struct mbuf *m, int iphlen, struct ifnet *gifp)
 
 	/* Remove outer IP header */
 	m_adj(m, iphlen);
+
+	/* Sanity check */
+	if (m->m_pkthdr.len < sizeof(struct ip))  {
+		ipipstat.ipips_hdrops++;
+		m_freem(m);
+		return;
+	}
 
 	m_copydata(m, 0, 1, &v);
 

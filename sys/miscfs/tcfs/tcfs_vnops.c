@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_vnops.c,v 1.3.6.1 2001/05/14 22:32:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_vnops.c,v 1.3.6.2 2002/03/06 02:13:24 niklas Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.
@@ -454,7 +454,7 @@ struct vnodeopv_entry_desc tcfs_vnodeop_entries[] = {
         { &vop_link_desc,       tcfs_link },
         { &vop_rename_desc,     tcfs_rename },
         { &vop_symlink_desc,    tcfs_symlink },
-        { (struct vnodeop_desc*)NULL,   (int(*) __P((void *)))NULL }
+        { NULL, NULL }
 };
 
 struct vnodeopv_desc tcfs_vnodeop_opv_desc =

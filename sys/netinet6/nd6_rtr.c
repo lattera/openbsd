@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_rtr.c,v 1.4.2.4 2001/07/04 10:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_rtr.c,v 1.4.2.5 2002/03/06 02:15:08 niklas Exp $	*/
 /*	$KAME: nd6_rtr.c,v 1.97 2001/02/07 11:09:13 itojun Exp $	*/
 
 /*
@@ -381,7 +381,7 @@ nd6_ra_input(m, off, icmp6len)
  skip:
 	
 	/*
-	 * Src linkaddress
+	 * Source link layer address
 	 */
     {
 	char *lladdr = NULL;
