@@ -1,13 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.5 2002/03/28 10:36:02 niklas Exp $ */
-/*
- * Ashura Project
- */
-/*
- * HISTORY
- *
- * Original SCCS ID in ISEDL 
- * @(#)mmu.h 1.22		 90/09/20 19:13:34
- */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.6 2002/03/29 23:46:49 niklas Exp $ */
 
 /*
  * This file bears almost no resemblance to the original m68k file,
