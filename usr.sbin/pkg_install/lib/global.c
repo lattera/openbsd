@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/global.c,v 1.3 1998/09/07 22:30:16 marc Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/global.c,v 1.4 1998/10/13 23:09:53 marc Exp $	*/
 
 #ifndef lint
-static const char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/global.c,v 1.3 1998/09/07 22:30:16 marc Exp $";
+static const char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/global.c,v 1.4 1998/10/13 23:09:53 marc Exp $";
 #endif
 
 /*
@@ -31,6 +31,5 @@ static const char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/global.
 Boolean	Verbose		= FALSE;
 Boolean	Fake		= FALSE;
 Boolean	Force		= FALSE;
-int AutoAnswer		= FALSE;
 
 
