@@ -4,7 +4,7 @@
  * to pick it up and invokes sendmail (or sendmail-like agent) to
  * deliver it.
  *
- * $Id: smtpfwdd.c,v 1.2 1998/03/09 08:14:51 deraadt Exp $
+ * $Id: smtpfwdd.c,v 1.3 1998/06/03 08:57:14 beck Exp $
  * 
  * Copyright (c) 1996, 1997 Obtuse Systems Corporation. All rights
  * reserved.
@@ -41,7 +41,7 @@
  */
 char *obtuse_copyright =
 "Copyright 1996 - Obtuse Systems Corporation - All rights reserved.";
-char *obtuse_rcsid = "$Id: smtpfwdd.c,v 1.2 1998/03/09 08:14:51 deraadt Exp $";
+char *obtuse_rcsid = "$Id: smtpfwdd.c,v 1.3 1998/06/03 08:57:14 beck Exp $";
 
 #include <stdio.h>
 #include <signal.h>
@@ -793,7 +793,7 @@ main(int argc, char **argv)
 #ifdef GETOPT_EOF
   while ((opt = getopt(argc, argv, optstring)) != EOF) {
 #else
-  while ((opt = getopt(argc, argv, optstring)) > 0) {
+  while ((opt = getopt(argc, argv, optstring)) != -1) {
 #endif
     switch (opt) {
     case 'q':
