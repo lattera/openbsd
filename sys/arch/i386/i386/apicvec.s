@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.5 2001/10/30 19:21:17 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.6 2001/10/30 19:37:03 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -98,6 +98,13 @@ XINTR(softclock):
 	call	_C_LABEL(softclock)
 	jmp	_C_LABEL(Xdoreti)
 	
+#define DONETISR(s, c) \
+	.globl  _C_LABEL(c)	;\
+	testl	$(1 << s),%edi	;\
+	jz	1f		;\
+	call	_C_LABEL(c)	;\
+1:
+
 XINTR(softnet):
 	pushl	$0		
 	pushl	$T_ASTFLT
@@ -112,6 +119,7 @@ XINTR(softnet):
 	xchgl	_C_LABEL(netisr),%edi
 #include <net/netisr_dispatch.h>
 	jmp	_C_LABEL(Xdoreti)
+#undef DONETISR
 
 XINTR(softtty):	
 	pushl	$0		
