@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcname.c,v 1.2 1996/06/26 05:39:53 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcname.c,v 1.3 1997/01/17 07:18:08 millert Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -29,6 +29,9 @@
  **********************************************************************
  * HISTORY
  * $Log: supcname.c,v $
+ * Revision 1.2  1996/06/26 05:39:53  deraadt
+ * rcsid
+ *
  * Revision 1.1  1995/12/16 11:46:58  deraadt
  * add sup to the tree
  *
@@ -88,8 +91,8 @@ void getnams ()
 	f = fopen (buf,"r");
 	if (f == NULL)  logquit (1,"Can't open %s",buf);
 	while ((p = fgets (buf,STRINGLENGTH,f)) != NULL) {
-		if (q = index (p,'\n'))  *q = '\0';
-		if (index ("#;:",*p))  continue;
+		if (q = strchr (p,'\n'))  *q = '\0';
+		if (strchr ("#;:",*p))  continue;
 		q = nxtarg (&p,"= \t");
 		p = skipover (p," \t");
 		if (*p == '=')  p++;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supfilesrv.c,v 1.5 1996/12/22 03:26:05 tholo Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supfilesrv.c,v 1.6 1997/01/17 07:18:10 millert Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -44,6 +44,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supfilesrv.c,v $
+ * Revision 1.5  1996/12/22 03:26:05  tholo
+ * Deal with _POSIX_SAVED_IDS when relinquishing privileges
+ *
  * Revision 1.4  1996/07/31 11:11:31  niklas
  * Better use time_t instead of long when dealing with times
  *
@@ -537,7 +540,7 @@ char **argv;
 	if (f == NULL)
 		quit (1,"Unable to open cryptfile %s\n",cryptkey);
 	if (p = fgets (buf,STRINGLENGTH,f)) {
-		if (q = index (p,'\n'))  *q = '\0';
+		if (q = strchr (p,'\n'))  *q = '\0';
 		if (*p == '\0')
 			quit (1,"No cryptkey found in %s\n",cryptkey);
 		cryptkey = salloc (buf);
@@ -753,9 +756,9 @@ setup ()
 				struct stat fsbuf;
 
 				while (p = fgets (buf,STRINGLENGTH,f)) {
-					q = index (p,'\n');
+					q = strchr (p,'\n');
 					if (q)  *q = 0;
-					if (index ("#;:",*p))  continue;
+					if (strchr ("#;:",*p))  continue;
 					q = nxtarg (&p," \t");
 					if (*p == '\0')  continue;
 					if (!matchhost(q)) continue;
@@ -806,9 +809,9 @@ setup ()
 		f = fopen (buf,"r");
 		if (f) {
 			while (p = fgets (buf,STRINGLENGTH,f)) {
-				q = index (p,'\n');
+				q = strchr (p,'\n');
 				if (q)  *q = 0;
-				if (index ("#;:",*p))  continue;
+				if (strchr ("#;:",*p))  continue;
 				q = nxtarg (&p," \t=");
 				if (strcmp(q,collname) == 0) {
 					basedir = skipover(p," \t=");
@@ -829,9 +832,9 @@ setup ()
 	f = fopen (buf,"r");
 	if (f) {
 		while (p = fgets (buf,STRINGLENGTH,f)) {
-			q = index (p,'\n');
+			q = strchr (p,'\n');
 			if (q)  *q = 0;
-			if (index ("#;:",*p))  continue;
+			if (strchr ("#;:",*p))  continue;
 			prefix = salloc(p);
 			if (chdir (prefix) < 0)
 				goaway ("Can't chdir to %s from base directory %s",
@@ -875,9 +878,9 @@ setup ()
 			int hostok = FALSE;
 			while (p = fgets (buf,STRINGLENGTH,f)) {
 				int not;
-				q = index (p,'\n');
+				q = strchr (p,'\n');
 				if (q)  *q = 0;
-				if (index ("#;:",*p))  continue;
+				if (strchr ("#;:",*p))  continue;
 				q = nxtarg (&p," \t");
 				if ((not = (*q == '!')) && *++q == '\0')
 					q = nxtarg (&p," \t");
@@ -942,7 +945,7 @@ docrypt ()
 
 				if (cryptkey == NULL &&
 				    (p = fgets (buf,STRINGLENGTH,f))) {
-					if (q = index (p,'\n'))  *q = '\0';
+					if (q = strchr (p,'\n'))  *q = '\0';
 					if (*p)  cryptkey = salloc (buf);
 				}
 				if (local_file(fileno(f), &fsbuf) > 0
@@ -1519,10 +1522,10 @@ int fileuid,filegid;
 		pswdp = NULL;
 	} else {
 		(void) strcpy (nbuf,namep);
-		account = group = index (nbuf,',');
+		account = group = strchr (nbuf,',');
 		if (group != NULL) {
 			*group++ = '\0';
-			account = index (group,',');
+			account = strchr (group,',');
 			if (account != NULL) {
 				*account++ = '\0';
 				if (*account == '\0')  account = NULL;
