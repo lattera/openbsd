@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.bin/yacc/mkpar.c,v 1.3 1996/03/31 04:56:02 etheisen Exp $	*/
+
 #ifndef lint
-static char rcsid[] = "$Id: mkpar.c,v 1.1.1.1 1995/10/18 08:47:05 deraadt Exp $";
+static char rcsid[] = "$Id$";
 #endif /* not lint */
 
 #include "defs.h"
