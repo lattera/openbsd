@@ -1,25 +1,25 @@
 #ifndef __GENASSYM_INCLUDED
 #define __GENASSYM_INCLUDED 1
 
-#ifdef ASSEMBLER
-#define NEWLINE \\ 
-#endif
 #define	P_FORW 0
 #define	P_BACK 4
 #define	P_VMSPACE 32
-#define	P_ADDR 240
+#define	P_ADDR 236
 #define	P_PRIORITY 208
-#define	P_STAT 44
-#define	P_WCHAN 96
+#define	P_STAT 45
+#define	P_WCHAN 104
 #define	SRUN 2
 #define	VM_PMAP 132
 #define	V_INTR 12
 #define	UPAGES 3
 #define	PGSHIFT 12
-#define	U_PROF 824
-#define	U_PROFSCALE 836
-#define	PCB_ONFAULT 328
-#define	SIZEOF_PCB 332
+#define	USIZE 12288
+#define	NBPG 4096
+#define	U_PROF 840
+#define	U_PROFSCALE 852
+#define	PCB_ONFAULT 336
+#define	SIZEOF_PCB 344
+#define	PCB_USER_STATE 80
 #define	SYS_exit 1
 #define	SYS_execve 59
 #define	SYS_sigreturn 103
@@ -54,7 +54,29 @@
 #define EF_MASK 58
 #define EF_MODE 59
 #define EF_RET 60
-#define EF_NREGS 62
-#define SIZEOF_EF 248
+#define EF_IPFSR 61
+#define EF_DPFSR 62
+#define EF_NREGS 64
+#define SIZEOF_EF 256
+#define PCB_PC 0
+#define PCB_IPL 4
+#define PCB_R14 8
+#define PCB_R15 12
+#define PCB_R16 16
+#define PCB_R17 20
+#define PCB_R18 24
+#define PCB_R19 28
+#define PCB_R20 32
+#define PCB_R21 36
+#define PCB_R22 40
+#define PCB_R23 44
+#define PCB_R24 48
+#define PCB_R25 52
+#define PCB_R26 56
+#define PCB_R27 60
+#define PCB_R28 64
+#define PCB_R29 68
+#define PCB_R30 72
+#define PCB_SP 76
 
 #endif /* __GENASSYM_INCLUDED */

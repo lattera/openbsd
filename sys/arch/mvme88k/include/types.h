@@ -55,7 +55,7 @@ typedef struct _physadr {
 } *physadr;
 
 typedef struct label_t {
-	int val[2];
+	int val[22];
 } label_t;
 #endif
 

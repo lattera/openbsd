@@ -49,9 +49,12 @@
 int bugttymatch __P((struct device *parent, void *self, void *aux));
 void bugttyattach __P((struct device *parent, struct device *self, void *aux));
 
-struct cfdriver bugttycd = {
-	NULL, "bugtty", bugttymatch, bugttyattach,
-	DV_TTY, sizeof(struct device)
+struct cfattach bugtty_ca = {
+        sizeof(struct device), bugttymatch, bugttyattach
+};      
+
+struct cfdriver bugtty_cd = {
+        NULL, "bugtty", DV_TTY, 0
 };
 
 /* prototypes */
@@ -86,9 +89,16 @@ bugttymatch(parent, self, aux)
 	void *aux;
 {
 	extern int needprom;
+	struct confargs *ca = aux;
 	
 	if (needprom == 0)
 		return (0);
+	/*
+	 * tell our parent our requirements
+	 */
+	ca->ca_paddr = (caddr_t)0xfff45000;
+	ca->ca_size = 0x200;
+	ca->ca_ipl = IPL_TTY;
 	return (1);
 }
 
@@ -484,6 +494,8 @@ bugttycnputc(dev, c)
 	dev_t dev;
 	char c;
 {
+	int s;
+
 	if (c == '\n')
 		bugoutchr('\r');
 	bugoutchr(c);

@@ -86,11 +86,10 @@ loados(void)
 	/* zero out BSS */
 
 	printf("+%x]", hdr->a_bss);
-#if DEBUG
 	printf("zero'd out %x (%x)\n", loadaddr + hdr->a_text + hdr->a_data,
 			hdr->a_bss);
-#endif
-	memset(loadaddr + hdr->a_text + hdr->a_data, 0, hdr->a_bss);
+	/*memset(loadaddr + hdr->a_text + hdr->a_data, 0, hdr->a_bss); */
+	bzero(loadaddr + hdr->a_text + hdr->a_data, hdr->a_bss);
 
 	addr = loadaddr + hdr->a_text + hdr->a_data + hdr->a_bss;
 
@@ -174,12 +173,16 @@ loados(void)
 	miniroot = (int *)esym;
 	miniroot = (int *)(((int)miniroot + 0x1000 - 1) & ~0xFFF);
 	tapefileseek(3);	/* seek to file 3 - minroot */
-	if (readblk(1000, miniroot) != 0) {
+#if 0
+	if (readblk(1000, miniroot) != 0) { /* 5 Mb */
 		printf("miniroot not loaded\n");
 		addr = (char *)miniroot;
 	} else {
 		addr = (char *)((int)miniroot + 1000 * DEV_BSIZE);
 	}
+#endif /* 0 */
+	readblk(4096, miniroot); /* 2 Mb */
+	addr = (char *)((int)miniroot + 4096 * DEV_BSIZE);
 	printf("esym %x miniroot @ %x (ends @ %x)\n", esym, miniroot, addr);
 #if 0
 	{

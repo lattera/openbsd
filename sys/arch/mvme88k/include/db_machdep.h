@@ -81,8 +81,10 @@ db_regs_t	      ddb_regs;	/* register state */
  * This is an actual function due to the fact that the sxip
  * or snip could be nooped out due to a jmp or rte
  */
-#define PC_REGS(regs) (regs->sxip & 2) ? regs->sxip & ~3 : (regs->snip & 2 ? \
-				regs->snip & ~3 : regs->sfip & ~3)
+#define PC_REGS(regs) ((regs->sxip & 2) ?  regs->sxip & ~3 : \
+	(regs->snip & 2 ? regs->snip & ~3 : regs->sfip & ~3))
+#define l_PC_REGS(regs) ((regs->sxip & 2) ?  regs->sxip : \
+	(regs->snip & 2 ? regs->snip : regs->sfip ))
 
 #define pC_REGS(regs) (regs->sxip & 2) ? regs->sxip : (regs->snip & 2 ? \
 				regs->snip : regs->sfip)
@@ -110,7 +112,7 @@ extern int quiet_db_read_bytes;
 #define DB_NO_COFF 1
 
 /* need software single step */
-#define SOFTWARE_SSTEP 1
+#define SOFTWARE_SSTEP 1 /* we need this XXX nivas */
 
 /*
  * Debugger can get to any address space
