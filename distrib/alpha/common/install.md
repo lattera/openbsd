@@ -1,4 +1,4 @@
-#       $OpenBSD: src/distrib/alpha/common/install.md,v 1.11 2002/07/15 21:12:50 miod Exp $
+#       $OpenBSD: src/distrib/alpha/common/install.md,v 1.12 2002/07/15 23:17:54 krw Exp $
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
 # All rights reserved.
@@ -40,7 +40,6 @@
 
 # Machine-dependent install sets
 MDSETS=kernel
-MDTERM=vt220
 ARCH=ARCH
 
 md_set_term() {
