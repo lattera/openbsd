@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: iface.c,v 1.6 1999/05/31 23:57:37 brian Exp $
+ *	$Id: iface.c,v 1.7 2000/01/07 03:26:54 brian Exp $
  */
 
 #include <sys/param.h>
@@ -251,12 +251,14 @@ iface_inClear(struct iface *iface, int how)
 {
   int n, addrs;
 
-  addrs = n = how == IFACE_CLEAR_ALL ? 0 : 1;
-  for (; n < iface->in_addrs; n++)
-    iface_addr_Zap(iface->name, iface->in_addr + n);
+  if (iface->in_addrs) {
+    addrs = n = how == IFACE_CLEAR_ALL ? 0 : 1;
+    for (; n < iface->in_addrs; n++)
+      iface_addr_Zap(iface->name, iface->in_addr + n);
 
-  iface->in_addrs = addrs;
-  /* Don't bother realloc()ing - we have little to gain */
+    iface->in_addrs = addrs;
+    /* Don't bother realloc()ing - we have little to gain */
+  }
 }
 
 int
