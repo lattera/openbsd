@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.86 2002/01/24 21:09:25 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.87 2002/01/24 21:13:23 stevesk Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -59,6 +59,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.86 2002/01/24 21:09:25 stevesk Exp
 #include "mac.h"
 #include "log.h"
 #include "canohost.h"
+#include "misc.h"
 
 #ifdef PACKET_DEBUG
 #define DBG(x) x
