@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/process_machdep.c,v 1.5 2002/03/14 00:42:24 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/process_machdep.c,v 1.5.6.1 2004/03/03 00:19:42 brad Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.6 1996/03/14 21:09:26 christos Exp $ */
 
 /*
@@ -107,6 +107,10 @@ process_write_regs(p, regs)
 	struct reg *regs;
 {
 	int	psr = p->p_md.md_tf->tf_psr & ~PSR_ICC;
+
+	if (((regs->r_pc | regs->r_npc) & 0x03) != 0)
+		return (EINVAL);
+
 	bcopy((caddr_t)regs, p->p_md.md_tf, sizeof(struct reg));
 	p->p_md.md_tf->tf_psr = psr | (regs->r_psr & PSR_ICC);
 	return (0);
@@ -127,6 +131,9 @@ process_set_pc(p, addr)
 	struct proc *p;
 	caddr_t addr;
 {
+	if (((u_int)addr & 0x03) != 0)
+		return (EINVAL);
+
 	p->p_md.md_tf->tf_pc = (u_int)addr;
 	p->p_md.md_tf->tf_npc = (u_int)addr + 4;
 	return (0);
