@@ -39,7 +39,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)dev_mkdb.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$Id: dev_mkdb.c,v 1.2 1996/08/29 03:33:19 deraadt Exp $";
+static char rcsid[] = "$Id: dev_mkdb.c,v 1.3 1997/01/15 23:43:55 millert Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -76,7 +76,7 @@ main(argc, argv)
 	DBT data, key;
 	int ch;
 	u_char buf[MAXNAMLEN + 1];
-	char dbtmp[MAXPATHLEN + 1], dbname[MAXPATHLEN + 1];
+	char dbtmp[MAXPATHLEN], dbname[MAXPATHLEN];
 
 	while ((ch = getopt(argc, argv, "")) != -1)
 		switch((char)ch) {
