@@ -16,7 +16,7 @@ validity of the host key.
 */
 
 #include "includes.h"
-RCSID("$Id: auth-rsa.c,v 1.3 1999/09/30 17:08:51 deraadt Exp $");
+RCSID("$Id: auth-rsa.c,v 1.4 1999/10/11 20:00:35 markus Exp $");
 
 #include "rsa.h"
 #include "packet.h"
@@ -90,7 +90,7 @@ auth_rsa_challenge_dialog(unsigned int bits, BIGNUM *e, BIGNUM *n)
   packet_write_wait();
 
   /* The response is MD5 of decrypted challenge plus session id. */
-  len = (BN_num_bits(challenge) + 7) / 8;
+  len = BN_num_bytes(challenge);
   assert(len <= 32 && len);
   memset(buf, 0, 32);
   BN_bn2bin(challenge, buf + 32 - len);
