@@ -1,9 +1,9 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/16/93
-#	$Id: Makefile,v 1.3 1994/05/27 08:57:32 glass Exp $
+#	$Id: Makefile,v 1.1.1.1 1995/10/18 10:39:06 deraadt Exp $
 
 # Makefile for pica links, tags file
 
-.include "../kern/Make.tags.inc"
+.include "../../kern/Make.tags.inc"
 
 all:
 	@echo "make links or tags only"
@@ -19,10 +19,10 @@ PICA=	/sys/pica/dev/*.[ch] /sys/pica/include/*.[ch] \
 APICA=	/sys/pica/pica/*.s
 
 tags::
-	-ctags -wdt ${COMM} ${PICA}
+	-ctags -wdtif ${COMM} ${PICA}
 	egrep "^LEAF(.*)|^[AN]LEAF(.*)|^NON_LEAF(.*)" ${APICA} | \
 	    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3 \1 /^\2(\3\4$$/;" \
 		>> tags
 	sort -o tags tags
-	chown bin.wsrc tags
-	chmod 444 tags
+
+.include <bsd.prog.mk>
