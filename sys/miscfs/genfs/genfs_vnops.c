@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.1 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.2 2002/06/11 04:13:39 art Exp $	*/
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -262,7 +262,9 @@ genfs_getpages(v)
 	mbp->b_iodone = (async ? uvm_aio_biodone : 0);
 	mbp->b_vp = NULL;
 	LIST_INIT(&mbp->b_dep);
+	s = splbio();
 	bgetvp(vp, mbp);
+	splx(s);
 
 	/*
 	 * if EOF is in the middle of the range, zero the part past EOF.
@@ -968,7 +970,9 @@ genfs_gop_write(struct vnode *vp, struct vm_page **pgs, int npages, int flags)
 	mbp->b_iodone = uvm_aio_biodone;
 	mbp->b_vp = NULL;
 	LIST_INIT(&mbp->b_dep);
+	s = splbio();
 	bgetvp(vp, mbp);
+	splx(s);
 
 	bp = NULL;
 	for (offset = startoffset;
