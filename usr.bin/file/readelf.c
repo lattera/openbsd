@@ -14,11 +14,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *    This product includes software developed by Ian F. Darwin and others.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *  
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -46,7 +41,7 @@
 #include "readelf.h"
 
 #ifndef lint
-static char *RCSID = "@(#)$Id: readelf.c,v 1.4 2003/03/03 22:24:08 ian Exp $";
+static char *RCSID = "@(#)$Id: readelf.c,v 1.5 2003/03/11 21:26:26 ian Exp $";
 #endif
 
 #ifdef	ELFCORE
