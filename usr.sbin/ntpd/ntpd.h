@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ntpd/ntpd.h,v 1.10 2004/07/05 07:46:16 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/ntpd/ntpd.h,v 1.11 2004/07/05 20:41:35 henning Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -60,7 +60,7 @@ struct ntp_peer {
 	time_t				 next;
 	time_t				 deadline;
 	double				 offset;
-	double				 error;
+	double				 delay;
 };
 
 struct ntpd_conf {
