@@ -563,6 +563,12 @@ void ack_lease (packet, lease, offer, when)
 	struct class *vendor_class, *user_class;
 	int i;
 
+	/* If we're already acking this lease, don't do it again. */
+	if (lease -> state) {
+		note ("already acking lease %s", piaddr (lease -> ip_addr));
+		return;
+	}
+
 	if (packet -> options [DHO_DHCP_CLASS_IDENTIFIER].len) {
 		vendor_class =
 			find_class (0,
