@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.22 2004/06/06 21:46:12 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.23 2004/06/08 19:39:49 art Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -426,9 +426,11 @@ main(framep)
 	 * from the file system.  Reset p->p_rtime as it may have been
 	 * munched in mi_switch() after the time got set.
 	 */
-	p->p_stats->p_start = mono_time = boottime = time;
 #ifdef MULTIPROCESSOR
+	p->p_stats->p_start = mono_time = boottime = time;
 	p->p_cpu->ci_schedstate.spc_runtime = time;
+#else
+	p->p_stats->p_start = runtime = mono_time = boottime = time;	
 #endif
 	p->p_rtime.tv_sec = p->p_rtime.tv_usec = 0;
 
