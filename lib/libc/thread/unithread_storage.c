@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/thread/Attic/thread_storage.c,v 1.1 2000/01/06 07:27:33 d Exp $	*/
+/*	$OpenBSD: src/lib/libc/thread/Attic/unithread_storage.c,v 1.1 2000/01/06 15:07:06 d Exp $	*/
 /*
  * 
  */
