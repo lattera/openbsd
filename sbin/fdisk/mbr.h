@@ -1,5 +1,4 @@
-
-/* $OpenBSD: src/sbin/fdisk/mbr.h,v 1.1 1997/09/29 22:58:17 weingart Exp $ */
+/*	$OpenBSD: src/sbin/fdisk/mbr.h,v 1.2 1997/09/29 23:33:36 mickey Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
