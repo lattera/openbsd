@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.16 2003/01/07 00:34:41 millert Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.16.2.1 2003/08/20 20:16:41 brad Exp $	*/
 /*	$NetBSD: sysv_sem.c,v 1.26 1996/02/09 19:00:25 christos Exp $	*/
 
 /*
@@ -431,10 +431,20 @@ sys_semget(struct proc *p, void *v, register_t *retval)
 
 	/*
 	 * Preallocate space for the new semaphore.  If we are going
-	 * to sleep, we want to sleep now to elliminate any race
+	 * to sleep, we want to sleep now to eliminate any race
 	 * condition in allocating a semaphore with a specific key.
 	 */
 	if (key == IPC_PRIVATE || (semflg & IPC_CREAT)) {
+		if (nsems <= 0 || nsems > seminfo.semmsl) {
+			DPRINTF(("nsems out of range (0<%d<=%d)\n", nsems,
+			    seminfo.semmsl));
+			return (EINVAL);
+		}
+		if (nsems > seminfo.semmns - semtot) {
+			DPRINTF(("not enough semaphores left (need %d, got %d)\n",
+			    nsems, seminfo.semmns - semtot));
+			return (ENOSPC);
+		}
 		semaptr_new = pool_get(&sema_pool, PR_WAITOK);
 		semaptr_new->sem_base = malloc(nsems * sizeof(struct sem),
 		    M_SEM, M_WAITOK);
@@ -468,18 +478,6 @@ sys_semget(struct proc *p, void *v, register_t *retval)
 
 	DPRINTF(("need to allocate the semid_ds\n"));
 	if (key == IPC_PRIVATE || (semflg & IPC_CREAT)) {
-		if (nsems <= 0 || nsems > seminfo.semmsl) {
-			DPRINTF(("nsems out of range (0<%d<=%d)\n", nsems,
-			    seminfo.semmsl));
-			error = EINVAL;
-			goto error;
-		}
-		if (nsems > seminfo.semmns - semtot) {
-			DPRINTF(("not enough semaphores left (need %d, got %d)\n",
-			    nsems, seminfo.semmns - semtot));
-			error = ENOSPC;
-			goto error;
-		}
 		for (semid = 0; semid < seminfo.semmni; semid++) {
 			if ((semaptr = sema[semid]) == NULL)
 				break;
