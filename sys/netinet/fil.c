@@ -1,4 +1,4 @@
-/*       $OpenBSD: src/sys/netinet/Attic/fil.c,v 1.18 1999/12/15 07:04:20 itojun Exp $       */
+/*       $OpenBSD: src/sys/netinet/Attic/fil.c,v 1.19 1999/12/17 06:17:07 kjell Exp $       */
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
  *
@@ -8,7 +8,7 @@
  */
 #if !defined(lint)
 static const char sccsid[] = "@(#)fil.c	1.36 6/5/96 (C) 1993-1996 Darren Reed";
-static const char rcsid[] = "@(#)$Id: fil.c,v 1.17 1999/12/15 05:20:20 kjell Exp $";
+static const char rcsid[] = "@(#)$Id: fil.c,v 1.18 1999/12/15 07:04:20 itojun Exp $";
 #endif
 
 #include <sys/errno.h>
@@ -1179,7 +1179,7 @@ nodata:
  * SUCH DAMAGE.
  *
  *	@(#)uipc_mbuf.c	8.2 (Berkeley) 1/4/94
- * $Id: fil.c,v 1.17 1999/12/15 05:20:20 kjell Exp $
+ * $Id: fil.c,v 1.18 1999/12/15 07:04:20 itojun Exp $
  */
 /*
  * Copy data from an mbuf chain starting "off" bytes from the beginning,
@@ -1545,7 +1545,6 @@ struct in_addr *inp;
 	in = sin->sin_addr;
 #  endif /* linux */
 # endif /* SOLARIS */
-	in.s_addr = ntohl(in.s_addr);
 	*inp = in;
 	return 0;
 }
