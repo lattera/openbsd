@@ -43,28 +43,17 @@
 int	errno;
 
 extern void	nullsys();
-extern int	nodev(), noioctl();
+extern int	nodev();
+extern int	noioctl();
 
-int	rzstrategy(), rzopen();
-#ifdef SMALL
-#define rzclose 0
-#else	/*!SMALL*/
-int	 rzclose();
-#endif	/*!SMALL*/
+int	sdstrategy __P((void *, int, daddr_t, size_t, void *, size_t *));
+int	sdopen __P((struct open_file *, ...));
+int	sdclose __P((struct open_file *));
 
-#define	rzioctl		noioctl
-
-#ifndef BOOT
-int	tzstrategy(), tzopen(), tzclose();
-#endif
-#define	tzioctl		noioctl
-
+#define	sdioctl		noioctl
 
 struct devsw devsw[] = {
-	{ "rz",	rzstrategy,	rzopen,	rzclose,	rzioctl }, /*0*/
-#ifndef BOOT
-	{ "tz",	tzstrategy,	tzopen,	tzclose,	tzioctl }, /*1*/
-#endif
+	{ "sd",	sdstrategy,	sdopen,	sdclose,	sdioctl }, /*0*/
 };
 
 int	ndevs = (sizeof(devsw)/sizeof(devsw[0]));

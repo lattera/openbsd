@@ -44,15 +44,16 @@
  * Decode the string 'fname', open the device and return the remaining
  * file name if any.
  */
+int
 devopen(f, fname, file)
 	struct open_file *f;
 	const char *fname;
 	char **file;	/* out */
 {
-	register char *cp;
-	register char *ncp;
-	register struct devsw *dp;
-	register int c, i;
+	const char *cp;
+	char *ncp;
+	struct devsw *dp;
+	int c, i;
 	int ctlr = 0, unit = 0, part = 0;
 	char namebuf[20];
 	int rc;
@@ -60,7 +61,7 @@ devopen(f, fname, file)
 	cp = fname;
 	ncp = namebuf;
 
-		/* expect a string like 'rz(0,0,0)vmunix' */
+		/* expect a string like 'sd(0,0,0)vmunix' */
 		while ((c = *cp) != '\0') {
 			if (c == '(') {
 				cp++;
@@ -97,32 +98,19 @@ devopen(f, fname, file)
 		cp++;
 	*ncp = '\0';
 
-#ifdef SMALL
-	if (strcmp (namebuf, "rz")) {
+	if (strcmp (namebuf, "sd")) {
 		printf ("Unknown device: %s\n", namebuf);
 		return ENXIO;
 	}
 	dp = devsw;
 	i = 0;
-#else
-	for (dp = devsw, i = 0; i < ndevs; dp++, i++)
-		if (dp->dv_name && strcmp(namebuf, dp->dv_name) == 0)
-			goto fnd;
-	printf("Unknown device '%s'\nKnown devices are:", namebuf);
-	for (dp = devsw, i = 0; i < ndevs; dp++, i++)
-		if (dp->dv_name)
-			printf(" %s", dp->dv_name);
-	printf("\n");
-	return (ENXIO);
 
-fnd:
-#endif
 	rc = (dp->dv_open)(f, ctlr, unit, part);
 	if (rc)
 		return (rc);
 
 	f->f_dev = dp;
 	if (file && *cp != '\0')
-		*file = cp;
+		*file = (char *)cp;
 	return (0);
 }

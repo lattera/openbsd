@@ -1,11 +1,9 @@
-/*	$NetBSD: boot.c,v 1.6 1995/06/28 10:22:32 jonathan Exp $	*/
+/*	$OpenBSD: src/sys/arch/wgrisc/stand/libsa/Attic/gets.c,v 1.1 1997/05/11 16:17:56 pefo Exp $	*/
+/*	$NetBSD: gets.c,v 1.5.2.1 1995/10/13 19:54:26 pk Exp $	*/
 
-/*
- * Copyright (c) 1992, 1993
+/*-
+ * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Ralph Campbell.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,80 +33,48 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)boot.c	8.1 (Berkeley) 6/10/93
+ *	@(#)gets.c	8.1 (Berkeley) 6/11/93
  */
 
-#include <sys/param.h>
-#include <sys/exec.h>
-#include <stand.h>
+#include "stand.h"
 
-
-char	line[1024];
-
-/*
- * This gets arguments from the PROM, calls other routines to open
- * and load the program to boot, and then transfers execution to that
- * new program.
- * Argv[0] should be something like "rz(0,0,0)vmunix" on a DECstation 3100.
- * Argv[0,1] should be something like "boot 5/rz0/vmunix" on a DECstation 5000.
- * The argument "-a" means vmunix should do an automatic reboot.
- */
-int
-main(argc, argv)
-	int argc;
-	char **argv;
+void
+gets(buf)
+	char *buf;
 {
-	char *cp;
-	int   ask, entry;
-	int   i;
+	register int c;
+	register char *lp;
 
-	ask = 1;
+	for (lp = buf;;)
+		switch (c = getchar() & 0177) {
+		case '\n':
+		case '\r':
+			*lp = '\0';
+			return;
+		case '\b':
+		case '\177':
+			if (lp > buf) {
+				lp--;
+				putchar('\b');
+				putchar(' ');
+				putchar('\b');
+			}
+			break;
+		case 'r'&037: {
+			register char *p;
 
-	for(i = 0; i < argc; i++)
-		printf("Arg %d:%s\n",i,argv[i]);
-
-	do {
-		printf("Boot: ");
-		if (ask) {
-			gets(line);
-			cp = line;
-			argv[0] = cp;
-			argc = 1;
-		} else
-			printf("%s\n", cp);
-	} while(ask && line[0] == '\0');
-
-	entry = loadfile(cp);
-	if (entry == -1) {
-		gets(line);
-		return 0;
-	}
-
-	printf("Starting at 0x%x\n\n", entry);
-	((void (*)())entry)(argc, argv, 0, 0);
-}
-
-/*
- * Open 'filename', read in program and return the entry point or -1 if error.
- */
-loadfile(fname)
-	register char *fname;
-{
-	struct devices *dp;
-	int fd, i, n;
-	struct exec aout;
-
-	if ((fd = open(fname, 0)) < 0) {
-		printf("open(%s) failed: %d\n", fname, errno);
-		goto err;
-	}
-
-	/* read the exec header */
-	i = read(fd, (char *)&aout, sizeof(aout));
-
-cerr:
-	(void) close(fd);
-err:
-	printf("Can't boot '%s'\n", fname);
-	return (-1);
+			putchar('\n');
+			for (p = buf; p < lp; ++p)
+				putchar(*p);
+			break;
+		}
+		case 'u'&037:
+		case 'w'&037:
+			lp = buf;
+			putchar('\n');
+			break;
+		default:
+			*lp++ = c;
+		}
+	/*NOTREACHED*/
 }
