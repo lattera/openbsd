@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_out.c,v 1.21.2.1 2000/07/01 05:03:46 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_out.c,v 1.21.2.2 2000/07/05 22:49:42 jason Exp $	*/
 
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis and Joerg Wunsch.
@@ -1303,7 +1303,7 @@ check_scroll(struct video_state *svsp)
 	{
 		/* we write within scroll region */
 
-		if(svsp->row + 1 == svsp->scrr_len)
+		if(svsp->row == svsp->scrr_end)
 		{
 			/* the following piece of code has to be protected */
 			/* from trying to switch to another virtual screen */
