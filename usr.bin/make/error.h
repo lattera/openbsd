@@ -1,7 +1,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/error.h,v 1.6 2001/05/23 12:34:42 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/error.h,v 1.7 2001/09/19 10:58:07 mpech Exp $ */
 
 /*
  * Copyright (c) 2001 Marc Espie.
@@ -39,7 +39,7 @@
  *				takes a format string and two arguments.
  *
  *	Finish			Finish things up by printing the number of
- *				errors which occured, as passed to it, and
+ *				errors which occurred, as passed to it, and
  *				exiting.
  */
 extern void Error(char *, ...);
