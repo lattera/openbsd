@@ -1,0 +1,15 @@
+$OpenBSD: src/sys/arch/i386/boot/Attic/README.OpenBSD,v 1.1.2.1 1996/10/28 12:14:25 mickey Exp $
+
+This readme file is here to show you how new boot is different
+from the 386BSD and Mach ones, those readmes are kept as a good
+information source, and also to remark the roots.
+
+This new boots are designed to be a real bootstrap for the smart and
+friendly /boot program, that is supposed to load /bsd then.
+Neither user interaction nor any useful output, just loading the /boot.
+This boots maybe used as a MBR program then providing some choice
+about what MBR partition to boot from, as good as 2nd stage loader,
+that is loaded by some other MBR (assuming later one will provide
+partition table entry pointer in ds:si).
+
+mickey@openbsd.org

@@ -1,4 +1,4 @@
-#	$NetBSD: Makefile,v 1.20 1995/06/26 03:24:17 christos Exp $
+#	$OpenBSD: src/sys/arch/i386/boot/Attic/Makefile,v 1.3.2.4 1996/10/28 12:14:24 mickey Exp $
 #
 # Ported to boot 386BSD by Julian Elischer (julian@tfs.com)
 # September 1992
@@ -26,18 +26,18 @@
 
 S=	${.CURDIR}/../../..
 
-LOADSZ=15
+LOADSZ=16
 
 DEBUG=	-g -DDEBUG
+NO_NET=no_net
 
-OBJDUMP=/usr/i386-unknown-openbsd1.2/bin/objdump
-AS=	/usr/i386-unknown-openbsd1.2/bin/as.new
-AFLAGS+=-DLOADSZ=${LOADSZ}
-CFLAGS+=-Werror -m386 -O2 -DNO_SPRINTF -DDO_BAD144
-# no 16-bit-code flag yet
-OBJDUMPFLAGS=-d
+CFLAGS+=-Wall -Werror -m386 -O2
+# strip off uneeded stuff
+CFLAGS+=-DNO_WRITE -DNO_READDIR -DNO_LSEEK -DNO_STAT -DINSECURE -DSTRIPPED
+# use kbd io
+CFLAGS+=-Dputc=kbd_putc
 
-CPPFLAGS=${DEBUG} -I. -I${.CURDIR} -I$S -I${.CURDIR}/../..
+CPPFLAGS=${DEBUG} -I${.CURDIR} -I$S -I${.CURDIR}/../stand/libsa
 # Uncomment this to make the boot block talk to a serial port.
 #CPPFLAGS+=-DSERIAL=0
 
@@ -47,16 +47,15 @@ SAREL=
 CFLAGS+=-I$S/lib/libsa
 
 # start.o should be first
-OBJS=	start.o table.o boot.o asm.o bios.o io.o disk.o sys.o
+OBJS=	start.o table.o boot.o conf.o dev_subr.o
 CLEANFILES+=bootbios boot biosboot boot.sym machine ${MACHINE_ARCH}
 
 all: machine-links biosboot bootbios
 
 
 start.o: ${.CURDIR}/start.S
-	@echo ${CC} ${CPPFLAGS} ${AFLAGS} ${.CURDIR}/start.S
-	@${CC} -E ${CPPFLAGS} ${AFLAGS} ${.CURDIR}/start.S > $*.s
-	@(${AS} -o $*.o $*.s; rm $*.s)
+	${CC} -E ${CPPFLAGS} ${AFLAGS} -DLOADSZ=${LOADSZ} ${.CURDIR}/start.S > tmp.s
+	${AS} -o $*.o tmp.s && rm tmp.s
 
 machine-links:
 	ln -fs ${.CURDIR}/../include machine

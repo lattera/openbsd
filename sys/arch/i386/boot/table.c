@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/table.c,v 1.1.1.1.2.1 1996/10/28 12:14:30 mickey Exp $	*/
 /*	$NetBSD: table.c,v 1.6 1994/10/27 04:14:42 cgd Exp $	*/
 
 /*
