@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.10 2003/04/06 16:19:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.11 2003/04/15 03:53:47 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -337,18 +337,6 @@ struct pv_page {
 };
 
 /*
- * pmap_remove_record: a record of VAs that have been unmapped, used to
- * flush TLB.  if we have more than PMAP_RR_MAX then we stop recording.
- */
-
-#define PMAP_RR_MAX	16	/* max of 16 pages (64K) */
-
-struct pmap_remove_record {
-	int prr_npages;
-	vaddr_t prr_vas[PMAP_RR_MAX];
-};
-
-/*
  * global kernel variables
  */
 
@@ -399,6 +387,11 @@ vaddr_t reserve_dumppages(vaddr_t); /* XXX: not a pmap fn */
 
 void	pmap_tlb_shootdown(pmap_t, vaddr_t, pt_entry_t, int32_t *);
 void	pmap_tlb_shootnow(int32_t);
+#ifdef notyet
+void	pmap_do_tlb_shootdown(struct cpu_info *);
+#else
+void	pmap_do_tlb_shootdown(void);
+#endif
 
 #define PMAP_GROWKERNEL		/* turn on pmap_growkernel interface */
 
