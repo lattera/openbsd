@@ -31,11 +31,15 @@
  */
 
 /*
- * $Header: /cvs/src/sbin/ipsec/photurisd/errlog.c,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $
+ * $Header: /cvs/src/sbin/ipsec/photurisd/errlog.c,v 1.2 1997/07/23 12:28:47 provos Exp $
  *
  * $Author: provos $
  *
  * $Log: errlog.c,v $
+ * Revision 1.2  1997/07/23 12:28:47  provos
+ * tunnel,lifetimes,hostname via startkey/startup
+ * errors to stderr before daemon, to syslog afterwards
+ *
  * Revision 1.1.1.1  1997/07/18 22:48:49  provos
  * initial import of the photuris keymanagement daemon
  *
@@ -45,14 +49,14 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: errlog.c,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $";
+static char rcsid[] = "$Id: errlog.c,v 1.2 1997/07/23 12:28:47 provos Exp $";
 #endif
 
 #define _ERRLOG_C_
 
 #include <stdio.h>
 #include <stdlib.h>
-#if __STDC__
+#ifdef __STDC__
 #include <stdarg.h>
 #else
 #include <varargs.h>
@@ -84,7 +88,7 @@ void _log_error(int flag, char *fmt, va_list ap);
  */
 
 void
-#if __STDC__
+#ifdef __STDC__
 crit_error(int flag, char *fmt, ...)
 #else
 crit_error(flag, fmt, va_alist)
@@ -94,7 +98,7 @@ crit_error(flag, fmt, va_alist)
 #endif
 {
 	va_list ap;
-#if __STDC__
+#ifdef __STDC__
 	va_start(ap, fmt);
 #else
 	va_start(ap);
@@ -110,7 +114,7 @@ crit_error(flag, fmt, va_alist)
  */
 
 void
-#if __STDC__
+#ifdef __STDC__
 log_error(int flag, char *fmt, ...)
 #else
 log_error(flag, fmt, va_alist)
@@ -120,7 +124,7 @@ log_error(flag, fmt, va_alist)
 #endif
 {
      va_list ap;
-#if __STDC__
+#ifdef __STDC__
      va_start(ap, fmt);
 #else
      va_start(ap);
