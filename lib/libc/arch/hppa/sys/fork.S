@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa/sys/fork.S,v 1.6 2001/03/29 01:43:52 mickey Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/hppa/sys/fork.S,v 1.7 2001/06/04 23:14:04 mickey Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -35,11 +35,11 @@
 
 #ifdef SYSLIBC_SCCS
 	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/hppa/sys/fork.S,v 1.6 2001/03/29 01:43:52 mickey Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/hppa/sys/fork.S,v 1.7 2001/06/04 23:14:04 mickey Exp $"
 	.align	4
 #endif
 
-ENTRY(fork)
+ENTRY(fork,0)
 	SYSCALL(fork)
 	addi	-1, ret1, ret1
 	bv	r0(rp)
