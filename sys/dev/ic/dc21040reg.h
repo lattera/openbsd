@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dc21040reg.h,v 1.9 1998/08/28 06:31:19 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dc21040reg.h,v 1.9.8.1 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: dc21040reg.h,v 1.11 1997/06/08 18:44:02 thorpej Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -190,7 +190,7 @@ typedef struct {
 #define	TULIP_CMD_SCRAMBLER	0x01000000L		/* (RW)  Scrambler Mode (21140) */
 #define	TULIP_CMD_PCSFUNCTION	0x00800000L		/* (RW)  PCS Function (21140) */
 #define	TULIP_CMD_TXTHRSHLDCTL	0x00400000L		/* (RW)  Transmit Threshold Mode (21140) */
-#define	TULIP_CMD_STOREFWD	0x00200000L		/* (RW)  Store and Foward (21140) */
+#define	TULIP_CMD_STOREFWD	0x00200000L		/* (RW)  Store and Forward (21140) */
 #define	TULIP_CMD_NOHEARTBEAT	0x00080000L		/* (RW)  No Heartbeat (21140) */
 #define	TULIP_CMD_PORTSELECT	0x00040000L		/* (RW)  Post Select (100Mb) (21140) */
 #define	TULIP_CMD_ENHCAPTEFFCT	0x00040000L		/* (RW)  Enhanced Capture Effecty (21041) */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adwlib.c,v 1.3.2.5 2002/03/28 11:50:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adwlib.c,v 1.3.2.6 2003/03/28 00:38:11 niklas Exp $ */
 /* $NetBSD: adwlib.c,v 1.20 2000/07/04 04:17:03 itojun Exp $        */
 
 /*
@@ -1463,7 +1463,7 @@ AdwASC38C1600Cabling(iot, ioh, cfg)
 	 * Each ASC-38C1600 function has two connectors. Only an HVD device
 	 * can not be connected to either connector. An LVD device or SE device
 	 * may be connected to either connecor. If an SE device is connected,
-	 * then at most Ultra speed (20 Mhz) can be used on both connectors.
+	 * then at most Ultra speed (20 MHz) can be used on both connectors.
 	 *
 	 * If an HVD device is attached, return an error.
 	 */

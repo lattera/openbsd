@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.6 2002/03/30 08:22:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.7 2003/03/28 00:38:25 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_os.c,v 1.20 2000/10/20 08:16:53 roger Exp $ */
 
 /*
@@ -163,7 +163,7 @@ SYSCTL_INT(_hw_bt848, OID_AUTO, slow_msp_audio, CTLFLAG_RW, &bt848_slow_msp_audi
 
 #define BKTR_DEBUG
 #ifdef BKTR_DEBUG
-int bktr_debug = 0;
+int bktr_debug = 1;
 #define DPR(x)	(bktr_debug ? printf x : 0)
 #else
 #define DPR(x)
@@ -285,7 +285,7 @@ bktr_probe( device_t dev )
 			device_set_desc(dev, "BrookTree 879");
 			return 0;
 		}
-	};
+	}
 
         return ENXIO;
 }
@@ -380,12 +380,12 @@ bktr_attach( device_t dev )
         fun = fun | 1;	/* Enable writes to the sub-system vendor ID */
 
 #if defined( BKTR_430_FX_MODE )
-	if (bootverbose) printf("Using 430 FX chipset compatibilty mode\n");
+	if (bootverbose) printf("Using 430 FX chipset compatibility mode\n");
         fun = fun | 2;	/* Enable Intel 430 FX compatibility mode */
 #endif
 
 #if defined( BKTR_SIS_VIA_MODE )
-	if (bootverbose) printf("Using SiS/VIA chipset compatibilty mode\n");
+	if (bootverbose) printf("Using SiS/VIA chipset compatibility mode\n");
         fun = fun | 4;	/* Enable SiS/VIA compatibility mode (usefull for
                            OPTi chipset motherboards too */
 #endif
@@ -969,12 +969,12 @@ bktr_attach( pcici_t tag, int unit )
         fun = fun | 1;	/* Enable writes to the sub-system vendor ID */
 
 #if defined( BKTR_430_FX_MODE )
-	if (bootverbose) printf("Using 430 FX chipset compatibilty mode\n");
+	if (bootverbose) printf("Using 430 FX chipset compatibility mode\n");
         fun = fun | 2;	/* Enable Intel 430 FX compatibility mode */
 #endif
 
 #if defined( BKTR_SIS_VIA_MODE )
-	if (bootverbose) printf("Using SiS/VIA chipset compatibilty mode\n");
+	if (bootverbose) printf("Using SiS/VIA chipset compatibility mode\n");
         fun = fun | 4;	/* Enable SiS/VIA compatibility mode (usefull for
                            OPTi chipset motherboards too */
 #endif
@@ -1310,12 +1310,12 @@ int	bktr_ioctl(dev_t, ioctl_cmd_t, caddr_t, int, struct proc *);
 paddr_t	bktr_mmap(dev_t, off_t, int);
 #endif
 
-vm_offset_t vm_page_alloc_contig(vm_offset_t, vm_offset_t,
-                                 vm_offset_t, vm_offset_t);
-
 #if defined(__OpenBSD__)
 static int      bktr_probe(struct device *, void *, void *);
 #else
+vm_offset_t vm_page_alloc_contig(vm_offset_t, vm_offset_t,
+                                 vm_offset_t, vm_offset_t);
+
 static int      bktr_probe(struct device *, struct cfdata *, void *);
 #endif
 static void     bktr_attach(struct device *, struct device *, void *);
@@ -1389,6 +1389,15 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 	unit = bktr->bktr_dev.dv_unit;
         bktr->dmat = pa->pa_dmat;
 
+	/* Enabled Bus Master
+	   XXX: check if all old DMA is stopped first (e.g. after warm
+	   boot) */
+	fun = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
+	DPR((" fun=%b", fun, PCI_COMMAND_STATUS_BITS));
+	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
+	    fun | PCI_COMMAND_MEM_ENABLE | PCI_COMMAND_MASTER_ENABLE |
+	    PCI_COMMAND_BACKTOBACK_ENABLE);
+
 #ifndef __OpenBSD__
 	printf("\n");
 #endif
@@ -1396,13 +1405,11 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 	/*
 	 * map memory
 	 */
-	retval = pci_mapreg_map(pa, PCI_MAPREG_START,
-				PCI_MAPREG_TYPE_MEM
-				| PCI_MAPREG_MEM_TYPE_32BIT, 0,
-				&bktr->memt, &bktr->memh, NULL,
-				&bktr->obmemsz, 0);
-	DPR(("pci_mapreg_map: memt %x, memh %x, size %x\n",
-	     bktr->memt, (u_int)bktr->memh, (u_int)bktr->obmemsz));
+	retval = pci_mapreg_map(pa, PCI_MAPREG_START, PCI_MAPREG_TYPE_MEM |
+	    PCI_MAPREG_MEM_TYPE_32BIT, 0, &bktr->memt, &bktr->memh, NULL,
+	    &bktr->obmemsz, 0);
+	DPR(("pci_mapreg_map: memt %lx, memh %lx, size %x\n",
+	     bktr->memt, bktr->memh, bktr->obmemsz));
 	if (retval) {
 		printf("%s: couldn't map memory\n", bktr_name(bktr));
 		return;
@@ -1423,12 +1430,13 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 	intrstr = pci_intr_string(pa->pa_pc, ih);
-	bktr->ih = pci_intr_establish(pa->pa_pc, ih, IPL_VIDEO,
-				      bktr_intr, bktr
 #ifdef __OpenBSD__
-				      , bktr->bktr_dev.dv_xname
+	bktr->ih = pci_intr_establish(pa->pa_pc, ih, IPL_VIDEO,
+	    bktr_intr, bktr, bktr->bktr_dev.dv_xname);
+#else
+	bktr->ih = pci_intr_establish(pa->pa_pc, ih, IPL_VIDEO,
+	    bktr_intr, bktr);
 #endif
-	);
 	if (bktr->ih == NULL) {
 		printf("%s: couldn't establish interrupt",
 		       bktr_name(bktr));
@@ -1450,7 +1458,7 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
  * you have more than four, then 16 would probably be a better value.
  */
 #ifndef BROOKTREE_DEF_LATENCY_VALUE
-#define BROOKTREE_DEF_LATENCY_VALUE	10
+#define BROOKTREE_DEF_LATENCY_VALUE	0x10
 #endif
 	latency = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_LATENCY_TIMER);
 	latency = (latency >> 8) & 0xff;
@@ -1466,16 +1474,9 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 	}
 
 
-	/* Enabled Bus Master
-	   XXX: check if all old DMA is stopped first (e.g. after warm
-	   boot) */
-	fun = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
-	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
-		       fun | PCI_COMMAND_MASTER_ENABLE);
-
 	/* read the pci id and determine the card type */
 	fun = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ID_REG);
-        rev = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_CLASS_REG) & 0x000000ff;
+        rev = PCI_REVISION(pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_CLASS_REG));
 
 	common_bktr_attach(bktr, unit, fun, rev);
 
@@ -1489,7 +1490,7 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 /*
  * Special Memory Allocation
  */
-vm_offset_t
+vaddr_t
 get_bktr_mem(bktr, dmapp, size)
         bktr_ptr_t bktr;
         bus_dmamap_t *dmapp;
@@ -1540,14 +1541,14 @@ get_bktr_mem(bktr, dmapp, size)
                 bus_dmamap_destroy(dmat, *dmapp);
                 return 0;
         }
-        return (vm_offset_t)kva;
+        return (vaddr_t)kva;
 }
 
 void
 free_bktr_mem(bktr, dmap, kva)
         bktr_ptr_t bktr;
         bus_dmamap_t dmap;
-        vm_offset_t kva;
+        vaddr_t kva;
 {
         bus_dma_tag_t dmat = bktr->dmat;
 
@@ -1760,13 +1761,19 @@ bktr_get_info(void *v, struct radio_info *ri)
 
 #define	STATUSBIT_STEREO	0x10
 	ri->mute = (int)sc->audio_mute_state ? 1 : 0;
-	ri->stereo = (status & STATUSBIT_STEREO) ? 1 : 0;
 	ri->caps = RADIO_CAPS_DETECT_STEREO | RADIO_CAPS_HW_AFC;
 	ri->freq = tv->frequency * 10;
 	ri->info = (status & STATUSBIT_STEREO) ? RADIO_INFO_STEREO : 0;
 
 	/* not yet supported */
 	ri->volume = ri->rfreq = ri->lock = 0;
+
+	/*
+	 * The field ri->stereo is used to forcible switch to
+	 * mono/stereo, not as an indicator of received signal quality.
+	 * The ri->info is for that purpose.
+	 */
+	ri->stereo = 1; /* Can't switch to mono, always stereo */
 
 	return (0);
 }

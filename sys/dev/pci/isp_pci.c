@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/isp_pci.c,v 1.10.2.6 2002/03/06 02:11:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/isp_pci.c,v 1.10.2.7 2003/03/28 00:38:23 niklas Exp $	*/
 /*
  * PCI specific probe and attach routines for Qlogic ISP SCSI adapters.
  *
@@ -73,42 +73,42 @@ static int isp_pci_intr (void *);
 #if	defined(ISP_DISABLE_1040_SUPPORT) || !defined(ISP_COMPILE_1040_FW)
 #define	ISP_1040_RISC_CODE	NULL
 #else
-#define	ISP_1040_RISC_CODE	isp_1040_risc_code
+#define	ISP_1040_RISC_CODE	(u_int16_t *) isp_1040_risc_code
 #include <dev/microcode/isp/asm_1040.h>
 #endif
 
 #if	defined(ISP_DISABLE_1080_SUPPORT) || !defined(ISP_COMPILE_1080_FW)
 #define	ISP_1080_RISC_CODE	NULL
 #else
-#define	ISP_1080_RISC_CODE	isp_1080_risc_code
+#define	ISP_1080_RISC_CODE	(u_int16_t *) isp_1080_risc_code
 #include <dev/microcode/isp/asm_1080.h>
 #endif
 
 #if	defined(ISP_DISABLE_12160_SUPPORT) || !defined(ISP_COMPILE_12160_FW)
-#define	ISP_12160_RISC_CODE	NULL
+#define	ISP_12160_RISC_CODE	(u_int16_t *) NULL
 #else
-#define	ISP_12160_RISC_CODE	isp_12160_risc_code
+#define	ISP_12160_RISC_CODE	(u_int16_t *) isp_12160_risc_code
 #include <dev/microcode/isp/asm_12160.h>
 #endif
 
 #if	defined(ISP_DISABLE_2100_SUPPORT) || !defined(ISP_COMPILE_2100_FW)
 #define	ISP_2100_RISC_CODE	NULL
 #else
-#define	ISP_2100_RISC_CODE	isp_2100_risc_code
+#define	ISP_2100_RISC_CODE	(u_int16_t *) isp_2100_risc_code
 #include <dev/microcode/isp/asm_2100.h>
 #endif
 
 #if	defined(ISP_DISABLE_2200_SUPPORT) || !defined(ISP_COMPILE_2200_FW)
 #define	ISP_2200_RISC_CODE	NULL
 #else
-#define	ISP_2200_RISC_CODE	isp_2200_risc_code
+#define	ISP_2200_RISC_CODE	(u_int16_t *) isp_2200_risc_code
 #include <dev/microcode/isp/asm_2200.h>
 #endif
 
 #if	defined(ISP_DISABLE_2300_SUPPORT) || !defined(ISP_COMPILE_2300_FW)
 #define	ISP_2300_RISC_CODE	NULL
 #else
-#define	ISP_2300_RISC_CODE	isp_2300_risc_code
+#define	ISP_2300_RISC_CODE	(u_int16_t *) isp_2300_risc_code
 #include <dev/microcode/isp/asm_2300.h>
 #endif
 
@@ -225,6 +225,10 @@ static struct ispmdvec mdvec_2300 = {
 #define	PCI_PRODUCT_QLOGIC_ISP1280	0x1280
 #endif
 
+#ifndef	PCI_PRODUCT_QLOGIC_ISP10160
+#define	PCI_PRODUCT_QLOGIC_ISP10160	0x1016
+#endif
+
 #ifndef	PCI_PRODUCT_QLOGIC_ISP12160
 #define	PCI_PRODUCT_QLOGIC_ISP12160	0x1216
 #endif
@@ -256,6 +260,9 @@ static struct ispmdvec mdvec_2300 = {
 #define	PCI_QLOGIC_ISP1280	\
 	((PCI_PRODUCT_QLOGIC_ISP1280 << 16) | PCI_VENDOR_QLOGIC)
 
+#define	PCI_QLOGIC_ISP10160	\
+	((PCI_PRODUCT_QLOGIC_ISP10160 << 16) | PCI_VENDOR_QLOGIC)
+
 #define	PCI_QLOGIC_ISP12160	\
 	((PCI_PRODUCT_QLOGIC_ISP12160 << 16) | PCI_VENDOR_QLOGIC)
 
@@ -270,6 +277,11 @@ static struct ispmdvec mdvec_2300 = {
 
 #define	PCI_QLOGIC_ISP2312	\
 	((PCI_PRODUCT_QLOGIC_ISP2312 << 16) | PCI_VENDOR_QLOGIC)
+/*
+ * Odd case for some AMI raid cards... We need to *not* attach to this.
+ */
+#define	AMI_RAID_SUBVENDOR_ID	0x101e
+
 
 #define IO_MAP_REG	0x10
 #define MEM_MAP_REG	0x14
@@ -313,42 +325,51 @@ const char vstring[] =
     "Qlogic ISP Driver, NetBSD (pci) Platform Version %d.%d Core Version %d.%d";
 #endif
 
+const struct pci_matchid ispdev[] = {
+#ifndef	ISP_DISABLE_1020_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1020 },
+#endif
+#ifndef	ISP_DISABLE_1080_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1080 },
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1240 },
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1280 },
+#endif
+#ifndef	ISP_DISABLE_12160_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP10160 },
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP12160 },
+#endif
+#ifndef	ISP_DISABLE_2100_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP2100 },
+#endif
+#ifndef	ISP_DISABLE_2200_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP2200 },
+#endif
+#ifndef	ISP_DISABLE_2300_SUPPORT
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP2300 },
+	{ PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP2312 },
+#endif
+	{ 0, 0 }
+};
+
 static int
 isp_pci_probe(struct device *parent, void *match, void *aux)
 {
         struct pci_attach_args *pa = aux;
 
-        switch (pa->pa_id) {
-#ifndef	ISP_DISABLE_1020_SUPPORT
-	case PCI_QLOGIC_ISP:
-		return (1);
-#endif
-#ifndef	ISP_DISABLE_1080_SUPPORT
-	case PCI_QLOGIC_ISP1080:
-	case PCI_QLOGIC_ISP1240:
-	case PCI_QLOGIC_ISP1280:
-		return (1);
-#endif
 #ifndef	ISP_DISABLE_12160_SUPPORT
-	case PCI_QLOGIC_ISP12160:
-		return (1);
-#endif
-#ifndef	ISP_DISABLE_2100_SUPPORT
-	case PCI_QLOGIC_ISP2100:
-		return (1);
-#endif
-#ifndef	ISP_DISABLE_2200_SUPPORT
-	case PCI_QLOGIC_ISP2200:
-		return (1);
-#endif
-#ifndef	ISP_DISABLE_2300_SUPPORT
-	case PCI_QLOGIC_ISP2300:
-	case PCI_QLOGIC_ISP2312:
-		return (1);
-#endif
-	default:
-		return (0);
+	/*
+	 * Sigh. Check for subvendor id match here. Too bad we
+	 * can't give an exclude mask in matchbyid.
+	 */
+        if (pa->pa_id == PCI_QLOGIC_ISP12160) {
+		pcireg_t subvid =
+		    pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_SUBVEND_0);
+		if (subvid == AMI_RAID_SUBVENDOR_ID) {
+			return (0);
+                }
 	}
+#endif
+	return (pci_matchbyid(pa, ispdev, sizeof(ispdev)/sizeof(ispdev[0])));
 }
 
 
@@ -494,6 +515,18 @@ isp_pci_attach(struct device *parent, struct device *self, void *aux)
 	}
 #endif
 #ifndef	ISP_DISABLE_12160_SUPPORT
+	if (pa->pa_id == PCI_QLOGIC_ISP10160) {
+		isp->isp_mdvec = &mdvec_12160;
+		isp->isp_type = ISP_HA_SCSI_10160;
+		isp->isp_param = malloc(sizeof (sdparam), M_DEVBUF, M_NOWAIT);
+		if (isp->isp_param == NULL) {
+			printf(nomem);
+			return;
+		}
+		bzero(isp->isp_param, sizeof (sdparam));
+		pcs->pci_poff[DMA_BLOCK >> _BLK_REG_SHFT] =
+		    ISP1080_DMA_REGS_OFF;
+	}
 	if (pa->pa_id == PCI_QLOGIC_ISP12160) {
 		isp->isp_mdvec = &mdvec_12160;
 		isp->isp_type = ISP_HA_SCSI_12160;
@@ -503,7 +536,7 @@ isp_pci_attach(struct device *parent, struct device *self, void *aux)
 			printf(nomem);
 			return;
 		}
-		bzero(isp->isp_param, sizeof (sdparam));
+		bzero(isp->isp_param, 2 * sizeof (sdparam));
 		pcs->pci_poff[DMA_BLOCK >> _BLK_REG_SHFT] =
 		    ISP1080_DMA_REGS_OFF;
 	}
@@ -550,7 +583,12 @@ isp_pci_attach(struct device *parent, struct device *self, void *aux)
 	if (pa->pa_id == PCI_QLOGIC_ISP2300 ||
 	    pa->pa_id == PCI_QLOGIC_ISP2312) {
 		isp->isp_mdvec = &mdvec_2300;
-		isp->isp_type = ISP_HA_FC_2300;
+		if (pa->pa_id  == PCI_QLOGIC_ISP2300) {
+			isp->isp_type = ISP_HA_FC_2300;
+		} else {
+			isp->isp_type = ISP_HA_FC_2312;
+			isp->isp_port = pa->pa_function;
+		}
 		isp->isp_param = malloc(sizeof (fcparam), M_DEVBUF, M_NOWAIT);
 		if (isp->isp_param == NULL) {
 			printf(nomem);
@@ -593,6 +631,12 @@ isp_pci_attach(struct device *parent, struct device *self, void *aux)
 	 * Make sure that command register set sanely.
 	 */
 	data = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
+	if (IS_2300(isp)) {	/* per QLogic errata */
+		data &= ~PCI_COMMAND_PARITY_ENABLE;
+	}
+	if (IS_23XX(isp)) {
+		isp->isp_touched = 1;
+	}
 	data |= PCI_COMMAND_MASTER_ENABLE | PCI_COMMAND_INVALIDATE_ENABLE;
 
 	/*
@@ -762,10 +806,23 @@ isp_pci_rd_isr_2300(struct ispsoftc *isp, u_int16_t *isrp,
 	case ISPR2HST_MBX_OK:
 	case ISPR2HST_MBX_FAIL:
 	case ISPR2HST_ASYNC_EVENT:
-	case ISPR2HST_FPOST:
-	case ISPR2HST_FPOST_CTIO:
 		*isrp = r2hisr & 0xffff;
 		*mbox0p = (r2hisr >> 16);
+		*semap = 1;
+		return (1);
+	case ISPR2HST_RIO_16:
+		*isrp = r2hisr & 0xffff;
+		*mbox0p = ASYNC_RIO1;
+		*semap = 1;
+		return (1);
+	case ISPR2HST_FPOST:
+		*isrp = r2hisr & 0xffff;
+		*mbox0p = ASYNC_CMD_CMPLT;
+		*semap = 1;
+		return (1);
+	case ISPR2HST_FPOST_CTIO:
+		*isrp = r2hisr & 0xffff;
+		*mbox0p = ASYNC_CTIO_DONE;
 		*semap = 1;
 		return (1);
 	case ISPR2HST_RSPQ_UPDATE:
@@ -1163,6 +1220,9 @@ isp_pci_reset1(struct ispsoftc *isp)
 {
 	/* Make sure the BIOS is disabled */
 	isp_pci_wr_reg(isp, HCCR, PCI_HCCR_CMD_BIOS);
+	if (isp->isp_osinfo.no_mbox_ints == 0) {
+		ENABLE_INTS(isp);
+	}
 }
 
 static void

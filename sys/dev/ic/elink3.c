@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.6 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.7 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: elink3.c,v 1.32 1997/05/14 00:22:00 thorpej Exp $	*/
 
 /*
@@ -95,7 +95,7 @@ struct ep_media {
  * (i.e., EPMEDIA_ constants)  forcing order of entries. 
  *  Note that 3 is reserved.
  */
-struct ep_media ep_vortex_media[8] = {
+const struct ep_media ep_vortex_media[8] = {
   { EP_PCI_UTP,        EPC_UTP, "utp",	    IFM_ETHER|IFM_10_T,
        EPMEDIA_10BASE_T },
   { EP_PCI_AUI,        EPC_AUI, "aui",	    IFM_ETHER|IFM_10_5,
@@ -546,7 +546,7 @@ ep_vortex_probemedia(sc)
 	/* set available media options */
 	conn = 0;
 	for (i = 0; i < 8; i++) {
-		struct ep_media * epm = ep_vortex_media + i;
+		const struct ep_media *epm = ep_vortex_media + i;
 
 		if ((reset_options & epm->epm_eeprom_data) != 0) {
 			if (conn)
@@ -1520,7 +1520,6 @@ epioctl(ifp, cmd, data)
 			ifp->if_mtu = ifr->ifr_mtu;
 		}
 		break;
-	
 
 	case SIOCSIFFLAGS:
 		if ((ifp->if_flags & IFF_UP) == 0 &&
@@ -1538,14 +1537,12 @@ epioctl(ifp, cmd, data)
 			 * start it.
 			 */
 			epinit(sc);
-		} else {
+		} else if ((ifp->if_flags & IFF_UP) != 0) {
 			/*
-			 * deal with flags changes:
-			 * IFF_MULTICAST, IFF_PROMISC,
-			 * IFF_LINK0, IFF_LINK1.
+			 * Reset the interface to pick up changes in any other
+			 * flags that affect hardware registers.
 			 */
-			epsetfilter(sc);
-			epsetmedia(sc, sc->sc_mii.mii_media.ifm_cur->ifm_data);
+			epinit(sc);
 		}
 		break;
 

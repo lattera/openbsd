@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5.4.4 2002/03/29 23:39:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5.4.5 2003/03/28 00:38:10 niklas Exp $	*/
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -56,10 +56,6 @@ void dc_cardbus_attach(struct device *, struct device *,void *);
 int dc_cardbus_detach(struct device *, int);
 
 void dc_cardbus_setup(struct dc_cardbus_softc *csc);
-
-extern void dc_eeprom_width(struct dc_softc *);
-extern void dc_read_srom(struct dc_softc *, int);
-extern void dc_parse_21143_srom(struct dc_softc *);
 
 struct cfattach dc_cardbus_ca = {
 	sizeof(struct dc_cardbus_softc), dc_cardbus_match, dc_cardbus_attach,
@@ -130,7 +126,8 @@ dc_cardbus_attach(parent, self, aux)
 
 	csc->sc_intrline = ca->ca_intrline;
 
-	sc->dc_cachesize = pci_conf_read(cc, ca->ca_tag, DC_PCI_CFLT) & 0xFF;
+	sc->dc_cachesize = cardbus_conf_read(cc, cf, ca->ca_tag, DC_PCI_CFLT)
+	    & 0xFF;
 
 	dc_cardbus_setup(csc);
 
@@ -153,8 +150,8 @@ dc_cardbus_attach(parent, self, aux)
 			sc->dc_pmode = DC_PMODE_MII;
 
 			bcopy(ca->ca_cis.funce.network.netid,
-			    &sc->arpcom.ac_enaddr,
-			    sizeof sc->arpcom.ac_enaddr);
+			    &sc->sc_arpcom.ac_enaddr,
+			    sizeof sc->sc_arpcom.ac_enaddr);
 		}
 		break;
 	case PCI_VENDOR_ADMTEK:

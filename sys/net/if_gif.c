@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.4 2002/03/28 14:57:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.5 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$KAME: if_gif.c,v 1.43 2001/02/20 08:51:07 itojun Exp $	*/
 
 /*
@@ -93,6 +93,7 @@ gifattach(n)
 		sc->gif_if.if_snd.ifq_maxlen = ifqmaxlen;
 		sc->gif_if.if_softc = sc;
 		if_attach(&sc->gif_if);
+		if_alloc_sadl(&sc->gif_if);
 
 #if NBPFILTER > 0
 		bpfattach(&sc->gif_if.if_bpf, &sc->gif_if, DLT_NULL,
@@ -151,6 +152,13 @@ gif_output(ifp, m, dst, rt)
 	int error = 0;
 	struct m_tag *mtag;
 
+	if (!(ifp->if_flags & IFF_UP) ||
+	    sc->gif_psrc == NULL || sc->gif_pdst == NULL) {
+		m_freem(m);
+		error = ENETDOWN;
+		goto end;
+	}
+
 	/*
 	 * gif may cause infinite recursion calls when misconfigured.
 	 * We'll prevent this by detecting loops.
@@ -178,15 +186,6 @@ gif_output(ifp, m, dst, rt)
 	m_tag_prepend(m, mtag);
 
 	m->m_flags &= ~(M_BCAST|M_MCAST);
-	if (!(ifp->if_flags & IFF_UP) ||
-	    sc->gif_psrc == NULL || sc->gif_pdst == NULL) {
-		log(LOG_NOTICE,
-		    "gif_output: attempt to use unconfigured interface %s\n",
-		    ifp->if_xname);
-		m_freem(m);
-		error = ENETDOWN;
-		goto end;
-	}
 
 #if NBPFILTER > 0
 	if (ifp->if_bpf) {
@@ -224,10 +223,12 @@ gif_output(ifp, m, dst, rt)
 	default:
 		m_freem(m);		
 		error = ENETDOWN;
+		break;
 	}
 
   end:
-	if (error) ifp->if_oerrors++;
+	if (error)
+		ifp->if_oerrors++;
 	return error;
 }
 
@@ -297,6 +298,9 @@ gif_ioctl(ifp, cmd, data)
 				&(((struct if_laddrreq *)data)->addr);
 			dst = (struct sockaddr *)
 				&(((struct if_laddrreq *)data)->dstaddr);
+			break;
+		default:
+			return EINVAL;
 		}
 
 		/* sa_family must be equal */
@@ -519,6 +523,10 @@ gif_ioctl(ifp, cmd, data)
 	case SIOCSIFFLAGS:
 		/* if_ioctl() takes care of it */
 		break;
+
+        case SIOCSIFMTU:
+                ifp->if_mtu = ((struct ifreq *)data)->ifr_mtu;
+                break;
 
 	default:
 		error = EINVAL;

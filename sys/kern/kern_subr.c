@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.5 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.6 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: kern_subr.c,v 1.15 1996/04/09 17:21:56 ragge Exp $	*/
 
 /*
@@ -141,8 +141,12 @@ again:
 	switch (uio->uio_segflg) {
 
 	case UIO_USERSPACE:
-		if (subyte(iov->iov_base, c) < 0)
+	{
+		char tmp = c;
+
+		if (copyout(&tmp, iov->iov_base, sizeof(char)) != 0)
 			return (EFAULT);
+	}
 		break;
 
 	case UIO_SYSSPACE:
@@ -219,9 +223,9 @@ hook_disestablish(head, vhook)
 	struct hook_desc_head *head;
 	void *vhook;
 {
-#ifdef DIAGNOSTIC
 	struct hook_desc *hdp;
 
+#ifdef DIAGNOSTIC
 	for (hdp = TAILQ_FIRST(head); hdp != NULL;
 	    hdp = TAILQ_NEXT(hdp, hd_list))
                 if (hdp == vhook)
@@ -229,8 +233,9 @@ hook_disestablish(head, vhook)
 	if (hdp == NULL)
 		panic("hook_disestablish: hook not established");
 #endif
-
-	TAILQ_REMOVE(head, (struct hook_desc *)vhook, hd_list);
+	hdp = vhook;
+	TAILQ_REMOVE(head, hdp, hd_list);
+	free(hdp, M_DEVBUF);
 }
 
 /*
@@ -240,14 +245,22 @@ hook_disestablish(head, vhook)
  * after crash dump done, etc.
  */
 void
-dohooks(head)
-	struct hook_desc_head *head;
+dohooks(struct hook_desc_head *head, int flags)
 {
 	struct hook_desc *hdp;
 
-	for (hdp = TAILQ_FIRST(head); hdp != NULL;
-	    hdp = TAILQ_NEXT(hdp, hd_list))
-		(*hdp->hd_fn)(hdp->hd_arg);
+	if ((flags & HOOK_REMOVE) == 0) {
+		TAILQ_FOREACH(hdp, head, hd_list) {
+			(*hdp->hd_fn)(hdp->hd_arg);
+		}
+	} else {
+		while ((hdp = TAILQ_FIRST(head)) != NULL) {
+			TAILQ_REMOVE(head, hdp, hd_list);
+			(*hdp->hd_fn)(hdp->hd_arg);
+			if ((flags & HOOK_FREE) != 0)
+				free(hdp, M_DEVBUF);
+		}
+	}
 }
 
 /*

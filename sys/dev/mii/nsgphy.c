@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/nsgphy.c,v 1.3.2.2 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/nsgphy.c,v 1.3.2.3 2003/03/28 00:38:20 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 2001
@@ -191,7 +191,7 @@ nsgphy_service(sc, mii, cmd)
 		case IFM_AUTO:
 			(void) nsgphy_mii_phy_auto(sc, 0);
 			break;
-		case IFM_1000_TX:
+		case IFM_1000_T:
 			if ((ife->ifm_media & IFM_GMASK) == IFM_FDX) {
 				PHY_WRITE(sc, NSGPHY_MII_BMCR,
 				    NSGPHY_BMCR_FDX|NSGPHY_BMCR_SPD1);
@@ -260,7 +260,7 @@ nsgphy_service(sc, mii, cmd)
 		 */
 		if (++sc->mii_ticks != sc->mii_anegticks)
 			return (0);
-		
+
 		sc->mii_ticks = 0;
 
 		/*
@@ -316,9 +316,9 @@ nsgphy_status(sc)
 		anlpar = PHY_READ(sc, NSGPHY_MII_ANLPAR);
 		gstat = PHY_READ(sc, NSGPHY_MII_1000STS);
 		if (gstat & NSGPHY_1000STS_LPFD)
-			mii->mii_media_active |= IFM_1000_TX|IFM_FDX;
+			mii->mii_media_active |= IFM_1000_T|IFM_FDX;
 		else if (gstat & NSGPHY_1000STS_LPHD)
-			mii->mii_media_active |= IFM_1000_TX|IFM_HDX;
+			mii->mii_media_active |= IFM_1000_T|IFM_HDX;
 		else if (anlpar & NSGPHY_ANLPAR_100T4)
 			mii->mii_media_active |= IFM_100_T4;
 		else if (anlpar & NSGPHY_ANLPAR_100FDX)
@@ -336,7 +336,7 @@ nsgphy_status(sc)
 
 	switch(bmcr & (NSGPHY_BMCR_SPD1|NSGPHY_BMCR_SPD0)) {
 	case NSGPHY_S1000:
-		mii->mii_media_active |= IFM_1000_TX;
+		mii->mii_media_active |= IFM_1000_T;
 		break;
 	case NSGPHY_S100:
 		mii->mii_media_active |= IFM_100_TX;

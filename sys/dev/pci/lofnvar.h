@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/pci/lofnvar.h,v 1.4 2001/06/26 06:33:52 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofnvar.h,v 1.4.2.1 2003/03/28 00:38:23 niklas Exp $	*/
 
 /*
- * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
+ * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #define	LOFN_RNGBUF_SIZE	8	/* size in 32 bit elements */
@@ -39,7 +44,19 @@ struct lofn_softc {
 	bus_space_handle_t	sc_sh;
 	bus_space_tag_t		sc_st;
 	bus_dma_tag_t		sc_dmat;
-	u_int32_t		sc_rngbuf[LOFN_RNGBUF_SIZE];
+	u_int32_t		sc_rngbuf[LOFN_RNGBUF_SIZE], sc_ier;
+	int32_t			sc_cid;
+	union lofn_reg		sc_tmp;
+	union lofn_reg		sc_zero;
+	SIMPLEQ_HEAD(,lofn_q)	sc_queue;
+	struct lofn_q		*sc_current;
+};
+
+struct lofn_q {
+	SIMPLEQ_ENTRY(lofn_q) q_next;
+	int (*q_start)(struct lofn_softc *, struct lofn_q *);
+	void (*q_finish)(struct lofn_softc *, struct lofn_q *);
+	struct cryptkop *q_krp;
 };
 
 #define	READ_REG(sc,r)		\
@@ -59,3 +76,8 @@ struct lofn_softc {
 #ifndef LOFN_RNG_SCALAR
 #define	LOFN_RNG_SCALAR		0x00000700
 #endif
+
+/* C = M ^ E mod N */
+#define	LOFN_MODEXP_PAR_M	0
+#define	LOFN_MODEXP_PAR_E	1
+#define	LOFN_MODEXP_PAR_N	2

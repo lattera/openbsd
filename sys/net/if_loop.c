@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.5 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.6 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_loop.c,v 1.15 1996/05/07 02:40:33 thorpej Exp $	*/
 
 /*
@@ -205,6 +205,7 @@ loopattach(n)
 		ifp->if_start = lo_altqstart;
 #endif
 		if_attachhead(ifp);
+		if_alloc_sadl(ifp);
 #if NBPFILTER > 0
 		bpfattach(&ifp->if_bpf, ifp, DLT_LOOP, sizeof(u_int32_t));
 #endif
@@ -265,24 +266,17 @@ looutput(ifp, m, dst, rt)
 	 */
 	if ((ALTQ_IS_ENABLED(&ifp->if_snd) || TBR_IS_ENABLED(&ifp->if_snd))
 	    && ifp->if_start == lo_altqstart) {
-		struct altq_pktattr pktattr;
 		int32_t *afp;
 	        int error;
 
-		/*
-		 * if the queueing discipline needs packet classification,
-		 * do it before prepending link headers.
-		 */
-		IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
-
 		M_PREPEND(m, sizeof(int32_t), M_DONTWAIT);
 		if (m == 0)
-			return(ENOBUFS);
+			return (ENOBUFS);
 		afp = mtod(m, int32_t *);
 		*afp = (int32_t)dst->sa_family;
 
 	        s = splimp();
-		IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+		IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 		(*ifp->if_start)(ifp);
 		splx(s);
 		return (error);

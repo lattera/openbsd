@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1 2002/01/13 02:06:46 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1.4.1 2003/03/28 00:38:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #define	PPC_IN_PDATA		0x000		/* input data */
@@ -298,7 +303,7 @@
  *
  * The *iack registers are read/written with the IACK bit set.  When
  * the interrupt routine starts, it reads the MRAR, TRAR, and RRAR registers
- * from this mapping.  This signals an interrupt acknowlegement cycle.
+ * from this mapping.  This signals an interrupt acknowledgement cycle.
  * (NOTE: these are not really the MRAR, TRAR, and RRAR... They are copies
  * of the GSVR, I just mapped them to the same location as the mrar, trar,
  * and rrar because it seemed appropriate).
@@ -357,8 +362,8 @@
 /*
  * "verosc" node tells which oscillator we have.
  */
-#define	SPIF_OSC9	1		/* 9.8304 Mhz */
-#define	SPIF_OSC10	2		/* 10Mhz */
+#define	SPIF_OSC9	1		/* 9.8304 MHz */
+#define	SPIF_OSC10	2		/* 10MHz */
 
 /*
  * There are two interrupts, serial gets interrupt[0], and parallel

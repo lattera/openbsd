@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.5 2002/03/06 02:15:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.6 2003/03/28 00:41:29 niklas Exp $	*/
 /*	$KAME: in6_proto.c,v 1.66 2000/10/10 15:35:47 itojun Exp $	*/
 
 /*
@@ -142,42 +142,42 @@ struct ip6protosw inet6sw[] = {
   0,		0,		0,		0,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_ICMPV6,	PR_ATOMIC|PR_ADDR,
-  icmp6_input,	rip6_output,	0,		rip6_ctloutput,
+  icmp6_input,	rip6_output,	rip6_ctlinput,	rip6_ctloutput,
   rip6_usrreq,
   icmp6_init,	icmp6_fasttimo,	0,		0,
   icmp6_sysctl,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_DSTOPTS,PR_ATOMIC|PR_ADDR,
   dest6_input,	0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_ROUTING,PR_ATOMIC|PR_ADDR,
   route6_input,	0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_FRAGMENT,PR_ATOMIC|PR_ADDR,
   frag6_input,	0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
 },
 #ifdef IPSEC
 { SOCK_RAW,	&inet6domain,	IPPROTO_AH,	PR_ATOMIC|PR_ADDR,
   ah6_input,	0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
   ah_sysctl,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_ESP,	PR_ATOMIC|PR_ADDR,
   esp6_input,	0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
   esp_sysctl,
 },
 { SOCK_RAW,	&inet6domain,	IPPROTO_IPCOMP,	PR_ATOMIC|PR_ADDR,
   ipcomp6_input, 0,	 	0,		0,
-  0,	  
+  0,
   0,		0,		0,		0,
   ipcomp_sysctl,
 },
@@ -210,7 +210,7 @@ struct ip6protosw inet6sw[] = {
 #endif /* INET */
 #endif /* GIF */
 { SOCK_RAW,	&inet6domain,	IPPROTO_PIM,	PR_ATOMIC|PR_ADDR,
-  pim6_input,	rip6_output,	0,		rip6_ctloutput, 
+  pim6_input,	rip6_output,	0,		rip6_ctloutput,
   rip6_usrreq,
   0,		0,		0,		0,
 },
@@ -223,12 +223,13 @@ struct ip6protosw inet6sw[] = {
 };
 
 struct domain inet6domain =
-    { AF_INET6, "internet6", 0, 0, 0, 
+    { AF_INET6, "internet6", 0, 0, 0,
       (struct protosw *)inet6sw,
       (struct protosw *)&inet6sw[sizeof(inet6sw)/sizeof(inet6sw[0])], 0,
       rn_inithead,
       offsetof(struct sockaddr_in6, sin6_addr) << 3,
-      sizeof(struct sockaddr_in6) };
+      sizeof(struct sockaddr_in6),
+      in6_domifattach, in6_domifdetach, };
 
 /*
  * Internet configuration info
@@ -251,6 +252,7 @@ int	ip6_defhlim = IPV6_DEFHLIM;
 int	ip6_defmcasthlim = IPV6_DEFAULT_MULTICAST_HOPS;
 int	ip6_accept_rtadv = 0;	/* "IPV6FORWARDING ? 0 : 1" is dangerous */
 int	ip6_maxfragpackets = 200;
+int	ip6_maxfrags = 200;
 int	ip6_log_interval = 5;
 int	ip6_hdrnestlimit = 50;	/* appropriate? */
 int	ip6_dad_count = 1;	/* DupAddrDetectionTransmits */
@@ -259,6 +261,7 @@ int	ip6_auto_flowlabel = 1;
 int	ip6_use_deprecated = 1;	/* allow deprecated addr (RFC2462 5.5.4) */
 int	ip6_rr_prune = 5;	/* router renumbering prefix
 				 * walk list every 5 sec.    */
+const int ip6_v6only = 1;
 u_int32_t ip6_id = 0UL;
 int	ip6_keepfaith = 0;
 time_t	ip6_log_time = (time_t)0L;
@@ -270,7 +273,6 @@ time_t	ip6_log_time = (time_t)0L;
  * or so? (jinmei@kame.net 19990310)
  */
 int pmtu_expire = 60*10;
-int pmtu_probe = 60*2;
 
 /* raw IP6 parameters */
 /*

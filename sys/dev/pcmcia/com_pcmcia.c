@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.25.2.4 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.25.2.5 2003/03/28 00:38:26 niklas Exp $	*/
 /*	$NetBSD: com_pcmcia.c,v 1.15 1998/08/22 17:47:58 msaitoh Exp $	*/
 
 /*
@@ -121,8 +121,6 @@
 #include <dev/pcmcia/pcmciareg.h>
 #include <dev/pcmcia/pcmciadevs.h>
 
-#include <dev/isa/isavar.h>
-
 #include "com.h"
 #ifdef i386
 #include "pccom.h"
@@ -130,6 +128,7 @@
 
 #include <dev/ic/comreg.h>
 #if NPCCOM > 0
+#include <dev/isa/isavar.h>
 #include <i386/isa/pccomvar.h>
 #endif
 #if NCOM > 0
@@ -198,8 +197,7 @@ com_pcmcia_match(parent, match, aux)
 
 	/* 2. Does it have all four 'standard' port ranges? */
 	comportmask = 0;
-	for (cfe = pa->pf->cfe_head.sqh_first; cfe;
-	     cfe = cfe->cfe_list.sqe_next) {
+	SIMPLEQ_FOREACH(cfe, &pa->pf->cfe_head, cfe_list) {
 		switch (cfe->iospace[0].start) {
 		case IO_COM1:
 			comportmask |= 1;

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/if_gre.h,v 1.2.2.2 2002/03/28 14:57:36 niklas Exp $ */
+/*      $OpenBSD: src/sys/net/if_gre.h,v 1.2.2.3 2003/03/28 00:41:28 niklas Exp $ */
 /*	$NetBSD: if_gre.h,v 1.5 1999/11/19 20:41:19 thorpej Exp $ */
 
 /*
@@ -141,6 +141,7 @@ struct mobip_h {
 extern	struct gre_softc *gre;
 extern	int ngre;
 extern  int gre_allow;   
+extern  int gre_wccp;
 extern  int ip_mobile_allow;
 
 void	greattach(int);

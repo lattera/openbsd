@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.5 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.6 2003/03/28 00:41:27 niklas Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -121,29 +121,36 @@ sys_ptrace(p, v, retval)
 			return (EINVAL);
 
 		/*
-		 *	(2) it's already being traced, or
+		 *	(2) it's a system process
+		 */
+		if (ISSET(t->p_flag, P_SYSTEM))
+			return (EPERM);
+
+		/*
+		 *	(3) it's already being traced, or
 		 */
 		if (ISSET(t->p_flag, P_TRACED))
 			return (EBUSY);
 
 		/*
-		 *	(3) it's not owned by you, or the last exec
+		 *	(4) it's not owned by you, or the last exec
 		 *	    gave us setuid/setgid privs (unless
 		 *	    you're root), or...
 		 * 
-		 *      [Note: once P_SUGID gets set in execve(), it stays
-		 *	set until the process does another execve(). Hence
-		 *	this prevents a setuid process which revokes it's
-		 *	special privilidges using setuid() from being
-		 *	traced. This is good security.]
+		 *      [Note: once P_SUGID or P_SUGIDEXEC gets set in
+		 *	execve(), they stay set until the process does
+		 *	another execve().  Hence this prevents a setuid
+		 *	process which revokes it's special privileges using
+		 *	setuid() from being traced.  This is good security.]
 		 */
 		if ((t->p_cred->p_ruid != p->p_cred->p_ruid ||
-			ISSET(t->p_flag, P_SUGID)) &&
+		    ISSET(t->p_flag, P_SUGIDEXEC) ||
+		    ISSET(t->p_flag, P_SUGID)) &&
 		    (error = suser(p->p_ucred, &p->p_acflag)) != 0)
 			return (error);
 
 		/*
-		 *	(4) ...it's init, which controls the security level
+		 *	(5) ...it's init, which controls the security level
 		 *	    of the entire system, and the system was not
 		 *          compiled with permanently insecure mode turned
 		 *	    on.

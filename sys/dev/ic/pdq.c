@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/pdq.c,v 1.9.2.1 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/pdq.c,v 1.9.2.2 2003/03/28 00:38:14 niklas Exp $	*/
 /*	$NetBSD: pdq.c,v 1.9 1996/10/13 01:37:26 christos Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

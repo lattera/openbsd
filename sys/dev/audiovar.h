@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/audiovar.h,v 1.6.6.1 2001/05/14 22:23:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/audiovar.h,v 1.6.6.2 2003/03/28 00:38:09 niklas Exp $	*/
 /*	$NetBSD: audiovar.h,v 1.18 1998/03/03 09:16:16 augustss Exp $	*/
 
 /*
@@ -133,8 +133,8 @@ struct audio_softc {
 	struct	au_mixer_ports sc_inports, sc_outports;
 	int	sc_monitor_port;
 
-        int     sc_refcnt;
-        int     sc_dying;
+	int     sc_refcnt;
+	int     sc_dying;
 
 #ifdef AUDIO_INTR_TIME
 	u_long	sc_pfirstintr;	/* first time we saw a play interrupt */

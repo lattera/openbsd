@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/dev/isa/Attic/if_hp.c,v 1.5.6.2 2001/07/04 10:41:31 niklas Exp $       */
+/*    $OpenBSD: src/sys/dev/isa/Attic/if_hp.c,v 1.5.6.3 2003/03/28 00:38:16 niklas Exp $       */
 /*    $NetBSD: if_hp.c,v 1.21 1995/12/24 02:31:31 mycroft Exp $       */
 
 /* XXX THIS DRIVER IS BROKEN.  IT WILL NOT EVEN COMPILE. */
@@ -412,6 +412,7 @@ hpattach(dvp)
 	ifp->if_watchdog = 0;
 	IFQ_SET_READY(&ifp->if_snd);
 	if_attach(ifp);
+	if_alloc_sadl(ifp);
 }
 /*
  * Initialization of interface; set up initialization block

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_acer_reg.h,v 1.2.4.2 2001/10/31 03:22:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_acer_reg.h,v 1.2.4.3 2003/03/28 00:38:24 niklas Exp $	*/
 /*	$NetBSD: pciide_acer_reg.h,v 1.4 2001/07/26 20:02:22 bouyer Exp $	*/
 
 /*
@@ -14,8 +14,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *	This product includes software developed by Manuel Bouyer.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.

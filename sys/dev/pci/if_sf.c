@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.8 2002/03/28 15:35:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.9 2003/03/28 00:38:22 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -588,13 +588,9 @@ int sf_probe(parent, match, aux)
 {
 	struct pci_attach_args	*pa = (struct pci_attach_args *)aux;
 
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_ADP)
-		return(0);
-
-	switch (PCI_PRODUCT(pa->pa_id)) {
-	case PCI_PRODUCT_ADP_AIC6915:
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_ADP &&
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ADP_AIC6915)
 		return(1);
-	}
 
 	return(0);
 }
@@ -1166,7 +1162,7 @@ int sf_encap(sc, c, m_head)
 			if (frag == 0)
 				f->sf_pktlen = m_head->m_pkthdr.len;
 			f->sf_fraglen = m->m_len;
-			f->sf_addr = vtophys(mtod(m, vm_offset_t));
+			f->sf_addr = vtophys(mtod(m, vaddr_t));
 			frag++;
 		}
 	}

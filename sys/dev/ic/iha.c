@@ -1,9 +1,13 @@
-/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.4 2002/03/28 11:51:01 niklas Exp $ */
-/*
- * Initio INI-9xxxU/UW SCSI Device Driver
+/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.5 2003/03/28 00:38:13 niklas Exp $ */
+/*-------------------------------------------------------------------------
  *
- * Copyright (c) 2000-2001 Ken Westerback
- * All rights reserved.
+ * Device driver for the INI-9XXXU/UW or INIC-940/950  PCI SCSI Controller.
+ *
+ * Written for 386bsd and FreeBSD by
+ *	Winston Hung		<winstonh@initio.com>
+ *
+ * Copyright (c) 1997-1999 Initio Corp
+ * Copyright (c) 2000-2002 Ken Westerback
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,19 +29,6 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
- *
- *-------------------------------------------------------------------------
- *
- * Ported from i91u.c, provided by Initio Corporation, which credits:
- *
- * Device driver for the INI-9XXXU/UW or INIC-940/950  PCI SCSI Controller.
- *
- * FreeBSD
- *
- *  Written for 386bsd and FreeBSD by
- *	Winston Hung		<winstonh@initio.com>
- *
- * Copyright (c) 1997-99 Initio Corp.  All rights reserved.
  *
  *-------------------------------------------------------------------------
  */
@@ -634,7 +625,7 @@ iha_find_pend_scb(sc)
 				/*
 				 * OK to do a non-tagged request sense
 				 * even if a non-tagged I/O has been
-				 * started, 'cuz we don't allow any
+				 * started, because we don't allow any
 				 * disconnect during a request sense op
 				 */
 				break;
@@ -2686,7 +2677,7 @@ iha_read_eeprom(iot, ioh, nvram)
 	if ((nvram->NVM_Signature != SIGNATURE)
 	    ||
 	    (nvram->NVM_CheckSum  != chksum))
-		panic("iha: invalid EEPROM,  bad signature or checksum\n");
+		panic("iha: invalid EEPROM,  bad signature or checksum");
 }
 
 /*

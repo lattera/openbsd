@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/cdefs.h,v 1.5.16.1 2001/10/31 03:30:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/sys/cdefs.h,v 1.5.16.2 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: cdefs.h,v 1.16 1996/04/03 20:46:39 christos Exp $	*/
 
 /*
@@ -54,7 +54,7 @@
 
 #if defined(__cplusplus)
 #define	__BEGIN_DECLS	extern "C" {
-#define	__END_DECLS	};
+#define	__END_DECLS	}
 #else
 #define	__BEGIN_DECLS
 #define	__END_DECLS

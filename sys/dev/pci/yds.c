@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.6 2002/03/28 15:35:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.7 2003/03/28 00:38:25 niklas Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -570,7 +570,7 @@ yds_configure_legacy (arg)
 
 	reg = pci_conf_read(sc->sc_pc, sc->sc_pcitag, YDS_PCI_LEGACY);
 	reg &= ~0x8133c03f;	/* these bits are out of interest */
-	reg |= ((YDS_PCI_EX_LEGACY_IMOD) |
+	reg |= YDS_PCI_EX_LEGACY_SBMOD_XXX | ((YDS_PCI_EX_LEGACY_IMOD) |
 		(YDS_PCI_LEGACY_FMEN |
 		 YDS_PCI_LEGACY_MEN /*| YDS_PCI_LEGACY_MIEN*/));
 	if (FLEXIBLE) {
@@ -1595,7 +1595,6 @@ yds_halt_input(addr)
 	struct yds_softc *sc = addr;
 
 	DPRINTF(("yds: yds_halt_input\n"));
-	sc->sc_rec.intr = NULL;
 	if (sc->sc_rec.intr) {
 		/* Stop the rec slot operation */
 		YWRITE4(sc, YDS_MAPOF_REC, 0);
@@ -1610,6 +1609,7 @@ yds_halt_input(addr)
 		bus_dmamap_sync(sc->sc_dmatag, sc->sc_rec.dma->map,
 				0, sc->sc_rec.length, BUS_DMASYNC_POSTREAD);
 	}
+	sc->sc_rec.intr = NULL;
 
 	return 0;
 }

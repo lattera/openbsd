@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/xmphy.c,v 1.2.6.3 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/xmphy.c,v 1.2.6.4 2003/03/28 00:38:20 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000
@@ -211,7 +211,7 @@ xmphy_service(sc, mii, cmd)
 		 */
 		if (++sc->mii_ticks != sc->mii_anegticks)
 			return (0);
-		
+
 		sc->mii_ticks = 0;
 
 		/*

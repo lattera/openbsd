@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/am7990.c,v 1.16.2.5 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/am7990.c,v 1.16.2.6 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: am7990.c,v 1.22 1996/10/13 01:37:19 christos Exp $	*/
 
 /*-
@@ -148,6 +148,7 @@ am7990_config(sc)
 #ifdef LANCE_REVC_BUG
 	ifp->if_flags &= ~IFF_MULTICAST;
 #endif
+	ifp->if_baudrate = IF_Mbps(10);
 	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Attach the interface. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.4 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.5 2003/03/28 00:38:16 niklas Exp $	*/
 /*	$NetBSD: if_iy.c,v 1.4 1996/05/12 23:52:53 mycroft Exp $	*/
 /* #define IYDEBUG */
 /* #define IYMEMDEBUG */
@@ -751,7 +751,7 @@ iyintr(arg)
 	status = inb(iobase + STATUS_REG);
 #ifdef IYDEBUG
 	if (status & ALL_INTS) {
-		printf("%s: got interupt %b", sc->sc_dev.dv_xname, status,
+		printf("%s: got interrupt %b", sc->sc_dev.dv_xname, status,
 		    "\020\1RX_STP\2RX\3TX\4EXEC");
 		if (status & EXEC_INT)
 			printf(" event %b\n", inb(iobase),

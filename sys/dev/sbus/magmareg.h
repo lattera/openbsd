@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4.4.1 2002/03/28 15:09:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4.4.2 2003/03/28 00:38:30 niklas Exp $	*/
 
 /* magmareg.h
  *
@@ -91,7 +91,7 @@ struct cd1400 {
 	bus_space_handle_t cd_regh;	/* chip register handle */
 	bus_space_tag_t cd_regt;	/* chip register tag */
 	int cd_chiprev;			/* chip revision */
-	int cd_clock;			/* clock speed in Mhz */
+	int cd_clock;			/* clock speed in MHz */
 	int cd_parmode;			/* parallel mode operation */
 };
 

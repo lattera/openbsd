@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/spif.c,v 1.2.4.1 2002/03/28 15:09:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/spif.c,v 1.2.4.2 2003/03/28 00:38:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /*
@@ -270,7 +275,7 @@ spifattach(parent, self, aux)
 	STC_WRITE(sc, STC_GSCR2, 0);
 	STC_WRITE(sc, STC_GSCR3, 0);
 
-	printf(": rev %x chiprev %x osc %sMhz\n",
+	printf(": rev %x chiprev %x osc %sMHz\n",
 	    sc->sc_rev, sc->sc_rev2, clockfreq(sc->sc_osc));
 
 	(void)config_found(self, sttymatch, NULL);
@@ -775,7 +780,6 @@ spifstcintr_rxexception(sc, needsoftp)
 {
 	struct stty_port *sp;
 	u_int8_t channel, *ptr;
-	int cnt;
 
 	channel = CD180_GSCR_CHANNEL(STC_READ(sc, STC_GSCR1));
 	sp = &sc->sc_ttys->sc_port[channel];
@@ -791,10 +795,8 @@ spifstcintr_rxexception(sc, needsoftp)
 		SET(sp->sp_flags, STTYF_RING_OVERFLOW);
 	}
 	STC_WRITE(sc, STC_EOSRR, 0);
-	if (cnt) {
-		*needsoftp = 1;
-		sp->sp_rput = ptr;
-	}
+	*needsoftp = 1;
+	sp->sp_rput = ptr;
 	return (1);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/pim6_var.h,v 1.1.2.2 2002/03/28 14:56:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/pim6_var.h,v 1.1.2.3 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$KAME: pim6_var.h,v 1.8 2000/06/06 08:07:43 jinmei Exp $	*/
 
 /*
@@ -52,8 +52,6 @@ struct pim6stat {
 };
 
 #if (defined(KERNEL)) || (defined(_KERNEL))
-extern struct pim6stat pim6stat;
-
 int pim6_input(struct mbuf **, int *, int);
 #endif /* KERNEL */
 

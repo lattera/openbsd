@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/stat.h,v 1.7.10.3 2002/03/28 14:52:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/stat.h,v 1.7.10.4 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: stat.h,v 1.20 1996/05/16 22:17:49 cgd Exp $	*/
 
 /*-
@@ -207,6 +207,7 @@ int	chflags(const char *, unsigned int);
 int	fchflags(int, unsigned int);
 int	fchmod(int, mode_t);
 int	lstat(const char *, struct stat *);
+int	isfdtype(int, int);
 #endif
 __END_DECLS
 #endif

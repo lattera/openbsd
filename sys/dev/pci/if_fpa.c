@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_fpa.c,v 1.13.2.3 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_fpa.c,v 1.13.2.4 2003/03/28 00:38:22 niklas Exp $	*/
 /*	$NetBSD: if_fpa.c,v 1.15 1996/10/21 22:56:40 thorpej Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -94,11 +94,10 @@ pdq_pci_match(parent, match, aux)
 {
 	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
 
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_DEC)
-		return (0);
-	if (PCI_PRODUCT(pa->pa_id) != PCI_PRODUCT_DEC_DEFPA)
-		return (0);
-	return (1);
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_DEC &&
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DEC_DEFPA)
+		return (1);
+	return (0);
 }
 
 void
@@ -178,7 +177,7 @@ pdq_pci_attach(parent, self, aux)
 	}
 
 	bcopy((caddr_t) sc->sc_pdq->pdq_hwaddr.lanaddr_bytes,
-	    sc->sc_ac.ac_enaddr, 6);
+	    sc->sc_arpcom.ac_enaddr, 6);
 	pdq_ifattach(sc, NULL);
 
 	sc->sc_ats = shutdownhook_establish((void (*)(void *)) pdq_hwreset,

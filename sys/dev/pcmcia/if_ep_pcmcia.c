@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ep_pcmcia.c,v 1.21.2.3 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ep_pcmcia.c,v 1.21.2.4 2003/03/28 00:38:26 niklas Exp $	*/
 /*	$NetBSD: if_ep_pcmcia.c,v 1.16 1998/08/17 23:20:40 thorpej Exp $  */
 
 /*-
@@ -338,7 +338,7 @@ ep_pcmcia_attach(parent, self, aux)
 		return;
 	}
 
-	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, cfe->iospace[0].length);
+	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, psc->sc_pcioh.size);
 
 	switch (pa->product) {
 	case PCMCIA_PRODUCT_3COM_3C562:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/auconv.h,v 1.1.12.4 2002/03/28 12:29:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/auconv.h,v 1.1.12.5 2003/03/28 00:38:09 niklas Exp $ */
 /*	$NetBSD: auconv.h,v 1.5 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*-
@@ -52,8 +52,12 @@ extern void linear8_to_linear16_le(void *, u_char *, int);
 extern void linear8_to_linear16_be(void *, u_char *, int);
 extern void linear16_to_linear8_le(void *, u_char *, int);
 extern void linear16_to_linear8_be(void *, u_char *, int);
+/* Byte expansion/contraction with sign change */
 extern void ulinear8_to_linear16_le(void *, u_char *, int);
 extern void ulinear8_to_linear16_be(void *, u_char *, int);
+extern void linear16_to_ulinear8_le(void *, u_char *, int);
+extern void linear16_to_ulinear8_be(void *, u_char *, int);
+
 /* same as above, plus converting mono to stereo */
 extern void noswap_bytes_mts(void *, u_char *, int);
 extern void swap_bytes_mts(void *, u_char *, int);

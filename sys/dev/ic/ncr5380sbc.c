@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr5380sbc.c,v 1.9.12.3 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr5380sbc.c,v 1.9.12.4 2003/03/28 00:38:14 niklas Exp $	*/
 /*	$NetBSD: ncr5380sbc.c,v 1.13 1996/10/13 01:37:25 christos Exp $	*/
 
 /*
@@ -1507,7 +1507,7 @@ success:
 /*
  * The message system:
  *
- * This is a revamped message system that now should easier accomodate
+ * This is a revamped message system that now should easier accommodate
  * new messages, if necessary.
  *
  * Currently we accept these messages:

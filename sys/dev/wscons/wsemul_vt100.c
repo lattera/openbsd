@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100.c,v 1.6.4.2 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100.c,v 1.6.4.3 2003/03/28 00:38:33 niklas Exp $ */
 /* $NetBSD: wsemul_vt100.c,v 1.13 2000/04/28 21:56:16 mycroft Exp $ */
 
 /*
@@ -969,7 +969,7 @@ wsemul_vt100_output(cookie, data, count, kernel)
 		}
 #ifdef DIAGNOSTIC
 		if (edp->state > sizeof(vt100_output) / sizeof(vt100_output[0]))
-			panic("wsemul_vt100: invalid state %d\n", edp->state);
+			panic("wsemul_vt100: invalid state %d", edp->state);
 #endif
 		edp->state = vt100_output[edp->state - 1](edp, *data);
 	}

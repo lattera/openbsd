@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4 2001/06/27 01:58:03 provos Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4.2.1 2003/03/28 00:41:28 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -33,6 +33,9 @@
  * PURPOSE.
  */
 
+#include "bpfilter.h"
+#include "pflog.h"
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/mbuf.h>
@@ -44,11 +47,11 @@
 #include <net/route.h>
 #include <net/bpf.h>
 
-#include <net/if_pflog.h>
-
 #ifdef	INET
 #include <netinet/in.h>
 #include <netinet/in_var.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
 #endif
 
 #ifdef INET6
@@ -58,8 +61,8 @@
 #include <netinet6/nd6.h>
 #endif /* INET6 */
 
-#include "bpfilter.h"
-#include "pflog.h"
+#include <net/pfvar.h>
+#include <net/if_pflog.h>
 
 #define PFLOGMTU	(32768 + MHLEN + MLEN)
 
@@ -100,13 +103,11 @@ pflogattach(int npflog)
 		ifp->if_snd.ifq_maxlen = ifqmaxlen;
 		ifp->if_hdrlen = PFLOG_HDRLEN;
 		if_attach(ifp);
+		if_alloc_sadl(ifp);
 
 #if NBPFILTER > 0
 		bpfattach(&pflogif[i].sc_if.if_bpf, ifp, DLT_PFLOG,
 			  PFLOG_HDRLEN);
-#endif
-#ifdef INET6
-		nd6_ifattach(ifp);
 #endif
 	}
 }
@@ -166,6 +167,49 @@ pflogioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 	default:
 		return (EINVAL);
 	}
+
+	return (0);
+}
+
+int
+pflog_packet(struct ifnet *ifp, struct mbuf *m, sa_family_t af, u_short dir,
+    u_short reason, struct pf_rule *rm)
+{
+#if NBPFILTER > 0
+	struct ifnet *ifn;
+	struct pfloghdr hdr;
+	struct mbuf m1;
+
+	if (ifp == NULL || m == NULL || rm == NULL)
+		return (-1);
+
+	hdr.af = htonl(af);
+	memcpy(hdr.ifname, ifp->if_xname, sizeof(hdr.ifname));
+
+	hdr.rnr = htons(rm->nr);
+	hdr.reason = htons(reason);
+	hdr.dir = htons(dir);
+	hdr.action = htons(rm->action);
+
+#ifdef INET
+	if (af == AF_INET && dir == PF_OUT) {
+		struct ip *ip;
+
+		ip = mtod(m, struct ip *);
+		ip->ip_sum = 0;
+		ip->ip_sum = in_cksum(m, ip->ip_hl << 2);
+	}
+#endif /* INET */
+
+	m1.m_next = m;
+	m1.m_len = PFLOG_HDRLEN;
+	m1.m_data = (char *) &hdr;
+
+	ifn = &(pflogif[0].sc_if);
+
+	if (ifn->if_bpf)
+		bpf_mtap(ifn->if_bpf, &m1);
+#endif
 
 	return (0);
 }

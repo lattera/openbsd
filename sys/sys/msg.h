@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/msg.h,v 1.5.8.2 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/msg.h,v 1.5.8.3 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: msg.h,v 1.9 1996/02/09 18:25:18 christos Exp $	*/
 
 /*
@@ -114,7 +114,9 @@ struct msginfo {
 		msgssz,		/* size of a message segment (see notes above) */
 		msgseg;		/* number of message segments */
 };
-struct msginfo	msginfo;	/* XXX */
+#ifdef SYSVMSG
+extern struct msginfo	msginfo;
+#endif
 
 struct msg_sysctl_info {
 	struct msginfo msginfo;
@@ -127,7 +129,7 @@ struct msg_sysctl_info {
 #ifndef MSGSEG
 #define MSGSEG	2048		/* must be less than 32767 */
 #endif
-#undef MSGMAX			/* ALWAYS compute MGSMAX! */
+#undef MSGMAX			/* ALWAYS compute MSGMAX! */
 #define MSGMAX	(MSGSSZ*MSGSEG)
 #ifndef MSGMNB
 #define MSGMNB	2048		/* max # of bytes in a queue */

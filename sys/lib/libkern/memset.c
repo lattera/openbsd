@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/memset.c,v 1.1.8.1 2001/05/14 22:32:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/memset.c,v 1.1.8.2 2003/03/28 00:41:27 niklas Exp $	*/
 /*	$NetBSD: memset.c,v 1.6 1998/03/27 05:35:47 cgd Exp $	*/
 
 /*-
@@ -52,9 +52,9 @@ __RCSID("$NetBSD: memset.c,v 1.6 1998/03/27 05:35:47 cgd Exp $");
 #include <string.h>
 #include <limits.h>
 #else
+#include <sys/limits.h>
 #include <sys/systm.h>
 #include <lib/libkern/libkern.h>
-#include <machine/limits.h>
 #endif 
 
 #define	wsize	sizeof(u_int)

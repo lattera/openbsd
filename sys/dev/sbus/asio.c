@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/asio.c,v 1.4 2002/03/14 15:42:44 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/asio.c,v 1.4.2.1 2003/03/28 00:38:29 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /*
@@ -177,7 +182,7 @@ asio_print(aux, name)
 	void *aux;
 	const char *name;
 {
-	struct asio_attach_args *aaa;
+	struct asio_attach_args *aaa = aux;
 
 	if (name != NULL)
 		printf("%s at %s", aaa->aaa_name, name);
@@ -226,7 +231,7 @@ com_asio_attach(parent, self, aux)
 
 	sc->sc_iot = aaa->aaa_iot;
 	sc->sc_ioh = aaa->aaa_ioh;
-	sc->sc_iobase = sc->sc_ioh;
+	sc->sc_iobase = 0;   /* XXX WTF is iobase for? It used to be the lower 32 bits of ioh's vaddr... */
 	sc->sc_hwflags = 0;
 	sc->sc_swflags = 0;
 	sc->sc_frequency = BAUD_BASE;

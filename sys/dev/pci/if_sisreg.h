@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.3 2002/03/06 02:11:45 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.4 2003/03/28 00:38:22 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -297,6 +297,7 @@ struct sis_desc {
 	/* Driver software section */
 	struct mbuf		*sis_mbuf;
 	struct sis_desc		*sis_nextdesc;
+	bus_dmamap_t		map;
 };
 
 #define SIS_CMDSTS_BUFLEN	0x00000FFF
@@ -370,6 +371,8 @@ struct sis_ring_data {
 #define SIS_REV_630E		0x0081
 #define SIS_REV_630S		0x0082
 #define SIS_REV_630EA1		0x0083
+#define SIS_REV_630ET		0x0084
+#define SIS_REV_635		0x0090
 
 struct sis_type {
 	u_int16_t		sis_vid;
@@ -390,11 +393,18 @@ struct sis_softc {
 	bus_space_tag_t		sis_btag;
 	u_int8_t		sis_unit;
 	u_int8_t		sis_type;
+	u_int8_t		sis_rev;
 	u_int8_t		sis_link;
 	struct sis_list_data	*sis_ldata;
-	caddr_t			sis_ldata_ptr;
 	struct sis_ring_data	sis_cdata;
 	struct timeout		sis_timeout;
+	bus_dma_tag_t		sc_dmat;
+	bus_dmamap_t		sc_listmap;
+	bus_dma_segment_t	sc_listseg[1];
+	int			sc_listnseg;
+	caddr_t			sc_listkva;
+	bus_dmamap_t		sc_rx_sparemap;
+	bus_dmamap_t		sc_tx_sparemap;
 };
 
 /*
@@ -448,8 +458,3 @@ struct sis_softc {
 #define SIS_PSTATE_D3		0x0003
 #define SIS_PME_EN		0x0010
 #define SIS_PME_STATUS		0x8000
-
-#ifdef __alpha__
-#undef vtophys
-#define vtophys(va)		alpha_XXX_dmamap((vm_offset_t)va)
-#endif

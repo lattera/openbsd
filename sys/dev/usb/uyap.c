@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.1.4.3 2002/03/06 02:11:48 niklas Exp $ */
-/*	$NetBSD: uyap.c,v 1.4 2001/07/11 04:53:18 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uyap.c,v 1.1.4.4 2003/03/28 00:38:33 niklas Exp $ */
+/*	$NetBSD: uyap.c,v 1.6 2002/07/11 21:14:37 augustss Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -51,7 +51,11 @@
 #include <dev/usb/ezload.h>
 
 const struct ezdata uyap_firmware[] = {
+#if defined(__OpenBSD__)
 #include "dev/microcode/uyap/uyap_firmware.h"
+#else
+#include "dev/usb/uyap_firmware.h"
+#endif
 };
 const struct ezdata *uyap_firmwares[] = { uyap_firmware, NULL };
 
@@ -64,13 +68,13 @@ USB_DECLARE_DRIVER(uyap);
 USB_MATCH(uyap)
 {
 	USB_MATCH_START(uyap, uaa);
-	
+
 	if (uaa->iface != NULL)
 		return (UMATCH_NONE);
 
 	/* Match the boot device. */
 	if (uaa->vendor == USB_VENDOR_SILICONPORTALS &&
-	    uaa->product == USB_PRODUCT_SILICONPORTALS_YAPPH_NF) 
+	    uaa->product == USB_PRODUCT_SILICONPORTALS_YAPPH_NF)
 		return (UMATCH_VENDOR_PRODUCT);
 
 	return (UMATCH_NONE);
@@ -82,7 +86,7 @@ USB_ATTACH(uyap)
 	usbd_device_handle dev = uaa->device;
 	usbd_status err;
 	char devinfo[1024];
-	
+
 	usbd_devinfo(dev, 0, devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->sc_dev), devinfo);
@@ -94,7 +98,7 @@ USB_ATTACH(uyap)
 		       USBDEVNAME(sc->sc_dev), usbd_errstr(err));
 		USB_ATTACH_ERROR_RETURN;
 	}
-	
+
 	printf("%s: firmware download complete, disconnecting.\n",
 	       USBDEVNAME(sc->sc_dev));
 	USB_ATTACH_SUCCESS_RETURN;

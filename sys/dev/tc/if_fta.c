@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.3 2002/03/28 15:09:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.4 2003/03/28 00:38:30 niklas Exp $	*/
 /*	$NetBSD: if_fta.c,v 1.7 1996/10/22 21:37:26 cgd Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -109,7 +109,7 @@ pdq_tc_attach(parent, self, aux)
 		return;
 	}
 	bcopy((caddr_t) sc->sc_pdq->pdq_hwaddr.lanaddr_bytes,
-	    sc->sc_ac.ac_enaddr, 6);
+	    sc->sc_arpcom.ac_enaddr, 6);
 	printf("\n");
 	pdq_ifattach(sc, NULL);
 

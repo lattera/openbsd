@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.6 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.7 2003/03/28 00:38:26 niklas Exp $	*/
 /*	$NetBSD: if_ne_pcmcia.c,v 1.17 1998/08/15 19:00:04 thorpej Exp $	*/
 
 /*
@@ -130,6 +130,10 @@ const struct ne2000dev {
       0, -1, { 0x00, 0x80, 0xc8 } },
 
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
+      PCMCIA_CIS_DLINK_DE660PLUS,
+      0, -1, { 0x00, 0x80, 0xc8 } },
+
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_RPTI_EP400,
       0, -1, { 0x00, 0x40, 0x95 } },
 
@@ -188,6 +192,14 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_WISECOM_IPORT,
       0, -1, { 0x00, 0x02, 0xdd } },
+
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
+      PCMCIA_CIS_AROWANA_FE,
+      0, -1, { 0x00, 0x48, 0x54 }, NE2000DVF_AX88190 },
+
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
+      PCMCIA_CIS_GVC_NP0335,
+      0, -1, { 0x00, 0x40, 0x05 } },
 
     /*
      * You have to add new entries which contains
@@ -260,6 +272,14 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_ETHERFAST,
       PCMCIA_CIS_DLINK_DE650,
       0, -1, { 0x00, 0xe0, 0x98 } },
+
+    { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
+      PCMCIA_CIS_DLINK_DFE670TXD,
+      0, -1, { 0x00, 0x05, 0x5d } },
+
+    { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
+      PCMCIA_CIS_DLINK_DFE670TXD,
+      0, -1, { 0x00, 0x50, 0xba } },
 
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_TRUST_COMBO_ECARD,
       PCMCIA_CIS_LINKSYS_TRUST_COMBO_ECARD,
@@ -355,6 +375,10 @@ const struct ne2000dev {
       PCMCIA_CIS_SMC_EZCARD,
       0, 0x01c0, { 0x00, 0xe0, 0x29 } },
 
+    { PCMCIA_VENDOR_SMC, PCMCIA_PRODUCT_SMC_8041,
+	  PCMCIA_CIS_SMC_8041,
+	  0, -1, { 0x00, 0x04, 0xe2 } },
+
     { PCMCIA_VENDOR_SOCKET, PCMCIA_PRODUCT_SOCKET_LP_ETHER_CF,
       PCMCIA_CIS_SOCKET_LP_ETHER_CF,
       0, -1, { 0x00, 0xc0, 0x1b} },
@@ -402,6 +426,10 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA411,
       PCMCIA_CIS_NETGEAR_FA411,
       0, -1, { 0x00, 0x40, 0xf4 } },
+
+    { PCMCIA_VENDOR_BELKIN, PCMCIA_PRODUCT_BELKIN_F5D5020,
+      PCMCIA_CIS_BELKIN_F5D5020,
+      0, -1, { 0x00, 0x30, 0xbd } },
 
 #if 0
     /* the rest of these are stolen from the linux pcnet pcmcia device

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ispvar.h,v 1.8.2.4 2002/03/06 02:11:43 niklas Exp $ */
+/*     $OpenBSD: src/sys/dev/ic/ispvar.h,v 1.8.2.5 2003/03/28 00:38:14 niklas Exp $ */
 /*
  * Soft Definitions for for Qlogic ISP SCSI adapters.
  *
@@ -54,7 +54,7 @@
 #endif
 
 #define	ISP_CORE_VERSION_MAJOR	2
-#define	ISP_CORE_VERSION_MINOR	5
+#define	ISP_CORE_VERSION_MINOR	7
 
 /*
  * Vector for bus specific code to provide specific services.
@@ -73,7 +73,7 @@ struct ispmdvec {
 	void		(*dv_reset0) (struct ispsoftc *);
 	void		(*dv_reset1) (struct ispsoftc *);
 	void		(*dv_dregs) (struct ispsoftc *, const char *);
-	const u_int16_t	*dv_ispfw;	/* ptr to f/w */
+	u_int16_t	*dv_ispfw;	/* ptr to f/w */
 	u_int16_t	dv_conf1;
 	u_int16_t	dv_clock;	/* clock frequency */
 };
@@ -89,8 +89,10 @@ struct ispmdvec {
 /*
  * 'Types'
  */
-#ifndef	ISP_DMA_ADDR_T
-#define	ISP_DMA_ADDR_T	u_int32_t
+#ifdef	ISP_DAC_SUPPORTED
+typedef	u_int64_t	isp_dma_addr_t;
+#else
+typedef	u_int32_t	isp_dma_addr_t;
 #endif
 
 /*
@@ -149,8 +151,12 @@ struct ispmdvec {
 #define	QENTRY_LEN			64
 /* Both request and result queue length must be a power of two */
 #define	RQUEST_QUEUE_LEN(x)		MAXISPREQUEST(x)
+#ifdef	ISP_TARGET_MODE
+#define	RESULT_QUEUE_LEN(x)		MAXISPREQUEST(x)
+#else
 #define	RESULT_QUEUE_LEN(x)		\
 	(((MAXISPREQUEST(x) >> 2) < 64)? 64 : MAXISPREQUEST(x) >> 2)
+#endif
 #define	ISP_QUEUE_ENTRY(q, idx)		((q) + ((idx) * QENTRY_LEN))
 #define	ISP_QUEUE_SIZE(n)		((n) * QENTRY_LEN)
 #define	ISP_NXT_QENTRY(idx, qlen)	(((idx) + 1) & ((qlen)-1))
@@ -242,6 +248,11 @@ typedef struct {
 #define	FC_PORT_ID		0x7f	/* Fabric Controller Special ID */
 #define	FC_SNS_ID		0x80	/* SNS Server Special ID */
 
+/* #define	ISP_USE_GA_NXT	1 */	/* Use GA_NXT with switches */
+#ifndef	GA_NXT_MAX
+#define	GA_NXT_MAX	256
+#endif
+
 typedef struct {
 	u_int32_t		isp_fwoptions	: 16,
 				isp_gbspeed	: 2,
@@ -276,9 +287,13 @@ typedef struct {
 	 * to move around.
 	 */
 	struct lportdb {
-		u_int
+		u_int32_t
+					port_type	: 8,
 					loopid		: 8,
-							: 1,
+					fc4_type	: 4,
+					last_fabric_dev	: 1,
+							: 2,
+					relogin		: 1,
 					force_logout	: 1,
 					was_fabric_dev	: 1,
 					fabric_dev	: 1,
@@ -294,7 +309,10 @@ typedef struct {
 	 * Scratch DMA mapped in area to fetch Port Database stuff, etc.
 	 */
 	caddr_t			isp_scratch;
-	ISP_DMA_ADDR_T		isp_scdma;
+	isp_dma_addr_t		isp_scdma;
+#ifdef	ISP_FW_CRASH_DUMP
+	u_int16_t		*isp_dump_data;
+#endif
 } fcparam;
 
 #define	FW_CONFIG_WAIT		0
@@ -350,7 +368,8 @@ typedef struct ispsoftc {
 	u_int32_t		isp_maxluns;	/* maximum luns supported */
 
 	u_int32_t		isp_clock	: 8,	/* input clock */
-						: 5,
+						: 4,
+				isp_port	: 1,	/* 23XX only */
 				isp_failed	: 1,	/* board failed */
 				isp_open	: 1,	/* opened (ioctl) */
 				isp_touched	: 1,	/* board ever seen? */
@@ -371,6 +390,12 @@ typedef struct ispsoftc {
 	 */
 	u_int64_t		isp_intcnt;		/* total int count */
 	u_int64_t		isp_intbogus;		/* spurious int count */
+	u_int64_t		isp_intmboxc;		/* mbox completions */
+	u_int64_t		isp_intoasync;		/* other async */
+	u_int64_t		isp_rsltccmplt;		/* CMDs on result q */
+	u_int64_t		isp_fphccmplt;		/* CMDs via fastpost */
+	u_int16_t		isp_rscchiwater;
+	u_int16_t		isp_fpcchiwater;
 
 	/*
 	 * Volatile state
@@ -386,9 +411,15 @@ typedef struct ispsoftc {
 	volatile u_int16_t	isp_reqodx;	/* index of last ISP pickup */
 	volatile u_int16_t	isp_reqidx;	/* index of next request */
 	volatile u_int16_t	isp_residx;	/* index of next result */
+	volatile u_int16_t	isp_resodx;	/* index of next result */
+	volatile u_int16_t	isp_rspbsy;
 	volatile u_int16_t	isp_lasthdls;	/* last handle seed */
 	volatile u_int16_t	isp_mboxtmp[MAX_MAILBOX];
 	volatile u_int16_t	isp_lastmbxcmd;	/* last mbox command sent */
+	volatile u_int16_t	isp_mbxwrk0;
+	volatile u_int16_t	isp_mbxwrk1;
+	volatile u_int16_t	isp_mbxwrk2;
+	void *			isp_mbxworkp;
 
 	/*
 	 * Active commands are stored here, indexed by handle functions.
@@ -400,8 +431,8 @@ typedef struct ispsoftc {
 	 */
 	caddr_t			isp_rquest;
 	caddr_t			isp_result;
-	ISP_DMA_ADDR_T		isp_rquest_dma;
-	ISP_DMA_ADDR_T		isp_result_dma;
+	isp_dma_addr_t		isp_rquest_dma;
+	isp_dma_addr_t		isp_result_dma;
 } ispsoftc_t;
 
 #define	SDPARAM(isp)	((sdparam *) (isp)->isp_param)
@@ -423,12 +454,16 @@ typedef struct ispsoftc {
 #define	ISP_CFG_TWOGB		0x20	/* force 2GB connection (23XX only) */
 #define	ISP_CFG_ONEGB		0x10	/* force 1GB connection (23XX only) */
 #define	ISP_CFG_FULL_DUPLEX	0x01	/* Full Duplex (Fibre Channel only) */
-#define	ISP_CFG_OWNWWN		0x02	/* override NVRAM wwn */
 #define	ISP_CFG_PORT_PREF	0x0C	/* Mask for Port Prefs (2200 only) */
 #define	ISP_CFG_LPORT		0x00	/* prefer {N/F}L-Port connection */
 #define	ISP_CFG_NPORT		0x04	/* prefer {N/F}-Port connection */
 #define	ISP_CFG_NPORT_ONLY	0x08	/* insist on {N/F}-Port connection */
 #define	ISP_CFG_LPORT_ONLY	0x0C	/* insist on {N/F}L-Port connection */
+#define	ISP_CFG_OWNWWPN		0x100	/* override NVRAM wwpn */
+#define	ISP_CFG_OWNWWNN		0x200	/* override NVRAM wwnn */
+#define	ISP_CFG_OWNFSZ		0x400	/* override NVRAM frame size */
+#define	ISP_CFG_OWNLOOPID	0x800	/* override NVRAM loopid */
+#define	ISP_CFG_OWNEXCTHROTTLE	0x1000	/* override NVRAM execution throttle */
 
 /*
  * Prior to calling isp_reset for the first time, the outer layer
@@ -474,6 +509,8 @@ typedef struct ispsoftc {
 #define	ISP_FW_MAJORX(xp)		(xp[0])
 #define	ISP_FW_MINORX(xp)		(xp[1])
 #define	ISP_FW_MICROX(xp)		(xp[2])
+#define	ISP_FW_NEWER_THAN(i, major, minor, micro)		\
+ (ISP_FW_REVX((i)->isp_fwrev) > ISP_FW_REV(major, minor, micro))
 
 /*
  * Bus (implementation) types
@@ -503,33 +540,44 @@ typedef struct ispsoftc {
 #define	ISP_HA_SCSI_1240	0x8
 #define	ISP_HA_SCSI_1080	0x9
 #define	ISP_HA_SCSI_1280	0xa
-#define	ISP_HA_SCSI_12160	0xb
+#define	ISP_HA_SCSI_10160	0xb
+#define	ISP_HA_SCSI_12160	0xc
 #define	ISP_HA_FC		0xf0
 #define	ISP_HA_FC_2100		0x10
 #define	ISP_HA_FC_2200		0x20
 #define	ISP_HA_FC_2300		0x30
+#define	ISP_HA_FC_2312		0x40
 
 #define	IS_SCSI(isp)	(isp->isp_type & ISP_HA_SCSI)
 #define	IS_1240(isp)	(isp->isp_type == ISP_HA_SCSI_1240)
 #define	IS_1080(isp)	(isp->isp_type == ISP_HA_SCSI_1080)
 #define	IS_1280(isp)	(isp->isp_type == ISP_HA_SCSI_1280)
+#define	IS_10160(isp)	(isp->isp_type == ISP_HA_SCSI_10160)
 #define	IS_12160(isp)	(isp->isp_type == ISP_HA_SCSI_12160)
 
 #define	IS_12X0(isp)	(IS_1240(isp) || IS_1280(isp))
+#define	IS_1X160(isp)	(IS_10160(isp) || IS_12160(isp))
 #define	IS_DUALBUS(isp)	(IS_12X0(isp) || IS_12160(isp))
-#define	IS_ULTRA2(isp)	(IS_1080(isp) || IS_1280(isp) || IS_12160(isp))
-#define	IS_ULTRA3(isp)	(IS_12160(isp))
+#define	IS_ULTRA2(isp)	(IS_1080(isp) || IS_1280(isp) || IS_1X160(isp))
+#define	IS_ULTRA3(isp)	(IS_1X160(isp))
 
 #define	IS_FC(isp)	((isp)->isp_type & ISP_HA_FC)
 #define	IS_2100(isp)	((isp)->isp_type == ISP_HA_FC_2100)
 #define	IS_2200(isp)	((isp)->isp_type == ISP_HA_FC_2200)
-#define	IS_2300(isp)	((isp)->isp_type >= ISP_HA_FC_2300)
+#define	IS_23XX(isp)	((isp)->isp_type >= ISP_HA_FC_2300)
+#define	IS_2300(isp)	((isp)->isp_type == ISP_HA_FC_2300)
+#define	IS_2312(isp)	((isp)->isp_type == ISP_HA_FC_2312)
 
 /*
  * DMA cookie macros
  */
+#ifdef	ISP_DAC_SUPPORTRED
+#define	DMA_WD3(x)	(((x) >> 48) & 0xffff)
+#define	DMA_WD2(x)	(((x) >> 32) & 0xffff)
+#else
 #define	DMA_WD3(x)	0
 #define	DMA_WD2(x)	0
+#endif
 #define	DMA_WD1(x)	(((x) >> 16) & 0xffff)
 #define	DMA_WD0(x)	(((x) & 0xffff))
 
@@ -552,6 +600,13 @@ void isp_init(struct ispsoftc *);
  * Reset the ISP and call completion for any orphaned commands.
  */
 void isp_reinit(struct ispsoftc *);
+
+#ifdef	ISP_FW_CRASH_DUMP
+/*
+ * Dump firmware entry point.
+ */
+void isp_fw_dump(struct ispsoftc *isp);
+#endif
 
 /*
  * Internal Interrupt Service Routine
@@ -658,7 +713,7 @@ int isp_control(struct ispsoftc *, ispctl_t, void *);
  * we had better let the OS determine login policy.
  *
  * ISPASYNC_PROMENADE has an argument that is a pointer to an integer which
- * is an index into the portdb in the softc ('target'). Whether that entrie's
+ * is an index into the portdb in the softc ('target'). Whether that entry's
  * valid tag is set or not says whether something has arrived or departed.
  * The name refers to a favorite pastime of many city dwellers- watching
  * people come and go, talking of Michaelangelo, and so on..
@@ -684,7 +739,9 @@ typedef enum {
 	ISPASYNC_TARGET_ACTION,		/* other target command action */
 	ISPASYNC_CONF_CHANGE,		/* Platform Configuration Change */
 	ISPASYNC_UNHANDLED_RESPONSE,	/* Unhandled Response Entry */
-	ISPASYNC_FW_CRASH		/* Firmware has crashed */
+	ISPASYNC_FW_CRASH,		/* Firmware has crashed */
+	ISPASYNC_FW_DUMPED,		/* Firmware crashdump taken */
+	ISPASYNC_FW_RESTARTED		/* Firmware has been restarted */
 } ispasync_t;
 int isp_async(struct ispsoftc *, ispasync_t, void *);
 
@@ -725,17 +782,16 @@ void isp_prt(struct ispsoftc *, int level, const char *, ...);
  *
  *	INLINE		-	platform specific define for 'inline' functions
  *
- *	ISP_DMA_ADDR_T	-	platform specific dma address coookie- basically
- *				the largest integer that can hold the 32 or
- *				64 bit value appropriate for the QLogic's DMA
- *				addressing. Defaults to u_int32_t.
+ *	ISP_DAC_SUPPORTED -	Is DAC (Dual Address Cycle) is supported?
+ *				Basically means whether or not DMA for PCI
+ *				PCI cards (Ultra2 or better or FC) works
+ *				above 4GB.
  *
  *	ISP2100_SCRLEN	-	length for the Fibre Channel scratch DMA area
  *
  *	MEMZERO(dst, src)			platform zeroing function
  *	MEMCPY(dst, src, count)			platform copying function
  *	SNPRINTF(buf, bufsize, fmt, ...)	snprintf
- *	STRNCAT(dstbuf, size, srcbuf)		strncat
  *	USEC_DELAY(usecs)			microsecond spindelay function
  *	USEC_SLEEP(isp, usecs)			microsecond sleep function
  *
@@ -763,6 +819,8 @@ void isp_prt(struct ispsoftc *, int level, const char *, ...);
  *	MBOX_NOTIFY_COMPLETE(struct ispsoftc *)	notification of mbox cmd donee
  *	MBOX_RELEASE(struct ispsoftc *)		release lock on mailbox regs
  *
+ *	FC_SCRATCH_ACQUIRE(struct ispsoftc *)	acquire lock on FC scratch area
+ *	FC_SCRATCH_RELEASE(struct ispsoftc *)	acquire lock on FC scratch area
  *
  *	SCSI_GOOD	SCSI 'Good' Status
  *	SCSI_CHECK	SCSI 'Check Condition' Status
@@ -811,6 +869,8 @@ void isp_prt(struct ispsoftc *, int level, const char *, ...);
  *	DEFAULT_LOOPID(struct ispsoftc *)	Default FC Loop ID
  *	DEFAULT_NODEWWN(struct ispsoftc *)	Default Node WWN
  *	DEFAULT_PORTWWN(struct ispsoftc *)	Default Port WWN
+ *	DEFAULT_FRAMESIZE(struct ispsoftc *)	Default Frame Size
+ *	DEFAULT_EXEC_THROTTLE(struct ispsoftc *) Default Execution Throttle
  *		These establish reasonable defaults for each platform.
  * 		These must be available independent of card NVRAM and are
  *		to be used should NVRAM not be readable.

@@ -1,5 +1,6 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_invertq.c,v 1.2 1999/02/16 00:02:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_invertq.c,v 1.2.6.1 2003/03/28 00:38:28 niklas Exp $	*/
 /*	$NetBSD: rf_invertq.c,v 1.3 1999/02/05 00:06:12 oster Exp $	*/
+
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
  * All rights reserved.

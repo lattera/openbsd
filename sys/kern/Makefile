@@ -1,9 +1,9 @@
-#	$OpenBSD: src/sys/kern/Makefile,v 1.7.14.1 2001/05/14 22:32:38 niklas Exp $
+#	$OpenBSD: src/sys/kern/Makefile,v 1.7.14.2 2003/03/28 00:41:26 niklas Exp $
 
 # Makefile for kernel tags files, init_sysent, etc.
 
-ARCH=	alpha amiga atari hp300 i386 m68k mac68k mvme68k mvme88k pc532 \
-	pica pmax sparc sun3 vax
+ARCH=	alpha hp300 hppa i386 m68k mac68k mvme68k mvme88k \
+	mvmeppc powerpc sparc sparc64 vax
 
 all:	init_sysent.c vnode_if.c
 

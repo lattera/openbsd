@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.4 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.5 2003/03/28 00:38:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -87,21 +87,21 @@ struct cfattach an_pci_ca = {
 	sizeof (struct an_softc), an_pci_match, an_pci_attach
 };
 
+const struct pci_matchid an_pci_devices[] = {
+	{ PCI_VENDOR_AIRONET, PCI_PRODUCT_AIRONET_PCI352 },
+	{ PCI_VENDOR_AIRONET, PCI_PRODUCT_AIRONET_PC4500 },
+	{ PCI_VENDOR_AIRONET, PCI_PRODUCT_AIRONET_PC4800 },
+	{ PCI_VENDOR_AIRONET, PCI_PRODUCT_AIRONET_PC4800_1 },
+};
+
 int
 an_pci_match(parent, match, aux)
 	struct device *parent;
 	void *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = aux;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_AIRONET &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PCI352 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4500 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4800))
-		return(1);
-
-	return(0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, an_pci_devices,
+	    sizeof(an_pci_devices)/sizeof(an_pci_devices[0])));
 }
 
 void

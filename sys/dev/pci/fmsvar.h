@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fmsvar.h,v 1.2.6.1 2001/05/14 22:25:41 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/fmsvar.h,v 1.2.6.2 2003/03/28 00:38:21 niklas Exp $ */
 /*	$NetBSD: fmsvar.h,v 1.1 1999/11/01 21:54:12 augustss Exp $	*/
 
 /*-
@@ -47,14 +47,14 @@ struct fms_softc {
 
 	bus_space_tag_t sc_iot;
 	bus_space_handle_t sc_ioh;
-	bus_addr_t sc_ioaddr;
-	bus_size_t sc_iosize;
 	bus_dma_tag_t sc_dmat;
 
 	bus_space_handle_t sc_opl_ioh;
 
 	bus_space_handle_t sc_mpu_ioh;
 	struct device * sc_mpu_dev;
+
+	void *radio;
 
 	struct ac97_codec_if *codec_if;
 	struct ac97_host_if host_if;
@@ -75,5 +75,7 @@ struct fms_softc {
 	int sc_rec_flip;
 	u_int16_t sc_rec_reg;
 };
+
+int	fmsradio_attach(struct fms_softc *);
 
 #endif

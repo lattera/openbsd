@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/bt485.c,v 1.5.4.4 2002/03/28 11:51:00 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/bt485.c,v 1.5.4.5 2003/03/28 00:38:12 niklas Exp $ */
 /* $NetBSD: bt485.c,v 1.2 2000/04/02 18:55:01 nathanw Exp $ */
 
 /*
@@ -84,6 +84,7 @@ struct ramdac_funcs bt485_funcsstruct = {
 	NULL,			/* check_curcmap; not needed */
 	NULL,			/* set_curcmap; not needed */
 	NULL,			/* get_curcmap; not needed */
+	NULL,			/* no dot clock to set */
 };
 
 /*
@@ -265,7 +266,8 @@ bt485_set_cmap(rc, cmapp)
 	struct wsdisplay_cmap *cmapp;
 {
 	struct bt485data *data = (struct bt485data *)rc;
-	int count, index, s;
+	u_int count, index;
+	int s, error;
 
 #ifdef DIAGNOSTIC
 	if (rc == NULL)
@@ -273,21 +275,26 @@ bt485_set_cmap(rc, cmapp)
 	if (cmapp == NULL)
 		panic("bt485_set_cmap: cmapp");
 #endif
-	if ((u_int)cmapp->index >= 256 ||
-	    ((u_int)cmapp->index + (u_int)cmapp->count) > 256)
+	index = cmapp->index;
+	count = cmapp->count;
+
+	if (index >= 256 || count > 256 - index)
 		return (EINVAL);
-	if (!uvm_useracc(cmapp->red, cmapp->count, B_READ) ||
-	    !uvm_useracc(cmapp->green, cmapp->count, B_READ) ||
-	    !uvm_useracc(cmapp->blue, cmapp->count, B_READ))
-		return (EFAULT);
 
 	s = spltty();
 
-	index = cmapp->index;
-	count = cmapp->count;
-	copyin(cmapp->red, &data->cmap_r[index], count);
-	copyin(cmapp->green, &data->cmap_g[index], count);
-	copyin(cmapp->blue, &data->cmap_b[index], count);
+	if ((error = copyin(cmapp->red, &data->cmap_r[index], count)) != 0) {
+		splx(s);
+		return (error);
+	}
+	if ((error = copyin(cmapp->green, &data->cmap_g[index], count)) != 0) {
+		splx(s);
+		return (error);
+	}
+	if ((error = copyin(cmapp->blue, &data->cmap_b[index], count)) != 0) {
+		splx(s);
+		return (error);
+	}
 
 	data->changed |= DATA_CMAP_CHANGED;
 
@@ -306,10 +313,10 @@ bt485_get_cmap(rc, cmapp)
 	struct wsdisplay_cmap *cmapp;
 {
 	struct bt485data *data = (struct bt485data *)rc;
-	int error, count, index;
+	u_int count, index;
+	int error;
 
-	if ((u_int)cmapp->index >= 256 ||
-	    ((u_int)cmapp->index + (u_int)cmapp->count) > 256)
+	if (cmapp->index >= 256 || cmapp->count > 256 - cmapp->index)
 		return (EINVAL);
 
 	count = cmapp->count;
@@ -331,7 +338,9 @@ bt485_set_cursor(rc, cursorp)
 	struct wsdisplay_cursor *cursorp;
 {
 	struct bt485data *data = (struct bt485data *)rc;
-	int count, index, v, s;
+	u_int count, index;
+	int error;
+	int v, s;
 
 	v = cursorp->which;
 
@@ -340,24 +349,15 @@ bt485_set_cursor(rc, cursorp)
 	 * before we do anything that we can't recover from.
 	 */
 	if (v & WSDISPLAY_CURSOR_DOCMAP) {
-		if ((u_int)cursorp->cmap.index > 2 ||
-		    ((u_int)cursorp->cmap.index +
-		     (u_int)cursorp->cmap.count) > 2)
-			return (EINVAL);
+		index = cursorp->cmap.index;
 		count = cursorp->cmap.count;
-		if (!uvm_useracc(cursorp->cmap.red, count, B_READ) ||
-		    !uvm_useracc(cursorp->cmap.green, count, B_READ) ||
-		    !uvm_useracc(cursorp->cmap.blue, count, B_READ))
-			return (EFAULT);
+		if (index >= 2 || count > 2 - index)
+			return (EINVAL);
 	}
 	if (v & WSDISPLAY_CURSOR_DOSHAPE) {
 		if ((u_int)cursorp->size.x > CURSOR_MAX_SIZE ||
 		    (u_int)cursorp->size.y > CURSOR_MAX_SIZE)
 			return (EINVAL);
-		count = (CURSOR_MAX_SIZE / NBBY) * data->cursize.y;
-		if (!uvm_useracc(cursorp->image, count, B_READ) ||
-		    !uvm_useracc(cursorp->mask, count, B_READ))
-			return (EFAULT);
 	}
 
 	if (v & (WSDISPLAY_CURSOR_DOPOS | WSDISPLAY_CURSOR_DOCUR)) {
@@ -376,11 +376,23 @@ bt485_set_cursor(rc, cursorp)
 		data->changed |= DATA_ENB_CHANGED;
 	}
 	if (v & WSDISPLAY_CURSOR_DOCMAP) {
-		count = cursorp->cmap.count;
 		index = cursorp->cmap.index;
-		copyin(cursorp->cmap.red, &data->curcmap_r[index], count);
-		copyin(cursorp->cmap.green, &data->curcmap_g[index], count);
-		copyin(cursorp->cmap.blue, &data->curcmap_b[index], count);
+		count = cursorp->cmap.count;
+		if ((error = copyin(cursorp->cmap.red,
+		    &data->curcmap_r[index], count)) != 0) {
+			splx(s);
+			return (error);
+		}
+		if ((error = copyin(cursorp->cmap.green,
+		    &data->curcmap_g[index], count)) != 0) {
+			splx(s);
+			return (error);
+		}
+		if ((error = copyin(cursorp->cmap.blue,
+		    &data->curcmap_b[index], count)) != 0) {
+			splx(s);
+			return (error);
+		}
 		data->changed |= DATA_CURCMAP_CHANGED;
 	}
 	if (v & WSDISPLAY_CURSOR_DOSHAPE) {
@@ -388,8 +400,16 @@ bt485_set_cursor(rc, cursorp)
 		count = (CURSOR_MAX_SIZE / NBBY) * data->cursize.y;
 		bzero(data->curimage, sizeof data->curimage);
 		bzero(data->curmask, sizeof data->curmask);
-		copyin(cursorp->image, data->curimage, count);	/* can't fail */
-		copyin(cursorp->mask, data->curmask, count);	/* can't fail */
+		if ((error = copyin(cursorp->image, data->curimage,
+		    count)) != 0) {
+			splx(s);
+			return (error);
+		}
+		if ((error = copyin(cursorp->mask, data->curmask,
+		    count)) != 0) {
+			splx(s);
+			return (error);
+		}
 		data->changed |= DATA_CURSHAPE_CHANGED;
 	}
 

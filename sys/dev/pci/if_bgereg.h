@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/if_bgereg.h,v 1.2.4.2 2002/03/28 15:35:57 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_bgereg.h,v 1.2.4.3 2003/03/28 00:38:21 niklas Exp $ */
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2001
@@ -31,7 +31,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $FreeBSD$
+ * $FreeBSD: if_bgereg.h,v 1.11 2002/11/14 23:54:50 sam Exp $
  */
 
 /*
@@ -203,9 +203,9 @@
 #define BGE_PCIMISCCTL_ASICREV		0xFFFF0000
 
 #define BGE_BIGENDIAN_INIT						\
-	(BGE_BGE_PCIMISCCTL_ENDIAN_BYTESWAP|				\
+	(BGE_PCIMISCCTL_ENDIAN_BYTESWAP|				\
 	BGE_PCIMISCCTL_ENDIAN_WORDSWAP|BGE_PCIMISCCTL_CLEAR_INTA|	\
-	BGE_PCIMISCCTL_INDIRECT_ACCESS|PCIMISCCTL_MASK_PCI_INTR)
+	BGE_PCIMISCCTL_INDIRECT_ACCESS|BGE_PCIMISCCTL_MASK_PCI_INTR)
 
 #define BGE_LITTLEENDIAN_INIT						\
 	(BGE_PCIMISCCTL_CLEAR_INTA|BGE_PCIMISCCTL_MASK_PCI_INTR|	\
@@ -218,6 +218,16 @@
 #define BGE_ASICREV_BCM5700_B2		0x71030000
 #define BGE_ASICREV_BCM5700_ALTIMA	0x71040000
 #define BGE_ASICREV_BCM5700_C0		0x72000000
+#define BGE_ASICREV_BCM5701_A0		0x00000000	/* grrrr */
+#define BGE_ASICREV_BCM5701_B0		0x01000000
+#define BGE_ASICREV_BCM5701_B2		0x01020000
+#define BGE_ASICREV_BCM5701_B5		0x01050000
+#define BGE_ASICREV_BCM5703_A0		0x10000000
+#define BGE_ASICREV_BCM5703_A1		0x10010000
+#define BGE_ASICREV_BCM5703_A2		0x10020000
+
+/* shorthand one */
+#define BGE_ASICREV_BCM5700		0x71000000
 
 /* PCI DMA Read/Write Control register */
 #define BGE_PCIDMARWCTL_MINDMA		0x000000FF
@@ -279,11 +289,6 @@
 #define BGE_PCICLOCKCTL_PCIPLL_DISABLE	0x00004000
 #define BGE_PCICLOCKCTL_SYSPLL_DISABLE	0x00008000
 #define BGE_PCICLOCKCTL_BIST_ENABLE	0x00010000
-
-
-#ifndef PCIM_CMD_MWIEN
-#define PCIM_CMD_MWIEN			0x0010
-#endif
 
 /*
  * High priority mailbox registers
@@ -1774,37 +1779,9 @@ struct bge_status_block {
 #define BGE_STATFLAG_LINKSTATE_CHANGED	0x00000002
 #define BGE_STATFLAG_ERROR		0x00000004
 
-
 /*
- * Broadcom Vendor ID
- * (Note: the BCM570x still defaults to the Alteon PCI vendor ID
- * even though they're now manufactured by Broadcom)
+ * SysKonnect Subsystem IDs
  */
-#define BCOM_VENDORID			0x14E4
-#define BCOM_DEVICEID_BCM5700		0x1644
-#define BCOM_DEVICEID_BCM5701		0x1645
-
-/*
- * Alteon AceNIC PCI vendor/device ID.
- */
-#define ALT_VENDORID			0x12AE
-#define ALT_DEVICEID_ACENIC		0x0001
-#define ALT_DEVICEID_ACENIC_COPPER	0x0002
-#define ALT_DEVICEID_BCM5700		0x0003
-#define ALT_DEVICEID_BCM5701		0x0004
-
-/*
- * 3Com 3c985 PCI vendor/device ID.
- */
-#define TC_VENDORID			0x10B7
-#define TC_DEVICEID_3C985		0x0001
-#define TC_DEVICEID_3C996		0x0003
-
-/*
- * SysKonnect PCI vendor ID
- */
-#define SK_VENDORID			0x1148
-#define SK_DEVICEID_ALTIMA		0x4400
 #define SK_SUBSYSID_9D21		0x4421
 #define SK_SUBSYSID_9D41		0x4441
 
@@ -1813,6 +1790,21 @@ struct bge_status_block {
  */
 #define BGE_EE_MAC_OFFSET		0x7C
 #define BGE_EE_HWCFG_OFFSET		0xC8
+
+#define BGE_HWCFG_VOLTAGE		0x00000003
+#define BGE_HWCFG_PHYLED_MODE		0x0000000C
+#define BGE_HWCFG_MEDIA			0x00000030
+
+#define BGE_VOLTAGE_1POINT3		0x00000000
+#define BGE_VOLTAGE_1POINT8		0x00000001
+
+#define BGE_PHYLEDMODE_UNSPEC		0x00000000
+#define BGE_PHYLEDMODE_TRIPLELED	0x00000004
+#define BGE_PHYLEDMODE_SINGLELED	0x00000008
+
+#define BGE_MEDIA_UNSPEC		0x00000000
+#define BGE_MEDIA_COPPER		0x00000010
+#define BGE_MEDIA_FIBER			0x00000020
 
 #define BGE_PCI_READ_CMD		0x06000000
 #define BGE_PCI_WRITE_CMD		0x70000000
@@ -2019,14 +2011,14 @@ struct vpd_key {
 	bus_space_read_4(sc->bge_btag, sc->bge_bhandle, reg)
 
 #define BGE_SETBIT(sc, reg, x)	\
-	CSR_WRITE_4(sc, reg, (CSR_READ_4(sc, reg) | x))
+	CSR_WRITE_4(sc, reg, (CSR_READ_4(sc, reg) | (x)))
 #define BGE_CLRBIT(sc, reg, x)	\
-	CSR_WRITE_4(sc, reg, (CSR_READ_4(sc, reg) & ~x))
+	CSR_WRITE_4(sc, reg, (CSR_READ_4(sc, reg) & ~(x)))
 
 #define PCI_SETBIT(pc, tag, reg, x)	\
-	pci_conf_write(pc, tag, reg, (pci_conf_read(pc, tag, reg) | x))
+	pci_conf_write(pc, tag, reg, (pci_conf_read(pc, tag, reg) | (x)))
 #define PCI_CLRBIT(pc, tag, reg, x)	\
-	pci_conf_write(pc, tag, reg, (pci_conf_read(pc, tag, reg) & ~x))
+	pci_conf_write(pc, tag, reg, (pci_conf_read(pc, tag, reg) & ~(x)))
 
 /*
  * Memory management stuff. Note: the SSLOTS, MSLOTS and JSLOTS
@@ -2133,7 +2125,9 @@ struct bge_softc {
 	struct ifmedia		bge_ifmedia;	/* media info */
 	u_int8_t		bge_extram;	/* has external SSRAM */
 	u_int8_t		bge_tbi;
+	u_int8_t		bge_rx_alignment_bug;
 	bus_dma_tag_t		bge_dmatag;
+	u_int32_t		bge_asicrev;
 	struct bge_ring_data	*bge_rdata;	/* rings */
 	struct bge_chain_data	bge_cdata;	/* mbufs */
 	bus_dmamap_t		bge_ring_map;

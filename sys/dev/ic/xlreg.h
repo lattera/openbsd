@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8.4.3 2002/03/28 12:11:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8.4.4 2003/03/28 00:38:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -35,6 +35,7 @@
  */
 
 #define XL_EE_READ	0x0080	/* read, 5 bit address */
+#define XL_EE_8BIT_READ	0x0200	/* read, 8 bit address */
 #define XL_EE_WRITE	0x0040	/* write, 5 bit address */
 #define XL_EE_ERASE	0x00c0	/* erase, 5 bit address */
 #define XL_EE_EWEN	0x0030	/* erase, no data needed */
@@ -249,7 +250,7 @@
 #define XL_RESETOPT_TESTPDTPDR	0x0800
 #define XL_RESETOPT_TEST100TX	0x1000
 #define XL_RESETOPT_TEST100RX	0x2000
-
+#define	XL_RESETOPT_INVMIIPWR	0x4000		/* some 3c905Bs only */
 /*
  * Window 3 (fifo management)
  */
@@ -460,12 +461,14 @@ struct xl_chain {
 	struct xl_chain		*xl_next;
 	struct xl_chain		*xl_prev;
 	u_int32_t		xl_phys;
+	bus_dmamap_t		map;
 };
 
 struct xl_chain_onefrag {
 	struct xl_list_onefrag	*xl_ptr;
 	struct mbuf		*xl_mbuf;
 	struct xl_chain_onefrag	*xl_next;
+	bus_dmamap_t		map;
 };
 
 struct xl_chain_data {
@@ -500,7 +503,7 @@ struct xl_chain_data {
 #define XL_RXSTAT_UDPCKERR	0x08000000	/* 3c905B only */
 #define XL_RXSTAT_BUFEN		0x10000000	/* 3c905B only */
 #define XL_RXSTAT_IPCKOK	0x20000000	/* 3c905B only */
-#define XL_RXSTAT_TCPCOK	0x40000000	/* 3c905B only */
+#define XL_RXSTAT_TCPCKOK	0x40000000	/* 3c905B only */
 #define XL_RXSTAT_UDPCKOK	0x80000000	/* 3c905B only */
 
 #define XL_TXSTAT_LENMASK	0x00001FFF
@@ -563,7 +566,7 @@ struct xl_softc {
 	struct device		sc_dev;		/* generic device structure */
 	void *			xl_intrhand;	/* interrupt handler cookie */
 	struct timeout		xl_stsup_tmo;	/* stats update timeout */
-	struct arpcom		arpcom;		/* interface info */
+	struct arpcom		sc_arpcom;		/* interface info */
 	struct ifmedia		ifmedia;	/* media info */
 	mii_data_t		sc_mii;		/* mii bus */
 	bus_space_handle_t	xl_bhandle;
@@ -580,12 +583,18 @@ struct xl_softc {
 	u_int8_t		xl_stats_no_timeout;
 	u_int16_t		xl_tx_thresh;
 	int			xl_if_flags;
-	caddr_t			xl_ldata_ptr;
 	struct xl_list_data	*xl_ldata;
 	struct xl_chain_data	xl_cdata;
 	int			xl_flags;
 	void (*intr_ack)(struct xl_softc *);
 	void *			sc_sdhook, *sc_pwrhook;
+	bus_dma_tag_t		sc_dmat;
+	bus_dmamap_t		sc_listmap;
+	bus_dma_segment_t	sc_listseg[1];
+	int			sc_listnseg;
+	caddr_t			sc_listkva;
+	bus_dmamap_t		sc_rx_sparemap;
+	bus_dmamap_t		sc_tx_sparemap;
 };
 
 #define xl_rx_goodframes(x) \
@@ -629,7 +638,7 @@ struct xl_stats {
 
 #define XL_SEL_WIN(x)	\
 	CSR_WRITE_2(sc, XL_COMMAND, XL_CMD_WINSEL | x)
-#define XL_TIMEOUT		1000
+#define XL_TIMEOUT		2000
 
 /*
  * General constants that are fun to know.
@@ -715,11 +724,6 @@ struct xl_stats {
 #define XL_PSTATE_D3		0x0003
 #define XL_PME_EN		0x0010
 #define XL_PME_STATUS		0x8000
-
-#ifdef __alpha__
-#undef vtophys
-#define vtophys(va)		alpha_XXX_dmamap((vm_offset_t)va)
-#endif
 
 #ifndef ETHER_ALIGN
 #define ETHER_ALIGN 2

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/sunkbdreg.h,v 1.1 2002/01/25 03:24:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/sunkbdreg.h,v 1.1.4.1 2003/03/28 00:38:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /* keyboard commands (host->kbd) */
@@ -41,7 +46,7 @@
 #define	SKBD_CMD_LAYOUT		0x0f
 
 /* keyboard responses (kbd->host) */
-#define	SKBD_RSP_RESET_OK	0x04	/* normal reset status */
+#define	SKBD_RSP_RESET_OK	0x04	/* normal reset status for type 4/5/6 */
 #define	SKBD_RSP_IDLE		0x7f	/* no keys down */
 #define	SKBD_RSP_LAYOUT		0xfe	/* layout follows */
 #define	SKBD_RSP_RESET		0xff	/* reset status follows */
@@ -55,3 +60,7 @@
 #define	SKBD_STATE_LAYOUT	1
 #define	SKBD_STATE_GETKEY	2
 
+/* keyboard types */
+#define	KB_SUN2		2		/* type 2 keyboard */
+#define	KB_SUN3		3		/* type 3 keyboard */
+#define	KB_SUN4		4		/* type 4/5/6 keyboard */

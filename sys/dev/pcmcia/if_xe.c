@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.4 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.5 2003/03/28 00:38:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Niklas Hallqvist, Brandon Creighton, Job de Haas
@@ -1407,7 +1407,7 @@ xe_full_reset(sc)
 		PAGE(sc, 4);
 		/*
 		 * Drive GP1 low to power up ML6692 and GP2 high to power up
-		 * the 10Mhz chip.  XXX What chip is that?  The phy?
+		 * the 10MHz chip.  XXX What chip is that?  The phy?
 		 */
 		bus_space_write_1(bst, bsh, offset + GP0,
 		    GP1_OUT | GP2_OUT | GP2_WR);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mpuvar.h,v 1.1.4.1 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mpuvar.h,v 1.1.4.2 2003/03/28 00:38:14 niklas Exp $	*/
 /*	$NetBSD: mpu401var.h,v 1.3 1998/11/25 22:17:06 augustss Exp $	*/
 
 /*
@@ -50,10 +50,21 @@ struct midi_hw_if mpu_midi_hw_if;
 
 int	mpu_intr(void *);
 int	mpu_find(void *);
-int	mpu_open(void *, int, 
+int	mpu_open(void *, int,
 		 void (*iintr)(void *, int),
 		 void (*ointr)(void *), void *arg);
 void	mpu_close(void *);
 int	mpu_output(void *, int);
 void	mpu_getinfo(void *addr, struct midi_info *mi);
 
+#define MPU401_NPORT		2
+#define MPU_DATA		0
+#define MPU_COMMAND		1
+#define  MPU_RESET		0xff
+#define  MPU_UART_MODE		0x3f
+#define  MPU_ACK		0xfe
+#define MPU_STATUS		1
+#define  MPU_OUTPUT_BUSY	0x40
+#define  MPU_INPUT_EMPTY	0x80
+
+#define MPU_MAXWAIT	10000	/* usec/10 to wait */

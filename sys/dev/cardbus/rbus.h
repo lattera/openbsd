@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/rbus.h,v 1.1.8.2 2002/03/29 23:39:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/rbus.h,v 1.1.8.3 2003/03/28 00:38:10 niklas Exp $ */
 /*	$NetBSD: rbus.h,v 1.3 1999/12/15 12:28:55 kleink Exp $	*/
 /*
  * Copyright (c) 1999
@@ -42,7 +42,7 @@
  * 
  *  Ths rbus is a recursive bus-space administrator.  This means a
  *  parent bus-space administrator, which usually belongs to a bus
- *  bridge, makes some child bus-space administorators and gives
+ *  bridge, makes some child bus-space administrators and gives
  *  (restricted) bus-space for children.  There are a root bus-space
  *  administrator which maintains whole bus-space.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cacreg.h,v 1.2.4.1 2001/05/14 22:23:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cacreg.h,v 1.2.4.2 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: cacreg.h,v 1.5 2001/01/10 16:48:04 ad Exp $	*/
 
 /*-
@@ -99,6 +99,9 @@
 #define	CAC_INTR_DISABLE		0x00
 #define	CAC_INTR_ENABLE			0x01
 
+/* Interrupt status masks */
+#define	CAC_INTR_FIFO_NEMPTY		0x01
+
 /* Command types */
 #define	CAC_CMD_GET_LOG_DRV_INFO	0x10
 #define	CAC_CMD_GET_CTRL_INFO		0x11
@@ -120,6 +123,7 @@
 /* Return status codes */
 #define	CAC_RET_SOFT_ERROR		0x02
 #define	CAC_RET_HARD_ERROR		0x04
+#define	CAC_RET_CMD_INVALID		0x10
 #define	CAC_RET_CMD_REJECTED		0x14
 
 struct cac_drive_info {

@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_strutils.c,v 1.2 1999/02/16 00:03:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_strutils.c,v 1.2.6.1 2003/03/28 00:38:29 niklas Exp $	*/
 /*	$NetBSD: rf_strutils.c,v 1.3 1999/02/05 00:06:18 oster Exp $	*/
+
 /*
  * rf_strutils.c
  *
- * String-parsing funcs
+ * String-parsing funcs.
  */
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
@@ -40,15 +41,16 @@
 
 #include "rf_utils.h"
 
-/* finds a non-white character in the line */
-char   *
+/* Finds a non-white character in the line. */
+char *
 rf_find_non_white(char *p)
 {
 	for (; *p != '\0' && (*p == ' ' || *p == '\t'); p++);
 	return (p);
 }
-/* finds a white character in the line */
-char   *
+
+/* Finds a white character in the line. */
+char *
 rf_find_white(char *p)
 {
 	for (; *p != '\0' && (*p != ' ' && *p != '\t'); p++);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_apollo_reg.h,v 1.1.4.2 2001/10/31 03:22:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_apollo_reg.h,v 1.1.4.3 2003/03/28 00:38:24 niklas Exp $	*/
 /*	$NetBSD: pciide_apollo_reg.h,v 1.8 2001/01/05 18:04:43 bouyer Exp $	*/
 
 /*
@@ -14,8 +14,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *	This product includes software developed by Manuel Bouyer.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -98,7 +97,8 @@
 	(((1 - (channel)) << 4) + ((1 - (drive)) << 3)))
 #define APO_UDMA_CLK66(channel) (0x08 << ((1 - (channel)) << 4))
 
-static int8_t apollo_udma100_tim[] = {0x0f, 0x07, 0x04, 0x02, 0x01, 0x00};
+static int8_t apollo_udma133_tim[] = {0x07, 0x07, 0x06, 0x04, 0x02, 0x01, 0x00};
+static int8_t apollo_udma100_tim[] = {0x07, 0x07, 0x04, 0x02, 0x01, 0x00};
 static int8_t apollo_udma66_tim[] = {0x03, 0x03, 0x02, 0x01, 0x00};
 static int8_t apollo_udma33_tim[] = {0x03, 0x02, 0x00};
 static int8_t apollo_pio_set[] = {0x0a, 0x0a, 0x0a, 0x02, 0x02};

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.1 2001/05/14 22:32:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.2 2003/03/28 00:41:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -28,7 +28,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.1 2001/05/14 22:32:48 niklas Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.2 2003/03/28 00:41:27 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)
@@ -43,10 +43,8 @@ static char *rcsid = "$OpenBSD: src/sys/lib/libkern/strlcpy.c,v 1.1.6.1 2001/05/
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
-size_t strlcpy(dst, src, siz)
-	char *dst;
-	const char *src;
-	size_t siz;
+size_t
+strlcpy(char *dst, const char *src, size_t siz)
 {
 	register char *d = dst;
 	register const char *s = src;

@@ -1,4 +1,4 @@
-# $OpenBSD: src/sys/dev/pckbc/files.pckbc,v 1.2.4.1 2001/05/14 22:26:04 niklas Exp $
+# $OpenBSD: src/sys/dev/pckbc/files.pckbc,v 1.2.4.2 2003/03/28 00:38:26 niklas Exp $
 # $NetBSD: files.pckbc,v 1.6 1999/01/23 16:05:56 drochner Exp $
 # devices attached at pckbc, for use with wscons
 
@@ -8,7 +8,7 @@ file	dev/pckbc/pckbd.c		pckbd	needs-flag
 file	dev/pckbc/wskbdmap_mfii.c		pckbd
 
 device  pms: wsmousedev
-attach  pms at pckbc
+attach  pms at pckbc, gsckbc
 file    dev/pckbc/psm.c            pms
 
 device  pmsi: wsmousedev

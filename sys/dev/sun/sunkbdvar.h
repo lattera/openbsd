@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/sunkbdvar.h,v 1.1 2002/01/25 03:24:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/sunkbdvar.h,v 1.1.4.1 2003/03/28 00:38:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,8 +29,26 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
-extern const keysym_t sunkbd_keydesc_us[];
 extern const struct wscons_keydesc sunkbd_keydesctab[];
 extern struct wskbd_mapdata sunkbd_keymapdata;
+extern const struct wscons_keydesc sunkbd5_keydesctab[];
+extern struct wskbd_mapdata sunkbd5_keymapdata;
+
+/*
+ * Keyboard types 5 and 6 identify themselves as type 4, but might have
+ * different layouts. Fortunately they will have distinct layout codes, so
+ * here's a way to distinct types 5 and 6 from type 4.
+ *
+ * Note that ``Compact-1'' keyboards will be abusively reported as type 5.
+ */
+#define ISTYPE5(layout) ((layout) > 0x20)
+
+#define	MAXSUNLAYOUT	0x061
+extern const int sunkbd_layouts[MAXSUNLAYOUT];

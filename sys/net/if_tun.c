@@ -1,13 +1,33 @@
-/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.6 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.7 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
- * Copyright (c) 1988, Julian Onions <jpo@cs.nott.ac.uk>
+ * Copyright (c) 1988, Julian Onions <Julian.Onions@nexor.co.uk>
  * Nottingham University 1987.
+ * All rights reserved.
  *
- * This source may be freely distributed, however I would be interested
- * in any changes that are made.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
  * This driver takes packets off the IP i/f and hands them up to a
  * user process to have its wicked way with. This driver has its
  * roots in a similar driver written by Phil Cockcroft (formerly) at
@@ -109,6 +129,7 @@ int	tunioctl(dev_t, u_long, caddr_t, int, struct proc *);
 int	tunread(dev_t, struct uio *, int);
 int	tunwrite(dev_t, struct uio *, int);
 int	tunselect(dev_t, int, struct proc *);
+int	tunkqfilter(dev_t, struct knote *);
 
 
 static int tuninit(struct tun_softc *);
@@ -151,6 +172,7 @@ tunattach(n)
 		ifp->if_ibytes = 0;
 		ifp->if_obytes = 0;
 		if_attach(ifp);
+		if_alloc_sadl(ifp);
 #if NBPFILTER > 0
 		bpfattach(&ifp->if_bpf, ifp, DLT_LOOP, sizeof(u_int32_t));
 #endif
@@ -355,7 +377,6 @@ tun_output(ifp, m0, dst, rt)
 	struct tun_softc *tp = ifp->if_softc;
 	int		s, len, error;
 	u_int32_t	*af;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	TUNDEBUG(("%s: tun_output\n", ifp->if_xname));
 
@@ -366,12 +387,6 @@ tun_output(ifp, m0, dst, rt)
 		return EHOSTDOWN;
 	}
 
-	/*
-	 * if the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m0, dst->sa_family, &pktattr);
- 
 	M_PREPEND(m0, sizeof(*af), M_DONTWAIT);
 	af = mtod(m0, u_int32_t *);
 	*af = htonl(dst->sa_family);
@@ -383,7 +398,7 @@ tun_output(ifp, m0, dst, rt)
 
 	len = m0->m_pkthdr.len + sizeof(*af);
 	s = splimp();
-	IFQ_ENQUEUE(&ifp->if_snd, m0, &pktattr, error);
+	IFQ_ENQUEUE(&ifp->if_snd, m0, NULL, error);
 	if (error) {
 		splx(s);
 		ifp->if_collisions++;
@@ -742,6 +757,14 @@ tunselect(dev, rw, p)
 	splx(s);
 	TUNDEBUG(("%s: tunselect waiting\n", ifp->if_xname));
 	return 0;
+}
+
+/* Does not currently work */
+
+int
+tunkqfilter(dev_t dev,struct knote *kn)
+{
+	return (1);
 }
 
 #ifdef ALTQ

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/exphy.c,v 1.6.2.4 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/exphy.c,v 1.6.2.5 2003/03/28 00:38:19 niklas Exp $	*/
 /*	$NetBSD: exphy.c,v 1.23 2000/02/02 23:34:56 thorpej Exp $	*/
 
 /*-
@@ -109,7 +109,8 @@ exphymatch(parent, match, aux)
 	struct mii_attach_args *ma = aux;
 
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_BROADCOM &&
-	    MII_MODEL(ma->mii_id2) == MII_MODEL_BROADCOM_3C905C)
+	    (MII_MODEL(ma->mii_id2) == MII_MODEL_BROADCOM_3C905B ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_BROADCOM_3C905C))
 		return (10);
 
 	/*
@@ -140,6 +141,10 @@ exphyattach(parent, self, aux)
 	     MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_3COM) &&
 	    MII_MODEL(ma->mii_id2) == 0)
 		printf(": 3Com internal media interface\n");
+	else if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_BROADCOM &&
+	    MII_MODEL(ma->mii_id2) == MII_MODEL_BROADCOM_3C905B)
+		printf(": %s, rev. %d\n", MII_STR_BROADCOM_3C905B,
+		    MII_REV(ma->mii_id2));
 	else if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_BROADCOM &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_BROADCOM_3C905C)
 		printf(": %s, rev. %d\n", MII_STR_BROADCOM_3C905C,

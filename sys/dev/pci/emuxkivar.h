@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxkivar.h,v 1.2.2.2 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxkivar.h,v 1.2.2.3 2003/03/28 00:38:21 niklas Exp $	*/
 /*	$NetBSD: emuxkivar.h,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-
@@ -41,6 +41,7 @@
 #define _DEV_PCI_EMU10K1VAR_H_
 
 #define	EMU_PCI_CBIO		0x10
+#define	EMU_SUBSYS_APS		0x40011102
 
 /*
  * dma memory managment
@@ -98,7 +99,7 @@ struct emuxki_chanparms_fxsend {
 };
 
 struct emuxki_chanparms_pitch {
-	u_int16_t       intial;	/* 4 bits of octave, 12 bits of fractional
+	u_int16_t       initial;/* 4 bits of octave, 12 bits of fractional
 				 * octave */
 	u_int16_t       current;/* 0x4000 == unity pitch shift */
 	u_int16_t       target;	/* 0x4000 == unity pitch shift */
@@ -225,6 +226,10 @@ struct emuxki_stream {
 
 struct emuxki_softc {
 	struct device   sc_dev;
+	struct audio_device sc_audv;
+	enum {
+		EMUXKI_SBLIVE, EMUXKI_APS, EMUXKI_AUDIGY
+	} sc_type;
 
 	/* Autoconfig parameters */
 	bus_space_tag_t 	sc_iot;

@@ -1,9 +1,9 @@
-/*      $OpenBSD: src/sys/dev/ic/wdc.c,v 1.15.2.6 2002/03/28 12:09:41 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdc.c,v 1.15.2.7 2003/03/28 00:38:15 niklas Exp $     */
 /*	$NetBSD: wdc.c,v 1.68 1999/06/23 19:00:17 bouyer Exp $ */
 
 
 /*
- * Copyright (c) 1998 Manuel Bouyer.  All rights reserved.
+ * Copyright (c) 1998, 2001 Manuel Bouyer.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -119,7 +119,10 @@ void  wdc_kill_pending(struct channel_softc *);
 #ifdef WDCDEBUG
 int wdcdebug_mask = 0;
 int wdc_nxfer = 0;
-#define WDCDEBUG_PRINT(args, level)  if (wdcdebug_mask & (level)) printf args
+#define WDCDEBUG_PRINT(args, level) do {	\
+	if ((wdcdebug_mask & (level)) != 0)	\
+		printf args;			\
+} while (0)
 #else
 #define WDCDEBUG_PRINT(args, level)
 #endif
@@ -157,7 +160,7 @@ static int wdc_size = 16 * 1024;
 static int chp_idx = 1;
 
 void
-wdc_log(struct channel_softc *chp, int type, 
+wdc_log(struct channel_softc *chp, enum wdcevent_type type, 
     unsigned int size, char val[]) 
 {
 	unsigned int request_size;
@@ -895,21 +898,10 @@ wdcstart(chp)
 {
 	struct wdc_xfer *xfer;
 
-#ifdef WDC_DIAGNOSTIC
-	int spl1, spl2;
-
-	spl1 = splbio();
-	spl2 = splbio();
-	if (spl2 != spl1) {
-		printf("wdcstart: not at splbio()\n");
-		panic("wdcstart");
-	}
-	splx(spl2);
-	splx(spl1);
-#endif /* WDC_DIAGNOSTIC */
+	splassert(IPL_BIO);
 
 	/* is there a xfer ? */
-	if ((xfer = chp->ch_queue->sc_xfer.tqh_first) == NULL) {
+	if ((xfer = TAILQ_FIRST(&chp->ch_queue->sc_xfer)) == NULL) {
 		return;
 	}
 
@@ -921,7 +913,7 @@ wdcstart(chp)
 	}
 #ifdef DIAGNOSTIC
 	if ((chp->ch_flags & WDCF_IRQ_WAIT) != 0)
-		panic("wdcstart: channel waiting for irq\n");
+		panic("wdcstart: channel waiting for irq");
 #endif
 	if (chp->wdc->cap & WDC_CAPABILITY_HWLOCK)
 		if (!(chp->wdc->claim_hw)(chp, 0))
@@ -995,7 +987,7 @@ wdcintr(arg)
 	}
 
 	WDCDEBUG_PRINT(("wdcintr\n"), DEBUG_INTR);
-	xfer = chp->ch_queue->sc_xfer.tqh_first;
+	xfer = TAILQ_FIRST(&chp->ch_queue->sc_xfer);
 	chp->ch_flags &= ~WDCF_IRQ_WAIT;
         ret = xfer->c_intr(chp, xfer, 1);
 	if (ret == 0)	/* irq was not for us, still waiting for irq */
@@ -1058,7 +1050,7 @@ __wdcwait_reset(chp, drv_mask)
 	u_int8_t st0, st1;
 
 	/* wait for BSY to deassert */
-	for (timeout = 0; timeout < WDCNDELAY_RST;timeout++) {
+	for (timeout = 0; timeout < WDCNDELAY_RST; timeout++) {
 		wdc_set_drive(chp, 0);
 		delay(10);
 		st0 = CHP_READ_REG(chp, wdr_status);
@@ -1150,7 +1142,7 @@ wdc_wait_for_status(chp, mask, bits, timeout)
 #ifdef WDCNDELAY_DEBUG
 	/* After autoconfig, there should be no long delays. */
 	if (!cold && time > WDCNDELAY_DEBUG) {
-		struct wdc_xfer *xfer = chp->ch_queue->sc_xfer.tqh_first;
+		struct wdc_xfer *xfer = TAILQ_FIRST(&chp->ch_queue->sc_xfer);
 		if (xfer == NULL)
 			printf("%s channel %d: warning: busy-wait took %dus\n",
 			    chp->wdc->sc_dev.dv_xname, chp->channel,
@@ -1246,12 +1238,49 @@ wdc_probe_caps(drvp, params)
 		}
 	} else 
 #endif
-	/* An ATAPI device is at last PIO mode 3 */
+	/* Use PIO mode 3 as a default value for ATAPI devices */
 	if (drvp->drive_flags & DRIVE_ATAPI)
 		drvp->PIO_mode = 3;
 
 	WDCDEBUG_PRINT(("wdc_probe_caps: wdc_cap %d cf_flags %d\n", 
 		    wdc->cap, cf_flags), DEBUG_PROBE);
+
+	valid_mode_found = 0;
+
+	WDCDEBUG_PRINT(("%s: atap_oldpiotiming=%d\n", __func__,
+	    params->atap_oldpiotiming), DEBUG_PROBE);
+	/*
+	 * ATA-4 compliant devices contain PIO mode
+	 * number in atap_oldpiotiming.
+	 */
+	if (params->atap_oldpiotiming <= 2) {
+		drvp->PIO_cap = params->atap_oldpiotiming;
+		valid_mode_found = 1;
+		drvp->drive_flags |= DRIVE_MODE;
+	} else if (params->atap_oldpiotiming > 180 &&
+	    params->atap_oldpiotiming <= 600) {
+		/*
+		 * ATA-2 compliant devices contain cycle
+		 * time in atap_oldpiotiming.
+		 * A device with a cycle time of 180ns
+		 * or less is at least PIO mode 3 and
+		 * should be reporting that in
+		 * atap_piomode_supp, so ignore it here.
+		 * A cycle time greater than 600ns seems
+		 * to be invalid.
+		 */
+		if (params->atap_oldpiotiming <= 240) {
+			drvp->PIO_cap = 2;
+		} else if (params->atap_oldpiotiming <= 480) {
+			drvp->PIO_cap = 1;
+		} else {
+			drvp->PIO_cap = 0;
+		}
+		valid_mode_found = 1;
+		drvp->drive_flags |= DRIVE_MODE;
+	}
+	if (valid_mode_found)
+		drvp->PIO_mode = drvp->PIO_cap;
 
 	/*
 	 * It's not in the specs, but it seems that some drive 
@@ -1259,7 +1288,6 @@ wdc_probe_caps(drvp, params)
 	 */
 	if (params->atap_extensions != 0xffff &&
 	    (params->atap_extensions & WDC_EXT_MODES)) {
-		valid_mode_found = 0;
 		/*
 		 * XXX some drives report something wrong here (they claim to
 		 * support PIO mode 8 !). As mode is coded on 3 bits in
@@ -1610,7 +1638,7 @@ wdc_exec_command(drvp, wdc_c)
 #ifdef DIAGNOSTIC
 	if ((wdc_c->flags & AT_POLL) != 0 &&
 	    (wdc_c->flags & AT_DONE) == 0)
-		panic("wdc_exec_command: polled command not done\n");
+		panic("wdc_exec_command: polled command not done");
 #endif
 	if (wdc_c->flags & AT_DONE) {
 		ret = WDC_COMPLETE;
@@ -1660,26 +1688,49 @@ __wdccommand_start(chp, xfer)
 	if (wdc_c->r_command != ATAPI_SOFT_RESET) {
 		if (wdcwait(chp, wdc_c->r_st_bmask | WDCS_DRQ, wdc_c->r_st_bmask,
 		    wdc_c->timeout) != 0) {
-			wdc_c->flags |= AT_TIMEOU;
-			__wdccommand_done(chp, xfer);
-			return;
+			goto timeout;
 		}
 	} else
 		DELAY(10);
 
 	wdccommand(chp, drive, wdc_c->r_command, wdc_c->r_cyl, wdc_c->r_head,
 	    wdc_c->r_sector, wdc_c->r_count, wdc_c->r_precomp);
+
+	if ((wdc_c->flags & AT_WRITE) == AT_WRITE) {
+		delay(10);
+		if (wait_for_unbusy(chp, wdc_c->timeout) != 0)
+			goto timeout;
+		
+		if ((chp->ch_status & (WDCS_DRQ | WDCS_ERR)) == WDCS_ERR) {
+			__wdccommand_done(chp, xfer);
+			return;
+		}
+
+		if (wait_for_drq(chp, wdc_c->timeout) != 0)
+			goto timeout;
+
+		wdc_output_bytes(&chp->ch_drive[drive], 
+		    wdc_c->data, wdc_c->bcount);
+	}
+
 	if ((wdc_c->flags & AT_POLL) == 0) {
 		chp->ch_flags |= WDCF_IRQ_WAIT; /* wait for interrupt */
 		timeout_add(&chp->ch_timo, wdc_c->timeout / 1000 * hz);
 		return;
 	}
+
 	/*
 	 * Polled command. Wait for drive ready or drq. Done in intr().
 	 * Wait for at last 400ns for status bit to be valid.
 	 */
 	delay(10);
 	__wdccommand_intr(chp, xfer, 0);
+	return;
+
+ timeout:
+	wdc_c->flags |= AT_TIMEOU;
+	__wdccommand_done(chp, xfer);
+	return;
 }
 
 int
@@ -1706,10 +1757,10 @@ __wdccommand_intr(chp, xfer, irq)
 	}
         if (chp->wdc->cap & WDC_CAPABILITY_IRQACK)
                 chp->wdc->irqack(chp);
-	if (wdc_c->flags & AT_READ) {
+
+	if ((wdc_c->flags & AT_READ) && (chp->ch_status & WDCS_DRQ)) {
 		wdc_input_bytes(drvp, data, bcount);
-	} else if (wdc_c->flags & AT_WRITE) {
-		wdc_output_bytes(drvp, data, bcount);
+		/* Should we wait for device to indicate idle? */
 	}
 	__wdccommand_done(chp, xfer);
 	WDCDEBUG_PRINT(("__wdccommand_intr returned\n"), DEBUG_INTR);
@@ -1797,6 +1848,43 @@ wdccommand(chp, drive, command, cylin, head, sector, count, precomp)
 }
 
 /*
+ * Send a 48-bit addressing command. The drive should be ready.
+ * Assumes interrupts are blocked.
+ */
+void
+wdccommandext(chp, drive, command, blkno, count)
+	struct channel_softc *chp;
+	u_int8_t drive;
+	u_int8_t command;
+	u_int64_t blkno;
+	u_int16_t count;
+{
+	WDCDEBUG_PRINT(("wdccommandext %s:%d:%d: command=0x%x blkno=%llu "
+	    "count=%d\n", chp->wdc->sc_dev.dv_xname,
+	    chp->channel, drive, command, blkno, count),
+	    DEBUG_FUNCS);
+	WDC_LOG_ATA_CMDEXT(chp, blkno >> 40, blkno >> 16, blkno >> 32,
+	    blkno >> 8, blkno >> 24, blkno, count >> 8, count, command);
+
+	/* Select drive and LBA mode. */
+	CHP_WRITE_REG(chp, wdr_sdh, (drive << 4) | WDSD_LBA);
+
+	/* Load parameters. All registers are two byte deep FIFOs. */
+	CHP_WRITE_REG(chp, wdr_lba_hi, blkno >> 40);
+	CHP_WRITE_REG(chp, wdr_lba_hi, blkno >> 16);
+	CHP_WRITE_REG(chp, wdr_lba_mi, blkno >> 32);
+	CHP_WRITE_REG(chp, wdr_lba_mi, blkno >> 8);
+	CHP_WRITE_REG(chp, wdr_lba_lo, blkno >> 24);
+	CHP_WRITE_REG(chp, wdr_lba_lo, blkno);
+	CHP_WRITE_REG(chp, wdr_seccnt, count >> 8);
+	CHP_WRITE_REG(chp, wdr_seccnt, count);
+
+	/* Send command. */
+	CHP_WRITE_REG(chp, wdr_command, command);
+	return;
+}
+
+/*
  * Simplified version of wdccommand().  Unbusy/ready/drq must be
  * tested by the caller.
  */
@@ -1836,7 +1924,7 @@ wdc_exec_xfer(chp, xfer)
 	 * to complete, we're going to reboot soon anyway.
 	 */
 	if ((xfer->c_flags & C_POLL) != 0 &&
-	    chp->ch_queue->sc_xfer.tqh_first != NULL) {
+	    !TAILQ_EMPTY(&chp->ch_queue->sc_xfer)) {
 		TAILQ_INIT(&chp->ch_queue->sc_xfer);
 	}
 	/* insert at the end of command list */
@@ -1902,7 +1990,7 @@ __wdcerror(chp, msg)
 	struct channel_softc *chp;
 	char *msg;
 {
-	struct wdc_xfer *xfer = chp->ch_queue->sc_xfer.tqh_first;
+	struct wdc_xfer *xfer = TAILQ_FIRST(&chp->ch_queue->sc_xfer);
 	if (xfer == NULL)
 		printf("%s:%d: %s\n", chp->wdc->sc_dev.dv_xname, chp->channel,
 		    msg);
@@ -1995,7 +2083,7 @@ wdc_ioctl_find(bp)
 	int s;
 
 	s = splbio();
-	for (wi = wi_head.lh_first; wi != 0; wi = wi->wi_list.le_next)
+	LIST_FOREACH(wi, &wi_head, wi_list)
 		if (bp == &wi->wi_bp)
 			break;
 	splx(s);
@@ -2031,6 +2119,7 @@ wdc_ioctl_strategy(bp)
 	struct wdc_ioctl *wi;
 	struct wdc_command wdc_c;
 	int error = 0;
+	int s;
 
 	wi = wdc_ioctl_find(bp);
 	if (wi == NULL) {
@@ -2115,12 +2204,16 @@ wdc_ioctl_strategy(bp)
 	}
 
 	bp->b_error = 0;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 	return;
 bad:
 	bp->b_flags |= B_ERROR;
 	bp->b_error = error;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 int
@@ -2135,7 +2228,7 @@ wdc_ioctl(drvp, xfer, addr, flag, p)
 
 	switch (xfer) {
 	case ATAIOGETTRACE: {
-		struct atagettrace *agt = (struct atagettrace *)addr;
+		atagettrace_t *agt = (atagettrace_t *)addr;
 		unsigned int size = 0;
 		char *log_to_copy;
 		

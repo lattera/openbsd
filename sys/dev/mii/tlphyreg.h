@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/dev/mii/tlphyreg.h,v 1.1 1998/09/10 17:17:34 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/tlphyreg.h,v 1.1.8.1 2003/03/28 00:38:20 niklas Exp $	*/
 /*	$NetBSD: tlphyreg.h,v 1.1 1998/08/10 23:59:58 thorpej Exp $	*/
- 
+
 /*
  * Copyright (c) 1997 Manuel Bouyer.  All rights reserved.
  *

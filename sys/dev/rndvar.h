@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rndvar.h,v 1.11.12.4 2002/03/28 15:03:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/rndvar.h,v 1.11.12.5 2003/03/28 00:38:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996,2000 Michael Shalayeff.
@@ -92,7 +92,6 @@ extern struct rndstats rndstats;
 void enqueue_randomness(int, int);
 void get_random_bytes(void *, size_t);
 u_int32_t arc4random(void);
-int arc4random_8(void);
 
 #endif /* _KERNEL */
 

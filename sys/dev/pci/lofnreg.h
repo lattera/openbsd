@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/pci/lofnreg.h,v 1.10.2.1 2001/10/31 03:22:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofnreg.h,v 1.10.2.2 2003/03/28 00:38:23 niklas Exp $	*/
 
 /*
- * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
+ * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #define	LOFN_BAR0		0x0010		/* base address register */
@@ -149,3 +154,10 @@
      (((rd) & OP_R_MASK) << OP_RD_SHIFT) |		\
      (((ra) & OP_R_MASK) << OP_RA_SHIFT) |		\
      ((len) & OP_LEN_MASK))
+
+/* registers are 1024 bits wide, but must be addressed by word. */
+union lofn_reg {
+	u_int8_t b[128];
+	u_int32_t w[32];
+};
+

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.2.1 2002/03/06 02:11:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.2.2 2003/03/28 00:38:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -31,21 +31,27 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	From: if_wireg.h,v 1.5 1999/07/20 20:03:42 wpaul Exp $
+ *	From: if_wireg.h,v 1.8.2.2 2001/08/25 00:48:25 nsayer Exp $
  */
+
+#include <dev/ic/if_wi_hostap.h>
 
 struct wi_softc	{
 #ifndef __FreeBSD__
 	struct device		sc_dev;
 #endif	/* !__FreeBSD__ */
-	struct arpcom		arpcom;
+	struct arpcom		sc_arpcom;
 	struct ifmedia		sc_media;
 	bus_space_handle_t	wi_bhandle;
 	bus_space_tag_t		wi_btag;
+	bus_space_handle_t	wi_lhandle;
+	bus_space_tag_t		wi_ltag;
+	bus_size_t		wi_cor_offset;
 	int			wi_tx_data_id;
 	int			wi_tx_mgmt_id;
-	int			wi_gone;
+	int			wi_flags;
 	int			wi_if_flags;
+	u_int16_t		wi_procframe;
 	u_int16_t		wi_ptype;
 	u_int16_t		wi_portnum;
 	u_int16_t		wi_max_data_len;
@@ -59,23 +65,69 @@ struct wi_softc	{
 	u_int16_t		wi_max_sleep;
 	u_int16_t		wi_authtype;
 	u_int16_t		wi_roaming;
+	u_int16_t		wi_supprates;
+	u_int16_t		wi_diversity;
+
+	u_int8_t		wi_txbuf[1596];
+	u_int8_t		wi_scanbuf[1596];
+
+	u_int8_t		wi_scanbuf_len;
 
 	struct ieee80211_nwid	wi_node_name;
 	struct ieee80211_nwid	wi_net_name;
 	struct ieee80211_nwid	wi_ibss_name;
 
-	u_int8_t		wi_txbuf[1596];
-	int			wi_has_wep;
 	int			wi_use_wep;
+	int			wi_crypto_algorithm;
 	int			wi_tx_key;
 	struct wi_ltv_keys	wi_keys;
 	struct wi_counters	wi_stats;
 	void			*sc_ih;
 	struct timeout		sc_timo;
-	int			sc_prism2;
-	int			sc_prism2_ver;
+	int			sc_firmware_type;
+	int			sc_sta_firmware_ver;
 	int			sc_pci;
+	struct wihap_info	wi_hostap_info;
+	u_int32_t		wi_icv;
+	int			wi_icv_flag;
+	int			wi_ibss_port;
+
+	struct {
+		u_int16_t		wi_sleep;
+		u_int16_t		wi_delaysupp;
+		u_int16_t		wi_txsupp;
+		u_int16_t		wi_monitor;
+		u_int16_t		wi_ledtest;
+		u_int16_t		wi_ledtest_param0;
+		u_int16_t		wi_ledtest_param1;
+		u_int16_t		wi_conttx;
+		u_int16_t		wi_conttx_param0;
+		u_int16_t		wi_contrx;
+		u_int16_t		wi_sigstate;
+		u_int16_t		wi_sigstate_param0;
+		u_int16_t		wi_confbits;
+		u_int16_t		wi_confbits_param0;
+	} wi_debug;
 };
+
+/* Values for wi_flags. */
+#define WI_FLAGS_ATTACHED		0x0001
+#define WI_FLAGS_INITIALIZED		0x0002
+#define WI_FLAGS_HAS_WEP		0x0004
+#define WI_FLAGS_HAS_IBSS		0x0008
+#define WI_FLAGS_HAS_CREATE_IBSS	0x0010
+#define WI_FLAGS_HAS_MOR		0x0020
+#define WI_FLAGS_HAS_ROAMING		0x0040
+#define WI_FLAGS_HAS_DIVERSITY		0x0080
+#define WI_FLAGS_HAS_HOSTAP		0x0100
+#define WI_FLAGS_BUS_PCMCIA		0x0200
 
 #define WI_PRT_FMT "%s"
 #define WI_PRT_ARG(sc)	(sc)->sc_dev.dv_xname
+
+int	wi_attach(struct wi_softc *);
+int	wi_intr(void *);
+void	wi_init(struct wi_softc *);
+void	wi_stop(struct wi_softc *);
+void	wi_cor_reset(struct wi_softc *);
+int	wi_mgmt_xmit(struct wi_softc *, caddr_t, int);

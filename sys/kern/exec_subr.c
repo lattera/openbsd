@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7.2.6 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7.2.7 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -54,7 +54,7 @@
  */
 
 void
-new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
+new_vmcmd(evsp, proc, len, addr, vp, offset, prot, flags)
 	struct	exec_vmcmd_set *evsp;
 	int	(*proc)(struct proc * p, struct exec_vmcmd *);
 	u_long	len;
@@ -62,6 +62,7 @@ new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
 	struct	vnode *vp;
 	u_long	offset;
 	u_int	prot;
+	int	flags;
 {
 	struct exec_vmcmd    *vcp;
 
@@ -75,6 +76,7 @@ new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
 		vref(vp);
 	vcp->ev_offset = offset;
 	vcp->ev_prot = prot;
+	vcp->ev_flags = flags;
 }
 #endif /* DEBUG */
 
@@ -105,8 +107,7 @@ vmcmdset_extend(evsp)
 }
 
 void
-kill_vmcmds(evsp)
-	struct	exec_vmcmd_set *evsp;
+kill_vmcmds(struct exec_vmcmd_set *evsp)
 {
 	struct exec_vmcmd *vcp;
 	int i;
@@ -127,6 +128,36 @@ kill_vmcmds(evsp)
 	evsp->evs_cnt = EXEC_DEFAULT_VMCMD_SETSIZE;
 }
 
+int
+exec_process_vmcmds(struct proc *p, struct exec_package *epp)
+{
+	struct exec_vmcmd *base_vc = NULL;
+	int error = 0;
+	int i;
+
+	for (i = 0; i < epp->ep_vmcmds.evs_used && !error; i++) {
+		struct exec_vmcmd *vcp;
+
+		vcp = &epp->ep_vmcmds.evs_cmds[i];
+
+		if (vcp->ev_flags & VMCMD_RELATIVE) {
+#ifdef DIAGNOSTIC
+			if (base_vc == NULL)
+				panic("exec_process_vmcmds: RELATIVE no base");
+#endif
+			vcp->ev_addr += base_vc->ev_addr;
+		}
+		error = (*vcp->ev_proc)(p, vcp);
+		if (vcp->ev_flags & VMCMD_BASE) {
+			base_vc = vcp;
+		}
+	}
+
+	kill_vmcmds(&epp->ep_vmcmds);
+
+	return (error);
+}
+
 /*
  * vmcmd_map_pagedvn():
  *	handle vmcmd which specifies that a vnode should be mmap'd.
@@ -145,7 +176,7 @@ vmcmd_map_pagedvn(p, cmd)
 	 * call this routine.
 	 */
 	struct uvm_object *uobj;
-	int retval;
+	int error;
 
 	/*
 	 * map the vnode in using uvm_map.
@@ -172,7 +203,7 @@ vmcmd_map_pagedvn(p, cmd)
 	 * do the map
 	 */
 
-	retval = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr, cmd->ev_len,
+	error = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr, cmd->ev_len,
 	    uobj, cmd->ev_offset, 0,
 	    UVM_MAPFLAG(cmd->ev_prot, VM_PROT_ALL, UVM_INH_COPY,
 	    UVM_ADV_NORMAL, UVM_FLAG_COPYONW|UVM_FLAG_FIXED));
@@ -181,15 +212,14 @@ vmcmd_map_pagedvn(p, cmd)
 	 * check for error
 	 */
 
-	if (retval == KERN_SUCCESS)
-		return(0);
+	if (error) {
+		/*
+		 * error: detach from object
+		 */
+		uobj->pgops->pgo_detach(uobj);
+	}
 
-	/*
-	 * error: detach from object
-	 */
-
-	uobj->pgops->pgo_detach(uobj);
-	return(EINVAL);
+	return (error);
 }
 
 /*
@@ -287,11 +317,12 @@ exec_setup_stack(p, epp)
 {
 
 #ifdef MACHINE_STACK_GROWS_UP
-	epp->ep_maxsaddr = USRSTACK + MAXSSIZ;
+	epp->ep_maxsaddr = USRSTACK;
+	epp->ep_minsaddr = USRSTACK + MAXSSIZ;
 #else
 	epp->ep_maxsaddr = USRSTACK - MAXSSIZ;
-#endif
 	epp->ep_minsaddr = USRSTACK;
+#endif
 	epp->ep_ssize = round_page(p->p_rlimit[RLIMIT_STACK].rlim_cur);
 
 	/*
@@ -307,18 +338,18 @@ exec_setup_stack(p, epp)
 	 */
 #ifdef MACHINE_STACK_GROWS_UP
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
-	    (epp->ep_maxsaddr - (epp->ep_minsaddr + epp->ep_ssize)),
-	    epp->ep_minsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
+	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
+	    epp->ep_maxsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
-	    epp->ep_minsaddr, NULLVP, 0,
-	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+	    epp->ep_maxsaddr, NULLVP, 0,
+	    VM_PROT_READ|VM_PROT_WRITE);
 #else
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
 	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
 	    epp->ep_maxsaddr, NULLVP, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
 	    (epp->ep_minsaddr - epp->ep_ssize), NULLVP, 0,
-	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+	    VM_PROT_READ|VM_PROT_WRITE);
 #endif
 
 	return 0;

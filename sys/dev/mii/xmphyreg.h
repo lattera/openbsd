@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/mii/xmphyreg.h,v 1.1.6.4 2003/03/28 00:38:20 niklas Exp $	*/
 /*
  * Copyright (c) 2000
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.

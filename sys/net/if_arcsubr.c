@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.3 2002/03/28 14:57:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.4 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_arcsubr.c,v 1.8 1996/05/07 02:40:29 thorpej Exp $	*/
 
 /*
@@ -104,10 +104,9 @@ arc_output(ifp, m0, dst, rt0)
 	int			s, error, newencoding, len;
 	u_int8_t		atype, adst;
 	int			tfrags, sflag, fsflag, rsflag;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING)) 
-		return(ENETDOWN); /* m, m1 aren't initialized yet */
+		return (ENETDOWN); /* m, m1 aren't initialized yet */
 
 	error = newencoding = 0;
 	ac = (struct arccom *)ifp;
@@ -136,12 +135,6 @@ arc_output(ifp, m0, dst, rt0)
 			    time.tv_sec < rt->rt_rmx.rmx_expire)
 				senderr(rt == rt0 ? EHOSTDOWN : EHOSTUNREACH);
 	}
-
-	/*
-	 * if the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
 
 	switch (dst->sa_family) {
 #ifdef INET
@@ -222,7 +215,7 @@ arc_output(ifp, m0, dst, rt0)
 			 * Queue message on interface, and start output if 
 			 * interface not yet active.
 			 */
-			IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+			IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 			if (error) {
 				/* mbuf is already freed */
 				splx(s);
@@ -427,7 +420,7 @@ arc_defrag(ifp, m)
 			/* is it the last one? */
 			if (af->af_lastseen > af->af_maxflag) {
 				af->af_packet = NULL;
-				return(m1);
+				return (m1);
 			} else
 				return NULL;
 		}
@@ -551,8 +544,6 @@ void
 arc_ifattach(ifp)
 	register struct ifnet *ifp;
 {
-	register struct ifaddr *ifa;
-	register struct sockaddr_dl *sdl;
 	register struct arccom *ac;
 
 	ifp->if_type = IFT_ARCNET;
@@ -571,14 +562,7 @@ arc_ifattach(ifp)
 		log(LOG_ERR,"%s: link address 0 reserved for broadcasts.  Please change it and ifconfig %s down up\n",
 		   ifp->if_xname, ifp->if_xname); 
 	}
-	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
-		if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
-		    sdl->sdl_family == AF_LINK) {
-			sdl->sdl_type = IFT_ARCNET;
-			sdl->sdl_alen = ifp->if_addrlen;
-			bcopy((caddr_t)&((struct arccom *)ifp)->ac_anaddr,
-			      LLADDR(sdl), ifp->if_addrlen);
-			break;
-		}
-	}
+	if_alloc_sadl(ifp);
+	bcopy((caddr_t)&((struct arccom *)ifp)->ac_anaddr,
+	      LLADDR(ifp->if_sadl), ifp->if_addrlen);
 }

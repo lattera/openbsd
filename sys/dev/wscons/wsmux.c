@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.4.3 2002/03/28 15:09:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.4.4 2003/03/28 00:38:33 niklas Exp $	*/
 /*	$NetBSD: wsmux.c,v 1.9 2000/05/28 10:33:14 takemura Exp $	*/
 
 /*
@@ -92,8 +92,6 @@ int wsmux_set_display(struct device *, struct wsmux_softc *);
 int wsmux_isset_display(struct device *);
 
 #if NWSMUX > 0
-cdev_decl(wsmux);
-
 void wsmuxattach(int);
 
 struct wsmuxops wsmux_muxops = {
@@ -118,7 +116,7 @@ wsmux_setmax(n)
 			wsmuxdevs_tmp = malloc(nwsmux * sizeof(*wsmuxdevs_tmp),
 			    M_DEVBUF, M_NOWAIT);
 			if (wsmuxdevs_tmp == 0)
-				panic("wsmux_setmax: no mem\n");
+				panic("wsmux_setmax: no mem");
 			for (i = 0; i < nwsmux; i++)
 				wsmuxdevs_tmp[i] = wsmuxdevs[i];
 			free(wsmuxdevs, M_DEVBUF);
@@ -127,7 +125,7 @@ wsmux_setmax(n)
 		wsmuxdevs = malloc((n + 1) * sizeof(*wsmuxdevs), 
 		    M_DEVBUF, M_NOWAIT);
 		if (wsmuxdevs == NULL)
-			panic("wsmux_setmax: no memory\n");
+			panic("wsmux_setmax: no memory");
 		memset(wsmuxdevs, 0, (n + 1) * sizeof(*wsmuxdevs));
 		if (wsmuxdevs_tmp != NULL) {
 			for (i = 0; i < nwsmux; i++)

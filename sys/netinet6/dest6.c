@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/dest6.c,v 1.3.2.1 2001/05/14 22:40:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/dest6.c,v 1.3.2.2 2003/03/28 00:41:29 niklas Exp $	*/
 /*	$KAME: dest6.c,v 1.25 2001/02/22 01:39:16 itojun Exp $	*/
 
 /*
@@ -102,9 +102,10 @@ dest6_input(mp, offp, proto)
 			optlen = *(opt + 1) + 2;
 			break;
 		default:		/* unknown option */
-			if ((optlen = ip6_unknown_opt(opt, m,
-						      opt-mtod(m, u_int8_t *))) == -1)
-				return(IPPROTO_DONE);
+			optlen = ip6_unknown_opt(opt, m,
+			    opt - mtod(m, u_int8_t *));
+			if (optlen == -1)
+				return (IPPROTO_DONE);
 			optlen += 2;
 			break;
 		}

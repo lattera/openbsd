@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsmoused.h,v 1.1.4.2 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsmoused.h,v 1.1.4.3 2003/03/28 00:38:33 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Baptiste Marchand, Julien Montagne and Jerome Verdon
@@ -73,6 +73,9 @@ void mouse_paste(void);
 
 void mouse_zaxis(int);
 void allocate_copybuffer(struct wsdisplay_softc *);
+void mouse_remove(struct wsdisplay_softc *);
+void wsmoused_release(struct wsdisplay_softc *);
+void wsmoused_wakeup(struct wsdisplay_softc *);
 
 void sysbeep(int, int);
 

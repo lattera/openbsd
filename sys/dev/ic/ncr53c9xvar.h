@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr53c9xvar.h,v 1.5.8.3 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr53c9xvar.h,v 1.5.8.4 2003/03/28 00:38:14 niklas Exp $	*/
 /*	$NetBSD: ncr53c9xvar.h,v 1.13 1998/05/26 23:17:34 thorpej Exp $	*/
 
 /*-
@@ -270,7 +270,7 @@ struct ncr53c9x_softc {
 
 	struct evcnt sc_intrcnt;		/* intr count */
 	struct timeout sc_watchdog;		/* periodic timer */
-	struct scsi_link sc_link;		/* scsi lint struct */
+	struct scsi_link sc_link;		/* scsi link struct */
 
 	struct ncr53c9x_glue *sc_glue;		/* glue to MD code */
 

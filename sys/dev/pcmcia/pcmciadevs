@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs,v 1.32.2.6 2002/03/06 02:11:47 niklas Exp $
+	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs,v 1.32.2.7 2003/03/28 00:38:26 niklas Exp $
 /* $NetBSD: pcmciadevs,v 1.13 1998/08/17 23:10:12 thorpej Exp $ */
 
 /*
@@ -37,6 +37,7 @@
  */
 
 vendor FUJITSU			0x0004	Fujitsu
+vendor NETGEAR2			0x000b	Netgear
 vendor PANASONIC		0x0032	Matsushita Electric Industrial Co.
 vendor SANDISK			0x0045	Sandisk
 vendor NEWMEDIA			0x0057	NewMedia
@@ -63,6 +64,7 @@ vendor NETGEAR			0x0149	Netgear
 vendor SIMPLETECH		0x014d	Simple Technology
 vendor SYMBOL2			0x014d	Symbol
 vendor LUCENT			0x0156	Lucent
+vendor GEMPLUS			0x0157	Gemplus
 vendor AIRONET			0x015f	Aironet Wireless Communications
 vendor ERICSSON			0x016b	Ericsson
 vendor PSION			0x016c	Psion
@@ -72,6 +74,7 @@ vendor DAYNA			0x0194	Dayna
 vendor RAYTHEON			0x01a6	Raytheon
 vendor BAY			0x01eb	Bay Networks
 vendor IODATA			0x01bf	I-O DATA
+vendor BELKIN			0x01bf	Belkin
 vendor FARALLON			0x0200	Farallon Communications
 vendor TELECOMDEVICE		0x021b	Telecom Device
 vendor NOKIA			0x023d	Nokia Communications
@@ -83,8 +86,10 @@ vendor IODATA2			0x028a	I-O DATA
 vendor NWN			0x0602	No Wires Needed
 vendor BREEZECOM		0x0a02	BreezeCOM
 vendor NEWMEDIA2		0x10cd	NewMedia
+vendor ACTIONTEC		0x1668	ACTIONTEC
 vendor LASAT			0x3401	Lasat
 vendor LEXARMEDIA		0x4e01	Lexar Media
+vendor AIRVAST			0x50c2	AirVast Technology
 vendor ARCHOS			0x5241	Archos
 vendor DUAL			0x890f	Dual
 vendor COMPEX			0x8a01	Compex
@@ -104,6 +109,7 @@ vendor ELSA			0xd601	Elsa
  */
 /* 3COM */
 product 3COM 3CRWE737A		0x0001 3Com AirConnect Wireless LAN
+product 3COM 3CRWE777A		0x0777 3Com AirConnect Wireless LAN
 product 3COM 3CXM056BNW		0x002f 3Com/NoteWorthy 3CXM056-BNW
 product 3COM 3CXEM556		0x0035 3Com 3CXEM556
 product 3COM 3CXEM556B		0x003d 3Com 3CXEM556B-INT
@@ -114,6 +120,9 @@ product 3COM 3C574		0x0574 3Com 3c574
 product 3COM 3C1		0x0cf1 3Com 3C1
 product 3COM 3CRWE62092A	0x2092 3Com Wireless LAN
 
+/* ACTIONTEC */
+product ACTIONTEC HWC01170	0x101  ACTIONTEC Wireless LAN PC CARD
+
 /* Adaptec */
 product ADAPTEC APA1460_1	0x0001 Adaptec APA-1460/A
 product ADAPTEC APA1460_2	0x0002 Adaptec APA-1460/B
@@ -122,6 +131,9 @@ product ADAPTEC APA1460_2	0x0002 Adaptec APA-1460/B
 product AIRONET PC4500		0x0005 Aironet PC4500
 product AIRONET PC4800		0x0007 Aironet PC4800
 product AIRONET 350		0x000a Aironet 350
+
+/* AirVast */
+product AIRVAST WN_100		0x7300 AirVast WN-100 
 
 /* Allied Telesis K.K. */
 product ALLIEDTELESIS LA_PCM	0x0002 Allied Telesis LA-PCM
@@ -133,6 +145,9 @@ product	ARCHOS ARC_ATAPI	0x0043 MiniCD
 product BAY STACK_650		0x0804 BayStack 650
 product BAY SURFER_PRO		0x0806 AirSurfer Pro
 product BAY STACK_660		0x0807 BayStack 660
+
+/* Belkin */
+product BELKIN F5D5020		0x2328 F5D5020
 
 /* BreezeCOM */
 product BREEZECOM BREEZENET	0x0102 BreezeCOM BreezeNET
@@ -166,6 +181,7 @@ product DUAL NE2000		0x0100 Dual NE2000
 product ELSA MC2_IEEE		0x0001 AirLancer MC-2 IEEE
 product ELSA XI300_IEEE		0x0002 XI300 Wireless LAN
 product ELSA XI800_IEEE		0x0004 XI800 CF Wireless LAN
+product ELSA XI325_IEEE		0x0005 XI325 Wireless LAN
 
 /* EMTAC */
 product EMTAC WLAN		0x0002 EMTAC A2424i 11Mbps WLAN Card
@@ -177,6 +193,9 @@ product FARALLON SKYLINE	0x0a01 SkyLINE Wireless
 product FUJITSU SCSI600		0x0401 Fujitsu 600
 product FUJITSU LA10S		0x1003 Fujitsu CF Ethernet
 product FUJITSU LA501		0x2000 Fujitsu Towa LA501
+
+/* Gemplus */
+product GEMPLUS GPR400		0x3004 GPR400 Smartcard Reader
  
 /* Greycell */
 product GREYCELL GCS2000	0x0201 Grey Cell GCS2000 Gold II Ethernet
@@ -215,6 +234,7 @@ product LINKSYS ETHERFAST	0x0230 Linksys Etherfast 10/100 Ethernet
 product LINKSYS ECARD_1		0x0265 Linksys EthernetCard or D-Link DE-650
 product LINKSYS COMBO_ECARD	0xc1ab Linksys Combo EthernetCard
 product LINKSYS2 IWN		0x1612 Instant Wireless Network
+product LINKSYS2 IWN2		0x1613 Instant Wireless Network
 
 /* Lucent WaveLAN/IEEE */
 product LUCENT WAVELAN_IEEE	0x0002 WaveLAN/IEEE
@@ -250,8 +270,10 @@ product NEWMEDIA2 BUSTOASTER	0x0001 NewMedia BusToaster
 /* Netgear */
 product NETGEAR FA410TXC	0x4530 Netgear FA410TXC
 product NETGEAR FA411		0x0411 Netgear FA411
+product NETGEAR2 MA401RA	0x7300 Netgear MA401RA
 
 /* Nokia */
+product NOKIA C110_WLAN		0x1110 Nokia C110/C111
 product NOKIA C020_WLAN		0x20c0 Nokia C020
 
 /* No Wires Needed */
@@ -266,6 +288,7 @@ product PANASONIC KME		0x2604 Panasonic CD-R/RW Interface
 /* Proxim */
 product PROXIM ROAMABOUT_2400FH	0x1058 Digital RoamAbout 2400FH
 product PROXIM RANGELAN2_7401	0x1158 Proxim RangeLAN2 7401
+product PROXIM RANGELANDS_8430	0x8000 Proxim RangeLAN-DS 8430 
 
 /* Ericsson */
 product	ERICSSON WIRELESSLAN	0x0001 DSSS Wireless LAN PC Card
@@ -306,7 +329,7 @@ product SMC EZCARD		0x8022 SMC EZCard
 
 /* Symbol */
 product SYMBOL  SPECTRUM24	0x0801 Spectrum24 WLAN IEEE 802.11 FHSS
-product SYMBOL2 LA4100		0x0001 Spectrum24 LA4100 Series WLAN
+product SYMBOL	LA4100		0x0001 Spectrum24 LA4100 Series WLAN
 
 /* Telecom Device */
 product TELECOMDEVICE TCD_HPC100	0x0202 Telecom Device TCD-HPC100
@@ -334,6 +357,7 @@ vendor ACCTON			-1	ACCTON
 vendor ADDTRON			-1	Addtron
 vendor AMBICOM			-1	AmbiCom
 vendor AMD			-1	AMD
+vendor AROWANA			-1	Arowana
 vendor BILLIONTON		-1	Billionton Systems Inc.
 vendor CNET			-1	CNet
 vendor DIGITAL			-1	Digital
@@ -342,6 +366,7 @@ vendor EDIMAX			-1	Edimax
 vendor EPSON			-1	Seiko Epson Corporation
 vendor EXP			-1	EXP Computer Inc
 vendor GEMTEK			-1	GEMTEK
+vendor GVC			-1	GVC
 vendor ICOM			-1	ICOM Inc
 vendor INTERSIL			-1	Intersil
 vendor PLANET			-1	Planet
@@ -368,6 +393,8 @@ product PLANEX FNW3600T		-1
 product PLANEX FNW3700T		-1
 product DLINK DE650		{ "D-Link", "DE-650", NULL, NULL }
 product DLINK DE660		{ "D-Link", "DE-660", NULL, NULL }
+product DLINK DE660PLUS		{ "D-Link", "DE-660+", NULL, NULL }
+product DLINK DFE670TXD         { "D-Link", "DFE-670TXD", NULL, NULL }
 product RPTI EP400		{ "RPTI&spLTD.", "EP400", "CISV100", NULL }
 product RPTI EP401		{ "RPTI", "EP401&spEthernet&spNE2000&spCompatible", NULL, NULL }
 product ACCTON EN2212		{ "ACCTON", "EN2212", NULL, NULL }
@@ -415,6 +442,7 @@ product ADDTRON AWP100		{ "Addtron", "AWP-100&spWireless&spPCMCIA", "Version&sp0
 product NEC CMZ_RT_WP		{ "NEC", "Wireless&spCard&spCMZ-RT-WP", "Version&sp01.01", NULL }
 product NTT_ME WLAN		{ "NTT-ME", "11Mbps&spWireless&spLAN&spPC&spCard", NULL, NULL }
 product SMC 2632W		{ "SMC", "SMC2632W", "Version&sp01.02", NULL }
+product SMC 8041		{ "SMC", "8041TX-10/100-PC-Card-V2", NULL, NULL } SMC 8041TX 10/100 PC Card
 product NANOSPEED PRISM2	{ "NANOSPEED", "HFA384x/IEEE", "Version&sp01.02", NULL }
 product CABLETRON ROAMABOUT	{ "Cabletron", "RoamAbout&sp802.11&spDS", "Version&sp01.01", NULL }
 product GVC NIC2000P		{ "GVC", "NIC-2000p", "ETHERNET", "R01" }
@@ -423,3 +451,5 @@ product WISECOM T210CT		{ "PCMCIA", "Ethernet&spCard", NULL, NULL }
 product WISECOM IPORT		{ "iPort", "10/100&spEthernet&spCard", NULL, NULL }
 product GEMTEK WLAN		{ "Intersil", "PRISM&sp2_5&spPCMCIA&spADAPTER", "ISL37300P", "Eval-RevA" }
 product SIMPLETECH SPECTRUM24_ALT	{ "Symbol&spTechnologies", "LA4111&spSpectrum24&spWireless&spLAN&spPC&spCard", NULL, NULL }
+product AROWANA FE		{ "PCMCIA", "Fast-Ethernet", NULL, NULL }
+product GVC NP0335		{ "ETHER-C16", "ETHER-C16", "Fast&spEthernet", NULL }

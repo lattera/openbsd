@@ -1,5 +1,6 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_engine.h,v 1.2 1999/02/16 00:02:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_engine.h,v 1.2.6.1 2003/03/28 00:38:28 niklas Exp $	*/
 /*	$NetBSD: rf_engine.h,v 1.3 1999/02/05 00:06:11 oster Exp $	*/
+
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
  * All rights reserved.
@@ -27,22 +28,23 @@
  * rights to redistribute these changes.
  */
 
-/**********************************************************
- *                                                        *
- * engine.h -- header file for execution engine functions *
- *                                                        *
- **********************************************************/
+/***********************************************************
+ *                                                         *
+ * engine.h -- Header file for execution engine functions. *
+ *                                                         *
+ ***********************************************************/
 
-#ifndef _RF__RF_ENGINE_H_
-#define _RF__RF_ENGINE_H_
+#ifndef	_RF__RF_ENGINE_H_
+#define	_RF__RF_ENGINE_H_
 
-int 
-rf_ConfigureEngine(RF_ShutdownList_t ** listp,
-    RF_Raid_t * raidPtr, RF_Config_t * cfgPtr);
+extern void **rf_hook_cookies;
 
-int     rf_FinishNode(RF_DagNode_t * node, int context);	/* return finished node
-								 * to engine */
+int  rf_ConfigureEngine(RF_ShutdownList_t **, RF_Raid_t *, RF_Config_t *);
 
-int     rf_DispatchDAG(RF_DagHeader_t * dag, void (*cbFunc) (void *), void *cbArg);	/* execute dag */
+	/* Return finished node to engine. */
+int  rf_FinishNode(RF_DagNode_t *, int);
 
-#endif				/* !_RF__RF_ENGINE_H_ */
+	/* Execute dag. */
+int  rf_DispatchDAG(RF_DagHeader_t *, void (*) (void *), void *);
+
+#endif	/* !_RF__RF_ENGINE_H_ */

@@ -1,4 +1,5 @@
 /*
+ * $OpenBSD: src/sys/dev/ic/Attic/aic7xxx.h,v 1.1.2.2 2003/03/28 00:38:12 niklas Exp $
  * Core definitions and data structures shareable across OS platforms.
  *
  * Copyright (c) 1994-2001 Justin T. Gibbs.
@@ -437,8 +438,8 @@ struct hardware_scb {
 					 */
 /*20*/	uint32_t sgptr;
 #define SG_PTR_MASK	0xFFFFFFF8
-/*24*/	uint8_t  control;	/* See SCB_CONTROL in aic7xxx.reg for details */
-/*25*/	uint8_t  scsiid;	/* what to load in the SCSIID register */
+/*24*/	uint8_t  control;		/* See SCB_CONTROL in aic7xxx.reg for details */
+/*25*/	uint8_t  scsiid;		/* what to load in the SCSIID register */
 /*26*/	uint8_t  lun;
 /*27*/	uint8_t  tag;			/*
 					 * Index into our kernel SCB array.
@@ -707,7 +708,7 @@ struct ahc_syncrate {
 extern struct ahc_syncrate ahc_syncrates[];
 
 /*
- * Indexes into our table of syncronous transfer rates.
+ * Indexes into our table of synchronous transfer rates.
  */
 #define AHC_SYNCRATE_DT		0
 #define AHC_SYNCRATE_ULTRA2	1
@@ -1115,11 +1116,7 @@ int			 ahc_reset(struct ahc_softc *ahc);
 void			 ahc_shutdown(void *arg);
 
 /*************************** Interrupt Services *******************************/
-#ifdef __OpenBSD__
-int			ahc_pci_intr(struct ahc_softc *ahc);
-#else
 void			ahc_pci_intr(struct ahc_softc *ahc);
-#endif 
 void			ahc_clear_intstat(struct ahc_softc *ahc);
 void			ahc_run_qoutfifo(struct ahc_softc *ahc);
 #ifdef AHC_TARGET_MODE
@@ -1214,3 +1211,4 @@ cam_status	ahc_find_tmode_devs(struct ahc_softc *ahc,
 void			ahc_print_scb(struct scb *scb);
 void			ahc_dump_card_state(struct ahc_softc *ahc);
 #endif /* _AIC7XXX_H_ */
+

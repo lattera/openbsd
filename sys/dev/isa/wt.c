@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/wt.c,v 1.12.10.3 2002/03/28 12:11:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/wt.c,v 1.12.10.4 2003/03/28 00:38:16 niklas Exp $	*/
 /*	$NetBSD: wt.c,v 1.33 1996/05/12 23:54:22 mycroft Exp $	*/
 
 /*
@@ -613,7 +613,9 @@ errxit:
 		bp->b_error = EIO;
 	}
 xit:
+	s = splbio();
 	biodone(bp);
+	splx(s);
 	return;
 }
 

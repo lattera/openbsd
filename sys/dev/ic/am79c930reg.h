@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.4 2002/03/30 08:38:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.5 2003/03/28 00:38:12 niklas Exp $ */
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -48,7 +48,7 @@
 
 /*
  * The 79c930 contains a bus interface unit, a media access
- * controller, and a tranceiver attachment interface.
+ * controller, and a transceiver attachment interface.
  * The MAC contains an 80188 CPU core.
  * typical devices built around this chip typically add 32k or 64k of
  * memory for buffers.
@@ -112,7 +112,7 @@
 
 
 /*
- * Tranceiver Attachment Interface Registers (TIR space)
+ * Transceiver Attachment Interface Registers (TIR space)
  * (omitted for now, since host access to them is for diagnostic
  * purposes only).
  */

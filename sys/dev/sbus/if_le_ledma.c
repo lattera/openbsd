@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5.4.2 2002/03/28 15:09:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5.4.3 2003/03/28 00:38:30 niklas Exp $	*/
 /*	$NetBSD: if_le_ledma.c,v 1.14 2001/05/30 11:46:35 mrg Exp $	*/
 
 /*-
@@ -354,7 +354,7 @@ leattach_ledma(parent, self, aux)
 	lesc->sc_dma->sc_client = lesc;
 
 	/* Map device registers */
-	if (bus_space_map2(sa->sa_bustag,
+	if (sbus_bus_map(sa->sa_bustag,
 			   sa->sa_slot,
 			   sa->sa_offset,
 			   sa->sa_size,

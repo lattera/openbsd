@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.3 2002/03/06 02:15:06 niklas Exp $       */
+/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.4 2003/03/28 00:41:28 niklas Exp $       */
 
 /*
  *
@@ -141,17 +141,9 @@ atm_output(ifp, m0, dst, rt0)
 	register struct rtentry *rt;
 	struct atmllc *atmllc;
 	u_int32_t atm_flags;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
 		senderr(ENETDOWN);
-
-	/*
-	 * if the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m,
-		     (dst != NULL ? dst->sa_family : AF_UNSPEC), &pktattr);
 
 	/*
 	 * check route
@@ -265,7 +257,7 @@ atm_output(ifp, m0, dst, rt0)
 	 */
 	len = m->m_pkthdr.len;
 	s = splimp();
-	IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+	IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 	if (error) {
 		splx(s);
 		return (error);
@@ -375,10 +367,8 @@ atm_input(ifp, ah, m, rxhand)
  */
 void
 atm_ifattach(ifp)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 {
-	register struct ifaddr *ifa;
-	register struct sockaddr_dl *sdl;
 
 	ifp->if_type = IFT_ATM;
 	ifp->if_addrlen = 0;
@@ -386,20 +376,8 @@ atm_ifattach(ifp)
 	ifp->if_mtu = ATMMTU;
 	ifp->if_output = atm_output;
 
-#if defined(__NetBSD__) || defined(__OpenBSD__)
-	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
-#elif defined(__FreeBSD__) || defined(__bsdi__)
-	for (ifa = ifp->if_addrlist; ifa; ifa = ifa->ifa_next)  {
-#endif
-
-		if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
-		    sdl->sdl_family == AF_LINK) {
-			sdl->sdl_type = IFT_ATM;
-			sdl->sdl_alen = ifp->if_addrlen;
+	if_alloc_sadl(ifp);
 #ifdef notyet /* if using ATMARP, store hardware address using the next line */
-			bcopy(ifp->hw_addr, LLADDR(sdl), ifp->if_addrlen);
+	bcopy(ifp->hw_addr, LLADDR(ifp->if_sadl), ifp->if_addrlen);
 #endif
-			break;
-		}
-	}
 }

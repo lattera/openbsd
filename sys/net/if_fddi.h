@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_fddi.h,v 1.2.14.2 2002/03/28 14:57:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_fddi.h,v 1.2.14.3 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_fddi.h,v 1.2 1995/08/19 04:35:28 cgd Exp $	*/
 
 /*
@@ -49,6 +49,7 @@ struct	fddi_header {
 };
 
 #define	FDDIMTU			4470
+#define	FDDIIPMTU		4352
 #define	FDDIMIN			3
 
 #define	FDDIFC_C		0x80	/* 0b10000000 */

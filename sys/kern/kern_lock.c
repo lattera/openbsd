@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.3 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.4 2003/03/28 00:41:26 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -384,7 +384,8 @@ lockmgr(lkp, flags, interlkp, p)
 		} else if (lkp->lk_sharecount != 0) {
 			lkp->lk_sharecount--;
 			COUNT(p, -1);
-		}
+		} else
+			panic("lockmgr: LK_RELEASE of unlocked lock");
 		if (lkp->lk_waitcount)
 			wakeup((void *)lkp);
 		break;

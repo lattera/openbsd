@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/adv_pci.c,v 1.4.6.2 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/adv_pci.c,v 1.4.6.3 2003/03/28 00:38:20 niklas Exp $	*/
 /*	$NetBSD: adv_pci.c,v 1.5 1998/09/26 15:52:55 dante Exp $	*/
 
 /*
@@ -97,6 +97,12 @@ struct cfattach adv_pci_ca =
 	sizeof(ASC_SOFTC), adv_pci_match, adv_pci_attach
 };
 
+const struct pci_matchid adv_pci_devices[] = {
+	{ PCI_VENDOR_ADVSYS, PCI_PRODUCT_ADVSYS_1200A },
+	{ PCI_VENDOR_ADVSYS, PCI_PRODUCT_ADVSYS_1200B },
+	{ PCI_VENDOR_ADVSYS, PCI_PRODUCT_ADVSYS_ULTRA },
+};
+
 /******************************************************************************/
 /*
  * Check the slots looking for a board we recognise
@@ -108,17 +114,8 @@ adv_pci_match(parent, match, aux)
 	struct device *parent;
 	void *match, *aux;
 {
-	struct pci_attach_args *pa = aux;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_ADVSYS)
-		switch (PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_ADVSYS_1200A:
-		case PCI_PRODUCT_ADVSYS_1200B:
-		case PCI_PRODUCT_ADVSYS_ULTRA:
-			return (1);
-		}
-
-	return 0;
+	return (pci_matchbyid((struct pci_attach_args *)aux, adv_pci_devices,
+	    sizeof(adv_pci_devices)/sizeof(adv_pci_devices[0])));
 }
 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/signal.h,v 1.9.10.2 2002/03/28 14:52:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/signal.h,v 1.9.10.3 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: signal.h,v 1.21 1996/02/09 18:25:32 christos Exp $	*/
 
 /*
@@ -99,7 +99,7 @@
 #define SIGUSR2 31	/* user defined signal 2 */
 
 /*
- * Language spec sez we must list exactly one parameter, even though we
+ * Language spec says we must list exactly one parameter, even though we
  * actually supply three.  Ugh!
  */
 #define	SIG_DFL		(void (*)(int))0

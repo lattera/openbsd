@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.7 2002/03/28 11:50:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.8 2003/03/28 00:38:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -314,6 +314,7 @@ const struct ac97_codecid {
 	{ 0x48, 0xff, 0, 0,	"AD1881A" },
 	{ 0x60, 0xff, 0, 0,	"AD1885" },
 	{ 0x61, 0xff, 0, 0,	"AD1886" },
+	{ 0x72, 0xff, 0, 0,	"AD1981A" },
 }, ac97_ak[] = {
 	{ 0x00,	0xfe, 1, 0,	"AK4540" },
 	{ 0x01,	0xfe, 1, 0,	"AK4540" },
@@ -429,7 +430,7 @@ const char * const ac97enhancement[] = {
 	"Wolfson Microelectronics 3D",
 	"Delta Integration 3D",
 	"SigmaTel 3D",
-	"Unknown 3D",
+	"KS Waves 3D",
 	"Rockwell 3D",
 	"Unknown 3D",
 	"Unknown 3D",
@@ -712,12 +713,14 @@ ac97_attach(host_if)
 	if (as->ext_id)
 		DPRINTF(("ac97: ext id %b\n", as->ext_id,
 		    AC97_EXT_AUDIO_BITS));
-	ac97_read(as, AC97_REG_EXT_AUDIO_ID, &id1);
-	if (as->ext_id & AC97_EXT_AUDIO_VRA)
-		id1 |= AC97_EXT_AUDIO_VRA;
-	if (as->ext_id & AC97_EXT_AUDIO_VRM)
-		id1 |= AC97_EXT_AUDIO_VRM;
-	ac97_write(as, AC97_REG_EXT_AUDIO_CTRL, id1);
+	if (as->ext_id & (AC97_EXT_AUDIO_VRA | AC97_EXT_AUDIO_VRM)) {
+		ac97_read(as, AC97_REG_EXT_AUDIO_CTRL, &id1);
+		if (as->ext_id & AC97_EXT_AUDIO_VRA)
+			id1 |= AC97_EXT_AUDIO_VRA;
+		if (as->ext_id & AC97_EXT_AUDIO_VRM)
+			id1 |= AC97_EXT_AUDIO_VRM;
+		ac97_write(as, AC97_REG_EXT_AUDIO_CTRL, id1);
+	}
 
 	ac97_setup_source_info(as);
 
@@ -829,8 +832,13 @@ ac97_mixer_set_port(codec_if, cp)
 		if (cp->un.value.num_channels == 1) {
 			l = r = cp->un.value.level[AUDIO_MIXER_LEVEL_MONO];
 		} else {
-			l = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
-			r = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			if (!(as->host_flags & AC97_HOST_SWAPPED_CHANNELS)) {
+				l = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
+				r = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			} else {
+				r = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
+				l = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			}
 		}
 
 		if (!si->polarity) {
@@ -915,9 +923,17 @@ ac97_mixer_get_port(codec_if, cp)
 		    (cp->un.value.num_channels > value->num_channels))
 			return (EINVAL);
 
-		l = r = (val >> si->ofs) & mask;
-		if (value->num_channels > 1) 
-			r = (val >> (si->ofs + 8)) & mask;
+		if (value->num_channels == 1) 
+			l = r = (val >> si->ofs) & mask;
+		else {
+			if (!(as->host_flags & AC97_HOST_SWAPPED_CHANNELS)) {
+				l = (val >> si->ofs) & mask;
+				r = (val >> (si->ofs + 8)) & mask;
+			} else {
+				r = (val >> si->ofs) & mask;
+				l = (val >> (si->ofs + 8)) & mask;
+			}
+		}
 
 		l <<= 8 - si->bits;
 		r <<= 8 - si->bits;

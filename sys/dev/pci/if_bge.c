@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.3.4.3 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.3.4.4 2003/03/28 00:38:21 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2001
@@ -31,7 +31,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $FreeBSD: src/sys/dev/bge/if_bge.c,v 1.2 2001/09/28 18:56:57 wpaul Exp $
+ * $FreeBSD: if_bge.c,v 1.25 2002/11/14 23:54:49 sam Exp $
  */
 
 /*
@@ -55,10 +55,10 @@
  * into the driver.
  *
  * The BCM5700 supports the PCI v2.2 and PCI-X v1.0 standards, and will
- * function in a 32-bit/64-bit 33/66Mhz bus, or a 64-bit/133Mhz bus.
+ * function in a 32-bit/64-bit 33/66MHz bus, or a 64-bit/133MHz bus.
  *
  * The BCM5701 is a single-chip solution incorporating both the BCM5700
- * MAC and a BCM5401 10/100/1000 PHY. Unlike the BCM5700, the BCM5700
+ * MAC and a BCM5401 10/100/1000 PHY. Unlike the BCM5700, the BCM5701
  * does not support external SSRAM.
  *
  * Broadcom also produces a variation of the BCM5700 under the "Altima"
@@ -137,11 +137,10 @@ void bge_shutdown(void *);
 int bge_ifmedia_upd(struct ifnet *);
 void bge_ifmedia_sts(struct ifnet *, struct ifmediareq *);
 
-u_int8_t	bge_eeprom_getbyte(struct bge_softc *,
-					     int, u_int8_t *);
+u_int8_t bge_eeprom_getbyte(struct bge_softc *, int, u_int8_t *);
 int bge_read_eeprom(struct bge_softc *, caddr_t, int, int);
 
-u_int32_t bge_crc(struct bge_softc *, caddr_t);
+u_int32_t bge_crc(caddr_t);
 void bge_setmulti(struct bge_softc *);
 
 void bge_handle_events(struct bge_softc *);
@@ -161,9 +160,11 @@ int bge_init_tx_ring(struct bge_softc *);
 int bge_chipinit(struct bge_softc *);
 int bge_blockinit(struct bge_softc *);
 
+#ifdef notdef
 u_int8_t bge_vpd_readbyte(struct bge_softc *, int);
 void bge_vpd_read_res(struct bge_softc *, struct vpd_res *, int);
 void bge_vpd_read(struct bge_softc *);
+#endif
 
 u_int32_t bge_readmem_ind(struct bge_softc *, int);
 void bge_writemem_ind(struct bge_softc *, int, int);
@@ -188,6 +189,31 @@ int	bgedebug = 0;
 #define DPRINTF(x)
 #define DPRINTFN(n,x)
 #endif
+
+/*
+ * Various supported device vendors/types and their names. Note: the
+ * spec seems to indicate that the hardware still has Alteon's vendor
+ * ID burned into it, though it will always be overriden by the vendor
+ * ID in the EEPROM. Just to be safe, we cover all possibilities.
+ */
+const struct pci_matchid bge_devices[] = {
+	{ PCI_VENDOR_ALTEON, PCI_PRODUCT_ALTEON_BCM5700 },
+	{ PCI_VENDOR_ALTEON, PCI_PRODUCT_ALTEON_BCM5701 },
+
+	{ PCI_VENDOR_ALTIMA, PCI_PRODUCT_ALTIMA_AC100X },
+	{ PCI_VENDOR_ALTIMA, PCI_PRODUCT_ALTIMA_AC9100 },
+
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5700 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5701 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5702 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5703 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5702X },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5703X },
+
+	{ PCI_VENDOR_SCHNEIDERKOCH, PCI_PRODUCT_SCHNEIDERKOCH_SK9D21 },
+
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C996 },
+};
 
 u_int32_t
 bge_readmem_ind(sc, off)
@@ -235,6 +261,7 @@ bge_writereg_ind(sc, off, val)
 	pci_conf_write(pa->pa_pc, pa->pa_tag, BGE_PCI_REG_DATA, val);
 }
 
+#ifdef notdef
 u_int8_t
 bge_vpd_readbyte(sc, addr)
 	struct bge_softc *sc;
@@ -322,6 +349,7 @@ bge_vpd_read(sc)
 	for (i = 0; i < res.vr_len + 1; i++)
 		sc->bge_vpd_readonly[i] = bge_vpd_readbyte(sc, i + pos);
 }
+#endif
 
 /*
  * Read a byte of data stored in the EEPROM at address 'addr.' The
@@ -407,8 +435,12 @@ bge_miibus_readreg(dev, phy, reg)
 
 	ifp = &sc->arpcom.ac_if;
 
-	if (ifp->if_flags & IFF_RUNNING)
-		BGE_CLRBIT(sc, BGE_MI_MODE, BGE_MIMODE_AUTOPOLL);
+	if (phy != 1)
+		switch(sc->bge_asicrev) {
+		case BGE_ASICREV_BCM5701_B5:
+		case BGE_ASICREV_BCM5703_A2:
+			return(0);
+		}
 
 	CSR_WRITE_4(sc, BGE_MI_COMM, BGE_MICMD_READ|BGE_MICOMM_BUSY|
 	    BGE_MIPHY(phy)|BGE_MIREG(reg));
@@ -425,9 +457,6 @@ bge_miibus_readreg(dev, phy, reg)
 	}
 
 	val = CSR_READ_4(sc, BGE_MI_COMM);
-
-	if (ifp->if_flags & IFF_RUNNING)
-		BGE_SETBIT(sc, BGE_MI_MODE, BGE_MIMODE_AUTOPOLL);
 
 	if (val & BGE_MICOMM_READFAIL)
 		return(0);
@@ -464,7 +493,7 @@ bge_miibus_statchg(dev)
 	struct mii_data *mii = &sc->bge_mii;
 
 	BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_PORTMODE);
-	if (IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_TX) {
+	if (IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_T) {
 		BGE_SETBIT(sc, BGE_MAC_MODE, BGE_PORTMODE_GMII);
 	} else {
 		BGE_SETBIT(sc, BGE_MAC_MODE, BGE_PORTMODE_MII);
@@ -610,8 +639,8 @@ bge_jfree(buf, size, arg)
 
 	/* calculate the slot this buffer belongs to */
 
-	i = ((vm_offset_t)buf
-	     - (vm_offset_t)sc->bge_cdata.bge_jumbo_buf) / BGE_JLEN;
+	i = ((vaddr_t)buf
+	     - (vaddr_t)sc->bge_cdata.bge_jumbo_buf) / BGE_JLEN;
 
 	if ((i < 0) || (i >= BGE_JSLOTS))
 		panic("bge_jfree: asked to free buffer that we don't manage!");
@@ -641,15 +670,11 @@ bge_newbuf_std(sc, i, m)
 	if (m == NULL) {
 		MGETHDR(m_new, M_DONTWAIT, MT_DATA);
 		if (m_new == NULL) {
-			printf("%s: mbuf allocation failed "
-			    "-- packet dropped!\n", sc->bge_dev.dv_xname);
 			return(ENOBUFS);
 		}
 
 		MCLGET(m_new, M_DONTWAIT);
 		if (!(m_new->m_flags & M_EXT)) {
-			printf("%s: cluster allocation failed "
-			    "-- packet dropped!\n", sc->bge_dev.dv_xname);
 			m_freem(m_new);
 			return(ENOBUFS);
 		}
@@ -663,10 +688,12 @@ bge_newbuf_std(sc, i, m)
 	if (bus_dmamap_load_mbuf(sc->bge_dmatag, rxmap, m_new, BUS_DMA_NOWAIT))
 		return(ENOBUFS);
 
-	m_adj(m_new, ETHER_ALIGN);
+	if (!sc->bge_rx_alignment_bug)
+		m_adj(m_new, ETHER_ALIGN);
 	sc->bge_cdata.bge_rx_std_chain[i] = m_new;
 	r = &sc->bge_rdata->bge_rx_std_ring[i];
-	BGE_HOSTADDR(r->bge_addr) = rxmap->dm_segs[0].ds_addr + ETHER_ALIGN;
+	BGE_HOSTADDR(r->bge_addr) = rxmap->dm_segs[0].ds_addr +
+	    (!sc->bge_rx_alignment_bug ? ETHER_ALIGN : 0);
 	r->bge_flags = BGE_RXBDFLAG_END;
 	r->bge_len = m_new->m_len;
 	r->bge_idx = i;
@@ -693,8 +720,6 @@ bge_newbuf_jumbo(sc, i, m)
 		/* Allocate the mbuf. */
 		MGETHDR(m_new, M_DONTWAIT, MT_DATA);
 		if (m_new == NULL) {
-			printf("%s: mbuf allocation failed "
-			    "-- packet dropped!\n", sc->bge_dev.dv_xname);
 			return(ENOBUFS);
 		}
 
@@ -716,12 +741,13 @@ bge_newbuf_jumbo(sc, i, m)
 		m_new->m_ext.ext_size = BGE_JUMBO_FRAMELEN;
 	}
 
-	m_adj(m_new, ETHER_ALIGN);
+	if (!sc->bge_rx_alignment_bug)
+		m_adj(m_new, ETHER_ALIGN);
 	/* Set up the descriptor. */
 	r = &sc->bge_rdata->bge_rx_jumbo_ring[i];
 	sc->bge_cdata.bge_rx_jumbo_chain[i] = m_new;
-	BGE_HOSTADDR(r->bge_addr) =
-		BGE_JUMBO_DMA_ADDR(sc, m_new) + ETHER_ALIGN;
+	BGE_HOSTADDR(r->bge_addr) = BGE_JUMBO_DMA_ADDR(sc, m_new) +
+	    (!sc->bge_rx_alignment_bug ? ETHER_ALIGN : 0);
 	r->bge_flags = BGE_RXBDFLAG_END|BGE_RXBDFLAG_JUMBO_RING;
 	r->bge_len = m_new->m_len;
 	r->bge_idx = i;
@@ -861,8 +887,7 @@ bge_init_tx_ring(sc)
 #define BGE_POLY	0xEDB88320
 
 u_int32_t
-bge_crc(sc, addr)
-	struct bge_softc *sc;
+bge_crc(addr)
 	caddr_t addr;
 {
 	u_int32_t idx, bit, data, crc;
@@ -903,7 +928,7 @@ bge_setmulti(sc)
 	/* Now program new ones. */
 	ETHER_FIRST_MULTI(step, ac, enm);
 	while (enm != NULL) {
-		h = bge_crc(sc, LLADDR((struct sockaddr_dl *)enm->enm_addrlo));
+		h = bge_crc(LLADDR((struct sockaddr_dl *)enm->enm_addrlo));
 		hashes[(h & 0x60) >> 5] |= 1 << (h & 0x1F);
 		ETHER_NEXT_MULTI(step, enm);
 	}
@@ -920,7 +945,6 @@ int
 bge_chipinit(sc)
 	struct bge_softc *sc;
 {
-	u_int32_t		cachesize;
 	int			i;
 	struct pci_attach_args	*pa = &(sc->bge_pa);
 
@@ -964,8 +988,16 @@ bge_chipinit(sc)
 		BGE_MEMWIN_WRITE(pa->pa_pc, pa->pa_tag, i, 0);
 
 	/* Set up the PCI DMA control register. */
-	pci_conf_write(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-	    BGE_PCI_READ_CMD|BGE_PCI_WRITE_CMD|0x0F);
+	if (pci_conf_read(pa->pa_pc, pa->pa_tag, BGE_PCI_PCISTATE) &
+	    BGE_PCISTATE_PCI_BUSMODE) {
+		/* Conventional PCI bus */
+		pci_conf_write(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
+		    BGE_PCI_READ_CMD|BGE_PCI_WRITE_CMD|0x3F000F);
+	} else {
+		/* PCI-X bus */
+		pci_conf_write(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
+		    BGE_PCI_READ_CMD|BGE_PCI_WRITE_CMD|0x1B000F);
+	}
 
 	/*
 	 * Set up general mode register.
@@ -985,56 +1017,12 @@ bge_chipinit(sc)
 );
 #endif
 
-	/* Get cache line size. */
-	cachesize = pci_conf_read(pa->pa_pc, pa->pa_tag, BGE_PCI_CACHESZ);
-
 	/*
-	 * Avoid violating PCI spec on certain chip revs.
+	 * Disable memory write invalidate.  Apparently it is not supported
+	 * properly by these devices.
 	 */
-	if (pci_conf_read(pa->pa_pc, pa->pa_tag, BGE_PCI_CMD) &
-	    PCIM_CMD_MWIEN) {
-		switch(cachesize) {
-		case 1:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_16BYTES);
-			break;
-		case 2:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_32BYTES);
-			break;
-		case 4:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_64BYTES);
-			break;
-		case 8:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_128BYTES);
-			break;
-		case 16:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_256BYTES);
-			break;
-		case 32:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_512BYTES);
-			break;
-		case 64:
-			PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
-				   BGE_PCI_WRITE_BNDRY_1024BYTES);
-			break;
-		default:
-		/* Disable PCI memory write and invalidate. */
-#if 0
-			if (bootverbose)
-				printf("%s: cache line size %d not "
-				    "supported; disabling PCI MWI\n",
-				    sc->bge_dev.dv_xname, cachesize);
-#endif
-			PCI_CLRBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_CMD,
-			    PCIM_CMD_MWIEN);
-			break;
-		}
-	}
+	PCI_CLRBIT(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
+	    PCI_COMMAND_INVALIDATE_ENABLE);
 
 #ifdef __brokenalpha__
 	/*
@@ -1043,10 +1031,11 @@ bge_chipinit(sc)
 	 * restriction on some ALPHA platforms with early revision
 	 * 21174 PCI chipsets, such as the AlphaPC 164lx
 	 */
-	PCI_SETBIT(sc, BGE_PCI_DMA_RW_CTL, BGE_PCI_READ_BNDRY_1024, 4);
+	PCI_SETBIT(pa->pa_pc, pa->pa_tag, BGE_PCI_DMA_RW_CTL,
+	    BGE_PCI_READ_BNDRY_1024);
 #endif
 
-	/* Set the timer prescaler (always 66Mhz) */
+	/* Set the timer prescaler (always 66MHz) */
 	CSR_WRITE_4(sc, BGE_MISC_CFG, 65 << 1/*BGE_32BITTIME_66MHZ*/);
 
 	return(0);
@@ -1058,7 +1047,7 @@ bge_blockinit(sc)
 {
 	struct bge_rcb		*rcb;
 	struct bge_rcb_opaque	*rcbo;
-	vm_offset_t		rcb_addr;
+	vaddr_t			rcb_addr;
 	int			i;
 
 	/*
@@ -1386,8 +1375,12 @@ bge_blockinit(sc)
 	/* Enable PHY auto polling (for MII/GMII only) */
 	if (sc->bge_tbi) {
 		CSR_WRITE_4(sc, BGE_MI_STS, BGE_MISTS_LINK);
-	} else
+ 	} else {
 		BGE_SETBIT(sc, BGE_MI_MODE, BGE_MIMODE_AUTOPOLL|10<<16);
+		if (sc->bge_asicrev == BGE_ASICREV_BCM5700)
+			CSR_WRITE_4(sc, BGE_MAC_EVT_ENB,
+			    BGE_EVTENB_MI_INTERRUPT);
+	}
 
 	/* Enable link state change attentions. */
 	BGE_SETBIT(sc, BGE_MAC_EVT_ENB, BGE_EVTENB_LINK_CHANGED);
@@ -1409,35 +1402,8 @@ bge_probe(parent, match, aux)
 	void *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
-
-	/*
-	 * Various supported device vendors/types and their
-	 * names. Note: the spec seems to indicate that the hardware
-	 * still has Alteon's vendor ID burned into it, though it will
-	 * always be overriden by the vendor ID in the EEPROM. Just to
-	 * be safe, we cover all possibilities.
-	 */
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_ALTEON &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ALTEON_BCM5700 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ALTEON_BCM5701))
-		return (1);
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_BCM5700 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_BCM5701))
-		return (1);
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SCHNEIDERKOCH &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SCHNEIDERKOCH_SK9D21)
-		return (1);
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_3COM &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_3COM_3C996)
-		return (1);
-
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, bge_devices,
+	    sizeof(bge_devices)/sizeof(bge_devices[0])));
 }
 
 void
@@ -1454,6 +1420,8 @@ bge_attach(parent, self, aux)
 	bus_size_t		iosize;
 	bus_dma_segment_t	seg;
 	int			s, rseg;
+	u_int32_t		hwcfg = 0;
+	u_int32_t		mac_addr = 0;
 	u_int32_t		command;
 	struct ifnet		*ifp;
 	int			unit, error = 0;
@@ -1531,7 +1499,16 @@ bge_attach(parent, self, aux)
 	/*
 	 * Get station address from the EEPROM.
 	 */
-	if (bge_read_eeprom(sc, (caddr_t)&sc->arpcom.ac_enaddr,
+	mac_addr = bge_readmem_ind(sc, 0x0c14);
+	if ((mac_addr >> 16) == 0x484b) {
+		sc->arpcom.ac_enaddr[0] = (u_char)(mac_addr >> 8);
+		sc->arpcom.ac_enaddr[1] = (u_char)mac_addr;
+		mac_addr = bge_readmem_ind(sc, 0x0c18);
+		sc->arpcom.ac_enaddr[2] = (u_char)(mac_addr >> 24);
+		sc->arpcom.ac_enaddr[3] = (u_char)(mac_addr >> 16);
+		sc->arpcom.ac_enaddr[4] = (u_char)(mac_addr >> 8);
+		sc->arpcom.ac_enaddr[5] = (u_char)mac_addr;
+	} else if (bge_read_eeprom(sc, (caddr_t)&sc->arpcom.ac_enaddr,
 	    BGE_EE_MAC_OFFSET + 2, ETHER_ADDR_LEN)) {
 		printf("bge%d: failed to read station address\n", unit);
 		bge_release_resources(sc);
@@ -1542,7 +1519,7 @@ bge_attach(parent, self, aux)
 	/*
 	 * A Broadcom chip was detected. Inform the world.
 	 */
-	printf(": Ethernet address: %s\n",
+	printf(": address: %s\n",
 	    ether_sprintf(sc->arpcom.ac_enaddr));
 
 	/* Allocate the general information block and ring buffers. */
@@ -1627,26 +1604,81 @@ bge_attach(parent, self, aux)
 	sc->bge_mii.mii_writereg = bge_miibus_writereg;
 	sc->bge_mii.mii_statchg = bge_miibus_statchg;
 
+	/* Save ASIC rev. */
+
+	sc->bge_asicrev =
+	    pci_conf_read(pc, pa->pa_tag, BGE_PCI_MISC_CTL) &
+	    BGE_PCIMISCCTL_ASICREV;
+
+	/* Pretend all 5700s are the same */
+	if ((sc->bge_asicrev & 0xFF000000) == BGE_ASICREV_BCM5700)
+		sc->bge_asicrev = BGE_ASICREV_BCM5700;
+
+	/*
+	 * Figure out what sort of media we have by checking the
+	 * hardware config word in the EEPROM. Note: on some BCM5700
+	 * cards, this value appears to be unset. If that's the
+	 * case, we have to rely on identifying the NIC by its PCI
+	 * subsystem ID, as we do below for the SysKonnect SK-9D41.
+	 */
+	bge_read_eeprom(sc, (caddr_t)&hwcfg,
+		    BGE_EE_HWCFG_OFFSET, sizeof(hwcfg));
+	if ((ntohl(hwcfg) & BGE_HWCFG_MEDIA) == BGE_MEDIA_FIBER)
+		sc->bge_tbi = 1;
+
 	/* The SysKonnect SK-9D41 is a 1000baseSX card. */
-	if ((pci_conf_read(pa->pa_pc, pa->pa_tag, BGE_PCI_SUBSYS) >> 16) ==
+	if ((pci_conf_read(pc, pa->pa_tag, BGE_PCI_SUBSYS) >> 16) ==
 	    SK_SUBSYSID_9D41)
 		sc->bge_tbi = 1;
 
-	/*
-	 * Do transceiver setup.
-	 */
-	ifmedia_init(&sc->bge_mii.mii_media, 0, bge_ifmedia_upd,
-		     bge_ifmedia_sts);
-	mii_attach(&sc->bge_dev, &sc->bge_mii, 0xffffffff,
-		   MII_PHY_ANY, MII_OFFSET_ANY, 0);
-
-	if (LIST_FIRST(&sc->bge_mii.mii_phys) == NULL) {
-		printf("%s: no PHY found!\n", sc->bge_dev.dv_xname);
-		ifmedia_add(&sc->bge_mii.mii_media, IFM_ETHER|IFM_MANUAL,
+	if (sc->bge_tbi) {
+		ifmedia_init(&sc->bge_ifmedia, IFM_IMASK, bge_ifmedia_upd,
+		    bge_ifmedia_sts);
+		ifmedia_add(&sc->bge_ifmedia, IFM_ETHER|IFM_1000_SX, 0, NULL);
+		ifmedia_add(&sc->bge_ifmedia, IFM_ETHER|IFM_1000_SX|IFM_FDX,
 			    0, NULL);
-		ifmedia_set(&sc->bge_mii.mii_media, IFM_ETHER|IFM_MANUAL);
-	} else
-		ifmedia_set(&sc->bge_mii.mii_media, IFM_ETHER|IFM_AUTO);
+		ifmedia_add(&sc->bge_ifmedia, IFM_ETHER|IFM_AUTO, 0, NULL);
+		ifmedia_set(&sc->bge_ifmedia, IFM_ETHER|IFM_AUTO);
+	} else {
+		/*
+		 * Do transceiver setup.
+		 */
+		ifmedia_init(&sc->bge_mii.mii_media, 0, bge_ifmedia_upd,
+			     bge_ifmedia_sts);
+		mii_attach(&sc->bge_dev, &sc->bge_mii, 0xffffffff,
+			   MII_PHY_ANY, MII_OFFSET_ANY, 0);
+		
+		if (LIST_FIRST(&sc->bge_mii.mii_phys) == NULL) {
+			printf("%s: no PHY found!\n", sc->bge_dev.dv_xname);
+			ifmedia_add(&sc->bge_mii.mii_media,
+				    IFM_ETHER|IFM_MANUAL, 0, NULL);
+			ifmedia_set(&sc->bge_mii.mii_media,
+				    IFM_ETHER|IFM_MANUAL);
+		} else
+			ifmedia_set(&sc->bge_mii.mii_media,
+				    IFM_ETHER|IFM_AUTO);
+	}
+
+	/*
+	 * When using the BCM5701 in PCI-X mode, data corruption has
+	 * been observed in the first few bytes of some received packets.
+	 * Aligning the packet buffer in memory eliminates the corruption.
+	 * Unfortunately, this misaligns the packet payloads.  On platforms
+	 * which do not support unaligned accesses, we will realign the
+	 * payloads by copying the received packets.
+	 */
+	switch (sc->bge_asicrev) {
+	case BGE_ASICREV_BCM5701_A0:
+	case BGE_ASICREV_BCM5701_B0:
+	case BGE_ASICREV_BCM5701_B2:
+	case BGE_ASICREV_BCM5701_B5:
+		/* If in PCI-X mode, work around the alignment bug. */
+		if ((pci_conf_read(pc, pa->pa_tag, BGE_PCI_PCISTATE) &
+		    (BGE_PCISTATE_PCI_BUSMODE | BGE_PCISTATE_PCI_BUSSPEED)) ==
+		    BGE_PCISTATE_PCI_BUSSPEED)
+			sc->bge_rx_alignment_bug = 1;
+		break;
+	}
 
 	/*
 	 * Call MI attach routine.
@@ -1775,7 +1807,7 @@ bge_reset(sc)
  * on the receive return list.
  *
  * Note: we have to be able to handle two possibilities here:
- * 1) the frame is from the jumbo recieve ring
+ * 1) the frame is from the jumbo receive ring
  * 2) the frame is from the standard receive ring
  */
 
@@ -1851,6 +1883,17 @@ bge_rxeof(sc)
 		}
 
 		ifp->if_ipackets++;
+#ifdef __STRICT_ALIGNMENT
+		/*
+		 * The i386 allows unaligned accesses, but for other
+		 * platforms we must make sure the payload is aligned.
+		 */
+		if (sc->bge_rx_alignment_bug) {
+			bcopy(m->m_data, m->m_data + ETHER_ALIGN,
+			    cur_rx->bge_len);
+			m->m_data += ETHER_ALIGN;
+		}
+#endif
 		m->m_pkthdr.len = m->m_len = cur_rx->bge_len;
 		m->m_pkthdr.rcvif = ifp;
 
@@ -1954,16 +1997,43 @@ bge_intr(xsc)
 	/* Ack interrupt and stop others from occuring. */
 	CSR_WRITE_4(sc, BGE_MBX_IRQ0_LO, 1);
 
-	/* Process link state changes. */
-	if (sc->bge_rdata->bge_status_block.bge_status &
-	    BGE_STATFLAG_LINKSTATE_CHANGED) {
-		sc->bge_link = 0;
-		timeout_del(&sc->bge_timeout);
-		bge_tick(sc);
-		/* ack the event to clear/reset it */
-		CSR_WRITE_4(sc, BGE_MAC_STS, BGE_MACSTAT_SYNC_CHANGED|
-		    BGE_MACSTAT_CFG_CHANGED);
-		CSR_WRITE_4(sc, BGE_MI_STS, 0);
+	/*
+	 * Process link state changes.
+	 * Grrr. The link status word in the status block does
+	 * not work correctly on the BCM5700 rev AX and BX chips,
+	 * according to all avaibable information. Hence, we have
+	 * to enable MII interrupts in order to properly obtain
+	 * async link changes. Unfortunately, this also means that
+	 * we have to read the MAC status register to detect link
+	 * changes, thereby adding an additional register access to
+	 * the interrupt handler.
+	 */
+
+	if (sc->bge_asicrev == BGE_ASICREV_BCM5700) {
+		u_int32_t		status;
+
+		status = CSR_READ_4(sc, BGE_MAC_STS);
+		if (status & BGE_MACSTAT_MI_INTERRUPT) {
+			sc->bge_link = 0;
+			timeout_del(&sc->bge_timeout);
+			bge_tick(sc);
+			/* Clear the interrupt */
+			CSR_WRITE_4(sc, BGE_MAC_EVT_ENB,
+			    BGE_EVTENB_MI_INTERRUPT);
+			bge_miibus_readreg(&sc->bge_dev, 1, BRGPHY_MII_ISR);
+			bge_miibus_writereg(&sc->bge_dev, 1, BRGPHY_MII_IMR,
+			    BRGPHY_INTRS);
+		}
+	} else {
+		if (sc->bge_rdata->bge_status_block.bge_status &
+		    BGE_STATFLAG_LINKSTATE_CHANGED) {
+			sc->bge_link = 0;
+			timeout_del(&sc->bge_timeout);
+			bge_tick(sc);
+			/* Clear the interrupt */
+			CSR_WRITE_4(sc, BGE_MAC_STS, BGE_MACSTAT_SYNC_CHANGED|
+			    BGE_MACSTAT_CFG_CHANGED);
+		}
 	}
 
 	if (ifp->if_flags & IFF_RUNNING) {
@@ -2010,7 +2080,6 @@ bge_tick(xsc)
 		    BGE_MACSTAT_TBI_PCS_SYNCHED) {
 			sc->bge_link++;
 			CSR_WRITE_4(sc, BGE_MAC_STS, 0xFFFFFFFF);
-			printf("%s: gigabit link up\n", sc->bge_dev.dv_xname);
 			if (!IFQ_IS_EMPTY(&ifp->if_snd))
 				bge_start(ifp);
 		}
@@ -2023,9 +2092,6 @@ bge_tick(xsc)
 	if (!sc->bge_link && mii->mii_media_status & IFM_ACTIVE &&
 	    IFM_SUBTYPE(mii->mii_media_active) != IFM_NONE) {
 		sc->bge_link++;
-		if (IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_TX ||
-		    IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_SX)
-			printf("%s: gigabit link up\n", sc->bge_dev.dv_xname);
 		if (!IFQ_IS_EMPTY(&ifp->if_snd))
 			bge_start(ifp);
 	}
@@ -2073,7 +2139,6 @@ bge_encap(sc, m_head, txidx)
 	u_int32_t *txidx;
 {
 	struct bge_tx_bd	*f = NULL;
-	struct mbuf		*m;
 	u_int32_t		frag, cur, cnt = 0;
 	u_int16_t		csum_flags = 0;
 	bus_dmamap_t		txmap;
@@ -2086,7 +2151,6 @@ bge_encap(sc, m_head, txidx)
 		ifv = m_head->m_pkthdr.rcvif->if_softc;
 #endif
 
-	m = m_head;
 	cur = frag = *txidx;
 
 #ifdef BGE_CHECKSUM
@@ -2111,41 +2175,35 @@ bge_encap(sc, m_head, txidx)
 	 * of fragments or hit the end of the mbuf chain.
 	 */
 	txmap = sc->bge_cdata.bge_tx_map[frag];
-	if (bus_dmamap_load_mbuf(sc->bge_dmatag, txmap, m,
-				 BUS_DMA_NOWAIT))
+	if (bus_dmamap_load_mbuf(sc->bge_dmatag, txmap, m_head,
+	    BUS_DMA_NOWAIT))
 		return(ENOBUFS);
 
-	for (m = m_head; m != NULL; m = m->m_next) {
-		if (m->m_len != 0) {
-			f = &sc->bge_rdata->bge_tx_ring[frag];
-			if (sc->bge_cdata.bge_tx_chain[frag] != NULL)
-				break;
-			BGE_HOSTADDR(f->bge_addr) =
-				txmap->dm_segs[i++].ds_addr;
-			f->bge_len = m->m_len;
-			f->bge_flags = csum_flags;
+	for (i = 0; i < txmap->dm_nsegs; i++) {
+		f = &sc->bge_rdata->bge_tx_ring[frag];
+		if (sc->bge_cdata.bge_tx_chain[frag] != NULL)
+			break;
+		BGE_HOSTADDR(f->bge_addr) = txmap->dm_segs[i].ds_addr;
+		f->bge_len = txmap->dm_segs[i].ds_len;
+		f->bge_flags = csum_flags;
 #if NVLAN > 0
-			if (ifv != NULL) {
-				f->bge_flags |= BGE_TXBDFLAG_VLAN_TAG;
-				f->bge_vlan_tag = ifv->ifv_tag;
-			} else {
-				f->bge_vlan_tag = 0;
-			}
-#endif
-			/*
-			 * Sanity check: avoid coming within 16 descriptors
-			 * of the end of the ring.
-			 */
-			if ((BGE_TX_RING_CNT - (sc->bge_txcnt + cnt)) < 16)
-				return(ENOBUFS);
-			cur = frag;
-			BGE_INC(frag, BGE_TX_RING_CNT);
-			cnt++;
+		if (ifv != NULL) {
+			f->bge_flags |= BGE_TXBDFLAG_VLAN_TAG;
+			f->bge_vlan_tag = ifv->ifv_tag;
+		} else {
+			f->bge_vlan_tag = 0;
 		}
+#endif
+		/*
+		 * Sanity check: avoid coming within 16 descriptors
+		 * of the end of the ring.
+		 */
+		if ((BGE_TX_RING_CNT - (sc->bge_txcnt + cnt)) < 16)
+			return(ENOBUFS);
+		cur = frag;
+		BGE_INC(frag, BGE_TX_RING_CNT);
+		cnt++;
 	}
-
-	if (m != NULL)
-		return(ENOBUFS);
 
 	if (frag == sc->bge_tx_saved_considx)
 		return(ENOBUFS);
@@ -2217,12 +2275,14 @@ bge_start(ifp)
 		IFQ_DEQUEUE(&ifp->if_snd, m_head);
 		pkts++;
 
+#if NBPFILTER > 0
 		/*
 		 * If there's a BPF listener, bounce a copy of this frame
 		 * to him.
 		 */
 		if (ifp->if_bpf)
 			bpf_mtap(ifp->if_bpf, m_head);
+#endif
 	}
 	if (pkts == 0)
 		return;
@@ -2289,8 +2349,10 @@ bge_init(xsc)
 
 	ifp = &sc->arpcom.ac_if;
 
-	if (ifp->if_flags & IFF_RUNNING)
+	if (ifp->if_flags & IFF_RUNNING) {
+		splx(s);
 		return;
+	}
 
 	/* Cancel pending I/O and flush buffers. */
 	bge_stop(sc);

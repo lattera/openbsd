@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_autoconf.c,v 1.25.4.3 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_autoconf.c,v 1.25.4.4 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: subr_autoconf.c,v 1.21 1996/04/04 06:06:18 cgd Exp $	*/
 
 /*
@@ -49,9 +49,9 @@
 
 #include <sys/param.h>
 #include <sys/device.h>
+#include <sys/limits.h>
 #include <sys/malloc.h>
 #include <sys/systm.h>
-#include <machine/limits.h>
 /* Extra stuff from Matthias Drochner <drochner@zelux6.zel.kfa-juelich.de> */
 #include <sys/queue.h>
 
@@ -876,62 +876,3 @@ evcnt_attach(dev, name, ev)
 	strcpy(ev->ev_name, name);
 	TAILQ_INSERT_TAIL(&allevents, ev, ev_list);
 }
-
-#if 0
-int
-attach_loadable(parentname, parentunit, cftable)
-	char *parentname;
-	int parentunit;
-	struct cftable *cftable;
-{
-	int found = 0;
-	struct device *d;
-
-	TAILQ_INSERT_TAIL(&allcftables, cftable, list);
-
-	for(d = alldevs.tqh_first; d != NULL; d = d->dv_list.tqe_next) {
-		struct cfdriver *drv = d->dv_cfdata->cf_driver;
-
-		if (strcmp(parentname, drv->cd_name) == NULL &&
-		    (parentunit == -1 || parentunit == d->dv_unit)) {
-			int s;
-
-			s = splhigh(); /* ??? */
-			found |= (*d->dv_cfdata->cf_attach->ca_reprobe)(d,
-			    &(cftable->tab[0]));
-			splx(s);
-		}
-	}
-	if (!found)
-		TAILQ_REMOVE(&allcftables, cftable, list);
-	return(found);
-}
-
-int
-devcf_intable(struct device *, void *);
-
-int
-devcf_intable(dev, arg)
-	struct device *dev;
-	void *arg;
-{
-	struct cftable *tbl = arg;
-	struct cfdata *cf;
-
-	for(cf = tbl->tab; cf->cf_driver; cf++) {
-		if (dev->dv_cfdata == cf)
-			return(1);
-	}
-	return(0);
-}
-
-int
-detach_loadable(cftable)
-	struct cftable *cftable;
-{
-	if (!detach_devices(devcf_intable, cftable, 0, 0))
-		return(0);
-	TAILQ_REMOVE(&allcftables, cftable, list);
-	return(1);
-}
-#endif

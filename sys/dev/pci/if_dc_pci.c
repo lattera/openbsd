@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.5 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.6 2003/03/28 00:38:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -72,6 +72,10 @@
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pcidevs.h>
 
+#ifdef __sparc64__
+#include <dev/ofw/openfirm.h>
+#endif
+
 #define DC_USEIOSPACE
 
 #include <dev/ic/dcreg.h>
@@ -95,16 +99,14 @@ struct dc_type dc_devs[] = {
 	{ PCI_VENDOR_LITEON, PCI_PRODUCT_LITEON_PNICII },
 	{ PCI_VENDOR_ACCTON, PCI_PRODUCT_ACCTON_EN1217 },
 	{ PCI_VENDOR_ACCTON, PCI_PRODUCT_ACCTON_EN2242 },
+	{ PCI_VENDOR_CONEXANT, PCI_PRODUCT_CONEXANT_RS7112 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_21145 },
 	{ 0, 0 }
 };
 
 int dc_pci_match(struct device *, void *, void *);
 void dc_pci_attach(struct device *, struct device *, void *);
 void dc_pci_acpi(struct device *, void *);
-
-extern void dc_eeprom_width(struct dc_softc *);
-extern void dc_read_srom(struct dc_softc *, int);
-extern void dc_parse_21143_srom(struct dc_softc *);
 
 /*
  * Probe for a 21143 or clone chip. Check the PCI vendor and device
@@ -118,22 +120,35 @@ dc_pci_match(parent, match, aux)
 	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
 	struct dc_type *t;
 
+	/*
+	 * Support for the 21140 chip is experimental.  If it works for you,
+	 * that's great.  By default, this chip will use de.
+	 */
         if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_DEC &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DEC_21140)
 		return (1);
 
+	/*
+	 * The following chip revision doesn't seem to work so well with dc,
+	 * so let's have de handle it.  (de will return a match of 2)
+	 */
         if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_DEC &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DEC_21142 &&
 	    PCI_REVISION(pa->pa_class) == 0x21)
 		return (1);
 
+	/*
+	 * Since dc doesn't fit on the alpha floppy, we want de to win by
+	 * default on alpha so that RAMDISK* and GENERIC will use the same
+	 * driver.
+	 */
 	for (t = dc_devs; t->dc_vid != 0; t++) {
 		if ((PCI_VENDOR(pa->pa_id) == t->dc_vid) &&
 		    (PCI_PRODUCT(pa->pa_id) == t->dc_did)) {
 #ifdef __alpha__
 			return (1);
 #else
-			return (2);
+			return (3);
 #endif
 		}
 	}
@@ -285,6 +300,15 @@ void dc_pci_attach(parent, self, aux)
 			dc_read_srom(sc, sc->dc_romwidth);
 		}
 		break;
+	case PCI_VENDOR_INTEL:
+		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_INTEL_21145) {
+			found = 1;
+			sc->dc_type = DC_TYPE_21145;
+			sc->dc_flags |= DC_TX_POLL|DC_TX_USE_TX_INTR;
+			sc->dc_flags |= DC_REDUCED_MII_POLL;
+			dc_eeprom_width(sc);
+			dc_read_srom(sc, sc->dc_romwidth);
+		}
 	case PCI_VENDOR_DAVICOM:
 		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9100 ||
 		    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DAVICOM_DM9102) {
@@ -402,6 +426,17 @@ void dc_pci_attach(parent, self, aux)
 			sc->dc_pmode = DC_PMODE_MII;
 		}
 		break;
+	case PCI_VENDOR_CONEXANT:
+		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CONEXANT_RS7112) {
+			found = 1;
+			sc->dc_type = DC_TYPE_CONEXANT;
+			sc->dc_flags |= DC_TX_INTR_ALWAYS;
+			sc->dc_flags |= DC_REDUCED_MII_POLL;
+			sc->dc_pmode = DC_PMODE_MII;
+			dc_eeprom_width(sc);
+			dc_read_srom(sc, sc->dc_romwidth);
+		}
+		break;
 	}
 	if (found == 0) {
 		/* This shouldn't happen if probe has done it's job... */
@@ -464,7 +499,10 @@ void dc_pci_attach(parent, self, aux)
 #ifdef __sparc64__
 	{
 		extern void myetheraddr(u_char *);
-		myetheraddr(sc->arpcom.ac_enaddr);
+
+		if (OF_getprop(PCITAG_NODE(pa->pa_tag), "local-mac-address",
+		    sc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN) <= 0)
+			myetheraddr(sc->sc_arpcom.ac_enaddr);
 		sc->sc_hasmac = 1;
 	}
 #endif

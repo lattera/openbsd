@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.7 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.8 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: subr_extent.c,v 1.7 1996/11/21 18:46:34 cgd Exp $	*/
 
 /*-
@@ -88,20 +88,29 @@ static	void extent_register(struct extent *);
  * Should work, no?
  */
 static LIST_HEAD(listhead, extent) ext_list;
-static struct listhead *ext_listp;
 
 static void
-extent_register(ex)
-	struct extent *ex;
+extent_register(struct extent *ex)
 {
-	/* Is this redundant? */
-	if (ext_listp == NULL){
+#ifdef DIAGNOSTIC
+	struct extent *ep;
+#endif
+	static int initialized;
+
+	if (!initialized){
 		LIST_INIT(&ext_list);
-		ext_listp = &ext_list;
+		initialized = 1;
 	}
 
+#ifdef DIAGNOSTIC
+	LIST_FOREACH(ep, &ext_list, ex_link) {
+		if (ep == ex)
+			panic("extent_register: already registered");
+	}
+#endif
+
 	/* Insert into list */
-	LIST_INSERT_HEAD(ext_listp, ex, ex_link);
+	LIST_INSERT_HEAD(&ext_list, ex, ex_link);
 }
 
 struct pool ex_region_pl;
@@ -131,7 +140,7 @@ extent_find(name)
 {
 	struct extent *ep;
 
-	for(ep = ext_listp->lh_first; ep != NULL; ep = ep->ex_link.le_next){
+	LIST_FOREACH(ep, &ext_list, ex_link) {
 		if (!strcmp(ep->ex_name, name))
 			return(ep);
 	}
@@ -149,7 +158,7 @@ extent_print_all(void)
 {
 	struct extent *ep;
 
-	for(ep = ext_listp->lh_first; ep != NULL; ep = ep->ex_link.le_next){
+	LIST_FOREACH(ep, &ext_list, ex_link) {
 		extent_print(ep);
 	}
 }
@@ -1058,7 +1067,7 @@ extent_alloc_region_descriptor(ex, flags)
 	}
 
  alloc:
-	s = splimp();
+	s = splvm();
 	rp = pool_get(&ex_region_pl, (flags & EX_WAITOK) ? PR_WAITOK : 0);
 	splx(s);
 	if (rp != NULL)
@@ -1090,7 +1099,7 @@ extent_free_region_descriptor(ex, rp)
 				    er_link);
 				goto wake_em_up;
 			} else {
-				s = splimp();
+				s = splvm();
 				pool_put(&ex_region_pl, rp);
 				splx(s);
 			}
@@ -1111,7 +1120,7 @@ extent_free_region_descriptor(ex, rp)
 	/*
 	 * We know it's dynamically allocated if we get here.
 	 */
-	s = splimp();
+	s = splvm();
 	pool_put(&ex_region_pl, rp);
 	splx(s);
 }
@@ -1130,8 +1139,8 @@ extent_print(ex)
 	if (ex == NULL)
 		panic("extent_print: NULL extent");
 
-	db_printf("extent `%s' (0x%lx - 0x%lx), flags = 0x%x\n", ex->ex_name,
-	    ex->ex_start, ex->ex_end, ex->ex_flags);
+	db_printf("extent `%s' (0x%lx - 0x%lx), flags=%b\n", ex->ex_name,
+	    ex->ex_start, ex->ex_end, ex->ex_flags, EXF_BITS);
 
 	for (rp = ex->ex_regions.lh_first; rp != NULL;
 	    rp = rp->er_link.le_next)

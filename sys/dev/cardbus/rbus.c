@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2.6.3 2002/03/29 23:39:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2.6.4 2003/03/28 00:38:10 niklas Exp $ */
 /*	$NetBSD: rbus.c,v 1.3 1999/11/06 06:20:53 soren Exp $	*/
 /*
  * Copyright (c) 1999
@@ -288,7 +288,6 @@ rbus_new(parent, start, size, offset, flags)
   } else if (flags == RBUS_SPACE_DEDICATE) {
     if (NULL == (ex = extent_create("rbus", start, end, M_DEVBUF, NULL, 0, 
 				    EX_NOCOALESCE|EX_NOWAIT))) {
-      free(rb, M_DEVBUF);
       return NULL;
     }
   } else if (flags == RBUS_SPACE_ASK_PARENT) {

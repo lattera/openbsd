@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.4 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.5 2003/03/28 00:38:33 niklas Exp $ */
 /* $NetBSD: wsmouse.c,v 1.12 2000/05/01 07:36:58 takemura Exp $ */
 
 /*
@@ -163,8 +163,6 @@ struct cfattach wsmouse_ca = {
 #if NWSMOUSE > 0
 extern struct cfdriver wsmouse_cd;
 #endif /* NWSMOUSE > 0 */
-
-cdev_decl(wsmouse);
 
 #if NWSMUX > 0
 struct wsmuxops wsmouse_muxops = {
@@ -435,6 +433,16 @@ wsmouse_input(wsmousedev, btns, x, y, z, flags)
 		ADVANCE;
 		ub ^= d;
 	}
+
+	/* XXX fake wscons_event notifying wsmoused(8) to close mouse device */
+	if (flags & WSMOUSE_INPUT_WSMOUSED_CLOSE) {
+			NEXT;
+			ev->type = WSCONS_EVENT_WSMOUSED_CLOSE;
+			ev->value = 0;
+			TIMESTAMP;
+			ADVANCE;
+	}
+
 out:
 	if (any) {
 		sc->sc_ub = ub;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.4 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.5 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -102,7 +102,6 @@
 
 /* XXX: These belong elsewhere */
 cdev_decl(com);
-bdev_decl(com);
 
 static u_char tiocm_xxx2mcr(int);
 
@@ -379,8 +378,10 @@ com_enable_debugport(sc)
 
 	/* Turn on line break interrupt, set carrier. */
 	s = splhigh();
+#ifdef KGDB
 	SET(sc->sc_ier, IER_ERXRDY);
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, com_ier, sc->sc_ier);
+#endif
 	SET(sc->sc_mcr, MCR_DTR | MCR_RTS | MCR_IENABLE);
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, com_mcr, sc->sc_mcr);
 
@@ -918,6 +919,7 @@ comioctl(dev, cmd, data, flag, p)
 	return 0;
 }
 
+/* already called at spltty */
 int
 comparam(tp, t)
 	struct tty *tp;
@@ -929,7 +931,6 @@ comparam(tp, t)
 	int ospeed = comspeed(sc->sc_frequency, t->c_ospeed);
 	u_char lcr;
 	tcflag_t oldcflag;
-	int s;
 
 	/* check requested parameters */
 	if (ospeed < 0 || (t->c_ispeed && t->c_ispeed != t->c_ospeed))
@@ -961,8 +962,6 @@ comparam(tp, t)
 
 	sc->sc_lcr = lcr;
 
-	s = spltty();
-
 	if (ospeed == 0) {
 		CLR(sc->sc_mcr, MCR_DTR);
 		bus_space_write_1(iot, ioh, com_mcr, sc->sc_mcr);
@@ -992,7 +991,6 @@ comparam(tp, t)
 				    TTOPRI | PCATCH, "comprm", 0);
 				--sc->sc_halt;
 				if (error) {
-					splx(s);
 					comstart(tp);
 					return (error);
 				}
@@ -1059,7 +1057,6 @@ comparam(tp, t)
 	}
 
 	/* Just to be sure... */
-	splx(s);
 	comstart(tp);
 	return 0;
 }
@@ -1225,6 +1222,8 @@ compoll(arg)
 out:
 #ifndef __HAVE_GENERIC_SOFT_INTERRUPTS
 	timeout_add(&sc->sc_poll_tmo, 1);
+#else
+	;
 #endif
 }
 
@@ -1293,10 +1292,6 @@ comintr(arg)
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct tty *tp;
 	u_char lsr, data, msr, delta;
-#ifdef PPS_SYNC
-	struct timeval tv;
-	long usec;
-#endif /* PPS_SYNC */
 
 	if (!sc->sc_tty)
 		return (0);		/* can't do squat. */
@@ -1357,19 +1352,6 @@ comintr(arg)
 			delta = msr ^ sc->sc_msr;
 			sc->sc_msr = msr;
 			if (ISSET(delta, MSR_DCD)) {
-#ifdef PPS_SYNC
-				if (ISSET(sc->sc_swflags, COM_SW_PPS)) {
-					if (ISSET(msr, MSR_DCD)) {
-						usec = time.tv_usec;
-						microtime(&tv);
-						usec = tv.tv_usec - usec;
-						if (usec < 0)
-							usec += 1000000;
-						hardpps(&tv, usec);
-					}
-				}
-				else
-#endif /* PPS_SYNC */
 				if (!ISSET(sc->sc_swflags, COM_SW_SOFTCAR) &&
 				    (*linesw[tp->t_line].l_modem)(tp, ISSET(msr, MSR_DCD)) == 0) {
 					CLR(sc->sc_mcr, sc->sc_dtr);
@@ -1434,22 +1416,22 @@ com_common_putc(iot, ioh, c)
 	bus_space_handle_t ioh;
 	int c;
 {
-	int s = splhigh();
+	int s = spltty();
 	int timo;
 
 	/* wait for any pending transmission to finish */
-	timo = 150000;
+	timo = 2000;
 	while (!ISSET(bus_space_read_1(iot, ioh, com_lsr), LSR_TXRDY) && --timo)
-		continue;
+		delay(1);
 
 	bus_space_write_1(iot, ioh, com_data, c);
 	bus_space_barrier(iot, ioh, 0, COM_NPORTS,
 	    (BUS_SPACE_BARRIER_READ|BUS_SPACE_BARRIER_WRITE));
 
 	/* wait for this transmission to complete */
-	timo = 1500000;
+	timo = 2000;
 	while (!ISSET(bus_space_read_1(iot, ioh, com_lsr), LSR_TXRDY) && --timo)
-		continue;
+		delay(1);
 
 	splx(s);
 }
@@ -1472,7 +1454,7 @@ cominit(iot, ioh, rate)
 	bus_space_write_1(iot, ioh, com_dlbh, rate >> 8);
 	bus_space_write_1(iot, ioh, com_lcr, LCR_8BITS);
 	bus_space_write_1(iot, ioh, com_mcr, MCR_DTR | MCR_RTS);
-	bus_space_write_1(iot, ioh, com_ier, IER_ERXRDY | IER_ETXRDY);
+	bus_space_write_1(iot, ioh, com_ier, 0);  /* Make sure they are off */
 	bus_space_write_1(iot, ioh, com_fifo,
 	    FIFO_ENABLE | FIFO_RCV_RST | FIFO_XMT_RST | FIFO_TRIGGER_1);
 	stat = bus_space_read_1(iot, ioh, com_iir);

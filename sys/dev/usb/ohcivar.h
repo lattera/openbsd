@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ohcivar.h,v 1.6.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ohcivar.h,v 1.6.2.5 2003/03/28 00:38:31 niklas Exp $ */
 /*	$NetBSD: ohcivar.h,v 1.28 2001/09/28 23:57:21 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohcivar.h,v 1.13 1999/11/17 22:33:41 n_hibma Exp $	*/
 
@@ -138,6 +138,7 @@ typedef struct ohci_softc {
 	char sc_dying;
 } ohci_softc_t;
 
+void	ohci_reset(ohci_softc_t *);
 usbd_status	ohci_init(ohci_softc_t *);
 int		ohci_intr(void *);
 #if defined(__NetBSD__) || defined(__OpenBSD__)

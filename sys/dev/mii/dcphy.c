@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/dcphy.c,v 1.1.2.2 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/dcphy.c,v 1.1.2.3 2003/03/28 00:38:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -92,7 +92,7 @@ struct cfattach dcphy_ca = {
 	sizeof(struct mii_softc), dcphy_match, dcphy_attach, mii_phy_detach,
 	    mii_phy_activate
 };
-	  
+
 struct cfdriver dcphy_cd = {
 	NULL, "dcphy", DV_DULL
 };
@@ -167,6 +167,9 @@ dcphy_attach(parent, self, aux)
 		}
 		break;
 	}
+
+	if (dc_sc->dc_type == DC_TYPE_21145)
+		sc->mii_capabilities = BMSR_10THDX;
 
 	sc->mii_capabilities &= ma->mii_capmask;
 	if (sc->mii_capabilities & BMSR_MEDIAMASK)
@@ -371,7 +374,7 @@ dcphy_status(sc)
 		/*
 		 * If the other side doesn't support NWAY, then the
 		 * best we can do is determine if we have a 10Mbps or
-		 * 100Mbps link. There's no way to know if the link 
+		 * 100Mbps link. There's no way to know if the link
 		 * is full or half duplex, so we default to half duplex
 		 * and hope that the user is clever enough to manually
 		 * change the media settings if we're wrong.

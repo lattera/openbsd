@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.10.4.7 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_tl.c,v 1.10.4.8 2003/03/28 00:38:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -429,7 +429,7 @@ u_int8_t tl_eeprom_putbyte(sc, byte)
 	tl_dio_setbit(sc, TL_NETSIO, TL_SIO_ETXEN);
 
 	/*
-	 * Feed in each bit and stobe the clock.
+	 * Feed in each bit and strobe the clock.
 	 */
 	for (i = 0x80; i; i >>= 1) {
 		if (byte & i) {
@@ -860,42 +860,43 @@ void tl_setmulti(sc)
 {
 	struct ifnet		*ifp;
 	u_int32_t		hashes[2] = { 0, 0 };
-	int			h, i;
+	int			h;
 	struct arpcom *ac = &sc->arpcom;
 	struct ether_multistep step;
 	struct ether_multi *enm;
-	u_int8_t		dummy[] = { 0, 0, 0, 0, 0 ,0 };
 	ifp = &sc->arpcom.ac_if;
 
-	/* First, zot all the existing filters. */
-	for (i = 1; i < 4; i++)
-		tl_setfilt(sc, (caddr_t)&dummy, i);
 	tl_dio_write32(sc, TL_HASH1, 0);
 	tl_dio_write32(sc, TL_HASH2, 0);
 
-	/* Now program new ones. */
-	if (ifp->if_flags & IFF_ALLMULTI) {
-		hashes[0] = 0xFFFFFFFF;
-		hashes[1] = 0xFFFFFFFF;
-	} else {
-		i = 1;
-		ETHER_FIRST_MULTI(step, ac, enm);
-		while (enm != NULL) {
-			if (i < 4) {
-				tl_setfilt(sc, enm->enm_addrlo, i);
-				i++;
-				continue;
-			}
-
+	ifp->if_flags &= ~IFF_ALLMULTI;
+#if 0
+	ETHER_FIRST_MULTI(step, ac, enm);
+	while (enm != NULL) {
+		if (memcmp(enm->enm_addrlo, enm->enm_addrhi, 6) == 0) {
 			h = tl_calchash(enm->enm_addrlo);
-			if (h < 32)
-				hashes[0] |= (1 << h);
-			else
-				hashes[1] |= (1 << (h - 32));
-				
-			ETHER_NEXT_MULTI(step, enm);
+			hashes[h/32] |= (1 << (h % 32));
+		} else {
+			hashes[0] = hashes[1] = 0xffffffff;
+			ifp->if_flags |= IFF_ALLMULTI;
+			break;
 		}
+		ETHER_NEXT_MULTI(step, enm);
 	}
+#else
+	ETHER_FIRST_MULTI(step, ac, enm);
+	h = 0;
+	while (enm != NULL) {
+		h++;
+		ETHER_NEXT_MULTI(step, enm);
+	}
+	if (h) {
+		hashes[0] = hashes[1] = 0xffffffff;
+		ifp->if_flags |= IFF_ALLMULTI;
+	} else {
+		hashes[0] = hashes[1] = 0x00000000;
+	}
+#endif
 
 	tl_dio_write32(sc, TL_HASH1, hashes[0]);
 	tl_dio_write32(sc, TL_HASH2, hashes[1]);
@@ -1478,7 +1479,7 @@ int tl_encap(sc, c, m_head)
 				break;
 			total_len+= m->m_len;
 			c->tl_ptr->tl_frag[frag].tlist_dadr =
-				vtophys(mtod(m, vm_offset_t));
+				vtophys(mtod(m, vaddr_t));
 			c->tl_ptr->tl_frag[frag].tlist_dcnt = m->m_len;
 			frag++;
 		}

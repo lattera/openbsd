@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/qsphy.c,v 1.5.2.2 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/qsphy.c,v 1.5.2.3 2003/03/28 00:38:20 niklas Exp $	*/
 /*	$NetBSD: qsphy.c,v 1.19 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*-
@@ -37,7 +37,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /*
  * Copyright (c) 1997 Manuel Bouyer.  All rights reserved.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/vnode.h,v 1.22.2.7 2002/03/28 14:52:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/vnode.h,v 1.22.2.8 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: vnode.h,v 1.38 1996/02/29 20:59:05 cgd Exp $	*/
 
 /*
@@ -69,7 +69,7 @@ enum vtype	{ VNON, VREG, VDIR, VBLK, VCHR, VLNK, VSOCK, VFIFO, VBAD };
 enum vtagtype	{
 	VT_NON, VT_UFS, VT_NFS, VT_MFS, VT_MSDOSFS, VT_LFS, VT_LOFS, VT_FDESC,
 	VT_PORTAL, VT_NULL, VT_UMAP, VT_KERNFS, VT_PROCFS, VT_AFS, VT_ISOFS,
-	VT_UNION, VT_ADOSFS, VT_EXT2FS, VT_NCPFS, VT_VFS, VT_XFS, VT_TCFS
+	VT_UNION, VT_ADOSFS, VT_EXT2FS, VT_NCPFS, VT_VFS, VT_XFS
 };
 
 /*
@@ -200,6 +200,14 @@ struct vattr {
  */
 #define	VNOVAL	(-1)
 
+/*
+ * Structure returned by the KERN_VNODE sysctl
+ */
+struct e_vnode {
+	struct vnode *vptr;
+	struct vnode vnode;
+};	
+
 #ifdef _KERNEL
 /*
  * Convert between vnode types and inode formats (since POSIX.1
@@ -328,7 +336,7 @@ extern struct vnodeop_desc *vnodeop_descs[];
 /*
  * Interlock for scanning list of vnodes attached to a mountpoint
  */
-struct simplelock mntvnode_slock;
+extern struct simplelock mntvnode_slock;
 
 /*
  * This macro is very helpful in defining those offsets in the vdesc struct.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.4 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.5 2003/03/28 00:38:20 niklas Exp $	*/
 /*	$NetBSD: miivar.h,v 1.17 2000/03/06 20:56:57 thorpej Exp $	*/
 
 /*-
@@ -125,7 +125,7 @@ typedef void (*mii_statusreq_t)(struct mii_softc *);
  */
 struct mii_softc {
 	struct device mii_dev;		/* generic device glue */
-	
+
 	LIST_ENTRY(mii_softc) mii_list;	/* entry on parent's PHY list */
 
 	int mii_phy;			/* our MII address */

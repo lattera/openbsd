@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.5 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.6 2003/03/28 00:38:13 niklas Exp $	*/
 /*	$NetBSD: if_fxpvar.h,v 1.1 1997/06/05 02:01:58 thorpej Exp $	*/
 
 /*                  
@@ -79,7 +79,7 @@ struct fxp_softc {
 	bus_space_tag_t sc_st;		/* bus space tag */
 	bus_space_handle_t sc_sh;	/* bus space handle */
 	bus_dma_tag_t sc_dmat;		/* bus dma tag */
-	struct arpcom arpcom;		/* per-interface network data */
+	struct arpcom sc_arpcom;	/* per-interface network data */
 	struct mii_data sc_mii;		/* MII media information */
 	struct mbuf *rfa_headm;		/* first mbuf in receive frame area */
 	struct mbuf *rfa_tailm;		/* last mbuf in receive frame area */
@@ -144,6 +144,10 @@ extern int fxp_detach(struct fxp_softc *);
 #define	FXP_CFG_SYNC(sc, p)						\
     bus_dmamap_sync((sc)->sc_dmat, (sc)->tx_cb_map,			\
 	offsetof(struct fxp_ctrl, u.cfg), sizeof(struct fxp_cb_config), (p))
+
+#define	FXP_STATS_SYNC(sc, p)						\
+    bus_dmamap_sync((sc)->sc_dmat, (sc)->tx_cb_map,			\
+	offsetof(struct fxp_ctrl, stats), sizeof(struct fxp_stats), (p)) 
 
 #define	FXP_MBUF_SYNC(sc, m, p)						\
     bus_dmamap_sync((sc)->sc_dmat, (m), 0, (m)->dm_mapsize, (p))

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.7 2002/03/06 02:11:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.8 2003/03/28 00:38:20 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.26 2001/12/15 02:41:33 deraadt Exp 
+ *	OpenBSD: miidevs,v 1.33 2003/02/19 10:12:55 miod Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -94,6 +94,8 @@
 /* Contrived vendor for dcphy */
 #define	MII_OUI_xxDEC	0x040440	/* Digital Clone */
 
+#define	MII_OUI_xxMARVELL	0x000ac2	/* Marvell Semiconductor */
+
 /*
  * List of known models.  Grouped by oui.
  */
@@ -115,12 +117,20 @@
 #define	MII_STR_xxBROADCOM_BCM5401	"BCM5401 10/100/1000baseTX PHY"
 #define	MII_MODEL_xxBROADCOM_BCM5411	0x0007
 #define	MII_STR_xxBROADCOM_BCM5411	"BCM5411 10/100/1000baseTX PHY"
+#define	MII_MODEL_xxBROADCOM_BCM5421S	0x000e
+#define	MII_STR_xxBROADCOM_BCM5421S	"BCM5421S 10/100/1000baseTX PHY"
+#define	MII_MODEL_xxBROADCOM_BCM5701	0x0011
+#define	MII_STR_xxBROADCOM_BCM5701	"BCM5701 10/100/1000baseTX PHY"
+#define	MII_MODEL_xxBROADCOM_BCM5703	0x0016
+#define	MII_STR_xxBROADCOM_BCM5703	"BCM5703 10/100/1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5400	0x0004
 #define	MII_STR_BROADCOM_BCM5400	"BCM5400 1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5401	0x0005
 #define	MII_STR_BROADCOM_BCM5401	"BCM5401 1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5411	0x0007
 #define	MII_STR_BROADCOM_BCM5411	"BCM5411 1000baseTX PHY"
+#define	MII_MODEL_BROADCOM_3C905B	0x0012
+#define	MII_STR_BROADCOM_3C905B	"Broadcom 3C905B internal PHY"
 #define	MII_MODEL_BROADCOM_3C905C	0x0017
 #define	MII_STR_BROADCOM_3C905C	"Broadcom 3C905C internal PHY"
 #define	MII_MODEL_BROADCOM_BCM5221	0x001e
@@ -142,7 +152,15 @@
 
 /* Marvell Semiconductor PHYs */
 #define	MII_MODEL_MARVELL_E1000	0x0000
-#define	MII_STR_MARVELL_E1000	"Marvell Semiconductor 88E1000* Gigabit"
+#define	MII_STR_MARVELL_E1000	"Marvell 88E1000* Gigabit PHY"
+#define	MII_MODEL_MARVELL_E1000_3	0x0003
+#define	MII_STR_MARVELL_E1000_3	"Marvell 88E1000 Gigabit PHY"
+#define	MII_MODEL_MARVELL_E1000_6	0x0006
+#define	MII_STR_MARVELL_E1000_6	"Marvell 88E1000 Gigabit PHY"
+#define	MII_MODEL_xxMARVELL_E1000_3	0x0003
+#define	MII_STR_xxMARVELL_E1000_3	"Marvell 88E1000 Gigabit PHY"
+#define	MII_MODEL_xxMARVELL_E1000_5	0x0005
+#define	MII_STR_xxMARVELL_E1000_5	"Marvell 88E1000 Gigabit PHY"
 
 /* Contrived vendor/model for dcphy */
 #define	MII_MODEL_xxDEC_xxDC	0x0001
@@ -153,6 +171,8 @@
 #define	MII_STR_xxICS_1890	"ICS1890 10/100 media interface"
 #define	MII_MODEL_xxICS_1892	0x0003
 #define	MII_STR_xxICS_1892	"ICS1892 10/100 media interface"
+#define	MII_MODEL_xxICS_1893	0x0004
+#define	MII_STR_xxICS_1893	"ICS1893 10/100 media interface"
 
 /* Intel PHYs */
 #define	MII_MODEL_xxINTEL_I82553	0x0000

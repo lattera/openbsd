@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/auconv.c,v 1.1.12.3 2002/03/06 02:11:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/auconv.c,v 1.1.12.4 2003/03/28 00:38:09 niklas Exp $ */
 /*	$NetBSD: auconv.c,v 1.3 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*
@@ -220,6 +220,45 @@ ulinear8_to_linear16_le(v, p, cc)
 	}
 }
 
+void
+ulinear8_to_linear16_be(v, p, cc)
+	void *v;
+	u_char *p;
+	int cc;
+{
+	u_char *q = p;
+
+	p += cc;
+	q += cc * 2;
+	while (--cc >= 0) {
+		q -= 2;
+		q[0] = (*--p) ^ 0x80;
+		q[1] = 0;
+	}
+}
+
+void
+linear16_to_ulinear8_le(void *v, u_char *p, int cc)
+{
+	u_char *q = p;
+
+	while (--cc >= 0) {
+		*q++ = p[1] ^ 0x80;
+		p += 2;
+	}
+}
+
+void
+linear16_to_ulinear8_be(void *v, u_char *p, int cc)
+{
+	u_char *q = p;
+
+	while (--cc >= 0) {
+		*q++ = p[0] ^ 0x80;
+		p += 2;
+	}
+}
+
 /*
  * just expand mono to stereo, no other conversions
  */
@@ -297,23 +336,6 @@ linear8_to_linear16_be_mts(v, p, cc)
 		q -= 4;
 		q[0] = q[2] = *--p;
 		q[1] = q[3] = 0;
-	}
-}
-
-void
-ulinear8_to_linear16_be(v, p, cc)
-	void *v;
-	u_char *p;
-	int cc;
-{
-	u_char *q = p;
-
-	p += cc;
-	q += cc * 2;
-	while (--cc >= 0) {
-		q -= 2;
-		q[0] = (*--p) ^ 0x80;
-		q[1] = 0;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.4.1 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.4.2 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: bha.c,v 1.27 1998/11/19 21:53:00 thorpej Exp $	*/
 
 #undef BHADEBUG
@@ -1038,7 +1038,7 @@ bha_find(iot, ioh, sc)
 
 
 /*
- * Disable the ISA-compatiblity ioports on  PCI bha devices,
+ * Disable the ISA-compatibility ioports on PCI bha devices,
  * to ensure they're not autoconfigured a second time as an ISA bha.
  */
 int

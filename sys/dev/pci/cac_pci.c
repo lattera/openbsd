@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3.4.5 2002/03/06 02:11:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3.4.6 2003/03/28 00:38:20 niklas Exp $	*/
 /*	$NetBSD: cac_pci.c,v 1.10 2001/01/10 16:48:04 ad Exp $	*/
 
 /*-
@@ -270,7 +270,7 @@ cac_pci_l0_completed(struct cac_softc *sc)
 
 	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap, 0,
 	    sc->sc_dmamap->dm_mapsize,
-	    BUS_DMASYNC_PREWRITE | BUS_DMASYNC_PREREAD);
+	    BUS_DMASYNC_POSTWRITE | BUS_DMASYNC_POSTREAD);
 
 	return (ccb);
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.7 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.8 2003/03/28 00:38:33 niklas Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -60,6 +60,7 @@
 #include <dev/ic/pcdisplay.h>
 
 #include "wskbd.h"
+#include "wsmouse.h"
 #include "wsmux.h"
 
 #if NWSKBD > 0
@@ -67,7 +68,15 @@
 #include <dev/wscons/wsmuxvar.h>
 #endif
 
+#if NWSMOUSE > 0
+#include "wsmousevar.h"
+#endif /* NWSMOUSE > 0 */
+
 #include "wsmoused.h"
+
+#if NWSMOUSE > 0
+extern struct cfdriver wsmouse_cd;
+#endif /* NWSMOUSE > 0 */
 
 struct wsscreen_internal {
 	const struct wsdisplay_emulops *emulops;
@@ -89,6 +98,7 @@ struct wsscreen {
 #define SCR_OPEN 1		/* is it open? */
 #define SCR_WAITACTIVE 2	/* someone waiting on activation */
 #define SCR_GRAPHICS 4		/* graphics mode, no text (emulation) output */
+#define	SCR_DUMBFB 8		/* in use as dumb framebuffer (iff SCR_GRAPHICS) */
 	const struct wscons_syncops *scr_syncops;
 	void *scr_synccookie;
 
@@ -99,17 +109,17 @@ struct wsscreen {
 	struct wsdisplay_softc *sc;
 
 	/* mouse console support via wsmoused(8) */
-	unsigned short mouse; 		/* mouse cursor position */
+	unsigned short mouse;		/* mouse cursor position */
 	unsigned short cursor;		/* selection cursor position (if
 					different from mouse cursor pos) */
-	unsigned short cpy_start; 	/* position of the copy start mark*/
+	unsigned short cpy_start;	/* position of the copy start mark*/
 	unsigned short cpy_end;		/* position of the copy end mark */
 	unsigned short orig_start;	/* position of the original sel. start*/
 	unsigned short orig_end;	/* position of the original sel. end */
-#define MOUSE_VISIBLE 	(1 << 0)	/* flag, the mouse cursor is visible */
-#define SEL_EXISTS 	(1 << 1)	/* flag, a selection exists */
+#define MOUSE_VISIBLE	(1 << 0)	/* flag, the mouse cursor is visible */
+#define SEL_EXISTS	(1 << 1)	/* flag, a selection exists */
 #define SEL_IN_PROGRESS (1 << 2)	/* flag, a selection is in progress */
-#define SEL_EXT_AFTER 	(1 << 3)	/* flag, selection is extended after */
+#define SEL_EXT_AFTER	(1 << 3)	/* flag, selection is extended after */
 #define BLANK_TO_EOL	(1 << 4)	/* flag, there are only blanks
 					   characters to eol */
 #define SEL_BY_CHAR	(1 << 5)	/* flag, select character by character*/
@@ -137,9 +147,6 @@ void wsdisplay_addscreen_print(struct wsdisplay_softc *, int, int);
 void wsdisplay_closescreen(struct wsdisplay_softc *, struct wsscreen *);
 int wsdisplay_delscreen(struct wsdisplay_softc *, int, int);
 void wsdisplay_burner(void *v);
-
-#define WSDISPLAY_MAXSCREEN	12
-#define WSDISPLAY_MAXFONT	8
 
 struct wsdisplay_softc {
 	struct device sc_dv;
@@ -174,9 +181,15 @@ struct wsdisplay_softc {
 	int sc_rawkbd;
 #endif
 #endif /* NWSKBD > 0 */
+
+	dev_t wsmoused_dev; /* device opened by wsmoused(8), when active */
+	int wsmoused_sleep; /* true when wsmoused(8) is sleeping */
 };
 
 extern struct cfdriver wsdisplay_cd;
+#if NWSMUX > 0
+extern struct wsmux_softc **wsmuxdevs;
+#endif /* NWSMUX > 0 */
 
 /* Autoconfiguration definitions. */
 int wsdisplay_emul_match(struct device *, void *, void *);
@@ -197,9 +210,6 @@ struct cfattach wsdisplay_noemul_ca = {
 	sizeof(struct wsdisplay_softc), wsdisplay_noemul_match,
 	    wsdisplay_noemul_attach,
 };
-
-/* Exported tty- and cdevsw-related functions. */
-cdev_decl(wsdisplay);
 
 void wsdisplaystart(struct tty *);
 int wsdisplayparam(struct tty *, struct termios *);
@@ -239,7 +249,7 @@ struct consdev wsdisplay_cons = {
 };
 
 #ifndef WSDISPLAY_DEFAULTSCREENS
-# define WSDISPLAY_DEFAULTSCREENS	0
+# define WSDISPLAY_DEFAULTSCREENS	1
 #endif
 int wsdisplay_defaultscreens = WSDISPLAY_DEFAULTSCREENS;
 
@@ -670,7 +680,7 @@ wsdisplay_common_attach(sc, console, scrdata, accessops, accesscookie)
 
 	sc->sc_muxdv = wsmux_create("dmux", sc->sc_dv.dv_unit);
 	if (!sc->sc_muxdv)
-		panic("wsdisplay_common_attach: no memory\n");
+		panic("wsdisplay_common_attach: no memory");
 	sc->sc_muxdv->sc_displaydv = &sc->sc_dv;
 #endif
 
@@ -1054,19 +1064,52 @@ wsdisplay_internal_ioctl(sc, scr, cmd, data, flag, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GMODE:
-		*(u_int *)data = (scr->scr_flags & SCR_GRAPHICS ?
-		    WSDISPLAYIO_MODE_MAPPED : WSDISPLAYIO_MODE_EMUL);
+		if (scr->scr_flags & SCR_GRAPHICS) {
+			if (scr->scr_flags & SCR_DUMBFB)
+				*(u_int *)data = WSDISPLAYIO_MODE_DUMBFB;
+			else
+				*(u_int *)data = WSDISPLAYIO_MODE_MAPPED;
+		} else
+			*(u_int *)data = WSDISPLAYIO_MODE_EMUL;
 		return (0);
 
 	case WSDISPLAYIO_SMODE:
 #define d (*(int *)data)
-		if (d != WSDISPLAYIO_MODE_EMUL && d != WSDISPLAYIO_MODE_MAPPED)
+		if (d != WSDISPLAYIO_MODE_EMUL &&
+		    d != WSDISPLAYIO_MODE_MAPPED &&
+		    d != WSDISPLAYIO_MODE_DUMBFB)
 			return (EINVAL);
 
 	    if (WSSCREEN_HAS_EMULATOR(scr)) {
 		    scr->scr_flags &= ~SCR_GRAPHICS;
-		    if (d == WSDISPLAYIO_MODE_MAPPED)
-			    scr->scr_flags |= SCR_GRAPHICS;
+		    if (d == WSDISPLAYIO_MODE_MAPPED ||
+			d == WSDISPLAYIO_MODE_DUMBFB) {
+			    scr->scr_flags |= SCR_GRAPHICS |
+				((d == WSDISPLAYIO_MODE_DUMBFB) ?
+				    SCR_DUMBFB : 0);
+
+			    /*
+			     * wsmoused cohabitation with X-Window support
+			     * X-Window is starting
+			     */
+			    wsmoused_release(sc);
+
+			    /* disable the burner while X is running */
+			    if (sc->sc_burnout)
+				    timeout_del(&sc->sc_burner);
+		    }
+		    else {
+			    /* reenable the burner after exiting from X */
+			    if (!sc->sc_burnman)
+				    wsdisplay_burn(sc, sc->sc_burnflags);
+
+			    /*
+			     * wsmoused cohabitation with X-Window support
+			     * X-Window is ending
+			     */
+
+			    wsmoused_wakeup(sc);
+		    }
 	    } else if (d == WSDISPLAYIO_MODE_EMUL)
 		    return (EINVAL);
 
@@ -1702,6 +1745,7 @@ wsdisplay_switch(dev, no, waitok)
 	int s, res = 0;
 	struct wsscreen *scr;
 
+
 	if (no != WSDISPLAY_NULLSCREEN &&
 	    (no < 0 || no >= WSDISPLAY_MAXSCREEN || !sc->sc_scr[no]))
 		return (ENXIO);
@@ -1731,6 +1775,48 @@ wsdisplay_switch(dev, no, waitok)
 	} else
 		sc->sc_oldscreen = sc->sc_focusidx;
 
+
+	/*
+	 *  wsmoused cohabitation with X-Window support
+	 *
+	 *  Detect switch from a graphic to text console and vice-versa
+	 *  This only happen when switching from X-Window to text mode and
+	 *  switching back from text mode to X-Window.
+	 *
+	 *  scr_flags is not yet flagged with SCR_GRAPHICS when X-Window starts
+	 *  (KD_GRAPHICS ioctl happens after VT_ACTIVATE ioctl in
+	 *  xf86OpenPcvt()). Conversely, scr_flags is no longer flagged with
+	 *  SCR_GRAPHICS when X-Window stops. In this case, the first of the
+	 *  three following 'if' statements is evaluated.
+	 *  We handle wsmoused(8) events the WSDISPLAYIO_SMODE ioctl.
+	 *
+	 */
+
+	if (!(scr->scr_flags & SCR_GRAPHICS) &&
+	    (!(sc->sc_scr[no]->scr_flags & SCR_GRAPHICS))) {
+		/* switching from a text console to another text console */
+		/* XXX evaluated when the X-server starts or stops, see above */
+
+		/* remove a potential wsmoused(8) selection */
+		mouse_remove(sc);
+	}
+
+	if (!(scr->scr_flags & SCR_GRAPHICS) &&
+	    (sc->sc_scr[no]->scr_flags & SCR_GRAPHICS)) {
+		/* switching from a text console to a graphic console */
+	
+		/* remote a potential wsmoused(8) selection */
+		mouse_remove(sc);
+		wsmoused_release(sc);
+	}
+	
+	if ((scr->scr_flags & SCR_GRAPHICS) &&
+	    !(sc->sc_scr[no]->scr_flags & SCR_GRAPHICS)) {
+		/* switching from a graphic console to a text console */
+
+		wsmoused_wakeup(sc);
+	}
+
 #define wsswitch_cb1 ((void (*)(void *, int, int))wsdisplay_switch1)
 	if (scr->scr_syncops) {
 		res = (*scr->scr_syncops->detach)(scr->scr_synccookie, waitok,
@@ -1743,12 +1829,6 @@ wsdisplay_switch(dev, no, waitok)
 		/* no way to save state */
 		res = EBUSY;
 	}
-
-	if (IS_SEL_EXISTS(sc->sc_focus))
-		/* hide a potential selection */
-		remove_selection(sc);
-
-	mouse_hide(sc); /* hide a potential mouse cursor */
 
 	return (wsdisplay_switch1(sc, res, waitok));
 }
@@ -2080,8 +2160,9 @@ wsdisplay_shutdownhook(arg)
 }
 
 /*
- * mouse console support functions
+ * wsmoused(8) support functions
  */
+
 
 /* pointer to the current screen wsdisplay_softc structure */
 static struct wsdisplay_softc *sc = NULL;
@@ -2200,20 +2281,31 @@ button_event(int button, int clicks)
 int
 ctrl_event(u_int type, int value, struct wsdisplay_softc *ws_sc, struct proc *p)
 {
-	int i;
+	int i, error;
 
 	if (type == WSCONS_EVENT_WSMOUSED_ON) {
 		if (!ws_sc->sc_accessops->getchar)
-			/* no wsmoused support in the display driver */
+			/* no wsmoused(8) support in the display driver */
 			return (1);
 		/* initialization of globals */
 		sc = ws_sc;
 		allocate_copybuffer(sc);
 		Paste_avail = 0;
+		ws_sc->wsmoused_dev = value;
 	}
 	if (type == WSCONS_EVENT_WSMOUSED_OFF) {
 		Paste_avail = 0;
+		ws_sc->wsmoused_dev = 0;
 		return (0);
+	}
+	if (type == WSCONS_EVENT_WSMOUSED_SLEEP) {
+		/* sleeping until next switch to text mode */
+		ws_sc->wsmoused_sleep = 1;
+		error = 0;
+		while (ws_sc->wsmoused_sleep && error == 0)
+			error = tsleep(&ws_sc->wsmoused_sleep, PPAUSE,
+			    "wsmoused_sleep", 0);
+		return (error);
 	}
 	for (i = 0 ; i < WSDISPLAY_DEFAULTSCREENS ; i++)
 		if (sc->sc_scr[i]) {
@@ -2369,7 +2461,7 @@ skip_spc_left(void)
  * Stolen from xterm sources of the Xfree project (see cvs tag below)
  * $TOG: button.c /main/76 1997/07/30 16:56:19 kaleb $
  */
-static int charClass[256] = {
+static const int charClass[256] = {
 /* NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,   1,   1,   1,   1,   1,   1,   1,
 /*  BS   HT   NL   VT   NP   CR   SO   SI */
@@ -2515,7 +2607,7 @@ mouse_copy_start(void)
 	if (!IS_MOUSE_VISIBLE(sc->sc_focus))
 		inverse_char(MOUSE);
 
-    	CPY_START = MOUSE;
+	CPY_START = MOUSE;
 	CPY_END = MOUSE;
 	ORIG_START = CPY_START;
 	ORIG_END = CPY_END;
@@ -2779,7 +2871,7 @@ mouse_copy_extend_word(void)
 			} else {
 				old_cpy_end = CPY_END;
 				CPY_END = MOUSE + skip_char_right(MOUSE);
-			       	if (CPY_END != old_cpy_end) {
+				if (CPY_END != old_cpy_end) {
 					/* reducing selection, from the end of
 					 * next word */
 					inverse_region(CPY_END + 1,
@@ -3043,4 +3135,92 @@ allocate_copybuffer(struct wsdisplay_softc *sc)
 	}
 	Copybuffer_size = size;
 	splx(s);
+}
+
+
+/* Remove selection and cursor on current screen */
+void
+mouse_remove(struct wsdisplay_softc *sc)
+{
+	if (IS_SEL_EXISTS(sc->sc_focus))
+		remove_selection(sc);
+
+	mouse_hide(sc);
+}
+
+
+
+/* Send a wscons event to notify wsmoused(8) to release the mouse device */
+void
+wsmoused_release(struct wsdisplay_softc *sc)
+{
+#if NWSMOUSE > 0
+	struct device *wsms_dev = NULL;
+	struct device **wsms_dev_list;
+	int is_wsmouse = 0;
+#if NWSMUX > 0
+	int is_wsmux = 0;
+#endif /* NWSMUX > 0 */
+
+	if (sc->wsmoused_dev) {
+		/* wsmoused(8) is running */
+
+		wsms_dev_list = (struct device **) wsmouse_cd.cd_devs;
+		if (!wsms_dev_list)
+			/* no wsmouse device exists */
+			return ;
+
+		/* test whether device opened by wsmoused(8) is a wsmux device
+		 * (/dev/wsmouse) or a wsmouse device (/dev/wsmouse{0..n} */
+
+#if NWSMUX > 0
+		/* obtain major of /dev/wsmouse multiplexor device */
+		/* XXX first member of wsmux_softc is of type struct device */
+		if (cdevsw[major(sc->wsmoused_dev)].d_open == wsmuxopen)
+			is_wsmux = 1;
+
+		if (is_wsmux && (minor(sc->wsmoused_dev) == WSMOUSEDEVCF_MUX)) {
+			/* /dev/wsmouse case */
+			/* XXX at least, wsmouse0 exist */
+			wsms_dev = wsms_dev_list[0];
+		}
+#endif /* NWSMUX > 0 */
+
+		/* obtain major of /dev/wsmouse{0..n} devices */
+		if (wsmouse_cd.cd_ndevs > 0) {
+			if (cdevsw[major(sc->wsmoused_dev)].d_open ==
+			     wsmouseopen)
+				is_wsmouse = 1;
+		}
+
+		if (is_wsmouse && (minor(sc->wsmoused_dev) <= NWSMOUSE)) {
+			/* /dev/wsmouseX case */
+			if (minor(sc->wsmoused_dev) <= wsmouse_cd.cd_ndevs) {
+				wsms_dev =
+				    wsms_dev_list[minor(sc->wsmoused_dev)];
+			}
+			else
+				/* no corresponding /dev/wsmouseX device */
+				return;
+		}
+
+		/* inject event to notify wsmoused(8) to close mouse device */
+		if (wsms_dev != NULL) 
+			wsmouse_input(wsms_dev, 0, 0, 0, 0,
+				      WSMOUSE_INPUT_WSMOUSED_CLOSE);
+		
+	}
+#endif /* NWSMOUSE > 0 */
+}
+
+/* Wakeup wsmoused(8), so that the mouse device can be reopened */
+void
+wsmoused_wakeup(struct wsdisplay_softc *sc)
+{
+#if NWSMOUSE > 0
+	if (sc->wsmoused_dev) {
+		sc->wsmoused_sleep = 0;
+		wakeup(&sc->wsmoused_sleep);
+	}
+#endif /* NWSMOUSE > 0 */
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82596var.h,v 1.2.2.3 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82596var.h,v 1.2.2.4 2003/03/28 00:38:13 niklas Exp $	*/
 /*	$NetBSD: i82586var.h,v 1.10 1998/08/15 04:42:42 mycroft Exp $	*/
 
 /*-
@@ -111,18 +111,19 @@
 #define IED_CMDS	0x80
 #define	IED_ALL		0xff
 
-#define B_PER_F		3		/* recv buffers per frame */
+#define B_PER_F		6		/* recv buffers per frame */
 #define	IE_RBUF_SIZE	256		/* size of each receive buffer;
 						MUST BE POWER OF TWO */
-#define	NTXBUF		2		/* number of transmit commands */
+#define	NTXBUF		4		/* number of transmit commands */
 #define	IE_TBUF_SIZE	ETHER_MAX_LEN	/* length of transmit buffer */
 
 #define IE_MAXMCAST	(IE_TBUF_SIZE/6)/* must fit in transmit buffer */
 
 
-#define	IE_INTR_ENTER	0		/* intr hook called on ISR entry */
-#define	IE_INTR_EXIT	1		/* intr hook called on ISR exit */
-#define	IE_INTR_LOOP	2		/* intr hook called on ISR loop */
+#define	IE_INTR_ENRCV	1		/* receive pkt interrupt */
+#define	IE_INTR_ENSND	2		/* send pkt interrupt */
+#define	IE_INTR_LOOP	3		/* a loop for next one*/
+#define	IE_INTR_EXIT	4		/* done w/ interrupts */
 
 #define	IE_CHIP_PROBE	0		/* reset called from chip probe */
 #define	IE_CARD_RESET	1		/* reset called from card reset */
@@ -294,10 +295,11 @@ int 	i82596_start_cmd(struct ie_softc *, int, int, int, int);
 static __inline__ void
 ie_ack(struct ie_softc *sc, u_int mask) /* in native byte-order */
 {
-	register u_int status;
+	u_int status;
+	int off = IE_SCB_STATUS(sc->scb);
 
-	bus_space_barrier(sc->bt, sc->bh, 0, 0, BUS_SPACE_BARRIER_READ);
-	status = (sc->ie_bus_read16)(sc, IE_SCB_STATUS(sc->scb));
+	bus_space_barrier(sc->bt, sc->bh, off, 2, BUS_SPACE_BARRIER_READ);
+	status = (sc->ie_bus_read16)(sc, off);
 	i82596_start_cmd(sc, status & mask, 0, 0, 0);
 }
 

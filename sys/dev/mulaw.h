@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mulaw.h,v 1.4.6.4 2002/03/28 12:29:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/mulaw.h,v 1.4.6.5 2003/03/28 00:38:09 niklas Exp $ */
 /*	$NetBSD: mulaw.h,v 1.11 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*-
@@ -47,6 +47,7 @@ extern void mulaw_to_ulinear16_be_mts(void *, u_char *buf, int cnt);
 /* Convert 8-bit mu-law to 16 bit signed linear. */
 extern void mulaw_to_slinear16_le(void *, u_char *buf, int cnt);
 extern void mulaw_to_slinear16_be(void *, u_char *buf, int cnt);
+extern void slinear16_to_mulaw_le(void *, u_char *buf, int cnt);
 /* Convert 8-bit mu-law to/from 8 bit unsigned linear. */
 extern void mulaw_to_ulinear8(void *, u_char *buf, int cnt);
 extern void ulinear8_to_mulaw(void *, u_char *buf, int cnt);

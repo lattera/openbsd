@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.6 2002/03/06 02:11:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.7 2003/03/28 00:38:21 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -33,6 +33,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 #ifndef __HIFN_H__
 #define	__HIFN_H__
@@ -45,8 +50,8 @@
  */
 #define	HIFN_BAR0		(PCI_MAPREG_START + 0)	/* PUC register map */
 #define	HIFN_BAR1		(PCI_MAPREG_START + 4)	/* DMA register map */
-#define	HIFN_RETRY_TIMEOUT	0x40
-#define	HIFN_TRDY_TIMEOUT	0x41
+#define	HIFN_RETRY_TIMEOUT	0x41
+#define	HIFN_TRDY_TIMEOUT	0x40
 
 /*
  * The values below should multiple of 4 -- and be large enough to handle
@@ -54,22 +59,22 @@
  *
  * MAX_COMMAND = base command + mac command + encrypt command +
  *			mac-key + rc4-key
- * MAX_RESULT  = base result + mac result + mac + encrypt result
+ * MAX_RESULT  = base result + comp result + mac result + mac + encrypt result
  *			
  *
  */
 #define	HIFN_MAX_COMMAND	(8 + 8 + 8 + 64 + 260)
-#define	HIFN_MAX_RESULT		(8 + 4 + 20 + 4)
+#define	HIFN_MAX_RESULT		(8 + 4 + 4 + 20 + 4)
 
 /*
  * hifn_desc_t
  *
  * Holds an individual descriptor for any of the rings.
  */
-typedef struct hifn_desc {
+struct hifn_desc {
 	volatile u_int32_t l;		/* length and status bits */
 	volatile u_int32_t p;
-} hifn_desc_t;
+};
 
 /*
  * Masks for the "length" field of struct hifn_desc.
@@ -81,7 +86,6 @@ typedef struct hifn_desc {
 #define	HIFN_D_LAST		0x20000000	/* last descriptor in chain */
 #define	HIFN_D_JUMP		0x40000000	/* jump descriptor */
 #define	HIFN_D_VALID		0x80000000	/* valid bit */
-
 
 /*
  * Processing Unit Registers (offset from BASEREG0)
@@ -194,13 +198,14 @@ typedef struct hifn_desc {
 #define	HIFN_1_7811_RNGSTS	0x6c	/* 7811: rng status */
 #define	HIFN_1_7811_MIPSRST	0x94	/* 7811: MIPS reset */
 #define	HIFN_1_REVID		0x98	/* Revision ID */
-
+#define	HIFN_1_UNLOCK_SECRET1	0xf4
+#define	HIFN_1_UNLOCK_SECRET2	0xfc
 #define	HIFN_1_PUB_RESET	0x204	/* Public/RNG Reset */
 #define	HIFN_1_PUB_BASE		0x300	/* Public Base Address */
 #define	HIFN_1_PUB_OPLEN	0x304	/* Public Operand Length */
 #define	HIFN_1_PUB_OP		0x308	/* Public Operand */
 #define	HIFN_1_PUB_STATUS	0x30c	/* Public Status */
-#define	HIFN_1_PUB_IEN		0x310	/* Public Interrupt nable */
+#define	HIFN_1_PUB_IEN		0x310	/* Public Interrupt enable */
 #define	HIFN_1_RNG_CONFIG	0x314	/* RNG config */
 #define	HIFN_1_RNG_DATA		0x318	/* RNG data */
 #define	HIFN_1_PUB_MEM		0x400	/* start of Public key memory */
@@ -303,13 +308,30 @@ typedef struct hifn_desc {
 #define	HIFN_MIPSRST_MIPSRST	0x00000002	/* warm reset MIPS */
 #define	HIFN_MIPSRST_MIPSCOLD	0x00000001	/* cold reset MIPS */
 
+/* Revision ID */
+#define	HIFN_REVID_7811_PB3_2	0x00000002	/* 7811PB3/2 */
+
 /* Public key reset register (HIFN_1_PUB_RESET) */
 #define	HIFN_PUBRST_RESET	0x00000001	/* reset public/rng unit */
 
+/* Public base address register (HIFN_1_PUB_BASE) */
+#define	HIFN_PUBBASE_ADDR	0x00003fff	/* base address */
+
+/* Public operand length register (HIFN_1_PUB_OPLEN) */
+#define	HIFN_PUBOPLEN_MOD_M	0x0000007f	/* modulus length mask */
+#define	HIFN_PUBOPLEN_MOD_S	0		/* modulus length shift */
+#define	HIFN_PUBOPLEN_EXP_M	0x0003ff80	/* exponent length mask */
+#define	HIFN_PUBOPLEN_EXP_S	7		/* exponent lenght shift */
+#define	HIFN_PUBOPLEN_RED_M	0x003c0000	/* reducend length mask */
+#define	HIFN_PUBOPLEN_RED_S	18		/* reducend length shift */
+
 /* Public operation register (HIFN_1_PUB_OP) */
-#define	HIFN_PUBOP_AOFFSET	0x0000003e	/* A offset */
-#define	HIFN_PUBOP_BOFFSET	0x00000fc0	/* B offset */
-#define	HIFN_PUBOP_MOFFSET	0x0003f000	/* M offset */
+#define	HIFN_PUBOP_AOFFSET_M	0x0000007f	/* A offset mask */
+#define	HIFN_PUBOP_AOFFSET_S	0		/* A offset shift */
+#define	HIFN_PUBOP_BOFFSET_M	0x00000f80	/* B offset mask */
+#define	HIFN_PUBOP_BOFFSET_S	7		/* B offset shift */
+#define	HIFN_PUBOP_MOFFSET_M	0x0003f000	/* M offset mask */
+#define	HIFN_PUBOP_MOFFSET_S	12		/* M offset shift */
 #define	HIFN_PUBOP_OP_MASK	0x003c0000	/* Opcode: */
 #define	HIFN_PUBOP_OP_NOP	0x00000000	/*  NOP */
 #define	HIFN_PUBOP_OP_ADD	0x00040000	/*  ADD */
@@ -322,13 +344,8 @@ typedef struct hifn_desc {
 #define	HIFN_PUBOP_OP_DECA	0x00200000	/*  DEC A */
 #define	HIFN_PUBOP_OP_MULT	0x00240000	/*  MULT */
 #define	HIFN_PUBOP_OP_MODMULT	0x00280000	/*  Modular MULT */
-#define	HIFN_PUBOP_OP_MODRED	0x002c0000	/*  Modular Red */
-#define	HIFN_PUBOP_OP_MODEXP	0x00300000	/*  Modular Exp */
-
-/* Public operand length register (HIFN_1_PUB_OPLEN) */
-#define	HIFN_PUBOPLEN_MODLEN	0x0000007f
-#define	HIFN_PUBOPLEN_EXPLEN	0x0003ff80
-#define	HIFN_PUBOPLEN_REDLEN	0x003c0000
+#define	HIFN_PUBOP_OP_MODRED	0x002c0000	/*  Modular RED */
+#define	HIFN_PUBOP_OP_MODEXP	0x00300000	/*  Modular EXP */
 
 /* Public status register (HIFN_1_PUB_STATUS) */
 #define	HIFN_PUBSTS_DONE	0x00000001	/* operation done */
@@ -340,18 +357,6 @@ typedef struct hifn_desc {
 /* Random number generator config register (HIFN_1_RNG_CONFIG) */
 #define	HIFN_RNGCFG_ENA		0x00000001	/* enable rng */
 
-/*
- * Register offsets in register set 1
- */
-
-#define	HIFN_UNLOCK_SECRET1	0xf4
-#define	HIFN_UNLOCK_SECRET2	0xfc
-
-#define	WRITE_REG_1(sc,reg,val)	\
-    bus_space_write_4((sc)->sc_st1, (sc)->sc_sh1, reg, val)
-#define	READ_REG_1(sc,reg) \
-    bus_space_read_4((sc)->sc_st1, (sc)->sc_sh1, reg)
-
 /*********************************************************************
  * Structs for board commands 
  *
@@ -360,15 +365,17 @@ typedef struct hifn_desc {
 /*
  * Structure to help build up the command data structure.
  */
-typedef struct hifn_base_command {
+struct hifn_base_command {
 	volatile u_int16_t masks;
 	volatile u_int16_t session_num;
 	volatile u_int16_t total_source_count;
 	volatile u_int16_t total_dest_count;
-} hifn_base_command_t;
+};
 
-#define	HIFN_BASE_CMD_MAC		0x0400
-#define	HIFN_BASE_CMD_CRYPT		0x0800
+#define	HIFN_BASE_CMD_COMP		0x0100	/* enable compression engine */
+#define	HIFN_BASE_CMD_PAD		0x0200	/* enable padding engine */
+#define	HIFN_BASE_CMD_MAC		0x0400	/* enable MAC engine */
+#define	HIFN_BASE_CMD_CRYPT		0x0800	/* enable crypt engine */
 #define	HIFN_BASE_CMD_DECODE		0x2000
 #define	HIFN_BASE_CMD_SRCLEN_M		0xc000
 #define	HIFN_BASE_CMD_SRCLEN_S		14
@@ -380,12 +387,12 @@ typedef struct hifn_base_command {
 /*
  * Structure to help build up the command data structure.
  */
-typedef struct hifn_crypt_command {
+struct hifn_crypt_command {
 	volatile u_int16_t masks;
 	volatile u_int16_t header_skip;
 	volatile u_int16_t source_count;
 	volatile u_int16_t reserved;
-} hifn_crypt_command_t;
+};
 
 #define	HIFN_CRYPT_CMD_ALG_MASK		0x0003		/* algorithm: */
 #define	HIFN_CRYPT_CMD_ALG_DES		0x0000		/*   DES */
@@ -406,12 +413,12 @@ typedef struct hifn_crypt_command {
 /*
  * Structure to help build up the command data structure.
  */
-typedef struct hifn_mac_command {
+struct hifn_mac_command {
 	volatile u_int16_t masks;
 	volatile u_int16_t header_skip;
 	volatile u_int16_t source_count;
 	volatile u_int16_t reserved;
-} hifn_mac_command_t;
+};
 
 #define	HIFN_MAC_CMD_ALG_MASK		0x0001
 #define	HIFN_MAC_CMD_ALG_SHA1		0x0000
@@ -433,6 +440,64 @@ typedef struct hifn_mac_command {
  */
 #define	HIFN_MAC_CMD_POS_IPSEC		0x0200
 #define	HIFN_MAC_CMD_NEW_KEY		0x0800
+
+struct hifn_comp_command {
+	volatile u_int16_t masks;
+	volatile u_int16_t header_skip;
+	volatile u_int16_t source_count;
+	volatile u_int16_t reserved;
+};
+
+#define	HIFN_COMP_CMD_SRCLEN_M		0xc000
+#define	HIFN_COMP_CMD_SRCLEN_S		14
+#define	HIFN_COMP_CMD_ONE		0x0100	/* must be one */
+#define	HIFN_COMP_CMD_CLEARHIST		0x0010	/* clear history */
+#define	HIFN_COMP_CMD_UPDATEHIST	0x0008	/* update history */
+#define	HIFN_COMP_CMD_LZS_STRIP0	0x0004	/* LZS: strip zero */
+#define	HIFN_COMP_CMD_MPPC_RESTART	0x0004	/* MPPC: restart */
+#define	HIFN_COMP_CMD_ALG_MASK		0x0001	/* compression mode: */
+#define	HIFN_COMP_CMD_ALG_MPPC		0x0001	/*   MPPC */
+#define	HIFN_COMP_CMD_ALG_LZS		0x0000	/*   LZS */
+
+struct hifn_base_result {
+	volatile u_int16_t flags;
+	volatile u_int16_t session;
+	volatile u_int16_t src_cnt;		/* 15:0 of source count */
+	volatile u_int16_t dst_cnt;		/* 15:0 of dest count */
+};
+
+#define	HIFN_BASE_RES_DSTOVERRUN	0x0200	/* destination overrun */
+#define	HIFN_BASE_RES_SRCLEN_M		0xc000	/* 17:16 of source count */
+#define	HIFN_BASE_RES_SRCLEN_S		14
+#define	HIFN_BASE_RES_DSTLEN_M		0x3000	/* 17:16 of dest count */
+#define	HIFN_BASE_RES_DSTLEN_S		12
+
+struct hifn_comp_result {
+	volatile u_int16_t flags;
+	volatile u_int16_t crc;
+};
+
+#define	HIFN_COMP_RES_LCB_M		0xff00	/* longitudinal check byte */
+#define	HIFN_COMP_RES_LCB_S		8
+#define	HIFN_COMP_RES_RESTART		0x0004	/* MPPC: restart */
+#define	HIFN_COMP_RES_ENDMARKER		0x0002	/* LZS: end marker seen */
+#define	HIFN_COMP_RES_SRC_NOTZERO	0x0001	/* source expired */
+
+struct hifn_mac_result {
+	volatile u_int16_t flags;
+	volatile u_int16_t reserved;
+	/* followed by 0, 6, 8, or 10 u_int16_t's of the MAC, then crypt */
+};
+
+#define	HIFN_MAC_RES_MISCOMPARE		0x0002	/* compare failed */
+#define	HIFN_MAC_RES_SRC_NOTZERO	0x0001	/* source expired */
+
+struct hifn_crypt_result {
+	volatile u_int16_t flags;
+	volatile u_int16_t reserved;
+};
+
+#define	HIFN_CRYPT_RES_SRC_NOTZERO	0x0001	/* source expired */
 
 /*
  * The poll frequency and poll scalar defines are unshifted values used

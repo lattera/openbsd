@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.10.2.5 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.10.2.6 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: kern_resource.c,v 1.38 1996/10/23 07:19:38 matthias Exp $	*/
 
 /*-
@@ -213,7 +213,7 @@ sys_setrlimit(p, v, retval)
 	register_t *retval;
 {
 	register struct sys_setrlimit_args /* {
-		syscallarg(u_int) which;
+		syscallarg(int) which;
 		syscallarg(struct rlimit *) rlp;
 	} */ *uap = v;
 	struct rlimit alim;
@@ -289,7 +289,7 @@ dosetrlimit(p, which, limp)
 			vm_prot_t prot;
 
 			if (limp->rlim_cur > alimp->rlim_cur) {
-				prot = VM_PROT_ALL;
+				prot = VM_PROT_READ|VM_PROT_WRITE;
 				size = limp->rlim_cur - alimp->rlim_cur;
 #ifdef MACHINE_STACK_GROWS_UP
 				addr = USRSTACK + alimp->rlim_cur;
@@ -324,11 +324,11 @@ sys_getrlimit(p, v, retval)
 	register_t *retval;
 {
 	register struct sys_getrlimit_args /* {
-		syscallarg(u_int) which;
+		syscallarg(int) which;
 		syscallarg(struct rlimit *) rlp;
 	} */ *uap = v;
 
-	if (SCARG(uap, which) >= RLIM_NLIMITS)
+	if (SCARG(uap, which) < 0 || SCARG(uap, which) >= RLIM_NLIMITS)
 		return (EINVAL);
 	return (copyout((caddr_t)&p->p_rlimit[SCARG(uap, which)],
 	    (caddr_t)SCARG(uap, rlp), sizeof (struct rlimit)));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_xl_cardbus.c,v 1.9.6.2 2002/03/29 23:39:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/if_xl_cardbus.c,v 1.9.6.3 2003/03/28 00:38:10 niklas Exp $ */
 /*	$NetBSD: if_xl_cardbus.c,v 1.13 2000/03/07 00:32:52 mycroft Exp $	*/
 
 /*
@@ -236,6 +236,7 @@ xl_cardbus_attach(parent, self, aux)
 	printf(": 3Com %s", ecp->ecp_name);
 
 	sc->xl_flags = ecp->ecp_flags;
+	sc->sc_dmat = ca->ca_dmat;
 
 	iob = adr;
 	sc->xl_bhandle = ioh;
@@ -324,7 +325,7 @@ xl_cardbus_detach(self, arg)
 
 #if defined(DIAGNOSTIC)
 	if (ct == NULL) {
-		panic("%s: data structure lacks\n", sc->sc_dev.dv_xname);
+		panic("%s: data structure lacks", sc->sc_dev.dv_xname);
 	}
 #endif
 

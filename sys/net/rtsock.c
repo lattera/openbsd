@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.8 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.9 2003/03/28 00:41:29 niklas Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -277,7 +277,7 @@ route_output(struct mbuf *m, ...)
 		rt = (struct rtentry *)rn;
 		rt->rt_refcnt++;
 
-		switch(rtm->rtm_type) {
+		switch (rtm->rtm_type) {
 
 		case RTM_GET:
 		report:
@@ -393,6 +393,10 @@ flush:
 		/* There is another listener, so construct message */
 		rp = sotorawcb(so);
 	}
+	if (rp)
+		rp->rcb_proto.sp_family = 0; /* Avoid us */
+	if (dst)
+		route_proto.sp_protocol = dst->sa_family;
 	if (rtm) {
 		m_copyback(m, 0, rtm->rtm_msglen, (caddr_t)rtm);
 		if (m->m_pkthdr.len < rtm->rtm_msglen) {
@@ -402,10 +406,6 @@ flush:
 			m_adj(m, rtm->rtm_msglen - m->m_pkthdr.len);
 		Free(rtm);
 	}
-	if (rp)
-		rp->rcb_proto.sp_family = 0; /* Avoid us */
-	if (dst)
-		route_proto.sp_protocol = dst->sa_family;
 	if (m)
 		raw_input(m, &route_proto, &route_src, &route_dst);
 	if (rp)
@@ -455,7 +455,7 @@ rt_xaddrs(cp, cplim, rtinfo)
 /*
  * Copy data from a buffer back into the indicated mbuf chain,
  * starting "off" bytes from the beginning, extending the mbuf
- * chain if necessary. The mbuf needs to be properly initalized
+ * chain if necessary. The mbuf needs to be properly initialized
  * including the setting of m_len.
  */
 void
@@ -783,7 +783,7 @@ sysctl_dumpentry(rn, v)
 			brdaddr = rt->rt_ifa->ifa_dstaddr;
 	}
 	size = rt_msg2(RTM_GET, &info, 0, w);
-	if (w->w_where && w->w_tmem) {
+	if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 		register struct rt_msghdr *rtm = (struct rt_msghdr *)w->w_tmem;
 
 		rtm->rtm_flags = rt->rt_flags;
@@ -815,10 +815,12 @@ sysctl_iflist(af, w)
 		if (w->w_arg && w->w_arg != ifp->if_index)
 			continue;
 		ifa = TAILQ_FIRST(&ifp->if_addrlist);
+		if (!ifa)
+			continue;
 		ifpaddr = ifa->ifa_addr;
 		len = rt_msg2(RTM_IFINFO, &info, (caddr_t)0, w);
 		ifpaddr = 0;
-		if (w->w_where && w->w_tmem) {
+		if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 			register struct if_msghdr *ifm;
 
 			ifm = (struct if_msghdr *)w->w_tmem;
@@ -839,7 +841,7 @@ sysctl_iflist(af, w)
 			netmask = ifa->ifa_netmask;
 			brdaddr = ifa->ifa_dstaddr;
 			len = rt_msg2(RTM_NEWADDR, &info, 0, w);
-			if (w->w_where && w->w_tmem) {
+			if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 				register struct ifa_msghdr *ifam;
 
 				ifam = (struct ifa_msghdr *)w->w_tmem;

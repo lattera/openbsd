@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11.2.4 2002/03/28 15:03:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11.2.5 2003/03/28 00:38:10 niklas Exp $	*/
 /*	$NetBSD: ramdisk.c,v 1.8 1996/04/12 08:30:09 leo Exp $	*/
 
 /*
@@ -100,7 +100,7 @@ struct rd_softc {
 #define RD_SERVED	0x02
 
 void rdattach(int);
-static void rd_attach(struct device *, struct device *, void *);
+void rd_attach(struct device *, struct device *, void *);
 struct disklabel *rdgetdisklabel(dev_t dev, struct rd_softc *sc);
 
 /*
@@ -116,8 +116,8 @@ struct cfdriver rd_cd = {
 void rdstrategy(struct buf *bp);
 struct dkdriver rddkdriver = { rdstrategy };
 
-static int   ramdisk_ndevs;
-static void *ramdisk_devs[RD_MAX_UNITS];
+int   ramdisk_ndevs;
+void *ramdisk_devs[RD_MAX_UNITS];
 
 /*
  * This is called if we are configured as a pseudo-device
@@ -159,7 +159,7 @@ rdattach(n)
 	}
 }
 
-static void
+void
 rd_attach(parent, self, aux)
 	struct device	*parent, *self;
 	void		*aux;
@@ -191,11 +191,11 @@ rd_attach(parent, self, aux)
  */
 
 #if RAMDISK_SERVER
-static int rd_server_loop(struct rd_softc *sc);
-static int rd_ioctl_server(struct rd_softc *sc,
+int rd_server_loop(struct rd_softc *sc);
+int rd_ioctl_server(struct rd_softc *sc,
 		struct rd_conf *urd, struct proc *proc);
 #endif
-static int rd_ioctl_kalloc(struct rd_softc *sc,
+int rd_ioctl_kalloc(struct rd_softc *sc,
 		struct rd_conf *urd, struct proc *proc);
 
 dev_type_open(rdopen);
@@ -206,7 +206,8 @@ dev_type_ioctl(rdioctl);
 dev_type_size(rdsize);
 dev_type_dump(rddump);
 
-int rddump(dev, blkno, va, size)
+int
+rddump(dev, blkno, va, size)
 	dev_t dev;
 	daddr_t blkno;
 	caddr_t va;
@@ -215,13 +216,15 @@ int rddump(dev, blkno, va, size)
 	return ENODEV;
 }
 
-int rdsize(dev_t dev)
+int
+rdsize(dev_t dev)
 {
-	int unit;
+	int part, unit;
 	struct rd_softc *sc;
+	struct disklabel *lp;
 
 	/* Disallow control units. */
-	unit = minor(dev);
+	unit = DISKUNIT(dev);
 	if (unit >= ramdisk_ndevs)
 		return 0;
 	sc = ramdisk_devs[unit];
@@ -231,7 +234,13 @@ int rdsize(dev_t dev)
 	if (sc->sc_type == RD_UNCONFIGURED)
 		return 0;
 
-	return (sc->sc_size >> DEV_BSHIFT);
+	lp = rdgetdisklabel(dev, sc);
+	part = DISKPART(dev);
+	if (part > lp->d_npartitions)
+		return 0;
+	else
+		return lp->d_partitions[part].p_size *
+		    (lp->d_secsize / DEV_BSIZE);
 }
 
 int
@@ -325,6 +334,7 @@ rdstrategy(bp)
 	struct rd_softc *sc;
 	caddr_t addr;
 	size_t  off, xfer;
+	int s;
 
 	unit = DISKUNIT(bp->b_dev);
 	sc = ramdisk_devs[unit];
@@ -372,7 +382,9 @@ rdstrategy(bp)
 		bp->b_flags |= B_ERROR;
 		break;
 	}
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 int
@@ -517,7 +529,7 @@ rdgetdisklabel(dev, sc)
  * Handle ioctl RD_SETCONF for (sc_type == RD_KMEM_ALLOCATED)
  * Just allocate some kernel memory and return.
  */
-static int
+int
 rd_ioctl_kalloc(sc, urd, proc)
 	struct rd_softc *sc;
 	struct rd_conf *urd;
@@ -545,7 +557,7 @@ rd_ioctl_kalloc(sc, urd, proc)
  * Handle ioctl RD_SETCONF for (sc_type == RD_UMEM_SERVER)
  * Set config, then become the I/O server for this unit.
  */
-static int
+int
 rd_ioctl_server(sc, urd, proc)
 	struct rd_softc *sc;
 	struct rd_conf *urd;
@@ -578,7 +590,7 @@ rd_ioctl_server(sc, urd, proc)
 
 int	rd_sleep_pri = PWAIT | PCATCH;
 
-static int
+int
 rd_server_loop(sc)
 	struct rd_softc *sc;
 {
@@ -587,6 +599,7 @@ rd_server_loop(sc)
 	size_t  off;	/* offset into "device" */
 	size_t  xfer;	/* amount to transfer */
 	int error;
+	int s;
 
 	for (;;) {
 		/* Wait for some work to arrive. */
@@ -627,7 +640,9 @@ rd_server_loop(sc)
 			bp->b_error = error;
 			bp->b_flags |= B_ERROR;
 		}
+		s = splbio();
 		biodone(bp);
+		splx(s);
 	}
 }
 

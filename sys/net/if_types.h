@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_types.h,v 1.4.2.3 2001/11/13 22:59:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_types.h,v 1.4.2.4 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_types.h,v 1.17 2000/10/26 06:51:31 onoe Exp $	*/
 
 /*
@@ -252,14 +252,22 @@
 #define	IFT_SIPTG		   0xcb /* SIP Trunk Group */
 #define	IFT_SIPSIG		   0xcc /* SIP Signaling */
 #define	IFT_DOCSCABLEUPSTREAMCHANNEL 0xcd /* CATV Upstream Channel */
+#define	IFT_ECONET		   0xce /* Acorn Econet */
+#define	IFT_PON155		   0xcf /* FSAN 155Mb Symetrical PON interface */
+#define	IFT_PON622		   0xd0 /* FSAN 622Mb Symetrical PON interface */
+#define	IFT_BRIDGE		   0xd1 /* Transparent bridge interface */
+#define	IFT_LINEGROUP		   0xd2 /* Interface common to multiple lines */
+#define	IFT_VOICEEMFGD		   0xd3 /* voice E&M Feature Group D */
+#define	IFT_VOICEFGDEANA	   0xd4 /* voice FGD Exchange Access North American */
+#define	IFT_VOICEDID		   0xd5 /* voice Direct Inward Dialing */
 
 /* private usage... how should we define these? */
-#define	IFT_BRIDGE	0xe8		/* bridge interfaces */
 #define	IFT_GIF		0xf0
 #define	IFT_DUMMY	0xf1
 #define	IFT_PVC		0xf2
 #define	IFT_FAITH	0xf3
 #define	IFT_ENC		0xf4		/* Encapsulation */
 #define	IFT_PFLOG	0xf5		/* Packet filter logging */
+#define	IFT_PFSYNC	0xf6		/* Packet filter state syncing */
 
 #endif /* _NET_IF_TYPES_H_ */

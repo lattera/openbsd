@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.5 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.6 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: dp8390.c,v 1.13 1998/07/05 06:49:11 jonathan Exp $	*/
 
 /*
@@ -391,7 +391,7 @@ dp8390_xmit(sc)
 		    sc->txb_next_tx, sc->txb_inuse, sc->txb_cnt, sc->txb_new);
 
 	if (sc->txb_inuse == 0)
-		panic("dp8390_xmit: no packets to xmit\n");
+		panic("dp8390_xmit: no packets to xmit");
 #endif
 
 	len = sc->txb_len[sc->txb_next_tx];

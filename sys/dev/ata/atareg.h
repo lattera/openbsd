@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/atareg.h,v 1.2.4.2 2001/07/04 10:40:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ata/atareg.h,v 1.2.4.3 2003/03/28 00:38:10 niklas Exp $	*/
 /*	$NetBSD: atareg.h,v 1.5 1999/01/18 20:06:24 bouyer Exp $	*/
 
 #ifndef __DEV_ATA_ATAREG_H__
@@ -104,7 +104,7 @@ struct ataparams {
     u_int16_t	atap_pkt_bsyclr;	/* 72: tme to clear BSY after service */
     u_int16_t	__reserved4[2];	
     u_int16_t	atap_queuedepth;   	/* 75: */
-#define WDC_QUEUE_DEPTH_MASK 0x0F
+#define WDC_QUEUE_DEPTH_MASK 0x1f
     u_int16_t	__reserved5[4];   	
     u_int16_t	atap_ata_major;  	/* 80: Major version number */
 #define	WDC_VER_ATA1	0x0002
@@ -122,7 +122,7 @@ struct ataparams {
 #define	WDC_VER_ATA13	0x2000
 #define	WDC_VER_ATA14	0x4000
     u_int16_t   atap_ata_minor;  	/* 81: Minor version number */
-    u_int16_t	atap_cmd_set1;    	/* 82: command set suported */
+    u_int16_t	atap_cmd_set1;    	/* 82: command set supported */
 #define WDC_CMD1_NOP	0x4000
 #define WDC_CMD1_RB	0x2000
 #define WDC_CMD1_WB	0x1000
@@ -137,7 +137,7 @@ struct ataparams {
 #define WDC_CMD1_REMOV	0x0004
 #define WDC_CMD1_SEC	0x0002
 #define WDC_CMD1_SMART	0x0001
-    u_int16_t	atap_cmd_set2;    	/* 83: command set suported */
+    u_int16_t	atap_cmd_set2;    	/* 83: command set supported */
 #define ATAPI_CMD2_FCE	0x2000 /* Flush Cache Ext supported */
 #define ATAPI_CMD2_FC	0x1000 /* Flush Cache supported */
 #define ATAPI_CMD2_DCO	0x0800 /* Device Configuration Overlay supported */
@@ -211,7 +211,7 @@ struct ataparams {
 #define ATAPI_CFA_MODE1_DIS 0x1000 /* CFA Mode 1 Disabled */
 #define ATAPI_CFA_MODE1_REQ 0x2000 /* CFA Mode 1 Required */
 #define ATAPI_CFA_WORD160   0x8000 /* Word 160 supported */
-    u_int16_t	__reserved9[31];	/* 161-175: reserved for CFA */
+    u_int16_t	__reserved9[15];	/* 161-175: reserved for CFA */
     u_int8_t	atap_media_serial[60];	/* 176-205: media serial number */
     u_int16_t	__reserved10[49];	/* 206-254: reserved */
 #if BYTE_ORDER == LITTLE_ENDIAN

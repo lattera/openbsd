@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm_symbol.c,v 1.1.2.3 2002/03/28 12:29:45 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm_symbol.c,v 1.1.2.4 2003/03/28 00:38:17 niklas Exp $ */
 /*
  * Aic7xxx SCSI host adapter firmware asssembler symbol table implementation
  *
@@ -11,29 +11,40 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions, and the following disclaimer,
  *    without modification.
- * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
+ *
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
  *
- * $FreeBSD: src/sys/dev/aic7xxx/aicasm_symbol.c,v 1.8 1999/12/06 18:23:30 gibbs Exp $
+ * $FreeBSD: src/sys/dev/aic7xxx/aicasm/aicasm_symbol.c,v 1.17 2002/06/06 16:07:18 gibbs Exp $
  */
-
 
 #include <sys/types.h>
 
 #include <db.h>
 #include <fcntl.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -189,11 +200,9 @@ symlist_search(symlist, symname)
 {
 	symbol_node_t *curnode;
 
-	curnode = symlist->slh_first;
-	while(curnode != NULL) {
+	SLIST_FOREACH(curnode, symlist, links) {
 		if (strcmp(symname, curnode->symbol->name) == 0)
 			break;
-		curnode = curnode->links.sle_next;
 	}
 	return (curnode);
 }
@@ -232,7 +241,7 @@ symlist_add(symlist, symbol, how)
 			/* NOTREACHED */
 		}
 
-		curnode = symlist->slh_first;
+		curnode = SLIST_FIRST(symlist);
 		if (curnode == NULL
 		 || (mask && (curnode->symbol->info.minfo->mask >
 		              newnode->symbol->info.minfo->mask))
@@ -243,14 +252,14 @@ symlist_add(symlist, symbol, how)
 		}
 
 		while (1) {
-			if (curnode->links.sle_next == NULL) {
+			if (SLIST_NEXT(curnode, links) == SLIST_END(symlist)) {
 				SLIST_INSERT_AFTER(curnode, newnode,
 						   links);
 				break;
 			} else {
 				symbol_t *cursymbol;
 
-				cursymbol = curnode->links.sle_next->symbol;
+				cursymbol = SLIST_NEXT(curnode, links)->symbol;
 				if ((mask && (cursymbol->info.minfo->mask >
 				              symbol->info.minfo->mask))
 				 || (!mask &&(cursymbol->info.rinfo->address >
@@ -260,7 +269,7 @@ symlist_add(symlist, symbol, how)
 					break;
 				}
 			}
-			curnode = curnode->links.sle_next;
+			curnode = SLIST_NEXT(curnode, links);
 		}
 	} else {
 		SLIST_INSERT_HEAD(symlist, newnode, links);
@@ -271,15 +280,13 @@ void
 symlist_free(symlist)
 	symlist_t *symlist;
 {
-	symbol_node_t *node1, *node2;
+	symbol_node_t *node;
 
-	node1 = symlist->slh_first;
-	while (node1 != NULL) {
-		node2 = node1->links.sle_next;
-		free(node1);
-		node1 = node2;
+	while (!SLIST_EMPTY(symlist)) {
+		node = SLIST_FIRST(symlist);
+		SLIST_REMOVE_HEAD(symlist, links);
+		free(node);
 	}
-	SLIST_INIT(symlist);
 }
 
 void
@@ -291,7 +298,7 @@ symlist_merge(symlist_dest, symlist_src1, symlist_src2)
 	symbol_node_t *node;
 
 	*symlist_dest = *symlist_src1;
-	while((node = symlist_src2->slh_first) != NULL) {
+	while((node = SLIST_FIRST(symlist_src2)) != NULL) {
 		SLIST_REMOVE_HEAD(symlist_src2, links);
 		SLIST_INSERT_HEAD(symlist_dest, node, links);
 	}
@@ -315,12 +322,15 @@ symtable_dump(ofile)
 	symlist_t constants;
 	symlist_t download_constants;
 	symlist_t aliases;
+	symlist_t exported_labels;
+	u_int	  i;
 
 	SLIST_INIT(&registers);
 	SLIST_INIT(&masks);
 	SLIST_INIT(&constants);
 	SLIST_INIT(&download_constants);
 	SLIST_INIT(&aliases);
+	SLIST_INIT(&exported_labels);
 
 	if (symtable != NULL) {
 		DBT	 key;
@@ -342,10 +352,8 @@ symtable_dump(ofile)
 				symlist_add(&masks, cursym, SYMLIST_SORT);
 				break;
 			case CONST:
-				if (cursym->info.cinfo->define == FALSE) {
-					symlist_add(&constants, cursym,
+				symlist_add(&constants, cursym,
 						    SYMLIST_INSERT_HEAD);
-				}
 				break;
 			case DOWNLOAD_CONST:
 				symlist_add(&download_constants, cursym,
@@ -355,6 +363,12 @@ symtable_dump(ofile)
 				symlist_add(&aliases, cursym,
 					    SYMLIST_INSERT_HEAD);
 				break;
+			case LABEL:
+				if (cursym->info.linfo->exported == 0)
+					break;
+				symlist_add(&exported_labels, cursym,
+					    SYMLIST_INSERT_HEAD);
+				break;
 			default:
 				break;
 			}
@@ -362,28 +376,28 @@ symtable_dump(ofile)
 		}
 
 		/* Put in the masks and bits */
-		while (masks.slh_first != NULL) {
+		while (SLIST_FIRST(&masks) != SLIST_END(&masks)) {
 			symbol_node_t *curnode;
 			symbol_node_t *regnode;
 			char *regname;
 
-			curnode = masks.slh_first;
+			curnode = SLIST_FIRST(&masks);
 			SLIST_REMOVE_HEAD(&masks, links);
 
 			regnode =
-			    curnode->symbol->info.minfo->symrefs.slh_first;
+			    SLIST_FIRST(&curnode->symbol->info.minfo->symrefs);
 			regname = regnode->symbol->name;
 			regnode = symlist_search(&registers, regname);
 			SLIST_INSERT_AFTER(regnode, curnode, links);
 		}
 
 		/* Add the aliases */
-		while (aliases.slh_first != NULL) {
+		while (SLIST_FIRST(&aliases) != SLIST_END(&aliases)) {
 			symbol_node_t *curnode;
 			symbol_node_t *regnode;
 			char *regname;
 
-			curnode = aliases.slh_first;
+			curnode = SLIST_FIRST(&aliases);
 			SLIST_REMOVE_HEAD(&aliases, links);
 
 			regname = curnode->symbol->info.ainfo->parent->name;
@@ -393,16 +407,18 @@ symtable_dump(ofile)
 
 		/* Output what we have */
 		fprintf(ofile,
-"/*
- * DO NOT EDIT - This file is automatically generated.
- */\n");
-		while (registers.slh_first != NULL) {
+"/*\n"
+" * DO NOT EDIT - This file is automatically generated\n"
+" *		 from the following source files:\n"
+" *\n"
+"%s */\n", versions);
+                while (SLIST_FIRST(&registers) != SLIST_END(&registers)) {
 			symbol_node_t *curnode;
-			u_int8_t value;
+			u_int value;
 			char *tab_str;
 			char *tab_str2;
 
-			curnode = registers.slh_first;
+			curnode = SLIST_FIRST(&registers);
 			SLIST_REMOVE_HEAD(&registers, links);
 			switch(curnode->symbol->type) {
 			case REGISTER:
@@ -444,10 +460,10 @@ symtable_dump(ofile)
 		}
 		fprintf(ofile, "\n\n");
 
-		while (constants.slh_first != NULL) {
+		while (SLIST_FIRST(&constants) != SLIST_END(&constants)) {
 			symbol_node_t *curnode;
 
-			curnode = constants.slh_first;
+			curnode = SLIST_FIRST(&constants);
 			SLIST_REMOVE_HEAD(&constants, links);
 			fprintf(ofile, "#define\t%-8s\t0x%02x\n",
 				curnode->symbol->name,
@@ -458,14 +474,30 @@ symtable_dump(ofile)
 		
 		fprintf(ofile, "\n\n/* Downloaded Constant Definitions */\n");
 
-		while (download_constants.slh_first != NULL) {
+		while (SLIST_FIRST(&download_constants) !=
+		    SLIST_END(&download_constants)) {
 			symbol_node_t *curnode;
 
-			curnode = download_constants.slh_first;
+			curnode = SLIST_FIRST(&download_constants);
 			SLIST_REMOVE_HEAD(&download_constants, links);
 			fprintf(ofile, "#define\t%-8s\t0x%02x\n",
 				curnode->symbol->name,
 				curnode->symbol->info.cinfo->value);
+			free(curnode);
+		}
+		fprintf(ofile, "#define\tDOWNLOAD_CONST_COUNT\t0x%02x\n", i);
+
+		fprintf(ofile, "\n\n/* Exported Labels */\n");
+
+		while (SLIST_FIRST(&exported_labels) !=
+		    SLIST_END(&exported_labels)) {
+			symbol_node_t *curnode;
+
+			curnode = SLIST_FIRST(&exported_labels);
+			SLIST_REMOVE_HEAD(&exported_labels, links);
+			fprintf(ofile, "#define\tLABEL_%-8s\t0x%02x\n",
+				curnode->symbol->name,
+				curnode->symbol->info.linfo->address);
 			free(curnode);
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/pdqreg.h,v 1.7.14.1 2001/05/14 22:24:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/pdqreg.h,v 1.7.14.2 2003/03/28 00:38:15 niklas Exp $	*/
 /*	$NetBSD: pdqreg.h,v 1.6 1996/08/28 16:01:29 cgd Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

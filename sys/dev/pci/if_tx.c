@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.6 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.7 2003/03/28 00:38:22 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_tx.c,v 1.45 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -205,13 +205,11 @@ epic_openbsd_probe(
     void *aux )
 {
 	struct pci_attach_args *pa = aux;
-	if( PCI_VENDOR(pa->pa_id) != SMC_VENDORID )
-		return 0;
 
-	if( PCI_PRODUCT(pa->pa_id) == SMC_DEVICEID_83C170 )
-		return 1;
-
-	return 0;
+	if (PCI_VENDOR(pa->pa_id) == SMC_VENDORID &&
+	    PCI_PRODUCT(pa->pa_id) == SMC_DEVICEID_83C170)
+		return (1);
+	return (0);
 }
 
 void
@@ -261,6 +259,7 @@ epic_openbsd_attach(
 	ifp->if_ioctl = epic_ifioctl;
 	ifp->if_start = epic_ifstart;
 	ifp->if_watchdog = epic_ifwatchdog;
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Fetch card id */
 	sc->cardvend = pci_conf_read(pc, pa->pa_tag, PCI_SUBVEND_0);
@@ -1118,7 +1117,7 @@ epic_ifwatchdog(ifp)
 		epic_init(sc);
 
 	} else 
-		printf("seems we can continue normaly\n");
+		printf("seems we can continue normally\n");
 
 	/* Start output */
 	if( !IFQ_IS_EMPTY( &ifp->if_snd ) ) epic_ifstart( ifp );
@@ -1215,7 +1214,7 @@ epic_ifmedia_upd(ifp)
 	case EPIC_QS6612_PHY:
 		break;
 	case EPIC_AC101_PHY:
-		/* We have to powerup fiber tranceivers */
+		/* We have to powerup fiber transceivers */
 		if (IFM_SUBTYPE(media) == IFM_100_FX)
 			sc->miicfg |= MIICFG_694_ENABLE;
 		else
@@ -1224,7 +1223,7 @@ epic_ifmedia_upd(ifp)
 	
 		break;
 	case EPIC_LXT970_PHY:
-		/* We have to powerup fiber tranceivers */
+		/* We have to powerup fiber transceivers */
 		cfg = PHY_READ(sc->physc, MII_LXTPHY_CONFIG);
 		if (IFM_SUBTYPE(media) == IFM_100_FX)
 			cfg |= CONFIG_LEDC1 | CONFIG_LEDC0;

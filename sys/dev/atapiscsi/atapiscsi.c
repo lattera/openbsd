@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.24.2.7 2002/03/28 12:29:45 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.24.2.8 2003/03/28 00:38:10 niklas Exp $     */
 
 /*
  * This code is derived from code with the copyright below.
@@ -92,9 +92,10 @@ enum atapi_drive_states {
 
 #if defined(WDCDEBUG)
 int wdcdebug_atapi_mask = 0;
-#define WDCDEBUG_PRINT(args, level) \
-	if (wdcdebug_atapi_mask & (level)) \
-		printf args
+#define WDCDEBUG_PRINT(args, level) do {		\
+	if ((wdcdebug_atapi_mask & (level)) != 0)	\
+		printf args;				\
+} while (0)
 #else
 #define WDCDEBUG_PRINT(args, level)
 #endif
@@ -150,11 +151,12 @@ int	atapiscsi_match(struct device *, void *, void *);
 void	atapiscsi_attach(struct device *, struct device *, void *);
 int     atapi_to_scsi_sense(struct scsi_xfer *, u_int8_t);
 
+enum atapi_state { as_none, as_data, as_completed };
+
 struct atapiscsi_softc {
 	struct device  sc_dev;
 	struct  scsi_link  sc_adapterlink;
 	struct channel_softc *chp;
-	enum atapi_state { as_none, as_data, as_completed };
 	enum atapi_state protocol_phase;
 
 	int drive;
@@ -875,8 +877,8 @@ wdc_atapi_intr_command(chp, xfer, timeout, ret)
 		bcopy(sc_xfer->cmd, cmd, sc_xfer->cmdlen);
 
 	WDC_LOG_ATAPI_CMD(chp, xfer->drive, xfer->c_flags,
-	    sc_xfer->cmdlen, sc_xfer->cmd);
-
+	    cmdlen, cmd);
+	
 	for (i = 0; i < 12; i++)
 		WDCDEBUG_PRINT(("%02x ", cmd[i]), DEBUG_INTR);
 	WDCDEBUG_PRINT((": PHASE_CMDOUT\n"), DEBUG_INTR);
@@ -1355,6 +1357,12 @@ wdc_atapi_ctrl(chp, xfer, timeout, ret)
 
 			break;
 
+		case ATAPI_PIOMODE_STATE:
+			errstring = "Post-Identify";
+			if (!(chp->ch_status & (WDCS_BSY | WDCS_DRQ)))
+				trigger_timeout = 0;
+			break;
+
 		case ATAPI_PIOMODE_WAIT_STATE:
 			errstring = "PIOMODE";
 			if (chp->ch_status & (WDCS_BSY | WDCS_DRQ))
@@ -1431,16 +1439,23 @@ wdc_atapi_ctrl(chp, xfer, timeout, ret)
 		}
 
 		drvp->state = ATAPI_PIOMODE_STATE;
+		/* 
+		 * Note, we can't go directly to set PIO mode
+		 * because the drive is free to assert BSY
+		 * after the transfer
+		 */
+		break;
 	}
-		/* fall through */
 
 	case ATAPI_PIOMODE_STATE:
-piomode:
 		/* Don't try to set mode if controller can't be adjusted */
 		if ((chp->wdc->cap & WDC_CAPABILITY_MODE) == 0)
 			goto ready;
 		/* Also don't try if the drive didn't report its mode */
 		if ((drvp->drive_flags & DRIVE_MODE) == 0)
+			goto ready;
+		/* SET FEATURES 0x08 is only for PIO mode > 2 */
+		if (drvp->PIO_mode <= 2)
 			goto ready;
 		wdccommand(chp, drvp->drive, SET_FEATURES, 0, 0, 0,
 		    0x08 | drvp->PIO_mode, WDSF_SET_MODE);
@@ -1452,14 +1467,7 @@ piomode:
 		if (chp->wdc->cap & WDC_CAPABILITY_IRQACK)
 			chp->wdc->irqack(chp);
 		if (chp->ch_status & WDCS_ERR) {
-			if (drvp->PIO_mode < 3) {
-				drvp->PIO_mode = 3;
-				goto piomode;
-			}
-			/* 
-			 * All ATAPI drives are supposed to support
-			 * PIO mode 3 or greater. 
-			 */
+			/* Downgrade straight to PIO mode 3 */
 			drvp->PIO_mode = 3;
 			chp->wdc->set_modes(chp);
 		}

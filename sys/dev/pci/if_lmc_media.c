@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.3 2001/11/13 21:10:02 niklas Exp $ */
-/* $Id: if_lmc_media.c,v 1.4.2.2 2001/10/31 03:22:46 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.4 2003/03/28 00:38:22 niklas Exp $ */
+/* $Id$ */
 
 /*-
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)
@@ -661,10 +661,10 @@ lmc_ssi_set_speed(lmc_softc_t * const sc, lmc_ctl_t *ctl)
 	lmc_av9110_t *av;
 
         /* original settings for clock rate of:
-         *  100 Khz (8,25,0,0,2) were incorrect
+         *  100 KHz (8,25,0,0,2) were incorrect
          *  they should have been 80,125,1,3,3
          *  There are 17 param combinations to produce this freq.
-         *  For 1.5 Mhz use 120,100,1,1,2 (226 param. combinations)
+         *  For 1.5 MHz use 120,100,1,1,2 (226 param. combinations)
          */
 	if (ctl == NULL) {
                 av = &ictl->cardspec.ssi;

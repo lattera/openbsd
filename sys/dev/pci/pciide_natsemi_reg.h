@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_natsemi_reg.h,v 1.1.4.1 2001/10/31 03:22:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_natsemi_reg.h,v 1.1.4.2 2003/03/28 00:38:24 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -95,3 +95,10 @@
 
 #define	NATSEMI_RTREG(c,d)	(0x44 + (c * 8) + (d * 4) + 0)
 #define	NATSEMI_WTREG(c,d)	(0x44 + (c * 8) + (d * 4) + 1)
+
+/* 17 - N = number of clocks */
+static u_int8_t natsemi_pio_pulse[] =	{ 7, 12, 13, 14, 14 };
+static u_int8_t natsemi_dma_pulse[] =	{ 7, 10, 10 };
+/* 16 - N = number of clocks */
+static u_int8_t natsemi_pio_recover[] =	{ 6,  8, 11, 13, 15 };
+static u_int8_t natsemi_dma_recover[] =	{ 6,  8,  9 };

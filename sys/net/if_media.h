@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_media.h,v 1.3.2.5 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_media.h,v 1.3.2.6 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_media.h,v 1.22 2000/02/17 21:53:16 sommerfeld Exp $	*/
 
 /*-
@@ -178,7 +178,8 @@ int	ifmedia_baudrate(int);
 #define	IFM_10_FL	13		/* 10BaseFL - Fiber */
 #define	IFM_1000_LX	14		/* 1000baseLX - single-mode fiber */
 #define	IFM_1000_CX	15		/* 1000baseCX - 150ohm STP */
-#define	IFM_1000_TX	16		/* 1000baseTX - 4 pair cat 5 */
+#define	IFM_1000_T	16		/* 1000baseT - 4 pair cat 5 */
+#define	IFM_1000_TX	IFM_1000_T	/* for backwards compatibility */
 #define	IFM_HPNA_1	17		/* HomePNA 1.0 (1Mb/s) */
 
 /*
@@ -213,6 +214,9 @@ int	ifmedia_baudrate(int);
 #define	IFM_IEEE80211_DS11	7	/* Direct Sequence 11Mbps*/
 #define	IFM_IEEE80211_DS1	8	/* Direct Sequence  1Mbps*/
 #define	IFM_IEEE80211_ADHOC	0x100	/* Operate in Adhoc mode */
+#define	IFM_IEEE80211_HOSTAP	0x200	/* Operate in Host AP mode */
+#define	IFM_IEEE80211_IBSS	0x400	/* Operate in IBSS mode */
+#define	IFM_IEEE80211_IBSSMASTER 0x800	/* Operate as an IBSS master */
 
 /*
  * Shared media sub-types
@@ -348,8 +352,10 @@ struct ifmedia_description {
 	{ IFM_ETHER|IFM_1000_LX,	"1000LX" },			\
 	{ IFM_ETHER|IFM_1000_CX,	"1000baseCX" },			\
 	{ IFM_ETHER|IFM_1000_CX,	"1000CX" },			\
-	{ IFM_ETHER|IFM_1000_TX,	"1000baseTX" },			\
-	{ IFM_ETHER|IFM_1000_TX,	"1000TX" },			\
+	{ IFM_ETHER|IFM_1000_T,		"1000baseT" },			\
+	{ IFM_ETHER|IFM_1000_T,		"1000T" },			\
+	{ IFM_ETHER|IFM_1000_T,		"1000baseTX" },			\
+	{ IFM_ETHER|IFM_1000_T,		"1000TX" },			\
 	{ IFM_ETHER|IFM_HPNA_1,		"HomePNA1" },			\
 	{ IFM_ETHER|IFM_HPNA_1,		"HPNA1" },			\
 									\
@@ -402,6 +408,9 @@ struct ifmedia_description {
 	{ IFM_FDDI|IFM_FDDI_DA,		"das" },			\
 									\
 	{ IFM_IEEE80211|IFM_IEEE80211_ADHOC,	"adhoc" },		\
+	{ IFM_IEEE80211|IFM_IEEE80211_HOSTAP,	"hostap" },		\
+	{ IFM_IEEE80211|IFM_IEEE80211_IBSS,	"ibss" },		\
+	{ IFM_IEEE80211|IFM_IEEE80211_IBSSMASTER, "ibss-master" },	\
 									\
 	{ 0, NULL },							\
 }
@@ -428,7 +437,7 @@ struct ifmedia_baudrate {
 	{ IFM_ETHER|IFM_10_FL,		IF_Mbps(10) },			\
 	{ IFM_ETHER|IFM_1000_LX,	IF_Mbps(1000) },		\
 	{ IFM_ETHER|IFM_1000_CX,	IF_Mbps(1000) },		\
-	{ IFM_ETHER|IFM_1000_TX,	IF_Mbps(1000) },		\
+	{ IFM_ETHER|IFM_1000_T,		IF_Mbps(1000) },		\
 	{ IFM_ETHER|IFM_HPNA_1,		IF_Mbps(1) },			\
 									\
 	{ IFM_TOKEN|IFM_TOK_STP4,	IF_Mbps(4) },			\

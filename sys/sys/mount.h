@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.4 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.5 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -77,7 +77,7 @@ struct export_args {
  */
 struct ufs_args {
 	char	*fspec;			/* block special device to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;/* network export information */
 };
 
 /*
@@ -85,7 +85,7 @@ struct ufs_args {
  */
 struct mfs_args {
 	char	*fspec;			/* name to export for statfs */
-	struct	export_args export;	/* if exported MFSes are supported */
+	struct	export_args export_info;/* if exported MFSes are supported */
 	caddr_t	base;			/* base of file system in memory */
 	u_long	size;			/* size of file system */
 };
@@ -95,7 +95,7 @@ struct mfs_args {
  */
 struct iso_args {
 	char	*fspec;			/* block special device to mount */
-	struct	export_args export;	/* network export info */
+	struct	export_args export_info;/* network export info */
 	int	flags;			/* mounting flags, see below */
 };
 #define	ISOFSMNT_NORRIP	0x00000001	/* disable Rock Ridge Ext.*/
@@ -208,7 +208,8 @@ struct nfs_args3 {
  */
 struct msdosfs_args {
 	char	*fspec;		/* blocks special holding the fs to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;
+				/* network export information */
 	uid_t	uid;		/* uid that owns msdosfs files */
 	gid_t	gid;		/* gid that owns msdosfs files */
 	mode_t  mask;		/* mask to be applied for msdosfs perms */
@@ -228,7 +229,8 @@ struct msdosfs_args {
  */
 struct adosfs_args {
 	char	*fspec;		/* blocks special holding the fs to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;
+				/* network export information */
 	uid_t	uid;		/* uid that owns adosfs files */
 	gid_t	gid;		/* gid that owns adosfs files */
 	mode_t	mask;		/* mask to be applied for adosfs perms */
@@ -318,7 +320,6 @@ struct ostatfs {
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */
 #define	MOUNT_NCPFS	"ncpfs"		/* NetWare Network File System */
 #define	MOUNT_XFS	"xfs"		/* xfs */
-#define	MOUNT_TCFS	"tcfs"		/* tcfs */
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
@@ -382,20 +383,11 @@ struct mount {
 
 /*
  * filesystem control flags.
- *
- * MNT_MLOCK lock the mount entry so that name lookup cannot proceed
- * past the mount point.  This keeps the subtree stable during mounts
- * and unmounts.
  */
 #define	MNT_UPDATE	0x00010000	/* not a real mount, just an update */
 #define	MNT_DELEXPORT	0x00020000	/* delete export host lists */
 #define	MNT_RELOAD	0x00040000	/* reload filesystem data */
 #define	MNT_FORCE	0x00080000	/* force unmount or readonly change */
-#define	MNT_MLOCK	0x00100000	/* lock so that subtree is stable */
-#define	MNT_MWAIT	0x00200000	/* someone is waiting for lock */
-#define MNT_MPBUSY	0x00400000	/* scan of mount point in progress */
-#define MNT_MPWANT	0x00800000	/* waiting for mount point */
-#define MNT_UNMOUNT	0x01000000	/* unmount in progress */
 #define MNT_WANTRDWR	0x02000000	/* want upgrade to read/write */
 #define MNT_SOFTDEP     0x04000000      /* soft dependencies being done */
 /*

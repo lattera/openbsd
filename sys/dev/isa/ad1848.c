@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.5 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.6 2003/03/28 00:38:15 niklas Exp $	*/
 /*	$NetBSD: ad1848.c,v 1.45 1998/01/30 02:02:38 augustss Exp $	*/
 
 /*
@@ -1265,7 +1265,7 @@ ad1848_commit_settings(addr)
 	(void)ADREAD(sc, AD1848_IDATA);
 	(void)ADREAD(sc, AD1848_IDATA);
 	/*
-	 * Write to I8 starts resyncronization. Wait until it completes.
+	 * Write to I8 starts resynchronization. Wait until it completes.
 	 */
 	timeout = 100000;
 	while (timeout > 0 && ADREAD(sc, AD1848_IADDR) == SP_IN_INIT)
@@ -1280,7 +1280,7 @@ ad1848_commit_settings(addr)
 	/* Now wait for resync for capture side of the house */
     }
     /*
-     * Write to I8 starts resyncronization. Wait until it completes.
+     * Write to I8 starts resynchronization. Wait until it completes.
      */
     timeout = 100000;
     while (timeout > 0 && ADREAD(sc, AD1848_IADDR) == SP_IN_INIT)
@@ -1338,7 +1338,7 @@ ad1848_set_speed(sc, argp)
 {
     /*
      * The sampling speed is encoded in the least significant nible of I8. The
-     * LSB selects the clock source (0=24.576 MHz, 1=16.9344 Mhz) and other
+     * LSB selects the clock source (0=24.576 MHz, 1=16.9344 MHz) and other
      * three bits select the divisor (indirectly):
      *
      * The available speeds are in the following table. Keep the speeds in

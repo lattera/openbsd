@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/smc91cxx.c,v 1.7.2.4 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/smc91cxx.c,v 1.7.2.5 2003/03/28 00:38:15 niklas Exp $	*/
 /*	$NetBSD: smc91cxx.c,v 1.11 1998/08/08 23:51:41 mycroft Exp $	*/
 
 /*-
@@ -132,7 +132,6 @@
 /* XXX Hardware padding doesn't work yet(?) */
 #define	SMC91CXX_SW_PAD
 
-#ifdef SMC_DEBUG
 const char *smc91cxx_idstrs[] = {
 	NULL,				/* 0 */
 	NULL,				/* 1 */
@@ -151,7 +150,6 @@ const char *smc91cxx_idstrs[] = {
 	NULL,				/* 14 */
 	NULL,				/* 15 */
 };
-#endif
 
 /* Supported media types. */
 const int smc91cxx_media[] = {
@@ -975,9 +973,9 @@ smc91cxx_ioctl(ifp, cmd, data)
 		switch (ifa->ifa_addr->sa_family) {
 #ifdef INET
 		case AF_INET:
-		smc91cxx_init(sc);
-		arp_ifinit(&sc->sc_arpcom, ifa);
-		break;
+			smc91cxx_init(sc);
+			arp_ifinit(&sc->sc_arpcom, ifa);
+			break;
 #endif
 #ifdef NS
 		case AF_NS:

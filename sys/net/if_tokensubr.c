@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.3 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.4 2003/03/28 00:41:28 niklas Exp $	*/
 /*	$NetBSD: if_tokensubr.c,v 1.7 1999/05/30 00:39:07 bad Exp $	*/
 
 /*
@@ -152,7 +152,6 @@ token_output(ifp, m0, dst, rt0)
 	struct token_rif *rif = (struct  token_rif *)0;
 	struct token_rif bcastrif;
 	size_t riflen = 0;
-	ALTQ_DECL(struct altq_pktattr pktattr;)
 	short mflags;
 
 	if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
@@ -179,12 +178,6 @@ token_output(ifp, m0, dst, rt0)
 			    time.tv_sec < rt->rt_rmx.rmx_expire)
 				senderr(rt == rt0 ? EHOSTDOWN : EHOSTUNREACH);
 	}
-
-	/*
-	 * If the queueing discipline needs packet classification,
-	 * do it before prepending link headers.
-	 */
-	IFQ_CLASSIFY(&ifp->if_snd, m, dst->sa_family, &pktattr);
 
 	switch (dst->sa_family) {
 
@@ -455,7 +448,7 @@ send:
 	 * Queue message on interface, and start output if interface
 	 * not yet active.
 	 */
-	IFQ_ENQUEUE(&ifp->if_snd, m, &pktattr, error);
+	IFQ_ENQUEUE(&ifp->if_snd, m, NULL, error);
 	if (error) {
 		/* mbuf is already freed */
 		splx(s);
@@ -683,9 +676,6 @@ void
 token_ifattach(ifp)
 	register struct ifnet *ifp;
 {
-	register struct ifaddr *ifa;
-	register struct sockaddr_dl *sdl;
-
 	ifp->if_type = IFT_ISO88025;
 	ifp->if_addrlen = ISO88025_ADDR_LEN;
 	ifp->if_hdrlen = 14;
@@ -694,14 +684,7 @@ token_ifattach(ifp)
 #ifdef IFF_NOTRAILERS
 	ifp->if_flags |= IFF_NOTRAILERS;
 #endif
-	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
-		if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
-		    sdl->sdl_family == AF_LINK) {
-			sdl->sdl_type = IFT_ISO88025;
-			sdl->sdl_alen = ifp->if_addrlen;
-			bcopy((caddr_t)((struct arpcom *)ifp)->ac_enaddr,
-			    LLADDR(sdl), ifp->if_addrlen);
-			break;
-		}
-	}
+	if_alloc_sadl(ifp);
+	bcopy((caddr_t)((struct arpcom *)ifp)->ac_enaddr,
+	    LLADDR(ifp->if_sadl), ifp->if_addrlen);
 }

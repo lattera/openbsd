@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syslog.h,v 1.5.10.2 2002/03/28 14:52:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/syslog.h,v 1.5.10.3 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: syslog.h,v 1.14 1996/04/03 20:46:44 christos Exp $	*/
 
 /*
@@ -159,7 +159,7 @@ struct syslog_data {
 	int 	log_mask;
 };
 
-#define SYSLOG_DATA_INIT {-1, 0, 0, 0, NULL, LOG_USER, 0xff}
+#define SYSLOG_DATA_INIT {-1, 0, 0, 0, (const char *)0, LOG_USER, 0xff}
 
 #ifdef _KERNEL
 #define	LOG_PRINTF	-1	/* pseudo-priority to indicate use of printf */
@@ -201,13 +201,13 @@ void	closelog(void);
 void	openlog(const char *, int, int);
 int	setlogmask(int);
 void	syslog(int, const char *, ...)
-    __attribute__((__format__(__printf__,2,3)));
+    __attribute__((__format__(__syslog__,2,3)));
 void	vsyslog(int, const char *, _BSD_VA_LIST_);
 void	closelog_r(struct syslog_data *);
 void	openlog_r(const char *, int, int, struct syslog_data *);
 int	setlogmask_r(int, struct syslog_data *);
 void	syslog_r(int, struct syslog_data *, const char *, ...)
-     __attribute__((__format__(__printf__,3,4)));
+     __attribute__((__format__(__syslog__,3,4)));
 void	vsyslog_r(int, struct syslog_data *, const char *, 
      _BSD_VA_LIST_);
 __END_DECLS

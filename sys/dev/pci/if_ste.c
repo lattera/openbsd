@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5.2.6 2002/03/28 15:35:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5.2.7 2003/03/28 00:38:22 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -827,6 +827,10 @@ void ste_stats_update(xsc)
 	return;
 }
 
+const struct pci_matchid ste_devices[] = {
+	{ PCI_VENDOR_SUNDANCE, PCI_PRODUCT_SUNDANCE_ST201 },
+	{ PCI_VENDOR_DLINK, PCI_PRODUCT_DLINK_550TX },
+};
 
 /*
  * Probe for a Sundance ST201 chip. Check the PCI vendor and device
@@ -836,17 +840,8 @@ int ste_probe(parent, match, aux)
 	struct device		*parent;
 	void			*match, *aux;
 {
-	struct pci_attach_args	*pa = (struct pci_attach_args *)aux;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SUNDANCE &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUNDANCE_ST201)
-		return(1);
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_DLINK &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_DLINK_550TX)
-		return(1);
-
-	return(0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, ste_devices,
+	    sizeof(ste_devices)/sizeof(ste_devices[0])));
 }
 
 /*
@@ -1394,7 +1389,7 @@ int ste_encap(sc, c, m_head)
 				break;
 			total_len += m->m_len;
 			f = &c->ste_ptr->ste_frags[frag];
-			f->ste_addr = vtophys(mtod(m, vm_offset_t));
+			f->ste_addr = vtophys(mtod(m, vaddr_t));
 			f->ste_len = m->m_len;
 			frag++;
 		}

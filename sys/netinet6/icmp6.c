@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.7 2002/03/28 14:56:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.8 2003/03/28 00:41:29 niklas Exp $	*/
 /*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
@@ -889,7 +889,7 @@ icmp6_input(mp, offp, proto)
 	deliver:
 		if (icmp6_notify_error(m, off, icmp6len, code)) {
 			/* In this case, m should've been freed. */
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 		break;
 
@@ -936,7 +936,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 		       sizeof(*icmp6) + sizeof(struct ip6_hdr));
 	if (icmp6 == NULL) {
 		icmp6stat.icp6s_tooshort++;
-		return(-1);
+		return (-1);
 	}
 #endif
 	eip6 = (struct ip6_hdr *)(icmp6 + 1);
@@ -973,10 +973,10 @@ icmp6_notify_error(m, off, icmp6len, code)
 					       eoff, sizeof(*eh));
 				if (eh == NULL) {
 					icmp6stat.icp6s_tooshort++;
-					return(-1);
+					return (-1);
 				}
 #endif
-				
+
 				if (nxt == IPPROTO_AH)
 					eoff += (eh->ip6e_len + 2) << 2;
 				else
@@ -1002,7 +1002,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 					       eoff, sizeof(*rth));
 				if (rth == NULL) {
 					icmp6stat.icp6s_tooshort++;
-					return(-1);
+					return (-1);
 				}
 #endif
 				rthlen = (rth->ip6r_len + 1) << 3;
@@ -1028,7 +1028,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 						       eoff, rthlen);
 					if (rth0 == NULL) {
 						icmp6stat.icp6s_tooshort++;
-						return(-1);
+						return (-1);
 					}
 #endif
 					/* just ignore a bogus header */
@@ -1051,7 +1051,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 					       eoff, sizeof(*fh));
 				if (fh == NULL) {
 					icmp6stat.icp6s_tooshort++;
-					return(-1);
+					return (-1);
 				}
 #endif
 				/*
@@ -1086,7 +1086,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 			       sizeof(*icmp6) + sizeof(struct ip6_hdr));
 		if (icmp6 == NULL) {
 			icmp6stat.icp6s_tooshort++;
-			return(-1);
+			return (-1);
 		}
 #endif
 
@@ -1154,11 +1154,11 @@ icmp6_notify_error(m, off, icmp6len, code)
 					  &ip6cp);
 		}
 	}
-	return(0);
+	return (0);
 
   freeit:
 	m_freem(m);
-	return(-1);
+	return (-1);
 }
 
 void
@@ -1206,13 +1206,10 @@ icmp6_mtudisc_update(ip6cp, validated)
 	/* sin6.sin6_scope_id = XXX: should be set if DST is a scoped addr */
 	rt = icmp6_mtudisc_clone((struct sockaddr *)&sin6);
 
-	if (rt && (rt->rt_flags & RTF_HOST)
-	    && !(rt->rt_rmx.rmx_locks & RTV_MTU)) {
-		if (mtu < IPV6_MMTU) {
-				/* xxx */
-			rt->rt_rmx.rmx_locks |= RTV_MTU;
-		} else if (mtu < rt->rt_ifp->if_mtu &&
-			   rt->rt_rmx.rmx_mtu > mtu) {
+	if (rt && (rt->rt_flags & RTF_HOST) &&
+	    !(rt->rt_rmx.rmx_locks & RTV_MTU) &&
+	    (rt->rt_rmx.rmx_mtu > mtu || rt->rt_rmx.rmx_mtu == 0)) {
+		if (mtu < IN6_LINKMTU(rt->rt_ifp)) {
 			icmp6stat.icp6s_pmtuchg++;
 			rt->rt_rmx.rmx_mtu = mtu;
 		}
@@ -1233,7 +1230,7 @@ icmp6_mtudisc_update(ip6cp, validated)
 /*
  * Process a Node Information Query packet, based on
  * draft-ietf-ipngwg-icmp-name-lookups-07.
- * 
+ *
  * Spec incompatibilities:
  * - IPv6 Subject address handling
  * - IPv4 Subject address handling support missing
@@ -1450,7 +1447,7 @@ ni6_input(m, off)
 	MGETHDR(n, M_DONTWAIT, m->m_type);
 	if (n == NULL) {
 		m_freem(m);
-		return(NULL);
+		return (NULL);
 	}
 	M_DUP_PKTHDR(n, m); /* just for rcvif */
 	if (replylen > MHLEN) {
@@ -1527,15 +1524,20 @@ ni6_input(m, off)
 
 	nni6->ni_type = ICMP6_NI_REPLY;
 	m_freem(m);
-	return(n);
+	return (n);
 
   bad:
 	m_freem(m);
 	if (n)
 		m_freem(n);
-	return(NULL);
+	return (NULL);
 }
 #undef hostnamelen
+
+#define isupper(x) ('A' <= (x) && (x) <= 'Z')
+#define isalpha(x) (('A' <= (x) && (x) <= 'Z') || ('a' <= (x) && (x) <= 'z'))
+#define isalnum(x) (isalpha(x) || ('0' <= (x) && (x) <= '9'))
+#define tolower(x) (isupper(x) ? (x) + 'a' - 'A' : (x))
 
 /*
  * make a mbuf with DNS-encoded string.  no compression support.
@@ -1614,8 +1616,18 @@ ni6_nametodns(name, namelen, old)
 			if (i <= 0 || i >= 64)
 				goto fail;
 			*cp++ = i;
-			bcopy(p, cp, i);
-			cp += i;
+			if (!isalpha(p[0]) || !isalnum(p[i - 1]))
+				goto fail;
+			while (i > 0) {
+				if (!isalnum(*p) && *p != '-')
+					goto fail;
+				if (isupper(*p)) {
+					*cp++ = tolower(*p);
+					p++;
+				} else
+					*cp++ = *p++;
+				i--;
+			}
 			p = q;
 			if (p < name + namelen && *p == '.')
 				p++;
@@ -1725,7 +1737,7 @@ ni6_addrs(ni6, m, ifpp, subj)
 		switch (ni6->ni_code) {
 		case ICMP6_NI_SUBJ_IPV6:
 			if (subj == NULL) /* must be impossible... */
-				return(0);
+				return (0);
 			subj_ip6 = (struct sockaddr_in6 *)subj;
 			break;
 		default:
@@ -1733,7 +1745,7 @@ ni6_addrs(ni6, m, ifpp, subj)
 			 * XXX: we only support IPv6 subject address for
 			 * this Qtype.
 			 */
-			return(0);
+			return (0);
 		}
 	}
 
@@ -1792,13 +1804,13 @@ ni6_addrs(ni6, m, ifpp, subj)
 		}
 		if (iffound) {
 			*ifpp = ifp;
-			return(addrsofif);
+			return (addrsofif);
 		}
 
 		addrs += addrsofif;
 	}
 
-	return(addrs);
+	return (addrs);
 }
 
 static int
@@ -1818,7 +1830,7 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 	long time_second = time.tv_sec;
 
 	if (ifp0 == NULL && !(niflags & NI_NODEADDR_FLAG_ALL))
-		return(0);	/* needless to copy */
+		return (0);	/* needless to copy */
 
   again:
 
@@ -1883,7 +1895,7 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 				 */
 				nni6->ni_flags |=
 					NI_NODEADDR_FLAG_TRUNCATE;
-				return(copied);
+				return (copied);
 			}
 
 			/*
@@ -1912,7 +1924,7 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 				else
 					ltime = 0;
 			}
-			
+
 			bcopy(&ltime, cp, sizeof(u_int32_t));
 			cp += sizeof(u_int32_t);
 
@@ -1923,7 +1935,7 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 			if (IN6_IS_ADDR_LINKLOCAL(&ifa6->ia_addr.sin6_addr))
 				((struct in6_addr *)cp)->s6_addr16[1] = 0;
 			cp += sizeof(struct in6_addr);
-			
+
 			resid -= (sizeof(struct in6_addr) + sizeof(u_int32_t));
 			copied += (sizeof(struct in6_addr) +
 				   sizeof(u_int32_t));
@@ -1939,7 +1951,7 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 		goto again;
 	}
 
-	return(copied);
+	return (copied);
 }
 
 /*
@@ -2184,7 +2196,7 @@ icmp6_reflect(m, off)
 	ip6->ip6_nxt = IPPROTO_ICMPV6;
 	if (m->m_pkthdr.rcvif) {
 		/* XXX: This may not be the outgoing interface */
-		ip6->ip6_hlim = nd_ifinfo[m->m_pkthdr.rcvif->if_index].chlim;
+		ip6->ip6_hlim = ND_IFINFO(m->m_pkthdr.rcvif)->chlim;
 	} else
 		ip6->ip6_hlim = ip6_defhlim;
 
@@ -2198,7 +2210,13 @@ icmp6_reflect(m, off)
 
 	m->m_flags &= ~(M_BCAST|M_MCAST);
 
-	if (ip6_output(m, NULL, NULL, 0, NULL, &outif) != 0 && outif)
+	/*
+	 * To avoid a "too big" situation at an intermediate router
+	 * and the path MTU discovery process, specify the IPV6_MINMTU flag.
+	 * Note that only echo and node information replies are affected,
+	 * since the length of ICMP6 errors is limited to the minimum MTU.
+	 */
+	if (ip6_output(m, NULL, NULL, IPV6_MINMTU, NULL, &outif) != 0 && outif)
 		icmp6_ifstat_inc(outif, ifs6_out_error);
 
 	if (outif)
@@ -2251,7 +2269,7 @@ icmp6_redirect_input(m, off)
 	struct in6_addr reddst6;
 	union nd_opts ndopts;
 
-	if (!m || !ifp)
+	if (!ifp)
 		return;
 
 	/* XXX if we are router, we don't update route by icmp6 redirect */
@@ -2652,7 +2670,7 @@ icmp6_redirect_output(m0, rt)
 	 * and truncates if not.
 	 */
 	if (m0->m_next || m0->m_pkthdr.len != m0->m_len)
-		panic("assumption failed in %s:%d\n", __FILE__, __LINE__);
+		panic("assumption failed in %s:%d", __FILE__, __LINE__);
 
 	if (len - sizeof(*nd_opt_rh) < m0->m_pkthdr.len) {
 		/* not enough room, truncate */
@@ -2813,7 +2831,7 @@ icmp6_ctloutput(op, so, level, optname, mp)
 		break;
 	}
 
-	return(error);
+	return (error);
 }
 
 /* NRL PCB */
@@ -2898,8 +2916,8 @@ icmp6_mtudisc_timeout(rt, r)
 		rtrequest((int) RTM_DELETE, (struct sockaddr *)rt_key(rt),
 		    rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
 	} else {
-		if ((rt->rt_rmx.rmx_locks & RTV_MTU) == 0)
-			rt->rt_rmx.rmx_mtu = rt->rt_ifp->if_mtu;
+		if (!(rt->rt_rmx.rmx_locks & RTV_MTU))
+			rt->rt_rmx.rmx_mtu = 0;
 	}
 }
 
@@ -2970,6 +2988,9 @@ icmp6_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 				&icmp6_mtudisc_lowat);
 	case ICMPV6CTL_ND6_DEBUG:
 		return sysctl_int(oldp, oldlenp, newp, newlen, &nd6_debug);
+	case ICMPV6CTL_ND6_DRLIST:
+	case ICMPV6CTL_ND6_PRLIST:
+		return nd6_sysctl(name[0], oldp, oldlenp, newp, newlen);
 	default:
 		return ENOPROTOOPT;
 	}

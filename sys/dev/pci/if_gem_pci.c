@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.2.4.4 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.2.4.5 2003/03/28 00:38:22 niklas Exp $	*/
 /*	$NetBSD: if_gem_pci.c,v 1.1 2001/09/16 00:11:42 eeh Exp $ */
 
 /*
@@ -95,25 +95,22 @@ struct cfattach gem_pci_ca = {
  * Attach routines need to be split out to different bus-specific files.
  */
 
+const struct pci_matchid gem_pci_devices[] = {
+	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_ERINETWORK },
+	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_GEMNETWORK },
+	{ PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GMAC },
+	{ PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GMAC2 },
+	{ PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GMAC3 },
+};
+
 int
 gem_match_pci(parent, cf, aux)
 	struct device *parent;
 	void *cf;
 	void *aux;
 {
-	struct pci_attach_args *pa = aux;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SUN && 
-	       (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_ERINETWORK ||
-		PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_GEMNETWORK))
-		return (1);
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_APPLE && 
-	       (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_APPLE_GMAC ||
-		PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_APPLE_GMAC2))
-		return (1);
-
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, gem_pci_devices,
+	    sizeof(gem_pci_devices)/sizeof(gem_pci_devices[0])));
 }
 
 void

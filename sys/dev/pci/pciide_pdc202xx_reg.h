@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_pdc202xx_reg.h,v 1.2.2.2 2001/10/31 03:22:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_pdc202xx_reg.h,v 1.2.2.3 2003/03/28 00:38:24 niklas Exp $	*/
 /*	$NetBSD: pciide_pdc202xx_reg.h,v 1.5 2001/07/05 08:38:27 toshii Exp $ */
 
 /*
@@ -14,8 +14,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *	This product includes software developed by Manuel Bouyer.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -113,3 +112,11 @@ static int8_t pdc2xx_dma_mb[] = {0x3, 0x3, 0x3};
 static int8_t pdc2xx_dma_mc[] = {0x5, 0x4, 0x3};
 static int8_t pdc2xx_udma_mb[] = {0x3, 0x2, 0x1, 0x2, 0x1, 0x1};
 static int8_t pdc2xx_udma_mc[] = {0x3, 0x2, 0x1, 0x2, 0x1, 0x1};
+
+/*
+ * Registers definitions for Promise PDC20268 and above chips
+ */
+#define PDC268_INDEX(chan)	(0x01 + IDEDMA_SCH_OFFSET * (chan))
+#define PDC268_DATA(chan)	(0x03 + IDEDMA_SCH_OFFSET * (chan))
+#define PDC268_CABLE		0x04
+#define PDC268_INTR		0x20

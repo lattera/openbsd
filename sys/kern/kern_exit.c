@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.8 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.9 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -71,14 +71,15 @@
 #include <sys/sem.h>
 #endif
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
 #include <machine/cpu.h>
 
 #include <uvm/uvm_extern.h>
-
-void proc_zap(struct proc *);
 
 /*
  * exit --
@@ -110,7 +111,6 @@ exit1(p, rv)
 	int rv;
 {
 	struct proc *q, *nq;
-	struct vmspace *vm;
 
 	if (p->p_pid == 1)
 		panic("init died (signal %d, exit %d)",
@@ -139,23 +139,9 @@ exit1(p, rv)
 	 */
 	fdfree(p);
 
-	/* The next three chunks should probably be moved to vmspace_exit. */
-	vm = p->p_vmspace;
 #ifdef SYSVSEM
 	semexit(p);
 #endif
-	/*
-	 * Release user portion of address space.
-	 * This releases references to vnodes,
-	 * which could cause I/O if the file has been unlinked.
-	 * Need to do this early enough that we can still sleep.
-	 * Can't free the entire vmspace as the kernel stack
-	 * may be mapped within that space also.
-	 */
-	if (vm->vm_refcnt == 1)
-		(void) uvm_deallocate(&vm->vm_map, VM_MIN_ADDRESS,
-		    VM_MAXUSER_ADDRESS - VM_MIN_ADDRESS);
-
 	if (SESS_LEADER(p)) {
 		register struct session *sp = p->p_session;
 
@@ -197,6 +183,10 @@ exit1(p, rv)
 	p->p_traceflag = 0;	/* don't trace the vrele() */
 	if (p->p_tracep)
 		ktrsettracevnode(p, NULL);
+#endif
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		systrace_exit(p);
 #endif
 	/*
 	 * NOTE: WE ARE NO LONGER ALLOWED TO SLEEP!
@@ -340,7 +330,7 @@ exit2(p)
  * a zombie, and the parent is allowed to read the undead's status.
  */
 void
-reaper()
+reaper(void)
 {
 	struct proc *p;
 
@@ -512,10 +502,8 @@ proc_reparent(child, parent)
 }
 
 void
-proc_zap(p)
-	struct proc *p;
+proc_zap(struct proc *p)
 {
-
 	pool_put(&rusage_pool, p->p_ru);
 
 	/*

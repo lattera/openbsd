@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.3 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.4 2003/03/28 00:38:12 niklas Exp $	*/
 /*	$NetBSD: awi.c,v 1.26 2000/07/21 04:48:55 onoe Exp $	*/
 
 /*-
@@ -480,7 +480,7 @@ awi_ioctl(ifp, cmd, data)
 	s = splnet();
 
 #ifdef __OpenBSD__
-	if ((error = ether_ioctl(ifp, &sc->sc_ec, cmd, data)) > 0) {
+	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, cmd, data)) > 0) {
 		splx(s);
 		return (error);
 	}
@@ -521,8 +521,8 @@ awi_ioctl(ifp, cmd, data)
 		error = ENETRESET;	/*XXX*/
 #else
 		error = (cmd == SIOCADDMULTI) ?
-		    ether_addmulti(ifr, &sc->sc_ec) :
-		    ether_delmulti(ifr, &sc->sc_ec);
+		    ether_addmulti(ifr, &sc->sc_arpcom) :
+		    ether_delmulti(ifr, &sc->sc_arpcom);
 #endif
 		/*
 		 * Do not rescan BSS.  Rather, just reset multicast filter.
@@ -822,7 +822,7 @@ awi_init(sc)
 		n++;
 	}
 #else
-	ETHER_FIRST_MULTI(step, &sc->sc_ec, enm);
+	ETHER_FIRST_MULTI(step, &sc->sc_arpcom, enm);
 	while (enm != NULL) {
 		if (n == AWI_GROUP_ADDR_SIZE ||
 		    memcmp(enm->enm_addrlo, enm->enm_addrhi, ETHER_ADDR_LEN)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.5 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.6 2003/03/28 00:38:33 niklas Exp $ */
 /* $NetBSD: wskbd.c,v 1.38 2000/03/23 07:01:47 thorpej Exp $ */
 
 /*
@@ -276,8 +276,6 @@ struct wskbd_keyrepeat_data wskbd_default_keyrepeat_data = {
 	WSKBD_DEFAULT_KEYREPEAT_DELN,
 };
 
-cdev_decl(wskbd);
-
 #if NWSMUX > 0 || NWSDISPLAY > 0
 struct wsmuxops wskbd_muxops = {
 	wskbdopen, wskbddoclose, wskbddoioctl, wskbd_displayioctl,
@@ -388,7 +386,9 @@ wskbd_attach(parent, self, aux)
 		wskbd_update_layout(sc->id, ap->keymap->layout);
 	}
 
+#if NWSDISPLAY > 0
 	timeout_set(&sc->sc_repeat_ch, wskbd_repeat, sc);
+#endif
 
 	sc->id->t_sc = sc;
 
@@ -1038,13 +1038,13 @@ getkeyrepeat:
 			if (KB_VARIANT(enc) & ~KB_HANDLEDBYWSKBD)
 				return (EINVAL);
 		} else {
-		md = *(sc->id->t_keymap); /* structure assignment */
-			md.layout = enc;
-			error = wskbd_load_keymap(&md, &sc->sc_map,
-						  &sc->sc_maplen);
-			if (error)
-		return(error);
-	}
+			md = *(sc->id->t_keymap); /* structure assignment */
+				md.layout = enc;
+				error = wskbd_load_keymap(&md, &sc->sc_map,
+							  &sc->sc_maplen);
+				if (error)
+			return(error);
+		}
 		sc->sc_layout = enc;
 		wskbd_update_layout(sc->id, enc);
 		return (0);
@@ -1376,17 +1376,21 @@ internal_command(sc, type, ksym, ksym2)
 	switch (ksym) {
 	case KS_Cmd_ScrollBack:
 		if (MOD_ONESET(sc->id, MOD_ANYSHIFT)) {
-			wsscrollback(sc->sc_displaydv,
-			    WSDISPLAY_SCROLL_BACKWARD);
+			if (sc->sc_displaydv != NULL)
+				wsscrollback(sc->sc_displaydv,
+				    WSDISPLAY_SCROLL_BACKWARD);
 			return (1);
 		}
+		break;
 
 	case KS_Cmd_ScrollFwd:
 		if (MOD_ONESET(sc->id, MOD_ANYSHIFT)) {
-			wsscrollback(sc->sc_displaydv,
-			    WSDISPLAY_SCROLL_FORWARD);
+			if (sc->sc_displaydv != NULL)
+				wsscrollback(sc->sc_displaydv,
+				    WSDISPLAY_SCROLL_FORWARD);
 			return (1);
 		}
+		break;
 	}
 #endif
 
@@ -1417,13 +1421,17 @@ internal_command(sc, type, ksym, ksym2)
 	case KS_Cmd_Screen9:
 	case KS_Cmd_Screen10:
 	case KS_Cmd_Screen11:
-		wsdisplay_switch(sc->sc_displaydv, ksym - KS_Cmd_Screen0, 0);
+		if (sc->sc_displaydv != NULL)
+			wsdisplay_switch(sc->sc_displaydv,
+			    ksym - KS_Cmd_Screen0, 0);
 		return (1);
 	case KS_Cmd_ResetEmul:
-		wsdisplay_reset(sc->sc_displaydv, WSDISPLAY_RESETEMUL);
+		if (sc->sc_displaydv != NULL)
+			wsdisplay_reset(sc->sc_displaydv, WSDISPLAY_RESETEMUL);
 		return (1);
 	case KS_Cmd_ResetClose:
-		wsdisplay_reset(sc->sc_displaydv, WSDISPLAY_RESETCLOSE);
+		if (sc->sc_displaydv != NULL)
+			wsdisplay_reset(sc->sc_displaydv, WSDISPLAY_RESETCLOSE);
 		return (1);
 #ifdef __i386__
 	case KS_Cmd_KbdReset:

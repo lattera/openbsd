@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/fcntl.h,v 1.5.10.2 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/fcntl.h,v 1.5.10.3 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$NetBSD: fcntl.h,v 1.8 1995/03/26 20:24:12 jtc Exp $	*/
 
 /*-
@@ -99,7 +99,7 @@
 #endif
 
 /*
- * POSIX 1003.1 specifies a higher granularity for syncronous operations
+ * POSIX 1003.1 specifies a higher granularity for synchronous operations
  * than we support.  Since synchronicity is all or nothing in OpenBSD
  * we just define these to be the same as O_SYNC.
  */

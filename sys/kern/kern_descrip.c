@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.18.4.8 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.18.4.9 2003/03/28 00:41:26 niklas Exp $	*/
 /*	$NetBSD: kern_descrip.c,v 1.42 1996/03/30 22:24:38 christos Exp $	*/
 
 /*
@@ -215,7 +215,7 @@ sys_dup(p, v, retval)
 	register_t *retval;
 {
 	struct sys_dup_args /* {
-		syscallarg(u_int) fd;
+		syscallarg(int) fd;
 	} */ *uap = v;
 	struct filedesc *fdp = p->p_fd;
 	int old = SCARG(uap, fd);
@@ -249,8 +249,8 @@ sys_dup2(p, v, retval)
 	register_t *retval;
 {
 	struct sys_dup2_args /* {
-		syscallarg(u_int) from;
-		syscallarg(u_int) to;
+		syscallarg(int) from;
+		syscallarg(int) to;
 	} */ *uap = v;
 	int old = SCARG(uap, from), new = SCARG(uap, to);
 	struct filedesc *fdp = p->p_fd;
@@ -285,6 +285,7 @@ restart:
 		if (new != i)
 			panic("dup2: fdalloc");
 	}
+	/* finishdup() does FRELE */
 	return (finishdup(p, fp, old, new, retval));
 }
 
@@ -503,6 +504,11 @@ finishdup(struct proc *p, struct file *fp, int old, int new, register_t *retval)
 	struct file *oldfp;
 	struct filedesc *fdp = p->p_fd;
 
+	if (fp->f_count == LONG_MAX-2) {
+		FRELE(fp);
+		return (EDEADLK);
+	}
+
 	/*
 	 * Don't fd_getfile here. We want to closef LARVAL files and
 	 * closef can deal with that.
@@ -511,8 +517,6 @@ finishdup(struct proc *p, struct file *fp, int old, int new, register_t *retval)
 	if (oldfp != NULL)
 		FREF(oldfp);
 
-	if (fp->f_count == LONG_MAX-2)
-		return (EDEADLK);
 	fdp->fd_ofiles[new] = fp;
 	fdp->fd_ofileflags[new] = fdp->fd_ofileflags[old] & ~UF_EXCLOSE;
 	fp->f_count++;
@@ -796,7 +800,7 @@ fdexpand(p)
 
 /*
  * Create a new open file structure and allocate
- * a file decriptor for the process that refers to it.
+ * a file descriptor for the process that refers to it.
  */
 int
 falloc(p, resultfp, resultfd)
@@ -851,20 +855,22 @@ restart:
  * Build a new filedesc structure.
  */
 struct filedesc *
-fdinit(p)
-	struct proc *p;
+fdinit(struct proc *p)
 {
-	register struct filedesc0 *newfdp;
-	register struct filedesc *fdp = p->p_fd;
+	struct filedesc0 *newfdp;
 	extern int cmask;
 
 	newfdp = pool_get(&fdesc_pool, PR_WAITOK);
 	bzero(newfdp, sizeof(struct filedesc0));
-	newfdp->fd_fd.fd_cdir = fdp->fd_cdir;
-	VREF(newfdp->fd_fd.fd_cdir);
-	newfdp->fd_fd.fd_rdir = fdp->fd_rdir;
-	if (newfdp->fd_fd.fd_rdir)
-		VREF(newfdp->fd_fd.fd_rdir);
+	if (p != NULL) {
+		struct filedesc *fdp = p->p_fd;
+
+		newfdp->fd_fd.fd_cdir = fdp->fd_cdir;
+		VREF(newfdp->fd_fd.fd_cdir);
+		newfdp->fd_fd.fd_rdir = fdp->fd_rdir;
+		if (newfdp->fd_fd.fd_rdir)
+			VREF(newfdp->fd_fd.fd_rdir);
+	}
 	lockinit(&newfdp->fd_fd.fd_lock, PLOCK, "fdexpand", 0, 0);
 
 	/* Create the file descriptor table. */
@@ -1029,7 +1035,7 @@ fdfree(p)
  * Note: p may be NULL when closing a file
  * that was being passed in a message.
  *
- * The fp must have its usecount bumped and will be FILE_UNUSEd here.
+ * The fp must have its usecount bumped and will be FRELEd here.
  */
 int
 closef(struct file *fp, struct proc *p)

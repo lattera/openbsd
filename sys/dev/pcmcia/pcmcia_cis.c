@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.3.4.3 2002/03/28 15:34:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.3.4.4 2003/03/28 00:38:26 niklas Exp $	*/
 /*	$NetBSD: pcmcia_cis.c,v 1.9 1998/08/22 23:41:48 msaitoh Exp $	*/
 
 /*
@@ -125,8 +125,6 @@ pcmcia_scan_cis(dev, fct, arg)
 #endif
 		return -1;
 	}
-	tuple.memt = pcmh.memt;
-	tuple.memh = pcmh.memh;
 
 	/* initialize state for the primary tuple chain */
 	if (pcmcia_chip_mem_map(pct, pch, PCMCIA_MEM_ATTR, 0,
@@ -138,6 +136,9 @@ pcmcia_scan_cis(dev, fct, arg)
 #endif
 		return -1;
 	}
+	tuple.memt = pcmh.memt;
+	tuple.memh = pcmh.memh;
+
 	DPRINTF(("cis mem map %x\n", (unsigned int) tuple.memh));
 
 	tuple.mult = 2;
@@ -470,8 +471,7 @@ pcmcia_print_cis(sc)
 	printf("%s: Manufacturer code 0x%x, product 0x%x\n",
 	       sc->dev.dv_xname, card->manufacturer, card->product);
 
-	for (pf = card->pf_head.sqh_first; pf != NULL;
-	    pf = pf->pf_list.sqe_next) {
+	SIMPLEQ_FOREACH(pf, &card->pf_head, pf_list) {
 		printf("%s: function %d: ", sc->dev.dv_xname, pf->number);
 
 		switch (pf->function) {
@@ -521,8 +521,7 @@ pcmcia_print_cis(sc)
 
 		printf(", ccr addr %lx mask %lx\n", pf->ccr_base, pf->ccr_mask);
 
-		for (cfe = pf->cfe_head.sqh_first; cfe != NULL;
-		    cfe = cfe->cfe_list.sqe_next) {
+		SIMPLEQ_FOREACH(cfe, &pf->cfe_head, cfe_list) {
 			printf("%s: function %d, config table entry %d: ",
 			    sc->dev.dv_xname, pf->number, cfe->number);
 
@@ -631,9 +630,9 @@ pcmcia_parse_cis_tuple(tuple, arg)
 		if (state->gotmfc == 1) {
 			struct pcmcia_function *pf, *pfnext;
 
-			for (pf = state->card->pf_head.sqh_first; pf != NULL;
-			    pf = pfnext) {
-				pfnext = pf->pf_list.sqe_next;
+			for (pf = SIMPLEQ_FIRST(&state->card->pf_head);
+			    pf != NULL; pf = pfnext) {
+				pfnext = SIMPLEQ_NEXT(pf, pf_list);
 				free(pf, M_DEVBUF);
 			}
 

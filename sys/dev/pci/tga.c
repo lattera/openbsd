@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.5 2002/03/28 15:35:59 niklas Exp $ */
-/* $NetBSD: tga.c,v 1.31 2001/02/11 19:34:58 nathanw Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.6 2003/03/28 00:38:25 niklas Exp $ */
+/* $NetBSD: tga.c,v 1.40 2002/03/13 15:05:18 ad Exp $ */
 
 /*
  * Copyright (c) 1995, 1996 Carnegie-Mellon University.
@@ -49,6 +49,7 @@
 #include <dev/ic/bt485var.h>
 #include <dev/ic/bt463reg.h>
 #include <dev/ic/bt463var.h>
+#include <dev/ic/ibm561var.h>
 
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wscons_raster.h>
@@ -80,38 +81,39 @@ int	tga_identify(struct tga_devconfig *);
 const struct tga_conf *tga_getconf(int);
 void	tga_getdevconfig(bus_space_tag_t memt, pci_chipset_tag_t pc,
 	    pcitag_t tag, struct tga_devconfig *dc);
+unsigned tga_getdotclock(struct tga_devconfig *dc);
 
 struct tga_devconfig tga_console_dc;
 
-int tga_ioctl(void *, u_long, caddr_t, int, struct proc *);
-paddr_t tga_mmap(void *, off_t, int);
-static void tga_copyrows(void *, int, int, int);
-static void tga_copycols(void *, int, int, int, int);
-static int tga_alloc_screen(void *, const struct wsscreen_descr *,
-				      void **, int *, int *, long *);
-static void tga_free_screen(void *, void *);
-static int tga_show_screen(void *, void *, int,
+int	tga_ioctl(void *, u_long, caddr_t, int, struct proc *);
+paddr_t	tga_mmap(void *, off_t, int);
+void	tga_copyrows(void *, int, int, int);
+void	tga_copycols(void *, int, int, int, int);
+int	tga_alloc_screen(void *, const struct wsscreen_descr *,
+	    void **, int *, int *, long *);
+void	tga_free_screen(void *, void *);
+int	tga_show_screen(void *, void *, int,
 			   void (*) (void *, int, int), void *);
-static int tga_rop(struct rasops_info *, int, int, int, int, int,
+void	tga_burner(void *, u_int, u_int);
+int	tga_rop(struct rasops_info *, int, int, int, int, int,
 	struct rasops_info *, int, int);
-static int tga_rop_vtov(struct rasops_info *, int, int, int, int,
+int	tga_rop_vtov(struct rasops_info *, int, int, int, int,
 	int, struct rasops_info *, int, int );
-static void tga_putchar(void *c, int row, int col,
-				u_int uc, long attr);
-static void tga_eraserows(void *, int, int, long);
-static void	tga_erasecols(void *, int, int, int, long);
-void tga2_init(struct tga_devconfig *, int);
+void	tga_putchar(void *c, int row, int col, u_int uc, long attr);
+void	tga_eraserows(void *, int, int, long);
+void	tga_erasecols(void *, int, int, int, long);
+void	tga2_init(struct tga_devconfig *);
 
-void tga_config_interrupts(struct device *);
+void	tga_config_interrupts(struct device *);
 
 /* RAMDAC interface functions */
-int		tga_sched_update(void *, void (*)(void *));
-void		tga_ramdac_wr(void *, u_int, u_int8_t);
-u_int8_t	tga_ramdac_rd(void *, u_int);
-void		tga_bt463_wr(void *, u_int, u_int8_t);
-u_int8_t	tga_bt463_rd(void *, u_int);
-void		tga2_ramdac_wr(void *, u_int, u_int8_t);
-u_int8_t	tga2_ramdac_rd(void *, u_int);
+int	 tga_sched_update(void *, void (*)(void *));
+void	 tga_ramdac_wr(void *, u_int, u_int8_t);
+u_int8_t tga_ramdac_rd(void *, u_int);
+void	 tga_bt463_wr(void *, u_int, u_int8_t);
+u_int8_t tga_bt463_rd(void *, u_int);
+void	 tga2_ramdac_wr(void *, u_int, u_int8_t);
+u_int8_t tga2_ramdac_rd(void *, u_int);
 
 /* Interrupt handler */
 int	tga_intr(void *);
@@ -154,7 +156,9 @@ struct wsdisplay_accessops tga_accessops = {
 	tga_free_screen,
 	tga_show_screen,
 	NULL,			/* load_font */
-	NULL			/* scrollback */
+	NULL,			/* scrollback */
+	NULL,			/* getchar */
+	tga_burner,
 };
 
 void	tga_blank(struct tga_devconfig *);
@@ -272,11 +276,7 @@ tga_getdevconfig(memt, pc, tag, dc)
 	}
 
 	if (dc->dc_tga2) {
-		int	monitor;
-
-		monitor = (~TGARREG(dc, TGA_REG_GREV) >> 16) & 0x0f;
-		DPRINTF("tga_getdevconfig: tga2_init\n");
-		tga2_init(dc, monitor);
+		tga2_init(dc);
 	}
 	
 	i = TGARREG(dc, TGA_REG_VHCR) & 0x1ff;
@@ -366,8 +366,13 @@ tga_getdevconfig(memt, pc, tag, dc)
 
 	DPRINTF("tga_getdevconfig: wsfont_init\n");
 	wsfont_init();
-	/* prefer 8 pixel wide font */
-	if ((cookie = wsfont_find(NULL, 8, 0, 0)) <= 0)
+	if (rip->ri_width > 80*12) 
+		/* High res screen, choose a big font */
+		cookie = wsfont_find(NULL, 12, 0, 0);
+	else 
+		/*  lower res, choose a 8 pixel wide font */
+		cookie = wsfont_find(NULL, 8, 0, 0);
+	if (cookie <= 0)
 		cookie = wsfont_find(NULL, 0, 0, 0);
 	if (cookie <= 0) {
 		printf("tga: no appropriate fonts.\n");
@@ -375,29 +380,30 @@ tga_getdevconfig(memt, pc, tag, dc)
 	}
 
 	/* the accelerated tga_putchar() needs LSbit left */
-	if (wsfont_lock(cookie, &dc->dc_rinfo.ri_font,
+	if (wsfont_lock(cookie, &rip->ri_font,
 	    WSDISPLAY_FONTORDER_R2L, WSDISPLAY_FONTORDER_L2R) <= 0) {
 		printf("tga: couldn't lock font\n");
 		return;
 	}
-	dc->dc_rinfo.ri_wsfcookie = cookie;
-	rasops_init(rip, 34, 80);
+	rip->ri_wsfcookie = cookie;
+	/* fill screen size */
+	rasops_init(rip, rip->ri_height / rip->ri_font->fontheight,
+	    rip->ri_width / rip->ri_font->fontwidth); 
 	
 	/* add our accelerated functions */
 	/* XXX shouldn't have to do this; rasops should leave non-NULL 
 	 * XXX entries alone.
 	 */
-	dc->dc_rinfo.ri_ops.copyrows = tga_copyrows;
-	dc->dc_rinfo.ri_ops.eraserows = tga_eraserows;
-	dc->dc_rinfo.ri_ops.erasecols = tga_erasecols;
-	dc->dc_rinfo.ri_ops.copycols = tga_copycols;
-	dc->dc_rinfo.ri_ops.putchar = tga_putchar;	
+	rip->ri_ops.copyrows = tga_copyrows;
+	rip->ri_ops.eraserows = tga_eraserows;
+	rip->ri_ops.erasecols = tga_erasecols;
+	rip->ri_ops.copycols = tga_copycols;
+	rip->ri_ops.putchar = tga_putchar;	
 
-	tga_stdscreen.nrows = dc->dc_rinfo.ri_rows;
-	tga_stdscreen.ncols = dc->dc_rinfo.ri_cols;
-	tga_stdscreen.textops = &dc->dc_rinfo.ri_ops;
-	tga_stdscreen.capabilities = dc->dc_rinfo.ri_caps;
-
+	tga_stdscreen.nrows = rip->ri_rows;
+	tga_stdscreen.ncols = rip->ri_cols;
+	tga_stdscreen.textops = &rip->ri_ops;
+	tga_stdscreen.capabilities = rip->ri_caps;
 
 	dc->dc_intrenabled = 0;
 }
@@ -501,8 +507,13 @@ tgaattach(parent, self, aux)
 		sc->sc_dc->dc_ramdac_cookie = 
 			sc->sc_dc->dc_ramdac_funcs->ramdac_register(sc->sc_dc, 
 			tga_sched_update, tga2_ramdac_wr, tga2_ramdac_rd);
-	}
 
+		/* XXX this is a bit of a hack, setting the dotclock here */
+		if (sc->sc_dc->dc_tgaconf->ramdac_funcs != bt485_funcs)
+			(*sc->sc_dc->dc_ramdac_funcs->ramdac_set_dotclock)
+				(sc->sc_dc->dc_ramdac_cookie,
+				 tga_getdotclock(sc->sc_dc));
+	}
 	DPRINTF("tgaattach: sc->sc_dc->dc_ramdac_cookie = 0x%016llx\n",
 		sc->sc_dc->dc_ramdac_cookie);
 	/*
@@ -536,6 +547,8 @@ tgaattach(parent, self, aux)
 
 #ifdef __NetBSD__
 	config_interrupts(self, tga_config_interrupts);
+#else
+	tga_config_interrupts(self);
 #endif
 }
 
@@ -566,15 +579,32 @@ tga_ioctl(v, cmd, data, flag, p)
 		*(u_int *)data = WSDISPLAY_TYPE_TGA;
 		return (0);
 
+	case WSDISPLAYIO_SMODE:
+		sc->sc_mode = *(u_int *)data;
+		switch (sc->sc_mode) {
+		case WSDISPLAYIO_MODE_DUMBFB:
+			/* in dump fb mode start the framebuffer at 0 */
+			TGAWREG(dc, TGA_REG_VVBR, 0);
+			break;
+		default:
+			/* XXX it this useful, except for not breaking Xtga? */
+			TGAWREG(dc, TGA_REG_VVBR, 1);
+			break;			
+		}
+		return (0);
+
 	case WSDISPLAYIO_GINFO:
 #define	wsd_fbip ((struct wsdisplay_fbinfo *)data)
 		wsd_fbip->height = sc->sc_dc->dc_ht;
 		wsd_fbip->width = sc->sc_dc->dc_wid;
 		wsd_fbip->depth = sc->sc_dc->dc_tgaconf->tgac_phys_depth;
-		wsd_fbip->cmsize = 256;		/* XXX ??? */
+		wsd_fbip->cmsize = 1024;		/* XXX ??? */
 #undef wsd_fbip
 		return (0);
 
+	case WSDISPLAYIO_LINEBYTES:
+		*(u_int *)data = sc->sc_dc->dc_rowbytes;
+		return 0;
 	case WSDISPLAYIO_GETCMAP:
 		return (*dcrf->ramdac_get_cmap)(dcrc,
 		    (struct wsdisplay_cmap *)data);
@@ -668,8 +698,11 @@ tga_intr(v)
 			return 0;
 		}
 	}
-	dc->dc_ramdac_intr(dcrc);
-	dc->dc_ramdac_intr = NULL;
+	/* if we have something to do, do it */
+	if (dc->dc_ramdac_intr) {
+		dc->dc_ramdac_intr(dcrc);
+		dc->dc_ramdac_intr = NULL;
+	}
 	TGAWREG(dc, TGA_REG_SISR, 0x00000001);
 	TGAREGWB(dc, TGA_REG_SISR, 1);
 	return (1);
@@ -681,20 +714,21 @@ tga_mmap(v, offset, prot)
 	off_t offset;
 	int prot;
 {
-
-	/* XXX NEW MAPPING CODE... */
-
-#if defined(__alpha__)
 	struct tga_softc *sc = v;
+	struct tga_devconfig *dc = sc->sc_dc;
 
-	if (offset >= sc->sc_dc->dc_tgaconf->tgac_cspace_size || offset < 0)
+	if (offset >= dc->dc_tgaconf->tgac_cspace_size || offset < 0)
 		return -1;
+
+	if (sc->sc_mode == WSDISPLAYIO_MODE_DUMBFB) {
+		/* 
+		 * The framebuffer starts at the upper half of tga mem
+		 */
+		offset += dc->dc_tgaconf->tgac_cspace_size / 2;
+	}
+#if defined(__alpha__)
 	return alpha_btop(sc->sc_dc->dc_paddr + offset);
 #elif defined(__mips__)
-	struct tga_softc *sc = v;
-
-	if (offset >= sc->sc_dc->dc_tgaconf->tgac_cspace_size || offset < 0)
-		return -1;
 	return mips_btop(sc->sc_dc->dc_paddr + offset);
 #else
 	return (-1);
@@ -775,10 +809,14 @@ tga_cnattach(iot, memt, pc, bus, device, function)
 	 * Initialization includes disabling cursor, setting a sane
 	 * colormap, etc.  It will be reinitialized in tgaattach().
 	 */
-	if (dcp->dc_tga2)
-		bt485_cninit(dcp, tga_sched_update, tga2_ramdac_wr,
-		    tga2_ramdac_rd);
-	else {
+	if (dcp->dc_tga2) {
+		if (dcp->dc_tgaconf->ramdac_funcs == bt485_funcs)
+			bt485_cninit(dcp, tga_sched_update, tga2_ramdac_wr,
+				     tga2_ramdac_rd);
+		else
+			ibm561_cninit(dcp, tga_sched_update, tga2_ramdac_wr,
+				      tga2_ramdac_rd, tga_getdotclock(dcp));
+	} else {
 		if (dcp->dc_tgaconf->ramdac_funcs == bt485_funcs)
 			bt485_cninit(dcp, tga_sched_update, tga_ramdac_wr,
 				tga_ramdac_rd);
@@ -796,6 +834,20 @@ tga_cnattach(iot, memt, pc, bus, device, function)
 /*
  * Functions to blank and unblank the display.
  */
+void
+tga_burner(v, on, flags)
+	void *v;
+	u_int on, flags;
+{
+	struct tga_softc *sc = v;
+
+	if (on) {
+		tga_unblank(sc->sc_dc);
+	} else {
+		tga_blank(sc->sc_dc);
+	}
+}
+
 void
 tga_blank(dc)
 	struct tga_devconfig *dc;
@@ -843,10 +895,6 @@ tga_builtin_set_cursor(dc, cursorp)
 		if ((u_int)cursorp->size.x != 64 ||
 		    (u_int)cursorp->size.y > 64)
 			return (EINVAL);
-		/* The cursor is 2 bits deep, and there is no mask */
-		count = (cursorp->size.y * 64 * 2) / NBBY;
-		if (!uvm_useracc(cursorp->image, count, B_READ))
-			return (EFAULT);
 	}
 	if (v & WSDISPLAY_CURSOR_DOHOT)		/* not supported */
 		return EINVAL;
@@ -862,19 +910,20 @@ tga_builtin_set_cursor(dc, cursorp)
 	}
 	if (v & WSDISPLAY_CURSOR_DOPOS) {
 		TGAWREG(dc, TGA_REG_CXYR, 
-				((cursorp->pos.y & 0xfff) << 12) | (cursorp->pos.x & 0xfff));
+		    ((cursorp->pos.y & 0xfff) << 12) | (cursorp->pos.x & 0xfff));
 	}
 	if (v & WSDISPLAY_CURSOR_DOCMAP) {
 		/* can't fail. */
 		dcrf->ramdac_set_curcmap(dcrc, cursorp);
 	}
 	if (v & WSDISPLAY_CURSOR_DOSHAPE) {
-		count = ((64 * 2) / NBBY) * cursorp->size.y;
+		/* The cursor is 2 bits deep, and there is no mask */
+		count = (cursorp->size.y * 64 * 2) / NBBY;
 		TGAWREG(dc, TGA_REG_CCBR,
 		    (TGARREG(dc, TGA_REG_CCBR) & ~0xfc00) | (cursorp->size.y << 10));
-		copyin(cursorp->image, (char *)(dc->dc_vaddr +
-		    (TGARREG(dc, TGA_REG_CCBR) & 0x3ff)),
-		    count);				/* can't fail. */
+		if ((error = copyin(cursorp->image,(char *)(dc->dc_vaddr +
+		    (TGARREG(dc, TGA_REG_CCBR) & 0x3ff)), count)) != 0)
+			return (error);
 	}
 	return (0);
 }
@@ -1272,7 +1321,7 @@ void tga_putchar (c, row, col, uc, attr)
 	/* XXX Abuses the fact that there is only one write barrier on Alphas */
 	TGAREGWB(dc, TGA_REG_GMOR, 1);
 
-	while(height--) {
+	while (height--) {
 		/* The actual stipple write */
 		*rp = fr[0] | (fr[1] << 8) | (fr[2] << 16) | (fr[3] << 24); 
 						  
@@ -1348,9 +1397,9 @@ tga_eraserows(c, row, num, attr)
 
 void
 tga_erasecols (c, row, col, num, attr)
-void *c;
-int row, col, num;
-long attr;
+	void *c;
+	int row, col, num;
+	long attr;
 {
 	struct rasops_info *ri = c;
 	struct tga_devconfig *dc = ri->ri_hw;
@@ -1409,7 +1458,7 @@ tga_ramdac_wr(v, btreg, val)
 	struct tga_devconfig *dc = v;
 
 	if (btreg > BT485_REG_MAX)
-		panic("tga_ramdac_wr: reg %d out of range\n", btreg);
+		panic("tga_ramdac_wr: reg %d out of range", btreg);
 
 	TGAWREG(dc, TGA_REG_EPDR, (btreg << 9) | (0 << 8 ) | val); /* XXX */
 	TGAREGWB(dc, TGA_REG_EPDR, 1);
@@ -1425,7 +1474,7 @@ tga2_ramdac_wr(v, btreg, val)
 	bus_space_handle_t ramdac;
 
 	if (btreg > BT485_REG_MAX)
-		panic("tga_ramdac_wr: reg %d out of range\n", btreg);
+		panic("tga_ramdac_wr: reg %d out of range", btreg);
 
 	bus_space_subregion(dc->dc_memt, dc->dc_memh, TGA2_MEM_RAMDAC + 
 		(0xe << 12) + (btreg << 8), 4, &ramdac);
@@ -1496,7 +1545,7 @@ tga_ramdac_rd(v, btreg)
 	tga_reg_t rdval;
 
 	if (btreg > BT485_REG_MAX)
-		panic("tga_ramdac_rd: reg %d out of range\n", btreg);
+		panic("tga_ramdac_rd: reg %d out of range", btreg);
 
 	TGAWREG(dc, TGA_REG_EPSR, (btreg << 1) | 0x1); /* XXX */
 	TGAREGWB(dc, TGA_REG_EPSR, 1);
@@ -1515,7 +1564,7 @@ tga2_ramdac_rd(v, btreg)
 	u_int8_t retval;
 
 	if (btreg > BT485_REG_MAX)
-		panic("tga_ramdac_rd: reg %d out of range\n", btreg);
+		panic("tga_ramdac_rd: reg %d out of range", btreg);
 
 	bus_space_subregion(dc->dc_memt, dc->dc_memh, TGA2_MEM_RAMDAC + 
 		(0xe << 12) + (btreg << 8), 4, &ramdac);
@@ -1530,31 +1579,47 @@ void tga2_ics9110_wr(
 	int dotclock
 );
 
-void
-tga2_init(dc, m)
-	struct tga_devconfig *dc;
-	int m;
-{
+struct monitor *tga_getmonitor(struct tga_devconfig *dc);
 
-	tga2_ics9110_wr(dc, decmonitors[m].dotclock);
+void
+tga2_init(dc)
+	struct tga_devconfig *dc;
+{
+	struct	monitor *m = tga_getmonitor(dc);
+
+
+	/* Deal with the dot clocks.
+	 */
+	if (dc->dc_tga_type == TGA_TYPE_POWERSTORM_4D20) {
+		/* Set this up as a reference clock for the
+		 * ibm561's PLL.
+		 */
+		tga2_ics9110_wr(dc, 14300000);
+		/* XXX Can't set up the dotclock properly, until such time
+		 * as the RAMDAC is configured.
+		 */
+	} else {
+		/* otherwise the ics9110 is our clock. */
+		tga2_ics9110_wr(dc, m->dotclock);
+	}
 #if 0
 	TGAWREG(dc, TGA_REG_VHCR, 
-	     ((decmonitors[m].hbp / 4) << 21) |
-	     ((decmonitors[m].hsync / 4) << 14) |
-	    (((decmonitors[m].hfp - 4) / 4) << 9) |
-	     ((decmonitors[m].cols + 4) / 4));
+	     ((m->hbp / 4) << 21) |
+	     ((m->hsync / 4) << 14) |
+	    (((m->hfp - 4) / 4) << 9) |
+	     ((m->cols + 4) / 4));
 #else
 	TGAWREG(dc, TGA_REG_VHCR, 
-	     ((decmonitors[m].hbp / 4) << 21) |
-	     ((decmonitors[m].hsync / 4) << 14) |
-	    (((decmonitors[m].hfp) / 4) << 9) |
-	     ((decmonitors[m].cols) / 4));
+	     ((m->hbp / 4) << 21) |
+	     ((m->hsync / 4) << 14) |
+	    (((m->hfp) / 4) << 9) |
+	     ((m->cols) / 4));
 #endif
 	TGAWREG(dc, TGA_REG_VVCR, 
-	    (decmonitors[m].vbp << 22) |
-	    (decmonitors[m].vsync << 16) |
-	    (decmonitors[m].vfp << 11) |
-	    (decmonitors[m].rows));
+	    (m->vbp << 22) |
+	    (m->vsync << 16) |
+	    (m->vfp << 11) |
+	    (m->rows));
 	TGAWREG(dc, TGA_REG_VVBR, 1);
 	TGAREGRWB(dc, TGA_REG_VHCR, 3);
 	TGAWREG(dc, TGA_REG_VVVR, TGARREG(dc, TGA_REG_VVVR) | 1);
@@ -1606,8 +1671,10 @@ tga2_ics9110_wr(dc, dotclock)
 		N = 0x60; M = 0x32; V = 0x1; X = 0x1; R = 0x2; break;
 	case 202500000:
 		N = 0x60; M = 0x32; V = 0x1; X = 0x1; R = 0x2; break;
+       case  14300000:         /* this one is just a ref clock */
+               N = 0x03; M = 0x03; V = 0x1; X = 0x1; R = 0x3; break;
 	default:
-		panic("unrecognized clock rate %d\n", dotclock);
+		panic("unrecognized clock rate %d", dotclock);
 	}
 
 	/* XXX -- hard coded, bad */
@@ -1618,8 +1685,8 @@ tga2_ics9110_wr(dc, dotclock)
 	bus_space_subregion(dc->dc_memt, dc->dc_memh, TGA2_MEM_EXTDEV +
 	    TGA2_MEM_CLOCK + (0xe << 12), 4, &clock); /* XXX */
 
-	for (i=24; i>0; i--) {
-		u_int32_t       writeval;
+	for (i = 24; i > 0; i--) {
+		u_int32_t writeval;
                 
 		writeval = valU & 0x1;
 		if (i == 1)  
@@ -1633,4 +1700,18 @@ tga2_ics9110_wr(dc, dotclock)
 		&clock); /* XXX */
 	bus_space_write_4(dc->dc_memt, clock, 0, 0x0);
 	bus_space_barrier(dc->dc_memt, clock, 0, 0, BUS_SPACE_BARRIER_WRITE);
+}
+
+struct monitor *
+tga_getmonitor(dc)
+       struct tga_devconfig *dc;
+{
+       return &decmonitors[(~TGARREG(dc, TGA_REG_GREV) >> 16) & 0x0f];
+}
+
+unsigned
+tga_getdotclock(dc)
+       struct tga_devconfig *dc;
+{
+       return tga_getmonitor(dc)->dotclock;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7.6.4 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7.6.5 2003/03/28 00:38:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -99,42 +99,38 @@ struct cfattach xl_pci_ca = {
 	sizeof(struct xl_softc), xl_pci_match, xl_pci_attach,
 };
 
+const struct pci_matchid xl_pci_devices[] = {
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CSOHO100TX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900TPO },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900COMBO },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900B },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900BCOMBO },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900BTPC },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C900BFL },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905TX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905T4 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905BTX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905BT4 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905BCOMBO },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905BFX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C980TX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C980CTX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C905CTX },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C450 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C555 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C556 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C556B },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C9201 },
+};
+
 int
 xl_pci_match(parent, match, aux)
 	struct device *parent;
 	void *match;
 	void *aux;
 {
-	struct pci_attach_args *pa = (struct pci_attach_args *) aux;
-
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_3COM)
-		return (0);
-
-	switch (PCI_PRODUCT(pa->pa_id)) {
-	case PCI_PRODUCT_3COM_3CSOHO100TX:
-	case PCI_PRODUCT_3COM_3C900TPO:
-	case PCI_PRODUCT_3COM_3C900COMBO:
-	case PCI_PRODUCT_3COM_3C900B:
-	case PCI_PRODUCT_3COM_3C900BCOMBO:
-	case PCI_PRODUCT_3COM_3C900BTPC:
-	case PCI_PRODUCT_3COM_3C900BFL:
-	case PCI_PRODUCT_3COM_3C905TX:
-	case PCI_PRODUCT_3COM_3C905T4:
-	case PCI_PRODUCT_3COM_3C905BTX:
-	case PCI_PRODUCT_3COM_3C905BT4:
-	case PCI_PRODUCT_3COM_3C905BCOMBO:
-	case PCI_PRODUCT_3COM_3C905BFX:
-	case PCI_PRODUCT_3COM_3C980TX:
-	case PCI_PRODUCT_3COM_3C980CTX:
-	case PCI_PRODUCT_3COM_3C905CTX:
-	case PCI_PRODUCT_3COM_3C450:
-	case PCI_PRODUCT_3COM_3C555:
-	case PCI_PRODUCT_3COM_3C556:
-	case PCI_PRODUCT_3COM_3C556B:
-		return (1);
-	}
-					
-	return (0);
+	return (pci_matchbyid((struct pci_attach_args *)aux, xl_pci_devices,
+	    sizeof(xl_pci_devices)/sizeof(xl_pci_devices[0])));
 }
 
 void
@@ -151,6 +147,7 @@ xl_pci_attach(parent, self, aux)
 	bus_size_t iosize;
 	u_int32_t command;
 
+	sc->sc_dmat = pa->pa_dmat;
 	sc->xl_unit = sc->sc_dev.dv_unit;
 
 	sc->xl_flags = 0;
@@ -170,6 +167,9 @@ xl_pci_attach(parent, self, aux)
 		sc->xl_flags |= XL_FLAG_FUNCREG | XL_FLAG_PHYOK |
 		    XL_FLAG_EEPROM_OFFSET_30 | XL_FLAG_WEIRDRESET;
 		sc->xl_flags |= XL_FLAG_INVERT_LED_PWR|XL_FLAG_INVERT_MII_PWR;
+		break;
+	case  PCI_PRODUCT_3COM_3C9201:
+		sc->xl_flags |= XL_FLAG_PHYOK;
 		break;
 	default:
 		break;

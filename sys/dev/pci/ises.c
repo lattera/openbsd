@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4.4.5 2002/03/28 15:35:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4.4.6 2003/03/28 00:38:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Håkan Olsson (ho@crt.se)
@@ -291,7 +291,7 @@ ises_initstate(void *v)
 	struct ises_softc *sc = v;
 	char *dv = sc->sc_dv.dv_xname;
 	u_int32_t stat;
-	int p, ticks;
+	int p, ticks, algs[CRYPTO_ALGORITHM_MAX + 1];
 	static int retry_count = 0; /* XXX Should be in softc */
 
 	ticks = hz * 3 / 2; /* 1.5s */ 
@@ -499,19 +499,16 @@ ises_initstate(void *v)
 		printf("\n");
 
 		/* Register ourselves with crypto framework. */
-		p = crypto_register(sc->sc_cid, CRYPTO_3DES_CBC, 0, 0,
-		    ises_newsession, ises_freesession, ises_process);
-		p |= crypto_register(sc->sc_cid, CRYPTO_DES_CBC, 0, 0,
-		    NULL, NULL, NULL);
-		p |= crypto_register(sc->sc_cid, CRYPTO_MD5_HMAC, 0, 0,
-		    NULL, NULL, NULL);
-		p |= crypto_register(sc->sc_cid, CRYPTO_SHA1_HMAC, 0, 0,
-		    NULL, NULL, NULL);
-		p |= crypto_register(sc->sc_cid, CRYPTO_RIPEMD160_HMAC, 0, 0,
-		    NULL, NULL, NULL);
-		if (p)
-			printf("%s: could not register all algorithms\n", dv);
+		bzero(algs, sizeof(algs));
 
+		algs[CRYPTO_3DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
+		algs[CRYPTO_DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
+		algs[CRYPTO_MD5_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
+		algs[CRYPTO_SHA1_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
+		algs[CRYPTO_RIPEMD160_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
+
+		crypto_register(sc->sc_cid, algs,
+		    ises_newsession, ises_freesession, ises_process);
 		return;
 
 	default:
@@ -1127,7 +1124,7 @@ ises_freesession(u_int64_t tsid)
 {
 	struct ises_softc *sc;
 	int card, sesn;
-	u_int32_t sid = ((u_int32_t) tsid) & 0xffffffff;
+	u_int32_t sid = ((u_int32_t)tsid) & 0xffffffff;
 
 	card = ISES_CARD(sid);
 	if (card >= ises_cd.cd_ndevs || ises_cd.cd_devs[card] == NULL)
@@ -1469,7 +1466,7 @@ errout:
 		free(q, M_DEVBUF);
 	}
 	crp->crp_etype = err;
-	crp->crp_callback(crp);
+	crypto_done(crp);
 	return (0);
 }
 

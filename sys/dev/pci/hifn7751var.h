@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.6 2002/03/06 02:11:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.7 2003/03/28 00:38:21 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -33,6 +33,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
  *
  */
 
@@ -89,7 +93,7 @@ struct hifn_dma {
 	u_int64_t		test_src, test_dst;
 
 	/*
-	 *  Our current positions for insertion and removal from the desriptor
+	 *  Our current positions for insertion and removal from the descriptor
 	 *  rings. 
 	 */
 	int			cmdi, srci, dsti, resi;
@@ -102,6 +106,11 @@ struct hifn_session {
 	int hs_prev_op; /* XXX collapse into hs_flags? */
 	u_int8_t hs_iv[HIFN_IV_LENGTH];
 };
+
+/* We use a state machine on sessions */
+#define	HS_STATE_FREE	0		/* unused session entry */
+#define	HS_STATE_USED	1		/* allocated, but key not on card */
+#define	HS_STATE_KEY	2		/* allocated and key is on card */
 
 #define	HIFN_RING_SYNC(sc, r, i, f)					\
 	bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
@@ -121,11 +130,6 @@ struct hifn_session {
 	bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
 	    offsetof(struct hifn_dma, result_bufs[(i)][0]),		\
 	    HIFN_MAX_RESULT, (f))
-
-/* We use a state machine to on sessions */
-#define	HS_STATE_FREE	0		/* unused session entry */
-#define	HS_STATE_USED	1		/* allocated, but key not on card */
-#define	HS_STATE_KEY	2		/* allocated and key is on card */
 
 /*
  * Holds data specific to a single HIFN board.
@@ -151,6 +155,8 @@ struct hifn_softc {
 #define	HIFN_HAS_RNG		1
 #define	HIFN_HAS_PUBLIC		2
 #define	HIFN_IS_7811		4
+#define	HIFN_NO_BURSTWRITE	8
+#define	HIFN_HAS_LEDS		16
 	struct timeout sc_rngto, sc_tickto;
 	int sc_rngfirst;
 	int sc_rnghz;
@@ -158,15 +164,26 @@ struct hifn_softc {
 	struct hifn_session sc_sessions[2048];
 	pci_chipset_tag_t sc_pci_pc;
 	pcitag_t sc_pci_tag;
+	bus_size_t sc_waw_lastreg;
+	int sc_waw_lastgroup;
 };
 
-#define	WRITE_REG_0(sc,reg,val) \
-    bus_space_write_4((sc)->sc_st0, (sc)->sc_sh0, reg, val)
-#define	READ_REG_0(sc,reg) \
-    bus_space_read_4((sc)->sc_st0, (sc)->sc_sh0, reg)
+#define WRITE_REG_0(sc,reg,val)		hifn_write_4((sc), 0, (reg), (val))
+#define WRITE_REG_1(sc,reg,val)		hifn_write_4((sc), 1, (reg), (val))
+#define	READ_REG_0(sc,reg)		hifn_read_4((sc), 0, (reg))
+#define	READ_REG_1(sc,reg)		hifn_read_4((sc), 1, (reg))
+
+#define	SET_LED(sc,v)							\
+	if (sc->sc_flags & HIFN_HAS_LEDS)				\
+		WRITE_REG_1(sc, HIFN_1_7811_MIPSRST,			\
+		    READ_REG_1(sc, HIFN_1_7811_MIPSRST) | (v))
+#define	CLR_LED(sc,v)							\
+	if (sc->sc_flags & HIFN_HAS_LEDS)				\
+		WRITE_REG_1(sc, HIFN_1_7811_MIPSRST,			\
+		    READ_REG_1(sc, HIFN_1_7811_MIPSRST) & ~(v))
 
 /*
- *  hifn_command_t
+ *  struct hifn_command
  *
  *  This is the control structure used to pass commands to hifn_encrypt().
  *
@@ -232,7 +249,7 @@ struct hifn_softc {
  */
 struct hifn_command {
 	u_int16_t session_num;
-	u_int16_t base_masks, cry_masks, mac_masks;
+	u_int16_t base_masks, cry_masks, mac_masks, comp_masks;
 	u_int8_t iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
 	int cklen;
 	int sloplen, slopidx;
@@ -251,7 +268,9 @@ struct hifn_command {
 
 	struct hifn_softc *softc;
 	struct cryptop *crp;
-	struct cryptodesc *enccrd, *maccrd;
+	struct cryptodesc *enccrd, *maccrd, *compcrd;
+	void (*cmd_callback)(struct hifn_softc *, struct hifn_command *,
+	    u_int8_t *);
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.7 2002/03/28 11:43:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.8 2003/03/28 00:41:27 niklas Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -59,6 +59,7 @@
 #include <sys/signalvar.h>
 #include <sys/resourcevar.h>
 #include <sys/sysctl.h>
+#include <sys/pool.h>
 
 #include <sys/namei.h>
 
@@ -75,6 +76,7 @@ int	filt_ttyread(struct knote *kn, long hint);
 void 	filt_ttyrdetach(struct knote *kn);
 int	filt_ttywrite(struct knote *kn, long hint);
 void 	filt_ttywdetach(struct knote *kn);
+int	ttystats_init(void);
 
 /* Symbolic sleep message strings. */
 char ttclos[]	= "ttycls";
@@ -165,6 +167,8 @@ u_char const char_type[] = {
 struct ttylist_head ttylist;	/* TAILQ_HEAD */
 int tty_count;
 
+int64_t tk_cancc, tk_nin, tk_nout, tk_rawcc;
+
 /*
  * Initial open of tty, or (re)entry to standard tty line discipline.
  */
@@ -207,6 +211,8 @@ ttyclose(tp)
 
 	tp->t_gen++;
 	tp->t_pgrp = NULL;
+	if (tp->t_session)
+		SESSRELE(tp->t_session);
 	tp->t_session = NULL;
 	tp->t_state = 0;
 	return (0);
@@ -234,6 +240,7 @@ ttyinput(c, tp)
 	register int iflag, lflag;
 	register u_char *cc;
 	int i, error;
+	int s;
 
 	add_tty_randomness(tp->t_dev << 8 | c);
 	/*
@@ -241,12 +248,15 @@ ttyinput(c, tp)
 	 */
 	if (!ISSET(tp->t_cflag, CREAD))
 		return (0);
+
 	/*
 	 * If input is pending take it first.
 	 */
 	lflag = tp->t_lflag;
+	s = spltty();
 	if (ISSET(lflag, PENDIN))
 		ttypend(tp);
+	splx(s);
 	/*
 	 * Gather stats.
 	 */
@@ -777,7 +787,9 @@ ttioctl(tp, cmd, data, flag, p)
 	case FIONBIO:			/* set/clear non-blocking i/o */
 		break;			/* XXX: delete. */
 	case FIONREAD:			/* get # bytes to read */
+		s = spltty();
 		*(int *)data = ttnread(tp);
+		splx(s);
 		break;
 	case TIOCEXCL:			/* set exclusive use of tty */
 		s = spltty();
@@ -977,6 +989,8 @@ ttioctl(tp, cmd, data, flag, p)
 		    ((p->p_session->s_ttyvp || tp->t_session) &&
 		     (tp->t_session != p->p_session)))
 			return (EPERM);
+		if (tp->t_session)
+			SESSRELE(tp->t_session);
 		SESSHOLD(p->p_session);
 		tp->t_session = p->p_session;
 		tp->t_pgrp = p->p_pgrp;
@@ -1099,8 +1113,11 @@ filt_ttyread(struct knote *kn, long hint)
 {
 	dev_t dev = (dev_t)((u_long)kn->kn_hook);
 	struct tty *tp = (*cdevsw[major(dev)].d_tty)(dev);
+	int s;
 
+	s = spltty();
 	kn->kn_data = ttnread(tp);
+	splx(s);
 	if (!ISSET(tp->t_state, CLOCAL) && !ISSET(tp->t_state, TS_CARR_ON)) {
 		kn->kn_flags |= EV_EOF;
 		return (1);
@@ -1136,6 +1153,8 @@ ttnread(tp)
 	struct tty *tp;
 {
 	int nread;
+
+	splassert(IPL_TTY);
 
 	if (ISSET(tp->t_lflag, PENDIN))
 		ttypend(tp);
@@ -1386,11 +1405,12 @@ nullmodem(tp, flag)
  * call at spltty().
  */
 void
-ttypend(tp)
-	register struct tty *tp;
+ttypend(struct tty *tp)
 {
 	struct clist tq;
-	register int c;
+	int c;
+
+	splassert(IPL_TTY);
 
 	CLR(tp->t_lflag, PENDIN);
 	SET(tp->t_state, TS_TYPEN);
@@ -1537,6 +1557,7 @@ sleep:
 		}
 		if (error && error != EWOULDBLOCK)
 			goto out;
+		error = 0;
 		goto loop;
 	}
 read:
@@ -1602,10 +1623,11 @@ out:
 
 /* Call at spltty */
 void
-ttyunblock(tp)
-	struct tty *tp;
+ttyunblock(struct tty *tp)
 {
 	u_char *cc = tp->t_cc;
+
+	splassert(IPL_TTY);
 
 	if (ISSET(tp->t_state, TS_TBLOCK)) {
 		if (ISSET(tp->t_iflag, IXOFF) &&
@@ -2313,6 +2335,36 @@ ttyfree(tp)
 	FREE(tp, M_TTYS);
 }
 
+struct itty *ttystats;
+
+int
+ttystats_init(void)
+{
+	struct itty *itp;
+	struct tty *tp;
+
+	ttystats = malloc(tty_count * sizeof(struct itty),
+	    M_SYSCTL, M_WAITOK);
+	for (tp = TAILQ_FIRST(&ttylist), itp = ttystats; tp;
+	    tp = TAILQ_NEXT(tp, tty_link), itp++) {
+		itp->t_dev = tp->t_dev;
+		itp->t_rawq_c_cc = tp->t_rawq.c_cc;
+		itp->t_canq_c_cc = tp->t_canq.c_cc;
+		itp->t_outq_c_cc = tp->t_outq.c_cc;
+		itp->t_hiwat = tp->t_hiwat;
+		itp->t_lowat = tp->t_lowat;
+		itp->t_column = tp->t_column;
+		itp->t_state = tp->t_state;
+		itp->t_session = tp->t_session;
+		if (tp->t_pgrp)
+			itp->t_pgrp_pg_id = tp->t_pgrp->pg_id;
+		else
+			itp->t_pgrp_pg_id = 0;
+		itp->t_line = tp->t_line;
+	}
+	return (0);
+}
+
 /*
  * Return tty-related information.
  */
@@ -2325,6 +2377,8 @@ sysctl_tty(name, namelen, oldp, oldlenp, newp, newlen)
 	void *newp;
 	size_t newlen;
 {
+	int err;
+
 	if (namelen != 1)
 		return (ENOTDIR);
 
@@ -2337,6 +2391,14 @@ sysctl_tty(name, namelen, oldp, oldlenp, newp, newlen)
 		return (sysctl_rdquad(oldp, oldlenp, newp, tk_rawcc));
 	case KERN_TTY_TKCANCC:
 		return (sysctl_rdquad(oldp, oldlenp, newp, tk_cancc));
+	case KERN_TTY_INFO:
+		err = ttystats_init();
+		if (err)
+			return (err);
+		err = sysctl_rdstruct(oldp, oldlenp, newp, ttystats,
+		    tty_count * sizeof(struct itty));
+		free(ttystats, M_SYSCTL);
+		return (err);
 	default:
 		return (EOPNOTSUPP);
 	}

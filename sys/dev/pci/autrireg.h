@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/autrireg.h,v 1.1.2.1 2001/12/05 00:43:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/autrireg.h,v 1.1.2.2 2003/03/28 00:38:20 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.
@@ -146,8 +146,11 @@
  * Indexed Channel Registers
  */
 #define AUTRI_ARAM_CR			0xe0
+# define AUTRI_ATTR_PCMREC_SIS		0x88000000
+# define AUTRI_ATTR_ENASRC_SIS		0x00800000
 # define AUTRI_CTRL_WAVEVOL		0x80000000
 # define AUTRI_CTRL_MUTE		0x3fff0000
+# define AUTRI_CTRL_MUTE_SIS		0x3f000fff
 # define AUTRI_CTRL_16BIT		0x00008000
 # define AUTRI_CTRL_STEREO		0x00004000
 # define AUTRI_CTRL_SIGNED		0x00002000

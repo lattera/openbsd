@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/stireg.h,v 1.3.4.2 2002/03/28 12:09:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/stireg.h,v 1.3.4.3 2003/03/28 00:38:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -317,6 +317,7 @@ typedef struct sti_blkmvin {
 	u_int8_t	bg_colour;
 	u_int16_t	srcx, srcy, dstx, dsty;
 	u_int16_t	width, height;
+	u_int16_t	pad;
 	void		*future;
 } *sti_blkmvin_t;
 

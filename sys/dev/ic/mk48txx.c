@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.4.2 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.4.3 2003/03/28 00:38:14 niklas Exp $	*/
 /*	$NetBSD: mk48txx.c,v 1.7 2001/04/08 17:05:10 tsutsui Exp $ */
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -109,6 +109,10 @@ mk48txx_attach(bt, bh, model, year0)
 
 	sz = ALIGN(sizeof(struct todr_chip_handle)) + sizeof(struct mk48txx);
 	handle = malloc(sz, M_DEVBUF, M_NOWAIT);
+	if (handle == NULL) {
+		printf(": failed to allocate memory");
+		return NULL;
+	}
 	mk = (struct mk48txx *)((u_long)handle +
 				 ALIGN(sizeof(struct todr_chip_handle)));
 	handle->cookie = mk;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3.2.5 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3.2.6 2003/03/28 00:38:21 niklas Exp $	*/
 /*	$NetBSD: emuxki.c,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-
@@ -342,6 +342,8 @@ emuxki_scinit(struct emuxki_softc *sc)
 	int             err;
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, EMU_HCFG,
+		/* enable spdif(?) output on non-APS */
+		(sc->sc_type == EMUXKI_APS? 0 : EMU_HCFG_GPOUTPUT0) |
 		EMU_HCFG_LOCKSOUNDCACHE | EMU_HCFG_LOCKTANKCACHE_MASK |
 		EMU_HCFG_MUTEBUTTONENABLE);
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, EMU_INTE,
@@ -427,7 +429,24 @@ emuxki_attach(struct device *parent, struct device *self, void *aux)
 	}
 	printf(": %s\n", intrstr);
 
-	if (emuxki_scinit(sc) || emuxki_ac97_init(sc) ||
+	/* XXX it's unknown wheather APS is made from Audigy as well */
+	if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_CREATIVELABS_AUDIGY) {
+		sc->sc_type = EMUXKI_AUDIGY;
+		strcpy(sc->sc_audv.name, "Audigy");
+	} else if (pci_conf_read(pa->pa_pc, pa->pa_tag,
+	    PCI_SUBSYS_ID_REG) == EMU_SUBSYS_APS) {
+		sc->sc_type = EMUXKI_APS;
+		strcpy(sc->sc_audv.name, "E-mu APS");
+	} else {
+		sc->sc_type = EMUXKI_SBLIVE;
+		strcpy(sc->sc_audv.name, "SB Live!");
+	}
+	sprintf(sc->sc_audv.version, "0x%02x", PCI_REVISION(pa->pa_class));
+	strcpy(sc->sc_audv.config, "emuxki");
+
+	if (emuxki_scinit(sc) ||
+	    /* APS has no ac97 XXX */
+	    (sc->sc_type == EMUXKI_APS || emuxki_ac97_init(sc)) ||
 	    (sc->sc_audev = audio_attach_mi(&emuxki_hw_if, sc, self)) == NULL)
 		emuxki_pci_shutdown(sc);
 }
@@ -916,7 +935,7 @@ emuxki_chanparms_set_defaults(struct emuxki_channel *chan)
 	chan->fxsend.c.dest = 0x2;
 	chan->fxsend.d.dest = 0x3;
 
-	chan->pitch.intial = 0x0000;	/* shouldn't it be 0xE000 ? */
+	chan->pitch.initial = 0x0000;	/* shouldn't it be 0xE000 ? */
 	chan->pitch.current = 0x0000;	/* should it be 0x0400 */
 	chan->pitch.target = 0x0000;	/* the unity pitch shift ? */
 	chan->pitch.envelope_amount = 0x00;	/* none */
@@ -1005,7 +1024,7 @@ emuxki_channel_set_srate(struct emuxki_channel *chan, u_int32_t srate)
 		(chan->pitch.target & 1);
 	chan->pitch.target &= 0xffff;
 	chan->pitch.current = chan->pitch.target;
-	chan->pitch.intial =
+	chan->pitch.initial =
 		(emuxki_rate_to_pitch(srate) >> 8) & EMU_CHAN_IP_MASK;
 }
 
@@ -1131,7 +1150,7 @@ emuxki_channel_start(struct emuxki_channel *chan)
 		chan->pitch.target);
 	emuxki_write(sc, chano, EMU_CHAN_CPF_PITCH,
 		chan->pitch.current);
-	emuxki_write(sc, chano, EMU_CHAN_IP, chan->pitch.intial);
+	emuxki_write(sc, chano, EMU_CHAN_IP, chan->pitch.initial);
 
 	splx(s);
 }
@@ -1845,13 +1864,11 @@ emuxki_halt_input(void *addr)
 }
 
 int
-emuxki_getdev(void *addr, struct audio_device *dev)
+emuxki_getdev(void *v, struct audio_device *adp)
 {
-	strncpy(dev->name, "Creative EMU10k1", sizeof(dev->name));
-	strcpy(dev->version, "");
-	strncpy(dev->config, "emuxki", sizeof(dev->config));
-
-	return (0);
+	struct emuxki_softc *sc = v;
+	*adp = sc->sc_audv;
+	return 0;
 }
 
 int

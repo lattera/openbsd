@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/mii/eephy.c,v 1.2.4.2 2001/10/31 03:22:44 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/mii/eephy.c,v 1.2.4.3 2003/03/28 00:38:19 niklas Exp $	*/
 /*
  * Principal Author: Parag Patel
  * Copyright (c) 2001
@@ -82,6 +82,18 @@ eephymatch(struct device *parent, void *match, void *aux)
 	if (id == E1000_ID_88E1000 || id == E1000_ID_88E1000S) {
 		return(10);
 	}
+
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxMARVELL &&
+	    (MII_MODEL(ma->mii_id2) == MII_MODEL_xxMARVELL_E1000_3 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_xxMARVELL_E1000_5 ))
+		return (10);
+
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_MARVELL &&
+	    (MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_3 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_6))
+		return (10);
+
 	return(0);
 }
 
@@ -102,7 +114,7 @@ eephyattach(struct device *parent, struct device *self, void *aux)
 	sc->mii_status = eephy_status;
 	sc->mii_pdata = mii;
 	sc->mii_flags = mii->mii_flags;
-	sc->mii_anegticks = 5;
+	sc->mii_anegticks = 10;
 
 	eephy_reset(sc);
 
@@ -118,12 +130,12 @@ eephyattach(struct device *parent, struct device *self, void *aux)
 #ifndef __OpenBSD__
 	printf("%s: ", sc->mii_dev.dv_xname);
 #endif
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, IFM_FDX, sc->mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, IFM_FDX, sc->mii_inst),
 			E1000_CR_SPEED_1000 | E1000_CR_FULL_DUPLEX);
 	PRINT("1000baseTX-FDX");
 	/*
 	TODO - apparently 1000BT-simplex not supported?
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, 0, sc->mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_T, 0, sc->mii_inst),
 			E1000_CR_SPEED_1000);
 	PRINT("1000baseTX");
 	*/
@@ -237,7 +249,7 @@ eephy_service(struct mii_softc *sc, struct mii_data *mii, int cmd)
 			(void)eephy_mii_phy_auto(sc, 1);
 			break;
 
-		case IFM_1000_TX:
+		case IFM_1000_T:
 			if (sc->mii_flags & MIIF_DOINGAUTO)
 				return (0);
 
@@ -344,9 +356,6 @@ eephy_status(struct mii_softc *sc)
 	struct mii_data *mii = sc->mii_pdata;
 	int bmsr, bmcr, esr, ssr, isr, ar, lpar;
 
-	if ((mii->mii_ifp->if_flags & IFF_UP) == 0)
-		return;
-
 	mii->mii_media_status = IFM_AVALID;
 	mii->mii_media_active = IFM_ETHER;
 
@@ -373,7 +382,7 @@ eephy_status(struct mii_softc *sc)
 	}
 
 	if (ssr & E1000_SSR_1000MBS)
-		mii->mii_media_active |= IFM_1000_TX;
+		mii->mii_media_active |= IFM_1000_T;
 	else if (ssr & E1000_SSR_100MBS)
 		mii->mii_media_active |= IFM_100_TX;
 	else
@@ -403,7 +412,7 @@ eephy_mii_phy_auto(struct mii_softc *sc, int waitfor)
 
 	if ((sc->mii_flags & MIIF_DOINGAUTO) == 0) {
 		PHY_WRITE(sc, E1000_AR, E1000_AR_10T | E1000_AR_10T_FD |
-		    E1000_AR_100TX | E1000_AR_100TX_FD | 
+		    E1000_AR_100TX | E1000_AR_100TX_FD |
 		    E1000_AR_PAUSE | E1000_AR_ASM_DIR);
 		PHY_WRITE(sc, E1000_1GCR, E1000_1GCR_1000T_FD);
 		PHY_WRITE(sc, E1000_CR,

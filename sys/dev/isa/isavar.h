@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/isavar.h,v 1.39.4.3 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/isavar.h,v 1.39.4.4 2003/03/28 00:38:16 niklas Exp $	*/
 /*	$NetBSD: isavar.h,v 1.26 1997/06/06 23:43:57 thorpej Exp $	*/
 
 /*-
@@ -148,7 +148,7 @@ struct isabus_attach_args;
 #endif 
 #endif
 #ifdef __hppa__
-#include <hppa/isa/isa_machdep.h>
+#include <hppa/include/isa_machdep.h>
 #endif
 
 #include "isapnp.h"
@@ -179,6 +179,11 @@ ERROR: COMPILING ISAPNP FOR UNSUPPORTED MACHINE, OR MORE THAN ONE.
 
 # define ISAPNP_MALLOC(a) malloc(a, M_DEVBUF, M_WAITOK)
 # define ISAPNP_FREE(a) free(a, M_DEVBUF)
+# define ISAPNP_CLONE_SETUP(dest, src) \
+	do { \
+		bzero((dest), sizeof(*(dest))); \
+		(dest)->ia_ic = (src)->ia_ic; \
+	} while (0)
 
 #ifndef _DEV_ISA_ISAPNPREG_H_
 /*
@@ -443,7 +448,7 @@ isapnp_read_reg(sc, r)
 }
 
 struct isa_attach_args *
-    isapnp_get_resource(struct isapnp_softc *, int);
+    isapnp_get_resource(struct isapnp_softc *, int, struct isa_attach_args *);
 char *isapnp_id_to_vendor(char *, const u_char *);
 
 int isapnp_config(bus_space_tag_t, bus_space_tag_t,

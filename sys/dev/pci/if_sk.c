@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.7 2002/03/28 15:35:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.8 2003/03/28 00:38:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -42,9 +42,9 @@
  * http://www.freebsd.org/~wpaul/SysKonnect/xmacii_datasheet_rev_c_9-29.pdf
  *	The SysKonnect GEnesis manual, http://www.syskonnect.com
  *
- * Note: XaQti has been aquired by Vitesse, and Vitesse does not have the
+ * Note: XaQti has been acquired by Vitesse, and Vitesse does not have the
  * XMAC II datasheet online. I have put my copy at people.freebsd.org as a
- * convience to others until Vitesse corrects this problem:
+ * convenience to others until Vitesse corrects this problem:
  *
  * http://people.freebsd.org/~wpaul/SysKonnect/xmacii_datasheet_rev_c_9-29.pdf
  *
@@ -701,6 +701,13 @@ sk_ioctl(ifp, command, data)
 			break;
 		}
 		break;
+	case SIOCSIFMTU:
+		if (ifr->ifr_mtu > SK_JUMBO_MTU)
+			error = EINVAL;
+		else
+			ifp->if_mtu = ifr->ifr_mtu;
+		sk_init(sc_if);
+		break;
 	case SIOCSIFFLAGS:
 		if (ifp->if_flags & IFF_UP) {
 			if (ifp->if_flags & IFF_RUNNING &&
@@ -957,6 +964,7 @@ sk_attach(parent, self, aux)
 	ifp->if_start = sk_start;
 	ifp->if_watchdog = sk_watchdog;
 	ifp->if_baudrate = 1000000000;
+	ifp->if_capabilities |= IFCAP_VLAN_MTU;
 	IFQ_SET_MAXLEN(&ifp->if_snd, SK_TX_RING_CNT - 1);
 	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc_if->sk_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
@@ -1168,7 +1176,7 @@ skc_attach(parent, self, aux)
 		sc->sk_pmd = IFM_1000_CX;
 		break;
 	case SK_PMD_1000BASETX:
-		sc->sk_pmd = IFM_1000_TX;
+		sc->sk_pmd = IFM_1000_T;
 		break;
 	default:
 		printf("%s: unknown media type: 0x%x\n",
@@ -1217,7 +1225,7 @@ int sk_encap(sc_if, m_head, txidx)
 			    (sc_if->sk_cdata.sk_tx_cnt + cnt)) < 2)
 				return(ENOBUFS);
 			f = &sc_if->sk_rdata->sk_tx_ring[frag];
-			f->sk_data_lo = vtophys(mtod(m, vm_offset_t));
+			f->sk_data_lo = vtophys(mtod(m, vaddr_t));
 			f->sk_ctl = m->m_len | SK_OPCODE_DEFAULT;
 			if (cnt == 0)
 				f->sk_ctl |= SK_TXCTL_FIRSTFRAG;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_lookup.c,v 1.17.6.2 2001/07/04 10:48:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_lookup.c,v 1.17.6.3 2003/03/28 00:41:27 niklas Exp $	*/
 /*	$NetBSD: vfs_lookup.c,v 1.17 1996/02/09 19:00:59 christos Exp $	*/
 
 /*
@@ -52,6 +52,7 @@
 #include <sys/malloc.h>
 #include <sys/filedesc.h>
 #include <sys/proc.h>
+#include <sys/hash.h>
 
 #ifdef KTRACE
 #include <sys/ktrace.h>
@@ -114,11 +115,6 @@ namei(ndp)
 		error = copyinstr(ndp->ni_dirp, cnp->cn_pnbuf,
 			    MAXPATHLEN, &ndp->ni_pathlen);
 
-#ifdef KTRACE
-	if (KTRPOINT(cnp->cn_proc, KTR_NAMEI))
-		ktrnamei(cnp->cn_proc, cnp->cn_pnbuf);
-#endif
-
 	/*
 	 * Fail on null pathnames
 	 */
@@ -130,6 +126,11 @@ namei(ndp)
 		ndp->ni_vp = NULL;
 		return (error);
 	}
+
+#ifdef KTRACE
+	if (KTRPOINT(cnp->cn_proc, KTR_NAMEI))
+		ktrnamei(cnp->cn_proc, cnp->cn_pnbuf);
+#endif
 
 	/*
 	 *  Strip trailing slashes, as requested
@@ -280,14 +281,15 @@ int
 lookup(ndp)
 	register struct nameidata *ndp;
 {
-	register char *cp;		/* pointer into pathname argument */
-	register struct vnode *dp = 0;	/* the directory we are searching */
+	char *cp;			/* pointer into pathname argument */
+	struct vnode *dp = 0;		/* the directory we are searching */
 	struct vnode *tdp;		/* saved dp */
 	struct mount *mp;		/* mount table entry */
 	int docache;			/* == 0 do not cache last component */
 	int wantparent;			/* 1 => wantparent or lockparent flag */
 	int rdonly;			/* lookup read-only flag bit */
 	int error = 0;
+	int dpunlocked = 0;		/* dp has already been unlocked */
 	int slashes;
 	struct componentname *cnp = &ndp->ni_cnd;
 	struct proc *p = cnp->cn_proc;
@@ -350,10 +352,9 @@ dirloop:
 	 * the name set the SAVENAME flag. When done, they assume
 	 * responsibility for freeing the pathname buffer.
 	 */
+	cp = NULL;
 	cnp->cn_consume = 0;
-	cnp->cn_hash = 0;
-	for (cp = cnp->cn_nameptr; *cp != '\0' && *cp != '/'; cp++)
-		cnp->cn_hash += (unsigned char)*cp;
+	cnp->cn_hash = hash32_stre(cnp->cn_nameptr, '/', &cp, HASHINIT);
 	cnp->cn_namelen = cp - cnp->cn_nameptr;
 	if (cnp->cn_namelen > NAME_MAX) {
 		error = ENAMETOOLONG;
@@ -439,6 +440,8 @@ dirloop:
 unionlookup:
 	ndp->ni_dvp = dp;
 	ndp->ni_vp = NULL;
+	cnp->cn_flags &= ~PDIRUNLOCK;
+
 	if ((error = VOP_LOOKUP(dp, &ndp->ni_vp, cnp)) != 0) {
 #ifdef DIAGNOSTIC
 		if (ndp->ni_vp != NULL)
@@ -452,7 +455,10 @@ unionlookup:
 		    (dp->v_mount->mnt_flag & MNT_UNION)) {
 			tdp = dp;
 			dp = dp->v_mount->mnt_vnodecovered;
-			vput(tdp);
+			if (cnp->cn_flags & PDIRUNLOCK)
+				vrele(tdp);
+			else
+				vput(tdp);
 			VREF(dp);
 			vn_lock(dp, LK_EXCLUSIVE | LK_RETRY, p);
 			goto unionlookup;
@@ -517,11 +523,14 @@ unionlookup:
 	    (cnp->cn_flags & NOCROSSMOUNT) == 0) {
 		if (vfs_busy(mp, 0, 0, p))
 			continue;
+		VOP_UNLOCK(dp, 0, p);
 		error = VFS_ROOT(mp, &tdp);
 		vfs_unbusy(mp, p);
-		if (error)
+		if (error) {
+			dpunlocked = 1;
 			goto bad2;
-		vput(dp);
+		}
+		vrele(dp);
 		ndp->ni_vp = dp = tdp;
 	}
 
@@ -585,11 +594,15 @@ terminal:
 	return (0);
 
 bad2:
-	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN))
+	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN) &&
+	    ((cnp->cn_flags & PDIRUNLOCK) == 0))
 		VOP_UNLOCK(ndp->ni_dvp, 0, p);
 	vrele(ndp->ni_dvp);
 bad:
-	vput(dp);
+	if (dpunlocked)
+		vrele(dp);
+	else
+		vput(dp);
 	ndp->ni_vp = NULL;
 	return (error);
 }
@@ -637,8 +650,8 @@ relookup(dvp, vpp, cnp)
 	 * responsibility for freeing the pathname buffer.
 	 */
 #ifdef NAMEI_DIAGNOSTIC
-	for (newhash = 0, cp = cnp->cn_nameptr; *cp != 0 && *cp != '/'; cp++)
-		newhash += (unsigned char)*cp;
+	cp = NULL;
+	newhash = hash32_stre(cnp->cn_nameptr, '/', &cp, HASHINIT);
 	if (newhash != cnp->cn_hash)
 		panic("relookup: bad hash");
 	if (cnp->cn_namelen != cp - cnp->cn_nameptr)

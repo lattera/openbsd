@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.4 2002/03/28 15:09:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.5 2003/03/28 00:38:30 niklas Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -218,8 +218,8 @@ qeattach(parent, self, aux)
 		return;
 	}
 
-	if (bus_space_map2(sa->sa_bustag,
-	    (bus_type_t)sa->sa_reg[0].sbr_slot,
+	if (sbus_bus_map(sa->sa_bustag,
+	    sa->sa_reg[0].sbr_slot,
 	    (bus_addr_t)sa->sa_reg[0].sbr_offset,
 	    (bus_size_t)sa->sa_reg[0].sbr_size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_cr) != 0) {
@@ -227,8 +227,8 @@ qeattach(parent, self, aux)
 		return;
 	}
 
-	if (bus_space_map2(sa->sa_bustag,
-	    (bus_type_t)sa->sa_reg[1].sbr_slot,
+	if (sbus_bus_map(sa->sa_bustag,
+	    sa->sa_reg[1].sbr_slot,
 	    (bus_addr_t)sa->sa_reg[1].sbr_offset,
 	    (bus_size_t)sa->sa_reg[1].sbr_size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_mr) != 0) {

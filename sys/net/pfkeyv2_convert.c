@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.4.2.2 2002/03/06 02:15:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.4.2.3 2003/03/28 00:41:29 niklas Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@keromytis.org)
  *
@@ -97,6 +97,7 @@
 #include <sys/mbuf.h>
 #include <sys/kernel.h>
 #include <sys/socket.h>
+#include <net/route.h>
 #include <netinet/ip_ipsp.h>
 #include <net/pfkeyv2.h>
 #include <crypto/cryptodev.h>
@@ -156,11 +157,14 @@ export_sa(void **p, struct tdb *tdb)
 	if (tdb->tdb_flags & TDBF_INVALID)
 		sadb_sa->sadb_sa_state = SADB_SASTATE_LARVAL;
 
-	if (tdb->tdb_sproto == IPPROTO_IPCOMP) {
-		switch (tdb->tdb_compalgxform->type)
-		{
+	if (tdb->tdb_sproto == IPPROTO_IPCOMP &&
+	    tdb->tdb_compalgxform != NULL) {
+		switch (tdb->tdb_compalgxform->type) {
 		case CRYPTO_DEFLATE_COMP:
 			sadb_sa->sadb_sa_encrypt = SADB_X_CALG_DEFLATE;
+			break;
+		case CRYPTO_LZS_COMP:
+			sadb_sa->sadb_sa_encrypt = SADB_X_CALG_LZS;
 			break;
 		}
 	}
@@ -269,9 +273,11 @@ import_lifetime(struct tdb *tdb, struct sadb_lifetime *sadb_lifetime, int type)
 		if ((tdb->tdb_exp_timeout =
 		    sadb_lifetime->sadb_lifetime_addtime) != 0) {
 			tdb->tdb_flags |= TDBF_TIMER;
-			tv.tv_sec += tdb->tdb_exp_timeout;
-			timeout_add(&tdb->tdb_timer_tmo,
-			    hzto(&tv));
+			if (tv.tv_sec + tdb->tdb_exp_timeout < tv.tv_sec)
+				tv.tv_sec = ((unsigned long) -1) / 2; /* XXX */
+			else
+				tv.tv_sec += tdb->tdb_exp_timeout;
+			timeout_add(&tdb->tdb_timer_tmo, hzto(&tv));
 		} else
 			tdb->tdb_flags &= ~TDBF_TIMER;
 
@@ -298,9 +304,11 @@ import_lifetime(struct tdb *tdb, struct sadb_lifetime *sadb_lifetime, int type)
 		if ((tdb->tdb_soft_timeout =
 		    sadb_lifetime->sadb_lifetime_addtime) != 0) {
 			tdb->tdb_flags |= TDBF_SOFT_TIMER;
-			tv.tv_sec += tdb->tdb_soft_timeout;
-			timeout_add(&tdb->tdb_stimer_tmo,
-			    hzto(&tv));
+			if (tv.tv_sec + tdb->tdb_soft_timeout < tv.tv_sec)
+				tv.tv_sec = ((unsigned long) -1) / 2; /* XXX */
+			else
+				tv.tv_sec += tdb->tdb_soft_timeout;
+			timeout_add(&tdb->tdb_stimer_tmo, hzto(&tv));
 		} else
 			tdb->tdb_flags &= ~TDBF_SOFT_TIMER;
 
@@ -381,6 +389,97 @@ export_lifetime(void **p, struct tdb *tdb, int type)
 }
 
 /*
+ * Import flow information to two struct sockaddr_encap's. Either
+ * all or none of the address arguments are NULL.
+ */
+void
+import_flow(struct sockaddr_encap *flow, struct sockaddr_encap *flowmask,
+    struct sadb_address *ssrc, struct sadb_address *ssrcmask,
+    struct sadb_address *ddst, struct sadb_address *ddstmask,
+    struct sadb_protocol *sab, struct sadb_protocol *ftype)
+{
+	u_int8_t transproto = 0;
+	union sockaddr_union *src = (union sockaddr_union *)(ssrc + 1);
+	union sockaddr_union *dst = (union sockaddr_union *)(ddst + 1);
+	union sockaddr_union *srcmask = (union sockaddr_union *)(ssrcmask + 1);
+	union sockaddr_union *dstmask = (union sockaddr_union *)(ddstmask + 1);
+
+	if (ssrc == NULL)
+		return; /* There wasn't any information to begin with. */
+
+	bzero(flow, sizeof(*flow));
+	bzero(flowmask, sizeof(*flowmask));
+
+	if (sab != NULL)
+		transproto = sab->sadb_protocol_proto;
+
+	/*
+	 * Check that all the address families match. We know they are
+	 * valid and supported because pfkeyv2_parsemessage() checked that.
+	 */
+	if ((src->sa.sa_family != dst->sa.sa_family) ||
+	    (src->sa.sa_family != srcmask->sa.sa_family) ||
+	    (src->sa.sa_family != dstmask->sa.sa_family))
+		return;
+
+	/* Generic netmask handling, works for IPv4 and IPv6. */
+	rt_maskedcopy(&src->sa, &src->sa, &srcmask->sa);
+	rt_maskedcopy(&dst->sa, &dst->sa, &dstmask->sa);
+
+	/*
+	 * We set these as an indication that tdb_filter/tdb_filtermask are
+	 * in fact initialized.
+	 */
+	flow->sen_family = flowmask->sen_family = PF_KEY;
+	flow->sen_len = flowmask->sen_len = SENT_LEN;
+
+	switch (src->sa.sa_family)
+	{
+#ifdef INET
+	case AF_INET:
+		flow->sen_type = SENT_IP4;
+		flow->sen_direction = ftype->sadb_protocol_direction;
+		flow->sen_ip_src = src->sin.sin_addr;
+		flow->sen_ip_dst = dst->sin.sin_addr;
+		flow->sen_proto = transproto;
+		flow->sen_sport = src->sin.sin_port;
+		flow->sen_dport = dst->sin.sin_port;
+
+		flowmask->sen_type = SENT_IP4;
+		flowmask->sen_direction = 0xff;
+		flowmask->sen_ip_src = srcmask->sin.sin_addr;
+		flowmask->sen_ip_dst = dstmask->sin.sin_addr;
+		flowmask->sen_sport = srcmask->sin.sin_port;
+		flowmask->sen_dport = dstmask->sin.sin_port;
+		if (transproto)
+			flowmask->sen_proto = 0xff;
+		break;
+#endif /* INET */
+
+#ifdef INET6
+	case AF_INET6:
+		flow->sen_type = SENT_IP6;
+		flow->sen_ip6_direction = ftype->sadb_protocol_direction;
+		flow->sen_ip6_src = src->sin6.sin6_addr;
+		flow->sen_ip6_dst = dst->sin6.sin6_addr;
+		flow->sen_ip6_proto = transproto;
+		flow->sen_ip6_sport = src->sin6.sin6_port;
+		flow->sen_ip6_dport = dst->sin6.sin6_port;
+
+		flowmask->sen_type = SENT_IP6;
+		flowmask->sen_ip6_direction = 0xff;
+		flowmask->sen_ip6_src = srcmask->sin6.sin6_addr;
+		flowmask->sen_ip6_dst = dstmask->sin6.sin6_addr;
+		flowmask->sen_ip6_sport = srcmask->sin6.sin6_port;
+		flowmask->sen_ip6_dport = dstmask->sin6.sin6_port;
+		if (transproto)
+			flowmask->sen_ip6_proto = 0xff;
+		break;
+#endif /* INET6 */
+	}
+}
+
+/*
  * Copy an SADB_ADDRESS payload to a struct sockaddr.
  */
 void
@@ -396,7 +495,7 @@ import_address(struct sockaddr *sa, struct sadb_address *sadb_address)
 	if (ssa->sa_len)
 		salen = ssa->sa_len;
 	else
-		switch(ssa->sa_family) {
+		switch (ssa->sa_family) {
 #ifdef INET
 		case AF_INET:
 			salen = sizeof(struct sockaddr_in);
@@ -599,11 +698,11 @@ export_auth(void **p, struct tdb *tdb, int dstauth)
 	    PADUP((*ipr)->ref_len)) / sizeof(uint64_t);
 
 	switch ((*ipr)->ref_type) {
-	case IPSP_CRED_KEYNOTE:
-		sadb_auth->sadb_x_cred_type = SADB_X_CREDTYPE_KEYNOTE;
+	case IPSP_AUTH_PASSPHRASE:
+		sadb_auth->sadb_x_cred_type = SADB_X_AUTHTYPE_PASSPHRASE;
 		break;
-	case IPSP_CRED_X509:
-		sadb_auth->sadb_x_cred_type = SADB_X_CREDTYPE_X509;
+	case IPSP_AUTH_RSA:
+		sadb_auth->sadb_x_cred_type = SADB_X_AUTHTYPE_RSA;
 		break;
 	}
 	*p += sizeof(struct sadb_x_cred);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/fd.c,v 1.41.4.3 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/fd.c,v 1.41.4.4 2003/03/28 00:38:15 niklas Exp $	*/
 /*	$NetBSD: fd.c,v 1.90 1996/05/12 23:12:03 mycroft Exp $	*/
 
 /*-
@@ -415,7 +415,9 @@ bad:
 done:
 	/* Toss transfer; we're done early. */
 	bp->b_resid = bp->b_bcount;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 void
@@ -440,6 +442,8 @@ fdfinish(fd, bp)
 	struct buf *bp;
 {
 	struct fdc_softc *fdc = (void *)fd->sc_dev.dv_parent;
+
+	splassert(IPL_BIO);
 
 	/*
 	 * Move this drive to the end of the queue to give others a `fair'

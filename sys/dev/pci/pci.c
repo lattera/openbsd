@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pci.c,v 1.15.4.5 2002/03/28 15:35:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pci.c,v 1.15.4.6 2003/03/28 00:38:23 niklas Exp $	*/
 /*	$NetBSD: pci.c,v 1.31 1997/06/06 23:48:04 thorpej Exp $	*/
 
 /*
@@ -169,12 +169,32 @@ pciattach(parent, self, aux)
 	for (device = 0; device < maxndevs; device++) {
 #endif
 		pcitag_t tag;
-		pcireg_t id, class, intr, bhlcr;
+		pcireg_t id, class, intr;
+#ifndef __sparc64__
+		pcireg_t bhlcr;
+#endif
 		struct pci_attach_args pa;
 		int pin;
 
 		tag = pci_make_tag(pc, bus, device, 0);
 		id = pci_conf_read(pc, tag, PCI_ID_REG);
+
+#ifdef __sparc64__
+		pci_dev_funcorder(pc, bus, device, funcs);
+		nfunctions = 8;
+
+		/* Invalid vendor ID value or 0 (see below for zero)
+		 * ... of course, if the pci_dev_funcorder found
+		 *     functions other than zero, we probably want
+		 *     to attach them.
+		 */
+		if (PCI_VENDOR(id) == PCI_VENDOR_INVALID || PCI_VENDOR(id) == 0)
+			if (funcs[0] < 0)
+				continue;
+
+		for (j = 0; (function = funcs[j]) < nfunctions &&
+		    function >= 0; j++) {
+#else
 
 		/* Invalid vendor ID value? */
 		if (PCI_VENDOR(id) == PCI_VENDOR_INVALID)
@@ -192,6 +212,7 @@ pciattach(parent, self, aux)
 		    function >= 0; j++) {
 #else
 		for (function = 0; function < nfunctions; function++) {
+#endif
 #endif
 			tag = pci_make_tag(pc, bus, device, function);
 			id = pci_conf_read(pc, tag, PCI_ID_REG);
@@ -366,6 +387,20 @@ pci_get_capability(pc, tag, capid, offset, value)
 	return (0);
 }
 
+int
+pci_matchbyid(struct pci_attach_args *pa, const struct pci_matchid *ids,
+    int nent)
+{
+	const struct pci_matchid *pm;
+	int i;
+
+	for (i = 0, pm = ids; i < nent; i++, pm++)
+		if (PCI_VENDOR(pa->pa_id) == pm->pm_vid &&
+		    PCI_PRODUCT(pa->pa_id) == pm->pm_pid)
+			return (1);
+	return (0);
+}
+
 #ifdef USER_PCICONF
 /*
  * This is the user interface to PCI configuration space.
@@ -474,9 +509,10 @@ pciioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		switch(io->pi_width) {
 		case 4:
 			/* Make sure the register is properly aligned */
-			if (io->pi_reg & 0x3) 
+			if (io->pi_reg & 0x3)
 				return EINVAL;
 			pci_conf_write(pc, tag, io->pi_reg, io->pi_data);
+			error = 0;
 			break;
 		default:
 			error = ENODEV;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.5 2002/03/28 14:56:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.6 2003/03/28 00:41:30 niklas Exp $	*/
 /*	$KAME: ip6_var.h,v 1.33 2000/06/11 14:59:20 jinmei Exp $	*/
 
 /*
@@ -89,6 +89,7 @@ struct	ip6q {
 #ifdef notyet
 	u_char		*ip6q_nxtp;
 #endif
+	int		ip6q_nfrag;	/* # of fragments */
 };
 
 struct	ip6asfrag {
@@ -106,7 +107,7 @@ struct	ip6asfrag {
 	u_int16_t	ip6af_mff;	/* more fragment bit in frag off */
 };
 
-#define IP6_REASS_MBUF(ip6af) (*(struct mbuf **)&((ip6af)->ip6af_m))
+#define IP6_REASS_MBUF(ip6af) ((ip6af)->ip6af_m)
 
 struct	ip6_moptions {
 	struct	ifnet *im6o_multicast_ifp; /* ifp for outgoing multicasts */
@@ -153,7 +154,7 @@ struct	ip6stat {
 	u_quad_t ip6s_localout;		/* total ip packets generated here */
 	u_quad_t ip6s_odropped;		/* lost packets due to nobufs, etc. */
 	u_quad_t ip6s_reassembled;	/* total packets reassembled ok */
-	u_quad_t ip6s_fragmented;	/* datagrams sucessfully fragmented */
+	u_quad_t ip6s_fragmented;	/* datagrams successfully fragmented */
 	u_quad_t ip6s_ofragments;	/* output fragments created */
 	u_quad_t ip6s_cantfrag;		/* don't fragment flag was set, etc. */
 	u_quad_t ip6s_badoptions;	/* error in option processing */
@@ -201,8 +202,9 @@ struct	ip6stat {
 
 #ifdef _KERNEL
 /* flags passed to ip6_output as last parameter */
-#define	IPV6_DADOUTPUT		0x01	/* DAD */
+#define	IPV6_UNSPECSRC		0x01	/* allow :: as the source address */
 #define	IPV6_FORWARDING		0x02	/* most of IPv6 header exists */
+#define	IPV6_MINMTU		0x04	/* use minimum MTU (IPV6_USE_MIN_MTU) */
 
 extern struct	ip6stat ip6stat;	/* statistics */
 extern u_int32_t ip6_id;		/* fragment identifier */
@@ -213,9 +215,12 @@ extern int	ip6_forward_srcrt;	/* forward src-routed? */
 extern int	ip6_use_deprecated;	/* allow deprecated addr as source */
 extern int	ip6_rr_prune;		/* router renumbering prefix
 					 * walk list every 5 sec.    */
+extern const int	ip6_v6only;
+
 extern struct socket *ip6_mrouter; 	/* multicast routing daemon */
 extern int	ip6_sendredirects;	/* send IP redirects when forwarding? */
 extern int	ip6_maxfragpackets; /* Maximum packets in reassembly queue */
+extern int	ip6_maxfrags;	/* Maximum fragments in reassembly queue */
 extern int	ip6_sourcecheck;	/* Verify source interface */
 extern int	ip6_sourcecheck_interval; /* Interval between log messages */
 extern int	ip6_accept_rtadv;	/* Acts as a host not a router */
@@ -227,6 +232,7 @@ extern int	ip6_dad_count;		/* DupAddrDetectionTransmits */
 
 extern u_int32_t ip6_flow_seq;
 extern int ip6_auto_flowlabel;
+extern int ip6_auto_linklocal;
 
 struct in6pcb;
 struct inpcb;
@@ -238,7 +244,7 @@ void	ip6intr(void);
 void	ip6_input(struct mbuf *);
 void	ip6_freemoptions(struct ip6_moptions *);
 int	ip6_unknown_opt(u_int8_t *, struct mbuf *, int);
-char *	ip6_get_prevhdr(struct mbuf *, int);
+u_int8_t *ip6_get_prevhdr(struct mbuf *, int);
 int	ip6_nexthdr(struct mbuf *, int, int, int *);
 int	ip6_lasthdr(struct mbuf *, int, int, int *);
 int	ip6_mforward(struct ip6_hdr *, struct ifnet *, struct mbuf *);
@@ -255,6 +261,7 @@ int	ip6_output(struct mbuf *, struct ip6_pktopts *,
 			struct route_in6 *, int,
 			struct ip6_moptions *, struct ifnet **);
 int	ip6_ctloutput(int, struct socket *, int, int, struct mbuf **);
+int	ip6_raw_ctloutput(int, struct socket *, int, int, struct mbuf **);
 int	ip6_setpktoptions(struct mbuf *, struct ip6_pktopts *, int);
 int	ip6_optlen(struct inpcb *);
 
@@ -275,6 +282,9 @@ int	rip6_usrreq(struct socket *,
 
 int	dest6_input(struct mbuf **, int *, int);
 int	none_input(struct mbuf **, int *, int);
+
+struct 	in6_addr *in6_selectsrc(struct sockaddr_in6 *, struct ip6_pktopts *,
+	struct ip6_moptions *, struct route_in6 *, struct in6_addr *, int *);
 #endif /* _KERNEL */
 
 #endif /* !_NETINET6_IP6_VAR_H_ */

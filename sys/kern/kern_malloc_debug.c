@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.5 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.6 2003/03/28 00:41:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Artur Grabowski <art@openbsd.org>
@@ -104,6 +104,8 @@ int debug_malloc_frees;
 int debug_malloc_pages;
 int debug_malloc_chunks_on_freelist;
 
+int debug_malloc_initialized;
+
 struct pool debug_malloc_pool;
 
 int
@@ -113,10 +115,11 @@ debug_malloc(unsigned long size, int type, int flags, void **addr)
 	int s, wait = flags & M_NOWAIT;
 
 	/* Careful not to compare unsigned long to int -1 */
-	if ((type != debug_malloc_type && debug_malloc_type != 0) ||
+	if (((type != debug_malloc_type && debug_malloc_type != 0) ||
 	    (size != debug_malloc_size && debug_malloc_size != 0) ||
 	    (debug_malloc_size_lo != -1 && size < debug_malloc_size_lo) ||
-	    (debug_malloc_size_hi != -1 && size > debug_malloc_size_hi))
+	    (debug_malloc_size_hi != -1 && size > debug_malloc_size_hi) ||
+	    !debug_malloc_initialized) && type != M_DEBUG)
 		return (0);
 
 	/* XXX - fix later */
@@ -139,7 +142,7 @@ debug_malloc(unsigned long size, int type, int flags, void **addr)
 	debug_malloc_allocs++;
 	splx(s);
 
-	pmap_kenter_pa(md->md_va, md->md_pa, VM_PROT_ALL);
+	pmap_kenter_pa(md->md_va, md->md_pa, VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 
 	md->md_size = size;
@@ -160,7 +163,8 @@ debug_free(void *addr, int type)
 	vaddr_t va;
 	int s;
 
-	if (type != debug_malloc_type && debug_malloc_type != 0)
+	if (type != debug_malloc_type && debug_malloc_type != 0 &&
+	    type != M_DEBUG)
 		return (0);
 
 	/*
@@ -217,6 +221,8 @@ debug_malloc_init(void)
 
 	pool_init(&debug_malloc_pool, sizeof(struct debug_malloc_entry),
 	    0, 0, 0, "mdbepl", NULL);
+
+	debug_malloc_initialized = 1;
 }
 
 /*
@@ -230,6 +236,8 @@ debug_malloc_allocate_free(int wait)
 	vaddr_t va, offset;
 	struct vm_page *pg;
 	struct debug_malloc_entry *md;
+
+	splassert(IPL_VM);
 
 	md = pool_get(&debug_malloc_pool, wait ? PR_WAITOK : PR_NOWAIT);
 	if (md == NULL)
