@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.10 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.11 2004/06/05 23:18:25 tedu Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -167,7 +167,9 @@ hardclock(frame)
 	register int delta;
 	extern int tickdelta;
 	extern long timedelta;
+#if defined(MULTIPROCESSOR)
 	struct cpu_info *ci = curcpu();
+#endif
 
 	p = curproc;
 	if (p) {

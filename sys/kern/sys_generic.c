@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.10 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.11 2004/06/05 23:18:25 tedu Exp $	*/
 /*	$NetBSD: sys_generic.c,v 1.24 1996/03/29 00:25:32 cgd Exp $	*/
 
 /*
@@ -55,6 +55,7 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+#include <sys/sched.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>

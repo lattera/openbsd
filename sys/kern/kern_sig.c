@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.13 2004/06/05 23:13:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.14 2004/06/05 23:18:25 tedu Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -62,6 +62,7 @@
 #include <sys/malloc.h>
 #include <sys/pool.h>
 #include <sys/ptrace.h>
+#include <sys/sched.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
