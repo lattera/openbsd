@@ -1,4 +1,4 @@
-/*	$Id: tree.c,v 1.6 2004/04/16 04:30:09 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/dhcpd/tree.c,v 1.8 2004/04/20 05:35:33 henning Exp $ */
 
 /* Routines for manipulating parse trees... */
 
