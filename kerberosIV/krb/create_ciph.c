@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/kerberosIV/krb/Attic/create_ciph.c,v 1.3 1997/12/09 07:57:11 art Exp $	*/
 
 /* $KTH: create_ciph.c,v 1.9 1997/04/01 08:18:20 joda Exp $ */
 

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/kerberosIV/krb/Attic/strtok_r.c,v 1.2 1997/12/09 07:57:40 art Exp $	*/
 /* $KTH: strtok_r.c,v 1.4 1997/05/19 03:05:47 assar Exp $ */
 
 /*
