@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.21 2004/03/18 02:09:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.22 2004/03/30 09:09:40 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -188,6 +188,8 @@ extern struct cpu_info *cpu_info_list;
 #endif
 #define curcpu()		(cpu_info[cpu_number()])
 #define curpcb			curcpu()->ci_curpcb
+
+#define CPU_IS_PRIMARY(ci)	((ci)->ci_flags & CPUF_PRIMARY)
 
 extern struct cpu_info	*cpu_info[I386_MAXPROCS];
 extern u_long		 cpus_running;
