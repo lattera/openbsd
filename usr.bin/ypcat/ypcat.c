@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.bin/ypcat/ypcat.c,v 1.3 1996/05/05 16:19:31 deraadt Exp $ */
+
 /*
- * Copyright (c) 1992, 1993 Theo de Raadt <deraadt@fsa.ca>
+ * Copyright (c) 1992, 1993, 1996 Theo de Raadt <deraadt@theos.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: ypcat.c,v 1.1.1.1 1995/10/18 08:47:08 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/ypcat/ypcat.c,v 1.3 1996/05/05 16:19:31 deraadt Exp $";
 #endif
 
 #include <sys/param.h>
@@ -124,9 +126,11 @@ char **argv;
 		usage();
 
 	inmap = argv[optind];
-	for(i=0; (!notrans) && i<sizeof ypaliases/sizeof ypaliases[0]; i++)
-		if( strcmp(inmap, ypaliases[i].alias) == 0)
-			inmap = ypaliases[i].name;
+	if (!notrans) {
+		for(i=0; i<sizeof ypaliases/sizeof ypaliases[0]; i++)
+			if( strcmp(inmap, ypaliases[i].alias) == 0)
+				inmap = ypaliases[i].name;
+	}
 	ypcb.foreach = printit;
 	ypcb.data = NULL;
 
