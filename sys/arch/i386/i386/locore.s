@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.19 2003/05/25 17:32:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.20 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -17,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -214,7 +210,8 @@
 	.data
 
 	.globl	_C_LABEL(cpu), _C_LABEL(cpu_id), _C_LABEL(cpu_vendor)
-	.globl	_C_LABEL(cpuid_level), _C_LABEL(cpu_feature)
+	.globl	_C_LABEL(cpuid_level)
+	.globl	_C_LABEL(cpu_feature), _C_LABEL(cpu_ecxfeature)
 	.globl	_C_LABEL(cpu_cache_eax), _C_LABEL(cpu_cache_ebx)
 	.globl	_C_LABEL(cpu_cache_ecx), _C_LABEL(cpu_cache_edx)
 	.globl	_C_LABEL(cold), _C_LABEL(cnvmem), _C_LABEL(extmem)
@@ -253,8 +250,9 @@ _C_LABEL(lapic_tpr):
 
 _C_LABEL(cpu):		.long	0	# are we 386, 386sx, 486, 586 or 686
 _C_LABEL(cpu_id):	.long	0	# saved from 'cpuid' instruction
-_C_LABEL(cpu_feature):	.long	0	# feature flags from 'cpuid' insn
-_C_LABEL(cpuid_level):	.long	-1	# max. level accepted by 'cpuid' insn
+_C_LABEL(cpu_feature):	.long	0	# feature flags from 'cpuid' instruction
+_C_LABEL(cpu_ecxfeature):.long	0	# extended feature flags from 'cpuid'
+_C_LABEL(cpuid_level):	.long	-1	# max. lvl accepted by 'cpuid' insn
 _C_LABEL(cpu_cache_eax):.long	0
 _C_LABEL(cpu_cache_ebx):.long	0
 _C_LABEL(cpu_cache_ecx):.long	0
@@ -479,6 +477,7 @@ try586:	/* Use the `cpuid' instruction. */
 	cpuid
 	movl	%eax,RELOC(_C_LABEL(cpu_id))	# store cpu_id and features
 	movl	%edx,RELOC(_C_LABEL(cpu_feature))
+	movl	%ecx,RELOC(_C_LABEL(cpu_ecxfeature))
 
 	movl	$RELOC(_C_LABEL(cpuid_level)),%eax
 	cmp	$2,%eax

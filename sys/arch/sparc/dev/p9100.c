@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3.4.5 2003/05/16 00:29:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3.4.6 2003/06/07 11:14:43 ho Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Jason L. Wright
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -190,7 +185,8 @@ struct p9100_ctl {
 		volatile u_int32_t	rc;		/* refresh count */
 		volatile u_int32_t	rasmax;		/* ras low maximum */
 		volatile u_int32_t	rascur;		/* ras low current */
-		volatile u_int32_t	unused1[26];
+		volatile u_int32_t	dacfifo;	/* free fifo */
+		volatile u_int32_t	unused1[25];
 	} ctl_vram;
 
 	/* IBM RGB528 RAMDAC registers: 0x0200 - 0x3ff */
@@ -216,13 +212,24 @@ struct p9100_ctl {
 /*
  * Select the appropriate register group within the control registers
  * (must be done before any write to a register within the group, but
- * subsquent writes to the same group do not need to reselect).
+ * subsequent writes to the same group do not need to reselect).
  */
 #define	P9100_SELECT_SCR(sc)	((sc)->sc_junk = (sc)->sc_ctl->ctl_scr.scr)
 #define	P9100_SELECT_VCR(sc)	((sc)->sc_junk = (sc)->sc_ctl->ctl_vcr.hcr)
 #define	P9100_SELECT_VRAM(sc)	((sc)->sc_junk = (sc)->sc_ctl->ctl_vram.mc)
 #define	P9100_SELECT_DAC(sc)	((sc)->sc_junk = (sc)->sc_ctl->ctl_dac.pwraddr)
 #define	P9100_SELECT_VCI(sc)	((sc)->sc_junk = (sc)->sc_ctl->ctl_vci[0])
+
+/*
+ * For some reason, every write to a DAC register needs to be followed by a
+ * read from the ``free fifo number'' register, supposedly to have the write
+ * take effect faster...
+ */
+#define	P9100_FLUSH_DAC(sc) \
+	do { \
+		P9100_SELECT_VRAM(sc); \
+		(sc)->sc_junk = (sc)->sc_ctl->ctl_vram.dacfifo; \
+	} while (0)
 
 /*
  * Drawing engine
@@ -236,14 +243,8 @@ p9100match(parent, vcf, aux)
 	struct device *parent;
 	void *vcf, *aux;
 {
-	struct cfdata *cf = vcf;
 	struct confargs *ca = aux;
 	struct romaux *ra = &ca->ca_ra;
-
-	/*
-	 * Mask out invalid flags from the user.
-	 */
-	cf->cf_flags &= FB_USERMASK;
 
 	if (strcmp("p9100", ra->ra_name))
 		return (0);
@@ -273,7 +274,6 @@ p9100attach(parent, self, args)
 	}
 #endif
 
-	sc->sc_sunfb.sf_flags = self->dv_cfdata->cf_flags;
 	sc->sc_phys = ca->ca_ra.ra_reg[P9100_REG_VRAM];
 
 	sc->sc_ctl = mapiodev(&(ca->ca_ra.ra_reg[P9100_REG_CTL]), 0,
@@ -340,17 +340,10 @@ p9100attach(parent, self, args)
 	p9100_burner(sc, 1, 0);
 
 	if (isconsole) {
-		switch (sc->sc_sunfb.sf_width) {
-		case 640:
-			row = p9100_stdscreen.nrows - 1;
-			break;
-		case 800:
+		if (sc->sc_sunfb.sf_width == 800)
 			row = 0;	/* screen has been cleared above */
-			break;
-		default:
+		else
 			row = -1;
-			break;
-		}
 
 		fbwscons_console_init(&sc->sc_sunfb, &p9100_stdscreen, row,
 		    p9100_burner);
@@ -374,6 +367,9 @@ p9100_ioctl(v, cmd, data, flags, p)
 	struct p9100_softc *sc = v;
 	struct wsdisplay_fbinfo *wdf;
 	struct wsdisplay_cmap *cm;
+#if NTCTRL > 0
+	struct wsdisplay_param *dp;
+#endif
 	int error;
 
 	switch (cmd) {
@@ -408,6 +404,42 @@ p9100_ioctl(v, cmd, data, flags, p)
 			return (error);
 		p9100_loadcmap(sc, cm->index, cm->count);
 		break;
+
+#if NTCTRL > 0
+	case WSDISPLAYIO_GETPARAM:
+		dp = (struct wsdisplay_param *)data;
+
+		switch (dp->param) {
+		case WSDISPLAYIO_PARAM_BRIGHTNESS:
+			dp->min = 0;
+			dp->max = 255;
+			dp->curval = tadpole_get_brightness();
+			break;
+		case WSDISPLAYIO_PARAM_BACKLIGHT:
+			dp->min = 0;
+			dp->max = 1;
+			dp->curval = tadpole_get_video();
+			break;
+		default:
+			return (-1);
+		}
+		break;
+
+	case WSDISPLAYIO_SETPARAM:
+		dp = (struct wsdisplay_param *)data;
+
+		switch (dp->param) {
+		case WSDISPLAYIO_PARAM_BRIGHTNESS:
+			tadpole_set_brightness(dp->curval);
+			break;
+		case WSDISPLAYIO_PARAM_BACKLIGHT:
+			tadpole_set_video(dp->curval);
+			break;
+		default:
+			return (-1);
+		}
+		break;
+#endif	/* NTCTRL > 0 */
 
 	case WSDISPLAYIO_SVIDEO:
 	case WSDISPLAYIO_GVIDEO:
@@ -515,18 +547,14 @@ p9100_loadcmap(sc, start, ncolors)
 {
 	u_char *p;
 
-	P9100_SELECT_VRAM(sc);
-	P9100_SELECT_VRAM(sc);
 	P9100_SELECT_DAC(sc);
 	sc->sc_ctl->ctl_dac.pwraddr = start << 16;
+	P9100_FLUSH_DAC(sc);
 
 	for (p = sc->sc_cmap.cm_map[start], ncolors *= 3; ncolors-- > 0; p++) {
-		/* These generate a short delay between ramdac writes */
-		P9100_SELECT_VRAM(sc);
-		P9100_SELECT_VRAM(sc);
-
 		P9100_SELECT_DAC(sc);
 		sc->sc_ctl->ctl_dac.paldata = (*p) << 16;
+		P9100_FLUSH_DAC(sc);
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.13 2003/05/16 00:29:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.14 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -480,15 +480,12 @@ pmap_protect(pmap, sva, eva, prot)
 	vaddr_t sva, eva;
 	vm_prot_t prot;
 {
-	if ((prot & (VM_PROT_WRITE|VM_PROT_EXECUTE)) ==
-	    (VM_PROT_WRITE|VM_PROT_EXECUTE))
-		return;
-
-	if ((prot & (VM_PROT_READ|VM_PROT_EXECUTE)) ==
-	    (VM_PROT_READ|VM_PROT_EXECUTE)) {
-		pmap_write_protect(pmap, sva, eva, prot);
-	} else {
-		pmap_remove(pmap, sva, eva);
+	if ((prot & VM_PROT_WRITE) == 0) {
+		if (prot & (VM_PROT_READ|VM_PROT_EXECUTE)) {
+			pmap_write_protect(pmap, sva, eva, prot);
+		} else {
+			pmap_remove(pmap, sva, eva);
+		}
 	}
 }
 

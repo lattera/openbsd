@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/tcpipv6.h,v 1.5.2.2 2001/07/04 10:55:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/tcpipv6.h,v 1.5.2.3 2003/06/07 11:06:09 ho Exp $	*/
 
 /*
  *	@(#)COPYRIGHT	1.1 (NRL) 17 January 1995
@@ -51,8 +51,9 @@ struct tcpipv6hdr {
 	struct tcphdr ti6_t;
 };
 
-#define ti6_src		ti6_i.ipv6_src
-#define ti6_dst		ti6_i.ipv6_dst
+#define ti6_src		ti6_i.ip6_src
+#define ti6_dst		ti6_i.ip6_dst
+#define ti6_plen	ti6_i.ip6_plen
 #define	ti6_sport	ti6_t.th_sport
 #define	ti6_dport	ti6_t.th_dport
 #define	ti6_seq		ti6_t.th_seq

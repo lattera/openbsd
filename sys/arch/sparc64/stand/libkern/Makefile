@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/libkern/Attic/Makefile,v 1.3.4.2 2003/05/13 19:41:09 ho Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/libkern/Attic/Makefile,v 1.3.4.3 2003/06/07 11:14:46 ho Exp $
 
 LIB=	kern
 
@@ -16,8 +16,8 @@ AFLAGS=	-x assembler-with-cpp -traditional-cpp -I${.CURDIR}/../include \
 	-I${.CURDIR}/../../../../lib/libkern/arch/sparc
 
 # kern routines
-SRCS=	__main.c ashrdi3.c bzero.S divdi3.c qdivrem.c strlen.S strcat.c \
-	strcmp.c strcpy.c strlcat.c strlcpy.c strncmp.c umoddi3.c
+SRCS=	__main.c ashrdi3.c bzero.S divdi3.c qdivrem.c strlen.S \
+	strcmp.c strlcat.c strlcpy.c strncmp.c umoddi3.c
 
 SRCS+=	umul.S mul.S rem.S sdiv.S udiv.S urem.S
 SRCS+=	saveregs.S

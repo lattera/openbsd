@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/qe.c,v 1.8.2.6 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/qe.c,v 1.8.2.7 2003/06/07 11:14:43 ho Exp $	*/
 
 /*
  * Copyright (c) 1998, 2000 Jason L. Wright.
@@ -12,8 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the authors may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

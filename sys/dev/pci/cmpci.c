@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.8 2003/05/13 19:35:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.9 2003/06/07 11:02:29 ho Exp $	*/
 
 /*
  * Copyright (c) 2000 Takuya SHIOZAKI
@@ -830,7 +830,7 @@ cmpci_query_devinfo(handle, dip)
 		return 0;
 	case CMPCI_OUTPUT_CLASS:
 		dip->type = AUDIO_MIXER_CLASS;
-		dip->mixer_class = CMPCI_INPUT_CLASS;
+		dip->mixer_class = CMPCI_OUTPUT_CLASS;
 		dip->next = dip->prev = AUDIO_MIXER_LAST;
 		strlcpy(dip->label.name, AudioCoutputs,
 		    sizeof dip->label.name);

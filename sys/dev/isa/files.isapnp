@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/isa/files.isapnp,v 1.21.4.3 2003/03/28 00:38:15 niklas Exp $
+#	$OpenBSD: src/sys/dev/isa/files.isapnp,v 1.21.4.4 2003/06/07 11:02:29 ho Exp $
 #	$NetBSD: files.isapnp,v 1.7 1997/10/16 17:16:36 matt Exp $
 #
 # Config file and device description for machine-independent ISAPnP code.
@@ -41,6 +41,9 @@ file	dev/isa/ess_isapnp.c		ess_isapnp needs-flag
 attach	gus at isapnp with gus_isapnp
 file	dev/isa/gus_isapnp.c		gus_isapnp needs-flag 
 
+
+attach	an at isapnp with an_isapnp
+file	dev/isa/if_an_isapnp.c		an_isapnp
 
 attach	le at isapnp with le_isapnp
 file	dev/isa/if_le_isapnp.c		le_isapnp

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.3.2.7 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.3.2.8 2003/06/07 11:06:09 ho Exp $	*/
 /*	$KAME: ip6_mroute.c,v 1.45 2001/03/25 08:38:51 itojun Exp $	*/
 
 /*
@@ -48,11 +48,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -318,20 +314,15 @@ mrt6_ioctl(cmd, data)
 	int cmd;
 	caddr_t data;
 {
-	int error = 0;
 
 	switch (cmd) {
 	case SIOCGETSGCNT_IN6:
 		return (get_sg_cnt((struct sioc_sg_req6 *)data));
-		break;		/* for safety */
 	case SIOCGETMIFCNT_IN6:
 		return (get_mif6_cnt((struct sioc_mif_req6 *)data));
-		break;		/* for safety */
 	default:
 		return (EINVAL);
-		break;
 	}
-	return error;
 }
 
 /*
@@ -1430,6 +1421,9 @@ ip6_mdq(m, ifp, rt)
 	 */
 	for (mifp = mif6table, mifi = 0; mifi < nummifs; mifp++, mifi++)
 		if (IF_ISSET(mifi, &rt->mf6c_ifset)) {
+			if (mif6table[mifi].m6_ifp == NULL)
+				continue;
+
 			/*
 			 * check if the outgoing packet is going to break
 			 * a scope boundary.

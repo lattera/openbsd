@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.6 2003/05/18 17:41:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.7 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.9 1996/05/03 19:23:59 christos Exp $	*/
 
 /* 

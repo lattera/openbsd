@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.8 2003/05/13 19:35:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.9 2003/06/07 11:02:29 ho Exp $	*/
 
 /*
  * Copyright (c) 2000,2001 Michael Shalayeff
@@ -12,8 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -189,6 +187,7 @@ struct auich_softc {
 	int sc_sample_size;
 	int sc_sts_reg;
 	int sc_ignore_codecready;
+	int flags;
 };
 
 #ifdef AUICH_DEBUG
@@ -289,6 +288,7 @@ int  auich_attach_codec(void *, struct ac97_codec_if *);
 int  auich_read_codec(void *, u_int8_t, u_int16_t *);
 int  auich_write_codec(void *, u_int8_t, u_int16_t);
 void auich_reset_codec(void *);
+enum ac97_host_flags auich_flags_codec(void *);
 
 int
 auich_match(parent, match, aux)
@@ -407,6 +407,9 @@ auich_attach(parent, self, aux)
 	sc->host_if.read = auich_read_codec;
 	sc->host_if.write = auich_write_codec;
 	sc->host_if.reset = auich_reset_codec;
+	sc->host_if.flags = auich_flags_codec;
+	if (sc->sc_dev.dv_cfdata->cf_flags & 0x0001) 
+		sc->flags = AC97_HOST_SWAPPED_CHANNELS;
 
 	if (ac97_attach(&sc->host_if) != 0) {
 		pci_intr_disestablish(pa->pa_pc, sc->sc_ih);
@@ -503,6 +506,14 @@ auich_reset_codec(v)
 	if (i < 0)
 		DPRINTF(AUICH_DEBUG_CODECIO,
 		    ("%s: reset_codec timeout\n", sc->sc_dev.dv_xname));
+}
+
+enum ac97_host_flags
+auich_flags_codec(void *v)
+{
+	struct auich_softc *sc = v;
+
+	return (sc->flags);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.4 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.5 2003/06/07 11:11:36 ho Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -214,6 +214,7 @@ ie_gsc_intrhook(sc, where)
 		break;
 	case IE_INTR_EXIT:
 	case IE_INTR_LOOP:
+		fdcache(0, (vaddr_t)ie_mem, IE_SIZE);
 		break;
 	}
 	return 0;
@@ -387,5 +388,5 @@ ie_gsc_attach(parent, self, aux)
 		      ie_gsc_media, IE_NMEDIA, ie_gsc_media[0]);
 
 	sc->sc_ih = gsc_intr_establish((struct gsc_softc *)parent, IPL_NET,
-				       ga->ga_irq, i82596_intr,sc,&sc->sc_dev);
+	    ga->ga_irq, i82596_intr, sc, &sc->sc_dev);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/stand.h,v 1.35.8.2 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/stand.h,v 1.35.8.3 2003/06/07 11:03:42 ho Exp $	*/
 /*	$NetBSD: stand.h,v 1.18 1996/11/30 04:35:51 gwr Exp $	*/
 
 /*-
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -139,7 +135,7 @@ char	*getdisklabel(const char *, struct disklabel *);
 u_int	dkcksum(struct disklabel *);
 
 void	printf(const char *, ...);
-void	sprintf(char *, const char *, ...);
+int	snprintf(char *, size_t, const char *, ...);
 void	vprintf(const char *, _BSD_VA_LIST_);
 void	twiddle(void);
 void	gets(char *);
@@ -195,7 +191,7 @@ u_int	sleep(u_int);
 void	usleep(u_int);
 char *ctime(const time_t *);
 
-void	putchar(int);    
+void	putchar(int);
 int	getchar(void);
 
 #ifdef __INTERNAL_LIBSA_CREAD

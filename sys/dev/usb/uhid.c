@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhid.c,v 1.6.2.4 2003/03/28 00:38:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uhid.c,v 1.6.2.5 2003/06/07 11:02:33 ho Exp $ */
 /*	$NetBSD: uhid.c,v 1.55 2002/10/23 09:14:00 jdolecek Exp $	*/
 
 /*
@@ -39,7 +39,7 @@
  */
 
 /*
- * HID spec: http://www.usb.org/developers/data/devclass/hid1_1.pdf
+ * HID spec: http://www.usb.org/developers/devclass_docs/HID1_11.pdf
  */
 
 #include <sys/param.h>

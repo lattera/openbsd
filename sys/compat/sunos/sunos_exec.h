@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.h,v 1.1.6.1 2001/05/14 22:05:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.h,v 1.1.6.2 2003/06/07 11:00:37 ho Exp $	*/
 /*	$NetBSD: exec.h,v 1.4 1994/10/25 23:03:22 deraadt Exp $	*/
 
 /*
@@ -13,8 +13,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

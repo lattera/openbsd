@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.18 2003/05/18 17:41:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.19 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -3115,7 +3115,8 @@ pmap_enter(pmap, va, pa, prot, flags)
 		ptp = pmap_get_ptp(pmap, pdei(va), FALSE);
 		if (ptp == NULL) {
 			if (flags & PMAP_CANFAIL) {
-				return (KERN_RESOURCE_SHORTAGE);
+				error = KERN_RESOURCE_SHORTAGE;
+				goto out;
 			}
 			panic("pmap_enter: get ptp failed");
 		}

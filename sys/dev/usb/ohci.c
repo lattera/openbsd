@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.6 2003/03/28 00:38:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.7 2003/06/07 11:02:32 ho Exp $ */
 /*	$NetBSD: ohci.c,v 1.104 2001/09/28 23:57:21 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohci.c,v 1.22 1999/11/17 22:33:40 n_hibma Exp $	*/
 
@@ -43,7 +43,7 @@
  * USB Open Host Controller driver.
  *
  * OHCI spec: http://www.compaq.com/productinfo/development/openhci.html
- * USB spec: http://www.usb.org/developers/data/usbspec.zip
+ * USB spec: http://www.usb.org/developers/docs/usbspec.zip
  */
 
 #include <sys/param.h>
@@ -854,8 +854,11 @@ ohci_init(ohci_softc_t *sc)
 	 * The AMD756 requires a delay before re-reading the register,
 	 * otherwise it will occasionally report 0 ports.
 	 */
-	usb_delay_ms(&sc->sc_bus, OHCI_READ_DESC_DELAY);
-	sc->sc_noport = OHCI_GET_NDP(OREAD4(sc, OHCI_RH_DESCRIPTOR_A));
+	sc->sc_noport = 0;
+	for (i = 0; i < 10 && sc->sc_noport == 0; i++) {
+		usb_delay_ms(&sc->sc_bus, OHCI_READ_DESC_DELAY);
+		sc->sc_noport = OHCI_GET_NDP(OREAD4(sc, OHCI_RH_DESCRIPTOR_A));
+	}
 
 #ifdef OHCI_DEBUG
 	if (ohcidebug > 5)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.3 2002/03/28 10:34:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.4 2003/06/07 11:13:14 ho Exp $	*/
 /*	$NetBSD: macrom.c,v 1.31 1997/03/01 17:20:34 scottr Exp $	*/
 
 /*-
@@ -950,7 +950,7 @@ mrg_init()
   	if(ROMBase == 0)
 		panic("ROMBase not set in mrg_init()!");
 
-	strcpy(&FinderName[1], findername);
+	strlcpy(FinderName + 1, findername, sizeof FinderName - 1);
 	FinderName[0] = (u_char) strlen(findername);
 #if defined(MRG_DEBUG)
 	printf("After setting globals\n");

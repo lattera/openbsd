@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.10 2003/05/13 19:21:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.11 2003/06/07 11:03:40 ho Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -75,7 +75,7 @@ int exec_sigcode_map(struct proc *, struct emul *);
  * to it. Must be a n^2. If non-zero, the stack gap will be calculated as:
  * (arc4random() * ALIGNBYTES) & (stackgap_random - 1) + STACKGAPLEN.
  */
-int stackgap_random = 1024;
+int stackgap_random = 64*1024;
 
 /*
  * check exec:
@@ -710,7 +710,7 @@ exec_sigcode_map(struct proc *p, struct emul *e)
 	 * in all processes that need this sigcode. The creation is simple,
 	 * we create an object, add a permanent reference to it, map it in
 	 * kernel space, copy out the sigcode to it and unmap it.
-	 * The we map it with PROT_READ|PROT_EXEC into the process just
+	 * Then we map it with PROT_READ|PROT_EXEC into the process just
 	 * the way sys_mmap would map it.
 	 */
 	if (e->e_sigobject == NULL) {

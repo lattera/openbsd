@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.11.4.6 2003/03/28 00:08:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.11.4.7 2003/06/07 11:09:09 ho Exp $	*/
 /*	$NetBSD: inode.h,v 1.8 1995/06/15 23:22:50 cgd Exp $	*/
 
 /*
@@ -18,11 +18,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -52,8 +48,8 @@ typedef long ufs_lbn_t;
  * Per-filesystem inode extensions.
  */
 struct ext2fs_inode_ext {
-       ufs_daddr_t ext2fs_last_lblk; /* last logical block allocated */
-       ufs_daddr_t ext2fs_last_blk; /* last block allocated on disk */
+       ufs1_daddr_t ext2fs_last_lblk; /* last logical block allocated */
+       ufs1_daddr_t ext2fs_last_blk; /* last block allocated on disk */
 };
 
 /*
@@ -235,7 +231,7 @@ struct inode_vtbl {
  * ufs_getlbns and used by truncate and bmap code.
  */
 struct indir {
-	ufs_daddr_t in_lbn;		/* Logical block number. */
+	daddr_t in_lbn;			/* Logical block number. */
 	int	in_off;			/* Offset in buffer. */
 	int	in_exists;		/* Flag if the block exists. */
 };

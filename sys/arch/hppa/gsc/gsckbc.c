@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/gsckbc.c,v 1.3 2003/02/17 23:06:31 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/gsckbc.c,v 1.3.4.1 2003/06/07 11:11:36 ho Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -227,15 +227,19 @@ probe_readtmo(bus_space_tag_t iot, bus_space_handle_t ioh, int *reply)
 
 	if (bus_space_read_1(iot, ioh, KBSTATP) & (KBS_PERR | KBS_TERR)) {
 		if (!(bus_space_read_1(iot, ioh, KBSTATP) & KBS_DIB)) {
-			bus_space_write_1(iot, ioh, KBRESETP, 0);
-			bus_space_write_1(iot, ioh, KBCMDP, KBCP_ENABLE);
+			bus_space_write_1(iot, ioh, KBRESETP, 0xff);
+			bus_space_write_1(iot, ioh, KBRESETP, 0x00);
+			bus_space_write_1(iot, ioh, KBCMDP,
+			    bus_space_read_1(iot, ioh, KBCMDP) | KBCP_ENABLE);
 			return (PROBE_TIMEOUT);
 		}
 
 		*reply = bus_space_read_1(iot, ioh, KBDATAP);
 		if (!(bus_space_read_1(iot, ioh, KBSTATP) & KBS_DIB)) {
-			bus_space_write_1(iot, ioh, KBRESETP, 0);
-			bus_space_write_1(iot, ioh, KBCMDP, KBCP_ENABLE);
+			bus_space_write_1(iot, ioh, KBRESETP, 0xff);
+			bus_space_write_1(iot, ioh, KBRESETP, 0x00);
+			bus_space_write_1(iot, ioh, KBCMDP,
+			    bus_space_read_1(iot, ioh, KBCMDP) | KBCP_ENABLE);
 			if (probe_sendtmo(iot, ioh, KBR_RESEND))
 				return (PROBE_TIMEOUT);
 			else
@@ -1025,7 +1029,7 @@ gsckbcintr(struct gsckbc_softc *gsc)
 		if (!q) {
 			/* XXX do something for live insertion? */
 #ifdef PCKBCDEBUG
-			printf("pckbcintr: no dev for slot %d\n", slot);
+			printf("gsckbcintr: no dev for slot %d\n", slot);
 #endif
 			KBD_DELAY;
 			(void) bus_space_read_1(t->t_iot, t->t_ioh_d, KBDATAP);
@@ -1045,7 +1049,7 @@ gsckbcintr(struct gsckbc_softc *gsc)
 			(*sc->inputhandler[slot])(sc->inputarg[slot], data);
 #ifdef PCKBCDEBUG
 		else
-			printf("pckbcintr: slot %d lost %d\n", slot, data);
+			printf("gsckbcintr: slot %d lost %d\n", slot, data);
 #endif
 	}
 

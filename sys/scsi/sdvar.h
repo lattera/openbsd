@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sdvar.h,v 1.1.4.2 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sdvar.h,v 1.1.4.3 2003/06/07 11:07:44 ho Exp $	*/
 /*	$NetBSD: sdvar.h,v 1.7 1998/08/17 00:49:03 mycroft Exp $	*/
 
 /*-
@@ -100,7 +100,7 @@ struct sd_ops {
 		    int);
 	void	(*sdo_flush)(struct sd_softc *, int);
 };
-#define	SDGP_RESULT_OK		0	/* paramters obtained */
+#define	SDGP_RESULT_OK		0	/* parameters obtained */
 #define	SDGP_RESULT_OFFLINE	1	/* no media, or otherwise losing */
 #define	SDGP_RESULT_UNFORMATTED	2	/* unformatted media (max params) */
 

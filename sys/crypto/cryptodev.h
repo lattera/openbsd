@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.5 2003/03/27 23:53:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.6 2003/06/07 11:02:27 ho Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -27,12 +27,10 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *   derived from this software without specific prior written permission.
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -160,6 +158,8 @@ struct cryptop {
 #define CRYPTO_F_IMBUF	0x0001	/* Input/output are mbuf chains, otherwise contig */
 #define CRYPTO_F_IOV	0x0002	/* Input/output are uio */
 #define CRYPTO_F_REL	0x0004	/* Must return data in same place */
+#define CRYPTO_F_NOQUEUE	0x0008	/* Don't use crypto queue/thread */
+#define CRYPTO_F_DONE	0x0010	/* request completed */
 
 	caddr_t		crp_buf;	/* Data to be processed */
 	caddr_t		crp_opaque;	/* Opaque pointer, passed along */

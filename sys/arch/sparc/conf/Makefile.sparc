@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.18.4.4 2003/05/16 00:29:40 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.18.4.5 2003/06/07 11:14:42 ho Exp $
 # 	$NetBSD: Makefile.sparc,v 1.32.4.1 1996/06/12 20:26:32 pk Exp $
 
 # Makefile for OpenBSD
@@ -149,7 +149,7 @@ clean::
 
 lint:
 	@lint -hbxncez -DGENERIC -Dvolatile= ${CPPFLAGS} ${PARAM} -UKGDB \
-	    ${CFILES} ${SPARC}/sparc/swapgeneric.c ioconf.c param.c | \
+	    ${CFILES} ioconf.c param.c | \
 	    grep -v 'static function .* unused'
 
 tags:

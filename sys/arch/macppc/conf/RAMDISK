@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/RAMDISK,v 1.3.4.4 2003/03/27 23:29:46 niklas Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/RAMDISK,v 1.3.4.5 2003/06/07 11:13:14 ho Exp $
 #
 # PPC GENERIC config file
 #
@@ -55,6 +55,8 @@ ahc*		at pci? dev ? function ?	# Adaptec 294x, aic78x0 SCSI
 #bha*		at pci? dev ? function ?	# BusLogic 9xx SCSI
 #pcscp*		at pci? dev ? function ?	# AMD Am53c974 PCscsi-PCI SCSI
 pciide*	at pci? dev ? function ?
+kauaiata*	at pci? dev ? function ?	# Apple ATA 100
+wdc*		at kauaiata?  flags 0x1
 macobio0	at pci? dev ? function ?
 gem*		at pci? dev ? function ?	# GMAC ethernet
 hme*		at pci? dev ? function ?	# HME ethernet

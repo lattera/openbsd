@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.7 2003/05/13 19:21:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.8 2003/06/07 11:03:40 ho Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -51,7 +51,7 @@
 
 /*
  * note that stdarg.h and the ansi style va_start macro is used for both
- * ansi and traditional c complers.
+ * ansi and traditional c compilers.
  * XXX: this requires that stdarg.h define: va_alist and va_dcl
  */
 #include <machine/stdarg.h>

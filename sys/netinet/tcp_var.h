@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.6 2003/05/13 19:36:18 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.7 2003/06/07 11:06:08 ho Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -102,18 +98,18 @@ struct tcpcb {
 	tcp_seq	snd_wl2;		/* window update seg ack number */
 	tcp_seq	iss;			/* initial send sequence number */
 	u_long	snd_wnd;		/* send window */
-#ifdef TCP_SACK
+#if 1 /*def TCP_SACK*/
 	int	sack_disable;		/* disable SACK for this connection */
 	int	snd_numholes;		/* number of holes seen by sender */
 	struct sackhole *snd_holes;	/* linked list of holes (sorted) */
-#if defined(TCP_SACK) && defined(TCP_FACK)
+#if 1 /*defined(TCP_SACK) && defined(TCP_FACK)*/
 	tcp_seq snd_fack;		/* for FACK congestion control */
 	u_long	snd_awnd;		/* snd_nxt - snd_fack + */
 					/* retransmitted data */
 	int retran_data;		/* amount of outstanding retx. data  */
 #endif /* TCP_FACK */
 #endif /* TCP_SACK */
-#if defined(TCP_SACK) || defined(TCP_ECN)
+#if 1 /*defined(TCP_SACK) || defined(TCP_ECN)*/
 	tcp_seq snd_last;		/* for use in fast recovery */
 #endif
 /* receive sequence variables */
@@ -121,7 +117,7 @@ struct tcpcb {
 	tcp_seq	rcv_nxt;		/* receive next */
 	tcp_seq	rcv_up;			/* receive urgent pointer */
 	tcp_seq	irs;			/* initial receive sequence number */
-#ifdef TCP_SACK
+#if 1 /*def TCP_SACK*/
 	tcp_seq rcv_laststart;		/* start of last segment recd. */
 	tcp_seq rcv_lastend;		/* end of ... */
 	tcp_seq rcv_lastsack;		/* last seq number(+1) sack'd by rcv'r*/
@@ -424,7 +420,7 @@ void	 tcp_setpersist(struct tcpcb *);
 void	 tcp_slowtimo(void);
 struct mbuf *
 	 tcp_template(struct tcpcb *);
-void	 tcp_trace(int, int, struct tcpcb *, caddr_t, int, int);
+void	 tcp_trace(int, int, struct tcpcb *, struct mbuf *, int, int);
 struct tcpcb *
 	 tcp_usrclosed(struct tcpcb *);
 int	 tcp_sysctl(int *, u_int, void *, size_t *, void *, size_t);

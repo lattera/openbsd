@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.7 2003/05/13 19:36:57 ho Exp $	*/
+/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.8 2003/06/07 11:07:44 ho Exp $	*/
 /*	$NetBSD: cd.c,v 1.100 1997/04/02 02:29:30 mycroft Exp $	*/
 
 /*
@@ -162,7 +162,7 @@ struct scsi_device cd_switch = {
 	cddone,			/* deal with stats at interrupt time */
 };
 
-struct scsi_inquiry_pattern cd_patterns[] = {
+const struct scsi_inquiry_pattern cd_patterns[] = {
 	{T_CDROM, T_REMOV,
 	 "",         "",                 ""},
 	{T_WORM, T_REMOV,
@@ -191,7 +191,7 @@ cdmatch(parent, match, aux)
 	int priority;
 
 	(void)scsi_inqmatch(sa->sa_inqbuf,
-	    (caddr_t)cd_patterns, sizeof(cd_patterns)/sizeof(cd_patterns[0]),
+	    cd_patterns, sizeof(cd_patterns)/sizeof(cd_patterns[0]),
 	    sizeof(cd_patterns[0]), &priority);
 	return (priority);
 }
@@ -667,6 +667,7 @@ cdstart(v)
 		 *  fit in a "small" cdb, use it.
 		 */
 		if (!(sc_link->flags & SDEV_ATAPI) &&
+		    !(sc_link->quirks & SDEV_ONLYBIG) && 
 		    ((blkno & 0x1fffff) == blkno) &&
 		    ((nblks & 0xff) == nblks)) {
 			/*
@@ -1338,7 +1339,7 @@ cd_size(cd, flags)
 	u_long size;
 	
 	/* Reasonable defaults for drives that don't support
-	   READ_CD_CAPCITY */
+	   READ_CD_CAPACITY */
 	cd->params.blksize = 2048;
 	cd->params.disksize = 400000;
 

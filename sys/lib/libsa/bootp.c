@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/bootp.c,v 1.8.2.1 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/bootp.c,v 1.8.2.2 2003/06/07 11:03:42 ho Exp $	*/
 /*	$NetBSD: bootp.c,v 1.10 1996/10/13 02:28:59 christos Exp $	*/
 
 /*
@@ -80,18 +80,18 @@ bootp(sock)
 	} rbuf;
 
 #ifdef BOOTP_DEBUG
- 	if (debug)
+	if (debug)
 		printf("bootp: socket=%d\n", sock);
 #endif
 	if (!bot)
 		bot = getsecs();
-	
+
 	if (!(d = socktodesc(sock))) {
 		printf("bootp: bad socket. %d\n", sock);
 		return;
 	}
 #ifdef BOOTP_DEBUG
- 	if (debug)
+	if (debug)
 		printf("bootp: d=%x\n", (u_int)d);
 #endif
 

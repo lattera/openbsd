@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_ie.c,v 1.11.2.7 2003/03/27 23:32:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_ie.c,v 1.11.2.8 2003/06/07 11:13:15 ho Exp $ */
 
 /*-
  * Copyright (c) 1999 Steve Murphree, Jr. 
@@ -29,9 +29,6 @@
  *	University of Vermont and State Agricultural College and Garrett A.
  *	Wollman, by William F. Jolitz, and by the University of California,
  *	Berkeley, Lawrence Berkeley Laboratory, and its contributors.
- *    and
- *      This product includes software developed under OpenBSD by
- *	Theo de Raadt for Willowglen Singapore.
  * 4. Neither the names of the Universities nor the names of the authors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.

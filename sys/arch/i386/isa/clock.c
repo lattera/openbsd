@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.21.2.5 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.21.2.6 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: clock.c,v 1.39 1996/05/12 23:11:54 mycroft Exp $	*/
 
 /*-
@@ -17,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -451,9 +447,9 @@ calibrate_cyclecounter()
 {
 	unsigned long long count, last_count;
 
-	__asm __volatile(".byte 0xf, 0x31" : "=A" (last_count));
+	__asm __volatile("rdtsc" : "=A" (last_count));
 	delay(1000000);
-	__asm __volatile(".byte 0xf, 0x31" : "=A" (count));
+	__asm __volatile("rdtsc" : "=A" (count));
 	pentium_mhz = ((count - last_count) + 500000) / 1000000;
 }
 #endif

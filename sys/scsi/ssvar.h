@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/Attic/ssvar.h,v 1.7.14.2 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/Attic/ssvar.h,v 1.7.14.3 2003/06/07 11:07:44 ho Exp $	*/
 /*	$NetBSD: ssvar.h,v 1.2 1996/03/30 21:47:11 christos Exp $	*/
 
 /*
@@ -68,7 +68,7 @@ struct ss_softc {
 	struct scsi_link *sc_link;	/* contains our targ, lun, etc.	*/
 	struct scan_io sio;
 	struct buf buf_queue;		/* the queue of pending IO operations */
-	struct quirkdata *quirkdata;	/* if we have a rogue entry */
+	const struct quirkdata *quirkdata; /* if we have a rogue entry */
 	struct ss_special special;	/* special handlers for spec. devices */
 };
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/net.c,v 1.10.8.1 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/net.c,v 1.10.8.2 2003/06/07 11:03:42 ho Exp $	*/
 /*	$NetBSD: net.c,v 1.14 1996/10/13 02:29:02 christos Exp $	*/
 
 /*
@@ -72,7 +72,7 @@ sendudp(d, pkt, len)
 	struct ip tip;
 
 #ifdef NET_DEBUG
- 	if (debug) {
+	if (debug) {
 		printf("sendudp: d=%x called.\n", (u_int)d);
 		if (d) {
 			printf("saddr: %s:%d",

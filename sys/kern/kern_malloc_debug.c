@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.6 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.5.6.7 2003/06/07 11:03:40 ho Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Artur Grabowski <art@openbsd.org>
@@ -10,10 +10,7 @@
  *
  * 1. Redistributions of source code must retain the above copyright 
  *    notice, this list of conditions and the following disclaimer. 
- * 2. Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the distribution. 
- * 3. The name of the author may not be used to endorse or promote products
+ * 2. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission. 
  *
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,

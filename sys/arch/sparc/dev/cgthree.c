@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.5 2003/05/13 19:41:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.6 2003/06/07 11:14:42 ho Exp $	*/
 /*	$NetBSD: cgthree.c,v 1.33 1997/05/24 20:16:11 pk Exp $ */
 
 /*
@@ -14,11 +14,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Jason L. Wright
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -57,11 +52,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -207,11 +198,6 @@ cgthreematch(parent, vcf, aux)
 	struct confargs *ca = aux;
 	struct romaux *ra = &ca->ca_ra;
 
-	/*
-	 * Mask out invalid flags from the user.
-	 */
-	cf->cf_flags &= FB_USERMASK;
-
 	if (strcmp(cf->cf_driver->cd_name, ra->ra_name) &&
 	    strcmp("cgRDI", ra->ra_name))
 		return (0);
@@ -238,8 +224,6 @@ cgthreeattach(parent, self, args)
 	volatile struct bt_regs *bt;
 	int isconsole = 0, sbus = 1;
 	char *nam = NULL;
-
-	sc->sc_sunfb.sf_flags = self->dv_cfdata->cf_flags;
 
 	switch (ca->ca_bustype) {
 	case BUS_OBIO:

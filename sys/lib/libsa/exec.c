@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/Attic/exec.c,v 1.22 1998/07/14 14:26:18 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/Attic/exec.c,v 1.22.8.1 2003/06/07 11:03:42 ho Exp $	*/
 /*	$NetBSD: exec.c,v 1.15 1996/10/13 02:29:01 christos Exp $	*/
 
 /*-
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -138,7 +134,7 @@ exec(path, loadaddr, howto)
 			sz = i - sizeof(int);
 			addr += sizeof(int);
 			if (read(io, addr, sz) != sz)
-                	goto shread;
+				goto shread;
 			addr += sz;
 		}
 
@@ -166,7 +162,7 @@ exec(path, loadaddr, howto)
 
 #ifdef EXEC_DEBUG
         printf("loadaddr=%p etxt=%p daddr=%p ssym=%p esym=%p\n",
-	    	loadaddr, etxt, daddr, ssym, esym);
+	    loadaddr, etxt, daddr, ssym, esym);
         printf("\n\nReturn to boot...\n");
         getchar();
 #endif

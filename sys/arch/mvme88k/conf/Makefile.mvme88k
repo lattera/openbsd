@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.7 2003/05/16 00:29:39 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.8 2003/06/07 11:13:16 ho Exp $
 #
 # Makefile for OpenBSD
 #
@@ -153,7 +153,7 @@ clean::
 
 lint:
 	@lint -hbxncez -DGENERIC -Dvolatile= ${CPPFLAGS} ${PARAM} -UKGDB \
-	    ${CFILES} ${MVME88K}/mvme88k/swapgeneric.c ioconf.c param.c | \
+	    ${CFILES} ioconf.c param.c | \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 

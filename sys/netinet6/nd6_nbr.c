@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.8 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.9 2003/06/07 11:06:09 ho Exp $	*/
 /*	$KAME: nd6_nbr.c,v 1.61 2001/02/10 16:06:14 jinmei Exp $	*/
 
 /*
@@ -988,7 +988,6 @@ nd6_ifptomac(ifp)
 	case IFT_L2VLAN:
 	case IFT_IEEE80211:
 		return ((caddr_t)(ifp + 1));
-		break;
 	default:
 		return NULL;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.6 2003/05/13 19:35:11 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.7 2003/06/07 11:02:32 ho Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -49,8 +49,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the authors may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

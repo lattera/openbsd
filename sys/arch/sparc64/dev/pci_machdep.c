@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.4.4 2003/05/13 19:41:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.4.5 2003/06/07 11:14:44 ho Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.22 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*
@@ -415,7 +415,11 @@ pci_intr_map(pa, ihp)
 
 	/* XXXX -- we use the ino.  What if there is a valid IGN? */
 	*ihp = interrupts;
-	return (0);
+
+	if (pa->pa_pc->intr_map)
+		return ((*pa->pa_pc->intr_map)(pa, ihp));
+	else
+		return (0);
 }
 
 const char *
@@ -454,7 +458,8 @@ pci_intr_establish(pc, ih, level, func, arg, what)
 	void *cookie;
 	struct psycho_pbm *pp = (struct psycho_pbm *)pc->cookie;
 
-	DPRINTF(SPDB_INTR, ("pci_intr_establish: ih %lu; level %d", (u_long)ih, level));
+	DPRINTF(SPDB_INTR, ("pci_intr_establish: ih %lu; level %d",
+	    (u_long)ih, level));
 	cookie = bus_intr_establish(pp->pp_memt, ih, level, 0, func, arg);
 
 	DPRINTF(SPDB_INTR, ("; returning handle %p\n", cookie));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.21 2003/05/25 19:24:31 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.22 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -55,11 +55,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -717,7 +713,8 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				"Celeron (Mendocino)",
 				"Pentium III (Katmai)",
 				"Pentium III (Coppermine)",
-				0, "Pentium III Xeon (Cascades)",
+				"Pentium M",
+				"Pentium III Xeon (Cascades)",
 				"Pentium III (Tualatin)", 0, 0,
 				0, 0,
 				"Pentium Pro, II or III"	/* Default */
@@ -1003,10 +1000,23 @@ const struct cpu_cpuid_feature i386_cpuid_features[] = {
 	{ CPUID_PAT,	"PAT" },
 	{ CPUID_PSE36,	"PSE36" },
 	{ CPUID_SER,	"SER" },
+	{ CPUID_CFLUSH,	"CFLUSH" },
+	{ CPUID_ACPI,	"ACPI" },
 	{ CPUID_MMX,	"MMX" },
 	{ CPUID_FXSR,	"FXSR" },
 	{ CPUID_SIMD,	"SIMD" },
+	{ CPUID_SIMD2,	"SIMD2" },
+	{ CPUID_SS,	"SS" },
+	{ CPUID_HTT,	"HTT" },
+	{ CPUID_TM,	"TM" },
+	{ CPUID_SBF,	"SBF" },
 	{ CPUID_3DNOW,	"3DNOW" },
+};
+
+const struct cpu_cpuid_feature i386_cpuid_ecxfeatures[] = {
+	{ CPUIDECX_EST,		"EST" },
+	{ CPUIDECX_TM2,		"TM2" },
+	{ CPUIDECX_CNXTID,	"CNXT-ID" },
 };
 
 void
@@ -1247,11 +1257,11 @@ intel686_cpu_setup(cpu_device, model, step)
 #define rdmsr(msr)	\
 ({			\
 	u_quad_t v;	\
-	__asm __volatile (".byte 0xf, 0x32" : "=A" (v) : "c" (msr));	\
+	__asm __volatile ("rdmsr" : "=A" (v) : "c" (msr));	\
 	v;		\
 })
 #define wrmsr(msr, v)	\
-	__asm __volatile (".byte 0xf, 0x30" :: "A" ((u_quad_t) (v)), "c" (msr));
+	__asm __volatile ("wrmsr" :: "A" ((u_quad_t) (v)), "c" (msr));
 
 	/*
 	 * Original PPro returns SYSCALL in CPUID but is non-functional.
@@ -1591,6 +1601,7 @@ old_identifycpu()
 	extern char cpu_vendor[];
 	extern int cpu_id;
 	extern int cpu_feature;
+	extern int cpu_ecxfeature;
 #ifdef CPUDEBUG
 	extern int cpu_cache_eax, cpu_cache_ebx, cpu_cache_ecx, cpu_cache_edx;
 #else
@@ -1751,6 +1762,16 @@ old_identifycpu()
 			if (cpu_feature & i386_cpuid_features[i].feature_bit) {
 				printf("%s%s", (numbits == 0 ? "" : ","),
 				    i386_cpuid_features[i].feature_name);
+				numbits++;
+			}
+		}
+		max = sizeof(i386_cpuid_ecxfeatures)
+			/ sizeof(i386_cpuid_ecxfeatures[0]);
+		for (i = 0; i < max; i++) {
+			if (cpu_ecxfeature &
+			    i386_cpuid_ecxfeatures[i].feature_bit) {
+				printf("%s%s", (numbits == 0 ? "" : ","),
+				    i386_cpuid_ecxfeatures[i].feature_name);
 				numbits++;
 			}
 		}
@@ -3463,6 +3484,9 @@ _bus_dmamap_load_uio(t, map, uio, flags)
 
 	resid = uio->uio_resid;
 	iov = uio->uio_iov;
+
+	if (resid > map->_dm_size)
+		return (EINVAL);
 
 	if (uio->uio_segflg == UIO_USERSPACE) {
 		p = uio->uio_procp;

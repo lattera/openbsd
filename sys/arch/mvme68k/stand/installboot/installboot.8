@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/installboot.8,v 1.7.2.3 2003/05/13 19:41:06 ho Exp $
+.\"	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/installboot.8,v 1.7.2.4 2003/06/07 11:13:16 ho Exp $
 .\"
 .\" Copyright (c) 1994 Paul Kranenburg
 .\" All rights reserved.
@@ -78,6 +78,9 @@ is mounted.
 cp /usr/mdec/bootsd /
 /usr/mdec/installboot /bootsd /usr/mdec/bootxx /dev/rsd0a
 .Ed
+.Sh SEE ALSO
+.Xr disklabel 8 ,
+.Xr init 8
 .Sh BUGS
 .Nm installboot
 requires simultaneous access to the mounted file system and
@@ -86,7 +89,4 @@ the raw device, but that is not allowed with the kernel
 variable set to a value greater than zero (the default), so
 .Nm installboot
 only works in single-user mode (or insecure mode - see
-.Xr init 8 ).
-.Sh SEE ALSO
-.Xr disklabel 8 ,
-.Xr init 8
+.Xr init 8 ) .

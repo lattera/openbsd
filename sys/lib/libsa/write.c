@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/write.c,v 1.3 1996/12/08 15:15:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/write.c,v 1.3.14.1 2003/06/07 11:03:43 ho Exp $	*/
 /*	$NetBSD: write.c,v 1.7 1996/06/21 20:29:30 pk Exp $	*/
 
 /*-
@@ -16,11 +16,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,30 +33,30 @@
  * SUCH DAMAGE.
  *
  *	@(#)write.c	8.1 (Berkeley) 6/11/93
- *  
+ *
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
  * All Rights Reserved.
  *
  * Author: Alessandro Forin
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
+ *
  * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -84,7 +80,7 @@ write(fd, dest, bcount)
 	if (f->f_flags & F_RAW) {
 		twiddle();
 		errno = (f->f_dev->dv_strategy)(f->f_devdata, F_WRITE,
-			btodb(f->f_offset), bcount, dest, &resid);
+		    btodb(f->f_offset), bcount, dest, &resid);
 		if (errno)
 			return (-1);
 		f->f_offset += resid;

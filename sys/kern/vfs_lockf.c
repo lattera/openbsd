@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_lockf.c,v 1.2.16.2 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_lockf.c,v 1.2.16.3 2003/06/07 11:03:41 ho Exp $	*/
 /*	$NetBSD: vfs_lockf.c,v 1.7 1996/02/04 02:18:21 christos Exp $	*/
 
 /*
@@ -16,11 +16,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_fddisubr.c,v 1.22.2.5 2003/05/16 00:29:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_fddisubr.c,v 1.22.2.6 2003/06/07 11:06:06 ho Exp $	*/
 /*	$NetBSD: if_fddisubr.c,v 1.5 1996/05/07 23:20:21 christos Exp $	*/
 
 /*
@@ -15,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/Makefile,v 1.36.4.3 2003/05/13 19:42:09 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/Makefile,v 1.36.4.4 2003/06/07 11:11:38 ho Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -28,8 +28,8 @@ CLEANFILES+=	unixdev.o unixsys.o nullfs.o
 
 # stand routines
 SRCS+=	alloc.c exit.c getfile.c gets.c globals.c strcmp.c strlen.c \
-	strncmp.c memcmp.c memcpy.c memset.c printf.c strerror.c strncpy.c \
-	strtol.c ctime.c
+	strncmp.c memcmp.c memcpy.c memset.c printf.c snprintf.c \
+	strerror.c strncpy.c strtol.c ctime.c strlcpy.c strlcat.c
 
 # io routines
 SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \

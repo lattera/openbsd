@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.10 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.11 2003/06/07 11:03:40 ho Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -19,11 +19,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *

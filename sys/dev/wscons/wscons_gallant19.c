@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_gallant19.c,v 1.1.6.2 2001/10/31 03:22:50 nate Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_gallant19.c,v 1.1.6.3 2003/06/07 11:02:34 ho Exp $ */
 /* $NetBSD: wscons_rfont.h,v 1.1 1998/03/22 14:24:02 drochner Exp $ */
 
 /*
@@ -17,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *

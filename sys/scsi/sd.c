@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.6 2003/05/13 19:36:57 ho Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.7 2003/06/07 11:07:44 ho Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -124,7 +124,7 @@ struct scsi_device sd_switch = {
 	sddone,			/* deal with stats at interrupt time */
 };
 
-struct scsi_inquiry_pattern sd_patterns[] = {
+const struct scsi_inquiry_pattern sd_patterns[] = {
 	{T_DIRECT, T_FIXED,
 	 "",         "",                 ""},
 	{T_DIRECT, T_REMOV,
@@ -155,7 +155,7 @@ sdmatch(parent, match, aux)
 	int priority;
 
 	(void)scsi_inqmatch(sa->sa_inqbuf,
-	    (caddr_t)sd_patterns, sizeof(sd_patterns)/sizeof(sd_patterns[0]),
+	    sd_patterns, sizeof(sd_patterns)/sizeof(sd_patterns[0]),
 	    sizeof(sd_patterns[0]), &priority);
 	return (priority);
 }
@@ -202,7 +202,7 @@ sdattach(parent, self, aux)
 	}
 
 	if (!(sc_link->inquiry_flags & SID_RelAdr))
-		sc_link->quirks |= SDEV_NOCDB6;
+		sc_link->quirks |= SDEV_ONLYBIG;
 
 	/*
 	 * Note if this device is ancient.  This is used in sdminphys().
@@ -234,7 +234,7 @@ sdattach(parent, self, aux)
 		result = SDGP_RESULT_OFFLINE;
 	else
 		result = (*sd->sc_ops->sdo_get_parms)(sd, &sd->params,
-		    scsi_autoconf);
+		    scsi_autoconf | SCSI_IGNORE_MEDIA_CHANGE);
 
 	printf("%s: ", sd->sc_dev.dv_xname);
 	switch (result) {
@@ -699,7 +699,7 @@ sdstart(v)
 		 *  fit in a "small" cdb, use it.
 		 */
 		if (!(sc_link->flags & SDEV_ATAPI) &&
-		    !(sc_link->quirks & SDEV_NOCDB6) && 
+		    !(sc_link->quirks & SDEV_ONLYBIG) && 
 		    ((blkno & 0x1fffff) == blkno) &&
 		    ((nblks & 0xff) == nblks)) {
 			/*

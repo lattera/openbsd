@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/srt0.S,v 1.6.4.1 2001/07/04 10:16:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/srt0.S,v 1.6.4.2 2003/06/07 11:11:36 ho Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -138,6 +138,9 @@ start
 	ldil	L%HEAP_LIMIT, %sp
 	ldo	R%HEAP_LIMIT(%sp), %sp
 
+	.import	bootprompt, data
+	ldil	L%bootprompt, t1
+	stw	r26, R%bootprompt(t1)
 	b	boot			; Call boot(),
 	copy	%r0, arg0		; use default boot device
 	nop

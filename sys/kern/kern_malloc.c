@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.9 2003/05/13 19:21:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.10 2003/06/07 11:03:40 ho Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -474,6 +470,7 @@ kmeminit_nkmempages()
 void
 kmeminit()
 {
+	vaddr_t base, limit;
 #ifdef KMEMSTATS
 	long indx;
 #endif
@@ -488,10 +485,12 @@ kmeminit()
 	 * done so already.
 	 */
 	kmeminit_nkmempages();
-
-	kmem_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&kmembase,
-		(vaddr_t *)&kmemlimit, (vsize_t)(nkmempages * PAGE_SIZE), 
-			VM_MAP_INTRSAFE, FALSE, &kmem_map_store.vmi_map);
+	base = vm_map_min(kernel_map);
+	kmem_map = uvm_km_suballoc(kernel_map, &base, &limit,
+	    (vsize_t)(nkmempages * PAGE_SIZE), VM_MAP_INTRSAFE, FALSE,
+	    &kmem_map_store.vmi_map);
+	kmembase = (char *)base;
+	kmemlimit = (char *)limit;
 	kmemusage = (struct kmemusage *) uvm_km_zalloc(kernel_map,
 		(vsize_t)(nkmempages * sizeof(struct kmemusage)));
 #ifdef KMEMSTATS

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ubsa.c,v 1.1.4.1 2003/05/13 19:35:11 ho Exp $ 	*/
-/*	$NetBSD: ubsa.c,v 1.3 2002/10/27 20:16:41 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ubsa.c,v 1.1.4.2 2003/06/07 11:02:33 ho Exp $ 	*/
+/*	$NetBSD: ubsa.c,v 1.5 2002/11/25 00:51:33 fvdl Exp $	*/
 /*-
  * Copyright (c) 2002, Alexander Kabaev <kan.FreeBSD.org>.
  * All rights reserved.
@@ -388,7 +388,7 @@ error:
 USB_DETACH(ubsa)
 {
 	USB_DETACH_START(ubsa, sc);
-	int rv;
+	int rv = 0;
 
 
 	DPRINTF(("ubsa_detach: sc = %p\n", sc));

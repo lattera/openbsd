@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/netif.h,v 1.3.14.1 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/netif.h,v 1.3.14.2 2003/06/07 11:03:42 ho Exp $	*/
 /*	$NetBSD: netif.h,v 1.4 1995/09/14 23:45:30 pk Exp $	*/
 
 #ifndef __SYS_LIBNETBOOT_NETIF_H
@@ -60,5 +60,5 @@ int		netif_open(void *);
 int		netif_close(int);
 
 struct iodesc	*socktodesc(int);
-	
+
 #endif /* __SYS_LIBNETBOOT_NETIF_H */

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/libsa/Makefile,v 1.4.4.1 2001/10/31 03:07:59 nate Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/libsa/Makefile,v 1.4.4.2 2003/06/07 11:14:46 ho Exp $
 
 LIB=	sa
 
@@ -16,7 +16,7 @@ CPPFLAGS+= -D__INTERNAL_LIBSA_CREAD
 
 # stand routines
 SRCS=	alloc.c exit.c exec.c getfile.c gets.c globals.c \
-	memcmp.c memcpy.c memset.c printf.c strerror.c strncpy.c
+	memcmp.c memcpy.c memset.c printf.c snprintf.c strerror.c strncpy.c
 
 # io routines
 SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/bcmp.c,v 1.4.14.1 2001/05/14 22:32:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/bcmp.c,v 1.4.14.2 2003/06/07 11:03:41 ho Exp $	*/
 
 /*
  * Copyright (c) 1987 Regents of the University of California.
@@ -12,11 +12,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -35,7 +31,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)bcmp.c	5.6 (Berkeley) 2/24/91";*/
-static char *rcsid = "$OpenBSD: src/sys/lib/libkern/bcmp.c,v 1.4.14.1 2001/05/14 22:32:47 niklas Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/bcmp.c,v 1.4.14.2 2003/06/07 11:03:41 ho Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.7 2003/03/28 00:38:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.8 2003/06/07 11:02:29 ho Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -21,7 +21,6 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

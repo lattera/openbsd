@@ -1,8 +1,7 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.5.4.6 2003/03/27 23:32:17 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.5.4.7 2003/06/07 11:13:16 ho Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
- *
  *   
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,11 +11,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Dale Rahn.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

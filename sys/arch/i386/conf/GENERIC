@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.9 2003/05/13 19:42:07 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.10 2003/06/07 11:11:36 ho Exp $
 #	$NetBSD: GENERIC,v 1.48 1996/05/20 18:17:23 mrg Exp $
 #
 #	GENERIC -- everything that's currently supported
@@ -30,6 +30,8 @@ option		COMPAT_IBCS2	# binary compatibility with SCO and ISC
 option		COMPAT_LINUX	# binary compatibility with Linux
 option		COMPAT_FREEBSD	# binary compatibility with FreeBSD
 option		COMPAT_BSDOS	# binary compatibility with BSD/OS
+
+#option		NTFS		# Experimental NTFS support
 
 maxusers	32		# estimated number of users
 
@@ -65,6 +67,8 @@ lm0	at isa? port 0x290
 #lm1	at isa? port 0x280
 #lm2	at isa? port 0x310
 
+it0	at isa? port 0x290		# IT8705F, IT8712F and SiS970 hardware
+					# monitors
 viaenv*	at pci? dev ? function ?	# VIA VT82C686A hardware monitor
 
 # ISA PCMCIA controllers
@@ -387,6 +391,7 @@ wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
 #awi*	at pcmcia? function ?			# Bay Networks IEEE 802.11FH
 an*	at pci? dev ? function ?		# Aironet IEEE 802.11DS
+an*	at isapnp?				# Aironet IEEE 802.11DS
 an*	at pcmcia? function ?			# Aironet IEEE 802.11DS
 #cnw*	at pcmcia? function ?			# Xircom Netwave
 ray*	at pcmcia? function ?			# Raylink Aviator2.4/Pro 802.11FH
@@ -422,7 +427,7 @@ eso*	at pci? dev ? function ?		# ESS Solo-1 PCI AudioDrive
 sv*	at pci? dev ? function ?		# S3 SonicVibes (S3 617)
 neo*	at pci? dev ? function ?		# NeoMagic 256AV/ZX
 cmpci*	at pci? dev ? function ?		# C-Media CMI8338/8738
-auich*	at pci? dev ? function ?		# i82801 ICH AC'97 audio
+auich*	at pci? dev ? function ? flags 0x0000	# i82801 ICH AC'97 audio
 autri*	at pci? dev ? function ? flags 0x0000	# Trident 4D WAVE
 auvia*	at pci? dev ? function ?		# VIA VT82C686A
 clcs*	at pci? dev ? function ?		# CS4280 CrystalClear audio

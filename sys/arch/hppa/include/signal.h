@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/signal.h,v 1.1.8.1 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/signal.h,v 1.1.8.2 2003/06/07 11:11:36 ho Exp $	*/
 
 /* 
  * Copyright (c) 1994, The University of Utah and
@@ -44,10 +44,10 @@ struct	sigcontext {
 	int	sc_onstack;		/* sigstack state to restore */
 	int	sc_mask;		/* signal mask to restore */
 	int	sc_ps;			/* psl to restore */
-	int	sc_sp;			/* sp to restore */
 	int	sc_fp;			/* fp to restore */
 	int	sc_pcoqh;		/* pc offset queue (head) to restore */
 	int	sc_pcoqt;		/* pc offset queue (tail) to restore */
-	int	sc_resv[5];
-	int	sc_tf[64];
+	int	sc_resv[2];
+	int	sc_regs[32];
+	int	sc_fpregs[64];
 };

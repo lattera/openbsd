@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.7 2003/05/16 00:29:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.8 2003/06/07 11:06:07 ho Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -39,10 +39,14 @@
 
 #include <net/radix.h>
 #include <netinet/ip_ipsp.h>
+#include <netinet/tcp_fsm.h>
+
+#define	PF_TCPS_PROXY_SRC	((TCP_NSTATES)+0)
+#define	PF_TCPS_PROXY_DST	((TCP_NSTATES)+1)
 
 enum	{ PF_INOUT, PF_IN, PF_OUT };
 enum	{ PF_PASS, PF_DROP, PF_SCRUB, PF_NAT, PF_NONAT,
-	  PF_BINAT, PF_NOBINAT, PF_RDR, PF_NORDR };
+	  PF_BINAT, PF_NOBINAT, PF_RDR, PF_NORDR, PF_SYNPROXY_DROP };
 enum	{ PF_RULESET_SCRUB, PF_RULESET_FILTER, PF_RULESET_NAT,
 	  PF_RULESET_BINAT, PF_RULESET_RDR, PF_RULESET_MAX };
 enum	{ PF_OP_NONE, PF_OP_IRG, PF_OP_EQ, PF_OP_NE, PF_OP_LT,
@@ -381,9 +385,11 @@ struct pf_rule {
 	u_int8_t		 log;
 	u_int8_t		 quick;
 	u_int8_t		 ifnot;
+	u_int8_t		 match_tag_not;
 
 #define PF_STATE_NORMAL		0x1
 #define PF_STATE_MODULATE	0x2
+#define PF_STATE_SYNPROXY	0x3
 	u_int8_t		 keep_state;
 	sa_family_t		 af;
 	u_int8_t		 proto;
@@ -1096,6 +1102,11 @@ int	pfr_ina_begin(int *, int *, int);
 int	pfr_ina_commit(int, int *, int *, int);
 int	pfr_ina_define(struct pfr_table *, struct pfr_addr *, int, int *,
 	    int *, int, int);
+
+u_int16_t	pf_tagname2tag(char *);
+void		pf_tag2tagname(u_int16_t, char *);
+void		pf_tag_unref(u_int16_t);
+int		pf_tag_packet(struct mbuf *, struct pf_tag *, int);
 
 extern struct pf_status	pf_status;
 extern struct pool	pf_frent_pl, pf_frag_pl;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.27.6.8 2003/03/28 00:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.27.6.9 2003/06/07 11:09:09 ho Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*
@@ -18,11 +18,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -490,7 +486,7 @@ ufs_chown(vp, uid, gid, cred, p)
 	uid_t ouid;
 	gid_t ogid;
 	int error = 0;
-	ufs_daddr_t change;
+	daddr_t change;
 	enum ufs_quota_flags quota_flags = 0;
 
 	if (uid == (uid_t)VNOVAL)

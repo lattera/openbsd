@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.6 2003/05/13 19:35:00 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.7 2003/06/07 11:02:28 ho Exp $ */
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -94,6 +94,9 @@
 #define DC_IS_ADMTEK(x)				\
 	(x->dc_type == DC_TYPE_AL981 ||		\
 	 x->dc_type == DC_TYPE_AN983)
+
+#define DC_IS_CENTAUR(x)			\
+	(x->dc_type == DC_TYPE_AN983)
 
 #define DC_IS_INTEL(x)				\
 	(x->dc_type == DC_TYPE_21143 ||		\
@@ -752,6 +755,7 @@ struct dc_softc {
 #define DC_64BIT_HASH		0x00002000
 #define DC_TULIP_LEDS		0x00004000
 #define DC_TX_ONE		0x00008000
+#define DC_MOMENCO_BOTCH	0x00010000
 
 /*
  * register space access macros

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.3.2.6 2003/05/13 19:35:13 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.3.2.7 2003/06/07 11:02:34 ho Exp $ */
 /*	$NetBSD: uscanner.c,v 1.34 2002/10/23 09:14:03 jdolecek Exp $	*/
 
 /*
@@ -178,10 +178,13 @@ static const struct uscan_info uscanner_devs[] = {
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_610 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1200 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1240 }, 0 },
+ {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1260 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1600 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1640 }, 0 },
+ {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1660 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_640U }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_1650 }, 0 },
+ {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_2400 }, 0 },
  {{ USB_VENDOR_EPSON, USB_PRODUCT_EPSON_GT9700F }, USC_KEEP_OPEN },
 
   /* UMAX */

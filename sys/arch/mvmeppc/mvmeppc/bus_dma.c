@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.3 2002/03/06 02:04:46 niklas Exp $        */
+/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.4 2003/06/07 11:13:18 ho Exp $        */
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-
@@ -330,6 +330,9 @@ _bus_dmamap_load_uio(t, map, uio, flags)
 
         resid = uio->uio_resid;
         iov = uio->uio_iov;
+
+	if (resid > map->_dm_size)
+		return (EINVAL);
 
         if (uio->uio_segflg == UIO_USERSPACE) {
                 p = uio->uio_procp;

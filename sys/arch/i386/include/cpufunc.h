@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpufunc.h,v 1.5.2.4 2003/04/15 03:53:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpufunc.h,v 1.5.2.5 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: cpufunc.h,v 1.8 1994/10/27 04:15:59 cgd Exp $	*/
 
 /*
@@ -207,7 +207,7 @@ wbinvd(void)
 static __inline void
 wrmsr(u_int msr, u_int64_t newval)
 {
-        __asm __volatile(".byte 0x0f, 0x30" : : "A" (newval), "c" (msr));
+        __asm __volatile("wrmsr" : : "A" (newval), "c" (msr));
 }
 
 static __inline u_int64_t
@@ -215,7 +215,7 @@ rdmsr(u_int msr)
 {
         u_int64_t rv;
 
-        __asm __volatile(".byte 0x0f, 0x32" : "=A" (rv) : "c" (msr));
+        __asm __volatile("rdmsr" : "=A" (rv) : "c" (msr));
         return (rv);
 }
 

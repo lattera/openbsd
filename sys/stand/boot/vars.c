@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/vars.c,v 1.5.2.2 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/vars.c,v 1.5.2.3 2003/06/07 11:07:44 ho Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -35,6 +30,7 @@
 #include <sys/param.h>
 #include <libsa.h>
 #include <sys/reboot.h>
+#include <lib/libkern/funcs.h>
 #include "cmd.h"
 
 extern const char version[];
@@ -55,7 +51,7 @@ int Xenv(void);
 const struct cmd_table cmd_set[] = {
 	{"addr",   CMDT_VAR, Xaddr},
 	{"howto",  CMDT_VAR, Xhowto},
-#ifdef DEBUG	
+#ifdef DEBUG
 	{"debug",  CMDT_VAR, Xdebug},
 #endif
 	{"device", CMDT_VAR, Xdevice},
@@ -109,7 +105,7 @@ Xdevice()
 	if (cmd.argc != 2)
 		printf("%s\n", cmd.bootdev);
 	else
-		strncpy(cmd.bootdev, cmd.argv[1], sizeof(cmd.bootdev));
+		strlcpy(cmd.bootdev, cmd.argv[1], sizeof(cmd.bootdev));
 	return 0;
 }
 
@@ -119,7 +115,7 @@ Ximage()
 	if (cmd.argc != 2)
 		printf("%s\n", cmd.image);
 	else
-		strncpy(cmd.image, cmd.argv[1], sizeof(cmd.image));
+		strlcpy(cmd.image, cmd.argv[1], sizeof(cmd.image));
 	return 0;
 }
 
@@ -232,6 +228,7 @@ bootparse(i)
  * terminated by the usual '\0'
  */
 char *environ;
+
 int
 Xenv()
 {
@@ -245,20 +242,23 @@ Xenv()
 		int l;
 		for (p = environ; p && *p; p = q) {
 			l = strlen(cmd.argv[1]);
-			for (q = p; *q != '='; q++);
+			for (q = p; *q != '='; q++)
+				;
 			l = max(l, q - p) + 1;
-			for (q = p; *q != '\n'; q++);
+			for (q = p; *q != '\n'; q++)
+				;
 			if (*q)
 				q++;
 			if (!strncmp(p, cmd.argv[1], l)) {
-				while((*p++ = *q++));
+				while((*p++ = *q++))
+					;
 				p--;
 			}
 		}
 		if (!p)
 			p = environ = alloc(4096);
-		sprintf(p, "%s=%s\n",
-			cmd.argv[1], (cmd.argc==3?cmd.argv[2]:""));
+		snprintf(p, environ + 4096 - p, "%s=%s\n",
+		    cmd.argv[1], (cmd.argc==3?cmd.argv[2]:""));
 	}
 
 	return 0;

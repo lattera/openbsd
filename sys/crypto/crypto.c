@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.8 2003/03/27 23:53:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.9 2003/06/07 11:02:27 ho Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -686,18 +686,28 @@ crypto_thread(void)
 void
 crypto_done(struct cryptop *crp)
 {
-	int s = splimp();
+	int s;
 
-	crp->crp_next = NULL;
-	if (crp_ret_queue == NULL) {
-		crp_ret_queue = crp;
-		crp_ret_queue_tail = &(crp->crp_next);
-		splx(s);
-		wakeup((caddr_t) &crp_req_queue); /* Shared wait channel. */
+	if (crp->crp_flags & CRYPTO_F_NOQUEUE) {
+		/* not from the crypto queue, wakeup the userland
+		 * process 
+		 */
+		crp->crp_flags |= CRYPTO_F_DONE;
+		crp->crp_callback(crp);
 	} else {
-		*crp_ret_queue_tail = crp;
-		crp_ret_queue_tail = &(crp->crp_next);
-		splx(s);
+		s = splimp();
+		crp->crp_flags |= CRYPTO_F_DONE;
+		crp->crp_next = NULL;
+		if (crp_ret_queue == NULL) {
+			crp_ret_queue = crp;
+			crp_ret_queue_tail = &(crp->crp_next);
+			splx(s);
+			wakeup((caddr_t) &crp_req_queue); /* Shared wait channel. */
+		} else {
+			*crp_ret_queue_tail = crp;
+			crp_ret_queue_tail = &(crp->crp_next);
+			splx(s);
+		}
 	}
 }
 

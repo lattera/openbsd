@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/installboot.c,v 1.4.2.2 2002/03/28 10:34:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/installboot.c,v 1.4.2.3 2003/06/07 11:13:16 ho Exp $ */
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*
@@ -121,7 +121,7 @@ main(argc, argv)
 	boot = argv[optind];
 	proto = argv[optind + 1];
 	dev = argv[optind + 2];
-	strcpy(cdev, dev);
+	strlcpy(cdev, dev, sizeof cdev);
 	cdev[strlen(cdev)-1] = 'c';
 	
 	if (verbose) {

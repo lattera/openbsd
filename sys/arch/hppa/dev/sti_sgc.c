@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5.2.6 2003/05/13 19:41:03 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5.2.7 2003/06/07 11:11:36 ho Exp $	*/
 
 /*
  * Copyright (c) 2000-2003 Michael Shalayeff
@@ -59,6 +59,9 @@
 #define	STI_ROMSIZE	0x30000
 #define	STI_ID_FDDI	0x280b31af	/* Medusa FDDI ROM id */
 
+#define	STI_INEG_REV	0x60
+#define	STI_INEG_PROM	0xf0011000
+
 int sti_sgc_probe(struct device *, void *, void *);
 void sti_sgc_attach(struct device *, struct device *, void *);
 
@@ -70,6 +73,26 @@ struct cfattach sti_phantom_ca = {
 	sizeof(struct sti_softc), sti_sgc_probe, sti_sgc_attach
 };
 
+/*
+ * Locate STI ROM.
+ * On some machines it may not be part of the HPA space.
+ */
+paddr_t
+sti_sgc_getrom(struct confargs *ca)
+{
+	paddr_t rom;
+
+	if (PAGE0->pd_resv2[1] < HPPA_IOBEGIN)
+		if (ca->ca_type.iodc_revision == STI_INEG_REV)
+			rom = STI_INEG_PROM;
+		else
+			rom = ca->ca_hpa;
+	else
+		rom = PAGE0->pd_resv2[1];
+
+	return (rom);
+}
+
 int
 sti_sgc_probe(parent, match, aux)
 	struct device *parent;
@@ -77,7 +100,8 @@ sti_sgc_probe(parent, match, aux)
 {
 	struct confargs *ca = aux;
 	bus_space_handle_t ioh, romh;
-	u_int32_t id, rom;
+	paddr_t rom;
+	u_int32_t id;
 	u_char devtype;
 	int rv = 0, romunmapped = 0;
 
@@ -99,20 +123,15 @@ sti_sgc_probe(parent, match, aux)
 		return 0;
 	}
 
-	/*
-	 * Locate STI ROM.
-	 * On some machines it may not be part of the HPA space.
-	 */
-	if (PAGE0->pd_resv2[1] < HPPA_IOBEGIN) {
-		rom = ca->ca_hpa;
-		romh = ioh;
-		romunmapped++;
-	} else
-		rom = PAGE0->pd_resv2[1];
-
+	rom = sti_sgc_getrom(ca);
 #ifdef STIDEBUG
 	printf ("sti: hpa=%x, rom=%x\n", ca->ca_hpa, rom);
 #endif
+
+	if (rom == ca->ca_hpa) {
+		romh = ioh;
+		romunmapped++;
+	}
 
 	/* if it does not map, probably part of the lasi space */
 	if (rom != ca->ca_hpa &&
@@ -178,13 +197,10 @@ sti_sgc_attach(parent, self, aux)
 {
 	struct sti_softc *sc = (void *)self;
 	struct confargs *ca = aux;
-	bus_addr_t addr;
+	paddr_t addr;
 	int rv;
 
-	if (PAGE0->pd_resv2[1] < HPPA_IOBEGIN)
-		addr = ca->ca_hpa;
-	else
-		addr = PAGE0->pd_resv2[1];
+	addr = sti_sgc_getrom(ca);
 
 #ifdef STIDEBUG
 	printf("sti: hpa=%x, rom=%x\n", ca->ca_hpa, addr);

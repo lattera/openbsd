@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.6 2003/05/18 17:41:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.7 2003/06/07 11:11:36 ho Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.22 1996/05/03 19:42:00 christos Exp $	*/
 
 /* 

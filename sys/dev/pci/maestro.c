@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/maestro.c,v 1.4.4.6 2002/03/28 15:35:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/maestro.c,v 1.4.4.7 2003/06/07 11:02:30 ho Exp $	*/
 /* $FreeBSD: /c/ncvs/src/sys/dev/sound/pci/maestro.c,v 1.3 2000/11/21 12:22:11 julian Exp $ */
 /*
  * FreeBSD's ESS Agogo/Maestro driver 
@@ -903,6 +903,7 @@ maestro_trigger_input(hdl, start, end, blksize, intr, arg, param)
 	struct maestro_softc *sc = (struct maestro_softc *)hdl;
 
 	sc->record.mode |= MAESTRO_RUNNING;
+	sc->record.blocksize = blksize;
 
 	maestro_channel_start(&sc->record);
 

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.8.2.4 2003/03/28 00:38:31 niklas Exp $ */
-/*	$NetBSD: ucom.c,v 1.47 2002/10/23 09:13:59 jdolecek Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.8.2.5 2003/06/07 11:02:33 ho Exp $ */
+/*	$NetBSD: ucom.c,v 1.49 2003/01/01 00:10:25 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1998, 2000 The NetBSD Foundation, Inc.
@@ -1111,7 +1111,7 @@ ucomreadcb(usbd_xfer_handle xfer, usbd_private_handle p, usbd_status status)
 		return;
 	}
 
-	usbd_get_xfer_status(xfer, NULL, (void **)&cp, &cc, NULL);
+	usbd_get_xfer_status(xfer, NULL, (void *)&cp, &cc, NULL);
 #if defined(__NetBSD__) && NRND > 0
 	rnd_add_uint32(&sc->sc_rndsource, cc);
 #endif

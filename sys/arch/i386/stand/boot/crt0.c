@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/boot/crt0.c,v 1.3.8.1 2002/03/28 10:31:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/boot/crt0.c,v 1.3.8.2 2003/06/07 11:11:38 ho Exp $	*/
 
 /*
  * Copyright (c) 1997-1998 Michael Shalayeff
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 

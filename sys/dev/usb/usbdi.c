@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/usbdi.c,v 1.7.2.3 2003/03/28 00:38:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/usbdi.c,v 1.7.2.4 2003/06/07 11:02:34 ho Exp $ */
 /*	$NetBSD: usbdi.c,v 1.81 2001/04/17 00:05:33 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usbdi.c,v 1.28 1999/11/17 22:33:49 n_hibma Exp $	*/
 
@@ -551,7 +551,6 @@ usbd_clear_endpoint_stall_async(usbd_pipe_handle pipe)
 	return (err);
 }
 
-void usbd_clear_endpoint_toggle(usbd_pipe_handle pipe); /* XXXXX */
 void
 usbd_clear_endpoint_toggle(usbd_pipe_handle pipe)
 {

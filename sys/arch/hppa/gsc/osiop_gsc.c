@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/osiop_gsc.c,v 1.3.4.1 2003/05/13 19:41:03 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/osiop_gsc.c,v 1.3.4.2 2003/06/07 11:11:36 ho Exp $	*/
 /*	$NetBSD: osiop_gsc.c,v 1.6 2002/10/02 05:17:50 thorpej Exp $	*/
 
 /*
@@ -188,9 +188,9 @@ osiop_gsc_intr(arg)
 	 * Per page 4-18 of the LSI 53C710 Technical Manual,
 	 * "insert a delay equivalent to 12 BCLK periods between
 	 * the reads [of DSTAT and SSTAT0] to ensure that the
-	 * interrupts clear properly."
+	 * interrupts clear properly." 1 BCLK = 40ns. Pg. 6-10.
 	 */
-	DELAY(100);
+	DELAY(25);
 	sc->sc_dstat = osiop_read_1(sc, OSIOP_DSTAT);
 
 	/* Deal with the interrupt */

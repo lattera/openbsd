@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/fcntl.h,v 1.5.10.3 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/fcntl.h,v 1.5.10.4 2003/06/07 11:09:07 ho Exp $	*/
 /*	$NetBSD: fcntl.h,v 1.8 1995/03/26 20:24:12 jtc Exp $	*/
 
 /*-
@@ -18,11 +18,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *

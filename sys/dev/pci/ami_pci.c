@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.3.4.6 2003/05/13 19:35:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.3.4.7 2003/06/07 11:02:29 ho Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -84,6 +79,8 @@ struct	ami_pci_device {
 	{ PCI_VENDOR_AMI,	PCI_PRODUCT_AMI_MEGARAID,	0 },
 	{ PCI_VENDOR_AMI,	PCI_PRODUCT_AMI_MEGARAID428,	0 },
 	{ PCI_VENDOR_AMI,	PCI_PRODUCT_AMI_MEGARAID434,	0 },
+	{ PCI_VENDOR_DELL,	PCI_PRODUCT_DELL_PERC_4DI,	0 },
+	{ PCI_VENDOR_DELL,	PCI_PRODUCT_DELL_PERC_4DI_2,	0 },
 	{ PCI_VENDOR_INTEL,	PCI_PRODUCT_INTEL_80960RP_ATU, AMI_CHECK_SIGN },
 	{ 0 }
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_table.c,v 1.31.4.1 2003/05/13 19:36:16 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/pf_table.c,v 1.31.4.2 2003/06/07 11:06:07 ho Exp $	*/
 
 /*
  * Copyright (c) 2002 Cedric Berger
@@ -815,7 +815,7 @@ void
 pfr_clstats_kentries(struct pfr_kentryworkq *workq, long tzero, int negchange)
 {
 	struct pfr_kentry	*p;
-	int			 s, n = 0;
+	int			 s;
 
 	SLIST_FOREACH(p, workq, pfrke_workq) {
 		s = splsoftnet();
@@ -825,7 +825,6 @@ pfr_clstats_kentries(struct pfr_kentryworkq *workq, long tzero, int negchange)
 		bzero(p->pfrke_bytes, sizeof(p->pfrke_bytes));
 		splx(s);
 		p->pfrke_tzero = tzero;
-		n++;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.10 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.11 2003/06/07 11:06:08 ho Exp $	*/
 /*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
@@ -42,11 +42,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -512,7 +508,6 @@ icmp6_input(mp, offp, proto)
 			goto badcode;
 		}
 		goto deliver;
-		break;
 
 	case ICMP6_PACKET_TOO_BIG:
 		icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_pkttoobig);
@@ -526,7 +521,6 @@ icmp6_input(mp, offp, proto)
 		 * intermediate extension headers.
 		 */
 		goto deliver;
-		break;
 
 	case ICMP6_TIME_EXCEEDED:
 		icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_timeexceed);
@@ -541,7 +535,6 @@ icmp6_input(mp, offp, proto)
 			goto badcode;
 		}
 		goto deliver;
-		break;
 
 	case ICMP6_PARAM_PROB:
 		icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_paramprob);
@@ -557,7 +550,6 @@ icmp6_input(mp, offp, proto)
 			goto badcode;
 		}
 		goto deliver;
-		break;
 
 	case ICMP6_ECHO_REQUEST:
 		icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_echo);
@@ -2562,77 +2554,61 @@ icmp6_redirect_output(m0, rt)
 	if (p - (u_char *)ip6 > maxlen)
 		goto noredhdropt;
 
-    {
-	/* redirected header option */
-	int len;
-	struct nd_opt_rd_hdr *nd_opt_rh;
+	{
+		/* redirected header option */
+		int len;
+		struct nd_opt_rd_hdr *nd_opt_rh;
 
-	/*
-	 * compute the maximum size for icmp6 redirect header option.
-	 * XXX room for auth header?
-	 */
-	len = maxlen - (p - (u_char *)ip6);
-	len &= ~7;
+		/*
+		 * compute the maximum size for icmp6 redirect header option.
+		 * XXX room for auth header?
+		 */
+		len = maxlen - (p - (u_char *)ip6);
+		len &= ~7;
 
-	/* This is just for simplicity. */
-	if (m0->m_pkthdr.len != m0->m_len) {
-		if (m0->m_next) {
-			m_freem(m0->m_next);
-			m0->m_next = NULL;
-		}
-		m0->m_pkthdr.len = m0->m_len;
-	}
+		/*
+		 * Redirected header option spec (RFC2461 4.6.3) talks nothing
+		 * about padding/truncate rule for the original IP packet.
+		 * From the discussion on IPv6imp in Feb 1999,
+		 * the consensus was:
+		 * - "attach as much as possible" is the goal
+		 * - pad if not aligned (original size can be guessed by
+		 *   original ip6 header)
+		 * Following code adds the padding if it is simple enough,
+		 * and truncates if not.
+		 */
+		if (len - sizeof(*nd_opt_rh) < m0->m_pkthdr.len) {
+			/* not enough room, truncate */
+			m_adj(m0, (len - sizeof(*nd_opt_rh)) -
+			    m0->m_pkthdr.len);
+		} else {
+			/*
+			 * enough room, truncate if not aligned.
+			 * we don't pad here for simplicity.
+			 */
+			size_t extra;
 
-	/*
-	 * Redirected header option spec (RFC2461 4.6.3) talks nothing
-	 * about padding/truncate rule for the original IP packet.
-	 * From the discussion on IPv6imp in Feb 1999, the consensus was:
-	 * - "attach as much as possible" is the goal
-	 * - pad if not aligned (original size can be guessed by original
-	 *   ip6 header)
-	 * Following code adds the padding if it is simple enough,
-	 * and truncates if not.
-	 */
-	if (m0->m_next || m0->m_pkthdr.len != m0->m_len)
-		panic("assumption failed in %s:%d", __FILE__, __LINE__);
-
-	if (len - sizeof(*nd_opt_rh) < m0->m_pkthdr.len) {
-		/* not enough room, truncate */
-		m0->m_pkthdr.len = m0->m_len = len - sizeof(*nd_opt_rh);
-	} else {
-		/* enough room, pad or truncate */
-		size_t extra;
-
-		extra = m0->m_pkthdr.len % 8;
-		if (extra) {
-			/* pad if easy enough, truncate if not */
-			if (8 - extra <= M_TRAILINGSPACE(m0)) {
-				/* pad */
-				m0->m_len += (8 - extra);
-				m0->m_pkthdr.len += (8 - extra);
-			} else {
+			extra = m0->m_pkthdr.len % 8;
+			if (extra) {
 				/* truncate */
-				m0->m_pkthdr.len -= extra;
-				m0->m_len -= extra;
+				m_adj(m0, -extra);
 			}
+			len = m0->m_pkthdr.len + sizeof(*nd_opt_rh);
 		}
-		len = m0->m_pkthdr.len + sizeof(*nd_opt_rh);
-		m0->m_pkthdr.len = m0->m_len = len - sizeof(*nd_opt_rh);
+
+		nd_opt_rh = (struct nd_opt_rd_hdr *)p;
+		bzero(nd_opt_rh, sizeof(*nd_opt_rh));
+		nd_opt_rh->nd_opt_rh_type = ND_OPT_REDIRECTED_HEADER;
+		nd_opt_rh->nd_opt_rh_len = len >> 3;
+		p += sizeof(*nd_opt_rh);
+		m->m_pkthdr.len = m->m_len = p - (u_char *)ip6;
+
+		/* connect m0 to m */
+		m_cat(m, m0);
+		m->m_pkthdr.len += m0->m_pkthdr.len;
+		m0 = NULL;
 	}
-
-	nd_opt_rh = (struct nd_opt_rd_hdr *)p;
-	bzero(nd_opt_rh, sizeof(*nd_opt_rh));
-	nd_opt_rh->nd_opt_rh_type = ND_OPT_REDIRECTED_HEADER;
-	nd_opt_rh->nd_opt_rh_len = len >> 3;
-	p += sizeof(*nd_opt_rh);
-	m->m_pkthdr.len = m->m_len = p - (u_char *)ip6;
-
-	/* connect m0 to m */
-	m->m_next = m0;
-	m->m_pkthdr.len = m->m_len + m0->m_len;
-	m0 = NULL;
-    }
-noredhdropt:;
+noredhdropt:
 	if (m0) {
 		m_freem(m0);
 		m0 = NULL;

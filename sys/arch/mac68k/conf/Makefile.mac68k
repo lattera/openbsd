@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/Makefile.mac68k,v 1.20.8.4 2003/05/16 00:29:39 niklas Exp $
+#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/Makefile.mac68k,v 1.20.8.5 2003/06/07 11:13:13 ho Exp $
 #	$NetBSD: Makefile.mac68k,v 1.53 1997/04/15 06:11:38 scottr Exp $
 
 # Makefile for OpenBSD
@@ -149,7 +149,7 @@ clean::
 
 lint:
 	@lint -hbxncez -DGENERIC -Dvolatile= ${CPPFLAGS} ${PARAM} -UKGDB \
-	    ${CFILES} ${MAC68K}/mac68k/swapgeneric.c ioconf.c param.c | \
+	    ${CFILES} ioconf.c param.c | \
 	    grep -v 'static function .* unused'
 
 tags:

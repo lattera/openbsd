@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/cdboot/cdboot.c,v 1.3.2.1 2003/05/12 19:55:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/cdboot/cdboot.c,v 1.3.2.2 2003/06/07 11:11:36 ho Exp $	*/
 
 /*
  * Copyright (c) 2003 Michael Shalayeff
@@ -45,6 +45,7 @@
 
 dev_t bootdev;
 int debug = 1;
+int bootprompt = 1;
 
 struct fs_ops file_system[] = {
 	{ cd9660_open, cd9660_close, cd9660_read, cd9660_write, cd9660_seek,

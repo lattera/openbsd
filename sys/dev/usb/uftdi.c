@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.2.4 2003/05/13 19:35:12 ho Exp $ 	*/
-/*	$NetBSD: uftdi.c,v 1.13 2002/09/23 05:51:23 simonb Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.2.5 2003/06/07 11:02:33 ho Exp $ 	*/
+/*	$NetBSD: uftdi.c,v 1.14 2003/02/23 04:20:07 simonb Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -279,12 +279,11 @@ int
 uftdi_detach(device_ptr_t self, int flags)
 {
 	struct uftdi_softc *sc = (struct uftdi_softc *)self;
-	int rv = 0;
 
 	DPRINTF(("uftdi_detach: sc=%p flags=%d\n", sc, flags));
 	sc->sc_dying = 1;
 	if (sc->sc_subdev != NULL) {
-		rv = config_detach(sc->sc_subdev, flags);
+		config_detach(sc->sc_subdev, flags);
 		sc->sc_subdev = NULL;
 	}
 

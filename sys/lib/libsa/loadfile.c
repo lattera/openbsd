@@ -1,5 +1,5 @@
 /* $NetBSD: loadfile.c,v 1.10 2000/12/03 02:53:04 tsutsui Exp $ */
-/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.2.3 2003/05/13 19:21:29 ho Exp $ */
+/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.2.4 2003/06/07 11:03:42 ho Exp $ */
 
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -53,11 +53,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -127,7 +123,7 @@ loadfile(fname, marks, flags)
 #ifdef BOOT_AOUT
 		struct exec aout;
 #endif
-		
+
 	} hdr;
 	ssize_t nr;
 	int fd, rval;
@@ -457,7 +453,7 @@ aout_exec(fd, x, marks, flags)
 		sub = 0;
 	else
 		sub = sizeof(*x);
-	
+
 	minp = maxp = ALIGNENTRY(entry);
 
 	if (lseek(fd, sizeof(*x), SEEK_SET) == -1)  {

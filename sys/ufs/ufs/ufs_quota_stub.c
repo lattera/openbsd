@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota_stub.c,v 1.1.2.1 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota_stub.c,v 1.1.2.2 2003/06/07 11:09:09 ho Exp $	*/
 
 #include <sys/param.h>
 #include <sys/kernel.h>
@@ -24,13 +24,13 @@ getinoquota(struct inode *ip) {
 }
 
 int
-ufs_quota_alloc_blocks2(struct inode *ip, ufs_daddr_t change, 
+ufs_quota_alloc_blocks2(struct inode *ip, daddr_t change, 
     struct ucred *cred, enum ufs_quota_flags flags) {
 	return (0);
 }
 
 int
-ufs_quota_free_blocks2(struct inode *ip, ufs_daddr_t change, 
+ufs_quota_free_blocks2(struct inode *ip, daddr_t change, 
     struct ucred *cred, enum ufs_quota_flags flags) {
 	return (0);
 }

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libsa/Makefile,v 1.19.14.1 2001/07/04 10:49:02 niklas Exp $
+#	$OpenBSD: src/sys/lib/libsa/Makefile,v 1.19.14.2 2003/06/07 11:03:42 ho Exp $
 #	$NetBSD: Makefile,v 1.13 1996/10/02 16:19:51 ws Exp $
 
 LIB=	sa
@@ -25,8 +25,9 @@ CPPFLAGS+= -D__INTERNAL_LIBSA_CREAD
 .endif
 
 # stand routines
-SRCS+=	alloc.c memcpy.c exit.c exec.c getfile.c gets.c globals.c printf.c \
-	strerror.c strcmp.c memset.c memcmp.c strncpy.c strncmp.c strchr.c
+SRCS+=	alloc.c memcpy.c exit.c exec.c getfile.c gets.c globals.c \
+	printf.c snprintf.c strerror.c strcmp.c memset.c memcmp.c \
+	strncpy.c strncmp.c strchr.c
 
 # math from libkern
 SRCS+=	divdi3.c qdivrem.c

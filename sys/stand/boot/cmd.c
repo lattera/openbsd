@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/cmd.c,v 1.46.2.2 2003/03/28 00:08:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/cmd.c,v 1.46.2.3 2003/06/07 11:07:44 ho Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -12,14 +12,9 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
@@ -35,6 +30,7 @@
 #include <sys/param.h>
 #include <libsa.h>
 #include <sys/reboot.h>
+#include <lib/libkern/funcs.h>
 #include "cmd.h"
 
 #define CTRL(c)	((c)&0x1f)
@@ -122,9 +118,9 @@ read_conf()
 
 		cmd.cmd = NULL;
 
-		do
+		do {
 			eof = read(fd, p, 1);
-		while (eof > 0 && *p++ != '\n');
+		} while (eof > 0 && *p++ != '\n');
 
 		if (eof < 0)
 			printf("%s: %s\n", cmd.path, strerror(errno));
@@ -239,12 +235,13 @@ readline(buf, n, to)
 				break;
 
 		if (!cnischar()) {
-			strncpy(buf, "boot", 5);
+			strlcpy(buf, "boot", 5);
 			putchar('\n');
 			return strlen(buf);
 		}
 	} else
-		while (!cnischar()) ;
+		while (!cnischar())
+			;
 
 	while (1) {
 		switch ((ch = getchar())) {
@@ -283,7 +280,7 @@ readline(buf, n, to)
 /*
  * Search for spaces/tabs after the current word. If found, \0 the
  * first one.  Then pass a pointer to the first character of the
- * next word, or NULL if there is no next word. 
+ * next word, or NULL if there is no next word.
  */
 char *
 nextword(p)
@@ -407,7 +404,8 @@ Xls()
 		}
 
 		/* no strlen in lib !!! */
-		for (p = cmd.path; *p; p++);
+		for (p = cmd.path; *p; p++)
+			;
 		*p++ = '/';
 		*p = '\0';
 
@@ -439,7 +437,7 @@ ls(name, sb)
 	lsrwx(sb->st_mode     , (sb->st_mode & S_ISTXT? "tT" : "x-"));
 
 	printf (" %u,%u\t%lu\t%s\n", sb->st_uid, sb->st_gid,
-		(u_long)sb->st_size, name);
+	    (u_long)sb->st_size, name);
 }
 #undef lsrwx
 
@@ -466,7 +464,8 @@ Xboot()
 	} else {
 		if (bootparse(1))
 			return 0;
-		sprintf(cmd.path, "%s:%s", cmd.bootdev, cmd.image);
+		snprintf(cmd.path, sizeof cmd.path, "%s:%s",
+		    cmd.bootdev, cmd.image);
 	}
 
 	return 1;
@@ -486,9 +485,10 @@ qualify(name)
 		if (*p == ':')
 			break;
 	if (*p == ':')
-		strncpy(cmd.path, name, sizeof(cmd.path));
+		strlcpy(cmd.path, name, sizeof(cmd.path));
 	else
-		sprintf(cmd.path, "%s:%s", cmd.bootdev, name);
+		snprintf(cmd.path, sizeof cmd.path, "%s:%s",
+		    cmd.bootdev, name);
 	return cmd.path;
 }
 

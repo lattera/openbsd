@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/promdev.c,v 1.2.6.3 2003/03/27 23:49:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/promdev.c,v 1.2.6.4 2003/06/07 11:14:44 ho Exp $	*/
 /*	$NetBSD: promdev.c,v 1.16 1995/11/14 15:04:01 pk Exp $ */
 
 /*
@@ -534,7 +534,7 @@ prom_getether(fd, ea)
 		(void)(*promvec->pv_enaddr)(fd, (char *)ea);
 	} else {
 		char buf[64];
-		sprintf(buf, "%x mac-address drop swap 6 cmove", ea);
+		snprintf(buf, sizeof buf, "%x mac-address drop swap 6 cmove", ea);
 		promvec->pv_fortheval.v2_eval(buf);
 	}
 }

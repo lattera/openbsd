@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/pci_machdep.h,v 1.4.4.2 2003/03/27 23:42:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/pci_machdep.h,v 1.4.4.3 2003/06/07 11:14:45 ho Exp $	*/
 /* $NetBSD: pci_machdep.h,v 1.7 2001/07/20 00:07:14 eeh Exp $ */
 
 /*
@@ -74,7 +74,7 @@ struct sparc_pci_chipset {
 	bus_space_handle_t	bushandle;
 	int			rootnode;	/* PCI controller */
 	int			curnode;	/* Current OFW node */
-
+	int (*intr_map)(struct pci_attach_args *, pci_intr_handle_t *);
 };
 
 void		pci_attach_hook(struct device *, struct device *,

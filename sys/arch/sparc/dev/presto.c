@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/presto.c,v 1.1.2.1 2003/05/12 19:58:48 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/presto.c,v 1.1.2.2 2003/06/07 11:14:43 ho Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -113,7 +113,7 @@ presto_attach(struct device *parent, struct device *self, void *args)
 	/* Get card parameters */
 	model = getpropstring(ca->ca_ra.ra_node, "model");
 	if (*model == '\0')
-		submodel = "fictious";
+		submodel = "fictitious";
 	else {
 		submodel = memchr(model, ',', strlen(model));
 		if (submodel != NULL)
@@ -368,7 +368,7 @@ prestoioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *proc)
 }
 
 /*
- * Read the disklabel. If none is present, use a fictious one instead.
+ * Read the disklabel. If none is present, use a fictitious one instead.
  */
 void
 presto_getdisklabel(struct presto_softc *sc)

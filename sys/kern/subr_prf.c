@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.16 2003/05/29 14:35:58 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.17 2003/06/07 11:03:40 ho Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -18,11 +18,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -62,7 +58,7 @@
 
 /*
  * note that stdarg.h and the ansi style va_start macro is used for both
- * ansi and traditional c complers.
+ * ansi and traditional c compilers.
  */
 #include <machine/stdarg.h>
 
@@ -311,7 +307,7 @@ splassert_fail(int wantipl, int haveipl, const char *func)
 void
 log(int level, const char *fmt, ...)
 {
-	register int s;
+	int s;
 	va_list ap;
 
 	s = splhigh();
@@ -333,8 +329,7 @@ log(int level, const char *fmt, ...)
  */
 
 void
-logpri(level)
-	int level;
+logpri(int level)
 {
 	char *p;
 	char snbuf[KPRINTF_BUFSIZE];
@@ -353,7 +348,7 @@ logpri(level)
 int
 addlog(const char *fmt, ...)
 {
-	register int s;
+	int s;
 	va_list ap;
 
 	s = splhigh();
@@ -378,10 +373,7 @@ addlog(const char *fmt, ...)
  *	for inspection later (e.g. dmesg/syslog)
  */
 void
-kputchar(c, flags, tp)
-	register int c;
-	int flags;
-	struct tty *tp;
+kputchar(int c, int flags, struct tty *tp)
 {
 	extern int msgbufmapped;
 	struct msgbuf *mbp;
@@ -431,7 +423,7 @@ kputchar(c, flags, tp)
 void
 uprintf(const char *fmt, ...)
 {
-	register struct proc *p = curproc;
+	struct proc *p = curproc;
 	va_list ap;
 
 	if (p->p_flag & P_CONTROLT && p->p_session->s_ttyvp) {
@@ -457,8 +449,7 @@ uprintf(const char *fmt, ...)
  */
 
 tpr_t
-tprintf_open(p)
-	register struct proc *p;
+tprintf_open(struct proc *p)
 {
 
 	if (p->p_flag & P_CONTROLT && p->p_session->s_ttyvp) {
@@ -473,8 +464,7 @@ tprintf_open(p)
  */
 
 void
-tprintf_close(sess)
-	tpr_t sess;
+tprintf_close(tpr_t sess)
 {
 
 	if (sess)
@@ -490,7 +480,7 @@ tprintf_close(sess)
 void
 tprintf(tpr_t tpr, const char *fmt, ...)
 {
-	register struct session *sess = (struct session *)tpr;
+	struct session *sess = (struct session *)tpr;
 	struct tty *tp = NULL;
 	int flags = TOLOG;
 	va_list ap;
@@ -580,64 +570,18 @@ printf(const char *fmt, ...)
  *	va_list]
  */
 
-void
-vprintf(fmt, ap)
-	const char *fmt;
-	va_list ap;
+int
+vprintf(const char *fmt, va_list ap)
 {
-	int savintr;
+	int savintr, retval;
 
 	savintr = consintr;		/* disable interrupts */
 	consintr = 0;
-	kprintf(fmt, TOCONS | TOLOG, NULL, NULL, ap);
+	retval = kprintf(fmt, TOCONS | TOLOG, NULL, NULL, ap);
 	if (!panicstr)
 		logwakeup();
 	consintr = savintr;		/* reenable interrupts */
-}
-
-__warn_references(sprintf,
-    "warning: sprintf() is often misused, please use snprintf()");
-
-/*
- * sprintf: print a message to a buffer
- */
-int
-sprintf(char *buf, const char *fmt, ...)
-{
-	int retval;
-	va_list ap;
-
-	va_start(ap, fmt);
-	retval = kprintf(fmt, TOBUFONLY, NULL, buf, ap);
-	va_end(ap);
-	*(buf + retval) = 0;	/* null terminate */
-	return(retval);
-}
-
-__warn_references(vsprintf,
-    "warning: vsprintf() is often misused, please use vsnprintf()");
-
-/*
- * vsprintf: print a message to the provided buffer [already have a
- *	va_list]
- */
-int
-vsprintf(buf, fmt, ap)
-	char *buf;
-	const char *fmt;
-	va_list ap;
-{
-	int savintr;
-	int len;
-
-	savintr = consintr;		/* disable interrupts */
-	consintr = 0;
-	len = kprintf(fmt, TOBUFONLY, NULL, buf, ap);
-	if (!panicstr)
-		logwakeup();
-	consintr = savintr;		/* reenable interrupts */
-	buf[len] = 0;
-	return (len);
+	return (retval);
 }
 
 /*
@@ -665,11 +609,7 @@ snprintf(char *buf, size_t size, const char *fmt, ...)
  * vsnprintf: print a message to a buffer [already have va_alist]
  */
 int
-vsnprintf(buf, size, fmt, ap)
-	char *buf;
-	size_t size;
-	const char *fmt;
-	va_list ap;
+vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 {
 	int retval;
 	char *p;
@@ -774,12 +714,7 @@ vsnprintf(buf, size, fmt, ap)
 } while(0)
 
 int
-kprintf(fmt0, oflags, vp, sbuf, ap)
-	const char *fmt0;
-	int oflags;
-	void *vp;
-	char *sbuf;
-	va_list ap;
+kprintf(const char *fmt0, int oflags, void *vp, char *sbuf, va_list ap)
 {
 	char *fmt;		/* format string */
 	int ch;			/* character from fmt */

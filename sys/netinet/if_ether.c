@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.9 2003/05/13 19:36:16 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.19.2.10 2003/06/07 11:06:08 ho Exp $	*/
 /*	$NetBSD: if_ether.c,v 1.31 1996/05/11 12:59:58 mycroft Exp $	*/
 
 /*
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -144,6 +140,8 @@ arp_rtrequest(req, rt, info)
 	register struct sockaddr *gate = rt->rt_gateway;
 	register struct llinfo_arp *la = (struct llinfo_arp *)rt->rt_llinfo;
 	static struct sockaddr_dl null_sdl = {sizeof(null_sdl), AF_LINK};
+	struct in_ifaddr *ia;
+	struct ifaddr *ifa;
 
 	if (!arpinit_done) {
 		static struct timeout arptimer_to;
@@ -252,8 +250,14 @@ arp_rtrequest(req, rt, info)
 		la->la_rt = rt;
 		rt->rt_flags |= RTF_LLINFO;
 		LIST_INSERT_HEAD(&llinfo_arp, la, la_list);
-		if (SIN(rt_key(rt))->sin_addr.s_addr ==
-		    (IA_SIN(rt->rt_ifa))->sin_addr.s_addr) {
+
+		TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
+			if (ia->ia_ifp == rt->rt_ifp &&
+			    SIN(rt_key(rt))->sin_addr.s_addr ==
+			    (IA_SIN(ia))->sin_addr.s_addr)
+				break;
+		}
+		if (ia) {
 			/*
 			 * This test used to be
 			 *	if (lo0ifp->if_flags & IFF_UP)
@@ -264,6 +268,12 @@ arp_rtrequest(req, rt, info)
 			 * packets they send.  It is now necessary to clear
 			 * "useloopback" and remove the route to force
 			 * traffic out to the hardware.
+			 *
+			 * In 4.4BSD, the above "if" statement checked
+			 * rt->rt_ifa against rt_key(rt).  It was changed
+			 * to the current form so that we can provide a
+			 * better support for multiple IPv4 addresses on a
+			 * interface.
 			 */
 			rt->rt_expire = 0;
 			Bcopy(((struct arpcom *)rt->rt_ifp)->ac_enaddr,
@@ -271,6 +281,17 @@ arp_rtrequest(req, rt, info)
 			    SDL(gate)->sdl_alen = ETHER_ADDR_LEN);
 			if (useloopback)
 				rt->rt_ifp = lo0ifp;
+			/*
+			 * make sure to set rt->rt_ifa to the interface
+			 * address we are using, otherwise we will have trouble
+			 * with source address selection.
+			 */
+			ifa = &ia->ia_ifa;
+			if (ifa != rt->rt_ifa) {
+				IFAFREE(rt->rt_ifa);
+				ifa->ifa_refcnt++;
+				rt->rt_ifa = ifa;
+			}
 		}
 		break;
 

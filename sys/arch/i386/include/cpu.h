@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.15 2003/05/18 17:41:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.16 2003/06/07 11:11:37 ho Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -16,11 +16,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -254,7 +250,7 @@ extern u_quad_t pentium_base_tsc;
 	do {								\
 		if (pentium_mhz) {					\
 			__asm __volatile("cli\n"			\
-					 ".byte 0xf, 0x31\n"		\
+					 "rdtsc\n"			\
 					 "sti\n"			\
 					 : "=A" (pentium_base_tsc)	\
 					 : );				\

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/stand/libsa/Makefile,v 1.1 1997/09/17 10:46:23 downsj Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/libsa/Makefile,v 1.1.12.1 2003/06/07 11:14:44 ho Exp $
 
 LIB=	sa
 
@@ -11,7 +11,7 @@ CFLAGS= -O2 -D__INTERNAL_LIBSA_CREAD \
 
 # stand routines
 SRCS=	alloc.c exit.c exec.c getfile.c gets.c globals.c \
-	memcmp.c memcpy.c memset.c printf.c strerror.c strncpy.c
+	memcmp.c memcpy.c memset.c printf.c snprintf.c strerror.c strncpy.c
 
 # io routines
 SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \
