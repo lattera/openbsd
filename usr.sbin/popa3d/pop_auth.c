@@ -1,4 +1,4 @@
-/* $OpenBSD: src/libexec/popa3d/Attic/pop_auth.c,v 1.2 2001/08/13 20:19:33 camield Exp $ */
+/* $OpenBSD: src/usr.sbin/popa3d/Attic/pop_auth.c,v 1.1 2001/08/19 13:05:57 deraadt Exp $ */
 
 /*
  * AUTHORIZATION state handling.
