@@ -6,7 +6,7 @@
 .\" this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
 .\" ----------------------------------------------------------------------------
 .\"
-.\" $Id: problems.ms,v 1.1 1996/04/13 08:30:21 phk Exp $
+.\" $OpenBSD: src/share/doc/papers/malloc/Attic/problems.ms,v 1.2 1997/01/05 22:18:11 tholo Exp $
 .\"
 .ds RH The problems
 .NH

@@ -6,7 +6,7 @@
 .\" this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
 .\" ----------------------------------------------------------------------------
 .\"
-.\" $Id: performance.ms,v 1.2 1996/11/14 08:10:31 phk Exp $
+.\" $OpenBSD: src/share/doc/papers/malloc/Attic/performance.ms,v 1.2 1997/01/05 22:18:10 tholo Exp $
 .\"
 .ds RH Performance
 .NH

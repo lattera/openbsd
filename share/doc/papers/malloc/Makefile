@@ -1,5 +1,5 @@
 #	From: @(#)Makefile	6.3 (Berkeley) 6/8/93
-#	$Id: Makefile,v 1.1 1996/04/13 08:30:07 phk Exp $
+#	$OpenBSD: src/share/doc/papers/malloc/Attic/Makefile,v 1.2 1997/01/05 22:18:05 tholo Exp $
 
 VOLUME=	papers
 DOC=	malloc
