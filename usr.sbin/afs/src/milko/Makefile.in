@@ -1,0 +1,48 @@
+# $Id: Makefile.in,v 1.48 1999/05/30 00:56:41 lha Exp $
+
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+SHELL		= /bin/sh
+
+SUBDIRS		= lib appl fs vldb pts bos
+
+all:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+clean:
+		SUBDIRS='$(SUBDIRS)'; \
+		 for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+realclean:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+distclean:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+mostlyclean:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+install:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+uninstall:
+		SUBDIRS='$(SUBDIRS)'; \
+		for i in $$SUBDIRS; \
+		do (cd $$i && $(MAKE) $(MFLAGS) $@) || exit 1; done
+
+Makefile:	Makefile.in ../config.status
+		cd .. ; CONFIG_FILES=milko/Makefile CONFIG_HEADERS= $(SHELL) config.status
+
+.PHONY: all clean realclean distclean mostlyclean install uninstall
