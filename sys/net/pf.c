@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.163.2.2 2001/12/05 19:47:39 jason Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.163.2.3 2001/12/13 19:52:37 jason Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1007,6 +1007,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 	if (!(flags & FWRITE))
 		return (EACCES);
 
+	/* XXX keep in sync with switch() below */
 	if (securelevel > 1)
 		switch (cmd) {
 		case DIOCSTART:
@@ -1026,6 +1027,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		case DIOCCLRSTATES:
 		case DIOCCHANGERULE:
 		case DIOCCHANGENAT:
+		case DIOCCHANGEBINAT:
 		case DIOCCHANGERDR:
 		case DIOCSETTIMEOUT:
 			return EPERM;
@@ -1885,6 +1887,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		    n = pf_tree_next(n))
 			n->state->expire = 0;
 		pf_purge_expired_states();
+		pf_status.states = 0;
 		splx(s);
 		break;
 	}
