@@ -18,7 +18,7 @@ agent connections.
 */
 
 #include "includes.h"
-RCSID("$Id: sshd.c,v 1.30 1999/10/12 18:11:55 markus Exp $");
+RCSID("$Id: sshd.c,v 1.31 1999/10/14 18:17:42 markus Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -596,6 +596,8 @@ main(int ac, char **av)
 
 	  /* Mark that the key has been used (it was "given" to the child). */
 	  key_used = 1;
+
+	  arc4random_stir();
 
 	  /* Close the new socket (the child is now taking care of it). */
 	  close(newsock);
