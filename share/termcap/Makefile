@@ -1,5 +1,5 @@
+#	$OpenBSD: src/share/termcap/Attic/Makefile,v 1.3 1996/04/24 23:45:04 mickey Exp $
 #	from: @(#)Makefile	5.14 (Berkeley) 9/15/92
-#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:44:48 deraadt Exp $
 
 MAN=	termcap.5
 
