@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ld.so/ldd/ldd.c,v 1.7 2001/07/09 07:04:42 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/ld.so/ldd/ldd.c,v 1.8 2002/02/20 03:56:48 jason Exp $	*/
 /*
  * Copyright (c) 2001 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
@@ -59,7 +59,7 @@ main(int argc, char **argv)
 	}
 
 	if (xflag)
-		errx(1, "-x not yet implemented\n");
+		errx(1, "-x not yet implemented");
 
 	argc -= optind;
 	argv += optind;
