@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arc/arc/Attic/vm_machdep.c,v 1.3 1996/12/09 00:13:49 imp Exp $	*/
+/*	$OpenBSD: src/sys/arch/arc/arc/Attic/vm_machdep.c,v 1.4 1997/03/23 11:34:31 pefo Exp $	*/
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -39,7 +39,7 @@
  * from: Utah Hdr: vm_machdep.c 1.21 91/04/06
  *
  *	from: @(#)vm_machdep.c	8.3 (Berkeley) 1/4/94
- *      $Id: vm_machdep.c,v 1.2 1996/08/26 11:11:57 pefo Exp $
+ *      $Id: vm_machdep.c,v 1.3 1996/12/09 00:13:49 imp Exp $
  */
 
 #include <sys/param.h>
@@ -55,9 +55,6 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
-#if 0
-#include <vm/vm_object.h>
-#endif
 
 #include <machine/pte.h>
 #include <machine/cpu.h>
