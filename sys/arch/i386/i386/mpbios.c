@@ -95,7 +95,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mpbios.c,v 1.1.2.4 2000/02/29 13:20:07 sommerfeld Exp $
+ *	$Id: mpbios.c,v 1.1.2.1 2001/07/14 10:02:29 ho Exp $
  */
 
 /*
@@ -406,9 +406,8 @@ inline static void
 mpbios_unmap (handle)
 	struct mp_map *handle;
 {
-	bus_addr_t curaddr;
   	/* pmap_kremove (handle->baseva, handle->vsize); */
-  	pmap_extract(pmap_kernel(), handle->baseva, (paddr_t *)&curaddr);
+  	pmap_extract(pmap_kernel(), handle->baseva, NULL);
 	uvm_km_free (kernel_map, handle->baseva, handle->vsize);
 }
 
@@ -1221,7 +1220,6 @@ mpbios_cpu_start(struct cpu_info *ci)
 {
 	int error;
 	unsigned short dwordptr[2];
-	bus_addr_t curaddr;
 
 	/*
 	 * "The BSP must initialize CMOS shutdown code to 0Ah ..."
@@ -1243,7 +1241,7 @@ mpbios_cpu_start(struct cpu_info *ci)
 		    VM_PROT_READ|VM_PROT_WRITE);
 	memcpy ((u_int8_t *) 0x467, dwordptr, 4);
 	/* pmap_kremove (0, NBPG); */
-	pmap_extract (pmap_kernel(), 0, (paddr_t *)&curaddr);
+	pmap_extract (pmap_kernel(), 0, NULL);
 	
 	/*
 	 * ... prior to executing the following sequence:"
