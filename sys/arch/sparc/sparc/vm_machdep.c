@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.1 2000/02/20 11:56:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.2 2000/02/21 22:29:04 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -164,6 +164,8 @@ dvma_free(dva, len, kaddr)
 	free((void *)kva, M_DEVBUF);
 }
 
+u_long dvma_cachealign = 0;
+
 /*
  * Map a range [va, va+len] of wired virtual addresses in the given map
  * to a kernel address in DVMA space.
@@ -177,22 +179,26 @@ dvma_mapin(map, va, len, canwait)
 	vaddr_t	kva, tva;
 	int npf, s;
 	paddr_t pa;
-	long off;
-	vaddr_t	ova;
-	int		olen;
+	vaddr_t off;
+	vaddr_t ova;
+	int olen;
 	int error;
+
+	if (dvma_cachealign == 0)
+	        dvma_cachealign = PAGE_SIZE;
 
 	ova = va;
 	olen = len;
 
-	off = (int)va & PGOFSET;
-	va -= off;
+	off = va & PAGE_MASK;
+	va &= ~PAGE_MASK;
 	len = round_page(len + off);
 	npf = btoc(len);
 
 	s = splhigh();
-	error = extent_alloc(dvmamap_extent, len, PAGE_SIZE, 0,
-			     canwait ? EX_WAITSPACE : 0, &tva);
+	error = extent_alloc1(dvmamap_extent, len, dvma_cachealign, 
+			      va & (dvma_cachealign - 1), 0,
+			      canwait ? EX_WAITSPACE : 0, &tva);
 	splx(s);
 	if (error)
 		return NULL;
@@ -413,7 +419,7 @@ cpu_fork(p1, p2, stack, stacksize)
 
 	bcopy((caddr_t)opcb, (caddr_t)npcb, sizeof(struct pcb));
 	if (p1->p_md.md_fpstate) {
-		if (p1 == fpproc)
+		if (p1 == cpuinfo.fpproc)
 			savefpstate(p1->p_md.md_fpstate);
 		p2->p_md.md_fpstate = malloc(sizeof(struct fpstate),
 		    M_SUBPROC, M_WAITOK);
@@ -521,9 +527,9 @@ cpu_exit(p)
 	register struct fpstate *fs;
 
 	if ((fs = p->p_md.md_fpstate) != NULL) {
-		if (p == fpproc) {
+		if (p == cpuinfo.fpproc) {
 			savefpstate(fs);
-			fpproc = NULL;
+			cpuinfo.fpproc = NULL;
 		}
 		free((void *)fs, M_SUBPROC);
 	}
@@ -558,7 +564,7 @@ cpu_coredump(p, vp, cred, chdr)
 
 	md_core.md_tf = *p->p_md.md_tf;
 	if (p->p_md.md_fpstate) {
-		if (p == fpproc)
+		if (p == cpuinfo.fpproc)
 			savefpstate(p->p_md.md_fpstate);
 		md_core.md_fpstate = *p->p_md.md_fpstate;
 	} else

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9 1999/11/17 05:21:18 jason Exp $	*/
-/* $FreeBSD: src/sys/pci/if_tx.c,v 1.33 1999/10/29 09:56:51 semenu Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.1 2000/02/21 22:29:13 niklas Exp $	*/
+/* $FreeBSD: src/sys/pci/if_tx.c,v 1.34 1999/12/21 11:14:10 eivind Exp $ */
 
 /*-
  * Copyright (c) 1997 Semen Ustimenko (semen@iclub.nsu.ru)
@@ -56,7 +56,7 @@
 	{ MGETHDR((m),M_DONTWAIT,MT_DATA); \
 	  if (m) { \
 	    MCLGET((m),M_DONTWAIT); \
-	    if( NULL == ((m)->m_flags & M_EXT) ){ \
+	    if( 0 == ((m)->m_flags & M_EXT) ){ \
 	      m_freem(m); \
 	      (m) = NULL; \
 	    } \

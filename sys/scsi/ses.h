@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/scsi/ses.h,v 1.1 2000/02/21 08:23:30 mjacob Exp $ */
+/* $OpenBSD: src/sys/scsi/ses.h,v 1.1.2.1 2000/02/21 22:29:15 niklas Exp $ */
 /* $NetBSD: ses.h,v 1.1 2000/01/20 17:07:41 mjacob Exp $ */
 /*
  * Copyright (C) 2000 National Aeronautics & Space Administration

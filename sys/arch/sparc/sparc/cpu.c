@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.1 2000/02/20 11:56:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.2 2000/02/21 22:29:02 niklas Exp $	*/
 /*	$NetBSD: cpu.c,v 1.56 1997/09/15 20:52:36 pk Exp $ */
 
 /*
@@ -82,7 +82,6 @@ char	cpu_hotfix[40];
 extern char mainbus_model[];		/* from autoconf.c */
 
 int	foundfpu;			/* from machine/cpu.h */
-struct proc *fpproc;			/* XXX - should be in cpuinfo */
 
 /* The CPU configuration driver. */
 void cpu_attach __P((struct device *, struct device *, void *));
@@ -381,13 +380,18 @@ void viking_mmu_enable __P((void));
 void swift_mmu_enable __P((void));
 void hypersparc_mmu_enable __P((void));
 
-void srmmu_get_fltstatus __P((void));
-void ms1_get_fltstatus __P((void));
-void viking_get_fltstatus __P((void));
-void swift_get_fltstatus __P((void));
-void turbosparc_get_fltstatus __P((void));
-void hypersparc_get_fltstatus __P((void));
-void cypress_get_fltstatus __P((void));
+void srmmu_get_syncflt __P((void));
+void ms1_get_syncflt __P((void));
+void viking_get_syncflt __P((void));
+void swift_get_syncflt __P((void));
+void turbosparc_get_syncflt __P((void));
+void hypersparc_get_syncflt __P((void));
+void cypress_get_syncflt __P((void));
+
+int srmmu_get_asyncflt __P((u_int *, u_int *));
+int hypersparc_get_asyncflt __P((u_int *, u_int *));
+int cypress_get_asyncflt __P((u_int *, u_int *));
+int no_asyncflt_regs __P((u_int *, u_int *));
 
 struct module_info module_unknown = {
 	CPUTYP_UNKNOWN,
@@ -418,7 +422,8 @@ struct module_info module_sun4 = {
 	0,
 	sun4_cache_enable,
 	0,			/* ncontext set in `match' function */
-	0,			/* get fault regs: unused */
+	0,			/* get_syncflt(); unused in sun4 */
+	0,			/* get_asyncflt(); unused in sun4 */
 	sun4_cache_flush,
 	sun4_vcache_flush_page,
 	sun4_vcache_flush_segment,
@@ -543,7 +548,8 @@ struct module_info module_sun4c = {
 	0,
 	sun4_cache_enable,
 	0,			/* ncontext set in `match' function */
-	0,
+	0,			/* get_syncflt(); unused in sun4c */
+	0,			/* get_asyncflt(); unused in sun4c */
 	sun4_cache_flush,
 	sun4_vcache_flush_page,
 	sun4_vcache_flush_segment,
@@ -740,7 +746,8 @@ struct module_info module_ms1 = {
 	ms1_mmu_enable,
 	ms1_cache_enable,
 	64,
-	ms1_get_fltstatus,
+	ms1_get_syncflt,
+	no_asyncflt_regs,
 	ms1_cache_flush,
 	noop_vcache_flush_page,
 	noop_vcache_flush_segment,
@@ -767,7 +774,8 @@ struct module_info module_ms2 = {		/* UNTESTED */
 	0,
 	swift_cache_enable,
 	256,
-	srmmu_get_fltstatus,
+	srmmu_get_syncflt,
+	srmmu_get_asyncflt,
 	srmmu_cache_flush,
 	srmmu_vcache_flush_page,
 	srmmu_vcache_flush_segment,
@@ -789,7 +797,8 @@ struct module_info module_swift = {		/* UNTESTED */
 	0,
 	swift_cache_enable,
 	256,
-	swift_get_fltstatus,
+	swift_get_syncflt,
+	no_asyncflt_regs,
 	srmmu_cache_flush,
 	srmmu_vcache_flush_page,
 	srmmu_vcache_flush_segment,
@@ -835,7 +844,8 @@ struct module_info module_viking = {		/* UNTESTED */
 	viking_mmu_enable,
 	viking_cache_enable,
 	4096,
-	viking_get_fltstatus,
+	viking_get_syncflt,
+	no_asyncflt_regs,
 	/* supersparcs use cached DVMA, no need to flush */
 	noop_cache_flush,
 	noop_vcache_flush_page,
@@ -911,14 +921,15 @@ viking_mmu_enable()
 /* ROSS Hypersparc */
 struct module_info module_hypersparc = {		/* UNTESTED */
 	CPUTYP_UNKNOWN,
-	VAC_NONE,
+	VAC_WRITEBACK,
 	cpumatch_hypersparc,
 	getcacheinfo_obp,
 	0,
 	hypersparc_mmu_enable,
 	hypersparc_cache_enable,
 	4096,
-	hypersparc_get_fltstatus,
+	hypersparc_get_syncflt,
+	hypersparc_get_asyncflt,
 	srmmu_cache_flush,
 	srmmu_vcache_flush_page,
 	srmmu_vcache_flush_segment,
@@ -937,7 +948,9 @@ cpumatch_hypersparc(sc, mp, node)
 	int	node;
 {
 	sc->cpu_type = CPUTYP_HS_MBUS;/*XXX*/
-	printf("warning: hypersparc support still under construction\n");
+
+	if (node == 0)
+		sta(0, ASI_HICACHECLR, 0);
 
 	replacemul();
 }
@@ -966,7 +979,8 @@ struct module_info module_cypress = {		/* UNTESTED */
 	0,
 	cypress_cache_enable,
 	4096,
-	cypress_get_fltstatus,
+	cypress_get_syncflt,
+	cypress_get_asyncflt,
 	srmmu_cache_flush,
 	srmmu_vcache_flush_page,
 	srmmu_vcache_flush_segment,
@@ -988,7 +1002,8 @@ struct module_info module_turbosparc = {	/* UNTESTED */
 	0,
 	turbosparc_cache_enable,
 	256,
-	turbosparc_get_fltstatus,
+	turbosparc_get_syncflt,
+	no_asyncflt_regs,
 	srmmu_cache_flush,
 	srmmu_vcache_flush_page,
 	srmmu_vcache_flush_segment,
@@ -1026,7 +1041,7 @@ cpumatch_turbosparc(sc, mp, node)
 	sc->hotfix = 0;
 	sc->mmu_enable = 0;
 	sc->cache_enable = 0;
-	sc->get_faultstatus = 0;
+	sc->get_syncflt = 0;
 	sc->cache_flush = 0;
 	sc->vcache_flush_page = 0;
 	sc->vcache_flush_segment = 0;
@@ -1212,7 +1227,8 @@ getcpuinfo(sc, node)
 		MPCOPY(hotfix);
 		MPCOPY(mmu_enable);
 		MPCOPY(cache_enable);
-		MPCOPY(get_faultstatus);
+		MPCOPY(get_syncflt);
+		MPCOPY(get_asyncflt);
 		MPCOPY(cache_flush);
 		MPCOPY(vcache_flush_page);
 		MPCOPY(vcache_flush_segment);
@@ -1311,25 +1327,27 @@ fsrtoname(impl, vers, fver, buf)
 void
 replacemul()
 {
-#ifdef notyet
-	extern void *_umulreplace, *_umulreplace_end;
-	extern void *_mulreplace, *_mulreplace_end;
+	extern char *_umulreplace, *_umulreplace_end;
+	extern char *_mulreplace, *_mulreplace_end;
 	extern char *_mul, *_umul;
 	int i, j, s;
+
+	return;
 
 	/*
 	 * Whack the slow sun4/sun4c umul/mul functions with
 	 * fast V8 ones
 	 */
 	s = splhigh();
-	for (i = 0; i < _umulreplace_end - _umulreplace; i += 4) {
-		j = ((int *)_umulreplace)[i];
-		pmap_writetext(_umul + (i<<2), j);
+	cpuinfo.cache_flush_all();
+	for (i = 0; i < _umulreplace_end - _umulreplace; i++) {
+		j = _umulreplace[i];
+		pmap_writetext(&_umul[i], j);
 	}
-	for (i = 0; i < _mulreplace_end - _mulreplace; i += 4) {
-		j = ((int *)_mulreplace)[i];
-		pmap_writetext(_mul + (i<<2), j);
+	for (i = 0; i < _mulreplace_end - _mulreplace; i++) {
+		j = _mulreplace[i];
+		pmap_writetext(&_mul[i], j);
 	}
+	cpuinfo.cache_flush_all();
 	splx(s);
-#endif
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/Attic/isp_tpublic.h,v 1.1 2000/02/20 21:22:40 mjacob Exp $ */
+/* $OpenBSD: src/sys/dev/ic/Attic/isp_tpublic.h,v 1.1.2.1 2000/02/21 22:29:05 niklas Exp $ */
 /*
  * Qlogic ISP Host Adapter Public Target Interface Structures && Routines
  *---------------------------------------

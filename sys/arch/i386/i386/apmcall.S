@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apmcall.S,v 1.1 2000/02/21 17:09:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apmcall.S,v 1.1.2.1 2000/02/21 22:29:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
