@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: binary.c,v 1.1 2003/06/22 22:20:07 deraadt Exp $
+ *	$Id$
  */
 
 #include <ctype.h>
@@ -54,6 +54,7 @@ bin_file(FILE *f)
 	return 0;
 }
 
+#ifndef NOZ
 int
 gzbin_file(gzFile *f)
 {
@@ -73,12 +74,13 @@ gzbin_file(gzFile *f)
 	gzrewind(f);
 	return 0;
 }
+#endif
 
 int
 mmbin_file(mmf_t *f)
 {
 	int i;
-	
+
 	/* XXX knows too much about mmf internals */
 	for (i = 0; i < BUFFER_SIZE && i < f->len; i++)
 		if (!isprint(f->base[i]))

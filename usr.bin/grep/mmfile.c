@@ -47,18 +47,18 @@ mmopen(char *fn, char *mode)
 
 	/* XXX ignore mode for now */
 	mode = mode;
-	
-	mmf = grep_malloc(sizeof *mmf);	
+
+	mmf = grep_malloc(sizeof *mmf);
 	if ((mmf->fd = open(fn, O_RDONLY)) == -1)
 		goto ouch1;
 	if (fstat(mmf->fd, &st) == -1)
 		goto ouch2;
-	if (st.st_size > SIZE_T_MAX) /* too big to mmap */		
+	if (st.st_size > SIZE_T_MAX) /* too big to mmap */
 		goto ouch2;
 	if ((st.st_mode & S_IFREG) == 0) /* only mmap regular files */
 		goto ouch2;
 	mmf->len = (size_t)st.st_size;
-	mmf->base = mmap(NULL, mmf->len, PROT_READ, MAP_PRIVATE, mmf->fd, 0);
+	mmf->base = mmap(NULL, mmf->len, PROT_READ, MAP_PRIVATE, mmf->fd, (off_t)0);
 	if (mmf->base == NULL)
 		goto ouch2;
 	mmf->ptr = mmf->base;

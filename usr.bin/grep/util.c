@@ -49,7 +49,7 @@
 static int	linesqueued;
 static int	procline(str_t *l);
 
-int 
+int
 grep_tree(char **argv)
 {
 	FTS	       *fts;
@@ -126,7 +126,7 @@ procfile(char *fn)
 		ln.line_no++;
 
 		z = tail;
-		
+
 		if ((t = procline(&ln)) == 0 && Bflag > 0 && z == 0) {
 			enqueue(&ln);
 			linesqueued++;
@@ -166,7 +166,7 @@ procline(str_t *l)
 		c = !vflag;
 		goto print;
 	}
-	
+
 	t = vflag ? REG_NOMATCH : 0;
 	pmatch.rm_so = 0;
 	pmatch.rm_eo = l->len;
@@ -190,7 +190,7 @@ procline(str_t *l)
 			break;
 		}
 	}
-	
+
 print:
 	if ((tail > 0 || c) && !cflag && !qflag) {
 		if (c) {
@@ -232,7 +232,7 @@ void
 printline(str_t *line, int sep)
 {
 	int n;
-	
+
 	n = 0;
 	if (!hflag) {
 		fputs(line->file, stdout);
