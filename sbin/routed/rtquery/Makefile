@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sbin/routed/rtquery/Attic/Makefile,v 1.1.1.1 1996/09/05 13:59:00 mickey Exp $
+#	$OpenBSD: src/sbin/routed/rtquery/Attic/Makefile,v 1.2 1996/09/22 20:48:10 millert Exp $
 #	@(#)Makefile	8.1 (Berkeley) 6/5/93
 
 PROG=	rtquery
