@@ -1,0 +1,8 @@
+#	$OpenBSD: src/sys/arch/i386/conf/Attic/MP_LOCKDEBUG,v 1.1.2.1 2004/03/18 02:10:25 niklas Exp $
+#
+#	MP_LOCKDEBUG - multiprocessor kernel for debugging locks
+#
+
+include "arch/i386/conf/GENERIC.MP"
+
+option		MP_LOCKDEBUG
