@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.11 2004/02/19 08:50:45 niklas Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.12 2004/02/19 10:57:00 niklas Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
@@ -56,7 +56,7 @@ you mainly need to carry out the following procedure.
   Readdition of files that have gone dead need to have
   the timestamp in the Entries file changed to /dummy timestamp/
   in order to be accepted by commit.  Other new files will be committed
-  but than crash before cleaning things up.  They leave the RCS file locked
+  but then crash before cleaning things up.  They leave the RCS file locked
   on cvs.openbsd.org, and the changes won't be reflected locally.
   After removing it locally, two updates are needed, the 1st to
   remove the local CVS/Entries entry, and the second to get it
