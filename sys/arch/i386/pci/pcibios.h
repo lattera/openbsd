@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/Attic/pcibios.h,v 1.4 2000/08/08 19:12:48 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/Attic/pcibios.h,v 1.5 2000/08/17 20:15:40 mickey Exp $	*/
 /*	$NetBSD: pcibios.h,v 1.2 2000/04/28 17:15:16 uch Exp $	*/
 
 /*
@@ -29,6 +29,10 @@
 /*
  * Data structure definitions for the PCI BIOS interface.
  */
+
+#define	PCIBIOS_ADDR_FIXUP	0x001
+#define	PCIBIOS_BUS_FIXUP	0x002
+#define	PCIBIOS_INTR_FIXUP	0x004
 
 /*
  * PCI BIOS return codes.
