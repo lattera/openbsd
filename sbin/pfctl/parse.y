@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.140 2002/08/12 19:36:04 dhartmei Exp $	*/
+/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.141 2002/08/16 14:14:03 henning Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -2395,7 +2395,7 @@ top:
 	(isalnum(x) || (ispunct(x) && x != '(' && x != ')' && \
 	x != '{' && x != '}' && x != '<' && x != '>' && \
 	x != '!' && x != '=' && x != '/' && x != '#' && \
-	x != ',' && x != '(' && x != ')'))
+	x != ','))
 
 	if (isalnum(c) || c == ':') {
 		do {
