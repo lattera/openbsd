@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/dkbad.c,v 1.5 2001/07/04 08:57:46 niklas Exp $	*/
 /*	$NetBSD: dkbad.c,v 1.4 1996/02/02 18:05:59 mycroft Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/db_disasm.c,v 1.6 2001/07/04 08:57:46 niklas Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.11 1996/05/03 19:41:58 christos Exp $	*/
 
 /* 
