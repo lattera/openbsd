@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.3 2000/02/25 15:14:43 hin dead $
+# $Id: Makefile,v 1.5 2000/09/04 18:01:20 hin Exp $
 
 KRBDEPTH=..
-.include <../Makefile.inc>
+.include "../Makefile.inc"
 
 .PATH:	${KRBSRC}/doc
 

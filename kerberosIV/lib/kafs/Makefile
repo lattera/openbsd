@@ -1,9 +1,9 @@
-# $OpenBSD: src/kerberosIV/lib/kafs/Attic/Makefile,v 1.5 2000/04/02 03:59:00 deraadt Exp $
+# $OpenBSD: src/kerberosIV/lib/kafs/Attic/Makefile,v 1.6 2001/01/09 02:41:17 angelos Exp $
 
 LIB	= kafs
 
 KRBDEPTH=../..
-.include <../../Makefile.inc>
+.include "../../Makefile.inc"
 
 INCLUDE_FILES	= ${KRBSRC}/lib/kafs/kafs.h
 

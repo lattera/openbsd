@@ -1,9 +1,9 @@
-# $OpenBSD: src/kerberosIV/usr.bin/kauth/Attic/Makefile,v 1.1 2000/02/25 16:35:29 hin Exp $
+# $OpenBSD: src/kerberosIV/usr.bin/kauth/Attic/Makefile,v 1.2 2001/01/09 02:41:19 angelos Exp $
 
 PROG	= kauth
 
 KRBDEPTH=../..
-.include <../../Makefile.inc>
+.include "../../Makefile.inc"
 
 .PATH:	${KRBSRC}/appl/kauth
 

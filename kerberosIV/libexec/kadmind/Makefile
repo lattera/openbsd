@@ -1,9 +1,9 @@
-# $OpenBSD: src/kerberosIV/libexec/kadmind/Attic/Makefile,v 1.2 2000/03/01 08:54:59 deraadt Exp $
+# $OpenBSD: src/kerberosIV/libexec/kadmind/Attic/Makefile,v 1.3 2001/01/09 02:41:18 angelos Exp $
 
 PROG	= kadmind
 
 KRBDEPTH=../..
-.include <../../Makefile.inc>
+.include "../../Makefile.inc"
 
 .PATH:	${KRBSRC}/kadmin
 
