@@ -1,0 +1,26 @@
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+OpenBSDfloppy
+
+		boot.mop	MOP-bootable image (for network installs); 
+				see below.
+
+DistributionDescription
+
+OpenBSDbase(44.4M,84.5M)
+
+OpenBSDcomp(12.3M,34.3M)
+
+OpenBSDetc(1.0M,3.1M)
+
+OpenBSDgame(6.0M,12.1M)
+
+OpenBSDman(5.4M,19.4M)
+
+OpenBSDmisc(1.7M,5.6M)
