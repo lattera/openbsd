@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/user/main.c,v 1.2 2000/04/24 22:31:29 jakob Exp $ */
+/* $OpenBSD: src/usr.sbin/user/main.c,v 1.3 2000/04/26 06:25:45 jakob Exp $ */
 /* $NetBSD: main.c,v 1.1 1999/12/24 09:08:50 agc Exp $ */
 
 /*
@@ -100,6 +100,5 @@ main(int argc, char **argv)
 		}
 	}
 	usermgmt_usage(__progname);
-	errx(EXIT_FAILURE, "Program `%s' not recognised", __progname);
 	/* NOTREACHED */
 }
