@@ -1,6 +1,6 @@
-# $OpenBSD: src/regress/gnu/egcs/Makefile,v 1.2 2002/02/23 01:25:10 art Exp $
+# $OpenBSD: src/regress/gnu/egcs/Makefile,v 1.3 2004/07/09 21:00:26 david Exp $
 
-SUBDIR+= gcc libiberty libf2c
+SUBDIR+= gcc gcc-bounds libiberty libf2c
 
 install:
 
