@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_ftchoice.c,v 1.1 1997/12/03 05:39:53 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,31 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_ftchoice.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
-|   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Function      :  int set_fieldtype_choice(
+|                          FIELDTYPE *typ,
+|                          bool (* const next_choice)(FIELD *,const void *),
+|                          bool (* const prev_choice)(FIELD *,const void *))
 |
-|   Return Values :  E_OK         - on success
+|   Description   :  Define implementation of enumeration requests.
+|
+|   Return Values :  E_OK           - success
+|                    E_BAD_ARGUMENT - invalid arguments
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_fieldtype_choice(FIELDTYPE * typ,
+			 bool (* const next_choice) (FIELD *,const void *),
+			 bool (* const prev_choice) (FIELD *,const void *))
 {
-  Normalize_Form(form)->usrptr = usrptr;
+  if ( !typ || !next_choice || !prev_choice ) 
+    RETURN(E_BAD_ARGUMENT);
+
+  typ->status |= _HAS_CHOICE;
+  typ->next = next_choice;
+  typ->prev = prev_choice;
   RETURN(E_OK);
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+/* fld_ftchoice.c ends here */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_move.c,v 1.1 1997/12/03 05:39:55 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,31 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_move.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int move_field(FIELD *field,int frow, int fcol)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Moves the disconnected field to the new location in
+|                    the forms subwindow.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK            - success
+|                    E_BAD_ARGUMENT  - invalid argument passed
+|                    E_CONNECTED     - field is connected
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int move_field(FIELD *field, int frow, int fcol)
 {
-  Normalize_Form(form)->usrptr = usrptr;
+  if ( !field || (frow<0) || (fcol<0) ) 
+    RETURN(E_BAD_ARGUMENT);
+
+  if (field->form) 
+    RETURN(E_CONNECTED);
+
+  field->frow = frow;
+  field->fcol = fcol;
   RETURN(E_OK);
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
+/* fld_move.c ends here */
 
-/* frm_user.c ends here */

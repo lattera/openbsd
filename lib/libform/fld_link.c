@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_link.c,v 1.1 1997/12/03 05:39:54 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,59 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_link.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  FIELD *link_field(FIELD *field, int frow, int fcol)  
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Duplicates the field at the specified position. The
+|                    new field shares its buffers with the original one,
+|                    the attributes are independent.
+|                    If an error occurs, errno is set to
+|                    
+|                    E_BAD_ARGUMENT - invalid argument
+|                    E_SYSTEM_ERROR - system error
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  Pointer to the new field or NULL if failure
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+FIELD *link_field(FIELD * field, int frow, int fcol)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  FIELD *New_Field = (FIELD *)0;
+  int err = E_BAD_ARGUMENT;
+
+  if (field && (frow>=0) && (fcol>=0) &&
+      ((err=E_SYSTEM_ERROR) != 0) && /* trick: this resets the default error */
+      (New_Field = (FIELD *)malloc(sizeof(FIELD))) )
+    {
+      *New_Field        = *_nc_Default_Field;
+      New_Field->frow   = frow;
+      New_Field->fcol   = fcol;
+      New_Field->link   = field->link;
+      field->link       = New_Field;
+      New_Field->buf    = field->buf;
+      New_Field->rows   = field->rows;
+      New_Field->cols   = field->cols;
+      New_Field->nrow   = field->nrow;
+      New_Field->nbuf   = field->nbuf;
+      New_Field->drows  = field->drows;
+      New_Field->dcols  = field->dcols;
+      New_Field->maxgrow= field->maxgrow;
+      New_Field->just   = field->just;
+      New_Field->fore   = field->fore;
+      New_Field->back   = field->back;
+      New_Field->pad    = field->pad;
+      New_Field->opts   = field->opts;
+      New_Field->usrptr = field->usrptr;
+      if (_nc_Copy_Type(New_Field,field)) 
+	return New_Field;
+    }
+
+  if (New_Field) 
+    free_field(New_Field);
+
+  SET_ERROR( err );
+  return (FIELD *)0;
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+/* fld_link.c ends here */

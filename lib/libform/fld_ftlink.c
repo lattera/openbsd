@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_ftlink.c,v 1.1 1997/12/03 05:39:53 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,52 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_ftlink.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  FIELDTYPE *link_fieldtype(
+|                                FIELDTYPE *type1,
+|                                FIELDTYPE *type2)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Create a new fieldtype built from the two given types.
+|                    They are connected by an logical 'OR'.
+|                    If an error occurs, errno is set to                    
+|                       E_BAD_ARGUMENT  - invalid arguments
+|                       E_SYSTEM_ERROR  - system error (no memory)
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  Fieldtype pointer or NULL if error occured.
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+FIELDTYPE *link_fieldtype(FIELDTYPE * type1, FIELDTYPE * type2)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  FIELDTYPE *nftyp = (FIELDTYPE *)0;
+
+  if ( type1 && type2 )
+    {
+      nftyp = (FIELDTYPE *)malloc(sizeof(FIELDTYPE));
+      if (nftyp)
+	{
+	  *nftyp = *_nc_Default_FieldType;
+	  nftyp->status |= _LINKED_TYPE;
+	  if ((type1->status & _HAS_ARGS) || (type2->status & _HAS_ARGS) )
+	    nftyp->status |= _HAS_ARGS;
+	  if ((type1->status & _HAS_CHOICE) || (type2->status & _HAS_CHOICE) )
+	    nftyp->status |= _HAS_CHOICE;
+	  nftyp->left  = type1;
+	  nftyp->right = type2; 
+	  type1->ref++;
+	  type2->ref++;
+	}
+      else
+	{
+	  SET_ERROR( E_SYSTEM_ERROR );
+	}
+    }
+  else
+    {
+      SET_ERROR( E_BAD_ARGUMENT );
+    }
+  return nftyp;
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+/* fld_ftlink.c ends here */

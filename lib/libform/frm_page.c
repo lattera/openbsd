@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/frm_page.c,v 1.1 1997/12/03 05:40:14 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,69 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: frm_page.c,v 1.2 1997/10/26 11:21:04 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int set_form_page(FORM * form,int  page)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Set the page number of the form.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK              - success
+|                    E_BAD_ARGUMENT    - invalid form pointer or page number
+|                    E_BAD_STATE       - called from a hook routine
+|                    E_INVALID_FIELD   - current field can't be left
+|                    E_SYSTEM_ERROR    - system error
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_form_page(FORM * form, int page)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  int err = E_OK;
+
+  if ( !form || (page<0) || (page>=form->maxpage) )
+    RETURN(E_BAD_ARGUMENT);
+
+  if (!(form->status & _POSTED))
+    {
+      form->curpage = page;
+      form->current = _nc_First_Active_Field(form);
+  }
+  else
+    {
+      if (form->status & _IN_DRIVER) 
+	err = E_BAD_STATE;
+      else
+	{
+	  if (form->curpage != page)
+	    {
+	      if (!_nc_Internal_Validation(form)) 
+		err = E_INVALID_FIELD;
+	      else
+		{
+		  Call_Hook(form,fieldterm);
+		  Call_Hook(form,formterm);
+		  err = _nc_Set_Form_Page(form,page,(FIELD *)0);
+		  Call_Hook(form,forminit);
+		  Call_Hook(form,fieldinit);
+		  _nc_Refresh_Current_Field(form);
+		}
+	    }
+	}
+    }
+  RETURN(err);
 }
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
+|   Function      :  int form_page(const FORM * form)
 |   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
+|   Description   :  Return the current page of the form.
 |
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
+|   Return Values :  >= 0  : current page number
+|                    -1    : invalid form pointer
 +--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
+int form_page(const FORM * form)
 {
-  return Normalize_Form(form)->usrptr;
+  return Normalize_Form(form)->curpage;
 }
 
-/* frm_user.c ends here */
+/* frm_page.c ends here */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_just.c,v 1.1 1997/12/03 05:39:54 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,50 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_just.c,v 1.2 1997/10/26 11:20:59 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int set_field_just(FIELD *field, int just)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Set the fields type of justification.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK            - success
+|                    E_BAD_ARGUMENT  - one of the arguments was incorrect
+|                    E_SYSTEM_ERROR  - system error
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_field_just(FIELD * field, int just)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  int res = E_BAD_ARGUMENT;
+
+  if ((just==NO_JUSTIFICATION)  ||
+      (just==JUSTIFY_LEFT)	||
+      (just==JUSTIFY_CENTER)	||
+      (just==JUSTIFY_RIGHT)	)
+    {
+      Normalize_Field( field );
+      if (field->just != just)
+	{
+	  field->just = just;
+	  res = _nc_Synchronize_Attributes( field );
+	}
+      else
+	res = E_OK;
+    }
+  RETURN(res);
 }
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
+|   Function      :  int field_just( const FIELD *field )
 |   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
+|   Description   :  Retrieve the fields type of justification
 |
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
+|   Return Values :  The justification type.
 +--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
+int field_just(const FIELD * field)
 {
-  return Normalize_Form(form)->usrptr;
+  return Normalize_Field( field )->just;
 }
 
-/* frm_user.c ends here */
+/* fld_just.c ends here */

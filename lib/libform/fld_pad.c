@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_pad.c,v 1.1 1997/12/03 05:39:56 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -21,39 +21,50 @@
 | NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH    |
 | THE USE OR PERFORMANCE OF THIS SOFTWARE.                                     |
 +-----------------------------------------------------------------------------*/
-
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_pad.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int set_field_pad(FIELD *field, int ch)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Set the pad character used to fill the field. This must
+|                    be a printable character.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK           - success
+|                    E_BAD_ARGUMENT - invalid field pointer or pad character
+|                    E_SYSTEM_ERROR - system error
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_field_pad(FIELD  * field, int ch)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  int res = E_BAD_ARGUMENT;
+
+  Normalize_Field( field );
+  if (isprint((unsigned char)ch))
+    {
+      if (field->pad != ch)
+	{
+	  field->pad = ch;
+	  res = _nc_Synchronize_Attributes( field );
+	}
+      else
+	res = E_OK;
+    }
+  RETURN(res);
 }
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
+|   Function      :  int field_pad(const FIELD *field)
 |   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
+|   Description   :  Retrieve the fields pad character.
 |
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
+|   Return Values :  The pad character.
 +--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
+int field_pad(const FIELD * field)
 {
-  return Normalize_Form(form)->usrptr;
+  return Normalize_Field( field )->pad;
 }
 
-/* frm_user.c ends here */
+/* fld_pad.c ends here */

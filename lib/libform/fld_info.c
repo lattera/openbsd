@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_info.c,v 1.1 1997/12/03 05:39:53 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,60 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_info.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int field_info(const FIELD *field,
+|                                   int *rows, int *cols,
+|                                   int *frow, int *fcol,
+|                                   int *nrow, int *nbuf)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Retrieve infos about the fields creation parameters.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK           - success
+|                    E_BAD_ARGUMENT - invalid field pointer
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int field_info(const FIELD *field,
+	       int *rows, int *cols, 
+	       int *frow, int *fcol, 
+	       int *nrow, int *nbuf)
 {
-  Normalize_Form(form)->usrptr = usrptr;
+  if (!field) 
+    RETURN(E_BAD_ARGUMENT);
+
+  if (rows) *rows = field->rows;
+  if (cols) *cols = field->cols;
+  if (frow) *frow = field->frow;
+  if (fcol) *fcol = field->fcol;
+  if (nrow) *nrow = field->nrow;
+  if (nbuf) *nbuf = field->nbuf;
+  RETURN(E_OK);
+}
+	
+/*---------------------------------------------------------------------------
+|   Facility      :  libnform  
+|   Function      :  int dynamic_field_info(const FIELD *field,
+|                                           int *drows, int *dcols,
+|                                           int *maxgrow)
+|   
+|   Description   :  Retrieve informations about a dynamic fields current
+|                    dynamic parameters.
+|
+|   Return Values :  E_OK           - success
+|                    E_BAD_ARGUMENT - invalid argument
++--------------------------------------------------------------------------*/
+int dynamic_field_info(const FIELD *field,
+		       int *drows, int *dcols, int *maxgrow)
+{
+  if (!field)
+    RETURN(E_BAD_ARGUMENT);
+
+  if (drows)   *drows   = field->drows;
+  if (dcols)   *dcols   = field->dcols;
+  if (maxgrow) *maxgrow = field->maxgrow;
+
   RETURN(E_OK);
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+/* fld_info.c ends here */

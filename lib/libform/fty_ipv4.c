@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libform/fty_ipv4.c,v 1.2 1997/12/03 05:40:18 millert Exp $	*/
+
 
 /*
  * THIS CODE IS SPECIFICALLY EXEMPTED FROM THE NCURSES PACKAGE COPYRIGHT.
@@ -13,7 +15,7 @@
 
 #include "form.priv.h"
 
-MODULE_ID("$Id: fty_ipv4.c,v 1.2 1997/04/26 22:06:00 tom Exp $")
+MODULE_ID("Id: fty_ipv4.c,v 1.2 1997/04/26 22:06:00 tom Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  

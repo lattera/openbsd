@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/frm_sub.c,v 1.1 1997/12/03 05:40:15 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,38 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: frm_sub.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int set_form_sub(FORM *form, WINDOW *win)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Set the subwindow of the form to win. 
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK       - success
+|                    E_POSTED   - form is posted
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_form_sub(FORM * form, WINDOW * win)
 {
-  Normalize_Form(form)->usrptr = usrptr;
+  if (form && (form->status & _POSTED))	
+    RETURN(E_POSTED);
+
+  Normalize_Form( form )->sub = win;
   RETURN(E_OK);
-}
+}	
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
+|   Function      :  WINDOW *form_sub(const FORM *)
 |   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
+|   Description   :  Retrieve the window of the form.
 |
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
+|   Return Values :  The pointer to the Subwindow.
 +--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
+WINDOW *form_sub(const FORM * form)
 {
-  return Normalize_Form(form)->usrptr;
+  const FORM* f = Normalize_Form( form );
+  return Get_Form_Window(f);
 }
 
-/* frm_user.c ends here */
+/* frm_sub.c ends here */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libform/fld_user.c,v 1.3 1997/12/03 05:39:58 millert Exp $	*/
+
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
 |             by Juergen Pfeifer <Juergen.Pfeifer@T-Online.de>                 |
@@ -22,7 +24,7 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: fld_user.c,v 1.4 1997/05/01 16:47:54 juergen Exp $")
+MODULE_ID("Id: fld_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
@@ -33,7 +35,7 @@ MODULE_ID("Id: fld_user.c,v 1.4 1997/05/01 16:47:54 juergen Exp $")
 |
 |   Return Values :  E_OK         - on success
 +--------------------------------------------------------------------------*/
-int set_field_userptr(FIELD * field, const void  *usrptr)
+int set_field_userptr(FIELD * field, void  *usrptr)
 {
   Normalize_Field( field )->usrptr = usrptr;
   RETURN(E_OK);
@@ -49,7 +51,7 @@ int set_field_userptr(FIELD * field, const void  *usrptr)
 |   Return Values :  Value of pointer. If no such pointer has been set,
 |                    NULL is returned
 +--------------------------------------------------------------------------*/
-const void *field_userptr(const FIELD *field)
+void *field_userptr(const FIELD *field)
 {
   return Normalize_Field( field )->usrptr;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/frm_cursor.c,v 1.1 1997/12/03 05:40:10 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -21,39 +21,38 @@
 | NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH    |
 | THE USE OR PERFORMANCE OF THIS SOFTWARE.                                     |
 +-----------------------------------------------------------------------------*/
-
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: frm_cursor.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int pos_form_cursor(FORM * form)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Moves the form window cursor to the location required
+|                    by the form driver to resume form processing. This may
+|                    be needed after the application calls a curses library
+|                    I/O routine that modifies the cursor position.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK                      - Success
+|                    E_SYSTEM_ERROR            - System error.
+|                    E_BAD_ARGUMENT            - Invalid form pointer
+|                    E_NOT_POSTED              - Form is not posted
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int pos_form_cursor(FORM * form)
 {
-  Normalize_Form(form)->usrptr = usrptr;
-  RETURN(E_OK);
+  int res;
+
+  if (!form)
+   res = E_BAD_ARGUMENT;
+  else
+    {
+      if (!(form->status & _POSTED))
+        res = E_NOT_POSTED;
+      else
+	res = _nc_Position_Form_Cursor(form);
+    }
+  RETURN(res);
 }
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+/* frm_cursor.c ends here */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libform/frm_user.c,v 1.3 1997/12/03 05:40:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libform/fld_max.c,v 1.1 1997/12/03 05:39:55 millert Exp $	*/
 
 /*-----------------------------------------------------------------------------+
 |           The ncurses form library is  Copyright (C) 1995-1997               |
@@ -24,36 +24,43 @@
 
 #include "form.priv.h"
 
-MODULE_ID("Id: frm_user.c,v 1.5 1997/05/23 23:31:29 juergen Exp $")
+MODULE_ID("Id: fld_max.c,v 1.1 1997/10/21 13:24:19 juergen Exp $")
 
 /*---------------------------------------------------------------------------
 |   Facility      :  libnform  
-|   Function      :  int set_form_userptr(FORM *form, void *usrptr)
+|   Function      :  int set_max_field(FIELD *field, int maxgrow)
 |   
-|   Description   :  Set the pointer that is reserved in any form to store
-|                    application relevant informations
+|   Description   :  Set the maximum growth for a dynamic field. If maxgrow=0
+|                    the field may grow to any possible size.
 |
-|   Return Values :  E_OK         - on success
+|   Return Values :  E_OK           - success
+|                    E_BAD_ARGUMENT - invalid argument
 +--------------------------------------------------------------------------*/
-int set_form_userptr(FORM * form, void *usrptr)
+int set_max_field(FIELD *field, int maxgrow)
 {
-  Normalize_Form(form)->usrptr = usrptr;
+  if (!field || (maxgrow<0))
+    RETURN(E_BAD_ARGUMENT);
+  else
+    {
+      bool single_line_field = Single_Line_Field(field);
+
+      if (maxgrow>0)
+	{
+	  if (( single_line_field && (maxgrow < field->dcols)) ||
+	      (!single_line_field && (maxgrow < field->drows)))
+	    RETURN(E_BAD_ARGUMENT);
+	}
+      field->maxgrow = maxgrow;
+      field->status &= ~_MAY_GROW;
+      if (!(field->opts & O_STATIC))
+	{
+	  if ((maxgrow==0) ||
+	      ( single_line_field && (field->dcols < maxgrow)) ||
+	      (!single_line_field && (field->drows < maxgrow)))
+	    field->status |= _MAY_GROW;
+	}
+    }
   RETURN(E_OK);
 }
-
-/*---------------------------------------------------------------------------
-|   Facility      :  libnform  
-|   Function      :  void *form_userptr(const FORM *form)
-|   
-|   Description   :  Return the pointer that is reserved in any form to
-|                    store application relevant informations.
-|
-|   Return Values :  Value of pointer. If no such pointer has been set,
-|                    NULL is returned
-+--------------------------------------------------------------------------*/
-void *form_userptr(const FORM * form)
-{
-  return Normalize_Form(form)->usrptr;
-}
-
-/* frm_user.c ends here */
+		  
+/* fld_max.c ends here */
