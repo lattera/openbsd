@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/lib/libc/Makefile,v 1.14 2004/04/30 17:15:12 espie Exp $
+#	$OpenBSD: src/regress/lib/libc/Makefile,v 1.15 2004/06/24 04:33:07 millert Exp $
 
-SUBDIR+= _setjmp alloca atexit db getaddrinfo longjmp malloc
+SUBDIR+= _setjmp alloca atexit db getaddrinfo hsearch longjmp malloc
 SUBDIR+= popen regex setjmp setjmp-signal sigreturn sigsetjmp
 SUBDIR+= sprintf strerror time
 
