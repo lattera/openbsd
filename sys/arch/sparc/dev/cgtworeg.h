@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/Attic/cgtworeg.h,v 1.2 1997/08/08 08:26:09 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgtworeg.h,v 1.1 2002/08/12 10:44:04 miod Exp $	*/
 /*	$NetBSD: cgtworeg.h,v 1.3 1995/10/04 00:21:27 pk Exp $ */
 
 /*
