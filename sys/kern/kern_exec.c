@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.57.2.1 2002/01/23 03:10:01 jason Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.57.2.2 2002/05/08 22:56:55 miod Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -532,9 +532,6 @@ sys_execve(p, v, retval)
 			 * allocated.  We do not want userland to accidentally
 			 * allocate descriptors in this range which has implied
 			 * meaning to libc.
-			 *
-			 * XXX - Shouldn't the exec fail if we can't allocate
-			 *       resources here?
 			 */
 			if (fp == NULL) {
 				short flags = FREAD | (i == 0 ? 0 : FWRITE);
@@ -542,7 +539,7 @@ sys_execve(p, v, retval)
 				int indx;
 
 				if ((error = falloc(p, &fp, &indx)) != 0)
-					break;
+					goto exec_abort;
 #ifdef DIAGNOSTIC
 				if (indx != i)
 					panic("sys_execve: falloc indx != i");
@@ -550,13 +547,13 @@ sys_execve(p, v, retval)
 				if ((error = cdevvp(getnulldev(), &vp)) != 0) {
 					ffree(fp);
 					fdremove(p->p_fd, indx);
-					break;
+					goto exec_abort;
 				}
 				if ((error = VOP_OPEN(vp, flags, p->p_ucred, p)) != 0) {
 					ffree(fp);
 					fdremove(p->p_fd, indx);
 					vrele(vp);
-					break;
+					goto exec_abort;
 				}
 				if (flags & FWRITE)
 					vp->v_writecount++;
