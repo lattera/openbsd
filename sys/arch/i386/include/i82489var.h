@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.2 2001/07/15 15:13:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.3 2001/07/16 21:40:50 niklas Exp $	*/
 /*	$NetBSD: i82489var.h,v 1.1.2.2 2000/02/21 18:46:14 sommerfeld Exp $	*/
 
 /*-
@@ -37,8 +37,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _I386_I82489REG_H_
-#define _I386_I82489REG_H_
+#ifndef _I386_I82489VAR_H_
+#define _I386_I82489VAR_H_
 
 static __inline__ u_int32_t i82489_readreg __P((int));
 static __inline__ void i82489_writereg __P((int, u_int32_t));
@@ -60,7 +60,8 @@ i82489_writereg(reg, val)
 	int reg;
 	u_int32_t val;
 {
-	*((volatile u_int32_t *)(((volatile u_int8_t *)local_apic) + reg)) = val;
+	*((volatile u_int32_t *)(((volatile u_int8_t *)local_apic) + reg)) =
+	    val;
 }
 
 /*
@@ -77,7 +78,7 @@ extern void Xintrspurious(void);
  * Vector used for inter-processor interrupts.
  */
 extern void Xintripi(void);
-#define LAPIC_IPI_VECTOR			0xe0
+#define LAPIC_IPI_VECTOR		0xe0
 
 /*
  * Vector used for local apic timer interrupts.
@@ -90,9 +91,9 @@ extern void Xintrltimer(void);
  * Vectors to be used for self-soft-interrupts.
  */
 
-#define LAPIC_SOFTCLOCK_VECTOR		SIR_CLOCK
-#define LAPIC_SOFTNET_VECTOR		SIR_NET
-#define LAPIC_SOFTTTY_VECTOR		SIR_TTY
+#define LAPIC_SOFTCLOCK_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16)
+#define LAPIC_SOFTNET_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16 + 1)
+#define LAPIC_SOFTTTY_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16 + 2)
 
 extern void Xintrsoftclock(void);
 extern void Xintrsoftnet(void);
@@ -105,7 +106,6 @@ struct cpu_info;
 extern void lapic_boot_init __P((paddr_t));
 extern void lapic_set_lvt __P((void));
 extern void lapic_enable __P((void));
-extern void lapic_calibrate_timer __P((struct cpu_info *ci));
+extern void lapic_calibrate_timer __P((struct cpu_info *));
 
 #endif
-
