@@ -36,6 +36,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rcsedit.c,v $
+ * Revision 1.2  1996/08/15 12:15:45  millert
+ * Use relative path for RCSLOCALID (like $Id)
+ *
  * Revision 1.1  1996/08/12 04:08:16  millert
  * rcs 5.7 + OpenBSD changes
  *
@@ -205,7 +208,7 @@ Report problems and direct all questions to:
 
 #include "rcsbase.h"
 
-libId(editId, "$Id: rcsedit.c,v 1.1 1996/08/12 04:08:16 millert Exp $")
+libId(editId, "$Id: rcsedit.c,v 1.2 1996/08/15 12:15:45 millert Exp $")
 
 static void editEndsPrematurely P((void)) exiting;
 static void editLineNumberOverflow P((void)) exiting;
@@ -1507,6 +1510,9 @@ makedirtemp(isworkfile)
 	register size_t dl;
 	register struct buf *bn;
 	register char const *name = isworkfile ? workname : RCSname;
+#	if has_mktemp
+	int fd;
+#	endif
 
 	dl = basefilename(name) - name;
 	bn = &dirtpname[newRCSdirtp_index + isworkfile];
@@ -1525,10 +1531,12 @@ makedirtemp(isworkfile)
 	catchints();
 #	if has_mktemp
 		VOID strcpy(tp, "XXXXXX");
-		if (!mktemp(np) || !*np)
+		fd = mkstemp(np);
+		if (fd < 0 || !*np)
 		    faterror("can't make temporary pathname `%.*s_%cXXXXXX'",
 			(int)dl, name, '0'+isworkfile
 		    );
+		close(fd);
 #	else
 		/*
 		 * Posix 1003.1-1990 has no reliable way
