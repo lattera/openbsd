@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.10 2001/12/11 23:19:02 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.11 2002/07/10 22:08:47 mickey Exp $	*/
 
 /*-
  * Copyright (c) 1996 Kenneth Stailey.  All rights reserved.
@@ -68,5 +68,3 @@ cdev_decl(bw2);
 cdev_decl(cg2);
 #include "cgfour.h"
 cdev_decl(cg4);
-
-cdev_decl(ksyms);

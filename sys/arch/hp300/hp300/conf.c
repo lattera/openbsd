@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.29 2002/05/16 21:11:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.30 2002/07/10 22:08:47 mickey Exp $	*/
 /*	$NetBSD: conf.c,v 1.39 1997/05/12 08:17:53 thorpej Exp $	*/
 
 /*-
@@ -121,7 +121,6 @@ cdev_decl(fd);
 #include "bpfilter.h"
 #include "tun.h"
 #include "ksyms.h"
-cdev_decl(ksyms);   
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
