@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.7 2002/07/31 04:36:15 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.8 2002/07/31 18:39:22 jason Exp $	*/
 /*	$NetBSD: openprom.c,v 1.4 2002/01/10 06:21:53 briggs Exp $ */
 
 /*
@@ -107,8 +107,8 @@ openpromgetstr(len, user, cpp)
 	int len;
 	char *user, **cpp;
 {
-	register int error;
-	register char *cp;
+	int error;
+	char *cp;
 
 	/* Reject obvious bogus requests */
 	if ((u_int)len > (8 * 1024) - 1)
