@@ -1,6 +1,5 @@
-#	$OpenBSD: src/sbin/ipsec/rtdelete/Attic/Makefile,v 1.2 1997/07/20 10:32:43 provos Exp $
+#	$OpenBSD: src/sbin/ipsec/rtdelete/Attic/Makefile,v 1.3 1997/09/05 10:07:31 provos Exp $
 
 PROG=	rtdelete
-NOMAN=
 
 .include <bsd.prog.mk>
