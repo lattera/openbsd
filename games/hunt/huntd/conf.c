@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/games/hunt/huntd/conf.c,v 1.4 1999/12/12 15:08:14 d Exp $	*/
+/*	$OpenBSD: src/games/hunt/huntd/conf.c,v 1.5 2001/02/13 11:55:09 pjanzen Exp $	*/
 /* David Leonard <d@openbsd.org>, 1999. Public domain. */
 
 #include <stdio.h>
@@ -118,7 +118,7 @@ static struct kwvar keywords[] = {
 	{ "mindshot",		&conf_mindshot,		Vint },
 	{ "simstep",		&conf_simstep,		Vint },
 
-	{ NULL }
+	{ NULL, NULL, Vint }
 };
 
 static char *
