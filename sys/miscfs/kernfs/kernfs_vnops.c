@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.3 1996/10/27 07:57:12 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.4 1997/02/07 06:07:56 mickey Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -59,6 +59,7 @@
 #include <sys/buf.h>
 #include <sys/dirent.h>
 #include <sys/msgbuf.h>
+#include <sys/exec.h>
 #include <miscfs/kernfs/kernfs.h>
 #ifdef DDB
 #include <vm/vm_param.h>
@@ -299,9 +300,6 @@ kernfs_xread(kt, off, bufp, len)
 		sprintf(*bufp, "%lu\n", physmem - cnt.v_wire_count);
 		break;
 
-	case KTT_SYMTAB:
-		return 0;
-
 	default:
 		return (0);
 	}
@@ -336,9 +334,6 @@ kernfs_xwrite(kt, buf, len)
 		hostname[len] = '\0';
 		hostnamelen = len;
 		return (0);
-
-	case KTT_SYMTAB:
-		return 0;
 
 	default:
 		return (EIO);
@@ -438,7 +433,7 @@ kernfs_lookup(v)
 #endif
 		return 0;
 	}
-
+#ifdef DDB
 	case Ksym:
 	{
 		db_symtab_t	st;
@@ -460,7 +455,7 @@ kernfs_lookup(v)
 
 		return kernfs_allocvp(dvp->v_mount, vpp, st, Ksymtab );
 	}
-
+#endif
 	default:
 		return (ENOTDIR);
 	}
@@ -481,6 +476,7 @@ kernfs_open(v)
 	struct kernfs_node *kfs = VTOKERN(ap->a_vp);
 
 	switch (kfs->kf_type) {
+#ifdef DDB
 	case Ksymtab:
 		if (((kfs->kf_flags & FWRITE) && (ap->a_mode & O_EXCL)) ||
 		    ((kfs->kf_flags & O_EXCL) && (ap->a_mode & FWRITE)))
@@ -489,6 +485,7 @@ kernfs_open(v)
 		if (ap->a_mode & FWRITE)
 			kfs->kf_flags = ap->a_mode & (FWRITE|O_EXCL);
 		break;
+#endif
 	default:
 		break;
 	}
@@ -510,11 +507,12 @@ kernfs_close(v)
 	struct kernfs_node *kfs = VTOKERN(ap->a_vp);
 
 	switch (kfs->kf_type) {
+#ifdef DDB
 	case Ksymtab:
 		if ((ap->a_fflag & FWRITE) && (kfs->kf_flags & O_EXCL))
 			kfs->kf_flags &= ~(FWRITE|O_EXCL);
 		break;
-
+#endif
 	default:
 		break;
 	}
@@ -588,7 +586,8 @@ kernfs_getattr(v)
 		vap->va_type = VREG;
 		vap->va_nlink = 1;
 		vap->va_fileid = 3 + kern_ntargets + kfs->kf_st->id;
-		vap->va_size = kfs->kf_st->rend - kfs->kf_st->start;
+		vap->va_size = sizeof(struct exec) +
+			kfs->kf_st->rend - kfs->kf_st->start;
 #endif
 	} else {
 #ifdef KERNFS_DIAGNOSTIC
@@ -673,19 +672,32 @@ kernfs_read(v)
 			off += len;
 		}
 		break;
-
+#ifdef DDB
 	case Ksymtab:
+	{
+		caddr_t p;
+		struct exec xh;
 #ifdef KERNFS_DIAGNOSTIC
 		printf("kern_read %s, off = %d\n", kfs->kf_st->name, off);
 #endif
-		len = (kfs->kf_st->rend - kfs->kf_st->start);
-		if (off > len)
-			return 0;
+		if (off < sizeof(struct exec)) {
+			db_stub_xh(kfs->kf_st, &xh);
+			len = sizeof(xh);
+			p = (caddr_t)&xh;
+		} else if (sizeof(struct exec) <= off &&
+			   off < (sizeof(struct exec) +
+				  (kfs->kf_st->rend - kfs->kf_st->rstart))) {
+			len = (kfs->kf_st->rend - kfs->kf_st->rstart);
+			off -= sizeof(struct exec);
+			p = kfs->kf_st->rstart;
+		} else
+			return EIO;
 		len = min(len, uio->uio_resid);
-		if ((error = uiomove(kfs->kf_st->start + off, len, uio)) != 0)
+		if ((error = uiomove(p + off, len, uio)) != 0)
 			return error;
+	}
 		break;
-
+#endif
 	default:
 		break;
 	}
@@ -794,7 +806,7 @@ kernfs_readdir(v)
 		}
 	}
 	break;
-
+#ifdef DDB
 	case Ksym:
 	{
 		register db_symtab_t	st;
@@ -834,7 +846,7 @@ kernfs_readdir(v)
 		}
 	}
 	break;
-
+#endif
 	default:
 		error = ENOTDIR;
 		break;

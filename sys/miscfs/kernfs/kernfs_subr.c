@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.2 1996/10/18 11:22:19 mickey Exp $ */
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.3 1997/02/07 06:07:52 mickey Exp $ */
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -145,7 +145,7 @@ loop:
 		vp->v_type = VREG;
 		kfs->kf_kt = kt;
 		break;
-
+#ifdef DDB
 	case Ksym:	/* /kern/sym = dr-xr-xr-x */
 		kfs->kf_mode = ((struct kern_target*)kt)->kt_mode;
 		vp->v_type = VDIR;
@@ -159,7 +159,7 @@ loop:
 		vp->v_type = VREG;
 		kfs->kf_st = kt;
 		break;
-
+#endif
 	default:
 		panic("kernfs_allocvp");
 	}
