@@ -1,7 +1,7 @@
-#	$OpenBSD: src/distrib/mac68k/ramdisk/Attic/list,v 1.22 2004/12/02 22:11:58 miod Exp $
+#	$OpenBSD: src/distrib/mac68k/ramdisk/Attic/list,v 1.23 2004/12/29 00:45:32 deraadt Exp $
 
 SRCDIRS distrib/special
-SRCDIRS gnu/usr.bin usr.bin bin sbin usr.sbin
+SRCDIRS bin sbin usr.bin usr.sbin
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin			instbin
