@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.71.2.1 2004/08/19 04:13:26 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.71.2.2 2005/03/10 17:15:04 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -78,6 +78,7 @@ struct Channel {
 	int     sock;		/* sock fd */
 	int     ctl_fd;		/* control fd (client sharing) */
 	int     isatty;		/* rfd is a tty */
+	int	client_tty;	/* (client) TTY has been requested */
 	int     force_drain;	/* force close on iEOF */
 	int     delayed;		/* fdset hack */
 	Buffer  input;		/* data read from socket, to be sent over
@@ -201,9 +202,11 @@ void	 channel_clear_permitted_opens(void);
 void     channel_input_port_forward_request(int, int);
 int	 channel_connect_to(const char *, u_short);
 int	 channel_connect_by_listen_address(u_short);
-void	 channel_request_remote_forwarding(u_short, const char *, u_short);
-void	 channel_request_rforward_cancel(u_short port);
-int	 channel_setup_local_fwd_listener(u_short, const char *, u_short, int);
+void	 channel_request_remote_forwarding(const char *, u_short,
+	     const char *, u_short);
+int	 channel_setup_local_fwd_listener(const char *, u_short,
+	     const char *, u_short, int);
+void	 channel_request_rforward_cancel(const char *host, u_short port);
 int	 channel_setup_remote_fwd_listener(const char *, u_short, int);
 int	 channel_cancel_rport_listener(const char *, u_short);
 

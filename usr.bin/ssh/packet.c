@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.112.2.1 2004/08/19 04:13:26 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.112.2.2 2005/03/10 17:15:04 brad Exp $");
 
 #include <sys/queue.h>
 
@@ -976,6 +976,8 @@ packet_read_poll1(void)
 		    buffer_len(&compression_buffer));
 	}
 	type = buffer_get_char(&incoming_packet);
+	if (type < SSH_MSG_MIN || type > SSH_MSG_MAX)
+		packet_disconnect("Invalid ssh1 packet type: %d", type);
 	return type;
 }
 
@@ -1088,6 +1090,8 @@ packet_read_poll2(u_int32_t *seqnr_p)
 	 * return length of payload (without type field)
 	 */
 	type = buffer_get_char(&incoming_packet);
+	if (type < SSH2_MSG_MIN || type >= SSH2_MSG_LOCAL_MIN)
+		packet_disconnect("Invalid ssh2 packet type: %d", type);
 	if (type == SSH2_MSG_NEWKEYS)
 		set_newkeys(MODE_IN);
 #ifdef PACKET_DEBUG

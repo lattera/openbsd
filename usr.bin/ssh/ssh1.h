@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh1.h,v 1.3.12.1 2004/08/19 04:13:27 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh1.h,v 1.3.12.2 2005/03/10 17:15:05 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -18,6 +18,9 @@
  * for compatibility.  The maximum value is 254; value 255 is reserved for
  * future extension.
  */
+/* Ranges */
+#define SSH_MSG_MIN				1
+#define SSH_MSG_MAX				254
 /* Message name */			/* msg code */	/* arguments */
 #define SSH_MSG_NONE				0	/* no message */
 #define SSH_MSG_DISCONNECT			1	/* cause (string) */

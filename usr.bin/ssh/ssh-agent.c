@@ -35,7 +35,7 @@
 
 #include "includes.h"
 #include <sys/queue.h>
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.117.2.1 2004/08/19 04:13:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.117.2.2 2005/03/10 17:15:04 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -164,23 +164,15 @@ lookup_identity(Key *key, int version)
 static int
 confirm_key(Identity *id)
 {
-	char *p, prompt[1024];
+	char *p;
 	int ret = -1;
 
 	p = key_fingerprint(id->key, SSH_FP_MD5, SSH_FP_HEX);
-	snprintf(prompt, sizeof(prompt), "Allow use of key %s?\n"
-	    "Key fingerprint %s.", id->comment, p);
+	if (ask_permission("Allow use of key %s?\nKey fingerprint %s.",
+	    id->comment, p))
+		ret = 0;
 	xfree(p);
-	p = read_passphrase(prompt, RP_ALLOW_EOF);
-	if (p != NULL) {
-		/*
-		 * Accept empty responses and responses consisting
-		 * of the word "yes" as affirmative.
-		 */
-		if (*p == '\0' || *p == '\n' || strcasecmp(p, "yes") == 0)
-			ret = 0;
-		xfree(p);
-	}
+
 	return (ret);
 }
 
@@ -1106,6 +1098,7 @@ main(int ac, char **av)
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sock < 0) {
 		perror("socket");
+		*socket_name = '\0'; /* Don't unlink any existing file */
 		cleanup_exit(1);
 	}
 	memset(&sunaddr, 0, sizeof(sunaddr));
@@ -1113,6 +1106,7 @@ main(int ac, char **av)
 	strlcpy(sunaddr.sun_path, socket_name, sizeof(sunaddr.sun_path));
 	if (bind(sock, (struct sockaddr *) & sunaddr, sizeof(sunaddr)) < 0) {
 		perror("bind");
+		*socket_name = '\0'; /* Don't unlink any existing file */
 		cleanup_exit(1);
 	}
 	if (listen(sock, SSH_LISTEN_BACKLOG) < 0) {

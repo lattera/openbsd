@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.55.2.1 2004/08/19 04:13:26 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.55.2.2 2005/03/10 17:15:04 brad Exp $");
 
 #include <openssl/dh.h>
 
@@ -1118,7 +1118,7 @@ mm_answer_sesskey(int sock, Buffer *m)
 	int rsafail;
 
 	/* Turn off permissions */
-	monitor_permit(mon_dispatch, MONITOR_REQ_SESSKEY, 1);
+	monitor_permit(mon_dispatch, MONITOR_REQ_SESSKEY, 0);
 
 	if ((p = BN_new()) == NULL)
 		fatal("%s: BN_new", __func__);
