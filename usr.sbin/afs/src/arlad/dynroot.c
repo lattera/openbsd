@@ -44,7 +44,7 @@
 
 #include <arla_local.h>
 
-RCSID("$Id: dynroot.c,v 1.9 2000/08/16 11:55:02 assar Exp $");
+RCSID("$Id: dynroot.c,v 1.1 2000/09/11 14:40:41 art Exp $");
 
 struct create_entry {
     fbuf *thedir;	/* pointer to the fbuf that contains the dir */
@@ -245,7 +245,8 @@ dynroot_update_entry (FCacheEntry *entry, int32_t filetype)
 static int
 dynroot_get_node (FCacheEntry *entry)
 {
-    int ret, fd, len, rootnode;
+    int ret, fd, rootnode;
+    size_t len;
     fbuf dir;
 
     rootnode = entry->fid.fid.Vnode == DYNROOT_ROOTDIR ? 1 : 0;
