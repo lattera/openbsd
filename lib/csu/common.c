@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/csu/Attic/common.c,v 1.6 2001/05/11 15:22:37 art Exp $	*/
+/*	$OpenBSD: src/lib/csu/Attic/common.c,v 1.7 2001/06/01 18:17:56 deraadt Exp $	*/
 /*	$NetBSD: common.c,v 1.4 1995/09/23 22:34:20 pk Exp $	*/
 /*
  * Copyright (c) 1993,1995 Paul Kranenburg
@@ -206,7 +206,7 @@ int	cmd;
 	return (ld_entry->dlctl)(fd, cmd, arg);
 }
 
-char *
+const char *
 dlerror()
 {
 	int     error;
