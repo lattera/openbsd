@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/pci/pcib.c,v 1.7 2000/03/27 08:35:22 brad Exp $	*/
 /*	$NetBSD: pcib.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*-

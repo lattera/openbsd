@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/pci/Attic/pci_bus_fixup.h,v 1.2 2000/03/27 08:35:21 brad Exp $	*/
 /*	$NetBSD$	*/
 
 /*
