@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.11 1996/06/11 03:25:12 tholo Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.12 1996/06/16 10:28:39 deraadt Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -186,7 +186,6 @@ main(framep)
 	kmeminit();
 	disk_init();		/* must come before autoconfiguration */
 	tty_init();		/* initialise tty's */
-	config_init();		/* init autoconfiguration data structures */
 	cpu_startup();
 
 	/*
