@@ -1,5 +1,7 @@
-#       $OpenBSD: src/distrib/i386/floppies/inst/Attic/dot.profile,v 1.6 1997/10/20 22:24:07 millert Exp $
+#	$OpenBSD: src/distrib/i386/floppies/common/Attic/dot.profile,v 1.1 1999/08/06 20:49:08 deraadt Exp $
+#	$NetBSD: dot.profile,v 1.1 1995/12/18 22:54:43 pk Exp $
 #
+# Copyright (c) 1995 Jason R. Thorpe
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.
 # 
@@ -31,27 +33,51 @@
 
 export PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export HISTFILE=/.sh_history
-export TERM=pc3
 
 umask 022
 
 set -o emacs # emacs-style command line editing
 
+# XXX
+# the TERM/EDITOR stuff is really well enough parameterized to be moved
+# into install.sub where it could use the routines there and be invoked
+# from the various (semi) MI install and upgrade scripts
+
+# editors believed to be in $EDITBIN, smart and dumb defaults
+EDITBIN=/bin
+EDITUBIN=/usr/bin
+
 if [ "X${DONEPROFILE}" = "X" ]; then
 	DONEPROFILE=YES
+
+	# mount kernfs and re-mount the boot media (perhaps r/w)
+	mount_kernfs /kern /kern
+	mount_ffs -o update /dev/rd0a /
 
 	# set up some sane defaults
 	echo 'erase ^?, werase ^W, kill ^U, intr ^C'
 	stty newcrt werase ^W intr ^C kill ^U erase ^? 9600
-	echo ''
 
-	# mount the kern_fs so that we can examine the dmesg state
-	mount -t kernfs /kern /kern
+	# Installing or upgrading?
+	_forceloop=""
+	while [ "X$_forceloop" = X"" ]; do
+		echo -n '(I)nstall, (U)pgrade or (S)hell? '
+		read _forceloop
+		case "$_forceloop" in
+			i*|I*)
+				/install
+				;;
 
-	# pull in the functions that people will use from the shell prompt.
-	. /.commonutils
-	. /.instutils
+			u*|U*)
+				/upgrade
+				;;
 
-	# run the installation script.
-	install
+			s*|S*)
+				;;
+
+			*)
+				_forceloop=""
+				;;
+		esac
+	done
 fi
