@@ -14,7 +14,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: ac.c,v 1.11 2002/02/17 19:42:35 millert Exp $";
+static char rcsid[] = "$Id: ac.c,v 1.12 2002/05/30 19:09:05 deraadt Exp $";
 #endif
 
 #include <sys/types.h>
@@ -514,7 +514,7 @@ ac(fp)
 	(void)fclose(fp);
 	if (!(Flags & AC_W))
 		usr.ut_time = time((time_t *)0);
-	(void)strcpy(usr.ut_line, "~");
+	(void)strlcpy(usr.ut_line, "~", sizeof usr.ut_line);
 
 	if (Flags & AC_D) {
 		ltm = localtime(&usr.ut_time);
