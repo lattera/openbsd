@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.16 2003/05/16 00:29:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.17 2003/05/16 01:03:19 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -649,7 +649,7 @@ pmap_exec_account(struct pmap *pm, vaddr_t va,
 		return;
 
 	if ((opte ^ npte) & PG_X) {
-		pmap_tlb_shootdown(pmap, va, opte, &cpumask);
+		pmap_tlb_shootdown(pm, va, opte, &cpumask);
 		pmap_tlb_shootnow(cpumask);
 	}
 			
