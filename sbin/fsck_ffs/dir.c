@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/fsck_ffs/dir.c,v 1.4 1997/02/20 06:03:04 tholo Exp $	*/
+/*	$OpenBSD: src/sbin/fsck_ffs/dir.c,v 1.5 1997/03/27 16:28:51 kstailey Exp $	*/
 /*	$NetBSD: dir.c,v 1.20 1996/09/27 22:45:11 christos Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #if 0
 static char sccsid[] = "@(#)dir.c	8.5 (Berkeley) 12/8/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/fsck_ffs/dir.c,v 1.4 1997/02/20 06:03:04 tholo Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/fsck_ffs/dir.c,v 1.5 1997/03/27 16:28:51 kstailey Exp $";
 #endif
 #endif /* not lint */
 
@@ -57,7 +57,7 @@ static char rcsid[] = "$OpenBSD: src/sbin/fsck_ffs/dir.c,v 1.4 1997/02/20 06:03:
 #include "extern.h"
 
 char	*lfname = "lost+found";
-int	lfmode = 01777;
+int	lfmode = 01700;
 struct	dirtemplate emptydir = { 0, DIRBLKSIZ };
 struct	dirtemplate dirhead = {
 	0, 12, DT_DIR, 1, ".",
