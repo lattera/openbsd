@@ -1,7 +1,7 @@
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
- * Copyright (c) 2000-2002 The Apache Software Foundation.  All rights
+ * Copyright (c) 2000-2003 The Apache Software Foundation.  All rights
  * reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  */
 
 #ifndef AP_EBCDIC_H
-#define AP_EBCDIC_H  "$Id: ap_ebcdic.h,v 1.2 2002/03/13 21:05:29 fielding Exp $"
+#define AP_EBCDIC_H  "$Id: ap_ebcdic.h,v 1.1.1.2 2003/08/21 12:53:38 henning Exp $"
 
 #include <sys/types.h>
 
