@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/cpu.c,v 1.1.2.1 2004/06/05 23:09:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/cpu.c,v 1.1.2.2 2004/06/06 05:24:37 tedu Exp $	*/
 /* $NetBSD: cpu.c,v 1.1 2003/04/26 18:39:26 fvdl Exp $ */
 
 /*-
@@ -625,7 +625,7 @@ mp_cpu_start(struct cpu_info *ci)
 	 */
 
 	outb(IO_RTC, NVRAM_RESET);
-	outb(IO_RTC+1, NVRAM_RESET_SOFT);
+	outb(IO_RTC+1, NVRAM_RESET_JUMP);
 
 	/*
 	 * "and the warm reset vector (DWORD based at 40:67) to point
