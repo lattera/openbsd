@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg2.c,v 1.6.14.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg2.c,v 1.6.14.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: cg2.c,v 1.7 1996/10/13 03:47:26 christos Exp $	*/
 
 /*
@@ -62,7 +62,7 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/conf.h>
 #include <machine/fbio.h>
@@ -232,10 +232,11 @@ cg2ioctl(dev, cmd, data, flags, p)
  * Return the address that would map the given device at the given
  * offset, allowing for the given protection, or return -1 for error.
  */
-int
+paddr_t
 cg2mmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct cg2_softc *sc = cgtwo_cd.cd_devs[minor(dev)];
 

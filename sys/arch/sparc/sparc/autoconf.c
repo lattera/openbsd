@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.4 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.5 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.73 1997/07/29 09:41:53 fair Exp $ */
 
 /*
@@ -68,7 +68,7 @@
 
 #include <dev/cons.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/bsd_openprom.h>

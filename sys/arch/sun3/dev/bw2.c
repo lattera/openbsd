@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/bw2.c,v 1.8 1997/01/16 04:03:42 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/bw2.c,v 1.8.14.1 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: bw2.c,v 1.8 1996/10/13 03:47:25 christos Exp $	*/
 
 /*
@@ -60,7 +60,7 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/conf.h>
 #include <machine/cpu.h>
@@ -223,10 +223,11 @@ bw2ioctl(dev, cmd, data, flags, p)
  * Return the address that would map the given device at the given
  * offset, allowing for the given protection, or return -1 for error.
  */
-int
+paddr_t
 bw2mmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct bw2_softc *sc = bwtwo_cd.cd_devs[minor(dev)];
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.3 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.4 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -65,7 +65,7 @@ int vmelclose __P((dev_t, int, int));
 int vmelioctl __P((dev_t, int, caddr_t, int, struct proc *));
 int vmelread __P((dev_t, struct uio *, int));
 int vmelwrite __P((dev_t, struct uio *, int));
-int vmelmmap __P((dev_t, int, int));
+paddr_t vmelmmap __P((dev_t, off_t, int));
 
 int
 vmelmatch(parent, cf, args)
@@ -161,16 +161,17 @@ vmelwrite(dev, uio, flags)
 	return (vmerw(sc->sc_vme, uio, flags, BUS_VMEL));
 }
 
-int
+paddr_t
 vmelmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	int unit = minor(dev);
 	struct vmelsoftc *sc = (struct vmelsoftc *) vmel_cd.cd_devs[unit];
 	void * pa;
 
-	pa = vmepmap(sc->sc_vme, (void *)off, NBPG, BUS_VMEL);
+	pa = vmepmap(sc->sc_vme, off, NBPG, BUS_VMEL);
 	printf("vmel %x pa %x\n", off, pa);
 	if (pa == NULL)
 		return (-1);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.c,v 1.6.4.4 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.c,v 1.6.4.5 2001/11/13 21:04:14 niklas Exp $ */
 
 /*-
  * Copyright (c) 1998 Steve Murphree, Jr. 
@@ -128,7 +128,7 @@ Mode of operation:
 #include <netinet/if_ether.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/cpu.h>

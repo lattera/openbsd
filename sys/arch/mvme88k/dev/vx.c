@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.3 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.4 2001/11/13 21:04:14 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr. 
  * All rights reserved.
@@ -47,12 +47,12 @@
 
 #include <dev/cons.h>
 
+#include <mvme88k/dev/vme.h>
 #include <mvme88k/dev/vxreg.h>
 
 #include "pcctwo.h"
 #if NPCCTWO > 0
 #include <mvme88k/dev/pcctworeg.h>
-#include <mvme88k/dev/vme.h>
 #endif
 
 #ifdef	DDB

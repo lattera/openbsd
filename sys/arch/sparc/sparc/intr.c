@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/intr.c,v 1.12.2.3 2001/10/31 03:07:57 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/sparc/intr.c,v 1.12.2.4 2001/11/13 21:04:17 niklas Exp $ */
 /*	$NetBSD: intr.c,v 1.20 1997/07/29 09:42:03 fair Exp $ */
 
 /*
@@ -50,7 +50,7 @@
 #include <sys/kernel.h>
 #include <sys/socket.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/cons.h>
 

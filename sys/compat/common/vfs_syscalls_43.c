@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.3 2001/10/31 03:11:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.4 2001/11/13 21:05:47 niklas Exp $	*/
 /*	$NetBSD: vfs_syscalls_43.c,v 1.4 1996/03/14 19:31:52 christos Exp $	*/
 
 /*
@@ -63,7 +63,7 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <sys/pipe.h>
 

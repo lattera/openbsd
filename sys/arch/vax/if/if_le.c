@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_le.c,v 1.4.8.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_le.c,v 1.4.8.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: if_le.c,v 1.14 1999/08/14 18:40:23 ragge Exp $	*/
 
 /*-
@@ -84,7 +84,6 @@
 #include <sys/device.h>
 #include <sys/reboot.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <net/if.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_exec.c,v 1.6.2.1 2001/10/31 03:11:46 nate Exp $	 */
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_exec.c,v 1.6.2.2 2001/11/13 21:05:48 niklas Exp $	 */
 /*	$NetBSD: svr4_exec.c,v 1.16 1995/10/14 20:24:20 christos Exp $	 */
 
 /*
@@ -38,7 +38,7 @@
 #include <sys/exec_olf.h>
 
 #include <sys/mman.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/reg.h>

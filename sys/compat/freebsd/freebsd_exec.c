@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.3 2001/11/13 21:05:47 niklas Exp $	*/
 /*	$NetBSD: freebsd_exec.c,v 1.2 1996/05/18 16:02:08 christos Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #include <sys/vnode.h>
 #include <sys/exec.h>
 #include <sys/resourcevar.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/exec_elf.h>
 #include <sys/exec_olf.h>
 

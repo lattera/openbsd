@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1.8.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1.8.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: uba.c,v 1.52 2000/06/04 02:14:12 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.
@@ -52,7 +52,7 @@
 #include <sys/malloc.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 #include <machine/scb.h>

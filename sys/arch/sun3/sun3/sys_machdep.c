@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sys_machdep.c,v 1.6.14.1 2001/05/14 21:37:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sys_machdep.c,v 1.6.14.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.3 1995/10/27 15:58:23 gwr Exp $	*/
 
 /*
@@ -49,7 +49,7 @@
 #include <sys/buf.h>
 #include <sys/mount.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <sys/syscallargs.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/db_machdep.h,v 1.6 1999/07/09 21:33:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/db_machdep.h,v 1.6.4.1 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.10 1997/08/31 21:23:40 pk Exp $ */
 
 /*
@@ -35,7 +35,7 @@
  */
 
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/frame.h>
 #include <machine/psl.h>
 #include <machine/trap.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/xd.c,v 1.14.4.2 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/xd.c,v 1.14.4.3 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: xd.c,v 1.37 1997/07/29 09:58:16 fair Exp $	*/
 
 /*
@@ -76,7 +76,7 @@
 #include <sys/conf.h>
 #include <sys/timeout.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/sun_disklabel.h>

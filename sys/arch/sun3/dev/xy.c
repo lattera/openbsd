@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/xy.c,v 1.12.6.2 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/xy.c,v 1.12.6.3 2001/11/13 21:04:18 niklas Exp $	*/
 /* $NetBSD: xy.c,v 1.11 1996/10/13 03:47:40 christos Exp $ */
 
 /*
@@ -74,7 +74,7 @@
 #include <sys/disk.h>
 #include <sys/syslog.h>
 #include <sys/dkbad.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/sun_disklabel.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 2001/06/14 22:56:58 thorpej Exp $ */
 
 /*
@@ -292,7 +292,6 @@ void	remrq __P((struct proc *));
 /* trap.c */
 void	kill_user_windows __P((struct proc *));
 int	rwindow_save __P((struct proc *));
-void	child_return __P((struct proc *));
 /* amd7930intr.s */
 void	amd7930_trap __P((void));
 /* cons.c */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mba/Attic/mba.c,v 1.5.12.2 2001/10/31 03:08:01 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/mba/Attic/mba.c,v 1.5.12.3 2001/11/13 21:04:18 niklas Exp $ */
 /*	$NetBSD: mba.c,v 1.18 2000/01/24 02:40:36 matt Exp $ */
 /*
  * Copyright (c) 1994, 1996 Ludd, University of Lule}, Sweden.
@@ -45,7 +45,7 @@
 #include <sys/buf.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/trap.h>
 #include <machine/scb.h>

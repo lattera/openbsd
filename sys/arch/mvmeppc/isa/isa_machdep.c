@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/isa/Attic/isa_machdep.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/isa/Attic/isa_machdep.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -124,7 +124,7 @@
 #include <sys/malloc.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 

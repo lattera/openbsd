@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.3 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.4 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.33 1997/07/29 17:55:38 fair Exp $	*/
 
 /*-
@@ -135,8 +135,7 @@ Mode of operation:
 #include <netns/ns_if.h>
 #endif
 
-#include <vm/vm.h>
-
+#include <uvm/uvm_extern.h>
 #include <uvm/uvm_map.h>
 
 /*

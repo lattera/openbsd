@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.2 2001/07/04 10:19:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.3 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1982, 1986, 1993
@@ -47,7 +47,7 @@
 #include <sys/mtio.h>
 #include <sys/buf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 

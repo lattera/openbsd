@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.1 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: cgthree.c,v 1.33 1997/05/24 20:16:11 pk Exp $ */
 
 /*
@@ -63,7 +63,7 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/fbio.h>
 #include <machine/autoconf.h>
@@ -419,10 +419,11 @@ cgthreeloadcmap(sc, start, ncolors)
  * As well, mapping at an offset of 0x04000000 causes the cg3 to be
  * mapped in flat mode without the cg4 emulation.
  */
-int
+paddr_t
 cgthreemmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	register struct cgthree_softc *sc = cgthree_cd.cd_devs[minor(dev)];
 #define START		(128*1024 + 128*1024)

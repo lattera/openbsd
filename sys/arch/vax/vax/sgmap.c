@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3.4.3 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3.4.4 2001/11/13 21:04:18 niklas Exp $	*/
 /* $NetBSD: sgmap.c,v 1.8 2000/06/29 07:14:34 mrg Exp $ */
 
 /*-
@@ -44,7 +44,7 @@
 #include <sys/proc.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 #include <machine/sgmap.h>

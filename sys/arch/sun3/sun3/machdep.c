@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.4 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.5 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.77 1996/10/13 03:47:51 christos Exp $	*/
 
 /*
@@ -78,8 +78,6 @@
 #ifdef SYSVSHM
 #include <sys/shm.h>
 #endif
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -282,7 +280,7 @@ cpu_startup()
 	 */
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-	    NULL, UVM_UNKNOWN_OFFSET,
+	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 	                UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("startup: cannot allocate buffers");

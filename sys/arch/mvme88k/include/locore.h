@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.2 2001/10/31 03:01:19 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.3 2001/11/13 21:04:15 niklas Exp $	*/
 
 #ifndef _MACHINE_LOCORE_H_
 #define _MACHINE_LOCORE_H_
 
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 
 /*
  * C prototypes for various routines defined in locore_* and friends

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.5 1996/12/11 21:04:14 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.5.14.1 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -155,17 +155,17 @@ vmelwrite(dev, uio, flags)
 	return (vmerw(sc->sc_vme, uio, flags, BUS_VMEL));
 }
 
-int
+paddr_t
 vmelmmap(dev, off, prot)
 	dev_t dev;
-	int off;
+	off_t off;
 	int prot;
 {
 	int unit = minor(dev);
 	struct vmelsoftc *sc = (struct vmelsoftc *) vmel_cd.cd_devs[unit];
 	void * pa;
 
-	pa = vmepmap(sc->sc_vme, (void *)off, NBPG, BUS_VMEL);
+	pa = vmepmap(sc->sc_vme, (void *)(int)off, NBPG, BUS_VMEL);
 	printf("vmel %x pa %x\n", off, pa);
 	if (pa == NULL)
 		return (-1);

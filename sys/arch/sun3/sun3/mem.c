@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.3 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.4 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.19 1995/08/08 21:09:01 gwr Exp $	*/
 
 /*
@@ -55,7 +55,7 @@
 #include <sys/proc.h>
 #include <sys/uio.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/conf.h>
 #include <machine/cpu.h>
@@ -262,10 +262,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	register int v = off;
 

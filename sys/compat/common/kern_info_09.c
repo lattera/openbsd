@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_09.c,v 1.6.10.1 2001/07/04 10:39:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_09.c,v 1.6.10.2 2001/11/13 21:05:47 niklas Exp $	*/
 /*	$NetBSD: kern_info_09.c,v 1.5 1996/02/21 00:10:59 cgd Exp $	*/
 
 /*
@@ -43,7 +43,7 @@
 #include <sys/proc.h>
 #include <sys/syslog.h>
 #include <sys/unistd.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <sys/mount.h>

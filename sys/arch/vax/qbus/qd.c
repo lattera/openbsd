@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qd.c,v 1.1.8.1 2001/05/14 21:38:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qd.c,v 1.1.8.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: qd.c,v 1.17 2000/01/24 02:40:29 matt Exp $	*/
 
 /*-
@@ -73,7 +73,7 @@
 #include <sys/poll.h>
 #include <sys/buf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/cons.h>
 

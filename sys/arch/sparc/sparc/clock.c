@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/clock.c,v 1.13.4.1 2001/07/04 10:23:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/clock.c,v 1.13.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.52 1997/05/24 20:16:05 pk Exp $ */
 
 /*
@@ -71,7 +71,7 @@
 #include <sys/gmon.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/eeprom.h>

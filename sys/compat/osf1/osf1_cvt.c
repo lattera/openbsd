@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_cvt.c,v 1.1.6.1 2001/05/14 22:05:03 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_cvt.c,v 1.1.6.2 2001/11/13 21:05:48 niklas Exp $ */
 /* $NetBSD: osf1_cvt.c,v 1.7 1999/06/26 01:23:23 cgd Exp $ */
 
 /*
@@ -79,7 +79,7 @@
 #include <sys/resource.h>
 #include <sys/resourcevar.h>
 #include <sys/wait.h>
-#include <vm/vm.h>				/* XXX see mmap emulation */
+#include <uvm/uvm_extern.h>				/* XXX see mmap emulation */
 
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/if_ve.c,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/if_ve.c,v 1.1.4.3 2001/11/13 21:04:14 niklas Exp $ */
 /*-
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1982, 1992, 1993
@@ -66,7 +66,7 @@
 #include <net/bpfdesc.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/cpu.h>

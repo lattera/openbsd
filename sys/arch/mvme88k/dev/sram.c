@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.1.6.1 2001/07/04 10:19:56 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.1.6.2 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -43,7 +43,7 @@
 #include <machine/cpu.h>
 #include <machine/autoconf.h>
 #include <machine/mioctl.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 struct sramsoftc {
 	struct device	sc_dev;
@@ -205,10 +205,11 @@ sramwrite(dev, uio, flags)
 	return (memdevrw(sc->sc_vaddr, sc->sc_len, uio, flags));
 }
 
-int
+paddr_t
 srammmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	int unit = minor(dev);
 	struct sramsoftc *sc = (struct sramsoftc *) sram_cd.cd_devs[unit];

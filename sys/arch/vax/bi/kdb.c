@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/bi/Attic/kdb.c,v 1.2.12.2 2001/10/31 03:08:00 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/kdb.c,v 1.2.12.3 2001/11/13 21:04:18 niklas Exp $ */
 /*	$NetBSD: kdb.c,v 1.5 1997/01/11 11:34:39 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -47,7 +47,7 @@
 #include <sys/proc.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/sid.h>
 #include <machine/pte.h>

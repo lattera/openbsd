@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_misc.c,v 1.8.2.1 2001/05/14 22:04:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_misc.c,v 1.8.2.2 2001/11/13 21:05:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1989, 1991, 1993
@@ -60,7 +60,8 @@ netbsd_sys___vfork14(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	return (fork1(p, SIGCHLD, FORK_PPWAIT|FORK_SHAREVM, NULL, 0, retval));
+	return (fork1(p, SIGCHLD, FORK_PPWAIT|FORK_SHAREVM, NULL, 0, NULL,
+	    NULL, retval));
 }
 
 /* XXX syncs whole file */

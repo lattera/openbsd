@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.5.10.2 2001/10/31 03:01:17 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.5.10.3 2001/11/13 21:04:14 niklas Exp $ */
 /*	$NetBSD: sbic.c,v 1.2 1996/04/23 16:32:54 chuck Exp $	*/
 
 /*
@@ -63,10 +63,7 @@
 #include <sys/buf.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-#include <vm/pmap.h>
-#include <machine/pmap.h>
+#include <uvm/uvm_extern.h>
 #include <mvme68k/dev/dmavar.h>
 #include <mvme68k/dev/sbicreg.h>
 #include <mvme68k/dev/sbicvar.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11.4.2 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11.4.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.15 1996/10/30 00:24:33 gwr Exp $ */
 
 /*-
@@ -134,7 +134,7 @@
 #include <netns/ns_if.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 /*
  * ugly byte-order hack for SUNs

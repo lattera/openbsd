@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.3 2001/10/31 03:01:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.4 2001/11/13 21:04:14 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -35,7 +35,7 @@
 #include <sys/proc.h>
 #include <sys/reboot.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/m882xx.h>		 /* CMMU defs		        */
 #include <machine/trap.h>		 /* current_thread()            */
@@ -87,6 +87,8 @@ int	quiet_db_read_bytes = 0;
 /************************/
 /* 	DB_REGISTERS ****/
 /************************/
+
+db_regs_t	ddb_regs;
 
 /*
  *

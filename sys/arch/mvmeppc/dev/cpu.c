@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.1 2001/10/31 03:01:20 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -78,9 +78,11 @@ cpuattach(parent, dev, aux)
 	void *aux;
 {
 	int cpu, pvr;
+#ifdef OFW
 	char name[32];
 	int qhandle, phandle;
 	unsigned int clock_freq = 0;
+#endif
 
 	__asm__ ("mfpvr %0" : "=r"(pvr));
 	cpu = pvr >> 16;

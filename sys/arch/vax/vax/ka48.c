@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -40,7 +40,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <machine/cpu.h>

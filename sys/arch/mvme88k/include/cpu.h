@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.3 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.4 2001/11/13 21:04:15 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -66,8 +66,6 @@
  * definitions of cpu-dependent requirements
  * referenced in generic code
  */
-#define	COPY_SIGCODE		/* copy sigcode above user stack in exec */
-
 #define	cpu_exec(p)	/* nothing */
 #define	cpu_wait(p)	/* nothing */
 #define	cpu_swapout(p)	/* nothing */

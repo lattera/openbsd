@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.3 2001/10/31 03:01:19 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.4 2001/11/13 21:04:15 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -53,7 +53,6 @@
 
 #include <machine/board.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 caddr_t zeropage;
@@ -61,7 +60,7 @@ caddr_t zeropage;
 int mmopen __P((dev_t, int, int));
 int mmclose __P((dev_t, int, int));
 int mmrw __P((dev_t, struct uio *, int));
-int mmmmap __P((dev_t, int, int));
+paddr_t mmmmap __P((dev_t, off_t, int));
 int mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
 
 /*ARGSUSED*/
@@ -217,10 +216,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
         dev_t dev;
-        int off, prot;
+        off_t off;
+	int prot;
 {
 	return (-1);
 }

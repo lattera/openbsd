@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.1 2001/10/31 03:01:21 nate Exp $        */
+/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.2 2001/11/13 21:04:15 niklas Exp $        */
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-
@@ -51,7 +51,6 @@
 #include <sys/mbuf.h>
 #include <sys/mount.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 #include <uvm/uvm_page.h>
 
@@ -405,10 +404,12 @@ _bus_dmamap_unload(t, map)
  */
 
 void
-_bus_dmamap_sync(t, map, op)
+_bus_dmamap_sync(t, map, offset, len, op)
         bus_dma_tag_t t;
         bus_dmamap_t map;
-	bus_dmasync_op_t op;
+	bus_addr_t offset;
+	bus_size_t len;
+	int op;
 {
 	int i;
 	switch (op) {
@@ -417,8 +418,8 @@ _bus_dmamap_sync(t, map, op)
 	case BUS_DMASYNC_PREWRITE:
 	case BUS_DMASYNC_PREREAD:
 		for (i = map->dm_nsegs; i--; )
-			invdcache(map->dm_segs[i].ds_addr, 
-					map->dm_segs[i].ds_len);
+			invdcache((void *)map->dm_segs[i].ds_addr, 
+			    len);
 		break;
 	}
 }

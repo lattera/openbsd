@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.5.4.1 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.5.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: iommu.c,v 1.42 2001/10/07 20:30:40 eeh Exp $	*/
 
 /*
@@ -119,7 +119,6 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka650.c,v 1.6.12.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka650.c,v 1.6.12.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: ka650.c,v 1.25 2001/04/27 15:02:37 ragge Exp $	*/
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -47,7 +47,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/ka650.h>
 #include <machine/clock.h>

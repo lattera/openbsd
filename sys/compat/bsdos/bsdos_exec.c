@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/bsdos/Attic/bsdos_exec.c,v 1.2.2.1 2001/05/14 22:04:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/bsdos/Attic/bsdos_exec.c,v 1.2.2.2 2001/11/13 21:05:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994 Christopher G. Demetriou
@@ -38,7 +38,7 @@
 #include <sys/vnode.h>
 #include <sys/exec.h>
 #include <sys/resourcevar.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #if 0
 #include <machine/bsdos_machdep.h>

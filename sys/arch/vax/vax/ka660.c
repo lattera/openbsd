@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka660.c,v 1.1.4.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka660.c,v 1.1.4.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: ka660.c,v 1.3 2000/06/29 07:14:27 mrg Exp $	*/
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden.
@@ -37,7 +37,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <machine/cpu.h>

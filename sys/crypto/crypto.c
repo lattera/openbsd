@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.4 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.5 2001/11/13 21:05:48 niklas Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -69,6 +69,9 @@ crypto_newsession(u_int64_t *sid, struct cryptoini *cri, int hard)
 		    (crypto_drivers[hid].cc_flags & CRYPTOCAP_F_CLEANUP))
 			continue;
 
+		if (crypto_drivers[hid].cc_sessions == 0)
+			continue;
+
 		/* Hardware requested -- ignore software drivers. */
 		if (hard &&
 		    (crypto_drivers[hid].cc_flags & CRYPTOCAP_F_SOFTWARE))
@@ -77,7 +80,7 @@ crypto_newsession(u_int64_t *sid, struct cryptoini *cri, int hard)
 		/* See if all the algorithms are supported. */
 		for (cr = cri; cr; cr = cr->cri_next)
 			if (crypto_drivers[hid].cc_alg[cr->cri_alg] == 0)
-			break;
+				break;
 
 		/* Ok, all algorithms are supported. */
 		if (cr == NULL)
@@ -154,7 +157,7 @@ crypto_freesession(u_int64_t sid)
  * Find an empty slot.
  */
 int32_t
-crypto_get_driverid(void)
+crypto_get_driverid(u_int8_t flags)
 {
 	struct cryptocap *newdrv;
 	int i, s = splimp();
@@ -204,6 +207,7 @@ crypto_get_driverid(void)
 		    crypto_drivers_num * sizeof(struct cryptocap));
 
 		newdrv[i].cc_sessions = 1; /* Mark */
+		newdrv[i].cc_flags = flags;
 		crypto_drivers_num *= 2;
 
 		free(crypto_drivers, M_CRYPTO_DATA);

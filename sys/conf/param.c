@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.4 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.5 2001/11/13 21:05:48 niklas Exp $	*/
 /*	$NetBSD: param.c,v 1.16 1996/03/12 03:08:40 mrg Exp $	*/
 
 /*
@@ -162,7 +162,7 @@ struct	msginfo msginfo = {
  * These are initialized at bootstrap time
  * to values dependent on memory size
  */
-int	nbuf, nswbuf;
+int	nbuf;
 
 /*
  * These have to be allocated somewhere; allocating

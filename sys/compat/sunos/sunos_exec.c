@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.c,v 1.10.2.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_exec.c,v 1.10.2.3 2001/11/13 21:05:48 niklas Exp $	*/
 /*	$NetBSD: sunos_exec.c,v 1.11 1996/05/05 12:01:47 briggs Exp $	*/
 
 /*
@@ -44,7 +44,7 @@
 #include <sys/wait.h>
 
 #include <sys/mman.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/reg.h>

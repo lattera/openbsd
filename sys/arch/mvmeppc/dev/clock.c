@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/clock.c,v 1.1.2.1 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/clock.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 1996/09/30 16:34:40 ws Exp $	*/
 
 /*
@@ -34,6 +34,7 @@
 
 #include <sys/param.h>
 #include <sys/kernel.h>
+#include <sys/systm.h>
 
 #include <machine/pio.h>
 #include <machine/intr.h>
@@ -245,7 +246,9 @@ resettodr()
 	}
 }
 
+#if 0
 static unsigned cnt = 1001;
+#endif
 void
 decr_intr(frame)
 struct clockframe *frame;
@@ -264,7 +267,7 @@ struct clockframe *frame;
 #if 0
 	cnt++;
 	if (cnt > 1000) {
-		printf("derc int\n");
+		printf("decr int\n");
 		cnt = 0;
 	}
 #endif 
@@ -329,8 +332,6 @@ cpu_initclocks()
 void
 calc_delayconst()
 {
-	int qhandle, phandle;
-	char name[32];
 	int msr, scratch;
 
 	ticks_per_sec = ppc_tps();

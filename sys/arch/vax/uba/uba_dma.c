@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/uba_dma.c,v 1.1.8.1 2001/05/14 21:38:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/uba_dma.c,v 1.1.8.2 2001/11/13 21:04:18 niklas Exp $	*/
 /* $NetBSD: uba_dma.c,v 1.2 1999/06/20 00:59:55 ragge Exp $ */
 
 /*-
@@ -44,7 +44,7 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #define _VAX_BUS_DMA_PRIVATE
 #include <machine/bus.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.1 2001/10/31 03:01:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.2 2001/11/13 21:04:15 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -31,7 +31,9 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
 #include "machine/ipkdb.h"
+*/
 
 #include <sys/param.h>
 #include <sys/buf.h>
@@ -51,7 +53,6 @@
 #include <sys/systm.h>
 #include <sys/user.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #ifdef SYSVSHM
@@ -119,7 +120,6 @@ u_int32_t	ppc_set_msr __P((u_int32_t));
 /* 
  * Declare these as initialized data so we can patch them.
  */
-int	nswbuf = 0;
 #ifdef NBUF
 int	nbuf = NBUF;
 #else
@@ -176,27 +176,23 @@ initppc(startkernel, endkernel, args)
 	u_int startkernel, endkernel;
 	char *args;
 {
-	int phandle, qhandle;
-	char name[32];
-	struct machvec *mp;
-	extern trapcode, trapsize;
-	extern dsitrap, dsisize;
-	extern isitrap, isisize;
-	extern alitrap, alisize;
-	extern decrint, decrsize;
-	extern tlbimiss, tlbimsize;
-	extern tlbdlmiss, tlbdlmsize;
-	extern tlbdsmiss, tlbdsmsize;
+	extern caddr_t trapcode, trapsize;
+	extern caddr_t dsitrap, dsisize;
+	extern caddr_t isitrap, isisize;
+	extern caddr_t alitrap, alisize;
+	extern caddr_t decrint, decrsize;
+	extern caddr_t tlbimiss, tlbimsize;
+	extern caddr_t tlbdlmiss, tlbdlmsize;
+	extern caddr_t tlbdsmiss, tlbdsmsize;
 #ifdef DDB
-	extern ddblow, ddbsize;
+	extern caddr_t ddblow, ddbsize;
 #endif 
 #if NIPKDB > 0
-	extern ipkdblow, ipkdbsize;
+	extern caddr_t ipkdblow, ipkdbsize;
 #endif
 	extern void consinit __P((void));
 	extern void callback __P((void *));
 	int exc, scratch;
-	u_int32_t msr;
 
 	proc0.p_addr = proc0paddr;
 	bzero(proc0.p_addr, sizeof *proc0.p_addr);
@@ -472,7 +468,7 @@ void
 install_extint(handler)
 	void (*handler) __P((void));
 {
-	extern extint, extsize;
+	extern caddr_t extint, extsize;
 	extern u_long extint_call;
 	u_long offset = (u_long)handler - (u_long)&extint_call;
 	int omsr, msr;
@@ -524,7 +520,7 @@ cpu_startup()
 	 */
 	sz = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
@@ -637,11 +633,6 @@ allocsys(v)
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) & ~1;
-		if (nswbuf > 256)
-			nswbuf = 256;
-	}
 	valloc(buf, struct buf, nbuf);
 	
 	return v;
@@ -710,7 +701,9 @@ sendsig(catcher, sig, mask, code, type, val)
 	struct sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oldonstack;
+#if WHEN_WE_ONLY_FLUSH_DATA_WHEN_DOING_PMAP_ENTER
 	int pa;
+#endif
 	
 	frame.sf_signum = sig;
 	
@@ -775,7 +768,7 @@ sys_sigreturn(p, v, retval)
 	struct trapframe *tf;
 	int error;
 	
-	if (error = copyin(SCARG(uap, sigcntxp), &sc, sizeof sc))
+	if ((error = copyin(SCARG(uap, sigcntxp), &sc, sizeof sc)) != 0)
 		return error;
 	tf = trapframe(p);
 	if ((sc.sc_frame.srr1 & PSL_USERSTATIC) != (tf->srr1 & PSL_USERSTATIC))
@@ -892,7 +885,7 @@ boot(howto)
 {
 	static int syncing;
 	static char str[256];
-	char *ap = str, *ap1 = ap;
+	char *ap = str;
 
 	boothowto = howto;
 	if (!cold && !(howto & RB_NOSYNC) && !syncing) {
@@ -1203,12 +1196,9 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 		bpa, size, *bshp, spa);
 #endif
 	for (; len > 0; len -= NBPG) {
-#if 0
-		pmap_enter(vm_map_pmap(phys_map), vaddr, spa,
-#else
-		pmap_enter(pmap_kernel(), vaddr, spa,
-#endif
-			VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED /* XXX */);
+		pmap_kenter_cache(vaddr, spa,
+			VM_PROT_READ | VM_PROT_WRITE,
+			cacheable ? PMAP_CACHE_WT : PMAP_CACHE_DEFAULT);
 		spa += NBPG;
 		vaddr += NBPG;
 	}
@@ -1241,12 +1231,8 @@ mapiodev(pa, len)
 		return NULL;
 
 	for (; size > 0; size -= NBPG) {
-#if 0
-		pmap_enter(vm_map_pmap(phys_map), vaddr, spa,
-#else
-		pmap_enter(pmap_kernel(), vaddr, spa,
-#endif
-			VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED/* XXX */);
+		pmap_kenter_cache(vaddr, spa,
+			VM_PROT_READ | VM_PROT_WRITE, PMAP_CACHE_DEFAULT);
 		spa += NBPG;
 		vaddr += NBPG;
 	}
@@ -1408,7 +1394,7 @@ kcopy(from, to, size)
 	register void *oldh = curproc->p_addr->u_pcb.pcb_onfault;
 
 	if (setfault(env)) {
-		curpcb->pcb_onfault = 0;
+		curproc->p_addr->u_pcb.pcb_onfault = oldh;
 		return EFAULT;
 	}
 	bcopy(from, to, size);

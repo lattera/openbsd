@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.4 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.5 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.13 1996/03/30 21:12:16 christos Exp $ */
 
 /*
@@ -57,7 +57,6 @@
 #include <machine/eeprom.h>
 #include <machine/conf.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 extern vaddr_t prom_vstart;
@@ -218,10 +217,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
         dev_t dev;
-        int off, prot;
+        off_t off;
+	int prot;
 {
 
 	return (-1);

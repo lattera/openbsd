@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.1.8.3 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.1.8.4 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: bus_dma.c,v 1.5 1999/11/13 00:32:20 thorpej Exp $	*/
 
 /*-
@@ -55,9 +55,6 @@
 #include <sys/mbuf.h>
 #include <sys/vnode.h>
 #include <sys/device.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <uvm/uvm_extern.h>
 

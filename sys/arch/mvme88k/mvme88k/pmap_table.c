@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.1.4.3 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.1.4.4 2001/11/13 21:04:15 niklas Exp $	*/
 
 /* 
  * Mach Operating System
@@ -32,7 +32,7 @@
 #include <machine/board.h>
 #include <sys/param.h>
 #include <machine/m882xx.h>		/* CMMU stuff */
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/pmap_table.h>		/* pmap_table.h*/
 
 #define R VM_PROT_READ

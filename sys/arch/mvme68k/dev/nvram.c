@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.5.6.1 2001/04/18 16:10:25 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.5.6.2 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -409,10 +409,11 @@ int flags;
  * will also be mmap'd, due to NBPG being 4K. On the MVME147 the NVRAM
  * repeats, so userland gets two copies back-to-back.
  */
-int
+paddr_t
 nvrammmap(dev, off, prot)
-dev_t dev;
-int off, prot;
+	dev_t dev;
+	off_t off;
+	int prot;
 {
 	int unit = minor(dev);
 	struct nvramsoftc *sc = (struct nvramsoftc *) nvram_cd.cd_devs[unit];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.4 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.5 2001/11/13 21:04:16 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -48,8 +48,6 @@
 #include <machine/psl.h>
 #include <machine/trap.h>
 #include <machine/db_machdep.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -402,6 +400,7 @@ for (i = 0; i < errnum; i++) {
 		sv.sival_int = frame->srr0;
 		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
 		break;
+	}
 	case EXC_PGM:
 		/* should check for correct byte here or panic */
 #ifdef DDB
@@ -412,7 +411,14 @@ for (i = 0; i < errnum; i++) {
 #endif
 		break;
 
-	}
+	/* This is not really a perf exception, but is an ALTIVEC unavail
+	 * which we do not handle, kill the process with illegal instruction.
+	 */
+	case EXC_PERF|EXC_USER:
+		sv.sival_int = frame->srr0;
+		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
+		break;
+
 	case EXC_AST|EXC_USER:
 		/* This is just here that we trap */
 		break;
@@ -465,9 +471,10 @@ for (i = 0; i < errnum; i++) {
 }
 
 void
-child_return(p)
-	struct proc *p;
+child_return(arg)
+	void *arg;
 {
+	struct proc *p = (struct proc *)arg;
 	struct trapframe *tf = trapframe(p);
 
 	tf->fixreg[0] = 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.3 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.4 2001/11/13 21:04:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -56,8 +56,6 @@
 #include <sys/vnode.h>
 #include <sys/extent.h>
 
-#include <vm/vm.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/cmmu.h>
@@ -89,12 +87,17 @@ int badpaddr __P((caddr_t, int));
  */
 
 void
-cpu_fork(struct proc *p1, struct proc *p2, void *stack, size_t stacksize)
+cpu_fork(p1, p2, stack, stacksize, func, arg)
+	struct proc *p1, *p2;
+	void *stack;
+	size_t stacksize;
+	void (*func) __P((void *));
+	void *arg;
 {
 	struct switchframe *p2sf;
 	int cpu;
 	struct ksigframe {
-		void (*func)(struct proc *);
+		void (*func) __P((void *));
 		void *proc;
 	} *ksfp;
 	extern struct pcb *curpcb;
@@ -136,8 +139,8 @@ cpu_fork(struct proc *p1, struct proc *p2, void *stack, size_t stacksize)
 
 	ksfp = (struct ksigframe *)p2->p_addr->u_pcb.kernel_state.pcb_sp - 1;
 
-	ksfp->func = child_return;
-	ksfp->proc = p2;
+	ksfp->func = func;
+	ksfp->proc = arg;
 
 	/*
 	 * When this process resumes, r31 will be ksfp and
@@ -149,24 +152,6 @@ cpu_fork(struct proc *p1, struct proc *p2, void *stack, size_t stacksize)
 
 	p2->p_addr->u_pcb.kernel_state.pcb_sp = (u_int)ksfp;
 	p2->p_addr->u_pcb.kernel_state.pcb_pc = (u_int)proc_trampoline;
-}
-
-void
-cpu_set_kpc(struct proc *p, void (*func)(void *), void *arg)
-{
-	/*
-	 * override func pointer in ksigframe with func.
-	 */
-
-	struct ksigframe {
-		void (*func)(void *);
-		void *arg;
-	} *ksfp;
-
-	ksfp = (struct ksigframe *)p->p_addr->u_pcb.kernel_state.pcb_sp;
-
-	ksfp->func = func;
-	ksfp->arg = arg;
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/db_machdep.h,v 1.6.12.1 2001/05/14 21:37:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/db_machdep.h,v 1.6.12.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.6 1998/08/10 14:33:33 ragge Exp $	*/
 
 /* 
@@ -36,7 +36,7 @@
  */
 
 #include <sys/param.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/trap.h>
 #include <machine/psl.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.75.2.5 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.75.2.6 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -67,8 +67,6 @@
 #include <sys/core.h>
 #include <sys/kcore.h>
 #include <sys/lock.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 #include <sys/pool.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_exec.c,v 1.11.2.1 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_exec.c,v 1.11.2.2 2001/11/13 21:05:47 niklas Exp $	*/
 /*	$NetBSD: hpux_exec.c,v 1.8 1997/03/16 10:14:44 thorpej Exp $	*/
 
 /*
@@ -47,7 +47,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/reg.h>

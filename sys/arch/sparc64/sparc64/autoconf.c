@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -67,7 +67,6 @@
 
 #include <dev/cons.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

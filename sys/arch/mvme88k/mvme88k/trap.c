@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.3 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.4 2001/11/13 21:04:15 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -52,8 +52,6 @@
 #include <sys/syscall.h>
 #include <sys/systm.h>
 #include <sys/ktrace.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -1544,20 +1542,25 @@ m197_syscall(register_t code, struct m88100_saved_state *tf)
  * and do normal return-to-user-mode stuff.
  */
 void
-child_return(struct proc *p)
+child_return(arg)
+	void *arg;
 {
+	struct proc *p = arg;
 	struct trapframe *tf;
 
 	tf = USER_REGS(p);
 	tf->r[2] = 0;
 	tf->r[3] = 0;
 	tf->epsr &= ~PSR_C;
-	if (cputyp != CPU_197) {
-		tf->snip = tf->sfip & ~3;
-		tf->sfip = tf->snip + 4;
-	} else {
+#ifdef MVME197
+	if (cputyp == CPU_197) {
 		tf->sxip += 8;
 		tf->sxip &= ~3;
+	} else
+#endif
+	{
+		tf->snip = tf->sfip & ~3;
+		tf->sfip = tf->snip + 4;
 	}
 
 	userret(p, tf, p->p_sticks);

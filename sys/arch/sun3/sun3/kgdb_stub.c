@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/kgdb_stub.c,v 1.5.14.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/kgdb_stub.c,v 1.5.14.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: kgdb_stub.c,v 1.6 1996/10/23 16:30:48 gwr Exp $	*/
 
 /*
@@ -52,7 +52,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/control.h>
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vs.c,v 1.2.4.3 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vs.c,v 1.2.4.4 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
@@ -49,7 +49,7 @@
 #include <sys/buf.h>
 #include <sys/malloc.h>
 
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>

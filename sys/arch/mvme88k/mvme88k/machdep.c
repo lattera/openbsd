@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.5 2001/10/31 03:01:19 nate Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.6 2001/11/13 21:04:15 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -95,7 +95,6 @@
 
 #include <dev/cons.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <mvme88k/dev/sysconreg.h>
@@ -115,7 +114,6 @@
 #else
 #define DEBUG_MSG printf
 #endif /* DDB */
-static int waittime = -1;
 
 struct intrhand *intr_handlers[256];
 vm_offset_t interrupt_stack[MAX_CPUS] = {0};
@@ -503,7 +501,7 @@ cpu_startup()
 	 */
 	uarea_pages = UADDR;
 	uvm_map(kernel_map, (vaddr_t *)&uarea_pages, USPACE,
-		NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
+		NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE, 
 						     UVM_PROT_NONE,
 						     UVM_INH_NONE,
 						     UVM_ADV_NORMAL, 0));
@@ -530,7 +528,7 @@ cpu_startup()
 		bugromva = BUGROM_START;
 
 		uvm_map(kernel_map, (vaddr_t *)&bugromva, BUGROM_SIZE,
-			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
+			NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
@@ -544,7 +542,7 @@ cpu_startup()
 		 */
 		sramva = SRAM_START;
 		uvm_map(kernel_map, (vaddr_t *)&sramva, SRAM_SIZE,
-			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
+			NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
@@ -559,7 +557,7 @@ cpu_startup()
 		 */
 		obiova = OBIO_START;
 		uvm_map(kernel_map, (vaddr_t *)&obiova, OBIO_SIZE,
-			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
+			NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
@@ -576,7 +574,7 @@ cpu_startup()
 		 */
 		utilva = MVME188_UTILITY;
 		uvm_map(kernel_map, (vaddr_t *)&utilva, MVME188_UTILITY_SIZE,
-			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
+			NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
@@ -594,7 +592,7 @@ cpu_startup()
 	 */
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
@@ -1079,32 +1077,28 @@ __dead void
 boot(howto)
 	register int howto;
 {
+	/* take a snap shot before clobbering any registers */
+	if (curproc && curproc->p_addr)
+		savectx(curpcb);
+
 	/* If system is cold, just halt. */
 	if (cold) {
 		howto |= RB_HALT;
 		goto haltsys;
 	}
 
-	/* take a snap shot before clobbering any registers */
-	if (curproc && curproc->p_addr)
-		savectx(curpcb);
-
 	boothowto = howto;
-	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
-		extern struct proc proc0;
-
-		/* protect against curproc->p_stats.foo refs in sync()   XXX */
-		if (curproc == NULL)
-			curproc = &proc0;
-
-		waittime = 0;
+	if ((howto & RB_NOSYNC) == 0) {
 		vfs_shutdown();
-
 		/*
 		 * If we've been adjusting the clock, the todr
-		 * will be out of synch; adjust it now.
+		 * will be out of synch; adjust it now unless
+		 * the system was sitting in ddb.
 		 */
-		resettodr();
+		if ((howto & RB_TIMEBAD) == 0)
+			resettodr();
+		else
+			printf("WARNING: not updating battery clock\n");
 	}
 
 	/* Disable interrupts. */

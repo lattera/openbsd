@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3.4.2 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3.4.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: if_le_vsbus.c,v 1.10 2000/06/29 07:14:18 mrg Exp $	*/
 
 /*-
@@ -83,7 +83,7 @@
 #include <sys/device.h>
 #include <sys/reboot.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <net/if.h>
 #include <net/if_media.h>

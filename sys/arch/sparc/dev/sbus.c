@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8 1999/04/18 03:24:25 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8.4.1 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: sbus.c,v 1.17 1997/06/01 22:10:39 pk Exp $ */
 
 /*
@@ -53,7 +53,7 @@
 #include <sys/malloc.h>
 #include <sys/systm.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 

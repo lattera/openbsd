@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sab82532reg.h,v 1.1 2001/10/28 02:19:16 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sab82532reg.h,v 1.1.2.1 2001/11/13 21:04:17 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)

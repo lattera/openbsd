@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka670.c,v 1.1.8.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka670.c,v 1.1.8.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: ka670.c,v 1.4 2000/03/13 23:52:35 soren Exp $	*/
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
@@ -39,7 +39,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <machine/cpu.h>

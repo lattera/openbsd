@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_memrw.c,v 1.7.12.1 2001/07/04 10:24:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_memrw.c,v 1.7.12.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.13 1996/11/20 18:57:28 gwr Exp $	*/
 
 /*-
@@ -57,7 +57,7 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/control.h>
 #include <machine/pte.h>

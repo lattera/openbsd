@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/kgdb_machdep.c,v 1.1.12.2 2001/10/31 03:07:57 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/sparc/kgdb_machdep.c,v 1.1.12.3 2001/11/13 21:04:17 niklas Exp $ */
 /*	$NetBSD: kgdb_machdep.c,v 1.1 1997/08/31 21:22:45 pk Exp $ */
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -94,7 +94,7 @@
 #include <sys/buf.h>
 #include <sys/kgdb.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/ctlreg.h>
 #include <machine/psl.h>

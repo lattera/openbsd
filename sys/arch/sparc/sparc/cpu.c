@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.4 2001/05/14 21:37:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.5 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: cpu.c,v 1.56 1997/09/15 20:52:36 pk Exp $ */
 
 /*
@@ -56,7 +56,7 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/cpu.h>

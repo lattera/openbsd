@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.2 2001/07/04 10:24:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.45 1999/10/23 14:56:05 ragge Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #include <sys/reboot.h>
 #include <sys/conf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/sid.h>

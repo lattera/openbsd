@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/vmparam.h,v 1.2.2.1 2001/10/31 03:01:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/vmparam.h,v 1.2.2.2 2001/11/13 21:04:15 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -96,7 +96,7 @@
 extern vm_offset_t ppc_kvm_size;
 #define VM_KERN_ADDRESS_SIZE  (ppc_kvm_size)
 #define	VM_MAX_KERNEL_ADDRESS	((vm_offset_t)((KERNEL_SR << ADDR_SR_SHFT) \
-						+ VM_KERN_ADDRESS_SIZE))
+						+ SEGMENT_LENGTH))
 
 #define	VM_KMEM_SIZE		(NKMEMCLUSTERS * PAGE_SIZE)
 #define	VM_MBUF_SIZE		(NMBCLUSTERS * PAGE_SIZE)

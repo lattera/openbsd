@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.2 2001/04/18 16:10:40 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.3 2001/11/13 21:04:14 niklas Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt
@@ -76,7 +76,7 @@
 #include <machine/cpu.h>
 #include <machine/autoconf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #define RELOC(v, t)	*((t*)((u_int)&(v) + firstpa))
 

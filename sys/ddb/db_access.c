@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_access.c,v 1.7 1997/07/19 22:31:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_access.c,v 1.7.12.1 2001/11/13 21:05:48 niklas Exp $	*/
 /*	$NetBSD: db_access.c,v 1.8 1994/10/09 08:37:35 mycroft Exp $	*/
 
 /* 
@@ -33,7 +33,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>		/* type definitions */
 #include <machine/endian.h>

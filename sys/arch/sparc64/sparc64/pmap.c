@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.107 2001/08/31 16:47:41 eeh Exp $	*/
 #undef	NO_VCACHE /* Don't forget the locked TLB in dostart */
 #define	HWREF
@@ -39,7 +39,6 @@
 #include <sys/core.h>
 #include <sys/kcore.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 #include <machine/pcb.h>
@@ -247,6 +246,9 @@ static struct pool pv_pool;
 extern void	pmap_remove_pv __P((struct pmap *pm, vaddr_t va, paddr_t pa));
 extern void	pmap_enter_pv __P((struct pmap *pm, vaddr_t va, paddr_t pa));
 extern void	pmap_page_cache __P((struct pmap *pm, paddr_t pa, int mode));
+
+void	pmap_pinit __P((struct pmap *));
+void	pmap_release __P((struct pmap *));
 
 /*
  * First and last managed physical addresses.  XXX only used for dumping the system.

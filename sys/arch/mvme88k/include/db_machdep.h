@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/db_machdep.h,v 1.5.6.2 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/db_machdep.h,v 1.5.6.3 2001/11/13 21:04:15 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -40,7 +40,7 @@
 #include <machine/psl.h>
 #include <machine/trap.h>
 
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 
 #define BKPT_SIZE	(4)		/* number of bytes in bkpt inst. */
 #define BKPT_INST	(0xF000D082U)	/* tb0, 0,r0, vector 132 */
@@ -50,11 +50,11 @@
 #define ENTRY_ASM       	"tb0 0, r0, 132"
 #define DDB_ENTRY_TRAP_NO	132
 
-typedef vm_offset_t   db_addr_t;
-typedef int           db_expr_t;
-typedef struct m88100_saved_state db_regs_t;
-db_regs_t	      ddb_regs;	/* register state */
-#define DDB_REGS      (&ddb_regs)
+typedef	vm_offset_t		db_addr_t;
+typedef	int			db_expr_t;
+typedef	struct m88100_saved_state db_regs_t;
+extern db_regs_t	ddb_regs;	/* register state */
+#define	DDB_REGS	(&ddb_regs)
 
 /*
  * the low two bits of sxip, snip, sfip have valid bits

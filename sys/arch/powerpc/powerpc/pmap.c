@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.4 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.5 2001/11/13 21:04:16 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -38,8 +38,6 @@
 #include <sys/queue.h>
 #include <sys/systm.h>
 #include <sys/pool.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 
@@ -285,9 +283,6 @@ void pmap_remove_pv(struct pmap *pm, int pteidx, vm_offset_t va,
 	u_int32_t pte_lo);
 pte_t * pte_find(struct pmap *pm, vm_offset_t va);
 
-/* XXX */
-void pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs);
-void pmap_kremove(vaddr_t va, vsize_t len);
 void addbatmap(u_int32_t vaddr, u_int32_t raddr, u_int32_t wimg);
 
 /*

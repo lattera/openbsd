@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbicdma.c,v 1.4.14.1 2001/07/04 10:19:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbicdma.c,v 1.4.14.2 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -43,7 +43,7 @@
 #include <sys/device.h>
 #include <sys/proc.h>
 #include <sys/conf.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1999/06/30 18:48:06 ragge Exp $	*/
 
 /*
@@ -45,7 +45,7 @@
 #include <sys/proc.h>
 #include <sys/user.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/macros.h>
 #include <machine/pte.h>

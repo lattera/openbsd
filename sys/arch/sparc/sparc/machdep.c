@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.7 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.8 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -77,8 +77,7 @@
 #include <sys/sysctl.h>
 #include <sys/extent.h>
 
-#include <vm/vm.h>
-#include <vm/vm_page.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/frame.h>
@@ -118,7 +117,6 @@ vm_map_t phys_map = NULL;
 /*
  * Declare these as initialized data so we can patch them.
  */
-int	nswbuf = 0;
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -210,7 +208,7 @@ cpu_startup()
 
         /* allocate VM for buffers... area is not managed by VM system */
         if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-                    NULL, UVM_UNKNOWN_OFFSET,
+                    NULL, UVM_UNKNOWN_OFFSET, 0,
                     UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
                                 UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
         	panic("cpu_startup: cannot allocate VM for buffers");
@@ -351,11 +349,6 @@ allocsys(v)
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) &~ 1;	/* force even */
-		if (nswbuf > 256)
-			nswbuf = 256;		/* sanity */
-	}
 	valloc(buf, struct buf, nbuf);
 	return (v);
 }

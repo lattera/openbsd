@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.1 2001/05/14 22:05:27 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.2 2001/11/13 21:05:48 niklas Exp $	 */
 /*	$NetBSD: svr4_stat.c,v 1.21 1996/04/22 01:16:07 christos Exp $	 */
 
 /*
@@ -43,7 +43,7 @@
 
 #include <sys/time.h>
 #include <sys/ucred.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <sys/syscallargs.h>

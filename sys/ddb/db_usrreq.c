@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.1 2000/03/02 07:04:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.2 2001/11/13 21:05:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff.  All rights reserved.
@@ -33,7 +33,7 @@
 #include <sys/types.h>
 #include <sys/kernel.h>
 #include <sys/proc.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <ddb/db_var.h>

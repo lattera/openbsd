@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/disklabel.h,v 1.1 2001/06/26 21:57:44 smurph Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/disklabel.h,v 1.1.2.1 2001/11/13 21:04:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Christopher G. Demetriou
@@ -100,7 +100,6 @@ get_le(p)
 	void *p;
 #endif
 {
-	u_int32_t c;
 	u_int8_t *_p = (u_int8_t *)p;
 	int x;
 	x = _p[0];

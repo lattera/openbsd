@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_subr.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_subr.c,v 1.1.2.2 2001/11/13 21:05:47 niklas Exp $	*/
 /*	$KAME: altq_subr.c,v 1.8 2000/12/14 08:12:46 thorpej Exp $	*/
 
 /*
@@ -37,7 +37,7 @@
 #include <sys/kernel.h>
 #include <sys/errno.h>
 #include <sys/syslog.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 #include <sys/queue.h>
 

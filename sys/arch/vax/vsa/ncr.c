@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vsa/ncr.c,v 1.4.6.2 2001/10/31 03:08:02 nate Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vsa/ncr.c,v 1.4.6.3 2001/11/13 21:04:19 niklas Exp $ */
 /*	$NetBSD: ncr.c,v 1.32 2000/06/25 16:00:43 ragge Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@
 #include <sys/proc.h>
 #include <sys/user.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsi_debug.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvaxII.c,v 1.7.12.1 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvaxII.c,v 1.7.12.2 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: uvaxII.c,v 1.10 1996/10/13 03:36:04 christos Exp $	*/
 
 /*-
@@ -43,7 +43,7 @@
 #include <sys/types.h>
 #include <sys/device.h>
 #include <sys/systm.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/uvaxII.h>
 #include <machine/pte.h>

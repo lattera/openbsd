@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/asm.h,v 1.6.4.3 2001/10/31 03:01:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/asm.h,v 1.6.4.4 2001/11/13 21:04:15 niklas Exp $	*/
 
 /*
  * Mach Operating System
@@ -136,11 +136,14 @@
  * will never actually take the trap).
  */
 #if 0
-#define FLUSH_PIPELINE	tcnd	ne0, r0, 0
+#define	FLUSH_PIPELINE		tcnd	ne0, r0, 0
+#define	FLUSH_PIPELINE_STRING	"tcnd	ne0, r0, 0"
 #else
-#define FLUSH_PIPELINE	tb1 0, r0, 0
+#define	FLUSH_PIPELINE		tb1	0, r0, 0
+#define	FLUSH_PIPELINE_STRING	"tb1	0, r0, 0"
 #endif
-#define NOP		or r0, r0, r0
+#define	NOP			or	r0, r0, r0
+#define	NOP_STRING		"or	r0, r0, r0"
 
 /*
  * Useful in some situations.

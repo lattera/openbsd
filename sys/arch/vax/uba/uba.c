@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.8.12.2 2001/10/31 03:08:01 nate Exp $	   */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.8.12.3 2001/11/13 21:04:18 niklas Exp $	   */
 /*	$NetBSD: uba.c,v 1.43 2000/01/24 02:40:36 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.
@@ -52,7 +52,7 @@
 #include <sys/malloc.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5.12.2 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_trap.c,v 1.5.12.3 2001/11/13 21:05:48 niklas Exp $	*/
 /*	$NetBSD: db_trap.c,v 1.9 1996/02/05 01:57:18 christos Exp $	*/
 
 /* 
@@ -37,7 +37,7 @@
 #include <sys/proc.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.2 2001/07/04 10:19:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.3 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -474,10 +474,11 @@ tryerase:
 	return (error);
 }
 
-int
+paddr_t
 flashmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	int unit = minor(dev);
 	struct flashsoftc *sc = (struct flashsoftc *) flash_cd.cd_devs[unit];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.18.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.18.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.108 2001/07/24 19:30:14 eeh Exp $ */
 
 /*-
@@ -104,7 +104,6 @@
 #include <sys/syscallargs.h>
 #include <sys/exec.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 #include <sys/sysctl.h>
@@ -250,7 +249,7 @@ cpu_startup()
 	 */
 	printf(version);
 	/*identifycpu();*/
-	printf("total memory = %d\n", physmem * PAGE_SIZE);
+	printf("total memory = %ld\n", (long)physmem * PAGE_SIZE);
 
 	/*
 	 * Find out how much space we need, allocate it,
@@ -269,7 +268,7 @@ cpu_startup()
 
         /* allocate VM for buffers... area is not managed by VM system */
         if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-                    NULL, UVM_UNKNOWN_OFFSET,
+                    NULL, UVM_UNKNOWN_OFFSET, 0,
                     UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
                                 UVM_ADV_NORMAL, 0)) != 0)
         	panic("cpu_startup: cannot allocate VM for buffers");
@@ -387,11 +386,6 @@ allocsys(caddr_t v)
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) &~ 1;       /* force even */
-		if (nswbuf > 256)
-			nswbuf = 256;           /* sanity */
-	}
 	valloc(buf, struct buf, nbuf);
 
 	return (v);
@@ -1623,7 +1617,7 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
 	 * our aligment requirements.
 	 */
 	oversize = size + align - PAGE_SIZE;
-	r = uvm_map(kernel_map, &sva, oversize, NULL, UVM_UNKNOWN_OFFSET,
+	r = uvm_map(kernel_map, &sva, oversize, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 	    UVM_ADV_NORMAL, 0));
 	if (r != 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/isr.c,v 1.10.2.2 2001/07/04 10:24:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/isr.c,v 1.10.2.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: isr.c,v 1.25 1996/11/20 18:57:32 gwr Exp $	*/
 
 /*-
@@ -53,8 +53,6 @@
 #include <machine/machdep.h>
 #include <machine/mon.h>
 #include <machine/obio.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

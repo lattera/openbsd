@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/ddb/Attic/db_memrw.c,v 1.1 2001/06/26 21:57:39 smurph Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/ddb/Attic/db_memrw.c,v 1.1.2.1 2001/11/13 21:04:15 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.1 1996/02/22 23:23:35 gwr Exp $	*/
 
 /* 
@@ -41,7 +41,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
 

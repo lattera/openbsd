@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vs.c,v 1.1.2.2 2001/07/04 10:19:28 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vs.c,v 1.1.2.3 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
@@ -52,10 +52,10 @@
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
 
-#include <vm/vm_param.h>
-
 #include <machine/autoconf.h>
 #include <machine/param.h>
+
+#include <uvm/uvm_param.h>
 
 #ifdef mvme88k
 #include <mvme88k/dev/vsreg.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/bt_subr.c,v 1.4.4.1 2001/07/04 10:23:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/bt_subr.c,v 1.4.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: bt_subr.c,v 1.5 1996/03/14 19:44:32 christos Exp $ */
 
 /*
@@ -50,7 +50,7 @@
 #include <sys/buf.h>
 #include <sys/errno.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/fbio.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3.4.1 2000/03/24 09:08:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -48,7 +48,7 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/pmap.h>
 
 #include <machine/autoconf.h>

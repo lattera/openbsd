@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.3 2001/10/31 03:08:01 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.4 2001/11/13 21:04:18 niklas Exp $ */
 /*	$NetBSD: pmap.c,v 1.74 1999/11/13 21:32:25 matt Exp $	   */
 /*
  * Copyright (c) 1994, 1998, 1999 Ludd, University of Lule}, Sweden.
@@ -55,9 +55,7 @@
 #include <machine/cpu.h>
 #include <machine/scb.h>
 
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-
+#include <uvm/uvm_extern.h>
 
 /* QDSS console mapping hack */
 #include "qd.h"

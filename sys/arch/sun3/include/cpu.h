@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/cpu.h,v 1.10.10.3 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/cpu.h,v 1.10.10.4 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.20 1995/12/21 05:02:10 mycroft Exp $	*/
 
 /*
@@ -156,9 +156,6 @@ struct pcb;
 void	savectx __P((struct pcb *));
 void	switch_exit __P((struct proc *));
 void	proc_trampoline __P((void));
-
-/* trap.c */
-void	child_return __P((void *));
 
 #endif	/* _KERNEL */
 

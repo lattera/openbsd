@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/clock.c,v 1.6.4.1 2001/04/18 16:10:54 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/clock.c,v 1.6.4.2 2001/11/13 21:04:14 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1995 Theo de Raadt
@@ -89,6 +89,7 @@
 #include <sys/gmon.h>
 #endif
 
+#include <machine/asm.h>
 #include <machine/asm_macro.h>	/* for stack_pointer() */
 #include <machine/board.h>	/* for register defines */
 #include <machine/psl.h>
@@ -289,7 +290,9 @@ m188_clockintr(eframe)
 	volatile int *dti_stop = (volatile int *)DART_STOPC;
 	volatile int *dti_start = (volatile int *)DART_STARTC;
         volatile int *ist = (volatile int *)MVME188_IST;
+#ifdef DEBUG
 	register unsigned long sp;
+#endif
 	
 	/* increment intr counter */
 	intrcnt[M88K_CLK_IRQ]++; 
@@ -298,6 +301,7 @@ m188_clockintr(eframe)
 	tmp = *dti_stop;
 	
 
+#ifdef DEBUG
 	/* check kernel stack for overflow */
 	sp = stack_pointer();
 	if (sp < UADDR + NBPG && sp > UADDR) {
@@ -305,8 +309,9 @@ m188_clockintr(eframe)
 			printf("DTI not clearing!\n");
 		}
 		printf("kernel stack @ 0x%8x\n", sp);
-		panic("stack overflow eminant!");
+		panic("stack overflow imminent!");
 	}
+#endif
 	
 #if 0
 	/* clear the counter/timer output OP3 while we program the DART */

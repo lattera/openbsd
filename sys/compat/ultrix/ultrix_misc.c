@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.3 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.4 2001/11/13 21:05:48 niklas Exp $	*/
 /*	$NetBSD: ultrix_misc.c,v 1.23 1996/04/07 17:23:04 jonathan Exp $	*/
 
 /*
@@ -123,7 +123,7 @@
 #include <nfs/nfsproto.h>
 #include <nfs/nfs.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <sys/conf.h>					/* iszerodev() */
 #include <sys/socketvar.h>				/* sosetopt() */
@@ -308,15 +308,12 @@ async_daemon(p, v, retval)
 
 int
 ultrix_sys_mmap(p, v, retval)
-	register struct proc *p;
+	struct proc *p;
 	void *v;
 	register_t *retval;
 {
-	register struct ultrix_sys_mmap_args *uap = v;
+	struct ultrix_sys_mmap_args *uap = v;
 	struct sys_mmap_args ouap;
-	register struct filedesc *fdp;
-	register struct file *fp;
-	register struct vnode *vp;
 
 	/*
 	 * Verify the arguments.
@@ -339,18 +336,6 @@ ultrix_sys_mmap(p, v, retval)
 	SCARG(&ouap, prot) = SCARG(uap, prot);
 	SCARG(&ouap, fd) = SCARG(uap, fd);
 	SCARG(&ouap, pos) = SCARG(uap, pos);
-
-	/*
-	 * Special case: if fd refers to /dev/zero, map as MAP_ANON.  (XXX)
-	 */
-	fdp = p->p_fd;
-	if ((fp = fd_getfile(fdp, SCARG(&ouap, fd))) != NULL &&		/*XXX*/
-	    fp->f_type == DTYPE_VNODE &&				/*XXX*/
-	    (vp = (struct vnode *)fp->f_data)->v_type == VCHR &&	/*XXX*/
-	    iszerodev(vp->v_rdev)) {					/*XXX*/
-		SCARG(&ouap, flags) |= MAP_ANON;
-		SCARG(&ouap, fd) = -1;
-	}
 
 	return (sys_mmap(p, &ouap, retval));
 }

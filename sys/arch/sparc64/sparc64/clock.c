@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.3.4.2 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.41 2001/07/24 19:29:25 eeh Exp $ */
 
 /*
@@ -75,7 +75,6 @@
 #endif
 #include <sys/sched.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

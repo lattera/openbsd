@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg4.c,v 1.8 1997/01/16 04:03:43 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/cg4.c,v 1.8.14.1 2001/11/13 21:04:17 niklas Exp $	*/
 /*	$NetBSD: cg4.c,v 1.11 1996/10/29 19:54:19 gwr Exp $	*/
 
 /*
@@ -68,7 +68,7 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/conf.h>
 #include <machine/cpu.h>
@@ -305,10 +305,10 @@ cg4ioctl(dev, cmd, data, flags, p)
  * 	1920k gap
  * 	1024k color memory
  */
-int
+paddr_t
 cg4mmap(dev, off, prot)
 	dev_t dev;
-	register int off;
+	off_t off;
 	int prot;
 {
 	struct cg4_softc *sc = cgfour_cd.cd_devs[minor(dev)];

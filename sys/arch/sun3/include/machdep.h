@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/machdep.h,v 1.8.10.4 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/machdep.h,v 1.8.10.5 2001/11/13 21:04:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Gordon W. Ross
@@ -83,8 +83,6 @@ void	cache_flush_segment(vm_offset_t sgva);
 void	cache_flush_context(void);
 
 int 	cachectl __P((int req, caddr_t addr, int len));
-
-void	child_return __P((void *));
 
 void	cninit __P((void));
 

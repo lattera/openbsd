@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/dvma.c,v 1.8.6.2 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/dvma.c,v 1.8.6.3 2001/11/13 21:04:18 niklas Exp $	*/
 /*	$NetBSD: dvma.c,v 1.5 1996/11/20 18:57:29 gwr Exp $	*/
 
 /*-
@@ -48,8 +48,6 @@
 #include <sys/user.h>
 #include <sys/core.h>
 #include <sys/exec.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 

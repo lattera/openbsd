@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9.2.3 2001/10/31 03:01:17 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9.2.4 2001/11/13 21:04:14 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -82,7 +82,6 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 extern u_int lowram;
@@ -232,10 +231,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	/*
 	 * /dev/mem is the only one that makes sense through this

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.3 2001/10/31 03:11:47 nate Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.4 2001/11/13 21:05:48 niklas Exp $	 */
 /*	$NetBSD: svr4_misc.c,v 1.42 1996/12/06 03:22:34 christos Exp $	 */
 
 /*
@@ -88,8 +88,6 @@
 #include <compat/svr4/svr4_acl.h>
 
 #include <compat/common/compat_dir.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -677,7 +675,7 @@ svr4_sys_break(p, v, retval)
 
 	if (diff > 0) {
 		rv = uvm_map(&vm->vm_map, &old, diff, NULL, UVM_UNKNOWN_OFFSET,
-			UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_COPY,
+			0, UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_COPY,
 				    UVM_ADV_NORMAL,
 				    UVM_FLAG_AMAPPAD|UVM_FLAG_FIXED|
 				    UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW));

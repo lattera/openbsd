@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.4 2001/10/31 03:08:01 nate Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.5 2001/11/13 21:04:18 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -66,12 +66,10 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 #include <sys/ptrace.h>
-#include <vm/vm.h>
 #include <sys/sysctl.h>
 
 #include <dev/cons.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #ifdef SYSVMSG
@@ -213,7 +211,7 @@ cpu_startup()
 
 	/* allocate VM for buffers... area is not managed by VM system */
 	if (uvm_map(kernel_map, (vm_offset_t *) &buffers, round_page(size),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 			UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
@@ -810,12 +808,6 @@ allocsys(v)
     if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
         bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-    /* Allocate 1/2 as many swap buffer headers as file i/o buffers.  */
-    if (nswbuf == 0) {
-        nswbuf = (nbuf / 2) & ~1;   /* force even */
-        if (nswbuf > 256)
-            nswbuf = 256;       /* sanity */
-    }
     VALLOC(buf, struct buf, nbuf);
     return (v);
 }
