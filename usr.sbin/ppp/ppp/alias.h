@@ -7,7 +7,7 @@
     This software is placed into the public domain with no restrictions
     on its distribution.
 
-    $Id: alias.h,v 1.8 1998/04/19 21:42:05 brian Exp $
+    $Id: alias.h,v 1.3 1998/08/31 00:22:03 brian Exp $
 */
 
 
