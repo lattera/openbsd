@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.9 2004/03/22 23:47:53 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.10 2004/03/23 23:02:19 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -39,43 +39,103 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 	
+#include <machine/i82093reg.h>	
 #include <machine/i82489reg.h>	
 
 #ifdef __ELF__
-#define XINTR(irq_num) Xintr/**/irq_num
+#define XINTR(name) Xintr/**/name
 #else
-#define XINTR(irq_num) _Xintr/**/irq_num
+#define XINTR(name) _Xintr/**/name
 #endif
 
+#define	IDTVEC(name)	ALIGN_TEXT; .globl X/**/name; X/**/name:
+
 #ifdef MULTIPROCESSOR
+IDTVEC(recurse_lapic_ipi)
+	pushfl
+	pushl	%cs
+	pushl	%esi
+	pushl	$0		
+	pushl	$T_ASTFLT
+	INTRENTRY		
+IDTVEC(resume_lapic_ipi)
+	cli
+	jmp	1f
+IDTVEC(intr_lapic_ipi)
 	.globl	XINTR(ipi)
 XINTR(ipi):
 	pushl	$0		
 	pushl	$T_ASTFLT
 	INTRENTRY		
 	MAKE_FRAME		
-	pushl	CPL
-	movl	_C_LABEL(lapic_ppr),%eax
-	movl	%eax,CPL
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
+	movl	CPUVAR(ILEVEL),%ebx
+	cmpl	$IPL_IPI,%ebx
+	jae	2f
+1:
+#ifdef notyet
+	incl	CPUVAR(IDEPTH)
+#endif
+	movl	$IPL_IPI,CPUVAR(ILEVEL)
         sti			/* safe to take interrupts.. */
+	pushl	%ebx
 	call	_C_LABEL(i386_ipi_handler)
 	jmp	_C_LABEL(Xdoreti)
+2:
+	orl	$(1 << LIR_IPI),CPUVAR(IPENDING)
+	sti
+	INTRFASTEXIT
+
+#ifdef notyet
+#if defined(DDB)
+IDTVEC(intrddbipi)
+1:
+	str	%ax
+	GET_TSS
+	movzwl	(%eax),%eax
+	GET_TSS
+	pushl	%eax
+	movl	$0xff,_C_LABEL(lapic_tpr)
+	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
+	sti
+	call	_C_LABEL(ddb_ipi_tss)
+	addl	$4,%esp
+	movl	$0,_C_LABEL(lapic_tpr)
+	iret
+	jmp	1b
+#endif /* DDB */
 #endif
 	
 	/*
 	 * Interrupt from the local APIC timer.
 	 */
+IDTVEC(recurse_lapic_ltimer)
+	pushfl
+	pushl	%cs
+	pushl	%esi
+	pushl	$0		
+	pushl	$T_ASTFLT
+	INTRENTRY		
+IDTVEC(resume_lapic_ltimer)
+	cli
+	jmp	1f
+IDTVEC(intr_lapic_ltimer)
 	.globl	XINTR(ltimer)
 XINTR(ltimer):			
 	pushl	$0		
 	pushl	$T_ASTFLT
 	INTRENTRY		
 	MAKE_FRAME		
-	pushl	CPL
-	movl	_C_LABEL(lapic_ppr),%eax
-	movl	%eax,CPL
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
+	movl	CPUVAR(ILEVEL),%ebx
+	cmpl	$IPL_CLOCK,%ebx
+	jae	2f
+1:
+	pushl	%ebx
+#ifdef notyet
+	incl	CPUVAR(IDEPTH)
+#endif
+	movl	$IPL_CLOCK,CPUVAR(ILEVEL)
 	sti
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(i386_softintlock)
@@ -88,6 +148,10 @@ XINTR(ltimer):
 	call	_C_LABEL(i386_softintunlock)
 #endif
 	jmp	_C_LABEL(Xdoreti)
+2:
+	orl	$(1 << LIR_TIMER),CPUVAR(IPENDING)
+	sti
+	INTRFASTEXIT
 
 	.globl	XINTR(softclock), XINTR(softnet), XINTR(softtty)
 XINTR(softclock):
@@ -95,9 +159,13 @@ XINTR(softclock):
 	pushl	$T_ASTFLT
 	INTRENTRY		
 	MAKE_FRAME		
-	pushl	CPL
-	movl	$IPL_SOFTCLOCK,CPL
-	andl	$~(1<<SIR_CLOCK),_C_LABEL(ipending)
+	movl	CPUVAR(ILEVEL),%ebx
+	pushl	%ebx
+	movl	$IPL_SOFTCLOCK,CPUVAR(ILEVEL)
+#ifdef notyet
+	incl	CPUVAR(IDEPTH)
+#endif
+	andl	$~(1<<SIR_CLOCK),CPUVAR(IPENDING)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
 	sti
 #ifdef MULTIPROCESSOR
@@ -106,6 +174,9 @@ XINTR(softclock):
 	call	_C_LABEL(softclock)
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(i386_softintunlock)
+#endif
+#ifdef notyet
+	decl	CPUVAR(IDEPTH)
 #endif
 	jmp	_C_LABEL(Xdoreti)
 	
@@ -121,9 +192,13 @@ XINTR(softnet):
 	pushl	$T_ASTFLT
 	INTRENTRY		
 	MAKE_FRAME		
-	pushl	CPL
-	movl	$IPL_SOFTNET,CPL
-	andl	$~(1<<SIR_NET),_C_LABEL(ipending)
+	movl	CPUVAR(ILEVEL),%ebx
+	pushl	%ebx
+	movl	$IPL_SOFTNET,CPUVAR(ILEVEL)
+#ifdef notyet
+	incl	CPUVAR(IDEPTH)
+#endif
+	andl	$~(1<<SIR_NET),CPUVAR(IPENDING)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti
 #ifdef MULTIPROCESSOR
@@ -135,6 +210,9 @@ XINTR(softnet):
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(i386_softintunlock)
 #endif
+#ifdef notyet
+	decl	CPUVAR(IDEPTH)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 #undef DONETISR
 
@@ -143,9 +221,13 @@ XINTR(softtty):
 	pushl	$T_ASTFLT
 	INTRENTRY		
 	MAKE_FRAME		
-	pushl	CPL
-	movl	$IPL_SOFTTTY,CPL
-	andl	$~(1<<SIR_TTY),_C_LABEL(ipending)
+	movl	CPUVAR(ILEVEL),%ebx
+	pushl	%ebx
+	movl	$IPL_SOFTTTY,CPUVAR(ILEVEL)
+#ifdef notyet
+	incl	CPUVAR(IDEPTH)
+#endif
+	andl	$~(1<<SIR_TTY),CPUVAR(IPENDING)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti
 #ifdef MULTIPROCESSOR
@@ -155,9 +237,15 @@ XINTR(softtty):
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(i386_softintunlock)
 #endif
+#ifdef notyet
+	decl	CPUVAR(IDEPTH)
+#endif
 	jmp	_C_LABEL(Xdoreti)
 
 #if NIOAPIC > 0
+
+#define voidop(num)
+
 	/*
 	 * I/O APIC interrupt.
 	 * We sort out which one is which based on the value of 
@@ -167,76 +255,108 @@ XINTR(softtty):
 	 * XXX use cmove when appropriate.
 	 */
 	
-#define APICINTR(minor)							\
-XINTR(ioapic/**/minor):						\
+#define APICINTR(name, num, early_ack, late_ack, mask, unmask, level_mask) \
+IDTVEC(recurse_/**/name/**/num)						;\
+	pushfl								;\
+	pushl	%cs							;\
+	pushl	%esi							;\
+	subl	$4,%esp							;\
+	pushl	$T_ASTFLT		/* trap # for doing ASTs */	;\
+	INTRENTRY							;\
+IDTVEC(resume_/**/name/**/num)						\
+/*	movl	$IREENT_MAGIC,TF_ERR(%esp)	*/			;\
+/*	movl	%ebx,%esi	*/					;\
+/*	movl	CPUVAR(ISOURCES) + (num) * 4, %ebp	*/		;\
+/*	movl	IS_MAXLEVEL(%ebp),%ebx	*/				;\
+	jmp	1f							;\
+/*IDTVEC(intr_-**-name-**-num)*/					;\
+XINTR(_/**/name/**/num):						\
 	pushl	$0							;\
 	pushl	$T_ASTFLT						;\
 	INTRENTRY							;\
 	MAKE_FRAME							;\
-	pushl	CPL							;\
+/*	movl	CPUVAR(ISOURCES) + (num) * 4, %ebp	*/		;\
+	mask(num)			/* mask it in hardware */	;\
+	early_ack(num)			/* and allow other intrs */	;\
+/*	movl	IS_MAXLEVEL(%ebp),%ebx	*/				;\
+	movl	CPUVAR(ILEVEL),%esi					;\
+/*	cmpl	%ebx,%esi	*/					;\
+/*	jae	10f		*/	/* currently masked; hold it */	;\
+/*	incl	MY_COUNT+V_INTR	*/	/* statistical info */		;\
+1:									;\
+	pushl	%esi							;\
 	movl	_C_LABEL(lapic_ppr),%eax				;\
-	movl	%eax,CPL						;\
-	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI			;\
+	movl	%eax,CPUVAR(ILEVEL)					;\
 	sti								;\
-	orl	$minor,%eax						;\
+	orl	$num,%eax						;\
 	incl	_C_LABEL(apic_intrcount)(,%eax,4)			;\
+/*	incl	CPUVAR(IDEPTH)	*/					;\
 	movl	_C_LABEL(apic_intrhand)(,%eax,4),%ebx /* chain head */	;\
 	testl	%ebx,%ebx						;\
 	jz	8f			/* oops, no handlers.. */	;\
-7:									 \
-	LOCK_KERNEL							;\
-	movl	IH_ARG(%ebx),%eax	/* get handler arg */		;\
+7:	movl	IH_ARG(%ebx),%eax	/* get handler arg */		;\
 	testl	%eax,%eax						;\
-	jnz	6f							;\
+	jnz	4f							;\
 	movl	%esp,%eax		/* 0 means frame pointer */	;\
-6:									 \
+4:									 \
 	pushl	%eax							;\
 	call	*IH_FUN(%ebx)		/* call it */			;\
 	addl	$4,%esp			/* toss the arg */		;\
-	UNLOCK_KERNEL							;\
+	orl	%eax,%eax		/* should it be counted? */	;\
+	jz	5f			/* no, skip it */		;\
 	incl	IH_COUNT(%ebx)		/* count the intrs */		;\
-	movl	IH_NEXT(%ebx),%ebx	/* next handler in chain */	;\
+5:	movl	IH_NEXT(%ebx),%ebx	/* next handler in chain */	;\
 	testl	%ebx,%ebx						;\
 	jnz	7b							;\
-8:									 \
-	jmp	_C_LABEL(Xdoreti)
+	UNLOCK_KERNEL							;\
+6:	cli								;\
+	unmask(num)			/* unmask it in hardware */	;\
+	late_ack(num)							;\
+	sti								;\
+	jmp	_C_LABEL(Xdoreti)					;\
+8:	pushl	$num							;\
+	call	_C_LABEL(isa_strayintr)					;\
+	addl	$4,%esp							;\
+	jmp	6b							;\
+10:									;\
+	orb	$IRQ_BIT(num),CPUVAR(IPENDING) + IRQ_BYTE(num)		;\
+	sti								;\
+	INTRFASTEXIT
 	
-APICINTR(0)
-APICINTR(1)
-APICINTR(2)
-APICINTR(3)
-APICINTR(4)
-APICINTR(5)
-APICINTR(6)
-APICINTR(7)
-APICINTR(8)
-APICINTR(9)
-APICINTR(10)
-APICINTR(11)
-APICINTR(12)
-APICINTR(13)
-APICINTR(14)
-APICINTR(15)
+APICINTR(ioapic,0, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,1, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,2, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,3, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,4, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,5, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,6, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,7, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,8, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,9, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,10, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,11, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,12, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,13, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,14, voidop, ioapic_asm_ack, voidop, voidop, voidop)
+APICINTR(ioapic,15, voidop, ioapic_asm_ack, voidop, voidop, voidop)
 
-	.globl	_C_LABEL(Xintrioapic0),_C_LABEL(Xintrioapic1)
-	.globl	_C_LABEL(Xintrioapic2),_C_LABEL(Xintrioapic3)
-	.globl	_C_LABEL(Xintrioapic4),_C_LABEL(Xintrioapic5)
-	.globl	_C_LABEL(Xintrioapic6),_C_LABEL(Xintrioapic7)
-	.globl	_C_LABEL(Xintrioapic8),_C_LABEL(Xintrioapic9)
-	.globl	_C_LABEL(Xintrioapic10),_C_LABEL(Xintrioapic11)
-	.globl	_C_LABEL(Xintrioapic12),_C_LABEL(Xintrioapic13)
-	.globl	_C_LABEL(Xintrioapic14),_C_LABEL(Xintrioapic15)
+	.globl	_C_LABEL(Xintr_ioapic0),_C_LABEL(Xintr_ioapic1)
+	.globl	_C_LABEL(Xintr_ioapic2),_C_LABEL(Xintr_ioapic3)
+	.globl	_C_LABEL(Xintr_ioapic4),_C_LABEL(Xintr_ioapic5)
+	.globl	_C_LABEL(Xintr_ioapic6),_C_LABEL(Xintr_ioapic7)
+	.globl	_C_LABEL(Xintr_ioapic8),_C_LABEL(Xintr_ioapic9)
+	.globl	_C_LABEL(Xintr_ioapic10),_C_LABEL(Xintr_ioapic11)
+	.globl	_C_LABEL(Xintr_ioapic12),_C_LABEL(Xintr_ioapic13)
+	.globl	_C_LABEL(Xintr_ioapic14),_C_LABEL(Xintr_ioapic15)
 	.globl _C_LABEL(apichandler)
 
 _C_LABEL(apichandler):	
-	.long	_C_LABEL(Xintrioapic0),_C_LABEL(Xintrioapic1)
-	.long	_C_LABEL(Xintrioapic2),_C_LABEL(Xintrioapic3)
-	.long	_C_LABEL(Xintrioapic4),_C_LABEL(Xintrioapic5)
-	.long	_C_LABEL(Xintrioapic6),_C_LABEL(Xintrioapic7)
-	.long	_C_LABEL(Xintrioapic8),_C_LABEL(Xintrioapic9)
-	.long	_C_LABEL(Xintrioapic10),_C_LABEL(Xintrioapic11)
-	.long	_C_LABEL(Xintrioapic12),_C_LABEL(Xintrioapic13)
-	.long	_C_LABEL(Xintrioapic14),_C_LABEL(Xintrioapic15)
-
+	.long	_C_LABEL(Xintr_ioapic0),_C_LABEL(Xintr_ioapic1)
+	.long	_C_LABEL(Xintr_ioapic2),_C_LABEL(Xintr_ioapic3)
+	.long	_C_LABEL(Xintr_ioapic4),_C_LABEL(Xintr_ioapic5)
+	.long	_C_LABEL(Xintr_ioapic6),_C_LABEL(Xintr_ioapic7)
+	.long	_C_LABEL(Xintr_ioapic8),_C_LABEL(Xintr_ioapic9)
+	.long	_C_LABEL(Xintr_ioapic10),_C_LABEL(Xintr_ioapic11)
+	.long	_C_LABEL(Xintr_ioapic12),_C_LABEL(Xintr_ioapic13)
+	.long	_C_LABEL(Xintr_ioapic14),_C_LABEL(Xintr_ioapic15)
 #endif
-	
