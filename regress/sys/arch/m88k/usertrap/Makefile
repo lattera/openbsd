@@ -1,4 +1,4 @@
-#	$OpenBSD: src/regress/sys/arch/mvme88k/usertrap/Attic/Makefile,v 1.1 2003/09/01 19:45:28 miod Exp $
+#	$OpenBSD: src/regress/sys/arch/m88k/usertrap/Makefile,v 1.1 2004/04/24 13:19:15 miod Exp $
 
 PROG=	trap
 
