@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.44 2001/03/23 02:15:23 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.44.2.1 2001/07/29 13:20:00 jason Exp $	*/
 /*	$NetBSD: if_ethersubr.c,v 1.19 1996/05/07 02:40:30 thorpej Exp $	*/
 
 /*
@@ -559,7 +559,7 @@ ether_input(ifp, eh, m)
 	u_int16_t etype;
 	int s, llcfound = 0;
 	register struct llc *l;
-	struct arpcom *ac = (struct arpcom *)ifp;
+	struct arpcom *ac;
 
 	if ((ifp->if_flags & IFF_UP) == 0) {
 		m_freem(m);
@@ -606,6 +606,8 @@ ether_input(ifp, eh, m)
 		return;
        }
 #endif /* NVLAN > 0 */
+
+	ac = (struct arpcom *)ifp;
 
 	/*
 	 * If packet is unicast and we're in promiscuous mode, make sure it
