@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.17 2000/12/12 21:30:34 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.17.2.1 2001/12/01 00:31:55 miod Exp $	*/
 
 /*
  * Invertex AEON / Hi/fn 7751 driver
@@ -35,7 +35,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef __HIFN_H__
-#define __HIFN_H__
+#define	__HIFN_H__
 
 #include <machine/endian.h>
 
@@ -43,8 +43,10 @@
  * Some PCI configuration space offset defines.  The names were made
  * identical to the names used by the Linux kernel.
  */
-#define HIFN_BAR0		(PCI_MAPREG_START + 0)	/* PUC register map */
-#define HIFN_BAR1		(PCI_MAPREG_START + 4)	/* DMA register map */
+#define	HIFN_BAR0		(PCI_MAPREG_START + 0)	/* PUC register map */
+#define	HIFN_BAR1		(PCI_MAPREG_START + 4)	/* DMA register map */
+#define	HIFN_RETRY_TIMEOUT	0x40
+#define	HIFN_TRDY_TIMEOUT	0x41
 
 /*
  *  Some configurable values for the driver
@@ -138,6 +140,8 @@ struct hifn_softc {
 	int sc_maxses;
 	int sc_ramsize;
 	struct hifn_session sc_sessions[2048];
+	pci_chipset_tag_t sc_pci_pc;
+	pcitag_t sc_pci_tag;
 };
 
 /*

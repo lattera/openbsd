@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.57 2001/04/06 16:27:46 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.57.2.1 2001/12/01 00:31:55 miod Exp $	*/
 
 /*
  * Invertex AEON / Hi/fn 7751 driver
@@ -145,6 +145,9 @@ hifn_attach(parent, self, aux)
 	int rseg;
 	caddr_t kva;
 
+	sc->sc_pci_pc = pa->pa_pc;
+	sc->sc_pci_tag = pa->pa_tag;
+
 	cmd = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 	cmd |= PCI_COMMAND_MEM_ENABLE | PCI_COMMAND_MASTER_ENABLE;
 	pci_conf_write(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG, cmd);
@@ -171,6 +174,10 @@ hifn_attach(parent, self, aux)
 		printf(": can't find mem space %d\n", 1);
 		goto fail_io0;
 	}
+
+	cmd = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	cmd &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, cmd);
 
 	sc->sc_dmat = pa->pa_dmat;
 	if (bus_dmamem_alloc(sc->sc_dmat, sizeof(*sc->sc_dma), PAGE_SIZE, 0,
@@ -310,6 +317,8 @@ void
 hifn_reset_board(sc)
 	struct hifn_softc *sc;
 {
+	u_int32_t reg;
+
 	/*
 	 * Set polling in the DMA configuration register to zero.  0x7 avoids
 	 * resetting the board and zeros out the other fields.
@@ -344,6 +353,10 @@ hifn_reset_board(sc)
 	 * Wait another millisecond for the board to un-reset.
 	 */
 	DELAY(1000);
+
+	reg = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	reg &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, reg);
 }
 
 u_int32_t
@@ -761,7 +774,12 @@ hifn_init_dma(sc)
 	struct hifn_softc *sc;
 {
 	struct hifn_dma *dma = sc->sc_dma;
+	u_int32_t reg;
 	int i;
+
+	reg = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	reg &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, reg);
 
 	/* initialize static pointer values */
 	for (i = 0; i < HIFN_D_CMD_RSIZE; i++)
