@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.3.2.2 2002/05/18 04:50:38 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.3.2.3 2002/06/26 15:30:38 jason Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -49,7 +49,7 @@ enum monitor_reqtype {
 	MONITOR_REQ_RSAKEYALLOWED, MONITOR_ANS_RSAKEYALLOWED,
 	MONITOR_REQ_RSACHALLENGE, MONITOR_ANS_RSACHALLENGE,
 	MONITOR_REQ_RSARESPONSE, MONITOR_ANS_RSARESPONSE,
-	MONITOR_REQ_TERM,
+	MONITOR_REQ_TERM
 };
 
 struct mm_master;
@@ -59,7 +59,7 @@ struct monitor {
 	struct mm_master	*m_zback;
 	struct mm_master	*m_zlib;
 	struct Kex		**m_pkex;
-	int			 m_pid;
+	pid_t			 m_pid;
 };
 
 struct monitor *monitor_init(void);

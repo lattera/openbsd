@@ -75,7 +75,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.88 2002/04/06 18:24:09 mouring Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.88.2.1 2002/06/26 15:30:38 jason Exp $");
 
 #include "xmalloc.h"
 #include "atomicio.h"
@@ -219,10 +219,9 @@ main(argc, argv)
 	extern int optind;
 
 	args.list = NULL;
-	addargs(&args, "ssh");	 	/* overwritten with ssh_program */
+	addargs(&args, "ssh");		/* overwritten with ssh_program */
 	addargs(&args, "-x");
 	addargs(&args, "-oForwardAgent no");
-	addargs(&args, "-oFallBackToRsh no");
 	addargs(&args, "-oClearAllForwardings yes");
 
 	fflag = tflag = 0;
@@ -354,8 +353,7 @@ toremote(targ, argc, argv)
 		src = colon(argv[i]);
 		if (src) {	/* remote to remote */
 			static char *ssh_options =
-			    "-x -o'FallBackToRsh no' "
-			    "-o'ClearAllForwardings yes'";
+			    "-x -o'ClearAllForwardings yes'";
 			*src++ = 0;
 			if (*src == 0)
 				src = ".";
@@ -931,9 +929,9 @@ void
 usage(void)
 {
 	(void) fprintf(stderr,
-	    "usage: scp [-pqrvBC46] [-F config] [-S ssh] [-P port] [-c cipher] [-i identity]\n"
-	    "           [-o option] f1 f2\n"
-	    "   or: scp [options] f1 ... fn directory\n");
+	    "usage: scp [-pqrvBC46] [-F config] [-S program] [-P port]\n"
+	    "           [-c cipher] [-i identity] [-o option]\n"
+	    "           [[user@]host1:]file1 [...] [[user@]host2:]file2\n");
 	exit(1);
 }
 

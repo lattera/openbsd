@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.3 2002/06/22 04:33:15 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.4 2002/06/26 15:30:38 jason Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 #include <krb.h>
@@ -88,6 +88,7 @@ initialize_server_options(ServerOptions *options)
 	options->challenge_response_authentication = -1;
 	options->permit_empty_passwd = -1;
 	options->use_login = -1;
+	options->compression = -1;
 	options->allow_tcp_forwarding = -1;
 	options->num_allow_users = 0;
 	options->num_deny_users = 0;
@@ -205,6 +206,8 @@ fill_default_server_options(ServerOptions *options)
 		options->permit_empty_passwd = 0;
 	if (options->use_login == -1)
 		options->use_login = 0;
+	if (options->compression == -1)
+		options->compression = 1;
 	if (options->allow_tcp_forwarding == -1)
 		options->allow_tcp_forwarding = 1;
 	if (options->gateway_ports == -1)
@@ -256,7 +259,7 @@ typedef enum {
 	sPrintMotd, sPrintLastLog, sIgnoreRhosts,
 	sX11Forwarding, sX11DisplayOffset, sX11UseLocalhost,
 	sStrictModes, sEmptyPasswd, sKeepAlives,
-	sUseLogin, sAllowTcpForwarding,
+	sUseLogin, sAllowTcpForwarding, sCompression,
 	sAllowUsers, sDenyUsers, sAllowGroups, sDenyGroups,
 	sIgnoreUserKnownHosts, sCiphers, sMacs, sProtocol, sPidFile,
 	sGatewayPorts, sPubkeyAuthentication, sXAuthLocation, sSubsystem, sMaxStartups,
@@ -317,6 +320,7 @@ static struct {
 	{ "strictmodes", sStrictModes },
 	{ "permitemptypasswords", sEmptyPasswd },
 	{ "uselogin", sUseLogin },
+	{ "compression", sCompression },
 	{ "keepalive", sKeepAlives },
 	{ "allowtcpforwarding", sAllowTcpForwarding },
 	{ "allowusers", sAllowUsers },
@@ -384,7 +388,7 @@ add_one_listen_addr(ServerOptions *options, char *addr, u_short port)
 	hints.ai_family = IPv4or6;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = (addr == NULL) ? AI_PASSIVE : 0;
-	snprintf(strport, sizeof strport, "%d", port);
+	snprintf(strport, sizeof strport, "%u", port);
 	if ((gaierr = getaddrinfo(addr, strport, &hints, &aitop)) != 0)
 		fatal("bad addr or host: %s (%s)",
 		    addr ? addr : "<NULL>",
@@ -400,9 +404,8 @@ process_server_config_line(ServerOptions *options, char *line,
     const char *filename, int linenum)
 {
 	char *cp, **charptr, *arg, *p;
-	int *intptr, value;
+	int *intptr, value, i, n;
 	ServerOpCodes opcode;
-	int i, n;
 
 	cp = line;
 	arg = strdelim(&cp);
@@ -673,6 +676,10 @@ parse_flag:
 		intptr = &options->use_login;
 		goto parse_flag;
 
+	case sCompression:
+		intptr = &options->compression;
+		goto parse_flag;
+
 	case sGatewayPorts:
 		intptr = &options->gateway_ports;
 		goto parse_flag;
@@ -716,7 +723,8 @@ parse_flag:
 			if (options->num_allow_users >= MAX_ALLOW_USERS)
 				fatal("%s line %d: too many allow users.",
 				    filename, linenum);
-			options->allow_users[options->num_allow_users++] = xstrdup(arg);
+			options->allow_users[options->num_allow_users++] =
+			    xstrdup(arg);
 		}
 		break;
 
@@ -725,7 +733,8 @@ parse_flag:
 			if (options->num_deny_users >= MAX_DENY_USERS)
 				fatal( "%s line %d: too many deny users.",
 				    filename, linenum);
-			options->deny_users[options->num_deny_users++] = xstrdup(arg);
+			options->deny_users[options->num_deny_users++] =
+			    xstrdup(arg);
 		}
 		break;
 
@@ -734,7 +743,8 @@ parse_flag:
 			if (options->num_allow_groups >= MAX_ALLOW_GROUPS)
 				fatal("%s line %d: too many allow groups.",
 				    filename, linenum);
-			options->allow_groups[options->num_allow_groups++] = xstrdup(arg);
+			options->allow_groups[options->num_allow_groups++] =
+			    xstrdup(arg);
 		}
 		break;
 
@@ -872,10 +882,9 @@ parse_flag:
 void
 read_server_config(ServerOptions *options, const char *filename)
 {
-	FILE *f;
+	int linenum, bad_options = 0;
 	char line[1024];
-	int linenum;
-	int bad_options = 0;
+	FILE *f;
 
 	f = fopen(filename, "r");
 	if (!f) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/clientloop.h,v 1.6.4.2 2002/05/18 04:50:38 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/clientloop.h,v 1.6.4.3 2002/06/26 15:30:38 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

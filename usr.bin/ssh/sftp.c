@@ -24,7 +24,7 @@
 
 #include "includes.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.29 2002/04/02 17:37:48 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.29.2.1 2002/06/26 15:30:39 jason Exp $");
 
 /* XXX: short-form remote directory listings (like 'ls -C') */
 
@@ -47,8 +47,10 @@ static void
 connect_to_server(char *path, char **args, int *in, int *out, pid_t *sshpid)
 {
 	int c_in, c_out;
+
 #ifdef USE_PIPES
 	int pin[2], pout[2];
+
 	if ((pipe(pin) == -1) || (pipe(pout) == -1))
 		fatal("pipe: %s", strerror(errno));
 	*in = pin[0];
@@ -57,6 +59,7 @@ connect_to_server(char *path, char **args, int *in, int *out, pid_t *sshpid)
 	c_out = pin[1];
 #else /* USE_PIPES */
 	int inout[2];
+
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, inout) == -1)
 		fatal("socketpair: %s", strerror(errno));
 	*in = *out = inout[0];

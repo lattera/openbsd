@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.66.2.3 2002/05/19 15:12:46 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.66.2.4 2002/06/26 15:30:39 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -31,7 +31,7 @@
 #define SSH_MAX_IDENTITY_FILES		100
 
 /*
- * Major protocol version.  Different version indicates major incompatiblity
+ * Major protocol version.  Different version indicates major incompatibility
  * that prevents communication.
  *
  * Minor protocol version.  Different version indicates minor incompatibility
@@ -51,8 +51,8 @@
 #define SSH_SERVICE_NAME	"ssh"
 
 /*
- * Name of the environment variable containing the pathname of the
- * authentication socket.
+ * Name of the environment variable containing the process ID of the
+ * authentication agent.
  */
 #define SSH_AGENTPID_ENV_NAME	"SSH_AGENT_PID"
 

@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-skey.c,v 1.17.2.2 2002/05/18 04:50:37 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-skey.c,v 1.17.2.3 2002/06/26 15:30:37 jason Exp $");
 
 #ifdef SKEY
 
@@ -50,8 +50,8 @@ skey_query(void *ctx, char **name, char **infotxt,
 	if (skeychallenge(&skey, authctxt->user, challenge) == -1)
 		return -1;
 
-	*name       = xstrdup("");
-	*infotxt    = xstrdup("");
+	*name  = xstrdup("");
+	*infotxt  = xstrdup("");
 	*numprompts = 1;
 	*prompts = xmalloc(*numprompts * sizeof(char*));
 	*echo_on = xmalloc(*numprompts * sizeof(u_int));

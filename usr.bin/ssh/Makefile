@@ -1,9 +1,9 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.10.2.1 2002/06/22 04:33:15 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.10.2.2 2002/06/26 15:30:37 jason Exp $
 
 .include <bsd.own.mk>
 
 SUBDIR=	lib ssh sshd ssh-add ssh-keygen ssh-agent scp sftp-server \
-	ssh-keyscan sftp scard
+	ssh-keysign ssh-keyscan sftp scard
 
 distribution:
 	install -C -o root -g wheel -m 0644 ${.CURDIR}/ssh_config \
