@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.4 2001/07/14 10:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.5 2001/07/15 12:01:11 niklas Exp $	*/
 /*	$NetBSD: mainbus.c,v 1.21 1997/06/06 23:14:20 thorpej Exp $	*/
 
 /*
@@ -130,7 +130,7 @@ mainbus_attach(parent, self, aux)
 	}
 #endif
 
-#if NMBIOS > 0
+#if NMPBIOS > 0
 	if (mpbios_probe(self))
 		mpbios_scan(self);
 	else
