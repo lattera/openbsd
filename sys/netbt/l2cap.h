@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netbt/l2cap.h,v 1.1 2005/01/14 12:04:02 grange Exp $	*/
+/*	$OpenBSD: src/sys/netbt/l2cap.h,v 1.2 2005/01/17 18:12:49 mickey Exp $	*/
 
 /*
  * ng_l2cap.h
@@ -27,7 +27,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_l2cap.h,v 1.2 2003/04/27 00:52:26 max Exp $
  * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_l2cap.h,v 1.2 2003/05/10 21:44:41 julian Exp $
  */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netbt/Attic/bt.h,v 1.1 2005/01/14 12:04:02 grange Exp $	*/
+/*	$OpenBSD: src/sys/netbt/Attic/bt.h,v 1.2 2005/01/17 18:12:49 mickey Exp $	*/
 
 /*
  * ng_btsocket.h
@@ -27,7 +27,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_btsocket.h,v 1.8 2003/04/26 22:32:10 max Exp $
  * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_btsocket.h,v 1.6 2004/08/20 01:24:23 julian Exp $
  */
 
