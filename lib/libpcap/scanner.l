@@ -1,5 +1,5 @@
 %{
-/*	$OpenBSD: src/lib/libpcap/scanner.l,v 1.12 2002/03/23 01:33:16 frantzen Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/scanner.l,v 1.13 2002/08/26 22:43:53 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -24,7 +24,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/scanner.l,v 1.11 2001/07/06 23:52:24 millert Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/lib/libpcap/scanner.l,v 1.12 2002/03/23 01:33:16 frantzen Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -272,6 +272,7 @@ lex_init(buf)
 	char *buf;
 {
 	in_buffer = buf;
+	yyrestart(NULL);
 }
 
 /*
