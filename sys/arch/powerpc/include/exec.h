@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.8 2002/09/15 02:02:44 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/exec.h,v 1.9 2002/09/15 09:01:59 deraadt Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
