@@ -1,0 +1,37 @@
+#
+#	$OpenBSD: src/distrib/alpha/inst-common/Makefile.inc,v 1.6 2002/04/30 03:47:03 deraadt Exp $
+#
+
+# TOP is assumed to be defined by Makefile including this one.
+
+CBIN?=		instbin
+COMMONDIR=	${TOP}/inst-common
+UTILS=		${TOP}/../miniroot
+
+MOUNT_POINT?=	${TOP}/${BASE}/fs
+
+LISTS?=		${.CURDIR}/../common/list
+CRUNCHCONF?=	${CBIN}.conf
+MTREE=		${UTILS}/mtree.conf
+
+${CRUNCHCONF}: ${LISTS}
+	awk -f ${UTILS}/makeconf.awk CBIN=${CBIN} ${LISTS} > ${CBIN}.conf
+
+${CBIN}.mk ${CBIN}.cache ${CBIN}.c: ${CRUNCHCONF}
+	crunchgen -E -D ${BSDSRCDIR} -L ${DESTDIR}/usr/lib ${CRUNCHCONF}
+
+${CBIN}: ${CBIN}.mk ${CBIN}.cache ${CBIN}.c
+	make -f ${CBIN}.mk all
+
+do_files:
+	mtree -def ${MTREE} -p ${MOUNT_POINT}/ -u
+	TOPDIR=${TOP} CURDIR=${.CURDIR} OBJDIR=${.OBJDIR} \
+	    REV=${REV} TARGDIR=${MOUNT_POINT} UTILS=${UTILS}\
+	    sh ${UTILS}/runlist.sh ${LISTS}
+	rm ${MOUNT_POINT}/${CBIN}
+
+clean cleandir:
+	/bin/rm -f core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}.cache *.o *.lo *.c
+
+.include <bsd.obj.mk>
+.include <bsd.subdir.mk>
