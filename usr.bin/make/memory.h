@@ -1,8 +1,10 @@
-/*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/Attic/sprite.h,v 1.10 2001/05/03 13:41:10 espie Exp $	*/
-/*	$NetBSD: sprite.h,v 1.6 1996/11/06 17:59:22 christos Exp $	*/
+#ifndef MEMORY_H
+#define MEMORY_H
 
-/*
+/* $OpenPackages$ */
+/* $OpenBSD: src/usr.bin/make/memory.h,v 1.1 2001/05/23 12:34:47 espie Exp $ */
+
+/*-
  * Copyright (c) 1988, 1989, 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  * Copyright (c) 1989 by Berkeley Softworks
@@ -39,24 +41,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)sprite.h	8.1 (Berkeley) 6/6/93
+ *	from: @(#)nonints.h	8.3 (Berkeley) 3/19/94
  */
+extern void *emalloc(size_t);
+extern char *estrdup(const char *);
+extern void *erealloc(void *, size_t);
+extern void *ecalloc(size_t, size_t);
+extern int eunlink(const char *);
+extern void esetenv(const char *, const char *);
 
-#ifndef _SPRITE
-#define _SPRITE
+/* efree(x) works when x==NULL. STDC behavior, may need some different
+ * definition for cross-builds on deficient systems */
+#define efree	free
 
-/* Some basic types and definitions, originally from Sprite */
+extern void *hash_alloc(size_t, void *);
+extern void hash_free(void *, size_t, void *);
+extern void *element_alloc(size_t, void *);
 
-typedef int Boolean;
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-typedef int ReturnStatus;
-#define SUCCESS 0
-#define FAILURE 1
-
-#endif /* _SPRITE */
+#endif	/* MEMORY_H */
