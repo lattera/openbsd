@@ -26,14 +26,14 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-ike.c,v 0.0 00/00/00 00:00:00 xxx Exp $ (XXX)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ike.c,v 1.1 1999/07/28 20:41:36 jakob Exp $ (XXX)";
 #endif
 
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#if __STDC__
+#ifdef __STDC__
 struct mbuf;
 struct rtentry;
 #endif
@@ -95,7 +95,6 @@ void isakmp_print(register const u_char *cp, register int length)
 {
 	struct isakmp_header *ih;
 	register const u_char *ep;
-	int mode, version, leapind;
 	u_char *payload;
 	u_char  nextpayload, np1;
 	u_int   paylen;
