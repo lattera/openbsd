@@ -27,7 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#       $Id: dot.profile,v 1.2 1995/11/28 23:57:24 jtc Exp $
+#       $Id: dot.profile,v 1.3 1995/12/14 07:00:10 deraadt Exp $
 
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export PATH
@@ -43,9 +43,6 @@ if [ "X${DONEPROFILE}" = "X" ]; then
 	echo 'erase ^?, werase ^W, kill ^U, intr ^C'
 	stty newcrt werase ^W intr ^C kill ^U erase ^? 9600
 	echo ''
-
-	# run update, so that installed software is written as it goes.
-	update
 
 	# mount the kern_fs so that we can examine the dmesg state
 	mount -t kernfs /kern /kern
