@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.5 1995/12/06 10:53:00 deraadt Exp $
+#	$Id: Makefile,v 1.6 1995/12/07 03:28:33 deraadt Exp $
 
 LIB=sa
 
@@ -16,7 +16,7 @@ SRC_net= nfs.c rpc.c net.c ether.c arp.c in_cksum.c netif.c \
 	 bootparam.c rarp.c
 
 
-SRC_sa = alloc.c bcopy.c close.c getfile.c open.c \
+SRC_sa = alloc.c bcopy.c memcpy.c close.c getfile.c open.c \
 	 printf.c read.c strerror.c ufs.c globals.c lseek.c \
 	 closeall.c dev.c dkcksum.c nullfs.c fstat.c
 
