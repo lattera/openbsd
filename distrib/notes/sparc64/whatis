@@ -1,0 +1,4 @@
+dnl	$OpenBSD: src/distrib/notes/sparc64/whatis,v 1.9 2004/09/10 19:11:52 miod Exp $
+OpenBSD/MACHINE is a port to machines based on the UltraSPARC (64-bit)
+processor, including most of Sun Microsystems workstations and their
+clones.
