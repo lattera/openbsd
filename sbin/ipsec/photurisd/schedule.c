@@ -35,7 +35,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: schedule.c,v 1.3 1997/07/23 12:28:54 provos Exp $";
+static char rcsid[] = "$Id: schedule.c,v 1.4 1997/09/02 17:26:46 provos Exp $";
 #endif
 
 #define _SCHEDULE_C_
@@ -246,6 +246,7 @@ schedule_process(int sock)
 				"counter.\n", newst->address, newst->port);
 #endif /* DEBUG */
 			 start_exchange(sock, newst, st->address, st->port);
+			 state_insert(newst);
 			 break;
 		    } else {
 			 log_error(0, "exchange terminated, phase %d to %s:%d",
