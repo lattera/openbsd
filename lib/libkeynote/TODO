@@ -1,0 +1,10 @@
+# $OpenBSD: src/lib/libkeynote/Attic/TODO,v 1.5 1999/10/01 01:08:29 angelos Exp $
+
+TODOs:
+	- Write key/signature algorithm drafts
+	- More interesting/comprehensive testsuite
+	- Make X509 support be non-RSA specific
+	- Recursive parser
+	- PGPlib support
+	- ElGamal support
+	- Some sort of tcl/tk GUI
