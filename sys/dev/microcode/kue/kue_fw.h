@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/kue/kue_fw.h,v 1.1 2001/12/17 01:39:08 deraadt Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/kue/kue_fw.h,v 1.1.4.1 2002/03/06 01:52:49 niklas Exp $ */
 /*	$NetBSD: kue_fw.h,v 1.3 2001/01/19 08:54:21 jdolecek Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000

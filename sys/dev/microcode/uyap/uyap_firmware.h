@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/uyap/uyap_firmware.h,v 1.1 2001/12/17 01:39:08 deraadt Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/uyap/uyap_firmware.h,v 1.1.4.1 2002/03/06 01:53:10 niklas Exp $ */
 /*	$NetBSD: uyap_firmware.h,v 1.2 2001/01/16 03:10:09 augustss Exp $	*/
 
 /*
