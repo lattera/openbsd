@@ -1,9 +1,11 @@
-/*	$OpenBSD: src/sys/lib/libsa/getfile.c,v 1.3 1996/12/08 15:15:50 niklas Exp $	*/
-/*	$NetBSD: getfile.c,v 1.6 1996/10/14 04:49:21 cgd Exp $	*/
+/*	$NetBSD: rpcv2.h,v 1.1 1996/02/26 23:05:32 gwr Exp $	*/
 
-/*-
- * Copyright (c) 1993
+/*
+ * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Rick Macklem at The University of Guelph.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,26 +35,55 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)getfile.c	8.1 (Berkeley) 6/11/93
+ *	@(#)rpcv2.h	8.1 (Berkeley) 6/10/93
  */
-#include "stand.h"
 
-#define CTRL(x) (x&037)
+/*
+ * Definitions for Sun RPC Version 2, from
+ * "RPC: Remote Procedure Call Protocol Specification" RFC1057
+ */
 
-int
-getfile(prompt, mode)
-	char *prompt;
-	int mode;
-{
-	int fd;
-	char buf[100];
+/* Version # */
+#define	RPC_VER2	2
 
-	do {
-		printf("%s: ", prompt);
-		gets(buf);
-		if (buf[0] == CTRL('d') && buf[1] == 0)
-			return (-1);
-	} while ((fd = open(buf, mode)) < 0);
+/* Authentication */
+#define	RPCAUTH_NULL	0
+#define	RPCAUTH_UNIX	1
+#define	RPCAUTH_SHORT	2
+#define	RPCAUTH_MAXSIZ	400
+#define	RPCAUTH_UNIXGIDS 16
 
-	return (fd);
-}
+/* Rpc Constants */
+#define	RPC_CALL	0
+#define	RPC_REPLY	1
+#define	RPC_MSGACCEPTED	0
+#define	RPC_MSGDENIED	1
+#define	RPC_PROGUNAVAIL	1
+#define	RPC_PROGMISMATCH	2
+#define	RPC_PROCUNAVAIL	3
+#define	RPC_GARBAGE	4		/* I like this one */
+#define	RPC_MISMATCH	0
+#define	RPC_AUTHERR	1
+
+/* Authentication failures */
+#define	AUTH_BADCRED	1
+#define	AUTH_REJECTCRED	2
+#define	AUTH_BADVERF	3
+#define	AUTH_REJECTVERF	4
+#define	AUTH_TOOWEAK	5		/* Give em wheaties */
+
+/* Sizes of rpc header parts */
+#define	RPC_SIZ		24
+#define	RPC_REPLYSIZ	28
+
+/* RPC Prog definitions */
+#define	RPCPROG_MNT	100005
+#define	RPCMNT_VER1	1
+#define	RPCMNT_MOUNT	1
+#define	RPCMNT_DUMP	2
+#define	RPCMNT_UMOUNT	3
+#define	RPCMNT_UMNTALL	4
+#define	RPCMNT_EXPORT	5
+#define	RPCMNT_NAMELEN	255
+#define	RPCMNT_PATHLEN	1024
+#define	RPCPROG_NFS	100003

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/lib/libsa/lseek.c,v 1.2 1996/09/23 14:18:56 mickey Exp $	*/
-/*	$NetBSD: lseek.c,v 1.2 1994/10/26 05:44:51 cgd Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/lseek.c,v 1.3 1996/12/08 15:15:51 niklas Exp $	*/
+/*	$NetBSD: lseek.c,v 1.3 1996/06/21 20:09:03 pk Exp $	*/
 
 /*-
  * Copyright (c) 1993
@@ -80,10 +80,23 @@ lseek(fd, offset, where)
 		return (-1);
 	}
 
-	/* seek is not supported on raw devices */
 	if (f->f_flags & F_RAW) {
-		errno = EOFFSET;
-		return ((off_t)-1);
+		/*
+		 * On RAW devices, update internal offset.
+		 */
+		switch (where) {
+		case SEEK_SET:
+			f->f_offset = offset;
+			break;
+		case SEEK_CUR:
+			f->f_offset += offset;
+			break;
+		case SEEK_END:
+		default:
+			errno = EOFFSET;
+			return (-1);
+		}
+		return (f->f_offset);
 	}
 
 	return (f->f_ops->seek)(f, offset, where);
