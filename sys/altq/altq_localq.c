@@ -1,11 +1,9 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_localq.c,v 1.1 2001/06/27 05:28:35 kjc Exp $	*/
-/*	$KAME: altq_localq.c,v 1.3 2000/10/18 09:15:23 kjc Exp $	*/
-
-
-#if defined(__FreeBSD__) || defined(__NetBSD__)
-#include "opt_altq.h"
-#endif /* __FreeBSD__ || __NetBSD__ */
-#ifdef ALTQ_LOCALQ  /* localq is enabled by ALTQ_LOCALQ option in opt_altq.h */
+/*	$OpenBSD: src/sys/altq/Attic/altq_localq.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
+/*	$KAME: altq_localq.c,v 1.4 2001/08/16 11:28:25 kjc Exp $	*/
+/*
+ * a skeleton file for implementing a new queueing discipline.
+ * this file is in the public domain.
+ */
 
 #include <sys/param.h>
 #include <sys/mbuf.h>
@@ -65,5 +63,3 @@ static struct altqsw localq_sw =
 ALTQ_MODULE(altq_localq, ALTQT_LOCALQ, &localq_sw);
 
 #endif /* KLD_MODULE */
-
-#endif /* ALTQ_LOCALQ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_hfsc.c,v 1.1 2001/06/27 05:28:35 kjc Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_hfsc.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
 /*	$KAME: altq_hfsc.c,v 1.8 2000/12/14 08:12:46 thorpej Exp $	*/
 
 /*
@@ -39,18 +39,6 @@
  * Real-Time and Priority Service"
  * by Ion Stoica, Hui Zhang, and T. S. Eugene Ng.
  */
-
-#if defined(__FreeBSD__) || defined(__NetBSD__)
-#include "opt_altq.h"
-#if (__FreeBSD__ != 2)
-#include "opt_inet.h"
-#ifdef __FreeBSD__
-#include "opt_inet6.h"
-#endif
-#endif
-#endif /* __FreeBSD__ || __NetBSD__ */
-
-#ifdef ALTQ_HFSC  /* hfsc is enabled by ALTQ_HFSC option in opt_altq.h */
 
 #include <sys/param.h>
 #include <sys/malloc.h>
@@ -332,7 +320,7 @@ hfsc_class_create(hif, sc, parent, qlimit, flags)
 		if (flags & HFCF_CLEARDSCP)
 			red_flags |= RIOF_CLEARDSCP;
 #endif
-		if (sc->m2 == 0)
+		if (sc->m2 < 8)
 			red_pkttime = 1000 * 1000 * 1000; /* 1 sec */
 		else
 			red_pkttime = (int64_t)hif->hif_ifq->altq_ifp->if_mtu
@@ -1807,5 +1795,3 @@ static struct altqsw hfsc_sw =
 ALTQ_MODULE(altq_hfsc, ALTQT_HFSC, &hfsc_sw);
 
 #endif /* KLD_MODULE */
-
-#endif /* ALTQ_HFSC */
