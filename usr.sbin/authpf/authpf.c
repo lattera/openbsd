@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/authpf/authpf.c,v 1.53 2003/02/19 00:03:22 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/authpf/authpf.c,v 1.53.2.1 2003/07/08 22:19:56 margarida Exp $	*/
 
 /*
  * Copyright (C) 1998 - 2002 Bob Beck (beck@openbsd.org).
@@ -549,7 +549,7 @@ remove_stale_rulesets()
 		pid = strtoul(prs.name, &s, 10);
 		if (!prs.name[0] || errno || *s)
 			return (1);
-		if (kill(pid, 0)) {
+		if (kill(pid, 0) && errno != EPERM) {
 			int i;
 
 			for (i = 0; i < PF_RULESET_MAX; ++i) {
@@ -699,6 +699,7 @@ authpf_kill_states()
 		syslog(LOG_ERR, "DIOCKILLSTATES failed (%m)");
 
 	/* Kill all states to ipsrc */
+	psk.psk_af = AF_INET;
 	memset(&psk.psk_src, 0, sizeof(psk.psk_src));
 	psk.psk_dst.addr.v.a.addr.v4 = target;
 	memset(&psk.psk_dst.addr.v.a.mask, 0xff,
