@@ -1,3 +1,4 @@
+#       $OpenBSD: src/distrib/arm32/floppies/inst/Attic/dot.profile,v 1.3 2000/03/01 22:09:58 todd Exp $
 #
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.
@@ -27,7 +28,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#       $Id: dot.profile,v 1.1 1996/09/05 21:26:18 deraadt Exp $
 
 export PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export HISTFILE=/.sh_history

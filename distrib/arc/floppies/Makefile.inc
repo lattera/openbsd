@@ -1,3 +1,3 @@
-#	$Id: Makefile.inc,v 1.4 1998/03/08 00:26:15 deraadt Exp $
+#	$OpenBSD: src/distrib/arc/floppies/Attic/Makefile.inc,v 1.6 2000/03/01 22:09:56 todd Exp $
 
 REV=	${OSrev}

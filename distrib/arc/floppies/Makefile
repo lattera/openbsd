@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1996/10/08 19:58:39 deraadt Exp $
+#	$OpenBSD: src/distrib/arc/floppies/Attic/Makefile,v 1.2 2000/03/01 22:09:56 todd Exp $
 
 SUBDIR= kernel inst upgr
 

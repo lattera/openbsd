@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# $OpenBSD: src/distrib/arm32/floppies/inst-common/Attic/inst.sh,v 1.2 2000/03/01 22:09:59 todd Exp $
 # $NetBSD: inst.sh,v 1.1 1996/05/16 19:59:05 mark Exp $
 #
 # Copyright (c) 1995-1996 Mark Brinicombe

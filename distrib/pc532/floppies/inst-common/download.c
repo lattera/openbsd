@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/distrib/pc532/floppies/inst-common/Attic/download.c,v 1.4 2000/03/01 22:10:07 todd Exp $	*/
 /*	$NetBSD: download.c,v 1.1 1995/10/06 21:00:16 phil Exp $	*/
 
 /*

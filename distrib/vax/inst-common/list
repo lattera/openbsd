@@ -1,4 +1,4 @@
-#	$Id: list,v 1.4 1996/09/05 21:27:38 deraadt Exp $
+#	$OpenBSD: src/distrib/vax/inst-common/Attic/list,v 1.6 2000/03/01 22:10:14 todd Exp $
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin	instbin

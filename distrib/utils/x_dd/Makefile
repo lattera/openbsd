@@ -1,3 +1,4 @@
+# $OpenBSD: src/distrib/utils/x_dd/Attic/Makefile,v 1.3 2000/03/01 22:10:13 todd Exp $
 # $NetBSD: Makefile,v 1.4 1996/03/27 04:48:43 scottr Exp $
 # Build a smaller dd (i.e. for boot media)
 

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/distrib/pc532/floppies/inst-common/Attic/go.c,v 1.4 2000/03/01 22:10:07 todd Exp $	*/
 /*
  * Copyright (c) 1995 Matthias Pfaller.
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: go.c,v 1.1 1995/09/26 21:25:06 phil Exp $
  */
 
 #include <sys/reboot.h>

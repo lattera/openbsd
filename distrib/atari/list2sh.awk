@@ -1,3 +1,4 @@
+#	$OpenBSD: src/distrib/atari/Attic/list2sh.awk,v 1.2 2000/03/01 22:10:00 todd Exp $
 #	$NetBSD: list2sh.awk,v 1.1.1.1 1995/04/17 19:08:49 leo Exp $
 
 BEGIN {

@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1995/09/26 21:25:14 phil Exp $
+#	$OpenBSD: src/distrib/pc532/floppies/upgr/Attic/Makefile,v 1.3 2000/03/01 22:10:07 todd Exp $
 
 TOP=		${.CURDIR}/..
 

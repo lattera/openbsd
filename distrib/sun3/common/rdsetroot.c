@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/distrib/sun3/common/Attic/rdsetroot.c,v 1.4 2000/03/01 22:10:11 todd Exp $	*/
 /*	$NetBSD: rdsetroot.c,v 1.2 1995/10/13 16:38:39 gwr Exp $	*/
 
 /*
@@ -26,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: rdsetroot.c,v 1.2 1996/09/05 21:27:30 deraadt Exp $
  */
 
 /*
