@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/dhclient/Attic/inet.h,v 1.2 2004/02/04 12:16:56 henning Exp $	*/
+/*	$OpenBSD: src/sbin/dhclient/Attic/inet.h,v 1.3 2004/02/07 13:26:35 henning Exp $	*/
 
 /* Portable definitions for internet addresses */
 
@@ -43,7 +43,7 @@
 
 struct iaddr {
 	int len;
-	unsigned char iabuf [16];
+	unsigned char iabuf[16];
 };
 
 struct iaddrlist {
