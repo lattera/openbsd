@@ -11,7 +11,7 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Id: bf_torek.c,v 8.19.18.2 2000/09/17 17:04:26 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: bf_torek.c,v 8.19.18.2 2000/09/17 17:04:26 gshapiro Exp $";
 #endif /* ! lint */
 
 #if SFIO

@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Id: recipient.c,v 8.231.14.8 2000/09/14 23:32:27 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: recipient.c,v 8.231.14.8 2000/09/14 23:32:27 gshapiro Exp $";
 #endif /* ! lint */
 
 #include <sendmail.h>

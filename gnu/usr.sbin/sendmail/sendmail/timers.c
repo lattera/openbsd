@@ -11,7 +11,7 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Id: timers.c,v 8.13.16.1 2000/10/09 01:06:45 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: timers.c,v 8.13.16.1 2000/10/09 01:06:45 gshapiro Exp $";
 #endif /* ! lint */
 
 #if _FFR_TIMERS

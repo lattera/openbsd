@@ -23,7 +23,7 @@ divert(-1)
 #
 
 divert(0)dnl
-VERSIONID(`$Id: cs-solaris2.mc,v 8.12 1999/02/07 07:26:00 gshapiro Exp $')
+VERSIONID(`$Sendmail: cs-solaris2.mc,v 8.12 1999/02/07 07:26:00 gshapiro Exp $')
 OSTYPE(solaris2)dnl
 DOMAIN(CS.Berkeley.EDU)dnl
 MAILER(local)dnl

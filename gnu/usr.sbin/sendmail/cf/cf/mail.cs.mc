@@ -22,7 +22,7 @@ divert(-1)
 #
 
 divert(0)dnl
-VERSIONID(`$Id: mail.cs.mc,v 8.18 1999/02/07 07:26:04 gshapiro Exp $')
+VERSIONID(`$Sendmail: mail.cs.mc,v 8.18 1999/02/07 07:26:04 gshapiro Exp $')
 OSTYPE(ultrix4)dnl
 DOMAIN(Berkeley.EDU)dnl
 MASQUERADE_AS(CS.Berkeley.EDU)dnl
