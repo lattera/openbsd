@@ -1,0 +1,2 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/upgrade,v 1.5 2003/09/07 01:15:52 mickey Exp $
+OpenBSDUpgrade({:-the LIF image ``lif{:--:}OSrev.fs'', or a RAMDISK kernel ``bsd.rd''-:})
