@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/gnu/usr.bin/bc/bcwrap/Attic/bcwrap.c,v 1.1 1996/06/20 14:29:49 deraadt Exp $	*/
+/*	$OpenBSD: src/gnu/usr.bin/bc/bcwrap/Attic/bcwrap.c,v 1.1.1.1 1998/06/29 00:19:07 millert Exp $	*/
 
 /*
  * Copyright (c) 1996 Theo de Raadt <deraadt@theos.com>
@@ -36,6 +36,9 @@
  * copyright demands it. That's stupid, ugly, and I think looks very
  * gross.
  *
+ * As a side effect, the special ^C handling in gnubc goes away,
+ * bringing us back to the familiar handling.
+ *
  * Oh well, with this wrapper it's never in interactive mode.
  */
 
@@ -67,7 +70,7 @@ main(argc, argv)
 	pid = fork();
 	switch(pid) {
 	case -1:
-		perror("vfork");
+		perror("fork");
 		exit(1);
 	case 0:
 		dup2(pd[0], 0);		/* stdin = pipe */
@@ -82,27 +85,25 @@ main(argc, argv)
 	}
 
 	width = pd[1];
-	rfds = (1 << 0) || (1 << pd[1]);
 	while (1) {
+		if (waitpid(pid, &stat, WNOHANG) > 0)
+			exit(WEXITSTATUS(stat));
+		rfds = (1 << 0) || (1 << pd[1]);
 		switch (select(width, (fd_set *)&rfds, NULL, NULL, NULL)) {
 		case -1:
 		case 0:
 			break;
 		default:
 			if (rfds & (1<<0) == 0)
-				break;
-			n = read(0, buf, sizeof buf);
-			if (n == 0) {
-				close(pd[1]);
 				goto done;
-			}
+			n = read(0, buf, sizeof buf);
+			if (n == 0)
+				goto done;
 			off = 0;
 			while (off < n) {
 				res = write(pd[1], buf + off, n - off);
-				if (res == -1 && errno != EAGAIN) {
-					close(pd[1]);
+				if (res == -1 && errno != EAGAIN)
 					goto done;
-				}
 				off += res;
 			}
 		}
