@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.257 2000/05/04 17:05:01 deraadt Exp 
+ *		OpenBSD: pcidevs,v 1.257.2.1 2000/10/20 17:49:19 jason Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -4489,6 +4489,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "Vortex Computer Systems",
 	    "GDT6558RD/GDT6658RD",
+	},
+	{
+	    PCI_VENDOR_VORTEX, PCI_PRODUCT_VORTEX_GDT_6518RS,
+	    0,
+	    "Vortex Computer Systems",
+	    "GDT6518RS",
 	},
 	{
 	    PCI_VENDOR_VORTEX, PCI_PRODUCT_VORTEX_GDT_7x18RN,
