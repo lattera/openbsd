@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.5 2001/07/14 10:02:27 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.6 2001/07/16 21:40:10 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -325,6 +325,7 @@ int allowaperture = 0;
 void	winchip_cpu_setup __P((const char *, int, int));
 void	cyrix3_cpu_setup __P((const char *, int, int));
 void	cyrix6x86_cpu_setup __P((const char *, int, int));
+void	old_identifycpu __P((void));
 void	intel586_cpu_setup __P((const char *, int, int));
 void	intel686_cpu_setup __P((const char *, int, int));
 char *	intel686_cpu_name __P((int));
@@ -371,8 +372,8 @@ cpu_startup()
 	printf("%s", version);
 	startrtclock();
 
-	/* XXX MULTIPROCESSOR identifycpu(); */
-
+	/* XXX Merge with identifycpu */
+	old_identifycpu();
 	printf("real mem  = %u (%uK)\n", ctob(physmem), ctob(physmem)/1024);
 
 	/*
@@ -1389,6 +1390,229 @@ identifycpu(struct cpu_info *ci)
 
 }
 
+void
+old_identifycpu()
+{
+	extern char cpu_vendor[];
+	extern int cpu_id;
+	extern int cpu_feature;
+#ifdef CPUDEBUG
+	extern int cpu_cache_eax, cpu_cache_ebx, cpu_cache_ecx, cpu_cache_edx;
+#else
+	extern int cpu_cache_edx;
+#endif
+	const char *name, *modifier, *vendorname, *token;
+	const char *cpu_device = "cpu0";
+	int class = CPUCLASS_386, vendor, i, max;
+	int family, model, step, modif, cachesize;
+	const struct cpu_cpuid_nameclass *cpup = NULL;
+	void (*cpu_setup) __P((const char *, int, int));
+
+	if (cpuid_level == -1) {
+#ifdef DIAGNOSTIC
+		if (cpu < 0 || cpu >=
+		    (sizeof i386_nocpuid_cpus/sizeof(struct cpu_nocpuid_nameclass)))
+			panic("unknown cpu type %d", cpu);
+#endif
+		name = i386_nocpuid_cpus[cpu].cpu_name;
+		vendor = i386_nocpuid_cpus[cpu].cpu_vendor;
+		vendorname = i386_nocpuid_cpus[cpu].cpu_vendorname;
+		model = -1;
+		step = -1;
+		class = i386_nocpuid_cpus[cpu].cpu_class;
+		cpu_setup = i386_nocpuid_cpus[cpu].cpu_setup;
+		modifier = "";
+		token = "";
+	} else {
+		max = sizeof (i386_cpuid_cpus) / sizeof (i386_cpuid_cpus[0]);
+		modif = (cpu_id >> 12) & 3;
+		family = (cpu_id >> 8) & 15;
+		if (family < CPU_MINFAMILY)
+			panic("identifycpu: strange family value");
+		model = (cpu_id >> 4) & 15;
+		step = cpu_id & 15;
+#ifdef CPUDEBUG
+		printf("%s: family %x model %x step %x\n", cpu_device, family,
+			model, step);
+		printf("%s: cpuid level %d cache eax %x ebx %x ecx %x edx %x\n",
+			cpu_device, cpuid_level, cpu_cache_eax, cpu_cache_ebx,
+			cpu_cache_ecx, cpu_cache_edx);
+#endif
+
+		for (i = 0; i < max; i++) {
+			if (!strncmp(cpu_vendor,
+			    i386_cpuid_cpus[i].cpu_id, 12)) {
+				cpup = &i386_cpuid_cpus[i];
+				break;
+			}
+		}
+
+		if (cpup == NULL) {
+			vendor = CPUVENDOR_UNKNOWN;
+			if (cpu_vendor[0] != '\0')
+				vendorname = &cpu_vendor[0];
+			else
+				vendorname = "Unknown";
+			if (family > CPU_MAXFAMILY)
+				family = CPU_MAXFAMILY;
+			class = family - 3;
+			modifier = "";
+			name = "";
+			token = "";
+			cpu_setup = NULL;
+		} else {
+			token = cpup->cpu_id;
+			vendor = cpup->cpu_vendor;
+			vendorname = cpup->cpu_vendorname;
+			modifier = modifiers[modif];
+			if (family > CPU_MAXFAMILY) {
+				family = CPU_MAXFAMILY;
+				model = CPU_DEFMODEL;
+			} else if (model > CPU_MAXMODEL)
+				model = CPU_DEFMODEL;
+			i = family - CPU_MINFAMILY;
+
+			/* Special hack for the PentiumII/III series. */
+			if (vendor == CPUVENDOR_INTEL && family == 6 &&
+			    (model == 5 || model == 7)) {
+				name = intel686_cpu_name(model);
+			} else
+				name = cpup->cpu_family[i].cpu_models[model];
+			if (name == NULL)
+				name = cpup->cpu_family[i].cpu_models[CPU_DEFMODEL];
+			class = cpup->cpu_family[i].cpu_class;
+			cpu_setup = cpup->cpu_family[i].cpu_setup;
+		}
+	}
+
+	/* Find the amount of on-chip L2 cache.  Add support for AMD K6-3...*/
+	cachesize = -1;
+	if (vendor == CPUVENDOR_INTEL && cpuid_level >= 2 && family < 0xf) {
+		int intel_cachetable[] = { 0, 128, 256, 512, 1024, 2048 };
+		if ((cpu_cache_edx & 0xFF) >= 0x40 &&
+		    (cpu_cache_edx & 0xFF) <= 0x45)
+			cachesize = intel_cachetable[(cpu_cache_edx & 0xFF) - 0x40];
+	}
+
+	if (cachesize > -1) {
+		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
+			vendorname, modifier, name,
+			((*token) ? "\"" : ""), ((*token) ? token : ""),
+			((*token) ? "\" " : ""), classnames[class], cachesize);
+	} else {
+		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class)",
+			vendorname, modifier, name,
+			((*token) ? "\"" : ""), ((*token) ? token : ""),
+			((*token) ? "\" " : ""), classnames[class]);
+	}
+
+	/* configure the CPU if needed */
+	if (cpu_setup != NULL)
+		cpu_setup(cpu_device, model, step);
+
+	printf("%s: %s", cpu_device, cpu_model);
+
+#if defined(I586_CPU) || defined(I686_CPU)
+	if (cpu_feature && (cpu_feature & CPUID_TSC)) {	/* Has TSC */
+		calibrate_cyclecounter();
+		if (pentium_mhz > 994) {
+			int ghz, fr;
+
+			ghz = (pentium_mhz + 9) / 1000;
+			fr = ((pentium_mhz + 9) / 10 ) % 100;
+			if (fr)
+				printf(" %d.%02d GHz", ghz, fr);
+			else
+				printf(" %d GHz", ghz);
+		} else
+			printf(" %d MHz", pentium_mhz);
+	}
+#endif
+	printf("\n");
+
+	if (cpu_feature) {
+		int numbits = 0;
+
+		printf("%s: ", cpu_device);
+		max = sizeof(i386_cpuid_features)
+			/ sizeof(i386_cpuid_features[0]);
+		for (i = 0; i < max; i++) {
+			if (cpu_feature & i386_cpuid_features[i].feature_bit) {
+				printf("%s%s", (numbits == 0 ? "" : ","),
+				    i386_cpuid_features[i].feature_name);
+				numbits++;
+			}
+		}
+		printf("\n");
+	}
+
+	cpu_class = class;
+
+	/*
+	 * Now that we have told the user what they have,
+	 * let them know if that machine type isn't configured.
+	 */
+	switch (cpu_class) {
+#if !defined(I386_CPU) && !defined(I486_CPU) && !defined(I586_CPU) && !defined(I686_CPU)
+#error No CPU classes configured.
+#endif
+#ifndef I686_CPU
+	case CPUCLASS_686:
+		printf("NOTICE: this kernel does not support Pentium Pro CPU class\n");
+#ifdef I586_CPU
+		printf("NOTICE: lowering CPU class to i586\n");
+		cpu_class = CPUCLASS_586;
+		break;
+#endif
+#endif
+#ifndef I586_CPU
+	case CPUCLASS_586:
+		printf("NOTICE: this kernel does not support Pentium CPU class\n");
+#ifdef I486_CPU
+		printf("NOTICE: lowering CPU class to i486\n");
+		cpu_class = CPUCLASS_486;
+		break;
+#endif
+#endif
+#ifndef I486_CPU
+	case CPUCLASS_486:
+		printf("NOTICE: this kernel does not support i486 CPU class\n");
+#ifdef I386_CPU
+		printf("NOTICE: lowering CPU class to i386\n");
+		cpu_class = CPUCLASS_386;
+		break;
+#endif
+#endif
+#ifndef I386_CPU
+	case CPUCLASS_386:
+		printf("NOTICE: this kernel does not support i386 CPU class\n");
+		panic("no appropriate CPU class available");
+#endif
+	default:
+		break;
+	}
+
+	if (cpu == CPU_486DLC) {
+#ifndef CYRIX_CACHE_WORKS
+		printf("WARNING: CYRIX 486DLC CACHE UNCHANGED.\n");
+#else
+#ifndef CYRIX_CACHE_REALLY_WORKS
+		printf("WARNING: CYRIX 486DLC CACHE ENABLED IN HOLD-FLUSH MODE.\n");
+#else
+		printf("WARNING: CYRIX 486DLC CACHE ENABLED.\n");
+#endif
+#endif
+	}
+
+#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
+	/*
+	 * On a 486 or above, enable ring 0 write protection.
+	 */
+	if (cpu_class >= CPUCLASS_486)
+		lcr0(rcr0() | CR0_WP);
+#endif
+}
+
 #ifdef COMPAT_IBCS2
 void ibcs2_sendsig __P((sig_t, int, int, u_long, int, union sigval));
 
@@ -2032,8 +2256,8 @@ fix_f00f()
 	idt = p;
 
 	/* Fix up paging redirect */
-	setgate(&idt[ 14], &IDTVEC(f00f_redirect), 0, SDT_SYS386TGT,
-		SEL_KPL, GCODE_SEL);
+	setgate(&idt[ 14], &IDTVEC(f00f_redirect), 0, SDT_SYS386TGT, SEL_KPL,
+	    GCODE_SEL);
 
 	/* Map first page RO */
 	pte = PTE_BASE + i386_btop(va);
@@ -2123,8 +2347,10 @@ init386(first_avail)
 	setgate(&idt[ 16], &IDTVEC(fpu),     0, SDT_SYS386TGT, SEL_KPL, GCODE_SEL);
 	setgate(&idt[ 17], &IDTVEC(align),   0, SDT_SYS386TGT, SEL_KPL, GCODE_SEL);
 	setgate(&idt[ 18], &IDTVEC(rsvd),    0, SDT_SYS386TGT, SEL_KPL, GCODE_SEL);
-	for (i = 19; i < NIDT; i++)
+	for (i = 19; i < NRSVIDT; i++)
 		setgate(&idt[i], &IDTVEC(rsvd), 0, SDT_SYS386TGT, SEL_KPL, GCODE_SEL);
+	for (i = NRSVIDT; i < NIDT; i++)
+		unsetgate(&idt[i]);
 	setgate(&idt[128], &IDTVEC(syscall), 0, SDT_SYS386TGT, SEL_UPL, GCODE_SEL);
 
 	setregion(&region, gdt, sizeof(gdt) - 1);
@@ -2142,13 +2368,13 @@ init386(first_avail)
 	/* call pmap initialization to make new kernel address space */
 	pmap_bootstrap((vm_offset_t)atdevbase + IOM_SIZE);
 
-	/* Boot arguments are in page 1 */
+	/* Boot arguments are in a single page specified by /boot */
 	if (bootapiver & BAPIV_VECTOR) {
 		if (bootargc > NBPG)
 			panic ("too many boot args");
 
-		if (extent_alloc_region(iomem_ex, (paddr_t)bootargv,
-					bootargc, EX_NOWAIT))
+		if (extent_alloc_region(iomem_ex, (paddr_t)bootargv, bootargc,
+		    EX_NOWAIT))
 			panic("cannot reserve /boot args memory");
 
 		pmap_enter(pmap_kernel(), (vaddr_t)bootargp, (paddr_t)bootargv,
@@ -2166,9 +2392,10 @@ init386(first_avail)
 #endif
 
 #if defined(MULTIPROCESSOR)
-	/* install page 2 as PT page for first 4M */
-	pmap_enter(pmap_kernel(), (u_long)vtopte(0), 2*NBPG,
-	   VM_PROT_READ|VM_PROT_WRITE, TRUE, VM_PROT_READ|VM_PROT_WRITE);
+	/* install the page after boot args as PT page for first 4M */
+	pmap_enter(pmap_kernel(), (u_long)vtopte(0),
+	   i386_round_page(bootargv + bootargc), VM_PROT_READ|VM_PROT_WRITE,
+	   TRUE, VM_PROT_READ|VM_PROT_WRITE);
 	memset(vtopte(0), 0, NBPG);  /* make sure it is clean before using */
 #endif
 
@@ -2476,24 +2703,24 @@ need_resched()
  */
 
 int
-idt_vec_alloc (int low, int high)
+idt_vec_alloc(int low, int high)
 {
 	int vec;
 
 	for (vec = low; vec <= high; vec++)
 		if (idt[vec].gd_p == 0)
-			return vec;
-	return 0;
+			return (vec);
+	return (0);
 }
 
 void
-idt_vec_set (int vec, void (*function) __P((void)))
+idt_vec_set(int vec, void (*function) __P((void)))
 {
-	setgate (&idt[vec], function, 0, SDT_SYS386IGT, SEL_KPL, GCODE_SEL);
+	setgate(&idt[vec], function, 0, SDT_SYS386IGT, SEL_KPL, GCODE_SEL);
 }
 
 void
-idt_vec_free (int vec)
+idt_vec_free(int vec)
 {
 	unsetgate(&idt[vec]);
 }
