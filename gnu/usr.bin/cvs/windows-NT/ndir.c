@@ -11,7 +11,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    $Header: /u/src/master/ccvs/windows-NT/ndir.c,v 1.4 1997/01/02 19:02:54 kingdon Exp $
+    $Header: /home2/cvsroot/ccvs/windows-NT/ndir.c,v 1.4 1997/01/02 19:02:54 kingdon Exp $
  */
 
 /* Everything non trivial in this code is from: @(#)msd_dir.c 1.4
