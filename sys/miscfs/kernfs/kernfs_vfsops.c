@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.4.4.1 1996/10/14 13:38:03 mickey Exp $	*/
-/*	$NetBSD: kernfs_vfsops.c,v 1.26 1996/04/22 01:42:27 christos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.4.4.2 1997/05/29 00:52:39 mickey Exp $	*/
 
 /*
+ * Copyright (c) 1996, 1997 Michael Shalayeff
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -53,6 +53,7 @@
 #include <sys/namei.h>
 #include <sys/malloc.h>
 #include <sys/vmmeter.h>	/* for cnt */
+#include <sys/exec.h>
 
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/kernfs/kernfs.h>

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.3 1997/02/07 06:07:52 mickey Exp $ */
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.4 1997/05/29 00:52:38 mickey Exp $ */
 
 /*
- * Copyright (c) 1996 Michael Shalayeff
+ * Copyright (c) 1996, 1997 Michael Shalayeff
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -46,12 +46,14 @@
 #include <sys/proc.h>
 #include <sys/vnode.h>
 #include <sys/malloc.h>
+#include <sys/exec.h>
 #include <miscfs/kernfs/kernfs.h>
 
 static TAILQ_HEAD(, kernfs_node)	kfshead;
 static int kfsvplock = 0;
 #define KERNFS_LOCKED	0x01
 #define KERNFS_WANT	0x02
+extern struct exec kernel_xh;
 
 
 void
@@ -90,7 +92,7 @@ int
 kernfs_allocvp(mp, vpp, kt, type)
 	struct mount *mp;
 	struct vnode **vpp;
-	void *kt;
+	kern_target_t *kt;
 	kernfs_type type;
 {
 	struct kernfs_node *kfs;
@@ -129,6 +131,7 @@ loop:
 
 	kfs->kf_type = type;
 	kfs->kf_vnode = vp;
+	kfs->kf_kt = kt;
 
 	switch (type) {
 	case Kroot:	/* /kern = dr-xr-xr-x */
@@ -137,19 +140,15 @@ loop:
 				(VREAD|VEXEC) >> 6;
 		vp->v_type = VDIR;
 		vp->v_flag = VROOT;
-		kfs->kf_kt = kt;
 		break;
 
 	case Kvar:	/* kern/<files> = -r--r--r-- */
-		kfs->kf_mode = ((struct kern_target*)kt)->kt_mode;
+		kfs->kf_mode = ((kern_target_t *)kt)->kt_mode;
 		vp->v_type = VREG;
-		kfs->kf_kt = kt;
 		break;
-#ifdef DDB
 	case Ksym:	/* /kern/sym = dr-xr-xr-x */
-		kfs->kf_mode = ((struct kern_target*)kt)->kt_mode;
+		kfs->kf_mode = ((kern_target_t *)kt)->kt_mode;
 		vp->v_type = VDIR;
-		kfs->kf_kt = kt;
 		break;
 
 	case Ksymtab:	/* /kern/sym/ ... = -rw-r--r-- */
@@ -157,11 +156,9 @@ loop:
 				(VREAD) >> 3 |
 				(VREAD) >> 6;
 		vp->v_type = VREG;
-		kfs->kf_st = kt;
 		break;
-#endif
 	default:
-		panic("kernfs_allocvp");
+		panic("kernfs_allocvp: unknown type");
 	}
 
 	/* add to procfs vnode list */

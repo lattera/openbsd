@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs.h,v 1.2.4.1 1996/10/14 13:38:02 mickey Exp $	*/
-/*	$NetBSD: kernfs.h,v 1.10 1996/02/09 22:40:21 christos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs.h,v 1.2.4.2 1997/05/29 00:52:38 mickey Exp $	*/
 
 /*
+ * Copyright (c) 1996, 1997 Michael Shalayeff
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -56,6 +56,7 @@ enum {
 
 }	kernfs_type;
 
+typedef
 struct kern_target {
 	u_char kt_type;
 	u_char kt_namlen;
@@ -76,7 +77,7 @@ struct kern_target {
 	kernfs_type kt_ktype;
 	u_char kt_vtype;
 	mode_t kt_mode;
-};
+} kern_target_t;
 
 struct kernfs_node {
 	TAILQ_ENTRY(kernfs_node) list;
@@ -84,12 +85,10 @@ struct kernfs_node {
 	u_long		kf_mode;
 	u_long		kf_flags;
 	struct vnode	*kf_vnode;
-	union {
-		struct kern_target *ukf_kt;
-#define	kf_kt	__u.ukf_kt
-		struct db_symtab   *ukf_st;
-#define kf_st	__u.ukf_st
-	} __u;
+	kern_target_t	*kf_kt;
+	/* this is for Ksymtab only */
+	struct db_symtab*kf_st;
+	struct exec	kf_xh;
 };
 
 #define VFSTOKERNFS(mp)	((struct kernfs_mount *)((mp)->mnt_data))
@@ -101,7 +100,8 @@ extern struct vfsops kernfs_vfsops;
 extern dev_t rrootdev;
 
 int kernfs_freevp __P((struct vnode *));
-int kernfs_allocvp __P((struct mount *, struct vnode **, void *, kernfs_type));
+int kernfs_allocvp
+	__P((struct mount *, struct vnode **, kern_target_t *, kernfs_type));
 
 void	kernfs_init __P((void));
 int	kernfs_root __P((struct mount *, struct vnode **));
