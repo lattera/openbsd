@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.8 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.9 2004/03/30 09:12:07 niklas Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -166,6 +166,7 @@ hardclock(frame)
 	register int delta;
 	extern int tickdelta;
 	extern long timedelta;
+	struct cpu_info *ci = curcpu();
 
 	p = curproc;
 	if (p) {
@@ -189,6 +190,15 @@ hardclock(frame)
 	 */
 	if (stathz == 0)
 		statclock(frame);
+
+#if defined(MULTIPROCESSOR)
+	/*
+	 * If we are not the primary CPU, we're not allowed to do
+	 * any more work.
+	 */
+	if (CPU_IS_PRIMARY(ci) == 0)
+		return;
+#endif
 
 	/*
 	 * Increment the time-of-day.  The increment is normally just
