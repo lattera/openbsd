@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr53c9xvar.h,v 1.9.4.1 2002/06/11 03:42:19 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr53c9xvar.h,v 1.9.4.2 2003/05/19 21:54:25 tedu Exp $	*/
 /*	$NetBSD: ncr53c9xvar.h,v 1.13 1998/05/26 23:17:34 thorpej Exp $	*/
 
 /*-
@@ -138,7 +138,7 @@ struct ncr53c9x_ecb {
 	const char *f = "[" msg "]"; \
 	int n = strlen((ecb)->trace); \
 	if (n < (sizeof((ecb)->trace)-100)) \
-		sprintf((ecb)->trace + n, f,  a, b); \
+		snprintf((ecb)->trace + n, sizeof((ecb)->trace) - n, f,  a, b); \
 } while(0)
 #else
 #define ECB_TRACE(ecb, msg, a, b)
@@ -270,7 +270,7 @@ struct ncr53c9x_softc {
 
 	struct evcnt sc_intrcnt;		/* intr count */
 	struct timeout sc_watchdog;		/* periodic timer */
-	struct scsi_link sc_link;		/* scsi lint struct */
+	struct scsi_link sc_link;		/* scsi link struct */
 
 	struct ncr53c9x_glue *sc_glue;		/* glue to MD code */
 

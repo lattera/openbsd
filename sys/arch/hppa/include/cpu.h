@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24.2.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24.2.3 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
  * Copyright (c) 2000-2002 Michael Shalayeff
@@ -90,12 +90,14 @@ extern const char *cpu_typename;
 #define	HPPA_FPU_V	0x10
 #define	HPPA_FPU_D	0x20
 #define	HPPA_FPU_T	0x40
+#define	HPPA_FPU_XMASK	0x7f
 #define	HPPA_FPU_T_POS	25
 #define	HPPA_FPU_RM	0x00000600
 #define	HPPA_FPU_CQ	0x00fff800
 #define	HPPA_FPU_C	0x04000000
 #define	HPPA_FPU_FLSH	27
 #define	HPPA_FPU_INIT	(0)
+#define	HPPA_FPU_FORK(s) ((s) & ~((u_int64_t)(HPPA_FPU_XMASK)<<32))
 #define	HPPA_PMSFUS	0x20	/* ??? */
 
 /*
@@ -118,6 +120,14 @@ extern const char *cpu_typename;
 #define	HPPA_SPA_ENABLE	0x00000020
 #define	HPPA_NMODSPBUS	64
 
+#define	CPU_CLOCKUPDATE() do {					\
+	register_t __itmr;					\
+	__asm __volatile("mfctl	%%cr16, %0" : "=r" (__itmr));	\
+	cpu_itmr = __itmr;					\
+	__itmr += cpu_hzticks;					\
+	__asm __volatile("mtctl	%0, %%cr16" :: "r" (__itmr));	\
+} while (0)
+
 #define	clockframe		trapframe
 #define	CLKF_PC(framep)		((framep)->tf_iioq_head)
 #define	CLKF_INTR(framep)	((framep)->tf_flags & TFF_INTR)
@@ -136,6 +146,7 @@ extern const char *cpu_typename;
 	(((t)? pdcache : fdcache) (HPPA_SID_KERNEL,(vaddr_t)(a),(s)))
 
 extern int want_resched;
+extern u_int cpu_itmr, cpu_hzticks;
 
 #define DELAY(x) delay(x)
 

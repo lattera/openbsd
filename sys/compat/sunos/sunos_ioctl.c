@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.11.2.1 2002/06/11 03:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_ioctl.c,v 1.11.2.2 2003/05/19 21:52:09 tedu Exp $	*/
 /*	$NetBSD: sunos_ioctl.c,v 1.23 1996/03/14 19:33:46 christos Exp $	*/
 
 /*
@@ -779,7 +779,7 @@ sunos_sys_ioctl(p, v, retval)
 		/*
 		 * The bsd driver does not distinguish between paused and
 		 * active. (In the sun driver, not active means samples are
-		 * not ouput at all, but paused means the last streams buffer
+		 * not output at all, but paused means the last streams buffer
 		 * is drained and then output stops.)  If either are 0, then
 		 * when stop output. Otherwise, if either are non-zero,
 		 * we resume.

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbusvar.h,v 1.4.2.1 2002/06/11 03:35:36 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbusvar.h,v 1.4.2.2 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
- * Copyright (c) 1998 Michael Shalayeff
+ * Copyright (c) 1998-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,18 +33,14 @@
 struct gscbus_ic {
 	enum {gsc_unknown = 0, gsc_lasi, gsc_wax, gsc_asp} gsc_type;
 	void *gsc_dv;
-
-	void (*gsc_intr_establish)(void *v, u_int32_t mask);
-	void (*gsc_intr_disestablish)(void *v, u_int32_t mask);
-	u_int32_t (*gsc_intr_check)(void *v);
-	void (*gsc_intr_ack)(void *v, u_int32_t mask);
+	volatile void *gsc_base;
 };
 
 struct gsc_attach_args {
 	struct confargs ga_ca;
 #define	ga_name		ga_ca.ca_name
 #define	ga_iot		ga_ca.ca_iot
-#define	ga_mod		ga_ca.ca_mod
+#define	ga_dp		ga_ca.ca_dp
 #define	ga_type		ga_ca.ca_type
 #define	ga_hpa		ga_ca.ca_hpa
 #define	ga_hpamask	ga_ca.ca_hpamask
@@ -54,13 +50,6 @@ struct gsc_attach_args {
 	struct gscbus_ic *ga_ic;	/* IC pointer */
 }; 
 
-struct gscbus_intr {
-	int pri;
-	int (*handler)(void *);
-	void *arg;
-	struct evcnt evcnt;
-};
-
 struct gsc_softc {
 	struct  device sc_dev;
 	void *sc_ih;
@@ -68,17 +57,11 @@ struct gsc_softc {
 	bus_space_tag_t sc_iot;
 	struct gscbus_ic *sc_ic;
 	struct hppa_bus_dma_tag sc_dmatag;
-
-	/* interrupt vectors */
-	struct gscbus_intr sc_intrvs[32];
-	u_int32_t sc_intrmask;
 };
 
 void *gsc_intr_establish(struct gsc_softc *sc, int pri, int irq,
-			 int (*handler)(void *v), void *arg,
-			 struct device *name);
+    int (*handler)(void *v), void *arg, struct device *name);
 void gsc_intr_disestablish(struct gsc_softc *sc, void *v);
 int gsc_intr(void *);
 
 int gscprint(void *, const char *);
-

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.85.4.2 2002/10/29 00:30:52 art Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.85.4.3 2003/05/19 21:53:00 tedu Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -50,9 +50,10 @@ option		MSDOSFS		# MS-DOS file system
 option		FDESC		# /dev/fd
 option		FIFO		# FIFOs; RECOMMENDED
 option		KERNFS		# /kern
-option		NULLFS		# loopback file system
 option		PORTAL		# dynamically created filesystem objects
 option		PROCFS		# /proc
+# layer filesystems
+option		NULLFS		# loopback file system
 option		UMAPFS		# NULLFS + uid and gid remapping
 option		UNION		# union file system
 
@@ -60,7 +61,6 @@ option		UNION		# union file system
 option		INET		# IP + ICMP + TCP + UDP
 option		ALTQ		# ALTQ base
 option		INET6		# IPv6 (needs INET)
-option		PULLDOWN_TEST	# use m_pulldown for IPv6 packet parsing
 option		IPSEC		# IPsec
 #option		KEY		# PF_KEY (implied by IPSEC)
 #option		NS		# XNS
@@ -75,8 +75,9 @@ option		PPP_BSDCOMP	# PPP BSD compression
 option		PPP_DEFLATE
 #option		MROUTING	# Multicast router
 
-pseudo-device	pf	1	# packet filter
-pseudo-device	pflog	1	# pf log if
+pseudo-device	pf		# packet filter
+pseudo-device	pflog		# pf log if
+pseudo-device	pfsync		# pf sync if
 pseudo-device	loop	2	# network loopback
 pseudo-device	bpfilter 8	# packet filter
 pseudo-device	sl	2	# CSLIP

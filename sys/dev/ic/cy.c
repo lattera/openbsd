@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.15.4.3 2002/10/29 00:33:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.15.4.4 2003/05/19 21:54:24 tedu Exp $	*/
 /*
  * Copyright (c) 1996 Timo Rossi.
  * All rights reserved.
@@ -263,7 +263,7 @@ cy_attach(parent, self)
 }
 
 /*
- * open routine. returns zero if successfull, else error code
+ * open routine. returns zero if successful, else error code
  */
 int cyopen(dev_t, int, int, struct proc *);
 int cyclose(dev_t, int, int, struct proc *);
@@ -411,7 +411,7 @@ cyopen(dev, flag, mode, p)
 }
 
 /*
- * close routine. returns zero if successfull, else error code
+ * close routine. returns zero if successful, else error code
  */
 int
 cyclose(dev, flag, mode, p)
@@ -686,7 +686,7 @@ cystop(tp, flag)
 
 /*
  * parameter setting routine.
- * returns 0 if successfull, else returns error code
+ * returns 0 if successful, else returns error code
  */
 int
 cyparam(tp, t)

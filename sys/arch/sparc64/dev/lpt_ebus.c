@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.5.2.2 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.5.2.3 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: lpt_ebus.c,v 1.8 2002/03/01 11:51:00 martin Exp $	*/
 
 /*
@@ -80,13 +80,18 @@ lpt_ebus_attach(parent, self, aux)
 	struct lpt_ebus_softc *sc = (void *)self;
 	struct ebus_attach_args *ea = aux;
 
-	sc->sc_lpt.sc_iot = ea->ea_bustag;
 
-	if (ebus_bus_map(sc->sc_lpt.sc_iot, 0,
+	if (ebus_bus_map(ea->ea_memtag, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_lpt.sc_ioh) != 0) {
+	    0, 0, &sc->sc_lpt.sc_ioh) == 0) {
+		sc->sc_lpt.sc_iot = ea->ea_memtag;
+	} else if (ebus_bus_map(ea->ea_iotag, 0,
+		    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
+		    0, 0, &sc->sc_lpt.sc_ioh) == 0) {
+		sc->sc_lpt.sc_iot = ea->ea_iotag;
+	} else {
 		printf(": can't map register space\n");
-                return;
+		return;
 	}
 
 	if (ebus_bus_map(sc->sc_lpt.sc_iot, 0,

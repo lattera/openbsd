@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.c,v 1.5 1999/04/20 20:01:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.c,v 1.5.14.1 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -54,8 +54,8 @@ const struct pdc_devs {
 	char	name[3];
 	int	dev_type;
 } pdc_devs[] = {
-	{ "ct",  0 },
-	{ "dk",  1 },
+	{ "dk",  0 },
+	{ "ct",  1 },
 	{ "lf",  2 },
 	{ "",   -1 },
 	{ "rd", -1 },
@@ -70,9 +70,9 @@ devopen(f, fname, file)
 	const char *fname;
 	char **file;
 {
-	register struct hppa_dev *hpd;
-	register const struct pdc_devs *dp = pdc_devs;
-	register int rc = 1;
+	struct hppa_dev *hpd;
+	const struct pdc_devs *dp = pdc_devs;
+	int rc = 1;
 
 	if (!(*file = strchr(fname, ':')))
 		return ENODEV;
@@ -127,17 +127,17 @@ devboot(dev, p)
 	dev_t dev;
 	char *p;
 {
-	register const char *q;
+	const char *q;
 	if (!dev) {
 		int type, unit;
 
 		switch (PAGE0->mem_boot.pz_class) {
 		case PCL_RANDOM:
-			type = 1;
+			type = 0;
 			unit = PAGE0->mem_boot.pz_layers[0];
 			break;
 		case PCL_SEQU:
-			type = 0;
+			type = 1;
 			unit = PAGE0->mem_boot.pz_layers[0];
 			break;
 		case PCL_NET_MASK|PCL_SEQU:
@@ -149,7 +149,7 @@ devboot(dev, p)
 			unit = 0;
 			break;
 		}
-		dev = bootdev = MAKEBOOTDEV(type, 0, 0, unit, 0);
+		dev = bootdev = MAKEBOOTDEV(type, 0, 0, unit, B_PARTITION(dev));
 	}
 #ifdef _TEST
 	*p++ = '/';
@@ -201,7 +201,7 @@ putchar(c)
 int
 getchar()
 {
-	register int c = cngetc();
+	int c = cngetc();
 
 	if (c == '\r')
 		c = '\n';

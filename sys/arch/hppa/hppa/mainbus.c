@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20.2.2 2002/10/29 00:28:02 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20.2.3 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
- * Copyright (c) 1998-2001 Michael Shalayeff
+ * Copyright (c) 1998-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,8 +74,8 @@ mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
     bus_space_handle_t *bshp)
 {
 	static u_int32_t bmm[0x4000/32];
-	register u_int64_t spa, epa;
 	int bank, off, flex = HPPA_FLEX(bpa);
+	u_int64_t spa, epa;
 
 #ifdef BTLBDEBUG
 	printf("bus_mem_add_mapping(%x,%x,%scachable,%p)\n",
@@ -131,15 +131,17 @@ mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
 				}
 				spa = pa;
 			} else {
-				spa = max(spa, hppa_trunc_page(bpa));
-				epa = min(epa, hppa_round_page(bpa));
+				spa = hppa_trunc_page(bpa);
+				epa = hppa_round_page(bpa + size);
 
 				if (epa - 1 > ~0U)
 					epa = (u_int64_t)~0U + 1;
 
+#ifdef BTLBDEBUG
+				printf("kenter 0x%qx-0x%qx", spa, epa);
+#endif
 				for (; spa < epa; spa += PAGE_SIZE)
 					pmap_kenter_pa(spa, spa, UVM_PROT_RW);
-
 			}
 #ifdef BTLBDEBUG
 			printf("\n");
@@ -396,18 +398,18 @@ mbus_sm_8(void *v, bus_space_handle_t h, bus_size_t o, u_int64_t vv, bus_size_t 
 }
 
 void mbus_rrm_2(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int16_t*a, bus_size_t c);
+	    bus_size_t o, u_int16_t*a, bus_size_t c);
 void mbus_rrm_4(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int32_t*a, bus_size_t c);
+	    bus_size_t o, u_int32_t*a, bus_size_t c);
 void mbus_rrm_8(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int64_t*a, bus_size_t c);
+	    bus_size_t o, u_int64_t*a, bus_size_t c);
 
 void mbus_wrm_2(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int16_t *a, bus_size_t c);
+	    bus_size_t o, const u_int16_t *a, bus_size_t c);
 void mbus_wrm_4(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int32_t *a, bus_size_t c);
+	    bus_size_t o, const u_int32_t *a, bus_size_t c);
 void mbus_wrm_8(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int64_t *a, bus_size_t c);
+	    bus_size_t o, const u_int64_t *a, bus_size_t c);
 
 void
 mbus_rr_1(void *v, bus_space_handle_t h, bus_size_t o, u_int8_t *a, bus_size_t c)
@@ -595,12 +597,12 @@ mbus_dmamap_create(void *v, bus_size_t size, int nsegments,
 		   bus_size_t maxsegsz, bus_size_t boundary, int flags,
 		   bus_dmamap_t *dmamp)
 {
-	register struct hppa_bus_dmamap *map;
-	register size_t mapsize;
+	struct hppa_bus_dmamap *map;
+	size_t mapsize;
 
 	mapsize = sizeof(struct hppa_bus_dmamap) +
 	    (sizeof(bus_dma_segment_t) * (nsegments - 1));
-	MALLOC(map, struct hppa_bus_dmamap *, mapsize, M_DEVBUF,
+	map = malloc(mapsize, M_DEVBUF,
 		(flags & BUS_DMA_NOWAIT) ? M_NOWAIT : M_WAITOK);
 	if (!map)
 		return (ENOMEM);
@@ -654,7 +656,7 @@ mbus_dmamap_load(void *v, bus_dmamap_t map, void *addr, bus_size_t size,
 	pa_next = 0;
 	seg = -1;
 	mapsize = size;
-	off = (bus_size_t)addr & (PAGE_SIZE - 1);
+	off = (bus_size_t)addr & PAGE_MASK;
 	addr = (void *) ((caddr_t)addr - off);
 	for(; size > 0; ) {
 
@@ -705,15 +707,14 @@ void
 mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_addr_t offset, bus_size_t len,
     int ops)
 {
-
-	if (ops & (BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE))
-		__asm __volatile ("sync\n\tsyncdma\n\tsync\n\t"
-		    "nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\t");
-
-	if (ops & BUS_DMASYNC_PREREAD)
-		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
-	else if (ops & BUS_DMASYNC_PREWRITE)
+	if (ops & (BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE))
 		fdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
+	else
+		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
+
+	/* for either operation sync the shit away */
+	__asm __volatile ("sync\n\tsyncdma\n\tsync\n\t"
+	    "nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");
 }
 
 int
@@ -735,7 +736,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 
 	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
-	      UVM_ADV_RANDOM, 0))) {
+	    UVM_ADV_RANDOM, 0))) {
 		uvm_pglistfree(&pglist);
 		return (ENOMEM);
 	}
@@ -823,7 +824,11 @@ mbattach(parent, self, aux)
 	if (pdc_call((iodcio_t)pdc, 0, PDC_HPA, PDC_HPA_DFLT, &pdc_hpa) < 0)
 		panic("mbattach: PDC_HPA failed");
 
-	if (bus_space_map(&hppa_bustag, pdc_hpa.hpa, IOMOD_HPASIZE, 0, &ioh))
+	printf(" [flex %x]\n", pdc_hpa.hpa & HPPA_FLEX_MASK);
+
+	/* map all the way till the end of the memory */
+	if (bus_space_map(&hppa_bustag, pdc_hpa.hpa,
+	    (~0LU - pdc_hpa.hpa + 1), 0, &ioh))
 		panic("mbattach: cannot map mainbus IO space");
 
 	/*
@@ -833,7 +838,6 @@ mbattach(parent, self, aux)
 		(void *)((pdc_hpa.hpa & HPPA_FLEX_MASK) | DMA_ENABLE);
 
 	sc->sc_hpa = pdc_hpa.hpa;
-	printf(" [flex %x]\n", pdc_hpa.hpa & HPPA_FLEX_MASK);
 
 	/* PDC first */
 	bzero (&nca, sizeof(nca));
@@ -851,7 +855,10 @@ mbattach(parent, self, aux)
 	nca.ca_hpamask = HPPA_IOSPACE;
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
-	pdc_scanbus(self, &nca, -1, MAXMODBUS);
+	nca.ca_dp.dp_bc[0] = nca.ca_dp.dp_bc[1] = nca.ca_dp.dp_bc[2] =
+	nca.ca_dp.dp_bc[3] = nca.ca_dp.dp_bc[4] = nca.ca_dp.dp_bc[5] = -1;
+	nca.ca_dp.dp_mod = -1;
+	pdc_scanbus(self, &nca, MAXMODBUS);
 }
 
 /*

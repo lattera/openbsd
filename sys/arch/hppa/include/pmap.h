@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.15.2.3 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.15.2.4 2003/05/19 21:49:42 tedu Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -107,8 +107,6 @@ extern struct pdc_hwtlb pdc_hwtlb;
 #define pmap_kernel()			(&kernel_pmap_store)
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_update(pm)			(void)(pm)
-#define	pmap_activate(pm)		(void)(pm)
-#define	pmap_deactivate(pm)		(void)(pm)
 #define pmap_copy(dpmap,spmap,da,len,sa)
 
 #define pmap_clear_modify(pg)	pmap_changebit(pg, 0, PTE_PROT(TLB_DIRTY))
@@ -134,8 +132,8 @@ pmap_prot(struct pmap *pmap, int prot)
 static __inline void
 pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
-	if ((prot & VM_PROT_WRITE) == 0) {
-		if (prot & (VM_PROT_READ|VM_PROT_EXECUTE))
+	if ((prot & UVM_PROT_WRITE) == 0) {
+		if (prot & (UVM_PROT_RX))
 			pmap_changebit(pg, 0, PTE_PROT(TLB_WRITE));
 		else
 			pmap_page_remove(pg);
@@ -145,8 +143,8 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 static __inline void
 pmap_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
-	if ((prot & VM_PROT_WRITE) == 0) {
-		if (prot & (VM_PROT_READ|VM_PROT_EXECUTE))
+	if ((prot & UVM_PROT_WRITE) == 0) {
+		if (prot & (UVM_PROT_RX))
 			pmap_write_protect(pmap, sva, eva, prot);
 		else
 			pmap_remove(pmap, sva, eva);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.17.4.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.17.4.2 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: esp.c,v 1.69 1997/08/27 11:24:18 bouyer Exp $	*/
 
 /*
@@ -254,7 +254,7 @@ espattach(parent, self, aux)
 		sc->sc_freq = ((struct sbus_softc *)
 		    sc->sc_dev.dv_parent)->sc_clockfreq;
 
-	/* gimme Mhz */
+	/* gimme MHz */
 	sc->sc_freq /= 1000000;
 
 	if (dmachild) {

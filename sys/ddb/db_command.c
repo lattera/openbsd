@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.24.2.2 2002/06/11 03:28:48 art Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.24.2.3 2003/05/19 21:52:44 tedu Exp $	*/
 /*	$NetBSD: db_command.c,v 1.20 1996/03/30 22:30:05 christos Exp $	*/
 
 /* 
@@ -65,6 +65,13 @@ label_t		*db_recover;
  * Otherwise: 'dot' points to next item, '..' points to last.
  */
 boolean_t	db_ed_style = TRUE;
+
+db_addr_t	db_dot;		/* current location */
+db_addr_t	db_last_addr;	/* last explicit address typed */
+db_addr_t	db_prev;	/* last address examined
+				   or written */
+db_addr_t	db_next;	/* next address to be examined
+				   or written */
 
 /*
  * Utility routine - discard tokens through end-of-line.
@@ -369,6 +376,20 @@ db_pool_print_cmd(addr, have_addr, count, modif)
 
 /*ARGSUSED*/
 void
+db_proc_print_cmd(addr, have_addr, count, modif)
+	db_expr_t	addr;
+	int		have_addr;
+	db_expr_t	count;
+	char *		modif;
+{
+	if (!have_addr)
+		addr = (db_expr_t)curproc;
+
+	proc_printit((struct proc *)addr, modif, db_printf);
+}
+
+/*ARGSUSED*/
+void
 db_uvmexp_print_cmd(addr, have_addr, count, modif)
 	db_expr_t	addr;
 	int		have_addr;
@@ -397,6 +418,7 @@ struct db_command db_show_cmds[] = {
 	{ "object",	db_object_print_cmd,	0,	NULL },
 	{ "page",	db_page_print_cmd,	0,	NULL },
 	{ "pool",	db_pool_print_cmd,	0,	NULL },
+	{ "proc",	db_proc_print_cmd,	0,	NULL },
 	{ "registers",	db_show_regs,		0,	NULL },
 	{ "uvmexp",	db_uvmexp_print_cmd,	0,	NULL },
 	{ "watches",	db_listwatch_cmd, 	0,	NULL },

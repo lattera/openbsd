@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.35.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.35.2.2 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: cpu.c,v 1.56 1997/09/15 20:52:36 pk Exp $ */
 
 /*
@@ -95,7 +95,7 @@ struct cfdriver cpu_cd = {
 	NULL, "cpu", DV_CPU
 };
 
-char *fsrtoname(int, int, int, char *);
+char *fsrtoname(int, int, int, char *, size_t);
 void cache_print(struct cpu_softc *);
 void cpu_spinup(struct cpu_softc *);
 void fpu_init(struct cpu_softc *);
@@ -223,14 +223,14 @@ cpu_attach(parent, self, aux)
 		fpu_init(sc);
 		if (foundfpu)
 			fpuname = fsrtoname(sc->cpu_impl, sc->cpu_vers,
-			    sc->fpuvers, fpbuf);
+			    sc->fpuvers, fpbuf, sizeof fpbuf);
 	}
 	/* XXX - multi-processor: take care of `cpu_model' and `foundfpu' */
 
-	sprintf(model, "%s @ %s MHz, %s FPU", sc->cpu_name,
+	snprintf(model, sizeof model, "%s @ %s MHz, %s FPU", sc->cpu_name,
 	    clockfreq(sc->hz), fpuname);
 	printf(": %s", model);
-	sprintf(cpu_model, "%s, %s", mainbus_model, model);
+	snprintf(cpu_model, sizeof cpu_model, "%s, %s", mainbus_model, model);
 
 	if (cpu_hotfix[0])
 		printf("; %s", cpu_hotfix);
@@ -627,7 +627,8 @@ sun4_hotfix(sc)
 {
 	if ((sc->flags & CPUFLG_SUN4CACHEBUG) != 0) {
 		kvm_uncache((caddr_t)trapbase, 1);
-		sprintf(cpu_hotfix, "cache chip bug - trap page uncached");
+		snprintf(cpu_hotfix, sizeof cpu_hotfix,
+		    "cache chip bug - trap page uncached");
 	}
 
 }
@@ -1308,9 +1309,10 @@ static struct info fpu_types[] = {
 };
 
 char *
-fsrtoname(impl, vers, fver, buf)
+fsrtoname(impl, vers, fver, buf, buflen)
 	register int impl, vers, fver;
 	char *buf;
+	size_t buflen;
 {
 	register struct info *p;
 
@@ -1319,7 +1321,7 @@ fsrtoname(impl, vers, fver, buf)
 		    (p->iu_vers == vers || p->iu_vers == ANY) &&
 		    (p->fpu_vers == fver))
 			return (p->name);
-	sprintf(buf, "version 0x%x", fver);
+	snprintf(buf, buflen, "version 0x%x", fver);
 	return (buf);
 }
 
@@ -1338,6 +1340,7 @@ extern int _divreplace, _divreplace_end, _div;
 extern int _udivreplace, _udivreplace_end, _udiv;
 extern int _remreplace, _remreplace_end, _rem;
 extern int _uremreplace, _uremreplace_end, _urem;
+int	v8mul;	/* flag whether cpu has hardware mul, div, and rem */
 
 struct replace {
 	void *from, *frome, *to;
@@ -1365,4 +1368,5 @@ replacemul()
 		bcopy(ireplace[i].from, ireplace[i].to,
 		    ireplace[i].frome - ireplace[i].from);
 	splx(s);
+	v8mul = 1;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.6.2 2002/06/11 03:38:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.6.3 2003/05/19 21:46:58 tedu Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.16 2001/07/20 00:07:14 eeh Exp $	*/
 
 /*
@@ -513,7 +513,7 @@ prom_get_msgbuf(len, align)
 		char name[80];
 
 		if ((OF_getprop(rooth, "name", &name, sizeof(name))) != -1) {
-			if (strcmp(name, "SUNW,Ultra-250")) 
+			if (strcmp(name, "SUNW,Ultra-250") && strcmp(name, "SUNW,Ultra-4")) 
 				is_e250 = 0;
 		} else prom_printf("prom_get_msgbuf: cannot get \"name\"\r\n");
 	} else prom_printf("prom_get_msgbuf: cannot open root device \r\n");
@@ -523,7 +523,7 @@ prom_get_msgbuf(len, align)
 		return -1;
 	}
 	if (is_e250) {
-		prom_printf("prom_get_msgbuf: Cannot recover msgbuf on E250\r\n");
+		prom_printf("prom_get_msgbuf: Cannot recover msgbuf on E250/450\r\n");
 	} else if (OF_test("test-method") == 0) {
 		if (OF_test_method(memh, "SUNW,retain") != 0) {
 			args.name = ADR2CELL(&"call-method");
@@ -599,7 +599,7 @@ prom_printf(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	len = vsprintf(buf, fmt, ap);
+	len = vsnprintf(buf, sizeof buf, fmt, ap);
 	va_end(ap);
 
 	OF_write(OF_stdout(), buf, len);

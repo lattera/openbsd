@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/dbl_float.h,v 1.5.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/dbl_float.h,v 1.5.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -531,12 +531,12 @@ int dbl_fcmp(dbl_floating_point *, dbl_floating_point *, unsigned int, unsigned 
 int dbl_fdiv(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
 int dbl_fmpy(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
 int dbl_frem(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
-int dbl_fsqrt(dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_fsqrt(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
 int dbl_fsub(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
 
 dbl_floating_point dbl_setoverflow(unsigned int);
 
-int sgl_to_dbl_fcnvff(sgl_floating_point *, dbl_floating_point *, unsigned int *);
-int dbl_to_sgl_fcnvff(dbl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_to_dbl_fcnvff(sgl_floating_point *, sgl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_to_sgl_fcnvff(dbl_floating_point *, dbl_floating_point *, sgl_floating_point *, unsigned int *);
 
-int dbl_frnd(dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_frnd(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);

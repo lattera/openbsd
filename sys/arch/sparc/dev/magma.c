@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.8.4.2 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.8.4.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*
  * magma.c
  *
@@ -422,7 +422,7 @@ void *base;
 		/* seemingly the Magma drivers just ignore the propstring */
 		cd->cd_chiprev = cd1400_read_reg(cd, CD1400_GFRCR);
 
-		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMhz\n", sc->ms_dev.dv_xname, chip, cd->cd_reg, cd->cd_chiprev, cd->cd_clock));
+		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMHz\n", sc->ms_dev.dv_xname, chip, cd->cd_reg, cd->cd_chiprev, cd->cd_clock));
 
 		/* clear GFRCR */
 		cd1400_write_reg(cd, CD1400_GFRCR, 0x00);

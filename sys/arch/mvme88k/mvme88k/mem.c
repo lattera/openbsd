@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.14.2.1 2002/06/11 03:37:11 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.14.2.2 2003/05/19 21:45:53 tedu Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -136,8 +136,9 @@ mmrw(dev, uio, flags)
 				goto unlock;
 			}
 			pmap_enter(pmap_kernel(), (vm_offset_t)vmmap,
-			    trunc_page(v), uio->uio_rw == UIO_READ ?
-			    VM_PROT_READ : VM_PROT_WRITE, PMAP_WIRED);
+			    trunc_page(v),
+			    uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE,
+			    (uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE) | PMAP_WIRED);
 			pmap_update(pmap_kernel());
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/boot/conf.c,v 1.18.4.1 2002/10/29 00:28:04 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/boot/conf.c,v 1.18.4.2 2003/05/19 21:45:12 tedu Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -48,13 +48,9 @@
 #include <dev/cons.h>
 #include <lib/libsa/exec.h>
 
-const char version[] = "1.29";
+const char version[] = "2.00";
 int	debug = 1;
 
-const struct x_sw execsw[] = {
-	{ "aout", aout_probe, aout_load, aout_ldsym },
-	{ "",     NULL,       NULL,      NULL       },
-};
 
 struct fs_ops file_system[] = {
 	{ ufs_open,    ufs_close,    ufs_read,    ufs_write,    ufs_seek,

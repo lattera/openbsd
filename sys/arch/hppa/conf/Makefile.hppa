@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/Makefile.hppa,v 1.9.4.3 2002/10/29 00:28:02 art Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/Makefile.hppa,v 1.9.4.4 2003/05/19 21:49:41 tedu Exp $
 
 # Makefile for OpenBSD
 #
@@ -23,10 +23,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -42,7 +38,8 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dhppa
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wno-uninitialized \
 		-Wno-format -Wno-main
-CMACHFLAGS=	-mfast-indirect-calls -mportable-runtime -mno-space-regs
+CMACHFLAGS=	-mfast-indirect-calls -mportable-runtime -mno-space-regs \
+		-fno-stack-protector
 COPTS?=		-Os
 CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
@@ -54,7 +51,7 @@ CFLAGS+=	-fno-omit-frame-pointer
 .endif
 
 .if ${IDENT:M-DHP7000_CPU} != ""
-CFLAGS+=	-mpa-risc-1-0 -mschedule=700
+CFLAGS+=	-mpa-risc-1-0
 .elif ${IDENT:M-DHP8*_CPU} != ""
 CFLAGS+=	-mpa-risc-2-0
 .else
@@ -64,6 +61,8 @@ CFLAGS+=	-mpa-risc-1-1
 .if ${IDENT:M-DHP*_CPU} == ${IDENT:M-HHP7100LC_CPU}
 # XXX they said gcc has bugs in 7100lc scheduling
 #CFLAGS+=	-mschedule=7100LC
+.else
+CFLAGS+=	-mschedule=700
 .endif
 
 .if ${IDENT:M-DFPEMUL} != ""

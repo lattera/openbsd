@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/dfsqrt.c,v 1.5.6.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/dfsqrt.c,v 1.5.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -23,8 +23,8 @@
 
 /*ARGSUSED*/
 int
-dbl_fsqrt(srcptr,dstptr,status)
-	dbl_floating_point *srcptr, *dstptr;
+dbl_fsqrt(srcptr, null, dstptr, status)
+	dbl_floating_point *srcptr, *null, *dstptr;
 	unsigned int *status;
 {
 	register unsigned int srcp1, srcp2, resultp1, resultp2;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.6.2.2 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.6.2.3 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 2001/06/14 22:56:58 thorpej Exp $ */
 
 /*
@@ -54,8 +54,10 @@
 #define	CPU_BOOTED_KERNEL	1	/* string: booted kernel name */
 #define	CPU_LED_BLINK		2	/* int: blink leds? */
 #define	CPU_ALLOWAPERTURE	3	/* allow xf86 operations */
-#define CPU_CPUTYPE		4	/* cpu type */
-#define	CPU_MAXID		5	/* number of valid machdep ids */
+#define	CPU_CPUTYPE		4	/* cpu type */
+#define	CPU_CECCERRORS		5	/* Correctable ECC errors */
+#define	CPU_CECCLAST		6	/* Correctable ECC last fault addr */
+#define	CPU_MAXID		7	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES {			\
 	{ 0, 0 },				\
@@ -63,6 +65,8 @@
 	{ "led_blink", CTLTYPE_INT },		\
 	{ "allowaperture", CTLTYPE_INT },	\
 	{ "cputype", CTLTYPE_INT },		\
+	{ "ceccerrs", CTLTYPE_INT },		\
+	{ "cecclast", CTLTYPE_QUAD },		\
 }
 
 #ifdef _KERNEL
@@ -70,6 +74,7 @@
  * Exported definitions unique to SPARC cpu support.
  */
 
+#include <machine/ctlreg.h>
 #include <machine/psl.h>
 #include <machine/reg.h>
 #include <machine/intr.h>
@@ -203,13 +208,13 @@ void setsoftint(void);
 void setsoftnet(void);
 #endif
 
-int	want_ast;
+extern	int want_ast;
 
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
-int	want_resched;		/* resched() was called */
+extern	int want_resched;	/* resched() was called */
 #define	need_resched()		(want_resched = 1, want_ast = 1)
 
 /*
@@ -230,8 +235,8 @@ int	want_resched;		/* resched() was called */
  *
  * XXX this must be per-cpu (eventually)
  */
-struct	proc *fpproc;		/* FPU owner */
-int	foundfpu;		/* true => we have an FPU */
+extern	struct proc *fpproc;	/* FPU owner */
+extern	int foundfpu;		/* true => we have an FPU */
 
 /*
  * Interrupt handler chains.  Interrupt handlers should return 0 for
@@ -245,8 +250,9 @@ struct intrhand {
 	short			ih_number;	/* interrupt number */
 						/* the H/W provides */
 	char			ih_pil;		/* interrupt priority */
+	volatile char		ih_busy;	/* handler is on list */
 	struct intrhand		*ih_next;	/* global list */
-	struct intrhand		*ih_pending;	/* interrupt queued */
+	struct intrhand		*ih_pending;	/* pending list */
 	volatile u_int64_t	*ih_map;	/* Interrupt map reg */
 	volatile u_int64_t	*ih_clr;	/* clear interrupt reg */
 };

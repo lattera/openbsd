@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7.2.3 2002/10/29 00:33:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7.2.4 2003/05/19 21:54:24 tedu Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -301,10 +301,15 @@
 #define WI_PLX_LINT1STAT	0x04	/* Local interrupt 1 status bit */
 #define WI_PLX_COR_OFFSET	0x3E0	/* COR attribute offset of card */
 
-#define	WI_DRVR_MAGIC		0x4A2D	/* Magic number for card detection */
+#define	WI_ACEX_CMDRES		0x10	/* BAR0 (I/O) for ACEX-based bridge */
+#define	WI_ACEX_LOCALRES	0x14	/* BAR1 (I/O) for ACEX-based bridge */
+#define	WI_ACEX_IORES		0x18	/* BAR2 (I/O) for ACEX-based bridge */
+#define	WI_ACEX_COR_OFFSET	0xe0	/* COR attribute offset of card */
 
 #define WI_TMD_LOCALRES		0x14	/* TMD chip's local registers */
 #define WI_TMD_IORES		0x18	/* Prism I/O space (TMD) */
+
+#define	WI_DRVR_MAGIC		0x4A2D	/* Magic number for card detection */
 
 /*
  * PCI Host Interface Registers (HFA3842 Specific)

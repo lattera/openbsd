@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/trap.h,v 1.8 2000/02/10 20:05:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/trap.h,v 1.8.12.1 2003/05/19 21:49:42 tedu Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -100,6 +100,7 @@
 #define	HPPA_BREAK_KGDB		5
 #define	HPPA_BREAK_GET_PSW	9
 #define	HPPA_BREAK_SET_PSW	10
+#define	HPPA_BREAK_SPLLOWER	11
 
 /*
  * break instruction decoding.
@@ -108,4 +109,3 @@
 #define	break13(i)	(((i) >> 13) & 0x1fff)
 
 #endif	/* _MACHINE_TRAP_H_ */
-

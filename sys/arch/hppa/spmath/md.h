@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/md.h,v 1.4.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/md.h,v 1.4.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -77,5 +77,5 @@ void mpyscv(int, int, struct mdsfu_register *);
 void mpyu(unsigned int, unsigned int, struct mdsfu_register *);
 void mpyucv(unsigned int, unsigned int, struct mdsfu_register *);
 
-int impys(int *, int *, struct mdsfu_register *);
-int impyu(int *, int *, struct mdsfu_register *);
+int s_xmpy(int *, int *, struct mdsfu_register *);
+int u_xmpy(int *, int *, struct mdsfu_register *);

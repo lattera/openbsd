@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.10.10.1 2002/06/11 03:39:19 art Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.10.10.2 2003/05/19 21:46:09 tedu Exp $ */
 /*	$NetBSD: hp.c,v 1.22 2000/02/12 16:09:33 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -165,7 +165,8 @@ hpattach(parent, self, aux)
 	if ((msg = readdisklabel(makedev(0, self->dv_unit * 8), hpstrategy,
 	    dl, NULL)) != NULL)
 		printf(": %s", msg);
-	printf(": %s, size = %d sectors\n", dl->d_typename, dl->d_secperunit);
+	printf(": %.*s, size = %d sectors\n",
+	    (int)sizeof(dl->d_typename), dl->d_typename, dl->d_secperunit);
 	/*
 	 * check if this was what we booted from.
 	 */
@@ -181,15 +182,14 @@ hpstrategy(bp)
 {
 	struct	hp_softc *sc;
 	struct	buf *gp;
-	int	unit, s, err;
+	int	unit, s;
 	struct disklabel *lp;
 
 	unit = DISKUNIT(bp->b_dev);
 	sc = hp_cd.cd_devs[unit];
 	lp = sc->sc_disk.dk_label;
 
-	err = bounds_check_with_label(bp, lp, sc->sc_wlabel);
-	if (err < 0)
+	if (bounds_check_with_label(bp, lp, sc->sc_wlabel) <= 0)
 		goto done;
 
 	bp->b_rawblkno =

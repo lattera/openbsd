@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.20.2.1 2002/06/11 03:35:54 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.20.2.2 2003/05/19 21:45:12 tedu Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*
@@ -805,7 +805,8 @@ pci_intr_fixup(sc, pc, iot)
 		    PIR_DEVFUNC_DEVICE(pirh->router_devfunc),
 		    PIR_DEVFUNC_FUNCTION(pirh->router_devfunc));
 		if (pirh->compat_router != 0) {
-			pci_devinfo(pirh->compat_router, 0, 0, devinfo);
+			pci_devinfo(pirh->compat_router, 0, 0, devinfo,
+			    sizeof devinfo);
 			printf(" (%s)", devinfo);
 		}
 		printf("\n");

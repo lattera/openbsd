@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.2.2.2 2002/10/29 00:28:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.2.2.3 2003/05/19 21:49:43 tedu Exp $	*/
 /*	$NetBSD: pchb.c,v 1.4 2000/01/25 07:19:11 tsubai Exp $	*/
 
 /*-
@@ -117,7 +117,7 @@ pchbattach(parent, self, aux)
 	 */
 
 	/*
-	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo);
+	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo, sizeof devinfo);
 	printf("%s: %s (rev. 0x%02x)\n", self->dv_xname, devinfo,
 	    PCI_REVISION(pa->pa_class));
 	*/

@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.30.2.1 2002/06/11 03:36:18 art Exp $        */
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.30.2.2 2003/05/19 21:49:42 tedu Exp $        */
 /*    $NetBSD: if_sn.c,v 1.13 1997/04/25 03:40:10 briggs Exp $        */
 
 /*
@@ -973,12 +973,9 @@ sonictxint(sc)
 
 		if ((txp_status & TCR_PTX) == 0) {
 			ifp->if_oerrors++;
-			printf("%s: Tx packet status=0x%x\n",
-			    sc->sc_dev.dv_xname, txp_status);
 			
 			/* XXX - DG This looks bogus */
 			if (mtd_hw != sc->mtd_free) {
-				printf("resubmitting remaining packets\n");
 				mtd = &sc->mtda[mtd_hw];
 				NIC_PUT(sc, SNR_CTDA, LOWER(mtd->mtd_vtxp));
 				NIC_PUT(sc, SNR_CR, CR_TXP);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/Attic/svr4_machdep.c,v 1.9.22.2 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/Attic/svr4_machdep.c,v 1.9.22.3 2003/05/19 21:46:33 tedu Exp $	*/
 /*	$NetBSD: svr4_machdep.c,v 1.24 1997/07/29 10:04:45 fair Exp $	 */
 
 /*
@@ -496,7 +496,8 @@ svr4_sendsig(catcher, sig, mask, code, type, val)
 	write_user_windows();
 
 	if (rwindow_save(p) || copyout(&frame, fp, sizeof(frame)) != 0 ||
-	    suword(&((struct rwindow *)newsp)->rw_in[6], oldsp)) {
+	    copyout(&oldsp, &((struct rwindow *)newsp)->rw_in[6],
+	      sizeof(register_t)) != 0) {
 		/*
 		 * Process has trashed its stack; give it an illegal
 		 * instruction to halt it in its tracks.

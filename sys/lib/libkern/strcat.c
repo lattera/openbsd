@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/Attic/strcat.c,v 1.4 1998/06/27 01:21:04 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/Attic/strcat.c,v 1.4.18.1 2003/05/19 21:53:42 tedu Exp $	*/
 
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -35,7 +35,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)strcat.c	5.6 (Berkeley) 2/24/91";*/
-static char *rcsid = "$OpenBSD: src/sys/lib/libkern/Attic/strcat.c,v 1.4 1998/06/27 01:21:04 mickey Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/Attic/strcat.c,v 1.4.18.1 2003/05/19 21:53:42 tedu Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)
@@ -43,6 +43,8 @@ static char *rcsid = "$OpenBSD: src/sys/lib/libkern/Attic/strcat.c,v 1.4 1998/06
 #else
 #include <lib/libkern/libkern.h>
 #endif
+
+__warn_references(strcat, "warning: strcat() is often misused, please use strlcpy()");
 
 char *
 strcat(s, append)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.10.2.2 2002/10/29 00:28:08 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.10.2.3 2003/05/19 21:49:43 tedu Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -116,8 +116,6 @@ cdev_decl(xfs_dev);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
-
 #include "systrace.h"
 
 struct cdevsw cdevsw[] = {
@@ -203,7 +201,6 @@ struct cdevsw cdevsw[] = {
 	cdev_notdef(),			/* 68: i4b phone device */
 	cdev_notdef(),			/* 69: i4b phone device */
 	cdev_notdef(),			/* 70: i4b phone device */
-	cdev_altq_init(NALTQ,altq),	/* 71: ALTQ control interface */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 
@@ -241,7 +238,7 @@ getnulldev()
 	return makedev(mem_no, 2);
 }
 
-static int chrtoblktbl[] = {
+int chrtoblktbl[] = {
 	/*VCHR*/	/*VBLK*/
 	/*  0 */	NODEV,
 	/*  1 */	NODEV,
@@ -299,42 +296,7 @@ static int chrtoblktbl[] = {
 	/* 53 */	NODEV,
 	/* 54 */	19,
 };
-
-/*
- * Return accompanying block dev for a char dev.
- */
-int
-chrtoblk(dev)
-	dev_t dev;
-{
-	int blkmaj;
-	
-	if (major(dev) >= nchrdev ||
-	    major(dev) > sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]))
-		return (NODEV);
-	blkmaj = chrtoblktbl[major(dev)];
-	if (blkmaj == NODEV)
-		return (NODEV);
-	return (makedev(blkmaj, minor(dev)));
-}
-
-/*
- * Convert a character device number to a block device number.
- */
-dev_t
-blktochr(dev)
-	dev_t dev;
-{
-	int blkmaj = major(dev);
-	int i;
-
-	if (blkmaj >= nblkdev)
-		return (NODEV);
-	for (i = 0; i < sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]); i++)
-		if (blkmaj == chrtoblktbl[i])
-			return (makedev(i, minor(dev)));
-	return (NODEV);
-}
+int nchrtoblktbl = sizeof(chrtoblktbl) / sizeof(chrtoblktbl[0]);
 
 #include <dev/cons.h>
 

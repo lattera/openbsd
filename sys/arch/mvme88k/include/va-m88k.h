@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/va-m88k.h,v 1.5.4.1 2002/06/11 03:37:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/va-m88k.h,v 1.5.4.2 2003/05/19 21:45:53 tedu Exp $	*/
 
 /* This file has local changes by MOTOROLA
 Thu Sep  9 09:06:29 CDT 1993 Dale Rahn (drahn@pacific)
@@ -63,5 +63,14 @@ typedef __va_list __gnuc_va_list;
 			 + ((AP).__va_arg - __va_size(TYPE)))))
 
 #define va_end(AP)
+
+/* Copy __gnuc_va_list into another variable of this type.  */
+#define __va_copy(dest, src) 	(dest) = (src)
+
+#if !defined(_ANSI_SOURCE) && \
+    (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE) || \
+	defined(_ISOC99_SOURCE) || (__STDC_VERSION__ - 0) >= 199901L)
+#define va_copy(dest, src) __va_copy(dest, src)
+#endif
 
 #endif /* defined (_STDARG_H) || defined (_VARARGS_H) */

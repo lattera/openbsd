@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.21.2.2 2002/10/29 00:33:24 art Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.21.2.3 2003/05/19 21:54:24 tedu Exp $ */
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -705,7 +705,6 @@ struct dc_softc {
 	void			*sc_dhook;
 	struct resource		*dc_irq;
 	struct resource		*dc_res;
-	u_int8_t		dc_unit;	/* interface number */
 	u_int8_t		dc_type;
 	u_int8_t		dc_pmode;
 	u_int8_t		dc_link;
@@ -753,6 +752,7 @@ struct dc_softc {
 #define DC_64BIT_HASH		0x00002000
 #define DC_TULIP_LEDS		0x00004000
 #define DC_TX_ONE		0x00008000
+#define DC_MOMENCO_BOTCH	0x00010000
 
 /*
  * register space access macros

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_trace.c,v 1.1 2002/06/08 16:02:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/ddb/db_trace.c,v 1.1.4.1 2003/05/19 21:49:44 tedu Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.15 1996/02/22 23:23:41 gwr Exp $	*/
 
 /*
@@ -40,6 +40,8 @@
 #include <ddb/db_variables.h>
 #include <ddb/db_interface.h>
 #include <ddb/db_output.h>
+
+db_regs_t ddb_regs;
 
 struct db_variable db_regs[] = {
 	{ "r0",  (long *)&(DDB_REGS->tf.fixreg[0]),	FCN_NULL },
@@ -101,7 +103,7 @@ db_read32(u_int32_t paddr, u_int32_t *value)
 {
 	faultbuf env;
 	faultbuf *old_onfault = curpcb->pcb_onfault;
-	if (setfault(env)) {
+	if (setfault(&env)) {
 		curpcb->pcb_onfault = old_onfault;
 		return EFAULT;
 	}

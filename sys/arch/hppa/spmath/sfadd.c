@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/sfadd.c,v 1.4.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/sfadd.c,v 1.4.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -271,7 +271,7 @@ sgl_fadd(leftptr, rightptr, dstptr, status)
 	if(Sgl_iszero_hidden(result))
 	    {
 	    /* Handle normalization */
-	    /* A straight foward algorithm would now shift the result
+	    /* A straight forward algorithm would now shift the result
 	     * and extension left until the hidden bit becomes one.  Not
 	     * all of the extension bits need participate in the shift.
 	     * Only the two most significant bits (round and guard) are

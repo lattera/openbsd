@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.12.2.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.12.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: cgthree.c,v 1.33 1997/05/24 20:16:11 pk Exp $ */
 
 /*
@@ -319,6 +319,7 @@ cgthreeattach(parent, self, args)
 	    round_page(sc->sc_sunfb.sf_fbsize));
 	sc->sc_sunfb.sf_ro.ri_hw = sc;
 	fbwscons_init(&sc->sc_sunfb, isconsole);
+	fbwscons_setcolormap(&sc->sc_sunfb, cgthree_setcolor);
 
 	cgthree_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;
 	cgthree_stdscreen.nrows = sc->sc_sunfb.sf_ro.ri_rows;
@@ -329,7 +330,7 @@ cgthreeattach(parent, self, args)
 
 	if (isconsole) {
 		fbwscons_console_init(&sc->sc_sunfb, &cgthree_stdscreen, -1,
-		    cgthree_setcolor, cgthree_burner);
+		    cgthree_burner);
 	}
 #if defined(SUN4C) || defined(SUN4M)
 	if (sbus)
@@ -358,7 +359,7 @@ cgthree_ioctl(v, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_UNKNOWN;
+		*(u_int *)data = WSDISPLAY_TYPE_SUNCG3;
 		break;
 	case WSDISPLAYIO_GINFO:
 		wdf = (struct wsdisplay_fbinfo *)data;

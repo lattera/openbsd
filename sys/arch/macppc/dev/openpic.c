@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7.2.3 2002/10/29 00:28:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7.2.4 2003/05/19 21:49:43 tedu Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -67,7 +67,7 @@ int o_hwirq[ICU_LEN], o_virq[ICU_LEN];
 unsigned int imen_o = 0xffffffff;
 int o_virq_max;
 
-struct evcnt evirq[ICU_LEN];
+struct evcnt o_evirq[ICU_LEN];
 
 static int fakeintr(void *);
 static char *intr_typename(int type);
@@ -503,7 +503,7 @@ openpic_do_pending_int()
 			ih = ih->ih_next;
 		}
 
-		evirq[o_hwirq[irq]].ev_count++;
+		o_evirq[o_hwirq[irq]].ev_count++;
 	}
 
 	/*out32rb(INT_ENABLE_REG, ~imen_o);*/
@@ -651,7 +651,7 @@ ext_intr_openpic()
 			}
 
 			uvmexp.intrs++;
-			evirq[realirq].ev_count++;
+			o_evirq[realirq].ev_count++;
 		}
 
 		openpic_eoi(0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17.2.3 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17.2.4 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -106,7 +106,7 @@ extern	int kgdb_debug_panic;
 #endif
 
 static	int rootnode;
-char platform_type[32];
+char platform_type[64];
 
 static	char *str2hex(char *, int *);
 static	int mbprint(void *, const char *);
@@ -563,7 +563,8 @@ setroot()
 		unit = DISKUNIT(rootdev);
 		part = DISKPART(rootdev);
 
-		len = sprintf(buf, "%s%d", findblkname(majdev), unit);
+		len = snprintf(buf, sizeof buf, "%s%d", findblkname(majdev),
+			unit);
 		if (len >= sizeof(buf))
 			panic("setroot: device name too long");
 
@@ -588,7 +589,7 @@ setroot()
 			printf(": ");
 			len = getstr(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
-				strcpy(buf, bootdv->dv_xname);
+				strlcpy(buf, bootdv->dv_xname, sizeof buf);
 				len = strlen(buf);
 			}
 			if (len > 0 && buf[len - 1] == '*') {
@@ -921,12 +922,12 @@ clockfreq(freq)
 	static char buf[10];
 
 	freq /= 1000;
-	sprintf(buf, "%ld", freq / 1000);
+	snprintf(buf, sizeof buf, "%ld", freq / 1000);
 	freq %= 1000;
 	if (freq) {
 		freq += 1000;	/* now in 1000..1999 */
 		p = buf + strlen(buf);
-		sprintf(p, "%ld", freq);
+		snprintf(p, buf + sizeof buf - p, "%ld", freq);
 		*p = '.';	/* now buf = %d.%3d */
 	}
 	return (buf);
@@ -1005,7 +1006,7 @@ mainbus_attach(parent, dev, aux)
 	void *aux;
 {
 extern struct sparc_bus_dma_tag mainbus_dma_tag;
-extern struct sparc_bus_space_tag mainbus_space_tag;
+extern bus_space_tag_t mainbus_space_tag;
 
 	struct mainbus_attach_args ma;
 	char buf[32];
@@ -1028,7 +1029,10 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 		NULL
 	};
 
-	OF_getprop(findroot(), "name", platform_type, sizeof(platform_type));
+	if (OF_getprop(findroot(), "banner-name", platform_type,
+	    sizeof(platform_type)) <= 0)
+		OF_getprop(findroot(), "name", platform_type,
+		    sizeof(platform_type));
 	printf(": %s\n", platform_type);
 
 
@@ -1058,7 +1062,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 				continue;
 			if (strcmp(buf, "cpu") == 0) {
 				bzero(&ma, sizeof(ma));
-				ma.ma_bustag = &mainbus_space_tag;
+				ma.ma_bustag = mainbus_space_tag;
 				ma.ma_dmatag = &mainbus_dma_tag;
 				ma.ma_node = node;
 				ma.ma_name = "cpu";
@@ -1100,7 +1104,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 			continue; /* an "early" device already configured */
 
 		bzero(&ma, sizeof ma);
-		ma.ma_bustag = &mainbus_space_tag;
+		ma.ma_bustag = mainbus_space_tag;
 		ma.ma_dmatag = &mainbus_dma_tag;
 		ma.ma_name = buf;
 		ma.ma_node = node;
@@ -1343,13 +1347,13 @@ getdevunit(name, unit)
 	int lunit;
 
 	/* compute length of name and decimal expansion of unit number */
-	sprintf(num, "%d", unit);
+	snprintf(num, sizeof num, "%d", unit);
 	lunit = strlen(num);
 	if (strlen(name) + lunit >= sizeof(fullname) - 1)
 		panic("config_attach: device name too long");
 
-	strcpy(fullname, name);
-	strcat(fullname, num);
+	strlcpy(fullname, name, sizeof fullname);
+	strlcat(fullname, num, sizeof fullname);
 
 	while (strcmp(dev->dv_xname, fullname) != 0) {
 		if ((dev = dev->dv_list.tqe_next) == NULL)
@@ -1573,10 +1577,13 @@ device_register(dev, aux)
 			if (strcmp(bp->name, "ide") == 0 &&
 			    strcmp((bp + 1)->name, "ata") == 0 &&
 			    strcmp((bp + 2)->name, "cmdk") == 0) {
-				if (((bp + 2)->val[0] == (bp + 1)->val[0]) &&
-				    ((bp + 1)->val[1] == 0)) {
+				if ((bp + 2)->val[1] == 0 &&
+				    (bp + 1)->val[1] == 0) {
 					(bp + 1)->dev = dev;
 					bootpath_store(1, bp + 2);
+					(bp + 2)->val[0] +=
+					    2 * ((bp + 1)->val[0]);
+					(bp + 2)->val[1] = 0;
 				}
 			}
 			return;

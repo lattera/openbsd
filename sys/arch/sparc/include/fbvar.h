@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/fbvar.h,v 1.4.2.2 2002/10/29 00:28:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/fbvar.h,v 1.4.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: fbvar.h,v 1.9 1997/07/07 23:31:30 pk Exp $ */
 
 /*
@@ -50,9 +50,7 @@
  */
 
 #define	FB_PFOUR	0x00010000	/* indicates fb is a pfour fb */
-#define FB_FORCELOW	0x00000001	/* run 24 bit fb in 8 bit mode */
-					/* or cg12 in 1 bit mode */
-#define FB_USERMASK	(0xffff)	/* flags that the user can set */
+#define FB_USERMASK	(0)		/* flags that the user can set */
 
 /*
  * Common frame buffer variables.
@@ -82,8 +80,9 @@ extern int fbnode;
 void	fb_setsize(struct sunfb*, int, int, int, int, int);
 void	fbwscons_init(struct sunfb *, int);
 void	fbwscons_console_init(struct sunfb *, struct wsscreen_descr *, int,
-    void (*)(void *, u_int, u_int8_t, u_int8_t, u_int8_t),
     void (*)(void *, u_int, u_int));
+void	fbwscons_setcolormap(struct sunfb *,
+    void (*)(void *, u_int, u_int8_t, u_int8_t, u_int8_t));
 
 #if defined(SUN4)
 int	fb_pfour_id(void *);

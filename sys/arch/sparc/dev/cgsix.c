@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgsix.c,v 1.17.2.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgsix.c,v 1.17.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: cgsix.c,v 1.33 1997/08/07 19:12:30 pk Exp $ */
 
 /*
@@ -257,7 +257,7 @@ cgsixattach(parent, self, args)
 	sc->sc_sunfb.sf_flags = self->dv_cfdata->cf_flags;
 
 	/*
-	 * May just BT, FHC, FBC, THC, and video RAM.
+	 * Map just BT, FHC, FBC, THC, and video RAM.
 	 */
 	sc->sc_phys = ca->ca_ra.ra_reg[0];
 	sc->sc_bt = bt = (volatile struct bt_regs *)
@@ -346,6 +346,7 @@ cgsixattach(parent, self, args)
 	    CGSIX_VID_OFFSET, round_page(sc->sc_sunfb.sf_fbsize));
 	sc->sc_sunfb.sf_ro.ri_hw = sc;
 	fbwscons_init(&sc->sc_sunfb, isconsole);
+	fbwscons_setcolormap(&sc->sc_sunfb, cgsix_setcolor);
 
 	/*
 	 * Old rev. cg6 cards do not like the current acceleration code.
@@ -372,7 +373,7 @@ cgsixattach(parent, self, args)
 
 	if (isconsole) {
 		fbwscons_console_init(&sc->sc_sunfb, &cgsix_stdscreen, -1,
-		    cgsix_setcolor, cgsix_burner);
+		    cgsix_burner);
 	}
 
 #if defined(SUN4C) || defined(SUN4M)
@@ -402,7 +403,7 @@ cgsix_ioctl(dev, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_UNKNOWN;
+		*(u_int *)data = WSDISPLAY_TYPE_SUNCG6;
 		break;
 	case WSDISPLAYIO_GINFO:
 		wdf = (struct wsdisplay_fbinfo *)data;

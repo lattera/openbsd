@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/compat/bsdos/Attic/syscalls.master,v 1.8.4.1 2002/06/11 03:28:07 art Exp $
+	$OpenBSD: src/sys/compat/bsdos/Attic/syscalls.master,v 1.8.4.2 2003/05/19 21:52:09 tedu Exp $
 
 ; OpenBSD COMPAT_BSDOS system call name/number "master" file.
 ; (See syscalls.conf to see what it is processed into.)
@@ -160,7 +160,7 @@
 83	NOARGS		{ int sys_setitimer(u_int which, \
 			    struct itimerval *itv, struct itimerval *oitv); }
 84	NOARGS		{ int compat_43_sys_wait(void); } owait
-85	NOARGS		{ int sys_swapon(char *name); }
+85	NOARGS		{ int compat_25_sys_swapon(char *name); }
 86	NOARGS		{ int sys_getitimer(u_int which, \
 			    struct itimerval *itv); }
 87	NOARGS		{ int compat_43_sys_gethostname(char *hostname, \
@@ -225,10 +225,8 @@
 125	NOARGS		{ int compat_43_sys_recvfrom(int s, caddr_t buf, \
 			    size_t len, int flags, caddr_t from, \
 			    int *fromlenaddr); } orecvfrom
-126	NOARGS		{ int compat_43_sys_setreuid(int ruid, int euid); } \
-			    osetreuid
-127	NOARGS		{ int compat_43_sys_setregid(int rgid, int egid); } \
-			    osetregid
+126	NOARGS		{ int sys_setreuid(uid_t ruid, uid_t euid); }
+127	NOARGS		{ int sys_setregid(gid_t rgid, gid_t egid); }
 128	NOARGS		{ int sys_rename(char *from, char *to); }
 129	NOARGS		{ int compat_43_sys_truncate(char *path, \
 			    long length); } otruncate

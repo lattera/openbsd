@@ -31,7 +31,7 @@
  * $Id$
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx.c,v 1.80 2001/12/16 17:38:30 gibbs Exp $
- * $OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.34.2.2 2002/10/29 00:33:24 art Exp $
+ * $OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.34.2.3 2003/05/19 21:54:23 tedu Exp $
  */
 
 #ifdef __OpenBSD__
@@ -558,8 +558,8 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
 				scb->flags |= SCB_AUTO_NEGOTIATE;
 			}
 			hscb->cdb_len = sizeof(*sc);
-			hscb->dataptr = ahc_htole32(sg->addr); 
-			hscb->datacnt = ahc_htole32(sg->len);
+			hscb->dataptr = sg->addr; 
+			hscb->datacnt = sg->len;
 			hscb->sgptr = scb->sg_list_phys | SG_FULL_RESID;
 			hscb->sgptr = ahc_htole32(hscb->sgptr);
 			scb->sg_count = 1;
@@ -1109,7 +1109,7 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
 		/*
 		 * Although the driver does not care about the
 		 * 'Selection in Progress' status bit, the busy
-		 * LED does.  SELINGO is only cleared by a sucessfull
+		 * LED does.  SELINGO is only cleared by a successful
 		 * selection, so we must manually clear it to insure
 		 * the LED turns off just incase no future successful
 		 * selections occur (e.g. no devices on the bus).
@@ -1389,11 +1389,15 @@ void
 ahc_clear_intstat(struct ahc_softc *ahc)
 {
 	/* Clear any interrupt conditions this may have caused */
+	ahc_flush_device_writes(ahc);
 	ahc_outb(ahc, CLRSINT1, CLRSELTIMEO|CLRATNO|CLRSCSIRSTI
 				|CLRBUSFREE|CLRSCSIPERR|CLRPHASECHG|
 				CLRREQINIT);
+	ahc_flush_device_writes(ahc);
 	ahc_outb(ahc, CLRSINT0, CLRSELDO|CLRSELDI|CLRSELINGO);
+	ahc_flush_device_writes(ahc);
 	ahc_outb(ahc, CLRINT, CLRSCSIINT);
+	ahc_flush_device_writes(ahc);
 }
 
 /**************************** Debugging Routines ******************************/
@@ -4002,7 +4006,7 @@ ahc_init_scbdata(struct ahc_softc *ahc)
 	ahc_outb(ahc, NEXT_QUEUED_SCB, ahc->next_queued_scb->hscb->tag);
 
 	/*
-	 * Note that we were successfull
+	 * Note that we were successful
 	 */
 	return (0); 
 
@@ -4144,17 +4148,18 @@ ahc_alloc_scbs(struct ahc_softc *ahc)
 #endif /* __OpenBSD__ */
 
 void
-ahc_controller_info(struct ahc_softc *ahc, char *buf)
+ahc_controller_info(struct ahc_softc *ahc, char *buf, size_t buf_len)
 {
-	int len;
+	int len = 0;
 
-	len = sprintf(buf, "%s: ", ahc_chip_names[ahc->chip & AHC_CHIPID_MASK]);
-	buf += len;
+	snprintf(buf + len, buf_len - len, "%s: ",
+		 ahc_chip_names[ahc->chip & AHC_CHIPID_MASK]);
+	len = strlen(buf);
 	if ((ahc->features & AHC_TWIN) != 0)
- 		len = sprintf(buf, "Twin Channel, A SCSI Id=%d, "
-			      "B SCSI Id=%d, primary %c, ",
-			      ahc->our_id, ahc->our_id_b,
-			      (ahc->flags & AHC_PRIMARY_CHANNEL) + 'A');
+		snprintf(buf + len, buf_len - len,
+			 "Twin Channel, A SCSI Id=%d, B SCSI Id=%d, "
+			 "primary %c, ", ahc->our_id, ahc->our_id_b,
+			 (ahc->flags & AHC_PRIMARY_CHANNEL) + 'A');
 	else {
 		const char *speed;
 		const char *type;
@@ -4172,16 +4177,18 @@ ahc_controller_info(struct ahc_softc *ahc, char *buf)
 		} else {
 			type = "Single";
 		}
-		len = sprintf(buf, "%s%s Channel %c, SCSI Id=%d, ",
-			      speed, type, ahc->channel, ahc->our_id);
+		snprintf(buf + len, buf_len - len,
+			 "%s%s Channel %c, SCSI Id=%d, ",
+			 speed, type, ahc->channel, ahc->our_id);
 	}
-	buf += len;
+	len = strlen(buf);
 
 	if ((ahc->flags & AHC_PAGESCBS) != 0)
-		sprintf(buf, "%d/%d SCBs",
-			ahc->scb_data->maxhscbs, AHC_SCB_MAX);
+		snprintf(buf + len, buf_len - len, "%d/%d SCBs",
+			 ahc->scb_data->maxhscbs, AHC_SCB_MAX);
 	else
-		sprintf(buf, "%d SCBs", ahc->scb_data->maxhscbs);
+		snprintf(buf + len, buf_len - len, "%d SCBs",
+			 ahc->scb_data->maxhscbs);
 }
 
 /*
@@ -5627,6 +5634,7 @@ ahc_reset_current_bus(struct ahc_softc *ahc)
 	ahc_outb(ahc, SIMODE1, ahc_inb(ahc, SIMODE1) & ~ENSCSIRST);
 	scsiseq = ahc_inb(ahc, SCSISEQ);
 	ahc_outb(ahc, SCSISEQ, scsiseq | SCSIRSTO);
+	ahc_flush_device_writes(ahc);
 	ahc_delay(AHC_BUSRESET_DELAY);
 	/* Turn off the bus reset */
 	ahc_outb(ahc, SCSISEQ, scsiseq & ~SCSIRSTO);

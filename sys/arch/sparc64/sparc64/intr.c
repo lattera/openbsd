@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.3 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.4 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: intr.c,v 1.39 2001/07/19 23:38:11 eeh Exp $ */
 
 /*
@@ -61,6 +61,9 @@
 #include <machine/instr.h>
 #include <machine/trap.h>
 
+/* Grab interrupt map stuff (what is it doing there???) */
+#include <sparc64/dev/iommureg.h>
+
 /*
  * The following array is to used by locore.s to map interrupt packets
  * to the proper IPL to send ourselves a softint.  It should be filled
@@ -103,8 +106,8 @@ strayintr(fp, vectored)
 	/* If we're in polled mode ignore spurious interrupts */
 	if ((fp->tf_pil == PIL_SER) /* && swallow_zsintrs */) return;
 
-	printf("stray interrupt ipl %u pc=%llx npc=%llx pstate=%b vecttored=%d\n",
-	    fp->tf_pil, (unsigned long long)fp->tf_pc,
+	printf("stray interrupt ipl %u pc=%llx npc=%llx pstate=%b "
+	    "vecttored=%d\n", fp->tf_pil, (unsigned long long)fp->tf_pc,
 	    (unsigned long long)fp->tf_npc, fp->tf_tstate>>TSTATE_PSTATE_SHIFT,
 	    PSTATE_BITS, vectored);
 
@@ -162,40 +165,15 @@ softnet(fp)
 struct intrhand soft01intr = { softintr, NULL, 1 };
 struct intrhand soft01net = { softnet, NULL, 1 };
 
-#if 1
 void 
 setsoftint() {
 	send_softint(-1, IPL_SOFTINT, &soft01intr);
 }
+
 void 
 setsoftnet() {
 	send_softint(-1, IPL_SOFTNET, &soft01net);
 }
-#endif
-
-/*
- * Level 15 interrupts are special, and not vectored here.
- * Only `prewired' interrupts appear here; boot-time configured devices
- * are attached via intr_establish() below.
- */
-struct intrhand *intrhand[16] = {
-	NULL,			/*  0 = error */
-	&soft01intr,		/*  1 = software level 1 + Sbus */
-	NULL,	 		/*  2 = Sbus level 2 (4m: Sbus L1) */
-	NULL,			/*  3 = SCSI + DMA + Sbus level 3 (4m: L2,lpt)*/
-	NULL,			/*  4 = software level 4 (tty softint) (scsi) */
-	NULL,			/*  5 = Ethernet + Sbus level 4 (4m: Sbus L3) */
-	NULL,			/*  6 = software level 6 (not used) (4m: enet)*/
-	NULL,			/*  7 = video + Sbus level 5 */
-	NULL,			/*  8 = Sbus level 6 */
-	NULL,			/*  9 = Sbus level 7 */
-	NULL,			/* 10 = counter 0 = clock */
-	NULL,			/* 11 = floppy */
-	NULL,			/* 12 = zs hardware interrupt */
-	NULL,			/* 13 = audio chip */
-	NULL,			/* 14 = counter 1 = profiling timer */
-	NULL			/* 15 = async faults */
-};
 
 int fastvec = 0;
 
@@ -237,7 +215,8 @@ intr_establish(level, ih)
 	int level;
 	struct intrhand *ih;
 {
-	register struct intrhand **p, *q;
+	struct intrhand *q;
+	u_int64_t m, id;
 	int s;
 
 	s = splhigh();
@@ -246,18 +225,16 @@ intr_establish(level, ih)
 	 * and we do want to preserve order.
 	 */
 	ih->ih_pil = level; /* XXXX caller should have done this before */
+	ih->ih_busy = 0;    /* XXXX caller should have done this before */
 	ih->ih_pending = 0; /* XXXX caller should have done this before */
 	ih->ih_next = NULL;
-	for (p = &intrhand[level]; (q = *p) != NULL; p = &q->ih_next)
-		continue;
-	*p = ih;
 
 	/*
 	 * Store in fast lookup table
 	 */
 #ifdef NOT_DEBUG
 	if (!ih->ih_number) {
-		printf("\nintr_establish: NULL vector fun %p arg %p pil %p\n",
+		printf("\nintr_establish: NULL vector fun %p arg %p pil %p",
 			  ih->ih_fun, ih->ih_arg, ih->ih_number, ih->ih_pil);
 		Debugger();
 	}
@@ -302,12 +279,34 @@ intr_establish(level, ih)
 		q->ih_arg = (void *)nih;
 	}
 
-#ifdef NOT_DEBUG
+	if(ih->ih_map) {
+		id = CPU_UPAID;
+		m = *ih->ih_map;
+		if(INTTID(m) != id) {
+			printf("\nintr_establish: changing map 0x%llx -> ", m);
+			m = (m & ~INTMAP_TID) | (id << INTTID_SHIFT);
+			printf("0x%llx (id=%llx) ", m, id);
+		}
+		m |= INTMAP_V;
+		*ih->ih_map = m;
+	}
+	else {
+#ifdef DEBUG
+		printf(	"\n**********************\n"
+			"********************** intr_establish: no map register\n"
+			"**********************\n");
+#endif
+	}
+
+	if (ih->ih_clr != NULL)			/* Set interrupt to idle */
+		*ih->ih_clr = INTCLR_IDLE;
+
+#ifdef DEBUG
 	printf("\nintr_establish: vector %x pil %x mapintr %p "
-	    "clrintr %p fun %p arg %p\n",
+	    "clrintr %p fun %p arg %p target %d",
 	    ih->ih_number, ih->ih_pil, (void *)ih->ih_map,
 	    (void *)ih->ih_clr, (void *)ih->ih_fun,
-	    (void *)ih->ih_arg);
+	    (void *)ih->ih_arg, (int)(ih->ih_map ? INTTID(*ih->ih_map) : -1));
 #endif
 
 	splx(s);
@@ -326,6 +325,7 @@ softintr_establish(level, fun, arg)
 	ih->ih_fun = (int (*)(void *))fun;	/* XXX */
 	ih->ih_arg = arg;
 	ih->ih_pil = level;
+	ih->ih_busy = 0;
 	ih->ih_pending = 0;
 	ih->ih_clr = NULL;
 	return (void *)ih;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.5.4.3 2002/10/29 00:28:08 art Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.5.4.4 2003/05/19 21:49:43 tedu Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -25,10 +25,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 STRIP?=	strip
 SIZE?=	size
@@ -45,6 +41,9 @@ CPPFLAGS=	${INCLUDES} ${IDENT} -D_KERNEL \
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
 CMACHFLAGS=	-msoft-float -Wa,-m7400
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
 COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE

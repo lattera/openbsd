@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/mac68k5380.c,v 1.14.4.2 2002/10/29 00:28:05 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/mac68k5380.c,v 1.14.4.3 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: mac68k5380.c,v 1.29 1997/02/28 15:50:50 scottr Exp $	*/
 
 /*
@@ -639,6 +639,7 @@ scsi_timeout_error:
 	 * Clear the DMA mode.
 	 */
 	SET_5380_REG(NCR5380_MODE, GET_5380_REG(NCR5380_MODE) & ~SC_M_DMA);
+	splx(s);
 	return -1;
 }
 #endif /* if USE_PDMA */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.h,v 1.8.4.1 2002/06/11 03:28:34 art Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.h,v 1.8.4.2 2003/05/19 21:53:13 tedu Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -73,6 +73,7 @@ extern struct enc_xform enc_xform_cast5;
 extern struct enc_xform enc_xform_skipjack;
 extern struct enc_xform enc_xform_rijndael128;
 extern struct enc_xform enc_xform_arc4;
+extern struct enc_xform enc_xform_null;
 
 extern struct auth_hash auth_hash_md5;
 extern struct auth_hash auth_hash_sha1;
@@ -83,4 +84,6 @@ extern struct auth_hash auth_hash_hmac_sha1_96;
 extern struct auth_hash auth_hash_hmac_ripemd_160_96;
 
 extern struct comp_algo comp_algo_deflate;
+extern struct comp_algo comp_algo_lzs;
+
 #endif /* _CRYPTO_XFORM_H_ */

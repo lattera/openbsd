@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.6.2 2002/10/29 00:28:06 art Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.6.3 2003/05/19 21:49:43 tedu Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -182,7 +182,7 @@ cpuattach(parent, dev, aux)
 
 	}
 	/* power savings mode */
-	asm ("mfspr %0,1008" : "=r" (hid0));
+	__asm __volatile ("mfspr %0,1008" : "=r" (hid0));
 	switch (cpu) {
 	case MPC603:
 	case MPC603e:
@@ -196,7 +196,7 @@ cpuattach(parent, dev, aux)
 		hid0 &= ~(HID0_NAP | HID0_SLEEP);
 		hid0 |= HID0_DOZE | HID0_DPM; 
 	}
-	asm ("mtspr %0,1008" : "=r" (hid0));
+	__asm __volatile ("mtspr 1008,%0" : "=r" (hid0));
 
 	/* if processor is G3 or G4, configure l2 cache */ 
 	if ( (cpu == MPC750) || (cpu == MPC7400) || (cpu == IBM750FX)

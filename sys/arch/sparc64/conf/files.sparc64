@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22.2.3 2002/10/29 00:28:11 art Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22.2.4 2003/05/19 21:46:57 tedu Exp $
 #	$NetBSD: files.sparc64,v 1.50 2001/08/10 20:53:50 eeh Exp $
 
 # maxpartitions must be first item in files.${ARCH}
@@ -41,6 +41,9 @@ include "dev/pcmcia/files.pcmcia"
 include "compat/netbsd/files.netbsd"
 file	arch/sparc64/sparc64/netbsd_machdep.c	compat_netbsd
 
+# Sun specific files
+include "../../../dev/sun/files.sun"
+
 attach sbus at mainbus
 file	arch/sparc64/dev/sbus.c			sbus
 
@@ -54,6 +57,7 @@ attach creator at upa with creator_upa
 file	arch/sparc64/dev/creator_upa.c		creator_upa
 
 include "dev/pci/files.pci"
+major { wd = 12 }
 
 device psycho: pcibus
 attach psycho at mainbus
@@ -126,9 +130,6 @@ file	arch/sparc64/dev/ce4231.c		audioce
 attach com at ebus with com_ebus
 file	arch/sparc64/dev/com_ebus.c		com_ebus
 
-define sunkbd
-file	dev/sun/sunkbd.c			sunkbd
-
 attach pckbc at ebus with pckbc_ebus
 file	arch/sparc64/dev/pckbc_ebus.c		pckbc_ebus
 
@@ -169,6 +170,7 @@ file	arch/sparc64/fpu/fpu_subr.c
 # N.B.: optimizer breaks pmap.c and/or cache.c somehow -- have not
 # identified the exact problem yet.  NOOPT_C suffices for now.
 file	arch/sparc64/sparc64/autoconf.c
+file	arch/sparc64/sparc64/busop.c
 file	arch/sparc64/sparc64/cache.c
 file	arch/sparc64/sparc64/conf.c
 file	arch/sparc64/sparc64/emul.c

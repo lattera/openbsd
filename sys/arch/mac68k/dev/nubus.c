@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.24.2.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.24.2.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: nubus.c,v 1.35 1997/04/22 20:20:32 scottr Exp $	*/
 
 /*
@@ -820,17 +820,12 @@ nubus_mapin(paddr, sz)
 	retval = va + off;
 
 	/* Map it to the specified bus. */
-#if 0	/* XXX */
-	/* This has a problem with wrap-around... */
-	pmap_map((int)va, pa | pmt, pa + sz, VM_PROT_ALL);
-#else
 	do {
 		pmap_enter(pmap_kernel(), va, pa | pmt,
 			   VM_PROT_READ|VM_PROT_WRITE, 0);
 		va += NBPG;
 		pa += NBPG;
 	} while ((sz -= NBPG) > 0);
-#endif
 	pmap_update(pmap_kernel());
 
 	return ((char *)retval);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.6.4.1 2002/10/29 00:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.6.4.2 2003/05/19 21:49:44 tedu Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996 Wolfgang Solfrank.
@@ -40,7 +40,7 @@
 #include <sys/proc.h>
 #include <sys/systm.h>
 
-int whichqs;
+extern int whichqs;
 
 /*
  * Put process p on the run queue, given by its priority.

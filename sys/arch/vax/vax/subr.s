@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.15.4.2 2002/10/29 00:28:14 art Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.15.4.3 2003/05/19 21:46:09 tedu Exp $     */
 /*	$NetBSD: subr.s,v 1.32 1999/03/25 00:41:48 mrg Exp $	   */
 
 /*
@@ -491,48 +491,6 @@ ENTRY(copystr,0)
 	incl	r1		# null byte accounts for outlen...
 	movl	r1,(r3)		# save len copied
 4:	clrl	*pcbtrap
-	ret
-
-ENTRY(subyte,0)
-	movl	4(ap),r0
-	blss	3f		# illegal space
-	movab	1f,*pcbtrap
-	movb	8(ap),(r0)
-	clrl	r1
-1:	clrl	*pcbtrap
-	movl	r1,r0
-	ret
-
-ENTRY(suword,0)
-	movl	4(ap),r0
-	blss	3f		# illegal space
-	movab	1f,*pcbtrap
-	movl	8(ap),(r0)
-	clrl	r1
-1:	clrl	*pcbtrap
-	movl	r1,r0
-	ret
-
-ENTRY(suswintr,0)
-	movl	4(ap),r0
-	blss	3f		# illegal space
-	movab	1f,*pcbtrap
-	movw	8(ap),(r0)
-	clrl	r1
-1:	clrl	*pcbtrap
-	movl	r1,r0
-	ret
-
-3:	mnegl	$1,r0
-	ret
-
-ENTRY(fuswintr,0)
-	movl	4(ap),r0
-	blss	3b		# illegal space
-	movab	1f,*pcbtrap
-	movzwl	(r0),r1
-1:	clrl	*pcbtrap
-	movl	r1,r0
 	ret
 
 #

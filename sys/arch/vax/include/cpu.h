@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.11.4.2 2002/10/29 00:28:13 art Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.11.4.3 2003/05/19 21:46:09 tedu Exp $      */
 /*      $NetBSD: cpu.h,v 1.41 1999/10/21 20:01:36 ragge Exp $      */
 
 /*
@@ -114,6 +114,8 @@ extern	int     want_resched;   /* resched() was called */
 #define	IOSPSZ	((64*1024) / VAX_NBPG)	/* 64k == 128 pages */
 
 struct device;
+
+extern char cpu_model[100];
 
 /* Some low-level prototypes */
 int	badaddr(caddr_t, int);

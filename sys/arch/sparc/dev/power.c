@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/power.c,v 1.5.14.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/power.c,v 1.5.14.2 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: power.c,v 1.2 1996/05/16 15:56:56 abrown Exp $ */
 
 /*
@@ -62,6 +62,7 @@ struct cfdriver power_cd = {
 };
 
 static char power_attached = 0;
+volatile u_char *power_reg;
 
 /*
  * This is the driver for the "power" register available on some Sun4m

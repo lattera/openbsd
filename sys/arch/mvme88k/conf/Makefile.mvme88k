@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.16.2.3 2002/10/29 00:28:07 art Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.16.2.4 2003/05/19 21:45:52 tedu Exp $
 #
 # Makefile for OpenBSD
 #
@@ -23,10 +23,6 @@
 
 .include <bsd.own.mk>
 
-AS?= 	as
-CC?=    cc
-CPP?=   cpp
-LD?=    ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?= strip
@@ -41,7 +37,9 @@ INCLUDES=	-nostdinc -I. -I$S/arch -I$S
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -Dmvme88k -Dm88k
 CWARNFLAGS=	-Wall -Werror -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main -Wstrict-prototypes
-CMACHFLAGS=
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
 COPTS?=		-O
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE ${CMACHFLAGS}

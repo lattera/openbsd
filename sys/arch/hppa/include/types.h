@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/Attic/types.h,v 1.6.4.1 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/Attic/types.h,v 1.6.4.2 2003/05/19 21:49:42 tedu Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -85,5 +85,7 @@ typedef	unsigned long		 uint64_t;
 #endif
 
 typedef int32_t			register_t;
+
+#define	__HAVE_DEVICE_REGISTER
 
 #endif	/* _MACHINE_TYPES_H_ */

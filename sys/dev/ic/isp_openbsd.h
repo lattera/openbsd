@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/isp_openbsd.h,v 1.18.2.1 2002/06/11 03:42:19 art Exp $ */
+/*      $OpenBSD: src/sys/dev/ic/isp_openbsd.h,v 1.18.2.2 2003/05/19 21:54:25 tedu Exp $ */
 /*
  * OpenBSD Specific definitions for the Qlogic ISP Host Adapter
  */
@@ -45,7 +45,6 @@
 #include <machine/bus.h>
 #endif
 
-#include <scsi/scsi_all.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
 
@@ -118,7 +117,6 @@ struct isposinfo {
 #define	MEMZERO			bzero
 #define	MEMCPY(dst, src, amt)	bcopy((src), (dst), (amt))
 #define	SNPRINTF		snprintf
-#define	STRNCAT			strncat
 #define	USEC_DELAY(x)		delay(x)
 #define	USEC_SLEEP(isp, x)		\
 	if (!MUST_POLL(isp))		\
@@ -308,7 +306,6 @@ void isp_uninit(struct ispsoftc *);
 
 static INLINE void isp_lock(struct ispsoftc *);
 static INLINE void isp_unlock(struct ispsoftc *);
-static INLINE char *strncat(char *, const char *, size_t);
 static INLINE u_int64_t
 isp_microtime_sub(struct timeval *, struct timeval *);
 static void isp_wait_complete(struct ispsoftc *);
@@ -365,24 +362,6 @@ isp_unlock(struct ispsoftc *isp)
 		isp->isp_osinfo.islocked = 0;
 		splx(isp->isp_osinfo.splsaved);
 	}
-}
-
-static INLINE char *
-strncat(char *d, const char *s, size_t c)
-{
-        char *t = d;
-
-        if (c) {
-                while (*d)
-                        d++;
-                while ((*d++ = *s++)) {
-                        if (--c == 0) {
-                                *d = '\0';
-                                break;
-                        }
-                }
-        }
-        return (t);
 }
 
 static INLINE u_int64_t

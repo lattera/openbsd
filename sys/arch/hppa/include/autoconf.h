@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.11.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.11.2.2 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -36,13 +36,20 @@
 struct confargs {
 	const char	*ca_name;	/* device name/description */
 	bus_space_tag_t	ca_iot;		/* io tag */
-	int		ca_mod;		/* module number on the bus */
-	struct iodc_data ca_type;	/* iodc-specific type descrition */
-	hppa_hpa_t	ca_hpa;		/* module HPA */
-	hppa_hpa_t	ca_hpamask;	/* mask for modules on the bus */
 	bus_dma_tag_t	ca_dmatag;	/* DMA tag */
+	struct device_path ca_dp;	/* device_path as found by pdc_scan */
+	hppa_hpa_t	ca_hpa;		/* module HPA */
+	u_int		ca_hpasz;	/* module HPA size (if avail) */
+	hppa_hpa_t	ca_hpamask;	/* mask for modules on the bus */
 	int		ca_irq;		/* module IRQ */
+	struct iodc_data ca_type;	/* iodc-specific type descrition */
 	struct pdc_iodc_read *ca_pdc_iodc_read;
+	int		ca_naddrs;	/* number of valid addr ents */
+	struct {
+		hppa_hpa_t addr;
+		u_int	size;
+	}		ca_addrs[16];	/* 16 is ought to be enough */
+
 }; 
 
 #define	hppacf_off	cf_loc[0]
@@ -66,12 +73,13 @@ extern void (*cold_hook)(int);
 struct device;
 
 const char *hppa_mod_info(int, int);
-void	pdc_scanbus(struct device *, struct confargs *, int bus, int);
+void	pdc_scanbus(struct device *, struct confargs *, int);
 int	mbprint(void *, const char *);
 int	mbsubmatch(struct device *, void *, void *);
-void	*cpu_intr_establish(int pri, int, int (*handler)(void *),
-	    void *arg, struct device *name);
-void	cpu_intr(struct trapframe *frame);
+void	*cpu_intr_map(void *v, int pri, int irq, int (*handler)(void *),
+	    void *arg, struct device *dv);
+void	*cpu_intr_establish(int pri, int irq, int (*handler)(void *),
+	    void *arg, struct device *dv);
 int	clock_intr(void *);
 
 void	dumpconf(void);

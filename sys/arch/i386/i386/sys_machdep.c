@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.17.2.2 2002/10/29 00:28:04 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.17.2.3 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.28 1996/05/03 19:42:29 christos Exp $	*/
 
 /*-
@@ -111,6 +111,9 @@ i386_get_ldt(p, args, retval)
 	union descriptor *lp;
 	struct i386_get_ldt_args ua;
 
+	if (user_ldt_enable == 0)
+		return (ENOSYS);
+
 	if ((error = copyin(args, &ua, sizeof(ua))) != 0)
 		return (error);
 
@@ -157,6 +160,9 @@ i386_set_ldt(p, args, retval)
 	struct i386_set_ldt_args ua;
 	union descriptor desc;
 
+	if (user_ldt_enable == 0)
+		return (ENOSYS);
+
 	if ((error = copyin(args, &ua, sizeof(ua))) != 0)
 		return (error);
 
@@ -195,10 +201,10 @@ i386_set_ldt(p, args, retval)
 		bzero((caddr_t)new_ldt + old_len, new_len - old_len);
 		pmap->pm_ldt = new_ldt;
 
-		if (pmap->pm_flags & PCB_USER_LDT)
+		if (pmap->pm_flags & PMF_USER_LDT)
 			ldt_free(pmap);
 		else
-			pmap->pm_flags |= PCB_USER_LDT;
+			pmap->pm_flags |= PMF_USER_LDT;
 		ldt_alloc(pmap, new_ldt, new_len);
 		pcb->pcb_ldt_sel = pmap->pm_ldt_sel;
 		if (pcb == curpcb)

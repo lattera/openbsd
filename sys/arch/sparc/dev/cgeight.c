@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgeight.c,v 1.12.2.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgeight.c,v 1.12.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: cgeight.c,v 1.13 1997/05/24 20:16:04 pk Exp $	*/
 
 /*
@@ -112,7 +112,6 @@ void cgeight_free_screen(void *, void *);
 int cgeight_show_screen(void *, void *, int, void (*cb)(void *, int, int),
     void *);
 paddr_t cgeight_mmap(void *, off_t, int);
-int cgeight_is_console(int);
 void cgeight_reset(struct cgeight_softc *);
 void cgeight_burner(void *, u_int, u_int);
 
@@ -244,7 +243,7 @@ cgeightattach(parent, self, args)
 
 	if (isconsole) {
 		fbwscons_console_init(&sc->sc_sunfb, &cgeight_stdscreen, -1,
-		    NULL, cgeight_burner);
+		    cgeight_burner);
 	}
 
 	waa.console = isconsole;
@@ -269,7 +268,7 @@ cgeight_ioctl(v, cmd, data, flags, p)
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
-		*(u_int *)data = WSDISPLAY_TYPE_UNKNOWN;
+		*(u_int *)data = WSDISPLAY_TYPE_SUNCG8;
 		break;
 	case WSDISPLAYIO_GINFO:
 		wdf = (struct wsdisplay_fbinfo *)data;

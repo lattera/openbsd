@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/fcnvfxt.c,v 1.5.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/fcnvfxt.c,v 1.5.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -25,8 +25,8 @@
  */
 /*ARGSUSED*/
 int
-sgl_to_sgl_fcnvfxt(srcptr,dstptr,status)
-	sgl_floating_point *srcptr;
+sgl_to_sgl_fcnvfxt(srcptr, null, dstptr, status)
+	sgl_floating_point *srcptr, *null;
 	int *dstptr;
 	unsigned int *status;
 {
@@ -101,8 +101,8 @@ sgl_to_sgl_fcnvfxt(srcptr,dstptr,status)
  */
 /*ARGSUSED*/
 int
-sgl_to_dbl_fcnvfxt(srcptr,dstptr,status)
-	sgl_floating_point *srcptr;
+sgl_to_dbl_fcnvfxt(srcptr, null, dstptr, status)
+	sgl_floating_point *srcptr, *null;
 	dbl_integer *dstptr;
 	unsigned int *status;
 {
@@ -187,8 +187,8 @@ sgl_to_dbl_fcnvfxt(srcptr,dstptr,status)
  */
 /*ARGSUSED*/
 int
-dbl_to_sgl_fcnvfxt(srcptr,dstptr,status)
-	dbl_floating_point *srcptr;
+dbl_to_sgl_fcnvfxt(srcptr, null, dstptr, status)
+	dbl_floating_point *srcptr, *null;
 	int *dstptr;
 	unsigned int *status;
 {
@@ -264,8 +264,8 @@ dbl_to_sgl_fcnvfxt(srcptr,dstptr,status)
  */
 /*ARGSUSED*/
 int
-dbl_to_dbl_fcnvfxt(srcptr,dstptr,status)
-	dbl_floating_point *srcptr;
+dbl_to_dbl_fcnvfxt(srcptr, null, dstptr, status)
+	dbl_floating_point *srcptr, *null;
 	dbl_integer *dstptr;
 	unsigned int *status;
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3.6.3 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3.6.4 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: zs.c,v 1.29 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-
@@ -253,7 +253,7 @@ zs_attach_mainbus(parent, self, aux)
 				return;
 			}
 			zsaddr[zs_unit] = (struct zsdevice *)
-				(unsigned long int)kvaddr;
+				bus_space_vaddr(sa->sa_bustag, kvaddr);
 		}
 	}
 	zsc->zsc_bustag = sa->sa_bustag;

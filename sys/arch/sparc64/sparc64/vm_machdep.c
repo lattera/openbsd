@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.6.2.2 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.6.2.3 2003/05/19 21:46:58 tedu Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.38 2001/06/30 00:02:20 eeh Exp $ */
 
 /*
@@ -90,11 +90,8 @@ pagemove(from, to, size)
 	while (size > 0) {
 		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
 			panic("pagemove 2");
-		pmap_remove(pmap_kernel(),
-		    (vaddr_t)from, (vaddr_t)from + PAGE_SIZE);
-		pmap_enter(pmap_kernel(),
-		    (vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE,
-		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		pmap_kremove((vaddr_t)from, PAGE_SIZE);
+		pmap_kenter_pa((vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;

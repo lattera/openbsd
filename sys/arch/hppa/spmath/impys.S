@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/impys.S,v 1.5.6.3 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/impys.S,v 1.5.6.4 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -15,6 +15,8 @@
 /* @(#)impys.s: Revision: 1.11.88.1 Date: 93/12/07 15:06:28 */
 
 #include <machine/asm.h>
+#define _LOCORE
+#include <machine/frame.h>
 
 ;****************************************************************************
 ;
@@ -42,7 +44,7 @@ pm	.equ	       10		; value of -1 used in shifting
 ;*****************************************************************************
 	.text
 
-LEAF_ENTRY(impys)
+LEAF_ENTRY(s_xmpy)
 	stws,ma		pu,4(sp)		; save registers on stack
 	stws,ma		pl,4(sp)		; save registers on stack
 	stws,ma		op1,4(sp)		; save registers on stack
@@ -285,6 +287,6 @@ fini	stws		pu,0(arg2)		; save high part of result
 	ldws,mb		-4(sp),pl		; restore registers
 	bv		0(rp)			; return
 	ldws,mb		-4(sp),pu		; restore registers
-EXIT(imyps)
+EXIT(s_xmpy)
 
 	.end

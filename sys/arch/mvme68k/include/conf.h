@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/conf.h,v 1.1.2.1 2002/06/11 03:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/include/conf.h,v 1.1.2.2 2003/05/19 21:45:32 tedu Exp $	*/
 /*
  * Copyright (c) 2002, Miodrag Vallat.
  * All rights reserved.
  *
  * Permission to redistribute, use, copy, and modify this software
- * without fee is hereby granted, provided that the following
+ * is hereby granted without fee, provided that the following
  * conditions are met:
  *
  * 1. This entire notice is included in all source code copies of any

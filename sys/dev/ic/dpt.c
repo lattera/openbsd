@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.5.2.2 2002/10/29 00:33:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.5.2.3 2003/05/19 21:54:24 tedu Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -145,7 +145,7 @@ static char *dpt_cname[] = {
 	"PM2021", "SmartCache III",
 	"SK2012", "SmartCache Plus", 
 	"SK2011", "SmartCache Plus",
-	NULL,     "unknown adapter, please report using send-pr(1)",
+	NULL,     "unknown adapter, please report using sendbug(1)",
 };
 
 /*

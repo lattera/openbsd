@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/copystr.c,v 1.4.4.1 2002/10/29 00:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/copystr.c,v 1.4.4.2 2003/05/19 21:49:44 tedu Exp $	*/
 
 /*-
  * Copyright (C) 1995 Wolfgang Solfrank.
@@ -38,11 +38,7 @@
  * Emulate copyinstr.
  */
 int
-copystr(kfaddr, kdaddr, len, done)
-	const void *kfaddr;
-	void *kdaddr;
-	size_t len;
-	size_t *done;
+copystr(const void *kfaddr, void *kdaddr, size_t len, size_t *done)
 {
 	u_char *kfp = (u_char *)kfaddr;
 	u_char *kdp = kdaddr;
@@ -50,10 +46,12 @@ copystr(kfaddr, kdaddr, len, done)
 	
 	for (l = 0; len-- > 0; l++) {
 		if (!(*kdp++ = *kfp++)) {
-			*done = l + 1;
-			return 0;
+			if (done)
+				*done = l + 1;
+			return (0);
 		}
 	}
-	*done = l;
-	return ENAMETOOLONG;
+	if (done)
+		*done = l;
+	return (ENAMETOOLONG);
 }

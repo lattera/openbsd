@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/memreg.h,v 1.5.10.1 2002/06/11 03:38:17 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/memreg.h,v 1.5.10.2 2003/05/19 21:46:33 tedu Exp $	*/
 /*	$NetBSD: memreg.h,v 1.4 1996/03/31 22:52:13 pk Exp $ */
 
 /*
@@ -49,7 +49,7 @@
  * Sun-4c memory error register.
  * The register is a single word.
  */
-volatile u_int	*par_err_reg;	/* virtual address; NULL if not yet mapped */
+extern volatile u_int	*par_err_reg;	/* virtual address; NULL if not yet mapped */
 
 /*
  * Bits in parity error register.

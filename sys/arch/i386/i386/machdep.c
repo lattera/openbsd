@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190.2.3 2002/10/29 00:28:04 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190.2.4 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -104,12 +104,6 @@
 #ifdef SYSVMSG
 #include <sys/msg.h>
 #endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
-#ifdef SYSVSHM
-#include <sys/shm.h>
-#endif
 
 #ifdef KGDB
 #include <sys/kgdb.h>
@@ -135,6 +129,7 @@
 #include <machine/specialreg.h>
 #include <machine/biosvar.h>
 
+#include <dev/rndvar.h>
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
 #include <dev/ic/i8042reg.h>
@@ -201,6 +196,10 @@ char machine_arch[] = "i386";		/* machine == machine_arch */
 int	cpu_apmhalt = 0;	/* sysctl'd to 1 for halt -p hack */
 #endif
 
+#ifdef USER_LDT
+int	user_ldt_enable = 0;	/* sysctl'd to 1 to enable */
+#endif
+
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -222,8 +221,8 @@ extern int	boothowto;
 int	physmem;
 
 struct dumpmem {
-	vm_offset_t	start;
-	vm_size_t	end;
+	paddr_t	start;
+	paddr_t	end;
 } dumpmem[VM_PHYSSEG_MAX];
 u_int ndumpmem;
 
@@ -240,7 +239,7 @@ int	i386_fpu_exception;
 int	i386_fpu_fdivbug;
 
 bootarg_t *bootargp;
-vm_offset_t avail_end;
+paddr_t avail_end;
 
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
@@ -266,17 +265,19 @@ struct	extent *iomem_ex;
 static	int ioport_malloc_safe;
 
 caddr_t	allocsys(caddr_t);
-void	setup_buffers(vm_offset_t *);
+void	setup_buffers(vaddr_t *);
 void	dumpsys(void);
 int	cpu_dump(void);
 void	identifycpu(void);
-void	init386(vm_offset_t);
+void	init386(paddr_t);
 void	consinit(void);
 
 int	bus_mem_add_mapping(bus_addr_t, bus_size_t,
 	    int, bus_space_handle_t *);
 int	_bus_dmamap_load_buffer(bus_dma_tag_t, bus_dmamap_t, void *,
     bus_size_t, struct proc *, int, paddr_t *, int *, int);
+
+int	longrun_sysctl(void *, size_t *, void *, size_t);
 
 #ifdef KGDB
 #ifndef KGDB_DEVNAME
@@ -313,13 +314,16 @@ int allowaperture = 0;
 #endif
 
 void	winchip_cpu_setup(const char *, int, int);
+void	amd_family5_setup(const char *, int, int);
 void	cyrix3_cpu_setup(const char *, int, int);
 void	cyrix6x86_cpu_setup(const char *, int, int);
 void	natsem6x86_cpu_setup(const char *, int, int);
 void	intel586_cpu_setup(const char *, int, int);
 void	intel686_cpu_setup(const char *, int, int);
+void	tm86_cpu_setup(const char *, int, int);
 char *	intel686_cpu_name(int);
 char *	cyrix3_cpu_name(int, int);
+void	viac3_rnd(void *);
 
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
 static __inline u_char
@@ -466,18 +470,7 @@ allocsys(v)
 
 #define	valloc(name, type, num) \
 	    v = (caddr_t)(((name) = (type *)v) + (num))
-#ifdef SYSVSHM
-	shminfo.shmmax = shmmaxpgs;
-	shminfo.shmall = shmmaxpgs;
-	shminfo.shmseg = shmseg;
-	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-	valloc(sema, struct semid_ds, seminfo.semmni);
-	valloc(sem, struct sem, seminfo.semmns);
-	/* This is pretty disgusting! */
-	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
+
 #ifdef SYSVMSG
 	valloc(msgpool, char, msginfo.msgmax);
 	valloc(msgmaps, struct msgmap, msginfo.msgseg);
@@ -521,10 +514,10 @@ allocsys(v)
 
 void
 setup_buffers(maxaddr)
-	vm_offset_t *maxaddr;
+	vaddr_t *maxaddr;
 {
-	vm_size_t size;
-	vm_offset_t addr;
+	vsize_t size;
+	vaddr_t addr;
 	int base, residual, left, chunk, i;
 	struct pglist pgs, saved_pgs;
 	struct vm_page *pg;
@@ -608,7 +601,7 @@ setup_buffers(maxaddr)
 		 * The rest of each buffer occupies virtual space,
 		 * but has no physical memory allocated for it.
 		 */
-		addr = (vm_offset_t)buffers + i * MAXBSIZE;
+		addr = (vaddr_t)buffers + i * MAXBSIZE;
 		for (size = PAGE_SIZE * (i < residual ? base + 1 : base);
 		    size > 0; size -= PAGE_SIZE, addr += PAGE_SIZE) {
 			pmap_kenter_pa(addr, VM_PAGE_TO_PHYS(pg),
@@ -777,17 +770,20 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				"K6-2+/III+", 0, 0,
 				"K5 or K6"		/* Default */
 			},
-			NULL
+			amd_family5_setup
 		},
 		/* Family 6 */
 		{
 			CPUCLASS_686,
 			{
 				0, "Athlon Model 1", "Athlon Model 2",
-				"Duron", "Athlon Model 4 (Thunderbird)",
-				0, "Athlon Model 6 (Palomino)",
-				"Athlon Model 7 (Morgan)", 0,
-				0, 0, 0, 0, 0, 0, 0,
+				"Duron Model 3 (Spitfire)",
+				"Athlon Model 4 (Thunderbird)",
+				0, "Athlon XP Model 6 (Palomino)",
+				"Duron Model 7 (Morgan)", 
+				"Athlon XP Model 8 (Thoroughbred)",
+				0, "Athlon XP Model 10 (Barton)",
+				0, 0, 0, 0, 0,
 				"K7 (Athlon)"		/* Default */
 			},
 			NULL
@@ -921,9 +917,9 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				0, 0, 0, 0, 0, 0, 0, 0,
 				"TMS5x00"		/* Default */
 			},
-			NULL
+			tm86_cpu_setup
 		},
-		/* Family 6, not yet available from Rise */
+		/* Family 6, not yet available from Transmeta */
 		{
 			CPUCLASS_686,
 			{
@@ -1007,6 +1003,68 @@ winchip_cpu_setup(cpu_device, model, step)
 #endif
 }
 
+#if defined(I686_CPU)
+/*
+ * Note, the VIA C3 Nehemia provides 4 internal 8-byte buffers, which
+ * store random data, and can be accessed a lot quicker than waiting
+ * for new data to be generated.  As we are using every 8th bit only
+ * due to whitening. Since the RNG generates in excess of 21KB/s at
+ * it's worst, collecting 64 bytes worth of entropy should not affect
+ * things significantly.
+ *
+ * Note, due to some weirdness in the RNG, we need at least 7 bytes
+ * extra on the end of our buffer.  Also, there is an outside chance
+ * that the VIA RNG can "wedge", as the generated bit-rate is variable.
+ * We could do all sorts of startup testing and things, but
+ * frankly, I don't really see the point.  If the RNG wedges, then the
+ * chances of you having a defective CPU are very high.  Let it wedge.
+ *
+ * Adding to the whole confusion, in order to access the RNG, we need
+ * to have FXSR support enabled, and the correct FPU enable bits must
+ * be there to enable the FPU in kernel.  It would be nice if all this
+ * mumbo-jumbo was not needed in order to use the RNG.  Oh well, life
+ * does go on...
+ */
+#define VIAC3_RNG_BUFSIZ	16		/* 32bit words */
+struct timeout viac3_rnd_tmo;
+int viac3_rnd_present = 0;
+
+void
+viac3_rnd(void *v)
+{
+	struct timeout *tmo = v;
+	unsigned int *p, i, rv, creg0, creg4, len = VIAC3_RNG_BUFSIZ;
+	static int buffer[VIAC3_RNG_BUFSIZ + 2];
+	int s;
+
+	s = splhigh();
+	/* XXX - should not be needed, but we need FXSR & FPU set to access RNG */
+	creg0 = rcr0();
+	lcr0(creg0 & ~(CR0_EM|CR0_TS));
+	creg4 = rcr4();
+	lcr4(creg4 | CR4_OSFXSR);
+
+	/*
+	 * Here we collect the random data from the VIA C3 RNG.  We make
+	 * sure that we turn on maximum whitening (%edx[0,1] == "11"), so
+	 * that we get the best random data possible.
+	 */
+	__asm __volatile ("rep;.byte 0x0F,0xA7,0xC0"
+	    : "=a" (rv) : "d" (3), "D" (buffer), "c" (len*sizeof(int))
+	    : "memory", "cc");
+
+	/* XXX - should not be needed */
+	lcr0(creg0);
+	lcr4(creg4);
+
+	for (i = 0, p = buffer; i < VIAC3_RNG_BUFSIZ; i++, p++)
+		add_true_randomness(*p);
+
+	timeout_add(tmo, (hz>100)?(hz/100):1);
+	splx(s);
+}
+#endif
+
 void
 cyrix3_cpu_setup(cpu_device, model, step)
 	const char *cpu_device;
@@ -1027,6 +1085,45 @@ cyrix3_cpu_setup(cpu_device, model, step)
 		} else {
 			cpu_feature &= ~CPUID_3DNOW;
 		}
+		break;
+
+	case 9:
+		if (step < 3)
+			break;
+
+		/* 
+		 * C3 Nehemia:
+		 * First we check for extended feature flags, and then
+		 * (if present) retrieve the ones at 0xC0000001.  In this
+		 * bit 2 tells us if the RNG is present.  Bit 3 tells us
+		 * if the RNG has been enabled.  In order to use the RNG
+		 * we need 3 things:  We need an RNG, we need the FXSR bit
+		 * enabled in cr4 (SSE/SSE2 stuff), and we need to have
+		 * Bit 6 of MSR 0x110B set to 1 (the default), which will
+		 * show up as bit 3 set here.
+		 */
+		__asm __volatile("cpuid" /* Check for RNG */
+		    : "=a" (val) : "a" (0xC0000000) : "cc");
+		if (val >= 0xC0000001) {
+			__asm __volatile("cpuid"
+			    : "=d" (val) : "a" (0xC0000001) : "cc");
+		}
+
+		/* Stop here if no RNG */
+		if (!(val & 0x4))
+			break;
+
+		/* Enable RNG if disabled */
+		if (!(val & 0x8)) {
+			u_int64_t msreg;
+
+			msreg = rdmsr(0x110B);
+			msreg |= 0x40;
+			wrmsr(0x110B, msreg);
+			printf("Screwed with MSR 0x110B!\n");
+		}
+		viac3_rnd_present = 1;
+		printf("%s: RNG activated\n", cpu_device);
 		break;
 	}
 #endif
@@ -1090,6 +1187,29 @@ intel586_cpu_setup(cpu_device, model, step)
 }
 
 void
+amd_family5_setup(cpu_device, model, step)
+	const char *cpu_device;
+	int model, step;
+{
+	switch (model) {
+	case 0:         /* AMD-K5 Model 0 */
+		/*
+		 * According to the AMD Processor Recognition App Note,
+		 * the AMD-K5 Model 0 uses the wrong bit to indicate
+		 * support for global PTEs, instead using bit 9 (APIC)
+		 * rather than bit 13 (i.e. "0x200" vs. 0x2000".  Oops!).
+		 */
+		if (cpu_feature & CPUID_APIC)
+			cpu_feature = (cpu_feature & ~CPUID_APIC) | CPUID_PGE;
+		/*
+		 * XXX But pmap_pg_g is already initialized -- need to kick
+		 * XXX the pmap somehow.  How does the MP branch do this?
+		 */
+		break;
+	}
+}
+
+void
 intel686_cpu_setup(cpu_device, model, step)
 	const char *cpu_device;
 	int model, step;
@@ -1126,6 +1246,18 @@ intel686_cpu_setup(cpu_device, model, step)
 	}
 #undef rdmsr
 #undef wrmsr
+}
+
+void
+tm86_cpu_setup(cpu_device, model, step)
+	const char *cpu_device;
+	int model, step;
+{
+#ifndef SMALL_KERNEL
+	extern int longrun_enabled;
+
+	longrun_enabled = 1;
+#endif
 }
 
 char *
@@ -1185,6 +1317,9 @@ cyrix3_cpu_name(model, step)
 	case 8:
 		if (step < 8)
 			name = "C3 Ezra-T";
+		break;
+	case 9:
+		name = "C3 Nehemia";
 		break;
 	}
 	return name;
@@ -1309,15 +1444,17 @@ identifycpu()
 	}
 
 	if (cachesize > -1) {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class], cachesize);
+		snprintf(cpu_model, sizeof(cpu_model),
+		    "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
+		    vendorname, modifier, name,
+		    ((*token) ? "\"" : ""), ((*token) ? token : ""),
+		    ((*token) ? "\" " : ""), classnames[class], cachesize);
 	} else {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class]);
+		snprintf(cpu_model, sizeof(cpu_model),
+		    "%s %s%s (%s%s%s%s-class)",
+		    vendorname, modifier, name,
+		    ((*token) ? "\"" : ""), ((*token) ? token : ""),
+		    ((*token) ? "\" " : ""), classnames[class]);
 	}
 
 	/* configure the CPU if needed */
@@ -1552,7 +1689,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = p->p_sigcode;
-	tf->tf_cs = pmap->pm_nxpages > 0?
+	tf->tf_cs = pmap->pm_hiexec > I386_MAX_EXE_ADDR ? 
 	    GSEL(GUCODE1_SEL, SEL_UPL) : GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;
@@ -1798,15 +1935,14 @@ cpu_dump()
  * getting on the dump stack, either when called above, or by
  * the auto-restart code.
  */
-static vm_offset_t dumpspace;
+static vaddr_t dumpspace;
 
-vm_offset_t
-reserve_dumppages(p)
-	vm_offset_t p;
+vaddr_t
+reserve_dumppages(vaddr_t p)
 {
 
 	dumpspace = p;
-	return (p + NBPG);
+	return (p + PAGE_SIZE);
 }
 
 void
@@ -1957,7 +2093,7 @@ setregs(p, pack, stack, retval)
 	tf->tf_ebp = 0;
 	tf->tf_ebx = (int)PS_STRINGS;
 	tf->tf_eip = pack->ep_entry;
-	tf->tf_cs = pmap->pm_nxpages > 0?
+	tf->tf_cs = pmap->pm_hiexec > I386_MAX_EXE_ADDR ? 
 	    LSEL(LUCODE1_SEL, SEL_UPL) : LSEL(LUCODE_SEL, SEL_UPL);
 	tf->tf_eflags = PSL_USERSET;
 	tf->tf_esp = stack;
@@ -2038,10 +2174,10 @@ extern int IDTVEC(f00f_redirect);
 int cpu_f00f_bug = 0;
 
 void
-fix_f00f()
+fix_f00f(void)
 {
 	struct region_descriptor region;
-	vm_offset_t va;
+	vaddr_t va;
 	pt_entry_t *pte;
 	void *p;
 
@@ -2071,8 +2207,7 @@ fix_f00f()
 #endif
 
 void
-init386(first_avail)
-	vm_offset_t first_avail;
+init386(paddr_t first_avail)
 {
 	int i;
 	struct region_descriptor region;
@@ -2107,8 +2242,7 @@ init386(first_avail)
 	    0, 0);
 	setsegment(&gdt[GUCODE1_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
-	setsegment(&gdt[GUCODE_SEL].sd, 0,
-	    i386_btop(VM_MAXUSER_ADDRESS - MAXSSIZ) - 1,
+	setsegment(&gdt[GUCODE_SEL].sd, 0, i386_btop(I386_MAX_EXE_ADDR) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
 	setsegment(&gdt[GUDATA_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMRWA, SEL_UPL, 1, 1);
@@ -2158,7 +2292,7 @@ init386(first_avail)
 			/* XXX here, until we can use bios for printfs */
 
 	/* call pmap initialization to make new kernel address space */
-	pmap_bootstrap((vm_offset_t)atdevbase + IOM_SIZE);
+	pmap_bootstrap((vaddr_t)atdevbase + IOM_SIZE);
 
 	/* Boot arguments are in a single page specified by /boot */
 	if (bootapiver & BAPIV_VECTOR) {
@@ -2206,7 +2340,7 @@ init386(first_avail)
 #endif
 
 			/* skip shorter than page regions */
-			if ((e - a) < NBPG) {
+			if (a >= e || (e - a) < NBPG) {
 #ifdef DEBUG
 				printf("-S");
 #endif
@@ -2531,8 +2665,17 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		else
 			return (sysctl_int(oldp, oldlenp, newp, newlen, 
 			    &kbd_reset));
+#ifdef USER_LDT
+	case CPU_USERLDT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &user_ldt_enable));
+#endif
+#ifndef SMALL_KERNEL
+	case CPU_LONGRUN:
+		return (longrun_sysctl(oldp, oldlenp, newp, newlen));
+#endif
 	default:
-		return EOPNOTSUPP;
+		return (EOPNOTSUPP);
 	}
 	/* NOTREACHED */
 }
@@ -2707,7 +2850,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	bus_space_handle_t *bshp;
 {
 	u_long pa, endpa;
-	vm_offset_t va;
+	vaddr_t va;
 	pt_entry_t *pte;
 
 	pa = i386_trunc_page(bpa);
@@ -3149,7 +3292,7 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
 	caddr_t *kvap;
 	int flags;
 {
-	vm_offset_t va;
+	vaddr_t va;
 	bus_addr_t addr;
 	int curseg;
 
@@ -3193,7 +3336,7 @@ _bus_dmamem_unmap(t, kva, size)
 #endif
 
 	size = round_page(size);
-	uvm_km_free(kernel_map, (vm_offset_t)kva, size);
+	uvm_km_free(kernel_map, (vaddr_t)kva, size);
 }
 
 /*
@@ -3271,7 +3414,7 @@ _bus_dmamap_load_buffer(t, map, buf, buflen, p, flags, lastaddrp, segp, first)
 		/*
 		 * Get the physical address for this segment.
 		 */
-		pmap_extract(pmap, (vm_offset_t)vaddr, (paddr_t *)&curaddr);
+		pmap_extract(pmap, vaddr, (paddr_t *)&curaddr);
 
 		/*
 		 * Compute the segment size, and adjust counts.
@@ -3342,10 +3485,10 @@ _bus_dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 	int nsegs;
 	int *rsegs;
 	int flags;
-	vm_offset_t low;
-	vm_offset_t high;
+	paddr_t low;
+	paddr_t high;
 {
-	vm_offset_t curaddr, lastaddr;
+	paddr_t curaddr, lastaddr;
 	struct vm_page *m;
 	struct pglist mlist;
 	int curseg, error;

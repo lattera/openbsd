@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.h,v 1.15.16.1 2002/06/11 03:35:54 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.h,v 1.15.16.2 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: isa_machdep.h,v 1.7 1997/06/06 23:28:42 thorpej Exp $	*/
 
 /*-
@@ -191,7 +191,7 @@ struct i386_isa_dma_cookie {
 #define	DMA_BOUNCE_LOW  16		/* number of pages if memory <= 16M */
 #endif
 
-extern vm_offset_t isaphysmem;
+extern vaddr_t isaphysmem;
 extern int isaphysmempgs;
 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/hpux_machdep.c,v 1.5.2.2 2002/10/29 00:28:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/hpux_machdep.c,v 1.5.2.3 2003/05/19 21:45:32 tedu Exp $	*/
 /*	$NetBSD: hpux_machdep.c,v 1.9 1997/03/16 10:00:45 thorpej Exp $	*/
 
 /*
@@ -207,7 +207,8 @@ hpux_cpu_uname(ut)
 		if (machine_table[i].val == cputype)
 			break;
 
-	sprintf(ut->machine, "9000/%s", machine_table[i].str);
+	snprintf(ut->machine, sizeof ut->machine, "9000/%s",
+	    machine_table[i].str);
 }
 
 /*
@@ -651,17 +652,13 @@ hpux_sys_sigreturn(p, v, retval)
 	 * See if there is anything to do before we go to the
 	 * expense of copying in close to 1/2K of data
 	 */
-	flags = fuword((caddr_t)rf);
+	if (copyin((caddr_t)rf, &flags, sizeof(int)) != 0)
+		return (EINVAL);
 #ifdef DEBUG
 	if (hpuxsigdebug & SDB_FOLLOW)
 		printf("sigreturn(%d): sc_ap %x flags %x\n",
 		       p->p_pid, rf, flags);
 #endif
-	/*
-	 * fuword failed (bogus _hsc_ap value).
-	 */
-	if (flags == -1)
-		return (EINVAL);
 	if (flags == 0 || copyin((caddr_t)rf, (caddr_t)&tstate, sizeof tstate))
 		return (EJUSTRETURN);
 #ifdef DEBUG

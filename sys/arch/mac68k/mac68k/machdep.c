@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91.2.2 2002/06/11 03:36:20 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91.2.3 2003/05/19 21:49:43 tedu Exp $	*/
 /*	$NetBSD: machdep.c,v 1.207 1998/07/08 04:39:34 thorpej Exp $	*/
 
 /*
@@ -102,12 +102,6 @@
 #include <sys/extent.h>
 #ifdef SYSVMSG
 #include <sys/msg.h>
-#endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
-#ifdef SYSVSHM
-#include <sys/shm.h>
 #endif
 
 #include <machine/db_machdep.h>
@@ -280,6 +274,20 @@ mac68k_init()
 			    VM_FREELIST_DEFAULT);
 	}
 
+	/*
+	 * Initialize the I/O mem extent map.
+	 * Note: we don't have to check the return value since
+	 * creation of a fixed extent map will never fail (since
+	 * descriptor storage has already been allocated).
+	 *
+	 * N.B. The iomem extent manages _all_ physical addresses
+	 * on the machine.  When the amount of RAM is found, all
+	 * extents of RAM are allocated from the map.
+	 */
+	iomem_ex = extent_create("iomem", 0x0, 0xffffffff, M_DEVBUF,
+	    (caddr_t)iomem_ex_storage, sizeof(iomem_ex_storage),
+	    EX_NOCOALESCE|EX_NOWAIT);
+
 	/* Initialize the VIAs */
 	via_init();
 
@@ -344,7 +352,8 @@ cpu_startup(void)
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
 		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp + i * NBPG,
 		    high[numranges - 1] + i * NBPG,
-		    VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
@@ -478,18 +487,6 @@ allocsys(v)
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
 
-#ifdef SYSVSHM
-	shminfo.shmmax = shmmaxpgs;
-	shminfo.shmall = shmmaxpgs;
-	shminfo.shmseg = shmseg;
-	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-	valloc(sema, struct semid_ds, seminfo.semmni);
-	valloc(sem, struct sem, seminfo.semmns);
-	/* This is pretty disgusting! */
-	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
 #ifdef SYSVMSG
 	valloc(msgpool, char, msginfo.msgmax);
 	valloc(msgmaps, struct msgmap, msginfo.msgseg);
@@ -1122,12 +1119,6 @@ cpu_exec_aout_makecmds(p, epp)
 {
 	int error = ENOEXEC;
 
-#ifdef COMPAT_NOMID
-	/* Check to see if MID == 0. */
-	if (((struct exec *)epp->ep_hdr)->a_midmag == ZMAGIC)
-		return exec_aout_prep_oldzmagic(p, epp);
-#endif
-
 #ifdef COMPAT_SUNOS
 	{
 		extern int sunos_exec_aout_makecmds(struct proc *,
@@ -1153,7 +1144,9 @@ getenvvars(flag, buf)
 	char   *buf;
 {
 	extern u_long bootdev, videobitdepth, videosize;
+#if defined(DDB) || NKSYMS > 0
 	extern u_long end, esym;
+#endif
 	extern u_long macos_boottime, MacOSROMBase;
 	extern long macos_gmtbias;
 	int root_scsi_id;
@@ -2189,7 +2182,7 @@ identifycpu()
 	/*
 	 * Print the machine type...
 	 */
-	sprintf(cpu_model, "Apple Macintosh %s%s",
+	snprintf(cpu_model, sizeof cpu_model, "Apple Macintosh %s%s",
 	    cpu_models[mac68k_machine.cpu_model_index].model_major,
 	    cpu_models[mac68k_machine.cpu_model_index].model_minor);
 
@@ -2198,16 +2191,16 @@ identifycpu()
 	 */
 	switch (cputype) {
 	case CPU_68040:
-		strcat(cpu_model, ", 68040 CPU");
+		strlcat(cpu_model, ", 68040 CPU", sizeof cpu_model);
 		break;
 	case CPU_68030:
-		strcat(cpu_model, ", 68030 CPU");
+		strlcat(cpu_model, ", 68030 CPU", sizeof cpu_model);
 		break;
 	case CPU_68020:
-		strcat(cpu_model, ", 68020 CPU");
+		strlcat(cpu_model, ", 68020 CPU", sizeof cpu_model);
 		break;
 	default:
-		strcat(cpu_model, ", unknown CPU");
+		strlcat(cpu_model, ", unknown CPU", sizeof cpu_model);
 		break;
 	}
 
@@ -2217,10 +2210,10 @@ identifycpu()
 	switch (mmutype) {
 	case MMU_68040:
 	case MMU_68030:
-		strcat(cpu_model, "+MMU");
+		strlcat(cpu_model, "+MMU", sizeof cpu_model);
 		break;
 	case MMU_68851:
-		strcat(cpu_model, ", MC68851 MMU");
+		strlcat(cpu_model, ", MC68851 MMU", sizeof cpu_model);
 		break;
 	default:
 		printf("%s\n", cpu_model);
@@ -2235,19 +2228,19 @@ identifycpu()
 
 	switch (fputype) {
 	case FPU_68040:
-		strcat(cpu_model, "+FPU");
+		strlcat(cpu_model, "+FPU", sizeof cpu_model);
 		break;
 	case FPU_68882:
-		strcat(cpu_model, ", MC6882 FPU");
+		strlcat(cpu_model, ", MC6882 FPU", sizeof cpu_model);
 		break;
 	case FPU_68881:
-		strcat(cpu_model, ", MC6881 FPU");
+		strlcat(cpu_model, ", MC6881 FPU", sizeof cpu_model);
 		break;
 	case FPU_UNKNOWN:
-		strcat(cpu_model, ", unknown FPU");
+		strlcat(cpu_model, ", unknown FPU", sizeof cpu_model);
 		break;
 	default:
-		/*strcat(cpu_model, ", no FPU");*/
+		/*strlcat(cpu_model, ", no FPU", sizeof cpu_model);*/
 		break;
 	}
 
@@ -2255,7 +2248,7 @@ identifycpu()
 	 * ... and finally, the cache type.
 	 */
 	if (cputype == CPU_68040)
-		strcat(cpu_model, ", 4k on-chip physical I/D caches");
+		strlcat(cpu_model, ", 4k on-chip physical I/D caches", sizeof cpu_model);
 
 	printf("%s\n", cpu_model);
 #ifdef DEBUG
@@ -2452,20 +2445,6 @@ mac68k_set_io_offsets(base)
 	vm_offset_t base;
 {
 	extern volatile u_char *sccA;
-
-	/*
-	 * Initialize the I/O mem extent map.
-	 * Note: we don't have to check the return value since
-	 * creation of a fixed extent map will never fail (since
-	 * descriptor storage has already been allocated).
-	 *
-	 * N.B. The iomem extent manages _all_ physical addresses
-	 * on the machine.  When the amount of RAM is found, all
-	 * extents of RAM are allocated from the map.
-	 */
-	iomem_ex = extent_create("iomem", 0x0, 0xffffffff, M_DEVBUF,
-	    (caddr_t)iomem_ex_storage, sizeof(iomem_ex_storage),
-	    EX_NOCOALESCE|EX_NOWAIT);
 
 	switch (current_mac_model->class) {
 	case MACH_CLASSQ:

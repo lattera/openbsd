@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.6 2002/11/04 16:38:31 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.7 2003/05/19 21:46:33 tedu Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -2129,6 +2129,7 @@ pv_link4_4c(pv, pm, va, nc)
 		pv->pv_flags |= nc ? PV_NC : 0;
 		return (ret);
 	}
+
 	/*
 	 * Before entering the new mapping, see if
 	 * it will cause old mappings to become aliased
@@ -2160,6 +2161,7 @@ pv_link4_4c(pv, pm, va, nc)
 			}
 		}
 	}
+
 	npv = pool_get(&pvpool, PR_NOWAIT);
 	if (npv == NULL)
 		panic("pvpool exhausted");
@@ -3597,6 +3599,7 @@ pmap_rmk4_4c(pm, va, endva, vr, vs)
 	int nleft, pmeg;
 	struct regmap *rp;
 	struct segmap *sp;
+	int s;
 
 	rp = &pm->pm_regmap[vr];
 	sp = &rp->rg_segmap[vs];
@@ -3645,7 +3648,9 @@ pmap_rmk4_4c(pm, va, endva, vr, vs)
 			pv = pvhead(tpte & PG_PFNUM);
 			if (pv) {
 				pv->pv_flags |= MR4_4C(tpte);
+				s = splvm();
 				pv_unlink4_4c(pv, pm, va);
+				splx(s);
 			}
 		}
 		nleft--;
@@ -3789,6 +3794,7 @@ pmap_rmu4_4c(pm, va, endva, vr, vs)
 	int nleft, pmeg;
 	struct regmap *rp;
 	struct segmap *sp;
+	int s;
 
 	rp = &pm->pm_regmap[vr];
 	if (rp->rg_nsegmap == 0)
@@ -3799,9 +3805,9 @@ pmap_rmu4_4c(pm, va, endva, vr, vs)
 	sp = &rp->rg_segmap[vs];
 	if ((nleft = sp->sg_npte) == 0)
 		return;
+
 	if (sp->sg_pte == NULL)
 		panic("pmap_rmu: no pages");
-
 
 	pmeg = sp->sg_pmeg;
 	pte0 = sp->sg_pte;
@@ -3822,8 +3828,11 @@ pmap_rmu4_4c(pm, va, endva, vr, vs)
 				struct pvlist *pv;
 
 				pv = pvhead(tpte & PG_PFNUM);
-				if (pv)
+				if (pv) {
+					s = splvm();
 					pv_unlink4_4c(pv, pm, va);
+					splx(s);
+				}
 			}
 			nleft--;
 			*pte = 0;
@@ -3855,8 +3864,8 @@ pmap_rmu4_4c(pm, va, endva, vr, vs)
 	 */
 	if (CTX_USABLE(pm,rp)) {
 		/* process has a context, must flush cache */
-		npg = (endva - va) >> PGSHIFT;
 		setcontext4(pm->pm_ctxnum);
+		npg = (endva - va) >> PGSHIFT;
 		if (npg > PMAP_RMU_MAGIC) {
 			perpage = 0; /* flush the whole segment */
 			cache_flush_segment(vr, vs);
@@ -3884,7 +3893,9 @@ pmap_rmu4_4c(pm, va, endva, vr, vs)
 			pv = pvhead(tpte & PG_PFNUM);
 			if (pv) {
 				pv->pv_flags |= MR4_4C(tpte);
+				s = splvm();
 				pv_unlink4_4c(pv, pm, va);
+				splx(s);
 			}
 		}
 		nleft--;
@@ -4064,16 +4075,14 @@ pmap_page_protect4_4c(struct vm_page *pg, vm_prot_t prot)
 	struct segmap *sp;
 
 #ifdef DEBUG
-	if (!pmap_pa_exists(pa))
-		panic("pmap_page_protect: no such address: 0x%lx", pa);
 	if ((pmapdebug & PDB_CHANGEPROT) ||
 	    (pmapdebug & PDB_REMOVE && prot == VM_PROT_NONE))
-		printf("pmap_page_protect(0x%lx, 0x%x)\n", pa, prot);
+		printf("pmap_page_protect(0x%lx, 0x%x)\n", pg, prot);
 #endif
+	pv = &pg->mdpage.pv_head;
 	/*
 	 * Skip operations that do not take away write permission.
 	 */
-	pv = &pg->mdpage.pv_head;
 	if (prot & VM_PROT_WRITE)
 		return;
 	write_user_windows();	/* paranoia */
@@ -4096,18 +4105,22 @@ pmap_page_protect4_4c(struct vm_page *pg, vm_prot_t prot)
 	ctx = getcontext4();
 	pv0 = pv;
 	flags = pv->pv_flags & ~PV_NC;
-	for (;; pm = pv->pv_pmap) {
+	while (pv != NULL) {
+		pm = pv->pv_pmap;
 		va = pv->pv_va;
 		vr = VA_VREG(va);
 		vs = VA_VSEG(va);
 		rp = &pm->pm_regmap[vr];
+#ifdef DIAGNOSTIC
 		if (rp->rg_nsegmap == 0)
 			panic("pmap_remove_all: empty vreg");
+#endif
 		sp = &rp->rg_segmap[vs];
-		if ((nleft = sp->sg_npte) == 0)
+#ifdef DIAGNOSTIC
+		if (sp->sg_npte == 0)
 			panic("pmap_remove_all: empty vseg");
-		nleft--;
-		sp->sg_npte = nleft;
+#endif
+		nleft = --sp->sg_npte;
 
 		if (sp->sg_pmeg == seginval) {
 			/* Definitely not a kernel map */
@@ -4149,9 +4162,11 @@ pmap_page_protect4_4c(struct vm_page *pg, vm_prot_t prot)
 		}
 
 		tpte = getpte4(pteva);
+#ifdef DIAGNOSTIC
 		if ((tpte & PG_V) == 0)
 			panic("pmap_page_protect !PG_V: ctx %d, va 0x%x, pte 0x%x",
 			      pm->pm_ctxnum, va, tpte);
+#endif
 		flags |= MR4_4C(tpte);
 
 		if (nleft) {
@@ -4217,11 +4232,10 @@ pmap_page_protect4_4c(struct vm_page *pg, vm_prot_t prot)
 		npv = pv->pv_next;
 		if (pv != pv0)
 			pool_put(&pvpool, pv);
-		if ((pv = npv) == NULL)
-			break;
+		pv = npv;
 	}
 	pv0->pv_pmap = NULL;
-	pv0->pv_next = NULL; /* ? */
+	pv0->pv_next = NULL;
 	pv0->pv_flags = flags;
 	setcontext4(ctx);
 	splx(s);
@@ -4237,10 +4251,7 @@ pmap_page_protect4_4c(struct vm_page *pg, vm_prot_t prot)
  * fairly easy.
  */
 void
-pmap_protect4_4c(pm, sva, eva, prot)
-	struct pmap *pm;
-	vaddr_t sva, eva;
-	vm_prot_t prot;
+pmap_protect4_4c(struct pmap *pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
 	int va, nva, vr, vs;
 	int s, ctx;
@@ -4282,7 +4293,7 @@ if (nva == 0) panic("pmap_protect: last segment");	/* cannot happen */
 			continue;
 		}
 #ifdef DEBUG
-		if (pm != pmap_kernel() && sp->sg_pte == NULL)
+		if (sp->sg_pte == NULL)
 			panic("pmap_protect: no pages");
 #endif
 		if (sp->sg_pmeg == seginval) {
@@ -4370,10 +4381,12 @@ pmap_changeprot4_4c(pm, va, prot, wired)
 	rp = &pm->pm_regmap[vr];
 	if (rp->rg_nsegmap == 0) {
 		printf("pmap_changeprot: no segments in %d\n", vr);
+		splx(s);
 		return;
 	}
 	if (rp->rg_segmap == NULL) {
 		printf("pmap_changeprot: no segments in %d!\n", vr);
+		splx(s);
 		return;
 	}
 	sp = &rp->rg_segmap[vs];
@@ -4460,7 +4473,7 @@ pmap_page_protect4m(struct vm_page *pg, vm_prot_t prot)
 #ifdef DEBUG
 	if ((pmapdebug & PDB_CHANGEPROT) ||
 	    (pmapdebug & PDB_REMOVE && prot == VM_PROT_NONE))
-		printf("pmap_page_protect(0x%lx, 0x%x)\n", pa, prot);
+		printf("pmap_page_protect(0x%lx, 0x%x)\n", pg, prot);
 #endif
 	pv = &pg->mdpage.pv_head;
 	/*
@@ -4618,7 +4631,7 @@ pmap_protect4m(struct pmap *pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 		if (pm->pm_ctx)
 			setcontext4m(pm->pm_ctxnum);
 
-		pmap_stats.ps_npg_prot_all = (nva - va) >> PGSHIFT;
+		pmap_stats.ps_npg_prot_all += (nva - va) >> PGSHIFT;
 		for (; va < nva; va += NBPG) {
 			int tpte, npte;
 
@@ -4770,7 +4783,7 @@ pmap_enter4_4c(pm, va, pa, prot, flags)
 	else
 		ret = pmap_enu4_4c(pm, va, prot, flags, pv, pteproto);
 #ifdef DIAGNOSTIC
-	if ((flags & PMAP_CANFAIL) == 0 && ret)
+	if ((flags & PMAP_CANFAIL) == 0 && ret != 0)
 		panic("pmap_enter4_4c: can't fail, but did");
 #endif
 	setcontext4(ctx);
@@ -5065,6 +5078,7 @@ pmap_enu4_4c(pm, va, prot, flags, pv, pteproto)
 void
 pmap_kenter_pa4_4c(vaddr_t va, paddr_t pa, vm_prot_t prot)
 {
+#ifdef USE_NETBSD_CODE
 	struct pmap *pm = pmap_kernel();
 	struct regmap *rp;
 	struct segmap *sp;
@@ -5143,11 +5157,33 @@ pmap_kenter_pa4_4c(vaddr_t va, paddr_t pa, vm_prot_t prot)
 	sp->sg_npte++;
 	splx(s);
 	setcontext4(ctx);
+#else /* code from main branch */
+	struct pvlist *pv;
+	int pteproto, ctx;
+
+	pteproto = PG_S | PG_V | PMAP_T2PTE_4(pa);
+	if (prot & VM_PROT_WRITE)
+		pteproto |= PG_W;
+
+	pa &= ~PMAP_TNC_4;
+
+	if ((pteproto & PG_TYPE) == PG_OBMEM)
+		pv = pvhead(atop(pa));
+	else
+		pv = NULL;
+
+	pteproto |= atop(pa) & PG_PFNUM;
+
+	ctx = getcontext4();
+	pmap_enk4_4c(pmap_kernel(), va, prot, PMAP_WIRED, pv, pteproto);
+	setcontext4(ctx);
+#endif
 }
 
 void
 pmap_kremove4_4c(vaddr_t va, vsize_t len)
 {
+#ifdef USE_NETBSD_CODE
 	struct pmap *pm = pmap_kernel();
 	struct regmap *rp;
 	struct segmap *sp;
@@ -5253,6 +5289,9 @@ pmap_kremove4_4c(vaddr_t va, vsize_t len)
 	simple_unlock(&pm->pm_lock);
 	setcontext(ctx);
 	splx(s);
+#else /* code from main branch */
+	pmap_remove(pmap_kernel(), va, va + len);
+#endif
 }
 
 #endif /*sun4,4c*/
@@ -5620,6 +5659,7 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 			}
 		} else {
 
+<<<<<<< pmap.c
 			/*
 			 * flush each page individually;
 			 * some never need flushing
@@ -5643,6 +5683,10 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 		}
 		sp->sg_npte = nleft;
 	}
+=======
+	ctx = getcontext4m();
+	pmap_enk4m(pmap_kernel(), va, prot, PMAP_WIRED, pv, pteproto);
+>>>>>>> 1.134
 	setcontext4m(ctx);
 }
 

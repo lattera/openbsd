@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.29.2.2 2002/10/29 00:28:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.29.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -261,8 +261,6 @@ int             pmap_dumpmmu(int (*)(dev_t, daddr_t, caddr_t, size_t), daddr_t);
 #define	pmap_kernel()	(&kernel_pmap_store)
 #define	pmap_resident_count(pmap)	pmap_count_ptes(pmap)
 
-#define PMAP_ACTIVATE(pmap, pcb, iscurproc)
-#define PMAP_DEACTIVATE(pmap, pcb)
 #define PMAP_PREFER(fo, ap)		pmap_prefer((fo), (ap))
 
 #define PMAP_EXCLUDE_DECLS	/* tells MI pmap.h *not* to include decls */

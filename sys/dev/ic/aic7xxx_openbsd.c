@@ -32,7 +32,7 @@
  * $Id$
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_freebsd.c,v 1.26 2001/07/18 21:39:47 gibbs Exp $
- * $OpenBSD: src/sys/dev/ic/aic7xxx_openbsd.c,v 1.9.4.1 2002/10/29 00:33:24 art Exp $
+ * $OpenBSD: src/sys/dev/ic/aic7xxx_openbsd.c,v 1.9.4.2 2003/05/19 21:54:24 tedu Exp $
  */
 
 #include <dev/ic/aic7xxx_openbsd.h>
@@ -437,7 +437,7 @@ ahc_init_scbdata(ahc)
 	ahc_outb(ahc, NEXT_QUEUED_SCB, ahc->next_queued_scb->hscb->tag);
 
 	/*
-	 * Note that we were successfull
+	 * Note that we were successful
 	 */
 	return (0); 
 
@@ -513,7 +513,7 @@ ahc_attach(ahc)
 	int s;
 	ahc_lock(ahc, &s);
 	
-	ahc_controller_info(ahc, ahc_info);
+	ahc_controller_info(ahc, ahc_info, sizeof ahc_info);
 	printf("%s: %s\n", ahc_name(ahc), ahc_info);
 	/*
 	 * Initialize the software queue.
@@ -731,7 +731,7 @@ ahc_done(ahc, scb)
 		 */
 		memset(&xs->sense, 0, sizeof(struct scsi_sense_data));
 		memcpy(&xs->sense, ahc_get_sense_buf(ahc, scb),
-		       ahc_le32toh((scb->sg_list->len & AHC_SG_LEN_MASK)));
+		       ahc_le32toh(scb->sg_list->len) & AHC_SG_LEN_MASK);
 		xs->error = XS_SENSE;
 	}
 	
@@ -1063,7 +1063,7 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 		scb->hscb->dataptr = scb->sg_list->addr;
 		scb->hscb->datacnt = scb->sg_list->len;
 	} else {
-		scb->hscb->sgptr = SG_LIST_NULL;
+		scb->hscb->sgptr = ahc_htole32(SG_LIST_NULL);
 		scb->hscb->dataptr = 0;
 		scb->hscb->datacnt = 0;
 	}
@@ -1095,11 +1095,6 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 		panic("ahc bad sg_count");
 #endif
 
-	/* Fixup byte order */
-	scb->hscb->dataptr = ahc_htole32(scb->hscb->dataptr); 
-	scb->hscb->datacnt = ahc_htole32(scb->hscb->datacnt);
-	scb->hscb->sgptr = ahc_htole32(scb->hscb->sgptr);
-	
 	tinfo = ahc_fetch_transinfo(ahc, SCSIID_CHANNEL(ahc, scb->hscb->scsiid),
 				    SCSIID_OUR_ID(scb->hscb->scsiid),
 				    SCSIID_TARGET(ahc, scb->hscb->scsiid),

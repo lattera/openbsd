@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.14.2.3 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.14.2.4 2003/05/19 21:46:58 tedu Exp $	*/
 /*	$NetBSD: trap.c,v 1.73 2001/08/09 01:03:01 eeh Exp $ */
 
 /*
@@ -928,8 +928,6 @@ data_access_error(tf, type, afva, afsr, sfva, sfsr)
 	u_quad_t sticks;
 	union sigval sv;
 
-	sv.sival_ptr = (void *)pc;
-
 	uvmexp.traps++;
 	if ((p = curproc) == NULL)	/* safety check */
 		p = &proc0;
@@ -937,6 +935,8 @@ data_access_error(tf, type, afva, afsr, sfva, sfsr)
 
 	pc = tf->tf_pc;
 	tstate = tf->tf_tstate;
+
+	sv.sival_ptr = (void *)pc;
 
 	onfault = p->p_addr ? (long)p->p_addr->u_pcb.pcb_onfault : 0;
 	printf("data error type %x sfsr=%lx sfva=%lx afsr=%lx afva=%lx tf=%p\n",

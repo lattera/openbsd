@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/pci/Attic/raven.c,v 1.5.2.1 2002/06/11 03:37:23 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/pci/Attic/raven.c,v 1.5.2.2 2003/05/19 21:49:43 tedu Exp $ */
 
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
@@ -471,7 +471,7 @@ mpc_intr_string(lcv, ih)
 {
 	static char str[16];
 
-	sprintf(str, "irq %d", ih);
+	snprintf(str, sizeof str, "irq %d", ih);
 	return(str);
 }
 

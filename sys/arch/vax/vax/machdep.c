@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.49.2.3 2002/10/29 00:28:14 art Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.49.2.4 2003/05/19 21:46:09 tedu Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -81,12 +81,6 @@
 #ifdef SYSVMSG
 #include <sys/msg.h>
 #endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
-#ifdef SYSVSHM
-#include <sys/shm.h>
-#endif
 
 #include <net/netisr.h>
 #include <net/if.h>
@@ -145,7 +139,6 @@ int bufpages = 0;
 #endif
 int bufcachepercent = BUFCACHEPERCENT;
 
-extern int *chrtoblktbl;
 extern int virtual_avail, virtual_end;
 /*
  * We do these external declarations here, maybe they should be done
@@ -154,7 +147,6 @@ extern int virtual_avail, virtual_end;
 int		want_resched;
 char		machine[] = MACHINE;		/* from <machine/param.h> */
 char		machine_arch[] = MACHINE_ARCH;	/* from <machine/param.h> */
-char		cpu_model[100];
 int		physmem;
 int		dumpsize = 0;
 int		cold = 1; /* coldstart */
@@ -185,6 +177,7 @@ cpu_startup()
 	vm_offset_t	minaddr, maxaddr;
 	vm_size_t	size;
 	extern unsigned int avail_end;
+	extern char	cpu_model[];
 
 	/*
 	 * Initialize error message buffer.
@@ -387,68 +380,62 @@ sys_sigreturn(p, v, retval)
 	} *uap = v;
 	struct trapframe *scf;
 	struct sigcontext *cntx;
+	struct sigcontext ksc;
 
 	scf = p->p_addr->u_pcb.framep;
 	cntx = SCARG(uap, sigcntxp);
 
-	if (uvm_useracc((caddr_t)cntx, sizeof (*cntx), B_READ) == 0)
-		return EINVAL;
+	if (copyin((caddr_t)cntx, (caddr_t)&ksc, sizeof(struct sigcontext)))
+		return (EINVAL);
+
 	/* Compatibility mode? */
-	if ((cntx->sc_ps & (PSL_IPL | PSL_IS)) ||
-	    ((cntx->sc_ps & (PSL_U | PSL_PREVU)) != (PSL_U | PSL_PREVU)) ||
-	    (cntx->sc_ps & PSL_CM)) {
+	if ((ksc.sc_ps & (PSL_IPL | PSL_IS)) ||
+	    ((ksc.sc_ps & (PSL_U | PSL_PREVU)) != (PSL_U | PSL_PREVU)) ||
+	    (ksc.sc_ps & PSL_CM)) {
 		return (EINVAL);
 	}
-	if (cntx->sc_onstack & 01)
+	if (ksc.sc_onstack & 01)
 		p->p_sigacts->ps_sigstk.ss_flags |= SS_ONSTACK;
 	else
 		p->p_sigacts->ps_sigstk.ss_flags &= ~SS_ONSTACK;
 	/* Restore signal mask. */
-    p->p_sigmask = cntx->sc_mask & ~sigcantmask;
+	p->p_sigmask = ksc.sc_mask & ~sigcantmask;
 
-	scf->fp = cntx->sc_fp;
-	scf->ap = cntx->sc_ap;
-	scf->pc = cntx->sc_pc;
-	scf->sp = cntx->sc_sp;
-	scf->psl = cntx->sc_ps;
+	scf->fp = ksc.sc_fp;
+	scf->ap = ksc.sc_ap;
+	scf->pc = ksc.sc_pc;
+	scf->sp = ksc.sc_sp;
+	scf->psl = ksc.sc_ps;
 	return (EJUSTRETURN);
 }
 
-struct trampframe {
-	unsigned	sig;	/* Signal number */
-	unsigned	code;	/* Info code */
-	unsigned	scp;	/* Pointer to struct sigcontext */
-	unsigned	r0, r1, r2, r3, r4, r5; /* Registers saved when
-						 * interrupt */
-	unsigned	pc;	/* Address of signal handler */
-	unsigned	arg;	/* Pointer to first (and only) sigreturn
-				 * argument */
+struct sigframe {
+	int		 sf_signum;
+	siginfo_t 	*sf_sip;
+	struct sigcontext *sf_scp;
+	register_t 	 sf_r0, sf_r1, sf_r2, sf_r3, sf_r4, sf_r5;
+	register_t 	 sf_pc;
+	register_t 	 sf_arg;
+	siginfo_t 	 sf_si;
+	struct sigcontext sf_sc;
 };
 
-/*
- * XXX no siginfo implementation!!!!
- */
 void
 sendsig(catcher, sig, mask, code, type, val)
 	sig_t		catcher;
 	int		sig, mask;
 	u_long		code;
-	int 	type;
+	int 		type;
 	union sigval 	val;
 {
 	struct	proc	*p = curproc;
 	struct	sigacts *psp = p->p_sigacts;
 	struct	trapframe *syscf;
-	struct	sigcontext *sigctx, gsigctx;
-	struct	trampframe *trampf, gtrampf;
-	unsigned	cursp;
+	struct	sigframe *sigf, gsigf;
+	unsigned int	cursp;
 	int	onstack;
 
-#if 0
-printf("sendsig: signal %x  catcher %x\n", sig, catcher);
-#endif
 	syscf = p->p_addr->u_pcb.framep;
-
 	onstack = psp->ps_sigstk.ss_flags & SS_ONSTACK;
 
 	/* Allocate space for the signal handler context. */
@@ -458,42 +445,44 @@ printf("sendsig: signal %x  catcher %x\n", sig, catcher);
 		cursp = syscf->sp;
 
 	/* Set up positions for structs on stack */
-	sigctx = (struct sigcontext *) (cursp - sizeof(struct sigcontext));
-	trampf = (struct trampframe *) ((unsigned)sigctx -
-	    sizeof(struct trampframe));
+	sigf = (struct sigframe *) (cursp - sizeof(struct sigframe));
 
 	/*
-	 * Place sp at the beginning of trampf; this ensures that possible
+	 * Place sp at the beginning of sigf; this ensures that possible
 	 * further calls to sendsig won't overwrite this struct
-	 * trampframe/struct sigcontext pair with their own.
+	 * sigframe/struct sigcontext pair with their own.
 	 */
-	cursp = (unsigned) trampf;
+	cursp = (unsigned) sigf;
 
-	gtrampf.arg = (int) sigctx;
-	gtrampf.pc = (unsigned) catcher;
-	gtrampf.scp = (int) sigctx;
-	gtrampf.code = code;
-	gtrampf.sig = sig;
+	bzero(&gsigf, sizeof gsigf);
+	gsigf.sf_arg = (register_t)&sigf->sf_sc;
+	gsigf.sf_pc = (register_t)catcher;
+	gsigf.sf_scp = &sigf->sf_sc;
+	gsigf.sf_signum = sig;
 
-	gsigctx.sc_pc = syscf->pc;
-	gsigctx.sc_ps = syscf->psl;
-	gsigctx.sc_ap = syscf->ap;
-	gsigctx.sc_fp = syscf->fp; 
-	gsigctx.sc_sp = syscf->sp; 
-	gsigctx.sc_onstack = psp->ps_sigstk.ss_flags & SS_ONSTACK;
-	gsigctx.sc_mask = mask;
+	if (psp->ps_siginfo & sigmask(sig)) {
+		gsigf.sf_sip = &sigf->sf_si;
+		initsiginfo(&gsigf.sf_si, sig, code, type, val);
+	}
+
+	gsigf.sf_sc.sc_pc = syscf->pc;
+	gsigf.sf_sc.sc_ps = syscf->psl;
+	gsigf.sf_sc.sc_ap = syscf->ap;
+	gsigf.sf_sc.sc_fp = syscf->fp; 
+	gsigf.sf_sc.sc_sp = syscf->sp; 
+	gsigf.sf_sc.sc_onstack = psp->ps_sigstk.ss_flags & SS_ONSTACK;
+	gsigf.sf_sc.sc_mask = mask;
 
 #if defined(COMPAT_13) || defined(COMPAT_ULTRIX)
-	native_sigset_to_sigset13(mask, &gsigctx.__sc_mask13);
+	native_sigset_to_sigset13(mask, &gsigf.sf_sc.__sc_mask13);
 #endif
 
-	if (copyout(&gtrampf, trampf, sizeof(gtrampf)) ||
-	    copyout(&gsigctx, sigctx, sizeof(gsigctx)))
+	if (copyout(&gsigf, sigf, sizeof(gsigf)))
 		sigexit(p, SIGILL);
 
 	syscf->pc = p->p_sigcode;
 	syscf->psl = PSL_U | PSL_PREVU;
-	syscf->ap = (unsigned) sigctx-8;
+	syscf->ap = (unsigned) sigf + offsetof(struct sigframe, sf_pc);
 	syscf->sp = cursp;
 
 	if (onstack)
@@ -796,19 +785,6 @@ allocsys(v)
     register caddr_t v;
 {
 
-#ifdef SYSVSHM
-    shminfo.shmmax = shmmaxpgs;
-    shminfo.shmall = shmmaxpgs;
-    shminfo.shmseg = shmseg;
-    VALLOC(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-    VALLOC(sema, struct semid_ds, seminfo.semmni);
-    VALLOC(sem, struct sem, seminfo.semmns);
-
-    /* This is pretty disgusting! */
-    VALLOC(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
 #ifdef SYSVMSG
     VALLOC(msgpool, char, msginfo.msgmax);
     VALLOC(msgmaps, struct msgmap, msginfo.msgseg);

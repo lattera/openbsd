@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4.6.2 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_interface.c,v 1.4.6.3 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.61 2001/07/31 06:55:47 eeh Exp $ */
 
 /*
@@ -58,6 +58,8 @@
 #include "fb.h"
 #include "esp_sbus.h"
 #endif
+
+db_regs_t	ddb_regs;	/* register state */
 
 extern void OF_enter(void);
 
@@ -378,7 +380,7 @@ db_read_bytes(addr, size, data)
 		if (src >= (char *)VM_MIN_KERNEL_ADDRESS)
 			*data++ = probeget((paddr_t)(u_long)src++, ASI_P, 1);
 		else
-			*data++ = fubyte(src++);
+			copyin(src++, data++, sizeof(u_char));
 	}
 }
 
@@ -405,7 +407,7 @@ db_write_bytes(addr, size, data)
 			/* Read Only mapping -- need to do a bypass access */
 			stba((u_long)dst - ktext + ktextp, ASI_PHYS_CACHED, *data);
 		else
-			subyte(dst, *data);
+			copyout(data, dst, sizeof(char));
 		dst++, data++;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/exec.c,v 1.1.2.1 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/exec.c,v 1.1.2.2 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -42,16 +42,8 @@ typedef void (*startfuncp) __P((int, int, int, int, int, int, caddr_t))
     __attribute__ ((noreturn));
 
 void
-exec(char *file, void *addr, int howto)
+run_loadfile(u_long *marks, int howto)
 {
-	u_long marks[MARK_MAX];
-
-	marks[MARK_START] = (u_long)addr;
-
-	if (loadfile(file, marks, LOAD_KERNEL))
-		return;
-
-	marks[MARK_END] = ALIGN(marks[MARK_END] - (u_long)addr);
 	fcacheall();
 
 	__asm("mtctl %r0, %cr17");

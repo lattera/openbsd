@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ami.c,v 1.15.2.2 2002/10/29 00:33:24 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ami.c,v 1.15.2.3 2003/05/19 21:54:24 tedu Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -364,9 +364,9 @@ ami_attach(sc)
 				sc->sc_maxunits = AMI_BIG_MAX_LDRIVES;
 
 				bcopy (pi->api_fwver, sc->sc_fwver, 16);
-				sc->sc_fwver[16] = '\0';
+				sc->sc_fwver[15] = '\0';
 				bcopy (pi->api_biosver, sc->sc_biosver, 16);
-				sc->sc_biosver[16] = '\0';
+				sc->sc_biosver[15] = '\0';
 				sc->sc_channels = pi->api_channels;
 				sc->sc_targets = pi->api_fcloops;
 				sc->sc_memory = letoh16(pi->api_ramsize);
@@ -432,10 +432,10 @@ ami_attach(sc)
 	    'A' <= sc->sc_biosver[2] && sc->sc_biosver[2] <= 'Z' &&
 	    sc->sc_biosver[1] < ' ' && sc->sc_biosver[0] < ' ') {
 
-		sprintf(sc->sc_fwver, "%c.%02d.%02d", sc->sc_fwver[2],
-		    sc->sc_fwver[1], sc->sc_fwver[0]);
-		sprintf(sc->sc_biosver, "%c.%02d.%02d", sc->sc_biosver[2],
-		    sc->sc_biosver[1], sc->sc_biosver[0]);
+		snprintf(sc->sc_fwver, sizeof sc->sc_fwver, "%c.%02d.%02d",
+		    sc->sc_fwver[2], sc->sc_fwver[1], sc->sc_fwver[0]);
+		snprintf(sc->sc_biosver, sizeof sc->sc_biosver, "%c.%02d.%02d",
+		    sc->sc_biosver[2], sc->sc_biosver[1], sc->sc_biosver[0]);
 	}
 
 	printf(": FW %s, BIOS v%s, %dMB RAM\n"
@@ -1120,9 +1120,10 @@ ami_scsi_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "AMI    ");
-		sprintf(inq.product, "Host drive  #%02d", target);
-		strcpy(inq.revision, "   ");
+		strlcpy(inq.vendor, "AMI    ", sizeof inq.vendor);
+		snprintf(inq.product, sizeof inq.product, "Host drive  #%02d",
+		    target);
+		strlcpy(inq.revision, "   ", sizeof inq.revision);
 		ami_copy_internal_data(xs, &inq, sizeof inq);
 		break;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/Attic/types.h,v 1.10.4.1 2002/10/29 00:28:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/Attic/types.h,v 1.10.4.2 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: types.h,v 1.11 1996/12/10 23:19:38 pk Exp $	*/
 
 /*
@@ -55,9 +55,6 @@ typedef struct label_t {
 	int val[2];
 } label_t;
 #endif
-
-typedef	unsigned long	vm_offset_t;
-typedef	unsigned long	vm_size_t;
 
 typedef unsigned long	vaddr_t;
 typedef unsigned long	paddr_t;

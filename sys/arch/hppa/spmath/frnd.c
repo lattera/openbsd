@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/frnd.c,v 1.5.6.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/frnd.c,v 1.5.6.3 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -26,8 +26,8 @@
 
 /*ARGSUSED*/
 int
-sgl_frnd(srcptr,dstptr,status)
-	sgl_floating_point *srcptr, *dstptr;
+sgl_frnd(srcptr, null, dstptr, status)
+	sgl_floating_point *srcptr, *null, *dstptr;
 	unsigned int *status;
 {
 	register unsigned int src, result;
@@ -129,8 +129,8 @@ sgl_frnd(srcptr,dstptr,status)
 
 /*ARGSUSED*/
 int
-dbl_frnd(srcptr,dstptr,status)
-	dbl_floating_point *srcptr, *dstptr;
+dbl_frnd(srcptr, null, dstptr, status)
+	dbl_floating_point *srcptr, *null, *dstptr;
 	unsigned int *status;
 {
 	register unsigned int srcp1, srcp2, resultp1, resultp2;
@@ -231,8 +231,8 @@ dbl_frnd(srcptr,dstptr,status)
 
 /*ARGSUSED*/
 int
-quad_frnd(srcptr,dstptr,status)
-	quad_floating_point *srcptr, *dstptr;
+quad_frnd(srcptr, null, dstptr, status)
+	quad_floating_point *srcptr, *null, *dstptr;
 	unsigned int *status;
 {
 	return(UNIMPLEMENTEDEXCEPTION);

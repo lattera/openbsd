@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.13.2.3 2002/10/29 00:33:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.13.2.4 2003/05/19 21:54:24 tedu Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -217,7 +217,7 @@ gem_config(sc)
 	    bus_space_read_4(sc->sc_bustag, sc->sc_h, GEM_RX_FIFO_SIZE);
 
 	/* Initialize ifnet structure. */
-	strcpy(ifp->if_xname, sc->sc_dev.dv_xname);
+	strlcpy(ifp->if_xname, sc->sc_dev.dv_xname, sizeof ifp->if_xname);
 	ifp->if_softc = sc;
 	ifp->if_flags =
 	    IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
@@ -302,7 +302,7 @@ gem_config(sc)
 	 * Unless we are Apple.
 	 */
 	TAILQ_FOREACH(ifm, &sc->sc_media.ifm_list, ifm_list) {
-		if (IFM_SUBTYPE(ifm->ifm_media) == IFM_1000_TX ||
+		if (IFM_SUBTYPE(ifm->ifm_media) == IFM_1000_T ||
 		    IFM_SUBTYPE(ifm->ifm_media) == IFM_1000_SX ||
 		    IFM_SUBTYPE(ifm->ifm_media) == IFM_1000_LX ||
 		    IFM_SUBTYPE(ifm->ifm_media) == IFM_1000_CX) {
@@ -446,9 +446,8 @@ gem_stop(struct ifnet *ifp, int disable)
 	timeout_del(&sc->sc_tick_ch);
 	mii_down(&sc->sc_mii);
 
-	/* XXX - Should we reset these instead? */
-	gem_disable_rx(sc);
-	gem_disable_tx(sc);
+	gem_reset_rx(sc);
+	gem_reset_tx(sc);
 
 	/*
 	 * Release any queued transmit buffers.
@@ -625,7 +624,6 @@ gem_meminit(struct gem_softc *sc)
 	/*
 	 * Initialize the transmit descriptor ring.
 	 */
-	memset((void *)sc->sc_txdescs, 0, sizeof(sc->sc_txdescs));
 	for (i = 0; i < GEM_NTXDESC; i++) {
 		sc->sc_txdescs[i].gd_flags = 0;
 		sc->sc_txdescs[i].gd_addr = 0;
@@ -936,13 +934,9 @@ gem_rint(sc)
 	struct gem_rxsoft *rxs;
 	struct mbuf *m;
 	u_int64_t rxstat;
-	u_int32_t rxcomp;
 	int i, len;
 
-	DPRINTF(sc, ("gem_rint: sc->rxptr %d, complete %d\n",
-		sc->sc_rxptr, bus_space_read_4(t, h, GEM_RX_COMPLETION)));
-	rxcomp = bus_space_read_4(t, h, GEM_RX_COMPLETION);
-	for (i = sc->sc_rxptr; i != rxcomp; i = GEM_NEXTRX(i)) {
+	for (i = sc->sc_rxptr;; i = GEM_NEXTRX(i)) {
 		rxs = &sc->sc_rxsoft[i];
 
 		GEM_CDRXSYNC(sc, i,
@@ -1125,9 +1119,19 @@ gem_intr(v)
 		int rxstat = bus_space_read_4(t, seb, GEM_MAC_RX_STATUS);
 
 		rxstat &= ~(GEM_MAC_RX_DONE | GEM_MAC_RX_FRAME_CNT);
-		if (rxstat != 0)
+		if (rxstat & GEM_MAC_RX_OVERFLOW) {
+			struct ifnet *ifp = &sc->sc_arpcom.ac_if;
+
+			gem_init(ifp);
+			ifp->if_ierrors++;
+		} else {
+			/*
+			 * Leave this in here until I figure out what to do
+			 * about other errors.
+			 */
 			printf("%s: MAC rx fault, status %x\n",
 			    sc->sc_dev.dv_xname, rxstat);
+		}
 	}
 	return (r);
 }
@@ -1304,7 +1308,7 @@ gem_mii_statchg(dev)
 		 	v |= GEM_MAC_XIF_ECHO_DISABL;
 
 		switch (IFM_SUBTYPE(sc->sc_mii.mii_media_active)) {
-		case IFM_1000_TX:  /* Gigabit using GMII interface */
+		case IFM_1000_T:  /* Gigabit using GMII interface */
 			v |= GEM_MAC_XIF_GMII_MODE;
 			break;
 		default:

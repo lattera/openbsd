@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/cnv_float.h,v 1.5.6.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/cnv_float.h,v 1.5.6.3 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -296,17 +296,17 @@
 	else position -= 2;			\
     }
 
-int sgl_to_sgl_fcnvfx(sgl_floating_point *, sgl_floating_point *, unsigned int *);
-int sgl_to_dbl_fcnvfx(sgl_floating_point *, dbl_integer *, unsigned int *);
-int dbl_to_sgl_fcnvfx(dbl_floating_point *, int *, unsigned int *);
-int dbl_to_dbl_fcnvfx(dbl_floating_point *, dbl_integer *, unsigned int *);
+int sgl_to_sgl_fcnvfx(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_to_dbl_fcnvfx(sgl_floating_point *, sgl_floating_point *, dbl_integer *, unsigned int *);
+int dbl_to_sgl_fcnvfx(dbl_floating_point *, dbl_floating_point *, int *, unsigned int *);
+int dbl_to_dbl_fcnvfx(dbl_floating_point *, dbl_floating_point *, dbl_integer *, unsigned int *);
 
-int sgl_to_sgl_fcnvfxt(sgl_floating_point *, int *, unsigned int *);
-int sgl_to_dbl_fcnvfxt(sgl_floating_point *, dbl_integer *, unsigned int *);
-int dbl_to_sgl_fcnvfxt(dbl_floating_point *, int *, unsigned int *);
-int dbl_to_dbl_fcnvfxt(dbl_floating_point *, dbl_integer *, unsigned int *);
+int sgl_to_sgl_fcnvfxt(sgl_floating_point *, sgl_floating_point *, int *, unsigned int *);
+int sgl_to_dbl_fcnvfxt(sgl_floating_point *, sgl_floating_point *, dbl_integer *, unsigned int *);
+int dbl_to_sgl_fcnvfxt(dbl_floating_point *, dbl_floating_point *, int *, unsigned int *);
+int dbl_to_dbl_fcnvfxt(dbl_floating_point *, dbl_floating_point *, dbl_integer *, unsigned int *);
 
-int sgl_to_sgl_fcnvxf(int *, sgl_floating_point *, unsigned int *);
-int sgl_to_dbl_fcnvxf(int *, dbl_floating_point *, unsigned int *);
-int dbl_to_sgl_fcnvxf(dbl_integer *, sgl_floating_point *, unsigned int *);
-int dbl_to_dbl_fcnvxf(dbl_integer *, dbl_floating_point *, unsigned int *);
+int sgl_to_sgl_fcnvxf(int *, int *, sgl_floating_point *, unsigned int *);
+int sgl_to_dbl_fcnvxf(int *, int *, dbl_floating_point *, unsigned int *);
+int dbl_to_sgl_fcnvxf(dbl_integer *, dbl_integer *, sgl_floating_point *, unsigned int *);
+int dbl_to_dbl_fcnvxf(dbl_integer *, dbl_integer *, dbl_floating_point *, unsigned int *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17.2.3 2002/10/29 00:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17.2.4 2003/05/19 21:49:43 tedu Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -54,12 +54,6 @@
 
 #include <uvm/uvm_extern.h>
 
-#ifdef SYSVSHM
-#include <sys/shm.h>
-#endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
 #ifdef SYSVMSG
 #include <sys/msg.h>
 #endif
@@ -620,17 +614,6 @@ allocsys(v)
 #define	valloc(name, type, num) \
 	v = (caddr_t)(((name) = (type *)v) + (num))
 
-#ifdef	SYSVSHM
-	shminfo.shmmax = shmmaxpgs;
-	shminfo.shmall = shmmaxpgs;
-	shminfo.shmseg = shmseg;
-	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef	SYSVSEM
-	valloc(sema, struct semid_ds, seminfo.semmni);
-	valloc(sem, struct sem, seminfo.semmns);
-	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
 #ifdef	SYSVMSG
 	valloc(msgpool, char, msginfo.msgmax);
 	valloc(msgmaps, struct msgmap, msginfo.msgseg);
@@ -1396,7 +1379,7 @@ kcopy(from, to, size)
 	faultbuf env;
 	register void *oldh = curproc->p_addr->u_pcb.pcb_onfault;
 
-	if (setfault(env)) {
+	if (setfault(&env)) {
 		curproc->p_addr->u_pcb.pcb_onfault = oldh;
 		return EFAULT;
 	}
@@ -1427,8 +1410,8 @@ nameinterrupt(replace, newstr)
 		src+=1; /* skip the NUL */
 	}
 
-	strcat(intrname[replace], "/");
-	strcat(intrname[replace], newstr);
+	strlcat(intrname[replace], "/", sizeof intrname[replace]);
+	strlcat(intrname[replace], newstr, sizeof intrname[replace]);
 
 	p = intrnames;
 	for (i = 0; i < NENTRIES; i++) {

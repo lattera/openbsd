@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/machdep.c,v 1.6 2001/06/04 22:25:52 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/machdep.c,v 1.6.4.1 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -40,7 +40,8 @@
 #include "dev_hppa.h"
 
 extern struct	stable_storage sstor;	/* contents of Stable Storage */
-int howto, bootdev;
+int howto;
+dev_t bootdev;
 
 void
 machdep()
@@ -53,7 +54,7 @@ machdep()
 
 #ifdef PDCDEBUG
 	if (debug) {
-		register int i;
+		int i;
 
 		printf("SSTOR:\n");
 		printf("pri_boot=");	DEVPATH_PRINT(&sstor.ss_pri_boot);

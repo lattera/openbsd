@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.19.2.3 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.19.2.4 2003/05/19 21:53:27 tedu Exp $	*/
 /*	$NetBSD: cd9660_vnops.c,v 1.42 1997/10/16 23:56:57 christos Exp $	*/
 
 /*-
@@ -621,7 +621,8 @@ cd9660_readdir(v)
 				error = iso_uiodir(idp,&idp->current,idp->curroff);
 			break;
 		default:	/* ISO_FTYPE_DEFAULT || ISO_FTYPE_9660 */
-			strcpy(idp->current.d_name,"..");
+			strlcpy(idp->current.d_name,"..",
+			    sizeof idp->current.d_name);
 			if (idp->current.d_namlen == 1 && ep->name[0] == 0) {
 				idp->current.d_namlen = 1;
 				error = iso_uiodir(idp,&idp->current,idp->curroff);
@@ -743,7 +744,8 @@ cd9660_readlink(v)
 	 * Now get a buffer
 	 * Abuse a namei buffer for now.
 	 */
-	if (uio->uio_segflg == UIO_SYSSPACE)
+	if (uio->uio_segflg == UIO_SYSSPACE &&
+	    uio->uio_iov->iov_len >= MAXPATHLEN)
 		symname = uio->uio_iov->iov_base;
 	else
 		MALLOC(symname, char *, MAXPATHLEN, M_NAMEI, M_WAITOK);
@@ -752,7 +754,8 @@ cd9660_readlink(v)
 	 * Ok, we just gathering a symbolic name in SL record.
 	 */
 	if (cd9660_rrip_getsymname(dirp, symname, &symlen, imp) == 0) {
-		if (uio->uio_segflg != UIO_SYSSPACE)
+		if (uio->uio_segflg != UIO_SYSSPACE ||
+		    uio->uio_iov->iov_len < MAXPATHLEN)
 			FREE(symname, M_NAMEI);
 		brelse(bp);
 		return (EINVAL);
@@ -765,7 +768,8 @@ cd9660_readlink(v)
 	/*
 	 * return with the symbolic name to caller's.
 	 */
-	if (uio->uio_segflg != UIO_SYSSPACE) {
+	if (uio->uio_segflg != UIO_SYSSPACE ||
+	    uio->uio_iov->iov_len < MAXPATHLEN) {
 		error = uiomove(symname, symlen, uio);
 		FREE(symname, M_NAMEI);
 		return (error);
@@ -1030,21 +1034,16 @@ struct vnodeopv_desc cd9660_vnodeop_opv_desc =
  */
 int (**cd9660_specop_p)(void *);
 struct vnodeopv_entry_desc cd9660_specop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
-	{ &vop_close_desc, spec_close },	/* close */
+	{ &vop_default_desc, spec_vnoperate },
 	{ &vop_access_desc, cd9660_access },	/* access */
 	{ &vop_getattr_desc, cd9660_getattr },	/* getattr */
 	{ &vop_setattr_desc, cd9660_setattr },	/* setattr */
-	{ &vop_read_desc, spec_read },		/* read */
-	{ &vop_write_desc, spec_write },	/* write */
-	{ &vop_fsync_desc, spec_fsync },	/* fsync */
 	{ &vop_inactive_desc, cd9660_inactive },/* inactive */
 	{ &vop_reclaim_desc, cd9660_reclaim },	/* reclaim */
 	{ &vop_lock_desc, cd9660_lock },	/* lock */
 	{ &vop_unlock_desc, cd9660_unlock },	/* unlock */
 	{ &vop_print_desc, cd9660_print },	/* print */
 	{ &vop_islocked_desc, cd9660_islocked },/* islocked */
-	SPEC_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc cd9660_specop_opv_desc =
@@ -1053,23 +1052,17 @@ struct vnodeopv_desc cd9660_specop_opv_desc =
 #ifdef FIFO
 int (**cd9660_fifoop_p)(void *);
 struct vnodeopv_entry_desc cd9660_fifoop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
-	{ &vop_close_desc, fifo_close },	/* close */
+	{ &vop_default_desc, fifo_vnoperate },
 	{ &vop_access_desc, cd9660_access },	/* access */
 	{ &vop_getattr_desc, cd9660_getattr },	/* getattr */
 	{ &vop_setattr_desc, cd9660_setattr },	/* setattr */
-	{ &vop_read_desc, fifo_read },		/* read */
-	{ &vop_write_desc, fifo_write },	/* write */
-	{ &vop_fsync_desc, fifo_fsync },	/* fsync */
 	{ &vop_inactive_desc, cd9660_inactive },/* inactive */
 	{ &vop_reclaim_desc, cd9660_reclaim },	/* reclaim */
 	{ &vop_lock_desc, cd9660_lock },	/* lock */
 	{ &vop_unlock_desc, cd9660_unlock },	/* unlock */
-	{ &vop_bmap_desc, fifo_bmap },		/* bmap */
 	{ &vop_print_desc, cd9660_print },	/* print */
 	{ &vop_islocked_desc, cd9660_islocked },/* islocked */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
-	FIFO_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc cd9660_fifoop_opv_desc =

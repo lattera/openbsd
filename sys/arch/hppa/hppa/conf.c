@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.15.4.2 2002/10/29 00:28:02 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.15.4.3 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -94,6 +94,10 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #include "wskbd.h"
 #include "wsmouse.h"
 #include "wsmux.h"
+#ifdef XFS
+#include <xfs/nxfs.h>
+cdev_decl(xfs_dev);
+#endif
 
 #include "inet.h"
 #include "bpfilter.h"
@@ -108,8 +112,6 @@ cdev_decl(lpt);
 cdev_decl(com);
 
 #include "pf.h"
-
-#include <altq/altqconf.h>
 
 #include "systrace.h"
 
@@ -147,13 +149,14 @@ struct cdevsw   cdevsw[] =
 	cdev_mouse_init(NWSKBD,wskbd),	/* 28: keyboards */
 	cdev_mouse_init(NWSMOUSE,wsmouse), /* 29: mice */
 	cdev_mouse_init(NWSMUX,wsmux),	/* 30: mux */
-					/* 31 */
+	cdev_notdef(),			/* 31 */
+
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 32: xfs communication device */
 #else
 	cdev_notdef(),			/* 32 */
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 33: ALTQ control interface */
+	cdev_notdef(),			/* 33: ALTQ (deprecated) */
 	cdev_systrace_init(NSYSTRACE,systrace),	/* 34: system call tracing */
 	cdev_audio_init(NAUDIO,audio),	/* 35: /dev/audio */
 	cdev_crypto_init(NCRYPTO,crypto), /* 36: /dev/crypto */
@@ -180,7 +183,7 @@ int mem_no = 2;		/* major device number of memory special file */
  */
 dev_t   swapdev = makedev(1, 0);
 
-static int chrtoblktbl[] = {
+int chrtoblktbl[] = {
 	/* XXXX This needs to be dynamic for LKMs. */
 	/*VCHR*/	/*VBLK*/
 	/*  0 */	NODEV,
@@ -211,39 +214,7 @@ static int chrtoblktbl[] = {
 	/* 25 */	7,
 	/* 25 */	8,
 };
-
-/*
- * Convert a character device number to a block device number.
- */
-dev_t
-chrtoblk(dev)
-	dev_t dev;
-{
-	int blkmaj;
-	if (major(dev) >= nchrdev)
-		return (NODEV);
-	blkmaj = chrtoblktbl[major(dev)];
-	if (blkmaj == NODEV)
-		return (NODEV);
-	return (makedev(blkmaj, minor(dev)));
-}
-
-/*
- * Convert a block device number to a character device number.
- */
-dev_t
-blktochr(dev)
-	dev_t dev;
-{
-	int blkmaj = major(dev);
-	int i;
-	if (blkmaj >= nblkdev)
-		return (NODEV);
-	for (i = 0; i < sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]); i++)
-		if (blkmaj == chrtoblktbl[i])
-			return (makedev(i, minor(dev)));
-	return (NODEV);
-}
+int nchrtoblktbl = sizeof(chrtoblktbl) / sizeof(chrtoblktbl[0]);
 
 /*
  * Returns true if dev is /dev/zero.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/if_altq.h,v 1.1.6.2 2002/10/29 00:28:00 art Exp $	*/
+/*	$OpenBSD: src/sys/altq/if_altq.h,v 1.1.6.3 2003/05/19 21:50:54 tedu Exp $	*/
 /*	$KAME: if_altq.h,v 1.6 2001/01/29 19:59:09 itojun Exp $	*/
 
 /*
@@ -129,7 +129,7 @@ struct tb_regulator {
 #define	ALTQF_DRIVER1	 0x40	/* driver specific */
 
 /* if_altqflags set internally only: */
-#define	ALTQF_CANTCHANGE 	(ALTQF_READY)
+#define	ALTQF_CANTCHANGE	(ALTQF_READY)
 
 /* altq_dequeue 2nd arg */
 #define	ALTDQ_REMOVE		1	/* dequeue mbuf from the queue */
@@ -161,7 +161,7 @@ struct tb_regulator {
 extern int altq_attach(struct ifaltq *, int, void *,
 			    int (*)(struct ifaltq *, struct mbuf *,
 				    struct altq_pktattr *),
-			    struct mbuf *(*)(struct ifaltq *, int), 
+			    struct mbuf *(*)(struct ifaltq *, int),
 			    int (*)(struct ifaltq *, int, void *),
 			    void *,
 			    void *(*)(void *, struct mbuf *, int));
@@ -170,7 +170,6 @@ extern int altq_enable(struct ifaltq *);
 extern int altq_disable(struct ifaltq *);
 extern struct mbuf *tbr_dequeue(struct ifaltq *, int);
 extern int (*altq_input)(struct mbuf *, int);
-void altq_etherclassify(struct ifaltq *, struct mbuf *, struct altq_pktattr *);
 
 #endif /* _KERNEL */
 

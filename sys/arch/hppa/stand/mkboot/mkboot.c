@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.9.4.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.9.4.3 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 1990, 1993
@@ -43,7 +43,7 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.9.4.2 2002/10/29 00:28:03 art Exp $";
+static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.9.4.3 2003/05/19 21:43:13 tedu Exp $";
 #endif /* not lint */
 #endif
 
@@ -133,7 +133,7 @@ main(argc, argv)
 
 	bzero(buf, sizeof(buf));
 	/* clear possibly unused directory entries */
-	memset(lifd[1].dir_name, ' ', 10);
+	memset(lifd[1].dir_name, ' ', sizeof lifd[1].dir_name);
 	lifd[1].dir_type = -1;
 	lifd[1].dir_addr = 0;
 	lifd[1].dir_length = 0;
@@ -174,7 +174,8 @@ main(argc, argv)
 			lifd[1].dir_implement = htobe32(loadpoint + entry);
 		}
 
-		strcpy(lifd[optind].dir_name, lifname(argv[optind]));
+		strlcpy(lifd[optind].dir_name, lifname(argv[optind]),
+		    sizeof lifd[optind].dir_name);
 		lifd[optind].dir_length = htobe32(n);
 		bcddate(argv[optind], lifd[optind].dir_toc);
 		lifd[optind].dir_flag = htobe16(LIF_DIR_FLAG);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.8.2.3 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.8.2.4 2003/05/19 21:46:58 tedu Exp $	*/
 /*	$NetBSD: pmap.c,v 1.107 2001/08/31 16:47:41 eeh Exp $	*/
 #undef	NO_VCACHE /* Don't forget the locked TLB in dostart */
 /*
@@ -134,17 +134,17 @@ static int pseg_set(struct pmap* pm, vaddr_t addr, int64_t tte, paddr_t spare) {
 	if (!(pdir = (paddr_t *)ldda(&pm->pm_segs[va_to_seg(addr)],
 	    ASI_PHYS_CACHED))) {
 		if (!spare) return (1);
-		stda(&pm->pm_segs[va_to_seg(addr)], ASI_PHYS_CACHED, spare);
+		stxa_sync(&pm->pm_segs[va_to_seg(addr)], ASI_PHYS_CACHED, spare);
 		pdir = spare;
 		spare = NULL;
 	}
 	if (!(ptbl = (paddr_t *)ldda(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED))) {
 		if (!spare) return (1);
-		stda(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED, spare);
+		stxa_sync(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED, spare);
 		ptbl = spare;
 		spare = NULL;
 	}
-	stda(&ptbl[va_to_pte(addr)], ASI_PHYS_CACHED, tte);
+	stxa_sync(&ptbl[va_to_pte(addr)], ASI_PHYS_CACHED, tte);
 	return (0);
 }
 
@@ -155,13 +155,13 @@ static paddr_t pseg_find(struct pmap* pm, vaddr_t addr, paddr_t spare) {
 	if (!(pdir = (paddr_t *)ldda(&pm->pm_segs[va_to_seg(addr)],
 	    ASI_PHYS_CACHED))) {
 		if (!spare) return (1);
-		stda(&pm->pm_segs[va_to_seg(addr)], ASI_PHYS_CACHED, spare);
+		stxa_sync(&pm->pm_segs[va_to_seg(addr)], ASI_PHYS_CACHED, spare);
 		pdir = spare;
 		spare = NULL;
 	}
 	if (!(ptbl = (paddr_t *)ldda(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED))) {
 		if (!spare) return (1);
-		stda(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED, spare);
+		stxa_sync(&pdir[va_to_dir(addr)], ASI_PHYS_CACHED, spare);
 		ptbl = spare;
 		spare = NULL;
 	}
@@ -281,7 +281,7 @@ int tsbsize;		/* tsbents = 512 * 2^^tsbsize */
 
 struct pmap kernel_pmap_;
 
-int physmem;
+extern int physmem;
 /*
  * Virtual and physical addresses of the start and end of kernel text
  * and data segments.
@@ -1100,7 +1100,7 @@ remap_data:
 	bzero(tsb_immu, TSBSIZE);
 
 	BDPRINTF(PDB_BOOT1, ("firstaddr after TSB=%lx\r\n", (u_long)firstaddr));
-	BDPRINTF(PDB_BOOT1, ("TSB allocated at %p size %08x\r\n", (void *)tsb,
+	BDPRINTF(PDB_BOOT1, ("TSB allocated at %p size %08x\r\n", (void *)tsb_dmmu,
 	    (int)TSBSIZE));
 
 	first_phys_addr = mem->start;
@@ -2190,7 +2190,8 @@ pmap_enter(pm, va, pa, prot, flags)
 	 */
 	s = splvm();
 	simple_lock(&pm->pm_lock);
-	if ((tte.data = pseg_get(pm, va))<0) {
+	tte.data = pseg_get(pm, va);
+	if (tte.data & TLB_V) {
 		simple_unlock(&pm->pm_lock);
 		pmap_remove(pm, va, va+NBPG-1);
 		simple_lock(&pm->pm_lock);
@@ -3833,7 +3834,8 @@ pmap_testout()
 
 	pg = vm_page_alloc1();
 	pa = (paddr_t)VM_PAGE_TO_PHYS(pg);
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 
 	/* Now clear reference and modify */
@@ -3909,7 +3911,8 @@ pmap_testout()
 	       ref, mod);
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 
@@ -3934,7 +3937,8 @@ pmap_testout()
 	       ref, mod);
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 
@@ -3959,7 +3963,8 @@ pmap_testout()
 
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 

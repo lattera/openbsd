@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/eisa/eisa_machdep.c,v 1.4.4.1 2002/06/11 03:35:52 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/eisa/eisa_machdep.c,v 1.4.4.2 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: eisa_machdep.c,v 1.6 1997/06/06 23:12:52 thorpej Exp $	*/
 
 /*-
@@ -158,7 +158,7 @@ eisa_intr_string(ec, ih)
 	if (ih == 0 || ih >= ICU_LEN || ih == 2)
 		panic("eisa_intr_string: bogus handle 0x%x", ih);
 
-	sprintf(irqstr, "irq %d", ih);
+	snprintf(irqstr, sizeof irqstr, "irq %d", ih);
 	return (irqstr);
 	
 }

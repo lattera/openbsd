@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/regdump.c,v 1.2.22.1 2002/06/11 03:36:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/regdump.c,v 1.2.22.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: regdump.c,v 1.1 1997/04/09 19:21:47 thorpej Exp $	*/
 
 /*
@@ -104,11 +104,11 @@ regdump(tf, sbytes)
 
 void
 dumpmem(ptr, sz, ustack)
-	register int *ptr;
+	int *ptr;
 	int sz, ustack;
 {
-	register int i, val;
-	register int limit;
+	int i, val;
+	int limit;
 
 	/* Stay in the same page */
 	limit = ((int)ptr) | (NBPG-3);
@@ -119,7 +119,7 @@ dumpmem(ptr, sz, ustack)
 		else
 			printf(" ");
 		if (ustack == 1) {
-			if ((val = fuword(ptr++)) == -1)
+			if (copyin(ptr++, &val, sizeof(int)) != 0)
 				break;
 		} else {
 			if (((int) ptr) >= limit)

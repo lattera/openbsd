@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_trace.c,v 1.11.2.2 2002/06/11 03:37:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_trace.c,v 1.11.2.3 2003/05/19 21:45:52 tedu Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -616,7 +616,7 @@ stack_decode(unsigned addr, unsigned *stack, int (*pr)(const char *, ...))
 				if (!db_trace_get_val(check_addr + 4, &inst))
 					continue;
 				if (ST_R1_R31_IMM(instr))
-					break; /* sucess */
+					break; /* success */
 #else
 				/*
 				 * Latest GCC optimizer is just too good... the store

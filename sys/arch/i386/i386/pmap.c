@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.56.2.4 2002/10/29 00:28:04 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.56.2.5 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: pmap.c,v 1.120 2001/04/22 23:42:14 thorpej Exp $	*/
 
 /*
@@ -582,28 +582,67 @@ pmap_unmap_ptes(pmap)
 }
 
 __inline static void
-pmap_nxstack_account(struct pmap *pmap, vaddr_t va,
+pmap_exec_account(struct pmap *pm, vaddr_t va,
     pt_entry_t opte, pt_entry_t npte)
 {
-	if (((opte ^ npte) & PG_X) &&
-	    va < VM_MAXUSER_ADDRESS && va >= VM_MAXUSER_ADDRESS - MAXSSIZ) {
-		struct trapframe *tf = curproc->p_md.md_regs;
-		struct vm_map *map = &curproc->p_vmspace->vm_map;
+	if (curproc == NULL || curproc->p_vmspace == NULL ||
+	    pm != vm_map_pmap(&curproc->p_vmspace->vm_map))
+		return;
 
-		if (npte & PG_X && !(opte & PG_X)) {
-			if (++pmap->pm_nxpages == 1 &&
-			    pmap == vm_map_pmap(map)) {
-				tf->tf_cs = GSEL(GUCODE1_SEL, SEL_UPL);
-				pmap_update_pg(va);
-			}
-		} else {
-			if (!--pmap->pm_nxpages &&
-			    pmap == vm_map_pmap(map)) {
-				tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
-				pmap_update_pg(va);
-			}
-		}
+	if ((opte ^ npte) & PG_X)
+		pmap_update_pg(va);
+		
+	/*
+	 * Executability was removed on the last executable change.
+	 * Reset the code segment to something conservative and
+	 * let the trap handler deal with setting the right limit.
+	 * We can't do that because of locking constraints on the vm map.
+	 *
+	 * XXX - floating cs - set this _really_ low.
+	 */
+	if ((opte & PG_X) && (npte & PG_X) == 0 && va == pm->pm_hiexec) {
+		struct trapframe *tf = curproc->p_md.md_regs;
+		struct pcb *pcb = &curproc->p_addr->u_pcb;
+
+		pcb->pcb_cs = tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
+		pm->pm_hiexec = I386_MAX_EXE_ADDR;
 	}
+}
+
+/*
+ * Fixup the code segment to cover all potential executable mappings.
+ * returns 0 if no changes to the code segment were made.
+ */
+int
+pmap_exec_fixup(struct vm_map *map, struct trapframe *tf, struct pcb *pcb)
+{
+	struct vm_map_entry *ent;
+	struct pmap *pm = vm_map_pmap(map);
+	vaddr_t va = 0;
+
+	vm_map_lock(map);
+	for (ent = (&map->header)->next; ent != &map->header; ent = ent->next) {
+		/*
+		 * This entry has greater va than the entries before.
+		 * We need to make it point to the last page, not past it.
+		 */
+		if (ent->protection & VM_PROT_EXECUTE)
+			va = trunc_page(ent->end) - PAGE_SIZE;
+	}
+	vm_map_unlock(map);
+
+	if (va == pm->pm_hiexec)
+		return (0);
+
+	pm->pm_hiexec = va;
+
+	if (pm->pm_hiexec > (vaddr_t)I386_MAX_EXE_ADDR) {
+		pcb->pcb_cs = tf->tf_cs = GSEL(GUCODE1_SEL, SEL_UPL);
+	} else {
+		pcb->pcb_cs = tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
+	}
+	
+	return (1);
 }
 
 /*
@@ -1543,7 +1582,7 @@ pmap_create()
 	pmap->pm_stats.wired_count = 0;
 	pmap->pm_stats.resident_count = 1;	/* count the PDP allocd below */
 	pmap->pm_ptphint = NULL;
-	pmap->pm_nxpages = 0;
+	pmap->pm_hiexec = 0;
 	pmap->pm_flags = 0;
 
 	/* init the LDT */
@@ -2078,7 +2117,7 @@ pmap_remove_pte(pmap, ptp, pte, va, flags)
 	opte = *pte;			/* save the old PTE */
 	*pte = 0;			/* zap! */
 
-	pmap_nxstack_account(pmap, va, opte, 0);
+	pmap_exec_account(pmap, va, opte, 0);
 
 	if (opte & PG_W)
 		pmap->pm_stats.wired_count--;
@@ -2675,8 +2714,7 @@ pmap_write_protect(pmap, sva, eva, prot)
 			npte = (*spte & ~PG_PROT) | md_prot;
 
 			if (npte != *spte) {
-				/* account for executable pages on the stack */
-				pmap_nxstack_account(pmap, sva, *spte, npte);
+				pmap_exec_account(pmap, sva, *spte, npte);
 
 				*spte = npte;		/* zap! */
 
@@ -2798,7 +2836,7 @@ pmap_collect(pmap)
  */
 
 /*
- * defined as macro call in pmap.h
+ * defined as macro in pmap.h
  */
 
 /*
@@ -2973,7 +3011,7 @@ enter_now:
 	 */
 
 	npte = pa | protection_codes[prot] | PG_V;
-	pmap_nxstack_account(pmap, va, opte, npte);
+	pmap_exec_account(pmap, va, opte, npte);
 	if (pvh)
 		npte |= PG_PVLIST;
 	if (wired)
@@ -3048,12 +3086,6 @@ pmap_growkernel(maxkvaddr)
 			kpm->pm_stats.resident_count++;
 			continue;
 		}
-
-		/*
-		 * THIS *MUST* BE CODED SO AS TO WORK IN THE
-		 * pmap_initialized == FALSE CASE!  WE MAY BE
-		 * INVOKED WHILE pmap_init() IS RUNNING!
-		 */
 
 		/*
 		 * THIS *MUST* BE CODED SO AS TO WORK IN THE

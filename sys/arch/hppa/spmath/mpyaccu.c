@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyaccu.c,v 1.5.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyaccu.c,v 1.5.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -24,7 +24,7 @@ mpyaccu(opnd1,opnd2,result)
 	struct mdsfu_register temp;
 	int carry;
 
-	impyu(&opnd1,&opnd2,&temp);
+	u_xmpy(&opnd1,&opnd2,&temp);
 
 	/* get result of low word add, and check for carry out */
 	if ((result_lo += (unsigned)temp.rslt_lo) < (unsigned)temp.rslt_lo)

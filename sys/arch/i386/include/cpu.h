@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.40.2.2 2002/10/29 00:28:04 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.40.2.3 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -175,8 +175,6 @@ void	i386_proc0_tss_ldt_init(void);
 struct region_descriptor;
 void	lgdt(struct region_descriptor *);
 void	fillw(short, void *, size_t);
-short	fusword(u_short *);
-int	susword(u_short *t, u_short);
 
 struct pcb;
 void	savectx(struct pcb *);
@@ -199,6 +197,7 @@ int	math_emulate(struct trapframe *);
 
 #ifdef USER_LDT
 /* sys_machdep.h */
+extern int user_ldt_enable;
 void	i386_user_cleanup(struct pcb *);
 int	i386_get_ldt(struct proc *, void *, register_t *);
 int	i386_set_ldt(struct proc *, void *, register_t *);
@@ -209,7 +208,7 @@ void	isa_defaultirq(void);
 int	isa_nmi(void);
 
 /* pmap.c */
-void	pmap_bootstrap(vm_offset_t);
+void	pmap_bootstrap(vaddr_t);
 
 /* vm_machdep.c */
 int	kvtop(caddr_t);
@@ -240,7 +239,9 @@ void	setconf(void);
 #define CPU_APMWARN		9	/* APM battery warning percentage */
 #define CPU_KBDRESET		10	/* keyboard reset under pcvt */
 #define CPU_APMHALT		11	/* halt -p hack */
-#define	CPU_MAXID		12	/* number of valid machdep ids */
+#define CPU_USERLDT		12
+#define	CPU_LONGRUN		13	/* LongRun status */
+#define	CPU_MAXID		14	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
@@ -255,6 +256,8 @@ void	setconf(void);
 	{ "apmwarn", CTLTYPE_INT }, \
 	{ "kbdreset", CTLTYPE_INT }, \
 	{ "apmhalt", CTLTYPE_INT }, \
+	{ "userldt", CTLTYPE_INT }, \
+	{ "longrun", CTLTYPE_STRUCT }, \
 }
 
 #endif /* !_I386_CPU_H_ */

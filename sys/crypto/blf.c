@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/blf.c,v 1.3.8.1 2002/06/11 03:28:34 art Exp $	*/
+/*	$OpenBSD: src/sys/crypto/blf.c,v 1.3.8.2 2003/05/19 21:53:13 tedu Exp $	*/
 
 /*
  * Blowfish block cipher for OpenBSD
@@ -122,7 +122,7 @@ Blowfish_initstate(c)
 
 /* P-box and S-box tables initialized with digits of Pi */
 
-	const blf_ctx initstate =
+	static const blf_ctx initstate =
 
 	{ {
 		{

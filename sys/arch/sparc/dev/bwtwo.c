@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/bwtwo.c,v 1.19.2.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/bwtwo.c,v 1.19.2.3 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: bwtwo.c,v 1.33 1997/05/24 20:16:02 pk Exp $ */
 
 /*
@@ -319,7 +319,7 @@ obp_name:
 
 	if (isconsole) {
 		fbwscons_console_init(&sc->sc_sunfb, &bwtwo_stdscreen, -1,
-		    NULL, bwtwo_burner);
+		    bwtwo_burner);
 	}
 
 #if defined(SUN4C) || defined(SUN4M)

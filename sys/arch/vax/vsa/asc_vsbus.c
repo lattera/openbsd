@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/asc_vsbus.c,v 1.4.4.1 2002/10/29 00:28:14 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/asc_vsbus.c,v 1.4.4.2 2003/05/19 21:46:10 tedu Exp $	*/
 /*	$NetBSD: asc_vsbus.c,v 1.22 2001/02/04 20:36:32 ragge Exp $	*/
 
 /*-
@@ -280,7 +280,7 @@ asc_vsbus_attach(struct device *parent, struct device *self, void *aux)
 
 	sc->sc_freq = ASC_FREQUENCY;
 
-	/* gimme Mhz */
+	/* gimme MHz */
 	sc->sc_freq /= 1000000;
 
 	scb_vecalloc(va->va_cvec, (void (*)(void *)) ncr53c9x_intr,

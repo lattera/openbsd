@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.61.2.2 2002/06/11 03:36:50 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.61.2.3 2003/05/19 21:45:32 tedu Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -99,12 +99,6 @@
 #ifdef SYSVMSG
 #include <sys/msg.h>
 #endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
-#ifdef SYSVSHM
-#include <sys/shm.h>
-#endif
 
 #include <machine/autoconf.h>
 #include <machine/bugio.h>
@@ -202,7 +196,7 @@ void netintr(void *);
 void myetheraddr(u_char *);
 int fpu_gettype(void);
 int memsize162(void);
-int memsize1x7(void);
+int memsize1x7(void);	/* in locore */
 int memsize(void);
 
 void
@@ -314,18 +308,6 @@ again:
 	    (name) = (type *)v; v = (caddr_t)((name)+(num))
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
-#ifdef SYSVSHM
-	shminfo.shmmax = shmmaxpgs;
-	shminfo.shmall = shmmaxpgs;
-	shminfo.shmseg = shmseg;
-	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-	valloc(sema, struct semid_ds, seminfo.semmni);
-	valloc(sem, struct sem, seminfo.semmns);
-	/* This is pretty disgusting! */
-	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
 #ifdef SYSVMSG
 	valloc(msgpool, char, msginfo.msgmax);
 	valloc(msgmaps, struct msgmap, msginfo.msgseg);
@@ -535,9 +517,9 @@ identifycpu()
 #ifdef MVME147
 	case CPU_147:
 		bcopy(&brdid.suffix, suffix, sizeof brdid.suffix);
-		sprintf(suffix, "MVME%x", brdid.model, suffix);
+		snprintf(suffix, sizeof suffix, "MVME%x", brdid.model, suffix);
 		cpuspeed = pccspeed((struct pccreg *)IIOV(0xfffe1000));
-		sprintf(speed, "%02d", cpuspeed);
+		snprintf(speed, sizeof speed, "%02d", cpuspeed);
 		break;
 #endif
 #if defined(MVME162) || defined(MVME167) || defined(MVME172) || defined(MVME177)
@@ -565,8 +547,8 @@ identifycpu()
 		break;
 #endif
 	}
-	sprintf(cpu_model, "Motorola %s: %sMHz MC680%c0 CPU",
-	    suffix, speed, mc);
+	snprintf(cpu_model, sizeof cpu_model,
+	    "Motorola %s: %sMHz MC680%c0 CPU", suffix, speed, mc);
 	switch (mmutype) {
 #if defined(M68060) || defined(M68040)
 	case MMU_68060:
@@ -575,31 +557,30 @@ identifycpu()
 		bcopy(&fpsp_tab, &fpvect_tab,
 				(&fpvect_end - &fpvect_tab) * sizeof (fpvect_tab));
 #endif
-		strcat(cpu_model, "+MMU");
+		strlcat(cpu_model, "+MMU", sizeof cpu_model);
 		break;
 #endif
 	case MMU_68030:
-		strcat(cpu_model, "+MMU");
+		strlcat(cpu_model, "+MMU", sizeof cpu_model);
 		break;
 	case MMU_68851:
-		strcat(cpu_model, ", MC68851 MMU");
+		strlcat(cpu_model, ", MC68851 MMU", sizeof cpu_model);
 		break;
 	default:
 		printf("%s\n", cpu_model);
 		panic("unknown MMU type %d", mmutype);
 	}
-	len = strlen(cpu_model);
 	switch (mmutype) {
 #if defined(M68060)
 	case MMU_68060:
-		len += sprintf(cpu_model + len,
-		    "+FPU, 8k on-chip physical I/D caches");
+		strlcat(cpu_model,"+FPU, 8k on-chip physical I/D caches",
+		    sizeof cpu_model);
 		break;
 #endif
 #if defined(M68040)
 	case MMU_68040:
-		len += sprintf(cpu_model + len,
-		    "+FPU, 4k on-chip physical I/D caches");
+		strlcat(cpu_model, "+FPU, 4k on-chip physical I/D caches",
+		    sizeof cpu_model);
 		break;
 #endif
 #if defined(M68030) || defined(M68020)
@@ -611,11 +592,12 @@ identifycpu()
 			break;
 		case FPU_68881:
 		case FPU_68882:
-			len += sprintf(cpu_model + len, ", MC6888%d FPU",
-			    fputype);
+			len = strlen (cpu_model);
+			snprintf(cpu_model + len, sizeof cpu_model - len,
+			    ", MC6888%d FPU", fputype);
 			break;
 		default:
-			len += sprintf(cpu_model + len, ", unknown FPU", speed);
+			strlcat(cpu_model, ", unknown FPU", sizeof cpu_model);
 			break;
 		}
 		break;
@@ -1209,71 +1191,6 @@ memsize162()
 	}
 }
 #endif
-
-#if defined(MVME162) || defined(MVME167) || defined(MVME177) || defined(MVME172)
-#include <mvme68k/dev/memcreg.h>
-/*
- * XXX
- * finish writing this
- * 1) it is ugly
- * 2) it only looks at the first MEMC040/MCECC controller
- */
-int
-memsize1x7()
-{
-	struct memcreg *memc = (struct memcreg *)0xfff43000;
-	u_long   x;
-
-	x = MEMC_MEMCONF_RTOB(memc->memc_memconf);
-	return (x);
-}
-#endif
-
-int
-memsize()
-{
-	volatile unsigned int *look;
-	unsigned int *max;
-	extern char *end;
-#define MAXPHYSMEM (unsigned long)0x10000000 	/* max physical memory */
-#define PATTERN   0x5a5a5a5a
-#define STRIDE    (4*1024) 	/* 4k at a time */
-#define Roundup(value, stride) (((unsigned)(value) + (stride) - 1) & ~((stride)-1))
-	/* 
-	 * Put machine specific exception vectors in place.
-	 */
-	initvectors();
-	/*
-	 * count it up.
-	 */
-	max = (void *)MAXPHYSMEM;
-	for (look = (void *)Roundup(end, STRIDE); look < max;
-		 look = (int *)((unsigned)look + STRIDE)) {
-		unsigned save;
-
-		if (badvaddr((vaddr_t)look, 2)) {
-#if defined(DEBUG)
-			printf("%x\n", look);
-#endif
-			look = (int *)((int)look - STRIDE);
-			break;
-		}
-
-		/*
-		 * If we write a value, we expect to read the same value back.
-		 * We'll do this twice, the 2nd time with the opposite bit
-		 * pattern from the first, to make sure we check all bits.
-		 */
-		save = *look;
-		if (*look = PATTERN, *look != PATTERN)
-			break;
-		if (*look = ~PATTERN, *look != ~PATTERN)
-			break;
-		*look = save;
-	}
-	physmem = btoc(trunc_page((unsigned)look)); /* in pages */
-	return (trunc_page((unsigned)look));
-}
 
 /*
  * Boot console routines: 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.5.2.2 2002/10/29 00:28:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.5.2.3 2003/05/19 21:49:43 tedu Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*
@@ -491,18 +491,19 @@ vgafb_putcmap(vc, cm)
 {
 	u_int index = cm->index;
 	u_int count = cm->count;
-	int i;
+	u_int i;
+	int error;
 	u_int8_t *r, *g, *b;
 
 	if (index >= 256 || count > 256 - index)
 		return EINVAL;
-	if (!uvm_useracc(cm->red, count, B_READ) ||
-	    !uvm_useracc(cm->green, count, B_READ) ||
-	    !uvm_useracc(cm->blue, count, B_READ))
-		return EFAULT;
-	copyin(cm->red,   &(vc->vc_cmap_red[index]),   count);
-	copyin(cm->green, &(vc->vc_cmap_green[index]), count);
-	copyin(cm->blue,  &(vc->vc_cmap_blue[index]),  count);
+
+	if ((error = copyin(cm->red, &vc->vc_cmap_red[index], count)) != 0)
+		return (error);
+	if ((error = copyin(cm->green, &vc->vc_cmap_green[index], count)) != 0)
+		return (error);
+	if ((error = copyin(cm->blue, &vc->vc_cmap_blue[index], count)) != 0)
+		return (error);
 
 	r = &(vc->vc_cmap_red[index]);
 	g = &(vc->vc_cmap_green[index]);

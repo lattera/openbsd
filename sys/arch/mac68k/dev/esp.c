@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/esp.c,v 1.14.4.1 2002/06/11 03:36:18 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/esp.c,v 1.14.4.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: esp.c,v 1.59 1996/10/13 02:59:48 christos Exp $	*/
 
 /*
@@ -212,7 +212,7 @@ espattach(parent, self, aux)
 
 	sc->sc_id = 7;
 
-	/* gimme Mhz */
+	/* gimme MHz */
 	sc->sc_freq /= 1000000;
 
 	/*

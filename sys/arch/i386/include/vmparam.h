@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/vmparam.h,v 1.23.2.1 2002/06/11 03:35:54 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/vmparam.h,v 1.23.2.2 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.15 1994/10/27 04:16:34 cgd Exp $	*/
 
 /*-
@@ -67,7 +67,7 @@
 #define	DFLDSIZ		(64*1024*1024)		/* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(1*1024*1024*1024)	/* max data size */
+#define	MAXDSIZ		(1024*1024*1024)	/* max data size */
 #endif
 #ifndef	DFLSSIZ
 #define	DFLSSIZ		(4*1024*1024)		/* initial stack size limit */
@@ -75,6 +75,9 @@
 #ifndef	MAXSSIZ
 #define	MAXSSIZ		(32*1024*1024)		/* max stack size */
 #endif
+
+/* I386 has a line where all code is executable: 0 - I386_MAX_EXE_ADDR */
+#define I386_MAX_EXE_ADDR 0x20000000		/* exec line */
 
 /*
  * Size of shared memory map
@@ -104,11 +107,11 @@
 #define PTDPTDI		PDSLOT_PTE
 
 /* user/kernel map constants */
-#define VM_MIN_ADDRESS		((vm_offset_t)0)
-#define VM_MAXUSER_ADDRESS	((vm_offset_t)((PTDPTDI<<PDSHIFT) - USPACE))
-#define VM_MAX_ADDRESS		((vm_offset_t)((PTDPTDI<<PDSHIFT) + (PTDPTDI<<PGSHIFT)))
-#define VM_MIN_KERNEL_ADDRESS	((vm_offset_t)KERNBASE)
-#define VM_MAX_KERNEL_ADDRESS	((vm_offset_t)(APTDPTDI<<PDSHIFT))
+#define VM_MIN_ADDRESS		((vaddr_t)0)
+#define VM_MAXUSER_ADDRESS	((vaddr_t)((PTDPTDI<<PDSHIFT) - USPACE))
+#define VM_MAX_ADDRESS		((vaddr_t)((PTDPTDI<<PDSHIFT) + (PTDPTDI<<PGSHIFT)))
+#define VM_MIN_KERNEL_ADDRESS	((vaddr_t)KERNBASE)
+#define VM_MAX_KERNEL_ADDRESS	((vaddr_t)(APTDPTDI<<PDSHIFT))
 
 /* virtual sizes (bytes) for various kernel submaps */
 #define VM_PHYS_SIZE		(USRIOSIZE*PAGE_SIZE)

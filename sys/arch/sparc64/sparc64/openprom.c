@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.2.6.2 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.2.6.3 2003/05/19 21:46:58 tedu Exp $	*/
 /*	$NetBSD: openprom.c,v 1.4 2002/01/10 06:21:53 briggs Exp $ */
 
 /*
@@ -217,13 +217,15 @@ openpromioctl(dev, cmd, data, flags, p)
 		s = splhigh();
 		error = OF_nextprop(node, name, nextprop);
 		splx(s);
-		if (error == 0) {
-			op->op_buflen = 0;
-			error = subyte(op->op_buf, 0);
-			break;
-		}
 		if (error == -1) {
 			error = EINVAL;
+			break;
+		}
+		if (error == 0) {
+			char nul = '\0';
+
+			op->op_buflen = 0;
+			error = copyout(&nul, op->op_buf, sizeof(char));
 			break;
 		}
 		len = strlen(nextprop);

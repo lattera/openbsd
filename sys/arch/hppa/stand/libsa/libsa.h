@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/libsa.h,v 1.7.12.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/libsa.h,v 1.7.12.3 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -33,7 +33,6 @@
 #include <lib/libsa/stand.h>
 
 #define	EXEC_ELF
-/* #define	EXEC_ECOFF */
 #define	EXEC_SOM
 
 #define	DEFAULT_KERNEL_ADDRESS	0
@@ -65,22 +64,21 @@ void ite_pollc(dev_t, int);
 void machdep(void);
 void devboot(dev_t, char *);
 void fcacheall(void);
+void run_loadfile(u_long *marks, int howto);
 
-int     lif_open(char *path, struct open_file *f);
-int     lif_close(struct open_file *f);
-int     lif_read(struct open_file *f, void *buf,
-                size_t size, size_t *resid);
-int     lif_write(struct open_file *f, void *buf,
-		size_t size, size_t *resid);
-off_t   lif_seek(struct open_file *f, off_t offset, int where);
-int     lif_stat(struct open_file *f, struct stat *sb);
-int     lif_readdir(struct open_file *f, char *name);
+int lif_open(char *path, struct open_file *f);
+int lif_close(struct open_file *f);
+int lif_read(struct open_file *f, void *buf, size_t size, size_t *resid);
+int lif_write(struct open_file *f, void *buf, size_t size, size_t *resid);
+off_t lif_seek(struct open_file *f, off_t offset, int where);
+int lif_stat(struct open_file *f, struct stat *sb);
+int lif_readdir(struct open_file *f, char *name);
 
 union x_header;
 struct x_param;
-int	som_probe(int, union x_header *);
-int	som_load(int, struct x_param *);
-int	som_ldsym(int, struct x_param *);
+int som_probe(int, union x_header *);
+int som_load(int, struct x_param *);
+int som_ldsym(int, struct x_param *);
 
 extern int debug;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.4.4.1 2002/06/11 03:36:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.4.4.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*  pm_direct.c 1.22 01/09/97 Takashi Hamada */
 
 /*
@@ -520,6 +520,7 @@ pm_intr_pm1(void)
 		printf( "pm: PM is not ready. error code=%08x\n", rval );
 #endif
 		splx(s);
+		return;
 	}
 
 	if ((pmdata.data[2] & 0x10) == 0x10) {
@@ -779,6 +780,7 @@ pm_intr_pm2(void)
 		printf( "pm: PM is not ready. error code: %08x\n", rval );
 #endif
 		splx(s);
+		return;
 	}
 
 	switch( (u_int)(pmdata.data[2] & 0xff) ) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/db_machdep.h,v 1.16.2.2 2002/10/29 00:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/db_machdep.h,v 1.16.2.3 2003/05/19 21:49:44 tedu Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.13 1996/04/29 20:50:08 leo Exp $	*/
 
 /*
@@ -49,7 +49,7 @@ struct powerpc_saved_state {
 	struct trapframe tf;
 };
 typedef struct powerpc_saved_state db_regs_t;
-db_regs_t	ddb_regs;		/* register state */
+extern	db_regs_t ddb_regs;		/* register state */
 #define DDB_REGS	(&ddb_regs)
 
 #define	PC_REGS(regs)	((regs)->tf.srr0)

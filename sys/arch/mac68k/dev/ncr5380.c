@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ncr5380.c,v 1.16.4.2 2002/10/29 00:28:05 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ncr5380.c,v 1.16.4.3 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: ncr5380.c,v 1.38 1996/12/19 21:48:18 scottr Exp $	*/
 
 /*
@@ -74,11 +74,11 @@ static volatile int	main_running = 0;
 static u_char	busy;
 
 static void	ncr5380_minphys(struct buf *bp);
-static int	ncr5380_scsi_cmd(struct scsi_xfer *xs);
+static int	mac68k_ncr5380_scsi_cmd(struct scsi_xfer *xs);
 static void	ncr5380_show_scsi_cmd(struct scsi_xfer *xs);
 
 struct scsi_adapter ncr5380_switch = {
-	ncr5380_scsi_cmd,		/* scsi_cmd()			*/
+	mac68k_ncr5380_scsi_cmd,	/* scsi_cmd()			*/
 	ncr5380_minphys,		/* scsi_minphys()		*/
 	0,				/* open_target_lu()		*/
 	0				/* close_target_lu()		*/
@@ -187,11 +187,11 @@ extern __inline__ void finish_req(SC_REQ *reqp)
 	sps = splbio();
 	reqp->next = free_head;
 	free_head  = reqp;
-	splx(sps);
 
 	xs->flags |= ITSDONE;
 	if (!(reqp->dr_flag & DRIVER_LINKCHK))
 		scsi_done(xs);
+	splx(sps);
 }
 
 /*
@@ -286,7 +286,7 @@ void		*auxp;
  * Carry out a request from the high level driver.
  */
 static int
-ncr5380_scsi_cmd(struct scsi_xfer *xs)
+mac68k_ncr5380_scsi_cmd(struct scsi_xfer *xs)
 {
 	int	sps;
 	SC_REQ	*reqp, *link, *tmp;

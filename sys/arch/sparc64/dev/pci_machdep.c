@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.6.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.6.2 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.22 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*
@@ -336,42 +336,42 @@ pci_make_tag(pc, b, d, f)
 	return (tag);
 }
 
-pcireg_t (*sparc64_pci_conf_read)(pci_chipset_tag_t, pcitag_t, int);
-void (*sparc64_pci_conf_write)(pci_chipset_tag_t, pcitag_t, int, pcireg_t);
-
-void
-pci_conf_setfunc(rd, wr)
-	pcireg_t (*rd)(pci_chipset_tag_t, pcitag_t, int);
-	void (*wr)(pci_chipset_tag_t, pcitag_t, int, pcireg_t);
-{
-	sparc64_pci_conf_read = rd;
-	sparc64_pci_conf_write = wr;
-}
-
 /* assume we are mapped little-endian/side-effect */
 pcireg_t
-pci_conf_read(pc, tag, reg)
-	pci_chipset_tag_t pc;
-	pcitag_t tag;
-	int reg;
+pci_conf_read(pci_chipset_tag_t pc, pcitag_t tag, int reg)
 {
-	if (sparc64_pci_conf_read == NULL)
-		panic("no pci_conf_read");
-	return ((*sparc64_pci_conf_read)(pc, tag, reg));
+        pcireg_t val = (pcireg_t)~0;
+
+        DPRINTF(SPDB_CONF, ("pci_conf_read: tag %lx reg %x ",
+                (long)PCITAG_OFFSET(tag), reg));
+        if (PCITAG_NODE(tag) != -1) {
+                val = bus_space_read_4(pc->bustag, pc->bushandle,
+                        PCITAG_OFFSET(tag) + reg);
+        }
+#ifdef DEBUG
+        else DPRINTF(SPDB_CONF, ("pci_conf_read: bogus pcitag %x\n",
+            (int)PCITAG_OFFSET(tag)));
+#endif
+        DPRINTF(SPDB_CONF, (" returning %08x\n", (u_int)val));
+
+        return (val);
 }
 
 void
-pci_conf_write(pc, tag, reg, data)
-	pci_chipset_tag_t pc;
-	pcitag_t tag;
-	int reg;
-	pcireg_t data;
+pci_conf_write(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t data)
 {
-	if (sparc64_pci_conf_write == NULL)
-		panic("no pci_conf_read");
-	return ((*sparc64_pci_conf_write)(pc, tag, reg, data));
-}
+        DPRINTF(SPDB_CONF, ("pci_conf_write: tag %lx; reg %x; data %x; ",
+                (long)PCITAG_OFFSET(tag), reg, (int)data));
 
+        /* If we don't know it, just punt. */
+        if (PCITAG_NODE(tag) == -1) {
+                DPRINTF(SPDB_CONF, ("pci_config_write: bad addr"));
+                return;
+        }
+
+        bus_space_write_4(pc->bustag, pc->bushandle,
+                PCITAG_OFFSET(tag) + reg, data);
+}
 
 /*
  * interrupt mapping foo.
@@ -415,7 +415,11 @@ pci_intr_map(pa, ihp)
 
 	/* XXXX -- we use the ino.  What if there is a valid IGN? */
 	*ihp = interrupts;
-	return (0);
+
+	if (pa->pa_pc->intr_map)
+		return ((*pa->pa_pc->intr_map)(pa, ihp));
+	else
+		return (0);
 }
 
 const char *
@@ -426,7 +430,7 @@ pci_intr_string(pc, ih)
 	static char str[16];
 
 	DPRINTF(SPDB_INTR, ("pci_intr_string: ih %u", ih));
-	sprintf(str, "ivec %x", ih);
+	snprintf(str, sizeof str, "ivec %x", ih);
 	DPRINTF(SPDB_INTR, ("; returning %s\n", str));
 
 	return (str);
@@ -454,7 +458,8 @@ pci_intr_establish(pc, ih, level, func, arg, what)
 	void *cookie;
 	struct psycho_pbm *pp = (struct psycho_pbm *)pc->cookie;
 
-	DPRINTF(SPDB_INTR, ("pci_intr_establish: ih %lu; level %d", (u_long)ih, level));
+	DPRINTF(SPDB_INTR, ("pci_intr_establish: ih %lu; level %d",
+	    (u_long)ih, level));
 	cookie = bus_intr_establish(pp->pp_memt, ih, level, 0, func, arg);
 
 	DPRINTF(SPDB_INTR, ("; returning handle %p\n", cookie));

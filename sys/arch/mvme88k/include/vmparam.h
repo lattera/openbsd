@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18.2.2 2002/06/11 03:37:10 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18.2.3 2003/05/19 21:45:53 tedu Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -107,11 +107,27 @@
 /*
  * pmap-specific data stored in the vm_physmem[] array.
  */
-#define __HAVE_PMAP_PHYSSEG
-struct pmap_physseg {
-	struct pv_entry *pvent;		/* pv table for this seg */
-	char *attrs;			/* page modify list for this seg */
+
+/* XXX - belongs in pmap.h, but put here because of ordering issues */
+struct pv_entry {
+	struct pv_entry	*pv_next;	/* next pv_entry */
+	struct pmap	*pv_pmap;	/* pmap where mapping lies */
+	vaddr_t		pv_va;		/* virtual address for mapping */
+	int		pv_flags;
 };
+
+#define	__HAVE_VM_PAGE_MD
+struct vm_page_md {
+	struct pv_entry pvent;
+};
+
+#define	VM_MDPAGE_INIT(pg) do {			\
+	(pg)->mdpage.pvent.pv_next = NULL;	\
+	(pg)->mdpage.pvent.pv_pmap = PMAP_NULL;	\
+	(pg)->mdpage.pvent.pv_va = 0;		\
+	(pg)->mdpage.pvent.pv_flags = 0;	\
+} while (0)
+
 #endif /* _LOCORE */
 
 #endif /* _MACHINE_VM_PARAM_ */

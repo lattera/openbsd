@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.19.2.1 2002/06/11 03:36:18 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.19.2.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*	$NetBSD: grf.c,v 1.41 1997/02/24 06:20:04 scottr Exp $	*/
 
 /*
@@ -369,7 +369,7 @@ grfmap(dev, addrp, p)
 	vn.v_rdev = dev;	/* XXX */
 
 	error = uvm_mmap(&p->p_vmspace->vm_map, (vm_offset_t *)addrp,
-	    (vm_size_t)len, VM_PROT_ALL, VM_PROT_ALL, flags, (caddr_t)&vn, 0,
+	    (vm_size_t)len, UVM_PROT_RW, UVM_PROT_RW, flags, (caddr_t)&vn, 0,
 	    p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur);
 
 	/* Offset into page: */

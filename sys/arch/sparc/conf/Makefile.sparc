@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.19.4.2 2002/10/29 00:28:09 art Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.19.4.3 2003/05/19 21:46:32 tedu Exp $
 # 	$NetBSD: Makefile.sparc,v 1.32.4.1 1996/06/12 20:26:32 pk Exp $
 
 # Makefile for OpenBSD
@@ -24,10 +24,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -48,6 +44,9 @@ CDIAGFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 CMACHFLAGS=	-mcpu=supersparc
 .else
 CMACHFLAGS=
+.endif
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
 .endif
 
 CFLAGS=		${DEBUG} -O2 ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}

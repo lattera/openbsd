@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/stand/boot/Makefile,v 1.9.10.1 2002/10/29 00:28:11 art Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/boot/Makefile,v 1.9.10.2 2003/05/19 21:46:33 tedu Exp $
 #	$NetBSD: Makefile,v 1.2 1995/09/30 21:43:38 pk Exp $
 
 .PATH:	${.CURDIR}/../common
@@ -26,7 +26,7 @@ ${PROG}: ${OBJS} ${LIBS} elfclean
 	./elfclean elf
 	objcopy -j .text -j .data -j .bss -O a.out-sparc-netbsd elf a.out
 	@size a.out
-	(echo -n 01 | tr 01 '\01\03'; tail +3c a.out) > ${.TARGET}
+	(echo -n 01 | tr 01 '\01\03'; tail +3c a.out) | dd obs=512 conv=osync > ${.TARGET}
 	@rm a.out elf
 
 srt0.o: srt0.S

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.13.2.1 2002/06/11 03:39:19 art Exp $	 */
+/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.13.2.2 2003/05/19 21:46:09 tedu Exp $	 */
 /*	$NetBSD: clock.c,v 1.35 2000/06/04 06:16:58 matt Exp $	 */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -181,7 +181,7 @@ cpu_initclocks()
 	 * device for vmstat's sake, until it can be replaced.
 	 */
 	static struct device clockdev;
-	strcpy(clockdev.dv_xname, "clock");
+	strlcpy(clockdev.dv_xname, "clock", sizeof clockdev.dv_xname);
 
 	mtpr(-10000, PR_NICR); /* Load in count register */
 	mtpr(0x800000d1, PR_ICCS); /* Start clock and enable interrupt */

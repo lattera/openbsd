@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1.8.1 2002/06/11 03:36:49 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1.8.2 2003/05/19 21:45:31 tedu Exp $ */
 
 /*
  * Copyright (c) 1994 Michael L. Hitch
@@ -1418,7 +1418,7 @@ sshintr(sc)
 }
 
 /*
- * This is based on the Progressive Peripherals 33Mhz Zeus driver and will
+ * This is based on the Progressive Peripherals 33MHz Zeus driver and will
  * not be correct for other 53c710 boards.
  *
  */

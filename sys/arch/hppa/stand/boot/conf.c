@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.12.8.2 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.12.8.3 2003/05/19 21:43:13 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -36,22 +36,22 @@
 #include <lib/libsa/cd9660.h>
 #include <dev/cons.h>
 
-const char version[] = "0.7";
+const char version[] = "0.8";
 int	debug = 0;
 
 struct fs_ops file_system[] = {
-	{ lif_open,    lif_close,    lif_read,    lif_write,    lif_seek,
-	  lif_stat,    lif_readdir    },
 	{ ufs_open,    ufs_close,    ufs_read,    ufs_write,    ufs_seek,
 	  ufs_stat,    ufs_readdir    },
 	{ cd9660_open, cd9660_close, cd9660_read, cd9660_write, cd9660_seek,
 	  cd9660_stat, cd9660_readdir },
+	{ lif_open,    lif_close,    lif_read,    lif_write,    lif_seek,
+	  lif_stat,    lif_readdir    },
 };
 int nfsys = NENTS(file_system);
 
 struct devsw devsw[] = {
-	{ "ct",	iodcstrategy, ctopen, ctclose, noioctl },
 	{ "dk",	iodcstrategy, dkopen, dkclose, noioctl },
+	{ "ct",	iodcstrategy, ctopen, ctclose, noioctl },
 	{ "lf", iodcstrategy, lfopen, lfclose, noioctl }
 };
 int	ndevs = NENTS(devsw);

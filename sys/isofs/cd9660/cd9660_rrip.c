@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_rrip.c,v 1.5.14.1 2002/06/11 03:29:20 art Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_rrip.c,v 1.5.14.2 2003/05/19 21:53:27 tedu Exp $	*/
 /*	$NetBSD: cd9660_rrip.c,v 1.17 1997/01/24 00:27:32 cgd Exp $	*/
 
 /*-
@@ -298,7 +298,7 @@ cd9660_rrip_defname(v, ana)
 {
 	struct iso_directory_record *isodir = v;
 
-	strcpy(ana->outbuf, "..");
+	strlcpy(ana->outbuf, "..", ana->maxlen - *ana->outlen);
 	switch (*isodir->name) {
 	default:
 		isofntrans(isodir->name, isonum_711(isodir->name_len),

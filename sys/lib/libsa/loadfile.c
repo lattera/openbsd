@@ -1,5 +1,5 @@
 /* $NetBSD: loadfile.c,v 1.10 2000/12/03 02:53:04 tsutsui Exp $ */
-/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.6.1 2002/06/11 03:30:09 art Exp $ */
+/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.6.2 2003/05/19 21:53:42 tedu Exp $ */
 
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -279,7 +279,7 @@ elf_exec(fd, elf, marks, flags)
 	size_t sz;
 	int first;
 	int havesyms;
-	paddr_t minp = ~0, maxp = 0, pos;
+	paddr_t minp = ~0, maxp = 0, pos = 0;
 	paddr_t offset = marks[MARK_START], shpp, elfp;
 
 	for (first = 1, i = 0; i < elf->e_phnum; i++) {
@@ -349,11 +349,9 @@ elf_exec(fd, elf, marks, flags)
 	/*
 	 * Copy the ELF and section headers.
 	 */
-	maxp = roundup(maxp, sizeof(long));
-	if (flags & (LOAD_HDR|COUNT_HDR)) {
-		elfp = maxp;
+	elfp = maxp = roundup(maxp, sizeof(long));
+	if (flags & (LOAD_HDR|COUNT_HDR))
 		maxp += sizeof(Elf_Ehdr);
-	}
 
 	if (flags & (LOAD_SYM|COUNT_SYM)) {
 		if (lseek(fd, elf->e_shoff, SEEK_SET) == -1)  {
@@ -361,7 +359,6 @@ elf_exec(fd, elf, marks, flags)
 			return 1;
 		}
 		sz = elf->e_shnum * sizeof(Elf_Shdr);
-
 		shp = ALLOC(sz);
 
 		if (read(fd, shp, sz) != sz) {
@@ -411,11 +408,11 @@ elf_exec(fd, elf, marks, flags)
 		}
 		if (flags & LOAD_SYM) {
 			BCOPY(shp, shpp, sz);
-			FREE(shp, sz);
 
 			if (havesyms && first == 0)
 				PROGRESS(("]"));
 		}
+		FREE(shp, sz);
 	}
 
 	/*

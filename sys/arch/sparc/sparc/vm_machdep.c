@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40.2.3 2002/10/29 00:28:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40.2.4 2003/05/19 21:46:33 tedu Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -300,7 +300,7 @@ dvma_mapout(kva, va, len)
 	klen = round_page(len + off);
 
 #if defined(SUN4M)
-	if (cputyp == CPU_SUN4M)
+	if (CPU_ISSUN4M)
 		iommu_remove(kva, klen);
 	else
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.8.8.1 2002/06/11 03:35:36 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.8.8.2 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -80,6 +80,13 @@ cpumatch(parent, cfdata, aux)
 	return 1;
 }
 
+int
+cpu_hardclock(void *v)
+{
+	hardclock(v);
+	return (1);
+}
+
 void
 cpuattach(parent, self, aux)
 	struct device *parent;
@@ -136,7 +143,7 @@ cpuattach(parent, self, aux)
 	printf ("%d", mhz / 100);
 	if (mhz % 100 > 9)
 		printf(".%02d", mhz % 100);
-	printf("MHz, ");
+	printf("MHz");
 
 	if (fpu_enable) {
 		u_int32_t ver[2];
@@ -149,12 +156,9 @@ cpuattach(parent, self, aux)
 		    :: "r" (&ver) : "memory");
 		mtctl(0, CR_CCR);
 		ver[0] = HPPA_FPUVER(ver[0]);
-		printf("FPU %s rev %d",
+		printf(", FPU %s rev %d",
 		    hppa_mod_info(HPPA_TYPE_FPU, ver[0] >> 5), ver[0] & 0x1f);
 	}
-
-	/* if (pdc_model.sh)
-		printf("shadows, "); */
 
 	printf("\n%s: ", self->dv_xname);
 	p = "";
@@ -186,7 +190,7 @@ cpuattach(parent, self, aux)
 	/* sanity against lusers amongst config editors */
 	if (ca->ca_irq == 31)
 		sc->sc_ih = cpu_intr_establish(IPL_CLOCK, ca->ca_irq,
-		    clock_intr, NULL /*trapframe*/, &sc->sc_dev);
+		    cpu_hardclock, NULL /*frame*/, &sc->sc_dev);
 	else
 		printf ("%s: bad irq %d\n", sc->sc_dev.dv_xname, ca->ca_irq);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_43.c,v 1.11.2.1 2002/06/11 03:28:07 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_43.c,v 1.11.2.2 2003/05/19 21:51:44 tedu Exp $	*/
 /*	$NetBSD: kern_info_43.c,v 1.5 1996/02/04 02:02:22 christos Exp $	*/
 
 /*
@@ -278,17 +278,17 @@ compat_43_sys_getkerninfo(p, v, retval)
 
 		bsdi_si.bsdi_ostype = ((char *)(s - bsdi_strings)) +
 				       sizeof(bsdi_si);
-		strcpy(s, ostype);
+		strlcpy(s, ostype, bsdi_strings + sizeof bsdi_strings - s);
 		s += strlen(s) + 1;
 
 		bsdi_si.bsdi_osrelease = ((char *)(s - bsdi_strings)) +
 					  sizeof(bsdi_si);
-		strcpy(s, osrelease);
+		strlcpy(s, osrelease, bsdi_strings + sizeof bsdi_strings - s);
 		s += strlen(s) + 1;
 
 		bsdi_si.bsdi_machine = ((char *)(s - bsdi_strings)) +
 					sizeof(bsdi_si);
-		strcpy(s, machine);
+		strlcpy(s, machine, bsdi_strings + sizeof bsdi_strings - s);
 		s += strlen(s) + 1;
 
 		needed = sizeof(bsdi_si) + (s - bsdi_strings);

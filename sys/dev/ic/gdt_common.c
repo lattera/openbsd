@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.16.2.2 2002/10/29 00:33:25 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.16.2.3 2003/05/19 21:54:24 tedu Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
@@ -209,7 +209,7 @@ gdt_attach(gdt)
 		for (i = 0; i < gdt->sc_bus_cnt; i++) {
 			id = gdt->sc_scratch[GDT_IOC_HDR_SZ +
 			    i * GDT_RAWIOC_SZ + GDT_RAWIOC_PROC_ID];
-			gdt->sc_bus_id[id] = id < GDT_MAXID ? id : 0xff;
+			gdt->sc_bus_id[id] = id < GDT_MAXBUS ? id : 0xff;
 		}
 
 	} else {
@@ -893,9 +893,10 @@ gdt_internal_cache_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "ICP	   ");
-		sprintf(inq.product, "Host drive  #%02d", target);
-		strcpy(inq.revision, "	 ");
+		strlcpy(inq.vendor, "ICP	   ", sizeof inq.vendor);
+		snprintf(inq.product, sizeof inq.product, "Host drive  #%02d",
+		    target);
+		strlcpy(inq.revision, "	 ", sizeof inq.revision);
 		gdt_copy_internal_data(xs, (u_int8_t *)&inq, sizeof inq);
 		break;
 
@@ -1456,7 +1457,7 @@ gdt_ioctl(dev, cmd, addr)
 			p->revision = osrelease[4] - '0';
 		else
 			p->revision = 0;
-		strcpy(p->name, ostype);
+		strlcpy(p->name, ostype, sizeof p->name);
 		break;
 	}
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/RAMDISK,v 1.2.2.1 2002/06/11 03:36:49 art Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/RAMDISK,v 1.2.2.2 2003/05/19 21:45:31 tedu Exp $
 
 machine		mvme68k m68k
 
@@ -23,6 +23,7 @@ maxusers	32
 
 option		SCSITERSE
 option		SMALL_KERNEL
+option		NO_PROPOLICE
 option		TIMEZONE=0	# time zone to adjust RTC time by
 option		DST=0		# daylight saving time used by RTC
 #makeoptions	DEBUG="-g"	# compile full symbol table

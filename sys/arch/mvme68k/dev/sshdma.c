@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.8.2 2002/10/29 00:28:07 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshdma.c,v 1.1.8.3 2003/05/19 21:45:31 tedu Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -116,7 +116,7 @@ void *auxp;
 	 */
 	sc->sc_clock_freq = cpuspeed * 2;
 #ifdef MVME177
-	/* MVME177 ssh clock documented as fixed 50Mhz in VME177A/HX */
+	/* MVME177 ssh clock documented as fixed 50MHz in VME177A/HX */
 	if (cputyp == CPU_177)
 		sc->sc_clock_freq = 50;
 #endif

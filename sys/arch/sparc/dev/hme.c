@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34.4.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34.4.3 2003/05/19 21:46:32 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -1127,8 +1127,11 @@ hme_mii_statchg(self)
 	struct hme_softc *sc = (struct hme_softc *)self;
 	struct hme_cr *cr = sc->sc_cr;
 
-	if (sc->sc_mii.mii_media_active & IFM_FDX)
+	if ((IFM_OPTIONS(sc->sc_mii.mii_media_active) & IFM_FDX) != 0) {
 		cr->tx_cfg |= CR_TXCFG_FULLDPLX;
-	else
+		sc->sc_arpcom.ac_if.if_flags |= IFF_SIMPLEX;
+	} else {
 		cr->tx_cfg &= ~CR_TXCFG_FULLDPLX;
+		sc->sc_arpcom.ac_if.if_flags &= ~IFF_SIMPLEX;
+	}
 }

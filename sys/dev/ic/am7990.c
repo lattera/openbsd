@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/am7990.c,v 1.27.4.1 2002/06/11 03:42:17 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/am7990.c,v 1.27.4.2 2003/05/19 21:54:24 tedu Exp $	*/
 /*	$NetBSD: am7990.c,v 1.22 1996/10/13 01:37:19 christos Exp $	*/
 
 /*-
@@ -148,6 +148,7 @@ am7990_config(sc)
 #ifdef LANCE_REVC_BUG
 	ifp->if_flags &= ~IFF_MULTICAST;
 #endif
+	ifp->if_baudrate = IF_Mbps(10);
 	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Attach the interface. */
@@ -617,9 +618,6 @@ am7990_tint(sc)
 			if (tmd.tmd3 & LE_T3_LCAR) {
 				if (sc->sc_nocarrier)
 					(*sc->sc_nocarrier)(sc);
-				else
-					printf("%s: lost carrier\n",
-					    sc->sc_dev.dv_xname);
 			}
 			if (tmd.tmd3 & LE_T3_LCOL)
 				ifp->if_collisions++;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/db_interface.c,v 1.9.2.1 2002/06/11 03:38:16 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/db_interface.c,v 1.9.2.2 2003/05/19 21:46:32 tedu Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.18 1997/09/01 00:16:31 pk Exp $ */
 
 /*
@@ -57,7 +57,6 @@
 #include <machine/bsd_openprom.h>
 #include <machine/ctlreg.h>
 #include <sparc/sparc/asm.h>
-
 
 /*
  * Read bytes from kernel address space for debugger.
@@ -154,6 +153,8 @@ struct db_variable db_regs[] = {
 struct db_variable *db_eregs = db_regs + sizeof(db_regs)/sizeof(db_regs[0]);
 
 extern label_t	*db_recover;
+
+db_regs_t	ddb_regs;	/* register state */
 
 int	db_active = 0;
 

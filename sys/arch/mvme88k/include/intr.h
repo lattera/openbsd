@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.6.2.1 2002/06/11 03:37:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.6.2.2 2003/05/19 21:45:53 tedu Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.
@@ -83,16 +83,29 @@ extern int intrcnt[M88K_NIRQ];
 #ifdef _KERNEL
 #ifndef _LOCORE
 unsigned setipl(unsigned level);
-#ifdef DDB
-unsigned db_setipl(unsigned level);
-#endif 
 int spl0(void);
-#endif /* _LOCORE */
 
 /* needs major cleanup - XXX nivas */
 
 /* SPL asserts */
-#define	splassert(wantipl)	/* nothing */
+#ifdef DIAGNOSTIC
+/*
+ * Although this function is implemented in MI code, it must be in this MD
+ * header because we don't want this header to include MI includes.
+ */
+void splassert_fail(int, int, const char *);
+extern int splassert_ctl;
+void splassert_check(int, const char *);
+#define splassert(__wantipl) do {			\
+	if (__predict_false(splassert_ctl > 0)) {	\
+		splassert_check(__wantipl, __func__);	\
+	}						\
+} while (0)
+#else
+#define	splassert(wantipl)	do { /* nothing */ } while (0)
+#endif
+
+#endif /* _LOCORE */
 
 #if 0
 spl0 is a function by itself. I really am serious about the clean up
@@ -121,11 +134,6 @@ above...
 #define splhigh()		setipl(IPL_HIGH)
 
 #define splx(x)		((x) ? setipl((x)) : spl0())
-
-#ifdef DDB
-#define db_splx(x)	db_setipl((x))
-#define db_splhigh()    db_setipl(IPL_HIGH)
-#endif /* DDB */
 
 #endif /* _KERNEL */
 #endif /* _MVME88K_INTR_H_ */

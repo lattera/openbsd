@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/bi/Attic/if_ni.c,v 1.3.2.1 2002/10/29 00:28:12 art Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/if_ni.c,v 1.3.2.2 2003/05/19 21:46:09 tedu Exp $ */
 /*	$NetBSD: if_ni.c,v 1.15 2002/05/22 16:03:14 wiz Exp $ */
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -287,7 +287,7 @@ niattach(parent, self, aux)
 	fqb->nf_dlen = PKTHDR+TXADD;
 	fqb->nf_rlen = PKTHDR+RXADD;
 
-	strcpy(ifp->if_xname, sc->sc_dev.dv_xname);
+	strlcpy(ifp->if_xname, sc->sc_dev.dv_xname, sizeof ifp->if_xname);
 	ifp->if_softc = sc;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
 	ifp->if_start = nistart;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84.2.3 2002/10/29 00:28:03 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84.2.4 2003/05/19 21:45:11 tedu Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -116,13 +116,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
         (dev_type_stop((*))) enodev, 0,  dev_init(c,n,select), \
         (dev_type_mmap((*))) enodev, 0 }
 
-/* open, close, read, ioctl, mmap */
-#define	cdev_bktr_init(c, n) { \
-        dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
-        (dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) enodev, 0, seltrue, \
-        dev_init(c,n,mmap) }
-
 /* open, close, read, ioctl */
 #define	cdev_wdt_init(c, n) { \
 	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
@@ -180,7 +173,6 @@ cdev_decl(music);
 cdev_decl(xfs_dev);
 #endif
 #include "bktr.h"
-cdev_decl(bktr);
 #include "wdt.h"
 cdev_decl(wdt);
 #include "ksyms.h"
@@ -212,8 +204,6 @@ cdev_decl(pci);
 #endif
 
 #include "pf.h"
-
-#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -315,7 +305,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),
 #endif
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
-	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
+	cdev_notdef(),			/* 74: ALTQ (deprecated) */
 	cdev_iop_init(NIOP,iop),	/* 75: I2O IOP control interface */
 	cdev_radio_init(NRADIO, radio), /* 76: generic radio I/O */
 	cdev_usbdev_init(NUSCANNER,uscanner),	/* 77: USB scanners */
@@ -366,7 +356,7 @@ getnulldev()
 	return makedev(mem_no, 2);
 }
 
-static int chrtoblktbl[] = {
+int chrtoblktbl[] = {
 	/* XXXX This needs to be dynamic for LKMs. */
 	/*VCHR*/	/*VBLK*/
 	/*  0 */	NODEV,
@@ -425,42 +415,7 @@ static int chrtoblktbl[] = {
 	/* 53 */	NODEV,
 	/* 54 */	19,
 };
-
-/*
- * Convert a character device number to a block device number.
- */
-dev_t
-chrtoblk(dev)
-	dev_t dev;
-{
-	int blkmaj;
-
-	if (major(dev) >= nchrdev ||
-	    major(dev) > sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]))
-		return (NODEV);
-	blkmaj = chrtoblktbl[major(dev)];
-	if (blkmaj == NODEV)
-		return (NODEV);
-	return (makedev(blkmaj, minor(dev)));
-}
-
-/*
- * Convert a block device number to a character device number.
- */
-dev_t
-blktochr(dev)
-	dev_t dev;
-{
-	int blkmaj = major(dev);
-	int i;
-
-	if (blkmaj >= nblkdev)
-		return (NODEV);
-	for (i = 0; i < sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]); i++)
-		if (blkmaj == chrtoblktbl[i])
-			return (makedev(i, minor(dev)));
-	return (NODEV);
-}
+int nchrtoblktbl = sizeof(chrtoblktbl) / sizeof(chrtoblktbl[0]);
 
 /*
  * In order to map BSD bdev numbers of disks to their BIOS equivalents

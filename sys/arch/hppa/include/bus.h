@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.14.2.1 2002/06/11 03:35:37 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.14.2.2 2003/05/19 21:49:41 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -166,6 +166,12 @@ struct hppa_bus_space_tag {
 typedef const struct hppa_bus_space_tag *bus_space_tag_t;
 extern const struct hppa_bus_space_tag hppa_bustag;
 
+/* flags for bus space map functions */
+#define	BUS_SPACE_MAP_CACHEABLE		0x0001
+#define	BUS_SPACE_MAP_LINEAR		0x0002
+#define	BUS_SPACE_MAP_READONLY		0x0004
+#define	BUS_SPACE_MAP_PREFETCHABLE	0x0008
+
 /* bus access routines */
 
 #define	bus_space_map(t,a,c,ca,hp) \
@@ -285,6 +291,8 @@ extern const struct hppa_bus_space_tag hppa_bustag;
 
 #define	bus_space_barrier(t,h,o,l,op) \
 	((t)->hbt_barrier((t)->hbt_cookie, (h), (o), (l), (op)))
+#define	bus_space_vaddr(t,h,o,l,op) \
+	((t)->hbt_vaddr((t)->hbt_cookie, (h), (o), (l), (op)))
 
 #define	BUS_DMA_WAITOK		0x000	/* safe to sleep (pseudo-flag) */
 #define	BUS_DMA_NOWAIT		0x001	/* not safe to sleep */

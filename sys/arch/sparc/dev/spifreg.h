@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.6.8.2 2002/10/29 00:28:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.6.8.3 2003/05/19 21:46:32 tedu Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -387,8 +387,8 @@ struct spifregs {
 /*
  * "verosc" node tells which oscillator we have.
  */
-#define	SPIF_OSC9	1		/* 9.8304 Mhz */
-#define	SPIF_OSC10	2		/* 10Mhz */
+#define	SPIF_OSC9	1		/* 9.8304 MHz */
+#define	SPIF_OSC10	2		/* 10MHz */
 
 /*
  * There are two interrupts, serial gets interrupt[0], and parallel

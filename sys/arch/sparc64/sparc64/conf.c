@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.3 2002/10/29 00:28:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.4 2003/05/19 21:46:57 tedu Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -115,8 +115,6 @@ cdev_decl(pci);
 #include "uscanner.h"
 
 #include "pf.h"
-
-#include <altq/altqconf.h>
 
 #ifdef XFS
 #include <xfs/nxfs.h>
@@ -243,7 +241,7 @@ struct cdevsw	cdevsw[] =
 	cdev_tty_init(NMTTY,mtty),	/* 71: magma serial ports */
 	cdev_gen_init(NMBPP,mbpp),	/* 72: magma parallel ports */
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
-	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
+	cdev_notdef(),			/* 74: ALTQ (deprecated) */
 	cdev_crypto_init(NCRYPTO,crypto), /* 75: /dev/crypto */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 76 *: Kernel symbols device */
 	cdev_tty_init(NSABTTY,sabtty),	/* 77: sab82532 serial ports */
@@ -339,7 +337,7 @@ getnulldev(void)
 	return makedev(mem_no, 2);
 }
 
-static int chrtoblktbl[] = {
+int chrtoblktbl[] = {
 	/* XXXX This needs to be dynamic for LKMs. */
 	/*VCHR*/	/*VBLK*/
 	/*  0 */	NODEV,
@@ -466,39 +464,4 @@ static int chrtoblktbl[] = {
 	/*121 */	25,
 	/*122 */	NODEV,
 };
-
-/*
- * Routine to convert from character to block device number.
- */
-dev_t
-chrtoblk(dev)
-	dev_t dev;
-{
-	int blkmaj;
-
-	if (major(dev) >= nchrdev)
-		return (NODEV);
-	blkmaj = chrtoblktbl[major(dev)];
-	if (blkmaj == NODEV)
-		return (NODEV);
-	return (makedev(blkmaj, minor(dev)));
-}
-
-/*
- * Convert a character device number to a block device number.
- */
-dev_t
-blktochr(dev)
-	dev_t dev;
-{
-	int blkmaj = major(dev);
-	int i;
-
-	if (blkmaj >= nblkdev)
-		return (NODEV);
-	for (i = 0; i < sizeof(chrtoblktbl)/sizeof(chrtoblktbl[0]); i++)
-		if (blkmaj == chrtoblktbl[i])
-			return (makedev(i, minor(dev)));
-	return (NODEV);
-}
-
+int nchrtoblktbl = sizeof(chrtoblktbl) / sizeof(chrtoblktbl[0]);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/intr.c,v 1.17.2.2 2002/10/29 00:28:10 art Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/sparc/intr.c,v 1.17.2.3 2003/05/19 21:46:32 tedu Exp $ */
 /*	$NetBSD: intr.c,v 1.20 1997/07/29 09:42:03 fair Exp $ */
 
 /*
@@ -105,7 +105,7 @@ strayintr(fp)
 }
 
 static struct intrhand level10 = { clockintr, NULL, (IPL_CLOCK << 8) };
-static struct intrhand level14 = { statintr, NULL, (14 << 8) /* XXX - IPL_STATCLOCK */ };
+static struct intrhand level14 = { statintr, NULL, (IPL_STATCLOCK << 8) };
 union sir sir;
 /*
  * Level 1 software interrupt (could also be Sbus level 1 interrupt).

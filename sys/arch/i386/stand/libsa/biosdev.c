@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.c,v 1.52.18.1 2002/06/11 03:35:55 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.c,v 1.52.18.2 2003/05/19 21:45:12 tedu Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -189,7 +189,7 @@ biosd_rw(rw, dev, cyl, head, sect, nsect, buf)
 			  "xchgb %%ch, %%cl\n\t"
 			  "rorb  $2, %%cl\n\t"
 			  "orb %b5, %%cl\n\t"
-			  "incl %%cx\n\t"
+			  "inc %%cx\n\t"
 			  DOINT(0x13) "\n\t"
 			  "setc %b0"
 			  : "=a" (rv)

@@ -1,5 +1,5 @@
 	.file	"reg_div.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_div.s,v 1.1.26.1 2002/10/29 00:30:52 art Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_div.s,v 1.1.26.2 2003/05/19 21:52:32 tedu Exp $	*/
 /*
  *  reg_div.S
  *
@@ -245,8 +245,8 @@ L_arg2_not_inf:
 #endif DENORM_OPERAND
 
 L_copy_arg1:
-	movb	TAG(%esi),%ax
-	movb	%ax,TAG(%edi)
+	movb	TAG(%esi),%al
+	movb	%al,TAG(%edi)
 	movl	EXP(%esi),%eax
 	movl	%eax,EXP(%edi)
 	movl	SIGL(%esi),%eax

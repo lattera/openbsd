@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyucv.c,v 1.4.6.1 2002/06/11 03:35:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyucv.c,v 1.4.6.2 2003/05/19 21:49:42 tedu Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -21,6 +21,6 @@ mpyucv(opnd1,opnd2,result)
 	unsigned int opnd1, opnd2;
 	struct mdsfu_register *result;
 {
-	impyu(&opnd1,&opnd2,result);
+	u_xmpy(&opnd1,&opnd2,result);
 	overflow = FALSE;
 }
