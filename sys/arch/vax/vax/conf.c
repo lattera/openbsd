@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.13 1997/09/10 12:04:43 maja Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.14 1997/11/23 05:21:59 mickey Exp $ */
 /*	$NetBSD: conf.c,v 1.28 1997/02/04 19:13:17 ragge Exp $	*/
 
 /*-
@@ -326,7 +326,6 @@ cdev_decl(qv);
 #include "qd.h"
 cdev_decl(qd);
 
-cdev_decl(ipl);
 #ifdef IPFILTER
 #define NIPF 1
 #else

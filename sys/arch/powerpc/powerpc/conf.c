@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/conf.c,v 1.5 1997/10/28 10:36:13 pefo Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/conf.c,v 1.6 1997/11/23 05:21:58 mickey Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -121,8 +121,6 @@ cdev_decl(random);
  
 cdev_decl(lkm);
 
-/* open, close, read, ioctl */
-cdev_decl(ipl);
 #ifdef IPFILTER
 #define NIPF 1
 #else   
