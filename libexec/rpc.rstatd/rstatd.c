@@ -32,7 +32,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rstatd.c,v 1.6 1995/01/13 06:14:31 mycroft Exp $";
+static char rcsid[] = "$Id: rstatd.c,v 1.1.1.1 1995/10/18 08:43:21 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -112,7 +112,7 @@ main(argc, argv)
 		exit(1);
 	}
 
-        svc_run();
+	svc_run();
 	syslog(LOG_ERR, "svc_run returned");
 	exit(1);
 }
