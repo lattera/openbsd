@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.11.2.2 2002/03/09 00:20:44 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.11.2.3 2002/04/22 19:56:42 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -22,6 +22,9 @@ void    buffer_put_bignum(Buffer *, BIGNUM *);
 void    buffer_put_bignum2(Buffer *, BIGNUM *);
 void	buffer_get_bignum(Buffer *, BIGNUM *);
 void	buffer_get_bignum2(Buffer *, BIGNUM *);
+
+u_short	buffer_get_short(Buffer *);
+void    buffer_put_short(Buffer *, u_short);
 
 u_int	buffer_get_int(Buffer *);
 void    buffer_put_int(Buffer *, u_int);
