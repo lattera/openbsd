@@ -14,11 +14,12 @@
  */
 
 #include "includes.h"
-RCSID("$Id: readconf.c,v 1.22 1999/12/01 13:59:15 markus Exp $");
+RCSID("$Id: readconf.c,v 1.23 2000/02/28 19:51:58 markus Exp $");
 
 #include "ssh.h"
 #include "cipher.h"
 #include "readconf.h"
+#include "match.h"
 #include "xmalloc.h"
 
 /* Format of the configuration file:
