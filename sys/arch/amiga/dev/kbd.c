@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/kbd.c,v 1.6 2002/03/14 01:26:29 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/kbd.c,v 1.7 2002/06/11 03:25:43 miod Exp $	*/
 /*	$NetBSD: kbd.c,v 1.28 1996/12/23 09:10:22 veego Exp $	*/
 
 /*
@@ -60,7 +60,6 @@
 #include <amiga/dev/vuid_event.h>
 #include "kbd.h"
 
-#include <sys/conf.h>
 #include <machine/conf.h>
 
 struct kbd_softc {
