@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100 2001/07/07 22:22:04 provos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100.2.1 2002/06/24 18:19:05 miod Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -1106,6 +1106,7 @@ findpcb:
 			 */
 			am->m_len = sizeof(struct sockaddr_in6);
 			sin6 = mtod(am, struct sockaddr_in6 *);
+			bzero(sin6, sizeof(*sin6));
 			sin6->sin6_family = AF_INET6;
 			sin6->sin6_len = sizeof(struct sockaddr_in6);
 			sin6->sin6_addr = ipv6->ip6_src;
@@ -1131,6 +1132,7 @@ findpcb:
 			}
 			am->m_len = sizeof(struct sockaddr_in);
 			sin = mtod(am, struct sockaddr_in *);
+			bzero(sin, sizeof(*sin));
 			sin->sin_family = AF_INET;
 			sin->sin_len = sizeof(*sin);
 			sin->sin_addr = ip->ip_src;
