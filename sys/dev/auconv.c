@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/auconv.c,v 1.3 2001/05/01 01:49:48 aaron Exp $ */
 /*	$NetBSD: auconv.c,v 1.3 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*
