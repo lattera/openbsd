@@ -1,0 +1,39 @@
+/*	$OpenBSD: src/share/misc/getopt,v 1.4 2001/07/15 20:54:20 pvalchev Exp $	*/
+/*
+ * Main/getopt(3) fragment.
+ *
+ *	from: @(#)getopt	5.3 (Berkeley) 3/28/94
+ */
+
+#include <sys/types.h>
+
+#include <stdlib.h>
+
+void usage __P((void));
+
+int
+main(argc, argv)
+	int argc;
+	char *argv[];
+{
+	int ch;
+
+	while ((ch = getopt(argc, argv, "")) != -1)
+		switch (ch) {
+		case '':
+			break;
+		case '?':
+		default:
+			usage();
+		}
+	argc -= optind;
+	argv += optind;
+}
+
+void
+usage()
+{
+	extern char *__progname;
+	(void)fprintf(stderr, "usage: %s [-abc] [-f file]\n", __progname);
+	exit(1);
+}
