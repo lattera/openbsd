@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.42 2003/05/28 11:23:19 henric Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.42.2.1 2004/05/14 21:29:59 brad Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*
@@ -739,8 +739,10 @@ fxp_intr(arg)
 	struct fxp_softc *sc = arg;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	u_int8_t statack;
-	int claimed = 0, rnr;
-
+	bus_dmamap_t rxmap;
+	int claimed = 0;
+	int rnr = 0;
+	
 	/*
 	 * If the interface isn't running, don't try to
 	 * service the interrupt.. just ack it and bail.
@@ -756,8 +758,7 @@ fxp_intr(arg)
 
 	while ((statack = CSR_READ_1(sc, FXP_CSR_SCB_STATACK)) != 0) {
 		claimed = 1;
-		rnr = 0;
-
+		rnr = (statack & FXP_SCB_STATACK_RNR) ? 1 : 0;
 		/*
 		 * First ACK all the interrupts in this pass.
 		 */
@@ -808,7 +809,6 @@ fxp_intr(arg)
 		 */
 		if (statack & (FXP_SCB_STATACK_FR | FXP_SCB_STATACK_RNR)) {
 			struct mbuf *m;
-			bus_dmamap_t rxmap;
 			u_int8_t *rfap;
 rcvloop:
 			m = sc->rfa_headm;
@@ -860,15 +860,16 @@ rcvloop:
 				}
 				goto rcvloop;
 			}
-			if (rnr) {
-				rxmap = *((bus_dmamap_t *)
-				    sc->rfa_headm->m_ext.ext_buf);
-				fxp_scb_wait(sc);
-				CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
+		}
+		if (rnr) {
+			rxmap = *((bus_dmamap_t *)
+				  sc->rfa_headm->m_ext.ext_buf);
+			fxp_scb_wait(sc);
+			CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
 				    rxmap->dm_segs[0].ds_addr +
 				    RFA_ALIGNMENT_FUDGE);
-				fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
-			}
+			fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
+			
 		}
 	}
 	return (claimed);
