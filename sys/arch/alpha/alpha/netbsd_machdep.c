@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.4 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.5 2003/03/27 23:18:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996 Carnegie-Mellon University.
@@ -113,7 +113,6 @@ netbsd_sendsig(catcher, sig, mask, code, type, val)
 	struct trapframe *frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack, fsize, rndfsize;
-	extern char netbsd_sigcode[], netbsd_esigcode[];
 	struct netbsd_sigcontext nbsc;
 
 	frame = p->p_md.md_tf;
@@ -201,8 +200,7 @@ netbsd_sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Set up the registers to return to netbsd_sigcode.
 	 */
-	frame->tf_regs[FRAME_PC] =
-	    (u_int64_t)PS_STRINGS - (netbsd_esigcode - netbsd_sigcode);
+	frame->tf_regs[FRAME_PC] = p->p_sigcode;
 	frame->tf_regs[FRAME_A0] = sig;
 	frame->tf_regs[FRAME_A1] = code;
 	frame->tf_regs[FRAME_A2] = (u_int64_t)scp;

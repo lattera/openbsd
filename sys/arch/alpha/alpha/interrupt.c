@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.3 2001/11/13 21:00:48 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.4 2003/03/27 23:18:05 niklas Exp $ */
 /* $NetBSD: interrupt.c,v 1.46 2000/06/03 20:47:36 thorpej Exp $ */
 
 /*-
@@ -342,7 +342,7 @@ badaddr_read(void *addr, size_t size, void *rptr)
 		break;
 
 	default:
-		panic("badaddr: invalid size (%ld)\n", size);
+		panic("badaddr: invalid size (%ld)", size);
 	}
 	alpha_mb();
 	alpha_mb();	/* MAGIC ON SOME SYSTEMS */

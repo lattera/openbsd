@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/files.hp300,v 1.12.2.3 2001/12/05 00:39:09 niklas Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/files.hp300,v 1.12.2.4 2003/03/27 23:19:19 niklas Exp $
 #	$NetBSD: files.hp300,v 1.28 1997/05/12 08:23:28 thorpej Exp $
 #
 # hp300-specific configuration info
@@ -197,8 +197,6 @@ file	arch/hp300/dev/dma.c
 
 file	dev/cons.c
 file	dev/cninit.c
-
-file	kludge_for_in_proto.c			hy needs-flag
 
 major	{vnd = 6}
 

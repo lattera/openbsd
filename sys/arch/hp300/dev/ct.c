@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/ct.c,v 1.7.14.1 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/ct.c,v 1.7.14.2 2003/03/27 23:19:19 niklas Exp $	*/
 /*	$NetBSD: ct.c,v 1.21 1997/04/02 22:37:23 scottr Exp $	*/
 
 /*
@@ -448,7 +448,7 @@ ctcommand(dev, cmd, cnt)
 #endif
 		}
 		ctstrategy(bp);
-		iowait(bp);
+		biowait(bp);
 	}
 	bp->b_flags = 0;
 	sc->sc_flags &= ~CTF_CMD;

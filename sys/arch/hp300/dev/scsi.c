@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/scsi.c,v 1.10.12.1 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/scsi.c,v 1.10.12.2 2003/03/27 23:19:20 niklas Exp $	*/
 /*	$NetBSD: scsi.c,v 1.21 1997/05/05 21:08:26 thorpej Exp $	*/
 
 /*
@@ -40,9 +40,6 @@
  *	@(#)scsi.c	8.2 (Berkeley) 1/12/94
  */
 
-#ifndef DEBUG
-#define DEBUG
-#endif
 /*
  * HP9000/3xx 98658 SCSI host adaptor driver.
  */
@@ -736,7 +733,7 @@ mxfer_in(hd, len, buf, phase)
 	hd->scsi_tmod = 0;
 	for (i = 0; i < len; ++i) {
 		/*
-		 * manual sez: reset ATN before ACK is sent.
+		 * manual says: reset ATN before ACK is sent.
 		 */
 		if (hd->scsi_psns & PSNS_ATN)
 			hd->scsi_scmd = SCMD_RST_ATN;

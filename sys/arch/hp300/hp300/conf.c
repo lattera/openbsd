@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.4 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.5 2003/03/27 23:19:21 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.39 1997/05/12 08:17:53 thorpej Exp $	*/
 
 /*-
@@ -121,7 +121,6 @@ cdev_decl(fd);
 #include "bpfilter.h"
 #include "tun.h"
 #include "ksyms.h"
-cdev_decl(ksyms);   
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
@@ -129,7 +128,7 @@ cdev_decl(xfs_dev);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -183,14 +182,13 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 47 */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
 	
 	cdev_notdef(),			/* 51 */
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 52: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

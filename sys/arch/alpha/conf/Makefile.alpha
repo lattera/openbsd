@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/Makefile.alpha,v 1.17.8.4 2002/03/06 00:47:43 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/Makefile.alpha,v 1.17.8.5 2003/03/27 23:18:06 niklas Exp $
 #	$NetBSD: Makefile.alpha,v 1.27 1996/12/01 06:12:25 jonathan Exp $
 
 # Makefile for OpenBSD
@@ -18,10 +18,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -38,9 +34,9 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -Dalpha
 CDIAGFLAGS?=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
 
-CMACHFLAGS=	-mno-fp-regs
+CMACHFLAGS=	-mno-fp-regs -fno-stack-protector
 COPTS?= 	-O2
-CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-traditional -D_LOCORE
 LINKFLAGS=	-N -Ttext fffffc0000230000 -e __start -G 4
 STRIPFLAGS=	-g -X -x
@@ -104,7 +100,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${ALPHA}/alpha/genassym.cf
+assym.h: $S/kern/genassym.sh ${ALPHA}/alpha/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    ${PARAM} < ${ALPHA}/alpha/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/sio_pic.c,v 1.14.6.3 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/sio_pic.c,v 1.14.6.4 2003/03/27 23:18:06 niklas Exp $	*/
 /* $NetBSD: sio_pic.c,v 1.28 2000/06/06 03:10:13 thorpej Exp $ */
 
 /*-
@@ -439,7 +439,7 @@ sio_intr_string(v, irq)
 	static char irqstr[12];		/* 8 + 2 + NULL + sanity */
 
 	if (irq == 0 || irq >= ICU_LEN || irq == 2)
-		panic("sio_intr_string: bogus isa irq 0x%x\n", irq);
+		panic("sio_intr_string: bogus isa irq 0x%x", irq);
 
 	sprintf(irqstr, "isa irq %d", irq);
 	return (irqstr);
@@ -461,7 +461,7 @@ sio_intr_evcnt(v, irq)
 {
 
 	if (irq == 0 || irq >= ICU_LEN || irq == 2)
-		panic("sio_intr_evcnt: bogus isa irq 0x%x\n", irq);
+		panic("sio_intr_evcnt: bogus isa irq 0x%x", irq);
 
 	return (alpha_shared_intr_evcnt(sio_intr, irq));
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.3 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.4 2003/03/27 23:19:20 niklas Exp $	*/
 /*	$NetBSD: mt.c,v 1.8 1997/03/31 07:37:29 scottr Exp $	*/
 
 /* 
@@ -412,7 +412,7 @@ mtcommand(dev, cmd, cnt)
 	do {
 		bp->b_flags = B_BUSY | B_CMD;
 		mtstrategy(bp);
-		iowait(bp);
+		biowait(bp);
 		if (bp->b_flags & B_ERROR) {
 			error = (int) (unsigned) bp->b_error;
 			break;
@@ -473,7 +473,9 @@ mtstrategy(bp)
 #endif
 			bp->b_flags |= B_ERROR;
 			bp->b_error = EIO;
-			iodone(bp);
+			s = splbio();
+			biodone(bp);
+			splx(s);
 			return;
 		}
 	}
@@ -712,7 +714,7 @@ errdone:
 	bp->b_flags |= B_ERROR;
 done:
 	sc->sc_flags &= ~(MTF_HITEOF | MTF_HITBOF);
-	iodone(bp);
+	biodone(bp);
 	if ((dp = bp->b_actf))
 		dp->b_actb = bp->b_actb;
 	else
@@ -901,7 +903,7 @@ mtintr(arg)
 	cmdbuf[0] = MTE_COMPLETE | MTE_IDLE;
 	(void) hpibsend(sc->sc_hpibno, sc->sc_slave, MTL_ECMD, cmdbuf, 1);
 	bp->b_flags &= ~B_CMD;
-	iodone(bp);
+	biodone(bp);
 	if ((dp = bp->b_actf))
 		dp->b_actb = bp->b_actb;
 	else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf_rb.c,v 1.6.14.2 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf_rb.c,v 1.6.14.3 2003/03/27 23:19:19 niklas Exp $	*/
 /*	$NetBSD: grf_rb.c,v 1.11 1997/03/31 07:34:17 scottr Exp $	*/
 
 /*
@@ -135,7 +135,7 @@ rbox_intio_match(parent, match, aux)
 		return (0);
 
 	if (grf->gr_id == DIO_DEVICE_ID_FRAMEBUFFER &&
-	    grf->gr_id2 == DIO_DEVICE_SECID_RENASSIANCE) {
+	    grf->gr_id2 == DIO_DEVICE_SECID_RENAISSANCE) {
 		ia->ia_addr = (caddr_t)GRFIADDR;
 		return (1);
 	}
@@ -169,7 +169,7 @@ rbox_dio_match(parent, match, aux)
 	struct dio_attach_args *da = aux;
 
 	if (da->da_id == DIO_DEVICE_ID_FRAMEBUFFER &&
-	    da->da_secid == DIO_DEVICE_SECID_RENASSIANCE)
+	    da->da_secid == DIO_DEVICE_SECID_RENAISSANCE)
 		return (1);
 
 	return (0);

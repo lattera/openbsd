@@ -1,10 +1,12 @@
-#	$OpenBSD: src/sys/arch/hp300/stand/Makefile.inc,v 1.3 1999/08/16 09:43:07 downsj Exp $
+#	$OpenBSD: src/sys/arch/hp300/stand/Makefile.inc,v 1.3.4.1 2003/03/27 23:19:22 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.7 1997/05/12 07:43:18 thorpej Exp $
 
 BINDIR=			/usr/mdec
 
 # RELOC=FFF00000 allows for boot prog up to FF000 (1044480) bytes long
 RELOC=	FFF00000
+
+CFLAGS+=		-fno-stack-protector
 
 CPPFLAGS+=		-DDCACONSOLE -DAPCICONSOLE -DITECONSOLE -DDCMCONSOLE
 CPPFLAGS+=		-DHIL_KEYBOARD -DUK_KEYBOARD

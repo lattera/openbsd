@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/stand/common/scsi.c,v 1.1 1997/07/14 08:14:28 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/common/scsi.c,v 1.1.12.1 2003/03/27 23:19:22 niklas Exp $	*/
 /*	$NetBSD: scsi.c,v 1.7 1997/01/30 10:32:57 thorpej Exp $	*/
 
 /*
@@ -357,7 +357,7 @@ scsiicmd(hs, target, cbuf, clen, buf, len, xferphase)
 		}
 #ifdef SLOWSCSI
 		/*
-		 * XXX we have wierd transient problems with booting from
+		 * XXX we have weird transient problems with booting from
 		 * slow scsi disks on fast machines.  I have never been
 		 * able to pin the problem down, but a large delay here
 		 * seems to always work.

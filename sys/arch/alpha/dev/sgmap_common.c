@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/sgmap_common.c,v 1.1.2.4 2002/03/21 14:46:08 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/sgmap_common.c,v 1.1.2.5 2003/03/27 23:18:06 niklas Exp $ */
 /* $NetBSD: sgmap_common.c,v 1.13 2000/06/29 09:02:57 mrg Exp $ */
 
 /*-
@@ -105,7 +105,7 @@ alpha_sgmap_init(t, sgmap, name, wbase, sgvabase, sgvasize, ptesize, ptva,
 			minptalign = ptsize;
 		if (bus_dmamem_alloc(t, ptsize, minptalign, 0, &seg, 1, &rseg,
 		    BUS_DMA_NOWAIT)) {
-			panic("unable to allocate page table for sgmap `%s'\n",
+			panic("unable to allocate page table for sgmap `%s'",
 			    name);
 			goto die;
 		}

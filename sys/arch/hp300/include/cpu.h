@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.4 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.5 2003/03/27 23:19:21 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*
@@ -80,7 +80,6 @@ struct clockframe {
 };
 
 #define	CLKF_USERMODE(framep)	(((framep)->sr & PSL_S) == 0)
-#define	CLKF_BASEPRI(framep)	(((framep)->sr & PSL_IPL) == 0)
 #define	CLKF_PC(framep)		((framep)->pc)
 #if 0
 /* We would like to do it this way... */
@@ -118,7 +117,7 @@ extern int astpending;		/* need to trap before returning to user mode */
  * CTL_MACHDEP definitions.
  */
 #define	CPU_CONSDEV		1	/* dev_t: console terminal device */
-#define	CPU_CPUSPEED		2	/* CPU speed in Mhz */
+#define	CPU_CPUSPEED		2	/* CPU speed in MHz */
 #define	CPU_MACHINEID		3	/* machine id (HP_XXX) */
 #define	CPU_MMUID		4	/* mmu id (MMUID_*) */
 #define	CPU_MAXID		5	/* number of valid machdep ids */

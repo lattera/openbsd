@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.7.12.3 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.7.12.4 2003/03/27 23:19:21 niklas Exp $	*/
 /*	$NetBSD: hpux_machdep.c,v 1.19 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*
@@ -241,6 +241,9 @@ hpux_sys_getcontext(p, v, retval)
 	int l, i, error = 0;
 	int len; 
 
+	if (SCARG(uap, len) <= 0)
+		return (EINVAL);
+
 	for (i = 0; context_table[i].str != NULL; i++)
 		if (context_table[i].val == fputype)
 			break;
@@ -391,7 +394,6 @@ hpux_sendsig(catcher, sig, mask, code, type, val)
 	struct sigacts *psp = p->p_sigacts;
 	short ft;
 	int oonstack, fsize;
-	extern char sigcode[], esigcode[];
 
 	frame = (struct frame *)p->p_md.md_regs;
 	ft = frame->f_format;
@@ -531,7 +533,7 @@ hpux_sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Signal trampoline code is at base of user stack.
 	 */
-	frame->f_pc = (int)PS_STRINGS - (esigcode - sigcode);
+	frame->f_pc = p->p_sigcode;
 #ifdef DEBUG
 	if ((hpuxsigdebug & SDB_KSTACK) && p->p_pid == hpuxsigpid)
 		printf("hpux_sendsig(%d): sig %d returns\n",
@@ -547,7 +549,7 @@ hpux_sendsig(catcher, sig, mask, code, type, val)
  * Return to previous pc and psl as specified by
  * context left by sendsig. Check carefully to
  * make sure that the user has not modified the
- * psl to gain improper priviledges or to cause
+ * psl to gain improper privileges or to cause
  * a machine fault.
  */
 /* ARGSUSED */
@@ -612,17 +614,13 @@ hpux_sys_sigreturn(p, v, retval)
 	 * See if there is anything to do before we go to the
 	 * expense of copying in close to 1/2K of data
 	 */
-	flags = fuword((caddr_t)rf);
+	if (copyin((caddr_t)rf, &flags, sizeof(int)) != 0)
+		return (EINVAL);
 #ifdef DEBUG
 	if (hpuxsigdebug & SDB_FOLLOW)
 		printf("sigreturn(%d): sc_ap %x flags %x\n",
 		       p->p_pid, rf, flags);
 #endif
-	/*
-	 * fuword failed (bogus _hsc_ap value).
-	 */
-	if (flags == -1)
-		return (EINVAL);
 	if (flags == 0 || copyin((caddr_t)rf, (caddr_t)&tstate, sizeof tstate))
 		return (EJUSTRETURN);
 #ifdef DEBUG

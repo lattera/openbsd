@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/process_machdep.c,v 1.4.14.2 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/process_machdep.c,v 1.4.14.3 2003/03/27 23:18:06 niklas Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.7 1996/07/11 20:14:21 cgd Exp $	*/
 
 /*-
@@ -154,8 +154,8 @@ process_write_fpregs(p, regs)
 	struct fpreg *regs;
 {
 
-	if (p == fpcurproc)
-		fpcurproc = NULL;
+	if (p->p_addr->u_pcb.pcb_fpcpu != NULL)
+		fpusave_proc(p, 1);
 
 	bcopy(regs, process_fpframe(p), sizeof(struct fpreg));
 	return (0);
@@ -333,6 +333,8 @@ process_sstep(struct proc *p, int sstep)
 		count = 1;
 	}
 
+	if (p->p_addr->u_pcb.pcb_fpcpu != NULL)
+		fpusave_proc(p, 0);
 	p->p_md.md_sstep[0].addr = addr[0];
 	error = ptrace_set_bpt(p, &p->p_md.md_sstep[0]);
 	if (error)

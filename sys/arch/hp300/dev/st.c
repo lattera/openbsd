@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/st.c,v 1.11.4.1 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/st.c,v 1.11.4.2 2003/03/27 23:19:20 niklas Exp $	*/
 /*	$NetBSD: st.c,v 1.22 1997/04/02 22:37:38 scottr Exp $	*/
 
 /*
@@ -88,6 +88,8 @@
 #include <sys/tprintf.h>
 #include <sys/device.h>
 
+#include <sys/conf.h>
+
 #include <hp300/dev/scsireg.h>
 #include <hp300/dev/scsivar.h>
 #include <hp300/dev/stvar.h>
@@ -162,18 +164,8 @@ int st_extti = 0x01;		/* bitmask of unit numbers, do extra */
 				/* sensing so TTi display gets updated */
 #endif
 
-/* bdev_decl(st); */
-/* cdev_decl(st); */
-/* XXX we should use macros to do these... */
-int	stopen(dev_t, int, int, struct proc *);
-int	stclose(dev_t, int, int, struct proc *);
-
-int	stioctl(dev_t, u_long, caddr_t, int, struct proc *);
-int	stread(dev_t, struct uio *, int);
-int	stwrite(dev_t, struct uio *, int);
-
-void	ststrategy(struct buf *);
-int	stdump(dev_t);
+bdev_decl(st);
+cdev_decl(st);
 
 #ifdef DEBUG
 void	dumpxsense(struct st_xsense *);
@@ -795,7 +787,7 @@ stfinish(sc, bp)
 	else
 		sc->sc_tab.b_actb = bp->b_actb;
 	*bp->b_actb = dp;
-	iodone(bp);
+	biodone(bp);
 	scsifree(sc->sc_dev.dv_parent, &sc->sc_sq);
 	if (sc->sc_tab.b_actf)
 		stustart(sc->sc_dev.dv_unit);
@@ -826,8 +818,7 @@ stwrite(dev, uio, flags)
 
 /*ARGSUSED*/
 int
-stdump(dev)
-	dev_t dev;
+stdump(dev_t dev, daddr_t blkno, caddr_t va, size_t size)
 {
 	return(ENXIO);
 }
@@ -1180,7 +1171,7 @@ again:
 		if (bp->b_flags & B_DONE)
 			break;
 		bp->b_flags |= B_WANTED;
-		sleep((caddr_t)bp, PRIBIO);
+		tsleep((caddr_t)bp, PRIBIO, "stcommand", 0);
 	}
 	bp->b_flags = B_BUSY|B_READ;
 	splx(s);
@@ -1190,7 +1181,7 @@ again:
 	bp->b_blkno = 0;
 	bp->b_error = 0;
 	ststrategy(bp);
-	iowait(bp);
+	biowait(bp);
 	if (bp->b_flags & B_WANTED)
 		wakeup((caddr_t)bp);
 	bp->b_flags &= B_ERROR;

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/tc_3000_500.h,v 1.4 1996/10/30 22:41:19 niklas Exp $	*/
-/*	$NetBSD: tc_3000_500.h,v 1.2 1995/12/20 00:43:31 cgd Exp $	*/
+/* $OpenBSD: src/sys/arch/alpha/tc/tc_3000_500.h,v 1.4.14.1 2003/03/27 23:18:06 niklas Exp $ */
+/* $NetBSD: tc_3000_500.h,v 1.4 1998/10/22 01:03:09 briggs Exp $ */
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -104,3 +104,5 @@
 #define TC_3000_500_DEV_BOGUS	-1
 
 #define TC_3000_500_NCOOKIES	9
+
+extern int	tc_3000_500_fb_cnattach(u_int64_t);

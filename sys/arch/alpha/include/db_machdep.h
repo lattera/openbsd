@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7.12.3 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7.12.4 2003/03/27 23:18:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
@@ -34,8 +34,6 @@
 
 /* XXX - Need to include vm.h for boolean_t */
 #include <uvm/uvm_extern.h>
-
-#define DB_MACHINE_COMMANDS
 
 /*
  * We use Elf64 symbols in DDB.

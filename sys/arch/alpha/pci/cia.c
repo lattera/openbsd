@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.5 2002/03/28 10:06:13 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.6 2003/03/27 23:18:06 niklas Exp $ */
 /* $NetBSD: cia.c,v 1.56 2000/06/29 08:58:45 mrg Exp $ */
 
 /*-
@@ -136,11 +136,11 @@ struct cia_config cia_configuration;
 #endif
 
 #ifndef	CIA_BUS_USE_BWX
-#define	CIA_BUS_USE_BWX	0
+#define	CIA_BUS_USE_BWX	1
 #endif
 
 #ifndef CIA_PYXIS_FORCE_BWX
-#define	CIA_PYXIS_FORCE_BWX 0
+#define	CIA_PYXIS_FORCE_BWX 1
 #endif
 
 int	cia_pci_use_bwx = CIA_PCI_USE_BWX;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_6600.c,v 1.2.2.3 2002/03/28 10:06:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_6600.c,v 1.2.2.4 2003/03/27 23:18:05 niklas Exp $ */
 /* $NetBSD: dec_6600.c,v 1.7 2000/06/20 03:48:54 matt Exp $ */
 
 /*
@@ -152,7 +152,7 @@ dec_6600_cons_init()
 		    " hose = %ld\n", ctb->ctb_term_type, ctbslot,
 		    CTB_TURBOSLOT_HOSE(ctbslot));
 
-		panic("consinit: unknown console type %ld\n",
+		panic("consinit: unknown console type %ld",
 		    ctb->ctb_term_type);
 	}
 }

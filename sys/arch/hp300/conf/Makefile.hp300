@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.5 2002/03/06 00:57:22 niklas Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.6 2003/03/27 23:19:19 niklas Exp $
 #	$NetBSD: Makefile.hp300,v 1.54 1997/04/01 23:16:41 scottr Exp $
 
 # Makefile for OpenBSD
@@ -24,10 +24,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -44,9 +40,9 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dmc68020 -Dhp300
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
-CMACHFLAGS=	-msoft-float
-COPTS?=	-O2
-CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS}
+CMACHFLAGS=	-msoft-float -fno-stack-protector
+COPTS?=		-O2
+CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
 LINKFLAGS=	-n -Ttext 0 -e start
 STRIPFLAGS=	-d
@@ -150,7 +146,7 @@ LINKFLAGS+=	-S
 %LOAD
 
 assym.h: $S/kern/genassym.sh \
-	 ${M68K}/m68k/genassym.cf ${HP300}/hp300/genassym.cf
+	 ${M68K}/m68k/genassym.cf ${HP300}/hp300/genassym.cf Makefile
 	cat ${M68K}/m68k/genassym.cf ${HP300}/hp300/genassym.cf | \
 	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} ${PROF} \
 	    > assym.h.tmp && \

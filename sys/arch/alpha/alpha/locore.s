@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.3 2001/10/31 02:52:44 nate Exp $ */
-/* $NetBSD: locore.s,v 1.80 2000/09/04 00:31:59 thorpej Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.4 2003/03/27 23:18:06 niklas Exp $ */
+/* $NetBSD: locore.s,v 1.94 2001/04/26 03:10:44 ross Exp $ */
 
 /*-
  * Copyright (c) 1999, 2000 The NetBSD Foundation, Inc.
@@ -1460,319 +1460,6 @@ END(copyerr)
 /**************************************************************************/
 
 /*
- * {fu,su},{ibyte,isword,iword}, fetch or store a byte, short or word to
- * user text space.
- * {fu,su},{byte,sword,word}, fetch or store a byte, short or word to
- * user data space.
- */
-LEAF(fuword, 1)
-XLEAF(fuiword, 1)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	ldq	v0, 0(a0)
-	zap	v0, 0xf0, v0
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	RET
-	END(fuword)
-
-LEAF(fusword, 1)
-XLEAF(fuisword, 1)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	/* XXX FETCH IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	RET
-	END(fusword)
-
-LEAF(fubyte, 1)
-XLEAF(fuibyte, 1)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	/* XXX FETCH IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	RET
-	END(fubyte)
-
-LEAF(suword, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	stq	a1, 0(a0)			/* do the store. */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	mov	zero, v0
-	RET
-	END(suword)
-
-#ifdef notdef
-LEAF(suiword, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	/* XXX STORE IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	call_pal PAL_OSF1_imb			/* sync instruction stream */
-	mov	zero, v0
-	RET
-	END(suiword)
-
-LEAF(susword, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	/* XXX STORE IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	mov	zero, v0
-	RET
-	END(susword)
-
-LEAF(suisword, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	/* XXX STORE IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	call_pal PAL_OSF1_imb			/* sync instruction stream */
-	mov	zero, v0
-	RET
-	END(suisword)
-#endif /* notdef */
-
-LEAF(subyte, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	zap	a1, 0xfe, a1			/* kill arg's high bytes */
-	insbl	a1, a0, a1			/* move it to the right byte */
-	ldq_u	t0, 0(a0)			/* load quad around byte */
-	mskbl	t0, a0, t0			/* kill the target byte */
-	or	t0, a1, a1			/* put the result together */
-	stq_u	a1, 0(a0)			/* and store it. */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	mov	zero, v0
-	RET
-	END(subyte)
-
-LEAF(suibyte, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	.set at
-	zap	a1, 0xfe, a1			/* kill arg's high bytes */
-	insbl	a1, a0, a1			/* move it to the right byte */
-	ldq_u	t0, 0(a0)			/* load quad around byte */
-	mskbl	t0, a0, t0			/* kill the target byte */
-	or	t0, a1, a1			/* put the result together */
-	stq_u	a1, 0(a0)			/* and store it. */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	call_pal PAL_OSF1_imb			/* sync instruction stream */
-	mov	zero, v0
-	RET
-	END(suibyte)
-
-LEAF(fswberr, 0)
-	LDGP(pv)
-	ldiq	v0, -1
-	RET
-	END(fswberr)
-
-/**************************************************************************/
-
-#ifdef notdef
-/*
- * fuswintr and suswintr are just like fusword and susword except that if
- * the page is not in memory or would cause a trap, then we return an error.
- * The important thing is to prevent sleep() and switch().
- */
-
-LEAF(fuswintr, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswintrberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswintrberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	stq	a0, U_PCB_ACCESSADDR(at_reg)
-	.set at
-	/* XXX FETCH IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	RET
-	END(fuswintr)
-
-LEAF(suswintr, 2)
-	LDGP(pv)
-	ldiq	t0, VM_MAX_ADDRESS		/* make sure that addr */
-	cmpult	a0, t0, t1			/* is in user space. */
-	beq	t1, fswintrberr			/* if it's not, error out. */
-	/* Note: GET_CURPROC clobbers v0, t0, t8...t11. */
-	GET_CURPROC
-	mov	v0, t1
-	lda	t0, fswintrberr
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	t0, U_PCB_ONFAULT(at_reg)
-	stq	a0, U_PCB_ACCESSADDR(at_reg)
-	.set at
-	/* XXX STORE IT */
-	.set noat
-	ldq	at_reg, 0(t1)
-	ldq	at_reg, P_ADDR(at_reg)
-	stq	zero, U_PCB_ONFAULT(at_reg)
-	.set at
-	mov	zero, v0
-	RET
-	END(suswintr)
-#endif
-
-LEAF(fswintrberr, 0)
-XLEAF(fuswintr, 2)				/* XXX what is a 'word'? */
-XLEAF(suswintr, 2)				/* XXX what is a 'word'? */
-	LDGP(pv)
-	ldiq	v0, -1
-	RET
-	END(fswberr)
-
-/**************************************************************************/
-
-/*
  * Some bogus data, to keep vmstat happy, for now.
  */
 
@@ -1780,16 +1467,20 @@ XLEAF(suswintr, 2)				/* XXX what is a 'word'? */
 
 	.data
 EXPORT(intrnames)
+	.type intrnames,@object
 #ifndef EVCNT_COUNTERS
 	INTRNAMES_DEFINITION
 #endif
 EXPORT(eintrnames)
+	.type eintrnames,@object
 	.align 3
 EXPORT(intrcnt)
+	.type intrcnt,@object
 #ifndef EVCNT_COUNTERS
 	INTRCNT_DEFINITION
 #endif
 EXPORT(eintrcnt)
+	.type eintrcnt,@object
 	.text
 
 /**************************************************************************/
@@ -1905,6 +1596,63 @@ longjmp_botchmsg:
 	.asciz	"longjmp botch from %p"
 	.text
 END(longjmp)
+
+/*
+ * void sts(int rn, u_int32_t *rval);
+ * void stt(int rn, u_int64_t *rval);
+ * void lds(int rn, u_int32_t *rval);
+ * void ldt(int rn, u_int64_t *rval);
+ */
+
+#ifndef NO_IEEE
+.macro make_freg_util name, op
+	LEAF(alpha_\name, 2)
+	and	a0, 0x1f, a0
+	s8addq	a0, pv, pv
+	addq	pv, 1f - alpha_\name, pv
+	jmp	(pv)
+1:
+	rn = 0
+	.rept   32
+	\op     $f0 + rn, 0(a1)
+	RET
+	rn = rn + 1
+	.endr
+	END(alpha_\name)
+.endm
+/*
+LEAF(alpha_sts, 2)
+LEAF(alpha_stt, 2)
+LEAF(alpha_lds, 2)
+LEAF(alpha_ldt, 2)
+ */
+	make_freg_util sts, sts
+	make_freg_util stt, stt
+	make_freg_util lds, lds
+	make_freg_util ldt, ldt
+
+LEAF(alpha_read_fpcr, 0); f30save = 0; rettmp = 8; framesz = 16
+	lda	sp, -framesz(sp)
+	stt	$f30, f30save(sp)
+	mf_fpcr	$f30
+	stt	$f30, rettmp(sp)
+	ldt	$f30, f30save(sp)
+	ldq	v0, rettmp(sp)
+	lda	sp, framesz(sp)
+	RET
+END(alpha_read_fpcr)
+
+LEAF(alpha_write_fpcr, 1); f30save = 0; fpcrtmp = 8; framesz = 16
+	lda	sp, -framesz(sp)
+	stq	a0, fpcrtmp(sp)
+	stt	$f30, f30save(sp)
+	ldt	$f30, fpcrtmp(sp)
+	mt_fpcr	$f30
+	ldt	$f30, f30save(sp)
+	lda	sp, framesz(sp)
+	RET
+END(alpha_write_fpcr)
+#endif
 
 #if 0
 NESTED(transfer_check,0,0,ra,0,0)

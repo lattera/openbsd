@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/arch/alpha/include/alpha_cpu.h,v 1.4.8.1 2001/04/18 16:00:45 niklas Exp $ */
-/* $NetBSD: alpha_cpu.h,v 1.41 2000/06/08 03:10:06 thorpej Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/alpha_cpu.h,v 1.4.8.2 2003/03/27 23:18:06 niklas Exp $ */
+/* $NetBSD: alpha_cpu.h,v 1.43 2001/12/18 04:18:22 thorpej Exp $ */
 
 /*
  * Copyright (c) 1996 Carnegie-Mellon University.
@@ -208,27 +208,27 @@ struct alpha_logout_area {
 #define ALPHA_K0SEG_TO_PHYS(x)	((x) & ~ALPHA_K0SEG_BASE)
 #define ALPHA_PHYS_TO_K0SEG(x)	((x) | ALPHA_K0SEG_BASE)
 
-#define	ALPHA_PTE_VALID			0x0001
+#define	ALPHA_PTE_VALID			0x0001UL
 
-#define	ALPHA_PTE_FAULT_ON_READ		0x0002
-#define	ALPHA_PTE_FAULT_ON_WRITE	0x0004
-#define	ALPHA_PTE_FAULT_ON_EXECUTE	0x0008
+#define	ALPHA_PTE_FAULT_ON_READ		0x0002UL
+#define	ALPHA_PTE_FAULT_ON_WRITE	0x0004UL
+#define	ALPHA_PTE_FAULT_ON_EXECUTE	0x0008UL
 
-#define	ALPHA_PTE_ASM			0x0010		/* addr. space match */
-#define	ALPHA_PTE_GRANULARITY		0x0060		/* granularity hint */
+#define	ALPHA_PTE_ASM			0x0010UL	/* addr. space match */
+#define	ALPHA_PTE_GRANULARITY		0x0060UL	/* granularity hint */
 
-#define	ALPHA_PTE_PROT			0xff00
-#define	ALPHA_PTE_KR			0x0100
-#define	ALPHA_PTE_UR			0x0200
-#define	ALPHA_PTE_KW			0x1000
-#define	ALPHA_PTE_UW			0x2000
+#define	ALPHA_PTE_PROT			0xff00UL
+#define	ALPHA_PTE_KR			0x0100UL
+#define	ALPHA_PTE_UR			0x0200UL
+#define	ALPHA_PTE_KW			0x1000UL
+#define	ALPHA_PTE_UW			0x2000UL
 
 #define	ALPHA_PTE_WRITE			(ALPHA_PTE_KW | ALPHA_PTE_UW)
 
-#define	ALPHA_PTE_SOFTWARE		0x00000000ffff0000
+#define	ALPHA_PTE_SOFTWARE		0x00000000ffff0000UL
 #define	ALPHA_PTE_PALCODE		(~ALPHA_PTE_SOFTWARE) /* shorthand */
 
-#define	ALPHA_PTE_PFN			0xffffffff00000000
+#define	ALPHA_PTE_PFN			0xffffffff00000000UL
 
 #define	ALPHA_PTE_TO_PFN(pte)		((pte) >> 32)
 #define	ALPHA_PTE_FROM_PFN(pfn)		((pfn) << 32)
@@ -266,6 +266,8 @@ typedef unsigned long alpha_pt_entry_t;
 #define	ALPHA_IF_CODE_FEN	3
 #define	ALPHA_IF_CODE_OPDEC	4
 
+#ifdef _KERNEL
+
 /*
  * Translation Buffer Invalidation definitions [OSF/1 PALcode Specific]
  */
@@ -275,6 +277,8 @@ typedef unsigned long alpha_pt_entry_t;
 #define	ALPHA_TBISI(va)	alpha_pal_tbi(1, (va))		/* ITB entry for va */
 #define	ALPHA_TBISD(va)	alpha_pal_tbi(2, (va))		/* DTB entry for va */
 #define	ALPHA_TBIS(va)	alpha_pal_tbi(3, (va))		/* all for va */
+
+#endif /* _KERNEL */
 
 /*
  * Bits used in the amask instruction [EV56 and later]
@@ -301,6 +305,8 @@ typedef unsigned long alpha_pt_entry_t;
 #define	ALPHA_IMPLVER_EV5	1		/* EV5/EV56/PCA56 */
 #define	ALPHA_IMPLVER_EV6	2		/* EV6 */
 
+#ifdef _KERNEL
+
 /*
  * Maximum processor ID we allow from `whami', and related constants.
  *
@@ -324,6 +330,10 @@ const char	*alpha_dsr_sysname(void);
 unsigned long	alpha_amask(unsigned long);
 unsigned long	alpha_implver(void);
 
+#endif /* _KERNEL */
+
+/* XXX Expose the insn wrappers to userspace, for now. */
+
 static __inline unsigned long
 alpha_rpcc(void)
 {
@@ -335,6 +345,8 @@ alpha_rpcc(void)
 
 #define	alpha_mb()	__asm __volatile("mb" : : : "memory")
 #define	alpha_wmb()	__asm __volatile("mb" : : : "memory")	/* XXX */
+
+#if defined(_KERNEL) || defined(_STANDALONE)
 
 /*
  * Stubs for OSF/1 PALcode operations.
@@ -419,7 +431,7 @@ alpha_pal_swpctx(unsigned long ctx)
 		: "=r" (a0), "=r" (v0)
 		: "i" (PAL_OSF1_swpctx), "0" (a0)
 		/* clobbers t0, t8..t11, a0 (above) */
-		: "$1", "$22", "$23", "$24", "$25");
+		: "$1", "$22", "$23", "$24", "$25", "memory");
 
 	return (v0);
 }
@@ -434,7 +446,7 @@ alpha_pal_swpipl(unsigned long ipl)
 		: "=r" (a0), "=r" (v0)
 		: "i" (PAL_OSF1_swpipl), "0" (a0)
 		/* clobbers t0, t8..t11, a0 (above) */
-		: "$1", "$22", "$23", "$24", "$25");
+		: "$1", "$22", "$23", "$24", "$25", "memory");
 
 	return (v0);
 }
@@ -525,5 +537,7 @@ alpha_pal_wrval(unsigned long val)
 		/* clobbers t0, t8..t11, a0 (above) */
 		: "$1", "$22", "$23", "$24", "$25");
 }
+
+#endif /* _KERNEL */
 
 #endif /* __ALPHA_ALPHA_CPU_H__ */

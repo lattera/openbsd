@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/clock.c,v 1.6.2.1 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/clock.c,v 1.6.2.2 2003/03/27 23:19:21 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.20 1997/04/27 20:43:38 thorpej Exp $	*/
 
 /*
@@ -45,7 +45,7 @@
 
 /*
  * HPs use the MC6840 PTM with the following arrangement:
- *	Timers 1 and 3 are externally driver from a 25Mhz source.
+ *	Timers 1 and 3 are externally driver from a 25MHz source.
  *	Output from timer 3 is tied to the input of timer 2.
  * The latter makes it possible to use timers 3 and 2 together to get
  * a 32-bit countdown timer.

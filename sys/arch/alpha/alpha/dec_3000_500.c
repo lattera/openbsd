@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_3000_500.c,v 1.5.14.2 2002/03/28 10:06:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_3000_500.c,v 1.5.14.3 2003/03/27 23:18:05 niklas Exp $ */
 /* $NetBSD: dec_3000_500.c,v 1.29 2000/05/22 20:13:32 thorpej Exp $ */
 
 /*
@@ -43,7 +43,7 @@
 #include <machine/cpuconf.h>
 
 #include <dev/tc/tcvar.h>
-#include <alpha/tc/tcdsvar.h>
+#include <dev/tc/tcdsvar.h>
 #include <alpha/tc/tc_3000_500.h>
 #ifndef NEW_SCC_DRIVER
 #include <alpha/tc/sccvar.h>
@@ -178,7 +178,7 @@ badconsole:
 	printf("ctb->ctb_term_type = 0x%lx\n", ctb->ctb_term_type);
 	printf("ctb->ctb_turboslot = 0x%lx\n", ctb->ctb_turboslot);
 
-	panic("consinit: unknown console type %lu\n",
+	panic("consinit: unknown console type %lu",
 	    ctb->ctb_term_type);
 }
 
@@ -232,7 +232,7 @@ dec_3000_500_device_register(dev, aux)
 		if (parent != (struct device *)tcdsdev)
 			return;
 
-		if (ta->tcdsda_slot != b->channel)
+		if (ta->tcdsda_chip != b->channel)
 			return;
 
 		scsidev = dev;
