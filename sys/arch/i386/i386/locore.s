@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.5 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.6 2001/10/31 12:00:43 ho Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -2123,8 +2123,7 @@ IDTVEC(page)
 	TRAP(T_PAGEFLT)
 IDTVEC(rsvd)
 	ZTRAP(T_RESERVED)
-#if 0
-IDTVEC(intrspurios)
+IDTVEC(intrspurious)
 	/*
 	 * The Pentium Pro local APIC may erroneously call this vector for a
 	 * default IR7.  Just ignore it.
@@ -2134,7 +2133,6 @@ IDTVEC(intrspurios)
 	 * up that it's inconvenient to abort delivery completely..)
 	 */
 	iret
-#endif
 IDTVEC(fpu)
 #if NNPX > 0
 	/*
