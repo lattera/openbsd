@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-rsa.h,v 1.3.6.1 2001/09/27 19:03:55 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-rsa.h,v 1.3.6.2 2002/03/09 00:20:45 miod Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -26,7 +26,7 @@
 #ifndef SSH_RSA_H
 #define SSH_RSA_H
 
-int	 ssh_rsa_sign(Key *, u_char **, int *, u_char *, int);
-int	 ssh_rsa_verify(Key *, u_char *, int, u_char *, int);
+int	 ssh_rsa_sign(Key *, u_char **, u_int *, u_char *, u_int);
+int	 ssh_rsa_verify(Key *, u_char *, u_int, u_char *, u_int);
 
 #endif

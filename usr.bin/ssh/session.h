@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.6.2.2 2001/11/15 00:15:19 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.6.2.3 2002/03/09 00:20:45 miod Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -29,7 +29,7 @@
 void	 do_authenticated(Authctxt *);
 
 int	 session_open(Authctxt*, int);
-void	 session_input_channel_req(int, void *);
+int	 session_input_channel_req(Channel *, const char *);
 void	 session_close_by_pid(pid_t, int);
 void	 session_close_by_channel(int, void *);
 void	 session_destroy_all(void);

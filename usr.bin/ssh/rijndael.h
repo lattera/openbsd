@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/rijndael.h,v 1.7.2.1 2001/09/27 19:03:55 jason Exp $ */
+/*	$OpenBSD: src/usr.bin/ssh/Attic/rijndael.h,v 1.7.2.2 2002/03/09 00:20:44 miod Exp $ */
 
 /**
  * rijndael-alg-fst.h
@@ -32,8 +32,8 @@
 #define MAXKB	(256/8)
 #define MAXNR	14
 
-typedef unsigned char	u8;	
-typedef unsigned short	u16;	
+typedef unsigned char	u8;
+typedef unsigned short	u16;
 typedef unsigned int	u32;
 
 /*  The structure for key information */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.9.2.2 2002/03/09 00:20:44 miod Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -11,8 +13,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.9.2.1 2001/09/27 19:03:54 jason Exp $"); */
 
 #ifndef MPAUX_H
 #define MPAUX_H

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/uidswap.h,v 1.7.2.1 2001/09/27 19:03:56 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/uidswap.h,v 1.7.2.2 2002/03/09 00:20:45 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

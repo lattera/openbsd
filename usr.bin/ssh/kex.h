@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.22.2.1 2001/09/27 19:03:54 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.22.2.2 2002/03/09 00:20:44 miod Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -71,6 +71,8 @@ struct Enc {
 	char	*name;
 	Cipher	*cipher;
 	int	enabled;
+	u_int	key_len;
+	u_int	block_size;
 	u_char	*key;
 	u_char	*iv;
 };
@@ -115,7 +117,7 @@ Kex	*kex_setup(char *[PROPOSAL_MAX]);
 void	 kex_finish(Kex *);
 
 void	 kex_send_kexinit(Kex *);
-void	 kex_input_kexinit(int, int, void *);
+void	 kex_input_kexinit(int, u_int32_t, void *);
 void	 kex_derive_keys(Kex *, u_char *, BIGNUM *);
 
 void	 kexdh(Kex *);

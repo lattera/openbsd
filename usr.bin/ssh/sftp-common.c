@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.6.1 2001/09/27 19:03:55 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.6.2 2002/03/09 00:20:45 miod Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
@@ -144,6 +144,6 @@ fx2txt(int status)
 		return("Operation unsupported");
 	default:
 		return("Unknown status");
-	};
+	}
 	/* NOTREACHED */
 }

@@ -60,7 +60,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/rsa.c,v 1.22.2.1 2001/09/27 19:03:55 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/rsa.c,v 1.22.2.2 2002/03/09 00:20:44 miod Exp $");
 
 #include "rsa.h"
 #include "log.h"
@@ -120,14 +120,17 @@ rsa_private_decrypt(BIGNUM *out, BIGNUM *in, RSA *key)
 	return len;
 }
 
+/* calculate p-1 and q-1 */
 void
 rsa_generate_additional_parameters(RSA *rsa)
 {
 	BIGNUM *aux;
 	BN_CTX *ctx;
-	/* Generate additional parameters */
-	aux = BN_new();
-	ctx = BN_CTX_new();
+
+	if ((aux = BN_new()) == NULL)
+		fatal("rsa_generate_additional_parameters: BN_new failed");
+	if ((ctx = BN_CTX_new()) == NULL)
+		fatal("rsa_generate_additional_parameters: BN_CTX_new failed");
 
 	BN_sub(aux, rsa->q, BN_value_one());
 	BN_mod(rsa->dmq1, rsa->d, aux, ctx);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/groupaccess.h,v 1.2.6.1 2001/09/27 19:03:54 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/groupaccess.h,v 1.2.6.2 2002/03/09 00:20:44 miod Exp $	*/
 
 /*
  * Copyright (c) 2001 Kevin Steves.  All rights reserved.

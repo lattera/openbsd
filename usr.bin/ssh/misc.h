@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.4.2.1 2001/09/27 19:03:54 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.4.2.2 2002/03/09 00:20:44 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -16,6 +16,7 @@ char	*chop(char *);
 char	*strdelim(char **);
 void	 set_nonblock(int);
 void	 unset_nonblock(int);
+void	 set_nodelay(int);
 int	 a2port(const char *);
 char	*cleanhostname(char *);
 char	*colon(char *);

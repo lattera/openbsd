@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26.2.1 2001/09/27 19:03:54 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26.2.2 2002/03/09 00:20:44 miod Exp $");
 
 #include "packet.h"
 #include "match.h"
@@ -49,7 +49,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26.2.1 2001/09/27 19:03:54 jason
  * pointer over the key.  Skips any whitespace at the beginning and at end.
  */
 
-static int
+int
 hostfile_read_key(char **cpp, u_int *bitsp, Key *ret)
 {
 	char *cp;
@@ -69,17 +69,6 @@ hostfile_read_key(char **cpp, u_int *bitsp, Key *ret)
 	*cpp = cp;
 	*bitsp = key_size(ret);
 	return 1;
-}
-
-int
-auth_rsa_read_key(char **cpp, u_int *bitsp, BIGNUM * e, BIGNUM * n)
-{
-	Key *k = key_new(KEY_RSA1);
-	int ret = hostfile_read_key(cpp, bitsp, k);
-	BN_copy(e, k->rsa->e);
-	BN_copy(n, k->rsa->n);
-	key_free(k);
-	return ret;
 }
 
 static int

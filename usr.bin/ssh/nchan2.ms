@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/ssh/nchan2.ms,v 1.1.6.1 2001/11/15 00:15:19 miod Exp $
+.\"	$OpenBSD: src/usr.bin/ssh/nchan2.ms,v 1.1.6.2 2002/03/09 00:20:44 miod Exp $
 .\" 
 .\" Copyright (c) 2000 Markus Friedl.  All rights reserved.
 .\" 

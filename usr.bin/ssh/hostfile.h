@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/hostfile.h,v 1.7.2.1 2001/09/27 19:03:54 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/hostfile.h,v 1.7.2.2 2002/03/09 00:20:44 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -18,9 +18,9 @@ typedef enum {
 	HOST_OK, HOST_NEW, HOST_CHANGED
 }       HostStatus;
 
+int	 hostfile_read_key(char **, u_int *, Key *);
 HostStatus
 check_host_in_hostfile(const char *, const char *, Key *, Key *, int *);
 int	 add_host_to_hostfile(const char *, const char *, Key *);
-int	 auth_rsa_read_key(char **, u_int *, BIGNUM *, BIGNUM *);
 
 #endif
