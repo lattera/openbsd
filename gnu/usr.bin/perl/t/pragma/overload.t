@@ -1,8 +1,11 @@
 #!./perl
 
-BEGIN { unshift @INC, './lib', '../lib';
-    require Config; import Config;
+BEGIN {
+    chdir 't' if -d 't';
+    @INC = '../lib';
 }
+
+use Config;
 
 package Oscalar;
 use overload ( 
@@ -30,7 +33,7 @@ qw(
 
 sub new {
   my $foo = $_[1];
-  bless \$foo;
+  bless \$foo, $_[0];
 }
 
 sub stringify { "${$_[0]}" }
@@ -52,7 +55,9 @@ $a = new Oscalar "087";
 $b= "$a";
 
 # All test numbers in comments are off by 1.
-# So much for hard-wiring them in :-)
+# So much for hard-wiring them in :-) To fix this:
+test(1);			# 1
+
 test ($b eq $a);		# 2
 test ($b eq "087");		# 3
 test (ref $a eq "Oscalar");	# 4
@@ -252,16 +257,107 @@ $a=new Oscalar "xx";
 
 test ("b${a}c" eq "_._.b.__.xx._.__.c._"); # 88
 
+# Check inheritance of overloading;
+{
+  package OscalarI;
+  @ISA = 'Oscalar';
+}
+
+$aI = new OscalarI "$a";
+test (ref $aI eq "OscalarI");	# 89
+test ("$aI" eq "xx");		# 90
+test ($aI eq "xx");		# 91
+test ("b${aI}c" eq "_._.b.__.xx._.__.c._");		# 92
+
 # Here we test blessing to a package updates hash
 
 eval "package Oscalar; no overload '.'";
 
-test ("b${a}" eq "_.b.__.xx._"); # 89
+test ("b${a}" eq "_.b.__.xx._"); # 93
 $x="1";
 bless \$x, Oscalar;
-test ("b${a}c" eq "bxxc");	# 90
+test ("b${a}c" eq "bxxc");	# 94
 new Oscalar 1;
-test ("b${a}c" eq "bxxc");	# 91
+test ("b${a}c" eq "bxxc");	# 95
 
-# Last test is number 90.
-sub last {90}
+# Negative overloading:
+
+$na = eval { ~$a };
+test($@ =~ /no method found/);	# 96
+
+# Check AUTOLOADING:
+
+*Oscalar::AUTOLOAD = 
+  sub { *{"Oscalar::$AUTOLOAD"} = sub {"_!_" . shift() . "_!_"} ;
+	goto &{"Oscalar::$AUTOLOAD"}};
+
+eval "package Oscalar; sub comple; use overload '~' => 'comple'";
+
+$na = eval { ~$a };		# Hash was not updated
+test($@ =~ /no method found/);	# 97
+
+bless \$x, Oscalar;
+
+$na = eval { ~$a };		# Hash updated
+warn "`$na', $@" if $@;
+test !$@;			# 98
+test($na eq '_!_xx_!_');	# 99
+
+$na = 0;
+
+$na = eval { ~$aI };		# Hash was not updated
+test($@ =~ /no method found/);	# 100
+
+bless \$x, OscalarI;
+
+$na = eval { ~$aI };
+print $@;
+
+test !$@;			# 101
+test($na eq '_!_xx_!_');	# 102
+
+eval "package Oscalar; sub rshft; use overload '>>' => 'rshft'";
+
+$na = eval { $aI >> 1 };	# Hash was not updated
+test($@ =~ /no method found/);	# 103
+
+bless \$x, OscalarI;
+
+$na = 0;
+
+$na = eval { $aI >> 1 };
+print $@;
+
+test !$@;			# 104
+test($na eq '_!_xx_!_');	# 105
+
+# warn overload::Method($a, '0+'), "\n";
+test (overload::Method($a, '0+') eq \&Oscalar::numify); # 106
+test (overload::Method($aI,'0+') eq \&Oscalar::numify); # 107
+test (overload::Overloaded($aI)); # 108
+test (!overload::Overloaded('overload')); # 109
+
+test (! defined overload::Method($aI, '<<')); # 110
+test (! defined overload::Method($a, '<')); # 111
+
+test (overload::StrVal($aI) =~ /^OscalarI=SCALAR\(0x[\da-fA-F]+\)$/); # 112
+test (overload::StrVal(\$aI) eq "@{[\$aI]}"); # 113
+
+# Check overloading by methods (specified deep in the ISA tree).
+{
+  package OscalarII;
+  @ISA = 'OscalarI';
+  sub Oscalar::lshft {"_<<_" . shift() . "_<<_"}
+  eval "package OscalarI; use overload '<<' => 'lshft', '|' => 'lshft'";
+}
+
+$aaII = "087";
+$aII = \$aaII;
+bless $aII, 'OscalarII';
+bless \$fake, 'OscalarI';		# update the hash
+test(($aI | 3) eq '_<<_xx_<<_');	# 114
+# warn $aII << 3;
+test(($aII << 3) eq '_<<_087_<<_');	# 115
+
+# Last test is:
+sub last {115}
