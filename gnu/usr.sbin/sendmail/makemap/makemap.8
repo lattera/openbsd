@@ -1,4 +1,4 @@
-.\" Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.
+.\" Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
 .\"	 All rights reserved.
 .\" Copyright (c) 1988, 1991, 1993
 .\"	The Regents of the University of California.  All rights reserved.
@@ -8,11 +8,11 @@
 .\" the sendmail distribution.
 .\"
 .\"
-.\"     $Sendmail: makemap.8,v 8.21 1999/07/30 06:15:31 gshapiro Exp $
+.\"     $Id: makemap.8,v 8.21.16.5 2000/12/29 18:12:20 gshapiro Exp $
 .\"
-.TH MAKEMAP 8 "November 16, 1992"
+.TH MAKEMAP 8 "$Date: 2000/12/29 18:12:20 $"
 .SH NAME
-.B makemap
+makemap
 \- create database maps for sendmail
 .SH SYNOPSIS
 .B makemap
@@ -21,7 +21,15 @@
 .RB [ \-N ]
 .RB [ \-c
 .IR cachesize ]
-.RB [ \-d "] [" \-e "] [" \-f "] [" \-l "] [" \-o "] [" \-r "] [" \-s "] [" \-u "] [" \-v ]
+.RB [ \-d ]
+.RB [ \-e ]
+.RB [ \-f ]
+.RB [ \-l ]
+.RB [ \-o ]
+.RB [ \-r ]
+.RB [ \-s ]
+.RB [ \-u ]
+.RB [ \-v ]
 .I 
 maptype mapnam
 .SH DESCRIPTION
@@ -79,8 +87,9 @@ the specified
 .SS Flags
 .TP  
 .B \-C
-Use the specified sendmail configuration file for 
-looking up the TrustedUser option.
+Use the specified
+.B sendmail
+configuration file for looking up the TrustedUser option.
 .TP 
 .B \-N
 Include the null byte that terminates strings 

@@ -1,6 +1,6 @@
 divert(-1)
 #
-# Copyright (c) 1999 Sendmail, Inc. and its suppliers.
+# Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
 #	All rights reserved.
 #
 # By using this file, you agree to the terms and conditions set
@@ -10,7 +10,7 @@ divert(-1)
 #
 #  Definitions for Makefile construction for sendmail
 #
-#	$Sendmail: manpage.m4,v 8.10 1999/10/27 05:17:55 gshapiro Exp $
+#	$Id: manpage.m4,v 8.10.16.2 2000/09/17 17:04:23 gshapiro Exp $
 #
 divert(0)dnl
 
@@ -69,7 +69,7 @@ ifdef(`confNO_MAN_INSTALL', `divert(-1)', `dnl')
 define(`bldMAN_INSTALL_CMD', 
 `	${INSTALL} -c -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} bldGET_MAN_BASE_NAME($1).`${MAN'bldGET_MAN_SOURCE_NUM($1)`SRC}' `${DESTDIR}${MAN'bldGET_MAN_SOURCE_NUM($1)}/bldGET_MAN_BASE_NAME($1)`.${MAN'bldGET_MAN_SOURCE_NUM($1)`EXT}'
 ifdef(`confINSTALL_RAWMAN', 
-`	${INSTALL} -c -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} bldGET_MAN_BASE_NAME($1).`${MAN'bldGET_MAN_SOURCE_NUM($1)`EXT}' `${DESTDIR}${MAN'bldGET_MAN_SOURCE_NUM($1)`MAN}'/bldGET_MAN_BASE_NAME($1)`.${MAN'bldGET_MAN_SOURCE_NUM($1)`EXT}'', `dnl')'
+`	${INSTALL} -c -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} bldGET_MAN_BASE_NAME($1).bldGET_MAN_SOURCE_NUM($1) `${DESTDIR}${MAN'bldGET_MAN_SOURCE_NUM($1)`MAN}'/bldGET_MAN_BASE_NAME($1)`.${MAN'bldGET_MAN_SOURCE_NUM($1)`EXT}'', `dnl')'
 )dnl
 bldFOREACH(`bldMAN_INSTALL_CMD(', `bldMAN_PAGES')
 ifdef(`confNO_MAN_INSTALL', `divert(0)', `dnl')

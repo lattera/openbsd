@@ -10,7 +10,7 @@ divert(-1)
 #
 #  Definitions for Makefile construction for sendmail
 #
-#	$Sendmail: all.m4,v 8.7 1999/10/13 07:08:36 gshapiro Exp $
+#	$Id: all.m4,v 8.7 1999/10/13 07:08:36 gshapiro Exp $
 #
 divert(0)dnl
 ALL=${BEFORE} ${LINKS} bldTARGETS

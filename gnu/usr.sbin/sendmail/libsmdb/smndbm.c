@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 1999 Sendmail, Inc. and its suppliers.
+** Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
 **	All rights reserved.
 **
 ** By using this file, you agree to the terms and conditions set
@@ -8,7 +8,7 @@
 */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: smndbm.c,v 8.37 1999/10/28 01:58:36 eric Exp $";
+static char id[] = "@(#)$Id: smndbm.c,v 8.40.4.3 2000/10/05 22:27:50 gshapiro Exp $";
 #endif /* ! lint */
 
 #include <fcntl.h>
@@ -124,9 +124,14 @@ smdbm_del(database, key, flags)
 {
 	int result;
 	DBM *dbm = ((SMDB_DBM_DATABASE *) database->smdb_impl)->smndbm_dbm;
+	datum dbkey;
+
+	memset(&dbkey, '\0', sizeof dbkey);
+	dbkey.dptr = key->data;
+	dbkey.dsize = key->size;
 
 	errno = 0;
-	result = dbm_delete(dbm, key->dbm);
+	result = dbm_delete(dbm, dbkey);
 	if (result != 0)
 	{
 		int save_errno = errno;
@@ -157,6 +162,15 @@ smdbm_fd(database, fd)
 }
 
 int
+smdbm_lockfd(database)
+	SMDB_DATABASE *database;
+{
+	SMDB_DBM_DATABASE *db = (SMDB_DBM_DATABASE *) database->smdb_impl;
+
+	return db->smndbm_lock_fd;
+}
+
+int
 smdbm_get(database, key, data, flags)
 	SMDB_DATABASE *database;
 	SMDB_DBENT *key;
@@ -164,10 +178,16 @@ smdbm_get(database, key, data, flags)
 	u_int flags;
 {
 	DBM *dbm = ((SMDB_DBM_DATABASE *) database->smdb_impl)->smndbm_dbm;
+	datum dbkey, dbdata;
+
+	memset(&dbkey, '\0', sizeof dbkey);
+	memset(&dbdata, '\0', sizeof dbdata);
+	dbkey.dptr = key->data;
+	dbkey.dsize = key->size;
 
 	errno = 0;
-	data->dbm = dbm_fetch(dbm, key->dbm);
-	if (data->dbm.dptr == NULL)
+	dbdata = dbm_fetch(dbm, dbkey);
+	if (dbdata.dptr == NULL)
 	{
 		int save_errno = errno;
 
@@ -179,7 +199,8 @@ smdbm_get(database, key, data, flags)
 
 		return SMDBE_NOT_FOUND;
 	}
-
+	data->data = dbdata.dptr;
+	data->size = dbdata.dsize;
 	return SMDBE_OK;
 }
 
@@ -193,9 +214,17 @@ smdbm_put(database, key, data, flags)
 	int result;
 	int save_errno;
 	DBM *dbm = ((SMDB_DBM_DATABASE *) database->smdb_impl)->smndbm_dbm;
+	datum dbkey, dbdata;
+
+	memset(&dbkey, '\0', sizeof dbkey);
+	memset(&dbdata, '\0', sizeof dbdata);
+	dbkey.dptr = key->data;
+	dbkey.dsize = key->size;
+	dbdata.dptr = data->data;
+	dbdata.dsize = data->size;
 
 	errno = 0;
-	result = dbm_store(dbm, key->dbm, data->dbm,
+	result = dbm_store(dbm, dbkey, dbdata,
 			   smdb_put_flags_to_ndbm_flags(flags));
 	switch (result)
 	{
@@ -312,6 +341,13 @@ smdbm_cursor_get(cursor, key, value, flags)
 	SMDB_DBM_CURSOR *dbm_cursor = (SMDB_DBM_CURSOR *) cursor->smdbc_impl;
 	SMDB_DBM_DATABASE *db = dbm_cursor->smndbmc_db;
 	DBM *dbm = db->smndbm_dbm;
+	datum dbkey, dbdata;
+
+	memset(&dbkey, '\0', sizeof dbkey);
+	memset(&dbdata, '\0', sizeof dbdata);
+
+	if (flags == SMDB_CURSOR_GET_RANGE)
+		return SMDBE_UNSUPPORTED;
 
 	if (dbm_cursor->smndbmc_current_key.dptr == NULL)
 	{
@@ -335,8 +371,8 @@ smdbm_cursor_get(cursor, key, value, flags)
 	}
 
 	errno = 0;
-	value->dbm = dbm_fetch(dbm, dbm_cursor->smndbmc_current_key);
-	if (value->dbm.dptr == NULL)
+	dbdata = dbm_fetch(dbm, dbm_cursor->smndbmc_current_key);
+	if (dbdata.dptr == NULL)
 	{
 		int save_errno = errno;
 
@@ -348,7 +384,10 @@ smdbm_cursor_get(cursor, key, value, flags)
 
 		return SMDBE_NOT_FOUND;
 	}
-	key->dbm = dbm_cursor->smndbmc_current_key;
+	value->data = dbdata.dptr;
+	value->size = dbdata.dsize;
+	key->data = dbm_cursor->smndbmc_current_key.dptr;
+	key->size = dbm_cursor->smndbmc_current_key.dsize;
 
 	return SMDBE_OK;
 }
@@ -365,9 +404,14 @@ smdbm_cursor_put(cursor, key, value, flags)
 	SMDB_DBM_CURSOR *dbm_cursor = (SMDB_DBM_CURSOR *) cursor->smdbc_impl;
 	SMDB_DBM_DATABASE *db = dbm_cursor->smndbmc_db;
 	DBM *dbm = db->smndbm_dbm;
+	datum dbdata;
+
+	memset(&dbdata, '\0', sizeof dbdata);
+	dbdata.dptr = value->data;
+	dbdata.dsize = value->size;
 
 	errno = 0;
-	result = dbm_store(dbm, dbm_cursor->smndbmc_current_key, value->dbm,
+	result = dbm_store(dbm, dbm_cursor->smndbmc_current_key, dbdata,
 			   smdb_put_flags_to_ndbm_flags(flags));
 	switch (result)
 	{
@@ -457,7 +501,7 @@ smdb_ndbm_open(database, db_name, mode, mode_mask, sff, type, user_info,
 	char *db_name;
 	int mode;
 	int mode_mask;
-	int sff;
+	long sff;
 	SMDB_DBTYPE type;
 	SMDB_USER_INFO *user_info;
 	SMDB_DBPARAMS *db_params;
@@ -552,6 +596,7 @@ smdb_ndbm_open(database, db_name, mode, mode_mask, sff, type, user_info,
 		smdb_db->smdb_close = smdbm_close;
 		smdb_db->smdb_del = smdbm_del;
 		smdb_db->smdb_fd = smdbm_fd;
+		smdb_db->smdb_lockfd = smdbm_lockfd;
 		smdb_db->smdb_get = smdbm_get;
 		smdb_db->smdb_put = smdbm_put;
 		smdb_db->smdb_set_owner = smndbm_set_owner;

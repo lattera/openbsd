@@ -6,11 +6,11 @@
 .\" the sendmail distribution.
 .\"
 .\"
-.\"	$Sendmail: mailstats.8,v 8.16 2000/02/01 05:49:53 gshapiro Exp $
+.\"	$Id: mailstats.8,v 8.17.4.3 2000/12/29 18:12:20 gshapiro Exp $
 .\"
-.TH MAILSTATS 1 "April 25, 1996"
+.TH MAILSTATS 1 "$Date: 2000/12/29 18:12:20 $"
 .SH NAME
-.B mailstats
+mailstats
 \- display mail statistics
 .SH SYNOPSIS
 .B mailstats
@@ -29,7 +29,7 @@ in the format specified by
 ctime(3).  
 Then, 
 the statistics for each mailer are displayed on a single line, 
-each with the following whitespace separated fields:
+each with the following white space separated fields:
 .sp
 .RS
 .PD 0.2v
@@ -72,13 +72,13 @@ The options are as follows:
 .B \-C
 Read the specified file instead of the default
 .B sendmail
-``cf'' file.
+configuration file.
 .TP
 .B \-f
 Read the specified statistics file instead of the statistics file
 specified in the
 .B sendmail 
-``cf'' file.
+configuration file.
 .TP 
 .B \-p
 Output information in program-readable mode and clear statistics.
@@ -95,7 +95,7 @@ utility exits 0 on success, and >0 if an error occurs.
 /etc/mail/sendmail.cf
 The default
 .B sendmail
-``cf'' file.
+configuration file.
 .TP
 /etc/mail/statistics
 The default

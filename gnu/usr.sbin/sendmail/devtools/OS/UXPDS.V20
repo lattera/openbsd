@@ -1,4 +1,4 @@
-#	$Sendmail: UXPDS.V20,v 8.12 1999/06/02 22:53:45 gshapiro Exp $
+#	$Id: UXPDS.V20,v 8.12 1999/06/02 22:53:45 gshapiro Exp $
 define(`confCC', `/usr/ccs/bin/cc')
 define(`confBEFORE', `netinet/ip_var.h')
 define(`confMAPDEF', `-DNDBM -DNIS')

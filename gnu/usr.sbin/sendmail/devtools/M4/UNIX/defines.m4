@@ -10,7 +10,7 @@ divert(-1)
 #
 #  Definitions for Makefile construction for sendmail
 #
-#	$Sendmail: defines.m4,v 8.27 2000/02/26 01:32:06 gshapiro Exp $
+#	$Id: defines.m4,v 8.31.4.4 2000/12/20 21:21:39 gshapiro Exp $
 #
 divert(0)dnl
 
@@ -32,6 +32,10 @@ O=	ifdef(`confOPTIMIZE', `confOPTIMIZE', `-O')
 # Object archiver
 AR=     ifdef(`confAR', `confAR', `ar')
 AROPTS=	ifdef(`confAROPTS', `confAROPTS', `crv')
+
+# Link command
+LN=     ifdef(`confLN', `confLN', `ln')
+LNOPTS=	ifdef(`confLNOPTS', `confLNOPTS', `-f -s')
 
 # Ranlib (or echo)
 RANLIB= ifdef(`confRANLIB', `confRANLIB', `ranlib')
@@ -57,8 +61,7 @@ LIBDIRS=confLIBDIRS
 LIBADD= ifdef(`conf_'bldCURRENT_PRD`_LIBS', `conf_'bldCURRENT_PRD`_LIBS') 
 
 # libraries required on your system
-#  delete -l44bsd if you are not running BIND 4.9.x
-LIBS= ${LIBADD} ifdef(`confLIBS', `confLIBS')
+LIBS= ${LIBADD} ifdef(`confLIBS', `confLIBS') ifdef(`conf_'bldCURRENT_PRD`_LIB_POST', `conf_'bldCURRENT_PRD`_LIB_POST') 
 
 # location of sendmail binary (usually /usr/sbin or /usr/lib)
 BINDIR=	ifdef(`confMBINDIR', `confMBINDIR', `/usr/sbin')
@@ -72,6 +75,12 @@ SBINDIR=ifdef(`confSBINDIR', `confSBINDIR', `/usr/sbin')
 # location of "libexec" binaries (usually /usr/libexec or /usr/etc)
 EBINDIR=ifdef(`confEBINDIR', `confEBINDIR', `/usr/libexec')
 
+# where to install include files (usually /usr/include)
+INCLUDEDIR=ifdef(`confINCLUDEDIR', `confINCLUDEDIR', `/usr/include')
+
+# where to install library files (usually /usr/lib)
+LIBDIR=ifdef(`confLIBDIR', `confLIBDIR', `/usr/lib')
+
 # additional .c files needed
 SRCADD= ifdef(`confSRCADD', `confSRCADD')
 
@@ -83,6 +92,9 @@ bldCURRENT_PRODUCT`OBJADD'= ifdef(`conf_'bldCURRENT_PRD`_OBJADD', `conf_'bldCURR
 
 # copy files
 CP= ifdef(`confCOPY', `confCOPY', `cp')
+
+# In some places windows wants nmake where unix would just want make
+NMAKE=ifdef(`confNMAKE', `confNMAKE', `${MAKE}')
 
 ###################  end of user configuration flags  ######################
 
@@ -112,7 +124,7 @@ INSTALL=ifdef(`confINSTALL', `confINSTALL', `install')
 # User binary ownership/permissions
 UBINOWN=ifdef(`confUBINOWN', `confUBINOWN', `bin')
 UBINGRP=ifdef(`confUBINGRP', `confUBINGRP', `bin')
-UBINMODE=ifdef(`confSBINMODE', `confSBINMODE', `555')
+UBINMODE=ifdef(`confUBINMODE', `confUBINMODE', `555')
 
 # Setuid binary ownership/permissions
 SBINOWN=ifdef(`confSBINOWN', `confSBINOWN', `root')

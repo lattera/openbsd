@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -13,7 +13,7 @@
 
 #ifndef lint
 static char copyright[] =
-"@(#) Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.\n\
+"@(#) Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.\n\
 	All rights reserved.\n\
      Copyright (c) 1983 Eric P. Allman.  All rights reserved.\n\
      Copyright (c) 1988, 1993\n\
@@ -21,7 +21,7 @@ static char copyright[] =
 #endif /* ! lint */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: praliases.c,v 8.57 1999/10/13 03:35:16 ca Exp $";
+static char id[] = "@(#)$Id: praliases.c,v 8.59.4.15 2000/10/24 00:42:59 geir Exp $";
 #endif /* ! lint */
 
 #include <sys/types.h>
@@ -32,6 +32,7 @@ static char id[] = "@(#)$Sendmail: praliases.c,v 8.57 1999/10/13 03:35:16 ca Exp
 # undef EX_OK		/* unistd.h may have another use for this */
 #endif /* EX_OK */
 #include <sysexits.h>
+
 
 #ifndef NOT_SENDMAIL
 # define NOT_SENDMAIL
@@ -55,6 +56,9 @@ BITMAP256 DontBlameSendmail;
 
 extern void	syserr __P((const char *, ...));
 
+# define DELIMITERS		" ,/"
+# define PATH_SEPARATOR		':'
+
 int
 main(argc, argv)
 	int argc;
@@ -71,6 +75,7 @@ main(argc, argv)
 	extern char *optarg;
 	extern int optind;
 
+
 	clrbitmap(DontBlameSendmail);
 	RunAsUid = RealUid = getuid();
 	RunAsGid = RealGid = getgid();
@@ -82,12 +87,12 @@ main(argc, argv)
 		snprintf(rnamebuf, sizeof rnamebuf, "%s", pw->pw_name);
 	}
 	else
-		snprintf(rnamebuf, sizeof rnamebuf,
-			 "Unknown UID %d", (int) RealUid);
+		(void) snprintf(rnamebuf, sizeof rnamebuf, "Unknown UID %d",
+				(int) RealUid);
 	RunAsUserName = RealUserName = rnamebuf;
 
 	cfile = _PATH_SENDMAILCF;
-	while ((ch = getopt(argc, argv, "C:f:")) != EOF)
+	while ((ch = getopt(argc, argv, "C:f:")) != -1)
 	{
 		switch ((char)ch) {
 		case 'C':
@@ -167,7 +172,7 @@ main(argc, argv)
 					break;
 				b = p;
 
-				p = strpbrk(p, " ,/");
+				p = strpbrk(p, DELIMITERS);
 
 				/* find end of spec */
 				if (p != NULL)
@@ -241,7 +246,7 @@ praliases(filename, argc, argv)
 	SMDB_DBPARAMS params;
 	SMDB_USER_INFO user_info;
 
-	colon = strchr(filename, ':');
+	colon = strchr(filename, PATH_SEPARATOR);
 	if (colon == NULL)
 	{
 		db_name = filename;
@@ -259,6 +264,7 @@ praliases(filename, argc, argv)
 	{
 		while (isascii(*db_name) && isspace(*db_name))
 			db_name++;
+
 		if (*db_name != '-')
 			break;
 		while (*db_name != '\0' &&
@@ -291,43 +297,66 @@ praliases(filename, argc, argv)
 		goto fatal;
 	}
 
-	memset(&db_key, '\0', sizeof db_key);
-	memset(&db_value, '\0', sizeof db_value);
-
-	result = database->smdb_cursor(database, &cursor, 0);
-	if (result != SMDBE_OK)
+	if (argc == 0)
 	{
-		fprintf(stderr, "praliases: %s: set cursor: %s\n",
-			db_name, errstring(result));
-		goto fatal;
-	}
+		memset(&db_key, '\0', sizeof db_key);
+		memset(&db_value, '\0', sizeof db_value);
 
-	while ((result = cursor->smdbc_get(cursor, &db_key, &db_value,
-					   SMDB_CURSOR_GET_NEXT)) == SMDBE_OK)
-	{
+		result = database->smdb_cursor(database, &cursor, 0);
+		if (result != SMDBE_OK)
+		{
+			fprintf(stderr, "praliases: %s: set cursor: %s\n",
+				db_name, errstring(result));
+			goto fatal;
+		}
+
+		while ((result = cursor->smdbc_get(cursor, &db_key, &db_value,
+						   SMDB_CURSOR_GET_NEXT)) ==
+						   SMDBE_OK)
+		{
 #if 0
-		/* skip magic @:@ entry */
-		if (db_key.data.size == 2 &&
-		    db_key.data.data[0] == '@' &&
-		    db_key.data.data[1] == '\0' &&
-		    db_value.data.size == 2 &&
-		    db_value.data.data[0] == '@' &&
-		    db_value.data.data[1] == '\0')
-			continue;
+			/* skip magic @:@ entry */
+			if (db_key.size == 2 &&
+			    db_key.data[0] == '@' &&
+			    db_key.data[1] == '\0' &&
+			    db_value.size == 2 &&
+			    db_value.data[0] == '@' &&
+			    db_value.data[1] == '\0')
+				continue;
 #endif /* 0 */
 
-		printf("%.*s:%.*s\n",
-		       (int) db_key.data.size,
-		       (char *) db_key.data.data,
-		       (int) db_value.data.size,
-		       (char *) db_value.data.data);
-	}
+			printf("%.*s:%.*s\n",
+			       (int) db_key.size,
+			       (char *) db_key.data,
+			       (int) db_value.size,
+			       (char *) db_value.data);
+		}
 
-	if (result != SMDBE_OK && result != SMDBE_LAST_ENTRY)
+		if (result != SMDBE_OK && result != SMDBE_LAST_ENTRY)
+		{
+			fprintf(stderr,
+				"praliases: %s: get value at cursor: %s\n",
+				db_name, errstring(result));
+			goto fatal;
+		}
+	}
+	else for (; *argv != NULL; ++argv)
 	{
-		fprintf(stderr,	"praliases: %s: get value at cursor: %s\n",
-			db_name, errstring(result));
-		goto fatal;
+		memset(&db_key, '\0', sizeof db_key);
+		memset(&db_value, '\0', sizeof db_value);
+		db_key.data = *argv;
+		db_key.size = strlen(*argv) + 1;
+		if (database->smdb_get(database, &db_key,
+				       &db_value, 0) == SMDBE_OK)
+		{
+			printf("%.*s:%.*s\n",
+			       (int) db_key.size,
+			       (char *) db_key.data,
+			       (int) db_value.size,
+			       (char *) db_value.data);
+		}
+		else
+			printf("%s: No such key\n", (char *) db_key.data);
 	}
 
  fatal:

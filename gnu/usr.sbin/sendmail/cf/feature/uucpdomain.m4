@@ -13,7 +13,7 @@ divert(-1)
 #
 
 divert(0)
-VERSIONID(`$Sendmail: uucpdomain.m4,v 8.22 1999/07/22 17:55:35 gshapiro Exp $')
+VERSIONID(`$Id: uucpdomain.m4,v 8.22 1999/07/22 17:55:35 gshapiro Exp $')
 divert(-1)
 
 define(`_UUDOMAIN_TABLE_', `')

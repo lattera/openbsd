@@ -10,14 +10,18 @@
  * the sendmail distribution.
  *
  *
- *	$Sendmail: sendmail.h,v 8.33 2000/02/17 21:30:34 ca Exp $
+ *	$Id: sendmail.h,v 8.34.4.7 2000/10/09 16:15:26 gshapiro Exp $
  */
 
 /*
 **  SENDMAIL.H -- Global definitions for sendmail.
 */
 
+#if SFIO
+# include <sfio/stdio.h>
+#else /* SFIO */
 # include <stdio.h>
+#endif /* SFIO */
 #include <string.h>
 #include "conf.h"
 #include "sendmail/errstring.h"
@@ -48,6 +52,9 @@
 #define _BITBIT(bit)	((unsigned int)1 << ((bit) % (BYTEBITS * sizeof (int))))
 
 typedef unsigned int	BITMAP256[BITMAPBYTES / sizeof (int)];
+
+/* properly case and truncate bit */
+#define bitidx(bit)		((unsigned int) (bit) & 0xff)
 
 /* test bit number N */
 #define bitnset(bit, map)	((map)[_BITWORD(bit)] & _BITBIT(bit))
@@ -86,15 +93,13 @@ typedef unsigned int	BITMAP256[BITMAPBYTES / sizeof (int)];
 #define SFF_NOWLINK	0x00000400L	/* links only in non-writable dirs */
 #define SFF_NOGWFILES	0x00000800L	/* disallow world writable files */
 #define SFF_NOWWFILES	0x00001000L	/* disallow group writable files */
-#define SFF_NOGRFILES	0x00008000L	/* disallow g readable files */
-#define SFF_NOWRFILES	0x00010000L	/* disallow o readable files */
-#define SFF_NORFILES	(SFF_NOGRFILES|SFF_NOWRFILES)
-
-/* flags that are actually specific to safeopen/safefopen/dfopen */
 #define SFF_OPENASROOT	0x00002000L	/* open as root instead of real user */
 #define SFF_NOLOCK	0x00004000L	/* don't lock the file */
-#define SFF_NOTEXCL	0x00010000L	/* creates don't need to be exclusive */
-#define SFF_EXECOK	0x00020000L	/* executable files are ok (E_SM_ISEXEC) */
+#define SFF_NOGRFILES	0x00008000L	/* disallow g readable files */
+#define SFF_NOWRFILES	0x00010000L	/* disallow o readable files */
+#define SFF_NOTEXCL	0x00020000L	/* creates don't need to be exclusive */
+#define SFF_EXECOK	0x00040000L	/* executable files are ok (E_SM_ISEXEC) */
+#define SFF_NORFILES	(SFF_NOGRFILES|SFF_NOWRFILES)
 
 /* pseudo-flags */
 #define SFF_NOLINK	(SFF_NOHLINK|SFF_NOSLINK)
@@ -146,9 +151,16 @@ extern bool	filechanged __P((char *, int, struct stat *));
 #define DBS_NONROOTSAFEADDR				31
 #define DBS_TRUSTSTICKYBIT				32
 #define DBS_DONTWARNFORWARDFILEINUNSAFEDIRPATH		33
+#define DBS_INSUFFICIENTENTROPY				34
 #if _FFR_UNSAFE_SASL
-#define DBS_GROUPREADABLESASLFILE			34
+# define DBS_GROUPREADABLESASLFILE			35
 #endif /* _FFR_UNSAFE_SASL */
+#if _FFR_UNSAFE_WRITABLE_INCLUDE
+# define DBS_GROUPWRITABLEFORWARDFILE			36
+# define DBS_GROUPWRITABLEINCLUDEFILE			37
+# define DBS_WORLDWRITABLEFORWARDFILE			38
+# define DBS_WORLDWRITABLEINCLUDEFILE			39
+#endif /* _FFR_UNSAFE_WRITABLE_INCLUDE */
 
 /* struct defining such things */
 struct dbsval
@@ -165,11 +177,10 @@ extern int	dflush __P((void));
 #define dflush()	fflush(stdout)
 #endif /* _FFR_DPRINTF */
 
-#if !HASSNPRINTF
-extern int	snprintf __P((char *, size_t, const char *, ...));
-extern int	vsnprintf __P((char *, size_t, const char *, va_list));
-#endif /* !HASSNPRINTF */
+extern int	sm_snprintf __P((char *, size_t, const char *, ...));
+extern int	sm_vsnprintf __P((char *, size_t, const char *, va_list));
 extern char	*quad_to_string __P((QUAD_T));
 
 extern size_t	strlcpy __P((char *, const char *, size_t));
 extern size_t	strlcat __P((char *, const char *, size_t));
+

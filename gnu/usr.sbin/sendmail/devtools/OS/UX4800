@@ -1,4 +1,4 @@
-#	$Sendmail: UX4800,v 8.13 1999/08/08 02:52:05 gshapiro Exp $
+#	$Id: UX4800,v 8.13 1999/08/08 02:52:05 gshapiro Exp $
 define(`confCC', `/usr/abiccs/bin/cc -KOlimit=1000')
 define(`confBEFORE', `sysexits.h ndbm.h')
 define(`confMAPDEF', `-DNDBM -DNIS')

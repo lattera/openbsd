@@ -8,6 +8,6 @@
 # the sendmail distribution.
 #
 #
-#	$Sendmail: Build,v 8.3 1999/09/23 21:31:12 ca Exp $
+#	$Id: Build,v 8.3 1999/09/23 21:31:12 ca Exp $
 
 exec make OPTIONS="$*"

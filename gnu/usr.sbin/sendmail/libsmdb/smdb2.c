@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 1999 Sendmail, Inc. and its suppliers.
+** Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
 **	All rights reserved.
 **
 ** By using this file, you agree to the terms and conditions set
@@ -8,12 +8,13 @@
 */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: smdb2.c,v 8.48 1999/11/23 08:42:54 gshapiro Exp $";
+static char id[] = "@(#)$Id: smdb2.c,v 8.53.2.1.2.5 2000/10/26 00:39:56 geir Exp $";
 #endif /* ! lint */
 
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 
 #include <sendmail/sendmail.h>
 #include <libsmdb/smdb.h>
@@ -137,7 +138,7 @@ db2_error_to_smdb(error)
 			break;
 
 		default:
-			result = errno;
+			result = error;
 	}
 	return result;
 }
@@ -200,6 +201,9 @@ smdb_cursor_get_flags_to_db2(flags)
 		case SMDB_CURSOR_GET_NEXT:
 			return DB_NEXT;
 
+		case SMDB_CURSOR_GET_RANGE:
+			return DB_SET_RANGE;
+
 		default:
 			return -1;
 	}
@@ -246,8 +250,12 @@ smdb2_del(database, key, flags)
 	u_int flags;
 {
 	DB *db = ((SMDB_DB2_DATABASE *) database->smdb_impl)->smdb2_db;
+	DBT dbkey;
 
-	return db2_error_to_smdb(db->del(db, NULL, &key->db, flags));
+	memset(&dbkey, '\0', sizeof dbkey);
+	dbkey.data = key->data;
+	dbkey.size = key->size;
+	return db2_error_to_smdb(db->del(db, NULL, &dbkey, flags));
 }
 
 int
@@ -261,15 +269,35 @@ smdb2_fd(database, fd)
 }
 
 int
+smdb2_lockfd(database)
+	SMDB_DATABASE *database;
+{
+	SMDB_DB2_DATABASE *db2 = (SMDB_DB2_DATABASE *) database->smdb_impl;
+
+	return db2->smdb2_lock_fd;
+}
+
+
+int
 smdb2_get(database, key, data, flags)
 	SMDB_DATABASE *database;
 	SMDB_DBENT *key;
 	SMDB_DBENT *data;
 	u_int flags;
 {
+	int result;
 	DB *db = ((SMDB_DB2_DATABASE *) database->smdb_impl)->smdb2_db;
+	DBT dbkey, dbdata;
 
-	return db2_error_to_smdb(db->get(db, NULL, &key->db, &data->db, flags));
+	memset(&dbdata, '\0', sizeof dbdata);
+	memset(&dbkey, '\0', sizeof dbkey);
+	dbkey.data = key->data;
+	dbkey.size = key->size;
+
+	result = db->get(db, NULL, &dbkey, &dbdata, flags);
+	data->data = dbdata.data;
+	data->size = dbdata.size;
+	return db2_error_to_smdb(result);
 }
 
 int
@@ -280,8 +308,16 @@ smdb2_put(database, key, data, flags)
 	u_int flags;
 {
 	DB *db = ((SMDB_DB2_DATABASE *) database->smdb_impl)->smdb2_db;
+	DBT dbkey, dbdata;
 
-	return db2_error_to_smdb(db->put(db, NULL, &key->db, &data->db,
+	memset(&dbdata, '\0', sizeof dbdata);
+	memset(&dbkey, '\0', sizeof dbkey);
+	dbkey.data = key->data;
+	dbkey.size = key->size;
+	dbdata.data = data->data;
+	dbdata.size = data->size;
+
+	return db2_error_to_smdb(db->put(db, NULL, &dbkey, &dbdata,
 					 smdb_put_flags_to_db2_flags(flags)));
 }
 
@@ -348,11 +384,19 @@ smdb2_cursor_get(cursor, key, value, flags)
 	int db2_flags;
 	int result;
 	DBC *dbc = (DBC *) cursor->smdbc_impl;
+	DBT dbkey, dbdata;
+
+	memset(&dbdata, '\0', sizeof dbdata);
+	memset(&dbkey, '\0', sizeof dbkey);
 
 	db2_flags = smdb_cursor_get_flags_to_db2(flags);
-	result = dbc->c_get(dbc, &key->db, &value->db, db2_flags);
+	result = dbc->c_get(dbc, &dbkey, &dbdata, db2_flags);
 	if (result == DB_NOTFOUND)
 		return SMDBE_LAST_ENTRY;
+	key->data = dbkey.data;
+	key->size = dbkey.size;
+	value->data = dbdata.data;
+	value->size = dbdata.size;
 	return db2_error_to_smdb(result);
 }
 
@@ -364,8 +408,16 @@ smdb2_cursor_put(cursor, key, value, flags)
 	SMDB_FLAG flags;
 {
 	DBC *dbc = (DBC *) cursor->smdbc_impl;
+	DBT dbkey, dbdata;
 
-	return db2_error_to_smdb(dbc->c_put(dbc, &key->db, &value->db, 0));
+	memset(&dbdata, '\0', sizeof dbdata);
+	memset(&dbkey, '\0', sizeof dbkey);
+	dbkey.data = key->data;
+	dbkey.size = key->size;
+	dbdata.data = value->data;
+	dbdata.size = value->size;
+
+	return db2_error_to_smdb(dbc->c_put(dbc, &dbkey, &dbdata, 0));
 }
 
 int
@@ -516,11 +568,12 @@ smdb_db_open(database, db_name, mode, mode_mask, sff, type, user_info, db_params
 	char *db_name;
 	int mode;
 	int mode_mask;
-	int sff;
+	long sff;
 	SMDB_DBTYPE type;
 	SMDB_USER_INFO *user_info;
 	SMDB_DBPARAMS *db_params;
 {
+	bool lockcreated = FALSE;
 	int result;
 	int db_flags;
 	int lock_fd;
@@ -546,10 +599,20 @@ smdb_db_open(database, db_name, mode, mode_mask, sff, type, user_info, db_params
 
 	lock_fd = -1;
 
+	if (stat_info.st_mode == ST_MODE_NOFILE &&
+	    bitset(mode, O_CREAT))
+		lockcreated = TRUE;
+
 	result = smdb_lock_file(&lock_fd, db_name, mode, sff,
 				SMDB2_FILE_EXTENSION);
 	if (result != SMDBE_OK)
 		return result;
+
+	if (lockcreated)
+	{
+		mode |= O_TRUNC;
+		mode &= ~(O_CREAT|O_EXCL);
+	}
 
 	smdb_db = smdb_malloc_database();
 	if (smdb_db == NULL)
@@ -566,11 +629,11 @@ smdb_db_open(database, db_name, mode, mode_mask, sff, type, user_info, db_params
 	db = NULL;
 
 	db_flags = 0;
-	if (O_CREAT & mode)
+	if (bitset(O_CREAT, mode))
 		db_flags |= DB_CREATE;
-	if (O_TRUNC & mode)
+	if (bitset(O_TRUNC, mode))
 		db_flags |= DB_TRUNCATE;
-	if (O_RDONLY == mode)
+	if (mode == O_RDONLY)
 		db_flags |= DB_RDONLY;
 # if !HASFLOCK && defined(DB_FCNTL_LOCKING)
 	db_flags |= DB_FCNTL_LOCKING;
@@ -606,6 +669,7 @@ smdb_db_open(database, db_name, mode, mode_mask, sff, type, user_info, db_params
 		smdb_db->smdb_close = smdb2_close;
 		smdb_db->smdb_del = smdb2_del;
 		smdb_db->smdb_fd = smdb2_fd;
+		smdb_db->smdb_lockfd = smdb2_lockfd;
 		smdb_db->smdb_get = smdb2_get;
 		smdb_db->smdb_put = smdb2_put;
 		smdb_db->smdb_set_owner = smdb2_set_owner;

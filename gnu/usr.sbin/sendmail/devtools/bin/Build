@@ -11,7 +11,7 @@
 # the sendmail distribution.
 #
 #
-#       $Sendmail: Build,v 8.145 2000/02/01 05:49:49 gshapiro Exp $
+#       $Id: Build,v 8.155.4.5 2000/12/27 00:44:35 gshapiro Exp $
 #
 
 #
@@ -45,6 +45,9 @@ EX_OK=0
 EX_USAGE=64
 EX_NOINPUT=66
 EX_UNAVAILABLE=69
+
+# default to a optimized build to behave like the old system.
+build_variant="optimized"
 
 full_src_dir=`pwd`
 if [ -z "$src_dir" ]
@@ -214,6 +217,18 @@ do
 		shift
 		;;
 
+  	  -v)	# Select a build variant: debug, optimized, purify, whatever.
+		shift
+		build_variant=$1
+		if [ -z "$build_variant" ]
+		then 
+		    echo "Usage error with \"-v\" <build_variant>"  >&2
+		    echo "You must specify exactly one build variant of debug|optimized|purify"  >&2
+		    exit $EX_USAGE
+		fi
+		shift
+		;;
+
 	  *)	# pass argument to make
 		makeargs="$makeargs \"$1\""
 		SENDMAIL_BUILD_FLAGS="$SENDMAIL_BUILD_FLAGS \"$1\""
@@ -221,6 +236,25 @@ do
 		;;
 	esac
 done
+
+# process selected build variant.
+case $build_variant in
+    debug)
+	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=DEBUG"
+	;;
+    optimized)
+	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=OPTIMIZED"
+	;;
+    purify)
+	M4_BLDVARIANT_FLAGS="-DconfBLDVARIANT=PURIFY"
+	echo "Sorry, the purify build variant has not been plumbed yet. (Bummer.)"  >&2
+	exit $EX_USAGE
+	;;
+    *)
+	exit $EX_USAGE
+	;;
+esac
+
 
 #
 #  Do heuristic guesses !ONLY! for machines that do not have uname
@@ -305,13 +339,17 @@ fi
 if [ "$rel" = 4.0 ]
 then
 	case $arch in
-	  3[34]??|3[34]??,*)
+	  3[34]??|3[34]??,*|3[34]??[A-Z]|4[48]??|56??)
 		if [ -d /usr/sadm/sysadm/add-ons/WIN-TCP ]
 		then
-			os=NCR.MP-RAS.2.x
+			os=NCR.MP-RAS
+			rel=2.x
+			arch=i486
 		elif [ -d /usr/sadm/sysadm/add-ons/inet ]
 		then
-			os=NCR.MP-RAS.3.x
+			os=NCR.MP-RAS
+			rel=3.x
+			arch=i486
 		fi
 		;;
 	esac
@@ -398,7 +436,7 @@ fi
 
 if [ ! -n "$Mflag" -a ! -n "$Aflag" ]
 then
-	echo "Configuration: pfx=$pfx, os=$os, rel=$rel, rbase=$rbase, rroot=$rroot, arch=$arch, sfx=$sfx"
+	echo "Configuration: pfx=$pfx, os=$os, rel=$rel, rbase=$rbase, rroot=$rroot, arch=$arch, sfx=$sfx, variant=$build_variant"
 fi
 
 SMROOT=${SMROOT-..}
@@ -587,10 +625,6 @@ then
 	echo "Creating $obj using $BUILDTOOLS/OS/$oscf"
 	${mkdir} $obj
 
-	# If this is WINNT then compile with relative paths
-	# (based on REL_SRC_DIR), so we don't need to do any "linking"
-	if [ ! $os = "WINNT" ]
-	then
 		ln="ln -s"
 		(cd $obj; $ln ${obj_rel_base_dir}/${src_dir}/*.[ch13458] .)
 		(cd $obj
@@ -607,42 +641,22 @@ then
 		then
 			(cd $obj; $ln ${obj_rel_base_dir}/${src_dir}/helpfile .)
 		fi
-	fi
 
 	rm -f $obj/.settings$$
 	echo 'divert(-1)' > $obj/.settings$$
 	cat $BUILDTOOLS/M4/header.m4 >> $obj/.settings$$
+	echo "define(\`bldOS', \`\`$os'')" >> $obj/.settings$$
+	echo "define(\`bldREL', \`\`$rel'')" >> $obj/.settings$$
+	echo "define(\`bldARCH', \`\`$arch'')" >> $obj/.settings$$
 	cat $BUILDTOOLS/OS/$oscf >> $obj/.settings$$
 
-	if [ $os = "WINNT" ]
-	then
-		# Append C: onto pwd's which don't have the preceding //
-		# so that we can compile on non-network drives.
-		# (Is there a way to get the real drive letter?)
-		dir_prefix=`echo $absolute_base_dir | sed 's#\(..\).*#\1#'`
-		if [ ! $dir_prefix = "//" ]
-		then
-			absolute_base_dir="//C$absolute_base_dir"
-		fi
-
-	        # Convert sh's //X to X: drive letters to make make (and cl) happy
-		obj_rel_base_dir=`echo $absolute_base_dir | sed 's#^//\([a-zA-Z]\)#\1:#'`
-		cur_dir=`pwd`
-		cd $obj/..
-		absolute_obj_dir=`pwd | sed 's#/#\\\\\\\\#g'`
-		cd $cur_dir
-		echo "ifdef(\`bldABS_OBJ_DIR',,define(\`bldABS_OBJ_DIR', \`$absolute_obj_dir'))" >> $obj/.settings$$
-		rel_src_dir="$obj_rel_base_dir/$src_dir"
-		echo "define(\`bldREL_SRC_DIR', \`$rel_src_dir')" >> $obj/.settings$$
-	else
 		cur_dir=`pwd`
 		cd $obj/..
 		absolute_obj_dir=`pwd`
 		cd $cur_dir
-		echo "ifdef(\`bldABS_OBJ_DIR',,define(\`bldABS_OBJ_DIR', \`$absolute_obj_dir'))" >> $obj/.settings$$
+		echo "ifdef(\`bldABS_OBJ_DIR',,\`define(\`bldABS_OBJ_DIR', \`$absolute_obj_dir')')" >> $obj/.settings$$
 		rel_src_dir="$obj_rel_base_dir/$src_dir"
 		echo "define(\`bldREL_SRC_DIR', \`$rel_src_dir')" >> $obj/.settings$$
-	fi
 
 	if [ ! -z "$pfx" ]
 	then
@@ -694,24 +708,24 @@ then
 	echo 'divert(0)dnl' >> $obj/.settings$$
 	libdirs=`(cat $obj/.settings$$; echo "_SRIDBIL_= confLIBDIRS" ) | \
 		sed -e 's/\(.\)include/\1_include_/g' -e 's/#define/#_define_/g' | \
-		${M4} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
+		${M4} ${M4_BLDVARIANT_FLAGS} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
 		grep "^_SRIDBIL_=" | \
 		sed -e 's/#_define_/#define/g' -e 's/_include_/include/g' -e "s/^_SRIDBIL_=//"`
 	libsrch=`(cat $obj/.settings$$; echo "_HCRSBIL_= confLIBSEARCH" ) | \
 		sed -e 's/\(.\)include/\1_include_/g' -e 's/#define/#_define_/g' | \
-		${M4} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
+		${M4}  ${M4_BLDVARIANT_FLAGS} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
 		grep "^_HCRSBIL_=" | \
 		sed -e 's/#_define_/#define/g' -e 's/_include_/include/g' -e "s/^_HCRSBIL_=//"`
 	libpath=`(cat $obj/.settings$$; echo "_HCRSBIL_= confLIBSEARCHPATH" ) | \
 		sed -e 's/\(.\)include/\1_include_/g' -e 's/#define/#_define_/g' | \
-		${M4} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
+		${M4} ${M4_BLDVARIANT_FLAGS} -DconfBUILDTOOLSDIR=$BUILDTOOLS - | \
 		grep "^_HCRSBIL_=" | \
 		sed -e 's/#_define_/#define/g' -e 's/_include_/include/g' -e "s/^_HCRSBIL_=//"`
 	echo 'divert(-1)' >> $obj/.settings$$
 	LIBDIRS="$libdirs" LIBSRCH="$libsrch" LIBPATH="$libpath" SITECONFIG="$siteconfig" sh $BUILDTOOLS/bin/configure.sh $sflag $oscf >> $obj/.settings$$
 	echo 'divert(0)dnl' >> $obj/.settings$$
 	sed -e 's/\(.\)include/\1_include_/g' -e 's/#define/#_define_/g' -e 's///g' $obj/.settings$$ | \
-		${M4} -DconfBUILDTOOLSDIR=$BUILDTOOLS - Makefile.m4 | \
+		${M4}  ${M4_BLDVARIANT_FLAGS} -DconfBUILDTOOLSDIR=$BUILDTOOLS - Makefile.m4 | \
 		sed -e 's/#_define_/#define/g' -e 's/_include_/include/g' -e 's///g' > $obj/Makefile
 	# That ^M up there was added by quoting it in emacs.
 	# Make has problems if lines end in ^M^M, but not in ^M apparently
