@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/include/Attic/param.h,v 1.8.14.1 2000/07/13 16:05:30 jason Exp $	*/
 /*	$NetBSD: param.h,v 1.18 1997/02/26 01:45:41 jonathan Exp $	*/
 
 /*
@@ -104,6 +105,8 @@
 #define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
 #endif
 #endif
+
+#define MSGBUFSIZE	NBPG
 
 #ifdef _KERNEL
 #ifndef _LOCORE
