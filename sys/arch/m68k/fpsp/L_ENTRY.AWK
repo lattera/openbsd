@@ -1,3 +1,4 @@
+#	$OpenBSD: src/sys/arch/m68k/fpsp/L_ENTRY.AWK,v 1.2 1996/05/29 21:05:21 niklas Exp $
 #	$NetBSD: L_ENTRY.AWK,v 1.2 1994/10/26 07:48:34 cgd Exp $
 
 #	MOTOROLA MICROPROCESSOR & MEMORY TECHNOLOGY GROUP

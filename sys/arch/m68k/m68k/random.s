@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/random.s,v 1.2 1996/05/29 21:05:53 niklas Exp $	*/
 /*	$NetBSD: random.s,v 1.5 1995/01/15 22:32:35 mycroft Exp $	*/
 
 /*

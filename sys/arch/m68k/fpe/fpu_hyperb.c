@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/m68k/fpe/Attic/fpu_hyperb.c,v 1.2 1996/05/29 21:05:16 niklas Exp $	*/
 /*	$NetBSD: fpu_hyperb.c,v 1.1 1995/11/03 04:47:11 briggs Exp $	*/
 
 /*
