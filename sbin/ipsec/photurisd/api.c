@@ -37,7 +37,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: api.c,v 1.1.1.1 1997/07/18 22:48:50 provos Exp $";
+static char rcsid[] = "$Id: api.c,v 1.2 1997/07/22 11:18:19 provos Exp $";
 #endif
 
 #define _API_C_
@@ -49,6 +49,7 @@ static char rcsid[] = "$Id: api.c,v 1.1.1.1 1997/07/18 22:48:50 provos Exp $";
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include "state.h"
 #include "photuris.h"
