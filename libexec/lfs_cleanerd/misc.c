@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/lfs_cleanerd/Attic/misc.c,v 1.2 1996/07/01 11:04:58 downsj Exp $	*/
+
 /*-
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,8 +34,8 @@
  */
 
 #ifndef lint
-/*static char sccsid[] = "from: @(#)misc.c	8.1 (Berkeley) 6/4/93";*/
-static char *rcsid = "$Id: misc.c,v 1.1 1994/06/08 18:42:16 mycroft Exp $";
+/*static char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 6/4/93";*/
+static char rcsid[] = "$OpenBSD: src/libexec/lfs_cleanerd/Attic/misc.c,v 1.2 1996/07/01 11:04:58 downsj Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
