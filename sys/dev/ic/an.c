@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.2 2000/04/06 04:01:49 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.2.2.1 2000/06/18 04:29:34 jason Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -97,6 +97,7 @@
 #include <sys/mbuf.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/proc.h>
 #include <sys/socket.h>
 #include <sys/timeout.h>
 #ifdef ANCACHE
@@ -797,7 +798,7 @@ an_setdef(sc, areq)
 	case AN_RID_GENCONFIG:
 		cfg = (struct an_ltv_genconfig *)areq;
 
-		ifa = ifnet_addrs[ifp->if_index - 1];
+		ifa = ifnet_addrs[ifp->if_index];
 		sdl = (struct sockaddr_dl *)ifa->ifa_addr;
 		bcopy((char *)&cfg->an_macaddr, (char *)&sc->arpcom.ac_enaddr,
 		    ETHER_ADDR_LEN);
@@ -879,6 +880,7 @@ int an_ioctl(ifp, command, data)
 	struct an_softc		*sc;
 	struct an_req		areq;
 	struct ifreq		*ifr;
+	struct proc		*p = curproc;
 	struct ifaddr		*ifa = (struct ifaddr *)data;
 
 	s = splimp();
@@ -960,6 +962,9 @@ int an_ioctl(ifp, command, data)
 		error = copyout(&areq, ifr->ifr_data, sizeof(areq));
 		break;
 	case SIOCSAIRONET:
+		error = suser(p->p_ucred, &p->p_acflag);
+		if (error)
+			break;
 		error = copyin(ifr->ifr_data, &areq, sizeof(areq));
 		if (error)
 			break;
