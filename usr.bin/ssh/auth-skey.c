@@ -1,5 +1,5 @@
 #include "includes.h"
-RCSID("$Id: auth-skey.c,v 1.1 1999/10/07 21:45:02 markus Exp $");
+RCSID("$Id: auth-skey.c,v 1.2 1999/10/16 20:57:52 deraadt Exp $");
 
 #include "ssh.h"
 #include <sha1.h>
@@ -30,6 +30,7 @@ hash_collapse(s)
 
 	return i;
 }
+
 char *
 skey_fake_keyinfo(char *username)
 {
