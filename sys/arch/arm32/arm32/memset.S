@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/arm32/Attic/memset.S,v 1.1.1.1.16.1 2000/03/24 09:07:07 niklas Exp $ */
 /* $NetBSD: memset.S,v 1.1 1996/01/31 23:16:35 mark Exp $ */
 
 /*
@@ -41,7 +42,6 @@
  * Created      : 16/05/95
  * Last updated : 16/05/95
  *
- *    $Id: memset.S,v 1.1 1996/01/31 23:16:35 mark Exp $
  */
 
 sp	.req	r13

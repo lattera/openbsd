@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/arm32/Attic/bcopy.S,v 1.1.1.1.16.1 2000/03/24 09:07:03 niklas Exp $ */
 /* $NetBSD: bcopy.S,v 1.1 1996/01/31 23:15:12 mark Exp $ */
 
 /*
@@ -43,7 +44,6 @@
  * Created      : 16/05/95
  * Last updated : 16/05/95
  *
- *    $Id: bcopy.S,v 1.1 1996/01/31 23:15:12 mark Exp $
  */
 
 sp	.req	r13

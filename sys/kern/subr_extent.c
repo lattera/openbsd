@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.1 2000/02/20 11:57:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.2 2000/03/24 09:09:25 niklas Exp $	*/
 /*	$NetBSD: subr_extent.c,v 1.7 1996/11/21 18:46:34 cgd Exp $	*/
 
 /*-
@@ -531,7 +531,7 @@ extent_alloc_subregion1(ex, substart, subend, size, alignment, skew, boundary,
 		    substart, subend);
 		panic("extent_alloc_subregion: bad subregion");
 	}
-	if ((size < 1) || (size > ((subend - substart) + 1))) {
+	if (size < 1 || (size - 1) > (subend - substart)) {
 		printf("extent_alloc_subregion: extent `%s', size 0x%lx\n",
 		    ex->ex_name, size);
 		panic("extent_alloc_subregion: bad size");

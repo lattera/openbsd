@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.2 2000/03/02 07:04:39 niklas Exp $
+	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.3 2000/03/24 09:09:18 niklas Exp $
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -90,7 +90,7 @@ vendor OLIVETTI		0x102e	Olivetti
 vendor TOSHIBA		0x102f	Toshiba
 vendor TMCRESEARCH	0x1030	TMC Research
 vendor MIRO		0x1031	Miro Computer Products
-vendor COMPAQ2		0x1032	Compaq (2nd ID)
+vendor COMPAQ2		0x1032	Compaq(2)
 vendor NEC		0x1033	NEC
 vendor BURNDY		0x1034	Burndy
 vendor COMPCOMM		0x1035	Comp. & Comm. Research Lab
@@ -245,7 +245,7 @@ vendor MENTOR		0x10cc	Mentor ARC
 vendor ADVSYS		0x10cd	Advansys
 vendor RADIUS		0x10ce	Radius
 vendor CITICORP		0x10cf	Citicorp TTI
-vendor FUJITSU2		0x10d0	Fujitsu (2nd ID)
+vendor FUJITSU2		0x10d0	Fujitsu(2)
 vendor FUTUREPLUS	0x10d1	Future+ Systems
 vendor MOLEX		0x10d2	Molex
 vendor JABIL		0x10d3	Jabil Circuit
@@ -406,7 +406,7 @@ vendor MIRTRON		0x1175	Mitron Computer
 vendor SBE		0x1176	SBE
 vendor SILICONENG	0x1177	Silicon Engineering
 vendor ALFA		0x1178	Alfa
-vendor TOSHIBA2		0x1179	Toshiba (2nd ID)
+vendor TOSHIBA2		0x1179	Toshiba(2)
 vendor ATREND		0x117a	A-Trend Technology
 vendor ATTO		0x117c	Atto Technology
 vendor TR		0x117e	T/R Systems
@@ -418,7 +418,7 @@ vendor DATAWORLD	0x1185	Dataworld
 vendor DLINK		0x1186	D-Link Systems
 vendor ATL		0x1187	Advanced Techonoloy Labratories
 vendor SHIMA		0x1188	Shima Seiki Manufacturing
-vendor MATSUSHITA2	0x1189	Matsushita Electronics (2nd ID)
+vendor MATSUSHITA2	0x1189	Matsushita Electronics(2)
 vendor HILEVEL		0x118a	HiLevel Technology
 vendor COROLLARY	0x118c	Corrollary
 vendor BITFLOW		0x118d	BitFlow
@@ -436,11 +436,11 @@ vendor MINDSHARE	0x119a	Mind Share
 vendor OMEGA		0x119b	Omega Micro
 vendor ITI		0x119c	Information Technology Institute
 vendor BUG		0x119d	Bug Sapporo
-vendor FUJITSU3		0x119e	Fujitsu (3th ID)
+vendor FUJITSU3		0x119e	Fujitsu(3)
 vendor BULL		0x119f	Bull Hn Information Systems
 vendor CONVEX		0x11a0	Convex Computer
 vendor HAMAMATSU	0x11a1	Hamamatsu Photonics
-vendor SIERRA2		0x11a2	Sierra Research & Technology (2nd ID)
+vendor SIERRA2		0x11a2	Sierra Research & Technology(2)
 vendor BARCO		0x11a4	Barco
 vendor MICROUNITY	0x11a5	MicroUnity Systems Engineering
 vendor PUREDATA		0x11a6 	Pure Data
@@ -459,7 +459,7 @@ vendor BARR		0x11b3	Barr Systems
 vendor LEITECH		0x11b4	Leitch Technology
 vendor RADSTONE		0x11b5	Radstone Technology
 vendor UNITEDVIDEO	0x11b6	United Video
-vendor MOT2		0x11b7	Motorola (2nd ID)
+vendor MOT2		0x11b7	Motorola(2)
 vendor XPOINT		0x11b8	Xpoint Technologies
 vendor PATHLIGHT	0x11b9	Pathlight Technology
 vendor VIDEOTRON	0x11ba	VideoTron
@@ -468,7 +468,7 @@ vendor NETPERIPH	0x11bc	Network Peripherals
 vendor PINNACLE		0x11bd	Pinnacle Systems
 vendor IMI		0x11be	International Microcircuts
 vendor LUCENT		0x11c1  AT&T/Lucent
-vendor NEC2		0x11c3	NEC (2nd ID)
+vendor NEC2		0x11c3	NEC(2)
 vendor DOCTECH		0x11c4	Document Technologies
 vendor SHIVA		0x11c5	Shiva
 vendor DCMDATA		0x11c7	DCM Data Systems
@@ -505,7 +505,7 @@ vendor RISCOM		0x12aa	RISCom
 vendor ALTEON		0x12ae	Alteon
 vendor PICTUREEL	0x12c5	Picture Elements
 vendor STB2		0x12d2	NVidia/SGS-Thomson
-vendor DIAMOND2		0x12eb	Diamond Multimedia (2nd ID)
+vendor DIAMOND2		0x12eb	Diamond Multimedia(2)
 vendor ADMTEK		0x1317	ADMtek
 vendor SIIG		0x131f	SIIG
 vendor LMC		0x1376	LAN Media Corp
@@ -515,25 +515,25 @@ vendor SUNDANCE		0x13f0	Sundance
 vendor CMI		0x13f6	C-Media Electronics Inc.
 vendor INVERTEX		0x14e1	Invertex
 vendor DELTA		0x1500	Delta
-vendor SYMPHONY2	0x1c1c	Symphony Labs (2nd ID)
-vendor TEKRAM2		0x1de1	Tekram Technology (2nd ID)
+vendor SYMPHONY2	0x1c1c	Symphony Labs(2)
+vendor TEKRAM2		0x1de1	Tekram Technology(2)
 vendor 3DLABS		0x3d3d	3D Labs
-vendor AVANCE2		0x4005	Avance Logic (2nd ID)
+vendor AVANCE2		0x4005	Avance Logic(2)
 vendor ADDTRON		0x4033	Addtron
 vendor INDCOMPSRC	0x494f	Industrial Computer Source
 vendor NETVIN		0x4a14	NetVin
-vendor BUSLOGIC2	0x4b10	Buslogic (2nd ID)
+vendor BUSLOGIC2	0x4b10	Buslogic(2)
 vendor S3		0x5333	S3
-vendor NETPOWER2	0x5700	NetPower (2nd ID)
+vendor NETPOWER2	0x5700	NetPower(2)
 vendor C4T		0x6374	c't Magazin
 vendor QUANCM		0x8008	Quancm Electronic GmbH
 vendor INTEL		0x8086	Intel
-vendor TRIGEM2		0x8800	Trigem Computer (2nd ID)
-vendor WINBOND2		0x8c4a	Winbond (2nd ID)
+vendor TRIGEM2		0x8800	Trigem Computer(2)
+vendor WINBOND2		0x8c4a	Winbond(2)
 vendor COMPUTONE	0x8e0e	Computone
 vendor KTI		0x8e2e	KTI
 vendor ADP		0x9004	Adaptec
-vendor ADP2		0x9005	Adaptec (2nd ID)
+vendor ADP2		0x9005	Adaptec(2)
 vendor ATRONICS		0x907f	Atronics
 vendor ARC		0xedd8	ARC Logic
 vendor INVALID		0xffff	INVALID VENDOR ID
@@ -567,7 +567,8 @@ product 3COM 3C905BCOMBO	0x9058	3c905B 10/100Mbps-Combo
 product 3COM 3C905BFX		0x905a	3c905B 100Base-FX
 product 3COM 3C905CTX		0x9200	3c905C 100Base-TX
 product 3COM 3C980TX		0x9800	3c980 100Base-TX
-product	3COM 3C980CTX		0x9805	3c980C 100Base-TX
+product 3COM 3C980CTX		0x9805	3c980C 100Base-TX
+product 3COM 3CR990		0x9903	3cr990 TX-97
 product 3COM 3C985		0x0001	3c985
 
 /* 3DFX Interactive */
@@ -624,6 +625,7 @@ product ADMTEK AN985		0x0985	AN985
 
 /* Adaptec products */
 product ADP AIC7810		0x1078	AIC-7810
+product ADP 2940AU_CN		0x2178	AHA-2940AU/CN
 product ADP AIC7850		0x5078	AIC-7850
 product ADP AIC7855		0x5578	AIC-7855
 product ADP AIC5900		0x5900	AIC-5900 ATM
@@ -644,10 +646,16 @@ product ADP 2940UWPro		0x8778	AHA-2940UWPro
 product ADP AIC6915		0x6915	AIC-6915
 product ADP 7895		0x7895	AIC-7895
 
-product ADP2 2940U2		0x0010	AHA-2940U2
-product ADP2 7890		0x001f	AIC-7890/1
-product ADP2 3940U2		0x0050	AHA-3940U2
-product ADP2 7896		0x005f	AIC-7896/7
+product ADP2 2940U2		0x0010	AHA-2940U2 Ultra2
+product ADP2 AIC7890		0x001f	AIC-7890/1 Ultra2
+product ADP2 AIC7892		0x008F	AIC-7892 Ultra160
+product ADP2 29160		0x0080	AHA-29160 Ultra160
+product ADP2 19160B		0x0081	AHA-19160B Ultra160
+product ADP2 3950U2B		0x0050	AHA-3950U2B Ultra2
+product ADP2 3950U2D		0x0051	AHA-3950U2D Ultra2
+product ADP2 AIC7896		0x005f	AIC-7896/7 Ultra2
+product ADP2 AIC7899		0x00CF	AIC-7899 Ultra160
+product ADP2 3960D		0x00C0	AHA-3960D Ultra160
 
 /* Advanced System Products */
 product ADVSYS 1200A		0x1100	1200A
@@ -663,19 +671,31 @@ product ALLIANCE AT24		0x6424	AT24
 /* Alteon products */
 product ALTEON ACENIC		0x0001	Acenic
 
-/* Apple products */
-product APPLE BANDIT		0x0001	PCI
-
 /* AMD products */
 product AMD PCNET_PCI		0x2000	79c970 PCnet-PCI LANCE
 product AMD PCHOME_PCI		0x2001	79c978 PChome-PCI LANCE
 product AMD PCSCSI_PCI		0x2020	53c974 PCscsi-PCI SCSI
 product AMD PCNETS_PCI		0x2040	79C974 PCnet-PCI Ether+SCSI
-product AMD AMD_751AGP		0x7006	751 PCI-AGP
-product AMD AMD_751PCI		0x7007	751 PCI-PCI
+/* http://www.amd.com/products/cpg/athlon/techdocs/pdf/21910.pdf */
+product AMD SC751_SC		0x7006  751 System Controller
+product AMD SC751_PPB		0x7007  751 PCI-PCI
+/* http://www.amd.com/products/cpg/athlon/techdocs/pdf/22548.pdf */
+product AMD PBC756_ISA		0x7408  756 PCI-to-ISA Bridge
+product AMD PBC756_IDE		0x7409  756 IDE
+product AMD PBC756_PMC		0x740B  756 Power Management
+product AMD PBC756_USB		0x740C  756 USB Host
 
 /* Apple products */
 product APPLE BANDIT		0x0001	PCI
+product APPLE GC		0x0002	PCI
+product APPLE OHARE		0x0007	PCI
+product APPLE HEATHROW		0x0010	MACIO
+product APPLE PADDINGTON	0x0017	MACIO
+product APPLE UNINORTHETH	0x001e	PCI
+product APPLE UNINORTH		0x001f	PCI
+product APPLE UNINORTHAGP	0x0020	AGP
+product APPLE GMAC		0x0021	GMAC
+product APPLE KEYLARGO		0x0022	MACIO
 
 /* ARC Logic products */
 product ARC 1000PV		0xa091	1000PV
@@ -1345,7 +1365,7 @@ product SYMPHONY 82C565		0x0565	82C565 PCI-ISA
 /* Tekram Technology products (1st ID)*/
 product TEKRAM 	DC290		0xdc29	DC-290(M)
 
-/* Tekram Technology products (2nd ID) */
+/* Tekram Technology products(2) */
 product TEKRAM2	DC690C		0x690c	DC-690C
 
 /* Texas Instruments products */
@@ -1371,8 +1391,9 @@ product TI PERMEDIA2		0x3d07	3DLabs Permedia 2
 product TOSHIBA	R4X00		0x102f	R4x00 Host-PCI
 product TOSHIBA	TC35856F	0x0020	TC35856F ATM (Meteor)
 
-/* Toshiba (2nd ID) products */
+/* Toshiba(2) products */
 product TOSHIBA2 THB 		0x0601	Host-PCI
+product TOSHIBA2 ISA 		0x0602	PCI-ISA
 product TOSHIBA2 ToPIC95	0x0603	ToPIC95 CardBus-PCI
 product TOSHIBA2 ToPIC95B	0x060a	ToPIC95B PCI-CardBus
 product TOSHIBA2 ToPIC97	0x060f	ToPIC97 PCI-CardBus
@@ -1548,6 +1569,10 @@ product WINBOND W89C940F	0x0940	Linksys EtherPCI II
 
 /* Winbond Electronics products (PCI products set 2) */
 product WINBOND2 W89C940	0x1980	Linksys EtherPCI
+
+/* Motorola products */
+product MOT 	MPC105		0x0001	MPC105 PPC PCI bridge
+product MOT	MPC106		0x0002	MPC106 PPC PCI bridge
 
 /* Yamaha products */
 product YAMAHA YMF724E_V	0x0004	724 Audio

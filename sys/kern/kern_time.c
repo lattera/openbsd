@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.16 2000/01/22 23:41:42 millert Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.16.2.1 2000/03/24 09:09:25 niklas Exp $	*/
 /*	$NetBSD: kern_time.c,v 1.20 1996/02/18 11:57:06 fvdl Exp $	*/
 
 /*
@@ -486,10 +486,10 @@ sys_setitimer(p, v, retval)
 		return (EINVAL);
 	s = splclock();
 	if (SCARG(uap, which) == ITIMER_REAL) {
-		untimeout(realitexpire, (void *)p);
+		timeout_del(&p->p_realit_to);
 		if (timerisset(&aitv.it_value)) {
 			timeradd(&aitv.it_value, &time, &aitv.it_value);
-			timeout(realitexpire, (void *)p, hzto(&aitv.it_value));
+			timeout_add(&p->p_realit_to, hzto(&aitv.it_value));
 		}
 		p->p_realtimer = aitv;
 	} else
@@ -524,8 +524,8 @@ realitexpire(arg)
 		timeradd(&p->p_realtimer.it_value,
 		    &p->p_realtimer.it_interval, &p->p_realtimer.it_value);
 		if (timercmp(&p->p_realtimer.it_value, &time, >)) {
-			timeout(realitexpire, (void *)p,
-			    hzto(&p->p_realtimer.it_value));
+			timeout_add(&p->p_realit_to,
+				    hzto(&p->p_realtimer.it_value));
 			splx(s);
 			return;
 		}
@@ -593,4 +593,33 @@ expire:
 	} else
 		itp->it_value.tv_usec = 0;		/* sec is already 0 */
 	return (0);
+}
+
+/*
+ * ratecheck(): simple time-based rate-limit checking.  see ratecheck(9)
+ * for usage and rationale.
+ */
+int
+ratecheck(lasttime, mininterval)
+	struct timeval *lasttime;
+	const struct timeval *mininterval;
+{
+	struct timeval delta;
+	int s, rv = 0;
+
+	s = splclock(); 
+	timersub(&mono_time, lasttime, &delta);
+
+	/*
+	 * check for 0,0 is so that the message will be seen at least once,
+	 * even if interval is huge.
+	 */
+	if (timercmp(&delta, mininterval, >=) ||
+	    (lasttime->tv_sec == 0 && lasttime->tv_usec == 0)) {
+		*lasttime = mono_time;
+		rv = 1;
+	}
+	splx(s);
+
+	return (rv);
 }

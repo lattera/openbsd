@@ -1,4 +1,4 @@
-/*	$Id: SRT1.c,v 1.2 1996/02/03 03:57:09 build Exp build $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Attic/SRT1.c,v 1.1.1.1.14.1 2000/03/24 09:08:20 niklas Exp $ */
 
 /*
  * Copyright (c) 1996 Nivas Madhur

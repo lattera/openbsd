@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2 2000/03/23 20:02:57 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2.2.1 2000/03/24 09:09:21 niklas Exp $	*/
 /*	$NetBSD: if_ray.c,v 1.17 2000/03/23 07:01:42 thorpej Exp $	*/
 
 /*

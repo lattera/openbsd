@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158 2000/02/11 18:47:17 jason Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.1 2000/03/24 09:07:34 niklas Exp $
 #	$NetBSD: GENERIC,v 1.48 1996/05/20 18:17:23 mrg Exp $
 #
 #	GENERIC -- everything that's currently supported
@@ -21,10 +21,6 @@ option		UVM		# use the UVM virtual memory system
 option		XSERVER		# diddle with console driver
 option		APERTURE	# in-kernel aperture driver for XFree86
 
-# Some BIOSes don't get the size of extended memory right.  If you
-# have a broken BIOS, uncomment the following and set the value
-# properly for your system.
-#option		EXTMEM_SIZE=...	# size of extended memory
 #option		DUMMY_NOPS	# speed hack; recommended
 
 option		COMPAT_SVR4	# binary compatibility with SVR4
@@ -244,6 +240,7 @@ sm*	at pcmcia? function ?			# PCMCIA based sm ethernet
 xe*	at pcmcia? function ?			# Xircom ethernet
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11
 #cnw*	at pcmcia? function ?			# Xircom Netwave
+#ray*	at pcmcia? function ?			# Raylink Aviator2.4/Pro 802.11
 fpa*	at pci? dev ? function ?		# DEC DEFPA FDDI
 xl*	at pci? dev ? function ?		# 3c9xx ethernet
 rl*	at pci? dev ? function ?		# RealTek 81[23]9 ethernet
@@ -328,7 +325,7 @@ joy*	at isapnp?
 #wdt0	at pci? dev ? function ?	# Ind Computer Source PCI-WDT50x driver
 
 # crypto support
-#aeon*	at pci? dev ? function ?		# Aeon crypto card
+hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
 
 pseudo-device	pctr		1
 pseudo-device	mtrr		1	# Memory range attributes control

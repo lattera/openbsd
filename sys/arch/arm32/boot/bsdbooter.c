@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/boot/Attic/bsdbooter.c,v 1.1.1.1.16.1 2000/03/24 09:07:09 niklas Exp $ */
 /* $NetBSD: bsdbooter.c,v 1.1 1996/01/31 23:18:08 mark Exp $ */
 
 /*
@@ -44,7 +45,6 @@
  *
  * Based on kate/boot/boot.c
  *
- *    $Id: bsdbooter.c,v 1.1 1996/01/31 23:18:08 mark Exp $
  */
 
 /* Include standard header files */

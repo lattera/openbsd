@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.1 2000/03/02 07:04:31 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.2 2000/03/24 09:08:18 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -55,7 +55,7 @@
 #include <sys/reboot.h>
 #include <sys/conf.h>
 #include <sys/file.h>
-#include <sys/callout.h>
+#include <sys/timeout.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/mount.h>
@@ -636,12 +636,9 @@ cpu_startup()
                           VM_MBUF_SIZE, FALSE);
 
    /*
-    * Initialize callouts
+    * Initialize timeouts
     */
-   callfree = callout;
-   for (i = 1; i < ncallout; i++)
-      callout[i-1].c_next = &callout[i];
-   callout[i-1].c_next = NULL;
+   timeout_init();
 
    printf("avail mem = %d\n", ptoa(cnt.v_free_count));
    printf("using %d buffers containing %d bytes of memory\n",
@@ -700,7 +697,7 @@ register caddr_t v;
 #ifdef REAL_CLISTS
    valloc(cfree, struct cblock, nclist);
 #endif
-   valloc(callout, struct callout, ncallout);
+   valloc(timeouts, struct timeout, ntimeout);
 #if 0
    valloc(swapmap, struct map, nswapmap = maxproc * 2);
 #endif 

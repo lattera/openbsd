@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/atari/stand/tostools/aptck/Attic/aptck.in,v 1.1.16.1 2000/03/24 09:07:20 niklas Exp $	*/
 /*	$NetBSD: aptck.in,v 1.1.1.1 1996/01/07 21:54:17 leo Exp $	*/
 
 /*
@@ -44,7 +45,7 @@ static void	usage   PROTO((void)) NORETURN;
 static void
 version()
 {
-	eprintf("%s\n", "$Revision: 1.1.1.1 $");
+	eprintf("%s\n", "$Revision$");
 	xexit(EXIT_SUCCESS);
 }
 

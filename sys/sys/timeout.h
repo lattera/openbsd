@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/timeout.h,v 1.6 2000/03/23 16:52:26 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/timeout.h,v 1.6.2.1 2000/03/24 09:09:45 niklas Exp $	*/
 /*
  * Copyright (c) 2000 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 

@@ -1,4 +1,4 @@
-/*	$NetBSD: uvm_swap.c,v 1.26 1999/03/26 17:34:16 chs Exp $	*/
+/*	$NetBSD: uvm_swap.c,v 1.27 1999/03/30 16:07:47 chs Exp $	*/
 
 /*
  * Copyright (c) 1995, 1996, 1997 Matthew R. Green
@@ -282,6 +282,7 @@ boolean_t uvm_swap_allocpages __P((struct vm_page **, int));
 void uvm_swap_freepages __P((struct vm_page **, int));
 void uvm_swap_markdecrypt __P((struct swapdev *, int, int, int));
 boolean_t uvm_swap_needdecrypt __P((struct swapdev *, int));
+void uvm_swap_initcrypt __P((struct swapdev *, int));
 #endif
 
 /*
@@ -358,6 +359,39 @@ uvm_swap_init()
 }
 
 #ifdef UVM_SWAP_ENCRYPT
+void
+uvm_swap_initcrypt_all(void)
+{
+	struct swapdev *sdp;
+	struct swappri *spp;
+
+	simple_lock(&uvm.swap_data_lock);
+
+	for (spp = swap_priority.lh_first; spp != NULL;
+	     spp = spp->spi_swappri.le_next) {
+		for (sdp = spp->spi_swapdev.cqh_first;
+		     sdp != (void *)&spp->spi_swapdev;
+		     sdp = sdp->swd_next.cqe_next)
+			if (sdp->swd_decrypt == NULL)
+				uvm_swap_initcrypt(sdp, sdp->swd_npages);
+	}
+	simple_unlock(&uvm.swap_data_lock);
+}
+
+void
+uvm_swap_initcrypt(struct swapdev *sdp, int npages)
+{
+	/*
+	 * keep information if a page needs to be decrypted when we get it
+	 * from the swap device.
+	 * We cannot chance a malloc later, if we are doing ASYNC puts,
+	 * we may not call malloc with M_WAITOK.  This consumes only
+	 * 8KB memory for a 256MB swap partition.
+	 */
+	sdp->swd_decrypt = malloc(SWD_DCRYPT_SIZE(npages), M_VMSWAP, M_WAITOK);
+	bzero(sdp->swd_decrypt, SWD_DCRYPT_SIZE(npages));
+}
+
 boolean_t
 uvm_swap_allocpages(struct vm_page **pps, int npages)
 {
@@ -366,15 +400,13 @@ uvm_swap_allocpages(struct vm_page **pps, int npages)
 	boolean_t fail;
 
 	/* Estimate if we will succeed */
-	s = splimp();
-	uvm_lock_fpageq();
+	s = uvm_lock_fpageq();
 
 	minus = uvmexp.free - npages;
 	reserve = uvmexp.reserve_kernel;
 	fail = uvmexp.free - npages < uvmexp.reserve_kernel;
 
-	uvm_unlock_fpageq();
-	splx(s);
+	uvm_unlock_fpageq(s);
 
 	if (fail)
 		return FALSE;
@@ -1111,15 +1143,8 @@ swap_on(p, sdp)
 	}
 
 #ifdef UVM_SWAP_ENCRYPT
-	/*
-	 * keep information if a page needs to be decrypted when we get it
-	 * from the swap device.
-	 * We cannot chance a malloc later, if we are doing ASYNC puts,
-	 * we may not call malloc with M_WAITOK.  This takes consumes only
-	 * 8KB memory for a 256MB swap partition.
-	 */
-	sdp->swd_decrypt = malloc(SWD_DCRYPT_SIZE(npages), M_VMSWAP, M_WAITOK);
-	bzero(sdp->swd_decrypt, SWD_DCRYPT_SIZE(npages));
+	if (uvm_doswapencrypt)
+		uvm_swap_initcrypt(sdp, npages);
 #endif
 	/*
 	 * now add the new swapdev to the drum and enable.
@@ -1222,7 +1247,8 @@ swap_off(p, sdp)
 	return ENODEV;
 
 #ifdef UVM_SWAP_ENCRYPT
-	free(sdp->swd_decrypt);
+	if (sdp->swd_decrypt)
+		free(sdp->swd_decrypt);
 #endif
 	extent_free(swapmap, sdp->swd_mapoffset, sdp->swd_mapsize, EX_WAITOK);
 	name = sdp->swd_ex->ex_name;

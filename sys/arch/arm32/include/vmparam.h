@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/include/Attic/vmparam.h,v 1.1.1.1.16.1 2000/03/24 09:07:17 niklas Exp $ */
 /* $NetBSD: vmparam.h,v 1.1 1996/01/31 23:23:37 mark Exp $ */
 
 /*
@@ -32,7 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: vmparam.h,v 1.1 1996/01/31 23:23:37 mark Exp $
  */
 
 #ifndef	_ARM32_VMPARAM_H_

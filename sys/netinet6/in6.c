@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.1 2000/03/02 07:04:44 niklas Exp $	*/
-/*	$KAME: in6.c,v 1.55 2000/02/25 00:32:23 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.2 2000/03/24 09:09:40 niklas Exp $	*/
+/*	$KAME: in6.c,v 1.63 2000/03/21 05:18:38 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -311,7 +311,8 @@ in6_control(so, cmd, data, ifp, p)
 #ifdef COMPAT_IN6IFIOCTL
 	struct sockaddr_in6 net;
 #endif
-	int	error = 0, hostIsNew, prefixIsNew;
+	int error = 0, hostIsNew, prefixIsNew;
+	int newifaddr;
 	time_t time_second = (time_t)time.tv_sec;
 	int privileged;
 
@@ -448,11 +449,14 @@ in6_control(so, cmd, data, ifp, p)
 			ia->ia_ifa.ifa_addr = (struct sockaddr *)&ia->ia_addr;
 			ia->ia_addr.sin6_family = AF_INET6;
 			ia->ia_addr.sin6_len = sizeof(ia->ia_addr);
-			ia->ia_ifa.ifa_dstaddr
-				= (struct sockaddr *)&ia->ia_dstaddr;
 			if (ifp->if_flags & IFF_POINTOPOINT) {
+				ia->ia_ifa.ifa_dstaddr
+					= (struct sockaddr *)&ia->ia_dstaddr;
 				ia->ia_dstaddr.sin6_family = AF_INET6;
 				ia->ia_dstaddr.sin6_len = sizeof(ia->ia_dstaddr);
+			} else {
+				ia->ia_ifa.ifa_dstaddr = NULL;
+				bzero(&ia->ia_dstaddr, sizeof(ia->ia_dstaddr));
 			}
 			ia->ia_ifa.ifa_netmask
 				= (struct sockaddr *)&ia->ia_prefixmask;
@@ -469,7 +473,10 @@ in6_control(so, cmd, data, ifp, p)
 			TAILQ_INSERT_TAIL(&ifp->if_addrlist,
 				(struct ifaddr *)ia, ifa_list);
 			ia->ia_ifa.ifa_refcnt++;
-		}
+
+			newifaddr = 1;
+		} else
+			newifaddr = 0;
 
 		if (cmd == SIOCAIFADDR_IN6) {
 			/* sanity for overflow - beware unsigned */
@@ -620,7 +627,37 @@ in6_control(so, cmd, data, ifp, p)
 		break;
 
 	case SIOCSIFADDR_IN6:
-		return(in6_ifinit(ifp, ia, &ifr->ifr_addr, 1));
+		error = in6_ifinit(ifp, ia, &ifr->ifr_addr, 1);
+#if 0
+		/*
+		 * the code chokes if we are to assign multiple addresses with
+		 * the same address prefix (rtinit() will return EEXIST, which
+		 * is not fatal actually).  we will get memory leak if we
+		 * don't do it.
+		 * -> we may want to hide EEXIST from rtinit().
+		 */
+  undo:
+		if (error && newifaddr) {
+			TAILQ_REMOVE(&ifp->if_addrlist, &ia->ia_ifa, ifa_list);
+			IFAFREE(&ia->ia_ifa);
+
+			oia = ia;
+			if (oia == (ia = in6_ifaddr))
+				in6_ifaddr = ia->ia_next;
+			else {
+				while (ia->ia_next && (ia->ia_next != oia))
+					ia = ia->ia_next;
+				if (ia->ia_next)
+					ia->ia_next = oia->ia_next;
+				else {
+					printf("Didn't unlink in6_ifaddr "
+					    "from list\n");
+				}
+			}
+			IFAFREE(&ia->ia_ifa);
+		}
+#endif
+		return error;
 
 #ifdef COMPAT_IN6IFIOCTL		/* XXX should be unused */
 	case SIOCSIFNETMASK_IN6:
@@ -700,8 +737,13 @@ in6_control(so, cmd, data, ifp, p)
 			}
 			prefixIsNew = 1; /* We lie; but effect's the same */
 		}
-		if (hostIsNew || prefixIsNew)
+		if (hostIsNew || prefixIsNew) {
 			error = in6_ifinit(ifp, ia, &ifra->ifra_addr, 0);
+#if 0
+			if (error)
+				goto undo;
+#endif
+		}
 		if (hostIsNew && (ifp->if_flags & IFF_MULTICAST)) {
 			int error_local = 0;
 
@@ -1073,6 +1115,9 @@ in6_lifaddr_ioctl(so, cmd, data, ifp, p)
 			if ((ifp->if_flags & IFF_POINTOPOINT) != 0) {
 				bcopy(&ia->ia_dstaddr, &ifra.ifra_dstaddr,
 					ia->ia_dstaddr.sin6_len);
+			} else {
+				bzero(&ifra.ifra_dstaddr,
+				    sizeof(ifra.ifra_dstaddr));
 			}
 			bcopy(&ia->ia_prefixmask, &ifra.ifra_dstaddr,
 				ia->ia_prefixmask.sin6_len);

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.1 2000/03/02 07:04:35 niklas Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.2 2000/03/24 09:09:04 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -346,6 +346,7 @@ file kern/kern_subr.c
 file kern/kern_sysctl.c
 file kern/kern_synch.c
 file kern/kern_time.c
+file kern/kern_timeout.c
 file kern/kern_xxx.c
 file kern/subr_autoconf.c
 file kern/subr_disk.c
@@ -503,7 +504,6 @@ file netinet/ip_ipsp.c			(inet | inet6) & (ipsec | tcp_signature)
 file netinet/ip_ipip.c			inet | inet6
 file netinet/ip_ether.c			inet & ipsec
 file netinet/ipsec_input.c		(inet | inet6) & ipsec
-file netinet/ip_xform.c			inet & ipsec
 file netinet/ip_esp.c			inet & ipsec
 file netinet/ip_ah.c			inet & ipsec
 file crypto/rmd160.c			(inet & ipsec) | crypto
@@ -514,6 +514,9 @@ file crypto/skipjack.c			(inet & ipsec) | crypto
 file crypto/ecb_enc.c			(inet & ipsec) | crypto
 file crypto/set_key.c			(inet & ipsec) | crypto
 file crypto/ecb3_enc.c			(inet & ipsec) | crypto
+file crypto/crypto.c			(inet & ipsec) | crypto
+file crypto/cryptosoft.c		(inet & ipsec) | crypto
+file crypto/xform.c			(inet & ipsec) | crypto
 file netatalk/aarp.c			netatalk
 file netatalk/at_control.c		netatalk
 file netatalk/at_proto.c		netatalk

@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.220 2000/02/22 18:50:38 aaron Exp 
+ *		OpenBSD: pcidevs,v 1.228 2000/03/22 03:42:13 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -139,6 +139,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "3Com",
 	    "3c980C 100Base-TX",
+	},
+	{
+	    PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CR990,
+	    0,
+	    "3Com",
+	    "3cr990 TX-97",
 	},
 	{
 	    PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C985,
@@ -369,6 +375,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "AIC-7810",
 	},
 	{
+	    PCI_VENDOR_ADP, PCI_PRODUCT_ADP_2940AU_CN,
+	    0,
+	    "Adaptec",
+	    "AHA-2940AU/CN",
+	},
+	{
 	    PCI_VENDOR_ADP, PCI_PRODUCT_ADP_AIC7850,
 	    0,
 	    "Adaptec",
@@ -485,26 +497,62 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_2940U2,
 	    0,
-	    "Adaptec (2nd ID)",
-	    "AHA-2940U2",
+	    "Adaptec(2)",
+	    "AHA-2940U2 Ultra2",
 	},
 	{
-	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_7890,
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_AIC7890,
 	    0,
-	    "Adaptec (2nd ID)",
-	    "AIC-7890/1",
+	    "Adaptec(2)",
+	    "AIC-7890/1 Ultra2",
 	},
 	{
-	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_3940U2,
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_AIC7892,
 	    0,
-	    "Adaptec (2nd ID)",
-	    "AHA-3940U2",
+	    "Adaptec(2)",
+	    "AIC-7892 Ultra160",
 	},
 	{
-	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_7896,
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_29160,
 	    0,
-	    "Adaptec (2nd ID)",
-	    "AIC-7896/7",
+	    "Adaptec(2)",
+	    "AHA-29160 Ultra160",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_19160B,
+	    0,
+	    "Adaptec(2)",
+	    "AHA-19160B Ultra160",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_3950U2B,
+	    0,
+	    "Adaptec(2)",
+	    "AHA-3950U2B Ultra2",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_3950U2D,
+	    0,
+	    "Adaptec(2)",
+	    "AHA-3950U2D Ultra2",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_AIC7896,
+	    0,
+	    "Adaptec(2)",
+	    "AIC-7896/7 Ultra2",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_AIC7899,
+	    0,
+	    "Adaptec(2)",
+	    "AIC-7899 Ultra160",
+	},
+	{
+	    PCI_VENDOR_ADP2, PCI_PRODUCT_ADP2_3960D,
+	    0,
+	    "Adaptec(2)",
+	    "AHA-3960D Ultra160",
 	},
 	{
 	    PCI_VENDOR_ADVSYS, PCI_PRODUCT_ADVSYS_1200A,
@@ -555,12 +603,6 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "Acenic",
 	},
 	{
-	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_BANDIT,
-	    0,
-	    "Apple Computer",
-	    "PCI",
-	},
-	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PCNET_PCI,
 	    0,
 	    "AMD",
@@ -585,22 +627,100 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "79C974 PCnet-PCI Ether+SCSI",
 	},
 	{
-	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD_751AGP,
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_SC751_SC,
 	    0,
 	    "AMD",
-	    "751 PCI-AGP",
+	    "751 System Controller",
 	},
 	{
-	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD_751PCI,
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_SC751_PPB,
 	    0,
 	    "AMD",
 	    "751 PCI-PCI",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC756_ISA,
+	    0,
+	    "AMD",
+	    "756 PCI-to-ISA Bridge",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC756_IDE,
+	    0,
+	    "AMD",
+	    "756 IDE",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC756_PMC,
+	    0,
+	    "AMD",
+	    "756 Power Management",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC756_USB,
+	    0,
+	    "AMD",
+	    "756 USB Host",
 	},
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_BANDIT,
 	    0,
 	    "Apple Computer",
 	    "PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GC,
+	    0,
+	    "Apple Computer",
+	    "PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_OHARE,
+	    0,
+	    "Apple Computer",
+	    "PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_HEATHROW,
+	    0,
+	    "Apple Computer",
+	    "MACIO",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_PADDINGTON,
+	    0,
+	    "Apple Computer",
+	    "MACIO",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTHETH,
+	    0,
+	    "Apple Computer",
+	    "PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH,
+	    0,
+	    "Apple Computer",
+	    "PCI",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTHAGP,
+	    0,
+	    "Apple Computer",
+	    "AGP",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_GMAC,
+	    0,
+	    "Apple Computer",
+	    "GMAC",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_KEYLARGO,
+	    0,
+	    "Apple Computer",
+	    "MACIO",
 	},
 	{
 	    PCI_VENDOR_ARC, PCI_PRODUCT_ARC_1000PV,
@@ -815,13 +935,13 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_AVANCE2, PCI_PRODUCT_AVANCE2_ALG2301,
 	    0,
-	    "Avance Logic (2nd ID)",
+	    "Avance Logic(2)",
 	    "ALG2301",
 	},
 	{
 	    PCI_VENDOR_AVANCE2, PCI_PRODUCT_AVANCE2_ALG2302,
 	    0,
-	    "Avance Logic (2nd ID)",
+	    "Avance Logic(2)",
 	    "ALG2302",
 	},
 	{
@@ -1475,7 +1595,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_DIAMOND2, PCI_PRODUCT_DIAMOND2_MX300,
 	    0,
-	    "Diamond Multimedia (2nd ID)",
+	    "Diamond Multimedia(2)",
 	    "Monster Sound MX300",
 	},
 	{
@@ -3371,7 +3491,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_SYMPHONY2, PCI_PRODUCT_SYMPHONY2_82C101,
 	    0,
-	    "Symphony Labs (2nd ID)",
+	    "Symphony Labs(2)",
 	    "82C101",
 	},
 	{
@@ -3389,7 +3509,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_TEKRAM2, PCI_PRODUCT_TEKRAM2_DC690C,
 	    0,
-	    "Tekram Technology (2nd ID)",
+	    "Tekram Technology(2)",
 	    "DC-690C",
 	},
 	{
@@ -3509,37 +3629,43 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_THB,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "Host-PCI",
+	},
+	{
+	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_ISA,
+	    0,
+	    "Toshiba(2)",
+	    "PCI-ISA",
 	},
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_ToPIC95,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "ToPIC95 CardBus-PCI",
 	},
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_ToPIC95B,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "ToPIC95B PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_ToPIC97,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "ToPIC97 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_ToPIC100,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "ToPIC100 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_TOSHIBA2, PCI_PRODUCT_TOSHIBA2_TFIRO,
 	    0,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    "Fast Infrared Type O",
 	},
 	{
@@ -4319,8 +4445,20 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_WINBOND2, PCI_PRODUCT_WINBOND2_W89C940,
 	    0,
-	    "Winbond (2nd ID)",
+	    "Winbond(2)",
 	    "Linksys EtherPCI",
+	},
+	{
+	    PCI_VENDOR_MOT, PCI_PRODUCT_MOT_MPC105,
+	    0,
+	    "Motorola",
+	    "MPC105 PPC PCI bridge",
+	},
+	{
+	    PCI_VENDOR_MOT, PCI_PRODUCT_MOT_MPC106,
+	    0,
+	    "Motorola",
+	    "MPC106 PPC PCI bridge",
 	},
 	{
 	    PCI_VENDOR_YAMAHA, PCI_PRODUCT_YAMAHA_YMF724E_V,
@@ -4625,7 +4763,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_COMPAQ2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Compaq (2nd ID)",
+	    "Compaq(2)",
 	    NULL,
 	},
 	{
@@ -5555,7 +5693,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_FUJITSU2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Fujitsu (2nd ID)",
+	    "Fujitsu(2)",
 	    NULL,
 	},
 	{
@@ -6521,7 +6659,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_TOSHIBA2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Toshiba (2nd ID)",
+	    "Toshiba(2)",
 	    NULL,
 	},
 	{
@@ -6593,7 +6731,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_MATSUSHITA2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Matsushita Electronics (2nd ID)",
+	    "Matsushita Electronics(2)",
 	    NULL,
 	},
 	{
@@ -6701,7 +6839,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_FUJITSU3, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Fujitsu (3th ID)",
+	    "Fujitsu(3)",
 	    NULL,
 	},
 	{
@@ -6725,7 +6863,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_SIERRA2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Sierra Research & Technology (2nd ID)",
+	    "Sierra Research & Technology(2)",
 	    NULL,
 	},
 	{
@@ -6839,7 +6977,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_MOT2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Motorola (2nd ID)",
+	    "Motorola(2)",
 	    NULL,
 	},
 	{
@@ -6893,7 +7031,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_NEC2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "NEC (2nd ID)",
+	    "NEC(2)",
 	    NULL,
 	},
 	{
@@ -7115,7 +7253,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_DIAMOND2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Diamond Multimedia (2nd ID)",
+	    "Diamond Multimedia(2)",
 	    NULL,
 	},
 	{
@@ -7175,13 +7313,13 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_SYMPHONY2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Symphony Labs (2nd ID)",
+	    "Symphony Labs(2)",
 	    NULL,
 	},
 	{
 	    PCI_VENDOR_TEKRAM2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Tekram Technology (2nd ID)",
+	    "Tekram Technology(2)",
 	    NULL,
 	},
 	{
@@ -7193,7 +7331,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_AVANCE2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Avance Logic (2nd ID)",
+	    "Avance Logic(2)",
 	    NULL,
 	},
 	{
@@ -7217,7 +7355,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_BUSLOGIC2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Buslogic (2nd ID)",
+	    "Buslogic(2)",
 	    NULL,
 	},
 	{
@@ -7229,7 +7367,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_NETPOWER2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "NetPower (2nd ID)",
+	    "NetPower(2)",
 	    NULL,
 	},
 	{
@@ -7253,13 +7391,13 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_TRIGEM2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Trigem Computer (2nd ID)",
+	    "Trigem Computer(2)",
 	    NULL,
 	},
 	{
 	    PCI_VENDOR_WINBOND2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Winbond (2nd ID)",
+	    "Winbond(2)",
 	    NULL,
 	},
 	{
@@ -7283,7 +7421,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	{
 	    PCI_VENDOR_ADP2, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Adaptec (2nd ID)",
+	    "Adaptec(2)",
 	    NULL,
 	},
 	{

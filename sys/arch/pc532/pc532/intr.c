@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pc532/pc532/Attic/intr.c,v 1.5.2.1 2000/03/24 09:08:28 niklas Exp $  */
 /*	$NetBSD: intr.c,v 1.5 1995/09/26 20:16:26 phil Exp $  */
 
 /*
@@ -29,7 +30,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: intr.c,v 1.4 1999/05/24 23:09:06 jason Exp $
  */
 
 #define DEFINE_SPLX

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28 2000/02/10 15:16:59 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.1 2000/03/24 09:07:29 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -75,10 +75,6 @@
 #endif
 #include "assym.h"
 
-
-	/* this macro determines when to use cr28 (ie HVT works) */
-#define	USECR28	((defined(HP7100LC_CPU) || defined(HP7300LC_CPU)) && \
-	!(defined(HP71000_CPU) || defined(HP7200_CPU) || defined(HP7300_CPU)))
 
 	.import	$global$, data
 	.import pdc, data
@@ -319,7 +315,6 @@ ENTRY(pdc_call)
 
 	mfctl	eiem, t1
 	mtctl	r0, eiem
-	stw	t1, HPPA_FRAME_ARG(0)(sp)
 	stw	rp, HPPA_FRAME_CRP(sp)
 	copy	arg0, r31
 	copy	sp, ret1
@@ -331,64 +326,66 @@ ENTRY(pdc_call)
 	ldil	L%pdc_stack, ret1
 
 pdc_call_unmapped1
-	ldo	HPPA_FRAME_SIZE+24*4(ret1), ret1
+	copy	sp, r1
+	ldo	HPPA_FRAME_SIZE+24*4(ret1), sp
 
-	stw	sp, HPPA_FRAME_PSP(ret1)
+	stw	r1, HPPA_FRAME_PSP(sp)
+
+	/* save kernelmapped and eiem */
+	stw	ret0, HPPA_FRAME_ARG(21)(sp)
+	stw	t1, HPPA_FRAME_ARG(22)(sp)
+
+	/* copy arguments */
 	copy	arg2, arg0
 	copy	arg3, arg1
-	ldw	HPPA_FRAME_ARG(4)(sp), arg2
-	ldw	HPPA_FRAME_ARG(5)(sp), arg3
-	ldw	HPPA_FRAME_ARG(6)(sp), t1
-	ldw	HPPA_FRAME_ARG(7)(sp), t2
-	ldw	HPPA_FRAME_ARG(8)(sp), t3
-	ldw	HPPA_FRAME_ARG(9)(sp), t4
-	stw	t1, HPPA_FRAME_ARG(4)(ret1)
-	stw	t2, HPPA_FRAME_ARG(5)(ret1)
-	stw	t3, HPPA_FRAME_ARG(6)(ret1)
-	stw	t4, HPPA_FRAME_ARG(7)(ret1)
-	ldw	HPPA_FRAME_ARG(10)(sp), t1
-	ldw	HPPA_FRAME_ARG(11)(sp), t2
-	ldw	HPPA_FRAME_ARG(12)(sp), t3
-	ldw	HPPA_FRAME_ARG(13)(sp), t4
-	stw	t1, HPPA_FRAME_ARG(8)(ret1)
-	stw	t2, HPPA_FRAME_ARG(9)(ret1)
-	stw	t3, HPPA_FRAME_ARG(10)(ret1)
-	stw	t4, HPPA_FRAME_ARG(11)(ret1)
+	ldw	HPPA_FRAME_ARG(4)(r1), arg2
+	ldw	HPPA_FRAME_ARG(5)(r1), arg3
+	ldw	HPPA_FRAME_ARG(6)(r1), t1
+	ldw	HPPA_FRAME_ARG(7)(r1), t2
+	ldw	HPPA_FRAME_ARG(8)(r1), t3
+	ldw	HPPA_FRAME_ARG(9)(r1), t4
+	stw	t1, HPPA_FRAME_ARG(4)(sp)
+	stw	t2, HPPA_FRAME_ARG(5)(sp)
+	stw	t3, HPPA_FRAME_ARG(6)(sp)
+	stw	t4, HPPA_FRAME_ARG(7)(sp)
+	ldw	HPPA_FRAME_ARG(10)(r1), t1
+	ldw	HPPA_FRAME_ARG(11)(r1), t2
+	ldw	HPPA_FRAME_ARG(12)(r1), t3
+	ldw	HPPA_FRAME_ARG(13)(r1), t4
+	stw	t1, HPPA_FRAME_ARG(8)(sp)
+	stw	t2, HPPA_FRAME_ARG(9)(sp)
+	stw	t3, HPPA_FRAME_ARG(10)(sp)
+	stw	t4, HPPA_FRAME_ARG(11)(sp)
 
 	/* save temp control regs */
 	mfctl	cr24, t1
 	mfctl	cr25, t2
 	mfctl	cr26, t3
 	mfctl	cr27, t4	
-	stw	t1, HPPA_FRAME_ARG(12)(ret1)
-	stw	t2, HPPA_FRAME_ARG(13)(ret1)
-	stw	t3, HPPA_FRAME_ARG(14)(ret1)
-	stw	t4, HPPA_FRAME_ARG(15)(ret1)
+	stw	t1, HPPA_FRAME_ARG(12)(sp)
+	stw	t2, HPPA_FRAME_ARG(13)(sp)
+	stw	t3, HPPA_FRAME_ARG(14)(sp)
+	stw	t4, HPPA_FRAME_ARG(15)(sp)
 	mfctl	cr28, t1
 	mfctl	cr29, t2
 	mfctl	cr30, t3
 	mfctl	cr31, t4	
-	stw	t1, HPPA_FRAME_ARG(16)(ret1)
-	stw	t2, HPPA_FRAME_ARG(17)(ret1)
-	stw	t3, HPPA_FRAME_ARG(18)(ret1)
-	stw	t4, HPPA_FRAME_ARG(19)(ret1)
+	stw	t1, HPPA_FRAME_ARG(16)(sp)
+	stw	t2, HPPA_FRAME_ARG(17)(sp)
+	stw	t3, HPPA_FRAME_ARG(18)(sp)
+	stw	t4, HPPA_FRAME_ARG(19)(sp)
 
 	comb,=	r0, ret0, pdc_call_unmapped2
 	nop
 
 	copy	arg0, t4
-	mfctl	eiem, t1
-	mtctl	r0, eiem
-
 	ldi	PSW_Q, arg0 /* (!pdc_flag && args[0] == PDC_PIM)? PSW_M:0) */
 	break	HPPA_BREAK_KERNEL, HPPA_BREAK_SET_PSW
 	nop
-	stw	t1, HPPA_FRAME_ARG(22)(ret1)
-	stw	ret0, HPPA_FRAME_ARG(23)(ret1)
+	stw	ret0, HPPA_FRAME_ARG(23)(sp)
 	copy	t4, arg0
 
 pdc_call_unmapped2
-	copy	ret1, sp
 	.call
 	blr	r0, rp
 	bv,n    (r31)
@@ -412,27 +409,22 @@ pdc_call_unmapped2
 	mtctl	t3, cr30
 	mtctl	t4, cr31
 
-	copy	sp, t4	
-	ldw	HPPA_FRAME_PSP(t4), sp
-
-	ldil	L%kernelmapped, t1
-	ldw	R%kernelmapped(t1), t1
+	ldw	HPPA_FRAME_ARG(21)(sp), t1
+	ldw	HPPA_FRAME_ARG(22)(sp), t2
 	comb,=	r0, t1, pdc_call_unmapped3
 	nop
 
 	copy	ret0, t3
-	ldw	HPPA_FRAME_ARG(22)(t4), t1
-	ldw	HPPA_FRAME_ARG(23)(t4), arg0
+	ldw	HPPA_FRAME_ARG(23)(sp), arg0
 	break	HPPA_BREAK_KERNEL, HPPA_BREAK_SET_PSW
 	nop
 	copy	t3, ret0
-	mtctl	t1, eiem
 
 pdc_call_unmapped3
-	ldw	HPPA_FRAME_ARG(0)(sp), t1
+	ldw	HPPA_FRAME_PSP(sp), sp
 	ldw	HPPA_FRAME_CRP(sp), rp
 	bv	r0(rp)
-	mtctl	t1, eiem
+	mtctl	t2, eiem
 EXIT(pdc_call)
 
 /*
@@ -540,46 +532,45 @@ $syscall
 	stw	r1, TF_CR15-TF_SIZE(sr1, t3)	/* eiem */
 	mtctl	r1, eiem
 
-	stw	r2 , TF_R2 -TF_SIZE(sr1, t3)
+	/*
+	 * we beleive that any calee-save registers
+	 * will be saved accordingly in either syscall()
+	 * or deeper called functions
+	 */
 	stw	r3 , TF_R3 -TF_SIZE(sr1, t3)
-	stw	r4 , TF_R4 -TF_SIZE(sr1, t3)
-	stw	r5 , TF_R5 -TF_SIZE(sr1, t3)
-	stw	r6 , TF_R6 -TF_SIZE(sr1, t3)
-	stw	r7 , TF_R7 -TF_SIZE(sr1, t3)
-	stw	r8 , TF_R8 -TF_SIZE(sr1, t3)
-	stw	r9 , TF_R9 -TF_SIZE(sr1, t3)
-	stw	r10, TF_R10-TF_SIZE(sr1, t3)
-	stw	r11, TF_R11-TF_SIZE(sr1, t3)
-	stw	r12, TF_R12-TF_SIZE(sr1, t3)
-	stw	r13, TF_R13-TF_SIZE(sr1, t3)
-	stw	r14, TF_R14-TF_SIZE(sr1, t3)
-	stw	r15, TF_R15-TF_SIZE(sr1, t3)
-	stw	r16, TF_R16-TF_SIZE(sr1, t3)
-	stw	r17, TF_R17-TF_SIZE(sr1, t3)
-	stw	r18, TF_R18-TF_SIZE(sr1, t3)
 	stw	r27, TF_R27-TF_SIZE(sr1, t3)	/* dp */
+#ifdef DDB
+	stw	r0, 0(t3)	/* terminate frame */
+	copy	r0 , r3
+	stw	r0, HPPA_FRAME_PSP(sp)
+	stw	r0, HPPA_FRAME_CRP(sp)
+#endif
 
-	/* copy arguments */
-	stw	arg0,  0(sr1, t3)
-	stw	arg1,  4(sr1, t3)
-	stw	arg2,  8(sr1, t3)
-	stw	arg3, 12(sr1, t3)
+	/*
+	 * Copy Arguments
+	 * unfortunately mmap() under bsd requires 7 words;
+	 * linux is confined to 5, and hpux to 6.
+	 * assuming the `long' syscall it gives us the maximum
+	 * 9 words, which very much overkill for an average of 3.
+	 * we keep it at 10, since bundling will keep it
+	 * at the same speed as 9 anyway.
+	 */
+	stw	arg0, 1*4(sr1, t3)
+	stw	arg1, 2*4(sr1, t3)
+	stw	arg2, 3*4(sr1, t3)
+	stw	arg3, 4*4(sr1, t3)
 	ldw	HPPA_FRAME_ARG( 4)(t4), arg0
 	ldw	HPPA_FRAME_ARG( 5)(t4), arg1
 	ldw	HPPA_FRAME_ARG( 6)(t4), arg2
 	ldw	HPPA_FRAME_ARG( 7)(t4), arg3
-	stw	arg0, 16(sr1, t3)
-	stw	arg1, 20(sr1, t3)
-	stw	arg2, 24(sr1, t3)
-	stw	arg3, 28(sr1, t3)
+	stw	arg0, 5*4(sr1, t3)
+	stw	arg1, 6*4(sr1, t3)
+	stw	arg2, 7*4(sr1, t3)
+	stw	arg3, 8*4(sr1, t3)
 	ldw	HPPA_FRAME_ARG( 8)(t4), arg0
 	ldw	HPPA_FRAME_ARG( 9)(t4), arg1
-	ldw	HPPA_FRAME_ARG(10)(t4), arg2
-	ldw	HPPA_FRAME_ARG(11)(t4), arg3
-	stw	arg0, 32(sr1, t3)
-	stw	arg1, 36(sr1, t3)
-	stw	arg2, 40(sr1, t3)
-	stw	arg3, 44(sr1, t3)
+	stw	arg0, 9*4(sr1, t3)
+	stw	arg1,10*4(sr1, t3)
 
 	/*
 	 * Save the rest of the CPU context
@@ -655,12 +646,8 @@ $syscall
 	mtsp	r0, sr6
 	mtsp	r0, sr7
 
-	/* setup frame */
-	stw	r0, HPPA_FRAME_PSP(sp)
-	stw	r0, HPPA_FRAME_CRP(sp)
-
 	ldo	-TF_SIZE(t3), arg0
-	copy	t3, arg1
+	ldo	4(t3), arg1
 
 	ldil	L%$global$,dp
 	ldo	R%$global$(dp),dp
@@ -708,10 +695,11 @@ $syscall_return_copy_loop
 
 	/* 1b. restore most of the general registers */
 	ldw	TF_CR11(t3), t1
-	ldw	TF_R1(t3), r1
 	mtctl	t1, sar
+	ldw	TF_R1(t3), r1
 	ldw	TF_R2(t3), r2
 	ldw	TF_R3(t3), r3
+#ifdef DDB
 	ldw	TF_R4(t3), r4
 	ldw	TF_R5(t3), r5
 	ldw	TF_R6(t3), r6
@@ -727,10 +715,11 @@ $syscall_return_copy_loop
 	ldw	TF_R16(t3), r16
 	ldw	TF_R17(t3), r17
 	ldw	TF_R18(t3), r18
-	ldw	TF_R19(t3), r19
+#endif
+	ldw	TF_R19(t3), t4
 	/*	r20(t3) is used as a temporary and will be restored later */
-	/*	r21(t3) is used as a temporary and will be restored later */
-	/*	r22(t3) is used as a temporary and will be restored later */
+	/*	r21(t2) is used as a temporary and will be restored later */
+	/*	r22(t1) is used as a temporary and will be restored later */
 	ldw	TF_R23(t3), r23
 	ldw	TF_R24(t3), r24
 	ldw	TF_R25(t3), r25
@@ -819,6 +808,7 @@ $syscall_end
  * interrupt vector table
  */
 #define	TLABEL(name)	$trap$name
+#define	TELABEL(num)	__CONCAT(trap_ep_,num)
 #define TRAP(name,num) \
 	.import TLABEL(name), code	! \
 	mtctl	r1, tr7			! \
@@ -839,11 +829,41 @@ $syscall_end
 	pre				! \
 	TRAP(name,num)
 
-#if USECR28
-#define	LDCR28	mfctl	cr28, r24
-#else
-#define	LDCR28	/* nop */
-#endif
+#define	STRAP(name,num,pre) \
+	.export	TLABEL(name)$num, entry	! \
+	.label	TLABEL(name)$num	! \
+	pre				! \
+	mtctl	r1, tr7			! \
+	.export	TELABEL(num), entry	! \
+	.label	TELABEL(num)		! \
+	ldil	0,r1			! \
+	ldo	0(r1), r1		! \
+	.call				! \
+	bv	0(r1)			! \
+	ldi	num, r1
+
+#define	LDILDO(name) 			! \
+	.export	name, entry		! \
+	.label	name			! \
+	ldil	L%$name,%r1		! \
+	ldo	R%$name(%r1), %r1
+
+LDILDO(itlb_x)
+LDILDO(dtlb_x)
+LDILDO(tlbd_x)
+
+LDILDO(itlb_s)
+LDILDO(dtlb_s)
+LDILDO(tlbd_s)
+
+LDILDO(itlb_t)
+LDILDO(dtlb_t)
+LDILDO(tlbd_t)
+
+LDILDO(itlb_l)
+LDILDO(dtlb_l)
+LDILDO(tlbd_l)
+
 #define	ITLBPRE \
 	mfctl	pcoq,r9		/* Offset */			! \
 	mfctl	pcsq,r8		/* Space  */			! \
@@ -851,8 +871,8 @@ $syscall_end
 #define	DTLBPRE \
 	mfctl	ior, r9		/* Offset */			! \
 	mfctl	isr, r8		/* Space  */			! \
-	depi    0,31,PGSHIFT,r9	/* align offset to page */	! \
-	LDCR28
+	depi    0,31,PGSHIFT,r9	/* align offset to page */
+	/* CR28XXX according to a popular belief cr28 should be read here */
 #define	HPMCPRE	nop
 
 	.align NBPG
@@ -866,7 +886,7 @@ hpmc_v
 	ATRAP(recnt,T_RECOVERY)		/*  3. recovery counter trap */
 	ATRAP(intr,T_INTERRUPT)		/*  4. external interrupt */
 	ATRAP(lpmc,T_LPMC)		/*  5. low-priority machine check */
-	CTRAP(itlb,T_ITLBMISS,ITLBPRE)	/*  6. instruction TLB miss fault */
+	STRAP(itlb,T_ITLBMISS,ITLBPRE)	/*  6. instruction TLB miss fault */
 	ATRAP(iprot,T_IPROT)		/*  7. instruction protection trap */
 	ATRAP(ill,T_ILLEGAL)		/*  8. Illegal instruction trap */
 	CTRAP(ibrk,T_IBREAK,)		/*  9. break instruction trap */
@@ -879,13 +899,13 @@ hpmc_v
 #else
 	ATRAP(excpt,T_EXCEPTION)
 #endif
-	CTRAP(dtlb,T_DTLBMISS,DTLBPRE)	/* 15. data TLB miss fault */
-	CTRAP(itlb,T_ITLBMISSNA,ITLBPRE)/* 16. ITLB non-access miss fault */
-	CTRAP(dtlb,T_DTLBMISSNA,DTLBPRE)/* 17. DTLB non-access miss fault */
+	STRAP(dtlb,T_DTLBMISS,DTLBPRE)	/* 15. data TLB miss fault */
+	STRAP(itlb,T_ITLBMISSNA,ITLBPRE)/* 16. ITLB non-access miss fault */
+	STRAP(dtlb,T_DTLBMISSNA,DTLBPRE)/* 17. DTLB non-access miss fault */
 	ATRAP(dprot,T_DPROT)		/* 18. data protection trap
 					      unalligned data reference trap */
 	ATRAP(dbrk,T_DBREAK)		/* 19. data break trap */
-	CTRAP(tlbd,T_TLB_DIRTY,DTLBPRE)	/* 20. TLB dirty bit trap */
+	STRAP(tlbd,T_TLB_DIRTY,DTLBPRE)	/* 20. TLB dirty bit trap */
 	ATRAP(pgref,T_PAGEREF)		/* 21. page reference trap */
 	CTRAP(emu,T_EMULATION,)		/* 22. assist emulation trap */
 	ATRAP(hpl,T_HIGHERPL)		/* 23. higher-privelege transfer trap*/
@@ -1162,8 +1182,7 @@ $sfu_emu
 	xor	r16, r24, r24		/* r24 ^= r16 */		! \
 	and	r17, r24, r24		/* r24 &= r17 */		! \
 	mfctl	vtop, r16		/* r16 = address of HPT table */! \
-	or	r16, r24, r24		/* r24 = HPT entry */		! \
-	mtctl	r24, cr28
+	or	r24, r16, r16		/* r16 = HPT entry */
 
 	/* Construct the virtual address tag. */
 #define	VTAG ! \
@@ -1171,83 +1190,75 @@ $sfu_emu
 	dep	r8, 31, 16, r16		/* put in the space id */	! \
 	depi	1, 0, 1, r16		/* and set the valid bit */
 
-
 	.align	64
-	.export	TLABEL(tlbd), entry
-TLABEL(tlbd)
-#if ! USECR28
+$tlbd_x
+$tlbd_s
+$tlbd_t
 	HPTENT	/* will update cr28 */
-#endif
+	mtctl	r16, cr28
 	
 	/*
 	 * Chase the list of entries for this hash bucket until we find
 	 * the correct mapping or NULL.
 	 */
-	ldw	hpt_entry(r24), r24
-$hash_loop_tlbd
+	ldw	hpt_entry(r16), r24
+$hash_loop_tlbd_t
 	comb,=,n r0, r24, TLABEL(all)
 	ldw	pv_va(r24), r25
 	ldw	pv_space(r24), r17
-	comb,<>,n r9, r25, $hash_loop_tlbd
+	comb,<>,n r9, r25, $hash_loop_tlbd_t
 	ldw	pv_hash(r24), r24
-	comb,<>,n r8, r17, $hash_loop_tlbd
+	comb,<>,n r8, r17, $hash_loop_tlbd_t
 	ldw	pv_hash(r24), r24
 
-#if ! USECR28
 	VTAG	/* (r8,r9) -> r16 */
-#endif
 	/* Set the dirty bit for this physical page. */
 	ldw	pv_tlbprot(r24), r25
-	b	$tlb_inshpt
+	b	$tlb_inshpt_t
 	depi	1, TLB_DIRTY_POS, 1, r25
 	
 	.align	32
-	.export	TLABEL(itlb), entry
-TLABEL(itlb)
-#if USECR28
-	HPTENT	/* will update cr28 */
-#endif
-	depi	1, TFF_ITLB_POS, 1, r1	/* mark for ITLB insert */
-	/* FALLTHROUGH */
+$itlb_x
+$itlb_s
+$itlb_t
 
-	.export	TLABEL(dtlb), entry
-TLABEL(dtlb)
-
-$tlbmiss
-	/* r1 is the trap type
+$dtlb_x
+$dtlb_s
+$dtlb_t
+	/*
+	 * r1 is the trap type
 	 * r8 is the space of the address that had the TLB miss
 	 * r9 is the offset of the address that had the TLB miss
 	 * r24 is the correspondent HPT entry pointer
 	 */
 
-#if ! USECR28
 	HPTENT	/* will update cr28 */
+	mtctl	r16, cr28
 	
+	ldw	hpt_tag(r16),r17
 	VTAG	/* (r8,r9) -> r16 */
-	ldw	hpt_tag(r24),r17
 
 	/* Compare the tag against the HPT entry.
 	   If it matches, then do the TLB insertion. */
-	comb,<>,n r16, r17, $tlb_gottalook
+	comb,<>,n r16, r17, $tlb_gottalook_t
 
 	ldw	hpt_tlbpage(r24), r17
-	b	$tlb_gothpt
+	b	$tlb_gothpt_t
 	ldw	hpt_tlbprot(r24), r25
 
-$tlb_gottalook
-#endif
+$tlb_gottalook_t
 	/*
 	 * Chase the list of entries for this hash bucket until we find
 	 * the correct mapping or NULL.
 	 */
 	ldw	hpt_entry(r24),r24
-$hash_loop
+$hash_loop_t
 	comb,=,n r0, r24, TLABEL(all)
 	ldw	pv_va(r24),r25
 	ldw	pv_space(r24),r17
-	comb,<>,n r9,r25,$hash_loop
+	comb,<>,n r9,r25,$hash_loop_t
 	ldw	pv_hash(r24),r24
-	comb,<>,n r8,r17,$hash_loop
+	comb,<>,n r8,r17,$hash_loop_t
 	ldw	pv_hash(r24),r24
 
 	/* Now set things up to enter the real mapping that we want */
@@ -1258,11 +1269,8 @@ $hash_loop
 	 * Load the HPT cache with the miss information for the next time.
 	 * The HPT entry address was saved by the HPTENT
 	 */
-$tlb_inshpt
+$tlb_inshpt_t
 	stw	r25, pv_tlbprot(r24)
-#if USECR28
-	VTAG	/* (r8,r9) -> r16 */
-#endif
 	ldw	pv_tlbpage(r24),r17
 	mfctl	cr28, r24
 
@@ -1270,9 +1278,9 @@ $tlb_inshpt
 	stw	r25, hpt_tlbprot(r24)
 	stw	r17, hpt_tlbpage(r24)
 
-$tlb_gothpt
+$tlb_gothpt_t
 	mfsp	sr1, r16
-	bb,<	r1, TFF_ITLB_POS, $tlb_itlb
+	bb,<	r1, TFF_ITLB_POS, $tlb_itlb_t
 	mtsp	r8, sr1
 
 	idtlba	r17,(sr1, r9)
@@ -1281,12 +1289,107 @@ $tlb_gothpt
 	rfir
 	nop
 
-$tlb_itlb
+$tlb_itlb_t
 	iitlba	r17,(sr1, r9)
 	iitlbp	r25,(sr1, r9)
 	mtsp	r16, sr1
 	rfir
 	nop
+
+	.align	32
+$tlbd_l
+	mfctl	cr28, r16
+
+	/*
+	 * Chase the list of entries for this hash bucket until we find
+	 * the correct mapping or NULL.
+	 */
+	ldw	hpt_entry(r16), r24
+$hash_loop_tlbd_l
+	comb,=,n r0, r24, TLABEL(all)
+	ldw	pv_va(r24), r25
+	ldw	pv_space(r24), r17
+	comb,<>,n r9, r25, $hash_loop_tlbd_l
+	ldw	pv_hash(r24), r24
+	comb,<>,n r8, r17, $hash_loop_tlbd_l
+	ldw	pv_hash(r24), r24
+
+	/* Set the dirty bit for this physical page. */
+	ldw	pv_tlbpage(r24),r17
+	ldw	pv_tlbprot(r24), r25
+	b	$tlb_inshpt_l
+	depi	1, TLB_DIRTY_POS, 1, r25
+	
+	.align	8
+$itlb_l
+	HPTENT	/* will update cr28 */
+#ifdef DDB
+	mtctl	r16, cr28
+#endif
+	b	$tlbmiss_l
+	depi	1, TFF_ITLB_POS, 1, r1	/* mark for ITLB insert */
+
+	.align	8
+$dtlb_l
+	/*mfctl	cr28, r16*/
+	HPTENT	/* weird, but sometimes dtlbmissna does not set cr28 */
+#ifdef DDB
+	mtctl	r16, cr28
+#endif
+$tlbmiss_l
+	/*
+	 * r1 is the trap type
+	 * r8 is the space of the address that had the TLB miss
+	 * r9 is the offset of the address that had the TLB miss
+	 * r16 is the correspondent HPT entry pointer
+	 */
+
+	/*
+	 * Chase the list of entries for this hash bucket until we find
+	 * the correct mapping or NULL.
+	 */
+	ldw	hpt_entry(r16),r24
+$hash_loop_l
+	comb,=,n r0, r24, TLABEL(all)
+	ldw	pv_va(r24),r25
+	ldw	pv_space(r24),r17
+	comb,<>,n r9,r25,$hash_loop_l
+	ldw	pv_hash(r24),r24
+	comb,<>,n r8,r17,$hash_loop_l
+	ldw	pv_hash(r24),r24
+
+	/* Now set things up to enter the real mapping that we want */
+	ldw	pv_tlbpage(r24),r17
+	ldw	pv_tlbprot(r24),r25
+	depi	1, TLB_REF_POS, 1, r25
+
+	/*
+	 * Load the HPT cache with the miss information for the next time.
+	 * The HPT entry address was saved by the HPTENT
+	 */
+$tlb_inshpt_l
+	stw	r25, pv_tlbprot(r24)
+	copy	r16, r24
+	VTAG	/* (r8,r9) -> r16 */
+
+	stw	r16, hpt_tag(r24)
+	stw	r25, hpt_tlbprot(r24)
+	bb,<	r1, TFF_ITLB_POS, $tlb_itlb_l
+	stw	r17, hpt_tlbpage(r24)
+
+	.word	0x04111440	; idtlbaf	r17
+	.word	0x04191400	; idtlbpf	r25
+	nop ! nop
+	rfir
+	nop
+
+$tlb_itlb_l
+	.word	0x04110440	; iitlbaf	r17
+	.word	0x04190400	; iitlbpf	r25
+	nop ! nop
+	rfir
+	nop
+
 	.export	$tlb_missend, entry
 $tlb_missend
 
@@ -1526,34 +1629,41 @@ $trapnowvirt
 	 * Save all general registers that we haven't saved already
 	 */
 
-	mfctl	sar, t1
-	stw	t1, TF_CR11(t3)
-	stw	r1,TF_R1(t3)
-	stw	r2,TF_R2(t3)
 #ifdef DDB
 	stw	rp, HPPA_FRAME_CRP(sp)
-	stw	r3, -HPPA_FRAME_SIZE(sp)
+	stw	r0, -HPPA_FRAME_SIZE(sp)
 #endif
-	stw	r3,TF_R3(t3)
-	stw	r4,TF_R4(t3)
-	stw	r5,TF_R5(t3)
-	stw	r6,TF_R6(t3)
-	stw	r7,TF_R7(t3)
-	stw	r8,TF_R8(t3)
-	stw	r9,TF_R9(t3)
-	stw	r10,TF_R10(t3)
-	stw	r11,TF_R11(t3)
-	stw	r12,TF_R12(t3)
-	stw	r13,TF_R13(t3)
-	stw	r14,TF_R14(t3)
-	stw	r15,TF_R15(t3)
-	stw	r16,TF_R16(t3)
-	stw	r17,TF_R17(t3)
-	stw	r18,TF_R18(t3)
-	stw	r19,TF_R19(t3)
-	/*	r20 already saved (t1)
+	stw	t3, -HPPA_FRAME_SIZE+4(sp)
+	/*
+	 * hmm, we don't need to save all the regs, only caller-save
+	 * (except when DDB)
+	 */
+	mfctl	sar, t1
+	stw	t1, TF_CR11(t3)
+	stw	r1, TF_R1(t3)
+	stw	r2, TF_R2(t3)
+	stw	r3, TF_R3(t3)
+#ifdef DDB
+	stw	r4, TF_R4(t3)
+	stw	r5, TF_R5(t3)
+	stw	r6, TF_R6(t3)
+	stw	r7, TF_R7(t3)
+	stw	r8, TF_R8(t3)
+	stw	r9, TF_R9(t3)
+	stw	r10, TF_R10(t3)
+	stw	r11, TF_R11(t3)
+	stw	r12, TF_R12(t3)
+	stw	r13, TF_R13(t3)
+	stw	r14, TF_R14(t3)
+	stw	r15, TF_R15(t3)
+	stw	r16, TF_R16(t3)
+	stw	r17, TF_R17(t3)
+	stw	r18, TF_R18(t3)
+#endif
+	stw	t4, TF_R19(t3)
+	/*	r20 already saved (t3)
 	 *	r21 already saved (t2)
-	 *	r22 already saved (t3) */
+	 *	r22 already saved (t1) */
 	stw	r23,TF_R23(t3)
 	stw	r24,TF_R24(t3)
 	stw	r25,TF_R25(t3)
@@ -1577,7 +1687,7 @@ $trap_copy_loop
 	stwm	t1, 4(arg1)
 
 	/*
-	 * Save the necessary control registers that were not already saved.
+	 * Save the necessary control registers that have not already saved.
 	 */
 
 	mfctl	rctr, t1
@@ -1622,22 +1732,22 @@ $trap_copy_loop
 	.import	trap, code
 	ldil	L%trap,t1
 	ldo	R%trap(t1),t1
-	copy	t3, r5
 	.call
 	blr	r0,rp
 	bv,n	r0(t1)
 	nop
 
+	ldw	-HPPA_FRAME_SIZE+4(sp), t3
 	/* see if curproc have changed */
-	ldw	TF_FLAGS(r5), arg0
+	ldw	TF_FLAGS(t3), arg0
 	bb,>=,n	arg0, TFF_LAST_POS, $syscall_return
-	copy	r5, t3
+	nop
 
 	/* see if curproc have really changed */
 	ldil	L%curproc, t1
 	ldw	R%curproc(t1), t2
 	comb,=,n r0, t2, $syscall_return
-	copy	r5, t3
+	ldw	-HPPA_FRAME_SIZE+4(sp), t3
 
 	/* means curproc have actually changed */
 	b	$syscall_return
@@ -2152,7 +2262,7 @@ ENTRY(switch_exit)
 	/* XXX we need to switch to some stupid stack here */
 
 	b	switch_search
-	nop
+	copy	r0, arg2	/* no old proc */
 EXIT(switch_exit)
 
 ENTRY(switch_trampoline)

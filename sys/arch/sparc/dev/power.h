@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/power.h,v 1.1.16.1 2000/03/24 09:08:47 niklas Exp $ */
 /*	$NetBSD: power.h,v 1.2 1996/05/16 15:56:57 abrown Exp $ */
 
 /*
@@ -38,7 +39,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: power.h,v 1.2 1996/05/16 15:56:57 abrown Exp $
  *
  */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.1 2000/02/21 22:29:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.2 2000/03/24 09:09:24 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -141,13 +141,15 @@ fork1(p1, flags, stack, stacksize, retval)
 	size_t stacksize;
 	register_t *retval;
 {
-	register struct proc *p2;
-	register uid_t uid;
+	struct proc *p2;
+	uid_t uid;
 	struct proc *newproc;
 	struct vmspace *vm;
 	int count;
 	static int pidchecked = 0;
 	vaddr_t uaddr;
+	extern void endtsleep __P((void *));
+	extern void realitexpire __P((void *));
 
 	/*
 	 * Although process entries are dynamically created, we still keep
@@ -211,9 +213,9 @@ retry:
 		 * is in use.  Remember the lowest pid that's greater
 		 * than lastpid, so we can avoid checking for a while.
 		 */
-		p2 = allproc.lh_first;
+		p2 = LIST_FIRST(&allproc);
 again:
-		for (; p2 != 0; p2 = p2->p_list.le_next) {
+		for (; p2 != 0; p2 = LIST_NEXT(p2, p_list)) {
 			while (p2->p_pid == lastpid ||
 			    p2->p_pgrp->pg_id == lastpid) {
 				lastpid++;
@@ -228,7 +230,7 @@ again:
 		}
 		if (!doingzomb) {
 			doingzomb = 1;
-			p2 = zombproc.lh_first;
+			p2 = LIST_FIRST(&zombproc);
 			goto again;
 		}
 	}
@@ -250,6 +252,12 @@ again:
 	    (unsigned) ((caddr_t)&p2->p_endzero - (caddr_t)&p2->p_startzero));
 	bcopy(&p1->p_startcopy, &p2->p_startcopy,
 	    (unsigned) ((caddr_t)&p2->p_endcopy - (caddr_t)&p2->p_startcopy));
+
+	/*
+	 * Initialize the timeouts.
+	 */
+	timeout_set(&p2->p_sleep_to, endtsleep, p2);
+	timeout_set(&p2->p_realit_to, realitexpire, p2);
 
 	/*
 	 * Duplicate sub-structures as needed.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.7 1997/02/22 21:09:16 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.7.14.1 2000/03/24 09:08:52 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1996 Kenneth Stailey.  All rights reserved.
@@ -83,3 +83,5 @@ cdev_decl(ipl);
 #else
 #define NIPF 0
 #endif
+
+cdev_decl(ksyms);

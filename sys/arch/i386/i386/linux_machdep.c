@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12 1998/07/09 18:22:12 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.1 2000/03/24 09:07:38 niklas Exp $	*/
 /*	$NetBSD: linux_machdep.c,v 1.29 1996/05/03 19:42:11 christos Exp $	*/
 
 /*
@@ -43,7 +43,6 @@
 #include <sys/reboot.h>
 #include <sys/conf.h>
 #include <sys/file.h>
-#include <sys/callout.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/msgbuf.h>

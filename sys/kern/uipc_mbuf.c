@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf.c,v 1.19 1999/12/31 23:37:08 provos Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf.c,v 1.19.2.1 2000/03/24 09:09:26 niklas Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.15.4.1 1996/06/13 17:11:44 cgd Exp $	*/
 
 /*
@@ -721,6 +721,41 @@ bad:
 }
 
 /*
+ * Return a pointer to mbuf/offset of location in mbuf chain.
+ */
+struct mbuf *
+m_getptr(m, loc, off)
+	struct mbuf *m;
+	int loc;
+	int *off;
+{
+	while (loc >= 0) {
+		/* Normal end of search */
+		if (m->m_len > loc) {
+	    		*off = loc;
+	    		return (m);
+		}
+		else {
+	    		loc -= m->m_len;
+
+	    		if (m->m_next == NULL) {
+				if (loc == 0) {
+ 					/* Point at the end of valid data */
+		    			*off = m->m_len;
+		    			return (m);
+				}
+				else
+		  			return (NULL);
+	    		}
+	    		else
+	      			m = m->m_next;
+		}
+    	}
+
+	return (NULL);
+}
+
+/*
  * Inject a new mbuf chain of length siz in mbuf chain m0 at
  * position len0. Returns a pointer to the first injected mbuf, or
  * NULL on failure (m0 is left undisturbed). Note that if there is
@@ -987,4 +1022,3 @@ m_apply(m, off, len, f, fstate)
 
 	return (0);
 }
-

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/powerpc/conf/Attic/USBMAC,v 1.1 2000/03/20 07:15:00 rahnds Exp $
+#	$OpenBSD: src/sys/arch/powerpc/conf/Attic/USBMAC,v 1.1.2.1 2000/03/24 09:08:37 niklas Exp $
 #
 # PPC GENERIC config file
 #

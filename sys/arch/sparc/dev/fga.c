@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3 1999/08/29 07:01:31 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3.4.1 2000/03/24 09:08:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -610,7 +610,7 @@ fgaopen(dev, flags, mode, p)
 	int flags, mode;
 	struct proc *p;
 {
-	if (fga_cd.cd_ndevs == 0 || fga_cd.cd_ndevs != 0)
+	if (fga_cd.cd_ndevs == 0)
 		return (ENXIO);
 	return (0);
 }

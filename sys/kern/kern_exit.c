@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.1 2000/02/21 22:29:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.2 2000/03/24 09:09:24 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -134,7 +134,7 @@ exit1(p, rv)
 	}
 	p->p_sigignore = ~0;
 	p->p_siglist = 0;
-	untimeout(realitexpire, (caddr_t)p);
+	timeout_del(&p->p_realit_to);
 
 	/*
 	 * Close open files and release open-file table.

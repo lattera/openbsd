@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_syscalls-common.c,v 1.1.4.1 2000/03/24 09:09:55 niklas Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -38,7 +40,7 @@
 
 #include <xfs/xfs_locl.h>
 
-RCSID("$Id: xfs_syscalls-common.c,v 1.27 1999/03/27 04:17:45 assar Exp $");
+RCSID("$OpenBSD: src/sys/xfs/Attic/xfs_syscalls-common.c,v 1.1.4.1 2000/03/24 09:09:55 niklas Exp $");
 
 /*
  * XFS system calls.

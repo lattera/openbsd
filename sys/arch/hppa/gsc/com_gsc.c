@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7 1999/12/17 06:41:06 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7.2.1 2000/03/24 09:07:28 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -39,8 +39,6 @@
 #include <machine/intr.h>
 #include <machine/iomod.h>
 #include <machine/autoconf.h>
-
-#include <dev/isa/isavar.h>	/* this must die, Die, DIE!!!! */
 
 #include <dev/ic/comreg.h>
 #include <dev/ic/comvar.h>

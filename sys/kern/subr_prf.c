@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.1 2000/03/02 07:04:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.2 2000/03/24 09:09:25 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -109,8 +109,23 @@ extern	int log_open;	/* subr_log: is /dev/klog open? */
 const	char *panicstr; /* arg to first call to panic (used as a flag
 			   to indicate that panic has already been called). */
 #ifdef DDB
+/*
+ * Enter ddb on panic.
+ */
 int	db_panic = 1;
+
+/*
+ * db_console controls if we can be able to enter ddb by a special key
+ * combination (machine dependent).
+ * If DDB_SAFE_CONSOLE is defined in the kernel configuration it allows
+ * to break into console during boot. It's _really_ useful when debugging
+ * some things in the kernel that can cause init(8) to crash.
+ */
+#ifdef DDB_SAFE_CONSOLE
+int	db_console = 1;
+#else
 int	db_console = 0;
+#endif
 #endif
 
 /*
@@ -320,6 +335,7 @@ putchar(c, flags, tp)
 			/* Nothing we can do */
 		}
 		mbp->msg_bufc[mbp->msg_bufx++] = c;
+		mbp->msg_bufl = min(mbp->msg_bufl+1, mbp->msg_bufs);
 		if (mbp->msg_bufx < 0 || mbp->msg_bufx >= mbp->msg_bufs)
 			mbp->msg_bufx = 0;
                 /* If the buffer is full, keep the most recent data. */

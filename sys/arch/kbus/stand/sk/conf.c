@@ -1,4 +1,4 @@
-/*	$Id: conf.c,v 1.1 1997/08/10 18:04:22 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/sk/Attic/conf.c,v 1.1.1.1.12.1 2000/03/24 09:07:58 niklas Exp $ */
 
 #include <sys/types.h>
 #include <netinet/in.h>

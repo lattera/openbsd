@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.2 2000/03/02 07:04:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.3 2000/03/24 09:09:23 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -96,6 +96,11 @@
 #include <net/if.h>
 #include <net/raw_cb.h>
 
+#if defined(CRYPTO)
+#include <crypto/crypto.h>
+#include <crypto/cryptosoft.h>
+#endif
+
 #if defined(NFSSERVER) || defined(NFSCLIENT)
 extern void nfs_init __P((void));
 #endif
@@ -184,9 +189,10 @@ main(framep)
 	int s;
 	register_t rval[2];
 	extern struct pdevinit pdevinit[];
-	extern void roundrobin __P((void *));
-	extern void schedcpu __P((void *));
+	extern void scheduler_start __P((void));
 	extern void disk_init __P((void));
+	extern void endtsleep __P((void *));
+	extern void realitexpire __P((void *));
 
 	/*
 	 * Initialize the current process pointer (curproc) before
@@ -240,6 +246,10 @@ main(framep)
 	p->p_nice = NZERO;
 	p->p_emul = &emul_native;
 	bcopy("swapper", p->p_comm, sizeof ("swapper"));
+
+	/* Init timeouts. */
+	timeout_set(&p->p_sleep_to, endtsleep, p);
+	timeout_set(&p->p_realit_to, realitexpire, p);
 
 	/* Create credentials. */
 	cred0.p_refcnt = 1;
@@ -350,6 +360,10 @@ main(framep)
 	for (pdev = pdevinit; pdev->pdev_attach != NULL; pdev++)
 		(*pdev->pdev_attach)(pdev->pdev_count);
 
+#ifdef CRYPTO
+	swcr_init();
+#endif /* CRYPTO */
+	
 	/*
 	 * Initialize protocols.  Block reception of incoming packets
 	 * until everything is ready.
@@ -364,9 +378,8 @@ main(framep)
 	kmstartup();
 #endif
 
-	/* Kick off timeout driven events by calling first time. */
-	roundrobin(NULL);
-	schedcpu(NULL);
+	/* Start the scheduler */
+	scheduler_start();
 
 	/* Configure root/swap devices */
 	if (md_diskconf)
@@ -538,8 +551,11 @@ start_init(arg)
 #endif
 
 	for (pathp = &initpaths[0]; (path = *pathp) != NULL; pathp++) {
+#ifdef MACHINE_STACK_GROWS_UP
+		ucp = (char *)addr;
+#else
 		ucp = (char *)(addr + PAGE_SIZE);
-
+#endif
 		/*
 		 * Construct the boot flag argument.
 		 */
@@ -567,8 +583,14 @@ start_init(arg)
 #ifdef DEBUG
 			printf("init: copying out flags `%s' %d\n", flags, i);
 #endif
+#ifdef MACHINE_STACK_GROWS_UP
+			arg1 = ucp;
+			(void)copyout((caddr_t)flags, (caddr_t)ucp, i);
+			ucp += i;
+#else
 			(void)copyout((caddr_t)flags, (caddr_t)(ucp -= i), i);
 			arg1 = ucp;
+#endif
 		}
 
 		/*
@@ -578,13 +600,20 @@ start_init(arg)
 #ifdef DEBUG
 		printf("init: copying out path `%s' %d\n", path, i);
 #endif
+#ifdef MACHINE_STACK_GROWS_UP
+		arg0 = ucp;
+		(void)copyout((caddr_t)path, (caddr_t)ucp, i);
+		ucp += i;
+		ucp = (caddr_t)ALIGN((u_long)ucp);
+		uap = (char **)ucp + 3;
+#else
 		(void)copyout((caddr_t)path, (caddr_t)(ucp -= i), i);
 		arg0 = ucp;
-
+		uap = (char **)((u_long)ucp & ~ALIGNBYTES);
+#endif
 		/*
 		 * Move out the arg pointers.
 		 */
-		uap = (char **)((long)ucp & ~ALIGNBYTES);
 		(void)suword((caddr_t)--uap, 0);	/* terminator */
 		if (options != 0)
 			(void)suword((caddr_t)--uap, (long)arg1);

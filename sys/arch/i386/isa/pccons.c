@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42 1998/11/20 15:57:25 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.1 2000/03/24 09:07:42 niklas Exp $	*/
 /*	$NetBSD: pccons.c,v 1.99.4.1 1996/06/04 20:03:53 cgd Exp $	*/
 
 /*-
@@ -53,7 +53,6 @@
 #include <sys/fcntl.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>
 #include <sys/device.h>

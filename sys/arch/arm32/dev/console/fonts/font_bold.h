@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/dev/console/fonts/Attic/font_bold.h,v 1.1.1.1.16.1 2000/03/24 09:07:12 niklas Exp $ */
 /* $NetBSD: font_bold.h,v 1.1 1996/01/31 23:20:07 mark Exp $ */
 
 /*
@@ -45,7 +46,6 @@
  *
  * Based on kate/display/14bold.h
  *
- *    $Id: font_bold.h,v 1.1 1996/01/31 23:20:07 mark Exp $
  */
  
 unsigned char font_terminal_14bold_data[] = {

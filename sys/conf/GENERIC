@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.61 2000/01/09 22:00:16 itojun Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.1 2000/03/24 09:09:04 niklas Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -13,6 +13,7 @@ option		SWAPPAGER	# paging; REQUIRED
 option		DEVPAGER	# mmap() of devices
 
 option		DDB		# in-kernel debugger
+#option		DDB_SAFE_CONSOLE # allow break into ddb during boot
 #makeoptions	DEBUG="-g"	# compile full symbol table
 #makeoptions	PROF="-pg"	# build profiled kernel
 #option		GPROF		# kernel profiling, kgmon(8)
@@ -20,11 +21,13 @@ option		DIAGNOSTIC	# internal consistency checks
 option		KTRACE		# system call tracing, a la ktrace(1)
 option		KMEMSTATS	# collect malloc(9) statistics
 
+option		CRYPTO		# Cryptographic framework
+
 option		SYSVMSG		# System V-like message queues
 option		SYSVSEM		# System V-like semaphores
 option		SYSVSHM		# System V-like memory sharing
 
-#option		UVM_SWAP_ENCRYPT# support encryption of pages going to swap
+option		UVM_SWAP_ENCRYPT# support encryption of pages going to swap
 
 #option		COMPAT_09	# Kernel compatibility with NetBSD 0.9,
 #option		COMPAT_10	# NetBSD 1.0,

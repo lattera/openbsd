@@ -1,4 +1,4 @@
-/*	$Id: version.c,v 1.2 1997/08/23 13:51:08 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/version.c,v 1.1.1.1.12.1 2000/03/24 09:07:56 niklas Exp $ */
 
 /*
  *	NOTE ANY CHANGES YOU MAKE TO THE BOOTBLOCKS HERE.
@@ -6,4 +6,4 @@
  *	1.1
  */
 
-char version[] = "$Revision: 1.2 $";
+char version[] = "$Revision$";

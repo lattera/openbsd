@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/atari/stand/tostools/loadbsd/Attic/loadbsd.c,v 1.3.14.1 2000/03/24 09:07:23 niklas Exp $	*/
 /*	$NetBSD: loadbsd.c,v 1.11 1996/01/09 09:55:15 leo Exp $	*/
 
 /*
@@ -52,7 +53,7 @@ int	s_flag  = 0;		/* St-ram only			*/
 int	t_flag  = 0;		/* Just test, do not execute	*/
 int	v_flag  = 0;		/* show version			*/
 
-const char version[] = "$Revision: 1.2 $";
+const char version[] = "$Revision$";
 
 /*
  * Default name of kernel to boot, large enough to patch

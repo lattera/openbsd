@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11 1999/11/22 19:22:02 matthieu Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.1 2000/03/24 09:08:50 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.13 1996/03/30 21:12:16 christos Exp $ */
 
 /*
@@ -219,12 +219,6 @@ mmrw(dev, uio, flags)
 		default:
 			return (ENXIO);
 		}
-		if (error)
-			break;
-		iov->iov_base += c;
-		iov->iov_len -= c;
-		uio->uio_offset += c;
-		uio->uio_resid -= c;
 	}
 	if (minor(dev) == 0) {
 unlock:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_proxy.c,v 1.6.2.1 2000/02/20 11:57:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_proxy.c,v 1.6.2.2 2000/03/24 09:09:37 niklas Exp $	*/
 
 /*
  * Copyright (C) 1997-1998 by Darren Reed.
@@ -8,7 +8,7 @@
  * to the original author and the contributors.
  */
 #if !defined(lint)
-static const char rcsid[] = "@(#)$IPFilter: ip_proxy.c,v 2.2.2.1 1999/09/19 12:18:19 darrenr Exp $";
+static const char rcsid[] = "@(#)$IPFilter: ip_proxy.c,v 2.2.2.3 2000/02/29 22:47:17 darrenr Exp $";
 #endif
 
 #if defined(__FreeBSD__) && defined(KERNEL) && !defined(_KERNEL)
@@ -102,15 +102,15 @@ ap_session_t	*ap_sess_tab[AP_SESS_SIZE];
 ap_session_t	*ap_sess_list = NULL;
 aproxy_t	ap_proxies[] = {
 #ifdef	IPF_FTP_PROXY
-	{ "ftp", (char)IPPROTO_TCP, 0, 0, ippr_ftp_init, NULL,
+	{ "ftp", (char)IPPROTO_TCP, 0, 0, ippr_ftp_init, NULL, NULL,
 	  ippr_ftp_in, ippr_ftp_out },
 #endif
 #ifdef	IPF_RCMD_PROXY
-	{ "rcmd", (char)IPPROTO_TCP, 0, 0, ippr_rcmd_init, ippr_rcmd_new,
-	  NULL, ippr_rcmd_out },
+	{ "rcmd", (char)IPPROTO_TCP, 0, 0, ippr_rcmd_init, NULL,
+	  ippr_rcmd_new, NULL, ippr_rcmd_out },
 #endif
 #ifdef	IPF_RAUDIO_PROXY
-	{ "raudio", (char)IPPROTO_TCP, 0, 0, ippr_raudio_init,
+	{ "raudio", (char)IPPROTO_TCP, 0, 0, ippr_raudio_init, NULL,
 	  ippr_raudio_new, ippr_raudio_in, ippr_raudio_out },
 #endif
 	{ "", '\0', 0, 0, NULL, NULL }
@@ -386,4 +386,14 @@ int appr_init()
 			break;
 	}
 	return err;
+}
+
+
+void appr_unload()
+{
+	aproxy_t *ap;
+
+	for (ap = ap_proxies; ap->apr_p; ap++)
+		if (ap->apr_fini)
+			(*ap->apr_fini)();
 }

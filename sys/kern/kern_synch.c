@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17 1999/09/05 22:20:45 tholo Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.1 2000/03/24 09:09:24 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -50,6 +50,7 @@
 #include <sys/resourcevar.h>
 #include <vm/vm.h>
 #include <sys/sched.h>
+#include <sys/timeout.h>
 
 #if defined(UVM)
 #include <uvm/uvm_extern.h>
@@ -64,10 +65,40 @@
 u_char	curpriority;		/* usrpri of curproc */
 int	lbolt;			/* once a second sleep address */
 
+void scheduler_start __P((void));
+
 void roundrobin __P((void *));
 void schedcpu __P((void *));
 void updatepri __P((struct proc *));
 void endtsleep __P((void *));
+
+void
+scheduler_start()
+{
+	static struct timeout roundrobin_to;
+	static struct timeout schedcpu_to;
+
+	/*
+	 * We avoid polluting the global namespace by keeping the scheduler
+	 * timeouts static in this function.
+	 * We setup the timeouts here and kick rundrobin and schedcpu once to
+	 * make them do their job.
+	 */
+
+	timeout_set(&roundrobin_to, roundrobin, &roundrobin_to);
+	timeout_set(&schedcpu_to, schedcpu, &schedcpu_to);
+
+	roundrobin(&roundrobin_to);
+	schedcpu(&schedcpu_to);
+}
+
+/*
+ * We need to keep track on how many times we call roundrobin before we
+ * actually attempt a switch (that is when we call mi_switch()).
+ * This is done so that some slow kernel subsystems can yield instead of
+ * blocking the scheduling.
+ */
+int	roundrobin_attempts;
 
 /*
  * Force switch among equal priority processes every 100ms.
@@ -77,9 +108,11 @@ void
 roundrobin(arg)
 	void *arg;
 {
+	struct timeout *to = (struct timeout *)arg;
 
 	need_resched();
-	timeout(roundrobin, NULL, hz / 10);
+	roundrobin_attempts++;
+	timeout_add(to, hz / 10);
 }
 
 /*
@@ -175,10 +208,11 @@ void
 schedcpu(arg)
 	void *arg;
 {
-	register fixpt_t loadfac = loadfactor(averunnable.ldavg[0]);
-	register struct proc *p;
-	register int s;
-	register unsigned int newcpu;
+	struct timeout *to = (struct timeout *)arg;
+	fixpt_t loadfac = loadfactor(averunnable.ldavg[0]);
+	struct proc *p;
+	int s;
+	unsigned int newcpu;
 	int phz;
 
 	/*
@@ -189,7 +223,7 @@ schedcpu(arg)
 	 */
 	phz = stathz ? stathz : profhz;
 
-	for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
+	for (p = LIST_FIRST(&allproc); p != 0; p = LIST_NEXT(p, p_list)) {
 		/*
 		 * Increment time in/out of memory and sleep time
 		 * (if sleeping).  We ignore overflow; with 16-bit int's
@@ -242,7 +276,7 @@ schedcpu(arg)
 	vmmeter();
 #endif
 	wakeup((caddr_t)&lbolt);
-	timeout(schedcpu, (void *)0, hz);
+	timeout_add(to, hz);
 }
 
 /*
@@ -345,7 +379,7 @@ tsleep(ident, priority, wmesg, timo)
 		*qp->sq_tailp = p;
 	*(qp->sq_tailp = &p->p_forw) = 0;
 	if (timo)
-		timeout(endtsleep, (void *)p, timo);
+		timeout_add(&p->p_sleep_to, timo);
 	/*
 	 * We put ourselves on the sleep queue and start our timeout
 	 * before calling CURSIG, as we could stop there, and a wakeup
@@ -390,7 +424,7 @@ resume:
 			return (EWOULDBLOCK);
 		}
 	} else if (timo)
-		untimeout(endtsleep, (void *)p);
+		timeout_del(&p->p_sleep_to);
 	if (catch && (sig != 0 || (sig = CURSIG(p)) != 0)) {
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_CSW))
@@ -417,7 +451,7 @@ void
 endtsleep(arg)
 	void *arg;
 {
-	register struct proc *p;
+	struct proc *p;
 	int s;
 
 	p = (struct proc *)arg;
@@ -630,6 +664,13 @@ mi_switch()
 #endif
 	cpu_switch(p);
 	microtime(&runtime);
+
+	/*
+	 * We reset roundrobin_attempts at exit, because cpu_switch could
+	 * have looped in the idle loop and the attempts would increase
+	 * leading to unjust punishment of an innocent process.
+	 */
+	roundrobin_attempts = 0;
 }
 
 /*
@@ -764,7 +805,7 @@ db_show_all_procs(addr, haddr, count, modif)
 		return;
 	}
 	
-	p = allproc.lh_first;
+	p = LIST_FIRST(&allproc);
 
 	switch (*mode) {
 
@@ -813,10 +854,10 @@ db_show_all_procs(addr, haddr, count, modif)
 
 			}
 		}
-		p = p->p_list.le_next;
+		p = LIST_NEXT(p, p_list);
 		if (p == 0 && doingzomb == 0) {
 			doingzomb = 1;
-			p = zombproc.lh_first;
+			p = LIST_FIRST(&zombproc);
 		}
 	}
 }

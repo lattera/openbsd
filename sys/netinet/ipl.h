@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ipl.h,v 1.4.2.1 2000/02/20 11:57:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ipl.h,v 1.4.2.2 2000/03/24 09:09:38 niklas Exp $	*/
 
 /*
  * Copyright (C) 1993-1999 by Darren Reed.
@@ -13,6 +13,6 @@
 #ifndef	__IPL_H__
 #define	__IPL_H__
 
-#define	IPL_VERSION	"IP Filter: v3.3.9"
+#define	IPL_VERSION	"IP Filter: v3.3.11"
 
 #endif

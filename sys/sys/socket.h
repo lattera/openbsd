@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.1 2000/02/20 11:57:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.2 2000/03/24 09:09:44 niklas Exp $	*/
 /*	$NetBSD: socket.h,v 1.14 1996/02/09 18:25:36 christos Exp $	*/
 
 /*
@@ -38,6 +38,11 @@
 
 #ifndef _SYS_SOCKET_H_
 #define	_SYS_SOCKET_H_
+
+/*
+ * needed for ALIGNBYTES
+ */
+#include <machine/param.h>
 
 /*
  * Definitions related to sockets: types, address families, options.
@@ -356,7 +361,7 @@ struct cmsghdr {
 #define	CMSG_FIRSTHDR(mhdr)	((struct cmsghdr *)(mhdr)->msg_control)
 
 /* Round len up to next alignment boundary */
-#define	CMSG_ALIGN(len)	(((len)+sizeof(long)-1) & ~(sizeof(long)-1))
+#define	CMSG_ALIGN(len)	ALIGN(len)
 
 /* Length of the contents of a control message of length len */
 #define	CMSG_LEN(len)	(CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))

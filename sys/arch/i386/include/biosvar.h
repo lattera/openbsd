@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.2 2000/02/20 11:56:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.3 2000/03/24 09:07:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -197,6 +197,7 @@ void bios_getopt __P((void));
 extern u_int bootapiver;
 extern bios_memmap_t *bios_memmap;
 extern void *bios_smpinfo;
+extern bios_pciinfo_t *bios_pciinfo;
 
 #endif /* _KERNEL */
 #endif /* _LOCORE */

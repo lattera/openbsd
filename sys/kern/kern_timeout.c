@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3 2000/03/23 11:07:34 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3.2.1 2000/03/24 09:09:25 niklas Exp $	*/
 /*
  * Copyright (c) 2000 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 

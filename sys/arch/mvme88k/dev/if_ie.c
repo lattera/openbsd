@@ -1,4 +1,4 @@
-/*	$Id: if_ie.c,v 1.5 1999/05/29 04:41:43 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.c,v 1.6.4.1 2000/03/24 09:08:14 niklas Exp $ */
 
 /*-
  * Copyright (c) 1998 Steve Murphree, Jr. 

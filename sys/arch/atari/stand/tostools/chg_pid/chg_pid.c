@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/atari/stand/tostools/chg_pid/Attic/chg_pid.c,v 1.3.14.1 2000/03/24 09:07:22 niklas Exp $	*/
 /*	$NetBSD: chg_pid.c,v 1.3 1996/01/09 09:55:06 leo Exp $	*/
 
 /*
@@ -95,7 +96,7 @@ int	read_block	PROTO((void *, int, int));
 int	write_block	PROTO((void *, int, int));
 void	set_csum	PROTO((char *));
 
-const char version[] = "$Revision: 1.2 $";
+const char version[] = "$Revision$";
 
 char	*Progname = NULL;		/* What are we called		*/
 int	t_flag    = 0;			/* Test -- don't actually do it	*/

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/exec_i386.c,v 1.24.8.1 2000/02/20 11:56:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/exec_i386.c,v 1.24.8.2 2000/03/24 09:07:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1998 Michael Shalayeff
@@ -65,6 +65,9 @@ machdep_exec(xp, howto, loadaddr)
 	cd.consdev = cn_tab->cn_dev;
 	cd.conspeed = com_speed;
 	addbootarg(BOOTARG_CONSDEV, sizeof(cd), &cd);
+
+	/* Pass memory map to the kernel */
+	mem_pass();
 
 	makebootargs(av, &ac);
 

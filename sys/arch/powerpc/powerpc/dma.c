@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/dma.c,v 1.1 2000/03/20 07:05:52 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/dma.c,v 1.1.2.1 2000/03/24 09:08:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff

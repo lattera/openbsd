@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm_symbol.h,v 1.1 2000/03/22 02:50:50 smurph Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm_symbol.h,v 1.1.2.1 2000/03/24 09:09:14 niklas Exp $ */
 /*
  * Aic7xxx SCSI host adapter firmware asssembler symbol table definitions
  *

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pc532/pc532/Attic/bzero.s,v 1.2.16.1 2000/03/24 09:08:26 niklas Exp $	*/
 /*	$NetBSD: bzero.s,v 1.3 1996/01/26 08:11:47 phil Exp $	*/
 
 /* 
@@ -31,7 +32,6 @@
  * 	File: ns532/bzero.s
  *	Author: Tero Kivinen, Helsinki University of Technology 1992.
  *
- *	$Id: bzero.s,v 1.3 1996/01/26 08:11:47 phil Exp $
  */
 
 

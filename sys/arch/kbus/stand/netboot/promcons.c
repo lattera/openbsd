@@ -1,4 +1,4 @@
-/*	$Id: promcons.c,v 1.1 1997/08/23 13:51:07 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/promcons.c,v 1.1.1.1.12.1 2000/03/24 09:07:56 niklas Exp $ */
 
 /*
  * Copyright (c) 1996 Nivas Madhur

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/arm32/include/Attic/vidc.h,v 1.1.1.1.16.1 2000/03/24 09:07:17 niklas Exp $ */
 /* $NetBSD: vidc.h,v 1.2 1996/03/28 21:22:24 mark Exp $ */
 
 /*
@@ -45,7 +46,6 @@
  *
  * Based on kate/display/vidc.h
  *
- *    $Id: vidc.h,v 1.2 1996/03/28 21:22:24 mark Exp $
  */
 
 #ifndef __vidc_h

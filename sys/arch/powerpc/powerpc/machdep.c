@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.1 2000/03/02 07:04:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.2 2000/03/24 09:08:43 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -35,7 +35,7 @@
 
 #include <sys/param.h>
 #include <sys/buf.h>
-#include <sys/callout.h>
+#include <sys/timeout.h>
 #include <sys/exec.h>
 #include <sys/malloc.h>
 #include <sys/map.h>
@@ -72,7 +72,6 @@
 #include <machine/bus.h>
 #include <machine/pio.h>
 
-#include <powerpc/pci/mpc106reg.h>
 /*
  * Global variables used here and there
  */
@@ -171,7 +170,7 @@ initppc(startkernel, endkernel, args)
 	 * XXX We use the page just above the interrupt vector as
 	 * message buffer
 	 */
-	initmsgbuf(0x3000, MSGBUFSIZE);
+	initmsgbuf((void *)0x3000, MSGBUFSIZE);
 
 where = 3;
 	curpcb = &proc0paddr->u_pcb;
@@ -198,15 +197,17 @@ where = 3;
 	battable[0].batu = BATU(0x00000000);
 
 #if 1
-	battable[1].batl = BATL(MPC106_V_ISA_IO_SPACE, BAT_I);
-	battable[1].batu = BATU(MPC106_P_ISA_IO_SPACE);
+	battable[1].batl = BATL(0x80000000, BAT_I);
+	battable[1].batu = BATU(0x80000000);
 	segment8_mapped = 1;
+#if 0
 	if(system_type == POWER4e) {
 		/* Map ISA I/O */
 		addbatmap(MPC106_V_ISA_IO_SPACE, MPC106_P_ISA_IO_SPACE, BAT_I);
 		battable[1].batl = BATL(0xbfffe000, BAT_I);
 		battable[1].batu = BATU(0xbfffe000);
 	}
+#endif
 #endif
 
 	/*
@@ -360,6 +361,9 @@ where = 3;
          */
 	consinit();
 
+#if 0
+	dump_avail();
+#endif
 #if NIPKDB > 0
 	/*
 	 * Now trap to IPKDB
@@ -511,11 +515,9 @@ cpu_startup()
 #endif
 	
 	/*
-	 * Initialize callouts.
+	 * Initialize timeouts.
 	 */
-	callfree = callout;
-	for (i = 1; i < ncallout; i++)
-		callout[i - 1].c_next = &callout[i];
+	timeout_init();
 	
 #ifdef UVM
 	printf("avail mem = %d\n", ptoa(uvmexp.free));
@@ -560,7 +562,7 @@ allocsys(v)
 #define	valloc(name, type, num) \
 	v = (caddr_t)(((name) = (type *)v) + (num))
 
-	valloc(callout, struct callout, ncallout);
+	valloc(timeouts, struct timeout, ntimeout);
 #ifdef	SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -1125,9 +1127,13 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	off = bpa - spa;
 	len = size+off;
 
+printf("mem_add_mapping bpa %x size %x, spa %x epa %x\n",
+	bpa, size, spa, epa);
+#if 0
 	if (epa <= spa) {
 		panic("bus_mem_add_mapping: overflow");
 	}
+#endif
 	if (ppc_malloc_ok == 0) { 
 		bus_size_t alloc_size;
 
@@ -1173,6 +1179,12 @@ mapiodev(pa, len)
 	spa = trunc_page(pa);
 	off = pa - spa;
 	size = round_page(off+len);
+	if ((pa >= 0x80000000) && ((pa+len) < 0x90000000)) {
+		extern int segment8_mapped;
+		if (segment8_mapped) {
+			return (void *)pa;
+		}
+	}
 #ifdef UVM
 	va = vaddr = uvm_km_valloc(phys_map, size);
 #else
@@ -1182,12 +1194,6 @@ mapiodev(pa, len)
 	if (va == 0) 
 		return NULL;
 
-	if (pa >= 0x80000000 && pa+len < 0x90000000) {
-		extern int segment8_mapped;
-		if (segment8_mapped) {
-			return (void *)pa;
-		}
-	}
 	for (; size > 0; size -= NBPG) {
 #if 0
 		pmap_enter(vm_map_pmap(phys_map), vaddr, spa,

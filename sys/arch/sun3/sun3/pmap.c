@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18 1999/11/09 14:32:48 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18.2.1 2000/03/24 09:08:55 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.64 1996/11/20 18:57:35 gwr Exp $	*/
 
 /*-
@@ -163,9 +163,6 @@ static vm_offset_t temp_seg_va;
 #define splpmap splimp
 #define PMAP_LOCK() s = splpmap()
 #define PMAP_UNLOCK() splx(s)
-
-#define TAILQ_EMPTY(headp) \
-		!((headp)->tqh_first)
 
 #define TAILQ_REMOVE_FIRST(result, headp, entries) \
 { \

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1 2000/03/17 10:25:21 angelos Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.1 2000/03/24 09:09:05 niklas Exp $	*/
 
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),

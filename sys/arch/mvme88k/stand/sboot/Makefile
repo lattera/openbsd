@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1997/04/27 20:56:34 millert Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Makefile,v 1.3.8.1 2000/03/24 09:08:21 niklas Exp $
 
 S=	${.CURDIR}/../../../..
 INCL?= -I${.CURDIR} -I${.CURDIR}/../libsa -I${S}/lib/libsa -I${S}

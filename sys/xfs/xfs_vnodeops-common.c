@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_vnodeops-common.c,v 1.2.4.1 2000/03/24 09:09:56 niklas Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -49,7 +51,7 @@
 #include <xfs/xfs_syscalls.h>
 #include <xfs/xfs_vnodeops.h>
 
-RCSID("$Id: xfs_vnodeops-common.c,v 1.1 1999/04/30 01:59:01 art Exp $");
+RCSID("$OpenBSD: src/sys/xfs/Attic/xfs_vnodeops-common.c,v 1.2.4.1 2000/03/24 09:09:56 niklas Exp $");
 
 int
 xfs_open_valid(struct vnode * vp, struct ucred * cred, u_int tok)

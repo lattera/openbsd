@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1 2000/03/22 04:40:58 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1.2.1 2000/03/24 09:09:21 niklas Exp $	*/
 /*	$NetBSD: if_rayreg.h,v 1.2 2000/02/27 20:40:43 augustss Exp $	*/
 
 /* 

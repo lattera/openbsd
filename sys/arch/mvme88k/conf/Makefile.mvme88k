@@ -1,5 +1,5 @@
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.1 2000/03/24 09:08:13 niklas Exp $
 #	@(#)Makefile.hp300	7.10 (Berkeley) 6/27/91
-#	$Id: Makefile.mvme88k,v 1.6 1999/09/27 21:21:15 smurph Exp $
 #
 # Makefile for OpenBSD
 #

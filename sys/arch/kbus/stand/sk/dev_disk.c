@@ -1,4 +1,4 @@
-/*	$Id: dev_disk.c,v 1.1 1997/08/23 13:51:03 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/sk/Attic/dev_disk.c,v 1.1.1.1.12.1 2000/03/24 09:07:58 niklas Exp $ */
 
 /*
  * Copyright (c) 1993 Paul Kranenburg

@@ -1,4 +1,4 @@
-/*	$Id: dev_net.c,v 1.1.1.1 1997/10/14 07:25:32 gingold Exp $ */
+/*	$OpenBSD: src/sys/arch/kbus/stand/netboot/Attic/dev_net.c,v 1.2.6.1 2000/03/24 09:07:55 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Gordon W. Ross

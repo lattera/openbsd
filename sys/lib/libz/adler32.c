@@ -1,9 +1,9 @@
+/*	$OpenBSD: src/sys/lib/libz/adler32.c,v 1.4.8.1 2000/03/24 09:09:28 niklas Exp $	*/
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-1998 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: adler32.c,v 1.2 1998/08/08 20:57:07 millert Exp $ */
 
 #include "zlib.h"
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_dev-bsd.c,v 1.1.4.1 2000/03/24 09:09:54 niklas Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -43,7 +45,7 @@
 #include <xfs/xfs_dev.h>
 #include <xfs/xfs_deb.h>
 
-RCSID("$Id: xfs_dev-bsd.c,v 1.7 1999/01/19 20:03:12 art Exp $");
+RCSID("$OpenBSD: src/sys/xfs/Attic/xfs_dev-bsd.c,v 1.1.4.1 2000/03/24 09:09:54 niklas Exp $");
 
 int
 xfs_devopen(dev_t dev, int flag, int devtype, struct proc *proc)

@@ -1,3 +1,4 @@
+# $OpenBSD: src/sys/arch/arm32/boot/Attic/Makefile,v 1.1.1.1.16.1 2000/03/24 09:07:08 niklas Exp $
 # $NetBSD: Makefile,v 1.2 1996/02/01 22:29:25 mycroft Exp $
 
 # Copyright (c) 1994,1995 Mark Brinicombe.
@@ -42,7 +43,6 @@
 # Created      : 14/01/96
 # Last updated : 14/01/96
 #
-#	$Id: Makefile,v 1.2 1996/02/01 22:29:25 mycroft Exp $
 #
 
 S=	../../..

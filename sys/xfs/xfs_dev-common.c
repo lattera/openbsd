@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_dev-common.c,v 1.1.4.1 2000/03/24 09:09:54 niklas Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -44,7 +46,7 @@
 #include <xfs/xfs_dev.h>
 #include <xfs/xfs_deb.h>
 
-RCSID("$Id: xfs_dev-common.c,v 1.22 1999/04/06 13:58:12 lha Exp $");
+RCSID("$OpenBSD: src/sys/xfs/Attic/xfs_dev-common.c,v 1.1.4.1 2000/03/24 09:09:54 niklas Exp $");
 
 struct xfs_channel xfs_channel[NXFS];
 

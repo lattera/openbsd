@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1 1999/11/08 23:46:01 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1.2.1 2000/03/24 09:08:41 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -39,18 +39,15 @@
  *
  *	@(#)isa.c	7.2 (Berkeley) 5/12/91
  */
+
 #include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/user.h>
-#include <sys/systm.h>
-#include <sys/time.h>
-#include <sys/kernel.h>
 #include <sys/device.h>
-#include <sys/malloc.h>
+#include <sys/ioctl.h>
+#include <sys/mbuf.h>
+#include <sys/socket.h>
+#include <sys/systm.h>
 
-#include <vm/vm.h>
-#include <vm/vm_kern.h>
-
+#include <machine/autoconf.h>
 #include <machine/intr.h>
 #include <machine/psl.h>
 #include <machine/pio.h>
@@ -71,6 +68,9 @@ static char *intr_typename(int type);
 static void intr_calculatemasks();
 static void enable_irq(int x);
 static __inline int cntlzw(int x);
+static int mapirq(int irq);
+static int read_irq();
+static void mac_intr_do_pending_int();
 
 extern u_int32_t *heathrow_FCR;
 
@@ -86,10 +86,96 @@ extern u_int32_t *heathrow_FCR;
 #define INT_CLEAR_REG1  (INT_CLEAR_REG0  - 0x10)
 #define INT_LEVEL_REG1  (INT_LEVEL_REG0  - 0x10)
 
-int      macintrmatch __P((struct device *, void *, void *));
-void     macintrattach __P((struct device *, struct device *, void *));
+struct macintr_softc {
+	struct device sc_dev;
+};
+
+int	macintr_match __P((struct device *parent, void *cf, void *aux));
+void	macintr_attach __P((struct device *, struct device *, void *));
+void	mac_do_pending_int();
+void	mac_ext_intr();
+
+struct cfattach macintr_ca = { 
+	sizeof(struct macintr_softc),
+	macintr_match,
+	macintr_attach
+};
+
+struct cfdriver macintr_cd = {
+	NULL, "macintr", DV_DULL
+};
+
+int
+macintr_match(parent, cf, aux) 
+	struct device *parent;
+	void *cf;
+	void *aux;
+{
+	char type[40];
+	struct confargs *ca = aux;
+
+	bzero (type, sizeof(type));
+
+	if (strcmp(ca->ca_name, "interrupt-controller") == 0 ) {
+		OF_getprop(ca->ca_node, "device_type", type, sizeof(type));
+		if (strcmp(type,  "interrupt-controller") == 0) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
 u_int8_t *interrupt_reg;
+typedef void  (void_f) (void);
+extern void_f *pending_int_f;
+int prog_switch (void *arg);
+typedef int mac_intr_handle_t;
+
+typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
+            int, int, int (*func)(void *), void *, char *));
+typedef void     (intr_disestablish_t) __P((void *, void *));
+
+intr_establish_t macintr_establish;
+intr_disestablish_t macintr_disestablish;
+extern intr_establish_t *mac_intr_establish_func;
+extern intr_disestablish_t *mac_intr_disestablish_func;
+
+void
+macintr_attach(parent, self, aux)
+	struct device *parent, *self;
+	void *aux;
+{
+	struct confargs *ca = aux;
+	struct macintr_softc *sc = (void *)self;
+	extern intr_establish_t *intr_establish_func;
+	extern intr_disestablish_t *intr_disestablish_func;
+
+	interrupt_reg = (void *)ca->ca_baseaddr; /* XXX */
+
+	install_extint(mac_ext_intr);
+	pending_int_f = mac_intr_do_pending_int;
+	intr_establish_func  = macintr_establish;
+	intr_disestablish_func  = macintr_disestablish;
+	mac_intr_establish_func  = macintr_establish;
+	mac_intr_disestablish_func  = macintr_disestablish;
+
+
+	mac_intr_establish(parent, 0x14, IST_LEVEL, IPL_HIGH,
+		prog_switch, (void *)0x14, "prog button");
+
+	printf("\n");
+}
+
+int
+prog_switch (void *arg)
+{
+#ifdef DDB
+        Debugger();
+#else
+	printf("programmer button pressed, debugger not available\n");
+#endif
+	return 1;
+}
 
 static int
 fakeintr(arg)
@@ -103,21 +189,24 @@ fakeintr(arg)
  * Register an interrupt handler.
  */
 void *
-mac_intr_establish(irq, type, level, ih_fun, ih_arg)
+macintr_establish(lcv, irq, type, level, ih_fun, ih_arg, name)
+	void * lcv;
 	int irq;
 	int type;
 	int level;
 	int (*ih_fun) __P((void *));
 	void *ih_arg;
+	char *name;
 {
 	struct intrhand **p, *q, *ih;
 	static struct intrhand fakehand;
 	extern int cold;
+
 	fakehand.ih_next = NULL;
 	fakehand.ih_fun  = fakeintr;
 
 #if 0
-printf("mac_intr_establish, hI %d L %d ", irq, type);
+printf("macintr_establish, hI %d L %d ", irq, type);
 printf("addr reg0 %x\n", INT_STATE_REG0);
 #endif
 
@@ -160,7 +249,7 @@ printf("vI %d ", irq);
 
 	/*
 	 * Actually install a fake handler momentarily, since we might be doing
-	 * this with interrupts enabled and don't want the real routine called
+	 * this with interrupts enabled and DON'T WANt the real routine called
 	 * until masking is set up.
 	 */
 	fakehand.ih_level = level;
@@ -186,7 +275,8 @@ printf("vI %d ", irq);
  * Deregister an interrupt handler.
  */
 void
-mac_intr_disestablish(arg)
+macintr_disestablish(lcp, arg)
+	void *lcp;
 	void *arg;
 {
 	struct intrhand *ih = arg;
@@ -332,7 +422,7 @@ enable_irq(x)
 /*
  * Map 64 irqs into 32 (bits).
  */
-int
+static int
 mapirq(irq)
 	int irq;
 {
@@ -424,7 +514,7 @@ out:
 }
 
 void
-mac_do_pending_int()
+mac_intr_do_pending_int()
 {
 	struct intrhand *ih;
 	int irq;
@@ -479,7 +569,7 @@ mac_do_pending_int()
 	processing = 0;
 }
 
-int
+static int
 read_irq()
 {
 	int rv = 0;

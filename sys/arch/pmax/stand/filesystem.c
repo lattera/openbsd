@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/stand/Attic/filesystem.c,v 1.4.14.1 2000/03/24 09:08:35 niklas Exp $	*/
 /*
  * Copyright (c) 1993 Philip A. Nelson.
  * All rights reserved.
@@ -30,7 +31,6 @@
  *
  *	filesystem.c
  *
- *	$Id: filesystem.c,v 1.1.1.1 1996/02/16 19:00:23 niklas Exp $
  */
 
 #include <stand.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.2 2000/03/02 07:04:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.3 2000/03/24 09:08:48 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -44,6 +44,10 @@
  *
  *	@(#)param.h	8.1 (Berkeley) 6/11/93
  */
+
+#ifndef _SPARC_PARAM_H_
+#define _SPARC_PARAM_H_
+
 /*
  * Sun4M support by Aaron Brown, Harvard University.
  * Changes Copyright (c) 1995 The President and Fellows of Harvard College.
@@ -296,3 +300,5 @@ extern int mmumod;
 #	define PGOFSET		pgofset
 #	define PGSHIFT		pgshift
 #endif
+
+#endif /* _SPARC_PARAM_H_ */

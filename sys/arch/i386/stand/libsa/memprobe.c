@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.2 2000/02/20 10:27:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.3 2000/03/24 09:07:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -311,10 +311,6 @@ memprobe()
 
 	apmcheck();
 
-	/* Register in global var */
-	addbootarg(BOOTARG_MEMMAP, 
-		(pm - bios_memmap + 1) * sizeof(*bios_memmap), bios_memmap);
-
 #ifdef DEBUG
 	printf(")[");
 #endif
@@ -456,3 +452,13 @@ mem_add(sa, ea)
 	return 0;
 }
 
+void
+mem_pass()
+{
+	bios_memmap_t *p;
+
+	for (p = bios_memmap; p->type != BIOS_MAP_END; p++)
+		;
+	addbootarg(BOOTARG_MEMMAP, (p - bios_memmap + 1) * sizeof *bios_memmap,
+		bios_memmap);
+}

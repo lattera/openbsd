@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.c,v 1.27 2000/01/02 05:28:24 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/net/if.c,v 1.27.2.1 2000/03/24 09:09:31 niklas Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -370,8 +370,6 @@ ifa_ifwithaddr(addr)
 	    for (ifa = ifp->if_addrlist.tqh_first; ifa != 0; ifa = ifa->ifa_list.tqe_next) {
 		if (ifa->ifa_addr->sa_family != addr->sa_family)
 			continue;
-		if (ifa->ifa_dstaddr == NULL)
-			continue;
 		if (equal(addr, ifa->ifa_addr))
 			return (ifa);
 		if ((ifp->if_flags & IFF_BROADCAST) && ifa->ifa_broadaddr &&
@@ -634,35 +632,6 @@ ifunit(name)
 	return (NULL);
 }
 
-
-/*
- * Map interface name in a sockaddr_dl to
- * interface structure pointer.
- */
-struct ifnet *
-if_withname(sa)
-	struct sockaddr *sa;
-{
-	char ifname[IFNAMSIZ+1];
-	struct sockaddr_dl *sdl = (struct sockaddr_dl *)sa;
-
-	if ( (sa->sa_family != AF_LINK) || (sdl->sdl_nlen == 0) ||
-	     (sdl->sdl_nlen > IFNAMSIZ) )
-		return NULL;
-
-	/*
-	 * ifunit wants a null-terminated name.  It may not be null-terminated
-	 * in the sockaddr.  We don't want to change the caller's sockaddr,
-	 * and there might not be room to put the trailing null anyway, so we
-	 * make a local copy that we know we can null terminate safely.
-	 */
-
-	bcopy(sdl->sdl_data, ifname, sdl->sdl_nlen);
-	ifname[sdl->sdl_nlen] = '\0';
-	return ifunit(ifname);
-}
-
-
 /*
  * Interface ioctls.
  */
@@ -699,6 +668,10 @@ ifioctl(so, cmd, data, p)
 		ifr->ifr_metric = ifp->if_metric;
 		break;
 
+	case SIOCGIFMTU:
+		ifr->ifr_mtu = ifp->if_mtu;
+		break;
+
 	case SIOCGIFDATA:
 		error = copyout((caddr_t)&ifp->if_data, ifr->ifr_data,
 		    sizeof(ifp->if_data));
@@ -728,6 +701,28 @@ ifioctl(so, cmd, data, p)
 			return (error);
 		ifp->if_metric = ifr->ifr_metric;
 		break;
+
+	case SIOCSIFMTU:
+	{
+#ifdef INET6
+		int oldmtu = ifp->if_mtu;
+#endif
+
+		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+			return (error);
+		if (ifp->if_ioctl == NULL)
+			return (EOPNOTSUPP);
+		error = (*ifp->if_ioctl)(ifp, cmd, data);
+
+		/*
+		 * If the link MTU changed, do network layer specific procedure.
+		 */
+#ifdef INET6
+		if (ifp->if_mtu != oldmtu)
+			nd6_setmtu(ifp);
+#endif
+		break;
+	}
 
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
