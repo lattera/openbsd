@@ -95,6 +95,6 @@ you mainly need to carry out the following procedure.
 
 * A nice check is to browse the output of:
 
-  $ cvs -qd cvs.openbsd.org:/cvs rdiff -u -r$NEW_TAG -rSMP src/sys
+  $ cvs -qd cvs.openbsd.org:/cvs rdiff -kk -u -r$NEW_TAG -rSMP src/sys
 
   It should just be differences related to multiprocessor support.
