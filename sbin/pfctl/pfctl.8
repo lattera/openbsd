@@ -1,0 +1,261 @@
+.\" $OpenBSD: src/sbin/pfctl/pfctl.8,v 1.34 2001/10/11 00:53:21 dhartmei Exp $
+.\"
+.\" Copyright (c) 2001 Kjell Wooding.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 24, 2001
+.Dt PFCTL 8
+.Os
+.Sh NAME
+.Nm pfctl
+.Nd control the packet filter and NAT subsystems
+.Sh SYNOPSIS
+.Nm pfctl
+.Op Fl dehnqv
+.Op Fl F Ar modifier
+.Op Fl l Ar interface
+.Op Fl N Ar file
+.Op Fl O Ar level
+.Op Fl R Ar file
+.Op Fl s Ar modifier
+.Op Fl t Ar modifier
+.Op Fl x Ar level
+.Sh DESCRIPTION
+The
+.Nm
+utility communicates with the packet filter system using the
+ioctl interface described in
+.Xr pf 4 .
+.Pp
+Packet filtering lets you restrict packets entering or leaving
+your host; packets can be specified in a variety of ways including
+by protocol, by port number, and by address.
+Network Address Translation lets you map a series of internal
+host IP numbers to a single external address.
+The NAT code also has provisions for redirecting a
+range of connections to a different host and/or port number.
+Taken together this provides a powerful basic firewall mechanism.
+.Pp
+The
+.Nm
+command is normally invoked automatically at system initialization
+time to start and load the packet filter,
+but can also be used when the filter or translation rules change.
+.Pp
+.Nm
+requires the
+.Xr pf 4
+pseudo-device driver.
+Forwarding packets, by using NAT, also requires specifying
+.Li net.inet.ip.forwarding=1
+in the file
+.Pa /etc/sysctl.conf .
+.Pp
+The
+.Nm
+utility provides several commands.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl d
+Disable the packet filter.
+.It Fl e
+Enable the packet filter.
+.It Fl F Ar modifier
+Flush one of the following.
+Modifier name may be abbreviated:
+.Bl -tag -width "F rules " -compact
+.It Fl F Ar nat
+Flush the NAT rules.
+.It Fl F Ar rules
+Flush the filter rules.
+.It Fl F Ar state
+Flush the state table (NAT and filter).
+.It Fl F Ar info
+Flush the filter information (statistics and counters).
+.It Fl F Ar all
+Flush all of the above.
+.El
+.It Fl h
+Help.
+.It Fl l Ar interface
+Enable collection of packet and byte count statistics for interface named
+.Ar interface .
+These statistics can be viewed with the
+.Fl s Ar info
+option.
+.It Fl n
+Do not actually load rules.
+.It Fl N Ar file
+Load a NAT rules file.
+.It Fl O Ar modifier
+Optimize the engine to one of the following network topographies or
+environments:
+.Bl -tag -width "O high-latency " -compact
+.It Fl O Ar default
+A normal network environment.  Suitable for almost all networks.
+.It Fl O Ar normal
+Alias for
+.Em default
+.It Fl O Ar high-latency
+A high-latency environment (such as a satellite connection)
+.It Fl O Ar satellite
+Alias for
+.Em high-latency
+.It Fl O Ar aggressive
+Aggressively expire connections when they are likely no longer valid.  This
+can greatly reduce the memory usage of the firewall at the cost of dropping
+idle connections early.
+.It Fl O Ar conservative
+Extremely conservative settings.  Pains will be taken to avoid dropping
+legitimate connections at the expense of greater memory utilization (possibly
+much greater on a busy network) and slightly increased processor utilization.
+.El
+Currently the optimizations only encompass the state table timeouts but much
+more is planned in future revisions of the finite state machines (FSMs).
+.It Fl q
+Only print errors and warnings.
+.It Fl R Ar file
+Load a filter rules file into the filter.
+.It Fl s Ar modifier
+Show filter parameters. Modifier names may be abbreviated:
+.Bl -tag -width "s rules " -compact
+.It Fl s Ar nat
+Show the currently loaded NAT rules.
+.It Fl s Ar rules
+Show the currently loaded packet filter rules.
+When used together with -v, the per-rule statistics (number of evaluations,
+packets and bytes) are also shown. Note that the 'skip step' optimization
+done automatically by the kernel will skip evaluation of rules where
+redundant. Packets passed statefully are counted in the rule that created
+the state (even though the rule isn't evaluated more than once for the
+entire connection).
+.It Fl s Ar state
+Show the contents of the state table.
+.It Fl s Ar info
+Show filter information (statistics and counters).
+.It Fl s Ar all
+Show all of the above.
+.El
+.It Fl t Ar modifier
+Get a timeout or interval value.  Any of the modifiers may be set,
+with the exception of
+.Em all ,
+by appending =<seconds> to the modifier without any whitespace seperating
+the modifier, the equals and the number of seconds.
+.Bl -tag -width "t interval " -compact
+.It Fl t Ar all
+Display all timeouts and intervals.
+.It Fl t Ar interval
+Interval between purging expired states and fragments.
+.It Fl t Ar frag
+Seconds before an unassembled fragment is expired.
+.El
+.Pp
+When a packet matches a stateful connection, the seconds to live of the
+connection will be updated to that of the proto.modifier which corresponds
+to the connection state.  Each packet which matches this state will increase
+the TTL.  It is permissible to set the TTL for a particular state to zero
+if you do not want packets matching a particular state to prolong the life
+of the state.  Tuning these values may improve the performance of the
+firewall at the risk of dropping valid idled connections.
+
+.Bl -tag -width "t tcp.established " -compact
+.It Fl t Ar tcp.first
+The state after the first packet.
+.It Fl t Ar tcp.opening
+The state before the destination host ever sends a packet.
+.It Fl t Ar tcp.established
+The fully established state.
+.It Fl t Ar tcp.closing
+The state after the first FIN has been sent.
+.It Fl t Ar tcp.finwait
+The state after both FINs have been exchanged and the connection is closed.
+If you see lots of blocked packets coming back from web servers (notably
+Solaris), increase this value and possibly tcp.closing.
+.It Fl t Ar tcp.closed
+The state after one endpoint sends a RST.
+.El
+.Pp
+ICMP and UDP are handled in a similar fashion to TCP but with a much more
+limited set of states.
+.Bl -tag -width "t udp.multiple " -compact
+.It Fl t Ar udp.first
+The state after the first packet.
+.It Fl t Ar udp.single
+The state if the source host sends more than one packet but the destination
+host has never sent one back.
+.It Fl t Ar udp.multiple
+The state if both hosts have sent packets.
+.It Fl t Ar icmp.first
+The state after the first packet.
+.It Fl t Ar icmp.error
+The state after an icmp error came back in response to an icmp packet.
+.El
+.Pp
+.Bd -literal
+Example:
+    # Timeout established connections after an hour of inactivity
+    pfctl -t tcp.established=3600
+
+    # Display the current established idle timeout
+    pfctl -t tcp.established
+.Ed
+
+.It Fl v
+Produce more verbose output.
+.It Fl x Ar level
+Set the debug level to one of the following.
+Level names may be abbreviated:
+.Bl -tag -width "x urgent " -compact
+.It Fl x Ar none
+Don't generate debug messages.
+.It Fl x Ar urgent
+Generate debug messages only for serious errors.
+.It Fl x Ar misc
+Generate debug messages for various errors.
+.El
+.Sh FILES
+.Bl -tag -width "/etc/nat.conf" -compact
+.It Pa /etc/pf.conf
+Packet filter rules file.
+.It Pa /etc/nat.conf
+Rules for Network Address Translation.
+.El
+.Sh SEE ALSO
+.Xr pf 4 , 
+.Xr nat.conf 5 ,
+.Xr pf.conf 5 ,
+.Xr ftp-proxy 8 ,
+.Xr rc 8
+.Sh AUTHORS
+Daniel Hartmeier wrote the program and the underlying mechanism.
+.Sh HISTORY
+The
+.Nm
+program and the 
+.Xr pf 4
+filter mechanism first appeared in
+.Ox 3.0 .
+.Sh BUGS
+Probably.
