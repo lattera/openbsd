@@ -1,0 +1,70 @@
+dnl	$OpenBSD: src/distrib/notes/i386/contents,v 1.54 2004/09/10 19:41:39 miod Exp $
+TopPart
+
+OpenBSDfloppy
+
+	floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy; this one
+			features all the drivers not available in floppy{:--:}OSrev.fs,
+			such as SCSI, RAID, Gigabit Ethernet, and such; see
+			below.
+
+	floppyC{:--:}OSrev.fs	Another MACHINE boot and installation floppy; this one
+			features most of the cardbus and PCMCIA drivers; see
+			below.
+
+	cdrom{:--:}OSrev.fs	The MACHINE boot and installation 2.88MB
+			floppy image that contains almost all OpenBSD
+			drivers; see below.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDcd
+
+	cdemu{:--:}OSrev.iso	Another bootable CD-ROM image, for older systems
+			which BIOS only support the ``large floppy emulation''
+			mode for bootable CD-ROM, and as such are unable to
+			boot cd{:--:}OSrev.iso; this image is provided for
+			convenience purposes, but should never be needed.
+
+Additionally, you may be interested in
+
+.../OSREV/tools/
+	miscellaneous MACHINE installation utilities like rawrite.exe,
+	ntrw.exe, gzip.exe, and pfdisk.exe; see installation section,
+	below.
+
+
+OpenBSDfloppydesc(three,Each,s)
+
+In addition, the "tools/" directory contains some utilities that might be
+useful for the installation.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(32148121,92303250,shared)
+
+OpenBSDcomp(18669925,60702972,shared)
+
+OpenBSDetc(1694991,6532135)
+
+OpenBSDgame(2597798,5994214)
+
+OpenBSDman(6954862,24825347)
+
+OpenBSDmisc(2245626,7365432)
+
+OpenBSDxbase(10364495,29080928)
+
+OpenBSDxetc(440889,2316085)
+
+OpenBSDxfont(32504208,36041353)
+
+OpenBSDxserv(15831441,41291357)
+
+OpenBSDxshare(1933573,9970341)

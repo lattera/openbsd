@@ -1,0 +1,73 @@
+dnl	$OpenBSD: src/distrib/notes/sparc64/contents,v 1.34 2004/09/10 19:41:41 miod Exp $
+TopPart
+
+OpenBSDminiroot
+			It can be copied to the swap partition of an existing
+			OpenBSD, Solaris, NetBSD, or Linux installation to
+			allow installing or upgrading to OpenBSD OSREV.
+
+OpenBSDfloppy
+			This floppy image will boot on SBus-based MACHINE
+			models, such as:
+			- Ultra 1/1E
+			- Ultra 2
+
+dnl	floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+dnl			see below.
+dnl			This floppy image will boot on PCI-based
+dnl			MACHINE models, such as:
+dnl			- Ultra 5
+dnl			- Ultra 10
+dnl			IMPORTANT! Please note that, as the moment of
+dnl			writing, this floppy image is not working
+dnl			correctly; your mileage may vary.
+dnl			However, it will work correctly when used
+dnl			as a miniroot and booted from the disk's
+dnl			swap area, although the regular miniroot
+dnl			is preferred for this usage.
+dnl
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+OpenBSDcd
+
+	installboot	The OpenBSD/MACHINE boot loader installation program.
+	bootblk		The OpenBSD/MACHINE boot block.
+	ofwboot		The OpenBSD/MACHINE secondary boot loader.
+	ofwboot.net	The OpenBSD/MACHINE network boot loader.
+
+
+Please note that there are multiple bootable images and kernels, intended
+to allow installing OpenBSD/MACHINE in a variety of situations without
+requiring a pre-existing working operating system.
+
+The kernel and boot images are provided for net booting installations.
+
+OpenBSDfloppydesc(single,The)
+
+DistributionDescription(eleven)
+
+OpenBSDbase(37537457,113802416,shared)
+
+OpenBSDcomp(25888183,92653832,shared)
+
+OpenBSDetc(1698985,6548470)
+
+OpenBSDgame(2754936,6395510)
+
+OpenBSDman(7234330,25876115)
+
+OpenBSDmisc(2245636,7365432)
+
+OpenBSDxbase(10634619,33701146)
+
+OpenBSDxetc(455064,2367965)
+
+OpenBSDxfont(33473405,37456744)
+
+OpenBSDxserv(7427160,21226849)
+
+OpenBSDxshare(1933981,9968261)
