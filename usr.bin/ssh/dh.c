@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/dh.c,v 1.2 2000/10/11 20:11:35 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/dh.c,v 1.2.2.1 2001/02/16 20:13:01 jason Exp $");
 
 #include "xmalloc.h"
 
@@ -31,10 +31,13 @@ RCSID("$OpenBSD: src/usr.bin/ssh/dh.c,v 1.2 2000/10/11 20:11:35 markus Exp $");
 #include <openssl/dh.h>
 #include <openssl/evp.h>
 
-#include "ssh.h"
 #include "buffer.h"
+#include "cipher.h"
 #include "kex.h"
 #include "dh.h"
+#include "pathnames.h"
+#include "log.h"
+#include "misc.h"
 
 int
 parse_prime(int linenum, char *line, struct dhgroup *dhg)
@@ -87,7 +90,7 @@ parse_prime(int linenum, char *line, struct dhgroup *dhg)
 
 	return (1);
  fail:
-	fprintf(stderr, "Bad prime description in line %d\n", linenum);
+	error("Bad prime description in line %d\n", linenum);
 	return (0);
 }
 
@@ -100,10 +103,9 @@ choose_dh(int minbits)
 	int linenum;
 	struct dhgroup dhg;
 
-	f = fopen(DH_PRIMES, "r");
+	f = fopen(_PATH_DH_PRIMES, "r");
 	if (!f) {
-		perror(DH_PRIMES);
-		log("WARNING: %s does not exist, using old prime", DH_PRIMES);
+		log("WARNING: %s does not exist, using old prime", _PATH_DH_PRIMES);
 		return (dh_new_group1());
 	}
 
@@ -127,14 +129,13 @@ choose_dh(int minbits)
 	fclose (f);
 
 	if (bestcount == 0) {
-		log("WARNING: no primes in %s, using old prime", DH_PRIMES);
+		log("WARNING: no primes in %s, using old prime", _PATH_DH_PRIMES);
 		return (dh_new_group1());
 	}
 
-	f = fopen(DH_PRIMES, "r");
+	f = fopen(_PATH_DH_PRIMES, "r");
 	if (!f) {
-		perror(DH_PRIMES);
-		exit(1);
+		fatal("WARNING: %s dissappeared, giving up", _PATH_DH_PRIMES);
 	}
 
 	linenum = 0;

@@ -14,13 +14,16 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.16 2000/10/03 18:03:03 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.16.2.1 2001/02/16 20:12:52 jason Exp $");
 
 #include "packet.h"
-#include "ssh.h"
 #include "xmalloc.h"
 #include "uidswap.h"
+#include "pathnames.h"
+#include "log.h"
 #include "servconf.h"
+#include "canohost.h"
+#include "auth.h"
 
 /*
  * This function processes an rhosts-style file (.rhosts, .shosts, or
@@ -152,7 +155,7 @@ auth_rhosts(struct passwd *pw, const char *client_user)
 	const char *hostname, *ipaddr;
 	struct stat st;
 	static const char *rhosts_files[] = {".shosts", ".rhosts", NULL};
-	unsigned int rhosts_file_index;
+	u_int rhosts_file_index;
 
 	/* no user given */
 	if (pw == NULL)
@@ -177,25 +180,25 @@ auth_rhosts(struct passwd *pw, const char *client_user)
 
 	/* Deny if The user has no .shosts or .rhosts file and there are no system-wide files. */
 	if (!rhosts_files[rhosts_file_index] &&
-	    stat("/etc/hosts.equiv", &st) < 0 &&
-	    stat(SSH_HOSTS_EQUIV, &st) < 0)
+	    stat(_PATH_RHOSTS_EQUIV, &st) < 0 &&
+	    stat(_PATH_SSH_HOSTS_EQUIV, &st) < 0)
 		return 0;
 
-	hostname = get_canonical_hostname();
+	hostname = get_canonical_hostname(options.reverse_mapping_check);
 	ipaddr = get_remote_ipaddr();
 
 	/* If not logging in as superuser, try /etc/hosts.equiv and shosts.equiv. */
 	if (pw->pw_uid != 0) {
-		if (check_rhosts_file("/etc/hosts.equiv", hostname, ipaddr, client_user,
+		if (check_rhosts_file(_PATH_RHOSTS_EQUIV, hostname, ipaddr, client_user,
 				      pw->pw_name)) {
 			packet_send_debug("Accepted for %.100s [%.100s] by /etc/hosts.equiv.",
 					  hostname, ipaddr);
 			return 1;
 		}
-		if (check_rhosts_file(SSH_HOSTS_EQUIV, hostname, ipaddr, client_user,
+		if (check_rhosts_file(_PATH_SSH_HOSTS_EQUIV, hostname, ipaddr, client_user,
 				      pw->pw_name)) {
 			packet_send_debug("Accepted for %.100s [%.100s] by %.100s.",
-				      hostname, ipaddr, SSH_HOSTS_EQUIV);
+				      hostname, ipaddr, _PATH_SSH_HOSTS_EQUIV);
 			return 1;
 		}
 	}

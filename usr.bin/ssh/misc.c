@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1 2001/01/21 19:05:52 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.1 2001/02/16 20:13:07 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1 2001/01/21 19:05:52 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.1.2.1 2001/02/16 20:13:07 jason Exp $");
 
 #include "misc.h"
 #include "log.h"

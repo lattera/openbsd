@@ -36,12 +36,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/log-server.c,v 1.17 2000/09/12 20:53:10 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/log-server.c,v 1.17.2.1 2001/02/16 20:13:04 jason Exp $");
 
 #include <syslog.h>
 #include "packet.h"
 #include "xmalloc.h"
-#include "ssh.h"
+#include "log.h"
 
 static LogLevel log_level = SYSLOG_LEVEL_INFO;
 static int log_on_stderr = 0;
@@ -58,8 +58,8 @@ log_init(char *av0, LogLevel level, SyslogFacility facility, int on_stderr)
 {
 	switch (level) {
 	case SYSLOG_LEVEL_QUIET:
-	case SYSLOG_LEVEL_ERROR:
 	case SYSLOG_LEVEL_FATAL:
+	case SYSLOG_LEVEL_ERROR:
 	case SYSLOG_LEVEL_INFO:
 	case SYSLOG_LEVEL_VERBOSE:
 	case SYSLOG_LEVEL_DEBUG1:
@@ -128,15 +128,17 @@ do_log(LogLevel level, const char *fmt, va_list args)
 	if (level > log_level)
 		return;
 	switch (level) {
+	case SYSLOG_LEVEL_FATAL:
+		txt = "fatal";
+		pri = LOG_CRIT;
+		break;
 	case SYSLOG_LEVEL_ERROR:
 		txt = "error";
 		pri = LOG_ERR;
 		break;
-	case SYSLOG_LEVEL_FATAL:
-		txt = "fatal";
-		pri = LOG_ERR;
-		break;
 	case SYSLOG_LEVEL_INFO:
+		pri = LOG_INFO;
+		break;
 	case SYSLOG_LEVEL_VERBOSE:
 		pri = LOG_INFO;
 		break;

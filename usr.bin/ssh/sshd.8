@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.70 2000/10/16 09:38:44 djm Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.70.2.1 2001/02/16 20:13:22 jason Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -43,7 +43,7 @@
 .Nd secure shell daemon
 .Sh SYNOPSIS
 .Nm sshd
-.Op Fl diqQ46
+.Op Fl diqD46
 .Op Fl b Ar bits
 .Op Fl f Ar config_file
 .Op Fl g Ar login_grace_time
@@ -144,7 +144,7 @@ through a cryptographic message authentication code
 (hmac-sha1 or hmac-md5).
 .Pp
 Protocol version 2 provides a public key based
-user authentication method (DSAAuthentication)
+user authentication method (PubkeyAuthentication)
 and conventional password authentication.
 .Pp
 .Ss Command execution and data forwarding
@@ -197,17 +197,19 @@ The default is
 refuses to start if there is no configuration file.
 .It Fl g Ar login_grace_time
 Gives the grace time for clients to authenticate themselves (default
-300 seconds).
+600 seconds).
 If the client fails to authenticate the user within
 this many seconds, the server disconnects and exits.
 A value of zero indicates no limit.
 .It Fl h Ar host_key_file
-Specifies the file from which the RSA host key is read (default
+Specifies the file from which the host key is read (default
 .Pa /etc/ssh_host_key ) .
 This option must be given if
 .Nm
 is not run as root (as the normal
 host file is normally not readable by anyone but root).
+It is possible to have multiple host key files for
+the different protocol versions.
 .It Fl i
 Specifies that
 .Nm
@@ -254,8 +256,12 @@ indicates that only dotted decimal addresses
 should be put into the
 .Pa utmp
 file.
-.It Fl Q
-Do not print an error message if RSA support is missing.
+.It Fl D
+When this option is specified
+.Nm
+will not detach and does not become a daemon.
+This allows easy monitoring of
+.Nm sshd .
 .It Fl V Ar client_protocol_id
 SSH-2 compatibility mode.
 When this option is specified
@@ -292,17 +298,17 @@ Specifies whether an AFS token may be forwarded to the server.
 Default is
 .Dq yes .
 .It Cm AllowGroups
-This keyword can be followed by a number of group names, separated
+This keyword can be followed by a list of group names, separated
 by spaces.
 If specified, login is allowed only for users whose primary
-group matches one of the patterns.
+group or supplementary group list matches one of the patterns.
 .Ql \&*
 and
 .Ql ?
 can be used as
 wildcards in the patterns.
 Only group names are valid; a numerical group ID isn't recognized.
-By default login is allowed regardless of the primary group.
+By default login is allowed regardless of the group list.
 .Pp
 .It Cm AllowTcpForwarding
 Specifies whether TCP forwarding is permitted.
@@ -313,7 +319,7 @@ users are also denied shell access, as they can always install their
 own forwarders.
 .Pp
 .It Cm AllowUsers
-This keyword can be followed by a number of user names, separated
+This keyword can be followed by a list of user names, separated
 by spaces.
 If specified, login is allowed only for users names that
 match one of the patterns.
@@ -325,11 +331,18 @@ wildcards in the patterns.
 Only user names are valid; a numerical user ID isn't recognized.
 By default login is allowed regardless of the user name.
 .Pp
+.It Cm Banner
+In some jurisdictions, sending a warning message before authentication
+may be relevant for getting legal protection.
+The contents of the specified file are sent to the remote user before
+authentication is allowed.
+This option is only available for protocol version 2.
+.Pp
 .It Cm Ciphers
 Specifies the ciphers allowed for protocol version 2.
 Multiple ciphers must be comma-separated.
 The default is
-.Dq 3des-cbc,blowfish-cbc,arcfour,cast128-cbc .
+.Dq 3des-cbc,blowfish-cbc,cast128-cbc,arcfour,aes128-cbc .
 .It Cm CheckMail
 Specifies whether
 .Nm
@@ -339,15 +352,15 @@ The default is
 .It Cm DenyGroups
 This keyword can be followed by a number of group names, separated
 by spaces.
-Users whose primary group matches one of the patterns
-aren't allowed to log in.
+Users whose primary group or supplementary group list matches
+one of the patterns aren't allowed to log in.
 .Ql \&*
 and
 .Ql ?
 can be used as
 wildcards in the patterns.
 Only group names are valid; a numerical group ID isn't recognized.
-By default login is allowed regardless of the primary group.
+By default login is allowed regardless of the group list.
 .Pp
 .It Cm DenyUsers
 This keyword can be followed by a number of user names, separated
@@ -359,8 +372,8 @@ and
 can be used as wildcards in the patterns.
 Only user names are valid; a numerical user ID isn't recognized.
 By default login is allowed regardless of the user name.
-.It Cm DSAAuthentication
-Specifies whether DSA authentication is allowed.
+.It Cm PubkeyAuthentication
+Specifies whether public key authentication is allowed.
 The default is
 .Dq yes .
 Note that this option applies to protocol version 2 only.
@@ -373,20 +386,20 @@ or
 .Dq no .
 The default is
 .Dq no .
-.It Cm HostDSAKey
-Specifies the file containing the private DSA host key (default
-.Pa /etc/ssh_host_dsa_key )
-used by SSH protocol 2.0.
-Note that
-.Nm
-disables protocol 2.0 if this file is group/world-accessible.
 .It Cm HostKey
-Specifies the file containing the private RSA host key (default
+Specifies the file containing the private host keys (default
 .Pa /etc/ssh_host_key )
-used by SSH protocols 1.3 and 1.5.
+used by SSH protocol versions 1 and 2.
 Note that
 .Nm
-disables protocols 1.3 and 1.5 if this file is group/world-accessible.
+will refuse to use a file if it is group/world-accessible.
+It is possible to have multiple host key files.
+.Dq rsa1
+keys are used for version 1 and
+.Dq dsa
+or
+.Dq rsa
+are used for version 2 of the SSH protocol.
 .It Cm IgnoreRhosts
 Specifies that
 .Pa .rhosts
@@ -488,6 +501,17 @@ QUIET, FATAL, ERROR, INFO, VERBOSE and DEBUG.
 The default is INFO.
 Logging with level DEBUG violates the privacy of users
 and is not recommended.
+.It Cm MACs
+Specifies the available MAC (message authentication code) algorithms.
+The MAC algorithm is used in protocol version 2
+for data integrity protection.
+Multiple algorithms must be comma-separated.
+The default is
+.Pp
+.Bd -literal
+  ``hmac-sha1,hmac-md5,hmac-ripemd160,hmac-ripemd160@openssh.com,
+    hmac-sha1-96,hmac-md5-96''
+.Ed
 .It Cm MaxStartups
 Specifies the maximum number of concurrent unauthenticated connections to the
 .Nm
@@ -502,14 +526,14 @@ the three colon separated values
 .Dq start:rate:full
 (e.g., "10:30:60").
 .Nm
-will refuse connection attempts with a probabillity of
+will refuse connection attempts with a probability of
 .Dq rate/100
 (30%)
 if there are currently
 .Dq start
 (10)
 unauthenticated connections.
-The probabillity increases linearly and all connection attempts
+The probability increases linearly and all connection attempts
 are refused if the number of unauthenticated connections reaches
 .Dq full
 (60).
@@ -528,21 +552,26 @@ Specifies whether the root can log in using
 .Xr ssh 1 .
 The argument must be
 .Dq yes ,
-.Dq without-password
+.Dq without-password ,
+.Dq forced-commands-only
 or
 .Dq no .
 The default is
 .Dq yes .
-If this options is set to
-.Dq without-password
-only password authentication is disabled for root.
 .Pp
-Root login with RSA authentication when the
+If this option is set to
+.Dq without-password
+password authentication is disabled for root.
+.Pp
+If this option is set to
+.Dq forced-commands-only
+root login with public key authentication will be allowed,
+but only if the
 .Ar command
-option has been
-specified will be allowed regardless of the value of this setting
+option has been specified
 (which may be useful for taking remote backups even if root login is
-normally not allowed).
+normally not allowed). All other authentication methods are disabled
+for root.
 .It Cm PidFile
 Specifies the file that contains the process identifier of the
 .Nm
@@ -580,6 +609,14 @@ The default is
 .It Cm RandomSeed
 Obsolete.
 Random number generation uses other techniques.
+.It Cm ReverseMappingCheck
+Specifies whether
+.Nm
+should try to verify the remote host name and check that
+the resolved host name for the remote IP address maps back to the
+very same IP address.
+The default is
+.Dq no .
 .It Cm RhostsAuthentication
 Specifies whether authentication using rhosts or /etc/hosts.equiv
 files is sufficient.
@@ -603,15 +640,15 @@ Note that this option applies to protocol version 1 only.
 .It Cm ServerKeyBits
 Defines the number of bits in the server key.
 The minimum value is 512, and the default is 768.
-.It Cm SkeyAuthentication
+.It Cm ChallengeResponseAuthentication
 Specifies whether
-.Xr skey 1
+challenge reponse
 authentication is allowed.
+Currently there is only support for
+.Xr skey 1
+authentication.
 The default is
 .Dq yes .
-Note that s/key authentication is enabled only if
-.Cm PasswordAuthentication
-is allowed, too.
 .It Cm StrictModes
 Specifies whether
 .Nm
@@ -720,26 +757,37 @@ file lists the RSA keys that are
 permitted for RSA authentication in SSH protocols 1.3 and 1.5
 Similarly, the
 .Pa $HOME/.ssh/authorized_keys2
-file lists the DSA keys that are
-permitted for DSA authentication in SSH protocol 2.0.
+file lists the DSA and RSA keys that are
+permitted for public key authentication (PubkeyAuthentication)
+in SSH protocol 2.0.
+.Pp
 Each line of the file contains one
 key (empty lines and lines starting with a
 .Ql #
 are ignored as
 comments).
-Each line consists of the following fields, separated by
+Each RSA public key consists of the following fields, separated by
 spaces: options, bits, exponent, modulus, comment.
-The options field
-is optional; its presence is determined by whether the line starts
+Each protocol version 2 public key consists of:
+options, keytype, base64 encoded key, comment.
+The options fields
+are optional; its presence is determined by whether the line starts
 with a number or not (the option field never starts with a number).
-The bits, exponent, modulus and comment fields give the RSA key; the
+The bits, exponent, modulus and comment fields give the RSA key for
+protocol version 1; the
 comment field is not used for anything (but may be convenient for the
 user to identify the key).
+For protocol version 2 the keytype is
+.Dq ssh-dss
+or
+.Dq ssh-rsa .
 .Pp
 Note that lines in this file are usually several hundred bytes long
 (because of the size of the RSA key modulus).
 You don't want to type them in; instead, copy the
 .Pa identity.pub
+or the
+.Pa id_dsa.pub
 file and edit it.
 .Pp
 The options (if present) consist of comma-separated option
@@ -773,6 +821,9 @@ authentication.
 The command supplied by the user (if any) is ignored.
 The command is run on a pty if the connection requests a pty;
 otherwise it is run without a tty.
+Note that if you want a 8-bit clean channel,
+you must not request a pty or should specify
+.Cm no-pty .
 A quote may be included in the command by quoting it with a backslash.
 This option might be useful
 to restrict certain RSA keys to perform just a specific operation.
@@ -885,6 +936,8 @@ really used for anything; it is only provided for the convenience of
 the user so its contents can be copied to known hosts files.
 These two files are created using
 .Xr ssh-keygen 1 .
+.It Pa /etc/primes
+Contains Diffie-Hellman groups used for the "Diffie-Hellman Group Exchange".
 .It Pa /var/run/sshd.pid
 Contains the process ID of the
 .Nm
@@ -1039,45 +1092,22 @@ This can be used to specify
 machine-specific login-time initializations globally.
 This file should be writable only by root, and should be world-readable.
 .El
-.Sh AUTHOR
-OpenSSH
-is a derivative of the original (free) ssh 1.2.12 release by Tatu Ylonen,
-but with bugs removed and newer features re-added.
-Rapidly after the
-1.2.12 release, newer versions of the original ssh bore successively
-more restrictive licenses, and thus demand for a free version was born.
-.Pp
-This version of OpenSSH
-.Bl -bullet
-.It
-has all components of a restrictive nature (i.e., patents, see
-.Xr ssl 8 )
-directly removed from the source code; any licensed or patented components
-are chosen from
-external libraries.
-.It
-has been updated to support SSH protocol 1.5 and 2, making it compatible with
-all other SSH clients and servers.
-.It
-contains added support for
-.Xr kerberos 8
-authentication and ticket passing.
-.It
-supports one-time password authentication with
-.Xr skey 1 .
-.El
-.Pp
-OpenSSH has been created by Aaron Campbell, Bob Beck, Markus Friedl,
-Niels Provos, Theo de Raadt, and Dug Song.
-.Pp
-The support for SSH protocol 2 was written by Markus Friedl.
+.Sh AUTHORS
+OpenSSH is a derivative of the original and free
+ssh 1.2.12 release by Tatu Ylonen.
+Aaron Campbell, Bob Beck, Markus Friedl, Niels Provos,
+Theo de Raadt and Dug Song
+removed many bugs, re-added newer features and
+created OpenSSH.
+Markus Friedl contributed the support for SSH
+protocol versions 1.5 and 2.0.
 .Sh SEE ALSO
 .Xr scp 1 ,
+.Xr sftp 1 ,
 .Xr sftp-server 8 ,
 .Xr ssh 1 ,
 .Xr ssh-add 1 ,
 .Xr ssh-agent 1 ,
 .Xr ssh-keygen 1 ,
-.Xr ssl 8 ,
 .Xr rlogin 1 ,
 .Xr rsh 1

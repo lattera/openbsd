@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.26.2.1 2001/02/16 20:13:27 jason Exp $
+
 .PATH:		${.CURDIR}/..
 
 PROG=	ssh

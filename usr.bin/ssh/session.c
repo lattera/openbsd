@@ -33,24 +33,30 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.42 2000/10/27 07:32:18 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.42.2.1 2001/02/16 20:13:13 jason Exp $");
 
-#include "xmalloc.h"
 #include "ssh.h"
+#include "ssh1.h"
+#include "ssh2.h"
+#include "xmalloc.h"
 #include "pty.h"
 #include "packet.h"
 #include "buffer.h"
 #include "mpaux.h"
-#include "servconf.h"
 #include "uidswap.h"
 #include "compat.h"
 #include "channels.h"
 #include "nchan.h"
-
 #include "bufaux.h"
-#include "ssh2.h"
 #include "auth.h"
 #include "auth-options.h"
+#include "pathnames.h"
+#include "log.h"
+#include "servconf.h"
+#include "login.h"
+#include "serverloop.h"
+#include "canohost.h"
+#include "session.h"
 
 #ifdef HAVE_LOGIN_CAP
 #include <login_cap.h>
@@ -101,7 +107,7 @@ extern ServerOptions options;
 extern char *__progname;
 extern int log_stderr;
 extern int debug_flag;
-extern unsigned int utmp_len;
+extern u_int utmp_len;
 
 extern int startup_pipe;
 
@@ -109,7 +115,7 @@ extern int startup_pipe;
 static char *xauthfile;
 
 /* original command from peer. */
-char *original_command = NULL; 
+char *original_command = NULL;
 
 /* data */
 #define MAX_SESSIONS 10
@@ -177,7 +183,7 @@ do_authenticated(struct passwd * pw)
 	char *command;
 	int n_bytes;
 	int plen;
-	unsigned int proto_len, data_len, dlen;
+	u_int proto_len, data_len, dlen;
 
 	/*
 	 * Cancel the alarm we set to limit the time taken for
@@ -301,12 +307,18 @@ do_authenticated(struct passwd * pw)
 
 			s->auth_proto = packet_get_string(&proto_len);
 			s->auth_data = packet_get_string(&data_len);
-			packet_integrity_check(plen, 4 + proto_len + 4 + data_len + 4, type);
 
-			if (packet_get_protocol_flags() & SSH_PROTOFLAG_SCREEN_NUMBER)
+			if (packet_get_protocol_flags() & SSH_PROTOFLAG_SCREEN_NUMBER) {
+				debug2("SSH_PROTOFLAG_SCREEN_NUMBER == true");
+				packet_integrity_check(plen,
+				    4 + proto_len + 4 + data_len + 4, type);
 				s->screen = packet_get_int();
-			else
+			} else {
+				debug2("SSH_PROTOFLAG_SCREEN_NUMBER == false");
+				packet_integrity_check(plen,
+				    4 + proto_len + 4 + data_len, type);
 				s->screen = 0;
+			}
 			s->display = x11_create_display_inet(s->screen, options.x11_display_offset);
 
 			if (s->display == NULL)
@@ -364,10 +376,6 @@ do_authenticated(struct passwd * pw)
 
 		case SSH_CMSG_EXEC_SHELL:
 		case SSH_CMSG_EXEC_CMD:
-			/* Set interactive/non-interactive mode. */
-			packet_set_interactive(have_pty || s->display != NULL,
-			    options.keepalives);
-
 			if (type == SSH_CMSG_EXEC_CMD) {
 				command = packet_get_string(&dlen);
 				debug("Exec command '%.500s'", command);
@@ -497,6 +505,8 @@ do_exec_no_pty(Session *s, const char *command, struct passwd * pw)
 	if (pid < 0)
 		packet_disconnect("fork failed: %.100s", strerror(errno));
 	s->pid = pid;
+	/* Set interactive/non-interactive mode. */
+	packet_set_interactive(s->display != NULL);
 #ifdef USE_PIPES
 	/* We are the parent.  Close the child sides of the pipes. */
 	close(pin[0]);
@@ -603,6 +613,7 @@ do_exec_pty(Session *s, const char *command, struct passwd * pw)
 	s->ptymaster = ptymaster;
 
 	/* Enter interactive session. */
+	packet_set_interactive(1);
 	if (compat20) {
 		session_set_fds(s, ptyfd, fdout, -1);
 	} else {
@@ -617,7 +628,7 @@ get_remote_name_or_ip(void)
 {
 	static const char *remote = "";
 	if (utmp_len > 0)
-		remote = get_canonical_hostname();
+		remote = get_canonical_hostname(options.reverse_mapping_check);
 	if (utmp_len == 0 || strlen(remote) > utmp_len)
 		remote = get_remote_ipaddr();
 	return remote;
@@ -700,10 +711,10 @@ do_login(Session *s, const char *command)
  * already exists, its value is overriden.
  */
 void
-child_set_env(char ***envp, unsigned int *envsizep, const char *name,
+child_set_env(char ***envp, u_int *envsizep, const char *name,
 	      const char *value)
 {
-	unsigned int i, namelen;
+	u_int i, namelen;
 	char **env;
 
 	/*
@@ -741,7 +752,7 @@ child_set_env(char ***envp, unsigned int *envsizep, const char *name,
  * and assignments of the form name=value.  No other forms are allowed.
  */
 void
-read_environment_file(char ***env, unsigned int *envsize,
+read_environment_file(char ***env, u_int *envsize,
 		      const char *filename)
 {
 	FILE *f;
@@ -789,7 +800,7 @@ do_child(const char *command, struct passwd * pw, const char *term,
 	char buf[256];
 	char cmd[1024];
 	FILE *f = NULL;
-	unsigned int envsize, i;
+	u_int envsize, i;
 	char **env;
 	extern char **environ;
 	struct stat st;
@@ -826,7 +837,7 @@ do_child(const char *command, struct passwd * pw, const char *term,
 			    (LOGIN_SETALL & ~LOGIN_SETPATH)) < 0) {
 				perror("unable to set user context");
 				exit(1);
-				
+
 			}
 #else
 			if (setlogin(pw->pw_name) < 0)
@@ -1012,28 +1023,28 @@ do_child(const char *command, struct passwd * pw, const char *term,
 	 * in this order).
 	 */
 	if (!options.use_login) {
-		if (stat(SSH_USER_RC, &st) >= 0) {
+		if (stat(_PATH_SSH_USER_RC, &st) >= 0) {
 			if (debug_flag)
-				fprintf(stderr, "Running /bin/sh %s\n", SSH_USER_RC);
+				fprintf(stderr, "Running %s %s\n", _PATH_BSHELL, _PATH_SSH_USER_RC);
 
-			f = popen("/bin/sh " SSH_USER_RC, "w");
+			f = popen(_PATH_BSHELL " " _PATH_SSH_USER_RC, "w");
 			if (f) {
 				if (auth_proto != NULL && auth_data != NULL)
 					fprintf(f, "%s %s\n", auth_proto, auth_data);
 				pclose(f);
 			} else
-				fprintf(stderr, "Could not run %s\n", SSH_USER_RC);
-		} else if (stat(SSH_SYSTEM_RC, &st) >= 0) {
+				fprintf(stderr, "Could not run %s\n", _PATH_SSH_USER_RC);
+		} else if (stat(_PATH_SSH_SYSTEM_RC, &st) >= 0) {
 			if (debug_flag)
-				fprintf(stderr, "Running /bin/sh %s\n", SSH_SYSTEM_RC);
+				fprintf(stderr, "Running %s %s\n", _PATH_BSHELL, _PATH_SSH_SYSTEM_RC);
 
-			f = popen("/bin/sh " SSH_SYSTEM_RC, "w");
+			f = popen(_PATH_BSHELL " " _PATH_SSH_SYSTEM_RC, "w");
 			if (f) {
 				if (auth_proto != NULL && auth_data != NULL)
 					fprintf(f, "%s %s\n", auth_proto, auth_data);
 				pclose(f);
 			} else
-				fprintf(stderr, "Could not run %s\n", SSH_SYSTEM_RC);
+				fprintf(stderr, "Could not run %s\n", _PATH_SSH_SYSTEM_RC);
 		} else if (options.xauth_location != NULL) {
 			/* Add authority data to .Xauthority if appropriate. */
 			if (auth_proto != NULL && auth_data != NULL) {
@@ -1055,7 +1066,7 @@ do_child(const char *command, struct passwd * pw, const char *term,
 				if (f) {
 					fprintf(f, "add %s %s %s\n", display,
 					    auth_proto, auth_data);
-					if (screen != NULL) 
+					if (screen != NULL)
 						fprintf(f, "add %.*s/unix%s %s %s\n",
 						    (int)(screen-display), display,
 						    screen, auth_proto, auth_data);
@@ -1201,7 +1212,7 @@ session_open(int chanid)
 	}
 	s->pw = auth_get_user();
 	if (s->pw == NULL)
-		fatal("no user for session %i", s->self);
+		fatal("no user for session %d", s->self);
 	debug("session_open: session %d: link with channel %d", s->self, chanid);
 	s->chanid = chanid;
 	return 1;
@@ -1253,7 +1264,7 @@ session_window_change_req(Session *s)
 int
 session_pty_req(Session *s)
 {
-	unsigned int len;
+	u_int len;
 	char *term_modes;	/* encoded terminal modes */
 
 	if (no_pty_flag)
@@ -1302,7 +1313,7 @@ session_pty_req(Session *s)
 int
 session_subsystem_req(Session *s)
 {
-	unsigned int len;
+	u_int len;
 	int success = 0;
 	char *subsys = packet_get_string(&len);
 	int i;
@@ -1398,7 +1409,7 @@ session_shell_req(Session *s)
 int
 session_exec_req(Session *s)
 {
-	unsigned int len;
+	u_int len;
 	char *command = packet_get_string(&len);
 	packet_done();
 	if (forced_command) {
@@ -1416,10 +1427,27 @@ session_exec_req(Session *s)
 	return 1;
 }
 
+int
+session_auth_agent_req(Session *s)
+{
+	static int called = 0;
+	packet_done();
+	if (no_agent_forwarding_flag) {
+		debug("session_auth_agent_req: no_agent_forwarding_flag");
+		return 0;
+	}
+	if (called) {
+		return 0;
+	} else {
+		called = 1;
+		return auth_input_request_forwarding(s->pw);
+	}
+}
+
 void
 session_input_channel_req(int id, void *arg)
 {
-	unsigned int len;
+	u_int len;
 	int reply;
 	int success = 0;
 	char *rtype;
@@ -1452,6 +1480,8 @@ session_input_channel_req(int id, void *arg)
 			success =  session_pty_req(s);
 		} else if (strcmp(rtype, "x11-req") == 0) {
 			success = session_x11_req(s);
+		} else if (strcmp(rtype, "auth-agent-req@openssh.com") == 0) {
+			success = session_auth_agent_req(s);
 		} else if (strcmp(rtype, "subsystem") == 0) {
 			success = session_subsystem_req(s);
 		}
@@ -1492,7 +1522,7 @@ session_pty_cleanup(Session *s)
 	if (s == NULL || s->ttyfd == -1)
 		return;
 
-	debug("session_pty_cleanup: session %i release %s", s->self, s->tty);
+	debug("session_pty_cleanup: session %d release %s", s->self, s->tty);
 
 	/* Cancel the cleanup function. */
 	fatal_remove_cleanup(pty_cleanup_proc, (void *)s);
@@ -1650,10 +1680,8 @@ session_proctitle(Session *s)
 }
 
 void
-do_authenticated2(void)
+do_authenticated2(Authctxt *authctxt)
 {
-	struct passwd *pw;
-
 	/*
 	 * Cancel the alarm we set to limit the time taken for
 	 * authentication.
@@ -1664,8 +1692,7 @@ do_authenticated2(void)
 		startup_pipe = -1;
 	}
 #ifdef HAVE_LOGIN_CAP
-	pw = auth_get_user();
-	if ((lc = login_getclass(pw->pw_class)) == NULL) {
+	if ((lc = login_getclass(authctxt->pw->pw_class)) == NULL) {
 		error("unable to get login class");
 		return;
 	}

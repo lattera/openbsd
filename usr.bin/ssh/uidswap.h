@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/uidswap.h,v 1.4.2.1 2001/02/16 20:13:24 jason Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -23,7 +25,7 @@ void    temporarily_use_uid(uid_t uid);
  * Restores the original effective user id after temporarily_use_uid().
  * This should only be called while temporarily_use_uid is effective.
  */
-void    restore_uid();
+void    restore_uid(void);
 
 /*
  * Permanently sets all uids to the given uid.  This cannot be called while

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/dh.h,v 1.1.2.1 2001/02/16 20:13:01 jason Exp $	*/
+
 /*
  * Copyright (c) 2000 Niels Provos.  All rights reserved.
  *

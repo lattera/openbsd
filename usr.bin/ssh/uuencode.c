@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7 2000/09/07 20:27:55 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.1 2001/02/16 20:13:24 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -26,20 +26,21 @@
 
 #include "includes.h"
 #include "xmalloc.h"
+#include "uuencode.h"
 
 #include <resolv.h>
 
-RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7 2000/09/07 20:27:55 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.1 2001/02/16 20:13:24 jason Exp $");
 
 int
-uuencode(unsigned char *src, unsigned int srclength,
+uuencode(u_char *src, u_int srclength,
     char *target, size_t targsize)
 {
 	return __b64_ntop(src, srclength, target, targsize);
 }
 
 int
-uudecode(const char *src, unsigned char *target, size_t targsize)
+uudecode(const char *src, u_char *target, size_t targsize)
 {
 	int len;
 	char *encoded, *p;
@@ -59,10 +60,11 @@ uudecode(const char *src, unsigned char *target, size_t targsize)
 }
 
 void
-dump_base64(FILE *fp, unsigned char *data, int len)
+dump_base64(FILE *fp, u_char *data, int len)
 {
-	unsigned char *buf = xmalloc(2*len);
+	u_char *buf = xmalloc(2*len);
 	int i, n;
+
 	n = uuencode(data, len, buf, 2*len);
 	for (i = 0; i < n; i++) {
 		fprintf(fp, "%c", buf[i]);

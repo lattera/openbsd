@@ -1,8 +1,10 @@
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2 2000/10/16 09:38:44 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cli.c,v 1.2.2.1 2001/02/16 20:12:58 jason Exp $");
 
 #include "xmalloc.h"
-#include "ssh.h"
+#include "log.h"
+#include "cli.h"
+
 #include <vis.h>
 
 static int cli_input = -1;
@@ -32,7 +34,7 @@ cli_open(int from_stdin)
 		cli_input = STDIN_FILENO;
 		cli_output = STDERR_FILENO;
 	} else {
-		cli_input = cli_output = open("/dev/tty", O_RDWR);
+		cli_input = cli_output = open(_PATH_TTY, O_RDWR);
 		if (cli_input < 0)
 			fatal("You have no controlling tty.  Cannot read passphrase.");
 	}
@@ -43,7 +45,7 @@ cli_open(int from_stdin)
 }
 
 static void
-cli_close()
+cli_close(void)
 {
 	if (!cli_from_stdin && cli_input >= 0)
 		close(cli_input);
@@ -54,13 +56,13 @@ cli_close()
 }
 
 void
-intrcatch()
+intrcatch(int sig)
 {
 	intr = 1;
 }
 
 static void
-cli_echo_disable()
+cli_echo_disable(void)
 {
 	sigemptyset(&nset);
 	sigaddset(&nset, SIGTSTP);
@@ -83,7 +85,7 @@ cli_echo_disable()
 }
 
 static void
-cli_echo_restore()
+cli_echo_restore(void)
 {
 	if (echo_modified != 0) {
 		tcsetattr(cli_input, TCSANOW, &otio);
@@ -137,18 +139,21 @@ cli_write(char* buf, int size)
 
 	output = xmalloc(4*size);
 	for (p = output, i = 0; i < size; i++) {
-                if (buf[i] == '\n')
-                        *p++ = buf[i];
-                else
-                        p = vis(p, buf[i], 0, 0);
-        }
+		if (buf[i] == '\n' || buf[i] == '\r')
+			*p++ = buf[i];
+		else
+			p = vis(p, buf[i], 0, 0);
+	}
 	len = p - output;
 
 	for (pos = 0; pos < len; pos += ret) {
 		ret = write(cli_output, output + pos, len - pos);
-		if (ret == -1)
+		if (ret == -1) {
+			xfree(output);
 			return -1;
+		}
 	}
+	xfree(output);
 	return 0;
 }
 

@@ -1,8 +1,9 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.6 2000/08/31 21:52:23 markus Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.6.2.1 2001/02/16 20:12:50 jason Exp $
 
 .include <bsd.own.mk>
 
-SUBDIR=	lib ssh sshd ssh-add ssh-keygen ssh-agent scp sftp-server
+SUBDIR=	lib ssh sshd ssh-add ssh-keygen ssh-agent scp sftp-server \
+	ssh-keyscan sftp
 
 distribution:
 	install -C -o root -g wheel -m 0644 ${.CURDIR}/ssh_config \

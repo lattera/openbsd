@@ -24,7 +24,7 @@
 
 #include "includes.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.7 2001/02/08 00:04:52 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.7.2.1 2001/02/16 20:13:16 jason Exp $");
 
 /* XXX: commandline mode */
 /* XXX: copy between two remote hosts (commandline) */

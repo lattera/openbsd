@@ -1,10 +1,15 @@
-# This is ssh server systemwide configuration file.
+#	$OpenBSD: src/usr.bin/ssh/sshd_config,v 1.21.2.1 2001/02/16 20:13:23 jason Exp $
+
+# This is the sshd server system-wide configuration file.  See sshd(8)
+# for more information.
 
 Port 22
 #Protocol 2,1
 #ListenAddress 0.0.0.0
 #ListenAddress ::
 HostKey /etc/ssh_host_key
+HostKey /etc/ssh_host_dsa_key
+#HostKey /etc/ssh_host_rsa_key
 ServerKeyBits 768
 LoginGraceTime 600
 KeyRegenerationInterval 3600
@@ -35,9 +40,9 @@ RSAAuthentication yes
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication yes
 PermitEmptyPasswords no
+
 # Uncomment to disable s/key passwords 
-#SkeyAuthentication no
-#KbdInteractiveAuthentication yes
+#ChallengeResponseAuthentication no
 
 # To change Kerberos options
 #KerberosAuthentication no
@@ -51,6 +56,8 @@ PermitEmptyPasswords no
 #CheckMail yes
 #UseLogin no
 
-# Uncomment if you want to enable sftp
-#Subsystem	sftp	/usr/libexec/sftp-server
 #MaxStartups 10:30:60
+#Banner /etc/issue.net
+#ReverseMappingCheck yes
+
+Subsystem	sftp	/usr/libexec/sftp-server

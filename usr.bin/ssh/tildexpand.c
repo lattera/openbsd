@@ -11,10 +11,11 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.c,v 1.8 2000/09/07 20:27:55 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.c,v 1.8.2.1 2001/02/16 20:13:23 jason Exp $");
 
 #include "xmalloc.h"
-#include "ssh.h"
+#include "log.h"
+#include "tildexpand.h"
 
 /*
  * Expands tildes in the file name.  Returns data allocated by xmalloc.
@@ -24,7 +25,7 @@ char *
 tilde_expand_filename(const char *filename, uid_t my_uid)
 {
 	const char *cp;
-	unsigned int userlen;
+	u_int userlen;
 	char *expanded;
 	struct passwd *pw;
 	char user[100];
