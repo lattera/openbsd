@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/pcctworeg.h,v 1.5 1999/02/09 06:36:27 smurph Exp $ */
 /*
  * Memory map for PCC2 chip found in mvme1x7 boards.
  *

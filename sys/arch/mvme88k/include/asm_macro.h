@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/asm_macro.h,v 1.4 1999/02/09 06:36:25 smurph Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -27,6 +28,9 @@
 /*
  * HISTORY
  * $Log: asm_macro.h,v $
+ * Revision 1.3  1997/03/03 20:20:46  rahnds
+ * Cleanup after import. This also seems to bring up the current version.
+ *
  * Revision 1.1.1.1  1995/10/18 10:54:22  deraadt
  * initial 88k import; code by nivas and based on mach luna88k
  *

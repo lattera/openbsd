@@ -1,5 +1,5 @@
 # standard amiga information
-#	$Id: std.m88k,v 1.3 1995/06/21 02:41:34 build Exp build $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Attic/std.mvme88k,v 1.2 1999/02/09 06:36:24 smurph Exp $
 machine mvme88k
 
 mainbus0	at root
