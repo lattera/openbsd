@@ -1,14 +1,14 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.36.2.2 2002/05/17 00:03:38 miod Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.36.2.3 2002/06/22 07:24:41 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
 PROG=	ssh
 BINOWN=	root
 
-BINMODE?=4555
+#BINMODE?=4555
 
 BINDIR=	/usr/bin
-MAN=	ssh.1
+MAN=	ssh.1 ssh_config.5
 LINKS=	${BINDIR}/ssh ${BINDIR}/slogin
 MLINKS=	ssh.1 slogin.1
 

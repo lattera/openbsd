@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.45.2.2 2002/05/17 00:03:41 miod Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.45.2.3 2002/06/22 07:24:42 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -6,14 +6,16 @@ PROG=	sshd
 BINOWN=	root
 BINMODE=555
 BINDIR=	/usr/sbin
-MAN=	sshd.8
+MAN=	sshd.8 sshd_config.5
 CFLAGS+=-DHAVE_LOGIN_CAP -DBSD_AUTH
 
 SRCS=	sshd.c auth-rhosts.c auth-passwd.c auth-rsa.c auth-rh-rsa.c \
-	sshpty.c sshlogin.c servconf.c serverloop.c \
+	sshpty.c sshlogin.c servconf.c serverloop.c uidswap.c \
 	auth.c auth1.c auth2.c auth-options.c session.c \
 	auth-chall.c auth2-chall.c groupaccess.c \
-	auth-skey.c auth-bsdauth.c monitor_mm.c monitor.c
+	auth-skey.c auth-bsdauth.c monitor_mm.c monitor.c \
+	auth2-none.c auth2-passwd.c auth2-pubkey.c \
+	auth2-hostbased.c auth2-kbdint.c
 
 .include <bsd.own.mk> # for KERBEROS and AFS
 
