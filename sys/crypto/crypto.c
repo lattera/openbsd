@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.26 2001/08/05 09:36:38 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.26.2.1 2001/12/14 21:48:07 jason Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -154,7 +154,7 @@ crypto_freesession(u_int64_t sid)
  * Find an empty slot.
  */
 int32_t
-crypto_get_driverid(void)
+crypto_get_driverid(u_int8_t flags)
 {
 	struct cryptocap *newdrv;
 	int i, s = splimp();
@@ -178,6 +178,7 @@ crypto_get_driverid(void)
 		    !(crypto_drivers[i].cc_flags & CRYPTOCAP_F_CLEANUP) &&
 		    crypto_drivers[i].cc_sessions == 0) {
 			crypto_drivers[i].cc_sessions = 1; /* Mark */
+			crypto_drivers[i].cc_flags = flags;
 			splx(s);
 			return i;
 		}
@@ -204,6 +205,7 @@ crypto_get_driverid(void)
 		    crypto_drivers_num * sizeof(struct cryptocap));
 
 		newdrv[i].cc_sessions = 1; /* Mark */
+		newdrv[i].cc_flags = flags;
 		crypto_drivers_num *= 2;
 
 		free(crypto_drivers, M_CRYPTO_DATA);
