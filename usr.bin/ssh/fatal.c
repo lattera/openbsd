@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/fatal.c,v 1.1 2002/02/22 12:20:34 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/fatal.c,v 1.1.14.1 2004/02/28 03:51:33 brad Exp $");
 
 #include "log.h"
 
@@ -36,5 +36,5 @@ fatal(const char *fmt,...)
 	va_start(args, fmt);
 	do_log(SYSLOG_LEVEL_FATAL, fmt, args);
 	va_end(args);
-	fatal_cleanup();
+	cleanup_exit(255);
 }

@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.49 2003/08/28 12:54:34 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.49.2.1 2004/02/28 03:51:33 brad Exp $");
 
 #include <openssl/dh.h>
 
@@ -125,6 +125,7 @@ int mm_answer_sessid(int, Buffer *);
 int mm_answer_gss_setup_ctx(int, Buffer *);
 int mm_answer_gss_accept_ctx(int, Buffer *);
 int mm_answer_gss_userok(int, Buffer *);
+int mm_answer_gss_checkmic(int, Buffer *);
 #endif
 
 static Authctxt *authctxt;
@@ -176,6 +177,7 @@ struct mon_table mon_dispatch_proto20[] = {
     {MONITOR_REQ_GSSSETUP, MON_ISAUTH, mm_answer_gss_setup_ctx},
     {MONITOR_REQ_GSSSTEP, MON_ISAUTH, mm_answer_gss_accept_ctx},
     {MONITOR_REQ_GSSUSEROK, MON_AUTH, mm_answer_gss_userok},
+    {MONITOR_REQ_GSSCHECKMIC, MON_ISAUTH, mm_answer_gss_checkmic},
 #endif
     {0, 0, NULL}
 };
@@ -247,13 +249,16 @@ monitor_permit_authentications(int permit)
 	}
 }
 
-Authctxt *
-monitor_child_preauth(struct monitor *pmonitor)
+void
+monitor_child_preauth(Authctxt *_authctxt, struct monitor *pmonitor)
 {
 	struct mon_table *ent;
 	int authenticated = 0;
 
 	debug3("preauth child monitor started");
+
+	authctxt = _authctxt;
+	memset(authctxt, 0, sizeof(*authctxt));
 
 	if (compat20) {
 		mon_dispatch = mon_dispatch_proto20;
@@ -266,8 +271,6 @@ monitor_child_preauth(struct monitor *pmonitor)
 
 		monitor_permit(mon_dispatch, MONITOR_REQ_SESSKEY, 1);
 	}
-
-	authctxt = authctxt_new();
 
 	/* The first few requests do not require asynchronous access */
 	while (!authenticated) {
@@ -296,8 +299,6 @@ monitor_child_preauth(struct monitor *pmonitor)
 	    __func__, authctxt->user);
 
 	mm_get_keystate(pmonitor);
-
-	return (authctxt);
 }
 
 static void
@@ -529,6 +530,7 @@ mm_answer_pwnamallow(int socket, Buffer *m)
 
 	if (pwent == NULL) {
 		buffer_put_char(m, 0);
+		authctxt->pw = fakepw();
 		goto out;
 	}
 
@@ -769,7 +771,7 @@ mm_answer_keyallowed(int socket, Buffer *m)
 
 	debug3("%s: key_from_blob: %p", __func__, key);
 
-	if (key != NULL && authctxt->pw != NULL) {
+	if (key != NULL && authctxt->valid) {
 		switch(type) {
 		case MM_USERKEY:
 			allowed = options.pubkey_authentication &&
@@ -1007,7 +1009,7 @@ mm_record_login(Session *s, struct passwd *pw)
 		if (getpeername(packet_get_connection_in(),
 			(struct sockaddr *) & from, &fromlen) < 0) {
 			debug("getpeername: %.100s", strerror(errno));
-			fatal_cleanup();
+			cleanup_exit(255);
 		}
 	}
 	/* Record that there was a login on that tty from the remote host. */
@@ -1022,7 +1024,6 @@ mm_session_close(Session *s)
 	debug3("%s: session %d pid %ld", __func__, s->self, (long)s->pid);
 	if (s->ttyfd != -1) {
 		debug3("%s: tty %s ptyfd %d",  __func__, s->tty, s->ptyfd);
-		fatal_remove_cleanup(session_pty_cleanup2, (void *)s);
 		session_pty_cleanup2(s);
 	}
 	s->used = 0;
@@ -1047,7 +1048,6 @@ mm_answer_pty(int socket, Buffer *m)
 	res = pty_allocate(&s->ptyfd, &s->ttyfd, s->tty, sizeof(s->tty));
 	if (res == 0)
 		goto error;
-	fatal_add_cleanup(session_pty_cleanup2, (void *)s);
 	pty_setowner(authctxt->pw, s->tty);
 
 	buffer_put_int(m, 1);
@@ -1525,6 +1525,7 @@ monitor_init(void)
 
 	mon = xmalloc(sizeof(*mon));
 
+	mon->m_pid = 0;
 	monitor_socketpair(pair);
 
 	mon->m_recvfd = pair[0];
@@ -1601,11 +1602,39 @@ mm_answer_gss_accept_ctx(int socket, Buffer *m)
 
 	gss_release_buffer(&minor, &out);
 
-	/* Complete - now we can do signing */
 	if (major==GSS_S_COMPLETE) {
 		monitor_permit(mon_dispatch, MONITOR_REQ_GSSSTEP, 0);
 		monitor_permit(mon_dispatch, MONITOR_REQ_GSSUSEROK, 1);
+		monitor_permit(mon_dispatch, MONITOR_REQ_GSSCHECKMIC, 1);
 	}
+	return (0);
+}
+
+int
+mm_answer_gss_checkmic(int socket, Buffer *m)
+{
+	gss_buffer_desc gssbuf, mic;
+	OM_uint32 ret;
+	u_int len;
+
+	gssbuf.value = buffer_get_string(m, &len);
+	gssbuf.length = len;
+	mic.value = buffer_get_string(m, &len);
+	mic.length = len;
+
+	ret = ssh_gssapi_checkmic(gsscontext, &gssbuf, &mic);
+
+	xfree(gssbuf.value);
+	xfree(mic.value);
+
+	buffer_clear(m);
+	buffer_put_int(m, ret);
+
+	mm_request_send(socket, MONITOR_ANS_GSSCHECKMIC, m);
+
+	if (!GSS_ERROR(ret))
+		monitor_permit(mon_dispatch, MONITOR_REQ_GSSUSEROK, 1);
+
 	return (0);
 }
 
@@ -1622,7 +1651,7 @@ mm_answer_gss_userok(int socket, Buffer *m)
 	debug3("%s: sending result %d", __func__, authenticated);
 	mm_request_send(socket, MONITOR_ANS_GSSUSEROK, m);
 
-	auth_method="gssapi";
+	auth_method="gssapi-with-mic";
 
 	/* Monitor loop will terminate if authenticated */
 	return (authenticated);

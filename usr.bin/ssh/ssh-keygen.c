@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.108 2003/08/14 16:08:58 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.108.2.1 2004/02/28 03:51:34 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -32,9 +32,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.108 2003/08/14 16:08:58 markus
 #ifdef SMARTCARD
 #include "scard.h"
 #endif
-#ifdef DNS
 #include "dns.h"
-#endif
 
 /* Number of bits in the RSA/DSA key.  This value can be changed on the command line. */
 int bits = 1024;
@@ -187,8 +185,8 @@ do_convert_to_ssh2(struct passwd *pw)
 static void
 buffer_get_bignum_bits(Buffer *b, BIGNUM *value)
 {
-	int bits = buffer_get_int(b);
-	int bytes = (bits + 7) / 8;
+	u_int bits = buffer_get_int(b);
+	u_int bytes = (bits + 7) / 8;
 
 	if (buffer_len(b) < bytes)
 		fatal("buffer_get_bignum_bits: input buffer too small: "
@@ -621,7 +619,6 @@ do_change_passphrase(struct passwd *pw)
 	exit(0);
 }
 
-#ifdef DNS
 /*
  * Print the SSHFP RR.
  */
@@ -651,7 +648,6 @@ do_print_resource_record(struct passwd *pw, char *hostname)
 	printf("failed to read v2 public key from %s.\n", identity_file);
 	exit(1);
 }
-#endif /* DNS */
 
 /*
  * Change the comment of a private key file.
@@ -770,9 +766,7 @@ usage(void)
 	fprintf(stderr, "  -C comment  Provide new comment.\n");
 	fprintf(stderr, "  -N phrase   Provide new passphrase.\n");
 	fprintf(stderr, "  -P phrase   Provide old passphrase.\n");
-#ifdef DNS
 	fprintf(stderr, "  -r hostname Print DNS resource record.\n");
-#endif /* DNS */
 #ifdef SMARTCARD
 	fprintf(stderr, "  -D reader   Download public key from smartcard.\n");
 	fprintf(stderr, "  -U reader   Upload private key to smartcard.\n");
@@ -791,7 +785,7 @@ int
 main(int ac, char **av)
 {
 	char dotsshdir[MAXPATHLEN], comment[1024], *passphrase1, *passphrase2;
-	char out_file[PATH_MAX], *reader_id = NULL;
+	char out_file[MAXPATHLEN], *reader_id = NULL;
 	char *resource_record_hostname = NULL;
 	Key *private, *public;
 	struct passwd *pw;
@@ -799,6 +793,7 @@ main(int ac, char **av)
 	int opt, type, fd, download = 0, memory = 0;
 	int generator_wanted = 0, trials = 100;
 	int do_gen_candidates = 0, do_screen_candidates = 0;
+	int log_level = SYSLOG_LEVEL_INFO;
 	BIGNUM *start = NULL;
 	FILE *f;
 
@@ -820,7 +815,7 @@ main(int ac, char **av)
 	}
 
 	while ((opt = getopt(ac, av,
-	    "degiqpclBRxXyb:f:t:U:D:P:N:C:r:g:T:G:M:S:a:W:")) != -1) {
+	    "degiqpclBRvxXyb:f:t:U:D:P:N:C:r:g:T:G:M:S:a:W:")) != -1) {
 		switch (opt) {
 		case 'b':
 			bits = atoi(optarg);
@@ -888,6 +883,15 @@ main(int ac, char **av)
 		case 'U':
 			reader_id = optarg;
 			break;
+		case 'v':
+			if (log_level == SYSLOG_LEVEL_INFO)
+				log_level = SYSLOG_LEVEL_DEBUG1;
+			else {
+				if (log_level >= SYSLOG_LEVEL_DEBUG1 && 
+				    log_level < SYSLOG_LEVEL_DEBUG3)
+					log_level++;
+			}
+			break;
 		case 'r':
 			resource_record_hostname = optarg;
 			break;
@@ -899,13 +903,13 @@ main(int ac, char **av)
 		case 'a':
 			trials = atoi(optarg);
 			if (trials < TRIAL_MINIMUM) {
-				fatal("Minimum primality trials is %d", 
+				fatal("Minimum primality trials is %d",
 				    TRIAL_MINIMUM);
 			}
 			break;
 		case 'M':
 			memory = atoi(optarg);
-			if (memory != 0 && 
+			if (memory != 0 &&
 			   (memory < LARGE_MINIMUM || memory > LARGE_MAXIMUM)) {
 				fatal("Invalid memory amount (min %ld, max %ld)",
 				    LARGE_MINIMUM, LARGE_MAXIMUM);
@@ -929,6 +933,10 @@ main(int ac, char **av)
 			usage();
 		}
 	}
+
+	/* reinit */
+	log_init(av[0], log_level, SYSLOG_FACILITY_USER, 1);
+
 	if (optind < ac) {
 		printf("Too many arguments.\n");
 		usage();
@@ -950,11 +958,7 @@ main(int ac, char **av)
 	if (print_public)
 		do_print_public(pw);
 	if (resource_record_hostname != NULL) {
-#ifdef DNS
 		do_print_resource_record(pw, resource_record_hostname);
-#else /* DNS */
-		fatal("no DNS support.");
-#endif /* DNS */
 	}
 	if (reader_id != NULL) {
 #ifdef SMARTCARD
@@ -969,7 +973,7 @@ main(int ac, char **av)
 
 	if (do_gen_candidates) {
 		FILE *out = fopen(out_file, "w");
-		
+
 		if (out == NULL) {
 			error("Couldn't open modulus candidate file \"%s\": %s",
 			    out_file, strerror(errno));
@@ -988,7 +992,7 @@ main(int ac, char **av)
 		if (have_identity && strcmp(identity_file, "-") != 0) {
 			if ((in = fopen(identity_file, "r")) == NULL) {
 				fatal("Couldn't open modulus candidate "
-				    "file \"%s\": %s", identity_file, 
+				    "file \"%s\": %s", identity_file,
 				    strerror(errno));
 			}
 		} else

@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.31 2003/08/28 12:54:34 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.31.2.1 2004/02/28 03:51:33 brad Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/dh.h>
@@ -64,6 +64,16 @@ extern z_stream outgoing_stream;
 extern struct monitor *pmonitor;
 extern Buffer input, output;
 
+int
+mm_is_monitor(void)
+{
+	/*
+	 * m_pid is only set in the privileged part, and
+	 * points to the unprivileged child.
+	 */
+	return (pmonitor && pmonitor->m_pid > 0);
+}
+
 void
 mm_request_send(int socket, enum monitor_reqtype type, Buffer *m)
 {
@@ -92,7 +102,7 @@ mm_request_receive(int socket, Buffer *m)
 	res = atomicio(read, socket, buf, sizeof(buf));
 	if (res != sizeof(buf)) {
 		if (res == 0)
-			fatal_cleanup();
+			cleanup_exit(255);
 		fatal("%s: read: %ld", __func__, (long)res);
 	}
 	msg_len = GET_32BIT(buf);
@@ -210,7 +220,8 @@ mm_getpwnamallow(const char *login)
 	return (pw);
 }
 
-char *mm_auth2_read_banner(void)
+char *
+mm_auth2_read_banner(void)
 {
 	Buffer m;
 	char *banner;
@@ -221,10 +232,16 @@ char *mm_auth2_read_banner(void)
 	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_AUTH2_READ_BANNER, &m);
 	buffer_clear(&m);
 
-	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_AUTH2_READ_BANNER, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd,
+	    MONITOR_ANS_AUTH2_READ_BANNER, &m);
 	banner = buffer_get_string(&m, NULL);
 	buffer_free(&m);
 
+	/* treat empty banner as missing banner */
+	if (strlen(banner) == 0) {
+		xfree(banner);
+		banner = NULL;
+	}
 	return (banner);
 }
 
@@ -644,9 +661,8 @@ mm_pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 }
 
 void
-mm_session_pty_cleanup2(void *session)
+mm_session_pty_cleanup2(Session *s)
 {
-	Session *s = session;
 	Buffer m;
 
 	if (s->ttyfd == -1)
@@ -987,6 +1003,25 @@ mm_ssh_gssapi_accept_ctx(Gssctxt *ctx, gss_buffer_desc *in,
 	buffer_free(&m);
 
 	return (major);
+}
+
+OM_uint32
+mm_ssh_gssapi_checkmic(Gssctxt *ctx, gss_buffer_t gssbuf, gss_buffer_t gssmic)
+{
+	Buffer m;
+	OM_uint32 major;
+
+	buffer_init(&m);
+	buffer_put_string(&m, gssbuf->value, gssbuf->length);
+	buffer_put_string(&m, gssmic->value, gssmic->length);
+
+	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_GSSCHECKMIC, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_GSSCHECKMIC,
+	    &m);
+
+	major = buffer_get_int(&m);
+	buffer_free(&m);
+	return(major);
 }
 
 int

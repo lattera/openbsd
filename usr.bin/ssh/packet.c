@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.109 2003/07/10 14:42:28 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.109.2.1 2004/02/28 03:51:33 brad Exp $");
 
 #include <sys/queue.h>
 
@@ -165,8 +165,6 @@ packet_set_connection(int fd_in, int fd_out)
 		buffer_init(&incoming_packet);
 		TAILQ_INIT(&outgoing);
 	}
-	/* Kludge: arrange the close function to be called from fatal(). */
-	fatal_add_cleanup((void (*) (void *)) packet_close, NULL);
 }
 
 /* Returns 1 if remote host is connected via socket, 0 if not. */
@@ -865,7 +863,7 @@ packet_read_seqnr(u_int32_t *seqnr_p)
 		len = read(connection_in, buf, sizeof(buf));
 		if (len == 0) {
 			logit("Connection closed by %.200s", get_remote_ipaddr());
-			fatal_cleanup();
+			cleanup_exit(255);
 		}
 		if (len < 0)
 			fatal("Read from socket failed: %.100s", strerror(errno));
@@ -1015,7 +1013,9 @@ packet_read_poll2(u_int32_t *seqnr_p)
 		cp = buffer_ptr(&incoming_packet);
 		packet_length = GET_32BIT(cp);
 		if (packet_length < 1 + 4 || packet_length > 256 * 1024) {
+#ifdef PACKET_DEBUG
 			buffer_dump(&incoming_packet);
+#endif
 			packet_disconnect("Bad packet length %u.", packet_length);
 		}
 		DBG(debug("input: packet len %u", packet_length+4));
@@ -1129,7 +1129,7 @@ packet_read_poll_seqnr(u_int32_t *seqnr_p)
 				logit("Received disconnect from %s: %u: %.400s",
 				    get_remote_ipaddr(), reason, msg);
 				xfree(msg);
-				fatal_cleanup();
+				cleanup_exit(255);
 				break;
 			case SSH2_MSG_UNIMPLEMENTED:
 				seqnr = packet_get_int();
@@ -1154,7 +1154,7 @@ packet_read_poll_seqnr(u_int32_t *seqnr_p)
 				msg = packet_get_string(NULL);
 				logit("Received disconnect from %s: %.400s",
 				    get_remote_ipaddr(), msg);
-				fatal_cleanup();
+				cleanup_exit(255);
 				xfree(msg);
 				break;
 			default:
@@ -1331,8 +1331,7 @@ packet_disconnect(const char *fmt,...)
 
 	/* Close the connection. */
 	packet_close();
-
-	fatal_cleanup();
+	cleanup_exit(255);
 }
 
 /* Checks if there is any buffered output, and tries to write some of the output. */

@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cipher.c,v 1.65 2003/05/17 04:27:52 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/cipher.c,v 1.65.2.1 2004/02/28 03:51:33 brad Exp $");
 
 #include "xmalloc.h"
 #include "log.h"
@@ -52,6 +52,7 @@ extern const EVP_CIPHER *evp_ssh1_3des(void);
 extern void ssh1_3des_iv(EVP_CIPHER_CTX *, int, u_char *, int);
 extern const EVP_CIPHER *evp_aes_128_ctr(void);
 extern void ssh_aes_ctr_iv(EVP_CIPHER_CTX *, int, u_char *, u_int);
+#define EVP_acss NULL
 
 struct Cipher {
 	char	*name;
@@ -85,6 +86,7 @@ struct Cipher {
 	{ "aes128-ctr", 	SSH_CIPHER_SSH2, 16, 16, evp_aes_128_ctr },
 	{ "aes192-ctr", 	SSH_CIPHER_SSH2, 16, 24, evp_aes_128_ctr },
 	{ "aes256-ctr", 	SSH_CIPHER_SSH2, 16, 32, evp_aes_128_ctr },
+	{ "acss@openssh.org",	SSH_CIPHER_SSH2, 16, 5, EVP_acss },
 
 	{ NULL,			SSH_CIPHER_ILLEGAL, 0, 0, NULL }
 };
@@ -92,19 +94,19 @@ struct Cipher {
 /*--*/
 
 u_int
-cipher_blocksize(Cipher *c)
+cipher_blocksize(const Cipher *c)
 {
 	return (c->block_size);
 }
 
 u_int
-cipher_keylen(Cipher *c)
+cipher_keylen(const Cipher *c)
 {
 	return (c->key_len);
 }
 
 u_int
-cipher_get_number(Cipher *c)
+cipher_get_number(const Cipher *c)
 {
 	return (c->number);
 }
@@ -282,7 +284,7 @@ cipher_set_key_string(CipherContext *cc, Cipher *cipher,
  */
 
 int
-cipher_get_keyiv_len(CipherContext *cc)
+cipher_get_keyiv_len(const CipherContext *cc)
 {
 	Cipher *c = cc->cipher;
 	int ivlen;
@@ -368,12 +370,12 @@ cipher_set_keyiv(CipherContext *cc, u_char *iv)
 #endif
 
 int
-cipher_get_keycontext(CipherContext *cc, u_char *dat)
+cipher_get_keycontext(const CipherContext *cc, u_char *dat)
 {
 	Cipher *c = cc->cipher;
 	int plen = 0;
 
-	if (c->evptype == EVP_rc4) {
+	if (c->evptype == EVP_rc4 || c->evptype == EVP_acss) {
 		plen = EVP_X_STATE_LEN(cc->evp);
 		if (dat == NULL)
 			return (plen);
@@ -388,7 +390,7 @@ cipher_set_keycontext(CipherContext *cc, u_char *dat)
 	Cipher *c = cc->cipher;
 	int plen;
 
-	if (c->evptype == EVP_rc4) {
+	if (c->evptype == EVP_rc4 || c->evptype == EVP_acss) {
 		plen = EVP_X_STATE_LEN(cc->evp);
 		memcpy(EVP_X_STATE(cc->evp), dat, plen);
 	}

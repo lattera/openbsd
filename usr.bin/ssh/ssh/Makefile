@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.50 2003/08/28 07:49:13 markus Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.50.2.1 2004/02/28 03:51:35 brad Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -18,7 +18,7 @@ SRCS=	ssh.c readconf.c clientloop.c sshtty.c \
 .include <bsd.own.mk> # for AFS
 
 .if (${KERBEROS5:L} == "yes")
-CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV -DGSSAPI 
+CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV -DGSSAPI
 .endif # KERBEROS5
 
 .include <bsd.prog.mk>

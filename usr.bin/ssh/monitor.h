@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.11 2003/08/28 12:54:34 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.11.2.1 2004/02/28 03:51:33 brad Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -52,6 +52,7 @@ enum monitor_reqtype {
 	MONITOR_REQ_GSSSETUP, MONITOR_ANS_GSSSETUP,
 	MONITOR_REQ_GSSSTEP, MONITOR_ANS_GSSSTEP,
 	MONITOR_REQ_GSSUSEROK, MONITOR_ANS_GSSUSEROK,
+	MONITOR_REQ_GSSCHECKMIC, MONITOR_ANS_GSSCHECKMIC,
 	MONITOR_REQ_TERM
 };
 
@@ -70,7 +71,7 @@ void monitor_reinit(struct monitor *);
 void monitor_sync(struct monitor *);
 
 struct Authctxt;
-struct Authctxt *monitor_child_preauth(struct monitor *);
+void monitor_child_preauth(struct Authctxt *, struct monitor *);
 void monitor_child_postauth(struct monitor *);
 
 struct mon_table;

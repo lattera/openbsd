@@ -28,7 +28,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-krb5.c,v 1.12 2003/08/28 12:54:34 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-krb5.c,v 1.12.2.1 2004/02/28 03:51:32 brad Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -49,17 +49,12 @@ krb5_init(void *context)
 {
 	Authctxt *authctxt = (Authctxt *)context;
 	krb5_error_code problem;
-	static int cleanup_registered = 0;
 
 	if (authctxt->krb5_ctx == NULL) {
 		problem = krb5_init_context(&authctxt->krb5_ctx);
 		if (problem)
 			return (problem);
 		krb5_init_ets(authctxt->krb5_ctx);
-	}
-	if (!cleanup_registered) {
-		fatal_add_cleanup(krb5_cleanup_proc, authctxt);
-		cleanup_registered = 1;
 	}
 	return (0);
 }
@@ -70,7 +65,7 @@ auth_krb5_password(Authctxt *authctxt, const char *password)
 	krb5_error_code problem;
 	krb5_ccache ccache = NULL;
 
-	if (authctxt->pw == NULL)
+	if (!authctxt->valid)
 		return (0);
 
 	temporarily_use_uid(authctxt->pw);
@@ -88,7 +83,7 @@ auth_krb5_password(Authctxt *authctxt, const char *password)
 	if (problem)
 		goto out;
 
-	problem = krb5_cc_initialize(authctxt->krb5_ctx, ccache, 
+	problem = krb5_cc_initialize(authctxt->krb5_ctx, ccache,
 		authctxt->krb5_user);
 	if (problem)
 		goto out;
@@ -103,7 +98,7 @@ auth_krb5_password(Authctxt *authctxt, const char *password)
 	if (problem)
 		goto out;
 
-	problem = krb5_cc_gen_new(authctxt->krb5_ctx, &krb5_fcc_ops, 
+	problem = krb5_cc_gen_new(authctxt->krb5_ctx, &krb5_fcc_ops,
 	    &authctxt->krb5_fwd_ccache);
 	if (problem)
 		goto out;
@@ -143,10 +138,8 @@ auth_krb5_password(Authctxt *authctxt, const char *password)
 }
 
 void
-krb5_cleanup_proc(void *context)
+krb5_cleanup_proc(Authctxt *authctxt)
 {
-	Authctxt *authctxt = (Authctxt *)context;
-
 	debug("krb5_cleanup_proc called");
 	if (authctxt->krb5_fwd_ccache) {
 		krb5_cc_destroy(authctxt->krb5_ctx, authctxt->krb5_fwd_ccache);

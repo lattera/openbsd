@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.2 2003/06/17 18:14:23 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.2.2.1 2004/02/28 03:51:33 brad Exp $");
 
 #include <openssl/evp.h>
 
@@ -90,7 +90,8 @@ ssh_aes_ctr_init(EVP_CIPHER_CTX *ctx, const u_char *key, const u_char *iv,
 		EVP_CIPHER_CTX_set_app_data(ctx, c);
 	}
 	if (key != NULL)
-                AES_set_encrypt_key(key, ctx->key_len * 8, &c->aes_ctx);
+		AES_set_encrypt_key(key, EVP_CIPHER_CTX_key_length(ctx) * 8,
+		     &c->aes_ctx);
 	if (iv != NULL)
 		memcpy(c->aes_counter, iv, AES_BLOCK_SIZE);
 	return (1);

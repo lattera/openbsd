@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.49 2003/08/26 09:58:43 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.49.2.1 2004/02/28 03:51:32 brad Exp $");
 
 #include <libgen.h>
 
@@ -151,14 +151,6 @@ allowed_user(struct passwd * pw)
 	}
 	/* We found no reason not to let this user try to log on... */
 	return 1;
-}
-
-Authctxt *
-authctxt_new(void)
-{
-	Authctxt *authctxt = xmalloc(sizeof(*authctxt));
-	memset(authctxt, 0, sizeof(*authctxt));
-	return authctxt;
 }
 
 void
@@ -480,7 +472,7 @@ fakepw(void)
 	memset(&fake, 0, sizeof(fake));
 	fake.pw_name = "NOUSER";
 	fake.pw_passwd =
-	    "$2a$06$r3.juUaHZDlIbQaO2dS9FuYxL1W9M81R1Tc92PoSNmzvpEqLkLGrK";	
+	    "$2a$06$r3.juUaHZDlIbQaO2dS9FuYxL1W9M81R1Tc92PoSNmzvpEqLkLGrK";
 	fake.pw_gecos = "NOUSER";
 	fake.pw_uid = -1;
 	fake.pw_gid = -1;

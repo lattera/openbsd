@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.18 2002/04/20 09:14:58 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.18.6.1 2004/02/28 03:51:32 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -18,8 +18,8 @@
 #include "buffer.h"
 #include <openssl/bn.h>
 
-void    buffer_put_bignum(Buffer *, BIGNUM *);
-void    buffer_put_bignum2(Buffer *, BIGNUM *);
+void    buffer_put_bignum(Buffer *, const BIGNUM *);
+void    buffer_put_bignum2(Buffer *, const BIGNUM *);
 void	buffer_get_bignum(Buffer *, BIGNUM *);
 void	buffer_get_bignum2(Buffer *, BIGNUM *);
 
