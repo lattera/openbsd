@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.6.2.4 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.6.2.5 2003/05/13 19:41:03 ho Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -143,7 +143,7 @@ cpuattach(parent, self, aux)
 	printf ("%d", mhz / 100);
 	if (mhz % 100 > 9)
 		printf(".%02d", mhz % 100);
-	printf("MHz, ");
+	printf("MHz");
 
 	if (fpu_enable) {
 		u_int32_t ver[2];
@@ -156,12 +156,9 @@ cpuattach(parent, self, aux)
 		    :: "r" (&ver) : "memory");
 		mtctl(0, CR_CCR);
 		ver[0] = HPPA_FPUVER(ver[0]);
-		printf("FPU %s rev %d",
+		printf(", FPU %s rev %d",
 		    hppa_mod_info(HPPA_TYPE_FPU, ver[0] >> 5), ver[0] & 0x1f);
 	}
-
-	/* if (pdc_model.sh)
-		printf("shadows, "); */
 
 	printf("\n%s: ", self->dv_xname);
 	p = "";

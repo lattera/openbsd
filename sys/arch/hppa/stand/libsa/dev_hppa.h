@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.h,v 1.3.4.2 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.h,v 1.3.4.3 2003/05/13 19:41:04 ho Exp $	*/
 
 
 #define IOPGSHIFT	11
@@ -15,8 +15,7 @@ struct hppa_dev {
 	struct disklabel *label;
 	/* buffer to cache data (aligned properly) */
 	char	*buf;
-	char	ua_buf[IODC_MAXIOSIZ + IODC_MINIOSIZ];
-
+	char	ua_buf[IODC_IOSIZ + IODC_MINIOSIZ];
 };
 
 #ifdef PDCDEBUG
@@ -38,7 +37,5 @@ struct hppa_dev {
 
 extern pdcio_t pdc;
 extern int pdcbuf[];			/* PDC returns, pdc.c */
-extern struct  pz_device ctdev;		/* cartridge tape (boot) device path */
 
 int iodc_rw(char *, u_int, u_int, int func, struct pz_device *);
-

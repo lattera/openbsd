@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyu.c,v 1.3.8.2 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/mpyu.c,v 1.3.8.3 2003/05/13 19:41:04 ho Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -21,9 +21,12 @@ mpyu(opnd1,opnd2,result)
 	unsigned int opnd1, opnd2;
 	struct mdsfu_register *result;
 {
-	impyu(&opnd1,&opnd2,result);
+	u_xmpy(&opnd1,&opnd2,result);
+
 	/* determine overflow status */
-	if (result_hi) overflow = TRUE;
-	else overflow = FALSE;
+	if (result_hi)
+		overflow = TRUE;
+	else
+		overflow = FALSE;
 	return;
 }

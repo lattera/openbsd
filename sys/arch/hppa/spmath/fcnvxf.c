@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/fcnvxf.c,v 1.4.2.2 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/fcnvxf.c,v 1.4.2.3 2003/05/13 19:41:04 ho Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -23,8 +23,8 @@
  *  Convert single fixed-point to single floating-point format
  */
 int
-sgl_to_sgl_fcnvxf(srcptr,dstptr,status)
-	int *srcptr;
+sgl_to_sgl_fcnvxf(srcptr, null, dstptr, status)
+	int *srcptr, *null;
 	sgl_floating_point *dstptr;
 	unsigned int *status;
 {
@@ -92,8 +92,8 @@ sgl_to_sgl_fcnvxf(srcptr,dstptr,status)
  *  Single Fixed-point to Double Floating-point
  */
 int
-sgl_to_dbl_fcnvxf(srcptr,dstptr,status)
-	int *srcptr;
+sgl_to_dbl_fcnvxf(srcptr, null, dstptr, status)
+	int *srcptr, *null;
 	dbl_floating_point *dstptr;
 	unsigned int *status;
 {
@@ -141,8 +141,8 @@ sgl_to_dbl_fcnvxf(srcptr,dstptr,status)
  *  Double Fixed-point to Single Floating-point
  */
 int
-dbl_to_sgl_fcnvxf(srcptr,dstptr,status)
-	dbl_integer *srcptr;
+dbl_to_sgl_fcnvxf(srcptr, null, dstptr, status)
+	dbl_integer *srcptr, *null;
 	sgl_floating_point *dstptr;
 	unsigned int *status;
 {
@@ -244,8 +244,8 @@ dbl_to_sgl_fcnvxf(srcptr,dstptr,status)
  *  Double Fixed-point to Double Floating-point
  */
 int
-dbl_to_dbl_fcnvxf(srcptr,dstptr,status)
-	dbl_integer *srcptr;
+dbl_to_dbl_fcnvxf(srcptr, null, dstptr, status)
+	dbl_integer *srcptr, *null;
 	dbl_floating_point *dstptr;
 	unsigned int *status;
 {

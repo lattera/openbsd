@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.5 2003/03/27 23:42:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/pmap.c,v 1.5.4.6 2003/05/13 19:41:09 ho Exp $	*/
 /*	$NetBSD: pmap.c,v 1.107 2001/08/31 16:47:41 eeh Exp $	*/
 #undef	NO_VCACHE /* Don't forget the locked TLB in dostart */
 /*
@@ -281,7 +281,7 @@ int tsbsize;		/* tsbents = 512 * 2^^tsbsize */
 
 struct pmap kernel_pmap_;
 
-int physmem;
+extern int physmem;
 /*
  * Virtual and physical addresses of the start and end of kernel text
  * and data segments.
@@ -3834,7 +3834,8 @@ pmap_testout()
 
 	pg = vm_page_alloc1();
 	pa = (paddr_t)VM_PAGE_TO_PHYS(pg);
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 
 	/* Now clear reference and modify */
@@ -3910,7 +3911,8 @@ pmap_testout()
 	       ref, mod);
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 
@@ -3935,7 +3937,8 @@ pmap_testout()
 	       ref, mod);
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 
@@ -3960,7 +3963,8 @@ pmap_testout()
 
 
 	/* Modify page */
-	pmap_enter(pmap_kernel(), va, pa, VM_PROT_ALL, VM_PROT_ALL);
+	pmap_enter(pmap_kernel(), va, pa, VM_PROT_READ|VM_PROT_WRITE,
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 	*loc = 1;
 

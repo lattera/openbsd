@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/impyu.S,v 1.3.8.3 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/impyu.S,v 1.3.8.4 2003/05/13 19:41:04 ho Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -45,7 +45,7 @@ temp	.equ		6
 
 ;****************************************************************************
 	.text
-LEAF_ENTRY(impyu)
+LEAF_ENTRY(u_xmpy)
 	stws,ma		pu,4(sp)		; save registers on stack
 	stws,ma		pl,4(sp)		; save registers on stack
 	stws,ma		op1,4(sp)		; save registers on stack
@@ -285,6 +285,6 @@ fini	stws		pu,0(arg2)		; save high part of result
 	ldws,mb		-4(sp),pl		; restore registers
 	bv		0(rp)			; return
 	ldws,mb		-4(sp),pu		; restore registers
-EXIT(impu)
+EXIT(u_xmpy)
 
 	.end

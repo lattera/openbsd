@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/Makefile,v 1.7.4.1 2001/04/18 16:11:51 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/Makefile,v 1.7.4.2 2003/05/13 19:41:07 ho Exp $
 
 SIZE?=	size
 STRIP?= strip
@@ -35,7 +35,7 @@ netboot.bin: netboot
 	${STRIP} netboot
 	dd ibs=32 skip=1 if=netboot of=$@
 #	dd ibs=38 skip=1 if=netboot of=$@
-	chown ${LIBOWN}.${LIBGRP} netboot.bin
+	chown ${LIBOWN}:${LIBGRP} netboot.bin
 	chmod ${LIBMODE} netboot.bin
 
 install:

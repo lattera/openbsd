@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.2 2003/03/18 05:11:57 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/boot/Attic/loadfile.c,v 1.2.4.1 2003/05/13 19:41:09 ho Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*
@@ -190,7 +190,7 @@ elf_seek(int fd, off_t relpos)
 
 	if (relpos < 0) {
 #ifdef DEBUG
-		printf("elf_seek: attempting to seek backwards from %lx bytes, "
+		printf("elf_seek: attempting to seek backwards from %llx bytes, "
 		    "may fail!\n", -relpos);
 #endif
 		if (lseek(fd, relpos, SEEK_CUR) < 0)

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.5 2003/03/27 23:26:53 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.6 2003/05/13 19:41:03 ho Exp $
 #
 # hppa-specific configuration info
 
@@ -133,7 +133,8 @@ file	arch/hppa/dev/dino.c		dino
 # U2/Uturn, Runway to GSC Bus bridge & IOA.
 
 attach	sti at mainbus with sti_sgc
-file	arch/hppa/dev/sti_sgc.c		sti_sgc
+attach	sti at phantomas with sti_phantom
+file	arch/hppa/dev/sti_sgc.c		sti_sgc | sti_phantom
 
 ###
 

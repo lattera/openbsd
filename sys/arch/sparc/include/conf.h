@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.4 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.5 2003/05/13 19:41:08 ho Exp $	*/
 /*	$NetBSD: conf.h,v 1.8 1996/12/31 07:12:43 mrg Exp $	*/
 
 /*
@@ -59,6 +59,9 @@ cdev_decl(xd);
 
 bdev_decl(xy);
 cdev_decl(xy);
+
+bdev_decl(presto);
+cdev_decl(presto);
 
 /* open, close, write, ioctl */
 #define	cdev_bpp_init(c,n) { \

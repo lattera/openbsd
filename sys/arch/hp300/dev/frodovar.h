@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/frodovar.h,v 1.1.12.1 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/frodovar.h,v 1.1.12.2 2003/05/13 19:41:02 ho Exp $	*/
 /*	$NetBSD: frodovar.h,v 1.1 1997/05/12 08:03:50 thorpej Exp $	*/
 
 /*
@@ -29,7 +29,7 @@
 
 /*
  * Autoconfiguration definitions and prototypes for the Frodo ASIC in
- * the HP9000/4xx series.
+ * the HP 9000/4xx series.
  */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/lf.c,v 1.3.4.1 2002/03/28 10:31:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/lf.c,v 1.3.4.2 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -40,7 +40,7 @@
 int
 lfopen(struct open_file *f, ...)
 {
-	register struct hppa_dev *dp = f->f_devdata;;
+	struct hppa_dev *dp = f->f_devdata;
 
 	if (!(dp->pz_dev = pdc_findev(-1, PCL_NET_MASK|PCL_SEQU)))
 		return ENXIO;
@@ -49,11 +49,9 @@ lfopen(struct open_file *f, ...)
 }
 
 int
-lfclose(f)
-	struct open_file *f;
+lfclose(struct open_file *f)
 {
 	free(f->f_devdata, sizeof(struct hppa_dev));
 	f->f_devdata = NULL;
 	return 0;
 }
-

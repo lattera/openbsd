@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/scsi.c,v 1.10.12.2 2003/03/27 23:19:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/scsi.c,v 1.10.12.3 2003/05/13 19:41:02 ho Exp $	*/
 /*	$NetBSD: scsi.c,v 1.21 1997/05/05 21:08:26 thorpej Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
  */
 
 /*
- * HP9000/3xx 98658 SCSI host adaptor driver.
+ * HP 9000/3xx 98658 SCSI host adaptor driver.
  */
 
 #include <sys/param.h>

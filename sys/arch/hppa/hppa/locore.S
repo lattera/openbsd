@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.6 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.7 2003/05/13 19:41:03 ho Exp $	*/
 
 /*
  * Copyright (c) 1998-2003 Michael Shalayeff
@@ -104,9 +104,8 @@
 	.import	kpsw, data
 	.import	panic, code
 
-#define	EXIT_STACKSIZE	(2*NBPG)
-#define	EMRG_STACKSIZE	(2*NBPG)
-#define	FPEMU_STACKSIZE	(4*NBPG)
+#define	EMRG_STACKSIZE	(1*NBPG)
+#define	FPEMU_STACKSIZE	(1*NBPG)
 
 	.data
 $trap_tmp_save			/* XXX assumed to be aligned on 2048 */
@@ -1210,7 +1209,7 @@ EXIT(TLABEL(emu))
 	dep	r8, 31, 16, r16		/* put in the space id */	! \
 	depi	1, 0, 1, r16		/* and set the valid bit */
 
-#if 1
+#if 0
 	.export	dtlb_c, data
 	BSS(dtlb_c, 8)
 	.export	dtlb_c, data
@@ -2390,7 +2389,7 @@ EXIT(ficache)
 LEAF_ENTRY(setjmp)
 /*
  * Save the other general registers whose contents are expected to remain
- * across function calls.  According to the "HP9000 Series 800 Assembly
+ * across function calls.  According to the "HP 9000 Series 800 Assembly
  * Language Reference Manual", procedures can use general registers 19-26,
  * 28, 29, 1, and 31 without restoring them.  Hence, we do not save these.
  */

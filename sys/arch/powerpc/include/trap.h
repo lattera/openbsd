@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/trap.h,v 1.1.1.1.14.5 2002/03/29 16:11:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/trap.h,v 1.1.1.1.14.6 2003/05/13 19:41:07 ho Exp $	*/
 /*	$NetBSD: trap.h,v 1.1 1996/09/30 16:34:35 ws Exp $	*/
 
 /*
@@ -50,7 +50,7 @@
 #define	EXC_PERF	0x0f00		/* Performance Monitoring */
 #define	EXC_VEC		0x0f20		/* AltiVec Unavailable */
 #define	EXC_BPT		0x1300		/* Instruction Breakpoint */
-#define	EXC_SMI		0x1400		/* System Managment Interrupt */
+#define	EXC_SMI		0x1400		/* System Management Interrupt */
 
 /* And these are only on the 603: */
 #define	EXC_IMISS	0x1000		/* Instruction translation miss */

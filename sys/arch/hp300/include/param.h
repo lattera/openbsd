@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.6 2002/03/28 10:07:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.7 2003/05/13 19:41:03 ho Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:38 veego Exp $	*/
 
 /*
@@ -47,7 +47,7 @@
 #define	_MACHINE_PARAM_H_
 
 /*
- * Machine dependent constants for HP9000 series 300.
+ * Machine dependent constants for HP 9000 series 300.
  */
 #define	_MACHINE	hp300
 #define	MACHINE		"hp300"

@@ -1,6 +1,7 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dhu.c,v 1.1.8.4 2003/03/27 23:52:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dhu.c,v 1.1.8.5 2003/05/13 19:41:10 ho Exp $	*/
 /*	$NetBSD: dhu.c,v 1.19 2000/06/04 06:17:01 matt Exp $	*/
 /*
+ * Copyright (c) 2003, Hugh Graham.
  * Copyright (c) 1996  Ken C. Wellsch.  All rights reserved.
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -56,8 +57,6 @@
 #include <arch/vax/qbus/ubavar.h>
 #include <arch/vax/qbus/dhureg.h>
 
-/* A DHU-11 has 16 ports while a DHV-11 has only 8. We use 16 by default */
-
 #define	NDHULINE 	16
 
 #define DHU_M2U(c)	((c)>>4)	/* convert minor(dev) to unit # */
@@ -68,6 +67,7 @@ struct	dhu_softc {
 	struct	evcnt	sc_rintrcnt;	/* Interrupt statistics */
 	struct	evcnt	sc_tintrcnt;	/* Interrupt statistics */
 	int		sc_type;	/* controller type, DHU or DHV */
+	int		sc_lines;	/* number of lines */
 	bus_space_tag_t	sc_iot;
 	bus_space_handle_t sc_ioh;
 	bus_dma_tag_t	sc_dmat;
@@ -231,22 +231,20 @@ dhu_attach(parent, self, aux)
 
 	c = DHU_READ_WORD(DHU_UBA_STAT);
 
-	sc->sc_type = (c & DHU_STAT_DHU)? IS_DHU: IS_DHV;
+	sc->sc_type = (c & DHU_STAT_DHU) ? IS_DHU : IS_DHV;
 
 	if (sc->sc_type == IS_DHU) {
 		if (c & DHU_STAT_MDL)
-			i = 16;		/* "Modem Low" */
+			sc->sc_lines = 16;	/* "Modem Low" */
 		else
-			i = 8;		/* Has modem support */
+			sc->sc_lines = 8;	/* Has modem support */
 	} else
-		i = 8;
+		sc->sc_lines = 8;
 
 	printf("\n%s: DH%s-11 %d lines\n", self->dv_xname,
-	    (sc->sc_type == IS_DHU) ? "U" : "V", i);
+	    (sc->sc_type == IS_DHU) ? "U" : "V", sc->sc_lines);
 
-	sc->sc_type = i;
-
-	for (i = 0; i < sc->sc_type; i++) {
+	for (i = 0; i < sc->sc_lines; i++) {
 		struct tty *tp;
 		tp = sc->sc_dhu[i].dhu_tty = ttymalloc();
 		sc->sc_dhu[i].dhu_state = STATE_IDLE;
@@ -301,8 +299,8 @@ dhurint(arg)
 				    (void)(*linesw[tp->t_line].l_modem)(tp, 1);
 			}
 			else if ((tp->t_state & TS_CARR_ON) &&
-				(*linesw[tp->t_line].l_modem)(tp, 0) == 0)
-					(void) dhumctl(sc, line, 0, DMSET);
+			    (*linesw[tp->t_line].l_modem)(tp, 0) == 0)
+				(void) dhumctl(sc, line, 0, DMSET);
 
 			/* Do CRTSCTS flow control */
 			delta = c ^ sc->sc_dhu[line].dhu_modem;
@@ -349,29 +347,41 @@ dhuxint(arg)
 {
 	struct	dhu_softc *sc = arg;
 	struct tty *tp;
-	int line;
+	int line, i;
 
-	line = DHU_LINE(DHU_READ_BYTE(DHU_UBA_CSR_HI));
+	while ((i = DHU_READ_BYTE(DHU_UBA_CSR_HI)) & (DHU_CSR_TX_ACTION >> 8)) {
 
-	tp = sc->sc_dhu[line].dhu_tty;
+		line = DHU_LINE(i);
 
-	tp->t_state &= ~TS_BUSY;
-	if (tp->t_state & TS_FLUSH)
-		tp->t_state &= ~TS_FLUSH;
-	else {
-		if (sc->sc_dhu[line].dhu_state == STATE_DMA_STOPPED)
-			sc->sc_dhu[line].dhu_cc -= 
-			DHU_READ_WORD(DHU_UBA_TBUFCNT);
-		ndflush(&tp->t_outq, sc->sc_dhu[line].dhu_cc);
-		sc->sc_dhu[line].dhu_cc = 0;
+		tp = sc->sc_dhu[line].dhu_tty;
+
+		if (i & (DHU_CSR_TX_DMA_ERROR >> 8))
+			printf("dhu%d: DMA ERROR on line: %d\n",
+			    DHU_M2U(minor(tp->t_dev)), line);
+
+		if (i & (DHU_CSR_DIAG_FAIL >> 8))
+			printf("dhu%d: DIAG FAIL on line: %d\n",
+			    DHU_M2U(minor(tp->t_dev)), line);
+
+		tp->t_state &= ~TS_BUSY;
+
+		if (tp->t_state & TS_FLUSH)
+			tp->t_state &= ~TS_FLUSH;
+		else {
+			if (sc->sc_dhu[line].dhu_state == STATE_DMA_STOPPED)
+				sc->sc_dhu[line].dhu_cc -= 
+				DHU_READ_WORD(DHU_UBA_TBUFCNT);
+			ndflush(&tp->t_outq, sc->sc_dhu[line].dhu_cc);
+			sc->sc_dhu[line].dhu_cc = 0;
+		}
+
+		sc->sc_dhu[line].dhu_state = STATE_IDLE;
+
+		if (tp->t_line)
+			(*linesw[tp->t_line].l_start)(tp);
+		else
+			dhustart(tp);
 	}
-
-	sc->sc_dhu[line].dhu_state = STATE_IDLE;
-
-	if (tp->t_line)
-		(*linesw[tp->t_line].l_start)(tp);
-	else
-		dhustart(tp);
 }
 
 int
@@ -393,8 +403,15 @@ dhuopen(dev, flag, mode, p)
 
 	sc = dhu_cd.cd_devs[unit];
 
-	if (line >= sc->sc_type)
+	if (line >= sc->sc_lines)
 		return ENXIO;
+
+	if (sc->sc_type == IS_DHU) {
+		s = spltty();		/* CSR 3:0 must be 0 */
+		DHU_WRITE_BYTE(DHU_UBA_CSR, DHU_CSR_RXIE);
+		DHU_WRITE_BYTE(DHU_UBA_RXTIME, 10);
+		splx(s);		/* RX int delay 10ms */
+	}
 
 	s = spltty();
 	DHU_WRITE_BYTE(DHU_UBA_CSR, DHU_CSR_RXIE | line);
@@ -617,6 +634,7 @@ dhustart(tp)
 	int s;
 
 	s = spltty();
+
 	if (tp->t_state & (TS_TIMEOUT|TS_BUSY|TS_TTSTOP))
 		goto out;
 	if (tp->t_outq.c_cc <= tp->t_lowat) {
@@ -642,15 +660,13 @@ dhustart(tp)
 
 	sc->sc_dhu[line].dhu_cc = cc;
 
-	if (cc == 1) {
+	if (cc == 1 && sc->sc_type == IS_DHV) {
 
 		sc->sc_dhu[line].dhu_state = STATE_TX_ONE_CHAR;
 		
 		DHU_WRITE_WORD(DHU_UBA_TXCHAR, 
 		    DHU_TXCHAR_DATA_VALID | *tp->t_outq.c_cf);
-
 	} else {
-
 		sc->sc_dhu[line].dhu_state = STATE_DMA_RUNNING;
 
 		addr = sc->sc_dhu[line].dhu_dmah->dm_segs[0].ds_addr +

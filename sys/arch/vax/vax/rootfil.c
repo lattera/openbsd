@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/rootfil.c,v 1.7.12.3 2003/03/27 23:52:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/rootfil.c,v 1.7.12.4 2003/05/13 19:41:10 ho Exp $	*/
 /*	$NetBSD: rootfil.c,v 1.14 1996/10/13 03:35:58 christos Exp $	*/
 
 /*
@@ -140,7 +140,7 @@ setroot()
 			printf(": ");
                         len = getstr(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
-				strcpy(buf, bootdv->dv_xname);
+				strlcpy(buf, bootdv->dv_xname, sizeof buf);
 				len = strlen(buf);
 			}
 			if (len > 0 && buf[len - 1] == '*') {

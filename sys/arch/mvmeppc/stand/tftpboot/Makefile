@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/stand/tftpboot/Attic/Makefile,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/stand/tftpboot/Attic/Makefile,v 1.1.2.2 2003/05/13 19:41:07 ho Exp $
 
 SIZE?=	size
 STRIP?= strip
@@ -35,7 +35,7 @@ tftpboot.bin: tftpboot
 	${STRIP} tftpboot
 	dd ibs=96 skip=1 if=tftpboot of=$@
 #	dd ibs=38 skip=1 if=tftpboot of=$@
-	chown ${LIBOWN}.${LIBGRP} tftpboot.bin
+	chown ${LIBOWN}:${LIBGRP} tftpboot.bin
 	chmod ${LIBMODE} tftpboot.bin
 
 install:

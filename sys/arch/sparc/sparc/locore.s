@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29.2.9 2003/03/27 23:49:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29.2.10 2003/05/13 19:41:08 ho Exp $	*/
 /*	$NetBSD: locore.s,v 1.73 1997/09/13 20:36:48 pk Exp $	*/
 
 /*
@@ -2409,8 +2409,10 @@ _C_LABEL(sparc_interrupt4m):
 	b,a	softintr_common
 #endif
 
+#if defined(SUN4) || defined(SUN4C)
 	.globl	_C_LABEL(sparc_interrupt44c)
 _C_LABEL(sparc_interrupt44c):
+#endif
 _C_LABEL(sparc_interrupt_common):
 	INTR_SETUP(-CCFSZ-80)
 	std	%g2, [%sp + CCFSZ + 24]	! save registers

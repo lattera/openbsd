@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.8 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.9 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 1998-2003 Michael Shalayeff
@@ -194,8 +194,11 @@ trap(type, frame)
 		}
 	}
 #endif
-	if (trapnum != T_INTERRUPT)
+	if (trapnum != T_INTERRUPT) {
+		uvmexp.traps++;
 		mtctl(frame->tf_eiem, CR_EIEM);
+	} else
+		uvmexp.intrs++;
 
 	switch (type) {
 	case T_NONEXIST:
@@ -355,47 +358,23 @@ trap(type, frame)
 			break;
 		}
 
-		if (!(vm = p->p_vmspace)) {
-			printf("trap: no vm, p=%p\n", p);
-			goto dead_end;
-		}
-
 		/*
 		 * it could be a kernel map for exec_map faults
 		 */
-		if (!(type & T_USER) && space == HPPA_SID_KERNEL)
+		if (space == HPPA_SID_KERNEL)
 			map = kernel_map;
-		else
+		else {
+			vm = p->p_vmspace;
 			map = &vm->vm_map;
-
-		if (map->pmap->pm_space != space) {
-			if (map->pmap->pm_space != HPPA_SID_KERNEL) {
-				sv.sival_int = va;
-				trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
-			} else {
-				printf("trap: space missmatch %d != %d\n",
-				    space, map->pmap->pm_space);
-				goto dead_end;
-			}
 		}
 
-#ifdef TRAPDEBUG
-		if (space == -1) {
-			extern int pmapdebug;
-			pmapdebug = 0xffffff;
+		if (type & T_USER && map->pmap->pm_space != space) {
+			sv.sival_int = va;
+			trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
+			break;
 		}
-#endif
+
 		ret = uvm_fault(map, hppa_trunc_page(va), fault, vftype);
-
-#ifdef TRAPDEBUG
-		if (space == -1) {
-			extern int pmapdebug;
-			pmapdebug = 0;
-		}
-
-		printf("uvm_fault(%p, %x, %d, %d)=%d\n",
-		    map, va, 0, vftype, ret);
-#endif
 
 		/*
 		 * If this was a stack access we keep track of the maximum
@@ -623,10 +602,10 @@ syscall(struct trapframe *frame)
 	else
 #endif
 		oerror = error = (*callp->sy_call)(p, args, rval);
+	p = curproc;
+	frame = p->p_md.md_regs;
 	switch (error) {
 	case 0:
-		p = curproc;			/* changes on exec() */
-		frame = p->p_md.md_regs;
 		frame->tf_ret0 = rval[0];
 		frame->tf_ret1 = rval[!retq];
 		frame->tf_t1 = 0;
@@ -634,10 +613,7 @@ syscall(struct trapframe *frame)
 	case ERESTART:
 		frame->tf_iioq_head -= 12;
 		frame->tf_iioq_tail -= 12;
-		break;
 	case EJUSTRETURN:
-		p = curproc;
-		frame = p->p_md.md_regs;
 		break;
 	default:
 	bad:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.3 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.4 2003/05/13 19:41:03 ho Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -238,7 +238,7 @@ mg_intr_string(void *v, int irq)
 {
 	static char buf[16];
 
-	sprintf (buf, "isa irq %d", irq);
+	snprintf(buf, sizeof buf, "isa irq %d", irq);
 	return buf;
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pram.c,v 1.6 1997/04/14 18:48:06 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pram.c,v 1.6.14.1 2003/05/13 19:41:05 ho Exp $	*/
 /*	$NetBSD: pram.c,v 1.11 1996/10/21 05:42:29 scottr Exp $	*/
 
 /*-
@@ -120,7 +120,8 @@ static char *convtime(unsigned long t)
     t=0;
   }
 
-  sprintf(s,"%s %ld, %ld   %ld:%ld:%ld",monstr[month],day,year,hour,minute,seconds);
+  snprintf(s, sizeof s, "%s %ld, %ld   %ld:%ld:%ld",
+    monstr[month],day,year,hour,minute,seconds);
 
   return s;
 }

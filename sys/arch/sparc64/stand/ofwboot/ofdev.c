@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.3 2003/03/27 23:42:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.4 2003/05/13 19:41:09 ho Exp $	*/
 /*	$NetBSD: ofdev.c,v 1.1 2000/08/20 14:58:41 mrg Exp $	*/
 
 /*
@@ -400,17 +400,17 @@ devopen(of, name, file)
 #ifdef NOTDEF_DEBUG
 	printf("devopen: you want %s\n", name);
 #endif
-	strcpy(fname, name);
+	strlcpy(fname, name, sizeof fname);
 	cp = filename(fname, &partition);
 	if (cp) {
-		strcpy(buf, cp);
+		strlcpy(buf, cp, sizeof buf);
 		*cp = 0;
 	}
 	if (!cp || !*buf)
-		strcpy(buf, DEFAULT_KERNEL);
+		strlcpy(buf, DEFAULT_KERNEL, sizeof buf);
 	if (!*fname)
-		strcpy(fname, bootdev);
-	strcpy(opened_name, fname);
+		strlcpy(fname, bootdev, sizeof fname);
+	strlcpy(opened_name, fname, sizeof opened_name);
 	if (partition) {
 		cp = opened_name + strlen(opened_name);
 		*cp++ = ':';
@@ -418,8 +418,8 @@ devopen(of, name, file)
 		*cp = 0;
 	}
 	if (*buf != '/')
-		strcat(opened_name, "/");
-	strcat(opened_name, buf);
+		strlcat(opened_name, "/", sizeof opened_name);
+	strlcat(opened_name, buf, sizeof opened_name);
 	*file = opened_name + strlen(fname) + 1;
 #ifdef NOTDEF_DEBUG
 	printf("devopen: trying %s\n", fname);

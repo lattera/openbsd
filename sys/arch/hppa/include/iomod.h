@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.4 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.5 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 2000-2003 Michael Shalayeff
@@ -54,6 +54,7 @@
  * improvements that they make and grant CSL redistribution rights.
  *
  *	Utah $Hdr: iomod.h 1.6 94/12/14$
+ *	Author: Jeff Forys (CSS), Dave Slattengren (mtXinu)
  */
 
 #ifndef	_MACHINE_IOMOD_H_

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.6 2003/03/27 23:18:06 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.7 2003/05/13 19:41:02 ho Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -248,7 +248,7 @@ printtrap(a0, a1, a2, entry, framep, isfatal, user)
 		entryname = "system call";
 		break;
 	default:
-		sprintf(ubuf, "type %lx", entry);
+		snprintf(ubuf, sizeof ubuf, "type %lx", entry);
 		entryname = (const char *) ubuf;
 		break;
 	}

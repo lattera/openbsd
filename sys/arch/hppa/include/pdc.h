@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.4 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.5 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 1990 mt Xinu, Inc.  All rights reserved.
@@ -24,6 +24,7 @@
  * improvements that they make and grant CSL redistribution rights.
  *
  *	Utah $Hdr: pdc.h 1.12 94/12/14$
+ *	Author: Jeff Forys (CSS), Dave Slattengren (mtXinu)
  */
 
 #ifndef	_MACHINE_PDC_H_
@@ -90,6 +91,7 @@
 #define	IODC_MAXSIZE	(16 * 4 * 1024)	/* maximum size of IODC */
 #define	IODC_MINIOSIZ	64		/* minimum buffer size for IODC call */
 #define	IODC_MAXIOSIZ	(64 * 1024)	/* maximum buffer size for IODC call */
+#define	IODC_IOSIZ	(16 * 1024)
 
 #define	PDC_ALIGNMENT	__attribute__ ((__aligned__(64)))
 #define	PDC_STACKSIZE	(4*NBPG)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/quad_float.h,v 1.4.2.3 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/quad_float.h,v 1.4.2.4 2003/05/13 19:41:04 ho Exp $	*/
 /*
   (c) Copyright 1986 HEWLETT-PACKARD COMPANY
   To anyone who acknowledges that this file is provided "AS IS"
@@ -74,4 +74,4 @@
     Qallp4(rightp4) = Qallp4(leftp4) XOR Qallp4(rightp4)	\
     Qallp4(leftp4)  = Qallp4(leftp4) XOR Qallp4(rightp4)
 
-int quad_frnd(quad_floating_point *, quad_floating_point *, unsigned int *);
+int quad_frnd(quad_floating_point *, quad_floating_point *, quad_floating_point *, unsigned int *);

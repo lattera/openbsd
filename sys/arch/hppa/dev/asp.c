@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/asp.c,v 1.5.2.2 2003/03/27 23:26:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/asp.c,v 1.5.2.3 2003/05/13 19:41:03 ho Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -168,9 +168,7 @@ aspattach(parent, self, aux)
 	register int s;
 
 	if (bus_space_map(ca->ca_iot, ca->ca_hpa, IOMOD_HPASIZE, 0, &ioh)) {
-#ifdef DEBUG
-		printf("aspattach: can't map IO space\n");
-#endif
+		printf(": can't map IO space\n");
 		return;
 	}
 

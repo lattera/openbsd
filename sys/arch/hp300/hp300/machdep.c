@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.9 2003/03/27 23:19:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.10 2003/05/13 19:41:03 ho Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -267,7 +267,8 @@ cpu_startup()
 	 */
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
 		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp + i * NBPG,
-		    avail_end + i * NBPG, VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
+		    avail_end + i * NBPG, VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
@@ -558,8 +559,8 @@ identifycpu()
 		printf("\nunknown cputype %d\n", cputype);
 		goto lose;
 	}
-	sprintf(cpu_model, "HP 9000/%s%s (%dMHz MC680%c0 CPU", t, td, cpuspeed,
-	    mc);
+	snprintf(cpu_model, sizeof cpu_model,
+	    "HP 9000/%s%s (%dMHz MC680%c0 CPU", t, td, cpuspeed, mc);
 
 	/*
 	 * ...and the MMU type.
@@ -567,53 +568,56 @@ identifycpu()
 	switch (mmutype) {
 	case MMU_68040:
 	case MMU_68030:
-		strcat(cpu_model, "+MMU");
+		strlcat(cpu_model, "+MMU", sizeof cpu_model);
 		break;
 	case MMU_68851:
-		strcat(cpu_model, ", MC68851 MMU");
+		strlcat(cpu_model, ", MC68851 MMU", sizeof cpu_model);
 		break;
 	case MMU_HP:
-		strcat(cpu_model, ", HP MMU");
+		strlcat(cpu_model, ", HP MMU", sizeof cpu_model);
 		break;
 	default:
 		printf("%s\nunknown MMU type %d\n", cpu_model, mmutype);
 		panic("startup");
 	}
 
-	len = strlen(cpu_model);
-
 	/*
 	 * ...and the FPU type.
 	 */
 	switch (fputype) {
 	case FPU_68040:
-		len += sprintf(cpu_model + len, "+FPU");
+		strlcat(cpu_model, "+FPU", sizeof cpu_model);
 		break;
 	case FPU_68882:
-		len += sprintf(cpu_model + len, ", %dMHz MC68882 FPU", cpuspeed);
+		len = strlen(cpu_model);
+		snprintf(cpu_model + len, sizeof cpu_model - len,
+		    ", %dMHz MC68882 FPU", cpuspeed);
 		break;
 	case FPU_68881:
-		len += sprintf(cpu_model + len, ", %dMHz MC68881 FPU",
-		    machineid == HP_350 ? 20 : 16);
+		len = strlen(cpu_model);
+		snprintf(cpu_model + len, sizeof cpu_model - len,
+		    ", %dMHz MC68881 FPU", machineid == HP_350 ? 20 : 16);
 		break;
 	default:
-		len += sprintf(cpu_model + len, ", unknown FPU");
+		strlcat(cpu_model, ", unknown FPU", sizeof cpu_model);
 	}
 
 	/*
 	 * ...and finally, the cache type.
 	 */
 	if (cputype == CPU_68040)
-		sprintf(cpu_model + len, ", 4k on-chip physical I/D caches");
+		strlcat(cpu_model, ", 4k on-chip physical I/D caches",
+		    sizeof cpu_model);
 	else {
+		len = strlen(cpu_model);
 		switch (ectype) {
 		case EC_VIRT:
-			sprintf(cpu_model + len,
+			snprintf(cpu_model + len, sizeof cpu_model - len,
 			    ", %dK virtual-address cache",
 			    machineid == HP_320 ? 16 : 32);
 			break;
 		case EC_PHYS:
-			sprintf(cpu_model + len,
+			snprintf(cpu_model + len, sizeof cpu_model - len,
 			    ", %dK physical-address cache",
 			    machineid == HP_370 ? 64 : 32);
 			break;

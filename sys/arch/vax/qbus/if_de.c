@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_de.c,v 1.1 2002/06/11 09:36:24 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/if_de.c,v 1.1.8.1 2003/05/13 19:41:10 ho Exp $ */
 /*	$NetBSD: if_de.c,v 1.11 2001/11/13 07:11:24 lukem Exp $	*/
 
 /*
@@ -239,7 +239,7 @@ deattach(struct device *parent, struct device *self, void *aux)
 	evcnt_attach_dynamic(&sc->sc_intrcnt, EVCNT_TYPE_INTR, ua->ua_evcnt,
 	    sc->sc_dev.dv_xname, "intr");
 
-	strcpy(ifp->if_xname, sc->sc_dev.dv_xname);
+	strlcpy(ifp->if_xname, sc->sc_dev.dv_xname, sizeof ifp->if_xname);
 	ifp->if_softc = sc;
 	ifp->if_flags = IFF_BROADCAST|IFF_SIMPLEX|IFF_MULTICAST|IFF_ALLMULTI;
 	ifp->if_ioctl = deioctl;

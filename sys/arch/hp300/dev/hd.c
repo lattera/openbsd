@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.11.8.4 2003/03/27 23:19:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.11.8.5 2003/05/13 19:41:02 ho Exp $	*/
 /*	$NetBSD: rd.c,v 1.33 1997/07/10 18:14:08 kleink Exp $	*/
 
 /*
@@ -488,8 +488,8 @@ hdgetinfo(dev, rs, lp, spoofonly)
 	bzero((caddr_t)lp, sizeof *lp);
 	lp->d_type = DTYPE_HPIB;
 	strncpy(lp->d_typename, hdidentinfo[rs->sc_type].ri_desc,
-	    sizeof(lp->d_typename) - 1);
-	strcpy(lp->d_packname, "fictitious");
+	    sizeof(lp->d_typename));
+	strncpy(lp->d_packname, "fictitious", sizeof lp->d_packname);
 	lp->d_secsize = DEV_BSIZE;
 	lp->d_rpm = 3600;
 	lp->d_interleave = 1;

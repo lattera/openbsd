@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/RAMDISK,v 1.9.2.1 2003/03/28 14:05:52 niklas Exp $
+#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/RAMDISK,v 1.9.2.2 2003/05/13 19:41:05 ho Exp $
 #
 # RAMDISK - bsd.rd configuration file (non-SBC version)
 
@@ -70,7 +70,10 @@ ite0		at grf?
 ncrscsi0	at obio?		# SCSI NCR 5380
 #sbc0		at obio? flags 0x1	# MI NCR 5380 SCSI Bus Controller
 
-scsibus*	at scsi?
+scsibus*	at esp?
+scsibus*	at ncrscsi?
+#scsibus*	at sbc?
+
 sd*	at scsibus? target ? lun ?	# SCSI disk drives
 st*	at scsibus? target ? lun ?	# SCSI tape drives
 cd*	at scsibus? target ? lun ?	# SCSI CD-ROM drives

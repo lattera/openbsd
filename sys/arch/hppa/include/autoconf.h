@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.5 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.6 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -36,13 +36,20 @@
 struct confargs {
 	const char	*ca_name;	/* device name/description */
 	bus_space_tag_t	ca_iot;		/* io tag */
-	struct device_path ca_dp;	/* device_path as found by pdc_scan */
-	struct iodc_data ca_type;	/* iodc-specific type descrition */
-	hppa_hpa_t	ca_hpa;		/* module HPA */
-	hppa_hpa_t	ca_hpamask;	/* mask for modules on the bus */
 	bus_dma_tag_t	ca_dmatag;	/* DMA tag */
+	struct device_path ca_dp;	/* device_path as found by pdc_scan */
+	hppa_hpa_t	ca_hpa;		/* module HPA */
+	u_int		ca_hpasz;	/* module HPA size (if avail) */
+	hppa_hpa_t	ca_hpamask;	/* mask for modules on the bus */
 	int		ca_irq;		/* module IRQ */
+	struct iodc_data ca_type;	/* iodc-specific type descrition */
 	struct pdc_iodc_read *ca_pdc_iodc_read;
+	int		ca_naddrs;	/* number of valid addr ents */
+	struct {
+		hppa_hpa_t addr;
+		u_int	size;
+	}		ca_addrs[16];	/* 16 is ought to be enough */
+
 }; 
 
 #define	hppacf_off	cf_loc[0]

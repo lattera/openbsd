@@ -1,10 +1,10 @@
-/* $OpenBSD: src/sys/arch/alpha/include/conf.h,v 1.1.2.1 2001/10/31 02:52:44 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/conf.h,v 1.1.2.2 2003/05/13 19:41:02 ho Exp $ */
 /*
  * Copyright (c) 2001 Nathan L. Binkert
  * All rights reserved.
  *
  * Permission to redistribute, use, copy, and modify this software
- * without fee is hereby granted, provided that the following
+ * is hereby granted without fee, provided that the following
  * conditions are met:
  *
  * 1. This entire notice is included in all source code copies of any

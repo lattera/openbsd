@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.10 2003/03/27 23:18:06 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.11 2003/05/13 19:41:02 ho Exp $ */
 /* $NetBSD: machdep.c,v 1.210 2000/06/01 17:12:38 thorpej Exp $ */
 
 /*-
@@ -385,7 +385,7 @@ nobootinfo:
 		/* NOTREACHED */
 	}
 	(*c->init)();
-	strcpy(cpu_model, platform.model);
+	strlcpy(cpu_model, platform.model, sizeof cpu_model);
 
 	/*
 	 * Initialize the real console, so that the bootstrap console is
@@ -1038,7 +1038,7 @@ alpha_unknown_sysname()
 {
 	static char s[128];		/* safe size */
 
-	sprintf(s, "%s family, unknown model variation 0x%lx",
+	snprintf(s, sizeof s, "%s family, unknown model variation 0x%lx",
 	    platform.family, hwrpb->rpb_variation & SV_ST_MASK);
 	return ((const char *)s);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.3 2003/03/27 23:52:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.4 2003/05/13 19:41:07 ho Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -89,40 +89,42 @@ cpuattach(parent, dev, aux)
 	cpu = pvr >> 16;
 	switch (cpu) {
 	case 1:
-		sprintf(cpu_model, "601");
+		snprintf(cpu_model, sizeof cpu_model, "601");
 		break;
 	case 3:
-		sprintf(cpu_model, "603");
+		snprintf(cpu_model, sizeof cpu_model, "603");
 		break;
 	case 4:
-		sprintf(cpu_model, "604");
+		snprintf(cpu_model, sizeof cpu_model, "604");
 		break;
 	case 5:
-		sprintf(cpu_model, "602");
+		snprintf(cpu_model, sizeof cpu_model, "602");
 		break;
 	case 6:
-		sprintf(cpu_model, "603e");
+		snprintf(cpu_model, sizeof cpu_model, "603e");
 		break;
 	case 7:
-		sprintf(cpu_model, "603ev");
+		snprintf(cpu_model, sizeof cpu_model, "603ev");
 		break;
 	case 8:
-		sprintf(cpu_model, "750");
+		snprintf(cpu_model, sizeof cpu_model, "750");
 		break;
 	case 9:
-		sprintf(cpu_model, "604ev");
+		snprintf(cpu_model, sizeof cpu_model, "604ev");
 		break;
 	case 12:
-		sprintf(cpu_model, "7400(G4)");
+		snprintf(cpu_model, sizeof cpu_model, "7400(G4)");
 		break;
 	case 20:
-		sprintf(cpu_model, "620");
+		snprintf(cpu_model, sizeof cpu_model, "620");
 		break;
 	default:
-		sprintf(cpu_model, "Version %x", cpu);
+		snprintf(cpu_model, sizeof cpu_model, "Version %x", cpu);
 		break;
 	}
-	sprintf(cpu_model + strlen(cpu_model), " (Revision %x)", pvr & 0xffff);
+	snprintf(cpu_model + strlen(cpu_model),
+	    sizeof cpu_model - strlen(cpu_model),
+	    " (Revision %x)", pvr & 0xffff);
 	printf(": %s", cpu_model);
 
 	/* This should only be executed on openfirmware systems... */

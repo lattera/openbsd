@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/cmd_hppa.c,v 1.1.2.2 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/cmd_hppa.c,v 1.1.2.3 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 2002 Miodrag Vallat
@@ -156,7 +156,7 @@ char *c_speeds[] = {
 /* values to console parity table */
 char *parities[] = {
 	"none",
-	"odd",	
+	"odd",
 	"<unknown parity>",
 	"even",
 };
@@ -776,7 +776,7 @@ bus_walk(struct device_path *idp)
 }
 
 void
-register_device(devlist, cnt, dp, mptr, type, first) 
+register_device(devlist, cnt, dp, mptr, type, first)
 	struct consoledev *devlist;
 	int cnt;
 	struct device_path *dp;

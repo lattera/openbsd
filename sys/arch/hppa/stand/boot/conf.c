@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.3 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.4 2003/05/13 19:41:04 ho Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -50,8 +50,8 @@ struct fs_ops file_system[] = {
 int nfsys = NENTS(file_system);
 
 struct devsw devsw[] = {
-	{ "ct",	iodcstrategy, ctopen, ctclose, noioctl },
 	{ "dk",	iodcstrategy, dkopen, dkclose, noioctl },
+	{ "ct",	iodcstrategy, ctopen, ctclose, noioctl },
 	{ "lf", iodcstrategy, lfopen, lfclose, noioctl }
 };
 int	ndevs = NENTS(devsw);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.8 2003/03/27 23:19:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.9 2003/05/13 19:41:02 ho Exp $	*/
 /*	$NetBSD: grf.c,v 1.30 1998/08/20 08:33:41 kleink Exp $	*/
 
 /*
@@ -637,7 +637,7 @@ grfmap(dev, addrp, p)
 	vn.v_specinfo = &si;			/* XXX */
 	vn.v_rdev = dev;			/* XXX */
 	error = uvm_mmap(&p->p_vmspace->vm_map, (vaddr_t *)addrp,
-			 (vsize_t)len, VM_PROT_ALL, VM_PROT_ALL,
+			 (vsize_t)len, UVM_PROT_RW, UVM_PROT_RW,
 			 flags, (caddr_t)&vn, 0,
 			 p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur);
 	if (error == 0)
