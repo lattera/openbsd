@@ -1,0 +1,54 @@
+TopPart
+
+OpenBSDfloppy
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+As well you may be interested in
+
+.../OSREV/tools/
+		miscellaneous i386 installation utilities like
+		rawrite.exe, ntrw.exe, gzip.exe, and pfdisk.exe; 
+		see installation section, below.
+
+For the imac systems, no floppy image is available, for now it
+is necessary to bootstrap the system from an existing BSD or unix system.
+
+At this time the bootloader and kernel must initally be loaded from the
+network. A method to boot from cd is not yet available.
+
+To load the network bootloader and install kernel from the openfirmware
+prompt type "boot enet:,ofwboot /bsd.rd"
+
+This assumes that that a machine is configured with bootp/tftp/nfs to
+make the kernel and bootloader available.
+
+NOTE:
+The powerpc port does not currently support sharing the disk with MacOS
+This is an important fact on the imac which does not support more than
+one disk.
+
+DistributionDescription
+
+OpenBSDbase(40.4M,101.3M)
+
+OpenBSDcomp(14.3M,48.3M)
+
+OpenBSDetc(164.4K,740.0K)
+
+OpenBSDgame(6.1M,14.2M)
+
+OpenBSDman(3.4M,13.1M)
+
+OpenBSDmisc(1.6M,5.4M)
+
+OpenBSDxbase(35.2M,85.6M)
+
+OpenBSDxshare(1.4M,8.3M)
+
+OpenBSDxfont(1.4M,8.3M)
+
+OpenBSDxserv(2.7M,7.4M)
+
