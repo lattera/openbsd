@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/fsdb/fsdbutil.c,v 1.7 2002/03/14 06:51:41 mpech Exp $	*/
+/*	$OpenBSD: src/sbin/fsdb/fsdbutil.c,v 1.8 2002/06/09 08:13:06 todd Exp $	*/
 /*	$NetBSD: fsdbutil.c,v 1.5 1996/09/28 19:30:37 christos Exp $	*/
 
 /*-
@@ -38,7 +38,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/sbin/fsdb/fsdbutil.c,v 1.7 2002/03/14 06:51:41 mpech Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/fsdb/fsdbutil.c,v 1.8 2002/06/09 08:13:06 todd Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -93,7 +93,7 @@ argcount(cmdp, argc, argv)
     else
 	warnx("command `%s' takes from %u to %u arguments",
 	      cmdp->cmd, cmdp->minargc-1, cmdp->maxargc-1);
-	    
+	
     warnx("usage: %s: %s", cmdp->cmd, cmdp->helptxt);
     return 1;
 }
