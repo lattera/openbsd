@@ -38,9 +38,13 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 	ASMSTR("from: @(#)syscall.s	8.1 (Berkeley) 6/4/93")
-	ASMSTR("$Id: syscall.S,v 1.1 1994/05/24 07:13:29 glass Exp $")
+	ASMSTR("$Id: syscall.S,v 1.1.1.1 1995/10/18 08:41:36 deraadt Exp $")
 #endif /* LIBC_SCCS and not lint */
 
 #define SYS_syscall	0
+
+#ifdef ABICALLS
+	.abicalls
+#endif
 
 RSYSCALL(syscall)
