@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/bin/systrace/systrace-translate.c,v 1.1 2002/06/04 17:20:04 provos Exp $	*/
+/*	$OpenBSD: src/bin/systrace/systrace-translate.c,v 1.2 2002/06/04 19:09:45 provos Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -39,8 +39,8 @@
 #include <fcntl.h>
 #include <err.h>
 
-#include "/sys/compat/linux/linux_types.h"
-#include "/sys/compat/linux/linux_fcntl.h"
+#include "../../sys/compat/linux/linux_types.h"
+#include "../../sys/compat/linux/linux_fcntl.h"
 
 #include "intercept.h"
 #include "systrace.h"
