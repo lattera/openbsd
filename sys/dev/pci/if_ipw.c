@@ -1,4 +1,4 @@
-/*	$Id: if_ipw.c,v 1.36 2004/12/10 21:25:52 damien Exp $  */
+/*	$OpenBSD: src/sys/dev/pci/if_ipw.c,v 1.38 2005/01/05 09:07:16 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2004

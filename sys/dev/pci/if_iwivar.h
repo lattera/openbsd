@@ -1,4 +1,4 @@
-/*	$Id: if_iwivar.h,v 1.3 2004/12/04 17:24:06 damien Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_iwivar.h,v 1.5 2005/01/05 09:07:16 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2004

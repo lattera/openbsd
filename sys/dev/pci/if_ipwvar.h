@@ -1,4 +1,4 @@
-/*      $Id: if_ipwvar.h,v 1.5 2004/12/05 17:46:07 damien Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_ipwvar.h,v 1.7 2005/01/05 09:07:16 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2004

@@ -1,4 +1,4 @@
-/*	$Id: if_iwi.c,v 1.21 2004/12/10 21:25:53 damien Exp $  */
+/*	$OpenBSD: src/sys/dev/pci/if_iwi.c,v 1.23 2005/01/05 09:07:15 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2004

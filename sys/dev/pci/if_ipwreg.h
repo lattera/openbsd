@@ -1,4 +1,4 @@
-/*      $Id: if_ipwreg.h,v 1.8 2004/12/05 19:39:22 damien Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_ipwreg.h,v 1.10 2005/01/05 09:07:16 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2004
