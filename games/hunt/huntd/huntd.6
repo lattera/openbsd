@@ -1,0 +1,207 @@
+.\"	$NetBSD: huntd.6,v 1.3 1998/01/09 08:03:42 perry Exp $
+.\"	$OpenBSD: src/games/hunt/huntd/huntd.6,v 1.5 1999/03/14 02:07:31 pjanzen Exp $
+.\"
+.\"  Hunt
+.\"  Copyright (c) 1985 Conrad C. Huang, Gregory S. Couch, Kenneth C.R.C. Arnold
+.\"  San Francisco, California
+.\"
+.\"  Copyright (c) 1985 Regents of the University of California.
+.\"  All rights reserved.  The Berkeley software License Agreement
+.\"  specifies the terms and conditions for redistribution.
+.\"
+.Dd August 21, 1986
+.Os 4BSD
+.Dt HUNTD 6
+.Sh NAME
+.Nm huntd
+.Nd hunt daemon, back-end for hunt game
+.Sh SYNOPSIS
+.Nm huntd
+.Op Fl s
+.Op Fl p Ar port
+.Op Fl a Ar addr
+.Sh DESCRIPTION
+.Nm
+controls the multi-player
+.Xr hunt 6
+game.
+.Pp
+The
+.Fl s
+option is for running
+.Nm
+forever (server mode).
+This is similar to running it under the control of
+.Xr inetd 8
+(see below),
+but it consumes a process table entry when no one is playing.
+.Pp
+The
+.Fl p Ar port
+option changes the udp port number used to rendezvous with the player
+process and thus allows for private games of
+.Xr hunt 6 .
+.Pp
+The
+.Fl a Ar addr
+option is used to cause the server to bind to a specific interface address.
+The
+.Ar addr
+must be given as an IP address.
+.Sh INETD
+.Pp
+To run
+.Nm
+from
+.Xr inetd 8 ,
+you'll need to put the
+.Sq hunt
+service in
+.Pa /etc/services :
+.Dl hunt 26740/udp		# multi-player/multi-host mazewars
+and add a line in
+.Pa /etc/inetd.conf :
+.Dl hunt dgram udp wait nobody /usr/games/huntd HUNT
+.Pp
+Do not use any of the command line options \(em if you want
+.Xr inetd 8
+to start up
+.Nm huntd
+on a private port, change the port listed in
+.Pa /etc/services .
+.Sh "NETWORK RENDEZVOUS"
+When
+.Xr hunt 6
+starts up, it broadcasts on the local area net
+(using the broadcast address for each interface) to find a
+.Nm hunt
+game in progress.
+If a
+.Nm huntd
+hears the request, it sends back the port number for the
+.Nm hunt
+process to connect to.
+.Pp
+Regardless of how
+.Nm
+is started, it always checks incoming connections with
+.Xr host_access 5 ,
+using a service name of
+.Sq huntd .
+.Sh "CONFIGURATION"
+When
+.Nm
+starts, it looks for configuration files that determine
+game parameters.
+Each line of a configuration file is of the form
+.Ar var No = Ar value .
+Comments start with a hash sign (`#').
+The configuration files loaded in order (if they exist) are:
+.Pa /etc/hunt.conf ,
+.Pa "$HOME/.hunt.conf" ,
+and
+.Pa ./.hunt.conf .
+.Pp
+Many of these variables require intimate knowledge of the
+driver source code.
+The complete list of configurable variables is:
+.Bl -tag -width pdroneabsorb -compact
+.It random
+enable dispersion doors (default 1)
+.It reflect
+enable generation of reflection walls (default 1)
+.It monitor
+enable monitors (default 1)
+.It ooze
+enable slime shots (default 1)
+.It fly
+enable flight (default 1)
+.It volcano
+enable volcanoes (default 1)
+.It drone
+enable drone (default 1)
+.It boots
+enable boots (default 1)
+.It scan
+enable scanning (default 1)
+.It cloak
+enable cloaking (default 1)
+.It logerr
+errors to stderr (default 1)
+.It syslog
+errors to syslog(8) (default 0)
+.It scoredecay
+nr deaths before nr kills begins to decay (default 15)
+.It maxremove
+Maximum number of holes in the maze wall (default 40)
+.It linger
+Seconds to keep game open with no players. \&-1 means forever. (default 90)
+.It flytime
+max time flying (default 20)
+.It flystep
+max displacement each flying time unit (default 5)
+.It volcano_max
+max size of volcano (default 50)
+.It ptrip_face
+chance of tripping a grenade on pickup (default 2)
+.It ptrip_back
+chance of same when backing onto it (default 95)
+.It ptrip_side
+chance of same when walking sideways into it (default 50)
+.It prandom
+percentage of time dispersion doors appear (default 1)
+.It preflect
+percentage of time reflection walls appear (default 1)
+.It pshot_coll
+percent chance of shots colliding (default 5)
+.It pgren_coll
+percent chance of grenades colliding (default 10)
+.It pgren_catch
+facing player chance of catching grenade (default 10)
+.It pmiss
+chance of bullet missing player (default 5)
+.It pdroneabsorb
+chance of absorbing a drone (default 1)
+.It fall_frac
+divisor of damage used for fall damage (default 5)
+.It bulspd
+speed of bullets (default 5)
+.It ishots
+initial ammo for player (default 15)
+.It nshots
+ammo boost for all when new player joins (default 5)
+.It maxncshot
+max number of simultaneous shots per player (default 2)
+.It maxdam
+the initial shield for each player (default 10)
+.It mindam
+minimum damage from one unit of ammo (default 5)
+.It stabdam
+damage from stabbing (default 2)
+.It killgain
+shield gained from killing someone (default 2)
+.It slimefactor
+charge multiplier for slime (default 3)
+.It slimespeed
+speed of slime (default 5)
+.It lavaspeed
+speed of volcano lava (default 1)
+.It cloaklen
+duration of a cloak (default 20)
+.It scanlen
+duration of a scan (default 20)
+.It mindshot
+minimum shot class needed to make a drone (default 2)
+.It simstep
+minimum simulation step in microseconds. Zero means traditional blocking 
+behaviour. Try 55000 for something reasonable (default 0)
+.El
+.Sh "SEE ALSO"
+.Xr hunt 6 ,
+.Xr inetd 8 ,
+.Xr hosts_options 5 .
+.Sh AUTHORS
+Conrad Huang, Ken Arnold, and Greg Couch;
+.br
+University of California, San Francisco, Computer Graphics Lab
+.\"Sh BUGS
