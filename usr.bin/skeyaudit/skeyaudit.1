@@ -1,0 +1,45 @@
+.\" $OpenBSD: src/usr.bin/skeyaudit/skeyaudit.1,v 1.6 2000/03/11 21:40:02 aaron Exp $
+.\"
+.Dd 22 July 1997
+.Dt SKEYAUDIT 1
+.Os
+.Sh NAME
+.Nm skeyaudit
+.Nd warn users if their S/Key will soon expire
+.Sh SYNOPSIS
+.Nm skeyaudit
+.Op Fl a
+.Op Fl i
+.Op Fl l Ar limit
+.Sh DESCRIPTION
+.Nm
+searches through the file
+.Pa /etc/skeykeys
+for users whose S/Key sequence number is less than
+.Ar limit ,
+and mails them a reminder to run
+.Xr skeyinit 1
+soon.
+.Pp
+The options are as follows:
+.Bl -tag -width "-l limit" -indent
+.It Fl a
+Check all keys in
+.Pa /etc/skeykeys .
+This option is only available to the superuser and
+is useful to run regularly via
+.Xr cron 8 .
+.It Fl i
+Interactive mode.
+Don't send mail, just print to the standard output.
+.It Fl l Ar limit
+The limit used to determine whether or not a user should be notified.
+The default is to notify if there are fewer than 12 keys left.
+.Sh FILES
+.Bl -tag -width /etc/skeykeys -compact
+.It Pa /etc/skeykeys
+S/Key key information database
+.El
+.Sh SEE ALSO
+.Xr skey 1 ,
+.Xr skeyinit 1
