@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.12 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.13 2004/04/21 09:36:12 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -444,6 +444,10 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 #endif
 
 	SCHED_ASSERT_UNLOCKED();
+	/*
+	 * Note! this splx belongs to the SCHED_LOCK(s) above, mi_switch
+	 * releases the scheduler lock, but does not lower the spl.
+	 */
 	splx(s);
 
 resume:
@@ -506,72 +510,6 @@ endtsleep(arg)
 		p->p_flag |= P_TIMEOUT;
 	}
 	SCHED_UNLOCK(s);
-}
-
-/*
- * Short-term, non-interruptable sleep.
- */
-void
-sleep(ident, priority)
-	void *ident;
-	int priority;
-{
-	register struct proc *p = curproc;
-	register struct slpque *qp;
-	register int s;
-
-	SCHED_ASSERT_LOCKED();
-
-#ifdef DIAGNOSTIC
-	if (priority > PZERO) {
-		printf("sleep called with priority %d > PZERO, wchan: %p\n",
-		    priority, ident);
-		panic("old sleep");
-	}
-#endif
-	s = splhigh();
-	if (cold || panicstr) {
-		/*
-		 * After a panic, or during autoconfiguration,
-		 * just give interrupts a chance, then just return;
-		 * don't run any other procs or panic below,
-		 * in case this is the idle process and already asleep.
-		 */
-		splx(safepri);
-		splx(s);
-		return;
-	}
-#ifdef DIAGNOSTIC
-	if (ident == NULL || p->p_stat != SRUN || p->p_back)
-		panic("sleep");
-#endif
-	p->p_wchan = ident;
-	p->p_wmesg = NULL;
-	p->p_slptime = 0;
-	p->p_priority = priority;
-	qp = &slpque[LOOKUP(ident)];
-	if (qp->sq_head == 0)
-		qp->sq_head = p;
-	else
-		*qp->sq_tailp = p;
-	*(qp->sq_tailp = &p->p_forw) = 0;
-	p->p_stat = SSLEEP;
-	p->p_stats->p_ru.ru_nvcsw++;
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p, 1, 0);
-#endif
-	mi_switch();
-#ifdef	DDB
-	/* handy breakpoint location after process "wakes" */
-	__asm(".globl bpendsleep\nbpendsleep:");
-#endif
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p, 0, 0);
-#endif
-	curpriority = p->p_usrpri;
-	splx(s);
 }
 
 /*
