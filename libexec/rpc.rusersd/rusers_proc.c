@@ -27,7 +27,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rusers_proc.c,v 1.2 1995/12/16 13:50:46 deraadt Exp $";
+static char rcsid[] = "$Id: rusers_proc.c,v 1.3 1996/09/22 08:41:32 tholo Exp $";
 #endif /* not lint */
 
 #include <signal.h>
@@ -171,7 +171,7 @@ getidle(tty, display)
 #ifdef DEBUG
 			printf("%s: %m\n", devname);
 #endif
-			return (-1);
+			return (0);
 		}
 		time(&now);
 #ifdef DEBUG
