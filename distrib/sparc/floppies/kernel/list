@@ -1,4 +1,0 @@
-#	$Id: list,v 1.2 1996/10/08 19:39:54 deraadt Exp $
-
-# copy the kernel
-COPY	${OBJDIR}/bsd	bsd

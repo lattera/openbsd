@@ -1,7 +1,0 @@
-# $OpenBSD: src/sys/arch/amiga/stand/loadkmap/us/Attic/Makefile,v 1.2 1996/10/04 22:35:41 niklas Exp $
-# $NetBSD: Makefile,v 1.2 1996/06/08 15:42:03 is Exp $
-
-PROG=us-kbdmap
-MAP=us.map
-
-.include <bsd.prog.mk>
