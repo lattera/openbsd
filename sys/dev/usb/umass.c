@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10.4.8 2004/02/19 10:56:34 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10.4.9 2004/06/08 21:07:27 niklas Exp $ */
 /*	$NetBSD: umass.c,v 1.96 2003/04/26 12:46:59 dsainty Exp $	*/
 /*-
  * Copyright (c) 1999 MAEKAWA Masahide <bishop@rr.iij4u.or.jp>,
@@ -1437,7 +1437,7 @@ umass_cbi_state(usbd_xfer_handle xfer, usbd_private_handle priv,
 		sc->transfer_state = TSTATE_CBI_DATA;
 		if (sc->transfer_dir == DIR_IN) {
 			if (umass_setup_transfer(sc, sc->sc_pipe[UMASS_BULKIN],
-					sc->transfer_data, sc->transfer_datalen,
+					sc->data_buffer, sc->transfer_datalen,
 					USBD_SHORT_XFER_OK | USBD_NO_COPY,
 					sc->transfer_xfer[XFER_CBI_DATA]))
 				umass_cbi_reset(sc, STATUS_WIRE_FAILED);
@@ -1446,7 +1446,7 @@ umass_cbi_state(usbd_xfer_handle xfer, usbd_private_handle priv,
 			memcpy(sc->data_buffer, sc->transfer_data,
 			       sc->transfer_datalen);
 			if (umass_setup_transfer(sc, sc->sc_pipe[UMASS_BULKOUT],
-					sc->transfer_data, sc->transfer_datalen,
+					sc->data_buffer, sc->transfer_datalen,
 					USBD_NO_COPY,/* fixed length transfer */
 					sc->transfer_xfer[XFER_CBI_DATA]))
 				umass_cbi_reset(sc, STATUS_WIRE_FAILED);

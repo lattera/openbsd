@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.9 2004/06/06 22:04:17 tedu Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.10 2004/06/08 21:07:18 niklas Exp $ */
 /* $NetBSD: cpu.h,v 1.45 2000/08/21 02:03:12 thorpej Exp $ */
 
 /*-
@@ -161,7 +161,7 @@ void	synchronize_fpstate(struct proc *, int);
 
 /* Multiprocessor glue; cpu.c */
 struct cpu_info;
-int	cpu_iccb_send(long, const char *);
+int	cpu_iccb_send(cpuid_t, const char *);
 void	cpu_iccb_receive(void);
 void	cpu_hatch(struct cpu_info *);
 void	cpu_halt_secondary(unsigned long);

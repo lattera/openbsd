@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.6 2004/02/19 09:59:33 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.7 2004/06/08 21:07:17 niklas Exp $ */
 /* $NetBSD: cpu.c,v 1.44 2000/05/23 05:12:53 thorpej Exp $ */
 
 /*-
@@ -541,7 +541,7 @@ cpu_hatch(ci)
 
 int
 cpu_iccb_send(cpu_id, msg)
-	long cpu_id;
+	cpuid_t cpu_id;
 	const char *msg;
 {
 	struct pcs *pcsp = LOCATE_PCS(hwrpb, cpu_id);
@@ -589,7 +589,7 @@ cpu_iccb_receive()
 	char *cp1, *cp2, buf[80];
 	struct pcs *pcsp;
 	u_int cnt;
-	long cpu_id;
+	cpuid_t cpu_id;
 
 	txrdy = hwrpb->rpb_txrdy;
 
