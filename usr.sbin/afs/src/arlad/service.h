@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -36,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: service.h,v 1.9 2000/06/08 21:47:02 lha Exp $ */
+/* $KTH: service.h,v 1.11 2000/10/06 23:50:58 lha Exp $ */
 
 /*
  * Service IDs
@@ -50,5 +45,7 @@
 #define BOS_SERVICE_ID    1
 #define VOTE_SERVICE_ID 50 /* ubik */
 #define DISK_SERVICE_ID 51 /* ubik */
+#define KA_AUTHENTICATION_SERVICE 731
+#define KA_TICKET_GRANTING_SERVICE 732
 #define KA_MAINTENANCE_SERVICE_ID 733 /* ka service */
 

@@ -27,7 +27,7 @@
  * SUCH DAMAGES.
  */
 
-/* $Id: reconnect.h,v 1.4 1999/05/29 18:43:35 assar Exp $ */
+/* $KTH: reconnect.h,v 1.4 1999/05/29 18:43:35 assar Exp $ */
 
 #ifndef _RECONNECT_H
 #define _RECONNECT_H
