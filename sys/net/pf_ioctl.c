@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.81.2.2 2004/04/30 23:28:58 brad Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.81.2.3 2004/07/24 18:29:27 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1003,7 +1003,8 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			while ((oldrule != NULL) && (oldrule->nr != pcr->nr))
 				oldrule = TAILQ_NEXT(oldrule, entries);
 			if (oldrule == NULL) {
-				pf_rm_rule(NULL, newrule);
+				if (newrule != NULL)
+					pf_rm_rule(NULL, newrule);
 				error = EINVAL;
 				splx(s);
 				break;
