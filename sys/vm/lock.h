@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/vm/Attic/vm_param.h,v 1.10 1997/10/06 20:21:28 deraadt Exp $	*/
-/*	$NetBSD: vm_param.h,v 1.12 1995/03/26 20:39:16 jtc Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/lock.h,v 1.6 1997/10/06 20:23:16 deraadt Exp $	*/
+/*	$NetBSD: lock.h,v 1.8 1994/10/30 19:11:11 cgd Exp $	*/
 
 /* 
  * Copyright (c) 1991, 1993
@@ -36,7 +36,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vm_param.h	8.1 (Berkeley) 6/11/93
+ *	@(#)lock.h	8.1 (Berkeley) 6/11/93
  *
  *
  * Copyright (c) 1987, 1990 Carnegie-Mellon University.
@@ -66,106 +66,110 @@
  */
 
 /*
- *	Machine independent virtual memory parameters.
+ *	Locking primitives definitions
  */
 
-#ifndef	_VM_PARAM_
-#define	_VM_PARAM_
+#ifndef	_LOCK_H_
+#define	_LOCK_H_
 
-#include <machine/vmparam.h>
+#define	NCPUS	1		/* XXX */
 
 /*
- * This belongs in types.h, but breaks too many existing programs.
+ *	A simple spin lock.
  */
-typedef	int	boolean_t;
-#define	TRUE	1
-#define	FALSE	0
 
-/*
- *	The machine independent pages are refered to as PAGES.  A page
- *	is some number of hardware pages, depending on the target machine.
- */
-#define	DEFAULT_PAGE_SIZE	4096
-
-/*
- *	All references to the size of a page should be done with PAGE_SIZE
- *	or PAGE_SHIFT.  The fact they are variables is hidden here so that
- *	we can easily make them constant if we so desire.
- */
-#define	PAGE_SIZE	cnt.v_page_size		/* size of page */
-#define	PAGE_MASK	page_mask		/* size of page - 1 */
-#define	PAGE_SHIFT	page_shift		/* bits to shift for pages */
-#ifdef _KERNEL
-extern vm_size_t	page_mask;
-extern int		page_shift;
-#endif
-
-/*
- * CTL_VM identifiers
- */
-#define	VM_METER	1		/* struct vmmeter */
-#define	VM_LOADAVG	2		/* struct loadavg */
-#define	VM_PSSTRINGS	3		/* PSSTRINGS */
-#define	VM_MAXID	4		/* number of valid vm ids */
-
-#define	CTL_VM_NAMES { \
-	{ 0, 0 }, \
-	{ "vmmeter", CTLTYPE_STRUCT }, \
-	{ "loadavg", CTLTYPE_STRUCT }, \
-	{ "psstrings", CTLTYPE_STRUCT }, \
-}
-
-struct _ps_strings {
-	void	*val;
+struct slock {
+	int		lock_data;	/* in general 1 bit is sufficient */
 };
 
-#define SWAPSKIPBYTES	8192	/* never use at the start of a swap space */
-
-/* 
- *	Return values from the VM routines.
- */
-#define	KERN_SUCCESS		0
-#define	KERN_INVALID_ADDRESS	1
-#define	KERN_PROTECTION_FAILURE	2
-#define	KERN_NO_SPACE		3
-#define	KERN_INVALID_ARGUMENT	4
-#define	KERN_FAILURE		5
-#define	KERN_RESOURCE_SHORTAGE	6
-#define	KERN_NOT_RECEIVER	7
-#define	KERN_NO_ACCESS		8
-
-#ifndef ASSEMBLER
-/*
- *	Convert addresses to pages and vice versa.
- *	No rounding is used.
- */
-#ifdef _KERNEL
-#define	atop(x)		(((unsigned long)(x)) >> PAGE_SHIFT)
-#define	ptoa(x)		((vm_offset_t)((x) << PAGE_SHIFT))
+typedef struct slock	simple_lock_data_t;
+typedef struct slock	*simple_lock_t;
 
 /*
- * Round off or truncate to the nearest page.  These will work
- * for either addresses or counts (i.e., 1 byte rounds to 1 page).
+ *	The general lock structure.  Provides for multiple readers,
+ *	upgrading from read to write, and sleeping until the lock
+ *	can be gained.
  */
-#define	round_page(x) \
-	((vm_offset_t)((((vm_offset_t)(x)) + PAGE_MASK) & ~PAGE_MASK))
-#define	trunc_page(x) \
-	((vm_offset_t)(((vm_offset_t)(x)) & ~PAGE_MASK))
-#define	num_pages(x) \
-	((vm_offset_t)((((vm_offset_t)(x)) + PAGE_MASK) >> PAGE_SHIFT))
 
-extern vm_size_t	mem_size;	/* size of physical memory (bytes) */
-extern vm_offset_t	first_addr;	/* first physical page */
-extern vm_offset_t	last_addr;	/* last physical page */
+struct lock {
+#ifdef	vax
+	/*
+	 *	Efficient VAX implementation -- see field description below.
+	 */
+	unsigned int	read_count:16,
+			want_upgrade:1,
+			want_write:1,
+			waiting:1,
+			can_sleep:1,
+			:0;
 
-#else
-/* out-of-kernel versions of round_page and trunc_page */
-#define	round_page(x) \
-	((((vm_offset_t)(x) + (vm_page_size - 1)) / vm_page_size) * \
-	    vm_page_size)
-#define	trunc_page(x) \
-	((((vm_offset_t)(x)) / vm_page_size) * vm_page_size)
+	simple_lock_data_t	interlock;
+#else /* vax */
+#ifdef	ns32000
+	/*
+	 *	Efficient ns32000 implementation --
+	 *	see field description below.
+	 */
+	simple_lock_data_t	interlock;
+	unsigned int	read_count:16,
+			want_upgrade:1,
+			want_write:1,
+			waiting:1,
+			can_sleep:1,
+			:0;
 
-#endif /* _KERNEL */
-#endif /* ASSEMBLER */
-#endif /* _VM_PARAM_ */
+#else /* ns32000 */
+	/*	Only the "interlock" field is used for hardware exclusion;
+	 *	other fields are modified with normal instructions after
+	 *	acquiring the interlock bit.
+	 */
+	simple_lock_data_t
+			interlock;	/* Interlock for remaining fields */
+	boolean_t	want_write;	/* Writer is waiting, or locked for write */
+	boolean_t	want_upgrade;	/* Read-to-write upgrade waiting */
+	boolean_t	waiting;	/* Someone is sleeping on lock */
+	boolean_t	can_sleep;	/* Can attempts to lock go to sleep */
+	int		read_count;	/* Number of accepted readers */
+#endif	/* ns32000 */
+#endif	/* vax */
+	void		*thread;	/* Thread that has lock, if recursive locking allowed */
+					/* (should be thread_t, but but we then have mutually
+					   recursive definitions) */
+	int		recursion_depth;/* Depth of recursion */
+};
+
+typedef struct lock	lock_data_t;
+typedef struct lock	*lock_t;
+
+#if NCPUS > 1
+__BEGIN_DECLS
+void		simple_lock __P((simple_lock_t));
+void		simple_lock_init __P((simple_lock_t));
+boolean_t	simple_lock_try __P((simple_lock_t));
+void		simple_unlock __P((simple_lock_t));
+__END_DECLS
+#else		/* No multiprocessor locking is necessary. */
+#define	simple_lock(l)
+#define	simple_lock_init(l)
+#define	simple_lock_try(l)	(1)	/* Always succeeds. */
+#define	simple_unlock(l)
+#endif
+
+/* Sleep locks must work even if no multiprocessing. */
+
+#define	lock_read_done(l)	lock_done(l)
+#define	lock_write_done(l)	lock_done(l)
+
+void		lock_clear_recursive __P((lock_t));
+void		lock_done __P((lock_t));
+void		lock_init __P((lock_t, boolean_t));
+void		lock_read __P((lock_t));
+boolean_t	lock_read_to_write __P((lock_t));
+void		lock_set_recursive __P((lock_t));
+void		lock_sleepable __P((lock_t, boolean_t));
+boolean_t	lock_try_read __P((lock_t));
+boolean_t	lock_try_read_to_write __P((lock_t));
+boolean_t	lock_try_write __P((lock_t));
+void		lock_write __P((lock_t));
+void		lock_write_to_read __P((lock_t));
+#endif /* !_LOCK_H_ */
