@@ -1,7 +1,0 @@
-#	$OpenBSD: src/usr.sbin/ypserv/ypinit/Makefile.main,v 1.8 1997/07/26 22:23:44 maja Exp $
-
-SUBDIR=	
-
-passwd group hosts ethers networks rpc services protocols netid netgroup amd.home aliases : _SUBDIRUSE
-
-.include <bsd.subdir.mk>
