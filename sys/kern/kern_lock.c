@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.10 2004/06/05 23:18:25 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.11 2004/06/06 23:11:51 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -42,6 +42,16 @@
 #include <sys/sched.h>
 
 #include <machine/cpu.h>
+
+#ifndef spllock
+#define spllock() splhigh()
+#endif
+
+#ifdef MULTIPROCESSOR
+#define CPU_NUMBER() cpu_number()
+#else
+#define CPU_NUMBER() 0
+#endif
 
 void record_stacktrace(int *, int);
 void playback_stacktrace(int *, int);
@@ -378,7 +388,7 @@ lockmgr(lkp, flags, interlkp, p)
 		/* XXX Check for p == NULL */
 		pid = p->p_pid;
 	}
-	cpu_id = cpu_number();
+	cpu_id = CPU_NUMBER();
 
 	/*
 	 * Once a lock has drained, the LK_DRAINING flag is set and an
@@ -700,12 +710,12 @@ spinlock_release_all(__volatile struct lock *lkp)
 {
 	int s, count;
 	cpuid_t cpu_id;
-	
+
 	KASSERT(lkp->lk_flags & LK_SPIN);
 	
 	INTERLOCK_ACQUIRE(lkp, LK_SPIN, s);
 
-	cpu_id = cpu_number();
+	cpu_id = CPU_NUMBER();
 	count = lkp->lk_exclusivecount;
 	
 	if (count != 0) {
@@ -759,7 +769,7 @@ spinlock_acquire_count(__volatile struct lock *lkp, int count)
 	
 	INTERLOCK_ACQUIRE(lkp, LK_SPIN, s);
 
-	cpu_id = cpu_number();
+	cpu_id = CPU_NUMBER();
 
 #ifdef DIAGNOSTIC
 	if (WEHOLDIT(lkp, LK_NOPROC, cpu_id))
@@ -893,7 +903,7 @@ _simple_lock(lkp, id, l)
 	const char *id;
 	int l;
 {
-	cpuid_t cpu_id = cpu_number();
+	cpuid_t cpu_id = CPU_NUMBER();
 	int s;
 
 	s = spllock();
@@ -946,9 +956,7 @@ _simple_lock(lkp, id, l)
 int
 _simple_lock_held(__volatile struct simplelock *alp)
 {
-#if defined(MULTIPROCESSOR) || defined(DIAGNOSTIC)
-	cpuid_t cpu_id = cpu_number();
-#endif
+	cpuid_t cpu_id = CPU_NUMBER();
 	int s, locked = 0;
 
 	s = spllock();
@@ -976,7 +984,7 @@ _simple_lock_try(lkp, id, l)
 	const char *id;
 	int l;
 {
-	cpuid_t cpu_id = cpu_number();
+	cpuid_t cpu_id = CPU_NUMBER();
 	int s, rv = 0;
 
 	s = spllock();
@@ -1060,7 +1068,7 @@ _simple_unlock(lkp, id, l)
 	__cpu_simple_unlock(&alp->lock_data);
 #else
 	alp->lock_data = __SIMPLELOCK_UNLOCKED;
-	KASSERT(alp->lock_holder == cpu_number());
+	KASSERT(alp->lock_holder == CPU_NUMBER());
 	alp->lock_holder = LK_NOCPU;
 #endif /* } */
 
@@ -1122,7 +1130,7 @@ void
 simple_lock_only_held(volatile struct simplelock *lp, const char *where)
 {
 	struct simplelock *alp;
-	cpuid_t cpu_id = cpu_number();
+	cpuid_t cpu_id = CPU_NUMBER();
 	int s;
 
 	if (lp) {
