@@ -15,7 +15,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: bufaux.c,v 1.5 1999/11/23 22:25:52 markus Exp $");
+RCSID("$Id: bufaux.c,v 1.6 1999/11/24 00:26:01 deraadt Exp $");
 
 #include "ssh.h"
 #include <ssl/bn.h>
@@ -47,7 +47,7 @@ buffer_put_bignum(Buffer *buffer, BIGNUM *value)
 	buffer_append(buffer, msg, 2);
 	/* Store the binary data. */
 	buffer_append(buffer, buf, oi);
-	/* Clear the temporary data. */
+
 	memset(buf, 0, bin_size);
 	xfree(buf);
 }

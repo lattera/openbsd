@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: ttymodes.c,v 1.3 1999/11/23 22:25:56 markus Exp $");
+RCSID("$Id: ttymodes.c,v 1.4 1999/11/24 00:26:04 deraadt Exp $");
 
 #include "packet.h"
 #include "ssh.h"
@@ -209,7 +209,6 @@ tty_make_modes(int fd)
 	struct termios tio;
 	int baud;
 
-	/* Get the modes. */
 	if (tcgetattr(fd, &tio) < 0) {
 		packet_put_char(TTY_OP_END);
 		log("tcgetattr: %.100s", strerror(errno));
