@@ -1,327 +1,375 @@
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#define PERL_NO_GET_CONTEXT
 #define WIN32_LEAN_AND_MEAN
 #define WIN32IO_IS_STDIO
-#define EXT
+#include <tchar.h>
+#ifdef __GNUC__
+#define Win32_Winsock
+#endif
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <io.h>
+
 #include <sys/stat.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
-#include <process.h>
-#include <direct.h>
-#include "win32iop.h"
+#include "EXTERN.h"
+#include "perl.h"
 
-/*
- * The following is just a basic wrapping of the stdio
- *
- *  redirected io subsystem for all XS modules
- */
+#ifdef PERLIO_LAYERS
 
-static int *
-dummy_errno(void)
+#include "perliol.h"
+
+#define NO_XSLOCKS
+#include "XSUB.h"
+
+
+/* Bottom-most level for Win32 case */
+
+typedef struct
 {
-    return (&(errno));
+ struct _PerlIO base;       /* The generic part */
+ HANDLE		h;          /* OS level handle */
+ IV		refcnt;     /* REFCNT for the "fd" this represents */
+ int		fd;         /* UNIX like file descriptor - index into fdtable */
+} PerlIOWin32;
+
+PerlIOWin32 *fdtable[256];
+IV max_open_fd = -1;
+
+IV
+PerlIOWin32_popped(pTHX_ PerlIO *f)
+{
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ if (--s->refcnt > 0)
+  {
+   *f = PerlIOBase(f)->next;
+   return 1;
+  }
+ fdtable[s->fd] = NULL;
+ return 0;
 }
 
-static char ***
-dummy_environ(void)
+IV
+PerlIOWin32_fileno(pTHX_ PerlIO *f)
 {
-    return (&(_environ));
+ return PerlIOSelf(f,PerlIOWin32)->fd;
 }
 
-/* the rest are the remapped stdio routines */
-static FILE *
-dummy_stderr(void)
+IV
+PerlIOWin32_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_funcs *tab)
 {
-    return stderr;
+ IV code = PerlIOBase_pushed(aTHX_ f,mode,arg,tab);
+ if (*PerlIONext(f))
+  {
+   PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+   s->fd     = PerlIO_fileno(PerlIONext(f));
+  }
+ PerlIOBase(f)->flags |= PERLIO_F_OPEN;
+ return code;
 }
 
-static FILE *
-dummy_stdin(void)
+PerlIO *
+PerlIOWin32_open(pTHX_ PerlIO_funcs *self, PerlIO_list_t *layers, IV n, const char *mode, int fd, int imode, int perm, PerlIO *f, int narg, SV **args)
 {
-    return stdin;
-}
-
-static FILE *
-dummy_stdout(void)
-{
-    return stdout;
-}
-
-static int
-dummy_globalmode(int mode)
-{
-    int o = _fmode;
-    _fmode = mode;
-
-    return o;
-}
-
-#if defined(_DLL) || defined(__BORLANDC__)
-/* It may or may not be fixed (ok on NT), but DLL runtime
-   does not export the functions used in the workround
-*/
-#define WIN95_OSFHANDLE_FIXED
-#endif
-
-#if defined(_WIN32) && !defined(WIN95_OSFHANDLE_FIXED) && defined(_M_IX86)
-
-#	ifdef __cplusplus
-#define EXT_C_FUNC	extern "C"
-#	else
-#define EXT_C_FUNC	extern
-#	endif
-
-EXT_C_FUNC int __cdecl _alloc_osfhnd(void);
-EXT_C_FUNC int __cdecl _set_osfhnd(int fh, long value);
-EXT_C_FUNC void __cdecl _lock_fhandle(int);
-EXT_C_FUNC void __cdecl _unlock_fhandle(int);
-EXT_C_FUNC void __cdecl _unlock(int);
-
-#if	(_MSC_VER >= 1000)
-typedef struct	{
-    long osfhnd;    /* underlying OS file HANDLE */
-    char osfile;    /* attributes of file (e.g., open in text mode?) */
-    char pipech;    /* one char buffer for handles opened on pipes */
-#if defined (_MT) && !defined (DLL_FOR_WIN32S)
-    int lockinitflag;
-    CRITICAL_SECTION lock;
-#endif  /* defined (_MT) && !defined (DLL_FOR_WIN32S) */
-}	ioinfo;
-
-EXT_C_FUNC ioinfo * __pioinfo[];
-
-#define IOINFO_L2E			5
-#define IOINFO_ARRAY_ELTS	(1 << IOINFO_L2E)
-#define _pioinfo(i)	(__pioinfo[i >> IOINFO_L2E] + (i & (IOINFO_ARRAY_ELTS - 1)))
-#define _osfile(i)	(_pioinfo(i)->osfile)
-
-#else	/* (_MSC_VER >= 1000) */
-extern char _osfile[];
-#endif	/* (_MSC_VER >= 1000) */
-
-#define FOPEN			0x01	/* file handle open */
-#define FAPPEND			0x20	/* file handle opened O_APPEND */
-#define FDEV			0x40	/* file handle refers to device */
-#define FTEXT			0x80	/* file handle is in text mode */
-
-#define _STREAM_LOCKS   26		/* Table of stream locks */
-#define _LAST_STREAM_LOCK  (_STREAM_LOCKS+_NSTREAM_-1)	/* Last stream lock */
-#define _FH_LOCKS          (_LAST_STREAM_LOCK+1)	/* Table of fh locks */
-
-/***
-*int _patch_open_osfhandle(long osfhandle, int flags) - open C Runtime file handle
-*
-*Purpose:
-*       This function allocates a free C Runtime file handle and associates
-*       it with the Win32 HANDLE specified by the first parameter. This is a
-*		temperary fix for WIN95's brain damage GetFileType() error on socket
-*		we just bypass that call for socket
-*
-*Entry:
-*       long osfhandle - Win32 HANDLE to associate with C Runtime file handle.
-*       int flags      - flags to associate with C Runtime file handle.
-*
-*Exit:
-*       returns index of entry in fh, if successful
-*       return -1, if no free entry is found
-*
-*Exceptions:
-*
-*******************************************************************************/
-
-int
-my_open_osfhandle(long osfhandle, int flags)
-{
-    int fh;
-    char fileflags;		/* _osfile flags */
-
-    /* copy relevant flags from second parameter */
-    fileflags = FDEV;
-
-    if(flags & O_APPEND)
-	fileflags |= FAPPEND;
-
-    if(flags & O_TEXT)
-	fileflags |= FTEXT;
-
-    /* attempt to allocate a C Runtime file handle */
-    if((fh = _alloc_osfhnd()) == -1) {
-	errno = EMFILE;		/* too many open files */
-	_doserrno = 0L;		/* not an OS error */
-	return -1;		/* return error to caller */
+ const char *tmode = mode;
+ HANDLE h = INVALID_HANDLE_VALUE;
+ if (f)
+  {
+   /* Close if already open */
+   if (PerlIOBase(f)->flags & PERLIO_F_OPEN)
+    (*PerlIOBase(f)->tab->Close)(aTHX_ f);
+  }
+ if (narg > 0)
+  {
+   char *path = SvPV_nolen(*args);
+   DWORD  access = 0;
+   DWORD  share  = 0;
+   DWORD  create = -1;
+   DWORD  attr   = FILE_ATTRIBUTE_NORMAL;
+   if (*mode == '#')
+    {
+     /* sysopen - imode is UNIX-like O_RDONLY etc.
+        - do_open has converted that back to string form in mode as well
+        - perm is UNIX like permissions
+      */
+     mode++;
     }
-
-    /* the file is open. now, set the info in _osfhnd array */
-    _set_osfhnd(fh, osfhandle);
-
-    fileflags |= FOPEN;		/* mark as open */
-
-#if (_MSC_VER >= 1000)
-    _osfile(fh) = fileflags;	/* set osfile entry */
-    _unlock_fhandle(fh);
-#else
-    _osfile[fh] = fileflags;	/* set osfile entry */
-    _unlock(fh+_FH_LOCKS);		/* unlock handle */
-#endif
-
-    return fh;			/* return handle */
-}
-#else
-
-int __cdecl
-my_open_osfhandle(long osfhandle, int flags)
-{
-    return _open_osfhandle(osfhandle, flags);
-}
-#endif	/* _M_IX86 */
-
-long
-my_get_osfhandle( int filehandle )
-{
-    return _get_osfhandle(filehandle);
-}
-
-#ifdef __BORLANDC__
-#define _chdir chdir
-#endif
-
-/* simulate flock by locking a range on the file */
-
-
-#define LK_ERR(f,i)	((f) ? (i = 0) : (errno = GetLastError()))
-#define LK_LEN		0xffff0000
-
-int
-my_flock(int fd, int oper)
-{
-    OVERLAPPED o;
-    int i = -1;
-    HANDLE fh;
-
-    fh = (HANDLE)my_get_osfhandle(fd);
-    memset(&o, 0, sizeof(o));
-
-    switch(oper) {
-    case LOCK_SH:		/* shared lock */
-	LK_ERR(LockFileEx(fh, 0, 0, LK_LEN, 0, &o),i);
-	break;
-    case LOCK_EX:		/* exclusive lock */
-	LK_ERR(LockFileEx(fh, LOCKFILE_EXCLUSIVE_LOCK, 0, LK_LEN, 0, &o),i);
-	break;
-    case LOCK_SH|LOCK_NB:	/* non-blocking shared lock */
-	LK_ERR(LockFileEx(fh, LOCKFILE_FAIL_IMMEDIATELY, 0, LK_LEN, 0, &o),i);
-	break;
-    case LOCK_EX|LOCK_NB:	/* non-blocking exclusive lock */
-	LK_ERR(LockFileEx(fh,
-		       LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY,
-		       0, LK_LEN, 0, &o),i);
-	break;
-    case LOCK_UN:		/* unlock lock */
-	LK_ERR(UnlockFileEx(fh, 0, LK_LEN, 0, &o),i);
-	break;
-    default:			/* unknown */
-	errno = EINVAL;
-	break;
+   else
+    {
+     /* Normal open - decode mode string */
     }
-    return i;
+   switch(*mode)
+    {
+     case 'r':
+      access  = GENERIC_READ;
+      create  = OPEN_EXISTING;
+      if (*++mode == '+')
+       {
+        access |= GENERIC_WRITE;
+        create  = OPEN_ALWAYS;
+        mode++;
+       }
+      break;
+
+     case 'w':
+      access  = GENERIC_WRITE;
+      create  = TRUNCATE_EXISTING;
+      if (*++mode == '+')
+       {
+        access |= GENERIC_READ;
+        mode++;
+       }
+      break;
+
+     case 'a':
+      access = GENERIC_WRITE;
+      create  = OPEN_ALWAYS;
+      if (*++mode == '+')
+       {
+        access |= GENERIC_READ;
+        mode++;
+       }
+      break;
+    }
+   if (*mode == 'b')
+    {
+     mode++;
+    }
+   else if (*mode == 't')
+    {
+     mode++;
+    }
+   if (*mode || create == -1)
+    {
+     SETERRNO(EINVAL,LIB$_INVARG);
+     return NULL;
+    }
+   if (!(access & GENERIC_WRITE))
+    share = FILE_SHARE_READ;
+   h = CreateFile(path,access,share,NULL,create,attr,NULL);
+   if (h == INVALID_HANDLE_VALUE)
+    {
+     if (create == TRUNCATE_EXISTING)
+      h = CreateFile(path,access,share,NULL,(create = OPEN_ALWAYS),attr,NULL);
+    }
+  }
+ else
+  {
+   /* fd open */
+   h = INVALID_HANDLE_VALUE;
+   if (fd >= 0 && fd <= max_open_fd)
+    {
+     PerlIOWin32 *s = fdtable[fd];
+     if (s)
+      {
+       s->refcnt++;
+       if (!f)
+        f = PerlIO_allocate(aTHX);
+       *f = &s->base;
+       return f;
+      }
+    }
+   if (*mode == 'I')
+    {
+     mode++;
+     switch(fd)
+      {
+       case 0:
+        h = GetStdHandle(STD_INPUT_HANDLE);
+        break;
+       case 1:
+        h = GetStdHandle(STD_OUTPUT_HANDLE);
+        break;
+       case 2:
+        h = GetStdHandle(STD_ERROR_HANDLE);
+        break;
+      }
+    }
+  }
+ if (h != INVALID_HANDLE_VALUE)
+  fd = win32_open_osfhandle((intptr_t) h, PerlIOUnix_oflags(tmode));
+ if (fd >= 0)
+  {
+   PerlIOWin32 *s;
+   if (!f)
+    f = PerlIO_allocate(aTHX);
+   s = PerlIOSelf(PerlIO_push(aTHX_ f,self,tmode,PerlIOArg),PerlIOWin32);
+   s->h      = h;
+   s->fd     = fd;
+   s->refcnt = 1;
+   if (fd >= 0)
+    {
+     fdtable[fd] = s;
+     if (fd > max_open_fd)
+      max_open_fd = fd;
+    }
+   return f;
+  }
+ if (f)
+  {
+   /* FIXME: pop layers ??? */
+  }
+ return NULL;
 }
 
-#undef LK_ERR
-#undef LK_LEN
+SSize_t
+PerlIOWin32_read(pTHX_ PerlIO *f, void *vbuf, Size_t count)
+{
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ DWORD len;
+ if (!(PerlIOBase(f)->flags & PERLIO_F_CANREAD))
+  return 0;
+ if (ReadFile(s->h,vbuf,count,&len,NULL))
+  {
+   return len;
+  }
+ else
+  {
+   if (GetLastError() != NO_ERROR)
+    {
+     PerlIOBase(f)->flags |= PERLIO_F_ERROR;
+     return -1;
+    }
+   else
+    {
+     if (count != 0)
+      PerlIOBase(f)->flags |= PERLIO_F_EOF;
+     return 0;
+    }
+  }
+}
 
-EXT int		my_fclose(FILE *pf);
+SSize_t
+PerlIOWin32_write(pTHX_ PerlIO *f, const void *vbuf, Size_t count)
+{
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ DWORD len;
+ if (WriteFile(s->h,vbuf,count,&len,NULL))
+  {
+   return len;
+  }
+ else
+  {
+   PerlIOBase(f)->flags |= PERLIO_F_ERROR;
+   return -1;
+  }
+}
 
-#ifdef PERLDLL
-__declspec(dllexport)
+IV
+PerlIOWin32_seek(pTHX_ PerlIO *f, Off_t offset, int whence)
+{
+ static const DWORD where[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ DWORD high = (sizeof(offset) > sizeof(DWORD)) ? (DWORD)(offset >> 32) : 0;
+ DWORD low  = (DWORD) offset;
+ DWORD res  = SetFilePointer(s->h,low,&high,where[whence]);
+ if (res != 0xFFFFFFFF || GetLastError() != NO_ERROR)
+  {
+   return 0;
+  }
+ else
+  {
+   return -1;
+  }
+}
+
+Off_t
+PerlIOWin32_tell(pTHX_ PerlIO *f)
+{
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ DWORD high = 0;
+ DWORD res  = SetFilePointer(s->h,0,&high,FILE_CURRENT);
+ if (res != 0xFFFFFFFF || GetLastError() != NO_ERROR)
+  {
+   return ((Off_t) high << 32) | res;
+  }
+ return (Off_t) -1;
+}
+
+IV
+PerlIOWin32_close(pTHX_ PerlIO *f)
+{
+ PerlIOWin32 *s = PerlIOSelf(f,PerlIOWin32);
+ if (s->refcnt == 1)
+  {
+   IV code = 0;	
+#if 0
+   /* This does not do pipes etc. correctly */	
+   if (!CloseHandle(s->h))
+    {
+     s->h = INVALID_HANDLE_VALUE;
+     return -1;
+    }
+#else
+    PerlIOBase(f)->flags &= ~PERLIO_F_OPEN;
+    return win32_close(s->fd);
 #endif
-WIN32_IOSUBSYSTEM	win32stdio = {
-    12345678L,		/* begin of structure; */
-    dummy_errno,	/* (*pfunc_errno)(void); */
-    dummy_environ,	/* (*pfunc_environ)(void); */
-    dummy_stdin,	/* (*pfunc_stdin)(void); */
-    dummy_stdout,	/* (*pfunc_stdout)(void); */
-    dummy_stderr,	/* (*pfunc_stderr)(void); */
-    ferror,		/* (*pfunc_ferror)(FILE *fp); */
-    feof,		/* (*pfunc_feof)(FILE *fp); */
-    strerror,		/* (*strerror)(int e); */
-    vfprintf,		/* (*pfunc_vfprintf)(FILE *pf, const char *format, va_list arg); */
-    vprintf,		/* (*pfunc_vprintf)(const char *format, va_list arg); */
-    fread,		/* (*pfunc_fread)(void *buf, size_t size, size_t count, FILE *pf); */
-    fwrite,		/* (*pfunc_fwrite)(void *buf, size_t size, size_t count, FILE *pf); */
-    fopen,		/* (*pfunc_fopen)(const char *path, const char *mode); */
-    fdopen,		/* (*pfunc_fdopen)(int fh, const char *mode); */
-    freopen,		/* (*pfunc_freopen)(const char *path, const char *mode, FILE *pf); */
-    my_fclose,		/* (*pfunc_fclose)(FILE *pf); */
-    fputs,		/* (*pfunc_fputs)(const char *s,FILE *pf); */
-    fputc,		/* (*pfunc_fputc)(int c,FILE *pf); */
-    ungetc,		/* (*pfunc_ungetc)(int c,FILE *pf); */
-    getc,		/* (*pfunc_getc)(FILE *pf); */
-    fileno,		/* (*pfunc_fileno)(FILE *pf); */
-    clearerr,		/* (*pfunc_clearerr)(FILE *pf); */
-    fflush,		/* (*pfunc_fflush)(FILE *pf); */
-    ftell,		/* (*pfunc_ftell)(FILE *pf); */
-    fseek,		/* (*pfunc_fseek)(FILE *pf,long offset,int origin); */
-    fgetpos,		/* (*pfunc_fgetpos)(FILE *pf,fpos_t *p); */
-    fsetpos,		/* (*pfunc_fsetpos)(FILE *pf,fpos_t *p); */
-    rewind,		/* (*pfunc_rewind)(FILE *pf); */
-    tmpfile,		/* (*pfunc_tmpfile)(void); */
-    abort,		/* (*pfunc_abort)(void); */
-    fstat,  		/* (*pfunc_fstat)(int fd,struct stat *bufptr); */
-    stat,		/* (*pfunc_stat)(const char *name,struct stat *bufptr); */
-    _pipe,		/* (*pfunc_pipe)( int *phandles, unsigned int psize, int textmode ); */
-    _popen,		/* (*pfunc_popen)( const char *command, const char *mode ); */
-    _pclose,		/* (*pfunc_pclose)( FILE *pf); */
-    setmode,		/* (*pfunc_setmode)( int fd, int mode); */
-    lseek,		/* (*pfunc_lseek)( int fd, long offset, int origin); */
-    tell,		/* (*pfunc_tell)( int fd); */
-    dup,		/* (*pfunc_dup)( int fd); */
-    dup2,		/* (*pfunc_dup2)(int h1, int h2); */
-    open,		/* (*pfunc_open)(const char *path, int oflag,...); */
-    close,		/* (*pfunc_close)(int fd); */
-    eof,		/* (*pfunc_eof)(int fd); */
-    read,		/* (*pfunc_read)(int fd, void *buf, unsigned int cnt); */
-    write,		/* (*pfunc_write)(int fd, const void *buf, unsigned int cnt); */
-    dummy_globalmode,	/* (*pfunc_globalmode)(int mode) */
-    my_open_osfhandle,
-    my_get_osfhandle,
-    spawnvp,
-    mkdir,
-    rmdir,
-    chdir,
-    my_flock,		/* (*pfunc_flock)(int fd, int oper) */
-    execvp,
-    perror,
-    setbuf,
-    setvbuf,
-    flushall,
-    fcloseall,
-    fgets,
-    gets,
-    fgetc,
-    putc,
-    puts,
-    getchar,
-    putchar,
-    fscanf,
-    scanf,
-    malloc,
-    calloc,
-    realloc,
-    free,
-    87654321L,		/* end of structure */
+  }
+ return 0;
+}
+
+PerlIO *
+PerlIOWin32_dup(pTHX_ PerlIO *f, PerlIO *o, CLONE_PARAMS *params, int flags)
+{
+ PerlIOWin32 *os = PerlIOSelf(f,PerlIOWin32);
+ HANDLE proc = GetCurrentProcess();
+ HANDLE new;
+ if (DuplicateHandle(proc, os->h, proc, &new, 0, FALSE,  DUPLICATE_SAME_ACCESS))
+  {
+   char mode[8];
+   int fd = win32_open_osfhandle((intptr_t) new, PerlIOUnix_oflags(PerlIO_modestr(o,mode)));
+   if (fd >= 0)
+    {
+     f = PerlIOBase_dup(aTHX_ f, o, params, flags);
+     if (f)
+      {
+       PerlIOWin32 *fs = PerlIOSelf(f,PerlIOWin32);
+       fs->h  = new;
+       fs->fd = fd;
+       fs->refcnt = 1;
+       fdtable[fd] = fs;
+       if (fd > max_open_fd)
+        max_open_fd = fd;
+      }
+     else
+      {
+       win32_close(fd);
+      }
+    }
+   else
+    {
+     CloseHandle(new);
+    }
+  }
+ return f;
+}
+
+PerlIO_funcs PerlIO_win32 = {
+ sizeof(PerlIO_funcs),
+ "win32",
+ sizeof(PerlIOWin32),
+ PERLIO_K_RAW,
+ PerlIOWin32_pushed,
+ PerlIOWin32_popped,
+ PerlIOWin32_open,
+ PerlIOBase_binmode,
+ NULL,                 /* getarg */
+ PerlIOWin32_fileno,
+ PerlIOWin32_dup,
+ PerlIOWin32_read,
+ PerlIOBase_unread,
+ PerlIOWin32_write,
+ PerlIOWin32_seek,
+ PerlIOWin32_tell,
+ PerlIOWin32_close,
+ PerlIOBase_noop_ok,   /* flush */
+ PerlIOBase_noop_fail, /* fill */
+ PerlIOBase_eof,
+ PerlIOBase_error,
+ PerlIOBase_clearerr,
+ PerlIOBase_setlinebuf,
+ NULL, /* get_base */
+ NULL, /* get_bufsiz */
+ NULL, /* get_ptr */
+ NULL, /* get_cnt */
+ NULL, /* set_ptrcnt */
 };
 
-
-#ifdef __cplusplus
-}
 #endif
 
