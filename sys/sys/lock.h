@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.9 2003/05/18 17:41:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.10 2003/05/18 18:25:03 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -308,7 +308,7 @@ extern int db_printf(const char *, ...)
     __kprintf_attribute__((__format__(__kprintf__,1,2)));
 
 /* CPU-dependent timing, needs this to be settable from ddb. */
-int __mp_lock_spinout = 200000000;
+extern int __mp_lock_spinout;
 #endif
 
 static __inline void
