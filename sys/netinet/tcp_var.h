@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.51 2003/06/09 07:40:25 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.51.2.1 2004/03/03 02:35:26 brad Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -81,6 +81,7 @@ struct tcpcb {
 #define TF_RCVD_CE	0x00010000	/* send ECE in subsequent segs */
 #define TF_SEND_CWR	0x00020000	/* send CWR in next seg */
 #define TF_DISABLE_ECN	0x00040000	/* disable ECN for this connection */
+#define TF_REASSLOCK	0x00080000	/* reassembling or draining */
 #endif
 
 	struct	mbuf *t_template;	/* skeletal packet for transmit */
@@ -205,6 +206,35 @@ do {									\
 		timeout_del(&(tp)->t_delack_to);			\
 	}								\
 } while (/*CONSTCOND*/0)
+
+static __inline int tcp_reass_lock_try(struct tcpcb *);
+static __inline void tcp_reass_unlock(struct tcpcb *);
+#define tcp_reass_lock(tp) tcp_reass_lock_try(tp)
+
+static __inline int
+tcp_reass_lock_try(struct tcpcb *tp)
+{
+	int s;
+
+	s = splimp();
+	if (tp->t_flags & TF_REASSLOCK) {
+		splx(s);
+		return (0);
+	}
+	tp->t_flags |= TF_REASSLOCK;
+	splx(s);
+	return (1);
+}
+
+static __inline void
+tcp_reass_unlock(struct tcpcb *tp)
+{
+	int s;
+
+	s = splimp();
+	tp->t_flags &= ~TF_REASSLOCK;
+	splx(s);
+}
 #endif /* _KERNEL */
 
 /*
@@ -319,6 +349,8 @@ struct	tcpstat {
 	u_int32_t tcps_cwr_ecn;		/* # of cwnd reduced by ecn */
 	u_int32_t tcps_cwr_frecovery;	/* # of cwnd reduced by fastrecovery */
 	u_int32_t tcps_cwr_timeout;	/* # of cwnd reduced by timeout */
+
+	u_int64_t tcps_conndrained;	/* # of connections drained */
 };
 
 /*
