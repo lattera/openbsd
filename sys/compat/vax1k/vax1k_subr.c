@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_subr.c,v 1.2 2001/11/28 13:47:39 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_subr.c,v 1.2.4.1 2002/03/06 01:47:58 niklas Exp $	*/
 /*	$NetBSD: vax1k_subr.c,v 1.2 1999/03/24 05:51:20 mrg Exp $	*/
 
 /*

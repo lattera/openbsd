@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_exec.h,v 1.1 2001/11/14 14:37:22 hugh Exp $	*/
+/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_exec.h,v 1.1.4.1 2002/03/06 01:47:38 niklas Exp $	*/
 /*	$NetBSD: vax1k_exec.h,v 1.1 1998/08/21 13:25:47 ragge Exp $	*/
 
 /*-
