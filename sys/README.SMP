@@ -2,7 +2,7 @@ The SMP branch is irregularily updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
 
 * Determine the new synchronization tag to use.  There are two used
-  alternately; SMP_SYNC_A and SMP_SYNC_B.  You can use several hueristics
+  alternately; SMP_SYNC_A and SMP_SYNC_B.  You can use several heuristics
   to find out which one was used last, and then use the other one.
   For example, CVSROOT/history* files gives you information about tag
   operations in lines matching '^T'.  Call the tag you will be using
@@ -50,9 +50,13 @@ you mainly need to carry out the following procedure.
   fix every regression you can find.
 
 * Time to fixup some cvs bugs.  Files that has got added since last
-  synchronization will make cvs choke and leave the RCS file locked
-  on cvs.openbsd.org.  However it will succeed in update the file first,
-  and after removing it locally, two updates are needed, the 1st to
+  synchronization will make cvs choke in two different ways.
+  Readdition of files that have gone dead need to have
+  the timestamp in the Entries file changed to /dummy timestamp/
+  in order to be accepted by commit.  Other new files will be committed
+  but than crash before clening things up.  They leave the RCS file locked
+  on cvs.openbsd.org, and the changes won't be reflected locally.
+  After removing it locally, two updates are needed, the 1st to
   remove the local CVS/Entries entry, and the second to get it
   checked out.
 
@@ -91,15 +95,6 @@ you mainly need to carry out the following procedure.
 
 * A nice check is to browse the output of:
 
-  $ cvs -q rdiff -u -r$NEW_TAG -rSMP
+  $ cvs -qd cvs.openbsd.org:/cvs rdiff -u -r$NEW_TAG -rSMP src/sys
 
-  It should just by differences related to multiprocessor support.
-
-PS
-  Here is a note I once wrote, I do not know if the fixup function above
-  covers files like this as well, if not, look here for a hint of how to
-  deal:
-
-  Readdition of files that have gone dead.  They need to have
-  the timestamp in the Entries file changed to /dummy timestamp/
-  in order to be accepted by commit.
+  It should just be differences related to multiprocessor support.
