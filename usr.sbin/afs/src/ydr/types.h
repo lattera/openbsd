@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/types.h,v 1.1.1.1 1998/09/14 21:53:28 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,10 +31,10 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: types.h,v 1.5 1998/05/02 02:37:30 assar Exp $ */
+/* $KTH: types.h,v 1.10 2000/10/02 22:37:20 lha Exp $ */
 
-#ifndef _TYPES_
-#define _TYPES_
+#ifndef _YDR_TYPES_
+#define _YDR_TYPES_
 
 #include "sym.h"
 
@@ -69,8 +63,10 @@ typedef struct {
      Type *type;
 } StructEntry;
 
+enum argtype { TIN, TOUT, TINOUT };
+
 typedef struct {
-     enum { TIN, TOUT, TINOUT } argtype;
+     enum argtype argtype;
      char *name;
      Type *type;
 } Argument;
@@ -78,10 +74,14 @@ typedef struct {
 Symbol *define_const (char *name, int value);
 Symbol *define_enum (char *name, List *list);
 Symbol *define_struct (char *name);
-Symbol *set_struct_body(char *name, List *list);
+Symbol *set_struct_body_sym (Symbol *s, List *list);
+Symbol *set_struct_body (char *name, List *list);
 Symbol *define_typedef (StructEntry *entry);
 Symbol *define_proc (char *name, List *args, unsigned id);
 Symbol *createenumentry (char *name, int val);
 StructEntry *createstructentry (char *name, Type *type);
+struct Type *create_type (TypeType type, Symbol *symbol, unsigned size,
+			  Type *subtype, Type *indextype, int flags);
 
-#endif /* _TYPES_ */
+
+#endif /* _YDR_TYPES_ */

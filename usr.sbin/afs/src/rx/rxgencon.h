@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rxgencon.h,v 1.1 1999/04/30 01:59:15 art Exp $	*/
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *

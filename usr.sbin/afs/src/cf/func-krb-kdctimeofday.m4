@@ -1,5 +1,5 @@
 dnl
-dnl $Id: func-krb-kdctimeofday.m4,v 1.4 2000/05/23 07:21:24 assar Exp $
+dnl $KTH: func-krb-kdctimeofday.m4,v 1.4 2000/05/23 07:21:24 assar Exp $
 dnl
 
 dnl

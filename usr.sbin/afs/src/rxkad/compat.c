@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rxkad/Attic/compat.c,v 1.1.1.1 1998/09/14 21:53:19 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,7 +33,9 @@
 
 #include "rxkad_locl.h"
 
-RCSID("$KTH: compat.c,v 1.2 1998/04/05 10:58:16 assar Exp $");
+RCSID("$KTH: compat.c,v 1.5 2000/10/03 00:38:11 lha Exp $");
+
+void initialize_rxk_error_table(void);
 
 void
 initialize_rxk_error_table(void)
@@ -142,8 +138,8 @@ tkt_DecodeTicket (char *asecret,
 		  char *inst,
 		  char *cell,
 		  char *sessionKey,
-		  int32 *host,
-		  int32 *start,
+		  int32 *host_,
+		  int32 *start_,
 		  int32 *end)
 {
     des_cblock *key = (des_cblock *)key_;
@@ -154,6 +150,8 @@ tkt_DecodeTicket (char *asecret,
     int life;
     char sname[ANAME_SZ];
     char sinst[INST_SZ];
+    u_int32 *start = (u_int32 *)start_;
+    u_int32 *host = (u_int32 *)host_;
 
     des_key_sched(key, sched);
     txt.length = ticketLen;
@@ -164,7 +162,7 @@ tkt_DecodeTicket (char *asecret,
 			 inst,
 			 cell,
 			 host,
-			 sessionKey,
+			 (unsigned char *)sessionKey,
 			 &life,
 			 start,
 			 sname,

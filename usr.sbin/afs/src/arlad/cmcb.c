@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/cmcb.c,v 1.1.1.1 1998/09/14 21:52:55 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -42,7 +36,7 @@
  */
 
 #include "arla_local.h"
-RCSID("$KTH: cmcb.c,v 1.19 1998/04/03 03:32:38 assar Exp $") ;
+RCSID("$KTH: cmcb.c,v 1.29 2000/11/28 01:50:44 lha Exp $") ;
 
 #include "cb.ss.h"
 
@@ -57,19 +51,15 @@ cmcb_init (void)
      static struct rx_securityClass *(securityObjects[1]);
 
      nullSecObjP = rxnull_NewClientSecurityObject ();
-     if (nullSecObjP == NULL) {
-	  arla_warnx (ADEBWARN, "Cannot create null security object.");
-	  return;
-     }
+     if (nullSecObjP == NULL)
+	  arla_errx (1, ADEBWARN, "Cannot create null security object.");
      
      securityObjects[0] = nullSecObjP;
 
      if (rx_NewService (0, CM_SERVICE_ID, "cm", securityObjects,
 			sizeof(securityObjects) / sizeof(*securityObjects),
-			(long (*)())RXAFSCB_ExecuteRequest) == NULL ) {
-	  arla_warnx (ADEBWARN, "Cannot install callback service");
-	  return;
-     }
+			RXAFSCB_ExecuteRequest) == NULL)
+	  arla_errx (1, ADEBWARN, "Cannot install callback service");
      rx_StartServer (0);
 }
 
@@ -98,9 +88,14 @@ RXAFSCB_InitCallBackState (struct rx_call *a_rxCallP)
      u_long host = rx_HostOf (rx_PeerOf (rx_ConnectionOf (a_rxCallP)));
      struct in_addr in_addr;
 
+     cm_check_consistency();
+
      in_addr.s_addr = host;
      arla_warnx (ADEBCALLBACK, "InitCallBackState (%s)", inet_ntoa(in_addr));
      fcache_purge_host (host);
+
+     cm_check_consistency();
+
      return 0;
 }
 
@@ -125,6 +120,10 @@ RXAFSCB_CallBack (struct rx_call *a_rxCallP,
      in_addr.s_addr = host;
      arla_warnx (ADEBCALLBACK, "callback (%s)", inet_ntoa(in_addr));
      cell = conn_host2cell(host, afsport, FS_SERVICE_ID);
+     if (cell == -1)
+	 arla_warnx (ADEBCALLBACK,
+		     "callback from unknown host: %s",
+		     inet_ntoa (in_addr));
      for (i = 0; i < a_fidArrayP->len; ++i) {
 	  VenusFid fid;
 	  AFSCallBack broken_callback = {0, 0, CBDROPPED};
@@ -142,12 +141,73 @@ RXAFSCB_CallBack (struct rx_call *a_rxCallP,
 	      fcache_purge_volume (fid);
 	      volcache_invalidate (fid.fid.Volume, fid.Cell);
 	  } else if (i < a_callBackArrayP->len)
-	      fcache_stale_entry (fid,
-				  a_callBackArrayP->val[i]);
+	      fcache_stale_entry (fid, a_callBackArrayP->val[i]);
 	  else
-	      fcache_stale_entry (fid,
-				  broken_callback);
+	      fcache_stale_entry (fid, broken_callback);
      }
+     cm_check_consistency();
 
      return 0;
+}
+
+
+int
+RXAFSCB_GetLock(struct rx_call *a_rxCallP,
+		int32_t index,
+		AFSDBLock *lock)
+{
+    return 1;
+}
+
+int
+RXAFSCB_GetCE(struct rx_call *a_rxCallP,
+	      int32_t index,
+	      AFSDBCacheEntry *dbentry)
+{
+    return 1;
+}
+
+int
+RXAFSCB_XStatsVersion(struct rx_call *a_rxCallP,
+		      int32_t *version)
+{
+    return RXGEN_OPCODE;
+}
+
+int
+RXAFSCB_GetXStats(struct rx_call *a_rxCallP,
+		  int32_t client_version_num,
+		  int32_t collection_number,
+		  int32_t *server_version_number,
+		  int32_t *time,
+		  AFSCB_CollData *stats)
+{
+    return RXGEN_OPCODE;
+}
+
+int
+RXAFSCB_InitCallBackState2(struct rx_call *a_rxCallP, interfaceAddr *addr)
+{
+    return RXGEN_OPCODE;
+}
+
+int
+RXAFSCB_WhoAreYou(struct rx_call *a_rxCallP,
+		  interfaceAddr *addr)
+{
+    return RXGEN_OPCODE;
+}
+
+int
+RXAFSCB_InitCallBackState3(struct rx_call *a_rxCallP,
+			   const struct afsUUID *serverUuid)
+{
+    return RXGEN_OPCODE;
+}
+
+int
+RXAFSCB_ProbeUUID(struct rx_call *a_rxCallP,
+		  const struct afsUUID *uuid)
+{
+    return RXGEN_OPCODE;
 }

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/lex.h,v 1.1.1.1 1998/09/14 21:53:26 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,11 +31,13 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: lex.h,v 1.3 1998/02/19 05:11:49 assar Exp $ */
+/* $KTH: lex.h,v 1.6 2000/10/02 22:36:33 lha Exp $ */
 
 #ifndef _LEX_
 #define _LEX_
 
-void error_message (char *, ...);
+void error_message (int errorp, char *, ...);
+
+int yylex (void);
 
 #endif /* _LEX_ */

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/list.h,v 1.1.1.1 1998/09/14 21:53:23 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -41,12 +35,13 @@
  * list handling functions
  */
 
-/* $KTH: list.h,v 1.4 1998/07/05 18:25:00 assar Exp $ */
+/* $KTH: list.h,v 1.10 2000/10/03 00:31:14 lha Exp $ */
 
 #ifndef _LIST_
 #define _LIST_
 
 #include "bool.h"
+#include <roken.h>
 
 struct listitem {
      void *data;
@@ -81,19 +76,53 @@ void *listdelhead (List *list);
 
 void *listdeltail (List *list);
 
-Bool listemptyp (List *list);
-
-Listitem *listhead (List *list);
-
-Listitem *listtail (List *list);
-
-Listitem *listprev (List *list, Listitem *item);
-
-Listitem *listnext (List *list, Listitem *item);
-
-void *listdata (Listitem *item);
-
 void listiter (List *list, Bool (*fn)(List *, Listitem *, void *arg),
 	       void *arg);
+
+/*
+ * inline functions
+ */
+
+static inline Listitem * __attribute__ ((unused))
+listhead (List *list)
+{
+     return list->head;
+}
+
+static inline Listitem * __attribute__ ((unused))
+listtail (List *list)
+{
+    return list->tail;
+}
+
+static inline Listitem * __attribute__ ((unused))
+listprev (List *list, Listitem *item)
+{
+    return item->prev;
+}
+
+static inline Listitem * __attribute__ ((unused))
+listnext (List *list, Listitem *item)
+{
+     return item->next;
+}
+
+static inline void * __attribute__ ((unused))
+listdata (Listitem *item)
+{
+     return item->data;
+}
+
+static inline Bool __attribute__ ((unused))
+listemptyp (List *list)
+{
+     return (Bool)(list->head == NULL);
+}
+
+static inline Bool __attribute__ ((unused))
+listnextp(Listitem *item)
+{
+    return (Bool)(item->next != NULL);
+}
 
 #endif /* _LIST_ */

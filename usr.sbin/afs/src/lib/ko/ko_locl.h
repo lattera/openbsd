@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lib/ko/Attic/ko_locl.h,v 1.1.1.1 1998/09/14 21:52:59 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,7 +33,7 @@
 
 /*
  *  Include file for whole arlad
- *  $KTH: ko_locl.h,v 1.2 1998/07/16 01:14:26 lha Exp $
+ *  $KTH: ko_locl.h,v 1.12 2000/10/02 22:43:03 lha Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -59,8 +53,16 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
+#ifdef HAVE_SYS_IOCCOM_H
+#include <sys/ioccom.h>
+#endif
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -68,14 +70,13 @@
 #include <err.h>
 #include <strings.h>
 #include <roken.h>
-#include <getarg.h>
+#include <parse_units.h>
+#include <agetarg.h>
 
 #include <hash.h>
-#include <ip.h>
+#include <bool.h>
+#include <log.h>
 
 #include "ko.h"
-#include "kodebug.h"
-
-#include "strmatch.h"
 
 

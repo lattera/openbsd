@@ -1,4 +1,4 @@
-dnl $Id: check-getpwnam_r-posix.m4,v 1.1 1999/05/15 22:45:21 assar Exp $
+dnl $KTH: check-getpwnam_r-posix.m4,v 1.1 1999/05/15 22:45:21 assar Exp $
 dnl
 dnl check for getpwnam_r, and if it's posix or not
 

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/hash.c,v 1.1.1.1 1998/09/14 21:53:23 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -43,7 +37,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: hash.c,v 1.10 1998/03/18 19:30:03 art Exp $");
+RCSID("$KTH: hash.c,v 1.14.2.1 2001/08/31 18:10:43 ahltorp Exp $");
 #endif
 
 #include <assert.h>
@@ -113,17 +107,19 @@ hashtabsearch(Hashtab * htab, void *ptr)
 /* if already there, set new value */
 /* !NULL if succesful */
 
-void *
-hashtabadd(Hashtab * htab, void *ptr)
+static void *
+_add(Hashtab * htab, void *ptr, Bool unique)
 {
     Hashentry *h = _search(htab, ptr);
     Hashentry **tabptr;
 
     assert(htab && ptr);
 
-    if (h)
+    if (h) {
+	if (unique)
+	    return NULL;
 	free((void *) h->ptr);
-    else {
+    } else {
 	h = (Hashentry *) malloc(sizeof(Hashentry));
 	if (h == NULL) {
 	    return NULL;
@@ -137,6 +133,18 @@ hashtabadd(Hashtab * htab, void *ptr)
     }
     h->ptr = ptr;
     return h;
+}
+
+void *
+hashtabaddreplace (Hashtab *htab, void *ptr)
+{
+    return _add (htab, ptr, FALSE);
+}
+
+void *
+hashtabadd (Hashtab *htab, void *ptr)
+{
+    return _add (htab, ptr, TRUE);
 }
 
 /* delete element with key key. Iff freep, free Hashentry->ptr */
@@ -196,12 +204,27 @@ hashtabcleantab(Hashtab * htab, Bool(*cond) (void *ptr, void *arg),
 		g = g->next ;
 		if ((*(f->prev) = f->next))
 		    f->next->prev = f->prev;
-		free(g);
+		free(f);
 	    } else {
 		 g = g->next;
 	    }
 	}
     }
+}
+
+static Bool
+true_cond(void *ptr, void *arg)
+{
+    return TRUE;
+}
+
+/* Free the hashtab and all items in it */
+
+void
+hashtabrelease(Hashtab *htab)
+{
+    hashtabcleantab(htab, true_cond, NULL);
+    free(htab);
 }
 
 
@@ -227,7 +250,7 @@ hashcaseadd(const char *s)
     assert(s);
 
     for (i = 0; *s; ++s)
-	i += toupper(*s);
+	i += toupper((unsigned char)*s);
     return i;
 }
 

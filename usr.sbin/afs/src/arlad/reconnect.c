@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/reconnect.c,v 1.1 1999/04/30 01:59:10 art Exp $	*/
 /* COPYRIGHT  (C)  1998
  * THE REGENTS OF THE UNIVERSITY OF MICHIGAN
  * ALL RIGHTS RESERVED
@@ -32,9 +31,11 @@
  * Do merging of the files that changed with we was in disconnected mode
  */
 
+#if 0
+
 #include "arla_local.h"
 
-RCSID("$KTH: reconnect.c,v 1.11 1999/02/15 04:49:43 art Exp $");
+RCSID("$KTH: reconnect.c,v 1.30.2.1 2001/06/04 22:16:39 ahltorp Exp $");
 
 static int reconnect_nonmute(struct vcache *, int, struct timeval);
 static int reconnect_putattr(struct vcache *, struct xfs_attr *);
@@ -121,7 +122,7 @@ do_replay(char *log_file, int log_entries, VenusFid *changed_fid)
 
     fid_AD_tail = fid_AD_head;
     cur_log = (log_ent_t *) malloc(sizeof(log_ent_t));
-    fd = open(log_file, O_RDONLY | O_BINARY);
+    fd = open(log_file, O_RDWR | O_BINARY);
 
     set_fid_value(&new_fid , 0);
 
@@ -322,6 +323,9 @@ do_replay(char *log_file, int log_entries, VenusFid *changed_fid)
    	 
   	fid_KP_head = 0;
     }
+    i = ftruncate (fd, 0);
+    assert (i == 0);
+
  terminate:
 
     arla_warnx (ADEBDISCONN,"We have done total %d replays",count-1);
@@ -537,7 +541,7 @@ find_venus (char *name, VenusFid *fid)
  *
  */
 
-static VenusFid *
+VenusFid *
 fid_translate(VenusFid *fid_in)
 {
     fid_trans *fid_tmp;
@@ -794,8 +798,8 @@ int reconnect_remove(struct vcache *vcp, FCacheEntry *childentry, char *name)
     fs_server_context context;
     AFSFetchStatus status;
     AFSVolSync volsync; 
-    char tmp[5];
-    xfs_cache_handle cache_handle;
+    char tmp[2 * sizeof(int) + 2];
+    fcache_cache_handle cache_handle;
 
     fid = &(vcp->fid); /* points to the VenusFid structure */
     fid = fid_translate(fid);
@@ -820,7 +824,7 @@ int reconnect_remove(struct vcache *vcp, FCacheEntry *childentry, char *name)
   
 	if (isupdate)
 	{
-	    xfs_cache_handle cache_handle;
+	    fcache_cache_handle cache_handle;
 
 	    arla_log(ADEBDISCONN, 
 		     "reconnect_remove: can't remove because file modified!");
@@ -836,14 +840,20 @@ int reconnect_remove(struct vcache *vcp, FCacheEntry *childentry, char *name)
 
     res.res = 0;
 
-    assert (CheckLock(&fce->lock) == -1);
+    AssertExclLocked(&fce->lock);
 
     conn = find_first_fs (fce, ce, &context);
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed", fce->index);
+	cred_free(ce);
+	ReleaseWriteLock(&fce->lock);
+	return ENETDOWN;
+    }
 
 /* Ba san: check the file exists 
 
    ReleaseWriteLock(&fce->lock);
-   error = adir_lookup(fce->fid, name, &tempfid, ce);
+   error = adir_lookup(fce->fid, name, &tempfid, NULL, &ce);
    assert (error == 0);                                             
    ObtainWriteLock(&fce->lock);  */
      
@@ -862,7 +872,7 @@ int reconnect_remove(struct vcache *vcp, FCacheEntry *childentry, char *name)
 
 /* Ba san: Chcek the deletion of the file */
     ReleaseWriteLock(&fce->lock);
-    error = adir_lookup(fce->fid, name, &tempfid, ce);
+    error = adir_lookup(&fce->fid, name, &tempfid, NULL, &ce);
     ObtainWriteLock(&fce->lock);
 
     if (error == 0) {
@@ -904,10 +914,10 @@ reconnect_rmdir(struct vcache *vcp, FCacheEntry *childEntry, char *name)
     int error;               
     VenusFid *fid, tempfid; /* Ba san: to check the deletion of file*/
     Result res;
-    char tmp[5];
+    char tmp[2 * sizeof(int) + 2];
     int ret = 0; 
     Result tempres; 
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
   
     ConnCacheEntry *conn;
     fs_server_context context;
@@ -923,9 +933,15 @@ reconnect_rmdir(struct vcache *vcp, FCacheEntry *childEntry, char *name)
     ce = cred_get (fid->Cell, vcp->cred.pag, CRED_ANY);
     assert (ce != NULL);
 
-    assert (CheckLock(&fce->lock) == -1);
+    AssertExclLocked(&fce->lock);
 
     conn = find_first_fs (fce, ce, &context);
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed", fce->index);
+	cred_free(ce);
+	ReleaseWriteLock(&fce->lock);
+	return ENETDOWN;
+    }
 
     ret = RXAFS_RemoveDir (conn->connection,
 			   &fce->fid.fid,
@@ -941,7 +957,7 @@ reconnect_rmdir(struct vcache *vcp, FCacheEntry *childEntry, char *name)
 
 /* Ba san: Chcek the deletion of the file */
     ReleaseWriteLock(&fce->lock);
-    error = adir_lookup(fce->fid, name, &tempfid, ce);
+    error = adir_lookup(&fce->fid, name, &tempfid, NULL, &ce);
     ObtainWriteLock(&fce->lock);
 
     if (error == 0) {
@@ -987,10 +1003,14 @@ reconnect_mut_chk(FCacheEntry *fce, CredCacheEntry *ce, int version)
     AFSCallBack callback;                                                    
     AFSVolSync volsync;      
 
-    assert (CheckLock (&fetched.lock) == -1);
+    AssertExclLocked(&fetched.lock);
 
 /*SWW Aug 01: >= is changed into > */
     conn = find_first_fs (&fetched, ce, &context);
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed", fce->index);
+	return ENETDOWN;
+    }
  
     ret = RXAFS_FetchStatus (conn->connection,
                              &fce->fid.fid,
@@ -1018,7 +1038,8 @@ reconnect_mut_chk(FCacheEntry *fce, CredCacheEntry *ce, int version)
  *
  */
 
-void fcache_backfile_name(char *name, size_t len)
+static void
+fcache_backfile_name(char *name, size_t len)
 {
     static int no = 1;
 
@@ -1031,19 +1052,16 @@ void fcache_backfile_name(char *name, size_t len)
  *
  */
 
-void
+static void
 copy_cached_file(int from, int to)
 {
-    char tmpname[5],name_from[21],name_to[27];
+    char name_from[2 * sizeof(int) + 1], name_to[2 * sizeof(int) + 1];
     int fd_from, n, fd_to;
     char buf[BUFSIZE];
 
-    strcpy(name_from,ARLACACHEDIR);
-    strcpy(name_to,ARLACACHEDIR);
-    sprintf(tmpname,"%04X",from);
-    strcat(name_from, tmpname);
-    sprintf(tmpname,"%04X",to);
-    strcat(name_to, tmpname);
+    snprintf (name_from, sizeof(name_from), "%04X", from);
+    snprintf (name_to,   sizeof(name_to),   "%04X", to);
+
     fd_from = open(name_from,O_RDONLY | O_BINARY);  
     fd_to   = open(name_to,  O_WRONLY | O_CREAT | O_BINARY);
 
@@ -1064,13 +1082,24 @@ copy_cached_file(int from, int to)
  *
  */
 
-int
-reconnect_mut_newfile(FCacheEntry **fcep, pag_t cred,VenusFid *new_fid)
+static void
+reconnect_update_fid (FCacheEntry *entry, VenusFid oldfid)
+{
+    if (entry->flags.kernelp)
+	update_fid (oldfid, NULL, entry->fid, entry);
+}
+
+/*
+ *
+ */
+
+static int
+reconnect_mut_newfile(FCacheEntry **fcep, xfs_pag_t cred,VenusFid *new_fid)
 {
 
     FCacheEntry *parent_fce;
     u_long host;
-    char name[9],tmp[5];
+    char name[2 * sizeof(int) + 3 + 1], tmp[2 * sizeof(int) + 2];
     AFSStoreStatus store_attr;
     AFSFetchStatus fetch_attr;
     CredCacheEntry *ce; 
@@ -1078,7 +1107,7 @@ reconnect_mut_newfile(FCacheEntry **fcep, pag_t cred,VenusFid *new_fid)
     VenusFid newfid;
     int ret;
     int from, to;
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
 
     ret = fcache_find (&parent_fce, (*fcep)->parent);
     assert (ret == 0);
@@ -1140,7 +1169,6 @@ int reconnect_putattr(struct vcache *vcp, struct xfs_attr *xap)
     Result res;
     u_int32_t sizefs;
     AFSStoreStatus storestatus;
-    AFSCallBack callback;
     AFSVolSync volsync;
     int ret;
 
@@ -1173,6 +1201,7 @@ int reconnect_putattr(struct vcache *vcp, struct xfs_attr *xap)
 
     sizefs=fce->status.Length;
 
+#if 0 /* XXX */
     /* some people have written to the file while we are disconnected */
     /* we have to give it a different name on the server  */
     if (reconnect_mut_chk(fce, ce, vcp->DataVersion))
@@ -1182,72 +1211,74 @@ int reconnect_putattr(struct vcache *vcp, struct xfs_attr *xap)
 	alloc_fid_trans(fid);
 	reconnect_mut_newfile(&fce,vcp->cred.pag,&new_fid);  
 	fce->status.Length = sizefs;
+	fce->length = sizefs;
 	ReleaseWriteLock(&tempce->lock);
 	fill_fid_trans(&new_fid);
 	tempce->flags.attrp = FALSE;
 	tempce->flags.kernelp = FALSE;
     }   
-
-#if 0
-    usedbytes -= entry->status.Length;
-    usedbytes += size;
-    
-    fce->status.Length = size;  
 #endif
 
     /* code from truncate file XXX join */
     conn = find_first_fs (fce, ce, &context);
-
-    call = rx_NewCall (conn->connection);
-    if (call == NULL) {
-	arla_log (ADEBDISCONN, "Cannot call");
-	res.res = ENOMEM;
-	goto out;
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed.");
+	ReleaseWriteLock(&fce->lock);
+	cred_free(ce);
+	return ENETDOWN;
     }
 
-    storestatus.Mask = 0;
-    res.res = StartRXAFS_StoreData (call,
-				    &(fce->fid.fid),
-				    &storestatus,
-				    0, 0, fce->status.Length);
-    if(res.res) {
-	arla_log (ADEBDISCONN, "Could not start store, %s (%d)",
-                  koerr_gettext(res.res), res.res);
-	rx_EndCall(call, 0);
-	goto out;
+    if (fce->status.FileType != TYPE_DIR) {
+
+	call = rx_NewCall (conn->connection);
+	if (call == NULL) {
+	    arla_log (ADEBDISCONN, "Cannot call");
+	    res.res = ENOMEM;
+	    goto out;
+	}
+
+	storestatus.Mask = 0;
+	res.res = StartRXAFS_StoreData (call,
+					&(fce->fid.fid),
+					&storestatus,
+					0, 0, fce->status.Length);
+	if(res.res) {
+	    arla_log (ADEBDISCONN, "Could not start store, %s (%d)",
+		      koerr_gettext(res.res), res.res);
+	    rx_EndCall(call, 0);
+	    goto out;
+	}
+
+	sizefs = htonl (sizefs);
+	if (rx_Write (call, &sizefs, sizeof(sizefs)) != sizeof(sizefs)) {
+	    res.res = conv_to_arla_errno(rx_Error(call));
+	    arla_log (ADEBDISCONN, "Error writing length: %d", res.res);
+	    rx_EndCall(call, 0);
+	    goto out;
+	}
+
+	if (rx_Write (call, 0, 0) != 0) {
+	    res.res = conv_to_arla_errno(rx_Error(call));
+	    arla_log (ADEBDISCONN, "Error writing: %d", res.res);
+	    rx_EndCall(call, 0);
+	    goto out;
+	}
+
+	res.res = rx_EndCall (call, EndRXAFS_StoreData (call,
+							&status,
+							&volsync));
+	if (res.res) {
+	    arla_log (ADEBDISCONN, "Error rx_EndCall: %s (%d)",
+		      koerr_gettext(res.res), res.res);
+	    goto out;
+	}
+
+	fce->status   = status;
+	fce->volsync  = volsync;
+
+	volcache_update_volsync (fce->volume, fce->volsync);
+
     }
-
-    sizefs = htonl (sizefs);
-    if (rx_Write (call, &sizefs, sizeof(sizefs)) != sizeof(sizefs)) {
-	res.res = rx_Error(call);
-	arla_log (ADEBDISCONN, "Error writing length: %d", res.res);
-	rx_EndCall(call, 0);
-	goto out;
-    }
-
-    if (rx_Write (call, 0, 0) != 0) {
-	res.res = rx_Error(call);
-	arla_log (ADEBDISCONN, "Error writing: %d", res.res);
-	rx_EndCall(call, 0);
-	goto out;
-    }
-
-    res.res = rx_EndCall (call, EndRXAFS_StoreData (call,
-						    &status,
-						    &callback,
-						    &volsync));
-    if (res.res) {
-	arla_log (ADEBDISCONN, "Error rx_EndCall: %s (%d)",
-		  koerr_gettext(res.res), res.res);
-	goto out;
-    }
-
-    fce->status   = status;
-    fce->callback = callback;
-    fce->volsync  = volsync;
-
-    volcache_update_volsync (fce->volume, fce->volsync);
-
     /* code from write_attr XXX join */
     xfs_attr2afsstorestatus(xap, &storestatus);
 
@@ -1296,7 +1327,6 @@ reconnect_putdata(struct vcache *vcp)
     struct stat statinfo;
     AFSStoreStatus storestatus;
     AFSFetchStatus status;
-    AFSCallBack callback;
     AFSVolSync volsync;
     int ret;
 
@@ -1348,9 +1378,15 @@ reconnect_putdata(struct vcache *vcp)
 #endif
 
     /* code taken from write_data XXX join */ 
-    assert (CheckLock(&fce->lock) == -1);
+    AssertExclLocked(&fce->lock);
 
     conn = find_first_fs (fce, ce, &context);
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed");
+	ReleaseWriteLock(&fce->lock); 
+	cred_free(ce);
+	return ENETDOWN;
+    }
 
     fd = fcache_open_file (fce, O_RDONLY);
     if (fd < 0) {
@@ -1387,7 +1423,7 @@ reconnect_putdata(struct vcache *vcp)
 	goto out;
     }
 
-    res.res = copyfd2rx (fd, call, sizefs);
+    res.res = copyfd2rx (fd, call, 0, sizefs);
     if (res.res) {
 	rx_EndCall(call, res.res);
 	arla_log (ADEBDISCONN, "copyfd2rx failed: %d", res.res);
@@ -1396,7 +1432,6 @@ reconnect_putdata(struct vcache *vcp)
      
     res.res = rx_EndCall (call, EndRXAFS_StoreData (call,
 						    &status,
-						    &callback,
 						    &volsync));
     if (res.res) {
 	arla_log (ADEBDISCONN, "Error rx_EndCall: %s (%d)", 
@@ -1408,7 +1443,6 @@ reconnect_putdata(struct vcache *vcp)
 		 "reconnect: putdata, server incremented DataVersion!");
 
     fce->status   = status;
-    fce->callback = callback;
     fce->volsync  = volsync;
 
     volcache_update_volsync (fce->volume, fce->volsync);
@@ -1439,13 +1473,13 @@ int reconnect_rename(struct vcache *vcp_old, struct vcache *vcp_new,
 
     int ret = 0;
     Result res;
-    char tmp[5];
+    char tmp[2 * sizeof(int) + 2];
     int isnewpar = 0;
     ConnCacheEntry *conn;
     fs_server_context context;
     AFSFetchStatus orig_status, new_status;
     AFSVolSync volsync;
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
 
     fid_old = &vcp_old->fid;
     fid_old = fid_translate(fid_old);
@@ -1496,10 +1530,22 @@ int reconnect_rename(struct vcache *vcp_old, struct vcache *vcp_new,
     ce = cred_get (vcp_old->fid.Cell, vcp_old->cred.pag, CRED_ANY);
     assert (ce != NULL);
 
-    assert (CheckLock(&fce_old->lock) == -1
-            && CheckLock(&fce_new->lock) == -1);
+    AssertExclLocked(&fce_old->lock);
+    AssertExclLocked(&fce_new->lock);
 
     conn = find_first_fs (fce_old, ce, &context);
+    if (conn == NULL) {
+	arla_log (ADEBDISCONN, "find_first_fs failed");
+	ReleaseWriteLock(&fce_new->lock);
+	
+	if (fid_old->fid.Volume != fid_new->fid.Volume ||
+	    fid_old->fid.Vnode != fid_new->fid.Vnode   ||
+	    fid_old->fid.Unique != fid_new->fid.Unique )
+	    ReleaseWriteLock(&fce_old->lock); /* old and new are the same*/
+	
+	cred_free(ce);
+	return ENETDOWN;
+    }
 
     error = RXAFS_Rename (conn->connection,
 			  &fce_old->fid.fid,
@@ -1538,7 +1584,7 @@ int reconnect_rename(struct vcache *vcp_old, struct vcache *vcp_new,
 #endif
     ReleaseWriteLock(&fce_old->lock); /* old and new are the same*/
     
-    error = adir_lookup (fce_old->fid, name_old, &foo_fid, ce);
+    error = adir_lookup (&fce_old->fid, name_old, &foo_fid, NULL, &ce);
     
 #if 0
     if (fid_old->fid.Volume == fid_new->fid.Volume &&
@@ -1572,7 +1618,7 @@ int reconnect_rename(struct vcache *vcp_old, struct vcache *vcp_new,
 #endif
 	    ReleaseWriteLock(&fce_new->lock);
 	    
-	    error = adir_lookup (fce_new->fid, name_new, &foo_fid, ce);
+	    error = adir_lookup (&fce_new->fid, name_new, &foo_fid, NULL, &ce);
 	    
 #if 0
 	    if (fid_old->fid.Volume == fid_new->fid.Volume &&
@@ -1629,26 +1675,6 @@ int reconnect_rename(struct vcache *vcp_old, struct vcache *vcp_new,
     return error;
 }
 
-/* XXX */
-
-/*
- *
- */
-
-static void
-recon_hashtabdel (FCacheEntry *e)
-{
-}
-
-/*
- *
- */
-
-static void
-recon_hashtabadd (FCacheEntry *e)
-{
-}
-
 /*
  *
  */
@@ -1669,13 +1695,12 @@ int reconnect_create(struct vcache *parent, struct vcache *child, char *name)
     AFSFetchStatus fetch_attr;
     AFSStoreStatus store_attr; 
 
-    Result res;
     AFSFetchStatus status;
     AFSCallBack callback;
     AFSVolSync volsync;
     int ret; 
-    char tmp[5];
-    xfs_cache_handle cache_handle;
+    char tmp[2 * sizeof(int) + 2];
+    fcache_cache_handle cache_handle;
     int32_t type;
 
     parent_fid = &(parent->fid); /* points to the VenusFid structure */
@@ -1708,11 +1733,13 @@ int reconnect_create(struct vcache *parent, struct vcache *child, char *name)
     adir_remove(parentEntry,name);  
 
     conn = find_first_fs (parentEntry, ce, &context);
-
     if (conn == NULL) {
-	arla_log (ADEBDISCONN, "Cannot call");
-	res.res = ENOMEM;
-	goto out;
+	arla_log (ADEBDISCONN, "find_first_fs failed");
+	ReleaseWriteLock(&parentEntry->lock);
+	ReleaseWriteLock(&childEntry->lock);
+	free_fs_server_context(&context);
+	cred_free(ce);
+	return ENETDOWN;
     }
 
     ret = fcache_find (&childEntry, *child_fid);
@@ -1760,7 +1787,7 @@ int reconnect_create(struct vcache *parent, struct vcache *child, char *name)
 	    fill_fid_trans(&childEntry->fid);
 	    recon_hashtabadd(childEntry);
 	    childEntry->host = rx_HostOf (rx_PeerOf (conn->connection));
-	    update_kernelfid(fakeFid, childEntry->fid); 
+	    reconnect_update_fid (childEntry, fakeFid);
 	} else {
 	    arla_log (ADEBDISCONN, "Could not CreateFile: %s (%d)",
 		      koerr_gettext(ret), ret);
@@ -1821,6 +1848,13 @@ int reconnect_create(struct vcache *parent, struct vcache *child, char *name)
     childEntry->flags.datap = TRUE;
     childEntry->tokens |= XFS_ATTR_R | XFS_DATA_R | XFS_DATA_W;
 
+    if (parentEntry->volume == NULL)
+	ret = volcache_getbyid (parentEntry->fid.fid.Volume,
+				parentEntry->fid.Cell,
+				ce,
+				&parentEntry->volume,
+				&type);
+
     volcache_update_volsync (parentEntry->volume, parentEntry->volsync);
 
 
@@ -1841,7 +1875,7 @@ int reconnect_create(struct vcache *parent, struct vcache *child, char *name)
 		childEntry->fid.fid.Vnode,
 		childEntry->fid.fid.Unique);
 
-    update_kernelfid(fakeFid, childEntry->fid); 
+    reconnect_update_fid (childEntry, fakeFid);
 
     conv_dir(parentEntry, ce, 0, &cache_handle, tmp, sizeof(tmp));
 
@@ -1872,18 +1906,17 @@ int reconnect_mkdir(struct vcache *parent, struct vcache *curdir,
 
     FCacheEntry *parentEntry, *childEntry, *tempEntry, *tempparEntry;
     Result tempres;
-    Result res;
     int    ret = 0;
     int    tempret = 0;
     struct timeval tv;
-    char tmp[5];
+    char tmp[2 * sizeof(int) + 2];
 
     AFSFid  Outfid;   /* Ba Wu: These are used to get the info from FS*/
     AFSFetchStatus fetch_attr;
     AFSFetchStatus status;
     AFSCallBack  callback;
     AFSVolSync   volsync;
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
     int32_t type;
 
     parent_fid = &(parent->fid); /* points to the VenusFid structure */
@@ -1902,17 +1935,18 @@ int reconnect_mkdir(struct vcache *parent, struct vcache *curdir,
 
 /*Ba ba: used to check whether name can be find  Deleted !!!
   ReleaseWriteLock(&parentEntry->lock);
-  tempret = adir_lookup (parentEntry->fid , name , &foo_fid , ce);  */
+  tempret = adir_lookup (parentEntry->fid , name , &foo_fid , NULL, ce);  */
 /*Ba ba: used to check whether name can be find  Deleted !!! */
 
     /*Ba Wu Remove the dir name from itsparent dir */
     tempret = adir_remove(parentEntry,name);  
     conn = find_first_fs (parentEntry, ce, &context);
-
     if (conn == NULL) {
 	arla_log (ADEBDISCONN,"Cannot make this connection");
-	res.res = ENOMEM;
-	goto out;
+	ReleaseWriteLock(&parentEntry->lock);
+	ReleaseWriteLock(&childEntry->lock);
+	cred_free(ce);
+	return ENETDOWN;
     }
 
     ret = fcache_find(&childEntry, *child_fid);/*Ba Wu: remove the newly created dir */
@@ -1968,17 +2002,15 @@ int reconnect_mkdir(struct vcache *parent, struct vcache *curdir,
     ReleaseWriteLock(&tempparEntry->lock);
     tempret = adir_changefid (tempparEntry->fid ,name, &Outfid,  ce);
     ReleaseWriteLock(&tempparEntry->lock);
-    tempret = adir_lookup (tempparEntry->fid ,name, &foo_fid, ce);
+    tempret = adir_lookup (tempparEntry->fid ,name, &foo_fid, NULL, ce);
 #endif
 
     tempret = adir_creat (parentEntry, name, childEntry->fid.fid); 
 
-    tempret = adir_mkdir (childEntry, childEntry->fid.fid,parentEntry->fid.fid); 
-
     childEntry->host = rx_HostOf (rx_PeerOf (conn->connection));
     assert(childEntry->host);
 
-    update_kernelfid(fakeFid, childEntry->fid);
+    reconnect_update_fid(childEntry, fakeFid);
      
     tempres = conv_dir(parentEntry, ce, 0, &cache_handle,
 		       tmp, sizeof(tmp));
@@ -1989,7 +2021,7 @@ int reconnect_mkdir(struct vcache *parent, struct vcache *curdir,
     ret = fcache_find (&tempEntry, childEntry->fid);  
 
     assert (ret == 0);
-    assert (tempEntry == NULL);
+    ReleaseWriteLock(&tempEntry->lock);
 
  out:
 
@@ -2012,7 +2044,7 @@ int reconnect_link(struct vcache *parent, struct vcache *existing,
     CredCacheEntry *ce;
     VenusFid *parent_fid;  
     VenusFid *existing_fid;
-    char tmp[5];
+    char tmp[2 * sizeof(int) + 2];
     int ret = 0;
     FCacheEntry *dir_entry,*existing_entry;
     Result res;
@@ -2020,7 +2052,7 @@ int reconnect_link(struct vcache *parent, struct vcache *existing,
     AFSFetchStatus new_status;
     AFSFetchStatus status;
     AFSVolSync volsync;
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
 
 
     parent_fid = &(parent->fid);
@@ -2038,11 +2070,12 @@ int reconnect_link(struct vcache *parent, struct vcache *existing,
     assert (ret == 0);
 
     conn = find_first_fs (dir_entry, ce, &context);
-
     if (conn == NULL) {
 	arla_log (ADEBDISCONN,"Cannot make this connection");
-	res.res = ENOMEM;
-	goto out;
+	ReleaseWriteLock(&dir_entry->lock);
+	ReleaseWriteLock(&existing_entry->lock);
+	cred_free(ce);
+	return ENETDOWN;
     }
 
     ret = RXAFS_Link (conn->connection,
@@ -2069,6 +2102,7 @@ int reconnect_link(struct vcache *parent, struct vcache *existing,
  out:
     ReleaseWriteLock(&dir_entry->lock);
     ReleaseWriteLock(&existing_entry->lock);
+    cred_free(ce);
     free_fs_server_context (&context);
     return ret;
 }
@@ -2085,14 +2119,14 @@ int reconnect_symlink(struct vcache *parent, struct vcache *child,
     fs_server_context context;
     CredCacheEntry *ce;
     VenusFid *parent_fid, *child_fid, fakeFid;
-    char tmp[5];
+    char tmp[2 * sizeof(int) + 2];
     int ret = 0;
     FCacheEntry *dir_entry, *childEntry;
     Result res;
 
     AFSFetchStatus fetch_attr, new_status;
     AFSVolSync volsync;
-    xfs_cache_handle cache_handle;
+    fcache_cache_handle cache_handle;
     int32_t type;
 
     parent_fid = &(parent->fid);
@@ -2115,10 +2149,12 @@ int reconnect_symlink(struct vcache *parent, struct vcache *child,
 
     assert(ret==0);
     conn = find_first_fs (dir_entry, ce, &context);
-
     if (conn == NULL) {
 	arla_log (ADEBDISCONN,"Cannot make this connection");
-	goto out;
+	ReleaseWriteLock(&dir_entry->lock);
+	ReleaseWriteLock(&childEntry->lock);
+	cred_free(ce);
+	return ENOMEM;
     }
   
     alloc_fid_trans(&childEntry->fid);
@@ -2159,7 +2195,7 @@ int reconnect_symlink(struct vcache *parent, struct vcache *child,
     childEntry->host = rx_HostOf (rx_PeerOf (conn->connection));
     assert(childEntry->host);
 
-    update_kernelfid(fakeFid, childEntry->fid);
+    reconnect_update_fid(childEntry, fakeFid);
     res = conv_dir (dir_entry, ce, 0, &cache_handle, tmp, sizeof(tmp));
 
  out: 
@@ -2170,3 +2206,4 @@ int reconnect_symlink(struct vcache *parent, struct vcache *child,
     return ret;
 }
 
+#endif

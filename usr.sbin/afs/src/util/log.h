@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/log.h,v 1.1.1.1 1998/09/14 21:53:23 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,39 +31,55 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: log.h,v 1.5 1998/04/03 03:34:26 assar Exp $ */
+/* $KTH: log.h,v 1.8.2.1 2001/04/29 23:53:31 lha Exp $ */
 
 #ifndef _LOG_
 #define _LOG_
 
 #include <stdarg.h>
+#include <parse_units.h>
 
-#if HAVE_SYSLOG
-#include <syslog.h>
-#endif /* HAVE_SYSLOG */
+typedef enum {
+    LOG_CPU_USAGE = 1
+} log_flags;
 
 typedef struct log_method Log_method;
+typedef struct log_unit Log_unit;
 
 /*
  * Functions for handling logging
  */
 
-Log_method *log_open (char *progname, char *fname);
+Log_method *log_open (const char *progname, char *fname);
 /* Starting logging to `fname'.  Label all messages as coming from
  * `progname'. */
 
 void log_close (Log_method *log);
 
-void log_log (Log_method *log, unsigned level, const char *fmt, ...)
+Log_unit *log_unit_init (Log_method *method, const char *name,
+			 struct units *lognames,
+			 unsigned long default_mask);
+
+void log_unit_free (Log_method *method, Log_unit *log);
+
+log_flags log_setflags(Log_method *log, log_flags flags);
+log_flags log_getflags(Log_method *log);
+
+void log_log (Log_unit *log, unsigned level, const char *fmt, ...)
 __attribute__((format (printf, 3, 4)))
 ;
 
-void log_vlog(Log_method *log, unsigned level, const char *fmt, va_list args)
+void log_vlog(Log_unit *log, unsigned level, const char *fmt, va_list args)
 __attribute__((format (printf, 3, 0)))
 ;
 
-unsigned log_get_mask (Log_method *log);
+unsigned log_get_mask (Log_unit *log);
 
-void log_set_mask (Log_method *log, unsigned mask);
+void log_set_mask (Log_unit *log, unsigned mask);
+
+void log_set_mask_str (Log_method *method, Log_unit *default_unit,
+		       const char *str);
+
+size_t log_mask2str (Log_method *method, Log_unit *unit, char *buf, size_t sz);
 
 #endif /* _LOG_ */

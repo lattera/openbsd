@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_globs.c,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/afsdir_check.c,v 1.1.1.1 1998/09/14 21:52:54 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -42,8 +36,12 @@
  */
 
 #include "arla_local.h"
+#include <getarg.h>
 
-RCSID("$KTH: afsdir_check.c,v 1.7 1998/04/05 03:33:09 assar Exp $");
+RCSID("$KTH: afsdir_check.c,v 1.21.2.1 2001/10/03 23:36:00 assar Exp $");
+
+static int help_flag;
+static int verbose = 0;
 
 /*
  * Hash the filename of one entry.
@@ -81,8 +79,8 @@ getentry (DirPage0 *page0,
      return &page->entry[num % ENTRIESPERPAGE];
 }
 
-int
-check (const char *filename)
+static int
+check_dir (const char *filename)
 {
     struct stat statbuf;
     int fd;
@@ -92,11 +90,11 @@ check (const char *filename)
     unsigned ind;
     unsigned len;
     int ret = 0;
-    unsigned npages;
+    unsigned npages = 0;
     unsigned page_entry_count;
     unsigned hash_entry_count;
     unsigned noverfill;
-    u_int8_t my_bitmaps[MAXPAGES][ENTRIESPERPAGE / 8];
+    u_int8_t **my_bitmaps = NULL;
 
     fd = open (filename, O_RDONLY | O_BINARY, 0);
     if (fd < 0)
@@ -107,9 +105,15 @@ check (const char *filename)
 
     len = statbuf.st_size;
 
-    ret = fbuf_create (&the_fbuf, fd, len, FBUF_READ);
+    if (len == 0)
+	errx (1, "length == 0");
+
+    if (len % AFSDIR_PAGESIZE != 0)
+	errx (1, "length %% AFSDIR_PAGESIZE != 0");
+
+    ret = fbuf_create (&the_fbuf, fd, len, FBUF_READ|FBUF_PRIVATE);
     if (ret)
-	return ret;
+	err (1, "fbuf_create");
 
     page0 = (DirPage0 *)(the_fbuf.buf);
 
@@ -124,8 +128,12 @@ check (const char *filename)
 
     npages = len / AFSDIR_PAGESIZE;
 
+    my_bitmaps = malloc (npages * sizeof(*my_bitmaps));
+    if (my_bitmaps == NULL)
+	err (1, "malloc %lu", (unsigned long)npages * sizeof(*my_bitmaps));
+
     printf ("map: ");
-    for (i = 0; i < npages; ++i) {
+    for (i = 0; i < min(npages, MAXPAGES); ++i) {
 	printf ("%u ", page0->dheader.map[i]);
     }
     printf ("\n");
@@ -135,6 +143,13 @@ check (const char *filename)
     for (i = 0; i < npages; ++i) {
 	PageHeader *ph = (PageHeader *)((char *)page0 + i * AFSDIR_PAGESIZE);
 	int start;
+	size_t sz = ENTRIESPERPAGE / 8 * sizeof(*my_bitmaps[i]);
+
+	my_bitmaps[i] = malloc (sz);
+	if (my_bitmaps[i] == NULL)
+	    err (1, "malloc %lu", (unsigned long)sz);
+
+	memset (my_bitmaps[i], 0, sz);
 
 	if (ph->pg_tag != htons(AFSDIRMAGIC)) {
 	    printf ("page %d: wrong tag: %u\n", i, htons(ph->pg_tag));
@@ -183,8 +198,6 @@ check (const char *filename)
     hash_entry_count = 0;
     noverfill = 0;
 
-    memset (my_bitmaps, 0, sizeof(my_bitmaps));
-
     for (i = 0; i < ADIRHASHSIZE; ++i) {
 	const DirEntry *entry;
 
@@ -198,6 +211,12 @@ check (const char *filename)
 
 	    entry = getentry (page0, ind - 1);
 
+	    if (verbose)
+		printf ("%s - %ld.%ld\n",
+			entry->name, 
+			(long)ntohl(entry->fid.Vnode),
+			(long)ntohl(entry->fid.Unique));
+	    
 	    if (hashentry (entry->name) != i)
 		printf ("wrong name here? hash = %u, name = *%s*\n",
 			i, entry->name);
@@ -265,17 +284,45 @@ check (const char *filename)
 
 out:    
     fbuf_end (&the_fbuf);
+    close (fd);
+    if (my_bitmaps) {
+	for (i = 0; i < npages; ++i)
+	    free (my_bitmaps[i]);
+	free (my_bitmaps);
+    }
     return ret;
+}
+
+static struct getargs args[] = {
+    {"verbose",	'v',	arg_flag,	&verbose,
+     "run in test mode", NULL},
+    {"help",	0,	arg_flag,	&help_flag,
+     NULL, NULL},
+};
+
+static void
+usage (int ret)
+{
+    arg_printusage (args, sizeof(args)/sizeof(*args), NULL, "[file]");
+    exit (ret);
 }
 
 int
 main(int argc, char **argv)
 {
-    if (argc != 2)
-	return 1;
+    int optind = 0;
+    
+    if (getarg (args, sizeof(args)/sizeof(*args), argc, argv, &optind))
+	usage (1);
 
-    arla_loginit ("/dev/stderr");
-    arla_log_set_level ("all");
+    argc -= optind;
+    argv += optind;
 
-    return check (argv[1]);
+    if (help_flag)
+	usage (0);
+
+    if (argc != 1)
+	usage (1);
+
+    return check_dir (argv[0]);
 }

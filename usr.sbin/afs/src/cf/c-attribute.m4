@@ -1,5 +1,5 @@
 dnl
-dnl $Id: c-attribute.m4,v 1.2 2000/08/06 13:59:20 lha Exp $
+dnl $KTH: c-attribute.m4,v 1.4 2000/10/10 22:11:31 lha Exp $
 dnl
 
 dnl
@@ -27,6 +27,7 @@ bar(void)
 {
   exit (1);
 }
+
 
 ],
 ac_cv___attribute__=yes,

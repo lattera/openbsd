@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/q.c,v 1.1.1.1 1998/09/14 21:53:13 art Exp $	*/
 /*
  * Emulate the vax instructions for queue insertion and deletion, somewhat.
  * A std_queue structure is defined here and used by these routines.  These
@@ -12,7 +11,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: q.c,v 1.7 1998/02/12 01:03:14 assar Exp $") ;
+RCSID("$KTH: q.c,v 1.8 1999/12/31 05:39:49 assar Exp $") ;
 #endif
 
 #include <stdio.h>
@@ -22,6 +21,8 @@ RCSID("$KTH: q.c,v 1.7 1998/02/12 01:03:14 assar Exp $") ;
 #include <sys/cdefs.h>
 #endif
 #include <utime.h>
+
+#include "q.h"
 
 /* Ansified, made more readable, and mayby fixed /lha */
 

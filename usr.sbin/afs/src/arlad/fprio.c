@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/fprio.c,v 1.1.1.1 1998/09/14 21:52:56 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -42,8 +36,8 @@
  */
 
 #include "arla_local.h"
-#include <kerberosIV/kafs.h>
-RCSID("$KTH: fprio.c,v 1.3 1998/06/08 18:55:13 lha Exp $");
+#include <kafs.h>
+RCSID("$KTH: fprio.c,v 1.9 2000/10/02 22:31:43 lha Exp $");
 
 /* Hashtable of entries by name */
 static Hashtab *fpriohashtab;
@@ -160,7 +154,7 @@ fprio_remove(VenusFid fid)
  */
 
 void
-fprio_set(VenusFid fid, unsigned prio)
+fprio_set(VenusFid fid, Bool prio)
 {
     struct fpriorityentry *e; 
     struct fpriorityentry key; 
@@ -202,10 +196,8 @@ fprio_readin(char *file)
     int lineno = 0 ;
 
     f = fopen(file, "r");
-    if (f == NULL) {
-	arla_warn(ADEBFCACHE, 1, "fprio_readin: cant open file %s", file);
+    if (f == NULL)
 	return -1;
-    }
 
     while(fgets(line, sizeof(line)-1, f) != NULL) {
 	lineno++;
@@ -232,7 +224,7 @@ fprio_readin(char *file)
 	}
 
 	fid.Cell = cellnum;
-	fprio_set(fid, prio);
+	fprio_set(fid, prio ? TRUE : FALSE);
     }
     return 0;
 }
@@ -241,7 +233,7 @@ fprio_readin(char *file)
  * Find the priority of a fid
  */
 
-int 
+Bool
 fprio_get(VenusFid fid)
 {
     struct fpriorityentry a;
@@ -252,7 +244,7 @@ fprio_get(VenusFid fid)
     b = hashtabsearch(fpriohashtab, &a);
     if (b)
 	return b->priority;
-    return 0;
+    return FALSE;
 }
 
 /*
@@ -263,7 +255,6 @@ static Bool
 fprio_print_entry (void *ptr, void *arg)
 {
     struct fpriorityentry *n = (struct fpriorityentry *)ptr;
-    FILE *f = (FILE *) ptr;
     const char *cell = cell_num2name(n->fid.Cell);
     char *comment;
 
@@ -272,10 +263,9 @@ fprio_print_entry (void *ptr, void *arg)
     else
 	comment = "";
 
-    fprintf(f, "%s%d:%s:%d:%d:%d", 
-	    comment, n->priority, cell?cell:"unknowncell", n->fid.fid.Volume, 
-	    n->fid.fid.Vnode, n->fid.fid.Unique);
-
+    arla_log(ADEBVLOG, "%s%d:%s:%d:%d:%d", 
+	     comment, n->priority == TRUE ? 1 : 0, cell?cell:"unknowncell", 
+	     n->fid.fid.Volume, n->fid.fid.Vnode, n->fid.fid.Unique);
     return FALSE;
 }
 
@@ -284,16 +274,15 @@ fprio_print_entry (void *ptr, void *arg)
  */
 
 void
-fprio_status (FILE *f)
+fprio_status (void)
 {
     time_t the_time = time(NULL);
 
-    fprintf (f, "#fprio entries\n#\n#  Date: %s\n#\n"
-	     "#priority range from %d to %d\n#\n"
+    arla_log(ADEBVLOG, "#fprio entries\n#\n#  Date: %s\n#"
 	     "#Syntax: (# means comment)\n"
 	     "#priority:cell:volume:vnode:unique\n",
-	     ctime(&the_time), FPRIO_MIN, FPRIO_MAX);
-    hashtabforeach (fpriohashtab, fprio_print_entry, f);
+	     ctime(&the_time));
+    hashtabforeach (fpriohashtab, fprio_print_entry, NULL);
 }
 
 

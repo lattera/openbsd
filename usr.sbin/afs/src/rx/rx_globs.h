@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_globs.h,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
-/* $KTH: rx_globs.h,v 1.4 1998/02/22 19:46:16 joda Exp $ */
+/* $KTH: rx_globs.h,v 1.6 2000/10/08 17:48:15 assar Exp $ */
 
 /*
 ****************************************************************************
@@ -141,11 +140,6 @@ EXT osi_socket rx_socket;
 /* Port requested at rx_Init.  If this is zero, the actual port used will be different--but it will only be used for client operations.  If non-zero, server provided services may use the same port. */
 EXT u_short rx_port;
 
-/* 32-bit select Mask for rx_Listener.  We use 32 bits because IOMGR_Select only supports 32 */
-EXT fd_set rx_selectMask;
-EXT int rx_maxSocketNumber;	       /* Maximum socket number represented
-				        * in the select mask */
-
 /* This is actually the minimum number of packets that must remain free,
     overall, immediately after a packet of the requested class has been
     allocated.  *WARNING* These must be assigned with a great deal of care.
@@ -228,8 +222,8 @@ void rxi_ClearReceiveQueue(struct rx_call *);
 void rxi_ResetConnection(struct rx_connection *);
 void rxi_InitCall(void); /* obsolete ? */
 void rxi_ResetCall(struct rx_call *);
-void rxi_CallError(struct rx_call *, long);
-void rxi_ConnectionError(struct rx_connection *, long);
+void rxi_CallError(struct rx_call *, int32_t);
+void rxi_ConnectionError(struct rx_connection *, int32_t);
 void rxi_QueuePackets(void); /* obsolete ? */
 void rxi_Start(struct rxevent *, struct rx_call *);
 void rxi_CallIsIdle(void); /* obsolete ? */

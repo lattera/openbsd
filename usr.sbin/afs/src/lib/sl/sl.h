@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lib/sl/Attic/sl.h,v 1.1.1.1 1998/09/14 21:53:11 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: sl.h,v 1.2 1998/06/21 21:35:59 lha Exp $ */
+/* $KTH: sl.h,v 1.4 2000/03/07 22:08:48 assar Exp $ */
 
 #ifndef _SL_H
 #define _SL_H
@@ -57,7 +51,10 @@ typedef struct sl_cmd SL_cmd;
 
 void sl_help (SL_cmd *, int argc, char **argv);
 int  sl_loop (SL_cmd *, char *prompt);
+int  sl_command_loop (SL_cmd *cmds, char *prompt, void **data);
 int  sl_command (SL_cmd *cmds, int argc, char **argv);
+int sl_make_argv(char*, int*, char***);
+void sl_apropos (SL_cmd *cmd, char *topic);
 
 
 #endif /* _SL_H */

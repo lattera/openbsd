@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: deep-tree2,v 1.1 1999/05/17 16:21:12 lha Exp $
+# $KTH: deep-tree2,v 1.1 1999/05/17 16:21:12 lha Exp $
 
 mkdir foo
 

@@ -1,13 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/lock.h,v 1.1.1.1 1998/09/14 21:53:12 art Exp $	*/
-/* $Header: /usr/local/cvsroot/arla/lwp/lock.h,v 1.5 1998/02/02 18:08:17 lha Exp $ */
-/* $Source: /usr/local/cvsroot/arla/lwp/lock.h,v $ */
-
-#ifndef LOCK_H
-#define LOCK_H
-
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-static char *rcsidlock = "$Header: /usr/local/cvsroot/arla/lwp/lock.h,v 1.5 1998/02/02 18:08:17 lha Exp $";
-#endif
+#ifndef LWP_LOCK_H
+#define LWP_LOCK_H
 
 /*
 ****************************************************************************
@@ -29,6 +21,8 @@ static char *rcsidlock = "$Header: /usr/local/cvsroot/arla/lwp/lock.h,v 1.5 1998
 * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.    *
 ****************************************************************************
 */
+
+/* $KTH: lock.h,v 1.11 2000/10/20 16:18:35 assar Exp $ */
 
 /*******************************************************************\
 * 								    *
@@ -57,12 +51,21 @@ static char *rcsidlock = "$Header: /usr/local/cvsroot/arla/lwp/lock.h,v 1.5 1998
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-/* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
+/* 
+ * all locks wait on excl_locked except for READ_LOCK, which waits on
+ * readers_reading
+ */
+
 struct Lock {
     unsigned char	wait_states;	/* type of lockers waiting */
-    unsigned char	excl_locked;	/* anyone have boosted, shared or write lock? */
-    unsigned char	readers_reading;	/* # readers actually with read locks */
+    unsigned char	excl_locked;    /* anyone have boosted, shared or write lock? */
+    unsigned char	readers_reading;/* # readers actually with read locks */
     unsigned char	num_waiting;	/* probably need this soon */
+    int			thread_index;	/* thread that have a exclusive lock */
+#ifdef LOCK_TRACE
+    char *file;
+    int line;
+#endif /* LOCK_TRACE */
 };
 
 /* Prototypes */
@@ -90,115 +93,185 @@ void Lock_Init(register struct Lock *);
 #define DEBUGWRITE(message,lock) do { ; } while (0)
 #define DEBUGWRITE_4(message,lock1,how1,lock2,how2) do { ; } while (0)
 #endif
+
+#ifdef LOCK_TRACE
+#define StoreFileLine(lock, f, l) \
+	(lock)->file = f; \
+	(lock)->line = l;
+#define GetTraceFile(lock) (lock)->file
+#define GetTraceLine(lock) (lock)->line
+#else
+#define StoreFileLine(lock, f, l)
+#define GetTraceFile(lock) "no_lock_trace"
+#define GetTraceLine(lock) 0
+#endif
+
+#define LOCK_CHECK_OWNER 1
+
+#ifdef LOCK_CHECK_OWNER
+#define AssertNotLockOwner(lock,owner) do {				    \
+	if ((lock)->thread_index == (owner)) {				    \
+		fprintf(stderr,						    \
+			"AssertNotLockOwner failed on %s:%d with lock %p, " \
+			"owned by %d, locked at (%s:%d)\n",		    \
+			__FILE__, __LINE__,				    \
+			(lock), (owner),				    \
+			GetTraceFile(lock), GetTraceLine(lock));	    \
+		abort();						    \
+	}								    \
+} while (0)
+
+#define AssertLockOwner(lock,owner) do {				 \
+	if ((lock)->thread_index != (owner)) {				 \
+		fprintf(stderr,						 \
+			"AssertLockOwner failed on %s:%d with lock %p, " \
+			"should be owned by %d, "			 \
+			"was owned by %d, locked at (%s:%d)\n",		 \
+			__FILE__, __LINE__,				 \
+			(lock), (owner), (lock)->thread_index,		 \
+			GetTraceFile(lock), GetTraceLine(lock));	 \
+		abort();						 \
+	}								 \
+} while (0)
+
+#else /* !LOCK_CHECK_OWNER */
+
+#define AssertNotLockOwner(lock,owner) do { ; } while (0)
+#define AssertLockOwner(lock,owner) do { ; } while (0)
+
+#endif /* LOCK_CHECK_OWNER */
+
+#define AssertExclLocked(lock)			\
+	BEGINMAC				\
+	AssertLockOwner(lock,LWP_Index());	\
+	ENDMAC					\
+
+#define AssertNotExclLocked(lock)			\
+	BEGINMAC					\
+	AssertLockOwner(lock,LWP_INVALIDTHREADID);	\
+	ENDMAC						\
+
 #define ObtainReadLock(lock) \
-    BEGINMAC\
-        DEBUGWRITE("ObtainReadLock: %p at %s:%d starting\n",lock);\
+	BEGINMAC \
+	DEBUGWRITE("ObtainReadLock: %p at %s:%d starting\n",lock); \
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealObtainReadLock(lock) \
+	AssertLockOwner(lock,LWP_INVALIDTHREADID); \
+	StoreFileLine(lock, __FILE__, __LINE__) \
+	DEBUGWRITE("ObtainReadLock: %p at %s:%d got it\n",lock);\
+	ENDMAC
+
+#define ObtainWriteLock(lock) \
+	BEGINMAC \
+	DEBUGWRITE("ObtainWriteLock: %p at %s:%d starting\n",lock); \
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealObtainWriteLock(lock) \
+	AssertLockOwner(lock,LWP_Index()); \
+	StoreFileLine(lock, __FILE__, __LINE__) \
+	DEBUGWRITE("ObtainWriteLock: %p at %s:%d got it\n",lock);\
+	ENDMAC
+
+#define ObtainSharedLock(lock) \
+	BEGINMAC \
+	DEBUGWRITE("ObtainSharedLock: %p at %s:%d starting\n",lock); \
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealObtainSharedLock(lock) \
+	StoreFileLine(lock, __FILE__, __LINE__) \
+	DEBUGWRITE("ObtainSharedLock: %p at %s:%d got it\n",lock);\
+	ENDMAC
+
+#define BoostSharedLock(lock) \
+	BEGINMAC \
+	DEBUGWRITE("BoostSharedLock: %p at %s:%d starting\n",lock); \
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealBoostSharedLock(lock) \
+	AssertLockOwner(lock,LWP_Index()); \
+	StoreFileLine(lock, __FILE__, __LINE__) \
+	DEBUGWRITE("BoostSharedLock: %p at %s:%d got it\n",lock);\
+	ENDMAC
+
+#define UnBoostSharedLock(lock) \
+	BEGINMAC \
+	DEBUGWRITE("UnBoostSharedLock: %p at %s:%d starting\n",lock); \
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealUnboostSharedLock(lock) \
+	AssertLockOwner(lock,LWP_INVALIDTHREADID); \
+	StoreFileLine(lock, __FILE__, __LINE__) \
+	DEBUGWRITE("UnBoostSharedLock: %p at %s:%d got it\n",lock);\
+	ENDMAC
+
+#define ReleaseReadLock(lock) \
+	BEGINMAC \
+        DEBUGWRITE("ReleaseReadLock: %p at %s:%d\n",lock);\
+	AssertNotLockOwner(lock,LWP_Index()); \
+	RealReleaseReadLock(lock) \
+	AssertLockOwner(lock,LWP_INVALIDTHREADID); \
+	ENDMAC
+
+#define ReleaseWriteLock(lock) \
+	BEGINMAC \
+        DEBUGWRITE("ReleaseWriteLock: %p at %s:%d\n",lock);\
+	AssertLockOwner(lock,LWP_Index()); \
+	RealReleaseWriteLock(lock) \
+	AssertLockOwner(lock,LWP_INVALIDTHREADID); \
+	ENDMAC
+
+#define ReleaseSharedLock(lock) \
+	BEGINMAC \
+        DEBUGWRITE("ReleaseSharedLock: %p at %s:%d\n",lock);\
+	RealReleaseSharedLock(lock) \
+	AssertLockOwner(lock,LWP_INVALIDTHREADID); \
+	ENDMAC
+
+#define RealObtainReadLock(lock) \
 	if (!((lock)->excl_locked & WRITE_LOCK) && !(lock)->wait_states)\
 	    (lock) -> readers_reading++;\
 	else\
-	    Lock_Obtain(lock, READ_LOCK);\
-	DEBUGWRITE("ObtainReadLock: %p at %s:%d got it\n",lock);\
-    ENDMAC
+	    Lock_Obtain(lock, READ_LOCK);
 
-#define ObtainWriteLock(lock)\
-    BEGINMAC\
-        DEBUGWRITE("ObtainWriteLock: %p at %s:%d starting\n",lock);\
-	if (!(lock)->excl_locked && !(lock)->readers_reading)\
+#define RealObtainWriteLock(lock)\
+	if (!(lock)->excl_locked && !(lock)->readers_reading) \
 	    (lock) -> excl_locked = WRITE_LOCK;\
 	else\
-	    Lock_Obtain(lock, WRITE_LOCK);\
-	DEBUGWRITE("ObtainReadLock: %p at %s:%d got it\n",lock);\
-    ENDMAC
+	    Lock_Obtain(lock, WRITE_LOCK); \
+	(lock) -> thread_index = LWP_Index();  
 
-#define ObtainSharedLock(lock)\
-    BEGINMAC\
-        DEBUGWRITE("ObtainSharedLock: %p at %s:%d starting\n",lock);\
+
+#define RealObtainSharedLock(lock)\
 	if (!(lock)->excl_locked && !(lock)->wait_states)\
 	    (lock) -> excl_locked = SHARED_LOCK;\
 	else\
-	    Lock_Obtain(lock, SHARED_LOCK);\
-	DEBUGWRITE("ObtainSharedLock: %p at %s:%d got it\n",lock);\
-    ENDMAC
+	    Lock_Obtain(lock, SHARED_LOCK);
 
-#define BoostSharedLock(lock)\
-    BEGINMAC\
-        DEBUGWRITE("BoostSharedLock: %p at %s:%d starting\n",lock);\
+#define RealBoostSharedLock(lock)\
 	if (!(lock)->readers_reading)\
 	    (lock)->excl_locked = WRITE_LOCK;\
 	else\
-	    Lock_Obtain(lock, BOOSTED_LOCK);\
-	DEBUGWRITE("BoostSharedLock: %p at %s:%d got it\n",lock);\
-    ENDMAC
+	    Lock_Obtain(lock, BOOSTED_LOCK); \
+	(lock) -> thread_index = LWP_Index();  
 
 /* this must only be called with a WRITE or boosted SHARED lock! */
-#define UnboostSharedLock(lock)\
-	BEGINMAC\
-        DEBUGWRITE("UnboostSharedLock: %p at %s:%d\n",lock);\
-	    (lock)->excl_locked = SHARED_LOCK; \
+#define RealUnboostSharedLock(lock)\
+	    (lock) -> excl_locked = SHARED_LOCK; \
+	    (lock) -> thread_index = LWP_INVALIDTHREADID; \
 	    if((lock)->wait_states) \
-		Lock_ReleaseR(lock); \
-	ENDMAC
+		Lock_ReleaseR(lock);
 
-#ifdef notdef
-/* this is what UnboostSharedLock looked like before the hi-C compiler */
-/* this must only be called with a WRITE or boosted SHARED lock! */
-#define UnboostSharedLock(lock)\
-	((lock)->excl_locked = SHARED_LOCK,\
-	((lock)->wait_states ?\
-		Lock_ReleaseR(lock) : 0))
-#endif /* notdef */
-
-#define ReleaseReadLock(lock)\
-	BEGINMAC\
-        DEBUGWRITE("ReleaseReadLock: %p at %s:%d\n",lock);\
+#define RealReleaseReadLock(lock)\
 	    if (!--(lock)->readers_reading && (lock)->wait_states)\
-		Lock_ReleaseW(lock) ; \
-	ENDMAC
+		Lock_ReleaseW(lock) ;
 
 
-#ifdef notdef
-/* This is what the previous definition should be, but the hi-C compiler generates
-  a warning for each invocation */
-#define ReleaseReadLock(lock)\
-	(!--(lock)->readers_reading && (lock)->wait_states ?\
-		Lock_ReleaseW(lock)    :\
-		0)
-#endif /* notdef */
-
-#define ReleaseWriteLock(lock)\
-        BEGINMAC\
-        DEBUGWRITE("ReleaseWriteLock: %p at %s:%d\n",lock);\
+#define RealReleaseWriteLock(lock)\
+	    (lock) -> thread_index = LWP_INVALIDTHREADID; \
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
-	    if ((lock)->wait_states) Lock_ReleaseR(lock);\
-        ENDMAC
-
-#ifdef notdef
-/* This is what the previous definition should be, but the hi-C compiler generates
-   a warning for each invocation */
-#define ReleaseWriteLock(lock)\
-	((lock)->excl_locked &= ~WRITE_LOCK,\
-	((lock)->wait_states ?\
-		Lock_ReleaseR(lock) : 0))
-#endif /* notdef */
+	    if ((lock)->wait_states) Lock_ReleaseR(lock);
 
 /* can be used on shared or boosted (write) locks */
-#define ReleaseSharedLock(lock)\
-        BEGINMAC\
-        DEBUGWRITE("ReleaseLock: %p at %s:%d\n",lock);\
+#define RealReleaseSharedLock(lock)\
+	    (lock) -> thread_index = LWP_INVALIDTHREADID; \
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    if ((lock)->wait_states) Lock_ReleaseR(lock);\
-        ENDMAC
-
-#ifdef notdef
-/* This is what the previous definition should be, but the hi-C compiler generates
-   a warning for each invocation */
-/* can be used on shared or boosted (write) locks */
-#define ReleaseSharedLock(lock)\
-	((lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK),\
-	((lock)->wait_states ?\
-		Lock_ReleaseR(lock) : 0))
-#endif /* notdef */
-	
+	    if ((lock)->wait_states) Lock_ReleaseR(lock);
 
 /* I added this next macro to make sure it is safe to nuke a lock -- Mike K. */
 #define LockWaiters(lock)\
@@ -209,6 +282,10 @@ void Lock_Init(register struct Lock *);
 
 #define WriteLocked(lock)\
 	((lock)->excl_locked & WRITE_LOCK)
+
+void LWP_WaitProcessR(register char *addr, register struct Lock *alock);
+void LWP_WaitProcessW(register char *addr, register struct Lock *alock);
+void LWP_WaitProcessS(register char *addr, register struct Lock *alock);
 
 /* This attempts to obtain two locks in a secure fashion */
 

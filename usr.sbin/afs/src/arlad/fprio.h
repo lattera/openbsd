@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/fprio.h,v 1.1.1.1 1998/09/14 21:52:56 art Exp $	*/
 /*
  * Copyright (c) 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -41,7 +35,7 @@
  * Our cache of volume information.
  */
 
-/* $KTH: fprio.h,v 1.3 1998/06/08 18:55:13 lha Exp $ */
+/* $KTH: fprio.h,v 1.6 2000/10/02 22:31:48 lha Exp $ */
 
 #ifndef _FPRIO_
 #define _FPRIO_
@@ -58,10 +52,10 @@ struct fpriorityentry {
 void fprio_init (char *file);
 int  fprio_clear(void);
 void fprio_remove(VenusFid fid);
-void fprio_set(VenusFid fid, unsigned prio);
+void fprio_set(VenusFid fid, Bool prio);
 int  fprio_readin(char *file);
-int  fprio_get(VenusFid fid);
-void fprio_status (FILE *f);
+Bool fprio_get(VenusFid fid);
+void fprio_status (void);
 
 #endif /* _FPRIO_ */
 

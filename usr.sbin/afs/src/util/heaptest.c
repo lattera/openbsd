@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/heaptest.c,v 1.1 1999/04/30 01:59:17 art Exp $	*/
 /*
  * Copyright (c) 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -41,7 +35,7 @@
 #include <config.h>
 #endif
 
-RCSID("$KTH: heaptest.c,v 1.2 1999/02/13 05:03:25 assar Exp $");
+RCSID("$KTH: heaptest.c,v 1.3 2000/10/03 00:31:03 lha Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>

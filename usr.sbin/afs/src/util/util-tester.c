@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/util/Attic/util-tester.c,v 1.1.1.1 1998/09/14 21:53:26 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,13 +31,20 @@
  * SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 
+#include <parse_units.h>
+
 #include "bool.h"
-#include "timeprio.h"
 #include "hash.h"
+#include "log.h"
 
 struct timeval time1, time2;
 
@@ -52,6 +53,7 @@ starttesting(char *msg)
 {
     printf("--------------------------------------------\n");
     printf("testing %s...\n", msg);
+    fflush (stdout);
     gettimeofday(&time1, NULL);
 }    
 
@@ -67,56 +69,32 @@ endtesting(int bool)
 	--time2.tv_sec;
     }
     time2.tv_sec -= time1.tv_sec;    
-    printf("timing: %ld.%ld\n",time2.tv_sec, time2.tv_usec);
+    printf("timing: %ld.%ld\n", (long)time2.tv_sec, (long)time2.tv_usec);
 
     return bool;
 }
 
 
-int
-test_timeprio(void)
-{
-    Timeprio *tp = timeprionew(100);
-
-    starttesting("timeprio");
-
-    timeprioinsert(tp, 10, "ten");
-    timeprioinsert(tp, 40, "fourty");
-    timeprioinsert(tp, 30, "thirty");
-
-
-    while(!timeprioemptyp(tp)) {
-	printf("timepriohead(tp) = %s\n", (char *) timepriohead(tp));
-	timeprioremove(tp);
-    }
-
-    timepriofree(tp);
-
-    endtesting(0);
-
-    return 0;
-}
-
-int
+static int
 hash_cmp(void *foo, void *bar)
 {
     return strcmp((char *) foo, (char *)bar);
 }
 
-unsigned
+static unsigned
 hash_hash(void *foo)
 {
     return hashcaseadd((char *) foo);
 }
 
-Bool
+static Bool
 hash_print(void *foo, void *bar)
 {
     printf("%s\n", (char *) foo);
     return FALSE;
 }
 
-int
+static int
 test_hash(void)
 {
     Hashtab *h;
@@ -147,15 +125,122 @@ test_hash(void)
     return endtesting(0);
 }
 
+struct units u1_units[] = {
+    { "all",		0xff },
+    { "u1-hack",	0x04 },
+    { "warning", 	0x02 },
+    { "debug",		0x01 },
+    { NULL, 		0 }
+};
+
+struct units u2_units[] = {
+    { "all",		0xff },
+    { "u2-hack2",	0x08 },
+    { "u2-hack1",	0x04 },
+    { "warning", 	0x02 },
+    { "debug",		0x01 },
+    { NULL, 		0 }
+};
+
+static int
+test_log (void)
+{
+    Log_method *m;
+    Log_unit *u1, *u2;
+    char buf[1024];
+
+    starttesting ("log");
+
+    m = log_open ("util-tester", "/dev/stderr:notime");
+    if (m == NULL)
+	return endtesting(1);
+
+    u1 = log_unit_init (m, "u1", u1_units, 0x3);
+    if (u1 == NULL)
+	return endtesting(1);
+
+    u2 = log_unit_init (m, "u2", u2_units, 0x0);
+    if (u2 == NULL)
+	return endtesting(1);
+
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+    log_log (u1, 0x1, "1.  this should show");
+    log_log (u2, 0x1, "X.  this should NOT show");
+
+    log_set_mask_str (m, NULL, "u1:-debug;u2:+debug");
+    log_log (u1, 0x1, "X.  now this should NOT show");
+    log_log (u2, 0x1, "2.  now this should show");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, NULL, "u1:-debug;u2:-debug");
+    log_log (u1, 0x1, "X.  now this should NOT show");
+    log_log (u2, 0x1, "X.  now this should NOT show");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, NULL, "+debug");
+    log_log (u1, 0x1, "3.  now this should show");
+    log_log (u2, 0x1, "4.  now this should show");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, NULL, "-debug");
+    log_log (u1, 0x1, "X.  now this should NOT show");
+    log_log (u2, 0x1, "X.  now this should NOT show");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, NULL, "+debug,+warning");
+    log_log (u1, 0x1, "5.  now this should show");
+    log_log (u2, 0x1, "6.  now this should show");
+    log_log (u1, 0x2, "7.  now this should show");
+    log_log (u2, 0x2, "8.  now this should show");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, u1, "-debug,-warning");
+    log_log (u1, 0x1, "X. now this should NOT show");
+    log_log (u2, 0x1, "9. now this should show");
+    log_log (u1, 0x2, "X. now this should NOT show");
+    log_log (u2, 0x2, "10. now this should show");
+
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask (u1, 0x4 + 0x2 + 0x1);
+    log_set_mask (u2, 0x8 + 0x4 + 0x2 + 0x1);
+
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("%s\n", buf); fflush (stdout);
+    log_set_mask_str (m, NULL, buf);
+
+    log_set_mask_str (m, NULL, "all");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("all: %s\n", buf); fflush (stdout);
+
+    log_set_mask_str (m, NULL, "-all");
+    log_mask2str (m, NULL, buf, sizeof(buf));
+    printf ("none: %s\n", buf); fflush (stdout);
+
+
+    log_close (m);
+    return endtesting (0);
+}
 
 int 
 main(int argc, char **argv)
 {
-    test_timeprio();
-    test_hash();
-    return 0;
+    int ret = 0;
+    ret |= test_hash();
+    ret |= test_log();
+    return ret;
 }
-
-
-
-

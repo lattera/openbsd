@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/adir.h,v 1.1.1.1 1998/09/14 21:52:54 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -41,7 +35,7 @@
  * Interface to directory handling routines
  */
 
-/* $KTH: adir.h,v 1.8 1998/03/18 14:14:17 assar Exp $ */
+/* $KTH: adir.h,v 1.14.2.1 2001/06/04 22:16:35 ahltorp Exp $ */
 
 #ifndef _ADIR_H_
 #define _ADIR_H_
@@ -49,14 +43,25 @@
 #include "fs.h"
 #include "cred.h"
 #include "fcache.h"
+#include "fdir.h"
 
-int adir_lookup (VenusFid dir, const char *name, VenusFid *file,
-		 CredCacheEntry *ce);
+int
+adir_lookup (FCacheEntry *centry, const char *name, VenusFid *file);
 
-int adir_readdir (VenusFid dir,
+int
+adir_changefid (VenusFid *dir,
+		const char *name,
+		VenusFid *file,
+		CredCacheEntry **ce);
+
+int
+adir_emptyp (VenusFid *dir,
+	     CredCacheEntry **ce);
+
+int adir_readdir (VenusFid *dir,
 		  void (*)(VenusFid *, const char *name, void *), 
 		  void *arg,
-		  CredCacheEntry *ce);
+		  CredCacheEntry **ce);
 
 int
 adir_creat (FCacheEntry *dir,

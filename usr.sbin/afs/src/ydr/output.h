@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/output.h,v 1.1.1.1 1998/09/14 21:53:27 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,27 +31,52 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: output.h,v 1.7 1998/04/27 20:17:17 assar Exp $ */
+/* $KTH: output.h,v 1.16 2000/10/10 00:48:55 lha Exp $ */
 
 #ifndef _OUTPUT_
 #define _OUTPUT_
 
 #include <stdio.h>
 #include <bool.h>
+#include <roken.h>
+
+typedef struct {
+  FILE *stream;
+  char *curname;
+  char *newname;
+} ydr_file;
 
 void generate_header (Symbol *s, FILE *f);
 void generate_sizeof (Symbol *s, FILE *f);
 void generate_function (Symbol *s, FILE *f, Bool encodep);
 void generate_function_prototype (Symbol *s, FILE *f, Bool encodep);
+void generate_printfunction (Symbol *s, FILE *f);
+void generate_printfunction_prototype (Symbol *s, FILE *f);
 void generate_client_stub (Symbol *s, FILE *f, FILE *headerf);
-void generate_server_stub (Symbol *s, FILE *f, FILE *headerf);
+void generate_server_stub (Symbol *s, FILE *f, FILE *headerf, FILE *h_file);
+void generate_tcpdump_stub (Symbol *s, FILE *f);
 void generate_server_switch (FILE *c_f, FILE *h_file);
-void init_generate (char *filename);
-void close_generator (char *filename);
+void generate_tcpdump_patches(FILE *td_file, const char *filename);
+void init_generate (const char *filename);
+void close_generator (const char *filename);
 
 extern char *package;
+extern List *packagelist;
 
-extern FILE *headerfile, *clientfile, *serverfile, *clienthdrfile,
-    *serverhdrfile, *ydrfile;
+extern char *prefix;
+
+extern ydr_file headerfile, clientfile, serverfile, clienthdrfile,
+    serverhdrfile, ydrfile, td_file;
+
+extern char *error_function;
+
+extern int parse_errors;
+
+void
+ydr_fopen (const char *name, const char *mode, ydr_file *f);
+
+void
+ydr_fclose (ydr_file *f);
+
 
 #endif /* _OUTPUT_ */

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_multi.h,v 1.1.1.1 1998/09/14 21:53:16 art Exp $	*/
 /* $KTH: rx_multi.h,v 1.3 1998/02/22 19:48:23 joda Exp $ */
 
 /*

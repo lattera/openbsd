@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/preempt.c,v 1.1.1.1 1998/09/14 21:53:12 art Exp $	*/
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
@@ -30,13 +29,14 @@
 
 #include <sys/time.h>
 #include <signal.h>
-#include "lwp.h"
+#include <lwp.h>
 #include "preempt.h"
 
-RCSID("$KTH: preempt.c,v 1.5 1998/02/06 03:18:30 art Exp $");
+RCSID("$KTH: preempt.c,v 1.7 2000/02/20 04:15:37 assar Exp $");
 
 char PRE_Block = 0;		/* used in lwp.c and process.s */
 
+#ifdef HAVE_GETITIMER
 
 static RETSIGTYPE
 #if defined(AFS_POSIX_SIGNALS)
@@ -144,3 +144,19 @@ PRE_EndPreempt(void)
 
     return(LWP_SUCCESS);
 }
+
+#else /* !HAVE_GETITIMER */
+
+int 
+PRE_InitPreempt(struct timeval *slice)
+{
+    return LWP_SUCCESS;
+}
+
+int 
+PRE_EndPreempt(void)
+{
+    return LWP_SUCCESS;
+}
+
+#endif /* HAVE_GETITIMER */

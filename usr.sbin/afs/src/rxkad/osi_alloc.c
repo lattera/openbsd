@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rxkad/Attic/osi_alloc.c,v 1.1.1.1 1998/09/14 21:53:19 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,10 +33,12 @@
 
 #include "rxkad_locl.h"
 
-RCSID("$KTH: osi_alloc.c,v 1.2 1997/11/09 23:48:40 assar Exp $");
+RCSID("$KTH: osi_alloc.c,v 1.4 2000/10/03 00:38:16 lha Exp $");
 
 #undef osi_Alloc
 #undef osi_Free
+char *osi_Alloc(int32 size);
+void osi_Free(void *p, int32 size);
 
 static char zero_malloc;
 

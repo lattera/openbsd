@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/sym.h,v 1.1.1.1 1998/09/14 21:53:27 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: sym.h,v 1.5 1998/02/19 05:15:52 assar Exp $ */
+/* $KTH: sym.h,v 1.8 2000/10/02 22:37:05 lha Exp $ */
 
 #ifndef _SYM_
 #define _SYM_
@@ -54,7 +48,7 @@ typedef enum
      TUNDEFINED, TSTRUCT, TENUM, TCONST, TENUMVAL, TTYPEDEF, TPROC
 } SymbolType;
 
-enum { TSPLIT = 1, TSIMPLE = 2};
+enum { TSPLIT = 1, TSIMPLE = 2, TMULTI = 4};
 
 typedef struct {
      SymbolType type;
@@ -67,6 +61,7 @@ typedef struct {
 	      unsigned id;
 	      List *arguments;
 	      unsigned flags;
+	      char *package;
 	  } proc;
      } u;
 } Symbol;

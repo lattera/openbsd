@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rxkad/Attic/rxkad_locl.h,v 1.1.1.1 1998/09/14 21:53:19 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,12 +31,12 @@
  * SUCH DAMAGE.
  */
 
-/* @(#)$KTH: rxkad_locl.h,v 1.8 1998/03/28 16:35:49 lha Exp $ */
+/* @(#)$KTH: rxkad_locl.h,v 1.10 2000/10/03 00:38:55 lha Exp $ */
 
 #ifndef __RXKAD_LOCL_H
 #define __RXKAD_LOCL_H
 
-/* $KTH: rxkad_locl.h,v 1.8 1998/03/28 16:35:49 lha Exp $ */
+/* $KTH: rxkad_locl.h,v 1.10 2000/10/03 00:38:55 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -61,13 +55,17 @@
 #endif
 
 #ifdef NDEBUG
+#ifndef assert
 #define assert(e) ((void)0)
+#endif
 #else
+#ifndef assert
 #define assert(e) ((e) ? (void)0 : (void)osi_Panic("assert(%s) failed: file %s, line %d\n", #e, __FILE__, __LINE__, #e))
+#endif
 #endif
 
 #include <des.h>
-#include <kerberosIV/krb.h>
+#include <krb.h>
 
 #undef RCSID
 #include <rx/rx.h>

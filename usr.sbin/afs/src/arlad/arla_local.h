@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/arla_local.h,v 1.1.1.1 1998/09/14 21:52:54 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,7 +33,7 @@
 
 /*
  *  Include file for whole arlad
- *  $KTH: arla_local.h,v 1.32 1998/07/03 12:38:19 assar Exp $
+ *  $KTH: arla_local.h,v 1.61.2.3 2001/09/14 13:25:45 lha Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -52,12 +46,15 @@
 #include <assert.h>
 #include <ctype.h>
 #include <time.h>
+#include <limits.h>
 #include <errno.h>
 #include <sys/time.h>
-#ifdef HAVE_DIRENT_H
+#if defined(HAVE_DIRENT_H)
 #include <dirent.h>
+#if DIRENT_AND_SYS_DIR_H
+#include <sys/dir.h>
 #endif
-#ifdef USE_SYS_DIR_H
+#elif defined(HAVE_SYS_DIR_H)
 #include <sys/dir.h>
 #endif
 #include <unistd.h>
@@ -68,7 +65,9 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #ifdef HAVE_SYS_IOCCOM_H
 #include <sys/ioccom.h>
@@ -76,10 +75,17 @@
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+#ifdef HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <err.h>
 #include <parse_units.h>
 #include <roken.h>
@@ -89,10 +95,11 @@
 
 #include <rx/rx.h>
 #include <rx/rx_null.h>
+#include <rx/rxgencon.h>
 
 #ifdef KERBEROS
 #include <des.h>
-#include <kerberosIV/krb.h>
+#include <krb.h>
 #include <rxkad.h>
 #endif
 
@@ -100,7 +107,7 @@
 #include <mmaptime.h>
 #endif
 
-#include <kerberosIV/kafs.h>
+#include <kafs.h>
 
 #include "log.h"
 
@@ -112,14 +119,12 @@
 #include "vldb.cs.h"
 #include "volcache.h"
 #include "fbuf.h"
-#include "fcache.h"
 #include "hash.h"
 #include "afs_dir.h"
-#include "ip.h"
 #include "service.h"
 #include "ports.h"
-#include "fcache.h"
 #include "conn.h"
+#include "fcache.h"
 #include "inter.h"
 #include "cred.h"
 #include "adir.h"
@@ -127,15 +132,12 @@
 #include "subr.h"
 #include "fprio.h"
 #include "bool.h"
-#include "minmax.h"
 #include "kernel.h"
 #include "messages.h"
-#include "strutil.h"
+#include "fs_errors.h"
 #include "arladeb.h"
 #include "ko.h"
-
-#define SYSNAMEMAXLEN 2048
-extern char arlasysname[SYSNAMEMAXLEN];
+#include "xfs.h"
 
 enum connected_mode { CONNECTED  = 0,
 		      FETCH_ONLY = 1,
@@ -143,6 +145,17 @@ enum connected_mode { CONNECTED  = 0,
                       CONNECTEDLOG = 4};
 
 extern enum connected_mode connected_mode;
+
+#include "darla.h"
+#include "discon_log.h"
+#include "discon.h"
+#include "reconnect.h"
+
+#include "dynroot.h"
+
+#define SYSNAMEMAXLEN 2048
+extern char arlasysname[SYSNAMEMAXLEN];
+
 
 #define ARLA_NUMCONNS 200
 #define ARLA_HIGH_VNODES 4000
@@ -156,6 +169,48 @@ extern enum connected_mode connected_mode;
  * This should be a not used uid in the system, 
  * XFS_ANONYMOUSID may be good
  */
+
 #define ARLA_NO_AUTH_CRED 4
 
+extern int fake_mp;
+extern char *default_log_file;
+extern char *default_arla_cachedir;
 
+extern int fork_flag;		/* if the program should fork */
+extern int num_workers;		/* number of workers program should use */
+extern int client_port;		/* what port the client is using */
+extern int afs_BusyWaitPeriod;	/* number of sec to wait on fs when VBUSY */
+
+void
+store_state (void);
+
+void
+arla_start (char *device_file, const char *cache_dir);
+
+int
+arla_init (int argc, char **argv);
+
+char *
+get_default_cache_dir (void);
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+extern char *conf_file;
+extern char *log_file;
+extern char *debug_levels;
+extern char *connected_mode_string;
+#ifdef KERBEROS
+extern char *rxkad_level_string;
+#endif
+extern const char *temp_sysname;
+extern char *root_volume;
+extern int cpu_usage;
+extern int version_flag;
+extern int help_flag;
+extern int recover;
+extern int dynroot_enable;
+extern int cm_consistency;
+
+extern char *cache_dir;

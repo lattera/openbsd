@@ -1,4 +1,4 @@
-dnl $Id: check-var.m4,v 1.1 1999/05/15 22:45:24 assar Exp $
+dnl $KTH: check-var.m4,v 1.1 1999/05/15 22:45:24 assar Exp $
 dnl
 dnl AC_CHECK_VAR(includes, variable)
 AC_DEFUN(AC_CHECK_VAR, [

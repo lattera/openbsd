@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_kern.h,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 /* $KTH: rx_kern.h,v 1.3 1998/02/22 19:46:53 joda Exp $ */
 
 /*

@@ -1,11 +1,12 @@
 #
-# $Id: Makefile.in,v 1.17 2000/01/23 09:44:10 lha Exp $
+# $KTH: Makefile.in,v 1.18 2000/10/08 06:24:12 lha Exp $
 #
 
 # This should really be set from configure
 SHELL = /bin/sh
 
 srcdir = @srcdir@
+top_builddir	= ..
 VPATH = @srcdir@
 
 CC = @CC@

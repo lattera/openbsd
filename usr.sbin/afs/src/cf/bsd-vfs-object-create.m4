@@ -1,5 +1,5 @@
 dnl
-dnl $Id: bsd-vfs-object-create.m4,v 1.1 1999/05/15 22:45:19 assar Exp $
+dnl $KTH: bsd-vfs-object-create.m4,v 1.1 1999/05/15 22:45:19 assar Exp $
 dnl
 
 dnl

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/testlwp.c,v 1.1.1.1 1998/09/14 21:53:13 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -40,11 +34,11 @@
 /*
  * testlwp
  *
- * Checks if lwp seams to work, and demostrates how to use lwp.
- * Give multiple commands om the argumentline to run several
- * tests on the same time.
+ * Checks if lwp seems to work, and demostrates how to use lwp.  Give
+ * multiple commands on the command line to run several tests at the
+ * same time.
  * 
- * $KTH: testlwp.c,v 1.2 1998/07/15 12:50:58 map Exp $
+ * $KTH: testlwp.c,v 1.8 2000/10/20 17:10:38 lha Exp $
  *
  */
 
@@ -53,6 +47,7 @@
 #include <string.h>
 #include <err.h>
 #include <lwp.h>
+#include <lock.h>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -165,6 +160,9 @@ SelectConsumer(void *foo)
     
     while(1) {
 	FD_ZERO(&readset);
+	if (pipa[0] >= FD_SETSIZE)
+	    errx (1, "fd too large");
+
 	FD_SET(pipa[0], &readset);
 	IOMGR_Select(pipa[0] + 1, &readset, NULL, NULL, NULL); 
 	len = read(pipa[0], str, 199);
@@ -175,7 +173,7 @@ SelectConsumer(void *foo)
     }
 }
 
-void
+static void
 startSelectPC (char *progname)
 {
     int pid;
@@ -246,6 +244,35 @@ yaEndlessLoop(void)
 	errx (1, "Cannot create enterprise process");
 }
 
+static void
+deadlock_write (void)
+{
+    struct Lock lock;
+    
+    Lock_Init (&lock);
+    ObtainWriteLock(&lock);
+    ObtainWriteLock(&lock);
+}
+
+static void
+deadlock_read (void)
+{
+    struct Lock lock;
+    
+    Lock_Init (&lock);
+    ObtainWriteLock(&lock);
+    ObtainReadLock(&lock);
+}
+
+static void
+deadlock_read2 (void)
+{
+    struct Lock lock;
+    
+    Lock_Init (&lock);
+    ObtainReadLock(&lock);
+    ObtainWriteLock(&lock);
+}
 
 /*
  * Usage
@@ -261,6 +288,9 @@ usage(char *progname)
 	    "selectconsumer\tSelect consumer\n"
 	    "selectproducer\t(special case, just print a string on stdout repeatally)\n"
 	    "cancel\t\tTest iomgr cancel\n"
+	    "deadlock-write\tdeadlockdetection\n"
+	    "deadlock-read\tdeadlockdetection\n"
+	    "deadlock-read2\tdeadlockdetection\n"
 	    "version\t\tPrint version\n");
 
     printf("Use several of these tests together to test their interopability\n");
@@ -298,10 +328,19 @@ int main(int argc, char **argv)
 	    startSelectPC (progname);
 	} else if (strcasecmp("cancel", argv[1]) == 0) {
 	    yaEndlessLoop();	 
+	} else if (strcasecmp("deadlock-write", argv[1]) == 0) {
+	    deadlock_write();
+	} else if (strcasecmp("deadlock-read", argv[1]) == 0) {
+	    deadlock_read();
+	} else if (strcasecmp("deadlock-read2", argv[1]) == 0) {
+	    deadlock_read2();
 	} else if (strcasecmp("version", argv[1]) == 0) {
-	    printf("Version: $KTH: testlwp.c,v 1.2 1998/07/15 12:50:58 map Exp $\n");
+	    printf("Version: "
+		   "$KTH: testlwp.c,v 1.8 2000/10/20 17:10:38 lha Exp $\n");
+	    exit (0);
 	} else {
 	    printf("unknown command %s\n", argv[1]);
+	    exit (1);
 	}
 
 	argc--;

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/iomgr.c,v 1.1.1.1 1998/09/14 21:53:11 art Exp $	*/
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
@@ -36,7 +35,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: iomgr.c,v 1.18 1998/07/09 19:56:27 art Exp $");
+RCSID("$KTH: iomgr.c,v 1.24 2000/02/15 23:53:40 assar Exp $");
 #endif
 
 #include <stdio.h>
@@ -98,8 +97,6 @@ struct IoRequest {
 #define badsig(signo)		(((signo) <= 0) || ((signo) >= NSIG))
 #define mysigmask(signo)		(1 << ((signo)-1))
 
-extern int errno;
-
 static long openMask;		/* mask of open files on an IOMGR abort */
 static long sigsHandled;        /* sigmask(signo) is on if we handle signo */
 static int anySigsDelivered;		/* true if any have been delivered. */
@@ -131,7 +128,7 @@ static int iomgr_errno;
 static struct timeval iomgr_badtv;
 static PROCESS iomgr_badpid;
 
-void
+static void
 FreeRequest(struct IoRequest *req)
 {
     req->next = iorFreeList; 
@@ -244,10 +241,6 @@ static void
 IOMGR(char *dummy)
 {
     for (;;) {
- /*
-  * commented out to match use - kazar	
-  * static struct timeval Poll = { 0, 0 }; 
-  */
 	int fds;
 	int nfds;
 	fd_set readfds, writefds, exceptfds;
@@ -322,7 +315,7 @@ IOMGR(char *dummy)
 		if (wfds)
 		    FD_OR(wfds, req->wfds);
 		else {
-		    wfds = &readfds;
+		    wfds = &writefds;
 		    FD_COPY(req->wfds, wfds);
 		}
 	    }
@@ -331,7 +324,7 @@ IOMGR(char *dummy)
 		if (efds)
 		    FD_OR(efds, req->efds);
 		else {
-		    efds = &readfds;
+		    efds = &exceptfds;
 		    FD_COPY(req->efds, efds);
 		}
 	    }
@@ -349,7 +342,9 @@ IOMGR(char *dummy)
 		if (timeout.tv_sec == -1 && timeout.tv_usec == -1)
 		    puts("INFINITE)]");
 		else
-		    printf("<%d, %d>)]\n", timeout.tv_sec, timeout.tv_usec);
+		    printf("<%ld, %lu>)]\n",
+			   (long)timeout.tv_sec,
+			   (unsigned long)timeout.tv_usec);
 	    }
 #endif /* DEBUG */
 	    iomgr_timeout = timeout;
@@ -380,7 +375,8 @@ IOMGR(char *dummy)
 	    /*
 	     * For SGI and SVR4 - poll & select can return EAGAIN ...
 	     */
-	    if (fds < 0 && errno != EINTR && errno != EAGAIN) {
+	    if (fds < 0
+		&& errno != EINTR && errno != EAGAIN && errno != ENOMEM) {
 		iomgr_errno = errno;
 		for(fds = 0; fds < FD_SETSIZE; fds++) {
 		    if (fcntl(fds, F_GETFD, 0) < 0 && errno == EBADF) 
@@ -547,7 +543,6 @@ IOMGR_SoftSig(void (*aproc)(), char *arock)
 int
 IOMGR_Initialize(void)
 {
-    extern int TM_Init();
     PROCESS pid;
 
     /* If lready initialized, just return */
@@ -651,7 +646,7 @@ IOMGR_Poll(void)
 	    if (wfds)
 		FD_OR(wfds, req->wfds);
 	    else {
-		wfds = &readfds;
+		wfds = &writefds;
 		FD_COPY(req->wfds, wfds);
 	    }
 	}
@@ -660,7 +655,7 @@ IOMGR_Poll(void)
 	    if (efds)
 		FD_OR(efds, req->efds);
 	    else {
-		efds = &readfds;
+		efds = &exceptfds;
 		FD_COPY(req->efds, efds);
 	    }
 	}
@@ -669,7 +664,7 @@ IOMGR_Poll(void)
     
     tv.tv_sec = 0;
     tv.tv_usec = 0;
-    code = select(nfds, &readfds, &writefds, &exceptfds, &tv);
+    code = select(nfds, rfds, wfds, efds, &tv);
 
     if (code > 0) {
 	SignalIO(code, rfds, wfds, efds);

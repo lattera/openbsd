@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/arladeb.h,v 1.1.1.1 1998/09/14 21:52:55 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -38,7 +32,7 @@
  */
 
 /*
- * $KTH: arladeb.h,v 1.16 1998/05/23 05:25:47 assar Exp $
+ * $KTH: arladeb.h,v 1.24.2.1 2001/04/30 00:02:15 lha Exp $
  */
 
 #ifndef _arladeb_h
@@ -46,8 +40,13 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <log.h>
 
 #include <roken.h>
+
+extern Log_method* arla_log_method;
+extern Log_unit* arla_log_unit;
+extern struct units arla_deb_units[];
 
 /* masks */
 #define ADEBANY		0xffffffff
@@ -62,13 +61,21 @@
 #define ADEBKERNEL	0x00000100      /* kernel interface */
 #define ADEBMSG		0x00000200	/* messages */
 #define ADEBFBUF	0x00000400	/* fbuf */
+#define ADEBDISCONN	0x00000800	/* disconn */
 #define ADEBWARN	0x08000000      /* don't ignore warning */
 #define ADEBERROR	0x10000000      /* don't ignore error */
+#define ADEBVLOG	0x20000000	/* venuslog output */
+
+#define ARLA_DEFAULT_LOG (ADEBWARN | ADEBERROR)
+
+extern struct units arla_deb_units[];
 
 void arla_log(unsigned level, char *fmt, ...);
-void arla_loginit(char *log);
+void arla_loginit(char *log, log_flags flags);
 int arla_log_set_level (const char *s);
+void arla_log_set_level_num (unsigned level);
 void arla_log_get_level (char *s, size_t len);
+unsigned arla_log_get_level_num (void);
 void arla_log_print_levels (FILE *f);
 
 void
@@ -114,5 +121,14 @@ void
 arla_vwarnx (unsigned level, const char *fmt, va_list args)
 __attribute__ ((format (printf, 2, 0)))
 ;
+
+void
+arla_warnx_with_fid (unsigned level, const VenusFid *fid, const char *fmt, ...)
+__attribute__ ((format (printf, 3, 4)));
+
+void
+arla_vwarnx_with_fid (unsigned level, const VenusFid *fid, const char *fmt,
+		      va_list args)
+__attribute__ ((format (printf, 3, 0)));
 
 #endif				       /* _arladeb_h */

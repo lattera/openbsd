@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/service.h,v 1.1.1.1 1998/09/14 21:52:57 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -37,15 +31,21 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: service.h,v 1.4 1998/07/14 16:00:50 lha Exp $ */
+/* $KTH: service.h,v 1.11 2000/10/06 23:50:58 lha Exp $ */
 
 /*
  * Service IDs
  */
 
 #define VLDB_SERVICE_ID 52
+#define VOLSER_SERVICE_ID 4
 #define PR_SERVICE_ID   73
 #define FS_SERVICE_ID    1
 #define CM_SERVICE_ID    1
+#define BOS_SERVICE_ID    1
 #define VOTE_SERVICE_ID 50 /* ubik */
 #define DISK_SERVICE_ID 51 /* ubik */
+#define KA_AUTHENTICATION_SERVICE 731
+#define KA_TICKET_GRANTING_SERVICE 732
+#define KA_MAINTENANCE_SERVICE_ID 733 /* ka service */
+

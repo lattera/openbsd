@@ -1,4 +1,4 @@
-; $Id: make-release.el,v 1.3 2000/08/19 19:22:15 assar Exp $
+; $KTH: make-release.el,v 1.3 2000/08/19 19:22:15 assar Exp $
 
 (defun bump-version (filename prefix v-string)
   (save-excursion

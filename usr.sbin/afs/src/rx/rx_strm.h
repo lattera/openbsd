@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_strm.h,v 1.1.1.1 1998/09/14 21:53:17 art Exp $	*/
-/* $Header: /usr/local/cvsroot/arla/rx/rx_strm.h,v 1.3 1998/02/22 19:54:23 joda Exp $ */
-/* $Source: /usr/local/cvsroot/arla/rx/rx_strm.h,v $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_strm.h,v 1.3 1998/02/22 19:54:23 joda Exp $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_strm.h,v $ */
 
 /*
 ****************************************************************************

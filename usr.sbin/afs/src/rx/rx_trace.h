@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_trace.h,v 1.1.1.1 1998/09/14 21:53:17 art Exp $	*/
-/* $Header: /usr/local/cvsroot/arla/rx/rx_trace.h,v 1.3 1998/02/22 19:55:28 joda Exp $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_trace.h,v 1.3 1998/02/22 19:55:28 joda Exp $ */
 
 #ifndef	_RX_TRACE
 #define _RX_TRACE

@@ -1,12 +1,14 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_pkt.c,v 1.1.1.1 1998/09/14 21:53:16 art Exp $	*/
 #include "rx_locl.h"
 
-RCSID("$KTH: rx_pkt.c,v 1.9 1998/03/14 13:40:22 assar Exp $");
+RCSID("$KTH: rx_pkt.c,v 1.15.2.1 2001/07/05 23:16:53 lha Exp $");
 
 struct rx_packet *rx_mallocedP = 0;
 struct rx_cbuf *rx_mallocedC = 0;
 
-char cml_version_number[4711];	       /* XXX - What is this? */
+/* string to send to rxdebug */
+#define CML_VERSION_NUMBER_SIZE 65
+static char cml_version_number[CML_VERSION_NUMBER_SIZE]= PACKAGE "-" VERSION ; 
+
 extern int (*rx_almostSent) ();
 
 /*
@@ -623,6 +625,11 @@ rxi_ReadPacket(int socket, struct rx_packet *p,
     p->wirevec[--p->niovecs].iov_base = NULL;
     p->wirevec[p->niovecs].iov_len = 0;
 
+    if (nbytes < 0) {
+	/* ignore error? */
+	return 0;
+    }
+
     p->length = (nbytes - RX_HEADER_SIZE);
     if ((nbytes > tlen) || (nbytes < (int)RX_HEADER_SIZE)) { /* Bogus packet */
 	if (nbytes > 0)
@@ -674,13 +681,17 @@ osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec,
 	fd_set sfds;
 
 	rx_stats.sendSelects++;
-	if (errno != EWOULDBLOCK && errno != ENOBUFS) {
+	if (errno != EWOULDBLOCK
+	    && errno != ENOBUFS
+	    && errno != ECONNREFUSED) {
 	    (osi_Msg "rx failed to send packet: ");
 	    perror("rx_send");	       /* translates the message to English */
 	    return 3;
 	}
 
 	FD_ZERO(&sfds);
+	if (socket >= FD_SETSIZE)
+	    osi_Panic("osi_NetSend: fd too large");
 	FD_SET(socket, &sfds);
 	while ((err = select(socket + 1, 0, &sfds, 0, 0)) != 1) {
 	    if (err >= 0 || errno != EINTR)
@@ -970,7 +981,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
     case RX_DEBUGI_RXSTATS:{
 	    int i;
-	    long *s;
+	    u_int32_t *s;
 
 	    tl = sizeof(rx_stats) - ap->length;
 	    if (tl > 0)
@@ -979,7 +990,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		return ap;
 
 	    /* Since its all longs convert to network order with a loop. */
-	    s = (long *) &rx_stats;
+	    s = (u_int32_t *) &rx_stats;
 	    for (i = 0; i < sizeof(rx_stats) / 4; i++, s++)
 		rx_PutLong(ap, i * 4, htonl(*s));
 
@@ -1010,7 +1021,7 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 {
     long tl;
 
-    rx_packetwrite(ap, 0, 65, cml_version_number + 4);
+    rx_packetwrite(ap, 0, CML_VERSION_NUMBER_SIZE, cml_version_number);
     tl = ap->length;
     ap->length = 65;
     rxi_SendDebugPacket(ap, asocket, ahost, aport);
@@ -1025,10 +1036,27 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		    long ahost, short aport)
 {
     struct sockaddr_in taddr;
+    int i = 0;
+    int savelen = 0;
+    int saven = 0;
+    int nbytes;
 
     taddr.sin_family = AF_INET;
     taddr.sin_port = aport;
     taddr.sin_addr.s_addr = ahost;
+
+    nbytes = apacket->length;
+
+    for (i = 1; i < apacket->niovecs; i++) {
+	if (nbytes <= apacket->wirevec[i].iov_len) {
+	    savelen = apacket->wirevec[i].iov_len;
+	    saven = apacket->niovecs;
+	    apacket->wirevec[i].iov_len = nbytes;
+	    apacket->niovecs = i + 1;	      
+	    /* so condition fails because i == niovecs */
+	} else
+	    nbytes -= apacket->wirevec[i].iov_len;
+    }
 
     GLOBAL_UNLOCK();
     /* debug packets are not reliably delivered, hence the cast below. */
@@ -1036,6 +1064,11 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     (void) osi_NetSend(asocket, (char *)&taddr, apacket->wirevec,
 		       apacket->niovecs, apacket->length + RX_HEADER_SIZE);
     GLOBAL_LOCK();
+
+    if (saven) {
+	apacket->wirevec[i - 1].iov_len = savelen;
+	apacket->niovecs = saven;
+    }
 }
 
 /*
@@ -1237,48 +1270,70 @@ rxi_SendSpecial(struct rx_call *call,
 }
 
 
+static void
+put32 (unsigned char **p, u_int32_t u)
+{
+    (*p)[0] = (u >> 24) & 0xFF;
+    (*p)[1] = (u >> 16) & 0xFF;
+    (*p)[2] = (u >>  8) & 0xFF;
+    (*p)[3] = (u >>  0) & 0xFF;
+    (*p) += 4;
+}
+
+static u_int32_t
+get32 (unsigned char **p)
+{
+    u_int32_t u;
+
+    u = ((*p)[0] << 24) | ((*p)[1] << 16) | ((*p)[2] << 8) | (*p)[3];
+    (*p) += 4;
+    return u;
+}
+
 /* Encode the packet's header (from the struct header in the packet to
  * the net byte order representation in the wire representation of the
  * packet, which is what is actually sent out on the wire) */
 void 
 rxi_EncodePacketHeader(struct rx_packet *p)
 {
-    u_int32_t *buf = (u_int32_t *) (p->wirevec[0].iov_base); /* MTUXXX */
+    unsigned char *buf = (unsigned char *)p->wirevec[0].iov_base;
 
-    memset((char *) buf, 0, RX_HEADER_SIZE);
-    *buf++ = htonl(p->header.epoch);
-    *buf++ = htonl(p->header.cid);
-    *buf++ = htonl(p->header.callNumber);
-    *buf++ = htonl(p->header.seq);
-    *buf++ = htonl(p->header.serial);
-    *buf++ = htonl((((unsigned long) p->header.type) << 24)
-		   | (((unsigned long) p->header.flags) << 16)
-		   | (p->header.userStatus << 8) | p->header.securityIndex);
+    memset(buf, 0, RX_HEADER_SIZE);
+    put32(&buf, p->header.epoch);
+    put32(&buf, p->header.cid);
+    put32(&buf, p->header.callNumber);
+    put32(&buf, p->header.seq);
+    put32(&buf, p->header.serial);
+    put32(&buf,
+	  ((((unsigned long) p->header.type) << 24)
+	   | (((unsigned long) p->header.flags) << 16)
+	   | (p->header.userStatus << 8) | p->header.securityIndex));
     /* Note: top 16 bits of this next word were reserved */
-    *buf++ = htonl((p->header.spare << 16) | (p->header.serviceId & 0xffff));
+    put32(&buf,
+	  ((p->header.spare << 16) | (p->header.serviceId & 0xffff)));
 }
 
 /* Decode the packet's header (from net byte order to a struct header) */
 void 
 rxi_DecodePacketHeader(struct rx_packet *p)
 {
-    u_int32_t *buf = (u_int32_t *) (p->wirevec[0].iov_base); /* MTUXXX */
+    unsigned char *buf = (unsigned char *)p->wirevec[0].iov_base;
     u_int32_t temp;
 
-    p->header.epoch = ntohl(*buf++);
-    p->header.cid = ntohl(*buf++);
-    p->header.callNumber = ntohl(*buf++);
-    p->header.seq = ntohl(*buf++);
-    p->header.serial = ntohl(*buf++);
-    temp = ntohl(*buf++);
+    p->header.epoch      = get32(&buf);
+    p->header.cid        = get32(&buf);
+    p->header.callNumber = get32(&buf);
+    p->header.seq        = get32(&buf);
+    p->header.serial     = get32(&buf);
+    temp = get32(&buf);
     /* C will truncate byte fields to bytes for me */
-    p->header.type = temp >> 24;
-    p->header.flags = temp >> 16;
-    p->header.userStatus = temp >> 8;
+    p->header.type          = temp >> 24;
+    p->header.flags         = temp >> 16;
+    p->header.userStatus    = temp >> 8;
     p->header.securityIndex = temp >> 0;
-    temp = ntohl(*buf++);
+    temp = get32(&buf);
     p->header.serviceId = (temp & 0xffff);
-    p->header.spare = temp >> 16;
+    p->header.spare     = temp >> 16;
     /* Note: top 16 bits of this last word are the security checksum */
 }
 

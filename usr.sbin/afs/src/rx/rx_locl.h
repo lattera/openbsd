@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_locl.h,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the 
  *    documentation and/or other materials provided with the distribution. 
  *
- * 3. All advertising materials mentioning features or use of this software 
- *    must display the following acknowledgement: 
- *      This product includes software developed by Kungliga Tekniska 
- *      Högskolan and its contributors. 
- *
- * 4. Neither the name of the Institute nor the names of its contributors 
+ * 3. Neither the name of the Institute nor the names of its contributors 
  *    may be used to endorse or promote products derived from this software 
  *    without specific prior written permission. 
  *
@@ -37,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: rx_locl.h,v 1.4 1998/03/28 16:35:46 lha Exp $ */
+/* $KTH: rx_locl.h,v 1.6 2000/10/03 00:41:28 lha Exp $ */
 
 #ifndef __RX_LOCL_H__
 #define __RX_LOCL_H__
@@ -50,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #include <sys/time.h>
 #include <sys/types.h>

@@ -1,8 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rxkad/Attic/rxkad.h,v 1.1.1.1 1998/09/14 21:53:21 art Exp $	*/
 /* -*- C -*- */
 
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -17,12 +16,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,7 +33,7 @@
  * SUCH DAMAGE.
  */
 
-/* @(#)$KTH: rxkad.h,v 1.7 1998/02/23 03:23:24 assar Exp $ */
+/* @(#)$KTH: rxkad.h,v 1.8.2.1 2001/10/03 22:55:31 assar Exp $ */
 
 #ifndef __RXKAD_H
 #define __RXKAD_H
@@ -121,6 +115,10 @@ rxkad_NewClientSecurityObject __P((/*rxkad_level*/ int level,
 #define MAXKTCNAMELEN		ANAME_SZ
 #define MAXKTCREALMLEN		REALM_SZ
 */
+
+#ifndef CLOCK_SKEW
+#define CLOCK_SKEW (5*60)
+#endif
 
 #define KTC_TIME_UNCERTAINTY (CLOCK_SKEW)
 

@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/lwp/Attic/testprocess.c,v 1.1.1.1 1998/09/14 21:53:11 art Exp $	*/
 #include <lwp.h>
 
 /*

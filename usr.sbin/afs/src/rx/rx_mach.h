@@ -1,8 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_mach.h,v 1.1.1.1 1998/09/14 21:53:15 art Exp $	*/
 #ifndef _RX_MACHDEP_
 #define _RX_MACHDEP_
 
-/* $Header: /usr/local/cvsroot/arla/rx/rx_mach.h,v 1.3 1998/03/29 01:25:32 assar Exp $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_mach.h,v 1.3 1998/03/29 01:25:32 assar Exp $ */
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *

@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/main.c,v 1.1.1.1 1998/09/14 21:53:27 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,15 +33,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: main.c,v 1.9 1998/03/13 04:46:33 assar Exp $");
+RCSID("$KTH: main.c,v 1.22 2000/10/16 22:01:45 assar Exp $");
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <mem.h>
-#include <fnameutil.h>
+#include <roken.h>
 #include "sym.h"
 #include "output.h"
 #include <err.h>
@@ -55,11 +48,44 @@ RCSID("$KTH: main.c,v 1.9 1998/03/13 04:46:33 assar Exp $");
 
 extern FILE *yyin;
 
+int parse_errors;
+
 /*
  * ydr - generate stub routines for encode/decoding and RX
  */
 
 int yyparse(void);
+
+/*
+ * Return the basename of `s'.
+ * The result is malloc'ed.
+ */
+
+static char *
+ydr_basename (const char *s)
+{
+     const char *p, *q;
+     char *res;
+
+     p = strrchr (s, '/');
+     if (p == NULL)
+	  p = s;
+     else
+	  ++p;
+     q = strchr (p, '.');
+     if (q == NULL)
+	  q = s + strlen (s);
+     res = malloc (q - p + 1);
+     if (res == NULL)
+	 return NULL;
+     memmove (res, p, q - p);
+     res[q - p] = '\0';
+     return res;
+}
+
+/*
+ *
+ */
 
 int
 main (int argc, char **argv)
@@ -80,8 +106,8 @@ main (int argc, char **argv)
 	      "ydr_tmp_%u.c", (unsigned)getpid());
     foo = fopen (tmp_filename, "w");
     if (foo == NULL)
-	errx (1, "Cannot fopen %s for writing", tmp_filename);
-    filename = copy_basename (argv[argc - 1]);
+	err (1, "error opening %s", tmp_filename);
+    filename = ydr_basename (argv[argc - 1]);
     fprintf (foo, "#include \"%s\"\n", argv[argc - 1]);
     fclose (foo);
 
@@ -108,11 +134,18 @@ main (int argc, char **argv)
     strcat (arg, tmp_filename);
 
     yyin = popen (arg, "r");
+    if (yyin == NULL) {
+	unlink (tmp_filename);
+	err (1, "popen `%s'", arg);
+    }
     free (arg);
     ret = yyparse ();
-    generate_server_switch (serverfile, serverhdrfile);
+    generate_server_switch (serverfile.stream, serverhdrfile.stream);
+    generate_tcpdump_patches (td_file.stream, filename);
     pclose (yyin);
     close_generator (filename);
     unlink (tmp_filename);
-    return ret;
+
+    return ret + parse_errors;
 }
+

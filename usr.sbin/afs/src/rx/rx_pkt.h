@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_pkt.h,v 1.1.1.1 1998/09/14 21:53:16 art Exp $	*/
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
 #include "sys/uio.h"
@@ -20,7 +19,10 @@
  * and that the offsets are as well.
  */
 
-#include <sys/param.h>
+
+#ifndef MIN
+#define MIN(a,b)  ((a)<(b)?(a):(b))
+#endif
 
 #define	RX_IPUDP_SIZE		28
 
@@ -165,6 +167,11 @@ struct rx_header {
  * Both Firstbuffersize and cbuffersize must be integral multiples of 8,
  * so the security header and trailer stuff works for rxkad_crypt.  yuck.
  */
+
+#define RX_FIRSTBUFFERSIZE (OLD_MAX_PACKET_SIZE - RX_HEADER_SIZE - 4)
+#define RX_CBUFFERSIZE 1024
+
+#if 0
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AOS_ENV)
 #define RX_FIRSTBUFFERSIZE (OLD_MAX_PACKET_SIZE - RX_HEADER_SIZE)
 #define RX_CBUFFERSIZE 1012
@@ -172,6 +179,8 @@ struct rx_header {
 #define RX_FIRSTBUFFERSIZE 480	       /* MTUXXX should be 1444 */
 #define RX_CBUFFERSIZE 504	       /* MTUXXX change this to 1024 or 1012  */
 #endif				       /* AFS_SUN5_ENV */
+#endif
+
 struct rx_packet {
     struct rx_queue queueItemHeader;   /* Packets are chained using the
 				        * queue.h package */
@@ -229,12 +238,12 @@ struct rx_cbuf {
  * caller. */
 #define rx_GetLong(p,off) (( (off) >= (p)->wirevec[1].iov_len) ? \
    rx_SlowGetLong((p), (off)) :  \
-  *((long *)((char *)(p)->wirevec[1].iov_base + (off))))
+  *((u_int32_t *)((char *)(p)->wirevec[1].iov_base + (off))))
 
 #define rx_PutLong(p,off,b) { \
        if ((off) >= (p)->wirevec[1].iov_len) \
 	  rx_SlowPutLong((p), (off), (b));   \
-       else *((long *)((char *)(p)->wirevec[1].iov_base + (off))) = b; }
+       else *((u_int32_t *)((char *)(p)->wirevec[1].iov_base + (off))) = b; }
 
 #define rx_data(p, o, l) ((l=((struct rx_packet*)(p))->wirevec[(o+1)].iov_len),\
   (((struct rx_packet*)(p))->wirevec[(o+1)].iov_base))
@@ -248,6 +257,13 @@ int rxi_AllocDataBuf(struct rx_packet *, int);
 size_t rx_SlowReadPacket(struct rx_packet*, int, int, void*);
 size_t rx_SlowWritePacket(struct rx_packet*, int, int, void*);
 int rxi_RoundUpPacket(struct rx_packet *, unsigned int);
+
+long rx_SlowGetLong(struct rx_packet *packet, int offset);
+long rx_SlowPutLong(struct rx_packet *packet, int offset, long data);
+int  rxi_FreeDataBufs(struct rx_packet *p, int first);
+
+int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec,
+		int nvecs, int length);
 
 /* copy data into an RX packet */
 #define rx_packetwrite(p, off, len, in)               \

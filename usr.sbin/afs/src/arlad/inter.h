@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/arlad/Attic/inter.h,v 1.1.1.1 1998/09/14 21:52:57 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -41,7 +35,7 @@
  * The interface to the cache manager.
  */
 
-/* $KTH: inter.h,v 1.14 1998/07/22 07:04:06 assar Exp $ */
+/* $KTH: inter.h,v 1.24 2000/11/28 01:42:15 lha Exp $ */
 
 #ifndef _INTER_H_
 #define _INTER_H_
@@ -54,9 +48,9 @@
  */
 
 typedef struct {
-     int res;
-     int error;
-     u_int tokens;
+    int res;			/* result */
+    int error;			/* error if res == -1 */
+    u_int tokens;		/* resulting tokens (if res == 0) */
 } Result;
 
 void
@@ -66,10 +60,11 @@ void
 cm_store_state (void);
 
 Result
-cm_open (VenusFid fid, CredCacheEntry *ce, u_int tokens);
+cm_open (VenusFid *fid, CredCacheEntry **ce, u_int tokens,
+	 fcache_cache_handle *, char *, size_t);
 
 Result
-cm_close (VenusFid fid, int flag, CredCacheEntry *ce);
+cm_close (VenusFid fid, int flag, AFSStoreStatus *, CredCacheEntry *ce);
 
 Result
 cm_getattr (VenusFid fid,
@@ -88,42 +83,48 @@ Result
 cm_access (VenusFid fid, int mode, CredCacheEntry *ce);
 
 Result
-cm_lookup (VenusFid dir_fid, const char *name, VenusFid *res,
+cm_lookup (VenusFid *dir_fid, const char *name, VenusFid *res,
+	   CredCacheEntry **ce, int follow_mount_point);
+Result
+cm_create (VenusFid *dir_fid, const char *name, AFSStoreStatus *store_attr,
+	   VenusFid *res, AFSFetchStatus *fetch_attr,
 	   CredCacheEntry **ce);
 Result
-cm_create (VenusFid dir_fid, const char *name, AFSStoreStatus *store_attr,
-	   VenusFid *res, AFSFetchStatus *fetch_attr,
-	   CredCacheEntry* ce);
-Result
-cm_mkdir (VenusFid dir_fid, const char *name, AFSStoreStatus *store_attr,
+cm_mkdir (VenusFid *dir_fid, const char *name, AFSStoreStatus *store_attr,
 	  VenusFid *res, AFSFetchStatus *fetch_attr,
-	  CredCacheEntry* ce);
+	  CredCacheEntry **ce);
 
 Result
-cm_remove (VenusFid dir_fid, const char *name, CredCacheEntry *ce);
+cm_remove (VenusFid *dir_fid, const char *name, CredCacheEntry **ce);
 
 Result
-cm_rmdir (VenusFid dir_fid, const char *name, CredCacheEntry *ce);
+cm_rmdir (VenusFid *dir_fid, const char *name, CredCacheEntry **ce);
 
 Result
-cm_readdir (VenusFid fid);
-
-Result
-cm_link (VenusFid dir_fid, const char *name,
+cm_link (VenusFid *dir_fid, const char *name,
 	 VenusFid existing_fid,
 	 AFSFetchStatus *existing_status,
-	 CredCacheEntry* ce);
+	 CredCacheEntry **ce);
 
 Result
-cm_symlink (VenusFid dir_fid, const char *name,
+cm_symlink (VenusFid *dir_fid, const char *name,
 	    AFSStoreStatus *store_attr,
-	    VenusFid *res, AFSFetchStatus *fetch_attr,
+	    VenusFid *res, VenusFid *real_fid,
+	    AFSFetchStatus *fetch_attr,
 	    const char *contents,
-	    CredCacheEntry* ce);
+	    CredCacheEntry **ce);
 
 Result
-cm_rename(VenusFid old_parent_fid, const char *old_name,
-	  VenusFid new_parent_fid, const char *new_name,
-	  CredCacheEntry* ce);
+cm_rename(VenusFid *old_parent_fid, const char *old_name,
+	  VenusFid *new_parent_fid, const char *new_name,
+	  VenusFid *child_fid,
+	  int *update_child,
+	  CredCacheEntry **ce);
+
+void
+cm_check_consistency (void);
+
+void
+cm_turn_on_consistency_check(void);
 
 #endif /* _INTER_H_ */

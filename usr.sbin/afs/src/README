@@ -1,15 +1,15 @@
-README for arla-0.9 ($Name:  $)
-$Id: README,v 1.29 1998/07/30 20:29:48 rb Exp $
+README for arla-0.35.7 ($KTH: arla-0-35-7 $)
+$KTH: README,v 1.77.2.11 2002/02/25 02:35:01 lha Exp $
 
 1. What is arla?
 
-Arla is a free AFS cache-manager/client implementation.
+Arla is a free AFS cache-manager implementation.
 
 2. Where do I find this file?
 
 This file is contained inside
-ftp://ftp.stacken.kth.se/pub/arla/arla-0.9.tar.gz
-(aka /afs/stacken.kth.se/ftp/pub/arla/arla-0.9.tar.gz).
+ftp://ftp.stacken.kth.se/pub/arla/arla-0.35.7.tar.gz
+(aka /afs/stacken.kth.se/ftp/pub/arla/arla-0.35.7.tar.gz).
 
 3. What is AFS?
 
@@ -22,34 +22,39 @@ for more information.
 There is kernel support (with different level of functionality) for
 the following operating systems:
 
-- FreeBSD 2.2
-- OpenBSD 2.2 and 2.3
-- NetBSD 1.2 and 1.3
-- Linux 2.0.x and 2.1.x
+- FreeBSD 3.x, 4.,x, and 5.x
+- OpenBSD 2.2-2.9
+- NetBSD 1.2, 1.3, 1.4, and 1.5
+- Linux 2.2.x, 2.3.x, 2.4.x
 - SunOS 4
-- Solaris 2.5, 2.6 and 2.7 beta
+- Solaris 2.5, 2.6, 7, and 8
 - AIX 4.x
 - IRIX 6.x
-- Digital Unix 4.0 (OSF/1)
-- Rhapsody DR2
+- Digital Unix 4.0, Compaq Tru64 5.0 (OSF/1)
+- Darwin 1.3 and 1.4, Mac OS X 10.0 and 10.1
+
+Userland only:
+- Ultrix 4.4
 
 A cache manager (arlad) that works both in user-level mode and with
 the kernel module.  The user-level mode is quite portable and has even
 been working under Windows NT (with the cygwin32 libraries).
 
-Some simple programs (fs, vos and pts).
+Some simple programs (amon, fs, klog, tokens, vos, udebug, and pts).
 
-Programs for acquiring tokens (kauth, afslog) are not included but are
-part of the kth-krb distribution.
+An experimental AFS server called milko.
 
-5. What's the status or arla?
+5. What's the status of arla?
 
-This is a snapshot and pre-greek letters.
-
-Most of the functionality is there.  You can read and write files and
-directories, with or without authentication.  It's not as stable or
-high-performing as we would like, yet.  It only does whole-file
-caching, but that's probably good enough.
+- Working stable client (currently cacheing whole files)
+- Authentication (using kth-krb4 or any other krb4 implantation)
+- Used in production systems with OpenBSD, FreeBSD, NetBSD, Linux,
+  Mac OS X, Compaq Tru64.
+- Some administration programs (fs, vos, pts and bos)
+- An experimental AFS server (milko)
+- Graphical program, amon, for monitoring the state of the cache.
+- A graphical interface for managing ACLs
+- A configuration utility for Mac OS X
 
 6. What do I need to run arla?
 
@@ -63,9 +68,10 @@ If you want to use authentication, you will also need a Kerberos v4
 implementation.  We use and recommend the one at
 <http://www.pdc.kth.se/kth-krb/>.
 
-OpenBSD 2.3 already ships with kth-krb.  However, you'll have to
-add the line 'AFS=yes' to /etc/mk.conf and rebuild libkafs and afslog.
-(can be found in /usr/src/kerberosIV/{kafs,afslog}).
+OpenBSD 2.3 and above already ships with kth-krb.  On OpenBSD 2.3 only, you'll
+have to add the line 'AFS=yes' to /etc/mk.conf and rebuild libkafs and
+afslog.  (can be found in /usr/src/kerberosIV/{kafs,afslog}) (versions
+since 2.3 have AFS=yes on by default, except for m88k).
 
 If you are using MIT-Kerberos or CNS Kerberos you can find a replacement
 for libkafs in http://andrew2.andrew.cmu.edu/dist/krbafs.html. Then you
@@ -86,13 +92,32 @@ See the file INSTALL
 Report it with as much detail as possible (including patches) to
 <arla-drinkers@stacken.kth.se>.
 
+If you find a bug, and do not have a clue what is wrong, please run
+arlad with `arlad -n -z --debug=almost-all' and append the output the
+the mail.  You can also turn on debug on an already running arlad with
+`fs arladebug <debug-level>'.  To enable debugging in the xfs kernel
+module, use `fs xfsdebug <debug-level>'.  The output will end up in
+your syslog (like /var/log/messages or /var/adm/messages).
+
+If arlad crashes, at least run gdb on the core dump and do a `bt'.
+Print out variables around where it crashes if they seem useful.  If
+you don't get a core dump, try starting arlad under gdb (the `-n'
+option is useful here) and then do the same thing when it crashes.
+
+If the kernel crashes, try to obtain a crash dump by whatever means
+your OS has for this and then run the debugger on it.  The
+documentation on your OS should have more information on how to
+perform this task.
+
+Without this info we are probably as lost as you are.
+
 9. How do I adjust the amount of debug information?
 
-Both arlad and the xfs (the kernel module) has variables for
+Both arlad and the xfs (the kernel module) have variables for
 controlling what type of debug messages should be printed.
 
-They are controlled by the `--debug' option to arlad and by setting
-the `xfsdeb' variable in xfs (see xfs/<system>/xfs_deb.c).
+They are controlled by the `--debug' option to arlad and then by
+running `fs arladebug' and `fs xfsdebug'.
 
 10. How hard is it to port arla to a new operating system?
 
@@ -100,22 +125,22 @@ It's not hard.  The user-level code is quite portable and is not much
 different between different operating systems.  The kernel module is
 system-specific but not that large and you can probably start with the
 one in `xfs/SYSTEM' that's most similar to your system.  If you're
-interested in doing the port, send mail to
+interested in doing the port or even run Arla on an OS not mentioned
+above, send mail to
 <arla-drinkers@stacken.kth.se>.
 
 11. Known problems.
 
-OpenBSD 2.3 (current) and OpenBSD 2.2 on some architectures have
-serious problems with mmap.  If arlad doesn't seem to work om your
-system run configure with `--disable-mmap'. This problem has only
-been noticed on sun4m platforms (probably just Microsparc 2).
+OpenBSD on some architectures have serious problems with mmap.  If arlad
+doesn't seem to work om your system run configure with `--disable-mmap'.
+This problem has only been noticed on sun4m platforms.
+
+The same problem exists on Mac OS X 10.1 (Darwin 1.4). Use the
+--disable-mmap option.
 
 If you have problems with stale data cached or arlad is misbehaving a
 lot try zapping the entire cache directory (`/usr/arla/cache' per
 default) and restarting arlad.
-
-If you are using Digital's cc you should probably use the
-options -std1 (ie setting CC to "cc -std1" when runing configure).
 
 12. How can I help?
 
@@ -138,10 +163,12 @@ lwp and rx are copyrighted by IBM.  We're grateful to Derrick J
 Brashear <shadow@dementia.org> and Jim Doyle <jrd@bu.edu> for making
 them available.
 
-the rxkad implementation was written by Björn Grönvall <bg@sics.se>
+The rxkad implementation was written by Björn Grönvall <bg@sics.se>
 and is also part of the kth-krb distribution.
 
 editline was written by Simmule Turner and Rich Salz.
+
+The code for disconnected operation was written by Wuwei Shen.
 
 The code for gluing these together were written by ourselves.
 

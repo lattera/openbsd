@@ -1,5 +1,5 @@
 dnl
-dnl $Id: type-msghdr.m4,v 1.1 1999/05/15 22:45:35 assar Exp $
+dnl $KTH: type-msghdr.m4,v 1.1 1999/05/15 22:45:35 assar Exp $
 dnl
 
 dnl

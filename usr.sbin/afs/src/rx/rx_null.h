@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/rx/Attic/rx_null.h,v 1.1.1.1 1998/09/14 21:53:16 art Exp $	*/
-/* $Header: /usr/local/cvsroot/arla/rx/rx_null.h,v 1.3 1998/01/28 04:54:19 art Exp $ */
-/* $Source: /usr/local/cvsroot/arla/rx/rx_null.h,v $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_null.h,v 1.3 1998/01/28 04:54:19 art Exp $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_null.h,v $ */
 
 /*
 ****************************************************************************

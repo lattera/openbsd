@@ -1,5 +1,5 @@
 dnl
-dnl $Id: func-hstrerror-const.m4,v 1.2 1999/05/28 13:18:04 assar Exp $
+dnl $KTH: func-hstrerror-const.m4,v 1.2 1999/05/28 13:18:04 assar Exp $
 dnl
 dnl Test if hstrerror wants const or not
 dnl

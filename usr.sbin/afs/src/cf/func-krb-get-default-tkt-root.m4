@@ -1,5 +1,5 @@
 dnl
-dnl $Id: func-krb-get-default-tkt-root.m4,v 1.3 2000/01/23 16:53:21 lha Exp $
+dnl $KTH: func-krb-get-default-tkt-root.m4,v 1.3 2000/01/23 16:53:21 lha Exp $
 dnl
 
 dnl

@@ -1,4 +1,4 @@
-dnl $Id: krb-find-db.m4,v 1.1 1999/05/15 22:45:28 assar Exp $
+dnl $KTH: krb-find-db.m4,v 1.1 1999/05/15 22:45:28 assar Exp $
 dnl
 dnl find a suitable database library
 dnl

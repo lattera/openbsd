@@ -1,6 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/afs/src/ydr/Attic/symbol.c,v 1.1.1.1 1998/09/14 21:53:27 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -15,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -39,15 +33,15 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: symbol.c,v 1.4 1998/02/19 05:16:28 assar Exp $");
+RCSID("$KTH: symbol.c,v 1.8 2000/10/02 22:37:10 lha Exp $");
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mem.h>
 #include "sym.h"
 #include <hash.h>
+#include <roken.h>
 
 static Hashtab *hashtab;
 
@@ -102,8 +96,7 @@ findsym (char *name)
      return (Symbol *)hashtabsearch (hashtab, (void *)&tmp);
 }
 
-#ifdef notyet
-static Bool
+static Bool __attribute__ ((unused))
 printsymbol (void *ptr, void *arg)
 {
      Symbol *s = (Symbol *)ptr;
@@ -134,7 +127,6 @@ printsymbol (void *ptr, void *arg)
 
      return FALSE;
 }
-#endif
 
 void
 symiterate (Bool (*func)(void *, void *), void *arg)
