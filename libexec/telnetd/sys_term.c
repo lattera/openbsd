@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/telnetd/Attic/sys_term.c,v 1.18 1999/08/17 09:13:13 millert Exp $	*/
+/*	$OpenBSD: src/libexec/telnetd/Attic/sys_term.c,v 1.18.4.1 2000/10/10 19:49:07 jason Exp $	*/
 /*	$NetBSD: sys_term.c,v 1.9 1996/03/20 04:25:53 tls Exp $	*/
 
 /*
@@ -39,7 +39,7 @@
 static char sccsid[] = "@(#)sys_term.c	8.4+1 (Berkeley) 5/30/95";
 static char rcsid[] = "$NetBSD: sys_term.c,v 1.8 1996/02/28 20:38:21 thorpej Exp $";
 #else
-static char rcsid[] = "$OpenBSD: src/libexec/telnetd/Attic/sys_term.c,v 1.18 1999/08/17 09:13:13 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/telnetd/Attic/sys_term.c,v 1.18.4.1 2000/10/10 19:49:07 jason Exp $";
 #endif
 #endif /* not lint */
 
@@ -1850,6 +1850,10 @@ scrub_env()
 		if (strncmp(*cpp, "LD_", 3) &&
 		    strncmp(*cpp, "_RLD_", 5) &&
 		    strncmp(*cpp, "LIBPATH=", 8) &&
+		    strncmp(*cpp, "TERMINFO=", 9) &&
+		    strncmp(*cpp, "TERMINFO_DIRS=", 14) &&
+		    strncmp(*cpp, "TERMPATH=", 9) &&
+		    strncmp(*cpp, "TERMCAP=/", 9) &&
 		    strncmp(*cpp, "ENV=", 4) &&
 		    strncmp(*cpp, "IFS=", 4))
 			*cpp2++ = *cpp;
