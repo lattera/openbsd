@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/otherOS/loop.c,v 1.2 1996/09/21 19:12:44 maja Exp $ */
+
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
  *
@@ -28,7 +30,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: loop.c,v 1.8 1996/08/07 23:48:15 moj Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/otherOS/loop.c,v 1.2 1996/09/21 19:12:44 maja Exp $";
 #endif
 
 #include "os.h"

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/common/put.c,v 1.2 1996/09/21 19:12:01 maja Exp $ */
+
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
  *
@@ -28,7 +30,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: put.c,v 1.5 1996/08/16 22:42:56 moj Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/common/put.c,v 1.2 1996/09/21 19:12:01 maja Exp $";
 #endif
 
 #include <stddef.h>

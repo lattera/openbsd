@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/common/get.h,v 1.2 1996/09/21 19:11:36 maja Exp $ */
+
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
  *
@@ -26,7 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: get.h,v 1.4 1995/10/05 20:21:31 moj Exp $
+ *	$OpenBSD: src/usr.sbin/mopd/common/get.h,v 1.2 1996/09/21 19:11:36 maja Exp $
  *
  */
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/common/mopdef.h,v 1.2 1996/09/21 19:11:43 maja Exp $ */
+
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
  *
@@ -26,7 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: mopdef.h,v 1.11 1995/10/12 20:22:21 moj Exp $
+ *	$OpenBSD: src/usr.sbin/mopd/common/mopdef.h,v 1.2 1996/09/21 19:11:43 maja Exp $
  *
  */
 

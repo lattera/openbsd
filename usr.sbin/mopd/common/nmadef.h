@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/common/nmadef.h,v 1.2 1996/09/21 19:11:48 maja Exp $ */
+
 /*
  * Copyright (c) 1995 Mats O Jansson.  All rights reserved.
  *
@@ -26,7 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: nmadef.h,v 1.1 1995/07/10 20:06:06 moj Exp $
+ *	$OpenBSD: src/usr.sbin/mopd/common/nmadef.h,v 1.2 1996/09/21 19:11:48 maja Exp $
  *
  */
 

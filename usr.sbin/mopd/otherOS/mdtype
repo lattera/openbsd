@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @(#) $Id: mdtype,v 1.3 1996/08/06 12:16:45 moj Exp $
+# @(#) $OpenBSD: src/usr.sbin/mopd/otherOS/mdtype,v 1.2 1996/09/21 19:12:45 maja Exp $
 #
 # Determine machine type.
 #

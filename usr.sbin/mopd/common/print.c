@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/common/print.c,v 1.2 1996/09/21 19:11:57 maja Exp $ */
+
 /*
  * Copyright (c) 1993-96 Mats O Jansson.  All rights reserved.
  *
@@ -28,7 +30,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: print.c,v 1.18 1996/08/16 22:42:08 moj Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/common/print.c,v 1.2 1996/09/21 19:11:57 maja Exp $";
 #endif
 
 #include <sys/types.h>

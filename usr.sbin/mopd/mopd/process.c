@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.2 1996/09/21 19:12:26 maja Exp $ */
+
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
  *
@@ -28,7 +30,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: process.c,v 1.21 1996/08/22 17:04:07 moj Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.2 1996/09/21 19:12:26 maja Exp $";
 #endif
 
 #include "os.h"
