@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv.c,v 1.26 2003/02/13 05:54:39 maja Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv.c,v 1.27 2003/05/05 08:37:05 avsm Exp $ */
 
 /*
  * Copyright (c) 1994 Mats O Jansson <moj@stacken.kth.se>
@@ -32,7 +32,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv.c,v 1.26 2003/02/13 05:54:39 maja Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv.c,v 1.27 2003/05/05 08:37:05 avsm Exp $";
 #endif
 
 #include <sys/types.h>
