@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.21 2004/02/19 10:48:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.22 2004/02/20 22:21:05 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1497,6 +1497,10 @@ NENTRY(remrunqueue)
  * something to come ready.
  */
 ENTRY(idle)
+	/* Skip context saving if we have none. */
+	testl %esi,%esi
+	jz	1f
+
 	/*
 	 * idling:	save old context.
 	 *
@@ -1560,7 +1564,8 @@ ENTRY(idle)
 
 	xorl	%esi,%esi
 	sti
-	
+
+1:
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)	
 	call	_C_LABEL(sched_unlock_idle)
 #endif
