@@ -1,0 +1,41 @@
+OpenBSD/powerpc 2.3 runs on ISA (AT-Bus), and PCI buses
+with 603, 603e, 604, 604e processors.
+Only systems with openfirmware are supported.
+Has been tested on various Motorola (MCG) boards:
+	VME16xx, Ultra, Pro2000,
+	Pro3000, Series E and Series DT.
+Also tested on a V-I Power-3 vme board.
+
+The minimal configuration is said to require 8M of RAM and 150M of
+disk space, though we do not know of anyone running with a system
+quite this minimal today.  To install the entire system requires much
+more disk space,
+
+Supported devices include:
+	ONLY DEVICES SUPPORTED BY OPENFIRMWARE ON THE MACHINE.
+
+	Floppy controllers.
+	IDE hard disk controllers. (if supported by ofw)
+	SCSI host adapters: (if supported by ofw)
+		Symbios Logic (NCR) 53C8xx-based PCI SCSI host adapters
+		(ofw may support other scsi devices)
+
+	VGA, SVGA Display Adapters. 
+		X does not yet exist.  currently will only function as console
+
+	Serial ports:
+		Only port 0 on the machine is supported and only as console.
+
+	Ethernet adapters:
+		Digital DC21x4x-based PCI Ethernet adapters, including:
+		Znyx ZX34X
+		(ofw may support other devices)
+	Tape drives:
+		NONE
+	CD-ROM drives:
+		SCSI CD-ROM drives
+	Mice:
+		NONE
+	Sound Cards:
+		NONE
+	Miscellaneous:
