@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.15 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.16 2003/05/15 17:47:15 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1394,6 +1394,8 @@ NENTRY(lgdt)
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%ss
+	movl	$GSEL(GCPU_SEL, SEL_KPL),%eax
+	movw	%ax,%fs
 	/* Reload code selector by doing intersegment return. */
 	popl	%eax
 	pushl	$GSEL(GCODE_SEL, SEL_KPL)
@@ -2133,7 +2135,7 @@ syscall1:
 	pushl	$T_ASTFLT	# trap # for doing ASTs
 	INTRENTRY
 #ifdef DIAGNOSTIC
-	movzbl	CPL,%ebx
+	movl	CPL,%ebx
 	testl	%ebx,%ebx
 	jz	1f
 	pushl	$5f

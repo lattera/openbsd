@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.8 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.9 2003/05/15 17:47:16 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*
@@ -171,11 +171,11 @@ _C_LABEL(Xintr)/**/irq_num/**/:						;\
 	ack(irq_num)			/* and allow other intrs */	;\
 	incl	MY_COUNT+V_INTR		/* statistical info */		;\
 	movl	_C_LABEL(iminlevel) + (irq_num) * 4, %eax		;\
-	movzbl	CPL,%ebx						;\
+	movl	CPL,%ebx						;\
 	cmpl	%eax,%ebx						;\
 	jae	_C_LABEL(Xhold/**/irq_num)/* currently masked; hold it */;\
 Xresume/**/irq_num/**/:						;\
-	movzbl	CPL,%eax		/* cpl to restore on exit */	;\
+	movl	CPL,%eax		/* cpl to restore on exit */	;\
 	pushl	%eax							;\
 	movl	_C_LABEL(imaxlevel) + (irq_num) * 4,%eax		;\
 	movl	%eax,CPL		/* block enough for this irq */	;\
