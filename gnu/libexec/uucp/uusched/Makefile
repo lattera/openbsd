@@ -1,5 +1,5 @@
 # Makefile for uusched
-# $Id: Makefile,v 1.5 1995/08/24 05:23:28 jtc Exp $
+# $Id: Makefile,v 1.1.1.1 1995/10/18 08:38:43 deraadt Exp $
 
 BINDIR=		$(bindir)
 
@@ -13,7 +13,7 @@ uusched:	uusched.in
 		$(.CURDIR)/uusched.in > $(.TARGET)
 
 install:
-	install ${COPY} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	install ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
 	    uusched ${DESTDIR}${BINDIR}
 
 .include <bsd.prog.mk>

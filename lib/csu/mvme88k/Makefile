@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	5.5 (Berkeley) 5/21/91
-#	$Id: Makefile,v 1.1 1995/11/07 04:43:22 build Exp build $
+#	$Id: Makefile,v 1.1 1997/03/25 17:06:44 rahnds Exp $
 
 CFLAGS+=	-DLIBC_SCCS -I${.CURDIR}/..
 OBJS=		crt0.o gcrt0.o scrt0.o
@@ -30,7 +30,7 @@ scrt0.o: ${SRCS}
 	@rm -f ${.TARGET}.o
 
 install:
-	install ${COPY} -o ${BINOWN} -g ${BINGRP} -m 444 ${OBJS} \
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 ${OBJS} \
 	    ${DESTDIR}/usr/lib
 
 .if make(depend)
