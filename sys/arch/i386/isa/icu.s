@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.13 2003/05/17 19:22:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.14 2003/05/22 09:11:56 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -138,7 +138,7 @@ IDTVEC(doreti)
 
 IDTVEC(softtty)
 #if NPCCOM > 0
-	movl	IPL_SOFTTTY(%ebx),%eax
+	movl	$IPL_SOFTTTY,%eax
 	movl	%eax,CPL
 	sti
 #ifdef MULTIPROCESSOR
