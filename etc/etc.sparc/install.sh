@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id$
+# $OpenBSD: src/etc/etc.sparc/Attic/install.sh,v 1.4 1998/09/23 07:30:57 todd Exp $
 
 # XXX should handle --unlink
 

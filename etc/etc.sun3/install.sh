@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install.sh,v 1.3 1995/08/08 21:16:10 gwr Exp $
+# $OpenBSD: src/etc/etc.sun3/Attic/install.sh,v 1.2 1998/09/23 07:30:58 todd Exp $
 umask 0
 [ "$TARDIR" ] || { echo "$0: set TARDIR first" ; exit 1; }
 
