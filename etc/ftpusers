@@ -1,0 +1,22 @@
+#	$OpenBSD: src/etc/ftpusers,v 1.9 2002/09/11 19:03:33 danh Exp $
+#
+# list of users disallowed any ftp access.
+# read by ftpd(8).
+root
+daemon
+operator
+bin
+smmsp
+popa3d
+sshd
+uucp
+www
+named
+proxy
+nobody
+_portmap
+_rstatd
+_identd
+_rusersd
+_fingerd
+_x11
