@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/mips/sys/Attic/Ovfork.S,v 1.3 1996/07/30 20:27:57 pefo Exp $	*/
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -38,12 +39,9 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 	ASMSTR("from: @(#)Ovfork.s	8.1 (Berkeley) 6/4/93")
-	ASMSTR("$Id: Ovfork.S,v 1.1.1.1 1995/10/18 08:41:35 deraadt Exp $")
+	ASMSTR("$Id: Ovfork.S,v 1.2 1996/05/16 11:16:07 pefo Exp $")
 #endif /* LIBC_SCCS and not lint */
 
-#ifdef ABICALLS
-	.abicalls
-#endif
 
 /*
  * pid = vfork();
@@ -53,11 +51,7 @@
  */
 
 LEAF(vfork)
-#ifdef ABICALLS
-	.set	noreorder
-	.cpload	t9
 	.set	reorder
-#endif
 	li	v0, SYS_vfork		# system call number for vfork
 	syscall
 	beq	a3, zero, 1f		# jump if no errors
