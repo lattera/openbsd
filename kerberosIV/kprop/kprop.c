@@ -1,4 +1,4 @@
-/*	$Id: kprop.c,v 1.1.1.1 1995/12/14 06:52:49 tholo Exp $	*/
+/*	$Id: kprop.c,v 1.2 1995/12/14 08:43:48 tholo Exp $	*/
 
 /*-
  * Copyright 1987 by the Massachusetts Institute of Technology.
@@ -142,7 +142,7 @@ prop_to_slaves(struct slave_host *sl, int fd, char *fslv)
     KTEXT_ST     ticket;
     CREDENTIALS  cred;
     MSG_DAT msg_dat;
-    static char tkstring[] = "/tmp/kproptktXXXXXX";
+    static char tkstring[] = "/tmp/kproptktXXXXXXXXXX";
     
     des_key_schedule session_sched;
 
