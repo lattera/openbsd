@@ -88,8 +88,9 @@
 # Initial revision
 #
 
-require 'chat2.pl';
-eval "require 'socket.ph'" || eval "require 'sys/socket.ph'" || die "socket.ph missing: $!\n";
+require 'chat2.pl';	# into main
+eval "require 'socket.ph'" || eval "require 'sys/socket.ph'"
+	|| die "socket.ph missing: $!\n";
 
 
 package ftp;
@@ -140,7 +141,7 @@ $real_site = "";
 $ftp_show = 0;
 sub ftp'debug
 {
-	$ftp_show = @_[0];
+	$ftp_show = $_[0];
 #	if( $ftp_show ){
 #		print STDERR "ftp debugging on\n";
 #	}
@@ -148,7 +149,7 @@ sub ftp'debug
 
 sub ftp'set_timeout
 {
-	$timeout = @_[0];
+	$timeout = $_[0];
 	$timeout_open = $timeout;
 	$timeout_read = 20 * $timeout;
 	if( $ftp_show ){
@@ -245,7 +246,7 @@ sub ftp'login
 	local( $remote_user, $remote_password ) = @_;
 
 	if( $proxy ){
-		&ftp'send( "USER $remote_user@$site" );
+		&ftp'send( "USER $remote_user\@$site" );
 	}
 	else {
 		&ftp'send( "USER $remote_user" );
