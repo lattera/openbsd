@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adbvar.h,v 1.3 1996/05/26 18:35:17 briggs Exp $	*/
 /*	$NetBSD: adbvar.h,v 1.3 1996/05/05 06:16:24 briggs Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/rd_root.c,v 1.3 1996/05/26 18:35:33 briggs Exp $	*/
 /*	$NetBSD: rd_root.c,v 1.3 1996/05/05 06:17:09 briggs Exp $	*/
 
 /*

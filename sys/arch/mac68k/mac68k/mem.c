@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/mem.c,v 1.2 1996/05/26 18:36:27 briggs Exp $	*/
 /*	$NetBSD: mem.c,v 1.10 1995/04/10 13:15:26 mycroft Exp $	*/
 
 /*

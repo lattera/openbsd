@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/scsi96.c,v 1.3 1996/05/26 18:35:34 briggs Exp $	*/
 /*	$NetBSD: scsi96.c,v 1.17 1996/05/05 06:17:19 briggs Exp $	*/
 
 /*

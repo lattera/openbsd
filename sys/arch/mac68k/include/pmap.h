@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pmap.h,v 1.3 1996/05/26 18:35:58 briggs Exp $	*/
 /*	$NetBSD: pmap.h,v 1.13 1996/05/18 18:52:41 briggs Exp $	*/
 
 /*

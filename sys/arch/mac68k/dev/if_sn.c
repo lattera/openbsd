@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.5 1996/05/26 18:35:25 briggs Exp $	*/
+
 /*
  * National Semiconductor  SONIC Driver
  * Copyright (c) 1991   Algorithmics Ltd (http://www.algor.co.uk)

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/mac68k5380.c,v 1.5 1996/05/26 18:35:28 briggs Exp $	*/
 /*	$NetBSD: mac68k5380.c,v 1.24 1996/05/25 16:42:24 briggs Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/adbsys.h,v 1.3 1996/05/26 18:35:42 briggs Exp $	*/
 /*	$NetBSD: adbsys.h,v 1.5 1996/05/05 14:34:07 briggs Exp $	*/
 
 /*-

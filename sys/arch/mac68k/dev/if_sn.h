@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.h,v 1.2 1996/05/26 18:35:26 briggs Exp $	*/
+
 /*
  * Copyright (c) 1991   Algorithmics Ltd (http://www.algor.co.uk)
  * You may use, copy, and modify this program so long as you retain the

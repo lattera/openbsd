@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/viareg.h,v 1.2 1996/05/26 18:36:10 briggs Exp $	*/
 /*	$NetBSD: viareg.h,v 1.3 1996/05/05 06:18:07 briggs Exp $	*/
 
 /*-

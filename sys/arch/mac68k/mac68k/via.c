@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/via.c,v 1.6 1996/05/26 18:36:37 briggs Exp $	*/
 /*	$NetBSD: via.c,v 1.44 1996/05/25 16:31:04 briggs Exp $	*/
 
 /*-

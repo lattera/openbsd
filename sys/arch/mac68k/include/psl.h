@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/psl.h,v 1.4 1996/05/26 18:36:00 briggs Exp $	*/
 /*	$NetBSD: psl.h,v 1.9 1996/05/19 04:30:32 briggs Exp $	*/
 
 #ifndef PSL_C

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/locore.s,v 1.8 1996/05/26 18:36:20 briggs Exp $	*/
 /*	$NetBSD: locore.s,v 1.63 1996/05/17 02:11:47 briggs Exp $	*/
 
 /*

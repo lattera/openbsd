@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.3 1996/05/26 18:36:24 briggs Exp $	*/
 /*	$NetBSD: macrom.c,v 1.25 1996/05/25 14:45:34 briggs Exp $	*/
 
 /*-
