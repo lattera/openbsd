@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: entry.c,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $";
+static char rcsid[] = "$Id: entry.c,v 1.2 1996/11/01 23:27:32 millert Exp $";
 #endif
 
 /* vix 26jan87 [RCS'd; rest of log is in RCS file]
@@ -240,6 +240,9 @@ load_entry(file, error_func, pw, envp)
 			goto eof;
 		}
 		Debug(DPARS, ("load_entry()...uid %d, gid %d\n",e->uid,e->gid))
+	} else if (ch == '*') {
+	    ecode = e_cmd;
+	    goto eof;
 	}
 
 	e->uid = pw->pw_uid;
