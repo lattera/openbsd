@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/pfctl/pfctl_parser.c,v 1.146 2003/03/19 15:56:08 henning Exp $ */
+/*	$OpenBSD: src/sbin/pfctl/pfctl_parser.c,v 1.146.2.1 2003/06/12 19:00:43 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -944,8 +944,9 @@ set_ipmask(struct node_host *h, u_int8_t b)
 
 	/* Mask off bits of the address that will never be used. */
 	n = &h->addr.v.a.addr;
-	for (i = 0; i < 4; i++)
-		n->addr32[i] = n->addr32[i] & m->addr32[i];
+	if (h->addr.type == PF_ADDR_ADDRMASK)
+		for (i = 0; i < 4; i++)
+			n->addr32[i] = n->addr32[i] & m->addr32[i];
 }
 
 /* interface lookup routines */
