@@ -1,5 +1,5 @@
 /*
-**	$Id: netbsd.c,v 1.8 1995/07/08 23:57:06 pk Exp $
+**	$Id: netbsd.c,v 1.1.1.1 1995/10/18 08:43:18 deraadt Exp $
 **
 ** netbsd.c		Low level kernel access functions for NetBSD
 **

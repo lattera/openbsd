@@ -1,7 +1,7 @@
-#	$Id: Makefile,v 1.2 1994/12/22 10:27:12 cgd Exp $
+#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:43:17 deraadt Exp $
 
 PROG=	identd
-SRCS=	config.c identd.c netbsd.c parse.c proxy.c version.c
+SRCS=	config.c identd.c openbsd.c parse.c proxy.c version.c
 MAN=	identd.8
 
 LDADD=	-lkvm
