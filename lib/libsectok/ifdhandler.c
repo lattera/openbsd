@@ -1,4 +1,4 @@
-/* $Id: ifdhandler.c,v 1.14 2001/07/27 15:19:29 rees Exp $ */
+/* $Id: ifdhandler.c,v 1.6 2001/07/30 15:51:16 rees Exp $ */
 
 /*
 copyright 2000
@@ -162,7 +162,7 @@ IFD_Set_Capabilities(u_long Tag, u_char Value[])
 #ifdef DEBUG
 	    fprintf (stderr, "cap_table[%x].flags = %d\n",
 		     (int) Tag, cap_table[i].flags);
-#endif DEBUG
+#endif /* DEBUG */
 
 	    return 0; 
 	}
