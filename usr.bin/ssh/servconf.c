@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: servconf.c,v 1.42 2000/05/31 06:36:40 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.40.2.2 2000/09/01 18:23:22 jason Exp $");
 
 #include "ssh.h"
 #include "servconf.h"
@@ -75,6 +75,10 @@ initialize_server_options(ServerOptions *options)
 	options->ciphers = NULL;
 	options->protocol = SSH_PROTO_UNKNOWN;
 	options->gateway_ports = -1;
+	options->num_subsystems = 0;
+	options->max_startups_begin = -1;
+	options->max_startups_rate = -1;
+	options->max_startups = -1;
 }
 
 void
@@ -158,9 +162,13 @@ fill_default_server_options(ServerOptions *options)
 		options->protocol = SSH_PROTO_1|SSH_PROTO_2;
 	if (options->gateway_ports == -1)
 		options->gateway_ports = 0;
+	if (options->max_startups == -1)
+		options->max_startups = 10;
+	if (options->max_startups_rate == -1)
+		options->max_startups_rate = 100;		/* 100% */
+	if (options->max_startups_begin == -1)
+		options->max_startups_begin = options->max_startups;
 }
-
-#define WHITESPACE " \t\r\n"
 
 /* Keyword tokens. */
 typedef enum {
@@ -182,7 +190,7 @@ typedef enum {
 	sStrictModes, sEmptyPasswd, sRandomSeedFile, sKeepAlives, sCheckMail,
 	sUseLogin, sAllowUsers, sDenyUsers, sAllowGroups, sDenyGroups,
 	sIgnoreUserKnownHosts, sHostDSAKeyFile, sCiphers, sProtocol, sPidFile,
-	sGatewayPorts, sDSAAuthentication, sXAuthLocation
+	sGatewayPorts, sDSAAuthentication, sXAuthLocation, sSubsystem, sMaxStartups
 } ServerOpCodes;
 
 /* Textual representation of the tokens. */
@@ -237,6 +245,8 @@ static struct {
 	{ "ciphers", sCiphers },
 	{ "protocol", sProtocol },
 	{ "gatewayports", sGatewayPorts },
+	{ "subsystem", sSubsystem },
+	{ "maxstartups", sMaxStartups },
 	{ NULL, 0 }
 };
 
@@ -298,10 +308,11 @@ read_server_config(ServerOptions *options, const char *filename)
 {
 	FILE *f;
 	char line[1024];
-	char *cp, **charptr;
+	char *cp, **charptr, *arg;
 	int linenum, *intptr, value;
 	int bad_options = 0;
 	ServerOpCodes opcode;
+	int i;
 
 	f = fopen(filename, "r");
 	if (!f) {
@@ -311,11 +322,14 @@ read_server_config(ServerOptions *options, const char *filename)
 	linenum = 0;
 	while (fgets(line, sizeof(line), f)) {
 		linenum++;
-		cp = line + strspn(line, WHITESPACE);
-		if (!*cp || *cp == '#')
+		cp = line;
+		arg = strdelim(&cp);
+		/* Ignore leading whitespace */
+		if (*arg == '\0')
+			arg = strdelim(&cp);
+		if (!*arg || *arg == '#')
 			continue;
-		cp = strtok(cp, WHITESPACE);
-		opcode = parse_token(cp, filename, linenum);
+		opcode = parse_token(arg, filename, linenum);
 		switch (opcode) {
 		case sBadOption:
 			bad_options++;
@@ -330,23 +344,23 @@ read_server_config(ServerOptions *options, const char *filename)
 			if (options->num_ports >= MAX_PORTS)
 				fatal("%s line %d: too many ports.\n",
 				    filename, linenum);
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp)
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
 				fatal("%s line %d: missing port number.\n",
 				    filename, linenum);
-			options->ports[options->num_ports++] = atoi(cp);
+			options->ports[options->num_ports++] = atoi(arg);
 			break;
 
 		case sServerKeyBits:
 			intptr = &options->server_key_bits;
 parse_int:
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp) {
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0') {
 				fprintf(stderr, "%s line %d: missing integer value.\n",
 					filename, linenum);
 				exit(1);
 			}
-			value = atoi(cp);
+			value = atoi(arg);
 			if (*intptr == -1)
 				*intptr = value;
 			break;
@@ -360,11 +374,11 @@ parse_int:
 			goto parse_int;
 
 		case sListenAddress:
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp)
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
 				fatal("%s line %d: missing inet addr.\n",
 				    filename, linenum);
-			add_listen_addr(options, cp);
+			add_listen_addr(options, arg);
 			break;
 
 		case sHostKeyFile:
@@ -372,14 +386,14 @@ parse_int:
 			charptr = (opcode == sHostKeyFile ) ?
 			    &options->host_key_file : &options->host_dsa_key_file;
 parse_filename:
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp) {
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0') {
 				fprintf(stderr, "%s line %d: missing file name.\n",
 				    filename, linenum);
 				exit(1);
 			}
 			if (*charptr == NULL)
-				*charptr = tilde_expand_filename(cp, getuid());
+				*charptr = tilde_expand_filename(arg, getuid());
 			break;
 
 		case sPidFile:
@@ -389,26 +403,26 @@ parse_filename:
 		case sRandomSeedFile:
 			fprintf(stderr, "%s line %d: \"randomseed\" option is obsolete.\n",
 				filename, linenum);
-			cp = strtok(NULL, WHITESPACE);
+			arg = strdelim(&cp);
 			break;
 
 		case sPermitRootLogin:
 			intptr = &options->permit_root_login;
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp) {
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0') {
 				fprintf(stderr, "%s line %d: missing yes/without-password/no argument.\n",
 					filename, linenum);
 				exit(1);
 			}
-			if (strcmp(cp, "without-password") == 0)
+			if (strcmp(arg, "without-password") == 0)
 				value = 2;
-			else if (strcmp(cp, "yes") == 0)
+			else if (strcmp(arg, "yes") == 0)
 				value = 1;
-			else if (strcmp(cp, "no") == 0)
+			else if (strcmp(arg, "no") == 0)
 				value = 0;
 			else {
 				fprintf(stderr, "%s line %d: Bad yes/without-password/no argument: %s\n",
-					filename, linenum, cp);
+					filename, linenum, arg);
 				exit(1);
 			}
 			if (*intptr == -1)
@@ -418,19 +432,19 @@ parse_filename:
 		case sIgnoreRhosts:
 			intptr = &options->ignore_rhosts;
 parse_flag:
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp) {
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0') {
 				fprintf(stderr, "%s line %d: missing yes/no argument.\n",
 					filename, linenum);
 				exit(1);
 			}
-			if (strcmp(cp, "yes") == 0)
+			if (strcmp(arg, "yes") == 0)
 				value = 1;
-			else if (strcmp(cp, "no") == 0)
+			else if (strcmp(arg, "no") == 0)
 				value = 0;
 			else {
 				fprintf(stderr, "%s line %d: Bad yes/no argument: %s\n",
-					filename, linenum, cp);
+					filename, linenum, arg);
 				exit(1);
 			}
 			if (*intptr == -1)
@@ -533,94 +547,137 @@ parse_flag:
 
 		case sLogFacility:
 			intptr = (int *) &options->log_facility;
-			cp = strtok(NULL, WHITESPACE);
-			value = log_facility_number(cp);
+			arg = strdelim(&cp);
+			value = log_facility_number(arg);
 			if (value == (SyslogFacility) - 1)
 				fatal("%.200s line %d: unsupported log facility '%s'\n",
-				    filename, linenum, cp ? cp : "<NONE>");
+				    filename, linenum, arg ? arg : "<NONE>");
 			if (*intptr == -1)
 				*intptr = (SyslogFacility) value;
 			break;
 
 		case sLogLevel:
 			intptr = (int *) &options->log_level;
-			cp = strtok(NULL, WHITESPACE);
-			value = log_level_number(cp);
+			arg = strdelim(&cp);
+			value = log_level_number(arg);
 			if (value == (LogLevel) - 1)
 				fatal("%.200s line %d: unsupported log level '%s'\n",
-				    filename, linenum, cp ? cp : "<NONE>");
+				    filename, linenum, arg ? arg : "<NONE>");
 			if (*intptr == -1)
 				*intptr = (LogLevel) value;
 			break;
 
 		case sAllowUsers:
-			while ((cp = strtok(NULL, WHITESPACE))) {
+			while ((arg = strdelim(&cp)) && *arg != '\0') {
 				if (options->num_allow_users >= MAX_ALLOW_USERS)
 					fatal("%s line %d: too many allow users.\n",
 					    filename, linenum);
-				options->allow_users[options->num_allow_users++] = xstrdup(cp);
+				options->allow_users[options->num_allow_users++] = xstrdup(arg);
 			}
 			break;
 
 		case sDenyUsers:
-			while ((cp = strtok(NULL, WHITESPACE))) {
+			while ((arg = strdelim(&cp)) && *arg != '\0') {
 				if (options->num_deny_users >= MAX_DENY_USERS)
 					fatal( "%s line %d: too many deny users.\n",
 					    filename, linenum);
-				options->deny_users[options->num_deny_users++] = xstrdup(cp);
+				options->deny_users[options->num_deny_users++] = xstrdup(arg);
 			}
 			break;
 
 		case sAllowGroups:
-			while ((cp = strtok(NULL, WHITESPACE))) {
+			while ((arg = strdelim(&cp)) && *arg != '\0') {
 				if (options->num_allow_groups >= MAX_ALLOW_GROUPS)
 					fatal("%s line %d: too many allow groups.\n",
 					    filename, linenum);
-				options->allow_groups[options->num_allow_groups++] = xstrdup(cp);
+				options->allow_groups[options->num_allow_groups++] = xstrdup(arg);
 			}
 			break;
 
 		case sDenyGroups:
-			while ((cp = strtok(NULL, WHITESPACE))) {
+			while ((arg = strdelim(&cp)) && *arg != '\0') {
 				if (options->num_deny_groups >= MAX_DENY_GROUPS)
 					fatal("%s line %d: too many deny groups.\n",
 					    filename, linenum);
-				options->deny_groups[options->num_deny_groups++] = xstrdup(cp);
+				options->deny_groups[options->num_deny_groups++] = xstrdup(arg);
 			}
 			break;
 
 		case sCiphers:
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp)
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
 				fatal("%s line %d: Missing argument.", filename, linenum);
-			if (!ciphers_valid(cp))
+			if (!ciphers_valid(arg))
 				fatal("%s line %d: Bad SSH2 cipher spec '%s'.",
-				    filename, linenum, cp ? cp : "<NONE>");
+				    filename, linenum, arg ? arg : "<NONE>");
 			if (options->ciphers == NULL)
-				options->ciphers = xstrdup(cp);
+				options->ciphers = xstrdup(arg);
 			break;
 
 		case sProtocol:
 			intptr = &options->protocol;
-			cp = strtok(NULL, WHITESPACE);
-			if (!cp)
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
 				fatal("%s line %d: Missing argument.", filename, linenum);
-			value = proto_spec(cp);
+			value = proto_spec(arg);
 			if (value == SSH_PROTO_UNKNOWN)
 				fatal("%s line %d: Bad protocol spec '%s'.",
-				      filename, linenum, cp ? cp : "<NONE>");
+				      filename, linenum, arg ? arg : "<NONE>");
 			if (*intptr == SSH_PROTO_UNKNOWN)
 				*intptr = value;
 			break;
 
+		case sSubsystem:
+			if(options->num_subsystems >= MAX_SUBSYSTEMS) {
+				fatal("%s line %d: too many subsystems defined.",
+				      filename, linenum);
+			}
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
+				fatal("%s line %d: Missing subsystem name.",
+				      filename, linenum);
+			for (i = 0; i < options->num_subsystems; i++)
+				if(strcmp(arg, options->subsystem_name[i]) == 0)
+					fatal("%s line %d: Subsystem '%s' already defined.",
+					      filename, linenum, arg);
+			options->subsystem_name[options->num_subsystems] = xstrdup(arg);
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
+				fatal("%s line %d: Missing subsystem command.",
+				      filename, linenum);
+			options->subsystem_command[options->num_subsystems] = xstrdup(arg);
+			options->num_subsystems++;
+			break;
+
+		case sMaxStartups:
+			arg = strdelim(&cp);
+			if (!arg || *arg == '\0')
+				fatal("%s line %d: Missing MaxStartups spec.",
+				      filename, linenum);
+			if (sscanf(arg, "%d:%d:%d",
+			    &options->max_startups_begin,
+			    &options->max_startups_rate,
+			    &options->max_startups) == 3) {
+				if (options->max_startups_begin >
+				    options->max_startups ||
+				    options->max_startups_rate > 100 ||
+				    options->max_startups_rate < 1)
+				fatal("%s line %d: Illegal MaxStartups spec.",
+				      filename, linenum);
+				break;
+			}
+			intptr = &options->max_startups;
+			goto parse_int;
+
 		default:
 			fprintf(stderr, "%s line %d: Missing handler for opcode %s (%d)\n",
-				filename, linenum, cp, opcode);
+				filename, linenum, arg, opcode);
 			exit(1);
 		}
-		if (strtok(NULL, WHITESPACE) != NULL) {
-			fprintf(stderr, "%s line %d: garbage at end of line.\n",
-				filename, linenum);
+		if ((arg = strdelim(&cp)) != NULL && *arg != '\0') {
+			fprintf(stderr, 
+				"%s line %d: garbage at end of line; \"%.200s\".\n",
+				filename, linenum, arg);
 			exit(1);
 		}
 	}

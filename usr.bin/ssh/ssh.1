@@ -9,7 +9,7 @@
 .\"
 .\" Created: Sat Apr 22 21:55:14 1995 ylo
 .\"
-.\" $Id: ssh.1,v 1.55 2000/05/31 06:36:40 markus Exp $
+.\" $Id: ssh.1,v 1.57 2000/08/25 16:16:15 deraadt Exp $
 .\"
 .Dd September 25, 1999
 .Dt SSH 1
@@ -994,7 +994,7 @@ If the current session has no tty,
 this variable is not set.
 .It Ev TZ
 The timezone variable is set to indicate the present timezone if it
-was set when the daemon was started (e.i., the daemon passes the value
+was set when the daemon was started (i.e., the daemon passes the value
 on to new connections).
 .It Ev USER
 Set to the name of the user logging in.
@@ -1216,10 +1216,6 @@ authentication and ticket passing.
 supports one-time password authentication with
 .Xr skey 1 .
 .El
-.Pp
-The libraries described in
-.Xr ssl 8
-are required for proper operation.
 .Pp
 OpenSSH has been created by Aaron Campbell, Bob Beck, Markus Friedl,
 Niels Provos, Theo de Raadt, and Dug Song.

@@ -7,6 +7,8 @@
 #include "includes.h"
 #include "uuencode.h"
 
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.11.2.1 2000/09/01 18:23:21 jason Exp $");
+
 #ifdef AFS
 #include <krb.h>
 

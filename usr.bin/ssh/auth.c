@@ -5,7 +5,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.6.2.1 2000/06/12 02:37:31 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.6.2.2 2000/09/01 18:23:17 jason Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -24,8 +24,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.6.2.1 2000/06/12 02:37:31 jason Exp 
 #include "ssh2.h"
 #include "auth.h"
 #include "session.h"
-#include "dispatch.h"
-
 
 /* import */
 extern ServerOptions options;

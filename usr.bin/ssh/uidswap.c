@@ -7,7 +7,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: uidswap.c,v 1.5 1999/11/24 19:53:54 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/uidswap.c,v 1.6.2.1 2000/09/01 18:23:25 jason Exp $");
 
 #include "ssh.h"
 #include "uidswap.h"
@@ -43,15 +43,15 @@ temporarily_use_uid(uid_t uid)
 
 	/* Set the effective uid to the given (unprivileged) uid. */
 	if (seteuid(uid) == -1)
-		debug("seteuid %d: %.100s", (int) uid, strerror(errno));
+		debug("seteuid %u: %.100s", (u_int) uid, strerror(errno));
 #else /* SAVED_IDS_WORK_WITH_SETUID */
 	/* Propagate the privileged uid to all of our uids. */
 	if (setuid(geteuid()) < 0)
-		debug("setuid %d: %.100s", (int) geteuid(), strerror(errno));
+		debug("setuid %u: %.100s", (u_int) geteuid(), strerror(errno));
 
 	/* Set the effective uid to the given (unprivileged) uid. */
 	if (seteuid(uid) == -1)
-		debug("seteuid %d: %.100s", (int) uid, strerror(errno));
+		debug("seteuid %u: %.100s", (u_int) uid, strerror(errno));
 #endif /* SAVED_IDS_WORK_WITH_SETEUID */
 }
 
@@ -64,7 +64,7 @@ restore_uid()
 #ifdef SAVED_IDS_WORK_WITH_SETEUID
 	/* Set the effective uid back to the saved uid. */
 	if (seteuid(saved_euid) < 0)
-		debug("seteuid %d: %.100s", (int) saved_euid, strerror(errno));
+		debug("seteuid %u: %.100s", (u_int) saved_euid, strerror(errno));
 #else /* SAVED_IDS_WORK_WITH_SETEUID */
 	/*
 	 * We are unable to restore the real uid to its unprivileged value.
@@ -83,5 +83,5 @@ void
 permanently_set_uid(uid_t uid)
 {
 	if (setuid(uid) < 0)
-		debug("setuid %d: %.100s", (int) uid, strerror(errno));
+		debug("setuid %u: %.100s", (u_int) uid, strerror(errno));
 }

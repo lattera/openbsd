@@ -6,6 +6,8 @@
 
 #include <resolv.h>
 
+RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.5.2.1 2000/09/01 18:23:25 jason Exp $");
+
 int
 uuencode(unsigned char *src, unsigned int srclength,
     char *target, size_t targsize)

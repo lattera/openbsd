@@ -11,7 +11,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: ssh.c,v 1.55 2000/05/31 06:36:40 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.51.2.2 2000/09/01 18:23:23 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/dsa.h>
@@ -21,7 +21,6 @@ RCSID("$Id: ssh.c,v 1.55 2000/05/31 06:36:40 markus Exp $");
 #include "ssh.h"
 #include "packet.h"
 #include "buffer.h"
-#include "authfd.h"
 #include "readconf.h"
 #include "uidswap.h"
 
@@ -29,6 +28,7 @@ RCSID("$Id: ssh.c,v 1.55 2000/05/31 06:36:40 markus Exp $");
 #include "compat.h"
 #include "channels.h"
 #include "key.h"
+#include "authfd.h"
 #include "authfile.h"
 
 extern char *__progname;
@@ -243,8 +243,8 @@ main(int ac, char **av)
 		cp = strrchr(av0, '/') + 1;
 	else
 		cp = av0;
-	if (strcmp(cp, "rsh") != 0 && strcmp(cp, "ssh") != 0 &&
-	    strcmp(cp, "rlogin") != 0 && strcmp(cp, "slogin") != 0)
+	if (strcmp(cp, "rsh") && strcmp(cp, "ssh") && strcmp(cp, "rlogin") &&
+	    strcmp(cp, "slogin") && strcmp(cp, "remsh"))
 		host = cp;
 
 	for (optind = 1; optind < ac; optind++) {
@@ -451,7 +451,7 @@ main(int ac, char **av)
 	}
 
 	/* Cannot fork to background if no command. */
-	if (fork_after_authentication_flag && buffer_len(&command) == 0)
+	if (fork_after_authentication_flag && buffer_len(&command) == 0 && !no_shell_flag)
 		fatal("Cannot fork into background without a command to execute.");
 
 	/* Allocate a tty by default if no command specified. */
@@ -480,6 +480,7 @@ main(int ac, char **av)
 	pwcopy.pw_passwd = xstrdup(pw->pw_passwd);
 	pwcopy.pw_uid = pw->pw_uid;
 	pwcopy.pw_gid = pw->pw_gid;
+	pwcopy.pw_class = xstrdup(pw->pw_class);
 	pwcopy.pw_dir = xstrdup(pw->pw_dir);
 	pwcopy.pw_shell = xstrdup(pw->pw_shell);
 	pw = &pwcopy;
@@ -612,7 +613,7 @@ main(int ac, char **av)
 	 */
 	snprintf(buf, sizeof buf, "%.100s/%.100s", pw->pw_dir, SSH_USER_DIR);
 	if (stat(buf, &st) < 0)
-		if (mkdir(buf, 0755) < 0)
+		if (mkdir(buf, 0700) < 0)
 			error("Could not create directory '%.200s'.", buf);
 
 	/* Check if the connection failed, and try "rsh" if appropriate. */
@@ -861,7 +862,7 @@ ssh_session(void)
 	}
 
 	/* Enter the interactive session. */
-	return client_loop(have_tty, tty_flag ? options.escape_char : -1);
+	return client_loop(have_tty, tty_flag ? options.escape_char : -1, 0);
 }
 
 void
@@ -944,16 +945,27 @@ int
 ssh_session2(void)
 {
 	int window, packetmax, id;
-	int in  = dup(STDIN_FILENO);
-	int out = dup(STDOUT_FILENO);
-	int err = dup(STDERR_FILENO);
+	int in, out, err;
+
+	if (stdin_null_flag) {
+		in = open("/dev/null", O_RDONLY);
+	} else {
+		in = dup(STDIN_FILENO);
+	}
+	out = dup(STDOUT_FILENO);
+	err = dup(STDERR_FILENO);
 
 	if (in < 0 || out < 0 || err < 0)
-		fatal("dump in/out/err failed");
+		fatal("dup() in/out/err failed");
 
 	/* should be pre-session */
 	init_local_fwd();
 	
+	/* If requested, let ssh continue in the background. */
+	if (fork_after_authentication_flag)
+		if (daemon(1, 1) < 0)
+			fatal("daemon() failed: %.200s", strerror(errno));
+
 	window = 32*1024;
 	if (tty_flag) {
 		packetmax = window/8;
@@ -962,13 +974,13 @@ ssh_session2(void)
 		packetmax = window/2;
 	}
 
+/*XXX MAXPACK */
 	id = channel_new(
 	    "session", SSH_CHANNEL_OPENING, in, out, err,
 	    window, packetmax, CHAN_EXTENDED_WRITE, xstrdup("client-session"));
 
-
 	channel_open(id);
 	channel_register_callback(id, SSH2_MSG_CHANNEL_OPEN_CONFIRMATION, client_init, (void *)0);
 
-	return client_loop(tty_flag, tty_flag ? options.escape_char : -1);
+	return client_loop(tty_flag, tty_flag ? options.escape_char : -1, id);
 }

@@ -32,7 +32,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: readpass.c,v 1.9 2000/01/21 21:16:00 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.10.2.1 2000/09/01 18:23:21 jason Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"

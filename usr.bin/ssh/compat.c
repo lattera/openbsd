@@ -28,7 +28,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: compat.c,v 1.14 2000/05/22 18:42:01 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.13.2.2 2000/09/01 18:23:19 jason Exp $");
 
 #include "ssh.h"
 #include "packet.h"
@@ -63,8 +63,10 @@ compat_datafellows(const char *version)
 	} check[] = {
 		{"2.1.0",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC},
 		{"2.0.1",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC|SSH_BUG_PUBKEYAUTH|SSH_BUG_X11FWD},
+		{"2.",		SSH_BUG_HMAC|SSH_COMPAT_SESSIONID_ENCODING},
 		{NULL,		0}
 	};
+	/* process table, return first match */
 	for (i = 0; check[i].version; i++) {
 		len = strlen(check[i].version);
 		if (strlen(version) >= len &&
@@ -80,13 +82,13 @@ compat_datafellows(const char *version)
 int
 proto_spec(const char *spec)
 {
-	char *s, *p;
+	char *s, *p, *q;
 	int ret = SSH_PROTO_UNKNOWN;
 
 	if (spec == NULL)
 		return ret;
-	s = xstrdup(spec);
-	for ((p = strtok(s, SEP)); p; (p = strtok(NULL, SEP))) {
+	q = s = xstrdup(spec);
+	for ((p = strsep(&q, SEP)); p && *p != '\0'; (p = strsep(&q, SEP))) {
 		switch(atoi(p)) {
 		case 1:
 			if (ret == SSH_PROTO_UNKNOWN)

@@ -9,6 +9,8 @@
 #include "ssh.h"
 #include "servconf.h"
 
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.14.2.1 2000/09/01 18:23:16 jason Exp $");
+
 #ifdef KRB4
 char *ticket = NULL;
 
@@ -80,11 +82,12 @@ auth_krb4_password(struct passwd * pw, const char *password)
 			if (r == RD_AP_UNDEC) {
 				/*
 				 * Probably didn't have a srvtab on
-				 * localhost. Allow login.
+				 * localhost. Disallow login.
 				 */
 				log("Kerberos V4 TGT for %s unverifiable, "
 				    "no srvtab installed? krb_rd_req: %s",
 				    pw->pw_name, krb_err_txt[r]);
+				goto kerberos_auth_failure;
 			} else if (r != KSUCCESS) {
 				log("Kerberos V4 %s ticket unverifiable: %s",
 				    KRB4_SERVICE_NAME, krb_err_txt[r]);
@@ -92,12 +95,13 @@ auth_krb4_password(struct passwd * pw, const char *password)
 			}
 		} else if (r == KDC_PR_UNKNOWN) {
 			/*
-			 * Allow login if no rcmd service exists, but
+			 * Disallow login if no rcmd service exists, and
 			 * log the error.
 			 */
 			log("Kerberos V4 TGT for %s unverifiable: %s; %s.%s "
 			    "not registered, or srvtab is wrong?", pw->pw_name,
 			krb_err_txt[r], KRB4_SERVICE_NAME, phost);
+			goto kerberos_auth_failure;
 		} else {
 			/*
 			 * TGT is bad, forget it. Possibly spoofed!
@@ -150,7 +154,7 @@ krb4_init(uid_t uid)
 		if (lstat("/ticket", &st) != -1)
 			tkt_root = "/ticket/";
 #endif /* AFS */
-		snprintf(ticket, MAXPATHLEN, "%s%d_%d", tkt_root, uid, getpid());
+		snprintf(ticket, MAXPATHLEN, "%s%u_%d", tkt_root, uid, getpid());
 		(void) krb_set_tkt_string(ticket);
 	}
 	/* Register ticket cleanup in case of fatal error. */

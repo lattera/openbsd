@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: canohost.c,v 1.11 2000/01/04 13:41:32 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/canohost.c,v 1.12.2.1 2000/09/01 18:23:18 jason Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"

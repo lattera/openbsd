@@ -17,13 +17,12 @@
  */
 
 #include "includes.h"
-RCSID("$Id: channels.c,v 1.59 2000/05/30 17:23:36 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.57.2.2 2000/09/01 18:23:18 jason Exp $");
 
 #include "ssh.h"
 #include "packet.h"
 #include "xmalloc.h"
 #include "buffer.h"
-#include "authfd.h"
 #include "uidswap.h"
 #include "readconf.h"
 #include "servconf.h"
@@ -33,6 +32,11 @@ RCSID("$Id: channels.c,v 1.59 2000/05/30 17:23:36 markus Exp $");
 #include "compat.h"
 
 #include "ssh2.h"
+
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
+#include "key.h"
+#include "authfd.h"
 
 /* Maximum number of fake X11 displays to try. */
 #define MAX_DISPLAYS  1000
@@ -135,7 +139,7 @@ Channel *
 channel_lookup(int id)
 {
 	Channel *c;
-	if (id < 0 && id > channels_alloc) {
+	if (id < 0 || id > channels_alloc) {
 		log("channel_lookup: %d: bad id", id);
 		return NULL;
 	}
@@ -240,6 +244,7 @@ channel_new(char *ctype, int type, int rfd, int wfd, int efd,
 	c->cb_arg = NULL;
 	c->cb_event = 0;
 	c->dettach_user = NULL;
+	c->input_filter = NULL;
 	debug("channel %d: new [%s]", found, remote_name);
 	return found;
 }
@@ -661,7 +666,14 @@ channel_handle_rfd(Channel *c, fd_set * readset, fd_set * writeset)
 			}
 			return -1;
 		}
-		buffer_append(&c->input, buf, len);
+		if(c->input_filter != NULL) {
+			if (c->input_filter(c, buf, len) == -1) {
+				debug("filter stops channel %d", c->self);
+				chan_read_failed(c);
+			}
+		} else {
+			buffer_append(&c->input, buf, len);
+		}
 	}
 	return 1;
 }
@@ -932,7 +944,6 @@ channel_output_poll()
 				packet_send();
 				buffer_consume(&c->input, len);
 				c->remote_window -= len;
-				debug("channel %d: send data len %d", c->self, len);
 			}
 		} else if (c->istate == CHAN_INPUT_WAIT_DRAIN) {
 			if (compat13)
@@ -2249,6 +2260,16 @@ channel_cancel_cleanup(int id)
 		return;
 	}
 	c->dettach_user = NULL;
+}
+void   
+channel_register_filter(int id, channel_filter_fn *fn)
+{
+	Channel *c = channel_lookup(id);
+	if (c == NULL) {
+		log("channel_register_filter: %d: bad id", id);
+		return;
+	}
+	c->input_filter = fn;
 }
 
 void

@@ -14,7 +14,7 @@
  *
  */
 
-/* RCSID("$Id: xmalloc.h,v 1.2 1999/11/24 00:26:04 deraadt Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.3.2.1 2000/09/01 18:23:25 jason Exp $"); */
 
 #ifndef XMALLOC_H
 #define XMALLOC_H

@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: servconf.h,v 1.23 2000/05/31 06:36:40 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.22.2.2 2000/09/01 18:23:22 jason Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H
@@ -24,6 +24,7 @@
 #define MAX_DENY_USERS		256	/* Max # users on deny list. */
 #define MAX_ALLOW_GROUPS	256	/* Max # groups on allow list. */
 #define MAX_DENY_GROUPS		256	/* Max # groups on deny list. */
+#define MAX_SUBSYSTEMS		256	/* Max # subsystems. */
 
 typedef struct {
 	unsigned int num_ports;
@@ -94,6 +95,15 @@ typedef struct {
 	char   *allow_groups[MAX_ALLOW_GROUPS];
 	unsigned int num_deny_groups;
 	char   *deny_groups[MAX_DENY_GROUPS];
+
+	unsigned int num_subsystems;
+	char   *subsystem_name[MAX_SUBSYSTEMS];
+	char   *subsystem_command[MAX_SUBSYSTEMS];
+
+	int	max_startups_begin;
+	int	max_startups_rate;
+	int	max_startups;
+
 }       ServerOptions;
 /*
  * Initializes the server options to special values that indicate that they

@@ -17,7 +17,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: packet.c,v 1.31 2000/05/01 07:40:03 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.32.2.1 2000/09/01 18:23:21 jason Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -479,8 +479,8 @@ packet_send1()
 	buffer_consume(&outgoing_packet, 8 - padding);
 
 	/* Add check bytes. */
-	checksum = crc32((unsigned char *) buffer_ptr(&outgoing_packet),
-			 buffer_len(&outgoing_packet));
+	checksum = ssh_crc32((unsigned char *) buffer_ptr(&outgoing_packet),
+	    buffer_len(&outgoing_packet));
 	PUT_32BIT(buf, checksum);
 	buffer_append(&outgoing_packet, buf, 4);
 
@@ -764,7 +764,7 @@ packet_read_poll1(int *payload_len_ptr)
 #endif
 
 	/* Compute packet checksum. */
-	checksum = crc32((unsigned char *) buffer_ptr(&incoming_packet),
+	checksum = ssh_crc32((unsigned char *) buffer_ptr(&incoming_packet),
 	    buffer_len(&incoming_packet) - 4);
 
 	/* Skip padding. */

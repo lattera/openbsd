@@ -8,7 +8,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: auth-passwd.c,v 1.14 1999/12/29 12:47:46 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-passwd.c,v 1.15.2.1 2000/09/01 18:23:16 jason Exp $");
 
 #include "packet.h"
 #include "ssh.h"
