@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.3 2001/11/13 21:00:49 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.4 2002/03/12 11:54:17 ho Exp $ */
 /* $NetBSD: cpu.h,v 1.45 2000/08/21 02:03:12 thorpej Exp $ */
 
 /*-
@@ -93,6 +93,7 @@
 #ifdef _KERNEL
 
 #include <machine/bus.h>
+#include <sys/device.h>
 
 struct pcb;
 struct proc;
@@ -161,9 +162,8 @@ struct mchkinfo {
 	__volatile int mc_received;	/* machine check was received */
 };
 
-typedef long cpuid_t;
-
 struct cpu_info {
+	struct device *ci_dev;		/* pointer to our device */
 	/*
 	 * Public members.
 	 */
@@ -172,12 +172,13 @@ struct cpu_info {
 	u_long ci_simple_locks;		/* # of simple locks held */
 #endif
 	struct proc *ci_curproc;	/* current owner of the processor */
+	struct simplelock ci_slock;	/* lock on this data structure */
+	cpuid_t ci_cpuid;		/* our CPU ID */
 
 	/*
 	 * Private members.
 	 */
 	struct mchkinfo ci_mcinfo;	/* machine check info */
-	cpuid_t ci_cpuid;		/* our CPU ID */
 	struct proc *ci_fpcurproc;	/* current owner of the FPU */
 	paddr_t ci_curpcb;		/* PA of current HW PCB */
 	struct pcb *ci_idle_pcb;	/* our idle PCB */

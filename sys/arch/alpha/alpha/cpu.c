@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.2 2001/11/13 21:00:48 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.3 2002/03/12 11:54:17 ho Exp $ */
 /* $NetBSD: cpu.c,v 1.44 2000/05/23 05:12:53 thorpej Exp $ */
 
 /*-
@@ -561,7 +561,8 @@ cpu_iccb_send(cpu_id, msg)
 	 */
 	strcpy(pcsp->pcs_iccb.iccb_rxbuf, msg);
 	pcsp->pcs_iccb.iccb_rxlen = strlen(msg);
-	atomic_setbits_ulong(&hwrpb->rpb_rxrdy, cpumask);
+	/* XXX cast to __volatile */
+	atomic_setbits_ulong((__volatile u_long *)&hwrpb->rpb_rxrdy, cpumask);
 
 	/* Wait for the message to be received. */
 	for (timeout = 10000; timeout != 0; timeout--) {

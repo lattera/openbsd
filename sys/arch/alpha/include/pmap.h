@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/pmap.h,v 1.4.14.4 2002/03/06 00:47:44 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/pmap.h,v 1.4.14.5 2002/03/12 11:54:17 ho Exp $ */
 /* $NetBSD: pmap.h,v 1.37 2000/11/19 03:16:35 thorpej Exp $ */
 
 /*-
@@ -182,7 +182,7 @@ struct pv_head {
 
 #if defined(MULTIPROCESSOR)
 void	pmap_tlb_shootdown(pmap_t, vaddr_t, pt_entry_t);
-void	pmap_do_tlb_shootdown(void);
+void	pmap_do_tlb_shootdown(struct cpu_info *, struct trapframe *);
 void	pmap_tlb_shootdown_q_drain(u_long, boolean_t);
 #define	PMAP_TLB_SHOOTDOWN(pm, va, pte)					\
 	pmap_tlb_shootdown((pm), (va), (pte))
