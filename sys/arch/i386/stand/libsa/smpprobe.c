@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.1 2000/02/19 17:53:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.2 2000/02/20 10:27:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -34,23 +34,13 @@
 
 #include <sys/param.h>
 #include <machine/biosvar.h>
+#include <machine/mp.h>
+#include <stand/boot/bootarg.h>
 #include "libsa.h"
 
 extern int debug;
 
 extern u_int cnvmem;
-#define	MP_FLOAT_SIG	0x5F504D5F	/* "_MP_" little endian*/
-#define	MP_CONF_SIG	0x504D4350	/* "PCMP" little endian */
-
-typedef struct _mp_float {
-	u_int32_t signature;
-	u_int32_t conf_addr;
-	u_int8_t length;
-	u_int8_t spec_rev;
-	u_int8_t checksum;
-	u_int8_t feature[5];
-} mp_float_t;
-
 
 static __inline int
 mp_checksum(ptr, len)
@@ -69,22 +59,22 @@ mp_checksum(ptr, len)
 	return ((sum & 0xff) == 0);
 }
 
-
-static mp_float_t *
+struct mp_float *
 mp_probefloat(ptr, len)
 	u_int8_t *ptr;
 	int len;
 {
-	mp_float_t *mpp;
+	struct mp_float *mpp;
 	int i;
 
 #ifdef DEBUG
 	if (debug)
 		printf("Checking %p for %d\n", ptr, len);
 #endif
-	for (i = 0, mpp = (mp_float_t *)ptr; i < len;
-	    i += sizeof(mp_float_t), mpp++) {
-		if (mpp->signature == MP_FLOAT_SIG) {
+	for (i = 0, mpp = (struct mp_float *)ptr; i < len;
+	    i += sizeof *mpp, mpp++) {
+		if (bcmp(mpp->signature, MPF_SIGNATURE,
+		    sizeof mpp->signature) == 0) {
 #ifdef DEBUG
 			if (debug)
 				printf("Found possible MP signature at: %p\n",
@@ -108,10 +98,11 @@ mp_probefloat(ptr, len)
 void
 smpprobe()
 {
-	mp_float_t *mp = NULL;
+	struct mp_float *mp = NULL;
 
 	/* Check EBDA */
-	if (!(mp = mp_probefloat((void *)((*((u_int16_t*)0x40e)) * 16), 1024)) &&
+	if (!(mp = mp_probefloat((void *)((*((u_int16_t*)0x40e)) * 16),
+	    1024)) &&
 		/* Check BIOS ROM 0xF0000 - 0xFFFFF */
 	    !(mp = mp_probefloat((void *)(0xF0000), 0xFFFF)) &&
 		/* Check last 1K of base RAM */
@@ -126,17 +117,20 @@ smpprobe()
 
 	/* Valid MP signature found */
 	printf(" smp");
+	addbootarg(BOOTARG_SMPINFO, mp->length * sizeof *mp, mp);
+
 #if DEBUG
 	if (debug)
 		printf("Floating Structure:\n"
-		"\tSignature: %x\n"
-		"\tConfig at: %x\n"
-		"\tLength: %d\n"
-		"\tRev: 1.%d\n"
-		"\tFeature: %x %x %x %x %x\n",
-		mp->signature, mp->conf_addr, mp->length, mp->spec_rev,
-		mp->feature[0], mp->feature[1], mp->feature[2],
-		mp->feature[3], mp->feature[4]);
+		    "\tSignature: %c%c%c%c\n"
+		    "\tConfig at: %x\n"
+		    "\tLength: %d\n"
+		    "\tRev: 1.%d\n"
+		    "\tFeature: %x %x %x %x %x\n",
+		    mp->signature[0], mp->signature[1], mp->signature[2],
+		    mp->signature[3], mp->pointer, mp->length, mp->revision,
+		    mp->feature1, mp->feature2, mp->feature3, mp->feature4,
+		    mp->feature5);
 #endif
 }
 
