@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/rlogin/Attic/krcmd.c,v 1.10 2002/02/17 19:42:31 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/rsh/Attic/krcmd.c,v 1.1 2002/05/06 22:23:53 deraadt Exp $	*/
 /*	$NetBSD: krcmd.c,v 1.2 1995/03/21 07:58:36 cgd Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #if 0
 static char sccsid[] = "@(#)krcmd.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/rlogin/Attic/krcmd.c,v 1.10 2002/02/17 19:42:31 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/rsh/Attic/krcmd.c,v 1.1 2002/05/06 22:23:53 deraadt Exp $";
 #endif
 #endif /* not lint */
 
