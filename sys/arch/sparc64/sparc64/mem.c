@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/mem.c,v 1.3 2001/08/20 20:23:53 jason Exp $	*/
 /*	$NetBSD: mem.c,v 1.18 2001/04/24 04:31:12 thorpej Exp $ */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.3 2001/08/20 20:23:53 jason Exp $	*/
 /*	$NetBSD: trap.c,v 1.73 2001/08/09 01:03:01 eeh Exp $ */
 
 /*

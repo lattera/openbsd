@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/bsd_openprom.h,v 1.2 2001/08/20 20:23:52 jason Exp $	*/
 /*	$NetBSD: bsd_openprom.h,v 1.2 2000/03/13 23:52:34 soren Exp $ */
 
 /*
