@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.4 2001/07/15 15:10:55 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.5 2001/07/16 21:40:24 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -97,7 +97,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mpbios.c,v 1.1.2.3 2001/07/15 11:43:59 niklas Exp $
+ *	$Id: mpbios.c,v 1.1.2.4 2001/07/15 15:10:55 ho Exp $
  */
 
 /*
@@ -138,7 +138,7 @@
 
 
 static struct mpbios_ioapic default_ioapic = {
-    2,0,1,IOAPICENTRY_FLAG_EN,(caddr_t)IOAPIC_BASE_DEFAULT
+    2, 0, 1, IOAPICENTRY_FLAG_EN, (caddr_t)IOAPIC_BASE_DEFAULT
 };
 
 /* descriptions of MP basetable entries */
@@ -372,7 +372,7 @@ out:
 }
 
 /*
- * Map a chunk of memory read-only and return an appropraitely
+ * Map a chunk of memory read-only and return an appropriately
  * const'ed pointer.
  */
 
@@ -394,8 +394,12 @@ mpbios_map(pa, len, handle)
 	handle->vsize = endpa-pgpa;
 
 	do {
+#if 1
+		pmap_kenter_pa(va, pgpa, VM_PROT_READ);
+#else
 		pmap_enter(pmap_kernel(), va, pgpa, VM_PROT_READ, TRUE,
 		    VM_PROT_READ);
+#endif
 		va += NBPG;
 		pgpa += NBPG;
 	} while (pgpa < endpa);
@@ -407,7 +411,11 @@ static __inline void
 mpbios_unmap(handle)
 	struct mp_map *handle;
 {
+#if 1
+  	pmap_kremove(handle->baseva, handle->vsize);
+#else
   	pmap_extract(pmap_kernel(), handle->baseva, NULL);
+#endif
 	uvm_km_free(kernel_map, handle->baseva, handle->vsize);
 }
 
@@ -563,11 +571,11 @@ mpbios_search (self, start, count, map)
 	int i, len;
 	const struct mpbios_fps *m;
 	int end = count - sizeof(*m);
-	const u_int8_t *base = mpbios_map (start, count, &t);
+	const u_int8_t *base = mpbios_map(start, count, &t);
 
 	if (mp_verbose)
 		printf("%s: scanning 0x%lx to 0x%lx for MP signature\n",
-		    self->dv_xname, start, start+count-sizeof(*m));
+		    self->dv_xname, start, start + count - sizeof(*m));
 
 	for (i = 0; i <= end; i += 4) {
 		m = (struct mpbios_fps *)&base[i];
@@ -582,7 +590,7 @@ mpbios_search (self, start, count, map)
 	}
 	mpbios_unmap(&t);
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -803,7 +811,7 @@ mpbios_scan(self)
 	mpbios_unmap(&mp_fp_map);
 	if (mp_cth != NULL) {
 		mp_cth = NULL;
-		mpbios_unmap (&mp_cfg_table_map);
+		mpbios_unmap(&mp_cfg_table_map);
 	}
 }
 
@@ -1158,7 +1166,7 @@ mpbios_int(ent, enttype, mpi)
 	mpi->bus_pin = dev;
 
 	mpi->ioapic_ih = APIC_INT_VIA_APIC |
-	    ((id<<APIC_INT_APIC_SHIFT) | ((pin<<APIC_INT_PIN_SHIFT)));
+	    ((id << APIC_INT_APIC_SHIFT) | ((pin << APIC_INT_PIN_SHIFT)));
 
 	mpi->type = type;
 	mpi->flags = flags;
@@ -1246,11 +1254,19 @@ mpbios_cpu_start(struct cpu_info *ci)
 	dwordptr[0] = 0;
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
 
+#if 1
+	pmap_kenter_pa(0, 0, VM_PROT_READ|VM_PROT_WRITE);
+#else
 	pmap_enter(pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
 	    VM_PROT_READ|VM_PROT_WRITE);
+#endif
 	/* XXX magic constant.  */
 	memcpy((u_int8_t *)0x467, dwordptr, 4);
+#if 1
+	pmap_kremove(0, NBPG);
+#else
 	pmap_extract(pmap_kernel(), 0, NULL);
+#endif
 
 	/*
 	 * ... prior to executing the following sequence:"
