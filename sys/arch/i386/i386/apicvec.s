@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.2 2001/07/16 21:39:06 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.3 2001/07/16 22:59:23 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -185,6 +185,14 @@ APICINTR(13)
 APICINTR(14)
 APICINTR(15)
 
+	.globl	_C_LABEL(Xintrioapic0),_C_LABEL(Xintrioapic1)
+	.globl	_C_LABEL(Xintrioapic2),_C_LABEL(Xintrioapic3)
+	.globl	_C_LABEL(Xintrioapic4),_C_LABEL(Xintrioapic5)
+	.globl	_C_LABEL(Xintrioapic6),_C_LABEL(Xintrioapic7)
+	.globl	_C_LABEL(Xintrioapic8),_C_LABEL(Xintrioapic9)
+	.globl	_C_LABEL(Xintrioapic10),_C_LABEL(Xintrioapic11)
+	.globl	_C_LABEL(Xintrioapic12),_C_LABEL(Xintrioapic13)
+	.globl	_C_LABEL(Xintrioapic14),_C_LABEL(Xintrioapic15)
 	.globl _C_LABEL(apichandler)
 
 _C_LABEL(apichandler):	
