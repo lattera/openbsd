@@ -1,3 +1,3 @@
-# Target: Big-endian HP-PA
-TDEPFILES= hppa-tdep.o
-TM_FILE= tm-hppaobsd.h
+# Target: OpenBSD/hppa
+TDEPFILES= hppa-tdep.o hppabsd-tdep.o corelow.o solib.o solib-svr4.o
+DEPRECATED_TM_FILE= solib.h

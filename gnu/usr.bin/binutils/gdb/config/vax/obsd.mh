@@ -1,6 +1,5 @@
-# Host: VAX running OpenBSD
-XDEPFILES= ser-tcp.o
-XM_FILE= xm-obsd.h
-NAT_FILE= nm-obsd.h
-NAT_CLIBS= -lkvm
-NATDEPFILES= infptrace.o inftarg.o fork-child.o corelow.o kcore-nbsd.o vaxnbsd-nat.o
+# Host: OpenBSD/vax
+NATDEPFILES= fork-child.o inf-ptrace.o \
+	vaxbsd-nat.o bsd-kvm.o
+
+LOADLIBES= -lkvm
