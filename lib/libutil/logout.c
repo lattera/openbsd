@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libutil/logout.c,v 1.6 2003/06/02 20:18:42 millert Exp $	*/
+/*	$OpenBSD: src/lib/libutil/logout.c,v 1.7 2004/05/28 07:03:47 deraadt Exp $	*/
 /*
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -30,7 +30,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /* from: static char sccsid[] = "@(#)logout.c	8.1 (Berkeley) 6/4/93"; */
-static const char rcsid[] = "$Id: logout.c,v 1.5 2002/06/09 22:18:43 fgsch Exp $";
+static const char rcsid[] = "$Id: logout.c,v 1.6 2003/06/02 20:18:42 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
@@ -47,8 +47,7 @@ static const char rcsid[] = "$Id: logout.c,v 1.5 2002/06/09 22:18:43 fgsch Exp $
 typedef struct utmp UTMP;
 
 int
-logout(line)
-	const char *line;
+logout(const char *line)
 {
 	int fd, rval;
 	UTMP ut;
