@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/vttest/Attic/header.h,v 1.2 1999/01/13 07:26:08 niklas Exp $	*/
+
 #define VERSION "1.7b 1985-04-19"
 
 /* Choose one of these */

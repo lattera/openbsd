@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/vttest/Attic/esc.c,v 1.2 1999/01/13 07:26:08 niklas Exp $	*/
+
 #include "header.h"
 
 println(s) char *s; {

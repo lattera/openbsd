@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/kbdreg.h,v 1.2 1999/01/13 07:26:01 niklas Exp $	*/
 /*	$NetBSD: kbdreg.h,v 1.7 1995/06/28 04:30:59 cgd Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/joyreg.h,v 1.2 1999/01/13 07:26:01 niklas Exp $	*/
 /*	$NetBSD: joy.c,v 1.3 1996/05/05 19:46:15 christos Exp $	*/
 
 /*-

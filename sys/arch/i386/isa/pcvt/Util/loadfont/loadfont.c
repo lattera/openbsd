@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/loadfont/Attic/loadfont.c,v 1.4 1999/01/13 07:26:06 niklas Exp $	*/
+
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis
  *

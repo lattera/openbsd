@@ -1,3 +1,5 @@
+#	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/keycap/Attic/Makefile,v 1.5 1999/01/13 07:26:05 niklas Exp $
+
 LIB	=	keycap
 CAPDIR	=	/usr/share/misc
 CAPPATH	=	$(CAPDIR)/keycap.pcvt

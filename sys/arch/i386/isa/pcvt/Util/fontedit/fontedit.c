@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/fontedit/Attic/fontedit.c,v 1.4 1999/01/13 07:26:04 niklas Exp $	*/
+
 /*
  * fontedit
  *	Fonteditor for VT220
