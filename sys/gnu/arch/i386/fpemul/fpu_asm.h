@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/fpu_asm.h,v 1.1 1996/08/27 10:32:45 downsj Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/fpu_asm.h,v 1.2 2002/10/12 07:12:58 pvalchev Exp $	*/
 /*
  *  fpu_asm.h
  *
@@ -64,7 +64,7 @@
 
 #include <gnu/arch/i386/fpemul/fpu_emu.h>
 
-#define	EXCEPTION	_exception
+#define	EXCEPTION	_C_LABEL(exception)
 
 
 #define PARAM1	8(%ebp)
