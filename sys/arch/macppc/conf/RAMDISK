@@ -1,9 +1,9 @@
-#	$OpenBSD: src/sys/arch/powerpc/conf/Attic/RAMDISK,v 1.27 2001/06/27 07:32:52 drahn Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/RAMDISK,v 1.1 2001/09/01 15:59:31 drahn Exp $
 #
 # PPC GENERIC config file
 #
 
-machine		powerpc
+machine		macppc powerpc
 
 maxusers	32
 
