@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_physio.c,v 1.7.2.4 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_physio.c,v 1.7.2.5 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: kern_physio.c,v 1.28 1997/05/19 10:43:28 pk Exp $	*/
 
 /*-
@@ -173,11 +173,12 @@ physio(strategy, bp, dev, flags, minphys, uio)
 			 * restores it.
 			 */
 			PHOLD(p);
-			if (uvm_vslock(p, bp->b_data, todo, (flags & B_READ) ?
-			    VM_PROT_READ | VM_PROT_WRITE : VM_PROT_READ) !=
-			    KERN_SUCCESS) {
+			error = uvm_vslock(p, bp->b_data, todo,
+			    (flags & B_READ) ?
+			    VM_PROT_READ | VM_PROT_WRITE : VM_PROT_READ);
+			if (error) {
 				bp->b_flags |= B_ERROR;
-				bp->b_error = EFAULT;
+				bp->b_error = error;
 				goto after_unlock;
 			}
 			vmapbuf(bp, todo);
@@ -283,7 +284,6 @@ getphysbuf()
 	bzero(bp, sizeof(*bp));
 
 	/* XXXCDC: are the following two lines necessary? */
-	bp->b_rcred = bp->b_wcred = NOCRED;
 	bp->b_vnbufs.le_next = NOLIST;
 
 	return (bp);

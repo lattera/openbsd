@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.7 2001/11/13 23:02:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.8 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -107,8 +107,8 @@ struct	emul {
  * control, known in UN*X as a process; it has references to substructures
  * containing descriptions of things that the process uses, but may share
  * with related processes.  The process structure and the substructures
- * are always addressible except for those marked "(PROC ONLY)" below,
- * which might be addressible only on a processor on which the process
+ * are always addressable except for those marked "(PROC ONLY)" below,
+ * which might be addressable only on a processor on which the process
  * is running.
  */
 struct	proc {

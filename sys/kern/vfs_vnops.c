@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.23.2.4 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.23.2.5 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: vfs_vnops.c,v 1.20 1996/02/04 02:18:41 christos Exp $	*/
 
 /*
@@ -165,6 +165,11 @@ vn_open(ndp, fmode, cmode)
 	}
 	if ((error = VOP_OPEN(vp, fmode, cred, p)) != 0)
 		goto bad;
+	if (vp->v_type == VREG &&
+	    uvn_attach(vp, fmode & FWRITE ? VM_PROT_WRITE : 0) == NULL) {
+		error = EIO;
+		goto bad;
+	}
 	if (fmode & FWRITE)
 		vp->v_writecount++;
 	return (0);
@@ -197,14 +202,40 @@ vn_writechk(vp)
 		}
 	}
 	/*
-	 * If there's shared text associated with
-	 * the vnode, try to free it up once.  If
-	 * we fail, we can't allow writing.
+	 * If the vnode is in use as a process's text,
+	 * we can't allow writing.
 	 */
-	if ((vp->v_flag & VTEXT) && !uvm_vnp_uncache(vp))
+	if (vp->v_flag & VTEXT)
 		return (ETXTBSY);
 
 	return (0);
+}
+
+/*
+ * Mark a vnode as being the text image of a running process.
+ */
+void
+vn_marktext(vp)
+	struct vnode *vp;
+{
+	if ((vp->v_flag & VTEXT) == 0) {
+		uvmexp.vnodepages -= vp->v_uvm.u_obj.uo_npages;
+		uvmexp.vtextpages += vp->v_uvm.u_obj.uo_npages;
+#if 0
+	/*
+	 * Doesn't help much because the pager is borked and ubc_flush is
+	 * slow.
+	 */
+#ifdef PMAP_PREFER
+		/*
+		 * Get rid of any cached reads from this vnode.
+		 * exec can't respect PMAP_PREFER when mapping the text.
+		 */
+		ubc_flush(&vp->v_uvm.u_obj, 0, 0);
+#endif
+#endif
+	}
+	vp->v_flag |= VTEXT;
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.29.2.4 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.29.2.5 2001/12/05 01:02:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Per Fogelstrom
@@ -636,7 +636,7 @@ native:
 #endif
 
 	free((char *)ph, M_TEMP);
-	epp->ep_vp->v_flag |= VTEXT;
+	vn_marktext(epp->ep_vp);
 	return (exec_setup_stack(p, epp));
 
 bad:

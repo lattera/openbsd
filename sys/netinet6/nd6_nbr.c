@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.3 2001/07/04 10:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.4 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$KAME: nd6_nbr.c,v 1.61 2001/02/10 16:06:14 jinmei Exp $	*/
 
 /*
@@ -768,16 +768,12 @@ nd6_na_input(m, off, icmp6len)
 	rt->rt_flags &= ~RTF_REJECT;
 	ln->ln_asked = 0;
 	if (ln->ln_hold) {
-#ifdef OLDIP6OUTPUT
-		(*ifp->if_output)(ifp, ln->ln_hold, rt_key(rt), rt);
-#else
 		/*
 		 * we assume ifp is not a p2p here, so just set the 2nd
 		 * argument as the 1st one.
 		 */
 		nd6_output(ifp, ifp, ln->ln_hold,
 			   (struct sockaddr_in6 *)rt_key(rt), rt);
-#endif
 		ln->ln_hold = 0;
 	}
 

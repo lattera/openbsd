@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.4 2001/10/31 03:29:03 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.5 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -394,6 +394,8 @@ ipv4_input(m)
 	 * Packet filter
 	 */
 	if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
+		goto bad;
+	if (m == NULL)
 		goto bad;
 
 	ip = mtod(m, struct ip *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.10.2.2 2001/07/04 10:55:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.10.2.3 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: nfs_var.h,v 1.3 1996/02/18 11:53:54 fvdl Exp $	*/
 
 /*
@@ -66,8 +66,8 @@ int nfs_write __P((void *));
 struct buf *nfs_getcacheblk __P((struct vnode *, daddr_t, int, struct proc *));
 int nfs_vinvalbuf __P((struct vnode *, int, struct ucred *, struct proc *,
 		       int));
-int nfs_asyncio __P((struct buf *, struct ucred *));
-int nfs_doio __P((struct buf *, struct ucred *, struct proc *));
+int nfs_asyncio __P((struct buf *));
+int nfs_doio __P((struct buf *, struct proc *));
 
 /* nfs_boot.c */
 int nfs_boot_init __P((struct nfs_diskless *, struct proc *));
@@ -93,9 +93,8 @@ int nfs_lookup __P((void *));
 int nfs_read __P((void *));
 int nfs_readlink __P((void *));
 int nfs_readlinkrpc __P((struct vnode *, struct uio *, struct ucred *));
-int nfs_readrpc __P((struct vnode *, struct uio *, struct ucred *));
-int nfs_writerpc __P((struct vnode *, struct uio *, struct ucred *, int *,
-		      int *));
+int nfs_readrpc __P((struct vnode *, struct uio *));
+int nfs_writerpc __P((struct vnode *, struct uio *, int *, int *));
 int nfs_mknodrpc __P((struct vnode *, struct vnode **, struct componentname *,
 		      struct vattr *));
 int nfs_mknod __P((void *));
@@ -120,8 +119,7 @@ int nfs_sillyrename __P((struct vnode *, struct vnode *,
 			 struct componentname *));
 int nfs_lookitup __P((struct vnode *, char *, int, struct ucred *,
 		      struct proc *, struct nfsnode **));
-int nfs_commit __P((struct vnode *, u_quad_t, int, struct ucred *,
-		    struct proc *));
+int nfs_commit __P((struct vnode *, u_quad_t, unsigned, struct proc *));
 int nfs_bmap __P((void *));
 int nfs_strategy __P((void *));
 int nfs_mmap __P((void *));
@@ -136,7 +134,6 @@ int nfs_vfree __P((void *));
 int nfs_truncate __P((void *));
 int nfs_update __P((void *));
 int nfs_bwrite __P((void *));
-int nfs_writebp __P((struct buf *, int));
 int nfsspec_access __P((void *));
 int nfsspec_read __P((void *));
 int nfsspec_write __P((void *));
@@ -260,7 +257,16 @@ void nfsm_srvfattr __P((struct nfsrv_descript *, struct vattr *,
 int nfsrv_fhtovp __P((fhandle_t *, int, struct vnode **, struct ucred *,
 		      struct nfssvc_sock *, struct mbuf *, int *, int));
 int netaddr_match __P((int, union nethostaddr *, struct mbuf *));
+
 void nfs_clearcommit __P((struct mount *));
+void nfs_merge_commit_ranges __P((struct vnode *));
+int nfs_in_committed_range __P((struct vnode *, off_t, off_t));
+int nfs_in_tobecommitted_range __P((struct vnode *, off_t, off_t));
+void nfs_add_committed_range __P((struct vnode *, off_t, off_t));
+void nfs_del_committed_range __P((struct vnode *, off_t, off_t));
+void nfs_add_tobecommitted_range __P((struct vnode *, off_t, off_t));
+void nfs_del_tobecommitted_range __P((struct vnode *, off_t, off_t));
+
 int nfsrv_errmap __P((struct nfsrv_descript *, int));
 void nfsrvw_sort __P((gid_t *, int));
 void nfsrv_setcred __P((struct ucred *, struct ucred *));

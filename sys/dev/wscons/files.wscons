@@ -1,4 +1,4 @@
-# $OpenBSD: src/sys/dev/wscons/files.wscons,v 1.1.10.1 2001/05/14 22:26:28 niklas Exp $
+# $OpenBSD: src/sys/dev/wscons/files.wscons,v 1.1.10.2 2001/12/05 01:02:39 niklas Exp $
 # $NetBSD: files.wscons,v 1.19 1999/12/12 08:17:28 scottr Exp $
 
 #
@@ -25,7 +25,7 @@ attach	wsmouse at wsmousedev
 file	dev/wscons/wsdisplay.c			wsdisplay needs-flag
 file	dev/wscons/wsdisplay_compat_usl.c	wsdisplay & wsdisplay_compat_usl
 file	dev/wscons/wsemulconf.c			wsdisplay
-file	dev/wscons/wsemul_dumb.c		wsdisplay & !wsemul_no_dumb
+file	dev/wscons/wsemul_dumb.c		wsdisplay & wsemul_dumb
 file	dev/wscons/wsemul_sun.c			wsdisplay & wsemul_sun
 file	dev/wscons/wsemul_vt100.c		wsdisplay & !wsemul_no_vt100
 file	dev/wscons/wsemul_vt100_subr.c		wsdisplay & !wsemul_no_vt100

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.3 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.4 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$KAME: ip6_output.c,v 1.172 2001/03/25 09:55:56 itojun Exp $	*/
 
 /*
@@ -881,11 +881,13 @@ skip_ipsec2:;
 	}
 
 #if NPF > 0 
-        if (pf_test6(PF_OUT, ifp, &m) != PF_PASS) {
-                error = EHOSTUNREACH;
+	if (pf_test6(PF_OUT, ifp, &m) != PF_PASS) {
+		error = EHOSTUNREACH;
 		m_freem(m);
-                goto done;
-        }
+		goto done;
+	}
+	if (m == NULL)
+		goto done;
 	ip6 = mtod(m, struct ip6_hdr *);
 #endif 
 
@@ -910,12 +912,7 @@ skip_ipsec2:;
 #endif
 	    )
 	{
-#ifdef OLDIP6OUTPUT
-		error = (*ifp->if_output)(ifp, m, (struct sockaddr *)dst,
-					  ro->ro_rt);
-#else
 		error = nd6_output(ifp, origifp, m, dst, ro->ro_rt);
-#endif
 		goto done;
 	} else if (mtu < IPV6_MMTU) {
 		/*
@@ -1031,13 +1028,7 @@ sendorfree:
 		m0 = m->m_nextpkt;
 		m->m_nextpkt = 0;
 		if (error == 0) {
-#ifdef OLDIP6OUTPUT
-			error = (*ifp->if_output)(ifp, m,
-						  (struct sockaddr *)dst,
-						  ro->ro_rt);
-#else
 			error = nd6_output(ifp, origifp, m, dst, ro->ro_rt);
-#endif
 		} else
 			m_freem(m);
 	}
@@ -1659,21 +1650,21 @@ ip6_ctloutput(op, so, level, optname, mp)
 #else
 				m->m_len = sizeof(int);
 				switch (optname) {
-				case IP_AUTH_LEVEL:
+				case IPV6_AUTH_LEVEL:
 					optval = inp->inp_seclevel[SL_AUTH];
 					break;
 
-				case IP_ESP_TRANS_LEVEL:
+				case IPV6_ESP_TRANS_LEVEL:
 					optval =
 					    inp->inp_seclevel[SL_ESP_TRANS];
 					break;
 
-				case IP_ESP_NETWORK_LEVEL:
+				case IPV6_ESP_NETWORK_LEVEL:
 					optval =
 					    inp->inp_seclevel[SL_ESP_NETWORK];
 					break;
 
-				case IP_IPCOMP_LEVEL:
+				case IPV6_IPCOMP_LEVEL:
 					optval = inp->inp_seclevel[SL_IPCOMP];
 					break;
 				}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.4 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.5 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$KAME: ip6_forward.c,v 1.75 2001/06/29 12:42:13 jinmei Exp $	*/
 
 /*
@@ -487,20 +487,17 @@ ip6_forward(m, srcrt)
 		ip6->ip6_dst.s6_addr16[1] = 0;
 
 #if NPF > 0 
-        if (pf_test6(PF_OUT, rt->rt_ifp, &m) != PF_PASS) {
+	if (pf_test6(PF_OUT, rt->rt_ifp, &m) != PF_PASS) {
 		m_freem(m);
 		goto senderr;
 	}
+	if (m == NULL)
+		goto senderr;
+
 	ip6 = mtod(m, struct ip6_hdr *);
 #endif 
 
-#ifdef OLDIP6OUTPUT
-	error = (*rt->rt_ifp->if_output)(rt->rt_ifp, m,
-					 (struct sockaddr *)dst,
-					 ip6_forward_rt.ro_rt);
-#else
 	error = nd6_output(rt->rt_ifp, origifp, m, dst, rt);
-#endif
 	if (error) {
 		in6_ifstat_inc(rt->rt_ifp, ifs6_out_discard);
 		ip6stat.ip6s_cantforward++;

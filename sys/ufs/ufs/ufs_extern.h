@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_extern.h,v 1.9.2.1 2001/05/14 22:47:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_extern.h,v 1.9.2.2 2001/12/05 01:02:41 niklas Exp $	*/
 /*	$NetBSD: ufs_extern.h,v 1.5 1996/02/09 22:36:03 christos Exp $	*/
 
 /*-
@@ -121,6 +121,7 @@ void ufs_ihashrem __P((struct inode *));
 /* ufs_inode.c */
 int ufs_init __P((struct vfsconf *));
 int ufs_reclaim __P((struct vnode *, struct proc *));
+int ufs_balloc_range __P((struct vnode *, off_t, off_t, struct ucred *, int));
 
 /* ufs_lookup.c */
 void ufs_dirbad __P((struct inode *, doff_t, char *));
@@ -134,26 +135,6 @@ int ufs_dirrewrite __P((struct inode *, struct inode *,
 		        ino_t, int, int));
 int ufs_dirempty __P((struct inode *, ino_t, struct ucred *));
 int ufs_checkpath __P((struct inode *, struct inode *, struct ucred *));
-
-/* ufs_quota.c */
-int getinoquota __P((struct inode *));
-int chkdq __P((struct inode *, long, struct ucred *, int));
-int chkdqchg __P((struct inode *, long, struct ucred *, int));
-int chkiq __P((struct inode *, long, struct ucred *, int));
-int chkiqchg __P((struct inode *, long, struct ucred *, int));
-void chkdquot __P((struct inode *));
-int quotaon __P((struct proc *, struct mount *, int, caddr_t));
-int quotaoff __P((struct proc *, struct mount *, int));
-int getquota __P((struct mount *, u_long, int, caddr_t));
-int setquota __P((struct mount *, u_long, int, caddr_t));
-int setuse __P((struct mount *, u_long, int, caddr_t));
-int qsync __P((struct mount *));
-int dqget __P((struct vnode *, u_long, struct ufsmount *, int,
-	       struct dquot **));
-void dqref __P((struct dquot *));
-void dqrele __P((struct vnode *, struct dquot *));
-int dqsync __P((struct vnode *, struct dquot *));
-void dqflush __P((struct vnode *));
 
 /* ufs_vfsops.c */
 int ufs_start __P((struct mount *, int, struct proc *));

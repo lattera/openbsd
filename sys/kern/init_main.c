@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.9 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.10 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -61,6 +61,7 @@
 #include <sys/conf.h>
 #include <sys/buf.h>
 #include <sys/device.h>
+#include <sys/socketvar.h>
 #include <sys/protosw.h>
 #include <sys/reboot.h>
 #include <sys/user.h>
@@ -212,12 +213,17 @@ main(framep)
 	 */
 	mbinit();
 
+	/* Initalize sockets. */
+	soinit();
+
 	/*
 	 * Initialize timeouts.
 	 */
 	timeout_startup();
 
 	cpu_configure();
+
+	ubc_init();		/* Initialize the unified buffer cache */
 
 	/* Initialize sysctls (must be done before any processes run) */
 	sysctl_init();
@@ -513,8 +519,7 @@ start_init(arg)
 	if (uvm_map(&p->p_vmspace->vm_map, &addr, PAGE_SIZE, 
 	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_COPY,
-	    UVM_ADV_NORMAL, UVM_FLAG_FIXED|UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW))
-	    != KERN_SUCCESS)
+	    UVM_ADV_NORMAL, UVM_FLAG_FIXED|UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW)))
 		panic("init: couldn't allocate argument space");
 #ifdef MACHINE_STACK_GROWS_UP
 	p->p_vmspace->vm_maxsaddr = (caddr_t)addr + PAGE_SIZE;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_extern.h,v 1.9.2.2 2001/07/04 11:00:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_extern.h,v 1.9.2.3 2001/12/05 01:02:41 niklas Exp $	*/
 /*	$NetBSD: ffs_extern.h,v 1.4 1996/02/09 22:22:22 christos Exp $	*/
 
 /*-
@@ -75,7 +75,7 @@ __BEGIN_DECLS
 int ffs_alloc __P((struct inode *, daddr_t, daddr_t , int, struct ucred *,
 		   daddr_t *));
 int ffs_realloccg __P((struct inode *, daddr_t, daddr_t, int, int ,
-		       struct ucred *, struct buf **));
+		       struct ucred *, struct buf **, daddr_t *));
 int ffs_reallocblks __P((void *));
 int ffs_inode_alloc(struct inode *, int, struct ucred *, struct vnode **);
 int ffs_inode_free(struct inode *, ino_t, int);
@@ -87,6 +87,7 @@ void ffs_clusteracct __P((struct fs *, struct cg *, daddr_t, int));
 
 /* ffs_balloc.c */
 int ffs_balloc(struct inode *, off_t, int, struct ucred *, int, struct buf **);
+int ffs_ballocn(void *);
 
 /* ffs_inode.c */
 int ffs_init __P((struct vfsconf *));
@@ -128,7 +129,7 @@ int ffs_read __P((void *));
 int ffs_write __P((void *));
 int ffs_fsync __P((void *));
 int ffs_reclaim __P((void *));
-
+int ffs_size __P((void *));
 
 /*
  * Soft dependency function prototypes.

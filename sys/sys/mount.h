@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.1 2001/05/14 22:45:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.2 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -336,6 +336,8 @@ struct mount {
 	struct lock     mnt_lock;               /* mount structure lock */
 	int		mnt_flag;		/* flags */
 	int		mnt_maxsymlinklen;	/* max size of short symlink */
+	int		mnt_fs_bshift;		/* offset shift for lblkno */
+	int		mnt_dev_bshift;		/* shift for device sectors */
 	struct statfs	mnt_stat;		/* cache of filesystem stats */
 	qaddr_t		mnt_data;		/* private data */
 };
@@ -535,6 +537,9 @@ struct netexport {
  * exported vnode operations
  */
 int	vfs_busy __P((struct mount *, int, struct simplelock *, struct proc *));
+int     vfs_isbusy(struct mount *);
+int     vfs_mount_foreach_vnode(struct mount *, int (*func)(struct vnode *,
+				    void *), void *);
 void	vfs_getnewfsid __P((struct mount *));
 struct	mount *vfs_getvfs __P((fsid_t *));
 int	vfs_mountedon __P((struct vnode *));

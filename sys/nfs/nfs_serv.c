@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.4 2001/11/13 22:59:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.5 2001/12/05 01:02:40 niklas Exp $	*/
 /*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
@@ -1663,8 +1663,6 @@ nfsrv_remove(nfsd, slp, procp, mrq)
 			error = EBUSY;
 			goto out;
 		}
-		if (vp->v_flag & VTEXT)
-			uvm_vnp_uncache(vp);
 out:
 		if (!error) {
 			error = VOP_REMOVE(nd.ni_dvp, nd.ni_vp, &nd.ni_cnd);
@@ -3276,11 +3274,10 @@ nfsrv_access(vp, flags, cred, rdonly, p, override)
 			}
 		}
 		/*
-		 * If there's shared text associated with
-		 * the inode, try to free it up once.  If
-		 * we fail, we can't allow writing.
+		 * If the vnode is in use as a process's text,
+		 * we can't allow writing.
 		 */
-		if ((vp->v_flag & VTEXT) && !uvm_vnp_uncache(vp))
+		if ((vp->v_flag & VTEXT))
 			return (ETXTBSY);
 	}
 	error = VOP_ACCESS(vp, flags, cred, p);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_bmap.c,v 1.7.2.2 2001/05/14 22:47:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_bmap.c,v 1.7.2.3 2001/12/05 01:02:41 niklas Exp $	*/
 /*	$NetBSD: ufs_bmap.c,v 1.3 1996/02/09 22:36:00 christos Exp $	*/
 
 /*
@@ -233,6 +233,7 @@ ufs_getlbns(vp, bn, ap, nump)
 	long metalbn, realbn;
 	struct ufsmount *ump;
 	int64_t blockcnt;
+	int lbc;
 	int i, numlevels, off;
 
 	ump = VFSTOUFS(vp->v_mount);
@@ -242,6 +243,13 @@ ufs_getlbns(vp, bn, ap, nump)
 	realbn = bn;
 	if ((long)bn < 0)
 		bn = -(long)bn;
+
+#ifdef DIAGNOSTIC
+	if (realbn < 0 && realbn > -NDADDR) {
+		panic ("ufs_getlbns: Invalid indirect block %d specified\n",
+		    realbn);
+	}
+#endif
 
 	/* The first NDADDR blocks are direct blocks. */
 	if (bn < NDADDR)
@@ -253,10 +261,14 @@ ufs_getlbns(vp, bn, ap, nump)
 	 * at the given level of indirection, and NIADDR - i is the number
 	 * of levels of indirection needed to locate the requested block.
 	 */
-	for (blockcnt = 1, i = NIADDR, bn -= NDADDR;; i--, bn -= blockcnt) {
+	bn -= NDADDR;
+	for (lbc = 0, i = NIADDR;; i--, bn -= blockcnt) {
 		if (i == 0)
 			return (EFBIG);
-		blockcnt *= MNINDIR(ump);
+
+		lbc += ump->um_lognindir;
+		blockcnt = (int64_t)1 << lbc;
+
 		if (bn < blockcnt)
 			break;
 	}
@@ -282,8 +294,9 @@ ufs_getlbns(vp, bn, ap, nump)
 		if (metalbn == realbn)
 			break;
 
-		blockcnt /= MNINDIR(ump);
-		off = (bn / blockcnt) % MNINDIR(ump);
+		lbc -= ump->um_lognindir;
+		blockcnt = (int64_t)1 << lbc;
+		off = (bn >> lbc) & (MNINDIR(ump) - 1);
 
 		++numlevels;
 		ap->in_lbn = metalbn;
@@ -293,6 +306,11 @@ ufs_getlbns(vp, bn, ap, nump)
 
 		metalbn -= -1 + off * blockcnt;
 	}
+#ifdef DIAGNOSTIC
+	if (realbn < 0 && metalbn != realbn) {
+		panic("ufs_getlbns: indirect block %d not found", realbn);
+	}
+#endif
 	if (nump)
 		*nump = numlevels;
 	return (0);

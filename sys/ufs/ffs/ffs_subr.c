@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6.10.3 2001/10/31 03:32:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6.10.4 2001/12/05 01:02:41 niklas Exp $	*/
 /*	$NetBSD: ffs_subr.c,v 1.6 1996/03/17 02:16:23 christos Exp $	*/
 
 /*
@@ -244,23 +244,21 @@ ffs_setblock(fs, cp, h)
  */
 int
 ffs_isfreeblock(fs, cp, h)
-      struct fs *fs;
-      unsigned char *cp;
-      daddr_t h;
+	struct fs *fs;
+	unsigned char *cp;
+	daddr_t h;
 {
 
-      switch ((int)fs->fs_frag) {
-      case 8:
-              return (cp[h] == 0);
-      case 4:
-              return ((cp[h >> 1] & (0x0f << ((h & 0x1) << 2))) == 0);
-      case 2:
-              return ((cp[h >> 2] & (0x03 << ((h & 0x3) << 1))) == 0);
-      case 1:
-              return ((cp[h >> 3] & (0x01 << (h & 0x7))) == 0);
-      default:
-              panic("ffs_isfreeblock");
-      }
+	switch ((int)fs->fs_frag) {
+	case 8:
+		return (cp[h] == 0);
+	case 4:
+		return ((cp[h >> 1] & (0x0f << ((h & 0x1) << 2))) == 0);
+	case 2:
+		return ((cp[h >> 2] & (0x03 << ((h & 0x3) << 1))) == 0);
+	case 1:
+		return ((cp[h >> 3] & (0x01 << (h & 0x7))) == 0);
+	default:
+		panic("ffs_isfreeblock");
+	}
 }
-
-

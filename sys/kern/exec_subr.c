@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7.2.3 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.7.2.4 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -138,14 +138,8 @@ vmcmd_map_pagedvn(p, cmd)
 	struct proc *p;
 	struct exec_vmcmd *cmd;
 {
-	/*
-	 * note that if you're going to map part of an process as being
-	 * paged from a vnode, that vnode had damn well better be marked as
-	 * VTEXT.  that's handled in the routine which sets up the vmcmd to
-	 * call this routine.
-	 */
 	struct uvm_object *uobj;
-	int retval;
+	int error;
 
 	/*
 	 * map the vnode in using uvm_map.
@@ -167,29 +161,22 @@ vmcmd_map_pagedvn(p, cmd)
 	uobj = uvn_attach((void *) cmd->ev_vp, VM_PROT_READ|VM_PROT_EXECUTE);
 	if (uobj == NULL)
 		return(ENOMEM);
+	VREF(cmd->ev_vp);
 
 	/*
 	 * do the map
 	 */
 
-	retval = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr, cmd->ev_len,
+	error = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr, cmd->ev_len,
 	    uobj, cmd->ev_offset, 0,
 	    UVM_MAPFLAG(cmd->ev_prot, VM_PROT_ALL, UVM_INH_COPY,
 	    UVM_ADV_NORMAL, UVM_FLAG_COPYONW|UVM_FLAG_FIXED));
 
-	/*
-	 * check for error
-	 */
+	if (error) {
+		uobj->pgops->pgo_detach(uobj);
+	}
 
-	if (retval == KERN_SUCCESS)
-		return(0);
-
-	/*
-	 * error: detach from object
-	 */
-
-	uobj->pgops->pgo_detach(uobj);
-	return(EINVAL);
+	return(error);
 }
 
 /*
@@ -206,7 +193,7 @@ vmcmd_map_readvn(p, cmd)
 	int error;
 
 	if (cmd->ev_len == 0)
-		return(KERN_SUCCESS); /* XXXCDC: should it happen? */
+		return (0);
 	
 	cmd->ev_addr = trunc_page(cmd->ev_addr); /* required by uvm_map */
 	error = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr,
@@ -216,13 +203,13 @@ vmcmd_map_readvn(p, cmd)
 	    UVM_FLAG_FIXED|UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW));
 
 	if (error)
-		return error;
+		return (error);
 
 	error = vn_rdwr(UIO_READ, cmd->ev_vp, (caddr_t)cmd->ev_addr,
 	    cmd->ev_len, cmd->ev_offset, UIO_USERSPACE, IO_UNIT|IO_NODELOCKED,
 	    p->p_ucred, NULL, p);
 	if (error)
-		return error;
+		return (error);
 
 	if (cmd->ev_prot != (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)) {
 		/*
@@ -231,13 +218,12 @@ vmcmd_map_readvn(p, cmd)
 		 * it mapped read-only, so now we are going to have to call
 		 * uvm_map_protect() to fix up the protection.  ICK.
 		 */
-		return(uvm_map_protect(&p->p_vmspace->vm_map,
+		return (uvm_map_protect(&p->p_vmspace->vm_map,
 		    trunc_page(cmd->ev_addr),
 		    round_page(cmd->ev_addr + cmd->ev_len),
 		    cmd->ev_prot, FALSE));
-	} else {
-		return(KERN_SUCCESS);
 	}
+	return (0);
 }
 
 /*
@@ -254,7 +240,7 @@ vmcmd_map_zero(p, cmd)
 	int error;
 
 	if (cmd->ev_len == 0)
-		return(KERN_SUCCESS); /* XXXCDC: should it happen? */
+		return (0);
 	
 	cmd->ev_addr = trunc_page(cmd->ev_addr); /* required by uvm_map */
 	error = uvm_map(&p->p_vmspace->vm_map, &cmd->ev_addr,
@@ -265,7 +251,7 @@ vmcmd_map_zero(p, cmd)
 	if (error)
 		return error;
 
-	return(KERN_SUCCESS);
+	return (0);
 }
 
 /*

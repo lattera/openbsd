@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.7.8.1 2001/07/04 10:55:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.7.8.2 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: nfsnode.h,v 1.16 1996/02/18 11:54:04 fvdl Exp $	*/
 
 /*
@@ -117,7 +117,21 @@ struct nfsnode {
 	short			n_fhsize;	/* size in bytes, of fh */
 	short			n_flag;		/* Flag for locking.. */
 	nfsfh_t			n_fh;		/* Small File Handle */
+	struct ucred		*n_rcred;
+	struct ucred		*n_wcred;
+	off_t			n_pushedlo;     /* 1st blk in commited range */
+	off_t			n_pushedhi;     /* Last block in range */
+	off_t			n_pushlo;       /* 1st block in commit range */
+	off_t			n_pushhi;       /* Last block in range */
+	struct lock		n_commitlock;   /* Serialize commits XXX */
+	int			n_commitflags;
 };
+
+/*
+ * Values for n_commitflags
+ */
+#define NFS_COMMIT_PUSH_VALID		0x0001	/* push range valid */
+#define NFS_COMMIT_PUSHED_VALID		0x0002	/* pushed range valid */
 
 #define n_atim		n_un1.nf_atim
 #define n_mtim		n_un2.nf_mtim
@@ -141,7 +155,7 @@ struct nfsnode {
  * Convert between nfsnode pointers and vnode pointers
  */
 #define VTONFS(vp)	((struct nfsnode *)(vp)->v_data)
-#define NFSTOV(np)	((struct vnode *)(np)->n_vnode)
+#define NFSTOV(np)	((np)->n_vnode)
 
 /*
  * Queue head for nfsiod's
@@ -197,6 +211,8 @@ int	nfs_bwrite __P((void *));
 int	nfs_vget __P((struct mount *, ino_t, struct vnode **));
 #define nfs_reallocblks \
 	((int (*) __P((void *)))eopnotsupp)
+int	nfs_getpages __P((void *));
+int	nfs_putpages __P((void *));
 
 /* other stuff */
 int	nfs_removeit __P((struct sillyrename *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21.6.4 2001/11/13 23:04:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21.6.5 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -320,6 +320,7 @@ msdosfs_setattr(v)
 	} */ *ap = v;
 	int error = 0;
 	struct denode *dep = VTODE(ap->a_vp);
+	struct msdosfsmount *pmp = dep->de_pmp;
 	struct vattr *vap = ap->a_vap;
 	struct ucred *cred = ap->a_cred;
 
@@ -331,7 +332,8 @@ msdosfs_setattr(v)
 	    (vap->va_fsid != VNOVAL) || (vap->va_fileid != VNOVAL) ||
 	    (vap->va_blocksize != VNOVAL) || (vap->va_rdev != VNOVAL) ||
 	    (vap->va_bytes != VNOVAL) || (vap->va_gen != VNOVAL) ||
-	    (vap->va_uid != VNOVAL) || (vap->va_gid != VNOVAL)) {
+	    (vap->va_uid != VNOVAL && vap->va_uid != pmp->pm_uid) ||
+	    (vap->va_gid != VNOVAL && vap->va_gid != pmp->pm_gid)) {
 #ifdef MSDOSFS_DEBUG
 		printf("msdosfs_setattr(): returning EINVAL\n");
 		printf("    va_type %d, va_nlink %x, va_fsid %x, va_fileid %x\n",
@@ -413,11 +415,11 @@ msdosfs_read(v)
 	int error = 0;
 	int diff;
 	int blsize;
-	int isadir;
 	long n;
 	long on;
 	daddr_t lbn;
-	daddr_t rablock;
+	void *win;
+	vsize_t bytelen;
 	struct buf *bp;
 	struct vnode *vp = ap->a_vp;
 	struct denode *dep = VTODE(vp);
@@ -432,42 +434,45 @@ msdosfs_read(v)
 	if (uio->uio_offset < 0)
 		return (EINVAL);
 
-	isadir = dep->de_Attributes & ATTR_DIRECTORY;
+	if (vp->v_type == VREG) {
+		while (uio->uio_resid > 0) {
+			bytelen = MIN(dep->de_FileSize - uio->uio_offset,
+			    uio->uio_resid);
+
+			if (bytelen == 0)
+				break;
+			win = ubc_alloc(&vp->v_uvm.u_obj, uio->uio_offset,
+			    &bytelen, UBC_READ);
+			error = uiomove(win, bytelen, uio);
+			ubc_release(win, 0);
+			if (error)
+				break;
+		}
+		dep->de_flag |= DE_ACCESS;
+		goto out;
+	}
+
+	/* this loop is only for directories now */
 	do {
 		lbn = de_cluster(pmp, uio->uio_offset);
 		on = uio->uio_offset & pmp->pm_crbomask;
-		n = min((u_long) (pmp->pm_bpcluster - on), uio->uio_resid);
+		n = MIN((pmp->pm_bpcluster - on), uio->uio_resid);
 		diff = dep->de_FileSize - uio->uio_offset;
 		if (diff <= 0)
 			return (0);
 		if (diff < n)
 			n = diff;
 		/* convert cluster # to block # if a directory */
-		if (isadir) {
-			error = pcbmap(dep, lbn, &lbn, 0, &blsize);
-			if (error)
-				return (error);
-		}
+		error = pcbmap(dep, lbn, &lbn, 0, &blsize);
+		if (error)
+			return (error);
 		/*
 		 * If we are operating on a directory file then be sure to
 		 * do i/o with the vnode for the filesystem instead of the
 		 * vnode for the directory.
 		 */
-		if (isadir) {
-			error = bread(pmp->pm_devvp, lbn, blsize, NOCRED, &bp);
-		} else {
-			rablock = lbn + 1;
-			if (dep->de_lastr + 1 == lbn &&
-			    de_cn2off(pmp, rablock) < dep->de_FileSize)
-				error = breada(vp, de_cn2bn(pmp, lbn),
-				    pmp->pm_bpcluster, de_cn2bn(pmp, rablock),
-				    pmp->pm_bpcluster, NOCRED, &bp);
-			else
-				error = bread(vp, de_cn2bn(pmp, lbn),
-				    pmp->pm_bpcluster, NOCRED, &bp);
-			dep->de_lastr = lbn;
-		}
-		n = min(n, pmp->pm_bpcluster - bp->b_resid);
+		error = bread(pmp->pm_devvp, lbn, blsize, NOCRED, &bp);
+		n = MIN(n, pmp->pm_bpcluster - bp->b_resid);
 		if (error) {
 			brelse(bp);
 			return (error);
@@ -475,8 +480,10 @@ msdosfs_read(v)
 		error = uiomove(bp->b_data + on, (int) n, uio);
 		brelse(bp);
 	} while (error == 0 && uio->uio_resid > 0 && n != 0);
-	if (!isadir && !(vp->v_mount->mnt_flag & MNT_NOATIME))
-		dep->de_flag |= DE_ACCESS;
+
+out:
+	if ((ap->a_ioflag & IO_SYNC) == IO_SYNC)
+		error = deupdat(dep, 1);
 	return (error);
 }
 
@@ -493,19 +500,19 @@ msdosfs_write(v)
 		int a_ioflag;
 		struct ucred *a_cred;
 	} */ *ap = v;
-	int n;
-	int croffset;
 	int resid;
 	u_long osize;
 	int error = 0;
 	u_long count;
-	daddr_t bn, lastcn;
-	struct buf *bp;
+	daddr_t lastcn;
 	int ioflag = ap->a_ioflag;
+	void *win;
+	vsize_t bytelen;
+	off_t oldoff;
+	boolean_t rv;
 	struct uio *uio = ap->a_uio;
 	struct proc *p = uio->uio_procp;
 	struct vnode *vp = ap->a_vp;
-	struct vnode *thisvp;
 	struct denode *dep = VTODE(vp);
 	struct msdosfsmount *pmp = dep->de_pmp;
 	struct ucred *cred = ap->a_cred;
@@ -521,7 +528,6 @@ msdosfs_write(v)
 	case VREG:
 		if (ioflag & IO_APPEND)
 			uio->uio_offset = dep->de_FileSize;
-		thisvp = vp;
 		break;
 	case VDIR:
 		return EISDIR;
@@ -576,84 +582,52 @@ msdosfs_write(v)
 	} else
 		lastcn = de_clcount(pmp, osize) - 1;
 
+	if (dep->de_FileSize < uio->uio_offset + resid) {
+		dep->de_FileSize = uio->uio_offset + resid;
+		uvm_vnp_setsize(vp, dep->de_FileSize);
+	}
+
 	do {
-		if (de_cluster(pmp, uio->uio_offset) > lastcn) {
+		oldoff = uio->uio_offset;
+		if (de_cluster(pmp, oldoff) > lastcn) {
 			error = ENOSPC;
 			break;
 		}
+		bytelen = MIN(dep->de_FileSize - oldoff, uio->uio_resid);
 
-		bn = de_blk(pmp, uio->uio_offset);
-		if ((uio->uio_offset & pmp->pm_crbomask) == 0
-		    && (de_blk(pmp, uio->uio_offset + uio->uio_resid) > de_blk(pmp, uio->uio_offset)
-			|| uio->uio_offset + uio->uio_resid >= dep->de_FileSize)) {
-			/*
-			 * If either the whole cluster gets written,
-			 * or we write the cluster from its start beyond EOF,
-			 * then no need to read data from disk.
-			 */
-			bp = getblk(thisvp, bn, pmp->pm_bpcluster, 0, 0);
-			clrbuf(bp);
-			/*
-			 * Do the bmap now, since pcbmap needs buffers
-			 * for the fat table. (see msdosfs_strategy)
-			 */
-			if (bp->b_blkno == bp->b_lblkno) {
-				error = pcbmap(dep,
-					       de_bn2cn(pmp, bp->b_lblkno),
-					       &bp->b_blkno, 0, 0);
-				if (error)
-					bp->b_blkno = -1;
-			}
-			if (bp->b_blkno == -1) {
-				brelse(bp);
-				if (!error)
-					error = EIO;		/* XXX */
-				break;
-			}
-		} else {
-			/*
-			 * The block we need to write into exists, so read it in.
-			 */
-			error = bread(thisvp, bn, pmp->pm_bpcluster,
-				      NOCRED, &bp);
-			if (error) {
-				brelse(bp);
-				break;
-			}
+		/*
+		 * XXXUBC if file is mapped and this is the last block,
+		 * process one page at a time.
+		 */
+
+		if (bytelen == 0)
+			break;
+		win = ubc_alloc(&vp->v_uvm.u_obj, oldoff, &bytelen, UBC_WRITE);
+		error = uiomove(win, bytelen, uio);
+		ubc_release(win, 0);
+		if (error) {
+			break;
 		}
-
-		croffset = uio->uio_offset & pmp->pm_crbomask;
-		n = min(uio->uio_resid, pmp->pm_bpcluster - croffset);
-		if (uio->uio_offset + n > dep->de_FileSize) {
-			dep->de_FileSize = uio->uio_offset + n;
-			uvm_vnp_setsize(vp, dep->de_FileSize);
+		/*
+		 * flush what we just wrote if necessary.
+		 * XXXUBC simplistic async flushing.
+		 */
+		if (ioflag & IO_SYNC) {
+			
+			simple_lock(&vp->v_uvm.u_obj.vmobjlock);
+			rv = vp->v_uvm.u_obj.pgops->pgo_flush(
+			    &vp->v_uvm.u_obj, oldoff,
+			    oldoff + bytelen, PGO_CLEANIT|PGO_SYNCIO);
+			simple_unlock(&vp->v_uvm.u_obj.vmobjlock);
+		} else if (oldoff >> 16 != uio->uio_offset >> 16) {
+			simple_lock(&vp->v_uvm.u_obj.vmobjlock);
+			rv = vp->v_uvm.u_obj.pgops->pgo_flush(
+			    &vp->v_uvm.u_obj, (oldoff >> 16) << 16,
+			    (uio->uio_offset >> 16) << 16, PGO_CLEANIT);
+			simple_unlock(&vp->v_uvm.u_obj.vmobjlock);
 		}
-		uvm_vnp_uncache(vp);
-		/*
-		 * Should these vnode_pager_* functions be done on dir
-		 * files?
-		 */
-
-		/*
-		 * Copy the data from user space into the buf header.
-		 */
-		error = uiomove(bp->b_data + croffset, n, uio);
-
-		/*
-		 * If they want this synchronous then write it and wait for
-		 * it.  Otherwise, if on a cluster boundary write it
-		 * asynchronously so we can move on to the next block
-		 * without delay.  Otherwise do a delayed write because we
-		 * may want to write somemore into the block later.
-		 */
-		if (ioflag & IO_SYNC)
-			(void) bwrite(bp);
-		else if (n + croffset == pmp->pm_bpcluster)
-			bawrite(bp);
-		else
-			bdwrite(bp);
-		dep->de_flag |= DE_UPDATE;
 	} while (error == 0 && uio->uio_resid > 0);
+	dep->de_flag |= DE_UPDATE;
 
 	/*
 	 * If the write failed and they want us to, truncate the file back
@@ -666,7 +640,8 @@ errexit:
 			uio->uio_offset -= resid - uio->uio_resid;
 			uio->uio_resid = resid;
 		} else {
-			detrunc(dep, dep->de_FileSize, ioflag & IO_SYNC, NOCRED, NULL);
+			detrunc(dep, dep->de_FileSize, ioflag & IO_SYNC, NOCRED,
+			    NULL);
 			if (uio->uio_resid != resid)
 				error = 0;
 		}
@@ -1506,11 +1481,11 @@ msdosfs_readdir(v)
 	while (uio->uio_resid > 0) {
 		lbn = de_cluster(pmp, offset - bias);
 		on = (offset - bias) & pmp->pm_crbomask;
-		n = min(pmp->pm_bpcluster - on, uio->uio_resid);
+		n = MIN(pmp->pm_bpcluster - on, uio->uio_resid);
 		diff = dep->de_FileSize - (offset - bias);
 		if (diff <= 0)
 			break;
-		n = min(n, diff);
+		n = MIN(n, diff);
 		if ((error = pcbmap(dep, lbn, &bn, &cn, &blsize)) != 0)
 			break;
 		error = bread(pmp->pm_devvp, bn, blsize, NOCRED, &bp);
@@ -1518,7 +1493,7 @@ msdosfs_readdir(v)
 			brelse(bp);
 			return (error);
 		}
-		n = min(n, blsize - bp->b_resid);
+		n = MIN(n, blsize - bp->b_resid);
 
 		/*
 		 * Convert from dos directory entries to fs-independent
@@ -1717,7 +1692,6 @@ msdosfs_bmap(v)
 		int *a_runp;
 	} */ *ap = v;
 	struct denode *dep = VTODE(ap->a_vp);
-	struct msdosfsmount *pmp = dep->de_pmp;
 
 	if (ap->a_vpp != NULL)
 		*ap->a_vpp = dep->de_devvp;
@@ -1729,7 +1703,7 @@ msdosfs_bmap(v)
 		 */
 		*ap->a_runp = 0;
 	}
-	return (pcbmap(dep, de_bn2cn(pmp, ap->a_bn), ap->a_bnp, 0, 0));
+	return (pcbmap(dep, ap->a_bn, ap->a_bnp, 0, 0));
 }
 
 int
@@ -1779,12 +1753,12 @@ msdosfs_strategy(v)
 		biodone(bp);
 		return (error);
 	}
-#ifdef DIAGNOSTIC
-#endif
+
 	/*
 	 * Read/write the block from/to the disk that contains the desired
 	 * file block.
 	 */
+
 	vp = dep->de_devvp;
 	bp->b_dev = vp->v_rdev;
 	VOCALL(vp->v_op, VOFFSET(vop_strategy), ap);
@@ -1902,7 +1876,10 @@ struct vnodeopv_entry_desc msdosfs_vnodeop_entries[] = {
 	{ &vop_advlock_desc, msdosfs_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, msdosfs_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },		/* bwrite */
-	{ (struct vnodeop_desc *)NULL, (int (*) __P((void *)))NULL }
+	{ &vop_getpages_desc, genfs_getpages },
+	{ &vop_putpages_desc, genfs_putpages },
+	{ &vop_size_desc, genfs_size },
+	{ NULL, NULL }
 };
 struct vnodeopv_desc msdosfs_vnodeop_opv_desc =
 	{ &msdosfs_vnodeop_p, msdosfs_vnodeop_entries };

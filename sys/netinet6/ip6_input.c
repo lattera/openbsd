@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.5 2001/11/13 22:59:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.6 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -265,8 +265,10 @@ ip6_input(m)
         /*
          * Packet filter
          */
-        if (pf_test6(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
-                goto bad;
+	if (pf_test6(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
+		goto bad;
+	if (m == NULL)
+		goto bad;
 #endif
 
 	if (m->m_len < sizeof(struct ip6_hdr)) {

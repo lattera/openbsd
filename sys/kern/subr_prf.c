@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.5 2001/10/31 03:26:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.6 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -61,7 +61,6 @@
 /*
  * note that stdarg.h and the ansi style va_start macro is used for both
  * ansi and traditional c complers.
- * XXX: this requires that stdarg.h define: va_alist and va_dcl
  */
 #include <machine/stdarg.h>
 
@@ -97,9 +96,8 @@ extern int uvm_doswapencrypt;
  * local prototypes
  */
 
-static int	 kprintf __P((const char *, int, void *,
-		    char *, va_list));
-static void	 putchar __P((int, int, struct tty *));
+int	 kprintf __P((const char *, int, void *, char *, va_list));
+void	 putchar __P((int, int, struct tty *));
 
 
 /*
@@ -267,7 +265,7 @@ log(level, fmt, va_alist)
  * logpri: log the priority level to the klog
  */
 
-void			/* XXXCDC: should be static? */
+void
 logpri(level)
 	int level;
 {
@@ -318,7 +316,7 @@ addlog(fmt, va_alist)
  * => if console, then the last MSGBUFS chars are saved in msgbuf
  *	for inspection later (e.g. dmesg/syslog)
  */
-static void
+void
 putchar(c, flags, tp)
 	register int c;
 	int flags;
@@ -746,7 +744,7 @@ vsnprintf(buf, size, fmt, ap)
 	}								\
 }
 
-static int
+int
 kprintf(fmt0, oflags, vp, sbuf, ap)
 	const char *fmt0;
 	int oflags;
@@ -757,7 +755,7 @@ kprintf(fmt0, oflags, vp, sbuf, ap)
 	char *fmt;		/* format string */
 	int ch;			/* character from fmt */
 	int n;			/* handy integer (short term usage) */
-	char *cp;		/* handy char pointer (short term usage) */
+	char *cp = NULL;	/* handy char pointer (short term usage) */
 	int flags;		/* flags as above */
 	int ret;		/* return value accumulator */
 	int width;		/* width from format (%8d), or 0 */
@@ -768,22 +766,16 @@ kprintf(fmt0, oflags, vp, sbuf, ap)
 	enum { OCT, DEC, HEX } base;/* base for [diouxX] conversion */
 	int dprec;		/* a copy of prec if [diouxX], 0 otherwise */
 	int realsz;		/* field size expanded by dprec */
-	int size;		/* size of converted field or string */
-	char *xdigs;		/* digits for [xX] conversion */
+	int size = 0;		/* size of converted field or string */
+	char *xdigs = NULL;	/* digits for [xX] conversion */
 	char buf[KPRINTF_BUFSIZE]; /* space for %c, %[diouxX] */
-	char *tailp;		/* tail pointer for snprintf */
+	char *tailp = NULL;	/* tail pointer for snprintf */
 
-	tailp = NULL;	/* XXX: shutup gcc */
 	if (oflags == TOBUFONLY && (vp != NULL))
 		tailp = *(char **)vp;
 
-	cp = NULL;	/* XXX: shutup gcc */
-	size = 0;	/* XXX: shutup gcc */
-
 	fmt = (char *)fmt0;
 	ret = 0;
-
-	xdigs = NULL;		/* XXX: shut up gcc warning */
 
 	/*
 	 * Scan the format for conversions (`%' character).

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.4 2001/10/31 03:29:03 nate Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.5 2001/12/05 01:02:40 niklas Exp $	*/
 /*	$NetBSD: in.c,v 1.26 1996/02/13 23:41:39 christos Exp $	*/
 
 /*
@@ -246,7 +246,7 @@ in_control(so, cmd, data, ifp)
 	case SIOCDIFADDR:
 		if (ifra->ifra_addr.sin_family == AF_INET)
 		    for (; ia != 0; ia = ia->ia_list.tqe_next) {
-			if (ia->ia_ifp == ifp  &&
+			if (ia->ia_ifp == ifp &&
 			    ia->ia_addr.sin_addr.s_addr ==
 				ifra->ifra_addr.sin_addr.s_addr)
 			    break;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.4 2001/11/13 21:10:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.5 2001/12/05 01:02:39 niklas Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -2987,7 +2987,7 @@ void
 mouse_paste(void)
 {
 	unsigned short len;
-	char *current = Copybuffer;
+	unsigned char *current = Copybuffer;
 
 	if (Paste_avail) {
 		for (len = strlen(Copybuffer) ; len > 0; len--) {

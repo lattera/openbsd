@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/Attic/exec_ecoff.c,v 1.5.6.3 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/Attic/exec_ecoff.c,v 1.5.6.4 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: exec_ecoff.c,v 1.8 1996/05/19 20:36:06 jonathan Exp $	*/
 
 /*
@@ -198,7 +198,7 @@ exec_ecoff_prep_zmagic(p, epp)
 #endif
 		return ETXTBSY;
 	}
-	epp->ep_vp->v_flag |= VTEXT;
+	vn_marktext(epp->ep_vp);
 
 	/* set up command for text segment */
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_pagedvn, eap->tsize,

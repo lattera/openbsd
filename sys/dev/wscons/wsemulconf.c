@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemulconf.c,v 1.3.4.1 2001/05/14 22:26:31 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemulconf.c,v 1.3.4.2 2001/12/05 01:02:39 niklas Exp $ */
 /* $NetBSD: wsemulconf.c,v 1.4 2000/01/05 11:19:37 drochner Exp $ */
 
 /*
@@ -49,7 +49,7 @@ static const struct wsemul_ops *wsemul_conf[] = {
 #ifndef WSEMUL_NO_VT100
 	&wsemul_vt100_ops,
 #endif
-#ifndef WSEMUL_NO_DUMB
+#ifdef WSEMUL_DUMB
 	&wsemul_dumb_ops,
 #endif
 	NULL

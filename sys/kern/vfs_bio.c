@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.26.2.4 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.26.2.5 2001/12/05 01:02:39 niklas Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -110,8 +110,7 @@ struct pool bufpool;
 #define	binsheadfree(bp, dp)	TAILQ_INSERT_HEAD(dp, bp, b_freelist)
 #define	binstailfree(bp, dp)	TAILQ_INSERT_TAIL(dp, bp, b_freelist)
 
-static __inline struct buf *bio_doread __P((struct vnode *, daddr_t, int,
-					    struct ucred *, int));
+static __inline struct buf *bio_doread __P((struct vnode *, daddr_t, int, int));
 int getnewbuf __P((int slpflag, int slptimeo, struct buf **));
 
 /*
@@ -200,8 +199,6 @@ bufinit()
 		bp = &buf[i];
 		bzero((char *)bp, sizeof *bp);
 		bp->b_dev = NODEV;
-		bp->b_rcred = NOCRED;
-		bp->b_wcred = NOCRED;
 		bp->b_vnbufs.le_next = NOLIST;
 		bp->b_data = buffers + i * MAXBSIZE;
 		LIST_INIT(&bp->b_dep);
@@ -246,11 +243,10 @@ bufinit()
 }
 
 static __inline struct buf *
-bio_doread(vp, blkno, size, cred, async)
+bio_doread(vp, blkno, size, async)
 	struct vnode *vp;
 	daddr_t blkno;
 	int size;
-	struct ucred *cred;
 	int async;
 {
 	register struct buf *bp;
@@ -263,12 +259,7 @@ bio_doread(vp, blkno, size, cred, async)
 	 * Therefore, it's valid if it's I/O has completed or been delayed.
 	 */
 	if (!ISSET(bp->b_flags, (B_DONE | B_DELWRI))) {
-		/* Start I/O for the buffer (keeping credentials). */
 		SET(bp->b_flags, B_READ | async);
-		if (cred != NOCRED && bp->b_rcred == NOCRED) {
-			crhold(cred);
-			bp->b_rcred = cred;
-		}
 		VOP_STRATEGY(bp);
 
 		/* Pay for the read. */
@@ -295,7 +286,7 @@ bread(vp, blkno, size, cred, bpp)
 	register struct buf *bp;
 
 	/* Get buffer for block. */
-	bp = *bpp = bio_doread(vp, blkno, size, cred, 0);
+	bp = *bpp = bio_doread(vp, blkno, size, 0);
 
 	/* Wait for the read to complete, and return result. */
 	return (biowait(bp));
@@ -317,7 +308,7 @@ breadn(vp, blkno, size, rablks, rasizes, nrablks, cred, bpp)
 	register struct buf *bp;
 	int i;
 
-	bp = *bpp = bio_doread(vp, blkno, size, cred, 0);
+	bp = *bpp = bio_doread(vp, blkno, size, 0);
 
 	/*
 	 * For each of the read-ahead blocks, start a read, if necessary.
@@ -328,28 +319,11 @@ breadn(vp, blkno, size, rablks, rasizes, nrablks, cred, bpp)
 			continue;
 
 		/* Get a buffer for the read-ahead block */
-		(void) bio_doread(vp, rablks[i], rasizes[i], cred, B_ASYNC);
+		(void) bio_doread(vp, rablks[i], rasizes[i], B_ASYNC);
 	}
 
 	/* Otherwise, we had to start a read for it; wait until it's valid. */
 	return (biowait(bp));
-}
-
-/*
- * Read with single-block read-ahead.  Defined in Bach (p.55), but
- * implemented as a call to breadn().
- * XXX for compatibility with old file systems.
- */
-int
-breada(vp, blkno, size, rablkno, rabsize, cred, bpp)
-	struct vnode *vp;
-	daddr_t blkno; int size;
-	daddr_t rablkno; int rabsize;
-	struct ucred *cred;
-	struct buf **bpp;
-{
-
-	return (breadn(vp, blkno, size, &rablkno, &rabsize, 1, cred, bpp));	
 }
 
 /*
@@ -415,7 +389,6 @@ bwrite(bp)
 	/* Initiate disk write.  Make sure the appropriate party is charged. */
 	bp->b_vp->v_numoutput++;
 	splx(s);
-	SET(bp->b_flags, B_WRITEINPROG);
 	VOP_STRATEGY(bp);
 
 	if (async)
@@ -475,7 +448,6 @@ bdwrite(bp)
 	}
 
 	/* Otherwise, the "write" is done, so mark and release the buffer. */
-	CLR(bp->b_flags, B_NEEDCOMMIT);
 	SET(bp->b_flags, B_DONE);
 	brelse(bp);
 }
@@ -597,6 +569,7 @@ brelse(bp)
 
 	/* Unlock the buffer. */
 	CLR(bp->b_flags, (B_AGE | B_ASYNC | B_BUSY | B_NOCACHE | B_DEFERRED));
+	SET(bp->b_flags, B_CACHE);
 
 	/* Allow disk interrupts. */
 	splx(s);
@@ -660,44 +633,30 @@ getblk(vp, blkno, size, slpflag, slptimeo)
 	daddr_t blkno;
 	int size, slpflag, slptimeo;
 {
-	struct bufhashhdr *bh;
 	struct buf *bp, *nbp = NULL;
 	int s, err;
 
-	/*
-	 * XXX
-	 * The following is an inlined version of 'incore()', but with
-	 * the 'invalid' test moved to after the 'busy' test.  It's
-	 * necessary because there are some cases in which the NFS
-	 * code sets B_INVAL prior to writing data to the server, but
-	 * in which the buffers actually contain valid data.  In this
-	 * case, we can't allow the system to allocate a new buffer for
-	 * the block until the write is finished.
-	 */
-	bh = BUFHASH(vp, blkno);
 start:
-	bp = bh->lh_first;
-	for (; bp != NULL; bp = bp->b_hash.le_next) {
-		if (bp->b_lblkno != blkno || bp->b_vp != vp)
-			continue;
-
+	bp = incore(vp, blkno);
+	if (bp != NULL) {
 		s = splbio();
 		if (ISSET(bp->b_flags, B_BUSY)) {
 			SET(bp->b_flags, B_WANTED);
 			err = tsleep(bp, slpflag | (PRIBIO + 1), "getblk",
 			    slptimeo);
 			splx(s);
-			if (err)
+			if (err) {
+				if (nbp != NULL) {
+					SET(nbp->b_flags, B_AGE);
+					brelse(nbp);
+				}
 				return (NULL);
+			}
 			goto start;
 		}
 
-		if (!ISSET(bp->b_flags, B_INVAL)) {
-			SET(bp->b_flags, (B_BUSY | B_CACHE));
-			bremfree(bp);
-			splx(s);
-			break;
-		}
+		SET(bp->b_flags, (B_BUSY | B_CACHE));
+		bremfree(bp);
 		splx(s);
 	}
 
@@ -706,7 +665,7 @@ start:
 			goto start;
 		}
 		bp = nbp;
-		binshash(bp, bh);
+		binshash(bp, BUFHASH(vp, blkno));
 		bp->b_blkno = bp->b_lblkno = blkno;
 		s = splbio();
 		bgetvp(vp, bp);
@@ -909,18 +868,6 @@ start:
 	bp->b_error = 0;
 	bp->b_resid = 0;
 	bp->b_bcount = 0;
-	bp->b_dirtyoff = bp->b_dirtyend = 0;
-	bp->b_validoff = bp->b_validend = 0;
-
-	/* nuke any credentials we were holding */
-	if (bp->b_rcred != NOCRED) {
-		crfree(bp->b_rcred);
-		bp->b_rcred = NOCRED;
-	}
-	if (bp->b_wcred != NOCRED) {
-		crfree(bp->b_wcred);
-		bp->b_wcred = NOCRED;
-	}
 
 	bremhash(bp);
 	*bpp = bp;
@@ -1041,7 +988,6 @@ biodone(bp)
 		buf_complete(bp);
 
 	if (!ISSET(bp->b_flags, B_READ)) {
-		CLR(bp->b_flags, B_WRITEINPROG);
 		vwakeup(bp->b_vp);
 	}
 
@@ -1117,3 +1063,16 @@ vfs_bufstats()
 	splx(s);
 }
 #endif /* DEBUG */
+
+int
+buf_cleanout(struct buf *bp) {
+	if (bp->b_vp != NULL)
+		brelvp(bp);
+
+	if (bp->b_flags & B_WANTED) {
+		bp->b_flags &= ~B_WANTED;
+		wakeup(bp);
+	}
+
+	return (0);
+}

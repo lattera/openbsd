@@ -1,4 +1,4 @@
-/*       $OpenBSD: src/sys/kern/vfs_sync.c,v 1.11.2.3 2001/07/04 10:48:54 niklas Exp $  */
+/*       $OpenBSD: src/sys/kern/vfs_sync.c,v 1.11.2.4 2001/12/05 01:02:39 niklas Exp $  */
 
 /*
  *  Portions of this code are:
@@ -130,8 +130,8 @@ vn_syncer_add_to_worklist(vp, delay)
 	if (vp->v_bioflag & VBIOONSYNCLIST)
 		LIST_REMOVE(vp, v_synclist);
 
-	LIST_INSERT_HEAD(&syncer_workitem_pending[slot], vp, v_synclist);
 	vp->v_bioflag |= VBIOONSYNCLIST;
+	LIST_INSERT_HEAD(&syncer_workitem_pending[slot], vp, v_synclist);
 	splx(s);
 }
 
@@ -176,15 +176,12 @@ sched_sync(p)
 			VOP_UNLOCK(vp, 0, p);
 			s = splbio();
 			if (LIST_FIRST(slp) == vp) {
-				/*
-				 * Note: disk vps can remain on the
-				 * worklist too with no dirty blocks, but
-				 * since sync_fsync() moves it to a different
-				 * slot we are safe.
-				 */
-				if (LIST_FIRST(&vp->v_dirtyblkhd) == NULL &&
-				    vp->v_type != VBLK)
-					panic("sched_sync: fsync failed");
+#ifdef DIAGNOSTIC
+				if (!(vp->v_bioflag & VBIOONSYNCLIST)) {
+					vprint("vnode", vp);
+					panic("sched_fsync: on synclist, but no flag");
+				}
+#endif
 				/*
 				 * Put us back on the worklist.  The worklist
 				 * routine will remove us from our current
@@ -387,6 +384,7 @@ sync_inactive(v)
 	}
 	vp->v_mount->mnt_syncer = NULL;
 	LIST_REMOVE(vp, v_synclist);
+	vp->v_bioflag &= ~VBIOONSYNCLIST;
 	vp->v_writecount = 0;
 	vput(vp);
 	return (0);
