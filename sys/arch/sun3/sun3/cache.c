@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.7 2001/09/11 20:05:24 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.8 2001/11/06 02:49:22 art Exp $	*/
 /*	$NetBSD: cache.c,v 1.5 1996/11/20 18:57:24 gwr Exp $	*/
 
 /*-
@@ -49,8 +49,7 @@
 #include <sys/user.h>
 #include <sys/queue.h>
 
-#include <vm/vm.h>
-#include <vm/vm_page.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/pte.h>
