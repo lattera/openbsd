@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libutil/logout.c,v 1.3 1996/06/17 07:46:03 downsj Exp $	*/
 /*
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,7 +34,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /* from: static char sccsid[] = "@(#)logout.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: logout.c,v 1.1.1.1 1995/10/18 08:43:13 deraadt Exp $";
+static char *rcsid = "$Id: logout.c,v 1.2 1996/05/22 11:35:07 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
@@ -44,7 +45,8 @@ static char *rcsid = "$Id: logout.c,v 1.1.1.1 1995/10/18 08:43:13 deraadt Exp $"
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util.h>
+
+#include "util.h"
 
 typedef struct utmp UTMP;
 
