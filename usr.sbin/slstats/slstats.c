@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/slstats/slstats.c,v 1.7 1996/12/22 03:29:06 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/slstats/slstats.c,v 1.8 1998/03/19 07:32:08 deraadt Exp $	*/
 /*	$NetBSD: slstats.c,v 1.6.6.1 1996/06/07 01:42:30 thorpej Exp $	*/
 
 /*
@@ -25,7 +25,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.sbin/slstats/slstats.c,v 1.7 1996/12/22 03:29:06 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/slstats/slstats.c,v 1.8 1998/03/19 07:32:08 deraadt Exp $";
 #endif
 
 #define INET
@@ -56,6 +56,7 @@ static char rcsid[] = "$OpenBSD: src/usr.sbin/slstats/slstats.c,v 1.7 1996/12/22
 #include <stdlib.h>
 #include <paths.h>
 #include <nlist.h>
+#include <string.h>
 #include <unistd.h>
 
 struct nlist nl[] = {
