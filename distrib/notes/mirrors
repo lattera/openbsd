@@ -1,5 +1,10 @@
 This is a list of currently known ftp servers:
 
+Korea:
+
+ftp://ftp1.kr.openbsd.org/pub/OpenBSD ==
+	ftp://sunsite.kren.ne.kr/pub/OpenBSD
+
 Australia:
 
 ftp://ftp.aba.net.su/pub/OpenBSD ==
@@ -38,6 +43,11 @@ Thailand:
 
 ftp://ftp.ruibon.ac.th/pup/OpenBSD ==
 	ftp://ftp.th.openbsd.org/pub/OpenBSD
+
+Korea:
+
+ftp://sunsite.kren.ne.kr/pup/OpenBSD ==
+	ftp://ftp.kr.openbsd.org/pub/OpenBSD
 
 United Kingdom:
 
