@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc_r/TEST/Attic/test_switch.c,v 1.6 2000/01/06 06:58:35 d Exp $	*/
 /* ==== test_switch.c ========================================================
  * Copyright (c) 1993 by Chris Provenzano, proven@athena.mit.edu
  *

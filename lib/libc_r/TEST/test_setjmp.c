@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc_r/TEST/Attic/test_setjmp.c,v 1.5 2000/01/06 06:58:34 d Exp $	*/
 #include <setjmp.h>
 #include "test.h"
 

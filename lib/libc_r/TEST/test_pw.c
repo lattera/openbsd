@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc_r/TEST/Attic/test_pw.c,v 1.4 2000/01/06 06:58:34 d Exp $	*/
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
