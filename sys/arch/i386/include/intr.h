@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.11 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.12 2003/04/05 20:41:11 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -213,6 +213,7 @@ spllower(ncpl)
 #define	splaudio()	splraise(IPL_AUDIO)
 #define	splclock()	splraise(IPL_CLOCK)
 #define	splstatclock()	splhigh()
+#define splipi()	splraise(IPL_IPI)
 
 /*
  * Software interrupt masks
