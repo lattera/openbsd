@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.48 2001/08/22 10:29:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.48.2.1 2002/01/23 03:10:01 jason Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -246,6 +246,7 @@ struct	proc {
 
 #define	P_NOCLDWAIT	0x080000	/* Let pid 1 wait for my children */
 #define	P_NOZOMBIE	0x100000	/* Pid 1 waits for me instead of dad */
+#define P_INEXEC	0x200000	/* Process is doing an exec right now */
 
 /* Macro to compute the exit signal to be delivered. */
 #define P_EXITSIG(p) \

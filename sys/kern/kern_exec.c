@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.57 2001/09/19 20:50:58 mickey Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.57.2.1 2002/01/23 03:10:01 jason Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -249,6 +249,12 @@ sys_execve(p, v, retval)
 	char **tmpfap;
 	int szsigcode;
 	extern struct emul emul_native;
+
+	/*
+	 * Cheap solution to complicated problems.
+	 * Mark this process as "leave me alone, I'm execing".
+	 */
+	p->p_flag |= P_INEXEC;
 
 	/*
 	 * figure out the maximum size of an exec header, if necessary.
@@ -611,6 +617,7 @@ sys_execve(p, v, retval)
 	if (KTRPOINT(p, KTR_EMUL))
 		ktremul(p, p->p_emul->e_name);
 #endif
+	p->p_flag &= ~P_INEXEC;
 	return (0);
 
 bad:
@@ -629,6 +636,7 @@ bad:
 
 freehdr:
 	free(pack.ep_hdr, M_EXEC);
+	p->p_flag &= ~P_INEXEC;
 	return (error);
 
 exec_abort:
@@ -652,6 +660,7 @@ free_pack_abort:
 	exit1(p, -1);
 
 	/* NOTREACHED */
+	p->p_flag &= ~P_INEXEC;
 	return (0);
 }
 
