@@ -1,5 +1,6 @@
 
-/*  A Bison parser, made from bi-parser.y with Bison version GNU Bison version 1.24
+/*  A Bison parser, made from bi-parser.y
+ by  Bison version A2.5 (Andrew Consortium)
   */
 
 #define YYBISON 1  /* Identify Bison output.  */
@@ -37,23 +38,6 @@ typedef union
   struct variation *variation;
   struct node *node;
 } YYSTYPE;
-
-#ifndef YYLTYPE
-typedef
-  struct yyltype
-    {
-      int timestamp;
-      int first_line;
-      int first_column;
-      int last_line;
-      int last_column;
-      char *text;
-   }
-  yyltype;
-
-#define YYLTYPE yyltype
-#endif
-
 #include <stdio.h>
 
 #ifndef __cplusplus
@@ -122,10 +106,14 @@ static const short yyrline[] = { 0,
     60,    65,    67,    71,    76,    78,    82,    85,    87,    89,
     93,    95,    98,   101,   105,   108,   112
 };
+#endif
+
+
+#if YYDEBUG != 0
 
 static const char * const yytname[] = {   "$","error","$undefined.","DEFOP",
 "STRING","'('","','","')'","top","defs","def","variations","variation","opt_string",
-"list","items","item",""
+"list","items","item", NULL
 };
 #endif
 
@@ -179,7 +167,7 @@ static const short yycheck[] = {    27,
     -1,    12,    -1,    -1,    16
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/local/share/bison.simple"
+#line 3 "/usr/share/bison.simple"
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -372,7 +360,7 @@ __yy_memcpy (char *from, char *to, int count)
 #endif
 #endif
 
-#line 192 "/usr/local/share/bison.simple"
+#line 192 "/usr/share/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -728,7 +716,7 @@ case 17:
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 487 "/usr/local/share/bison.simple"
+#line 487 "/usr/share/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;

@@ -1,6 +1,9 @@
-/* Configuration for GNU C-compiler for hosting on Windows32.
-   using GNU tools and the Windows32 API Library.
-   Copyright (C) 1997, 1998 Free Software Foundation, Inc.
+/* Operating system specific defines to be used when targeting GCC for
+   hosting on Windows32, using GNU tools and the Windows32 API Library,
+   as distinct from winnt.h, which is used to build GCC for use with a
+   windows style library and tool set and uses the Microsoft tools.
+   This variant uses CRTDLL.DLL insted of MSVCRTDLL.DLL.
+   Copyright (C) 1998 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -19,26 +22,12 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA. */
 
-#define NO_STAB_H
+#undef LIBGCC_SPEC
+#define LIBGCC_SPEC "-lmingw32 -lgcc -lmoldname -lcrtdll"
 
-#ifndef USG
-#define USG 1
-#endif
+/* Specify a different entry point when linking a DLL */
+#undef STARTFILE_SPEC
+#define STARTFILE_SPEC "%{mdll:dllcrt1%O%s} %{!mdll:crt1%O%s}"
 
-#ifndef ONLY_INT_FIELD
-#define ONLY_INT_FIELDS 1
-#endif
-
-#ifndef USE_PROTOTYPES
-#define USE_PROTOTYPES 1
-#endif
-
-#define NO_SYS_SIGLIST 1
-#define environ _environ
-
-/* Even though we support "/", allow "\" since everybody tests both.  */
-#define DIR_SEPARATOR '\\'
-#define EXECUTABLE_SUFFIX ".exe"
-
-#undef PATH_SEPARATOR
-#define PATH_SEPARATOR ';'
+#undef MATH_LIBRARY
+#define MATH_LIBRARY "-lcrtdll"

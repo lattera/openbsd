@@ -1,5 +1,6 @@
 
-/*  A Bison parser, made from objc-parse.y with Bison version GNU Bison version 1.24
+/*  A Bison parser, made from objc-parse.y
+ by  Bison version A2.5 (Andrew Consortium)
   */
 
 #define YYBISON 1  /* Identify Bison output.  */
@@ -142,23 +143,6 @@ int objc_public_flag;
 
 #define YYPRINT(FILE,YYCHAR,YYLVAL) yyprint(FILE,YYCHAR,YYLVAL)
 extern void yyprint ();
-
-#ifndef YYLTYPE
-typedef
-  struct yyltype
-    {
-      int timestamp;
-      int first_line;
-      int first_column;
-      int last_line;
-      int last_column;
-      char *text;
-   }
-  yyltype;
-
-#define YYLTYPE yyltype
-#endif
-
 #include <stdio.h>
 
 #ifndef __cplusplus
@@ -507,6 +491,10 @@ static const short yyrline[] = { 0,
   2868,  2873,  2879,  2881,  2887,  2891,  2892,  2898,  2900,  2903,
   2905,  2911,  2916,  2922,  2929,  2938
 };
+#endif
+
+
+#if YYDEBUG != 0
 
 static const char * const yytname[] = {   "$","error","$undefined.","IDENTIFIER",
 "TYPENAME","SCSPEC","TYPESPEC","TYPE_QUAL","CONSTANT","STRING","ELLIPSIS","SIZEOF",
@@ -549,8 +537,7 @@ static const char * const yytname[] = {   "$","error","$undefined.","IDENTIFIER"
 "myxdecls","mydecls","mydecl","myparms","myparm","optparmlist","@64","unaryselector",
 "keywordselector","selector","reservedwords","keyworddecl","messageargs","keywordarglist",
 "keywordexpr","keywordarg","receiver","objcmessageexpr","@65","@66","selectorarg",
-"keywordnamelist","keywordname","objcselectorexpr","objcprotocolexpr","objcencodeexpr",
-""
+"keywordnamelist","keywordname","objcselectorexpr","objcprotocolexpr","objcencodeexpr", NULL
 };
 #endif
 
@@ -1652,7 +1639,7 @@ static const short yycheck[] = {     9,
     48,    49,    50,    51,    52
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/local/share/bison.simple"
+#line 3 "/usr/share/bison.simple"
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -1845,7 +1832,7 @@ __yy_memcpy (char *from, char *to, int count)
 #endif
 #endif
 
-#line 192 "/usr/local/share/bison.simple"
+#line 192 "/usr/share/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -2617,7 +2604,7 @@ case 89:
 			      if (IDENTIFIER_GLOBAL_VALUE (yyvsp[0].ttype) != error_mark_node
 				  || IDENTIFIER_ERROR_LOCUS (yyvsp[0].ttype) != current_function_decl)
 				{
-				  error ("`%s' undeclared (first use this function)",
+				  error ("`%s' undeclared (first use in this function)",
 					 IDENTIFIER_POINTER (yyvsp[0].ttype));
 
 				  if (! undeclared_variable_notice)
@@ -4911,7 +4898,7 @@ case 556:
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 487 "/usr/local/share/bison.simple"
+#line 487 "/usr/share/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;

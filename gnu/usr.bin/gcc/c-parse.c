@@ -2104,7 +2104,7 @@ case 86:
 			      if (IDENTIFIER_GLOBAL_VALUE (yyvsp[0].ttype) != error_mark_node
 				  || IDENTIFIER_ERROR_LOCUS (yyvsp[0].ttype) != current_function_decl)
 				{
-				  error ("`%s' undeclared (first use this function)",
+				  error ("`%s' undeclared (first use in this function)",
 					 IDENTIFIER_POINTER (yyvsp[0].ttype));
 
 				  if (! undeclared_variable_notice)
