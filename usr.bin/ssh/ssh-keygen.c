@@ -14,7 +14,7 @@ Identity and host key generation and maintenance.
 */
 
 #include "includes.h"
-RCSID("$Id: ssh-keygen.c,v 1.2 1999/05/04 11:59:17 bg Exp $");
+RCSID("$Id: ssh-keygen.c,v 1.2 1999/09/28 04:45:37 provos Exp $");
 
 #ifndef HAVE_GETHOSTNAME
 #include <sys/utsname.h>
@@ -337,7 +337,7 @@ main(int ac, char **av)
       error("Could not create directory '%s'.", buf);
 
   /* Parse command line arguments. */
-  while ((opt = getopt(ac, av, "pcb:f:P:N:C:")) != EOF)
+  while ((opt = getopt(ac, av, "qpcb:f:P:N:C:")) != EOF)
     {
       switch (opt)
 	{
