@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/at/Attic/panic.c,v 1.7 2002/05/11 23:02:33 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/at/Attic/panic.c,v 1.8 2002/05/11 23:16:44 millert Exp $	*/
 /*	$NetBSD: panic.c,v 1.2 1995/03/25 18:13:33 glass Exp $	*/
 
 /*
@@ -42,7 +42,7 @@
 /* File scope variables */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/at/Attic/panic.c,v 1.7 2002/05/11 23:02:33 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/at/Attic/panic.c,v 1.8 2002/05/11 23:16:44 millert Exp $";
 #endif
 
 /* External variables */
@@ -50,42 +50,39 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/at/Attic/panic.c,v 1.7 2002/05/11 2
 /* Global functions */
 
 __dead void
-panic(a)
-	char *a;
+panic(const char *a)
 {
 	/*
 	 * Something fatal has happened, print error message and exit.
 	 */
 	(void)fprintf(stderr, "%s: %s\n", __progname, a);
 	if (fcreated) {
-		PRIV_START
+		PRIV_START;
 		unlink(atfile);
-		PRIV_END
+		PRIV_END;
 	}
 
 	exit(EXIT_FAILURE);
 }
 
 __dead void
-perr(a)
-	char *a;
+perr(const char *a)
 {
 	/*
 	 * Some operating system error; print error message and exit.
 	 */
 	perror(a);
 	if (fcreated) {
-		PRIV_START
+		PRIV_START;
 		unlink(atfile);
-		PRIV_END
+		PRIV_END;
 	}
 
 	exit(EXIT_FAILURE);
 }
 
 __dead void 
-perr2(a, b)
-	char *a, *b;
+perr2(const char *a, const char *b)
 {
 	(void)fputs(a, stderr);
 	perr(b);
