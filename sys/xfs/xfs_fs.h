@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: xfs_fs.h,v 1.1.1.1 2002/06/07 03:32:59 hin Exp $ */
+/* $Id: xfs_fs.h,v 1.6 2002/06/07 04:10:32 hin Exp $ */
 
 #ifndef _xfs_h
 #define _xfs_h
@@ -71,8 +71,6 @@ struct xfs {
 #define XFS_FROM_XNODE(xp) XFS_FROM_VNODE(XNODE_TO_VNODE(xp))
 
 extern struct xfs xfs[];
-
-extern struct vnodeops xfs_vnodeops;
 
 struct xfs_node *xfs_node_find(struct xfs *, struct xfs_handle *);
 int new_xfs_node(struct xfs *, struct xfs_msg_node *, struct xfs_node **,
