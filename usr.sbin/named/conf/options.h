@@ -1,7 +1,7 @@
 /* options.h - specify the conditionally-compiled features
  * vix 28mar92 [moved out of the Makefile because they were getting too big]
  *
- * $Id: options.h,v 8.12 1996/11/11 06:36:43 vixie Exp $
+ * $Id: options.h,v 1.2 1997/03/12 10:41:47 downsj Exp $
  */
 
 /*
@@ -75,7 +75,7 @@
  *      gns = Greg Shapiro of WPI
  */
 
-/*#define DEBUG		/* enable -d flag and SIGUSR[12] support (ucb) */
+#define DEBUG		/* enable -d flag and SIGUSR[12] support (ucb) */
 /*#define ALLOW_T_UNSPEC /* enable the "unspec" RR type for old athena (ucb) */
 /*#define INVQ		/* enable inverse queries (nslookup) (ucb/vix) */
 /*#define DSTORAGE	/* debug malloc overruns using storage.o (ucb/vix) */
