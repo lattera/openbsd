@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.40.2.1 2002/03/07 17:37:47 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.40.2.2 2002/03/08 15:17:18 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -81,7 +81,7 @@ typedef struct {
 	char   *user;		/* User to log in as. */
 	int     escape_char;	/* Escape character; -2 = none */
 
-	char   *system_hostfile;/* Path for /etc/ssh/ssh_known_hosts. */
+	char   *system_hostfile;/* Path for /etc/ssh_known_hosts. */
 	char   *user_hostfile;	/* Path for $HOME/.ssh/known_hosts. */
 	char   *system_hostfile2;
 	char   *user_hostfile2;
