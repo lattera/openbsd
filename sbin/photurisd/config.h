@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: config.h,v 1.4 1998/03/04 11:43:17 provos Exp $ */
+/* $Id: config.h,v 1.1 1998/11/14 23:37:22 deraadt Exp $ */
 /*
  * config.h: 
  * handling config
@@ -96,8 +96,6 @@ void reconfig(int sig);
 # define OPT_ENC            "enc"
 # define OPT_AUTH           "auth"
 #define OPT_USER            "user"
-#define OPT_TSRC            "tsrc"
-#define OPT_TDST            "tdst"
 
 struct cfgx {
      struct cfgx *next;

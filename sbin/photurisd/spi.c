@@ -33,7 +33,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: spi.c,v 1.1 1998/11/14 23:37:29 deraadt Exp $";
+static char rcsid[] = "$Id: spi.c,v 1.2 1999/03/27 21:18:02 provos Exp $";
 #endif
 
 #define _SPI_C_
@@ -103,24 +103,6 @@ make_spi(struct stateob *st, char *local_address,
      *lifetime = getspilifetime(st) + (arc4random() & 0x1F);
 
      return 0;
-}
-
-int
-spi_set_tunnel(struct stateob *st, struct spiob *spi)
-{
-     if (st->flags & IPSEC_OPT_TUNNEL) {
-	  spi->flags |= SPI_TUNNEL;
-	  spi->isrc = st->isrc;
-	  spi->ismask = st->ismask;
-	  spi->idst = st->idst;
-	  spi->idmask = st->idmask;
-     } else {
-	  spi->isrc = inet_addr(spi->local_address);
-	  spi->ismask = inet_addr("255.255.255.255");
-	  spi->idst = inet_addr(spi->address);
-	  spi->idmask = inet_addr("255.255.255.255");
-     }
-     return 1;
 }
 
 
