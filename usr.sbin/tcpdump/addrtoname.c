@@ -23,7 +23,7 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/addrtoname.c,v 1.12 2000/04/26 21:35:37 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/addrtoname.c,v 1.13 2000/04/30 05:23:28 ericj Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -194,7 +194,7 @@ getname(const u_char *ap)
 		break;
 
 	case 2:
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 		addr = ((u_int32_t)*(u_short *)ap << 16) |
 			(u_int32_t)*(u_short *)(ap + 2);
 #else
@@ -204,7 +204,7 @@ getname(const u_char *ap)
 		break;
 
 	default:
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 		addr = ((u_int32_t)ap[0] << 24) |
 			((u_int32_t)ap[1] << 16) |
 			((u_int32_t)ap[2] << 8) |
