@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: do_command.c,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $";
+static char rcsid[] = "$Id: do_command.c,v 1.2 1996/08/07 06:18:33 deraadt Exp $";
 #endif
 
 
@@ -380,7 +380,7 @@ child_process(e, u)
 					e->cmd);
 # if defined(MAIL_DATE)
 				fprintf(mail, "Date: %s\n",
-					arpadate(&TargetTime));
+					arpadate(&StartTime));
 # endif /* MAIL_DATE */
 				for (env = e->envp;  *env;  env++)
 					fprintf(mail, "X-Cron-Env: <%s>\n",
