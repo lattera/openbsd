@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.28 2000/10/20 15:28:04 deraadt Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.28.2.1 2000/11/14 05:45:50 jason Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -70,7 +70,7 @@ char osrelease[] = "${osr}";
 char osversion[] = "${id}#${v}";
 char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };
 char version[] =
-    "${ost} ${osr} (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
+    "${ost} ${osr}-stable (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
 eof
 
 expr ${v} + 1 > version
