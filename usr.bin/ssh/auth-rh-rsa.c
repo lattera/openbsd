@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.34.6.1 2003/09/16 20:50:42 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.34.6.2 2004/03/04 18:18:15 brad Exp $");
 
 #include "packet.h"
 #include "uidswap.h"
@@ -52,14 +52,15 @@ auth_rhosts_rsa_key_allowed(struct passwd *pw, char *cuser, char *chost,
  * its host key.  Returns true if authentication succeeds.
  */
 int
-auth_rhosts_rsa(struct passwd *pw, char *cuser, Key *client_host_key)
+auth_rhosts_rsa(Authctxt *authctxt, char *cuser, Key *client_host_key)
 {
 	char *chost;
+	struct passwd *pw = authctxt->pw;
 
 	debug("Trying rhosts with RSA host authentication for client user %.100s",
 	    cuser);
 
-	if (pw == NULL || client_host_key == NULL ||
+	if (!authctxt->valid || client_host_key == NULL ||
 	    client_host_key->rsa == NULL)
 		return 0;
 

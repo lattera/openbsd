@@ -22,9 +22,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if OPENSSL_VERSION_NUMBER < 0x00907000L
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-aes.c,v 1.1.4.1 2003/09/16 20:50:42 brad Exp $");
+#if OPENSSL_VERSION_NUMBER < 0x00907000L
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-aes.c,v 1.1.4.2 2004/03/04 18:18:15 brad Exp $");
 
 #include <openssl/evp.h>
 #include "rijndael.h"

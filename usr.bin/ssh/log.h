@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.8.4.1 2003/09/16 20:50:43 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.8.4.2 2004/03/04 18:18:15 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -56,11 +56,6 @@ void     debug(const char *, ...) __attribute__((format(printf, 1, 2)));
 void     debug2(const char *, ...) __attribute__((format(printf, 1, 2)));
 void     debug3(const char *, ...) __attribute__((format(printf, 1, 2)));
 
-void     fatal_cleanup(void);
-void     fatal_add_cleanup(void (*) (void *), void *);
-void     fatal_remove_cleanup(void (*) (void *), void *);
-void     fatal_remove_all_cleanups(void);
-
 void	 do_log(LogLevel, const char *, va_list);
-
+void	 cleanup_exit(int);
 #endif

@@ -18,7 +18,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/deattack.c,v 1.18 2002/03/04 17:27:39 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/deattack.c,v 1.18.6.1 2004/03/04 18:18:15 brad Exp $");
 
 #include "deattack.h"
 #include "log.h"
@@ -100,12 +100,12 @@ detect_attack(u_char *buf, u_int32_t len, u_char *IV)
 
 	if (h == NULL) {
 		debug("Installing crc compensation attack detector.");
+		h = (u_int16_t *) xmalloc(l * HASH_ENTRYSIZE);
 		n = l;
-		h = (u_int16_t *) xmalloc(n * HASH_ENTRYSIZE);
 	} else {
 		if (l > n) {
+			h = (u_int16_t *) xrealloc(h, l * HASH_ENTRYSIZE);
 			n = l;
-			h = (u_int16_t *) xrealloc(h, n * HASH_ENTRYSIZE);
 		}
 	}
 

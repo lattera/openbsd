@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.16 2002/09/09 14:54:15 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.16.4.1 2004/03/04 18:18:17 brad Exp $");
 
 #include "xmalloc.h"
 #include "uuencode.h"
@@ -31,7 +31,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.16 2002/09/09 14:54:15 markus Ex
 #include <resolv.h>
 
 int
-uuencode(u_char *src, u_int srclength,
+uuencode(const u_char *src, u_int srclength,
     char *target, size_t targsize)
 {
 	return __b64_ntop(src, srclength, target, targsize);

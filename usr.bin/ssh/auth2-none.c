@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-none.c,v 1.4.4.1 2003/09/16 20:50:42 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-none.c,v 1.4.4.2 2004/03/04 18:18:15 brad Exp $");
 
 #include "auth.h"
 #include "xmalloc.h"

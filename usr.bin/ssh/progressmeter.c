@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/progressmeter.c,v 1.3.2.1 2003/09/16 20:50:43 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/progressmeter.c,v 1.3.2.2 2004/03/04 18:18:16 brad Exp $");
 
 #include "progressmeter.h"
 #include "atomicio.h"
@@ -79,7 +79,7 @@ format_rate(char *buf, int size, off_t bytes)
 		bytes = (bytes + 512) / 1024;
 	}
 	snprintf(buf, size, "%3lld.%1lld%c%s",
-	    (long long) bytes / 100,
+	    (long long) (bytes + 5) / 100,
 	    (long long) (bytes + 5) / 10 % 10,
 	    unit[i],
 	    i ? "B" : " ");
@@ -106,7 +106,7 @@ refresh_progress_meter(void)
 	off_t transferred;
 	double elapsed;
 	int percent;
-	int bytes_left;
+	off_t bytes_left;
 	int cur_speed;
 	int hours, minutes, seconds;
 	int i, len;
@@ -119,14 +119,18 @@ refresh_progress_meter(void)
 
 	if (bytes_left > 0)
 		elapsed = now - last_update;
-	else
+	else {
 		elapsed = now - start;
+		/* Calculate true total speed when done */
+		transferred = end_pos;
+		bytes_per_second = 0;
+	}
 
 	/* calculate speed */
 	if (elapsed != 0)
 		cur_speed = (transferred / elapsed);
 	else
-		cur_speed = 0;
+		cur_speed = transferred;
 
 #define AGE_FACTOR 0.9
 	if (bytes_per_second != 0) {
@@ -199,7 +203,7 @@ refresh_progress_meter(void)
 			strlcat(buf, "    ", win_size);
 	}
 
-	atomicio(vwrite, STDOUT_FILENO, buf, win_size);
+	atomicio(vwrite, STDOUT_FILENO, buf, win_size - 1);
 	last_update = now;
 }
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-keygen/Makefile,v 1.21.8.1 2003/09/16 20:50:44 brad Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-keygen/Makefile,v 1.21.8.2 2004/03/04 18:18:17 brad Exp $
 
 .PATH:		${.CURDIR}/..
 

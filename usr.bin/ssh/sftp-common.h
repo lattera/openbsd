@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sftp-common.h,v 1.4 2002/09/11 22:41:50 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sftp-common.h,v 1.4.4.1 2004/03/04 18:18:16 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -39,10 +39,10 @@ struct Attrib {
 };
 
 void	 attrib_clear(Attrib *);
-void	 stat_to_attrib(struct stat *, Attrib *);
-void	 attrib_to_stat(Attrib *, struct stat *);
+void	 stat_to_attrib(const struct stat *, Attrib *);
+void	 attrib_to_stat(const Attrib *, struct stat *);
 Attrib	*decode_attrib(Buffer *);
-void	 encode_attrib(Buffer *, Attrib *);
-char	*ls_file(char *, struct stat *, int);
+void	 encode_attrib(Buffer *, const Attrib *);
+char	*ls_file(const char *, const struct stat *, int);
 
 const char *fx2txt(int);

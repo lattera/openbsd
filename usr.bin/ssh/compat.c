@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.65.4.2 2003/09/16 20:50:43 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.65.4.3 2004/03/04 18:18:15 brad Exp $");
 
 #include "buffer.h"
 #include "packet.h"
@@ -79,11 +79,7 @@ compat_datafellows(const char *version)
 		{ "OpenSSH_2.5.3*",	SSH_BUG_NOREKEY|SSH_BUG_EXTEOF},
 		{ "OpenSSH_2.*,"
 		  "OpenSSH_3.0*,"
-		  "OpenSSH_3.1*",	SSH_BUG_EXTEOF|SSH_BUG_GSSAPI_BER},
-		{ "OpenSSH_3.2*,"
-		  "OpenSSH_3.3*,"
-		  "OpenSSH_3.4*,"
-		  "OpenSSH_3.5*",	SSH_BUG_GSSAPI_BER},
+		  "OpenSSH_3.1*",	SSH_BUG_EXTEOF},
 		{ "Sun_SSH_1.0*",	SSH_BUG_NOREKEY|SSH_BUG_EXTEOF},
 		{ "OpenSSH*",		0 },
 		{ "*MindTerm*",		0 },

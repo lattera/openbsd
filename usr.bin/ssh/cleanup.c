@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cleanup.c,v 1.1 2003/09/23 20:17:11 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/cleanup.c,v 1.1.4.1 2004/03/04 18:18:15 brad Exp $");
 
 #include "log.h"
 

@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.16.4.2 2003/09/16 21:30:49 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.16.4.3 2004/03/04 18:18:15 brad Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -39,6 +39,7 @@ buffer_free(Buffer *buffer)
 {
 	if (buffer->alloc > 0) {
 		memset(buffer->buf, 0, buffer->alloc);
+		buffer->alloc = 0;
 		xfree(buffer->buf);
 	}
 }
@@ -104,7 +105,7 @@ restart:
 		goto restart;
 	}
 	/* Increase the size of the buffer and retry. */
-	
+
 	newlen = buffer->alloc + len + 32768;
 	if (newlen > 0xa00000)
 		fatal("buffer_append_space: alloc %u not supported",
@@ -168,7 +169,7 @@ buffer_ptr(Buffer *buffer)
 void
 buffer_dump(Buffer *buffer)
 {
-	int i;
+	u_int i;
 	u_char *ucp = buffer->buf;
 
 	for (i = buffer->offset; i < buffer->end; i++) {

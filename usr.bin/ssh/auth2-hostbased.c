@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-hostbased.c,v 1.2.8.1 2003/09/16 20:50:42 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-hostbased.c,v 1.2.8.2 2004/03/04 18:18:15 brad Exp $");
 
 #include "ssh2.h"
 #include "xmalloc.h"
@@ -114,7 +114,7 @@ userauth_hostbased(Authctxt *authctxt)
 			buffer_len(&b))) == 1)
 		authenticated = 1;
 
-	buffer_clear(&b);
+	buffer_free(&b);
 done:
 	debug2("userauth_hostbased: authenticated %d", authenticated);
 	if (key != NULL)

@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/kex.c,v 1.54.2.2 2003/09/16 20:50:43 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/kex.c,v 1.54.2.3 2004/03/04 18:18:15 brad Exp $");
 
 #include <openssl/crypto.h>
 
@@ -310,7 +310,7 @@ choose_hostkeyalg(Kex *k, char *client, char *server)
 	xfree(hostkeyalg);
 }
 
-static int 
+static int
 proposals_match(char *my[PROPOSAL_MAX], char *peer[PROPOSAL_MAX])
 {
 	static int check[] = {
@@ -392,7 +392,7 @@ kex_choose_conf(Kex *kex)
 	kex->we_need = need;
 
 	/* ignore the next message if the proposals do not match */
-	if (first_kex_follows && !proposals_match(my, peer) && 
+	if (first_kex_follows && !proposals_match(my, peer) &&
 	   !(datafellows & SSH_BUG_FIRSTKEX)) {
 		type = packet_read();
 		debug2("skipping next packet (type %u)", type);

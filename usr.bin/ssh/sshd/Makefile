@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.52.2.1 2003/09/16 20:50:45 brad Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.52.2.2 2004/03/04 18:18:17 brad Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -28,7 +28,7 @@ SRCS=	sshd.c auth-rhosts.c auth-passwd.c auth-rsa.c auth-rh-rsa.c \
 .include <bsd.prog.mk>
 
 #.if (${KERBEROS5:L} == "yes")
-#LDADD+= -lgssapi -lkrb5
+#LDADD+= -lgssapi -lkrb5 -lkafs
 #DPADD+= ${LIBGSSAPI} ${LIBKRB5}
 #.endif
 

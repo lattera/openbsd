@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.4.8.1 2003/09/16 20:50:42 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.4.8.2 2004/03/04 18:18:14 brad Exp $	*/
 
 /*
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.

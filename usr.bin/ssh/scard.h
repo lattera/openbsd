@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.11.4.1 2003/09/16 20:50:43 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.11.4.2 2004/03/04 18:18:16 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.

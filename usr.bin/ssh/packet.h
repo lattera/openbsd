@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.35.4.1 2003/09/16 20:50:43 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.35.4.2 2004/03/04 18:18:16 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

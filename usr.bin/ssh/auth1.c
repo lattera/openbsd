@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.47.2.1 2003/09/16 20:50:42 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.47.2.2 2004/03/04 18:18:15 brad Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -70,7 +70,6 @@ do_authloop(Authctxt *authctxt)
 	u_int dlen;
 	u_int ulen;
 	int type = 0;
-	struct passwd *pw = authctxt->pw;
 
 	debug("Attempting authentication for %s%.100s.",
 	    authctxt->valid ? "" : "illegal user ", authctxt->user);
@@ -125,7 +124,7 @@ do_authloop(Authctxt *authctxt)
 				    BN_num_bits(client_host_key->rsa->n), bits);
 			packet_check_eom();
 
-			authenticated = auth_rhosts_rsa(pw, client_user,
+			authenticated = auth_rhosts_rsa(authctxt, client_user,
 			    client_host_key);
 			key_free(client_host_key);
 
@@ -143,7 +142,7 @@ do_authloop(Authctxt *authctxt)
 				fatal("do_authloop: BN_new failed");
 			packet_get_bignum(n);
 			packet_check_eom();
-			authenticated = auth_rsa(pw, n);
+			authenticated = auth_rsa(authctxt, n);
 			BN_clear_free(n);
 			break;
 
@@ -235,10 +234,9 @@ do_authloop(Authctxt *authctxt)
  * Performs authentication of an incoming connection.  Session key has already
  * been exchanged and encryption is enabled.
  */
-Authctxt *
-do_authentication(void)
+void
+do_authentication(Authctxt *authctxt)
 {
-	Authctxt *authctxt;
 	u_int ulen;
 	char *user, *style = NULL;
 
@@ -252,7 +250,6 @@ do_authentication(void)
 	if ((style = strchr(user, ':')) != NULL)
 		*style++ = '\0';
 
-	authctxt = authctxt_new();
 	authctxt->user = user;
 	authctxt->style = style;
 
@@ -285,6 +282,4 @@ do_authentication(void)
 	packet_start(SSH_SMSG_SUCCESS);
 	packet_send();
 	packet_write_wait();
-
-	return (authctxt);
 }

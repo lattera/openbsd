@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.32.2.1 2003/09/16 20:50:42 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.32.2.2 2004/03/04 18:18:15 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -83,7 +83,7 @@ int	 ssh_add_identity_constrained(AuthenticationConnection *, Key *,
 int	 ssh_remove_identity(AuthenticationConnection *, Key *);
 int	 ssh_remove_all_identities(AuthenticationConnection *, int);
 int	 ssh_lock_agent(AuthenticationConnection *, int, const char *);
-int	 ssh_update_card(AuthenticationConnection *, int, const char *, 
+int	 ssh_update_card(AuthenticationConnection *, int, const char *,
     const char *, u_int, u_int);
 
 int

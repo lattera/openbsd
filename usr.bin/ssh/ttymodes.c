@@ -43,7 +43,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.18.4.1 2003/09/16 20:50:44 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.18.4.2 2004/03/04 18:18:17 brad Exp $");
 
 #include "packet.h"
 #include "log.h"
