@@ -1,7 +1,10 @@
-#	$OpenBSD: src/sbin/ping6/Makefile,v 1.2 1999/12/30 16:19:32 itojun Exp $
+#	$OpenBSD: src/sbin/ping6/Makefile,v 1.3 2000/03/23 11:26:17 hugh Exp $
 
 PROG=	ping6
 MAN=	ping6.8
+
+LDADD=	-lm
+DPADD=	${LIBM}
 
 CPPFLAGS+= -DINET6
 
