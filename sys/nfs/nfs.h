@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs.h,v 1.10 2000/05/22 17:33:18 mickey Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs.h,v 1.10.4.1 2001/10/14 20:44:49 jason Exp $	*/
 /*	$NetBSD: nfs.h,v 1.10.4.1 1996/05/27 11:23:56 fvdl Exp $	*/
 
 /*
@@ -177,9 +177,9 @@ struct nfsd_cargs {
 	char		*ncd_dirp;	/* Mount dir path */
 	uid_t		ncd_authuid;	/* Effective uid */
 	int		ncd_authtype;	/* Type of authenticator */
-	int		ncd_authlen;	/* Length of authenticator string */
+	u_int		ncd_authlen;	/* Length of authenticator string */
 	u_char		*ncd_authstr;	/* Authenticator string */
-	int		ncd_verflen;	/* and the verifier */
+	u_int		ncd_verflen;	/* and the verifier */
 	u_char		*ncd_verfstr;
 	NFSKERBKEY_T	ncd_key;	/* Session key */
 };
