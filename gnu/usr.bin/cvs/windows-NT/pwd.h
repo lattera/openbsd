@@ -11,11 +11,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-    $Header: /u/src/master/ccvs/windows-NT/pwd.h,v 1.3 1995/08/30 20:44:06 jimb Exp $
+    $Header: /u/src/master/ccvs/windows-NT/pwd.h,v 1.4 1997/01/02 19:02:57 kingdon Exp $
 */
 
 /* This 'implementation' is conjectured from the use of this functions in
