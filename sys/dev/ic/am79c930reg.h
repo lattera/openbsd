@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.3 2001/10/31 03:22:41 nate Exp $ */
+/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.4 2002/03/30 08:38:10 niklas Exp $ */
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -66,6 +66,7 @@
 #define AM79C930_IO_BASE	0
 #define AM79C930_IO_SIZE	16
 #define AM79C930_IO_SIZE_BIG	40
+#define AM79C930_IO_ALIGN	0x40	/* am79c930 decodes lower 6bits */
 
 
 #define AM79C930_GCR	0	/* General Config Register */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.3 2002/03/06 02:07:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.4 2002/03/30 08:35:20 niklas Exp $ */
 
 /**
  * rijndael-alg-fst.c

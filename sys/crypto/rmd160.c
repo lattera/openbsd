@@ -1,5 +1,4 @@
-/*       $OpenBSD: src/sys/crypto/rmd160.c,v 1.1.2.3 2001/10/31 03:11:47 nate Exp $       */
-/*	$OpenBSD: src/sys/crypto/rmd160.c,v 1.1.2.3 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/crypto/rmd160.c,v 1.1.2.4 2002/03/30 08:35:20 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
