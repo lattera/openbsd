@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.57 2002/09/11 09:50:44 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.57.4.1 2004/01/16 00:00:21 brad Exp $	*/
 /*	$EOM: message.c,v 1.156 2000/10/10 12:36:39 provos Exp $	*/
 
 /*
@@ -52,10 +52,13 @@
 #include "doi.h"
 #include "exchange.h"
 #include "field.h"
+#include "hash.h"
+#include "ipsec.h"
 #include "ipsec_num.h"
 #include "isakmp.h"
 #include "log.h"
 #include "message.h"
+#include "prf.h"
 #include "sa.h"
 #include "timer.h"
 #include "transport.h"
@@ -444,6 +447,12 @@ message_validate_delete (struct message *msg, struct payload *p)
 {
   u_int8_t proto = GET_ISAKMP_DELETE_PROTO (p->p);
   struct doi *doi;
+  struct sa *sa, *isakmp_sa;
+  struct sockaddr *dst, *dst_isa;
+  u_int32_t nspis = GET_ISAKMP_DELETE_NSPIS (p->p);
+  u_int8_t *spis = (u_int8_t *)p->p + ISAKMP_DELETE_SPI_OFF;
+  int i;
+  char *addr;
 
   doi = doi_lookup (GET_ISAKMP_DELETE_DOI (p->p));
   if (!doi)
@@ -477,16 +486,141 @@ message_validate_delete (struct message *msg, struct payload *p)
     }
 
   /* Validate the SPIs.  */
+  for (i = 0; i < nspis; i++)
+    {
+      /* Get ISAKMP SA protecting this message. */
+      isakmp_sa = msg->isakmp_sa;
+      if (!isakmp_sa)
+        {
+          /* XXX should not happen? */
+          log_print ("message_validate_delete: invalid spi "
+                     "(no valid ISAKMP SA found)");
+          message_free (msg);
+          return -1;
+        }
+      isakmp_sa->transport->vtbl->get_dst (isakmp_sa->transport, &dst_isa);
+
+      /* Get SA to be deleted. */
+      msg->transport->vtbl->get_dst (msg->transport, &dst);
+      if (proto == ISAKMP_PROTO_ISAKMP)
+	sa = sa_lookup_isakmp_sa (dst, spis + i * ISAKMP_HDR_COOKIES_LEN);
+      else
+	sa = ipsec_sa_lookup (dst, ((u_int32_t *)spis)[i], proto);
+      if (!sa)
+        {
+          log_print ("message_validate_delete: invalid spi "
+		     "(no valid SA found)");
+          message_free (msg);
+          return -1;
+        }
+      sa->transport->vtbl->get_dst (sa->transport, &dst);
+
+      /* Destination addresses must match. */
+      if (dst->sa_family != dst_isa->sa_family ||
+          memcmp (sockaddr_addrdata (dst_isa), sockaddr_addrdata (dst),
+                  sockaddr_addrlen (dst)))
+        {
+          sockaddr2text (dst_isa, &addr, 0);
+
+          log_print ("message_validate_delete: invalid spi "
+                     "(illegal delete request from %s)", addr);
+          free (addr);
+          message_free (msg);
+          return -1;
+        }
+    }
 
   return 0;
 }
 
 /*
- * Validate the hash payload P in message MSG.  */
+ * Validate the hash payload P in message MSG.
+ * XXX Currently hash payloads are processed by the particular exchanges,
+ * except INFORMATIONAL.  This should be actually done here.
+ */
 static int
 message_validate_hash (struct message *msg, struct payload *p)
 {
-  /* XXX Not implemented yet.  */
+  struct sa *isakmp_sa = msg->isakmp_sa;
+  struct ipsec_sa *isa;
+  struct hash *hash;
+  struct payload *hashp = TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_HASH]);
+  struct prf *prf;
+  u_int8_t *comp_hash, *rest;
+  u_int8_t message_id[ISAKMP_HDR_MESSAGE_ID_LEN];
+  size_t rest_len;
+
+  if (msg->exchange)	/* active exchange validates hash payload. */
+    return 0;
+
+  if (isakmp_sa == NULL)
+    {
+       log_print ("message_validate_hash: invalid hash information");
+       return -1;
+    }
+
+  isa = isakmp_sa->data;
+  hash = hash_get (isa->hash);
+
+  if (hash == NULL)
+    {
+       log_print ("message_validate_hash: invalid hash information");
+       return -1;
+    }
+
+  /* If no SKEYID_a, we can not do anything (should not happen).  */
+  if (!isa->skeyid_a)
+    {
+      log_print ("message_validate_hash: invalid hash information");
+      return -1;
+    }
+
+  /* Allocate the prf and start calculating our HASH(1). */
+  LOG_DBG_BUF ((LOG_MISC, 90, "message_validate_hash: SKEYID_a", isa->skeyid_a,
+		isa->skeyid_len));
+  prf = prf_alloc (isa->prf_type, hash->type, isa->skeyid_a, isa->skeyid_len);
+  if (!prf)
+    return -1;
+
+  comp_hash = (u_int8_t *)malloc (hash->hashsize);
+  if (!comp_hash)
+    {
+      log_error ("message_validate_hash: malloc (%lu) failed",
+	        (unsigned long)hash->hashsize);
+      prf_free (prf);
+      return -1;
+    }
+
+  /* This is not an active exchange. */
+  GET_ISAKMP_HDR_MESSAGE_ID (msg->iov[0].iov_base, message_id);
+
+  prf->Init (prf->prfctx);
+  LOG_DBG_BUF ((LOG_MISC, 90, "message_validate_hash: message_id",
+		message_id, ISAKMP_HDR_MESSAGE_ID_LEN));
+  prf->Update (prf->prfctx, message_id, ISAKMP_HDR_MESSAGE_ID_LEN);
+  rest = hashp->p + GET_ISAKMP_GEN_LENGTH (hashp->p);
+  rest_len = (GET_ISAKMP_HDR_LENGTH (msg->iov[0].iov_base)
+	        - (rest - (u_int8_t*)msg->iov[0].iov_base));
+  LOG_DBG_BUF ((LOG_MISC, 90, "message_validate_hash: payloads after HASH(1)",
+		rest, rest_len));
+  prf->Update (prf->prfctx, rest, rest_len);
+  prf->Final (comp_hash, prf->prfctx);
+  prf_free (prf);
+
+  if (memcmp (hashp->p + ISAKMP_HASH_DATA_OFF, comp_hash, hash->hashsize))
+    {
+      log_print ("message_validate_hash: invalid hash value for %s payload",
+		 TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_DELETE])
+		 ? "DELETE" : "NOTIFY");
+      message_drop (msg, ISAKMP_NOTIFY_INVALID_HASH_INFORMATION, 0, 1, 0);
+      free (comp_hash);
+      return -1;
+    }
+  free (comp_hash);
+
+  /* Mark the HASH as handled. */
+  hashp->flags |= PL_MARK;
+
   return 0;
 }
 
@@ -1221,6 +1355,16 @@ message_recv (struct message *msg)
   if ((msg->exchange->flags & EXCHANGE_FLAG_COMMITTED) == 0
       && (flags & ISAKMP_FLAGS_COMMIT))
     msg->exchange->flags |= EXCHANGE_FLAG_HE_COMMITTED;
+
+  /* Require encryption as soon as we have the keystate for it.  */
+  if ((flags & ISAKMP_FLAGS_ENC) == 0 &&
+      (msg->exchange->phase == 2 || msg->exchange->keystate))
+    {
+      log_print ("message_recv: cleartext phase %d message",
+                 msg->exchange->phase);
+      message_drop (msg, ISAKMP_NOTIFY_INVALID_FLAGS, 0, 1, 1);
+      return -1;
+    }
 
   /* OK let the exchange logic do the rest.  */
   exchange_run (msg);
