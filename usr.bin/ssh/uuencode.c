@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.11 2001/03/01 02:20:50 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.12 2001/03/01 02:27:18 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -28,7 +28,9 @@
 #include "xmalloc.h"
 #include "uuencode.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.11 2001/03/01 02:20:50 deraadt Exp $");
+#include <resolv.h>
+
+RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.12 2001/03/01 02:27:18 deraadt Exp $");
 
 int
 uuencode(u_char *src, u_int srclength,
