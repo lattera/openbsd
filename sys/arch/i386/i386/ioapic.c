@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-

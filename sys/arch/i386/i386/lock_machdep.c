@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/lock_machdep.c,v 1.1.2.2 2001/07/15 15:10:55 ho Exp $	*/
 /* $NetBSD: lock_machdep.c,v 1.1.2.3 2000/05/03 14:40:30 sommerfeld Exp $ */
 
 /*-

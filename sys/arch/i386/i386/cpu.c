@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-

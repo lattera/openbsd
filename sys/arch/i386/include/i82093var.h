@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/i82093var.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
 /* $NetBSD: i82093var.h,v 1.1.2.3 2000/02/27 20:26:06 sommerfeld Exp $ */
 
 /*-

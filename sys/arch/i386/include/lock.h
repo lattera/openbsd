@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/lock.h,v 1.1.2.2 2001/07/15 15:13:29 ho Exp $	*/
 /*	$NetBSD: lock.h,v 1.1.2.2 2000/05/03 14:40:55 sommerfeld Exp $	*/
 
 /*-

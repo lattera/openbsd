@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.4 2001/07/15 15:10:55 ho Exp $	*/
+
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -95,7 +97,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mpbios.c,v 1.1.2.2 2001/07/15 11:04:49 ho Exp $
+ *	$Id: mpbios.c,v 1.1.2.3 2001/07/15 11:43:59 niklas Exp $
  */
 
 /*
@@ -392,7 +394,6 @@ mpbios_map(pa, len, handle)
 	handle->vsize = endpa-pgpa;
 
 	do {
-		/* pmap_kenter_pa (va, pgpa, VM_PROT_READ); */
 		pmap_enter(pmap_kernel(), va, pgpa, VM_PROT_READ, TRUE,
 		    VM_PROT_READ);
 		va += NBPG;
@@ -406,7 +407,6 @@ static __inline void
 mpbios_unmap(handle)
 	struct mp_map *handle;
 {
-  	/* pmap_kremove (handle->baseva, handle->vsize); */
   	pmap_extract(pmap_kernel(), handle->baseva, NULL);
 	uvm_km_free(kernel_map, handle->baseva, handle->vsize);
 }
@@ -1246,12 +1246,10 @@ mpbios_cpu_start(struct cpu_info *ci)
 	dwordptr[0] = 0;
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
 
-	/* pmap_kenter_pa (0, 0, VM_PROT_READ|VM_PROT_WRITE); */
 	pmap_enter(pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
 	    VM_PROT_READ|VM_PROT_WRITE);
 	/* XXX magic constant.  */
 	memcpy((u_int8_t *)0x467, dwordptr, 4);
-	/* pmap_kremove (0, NBPG); */
 	pmap_extract(pmap_kernel(), 0, NULL);
 
 	/*

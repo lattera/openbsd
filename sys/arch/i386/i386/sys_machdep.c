@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.6.6.3 2001/07/15 15:10:55 ho Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.28 1996/05/03 19:42:29 christos Exp $	*/
 
 /*-

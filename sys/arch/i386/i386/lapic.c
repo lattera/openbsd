@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.2 2001/07/15 15:10:55 ho Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/i82489reg.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
 /*	$NetBSD: i82489reg.h,v 1.1.2.1 2000/02/20 16:30:27 sommerfeld Exp $	*/
 
 /*-
