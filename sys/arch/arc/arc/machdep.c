@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arc/arc/Attic/machdep.c,v 1.31 1998/03/16 09:38:30 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/arc/arc/Attic/machdep.c,v 1.32 1998/03/25 11:48:14 pefo Exp $	*/
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -38,7 +38,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)machdep.c	8.3 (Berkeley) 1/12/94
- *      $Id: machdep.c,v 1.30 1998/01/28 13:45:55 pefo Exp $
+ *      $Id: machdep.c,v 1.31 1998/03/16 09:38:30 pefo Exp $
  */
 
 /* from: Utah Hdr: machdep.c 1.63 91/04/24 */
@@ -550,6 +550,7 @@ mips_init(argc, argv, envv)
 	/*
 	 * Initialize the virtual memory system.
 	 */
+	vm_set_page_size();	/* XXX Works when default page size is 4k */
 	pmap_bootstrap((vm_offset_t)sysend);
 }
 
