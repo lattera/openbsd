@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/stand/Attic/kbd.c,v 1.4 1996/09/23 14:46:51 mickey Exp $	*/
 /*	$NetBSD: kbd.c,v 1.3 1994/10/27 04:21:56 cgd Exp $	*/
 
 /*-
