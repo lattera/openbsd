@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.10 1996/11/23 21:46:04 kstailey Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11 2000/01/24 05:20:54 smurph Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -273,7 +273,8 @@ struct nam2blk {
 	int maj;
 } nam2blk[] = {
 	{ "sd",		4 },
-	{ "st",		6 },
+	{ "st",		7 },
+   { "rd",     9 },
 };
 
 static int
