@@ -1,0 +1,35 @@
+The SMP branch is irregularily updated from the trunk.  To do this
+you mainly need to carry out the following procedure.
+
+* Determine the new synchronization tag to use.  There are two used
+  alternately; SMP_SYNC_A and SMP_SYNC_B.  You can use several hueristics
+  to find out which one was used last, and then use the other one.
+  For example, CVSROOT/history* files gives you information about tag
+  operations in lines matching '^T'.  Call the tag you will be using
+  for $NEW_TAG and the other one $OLD_TAG.
+
+* Tag the trunk with the new synchronization tag.
+
+  $ cvs -d cvs.openbsd.org:/cvs rtag -F -rHEAD $NEW_TAG src/sys
+
+* Have an SMP branch checkout available with -kk substitution done.
+  For example check out a fresh one:
+
+  $ cvs get -rSMP -kk src/sys
+
+* Go into src/sys and merge from the trunk (make sure that the repository
+  you use have the new tags from the tagging above, i.e. don't use a mirror
+  that has not been updated since that step):
+
+  $ cvs up -j$OLD_TAG -j$NEW_TAG -kk
+
+* Find any conflicts, and resolve them, this command might help:
+
+  $ cvs -q up -dP -rSMP -kk 2>&1 | grep '^C '
+
+* Build and test a GENERIC.MP kernel, fix every regression you can find.
+
+* Commit to the SMP branch in pieces to not lock too much of the sys tree
+  in the repository, Nice chunks are perhaps 100-300 files.
+
+  
