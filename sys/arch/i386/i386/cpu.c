@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.13 2004/03/30 09:06:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.14 2004/04/06 13:30:48 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -88,6 +88,7 @@
 #include <machine/pmap.h>
 #include <machine/vmparam.h>
 #include <machine/mpbiosvar.h>
+#include <machine/npx.h>
 #include <machine/pcb.h>
 #include <machine/specialreg.h>
 #include <machine/segments.h>
@@ -433,6 +434,7 @@ cpu_hatch(void *v)
 	lapic_initclocks();
 	lapic_set_lvt();
 	gdt_init_cpu(ci);
+	npxinit(ci);
 
 	lldt(GSEL(GLDT_SEL, SEL_KPL));
 
