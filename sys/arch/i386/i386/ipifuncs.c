@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.3 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.4 2003/04/04 15:02:03 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -60,11 +60,8 @@
 
 void i386_ipi_halt(void);
 void i386_ipi_fpsave(void);
-
-#if 0
 void i386_ipi_gmtb(void);
 void i386_ipi_nychi(void);
-#endif
 
 void (*ipifunc[I386_NIPI])(void) = 
 {
@@ -80,8 +77,8 @@ void (*ipifunc[I386_NIPI])(void) =
 	0,
 #endif
 	0,
-	0,
-	0,
+	i386_ipi_gmtb,
+	i386_ipi_nychi,
 };
 
 void
@@ -107,42 +104,39 @@ i386_ipi_fpsave(void)
 }
 #endif
 
-#if 0
 void
 i386_ipi_gmtb(void)
 {
-#if 0
+	extern struct cpu_info *first_app_cpu;
 	struct cpu_info *ci = curcpu();
+
 	printf("%s: we were asked for the brain.\n", ci->ci_dev.dv_xname);
-#endif
-	i386_send_ipi(1, I386_IPI_NYCHI);
+	i386_send_ipi(first_app_cpu, I386_IPI_NYCHI);
 }
 
 void
 i386_ipi_nychi(void)
 {
-#if 0
 	struct cpu_info *ci = curcpu();
+
 	printf("%s: we were asked for the brain.\n", ci->ci_dev.dv_xname);
-#endif
 }
-#endif
 
 void
-i386_spurious (void)
+i386_spurious(void)
 {
 	printf("spurious intr\n");
 }
 
 void
-i386_send_ipi (struct cpu_info *ci, int ipimask)
+i386_send_ipi(struct cpu_info *ci, int ipimask)
 {
 	i386_atomic_setbits_l(&ci->ci_ipis, ipimask);
 	i386_ipi(LAPIC_IPI_VECTOR, ci->ci_cpuid, LAPIC_DLMODE_FIXED);
 }
 
 void
-i386_self_ipi (int vector)
+i386_self_ipi(int vector)
 {
 	i82489_writereg(LAPIC_ICRLO,
 	    vector | LAPIC_DLMODE_FIXED | LAPIC_LVL_ASSERT | LAPIC_DEST_SELF);
@@ -150,7 +144,7 @@ i386_self_ipi (int vector)
 
 
 void
-i386_broadcast_ipi (int ipimask)
+i386_broadcast_ipi(int ipimask)
 {
 	panic("broadcast_ipi not implemented");
 }
@@ -163,9 +157,7 @@ i386_ipi_handler(void)
 	int bit;
 
 	pending = i386_atomic_testset_ul(&ci->ci_ipis, 0);
-#if 0
 	printf("%s: pending IPIs: %x\n", ci->ci_dev.dv_xname, pending);
-#endif
 
 	for (bit = 0; bit < I386_NIPI && pending; bit++) {
 		if (pending & (1<<bit)) {

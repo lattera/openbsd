@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.5 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.6 2003/04/04 15:02:03 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -111,8 +111,8 @@ void    cpu_attach __P((struct device *, struct device *, void *));
  * curproc, etc. are used early.
  */
 
-static struct cpu_info dummy_cpu_info; /* XXX */
-struct cpu_info *cpu_info[I386_MAXPROCS] = { &dummy_cpu_info };
+static struct cpu_info cpu_info_primary; /* XXX */
+struct cpu_info *cpu_info[I386_MAXPROCS] = { &cpu_info_primary };
 
 void   	cpu_hatch __P((void *));
 void   	cpu_boot_secondary __P((struct cpu_info *));
@@ -130,7 +130,7 @@ cpu_init_first()
 
 	if (cpunum != 0) {
 		cpu_info[0] = NULL;
-		cpu_info[cpunum] = &dummy_cpu_info;
+		cpu_info[cpunum] = &cpu_info_primary;
 	}
 
 	cpu_copy_trampoline();
@@ -179,9 +179,11 @@ cpu_attach(parent, self, aux)
 			    self->dv_xname, cpu_number(), cpunum);
 		}
 
+		ci = &cpu_info_primary;
+		bcopy(self, &ci->ci_dev, sizeof *self);
+
 		/* special-case boot CPU */			    /* XXX */
-		if (cpu_info[cpunum] == &dummy_cpu_info) {	    /* XXX */
-			ci->ci_curproc = dummy_cpu_info.ci_curproc; /* XXX */
+		if (cpu_info[cpunum] == &cpu_info_primary) {	    /* XXX */
 			cpu_info[cpunum] = NULL; 		    /* XXX */
 		}				 		    /* XXX */
 	}
@@ -364,6 +366,8 @@ cpu_boot_secondary (ci)
 
 }
 
+struct cpu_info *first_app_cpu = NULL;
+
 /*
  * The CPU ends up here when its ready to run
  * XXX should share some of this with init386 in machdep.c
@@ -374,9 +378,8 @@ cpu_hatch(void *v)
 {
 	struct cpu_info *ci = (struct cpu_info *)v;
         struct region_descriptor region;
-#if 0
 	volatile int i;
-#endif
+	int s;
 
 	cpu_init_idt();
 
@@ -385,24 +388,29 @@ cpu_hatch(void *v)
 
 	cpu_init(ci);
 
-	splbio();		/* XXX prevent softints from running here.. */
+	s = splhigh();		/* XXX prevent softints from running here.. */
 
 	enable_intr();
 	printf("%s: CPU %d reporting for duty, Sir!\n",ci->ci_dev.dv_xname,
 	    cpu_number());
 	printf("%s: stack is %p\n", ci->ci_dev.dv_xname, &region);
-#if 0
-	printf("%s: sending IPI to cpu 0\n",ci->ci_dev.dv_xname);
-	i386_send_ipi(cpu_primary, I386_IPI_GMTB);
+
+	if (first_app_cpu == NULL)
+		first_app_cpu = ci;
+	printf("%s: sending IPI to CPU %d\n", ci->ci_dev.dv_xname,
+	    cpu_info_primary.ci_cpuid);
+	i386_send_ipi(&cpu_info_primary, I386_IPI_GMTB);
 
 	/* give it a chance to be handled.. */
-	for (i=0; i<1000000; i++)
+	for (i = 0; i < 1000000; i++)
 		;
 
-	printf("%s: sending another IPI to cpu 0\n",
-	    ci->ci_dev.dv_xname);
-	i386_send_ipi(cpu_primary, I386_IPI_GMTB);
-#endif
+	printf("%s: sending another IPI to CPU %d\n", ci->ci_dev.dv_xname,
+	    cpu_info_primary.ci_cpuid);
+	i386_send_ipi(&cpu_info_primary, I386_IPI_GMTB);
+
+	splx(s);
+	/* XXX Just run and collect IPIs */
 	for (;;)
 		;
 }
