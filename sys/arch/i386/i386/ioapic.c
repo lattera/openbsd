@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.3 2001/07/16 21:39:28 niklas Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-
@@ -53,11 +53,11 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by the NetBSD 
- *      Foundation, Inc. and its contributors.  
- * 4. Neither the name of The NetBSD Foundation nor the names of its 
- *    contributors may be used to endorse or promote products derived  
- *    from this software without specific prior written permission.   
+ *      This product includes software developed by the NetBSD
+ *      Foundation, Inc. and its contributors.
+ * 4. Neither the name of The NetBSD Foundation nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -81,10 +81,8 @@
 #include <vm/vm_page.h>
 
 #include <machine/bus.h>
+#include <machine/psl.h>
 
-/* #include <machine/isa_machdep.h> * XXX intrhand */
-#include <../../isa/isa_machdep.h> /* XXX Move this file! */
- 
 #include <uvm/uvm_extern.h>
 #include <machine/i82093reg.h>
 #include <machine/i82093var.h>
@@ -96,45 +94,48 @@
 
 #include <machine/mpbiosvar.h>
 
+#include "isa.h"
+
 /*
  * maps an IO-apic
  * TODO locking, export of interrupt functions
  * and mapping of interrupts.
  */
 
-int     ioapic_match __P((struct device *, void *, void *));
-void    ioapic_attach __P((struct device *, struct device *, void *));
+int     ioapic_match(struct device *, void *, void *);
+void    ioapic_attach(struct device *, struct device *, void *);
 
-int     bus_mem_add_mapping __P((bus_addr_t, bus_size_t,
-            int, bus_space_handle_t *)); /* XXX */
+/* XXX */
+int     bus_mem_add_mapping(bus_addr_t, bus_size_t, int, bus_space_handle_t *);
 
-void	apic_vectorset __P((struct ioapic_softc *, int, int));
+void	apic_set_redir(struct ioapic_softc *, int);
+void	apic_vectorset(struct ioapic_softc *, int, int);
 
 int apic_verbose = 0;
 
 int ioapic_bsp_id = 0;
 int ioapic_cold = 1;
 
-static __inline  u_int32_t
-ioapic_read(struct ioapic_softc *sc,int regid)
+static __inline u_int32_t
+ioapic_read(struct ioapic_softc *sc, int regid)
 {
 	u_int32_t val;
-	
+
 	/*
-	 * TODO: lock apic  
+	 * TODO: lock apic
 	 */
 	*(sc->sc_reg) = regid;
 	val = *sc->sc_data;
 
 	return val;
-	
+
 }
 
-static __inline  void
-ioapic_write(struct ioapic_softc *sc,int regid, int val)
+static __inline void
+ioapic_write(struct ioapic_softc *sc, int regid, int val)
 {
 	/*
-	 * todo lock apic  
+	 * todo lock apic
 	 */
 
 	*(sc->sc_reg) = regid;
@@ -156,20 +157,18 @@ struct cfdriver ioapic_cd = {
 struct ioapic_softc *ioapics[16] = { 0 };
 
 int
-ioapic_match(parent, matchv, aux)
-	struct device *parent;  
-	void *matchv;   
-	void *aux;
+ioapic_match(struct device *parent, void *matchv, void *aux)
 {
         struct cfdata *match = (struct cfdata *)matchv;
-	struct apic_attach_args * aaa = (struct apic_attach_args *) aux;
+	struct apic_attach_args * aaa = (struct apic_attach_args *)aux;
 
 	if (strcmp(aaa->aaa_name, match->cf_driver->cd_name) == 0)
-		return 1;
-	return 0;
+		return (1);
+	return (0);
 }
 
-void ioapic_print_redir (struct ioapic_softc *sc, char *why, int pin)
+void
+ioapic_print_redir(struct ioapic_softc *sc, char *why, int pin)
 {
 	u_int32_t redirlo = ioapic_read(sc, IOAPIC_REDLO(pin));
 	u_int32_t redirhi = ioapic_read(sc, IOAPIC_REDHI(pin));
@@ -181,18 +180,16 @@ void ioapic_print_redir (struct ioapic_softc *sc, char *why, int pin)
 /*
  * can't use bus_space_xxx as we don't have a bus handle ...
  */
-void 
-ioapic_attach(parent, self, aux)   
-	struct device *parent, *self;
-	void *aux;
+void
+ioapic_attach(struct device *parent, struct device *self, void *aux)
 {
-	struct ioapic_softc *sc = (struct ioapic_softc *)self;  
-	struct apic_attach_args  *aaa = (struct apic_attach_args  *) aux;
+	struct ioapic_softc *sc = (struct ioapic_softc *)self;
+	struct apic_attach_args  *aaa = (struct apic_attach_args *)aux;
 	int apic_id;
 	bus_space_handle_t bh;
 	u_int32_t ver_sz;
 	int i;
-	
+
 	sc->sc_flags = aaa->flags;
 	sc->sc_apicid = aaa->apic_id;
 
@@ -205,7 +202,7 @@ ioapic_attach(parent, self, aux)
 	}
 
 	ioapics[aaa->apic_id] = sc;
-	
+
 	printf("%s: pa 0x%lx", sc->sc_dev.dv_xname, aaa->apic_address);
 
 	if (bus_mem_add_mapping(aaa->apic_address, NBPG, 0, &bh) != 0) {
@@ -213,11 +210,12 @@ ioapic_attach(parent, self, aux)
 		return;
 	}
 	sc->sc_reg = (volatile u_int32_t *)(bh + IOAPIC_REG);
-	sc->sc_data = (volatile u_int32_t *)(bh + IOAPIC_DATA);	
+	sc->sc_data = (volatile u_int32_t *)(bh + IOAPIC_DATA);
 
-	apic_id = (ioapic_read(sc,IOAPIC_ID)&IOAPIC_ID_MASK)>>IOAPIC_ID_SHIFT;
+	apic_id = (ioapic_read(sc,IOAPIC_ID) & IOAPIC_ID_MASK) >>
+	    IOAPIC_ID_SHIFT;
 	ver_sz = ioapic_read(sc, IOAPIC_VER);
-	
+
 	sc->sc_apic_vers = (ver_sz & IOAPIC_VER_MASK) >> IOAPIC_VER_SHIFT;
 	sc->sc_apic_sz = (ver_sz & IOAPIC_MAX_MASK) >> IOAPIC_MAX_SHIFT;
 	sc->sc_apic_sz++;
@@ -226,7 +224,7 @@ ioapic_attach(parent, self, aux)
 		printf(", %s mode",
 		    aaa->flags & IOAPIC_PICMODE ? "PIC" : "virtual wire");
 	}
-	
+
 	printf(", version %x, %d pins\n", sc->sc_apic_vers, sc->sc_apic_sz);
 
 	sc->sc_pins = malloc(sizeof(struct ioapic_pin) * sc->sc_apic_sz,
@@ -240,7 +238,7 @@ ioapic_attach(parent, self, aux)
 		sc->sc_pins[i].ip_type = 0;
 		sc->sc_pins[i].ip_level = 0;
 	}
-	
+
 	/*
 	 * In case the APIC is not initialized to the correct ID
 	 * do it now.
@@ -248,22 +246,22 @@ ioapic_attach(parent, self, aux)
 	 * mapping later ...
 	 */
 	if (apic_id != sc->sc_apicid) {
-		printf("%s: misconfigured as apic %d\n", sc->sc_dev.dv_xname, apic_id);
+		printf("%s: misconfigured as apic %d\n", sc->sc_dev.dv_xname,
+		    apic_id);
 
-		ioapic_write(sc,IOAPIC_VER,
-		    (ioapic_read(sc,IOAPIC_ID)&~IOAPIC_ID_MASK)
-		    |(sc->sc_apicid<<IOAPIC_ID_SHIFT));
-		
-		apic_id = (ioapic_read(sc,IOAPIC_ID)&IOAPIC_ID_MASK)>>IOAPIC_ID_SHIFT;
-		
+		ioapic_write(sc, IOAPIC_VER,
+		    (ioapic_read(sc, IOAPIC_ID) & ~IOAPIC_ID_MASK)
+		    | (sc->sc_apicid << IOAPIC_ID_SHIFT));
+
+		apic_id = (ioapic_read(sc,IOAPIC_ID) & IOAPIC_ID_MASK) >>
+		    IOAPIC_ID_SHIFT;
+
 		if (apic_id != sc->sc_apicid) {
 			printf("%s: can't remap to apid %d\n",
-			    sc->sc_dev.dv_xname,
-			    sc->sc_apicid);
+			    sc->sc_dev.dv_xname, sc->sc_apicid);
 		} else {
 			printf("%s: remapped to apic %d\n",
-			    sc->sc_dev.dv_xname,
-			    sc->sc_apicid);
+			    sc->sc_dev.dv_xname, sc->sc_apicid);
 		}
 	}
 #if 0
@@ -303,8 +301,8 @@ int apic_imask[NIPL];
 /* XXX should check vs. softc max int number */
 #define	LEGAL_IRQ(x)	((x) >= 0 && (x) < APIC_ICU_LEN && (x) != 2)
 
-static void
-apic_set_redir (struct ioapic_softc *sc, int irq)
+void
+apic_set_redir(struct ioapic_softc *sc, int irq)
 {
 	u_int32_t redlo;
 	u_int32_t redhi = 0;
@@ -312,7 +310,7 @@ apic_set_redir (struct ioapic_softc *sc, int irq)
 
 	struct ioapic_pin *pin;
 	struct mp_intr_map *map;
-	
+
 	pin = &sc->sc_pins[irq];
 	map = pin->ip_map;
 	if (map == NULL) {
@@ -321,7 +319,7 @@ apic_set_redir (struct ioapic_softc *sc, int irq)
 		redlo = map->redir;
 	}
 	delmode = (redlo & IOAPIC_REDLO_DEL_MASK) >> IOAPIC_REDLO_DEL_SHIFT;
-	
+
 	/* XXX magic numbers */
 	if ((delmode != 0) && (delmode != 1))
 		;
@@ -329,9 +327,9 @@ apic_set_redir (struct ioapic_softc *sc, int irq)
 		redlo |= IOAPIC_REDLO_MASK;
 	} else {
 		redlo |= (pin->ip_vector & 0xff);
-		redlo |= (IOAPIC_REDLO_DEL_FIXED<<IOAPIC_REDLO_DEL_SHIFT);
+		redlo |= (IOAPIC_REDLO_DEL_FIXED << IOAPIC_REDLO_DEL_SHIFT);
 		redlo &= ~IOAPIC_REDLO_DSTMOD;
-		
+
 		/* destination: BSP CPU */
 
 		/*
@@ -354,15 +352,13 @@ apic_set_redir (struct ioapic_softc *sc, int irq)
 		ioapic_print_redir(sc, "int", irq);
 }
 
-static int fakeintr __P((void *)); 	/* XXX headerify */
-extern char *isa_intr_typename (int); 	/* XXX headerify */
-
-static int fakeintr(arg)
-	void *arg;
-{
-	return 0;
-}
-
+/*
+ * XXX To be really correct an NISA > 0 condition should check for these.
+ * However, the i386 port pretty much assumes isa is there anyway.
+ * For example, pci_intr_establish calls isa_intr_establish unconditionally.
+ */
+extern int fakeintr(void *); 	/* XXX headerify */
+extern char *isa_intr_typename(int); 	/* XXX headerify */
 
 /*
  * apic_vectorset: allocate a vector for the given pin, based on
@@ -381,15 +377,12 @@ static int fakeintr(arg)
  */
 
 void
-apic_vectorset (sc, irq, level)
-	struct ioapic_softc *sc;
-	int irq;
-	int level;
+apic_vectorset(struct ioapic_softc *sc, int irq, int level)
 {
 	struct ioapic_pin *pin = &sc->sc_pins[irq];
 	int ovector = 0;
 	int nvector = 0;
-	
+
 	ovector = pin->ip_vector;
 
 	if (level == 0) {
@@ -397,9 +390,10 @@ apic_vectorset (sc, irq, level)
 		pin->ip_level = 0;
 		pin->ip_vector = 0;
 	} else if (level != pin->ip_level) {
-		nvector = idt_vec_alloc (level, level+15);
+		nvector = idt_vec_alloc(NRSVIDT + level * 16,
+		    NRSVIDT + level * 16 + 15);
 
-		if (nvector == NULL) {
+		if (nvector == 0) {
 			/*
 			 * XXX XXX we should be able to deal here..
 			 * need to double-up an existing vector
@@ -428,11 +422,11 @@ apic_vectorset (sc, irq, level)
 		 * (e.g., cardbus or pcmcia).
 		 */
 		apic_intrhand[ovector] = NULL;
-		idt_vec_free (ovector);
+		idt_vec_free(ovector);
 		printf("freed vector %x\n", ovector);
 	}
-	
-	apic_set_redir (sc, irq);
+
+	apic_set_redir(sc, irq);
 }
 
 /*
@@ -440,20 +434,24 @@ apic_vectorset (sc, irq, level)
  */
 
 void
-ioapic_enable ()
+ioapic_enable(void)
 {
 	int a, p, maxlevel;
 	struct intrhand *q;
-	extern void intr_calculatemasks __P((void)); /* XXX */
+	extern void intr_calculatemasks(void); /* XXX */
 	int did_imcr = 0;
 
 	intr_calculatemasks();	/* for softints, AST's */
 
 	ioapic_cold = 0;
 
+#if NISA > 0
+	isa_nodefaultirq();
+#endif
+
 	lapic_set_lvt();
-	
-	for (a=0; a<16; a++) {
+
+	for (a = 0; a < 16; a++) {
 		struct ioapic_softc *sc = ioapics[a];
 		if (sc != NULL) {
 			printf("%s: enabling\n", sc->sc_dev.dv_xname);
@@ -465,30 +463,27 @@ ioapic_enable ()
 				 */
 				printf("%s: writing to IMCR to disable pics\n",
 				    sc->sc_dev.dv_xname);
-				outb (IMCR_ADDR, IMCR_REGISTER);
-				outb (IMCR_DATA, IMCR_APIC);
+				outb(IMCR_ADDR, IMCR_REGISTER);
+				outb(IMCR_DATA, IMCR_APIC);
 				printf("%s: here's hoping it works\n",
 				    sc->sc_dev.dv_xname);
 				did_imcr = 1;
 			}
-			
-			for (p=0; p<sc->sc_apic_sz; p++) {
+
+			for (p = 0; p < sc->sc_apic_sz; p++) {
 				maxlevel = 0;
-				
+
 				for (q = sc->sc_pins[p].ip_handler;
 				     q != NULL;
 				     q = q->ih_next) {
 					if (q->ih_level > maxlevel)
 						maxlevel = q->ih_level;
 				}
-				apic_vectorset (sc, p, maxlevel);
+				apic_vectorset(sc, p, maxlevel);
 			}
 		}
 	}
 }
-
-
-
 
 /*
  * Interrupt handler management with the apic is radically different from the
@@ -497,7 +492,7 @@ ioapic_enable ()
  * The APIC adds an additional level of indirection between interrupt
  * signals and interrupt vectors in the IDT.
  * It also encodes a priority into the high-order 4 bits of the IDT vector
- * number. 
+ * number.
  *
  *
  * interrupt establishment:
@@ -511,12 +506,8 @@ ioapic_enable ()
  */
 
 void *
-apic_intr_establish(irq, type, level, ih_fun, ih_arg)
-	int irq;
-	int type;
-	int level;
-	int (*ih_fun) __P((void *));
-	void *ih_arg;
+apic_intr_establish(int irq, int type, int level, int (*ih_fun)(void *),
+    void *ih_arg, char *what)
 {
 	unsigned int ioapic = APIC_IRQ_APIC(irq);
 	unsigned int intr = APIC_IRQ_PIN(irq);
@@ -530,13 +521,13 @@ apic_intr_establish(irq, type, level, ih_fun, ih_arg)
 	if (sc == NULL)
 		panic("unknown ioapic id %d", ioapic);
 
-	if ((irq & APIC_INT_VIA_APIC) == NULL)
+	if ((irq & APIC_INT_VIA_APIC) == 0)
 		panic("apic_intr_establish of non-apic interrupt 0x%x", irq);
-	
+
 	pin = &sc->sc_pins[intr];
 	if (intr >= sc->sc_apic_sz || type == IST_NONE)
 		panic("apic_intr_establish: bogus intr or type");
-	
+
 	/* no point in sleeping unless someone can free memory. */
 	ih = malloc(sizeof *ih, M_DEVBUF, cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
@@ -554,7 +545,8 @@ apic_intr_establish(irq, type, level, ih_fun, ih_arg)
 	case IST_PULSE:
 		if (type != IST_NONE)
 			/* XXX should not panic here! */
-			panic("apic_intr_establish: intr %d can't share %s with %s",
+			panic("apic_intr_establish: "
+			      "intr %d can't share %s with %s",
 			      intr,
 			      isa_intr_typename(sc->sc_pins[intr].ip_type),
 			      isa_intr_typename(type));
@@ -602,6 +594,7 @@ apic_intr_establish(irq, type, level, ih_fun, ih_arg)
 	ih->ih_next = NULL;
 	ih->ih_level = level;
 	ih->ih_irq = irq;
+	ih->ih_what = what;
 	*p = ih;
 
 	return (ih);
@@ -614,7 +607,7 @@ apic_intr_establish(irq, type, level, ih_fun, ih_arg)
  *	if chain empty {
  *		reprogram apic for "safe" vector.
  *		free vector (point at stray handler).
- *	} 
+ *	}
  *	#ifdef notyet
  *	else {
  *		recompute level for current chain.
@@ -624,8 +617,7 @@ apic_intr_establish(irq, type, level, ih_fun, ih_arg)
  */
 
 void
-apic_intr_disestablish(arg)
-	void *arg;
+apic_intr_disestablish(void *arg)
 {
 	struct intrhand *ih = arg;
 	int irq = ih->ih_irq;
@@ -635,7 +627,7 @@ apic_intr_disestablish(arg)
 	struct ioapic_pin *pin = &sc->sc_pins[intr];
 	struct intrhand **p, *q;
 	int maxlevel;
-	
+
 	if (intr >= sc->sc_apic_sz)
 		panic("apic_intr_establish: bogus irq");
 
@@ -648,7 +640,7 @@ apic_intr_disestablish(arg)
 	     p = &q->ih_next)
 		if (q->ih_level > maxlevel)
 			maxlevel = q->ih_level;
-		
+
 	if (q)
 		*p = q->ih_next;
 	else
@@ -656,10 +648,9 @@ apic_intr_disestablish(arg)
 	for (; q != NULL; q = q->ih_next)
 		if (q->ih_level > maxlevel)
 			maxlevel = q->ih_level;
-	
+
 	if (!ioapic_cold)
 		apic_vectorset(sc, intr, maxlevel);
 
 	free(ih, M_DEVBUF);
 }
-
