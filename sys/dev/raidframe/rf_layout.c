@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_layout.c,v 1.3 1999/07/30 14:45:32 peter Exp $	*/
-/*	$NetBSD: rf_layout.c,v 1.4 1999/07/19 01:35:19 oster Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_layout.c,v 1.4 2000/08/08 16:07:42 peter Exp $	*/
+/*	$NetBSD: rf_layout.c,v 1.6 2000/04/17 19:35:12 oster Exp $	*/
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
  * All rights reserved.
