@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.19 2004/06/10 11:40:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.20 2004/06/11 05:29:25 drahn Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -429,6 +429,20 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (sysctl_malloc(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen, p));
 	case KERN_CPTIME:
+#ifdef MULTIPROCESSOR
+	{
+		CPU_INFO_ITERATOR cii;
+		struct cpu_info *ci;
+		int i;
+
+		bzero(cp_time, sizeof(cp_time));
+
+		for (CPU_INFO_FOREACH(cii, ci)) {
+			for (i = 0; i < CPUSTATES; i++)
+				cp_time[i] += ci->ci_schedstate.spc_cp_time[i];
+		}
+	}
+#endif
 		return (sysctl_rdstruct(oldp, oldlenp, newp, &cp_time,
 		    sizeof(cp_time)));
 	case KERN_NCHSTATS:
