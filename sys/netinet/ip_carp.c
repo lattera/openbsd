@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.44 2004/03/26 17:47:20 markus Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.44.2.1 2004/05/27 18:23:31 brad Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.
@@ -728,12 +728,10 @@ carp_send_ad(void *v)
 		advskew = 255;
 	} else {
 		advbase = sc->sc_advbase;
-		if (pfsync_sync_ok)
+		if (pfsync_sync_ok || sc->sc_advskew > 240)
 			advskew = sc->sc_advskew;
-		else {
-			if (sc->sc_advskew < 240)
-				advskew = 240;
-		}
+		else
+			advskew = 240;
 		tv.tv_sec = advbase;
 		tv.tv_usec = advskew * 1000000 / 256;
 	}
