@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ftp/ftp.c,v 1.35 2000/05/03 19:50:41 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ftp/ftp.c,v 1.35.2.1 2000/10/06 21:16:13 jason Exp $	*/
 /*	$NetBSD: ftp.c,v 1.27 1997/08/18 10:20:23 lukem Exp $	*/
 
 /*
@@ -67,7 +67,7 @@
 #if 0
 static char sccsid[] = "@(#)ftp.c	8.6 (Berkeley) 10/27/94";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/ftp/ftp.c,v 1.35 2000/05/03 19:50:41 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/ftp/ftp.c,v 1.35.2.1 2000/10/06 21:16:13 jason Exp $";
 #endif
 #endif /* not lint */
 
@@ -163,7 +163,7 @@ hookup(host, port)
 			error = getaddrinfo(host, pbuf, &hints, &res0);
 	}
 	if (error) {
-		warn(gai_strerror(error));
+		warn("%s", gai_strerror(error));
 		code = -1;
 		return (0);
 	}
@@ -214,7 +214,7 @@ hookup(host, port)
 		break;
 	}
 	if (s < 0) {
-		warn(cause);
+		warn("%s", cause);
 		code = -1;
 		freeaddrinfo(res0);
 		return 0;
@@ -1264,6 +1264,8 @@ reinit:
 		 * What we've got at this point is a string of comma separated
 		 * one-byte unsigned integer values, separated by commas.
 		 */
+		if (!pasvcmd)
+			goto bad;
 		if (strcmp(pasvcmd, "PASV") == 0) {
 			if (data_addr.su_family != AF_INET) {
 				fputs(

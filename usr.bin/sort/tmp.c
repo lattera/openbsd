@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sort/tmp.c,v 1.2 1997/06/16 02:21:57 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/sort/tmp.c,v 1.2.12.1 2000/10/06 21:16:17 jason Exp $	*/
 
 /*-
  * Copyright (c) 1993
@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)tmp.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/sort/tmp.c,v 1.2 1997/06/16 02:21:57 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/sort/tmp.c,v 1.2.12.1 2000/10/06 21:16:17 jason Exp $";
 #endif
 #endif /* not lint */
 
@@ -75,9 +75,9 @@ ftmp()
 	sigfillset(&set);
 	(void)sigprocmask(SIG_BLOCK, &set, &oset);
 	if ((fd = mkstemp(path)) < 0)
-		err(2, path);
+		err(2, "%s", path);
 	if (!(fp = fdopen(fd, "w+")))
-		err(2, path);
+		err(2, "%s", path);
 	(void)unlink(path);
 
 	(void)sigprocmask(SIG_SETMASK, &oset, NULL);

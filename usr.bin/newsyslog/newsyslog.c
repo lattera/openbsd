@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.30.2.1 2000/06/10 20:26:02 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.30.2.2 2000/10/06 21:16:16 jason Exp $	*/
 
 /*
  * Copyright (c) 1999 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -88,7 +88,7 @@ provided "as is" without express or implied warranty.
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.30.2.1 2000/06/10 20:26:02 jason Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.30.2.2 2000/10/06 21:16:16 jason Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -807,7 +807,7 @@ domonitor(log, whom)
 
 	fp = fopen(fname, "r");
 	if (fp == NULL) {
-		warn(fname);
+		warn("%s", fname);
 		goto cleanup;
 	}
 #ifdef QUAD_OFF_T
@@ -834,7 +834,7 @@ domonitor(log, whom)
 		/* Open logfile, seek. */
 		fp = fopen(log, "r");
 		if (fp == NULL) {
-			warn(log);
+			warn("%s", log);
 			goto cleanup;
 		}
 		fseek(fp, osize, SEEK_SET);
@@ -864,7 +864,7 @@ update:
 	/* Reopen for writing and update file. */
 	fp = fopen(fname, "w");
 	if (fp == NULL) {
-		warn(fname);
+		warn("%s", fname);
 		goto cleanup;
 	}
 #ifdef QUAD_OFF_T
