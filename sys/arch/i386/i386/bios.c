@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25 1999/10/26 18:16:48 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.1 2000/02/20 10:30:44 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -88,8 +88,11 @@ bios_apminfo_t *apm;
 bios_pciinfo_t *bios_pciinfo;
 #endif
 bios_diskinfo_t *bios_diskinfo;
-bios_memmap_t	*bios_memmap;
+bios_memmap_t  *bios_memmap;
 u_int32_t	bios_cksumlen;
+#ifdef SMP
+void	       *bios_smpinfo;
+#endif
 
 bios_diskinfo_t *bios_getdiskinfo __P((dev_t));
 
@@ -213,6 +216,13 @@ bios_getopt()
 		case BOOTARG_CONSDEV:
 			cnset(*(dev_t *)q->ba_arg);
 			break;
+
+#ifdef SMP
+		case BOOTARG_SMPINFO:
+			bios_smpinfo = q->ba_arg;
+			printf(" smpinfo %p", bios_smpinfo);
+			break;
+#endif
 
 		default:
 			printf(" unsupported arg (%d) %p", q->ba_type,

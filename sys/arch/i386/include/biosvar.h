@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32 2000/02/03 13:42:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.1 2000/02/20 10:30:44 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -140,6 +140,8 @@ typedef struct _bios_pciinfo {
 
 #define	BOOTARG_CONSDEV	5		/* dev_t */
 
+#define BOOTARG_SMPINFO 6		/* struct mp_float[] */
+
 #if defined(_KERNEL) || defined (_STANDALONE)
 
 #ifdef _LOCORE
@@ -190,6 +192,7 @@ void bios_getopt __P((void));
 
 extern u_int bootapiver;
 extern bios_memmap_t *bios_memmap;
+extern void *bios_smpinfo;
 
 #endif /* _KERNEL */
 #endif /* _LOCORE */
