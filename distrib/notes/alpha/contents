@@ -1,0 +1,49 @@
+TopPart
+
+OpenBSDfloppy
+				This floppy image will boot on the following
+				MACHINE models:
+				- AlphaStation 200, 250, 255, 400
+				- AlphaStation 500, 600
+				- AXPpci33 based machines, including
+				  ``Noname'', UDB, Multia
+				- EB164 based machines, including
+				  PC164, 164SX and 164LX
+				- Personal Workstation (Miata)
+
+		floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+				see below.
+				This floppy image will boot on the following
+				MACHINE models:
+    				- Alpha Processor, Inc. UP1000
+				- XP1000, 264DP, DS10, DS20
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+OpenBSDfloppydesc(two,Each,s)
+
+DistributionDescription(ten)
+
+OpenBSDbase(30.6,91.3,shared)
+
+OpenBSDcomp(27.8,116.7,shared)
+
+OpenBSDetc(1.2,3.9)
+
+OpenBSDgame(3.0,6.9)
+
+OpenBSDman(5.8,20.7)
+
+OpenBSDmisc(1.7,5.6)
+
+OpenBSDxbase(11.4,37.8)
+
+OpenBSDxfont(31.4,34.6)
+
+OpenBSDxserv(3.2,9.5)
+
+OpenBSDxshare(1.9,9.4)

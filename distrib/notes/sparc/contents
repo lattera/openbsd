@@ -1,0 +1,57 @@
+TopPart
+
+OpenBSDminiroot
+				It can be copied to the swap partition of
+				an existing OpenBSD, NetBSD, Linux, SunOS, 
+				or Solaris installation to allow installing
+				or upgrading to OpenBSD OSREV
+
+OpenBSDfloppy
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		bsd.scsi3	A kernel with SCSI target 3 re-mapped as 0
+				and 0 mapped as 3.
+
+		installboot	The OpenBSD/MACHINE boot loader installation
+				program
+		bootxx		The OpenBSD/MACHINE boot block
+		boot		The OpenBSD/MACHINE secondary boot loader
+		boot.net	The OpenBSD/MACHINE network boot loader
+
+
+Please note that there are multiple bootable images and kernels, intended
+to allow installing OpenBSD/MACHINE in a variety of situations without
+requiring a pre-existing working operating system.
+
+The kernel and boot images are provided for net booting installations.
+While the OpenBSD bootblocks will work with the provided miniroot images,
+Sun bootblocks require a separate kernel image and root filesystem.
+
+OpenBSDfloppydesc(single,The)
+
+DistributionDescription(ten)
+
+OpenBSDbase(25.3,76.9,shared)
+
+OpenBSDcomp(18.2,56.4,shared)
+
+OpenBSDetc(1.2,3.9)
+
+OpenBSDgame(2.9,6.9)
+
+OpenBSDman(5.5,19.9)
+
+OpenBSDmisc(1.7,5.6)
+
+OpenBSDxbase(7.8,22.1)
+
+OpenBSDxfont(32.3,35.9)
+
+OpenBSDxserv(7.7,20.3)
+
+OpenBSDxshare(1.9,9.4)
