@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.9 2003/05/15 17:47:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vector.s,v 1.1.2.1 2004/03/16 18:27:10 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*

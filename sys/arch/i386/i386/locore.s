@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.23 2004/03/14 17:47:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.24 2004/03/16 18:29:34 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -2141,7 +2141,7 @@ syscall1:
 	jmp	2b
 1:	INTRFASTEXIT
 
-#include <i386/isa/vector.s>
+#include <i386/i386/vector.s>
 #include <i386/isa/icu.s>
 
 /*
