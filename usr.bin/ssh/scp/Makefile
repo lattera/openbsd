@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/ssh/scp/Makefile,v 1.10 2001/01/29 01:58:20 niklas Exp $
+
 .PATH:		${.CURDIR}/..
 
 PROG=	scp

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/hmac.h,v 1.4 2001/01/29 01:58:15 niklas Exp $	*/
+
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *

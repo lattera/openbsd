@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/vi/perl_scripts/tk.pl,v 1.2 2001/01/29 01:58:48 niklas Exp $
+
 # make sure every subprocess has it's exit and that the main one
 # hasn't
 sub fun {

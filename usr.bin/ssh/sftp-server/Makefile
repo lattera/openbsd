@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/ssh/sftp-server/Makefile,v 1.3 2001/01/29 01:58:20 niklas Exp $
+
 .PATH:		${.CURDIR}/..
 
 PROG=	sftp-server

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/less/lesskey.h,v 1.2 2001/01/29 01:58:02 niklas Exp $	*/
+
 /*
  * Format of a lesskey file:
  *

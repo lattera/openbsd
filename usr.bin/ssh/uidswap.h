@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/uidswap.h,v 1.6 2001/01/29 01:58:19 niklas Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland

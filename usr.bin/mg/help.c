@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/mg/help.c,v 1.4 2001/01/29 01:58:07 niklas Exp $	*/
+
 /*
  * Help functions for Mg 2 
  */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/mg/main.c,v 1.6 2001/01/29 01:58:08 niklas Exp $	*/
+
 /*
  *	Mainline.
  */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/mg/extend.c,v 1.6 2001/01/29 01:58:07 niklas Exp $	*/
+
 /*
  *	Extended (M-X) commands, rebinding, and	startup file processing.
  */

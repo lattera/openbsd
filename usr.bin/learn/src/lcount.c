@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/learn/src/Attic/lcount.c,v 1.3 2001/01/29 01:57:59 niklas Exp $	*/
+
 /* count lines in something */
 
 /****************************************************************

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/uuencode.h,v 1.5 2001/01/29 01:58:19 niklas Exp $	*/
+
 /*
  * Copyright (c) 1999 Markus Friedl.  All rights reserved.
  *

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/mg/fileio.c,v 1.10 2001/01/29 01:58:07 niklas Exp $	*/
+
 /*
  *	POSIX fileio.c
  */

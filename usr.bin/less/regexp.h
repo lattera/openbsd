@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/less/regexp.h,v 1.2 2001/01/29 01:58:04 niklas Exp $	*/
+
 /*
  * Definitions etc. for regexp(3) routines.
  *
