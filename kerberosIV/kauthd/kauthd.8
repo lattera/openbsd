@@ -1,0 +1,28 @@
+.\" $KTH: kauthd.8,v 1.2 1996/09/28 22:04:48 assar Exp $
+.\" $OpenBSD: src/kerberosIV/kauthd/Attic/kauthd.8,v 1.2 1998/12/15 01:20:52 aaron Exp $
+.\"
+.Dd September 27, 1996
+.Dt KAUTHD 8
+.Os KTH-KRB
+.Sh NAME
+.Nm kauthd
+.Nd
+remote Kerberos login daemon
+.Sh SYNOPSIS
+.Nm kauthd
+.Sh DESCRIPTION
+Daemon for the
+.Xr kauth 1
+command.
+.Pp
+Options supported by
+.Nm kauthd :
+.Bl -tag -width Ds
+.It Fl i
+Interactive.  Do not expect to be started by
+.Nm inetd,
+but allocate and listen to the socket yourself.  Handy for testing
+and debugging.
+.El
+.Sh SEE ALSO
+.Xr kauth 1
