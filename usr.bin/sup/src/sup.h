@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/sup.h,v 1.3 1997/04/01 07:35:29 todd Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/sup.h,v 1.4 1997/07/28 09:47:36 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -115,7 +115,7 @@ extern char scmversion[];		/* string version of scm */
 #define FILEBKDIR	"%s/BACKUP"
 #define FILEBACKUP	"%s/BACKUP/%s"
 #define FILELAST	"sup/%s/last%s"
-#define FILELASTTEMP	"sup/%s/last.temp"
+#define FILELASTTEMP	"sup/%s/last.temp%s"
 #define FILELOCK	"sup/%s/lock"	/* also supfilesrv */
 #define FILEREFUSE	"sup/%s/refuse"
 #define FILEWHEN	"sup/%s/when%s"
