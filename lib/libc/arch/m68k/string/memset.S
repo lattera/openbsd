@@ -1,3 +1,5 @@
+/*	$NetBSD: memset.S,v 1.6 1995/11/28 23:40:56 thorpej Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -35,13 +37,15 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-	.text
-	/*.asciz "from: @(#)bzero.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: memset.S,v 1.4 1995/02/08 18:33:19 mycroft Exp $"
-#endif /* LIBC_SCCS and not lint */
-
 #include "DEFS.h"
+
+#if defined(LIBC_SCCS) && !defined(lint)
+#if 0
+	RCSID("from: @(#)bzero.s	5.1 (Berkeley) 5/12/90")
+#else
+	RCSID("$NetBSD: memset.S,v 1.6 1995/11/28 23:40:56 thorpej Exp $")
+#endif
+#endif /* LIBC_SCCS and not lint */
 
 /*
  * This is probably not the best we can do, but it is still much
