@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/bin/pdksh/Attic/lex.c,v 1.4 1996/10/13 21:32:19 downsj Exp $	*/
+/*	$OpenBSD: src/bin/pdksh/Attic/lex.c,v 1.5 1996/11/21 07:59:32 downsj Exp $	*/
 
 /*
  * lexical analysis and source input
@@ -871,6 +871,7 @@ getsc__()
 					s = source;
 					/* avoid reading eof twice */
 					s->str = NULL;
+					break;
 				}
 			}
 			continue;
