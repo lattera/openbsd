@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/fstat/fstat.c,v 1.26 2000/01/17 16:26:19 itojun Exp $	*/
+/*	$OpenBSD: src/usr.bin/fstat/fstat.c,v 1.26.2.1 2000/10/06 19:59:49 jason Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1993
@@ -41,7 +41,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)fstat.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$OpenBSD: src/usr.bin/fstat/fstat.c,v 1.26 2000/01/17 16:26:19 itojun Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/fstat/fstat.c,v 1.26.2.1 2000/10/06 19:59:49 jason Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -1018,7 +1018,7 @@ getfname(filename)
 	DEVS *cur;
 
 	if (stat(filename, &statbuf)) {
-		warn(filename);
+		warn("%s", filename);
 		return(0);
 	}
 	if ((cur = malloc(sizeof(DEVS))) == NULL)
