@@ -1,8 +1,6 @@
-#	$OpenBSD: src/regress/lib/csu/Makefile,v 1.2 2002/01/31 16:36:20 art Exp $
+#	$OpenBSD: src/regress/lib/csu/Makefile,v 1.3 2002/02/23 01:25:10 art Exp $
 
 SUBDIR+= ctors dtors
-
-regress: _SUBDIRUSE
 
 install:
 

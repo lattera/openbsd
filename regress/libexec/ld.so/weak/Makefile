@@ -1,8 +1,6 @@
-# $OpenBSD: src/regress/libexec/ld.so/weak/Makefile,v 1.1.1.1 2002/02/10 22:51:41 fgsch Exp $
+# $OpenBSD: src/regress/libexec/ld.so/weak/Makefile,v 1.2 2002/02/23 01:25:11 art Exp $
 
 SUBDIR+= libstrong libweak prog
-
-regress: _SUBDIRUSE
 
 install:
 
