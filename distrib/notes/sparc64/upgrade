@@ -1,0 +1,6 @@
+dnl	$OpenBSD: src/distrib/notes/sparc64/upgrade,v 1.9 2002/03/23 23:58:50 miod Exp $
+Due to the youth of the MACHINE port, upgrades to OpenBSD OSREV are not
+supported.
+You are strongly advised to reinstall your existing machines from scratch.
+dnl
+dnl OpenBSDUpgrade({:-CDROM, the miniroot, or the installation floppy-:})
