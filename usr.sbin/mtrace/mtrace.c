@@ -52,7 +52,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#) $Id: mtrace.c,v 1.6 2001/06/25 08:42:44 deraadt Exp $";
+    "@(#) $Id: mtrace.c,v 1.7 2001/07/27 20:34:36 pvalchev Exp $";
 #endif
 
 #include <netdb.h>
@@ -1708,6 +1708,7 @@ log(severity, syserr, format, va_alist)
 	    if (severity == LOG_WARNING) strcat(fmt, "warning - ");
 	    strncat(fmt, format, 80);
 	    vfprintf(stderr, fmt, ap);
+	    va_end(ap);
 	    if (syserr == 0)
 		fprintf(stderr, "\n");
 	    else if(syserr < sys_nerr)
