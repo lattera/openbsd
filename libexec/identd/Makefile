@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.4 1998/06/10 03:49:38 beck Exp $
+#	$OpenBSD: src/libexec/identd/Attic/Makefile,v 1.6 2001/01/28 19:34:28 niklas Exp $
 
 PROG=	identd
 SRCS=	identd.c openbsd.c parse.c version.c

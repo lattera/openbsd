@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/libexec/identd/Attic/error.h,v 1.3 2001/01/28 19:34:28 niklas Exp $*/
+
 /*
-**	$Id: error.h,v 1.1.1.1 1995/10/18 08:43:17 deraadt Exp $
 **
 ** error.h						 Error handling macros
 **

@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.3 1999/11/30 07:39:26 art Exp $
+#	$OpenBSD: src/libexec/rpc.rstatd/Makefile,v 1.5 2001/01/28 19:34:31 niklas Exp $
 
 PROG =	rpc.rstatd
 .PATH: ${.CURDIR}/../../usr.bin/vmstat

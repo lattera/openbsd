@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/getty/extern.h,v 1.3 2001/01/28 19:34:28 niklas Exp $*/
+
 /*
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +33,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)extern.h	8.1 (Berkeley) 6/4/93
- *	$Id: extern.h,v 1.1.1.1 1995/10/18 08:43:17 deraadt Exp $
  */
 
 struct delayval;

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/rlogind/Attic/rlogind.c,v 1.27 2001/01/28 19:34:31 niklas Exp $	*/
+
 /*-
  * Copyright (c) 1983, 1988, 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,7 +41,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rlogind.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: rlogind.c,v 1.25 2000/11/10 17:46:08 itojun Exp $";
+static char *rcsid = "$OpenBSD: src/libexec/rlogind/Attic/rlogind.c,v 1.27 2001/01/28 19:34:31 niklas Exp $";
 #endif /* not lint */
 
 /*

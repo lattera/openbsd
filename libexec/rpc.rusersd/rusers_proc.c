@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.8 2001/01/28 19:34:31 niklas Exp $	*/
+
 /*-
  *  Copyright (c) 1993 John Brezak
  *  All rights reserved.
@@ -27,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rusers_proc.c,v 1.6 1999/06/16 10:15:14 espie Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.8 2001/01/28 19:34:31 niklas Exp $";
 #endif /* not lint */
 
 #include <signal.h>

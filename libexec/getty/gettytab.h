@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/getty/gettytab.h,v 1.4 2001/01/28 19:34:28 niklas Exp $*/
+
 /*
  * Copyright (c) 1983, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +33,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)gettytab.h	8.2 (Berkeley) 3/30/94
- *	$Id: gettytab.h,v 1.2 1996/12/10 07:58:31 deraadt Exp $
  */
 
 /*

@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.6 1994/12/22 10:26:35 cgd Exp $
+#	$OpenBSD: src/libexec/atrun/Attic/Makefile,v 1.2 2001/01/28 19:34:27 niklas Exp $
 
 PROG=	atrun
 BINDIR=	/usr/libexec

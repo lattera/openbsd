@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/4/93
-#	$Id: Makefile,v 1.4 1994/12/22 10:26:47 cgd Exp $
+#	$OpenBSD: src/libexec/comsat/Makefile,v 1.2 2001/01/28 19:34:27 niklas Exp $
 
 PROG=	comsat
 MAN=	comsat.8

@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.7 1995/04/12 00:47:56 jtc Exp $
+#	$OpenBSD: src/libexec/rpc.rwalld/Makefile,v 1.2 2001/01/28 19:34:32 niklas Exp $
 
 PROG =	rpc.rwalld
 SRCS =	rwalld.c

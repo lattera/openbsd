@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/4/93
-#	$Id: Makefile,v 1.3 1997/04/19 21:26:20 millert Exp $
+#	$OpenBSD: src/libexec/rlogind/Attic/Makefile,v 1.5 2001/01/28 19:34:31 niklas Exp $
 
 PROG=	rlogind
 SRCS=	rlogind.c

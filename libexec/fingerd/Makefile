@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/4/93
-#	$Id: Makefile,v 1.3 1996/07/16 06:01:25 millert Exp $
+#	$OpenBSD: src/libexec/fingerd/Makefile,v 1.3 2001/01/28 19:34:27 niklas Exp $
 
 PROG=	fingerd
 MAN=	fingerd.8

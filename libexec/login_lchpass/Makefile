@@ -1,3 +1,5 @@
+#	$OpenBSD: src/libexec/login_lchpass/Makefile,v 1.2 2001/01/28 19:34:30 niklas Exp $
+
 #	BSDI	$From: Makefile,v 1.2 1997/08/08 18:58:22 prb Exp $
 
 PROG=	login_lchpass

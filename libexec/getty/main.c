@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/getty/main.c,v 1.17 2001/01/28 19:34:28 niklas Exp $	*/
+
 /*-
  * Copyright (c) 1980, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,7 +41,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)main.c	8.1 (Berkeley) 6/20/93";*/
-static char rcsid[] = "$Id: main.c,v 1.15 2000/09/07 17:02:23 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/getty/main.c,v 1.17 2001/01/28 19:34:28 niklas Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/ld.so/test/Attic/libbar.c,v 1.2 2001/01/28 19:34:29 niklas Exp $	*/
+
 #include <stdio.h>
 
 extern void dltest(const char *);

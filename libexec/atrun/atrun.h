@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/libexec/atrun/Attic/atrun.h,v 1.3 2001/01/28 19:34:27 niklas Exp $*/
 /*
  * Copyright (c) 1993 Christopher G. Demetriou
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: atrun.h,v 1.1.1.1 1995/10/18 08:43:15 deraadt Exp $
  */
 
 #define ATRUN_MAXLOAD	1.5

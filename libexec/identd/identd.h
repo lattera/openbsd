@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/libexec/identd/Attic/identd.h,v 1.6 2001/01/28 19:34:29 niklas Exp $*/
+
 /*
-**	$Id: identd.h,v 1.4 1999/08/06 17:35:02 deraadt Exp $
 **
 ** identd.h		    Common variables for the Pidentd daemon
 **

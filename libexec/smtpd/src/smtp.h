@@ -1,7 +1,8 @@
+/* $OpenBSD: src/libexec/smtpd/src/Attic/smtp.h,v 1.3 2001/01/28 19:34:34 niklas Exp $ */
+
 /*
  * Obtuse smtp store/forward daemon include file
  *
- * $Id: smtp.h,v 1.1.1.1 1997/12/12 05:50:27 beck Exp $ 
  *
  * Copyright (c) 1996, 1997 Obtuse Systems Corporation. All rights
  * reserved.

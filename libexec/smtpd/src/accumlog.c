@@ -1,5 +1,6 @@
+/* $OpenBSD: src/libexec/smtpd/src/Attic/accumlog.c,v 1.2 2001/01/28 19:34:34 niklas Exp $*/
+
 /*
- * $Id$
  * 
  * Copyright (c) 1998 Obtuse Systems Corporation <info@obtuse.com> 
  *  Copyright (c) 1998 Simon J. Gerraty <sjg@quick.com.au>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/mail.local/pathnames.h,v 1.4 2001/01/28 19:34:30 niklas Exp $*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -31,7 +33,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pathnames.h	5.3 (Berkeley) 1/17/91
- *	$Id: pathnames.h,v 1.2 1998/02/24 04:52:53 millert Exp $
  */
 #include <paths.h>
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/getty/pathnames.h,v 1.2 2001/01/28 19:34:28 niklas Exp $*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +33,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pathnames.h	8.1 (Berkeley) 6/4/93
- *	$Id: pathnames.h,v 1.3 1994/08/17 20:10:39 pk Exp $
  */
 
 #include <paths.h>

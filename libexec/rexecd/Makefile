@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.3 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.2 1996/02/15 03:50:46 etheisen Exp $
+#	$OpenBSD: src/libexec/rexecd/Attic/Makefile,v 1.4 2001/01/28 19:34:30 niklas Exp $
 
 PROG=	rexecd
 MAN=	rexecd.8

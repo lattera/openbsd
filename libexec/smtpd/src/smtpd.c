@@ -1,8 +1,9 @@
+/* $OpenBSD: src/libexec/smtpd/src/Attic/smtpd.c,v 1.11 2001/01/28 19:34:34 niklas Exp $*/
+
 /*
  * smtpd, Obtuse SMTP daemon, storing agent. does simple collection of
  * mail messages, for later forwarding by smtpfwdd.
  *
- * $Id: smtpd.c,v 1.9 2000/01/04 16:58:04 beck Exp $
  * 
  * Copyright (c) 1996, 1997 Obtuse Systems Corporation. All rights
  * reserved.
@@ -40,7 +41,7 @@
 
 char *obtuse_copyright =
 "Copyright 1996 - Obtuse Systems Corporation - All rights reserved.";
-char *obtuse_rcsid = "$Id: smtpd.c,v 1.9 2000/01/04 16:58:04 beck Exp $";
+char *obtuse_rcsid = "$OpenBSD: src/libexec/smtpd/src/Attic/smtpd.c,v 1.11 2001/01/28 19:34:34 niklas Exp $";
 
 #include <stdarg.h>
 #include <stdlib.h>

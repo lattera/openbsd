@@ -1,4 +1,3 @@
-#	from: @(#)Makefile.inc	5.1 (Berkeley) 5/11/90
-#	$Id: Makefile.inc,v 1.2 1993/08/01 05:39:36 mycroft Exp $
+#	$OpenBSD: src/libexec/Makefile.inc,v 1.2 2001/01/28 19:34:26 niklas Exp $
 
 BINDIR?=	/usr/libexec

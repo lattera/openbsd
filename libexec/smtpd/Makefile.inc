@@ -1,3 +1,5 @@
+#	$OpenBSD: src/libexec/smtpd/Attic/Makefile.inc,v 1.3 2001/01/28 19:34:33 niklas Exp $
+
 ##########################################################
 ## Compile time options, These set defaults ##############
 ##########################################################

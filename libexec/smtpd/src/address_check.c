@@ -1,5 +1,6 @@
+/* $OpenBSD: src/libexec/smtpd/src/Attic/address_check.c,v 1.4 2001/01/28 19:34:34 niklas Exp $ */
+
 /*
- * $Id: address_check.c,v 1.2 1997/12/14 01:42:27 beck Exp $ 
  * 
  * Copyright (c) 1996, 1997 Obtuse Systems Corporation. All rights
  * reserved.
