@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sgi/dev/Attic/lpt_lbus.c,v 1.3 2004/08/10 19:16:18 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sgi/dev/Attic/lpt_lbus.c,v 1.4 2005/01/31 21:35:50 grange Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994 Charles Hannum.
@@ -64,8 +64,8 @@
 #include <dev/ic/lptreg.h>
 #include <dev/ic/lptvar.h>
 
-int lpt_localbus_probe __P((struct device *, void *, void *));
-void lpt_localbus_attach __P((struct device *, struct device *, void *));
+int lpt_localbus_probe(struct device *, void *, void *);
+void lpt_localbus_attach(struct device *, struct device *, void *);
 
 struct cfattach lpt_pica_ca = {
 	sizeof(struct lpt_softc), lpt_localbus_probe, lpt_localbus_attach
