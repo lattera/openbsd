@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/talkd/talkd.c,v 1.6 1996/07/19 03:09:41 millert Exp $	*/
+/*	$OpenBSD: src/libexec/talkd/talkd.c,v 1.7 1998/07/08 19:15:19 millert Exp $	*/
 
 /*
  * Copyright (c) 1983 Regents of the University of California.
@@ -41,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)talkd.c	5.8 (Berkeley) 2/26/91";*/
-static char rcsid[] = "$Id: talkd.c,v 1.5 1996/07/18 00:18:54 deraadt Exp $";
+static char rcsid[] = "$Id: talkd.c,v 1.6 1996/07/19 03:09:41 millert Exp $";
 #endif /* not lint */
 
 /*
@@ -110,6 +110,11 @@ main(argc, argv)
 				syslog(LOG_WARNING, "recvfrom: %m");
 			continue;
 		}
+		/* Force NUL termination */
+		request.l_name[NAME_SIZE-1] = '\0';
+		request.r_name[NAME_SIZE-1] = '\0';
+		request.r_tty[TTY_SIZE-1] = '\0';
+
 		lastmsgtime = time(0);
 		process_request(&request, &response);
 		/* can block here, is this what I want? */
