@@ -1,18 +1,18 @@
 /*
- * 
+ *
  * ttymodes.h
- * 
+ *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * 	SGTTY stuff contributed by Janne Snabb <snabb@niksula.hut.fi>
- * 
+ *
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
- * 
+ *
  * Created: Tue Mar 21 15:42:09 1995 ylo
- * 
+ *
  */
 
-/* RCSID("$Id: ttymodes.h,v 1.5 1999/11/24 00:26:04 deraadt Exp $"); */
+/* RCSID("$Id: ttymodes.h,v 1.6 1999/11/24 19:53:54 markus Exp $"); */
 
 /* The tty mode description is a stream of bytes.  The stream consists of
  * opcode-arguments pairs.  It is terminated by opcode TTY_OP_END (0).

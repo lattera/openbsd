@@ -8,7 +8,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: auth-passwd.c,v 1.13 1999/12/01 16:54:35 markus Exp $");
+RCSID("$Id: auth-passwd.c,v 1.14 1999/12/29 12:47:46 markus Exp $");
 
 #include "packet.h"
 #include "ssh.h"
@@ -19,7 +19,7 @@ RCSID("$Id: auth-passwd.c,v 1.13 1999/12/01 16:54:35 markus Exp $");
  * Tries to authenticate the user using password.  Returns true if
  * authentication succeeds.
  */
-int 
+int
 auth_password(struct passwd * pw, const char *password)
 {
 	extern ServerOptions options;
