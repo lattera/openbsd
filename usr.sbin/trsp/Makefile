@@ -1,10 +1,11 @@
-#	from: @(#)Makefile	5.3 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.3 1994/12/22 11:45:05 cgd Exp $
+#	$OpenBSD: src/usr.sbin/trsp/Attic/Makefile,v 1.2 1997/09/08 09:23:16 deraadt Exp $
 
 PROG=	trsp
 MAN=	trsp.8
 BINGRP=	kmem
 BINMODE=2555
+DPADD=	${LIBKVM}
+LDADD=	-lkvm
 
 .include <bsd.prog.mk>
 
