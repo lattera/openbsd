@@ -1,11 +1,10 @@
-#	$OpenBSD: src/distrib/alpha/ramdisk/Attic/Makefile,v 1.22 2001/01/23 20:54:40 art Exp $
+#	$OpenBSD: src/distrib/alpha/common/Makefile.inc,v 1.1 2001/01/29 21:25:46 deraadt Exp $
 
 TOP=		${.CURDIR}/..
 
 .include "${TOP}/Makefile.inc"
 IMAGE=		ramdisk${REV}.fs
 CRUNCHCONF?=    ${TOP}/ramdisk/${CBIN}.conf
-BASE=		ramdisk
 
 MOUNT_POINT=	/mnt
 
@@ -21,7 +20,8 @@ GZIP?=		gzip
 GZIPFLAGS?=	-9f
 INSTALLBOOT?=	/usr/mdec/installboot -v
 
-FLOPPY?=	floppy${REV}.fs
+XNAME?=		floppy
+FLOPPY?=	${XNAME}${REV}.fs
 FLOPPYBLKS?=	2880
 FLOPPYTYPE?=	floppy3
 BOOT?=		/usr/mdec/boot
@@ -75,10 +75,10 @@ bsd.rd: bsd ${IMAGE} ${RDSETROOT}
 	${.OBJDIR}/${RDSETROOT} bsd.rd < ${IMAGE}
 
 bsd:
-	cd ${.CURDIR}/../../../sys/arch/alpha/conf && config RAMDISK
-	cd ${.CURDIR}/../../../sys/arch/alpha/compile/RAMDISK && \
+	cd ${.CURDIR}/../../../sys/arch/alpha/conf && config ${RAMDISK}
+	cd ${.CURDIR}/../../../sys/arch/alpha/compile/${RAMDISK} && \
 	    make depend && make clean && COPTS=-Os make
-	cp ${.CURDIR}/../../../sys/arch/alpha/compile/RAMDISK/bsd bsd
+	cp ${.CURDIR}/../../../sys/arch/alpha/compile/${RAMDISK}/bsd bsd
 
 ${IMAGE}:	do_prep do_mount do_files do_umount
 	mv -f ${REALIMAGE} ${IMAGE}
@@ -110,4 +110,4 @@ unconfig:
 	-vnconfig -u ${VND}
 
 beforeinstall:
-	cp ${FLOPPY} bsd.rd ${DESTDIR}/snapshot
+	cp ${FLOPPY} ${DESTDIR}/snapshot
