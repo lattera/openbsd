@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.16 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.17 2004/06/06 18:40:47 grange Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -42,7 +42,7 @@ _C_LABEL(imen):
 _C_LABEL(ipending):
 	.long	0		# interupts pending
 #ifndef MULTIPROCESSOR
-_C_LABEL(astpending)
+_C_LABEL(astpending):
 	.long	0		# async software traps (softints) pending
 #endif
 _C_LABEL(netisr):
