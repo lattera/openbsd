@@ -1,5 +1,5 @@
-#	$OpenBSD: src/sbin/isakmpd/regress/crypto/Attic/Makefile,v 1.5 2000/02/25 17:23:35 niklas Exp $
-#	$EOM: Makefile,v 1.5 2000/02/20 19:58:43 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/crypto/Attic/Makefile,v 1.6 2000/04/07 22:06:10 niklas Exp $
+#	$EOM: Makefile,v 1.7 2000/03/28 21:22:06 ho Exp $
 
 # Test Crypto:
 
