@@ -1,4 +1,4 @@
-/* $Id: atr.c,v 1.2 2001/07/30 20:02:08 rees Exp $ */
+/* $Id: atr.c,v 1.3 2001/08/02 23:15:39 rees Exp $ */
 
 /*
 copyright 1997, 1999, 2000, 2001
@@ -45,6 +45,7 @@ such damages.
 #include "field.h"
 typedef long int32_t;
 #else
+#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #endif
