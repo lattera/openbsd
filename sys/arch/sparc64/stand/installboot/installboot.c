@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc64/stand/installboot/installboot.c,v 1.2 2001/09/06 19:24:47 jason Exp $	*/
 /*	$NetBSD: installboot.c,v 1.8 2001/02/19 22:48:59 cgd Exp $ */
 
 /*-
