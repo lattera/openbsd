@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/lib/libkern/Attic/locc.c,v 1.2 1997/11/07 15:56:42 niklas Exp $	*/
 /*	$NetBSD: locc.c,v 1.2 1994/10/26 06:42:29 cgd Exp $	*/
 
 /*

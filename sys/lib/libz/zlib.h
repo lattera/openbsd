@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libz/zlib.h,v 1.2 1997/11/07 15:57:52 niklas Exp $	*/
+
 /* zlib.h -- interface of the 'zlib' general purpose compression library
   version 1.0.4, Jul 24th, 1996.
 

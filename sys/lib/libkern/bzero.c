@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libkern/bzero.c,v 1.3 1997/11/07 15:56:38 niklas Exp $	*/
+
 /*
  * Copyright (c) 1987 Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)bzero.c	5.7 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: bzero.c,v 1.1.1.1 1995/10/18 08:52:49 deraadt Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libkern/bzero.c,v 1.3 1997/11/07 15:56:38 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #ifndef _KERNEL

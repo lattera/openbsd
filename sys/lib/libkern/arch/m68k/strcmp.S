@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libkern/arch/m68k/strcmp.S,v 1.2 1997/11/07 15:57:09 niklas Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -38,7 +40,7 @@
 #if defined(LIBC_SCCS) && !defined(lint)
 	.text
 	/*.asciz "from: @(#)strcmp.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: strcmp.S,v 1.3 1995/02/08 18:35:53 mycroft Exp $"
+	.asciz "$OpenBSD: src/sys/lib/libkern/arch/m68k/strcmp.S,v 1.2 1997/11/07 15:57:09 niklas Exp $"
 #endif /* LIBC_SCCS and not lint */
 
 #include "DEFS.h"

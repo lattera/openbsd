@@ -1,9 +1,9 @@
+/* $OpenBSD: src/sys/lib/libz/crc32.c,v 1.3 1997/11/07 15:57:46 niklas Exp $ */
 /* crc32.c -- compute the CRC-32 of a data stream
  * Copyright (C) 1995-1996 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* $Id: crc32.c,v 1.1 1997/02/06 02:56:49 downsj Exp $ */
 
 #include "zlib.h"
 

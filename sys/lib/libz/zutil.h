@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/lib/libz/zutil.h,v 1.4 1997/11/07 15:57:53 niklas Exp $ */
 /* zutil.h -- internal interface and configuration of the compression library
  * Copyright (C) 1995-1996 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -8,7 +9,6 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* $Id: zutil.h,v 1.2 1997/02/07 13:26:33 mickey Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H

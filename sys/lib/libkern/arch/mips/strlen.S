@@ -1,3 +1,5 @@
+#	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/strlen.S,v 1.4 1997/11/07 15:57:22 niklas Exp $
+
 #include "DEFS.h"
 
 

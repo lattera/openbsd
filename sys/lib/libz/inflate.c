@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libz/inflate.c,v 1.2 1997/11/07 15:57:49 niklas Exp $	*/
+
 /* inflate.c -- zlib interface to inflate modules
  * Copyright (C) 1995-1996 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 

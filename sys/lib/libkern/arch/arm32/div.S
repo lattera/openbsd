@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/lib/libkern/arch/arm32/Attic/div.S,v 1.3 1997/11/07 15:56:58 niklas Exp $ */
 /* $NetBSD: div.S,v 1.2 1996/04/26 20:05:28 mark Exp $ */
 
 /*

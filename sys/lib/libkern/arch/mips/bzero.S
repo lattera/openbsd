@@ -1,3 +1,5 @@
+#	$OpenBSD: src/sys/lib/libkern/arch/mips/Attic/bzero.S,v 1.5 1997/11/07 15:57:18 niklas Exp $
+
 #include "DEFS.h"
 
 
