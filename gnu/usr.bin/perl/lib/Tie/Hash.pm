@@ -26,8 +26,8 @@ Tie::Hash, Tie::StdHash - base class definitions for tied hashes
     
     package main;
     
-    tie %new_hash, NewHash;
-    tie %new_std_hash, NewStdHash;
+    tie %new_hash, 'NewHash';
+    tie %new_std_hash, 'NewStdHash';
 
 =head1 DESCRIPTION
 
@@ -67,7 +67,7 @@ Return the (key, value) pair for the first key in the hash.
 
 =item NEXTKEY this, lastkey
 
-Return the next (key, value) pair for the hash.
+Return the next key for the hash.
 
 =item EXISTS this, key
 
@@ -92,13 +92,13 @@ but may be omitted in favor of a simple default.
 
 =head1 MORE INFORMATION
 
-The packages relating to various DBM-related implemetations (F<DB_File>,
+The packages relating to various DBM-related implementations (F<DB_File>,
 F<NDBM_File>, etc.) show examples of general tied hashes, as does the
 L<Config> module. While these do not utilize B<Tie::Hash>, they serve as
 good working examples.
 
 =cut
-    
+
 use Carp;
 
 sub new {
@@ -110,7 +110,7 @@ sub new {
 
 sub TIEHASH {
     my $pkg = shift;
-    if (defined &{"{$pkg}::new"}) {
+    if (defined &{"${pkg}::new"}) {
 	carp "WARNING: calling ${pkg}->new since ${pkg}->TIEHASH is missing"
 	    if $^W;
 	$pkg->new(@_);

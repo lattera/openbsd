@@ -2,6 +2,7 @@
 
 use Config;
 use File::Basename qw(&basename &dirname);
+use Cwd;
 
 # List explicitly here the variables you want Configure to
 # generate.  Metaconfig only looks for shell variables, so you
@@ -12,10 +13,10 @@ use File::Basename qw(&basename &dirname);
 
 # This forces PL files to create target in same directory as PL file.
 # This is so that make depend always knows where to find PL derivatives.
-chdir(dirname($0));
-($file = basename($0)) =~ s/\.PL$//;
-$file =~ s/\.pl$//
-	if ($^O eq 'VMS' or $^O eq 'os2');  # "case-forgiving"
+$origdir = cwd;
+chdir dirname($0);
+$file = basename($0, '.PL');
+$file .= '.com' if $^O eq 'VMS';
 
 open OUT,">$file" or die "Can't create $file: $!";
 
@@ -25,9 +26,9 @@ print "Extracting $file (with variable substitutions)\n";
 # You can use $Config{...} to use Configure variables.
 
 print OUT <<"!GROK!THIS!";
-$Config{'startperl'}
-    eval 'exec perl -S \$0 "\$@"'
-	if 0;
+$Config{startperl}
+    eval 'exec $Config{perlpath} -S \$0 \${1+"\$@"}'
+	if \$running_under_some_shell;
 !GROK!THIS!
 
 # In the following, perl variables are not expanded during extraction.
@@ -124,10 +125,20 @@ open(LATEX,">$pod.tex");
 &do_hdr();
 
 $cutting = 1;
+$begun = "";
 while (<POD>) {
     if ($cutting) {
 	next unless /^=/;
 	$cutting = 0;
+    }
+    if ($begun) {
+       if (/^=end\s+$begun/) {
+           $begun = "";
+       }
+       elsif ($begun =~ /^(tex|latex)$/) {
+           print LATEX $_;
+       }
+       next;
     }
     chop;
     length || (print LATEX  "\n") && next;
@@ -143,6 +154,22 @@ while (<POD>) {
 	    print LATEX  $_,"\n";
 	}
 	print LATEX  "\\end{verbatim}\n";
+	next;
+    }
+
+    if (/^=for\s+(\S+)\s*/s) {
+	if ($1 eq "tex" or $1 eq "latex") {
+	    print LATEX $',"\n";
+	} else {
+	    # ignore unknown for
+	}
+	next;
+    }
+    elsif (/^=begin\s+(\S+)\s*/s) {
+	$begun = $1;
+	if ($1 eq "tex" or $1 eq "latex") {
+	    print LATEX $'."\n";
+	}
 	next;
     }
 
@@ -447,6 +474,12 @@ while (<POD>) {
 	  noindex:
 	    ;
 	}
+	elsif ($cmd eq 'pod') {
+	    ;	# recognise the pod directive, as no op (hs)
+	}
+ 	elsif ($cmd eq 'pod') {
+ 	    ;    # recognise the pod directive, as no op (hs)
+ 	}
 	else {
 	    warn "Unrecognized directive: $cmd\n";
 	}
@@ -500,9 +533,8 @@ sub noremap {
 }
 
 sub init_noremap {
-    if ( /[\200-\377]/ ) {
-	warn "hit bit char in input stream";
-    }
+	# escape high bit characters in input stream
+	s/([\200-\377])/"E<".ord($1).">"/ge;
 }
 
 sub clear_noremap {
@@ -513,11 +545,14 @@ sub clear_noremap {
 
 sub expand_HTML_escapes {
     local($s) = $_[0];
-    $s =~ s { E<([A-Za-z]+)> }
+    $s =~ s { E<((\d+)|([A-Za-z]+))> }
     {
 	do {
-	    exists $HTML_Escapes{$1}
-	    ? do { $HTML_Escapes{$1} }
+		defined($2) 
+		? do { chr($2) }
+		: 
+	    exists $HTML_Escapes{$3}
+	    ? do { $HTML_Escapes{$3} }
 	    : do {
 		warn "Unknown escape: $& in $_";
 		"E<$1>";
@@ -649,7 +684,7 @@ BEGIN {
     "otilde"	=>	"\\~{o}",	#   small o, tilde
     "Ouml"	=>	'\\"{O}',	#   capital O, dieresis or umlaut mark
     "ouml"	=>	'\\"{o}',	#   small o, dieresis or umlaut mark
-    "szlig"	=>	'\\ss',		#   small sharp s, German (sz ligature)
+    "szlig"	=>	'\\ss{}',	#   small sharp s, German (sz ligature)
     "THORN"	=>	'\\L',		#   capital THORN, Icelandic
     "thorn"	=>	'\\l',,		#   small thorn, Icelandic
     "Uacute"	=>	"\\'{U}",	#   capital U, acute accent
@@ -670,3 +705,4 @@ BEGIN {
 close OUT or die "Can't close $file: $!";
 chmod 0755, $file or die "Can't reset permissions for $file: $!\n";
 exec("$Config{'eunicefix'} $file") if $Config{'eunicefix'} ne ':';
+chdir $origdir;

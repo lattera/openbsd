@@ -1,6 +1,6 @@
 /*    hv.c
  *
- *    Copyright (c) 1991-1994, Larry Wall
+ *    Copyright (c) 1991-1999, Larry Wall
  *
  *    You may distribute under the terms of either the GNU General Public
  *    License or the Artistic License, as specified in the README file.
@@ -14,58 +14,86 @@
 #include "EXTERN.h"
 #include "perl.h"
 
+static void hv_magic_check _((HV *hv, bool *needs_copy, bool *needs_store));
+#ifndef PERL_OBJECT
 static void hsplit _((HV *hv));
 static void hfreeentries _((HV *hv));
+static void more_he _((void));
+#endif
 
-static HE* more_he();
+#if defined(STRANGE_MALLOC) || defined(MYMALLOC)
+#  define ARRAY_ALLOC_BYTES(size) ( (size)*sizeof(HE*) )
+#else
+#  define MALLOC_OVERHEAD 16
+#  define ARRAY_ALLOC_BYTES(size) ( (size)*sizeof(HE*)*2 - MALLOC_OVERHEAD )
+#endif
 
-static HE*
-new_he()
+STATIC HE*
+new_he(void)
 {
     HE* he;
-    if (he_root) {
-        he = he_root;
-        he_root = (HE*)he->hent_next;
-        return he;
-    }
-    return more_he();
+    LOCK_SV_MUTEX;
+    if (!PL_he_root)
+        more_he();
+    he = PL_he_root;
+    PL_he_root = HeNEXT(he);
+    UNLOCK_SV_MUTEX;
+    return he;
 }
 
-static void
-del_he(p)
-HE* p;
+STATIC void
+del_he(HE *p)
 {
-    p->hent_next = (HE*)he_root;
-    he_root = p;
+    LOCK_SV_MUTEX;
+    HeNEXT(p) = (HE*)PL_he_root;
+    PL_he_root = p;
+    UNLOCK_SV_MUTEX;
 }
 
-static HE*
-more_he()
+STATIC void
+more_he(void)
 {
     register HE* he;
     register HE* heend;
-    he_root = (HE*)safemalloc(1008);
-    he = he_root;
+    New(54, PL_he_root, 1008/sizeof(HE), HE);
+    he = PL_he_root;
     heend = &he[1008 / sizeof(HE) - 1];
     while (he < heend) {
-        he->hent_next = (HE*)(he + 1);
+        HeNEXT(he) = (HE*)(he + 1);
         he++;
     }
-    he->hent_next = 0;
-    return new_he();
+    HeNEXT(he) = 0;
 }
 
+STATIC HEK *
+save_hek(char *str, I32 len, U32 hash)
+{
+    char *k;
+    register HEK *hek;
+    
+    New(54, k, HEK_BASESIZE + len + 1, char);
+    hek = (HEK*)k;
+    Copy(str, HEK_KEY(hek), len, char);
+    *(HEK_KEY(hek) + len) = '\0';
+    HEK_LEN(hek) = len;
+    HEK_HASH(hek) = hash;
+    return hek;
+}
+
+void
+unshare_hek(HEK *hek)
+{
+    unsharepvn(HEK_KEY(hek),HEK_LEN(hek),HEK_HASH(hek));
+}
+
+/* (klen == HEf_SVKEY) is special for MAGICAL hv entries, meaning key slot
+ * contains an SV* */
+
 SV**
-hv_fetch(hv,key,klen,lval)
-HV *hv;
-char *key;
-U32 klen;
-I32 lval;
+hv_fetch(HV *hv, char *key, U32 klen, I32 lval)
 {
     register XPVHV* xhv;
-    register char *s;
-    register I32 i;
-    register I32 hash;
+    register U32 hash;
     register HE *entry;
     SV *sv;
 
@@ -74,11 +102,25 @@ I32 lval;
 
     if (SvRMAGICAL(hv)) {
 	if (mg_find((SV*)hv,'P')) {
+	    dTHR;
 	    sv = sv_newmortal();
 	    mg_copy((SV*)hv, sv, key, klen);
-	    Sv = sv;
-	    return &Sv;
+	    PL_hv_fetch_sv = sv;
+	    return &PL_hv_fetch_sv;
 	}
+#ifdef ENV_IS_CASELESS
+	else if (mg_find((SV*)hv,'E')) {
+	    U32 i;
+	    for (i = 0; i < klen; ++i)
+		if (isLOWER(key[i])) {
+		    char *nkey = strupr(SvPVX(sv_2mortal(newSVpv(key,klen))));
+		    SV **ret = hv_fetch(hv, nkey, klen, 0);
+		    if (!ret && lval)
+			ret = hv_store(hv, key, klen, NEWSV(61,0), 0);
+		    return ret;
+		}
+	}
+#endif
     }
 
     xhv = (XPVHV*)SvANY(hv);
@@ -88,34 +130,30 @@ I32 lval;
 	         || (HvNAME(hv) && strEQ(HvNAME(hv),ENV_HV_NAME))
 #endif
 	                                                          )
-	    Newz(503,xhv->xhv_array, sizeof(HE*) * (xhv->xhv_max + 1), char);
+	    Newz(503,xhv->xhv_array, ARRAY_ALLOC_BYTES(xhv->xhv_max + 1), char);
 	else
 	    return 0;
     }
 
-    i = klen;
-    hash = 0;
-    s = key;
-    while (i--)
-	hash = hash * 33 + *s++;
+    PERL_HASH(hash, key, klen);
 
     entry = ((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
-    for (; entry; entry = entry->hent_next) {
-	if (entry->hent_hash != hash)		/* strings can't be equal */
+    for (; entry; entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
 	    continue;
-	if (entry->hent_klen != klen)
+	if (HeKLEN(entry) != klen)
 	    continue;
-	if (bcmp(entry->hent_key,key,klen))	/* is this it? */
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
 	    continue;
-	return &entry->hent_val;
+	return &HeVAL(entry);
     }
 #ifdef DYNAMIC_ENV_FETCH  /* %ENV lookup?  If so, try to fetch the value now */
     if (HvNAME(hv) && strEQ(HvNAME(hv),ENV_HV_NAME)) {
       char *gotenv;
 
-      gotenv = my_getenv(key);
-      if (gotenv != NULL) {
+      if ((gotenv = PerlEnv_getenv(key)) != Nullch) {
         sv = newSVpv(gotenv,strlen(gotenv));
+        SvTAINTED_on(sv);
         return hv_store(hv,key,klen,sv,hash);
       }
     }
@@ -127,16 +165,120 @@ I32 lval;
     return 0;
 }
 
-SV**
-hv_store(hv,key,klen,val,hash)
-HV *hv;
-char *key;
-U32 klen;
-SV *val;
-register U32 hash;
+/* returns a HE * structure with the all fields set */
+/* note that hent_val will be a mortal sv for MAGICAL hashes */
+HE *
+hv_fetch_ent(HV *hv, SV *keysv, I32 lval, register U32 hash)
 {
     register XPVHV* xhv;
-    register char *s;
+    register char *key;
+    STRLEN klen;
+    register HE *entry;
+    SV *sv;
+
+    if (!hv)
+	return 0;
+
+    if (SvRMAGICAL(hv)) {
+	if (mg_find((SV*)hv,'P')) {
+	    dTHR;
+	    sv = sv_newmortal();
+	    keysv = sv_2mortal(newSVsv(keysv));
+	    mg_copy((SV*)hv, sv, (char*)keysv, HEf_SVKEY);
+	    if (!HeKEY_hek(&PL_hv_fetch_ent_mh)) {
+		char *k;
+		New(54, k, HEK_BASESIZE + sizeof(SV*), char);
+		HeKEY_hek(&PL_hv_fetch_ent_mh) = (HEK*)k;
+	    }
+	    HeSVKEY_set(&PL_hv_fetch_ent_mh, keysv);
+	    HeVAL(&PL_hv_fetch_ent_mh) = sv;
+	    return &PL_hv_fetch_ent_mh;
+	}
+#ifdef ENV_IS_CASELESS
+	else if (mg_find((SV*)hv,'E')) {
+	    U32 i;
+	    key = SvPV(keysv, klen);
+	    for (i = 0; i < klen; ++i)
+		if (isLOWER(key[i])) {
+		    SV *nkeysv = sv_2mortal(newSVpv(key,klen));
+		    (void)strupr(SvPVX(nkeysv));
+		    entry = hv_fetch_ent(hv, nkeysv, 0, 0);
+		    if (!entry && lval)
+			entry = hv_store_ent(hv, keysv, NEWSV(61,0), hash);
+		    return entry;
+		}
+	}
+#endif
+    }
+
+    xhv = (XPVHV*)SvANY(hv);
+    if (!xhv->xhv_array) {
+	if (lval 
+#ifdef DYNAMIC_ENV_FETCH  /* if it's an %ENV lookup, we may get it on the fly */
+	         || (HvNAME(hv) && strEQ(HvNAME(hv),ENV_HV_NAME))
+#endif
+	                                                          )
+	    Newz(503,xhv->xhv_array, ARRAY_ALLOC_BYTES(xhv->xhv_max + 1), char);
+	else
+	    return 0;
+    }
+
+    key = SvPV(keysv, klen);
+    
+    if (!hash)
+	PERL_HASH(hash, key, klen);
+
+    entry = ((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    for (; entry; entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != klen)
+	    continue;
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
+	    continue;
+	return entry;
+    }
+#ifdef DYNAMIC_ENV_FETCH  /* %ENV lookup?  If so, try to fetch the value now */
+    if (HvNAME(hv) && strEQ(HvNAME(hv),ENV_HV_NAME)) {
+      char *gotenv;
+
+      if ((gotenv = PerlEnv_getenv(key)) != Nullch) {
+        sv = newSVpv(gotenv,strlen(gotenv));
+        SvTAINTED_on(sv);
+        return hv_store_ent(hv,keysv,sv,hash);
+      }
+    }
+#endif
+    if (lval) {		/* gonna assign to this, so it better be there */
+	sv = NEWSV(61,0);
+	return hv_store_ent(hv,keysv,sv,hash);
+    }
+    return 0;
+}
+
+static void
+hv_magic_check (HV *hv, bool *needs_copy, bool *needs_store)
+{
+    MAGIC *mg = SvMAGIC(hv);
+    *needs_copy = FALSE;
+    *needs_store = TRUE;
+    while (mg) {
+	if (isUPPER(mg->mg_type)) {
+	    *needs_copy = TRUE;
+	    switch (mg->mg_type) {
+	    case 'P':
+	    case 'S':
+		*needs_store = FALSE;
+	    }
+	}
+	mg = mg->mg_moremagic;
+    }
+}
+
+SV**
+hv_store(HV *hv, char *key, U32 klen, SV *val, register U32 hash)
+{
+    register XPVHV* xhv;
     register I32 i;
     register HE *entry;
     register HE **oentry;
@@ -146,47 +288,50 @@ register U32 hash;
 
     xhv = (XPVHV*)SvANY(hv);
     if (SvMAGICAL(hv)) {
-	mg_copy((SV*)hv, val, key, klen);
-#ifndef OVERLOAD
-	if (!xhv->xhv_array)
-	    return 0;
-#else
-	if (!xhv->xhv_array && (SvMAGIC(hv)->mg_type != 'A'
-				|| SvMAGIC(hv)->mg_moremagic))
-	  return 0;
-#endif /* OVERLOAD */
+	bool needs_copy;
+	bool needs_store;
+	hv_magic_check (hv, &needs_copy, &needs_store);
+	if (needs_copy) {
+	    mg_copy((SV*)hv, val, key, klen);
+	    if (!xhv->xhv_array && !needs_store)
+		return 0;
+#ifdef ENV_IS_CASELESS
+	    else if (mg_find((SV*)hv,'E')) {
+		SV *sv = sv_2mortal(newSVpv(key,klen));
+		key = strupr(SvPVX(sv));
+		hash = 0;
+	    }
+#endif
+	}
     }
-    if (!hash) {
-    i = klen;
-    s = key;
-    while (i--)
-	hash = hash * 33 + *s++;
-    }
+    if (!hash)
+	PERL_HASH(hash, key, klen);
 
     if (!xhv->xhv_array)
-	Newz(505, xhv->xhv_array, sizeof(HE**) * (xhv->xhv_max + 1), char);
+	Newz(505, xhv->xhv_array, ARRAY_ALLOC_BYTES(xhv->xhv_max + 1), char);
 
     oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
     i = 1;
 
-    for (entry = *oentry; entry; i=0, entry = entry->hent_next) {
-	if (entry->hent_hash != hash)		/* strings can't be equal */
+    for (entry = *oentry; entry; i=0, entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
 	    continue;
-	if (entry->hent_klen != klen)
+	if (HeKLEN(entry) != klen)
 	    continue;
-	if (bcmp(entry->hent_key,key,klen))	/* is this it? */
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
 	    continue;
-	SvREFCNT_dec(entry->hent_val);
-	entry->hent_val = val;
-	return &entry->hent_val;
+	SvREFCNT_dec(HeVAL(entry));
+	HeVAL(entry) = val;
+	return &HeVAL(entry);
     }
 
     entry = new_he();
-    entry->hent_klen = klen;
-    entry->hent_key = savepvn(key,klen);
-    entry->hent_val = val;
-    entry->hent_hash = hash;
-    entry->hent_next = *oentry;
+    if (HvSHAREKEYS(hv))
+	HeKEY_hek(entry) = share_hek(key, klen, hash);
+    else                                       /* gotta do the real thing */
+	HeKEY_hek(entry) = save_hek(key, klen, hash);
+    HeVAL(entry) = val;
+    HeNEXT(entry) = *oentry;
     *oentry = entry;
 
     xhv->xhv_keys++;
@@ -196,64 +341,227 @@ register U32 hash;
 	    hsplit(hv);
     }
 
-    return &entry->hent_val;
+    return &HeVAL(entry);
+}
+
+HE *
+hv_store_ent(HV *hv, SV *keysv, SV *val, register U32 hash)
+{
+    register XPVHV* xhv;
+    register char *key;
+    STRLEN klen;
+    register I32 i;
+    register HE *entry;
+    register HE **oentry;
+
+    if (!hv)
+	return 0;
+
+    xhv = (XPVHV*)SvANY(hv);
+    if (SvMAGICAL(hv)) {
+	dTHR;
+ 	bool needs_copy;
+ 	bool needs_store;
+ 	hv_magic_check (hv, &needs_copy, &needs_store);
+ 	if (needs_copy) {
+ 	    bool save_taint = PL_tainted;
+ 	    if (PL_tainting)
+ 		PL_tainted = SvTAINTED(keysv);
+ 	    keysv = sv_2mortal(newSVsv(keysv));
+ 	    mg_copy((SV*)hv, val, (char*)keysv, HEf_SVKEY);
+ 	    TAINT_IF(save_taint);
+ 	    if (!xhv->xhv_array && !needs_store)
+ 		return Nullhe;
+#ifdef ENV_IS_CASELESS
+	    else if (mg_find((SV*)hv,'E')) {
+		key = SvPV(keysv, klen);
+		keysv = sv_2mortal(newSVpv(key,klen));
+		(void)strupr(SvPVX(keysv));
+		hash = 0;
+	    }
+#endif
+	}
+    }
+
+    key = SvPV(keysv, klen);
+
+    if (!hash)
+	PERL_HASH(hash, key, klen);
+
+    if (!xhv->xhv_array)
+	Newz(505, xhv->xhv_array, ARRAY_ALLOC_BYTES(xhv->xhv_max + 1), char);
+
+    oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    i = 1;
+
+    for (entry = *oentry; entry; i=0, entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != klen)
+	    continue;
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
+	    continue;
+	SvREFCNT_dec(HeVAL(entry));
+	HeVAL(entry) = val;
+	return entry;
+    }
+
+    entry = new_he();
+    if (HvSHAREKEYS(hv))
+	HeKEY_hek(entry) = share_hek(key, klen, hash);
+    else                                       /* gotta do the real thing */
+	HeKEY_hek(entry) = save_hek(key, klen, hash);
+    HeVAL(entry) = val;
+    HeNEXT(entry) = *oentry;
+    *oentry = entry;
+
+    xhv->xhv_keys++;
+    if (i) {				/* initial entry? */
+	++xhv->xhv_fill;
+	if (xhv->xhv_keys > xhv->xhv_max)
+	    hsplit(hv);
+    }
+
+    return entry;
 }
 
 SV *
-hv_delete(hv,key,klen,flags)
-HV *hv;
-char *key;
-U32 klen;
-I32 flags;
+hv_delete(HV *hv, char *key, U32 klen, I32 flags)
 {
     register XPVHV* xhv;
-    register char *s;
     register I32 i;
-    register I32 hash;
+    register U32 hash;
     register HE *entry;
     register HE **oentry;
+    SV **svp;
     SV *sv;
 
     if (!hv)
 	return Nullsv;
     if (SvRMAGICAL(hv)) {
-	sv = *hv_fetch(hv, key, klen, TRUE);
-	mg_clear(sv);
-	if (mg_find(sv, 'p')) {
-	    sv_unmagic(sv, 'p');	/* No longer an element */
-	    return sv;
-	}
+	bool needs_copy;
+	bool needs_store;
+	hv_magic_check (hv, &needs_copy, &needs_store);
+
+	if (needs_copy && (svp = hv_fetch(hv, key, klen, TRUE))) {
+	    sv = *svp;
+	    mg_clear(sv);
+	    if (!needs_store) {
+		if (mg_find(sv, 'p')) {
+		    sv_unmagic(sv, 'p');        /* No longer an element */
+		    return sv;
+		}
+		return Nullsv;          /* element cannot be deleted */
+	    }
+#ifdef ENV_IS_CASELESS
+	    else if (mg_find((SV*)hv,'E')) {
+		sv = sv_2mortal(newSVpv(key,klen));
+		key = strupr(SvPVX(sv));
+	    }
+#endif
+        }
     }
     xhv = (XPVHV*)SvANY(hv);
     if (!xhv->xhv_array)
 	return Nullsv;
-    i = klen;
-    hash = 0;
-    s = key;
-    while (i--)
-	hash = hash * 33 + *s++;
+
+    PERL_HASH(hash, key, klen);
 
     oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
     entry = *oentry;
     i = 1;
-    for (; entry; i=0, oentry = &entry->hent_next, entry = *oentry) {
-	if (entry->hent_hash != hash)		/* strings can't be equal */
+    for (; entry; i=0, oentry = &HeNEXT(entry), entry = *oentry) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
 	    continue;
-	if (entry->hent_klen != klen)
+	if (HeKLEN(entry) != klen)
 	    continue;
-	if (bcmp(entry->hent_key,key,klen))	/* is this it? */
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
 	    continue;
-	*oentry = entry->hent_next;
+	*oentry = HeNEXT(entry);
 	if (i && !*oentry)
 	    xhv->xhv_fill--;
 	if (flags & G_DISCARD)
 	    sv = Nullsv;
 	else
-	    sv = sv_mortalcopy(entry->hent_val);
+	    sv = sv_mortalcopy(HeVAL(entry));
 	if (entry == xhv->xhv_eiter)
-	    entry->hent_klen = -1;
+	    HvLAZYDEL_on(hv);
 	else
-	    he_free(entry);
+	    hv_free_ent(hv, entry);
+	--xhv->xhv_keys;
+	return sv;
+    }
+    return Nullsv;
+}
+
+SV *
+hv_delete_ent(HV *hv, SV *keysv, I32 flags, U32 hash)
+{
+    register XPVHV* xhv;
+    register I32 i;
+    register char *key;
+    STRLEN klen;
+    register HE *entry;
+    register HE **oentry;
+    SV *sv;
+    
+    if (!hv)
+	return Nullsv;
+    if (SvRMAGICAL(hv)) {
+	bool needs_copy;
+	bool needs_store;
+	hv_magic_check (hv, &needs_copy, &needs_store);
+
+	if (needs_copy && (entry = hv_fetch_ent(hv, keysv, TRUE, hash))) {
+	    sv = HeVAL(entry);
+	    mg_clear(sv);
+	    if (!needs_store) {
+		if (mg_find(sv, 'p')) {
+		    sv_unmagic(sv, 'p');	/* No longer an element */
+		    return sv;
+		}		
+		return Nullsv;		/* element cannot be deleted */
+	    }
+#ifdef ENV_IS_CASELESS
+	    else if (mg_find((SV*)hv,'E')) {
+		key = SvPV(keysv, klen);
+		keysv = sv_2mortal(newSVpv(key,klen));
+		(void)strupr(SvPVX(keysv));
+		hash = 0; 
+	    }
+#endif
+	}
+    }
+    xhv = (XPVHV*)SvANY(hv);
+    if (!xhv->xhv_array)
+	return Nullsv;
+
+    key = SvPV(keysv, klen);
+    
+    if (!hash)
+	PERL_HASH(hash, key, klen);
+
+    oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    entry = *oentry;
+    i = 1;
+    for (; entry; i=0, oentry = &HeNEXT(entry), entry = *oentry) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != klen)
+	    continue;
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
+	    continue;
+	*oentry = HeNEXT(entry);
+	if (i && !*oentry)
+	    xhv->xhv_fill--;
+	if (flags & G_DISCARD)
+	    sv = Nullsv;
+	else
+	    sv = sv_mortalcopy(HeVAL(entry));
+	if (entry == xhv->xhv_eiter)
+	    HvLAZYDEL_on(hv);
+	else
+	    hv_free_ent(hv, entry);
 	--xhv->xhv_keys;
 	return sv;
     }
@@ -261,15 +569,10 @@ I32 flags;
 }
 
 bool
-hv_exists(hv,key,klen)
-HV *hv;
-char *key;
-U32 klen;
+hv_exists(HV *hv, char *key, U32 klen)
 {
     register XPVHV* xhv;
-    register char *s;
-    register I32 i;
-    register I32 hash;
+    register U32 hash;
     register HE *entry;
     SV *sv;
 
@@ -278,103 +581,234 @@ U32 klen;
 
     if (SvRMAGICAL(hv)) {
 	if (mg_find((SV*)hv,'P')) {
+	    dTHR;
 	    sv = sv_newmortal();
 	    mg_copy((SV*)hv, sv, key, klen); 
 	    magic_existspack(sv, mg_find(sv, 'p'));
 	    return SvTRUE(sv);
 	}
+#ifdef ENV_IS_CASELESS
+	else if (mg_find((SV*)hv,'E')) {
+	    sv = sv_2mortal(newSVpv(key,klen));
+	    key = strupr(SvPVX(sv));
+	}
+#endif
     }
 
     xhv = (XPVHV*)SvANY(hv);
     if (!xhv->xhv_array)
 	return 0; 
 
-    i = klen;
-    hash = 0;
-    s = key;
-    while (i--)
-	hash = hash * 33 + *s++;
+    PERL_HASH(hash, key, klen);
 
     entry = ((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
-    for (; entry; entry = entry->hent_next) {
-	if (entry->hent_hash != hash)		/* strings can't be equal */
+    for (; entry; entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
 	    continue;
-	if (entry->hent_klen != klen)
+	if (HeKLEN(entry) != klen)
 	    continue;
-	if (bcmp(entry->hent_key,key,klen))	/* is this it? */
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
 	    continue;
 	return TRUE;
     }
     return FALSE;
 }
 
-static void
-hsplit(hv)
-HV *hv;
+
+bool
+hv_exists_ent(HV *hv, SV *keysv, U32 hash)
+{
+    register XPVHV* xhv;
+    register char *key;
+    STRLEN klen;
+    register HE *entry;
+    SV *sv;
+
+    if (!hv)
+	return 0;
+
+    if (SvRMAGICAL(hv)) {
+	if (mg_find((SV*)hv,'P')) {
+	    dTHR;		/* just for SvTRUE */
+	    sv = sv_newmortal();
+	    keysv = sv_2mortal(newSVsv(keysv));
+	    mg_copy((SV*)hv, sv, (char*)keysv, HEf_SVKEY); 
+	    magic_existspack(sv, mg_find(sv, 'p'));
+	    return SvTRUE(sv);
+	}
+#ifdef ENV_IS_CASELESS
+	else if (mg_find((SV*)hv,'E')) {
+	    key = SvPV(keysv, klen);
+	    keysv = sv_2mortal(newSVpv(key,klen));
+	    (void)strupr(SvPVX(keysv));
+	    hash = 0; 
+	}
+#endif
+    }
+
+    xhv = (XPVHV*)SvANY(hv);
+    if (!xhv->xhv_array)
+	return 0; 
+
+    key = SvPV(keysv, klen);
+    if (!hash)
+	PERL_HASH(hash, key, klen);
+
+    entry = ((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    for (; entry; entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != klen)
+	    continue;
+	if (memNE(HeKEY(entry),key,klen))	/* is this it? */
+	    continue;
+	return TRUE;
+    }
+    return FALSE;
+}
+
+STATIC void
+hsplit(HV *hv)
 {
     register XPVHV* xhv = (XPVHV*)SvANY(hv);
     I32 oldsize = (I32) xhv->xhv_max + 1; /* sic(k) */
     register I32 newsize = oldsize * 2;
     register I32 i;
-    register HE **a;
-    register HE **b;
+    register char *a = xhv->xhv_array;
+    register HE **aep;
+    register HE **bep;
     register HE *entry;
     register HE **oentry;
-#ifndef STRANGE_MALLOC
-    I32 tmp;
-#endif
 
-    a = (HE**)xhv->xhv_array;
-    nomemok = TRUE;
-#ifdef STRANGE_MALLOC
-    Renew(a, newsize, HE*);
+    PL_nomemok = TRUE;
+#if defined(STRANGE_MALLOC) || defined(MYMALLOC)
+    Renew(a, ARRAY_ALLOC_BYTES(newsize), char);
+    if (!a) {
+      PL_nomemok = FALSE;
+      return;
+    }
 #else
-    i = newsize * sizeof(HE*);
 #define MALLOC_OVERHEAD 16
-    tmp = MALLOC_OVERHEAD;
-    while (tmp - MALLOC_OVERHEAD < i)
-	tmp += tmp;
-    tmp -= MALLOC_OVERHEAD;
-    tmp /= sizeof(HE*);
-    assert(tmp >= newsize);
-    New(2,a, tmp, HE*);
-    Copy(xhv->xhv_array, a, oldsize, HE*);
-    if (oldsize >= 64 && !nice_chunk) {
-	nice_chunk = (char*)xhv->xhv_array;
-	nice_chunk_size = oldsize * sizeof(HE*) * 2 - MALLOC_OVERHEAD;
+    New(2, a, ARRAY_ALLOC_BYTES(newsize), char);
+    if (!a) {
+      PL_nomemok = FALSE;
+      return;
+    }
+    Copy(xhv->xhv_array, a, oldsize * sizeof(HE*), char);
+    if (oldsize >= 64) {
+	offer_nice_chunk(xhv->xhv_array, ARRAY_ALLOC_BYTES(oldsize));
     }
     else
 	Safefree(xhv->xhv_array);
 #endif
 
-    nomemok = FALSE;
-    Zero(&a[oldsize], oldsize, HE*);		/* zero 2nd half*/
+    PL_nomemok = FALSE;
+    Zero(&a[oldsize * sizeof(HE*)], (newsize-oldsize) * sizeof(HE*), char);	/* zero 2nd half*/
     xhv->xhv_max = --newsize;
-    xhv->xhv_array = (char*)a;
+    xhv->xhv_array = a;
+    aep = (HE**)a;
 
-    for (i=0; i<oldsize; i++,a++) {
-	if (!*a)				/* non-existent */
+    for (i=0; i<oldsize; i++,aep++) {
+	if (!*aep)				/* non-existent */
 	    continue;
-	b = a+oldsize;
-	for (oentry = a, entry = *a; entry; entry = *oentry) {
-	    if ((entry->hent_hash & newsize) != i) {
-		*oentry = entry->hent_next;
-		entry->hent_next = *b;
-		if (!*b)
+	bep = aep+oldsize;
+	for (oentry = aep, entry = *aep; entry; entry = *oentry) {
+	    if ((HeHASH(entry) & newsize) != i) {
+		*oentry = HeNEXT(entry);
+		HeNEXT(entry) = *bep;
+		if (!*bep)
 		    xhv->xhv_fill++;
-		*b = entry;
+		*bep = entry;
 		continue;
 	    }
 	    else
-		oentry = &entry->hent_next;
+		oentry = &HeNEXT(entry);
 	}
-	if (!*a)				/* everything moved */
+	if (!*aep)				/* everything moved */
+	    xhv->xhv_fill--;
+    }
+}
+
+void
+hv_ksplit(HV *hv, IV newmax)
+{
+    register XPVHV* xhv = (XPVHV*)SvANY(hv);
+    I32 oldsize = (I32) xhv->xhv_max + 1; /* sic(k) */
+    register I32 newsize;
+    register I32 i;
+    register I32 j;
+    register char *a;
+    register HE **aep;
+    register HE *entry;
+    register HE **oentry;
+
+    newsize = (I32) newmax;			/* possible truncation here */
+    if (newsize != newmax || newmax <= oldsize)
+	return;
+    while ((newsize & (1 + ~newsize)) != newsize) {
+	newsize &= ~(newsize & (1 + ~newsize));	/* get proper power of 2 */
+    }
+    if (newsize < newmax)
+	newsize *= 2;
+    if (newsize < newmax)
+	return;					/* overflow detection */
+
+    a = xhv->xhv_array;
+    if (a) {
+	PL_nomemok = TRUE;
+#if defined(STRANGE_MALLOC) || defined(MYMALLOC)
+	Renew(a, ARRAY_ALLOC_BYTES(newsize), char);
+        if (!a) {
+	  PL_nomemok = FALSE;
+	  return;
+	}
+#else
+	New(2, a, ARRAY_ALLOC_BYTES(newsize), char);
+        if (!a) {
+	  PL_nomemok = FALSE;
+	  return;
+	}
+	Copy(xhv->xhv_array, a, oldsize * sizeof(HE*), char);
+	if (oldsize >= 64) {
+	    offer_nice_chunk(xhv->xhv_array, ARRAY_ALLOC_BYTES(oldsize));
+	}
+	else
+	    Safefree(xhv->xhv_array);
+#endif
+	PL_nomemok = FALSE;
+	Zero(&a[oldsize * sizeof(HE*)], (newsize-oldsize) * sizeof(HE*), char); /* zero 2nd half*/
+    }
+    else {
+	Newz(0, a, ARRAY_ALLOC_BYTES(newsize), char);
+    }
+    xhv->xhv_max = --newsize;
+    xhv->xhv_array = a;
+    if (!xhv->xhv_fill)				/* skip rest if no entries */
+	return;
+
+    aep = (HE**)a;
+    for (i=0; i<oldsize; i++,aep++) {
+	if (!*aep)				/* non-existent */
+	    continue;
+	for (oentry = aep, entry = *aep; entry; entry = *oentry) {
+	    if ((j = (HeHASH(entry) & newsize)) != i) {
+		j -= i;
+		*oentry = HeNEXT(entry);
+		if (!(HeNEXT(entry) = aep[j]))
+		    xhv->xhv_fill++;
+		aep[j] = entry;
+		continue;
+	    }
+	    else
+		oentry = &HeNEXT(entry);
+	}
+	if (!*aep)				/* everything moved */
 	    xhv->xhv_fill--;
     }
 }
 
 HV *
-newHV()
+newHV(void)
 {
     register HV *hv;
     register XPVHV* xhv;
@@ -384,6 +818,9 @@ newHV()
     xhv = (XPVHV*)SvANY(hv);
     SvPOK_off(hv);
     SvNOK_off(hv);
+#ifndef NODEFAULT_SHAREKEYS    
+    HvSHAREKEYS_on(hv);         /* key-sharing on by default */
+#endif    
     xhv->xhv_max = 7;		/* start with 8 buckets */
     xhv->xhv_fill = 0;
     xhv->xhv_pmroot = 0;
@@ -391,31 +828,87 @@ newHV()
     return hv;
 }
 
-void
-he_free(hent)
-register HE *hent;
+HV *
+newHVhv(HV *ohv)
 {
-    if (!hent)
-	return;
-    SvREFCNT_dec(hent->hent_val);
-    Safefree(hent->hent_key);
-    del_he(hent);
+    register HV *hv;
+    STRLEN hv_max = ohv ? HvMAX(ohv) : 0;
+    STRLEN hv_fill = ohv ? HvFILL(ohv) : 0;
+
+    hv = newHV();
+    while (hv_max && hv_max + 1 >= hv_fill * 2)
+	hv_max = hv_max / 2;	/* Is always 2^n-1 */
+    HvMAX(hv) = hv_max;
+    if (!hv_fill)
+	return hv;
+
+#if 0
+    if (! SvTIED_mg((SV*)ohv, 'P')) {
+	/* Quick way ???*/
+    } 
+    else 
+#endif
+    {
+	HE *entry;
+	I32 hv_riter = HvRITER(ohv);	/* current root of iterator */
+	HE *hv_eiter = HvEITER(ohv);	/* current entry of iterator */
+	
+	/* Slow way */
+	hv_iterinit(ohv);
+	while (entry = hv_iternext(ohv)) {
+	    hv_store(hv, HeKEY(entry), HeKLEN(entry), 
+		     SvREFCNT_inc(HeVAL(entry)), HeHASH(entry));
+	}
+	HvRITER(ohv) = hv_riter;
+	HvEITER(ohv) = hv_eiter;
+    }
+    
+    return hv;
 }
 
 void
-he_delayfree(hent)
-register HE *hent;
+hv_free_ent(HV *hv, register HE *entry)
 {
-    if (!hent)
+    SV *val;
+
+    if (!entry)
 	return;
-    sv_2mortal(hent->hent_val);	/* free between statements */
-    Safefree(hent->hent_key);
-    del_he(hent);
+    val = HeVAL(entry);
+    if (val && isGV(val) && GvCVu(val) && HvNAME(hv))
+	PL_sub_generation++;	/* may be deletion of method from stash */
+    SvREFCNT_dec(val);
+    if (HeKLEN(entry) == HEf_SVKEY) {
+	SvREFCNT_dec(HeKEY_sv(entry));
+        Safefree(HeKEY_hek(entry));
+    }
+    else if (HvSHAREKEYS(hv))
+	unshare_hek(HeKEY_hek(entry));
+    else
+	Safefree(HeKEY_hek(entry));
+    del_he(entry);
 }
 
 void
-hv_clear(hv)
-HV *hv;
+hv_delayfree_ent(HV *hv, register HE *entry)
+{
+    if (!entry)
+	return;
+    if (isGV(HeVAL(entry)) && GvCVu(HeVAL(entry)) && HvNAME(hv))
+	PL_sub_generation++;	/* may be deletion of method from stash */
+    sv_2mortal(HeVAL(entry));	/* free between statements */
+    if (HeKLEN(entry) == HEf_SVKEY) {
+	sv_2mortal(HeKEY_sv(entry));
+	Safefree(HeKEY_hek(entry));
+    }
+    else if (HvSHAREKEYS(hv))
+	unshare_hek(HeKEY_hek(entry));
+    else
+	Safefree(HeKEY_hek(entry));
+    del_he(entry);
+}
+
+void
+hv_clear(HV *hv)
 {
     register XPVHV* xhv;
     if (!hv)
@@ -431,13 +924,12 @@ HV *hv;
 	mg_clear((SV*)hv); 
 }
 
-static void
-hfreeentries(hv)
-HV *hv;
+STATIC void
+hfreeentries(HV *hv)
 {
     register HE **array;
-    register HE *hent;
-    register HE *ohent = Null(HE*);
+    register HE *entry;
+    register HE *oentry = Null(HE*);
     I32 riter;
     I32 max;
 
@@ -449,25 +941,24 @@ HV *hv;
     riter = 0;
     max = HvMAX(hv);
     array = HvARRAY(hv);
-    hent = array[0];
+    entry = array[0];
     for (;;) {
-	if (hent) {
-	    ohent = hent;
-	    hent = hent->hent_next;
-	    he_free(ohent);
+	if (entry) {
+	    oentry = entry;
+	    entry = HeNEXT(entry);
+	    hv_free_ent(hv, oentry);
 	}
-	if (!hent) {
+	if (!entry) {
 	    if (++riter > max)
 		break;
-	    hent = array[riter];
+	    entry = array[riter];
 	} 
     }
     (void)hv_iterinit(hv);
 }
 
 void
-hv_undef(hv)
-HV *hv;
+hv_undef(HV *hv)
 {
     register XPVHV* xhv;
     if (!hv)
@@ -480,7 +971,7 @@ HV *hv;
 	HvNAME(hv) = 0;
     }
     xhv->xhv_array = 0;
-    xhv->xhv_max = 7;		/* it's a normal associative array */
+    xhv->xhv_max = 7;		/* it's a normal hash */
     xhv->xhv_fill = 0;
     xhv->xhv_keys = 0;
 
@@ -489,21 +980,30 @@ HV *hv;
 }
 
 I32
-hv_iterinit(hv)
-HV *hv;
+hv_iterinit(HV *hv)
 {
-    register XPVHV* xhv = (XPVHV*)SvANY(hv);
-    HE *entry = xhv->xhv_eiter;
-    if (entry && entry->hent_klen < 0)	/* was deleted earlier? */
-	he_free(entry);
+    register XPVHV* xhv;
+    HE *entry;
+
+    if (!hv)
+	croak("Bad hash");
+    xhv = (XPVHV*)SvANY(hv);
+    entry = xhv->xhv_eiter;
+#ifdef DYNAMIC_ENV_FETCH  /* set up %ENV for iteration */
+    if (HvNAME(hv) && strEQ(HvNAME(hv), ENV_HV_NAME))
+	prime_env_iter();
+#endif
+    if (entry && HvLAZYDEL(hv)) {	/* was deleted earlier? */
+	HvLAZYDEL_off(hv);
+	hv_free_ent(hv, entry);
+    }
     xhv->xhv_riter = -1;
     xhv->xhv_eiter = Null(HE*);
-    return xhv->xhv_fill;
+    return xhv->xhv_keys;	/* used to be xhv->xhv_fill before 5.004_65 */
 }
 
 HE *
-hv_iternext(hv)
-HV *hv;
+hv_iternext(HV *hv)
 {
     register XPVHV* xhv;
     register HE *entry;
@@ -511,87 +1011,106 @@ HV *hv;
     MAGIC* mg;
 
     if (!hv)
-	croak("Bad associative array");
+	croak("Bad hash");
     xhv = (XPVHV*)SvANY(hv);
     oldentry = entry = xhv->xhv_eiter;
 
-    if (SvRMAGICAL(hv) && (mg = mg_find((SV*)hv,'P'))) {
+    if (mg = SvTIED_mg((SV*)hv, 'P')) {
 	SV *key = sv_newmortal();
 	if (entry) {
-	    sv_usepvn(key, entry->hent_key, entry->hent_klen);
-	    entry->hent_key = 0;
+	    sv_setsv(key, HeSVKEY_force(entry));
+	    SvREFCNT_dec(HeSVKEY(entry));	/* get rid of previous key */
 	}
 	else {
-	    xhv->xhv_eiter = entry = new_he();
+	    char *k;
+	    HEK *hek;
+
+	    xhv->xhv_eiter = entry = new_he();  /* one HE per MAGICAL hash */
 	    Zero(entry, 1, HE);
+	    Newz(54, k, HEK_BASESIZE + sizeof(SV*), char);
+	    hek = (HEK*)k;
+	    HeKEY_hek(entry) = hek;
+	    HeKLEN(entry) = HEf_SVKEY;
 	}
 	magic_nextpack((SV*) hv,mg,key);
         if (SvOK(key)) {
-	    STRLEN len;
-	    entry->hent_key = SvPV_force(key, len);
-	    entry->hent_klen = len;
-	    SvPOK_off(key);
-	    SvPVX(key) = 0;
-	    return entry;
+	    /* force key to stay around until next time */
+	    HeSVKEY_set(entry, SvREFCNT_inc(key));
+	    return entry;		/* beware, hent_val is not set */
         }
-	if (entry->hent_val)
-	    SvREFCNT_dec(entry->hent_val);
+	if (HeVAL(entry))
+	    SvREFCNT_dec(HeVAL(entry));
+	Safefree(HeKEY_hek(entry));
 	del_he(entry);
 	xhv->xhv_eiter = Null(HE*);
 	return Null(HE*);
     }
 
     if (!xhv->xhv_array)
-	Newz(506,xhv->xhv_array, sizeof(HE*) * (xhv->xhv_max + 1), char);
-    do {
-	if (entry)
-	    entry = entry->hent_next;
-	if (!entry) {
-	    ++xhv->xhv_riter;
-	    if (xhv->xhv_riter > xhv->xhv_max) {
-		xhv->xhv_riter = -1;
-		break;
-	    }
-	    entry = ((HE**)xhv->xhv_array)[xhv->xhv_riter];
+	Newz(506,xhv->xhv_array, ARRAY_ALLOC_BYTES(xhv->xhv_max + 1), char);
+    if (entry)
+	entry = HeNEXT(entry);
+    while (!entry) {
+	++xhv->xhv_riter;
+	if (xhv->xhv_riter > xhv->xhv_max) {
+	    xhv->xhv_riter = -1;
+	    break;
 	}
-    } while (!entry);
+	entry = ((HE**)xhv->xhv_array)[xhv->xhv_riter];
+    }
 
-    if (oldentry && oldentry->hent_klen < 0)	/* was deleted earlier? */
-	he_free(oldentry);
+    if (oldentry && HvLAZYDEL(hv)) {		/* was deleted earlier? */
+	HvLAZYDEL_off(hv);
+	hv_free_ent(hv, oldentry);
+    }
 
     xhv->xhv_eiter = entry;
     return entry;
 }
 
 char *
-hv_iterkey(entry,retlen)
-register HE *entry;
-I32 *retlen;
+hv_iterkey(register HE *entry, I32 *retlen)
 {
-    *retlen = entry->hent_klen;
-    return entry->hent_key;
+    if (HeKLEN(entry) == HEf_SVKEY) {
+	STRLEN len;
+	char *p = SvPV(HeKEY_sv(entry), len);
+	*retlen = len;
+	return p;
+    }
+    else {
+	*retlen = HeKLEN(entry);
+	return HeKEY(entry);
+    }
+}
+
+/* unlike hv_iterval(), this always returns a mortal copy of the key */
+SV *
+hv_iterkeysv(register HE *entry)
+{
+    if (HeKLEN(entry) == HEf_SVKEY)
+	return sv_mortalcopy(HeKEY_sv(entry));
+    else
+	return sv_2mortal(newSVpv((HeKLEN(entry) ? HeKEY(entry) : ""),
+				  HeKLEN(entry)));
 }
 
 SV *
-hv_iterval(hv,entry)
-HV *hv;
-register HE *entry;
+hv_iterval(HV *hv, register HE *entry)
 {
     if (SvRMAGICAL(hv)) {
 	if (mg_find((SV*)hv,'P')) {
 	    SV* sv = sv_newmortal();
-	    mg_copy((SV*)hv, sv, entry->hent_key, entry->hent_klen);
+	    if (HeKLEN(entry) == HEf_SVKEY)
+		mg_copy((SV*)hv, sv, (char*)HeKEY_sv(entry), HEf_SVKEY);
+	    else mg_copy((SV*)hv, sv, HeKEY(entry), HeKLEN(entry));
 	    return sv;
 	}
     }
-    return entry->hent_val;
+    return HeVAL(entry);
 }
 
 SV *
-hv_iternextsv(hv, key, retlen)
-    HV *hv;
-    char **key;
-    I32 *retlen;
+hv_iternextsv(HV *hv, char **key, I32 *retlen)
 {
     HE *he;
     if ( (he = hv_iternext(hv)) == NULL)
@@ -601,10 +1120,112 @@ hv_iternextsv(hv, key, retlen)
 }
 
 void
-hv_magic(hv, gv, how)
-HV* hv;
-GV* gv;
-int how;
+hv_magic(HV *hv, GV *gv, int how)
 {
     sv_magic((SV*)hv, (SV*)gv, how, Nullch, 0);
 }
+
+char*	
+sharepvn(char *sv, I32 len, U32 hash)
+{
+    return HEK_KEY(share_hek(sv, len, hash));
+}
+
+/* possibly free a shared string if no one has access to it
+ * len and hash must both be valid for str.
+ */
+void
+unsharepvn(char *str, I32 len, U32 hash)
+{
+    register XPVHV* xhv;
+    register HE *entry;
+    register HE **oentry;
+    register I32 i = 1;
+    I32 found = 0;
+    
+    /* what follows is the moral equivalent of:
+    if ((Svp = hv_fetch(PL_strtab, tmpsv, FALSE, hash))) {
+	if (--*Svp == Nullsv)
+	    hv_delete(PL_strtab, str, len, G_DISCARD, hash);
+    } */
+    xhv = (XPVHV*)SvANY(PL_strtab);
+    /* assert(xhv_array != 0) */
+    LOCK_STRTAB_MUTEX;
+    oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    for (entry = *oentry; entry; i=0, oentry = &HeNEXT(entry), entry = *oentry) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != len)
+	    continue;
+	if (memNE(HeKEY(entry),str,len))	/* is this it? */
+	    continue;
+	found = 1;
+	if (--HeVAL(entry) == Nullsv) {
+	    *oentry = HeNEXT(entry);
+	    if (i && !*oentry)
+		xhv->xhv_fill--;
+	    Safefree(HeKEY_hek(entry));
+	    del_he(entry);
+	    --xhv->xhv_keys;
+	}
+	break;
+    }
+    UNLOCK_STRTAB_MUTEX;
+    
+    if (!found)
+	warn("Attempt to free non-existent shared string");    
+}
+
+/* get a (constant) string ptr from the global string table
+ * string will get added if it is not already there.
+ * len and hash must both be valid for str.
+ */
+HEK *
+share_hek(char *str, I32 len, register U32 hash)
+{
+    register XPVHV* xhv;
+    register HE *entry;
+    register HE **oentry;
+    register I32 i = 1;
+    I32 found = 0;
+
+    /* what follows is the moral equivalent of:
+       
+    if (!(Svp = hv_fetch(PL_strtab, str, len, FALSE)))
+    	hv_store(PL_strtab, str, len, Nullsv, hash);
+    */
+    xhv = (XPVHV*)SvANY(PL_strtab);
+    /* assert(xhv_array != 0) */
+    LOCK_STRTAB_MUTEX;
+    oentry = &((HE**)xhv->xhv_array)[hash & (I32) xhv->xhv_max];
+    for (entry = *oentry; entry; i=0, entry = HeNEXT(entry)) {
+	if (HeHASH(entry) != hash)		/* strings can't be equal */
+	    continue;
+	if (HeKLEN(entry) != len)
+	    continue;
+	if (memNE(HeKEY(entry),str,len))	/* is this it? */
+	    continue;
+	found = 1;
+	break;
+    }
+    if (!found) {
+	entry = new_he();
+	HeKEY_hek(entry) = save_hek(str, len, hash);
+	HeVAL(entry) = Nullsv;
+	HeNEXT(entry) = *oentry;
+	*oentry = entry;
+	xhv->xhv_keys++;
+	if (i) {				/* initial entry? */
+	    ++xhv->xhv_fill;
+	    if (xhv->xhv_keys > xhv->xhv_max)
+		hsplit(PL_strtab);
+	}
+    }
+
+    ++HeVAL(entry);				/* use value slot as REFCNT */
+    UNLOCK_STRTAB_MUTEX;
+    return HeKEY_hek(entry);
+}
+
+
+

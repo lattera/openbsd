@@ -2,7 +2,9 @@
 
 # $RCSfile: write.t,v $$Revision: 4.1 $$Date: 92/08/07 18:28:38 $
 
-print "1..3\n";
+print "1..6\n";
+
+my $CAT = ($^O eq 'MSWin32') ? 'type' : 'cat';
 
 format OUT =
 the quick brown @<<
@@ -42,7 +44,7 @@ the course
 of huma...
 now is the time for all good men to come to\n";
 
-if (`cat Op_write.tmp` eq $right)
+if (`$CAT Op_write.tmp` eq $right)
     { print "ok 1\n"; unlink 'Op_write.tmp'; }
 else
     { print "not ok 1\n"; }
@@ -84,7 +86,7 @@ becomes
 necessary
 now is the time for all good men to come to\n";
 
-if (`cat Op_write.tmp` eq $right)
+if (`$CAT Op_write.tmp` eq $right)
     { print "ok 2\n"; unlink 'Op_write.tmp'; }
 else
     { print "not ok 2\n"; }
@@ -128,8 +130,63 @@ becomes
 necessary
 now is the time for all good men to come to\n";
 
-if (`cat Op_write.tmp` eq $right)
+if (`$CAT Op_write.tmp` eq $right)
     { print "ok 3\n"; unlink 'Op_write.tmp'; }
 else
     { print "not ok 3\n"; }
+
+# formline tests
+
+$mustbe = <<EOT;
+@ a
+@> ab
+@>> abc
+@>>>  abc
+@>>>>   abc
+@>>>>>    abc
+@>>>>>>     abc
+@>>>>>>>      abc
+@>>>>>>>>       abc
+@>>>>>>>>>        abc
+@>>>>>>>>>>         abc
+EOT
+
+$was1 = $was2 = '';
+for (0..10) {           
+  # lexical picture
+  $^A = '';
+  my $format1 = '@' . '>' x $_;
+  formline $format1, 'abc';
+  $was1 .= "$format1 $^A\n";
+  # global
+  $^A = '';
+  local $format2 = '@' . '>' x $_;
+  formline $format2, 'abc';
+  $was2 .= "$format2 $^A\n";
+}
+print $was1 eq $mustbe ? "ok 4\n" : "not ok 4\n";
+print $was2 eq $mustbe ? "ok 5\n" : "not ok 5\n";
+
+$^A = '';
+
+# more test
+
+format OUT3 =
+^<<<<<<...
+$foo
+.
+
+open(OUT3, '>Op_write.tmp') || die "Can't create Op_write.tmp";
+
+$foo = 'fit          ';
+write(OUT3);
+close OUT3;
+
+$right =
+"fit\n";
+
+if (`$CAT Op_write.tmp` eq $right)
+    { print "ok 6\n"; unlink 'Op_write.tmp'; }
+else
+    { print "not ok 6\n"; }
 

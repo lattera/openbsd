@@ -14,7 +14,14 @@ esac
 : This forces SH files to create target in same directory as SH file.
 : This is so that make depend always knows where to find SH derivatives.
 case "$0" in
-*/*) cd `expr X$0 : 'X\(.*\)/'` ;;
+*/Makefile.SH) cd `expr X$0 : 'X\(.*\)/'` ;;
+Makefile.SH) ;;
+*) case `pwd` in
+   */x2p) ;;
+   *) if test -d x2p; then cd x2p
+      else echo "Can't figure out where to write output."; exit 1
+	  fi;;
+   esac;;
 esac
 
 echo "Extracting x2p/Makefile (with variable substitutions)"
@@ -29,21 +36,30 @@ BYACC = $byacc
 LDFLAGS = $ldflags
 SMALL = $small
 LARGE = $large $split
-mallocsrc = $mallocsrc
-mallocobj = $mallocobj
+# XXX Perl malloc temporarily unusable (declaration collisions with
+# stdlib.h)
+#mallocsrc = $mallocsrc
+#mallocobj = $mallocobj
 shellflags = $shellflags
 
 libs = $libs
 
-# These variables will be used in a future version to make
-# the make file more portable to non-unix systems.
+$make_set_make
+# grrr
+SHELL = $sh
+
+# These variables may need to be manually set for non-Unix systems.
 AR = $ar
-EXE_EXT = $exe_ext
-LIB_EXT = $lib_ext
-OBJ_EXT = $obj_ext
-PATH_SEP = $path_sep
+EXE_EXT = $_ext
+LIB_EXT = $_a
+OBJ_EXT = $_o
+PATH_SEP = $p_
 
 FIRSTMAKEFILE = $firstmakefile
+
+# how to tr(anslate) newlines
+
+TRNL = '$trnl'
 
 .SUFFIXES: .c \$(OBJ_EXT)
 
@@ -51,6 +67,7 @@ FIRSTMAKEFILE = $firstmakefile
 
 cat >>Makefile <<'!NO!SUBS!'
 
+REALPERL = ../perl
 CCCMD = `sh $(shellflags) cflags $@`
 
 public = a2p s2p find2perl
@@ -66,10 +83,12 @@ shextract = Makefile cflags
 
 pl = find2perl.PL s2p.PL
 plextract = find2perl s2p
+plexe = find2perl.exe s2p.exe
+plc   = find2perl.c s2p.c
 
 addedbyconf = $(shextract) $(plextract)
 
-h = EXTERN.h INTERN.h ../config.h handy.h hash.h a2p.h str.h util.h
+h = EXTERN.h INTERN.h ../config.h ../handy.h hash.h a2p.h str.h util.h
 
 c = hash.c $(mallocsrc) str.c util.c walk.c
 
@@ -77,17 +96,18 @@ obj = hash$(OBJ_EXT) $(mallocobj) str$(OBJ_EXT) util$(OBJ_EXT) walk$(OBJ_EXT)
 
 lintflags = -phbvxac
 
-# grrr
-SHELL = /bin/sh
 
 .c$(OBJ_EXT):
-	$(CCCMD) $*.c
+	$(CCCMD) -DPERL_FOR_X2P $*.c
 
 all: $(public) $(private) $(util)
-	touch all
+	@echo " "
+
+compile: all
+	$(REALPERL) -I../lib ../utils/perlcc -regex 's/$$/.exe/' $(plextract) -prog -verbose dcf -log ../compilelog;  
 
 a2p: $(obj) a2p$(OBJ_EXT)
-	$(CC) $(LDFLAGS) $(obj) a2p$(OBJ_EXT) $(libs) -o a2p
+	$(CC) -o a2p $(LDFLAGS) $(obj) a2p$(OBJ_EXT) $(libs)
 
 # I now supply a2p.c with the kits, so the following section is
 # used only if you force byacc to run by saying
@@ -96,18 +116,20 @@ a2p: $(obj) a2p$(OBJ_EXT)
 run_byacc:	FORCE
 	@ echo Expect many shift/reduce and reduce/reduce conflicts
 	$(BYACC) a2p.y
+	rm -f a2p.c
 	mv y.tab.c a2p.c
 
 # We don't want to regenerate a2p.c, but it might appear out-of-date
 # after a patch is applied or a new distribution is made.
 a2p.c: a2p.y
-	-@touch a2p.c
+	-@sh -c true
 
-a2p$(OBJ_EXT): a2p.c a2py.c a2p.h EXTERN.h util.h INTERN.h handy.h ../config.h str.h hash.h
+a2p$(OBJ_EXT): a2p.c a2py.c a2p.h EXTERN.h util.h INTERN.h \
+		../handy.h ../config.h str.h hash.h
 	$(CCCMD) $(LARGE) a2p.c
 
 clean:
-	rm -f a2p *$(OBJ_EXT)
+	rm -f a2p *$(OBJ_EXT) $(plexe) $(plc)
 
 realclean: clean
 	rm -f *.orig core $(addedbyconf) all malloc.c
@@ -122,16 +144,16 @@ lint:
 	lint $(lintflags) $(defs) $(c) > a2p.fuzz
 
 depend: $(mallocsrc) ../makedepend
-	sh ../makedepend
+	sh ../makedepend MAKE=$(MAKE)
 
 clist:
-	echo $(c) | tr ' ' '\012' >.clist
+	echo $(c) | tr ' ' $(TRNL) >.clist
 
 hlist:
-	echo $(h) | tr ' ' '\012' >.hlist
+	echo $(h) | tr ' ' $(TRNL) >.hlist
 
 shlist:
-	echo $(sh) | tr ' ' '\012' >.shlist
+	echo $(sh) | tr ' ' $(TRNL) >.shlist
 
 # These should be automatically generated
 
@@ -141,8 +163,10 @@ $(plextract):
 malloc.c: ../malloc.c
 	rm -f malloc.c
 	sed <../malloc.c >malloc.c \
+	    -e 's/"EXTERN.h"/"..\/EXTERN.h"/' \
 	    -e 's/"perl.h"/"..\/perl.h"/' \
-	    -e 's/my_exit/exit/'
+	    -e 's/my_exit/exit/' \
+	    -e 's/MUTEX_[A-Z_]*(&PL_malloc_mutex);//'
 
 # AUTOMATICALLY GENERATED MAKE DEPENDENCIES--PUT NOTHING BELOW THIS LINE
 $(obj):

@@ -11,10 +11,9 @@ Env - perl module that imports environment variables
 
 =head1 DESCRIPTION
 
-Perl maintains environment variables in a pseudo-associative-array
-named %ENV.  For when this access method is inconvenient, the Perl
-module C<Env> allows environment variables to be treated as simple
-variables.
+Perl maintains environment variables in a pseudo-hash named %ENV.  For
+when this access method is inconvenient, the Perl module C<Env> allows
+environment variables to be treated as simple variables.
 
 The Env::import() function ties environment variables with suitable
 names to global Perl variables with the same names.  By default it
@@ -39,17 +38,21 @@ the environment, assign it the undefined value
 
 =head1 AUTHOR
 
-Chip Salzenberg <chip@fin.uucp>
+Chip Salzenberg E<lt>F<chip@fin.uucp>E<gt>
 
 =cut
 
 sub import {
     my ($callpack) = caller(0);
     my $pack = shift;
-    my @vars = @_ ? @_ : keys(%ENV);
+    my @vars = grep /^[A-Za-z_]\w*$/, (@_ ? @_ : keys(%ENV));
+    return unless @vars;
 
+    eval "package $callpack; use vars qw("
+	 . join(' ', map { '$'.$_ } @vars) . ")";
+    die $@ if $@;
     foreach (@vars) {
-	tie ${"${callpack}::$_"}, Env, $_ if /^[A-Za-z_]\w*$/;
+	tie ${"${callpack}::$_"}, Env, $_;
     }
 }
 

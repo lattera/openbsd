@@ -1,6 +1,6 @@
 #!./perl
 
-print "1..41\n";
+print "1..55\n";
 
 # Test glob operations.
 
@@ -101,7 +101,7 @@ $subref = \&mysub;
 &$subref;
 
 $subrefref = \\&mysub2;
-&$$subrefref("ok 24\n");
+$$subrefref->("ok 24\n");
 sub mysub2 { print shift }
 
 # Test the ref operator.
@@ -189,12 +189,96 @@ sub foo { print $_[1] }
 package WHATEVER;
 foo WHATEVER "ok 38\n";
 
+#
+# test the \(@foo) construct
+#
+package main;
+@foo = (1,2,3);
+@bar = \(@foo);
+@baz = \(1,@foo,@bar);
+print @bar == 3 ? "ok 39\n" : "not ok 39\n";
+print grep(ref($_), @bar) == 3 ? "ok 40\n" : "not ok 40\n";
+print @baz == 3 ? "ok 41\n" : "not ok 41\n";
+
+my(@fuu) = (1,2,3);
+my(@baa) = \(@fuu);
+my(@bzz) = \(1,@fuu,@baa);
+print @baa == 3 ? "ok 42\n" : "not ok 42\n";
+print grep(ref($_), @baa) == 3 ? "ok 43\n" : "not ok 43\n";
+print @bzz == 3 ? "ok 44\n" : "not ok 44\n";
+
+# test for proper destruction of lexical objects
+
+sub larry::DESTROY { print "# larry\nok 45\n"; }
+sub curly::DESTROY { print "# curly\nok 46\n"; }
+sub moe::DESTROY   { print "# moe\nok 47\n"; }
+
+{
+    my ($joe, @curly, %larry);
+    my $moe = bless \$joe, 'moe';
+    my $curly = bless \@curly, 'curly';
+    my $larry = bless \%larry, 'larry';
+    print "# leaving block\n";
+}
+
+print "# left block\n";
+
+# another glob test
+
+$foo = "not ok 48";
+{ local(*bar) = "foo" }
+$bar = "ok 48";
+local(*bar) = *bar;
+print "$bar\n";
+
+$var = "ok 49";
+$_   = \$var;
+print $$_,"\n";
+
+# test if reblessing during destruction results in more destruction
+
+{
+    package A;
+    sub new { bless {}, shift }
+    DESTROY { print "# destroying 'A'\nok 51\n" }
+    package B;
+    sub new { bless {}, shift }
+    DESTROY { print "# destroying 'B'\nok 50\n"; bless shift, 'A' }
+    package main;
+    my $b = B->new;
+}
+
+# test if $_[0] is properly protected in DESTROY()
+
+{
+    my $i = 0;
+    local $SIG{'__DIE__'} = sub {
+	my $m = shift;
+	if ($i++ > 4) {
+	    print "# infinite recursion, bailing\nnot ok 52\n";
+	    exit 1;
+        }
+	print "# $m";
+	if ($m =~ /^Modification of a read-only/) { print "ok 52\n" }
+    };
+    package C;
+    sub new { bless {}, shift }
+    DESTROY { $_[0] = 'foo' }
+    {
+	print "# should generate an error...\n";
+	my $c = C->new;
+    }
+    print "# good, didn't recurse\n";
+}
+
+# test global destruction
+
 package FINALE;
 
 {
-    $ref3 = bless ["ok 41\n"];		# package destruction
-    my $ref2 = bless ["ok 40\n"];	# lexical destruction
-    local $ref1 = bless ["ok 39\n"];	# dynamic destruction
+    $ref3 = bless ["ok 55\n"];		# package destruction
+    my $ref2 = bless ["ok 54\n"];	# lexical destruction
+    local $ref1 = bless ["ok 53\n"];	# dynamic destruction
     1;					# flush any temp values on stack
 }
 

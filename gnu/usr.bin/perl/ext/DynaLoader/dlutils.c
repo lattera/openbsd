@@ -26,7 +26,7 @@ static int dl_debug = 0;	/* value copied from $DynaLoader::dl_error */
 
 
 static void
-dl_generic_private_init()	/* called by dl_*.xs dl_private_init() */
+dl_generic_private_init(CPERLarg)	/* called by dl_*.xs dl_private_init() */
 {
     char *perl_dl_nonlazy;
 #ifdef DEBUGGING
@@ -35,7 +35,7 @@ dl_generic_private_init()	/* called by dl_*.xs dl_private_init() */
     if ( (perl_dl_nonlazy = getenv("PERL_DL_NONLAZY")) != NULL )
 	dl_nonlazy = atoi(perl_dl_nonlazy);
     if (dl_nonlazy)
-	DLDEBUG(1,fprintf(stderr,"DynaLoader bind mode is 'non-lazy'\n"));
+	DLDEBUG(1,PerlIO_printf(PerlIO_stderr(), "DynaLoader bind mode is 'non-lazy'\n"));
 #ifdef DL_LOADONCEONLY
     if (!dl_loaded_files)
 	dl_loaded_files = newHV(); /* provide cache for dl_*.xs if needed */
@@ -44,16 +44,8 @@ dl_generic_private_init()	/* called by dl_*.xs dl_private_init() */
 
 
 /* SaveError() takes printf style args and saves the result in LastError */
-#ifdef STANDARD_C
 static void
-SaveError(char* pat, ...)
-#else
-/*VARARGS0*/
-static void
-SaveError(pat, va_alist)
-    char *pat;
-    va_dcl
-#endif
+SaveError(CPERLarg_ char* pat, ...)
 {
     va_list args;
     char *message;
@@ -61,11 +53,7 @@ SaveError(pat, va_alist)
 
     /* This code is based on croak/warn, see mess() in util.c */
 
-#ifdef I_STDARG
     va_start(args, pat);
-#else
-    va_start(args);
-#endif
     message = mess(pat, &args);
     va_end(args);
 
@@ -75,22 +63,10 @@ SaveError(pat, va_alist)
     if (LastError)
         LastError = (char*)saferealloc(LastError, len) ;
     else
-        LastError = safemalloc(len) ;
+        LastError = (char *) safemalloc(len) ;
 
     /* Copy message into LastError (including terminating null char)	*/
     strncpy(LastError, message, len) ;
-    DLDEBUG(2,fprintf(stderr,"DynaLoader: stored error msg '%s'\n",LastError));
-}
-
-
-/* prepend underscore to s. write into buf. return buf. */
-char *
-dl_add_underscore(s, buf)
-char *s;
-char *buf;
-{
-    *buf = '_';
-    (void)strcpy(buf + 1, s);
-    return buf;
+    DLDEBUG(2,PerlIO_printf(PerlIO_stderr(), "DynaLoader: stored error msg '%s'\n",LastError));
 }
 

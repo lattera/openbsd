@@ -6,7 +6,7 @@ BEGIN {
     chdir 't' if -d 't';
     @INC = '../lib';
     require Config; import Config;
-    if ($Config{'extensions'} !~ /\bSDBM_File\b/) {
+    if (($Config{'extensions'} !~ /\bSDBM_File\b/) && ($^O ne 'VMS')){
 	print "1..0\n";
 	exit 0;
     }
@@ -15,20 +15,26 @@ require SDBM_File;
 #If Fcntl is not available, try 0x202 or 0x102 for O_RDWR|O_CREAT
 use Fcntl;
 
-print "1..12\n";
+print "1..18\n";
 
-unlink <Op.dbmx*>;
+unlink <Op_dbmx.*>;
 
 umask(0);
-print (tie(%h,SDBM_File,'Op.dbmx', O_RDWR|O_CREAT, 0640) ? "ok 1\n" : "not ok 1\n");
+print (tie(%h,SDBM_File,'Op_dbmx', O_RDWR|O_CREAT, 0640)
+       ? "ok 1\n" : "not ok 1\n");
 
-$Dfile = "Op.dbmx.pag";
+$Dfile = "Op_dbmx.pag";
 if (! -e $Dfile) {
-	($Dfile) = <Op.dbmx*>;
+	($Dfile) = <Op_dbmx.*>;
 }
-($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,
-   $blksize,$blocks) = stat($Dfile);
-print (($mode & 0777) == 0640 ? "ok 2\n" : "not ok 2\n");
+if ($^O eq 'amigaos' || $^O eq 'os2' || $^O eq 'MSWin32' || $^O eq 'dos') {
+    print "ok 2 # Skipped: different file permission semantics\n";
+}
+else {
+    ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,
+     $blksize,$blocks) = stat($Dfile);
+    print (($mode & 0777) == 0640 ? "ok 2\n" : "not ok 2\n");
+}
 while (($key,$value) = each(%h)) {
     $i++;
 }
@@ -54,7 +60,7 @@ $h{'goner2'} = 'snork';
 delete $h{'goner2'};
 
 untie(%h);
-print (tie(%h,SDBM_File,'Op.dbmx', O_RDWR, 0640) ? "ok 4\n" : "not ok 4\n");
+print (tie(%h,SDBM_File,'Op_dbmx', O_RDWR, 0640) ? "ok 4\n" : "not ok 4\n");
 
 $h{'j'} = 'J';
 $h{'k'} = 'K';
@@ -84,8 +90,8 @@ delete $h{'goner3'};
 
 if ($#keys == 29 && $#values == 29) {print "ok 5\n";} else {print "not ok 5\n";}
 
-while (($key,$value) = each(h)) {
-    if ($key eq $keys[$i] && $value eq $values[$i] && $key gt $value) {
+while (($key,$value) = each(%h)) {
+    if ($key eq $keys[$i] && $value eq $values[$i] && $key eq lc($value)) {
 	$key =~ y/a-z/A-Z/;
 	$i++ if $key eq $value;
     }
@@ -93,7 +99,7 @@ while (($key,$value) = each(h)) {
 
 if ($i == 30) {print "ok 6\n";} else {print "not ok 6\n";}
 
-@keys = ('blurfl', keys(h), 'dyick');
+@keys = ('blurfl', keys(%h), 'dyick');
 if ($#keys == 31) {print "ok 7\n";} else {print "not ok 7\n";}
 
 $h{'foo'} = '';
@@ -116,4 +122,91 @@ print join(':',200..400) eq join(':',@foo) ? "ok 10\n" : "not ok 10\n";
 print ($h{'foo'} eq '' ? "ok 11\n" : "not ok 11\n");
 print ($h{''} eq 'bar' ? "ok 12\n" : "not ok 12\n");
 
-unlink 'Op.dbmx.dir', $Dfile;
+untie %h;
+if ($^O eq 'VMS') {
+  unlink 'Op_dbmx.sdbm_dir', $Dfile;
+} else {
+  unlink 'Op_dbmx.dir', $Dfile;
+}
+
+
+sub ok
+{
+    my $no = shift ;
+    my $result = shift ;
+
+    print "not " unless $result ;
+    print "ok $no\n" ;
+}
+
+{
+   # sub-class test
+
+   package Another ;
+
+   use strict ;
+
+   open(FILE, ">SubDB.pm") or die "Cannot open SubDB.pm: $!\n" ;
+   print FILE <<'EOM' ;
+
+   package SubDB ;
+
+   use strict ;
+   use vars qw( @ISA @EXPORT) ;
+
+   require Exporter ;
+   use SDBM_File;
+   @ISA=qw(SDBM_File);
+   @EXPORT = @SDBM_File::EXPORT if defined @SDBM_File::EXPORT ;
+
+   sub STORE { 
+	my $self = shift ;
+        my $key = shift ;
+        my $value = shift ;
+        $self->SUPER::STORE($key, $value * 2) ;
+   }
+
+   sub FETCH { 
+	my $self = shift ;
+        my $key = shift ;
+        $self->SUPER::FETCH($key) - 1 ;
+   }
+
+   sub A_new_method
+   {
+	my $self = shift ;
+        my $key = shift ;
+        my $value = $self->FETCH($key) ;
+	return "[[$value]]" ;
+   }
+
+   1 ;
+EOM
+
+    close FILE ;
+
+    BEGIN { push @INC, '.'; }
+
+    eval 'use SubDB ; use Fcntl ;';
+    main::ok(13, $@ eq "") ;
+    my %h ;
+    my $X ;
+    eval '
+	$X = tie(%h, "SubDB","dbhash_tmp", O_RDWR|O_CREAT, 0640 );
+	' ;
+
+    main::ok(14, $@ eq "") ;
+
+    my $ret = eval '$h{"fred"} = 3 ; return $h{"fred"} ' ;
+    main::ok(15, $@ eq "") ;
+    main::ok(16, $ret == 5) ;
+
+    $ret = eval '$X->A_new_method("fred") ' ;
+    main::ok(17, $@ eq "") ;
+    main::ok(18, $ret eq "[[5]]") ;
+
+    undef $X;
+    untie(%h);
+    unlink "SubDB.pm", <dbhash_tmp.*> ;
+
+}
