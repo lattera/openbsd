@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: crontab.c,v 1.7 1996/12/25 01:56:14 deraadt Exp $";
+static char rcsid[] = "$Id: crontab.c,v 1.8 1996/12/25 19:08:09 mickey Exp $";
 #endif
 
 /* crontab - install and manage per-user crontab files
@@ -424,23 +424,26 @@ edit_cmd() {
 	}
 
 	/* parent */
-	xpid = wait(&waiter);
-	if (xpid != pid) {
-		fprintf(stderr, "%s: wrong PID (%d != %d) from \"%s\"\n",
-			ProgramName, xpid, pid, editor);
-		goto fatal;
-	}
-	if (WIFEXITED(waiter) && WEXITSTATUS(waiter)) {
-		fprintf(stderr, "%s: \"%s\" exited with status %d\n",
-			ProgramName, editor, WEXITSTATUS(waiter));
-		goto fatal;
-	}
-	if (WIFSIGNALED(waiter)) {
-		fprintf(stderr,
-			"%s: \"%s\" killed; signal %d (%score dumped)\n",
-			ProgramName, editor, WTERMSIG(waiter),
-			WCOREDUMP(waiter) ?"" :"no ");
-		goto fatal;
+	while (1) {
+		xpid = waitpid(pid, &waiter, WUNTRACED);
+		if (xpid != pid) {
+			fprintf(stderr, "%s: wrong PID (%d != %d) from \"%s\"\n",
+				ProgramName, xpid, pid, editor);
+			goto fatal;
+		} else if (WIFSTOPPED(waiter)) {
+			raise(WSTOPSIG(waiter));
+		} else if (WIFEXITED(waiter) && WEXITSTATUS(waiter)) {
+			fprintf(stderr, "%s: \"%s\" exited with status %d\n",
+				ProgramName, editor, WEXITSTATUS(waiter));
+			goto fatal;
+		} else if (WIFSIGNALED(waiter)) {
+			fprintf(stderr,
+				"%s: \"%s\" killed; signal %d (%score dumped)\n",
+				ProgramName, editor, WTERMSIG(waiter),
+				WCOREDUMP(waiter) ?"" :"no ");
+			goto fatal;
+		} else
+			break;
 	}
 	if (fstat(t, &statbuf) < 0) {
 		perror("fstat");
