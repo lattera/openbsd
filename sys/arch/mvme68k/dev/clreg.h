@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/clreg.h,v 1.4 1996/04/28 11:03:19 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/clreg.h,v 1.5 1997/04/02 05:25:46 rahnds Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
