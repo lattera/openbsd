@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/arm/sys/sbrk.S,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
 /*	$NetBSD: sbrk.S,v 1.7 2003/08/07 16:42:05 agc Exp $	*/
 
 /*-

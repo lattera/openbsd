@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/arm/sys/cerror.S,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
 /*	$NetBSD: cerror.S,v 1.5 2003/08/07 16:42:04 agc Exp $	*/
 
 /*-

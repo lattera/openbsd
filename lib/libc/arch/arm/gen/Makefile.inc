@@ -1,3 +1,4 @@
+# $OpenBSD: src/lib/libc/arch/arm/gen/Makefile.inc,v 1.2 2004/02/01 05:40:52 drahn Exp $
 # $NetBSD: Makefile.inc,v 1.6 2003/08/01 17:03:47 lukem Exp $
 
 SRCS+=	alloca.S byte_swap_2.S byte_swap_4.S divsi3.S \

@@ -1,4 +1,4 @@
-
+/*	$OpenBSD: src/lib/libc/arch/arm/softfloat/Attic/softfloat-macros.h,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
 /*
 ===============================================================================
 

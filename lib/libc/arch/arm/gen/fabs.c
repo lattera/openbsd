@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/arm/gen/fabs.c,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
 /*	$NetBSD: fabs.c,v 1.2 2002/05/26 11:48:01 wiz Exp $	*/
 
 /*
