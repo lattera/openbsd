@@ -1,0 +1,4 @@
+Be warned that upgrades may not be well supported currently for the
+MACHINE port.
+
+OpenBSDUpgrade({:- the CD-ROM or an installation floppy-:})
