@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.55.2.1 2000/05/29 18:24:03 jason Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.55.2.2 2000/10/07 05:43:15 jason Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -575,7 +575,7 @@ in_iawithaddr(ina, m)
 			(IFF_LOOPBACK|IFF_LINK1) &&
 		     ia->ia_subnet == (ina.s_addr & ia->ia_subnetmask)))
 			return ia;
-		if (m && ((ip_directedbcast == 0) || (ip_directedbcast &&
+		if (((ip_directedbcast == 0) || (m && ip_directedbcast &&
 		    ia->ia_ifp == m->m_pkthdr.rcvif)) &&
 		    (ia->ia_ifp->if_flags & IFF_BROADCAST)) {
 			if (ina.s_addr == ia->ia_broadaddr.sin_addr.s_addr ||
@@ -587,7 +587,8 @@ in_iawithaddr(ina, m)
 			    ina.s_addr == ia->ia_subnet ||
 			    ina.s_addr == ia->ia_net) {
 				/* Make sure M_BCAST is set */
-				m->m_flags |= M_BCAST;
+				if (m)
+					m->m_flags |= M_BCAST;
 				return ia;
 			    }
 		}
