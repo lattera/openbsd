@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-isoclns.c,v 1.9 2000/10/03 14:31:57 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-isoclns.c,v 1.10 2002/02/19 19:39:40 millert Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996
@@ -25,17 +25,15 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-isoclns.c,v 1.8 2000/04/26 21:35:41 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-isoclns.c,v 1.9 2000/10/03 14:31:57 ho Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#ifdef __STDC__
 struct mbuf;
 struct rtentry;
-#endif
 #include <net/if.h>
 
 #include <netinet/in.h>

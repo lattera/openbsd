@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-sunrpc.c,v 1.12 2001/11/07 18:48:16 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-sunrpc.c,v 1.13 2002/02/19 19:39:40 millert Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996
@@ -23,17 +23,15 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-sunrpc.c,v 1.11 2001/11/06 03:11:40 deraadt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-sunrpc.c,v 1.12 2001/11/07 18:48:16 deraadt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#ifdef __STDC__
 struct mbuf;
 struct rtentry;
-#endif
 #include <net/if.h>
 
 #include <netinet/in.h>

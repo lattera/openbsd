@@ -1,5 +1,5 @@
 %{
-/*	$OpenBSD: src/lib/libpcap/grammar.y,v 1.8 2000/06/29 06:56:13 dugsong Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/grammar.y,v 1.9 2002/02/19 19:39:37 millert Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996
@@ -24,17 +24,15 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/grammar.y,v 1.7 2000/04/26 21:25:53 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/lib/libpcap/grammar.y,v 1.8 2000/06/29 06:56:13 dugsong Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#ifdef __STDC__
 struct mbuf;
 struct rtentry;
-#endif
 
 #include <net/if.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-raw.c,v 1.3 2000/10/03 14:31:58 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-raw.c,v 1.4 2002/02/19 19:39:40 millert Exp $	*/
 
 /*
  * Copyright (c) 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-raw.c,v 1.2 2000/04/26 21:35:42 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-raw.c,v 1.3 2000/10/03 14:31:58 ho Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -32,10 +32,8 @@ static const char rcsid[] =
 #include <sys/file.h>
 #include <sys/ioctl.h>
 
-#ifdef __STDC__
 struct mbuf;
 struct rtentry;
-#endif
 #include <net/if.h>
 
 #include <netinet/in.h>
