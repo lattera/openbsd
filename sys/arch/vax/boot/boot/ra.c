@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ra.c,v 1.1.8.1 2001/05/14 21:37:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ra.c,v 1.1.8.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: ra.c,v 1.4 1999/08/07 11:19:04 ragge Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -111,7 +111,7 @@ raopen(f, adapt, ctlr, unit, part)
 		nisse[494] = PG_V | (((u_int)&uda) >> 9);
 		nisse[495] = nisse[494] + 1;
 		udacsr = (int)uioaddr[adapt] + udaaddr[ctlr];
-		ubauda = (void*)0x3dc00 + (((u_int)(&uda))&0x1ff);
+		ubauda = (void *)0x3dc00 + (((u_int)(&uda))&0x1ff);
 		johan = (((u_int)ubauda) & 0xffff) + 8;
 		johan2 = 3;
 		ra->ra_ip = (short *)udacsr;

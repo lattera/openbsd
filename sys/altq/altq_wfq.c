@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_wfq.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_wfq.c,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$KAME: altq_wfq.c,v 1.7 2000/12/14 08:12:46 thorpej Exp $	*/
 
 /*
@@ -69,7 +69,7 @@ static int		wfq_getqid(struct wfq_getqid *);
 static int		wfq_setweight(struct wfq_setweight *);
 static int		wfq_getstats(struct wfq_getstats *);
 static int		wfq_config(struct wfq_conf *);
-static int		wfq_request __P((struct ifaltq *, int, void *));
+static int		wfq_request(struct ifaltq *, int, void *);
 static int		wfq_flush(struct ifaltq *);
 static void		*wfq_classify(void *, struct mbuf *, int);
 

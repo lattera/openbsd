@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/z8530var.h,v 1.7.12.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/z8530var.h,v 1.7.12.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: z8530var.h,v 1.5 1996/10/13 03:47:44 christos Exp $	*/
 
 /*
@@ -60,23 +60,23 @@ struct zsc_softc {
  * These could be inlines, but with the delay, speed is moot.
  */
 
-u_char zs_read_reg __P((struct zs_chanstate *cs, u_char reg));
-u_char zs_read_csr __P((struct zs_chanstate *cs));
-u_char zs_read_data __P((struct zs_chanstate *cs));
+u_char zs_read_reg(struct zs_chanstate *cs, u_char reg);
+u_char zs_read_csr(struct zs_chanstate *cs);
+u_char zs_read_data(struct zs_chanstate *cs);
 
-void  zs_write_reg __P((struct zs_chanstate *cs, u_char reg, u_char val));
-void  zs_write_csr __P((struct zs_chanstate *cs, u_char val));
-void  zs_write_data __P((struct zs_chanstate *cs, u_char val));
+void  zs_write_reg(struct zs_chanstate *cs, u_char reg, u_char val);
+void  zs_write_csr(struct zs_chanstate *cs, u_char val);
+void  zs_write_data(struct zs_chanstate *cs, u_char val);
 
 
 /*
  * How to request a "soft" interrupt.
  * This could be a macro if you like.
  */
-void zsc_req_softint __P((struct zsc_softc *zsc));
+void zsc_req_softint(struct zsc_softc *zsc);
 
 /* Handle user request to enter kernel debugger. */
-void zs_abort __P((void));
+void zs_abort(void);
 
 /*
  * Some warts needed by z8530tty.c -

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/Attic/ka820.h,v 1.2.12.1 2001/05/14 21:38:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/Attic/ka820.h,v 1.2.12.2 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: ka820.h,v 1.3 2000/01/24 02:40:32 matt Exp $	*/
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -140,5 +140,5 @@ struct ka820clock {
 	u_short csr3;
 };
 
-void	crxintr __P((void *arg));
+void	crxintr(void *arg);
 #endif

@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/zs_cons.h,v 1.1 1997/01/16 04:04:01 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/zs_cons.h,v 1.1.14.1 2002/03/28 11:26:45 niklas Exp $	*/
 
 extern void *zs_conschan;
 
-extern void nullcnprobe __P((struct consdev *));
+extern void nullcnprobe(struct consdev *);
 
-extern int  zs_getc __P((void *arg));
-extern void zs_putc __P((void *arg, int c));
+extern int  zs_getc(void *arg);
+extern void zs_putc(void *arg, int c);
 

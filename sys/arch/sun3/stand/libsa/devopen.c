@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/devopen.c,v 1.2.14.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/devopen.c,v 1.2.14.2 2002/03/28 11:26:45 niklas Exp $	*/
 
 
 #include <sys/param.h>
@@ -25,7 +25,7 @@ devopen(f, fname, file)
 	struct devsw *dp;
 	int error;
 
-	*file = (char*)fname;
+	*file = (char *)fname;
 	dp = &devsw[0];
 	f->f_dev = dp;
 	error = (*dp->dv_open)(f, prom_bootdev);

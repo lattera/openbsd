@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_blue.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_blue.c,v 1.1.2.2 2002/03/28 11:26:44 niklas Exp $	*/
 /*	$KAME: altq_blue.c,v 1.7 2000/12/14 08:12:45 thorpej Exp $	*/
 
 /*
@@ -99,13 +99,13 @@
 static blue_queue_t *blue_list = NULL;
 
 /* internal function prototypes */
-static int blue_enqueue __P((struct ifaltq *, struct mbuf *,
-			     struct altq_pktattr *));
-static struct mbuf *blue_dequeue __P((struct ifaltq *, int));
-static int drop_early __P((blue_t *));
-static int mark_ecn __P((struct mbuf *, struct altq_pktattr *, int));
-static int blue_detach __P((blue_queue_t *));
-static int blue_request __P((struct ifaltq *, int, void *));
+static int blue_enqueue(struct ifaltq *, struct mbuf *,
+			struct altq_pktattr *);
+static struct mbuf *blue_dequeue(struct ifaltq *, int);
+static int drop_early(blue_t *);
+static int mark_ecn(struct mbuf *, struct altq_pktattr *, int);
+static int blue_detach(blue_queue_t *);
+static int blue_request(struct ifaltq *, int, void *);
 
 /*
  * blue device interface

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4.4.3 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4.4.4 2002/03/28 11:26:47 niklas Exp $	*/
 /*	$NetBSD: dz_ibus.c,v 1.15 1999/08/27 17:50:42 ragge Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
@@ -88,7 +88,7 @@ static volatile struct ss_dz {/* base address of DZ-controller: 0x200A0000 */
 cons_decl(dz);
 cdev_decl(dz);
 
-extern int getmajor __P((void *));	/* conf.c */
+extern int getmajor(void *);	/* conf.c */
 
 #if 0
 #if NDZKBD > 0 || NDZMS > 0
@@ -286,7 +286,7 @@ void
 dzcninit(cndev)
 	struct	consdev *cndev;
 {
-	dz = (void*)dz_regs;
+	dz = (void *)dz_regs;
 
 	dz->csr = 0;    /* Disable scanning until initting is done */
 	dz->tcr = (1 << minor(cndev->cn_dev));    /* Turn on xmitter */

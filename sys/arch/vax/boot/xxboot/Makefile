@@ -1,11 +1,11 @@
-#	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/Makefile,v 1.2.6.1 2001/05/14 21:37:50 niklas Exp $	
+#	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/Makefile,v 1.2.6.2 2002/03/28 11:26:46 niklas Exp $	
 #	$NetBSD: Makefile,v 1.2 1999/10/23 14:40:39 ragge Exp $
 
 S=${.CURDIR}/../../../../
 
 PROG=	xxboot
 LINKS=	${BINDIR}/xxboot ${BINDIR}/raboot 
-LINKS+=	${BINDIR}/xxboot ${BINDIR}/rdboot
+LINKS+=	${BINDIR}/xxboot ${BINDIR}/hdboot
 LINKS+=	${BINDIR}/xxboot ${BINDIR}/sdboot
 LINKS+=	${BINDIR}/xxboot ${BINDIR}/hpboot
 

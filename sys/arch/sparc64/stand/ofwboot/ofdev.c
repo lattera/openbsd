@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: ofdev.c,v 1.1 2000/08/20 14:58:41 mrg Exp $	*/
 
 /*
@@ -178,7 +178,7 @@ devclose(of)
 static struct devsw devsw[1] = {
 	"OpenFirmware",
 	strategy,
-	(int (*)__P((struct open_file *, ...)))nodev,
+	(int (*)(struct open_file *, ...))nodev,
 	devclose,
 	noioctl
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/compat_util.h,v 1.3.4.3 2001/11/13 21:05:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/compat_util.h,v 1.3.4.4 2002/03/28 11:28:05 niklas Exp $	*/
 /*	$NetBSD: compat_util.h,v 1.1 1995/06/24 20:16:05 christos Exp $	*/
 
 /*
@@ -39,8 +39,8 @@
 struct emul;
 /* struct proc; */
 
-caddr_t stackgap_init __P((struct emul *));
-void    *stackgap_alloc __P((caddr_t *, size_t));
+caddr_t stackgap_init(struct emul *);
+void    *stackgap_alloc(caddr_t *, size_t);
 
 struct emul_flags_xtab {
         unsigned long omask;
@@ -48,8 +48,8 @@ struct emul_flags_xtab {
         unsigned long nval;
 };
 
-int emul_find __P((struct proc *, caddr_t *, const char *, char *,
-		   char **, int));
+int emul_find(struct proc *, caddr_t *, const char *, char *,
+		   char **, int);
 
 unsigned long emul_flags_translate(const struct emul_flags_xtab *tab,
 		   unsigned long in, unsigned long *leftover);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/dvma.c,v 1.3.12.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/dvma.c,v 1.3.12.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: dvma.c,v 1.6 1996/01/31 17:20:39 gwr Exp $	*/
 
 /*
@@ -45,8 +45,8 @@
 #include "stand.h"
 
 /* XXX */
-extern int  get_segmap __P((int));
-extern void set_segmap __P((int, int));
+extern int  get_segmap(int);
+extern void set_segmap(int, int);
 
 
 #define	DVMA_BASE 0xFFf00000
@@ -111,7 +111,7 @@ dvma_alloc(int len)
 {
 	len = m68k_round_page(len);
 	dvma_end -= len;
-	return((char*)dvma_end);
+	return((char *)dvma_end);
 }
 
 void

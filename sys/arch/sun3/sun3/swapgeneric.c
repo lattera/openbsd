@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/swapgeneric.c,v 1.5.14.2 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/swapgeneric.c,v 1.5.14.3 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.14 1995/04/26 23:30:08 gwr Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #include <sys/param.h>
 #include <sys/conf.h>
 
-int (*mountroot) __P((void)) = NULL;	/* tells autoconf.c that we are "generic" */
+int (*mountroot)(void) = NULL;	/* tells autoconf.c that we are "generic" */
 
 dev_t	rootdev = NODEV;
 dev_t	dumpdev = NODEV;

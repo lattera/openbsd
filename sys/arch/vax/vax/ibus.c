@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ibus.c,v 1.3.4.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ibus.c,v 1.3.4.3 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: ibus.c,v 1.7 2001/02/04 20:36:32 ragge Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
@@ -41,7 +41,7 @@
 
 static	int ibus_print(void *, const char *);
 static	int ibus_match(struct device *, struct cfdata *, void *);
-static	void ibus_attach(struct device *, struct device *, void*);
+static	void ibus_attach(struct device *, struct device *, void *);
 
 struct	cfdriver ibus_cd = {
 	NULL, "ibus", DV_DULL

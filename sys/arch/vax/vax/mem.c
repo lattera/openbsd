@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.6.2.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.6.2.4 2002/03/28 11:26:47 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.15 1999/03/24 05:51:17 mrg Exp $	*/
 
 /*
@@ -61,10 +61,10 @@
 extern unsigned int avail_end;
 caddr_t zeropage;
 
-int	mmopen __P((dev_t, int, int));
-int	mmclose __P((dev_t, int, int));
-int	mmrw __P((dev_t, struct uio *, int));
-paddr_t	mmmmap __P((dev_t, off_t, int));
+int	mmopen(dev_t, int, int);
+int	mmclose(dev_t, int, int);
+int	mmrw(dev_t, struct uio *, int);
+paddr_t	mmmmap(dev_t, off_t, int);
 
 
 /*ARGSUSED*/

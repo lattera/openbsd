@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/osf1/Attic/osf1.h,v 1.1.6.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/osf1/Attic/osf1.h,v 1.1.6.3 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: osf1.h,v 1.20 1999/05/10 21:41:07 cgd Exp $	*/
 
 /*
@@ -72,7 +72,7 @@ typedef void		*osf1_data_ptr;	/* XXX hard to fix size */
 typedef void		*osf1_fcn_ptr;	/* XXX hard to fix size, bogus */
 typedef	osf1_int	osf1_key_t;
 typedef	osf1_int	osf1_pid_t;
-typedef void    (*osf1_handler_t) __P((int));
+typedef void    (*osf1_handler_t)(int);
 
 struct osf1_timeval {				/* time.h */
 	osf1_time_t	tv_sec;

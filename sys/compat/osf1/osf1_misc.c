@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_misc.c,v 1.11.2.1 2001/05/14 22:05:08 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/osf1/Attic/osf1_misc.c,v 1.11.2.2 2002/03/28 11:28:06 niklas Exp $ */
 /* $NetBSD: osf1_misc.c,v 1.55 2000/06/28 15:39:33 mrg Exp $ */
 
 /*
@@ -240,7 +240,7 @@ osf1_sys_uname(p, v, retval)
 	struct osf1_sys_uname_args *uap = v;
         struct osf1_utsname u;
         const char *cp;
-	extern char ostype[], hostname[], osrelease[], version[], machine[];
+	extern char hostname[], machine[];
         char *dp, *ep;
 
 	/* XXX would use stackgap, but our struct utsname is too big! */

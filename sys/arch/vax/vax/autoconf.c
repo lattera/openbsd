@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.4 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.45 1999/10/23 14:56:05 ragge Exp $	*/
 
 /*
@@ -59,9 +59,9 @@
 
 #include <vax/bi/bireg.h>
 
-void	cpu_dumpconf __P((void));	/* machdep.c */
-void	gencnslask __P((void));
-void	setroot __P((void));		/* rootfil.c */
+void	cpu_dumpconf(void);	/* machdep.c */
+void	gencnslask(void);
+void	setroot(void);		/* rootfil.c */
 
 struct cpu_dep *dep_call;
 int	mastercpu;	/* chief of the system */
@@ -100,9 +100,9 @@ cpu_configure()
 		(*dep_call->cpu_clrf)();
 }
 
-int	mainbus_print __P((void *, const char *));
-int	mainbus_match __P((struct device *, struct cfdata *, void *));
-void	mainbus_attach __P((struct device *, struct device *, void *));
+int	mainbus_print(void *, const char *);
+int	mainbus_match(struct device *, struct cfdata *, void *);
+void	mainbus_attach(struct device *, struct device *, void *);
 
 int
 mainbus_print(aux, hej)

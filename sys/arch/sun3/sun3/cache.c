@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.5.14.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.5.14.4 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: cache.c,v 1.5 1996/11/20 18:57:24 gwr Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@
 #define	VAC_FLUSH_INCR	512	/* bytes */
 #define VADDR_MASK	0xfFFffFF	/* 28 bits */
 
-static void cache_clear_tags __P((void));
+static void cache_clear_tags(void);
 
 void
 cache_flush_page(pgva)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/tapeboot/Attic/dev_tape.c,v 1.2.16.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/stand/tapeboot/Attic/dev_tape.c,v 1.2.16.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: dev_tape.c,v 1.2 1995/10/17 22:58:20 gwr Exp $	*/
 
 /*
@@ -70,7 +70,7 @@ devopen(f, fname, file)
 	struct devsw *dp;
 	int error;
 
-	*file = (char*)fname;
+	*file = (char *)fname;
 	dp = &devsw[0];
 	f->f_dev = dp;
 

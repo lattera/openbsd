@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/rpb.h,v 1.5.12.1 2001/05/14 21:38:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/rpb.h,v 1.5.12.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: rpb.h,v 1.6 1998/07/01 09:37:11 ragge Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -40,8 +40,7 @@
 
 struct rpb {		/* size		description */
 	struct rpb *rpb_base;	/* 4  physical base address of block */
-	void	(*rpb_restart)/* 4  physical address of restart routine */
-			__P((void));
+	void	(*rpb_restart)(void);/* 4  physical address of restart routine */
 	long	rpb_chksum;/* 4  checksum of first 31 longwords of restart */
 	long	rpb_rstflg;	/* 4  Restart in progress flag */
 	long	rpb_haltpc;	/* 4  PC at HALT/restart */

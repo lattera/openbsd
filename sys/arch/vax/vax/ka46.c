@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka46.c,v 1.1.8.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka46.c,v 1.1.8.4 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: ka46.c,v 1.12 2000/03/04 07:27:49 matt Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
@@ -54,13 +54,13 @@
 #include <machine/clock.h>
 #include <machine/vsbus.h>
 
-static	void	ka46_conf __P((void));
-static	void	ka46_steal_pages __P((void));
-static	void	ka46_memerr __P((void));
-static	int	ka46_mchk __P((caddr_t));
-static	void	ka46_halt __P((void));
-static	void	ka46_reboot __P((int));
-static	void	ka46_cache_enable __P((void));
+static	void	ka46_conf(void);
+static	void	ka46_steal_pages(void);
+static	void	ka46_memerr(void);
+static	int	ka46_mchk(caddr_t);
+static	void	ka46_halt(void);
+static	void	ka46_reboot(int);
+static	void	ka46_cache_enable(void);
 
 struct	vs_cpu *ka46_cpu;
 

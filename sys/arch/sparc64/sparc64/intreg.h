@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intreg.h,v 1.1.2.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intreg.h,v 1.1.2.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: intreg.h,v 1.4 2000/06/24 04:21:05 eeh Exp $ */
 
 /*
@@ -59,5 +59,5 @@
 
 #ifndef _LOCORE
 struct intrhand;	/* This is in cpu.h if you need it. */
-void	send_softint __P((int cpu, int level, struct intrhand *ih));
+void	send_softint(int cpu, int level, struct intrhand *ih);
 #endif

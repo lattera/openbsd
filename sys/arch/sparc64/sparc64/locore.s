@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.4.2 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.4.3 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.137 2001/08/13 06:10:10 jdolecek Exp $	*/
 
 /*
@@ -6185,7 +6185,7 @@ _C_LABEL(cache_flush_virt):
 	 mov	%o2, %o0	! Start of clear
 
 /*
- *	cache_flush_phys __P((paddr_t, psize_t, int));
+ *	cache_flush_phys(paddr_t, psize_t, int);
  *
  *	Clear a set of paddrs from the D$, I$ and if param3 is
  *	non-zero, E$.  (E$ is not supported yet).

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.6 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.7 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.34 1996/03/04 05:04:40 cgd Exp $	*/
 
 /*
@@ -93,7 +93,7 @@
 #if defined(_KERNEL) && !defined(_LOCORE)
 #include <machine/cpu.h>
 
-extern void _delay __P((unsigned));
+extern void _delay(unsigned);
 #define delay(us)	_delay((us)<<8)
 #define	DELAY(n)	delay(n)
 #endif	/* _KERNEL && !_LOCORE */

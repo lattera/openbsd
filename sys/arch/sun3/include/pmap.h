@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/pmap.h,v 1.7.14.4 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/pmap.h,v 1.7.14.5 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.18 1997/01/27 19:41:06 gwr Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@ extern struct pmap	kernel_pmap_store;
 #define	pmap_kernel()			(&kernel_pmap_store)
 
 /* This is called from locore.s:cpu_switch() */
-void pmap_switch __P((pmap_t pmap));
+void pmap_switch(pmap_t pmap);
 
 /* This lets us have some say in choosing VA locations. */
 extern void pmap_prefer(vm_offset_t, vm_offset_t *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_stat.c,v 1.4.14.3 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_stat.c,v 1.4.14.4 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: ibcs2_stat.c,v 1.5 1996/05/03 17:05:32 christos Exp $	*/
 
 /*
@@ -54,8 +54,8 @@
 #include <compat/ibcs2/ibcs2_util.h>
 #include <compat/ibcs2/ibcs2_utsname.h>
 
-static void bsd_stat2ibcs_stat __P((struct ostat *, struct ibcs2_stat *));
-static int cvt_statfs __P((struct statfs *, caddr_t, int));
+static void bsd_stat2ibcs_stat(struct ostat *, struct ibcs2_stat *);
+static int cvt_statfs(struct statfs *, caddr_t, int);
 
 static void
 bsd_stat2ibcs_stat(st, st4)
@@ -259,7 +259,7 @@ ibcs2_sys_utssys(p, v, retval)
 	case 0:			/* uname(2) */
 	{
 		struct ibcs2_utsname sut;
-		extern char ostype[], machine[], osrelease[];
+		extern char machine[];
 
 		bzero(&sut, ibcs2_utsname_len);
 		bcopy(ostype, sut.sysname, sizeof(sut.sysname) - 1);

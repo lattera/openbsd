@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/ubavar.h,v 1.1.8.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/ubavar.h,v 1.1.8.3 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: ubavar.h,v 1.29 2000/06/04 06:17:04 matt Exp $	*/
 
 /*
@@ -74,11 +74,11 @@ struct	uba_softc {
 	SIMPLEQ_HEAD(, uba_unit) uh_resq;	/* resource wait chain */
 	SIMPLEQ_HEAD(, uba_reset) uh_resetq;	/* ubareset queue */
 	int	uh_lastiv;		/* last free interrupt vector */
-	int	(*uh_errchk) __P((struct uba_softc *));
-	void	(*uh_beforescan) __P((struct uba_softc *));
-	void	(*uh_afterscan) __P((struct uba_softc *));
-	void	(*uh_ubainit) __P((struct uba_softc *));
-	void	(*uh_ubapurge) __P((struct uba_softc *, int));
+	int	(*uh_errchk)(struct uba_softc *);
+	void	(*uh_beforescan)(struct uba_softc *);
+	void	(*uh_afterscan)(struct uba_softc *);
+	void	(*uh_ubainit)(struct uba_softc *);
+	void	(*uh_ubapurge)(struct uba_softc *, int);
 	short	uh_nr;			/* Unibus sequential number */
 	bus_space_tag_t	uh_iot;		/* Tag for this Unibus */
 	bus_space_handle_t uh_ioh;	/* Handle for I/O space */
@@ -95,7 +95,7 @@ struct	uba_unit {
 	SIMPLEQ_ENTRY(uba_unit) uu_resq;/* Queue while waiting for resources */
 	void	*uu_softc;	/* Pointer to units softc */
 	int	uu_bdp;		/* for controllers that hang on to bdp's */
-	int    (*uu_ready) __P((struct uba_unit *));
+	int    (*uu_ready)(struct uba_unit *);
 	void	*uu_ref;	/* Buffer this is related to */
 	short   uu_xclu;        /* want exclusive use of bdp's */
 	short   uu_keepbdp;     /* hang on to bdp's once allocated */

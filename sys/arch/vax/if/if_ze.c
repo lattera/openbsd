@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_ze.c,v 1.1.8.3 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_ze.c,v 1.1.8.4 2002/03/28 11:26:46 niklas Exp $	*/
 /*      $NetBSD: if_ze.c,v 1.3 2000/01/24 02:54:03 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -62,8 +62,8 @@
 #define NISA_ROM        0x20084000
 #define	SGECVEC		0x108
 
-static	int	zematch __P((struct device *, struct cfdata *, void *));
-static	void	zeattach __P((struct device *, struct device *, void *));
+static	int	zematch(struct device *, struct cfdata *, void *);
+static	void	zeattach(struct device *, struct device *, void *);
 
 struct	cfattach ze_ibus_ca = {
 	sizeof(struct ze_softc), (cfmatch_t)zematch, zeattach

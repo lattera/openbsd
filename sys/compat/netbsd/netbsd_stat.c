@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.3 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_stat.c,v 1.5.4.4 2002/03/28 11:28:06 niklas Exp $	*/
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -59,7 +59,7 @@
 #include <compat/netbsd/netbsd_syscallargs.h>
 #include <compat/netbsd/netbsd_util.h>
 
-static void openbsd_to_netbsd_stat __P((struct stat *, struct netbsd_stat *));
+static void openbsd_to_netbsd_stat(struct stat *, struct netbsd_stat *);
 
 static void
 openbsd_to_netbsd_stat(obst, nbst)

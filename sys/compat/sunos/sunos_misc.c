@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_misc.c,v 1.22.2.5 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_misc.c,v 1.22.2.6 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: sunos_misc.c,v 1.65 1996/04/22 01:44:31 christos Exp $	*/
 
 /*
@@ -107,7 +107,7 @@
 # include <machine/machdep.h>	/* for prototype of reboot2() */
 #endif
 
-static int sunstatfs __P((struct statfs *, caddr_t));
+static int sunstatfs(struct statfs *, caddr_t);
 
 int
 sunos_sys_wait4(p, v, retval)
@@ -378,7 +378,7 @@ sunos_sys_sigpending(p, v, retval)
  *
  * This is quite ugly, but what do you expect from compatibility code?
  */
-int sunos_readdir_callback __P((void *, struct dirent *, off_t));
+int sunos_readdir_callback(void *, struct dirent *, off_t);
 
 struct sunos_readdir_callback_args {
 	caddr_t outp;
@@ -636,7 +636,7 @@ sunos_sys_uname(p, v, retval)
 {
 	struct sunos_sys_uname_args *uap = v;
 	struct sunos_utsname sut;
-	extern char ostype[], machine[], osrelease[];
+	extern char machine[];
 
 	bzero(&sut, sizeof(sut));
 
@@ -994,13 +994,7 @@ sunos_sys_setrlimit(p, v, retval)
 	return compat_43_sys_setrlimit(p, uap, retval);
 }
 
-/* for the m68k machines */
-#ifndef PT_GETFPREGS
-#define PT_GETFPREGS -1
-#endif
-#ifndef PT_SETFPREGS
-#define PT_SETFPREGS -1
-#endif
+#ifdef PTRACE
 
 static int sreq2breq[] = {
 	PT_TRACE_ME,    PT_READ_I,      PT_READ_D,      -1,
@@ -1036,6 +1030,8 @@ sunos_sys_ptrace(p, v, retval)
 
 	return sys_ptrace(p, &pa, retval);
 }
+
+#endif	/* PTRACE */
 
 /*
  * SunOS reboot system call (for compatibility).

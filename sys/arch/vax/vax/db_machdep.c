@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/db_machdep.c,v 1.7.12.2 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/db_machdep.c,v 1.7.12.3 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: db_machdep.c,v 1.17 1999/06/20 00:58:23 ragge Exp $	*/
 
 /* 
@@ -63,7 +63,7 @@
 
 extern	label_t	*db_recover;
 
-void	kdbprinttrap __P((int, int));
+void	kdbprinttrap(int, int);
 
 int	db_active = 0;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.14.6.5 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.14.6.6 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: ibcs2_misc.c,v 1.23 1997/01/15 01:37:49 perry Exp $	*/
 
 /*
@@ -336,8 +336,8 @@ ibcs2_sys_mount(p, v, retval)
  * This is quite ugly, but what do you expect from compatibility code?
  */
 
-int ibcs2_readdir_callback __P((void *, struct dirent *, off_t));
-int ibcs2_classicread_callback __P((void *, struct dirent *, off_t));
+int ibcs2_readdir_callback(void *, struct dirent *, off_t);
+int ibcs2_classicread_callback(void *, struct dirent *, off_t);
 
 struct ibcs2_readdir_callback_args {
 	caddr_t outp;
@@ -1145,7 +1145,7 @@ xenix_sys_rdchk(p, v, retval)
 	SCARG(&sa, data) = stackgap_alloc(&sg, sizeof(int));
 	if ((error = sys_ioctl(p, &sa, retval)) != 0)
 		return error;
-	*retval = (*((int*)SCARG(&sa, data))) ? 1 : 0;
+	*retval = (*((int *)SCARG(&sa, data))) ? 1 : 0;
 	return 0;
 }
 

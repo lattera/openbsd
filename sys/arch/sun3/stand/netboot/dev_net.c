@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/netboot/Attic/dev_net.c,v 1.3.14.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/stand/netboot/Attic/dev_net.c,v 1.3.14.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: dev_net.c,v 1.4 1996/01/29 23:54:15 gwr Exp $	*/
 
 /*
@@ -105,7 +105,7 @@ net_open(struct open_file *f, ...)
 	int error = 0;
 
 	va_start(ap, f);
-	devname = va_arg(ap, char*);
+	devname = va_arg(ap, char *);
 	va_end(ap);
 
 #ifdef	NETIF_DEBUG

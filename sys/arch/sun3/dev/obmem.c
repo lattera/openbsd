@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/obmem.c,v 1.6 1997/01/16 04:03:51 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/obmem.c,v 1.6.14.1 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: obmem.c,v 1.11 1996/11/20 18:56:57 gwr Exp $	*/
 
 /*-
@@ -49,8 +49,8 @@
 #include <machine/autoconf.h>
 #include <machine/obmem.h>
 
-static int  obmem_match __P((struct device *, void *, void *));
-static void obmem_attach __P((struct device *, struct device *, void *));
+static int  obmem_match(struct device *, void *, void *);
+static void obmem_attach(struct device *, struct device *, void *);
 
 struct cfattach obmem_ca = {
 	sizeof(struct device), obmem_match, obmem_attach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/net.c,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/net.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: net.c,v 1.1 2000/08/20 14:58:38 mrg Exp $	*/
 
 /*
@@ -63,8 +63,8 @@
 #include <lib/libsa/netif.h>
 
 
-static int net_mountroot_bootparams __P((void));
-static int net_mountroot_bootp __P((void));
+static int net_mountroot_bootparams(void);
+static int net_mountroot_bootp(void);
 
 char	rootpath[FNAME_SIZE];
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/kd.c,v 1.7.14.2 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/kd.c,v 1.7.14.3 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: kd.c,v 1.21 1996/11/20 18:56:55 gwr Exp $	*/
 
 /*-
@@ -276,7 +276,7 @@ kdstop(tp, flag)
 	return (0);
 }
 
-static void kd_later(void*);
+static void kd_later(void *);
 static void kd_putfb(struct tty *);
 static struct timeout kd_timeout;
 

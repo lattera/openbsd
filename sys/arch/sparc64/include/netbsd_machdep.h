@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/netbsd_machdep.h,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/netbsd_machdep.h,v 1.1.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 
 #ifndef _NETBSD_MACHDEP_H
 #define _NETBSD_MACHDEP_H
@@ -16,7 +16,7 @@ struct netbsd_sigcontext {
 };
 
 #ifdef _KERNEL
-void netbsd_sendsig __P((sig_t, int, int, u_long, int, union sigval));
+void netbsd_sendsig(sig_t, int, int, u_long, int, union sigval);
 #endif
 
 #endif /* _NETBSD_MACHDEP_H */

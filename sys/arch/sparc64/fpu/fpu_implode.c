@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_implode.c,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/fpu/fpu_implode.c,v 1.3.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: fpu_implode.c,v 1.7 2000/08/03 18:32:08 eeh Exp $ */
 
 /*
@@ -61,8 +61,8 @@
 #include <sparc64/fpu/fpu_emu.h>
 #include <sparc64/fpu/fpu_extern.h>
 
-static int round __P((register struct fpemu *, register struct fpn *));
-static int toinf __P((struct fpemu *, int));
+static int round(register struct fpemu *, register struct fpn *);
+static int toinf(struct fpemu *, int);
 
 /*
  * Round a number (algorithm from Motorola MC68882 manual, modified for

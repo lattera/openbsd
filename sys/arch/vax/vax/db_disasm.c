@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7.12.1 2001/05/14 21:38:48 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7.12.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: db_disasm.c,v 1.10 1998/04/13 12:10:27 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -116,20 +116,20 @@ typedef struct {
 #define ITYPE_BRANCH	1
 #define ITYPE_CALL	2
 
-int get_byte	__P((inst_buffer * ib));
-int get_word	__P((inst_buffer * ib));
-int get_long	__P((inst_buffer * ib));
+int get_byte(inst_buffer * ib);
+int get_word(inst_buffer * ib);
+int get_long(inst_buffer * ib);
 
-int get_opcode	__P((inst_buffer * ib));
-int get_operands __P((inst_buffer * ib));
-int get_operand __P((inst_buffer * ib, int size));
+int get_opcode(inst_buffer * ib);
+int get_operands(inst_buffer * ib);
+int get_operand(inst_buffer * ib, int size);
 
-void add_char	__P((inst_buffer * ib, int c));
-void add_str	__P((inst_buffer * ib, char *s));
-void add_int	__P((inst_buffer * ib, int i));
-void add_xint	__P((inst_buffer * ib, int i));
-void add_sym	__P((inst_buffer * ib, int i));
-void add_off	__P((inst_buffer * ib, int i));
+void add_char(inst_buffer * ib, int c);
+void add_str(inst_buffer * ib, char *s);
+void add_int(inst_buffer * ib, int i);
+void add_xint(inst_buffer * ib, int i);
+void add_sym(inst_buffer * ib, int i);
+void add_off(inst_buffer * ib, int i);
 
 #define err_print  printf
 

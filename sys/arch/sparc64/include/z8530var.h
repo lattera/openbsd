@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/z8530var.h,v 1.3.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/z8530var.h,v 1.3.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: z8530var.h,v 1.4 2000/11/08 23:41:42 eeh Exp $	*/
 
 /*
@@ -86,13 +86,13 @@ struct zsc_softc {
  * about the function call overhead where ZS_DELAY does nothing.
  */
 
-u_char zs_read_reg __P((struct zs_chanstate *cs, u_char reg));
-u_char zs_read_csr __P((struct zs_chanstate *cs));
-u_char zs_read_data __P((struct zs_chanstate *cs));
+u_char zs_read_reg(struct zs_chanstate *cs, u_char reg);
+u_char zs_read_csr(struct zs_chanstate *cs);
+u_char zs_read_data(struct zs_chanstate *cs);
 
-void  zs_write_reg __P((struct zs_chanstate *cs, u_char reg, u_char val));
-void  zs_write_csr __P((struct zs_chanstate *cs, u_char val));
-void  zs_write_data __P((struct zs_chanstate *cs, u_char val));
+void  zs_write_reg(struct zs_chanstate *cs, u_char reg, u_char val);
+void  zs_write_csr(struct zs_chanstate *cs, u_char val);
+void  zs_write_data(struct zs_chanstate *cs, u_char val);
 
 /* The sparc has splzs() in psl.h */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/tapeboot/Attic/rawfs.c,v 1.1.16.1 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/stand/tapeboot/Attic/rawfs.c,v 1.1.16.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: rawfs.c,v 1.1 1995/10/17 22:58:27 gwr Exp $	*/
 
 /*
@@ -59,7 +59,7 @@ struct file {
 };
 
 static int
-rawfs_get_block __P((struct open_file *));
+rawfs_get_block(struct open_file *);
 
 int	rawfs_open(path, f)
 	char *path;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ossaudio/ossaudio.c,v 1.2.8.4 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ossaudio/ossaudio.c,v 1.2.8.5 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: ossaudio.c,v 1.23 1997/10/19 07:41:52 augustss Exp $	*/
 
 /*
@@ -59,9 +59,9 @@ int ossdebug = 0;
 #define TO_OSSVOL(x) ((x) * 100 / 255)
 #define FROM_OSSVOL(x) ((x) * 255 / 100)
 
-static struct audiodevinfo *getdevinfo __P((struct file *, struct proc *));
+static struct audiodevinfo *getdevinfo(struct file *, struct proc *);
 
-static void setblocksize __P((struct file *, struct audio_info *, struct proc *));
+static void setblocksize(struct file *, struct audio_info *, struct proc *);
 
 
 int
@@ -85,7 +85,7 @@ oss_ioctl_audio(p, uap, retval)
 	u_int u;
 	int idat, idata;
 	int error;
-	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
+	int (*ioctlf)(struct file *, u_long, caddr_t, struct proc *);
 
 	fdp = p->p_fd;
 	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
@@ -569,7 +569,7 @@ getdevinfo(fp, p)
 		{ 0, -1 }
 	};
 	register const struct oss_devs *dp;
-	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *)) =
+	int (*ioctlf)(struct file *, u_long, caddr_t, struct proc *) =
 	    fp->f_ops->fo_ioctl;
 	struct vnode *vp;
 	struct vattr va;
@@ -662,7 +662,7 @@ oss_ioctl_mixer(p, uap, retval)
 	int i;
 	int error;
 	int l, r, n;
-	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
+	int (*ioctlf)(struct file *, u_long, caddr_t, struct proc *);
 
 	fdp = p->p_fd;
 	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)

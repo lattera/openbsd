@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie_obio.c,v 1.5.14.1 2001/05/14 21:37:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie_obio.c,v 1.5.14.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: if_ie_obio.c,v 1.6 1996/11/20 18:56:51 gwr Exp $	*/
 
 /*-
@@ -67,16 +67,16 @@
 #include <sun3/dev/if_iereg.h>
 #include <sun3/dev/if_ievar.h>
 
-static void ie_obreset __P((struct ie_softc *));
-static void ie_obattend __P((struct ie_softc *));
-static void ie_obrun __P((struct ie_softc *));
+static void ie_obreset(struct ie_softc *);
+static void ie_obattend(struct ie_softc *);
+static void ie_obrun(struct ie_softc *);
 
 /*
  * New-style autoconfig attachment
  */
 
-static int  ie_obio_match __P((struct device *, void *, void *));
-static void ie_obio_attach __P((struct device *, struct device *, void *));
+static int  ie_obio_match(struct device *, void *, void *);
+static void ie_obio_attach(struct device *, struct device *, void *);
 
 struct cfattach ie_obio_ca = {
 	sizeof(struct ie_softc), ie_obio_match, ie_obio_attach

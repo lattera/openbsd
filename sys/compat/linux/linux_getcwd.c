@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1.8.2 2001/07/04 10:39:23 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1.8.3 2002/03/28 11:28:06 niklas Exp $ */
 /* $NetBSD: vfs_getcwd.c,v 1.3.2.3 1999/07/11 10:24:09 sommerfeld Exp $ */
 
 /*-
@@ -47,7 +47,7 @@
 #include <sys/vnode.h>
 #include <sys/mount.h>
 #include <sys/proc.h>
-int proc_isunder __P((struct proc *, struct proc*)); /* missing from proc.h */
+int proc_isunder(struct proc *, struct proc*); /* missing from proc.h */
 #include <sys/uio.h>
 #include <sys/malloc.h>
 #include <sys/dirent.h>
@@ -63,17 +63,17 @@ int proc_isunder __P((struct proc *, struct proc*)); /* missing from proc.h */
 #include <machine/linux_machdep.h>
 
 static int
-linux_getcwd_scandir __P((struct vnode **, struct vnode **,
-    char **, char *, struct proc *));
+linux_getcwd_scandir(struct vnode **, struct vnode **,
+    char **, char *, struct proc *);
 static int
-linux_getcwd_getcache __P((struct vnode **, struct vnode **,
-    char **, char *));
+linux_getcwd_getcache(struct vnode **, struct vnode **,
+    char **, char *);
 static int
-linux_getcwd_common __P((struct vnode *, struct vnode *,
-		   char **, char *, int, int, struct proc *));
+linux_getcwd_common(struct vnode *, struct vnode *,
+		   char **, char *, int, int, struct proc *);
 
 static int
-linux_vn_isunder __P((struct vnode *, struct vnode *, struct proc *));
+linux_vn_isunder(struct vnode *, struct vnode *, struct proc *);
 
 #define DIRENT_MINSIZE (sizeof(struct dirent) - (MAXNAMLEN+1) + 4)
 

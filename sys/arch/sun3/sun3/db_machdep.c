@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_machdep.c,v 1.9.14.2 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_machdep.c,v 1.9.14.3 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: db_machdep.c,v 1.8 1996/11/20 18:57:27 gwr Exp $	*/
 
 /*-
@@ -55,10 +55,10 @@
 #include <ddb/db_command.h>
 #include <ddb/db_output.h>
 
-static void db_mach_pagemap __P((db_expr_t, int, db_expr_t, char *));
-static void db_mach_abort   __P((db_expr_t, int, db_expr_t, char *));
+static void db_mach_pagemap(db_expr_t, int, db_expr_t, char *);
+static void db_mach_abort(db_expr_t, int, db_expr_t, char *);
 
-static void pte_print __P((int));
+static void pte_print(int);
 
 static char *pgt_names[] = {
 	"MEM", "OBIO", "VMES", "VMEL" };

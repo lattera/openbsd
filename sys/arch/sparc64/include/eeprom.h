@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/eeprom.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/eeprom.h,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: eeprom.h,v 1.2 1999/12/30 16:25:17 eeh Exp $	*/
 
 /*
@@ -179,6 +179,6 @@ struct eeprom {
 
 #ifdef	_KERNEL
 extern	char *eeprom_va;
-int	eeprom_uio __P((struct uio *));
+int	eeprom_uio(struct uio *);
 #endif	/* _KERNEL */
 

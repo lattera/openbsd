@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.5 2002/03/06 02:07:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.6 2002/03/28 11:28:05 niklas Exp $	*/
 /*	$NetBSD: vfs_syscalls_43.c,v 1.4 1996/03/14 19:31:52 christos Exp $	*/
 
 /*
@@ -67,7 +67,7 @@
 
 #include <sys/pipe.h>
 
-static void cvtstat __P((struct stat *, struct ostat *));
+static void cvtstat(struct stat *, struct ostat *);
 
 /*
  * Redirection info so we don't have to include the union fs routines in 
@@ -77,8 +77,8 @@ static void cvtstat __P((struct stat *, struct ostat *));
  * value is compiled in from kern/vfs_syscalls.c
  */
 
-extern int (*union_check_p)  __P((struct proc *, struct vnode **, 
-				   struct file *, struct uio, int *));
+extern int (*union_check_p)(struct proc *, struct vnode **, 
+				   struct file *, struct uio, int *);
 
 /*
  * Convert from an old to a new stat structure.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/intreg.c,v 1.5.14.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/intreg.c,v 1.5.14.4 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: intreg.c,v 1.5 1996/11/20 18:57:32 gwr Exp $	*/
 
 /*-
@@ -64,9 +64,9 @@ struct intreg_softc {
 	volatile u_char *sc_reg;
 };
 
-static int  intreg_match __P((struct device *, void *vcf, void *args));
-static void intreg_attach __P((struct device *, struct device *, void *));
-static int soft1intr __P((void *));
+static int  intreg_match(struct device *, void *vcf, void *args);
+static void intreg_attach(struct device *, struct device *, void *);
+static int soft1intr(void *);
 
 struct cfattach intreg_ca = {
 	sizeof(struct intreg_softc), intreg_match, intreg_attach

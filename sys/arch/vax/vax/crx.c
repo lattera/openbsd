@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/crx.c,v 1.1.8.1 2001/05/14 21:38:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/crx.c,v 1.1.8.2 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: crx.c,v 1.4 2000/01/24 02:40:33 matt Exp $	*/
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -129,7 +129,7 @@ crxclose(dev, flags, fmt, p)
 /*
  * Perform a read (uio->uio_rw==UIO_READ) or write (uio->uio_rw==UIO_WRITE).
  */
-int	crxrw __P((dev_t, struct uio *, int));
+int	crxrw(dev_t, struct uio *, int);
 int
 crxrw(dev, uio, flags)
 	dev_t dev;

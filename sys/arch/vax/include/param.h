@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.11.12.4 2002/03/06 02:04:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.11.12.5 2002/03/28 11:26:46 niklas Exp $ */
 /*      $NetBSD: param.h,v 1.39 1999/10/22 21:14:34 ragge Exp $    */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -213,7 +213,7 @@
 #ifndef	_LOCORE
 #include <machine/cpu.h>
 
-void	delay __P((int));
+void	delay(int);
 /* inline macros used inside kernel */
 #include <machine/macros.h>
 #endif

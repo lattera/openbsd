@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.c,v 1.3.2.2 2001/12/05 00:43:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.c,v 1.3.2.3 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: m68k4k_exec.c,v 1.1 1996/09/10 22:01:20 thorpej Exp $	*/
 
 /*
@@ -58,9 +58,9 @@
 
 #include <compat/m68k4k/m68k4k_exec.h>
 
-int	exec_m68k4k_prep_zmagic __P((struct proc *, struct exec_package *));
-int	exec_m68k4k_prep_nmagic __P((struct proc *, struct exec_package *));
-int	exec_m68k4k_prep_omagic __P((struct proc *, struct exec_package *));
+int	exec_m68k4k_prep_zmagic(struct proc *, struct exec_package *);
+int	exec_m68k4k_prep_nmagic(struct proc *, struct exec_package *);
+int	exec_m68k4k_prep_omagic(struct proc *, struct exec_package *);
 
 /*
  * exec_m68k4k_makecmds(): Check if it's an a.out-format executable

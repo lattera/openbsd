@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/srt0.s,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: srt0.s,v 1.1 2000/08/20 14:58:42 mrg Exp $	*/
 
 /*
@@ -118,7 +118,7 @@ _start:
 	 nop
 
 /*
- * void syncicache(void* start, int size)
+ * void syncicache(void *start, int size)
  *
  * I$ flush.  Really simple.  Just flush over the whole range.
  */

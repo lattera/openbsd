@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/promdev.c,v 1.5.6.1 2001/10/31 03:08:00 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/promdev.c,v 1.5.6.2 2002/03/28 11:26:45 niklas Exp $ */
 /*	$NetBSD: promdev.c,v 1.7 1996/01/29 23:41:10 gwr Exp $ */
 
 /*
@@ -40,7 +40,7 @@
 #include "stand.h"
 #include "dvma.h"
 
-extern void set_pte __P((int, int));
+extern void set_pte(int, int);
 extern int debug;
 
 static int promdev_inuse;
@@ -107,7 +107,7 @@ prom_iopen(si)
 		size = dip->d_dmabytes + NBPG;
 		addr = (int) dvma_alloc(size);
 		addr = m68k_round_page(addr);
-		si->si_dmaaddr = (char*) addr;
+		si->si_dmaaddr = (char *) addr;
 #ifdef	DEBUG_PROM
 		if (debug)
 			printf("prom_iopen: dmaaddr=0x%x\n", si->si_dmaaddr);
@@ -222,5 +222,5 @@ found:
 		pte += 1;
 		length -= NBPG;
 	} while (length > 0);
-	return ((char*)(prom_devmap | (pa & PGOFSET)));
+	return ((char *)(prom_devmap | (pa & PGOFSET)));
 }

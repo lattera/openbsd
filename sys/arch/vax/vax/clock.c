@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.8.12.2 2001/10/31 03:08:01 nate Exp $	 */
+/*	$OpenBSD: src/sys/arch/vax/vax/clock.c,v 1.8.12.3 2002/03/28 11:26:46 niklas Exp $	 */
 /*	$NetBSD: clock.c,v 1.35 2000/06/04 06:16:58 matt Exp $	 */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.
@@ -44,8 +44,8 @@
 #include <machine/cpu.h>
 #include <machine/uvax.h>
 
-int	yeartonum __P((int));
-int	numtoyear __P((int));
+int	yeartonum(int);
+int	numtoyear(int);
 
 struct evcnt clock_intrcnt;
 

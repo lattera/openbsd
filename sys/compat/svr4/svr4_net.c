@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_net.c,v 1.9.4.4 2002/03/06 02:07:08 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_net.c,v 1.9.4.5 2002/03/28 11:28:07 niklas Exp $	 */
 /*	$NetBSD: svr4_net.c,v 1.12 1996/09/07 12:40:51 mycroft Exp $	 */
 
 /*
@@ -77,9 +77,9 @@ enum {
 	dev_unix_ord_stream	= 40
 };
 
-int svr4_netattach __P((int));
+int svr4_netattach(int);
 
-static int svr4_soo_close __P((struct file *fp, struct proc *p));
+static int svr4_soo_close(struct file *fp, struct proc *p);
 
 static struct fileops svr4_netops = {
 	soo_read, soo_write, soo_ioctl, soo_select, soo_kqfilter,

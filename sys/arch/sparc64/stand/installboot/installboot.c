@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/installboot/installboot.c,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/installboot/installboot.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: installboot.c,v 1.8 2001/02/19 22:48:59 cgd Exp $ */
 
 /*-
@@ -86,11 +86,11 @@ int32_t	*block_count_p;		/* size of this array */
 int32_t	*block_size_p;		/* filesystem block size */
 int32_t	max_block_count;
 
-char		*loadprotoblocks __P((char *, size_t *));
-int		loadblocknums __P((char *, int));
-static void	devread __P((int, void *, daddr_t, size_t, char *));
-static void	usage __P((void));
-int 		main __P((int, char *[]));
+char		*loadprotoblocks(char *, size_t *);
+int		loadblocknums(char *, int);
+static void	devread(int, void *, daddr_t, size_t, char *);
+static void	usage(void);
+int 		main(int, char *[]);
 
 static void
 usage()

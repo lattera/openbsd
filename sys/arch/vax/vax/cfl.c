@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cfl.c,v 1.1.12.1 2001/05/14 21:38:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cfl.c,v 1.1.12.2 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: cfl.c,v 1.2 1998/04/13 12:10:26 ragge Exp $	*/
 /*-
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -87,11 +87,11 @@ struct {
 #define	CFL_FINISH	6
 #define	CFL_GETIN	7
 
-static	void cflstart __P((void));
+static	void cflstart(void);
 
-int	cflopen __P((dev_t, int, struct proc *));
-int	cflclose __P((dev_t, int, struct proc *));
-int	cflrw __P((dev_t, struct uio *, int));
+int	cflopen(dev_t, int, struct proc *);
+int	cflclose(dev_t, int, struct proc *);
+int	cflrw(dev_t, struct uio *, int);
 
 /*ARGSUSED*/
 int
@@ -200,7 +200,7 @@ cflstart()
 #endif
 }
 
-void cfltint __P((int));
+void cfltint(int);
 
 void
 cfltint(arg)
@@ -234,7 +234,7 @@ cfltint(arg)
 	}
 }
 
-void cflrint __P((int));
+void cflrint(int);
 
 void
 cflrint(ch)

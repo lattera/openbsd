@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/intr.h,v 1.1.2.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/intr.h,v 1.1.2.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.8 2001/01/14 23:50:30 thorpej Exp $ */
 
 /*-
@@ -55,10 +55,10 @@
 #define	IPL_HIGH	PIL_HIGH	/* everything */
 
 void *
-softintr_establish __P((int level, void (*fun)(void *), void *arg));
+softintr_establish(int level, void (*fun)(void *), void *arg);
 
 void
-softintr_disestablish __P((void *cookie));
+softintr_disestablish(void *cookie);
 
 void
-softintr_schedule __P((void *cookie));
+softintr_schedule(void *cookie);

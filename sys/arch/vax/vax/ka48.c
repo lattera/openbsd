@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.4 2002/03/28 11:26:46 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -55,13 +55,13 @@
 #include <machine/clock.h>
 #include <machine/vsbus.h>
 
-static	void	ka48_conf __P((void));
-static	void	ka48_steal_pages __P((void));
-static	void	ka48_memerr __P((void));
-static	int	ka48_mchk __P((caddr_t));
-static	void	ka48_halt __P((void));
-static	void	ka48_reboot __P((int));
-static	void	ka48_cache_enable __P((void));
+static	void	ka48_conf(void);
+static	void	ka48_steal_pages(void);
+static	void	ka48_memerr(void);
+static	int	ka48_mchk(caddr_t);
+static	void	ka48_halt(void);
+static	void	ka48_reboot(int);
+static	void	ka48_cache_enable(void);
 
 struct	vs_cpu *ka48_cpu;
 

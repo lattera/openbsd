@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_resource.c,v 1.2.6.1 2001/05/14 22:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_resource.c,v 1.2.6.2 2002/03/28 11:28:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Niklas Hallqvist
@@ -48,8 +48,8 @@
 #include <compat/linux/linux_syscallargs.h>
 
 /* linux_resource.c */
-int	linux_to_bsd_rlimit __P((u_int));
-int	linux_dogetrlimit __P((struct proc *, void *, register_t *, rlim_t));
+int	linux_to_bsd_rlimit(u_int);
+int	linux_dogetrlimit(struct proc *, void *, register_t *, rlim_t);
 
 static u_int linux_to_bsd_rlimit_map[] = {
 	RLIMIT_CPU,

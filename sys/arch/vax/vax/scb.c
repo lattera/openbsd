@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/scb.c,v 1.1.8.3 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/scb.c,v 1.1.8.4 2002/03/28 11:26:47 niklas Exp $	*/
 /*	$NetBSD: scb.c,v 1.12 2000/06/04 06:16:59 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
@@ -49,7 +49,7 @@
 struct scb *scb;
 struct ivec_dsp *scb_vec;
 
-static	void scb_stray __P((void *));
+static	void scb_stray(void *);
 static	volatile int vector, ipl, gotintr;
 
 /*

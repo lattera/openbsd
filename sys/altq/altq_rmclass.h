@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.1.2.1 2002/03/06 02:07:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$KAME: altq_rmclass.h,v 1.6 2000/12/09 09:22:44 kjc Exp $	*/
 
 /*
@@ -240,23 +240,23 @@ struct rm_ifdat {
 
 #define	is_a_parent_class(cl)	((cl)->children_ != NULL)
 
-extern rm_class_t *rmc_newclass __P((int, struct rm_ifdat *, u_int,
+extern rm_class_t *rmc_newclass(int, struct rm_ifdat *, u_int,
 				     void (*)(struct rm_class *,
 					      struct rm_class *),
 				     int, struct rm_class *, struct rm_class *,
-				     u_int, int, u_int, int, int));
-extern void	rmc_delete_class __P((struct rm_ifdat *, struct rm_class *));
-extern int 	rmc_modclass __P((struct rm_class *, u_int, int,
-				  u_int, int, u_int, int));
-extern void	rmc_init __P((struct ifaltq *, struct rm_ifdat *, u_int,
+				     u_int, int, u_int, int, int);
+extern void	rmc_delete_class(struct rm_ifdat *, struct rm_class *);
+extern int 	rmc_modclass(struct rm_class *, u_int, int,
+				  u_int, int, u_int, int);
+extern void	rmc_init(struct ifaltq *, struct rm_ifdat *, u_int,
 			      void (*)(struct ifaltq *),
-			      int, int, u_int, int, u_int, int));
-extern int	rmc_queue_packet __P((struct rm_class *, mbuf_t *));
-extern mbuf_t	*rmc_dequeue_next __P((struct rm_ifdat *, int));
-extern void	rmc_update_class_util __P((struct rm_ifdat *));
-extern void	rmc_delay_action __P((struct rm_class *, struct rm_class *));
-extern void	rmc_dropall __P((struct rm_class *));
-extern int	rmc_get_weight __P((struct rm_ifdat *, int));
+			      int, int, u_int, int, u_int, int);
+extern int	rmc_queue_packet(struct rm_class *, mbuf_t *);
+extern mbuf_t	*rmc_dequeue_next(struct rm_ifdat *, int);
+extern void	rmc_update_class_util(struct rm_ifdat *);
+extern void	rmc_delay_action(struct rm_class *, struct rm_class *);
+extern void	rmc_dropall(struct rm_class *);
+extern int	rmc_get_weight(struct rm_ifdat *, int);
 
 #endif /* _KERNEL */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/idprom.c,v 1.6 1997/01/16 04:03:46 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/idprom.c,v 1.6.14.1 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: idprom.c,v 1.13 1996/11/20 18:56:50 gwr Exp $	*/
 
 /*-
@@ -115,8 +115,8 @@ idprom_init()
 	} hid;
 
 	idp = &identity_prom;
-	dst = (char*)idp;
-	src = (char*)IDPROM_BASE;
+	dst = (char *)idp;
+	src = (char *)IDPROM_BASE;
 	len = IDPROM_SIZE;
 	xorsum = 0;	/* calculated as xor of data */
 

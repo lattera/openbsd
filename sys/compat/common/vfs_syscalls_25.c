@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_25.c,v 1.1.2.1 2002/03/06 02:07:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_25.c,v 1.1.2.2 2002/03/28 11:28:05 niklas Exp $	*/
 
 /*
  * Copyright (c) 1989, 1993
@@ -54,7 +54,7 @@
 
 #include <sys/syscallargs.h>
 
-void statfs_to_ostatfs __P((struct proc *, struct mount *, struct statfs *, struct ostatfs *));
+void statfs_to_ostatfs(struct proc *, struct mount *, struct statfs *, struct ostatfs *);
 
 /*
  * Convert struct statfs -> struct ostatfs

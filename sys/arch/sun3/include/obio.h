@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/obio.h,v 1.6.14.1 2001/05/14 21:37:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/obio.h,v 1.6.14.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: obio.h,v 1.16 1996/11/20 18:57:14 gwr Exp $	*/
 
 /*-
@@ -77,15 +77,15 @@
 
 #ifdef	_KERNEL
 
-caddr_t obio_alloc __P((int, int));
-caddr_t obio_vm_alloc __P((int));
-caddr_t obio_find_mapping __P((int pa, int size));
+caddr_t obio_alloc(int, int);
+caddr_t obio_vm_alloc(int);
+caddr_t obio_find_mapping(int pa, int size);
 
 /* routines called during earily startup */
-void obio_init __P((void));
-void zs_init __P((void));
-void eeprom_init __P((void));
-void intreg_init __P((void));
-void clock_init __P((void));
+void obio_init(void);
+void zs_init(void);
+void eeprom_init(void);
+void intreg_init(void);
+void clock_init(void);
 
 #endif	/* _KERNEL */

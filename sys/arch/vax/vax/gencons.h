@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/gencons.h,v 1.3.12.1 2001/05/14 21:38:52 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/gencons.h,v 1.3.12.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: gencons.h,v 1.9 2000/01/20 00:07:49 matt Exp $ */
 
 /*
@@ -69,4 +69,4 @@
 #define	SCB_G3T	0xdc
 
 /* Prototypes */
-void	gencnputc __P((dev_t, int));
+void	gencnputc(dev_t, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/sbi.c,v 1.7.12.1 2001/05/14 21:39:09 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/sbi.c,v 1.7.12.2 2002/03/28 11:26:47 niklas Exp $ */
 /*	$NetBSD: sbi.c,v 1.20 1999/08/07 10:36:50 ragge Exp $ */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.
@@ -43,9 +43,9 @@
 #include <machine/cpu.h>
 #include <machine/nexus.h>
 
-static	int sbi_print __P((void *, const char *));
-static	int sbi_match __P((struct device *, struct cfdata *, void *));
-static	void sbi_attach __P((struct device *, struct device *, void*));
+static	int sbi_print(void *, const char *);
+static	int sbi_match(struct device *, struct cfdata *, void *);
+static	void sbi_attach(struct device *, struct device *, void *);
 
 int
 sbi_print(aux, name)
@@ -106,7 +106,7 @@ sbi_attach(parent, self, aux)
 
 			sa.nexnum = nexnum;
 			sa.nexaddr = nexusP;
-			config_found(self, (void*)&sa, sbi_print);
+			config_found(self, (void *)&sa, sbi_print);
 		}
 	}
 }

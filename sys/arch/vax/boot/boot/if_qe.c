@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_qe.c,v 1.1.8.1 2001/05/14 21:37:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_qe.c,v 1.1.8.2 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: if_qe.c,v 1.2 1999/06/30 18:19:26 ragge Exp $ */
 
 /*
@@ -218,7 +218,7 @@ retry:
         if (len == 0)
 		goto retry;
 
-	bcopy((void*)sc->qein,pkt,len);
+	bcopy((void *)sc->qein,pkt,len);
 
 
 end:

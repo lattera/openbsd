@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_rio.c,v 1.1.2.1 2001/10/31 02:43:21 nate Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_rio.c,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$KAME: altq_rio.c,v 1.8 2000/12/14 08:12:46 thorpej Exp $	*/
 
 /*
@@ -169,12 +169,12 @@ static struct redparams default_rio_params[RIO_NDROPPREC] = {
 };
 
 /* internal function prototypes */
-static int rio_enqueue __P((struct ifaltq *, struct mbuf *,
-			    struct altq_pktattr *));
-static struct mbuf *rio_dequeue __P((struct ifaltq *, int));
-static int rio_request __P((struct ifaltq *, int, void *));
-static int rio_detach __P((rio_queue_t *));
-static int dscp2index __P((u_int8_t));
+static int rio_enqueue(struct ifaltq *, struct mbuf *,
+			    struct altq_pktattr *);
+static struct mbuf *rio_dequeue(struct ifaltq *, int);
+static int rio_request(struct ifaltq *, int, void *);
+static int rio_detach(rio_queue_t *);
+static int dscp2index(u_int8_t);
 
 /*
  * rio device interface

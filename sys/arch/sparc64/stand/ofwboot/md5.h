@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/md5.h,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/md5.h,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: md5.h,v 1.1 2000/08/20 14:58:38 mrg Exp $	*/
 
 /*
@@ -43,13 +43,13 @@ typedef struct MD5Context {
 } MD5_CTX;
 
 __BEGIN_DECLS
-void	MD5Init __P((MD5_CTX *));
-void	MD5Update __P((MD5_CTX *, const unsigned char *, unsigned int));
-void	MD5Final __P((unsigned char[16], MD5_CTX *));
+void	MD5Init(MD5_CTX *);
+void	MD5Update(MD5_CTX *, const unsigned char *, unsigned int);
+void	MD5Final(unsigned char[16], MD5_CTX *);
 #ifndef _KERNEL
-char	*MD5End __P((MD5_CTX *, char *));
-char	*MD5File __P((const char *, char *));
-char	*MD5Data __P((const unsigned char *, unsigned int, char *));
+char	*MD5End(MD5_CTX *, char *);
+char	*MD5File(const char *, char *);
+char	*MD5Data(const unsigned char *, unsigned int, char *);
 #endif /* _KERNEL */
 __END_DECLS
 

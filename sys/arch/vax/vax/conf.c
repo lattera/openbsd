@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.4 2002/03/06 02:04:48 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.5 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: conf.c,v 1.44 1999/10/27 16:38:54 ragge Exp $	*/
 
 /*-
@@ -244,7 +244,7 @@ struct	consdev constab[]={
 };
 
 /* Special for console storage */
-#define dev_type_rw(n)	int n __P((dev_t, int, int, struct proc *))
+#define dev_type_rw(n)	int n(dev_t, int, int, struct proc *)
 
 /* plotters - open, close, write, ioctl, select*/
 #define cdev_plotter_init(c,n) { \

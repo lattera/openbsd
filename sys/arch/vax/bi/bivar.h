@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/bi/Attic/bivar.h,v 1.2.12.1 2001/05/14 21:37:38 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/bivar.h,v 1.2.12.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: bivar.h,v 1.5 2000/03/26 11:45:04 ragge Exp $ */
 /*
  * Copyright (c) 1996, 1999 Ludd, University of Lule}, Sweden.
@@ -70,5 +70,5 @@ struct bi_list {
 };
 
 /* Prototype */
-void	bi_attach __P((struct bi_softc *));
-void	bi_intr_establish __P((void *, int, void (*)(void *), void *));
+void	bi_attach(struct bi_softc *);
+void	bi_intr_establish(void *, int, void (*)(void *), void *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/psychovar.h,v 1.2.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/psychovar.h,v 1.2.4.3 2002/03/28 11:23:51 niklas Exp $	*/
 /*	$NetBSD: psychovar.h,v 1.6 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*
@@ -110,8 +110,8 @@ struct psycho_softc {
 };
 
 /* config space is per-psycho.  mem/io/dma are per-pci bus */
-bus_dma_tag_t psycho_alloc_dma_tag __P((struct psycho_pbm *));
-bus_space_tag_t psycho_alloc_bus_tag __P((struct psycho_pbm *, int));
+bus_dma_tag_t psycho_alloc_dma_tag(struct psycho_pbm *);
+bus_space_tag_t psycho_alloc_bus_tag(struct psycho_pbm *, int);
 
 #define psycho_alloc_config_tag(pp) psycho_alloc_bus_tag((pp), PCI_CONFIG_BUS_SPACE)
 #define psycho_alloc_mem_tag(pp) psycho_alloc_bus_tag((pp), PCI_MEMORY_BUS_SPACE)

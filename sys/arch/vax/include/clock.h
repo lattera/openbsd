@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/clock.h,v 1.3.12.1 2001/05/14 21:37:58 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/clock.h,v 1.3.12.2 2002/03/28 11:26:46 niklas Exp $ */
 /*	$NetBSD: clock.h,v 1.4 1999/09/06 19:52:53 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -70,7 +70,7 @@ extern	volatile short *clk_page;
 extern	int clk_adrshift, clk_tweak;
 
 /* Prototypes */
-int	generic_clkread __P((time_t));
-void	generic_clkwrite __P((void));
-int	chip_clkread __P((time_t));
-void	chip_clkwrite __P((void));
+int	generic_clkread(time_t);
+void	generic_clkwrite(void);
+int	chip_clkread(time_t);
+void	chip_clkwrite(void);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/db_machdep.h,v 1.6.12.2 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/db_machdep.h,v 1.6.12.3 2002/03/28 11:26:46 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.6 1998/08/10 14:33:33 ragge Exp $	*/
 
 /* 
@@ -73,7 +73,7 @@ db_regs_t	ddb_regs;	/* register state */
 #define inst_store(ins)		0
 
 /* Prototypes */
-void	kdb_trap __P((struct trapframe *));
+void	kdb_trap(struct trapframe *);
 
 /*
  * We use a.out symbols in DDB.

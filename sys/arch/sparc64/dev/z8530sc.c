@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530sc.c,v 1.1.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530sc.c,v 1.1.4.2 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: z8530sc.c,v 1.15 2001/07/07 15:53:22 thorpej Exp $	*/
 
 /*
@@ -311,10 +311,10 @@ zsc_intr_soft(arg)
  * Provide a null zs "ops" vector.
  */
 
-static void zsnull_rxint   __P((struct zs_chanstate *));
-static void zsnull_stint   __P((struct zs_chanstate *, int));
-static void zsnull_txint   __P((struct zs_chanstate *));
-static void zsnull_softint __P((struct zs_chanstate *));
+static void zsnull_rxint(struct zs_chanstate *);
+static void zsnull_stint(struct zs_chanstate *, int);
+static void zsnull_txint(struct zs_chanstate *);
+static void zsnull_softint(struct zs_chanstate *);
 
 static void
 zsnull_rxint(cs)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.5 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.6 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.19 1995/08/08 21:09:01 gwr Exp $	*/
 
 /*
@@ -64,7 +64,7 @@
 #include <machine/pte.h>
 #include <machine/pmap.h>
 
-extern int ledrw __P((struct uio *));
+extern int ledrw(struct uio *);
 
 static caddr_t devzeropage;
 

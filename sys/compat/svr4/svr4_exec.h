@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_exec.h,v 1.4.4.1 2001/05/14 22:05:24 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_exec.h,v 1.4.4.2 2002/03/28 11:28:07 niklas Exp $	 */
 /*	$NetBSD: svr4_exec.h,v 1.7 1995/07/02 06:16:06 christos Exp $	 */
 
 /*
@@ -62,7 +62,7 @@
 # define SVR4_INTERP_ADDR	0
 #endif
 
-int svr4_elf_probe __P((struct proc *, struct exec_package *, char *, u_long *,
-    u_int8_t *));
+int svr4_elf_probe(struct proc *, struct exec_package *, char *, u_long *,
+    u_int8_t *);
 
 #endif /* !_SVR4_EXEC_H_ */

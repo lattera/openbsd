@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.3.4.3 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.3.4.4 2002/03/28 11:23:52 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.18 2001/05/01 02:19:19 thorpej Exp $ */
 
 /*
@@ -172,7 +172,7 @@ struct pmap_physseg {
 
 #if defined (_KERNEL) && !defined(_LOCORE)
 struct vm_map;
-vaddr_t		dvma_mapin __P((struct vm_map *, vaddr_t, int, int));
-void		dvma_mapout __P((vaddr_t, vaddr_t, int));
+vaddr_t		dvma_mapin(struct vm_map *, vaddr_t, int, int);
+void		dvma_mapout(vaddr_t, vaddr_t, int);
 #endif
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.6 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.7 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.35 1996/04/26 18:38:06 gwr Exp $	*/
 
 /*
@@ -119,7 +119,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	 * Leave one word unused at the end of the kernel stack
 	 * so the system stack pointer stays within its stack.
 	 */
-	p2tf = (struct trapframe *)((char*)p2->p_addr + USPACE-4) - 1;
+	p2tf = (struct trapframe *)((char *)p2->p_addr + USPACE-4) - 1;
 	p2->p_md.md_regs = (int *)p2tf;
 	bcopy(p1->p_md.md_regs, p2tf, sizeof(*p2tf));
 

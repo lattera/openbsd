@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_ptrace.c,v 1.3.16.1 2001/05/14 22:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_ptrace.c,v 1.3.16.2 2002/03/28 11:28:05 niklas Exp $	*/
 /*	$NetBSD: freebsd_ptrace.c,v 1.2 1996/05/03 17:03:12 christos Exp $	*/
 
 /*-
@@ -107,13 +107,11 @@ freebsd_sys_ptrace(p, v, retval)
 	case FREEBSD_PT_WRITE_U:
 		sg = stackgap_init(p->p_emul);
 		nrp = stackgap_alloc(&sg, sizeof(*nrp));
-#ifdef PT_GETREGS
 		SCARG(&npa, req) = PT_GETREGS;
 		SCARG(&npa, pid) = SCARG(uap, pid);
 		SCARG(&npa, addr) = (caddr_t)&nrp->regs;
 		if ((error = sys_ptrace(p, &npa, retval)) != 0)
 			return error;
-#endif
 #ifdef PT_GETFPREGS
 		SCARG(&npa, req) = PT_GETFPREGS;
 		SCARG(&npa, pid) = SCARG(uap, pid);
@@ -134,13 +132,11 @@ freebsd_sys_ptrace(p, v, retval)
 			    return error;
 			freebsd_to_netbsd_ptrace_regs(&fr,
 						&nrp->regs, &nrp->fpregs);
-#ifdef PT_SETREGS
 			SCARG(&npa, req) = PT_SETREGS;
 			SCARG(&npa, pid) = SCARG(uap, pid);
 			SCARG(&npa, addr) = (caddr_t)&nrp->regs;
 			if ((error = sys_ptrace(p, &npa, retval)) != 0)
 				return error;
-#endif
 #ifdef PT_SETFPREGS
 			SCARG(&npa, req) = PT_SETFPREGS;
 			SCARG(&npa, pid) = SCARG(uap, pid);

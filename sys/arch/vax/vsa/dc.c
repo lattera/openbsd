@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.3 2002/03/06 02:04:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.4 2002/03/28 11:26:47 niklas Exp $	*/
 /*	$NetBSD: dc.c,v 1.4 1996/10/13 03:36:10 christos Exp $	*/
 /*-
  * Copyright (c) 1992, 1993
@@ -127,11 +127,11 @@ struct dc_softc {
  * Use the statically-allocated softc until old autoconfig code and
  * config.old are completely gone.
  */
-int	dcmatch	 __P((struct device * parent, void *cfdata, void *aux));
-void	dcattach __P((struct device *parent, struct device *self, void *aux));
+int	dcmatch(struct device * parent, void *cfdata, void *aux);
+void	dcattach(struct device *parent, struct device *self, void *aux);
 
-int	dc_doprobe __P((void *addr, int unit, int flags, int pri));
-int	dcintr __P((void * xxxunit));
+int	dc_doprobe(void *addr, int unit, int flags, int pri);
+int	dcintr(void * xxxunit);
 
 struct	cfdriver dc_cd = {
 	NULL, "dc", DV_TTY
@@ -143,12 +143,12 @@ struct	cfattach dc_ca = {
 
 #define NDCLINE		(NDC*4)
 
-void dcstart	__P((struct tty *));
-void dcxint	__P((struct tty *));
-void dcPutc	__P((dev_t, int));
-void dcscan	__P((void *));
-int dcGetc	__P((dev_t));
-int dcparam	__P((struct tty *, struct termios *));
+void dcstart(struct tty *);
+void dcxint(struct tty *);
+void dcPutc(dev_t, int);
+void dcscan(void *);
+int dcGetc(dev_t);
+int dcparam(struct tty *, struct termios *);
 
 struct	tty *dc_tty[NDCLINE];
 int	dc_cnt = NDCLINE;
@@ -252,7 +252,7 @@ dcattach(parent, self, aux)
 	u_long dcaddr;
 
 	dcaddr = (u_long)ca->ca_ioaddr;
-	(void) dc_doprobe((void*)uvax_phys2virt(dcaddr),
+	(void) dc_doprobe((void *)uvax_phys2virt(dcaddr),
 			  self->dv_unit, self->dv_cfdata->cf_flags,
 			  ca->ca_intslot);
 

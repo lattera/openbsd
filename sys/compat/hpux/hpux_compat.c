@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.4 2002/03/06 02:07:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.10.12.5 2002/03/28 11:28:06 niklas Exp $	*/
 /*	$NetBSD: hpux_compat.c,v 1.35 1997/05/08 16:19:48 mycroft Exp $	*/
 
 /*
@@ -112,11 +112,11 @@ extern char sigcode[], esigcode[];
 extern struct sysent hpux_sysent[];
 extern char *hpux_syscallnames[];
 
-int	hpux_shmctl1 __P((struct proc *, struct hpux_sys_shmctl_args *,
-	    register_t *, int));
-int	hpuxtobsdioctl __P((u_long));
+int	hpux_shmctl1(struct proc *, struct hpux_sys_shmctl_args *,
+	    register_t *, int);
+int	hpuxtobsdioctl(u_long);
 
-static int	hpux_scale __P((struct timeval *));
+static int	hpux_scale(struct timeval *);
 
 /*
  * HP-UX fork and vfork need to map the EAGAIN return value appropriately.
@@ -386,8 +386,7 @@ hpux_sys_utssys(p, v, retval)
 	int i;
 	int error;
 	struct hpux_utsname	ut;
-	extern char ostype[], hostname[], osrelease[], version[];
-	extern char machine[];
+	extern char hostname[], machine[];
 
 	switch (SCARG(uap, request)) {
 	/* uname */
@@ -553,6 +552,8 @@ hpux_sys_rtprio(cp, v, retval)
 
 /* hpux_sys_advise() is found in hpux_machdep.c */
 
+#ifdef PTRACE
+
 int
 hpux_sys_ptrace(p, v, retval)
 	struct proc *p;
@@ -630,6 +631,8 @@ hpux_sys_ptrace(p, v, retval)
 	return (error);
 }
 
+#endif	/* PTRACE */
+
 #ifdef SYSVSHM
 #include <sys/shm.h>
 
@@ -669,7 +672,7 @@ hpux_shmctl1(p, uap, retval, isnew)
 	struct ucred *cred = p->p_ucred;
 	struct hpux_shmid_ds sbuf;
 	int error;
-	extern struct shmid_ds *shm_find_segment_by_shmid __P((int));
+	extern struct shmid_ds *shm_find_segment_by_shmid(int);
 
 	if ((shp = shm_find_segment_by_shmid(SCARG(uap, shmid))) == NULL)
 		return EINVAL;

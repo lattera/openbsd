@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/stub.c,v 1.6.8.2 2001/07/04 10:24:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/stub.c,v 1.6.8.3 2002/03/28 11:26:45 niklas Exp $	*/
 /*	$NetBSD: stub.c,v 1.13 1996/11/20 18:57:37 gwr Exp $	*/
 
 /*-
@@ -47,7 +47,7 @@
 #include <machine/machdep.h>
 
 #ifndef DDB
-void  Debugger __P((void));
+void  Debugger(void);
 
 /*
  * When DDB is included, Debugger() comes from db_interface.c
