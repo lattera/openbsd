@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.9 2003/10/16 03:54:48 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.10 2005/03/29 14:32:57 miod Exp $	*/
 
 /*-
  * Copyright (c) 2001 Alexander Guy.  All rights reserved.
@@ -219,6 +219,7 @@ apmioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	case APM_IOC_STANDBY:
 		if ((flag & FWRITE) == 0)
 			error = EBADF;
+		break;
 	case APM_IOC_SUSPEND:
 		if ((flag & FWRITE) == 0)
 			error = EBADF;
