@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.2 2001/12/05 00:39:11 niklas Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.3 2002/03/06 01:06:10 niklas Exp $
 #
 # PPC GENERIC config file
 #
@@ -17,6 +17,7 @@ option		PCIVERBOSE
 option		USBVERBOSE
 #option		MACOBIOVERBOSE
 #option		PPC_VECTOR_SUPPORTED
+option		APERTURE	# in-kernel aperture driver for XFree86
 
 option		USER_PCICONF	# user-space PCI configuration
 
@@ -55,6 +56,9 @@ vgafb0		at pci? dev ? function ?	# PCI VGA graphics
 pciide*		at pci? dev ? function ?
 macobio0	at pci? dev ? function ?
 gm*		at pci? dev ? function ?	# GMAC ethernet
+gem*		at pci? disable dev ? function ?	# GMAC ethernet
+hme*		at pci? dev ? function ?	# HME ethernet
+dc*		at pci? dev ? function ?	# DEC Tulip 21143 clones
 an*		at pci? dev ? function ?	# Cisco/Aironet
 iop*		at pci? dev ? function ?	# I2O processor
 ioprbs*		at iop? tid ?			# I2O arrays
@@ -75,6 +79,8 @@ brgphy*		at mii? phy ?			# Broadcom 10/100/1000 PHYs
 bmtphy*		at mii? phy ?			# Broadcom 10/100 PHYs 
 ukphy*		at mii? phy ?			# generic unknown PHYs
 
+hifn*		at pci? dev ? function ?	# Hifn7751
+
 macintr0	at macobio?			# old interrupt controller
 openpic0	at macobio?			# openpic interrupt controller
 bm*		at macobio?			# BMAC ethernet
@@ -93,7 +99,7 @@ akbd*		at adb?				# ADB keyboard
 wskbd*		at akbd? console ?
 ams*		at adb?				# ADB mouse
 wsmouse*	at ams?	mux 0
-abtn*		at adb?				# ADB button?
+#abtn*		at adb?				# ADB button?
 zsc*		at macobio?
 zstty*		at zsc? channel ?
 
@@ -140,6 +146,8 @@ umass*		at uhub? port ? configuration ? # USB Mass Storage devices
 scsibus*	at umass?
 kue*		at uhub? port ?			# Kawasaki KL5KUSB101B
 aue*		at uhub? port ?			# USB EtherNet 
+uplcom* 	at uhub? port ?            # I/O DATA USB-RSAQ2 serial adapter
+ucom*   	at uplcom? portno ?
 
 wsdisplay*	at vgafb?
 wskbd*		at ukbd? console ?

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/disksubr.c,v 1.5.2.1 2001/04/18 16:06:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/disksubr.c,v 1.5.2.2 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -383,6 +383,8 @@ readdoslabel(bp, strat, lp, osdep, partoffp, cylp, spoofonly)
 		while (wander && n < 8 && loop < 8) {
 			loop++;
 			wander = 0;
+			if (part_blkno < extoff)
+				part_blkno = extoff;
 
 			/* read boot record */
 			bp->b_blkno = part_blkno;
@@ -490,8 +492,10 @@ donot:
 					break;
 				case DOSPTYP_EXTEND:
 					part_blkno = dp2->dp_start + extoff;
-					if (!extoff)
+					if (!extoff) {
 						extoff = dp2->dp_start;
+						part_blkno = 0;
+					}
 					wander = 1;
 					break;
 				default:

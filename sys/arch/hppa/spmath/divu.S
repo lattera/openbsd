@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/divu.S,v 1.3.8.1 2001/04/18 16:06:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/divu.S,v 1.3.8.2 2002/03/06 00:57:23 niklas Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.
@@ -58,7 +58,7 @@ tp	.reg		%r6	/* temp. reg. */
 	.text
 
 /*****************************************************************************/
-ENTRY(divu)
+LEAF_ENTRY(divu)
 	stws,ma		rem,4(sp)		; save registers on stack
 	stws,ma		quo,4(sp)		; save registers on stack
 	stws,ma		dvr,4(sp)		; save registers on stack

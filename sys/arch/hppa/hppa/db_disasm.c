@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.2 2001/04/18 16:06:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.3 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -1761,8 +1761,7 @@ beDasm(i, ofs, w)
 		s[0] = '\0';
 
 	p =  Nu(w)? ",n":"";
-	db_printf("%s\tR'%s%X(%%sr%d,%%r%d)", p, (d < 2048? "R'":""),
-	    s, d, Sr(w), Rsb(w));
+	db_printf("%s\tR'%s%X(%%sr%d,%%r%d)", p, s, d, Sr(w), Rsb(w));
 	return (1);
 }
 
@@ -2316,7 +2315,7 @@ fmpyaddDasm(i, ofs, w)
 
 	if (Rsd(w) == 0)
 		db_printf("\t%%fcfxt,%s,%%f%s,%%f%s,%%f%s",
-		    ((SinglePrec(w)) ? "sgl" : "dbl"), ms1, ms2, mt, ad);
+		    ((SinglePrec(w)) ? "sgl" : "dbl"), ms1, ms2, mt);
 	else
 		db_printf("add%s\t%%f%s,%%f%s,%%f%s,%%f%s,%%f%s",
 		    ((SinglePrec(w)) ? "sgl" : "dbl"), ms1, ms2, mt, as, ad);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/intr.h,v 1.3.4.2 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/intr.h,v 1.3.4.3 2002/03/06 00:57:22 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.2 1997/07/24 05:43:08 scottr Exp $	*/
 
 /*-
@@ -151,7 +151,7 @@ extern	unsigned short hp300_impipl;
 #define	splimp()		_splraise(hp300_impipl)
 #define	splclock()		spl6()
 #define	splstatclock()		spl6()
-#define	splvm()			spl6()
+#define	splvm()			splimp()
 #define	splhigh()		spl7()
 
 /* watch out for side effects */

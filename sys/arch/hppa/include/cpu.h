@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.4 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.5 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -80,6 +80,7 @@ extern const char *cpu_typename;
  * COPR/SFUs
  */
 #define	HPPA_FPUS	0xc0
+#define	HPPA_FPUVER(w)	(((w) & 0x003ff800) >> 11)
 #define	HPPA_PMSFUS	0x20	/* ??? */
 
 /*
@@ -124,20 +125,11 @@ extern int want_resched;
 
 #define DELAY(x) delay(x)
 
-static __inline long
-kvtop (const caddr_t va)
-{
-	long ret;
-	__asm __volatile ("lpa %%r0(%1), %0" : "=r" (ret) : "r" (va));
-	return ret;
-}
-
 extern int (*cpu_desidhash) __P((void));
 
 void	delay __P((u_int us));
 void	hppa_init __P((paddr_t start));
 void	trap __P((int type, struct trapframe *frame));
-int	dma_cachectl __P((caddr_t p, int size));
 int	spcopy __P((pa_space_t ssp, const void *src,
 		    pa_space_t dsp, void *dst, size_t size));
 int	spstrcpy __P((pa_space_t ssp, const void *src,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.9 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.10 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -158,7 +158,7 @@ extern	vm_offset_t avail_end;
 #define	IDTVEC(name)	__CONCAT(X,name)
 /* default interrupt vector table entries */
 typedef int (*vector) __P((void));
-extern vector IDTVEC(intr)[], IDTVEC(fast)[];
+extern vector IDTVEC(intr)[];
 void isa_strayintr __P((int));
 void intr_calculatemasks __P((void));
 int fakeintr __P((void *));
@@ -303,7 +303,6 @@ isa_strayintr(irq)
 		    intrstray[irq] >= 5 ? "; stopped logging" : "");
 }
 
-int fastvec;
 int intrtype[ICU_LEN], intrmask[ICU_LEN], intrlevel[ICU_LEN];
 int iminlevel[ICU_LEN], imaxlevel[ICU_LEN];
 struct intrhand *intrhand[ICU_LEN];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.4 2001/12/05 00:39:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.5 2002/03/06 01:07:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -65,11 +65,11 @@
 #include <m68k/param.h>
 
 /*
- * Size of kernel malloc arena in logical pages
- */ 
-#ifndef	NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(2048 * 1024 / PAGE_SIZE)
-#endif
+ * Minimum and maximum sizes of the kernel malloc arena in PAGE_SIZE-sized
+ * logical pages.
+ */
+#define	NKMEMPAGES_MIN_DEFAULT	((2 * 1024 * 1024) >> PAGE_SHIFT)
+#define	NKMEMPAGES_MAX_DEFAULT	((2 * 1024 * 1024) >> PAGE_SHIFT)
 
 /*
  * spl functions; all but spl0 are done in-line

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.1 2001/04/18 16:05:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mongoose.c,v 1.6.2.2 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -335,7 +335,7 @@ mg_intr(void *v)
 	int s, irq = 0;
 
 	iv = &sc->sc_iv[irq];
-	s = splx(iv->iv_pri);
+	s = splraise(iv->iv_pri);
 	(iv->iv_handler)(iv->iv_arg);
 	splx(s);
 

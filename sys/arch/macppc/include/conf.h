@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/conf.h,v 1.3.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/conf.h,v 1.3.4.2 2002/03/06 01:06:11 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.2 1996/05/05 19:28:34 christos Exp $	*/
 
 /*
@@ -45,3 +45,5 @@ cdev_decl(mm);
 
 
 cdev_decl(zs);
+
+cdev_decl(crypto);

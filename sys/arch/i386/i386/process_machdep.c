@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7.16.1 2001/07/14 10:02:31 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7.16.2 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.22 1996/05/03 19:42:25 christos Exp $	*/
 
 /*
@@ -110,18 +110,18 @@ process_read_regs(p, regs)
 
 #ifdef VM86
 	if (tf->tf_eflags & PSL_VM) {
-		regs->r_gs = tf->tf_vm86_gs;
-		regs->r_fs = tf->tf_vm86_fs;
-		regs->r_es = tf->tf_vm86_es;
-		regs->r_ds = tf->tf_vm86_ds;
+		regs->r_gs = tf->tf_vm86_gs & 0xffff;
+		regs->r_fs = tf->tf_vm86_fs & 0xffff;
+		regs->r_es = tf->tf_vm86_es & 0xffff;
+		regs->r_ds = tf->tf_vm86_ds & 0xffff;
 		regs->r_eflags = get_vflags(p);
 	} else
 #endif
 	{
-		regs->r_gs = pcb->pcb_gs;
-		regs->r_fs = pcb->pcb_fs;
-		regs->r_es = tf->tf_es;
-		regs->r_ds = tf->tf_ds;
+		regs->r_gs = pcb->pcb_gs & 0xffff;
+		regs->r_fs = pcb->pcb_fs & 0xffff;
+		regs->r_es = tf->tf_es & 0xffff;
+		regs->r_ds = tf->tf_ds & 0xffff;
 		regs->r_eflags = tf->tf_eflags;
 	}
 	regs->r_edi = tf->tf_edi;
@@ -132,9 +132,9 @@ process_read_regs(p, regs)
 	regs->r_ecx = tf->tf_ecx;
 	regs->r_eax = tf->tf_eax;
 	regs->r_eip = tf->tf_eip;
-	regs->r_cs = tf->tf_cs;
+	regs->r_cs = tf->tf_cs & 0xffff;
 	regs->r_esp = tf->tf_esp;
-	regs->r_ss = tf->tf_ss;
+	regs->r_ss = tf->tf_ss & 0xffff;
 
 	return (0);
 }
@@ -169,10 +169,10 @@ process_write_regs(p, regs)
 
 #ifdef VM86
 	if (tf->tf_eflags & PSL_VM) {
-		tf->tf_vm86_gs = regs->r_gs;
-		tf->tf_vm86_fs = regs->r_fs;
-		tf->tf_vm86_es = regs->r_es;
-		tf->tf_vm86_ds = regs->r_ds;
+		tf->tf_vm86_gs = regs->r_gs & 0xffff;
+		tf->tf_vm86_fs = regs->r_fs & 0xffff;
+		tf->tf_vm86_es = regs->r_es & 0xffff;
+		tf->tf_vm86_ds = regs->r_ds & 0xffff;
 		set_vflags(p, regs->r_eflags);
 	} else
 #endif
@@ -206,10 +206,10 @@ process_write_regs(p, regs)
 		     !valid_sel(regs->r_fs) && !null_sel(regs->r_fs)))
 			return (EINVAL);
 
-		pcb->pcb_gs = regs->r_gs;
-		pcb->pcb_fs = regs->r_fs;
-		tf->tf_es = regs->r_es;
-		tf->tf_ds = regs->r_ds;
+		pcb->pcb_gs = regs->r_gs & 0xffff;
+		pcb->pcb_fs = regs->r_fs & 0xffff;
+		tf->tf_es = regs->r_es & 0xffff;
+		tf->tf_ds = regs->r_ds & 0xffff;
 		tf->tf_eflags = regs->r_eflags;
 	}
 	tf->tf_edi = regs->r_edi;
@@ -220,9 +220,9 @@ process_write_regs(p, regs)
 	tf->tf_ecx = regs->r_ecx;
 	tf->tf_eax = regs->r_eax;
 	tf->tf_eip = regs->r_eip;
-	tf->tf_cs = regs->r_cs;
+	tf->tf_cs = regs->r_cs & 0xffff;
 	tf->tf_esp = regs->r_esp;
-	tf->tf_ss = regs->r_ss;
+	tf->tf_ss = regs->r_ss & 0xffff;
 
 	return (0);
 }

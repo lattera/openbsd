@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.2 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.3 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -57,6 +57,11 @@ struct hppa_mod_info {
 	int	mi_sv;
 	const char *mi_name;
 };
+
+extern void (*cold_hook) __P((int));
+#define	HPPA_COLD_COLD	0
+#define	HPPA_COLD_HOT	1   
+#define	HPPA_COLD_OFF	2
 
 struct device;
 

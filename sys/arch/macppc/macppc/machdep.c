@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.3 2001/12/05 00:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.4 2002/03/06 01:06:11 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -40,7 +40,6 @@
 #include <sys/timeout.h>
 #include <sys/exec.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
 #include <sys/mbuf.h>
 #include <sys/mount.h>
 #include <sys/msgbuf.h>
@@ -114,16 +113,21 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef BUFPAGES
 int bufpages = BUFPAGES;
 #else
 int bufpages = 0;
 #endif
+int bufcachepercent = BUFCACHEPERCENT;
 
 struct bat battable[16];
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int astpending;
@@ -146,12 +150,20 @@ struct firmware *fw = NULL;
 void * startsym, *endsym;
 #endif
 
+#ifdef APERTURE
+#ifdef INSECURE
+int allowaperture = 1;
+#else
+int allowaperture = 0;
+#endif
+#endif
+
 void ofw_dbg(char *str);
 
 caddr_t allocsys __P((caddr_t));
 void dumpsys __P((void));
 void systype __P((char *name));
-void lcsplx __P((int ipl));	/* called from LCore */
+int lcsplx __P((int ipl));	/* called from LCore */
 int power4e_get_eth_addr __P((void));
 void nameinterrupt __P((int replace, char *newstr));
 void ppc_intr_setup __P((intr_establish_t *establish,
@@ -482,8 +494,7 @@ where = 3;
 	(void)power4e_get_eth_addr();
 
 #ifdef PPC_VECTOR_SUPPORTED
-        pool_init(&ppc_vecpl, sizeof(struct vreg), 16, 0, 0, "ppcvec",
-		    0, NULL, NULL, M_SUBPROC);
+        pool_init(&ppc_vecpl, sizeof(struct vreg), 16, 0, 0, "ppcvec", NULL);
 #endif /* PPC_VECTOR_SUPPORTED */
 
 }
@@ -583,6 +594,7 @@ cpu_startup()
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -597,9 +609,6 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 	printf("avail mem = %d (%dK)\n", ptoa(uvmexp.free),
 	    ptoa(uvmexp.free)/1024);
@@ -639,14 +648,11 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Decide on buffer space to use.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem * BUFCACHEPERCENT / 100;
+		bufpages = physmem * bufcachepercent / 100;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -825,6 +831,17 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	if (namelen != 1)
 		return ENOTDIR;
 	switch (name[0]) {
+		case CPU_ALLOWAPERTURE:
+#ifdef APERTURE
+		if (securelevel > 0) 
+			return (sysctl_rdint(oldp, oldlenp, newp, 
+			    allowaperture));
+		else
+			return (sysctl_int(oldp, oldlenp, newp, newlen, 
+			    &allowaperture));
+#else
+		return (sysctl_rdint(oldp, oldlenp, newp, 0));
+#endif
 	default:
 		return EOPNOTSUPP;
 	}
@@ -869,11 +886,15 @@ softnet(isr)
 #include <net/netisr_dispatch.h>
 }
 
-void
+int
 lcsplx(ipl)
 	int ipl;
 {
+	int oldcpl;
+
+	oldcpl = cpl;
 	splx(ipl);
+	return oldcpl;
 }
 
 /*
@@ -1157,10 +1178,10 @@ bus_space_unmap(t, bsh, size)
 	off = bsh - sva;
 	len = size+off;
 
+	/* do not free memory which was stolen from the vm system */
 	if (ppc_malloc_ok &&
 	  ((sva >= VM_MIN_KERNEL_ADDRESS) && (sva < VM_MAX_KERNEL_ADDRESS)) )
 	{
-		/* do not free memory which was stolen from the vm system */
 		uvm_km_free(phys_map, sva, len);
 	}
 #if 0
@@ -1174,7 +1195,10 @@ bus_space_unmap(t, bsh, size)
 	}
 #endif
 	pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
+	pmap_update(pmap_kernel());
 }
+
+vm_offset_t ppc_kvm_stolen = VM_KERN_ADDRESS_SIZE;
 
 int
 bus_mem_add_mapping(bpa, size, cacheable, bshp)
@@ -1203,9 +1227,12 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 
 		/* need to steal vm space before kernel vm is initialized */
 		alloc_size = round_page(size);
-		ppc_kvm_size -= alloc_size;
 
-		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_size;
+		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_stolen;
+		ppc_kvm_stolen += alloc_size;
+		if (ppc_kvm_stolen > SEGMENT_LENGTH) {
+			panic("ppc_kvm_stolen, out of space");
+		}
 	} else {
 		vaddr = uvm_km_valloc_wait(phys_map, len);
 	}
@@ -1300,7 +1327,7 @@ unmapiodev(kva, p_size)
 #endif
 		vaddr += PAGE_SIZE;
 	}
-	return;
+	pmap_update(pmap_kernel());
 }
 
 

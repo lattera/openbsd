@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_kn20aa.c,v 1.11.6.3 2001/11/13 21:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_kn20aa.c,v 1.11.6.4 2002/03/06 00:55:15 niklas Exp $	*/
 /*	$NetBSD: pci_kn20aa.c,v 1.21 1996/11/17 02:05:27 cgd Exp $	*/
 
 /*
@@ -84,7 +84,7 @@ pci_kn20aa_pickintr(ccp)
 	struct cia_config *ccp;
 {
 	int i;
-	bus_space_tag_t iot = ccp->cc_iot;
+	bus_space_tag_t iot = &ccp->cc_iot;
 	pci_chipset_tag_t pc = &ccp->cc_pc;
 
         pc->pc_intr_v = ccp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/disklabel.h,v 1.4 1997/11/30 06:12:24 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/disklabel.h,v 1.4.10.1 2002/03/06 01:05:35 niklas Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.2 1996/05/05 06:17:38 briggs Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 
 /* Just a dummy */
 struct cpu_disklabel {
-	int	cd_dummy;			/* must have one element. */
+	/* EMPTY */
 };
 
 #endif /* _MAC68K_DISKLABEL_H_ */

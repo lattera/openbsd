@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/bus.h,v 1.1.4.2 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/bus.h,v 1.1.4.3 2002/03/06 01:06:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Per Fogelstrom.  All rights reserved.
@@ -387,6 +387,8 @@ bus_space_copy_4 __P((void *v, bus_space_handle_t h1, bus_space_handle_t h2,
 #define	BUS_DMA_BUS2		0x20
 #define	BUS_DMA_BUS3		0x40
 #define	BUS_DMA_BUS4		0x80
+#define BUS_DMA_READ            0x100
+
 
 /* Forwards needed by prototypes below. */
 struct mbuf;

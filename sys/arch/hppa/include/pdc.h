@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.1 2001/04/18 16:06:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.11.4.2 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990 mt Xinu, Inc.  All rights reserved.
@@ -518,9 +518,18 @@ struct device_path {
 };
 
 /* dp_flags */
-#define	PF_AUTOBOOT	0x80	/* These two are PDC flags for how to locate */
-#define	PF_AUTOSEARCH	0x40	/*	the "boot device" */
-#define	PF_TIMER	0x0f	/* power of 2 # secs "boot timer" (0 == dflt) */
+#define	PZF_AUTOBOOT	0x80	/* These two are PDC flags for how to locate */
+#define	PZF_AUTOSEARCH	0x40	/*	the "boot device" */
+#define	PZF_TIMER	0x0f	/* power of 2 # secs "boot timer" (0 == dflt) */
+#define	PZF_BITS	"\020\010autoboot\07autosearch"
+
+/* macros to decode serial parameters out of dp_layers */
+#define	PZL_BITS(l)	(((l) & 0x03) + 5)
+#define	PZL_PARITY(l)	(((l) & 0x18) >> 3)
+#define	PZL_SPEED(l)	(((l) & 0x3c0) >> 6)
+#define	PZL_ENCODE(bits, parity, speed) \
+	(((bits) - 5) & 0x03) | (((parity) & 0x3) << 3) | \
+	(((speed) & 0x0f) << 6)
 
 /*
  * A processors Stable Storage is accessed through the PDC.  There are

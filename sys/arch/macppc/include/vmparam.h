@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.3 2001/12/05 00:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.4 2002/03/06 01:06:11 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -93,13 +93,10 @@
  * initialized.
  */
 #define VM_KERN_ADDR_SIZE_DEF SEGMENT_LENGTH
-extern vm_offset_t ppc_kvm_size;
-#define VM_KERN_ADDRESS_SIZE  (ppc_kvm_size)
+#define VM_KERN_ADDRESS_SIZE  (SEGMENT_LENGTH - (32 * 1024 * 1024))
 #define	VM_MAX_KERNEL_ADDRESS	((vm_offset_t)((KERNEL_SR << ADDR_SR_SHFT) \
-						+ SEGMENT_LENGTH))
+						+ VM_KERN_ADDRESS_SIZE))
 
-#define	VM_KMEM_SIZE		(NKMEMCLUSTERS * PAGE_SIZE)
-#define	VM_MBUF_SIZE		(NMBCLUSTERS * PAGE_SIZE)
 #define	VM_PHYS_SIZE		(USRIOSIZE * PAGE_SIZE)
 
 #define __HAVE_PMAP_PHYSSEG

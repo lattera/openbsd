@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.4 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.5 2002/03/06 00:56:19 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.16 1997/07/12 16:18:36 perry Exp $	*/
 
 /*
@@ -129,8 +129,6 @@
 /*
  * virtual sizes (bytes) for various kernel submaps
  */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*PAGE_SIZE)
 #define VM_PHYS_SIZE		(USRIOSIZE*PAGE_SIZE)
 
 #define VM_PHYSSEG_MAX		(16)

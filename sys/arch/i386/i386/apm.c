@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.4 2001/10/31 03:01:11 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.5 2002/03/06 01:01:00 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1998-2001 Michael Shalayeff. All rights reserved.
@@ -46,7 +46,6 @@
 #include <sys/kernel.h>
 #include <sys/kthread.h>
 #include <sys/lock.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/malloc.h>
@@ -306,10 +305,13 @@ apm_power_print (sc, regs)
 				printf("unknown");
 			if (BATT_FLAGS(regs) & APM_BATT_FLAG_CHARGING)
 				printf(", charging");
-			if (BATT_REM_VALID(regs))
+			if (BATT_REM_VALID(regs)) {
+				int life = BATT_REMAINING(regs);
+				if (sc->sc_flags & APM_BEBATT)
+					life = swap16(life);
 				printf(", estimated %d:%02d hours",
-				    BATT_REMAINING(regs) / 60,
-				    BATT_REMAINING(regs) % 60);
+				    life / 60, life % 60);
+			}
 		}
 	}
 
@@ -1082,8 +1084,12 @@ apmioctl(dev, cmd, data, flag, p)
 					powerp->battery_state = APM_BATTERY_ABSENT;
 				else
 					powerp->battery_state = APM_BATT_UNKNOWN;
-				if (BATT_REM_VALID(&regs))
+				if (BATT_REM_VALID(&regs)) {
 					powerp->minutes_left = BATT_REMAINING(&regs);
+					if (sc->sc_flags & APM_BEBATT)
+						powerp->minutes_left =
+						    swap16(powerp->minutes_left);
+				}
 			}
 		} else {
 			apm_perror("ioctl get power status", &regs);

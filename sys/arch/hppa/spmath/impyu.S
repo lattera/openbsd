@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/impyu.S,v 1.3.8.1 2001/04/18 16:06:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/impyu.S,v 1.3.8.2 2002/03/06 00:57:23 niklas Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.
@@ -66,15 +66,8 @@ pc	.equ		9		; carry bit of product, = 00...01
 pm	.equ	       10		; value of -1 used in shifting
 temp	.equ		6
 
-;****************************************************************************
-	.export impyu,entry
-	.text
-	.align 4
-	.proc
-	.callinfo
-;
-;****************************************************************************
-impyu	stws,ma		pu,4(sp)		; save registers on stack
+LEAF_ENTRY(impyu)
+	stws,ma		pu,4(sp)		; save registers on stack
 	stws,ma		pl,4(sp)		; save registers on stack
 	stws,ma		op1,4(sp)		; save registers on stack
 	stws,ma		cnt,4(sp)		; save registers on stack
@@ -314,5 +307,6 @@ fini	stws		pu,0(arg2)		; save high part of result
 	bv		0(rp)			; return
 	ldws,mb		-4(sp),pu		; restore registers
 
-	.procend
+EXIT(impyu)
+
 	.end

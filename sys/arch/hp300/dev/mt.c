@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.1 2001/07/04 10:15:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.6.14.2 2002/03/06 00:57:22 niklas Exp $	*/
 /*	$NetBSD: mt.c,v 1.8 1997/03/31 07:37:29 scottr Exp $	*/
 
 /* 
@@ -509,7 +509,7 @@ spl_mtintr(arg)
 
 	hpibppclear(sc->sc_hpibno);
 	mtintr(sc);
-	(void) splx(s);
+	splx(s);
 }
 
 void
@@ -519,7 +519,7 @@ spl_mtstart(arg)
 	int s = splbio();
 
 	mtstart(arg);
-	(void) splx(s);
+	splx(s);
 }
 
 void

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/pdc.c,v 1.11.2.3 2001/07/04 10:16:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/pdc.c,v 1.11.2.4 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998-2001 Michael Shalayeff
+ * Copyright (c) 1998-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,8 @@ int pdcret[32] PDC_ALIGNMENT;
 char pdc_consbuf[IODC_MINIOSIZ] PDC_ALIGNMENT;
 iodcio_t pdc_cniodc, pdc_kbdiodc;
 pz_device_t *pz_kbd, *pz_cons;
-int CONADDR;
+hppa_hpa_t conaddr;
+int conunit;
 
 int pdcmatch __P((struct device *, void *, void*));
 void pdcattach __P((struct device *, struct device *, void *));
@@ -73,6 +74,21 @@ void pdcstart __P((struct tty *tp));
 void pdctimeout __P((void *v));
 int pdcparam __P((struct tty *tp, struct termios *));
 int pdccnlookc __P((dev_t dev, int *cp));
+
+/* serial console speed table */
+static int pdc_speeds[] = {
+	B50,
+	B75,
+	B110,
+	B150,
+	B300,
+	B600,
+	B1200,
+	B2400,
+	B4800,
+	B7200,
+	B9600,
+};
 
 void
 pdc_init()
@@ -101,7 +117,36 @@ pdc_init()
 
 	/* XXX make pdc current console */
 	cn_tab = &constab[0];
-	/* TODO: detect that we are on cereal, and set CONADDR */
+
+	/* setup the console */
+#include "com.h"
+#if NCOM_GSC > 0
+	if (PAGE0->mem_cons.pz_class == PCL_DUPLEX) {
+		struct pz_device *pzd = &PAGE0->mem_cons;
+		extern int comdefaultrate;
+#ifdef DEBUG
+		printf("console: class %d flags %b ",
+		    pzd->pz_class, pzd->pz_flags, PZF_BITS);
+		printf("bc %d/%d/%d/%d/%d/%d ",
+		    pzd->pz_bc[0], pzd->pz_bc[1], pzd->pz_bc[2],
+		    pzd->pz_bc[3], pzd->pz_bc[4], pzd->pz_bc[5]);
+		printf("mod %x layers %x/%x/%x/%x/%x/%x hpa %x\n", pzd->pz_mod,
+		    pzd->pz_layers[0], pzd->pz_layers[1], pzd->pz_layers[2],
+		    pzd->pz_layers[3], pzd->pz_layers[4], pzd->pz_layers[5],
+		    pzd->pz_hpa);
+#endif
+		conaddr = (u_long)pzd->pz_hpa + IOMOD_DEVOFFSET;
+		conunit = 0;
+
+		/* compute correct baud rate */
+		if (PZL_SPEED(pzd->pz_layers[0]) <
+		    sizeof(pdc_speeds) / sizeof(int))
+			comdefaultrate =
+			    pdc_speeds[PZL_SPEED(pzd->pz_layers[0])];
+		else
+			comdefaultrate = B9600;	/* XXX */
+	}
+#endif
 }
 
 int
@@ -162,22 +207,20 @@ pdcopen(dev, flag, mode, p)
 	tp->t_param = pdcparam;
 	tp->t_dev = dev;
 	if ((tp->t_state & TS_ISOPEN) == 0) {
-		tp->t_state |= TS_WOPEN|TS_CARR_ON;
 		ttychars(tp);
 		tp->t_iflag = TTYDEF_IFLAG;
 		tp->t_oflag = TTYDEF_OFLAG;
 		tp->t_cflag = TTYDEF_CFLAG|CLOCAL;
 		tp->t_lflag = TTYDEF_LFLAG;
-		tp->t_ispeed = tp->t_ospeed = 9600;
+		tp->t_ispeed = tp->t_ospeed = B9600;
 		ttsetwater(tp);
 
 		setuptimeout = 1;
 	} else if (tp->t_state&TS_XCLUDE && p->p_ucred->cr_uid != 0) {
 		splx(s);
-		return EBUSY;
+		return (EBUSY);
 	}
 	tp->t_state |= TS_CARR_ON;
-
 	splx(s);
 
 	error = (*linesw[tp->t_line].l_open)(dev, tp);

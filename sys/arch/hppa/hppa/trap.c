@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.5 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.6 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -146,14 +146,14 @@ trap(type, frame)
 	struct vmspace *vm;
 	register vm_prot_t vftype;
 	register pa_space_t space;
-	u_int opcode;
-	int ret;
 	union sigval sv;
-	int s, si;
+	u_int opcode;
+	int ret, s, si, trapnum;
 	const char *tts;
 
+	trapnum = type & ~T_USER;
 	opcode = frame->tf_iir;
-	if (type == T_ITLBMISS || type == T_ITLBMISSNA) {
+	if (trapnum == T_ITLBMISS || trapnum == T_ITLBMISSNA) {
 		va = frame->tf_iioq_head;
 		space = frame->tf_iisq_head;
 		vftype = VM_PROT_READ;	/* XXX VM_PROT_EXECUTE ??? */
@@ -167,16 +167,16 @@ trap(type, frame)
 		p->p_md.md_regs = frame;
 
 #ifdef TRAPDEBUG
-	if ((type & ~T_USER) > trap_types)
+	if (trapnum > trap_types)
 		tts = "reserved";
 	else
-		tts = trap_type[type & ~T_USER];
+		tts = trap_type[trapnum];
 
-	if (type != T_INTERRUPT && (type & ~T_USER) != T_IBREAK)
-		db_printf("trap: %d, %s for %x:%x at %x:%x, fl=%x, fp=%p\n",
+	if (trapnum != T_INTERRUPT && trapnum != T_IBREAK)
+		db_printf("trap: %x, %s for %x:%x at %x:%x, fl=%x, fp=%p\n",
 		    type, tts, space, va, frame->tf_iisq_head,
 		    frame->tf_iioq_head, frame->tf_flags, frame);
-	else if ((type & ~T_USER) == T_IBREAK)
+	else if (trapnum  == T_IBREAK)
 		db_printf("trap: break instruction %x:%x at %x:%x, fp=%p\n",
 		    break5(opcode), break13(opcode),
 		    frame->tf_iisq_head, frame->tf_iioq_head, frame);
@@ -320,9 +320,21 @@ trap(type, frame)
 			goto dead_end;
 		}
 
+#ifdef TRAPDEBUG
+		if (space == -1) {
+			extern int pmapdebug;
+			pmapdebug = 0xffffff;
+		}
+#endif
+
 		ret = uvm_fault(map, va, 0, vftype);
 
 #ifdef TRAPDEBUG
+		if (space == -1) {
+			extern int pmapdebug;
+			pmapdebug = 0;
+		}
+
 		printf("uvm_fault(%p, %x, %d, %d)=%d\n",
 		    map, va, 0, vftype, ret);
 #endif
@@ -345,7 +357,6 @@ trap(type, frame)
 
 		if (ret != 0) {
 			if (type & T_USER) {
-printf("trapsignal: uvm_fault\n");
 				sv.sival_int = frame->tf_ior;
 				trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
 			} else {
@@ -510,8 +521,8 @@ syscall(frame, args)
 		frame->tf_t1 = 0;
 		break;
 	case ERESTART:
-		frame->tf_iioq_head -= 4; /* right? XXX */
-		frame->tf_iioq_tail -= 4; /* right? XXX */
+		frame->tf_iioq_head -= 12;
+		frame->tf_iioq_tail -= 12;
 		break;
 	case EJUSTRETURN:
 		p = curproc;
@@ -565,12 +576,18 @@ void
 cpu_intr(frame)
 	struct trapframe *frame;
 {
-	u_int32_t eirr;
+	u_int32_t eirr = 0, r;
 	register struct cpu_intr_vector *iv;
 	register int bit;
 
 	do {
-		mfctl(CR_EIRR, eirr);
+		mfctl(CR_EIRR, r);
+		eirr |= r;
+#ifdef INTRDEBUG
+		if (eirr & 0x7fffffff)
+			db_printf ("cpu_intr: 0x%08x & 0x%08x\n",
+			    eirr, frame->tf_eiem);
+#endif
 		eirr &= frame->tf_eiem;
 		bit = ffs(eirr) - 1;
 		if (bit >= 0) {
@@ -586,7 +603,7 @@ cpu_intr(frame)
 				register int s, r;
 
 				iv->evcnt.ev_count++;
-				s = splx(iv->pri);
+				s = splraise(iv->pri);
 				/* no arg means pass the frame */
 				r = (iv->handler)(iv->arg? iv->arg:frame);
 				splx(s);

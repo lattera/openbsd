@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.3 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.4 2002/03/06 01:05:35 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.41 1997/02/11 07:35:49 scottr Exp $	*/
 
 /*
@@ -47,8 +47,6 @@
 #include <sys/vnode.h>
 #include <dev/cons.h>
 
-int	ttselect	__P((dev_t, int, struct proc *));
-
 #include "st.h"
 #include "sd.h"
 #include "cd.h"
@@ -56,8 +54,6 @@ int	ttselect	__P((dev_t, int, struct proc *));
 #include "vnd.h"
 #include "ccd.h"
 #include "rd.h"
-bdev_decl(rd);
-/* No cdev for rd */
 
 struct bdevsw	bdevsw[] =
 {
@@ -91,9 +87,7 @@ cdev_decl(ite);
 cdev_decl(mm);
 #include "pty.h"
 #include "ss.h"
-cdev_decl(ss);
 #include "uk.h"
-cdev_decl(uk);
 cdev_decl(fd);
 #include "grf.h"
 cdev_decl(grf);
@@ -104,10 +98,8 @@ cdev_decl(zsc);
 #include "zstty.h"
 cdev_decl(zs);
 #include "ch.h"
-cdev_decl(ch);
 #include "bpfilter.h"
 #include "tun.h"
-dev_decl(filedesc,open);
 #include "asc.h"
 cdev_decl(asc);
 #include "ksyms.h"

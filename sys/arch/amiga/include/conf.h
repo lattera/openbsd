@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/conf.h,v 1.11.4.2 2001/07/04 10:15:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/conf.h,v 1.11.4.3 2002/03/06 00:56:19 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.4 1996/11/30 01:13:07 is Exp $	*/
 
 /*
@@ -56,9 +56,6 @@ cdev_decl(msc);
 cdev_decl(par);
 
 cdev_decl(ser);
-
-bdev_decl(sw);
-cdev_decl(sw);
 
 cdev_decl(view);
 

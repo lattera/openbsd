@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9.2.4 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9.2.5 2002/03/06 01:07:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -165,12 +165,13 @@ mmrw(dev, uio, flags)
 				   trunc_page(v), 
 				   uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE,
 				   (uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE) | PMAP_WIRED); 
-
+			pmap_update(pmap_kernel());
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));
 			error = uiomove((caddr_t)vmmap + o, c, uio);
 			pmap_remove(pmap_kernel(), (vm_offset_t)vmmap,
 			    (vm_offset_t)vmmap + NBPG);
+			pmap_update(pmap_kernel());
 			continue;
 
 /* minor device 1 is kernel memory */

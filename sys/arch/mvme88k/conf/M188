@@ -1,10 +1,10 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/M188,v 1.1.4.5 2001/12/05 00:39:12 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/M188,v 1.1.4.6 2002/03/06 01:08:05 niklas Exp $
 
 machine mvme88k
 
 include "../../../conf/GENERIC"
 
-option		MVME188		# support for 187
+option		MVME188		# support for 188
 option		"NCPUS=1"	# Number of cpus supported (max 4)
 option		BUGMAP		# use Bug Rom VME Mappings
 #option		DEBUG		# print debugging statements

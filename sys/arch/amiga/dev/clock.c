@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/clock.c,v 1.10.12.2 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/clock.c,v 1.10.12.3 2002/03/06 00:56:18 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.25 1997/01/02 20:59:42 is Exp $	*/
 
 /*
@@ -521,8 +521,8 @@ clockunmmap(dev, addr, p)
 
 	if (addr == 0)
 		return(EINVAL);		/* XXX: how do we deal with this? */
-	uvm_deallocate(p->p_vmspace->vm_map, (vm_offset_t)addr, PAGE_SIZE);
-	return (0);
+	rv = vm_deallocate(p->p_vmspace->vm_map, (vm_offset_t)addr, PAGE_SIZE);
+	return(rv == KERN_SUCCESS ? 0 : EINVAL);
 }
 
 startclock()
@@ -559,7 +559,7 @@ stopclock()
  * The advantage of this is that the profiling timer can be turned up to
  * a higher interrupt rate, giving finer resolution timing. The profclock
  * routine is called from the lev6intr in locore, and is a specialized
- * routine that calls addupc. The overhead then is far less than if
+ * routine that calls addupc_task. The overhead then is far less than if
  * hardclock/softclock was called. Further, the context switch code in
  * locore has been changed to turn the profile clock on/off when switching
  * into/out of a process that is profiling (startprofclock/stopprofclock).
@@ -658,7 +658,7 @@ profclock(pc, ps)
 	 */
 	if (USERMODE(ps)) {
 		if (p->p_stats.p_prof.pr_scale)
-			addupc(pc, &curproc->p_stats.p_prof, 1);
+			addupc_task(&curproc, pc, 1);
 	}
 	/*
 	 * Came from kernel (supervisor) mode.

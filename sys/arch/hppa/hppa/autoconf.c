@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.2 2001/07/04 10:16:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.3 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -67,7 +67,7 @@ void	dumpconf __P((void));
 
 static int findblkmajor __P((struct device *dv));
 
-void (*cold_hook) __P((void)); /* see below */
+void (*cold_hook) __P((int)); /* see below */
 register_t	kpsw = PSW_Q | PSW_P | PSW_C | PSW_D;
 
 /*
@@ -100,7 +100,7 @@ cpu_configure()
 	dumpconf();
 	cold = 0;
 	if (cold_hook)
-		(*cold_hook)();
+		(*cold_hook)(HPPA_COLD_HOT);
 
 #ifdef USELEDS
 	timeout_set(&heartbeat_tmo, heartbeat, NULL);
@@ -389,6 +389,18 @@ pdc_scanbus(self, ca, bus, maxmod)
 		nca.ca_pdc_iodc_read = &pdc_iodc_read;
 		nca.ca_name = hppa_mod_info(nca.ca_type.iodc_type,
 					    nca.ca_type.iodc_sv_model);
+
+		if (autoconf_verbose) {
+			printf(">> probing: flags %b bc %d/%d/%d/%d/%d/%d ",
+			    dp.dp_flags, PZF_BITS,
+			    dp.dp_bc[0], dp.dp_bc[1], dp.dp_bc[2],
+			    dp.dp_bc[3], dp.dp_bc[4], dp.dp_bc[5]);
+			printf("mod %x layers %x/%x/%x/%x/%x/%x\n",
+			    dp.dp_mod,
+			    dp.dp_layers[0], dp.dp_layers[1],
+			    dp.dp_layers[2], dp.dp_layers[3],
+			    dp.dp_layers[4], dp.dp_layers[5]);
+		}
 
 		config_found_sm(self, &nca, mbprint, mbsubmatch);
 	}

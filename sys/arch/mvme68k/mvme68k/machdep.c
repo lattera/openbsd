@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.7 2001/12/05 00:39:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.8 2002/03/06 01:07:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -76,7 +76,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -125,7 +124,6 @@
 char machine[] = "mvme68k";		/* cpu "architecture" */
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 extern vm_offset_t avail_end;
@@ -259,6 +257,7 @@ cpu_startup()
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
 		pmap_kenter_pa((vm_offset_t)msgbufp,
 		    avail_end + i * NBPG, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -380,6 +379,7 @@ again:
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -394,8 +394,6 @@ again:
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif
@@ -856,8 +854,11 @@ dumpsys()
 			printf("%d ", pg / NPGMB);
 #undef	NPGMB
 		pmap_kenter_pa((vaddr_t)vmmap, maddr, VM_PROT_READ);
-
+		pmap_update(pmap_kernel());
 		error = (*dump)(dumpdev, blkno, vmmap, PAGE_SIZE);
+		pmap_kremove((vaddr_t)vmmap, PAGE_SIZE);
+		pmap_update(pmap_kernel());
+
 		if (error == 0) {
 			maddr += PAGE_SIZE;
 			blkno += btodb(PAGE_SIZE);

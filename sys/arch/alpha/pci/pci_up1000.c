@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_up1000.c,v 1.2.2.4 2001/11/13 21:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_up1000.c,v 1.2.2.5 2002/03/06 00:55:15 niklas Exp $	*/
 /* $NetBSD: pci_up1000.c,v 1.6 2000/12/28 22:59:07 sommerfeld Exp $ */
 
 /*-
@@ -80,7 +80,7 @@ void    api_up1000_pciide_compat_intr_disestablish(void *, void *);
 void
 pci_up1000_pickintr(struct irongate_config *icp)
 {
-	bus_space_tag_t iot = icp->ic_iot;
+	bus_space_tag_t iot = &icp->ic_iot;
 	pci_chipset_tag_t pc = &icp->ic_pc;
 
 	pc->pc_intr_v = icp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.6 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.7 2002/03/06 00:57:22 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -55,7 +55,7 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
+#include <sys/extent.h>
 #include <sys/mbuf.h>
 #include <sys/mount.h>
 #include <sys/msgbuf.h>
@@ -111,7 +111,6 @@
 char	machine[] = MACHINE;	/* from <machine/param.h> */
 
 struct vm_map *exec_map = NULL;  
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 extern paddr_t avail_start, avail_end;
@@ -146,6 +145,12 @@ extern struct emul emul_hpux;
 #ifdef COMPAT_SUNOS
 extern struct emul emul_sunos;
 #endif
+
+/*
+ * XXX some storage space must be allocated statically because of
+ * early console init
+ */
+char	extiospace[EXTENT_FIXED_STORAGE_SIZE(EIOMAPSIZE / 16)];
 
 /* prototypes for local functions */
 caddr_t	allocsys __P((caddr_t));
@@ -210,7 +215,8 @@ hp300_init()
 void
 consinit()
 {
-	extern struct map extiomap[];
+	extern struct extent *extio;
+	extern char *extiobase;
 
 	/*
 	 * Initialize some variables for sanity.
@@ -223,8 +229,10 @@ consinit()
 	/*
 	 * Initialize the DIO resource map.
 	 */
-	rminit(extiomap, (long)EIOMAPSIZE, (long)1, "extio", EIOMAPSIZE/16);
-
+	extio = extent_create("extio",
+	    (u_long)extiobase, (u_long)extiobase + ctob(EIOMAPSIZE),
+	    M_DEVBUF, extiospace, sizeof(extiospace), EX_NOWAIT);
+	    
 	/*
 	 * Initialize the console before we print anything out.
 	 */
@@ -266,6 +274,7 @@ cpu_startup()
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
 		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp + i * NBPG,
 		    avail_end + i * NBPG, VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
+	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -324,6 +333,7 @@ cpu_startup()
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -337,9 +347,6 @@ cpu_startup()
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
@@ -951,6 +958,7 @@ dumpsys()
 		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, maddr,
 		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
 
+		pmap_update(pmap_kernel());
 		error = (*dump)(dumpdev, blkno, vmmap, NBPG);
 		switch (error) {
 		case 0:
@@ -990,17 +998,6 @@ void
 initcpu()
 {
 
-#ifdef MAPPEDCOPY
-	/*
-	 * Initialize lower bound for doing copyin/copyout using
-	 * page mapping (if not already set).  We don't do this on
-	 * VAC machines as it loses big time.
-	 */
-	if (ectype == EC_VIRT)
-		mappedcopysize = -1;	/* in case it was patched */
-	else
-		mappedcopysize = NBPG;
-#endif
 	parityenable();
 #ifdef USELEDS
 	ledinit();
@@ -1071,27 +1068,11 @@ nmihand(frame)
 
 	/* Check for keyboard <CRTL>+<SHIFT>+<RESET>. */
 	if (kbdnmi()) {
-		printf("Got a keyboard NMI");
-
-		/*
-		 * We can:
-		 *
-		 *	- enter DDB
-		 *
-		 *	- Start the crashandburn sequence
-		 *
-		 *	- Ignore it.
-		 */
 #ifdef DDB
 		if (db_console) {
-			printf(": entering debugger\n");
 			Debugger();
-		} else
-			printf("\n");
-#else
-			printf(": ignoring\n");
+		}
 #endif /* DDB */
-
 		goto nmihand_out;	/* no more work to do */
 	}
 
@@ -1214,6 +1195,7 @@ parityerrorfind()
 	for (pg = btoc(lowram); pg < btoc(lowram)+physmem; pg++) {
 		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, ctob(pg),
 		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
+		pmap_update(pmap_kernel());
 		ip = (int *)vmmap;
 		for (o = 0; o < NBPG; o += sizeof(int))
 			i = *ip++;
@@ -1226,6 +1208,7 @@ parityerrorfind()
 done:
 	looking = 0;
 	pmap_remove(pmap_kernel(), (vaddr_t)vmmap, (vaddr_t)&vmmap[NBPG]);
+	pmap_update(pmap_kernel());
 	ecacheon();
 	splx(s);
 	return(found);

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.5 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.6 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999-2000 Michael Shalayeff
+ * Copyright (c) 1999-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,15 +106,14 @@ pagemove(from, to, size)
 
 	while (size > 0) {
 		pmap_extract(pmap_kernel(), (vaddr_t)from, &pa);
-		pmap_remove(pmap_kernel(),
-			    (vaddr_t)from, (vaddr_t)from + PAGE_SIZE);
-		pmap_enter(pmap_kernel(), (vaddr_t)to, pa,
-			   VM_PROT_READ|VM_PROT_WRITE,
-			   VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		pmap_kremove((vaddr_t)from, PAGE_SIZE);
+		pmap_kenter_pa((vaddr_t)to, pa,
+		    VM_PROT_READ|VM_PROT_WRITE);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 void
@@ -122,11 +121,15 @@ cpu_swapin(p)
 	struct proc *p;
 {
 	struct trapframe *tf = p->p_md.md_regs;
+	paddr_t pa;
 
 	/*
 	 * Stash the physical for the pcb of U for later perusal
 	 */
-	tf->tf_cr30 = kvtop((caddr_t)p->p_addr);
+	if (!pmap_extract(pmap_kernel(), (vaddr_t)p->p_addr, &pa))
+		panic("pmap_extract(p_addr) failed");
+
+	tf->tf_cr30 = pa;
 }
 
 void
@@ -134,14 +137,9 @@ cpu_swapout(p)
 	struct proc *p;
 {
 	extern paddr_t fpu_curpcb;
-	paddr_t q = fpu_curpcb;
+	struct trapframe *tf = p->p_md.md_regs;
 
-	fpu_curpcb = 0;
-
-	/*
-	 * TODO: determine if we have an fpu
-	 */
-	if (kvtop((caddr_t)&p->p_addr->u_pcb) == q) {
+	if (tf->tf_cr30 == fpu_curpcb) {
 		__asm __volatile(
 		    "fstds,ma %%fr0 , 8(%0)\n\t"
 		    "fstds,ma %%fr1 , 8(%0)\n\t"
@@ -175,7 +173,8 @@ cpu_swapout(p)
 		    "fstds,ma %%fr29, 8(%0)\n\t"
 		    "fstds,ma %%fr30, 8(%0)\n\t"
 		    "fstds    %%fr31, 0(%0)\n\t"
-		    : "+r" (q) :: "memory");
+		    : "+r" (fpu_curpcb) :: "memory");
+		fpu_curpcb = 0;
 	}
 }
 
@@ -218,7 +217,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 		p2->p_vmspace->vm_map.pmap->pmap_space;
 	tf->tf_iisq_head = tf->tf_iisq_tail =
 		p2->p_vmspace->vm_map.pmap->pmap_space;
-	tf->tf_pidr1 = tf->tf_pidr2 = p2->p_vmspace->vm_map.pmap->pmap_pid;
+	tf->tf_pidr1 = tf->tf_pidr2 = pmap_sid2pid(tf->tf_sr0);
 
 	/*
 	 * theoretically these could be inherited from the father,
@@ -262,12 +261,13 @@ cpu_exit(p)
 	struct proc *p;
 {
 	extern paddr_t fpu_curpcb;	/* from locore.S */
+	struct trapframe *tf = p->p_md.md_regs;
 
 	uvmexp.swtch++;
 
 	splhigh();
 	curproc = NULL;
-	if (fpu_curpcb == (paddr_t)&p->p_addr->u_pcb)
+	if (fpu_curpcb == tf->tf_cr30)
 		fpu_curpcb = 0;
 
 	switch_exit(p);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.1 2001/04/18 16:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.2 2002/03/06 00:57:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -37,13 +37,13 @@
 #include <lib/libsa/exec.h>
 #include <dev/cons.h>
 
-const char version[] = "0.6";
+const char version[] = "0.7";
 int	debug = 0;
 
 const struct x_sw execsw[] = {
 	{ "elf", elf_probe,	elf_load,	elf_ldsym },
 /*	{ "som", som_probe,	som_load,	som_ldsym }, */
-	{ ""   , NULL,		NULL },
+	{ ""   , NULL,		NULL,		NULL },
 };
 
 struct fs_ops file_system[] = {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/msc.c,v 1.6 1997/01/16 09:25:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/msc.c,v 1.6.14.1 2002/03/06 00:56:18 niklas Exp $ */
 /*	$NetBSD: msc.c,v 1.13 1996/12/23 09:10:26 veego Exp $	*/
 
 /*
@@ -1129,7 +1129,7 @@ mscmctl(dev, bits, how)
 
 	bits = msc->flags;
 
-	(void) splx(s);
+	splx(s);
   
 	return(bits);
 }

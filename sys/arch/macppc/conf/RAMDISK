@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/RAMDISK,v 1.3.4.2 2001/12/05 00:39:11 niklas Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/RAMDISK,v 1.3.4.3 2002/03/06 01:06:10 niklas Exp $
 #
 # PPC GENERIC config file
 #
@@ -94,7 +94,7 @@ akbd*		at adb?			# ADB keyboard
 wskbd*		at akbd? console ?
 #ams*		at adb?			# ADB mouse
 #wsmouse*	at ams?			
-abtn*		at adb?			# ADB button?
+#abtn*		at adb?			# ADB button?
 #zsc*		at macobio?
 #zstty*		at zsc? channel ?
 

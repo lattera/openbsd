@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.6 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.7 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -53,12 +53,14 @@
 #include <sys/dkstat.h>
 #include <sys/disklabel.h>
 #include <sys/conf.h>
-#include <sys/dmap.h>
 #include <sys/reboot.h>
 #include <sys/device.h>
 
+#include <uvm/uvm_extern.h>
+
 #include <machine/pte.h>
 #include <machine/cpu.h>
+#include <machine/gdt.h>
 #include <machine/biosvar.h>
 
 #include <dev/cons.h>
@@ -68,6 +70,9 @@
 #if NIOAPIC > 0
 #include <machine/i82093var.h>
 #endif
+
+int findblkmajor __P((struct device *dv));
+char *findblkname __P((int));
 
 void rootconf __P((void));
 void swapconf __P((void));
@@ -89,6 +94,8 @@ cpu_configure()
 {
 
 	startrtclock();
+
+	gdt_init();		/* XXX - pcibios uses gdt stuff */
 
 	if (config_rootfound("mainbus", NULL) == NULL)
 		panic("cpu_configure: mainbus not configured");
@@ -161,34 +168,50 @@ swapconf()
 
 #define	DOSWAP			/* change swdevt and dumpdev */
 
-static const char *devname[] = {
-	"wd",		/* 0 = wd */
-	"sw",		/* 1 = sw */
-	"fd",		/* 2 = fd */
-	"wt",		/* 3 = wt */
-	"sd",		/* 4 = sd */
-	"",		/* 5 */
-	"",		/* 6 */
-	"mcd",		/* 7 = mcd */
-	"",		/* 8 */
-	"",		/* 9 */
-	"",		/* 10 */
-	"",		/* 11 */
-	"",		/* 12 */
-	"",		/* 13 */
-	"",		/* 14 */
-	"",		/* 15 */
-	"",		/* 16 */
-	"rd",		/* 17 = rd */
-	"",		/* 18 */
-	"",		/* 19 */
-	""		/* 20 */
+static struct {
+	char *name;
+	int maj;
+} nam2blk[] = {
+	{ "wd", 0 },
+	{ "sw", 1 },
+	{ "fd", 2 },
+	{ "wt", 3 },
+	{ "sd", 4 },
+	{ "cd", 6 },
+	{ "mcd", 7 },
+	{ "rd", 17 },
+	{ "raid", 19 }
 };
+
+int
+findblkmajor(dv)
+	struct device *dv;
+{
+	char *name = dv->dv_xname;
+	int i;
+
+	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
+		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[i].name))
+		    == 0)
+			return (nam2blk[i].maj);
+	return (-1);
+}
+
+char *
+findblkname(maj)
+	int maj;
+{
+	int i;
+
+	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
+		if (maj == nam2blk[i].maj)
+			return (nam2blk[i].name);
+	return (NULL);
+}
 
 dev_t	argdev = NODEV;
 int	nswap;
 long	dumplo;
-int	dmmin, dmmax, dmtext;
 
 /*
  * Attempt to find the device from which we were booted.
@@ -209,8 +232,7 @@ setroot()
 	    (bootdev & B_MAGICMASK) != (u_long)B_DEVMAGIC)
 		return;
 	majdev = B_TYPE(bootdev);
-	if (majdev > sizeof(devname)/sizeof(devname[0]) ||
-	    *devname[majdev] == '\0')
+	if (findblkname(majdev) == NULL)
 		return;
 	adaptor = B_ADAPTOR(bootdev);
 	part = B_PARTITION(bootdev);
@@ -224,7 +246,7 @@ setroot()
 	 */
 	if (rootdev == orootdev)
 		return;
-	printf("root on %s%d%c\n", devname[majdev], unit, part + 'a');
+	printf("root on %s%d%c\n", findblkname(majdev), unit, part + 'a');
 
 #ifdef DOSWAP
 	for (swp = swdevt; swp->sw_dev != NODEV; swp++) {
@@ -272,6 +294,10 @@ extern	struct cfdriver fd_cd;
 #if NRD > 0
 extern	struct cfdriver rd_cd;
 #endif
+#include "raid.h"
+#if NRAID > 0
+extern	struct cfdriver raid_cd;
+#endif
 
 struct	genericconf {
 	struct cfdriver *gc_driver;
@@ -295,6 +321,9 @@ struct	genericconf {
 #endif
 #if NRD > 0
 	{ &rd_cd,  "rd",  17 },
+#endif
+#if NRAID > 0
+	{ &raid_cd,  "raid",  19 },
 #endif
 	{ 0 }
 };

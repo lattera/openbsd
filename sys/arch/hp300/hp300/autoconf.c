@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/autoconf.c,v 1.17.4.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/autoconf.c,v 1.17.4.3 2002/03/06 00:57:22 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.45 1999/04/10 17:31:02 kleink Exp $	*/
 
 /*
@@ -70,9 +70,8 @@
 #include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/disklabel.h>
-#include <sys/dmap.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
+#include <sys/extent.h>
 #include <sys/mount.h>
 #include <sys/queue.h>
 #include <sys/reboot.h>
@@ -107,8 +106,7 @@
  */
 int	cold;		    /* if 1, still working on cold-start */
 
-/* XXX must be allocated statically because of early console init */
-struct	map extiomap[EIOMAPSIZE/16];
+struct	extent *extio;
 
 extern	caddr_t internalhpib;
 extern	char *extiobase;
@@ -539,15 +537,12 @@ setroot()
 	register int len;
 	dev_t nrootdev, nswapdev = NODEV;
 	char buf[128], *rootdevname;
-	extern int (*mountroot) __P((void));
 	dev_t temp;
 	struct device *bootdv, *rootdv, *swapdv;
 	int bootpartition = 0;
 #ifdef NFSCLIENT
 	extern char *nfsbootdevname;
-	extern int nfs_mountroot __P((void));
 #endif
-	extern int dk_mountroot __P((void));
 
 	bootdv = booted_device;
 
@@ -1246,18 +1241,22 @@ iomap(pa, size)
 	caddr_t pa;
 	int size;
 {
-	int ix, npf;
+	int error;
 	caddr_t kva;
+
+	if (size == 0)
+		return NULL;
 
 #ifdef DEBUG
 	if (((int)pa & PGOFSET) || (size & PGOFSET))
 		panic("iomap: unaligned");
 #endif
-	npf = btoc(size);
-	ix = rmalloc(extiomap, npf);
-	if (ix == 0)
-		return(0);
-	kva = extiobase + ctob(ix-1);
+	error = extent_alloc(extio, size, PAGE_SIZE, 0, EX_NOBOUNDARY,
+	    EX_NOWAIT | EX_MALLOCOK, (u_long *)&kva);
+
+	if (error != 0)
+		return NULL;
+
 	physaccess(kva, pa, size, PG_RW|PG_CI);
 	return(kva);
 }
@@ -1270,7 +1269,7 @@ iounmap(kva, size)
 	caddr_t kva;
 	int size;
 {
-	int ix;
+	int error;
 
 #ifdef DEBUG
 	if (((int)kva & PGOFSET) || (size & PGOFSET))
@@ -1278,7 +1277,11 @@ iounmap(kva, size)
 	if (kva < extiobase || kva >= extiobase + ctob(EIOMAPSIZE))
 		panic("iounmap: bad address");
 #endif
+
 	physunaccess(kva, size);
-	ix = btoc(kva - extiobase) + 1;
-	rmfree(extiomap, btoc(size), ix);
+
+	error = extent_free(extio, (u_long)kva, size, EX_NOWAIT);
+
+	if (error != 0)
+		printf("iounmap: extent_free failed\n");
 }

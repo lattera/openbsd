@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/libsa/Makefile,v 1.7.2.1 2001/04/18 16:06:56 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/libsa/Makefile,v 1.7.2.2 2002/03/06 00:57:23 niklas Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -17,7 +17,7 @@ NOPIC=nopic
 
 # hppa stuff
 SRCS=	machdep.c pdc.c itecons.c dev_hppa.c exec_hppa.c time.c \
-	ct.c dk.c lf.c lif.c
+	ct.c dk.c lf.c lif.c cmd_hppa.c
 
 # stand routines
 SRCS+=	alloc.c exit.c getfile.c gets.c globals.c strcmp.c strlen.c \

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/uni_n.c,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/uni_n.c,v 1.1.4.2 2002/03/06 01:06:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Dale Rahn. All rights reserved.
@@ -110,8 +110,8 @@ uni_n_config(int handle)
 				baseaddr = mapiodev(address, NBPG);
 				ctladdr = (void*)(baseaddr + 0x20);
 				*ctladdr |= 0x02;
+				return baseaddr;
 			}
-		return baseaddr;
 		}
 	}
 	return 0;

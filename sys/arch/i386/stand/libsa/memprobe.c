@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.3 2000/03/24 09:07:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.4 2002/03/06 01:01:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -132,7 +132,7 @@ bios_E801(mp)
 
 	mp++;
 	mp->addr = (1024 * 1024) * 16;	/* 16MB */
-	mp->size = (m2 & 0xffff) * 64 * 1024;
+	mp->size = (m2 & 0xffff) * 64L * 1024;
 	mp->type = BIOS_MAP_FREE;
 
 	return ++mp;
@@ -258,7 +258,7 @@ static __inline bios_memmap_t *
 badprobe(mp)
 	register bios_memmap_t *mp;
 {
-	int ram;
+	u_int64_t ram;
 #ifdef DEBUG
 	printf("scan ");
 #endif
@@ -336,13 +336,12 @@ memprobe()
 			 * We drop "machine {cnvmem,extmem}" commands.
 			 */
 			if(im->addr < IOM_BEGIN)
-				cnvmem = max(cnvmem, im->addr + im->size);
+				cnvmem = max(cnvmem,
+				    im->addr + im->size) / 1024;
 			if(im->addr >= IOM_END)
-				extmem += im->size;
+				extmem += im->size / 1024;
 		}
 	}
-	cnvmem /= 1024;
-	extmem /= 1024;
 
 	/* Check if gate A20 is on */
 	printf("a20=o%s]", checkA20()? "n" : "ff!");
@@ -361,7 +360,7 @@ dump_biosmem(tm)
 
 	for(p = tm; p->type != BIOS_MAP_END; p++) {
 		printf("Region %d: type %u at 0x%x for %uKB\n", p - tm,
-			p->type, (u_int)p->addr, (u_int)p->size / 1024);
+			p->type, (u_int)p->addr, (u_int)(p->size / 1024));
 
 		if(p->type == BIOS_MAP_FREE)
 			total += p->size / 1024;

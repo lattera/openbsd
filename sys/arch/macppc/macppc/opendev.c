@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/opendev.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/opendev.c,v 1.2.4.2 2002/03/06 01:06:11 niklas Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -185,14 +185,10 @@ OF_call_method_1(method, ihandle, nargs, va_alist)
 		*--ip = va_arg(ap, int);
 	va_end(ap);
 	ofw_stack();
-	if (openfirmware(&args) == -1) {
-		va_end(ap);
+	if (openfirmware(&args) == -1)
 		return -1;
-	}
-	if (args.args_n_results[nargs]) {
-		va_end(ap);
+	if (args.args_n_results[nargs])
 		return -1;
-	}
 	return args.args_n_results[nargs + 1];
 }
 

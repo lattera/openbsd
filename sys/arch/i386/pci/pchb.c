@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.6.10.1 2001/04/18 16:08:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.6.10.2 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: pchb.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*
@@ -289,7 +289,7 @@ pchbattach(parent, self, aux)
 		case PCI_PRODUCT_INTEL_82860_HB:
 			sc->bt = pa->pa_memt;
 			if (bus_space_map(sc->bt, I82802_IOBASE, I82802_IOSIZE,
-			    0, &sc->bh) < 0)
+			    0, &sc->bh))
 				break;
 
 			/* probe and init rng */

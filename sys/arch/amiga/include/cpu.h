@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/cpu.h,v 1.12.10.3 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/cpu.h,v 1.12.10.4 2002/03/06 00:56:19 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.36 1996/09/11 00:11:42 thorpej Exp $	*/
 
 /*
@@ -233,7 +233,6 @@ int	dma_cachectl __P((caddr_t, int));
 int	kvtop __P((caddr_t));
 void	physaccess __P((caddr_t,  caddr_t, int, int));
 void	physunaccess __P((caddr_t, int));
-void	setredzone __P((u_int *, caddr_t));
 
 #ifdef GENERIC
 /*

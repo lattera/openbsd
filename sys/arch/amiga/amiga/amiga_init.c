@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/amiga_init.c,v 1.16.10.4 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/amiga_init.c,v 1.16.10.5 2002/03/06 00:56:18 niklas Exp $	*/
 /*	$NetBSD: amiga_init.c,v 1.56 1997/06/10 18:22:24 veego Exp $	*/
 
 /*
@@ -580,8 +580,7 @@ start_c(id, fphystart, fphysize, cphysize, esym_addr, flags, inh_sync)
 		for (; i < vstart; i += NBPG, pg_proto += NBPG)
 			*pg++ = pg_proto;
 
-		pg_proto = (pg_proto & ~PG_CI);
-		pg_proto |= PG_CCB;
+		pg_proto = (pg_proto & ~PG_CI) | PG_CCB;
 	}
 #endif
 	/*
@@ -698,7 +697,9 @@ start_c(id, fphystart, fphysize, cphysize, esym_addr, flags, inh_sync)
 	 * dumps more readable, with guaranteed 16MB of.
 	 * XXX depends on Sysmap being last.
 	 * XXX 16 MB instead of 256 MB should be enough, but...
-	 * we need to fix the fastmem loading first. (see comment at line 375)
+	 * we need to fix the fastmem loading first. (see Zorro-related
+	 * comment before ``What to do, what to do'' earlier in this
+	 * function)
 	 */
 	RELOC(amiga_uptbase, vaddr_t) =
 	    roundup(RELOC(Sysmap, u_int) + 0x10000000, 0x10000000);

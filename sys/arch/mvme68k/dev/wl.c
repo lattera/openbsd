@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.3.14.2 2001/07/04 10:19:29 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.3.14.3 2002/03/06 01:07:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -486,7 +486,7 @@ int clmctl (dev, bits, how)
 		}
 		break;
 	}
-	(void)splx(s);
+	splx(s);
 #if 0
 	bits = 0;
 	/* proper defaults? */

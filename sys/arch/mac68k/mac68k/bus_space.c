@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/bus_space.c,v 1.4.4.4 2001/12/05 00:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/bus_space.c,v 1.4.4.5 2002/03/06 01:05:35 niklas Exp $	*/
 /*	$NetBSD: bus_space.c,v 1.5 1999/03/26 23:41:30 mycroft Exp $	*/
 
 /*-
@@ -45,7 +45,6 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/extent.h>
-#include <sys/map.h>
 
 #include <machine/bus.h>
 
@@ -182,6 +181,7 @@ bus_mem_add_mapping(bpa, size, flags, bshp)
 			*pte |= PG_CI;
 		TBIA();
 	}
+	pmap_update(pmap_kernel());
  
 	return 0;
 }

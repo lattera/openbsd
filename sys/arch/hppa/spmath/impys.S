@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/impys.S,v 1.3.8.1 2001/04/18 16:06:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/impys.S,v 1.3.8.2 2002/03/06 00:57:23 niklas Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.
@@ -66,7 +66,7 @@ pm	.equ	       10		/* value of -1 used in shifting */
 
 	.text
 
-ENTRY(impys)
+LEAF_ENTRY(impys)
 	stws,ma		pu,4(sp)		; save registers on stack
 	stws,ma		pl,4(sp)		; save registers on stack
 	stws,ma		op1,4(sp)		; save registers on stack

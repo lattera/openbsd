@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.5 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.6 2002/03/06 00:56:18 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.56 1997/07/16 00:01:47 is Exp $	*/
 
 /*
@@ -326,9 +326,7 @@ trapmmufault(type, code, v, fp, p, sticks)
 		printf("68040 access error: pc %x, code %x,"
 		    " ea %x, fa %x\n", fp->f_pc, code, fp->f_fmt7.f_ea, v);
 		if (curpcb)
-			printf(" curpcb %p ->pcb_ustp %x / %x\n",
-			    curpcb, curpcb->pcb_ustp, 
-			    curpcb->pcb_ustp << PG_SHIFT);
+			printf(" curpcb %p\n", curpcb);
 				
 
 #ifdef DDB						/* XXX PAGE0 */

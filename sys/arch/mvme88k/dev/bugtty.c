@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/bugtty.c,v 1.4.6.1 2001/04/18 16:10:52 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/bugtty.c,v 1.4.6.2 2002/03/06 01:08:05 niklas Exp $ */
 /* Copyright (c) 1998 Steve Murphree, Jr. 
  * Copyright (c) 1995 Dale Rahn.
  * All rights reserved.
@@ -164,7 +164,7 @@ int
 	case DMGET:
 		break;
 	}
-	(void)splx(s);
+	splx(s);
 
 	bits = 0;
 	/* proper defaults? */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.11 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.12 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -82,7 +82,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/exec.h>
@@ -213,11 +212,17 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef	BUFPAGES
 int	bufpages = BUFPAGES;
 #else
 int	bufpages = 0;
 #endif
+int	bufcachepercent = BUFCACHEPERCENT;
 
 extern int	boothowto;
 int	physmem;
@@ -244,7 +249,6 @@ bootarg_t *bootargp;
 vm_offset_t avail_end;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int kbd_reset;
@@ -350,18 +354,21 @@ cpu_startup()
 	unsigned i;
 	caddr_t v;
 	int sz;
-	vm_offset_t minaddr, maxaddr, pa;
+	vaddr_t minaddr, maxaddr, va;
+	paddr_t pa;
 
 	/*
 	 * Initialize error message buffer (at end of core).
 	 * (space reserved in pmap_bootstrap)
 	 */
 	pa = avail_end;
-	for (i = 0; i < btoc(MSGBUFSIZE); i++, pa += NBPG)
-		pmap_enter(pmap_kernel(),
-		    (vm_offset_t)((caddr_t)msgbufp + i * NBPG), pa,
-		    VM_PROT_READ|VM_PROT_WRITE,
-		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+	va = (vaddr_t)msgbufp;
+	for (i = 0; i < btoc(MSGBUFSIZE); i++) {
+		pmap_kenter_pa(va, pa, VM_PROT_READ|VM_PROT_WRITE);
+		va += PAGE_SIZE;
+		pa += PAGE_SIZE;
+	}
+	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	printf("%s", version);
@@ -400,9 +407,6 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
 	printf("avail mem = %lu (%uK)\n", ptoa(uvmexp.free),
 	    ptoa(uvmexp.free)/1024);
 	printf("using %d buffers containing %u bytes (%uK) of memory\n",
@@ -434,7 +438,6 @@ i386_proc0_tss_ldt_init()
 {
 	struct pcb *pcb;
 
-	gdt_init();
 	curpcb = pcb = &proc0.p_addr->u_pcb;
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = (int)proc0.p_addr + USPACE - 16;
@@ -497,9 +500,6 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Determine how many buffers to allocate.  We use 10% of the
 	 * first 2MB of memory, and 5% of the rest, with a minimum of 16
@@ -511,7 +511,7 @@ allocsys(v)
 			bufpages = physmem / 10;
 		else
 			bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-			    BUFCACHEPERCENT / 100;
+			    bufcachepercent / 100;
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;
@@ -613,7 +613,7 @@ setup_buffers(maxaddr)
 	if (!TAILQ_EMPTY(&saved_pgs))
 		FREE_PGS(saved_pgs);
 
-	pg = pgs.tqh_first;
+	pg = TAILQ_FIRST(&pgs);
 	for (i = 0; i < nbuf; i++) {
 		/*
 		 * First <residual> buffers get (base+1) physical pages
@@ -624,13 +624,13 @@ setup_buffers(maxaddr)
 		 */
 		addr = (vm_offset_t)buffers + i * MAXBSIZE;
 		for (size = PAGE_SIZE * (i < residual ? base + 1 : base);
-		    size > 0; size -= NBPG, addr += NBPG) {
-			pmap_enter(pmap_kernel(), addr, pg->phys_addr,
-			    VM_PROT_READ|VM_PROT_WRITE,
-			    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
-			pg = pg->pageq.tqe_next;
+		    size > 0; size -= PAGE_SIZE, addr += PAGE_SIZE) {
+			pmap_kenter_pa(addr, VM_PAGE_TO_PHYS(pg),
+			    VM_PROT_READ|VM_PROT_WRITE);
+			pg = TAILQ_NEXT(pg, pageq);
 		}
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*  
@@ -800,7 +800,9 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 			{
 				0, "Athlon Model 1", "Athlon Model 2",
 				"Duron", "Athlon Model 4 (Thunderbird)",
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, "Athlon Model 6 (Palomino)",
+				"Athlon Model 7 (Morgan)", 0,
+				0, 0, 0, 0, 0, 0, 0,
 				"K7 (Athlon)"		/* Default */
 			},
 			NULL
@@ -1847,12 +1849,8 @@ boot(howto)
 	splhigh();
 
 	/* Do a dump if requested. */
-	if (howto & RB_DUMP) {
-		/* Save registers. */
-		savectx(&dumppcb);
-
+	if (howto & RB_DUMP)
 		dumpsys();
-	}
 
 haltsys:
 	doshutdownhooks();
@@ -2991,7 +2989,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 			pmap_update_pg(va);
 		}
 	}
-	tlbflush();
+	pmap_update(pmap_kernel());
 
 	return 0;
 }
@@ -3421,7 +3419,7 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
 			    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 		}
 	}
-	tlbflush();
+	pmap_update(pmap_kernel());
 
 	return (0);
 }
@@ -3648,3 +3646,6 @@ _bus_dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 
 	return (0);
 }
+
+/* If SMALL_KERNEL this results in an out of line definition of splx.  */
+SPLX_OUTLINED_BODY

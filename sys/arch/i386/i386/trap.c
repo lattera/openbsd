@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.6 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.7 2002/03/06 01:01:00 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -417,7 +417,7 @@ trap(frame)
 		/* FALLTHROUGH */
 
 	case T_PAGEFLT|T_USER: {	/* page fault */
-		vm_offset_t va;
+		vm_offset_t va, fa;
 		struct vmspace *vm = p->p_vmspace;
 		struct vm_map *map;
 		int rv;
@@ -426,7 +426,8 @@ trap(frame)
 
 		if (vm == NULL)
 			goto we_re_toast;
-		va = trunc_page((vm_offset_t)rcr2());
+		fa = (vm_offset_t)rcr2();
+		va = trunc_page(fa);
 		/*
 		 * It is only a kernel address space fault iff:
 		 *	1. (type & T_USER) == 0  and
@@ -485,7 +486,7 @@ trap(frame)
 			    map, va, ftype, rv);
 			goto we_re_toast;
 		}
-		sv.sival_int = rcr2();
+		sv.sival_int = fa;
 		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
 		break;
 	}

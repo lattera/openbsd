@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/apmvar.h,v 1.9.2.3 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/apmvar.h,v 1.9.2.4 2002/03/06 01:01:00 niklas Exp $	*/
 
 /*
  *  Copyright (c) 1995 John T. Kohl
@@ -51,6 +51,7 @@
 #define	APM_MINOR(f)		((f) & 0xff)
 #define	APM_VERMASK		0x0000ffff
 #define	APM_NOCLI		0x00010000
+#define	APM_BEBATT		0x00020000
 
 /* APM error codes */
 #define	APM_ERR_CODE(regs)	(((regs)->ax & 0xff00) >> 8)

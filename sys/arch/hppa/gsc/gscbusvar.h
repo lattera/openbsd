@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbusvar.h,v 1.3.4.1 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbusvar.h,v 1.3.4.2 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -50,7 +50,7 @@ struct gsc_attach_args {
 #define	ga_hpamask	ga_ca.ca_hpamask
 #define	ga_dmatag	ga_ca.ca_dmatag
 #define	ga_irq		ga_ca.ca_irq
-/*#define	ga_pdc_iodc_read	ga_ca.ca_pdc_iodc_read */
+#define	ga_pdc_iodc_read	ga_ca.ca_pdc_iodc_read
 	struct gscbus_ic *ga_ic;	/* IC pointer */
 }; 
 

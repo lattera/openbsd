@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.4 2001/04/18 16:07:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.5 2002/03/06 01:01:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -75,7 +75,7 @@ struct bios_romheader {
 	u_int8_t	len;		/* length in pages (512 bytes) */
 	u_int32_t	entry;		/* initialization entry point */
 	u_int8_t	reserved[19];
-	u_int16_t	pnpheaader;	/* offset to PnP expansion header */
+	u_int16_t	pnpheader;	/* offset to PnP expansion header */
 } *bios_romheader_t;
 
 /*

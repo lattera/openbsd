@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pte.h,v 1.2.14.1 2001/12/05 00:39:09 niklas Exp $	*/
-/*	$NetBSD: pte.h,v 1.14 1995/09/29 13:52:09 chopps Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pte.h,v 1.2.14.2 2002/03/06 00:56:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -47,10 +46,6 @@
 
 #include <m68k/pte_motorola.h>
 
-#define AMIGA_040RTSIZE		512	/* root (level 1) table size */
-#define AMIGA_040STSIZE		512	/* segment (level 2) table size */
-#define	AMIGA_040PTSIZE		128	/* page (level 3) table size */
-
 #if 0
 #define AMIGA_STSIZE		1024	/* segment table size */
 #else
@@ -65,9 +60,10 @@
  * AMIGA_MAX_KPTSIZE	the most number of bytes for kpt pages
  * AMIGA_MAX_PTSIZE	the number of bytes to map everything
  */
+extern vaddr_t amiga_uptbase;
 #define AMIGA_MAX_COREUPT	1024
 #define AMIGA_UPTSIZE		roundup(VM_MAXUSER_ADDRESS / NPTEPG, NBPG)
-#define AMIGA_UPTBASE		0x10000000
+#define AMIGA_UPTBASE		amiga_uptbase
 #define AMIGA_UPTMAXSIZE \
     roundup((AMIGA_MAX_COREUPT * AMIGA_UPTSIZE), NBPG)
 #define AMIGA_MAX_KPTSIZE \
@@ -82,4 +78,4 @@
 #define	MACHINE_PTBASE		AMIGA_UPTBASE
 #define	MACHINE_PTMAXSIZE	AMIGA_UPTMAXSIZE
 
-#endif /* !_MACHINE_PTE_H_ */
+#endif /* _MACHINE_PTE_H_ */

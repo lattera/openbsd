@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.3 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.4 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -167,7 +167,6 @@ typedef const struct hppa_bus_space_tag *bus_space_tag_t;
 extern const struct hppa_bus_space_tag hppa_bustag;
 
 /* bus access routines */
-#define DCIAS(pa)	((void)(pa))
 
 #define	bus_space_map(t,a,c,ca,hp) \
 	(((t)->hbt_map)((t)->hbt_cookie,(a),(c),(ca),(hp)))
@@ -403,12 +402,14 @@ struct hppa_bus_dmamap {
 	bus_size_t	_dm_maxsegsz;	/* largest possible segment */
 	bus_size_t	_dm_boundary;	/* don't cross this */
 	int		_dm_flags;	/* misc. flags */
+	vaddr_t		_dm_va;		/* needed for syncing */
 
 	void		*_dm_cookie;	/* cookie for bus-specific functions */
 
 	/*
 	 * PUBLIC MEMBERS: these are used by machine-independent code.
 	 */
+	bus_size_t	dm_mapsize;	/* size of the mapping */
 	int		dm_nsegs;	/* # valid segments in mapping */
 	bus_dma_segment_t dm_segs[1];	/* segments; variable length */
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14.4.4 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14.4.5 2002/03/06 01:07:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -178,6 +178,7 @@ pagemove(from, to, size)
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -270,6 +271,7 @@ vmapbuf(bp, siz)
 		addr += PAGE_SIZE;
 		kva += PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*

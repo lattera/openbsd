@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.3.2.1 2001/12/05 00:39:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.3.2.2 2002/03/06 01:05:03 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -111,7 +111,7 @@
  *
  * Supports:
  *	68020 with HP MMU
- *    	68020 with 68551 MMU
+ *    	68020 with 68851 MMU
  *	68030 with on-chip MMU
  *	68040 with on-chip MMU
  *	68060 with on-chip MMU
@@ -122,7 +122,7 @@
  *	We assume TLB entries don't have process tags (except for the
  *	supervisor/user distinction) so we only invalidate TLB entries
  *	when changing mappings for the current (or kernel) pmap.  This is
- *	technically not true for the 68551 but we flush the TLB on every
+ *	technically not true for the 68851 but we flush the TLB on every
  *	context switch, so it effectively winds up that way.
  *
  *	Bitwise and/or operations are significantly faster than bitfield
@@ -171,6 +171,7 @@
 
 #include <machine/pte.h>
 
+/* #define UVM_PAGE_INLINE */
 #include <uvm/uvm.h>
 
 #include <machine/cpu.h>
@@ -249,8 +250,7 @@ int dokwriteback = 1;	/* 68040: enable writeback caching of kernel AS */
  * Given a map and a machine independent protection code,
  * convert to an m68k protection code.
  */
-#define pte_prot(m, p)	(protection_codes[p])
-int	protection_codes[8];
+#define pte_prot(p)	((p) & VM_PROT_WRITE ? PG_RW : PG_RO)
 
 /*
  * Kernel page table page management.
@@ -338,8 +338,8 @@ void pmap_check_wiring	__P((char *, vaddr_t));
 #define	PRM_CFLUSH	2
 #define	PRM_KEEPPTPAGE	4
 
-#define	PAGE_IS_MANAGED(pa)	(pmap_initialized &&			\
-				 vm_physseg_find(atop((pa)), NULL) != -1)
+#define	PAGE_IS_MANAGED(pa) \
+	(pmap_initialized && IS_VM_PHYSADDR(pa))
 
 #define	pa_to_pvh(pa)							\
 ({									\
@@ -451,8 +451,11 @@ pmap_init()
 	if (mmutype == MMU_68060) {
 		for (addr2 = addr; addr2 < addr + MACHINE_STSIZE;
 		    addr2 += PAGE_SIZE) {
-			pmap_changebit(addr2, PG_CCB, 0);
-			pmap_changebit(addr2, PG_CI, 1);
+			pt_entry_t *pte;
+
+			pte = pmap_pte(pmap_kernel(), addr2);
+			*pte = (*pte | PG_CI) & ~PG_CCB;
+			TBIS(addr2);
 		}
 		DCIS();
 	}
@@ -521,12 +524,18 @@ pmap_init()
 		pmap_extract(pmap_kernel(), addr2, &kpt_pages->kpt_pa);
 #ifdef M68060
 		if (mmutype == MMU_68060) {
-			pmap_changebit(kpt_pages->kpt_pa, PG_CCB, 0);
-			pmap_changebit(kpt_pages->kpt_pa, PG_CI, 1);
-			DCIS();
+			pt_entry_t *pte;
+
+			pte = pmap_pte(pmap_kernel(), addr2);
+			*pte = (*pte | PG_CI) & ~PG_CCB;
+			TBIS(addr2);
 		}
 #endif
 	} while (addr != addr2);
+#ifdef M68060
+	if (mmutype == MMU_68060)
+		DCIS();
+#endif
 
 	PMAP_DPRINTF(PDB_INIT, ("pmap_init: KPT: %ld pages from %lx to %lx\n",
 	    atop(s), addr, addr + s));
@@ -565,7 +574,7 @@ pmap_init()
 	 * Initialize the pmap pools.
 	 */
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, 0, "pmappl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	    &pool_allocator_nointr);
 
 	/*
 	 * Now it is safe to enable pv_table recording.
@@ -730,7 +739,7 @@ pmap_map(va, spa, epa, prot)
 		va += PAGE_SIZE;
 		spa += PAGE_SIZE;
 	}
-	pmap_update();
+	pmap_update(pmap_kernel());
 	return (va);
 }
 
@@ -832,6 +841,7 @@ pmap_release(pmap)
 	if (pmap->pm_ptab) {
 		pmap_remove(pmap_kernel(), (vaddr_t)pmap->pm_ptab,
 		    (vaddr_t)pmap->pm_ptab + MACHINE_MAX_PTSIZE);
+		pmap_update(pmap_kernel());
 		uvm_km_pgremove(uvm.kernel_object, (vaddr_t)pmap->pm_ptab,
 		    (vaddr_t)pmap->pm_ptab + MACHINE_MAX_PTSIZE);
 		uvm_km_free_wakeup(pt_map, (vaddr_t)pmap->pm_ptab,
@@ -1080,7 +1090,7 @@ pmap_protect(pmap, sva, eva, prot)
 		return;
 	}
 
-	isro = pte_prot(pmap, prot);
+	isro = pte_prot(prot);
 	needtflush = active_pmap(pmap);
 	firstpage = TRUE;
 	while (sva < eva) {
@@ -1350,7 +1360,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 	}
 	/*
 	 * Assumption: if it is not part of our managed memory
-	 * then it must be device memory which may be volitile.
+	 * then it must be device memory which may be volatile.
 	 */
 	else if (pmap_initialized) {
 		checkpv = cacheable = FALSE;
@@ -1375,7 +1385,7 @@ validate:
 	/*
 	 * Build the new PTE.
 	 */
-	npte = pa | pte_prot(pmap, prot) | (*pte & (PG_M|PG_U)) | PG_V;
+	npte = pa | pte_prot(prot) | (*pte & (PG_M|PG_U)) | PG_V;
 	if (wired)
 		npte |= PG_W;
 
@@ -1462,7 +1472,7 @@ pmap_kenter_pa(va, pa, prot)
 		splx(s);
 	}
 
-	pa = m68k_trunc_page(pa);
+	pa = trunc_page(pa);
 	pte = pmap_pte(pmap, va);
 
 	PMAP_DPRINTF(PDB_ENTER, ("enter: pte %p, *pte %x\n", pte, *pte));
@@ -1479,7 +1489,7 @@ pmap_kenter_pa(va, pa, prot)
 	 * Build the new PTE.
 	 */
 
-	npte = pa | pte_prot(pmap, prot) | PG_V | PG_W;
+	npte = pa | pte_prot(prot) | PG_V | PG_W;
 #if defined(M68040) || defined(M68060)
 	if (mmutype <= MMU_68040 && (npte & (PG_PROT)) == PG_RW)
 		npte |= PG_CCB;
@@ -1682,15 +1692,15 @@ pmap_extract(pmap, va, pap)
 {
 	boolean_t rv = FALSE;
 	paddr_t pa;
-	u_int pte;
+	pt_entry_t *pte;
 
 	PMAP_DPRINTF(PDB_FOLLOW,
 	    ("pmap_extract(%p, %lx) -> ", pmap, va));
 
 	if (pmap_ste_v(pmap, va)) {
-		pte = *(u_int *)pmap_pte(pmap, va);
-		if (pte) {
-			pa = (pte & PG_FRAME) | (va & ~PG_FRAME);
+		pte = pmap_pte(pmap, va);
+		if (pmap_pte_v(pte)) {
+			pa = pmap_pte_pa(pte) | (va & ~PG_FRAME);
 			if (pap != NULL)
 				*pap = pa;
 			rv = TRUE;
@@ -1768,7 +1778,7 @@ pmap_collect(pmap)
 		 * all necessary locking.
 		 */
 		pmap_remove(pmap, VM_MIN_ADDRESS, VM_MAX_ADDRESS);
-		pmap_update();
+		pmap_update(pmap);
 	}
 
 #ifdef notyet
@@ -1874,11 +1884,11 @@ ok:
 		if (pmapdebug & (PDB_PTPAGE|PDB_COLLECT))
 			pmapdebug = opmapdebug;
 
-		if (*ste != SG_NV)
+		if (!(*ste & SG_V))
 			printf("collect: kernel STE at %p still valid (%x)\n",
 			       ste, *ste);
 		ste = &Sysptmap[ste - pmap_ste(pmap_kernel(), 0)];
-		if (*ste != SG_NV)
+		if (!(*ste & SG_V))
 			printf("collect: kernel PTmap at %p still valid (%x)\n",
 			       ste, *ste);
 #endif
@@ -2145,7 +2155,7 @@ pmap_mapmulti(pmap, va)
 #endif
 	bste = pmap_ste(pmap, HPMMBASEADDR(va));
 	ste = pmap_ste(pmap, va);
-	if (*ste == SG_NV && (*bste & SG_V)) {
+	if (!(*ste & SG_V) && (*bste & SG_V)) {
 		*ste = *bste;
 		TBIAU();
 		return (0);
@@ -2406,6 +2416,7 @@ pmap_remove_mapping(pmap, va, pte, flags)
 				pmap_remove(pmap_kernel(),
 				    (vaddr_t)ptpmap->pm_stab,
 				    (vaddr_t)ptpmap->pm_stab + MACHINE_STSIZE);
+				pmap_update(pmap_kernel());
 				uvm_pagefree(PHYS_TO_VM_PAGE((paddr_t)
 				    ptpmap->pm_stpa));
 				uvm_km_free_wakeup(st_map,
@@ -2633,8 +2644,7 @@ pmap_enter_ptpage(pmap, va)
 			if (mmutype == MMU_68060) {
 				while (stpa < (paddr_t)pmap->pm_stpa +
 				    MACHINE_STSIZE) {
-					pmap_changebit(stpa, PG_CCB, 0);
-					pmap_changebit(stpa, PG_CI, 1);
+					pmap_changebit(stpa, PG_CI, ~PG_CCB);
 					stpa += PAGE_SIZE;
 				}
 				DCIS();	/* XXX */
@@ -2726,12 +2736,10 @@ pmap_enter_ptpage(pmap, va)
 		pmap_enter(pmap, va, ptpa, VM_PROT_READ | VM_PROT_WRITE,
 		    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 #if defined(M68060)
-		if (mmutype == MMU_68060) {
-			pmap_changebit(ptpa, PG_CCB, 0);
-			pmap_changebit(ptpa, PG_CI, 1);
-		}
+		if (mmutype == MMU_68060)
+			pmap_changebit(ptpa, PG_CI, ~PG_CCB);
 #endif
-		pmap_update();
+		pmap_update(pmap);
 #ifdef DEBUG
 		if (pmapdebug & (PDB_ENTER|PDB_PTPAGE)) {
 			int ix = pmap_ste(pmap, va) - pmap_ste(pmap, 0);
@@ -2767,7 +2775,7 @@ pmap_enter_ptpage(pmap, va)
 		pmap_enter(pmap_kernel(), va, ptpa,
 		    VM_PROT_READ | VM_PROT_WRITE,
 		    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
-		pmap_update();
+		pmap_update(pmap_kernel());
 	}
 #if defined(M68040) || defined(M68060)
 	/*
@@ -2785,13 +2793,13 @@ pmap_enter_ptpage(pmap, va)
 			       pmap == pmap_kernel() ? "Kernel" : "User",
 			       va, ptpa, pte, *pte);
 #endif
-		pmap_changebit(ptpa, 0, ~PG_CCB);
 #ifdef M68060
 		if (mmutype == MMU_68060) {
-			pmap_changebit(ptpa, PG_CI, 1);
+			pmap_changebit(ptpa, PG_CI, ~PG_CCB);
 			DCIS();
-		}
+		} else
 #endif
+			pmap_changebit(ptpa, 0, ~PG_CCB);
 	}
 #endif
 	/*
@@ -2842,14 +2850,17 @@ pmap_enter_ptpage(pmap, va)
 		    ("enter: stab %p refcnt %d\n",
 		    pmap->pm_stab, pmap->pm_sref));
 	}
-#if 0
-	/*
-	 * Flush stale TLB info.
-	 */
-	if (pmap == pmap_kernel())
-		TBIAS();
-	else
-		TBIAU();
+
+#if defined(M68060)
+	if (mmutype == MMU_68060) {
+		/*
+		 * Flush stale TLB info.
+		 */
+		if (pmap == pmap_kernel())
+			TBIAS();
+		else
+			TBIAU();
+	}
 #endif
 	pmap->pm_ptpages++;
 	splx(s);

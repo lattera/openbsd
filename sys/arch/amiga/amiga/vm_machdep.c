@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.5 2001/12/05 00:39:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.6 2002/03/06 00:56:18 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/05/19 10:14:50 veego Exp $	*/
 
 /*
@@ -158,15 +158,13 @@ pagemove(from, to, size)
 			panic("pagemove 3");
 #endif
 #endif
-		pmap_remove(pmap_kernel(), (vm_offset_t)from,
-		    (vm_offset_t)from + PAGE_SIZE);
-		pmap_enter(pmap_kernel(),  (vm_offset_t)to, pa,
-		    VM_PROT_READ|VM_PROT_WRITE,
-		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		pmap_kremove((vaddr_t)from, PAGE_SIZE);
+		pmap_kenter_pa((vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -285,25 +283,6 @@ cpu_coredump(p, vp, cred, chdr)
 }
 
 /*
- * Set a red zone in the kernel stack after the u. area.
- * We don't support a redzone right now.  It really isn't clear
- * that it is a good idea since, if the kernel stack were to roll
- * into a write protected page, the processor would lock up (since
- * it cannot create an exception frame) and we would get no useful
- * post-mortem info.  Currently, under the DEBUG option, we just
- * check at every clock interrupt to see if the current k-stack has
- * gone too far (i.e. into the "redzone" page) and if so, panic.
- * Look at _lev6intr in locore.s for more details.
- */
-/*ARGSUSED*/
-void
-setredzone(pte, vaddr)
-	u_int *pte;
-	caddr_t vaddr;
-{
-}
-
-/*
  * Convert kernel VA to physical address
  */
 int
@@ -353,6 +332,7 @@ vmapbuf(bp, len)
                 kva += PAGE_SIZE;
                 len -= PAGE_SIZE;
         } while (len);
+	pmap_update(kpmap);
 }
 
 /*
@@ -373,10 +353,8 @@ vunmapbuf(bp, len)
         off = (vaddr_t)bp->b_data - kva;
         len = m68k_round_page(off + len);
 
-        /*
-         * pmap_remove() is unnecessary here, as kmem_free_wakeup()
-         * will do it for us.
-         */
+	pmap_remove(pmap_kernel(), kva, kva + len);
+	pmap_update(pmap_kernel());
         uvm_km_free_wakeup(phys_map, kva, len);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.2 2001/07/04 10:16:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.3 2002/03/06 00:57:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -88,7 +88,6 @@ struct pmap {
 	struct simplelock	pmap_lock;	/* lock on map */
 	int			pmap_refcnt;	/* reference count */
 	pa_space_t		pmap_space;	/* space for this pmap */
-	u_int			pmap_pid;	/* protection id for pmap */
 	struct pmap_statistics	pmap_stats;	/* statistics */
 } *pmap_t;
 extern pmap_t	kernel_pmap;			/* The kernel's map */
@@ -140,7 +139,7 @@ struct pv_page {
 	struct pv_entry pvp_pv[NPVPPG];
 };
 
-#define HPPA_MAX_PID	0xfffa
+#define HPPA_SID_MAX	0x7fff
 #define	HPPA_SID_KERNEL	0
 #define	HPPA_PID_KERNEL	2
 
@@ -150,9 +149,6 @@ struct pv_page {
 #define KERNEL_DATA_PROT (TLB_AR_KRW | (KERNEL_ACCESS_ID << 1))
 
 #ifdef _KERNEL
-#define cache_align(x)	(((x) + dcache_line_mask) & ~(dcache_line_mask))
-extern int dcache_line_mask;
-
 extern void gateway_page __P((void));
 
 #define	PMAP_STEAL_MEMORY	/* we have some memory to steal */
@@ -172,6 +168,7 @@ extern void gateway_page __P((void));
 #define pmap_kernel_va(VA)	\
 	(((VA) >= VM_MIN_KERNEL_ADDRESS) && ((VA) <= VM_MAX_KERNEL_ADDRESS))
 
+#define	pmap_sid2pid(s)			(((s) + 1) << 1)
 #define pmap_kernel()			(kernel_pmap)
 #define	pmap_resident_count(pmap)	((pmap)->pmap_stats.resident_count)
 #define pmap_reference(pmap) \
@@ -183,7 +180,7 @@ do { if (pmap) { \
 #define pmap_collect(pmap)
 #define pmap_release(pmap)
 #define pmap_copy(dpmap,spmap,da,len,sa)
-#define	pmap_update()
+#define	pmap_update(pm)
 #define	pmap_activate(p)
 #define	pmap_deactivate(p)
 

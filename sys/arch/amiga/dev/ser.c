@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ser.c,v 1.9 1998/02/22 23:33:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ser.c,v 1.9.10.1 2002/03/06 00:56:19 niklas Exp $	*/
 /*	$NetBSD: ser.c,v 1.43 1998/01/12 10:40:11 thorpej Exp $	*/
 
 /*
@@ -79,11 +79,6 @@
 
 #define SERUNIT(dev)   (minor(dev) & 0x7f)
 #define SERCUA(dev)    (minor(dev) & 0x80)
-
-/* Macros to clear/set/test flags. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
 
 void serattach __P((struct device *, struct device *, void *));
 int sermatch __P((struct device *, void *, void *));
@@ -1052,7 +1047,7 @@ sermctl(dev, bits, how)
 		ub = ~ciab.pra;
 		break;
 	}
-	(void)splx(s);
+	splx(s);
 
 	bits = 0;
 	if (ISSET(ub, CIAB_PRA_DTR))
