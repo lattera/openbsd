@@ -1,0 +1,7 @@
+#	$OpenBSD: src/regress/sys/uvm/Makefile,v 1.2 2002/02/23 01:25:11 art Exp $
+
+SUBDIR=misc
+
+install:
+
+.include <bsd.subdir.mk>
