@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.6 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.7 2004/02/21 02:49:00 niklas Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -80,6 +80,35 @@
  * Posix defines a <sched.h> which may want to include <sys/sched.h>
  */
 
+/*
+ * CPU states.
+ * XXX Not really scheduler state, but no other good place to put
+ * it right now, and it really is per-CPU.
+ */
+#define CP_USER         0
+#define CP_NICE         1
+#define CP_SYS          2
+#define CP_INTR         3
+#define CP_IDLE         4
+#define CPUSTATES       5
+
+/*
+ * Per-CPU scheduler state.
+ */
+struct schedstate_percpu {
+        struct timeval spc_runtime;     /* time curproc started running */
+        __volatile int spc_flags;       /* flags; see below */
+        u_int spc_schedticks;           /* ticks for schedclock() */
+        u_int64_t spc_cp_time[CPUSTATES]; /* CPU state statistics */
+        u_char spc_curpriority;         /* usrpri of curproc */
+};
+
+/* spc_flags */
+#define SPCF_SEENRR             0x0001  /* process has seen roundrobin() */
+#define SPCF_SHOULDYIELD        0x0002  /* process should yield the CPU */
+
+#define SPCF_SWITCHCLEAR        (SPCF_SEENRR|SPCF_SHOULDYIELD)
+
 #ifdef	_KERNEL
 
 #define	PPQ	(128 / NQS)		/* priorities per queue */
@@ -116,34 +145,6 @@ scheduler_wait_hook(parent, child)
 }
 #endif	/* _SYS_PROC_H_ */
 
-/*
- * CPU states.
- * XXX Not really scheduler state, but no other good place to put
- * it right now, and it really is per-CPU.
- */
-#define CP_USER         0
-#define CP_NICE         1
-#define CP_SYS          2
-#define CP_INTR         3
-#define CP_IDLE         4
-#define CPUSTATES       5
-
-/*
- * Per-CPU scheduler state.
- */
-struct schedstate_percpu {
-        struct timeval spc_runtime;     /* time curproc started running */
-        __volatile int spc_flags;       /* flags; see below */
-        u_int spc_schedticks;           /* ticks for schedclock() */
-        u_int64_t spc_cp_time[CPUSTATES]; /* CPU state statistics */
-        u_char spc_curpriority;         /* usrpri of curproc */
-};
-
-/* spc_flags */
-#define SPCF_SEENRR             0x0001  /* process has seen roundrobin() */
-#define SPCF_SHOULDYIELD        0x0002  /* process should yield the CPU */
-
-#define SPCF_SWITCHCLEAR        (SPCF_SEENRR|SPCF_SHOULDYIELD)
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
 #include <sys/lock.h>
