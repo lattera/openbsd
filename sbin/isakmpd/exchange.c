@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.84 2003/08/08 08:46:59 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.84.2.1 2004/01/13 22:50:07 brad Exp $	*/
 /*	$EOM: exchange.c,v 1.143 2000/12/04 00:02:25 angelos Exp $	*/
 
 /*
@@ -220,8 +220,10 @@ exchange_validate (struct message *msg)
 	      && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_HASH])
 	      && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_SIG]))
 	  || (*pc == EXCHANGE_SCRIPT_INFO
-	      && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_NOTIFY])
-	      && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_DELETE])))
+	      && ((!TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_NOTIFY])
+		   && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_DELETE]))
+	          || (TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_DELETE])
+		      && !TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_HASH])))))
 	{
 	  /* Missing payload.  */
 	  LOG_DBG ((LOG_MESSAGE, 70,
