@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996
+ * Copyright (c) 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/machdep.c,v 1.1 1996/12/12 16:22:51 bitblt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/machdep.c,v 1.2 1999/07/28 20:41:35 jakob Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -29,8 +29,6 @@ static const char rcsid[] =
 #include <sys/sysinfo.h>
 #include <sys/proc.h>
 #endif
-
-#include <pcap.h>
 
 #include "machdep.h"
 

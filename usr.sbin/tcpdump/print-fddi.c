@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1991, 1992, 1993, 1994, 1995, 1996
+ * Copyright (c) 1991, 1992, 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-fddi.c,v 1.6 1997/07/25 20:12:24 mickey Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-fddi.c,v 1.7 1998/06/02 05:25:54 deraadt Exp $ (LBL)";
 #endif
 
 #ifdef HAVE_FDDI
