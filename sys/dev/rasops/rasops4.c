@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops4.c,v 1.1.4.1 2001/05/14 22:26:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/rasops/rasops4.c,v 1.1.4.2 2002/03/30 08:19:20 niklas Exp $ */
 /* 	$NetBSD: $	*/
 
 /*-
@@ -51,15 +51,15 @@
 #include <dev/rasops/rasops.h>
 #include <dev/rasops/rasops_masks.h>
 
-static void	rasops4_copycols __P((void *, int, int, int, int));
-static void	rasops4_erasecols __P((void *, int, int, int, long));
-static void	rasops4_do_cursor __P((struct rasops_info *));
-static void	rasops4_putchar __P((void *, int, int col, u_int, long));
+static void	rasops4_copycols(void *, int, int, int, int);
+static void	rasops4_erasecols(void *, int, int, int, long);
+static void	rasops4_do_cursor(struct rasops_info *);
+static void	rasops4_putchar(void *, int, int col, u_int, long);
 #ifndef RASOPS_SMALL
-static void	rasops4_putchar8 __P((void *, int, int col, u_int, long));
-static void	rasops4_putchar12 __P((void *, int, int col, u_int, long));
-static void	rasops4_putchar16 __P((void *, int, int col, u_int, long));
-static void	rasops4_makestamp __P((struct rasops_info *, long));
+static void	rasops4_putchar8(void *, int, int col, u_int, long);
+static void	rasops4_putchar12(void *, int, int col, u_int, long);
+static void	rasops4_putchar16(void *, int, int col, u_int, long);
+static void	rasops4_makestamp(struct rasops_info *, long);
 #endif
 
 /*

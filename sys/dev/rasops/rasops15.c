@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops15.c,v 1.1.4.1 2001/05/14 22:26:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/rasops/rasops15.c,v 1.1.4.2 2002/03/30 08:19:20 niklas Exp $ */
 /* 	$NetBSD: rasops15.c,v 1.7 2000/04/12 14:22:29 pk Exp $	*/
 
 /*-
@@ -49,12 +49,12 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/rasops/rasops.h>
 
-static void 	rasops15_putchar __P((void *, int, int, u_int, long attr));
+static void 	rasops15_putchar(void *, int, int, u_int, long attr);
 #ifndef RASOPS_SMALL
-static void 	rasops15_putchar8 __P((void *, int, int, u_int, long attr));
-static void 	rasops15_putchar12 __P((void *, int, int, u_int, long attr));
-static void 	rasops15_putchar16 __P((void *, int, int, u_int, long attr));
-static void	rasops15_makestamp __P((struct rasops_info *, long));
+static void 	rasops15_putchar8(void *, int, int, u_int, long attr);
+static void 	rasops15_putchar12(void *, int, int, u_int, long attr);
+static void 	rasops15_putchar16(void *, int, int, u_int, long attr);
+static void	rasops15_makestamp(struct rasops_info *, long);
 #endif
 
 /*
