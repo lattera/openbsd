@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/pppd/upap.c,v 1.2 1996/03/25 15:55:58 niklas Exp $	*/
+
 /*
  * upap.c - User/Password Authentication Protocol.
  *
@@ -18,7 +20,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: upap.c,v 1.6 1995/07/04 23:48:10 paulus Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/pppd/upap.c,v 1.2 1996/03/25 15:55:58 niklas Exp $";
 #endif
 
 /*
@@ -34,9 +36,13 @@ static char rcsid[] = "$Id: upap.c,v 1.6 1995/07/04 23:48:10 paulus Exp $";
 #include "pppd.h"
 #include "upap.h"
 
+struct protent pap_protent = {
+    PPP_PAP, upap_init, upap_input, upap_protrej,
+    upap_lowerup, upap_lowerdown, NULL, NULL,
+    upap_printpkt, NULL, 1, "PAP", NULL, NULL
+};
 
 upap_state upap[NUM_PPP];		/* UPAP state; one for each unit */
-
 
 static void upap_timeout __P((caddr_t));
 static void upap_reqtimeout __P((caddr_t));

@@ -1,4 +1,6 @@
 %{
+/*	$OpenBSD: src/usr.sbin/config/gram.y,v 1.2 1996/03/25 15:55:04 niklas Exp $	*/
+/*	$NetBSD: gram.y,v 1.3 1996/03/03 17:28:13 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -42,7 +44,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)gram.y	8.1 (Berkeley) 6/6/93
- *	$Id: gram.y,v 1.2 1995/04/28 08:15:48 cgd Exp $
  */
 
 #include <sys/param.h>

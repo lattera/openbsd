@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.sbin/config/sem.c,v 1.2 1996/03/25 15:55:13 niklas Exp $	*/
+/*	$NetBSD: sem.c,v 1.2 1996/03/03 17:28:37 thorpej Exp $	*/
+
 /* 
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -40,7 +43,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)sem.c	8.1 (Berkeley) 6/6/93
- *	$Id: sem.c,v 1.1 1995/04/28 06:55:23 cgd Exp $
  */
 
 #include <sys/param.h>

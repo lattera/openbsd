@@ -1,9 +1,8 @@
-#	$Id: Makefile,v 1.8 1995/07/04 23:43:52 paulus Exp $
+#	$OpenBSD: src/usr.sbin/pppd/pppstats/Makefile,v 1.2 1996/03/25 15:56:03 niklas Exp $
 
 PROG=	pppstats
 SRCS=	pppstats.c
 MAN=	pppstats.8
-MLINKS= pppstats.8 slstats.8
 BINDIR=	/usr/sbin
 
 .include <bsd.prog.mk>
