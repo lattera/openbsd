@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	5.2 (Berkeley) 9/27/90
-#	$Id: Makefile,v 1.5 1994/12/22 11:37:41 cgd Exp $
+#	$OpenBSD: src/usr.sbin/portmap/Makefile,v 1.2 1997/01/17 16:12:36 millert Exp $
 
 PROG=	portmap
 MAN=	portmap.8
