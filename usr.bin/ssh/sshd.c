@@ -18,7 +18,7 @@ agent connections.
 */
 
 #include "includes.h"
-RCSID("$Id: sshd.c,v 1.24 1999/10/07 21:45:02 markus Exp $");
+RCSID("$Id: sshd.c,v 1.25 1999/10/07 22:46:33 markus Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -1233,7 +1233,7 @@ do_authentication(char *user, int privileged_port)
 
 	    packet_integrity_check(plen, nlen, type);
 	    
-	    if (auth_rsa(pw, n))
+	    if (auth_rsa(pw, n, options.strict_modes))
 	      { 
 		/* Successful authentication. */
 		BN_clear_free(n);
