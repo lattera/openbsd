@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-keyscan/Makefile,v 1.2.2.2 2001/02/19 17:19:52 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-keyscan/Makefile,v 1.2.2.3 2001/03/21 19:46:34 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -10,7 +10,7 @@ BINMODE?=555
 BINDIR=	/usr/bin
 MAN=	ssh-keyscan.1
 
-SRCS=	ssh-keyscan.c log-client.c
+SRCS=	ssh-keyscan.c
 
 .include <bsd.prog.mk>
 

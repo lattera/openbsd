@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.3.2.2 2001/02/19 17:18:55 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.3.2.3 2001/03/21 19:46:25 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* $OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.5.2.2 2001/02/19 17:18:34 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.5.2.3 2001/03/21 19:46:22 jason Exp $ */
 
 #ifndef AUTH_OPTIONS_H
 #define AUTH_OPTIONS_H

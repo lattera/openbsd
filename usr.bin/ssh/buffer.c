@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.8.2.2 2001/02/19 17:18:42 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.8.2.3 2001/03/21 19:46:23 jason Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"

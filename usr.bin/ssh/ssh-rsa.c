@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-rsa.c,v 1.6.2.2 2001/02/19 17:19:31 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-rsa.c,v 1.6.2.3 2001/03/21 19:46:30 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>

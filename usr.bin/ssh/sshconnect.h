@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.2.2.2 2001/02/19 17:19:36 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.2.2.3 2001/03/21 19:46:31 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.

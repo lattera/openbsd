@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.30.2.2 2001/02/19 17:19:19 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.30.2.3 2001/03/21 19:46:28 jason Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H

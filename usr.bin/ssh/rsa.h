@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.2 2001/02/19 17:19:16 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.3 2001/03/21 19:46:27 jason Exp $"); */
 
 #ifndef RSA_H
 #define RSA_H

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.6.2.2 2001/02/19 17:18:43 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.6.2.3 2001/03/21 19:46:23 jason Exp $"); */
 
 #ifndef BUFFER_H
 #define BUFFER_H

@@ -12,7 +12,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.h,v 1.1 2001/03/04 01:46:30 djm Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.h,v 1.1.4.1 2001/03/21 19:46:32 jason Exp $"); */
 
 #ifndef SSHPTY_H
 #define SSHPTY_H

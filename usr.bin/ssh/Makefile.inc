@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.12.2.2 2001/02/19 17:18:31 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.12.2.3 2001/03/21 19:46:21 jason Exp $
 
 CFLAGS+=	-I${.CURDIR}/..
 

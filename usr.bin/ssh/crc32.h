@@ -1,6 +1,6 @@
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
- * Copyright (c) 1992 Tatu Ylonen, Espoo, Finland
+ * Copyright (c) 1992 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
  * Functions for computing 32-bit CRC.
  *
@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.8.2.2 2001/02/19 17:18:52 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.8.2.3 2001/03/21 19:46:24 jason Exp $"); */
 
 #ifndef CRC32_H
 #define CRC32_H

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-add/Makefile,v 1.17.2.2 2001/02/19 17:19:49 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-add/Makefile,v 1.17.2.3 2001/03/21 19:46:33 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -10,9 +10,9 @@ BINMODE?=555
 BINDIR=	/usr/bin
 MAN=	ssh-add.1
 
-SRCS=	ssh-add.c log-client.c
+SRCS=	ssh-add.c
 
 .include <bsd.prog.mk>
 
-LDADD+=	-lcrypto -lutil -lz
-DPADD+= ${LIBCRYPTO} ${LIBDES} ${LIBUTIL} ${LIBZ}
+LDADD+=	-lcrypto
+DPADD+= ${LIBCRYPTO}

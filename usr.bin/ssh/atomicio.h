@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.2.2.2 2001/02/19 17:18:32 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.2.2.3 2001/03/21 19:46:22 jason Exp $	*/
 
 /*
- * Copyright (c) 1995,1999 Theo de Raadt
+ * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

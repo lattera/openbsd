@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.2.2 2001/02/19 17:19:22 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.2.3 2001/03/21 19:46:28 jason Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"

@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/nchan.h,v 1.9 2000/09/07 20:27:52 deraadt Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/nchan.h,v 1.9.2.1 2001/03/21 19:46:26 jason Exp $"); */
 
 #ifndef NCHAN_H
 #define NCHAN_H
@@ -84,7 +84,7 @@ extern chan_event_fn	*chan_rcvd_ieof;
 extern chan_event_fn	*chan_write_failed;
 extern chan_event_fn	*chan_obuf_empty;
 
-extern chan_event_fn	*chan_delete_if_full_closed;
+int chan_is_dead(Channel * c);
 
 void    chan_init_iostates(Channel * c);
 void	chan_init(void);

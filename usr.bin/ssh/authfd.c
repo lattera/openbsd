@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfd.c,v 1.29.2.2 2001/02/19 17:18:39 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfd.c,v 1.29.2.3 2001/03/21 19:46:22 jason Exp $");
 
 #include <openssl/evp.h>
 
@@ -75,7 +75,8 @@ ssh_get_authentication_socket(void)
 
 	sunaddr.sun_family = AF_UNIX;
 	strlcpy(sunaddr.sun_path, authsocket, sizeof(sunaddr.sun_path));
-	sunaddr.sun_len = len = SUN_LEN(&sunaddr)+1;
+	len = SUN_LEN(&sunaddr)+1;
+	sunaddr.sun_len = len;
 
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sock < 0)
@@ -117,6 +118,8 @@ ssh_request_reply(AuthenticationConnection *auth, Buffer *request, Buffer *reply
 	len = 4;
 	while (len > 0) {
 		l = read(auth->fd, buf + 4 - len, len);
+		if (l == -1 && (errno == EAGAIN || errno == EINTR))
+			continue; 
 		if (l <= 0) {
 			error("Error reading response length from authentication socket.");
 			return 0;
@@ -136,6 +139,8 @@ ssh_request_reply(AuthenticationConnection *auth, Buffer *request, Buffer *reply
 		if (l > sizeof(buf))
 			l = sizeof(buf);
 		l = read(auth->fd, buf, l);
+		if (l == -1 && (errno == EAGAIN || errno == EINTR))
+			continue; 
 		if (l <= 0) {
 			error("Error reading response from authentication socket.");
 			return 0;
@@ -251,7 +256,7 @@ ssh_get_num_identities(AuthenticationConnection *auth, int version)
 	/* Get the number of entries in the response and check it for sanity. */
 	auth->howmany = buffer_get_int(&auth->identities);
 	if (auth->howmany > 1024)
-		fatal("Too many identities in authentication reply: %d\n",
+		fatal("Too many identities in authentication reply: %d",
 		    auth->howmany);
 
 	return auth->howmany;
