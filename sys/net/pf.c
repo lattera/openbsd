@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.19 2001/06/25 00:14:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.20 2001/06/25 01:00:35 provos Exp $ */
 
 /*
  * Copyright (c) 2001, Daniel Hartmeier
@@ -1788,9 +1788,7 @@ pf_test(int direction, struct ifnet *ifp, struct mbuf **m)
 	}
 
 	default:
-		printf("packetfilter: dropping unsupported protocol");
-		print_ip(ifp, h);
-		action = PF_DROP;
+		action = PF_PASS;
 		break;
 	}
 
