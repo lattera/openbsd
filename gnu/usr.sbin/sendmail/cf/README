@@ -3630,6 +3630,7 @@ confMAX_HEADERS_LENGTH	MaxHeadersLength
 confMAX_MIME_HEADER_LENGTH  MaxMimeHeaderLength
 					[undefined] Maximum length of
 					certain MIME header field values.
+					If not set, sendmail uses 2048/1024.
 confCONNECTION_RATE_THROTTLE ConnectionRateThrottle
 					[undefined] The maximum number of
 					connections permitted per second per
@@ -4311,4 +4312,4 @@ M4 DIVERSIONS
    8	DNS based blacklists
    9	special local rulesets (1 and 2)
 
-$Revision: 1.14 $, Last updated $Date: 2002/06/26 04:48:54 $
+$Revision: 1.15 $, Last updated $Date: 2002/09/15 02:23:35 $

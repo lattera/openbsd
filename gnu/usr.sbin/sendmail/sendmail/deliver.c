@@ -1154,7 +1154,7 @@ coloncmp(a, b)
 		/* Need to account for IPv6 bracketed addresses */
 		if (*a == '[')
 			braclev++;
-		else if (*a == '[' && braclev > 0)
+		else if (*a == ']' && braclev > 0)
 			braclev--;
 		else if (*a == ':' && braclev <= 0)
 		{
@@ -4700,7 +4700,11 @@ putbody(mci, e, separator)
 				{
 					pos += bp - buf;
 					if (c != '\r')
+					{
+						SM_ASSERT(pbp < peekbuf +
+								sizeof(peekbuf));
 						*pbp++ = c;
+					}
 				}
 
 				bp = buf;
@@ -4740,6 +4744,7 @@ putbody(mci, e, separator)
 				}
 
 				/* had a naked carriage return */
+				SM_ASSERT(pbp < peekbuf + sizeof(peekbuf));
 				*pbp++ = c;
 				c = '\r';
 				ostate = OS_INLINE;
@@ -4768,7 +4773,11 @@ putch:
 					else if ((d = sm_io_getc(e->e_dfp,
 								 SM_TIME_DEFAULT))
 						 != SM_IO_EOF)
+					{
+						SM_ASSERT(pbp < peekbuf +
+									sizeof(peekbuf));
 						*pbp++ = d;
+					}
 
 					if (d == '\n' || d == SM_IO_EOF)
 					{
@@ -4818,6 +4827,8 @@ putch:
 								     mci->mci_mailer->m_eol);
 					}
 					ostate = OS_HEAD;
+					SM_ASSERT(pbp < peekbuf +
+							sizeof(peekbuf));
 					*pbp++ = c;
 					continue;
 				}

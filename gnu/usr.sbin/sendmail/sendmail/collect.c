@@ -434,6 +434,7 @@ collect(fp, smtpmode, hdrp, e)
 					  OpMode != MD_ARPAFTP))
 
 				{
+					SM_ASSERT(pbp < peekbuf + sizeof(peekbuf));
 					*pbp++ = c;
 					c = '.';
 				}
@@ -445,6 +446,7 @@ collect(fp, smtpmode, hdrp, e)
 				else
 				{
 					/* push back the ".\rx" */
+					SM_ASSERT(pbp < peekbuf + sizeof(peekbuf));
 					*pbp++ = c;
 					if (OpMode != MD_SMTP &&
 					    OpMode != MD_DAEMON &&
@@ -615,6 +617,7 @@ nextstate:
 			}
 
 			/* trim off trailing CRLF or NL */
+			SM_ASSERT(bp > buf);
 			if (*--bp != '\n' || *--bp != '\r')
 				bp++;
 			*bp = '\0';
