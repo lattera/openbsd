@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.17 2002/03/14 01:26:31 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.18 2002/03/14 03:15:53 millert Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -142,7 +142,7 @@ db_read_bytes(addr, size, data)
 	size_t size;
 	char *data;
 {
-	register char *src = (char*)addr;
+	register char *src = (char *)addr;
 
 	while (size--)
 		*data++ = *src++;
