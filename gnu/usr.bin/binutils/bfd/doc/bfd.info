@@ -1,5 +1,4 @@
-This is Info file bfd.info, produced by Makeinfo-1.64 from the input
-file ./bfd.texinfo.
+This is bfd.info, produced by makeinfo version 4.0 from bfd.texinfo.
 
 START-INFO-DIR-ENTRY
 * Bfd: (bfd).                   The Binary File Descriptor library.
@@ -25,70 +24,72 @@ versions.
 
 
 Indirect:
-bfd.info-1: 936
-bfd.info-2: 50487
-bfd.info-3: 91356
-bfd.info-4: 139850
-bfd.info-5: 181537
+bfd.info-1: 916
+bfd.info-2: 37727
+bfd.info-3: 81566
+bfd.info-4: 126215
+bfd.info-5: 175891
+bfd.info-6: 205826
+bfd.info-7: 233431
 
 Tag Table:
 (Indirect)
-Node: Top936
-Node: Overview1201
-Node: History2251
-Node: How It Works3192
-Node: What BFD Version 2 Can Do4733
-Node: BFD information loss6047
-Node: Canonical format8570
-Node: BFD front end12931
-Node: Memory Usage31295
-Node: Initialization32518
-Node: Sections32890
-Node: Section Input33365
-Node: Section Output34717
-Node: typedef asection37178
-Node: section prototypes50487
-Node: Symbols56231
-Node: Reading Symbols57818
-Node: Writing Symbols58898
-Node: Mini Symbols60458
-Node: typedef asymbol61419
-Node: symbol handling functions66065
-Node: Archives70069
-Node: Formats73671
-Node: Relocations76452
-Node: typedef arelent77168
-Node: howto manager91356
-Node: Core Files106226
-Node: Targets107231
-Node: bfd_target109189
-Node: Architectures126860
-Node: Opening and Closing136295
-Node: Internal139850
-Node: File Caching144788
-Node: Linker Functions147532
-Node: Creating a Linker Hash Table149195
-Node: Adding Symbols to the Hash Table150918
-Node: Differing file formats151804
-Node: Adding symbols from an object file153533
-Node: Adding symbols from an archive155665
-Node: Performing the Final Link158060
-Node: Information provided by the linker159288
-Node: Relocating the section contents160420
-Node: Writing the symbol table162153
-Node: Hash Tables164740
-Node: Creating and Freeing a Hash Table165928
-Node: Looking Up or Entering a String167080
-Node: Traversing a Hash Table168318
-Node: Deriving a New Hash Table Type169092
-Node: Define the Derived Structures170144
-Node: Write the Derived Creation Routine171206
-Node: Write Other Derived Routines173884
-Node: BFD back ends175180
-Node: What to Put Where175399
-Node: aout175537
-Node: coff181537
-Node: elf206935
-Node: Index207760
+Node: Top916
+Node: Overview1181
+Node: History2231
+Node: How It Works3172
+Node: What BFD Version 2 Can Do4710
+Node: BFD information loss6024
+Node: Canonical format8547
+Node: BFD front end12908
+Node: Memory Usage31825
+Node: Initialization33048
+Node: Sections33425
+Node: Section Input33903
+Node: Section Output35259
+Node: typedef asection37727
+Node: section prototypes53227
+Node: Symbols59441
+Node: Reading Symbols61031
+Node: Writing Symbols62205
+Node: Mini Symbols63895
+Node: typedef asymbol64860
+Node: symbol handling functions70089
+Node: Archives74418
+Node: Formats78036
+Node: Relocations80846
+Node: typedef arelent81566
+Node: howto manager97725
+Node: Core Files123231
+Node: Targets124252
+Node: bfd_target126215
+Node: Architectures145125
+Node: Opening and Closing158434
+Node: Internal162831
+Node: File Caching168829
+Node: Linker Functions171607
+Node: Creating a Linker Hash Table173273
+Node: Adding Symbols to the Hash Table175001
+Node: Differing file formats175891
+Node: Adding symbols from an object file177624
+Node: Adding symbols from an archive179760
+Node: Performing the Final Link182159
+Node: Information provided by the linker183390
+Node: Relocating the section contents184526
+Node: Writing the symbol table186263
+Node: Hash Tables188857
+Node: Creating and Freeing a Hash Table190048
+Node: Looking Up or Entering a String191205
+Node: Traversing a Hash Table192447
+Node: Deriving a New Hash Table Type193225
+Node: Define the Derived Structures194280
+Node: Write the Derived Creation Routine195346
+Node: Write Other Derived Routines198045
+Node: BFD back ends199345
+Node: What to Put Where199564
+Node: aout199702
+Node: coff205826
+Node: elf232598
+Node: Index233431
 
 End Tag Table

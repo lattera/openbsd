@@ -1,15 +1,18 @@
-This is Info file configure.info, produced by Makeinfo-1.64 from the
-input file ./configure.texi.
+This is configure.info, produced by makeinfo version 4.0 from
+./configure.texi.
 
+INFO-DIR-SECTION GNU admin
 START-INFO-DIR-ENTRY
-* configure: (configure).        Cygnus configure.
+* configure: (configure).	The GNU configure and build system
 END-INFO-DIR-ENTRY
 
-   This document describes the Cygnus Support version of `configure'.
+   This file documents the GNU configure and build system.
 
-   Copyright (C) 1991, 1992, 1993 Cygnus Support Permission is granted
-to make and distribute verbatim copies of this manual provided the
-copyright notice and this permission notice are preserved on all copies.
+   Copyright (C) 1998 Cygnus Solutions.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
 
    Permission is granted to copy and distribute modified versions of
 this manual under the conditions for verbatim copying, provided that
@@ -19,548 +22,1116 @@ permission notice identical to this one.
    Permission is granted to copy and distribute translations of this
 manual into another language, under the above conditions for modified
 versions, except that this permission notice may be stated in a
-translation approved by Cygnus Support.
+translation approved by the Foundation.
 
 
-File: configure.info,  Node: Makefile fragments,  Next: Makefile extensions,  Prev: Target,  Up: Using configure
+File: configure.info,  Node: Configuration Name Definition,  Next: Using Configuration Names,  Up: Configuration Names
 
-Adding information about local conventions
-==========================================
+Configuration Name Definition
+=============================
 
-   If you find that a tool does not get configured to your liking, or if
-`configure''s conventions differ from your local conventions, you should
-probably consider "site-specific `Makefile' fragments".  See also *Note
-Adding site info: Sites.
+   This is a string of the form CPU-MANUFACTURER-OPERATING_SYSTEM.  In
+some cases, this is extended to a four part form:
+CPU-MANUFACTURER-KERNEL-OPERATING_SYSTEM.
 
-   These are probably not the right choice for options that can be set
-from the `configure' command line or for differences that are host or
-target dependent.
+   When using a configuration name in a configure option, it is normally
+not necessary to specify an entire name.  In particular, the
+MANUFACTURER field is often omitted, leading to strings such as
+`i386-linux' or `sparc-sunos'.  The shell script `config.sub' will
+translate these shortened strings into the canonical form.  autoconf
+will arrange for `config.sub' to be run automatically when it is needed.
 
-   Cygnus `configure' uses three types of `Makefile' fragments.  In a
-generated `Makefile' they appear in the order: "target fragment", "host
-fragment", and "site fragment".  This allows host fragments to override
-target fragments, and site fragments to override both.
+   The fields of a configuration name are as follows:
 
-   Host-specific `Makefile' fragments conventionally reside in the
-`./config/' subdirectory with names of the form `mh-HOSTTYPE'.  They
-are used for hosts that require odd options to the standard compiler and
-for compile time options based on the host configuration.
+CPU
+     The type of processor.  This is typically something like `i386' or
+     `sparc'.  More specific variants are used as well, such as
+     `mipsel' to indicate a little endian MIPS processor.
 
-   Target-specific `Makefile' fragments conventionally reside in the
-`./config/' subdirectory with names of the form `mt-TARGET'.  They are
-used for target dependent compile time options.
+MANUFACTURER
+     A somewhat freeform field which indicates the manufacturer of the
+     system.  This is often simply `unknown'.  Other common strings are
+     `pc' for an IBM PC compatible system, or the name of a workstation
+     vendor, such as `sun'.
 
-   Site specific `Makefile' fragments conventionally reside in the
-`./config/' subdirectory with names of the form `ms-SITE'.  They are
-used to override host- and target-independent compile time options.
-Note that you can also override these options on the `make' invocation
-line.
+OPERATING_SYSTEM
+     The name of the operating system which is run on the system.  This
+     will be something like `solaris2.5' or `irix6.3'.  There is no
+     particular restriction on the version number, and strings like
+     `aix4.1.4.0' are seen.  For an embedded system, which has no
+     operating system, this field normally indicates the type of object
+     file format, such as `elf' or `coff'.
 
-
-File: configure.info,  Node: Makefile extensions,  Prev: Makefile fragments,  Up: Using configure
+KERNEL
+     This is used mainly for GNU/Linux.  A typical GNU/Linux
+     configuration name is `i586-pc-linux-gnulibc1'.  In this case the
+     kernel, `linux', is separated from the operating system,
+     `gnulibc1'.
 
-Extensions to the GNU coding standards
-======================================
+   The shell script `config.guess' will normally print the correct
+configuration name for the system on which it is run.  It does by
+running `uname' and by examining other characteristics of the system.
 
-   The following additions to the GNU coding standards are required for
-Cygnus `configure' to work properly.
-
-   * The `Makefile' must contain exactly one line starting with `####'.
-     This line should follow any default macro definitions but precede
-     any rules.  Host, target, and site-specific `Makefile' fragments
-     will be inserted immediately after this line.  If the line is
-     missing, the fragments will not be inserted.
-
-   * Cygnus adds the following targets to each `Makefile'.  Their
-     existence is not required for Cygnus `configure', but they are
-     documented here for completeness.
-
-    `info'
-          Build all info files from texinfo source.
-
-    `install-info'
-          Install all info files.
-
-    `clean-info'
-          Remove all info files and any intermediate files that can be
-          generated from texinfo source.
-
-    `Makefile'
-          Calls `./config.status' to rebuild the `Makefile' in this
-          directory.
-
-   * The following `Makefile' targets have revised semantics:
-
-    `install'
-          Should *not* depend on the target `all'.  If the program is
-          not already built, `make install' should fail.  This allows
-          you to install programs even when `make' would otherwise
-          determine them to be out of date.  This can happen, for
-          example, when the result of a `make all' is transported via
-          tape to another machine for installation.
-
-    `clean'
-          Should remove any file that can be regenerated by the
-          `Makefile', excepting only the `Makefile' itself, and any
-          links created by `configure'.  That is, `make all clean'
-          should return all directories to their original condition.
-          If this is not done, then the command sequence
-
-               configure HOST1 ; make all install clean ;
-               configure HOST2 ; make all install
-
-          will fail because of intermediate files intended for HOST1.
-
-   * Cygnus adds the following macros to all `Makefile.in' files, but
-     you are not required to use them to run Cygnus `configure'.
-
-    `docdir'
-          The directory in which to install any documentation that is
-          not either a `man' page or an `info' file.  For `man' pages,
-          see `mandir'; for `info', see `infodir'.
-
-    `includedir'
-          The directory in which to install any header files that
-          should be made available to users.  This is distinct from the
-          `gcc' include directory, which is intended for `gcc' only.
-          Files in `includedir' may be used by `cc' as well.
-
-   * The following macros have revised semantics.  Most of them describe
-     installation directories; see also *Note Full description of all
-     installation subdirectories: Install details.
-
-    `datadir'
-          is used for host independent data files.
-
-    `mandir'
-          The default path for `mandir' depends on `prefix'.
-
-    `infodir'
-          The default path for `infodir' depends on `prefix'.
-
-    `BISON'
-          is assumed to have a `yacc' calling convention.  To use GNU
-          `bison', use `BISON=bison -y'.
-
-   * Each Cygnus `Makefile' also conforms to one additional restriction:
-
-     When libraries are installed, the line containing the call to
-     `INSTALL_DATA' should always be followed by a line containing a
-     call to `RANLIB' on the installed library.  This is to accommodate
-     systems that use `ranlib'.  Systems that do not use `ranlib' can
-     set `RANLIB' to "`echo'" in a host specific `Makefile' fragment.
+   Because `config.guess' can normally determine the configuration name
+for a machine, it is normally only necessary to specify a configuration
+name when building a cross-compiler or when building using a
+cross-compiler.
 
 
-File: configure.info,  Node: Porting,  Next: Variables Index,  Prev: Using configure,  Up: Top
+File: configure.info,  Node: Using Configuration Names,  Prev: Configuration Name Definition,  Up: Configuration Names
 
-Porting with `configure'
-************************
+Using Configuration Names
+=========================
 
-   This section explains how to add programs, host and target
-configuration names, and site-specific information to Cygnus
-`configure'.
+   A configure script will sometimes have to make a decision based on a
+configuration name.  You will need to do this if you have to compile
+code differently based on something which can not be tested using a
+standard autoconf feature test.
+
+   It is normally better to test for particular features, rather than to
+test for a particular system.  This is because as Unix evolves,
+different systems copy features from one another.  Even if you need to
+determine whether the feature is supported based on a configuration
+name, you should define a macro which describes the feature, rather than
+defining a macro which describes the particular system you are on.
+
+   Testing for a particular system is normally done using a case
+statement in `configure.in'.  The case statement might look something
+like the following, assuming that `host' is a shell variable holding a
+canonical configuration name (which will be the case if `configure.in'
+uses the `AC_CANONICAL_HOST' or `AC_CANONICAL_SYSTEM' macro).
+
+     case "${host}" in
+     i[3456]86-*-linux-gnu*) do something ;;
+     sparc*-sun-solaris2.[56789]*) do something ;;
+     sparc*-sun-solaris*) do something ;;
+     mips*-*-elf*) do something ;;
+     esac
+
+   It is particularly important to use `*' after the operating system
+field, in order to match the version number which will be generated by
+`config.guess'.
+
+   In most cases you must be careful to match a range of processor
+types.  For most processor families, a trailing `*' suffices, as in
+`mips*' above.  For the i386 family, something along the lines of
+`i[3456]86' suffices at present.  For the m68k family, you will need
+something like `m68*'.  Of course, if you do not need to match on the
+processor, it is simpler to just replace the entire field by a `*', as
+in `*-*-irix*'.
+
+
+File: configure.info,  Node: Cross Compilation Tools,  Next: Canadian Cross,  Prev: Configuration Names,  Up: Top
+
+Cross Compilation Tools
+***********************
+
+   The GNU configure and build system can be used to build "cross
+compilation" tools.  A cross compilation tool is a tool which runs on
+one system and produces code which runs on another system.
 
 * Menu:
 
-* Programs::               Adding configure to new programs
-* Hosts and targets::      Adding hosts and targets
-* Sites::                  Adding site info
+* Cross Compilation Concepts::		Cross Compilation Concepts.
+* Host and Target::			Host and Target.
+* Using the Host Type::			Using the Host Type.
+* Specifying the Target::       	Specifying the Target.
+* Using the Target Type::		Using the Target Type.
+* Cross Tools in the Cygnus Tree::	Cross Tools in the Cygnus Tree
 
 
-File: configure.info,  Node: Programs,  Next: Hosts and targets,  Up: Porting
+File: configure.info,  Node: Cross Compilation Concepts,  Next: Host and Target,  Up: Cross Compilation Tools
 
-Adding `configure' to new programs
-==================================
+Cross Compilation Concepts
+==========================
 
-   If you are writing a new program, you probably shouldn't worry about
-porting or configuration issues until it is running reasonably on some
-host.  Then refer back to this section.
+   A compiler which produces programs which run on a different system
+is a cross compilation compiler, or simply a "cross compiler".
+Similarly, we speak of cross assemblers, cross linkers, etc.
 
-   If your program currently has a `configure' script that meets the GNU
-standards (*note How Configuration Should Work:
-(standards)Configuration., please do not add Cygnus `configure'.  It
-should be possible to add this program without change to a Cygnus
-`configure' style source tree.
+   In the normal case, a compiler produces code which runs on the same
+system as the one on which the compiler runs.  When it is necessary to
+distinguish this case from the cross compilation case, such a compiler
+is called a "native compiler".  Similarly, we speak of native
+assemblers, etc.
 
-   If the program is not target dependent, please consider using
-`autoconf' instead of Cygnus `configure'.  `autoconf' is available from
-the Free Software Foundation; it is a program which generates an
-executable shell script called `configure' by automatically finding
-information on the system to be configured on and embedding this
-information in the shell script.  `configure' scripts generated by
-`autoconf' require no arguments, and accept the same options as Cygnus
-`configure'.  For detailed instructions on using `autoconf', see *Note
-How to organize and produce Autoconf scripts: (autoconf)Making
-configure Scripts.
-
-   To add Cygnus `configure' to an existing program, do the following:
-
-*Make sure the `Makefile' conforms to the GNU standard
-     The coding standard for writing a GNU `Makefile' is described in
-     *Note Makefile Conventions: (standards)Makefiles.  For technical
-     information on writing a `Makefile', see *Note Writing Makefiles:
-     (make)Makefiles.
-
-*Add Cygnus extensions to the `Makefile'
-     These are described in *Note Extensions to the GNU coding
-     standards: Makefile extensions.
-
-*Collect package specific definitions in a single file
-     Many packages are best configured using a common `Makefile'
-     fragment which is included by all of the makefiles in the
-     different directories of the package.  In order to accomplish
-     this, set the variable `package_makefile_fragment' to the name of
-     the file.  It will be inserted into the final `Makefile' before
-     the target-specific fragment.
-
-*Move host support from `Makefile' to fragments
-     This usually involves finding sections of the `Makefile' that say
-     things like "uncomment these lines for host HOSTTYPE" and moving
-     them to a new file called `./config/mh-HOSTTYPE'. For more
-     information, see *Note Adding hosts and targets: Hosts and targets.
-
-*Choose defaults
-     If the program has compile-time options that determine the way the
-     program should behave, choose reasonable defaults and make these
-     `Makefile' variables.  Be sure the variables are assigned their
-     default values before the `####' line so that site-specific
-     `Makefile' fragments can override them (*note Extensions to the
-     GNU coding standards: Makefile extensions.).
-
-*Locate configuration files
-     If there is configuration information in header files or source
-     files, separate it in such a way that the files have generic
-     names.  Then move the specific instances of those files into the
-     `./config/' subdirectory.
-
-*Separate host and target information
-     Some programs already have this information separated.  If yours
-     does not, you will need to separate these two kinds of
-     configuration information.  "Host specific" information is the
-     information needed to compile the program.  "Target specific"
-     information is information on the format of data files that the
-     program will read or write.  This information should live in
-     separate files in the `./config/' subdirectory with names that
-     reflect the configuration for which they are intended.
-
-     At this point you might skip this step and simply move on.  If you
-     do, you should end up with a program that can be configured only
-     to build "native" tools, that is, tools for which the host system
-     is also the target system.  Later, you could attempt to build a
-     cross tool and separate out the target-specific information by
-     figuring out what went wrong.  This is often simpler than combing
-     through all of the source code.
-
-*Write `configure.in'
-     Usually this involves writing shell script fragments to map from
-     canonical configuration names into the names of the configuration
-     files.  These files will then be linked at configure time from the
-     specific instances of those files in `./config' to files in the
-     build directory with more generic names.  (See also *Note Build
-     directories: Build directories.)  The format of `configure.in' is
-     described in *Note The `configure.in' input file: configure.in.
-
-*Rename `Makefile' to `Makefile.in'
-   At this point you should have a program that can be configured using
-Cygnus `configure'.
+   Although the debugger is not strictly speaking a compilation tool,
+it is nevertheless meaningful to speak of a cross debugger: a debugger
+which is used to debug code which runs on another system.  Everything
+that is said below about configuring cross compilation tools applies to
+the debugger as well.
 
 
-File: configure.info,  Node: Hosts and targets,  Next: Sites,  Prev: Programs,  Up: Porting
+File: configure.info,  Node: Host and Target,  Next: Using the Host Type,  Prev: Cross Compilation Concepts,  Up: Cross Compilation Tools
 
-Adding hosts and targets
-========================
+Host and Target
+===============
 
-   To add a host or target to a program that already uses Cygnus
-`configure', do the following.
+   When building cross compilation tools, there are two different
+systems involved: the system on which the tools will run, and the
+system for which the tools generate code.
 
-   * Make sure the new configuration name is represented in
-     `config.sub'.  If not, add it.  For more details, see the comments
-     in the shell script `config.sub'.
+   The system on which the tools will run is called the "host" system.
 
-   * If you are adding a host configuration, look in `configure.in', in
-     the "per-host" section.  Make sure that your configuration name is
-     represented in the mapping from host configuration names to
-     configuration files.  If not, add it.  Also see *Note The
-     `configure.in' input file: configure.in.
+   The system for which the tools generate code is called the "target"
+system.
 
-   * If you are adding a target configuration, look in `configure.in',
-     in the "per-target" section.  Make sure that your configuration
-     name is represented in the mapping from target configuration names
-     to configuration files.  If not, add it.  Also see *Note The
-     `configure.in' input file: configure.in.
+   For example, suppose you have a compiler which runs on a GNU/Linux
+system and generates ELF programs for a MIPS embedded system.  In this
+case the GNU/Linux system is the host, and the MIPS ELF system is the
+target.  Such a compiler could be called a GNU/Linux cross MIPS ELF
+compiler, or, equivalently, a `i386-linux-gnu' cross `mips-elf'
+compiler.
 
-   * Look in `configure.in' for the variables `files', `links',
-     `host_makefile_frag', and `target_makefile_frag'.  The values
-     assigned to these variables are the names of the configuration
-     files, (relative to `srcdir') that the program uses.  Make sure
-     that copies of the files exist for your host.  If not, create
-     them.  See also *Note Variables available to `configure.in':
-     configure variables.
+   Naturally, most programs are not cross compilation tools.  For those
+programs, it does not make sense to speak of a target.  It only makes
+sense to speak of a target for tools like `gcc' or the `binutils' which
+actually produce running code.  For example, it does not make sense to
+speak of the target of a tool like `bison' or `make'.
 
-   This should be enough to `configure' for a new host or target
-configuration name.  Getting the program to compile and run properly
-represents the hardest work of any port.
+   Most cross compilation tools can also serve as native tools.  For a
+native compilation tool, it is still meaningful to speak of a target.
+For a native tool, the target is the same as the host.  For example, for
+a GNU/Linux native compiler, the host is GNU/Linux, and the target is
+also GNU/Linux.
 
 
-File: configure.info,  Node: Sites,  Prev: Hosts and targets,  Up: Porting
+File: configure.info,  Node: Using the Host Type,  Next: Specifying the Target,  Prev: Host and Target,  Up: Cross Compilation Tools
 
-Adding site info
-================
+Using the Host Type
+===================
 
-   If some of the `Makefile' defaults are not right for your site, you
-can build site-specific `Makefile' fragments.  To do this, do the
-following.
+   In almost all cases the host system is the system on which you run
+the `configure' script, and on which you build the tools (for the case
+when they differ, *note Canadian Cross::).
 
-   * Choose a name for your site.  It must currently be less than
-     eleven characters.
+   If your configure script needs to know the configuration name of the
+host system, and the package is not a cross compilation tool and
+therefore does not have a target, put `AC_CANONICAL_HOST' in
+`configure.in'.  This macro will arrange to define a few shell
+variables when the `configure' script is run.
 
-   * If the program source does not have a `./config/' subdirectory,
-     create it.
+`host'
+     The canonical configuration name of the host.  This will normally
+     be determined by running the `config.guess' shell script, although
+     the user is permitted to override this by using an explicit
+     `--host' option.
 
-   * Create a file called `./config/ms-SITE' where SITE is the name of
-     your site.  In it, set whatever `Makefile' variables you need to
-     override to match your site's conventions.
+`host_alias'
+     In the unusual case that the user used an explicit `--host' option,
+     this will be the argument to `--host'.  In the normal case, this
+     will be the same as the `host' variable.
 
-   * Configure the program with:
+`host_cpu'
+`host_vendor'
+`host_os'
+     The first three parts of the canonical configuration name.
 
-          configure ... --site=SITE
+   The shell variables may be used by putting shell code in
+`configure.in'.  For an example, see *Note Using Configuration Names::.
 
 
-File: configure.info,  Node: Variables Index,  Next: Concept Index,  Prev: Porting,  Up: Top
+File: configure.info,  Node: Specifying the Target,  Next: Using the Target Type,  Prev: Using the Host Type,  Up: Cross Compilation Tools
 
-Variable Index
+Specifying the Target
+=====================
+
+   By default, the `configure' script will assume that the target is
+the same as the host.  This is the more common case; for example, it
+leads to a native compiler rather than a cross compiler.
+
+   If you want to build a cross compilation tool, you must specify the
+target explicitly by using the `--target' option when you run
+`configure'.  The argument to `--target' is the configuration name of
+the system for which you wish to generate code.  *Note Configuration
+Names::.
+
+   For example, to build tools which generate code for a MIPS ELF
+embedded system, you would use `--target mips-elf'.
+
+
+File: configure.info,  Node: Using the Target Type,  Next: Cross Tools in the Cygnus Tree,  Prev: Specifying the Target,  Up: Cross Compilation Tools
+
+Using the Target Type
+=====================
+
+   When writing `configure.in' for a cross compilation tool, you will
+need to use information about the target.  To do this, put
+`AC_CANONICAL_SYSTEM' in `configure.in'.
+
+   `AC_CANONICAL_SYSTEM' will look for a `--target' option and
+canonicalize it using the `config.sub' shell script.  It will also run
+`AC_CANONICAL_HOST' (*note Using the Host Type::).
+
+   The target type will be recorded in the following shell variables.
+Note that the host versions of these variables will also be defined by
+`AC_CANONICAL_HOST'.
+
+`target'
+     The canonical configuration name of the target.
+
+`target_alias'
+     The argument to the `--target' option.  If the user did not specify
+     a `--target' option, this will be the same as `host_alias'.
+
+`target_cpu'
+`target_vendor'
+`target_os'
+     The first three parts of the canonical target configuration name.
+
+   Note that if `host' and `target' are the same string, you can assume
+a native configuration.  If they are different, you can assume a cross
+configuration.
+
+   It is arguably possible for `host' and `target' to represent the
+same system, but for the strings to not be identical.  For example, if
+`config.guess' returns `sparc-sun-sunos4.1.4', and somebody configures
+with `--target sparc-sun-sunos4.1', then the slight differences between
+the two versions of SunOS may be unimportant for your tool.  However,
+in the general case it can be quite difficult to determine whether the
+differences between two configuration names are significant or not.
+Therefore, by convention, if the user specifies a `--target' option
+without specifying a `--host' option, it is assumed that the user wants
+to configure a cross compilation tool.
+
+   The variables `target' and `target_alias' should be handled
+differently.
+
+   In general, whenever the user may actually see a string,
+`target_alias' should be used.  This includes anything which may appear
+in the file system, such as a directory name or part of a tool name.
+It also includes any tool output, unless it is clearly labelled as the
+canonical target configuration name.  This permits the user to use the
+`--target' option to specify how the tool will appear to the outside
+world.
+
+   On the other hand, when checking for characteristics of the target
+system, `target' should be used.  This is because a wide variety of
+`--target' options may map into the same canonical configuration name.
+You should not attempt to duplicate the canonicalization done by
+`config.sub' in your own code.
+
+   By convention, cross tools are installed with a prefix of the
+argument used with the `--target' option, also known as `target_alias'
+(*note Using the Target Type::).  If the user does not use the
+`--target' option, and thus is building a native tool, no prefix is
+used.
+
+   For example, if gcc is configured with `--target mips-elf', then the
+installed binary will be named `mips-elf-gcc'.  If gcc is configured
+without a `--target' option, then the installed binary will be named
+`gcc'.
+
+   The autoconf macro `AC_ARG_PROGRAM' will handle this for you.  If
+you are using automake, no more need be done; the programs will
+automatically be installed with the correct prefixes.  Otherwise, see
+the autoconf documentation for `AC_ARG_PROGRAM'.
+
+
+File: configure.info,  Node: Cross Tools in the Cygnus Tree,  Prev: Using the Target Type,  Up: Cross Compilation Tools
+
+Cross Tools in the Cygnus Tree
+==============================
+
+   The Cygnus tree is used for various packages including gdb, the GNU
+binutils, and egcs.  It is also, of course, used for Cygnus releases.
+
+   In the Cygnus tree, the top level `configure' script uses the old
+Cygnus configure system, not autoconf.  The top level `Makefile.in' is
+written to build packages based on what is in the source tree, and
+supports building a large number of tools in a single
+`configure'/`make' step.
+
+   The Cygnus tree may be configured with a `--target' option.  The
+`--target' option applies recursively to every subdirectory, and
+permits building an entire set of cross tools at once.
+
+* Menu:
+
+* Host and Target Libraries::		Host and Target Libraries.
+* Target Library Configure Scripts::	Target Library Configure Scripts.
+* Make Targets in Cygnus Tree::         Make Targets in Cygnus Tree.
+* Target libiberty::			Target libiberty
+
+
+File: configure.info,  Node: Host and Target Libraries,  Next: Target Library Configure Scripts,  Up: Cross Tools in the Cygnus Tree
+
+Host and Target Libraries
+-------------------------
+
+   The Cygnus tree distinguishes host libraries from target libraries.
+
+   Host libraries are built with the compiler used to build the programs
+which run on the host, which is called the host compiler.  This includes
+libraries such as `bfd' and `tcl'.  These libraries are built with the
+host compiler, and are linked into programs like the binutils or gcc
+which run on the host.
+
+   Target libraries are built with the target compiler.  If gcc is
+present in the source tree, then the target compiler is the gcc that is
+built using the host compiler.  Target libraries are libraries such as
+`newlib' and `libstdc++'.  These libraries are not linked into the host
+programs, but are instead made available for use with programs built
+with the target compiler.
+
+   For the rest of this section, assume that gcc is present in the
+source tree, so that it will be used to build the target libraries.
+
+   There is a complication here.  The configure process needs to know
+which compiler you are going to use to build a tool; otherwise, the
+feature tests will not work correctly.  The Cygnus tree handles this by
+not configuring the target libraries until the target compiler is
+built.  In order to permit everything to build using a single
+`configure'/`make', the configuration of the target libraries is
+actually triggered during the make step.
+
+   When the target libraries are configured, the `--target' option is
+not used.  Instead, the `--host' option is used with the argument of
+the `--target' option for the overall configuration.  If no `--target'
+option was used for the overall configuration, the `--host' option will
+be passed with the output of the `config.guess' shell script.  Any
+`--build' option is passed down unchanged.
+
+   This translation of configuration options is done because since the
+target libraries are compiled with the target compiler, they are being
+built in order to run on the target of the overall configuration.  By
+the definition of host, this means that their host system is the same as
+the target system of the overall configuration.
+
+   The same process is used for both a native configuration and a cross
+configuration.  Even when using a native configuration, the target
+libraries will be configured and built using the newly built compiler.
+This is particularly important for the C++ libraries, since there is no
+reason to assume that the C++ compiler used to build the host tools (if
+there even is one) uses the same ABI as the g++ compiler which will be
+used to build the target libraries.
+
+   There is one difference between a native configuration and a cross
+configuration.  In a native configuration, the target libraries are
+normally configured and built as siblings of the host tools.  In a cross
+configuration, the target libraries are normally built in a subdirectory
+whose name is the argument to `--target'.  This is mainly for
+historical reasons.
+
+   To summarize, running `configure' in the Cygnus tree configures all
+the host libraries and tools, but does not configure any of the target
+libraries.  Running `make' then does the following steps:
+
+   * Build the host libraries.
+
+   * Build the host programs, including gcc.  Note that we call gcc
+     both a host program (since it runs on the host) and a target
+     compiler (since it generates code for the target).
+
+   * Using the newly built target compiler, configure the target
+     libraries.
+
+   * Build the target libraries.
+
+   The steps need not be done in precisely this order, since they are
+actually controlled by `Makefile' targets.
+
+
+File: configure.info,  Node: Target Library Configure Scripts,  Next: Make Targets in Cygnus Tree,  Prev: Host and Target Libraries,  Up: Cross Tools in the Cygnus Tree
+
+Target Library Configure Scripts
+--------------------------------
+
+   There are a few things you must know in order to write a configure
+script for a target library.  This is just a quick sketch, and beginners
+shouldn't worry if they don't follow everything here.
+
+   The target libraries are configured and built using a newly built
+target compiler.  There may not be any startup files or libraries for
+this target compiler.  In fact, those files will probably be built as
+part of some target library, which naturally means that they will not
+exist when your target library is configured.
+
+   This means that the configure script for a target library may not use
+any test which requires doing a link.  This unfortunately includes many
+useful autoconf macros, such as `AC_CHECK_FUNCS'.  autoconf macros
+which do a compile but not a link, such as `AC_CHECK_HEADERS', may be
+used.
+
+   This is a severe restriction, but normally not a fatal one, as target
+libraries can often assume the presence of other target libraries, and
+thus know which functions will be available.
+
+   As of this writing, the autoconf macro `AC_PROG_CC' does a link to
+make sure that the compiler works.  This may fail in a target library,
+so target libraries must use a different set of macros to locate the
+compiler.  See the `configure.in' file in a directory like `libiberty'
+or `libgloss' for an example.
+
+   As noted in the previous section, target libraries are sometimes
+built in directories which are siblings to the host tools, and are
+sometimes built in a subdirectory.  The `--with-target-subdir' configure
+option will be passed when the library is configured.  Its value will be
+an empty string if the target library is a sibling.  Its value will be
+the name of the subdirectory if the target library is in a subdirectory.
+
+   If the overall build is not a native build (i.e., the overall
+configure used the `--target' option), then the library will be
+configured with the `--with-cross-host' option.  The value of this
+option will be the host system of the overall build.  Recall that the
+host system of the library will be the target of the overall build.  If
+the overall build is a native build, the `--with-cross-host' option
+will not be used.
+
+   A library which can be built both standalone and as a target library
+may want to install itself into different directories depending upon the
+case.  When built standalone, or when built native, the library should
+be installed in `$(libdir)'.  When built as a target library which is
+not native, the library should be installed in `$(tooldir)/lib'.  The
+`--with-cross-host' option may be used to distinguish these cases.
+
+   This same test of `--with-cross-host' may be used to see whether it
+is OK to use link tests in the configure script.  If the
+`--with-cross-host' option is not used, then the library is being built
+either standalone or native, and a link should work.
+
+
+File: configure.info,  Node: Make Targets in Cygnus Tree,  Next: Target libiberty,  Prev: Target Library Configure Scripts,  Up: Cross Tools in the Cygnus Tree
+
+Make Targets in Cygnus Tree
+---------------------------
+
+   The top level `Makefile' in the Cygnus tree defines targets for
+every known subdirectory.
+
+   For every subdirectory DIR which holds a host library or program,
+the `Makefile' target `all-DIR' will build that library or program.
+
+   There are dependencies among host tools.  For example, building gcc
+requires first building gas, because the gcc build process invokes the
+target assembler.  These dependencies are reflected in the top level
+`Makefile'.
+
+   For every subdirectory DIR which holds a target library, the
+`Makefile' target `configure-target-DIR' will configure that library.
+The `Makefile' target `all-target-DIR' will build that library.
+
+   Every `configure-target-DIR' target depends upon `all-gcc', since
+gcc, the target compiler, is required to configure the tool.  Every
+`all-target-DIR' target depends upon the corresponding
+`configure-target-DIR' target.
+
+   There are several other targets which may be of interest for each
+directory: `install-DIR', `clean-DIR', and `check-DIR'.  There are also
+corresponding `target' versions of these for the target libraries ,
+such as `install-target-DIR'.
+
+
+File: configure.info,  Node: Target libiberty,  Prev: Make Targets in Cygnus Tree,  Up: Cross Tools in the Cygnus Tree
+
+Target libiberty
+----------------
+
+   The `libiberty' subdirectory is currently a special case, in that it
+is the only directory which is built both using the host compiler and
+using the target compiler.
+
+   This is because the files in `libiberty' are used when building the
+host tools, and they are also incorporated into the `libstdc++' target
+library as support code.
+
+   This duality does not pose any particular difficulties.  It means
+that there are targets for both `all-libiberty' and
+`all-target-libiberty'.
+
+   In a native configuration, when target libraries are not built in a
+subdirectory, the same objects are normally used as both the host build
+and the target build.  This is normally OK, since libiberty contains
+only C code, and in a native configuration the results of the host
+compiler and the target compiler are normally interoperable.
+
+   Irix 6 is again an exception here, since the SGI native compiler
+defaults to using the `O32' ABI, and gcc defaults to using the `N32'
+ABI.  On Irix 6, the target libraries are built in a subdirectory even
+for a native configuration, avoiding this problem.
+
+   There are currently no other libraries built for both the host and
+the target, but there is no conceptual problem with adding more.
+
+
+File: configure.info,  Node: Canadian Cross,  Next: Cygnus Configure,  Prev: Cross Compilation Tools,  Up: Top
+
+Canadian Cross
 **************
 
+   It is possible to use the GNU configure and build system to build a
+program which will run on a system which is different from the system on
+which the tools are built.  In other words, it is possible to build
+programs using a cross compiler.
+
+   This is referred to as a "Canadian Cross".
+
 * Menu:
 
-* bindir:                               Install details.
-* configdirs:                           configure variables.
-* disable-FEATURE:                      Invoking configure.
-* docdir:                               Install details.
-* enable-FEATURE:                       Invoking configure.
-* exec-prefix:                          Invoking configure.
-* exec_prefix <1>:                      exec_prefix.
-* exec_prefix:                          Install details.
-* files:                                configure variables.
-* floating_point:                       configure variables.
-* gas:                                  configure variables.
-* host:                                 configure variables.
-* host_cpu:                             configure variables.
-* host_makefile_frag:                   configure variables.
-* host_os:                              configure variables.
-* host_vendor:                          configure variables.
-* includedir:                           Install details.
-* infodir:                              Install details.
-* libdir:                               Install details.
-* links:                                configure variables.
-* Makefile:                             configure variables.
-* manNdir:                              Install details.
-* manNext:                              Install details.
-* mandir:                               Install details.
-* nfp:                                  Invoking configure.
-* norecursion:                          Invoking configure.
-* package_makefile_frag:                configure variables.
-* prefix <1>:                           prefix.
-* prefix <2>:                           Install details.
-* prefix:                               Invoking configure.
-* program-prefix:                       Invoking configure.
-* removing:                             configure variables.
-* rm:                                   Invoking configure.
-* site:                                 Invoking configure.
-* site_makefile_frag:                   configure variables.
-* srcdir <1>:                           configure variables.
-* srcdir <2>:                           What configure does.
-* srcdir:                               Invoking configure.
-* srcname:                              configure variables.
-* srctrigger:                           configure variables.
-* subdirs:                              configure variables.
-* target <1>:                           Invoking configure.
-* target:                               configure variables.
-* target_cpu:                           configure variables.
-* target_makefile_frag:                 configure variables.
-* target_os:                            configure variables.
-* target_vendor:                        configure variables.
-* tmpdir:                               Invoking configure.
-* verbose:                              Invoking configure.
-* with-PACKAGE:                         Invoking configure.
-* without-PACKAGE:                      Invoking configure.
+* Canadian Cross Example::		Canadian Cross Example.
+* Canadian Cross Concepts::		Canadian Cross Concepts.
+* Build Cross Host Tools::		Build Cross Host Tools.
+* Build and Host Options::		Build and Host Options.
+* CCross not in Cygnus Tree::		Canadian Cross not in Cygnus Tree.
+* CCross in Cygnus Tree::		Canadian Cross in Cygnus Tree.
+* Supporting Canadian Cross::		Supporting Canadian Cross.
 
 
-File: configure.info,  Node: Concept Index,  Prev: Variables Index,  Up: Top
+File: configure.info,  Node: Canadian Cross Example,  Next: Canadian Cross Concepts,  Up: Canadian Cross
 
-Concept Index
-*************
+Canadian Cross Example
+======================
+
+   Here is an example of a Canadian Cross.
+
+   While running on a GNU/Linux, you can build a program which will run
+on a Solaris system.  You would use a GNU/Linux cross Solaris compiler
+to build the program.
+
+   Of course, you could not run the resulting program on your GNU/Linux
+system.  You would have to copy it over to a Solaris system before you
+would run it.
+
+   Of course, you could also simply build the programs on the Solaris
+system in the first place.  However, perhaps the Solaris system is not
+available for some reason; perhaps you actually don't have one, but you
+want to build the tools for somebody else to use.  Or perhaps your
+GNU/Linux system is much faster than your Solaris system.
+
+   A Canadian Cross build is most frequently used when building
+programs to run on a non-Unix system, such as DOS or Windows.  It may
+be simpler to configure and build on a Unix system than to support the
+configuration machinery on a non-Unix system.
+
+
+File: configure.info,  Node: Canadian Cross Concepts,  Next: Build Cross Host Tools,  Prev: Canadian Cross Example,  Up: Canadian Cross
+
+Canadian Cross Concepts
+=======================
+
+   When building a Canadian Cross, there are at least two different
+systems involved: the system on which the tools are being built, and
+the system on which the tools will run.
+
+   The system on which the tools are being built is called the "build"
+system.
+
+   The system on which the tools will run is called the host system.
+
+   For example, if you are building a Solaris program on a GNU/Linux
+system, as in the previous section, the build system would be GNU/Linux,
+and the host system would be Solaris.
+
+   It is, of course, possible to build a cross compiler using a Canadian
+Cross (i.e., build a cross compiler using a cross compiler).  In this
+case, the system for which the resulting cross compiler generates code
+is called the target system.  (For a more complete discussion of host
+and target systems, *note Host and Target::).
+
+   An example of building a cross compiler using a Canadian Cross would
+be building a Windows cross MIPS ELF compiler on a GNU/Linux system.  In
+this case the build system would be GNU/Linux, the host system would be
+Windows, and the target system would be MIPS ELF.
+
+   The name Canadian Cross comes from the case when the build, host, and
+target systems are all different.  At the time that these issues were
+all being hashed out, Canada had three national political parties.
+
+
+File: configure.info,  Node: Build Cross Host Tools,  Next: Build and Host Options,  Prev: Canadian Cross Concepts,  Up: Canadian Cross
+
+Build Cross Host Tools
+======================
+
+   In order to configure a program for a Canadian Cross build, you must
+first build and install the set of cross tools you will use to build the
+program.
+
+   These tools will be build cross host tools.  That is, they will run
+on the build system, and will produce code that runs on the host system.
+
+   It is easy to confuse the meaning of build and host here.  Always
+remember that the build system is where you are doing the build, and the
+host system is where the resulting program will run.  Therefore, you
+need a build cross host compiler.
+
+   In general, you must have a complete cross environment in order to do
+the build.  This normally means a cross compiler, cross assembler, and
+so forth, as well as libraries and include files for the host system.
+
+
+File: configure.info,  Node: Build and Host Options,  Next: CCross not in Cygnus Tree,  Prev: Build Cross Host Tools,  Up: Canadian Cross
+
+Build and Host Options
+======================
+
+   When you run `configure', you must use both the `--build' and
+`--host' options.
+
+   The `--build' option is used to specify the configuration name of
+the build system.  This can normally be the result of running the
+`config.guess' shell script, and it is reasonable to use
+`--build=`config.guess`'.
+
+   The `--host' option is used to specify the configuration name of the
+host system.
+
+   As we explained earlier, `config.guess' is used to set the default
+value for the `--host' option (*note Using the Host Type::).  We can
+now see that since `config.guess' returns the type of system on which
+it is run, it really identifies the build system.  Since the host
+system is normally the same as the build system (i.e., people do not
+normally build using a cross compiler), it is reasonable to use the
+result of `config.guess' as the default for the host system when the
+`--host' option is not used.
+
+   It might seem that if the `--host' option were used without the
+`--build' option that the configure script could run `config.guess' to
+determine the build system, and presume a Canadian Cross if the result
+of `config.guess' differed from the `--host' option.  However, for
+historical reasons, some configure scripts are routinely run using an
+explicit `--host' option, rather than using the default from
+`config.guess'.  As noted earlier, it is difficult or impossible to
+reliably compare configuration names (*note Using the Target Type::).
+Therefore, by convention, if the `--host' option is used, but the
+`--build' option is not used, then the build system defaults to the
+host system.
+
+
+File: configure.info,  Node: CCross not in Cygnus Tree,  Next: CCross in Cygnus Tree,  Prev: Build and Host Options,  Up: Canadian Cross
+
+Canadian Cross not in Cygnus Tree.
+==================================
+
+   If you are not using the Cygnus tree, you must explicitly specify the
+cross tools which you want to use to build the program.  This is done by
+setting environment variables before running the `configure' script.
+
+   You must normally set at least the environment variables `CC', `AR',
+and `RANLIB' to the cross tools which you want to use to build.
+
+   For some programs, you must set additional cross tools as well, such
+as `AS', `LD', or `NM'.
+
+   You would set these environment variables to the build cross tools
+which you are going to use.
+
+   For example, if you are building a Solaris program on a GNU/Linux
+system, and your GNU/Linux cross Solaris compiler were named
+`solaris-gcc', then you would set the environment variable `CC' to
+`solaris-gcc'.
+
+
+File: configure.info,  Node: CCross in Cygnus Tree,  Next: Supporting Canadian Cross,  Prev: CCross not in Cygnus Tree,  Up: Canadian Cross
+
+Canadian Cross in Cygnus Tree
+=============================
+
+   This section describes configuring and building a Canadian Cross when
+using the Cygnus tree.
 
 * Menu:
 
-* -disable-FEATURE:                     Invoking configure.
-* -enable-FEATURE:                      Invoking configure.
-* -exec-prefix:                         Invoking configure.
-* -help:                                Invoking configure.
-* -nfp:                                 Invoking configure.
-* -norecursion:                         Invoking configure.
-* -prefix:                              Invoking configure.
-* -program-prefix:                      Invoking configure.
-* -rm:                                  Invoking configure.
-* -site:                                Invoking configure.
-* -srcdir:                              Invoking configure.
-* -target:                              Invoking configure.
-* -tmpdir:                              Invoking configure.
-* -verbose:                             Invoking configure.
-* -version:                             Invoking configure.
-* -with-PACKAGE:                        Invoking configure.
-* -without-PACKAGE:                     Invoking configure.
-* -s:                                   Invoking configure.
-* -v:                                   Invoking configure.
-* .gdbinit:                             What configure does.
-* autoconf:                             Programs.
-* bindir:                               Install details.
-* config.guess:                         config.guess.
-* config.guess definition:              What configure really does.
-* config.status <1>:                    config.status.
-* config.status:                        What configure does.
-* config.status definition:             What configure really does.
-* config.sub definition:                What configure really does.
-* config/ subdirectory:                 What configure really does.
-* configdirs:                           configure variables.
-* configure.in:                         configure.in.
-* configure.in definition:              What configure really does.
-* configure back end:                   What configure really does.
-* configure details:                    What configure really does.
-* disable-FEATURE option:               Invoking configure.
-* docdir:                               Install details.
-* enable-FEATURE option:                Invoking configure.
-* exec-prefix option:                   Invoking configure.
-* exec_prefix:                          Install details.
-* floating_point:                       configure variables.
-* help option:                          Invoking configure.
-* host:                                 configure variables.
-* includedir:                           Install details.
-* infodir:                              Install details.
-* libdir:                               Install details.
-* Makefile.in definition:               What configure really does.
-* Makefile extensions:                  Makefile extensions.
-* Makefile fragments:                   Makefile fragments.
-* Makefile generation <1>:              Makefile generation.
-* Makefile generation:                  What configure does.
-* manNdir:                              Install details.
-* manNext:                              Install details.
-* mandir:                               Install details.
-* nfp option <1>:                       Invoking configure.
-* nfp option:                           configure variables.
-* norecursion option:                   Invoking configure.
-* prefix:                               Install details.
-* prefix option <1>:                    Invoking configure.
-* prefix option:                        prefix.
-* program-prefix option:                Invoking configure.
-* rm option <1>:                        Invoking configure.
-* rm option:                            configure variables.
-* site option:                          Invoking configure.
-* srcdir <1>:                           configure variables.
-* srcdir:                               What configure does.
-* srcdir option:                        Invoking configure.
-* srcname:                              configure variables.
-* srctrigger:                           configure variables.
-* subdirs:                              configure variables.
-* s option:                             Invoking configure.
-* target:                               configure variables.
-* target option:                        Invoking configure.
-* tmpdir option:                        Invoking configure.
-* verbose option:                       Invoking configure.
-* v option:                             Invoking configure.
-* with-PACKAGE option:                  Invoking configure.
-* with-gnu-as option:                   configure variables.
-* without-PACKAGE option:               Invoking configure.
-* configure.in interface:               configure variables.
-* host shell-script fragment:           per-host.
-* per-host section <1>:                 per-host.
-* per-host section:                     configure.in.
-* per-invocation section <1>:           configure.in.
-* per-invocation section:               Declarations.
-* per-target section <1>:               configure.in.
-* per-target section:                   per-target.
-* post-target section <1>:              configure.in.
-* post-target section:                  post-target.
-* Abbreviating option names:            Invoking configure.
-* Adding configure to new programs:     Programs.
-* Adding hosts and targets:             Hosts and targets.
-* Adding local info:                    Makefile fragments.
-* Adding site info <1>:                 Sites.
-* Adding site info:                     Makefile fragments.
-* Behind the scenes:                    What configure really does.
-* BISON:                                Makefile extensions.
-* Build directories <1>:                What configure does.
-* Build directories:                    Build directories.
-* Build variables:                      Build variables.
-* Building for multiple hosts:          Build directories.
-* Building for multiple targets:        Build directories.
-* Canonical "triple":                   configure variables.
-* Changing the install directory:       prefix.
-* clean:                                Makefile extensions.
-* clean-info:                           Makefile extensions.
-* Coding standards extensions:          Makefile extensions.
-* configure variables:                  configure variables.
-* Configuring for multiple hosts:       exec_prefix.
-* Cygnus extensions:                    Makefile extensions.
-* Cygnus Support Developer's Kit <1>:   What configure does.
-* Cygnus Support Developer's Kit:       Build variables.
-* datadir:                              Makefile extensions.
-* Declarations section:                 Declarations.
-* Default configuration:                Makefile generation.
-* Detailed usage:                       Using configure.
-* docdir:                               Makefile extensions.
-* Example configure.in:                 Example.
-* Example session <1>:                  Build directories.
-* Example session <2>:                  exec_prefix.
-* Example session <3>:                  Build variables.
-* Example session <4>:                  Makefile extensions.
-* Example session <5>:                  What configure really does.
-* Example session <6>:                  Sites.
-* Example session:                      Invoking configure.
-* For each invocation:                  Declarations.
-* Host:                                 Host.
-* Host-specific instructions:           per-host.
-* Hosts and targets:                    Hosts and targets.
-* includedir:                           Makefile extensions.
-* info:                                 Makefile extensions.
-* infodir:                              Makefile extensions.
-* install:                              Makefile extensions.
-* Install details:                      Install details.
-* Install locations:                    Install locations.
-* install-info:                         Makefile extensions.
-* Installation subdirectories:          Install details.
-* Installing host-independent files:    exec_prefix.
-* Introduction:                         What configure does.
-* Invoking configure:                   Invoking configure.
-* Local conventions:                    Makefile fragments.
-* Makefile:                             Makefile extensions.
-* mandir:                               Makefile extensions.
-* Minimal configure.in example:         Minimal.
-* Object directories:                   Build directories.
-* Other files:                          What configure really does.
-* Overview:                             What configure does.
-* Porting with configure:               Porting.
-* Post-target shell-script fragment:    post-target.
-* Recursion:                            What configure does.
-* Sample configure.in:                  Example.
-* Sharing host-independent files:       exec_prefix.
-* Sites:                                Sites.
-* Subdirectories:                       Install details.
-* Symbolic links <1>:                   What configure does.
-* Symbolic links:                       configure variables.
-* Target:                               Target.
-* target shell-script fragment:         per-target.
-* Target-specific instructions:         per-target.
-* The exec_prefix directory:            exec_prefix.
-* Truncating option names:              Invoking configure.
-* Usage:                                Invoking configure.
-* Usage: detailed:                      Using configure.
-* Using configure:                      Using configure.
-* Variables:                            Build variables.
-* Verbose Output:                       Invoking configure.
-* version:                              Invoking configure.
-* What configure does:                  What configure does.
-* What configure really does:           What configure really does.
-* Where to install:                     Install locations.
+* Standard Cygnus CCross::	Building a Normal Program.
+* Cross Cygnus CCross::		Building a Cross Program.
 
+
+File: configure.info,  Node: Standard Cygnus CCross,  Next: Cross Cygnus CCross,  Up: CCross in Cygnus Tree
+
+Building a Normal Program
+-------------------------
+
+   When configuring a Canadian Cross in the Cygnus tree, all the
+appropriate environment variables are automatically set to `HOST-TOOL',
+where HOST is the value used for the `--host' option, and TOOL is the
+name of the tool (e.g., `gcc', `as', etc.).  These tools must be on
+your `PATH'.
+
+   Adding a prefix of HOST will give the usual name for the build cross
+host tools.  To see this, consider that when these cross tools were
+built, they were configured to run on the build system and to produce
+code for the host system.  That is, they were configured with a
+`--target' option that is the same as the system which we are now
+calling the host.  Recall that the default name for installed cross
+tools uses the target system as a prefix (*note Using the Target
+Type::).  Since that is the system which we are now calling the host,
+HOST is the right prefix to use.
+
+   For example, if you configure with `--build=i386-linux-gnu' and
+`--host=solaris', then the Cygnus tree will automatically default to
+using the compiler `solaris-gcc'.  You must have previously built and
+installed this compiler, probably by doing a build with no `--host'
+option and with a `--target' option of `solaris'.
+
+
+File: configure.info,  Node: Cross Cygnus CCross,  Prev: Standard Cygnus CCross,  Up: CCross in Cygnus Tree
+
+Building a Cross Program
+------------------------
+
+   There are additional considerations if you want to build a cross
+compiler, rather than a native compiler, in the Cygnus tree using a
+Canadian Cross.
+
+   When you build a cross compiler using the Cygnus tree, then the
+target libraries will normally be built with the newly built target
+compiler (*note Host and Target Libraries::).  However, this will not
+work when building with a Canadian Cross.  This is because the newly
+built target compiler will be a program which runs on the host system,
+and therefore will not be able to run on the build system.
+
+   Therefore, when building a cross compiler with the Cygnus tree, you
+must first install a set of build cross target tools.  These tools will
+be used when building the target libraries.
+
+   Note that this is not a requirement of a Canadian Cross in general.
+For example, it would be possible to build just the host cross target
+tools on the build system, to copy the tools to the host system, and to
+build the target libraries on the host system.  The requirement for
+build cross target tools is imposed by the Cygnus tree, which expects
+to be able to build both host programs and target libraries in a single
+`configure'/`make' step.  Because it builds these in a single step, it
+expects to be able to build the target libraries on the build system,
+which means that it must use a build cross target toolchain.
+
+   For example, suppose you want to build a Windows cross MIPS ELF
+compiler on a GNU/Linux system.  You must have previously installed
+both a GNU/Linux cross Windows compiler and a GNU/Linux cross MIPS ELF
+compiler.
+
+   In order to build the Windows (configuration name `i386-cygwin32')
+cross MIPS ELF (configure name `mips-elf') compiler, you might execute
+the following commands (long command lines are broken across lines with
+a trailing backslash as a continuation character).
+
+     mkdir linux-x-cygwin32
+     cd linux-x-cygwin32
+     SRCDIR/configure --target i386-cygwin32 --prefix=INSTALLDIR \
+       --exec-prefix=INSTALLDIR/H-i386-linux
+     make
+     make install
+     cd ..
+     mkdir linux-x-mips-elf
+     cd linux-x-mips-elf
+     SRCDIR/configure --target mips-elf --prefix=INSTALLDIR \
+       --exec-prefix=INSTALLDIR/H-i386-linux
+     make
+     make install
+     cd ..
+     mkdir cygwin32-x-mips-elf
+     cd cygwin32-x-mips-elf
+     SRCDIR/configure --build=i386-linux-gnu --host=i386-cygwin32 \
+       --target=mips-elf --prefix=WININSTALLDIR \
+       --exec-prefix=WININSTALLDIR/H-i386-cygwin32
+     make
+     make install
+
+   You would then copy the contents of WININSTALLDIR over to the
+Windows machine, and run the resulting programs.
+
+
+File: configure.info,  Node: Supporting Canadian Cross,  Prev: CCross in Cygnus Tree,  Up: Canadian Cross
+
+Supporting Canadian Cross
+=========================
+
+   If you want to make it possible to build a program you are developing
+using a Canadian Cross, you must take some care when writing your
+configure and make rules.  Simple cases will normally work correctly.
+However, it is not hard to write configure and make tests which will
+fail in a Canadian Cross.
+
+* Menu:
+
+* CCross in Configure::		Supporting Canadian Cross in Configure Scripts.
+* CCross in Make::		Supporting Canadian Cross in Makefiles.
+
+
+File: configure.info,  Node: CCross in Configure,  Next: CCross in Make,  Up: Supporting Canadian Cross
+
+Supporting Canadian Cross in Configure Scripts
+----------------------------------------------
+
+   In a `configure.in' file, after calling `AC_PROG_CC', you can find
+out whether this is a Canadian Cross configure by examining the shell
+variable `cross_compiling'.  In a Canadian Cross, which means that the
+compiler is a cross compiler, `cross_compiling' will be `yes'.  In a
+normal configuration, `cross_compiling' will be `no'.
+
+   You ordinarily do not need to know the type of the build system in a
+configure script.  However, if you do need that information, you can get
+it by using the macro `AC_CANONICAL_SYSTEM', the same macro that is
+used to determine the target system.  This macro will set the variables
+`build', `build_alias', `build_cpu', `build_vendor', and `build_os',
+which correspond to the similar `target' and `host' variables, except
+that they describe the build system.
+
+   When writing tests in `configure.in', you must remember that you
+want to test the host environment, not the build environment.
+
+   Macros like `AC_CHECK_FUNCS' which use the compiler will test the
+host environment.  That is because the tests will be done by running the
+compiler, which is actually a build cross host compiler.  If the
+compiler can find the function, that means that the function is present
+in the host environment.
+
+   Tests like `test -f /dev/ptyp0', on the other hand, will test the
+build environment.  Remember that the configure script is running on the
+build system, not the host system.  If your configure scripts examines
+files, those files will be on the build system.  Whatever you determine
+based on those files may or may not be the case on the host system.
+
+   Most autoconf macros will work correctly for a Canadian Cross.  The
+main exception is `AC_TRY_RUN'.  This macro tries to compile and run a
+test program.  This will fail in a Canadian Cross, because the program
+will be compiled for the host system, which means that it will not run
+on the build system.
+
+   The `AC_TRY_RUN' macro provides an optional argument to tell the
+configure script what to do in a Canadian Cross.  If that argument is
+not present, you will get a warning when you run `autoconf':
+     warning: AC_TRY_RUN called without default to allow cross compiling
+
+This tells you that the resulting `configure' script will not work with
+a Canadian Cross.
+
+   In some cases while it may better to perform a test at configure
+time, it is also possible to perform the test at run time.  In such a
+case you can use the cross compiling argument to `AC_TRY_RUN' to tell
+your program that the test could not be performed at configure time.
+
+   There are a few other autoconf macros which will not work correctly
+with a Canadian Cross: a partial list is `AC_FUNC_GETPGRP',
+`AC_FUNC_SETPGRP', `AC_FUNC_SETVBUF_REVERSED', and
+`AC_SYS_RESTARTABLE_SYSCALLS'.  The `AC_CHECK_SIZEOF' macro is
+generally not very useful with a Canadian Cross; it permits an optional
+argument indicating the default size, but there is no way to know what
+the correct default should be.
+
+
+File: configure.info,  Node: CCross in Make,  Prev: CCross in Configure,  Up: Supporting Canadian Cross
+
+Supporting Canadian Cross in Makefiles.
+---------------------------------------
+
+   The main Canadian Cross issue in a `Makefile' arises when you want
+to use a subsidiary program to generate code or data which you will then
+include in your real program.
+
+   If you compile this subsidiary program using `$(CC)' in the usual
+way, you will not be able to run it.  This is because `$(CC)' will
+build a program for the host system, but the program is being built on
+the build system.
+
+   You must instead use a compiler for the build system, rather than the
+host system.  In the Cygnus tree, this make variable `$(CC_FOR_BUILD)'
+will hold a compiler for the build system.
+
+   Note that you should not include `config.h' in a file you are
+compiling with `$(CC_FOR_BUILD)'.  The `configure' script will build
+`config.h' with information for the host system.  However, you are
+compiling the file using a compiler for the build system (a native
+compiler).  Subsidiary programs are normally simple filters which do no
+user interaction, and it is normally possible to write them in a highly
+portable fashion so that the absence of `config.h' is not crucial.
+
+   The gcc `Makefile.in' shows a complex situation in which certain
+files, such as `rtl.c', must be compiled into both subsidiary programs
+run on the build system and into the final program.  This approach may
+be of interest for advanced build system hackers.  Note that the build
+system compiler is rather confusingly called `HOST_CC'.
+
+
+File: configure.info,  Node: Cygnus Configure,  Next: Multilibs,  Prev: Canadian Cross,  Up: Top
+
+Cygnus Configure
+****************
+
+   The Cygnus configure script predates autoconf.  All of its
+interesting features have been incorporated into autoconf.  No new
+programs should be written to use the Cygnus configure script.
+
+   However, the Cygnus configure script is still used in a few places:
+at the top of the Cygnus tree and in a few target libraries in the
+Cygnus tree.  Until those uses have been replaced with autoconf, some
+brief notes are appropriate here.  This is not complete documentation,
+but it should be possible to use this as a guide while examining the
+scripts themselves.
+
+* Menu:
+
+* Cygnus Configure Basics::		Cygnus Configure Basics.
+* Cygnus Configure in C++ Libraries::	Cygnus Configure in C++ Libraries.
+
+
+File: configure.info,  Node: Cygnus Configure Basics,  Next: Cygnus Configure in C++ Libraries,  Up: Cygnus Configure
+
+Cygnus Configure Basics
+=======================
+
+   Cygnus configure does not use any generated files; there is no
+program corresponding to `autoconf'.  Instead, there is a single shell
+script named `configure' which may be found at the top of the Cygnus
+tree.  This shell script was written by hand; it was not generated by
+autoconf, and it is incorrect, and indeed harmful, to run `autoconf' in
+the top level of a Cygnus tree.
+
+   Cygnus configure works in a particular directory by examining the
+file `configure.in' in that directory.  That file is broken into four
+separate shell scripts.
+
+   The first is the contents of `configure.in' up to a line that starts
+with `# per-host:'.  This is the common part.
+
+   The second is the rest of `configure.in' up to a line that starts
+with `# per-target:'.  This is the per host part.
+
+   The third is the rest of `configure.in' up to a line that starts
+with `# post-target:'.  This is the per target part.
+
+   The fourth is the remainder of `configure.in'.  This is the post
+target part.
+
+   If any of these comment lines are missing, the corresponding shell
+script is empty.
+
+   Cygnus configure will first execute the common part.  This must set
+the shell variable `srctrigger' to the name of a source file, to
+confirm that Cygnus configure is looking at the right directory.  This
+may set the shell variables `package_makefile_frag' and
+`package_makefile_rules_frag'.
+
+   Cygnus configure will next set the `build' and `host' shell
+variables, and execute the per host part.  This may set the shell
+variable `host_makefile_frag'.
+
+   Cygnus configure will next set the `target' variable, and execute
+the per target part.  This may set the shell variable
+`target_makefile_frag'.
+
+   Any of these scripts may set the `subdirs' shell variable.  This
+variable is a list of subdirectories where a `Makefile.in' file may be
+found.  Cygnus configure will automatically look for a `Makefile.in'
+file in the current directory.  The `subdirs' shell variable is not
+normally used, and I believe that the only directory which uses it at
+present is `newlib'.
+
+   For each `Makefile.in', Cygnus configure will automatically create a
+`Makefile' by adding definitions for `make' variables such as `host'
+and `target', and automatically editing the values of `make' variables
+such as `prefix' if they are present.
+
+   Also, if any of the `makefile_frag' shell variables are set, Cygnus
+configure will interpret them as file names relative to either the
+working directory or the source directory, and will read the contents of
+the file into the generated `Makefile'.  The file contents will be read
+in after the first line in `Makefile.in' which starts with `####'.
+
+   These `Makefile' fragments are used to customize behaviour for a
+particular host or target.  They serve to select particular files to
+compile, and to define particular preprocessor macros by providing
+values for `make' variables which are then used during compilation.
+Cygnus configure, unlike autoconf, normally does not do feature tests,
+and normally requires support to be added manually for each new host.
+
+   The `Makefile' fragment support is similar to the autoconf
+`AC_SUBST_FILE' macro.
+
+   After creating each `Makefile', the post target script will be run
+(i.e., it may be run several times).  This script may further customize
+the `Makefile'.  When it is run, the shell variable `Makefile' will
+hold the name of the `Makefile', including the appropriate directory
+component.
+
+   Like an autoconf generated `configure' script, Cygnus configure will
+create a file named `config.status' which, when run, will automatically
+recreate the configuration.  The `config.status' file will simply
+execute the Cygnus configure script again with the appropriate
+arguments.
+
+   Any of the parts of `configure.in' may set the shell variables
+`files' and `links'.  Cygnus configure will set up symlinks from the
+names in `links' to the files named in `files'.  This is similar to the
+autoconf `AC_LINK_FILES' macro.
+
+   Finally, any of the parts of `configure.in' may set the shell
+variable `configdirs' to a set of subdirectories.  If it is set, Cygnus
+configure will recursively run the configure process in each
+subdirectory.  If the subdirectory uses Cygnus configure, it will
+contain a `configure.in' file but no `configure' file, in which case
+Cygnus configure will invoke itself recursively.  If the subdirectory
+has a `configure' file, Cygnus configure assumes that it is an autoconf
+generated `configure' script, and simply invokes it directly.
+
+
+File: configure.info,  Node: Cygnus Configure in C++ Libraries,  Prev: Cygnus Configure Basics,  Up: Cygnus Configure
+
+Cygnus Configure in C++ Libraries
+=================================
+
+   The C++ library configure system, written by Per Bothner, deserves
+special mention.  It uses Cygnus configure, but it does feature testing
+like that done by autoconf generated `configure' scripts.  This
+approach is used in the libraries `libio', `libstdc++', and `libg++'.
+
+   Most of the `Makefile' information is written out by the shell
+script `libio/config.shared'.  Each `configure.in' file sets certain
+shell variables, and then invokes `config.shared' to create two package
+`Makefile' fragments.  These fragments are then incorporated into the
+resulting `Makefile' by the Cygnus configure script.
+
+   The file `_G_config.h' is created in the `libio' object directory by
+running the shell script `libio/gen-params'.  This shell script uses
+feature tests to define macros and typedefs in `_G_config.h'.
+
+
+File: configure.info,  Node: Multilibs,  Next: FAQ,  Prev: Cygnus Configure,  Up: Top
+
+Multilibs
+*********
+
+   For some targets gcc may have different processor requirements
+depending upon command line options.  An obvious example is the
+`-msoft-float' option supported on several processors.  This option
+means that the floating point registers are not available, which means
+that floating point operations must be done by calling an emulation
+subroutine rather than by using machine instructions.
+
+   For such options, gcc is often configured to compile target libraries
+twice: once with `-msoft-float' and once without.  When gcc compiles
+target libraries more than once, the resulting libraries are called
+"multilibs".
+
+   Multilibs are not really part of the GNU configure and build system,
+but we discuss them here since they require support in the `configure'
+scripts and `Makefile's used for target libraries.
+
+* Menu:
+
+* Multilibs in gcc::		        Multilibs in gcc.
+* Multilibs in Target Libraries::	Multilibs in Target Libraries.
+
+
+File: configure.info,  Node: Multilibs in gcc,  Next: Multilibs in Target Libraries,  Up: Multilibs
+
+Multilibs in gcc
+================
+
+   In gcc, multilibs are defined by setting the variable
+`MULTILIB_OPTIONS' in the target `Makefile' fragment.  Several other
+`MULTILIB' variables may also be defined there.  *Note The Target
+Makefile Fragment: (gcc)Target Fragment.
+
+   If you have built gcc, you can see what multilibs it uses by running
+it with the `-print-multi-lib' option.  The output `.;' means that no
+multilibs are used.  In general, the output is a sequence of lines, one
+per multilib.  The first part of each line, up to the `;', is the name
+of the multilib directory.  The second part is a list of compiler
+options separated by `@' characters.
+
+   Multilibs are built in a tree of directories.  The top of the tree,
+represented by `.' in the list of multilib directories, is the default
+library to use when no special compiler options are used.  The
+subdirectories of the tree hold versions of the library to use when
+particular compiler options are used.
 

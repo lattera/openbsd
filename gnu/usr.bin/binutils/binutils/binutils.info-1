@@ -1,14 +1,27 @@
-This is Info file binutils.info, produced by Makeinfo-1.64 from the
-input file ./binutils.texi.
+This is binutils.info, produced by makeinfo version 4.0 from
+binutils.texi.
 
 START-INFO-DIR-ENTRY
-* Binutils: (binutils).         The GNU binary utilities "ar", "objcopy",
-				"objdump", "nm", "nlmconv", "size",
-                                "strings", "strip", and "ranlib".
+* Binutils: (binutils).         The GNU binary utilities.
+* ar: (binutils)ar.               Create, modify, and extract from archives
+* nm: (binutils)nm.               List symbols from object files
+* objcopy: (binutils)objcopy.	  Copy and translate object files
+* objdump: (binutils)objdump.     Display information from object files
+* ranlib: (binutils)ranlib.       Generate index to archive contents
+* readelf: (binutils)readelf.	  Display the contents of ELF format files.
+* size: (binutils)size.           List section sizes and total size
+* strings: (binutils)strings.     List printable strings from files
+* strip: (binutils)strip.         Discard symbols
+* c++filt: (binutils)c++filt.	  Filter to demangle encoded C++ symbols
+* cxxfilt: (binutils)c++filt.     MS-DOS name for c++filt
+* addr2line: (binutils)addr2line. Convert addresses to file and line
+* nlmconv: (binutils)nlmconv.     Converts object code into an NLM
+* windres: (binutils)windres.	  Manipulate Windows resources
+* dlltool: (binutils)dlltool.	  Create files needed to build and use DLLs
 END-INFO-DIR-ENTRY
 
-   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
-Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 97, 98, 99, 2000 Free
+Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -30,7 +43,7 @@ Introduction
 ************
 
    This brief manual contains preliminary documentation for the GNU
-binary utilities (collectively version 2.8.1):
+binary utilities (collectively version 2.10.1):
 
 * Menu:
 
@@ -39,12 +52,16 @@ binary utilities (collectively version 2.8.1):
 * objcopy::			Copy and translate object files
 * objdump::                     Display information from object files
 * ranlib::                      Generate index to archive contents
+* readelf::			Display the contents of ELF format files.
 * size::                        List section sizes and total size
 * strings::                     List printable strings from files
 * strip::                       Discard symbols
 * c++filt::			Filter to demangle encoded C++ symbols
+* cxxfilt: c++filt.             MS-DOS name for c++filt
 * addr2line::			Convert addresses to file and line
 * nlmconv::                     Converts object code into an NLM
+* windres::			Manipulate Windows resources
+* dlltool::			Create files needed to build and use DLLs
 * Selecting The Target System:: How these utilities determine the target.
 * Reporting Bugs::              Reporting Bugs
 * Index::                       Index
@@ -55,7 +72,7 @@ File: binutils.info,  Node: ar,  Next: nm,  Prev: Top,  Up: Top
 ar
 **
 
-     ar [-]P[MOD [RELPOS]] ARCHIVE [MEMBER...]
+     ar [-]P[MOD [RELPOS] [COUNT]] ARCHIVE [MEMBER...]
      ar -M [ <mri-script ]
 
    The GNU `ar' program creates, modifies, and extracts from archives.
@@ -106,11 +123,11 @@ File: binutils.info,  Node: ar cmdline,  Next: ar scripts,  Up: ar
 Controlling `ar' on the command line
 ====================================
 
-     ar [-]P[MOD [RELPOS]] ARCHIVE [MEMBER...]
+     ar [-]P[MOD [RELPOS] [COUNT]] ARCHIVE [MEMBER...]
 
    When you use `ar' in the Unix style, `ar' insists on at least two
-arguments to execute: one keyletter specifying the *operation*
-(optionally accompanied by other keyletters specifying *modifiers*),
+arguments to execute: one keyletter specifying the _operation_
+(optionally accompanied by other keyletters specifying _modifiers_),
 and the archive name to act on.
 
    Most operations can also accept further MEMBER arguments, specifying
@@ -126,7 +143,7 @@ dash.
 of the following, but you must specify only one of them:
 
 `d'
-     *Delete* modules from the archive.  Specify the names of modules to
+     _Delete_ modules from the archive.  Specify the names of modules to
      be deleted as MEMBER...; the archive is untouched if you specify
      no files to delete.
 
@@ -134,19 +151,19 @@ of the following, but you must specify only one of them:
      deleted.
 
 `m'
-     Use this operation to *move* members in an archive.
+     Use this operation to _move_ members in an archive.
 
      The ordering of members in an archive can make a difference in how
      programs are linked using the library, if a symbol is defined in
      more than one member.
 
      If no modifiers are used with `m', any members you name in the
-     MEMBER arguments are moved to the *end* of the archive; you can
+     MEMBER arguments are moved to the _end_ of the archive; you can
      use the `a', `b', or `i' modifiers to move them to a specified
      place instead.
 
 `p'
-     *Print* the specified members of the archive, to the standard
+     _Print_ the specified members of the archive, to the standard
      output file.  If the `v' modifier is specified, show the member
      name before copying its contents to standard output.
 
@@ -154,10 +171,10 @@ of the following, but you must specify only one of them:
      are printed.
 
 `q'
-     *Quick append*; add the files MEMBER... to the end of ARCHIVE,
-     without checking for replacement.
+     _Quick append_; Historically, add the files MEMBER... to the end of
+     ARCHIVE, without checking for replacement.
 
-     The modifiers `a', `b', and `i' do *not* affect this operation;
+     The modifiers `a', `b', and `i' do _not_ affect this operation;
      new members are always placed at the end of the archive.
 
      The modifier `v' makes `ar' list each file as it is appended.
@@ -166,8 +183,11 @@ of the following, but you must specify only one of them:
      table index is not updated, even if it already existed; you can
      use `ar s' or `ranlib' explicitly to update the symbol table index.
 
+     However, too many different systems assume quick append rebuilds
+     the index, so GNU ar implements `q' as a synonym for `r'.
+
 `r'
-     Insert the files MEMBER... into ARCHIVE (with *replacement*). This
+     Insert the files MEMBER... into ARCHIVE (with _replacement_). This
      operation differs from `q' in that any previously existing members
      are deleted if their names match those being added.
 
@@ -185,7 +205,7 @@ of the following, but you must specify only one of them:
      or replaced.
 
 `t'
-     Display a *table* listing the contents of ARCHIVE, or those of the
+     Display a _table_ listing the contents of ARCHIVE, or those of the
      files listed in MEMBER... that are present in the archive.
      Normally only the member name is shown; if you also want to see
      the modes (permissions), timestamp, owner, group, and size, you can
@@ -200,7 +220,7 @@ of the following, but you must specify only one of them:
      our example, `ar t b.a'.
 
 `x'
-     *Extract* members (named MEMBER) from the archive.  You can use
+     _Extract_ members (named MEMBER) from the archive.  You can use
      the `v' modifier with this operation, to request that `ar' list
      each name as it extracts it.
 
@@ -211,19 +231,19 @@ of the following, but you must specify only one of them:
 to specify variations on an operation's behavior:
 
 `a'
-     Add new files *after* an existing member of the archive.  If you
+     Add new files _after_ an existing member of the archive.  If you
      use the modifier `a', the name of an existing archive member must
      be present as the RELPOS argument, before the ARCHIVE
      specification.
 
 `b'
-     Add new files *before* an existing member of the archive.  If you
+     Add new files _before_ an existing member of the archive.  If you
      use the modifier `b', the name of an existing archive member must
      be present as the RELPOS argument, before the ARCHIVE
      specification.  (same as `i').
 
 `c'
-     *Create* the archive.  The specified ARCHIVE is always created if
+     _Create_ the archive.  The specified ARCHIVE is always created if
      it did not exist, when you request an update.  But a warning is
      issued unless you specify in advance that you expect to create it,
      by using this modifier.
@@ -236,7 +256,7 @@ to specify variations on an operation's behavior:
      names when putting them in the archive.
 
 `i'
-     Insert new files *before* an existing member of the archive.  If
+     Insert new files _before_ an existing member of the archive.  If
      you use the modifier `i', the name of an existing archive member
      must be present as the RELPOS argument, before the ARCHIVE
      specification.  (same as `b').
@@ -244,10 +264,23 @@ to specify variations on an operation's behavior:
 `l'
      This modifier is accepted but not used.
 
+`N'
+     Uses the COUNT parameter.  This is used if there are multiple
+     entries in the archive with the same name.  Extract or delete
+     instance COUNT of the given name from the archive.
+
 `o'
-     Preserve the *original* dates of members when extracting them.  If
+     Preserve the _original_ dates of members when extracting them.  If
      you do not specify this modifier, files extracted from the archive
      are stamped with the time of extraction.
+
+`P'
+     Use the full path name when matching names in the archive.  GNU
+     `ar' can not create an archive with a full path name (such archives
+     are not POSIX complaint), but other archive creators can.  This
+     option will cause GNU `ar' to match file names using a complete
+     path name, which can be convenient when extracting a single file
+     from an archive created by another tool.
 
 `s'
      Write an object-file index into the archive, or update an existing
@@ -255,9 +288,16 @@ to specify variations on an operation's behavior:
      this modifier flag either with any operation, or alone.  Running
      `ar s' on an archive is equivalent to running `ranlib' on it.
 
+`S'
+     Do not generate an archive symbol table.  This can speed up
+     building a large library in several steps.  The resulting archive
+     can not be used with the linker.  In order to build a symbol
+     table, you must omit the `S' modifier on the last execution of
+     `ar', or you must run `ranlib' on the archive.
+
 `u'
      Normally, `ar r'... inserts all files listed into the archive.  If
-     you would like to insert *only* those of the files you list that
+     you would like to insert _only_ those of the files you list that
      are newer than existing members of the same names, use this
      modifier.  The `u' modifier is allowed only for the operation `r'
      (replace).  In particular, the combination `qu' is not allowed,
@@ -265,7 +305,7 @@ to specify variations on an operation's behavior:
      the operation `q'.
 
 `v'
-     This modifier requests the *verbose* version of an operation.  Many
+     This modifier requests the _verbose_ version of an operation.  Many
      operations display additional information, such as filenames
      processed, when the modifier `v' is appended.
 
@@ -288,7 +328,7 @@ prompt is `AR >'), and continues executing even after errors.  If you
 redirect standard input to a script file, no prompts are issued, and
 `ar' abandons execution (with a nonzero exit code) on any error.
 
-   The `ar' command language is *not* designed to be equivalent to the
+   The `ar' command language is _not_ designed to be equivalent to the
 command-line options; in fact, it provides somewhat less control over
 archives.  The only purpose of the command language is to ease the
 transition to GNU `ar' for developers who already have scripts written
@@ -338,7 +378,7 @@ file required for most of the other commands.
      Requires prior use of `OPEN' or `CREATE'.
 
 `CLEAR'
-     Discard the contents of the current archive, cancelling the effect
+     Discard the contents of the current archive, canceling the effect
      of any operations since the last `SAVE'.  May be executed (with no
      effect) even if  no current archive is specified.
 
@@ -383,7 +423,7 @@ file required for most of the other commands.
 `LIST'
      Display full contents of the current archive, in "verbose" style
      regardless of the state of `VERBOSE'.  The effect is like `ar tv
-     ARCHIVE').  (This single command is a GNU `ld' enhancement, rather
+     ARCHIVE'.  (This single command is a GNU `ar' enhancement, rather
      than present for MRI compatibility.)
 
      Requires prior use of `OPEN' or `CREATE'.
@@ -431,7 +471,7 @@ nm
         [ --no-demangle ] [ -V | --version ]  [ --help ]  [ OBJFILE... ]
 
    GNU `nm' lists the symbols from object files OBJFILE....  If no
-object files are listed as arguments, `nm' assumes `a.out'.
+object files are listed as arguments, `nm' assumes the file `a.out'.
 
    For each symbol, `nm' shows:
 
@@ -488,12 +528,20 @@ object files are listed as arguments, `nm' assumes `a.out'.
     `U'
           The symbol is undefined.
 
+    `V'
+          The symbol is a weak object.  When a weak defined symbol is
+          linked with a normal defined symbol, the normal defined
+          symbol is used with no error.  When a weak undefined symbol
+          is linked and the symbol is not defined, the value of the
+          weak symbol becomes zero with no error.
+
     `W'
-          The symbol is weak.  When a weak defined symbol is linked
-          with a normal defined symbol, the normal defined symbol is
-          used with no error.  When a weak undefined symbol is linked
-          and the symbol is not defined, the value of the weak symbol
-          becomes zero with no error.
+          The symbol is a weak symbol that has not been specifically
+          tagged as a weak object symbol.  When a weak defined symbol
+          is linked with a normal defined symbol, the normal defined
+          symbol is used with no error.  When a weak undefined symbol
+          is linked and the symbol is not defined, the value of the
+          weak symbol becomes zero with no error.
 
     `-'
           The symbol is a stabs symbol in an a.out object file.  In
@@ -514,7 +562,7 @@ equivalent.
 `-o'
 `--print-file-name'
      Precede each symbol by the name of the input file (or archive
-     element) in which it was found, rather than identifying the input
+     member) in which it was found, rather than identifying the input
      file once only, before all of its symbols.
 
 `-a'
@@ -629,20 +677,25 @@ objcopy
              [ -S | --strip-all ]  [ -g | --strip-debug ]
              [ -K SYMBOLNAME | --keep-symbol=SYMBOLNAME ]
              [ -N SYMBOLNAME | --strip-symbol=SYMBOLNAME ]
+             [ -L SYMBOLNAME | --localize-symbol=SYMBOLNAME ]
+             [ -W SYMBOLNAME | --weaken-symbol=SYMBOLNAME ]
              [ -x | --discard-all ]  [ -X | --discard-locals ]
              [ -b BYTE | --byte=BYTE ]
              [ -i INTERLEAVE | --interleave=INTERLEAVE ]
+             [ -j SECTIONNAME | --only-section=SECTIONNAME ]
              [ -R SECTIONNAME | --remove-section=SECTIONNAME ]
              [ -p | --preserve-dates ] [ --debugging ]
              [ --gap-fill=VAL ] [ --pad-to=ADDRESS ]
              [ --set-start=VAL ] [ --adjust-start=INCR ]
-             [ --adjust-vma=INCR ]
-             [ --adjust-section-vma=SECTION{=,+,-}VAL ]
-             [ --adjust-warnings ] [ --no-adjust-warnings ]
-             [ --set-section-flags=SECTION=FLAGS ]
-             [ --add-section=SECTIONNAME=FILENAME ]
+             [ --change-addresses=INCR ]
+             [ --change-section-address SECTION{=,+,-}VAL ]
+             [ --change-section-lma SECTION{=,+,-}VAL ]
+             [ --change-section-vma SECTION{=,+,-}VAL ]
+             [ --change-warnings ] [ --no-change-warnings ]
+             [ --set-section-flags SECTION=FLAGS ]
+             [ --add-section SECTIONNAME=FILENAME ]
              [ --change-leading-char ] [ --remove-leading-char ]
-             [ --weaken ]
+             [ --redefine-sym OLD=NEW ] [ --weaken ]
              [ -v | --verbose ] [ -V | --version ]  [ --help ]
              INFILE [OUTFILE]
 
@@ -671,11 +724,11 @@ address of the lowest section copied into the output file.
    When generating an S-record or a raw binary file, it may be helpful
 to use `-S' to remove sections containing debugging information.  In
 some cases `-R' will be useful to remove sections which contain
-information which is not needed by the binary file.
+information that is not needed by the binary file.
 
 `INFILE'
 `OUTFILE'
-     The source and output files, respectively.  If you do not specify
+     The input and output files, respectively.  If you do not specify
      OUTFILE, `objcopy' creates a temporary file and destructively
      renames the result with the name of INFILE.
 
@@ -695,6 +748,12 @@ information which is not needed by the binary file.
      Use BFDNAME as the object format for both the input and the output
      file; i.e., simply transfer data from source to destination with no
      translation.  *Note Target Selection::, for more information.
+
+`-j SECTIONNAME'
+`--only-section=SECTIONNAME'
+     Copy only the named section from the input file to the output file.
+     This option may be given more than once.  Note that using this
+     option inappropriately may make the output file unusable.
 
 `-R SECTIONNAME'
 `--remove-section=SECTIONNAME'
@@ -721,8 +780,17 @@ information which is not needed by the binary file.
 `-N SYMBOLNAME'
 `--strip-symbol=SYMBOLNAME'
      Do not copy symbol SYMBOLNAME from the source file.  This option
-     may be given more than once, and may be combined with strip options
-     other than `-K'.
+     may be given more than once.
+
+`-L SYMBOLNAME'
+`--localize-symbol=SYMBOLNAME'
+     Make symbol SYMBOLNAME local to the file, so that it is not
+     visible externally.  This option may be given more than once.
+
+`-W SYMBOLNAME'
+`--weaken-symbol=SYMBOLNAME'
+     Make symbol SYMBOLNAME weak. This option may be given more than
+     once.
 
 `-x'
 `--discard-all'
@@ -758,54 +826,91 @@ information which is not needed by the binary file.
      the conversion process can be time consuming.
 
 `--gap-fill VAL'
-     Fill gaps between sections with VAL.  This is done by increasing
+     Fill gaps between sections with VAL.  This operation applies to
+     the _load address_ (LMA) of the sections.  It is done by increasing
      the size of the section with the lower address, and filling in the
      extra space created with VAL.
 
 `--pad-to ADDRESS'
-     Pad the output file up to the virtual address ADDRESS.  This is
-     done by increasing the size of the last section.  The extra space
-     is filled in with the value specified by `--gap-fill' (default
-     zero).
+     Pad the output file up to the load address ADDRESS.  This is done
+     by increasing the size of the last section.  The extra space is
+     filled in with the value specified by `--gap-fill' (default zero).
 
 `--set-start VAL'
-     Set the address of the new file to VAL.  Not all object file
+     Set the start address of the new file to VAL.  Not all object file
      formats support setting the start address.
 
+`--change-start INCR'
 `--adjust-start INCR'
-     Adjust the start address by adding INCR.  Not all object file
+     Change the start address by adding INCR.  Not all object file
      formats support setting the start address.
 
+`--change-addresses INCR'
 `--adjust-vma INCR'
-     Adjust the address of all sections, as well as the start address,
-     by adding INCR.  Some object file formats do not permit section
-     addresses to be changed arbitrarily.  Note that this does not
-     relocate the sections; if the program expects sections to be
-     loaded at a certain address, and this option is used to change the
-     sections such that they are loaded at a different address, the
-     program may fail.
+     Change the VMA and LMA addresses of all sections, as well as the
+     start address, by adding INCR.  Some object file formats do not
+     permit section addresses to be changed arbitrarily.  Note that
+     this does not relocate the sections; if the program expects
+     sections to be loaded at a certain address, and this option is
+     used to change the sections such that they are loaded at a
+     different address, the program may fail.
 
+`--change-section-address SECTION{=,+,-}VAL'
 `--adjust-section-vma SECTION{=,+,-}VAL'
-     Set or adjust the address of the named SECTION.  If `=' is used,
-     the section address is set to VAL.  Otherwise, VAL is added to or
-     subtracted from the section address.  See the comments under
-     `--adjust-vma', above.  If SECTION does not exist in the input
-     file, a warning will be issued, unless `--no-adjust-warnings' is
-     used.
+     Set or change both the VMA address and the LMA address of the named
+     SECTION.  If `=' is used, the section address is set to VAL.
+     Otherwise, VAL is added to or subtracted from the section address.
+     See the comments under `--change-addresses', above. If SECTION
+     does not exist in the input file, a warning will be issued, unless
+     `--no-change-warnings' is used.
 
+`--change-section-lma SECTION{=,+,-}VAL'
+     Set or change the LMA address of the named SECTION.  The LMA
+     address is the address where the section will be loaded into
+     memory at program load time.  Normally this is the same as the VMA
+     address, which is the address of the section at program run time,
+     but on some systems, especially those where a program is held in
+     ROM, the two can be different.  If `=' is used, the section
+     address is set to VAL.  Otherwise, VAL is added to or subtracted
+     from the section address.  See the comments under
+     `--change-addresses', above.  If SECTION does not exist in the
+     input file, a warning will be issued, unless
+     `--no-change-warnings' is used.
+
+`--change-section-vma SECTION{=,+,-}VAL'
+     Set or change the VMA address of the named SECTION.  The VMA
+     address is the address where the section will be located once the
+     program has started executing.  Normally this is the same as the
+     LMA address, which is the address where the section will be loaded
+     into memory, but on some systems, especially those where a program
+     is held in ROM, the two can be different.  If `=' is used, the
+     section address is set to VAL.  Otherwise, VAL is added to or
+     subtracted from the section address.  See the comments under
+     `--change-addresses', above.  If SECTION does not exist in the
+     input file, a warning will be issued, unless
+     `--no-change-warnings' is used.
+
+`--change-warnings'
 `--adjust-warnings'
-     If `--adjust-section-vma' is used, and the named section does not
+     If `--change-section-address' or `--change-section-lma' or
+     `--change-section-vma' is used, and the named section does not
      exist, issue a warning.  This is the default.
 
+`--no-change-warnings'
 `--no-adjust-warnings'
-     Do not issue a warning if `--adjust-section-vma' is used, even if
+     Do not issue a warning if `--change-section-address' or
+     `--adjust-section-lma' or `--adjust-section-vma' is used, even if
      the named section does not exist.
 
 `--set-section-flags SECTION=FLAGS'
      Set the flags for the named section.  The FLAGS argument is a
      comma separated string of flag names.  The recognized names are
-     `alloc', `load', `readonly', `code', `data', and `rom'.  Not all
-     flags are meaningful for all object file formats.
+     `alloc', `contents', `load', `noload', `readonly', `code', `data',
+     `rom', `share', and `debug'.  You can set the `contents' flag for
+     a section which does not have contents, but it is not meaningful
+     to clear the `contents' flag of a section which does have
+     contents-just remove the section instead.  Not all flags are
+     meaningful for all object file formats.
 
 `--add-section SECTIONNAME=FILENAME'
      Add a new section named SECTIONNAME while copying the file.  The
@@ -835,6 +940,11 @@ information which is not needed by the binary file.
      because it always changes the symbol name when appropriate,
      regardless of the object file format of the output file.
 
+`--redefine-sym OLD=NEW'
+     Change the name of a symbol OLD, to NEW.  This can be useful when
+     one is trying link two things together for which you have no
+     source, and there are name collisions.
+
 `--weaken'
      Change all global symbols in the file to be weak.  This can be
      useful when building an object which will be linked against other
@@ -861,23 +971,38 @@ objdump
 *******
 
      objdump [ -a | --archive-headers ]
-             [ -b BFDNAME | --target=BFDNAME ] [ --debugging ]
-             [ -C | --demangle ] [ -d | --disassemble ]
-             [ -D | --disassemble-all ] [ --disassemble-zeroes ]
+             [ -b BFDNAME | --target=BFDNAME ]
+             [ -C | --demangle ]
+             [ -d | --disassemble ]
+             [ -D | --disassemble-all ]
+             [ -z | --disassemble-zeroes ]
              [ -EB | -EL | --endian={big | little } ]
              [ -f | --file-headers ]
-             [ -h | --section-headers | --headers ]  [ -i | --info ]
+             [ --file-start-context ]
+             [ -g | --debugging ]
+             [ -h | --section-headers | --headers ]
+             [ -i | --info ]
              [ -j SECTION | --section=SECTION ]
-             [ -l | --line-numbers ] [ -S | --source ]
+             [ -l | --line-numbers ]
+             [ -S | --source ]
              [ -m MACHINE | --architecture=MACHINE ]
-             [ -r | --reloc ] [ -R | --dynamic-reloc ]
-             [ -s | --full-contents ]  [ --stabs ]
-             [ -t | --syms ] [ -T | --dynamic-syms ] [ -x | --all-headers ]
-             [ -w | --wide ] [ --start-address=ADDRESS ]
+             [ -M OPTIONS | --disassembler-options=OPTIONS]
+             [ -p | --private-headers ]
+             [ -r | --reloc ]
+             [ -R | --dynamic-reloc ]
+             [ -s | --full-contents ]
+             [ -G | --stabs ]
+             [ -t | --syms ]
+             [ -T | --dynamic-syms ]
+             [ -x | --all-headers ]
+             [ -w | --wide ]
+             [ --start-address=ADDRESS ]
              [ --stop-address=ADDRESS ]
-             [ --prefix-addresses] [ --[no-]show-raw-insn ]
+             [ --prefix-addresses]
+             [ --[no-]show-raw-insn ]
              [ --adjust-vma=OFFSET ]
-             [ --version ]  [ --help ]
+             [ -V | --version ]
+             [ -H | --help ]
              OBJFILE...
 
    `objdump' displays information about one or more object files.  The
@@ -891,7 +1016,8 @@ archives, `objdump' shows information on each of the member object
 files.
 
    The long and short forms of options, shown here as alternatives, are
-equivalent.  At least one option besides `-l' must be given.
+equivalent.  At least one option from the list
+`-a,-d,-D,-f,-g,-G,-h,-H,-p,-r,-R,-S,-t,-T,-V,-x' must be given.
 
 `-a'
 `--archive-header'
@@ -928,6 +1054,8 @@ equivalent.  At least one option besides `-l' must be given.
      Besides removing any initial underscore prepended by the system,
      this makes C++ function names readable.  *Note c++filt::, for more
      information on demangling.
+
+`-G'
 
 `--debugging'
      Display debugging information.  This attempts to parse debugging
@@ -967,6 +1095,11 @@ equivalent.  At least one option besides `-l' must be given.
      Display summary information from the overall header of each of the
      OBJFILE files.
 
+`--file-start-context'
+     Specify that when displaying interlisted source code/disassembly
+     (assumes '-S') from a file that has not yet been displayed, extend
+     the context to the start of the file.
+
 `-h'
 `--section-header'
 `--header'
@@ -1003,9 +1136,42 @@ equivalent.  At least one option besides `-l' must be given.
 `-m MACHINE'
 `--architecture=MACHINE'
      Specify the architecture to use when disassembling object files.
-     This can be useful when disasembling object files which do not
+     This can be useful when disassembling object files which do not
      describe architecture information, such as S-records.  You can
      list the available architectures with the `-i' option.
+
+`-M OPTIONS'
+`--disassembler-options=OPTIONS'
+     Pass target specific information to the disassembler.  Only
+     supported on some targets.
+
+     If the target is an ARM architecture then this switch can be used
+     to select which register name set is used during disassembler.
+     Specifying `-M reg-name-std' (the default) will select the
+     register names as used in ARM's instruction set documentation, but
+     with register 13 called 'sp', register 14 called 'lr' and register
+     15 called 'pc'.  Specifying `-M reg-names-apcs' will select the
+     name set used by the ARM Procedure Call Standard, whilst
+     specifying `-M reg-names-raw' will just use `r' followed by the
+     register number.
+
+     There are also two variants on the APCS register naming scheme
+     enabled by `-M reg-names-atpcs' and `-M reg-names-special-atpcs'
+     which use the ARM/Thumb Procedure Call Standard naming
+     conventions.  (Eiuther with the normal register name sor the
+     special register names).
+
+     This option can also be used for ARM architectures to force the
+     disassembler to interpret all instructions as THUMB instructions by
+     using the switch `--disassembler-options=force-thumb'.  This can be
+     useful when attempting to disassemble thumb code produced by other
+     compilers.
+
+`-p'
+`--private-headers'
+     Print information that is specific to the object file format.  The
+     exact information printed depends upon the object file format.
+     For some object file formats, no additional information is printed.
 
 `-r'
 `--reloc'
@@ -1036,6 +1202,8 @@ equivalent.  At least one option besides `-l' must be given.
 `--no-show-raw-insn'
      When disassembling instructions, do not print the instruction
      bytes.  This is the default when `--prefix-addresses' is used.
+
+`-G'
 
 `--stabs'
      Display the full contents of any sections requested.  Display the
@@ -1082,7 +1250,7 @@ equivalent.  At least one option besides `-l' must be given.
      columns.
 
 
-File: binutils.info,  Node: ranlib,  Next: size,  Prev: objdump,  Up: Top
+File: binutils.info,  Node: ranlib,  Next: readelf,  Prev: objdump,  Up: Top
 
 ranlib
 ******
@@ -1104,244 +1272,6 @@ their placement in the archive.
 
 `-v'
 `-V'
+`--version'
      Show the version number of `ranlib'.
-
-
-File: binutils.info,  Node: size,  Next: strings,  Prev: ranlib,  Up: Top
-
-size
-****
-
-     size [ -A | -B | --format=COMPATIBILITY ]
-          [ --help ]  [ -d | -o | -x | --radix=NUMBER ]
-          [ --target=BFDNAME ]  [ -V | --version ]
-          OBJFILE...
-
-   The GNU `size' utility lists the section sizes--and the total
-size--for each of the object or archive files OBJFILE in its argument
-list.  By default, one line of output is generated for each object file
-or each module in an archive.
-
-   OBJFILE... are the object files to be examined.
-
-   The command line options have the following meanings:
-
-`-A'
-`-B'
-`--format=COMPATIBILITY'
-     Using one of these options, you can choose whether the output from
-     GNU `size' resembles output from System V `size' (using `-A', or
-     `--format=sysv'), or Berkeley `size' (using `-B', or
-     `--format=berkeley').  The default is the one-line format similar
-     to Berkeley's.
-
-     Here is an example of the Berkeley (default) format of output from
-     `size':
-          size --format=Berkeley ranlib size
-          text    data    bss     dec     hex     filename
-          294880  81920   11592   388392  5ed28   ranlib
-          294880  81920   11888   388688  5ee50   size
-
-     This is the same data, but displayed closer to System V
-     conventions:
-
-          size --format=SysV ranlib size
-          ranlib  :
-          section         size         addr
-          .text         294880         8192
-          .data          81920       303104
-          .bss           11592       385024
-          Total         388392
-          
-          
-          size  :
-          section         size         addr
-          .text         294880         8192
-          .data          81920       303104
-          .bss           11888       385024
-          Total         388688
-
-`--help'
-     Show a summary of acceptable arguments and options.
-
-`-d'
-`-o'
-`-x'
-`--radix=NUMBER'
-     Using one of these options, you can control whether the size of
-     each section is given in decimal (`-d', or `--radix=10'); octal
-     (`-o', or `--radix=8'); or hexadecimal (`-x', or `--radix=16').
-     In `--radix=NUMBER', only the three values (8, 10, 16) are
-     supported.  The total size is always given in two radices; decimal
-     and hexadecimal for `-d' or `-x' output, or octal and hexadecimal
-     if you're using `-o'.
-
-`--target=BFDNAME'
-     Specify that the object-code format for OBJFILE is BFDNAME.  This
-     option may not be necessary; `size' can automatically recognize
-     many formats.  *Note Target Selection::, for more information.
-
-`-V'
-`--version'
-     Display the version number of `size'.
-
-
-File: binutils.info,  Node: strings,  Next: strip,  Prev: size,  Up: Top
-
-strings
-*******
-
-     strings [-afov] [-MIN-LEN] [-n MIN-LEN] [-t RADIX] [-]
-             [--all] [--print-file-name] [--bytes=MIN-LEN]
-             [--radix=RADIX] [--target=BFDNAME]
-             [--help] [--version] FILE...
-
-   For each FILE given, GNU `strings' prints the printable character
-sequences that are at least 4 characters long (or the number given with
-the options below) and are followed by an unprintable character.  By
-default, it only prints the strings from the initialized and loaded
-sections of object files; for other types of files, it prints the
-strings from the whole file.
-
-   `strings' is mainly useful for determining the contents of non-text
-files.
-
-`-a'
-`--all'
-`-'
-     Do not scan only the initialized and loaded sections of object
-     files; scan the whole files.
-
-`-f'
-`--print-file-name'
-     Print the name of the file before each string.
-
-`--help'
-     Print a summary of the program usage on the standard output and
-     exit.
-
-`-MIN-LEN'
-`-n MIN-LEN'
-`--bytes=MIN-LEN'
-     Print sequences of characters that are at least MIN-LEN characters
-     long, instead of the default 4.
-
-`-o'
-     Like `-t o'.  Some other versions of `strings' have `-o' act like
-     `-t d' instead.  Since we can not be compatible with both ways, we
-     simply chose one.
-
-`-t RADIX'
-`--radix=RADIX'
-     Print the offset within the file before each string.  The single
-     character argument specifies the radix of the offset--`o' for
-     octal, `x' for hexadecimal, or `d' for decimal.
-
-`--target=BFDNAME'
-     Specify an object code format other than your system's default
-     format.  *Note Target Selection::, for more information.
-
-`-v'
-`--version'
-     Print the program version number on the standard output and exit.
-
-
-File: binutils.info,  Node: strip,  Next: c++filt,  Prev: strings,  Up: Top
-
-strip
-*****
-
-     strip [ -F BFDNAME | --target=BFDNAME | --target=BFDNAME ]
-           [ -I BFDNAME | --input-target=BFDNAME ]
-           [ -O BFDNAME | --output-target=BFDNAME ]
-           [ -s | --strip-all ] [ -S | -g | --strip-debug ]
-           [ -K SYMBOLNAME | --keep-symbol=SYMBOLNAME ]
-           [ -N SYMBOLNAME | --strip-symbol=SYMBOLNAME ]
-           [ -x | --discard-all ] [ -X | --discard-locals ]
-           [ -R SECTIONNAME | --remove-section=SECTIONNAME ]
-           [ -o FILE ] [ -p | --preserve-dates ]
-           [ -v | --verbose ]  [ -V | --version ]  [ --help ]
-           OBJFILE...
-
-   GNU `strip' discards all symbols from object files OBJFILE.  The
-list of object files may include archives.  At least one object file
-must be given.
-
-   `strip' modifies the files named in its argument, rather than
-writing modified copies under different names.
-
-`-F BFDNAME'
-`--target=BFDNAME'
-     Treat the original OBJFILE as a file with the object code format
-     BFDNAME, and rewrite it in the same format.  *Note Target
-     Selection::, for more information.
-
-`--help'
-     Show a summary of the options to `strip' and exit.
-
-`-I BFDNAME'
-`--input-target=BFDNAME'
-     Treat the original OBJFILE as a file with the object code format
-     BFDNAME.  *Note Target Selection::, for more information.
-
-`-O BFDNAME'
-`--output-target=BFDNAME'
-     Replace OBJFILE with a file in the output format BFDNAME.  *Note
-     Target Selection::, for more information.
-
-`-R SECTIONNAME'
-`--remove-section=SECTIONNAME'
-     Remove any section named SECTIONNAME from the output file.  This
-     option may be given more than once.  Note that using this option
-     inappropriately may make the output file unusable.
-
-`-s'
-`--strip-all'
-     Remove all symbols.
-
-`-g'
-`-S'
-`--strip-debug'
-     Remove debugging symbols only.
-
-`--strip-unneeded'
-     Remove all symbols that are not needed for relocation processing.
-
-`-K SYMBOLNAME'
-`--keep-symbol=SYMBOLNAME'
-     Keep only symbol SYMBOLNAME from the source file.  This option may
-     be given more than once.
-
-`-N SYMBOLNAME'
-`--strip-symbol=SYMBOLNAME'
-     Remove symbol SYMBOLNAME from the source file. This option may be
-     given more than once, and may be combined with strip options other
-     than `-K'.
-
-`-o FILE'
-     Put the stripped output in FILE, rather than replacing the
-     existing file.  When this argument is used, only one OBJFILE
-     argument may be specified.
-
-`-p'
-`--preserve-dates'
-     Preserve the access and modification dates of the file.
-
-`-x'
-`--discard-all'
-     Remove non-global symbols.
-
-`-X'
-`--discard-locals'
-     Remove compiler-generated local symbols.  (These usually start
-     with `L' or `.'.)
-
-`-V'
-`--version'
-     Show the version number for `strip'.
-
-`-v'
-`--verbose'
-     Verbose output: list all object files modified.  In the case of
-     archives, `strip -v' lists all members of the archive.
 
