@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.bin/yacc/reader.c,v 1.3 1996/03/27 19:33:19 niklas Exp $	*/
+
 #ifndef lint
-static char rcsid[] = "$Id: reader.c,v 1.1.1.1 1995/10/18 08:47:06 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/yacc/reader.c,v 1.3 1996/03/27 19:33:19 niklas Exp $";
 #endif /* not lint */
 
 #include "defs.h"
@@ -892,50 +894,6 @@ int assoc;
 }
 
 
-/*
- * %expect requires special handling
- * as it really isn't part of the yacc
- * grammar only a flag for yacc proper.
- */
-declare_expect(assoc)
-int assoc;
-{
-    register int c;
-
-    if (assoc != EXPECT) ++prec;
-
-    /*
-     * Stay away from nextc - doesn't
-     * detect EOL and will read to EOF.
-     */
-    c = *++cptr;
-    if (c == EOF) unexpected_EOF();
-
-    for(;;)
-    {
-        if (isdigit(c))
-        {
-	    SRexpect = get_number();
-            break;
-        }
-        /*
-         * Looking for number before EOL.
-         * Spaces, tabs, and numbers are ok,
-         * words, punc., etc. are syntax errors.
-         */
-        else if (c == '\n' || isalpha(c) || !isspace(c))
-        {
-            syntax_error(lineno, line, cptr);
-        }
-        else
-        {
-            c = *++cptr;
-            if (c == EOF) unexpected_EOF();
-        }
-    }
-}
-
-
 declare_types()
 {
     register int c;
@@ -981,6 +939,23 @@ declare_start()
     goal = bp;
 }
 
+handle_expect()
+{
+    register int c;
+    register int num;
+
+    c = nextc();
+    if (c == EOF) unexpected_EOF();
+    if (!isdigit(c))
+	syntax_error(lineno, line, cptr);
+    num = get_number();
+    if (num == 1)
+    	fprintf (stderr, "%s: Expect 1 shift/reduce conflict.\n", myname);
+    else
+	fprintf (stderr, "%s: Expect %d shift/reduce conflicts.\n", myname,
+	    num);
+}
+
 
 read_declarations()
 {
@@ -1019,16 +994,16 @@ read_declarations()
 	    declare_tokens(k);
 	    break;
 
-	case EXPECT:
-	    declare_expect(k);
-            break;
-
 	case TYPE:
 	    declare_types();
 	    break;
 
 	case START:
 	    declare_start();
+	    break;
+
+	case EXPECT:
+	    handle_expect();
 	    break;
 	}
     }

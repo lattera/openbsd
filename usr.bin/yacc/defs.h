@@ -1,4 +1,4 @@
-/*	$Id: defs.h,v 1.1.1.1 1995/10/18 08:47:05 deraadt Exp $ */
+/*	$OpenBSD: src/usr.bin/yacc/defs.h,v 1.3 1996/03/27 19:33:18 niklas Exp $	*/
 
 #include <assert.h>
 #include <ctype.h>

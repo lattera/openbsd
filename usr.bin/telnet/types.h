@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.bin/telnet/types.h,v 1.2 1996/03/27 19:33:13 niklas Exp $	*/
+/*	$NetBSD: types.h,v 1.5 1996/02/28 21:04:20 thorpej Exp $	*/
+
 /*
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,7 +34,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)types.h	8.1 (Berkeley) 6/6/93
- *	$Id: types.h,v 1.3 1994/02/25 03:00:49 cgd Exp $
  */
 
 typedef struct {

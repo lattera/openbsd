@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.bin/telnet/authenc.c,v 1.2 1996/03/27 19:32:57 niklas Exp $	*/
+/*	$NetBSD: authenc.c,v 1.5 1996/02/28 21:03:52 thorpej Exp $	*/
+
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,8 +35,12 @@
  */
 
 #ifndef lint
-/* from: static char sccsid[] = "@(#)authenc.c	8.1 (Berkeley) 6/6/93"; */
-static char *rcsid = "$Id: authenc.c,v 1.3 1994/02/25 03:00:20 cgd Exp $";
+#if 0
+static char sccsid[] = "@(#)authenc.c	8.1 (Berkeley) 6/6/93";
+static char rcsid[] = "$NetBSD: authenc.c,v 1.5 1996/02/28 21:03:52 thorpej Exp $";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.bin/telnet/authenc.c,v 1.2 1996/03/27 19:32:57 niklas Exp $";
+#endif
 #endif /* not lint */
 
 #if	defined(AUTHENTICATION)

@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.bin/telnet/terminal.c,v 1.2 1996/03/27 19:33:11 niklas Exp $	*/
+/*	$NetBSD: terminal.c,v 1.5 1996/02/28 21:04:17 thorpej Exp $	*/
+
 /*
  * Copyright (c) 1988, 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,8 +35,12 @@
  */
 
 #ifndef lint
-/* from: static char sccsid[] = "@(#)terminal.c	8.1 (Berkeley) 6/6/93"; */
-static char *rcsid = "$Id: terminal.c,v 1.3 1994/02/25 03:00:47 cgd Exp $";
+#if 0
+static char sccsid[] = "@(#)terminal.c	8.2 (Berkeley) 2/16/95";
+static char rcsid[] = "$NetBSD: terminal.c,v 1.5 1996/02/28 21:04:17 thorpej Exp $";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.bin/telnet/terminal.c,v 1.2 1996/03/27 19:33:11 niklas Exp $";
+#endif
 #endif /* not lint */
 
 #include <arpa/telnet.h>
@@ -141,7 +148,8 @@ ttyflush(drop)
 		n1 = n0 - n;
 		if (!drop)
 			n1 = TerminalWrite(ttyoring.bottom, n1);
-		n += n1;
+		if (n1 > 0)
+			n += n1;
 	}
 	ring_consumed(&ttyoring, n);
     }
