@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+#
+# $OpenBSD: src/usr.bin/vi/build/recover,v 1.2 1999/10/11 20:07:19 millert Exp $
+#
+# Script to (safely) recover nvi edit sessions.
+#
+$recoverdir = $ARGV[0] || "/var/tmp/vi.recover";
+$sendmail = "/usr/sbin/sendmail";
+
+# Make the recovery dir if it does not exist.
+if (!lstat($recoverdir)) {
+	mkdir($recoverdir, 01777) || die "Unable to create $recoverdir: $!\n";
+	chmod(01777, $recoverdir);
+	exit(0);
+}
+
+# Sanity check the vi recovery dir
+if (-l _) {
+	die "Warning! $recoverdir is a symbolic link! (ignoring)\n";
+} elsif (! -O _) {
+	die "Warning! $recoverdir is not owned by root! (ignoring)\n";
+} elsif (! -d _) {
+	die "Warning! $recoverdir is not a directory! (ignoring)\n";
+}
+chdir($recoverdir) || die "$0: can't chdir to $recoverdir: $!\n";
+
+# Check editor backup files.
+opendir(RECDIR, ".") || die "$0: can't open $recoverdir: $!\n";
+foreach $file (readdir(RECDIR)) {
+	next unless $file =~ /^vi\./;
+
+	# Unmodified vi editor backup files either have the
+	# execute bit set or are zero length.  Delete them.
+	# Anything that is not a normal file gets deleted too.
+	lstat($file) || die "$0: can't stat $file: $!\n";
+	if (-x _ || ! -s _ || ! -f _) {
+		unlink($file) unless -d _;
+	}
+}
+
+# It is possible to get incomplete recovery files, if the editor crashes
+# at the right time.
+rewinddir(RECDIR);
+foreach $file (readdir(RECDIR)) {
+	next unless $file =~ /^recover\./;
+
+	# Delete anything that is not a regular file as that is either
+	# filesystem corruption from fsck or an exploit attempt.
+	lstat($file) || die "$0: can't stat $file: $!\n";
+	if (! -f _ || ! -s _) {
+		unlink($file) unless -d _;
+		next;
+	}
+
+	# Slurp in the recover.* file and search for X-vi-recover-path
+	# (which should point to an existing vi.* file).
+	open(RECFILE, $file) || die "$0: can't open $file: $!\n";
+	@recfile = <RECFILE>;
+	close(RECFILE);
+	@backups = grep(s/^X-vi-recover-path:\s*(.*)[\r\n]*$/$1/, @recfile);
+
+	# Delete any recovery files that are zero length, corrupted,
+	# or that have no corresponding backup file.  Else send mail
+	# to the user.
+	if ($#backups != 0) {
+		unlink($file);
+	} elsif (! -s $backups[0]) {
+		unlink($file, $backups[0]);
+	} else {
+		open(SENDMAIL, "|$sendmail -t") ||
+		    die "$0: can't run $sendmail -t: $!\n";
+		print SENDMAIL @recfile;
+		close(SENDMAIL);
+	}
+}
+closedir(RECDIR);
+
+exit(0);
