@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.27 2004/06/06 18:20:27 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.28 2004/06/08 07:33:12 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1189,7 +1189,7 @@ ENTRY(copyoutstr)
 	subl	%eax,%ecx		# ecx = NBPG - (src % NBPG)
 
 	GET_CURPCB(%ecx)
-	movl	$6f, PCB_ONFAULT(%eax)
+	movl	$6f, PCB_ONFAULT(%ecx)
 
 1:	/*
 	 * Once per page, check that we are still within the bounds of user
