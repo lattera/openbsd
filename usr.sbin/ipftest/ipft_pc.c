@@ -1,6 +1,6 @@
-/*    $OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.11 1998/09/15 10:05:50 pattonme Exp $     */
+/*    $OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.12 1999/02/05 05:58:46 deraadt Exp $     */
 /*
- * Copyright (C) 1993-1997 by Darren Reed.
+ * Copyright (C) 1993-1998 by Darren Reed.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
@@ -38,7 +38,7 @@
 #include "pcap.h"
 
 #if !defined(lint)
-static const char rcsid[] = "@(#)$Id$";
+static const char rcsid[] = "@(#)$Id: ipft_pc.c,v 1.11 1998/09/15 10:05:50 pattonme Exp $";
 #endif
 
 struct	llc	{

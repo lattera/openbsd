@@ -1,12 +1,12 @@
-/*       $OpenBSD: src/sys/netinet/Attic/ip_auth.h,v 1.2 1998/02/17 01:39:02 dgregor Exp $       */
+/*       $OpenBSD: src/sys/netinet/Attic/ip_auth.h,v 1.3 1999/02/05 05:58:50 deraadt Exp $       */
 /*
- * Copyright (C) 1997 by Darren Reed & Guido Van Rooij.
+ * Copyright (C) 1997-1998 by Darren Reed & Guido Van Rooij.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
  * to the original author and the contributors.
  *
- * $Id: ip_auth.h,v 1.1 1998/01/26 04:10:38 dgregor Exp $
+ * $Id: ip_auth.h,v 1.2 1998/02/17 01:39:02 dgregor Exp $
  *
  */
 #ifndef	__IP_AUTH_H__

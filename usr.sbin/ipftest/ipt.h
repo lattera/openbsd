@@ -1,11 +1,11 @@
-/*     $OpenBSD: src/usr.sbin/ipftest/Attic/ipt.h,v 1.5 1998/01/26 04:16:41 dgregor Exp $     */
+/*     $OpenBSD: src/usr.sbin/ipftest/Attic/ipt.h,v 1.6 1999/02/05 05:58:47 deraadt Exp $     */
 /*
- * Copyright (C) 1993-1997 by Darren Reed.
+ * Copyright (C) 1993-1998 by Darren Reed.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
  * to the original author and the contributors.
- * $Id: ipt.h,v 2.0.2.7 1997/09/28 07:12:00 darrenr Exp $
+ * $Id: ipt.h,v 1.5 1998/01/26 04:16:41 dgregor Exp $
  */
 
 #ifndef	__IPT_H__

@@ -1,6 +1,6 @@
-/*    $OpenBSD: src/usr.sbin/ipftest/Attic/ipt.c,v 1.12 1998/09/15 10:05:51 pattonme Exp $     */
+/*    $OpenBSD: src/usr.sbin/ipftest/Attic/ipt.c,v 1.13 1999/02/05 05:58:47 deraadt Exp $     */
 /*
- * Copyright (C) 1993-1997 by Darren Reed.
+ * Copyright (C) 1993-1998 by Darren Reed.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
@@ -58,7 +58,7 @@
 
 #if !defined(lint)
 static const char sccsid[] = "@(#)ipt.c	1.19 6/3/96 (C) 1993-1996 Darren Reed";
-static const char rcsid[] = "@(#)$Id$";
+static const char rcsid[] = "@(#)$Id: ipt.c,v 1.12 1998/09/15 10:05:51 pattonme Exp $";
 #endif
 
 extern	char	*optarg;
