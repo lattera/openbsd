@@ -23,8 +23,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$OpenBSD: src/usr.sbin/ppp/ppp/sig.c,v 1.6 2002/05/16 01:13:39 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/sig.c,v 1.7 2002/06/15 01:33:23 brian Exp $
  */
+
+#include <sys/types.h>
 
 #include <signal.h>
 
