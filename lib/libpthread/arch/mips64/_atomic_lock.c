@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpthread/arch/mips/Attic/_atomic_lock.c,v 1.7 2002/10/11 19:08:41 marc Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/arch/mips64/Attic/_atomic_lock.c,v 1.1 2004/08/11 17:41:34 pefo Exp $	*/
 /*
  * Atomic lock for mips
  */
