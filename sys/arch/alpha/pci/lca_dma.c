@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.1 2001/02/16 05:17:31 jason Exp $	*/
-/*	$NetBSD: lca_dma.c,v 1.13 2000/06/29 08:58:47 mrg Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.2 2001/02/16 16:02:53 jason Exp $	*/
+/* $NetBSD: lca_dma.c,v 1.13 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-
  * Copyright (c) 1997, 1998 The NetBSD Foundation, Inc.
