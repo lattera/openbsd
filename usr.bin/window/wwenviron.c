@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/window/Attic/wwenviron.c,v 1.9 2003/07/10 00:06:52 david Exp $	*/
+/*	$OpenBSD: src/usr.bin/window/Attic/wwenviron.c,v 1.10 2003/08/01 22:01:37 david Exp $	*/
 /*	$NetBSD: wwenviron.c,v 1.4 1995/12/21 08:39:50 mycroft Exp $	*/
 
 /*
@@ -37,17 +37,20 @@
 #if 0
 static char sccsid[] = "@(#)wwenviron.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/window/Attic/wwenviron.c,v 1.9 2003/07/10 00:06:52 david Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/window/Attic/wwenviron.c,v 1.10 2003/08/01 22:01:37 david Exp $";
 #endif
 #endif /* not lint */
 
 #include "ww.h"
-#if !defined(OLD_TTY) && !defined(TIOCSCTTY) && !defined(TIOCNOTTY)
+#if !defined(OLD_TTY)
 #include <sys/ioctl.h>
 #endif
 #include <sys/signal.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /*
  * Set up the environment of this process to run in window 'wp'.
