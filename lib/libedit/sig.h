@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/lib/libedit/sig.h,v 1.2 1997/01/16 05:18:45 millert Exp $	*/
+/*	$OpenBSD: src/lib/libedit/sig.h,v 1.3 1997/03/14 05:13:03 millert Exp $	*/
+/*	$NetBSD: sig.h,v 1.2 1997/01/11 06:48:11 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
