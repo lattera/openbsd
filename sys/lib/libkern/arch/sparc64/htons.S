@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/lib/libkern/arch/sparc64/htons.S,v 1.2 2001/08/20 20:15:29 jason Exp $	*/
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
