@@ -1,0 +1,184 @@
+#! /usr/bin/perl
+# ex:ts=8 sw=4:
+# $OpenBSD: src/usr.sbin/pkg_add/Attic/pkg_info,v 1.9 2004/08/12 10:35:06 espie Exp $
+#
+# Copyright (c) 2003-2004 Marc Espie <espie@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+use OpenBSD::PackageInfo;
+use OpenBSD::PackageName;
+use Getopt::Std;
+
+sub printfile
+{
+	my $filename = shift;
+	local $_;
+
+	open my $fh, '<', $filename or return;
+	while(<$fh>) {
+		print;
+	}
+	close $fh;
+}
+
+sub get_line
+{
+	open my $fh, '<', shift or return "";
+	my $c = <$fh>;
+	chomp($c);
+	close $fh;
+	return $c;
+}
+
+our ($opt_c, $opt_D, $opt_d, $opt_f, $opt_I, $opt_i, $opt_k, $opt_L, $opt_m,
+    $opt_p, $opt_q, $opt_R, $opt_r, $opt_v, $opt_h, $opt_e, $opt_l, $opt_a);
+
+sub print_info
+{
+	my ($pkg, $dir) = @_;
+	unless (-d $dir) {
+		print STDERR "Error printing info for $pkg: no info ?\n";
+	}
+	if ($opt_I) {
+		my $l = 20 - length($pkg);
+		$l = 1 if $l <= 0;
+		print $pkg, " "x$l, get_line($dir.COMMENT), "\n";
+	} else {
+		print $opt_p, "Information for ", $pkg, "\n\n" unless $opt_q;
+		if ($opt_c) {
+			print $opt_p, "Comment:\n" unless $opt_q;
+			printfile($dir.COMMENT);
+			print "\n";
+		}
+		if ($opt_R && -f $dir.REQUIRED_BY) {
+			print $opt_p, "Required by:\n" unless $opt_q;
+			printfile($dir.REQUIRED_BY);
+			print "\n";
+		}
+		if ($opt_d) {
+			print $opt_p, "Description:\n" unless $opt_q;
+			printfile($dir.DESC);
+			print "\n";
+		}
+		if ($opt_D && -f $dir.DISPLAY) {
+			print $opt_p, "Install notice:\n" unless $opt_q;
+			printfile($dir.DISPLAY);
+			print "\n";
+		}
+		if ($opt_i && -f $dir.INSTALL) {
+			print $opt_p, "Install script:\n" unless $opt_q;
+			printfile($dir.INSTALL);
+			print "\n";
+		}
+		if ($opt_k && -f $dir.DEINSTALL) {
+			print $opt_p, "De-Install script:\n" unless $opt_q;
+			printfile($dir.DEINSTALL, \*STDOUT);
+			print "\n";
+		}
+		if ($opt_r && -f $dir.REQUIRE) {
+			print $opt_p, "Require script:\n" unless $opt_q;
+			printfile($dir.REQUIRE, \*STDOUT);
+			print "\n";
+		}
+		my $plist;
+		if ($opt_f || $opt_L) {
+			require OpenBSD::PackingOld;
+			require OpenBSD::PackingList;
+
+			if ($opt_f) {
+				$plist = OpenBSD::PackingList->fromfile($dir.CONTENTS);
+			} else {
+				$plist = OpenBSD::PackingList->fromfile($dir.CONTENTS, \&OpenBSD::PackingList::FilesOnly);
+			}
+			die "Bad packing list" unless defined $plist;
+		}
+		if ($opt_L) {
+			print $opt_p, "Files:\n" unless $opt_q;
+			for my $item (@{$plist->{items}}) {
+				next unless $item->IsFile();
+				print $item->fullname(), "\n";
+			}
+			print "\n";
+		}
+		if ($opt_f) {
+			print $opt_p, "Packing list:\n" unless $opt_q;
+			$plist->write(\*STDOUT);
+			print "\n";
+		}
+		print $opt_p, "\n" unless $opt_q;
+	}
+}
+
+getopts('cDdfIikLmpqRrvhe:l:a');
+
+if (defined $opt_e) {
+	die "Error: -e is not yet supported";
+}
+
+unless ($opt_c || $opt_D || $opt_d || $opt_f || $opt_I || $opt_i ||
+	$opt_k || $opt_L || $opt_m || $opt_p || $opt_R || $opt_r) {
+	if (@ARGV == 0) {
+		$opt_I = $opt_a = 1;
+	} else {
+		$opt_c = $opt_d = $opt_R = 1;
+	}
+}
+
+if ($opt_v) {
+	$opt_c = $opt_d = $opt_f = $opt_i = $opt_k = $opt_r = $opt_D =
+	    $opt_m = $opt_R = 1;
+}
+
+if (!defined $opt_p) {
+	$opt_p = "";
+}
+
+if (@ARGV == 0 && !$opt_a) {
+	die "Missing package name(s)";
+}
+
+if (@ARGV > 0 && $opt_a) {
+	die "Can't specify package name(s) with -a";
+}
+
+if (@ARGV == 0) {
+	@ARGV = sort(installed_packages());
+}
+
+for my $pkg (@ARGV) {
+	if (is_installed($pkg)) {
+		print_info($pkg, installed_info($pkg));
+		next;
+	}
+	if (OpenBSD::PackageName::is_stem($pkg)) {
+		my @l = sort (OpenBSD::PackageName::findstem($pkg, installed_packages()));
+		if (@l != 0) {
+			for my $p (@l) {
+				print_info($p, installed_info($p));
+			}
+			next;
+		}
+	}
+				
+	require OpenBSD::PackageLocator;
+
+	my $true_package = OpenBSD::PackageLocator->find($pkg);
+	next unless $true_package;
+	my $dir = $true_package->info();
+	$true_package->close();
+
+	print_info($pkg, $dir);
+}
