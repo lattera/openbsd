@@ -1,6 +1,6 @@
 #include "rx_locl.h"
 
-RCSID("$Id: rx_misc.c,v 1.4 1998/02/22 19:47:15 joda Exp $");
+RCSID("$KTH: rx_misc.c,v 1.4 1998/02/22 19:47:15 joda Exp $");
 
 /*
  * We currently only include below the errors that

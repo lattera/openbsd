@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -36,12 +31,12 @@
  * SUCH DAMAGE.
  */
 
-/* @(#)$Id: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
+/* @(#)$KTH: rxkad_locl.h,v 1.10 2000/10/03 00:38:55 lha Exp $ */
 
 #ifndef __RXKAD_LOCL_H
 #define __RXKAD_LOCL_H
 
-/* $Id: rxkad_locl.h,v 1.9 1998/10/23 02:15:47 lha Exp $ */
+/* $KTH: rxkad_locl.h,v 1.10 2000/10/03 00:38:55 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

@@ -1,6 +1,6 @@
 /* This is -*-c-*- */
 
-/* $Id: fs.xg,v 1.13 2000/04/30 10:14:25 assar Exp $ */
+/* $KTH: fs.xg,v 1.13 2000/04/30 10:14:25 assar Exp $ */
 
 /*
  * Interface to FS

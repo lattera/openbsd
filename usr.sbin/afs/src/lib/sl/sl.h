@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: sl.h,v 1.4 2000/03/07 22:08:48 assar Exp $ */
+/* $KTH: sl.h,v 1.4 2000/03/07 22:08:48 assar Exp $ */
 
 #ifndef _SL_H
 #define _SL_H

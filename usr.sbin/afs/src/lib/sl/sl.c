@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$Id: sl.c,v 1.8 2000/03/07 22:08:48 assar Exp $");
+RCSID("$KTH: sl.c,v 1.8 2000/03/07 22:08:48 assar Exp $");
 #endif
 
 #include "sl_locl.h"

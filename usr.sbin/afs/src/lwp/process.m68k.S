@@ -1,4 +1,4 @@
-/* $Id: process.m68k.S,v 1.1 2000/09/11 14:41:09 art Exp $ */
+/* $KTH: process.m68k.S,v 1.7 2000/08/25 14:49:04 lha Exp $ */
 
 /*
 ****************************************************************************
@@ -30,7 +30,11 @@
 #if !defined(__ELF__) && !defined(sun3)
 #define reg(x) x
 #else /* __ELF__ || sun3 */
+#ifdef __STDC__
 #define reg(x) %##x
+#else
+#define reg(x) %/**/x
+#endif /* __STDC__ */
 #endif /* __ELF__ || sun3 */
 
 /*

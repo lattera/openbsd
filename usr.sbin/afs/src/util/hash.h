@@ -14,12 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the Kungliga Tekniska
- *      Högskolan and its contributors.
- * 
- * 4. Neither the name of the Institute nor the names of its contributors
+ * 3. Neither the name of the Institute nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  * 
@@ -40,7 +35,7 @@
  * hash.h. Header file for hash table functions
  */
 
-/* $Id: hash.h,v 1.5 1998/12/01 23:09:22 assar Exp $ */
+/* $KTH: hash.h,v 1.6.2.1 2001/08/31 18:09:17 ahltorp Exp $ */
 
 #include <bool.h>
 
@@ -90,6 +85,8 @@ void hashtabforeach(Hashtab *htab,
 void hashtabcleantab(Hashtab * htab, 
 		     Bool(*cond) (void *ptr, void *arg),
 		     void *arg);
+
+void hashtabrelease(Hashtab *htab);
 
 unsigned hashadd(const char *s);		/* Standard hash function */
 unsigned hashcaseadd(const char *s);		/* Standard hash function */
