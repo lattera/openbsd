@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/gnu/usr.bin/ld/Attic/rrs.c,v 1.5 1999/08/25 07:36:28 niklas Exp $*/
+/*	$OpenBSD: src/gnu/usr.bin/ld/Attic/rrs.c,v 1.6 1999/08/25 07:42:06 niklas Exp $*/
 /*
  * Copyright (c) 1993 Paul Kranenburg
  * All rights reserved.
@@ -160,7 +160,7 @@ dlopen_is_used()
 		return 0;
 
 	/*
-	 * A use is charcterized as being an entry on the "refs" list
+	 * A use is characterized as being an entry on the "refs" list
 	 * that is not in the text section, because such an entry is the
 	 * definition.
 	 */
