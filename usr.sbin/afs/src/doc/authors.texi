@@ -1,0 +1,39 @@
+@c Copyright (c) 1998 - 2000 Kungliga Tekniska Högskolan
+@c (Royal Institute of Technology, Stockholm, Sweden).
+@c All rights reserved.
+
+@c $KTH: authors.texi,v 1.13.2.1 2001/06/05 02:08:16 mattiasa Exp $
+
+@node Authors, Acknowledgments, Arla timeline, Top
+@chapter Authors
+
+Currently writing on arla are
+
+@table @asis
+@item Assar Westerlund, Everything
+@item Magnus Ahltorp, Everything
+@item Artur Grabowski, BSD xfs, OpenBSD maintainer
+@item Love Hörnquist-Åstrand, Everything
+@item Robert Burgess, fs, Solaris xfs
+@item Johan Danielsson, OSF/1 xfs
+@item Hans Insulander, pts, OpenBSD maintainer
+@item Mattias Amnefelt, vos, milko, OSF/1
+@item Harald Barth, doc
+@item Tomas Olsson, milko
+@item Mikael Vidstedt (userland, some milko stuff)
+@item Jimmy Engelbercht (bos)
+@end table
+
+Rhapsody xfs port was contributed by Alexandra Ellwood <lxs@@MIT.EDU>
+Later, Rhapsody was renamed Darwin.
+
+Disconnected code is written by:
+
+@table @asis
+@item WUWEI SHEN <wwshen@@engin.umich.edu>
+@item Cheng Jin <chengjin@@eecs.umich.edu>
+@item Paul Callaway <pcallawa@@umich.edu>
+@end table
+
+For contributors, see @ref{Acknowledgments}.
+
