@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.12 2004/06/08 21:32:06 grange Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.13 2004/06/13 08:14:06 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -385,7 +385,7 @@ lockmgr(lkp, flags, interlkp, p)
 	if (extflags & LK_SPIN) {
 		pid = LK_KERNPROC;
 	} else {
-		/* XXX Check for p == NULL */
+		/* Process context required. */
 		pid = p->p_pid;
 	}
 	cpu_id = CPU_NUMBER();
