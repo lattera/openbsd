@@ -1,5 +1,5 @@
 
-#	$Id: Makefile,v 1.3 1996/08/16 22:44:35 moj Exp $
+#	$OpenBSD: src/usr.sbin/mopd/mopa.out/Makefile,v 1.2 1996/09/21 18:04:54 maja Exp $
 
 PROG=	mopa.out
 SRCS=	mopa.out.c file.c
