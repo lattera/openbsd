@@ -33,7 +33,7 @@
 
 #include "gssapi_locl.h"
 
-RCSID("$Id$");
+RCSID("$KTH: compat.c,v 1.2.2.2 2003/04/28 13:58:09 lha Exp $");
 
 
 static krb5_error_code
