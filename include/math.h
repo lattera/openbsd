@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/include/math.h,v 1.4 2000/03/01 22:27:13 todd Exp $	*/
 /*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
@@ -11,7 +12,6 @@
 
 /*
  * from: @(#)fdlibm.h 5.1 93/09/24
- * $Id: math.h,v 1.4 1998/03/02 23:34:46 millert Exp $
  */
 
 #ifndef _MATH_H_
