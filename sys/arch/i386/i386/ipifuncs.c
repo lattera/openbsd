@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.5 2003/04/06 14:03:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.6 2003/04/15 03:56:20 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -58,6 +58,8 @@
 #include <machine/atomic.h>
 #include <machine/i82093var.h>
 
+#include <uvm/uvm_extern.h>
+
 void i386_ipi_halt(void);
 void i386_ipi_fpsave(void);
 void i386_ipi_gmtb(void);
@@ -66,19 +68,15 @@ void i386_ipi_nychi(void);
 void (*ipifunc[I386_NIPI])(void) = 
 {
 	i386_ipi_halt,
-#if 0 /* XXX */
 	pmap_do_tlb_shootdown,
-#else
-	0,
-#endif
 #if NNPX > 0
 	i386_ipi_fpsave,
 #else
 	0,
 #endif
 	0,
-	i386_ipi_gmtb,
-	i386_ipi_nychi,
+	0,
+	0,
 };
 
 void
@@ -105,24 +103,6 @@ i386_ipi_fpsave(void)
 #endif
 
 void
-i386_ipi_gmtb(void)
-{
-	extern struct cpu_info *first_app_cpu;
-	struct cpu_info *ci = curcpu();
-
-	printf("%s: we were asked for the brain.\n", ci->ci_dev.dv_xname);
-	i386_send_ipi(first_app_cpu, I386_IPI_NYCHI);
-}
-
-void
-i386_ipi_nychi(void)
-{
-	struct cpu_info *ci = curcpu();
-
-	printf("%s: we were asked for the brain.\n", ci->ci_dev.dv_xname);
-}
-
-void
 i386_spurious(void)
 {
 	printf("spurious intr\n");
@@ -139,8 +119,6 @@ i386_send_ipi(struct cpu_info *ci, int ipimask)
 	if (!(ci->ci_flags & CPUF_RUNNING))
 		return ENOENT;
 
-printf("send ipi %x from %s to %s\n", ipimask, curcpu()->ci_dev.dv_xname,
-    ci->ci_dev.dv_xname);
 	ret = i386_ipi(LAPIC_IPI_VECTOR, ci->ci_cpuid, LAPIC_DLMODE_FIXED);
 	if (ret != 0) {
 		printf("ipi of %x from %s to %s failed\n",
@@ -172,7 +150,6 @@ i386_ipi_handler(void)
 	int bit;
 
 	pending = i386_atomic_testset_ul(&ci->ci_ipis, 0);
-	printf("%s: pending IPIs: %x\n", ci->ci_dev.dv_xname, pending);
 
 	for (bit = 0; bit < I386_NIPI && pending; bit++) {
 		if (pending & (1<<bit)) {
@@ -180,8 +157,4 @@ i386_ipi_handler(void)
 			(*ipifunc[bit])();
 		}
 	}
-	
-#if 0
-	Debugger();
-#endif
 }
