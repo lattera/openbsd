@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/locate/locate/fastfind.c,v 1.3 1996/10/20 00:52:54 michaels Exp $	*/
+/*	$OpenBSD: src/usr.bin/locate/locate/fastfind.c,v 1.4 1997/01/17 07:12:41 millert Exp $	*/
 
 /*
  * Copyright (c) 1995 Wolfram Schneider <wosch@FreeBSD.org>. Berlin.
@@ -36,7 +36,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fastfind.c,v 1.2 1996/10/10 09:55:06 michaels Exp $
+ * $Id: fastfind.c,v 1.3 1996/10/20 00:52:54 michaels Exp $
  */
 
 #ifndef _LOCATE_STATISTIC_
@@ -172,7 +172,7 @@ fastfind
 
 	/* find optimal (last) char for searching */
 	for (p = pathpart; *p != '\0'; p++)
-		if (index(LOCATE_REG, *p) != NULL)
+		if (strchr(LOCATE_REG, *p) != NULL)
 			break;
 
 	if (*p == '\0')
