@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_sysent.c,v 1.16 2001/02/02 19:46:38 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_sysent.c,v 1.17 2001/08/26 04:14:26 deraadt Exp $	*/
 
 /*
  * System call switch table.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_syscall.h,v 1.15 2001/02/02 19:46:37 tholo Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_syscall.h,v 1.16 2001/08/26 04:14:26 deraadt Exp $	*/
 
 /*
  * System call numbers.

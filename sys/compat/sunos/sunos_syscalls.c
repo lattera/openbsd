@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_syscalls.c,v 1.12 2001/05/16 05:05:09 millert Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_syscalls.c,v 1.13 2001/08/26 04:14:27 deraadt Exp $	*/
 
 /*
  * System call names.

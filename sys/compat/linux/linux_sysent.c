@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_sysent.c,v 1.31 2001/07/04 20:01:41 jasoni Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_sysent.c,v 1.32 2001/08/26 04:14:26 deraadt Exp $	*/
 
 /*
  * System call switch table.
