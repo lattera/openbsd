@@ -1,5 +1,5 @@
-#	$Id: Makefile,v 1.1.1.2 1997/03/03 19:30:27 rahnds Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/Makefile,v 1.4 1998/08/22 08:57:27 smurph Exp $
 
-SUBDIR=  netboot sboot bootsd bootst libsa bugcrt libbug wrtvid
-
+SUBDIR=  bugcrt libbug libsa libz wrtvid bootsd bootxx bootst netboot installboot
+#sboot XXX future
 .include <bsd.subdir.mk>

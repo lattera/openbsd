@@ -1,4 +1,4 @@
-/*	$NetBSD: conf.c,v 1.1.1.1 1995/06/01 20:38:08 gwr Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/conf.c,v 1.2 1998/08/22 08:57:29 smurph Exp $	*/
 
 #include <sys/types.h>
 #include <machine/prom.h>
