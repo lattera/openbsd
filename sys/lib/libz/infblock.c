@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/sys/lib/libz/Attic/infblock.c,v 1.7.14.1 2002/03/13 15:54:29 jason Exp $	*/
 /* infblock.c -- interpret and process block types to last block
- * Copyright (C) 1995-1998 Mark Adler
+ * Copyright (C) 1995-2002 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
