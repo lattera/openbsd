@@ -1,4 +1,4 @@
-#	$OpenBSD: src/share/doc/smm/05.fastfs/Attic/Makefile,v 1.2 2001/02/03 08:15:08 niklas Exp $
+#	$OpenBSD: src/share/doc/smm/05.fastfs/Attic/Makefile,v 1.3 2004/02/01 14:22:45 jmc Exp $
 
 
 DIR=	smm/05.fastfs
@@ -7,5 +7,8 @@ MACROS=	-ms
 
 paper.ps: ${SRCS}
 	${TBL} ${SRCS} | ${EQN} | ${ROFF} > ${.TARGET}
+
+paper.txt: ${SRCS}
+	${TBL} ${SRCS} | ${EQN} | ${ROFF} -Tascii > ${.TARGET}
 
 .include <bsd.doc.mk>
