@@ -39,11 +39,11 @@
 
 #if !defined(lint)
 static const char sccsid[] = "@(#)sbpf.c	1.3 8/25/95 (C)1995 Darren Reed";
-static const char rcsid[] = "@(#)$Id: sbpf.c,v 2.0.2.7 1997/10/23 11:42:47 darrenr Exp $";
+static const char rcsid[] = "@(#)$Id: sbpf.c,v 1.3 1998/01/26 04:16:53 dgregor Exp $";
 #endif
 
 /*
- * the code herein is dervied from libpcap.
+ * the code herein is derived from libpcap.
  */
 static	u_char	*buf = NULL;
 static	int	bufsize = 0, timeout = 1;
