@@ -1,5 +1,5 @@
 /*
- *  CU sudo version 1.5.2
+ *  CU sudo version 1.5.3
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *
  *  Please send bugs, changes, problems to sudo-bugs@courtesan.com
  *
- *  $Id: compat.h,v 1.27 1996/10/09 17:37:18 millert Exp $
+ *  $Id: compat.h,v 1.28 1996/11/14 02:37:16 millert Exp $
  */
 
 #ifndef _SUDO_COMPAT_H

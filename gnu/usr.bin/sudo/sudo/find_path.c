@@ -1,5 +1,5 @@
 /*
- *  CU sudo version 1.5.2
+ *  CU sudo version 1.5.3
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: find_path.c,v 1.63 1996/10/07 05:05:33 millert Exp $";
+static char rcsid[] = "$Id: find_path.c,v 1.65 1996/11/14 02:37:16 millert Exp $";
 #endif /* lint */
 
 #include "config.h"
@@ -160,8 +160,7 @@ char * find_path(file)
 	/*
 	 * resolve the path and exit the loop if found
 	 */
-	if (strlen(path) + strlen(file) >= MAXPATHLEN) {
-	    errno = ENAMETOOLONG;
+	if (strlen(path) + strlen(file) + 1 >= MAXPATHLEN) {
 	    (void) fprintf(stderr, "%s:  path too long:  %s\n", Argv[0], file);
 	    exit(1);
 	}
