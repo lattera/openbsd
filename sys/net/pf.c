@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.328 2003/03/21 12:47:36 cedric Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.328.2.1 2003/05/31 00:57:50 margarida Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -2643,6 +2643,7 @@ pf_test_other(struct pf_rule **rm, struct pf_state **sm, int direction,
 		/* check incoming packet for BINAT/RDR */
 		if ((rdr = pf_get_translation(PF_IN, ifp, pd->proto,
 		    saddr, 0, daddr, 0, &naddr, NULL, af)) != NULL) {
+			PF_ACPY(&baddr, daddr, af);
 			switch (af) {
 #ifdef INET
 			case AF_INET:
