@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/scard/Attic/Makefile,v 1.2.4.1 2001/09/27 19:03:56 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/scard/Attic/Makefile,v 1.2.4.2 2002/03/09 00:22:15 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
