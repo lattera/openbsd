@@ -1,5 +1,5 @@
 /* tc-ppc.h -- Header file for tc-ppc.c.
-   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support.
 
    This file is part of GAS, the GNU Assembler.
@@ -20,6 +20,15 @@
    02111-1307, USA. */
 
 #define TC_PPC
+
+#ifdef ANSI_PROTOTYPES
+struct fix;
+#endif
+
+/* Set the endianness we are using.  Default to big endian.  */
+#ifndef TARGET_BYTES_BIG_ENDIAN
+#define TARGET_BYTES_BIG_ENDIAN 1
+#endif
 
 #ifndef BFD_ASSEMBLER
  #error PowerPC support requires BFD_ASSEMBLER
@@ -74,27 +83,11 @@ extern int target_big_endian;
 #define NO_STRING_ESCAPES
 #endif
 
-/* When using COFF, we determine whether or not to output a symbol
-   based on sy_tc.output, not on the name.  */
-#ifdef OBJ_XCOFF
-#define LOCAL_LABEL(name) 0
-#endif
 #ifdef OBJ_ELF
-/* When using ELF, local labels start with '.'.  */
-#define LOCAL_LABEL(name) (name[0] == '.' \
-			   && (name[1] == 'L' || name[1] == '.'))
-#define FAKE_LABEL_NAME ".L0\001"
 #define DIFF_EXPR_OK		/* .-foo gets turned into PC relative relocs */
 #endif
 
-/* Set the endianness we are using.  Default to big endian.  */
-#ifndef TARGET_BYTES_BIG_ENDIAN
-#ifndef TARGET_BYTES_LITTLE_ENDIAN
-#define TARGET_BYTES_BIG_ENDIAN 1
-#endif
-#endif
-
-#ifdef TARGET_BYTES_BIG_ENDIAN
+#if TARGET_BYTES_BIG_ENDIAN
 #define PPC_BIG_ENDIAN 1
 #else
 #define PPC_BIG_ENDIAN 0
@@ -235,6 +228,9 @@ extern int ppc_section_flags PARAMS ((int, int, int));
   { ".PPC.EMB.sdata0",	SHT_PROGBITS,	SHF_ALLOC }, \
   { ".PPC.EMB.sbss0",	SHT_PROGBITS,	SHF_ALLOC },
 
+#define tc_comment_chars ppc_comment_chars
+extern const char *ppc_comment_chars;
+
 #endif /* OBJ_ELF */
 
 /* call md_apply_fix3 with segment instead of md_apply_fix */
@@ -242,6 +238,7 @@ extern int ppc_section_flags PARAMS ((int, int, int));
 
 /* call md_pcrel_from_section, not md_pcrel_from */
 #define MD_PCREL_FROM_SECTION(FIXP, SEC) md_pcrel_from_section(FIXP, SEC)
+extern long md_pcrel_from_section PARAMS ((struct fix *, segT));
 
 #define md_parse_name(name, exp) ppc_parse_name (name, exp)
 extern int ppc_parse_name PARAMS ((const char *, struct expressionS *));

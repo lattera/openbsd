@@ -1,5 +1,5 @@
 /* BFD back-end for HP/UX core files.
-   Copyright 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Stu Grossman, Cygnus Support.
    Converted to back-end form by Ian Lance Taylor, Cygnus SUpport
 
@@ -205,7 +205,8 @@ hpux_core_core_file_matches_executable_p (core_bfd, exec_bfd)
 #define hpux_core_get_symtab _bfd_nosymbols_get_symtab
 #define hpux_core_print_symbol _bfd_nosymbols_print_symbol
 #define hpux_core_get_symbol_info _bfd_nosymbols_get_symbol_info
-#define hpux_core_bfd_is_local_label _bfd_nosymbols_bfd_is_local_label
+#define hpux_core_bfd_is_local_label_name \
+  _bfd_nosymbols_bfd_is_local_label_name
 #define hpux_core_get_lineno _bfd_nosymbols_get_lineno
 #define hpux_core_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define hpux_core_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

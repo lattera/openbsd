@@ -1,5 +1,5 @@
 /* macro.c - macro support for gas and gasp
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 95, 96, 1997 Free Software Foundation, Inc.
 
    Written by Steve and Judy Chamberlain of Cygnus Support,
       sac@cygnus.com
@@ -664,12 +664,17 @@ macro_expand_body (in, out, formals, formal_hash, comment_char, locals)
       if (in->ptr[src] == '&')
 	{
 	  sb_reset (&t);
-	  if (macro_mri && src + 1 < in->len && in->ptr[src + 1] == '&')
+	  if (macro_mri)
 	    {
-	      src = sub_actual (src + 2, in, &t, formal_hash, '\'', out, 1);
+	      if (src + 1 < in->len && in->ptr[src + 1] == '&')
+		src = sub_actual (src + 2, in, &t, formal_hash, '\'', out, 1);
+	      else
+		sb_add_char (out, in->ptr[src++]);
 	    }
 	  else
 	    {
+	      /* FIXME: Why do we do this?  It prevents people from
+                 using the & operator in a macro.  */
 	      src = sub_actual (src + 1, in, &t, formal_hash, '&', out, 0);
 	    }
 	}

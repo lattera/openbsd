@@ -1,5 +1,6 @@
 /* Generic BFD library interface and support routines.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -182,8 +183,10 @@ CODE_FRAGMENT
 .    {* Used by the application to hold private data*}
 .    PTR usrdata;
 .
-.    {* Where all the allocated stuff under this BFD goes *}
-.    struct obstack memory;
+.  {* Where all the allocated stuff under this BFD goes.  This is a
+.     struct objalloc *, but we use PTR to avoid requiring the inclusion of
+.     objalloc.h.  *}
+.    PTR memory;
 .};
 .
 */
@@ -197,6 +200,7 @@ CODE_FRAGMENT
 #include <varargs.h>
 #endif
 
+#include "libiberty.h"
 #include "bfdlink.h"
 #include "libbfd.h"
 #include "coff/internal.h"
@@ -262,9 +266,6 @@ CODE_FRAGMENT
 .} bfd_error_type;
 .
 */
-
-#undef strerror
-extern char *strerror();
 
 static bfd_error_type bfd_error = bfd_error_no_error;
 
@@ -345,19 +346,7 @@ bfd_errmsg (error_tag)
   extern int errno;
 #endif
   if (error_tag == bfd_error_system_call)
-    {
-      const char *errmsg;
-
-      errmsg = strerror (errno);
-      if (errmsg == NULL)
-	{
-	  static char buf[32];
-
-	  sprintf (buf, "Error %d", errno);
-	  errmsg = buf;
-	}
-      return errmsg;
-    }
+    return xstrerror (errno);
 
   if ((((int)error_tag <(int) bfd_error_no_error) ||
        ((int)error_tag > (int)bfd_error_invalid_error_code)))
@@ -615,7 +604,7 @@ bfd_set_reloc (ignore_abfd, asect, location, count)
      arelent **location;
      unsigned int count;
 {
-  asect->orelocation  = location;
+  asect->orelocation = location;
   asect->reloc_count = count;
 }
 
@@ -1124,7 +1113,7 @@ bfd_record_phdr (abfd, type, flags_valid, flags, at_valid, at,
   m = ((struct elf_segment_map *)
        bfd_alloc (abfd,
 		  (sizeof (struct elf_segment_map)
-		   + (count - 1) * sizeof (asection *))));
+		   + ((size_t) count - 1) * sizeof (asection *))));
   if (m == NULL)
     return false;
 

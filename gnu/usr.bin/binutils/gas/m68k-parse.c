@@ -75,7 +75,7 @@
 /* Internal functions.  */
 
 static enum m68k_register m68k_reg_parse PARAMS ((char **));
-static int yylex PARAMS (());
+static int yylex PARAMS ((void));
 static void yyerror PARAMS ((const char *));
 
 /* The parser sets fields pointed to by this global variable.  */
@@ -118,7 +118,7 @@ typedef
 
 
 
-#define	YYFINAL		168
+#define	YYFINAL		173
 #define	YYFLAG		-32768
 #define	YYNTBASE	25
 
@@ -157,14 +157,14 @@ static const char yytranslate[] = {     0,
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
      0,     2,     4,     6,     8,    10,    12,    14,    16,    18,
-    21,    24,    26,    30,    35,    40,    46,    51,    55,    59,
-    63,    71,    79,    86,    93,    99,   106,   112,   118,   123,
-   133,   141,   150,   157,   168,   177,   188,   197,   206,   209,
-   213,   217,   223,   230,   241,   251,   262,   264,   266,   268,
-   270,   272,   274,   276,   278,   280,   282,   284,   286,   288,
-   290,   291,   293,   295,   297,   298,   301,   302,   305,   306,
-   309,   311,   315,   319,   321,   323,   327,   331,   335,   337,
-   339,   341
+    21,    24,    26,    30,    35,    40,    46,    52,    57,    61,
+    65,    69,    77,    85,    92,    98,   105,   111,   118,   124,
+   130,   135,   145,   153,   162,   169,   180,   189,   200,   209,
+   218,   221,   225,   229,   235,   242,   253,   263,   274,   276,
+   278,   280,   282,   284,   286,   288,   290,   292,   294,   296,
+   298,   300,   302,   303,   305,   307,   309,   310,   313,   314,
+   317,   318,   321,   323,   327,   331,   333,   335,   339,   343,
+   347,   349,   351,   353
 };
 
 static const short yyrhs[] = {    26,
@@ -172,37 +172,38 @@ static const short yyrhs[] = {    26,
      0,     6,     0,    11,     0,    13,     0,    14,    13,     0,
     15,    13,     0,    40,     0,    16,     4,    17,     0,    16,
      4,    17,    18,     0,    19,    16,     4,    17,     0,    16,
-    13,    20,    34,    17,     0,    13,    16,    34,    17,     0,
-    16,     7,    17,     0,    16,     8,    17,     0,    16,    10,
-    17,     0,    16,    13,    20,    34,    20,    29,    17,     0,
-    16,    13,    20,    34,    20,    36,    17,     0,    16,    13,
-    20,    30,    37,    17,     0,    13,    16,    34,    20,    29,
-    17,     0,    16,    34,    20,    29,    17,     0,    13,    16,
-    34,    20,    36,    17,     0,    16,    34,    20,    36,    17,
-     0,    13,    16,    30,    37,    17,     0,    16,    30,    37,
-    17,     0,    16,    21,    13,    37,    22,    20,    29,    38,
-    17,     0,    16,    21,    13,    37,    22,    38,    17,     0,
-    16,    21,    34,    22,    20,    29,    38,    17,     0,    16,
-    21,    34,    22,    38,    17,     0,    16,    21,    13,    20,
-    34,    20,    29,    22,    38,    17,     0,    16,    21,    34,
-    20,    29,    22,    38,    17,     0,    16,    21,    13,    20,
-    34,    20,    36,    22,    38,    17,     0,    16,    21,    34,
-    20,    36,    22,    38,    17,     0,    16,    21,    39,    30,
-    37,    22,    38,    17,     0,    35,    23,     0,    35,    23,
-    18,     0,    35,    23,    19,     0,    35,    23,    16,    13,
-    17,     0,    35,    23,    16,    39,    29,    17,     0,    35,
-    23,    16,    13,    17,    23,    16,    39,    29,    17,     0,
-    35,    23,    16,    13,    17,    23,    16,    13,    17,     0,
-    35,    23,    16,    39,    29,    17,    23,    16,    13,    17,
-     0,    12,     0,    31,     0,    12,     0,    32,     0,    32,
-     0,     4,     0,     8,     0,     3,     0,     9,     0,     4,
-     0,     7,     0,    33,     0,    10,     0,     8,     0,     0,
-    34,     0,     7,     0,    10,     0,     0,    20,    34,     0,
-     0,    20,    13,     0,     0,    13,    20,     0,    42,     0,
-    42,    24,    41,     0,    43,    24,    41,     0,    43,     0,
+    13,    20,    34,    17,     0,    16,    34,    20,    13,    17,
+     0,    13,    16,    34,    17,     0,    16,     7,    17,     0,
+    16,     8,    17,     0,    16,    10,    17,     0,    16,    13,
+    20,    34,    20,    29,    17,     0,    16,    13,    20,    34,
+    20,    36,    17,     0,    16,    13,    20,    30,    37,    17,
+     0,    16,    30,    20,    13,    17,     0,    13,    16,    34,
+    20,    29,    17,     0,    16,    34,    20,    29,    17,     0,
+    13,    16,    34,    20,    36,    17,     0,    16,    34,    20,
+    36,    17,     0,    13,    16,    30,    37,    17,     0,    16,
+    30,    37,    17,     0,    16,    21,    13,    37,    22,    20,
+    29,    38,    17,     0,    16,    21,    13,    37,    22,    38,
+    17,     0,    16,    21,    34,    22,    20,    29,    38,    17,
+     0,    16,    21,    34,    22,    38,    17,     0,    16,    21,
+    13,    20,    34,    20,    29,    22,    38,    17,     0,    16,
+    21,    34,    20,    29,    22,    38,    17,     0,    16,    21,
+    13,    20,    34,    20,    36,    22,    38,    17,     0,    16,
+    21,    34,    20,    36,    22,    38,    17,     0,    16,    21,
+    39,    30,    37,    22,    38,    17,     0,    35,    23,     0,
+    35,    23,    18,     0,    35,    23,    19,     0,    35,    23,
+    16,    13,    17,     0,    35,    23,    16,    39,    29,    17,
+     0,    35,    23,    16,    13,    17,    23,    16,    39,    29,
+    17,     0,    35,    23,    16,    13,    17,    23,    16,    13,
+    17,     0,    35,    23,    16,    39,    29,    17,    23,    16,
+    13,    17,     0,    12,     0,    31,     0,    12,     0,    32,
+     0,    32,     0,     4,     0,     8,     0,     3,     0,     9,
+     0,     4,     0,     7,     0,    33,     0,    10,     0,     8,
+     0,     0,    34,     0,     7,     0,    10,     0,     0,    20,
+    34,     0,     0,    20,    13,     0,     0,    13,    20,     0,
     42,     0,    42,    24,    41,     0,    43,    24,    41,     0,
-    43,    19,    43,     0,     3,     0,     4,     0,     5,     0,
-     6,     0
+    43,     0,    42,     0,    42,    24,    41,     0,    43,    24,
+    41,     0,    43,    19,    43,     0,     3,     0,     4,     0,
+     5,     0,     6,     0
 };
 
 #endif
@@ -210,14 +211,14 @@ static const short yyrhs[] = {    26,
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
    116,   118,   119,   124,   130,   135,   140,   145,   150,   155,
-   160,   165,   177,   183,   188,   193,   203,   213,   218,   223,
-   228,   235,   246,   253,   260,   266,   277,   287,   294,   300,
-   308,   315,   322,   328,   336,   343,   355,   366,   378,   387,
-   395,   403,   413,   420,   428,   435,   448,   450,   462,   464,
-   475,   477,   478,   483,   485,   490,   492,   498,   500,   501,
-   506,   511,   516,   518,   523,   528,   536,   542,   550,   556,
-   564,   566,   570,   581,   586,   587,   591,   597,   604,   609,
-   613,   617
+   160,   165,   177,   183,   188,   193,   203,   213,   223,   228,
+   233,   238,   245,   256,   263,   269,   276,   282,   293,   303,
+   310,   316,   324,   331,   338,   344,   352,   359,   371,   382,
+   394,   403,   411,   419,   429,   436,   444,   451,   464,   466,
+   478,   480,   491,   493,   494,   499,   501,   506,   508,   514,
+   516,   517,   522,   527,   532,   534,   539,   544,   552,   558,
+   566,   572,   580,   582,   586,   597,   602,   603,   607,   613,
+   620,   625,   629,   633
 };
 
 static const char * const yytname[] = {   "$","error","$undefined.","DR","AR",
@@ -233,124 +234,128 @@ static const short yyr1[] = {     0,
     25,    25,    25,    26,    26,    26,    26,    26,    26,    26,
     26,    26,    27,    27,    27,    27,    27,    27,    27,    27,
     27,    27,    27,    27,    27,    27,    27,    27,    27,    27,
-    27,    27,    27,    27,    27,    27,    27,    27,    28,    28,
-    28,    28,    28,    28,    28,    28,    29,    29,    30,    30,
-    31,    31,    31,    32,    32,    33,    33,    34,    34,    34,
-    35,    35,    36,    36,    37,    37,    38,    38,    39,    39,
-    40,    40,    40,    41,    41,    41,    41,    42,    43,    43,
-    43,    43
+    27,    27,    27,    27,    27,    27,    27,    27,    27,    27,
+    28,    28,    28,    28,    28,    28,    28,    28,    29,    29,
+    30,    30,    31,    31,    31,    32,    32,    33,    33,    34,
+    34,    34,    35,    35,    36,    36,    37,    37,    38,    38,
+    39,    39,    40,    40,    40,    41,    41,    41,    41,    42,
+    43,    43,    43,    43
 };
 
 static const short yyr2[] = {     0,
      1,     1,     1,     1,     1,     1,     1,     1,     1,     2,
-     2,     1,     3,     4,     4,     5,     4,     3,     3,     3,
-     7,     7,     6,     6,     5,     6,     5,     5,     4,     9,
-     7,     8,     6,    10,     8,    10,     8,     8,     2,     3,
-     3,     5,     6,    10,     9,    10,     1,     1,     1,     1,
+     2,     1,     3,     4,     4,     5,     5,     4,     3,     3,
+     3,     7,     7,     6,     5,     6,     5,     6,     5,     5,
+     4,     9,     7,     8,     6,    10,     8,    10,     8,     8,
+     2,     3,     3,     5,     6,    10,     9,    10,     1,     1,
      1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-     0,     1,     1,     1,     0,     2,     0,     2,     0,     2,
-     1,     3,     3,     1,     1,     3,     3,     3,     1,     1,
-     1,     1
+     1,     1,     0,     1,     1,     1,     0,     2,     0,     2,
+     0,     2,     1,     3,     3,     1,     1,     3,     3,     3,
+     1,     1,     1,     1
 };
 
-static const short yydefact[] = {    61,
-    79,    80,    81,    82,    57,    60,    59,     8,     9,     0,
-     0,     0,     0,     1,     2,     3,    58,    62,     0,    12,
-    71,     0,     0,    10,    11,    54,    56,    57,    60,    55,
-    59,    49,     0,    69,    65,    50,     0,     0,    39,     0,
-     0,     0,    56,    65,     0,    13,    18,    19,    20,     0,
-    65,     0,     0,     0,     0,     0,     0,    69,    40,    41,
-    79,    80,    81,    82,    72,    75,    74,    78,    73,     0,
-    17,     0,    14,    65,     0,    70,     0,     0,    67,    65,
-    66,    29,    52,    63,    53,    64,    47,     0,    48,    51,
-     0,    15,     0,     0,     0,     0,    28,     0,     0,     0,
-    16,     0,    66,    67,     0,     0,     0,     0,     0,    25,
-    27,    42,    70,     0,    76,    77,    24,    26,    23,     0,
-     0,     0,     0,     0,    67,    67,    68,    67,    33,    67,
-     0,    43,    21,    22,     0,     0,    67,    31,     0,     0,
-     0,     0,     0,    69,     0,    67,    67,     0,    35,    37,
-    32,    38,     0,     0,     0,     0,     0,    30,    45,     0,
-     0,    34,    36,    44,    46,     0,     0,     0
+static const short yydefact[] = {    63,
+    81,    82,    83,    84,    59,    62,    61,     8,     9,     0,
+     0,     0,     0,     1,     2,     3,    60,    64,     0,    12,
+    73,     0,     0,    10,    11,    56,    58,    59,    62,    57,
+    61,    51,     0,    71,    67,    52,     0,     0,    41,     0,
+     0,     0,    58,    67,     0,    13,    19,    20,    21,     0,
+    67,     0,     0,     0,     0,     0,     0,    71,    42,    43,
+    81,    82,    83,    84,    74,    77,    76,    80,    75,     0,
+     0,    18,     0,    14,    67,     0,    72,     0,     0,    69,
+    67,     0,    68,    31,    54,    65,    55,    66,    49,     0,
+     0,    50,    53,     0,    15,     0,     0,     0,     0,    30,
+     0,     0,     0,    16,     0,    68,    69,     0,     0,     0,
+     0,     0,    25,    17,    27,    29,    44,    72,     0,    78,
+    79,    26,    28,    24,     0,     0,     0,     0,     0,    69,
+    69,    70,    69,    35,    69,     0,    45,    22,    23,     0,
+     0,    69,    33,     0,     0,     0,     0,     0,    71,     0,
+    69,    69,     0,    37,    39,    34,    40,     0,     0,     0,
+     0,     0,    32,    47,     0,     0,    36,    38,    46,    48,
+     0,     0,     0
 };
 
-static const short yydefgoto[] = {   166,
-    14,    15,    16,    88,    35,    89,    90,    17,    18,    19,
-    91,    55,   108,    53,    20,    65,    66,    67
+static const short yydefgoto[] = {   171,
+    14,    15,    16,    91,    35,    92,    93,    17,    83,    19,
+    94,    55,   111,    53,    20,    65,    66,    67
 };
 
-static const short yypact[] = {    74,
-    19,    14,    33,    53,-32768,-32768,-32768,-32768,    45,    57,
-    81,    55,    79,-32768,-32768,-32768,-32768,-32768,    83,-32768,
-    86,    -2,    95,-32768,-32768,-32768,    94,   104,   119,-32768,
-   121,-32768,   113,   112,   120,-32768,   122,   137,   116,   125,
-   125,   125,-32768,   120,    -5,   126,-32768,-32768,-32768,    95,
-   123,   117,   115,    65,   128,   105,   129,   134,-32768,-32768,
--32768,-32768,-32768,-32768,-32768,   124,    36,-32768,-32768,   132,
--32768,   105,-32768,   120,    25,    65,   130,   105,   131,   120,
--32768,-32768,-32768,-32768,-32768,-32768,-32768,   133,-32768,-32768,
-   136,-32768,    54,    17,   125,   125,-32768,   138,   139,   140,
--32768,   105,   141,   142,   143,   144,    88,   146,   145,-32768,
--32768,   135,-32768,   147,-32768,-32768,-32768,-32768,-32768,   151,
-   152,   105,    88,   153,   154,   154,-32768,   154,-32768,   154,
-   155,   149,-32768,-32768,   156,   157,   154,-32768,   160,   158,
-   159,   163,   164,   169,   161,   154,   154,   166,-32768,-32768,
--32768,-32768,   106,    17,   171,   168,   170,-32768,-32768,   172,
-   173,-32768,-32768,-32768,-32768,   186,   188,-32768
+static const short yypact[] = {    89,
+    10,    11,    19,    23,-32768,-32768,-32768,-32768,    13,    -4,
+    22,    57,    36,-32768,-32768,-32768,-32768,-32768,    18,-32768,
+    33,    -2,   114,-32768,-32768,-32768,    46,    62,    66,-32768,
+    67,-32768,    68,   131,    69,-32768,    70,   105,   147,   156,
+   156,   156,-32768,    94,    25,   101,-32768,-32768,-32768,   114,
+   100,    53,     9,   138,   108,   103,   112,   117,-32768,-32768,
+-32768,-32768,-32768,-32768,-32768,   119,    12,-32768,-32768,    64,
+   130,-32768,   124,-32768,    94,    81,    64,   135,   124,   132,
+    94,   150,-32768,-32768,-32768,-32768,-32768,-32768,-32768,   151,
+   152,-32768,-32768,   153,-32768,   120,   146,   156,   156,-32768,
+   154,   155,   157,-32768,   124,   144,   158,   159,   160,    73,
+   162,   161,-32768,-32768,-32768,-32768,   163,-32768,   167,-32768,
+-32768,-32768,-32768,-32768,   168,   170,   124,    73,   171,   169,
+   169,-32768,   169,-32768,   169,   164,   172,-32768,-32768,   174,
+   175,   169,-32768,   177,   176,   181,   182,   183,   178,   185,
+   169,   169,   186,-32768,-32768,-32768,-32768,   136,   146,   179,
+   187,   188,-32768,-32768,   189,   190,-32768,-32768,-32768,-32768,
+   173,   194,-32768
 };
 
 static const short yypgoto[] = {-32768,
--32768,-32768,-32768,   -71,   -15,-32768,    -7,-32768,   -10,-32768,
-   -68,   -33,   -98,   -58,-32768,   -39,   191,     9
+-32768,-32768,-32768,   -72,     1,-32768,    -7,-32768,     3,-32768,
+   -65,   -31,  -103,   -58,-32768,   -40,   202,     6
 };
 
 
-#define	YYLAST		191
+#define	YYLAST		207
 
 
-static const short yytable[] = {    94,
-    98,    37,    69,    99,    36,   124,   105,    44,    22,   106,
-    70,    71,    45,    -5,    72,    36,    41,    77,    -4,    26,
-    83,    42,   114,    52,    85,    30,   140,   141,    87,   142,
-   120,   143,    -6,   121,    74,   128,   -56,    80,   148,    75,
-   100,   101,    36,    81,   102,    36,   109,   156,   157,    68,
-   135,   137,    -7,   136,    41,   115,   116,    26,    27,    96,
-    23,    28,    29,    30,    31,   103,    32,    33,    43,    24,
-   112,     5,     6,   113,     7,    34,     1,     2,     3,     4,
-     5,     6,   160,     7,     8,   154,     9,    10,    11,    12,
-    26,    83,    13,    25,    38,    85,    30,    26,    43,    87,
-   127,     5,     6,    30,     7,    39,    32,    26,    83,    40,
-    46,    84,    85,    30,    86,    43,    87,    26,     5,     6,
-    47,     7,   159,    30,    51,   113,    32,    61,    62,    63,
-    64,    58,    50,    59,    60,    48,    78,    49,    79,    54,
-    57,    56,    76,    73,    82,    92,    93,    95,    97,   110,
-   107,   104,   111,     0,   117,   118,   119,   131,     0,     0,
-   122,   123,   129,   132,   125,   126,   130,   133,   134,   138,
-   144,   145,   127,   139,   149,   150,   155,   146,   147,   151,
-   152,   153,   158,   161,   162,   167,   163,   168,   164,   165,
-    21
+static const short yytable[] = {    97,
+   101,    69,    18,   129,    36,    22,   108,   102,    24,    -4,
+    -5,    26,    71,   109,    37,    36,    41,    30,    -6,    78,
+    32,    42,    -7,    44,   119,    45,   145,   146,    23,   147,
+    41,   148,   125,   -58,    25,    99,    52,   133,   153,   126,
+    39,    72,    36,   103,    73,    36,    68,   161,   162,   112,
+    75,    38,    76,    81,   140,   142,    40,   120,   121,    26,
+    27,   141,    46,    28,    29,    30,    31,    43,    32,    33,
+     5,     6,    79,     7,    80,    26,    85,    34,    47,   106,
+    87,    30,    48,    49,    89,   132,   165,    50,    54,    56,
+   159,     1,     2,     3,     4,     5,     6,   104,     7,     8,
+   105,     9,    10,    11,    12,    26,    85,    13,    57,    86,
+    87,    30,    88,    70,    89,    90,    26,    43,    74,    77,
+     5,     6,    30,     7,    84,    32,    26,    85,    95,    96,
+    86,    87,    30,    88,    43,    89,   117,     5,     6,   118,
+     7,    43,    98,    51,     5,     6,   100,     7,    26,    85,
+    82,   110,   164,    87,    30,   118,   107,    89,    61,    62,
+    63,    64,    58,   127,    59,    60,   113,   114,   115,   116,
+   122,   123,   172,   124,     0,     0,     0,   128,   134,   149,
+   130,   131,   135,   137,   138,   136,   139,   143,   144,   132,
+   158,   166,   154,   173,   150,   151,   152,   155,   156,   157,
+   160,    21,   163,   167,   168,   169,   170
 };
 
 static const short yycheck[] = {    58,
-    72,    12,    42,    72,    12,   104,    78,    23,     0,    78,
-    44,    17,    23,     0,    20,    23,    19,    51,     0,     3,
-     4,    24,    94,    34,     8,     9,   125,   126,    12,   128,
-   102,   130,     0,   102,    50,   107,    23,    53,   137,    50,
-    74,    17,    50,    54,    20,    53,    80,   146,   147,    41,
-   122,   123,     0,   122,    19,    95,    96,     3,     4,    24,
-    16,     7,     8,     9,    10,    76,    12,    13,     4,    13,
-    17,     7,     8,    20,    10,    21,     3,     4,     5,     6,
-     7,     8,   154,    10,    11,   144,    13,    14,    15,    16,
-     3,     4,    19,    13,    16,     8,     9,     3,     4,    12,
-    13,     7,     8,     9,    10,    23,    12,     3,     4,    24,
-    17,     7,     8,     9,    10,     4,    12,     3,     7,     8,
-    17,    10,    17,     9,    13,    20,    12,     3,     4,     5,
-     6,    16,    20,    18,    19,    17,    20,    17,    22,    20,
-     4,    20,    20,    18,    17,    17,    13,    24,    17,    17,
-    20,    22,    17,    -1,    17,    17,    17,    23,    -1,    -1,
-    20,    20,    17,    17,    22,    22,    22,    17,    17,    17,
-    16,    23,    13,    20,    17,    17,    16,    22,    22,    17,
-    17,    13,    17,    13,    17,     0,    17,     0,    17,    17,
-     0
+    73,    42,     0,   107,    12,     0,    79,    73,    13,     0,
+     0,     3,    44,    79,    12,    23,    19,     9,     0,    51,
+    12,    24,     0,    23,    97,    23,   130,   131,    16,   133,
+    19,   135,   105,    23,    13,    24,    34,   110,   142,   105,
+    23,    17,    50,    75,    20,    53,    41,   151,   152,    81,
+    50,    16,    50,    53,   127,   128,    24,    98,    99,     3,
+     4,   127,    17,     7,     8,     9,    10,     4,    12,    13,
+     7,     8,    20,    10,    22,     3,     4,    21,    17,    77,
+     8,     9,    17,    17,    12,    13,   159,    20,    20,    20,
+   149,     3,     4,     5,     6,     7,     8,    17,    10,    11,
+    20,    13,    14,    15,    16,     3,     4,    19,     4,     7,
+     8,     9,    10,    20,    12,    13,     3,     4,    18,    20,
+     7,     8,     9,    10,    17,    12,     3,     4,    17,    13,
+     7,     8,     9,    10,     4,    12,    17,     7,     8,    20,
+    10,     4,    24,    13,     7,     8,    17,    10,     3,     4,
+    13,    20,    17,     8,     9,    20,    22,    12,     3,     4,
+     5,     6,    16,    20,    18,    19,    17,    17,    17,    17,
+    17,    17,     0,    17,    -1,    -1,    -1,    20,    17,    16,
+    22,    22,    22,    17,    17,    23,    17,    17,    20,    13,
+    13,    13,    17,     0,    23,    22,    22,    17,    17,    17,
+    16,     0,    17,    17,    17,    17,    17
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "/usr/unsupported/share/bison.simple"
@@ -943,6 +948,18 @@ case 16:
 case 17:
 #line 204 "./config/m68k-parse.y"
 {
+		  op->reg = yyvsp[-3].reg;
+		  op->disp = yyvsp[-1].exp;
+		  if ((yyvsp[-3].reg >= ZADDR0 && yyvsp[-3].reg <= ZADDR7)
+		      || yyvsp[-3].reg == ZPC)
+		    op->mode = BASE;
+		  else
+		    op->mode = DISP;
+		;
+    break;}
+case 18:
+#line 214 "./config/m68k-parse.y"
+{
 		  op->reg = yyvsp[-1].reg;
 		  op->disp = yyvsp[-3].exp;
 		  if ((yyvsp[-1].reg >= ZADDR0 && yyvsp[-1].reg <= ZADDR7)
@@ -952,102 +969,51 @@ case 17:
 		    op->mode = DISP;
 		;
     break;}
-case 18:
-#line 214 "./config/m68k-parse.y"
+case 19:
+#line 224 "./config/m68k-parse.y"
 {
 		  op->mode = DISP;
 		  op->reg = yyvsp[-1].reg;
 		;
     break;}
-case 19:
-#line 219 "./config/m68k-parse.y"
-{
-		  op->mode = BASE;
-		  op->reg = yyvsp[-1].reg;
-		;
-    break;}
 case 20:
-#line 224 "./config/m68k-parse.y"
+#line 229 "./config/m68k-parse.y"
 {
 		  op->mode = BASE;
 		  op->reg = yyvsp[-1].reg;
 		;
     break;}
 case 21:
-#line 229 "./config/m68k-parse.y"
+#line 234 "./config/m68k-parse.y"
 {
 		  op->mode = BASE;
-		  op->reg = yyvsp[-3].reg;
-		  op->disp = yyvsp[-5].exp;
-		  op->index = yyvsp[-1].indexreg;
+		  op->reg = yyvsp[-1].reg;
 		;
     break;}
 case 22:
-#line 236 "./config/m68k-parse.y"
+#line 239 "./config/m68k-parse.y"
 {
-		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
-		    yyerror ("syntax error");
 		  op->mode = BASE;
-		  op->reg = yyvsp[-1].reg;
+		  op->reg = yyvsp[-3].reg;
 		  op->disp = yyvsp[-5].exp;
-		  op->index.reg = yyvsp[-3].reg;
-		  op->index.size = SIZE_UNSPEC;
-		  op->index.scale = 1;
+		  op->index = yyvsp[-1].indexreg;
 		;
     break;}
 case 23:
-#line 247 "./config/m68k-parse.y"
+#line 246 "./config/m68k-parse.y"
 {
+		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
+		    yyerror ("syntax error");
 		  op->mode = BASE;
 		  op->reg = yyvsp[-1].reg;
-		  op->disp = yyvsp[-4].exp;
-		  op->index = yyvsp[-2].indexreg;
+		  op->disp = yyvsp[-5].exp;
+		  op->index.reg = yyvsp[-3].reg;
+		  op->index.size = SIZE_UNSPEC;
+		  op->index.scale = 1;
 		;
     break;}
 case 24:
-#line 254 "./config/m68k-parse.y"
-{
-		  op->mode = BASE;
-		  op->reg = yyvsp[-3].reg;
-		  op->disp = yyvsp[-5].exp;
-		  op->index = yyvsp[-1].indexreg;
-		;
-    break;}
-case 25:
-#line 261 "./config/m68k-parse.y"
-{
-		  op->mode = BASE;
-		  op->reg = yyvsp[-3].reg;
-		  op->index = yyvsp[-1].indexreg;
-		;
-    break;}
-case 26:
-#line 267 "./config/m68k-parse.y"
-{
-		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
-		    yyerror ("syntax error");
-		  op->mode = BASE;
-		  op->reg = yyvsp[-1].reg;
-		  op->disp = yyvsp[-5].exp;
-		  op->index.reg = yyvsp[-3].reg;
-		  op->index.size = SIZE_UNSPEC;
-		  op->index.scale = 1;
-		;
-    break;}
-case 27:
-#line 278 "./config/m68k-parse.y"
-{
-		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
-		    yyerror ("syntax error");
-		  op->mode = BASE;
-		  op->reg = yyvsp[-1].reg;
-		  op->index.reg = yyvsp[-3].reg;
-		  op->index.size = SIZE_UNSPEC;
-		  op->index.scale = 1;
-		;
-    break;}
-case 28:
-#line 288 "./config/m68k-parse.y"
+#line 257 "./config/m68k-parse.y"
 {
 		  op->mode = BASE;
 		  op->reg = yyvsp[-1].reg;
@@ -1055,16 +1021,75 @@ case 28:
 		  op->index = yyvsp[-2].indexreg;
 		;
     break;}
+case 25:
+#line 264 "./config/m68k-parse.y"
+{
+		  op->mode = BASE;
+		  op->disp = yyvsp[-1].exp;
+		  op->index = yyvsp[-3].indexreg;
+		;
+    break;}
+case 26:
+#line 270 "./config/m68k-parse.y"
+{
+		  op->mode = BASE;
+		  op->reg = yyvsp[-3].reg;
+		  op->disp = yyvsp[-5].exp;
+		  op->index = yyvsp[-1].indexreg;
+		;
+    break;}
+case 27:
+#line 277 "./config/m68k-parse.y"
+{
+		  op->mode = BASE;
+		  op->reg = yyvsp[-3].reg;
+		  op->index = yyvsp[-1].indexreg;
+		;
+    break;}
+case 28:
+#line 283 "./config/m68k-parse.y"
+{
+		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
+		    yyerror ("syntax error");
+		  op->mode = BASE;
+		  op->reg = yyvsp[-1].reg;
+		  op->disp = yyvsp[-5].exp;
+		  op->index.reg = yyvsp[-3].reg;
+		  op->index.size = SIZE_UNSPEC;
+		  op->index.scale = 1;
+		;
+    break;}
 case 29:
-#line 295 "./config/m68k-parse.y"
+#line 294 "./config/m68k-parse.y"
+{
+		  if (yyvsp[-3].reg == PC || yyvsp[-3].reg == ZPC)
+		    yyerror ("syntax error");
+		  op->mode = BASE;
+		  op->reg = yyvsp[-1].reg;
+		  op->index.reg = yyvsp[-3].reg;
+		  op->index.size = SIZE_UNSPEC;
+		  op->index.scale = 1;
+		;
+    break;}
+case 30:
+#line 304 "./config/m68k-parse.y"
+{
+		  op->mode = BASE;
+		  op->reg = yyvsp[-1].reg;
+		  op->disp = yyvsp[-4].exp;
+		  op->index = yyvsp[-2].indexreg;
+		;
+    break;}
+case 31:
+#line 311 "./config/m68k-parse.y"
 {
 		  op->mode = BASE;
 		  op->reg = yyvsp[-1].reg;
 		  op->index = yyvsp[-2].indexreg;
 		;
     break;}
-case 30:
-#line 301 "./config/m68k-parse.y"
+case 32:
+#line 317 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-5].reg;
@@ -1073,8 +1098,8 @@ case 30:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 31:
-#line 309 "./config/m68k-parse.y"
+case 33:
+#line 325 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-3].reg;
@@ -1082,8 +1107,8 @@ case 31:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 32:
-#line 316 "./config/m68k-parse.y"
+case 34:
+#line 332 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-5].reg;
@@ -1091,49 +1116,49 @@ case 32:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 33:
-#line 323 "./config/m68k-parse.y"
+case 35:
+#line 339 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-3].reg;
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 34:
-#line 329 "./config/m68k-parse.y"
-{
-		  op->mode = PRE;
-		  op->reg = yyvsp[-5].reg;
-		  op->disp = yyvsp[-7].exp;
-		  op->index = yyvsp[-3].indexreg;
-		  op->odisp = yyvsp[-1].exp;
-		;
-    break;}
-case 35:
-#line 337 "./config/m68k-parse.y"
-{
-		  op->mode = PRE;
-		  op->reg = yyvsp[-5].reg;
-		  op->index = yyvsp[-3].indexreg;
-		  op->odisp = yyvsp[-1].exp;
-		;
-    break;}
 case 36:
-#line 344 "./config/m68k-parse.y"
+#line 345 "./config/m68k-parse.y"
 {
-		  if (yyvsp[-5].reg == PC || yyvsp[-5].reg == ZPC)
-		    yyerror ("syntax error");
 		  op->mode = PRE;
-		  op->reg = yyvsp[-3].reg;
+		  op->reg = yyvsp[-5].reg;
 		  op->disp = yyvsp[-7].exp;
-		  op->index.reg = yyvsp[-5].reg;
-		  op->index.size = SIZE_UNSPEC;
-		  op->index.scale = 1;
+		  op->index = yyvsp[-3].indexreg;
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
 case 37:
-#line 356 "./config/m68k-parse.y"
+#line 353 "./config/m68k-parse.y"
+{
+		  op->mode = PRE;
+		  op->reg = yyvsp[-5].reg;
+		  op->index = yyvsp[-3].indexreg;
+		  op->odisp = yyvsp[-1].exp;
+		;
+    break;}
+case 38:
+#line 360 "./config/m68k-parse.y"
+{
+		  if (yyvsp[-5].reg == PC || yyvsp[-5].reg == ZPC)
+		    yyerror ("syntax error");
+		  op->mode = PRE;
+		  op->reg = yyvsp[-3].reg;
+		  op->disp = yyvsp[-7].exp;
+		  op->index.reg = yyvsp[-5].reg;
+		  op->index.size = SIZE_UNSPEC;
+		  op->index.scale = 1;
+		  op->odisp = yyvsp[-1].exp;
+		;
+    break;}
+case 39:
+#line 372 "./config/m68k-parse.y"
 {
 		  if (yyvsp[-5].reg == PC || yyvsp[-5].reg == ZPC)
 		    yyerror ("syntax error");
@@ -1145,8 +1170,8 @@ case 37:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 38:
-#line 367 "./config/m68k-parse.y"
+case 40:
+#line 383 "./config/m68k-parse.y"
 {
 		  op->mode = PRE;
 		  op->reg = yyvsp[-3].reg;
@@ -1155,8 +1180,8 @@ case 38:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 39:
-#line 380 "./config/m68k-parse.y"
+case 41:
+#line 396 "./config/m68k-parse.y"
 {
 		  /* We use optzapc to avoid a shift/reduce conflict.  */
 		  if (yyvsp[-1].reg < ADDR0 || yyvsp[-1].reg > ADDR7)
@@ -1165,8 +1190,8 @@ case 39:
 		  op->reg = yyvsp[-1].reg;
 		;
     break;}
-case 40:
-#line 388 "./config/m68k-parse.y"
+case 42:
+#line 404 "./config/m68k-parse.y"
 {
 		  /* We use optzapc to avoid a shift/reduce conflict.  */
 		  if (yyvsp[-2].reg < ADDR0 || yyvsp[-2].reg > ADDR7)
@@ -1175,8 +1200,8 @@ case 40:
 		  op->reg = yyvsp[-2].reg;
 		;
     break;}
-case 41:
-#line 396 "./config/m68k-parse.y"
+case 43:
+#line 412 "./config/m68k-parse.y"
 {
 		  /* We use optzapc to avoid a shift/reduce conflict.  */
 		  if (yyvsp[-2].reg < ADDR0 || yyvsp[-2].reg > ADDR7)
@@ -1185,8 +1210,8 @@ case 41:
 		  op->reg = yyvsp[-2].reg;
 		;
     break;}
-case 42:
-#line 404 "./config/m68k-parse.y"
+case 44:
+#line 420 "./config/m68k-parse.y"
 {
 		  op->reg = yyvsp[-4].reg;
 		  op->disp = yyvsp[-1].exp;
@@ -1197,8 +1222,8 @@ case 42:
 		    op->mode = DISP;
 		;
     break;}
-case 43:
-#line 414 "./config/m68k-parse.y"
+case 45:
+#line 430 "./config/m68k-parse.y"
 {
 		  op->mode = BASE;
 		  op->reg = yyvsp[-5].reg;
@@ -1206,8 +1231,8 @@ case 43:
 		  op->index = yyvsp[-1].indexreg;
 		;
     break;}
-case 44:
-#line 421 "./config/m68k-parse.y"
+case 46:
+#line 437 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-9].reg;
@@ -1216,8 +1241,8 @@ case 44:
 		  op->odisp = yyvsp[-2].exp;
 		;
     break;}
-case 45:
-#line 429 "./config/m68k-parse.y"
+case 47:
+#line 445 "./config/m68k-parse.y"
 {
 		  op->mode = POST;
 		  op->reg = yyvsp[-8].reg;
@@ -1225,8 +1250,8 @@ case 45:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 46:
-#line 436 "./config/m68k-parse.y"
+case 48:
+#line 452 "./config/m68k-parse.y"
 {
 		  op->mode = PRE;
 		  op->reg = yyvsp[-9].reg;
@@ -1235,122 +1260,122 @@ case 46:
 		  op->odisp = yyvsp[-1].exp;
 		;
     break;}
-case 48:
-#line 451 "./config/m68k-parse.y"
-{
-		  yyval.indexreg.reg = yyvsp[0].reg;
-		  yyval.indexreg.size = SIZE_UNSPEC;
-		  yyval.indexreg.scale = 1;
-		;
-    break;}
 case 50:
-#line 465 "./config/m68k-parse.y"
+#line 467 "./config/m68k-parse.y"
 {
 		  yyval.indexreg.reg = yyvsp[0].reg;
 		  yyval.indexreg.size = SIZE_UNSPEC;
 		  yyval.indexreg.scale = 1;
 		;
     break;}
-case 61:
-#line 508 "./config/m68k-parse.y"
+case 52:
+#line 481 "./config/m68k-parse.y"
+{
+		  yyval.indexreg.reg = yyvsp[0].reg;
+		  yyval.indexreg.size = SIZE_UNSPEC;
+		  yyval.indexreg.scale = 1;
+		;
+    break;}
+case 63:
+#line 524 "./config/m68k-parse.y"
 {
 		  yyval.reg = ZADDR0;
 		;
     break;}
-case 65:
-#line 525 "./config/m68k-parse.y"
+case 67:
+#line 541 "./config/m68k-parse.y"
 {
 		  yyval.reg = ZADDR0;
 		;
     break;}
-case 66:
-#line 529 "./config/m68k-parse.y"
+case 68:
+#line 545 "./config/m68k-parse.y"
 {
 		  yyval.reg = yyvsp[0].reg;
 		;
     break;}
-case 67:
-#line 538 "./config/m68k-parse.y"
-{
-		  yyval.exp.exp.X_op = O_absent;
-		  yyval.exp.size = SIZE_UNSPEC;
-		;
-    break;}
-case 68:
-#line 543 "./config/m68k-parse.y"
-{
-		  yyval.exp = yyvsp[0].exp;
-		;
-    break;}
 case 69:
-#line 552 "./config/m68k-parse.y"
+#line 554 "./config/m68k-parse.y"
 {
 		  yyval.exp.exp.X_op = O_absent;
 		  yyval.exp.size = SIZE_UNSPEC;
 		;
     break;}
 case 70:
-#line 557 "./config/m68k-parse.y"
+#line 559 "./config/m68k-parse.y"
 {
-		  yyval.exp = yyvsp[-1].exp;
+		  yyval.exp = yyvsp[0].exp;
+		;
+    break;}
+case 71:
+#line 568 "./config/m68k-parse.y"
+{
+		  yyval.exp.exp.X_op = O_absent;
+		  yyval.exp.size = SIZE_UNSPEC;
 		;
     break;}
 case 72:
-#line 567 "./config/m68k-parse.y"
+#line 573 "./config/m68k-parse.y"
 {
-		  yyval.mask = yyvsp[-2].mask | yyvsp[0].mask;
-		;
-    break;}
-case 73:
-#line 571 "./config/m68k-parse.y"
-{
-		  yyval.mask = (1 << yyvsp[-2].onereg) | yyvsp[0].mask;
+		  yyval.exp = yyvsp[-1].exp;
 		;
     break;}
 case 74:
 #line 583 "./config/m68k-parse.y"
 {
-		  yyval.mask = 1 << yyvsp[0].onereg;
-		;
-    break;}
-case 76:
-#line 588 "./config/m68k-parse.y"
-{
 		  yyval.mask = yyvsp[-2].mask | yyvsp[0].mask;
 		;
     break;}
-case 77:
-#line 592 "./config/m68k-parse.y"
+case 75:
+#line 587 "./config/m68k-parse.y"
 {
 		  yyval.mask = (1 << yyvsp[-2].onereg) | yyvsp[0].mask;
 		;
     break;}
-case 78:
+case 76:
 #line 599 "./config/m68k-parse.y"
+{
+		  yyval.mask = 1 << yyvsp[0].onereg;
+		;
+    break;}
+case 78:
+#line 604 "./config/m68k-parse.y"
+{
+		  yyval.mask = yyvsp[-2].mask | yyvsp[0].mask;
+		;
+    break;}
+case 79:
+#line 608 "./config/m68k-parse.y"
+{
+		  yyval.mask = (1 << yyvsp[-2].onereg) | yyvsp[0].mask;
+		;
+    break;}
+case 80:
+#line 615 "./config/m68k-parse.y"
 {
 		  yyval.mask = (1 << (yyvsp[0].onereg + 1)) - 1 - ((1 << yyvsp[-2].onereg) - 1);
 		;
     break;}
-case 79:
-#line 606 "./config/m68k-parse.y"
+case 81:
+#line 622 "./config/m68k-parse.y"
 {
 		  yyval.onereg = yyvsp[0].reg - DATA0;
 		;
     break;}
-case 80:
-#line 610 "./config/m68k-parse.y"
+case 82:
+#line 626 "./config/m68k-parse.y"
 {
 		  yyval.onereg = yyvsp[0].reg - ADDR0 + 8;
 		;
     break;}
-case 81:
-#line 614 "./config/m68k-parse.y"
+case 83:
+#line 630 "./config/m68k-parse.y"
 {
 		  yyval.onereg = yyvsp[0].reg - FP0 + 16;
 		;
     break;}
-case 82:
-#line 618 "./config/m68k-parse.y"
+case 84:
+#line 634 "./config/m68k-parse.y"
 {
 		  if (yyvsp[0].reg == FPI)
 		    yyval.onereg = 24;
@@ -1558,7 +1583,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 628 "./config/m68k-parse.y"
+#line 644 "./config/m68k-parse.y"
 
 
 /* The string to parse is stored here, and modified by yylex.  */
@@ -1642,6 +1667,7 @@ yylex ()
   char *s;
   int parens;
   int c = 0;
+  int tail = 0;
   char *hold;
 
   if (*str == ' ')
@@ -1653,12 +1679,21 @@ yylex ()
   /* Various special characters are just returned directly.  */
   switch (*str)
     {
+    case '@':
+      /* In MRI mode, this can be the start of an octal number.  */
+      if (flag_mri)
+	{
+	  if (isdigit (str[1])
+	      || ((str[1] == '+' || str[1] == '-')
+		  && isdigit (str[2])))
+	    break;
+	}
+      /* Fall through.  */
     case '#':
     case '&':
     case ',':
     case ')':
     case '/':
-    case '@':
     case '[':
     case ']':
       return *str++;
@@ -1840,7 +1875,7 @@ yylex ()
   yylval.exp.size = SIZE_UNSPEC;
   if (s <= str + 2
       || (s[-2] != '.' && s[-2] != ':'))
-    s = NULL;
+    tail = 0;
   else
     {
       switch (s[-1])
@@ -1860,14 +1895,52 @@ yylex ()
 	  yylval.exp.size = SIZE_LONG;
 	  break;
 	default:
-	  s = NULL;
 	  break;
 	}
       if (yylval.exp.size != SIZE_UNSPEC)
-	{
-	  c = s[-2];
-	  s[-2] = '\0';
-	}
+	tail = 2;
+    }
+
+#ifdef OBJ_ELF
+  {
+    /* Look for @PLTPC, etc.  */
+    char *cp;
+
+    yylval.exp.pic_reloc = pic_none;
+    cp = s - tail;
+    if (cp - 6 > str && cp[-6] == '@')
+      {
+	if (strncmp (cp - 6, "@PLTPC", 6) == 0)
+	  {
+	    yylval.exp.pic_reloc = pic_plt_pcrel;
+	    tail += 6;
+	  }
+	else if (strncmp (cp - 6, "@GOTPC", 6) == 0)
+	  {
+	    yylval.exp.pic_reloc = pic_got_pcrel;
+	    tail += 6;
+	  }
+      }
+    else if (cp - 4 > str && cp[-4] == '@')
+      {
+	if (strncmp (cp - 4, "@PLT", 4) == 0)
+	  {
+	    yylval.exp.pic_reloc = pic_plt_off;
+	    tail += 4;
+	  }
+	else if (strncmp (cp - 4, "@GOT", 4) == 0)
+	  {
+	    yylval.exp.pic_reloc = pic_got_off;
+	    tail += 4;
+	  }
+      }
+  }
+#endif
+
+  if (tail != 0)
+    {
+      c = s[-tail];
+      s[-tail] = 0;
     }
 
   hold = input_line_pointer;
@@ -1876,9 +1949,9 @@ yylex ()
   str = input_line_pointer;
   input_line_pointer = hold;
 
-  if (s != NULL)
+  if (tail != 0)
     {
-      s[-2] = c;
+      s[-tail] = c;
       str = s;
     }
 

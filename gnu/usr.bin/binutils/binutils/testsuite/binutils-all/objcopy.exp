@@ -1,4 +1,4 @@
-#   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+#   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ if {[which $OBJCOPY] == 0} then {
 
 send_user "Version [binutil_version $OBJCOPY]"
 
-if {![binutils_assemble $AS $srcdir$subdir/bintest.s tmpdir/bintest.o]} then {
+if {![binutils_assemble $AS $srcdir/$subdir/bintest.s tmpdir/bintest.o]} then {
     unresolved "objcopy (simple copy)"
     return
 }
@@ -41,7 +41,7 @@ if ![string match "" $got] then {
     send_log "cmp tmpdir/bintest.o tmpdir/copy.o\n"
     verbose "cmp tmpdir/bintest.o tmpdir/copy.o"
     catch "exec cmp tmpdir/bintest.o tmpdir/copy.o" exec_output
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    set exec_output [prune_warnings $exec_output]
 
     # On some systems the result of objcopy will not be identical.
     # Usually this is just because gas isn't using bfd to write the files

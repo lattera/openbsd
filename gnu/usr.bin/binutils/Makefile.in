@@ -1,6 +1,6 @@
 #
 # Makefile for directory with subdirs to build.
-#   Copyright (C) 1990, 1991, 1992, 1993 Free Software Foundation
+#   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,6 +68,7 @@ HOST_PREFIX_1 = loser-
 CFLAGS = -g
 LIBCFLAGS = $(CFLAGS)
 CFLAGS_FOR_TARGET = $(CFLAGS)
+LDFLAGS_FOR_TARGET = 
 LIBCFLAGS_FOR_TARGET = $(CFLAGS_FOR_TARGET)
 PICFLAG = 
 PICFLAG_FOR_TARGET = 
@@ -92,12 +93,7 @@ GZIPPROG = gzip
 DEFAULT_YACC = yacc
 DEFAULT_LEX = lex
 
-# BISON: This line sed'ed to BISON = bison -y for FSF releases, don't remove.
-BISON = `if [ -f $$r/byacc/byacc ] ; \
-	    then echo $$r/byacc/byacc ; \
-	    else echo ${DEFAULT_YACC} ; \
-	fi`
-
+BISON = bison -y
 LEX = `if [ -f $$r/flex/flex ] ; \
 	then echo $$r/flex/flex ; \
 	else echo ${DEFAULT_LEX} ; fi`
@@ -106,7 +102,7 @@ M4 = `if [ -f $$r/m4/m4 ] ; \
 	then echo $$r/m4/m4 ; \
 	else echo m4 ; fi`
 
-MAKEINFO = `if [ -f $$r/texinfo/makeinfo/makeinfo ] ; \
+MAKEINFO = `if [ -f $$r/texinfo/makeinfo/Makefile ] ; \
 	then echo $$r/texinfo/makeinfo/makeinfo ; \
 	else echo makeinfo ; fi`
 
@@ -376,15 +372,6 @@ TARGET_FLAGS_TO_PASS = $(BASE_FLAGS_TO_PASS) $(EXTRA_TARGET_FLAGS)
 # If any variables are added here, they must be added to do-*, below.
 # The HOST_* variables are a special case, which are used for the gcc
 # cross-building scheme.
-# The condition for setting GCC_FOR_TARGET is so that if CC_FOR_TARGET
-# is overridden on the command line we use that value for
-# GCC_FOR_TARGET, and, if it is not, we use the value of
-# GCC_FOR_TARGET.  We do this because the default value of
-# CC_FOR_TARGET depends on gcc/xgcc, which won't exist when we first
-# go into the gcc directory.  FIXME: The test won't work correctly for
-# older non-Posix make programs that do not set MAKEFLAGS; in that
-# case, overriding CC_FOR_TARGET on the command line will not affect
-# GCC_FOR_TARGET.
 EXTRA_GCC_FLAGS = \
 	'AR=$$(AR_FOR_TARGET)' \
 	'AS=$(AS)' \
@@ -396,12 +383,13 @@ EXTRA_GCC_FLAGS = \
 	'HOST_PREFIX_1=$(HOST_PREFIX_1)' \
 	'NM=$(NM)' \
 	'RANLIB=$$(RANLIB_FOR_TARGET)' \
-	'GCC_FOR_TARGET=$(GCC_FOR_TARGET)' \
+	"GCC_FOR_TARGET=$(GCC_FOR_TARGET)" \
 	`if test x"$(LANGUAGES)" != x; then echo "LANGUAGES=$(LANGUAGES)"; fi` \
 	`if test x"$(STMP_FIXPROTO)" != x; then echo "STMP_FIXPROTO=$(STMP_FIXPROTO)"; fi` \
 	`if test x"$(LIMITS_H_TEST)" != x; then echo "LIMITS_H_TEST=$(LIMITS_H_TEST)"; fi` \
 	`if test x"$(LIBGCC1_TEST)" != x; then echo "LIBGCC1_TEST=$(LIBGCC1_TEST)"; fi` \
 	`if test x"$(LIBGCC2_CFLAGS)" != x; then echo "LIBGCC2_CFLAGS=$(LIBGCC2_CFLAGS)"; fi` \
+	`if test x"$(LIBGCC2_DEBUG_CFLAGS)" != x; then echo "LIBGCC2_DEBUG_CFLAGS=$(LIBGCC2_DEBUG_CFLAGS)"; fi` \
 	`if test x"$(LIBGCC2_INCLUDES)" != x; then echo "LIBGCC2_INCLUDES=$(LIBGCC2_INCLUDES)"; fi` \
 	`if test x"$(ENQUIRE)" != x; then echo "ENQUIRE=$(ENQUIRE)"; fi` \
 	`if test x"$(BOOT_CFLAGS)" != x; then echo "BOOT_CFLAGS=$(BOOT_CFLAGS)"; fi`
@@ -418,11 +406,13 @@ ALL_MODULES = \
 	all-binutils \
 	all-byacc \
 	all-cvs \
+	all-db \
 	all-dejagnu \
 	all-diff \
 	all-dosutils \
 	all-etc \
 	all-fileutils \
+	all-findutils \
 	all-find \
 	all-flex \
 	all-gas \
@@ -435,6 +425,7 @@ ALL_MODULES = \
 	all-indent \
 	all-inet \
 	all-ispell \
+	all-itcl \
 	all-ld \
 	all-libiberty \
 	all-m4 \
@@ -452,6 +443,7 @@ ALL_MODULES = \
 	all-send-pr \
 	all-shellutils \
 	all-sim \
+	all-sn \
 	all-tar \
 	all-tcl \
 	all-texinfo \
@@ -478,10 +470,12 @@ CROSS_CHECK_MODULES = \
 	check-bfd \
 	check-binutils \
 	check-cvs \
+	check-db \
 	check-dejagnu \
 	check-diff \
 	check-etc \
 	check-fileutils \
+	check-findutils \
 	check-find \
 	check-gas \
 	check-gawk \
@@ -492,6 +486,7 @@ CROSS_CHECK_MODULES = \
 	check-indent \
 	check-inet \
 	check-ispell \
+	check-itcl \
 	check-ld \
 	check-libiberty \
 	check-m4 \
@@ -507,6 +502,7 @@ CROSS_CHECK_MODULES = \
 	check-sed \
 	check-send-pr \
 	check-shellutils \
+	check-sn \
 	check-sim \
 	check-tar \
 	check-tcl \
@@ -521,19 +517,25 @@ CHECK_MODULES=$(NATIVE_CHECK_MODULES) $(CROSS_CHECK_MODULES)
 
 # This is a list of the install targets for all of the modules which are
 # compiled using $(FLAGS_TO_PASS).
+# We put install-opcodes before install-binutils because the installed
+# binutils might be on PATH, and they might need the shared opcodes
+# library.
 INSTALL_MODULES = \
 	install-apache \
 	install-autoconf \
 	install-bash \
 	install-bfd \
+	install-opcodes \
 	install-binutils \
 	install-byacc \
 	install-cvs \
+	install-db \
 	install-dejagnu \
 	install-diff \
 	install-dosutils \
 	install-etc \
 	install-fileutils \
+	install-findutils \
 	install-find \
 	install-flex \
 	install-gas \
@@ -546,12 +548,12 @@ INSTALL_MODULES = \
 	install-indent \
 	install-inet \
 	install-ispell \
+	install-itcl \
 	install-ld \
 	install-libiberty \
 	install-m4 \
 	install-make \
 	install-mmalloc \
-	install-opcodes \
 	install-patch \
 	install-perl \
 	install-prms \
@@ -562,9 +564,9 @@ INSTALL_MODULES = \
 	install-send-pr \
 	install-shellutils \
 	install-sim \
+	install-sn \
 	install-tar \
 	install-tcl \
-	install-texinfo \
 	install-textutils \
 	install-tgas \
 	install-time \
@@ -591,8 +593,7 @@ CHECK_X11_MODULES = \
 	check-guile \
 	check-expect \
 	check-gash \
-	check-tclX \
-	check-tk
+	check-tclX
 
 # This is a list of the install targets for all the modules which are
 # compiled using $(X11_FLAGS_TO_PASS).
@@ -662,11 +663,13 @@ CLEAN_MODULES = \
 	clean-binutils \
 	clean-byacc \
 	clean-cvs \
+	clean-db \
 	clean-dejagnu \
 	clean-diff \
 	clean-dosutils \
 	clean-etc \
 	clean-fileutils \
+	clean-findutils \
 	clean-find \
 	clean-flex \
 	clean-gas \
@@ -679,6 +682,7 @@ CLEAN_MODULES = \
 	clean-indent \
 	clean-inet \
 	clean-ispell \
+	clean-itcl \
 	clean-ld \
 	clean-libiberty \
 	clean-m4 \
@@ -696,6 +700,7 @@ CLEAN_MODULES = \
 	clean-send-pr \
 	clean-shellutils \
 	clean-sim \
+	clean-sn \
 	clean-tar \
 	clean-tcl \
 	clean-texinfo \
@@ -816,6 +821,9 @@ info: do-info
 installcheck: do-installcheck
 dvi: do-dvi
 
+# Make sure makeinfo is built before we do a `make info'.
+do-info: all-texinfo
+
 install-info: do-install-info dir.info
 	s=`cd $(srcdir); pwd`; export s; \
 	if [ -f dir.info ] ; then \
@@ -826,7 +834,7 @@ local-clean:
 	-rm -f *.a TEMP errs core *.o *~ \#* TAGS *.E
 
 local-distclean:
-	-rm -f Makefile config.status
+	-rm -f Makefile config.status config.cache
 	-if [ "$(TARGET_SUBDIR)" != "." ]; then \
 	  rm -rf $(TARGET_SUBDIR); \
 	else true; fi
@@ -881,7 +889,7 @@ check: $(CHECK_MODULES) \
 # Installation targets.
 
 .PHONY: install uninstall source-vault binary-vault vault-install
-install: $(INSTALL_TARGET) 
+install: $(INSTALL_TARGET) install-info
 
 uninstall:
 	@echo "the uninstall target is not supported in this tree"
@@ -1050,6 +1058,7 @@ $(CONFIGURE_TARGET_MODULES):
 	    CXXFLAGS="$(CXXFLAGS_FOR_TARGET)"; export CXXFLAGS; \
 	    DLLTOOL="$(DLLTOOL_FOR_TARGET)"; export DLLTOOL; \
 	    LD="$(LD_FOR_TARGET)"; export LD; \
+            LDFLAGS="$(LDFLAGS_FOR_TARGET)"; export LDFLAGS; \
 	    NM="$(NM_FOR_TARGET)"; export NM; \
 	    RANLIB="$(RANLIB_FOR_TARGET)"; export RANLIB; \
 	    echo Configuring in $(TARGET_SUBDIR)/$${dir}; \
@@ -1264,6 +1273,7 @@ all-bfd:
 all-binutils: all-libiberty all-opcodes all-bfd all-flex all-byacc
 all-byacc:
 all-cvs:
+all-db:
 all-dejagnu: all-tcl all-expect all-tk
 all-diff: all-libiberty
 all-emacs:
@@ -1273,6 +1283,7 @@ configure-target-examples: $(ALL_GCC)
 all-target-examples: configure-target-examples
 all-expect: all-tcl all-tk
 all-fileutils: all-libiberty
+all-findutils:
 all-find:
 all-flex: all-libiberty all-byacc
 all-gas: all-libiberty all-opcodes all-bfd
@@ -1293,6 +1304,7 @@ all-hello: all-libiberty
 all-indent:
 all-inet: all-tcl all-send-pr all-perl
 all-ispell: all-emacs19
+all-itcl: all-tcl all-tk
 all-ld: all-libiberty all-bfd all-opcodes all-byacc all-flex
 configure-target-libg++: $(ALL_GCC) configure-target-librx
 all-target-libg++: configure-target-libg++ all-gas all-ld all-gcc all-target-libiberty all-target-newlib all-target-libio all-target-librx all-target-libstdc++
@@ -1321,6 +1333,7 @@ all-sed: all-libiberty
 all-send-pr: all-prms
 all-shellutils:
 all-sim: all-libiberty all-bfd all-opcodes
+all-sn: all-tcl all-tk all-itcl all-db
 all-tar: all-libiberty
 all-tcl:
 all-tclX: all-tcl all-tk
@@ -1330,7 +1343,7 @@ all-textutils:
 all-tgas: all-libiberty all-bfd all-opcodes
 all-time:
 all-wdiff:
-all-target-winsup: all-target-newlib all-target-libiberty all-target-librx configure-target-winsup 
+all-target-winsup: all-target-newlib all-target-libiberty all-target-librx all-target-libio configure-target-winsup 
 configure-target-winsup: configure-target-newlib
 all-uudecode: all-libiberty
 configure-target-libiberty: $(ALL_GCC)
@@ -1345,7 +1358,8 @@ MAKEDIRS= \
 	$(exec_prefix)
 .PHONY: install-dirs
 install-dirs:
-	@for i in $(MAKEDIRS) ; do \
+	@for i in .. $(MAKEDIRS) ; do \
+	    if [ x$$i != x.. ]; then \
 		echo Making $$i... ; \
 		parent=`echo $$i | sed -e 's@/[^/]*$$@@' | sed -e 's@^$$@/@'`; \
 		if [ -d $$parent ] ; then true ; else mkdir $$parent ; fi ; \
@@ -1358,8 +1372,8 @@ install-dirs:
 		else \
 			true ; \
 		fi ; \
+	    else true; fi; \
 	done
-
 
 dir.info: do-install-info
 	if [ -f $(srcdir)/texinfo/gen-info-dir ] ; then \
@@ -1395,7 +1409,7 @@ Makefile: Makefile.in configure.in $(host_makefile_frag) $(target_makefile_frag)
 # distribution (perhaps it would be better to include it anyway).
 DEVO_SUPPORT= README Makefile.in configure configure.in \
 	config.guess config.sub config move-if-change \
-	mpw-README mpw-build.in mpw-config.in mpw-configure \
+	mpw-README mpw-build.in mpw-config.in mpw-configure mpw-install \
 	COPYING COPYING.LIB install.sh config-ml.in symlink-tree
 
 # Files in devo/etc used in any net release.
@@ -1409,7 +1423,7 @@ ETC_SUPPORT= Makefile.in cfg-paper.texi configure configure.in configure.man \
 # this macro.
 SUPPORT_FILES = list-of-support-files-for-tool-in-question
 # Files where "byacc" (Cygnus version) should be changed to "bison -y" (FSF).
-DISTBISONFILES= binutils/Makefile.in gas/Makefile.in gdb/Makefile.in
+DISTBISONFILES= binutils/Makefile.in gas/Makefile.in gdb/Makefile.in ld/Makefile.in
 
 .PHONY: taz
 
@@ -1425,7 +1439,7 @@ taz: $(DEVO_SUPPORT) $(SUPPORT_FILES) \
 	# Take out texinfo from a few places; make simple BISON=bison line.
 	sed -e '/^all\.normal: /s/\all-texinfo //' \
 	    -e '/^	install-texinfo /d' \
-	    -e '/^BISON = /,/^$$/d' \
+	    -e '/^BISON = `if/,/^$$/d' \
 	    -e '/^# BISON:/s/.*/BISON = bison -y/' \
 	<Makefile.in >tmp
 	mv -f tmp Makefile.in
@@ -1489,14 +1503,14 @@ TEXINFO_SUPPORT= texinfo/texinfo.tex texinfo/gpl.texinfo texinfo/lgpl.texinfo
 DIST_SUPPORT= $(DEVO_SUPPORT) $(TEXINFO_SUPPORT)
 
 .PHONY: gas.tar.gz
-GAS_SUPPORT_DIRS= bfd include libiberty opcodes make-all.com setup.com
+GAS_SUPPORT_DIRS= bfd include libiberty opcodes setup.com makefile.vms
 gas.tar.gz: $(DIST_SUPPORT) $(GAS_SUPPORT_DIRS) gas
 	$(MAKE) -f Makefile.in taz TOOL=gas \
 		SUPPORT_FILES="$(GAS_SUPPORT_DIRS)"
 
 # The FSF "binutils" release includes gprof and ld.
 .PHONY: binutils.tar.gz
-BINUTILS_SUPPORT_DIRS= bfd gas include libiberty opcodes ld gprof make-all.com setup.com
+BINUTILS_SUPPORT_DIRS= bfd gas include libiberty opcodes ld gprof setup.com makefile.vms
 binutils.tar.gz: $(DIST_SUPPORT) $(BINUTILS_SUPPORT_DIRS) binutils
 	$(MAKE) -f Makefile.in taz TOOL=binutils \
 		SUPPORT_FILES="$(BINUTILS_SUPPORT_DIRS) makeall.bat configure.bat"

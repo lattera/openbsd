@@ -1,3 +1,55 @@
+Tue May 13 10:43:11 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gprof.c (VERSION): Define as "2.8.1".
+
+Thu Apr  3 18:55:05 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gprof.c (VERSION): Define as "2.8".
+
+Thu Mar 27 17:15:23 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gprof.c (main): Correct copyright message.
+
+Mon Mar 24 11:12:26 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* Makefile.in (.c.o): Define TARGET_$(MY_TARGET) when compiling.
+  	* gmon.h: Use bytes counts rather than sizeof in struct raw_phdr
+ 	and struct raw_arc.
+
+Mon Mar 17 10:54:47 1997  David Mosberger-Tang  <davidm@azstarnet.com>
+
+	* cg_arcs.c (arc_add): memset() newly alloced arc to ensure
+	all fields are initialized with 0.
+
+Sat Mar 15 19:17:31 1997  H.J. Lu  <hjl@lucon.org>
+
+	* symtab.h (find_call): Declare.
+	* cg_arcs.c (cg_assemble): Don't declare find_call.
+	* hist.c (scale_and_align_entries): Declare.
+
+Thu Feb 27 12:46:53 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* configure.in: Define BSD44_FORMAT if the target looks like a
+	BSD4.4 derived system.
+	* configure: Rebuild.
+	* Makefile.in (.c.o): Add @DEFS@.
+	* gmon_io.c (gmon_out_read): In BSD44_FORMAT code, get profrate
+	from profrate field, not version field.
+
+Thu Jan 16 17:42:54 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* dummy.c (find_call): Clear ignore_direct_calls.
+
+Tue Dec 31 15:44:10 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* Makefile.in (.c.o): Add -D_GNU_SOURCE.  Put $(CFLAGS) at the
+	end.
+	(gprof): Put $(CFLAGS) after the other options.
+
+Tue Nov 26 17:08:38 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* configure: Rebuild with autoconf 2.12.
+
 Wed Oct  2 15:23:16 1996  Ian Lance Taylor  <ian@cygnus.com>
 
 	* sparc.c (find_call): Align p_lowpc to avoid bus error.

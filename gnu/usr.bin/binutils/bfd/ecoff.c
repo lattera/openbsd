@@ -1,5 +1,5 @@
 /* Generic ECOFF (Extended-COFF) routines.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Original version by Per Bothner.
    Full support added by Ian Lance Taylor, ian@cygnus.com.
 
@@ -1443,11 +1443,11 @@ _bfd_ecoff_get_symbol_info (abfd, symbol, ret)
 
 /*ARGSUSED*/
 boolean
-_bfd_ecoff_bfd_is_local_label (abfd, symbol)
+_bfd_ecoff_bfd_is_local_label_name (abfd, name)
      bfd *abfd;
-     asymbol *symbol;
+     const char *name;
 {
-  return symbol->name[0] == '$';
+  return name[0] == '$';
 }
 
 /* Print information about an ECOFF symbol.  */

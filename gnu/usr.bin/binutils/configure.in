@@ -14,7 +14,7 @@
 ## For more information on these two systems, check out the documentation
 ## for 'Autoconf' (autoconf.texi) and 'Configure' (configure.texi).  
 
-#   Copyright (C) 1992, 93, 94, 95, 1996 Free Software Foundation, Inc.
+#   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -41,15 +41,16 @@
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="mmalloc libiberty opcodes bfd readline gash tcl tk tclX"
+host_libs="mmalloc libiberty opcodes bfd readline gash db tcl tk tclX itcl"
 
 if [ "${enable_gdbgui}" = "yes" ] ; then
 	host_libs="${host_libs} libgui"
 fi
 
 # these tools are built for the host environment
-#
-host_tools="texinfo byacc flex bison binutils ld gas gcc gdb make patch prms send-pr gprof gdbtest tgas etc expect dejagnu sim bash m4 autoconf ispell grep diff rcs cvs fileutils shellutils time textutils wdiff find emacs emacs19 uudecode hello tar gzip indent recode release sed utils guile perl apache inet gawk"
+# Note, the powerpc-eabi build depends on sim occurring before gdb in order to
+# know that we are building the simulator.
+host_tools="byacc flex bison binutils ld gas gcc sim gdb make patch prms send-pr gprof gdbtest tgas etc expect dejagnu bash m4 autoconf ispell grep diff rcs cvs fileutils shellutils time textutils wdiff find emacs emacs19 uudecode hello tar gzip indent recode release sed utils guile perl apache inet gawk findutils sn"
 
 
 # these libraries are built for the target environment, and are built after
@@ -79,7 +80,7 @@ target_tools="target-examples target-groff"
 #
 # This must be a single line because of the way it is searched by grep in
 # the code below.
-native_only="autoconf cvs emacs emacs19 fileutils find gawk grep gzip hello indent ispell m4 rcs recode sed shellutils tar textutils gash uudecode wdiff gprof target-groff guile perl apache inet time bash prms"
+native_only="autoconf cvs emacs emacs19 fileutils find gawk grep gzip hello indent ispell m4 rcs recode sed shellutils tar textutils gash uudecode wdiff gprof target-groff guile perl apache inet time bash prms sn"
 
 # directories to be built in a cross environment only
 #
@@ -110,7 +111,6 @@ case "${host}" in
   m68k-hp-hpux*)	  host_makefile_frag=config/mh-hp300 ;;
   m68k-apollo-sysv*)      host_makefile_frag=config/mh-apollo68 ;;
   m68k-apollo-bsd*)       host_makefile_frag=config/mh-a68bsd ;;
-  m68k-*-linux*)	  host_makefile_frag=config/mh-linux ;;
   m88k-dg-dgux*)	  host_makefile_frag=config/mh-dgux ;;
   m88k-harris-cxux*)	  host_makefile_frag=config/mh-cxux ;;
   m88k-motorola-sysv*)    host_makefile_frag=config/mh-delta88;;
@@ -128,7 +128,6 @@ case "${host}" in
   i[3456]86-*-sco3.2v5*)  host_makefile_frag=config/mh-sysv ;;
   i[3456]86-*-sco*)       host_makefile_frag=config/mh-sco ;;
   i[3456]86-*-isc*)	  host_makefile_frag=config/mh-sysv ;;
-  i[3456]86-*-linux*)     host_makefile_frag=config/mh-linux ;;
   i[3456]86-*-solaris2*)  host_makefile_frag=config/mh-sysv4 ;;
   i[3456]86-*-aix*)	  host_makefile_frag=config/mh-aix386 ;;
   i[3456]86-*-go32*)	  host_makefile_frag=config/mh-go32 ;;
@@ -312,6 +311,8 @@ fi
 # Default to using --with-stabs for certain targets.
 if [ x${with_stabs} = x ]; then
   case "${target}" in
+  mips*-*-irix6*)
+    ;;
   mips*-*-* | alpha*-*-osf* | i[3456]86*-*-sysv4* | i[3456]86*-*-unixware*)
     with_stabs=yes;
     withoptions="${withoptions} --with-stabs"
@@ -367,13 +368,13 @@ noconfigdirs=""
 
 case "${host}" in
   i[3456]86-*-vsta)
-    noconfigdirs="tcl expect dejagnu make texinfo bison patch flex byacc send-pr gprof uudecode dejagnu diff guile perl apache inet"
+    noconfigdirs="tcl expect dejagnu make texinfo bison patch flex byacc send-pr gprof uudecode dejagnu diff guile perl apache inet itcl db sn"
     ;;
   i[3456]86-*-go32)
-    noconfigdirs="tcl tk expect dejagnu make texinfo bison patch flex byacc send-pr gprof uudecode dejagnu diff guile perl apache inet"
+    noconfigdirs="tcl tk expect dejagnu make texinfo bison patch flex byacc send-pr gprof uudecode dejagnu diff guile perl apache inet itcl db sn"
 	;;
   *-*-cygwin32)
-     noconfigdirs="tk tcl expect dejagnu cvs autoconf bison send-pr gprof rcs guile perl texinfo apache inet"
+     noconfigdirs="expect dejagnu cvs autoconf bison send-pr gprof rcs guile perl texinfo apache inet itcl db sn"
     ;;
   *-*-windows*)
 # This is only used to build WinGDB...
@@ -381,7 +382,7 @@ case "${host}" in
      target_configdirs=
     ;;
   ppc*-*-pe)
-     noconfigdirs="patch diff make tk tcl expect dejagnu cvs autoconf texinfo bison send-pr gprof rcs guile perl apache inet"
+     noconfigdirs="patch diff make tk tcl expect dejagnu cvs autoconf texinfo bison send-pr gprof rcs guile perl apache inet itcl db sn"
     ;;
 esac
 
@@ -415,12 +416,16 @@ case "${target}" in
   arm-*-riscix*)
     noconfigdirs="$noconfigdirs ld target-libgloss"
     ;;
+  d10v-*-*)
+    noconfigdirs="$noconfigdirs target-librx target-libg++ target-libstdc++ target-libio target-libgloss"
+    ;;
   h8300*-*-* | \
   h8500-*-*)
     noconfigdirs="$noconfigdirs target-libg++ target-libstdc++ target-libio target-librx target-libgloss"
     ;;
   hppa*-*-*elf* | \
-  hppa*-*-lites*)
+  hppa*-*-lites* | \
+  hppa*-*-rtems* )
     # Do configure ld/binutils/gas for this case.
     ;;
   hppa*-*-*)
@@ -439,7 +444,7 @@ case "${target}" in
     ;;
   *-*-cygwin32)
     target_configdirs="$target_configdirs target-winsup"
-    noconfigdirs="$noconfigdirs tcl tk expect target-libgloss"
+    noconfigdirs="$noconfigdirs expect target-libgloss itcl db sn"
     # always build newlib.
     skipdirs=`echo " ${skipdirs} " | sed -e 's/ target-newlib / /'`
 
@@ -476,10 +481,10 @@ case "${target}" in
     noconfigdirs="$noconfigdirs emacs emacs19 target-libgloss"
     ;;
   mn10200-*-*)
-    noconfigdirs="$noconfigdirs ld gcc gdb target-libiberty target-libgloss target-newlib target-libio target-librx target-libstdc++ target-libg++"
+    noconfigdirs="$noconfigdirs target-libgloss"
     ;;
   mn10300-*-*)
-    noconfigdirs="$noconfigdirs ld gcc gdb target-libiberty target-libgloss target-newlib target-libio target-librx target-libstdc++ target-libg++"
+    noconfigdirs="$noconfigdirs target-libgloss"
     ;;
   powerpc-*-aix*)
     # copied from rs6000-*-* entry
@@ -489,13 +494,13 @@ case "${target}" in
     ;;
   powerpc*-*-winnt* | powerpc*-*-pe* | ppc*-*-pe)
     target_configdirs="$target_configdirs target-winsup"
-    noconfigdirs="$noconfigdirs gdb tcl tk make expect target-libgloss"
+    noconfigdirs="$noconfigdirs gdb tcl tk make expect target-libgloss itcl db sn"
     # always build newlib.
     skipdirs=`echo " ${skipdirs} " | sed -e 's/ target-newlib / /'`
     ;;
     # This is temporary until we can link against shared libraries
   powerpcle-*-solaris*)
-    noconfigdirs="$noconfigdirs gdb sim make tcl tk expect"
+    noconfigdirs="$noconfigdirs gdb sim make tcl tk expect itcl db sn"
     ;;
   rs6000-*-lynxos*)
     # The CVS server code doesn't work on the RS/6000
@@ -521,8 +526,7 @@ case "${target}" in
   mips*-*-irix6*)
     # The GNU linker does not support shared libraries.
     # emacs is emacs 18, which does not work on Irix 5 (emacs19 does work)
-    # BFD does not have Irix 6 support yet.
-    noconfigdirs="$noconfigdirs bfd binutils ld gas opcodes gdb readline mmalloc sim gprof emacs target-libgloss"
+    noconfigdirs="$noconfigdirs ld gas gprof emacs target-libgloss"
     ;;
   mips*-dec-bsd*)
     noconfigdirs="$noconfigdirs gprof target-libgloss"
@@ -588,7 +592,7 @@ esac
 # If we are building a Canadian Cross, discard tools that can not be built
 # using a cross compiler.  FIXME: These tools should be fixed.
 if [ "${build}" != "${host}" ]; then
-  noconfigdirs="$noconfigdirs tcl tk expect dejagnu"
+  noconfigdirs="$noconfigdirs expect dejagnu itcl db sn"
 fi
 
 # Make sure we don't let GNU ld be added if we didn't want it.

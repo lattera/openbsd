@@ -1,5 +1,6 @@
 /* Generic stabs parsing for gas.
-   Copyright (C) 1989, 90, 91, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 90, 91, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
 
@@ -27,6 +28,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    it defines stab types, which all object formats can use now. */
 
 #include "aout/stab_gnu.h"
+
+static void s_stab_generic PARAMS ((int, char *, char *));
 
 /* Allow backends to override the names used for the stab sections.  */
 #ifndef STAB_SECTION_NAME
@@ -116,6 +119,8 @@ get_stab_string_offset (string, stabstr_secname)
 #ifndef OBJ_PROCESS_STAB
 #define OBJ_PROCESS_STAB(SEG,W,S,T,O,D)	aout_process_stab(W,S,T,O,D)
 #endif
+
+static void aout_process_stab PARAMS ((int, const char *, int, int, int));
 
 static void
 aout_process_stab (what, string, type, other, desc)

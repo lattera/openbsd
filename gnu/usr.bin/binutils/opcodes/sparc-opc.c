@@ -1,5 +1,6 @@
 /* Table of opcodes for the sparc.
-   Copyright (C) 1989, 1991, 1992, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
 
 This file is part of the BFD library.
 
@@ -165,6 +166,9 @@ sparc_opcode_lookup_arch (name)
 { opcode,	F3(2, op3, 0), F3(~2, ~op3, ~0)|ASI(~0),	"1,2,d", 0, arch_mask }, \
 { opcode,	F3(2, op3, 1), F3(~2, ~op3, ~1),		"1,i,d", 0, arch_mask }, \
 { opcode,	F3(2, op3, 1), F3(~2, ~op3, ~1),		"i,1,d", 0, arch_mask }
+
+/* This table is sorted at runtime, so cannot be "const" like most of the
+   opcodes tables for other architectures . */
 
 struct sparc_opcode sparc_opcodes[] = {
 
@@ -1702,17 +1706,20 @@ const int sparc_num_opcodes = ((sizeof sparc_opcodes)/(sizeof sparc_opcodes[0]))
 typedef struct
 {
   int value;
-  char *name;
+  const char *name;
 } arg;
 
 /* Look up NAME in TABLE.  */
 
+static int lookup_name PARAMS ((const arg *, const char *));
+static const char *lookup_value PARAMS ((const arg *, int));
+
 static int
 lookup_name (table, name)
-     arg *table;
-     char *name;
+     const arg *table;
+     const char *name;
 {
-  arg *p;
+  const arg *p;
 
   for (p = table; p->name; ++p)
     if (strcmp (name, p->name) == 0)
@@ -1723,12 +1730,12 @@ lookup_name (table, name)
 
 /* Look up VALUE in TABLE.  */
 
-static char *
+static const char *
 lookup_value (table, value)
-     arg *table;
+     const arg *table;
      int value;
 {
-  arg *p;
+  const arg *p;
 
   for (p = table; p->name; ++p)
     if (value == p->value)
@@ -1783,14 +1790,14 @@ static arg asi_table[] =
 
 int
 sparc_encode_asi (name)
-     char *name;
+     const char *name;
 {
   return lookup_name (asi_table, name);
 }
 
 /* Return the name for ASI value VALUE or NULL if not found.  */
 
-char *
+const char *
 sparc_decode_asi (value)
      int value;
 {
@@ -1815,14 +1822,14 @@ static arg membar_table[] =
 
 int
 sparc_encode_membar (name)
-     char *name;
+     const char *name;
 {
   return lookup_name (membar_table, name);
 }
 
 /* Return the name for membar value VALUE or NULL if not found.  */
 
-char *
+const char *
 sparc_decode_membar (value)
      int value;
 {
@@ -1845,14 +1852,14 @@ static arg prefetch_table[] =
 
 int
 sparc_encode_prefetch (name)
-     char *name;
+     const char *name;
 {
   return lookup_name (prefetch_table, name);
 }
 
 /* Return the name for prefetch value VALUE or NULL if not found.  */
 
-char *
+const char *
 sparc_decode_prefetch (value)
      int value;
 {
@@ -1874,14 +1881,14 @@ static arg sparclet_cpreg_table[] =
 
 int
 sparc_encode_sparclet_cpreg (name)
-     char *name;
+     const char *name;
 {
   return lookup_name (sparclet_cpreg_table, name);
 }
 
 /* Return the name for sparclet cpreg value VALUE or NULL if not found.  */
 
-char *
+const char *
 sparc_decode_sparclet_cpreg (value)
      int value;
 {

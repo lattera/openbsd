@@ -1,5 +1,5 @@
 /* BFD back-end for binary objects.
-   Copyright 1994 Free Software Foundation, Inc.
+   Copyright 1994, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support, <ian@cygnus.com>
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -229,7 +229,7 @@ binary_get_symbol_info (ignore_abfd, symbol, ret)
   bfd_symbol_info (symbol, ret);
 }
 
-#define binary_bfd_is_local_label bfd_generic_is_local_label
+#define binary_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define binary_get_lineno _bfd_nosymbols_get_lineno
 #define binary_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define binary_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol
@@ -263,18 +263,23 @@ binary_set_section_contents (abfd, sec, data, offset, size)
 
   if (! abfd->output_has_begun)
     {
+      boolean found_low;
       bfd_vma low;
       asection *s;
 
       /* The lowest section LMA sets the virtual address of the start
          of the file.  We use this to set the file position of all the
          sections.  */
-      low = abfd->sections->lma;
-      for (s = abfd->sections->next; s != NULL; s = s->next)
+      found_low = false;
+      low = 0;
+      for (s = abfd->sections; s != NULL; s = s->next)
 	if (((s->flags & (SEC_HAS_CONTENTS | SEC_LOAD | SEC_ALLOC))
-	     ==  (SEC_HAS_CONTENTS | SEC_LOAD | SEC_ALLOC))
-	    && s->lma < low)
-	  low = s->lma;
+	     == (SEC_HAS_CONTENTS | SEC_LOAD | SEC_ALLOC))
+	    && (! found_low || s->lma < low))
+	  {
+	    low = s->lma;
+	    found_low = true;
+	  }
 
       for (s = abfd->sections; s != NULL; s = s->next)
 	s->filepos = s->lma - low;

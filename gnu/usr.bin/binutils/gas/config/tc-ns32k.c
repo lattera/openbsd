@@ -1,5 +1,5 @@
 /* ns32k.c  -- Assemble on the National Semiconductor 32k series
-   Copyright (C) 1987, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -1421,8 +1421,8 @@ convert_iif ()
 					 ? inst_opcode
 					 : (char *) opcode_location));
 			  if (first)
-			    old_frag->fr_pcrel_adjust = (char) size_so_far;
-			  old_frag->fr_bsr = iif.iifP[i].bsr;
+			    old_frag->fr_targ.ns32k.pcrel_adjust = (char) size_so_far;
+			  old_frag->fr_targ.ns32k.bsr = iif.iifP[i].bsr;
 			}
 
 			if (first) {
@@ -1896,7 +1896,7 @@ int md_pcrel_adjust (fragS *fragP)
   int ret;
   int st = fragP->fr_subtype;
   unsigned int opcode_address;
-  if ((st >> 2) == BRANCH && fragP->fr_pcrel_adjust == 0) {
+  if ((st >> 2) == BRANCH && fragP->fr_targ.ns32k.pcrel_adjust == 0) {
     unsigned int offset;
     opcode_frag = ((struct opcode_location *) fragP->fr_opcode)->fragP;
     offset = ((struct opcode_location *) fragP->fr_opcode)->offset;
@@ -1904,7 +1904,7 @@ int md_pcrel_adjust (fragS *fragP)
     ret = fragP->fr_address - opcode_address;
   }
   else
-    ret = fragP->fr_pcrel_adjust;
+    ret = fragP->fr_targ.ns32k.pcrel_adjust;
   return ret;
 }
 
@@ -2068,10 +2068,10 @@ md_estimate_size_before_relax (fragP, segment)
 			 fragP->fr_symbol,
 			 fragP->fr_offset,
 			 1,
-			 fragP->fr_pcrel_adjust,
+			 fragP->fr_targ.ns32k.pcrel_adjust,
 			 1,
 			 0,
-			 fragP->fr_bsr);	/*sequent hack */
+			 fragP->fr_targ.ns32k.bsr);	/*sequent hack */
 	  fragP->fr_fix += 4;
 	  /* fragP->fr_opcode[1]=0xff; */
 	  frag_wane (fragP);
@@ -2297,7 +2297,7 @@ md_pcrel_from (fixP)
   long res;
   res = fixP->fx_where + fixP->fx_frag->fr_address;
 #ifdef SEQUENT_COMPATABILITY
-  if (fixP->fx_frag->fr_bsr)
+  if (fixP->fx_frag->fr_targ.ns32k.bsr)
     res += 0x12			/* FOO Kludge alert! */
 #endif
       return res;
@@ -2315,8 +2315,7 @@ tc_gen_reloc (section, fixp)
 
   code = reloc(fixp->fx_size, fixp->fx_pcrel, fixp->fx_im_disp);
 
-  rel = (arelent *) bfd_alloc_by_size_t (stdoutput, sizeof (arelent));
-  assert (rel != 0);
+  rel = (arelent *) xmalloc (sizeof (arelent));
   rel->sym_ptr_ptr = &fixp->fx_addsy->bsym;
   rel->address = fixp->fx_frag->fr_address + fixp->fx_where;
   if (fixp->fx_pcrel)

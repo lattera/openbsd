@@ -1,5 +1,5 @@
 /* expr.h -> header file for expr.c
-   Copyright (C) 1987, 1992, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1987, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +14,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 /*
  * By popular demand, we define a struct to represent an expression.
@@ -113,8 +114,14 @@ typedef struct expressionS
   struct symbol *X_op_symbol;
   /* A number to add.  */
   offsetT X_add_number;
-  /* The type of the expression.  */
+  /* The type of the expression.  We can't assume that an arbitrary
+     compiler can handle a bitfield of enum type.  FIXME: We could
+     check this using autoconf.  */
+#ifdef __GNUC__
+  operatorT X_op : 5;
+#else
   unsigned X_op : 5;
+#endif
   /* Non-zero if X_add_number should be regarded as unsigned.  This is
      only valid for O_constant expressions.  It is only used when an
      O_constant must be extended into a bignum (i.e., it is not used

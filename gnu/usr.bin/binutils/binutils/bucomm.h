@@ -1,5 +1,5 @@
 /* bucomm.h -- binutils common include file.
-   Copyright (C) 1992, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -74,6 +74,10 @@ extern char *sbrk ();
 #endif
 #endif
 
+#ifdef NEED_DECLARATION_GETENV
+extern char *getenv ();
+#endif
+
 #ifndef O_RDONLY
 #define O_RDONLY 0
 #endif
@@ -92,12 +96,31 @@ extern char *sbrk ();
 #define SEEK_END 2
 #endif
 
+#ifdef __GNUC__
+# undef alloca
+# define alloca __builtin_alloca
+#else
+# if HAVE_ALLOCA_H
+#  include <alloca.h>
+# else
+#  ifndef alloca /* predefined by HP cc +Olibcalls */
+#   if !defined (__STDC__) && !defined (__hpux)
+char *alloca ();
+#   else
+void *alloca ();
+#   endif /* __STDC__, __hpux */
+#  endif /* alloca */
+# endif /* HAVE_ALLOCA_H */
+#endif
+
 /* bucomm.c */
 void bfd_nonfatal PARAMS ((CONST char *));
 
 void bfd_fatal PARAMS ((CONST char *));
 
 void fatal PARAMS ((CONST char *, ...));
+
+void set_default_bfd_target PARAMS ((void));
 
 void list_matching_formats PARAMS ((char **p));
 

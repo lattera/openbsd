@@ -7,48 +7,27 @@ The linker (ld) has been moved into a separate directory, which should be
 As of version 2.5, the assembler (as) is also included in this package, in
 ../gas.  Assembler-specific notes can be found in ../gas/README.
 
-These programs have been tested on various architectures.
-However, since this is a beta release taken directly from an
-evolving source tree, there might be some problems.  In particular,
-the programs have not been ported to as many machines as the
-old binutils.  There are also features of the old versions
-that are missing on the new programs.  We would appreciate
-patches to make things run on other machines; especially welcome
-are fixes for what used to work on the old programs!
-(See ./TODO, as well a ../bfd/TODO and ../ld/TODO.)
-
 Recent changes are in ./NEWS, ../ld/NEWS, and ../gas/NEWS.
 
 Unpacking and Installation -- quick overview
-==========================
+============================================
 
-In this release, the binary utilities, the linker, the generic GNU include
-files, the BFD ("binary file description") library, gprof, and getopt all
-have directories of their own underneath the binutils-2.7 directory.
-The idea is that a variety of GNU tools can
-share a common copy of these things.  Configuration scripts and
-makefiles exist to cruise up and down this directory tree and
-automatically build all the pieces in the right order.
-
-When you unpack the binutils-2.7.tar.gz file, you'll get a directory
-called something like `binutils-2.7', which contains:
-
-	COPYING          bfd/             configure*       libiberty/
-	COPYING.LIB      binutils/        configure.in     move-if-change*
-	CYGNUS           build-all.mk     etc/             opcodes/
-	ChangeLog        config/          gprof/           test-build.mk
-	Makefile.in      config.guess*    inc
+When you unpack the binutils-2.8.tar.gz file, you'll get a directory
+called something like `binutils-2.8', which contains various files and
+directories.  Most of the files in the top directory are for
+information and for configuration.  The actual source code is in
+subdirectories.
 
 To build binutils, you can just do:
 
-	cd binutils-2.7
+	cd binutils-2.8
 	./configure [ --enable-targets='target1,target2...' ]
 	make
 	make install # copies the programs files into /usr/local/bin
 		     # by default.
 
-This will configure and build all the libraries as well as binutils
-and the linker.
+This will configure and build all the libraries as well as the
+assembler, the binutils, and the linker.
 
 The --enable-targets option adds support for more binary file
 formats besides the default.  By default, support for only the
@@ -59,7 +38,7 @@ commas.  For example:
 	./configure --enable-targets=sun3,rs6000-aix,decstation
 
 The name 'all' compiles in support for all valid BFD targets (this was
-the default in previous releases):
+the default in releases before 2.3):
 
 	./configure --enable-targets=all
 
@@ -71,8 +50,8 @@ configure.  This will build the BFD and opcodes libraries as shared
 libraries.  This will only work on certain systems, and currently will
 only work when compiling with gcc.  You can use arguments with the
 --enable-shared option to indicate that only certain libraries should
-be built shared; for example, --enable-shared=bfd.  The only
-possibilities in a binutils release are bfd and opcodes.
+be built shared; for example, --enable-shared=bfd.  The only potential
+shared libraries in a binutils release are bfd and opcodes.
 
 The binutils will be linked against the shared libraries.  The build
 step will attempt to place the correct library in the runtime search
@@ -86,7 +65,7 @@ a single shared library will be built containing the bfd, opcodes, and
 libiberty libraries.  It will be installed as libbfd.  This option
 will make the binutils programs as small as possible.
 
-To build under openVMS/AXP, see the file make-all.com in the top level
+To build under openVMS/AXP, see the file makefile.vms in the top level
 directory.
 
 If you don't have ar
@@ -110,7 +89,7 @@ the ranlib program in order to build the distribution.
 
 Porting
 =======
-Binutils-2.7 supports many different architectures, but there
+Binutils-2.8 supports many different architectures, but there
 are many more not supported, including some that were supported
 by earlier versions.  We are hoping for volunteers to
 improve this situation.
@@ -120,18 +99,9 @@ architecture involves the BFD library.  There is some documentation
 in ../bfd/doc.  The file ../gdb/doc/gdbint.texinfo (distributed
 with gdb-4.x) may also be of help.
 
-If your system uses some variant of old-style a.out-format,
-you can start with a copy of bfd/newsos3.c, and edit it to fit.
-(You may also need to tweak bfd/aout-target.h.)
-Alternatively, you could use the host-aout.c target.  This is a
-special kludge that only works for native (non-cross) configurations.
-
 Reporting bugs
 ==============
-If you can't track down a bug and send suggestions/patches
-for fixes, you should probably *not* be using this release.
-We have little time to spend tracking down whatever random bugs you
-may run into (except for configurations that Cygnus supports for
-its customers).  The general place to send bug reports or patches
-is to bug-gnu-utils@prep.ai.mit.edu; you can also send them directly
-to raeburn@cygnus.com or ian@cygnus.com.
+Send bug reports and patches to bug-gnu-utils@prep.ai.mit.edu.  Always
+mention the version number you are running; this is printed by running
+any of the binutils with the --version option.  We appreciate reports
+about bugs, but we do not promise to fix them.

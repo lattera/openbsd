@@ -1,6 +1,6 @@
 #objdump: -dr --prefix-addresses
 #name: MIPS ulh-xgot
-#as: -mips1 -KPIC -xgot
+#as: -mips1 -KPIC -xgot -EB --defsym XGOT=1
 #source: ulh-pic.s
 
 # Test the unaligned load and store macros with -KPIC -xgot.

@@ -1,5 +1,5 @@
 /* BFD back-end definitions used by all NetBSD targets.
-   Copyright (C) 1990, 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -18,10 +18,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* NetBSD fits its header into the start of its text segment */
-#define	N_HEADER_IN_TEXT(x)	1
+/* This is the normal load address for executables. */
 #define TEXT_START_ADDR		TARGET_PAGE_SIZE
 
+/* NetBSD ZMAGIC has its header in the text segment.  */
+#define N_HEADER_IN_TEXT(x)	1
+
+/* Determine if this is a shared library using the flags. */
+#define N_SHARED_LIB(x) 	(N_DYNAMIC(x))
+
+/* We have 6 bits of flags and 10 bits of machine ID.  */
 #define N_MACHTYPE(exec) \
 	((enum machine_type)(((exec).a_info >> 16) & 0x03ff))
 #define N_FLAGS(exec) \
@@ -47,6 +53,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
    format.  */
 #define SWAP_MAGIC(ext) bfd_getb32 (ext)
 
+/* On NetBSD, the entry point may be taken to be the start of the text
+   section.  */
+#define MY_entry_is_text_address 1
 
 #define MY_write_object_contents MY(write_object_contents)
 static boolean MY(write_object_contents) PARAMS ((bfd *abfd));

@@ -1,5 +1,5 @@
 # Expect script for ld-shared tests
-#   Copyright (C) 1994, 1995, 1996 Free Software Foundation
+#   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -139,7 +139,7 @@ proc shared_test { progname testname main sh1 sh2 dat } {
     send_log "diff $tmpdir/$progname.out $srcdir/$subdir/$dat.dat\n"
     verbose "diff $tmpdir/$progname.out $srcdir/$subdir/$dat.dat"
     catch "exec diff $tmpdir/$progname.out $srcdir/$subdir/$dat.dat" exec_output
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    set exec_output [prune_warnings $exec_output]
 
     if {![string match "" $exec_output]} then {
 	send_log "$exec_output\n"

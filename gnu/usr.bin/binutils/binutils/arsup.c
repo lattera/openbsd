@@ -1,5 +1,5 @@
 /* arsup.c - Archive support for MRI compatibility
-   Copyright (C) 1992 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -37,8 +37,6 @@ static void ar_directory_doer PARAMS ((bfd *, bfd *));
 static void ar_addlib_doer PARAMS ((bfd *, bfd *));
 
 extern int verbose;
-
-extern char *strdup();
 
 static void
 map_over_list (arch, function, list)
@@ -159,7 +157,7 @@ DEFUN(ar_open,(name, t),
       int t)
 
 {
-  char *tname = (char *) malloc(strlen(name)+10);
+  char *tname = (char *) xmalloc (strlen (name) + 10);
   real_name = name;
   sprintf(tname, "%s-tmp", name);
   obfd = bfd_openw(tname, NULL);
@@ -319,7 +317,7 @@ DEFUN_VOID(ar_save)
     maybequit();
   }
   else {
-    char *ofilename = strdup(bfd_get_filename (obfd));
+    char *ofilename = xstrdup (bfd_get_filename (obfd));
     bfd_close(obfd);
     
     rename (ofilename, real_name);

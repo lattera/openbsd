@@ -326,6 +326,9 @@ extern void bfd_mips_elf32_swap_reginfo_out
 #define STO_INTERNAL		0x01
 #define STO_HIDDEN		0x02
 #define STO_PROTECTED		0x03
+
+/* This value is used for a mips16 .text symbol.  */
+#define STO_MIPS16		0xf0
 
 /* The 64-bit MIPS ELF ABI uses an usual reloc format.  Each
    relocation entry specifies up to three actual relocations, all at

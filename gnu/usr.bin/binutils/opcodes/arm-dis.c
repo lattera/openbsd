@@ -1,5 +1,5 @@
 /* Instruction printing code for the ARM
-   Copyright (C) 1994 Free Software Foundation, Inc. 
+   Copyright (C) 1994, 95, 96, 1997 Free Software Foundation, Inc. 
    Contributed by Richard Earnshaw (rwe@pegasus.esprit.ec.org)
 
 This file is part of libopcodes. 
@@ -14,10 +14,9 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 more details. 
 
-You should have received a copy of the GNU General Public License along with
-This program; if not, write to the Free Software Foundation, Inc., 675
- Mass Ave, Boston, MA 02111-1307, USA.  
-*/
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "dis-asm.h"
 #define DEFINE_TABLE
@@ -80,8 +79,6 @@ print_insn_arm (pc, info, given)
   struct arm_opcode *insn;
   void *stream = info->stream;
   fprintf_ftype func = info->fprintf_func;
-
-  func (stream, "%08x\t", given);
 
   for (insn = arm_opcodes; insn->assembler; insn++)
     {
@@ -489,6 +486,9 @@ print_insn_big_arm (pc, info)
   long given;
   int status;
 
+  info->bytes_per_chunk = 4;
+  info->display_endian = BFD_ENDIAN_BIG;
+
   status = (*info->read_memory_func) (pc, (bfd_byte *) &b[0], 4, info);
   if (status != 0)
     {
@@ -509,6 +509,9 @@ print_insn_little_arm (pc, info)
   unsigned char b[4];
   long given;
   int status;
+
+  info->bytes_per_chunk = 4;
+  info->display_endian = BFD_ENDIAN_LITTLE;
 
   status = (*info->read_memory_func) (pc, (bfd_byte *) &b[0], 4, info);
   if (status != 0)

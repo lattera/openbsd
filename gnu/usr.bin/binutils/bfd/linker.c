@@ -1,5 +1,5 @@
 /* linker.c -- BFD linker routines
-   Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain and Ian Lance Taylor, Cygnus Support
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -395,8 +395,7 @@ SUBSUBSECTION
 	is used to further controls which local symbols are included
 	in the output file.  If the value is <<discard_l>>, then all
 	local symbols which begin with a certain prefix are discarded;
-	this prefix is described by the <<lprefix>> and
-	<<lprefix_len>> fields of the <<bfd_link_info>> structure.
+	this is controlled by the <<bfd_is_local_label_name>> entry point.
 
 	The a.out backend handles symbols by calling
 	<<aout_link_write_symbols>> on each input BFD and then
@@ -2273,10 +2272,7 @@ _bfd_generic_link_output_symbols (output_bfd, input_bfd, info, psymalloc)
 		  output = false;
 		  break;
 		case discard_l:
-		  if (bfd_asymbol_name (sym)[0] == info->lprefix[0]
-		      && (info->lprefix_len == 1
-			  || strncmp (bfd_asymbol_name (sym), info->lprefix,
-				      info->lprefix_len) == 0))
+		  if (bfd_is_local_label (input_bfd, sym))
 		    output = false;
 		  else
 		    output = true;
@@ -2544,7 +2540,7 @@ bfd_new_link_order (abfd, section)
   struct bfd_link_order *new;
 
   new = ((struct bfd_link_order *)
-	 bfd_alloc_by_size_t (abfd, sizeof (struct bfd_link_order)));
+	 bfd_alloc (abfd, sizeof (struct bfd_link_order)));
   if (!new)
     return NULL;
 

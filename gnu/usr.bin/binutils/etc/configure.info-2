@@ -1,4 +1,4 @@
-This is Info file configure.info, produced by Makeinfo-1.55 from the
+This is Info file configure.info, produced by Makeinfo-1.64 from the
 input file ./configure.texi.
 
 START-INFO-DIR-ENTRY
@@ -339,7 +339,7 @@ Variable Index
 * docdir:                               Install details.
 * enable-FEATURE:                       Invoking configure.
 * exec-prefix:                          Invoking configure.
-* exec_prefix:                          exec_prefix.
+* exec_prefix <1>:                      exec_prefix.
 * exec_prefix:                          Install details.
 * files:                                configure variables.
 * floating_point:                       configure variables.
@@ -360,21 +360,21 @@ Variable Index
 * nfp:                                  Invoking configure.
 * norecursion:                          Invoking configure.
 * package_makefile_frag:                configure variables.
-* prefix:                               prefix.
-* prefix:                               Install details.
+* prefix <1>:                           prefix.
+* prefix <2>:                           Install details.
 * prefix:                               Invoking configure.
 * program-prefix:                       Invoking configure.
 * removing:                             configure variables.
 * rm:                                   Invoking configure.
 * site:                                 Invoking configure.
 * site_makefile_frag:                   configure variables.
-* srcdir:                               configure variables.
-* srcdir:                               What configure does.
+* srcdir <1>:                           configure variables.
+* srcdir <2>:                           What configure does.
 * srcdir:                               Invoking configure.
 * srcname:                              configure variables.
 * srctrigger:                           configure variables.
 * subdirs:                              configure variables.
-* target:                               Invoking configure.
+* target <1>:                           Invoking configure.
 * target:                               configure variables.
 * target_cpu:                           configure variables.
 * target_makefile_frag:                 configure variables.
@@ -417,7 +417,7 @@ Concept Index
 * bindir:                               Install details.
 * config.guess:                         config.guess.
 * config.guess definition:              What configure really does.
-* config.status:                        config.status.
+* config.status <1>:                    config.status.
 * config.status:                        What configure does.
 * config.status definition:             What configure really does.
 * config.sub definition:                What configure really does.
@@ -441,22 +441,22 @@ Concept Index
 * Makefile.in definition:               What configure really does.
 * Makefile extensions:                  Makefile extensions.
 * Makefile fragments:                   Makefile fragments.
-* Makefile generation:                  Makefile generation.
+* Makefile generation <1>:              Makefile generation.
 * Makefile generation:                  What configure does.
 * manNdir:                              Install details.
 * manNext:                              Install details.
 * mandir:                               Install details.
-* nfp option:                           Invoking configure.
+* nfp option <1>:                       Invoking configure.
 * nfp option:                           configure variables.
 * norecursion option:                   Invoking configure.
 * prefix:                               Install details.
-* prefix option:                        Invoking configure.
+* prefix option <1>:                    Invoking configure.
 * prefix option:                        prefix.
 * program-prefix option:                Invoking configure.
-* rm option:                            Invoking configure.
+* rm option <1>:                        Invoking configure.
 * rm option:                            configure variables.
 * site option:                          Invoking configure.
-* srcdir:                               configure variables.
+* srcdir <1>:                           configure variables.
 * srcdir:                               What configure does.
 * srcdir option:                        Invoking configure.
 * srcname:                              configure variables.
@@ -473,28 +473,27 @@ Concept Index
 * without-PACKAGE option:               Invoking configure.
 * configure.in interface:               configure variables.
 * host shell-script fragment:           per-host.
-* per-host section:                     per-host.
+* per-host section <1>:                 per-host.
 * per-host section:                     configure.in.
-* per-invocation section:               configure.in.
+* per-invocation section <1>:           configure.in.
 * per-invocation section:               Declarations.
-* per-target section:                   configure.in.
+* per-target section <1>:               configure.in.
 * per-target section:                   per-target.
-* post-target section:                  configure.in.
+* post-target section <1>:              configure.in.
 * post-target section:                  post-target.
 * Abbreviating option names:            Invoking configure.
 * Adding configure to new programs:     Programs.
 * Adding hosts and targets:             Hosts and targets.
 * Adding local info:                    Makefile fragments.
-* Adding site info:                     Sites.
+* Adding site info <1>:                 Sites.
 * Adding site info:                     Makefile fragments.
 * Behind the scenes:                    What configure really does.
 * BISON:                                Makefile extensions.
-* Build directories:                    What configure does.
+* Build directories <1>:                What configure does.
 * Build directories:                    Build directories.
 * Build variables:                      Build variables.
 * Building for multiple hosts:          Build directories.
 * Building for multiple targets:        Build directories.
-* Canonical "triple":                   configure variables.
 * Canonical "triple":                   configure variables.
 * Changing the install directory:       prefix.
 * clean:                                Makefile extensions.
@@ -503,7 +502,7 @@ Concept Index
 * configure variables:                  configure variables.
 * Configuring for multiple hosts:       exec_prefix.
 * Cygnus extensions:                    Makefile extensions.
-* Cygnus Support Developer's Kit:       What configure does.
+* Cygnus Support Developer's Kit <1>:   What configure does.
 * Cygnus Support Developer's Kit:       Build variables.
 * datadir:                              Makefile extensions.
 * Declarations section:                 Declarations.
@@ -511,14 +510,12 @@ Concept Index
 * Detailed usage:                       Using configure.
 * docdir:                               Makefile extensions.
 * Example configure.in:                 Example.
-* Example session:                      Build directories.
-* Example session:                      Build directories.
-* Example session:                      exec_prefix.
-* Example session:                      Build variables.
-* Example session:                      Makefile extensions.
-* Example session:                      What configure really does.
-* Example session:                      Sites.
-* Example session:                      Invoking configure.
+* Example session <1>:                  Build directories.
+* Example session <2>:                  exec_prefix.
+* Example session <3>:                  Build variables.
+* Example session <4>:                  Makefile extensions.
+* Example session <5>:                  What configure really does.
+* Example session <6>:                  Sites.
 * Example session:                      Invoking configure.
 * For each invocation:                  Declarations.
 * Host:                                 Host.
@@ -549,8 +546,7 @@ Concept Index
 * Sharing host-independent files:       exec_prefix.
 * Sites:                                Sites.
 * Subdirectories:                       Install details.
-* Symbolic links:                       What configure does.
-* Symbolic links:                       configure variables.
+* Symbolic links <1>:                   What configure does.
 * Symbolic links:                       configure variables.
 * Target:                               Target.
 * target shell-script fragment:         per-target.
@@ -558,12 +554,10 @@ Concept Index
 * The exec_prefix directory:            exec_prefix.
 * Truncating option names:              Invoking configure.
 * Usage:                                Invoking configure.
-* Usage:                                Invoking configure.
 * Usage: detailed:                      Using configure.
 * Using configure:                      Using configure.
 * Variables:                            Build variables.
 * Verbose Output:                       Invoking configure.
-* version:                              Invoking configure.
 * version:                              Invoking configure.
 * What configure does:                  What configure does.
 * What configure really does:           What configure really does.

@@ -1,6 +1,6 @@
 /* messages.c - error reporter -
-   Copyright (C) 1987, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
-
+   Copyright (C) 1987, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
    This file is part of GAS, the GNU Assembler.
 
    GAS is free software; you can redistribute it and/or modify
@@ -42,6 +42,7 @@ typedef int * va_list;
 #define va_end(ARGS)
 #endif
 
+static void identify PARAMS ((char *));
 static void as_show_where PARAMS ((void));
 static void as_warn_internal PARAMS ((char *, unsigned int, char *));
 static void as_bad_internal PARAMS ((char *, unsigned int, char *));

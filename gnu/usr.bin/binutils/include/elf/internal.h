@@ -1,5 +1,5 @@
 /* ELF support for BFD.
-   Copyright (C) 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
    Written by Fred Fish @ Cygnus Support, from information published
    in "UNIX System V Release 4, Programmers Guide: ANSI C and
@@ -174,6 +174,99 @@ typedef struct elf_internal_dyn {
 #define elf64_internal_dyn elf_internal_dyn
 #define Elf32_Internal_Dyn Elf_Internal_Dyn
 #define Elf64_Internal_Dyn Elf_Internal_Dyn
+
+/* This structure appears in a SHT_GNU_verdef section.  */
+
+typedef struct elf_internal_verdef {
+  unsigned short vd_version;	/* Version number of structure.  */
+  unsigned short vd_flags;	/* Flags (VER_FLG_*).  */
+  unsigned short vd_ndx;	/* Version index.  */
+  unsigned short vd_cnt;	/* Number of verdaux entries.  */
+  unsigned long	 vd_hash;	/* Hash of name.  */
+  unsigned long	 vd_aux;	/* Offset to verdaux entries.  */
+  unsigned long	 vd_next;	/* Offset to next verdef.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  bfd			      *vd_bfd;		/* BFD.  */
+  const char		      *vd_nodename;	/* Version name.  */
+  struct elf_internal_verdef  *vd_nextdef;	/* vd_next as pointer.  */
+  struct elf_internal_verdaux *vd_auxptr;	/* vd_aux as pointer.  */
+  unsigned int		       vd_exp_refno;	/* Used by the linker.  */
+} Elf_Internal_Verdef;
+
+/* This structure appears in a SHT_GNU_verdef section.  */
+
+typedef struct elf_internal_verdaux {
+  unsigned long vda_name;	/* String table offset of name.  */
+  unsigned long vda_next;	/* Offset to next verdaux.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  const char *vda_nodename;			/* vda_name as pointer.  */
+  struct elf_internal_verdaux *vda_nextptr;	/* vda_next as pointer.  */
+} Elf_Internal_Verdaux;
+ 
+/* This structure appears in a SHT_GNU_verneed section.  */
+
+typedef struct elf_internal_verneed {
+  unsigned short vn_version;	/* Version number of structure.  */
+  unsigned short vn_cnt;	/* Number of vernaux entries.  */
+  unsigned long	 vn_file;	/* String table offset of library name.  */
+  unsigned long	 vn_aux;	/* Offset to vernaux entries.  */
+  unsigned long	 vn_next;	/* Offset to next verneed.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  bfd			      *vn_bfd;		/* BFD.  */
+  const char                  *vn_filename;	/* vn_file as pointer.  */
+  struct elf_internal_vernaux *vn_auxptr;	/* vn_aux as pointer.  */
+  struct elf_internal_verneed *vn_nextref;	/* vn_nextref as pointer.  */
+} Elf_Internal_Verneed;
+
+/* This structure appears in a SHT_GNU_verneed section.  */
+
+typedef struct elf_internal_vernaux {
+  unsigned long	 vna_hash;	/* Hash of dependency name.  */
+  unsigned short vna_flags;	/* Flags (VER_FLG_*).  */
+  unsigned short vna_other;	/* Unused.  */
+  unsigned long	 vna_name;	/* String table offset to version name.  */
+  unsigned long	 vna_next;	/* Offset to next vernaux.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  const char                  *vna_nodename;	/* vna_name as pointer.  */
+  struct elf_internal_vernaux *vna_nextptr;	/* vna_next as pointer.  */
+} Elf_Internal_Vernaux;
+
+/* This structure appears in a SHT_GNU_versym section.  This is not a
+   standard ELF structure; ELF just uses Elf32_Half.  */
+
+typedef struct elf_internal_versym {
+  unsigned short vs_vers;
+} Elf_Internal_Versym;
+
+#define elf32_internal_verdef elf_internal_verdef
+#define elf64_internal_verdef elf_internal_verdef
+#define elf32_internal_verdaux elf_internal_verdaux
+#define elf64_internal_verdaux elf_internal_verdaux
+#define elf32_internal_verneed elf_internal_verneed
+#define elf64_internal_verneed elf_internal_verneed
+#define elf32_internal_vernaux elf_internal_vernaux
+#define elf64_internal_vernaux elf_internal_vernaux
+#define elf32_internal_versym elf_internal_versym
+#define elf64_internal_versym elf_internal_versym
+
+#define Elf32_Internal_Verdef Elf_Internal_Verdef
+#define Elf64_Internal_Verdef Elf_Internal_Verdef
+#define Elf32_Internal_Verdaux Elf_Internal_Verdaux
+#define Elf64_Internal_Verdaux Elf_Internal_Verdaux
+#define Elf32_Internal_Verneed Elf_Internal_Verneed
+#define Elf64_Internal_Verneed Elf_Internal_Verneed
+#define Elf32_Internal_Vernaux Elf_Internal_Vernaux
+#define Elf64_Internal_Vernaux Elf_Internal_Vernaux
+#define Elf32_Internal_Versym Elf_Internal_Versym
+#define Elf64_Internal_Versym Elf_Internal_Versym
 
 /* This structure is used to describe how sections should be assigned
    to program segments.  */

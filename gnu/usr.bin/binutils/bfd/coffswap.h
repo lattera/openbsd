@@ -810,12 +810,11 @@ coff_swap_scnhdr_out (abfd, in, out)
 
       memcpy (buf, scnhdr_int->s_name, sizeof (scnhdr_int->s_name));
       buf[sizeof (scnhdr_int->s_name)] = '\0';
-      (*_bfd_error_handler) ("%s: %s: line number overflow: 0x%lx > 0xffff",
-			     bfd_get_filename (abfd),
-			     buf, scnhdr_int->s_nlnno);
-      bfd_set_error (bfd_error_file_truncated);
+      (*_bfd_error_handler)
+	("%s: warning: %s: line number overflow: 0x%lx > 0xffff",
+	 bfd_get_filename (abfd),
+	 buf, scnhdr_int->s_nlnno);
       PUTHALF (abfd, 0xffff, (bfd_byte *) scnhdr_ext->s_nlnno);
-      ret = 0;
     }
   if (scnhdr_int->s_nreloc <= 0xffff)
     PUTHALF(abfd, scnhdr_int->s_nreloc, (bfd_byte *) scnhdr_ext->s_nreloc);

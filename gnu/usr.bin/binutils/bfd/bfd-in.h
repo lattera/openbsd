@@ -1,5 +1,5 @@
 /* Main header file for the bfd library -- portable access to object files.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
 
 ** NOTE: bfd.h and bfd-in2.h are GENERATED files.  Don't change them;
@@ -49,7 +49,6 @@ extern "C" {
 #endif
 
 #include "ansidecl.h"
-#include "obstack.h"
 
 /* These two lines get substitutions done by commands in Makefile.in.  */
 #define BFD_VERSION  "@VERSION@"
@@ -380,8 +379,9 @@ struct bfd_hash_table
   struct bfd_hash_entry *(*newfunc) PARAMS ((struct bfd_hash_entry *,
 					     struct bfd_hash_table *,
 					     const char *));
-  /* An obstack for this hash table.  */
-  struct obstack memory;
+   /* An objalloc for this hash table.  This is a struct objalloc *,
+     but we use PTR to avoid requiring the inclusion of objalloc.h.  */
+  PTR memory;
 };
 
 /* Initialize a hash table.  */
@@ -539,6 +539,7 @@ struct ecoff_extr;
 struct symbol_cache_entry;
 struct bfd_link_info;
 struct bfd_link_hash_entry;
+struct bfd_elf_version_tree;
 #endif
 extern bfd_vma bfd_ecoff_get_gp_value PARAMS ((bfd * abfd));
 extern boolean bfd_ecoff_set_gp_value PARAMS ((bfd *abfd, bfd_vma gp_value));
@@ -605,11 +606,13 @@ extern boolean bfd_elf64_record_link_assignment
 extern struct bfd_link_needed_list *bfd_elf_get_needed_list
   PARAMS ((bfd *, struct bfd_link_info *));
 extern boolean bfd_elf32_size_dynamic_sections
-  PARAMS ((bfd *, const char *, const char *, boolean,
-	   struct bfd_link_info *, struct sec **));
+  PARAMS ((bfd *, const char *, const char *, boolean, const char *,
+	   const char * const *, struct bfd_link_info *, struct sec **,
+	   struct bfd_elf_version_tree *));
 extern boolean bfd_elf64_size_dynamic_sections
-  PARAMS ((bfd *, const char *, const char *, boolean,
-	   struct bfd_link_info *, struct sec **));
+  PARAMS ((bfd *, const char *, const char *, boolean, const char *,
+	   const char * const *, struct bfd_link_info *, struct sec **,
+	   struct bfd_elf_version_tree *));
 extern void bfd_elf_set_dt_needed_name PARAMS ((bfd *, const char *));
 extern const char *bfd_elf_get_dt_soname PARAMS ((bfd *));
 
@@ -628,6 +631,8 @@ extern boolean bfd_sunos_size_dynamic_sections
 extern boolean bfd_i386linux_size_dynamic_sections
   PARAMS ((bfd *, struct bfd_link_info *));
 extern boolean bfd_m68klinux_size_dynamic_sections
+  PARAMS ((bfd *, struct bfd_link_info *));
+extern boolean bfd_sparclinux_size_dynamic_sections
   PARAMS ((bfd *, struct bfd_link_info *));
 
 /* mmap hacks */

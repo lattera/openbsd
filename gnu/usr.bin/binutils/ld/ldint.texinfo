@@ -43,7 +43,7 @@ regarded as a program in the language TeX).
 
 @tex
 \def\$#1${{#1}}  % Kluge: collect RCS revision info without $...$
-\xdef\manvers{\$Revision: 1.9 $}  % For use in headers, footers too
+\xdef\manvers{\$Revision: 1.10 $}  % For use in headers, footers too
 {\parskip=0pt
 \hfill Cygnus Support\par
 \hfill \manvers\par
@@ -163,7 +163,7 @@ as well as some conventional shell variables interpreted by the
 
 @table @code
 @item SCRIPT_NAME
-This is the name of the @file{scripttempl} scritp to use.  If
+This is the name of the @file{scripttempl} script to use.  If
 @code{SCRIPT_NAME} is set to @var{script}, @file{genscripts.sh} will use
 the script @file{scriptteml/@var{script}.sc}.
 

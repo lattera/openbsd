@@ -1,5 +1,5 @@
 /* This file is tc-sh.h
-   Copyright (C) 1993, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -19,6 +19,8 @@
    Boston, MA 02111-1307, USA.  */
 
 #define TC_SH
+
+#define TARGET_BYTES_BIG_ENDIAN 0
 
 #define TARGET_ARCH bfd_arch_sh
 
@@ -51,8 +53,8 @@ extern const struct relax_type md_relax_table[];
 
 /* We use a special alignment function to insert the correct nop
    pattern.  */
-extern int sh_do_align PARAMS ((int, const char *, int));
-#define md_do_align(n,fill,len,l) if (sh_do_align (n,fill,len)) goto l
+extern int sh_do_align PARAMS ((int, const char *, int, int));
+#define md_do_align(n,fill,len,max,l) if (sh_do_align (n,fill,len,max)) goto l
 
 /* We record, for each section, whether we have most recently output a
    CODE reloc or a DATA reloc.  */

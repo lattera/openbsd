@@ -1,5 +1,5 @@
 /* BFD back-end for OSF/1 core files.
-   Copyright 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 1997 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -189,7 +189,7 @@ osf_core_core_file_matches_executable_p (core_bfd, exec_bfd)
 #define osf_core_get_symtab _bfd_nosymbols_get_symtab
 #define osf_core_print_symbol _bfd_nosymbols_print_symbol
 #define osf_core_get_symbol_info _bfd_nosymbols_get_symbol_info
-#define osf_core_bfd_is_local_label _bfd_nosymbols_bfd_is_local_label
+#define osf_core_bfd_is_local_label_name _bfd_nosymbols_bfd_is_local_label_name
 #define osf_core_get_lineno _bfd_nosymbols_get_lineno
 #define osf_core_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define osf_core_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

@@ -1,5 +1,5 @@
 /* BFD back-end for IBM RS/6000 "XCOFF" files.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    FIXME: Can someone provide a transliteration of this name into ASCII?
    Using the following chars caused a compiler warning on HIUX (so I replaced
    them with octal escapes), and isn't useful without an understanding of what
@@ -31,7 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/internal.h"
 #include "coff/rs6000.h"
 #include "libcoff.h"
@@ -40,6 +39,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 static boolean xcoff_mkobject PARAMS ((bfd *));
 static boolean xcoff_copy_private_bfd_data PARAMS ((bfd *, bfd *));
+static boolean xcoff_is_local_label_name PARAMS ((bfd *, const char *));
 static void xcoff_rtype2howto
   PARAMS ((arelent *, struct internal_reloc *));
 static reloc_howto_type *xcoff_reloc_type_lookup
@@ -53,6 +53,7 @@ static const char *normalize_filename PARAMS ((bfd *));
 static boolean xcoff_write_armap
   PARAMS ((bfd *, unsigned int, struct orl *, unsigned int, int));
 static boolean xcoff_write_archive_contents PARAMS ((bfd *));
+static int _bfd_xcoff_sizeof_headers PARAMS ((bfd *, boolean));
 
 /* We use our own tdata type.  Its first field is the COFF tdata type,
    so the COFF routines are compatible.  */
@@ -129,6 +130,19 @@ xcoff_copy_private_bfd_data (ibfd, obfd)
   ox->maxdata = ix->maxdata;
   ox->maxstack = ix->maxstack;
   return true;
+}
+
+/* I don't think XCOFF really has a notion of local labels based on
+   name.  This will mean that ld -X doesn't actually strip anything.
+   The AIX native linker does not have a -X option, and it ignores the
+   -x option.  */
+
+static boolean
+xcoff_is_local_label_name (abfd, name)
+     bfd *abfd;
+     const char *name;
+{
+  return false;
 }
 
 /* The XCOFF reloc table.  Actually, XCOFF relocations specify the
@@ -541,6 +555,7 @@ xcoff_reloc_type_lookup (abfd, code)
 
 #define coff_mkobject xcoff_mkobject
 #define coff_bfd_copy_private_bfd_data xcoff_copy_private_bfd_data
+#define coff_bfd_is_local_label_name xcoff_is_local_label_name
 #define coff_bfd_reloc_type_lookup xcoff_reloc_type_lookup
 #define coff_relocate_section _bfd_ppc_xcoff_relocate_section
 

@@ -27,7 +27,7 @@
 
 /* arparse.y - Stange script language parser */
 
-/*   Copyright (C) 1992 Free Software Foundation, Inc.
+/*   Copyright (C) 1992, 93, 95, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -52,11 +52,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 */
 #define DONTDECLARE_MALLOC
 #include "bfd.h"
-#include <sysdep.h>
+#include "bucomm.h"
 #include "arsup.h"
 extern int verbose;
+static int yyerror PARAMS ((const char *));
 
-#line 34 "./arparse.y"
+#line 35 "./arparse.y"
 typedef union {
   char *name;
 struct list *list ;
@@ -152,11 +153,11 @@ static const short yyrhs[] = {    -1,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    64,    66,    68,    70,    73,    76,    78,    79,    80,    81,
-    82,    83,    84,    85,    86,    87,    88,    89,    90,    91,
-    92,    96,   101,   106,   111,   115,   120,   125,   132,   137,
-   143,   147,   154,   157,   160,   163,   167,   174,   178,   180,
-   184
+    65,    67,    69,    71,    74,    77,    79,    80,    81,    82,
+    83,    84,    85,    86,    87,    88,    89,    90,    91,    92,
+    93,    97,   102,   107,   112,   116,   121,   126,   133,   138,
+   144,   148,   155,   158,   161,   164,   168,   175,   179,   181,
+   185
 };
 
 static const char * const yytname[] = {   "$","error","$undefined.","NEWLINE",
@@ -723,83 +724,83 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 65 "./arparse.y"
+#line 66 "./arparse.y"
 { prompt(); ;
     break;}
 case 5:
-#line 74 "./arparse.y"
+#line 75 "./arparse.y"
 { prompt(); ;
     break;}
 case 18:
-#line 89 "./arparse.y"
+#line 90 "./arparse.y"
 { ar_end(); return 0; ;
     break;}
 case 20:
-#line 91 "./arparse.y"
+#line 92 "./arparse.y"
 { yyerror("foo"); ;
     break;}
 case 22:
-#line 98 "./arparse.y"
+#line 99 "./arparse.y"
 { ar_extract(yyvsp[0].list); ;
     break;}
 case 23:
-#line 103 "./arparse.y"
+#line 104 "./arparse.y"
 { ar_replace(yyvsp[0].list); ;
     break;}
 case 24:
-#line 108 "./arparse.y"
+#line 109 "./arparse.y"
 { ar_clear(); ;
     break;}
 case 25:
-#line 113 "./arparse.y"
+#line 114 "./arparse.y"
 { ar_delete(yyvsp[0].list); ;
     break;}
 case 26:
-#line 117 "./arparse.y"
+#line 118 "./arparse.y"
 { ar_addmod(yyvsp[0].list); ;
     break;}
 case 27:
-#line 122 "./arparse.y"
+#line 123 "./arparse.y"
 { ar_list(); ;
     break;}
 case 28:
-#line 127 "./arparse.y"
+#line 128 "./arparse.y"
 { ar_save(); ;
     break;}
 case 29:
-#line 134 "./arparse.y"
+#line 135 "./arparse.y"
 { ar_open(yyvsp[0].name,0); ;
     break;}
 case 30:
-#line 139 "./arparse.y"
+#line 140 "./arparse.y"
 { ar_open(yyvsp[0].name,1); ;
     break;}
 case 31:
-#line 145 "./arparse.y"
+#line 146 "./arparse.y"
 { ar_addlib(yyvsp[-1].name,yyvsp[0].list); ;
     break;}
 case 32:
-#line 149 "./arparse.y"
+#line 150 "./arparse.y"
 { ar_directory(yyvsp[-2].name, yyvsp[-1].list, yyvsp[0].name); ;
     break;}
 case 33:
-#line 156 "./arparse.y"
+#line 157 "./arparse.y"
 { yyval.name = yyvsp[0].name; ;
     break;}
 case 34:
-#line 157 "./arparse.y"
+#line 158 "./arparse.y"
 { yyval.name = 0; ;
     break;}
 case 35:
-#line 162 "./arparse.y"
+#line 163 "./arparse.y"
 { yyval.list = yyvsp[-1].list; ;
     break;}
 case 36:
-#line 164 "./arparse.y"
+#line 165 "./arparse.y"
 { yyval.list = 0; ;
     break;}
 case 37:
-#line 169 "./arparse.y"
+#line 170 "./arparse.y"
 { 	struct list *n  = (struct list *) malloc(sizeof(struct list));
 			n->next = yyvsp[-2].list; 
 			n->name = yyvsp[0].name;
@@ -807,11 +808,11 @@ case 37:
 		 ;
     break;}
 case 38:
-#line 174 "./arparse.y"
+#line 175 "./arparse.y"
 { yyval.list = 0; ;
     break;}
 case 41:
-#line 186 "./arparse.y"
+#line 187 "./arparse.y"
 { verbose = !verbose; ;
     break;}
 }
@@ -1012,15 +1013,15 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 190 "./arparse.y"
+#line 191 "./arparse.y"
 
 
-
-int
-yyerror(x)
-char *x;
+static int
+yyerror (x)
+     const char *x;
 {
   extern int linenumber;
-  printf("Synax error in archive script, line %d\n", linenumber + 1);
+
+  printf ("Syntax error in archive script, line %d\n", linenumber + 1);
   return 0;
 }

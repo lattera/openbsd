@@ -1,4 +1,4 @@
-This is Info file gprof.info, produced by Makeinfo-1.55 from the input
+This is Info file gprof.info, produced by Makeinfo-1.64 from the input
 file ./gprof.texi.
 
 START-INFO-DIR-ENTRY
@@ -23,7 +23,7 @@ manual into another language, under the above conditions for modified
 versions.
 
 
-File: gprof.info,  Node: Top,  Next: Why,  Prev: (DIR),  Up: (DIR)
+File: gprof.info,  Node: Top,  Next: Why,  Up: (dir)
 
 Profiling a Program: Where Does It Spend Its Time?
 **************************************************
@@ -238,6 +238,12 @@ functions in the output:
      the executable file.  This option affects both the flat profile
      and the call graph.
 
+`-D'
+     The `-D' option causes `gprof' to ignore symbols which are not
+     known to be functions.  This option will give more accurate
+     profile data on systems where it is supported (Solaris and HPUX for
+     example).
+
 `-e FUNCTION_NAME'
      The `-e FUNCTION' option tells `gprof' to not print information
      about the function FUNCTION_NAME (and its children...) in the call
@@ -325,6 +331,42 @@ lists in the call graph all functions that were reached from either
 `-T'
      The `-T' option causes `gprof' to print its output in
      "traditional" BSD style.
+
+`--function-ordering'
+     The `--function-ordering' option causes `gprof' to print a
+     suggested function ordering for the program based on profiling
+     data.  This option suggests an ordering which may improve paging,
+     tlb and cache behavior for the program on systems which support
+     arbitrary ordering of functions in an executable.
+
+     The exact details of how to force the linker to place functions in
+     a particular order is system dependent and out of the scope of this
+     manual.
+
+`--file-ordering MAP_FILE'
+     The `--file-ordering' option causes `gprof' to print a suggested
+     .o link line ordering for the program based on profiling data.
+     This option suggests an ordering which may improve paging, tlb and
+     cache behavior for the program on systems which do not support
+     arbitrary ordering of functions in an executable.
+
+     Use of the `-a' argument is highly recommended with this option.
+
+     The MAP_FILE argument is a pathname to a file which provides
+     function name to object file mappings.  The format of the file is
+     similar to the output of the program `nm'.
+
+          c-parse.o:00000000 T yyparse
+          c-parse.o:00000004 C yyerrflag
+          c-lang.o:00000000 T maybe_objc_method_name
+          c-lang.o:00000000 T print_lang_statistics
+          c-lang.o:00000000 T recognize_objc_keyword
+          c-decl.o:00000000 T print_lang_identifier
+          c-decl.o:00000000 T print_lang_type
+          ...
+
+     GNU `nm' `--extern-only' `--defined-only' `-v' `--print-file-name'
+     can be used to create MAP_FILE.
 
 
 File: gprof.info,  Node: Flat Profile,  Next: Call Graph,  Prev: Invoking,  Up: Top
@@ -933,19 +975,19 @@ are a few differences.
 
 Tag Table:
 Node: Top888
-Node: Why2593
-Node: Compiling4687
-Node: Executing6671
-Node: Invoking8782
-Node: Flat Profile14056
-Node: Call Graph17742
-Node: Primary20981
-Node: Callers23514
-Node: Subroutines25621
-Node: Cycles27280
-Node: Implementation34044
-Node: Sampling Error36144
-Node: Assumptions38463
-Node: Incompatibilities39988
+Node: Why2579
+Node: Compiling4673
+Node: Executing6657
+Node: Invoking8768
+Node: Flat Profile15857
+Node: Call Graph19543
+Node: Primary22782
+Node: Callers25315
+Node: Subroutines27422
+Node: Cycles29081
+Node: Implementation35845
+Node: Sampling Error37945
+Node: Assumptions40264
+Node: Incompatibilities41789
 
 End Tag Table

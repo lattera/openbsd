@@ -1,5 +1,5 @@
 /* ELF core file support for BFD.
-   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -31,6 +31,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #else
 #define get_thread(STATUS) (((prstatus_t *)(STATUS))->pr_pid)
 #endif
+
+static boolean bfd_prstatus PARAMS ((bfd *, char *, int, long, int));
+static boolean bfd_prpsinfo PARAMS ((bfd *, char *, int, long));
+static boolean bfd_fpregset PARAMS ((bfd *, char *, int, long, int));
+static boolean elf_corefile_note PARAMS ((bfd *, Elf_Internal_Phdr *));
+
 #else
 #define bfd_prstatus(abfd, descdata, descsz, filepos, thread) true
 #define bfd_fpregset(abfd, descdata, descsz, filepos, thread) true

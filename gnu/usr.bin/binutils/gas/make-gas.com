@@ -55,9 +55,9 @@ $assign 'opcode_dir' opcode/tran=conc
 $!
 $ set verify
 $!
-$ gcc 'c_flags'/Define=('C_DEFS') targ-cpu.c
-$ gcc 'c_flags'/Define=('C_DEFS') obj-format.c
-$ gcc 'c_flags'/Define=('C_DEFS') atof-targ.c
+$ gcc 'c_flags'/Define=('C_DEFS') tc-sparc.c
+$ gcc 'c_flags'/Define=('C_DEFS') obj-aout.c
+$ gcc 'c_flags'/Define=('C_DEFS') atof-ieee.c
 $ gcc 'c_flags'/Define=('C_DEFS') app.c
 $ gcc 'c_flags'/Define=('C_DEFS') as.c
 $ gcc 'c_flags'/Define=('C_DEFS') atof-generic.c
@@ -90,9 +90,9 @@ $ link/noMap/Exec=gcc-as version.opt/Opt+sys$input:/Opt
 !
 !	Linker options file for GNU assembler
 !
-targ-cpu.obj,-
-obj-format.obj,-
-atof-targ.obj,-
+tc-sparc.obj,-
+obj-aout.obj,-
+atof-ieee.obj,-
 app.obj,-
 as.obj,-
 atof-generic.obj,-

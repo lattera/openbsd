@@ -1,4 +1,4 @@
-This is Info file configure.info, produced by Makeinfo-1.55 from the
+This is Info file configure.info, produced by Makeinfo-1.64 from the
 input file ./configure.texi.
 
 START-INFO-DIR-ENTRY
@@ -22,7 +22,7 @@ versions, except that this permission notice may be stated in a
 translation approved by Cygnus Support.
 
 
-File: configure.info,  Node: Top,  Next: What configure does,  Prev: (DIR),  Up: (DIR)
+File: configure.info,  Node: Top,  Next: What configure does,  Up: (dir)
 
 Cygnus configure
 ****************

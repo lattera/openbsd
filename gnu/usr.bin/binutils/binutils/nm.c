@@ -1,5 +1,5 @@
 /* nm.c -- Describe symbol table of a rel file.
-   Copyright 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -46,6 +46,18 @@ struct get_relocs_info
   asymbol **syms;
 };
 
+static void
+usage PARAMS ((FILE *, int));
+
+static void
+set_print_radix PARAMS ((char *));
+
+static void
+set_output_format PARAMS ((char *));
+
+static void
+display_archive PARAMS ((bfd *));
+
 static boolean
 display_file PARAMS ((char *filename));
 
@@ -64,6 +76,9 @@ print_symbols PARAMS ((bfd *, boolean, PTR, long, unsigned int, bfd *));
 
 static void
 print_size_symbols PARAMS ((bfd *, boolean, struct size_sym *, long, bfd *));
+
+static void
+print_symname PARAMS ((const char *, const char *, bfd *));
 
 static void
 print_symbol PARAMS ((bfd *, asymbol *, bfd *));
@@ -265,7 +280,7 @@ static struct option long_options[] =
 
 /* Some error-reporting functions */
 
-void
+static void
 usage (stream, status)
      FILE *stream;
      int status;
@@ -288,7 +303,7 @@ Usage: %s [-aABCDglnopPrsuvV] [-t radix] [--radix=radix] [--target=bfdname]\n\
 
 /* Set the radix for the symbol value and size according to RADIX.  */
 
-void
+static void
 set_print_radix (radix)
      char *radix;
 {
@@ -320,7 +335,7 @@ set_print_radix (radix)
     }
 }
 
-void
+static void
 set_output_format (f)
      char *f;
 {
@@ -361,6 +376,7 @@ main (argc, argv)
   START_PROGRESS (program_name, 0);
 
   bfd_init ();
+  set_default_bfd_target ();
 
   while ((c = getopt_long (argc, argv, "aABCDef:glnopPrst:uvV", long_options, (int *) 0)) != EOF)
     {
@@ -987,7 +1003,8 @@ filter_symbols (abfd, dynamic, minisyms, symcount, size)
 
 static void
 print_symname (format, name, abfd)
-     char *format, *name;
+     const char *format;
+     const char *name;
      bfd *abfd;
 {
   if (do_demangle && *name)
@@ -1107,6 +1124,7 @@ print_symbol (abfd, sym, archive_bfd)
 
   if (line_numbers)
     {
+      static bfd *cache_bfd;
       static asymbol **syms;
       static long symcount;
       const char *filename, *functionname;
@@ -1115,6 +1133,11 @@ print_symbol (abfd, sym, archive_bfd)
       /* We need to get the canonical symbols in order to call
          bfd_find_nearest_line.  This is inefficient, but, then, you
          don't have to use --line-numbers.  */
+      if (abfd != cache_bfd && syms != NULL)
+	{
+	  free (syms);
+	  syms = NULL;
+	}
       if (syms == NULL)
 	{
 	  long symsize;
@@ -1126,10 +1149,12 @@ print_symbol (abfd, sym, archive_bfd)
 	  symcount = bfd_canonicalize_symtab (abfd, syms);
 	  if (symcount < 0)
 	    bfd_fatal (bfd_get_filename (abfd));
+	  cache_bfd = abfd;
 	}
 
       if (bfd_is_und_section (bfd_get_section (sym)))
 	{
+	  static bfd *cache_rel_bfd;
 	  static asection **secs;
 	  static arelent ***relocs;
 	  static long *relcount;
@@ -1140,6 +1165,19 @@ print_symbol (abfd, sym, archive_bfd)
              symbol, and print the line number of the reloc.  */
 
 	  seccount = bfd_count_sections (abfd);
+
+	  if (abfd != cache_rel_bfd && relocs != NULL)
+	    {
+	      for (i = 0; i < seccount; i++)
+		if (relocs[i] != NULL)
+		  free (relocs[i]);
+	      free (secs);
+	      free (relocs);
+	      free (relcount);
+	      secs = NULL;
+	      relocs = NULL;
+	      relcount = NULL;
+	    }
 
 	  if (relocs == NULL)
 	    {
@@ -1154,6 +1192,7 @@ print_symbol (abfd, sym, archive_bfd)
 	      info.relcount = relcount;
 	      info.syms = syms;
 	      bfd_map_over_sections (abfd, get_relocs, (PTR) &info);
+	      cache_rel_bfd = abfd;
 	    }
 
 	  symname = bfd_asymbol_name (sym);

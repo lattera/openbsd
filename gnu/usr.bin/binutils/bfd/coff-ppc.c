@@ -1,5 +1,5 @@
 /* BFD back-end for PowerPC Microsoft Portable Executable files.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    Original version pieced together by Kim Knuttila (krk@cygnus.com)
 
@@ -36,7 +36,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "sysdep.h"
 
 #include "libbfd.h"
-#include "obstack.h"
 
 #include "coff/powerpc.h"
 #include "coff/internal.h"
@@ -50,6 +49,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define BADMAG(x) PPCBADMAG(x)
 
 #include "libcoff.h"
+
+/* This file is compiled more than once, but we only compile the
+   final_link routine once.  */
+extern boolean ppc_bfd_coff_final_link
+  PARAMS ((bfd *, struct bfd_link_info *));
+extern void dump_toc PARAMS ((PTR));
 
 /* The toc is a set of bfd_vma fields. We use the fact that valid         */
 /* addresses are even (i.e. the bit representing "1" is off) to allow     */
@@ -124,6 +129,20 @@ struct ppc_coff_link_hash_table
 static struct bfd_hash_entry *ppc_coff_link_hash_newfunc
   PARAMS ((struct bfd_hash_entry *, struct bfd_hash_table *,
 	   const char *));
+static boolean ppc_coff_link_hash_table_init
+  PARAMS ((struct ppc_coff_link_hash_table *, bfd *,
+	   struct bfd_hash_entry *(*) (struct bfd_hash_entry *,
+				       struct bfd_hash_table *,
+				       const char *)));
+static struct bfd_link_hash_table *ppc_coff_link_hash_table_create
+  PARAMS ((bfd *));
+static boolean coff_ppc_relocate_section
+  PARAMS ((bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
+	   struct internal_reloc *, struct internal_syment *, asection **));
+static reloc_howto_type *coff_ppc_rtype_to_howto
+  PARAMS ((bfd *, asection *, struct internal_reloc *,
+	   struct coff_link_hash_entry *, struct internal_syment *,
+	   bfd_vma *));
 
 /* Routine to create an entry in the link hash table.  */
 
@@ -804,6 +823,10 @@ static reloc_howto_type ppc_coff_howto_table[] =
 
 
 /* toc construction and management routines */
+
+/* This file is compiled twice, and these variables are defined in one
+   of the compilations.  FIXME: This is confusing and weird.  Also,
+   BFD should not use global variables.  */
 extern bfd* bfd_of_toc_owner;
 extern long int global_toc_size;
 
@@ -837,8 +860,11 @@ struct list_ele
 extern struct list_ele *head;
 extern struct list_ele *tail;
 
+static void record_toc
+  PARAMS ((asection *, int, enum ref_category, const char *));
+
 static void
-record_toc(toc_section, our_toc_offset, cat, name)
+record_toc (toc_section, our_toc_offset, cat, name)
      asection *toc_section;
      int our_toc_offset;
      enum ref_category cat;
@@ -868,6 +894,11 @@ record_toc(toc_section, our_toc_offset, cat, name)
 }
 
 #ifdef COFF_IMAGE_WITH_PE
+
+static boolean ppc_record_toc_entry
+  PARAMS ((bfd *, struct bfd_link_info *, asection *, int, enum toc_type));
+static void ppc_mark_symbol_as_glue
+  PARAMS ((bfd *, int, struct internal_reloc *));
 
 /* record a toc offset against a symbol */
 static boolean
@@ -1594,8 +1625,11 @@ coff_ppc_relocate_section (output_bfd, info, input_bfd, input_section,
   return true;
 }
 
-
 #ifdef COFF_IMAGE_WITH_PE
+
+/* FIXME: BFD should not use global variables.  This file is compiled
+   twice, and these variables are shared.  This is confusing and
+   weird.  */
 
 long int global_toc_size = 4;
 
@@ -1616,8 +1650,8 @@ static char *
 h3 = " Offset  spelling                   (if present)\n";
 
 void
-dump_toc(vfile)
-     void *vfile;
+dump_toc (vfile)
+     PTR vfile;
 {
   FILE *file = vfile;
   struct list_ele *t;
@@ -2166,8 +2200,7 @@ ppc_coff_reloc_type_lookup (abfd, code)
 #define RTYPE2HOWTO(cache_ptr, dst)  ppc_coff_rtype2howto (cache_ptr, dst)
 
 #ifndef COFF_IMAGE_WITH_PE
-static void
-ppc_coff_swap_sym_in_hook ();
+static void ppc_coff_swap_sym_in_hook PARAMS ((bfd *, PTR, PTR));
 #endif
 
 /* We use the special COFF backend linker, with our own special touch.  */
@@ -2248,13 +2281,13 @@ ppc_coff_swap_sym_in_hook (abfd, ext1, in1)
 }
 #endif
 
-boolean
-ppc_bfd_coff_final_link ();
-
 #ifndef COFF_IMAGE_WITH_PE
 
+static boolean ppc_do_last PARAMS ((bfd *));
+static bfd *ppc_get_last PARAMS ((void));
+
 static boolean
-ppc_do_last(abfd)
+ppc_do_last (abfd)
      bfd *abfd;
 {
   if (abfd == bfd_of_toc_owner)
@@ -2338,7 +2371,10 @@ ppc_bfd_coff_final_link (abfd, info)
 
   /* Compute the file positions for all the sections.  */
   if (! abfd->output_has_begun)
-    bfd_coff_compute_section_file_positions (abfd);
+    {
+      if (! bfd_coff_compute_section_file_positions (abfd))
+	return false;
+    }
 
   /* Count the line numbers and relocation entries required for the
      output file.  Set the file positions for the relocs.  */
@@ -2563,7 +2599,6 @@ ppc_bfd_coff_final_link (abfd, info)
 
 #ifdef POWERPC_LE_PE
   {
-    extern bfd* ppc_get_last();
     bfd* last_one = ppc_get_last();
     if (last_one)
       {

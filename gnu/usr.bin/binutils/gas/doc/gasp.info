@@ -1,4 +1,4 @@
-This is Info file gasp.info, produced by Makeinfo-1.55 from the input
+This is Info file gasp.info, produced by Makeinfo-1.64 from the input
 file ./gasp.texi.
 
 START-INFO-DIR-ENTRY
@@ -21,7 +21,7 @@ manual into another language, under the above conditions for modified
 versions.
 
 
-File: gasp.info,  Node: Top,  Next: Overview,  Prev: (DIR),  Up: (DIR)
+File: gasp.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 GASP
 ****
@@ -958,7 +958,6 @@ Index
 * .AENDI:                               Conditionals.
 * .AENDR:                               Loops.
 * .AENDW:                               Loops.
-* .AENDW:                               Loops.
 * .AIF "STRA" CMP "STRB":               Conditionals.
 * .AIF EXPRA CMP EXPRB:                 Conditionals.
 * .ALIGN SIZE:                          Other Commands.
@@ -1025,6 +1024,7 @@ Index
 * PVAR .ASSIGNC "STR":                  Variables.
 * PVAR .EQU EXPR:                       Variables.
 * PVAR .REG (REGISTER):                 Variables.
+* \@:                                   Macros.
 * absolute expressions:                 Expressions.
 * argument fields:                      Syntax Details.
 * avoiding preprocessing:               Markers.
@@ -1057,31 +1057,30 @@ Index
 * symbols, separating from text:        Markers.
 * text, separating from symbols:        Markers.
 * whitespace:                           Syntax Details.
-* \@:                                   Macros.
 
 
 
 Tag Table:
 Node: Top828
-Node: Overview1276
-Node: Invoking GASP2942
-Node: Commands6678
-Node: Conditionals7354
-Node: Loops9646
-Node: Variables11171
-Node: Macros13566
-Node: Data17528
-Node: Initialized17976
-Node: Uninitialized20255
-Node: Listings21266
-Node: Other Commands22462
-Node: Syntax Details24214
-Node: Markers25350
-Node: Constants27598
-Node: Symbols28800
-Node: Expressions29096
-Node: String Builtins30328
-Node: Alternate31109
-Node: Index32727
+Node: Overview1262
+Node: Invoking GASP2928
+Node: Commands6664
+Node: Conditionals7340
+Node: Loops9632
+Node: Variables11157
+Node: Macros13552
+Node: Data17514
+Node: Initialized17962
+Node: Uninitialized20241
+Node: Listings21252
+Node: Other Commands22448
+Node: Syntax Details24200
+Node: Markers25336
+Node: Constants27584
+Node: Symbols28786
+Node: Expressions29082
+Node: String Builtins30314
+Node: Alternate31095
+Node: Index32713
 
 End Tag Table

@@ -1,5 +1,5 @@
 /* Parse options for the GNU linker.
-   Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GLD, the Gnu Linker.
 
@@ -88,7 +88,8 @@ int parsing_defsym = 0;
 #define OPTION_UR			(OPTION_TRADITIONAL_FORMAT + 1)
 #define OPTION_VERBOSE			(OPTION_UR + 1)
 #define OPTION_VERSION			(OPTION_VERBOSE + 1)
-#define OPTION_WARN_COMMON		(OPTION_VERSION + 1)
+#define OPTION_VERSION_SCRIPT		(OPTION_VERSION + 1)
+#define OPTION_WARN_COMMON		(OPTION_VERSION_SCRIPT + 1)
 #define OPTION_WARN_CONSTRUCTORS	(OPTION_WARN_COMMON + 1)
 #define OPTION_WARN_MULTIPLE_GP		(OPTION_WARN_CONSTRUCTORS + 1)
 #define OPTION_WARN_ONCE		(OPTION_WARN_MULTIPLE_GP + 1)
@@ -143,8 +144,11 @@ static const struct ld_option ld_options[] =
       'e', "ADDRESS", "Set start address", TWO_DASHES },
   { {"export-dynamic", no_argument, NULL, OPTION_EXPORT_DYNAMIC},
       'E', NULL, "Export all dynamic symbols", TWO_DASHES },
-  { {NULL, optional_argument, NULL, '\0'},
-      'F', "[FORMAT]", "Ignored", ONE_DASH },
+  { {"auxiliary", required_argument, NULL, 'f'},
+      'f', "SHLIB", "Auxiliary filter for shared object symbol table",
+      TWO_DASHES },
+  { {"filter", required_argument, NULL, 'F'},
+      'F', "SHLIB", "Filter for shared object symbol table", TWO_DASHES },
   { {NULL, no_argument, NULL, '\0'},
       'g', NULL, "Ignored", ONE_DASH },
   { {"gpsize", required_argument, NULL, 'G'},
@@ -291,6 +295,8 @@ static const struct ld_option ld_options[] =
       '\0', NULL, "Output lots of information during link", TWO_DASHES },
   { {"dll-verbose", no_argument, NULL, OPTION_VERBOSE}, /* Linux.  */
       '\0', NULL, NULL, NO_HELP },
+  { {"version-script", required_argument, NULL, OPTION_VERSION_SCRIPT },
+      '\0', "FILE", "Read version information script", TWO_DASHES },
   { {"warn-common", no_argument, NULL, OPTION_WARN_COMMON},
       '\0', NULL, "Warn about duplicate common symbols", TWO_DASHES },
   { {"warn-constructors", no_argument, NULL, OPTION_WARN_CONSTRUCTORS},
@@ -475,8 +481,31 @@ parse_args (argc, argv)
 	case 'e':
 	  lang_add_entry (optarg, true);
 	  break;
+	case 'f':
+	  if (command_line.auxiliary_filters == NULL)
+	    {
+	      command_line.auxiliary_filters =
+		(char **) xmalloc (2 * sizeof (char *));
+	      command_line.auxiliary_filters[0] = optarg;
+	      command_line.auxiliary_filters[1] = NULL;
+	    }
+	  else
+	    {
+	      int c;
+	      char **p;
+
+	      c = 0;
+	      for (p = command_line.auxiliary_filters; *p != NULL; p++)
+		++c;
+	      command_line.auxiliary_filters =
+		(char **) xrealloc (command_line.auxiliary_filters,
+				    (c + 2) * sizeof (char *));
+	      command_line.auxiliary_filters[c] = optarg;
+	      command_line.auxiliary_filters[c + 1] = NULL;
+	    }
+	  break;
 	case 'F':
-	  /* Ignore.  */
+	  command_line.filter_shlib = optarg;
 	  break;
 	case OPTION_FORCE_EXE_SUFFIX:
 	  command_line.force_exe_suffix = true;
@@ -676,7 +705,7 @@ parse_args (argc, argv)
 	case OPTION_VERSION:
 	  /* This output is intended to follow the GNU standards document.  */
 	  printf ("GNU ld %s\n", ld_program_version);
-	  printf ("Copyright 1996 Free Software Foundation, Inc.\n");
+	  printf ("Copyright 1997 Free Software Foundation, Inc.\n");
 	  printf ("\
 This program is free software; you may redistribute it under the terms of\n\
 the GNU General Public License.  This program has absolutely no warranty.\n");
@@ -691,6 +720,20 @@ the GNU General Public License.  This program has absolutely no warranty.\n");
 	      }
 	  }
 	  xexit (0);
+	  break;
+	case OPTION_VERSION_SCRIPT:
+	  /* This option indicates a small script that only specifies
+             version information.  Read it, but don't assume that
+             we've seen a linker script.  */
+	  {
+	    boolean hold_had_script;
+
+	    hold_had_script = had_script;
+	    ldfile_open_command_file (optarg);
+	    had_script = hold_had_script;
+	    parser_input = input_version_script;
+	    yyparse ();
+	  }
 	  break;
 	case OPTION_WARN_COMMON:
 	  config.warn_common = true;

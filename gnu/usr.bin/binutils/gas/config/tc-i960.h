@@ -1,5 +1,5 @@
 /* tc-i960.h - Basic 80960 instruction formats.
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -14,12 +14,15 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
    the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public
-   License along with GAS; see the file COPYING.  If not, write
-   to the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+   You should have received a copy of the GNU General Public License
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA. */
 
 #ifndef TC_I960
 #define TC_I960 1
+
+#define TARGET_BYTES_BIG_ENDIAN 0
 
 /*
  * The 'COJ' instructions are actually COBR instructions with the 'b' in
@@ -118,6 +121,10 @@ struct relocation_info
   };
 
 #ifdef OBJ_COFF
+
+/* We store the bal information in the sy_tc field.  */
+#define TC_SYMFIELD_TYPE struct symbol *
+
 #define TC_ADJUST_RELOC_COUNT(FIXP,COUNT) \
   { fixS *tcfixp = (FIXP); \
     for (;tcfixp;tcfixp=tcfixp->fx_next) \
@@ -132,16 +139,16 @@ extern int i960_validate_fix PARAMS ((struct fix *, segT, struct symbol **));
 
 #define tc_fix_adjustable(FIXP)		((FIXP)->fx_bsr == 0)
 
-void brtab_emit PARAMS ((void));
+extern void brtab_emit PARAMS ((void));
 #define md_end()	brtab_emit ()
 
-void reloc_callj ();		/* this is really reloc_callj(fixS *fixP) but I don't want to change header inclusion order. */
-void tc_set_bal_of_call ();	/* this is really tc_set_bal_of_call(symbolS *callP, symbolS *balP) */
+extern void reloc_callj ();
 
-char *_tc_get_bal_of_call ();	/* this is really symbolS *tc_get_bal_of_call(symbolS *callP). */
-#define tc_get_bal_of_call(c)	((symbolS *) _tc_get_bal_of_call(c))
+extern void tc_set_bal_of_call PARAMS ((struct symbol *, struct symbol *));
 
-void i960_handle_align ();
+extern struct symbol *tc_get_bal_of_call PARAMS ((struct symbol *));
+
+extern void i960_handle_align ();
 #define HANDLE_ALIGN(FRAG)	i960_handle_align (FRAG)
 #define NEED_FX_R_TYPE
 #define NO_RELOC -1

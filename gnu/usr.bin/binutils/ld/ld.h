@@ -1,5 +1,5 @@
 /* ld.h -- general linker header file
-   Copyright (C) 1991, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GLD, the Gnu Linker.
 
@@ -90,6 +90,14 @@ typedef struct
 
   /* If true, generate a cross reference report.  */
   boolean cref;
+
+  /* Name of shared object whose symbol table should be filtered with
+     this shared object.  From the --filter option.  */
+  char *filter_shlib;
+
+  /* Name of shared object for whose symbol table this shared object
+     is an auxiliary filter.  From the --auxiliary option.  */
+  char **auxiliary_filters;
 } args_type;
 
 extern args_type command_line;

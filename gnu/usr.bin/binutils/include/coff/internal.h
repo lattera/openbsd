@@ -587,10 +587,7 @@ struct internal_reloc
 #define R_VRT32  133
 #define R_RELLONG	(0x11)	/* Direct 32-bit relocation */
 #define R_IPRSHORT	(0x18)
-#define R_IPRMED 	(0x19)	/* 24-bit ip-relative relocation */
 #define R_IPRLONG	(0x1a)
-#define R_OPTCALL	(0x1b)	/* 32-bit optimizable call (leafproc/sysproc) */
-#define R_OPTCALLX	(0x1c)	/* 64-bit optimizable call (leafproc/sysproc) */
 #define R_GETSEG	(0x1d)
 #define R_GETPA		(0x1e)
 #define R_TAGWORD	(0x1f)

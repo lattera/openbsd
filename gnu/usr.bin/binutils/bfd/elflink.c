@@ -1,5 +1,5 @@
 /* ELF linking support for BFD.
-   Copyright 1995 Free Software Foundation, Inc.
+   Copyright 1995, 1996, 1997 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -38,7 +38,8 @@ _bfd_elf_create_got_section (abfd, info)
   if (bfd_get_section_by_name (abfd, ".got") != NULL)
     return true;
 
-  flags = SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY;
+  flags = (SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY
+	   | SEC_LINKER_CREATED);
 
   s = bfd_make_section (abfd, ".got");
   if (s == NULL
@@ -95,7 +96,8 @@ _bfd_elf_create_dynamic_sections (abfd, info)
   /* We need to create .plt, .rel[a].plt, .got, .got.plt, .dynbss, and
      .rel[a].bss sections.  */
 
-  flags = SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY;
+  flags = (SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY
+	   | SEC_LINKER_CREATED);
 
   s = bfd_make_section (abfd, ".plt");
   if (s == NULL
@@ -184,6 +186,10 @@ _bfd_elf_link_record_dynamic_symbol (info, h)
   if (h->dynindx == -1)
     {
       struct bfd_strtab_hash *dynstr;
+      char *p, *alc;
+      const char *name;
+      boolean copy;
+      bfd_size_type indx;
 
       h->dynindx = elf_hash_table (info)->dynsymcount;
       ++elf_hash_table (info)->dynsymcount;
@@ -197,11 +203,34 @@ _bfd_elf_link_record_dynamic_symbol (info, h)
 	    return false;
 	}
 
-      h->dynstr_index = ((unsigned long)
-			 _bfd_stringtab_add (dynstr, h->root.root.string,
-					     true, false));
-      if (h->dynstr_index == (unsigned long) -1)
+      /* We don't put any version information in the dynamic string
+         table.  */
+      name = h->root.root.string;
+      p = strchr (name, ELF_VER_CHR);
+      if (p == NULL)
+	{
+	  alc = NULL;
+	  copy = false;
+	}
+      else
+	{
+	  alc = bfd_malloc (p - name + 1);
+	  if (alc == NULL)
+	    return false;
+	  strncpy (alc, name, p - name);
+	  alc[p - name] = '\0';
+	  name = alc;
+	  copy = true;
+	}
+
+      indx = _bfd_stringtab_add (dynstr, name, true, copy);
+
+      if (alc != NULL)
+	free (alc);
+
+      if (indx == (bfd_size_type) -1)
 	return false;
+      h->dynstr_index = indx;
     }
 
   return true;
@@ -316,12 +345,18 @@ _bfd_elf_create_linker_section (abfd, info, which, defaults)
 	}
     }
 
+#if 0
+  /* This does not make sense.  The sections which may exist in the
+     object file have nothing to do with the sections we want to
+     create.  */
+
   /* Find the related sections if they have been created */
   if (lsect->bss_name && !lsect->bss_section)
     lsect->bss_section = bfd_get_section_by_name (dynobj, lsect->bss_name);
 
   if (lsect->rel_name && !lsect->rel_section)
     lsect->rel_section = bfd_get_section_by_name (dynobj, lsect->rel_name);
+#endif
 
   return lsect;
 }
@@ -367,6 +402,7 @@ _bfd_elf_make_linker_section_rela (dynobj, lsect, alignment)
 				       | SEC_LOAD
 				       | SEC_HAS_CONTENTS
 				       | SEC_IN_MEMORY
+				       | SEC_LINKER_CREATED
 				       | SEC_READONLY))
 	  || ! bfd_set_section_alignment (dynobj, lsect->rel_section, alignment))
 	return false;
@@ -374,4 +410,3 @@ _bfd_elf_make_linker_section_rela (dynobj, lsect, alignment)
 
   return true;
 }
-

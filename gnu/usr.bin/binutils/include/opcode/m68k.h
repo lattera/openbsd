@@ -176,7 +176,8 @@ struct m68k_opcode_alias
    *  all					(modes 0-6,7.*)
    ~  alterable memory				(modes 2-6,7.0,7.1)
    						(not 0,1,7.~)
-   %  alterable					(modes 0-6,7.0,7.1)(not 7.~)
+   %  alterable					(modes 0-6,7.0,7.1)
+						(not 7.~)
    ;  data					(modes 0,2-6,7.*)(not 1)
    @  data, but not immediate			(modes 0,2-6,7.? ? ?)
 						(not 1,7.?)
@@ -193,7 +194,16 @@ struct m68k_opcode_alias
    /  control, or data register			(modes 0,2,5,6,7.0,7.1,7.2,7.3)
 						(not 1,3,4,7.4)
    `  control, plus pre-dec, not simple indir.	(modes 4,5,6,7.*-)
-						(not 0,1,2,3,7.4) */
+						(not 0,1,2,3,7.4)
+   >  *save operands				(modes 2,4,5,6,7.0,7.1)
+   <  *restore operands				(modes 2,3,5,6,7.0,7.1,7.2,7.3)
+
+   coldfire move operands:
+   m  						(modes 0-4)
+   n						(modes 5,7.2)
+   o						(modes 6,7.0,7.1,7.3)
+   p						(modes 0-5)
+*/
 
 /* For the 68851: */
 /*

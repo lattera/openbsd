@@ -31,6 +31,7 @@ xconfig.h: Makefile
 	  echo "#define NEED_sys_nerr 1" >xconfig.h; \
 	  echo "#define NEED_sys_errlist 1" >>xconfig.h; \
 	  echo "#define NEED_sys_siglist 1" >>xconfig.h; \
+	  echo "#define NEED_strsignal 1" >>xconfig.h; \
 	  echo "#define NEED_psignal 1" >>xconfig.h; \
 	else \
 	  $(MAKE) $(FLAGS_TO_PASS) lconfig.h; \
@@ -39,7 +40,7 @@ xconfig.h: Makefile
 
 xneeded-list: Makefile
 	if [ -f ../newlib/Makefile ]; then \
-	  echo insque.o random.o strdup.o alloca.o >xneeded-list; \
+	  echo insque.o random.o strdup.o alloca.o vasprintf.o >xneeded-list; \
 	else \
 	  $(MAKE) $(FLAGS_TO_PASS) lneeded-list; \
 	  cp lneeded-list xneeded-list; \

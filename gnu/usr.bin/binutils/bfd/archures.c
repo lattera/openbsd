@@ -1,5 +1,5 @@
 /* BFD library support routines for architectures.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Hacked by John Gilmore and Steve Chamberlain of Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -121,6 +121,7 @@ DESCRIPTION
 .  bfd_arch_powerpc,   {* PowerPC *}
 .  bfd_arch_rs6000,    {* IBM RS/6000 *}
 .  bfd_arch_hppa,      {* HP PA RISC *}
+.  bfd_arch_d10v,      {* Mitsubishi D10V *}
 .  bfd_arch_z8k,       {* Zilog Z8000 *}
 .#define bfd_mach_z8001		1
 .#define bfd_mach_z8002		2
@@ -130,6 +131,7 @@ DESCRIPTION
 .  bfd_arch_arm,       {* Advanced Risc Machines ARM *}
 .  bfd_arch_ns32k,     {* National Semiconductors ns32000 *}
 .  bfd_arch_w65,       {* WDC 65816 *}
+.  bfd_arch_m32r,      {* Mitsubishi M32R/D *}
 .  bfd_arch_mn10200,   {* Matsushita MN10200 *}
 .  bfd_arch_mn10300,   {* Matsushita MN10300 *}
 .  bfd_arch_last
@@ -173,12 +175,14 @@ DESCRIPTION
 extern const bfd_arch_info_type bfd_a29k_arch;
 extern const bfd_arch_info_type bfd_alpha_arch;
 extern const bfd_arch_info_type bfd_arm_arch;
+extern const bfd_arch_info_type bfd_d10v_arch;
 extern const bfd_arch_info_type bfd_h8300_arch;
 extern const bfd_arch_info_type bfd_h8500_arch;
 extern const bfd_arch_info_type bfd_hppa_arch;
 extern const bfd_arch_info_type bfd_i386_arch;
 extern const bfd_arch_info_type bfd_i860_arch;
 extern const bfd_arch_info_type bfd_i960_arch;
+extern const bfd_arch_info_type bfd_m32r_arch;
 extern const bfd_arch_info_type bfd_m68k_arch;
 extern const bfd_arch_info_type bfd_m88k_arch;
 extern const bfd_arch_info_type bfd_mips_arch;
@@ -202,12 +206,14 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
   &bfd_a29k_arch,
   &bfd_alpha_arch,
   &bfd_arm_arch,
+  &bfd_d10v_arch,
   &bfd_h8300_arch,
   &bfd_h8500_arch,
   &bfd_hppa_arch,
   &bfd_i386_arch,
   &bfd_i860_arch,
   &bfd_i960_arch,
+  &bfd_m32r_arch,
   &bfd_m68k_arch,
   &bfd_m88k_arch,
   &bfd_mips_arch,

@@ -1,5 +1,5 @@
 /* subsegs.c - subsegments -
-   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -280,7 +280,6 @@ subseg_set_rest (seg, subseg)
       /*
        * This should be the only code that creates a frchainS.
        */
-      extern fragS *frag_alloc ();
       newP = (frchainS *) obstack_alloc (&frchains, sizeof (frchainS));
       newP->frch_subseg = subseg;
       newP->frch_seg = seg;

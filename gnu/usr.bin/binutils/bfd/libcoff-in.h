@@ -1,5 +1,6 @@
 /* BFD COFF object file private structure.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 ** NOTE: libcoff.h is a GENERATED file.  Don't change it; instead,
@@ -296,6 +297,7 @@ extern void coff_print_symbol PARAMS ((bfd *, PTR filep, asymbol *,
 				       bfd_print_symbol_type how));
 extern void coff_get_symbol_info PARAMS ((bfd *, asymbol *,
 					  symbol_info *ret));
+extern boolean _bfd_coff_is_local_label_name PARAMS ((bfd *, const char *));
 extern asymbol *coff_bfd_make_debug_symbol PARAMS ((bfd *, PTR,
 						    unsigned long));
 extern boolean coff_find_nearest_line PARAMS ((bfd *,
@@ -504,6 +506,13 @@ extern boolean _bfd_xcoff_bfd_final_link
 extern boolean _bfd_ppc_xcoff_relocate_section
   PARAMS ((bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
 	   struct internal_reloc *, struct internal_syment *, asection **));
+
+/* Functions in coff-ppc.c.  FIXME: These are called be pe.em in the
+   linker, and so should start with bfd and be declared in bfd.h.  */
+
+extern boolean ppc_allocate_toc_section PARAMS ((struct bfd_link_info *));
+extern boolean ppc_process_before_allocation
+  PARAMS ((bfd *, struct bfd_link_info *));
 
 /* And more taken from the source .. */
 

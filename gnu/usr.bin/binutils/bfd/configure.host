@@ -8,11 +8,12 @@
 
 # This sets the following shell variables:
 #  HDEFINES		host specific compiler options
-#  host64		set to true if this is a 64 bit host
+#  host64		set to true if 64 bit types are as fast as 32 bit
 #  HOST_64BIT_TYPE	host 64 bit type
 #  HOST_U_64BIT_TYPE	unsigned 64 bit type (not needed if 64BIT_TYPE is long)
 #  SHLIB_CC		compiler to use when building shared library
 #  SHLIB_CFLAGS		flags to use when building shared library
+#  SHLIB_LIBS		libraries to use when building shared library
 #  PICFLAG		may be set to flag to use to compile PIC
 #  SHLINK		may be set to the name to link the shared library to
 #  ALLLIBS		may be set to libraries to build
@@ -38,19 +39,18 @@ i[3456]86-sequent-bsd*)	HDEFINES=-Dshared=genshared ;;
 i[3456]86-sequent-sysv4*) ;;
 i[3456]86-sequent-sysv*)	HDEFINES=-Dshared=genshared ;;
 
-mips-dec-netbsd*)	;;
-mips-dec-*)		HDEFINES="-G 4"	;;
-mips-sgi-irix3*)	HDEFINES="-G 4" ;;
-mips-sgi-irix4*)	HDEFINES="-G 4" ;;
-mips-sgi-irix6*)	# We can use __int64_t here because bfd.h
-			# includes obstack.h which includes stddef.h.
-			host64=true
-			HOST_64BIT_TYPE=__int64_t
-			HOST_U_64BIT_TYPE=__uint64_t
+mips*-dec-netbsd*)	;;
+mips*-*-openbsd*)	;;
+mips*-dec-*)		HDEFINES="-G 4"	;;
+mips*-sgi-irix3*)	HDEFINES="-G 4" ;;
+mips*-sgi-irix4*)	HDEFINES="-G 4" ;;
+mips*-sgi-irix6*)	host64=true
+			HOST_64BIT_TYPE="long long";
+			HOST_U_64BIT_TYPE="unsigned long long";
 			;;
-mips-*-sysv4*)		;;
-mips-*-sysv*)		HDEFINES="-G 4" ;;
-mips-*-riscos*)		HDEFINES="-G 4" ;;
+mips*-*-sysv4*)		;;
+mips*-*-sysv*)		HDEFINES="-G 4" ;;
+mips*-*-riscos*)	HDEFINES="-G 4" ;;
 
 m68*-hp-hpux*)		HDEFINES=-DHOST_HP300HPUX ;;
 
@@ -59,7 +59,6 @@ m68*-hp-hpux*)		HDEFINES=-DHOST_HP300HPUX ;;
 			;;
 
 *-*-windows*)
-			host64=true
 			HOST_64BIT_TYPE=__int64
 			HOST_U_64BIT_TYPE="unsigned __int64"
 # The following krock is necessary because we can't run the build compiler
@@ -67,7 +66,7 @@ m68*-hp-hpux*)		HDEFINES=-DHOST_HP300HPUX ;;
 # Note that this file is never run through autoconf, so we can't use any
 # autoconf macros here.  Because of this, we have to muck with autoconf
 # variables explicitly.
-			ac_cv_func_mmap=no
+			ac_cv_func_mmap_fixed_mapped=no
 			ac_cv_header_time=no
 			ac_cv_func_getpagesize=no
 			ac_cv_func_madvise=no
@@ -86,6 +85,7 @@ HLDENV=
 RPATH_ENVVAR=LD_LIBRARY_PATH
 SHLIB_CC='$(CC)'
 SHLIB_CFLAGS='-shared'
+SHLIB_LIBS=
 INSTALL_SHLIB='$(INSTALL_PROGRAM) $$f $(libdir)/$$tf;'
 if [ "${shared}" = "true" ]; then
   case "${host}" in
@@ -129,6 +129,9 @@ if [ "${shared}" = "true" ]; then
       /lib | /usr/lib) ;;
       *) HLDFLAGS='-Wl,-rpath,$(libdir)' ;;
     esac
+    # On Linux, apparently, linking against -lc lets ldconfig figure
+    # out which version of libc should be used.
+    SHLIB_LIBS=-lc
     ;;
   *-*-solaris*)
     SHLIB_CFLAGS='-shared -h $(SONAME)'

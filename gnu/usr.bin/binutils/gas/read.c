@@ -1,5 +1,5 @@
 /* read.c - read a source file -
-   Copyright (C) 1986, 87, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1986, 87, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
@@ -15,8 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GAS; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+along with GAS; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA. */
 
 #if 0
 #define MASK_CHAR (0xFF)	/* If your chars aren't 8 bits, you will
@@ -95,6 +96,11 @@ die horribly;
 #define LEX_DOLLAR 3
 #endif
 
+#ifndef LEX_TILDE
+/* The Delta 68k assembler permits ~ at start of label names.  */
+#define LEX_TILDE 0
+#endif
+
 /* used by is_... macros. our ctype[] */
 char lex_type[256] =
 {
@@ -105,7 +111,7 @@ char lex_type[256] =
   LEX_AT, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,	/* @ABCDEFGHIJKLMNO */
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, LEX_BR, 0, LEX_BR, 0, 3, /* PQRSTUVWXYZ[\]^_ */
   0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,	/* `abcdefghijklmno */
-  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, LEX_BR, 0, LEX_BR, 0, 0, /* pqrstuvwxyz{|}~. */
+  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, LEX_BR, 0, LEX_BR, LEX_TILDE, 0, /* pqrstuvwxyz{|}~. */
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -153,17 +159,9 @@ char is_end_of_line[256] =
 static char *buffer;	/* 1st char of each buffer of lines is here. */
 static char *buffer_limit;	/*->1 + last char in buffer. */
 
-#ifdef TARGET_BYTES_BIG_ENDIAN
-/* Hack to deal with tc-*.h defining TARGET_BYTES_BIG_ENDIAN to empty
-   instead of to 0 or 1.  */
-#if 5 - TARGET_BYTES_BIG_ENDIAN - 5 == 10
-#undef  TARGET_BYTES_BIG_ENDIAN
-#define TARGET_BYTES_BIG_ENDIAN 1
-#endif
+/* TARGET_BYTES_BIG_ENDIAN is required to be defined to either 0 or 1 in the
+   tc-<CPU>.h file.  See the "Porting GAS" section of the internals manual. */
 int target_big_endian = TARGET_BYTES_BIG_ENDIAN;
-#else
-int target_big_endian /* = 0 */;
-#endif
 
 static char *old_buffer;	/* JF a hack */
 static char *old_input;
@@ -201,8 +199,10 @@ symbolS *mri_common_symbol;
    may be needed.  */
 static int mri_pending_align;
 
+static void cons_worker PARAMS ((int, int));
 static int scrub_from_string PARAMS ((char **));
-static void do_align PARAMS ((int, char *, int));
+static void do_align PARAMS ((int, char *, int, int));
+static void s_align PARAMS ((int, int));
 static int hex_float PARAMS ((int, char *));
 static void do_org PARAMS ((segT, expressionS *, int));
 char *demand_copy_string PARAMS ((int *lenP));
@@ -290,6 +290,7 @@ static const pseudo_typeS potable[] =
   {"endif", s_endif, 0},
 /* endef */
   {"equ", s_set, 0},
+  {"equiv", s_set, 1},
   {"err", s_err, 0},
   {"exitm", s_mexit, 0},
 /* extend */
@@ -526,13 +527,16 @@ read_a_source_file (name)
 		    {
 		      char *line_start = input_line_pointer;
 		      char c;
+		      int mri_line_macro;
 
+		      LISTING_NEWLINE ();
 		      HANDLE_CONDITIONAL_ASSEMBLY ();
 
 		      c = get_symbol_end ();
 
-		      /* In MRI mode, the EQU pseudoop must be
-			 handled specially.  */
+		      /* In MRI mode, the EQU and MACRO pseudoops must
+			 be handled specially.  */
+		      mri_line_macro = 0;
 		      if (flag_m68k_mri)
 			{
 			  char *rest = input_line_pointer + 1;
@@ -546,12 +550,27 @@ read_a_source_file (name)
 			      && (rest[3] == ' ' || rest[3] == '\t'))
 			    {
 			      input_line_pointer = rest + 3;
-			      equals (line_start);
+			      equals (line_start,
+				      strncasecmp (rest, "SET", 3) == 0);
 			      continue;
 			    }
+			  if (strncasecmp (rest, "MACRO", 5) == 0
+			      && (rest[5] == ' '
+				  || rest[5] == '\t'
+				  || is_end_of_line[(unsigned char) rest[5]]))
+			    mri_line_macro = 1;
 			}
 
-		      line_label = colon (line_start);
+		      /* In MRI mode, we need to handle the MACRO
+                         pseudo-op specially: we don't want to put the
+                         symbol in the symbol table.  */
+		      if (! mri_line_macro)
+			line_label = colon (line_start);
+		      else
+			line_label = symbol_create (line_start,
+						    absolute_section,
+						    (valueT) 0,
+						    &zero_address_frag);
 
 		      *input_line_pointer = c;
 		      if (c == ':')
@@ -618,7 +637,7 @@ read_a_source_file (name)
 			  && (rest[3] == ' ' || rest[3] == '\t'))
 			{
 			  input_line_pointer = rest + 3;
-			  equals (s);
+			  equals (s, 1);
 			  continue;
 			}
 		    }
@@ -631,13 +650,14 @@ read_a_source_file (name)
 
 		}
 	      else if (c == '='
-		       || (input_line_pointer[1] == '='
+		       || ((c == ' ' || c == '\t')
+			   && input_line_pointer[1] == '='
 #ifdef TC_EQUAL_IN_INSN
 			   && ! TC_EQUAL_IN_INSN (c, input_line_pointer)
 #endif
 			   ))
 		{
-		  equals (s);
+		  equals (s, 1);
 		  demand_empty_rest_of_line ();
 		}
 	      else
@@ -692,10 +712,26 @@ read_a_source_file (name)
 			      || ! ((pop->poc_handler == cons
 				     && pop->poc_val == 1)
 				    || (pop->poc_handler == s_space
-					&& pop->poc_val == 1))))
+					&& pop->poc_val == 1)
+#ifdef tc_conditional_pseudoop
+				    || tc_conditional_pseudoop (pop)
+#endif
+				    || pop->poc_handler == s_if
+				    || pop->poc_handler == s_ifdef
+				    || pop->poc_handler == s_ifc
+				    || pop->poc_handler == s_ifeqs
+				    || pop->poc_handler == s_else
+				    || pop->poc_handler == s_endif
+				    || pop->poc_handler == s_globl
+				    || pop->poc_handler == s_ignore)))
 			{
-			  do_align (1, (char *) NULL, 0);
+			  do_align (1, (char *) NULL, 0, 0);
 			  mri_pending_align = 0;
+			  if (line_label != NULL)
+			    {
+			      line_label->sy_frag = frag_now;
+			      S_SET_VALUE (line_label, frag_now_fix ());
+			    }
 			}
 
 		      /* Print the error msg now, while we still can */
@@ -726,14 +762,8 @@ read_a_source_file (name)
 			goto quit;
 		    }
 		  else
-		    {		/* machine instruction */
+		    {
 		      int inquote = 0;
-
-		      if (mri_pending_align)
-			{
-			  do_align (1, (char *) NULL, 0);
-			  mri_pending_align = 0;
-			}
 
 		      /* WARNING: c has char, which may be end-of-line. */
 		      /* Also: input_line_pointer->`\0` where c was. */
@@ -785,6 +815,17 @@ read_a_source_file (name)
 			      buffer_limit =
 				input_scrub_next_buffer (&input_line_pointer);
 			      continue;
+			    }
+			}
+
+		      if (mri_pending_align)
+			{
+			  do_align (1, (char *) NULL, 0, 0);
+			  mri_pending_align = 0;
+			  if (line_label != NULL)
+			    {
+			      line_label->sy_frag = frag_now;
+			      S_SET_VALUE (line_label, frag_now_fix ());
 			    }
 			}
 
@@ -1048,40 +1089,43 @@ s_abort (ignore)
   as_fatal (".abort detected.  Abandoning ship.");
 }
 
-/* Guts of .align directive.  */
+/* Guts of .align directive.  N is the power of two to which to align.
+   FILL may be NULL, or it may point to the bytes of the fill pattern.
+   LEN is the length of whatever FILL points to, if anything.  MAX is
+   the maximum number of characters to skip when doing the alignment,
+   or 0 if there is no maximum.  */
+
 static void 
-do_align (n, fill, len)
+do_align (n, fill, len, max)
      int n;
      char *fill;
      int len;
+     int max;
 {
-#ifdef md_do_align
-  md_do_align (n, fill, len, just_record_alignment);
-#endif
-  if (!fill)
-    {
-      /* @@ Fix this right for BFD!  */
-      static char zero;
-      static char nop_opcode = NOP_OPCODE;
+  char default_fill;
 
+#ifdef md_do_align
+  md_do_align (n, fill, len, max, just_record_alignment);
+#endif
+
+  if (fill == NULL)
+    {
+      /* FIXME: Fix this right for BFD!  */
       if (now_seg != data_section && now_seg != bss_section)
-	{
-	  fill = &nop_opcode;
-	}
+	default_fill = NOP_OPCODE;
       else
-	{
-	  fill = &zero;
-	}
+	default_fill = 0;
+      fill = &default_fill;
       len = 1;
     }
 
   /* Only make a frag if we HAVE to. . . */
-  if (n && !need_pass_2)
+  if (n != 0 && !need_pass_2)
     {
       if (len <= 1)
-	frag_align (n, *fill);
+	frag_align (n, *fill, max);
       else
-	frag_align_pattern (n, fill, len);
+	frag_align_pattern (n, fill, len, max);
     }
 
 #ifdef md_do_align
@@ -1091,17 +1135,22 @@ do_align (n, fill, len)
   record_alignment (now_seg, n);
 }
 
-/* For machines where ".align 4" means align to a 4 byte boundary. */
-void 
-s_align_bytes (arg)
+/* Handle the .align pseudo-op.  A positive ARG is a default alignment
+   (in bytes).  A negative ARG is the negative of the length of the
+   fill pattern.  BYTES_P is non-zero if the alignment value should be
+   interpreted as the byte boundary, rather than the power of 2.  */
+
+static void
+s_align (arg, bytes_p)
      int arg;
+     int bytes_p;
 {
-  register unsigned int temp;
-  char temp_fill;
-  unsigned int i = 0;
-  unsigned long max_alignment = 1 << 15;
+  register unsigned int align;
   char *stop = NULL;
   char stopc;
+  offsetT fill = 0;
+  int max;
+  int fill_p;
 
   if (flag_mri)
     stop = mri_comment_field (&stopc);
@@ -1109,60 +1158,93 @@ s_align_bytes (arg)
   if (is_end_of_line[(unsigned char) *input_line_pointer])
     {
       if (arg < 0)
-	temp = 0;
+	align = 0;
       else
-	temp = arg;	/* Default value from pseudo-op table */
+	align = arg;	/* Default value from pseudo-op table */
     }
   else
-    temp = get_absolute_expression ();
-
-  if (temp > max_alignment)
     {
-      as_bad ("Alignment too large: %d. assumed.", temp = max_alignment);
+      align = get_absolute_expression ();
+      SKIP_WHITESPACE ();
     }
 
-  /* For the sparc, `.align (1<<n)' actually means `.align n' so we
-     have to convert it.  */
-  if (temp != 0)
+  if (bytes_p)
     {
-      for (i = 0; (temp & 1) == 0; temp >>= 1, ++i)
-	;
-    }
-  if (temp != 1)
-    as_bad ("Alignment not a power of 2");
-
-  temp = i;
-  if (*input_line_pointer == ',')
-    {
-      offsetT fillval;
-      int len;
-
-      input_line_pointer++;
-      fillval = get_absolute_expression ();
-      if (arg >= 0)
-	len = 1;
-      else
-	len = - arg;
-      if (len <= 1)
+      /* Convert to a power of 2.  */
+      if (align != 0)
 	{
-	  temp_fill = fillval;
-	  do_align (temp, &temp_fill, len);
+	  unsigned int i;
+
+	  for (i = 0; (align & 1) == 0; align >>= 1, ++i)
+	    ;
+	  if (align != 1)
+	    as_bad ("Alignment not a power of 2");
+	  align = i;
+	}
+    }
+
+  if (align > 15)
+    {
+      align = 15;
+      as_bad ("Alignment too large: %u assumed", align);
+    }
+
+  if (*input_line_pointer != ',')
+    {
+      fill_p = 0;
+      max = 0;
+    }
+  else
+    {
+      ++input_line_pointer;
+      if (*input_line_pointer == ',')
+	fill_p = 0;
+      else
+	{
+	  fill = get_absolute_expression ();
+	  SKIP_WHITESPACE ();
+	  fill_p = 1;
+	}
+
+      if (*input_line_pointer != ',')
+	max = 0;
+      else
+	{
+	  ++input_line_pointer;
+	  max = get_absolute_expression ();
+	}
+    }
+
+  if (! fill_p)
+    {
+      if (arg < 0)
+	as_warn ("expected fill pattern missing");
+      do_align (align, (char *) NULL, 0, max);
+    }
+  else
+    {
+      int fill_len;
+
+      if (arg >= 0)
+	fill_len = 1;
+      else
+	fill_len = - arg;
+      if (fill_len <= 1)
+	{
+	  char fill_char;
+
+	  fill_char = fill;
+	  do_align (align, &fill_char, fill_len, max);
 	}
       else
 	{
 	  char ab[16];
 
-	  if (len > sizeof ab)
+	  if (fill_len > sizeof ab)
 	    abort ();
-	  md_number_to_chars (ab, fillval, len);
-	  do_align (temp, ab, len);
+	  md_number_to_chars (ab, fill, fill_len);
+	  do_align (align, ab, fill_len, max);
 	}
-    }
-  else
-    {
-      if (arg < 0)
-	as_warn ("expected fill pattern missing");
-      do_align (temp, (char *) NULL, 0);
     }
 
   if (flag_mri)
@@ -1171,65 +1253,24 @@ s_align_bytes (arg)
   demand_empty_rest_of_line ();
 }
 
-/* For machines where ".align 4" means align to 2**4 boundary. */
+/* Handle the .align pseudo-op on machines where ".align 4" means
+   align to a 4 byte boundary.  */
+
+void 
+s_align_bytes (arg)
+     int arg;
+{
+  s_align (arg, 1);
+}
+
+/* Handle the .align pseud-op on machines where ".align 4" means align
+   to a 2**4 boundary.  */
+
 void 
 s_align_ptwo (arg)
      int arg;
 {
-  register int temp;
-  char temp_fill;
-  long max_alignment = 15;
-  char *stop = NULL;
-  char stopc;
-
-  if (flag_mri)
-    stop = mri_comment_field (&stopc);
-
-  temp = get_absolute_expression ();
-  if (temp > max_alignment)
-    as_bad ("Alignment too large: %d. assumed.", temp = max_alignment);
-  else if (temp < 0)
-    {
-      as_bad ("Alignment negative. 0 assumed.");
-      temp = 0;
-    }
-  if (*input_line_pointer == ',')
-    {
-      offsetT fillval;
-      int len;
-
-      input_line_pointer++;
-      fillval = get_absolute_expression ();
-      if (arg >= 0)
-	len = 1;
-      else
-	len = - arg;
-      if (len <= 1)
-	{
-	  temp_fill = fillval;
-	  do_align (temp, &temp_fill, len);
-	}
-      else
-	{
-	  char ab[16];
-
-	  if (len > sizeof ab)
-	    abort ();
-	  md_number_to_chars (ab, fillval, len);
-	  do_align (temp, ab, len);
-	}
-    }
-  else
-    {
-      if (arg < 0)
-	as_warn ("expected fill pattern missing");
-      do_align (temp, (char *) NULL, 0);
-    }
-
-  if (flag_mri)
-    mri_comment_end (stop, stopc);
-
-  demand_empty_rest_of_line ();
+  s_align (arg, 0);
 }
 
 void 
@@ -1273,7 +1314,7 @@ s_comm (ignore)
   *p = 0;
   symbolP = symbol_find_or_make (name);
   *p = c;
-  if (S_IS_DEFINED (symbolP))
+  if (S_IS_DEFINED (symbolP) && ! S_IS_COMMON (symbolP))
     {
       as_bad ("Ignoring attempt to re-define symbol `%s'.",
 	      S_GET_NAME (symbolP));
@@ -1372,17 +1413,12 @@ s_mri_common (small)
       align = get_absolute_expression ();
     }
 
-  if (S_IS_DEFINED (sym))
+  if (S_IS_DEFINED (sym) && ! S_IS_COMMON (sym))
     {
-#if defined (S_IS_COMMON) || defined (BFD_ASSEMBLER)
-      if (! S_IS_COMMON (sym))
-#endif
-	{
-	  as_bad ("attempt to re-define symbol `%s'", S_GET_NAME (sym));
-	  mri_comment_end (stop, stopc);
-	  ignore_rest_of_line ();
-	  return;
-	}
+      as_bad ("attempt to re-define symbol `%s'", S_GET_NAME (sym));
+      mri_comment_end (stop, stopc);
+      ignore_rest_of_line ();
+      return;
     }
 
   S_SET_EXTERNAL (sym);
@@ -1607,7 +1643,9 @@ s_fill (ignore)
 
   if (temp_size && !need_pass_2)
     {
-      p = frag_var (rs_fill, (int) temp_size, (int) temp_size, (relax_substateT) 0, (symbolS *) 0, temp_repeat, (char *) 0);
+      p = frag_var (rs_fill, (int) temp_size, (int) temp_size,
+		    (relax_substateT) 0, (symbolS *) 0, (offsetT) temp_repeat,
+		    (char *) 0);
       memset (p, 0, (unsigned int) temp_size);
       /* The magic number BSD_FILL_SIZE_CROCK_4 is from BSD 4.2 VAX
        * flavoured AS.  The following bizzare behaviour is to be
@@ -1913,14 +1951,14 @@ s_lcomm (needs_align)
       subseg_set (bss_seg, 1);
 
       if (align)
-	frag_align (align, 0);
+	frag_align (align, 0, 0);
 					/* detach from old frag	*/
       if (S_GET_SEGMENT (symbolP) == bss_seg)
 	symbolP->sy_frag->fr_symbol = NULL;
 
       symbolP->sy_frag = frag_now;
       pfrag = frag_var (rs_org, 1, 1, (relax_substateT)0, symbolP,
-			temp, (char *)0);
+			(offsetT) temp, (char *) 0);
       *pfrag = 0;
 
       S_SET_SEGMENT (symbolP, bss_seg);
@@ -2016,6 +2054,8 @@ static int
 get_line_sb (line)
      sb *line;
 {
+  char quote1, quote2, inquote;
+
   if (input_line_pointer[-1] == '\n')
     bump_line_counters ();
 
@@ -2026,10 +2066,36 @@ get_line_sb (line)
 	return 0;
     }
 
-  while (! is_end_of_line[(unsigned char) *input_line_pointer])
-    sb_add_char (line, *input_line_pointer++);
-  while (input_line_pointer < buffer_limit
-	 && is_end_of_line[(unsigned char) *input_line_pointer])
+  /* If app.c sets any other characters to LEX_IS_STRINGQUOTE, this
+     code needs to be changed.  */
+  if (! flag_m68k_mri)
+    quote1 = '"';
+  else
+    quote1 = '\0';
+
+  quote2 = '\0';
+  if (flag_m68k_mri)
+    quote2 = '\'';
+#ifdef LEX_IS_STRINGQUOTE
+  quote2 = '\'';
+#endif
+
+  inquote = '\0';
+  while (! is_end_of_line[(unsigned char) *input_line_pointer]
+	 || (inquote != '\0' && *input_line_pointer != '\n'))
+    {
+      if (inquote == *input_line_pointer)
+	inquote = '\0';
+      else if (inquote == '\0')
+	{
+	  if (*input_line_pointer == quote1)
+	    inquote = quote1;
+	  else if (*input_line_pointer == quote2)
+	    inquote = quote2;
+	}
+      sb_add_char (line, *input_line_pointer++);
+    }
+  while (input_line_pointer < buffer_limit && *input_line_pointer == '\n')
     {
       if (input_line_pointer[-1] == '\n')
 	bump_line_counters ();
@@ -2097,6 +2163,7 @@ void
 s_mexit (ignore)
      int ignore;
 {
+  cond_exit_macro (macro_nest);
   buffer_limit = input_scrub_next_buffer (&input_line_pointer);
 }
 
@@ -2451,9 +2518,13 @@ s_rept (ignore)
   buffer_limit = input_scrub_next_buffer (&input_line_pointer);
 }
 
+/* Handle the .equ, .equiv and .set directives.  If EQUIV is 1, then
+   this is .equiv, and it is an error if the symbol is already
+   defined.  */
+
 void 
-s_set (ignore)
-     int ignore;
+s_set (equiv)
+     int equiv;
 {
   register char *name;
   register char delim;
@@ -2512,6 +2583,12 @@ s_set (ignore)
   symbol_table_insert (symbolP);
 
   *end_name = delim;
+
+  if (equiv
+      && S_IS_DEFINED (symbolP)
+      && S_GET_SEGMENT (symbolP) != reg_section)
+    as_bad ("symbol `%s' already defined", S_GET_NAME (symbolP));
+
   pseudo_set (symbolP);
   demand_empty_rest_of_line ();
 }				/* s_set() */
@@ -2525,6 +2602,7 @@ s_space (mult)
   char *p = 0;
   char *stop = NULL;
   char stopc;
+  int bytes;
 
 #ifdef md_flush_pending_output
   md_flush_pending_output ();
@@ -2561,7 +2639,7 @@ s_space (mult)
 	}
       else
 	{
-	  do_align (1, (char *) NULL, 0);
+	  do_align (1, (char *) NULL, 0, 0);
 	  if (line_label != NULL)
 	    {
 	      line_label->sy_frag = frag_now;
@@ -2569,6 +2647,8 @@ s_space (mult)
 	    }
 	}
     }
+
+  bytes = mult;
 
   expression (&exp);
 
@@ -2597,6 +2677,7 @@ s_space (mult)
 
 	  if (mult == 0)
 	    mult = 1;
+	  bytes = mult * exp.X_add_number;
 	  for (i = 0; i < exp.X_add_number; i++)
 	    emit_expr (&val, mult);
 	}
@@ -2610,6 +2691,7 @@ s_space (mult)
 	  repeat = exp.X_add_number;
 	  if (mult)
 	    repeat *= mult;
+	  bytes = repeat;
 	  if (repeat <= 0)
 	    {
 	      if (! flag_mri || repeat < 0)
@@ -2637,7 +2719,7 @@ s_space (mult)
 
 	  if (!need_pass_2)
 	    p = frag_var (rs_fill, 1, 1, (relax_substateT) 0, (symbolS *) 0,
-			  repeat, (char *) 0);
+			  (offsetT) repeat, (char *) 0);
 	}
       else
 	{
@@ -2653,7 +2735,7 @@ s_space (mult)
 	    }
 	  if (!need_pass_2)
 	    p = frag_var (rs_space, 1, 1, (relax_substateT) 0,
-			  make_expr_symbol (&exp), 0L, (char *) 0);
+			  make_expr_symbol (&exp), (offsetT) 0, (char *) 0);
 	}
 
       if (p)
@@ -2661,6 +2743,13 @@ s_space (mult)
     }
 
  getout:
+
+  /* In MRI mode, after an odd number of bytes, we must align to an
+     even word boundary, unless the next instruction is a dc.b, ds.b
+     or dcb.b.  */
+  if (flag_mri && (bytes & 1) != 0)
+    mri_pending_align = 1;
+
   if (flag_mri)
     mri_comment_end (stop, stopc);
 
@@ -3172,14 +3261,25 @@ emit_expr (exp, nbytes)
       register valueT get;
       register valueT use;
       register valueT mask;
+      valueT hibit;
       register valueT unmask;
 
       /* JF << of >= number of bits in the object is undefined.  In
 	 particular SPARC (Sun 4) has problems */
       if (nbytes >= sizeof (valueT))
-	mask = 0;
+	{
+	  mask = 0;
+	  if (nbytes > sizeof (valueT))
+	    hibit = 0;
+	  else
+	    hibit = (valueT) 1 << (nbytes * BITS_PER_CHAR - 1);
+	}
       else
-	mask = ~(valueT) 0 << (BITS_PER_CHAR * nbytes);	/* Don't store these bits. */
+	{
+	  /* Don't store these bits. */
+	  mask = ~(valueT) 0 << (BITS_PER_CHAR * nbytes);
+	  hibit = (valueT) 1 << (nbytes * BITS_PER_CHAR - 1);
+	}
 
       unmask = ~mask;		/* Do store these bits. */
 
@@ -3190,7 +3290,9 @@ emit_expr (exp, nbytes)
 
       get = exp->X_add_number;
       use = get & unmask;
-      if ((get & mask) != 0 && (get & mask) != mask)
+      if ((get & mask) != 0
+	  && ((get & mask) != mask
+	      || (get & hibit) == 0))
 	{		/* Leading bits contain both 0s & 1s. */
 	  as_warn ("Value 0x%lx truncated to 0x%lx.",
 		   (unsigned long) get, (unsigned long) use);
@@ -4104,8 +4206,9 @@ is_it_end_of_statement ()
 }				/* is_it_end_of_statement() */
 
 void 
-equals (sym_name)
+equals (sym_name, reassign)
      char *sym_name;
+     int reassign;
 {
   register symbolS *symbolP;	/* symbol we are working with */
   char *stop;
@@ -4134,6 +4237,11 @@ equals (sym_name)
   else
     {
       symbolP = symbol_find_or_make (sym_name);
+      /* Permit register names to be redefined.  */
+      if (! reassign
+	  && S_IS_DEFINED (symbolP)
+	  && S_GET_SEGMENT (symbolP) != reg_section)
+	as_bad ("symbol `%s' already defined", S_GET_NAME (symbolP));
       pseudo_set (symbolP);
     }
 

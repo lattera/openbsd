@@ -1,9 +1,8 @@
 /* BFD back-end for VERSAdos-E objects.
+   Copyright 1995, 96, 1997 Free Software Foundation, Inc.
+   Written by Steve Chamberlain of Cygnus Support <sac@cygnus.com>.
 
    Versados is a Motorola trademark.
-
-   Copyright 1995 Free Software Foundation, Inc.
-   Written by Steve Chamberlain of Cygnus Support <sac@cygnus.com>.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -850,7 +849,7 @@ versados_canonicalize_reloc (abfd, section, relptr, symbols)
 #define versados_bfd_free_cached_info _bfd_generic_bfd_free_cached_info
 #define versados_new_section_hook _bfd_generic_new_section_hook
 
-#define versados_bfd_is_local_label bfd_generic_is_local_label
+#define versados_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define versados_get_lineno _bfd_nosymbols_get_lineno
 #define versados_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define versados_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

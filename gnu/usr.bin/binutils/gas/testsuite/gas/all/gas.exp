@@ -23,6 +23,8 @@ gas_test "float.s" ""   "" "simple FP constants"
 # This test is meaningless for the PA; the difference of two undefined
 # symbols is something that is (and must be) supported on the PA.
 if ![istarget hppa*-*-*] then {
+    setup_xfail "mn10300*-*-*"
+    setup_xfail "mn10200*-*-*"
     gas_test_error "diff1.s" "" "difference of two undefined symbols"
 }
 
@@ -83,11 +85,14 @@ if ![istarget hppa*-*-*] then {
     # the vax fails because VMS can apparently actually handle this
     # case in relocs, so gas doesn't handle it itself.
     setup_xfail "vax*-*-vms*"
+    setup_xfail "mn10300*-*-*"
+    setup_xfail "mn10200*-*-*"
     do_930509a
 }
 
 if ![istarget hppa*-*-*] then {
     run_dump_test struct
+    run_dump_test align
 }
 
 # This test is for any COFF target.
@@ -106,6 +111,28 @@ if { [istarget *-*-coff*] \
      || ([istarget i960-*-vxworks5.*] && ![istarget i960-*-vxworks5.0*]) } {
     run_dump_test cofftag
 }
+
+# Test omitting conditionals from listings.
+proc test_cond {} {
+    global comp_output
+    global srcdir
+    global subdir
+
+    set testname "conditional listings"
+    gas_run cond.s -alc ">dump.out"
+    if ![string match "" $comp_output] {
+	send_log "$comp_output\n"
+	fail $testname
+    } else {
+	if { [regexp_diff dump.out $srcdir/$subdir/cond.d] } {
+	    fail $testname
+	} else {
+	    pass $testname
+	}
+    }
+}
+
+test_cond
 
 # FIXME: this is here cause of a bug in DejaGnu 1.1.1. When it is no longer
 #        in use, then this can be removed.

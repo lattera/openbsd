@@ -1,5 +1,5 @@
 /* objcopy.c -- copy object file from input to output, optionally massaging it.
-   Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -25,6 +25,16 @@
 #include "budbg.h"
 #include <sys/stat.h>
 
+#ifdef HAVE_GOOD_UTIME_H
+#include <utime.h>
+#else /* ! HAVE_GOOD_UTIME_H */
+#ifdef HAVE_UTIMES
+#include <sys/time.h>
+#endif /* HAVE_UTIMES */
+#endif /* ! HAVE_GOOD_UTIME_H */
+
+static void copy_usage PARAMS ((FILE *, int));
+static void strip_usage PARAMS ((FILE *, int));
 static flagword parse_flags PARAMS ((const char *));
 static struct section_list *find_section_list PARAMS ((const char *, boolean));
 static void setup_section PARAMS ((bfd *, asection *, PTR));
@@ -37,7 +47,17 @@ static boolean is_strip_section PARAMS ((bfd *, asection *));
 static unsigned int filter_symbols
   PARAMS ((bfd *, bfd *, asymbol **, asymbol **, long));
 static void mark_symbols_used_in_relocations PARAMS ((bfd *, asection *, PTR));
+static void filter_bytes PARAMS ((char *, bfd_size_type *));
 static boolean write_debugging_info PARAMS ((bfd *, PTR, long *, asymbol ***));
+static void copy_object PARAMS ((bfd *, bfd *));
+static void copy_archive PARAMS ((bfd *, bfd *, const char *));
+static void copy_file
+  PARAMS ((const char *, const char *, const char *, const char *));
+static int simple_copy PARAMS ((const char *, const char *));
+static int smart_rename PARAMS ((const char *, const char *));
+static void make_same_dates PARAMS ((const char *, const char *));
+static int strip_main PARAMS ((int, char **));
+static int copy_main PARAMS ((int, char **));
 
 #define nonfatal(s) {bfd_nonfatal(s); status = 1; return;}
 
@@ -162,6 +182,7 @@ static boolean remove_leading_char = false;
 #define OPTION_SET_SECTION_FLAGS (OPTION_REMOVE_LEADING_CHAR + 1)
 #define OPTION_SET_START (OPTION_SET_SECTION_FLAGS + 1)
 #define OPTION_STRIP_UNNEEDED (OPTION_SET_START + 1)
+#define OPTION_WEAKEN (OPTION_STRIP_UNNEEDED + 1)
 
 /* Options to handle if running as "strip".  */
 
@@ -176,6 +197,7 @@ static struct option strip_options[] =
   {"keep-symbol", required_argument, 0, 'K'},
   {"output-format", required_argument, 0, 'O'},	/* Obsolete */
   {"output-target", required_argument, 0, 'O'},
+  {"preserve-dates", no_argument, 0, 'p'},
   {"remove-section", required_argument, 0, 'R'},
   {"strip-all", no_argument, 0, 's'},
   {"strip-debug", no_argument, 0, 'S'},
@@ -212,6 +234,7 @@ static struct option copy_options[] =
   {"output-format", required_argument, 0, 'O'},	/* Obsolete */
   {"output-target", required_argument, 0, 'O'},
   {"pad-to", required_argument, 0, OPTION_PAD_TO},
+  {"preserve-dates", no_argument, 0, 'p'},
   {"remove-leading-char", no_argument, 0, OPTION_REMOVE_LEADING_CHAR},
   {"remove-section", required_argument, 0, 'R'},
   {"set-section-flags", required_argument, 0, OPTION_SET_SECTION_FLAGS},
@@ -223,6 +246,7 @@ static struct option copy_options[] =
   {"target", required_argument, 0, 'F'},
   {"verbose", no_argument, 0, 'v'},
   {"version", no_argument, 0, 'V'},
+  {"weaken", no_argument, 0, OPTION_WEAKEN},
   {0, no_argument, 0, 0}
 };
 
@@ -241,20 +265,20 @@ copy_usage (stream, exit_status)
      int exit_status;
 {
   fprintf (stream, "\
-Usage: %s [-vVSgxX] [-I bfdname] [-O bfdname] [-F bfdname] [-b byte]\n\
+Usage: %s [-vVSpgxX] [-I bfdname] [-O bfdname] [-F bfdname] [-b byte]\n\
        [-R section] [-i interleave] [--interleave=interleave] [--byte=byte]\n\
        [--input-target=bfdname] [--output-target=bfdname] [--target=bfdname]\n\
        [--strip-all] [--strip-debug] [--strip-unneeded] [--discard-all]\n\
        [--discard-locals] [--debugging] [--remove-section=section]\n",
 	   program_name);
   fprintf (stream, "\
-       [--gap-fill=val] [--pad-to=address]\n\
+       [--gap-fill=val] [--pad-to=address] [--preserve-dates]\n\
        [--set-start=val] [--adjust-start=incr]\n\
        [--adjust-vma=incr] [--adjust-section-vma=section{=,+,-}val]\n\
        [--adjust-warnings] [--no-adjust-warnings]\n\
        [--set-section-flags=section=flags] [--add-section=sectionname=filename]\n\
        [--keep-symbol symbol] [-K symbol] [--strip-symbol symbol] [-N symbol]\n\
-       [--change-leading-char] [--remove-leading-char] [--verbose]\n\
+       [--change-leading-char] [--remove-leading-char] [--weaken] [--verbose]\n\
        [--version] [--help] in-file [out-file]\n");
   list_supported_targets (program_name, stream);
   if (exit_status == 0)
@@ -268,12 +292,12 @@ strip_usage (stream, exit_status)
      int exit_status;
 {
   fprintf (stream, "\
-Usage: %s [-vVsSgxX] [-I bfdname] [-O bfdname] [-F bfdname] [-R section]\n\
+Usage: %s [-vVsSpgxX] [-I bfdname] [-O bfdname] [-F bfdname] [-R section]\n\
        [--input-target=bfdname] [--output-target=bfdname] [--target=bfdname]\n\
        [--strip-all] [--strip-debug] [--strip-unneeded] [--discard-all]\n\
        [--discard-locals] [--keep-symbol symbol] [-K symbol]\n\
        [--strip-symbol symbol] [-N symbol] [--remove-section=section]\n\
-       [-o file] [--verbose] [--version] [--help] file...\n",
+       [-o file] [--preserve-dates] [--verbose] [--version] [--help] file...\n",
 	   program_name);
   list_supported_targets (program_name, stream);
   if (exit_status == 0)
@@ -371,6 +395,10 @@ static struct symlist *strip_specific_list = NULL;
    Otherwise, we keep only the symbols in the list.  */
 
 static boolean keep_symbols = false;
+
+/* If this is true, we weaken global symbols (set BSF_WEAK).  */
+
+static boolean weaken = false;
 
 /* Add a symbol to strip_specific_list.  */
 
@@ -499,6 +527,12 @@ filter_symbols (abfd, obfd, osyms, isyms, symcount)
       if (keep && is_strip_section (abfd, bfd_get_section (sym)))
 	keep = 0;
 
+      if (keep && weaken && (flags & BSF_GLOBAL) != 0)
+	{
+	  sym->flags &=~ BSF_GLOBAL;
+	  sym->flags |= BSF_WEAK;
+	}
+
       if (keep)
 	to[dst_count++] = sym;
     }
@@ -511,7 +545,7 @@ filter_symbols (abfd, obfd, osyms, isyms, symcount)
 /* Keep only every `copy_byte'th byte in MEMHUNK, which is *SIZE bytes long.
    Adjust *SIZE.  */
 
-void
+static void
 filter_bytes (memhunk, size)
      char *memhunk;
      bfd_size_type *size;
@@ -747,7 +781,8 @@ copy_object (ibfd, obfd)
 	  || sections_removed
 	  || convert_debugging
 	  || change_leading_char
-	  || remove_leading_char)
+	  || remove_leading_char
+	  || weaken)
 	{
 	  /* Mark symbols used in output relocations so that they
 	     are kept, even if they are local labels or static symbols.
@@ -849,21 +884,6 @@ copy_object (ibfd, obfd)
     }
 }
 
-static char *
-cat (a, b, c)
-     char *a;
-     char *b;
-     char *c;
-{
-  size_t size = strlen (a) + strlen (b) + strlen (c);
-  char *r = xmalloc (size + 1);
-
-  strcpy (r, a);
-  strcat (r, b);
-  strcat (r, c);
-  return r;
-}
-
 /* Read each archive element in turn from IBFD, copy the
    contents to temp file, and keep the temp file handle.  */
 
@@ -871,7 +891,7 @@ static void
 copy_archive (ibfd, obfd, output_target)
      bfd *ibfd;
      bfd *obfd;
-     char *output_target;
+     const char *output_target;
 {
   struct name_list
     {
@@ -897,7 +917,8 @@ copy_archive (ibfd, obfd, output_target)
   while (this_element != (bfd *) NULL)
     {
       /* Create an output file for this member.  */
-      char *output_name = cat (dir, "/", bfd_get_filename(this_element));
+      char *output_name = concat (dir, "/", bfd_get_filename(this_element),
+				  (char *) NULL);
       bfd *output_bfd = bfd_openw (output_name, output_target);
       bfd *last_element;
 
@@ -961,10 +982,10 @@ copy_archive (ibfd, obfd, output_target)
 
 static void
 copy_file (input_filename, output_filename, input_target, output_target)
-     char *input_filename;
-     char *output_filename;
-     char *input_target;
-     char *output_target;
+     const char *input_filename;
+     const char *output_filename;
+     const char *input_target;
+     const char *output_target;
 {
   bfd *ibfd;
   char **matching;
@@ -1421,7 +1442,8 @@ write_debugging_info (obfd, dhandle, symcountp, symppp)
 
 static int
 simple_copy (from, to)
-     char *from, *to;
+     const char *from;
+     const char *to;
 {
   int fromfd, tofd, nread;
   int saved;
@@ -1475,7 +1497,8 @@ simple_copy (from, to)
 
 static int
 smart_rename (from, to)
-     char *from, *to;
+     const char *from;
+     const char *to;
 {
   struct stat s;
   int ret = 0;
@@ -1530,6 +1553,57 @@ smart_rename (from, to)
   return ret;
 }
 
+/* Set the date of the file DESTINATION to be the same as the date of
+   the file SOURCE.  */
+
+static void
+make_same_dates (source, destination)
+     const char *source;
+     const char *destination;
+{
+  struct stat statbuf;
+  int result;
+
+  if (stat (source, &statbuf) < 0)
+    {
+      fprintf (stderr, "%s: ", source);
+      perror ("cannot stat");
+      return;
+    }
+
+  {
+#ifdef HAVE_GOOD_UTIME_H
+    struct utimbuf tb;
+
+    tb.actime = statbuf.st_atime;
+    tb.modtime = statbuf.st_mtime;
+    result = utime (destination, &tb);
+#else /* ! HAVE_GOOD_UTIME_H */
+#ifndef HAVE_UTIMES
+    long tb[2];
+
+    tb[0] = statbuf.st_atime;
+    tb[1] = statbuf.st_mtime;
+    result = utime (destination, tb);
+#else /* HAVE_UTIMES */
+    struct timeval tv[2];
+
+    tv[0].tv_sec = statbuf.st_atime;
+    tv[0].tv_usec = 0;
+    tv[1].tv_sec = statbuf.st_mtime;
+    tv[1].tv_usec = 0;
+    result = utimes (destination, tv);
+#endif /* HAVE_UTIMES */
+#endif /* ! HAVE_GOOD_UTIME_H */
+  }
+
+  if (result != 0)
+    {
+      fprintf (stderr, "%s: ", destination);
+      perror ("can not set time");
+    }
+}
+
 static int
 strip_main (argc, argv)
      int argc;
@@ -1537,11 +1611,12 @@ strip_main (argc, argv)
 {
   char *input_target = NULL, *output_target = NULL;
   boolean show_version = false;
+  boolean preserve_dates = false;
   int c, i;
   struct section_list *p;
   char *output_file = NULL;
 
-  while ((c = getopt_long (argc, argv, "I:O:F:K:N:R:o:sSgxXVv",
+  while ((c = getopt_long (argc, argv, "I:O:F:K:N:R:o:sSpgxXVv",
 			   strip_options, (int *) 0)) != EOF)
     {
       switch (c)
@@ -1591,6 +1666,9 @@ strip_main (argc, argv)
 	  break;
 	case 'o':
 	  output_file = optarg;
+	  break;
+	case 'p':
+	  preserve_dates = true;
 	  break;
 	case 'x':
 	  discard_locals = locals_all;
@@ -1643,6 +1721,8 @@ strip_main (argc, argv)
       copy_file (argv[i], tmpname, input_target, output_target);
       if (status == 0)
 	{
+	  if (preserve_dates)
+	    make_same_dates (argv[i], tmpname);
 	  if (output_file == NULL)
 	    smart_rename (tmpname, argv[i]);
 	  status = hold_status;
@@ -1665,10 +1745,11 @@ copy_main (argc, argv)
   char *input_target = NULL, *output_target = NULL;
   boolean show_version = false;
   boolean adjust_warn = true;
+  boolean preserve_dates = false;
   int c;
   struct section_list *p;
 
-  while ((c = getopt_long (argc, argv, "b:i:I:K:N:s:O:d:F:R:SgxXVv",
+  while ((c = getopt_long (argc, argv, "b:i:I:K:N:s:O:d:F:R:SpgxXVv",
 			   copy_options, (int *) 0)) != EOF)
     {
       switch (c)
@@ -1735,6 +1816,9 @@ copy_main (argc, argv)
 	    }
 	  add_strip_symbol (optarg);
 	  break;
+	case 'p':
+	  preserve_dates = true;
+	  break;
 	case 'x':
 	  discard_locals = locals_all;
 	  break;
@@ -1746,6 +1830,9 @@ copy_main (argc, argv)
 	  break;
 	case 'V':
 	  show_version = true;
+	  break;
+	case OPTION_WEAKEN:
+	  weaken = true;
 	  break;
 	case OPTION_ADD_SECTION:
 	  {
@@ -1957,15 +2044,22 @@ copy_main (argc, argv)
   if (output_filename == (char *) NULL)
     {
       char *tmpname = make_tempname (input_filename);
+
       copy_file (input_filename, tmpname, input_target, output_target);
       if (status == 0)
-	smart_rename (tmpname, input_filename);
+	{	
+	  if (preserve_dates)
+	    make_same_dates (input_filename, tmpname);
+	  smart_rename (tmpname, input_filename);
+	}
       else
 	unlink (tmpname);
     }
   else
     {
       copy_file (input_filename, output_filename, input_target, output_target);
+      if (status == 0 && preserve_dates)
+	make_same_dates (input_filename, output_filename);
     }
 
   if (adjust_warn)
@@ -2000,6 +2094,7 @@ main (argc, argv)
   discard_locals = locals_undef;
 
   bfd_init ();
+  set_default_bfd_target ();
 
   if (is_strip < 0)
     {

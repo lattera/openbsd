@@ -1,3 +1,221 @@
+Sat Apr 19 23:16:35 1997  Niklas Hallqvist  <niklas@petra.appli.se>
+
+	* gas/mips/mips.exp: Handle OpenBSD like NetBSD.
+
+Mon Apr  7 12:57:45 1997  Doug Evans  <dje@canuck.cygnus.com>
+
+	* gas/m32r/allinsn.d: Update to new objdump output style.
+
+Fri Apr  4 18:16:44 1997  Doug Evans  <dje@canuck.cygnus.com>
+
+	* gas/m32r/allinsn.{exp,d,s}: New files.
+
+Fri Apr  4 13:19:39 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/all/float.s: Put a tab before .text, to keep the PA happy.
+
+	* gas/arm/arm.exp: Only run inst and arm7t on targets which can
+	handle -EL.  Add setup_xfail for thumb.
+
+	* gas/h8300/ffxx1.d: Don't fail if BFD is 64 bits.
+
+Sat Mar 15 17:21:46 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/arm/inst.d: Update for disassembler changes.
+	* gas/arm/arm7t.d: Likewise.
+
+Tue Mar 11 13:31:56 1997  Andreas Schwab  <schwab@issan.informatik.uni-dortmund.de>
+
+	* gas/m68k/op68000.d: Update for recent assembler bug fix.
+
+Wed Mar  5 13:01:24 1997  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/all/gas.exp: xfail a couple tests for the mn10300.
+
+Tue Feb 25 13:45:55 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/macros/semi.s: Force the final alignment to use a fill value
+	of 0.
+
+	* gas/all/cond.s, gas/all/cond.d: New test.
+	* gas/all/gas.exp: Run it.
+
+Mon Feb 24 10:52:12 1997  Bob Manson  <manson@charmed.cygnus.com>
+
+	* lib/gas-defs.exp(gas_init): Added new parameter for script
+	name.
+
+Sun Feb 23 17:54:00 1997  Dawn Perchik  <dawn@cygnus.com>
+
+	* gas/all/itbl-test.c(main): Update function calls.
+	Remove parameters from itbl_get_reg_val and
+	change itbl_get_insn_name to itbl_get_field.
+
+Sun Feb 23 17:22:00 1997  Dawn Perchik  <dawn@cygnus.com>
+
+	* gas/mips/itbl: Add comments.
+	* gas/mips/itbl.s: Add comments.  Prefix register names with $.
+	* gas/all/itbl: Generic table for testing for itbl support.
+	* gas/all/itbl.s: Generic assembly for testing for itbl support.
+	* gas/mips/itbl-test.c: Moved to gas/all.
+	* gas/all/itbl-test.c: Moved from gas/mips.
+
+Wed Feb 19 00:55:29 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/macros/semi.s, gas/macros/semi.d: New test.
+	* gas/macros/macros.exp: Run it.
+	* gas/mri/semi.s, gas/mri/semi.d: New test.
+	* gas/mri/mri.exp: Run it.
+
+Tue Feb 18 13:37:06 1997  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/hppa/unsorted/unsorted.exp (align4 tests): Tweak expected
+	output.
+	
+Fri Feb 14 17:56:27 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/all/align.d, gas/all/align.s: New test.
+	* gas/all/gas.exp: Run it.
+
+Thu Feb 13 14:44:05 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/mips16.d: Correct PC relative instruction bytes.
+
+Wed Feb 12 12:33:08 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/lif-svr4pic.d: Pass -EB when running the assembler.
+	* gas/mips/lif-xgot.d: Likewise.
+	* gas/mips/ulh-svr4pic.d: Likewise.
+	* gas/mips/ulh-xgot.d: Likewise.
+
+	* gas/mips/mips16.d: Update for yet another change in disassembly
+	output (this one is spacing only).
+
+Tue Feb 11 15:46:27 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/mips16.d: Update for change in disassembly output.
+
+Mon Feb 10 22:24:00 1997  Dawn Perchik  <dawn@cygnus.com>
+
+        * gas/mips/itbl-test.c: Add copyright message and fix indentation.   
+
+Mon Feb 10 17:54:00 1997  Dawn Perchik  <dawn@cygnus.com>
+
+	* gas/mips/itbl-test.c: New file.  Stand-alone assembler and 
+	dissassembler for itbl support.
+
+Mon Feb 10 17:20:00 1997  Dawn Perchik  <dawn@cygnus.com>
+
+	* gas/mips/itbl: New file.  Instruction Spec for testing --itbl
+	option.
+	* gas/mips/itbl.s: New file.  Assembly with ne2w instructions
+	specified in itbl.
+
+Fri Feb  7 16:42:53 1997  Bob Manson  <manson@charmed.cygnus.com>
+
+	* gasp/gasp.exp: Use prune_warnings instead of prune_system_crud.
+	* lib/gas-defs.exp: Ditto.
+
+Mon Feb  3 15:46:05 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/arm/inst.d, gas/arm/arm7t.d: Pass --prefix-addresses to
+	objdump.  Update for current relocation printing style.
+
+Thu Jan 30 11:57:33 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/mips16.d: Update for disassembler changes.
+
+Thu Jan 23 03:15:06 1997  Angela Marie Thomas (angela@cygnus.com)
+
+	* gas/mips/mips.exp: set ilocks for all 4100/4300
+
+Thu Jan  2 16:49:17 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/mips16.s, gas/mips/mips16.d: New test.
+	* gas/mips/mips.exp: Run mips16 test.
+
+	* gas/mips/mips.exp: Run dli test unconditionally.
+	* gas/mips/dli.s: Add text symbol.  Add nops to round to 16 byte
+	boundary.
+	* gas/mips/dli.d: Corresponding changes.
+
+Tue Dec 31 13:03:16 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/sparc/synth.d: Use --prefix-addresses for objdump.
+	* gas/sparc/synth64.d: Likewise.
+
+Tue Dec 24 16:30:58 1996  Angela Marie Thomas (angela@cygnus.com)
+
+	* gas/mips/*-ilocks.d: Fix regexps to resemble disassembled output.
+
+Fri Dec 13 13:05:33 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/mips/*.[sd]: Add explicit nops, sometimes controlled by
+	.ifdef, to accomodate change to avoid default alignment on
+	embedded systems.
+
+Wed Dec 11 09:26:01 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10200/basic.exp (do_movb): Fix bit pattern for
+	"movb dm,(an)".
+
+Tue Dec 10 13:01:05 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/basic.exp: Update after endianness changes to
+	the assembler.
+
+	* gas/mn10200/{mov1.s,mov2.s,mov3.s,mov4.s,movx.s}: New tests.
+	* gas/mn10200/{movb.s, movbu.s}: Likewise.
+	* gas/mn10200/basic.exp: Run them.
+
+Mon Dec  9 17:08:38 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10200/*.s: New tests for the mn10200 assembler.
+	* gas/mn10200/basic.exp: Run them.
+
+Fri Dec  6 15:35:04 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/*.s: Remove '$' register prefixing.
+
+Mon Nov 25 16:35:33 1996  Doug Evans  <dje@canuck.cygnus.com>
+
+	* gas/sparc-solaris/addend.exp: Fix patterns, you can't assume
+	\r will be present.
+
+Mon Nov 25 13:45:02 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* gas/m68k/*.d: Update for disassembler changes.
+	* gas/mri/*.d: Likewise.
+
+Mon Nov 25 11:38:37 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/*.s: Use '$' as register prefix for
+	all register operands.
+
+Thu Nov 21 11:52:54 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/all/gas.exp: xfail a couple tests for the mn10300.
+
+Wed Nov 20 11:31:41 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/other.s: Update for correct syntax on a
+	few instructions (those with register lists).
+	* gas/mn10300/basic.exp: Corresponding changes.
+
+Tue Nov 19 13:36:57 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/movm.s: Update for correct syntax.
+	* gas/mn10300/basic.exp: Update expected movm bit patterns.
+
+Fri Nov 15 13:57:42 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/mn10300/other.s: Put parens around register
+	argument in calls and jmp instructions.
+
+Wed Nov 13 13:16:04 1996  Jeffrey A Law  (law@cygnus.com)
+
+	* gas/h8300/ffxx1.d: Update for recent disassembler changes.
+
 Mon Nov 11 16:03:24 1996  Jeffrey A Law  (law@cygnus.com)
 
 	* gas/hppa/reloc/reloc.exp: Pass "--prefix-addresses" to objdump

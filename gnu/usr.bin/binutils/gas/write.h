@@ -1,5 +1,5 @@
 /* write.h
-   Copyright (C) 1987, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +14,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #ifndef TC_I960
 #ifdef hpux
@@ -23,15 +24,19 @@
 #endif
 #endif /* TC_I960 */
 
+#ifndef BFD_ASSEMBLER
+
 #ifndef LOCAL_LABEL
 #define LOCAL_LABEL(name) (name [0] == 'L' )
-#endif /* LOCAL_LABEL */
-
-#ifndef FAKE_LABEL_NAME
-#define FAKE_LABEL_NAME "L0\001"
 #endif
 
-#define S_LOCAL_NAME(s) (LOCAL_LABEL(S_GET_NAME(s)))
+#define S_LOCAL_NAME(s) (LOCAL_LABEL (S_GET_NAME (s)))
+
+#endif /* ! BFD_ASSEMBLER */
+
+/* This is the name of a fake symbol which will never appear in the
+   assembler output.  S_IS_LOCAL detects it because of the \001.  */
+#define FAKE_LABEL_NAME "L0\001"
 
 #include "bit_fix.h"
 
@@ -77,6 +82,9 @@ struct fix
 
      @@ Can this be determined from BFD?  */
   unsigned fx_no_overflow : 1;
+
+  /* The value is signed when checking for overflow.  */
+  unsigned fx_signed : 1;
 
   /* Which frag does this fix apply to?  */
   fragS *fx_frag;
@@ -158,6 +166,7 @@ extern bit_fixS *bit_fix_new
 extern void append PARAMS ((char **charPP, char *fromP, unsigned long length));
 extern void record_alignment PARAMS ((segT seg, int align));
 extern void write_object_file PARAMS ((void));
+extern long relax_frag PARAMS ((fragS *, long));
 extern void relax_segment
   PARAMS ((struct frag * seg_frag_root, segT seg_type));
 

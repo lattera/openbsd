@@ -1,5 +1,5 @@
 #as: -Av9
-#objdump: -dr
+#objdump: -dr --prefix-addresses
 #name: sparc64 synth64
 
 .*: +file format .*sparc.*

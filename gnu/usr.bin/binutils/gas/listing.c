@@ -1,5 +1,5 @@
 /* listing.c - mainting assembly listings
-   Copyright (C) 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +14,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GAS; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+along with GAS; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA. */
 
 /*
  Contributed by Steve Chamberlain
@@ -168,6 +169,7 @@ typedef struct list_info_struct
       EDICT_TITLE,
       EDICT_NOLIST,
       EDICT_LIST,
+      EDICT_NOLIST_NEXT,
       EDICT_EJECT
     } edict;
   char *edict_arg;
@@ -205,9 +207,8 @@ static char *buffer_line PARAMS ((file_info_type *file,
 				  char *line, unsigned int size));
 static void listing_page PARAMS ((list_info_type *list));
 static unsigned int calc_hex PARAMS ((list_info_type *list));
-static void print_lines PARAMS ((list_info_type *list,
-				 char *string,
-				 unsigned int address));
+static void print_lines PARAMS ((list_info_type *, unsigned int,
+				 char *, unsigned int));
 static void list_symbol_table PARAMS ((void));
 static void print_source PARAMS ((file_info_type *current_file,
 				  list_info_type *list,
@@ -555,8 +556,9 @@ calc_hex (list)
 
 
 static void
-print_lines (list, string, address)
+print_lines (list, lineno, string, address)
      list_info_type *list;
+     unsigned int lineno;
      char *string;
      unsigned int address;
 {
@@ -572,7 +574,7 @@ print_lines (list, string, address)
   /* Print the hex for the first line */
   if (address == ~0)
     {
-      fprintf (list_file, "% 4d     ", list->line);
+      fprintf (list_file, "% 4d     ", lineno);
       for (idx = 0; idx < nchars; idx++)
 	fprintf (list_file, " ");
 
@@ -585,11 +587,11 @@ print_lines (list, string, address)
     {
       if (had_errors ())
 	{
-	  fprintf (list_file, "% 4d ???? ", list->line);
+	  fprintf (list_file, "% 4d ???? ", lineno);
 	}
       else
 	{
-	  fprintf (list_file, "% 4d %04x ", list->line, address);
+	  fprintf (list_file, "% 4d %04x ", lineno, address);
 	}
 
       /* And the data to go along with it */
@@ -630,7 +632,7 @@ print_lines (list, string, address)
 	  nchars = ((LISTING_WORD_SIZE * 2) + 1) * LISTING_LHS_WIDTH_SECOND - 1;
 	  idx = 0;
 	  /* Print any more lines of data, but more compactly */
-	  fprintf (list_file, "% 4d      ", list->line);
+	  fprintf (list_file, "% 4d      ", lineno);
 
 	  while (*src && idx < nchars)
 	    {
@@ -860,6 +862,8 @@ listing_listing (name)
 	case EDICT_NOLIST:
 	  show_listing--;
 	  break;
+	case EDICT_NOLIST_NEXT:
+	  break;
 	case EDICT_EJECT:
 	  break;
 	case EDICT_NONE:
@@ -894,12 +898,17 @@ listing_listing (name)
 		 && list->file->linenum < list->line
 		 && !list->file->at_end)
 	    {
+	      unsigned int address;
+
 	      p = buffer_line (list->file, buffer, width);
 
+	      if (list->file->linenum < list->line)
+		address = ~ (unsigned int) 0;
+	      else
+		address = calc_hex (list);
+
 	      if (!((listing & LISTING_NODEBUG) && debugging_pseudo (p)))
-		{
-		  print_lines (list, p, calc_hex (list));
-		}
+		print_lines (list, list->file->linenum, p, address);
 	    }
 
 	  if (list->edict == EDICT_EJECT)
@@ -914,6 +923,9 @@ listing_listing (name)
 		 && !list->file->at_end)
 	    p = buffer_line (list->file, buffer, width);
 	}
+
+      if (list->edict == EDICT_NOLIST_NEXT)
+	--show_listing;
 
       list = list->next;
     }
@@ -1004,12 +1016,39 @@ listing_flags (ignore)
 
 }
 
+/* Turn listing on or off.  An argument of 0 means to turn off
+   listing.  An argument of 1 means to turn on listing.  An argument
+   of 2 means to turn off listing, but as of the next line; that is,
+   the current line should be listed, but the next line should not.  */
+
 void
 listing_list (on)
      int on;
 {
   if (listing)
-    listing_tail->edict = on ? EDICT_LIST : EDICT_NOLIST;
+    {
+      switch (on)
+	{
+	case 0:
+	  if (listing_tail->edict == EDICT_LIST)
+	    listing_tail->edict = EDICT_NONE;
+	  else
+	    listing_tail->edict = EDICT_NOLIST;
+	  break;
+	case 1:
+	  if (listing_tail->edict == EDICT_NOLIST
+	      || listing_tail->edict == EDICT_NOLIST_NEXT)
+	    listing_tail->edict = EDICT_NONE;
+	  else
+	    listing_tail->edict = EDICT_LIST;
+	  break;
+	case 2:
+	  listing_tail->edict = EDICT_NOLIST_NEXT;
+	  break;
+	default:
+	  abort ();
+	}
+    }
 }
 
 

@@ -1,5 +1,5 @@
 /* Support for the generic parts of most COFF variants, for BFD.
-   Copyright 1995, 1996 Free Software Foundation, Inc.
+   Copyright 1995, 1996, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -193,7 +193,31 @@ Most of this hacked by  Steve Chamberlain,
 #define PUT_SCNHDR_LNNOPTR bfd_h_put_32
 #endif
 
-
+static void coff_swap_reloc_in PARAMS ((bfd *, PTR, PTR));
+static unsigned int coff_swap_reloc_out PARAMS ((bfd *, PTR, PTR));
+static void coff_swap_filehdr_in PARAMS ((bfd *, PTR, PTR));
+static unsigned int coff_swap_filehdr_out PARAMS ((bfd *, PTR, PTR));
+static void coff_swap_sym_in PARAMS ((bfd *, PTR, PTR));
+static unsigned int coff_swap_sym_out PARAMS ((bfd *, PTR, PTR));
+static void coff_swap_aux_in PARAMS ((bfd *, PTR, int, int, int, int, PTR));
+static unsigned int coff_swap_aux_out
+  PARAMS ((bfd *, PTR, int, int, int, int, PTR));
+static void coff_swap_lineno_in PARAMS ((bfd *, PTR, PTR));
+static unsigned int coff_swap_lineno_out PARAMS ((bfd *, PTR, PTR));
+static void coff_swap_aouthdr_in PARAMS ((bfd *, PTR, PTR));
+static void add_data_entry
+  PARAMS ((bfd *, struct internal_extra_pe_aouthdr *, int, char *, bfd_vma));
+static unsigned int coff_swap_aouthdr_out PARAMS ((bfd *, PTR, PTR));
+static void coff_swap_scnhdr_in PARAMS ((bfd *, PTR, PTR));
+static unsigned int coff_swap_scnhdr_out PARAMS ((bfd *, PTR, PTR));
+static boolean pe_print_idata PARAMS ((bfd *, PTR));
+static boolean pe_print_edata PARAMS ((bfd *, PTR));
+static boolean pe_print_pdata PARAMS ((bfd *, PTR));
+static boolean pe_print_reloc PARAMS ((bfd *, PTR));
+static boolean pe_print_private_bfd_data PARAMS ((bfd *, PTR));
+static boolean pe_mkobject PARAMS ((bfd *));
+static PTR pe_mkobject_hook PARAMS ((bfd *, PTR, PTR));
+static boolean pe_bfd_copy_private_bfd_data PARAMS ((bfd *, bfd *));
 
 /**********************************************************************/
 
@@ -1177,8 +1201,8 @@ static char * dir_names[IMAGE_NUMBEROF_DIRECTORY_ENTRIES] =
 /**********************************************************************/
 static boolean
 pe_print_idata(abfd, vfile)
-     bfd*abfd;
-     void *vfile;
+     bfd *abfd;
+     PTR vfile;
 {
   FILE *file = vfile;
   bfd_byte *data = 0;
@@ -1388,9 +1412,9 @@ pe_print_idata(abfd, vfile)
 }
 
 static boolean
-pe_print_edata(abfd, vfile)
-     bfd*abfd;
-     void *vfile;
+pe_print_edata (abfd, vfile)
+     bfd *abfd;
+     PTR vfile;
 {
   FILE *file = vfile;
   bfd_byte *data = 0;
@@ -1573,9 +1597,9 @@ pe_print_edata(abfd, vfile)
 }
 
 static boolean
-pe_print_pdata(abfd, vfile)
-     bfd*abfd;
-     void *vfile;
+pe_print_pdata (abfd, vfile)
+     bfd  *abfd;
+     PTR vfile;
 {
   FILE *file = vfile;
   bfd_byte *data = 0;
@@ -1697,9 +1721,9 @@ static const char *tbl[6] =
 };
 
 static boolean
-pe_print_reloc(abfd, vfile)
-     bfd*abfd;
-     void *vfile;
+pe_print_reloc (abfd, vfile)
+     bfd *abfd;
+     PTR vfile;
 {
   FILE *file = vfile;
   bfd_byte *data = 0;

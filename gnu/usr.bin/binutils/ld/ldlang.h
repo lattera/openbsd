@@ -1,5 +1,5 @@
 /* ldlang.h - linker command language support
-   Copyright 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    
    This file is part of GLD, the Gnu Linker.
    
@@ -14,8 +14,9 @@
    GNU General Public License for more details.
    
    You should have received a copy of the GNU General Public License
-   along with GLD; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GLD; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #ifndef LDLANG_H
 #define LDLANG_H
@@ -443,6 +444,7 @@ extern void lang_add_reloc
 extern void lang_for_each_statement
   PARAMS ((void (*func) (lang_statement_union_type *)));
 extern PTR stat_alloc PARAMS ((size_t size));
+extern void dprint_statement PARAMS ((lang_statement_union_type *, int));
 extern bfd_vma lang_size_sections
   PARAMS ((lang_statement_union_type *s,
 	   lang_output_section_statement_type *output_section_statement,
@@ -464,5 +466,17 @@ extern void lang_leave_overlay_section
   PARAMS ((bfd_vma, struct lang_output_section_phdr_list *));
 extern void lang_leave_overlay
   PARAMS ((bfd_vma, const char *, struct lang_output_section_phdr_list *));
+
+extern struct bfd_elf_version_tree *lang_elf_version_info;
+
+extern struct bfd_elf_version_expr *lang_new_vers_regex
+  PARAMS ((struct bfd_elf_version_expr *, const char *));
+extern struct bfd_elf_version_tree *lang_new_vers_node
+  PARAMS ((struct bfd_elf_version_expr *, struct bfd_elf_version_expr *));
+extern struct bfd_elf_version_deps *lang_add_vers_depend
+  PARAMS ((struct bfd_elf_version_deps *, const char *));
+extern void lang_register_vers_node
+  PARAMS ((const char *, struct bfd_elf_version_tree *,
+	   struct bfd_elf_version_deps *));
 
 #endif

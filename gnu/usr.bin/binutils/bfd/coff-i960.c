@@ -1,5 +1,5 @@
 /* BFD back-end for Intel 960 COFF files.
-   Copyright (C) 1990, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -24,11 +24,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/i960.h"
 #include "coff/internal.h"
 #include "libcoff.h"		/* to allow easier abstraction-breaking */
 
+static boolean coff_i960_is_local_label_name PARAMS ((bfd *, const char *));
 static bfd_reloc_status_type optcall_callback
   PARAMS ((bfd *, arelent *, asymbol *, PTR, asection *, bfd *, char **));
 static bfd_reloc_status_type coff_i960_relocate
@@ -51,6 +51,20 @@ static boolean coff_i960_adjust_symndx
 #define COFF_PAGE_SIZE 1
 
 #define COFF_LONG_FILENAMES
+
+/* This set of local label names is taken from gas.  */
+
+static boolean
+coff_i960_is_local_label_name (abfd, name)
+     bfd *abfd;
+     const char *name;
+{
+  return (name[0] == 'L'
+	  || (name[0] == '.'
+	      && (name[1] == 'C'
+		  || name[1] == 'I'
+		  || name[1] == '.')));
+}
 
 /* This is just like the usual CALC_ADDEND, but it includes the
    section VMA for PC relative relocs.  */
@@ -584,6 +598,8 @@ coff_i960_adjust_symndx (obfd, info, ibfd, sec, irel, adjustedp)
 
   return true;
 }
+
+#define coff_bfd_is_local_label_name coff_i960_is_local_label_name
 
 #define coff_start_final_link coff_i960_start_final_link
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+# Copyright (C) 1993, 1994, 1997 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 
 # Please email any bugs, comments, and/or additions to this file to:
 # DejaGnu@cygnus.com
@@ -40,9 +40,11 @@ proc gas_run { prog as_opts redir } {
     global subdir
     global host_triplet
 
-    verbose "Executing $AS $ASFLAGS $as_opts $prog $redir"
+    verbose "Executing $srcdir/lib/run $AS $ASFLAGS $as_opts $srcdir/$subdir/$prog $redir"
     catch "exec $srcdir/lib/run $AS $ASFLAGS $as_opts $srcdir/$subdir/$prog $redir" comp_output
-    set comp_output [prune_system_crud $host_triplet $comp_output]
+    set comp_output [prune_warnings $comp_output]
+    verbose "output was $comp_output"
+    return [list $comp_output ""];
 }
 
 proc all_ones { args } {
@@ -155,7 +157,7 @@ proc gas_test_error { file as_opts testname } {
 
 proc gas_exit {} {}
 
-proc gas_init {} {
+proc gas_init { args } {
     global target_cpu
     global target_cpu_family
     global target_family
@@ -262,7 +264,7 @@ proc run_dump_test { name } {
 
     send_log "$AS $ASFLAGS $opts(as) -o dump.o $sourcefile\n"
     catch "exec $srcdir/lib/run $AS $ASFLAGS $opts(as) -o dump.o $sourcefile" comp_output
-    set comp_output [prune_system_crud $host_triplet $comp_output]
+    set comp_output [prune_warnings $comp_output]
 
     if ![string match "" $comp_output] then {
 	send_log "$comp_output\n"
@@ -281,7 +283,7 @@ proc run_dump_test { name } {
     if { $program == "objcopy" } {
 	send_log "$binary $progopts $progopts1 dump.o dump.out\n"
 	catch "exec $binary $progopts $progopts1 dump.o dump.out" comp_output
-	set comp_output [prune_system_crud $host_triplet $comp_output]
+	set comp_output [prune_warnings $comp_output]
 	if ![string match "" $comp_output] then {
 	    send_log "$comp_output\n"
 	    fail $testname
@@ -290,7 +292,7 @@ proc run_dump_test { name } {
     } else {
 	send_log "$binary $progopts $progopts1 dump.o > dump.out\n"
 	catch "exec $binary $progopts $progopts1 dump.o > dump.out" comp_output
-	set comp_output [prune_system_crud $host_triplet $comp_output]
+	set comp_output [prune_warnings $comp_output]
 	if ![string match "" $comp_output] then {
 	    send_log "$comp_output\n"
 	    fail $testname
@@ -301,6 +303,7 @@ proc run_dump_test { name } {
     verbose_eval {[file_contents "dump.out"]} 3
     if { [regexp_diff "dump.out" "${file}.d"] } then {
 	fail $testname
+	verbose "output is [file_contents "dump.out"]" 2
 	return
     }
 
@@ -340,7 +343,7 @@ proc objdump { opts } {
     global host_triplet
 
     catch "exec $OBJDUMP $opts" comp_output
-    set comp_output [prune_system_crud $host_triplet $comp_output]
+    set comp_output [prune_warnings $comp_output]
     verbose "objdump output=$comp_output\n" 3
 }
 
@@ -462,19 +465,16 @@ proc verbose_eval { expr { level 1 } } {
 # This definition is taken from an unreleased version of DejaGnu.  Once
 # that version gets released, and has been out in the world for a few
 # months at least, it may be safe to delete this copy.
-if ![string length [info proc prune_system_crud]] {
+if ![string length [info proc prune_warnings]] {
     #
-    # prune_system_crud -- delete various system verbosities from TEXT on SYSTEM
+    # prune_warnings -- delete various system verbosities from TEXT.
     #
     # An example is:
     # ld.so: warning: /usr/lib/libc.so.1.8.1 has older revision than expected 9
     #
-    # SYSTEM is typical $target_triplet or $host_triplet.
-    #
-    # This is useful when trying to do pattern matches on program output.
     # Sites with particular verbose os's may wish to override this in site.exp.
     #
-    proc prune_system_crud { system text } {
+    proc prune_warnings { text } {
 	# This is from sun4's.  Do it for all machines for now.
 	# The "\\1" is to try to preserve a "\n" but only if necessary.
 	regsub -all "(^|\n)(ld.so: warning:\[^\n\]*\n?)+" $text "\\1" text

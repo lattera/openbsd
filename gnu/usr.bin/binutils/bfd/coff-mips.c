@@ -1,5 +1,5 @@
 /* BFD back-end for MIPS Extended-Coff files.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Original version by Per Bothner.
    Full support added by Ian Lance Taylor, ian@cygnus.com.
 
@@ -1245,8 +1245,8 @@ mips_relocate_section (output_bfd, info, input_bfd, input_section,
   boolean got_lo;
   struct internal_reloc lo_int_rel;
 
-  BFD_ASSERT (input_bfd->xvec->header_byteorder
-	      == output_bfd->xvec->header_byteorder);
+  BFD_ASSERT (input_bfd->xvec->byteorder
+	      == output_bfd->xvec->byteorder);
 
   /* We keep a table mapping the symndx found in an internal reloc to
      the appropriate section.  This is faster than looking up the
@@ -1878,7 +1878,7 @@ mips_read_relocs (abfd, sec)
   if (section_tdata == (struct ecoff_section_tdata *) NULL)
     {
       sec->used_by_bfd =
-	(PTR) bfd_alloc_by_size_t (abfd, sizeof (struct ecoff_section_tdata));
+	(PTR) bfd_alloc (abfd, sizeof (struct ecoff_section_tdata));
       if (sec->used_by_bfd == NULL)
 	return false;
 
@@ -2114,7 +2114,7 @@ mips_relax_section (abfd, sec, info, again)
 	  size_t size;
 
 	  size = sec->reloc_count * sizeof (long);
-	  offsets = (long *) bfd_alloc_by_size_t (abfd, size);
+	  offsets = (long *) bfd_alloc (abfd, size);
 	  if (offsets == (long *) NULL)
 	    goto error_return;
 	  memset (offsets, 0, size);
@@ -2497,7 +2497,7 @@ static const struct ecoff_backend_data mips_ecoff_backend_data =
     (unsigned (*) PARAMS ((bfd *,PTR,PTR))) bfd_void, /* reloc_out */
     mips_ecoff_swap_filehdr_out, mips_ecoff_swap_aouthdr_out,
     mips_ecoff_swap_scnhdr_out,
-    FILHSZ, AOUTSZ, SCNHSZ, 0, 0, 0, 0, true, false,
+    FILHSZ, AOUTSZ, SCNHSZ, 0, 0, 0, 0, true, false, 4,
     mips_ecoff_swap_filehdr_in, mips_ecoff_swap_aouthdr_in,
     mips_ecoff_swap_scnhdr_in, NULL,
     mips_ecoff_bad_format_hook, _bfd_ecoff_set_arch_mach_hook,
@@ -2658,6 +2658,48 @@ const bfd_target ecoff_big_vec =
     _bfd_generic_mkarchive, bfd_false},
  {bfd_false, _bfd_ecoff_write_object_contents, /* bfd_write_contents */
     _bfd_write_archive_contents, bfd_false},
+
+     BFD_JUMP_TABLE_GENERIC (_bfd_ecoff),
+     BFD_JUMP_TABLE_COPY (_bfd_ecoff),
+     BFD_JUMP_TABLE_CORE (_bfd_nocore),
+     BFD_JUMP_TABLE_ARCHIVE (_bfd_ecoff),
+     BFD_JUMP_TABLE_SYMBOLS (_bfd_ecoff),
+     BFD_JUMP_TABLE_RELOCS (_bfd_ecoff),
+     BFD_JUMP_TABLE_WRITE (_bfd_ecoff),
+     BFD_JUMP_TABLE_LINK (_bfd_ecoff),
+     BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
+
+  (PTR) &mips_ecoff_backend_data
+};
+
+const bfd_target ecoff_biglittle_vec =
+{
+  "ecoff-biglittlemips",		/* name */
+  bfd_target_ecoff_flavour,
+  BFD_ENDIAN_LITTLE,		/* data byte order is little */
+  BFD_ENDIAN_BIG,		/* header byte order is big */
+
+  (HAS_RELOC | EXEC_P |		/* object flags */
+   HAS_LINENO | HAS_DEBUG |
+   HAS_SYMS | HAS_LOCALS | WP_TEXT | D_PAGED),
+
+  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC | SEC_CODE | SEC_DATA),
+  0,				/* leading underscore */
+  ' ',				/* ar_pad_char */
+  15,				/* ar_max_namelen */
+  bfd_getl64, bfd_getl_signed_64, bfd_putl64,
+     bfd_getl32, bfd_getl_signed_32, bfd_putl32,
+     bfd_getl16, bfd_getl_signed_16, bfd_putl16, /* data */
+  bfd_getb64, bfd_getb_signed_64, bfd_putb64,
+     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
+     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* hdrs */
+
+  {_bfd_dummy_target, coff_object_p, /* bfd_check_format */
+     _bfd_ecoff_archive_p, _bfd_dummy_target},
+  {bfd_false, _bfd_ecoff_mkobject,  /* bfd_set_format */
+     _bfd_generic_mkarchive, bfd_false},
+  {bfd_false, _bfd_ecoff_write_object_contents, /* bfd_write_contents */
+     _bfd_write_archive_contents, bfd_false},
 
      BFD_JUMP_TABLE_GENERIC (_bfd_ecoff),
      BFD_JUMP_TABLE_COPY (_bfd_ecoff),

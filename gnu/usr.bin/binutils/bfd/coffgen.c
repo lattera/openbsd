@@ -1,5 +1,5 @@
 /* Support for the generic parts of COFF, for BFD.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -650,9 +650,8 @@ coff_renumber_symbols (bfd_ptr, first_undef)
     asymbol **newsyms;
     unsigned int i;
 
-    newsyms = (asymbol **) bfd_alloc_by_size_t (bfd_ptr,
-						sizeof (asymbol *)
-						* (symbol_count + 1));
+    newsyms = (asymbol **) bfd_alloc (bfd_ptr,
+				      sizeof (asymbol *) * (symbol_count + 1));
     if (!newsyms)
       return false;
     bfd_ptr->outsymbols = newsyms;
@@ -1380,7 +1379,7 @@ coff_section_symbol (abfd, name)
 	  combined_entry_type e[10];
 	};
       struct foo *f;
-      f = (struct foo *) bfd_alloc_by_size_t (abfd, sizeof (*f));
+      f = (struct foo *) bfd_alloc (abfd, sizeof (*f));
       if (!f)
 	{
 	  bfd_set_error (bfd_error_no_error);
@@ -2083,6 +2082,19 @@ coff_print_symbol (abfd, filep, symbol, how)
 		   symbol->name);
 	}
     }
+}
+
+/* Return whether a symbol name implies a local symbol.  In COFF,
+   local symbols generally start with ``.L''.  Most targets use this
+   function for the is_local_label_name entry point, but some may
+   override it.  */
+
+boolean
+_bfd_coff_is_local_label_name (abfd, name)
+     bfd *abfd;
+     const char *name;
+{
+  return name[0] == '.' && name[1] == 'L';
 }
 
 /* Provided a BFD, a section and an offset into the section, calculate

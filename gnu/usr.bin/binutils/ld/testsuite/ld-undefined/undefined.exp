@@ -1,7 +1,7 @@
 # Test that the linker reports undefined symbol errors correctly.
 # By Ian Lance Taylor, Cygnus Support
 #
-#   Copyright (C) 1995 Free Software Foundation
+#   Copyright (C) 1995, 1996, 1997 Free Software Foundation
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ if { [which $CC] == 0 } {
     return
 }
 
-if ![ld_compile "$CC -g" $srcdir$subdir/undefined.c tmpdir/undefined.o] {
+if ![ld_compile "$CC -g" $srcdir/$subdir/undefined.c tmpdir/undefined.o] {
     unresolved $testund
     unresolved $testfn
     unresolved $testline

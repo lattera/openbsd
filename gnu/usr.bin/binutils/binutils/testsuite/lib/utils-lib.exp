@@ -1,4 +1,4 @@
-#   Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+#   Copyright (C) 1993, 1994, 1997 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ proc default_binutils_run { prog progargs } {
     # language.
     regsub -all "\\$" $progargs "\\$" progq
     catch "exec $prog $progq" exec_output
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    set exec_output [prune_warnings $exec_output]
     if {![string match "" $exec_output]} then {
 	send_log "$exec_output\n"
 	verbose "$exec_output"
@@ -107,7 +107,7 @@ proc default_binutils_assemble { as source object } {
 	catch "exec $as $ASFLAGS -o $object $source" exec_output
     }
 
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    set exec_output [prune_warnings $exec_output]
 
     if [string match "" $exec_output] then {
 	return 1
@@ -139,7 +139,7 @@ proc default_binutils_compile { cc flags source object } {
     verbose "$cc $flags $CFLAGS -o $object $source"
     catch "exec $cc $flags $CFLAGS -o $object $source" exec_output
 
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    set exec_output [prune_warnings $exec_output]
 
     if [string match "" $exec_output] then {
 	return 1
@@ -162,19 +162,16 @@ proc default_binutils_remove { file } {
 # This definition is taken from an unreleased version of DejaGnu.  Once
 # that version gets released, and has been out in the world for a few
 # months at least, it may be safe to delete this copy.
-if ![string length [info proc prune_system_crud]] {
+if ![string length [info proc prune_warnings]] {
     #
-    # prune_system_crud -- delete various system verbosities from TEXT on SYSTEM
+    # prune_warnings -- delete various system verbosities from TEXT
     #
     # An example is:
     # ld.so: warning: /usr/lib/libc.so.1.8.1 has older revision than expected 9
     #
-    # SYSTEM is typical $target_triplet or $host_triplet.
-    #
-    # This is useful when trying to do pattern matches on program output.
     # Sites with particular verbose os's may wish to override this in site.exp.
     #
-    proc prune_system_crud { system text } {
+    proc prune_warnings { text } {
 	# This is from sun4's.  Do it for all machines for now.
 	# The "\\1" is to try to preserve a "\n" but only if necessary.
 	regsub -all "(^|\n)(ld.so: warning:\[^\n\]*\n?)+" $text "\\1" text

@@ -1,5 +1,5 @@
 /* PowerPC-specific support for 32-bit ELF
-   Copyright 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -116,6 +116,8 @@ static boolean ppc_elf_modify_segment_map PARAMS ((bfd *));
 static boolean ppc_elf_section_from_shdr PARAMS ((bfd *,
 						  Elf32_Internal_Shdr *,
 						  char *));
+static boolean ppc_elf_fake_sections
+  PARAMS ((bfd *, Elf32_Internal_Shdr *, asection *));
 
 static elf_linker_section_t *ppc_elf_create_linker_section
   PARAMS ((bfd *abfd,
@@ -1249,7 +1251,7 @@ ppc_elf_section_from_shdr (abfd, hdr, name)
 
 /* Set up any other section flags and such that may be necessary.  */
 
-boolean
+static boolean
 ppc_elf_fake_sections (abfd, shdr, asect)
      bfd *abfd;
      Elf32_Internal_Shdr *shdr;
@@ -1290,7 +1292,8 @@ ppc_elf_create_linker_section (abfd, info, which)
       defaults.which = which;
       defaults.hole_written_p = false;
       defaults.alignment = 2;
-      defaults.flags = SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY;
+      defaults.flags = (SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS
+			| SEC_IN_MEMORY | SEC_LINKER_CREATED);
 
       switch (which)
 	{
@@ -1471,12 +1474,14 @@ ppc_elf_adjust_dynamic_symbol (info, h)
       /* Make room for this entry.  */
       s->_raw_size += PLT_ENTRY_SIZE;
 
+#if 0
       /* We also need to make an entry in the .got.plt section, which
 	 will be placed in the .got section by the linker script.  */
 
       s = bfd_get_section_by_name (dynobj, ".got.plt");
       BFD_ASSERT (s != NULL);
       s->_raw_size += 4;
+#endif
 
       /* We also need to make an entry in the .rela.plt section.  */
 
@@ -1522,20 +1527,17 @@ ppc_elf_adjust_dynamic_symbol (info, h)
   s = bfd_get_section_by_name (dynobj, ".dynbss");
   BFD_ASSERT (s != NULL);
 
-  /* If the symbol is currently defined in the .bss section of the
-     dynamic object, then it is OK to simply initialize it to zero.
-     If the symbol is in some other section, we must generate a
-     R_PPC_COPY reloc to tell the dynamic linker to copy the initial
-     value out of the dynamic object and into the runtime process
-     image.  We need to remember the offset into the .rela.bss section
-     we are going to use.  */
-  if ((h->root.u.def.section->flags & SEC_LOAD) != 0)
+  /* We must generate a R_PPC_COPY reloc to tell the dynamic linker to
+     copy the initial value out of the dynamic object and into the
+     runtime process image.  We need to remember the offset into the
+     .rela.bss section we are going to use.  */
+  if ((h->root.u.def.section->flags & SEC_ALLOC) != 0)
     {
       asection *srel;
 
       srel = bfd_get_section_by_name (dynobj, ".rela.bss");
       BFD_ASSERT (srel != NULL);
-      srel->_raw_size += sizeof (Elf32_External_Rel);
+      srel->_raw_size += sizeof (Elf32_External_Rela);
       h->elf_link_hash_flags |= ELF_LINK_HASH_NEEDS_COPY;
     }
 
@@ -1646,7 +1648,7 @@ ppc_elf_size_dynamic_sections (output_bfd, info)
       const char *name;
       boolean strip;
 
-      if ((s->flags & SEC_IN_MEMORY) == 0)
+      if ((s->flags & SEC_LINKER_CREATED) == 0)
 	continue;
 
       /* It's OK to base decisions on the section name, because none
@@ -1692,6 +1694,8 @@ ppc_elf_size_dynamic_sections (output_bfd, info)
                  than .rel.plt.  */
 	      if (strcmp (name, ".rela.plt") != 0)
 		{
+		  const char *outname;
+
 		  relocs = true;
 
 		  /* If this relocation section applies to a read only
@@ -1699,7 +1703,9 @@ ppc_elf_size_dynamic_sections (output_bfd, info)
 		     entry.  The entries in the .rel.plt section
 		     really apply to the .got section, which we
 		     created ourselves and so know is not readonly.  */
-		  target = bfd_get_section_by_name (output_bfd, name + 4);
+		  outname = bfd_get_section_name (output_bfd,
+						  s->output_section);
+		  target = bfd_get_section_by_name (output_bfd, outname + 4);
 		  if (target != NULL
 		      && (target->flags & SEC_READONLY) != 0)
 		    reltext = true;
@@ -1822,7 +1828,6 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
   const Elf_Internal_Rela *rel_end;
   bfd_vma *local_got_offsets;
   elf_linker_section_t *got;
-  elf_linker_section_t *plt;
   elf_linker_section_t *sdata;
   elf_linker_section_t *sdata2;
   asection *sreloc;
@@ -1836,14 +1841,9 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
 	   bfd_get_filename (abfd));
 #endif
 
-  /* Create the linker generated sections all the time so that the special
-     symbols are created.  */
-  if ((got = elf_linker_section (abfd, LINKER_SECTION_GOT)) == NULL)
-    {
-      got = ppc_elf_create_linker_section (abfd, info, LINKER_SECTION_GOT);
-      if (!got)
-	ret = false;
-    }
+  /* Create the linker generated sections all the time so that the
+     special symbols are created.  The .got section is an exception,
+     so that we don't waste space allocating it when it is not needed.  */
 
 #if 0
   if ((plt = elf_linker_section (abfd, LINKER_SECTION_PLT)) == NULL)
@@ -1866,6 +1866,13 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
     {
       sdata2 = ppc_elf_create_linker_section (abfd, info, LINKER_SECTION_SDATA2);
       if (!sdata2)
+	ret = false;
+    }
+
+  if ((got = elf_linker_section (abfd, LINKER_SECTION_GOT)) == NULL)
+    {
+      got = ppc_elf_create_linker_section (abfd, info, LINKER_SECTION_GOT);
+      if (!got)
 	ret = false;
     }
 
@@ -1919,6 +1926,18 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
 	      break;
 	    }
 
+	  if (got == NULL
+	      && (got = elf_linker_section (abfd, LINKER_SECTION_GOT)) == NULL)
+	    {
+	      got = ppc_elf_create_linker_section (abfd, info,
+						   LINKER_SECTION_GOT);
+	      if (!got)
+		{
+		  ret = false;
+		  break;
+		}
+	    }
+
 	  if (got->rel_section == NULL
 	      && (h != NULL || info->shared)
 	      && !_bfd_elf_make_linker_section_rela (dynobj, got, 2))
@@ -1941,6 +1960,18 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
 				     "R_PPC_EMB_SDA2I16");
 	      ret = false;
 	      break;
+	    }
+
+	  if (got == NULL
+	      && (got = elf_linker_section (abfd, LINKER_SECTION_GOT)) == NULL)
+	    {
+	      got = ppc_elf_create_linker_section (abfd, info,
+						   LINKER_SECTION_GOT);
+	      if (!got)
+		{
+		  ret = false;
+		  break;
+		}
 	    }
 
 	  if (got->rel_section == NULL
@@ -2030,8 +2061,7 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
 	  /* fall through */
 
 	default:
-	  if (info->shared
-	      && (sec->flags & SEC_ALLOC) != 0)
+	  if (info->shared)
 	    {
 #ifdef DEBUG
 	      fprintf (stderr, "ppc_elf_check_relocs need to create relocation for %s\n",
@@ -2065,6 +2095,7 @@ ppc_elf_check_relocs (abfd, info, sec, relocs)
 						       | SEC_LOAD
 						       | SEC_HAS_CONTENTS
 						       | SEC_IN_MEMORY
+						       | SEC_LINKER_CREATED
 						       | SEC_READONLY))
 			  || ! bfd_set_section_alignment (dynobj, sreloc, 2))
 			{
@@ -2619,10 +2650,11 @@ ppc_elf_relocate_section (output_bfd, info, input_bfd, input_section,
 	case (int)R_PPC_UADDR32:
 	case (int)R_PPC_UADDR16:
 	case (int)R_PPC_REL32:
-	  if (info->shared
-	      && (input_section->flags & SEC_ALLOC) != 0)
+	case (int)R_PPC_PLTREL24:
+	  if (info->shared)
 	    {
 	      Elf_Internal_Rela outrel;
+	      boolean skip;
 
 #ifdef DEBUG
 	      fprintf (stderr, "ppc_elf_relocate_section need to create relocation for %s\n",
@@ -2653,13 +2685,35 @@ ppc_elf_relocate_section (output_bfd, info, input_bfd, input_section,
 		  BFD_ASSERT (sreloc != NULL);
 		}
 
-	      outrel.r_offset = (rel->r_offset
-				 + input_section->output_section->vma
-				 + input_section->output_offset);
-	      if (h != NULL
-		  && (! info->symbolic
-		      || (h->elf_link_hash_flags
-			  & ELF_LINK_HASH_DEF_REGULAR) == 0))
+	      skip = false;
+
+	      if (elf_section_data (input_section)->stab_info == NULL)
+		outrel.r_offset = rel->r_offset;
+	      else
+		{
+		  bfd_vma off;
+
+		  off = (_bfd_stab_section_offset
+			 (output_bfd, &elf_hash_table (info)->stab_info,
+			  input_section,
+			  &elf_section_data (input_section)->stab_info,
+			  rel->r_offset));
+		  if (off == (bfd_vma) -1)
+		    skip = true;
+		  outrel.r_offset = off;
+		}
+
+	      outrel.r_offset += (input_section->output_section->vma
+				  + input_section->output_offset);
+
+	      if (skip)
+		memset (&outrel, 0, sizeof outrel);
+	      /* h->dynindx may be -1 if this symbol was marked to
+                 become local.  */
+	      else if (h != NULL
+		       && ((! info->symbolic && h->dynindx != -1)
+			   || (h->elf_link_hash_flags
+			       & ELF_LINK_HASH_DEF_REGULAR) == 0))
 		{
 		  BFD_ASSERT (h->dynindx != -1);
 		  outrel.r_info = ELF32_R_INFO (h->dynindx, r_type);
@@ -2714,8 +2768,12 @@ ppc_elf_relocate_section (output_bfd, info, input_bfd, input_section,
 	      ++sreloc->reloc_count;
 
 	      /* This reloc will be computed at runtime, so there's no
-                 need to do anything now.  */
-	      continue;
+                 need to do anything now, unless this is a RELATIVE
+                 reloc in an unallocated section.  */
+	      if (skip
+		  || (input_section->flags & SEC_ALLOC) != 0
+		  || ELF32_R_TYPE (outrel.r_info) != R_PPC_RELATIVE)
+		continue;
 	    }
 	  break;
 
@@ -2913,7 +2971,6 @@ ppc_elf_relocate_section (output_bfd, info, input_bfd, input_section,
 	case (int)R_PPC_EMB_MRKREF:
 	  continue;
 
-	case (int)R_PPC_PLTREL24:
 	case (int)R_PPC_COPY:
 	case (int)R_PPC_GLOB_DAT:
 	case (int)R_PPC_JMP_SLOT:

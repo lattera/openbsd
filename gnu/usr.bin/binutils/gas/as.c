@@ -1,5 +1,5 @@
 /* as.c - GAS main program.
-   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -43,6 +43,10 @@
 #include "output-file.h"
 #include "sb.h"
 #include "macro.h"
+#ifndef HAVE_ITBL_CPU
+#define itbl_parse(itbl_file) 1
+#define itbl_init()
+#endif
 
 #ifdef HAVE_SBRK
 #ifdef NEED_DECLARATION_SBRK
@@ -50,6 +54,9 @@ extern PTR sbrk ();
 #endif
 #endif
 
+static void show_usage PARAMS ((FILE *));
+static void parse_args PARAMS ((int *, char ***));
+static void dump_statistics PARAMS ((void));
 static void perform_an_assembly_pass PARAMS ((int argc, char **argv));
 static int macro_expr PARAMS ((const char *, int, sb *, int *));
 
@@ -84,6 +91,16 @@ struct defsym_list
 };
 
 static struct defsym_list *defsyms;
+
+/* Keep a record of the itbl files we read in. */
+
+struct itbl_file_list
+{
+  struct itbl_file_list *next;
+  char *name;
+};
+
+static struct itbl_file_list *itbl_files;
 
 void
 print_version_id ()
@@ -100,7 +117,7 @@ print_version_id ()
   fprintf (stderr, "\n");
 }
 
-void
+static void
 show_usage (stream)
      FILE *stream;
 {
@@ -110,6 +127,7 @@ show_usage (stream)
 Options:\n\
 -a[sub-option...]	turn on listings\n\
   Sub-options [default hls]:\n\
+  c	omit false conditionals\n\
   d	omit debugging directives\n\
   h	include high-level source\n\
   l	include assembly\n\
@@ -133,6 +151,8 @@ Options:\n\
 --statistics		print various measured statistics from execution\n\
 --version		print assembler version number and exit\n\
 -W			suppress warnings\n\
+--itbl INSTTBL		extend instruction set to include instructions\n\
+			matching the specifications defined in file INSTTBL\n\
 -w			ignored\n\
 -X			ignored\n\
 -Z			generate object file even after errors\n");
@@ -147,9 +167,12 @@ Options:\n\
 
 extern struct emulation mipsbelf, mipslelf, mipself;
 extern struct emulation mipsbecoff, mipslecoff, mipsecoff;
+extern struct emulation i386coff, i386elf;
 
 static struct emulation *const emulations[] = { EMULATIONS };
 static const int n_emulations = sizeof (emulations) / sizeof (emulations[0]);
+
+static void select_emulation_mode PARAMS ((int, char **));
 
 static void
 select_emulation_mode (argc, argv)
@@ -237,7 +260,7 @@ common_emul_init ()
  * md_parse_option definitions in config/tc-*.c
  */
 
-void
+static void
 parse_args (pargc, pargv)
      int *pargc;
      char ***pargv;
@@ -266,6 +289,8 @@ parse_args (pargc, pargv)
       'v',
 #endif
       'w', 'X',
+      /* New option for extending instruction set (see also --itbl below) */
+      't',
       '\0'
     };
   struct option *longopts;
@@ -288,7 +313,15 @@ parse_args (pargc, pargv)
 #define OPTION_EMULATION (OPTION_STD_BASE + 6)
     {"emulation", required_argument, NULL, OPTION_EMULATION},
 #define OPTION_DEFSYM (OPTION_STD_BASE + 7)
-    {"defsym", required_argument, NULL, OPTION_DEFSYM}
+    {"defsym", required_argument, NULL, OPTION_DEFSYM},
+#define OPTION_INSTTBL (OPTION_STD_BASE + 8)
+    /* New option for extending instruction set (see also -t above).
+       The "-t file" or "--itbl file" option extends the basic set of
+       valid instructions by reading "file", a text file containing a
+       list of instruction formats.  The additional opcodes and their
+       formats are added to the built-in set of instructions, and
+       mnemonics for new registers may also be defined.  */
+    {"itbl", required_argument, NULL, OPTION_INSTTBL}
   };
 
   /* Construct the option lists from the standard list and the
@@ -372,7 +405,7 @@ parse_args (pargc, pargv)
 	case OPTION_VERSION:
 	  /* This output is intended to follow the GNU standards document.  */
 	  printf ("GNU assembler %s\n", GAS_VERSION);
-	  printf ("Copyright 1996 Free Software Foundation, Inc.\n");
+	  printf ("Copyright 1997 Free Software Foundation, Inc.\n");
 	  printf ("\
 This program is free software; you may redistribute it under the terms of\n\
 the GNU General Public License.  This program has absolutely no warranty.\n");
@@ -421,6 +454,32 @@ the GNU General Public License.  This program has absolutely no warranty.\n");
 	  }
 	  break;
 
+	case OPTION_INSTTBL:
+	case 't':
+	  {
+	    /* optarg is the name of the file containing the instruction 
+	       formats, opcodes, register names, etc. */
+	    struct itbl_file_list *n;
+
+	    n = (struct itbl_file_list *) xmalloc (sizeof *n);
+	    n->next = itbl_files;
+	    n->name = optarg;
+	    itbl_files = n;
+
+	    /* Parse the file and add the new instructions to our internal
+	       table.  If multiple instruction tables are specified, the 
+	       information from this table gets appended onto the existing 
+	       internal table. */
+	    itbl_files->name = xstrdup (optarg);
+	    if (itbl_parse (itbl_files->name) != 0)
+	      {
+		fprintf (stderr, "Failed to read instruction table %s\n", 
+			 itbl_files->name);
+		exit (EXIT_SUCCESS);
+	      }
+	  }
+	  break;
+
 	case 'J':
 	  flag_signed_overflow_ok = 1;
 	  break;
@@ -461,6 +520,9 @@ the GNU General Public License.  This program has absolutely no warranty.\n");
 		{
 		  switch (*optarg)
 		    {
+		    case 'c':
+		      listing |= LISTING_NOCOND;
+		      break;
 		    case 'd':
 		      listing |= LISTING_NODEBUG;
 		      break;
@@ -528,7 +590,6 @@ the GNU General Public License.  This program has absolutely no warranty.\n");
   *pargv = new_argv;
 }
 
-static void dump_statistics ();
 static long start_time;
 
 int 
@@ -541,6 +602,7 @@ main (argc, argv)
   int keep_it;
 
   start_time = get_run_time ();
+
 
   if (debug_memory)
     {
@@ -580,7 +642,7 @@ main (argc, argv)
   symbol_begin ();
   frag_init ();
   subsegs_begin ();
-  parse_args (&argc, &argv);
+  parse_args (&argc, &argv); 
   read_begin ();
   input_scrub_begin ();
   expr_begin ();
@@ -613,6 +675,8 @@ main (argc, argv)
   tc_init_after_args ();
 #endif
 
+  itbl_init ();
+
   /* Now that we have fully initialized, and have created the output
      file, define any symbols requested by --defsym command line
      arguments.  */
@@ -633,13 +697,14 @@ main (argc, argv)
 
   perform_an_assembly_pass (argc, argv);	/* Assemble it. */
 
+  cond_finish_check (-1);
+
 #ifdef md_end
   md_end ();
 #endif
 
   if (seen_at_least_1_file ()
-      && !((had_warnings () && flag_always_generate_output)
-	   || had_errors () > 0))
+      && (flag_always_generate_output || had_errors () == 0))
     keep_it = 1;
   else
     keep_it = 0;
@@ -658,6 +723,9 @@ main (argc, argv)
     output_file_close (out_file_name);
 #endif
 
+  if (had_errors () > 0 && ! flag_always_generate_output)
+    keep_it = 0;
+
   if (!keep_it)
     unlink (out_file_name);
 
@@ -667,8 +735,7 @@ main (argc, argv)
 
   /* Use xexit instead of return, because under VMS environments they
      may not place the same interpretation on the value given.  */
-  if ((had_warnings () && flag_always_generate_output)
-      || had_errors () > 0)
+  if (had_errors () > 0)
     xexit (EXIT_FAILURE);
   xexit (EXIT_SUCCESS);
 }

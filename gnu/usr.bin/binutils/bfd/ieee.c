@@ -1,5 +1,7 @@
 /* BFD back-end for ieee-695 objects.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
+
    Written by Steve Chamberlain of Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -1239,15 +1241,18 @@ ieee_archive_p (abfd)
      bfd *abfd;
 {
   char *library;
-  boolean loop;
   unsigned int i;
   unsigned char buffer[512];
   file_ptr buffer_offset = 0;
   ieee_ar_data_type *save = abfd->tdata.ieee_ar_data;
   ieee_ar_data_type *ieee;
-  abfd->tdata.ieee_ar_data = (ieee_ar_data_type *) bfd_alloc (abfd, sizeof (ieee_ar_data_type));
+  unsigned int alc_elts;
+  ieee_ar_obstack_type *elts = NULL;
+
+  abfd->tdata.ieee_ar_data =
+    (ieee_ar_data_type *) bfd_alloc (abfd, sizeof (ieee_ar_data_type));
   if (!abfd->tdata.ieee_ar_data)
-    return NULL;
+    goto error_return;
   ieee = IEEE_AR_DATA (abfd);
 
   /* FIXME: Check return value.  I'm not sure whether it needs to read
@@ -1262,7 +1267,7 @@ ieee_archive_p (abfd)
   if (this_byte (&(ieee->h)) != Module_Beginning)
     {
       abfd->tdata.ieee_ar_data = save;
-      return (const bfd_target *) NULL;
+      goto error_return;
     }
 
   next_byte (&(ieee->h));
@@ -1271,7 +1276,7 @@ ieee_archive_p (abfd)
     {
       bfd_release (abfd, ieee);
       abfd->tdata.ieee_ar_data = save;
-      return (const bfd_target *) NULL;
+      goto error_return;
     }
   /* Throw away the filename */
   read_id (&(ieee->h));
@@ -1283,43 +1288,65 @@ ieee_archive_p (abfd)
   must_parse_int (&(ieee->h));	/* And the two dummy numbers */
   must_parse_int (&(ieee->h));
 
-  loop = true;
+  alc_elts = 10;
+  elts = (ieee_ar_obstack_type *) bfd_malloc (alc_elts * sizeof *elts);
+  if (elts == NULL)
+    goto error_return;
+
   /* Read the index of the BB table */
-  while (loop)
+  while (1)
     {
-      ieee_ar_obstack_type t;
-      int rec = read_2bytes (&(ieee->h));
-      if (rec == (int) ieee_assign_value_to_variable_enum)
+      int rec;
+      ieee_ar_obstack_type *t;
+
+      rec = read_2bytes (&(ieee->h));
+      if (rec != (int) ieee_assign_value_to_variable_enum)
+	break;
+
+      if (ieee->element_count >= alc_elts)
 	{
-	  must_parse_int (&(ieee->h));
-	  t.file_offset = must_parse_int (&(ieee->h));
-	  t.abfd = (bfd *) NULL;
-	  ieee->element_count++;
+	  ieee_ar_obstack_type *n;
 
-	  bfd_alloc_grow (abfd, (PTR) &t, sizeof t);
-
-	  /* Make sure that we don't go over the end of the buffer */
-
-	  if ((size_t) ieee_pos (abfd) > sizeof (buffer) / 2)
-	    {
-	      /* Past half way, reseek and reprime */
-	      buffer_offset += ieee_pos (abfd);
-	      if (bfd_seek (abfd, buffer_offset, SEEK_SET) != 0)
-		return NULL;
-	      /* FIXME: Check return value.  I'm not sure whether it
-		 needs to read the entire buffer or not.  */
-	      bfd_read ((PTR) buffer, 1, sizeof (buffer), abfd);
-	      ieee->h.first_byte = buffer;
-	      ieee->h.input_p = buffer;
-	    }
+	  alc_elts *= 2;
+	  n = ((ieee_ar_obstack_type *)
+	       bfd_realloc (elts, alc_elts * sizeof *elts));
+	  if (n == NULL)
+	    goto error_return;
+	  elts = n;
 	}
-      else
-	loop = false;
+
+      t = &elts[ieee->element_count];
+      ieee->element_count++;
+
+      must_parse_int (&(ieee->h));
+      t->file_offset = must_parse_int (&(ieee->h));
+      t->abfd = (bfd *) NULL;
+
+      /* Make sure that we don't go over the end of the buffer */
+
+      if ((size_t) ieee_pos (abfd) > sizeof (buffer) / 2)
+	{
+	  /* Past half way, reseek and reprime */
+	  buffer_offset += ieee_pos (abfd);
+	  if (bfd_seek (abfd, buffer_offset, SEEK_SET) != 0)
+	    goto error_return;
+	  /* FIXME: Check return value.  I'm not sure whether it needs
+	     to read the entire buffer or not.  */
+	  bfd_read ((PTR) buffer, 1, sizeof (buffer), abfd);
+	  ieee->h.first_byte = buffer;
+	  ieee->h.input_p = buffer;
+	}
     }
 
-  ieee->elements = (ieee_ar_obstack_type *) bfd_alloc_finish (abfd);
-  if (!ieee->elements)
-    return (const bfd_target *) NULL;
+  ieee->elements = ((ieee_ar_obstack_type *)
+		    bfd_alloc (abfd,
+			       ieee->element_count * sizeof *ieee->elements));
+  if (ieee->elements == NULL)
+    goto error_return;
+  memcpy (ieee->elements, elts,
+	  ieee->element_count * sizeof *ieee->elements);
+  free (elts);
+  elts = NULL;
 
   /* Now scan the area again, and replace BB offsets with file */
   /* offsets */
@@ -1327,7 +1354,7 @@ ieee_archive_p (abfd)
   for (i = 2; i < ieee->element_count; i++)
     {
       if (bfd_seek (abfd, ieee->elements[i].file_offset, SEEK_SET) != 0)
-	return NULL;
+	goto error_return;
       /* FIXME: Check return value.  I'm not sure whether it needs to
 	 read the entire buffer or not.  */
       bfd_read ((PTR) buffer, 1, sizeof (buffer), abfd);
@@ -1348,8 +1375,14 @@ ieee_archive_p (abfd)
 	}
     }
 
-/*  abfd->has_armap = ;*/
+  /*  abfd->has_armap = ;*/
+
   return abfd->xvec;
+
+ error_return:
+  if (elts != NULL)
+    free (elts);
+  return NULL;
 }
 
 static boolean
@@ -1824,6 +1857,10 @@ ieee_slurp_section_data (abfd)
 	      break;
 
 	    case ieee_value_starting_address_enum & 0xff:
+	      next_byte (&(ieee->h));
+	      if (this_byte (&(ieee->h)) == ieee_function_either_open_b_enum)
+		next_byte (&(ieee->h));
+	      abfd->start_address = must_parse_int (&(ieee->h));
 	      /* We've got to the end of the data now - */
 	      return true;
 	    default:
@@ -3720,7 +3757,7 @@ ieee_bfd_debug_info_accumulate (abfd, section)
 #define ieee_update_armap_timestamp bfd_true
 #define ieee_get_elt_at_index _bfd_generic_get_elt_at_index
 
-#define ieee_bfd_is_local_label bfd_generic_is_local_label
+#define ieee_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define ieee_get_lineno _bfd_nosymbols_get_lineno
 #define ieee_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol
 #define ieee_read_minisymbols _bfd_generic_read_minisymbols

@@ -1,5 +1,5 @@
 /* ldemul.c -- clearing house for ld emulation states
-   Copyright (C) 1991, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GLD, the Gnu Linker.
 
@@ -167,7 +167,7 @@ ldemul_choose_target()
 char *
 ldemul_default_target()
 {
-  char *from_outside = (char *) getenv(TARGET_ENVIRON);
+  char *from_outside = getenv (TARGET_ENVIRON);
   if (from_outside != (char *)NULL)
     return from_outside;
   return ld_emulation->target_name;

@@ -1,5 +1,5 @@
 /* nlmconv.c -- NLM conversion program
-   Copyright (C) 1993, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -22,9 +22,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
    This program can be used to convert any appropriate object file
    into a NetWare Loadable Module (an NLM).  It will accept a linker
    specification file which is identical to that accepted by the
-   NetWare linker, NLMLINK, except that the INPUT command, normally
-   used to give a list of object files to link together, is not used.
-   This program will convert only a single object file.  */
+   NetWare linker, NLMLINK.  */
+
+/* AIX requires this to be the first thing in the file.  */
+#ifndef __GNUC__
+# ifdef _AIX
+ #pragma alloca
+#endif
+#endif
 
 #include "bfd.h"
 #include "libiberty.h"
@@ -58,10 +63,6 @@ extern char *strerror ();
 
 #ifndef localtime
 extern struct tm *localtime ();
-#endif
-
-#ifndef getenv
-extern char *getenv ();
 #endif
 
 #ifndef SEEK_SET
@@ -205,6 +206,7 @@ main (argc, argv)
   xmalloc_set_program_name (program_name);
 
   bfd_init ();
+  set_default_bfd_target ();
 
   while ((opt = getopt_long (argc, argv, "dhI:l:O:T:V", long_options,
 			     (int *) NULL))
@@ -2199,7 +2201,7 @@ pexecute (program, argv)
   FILE *argfile;
   int i;
 
-  scmd = (char *)malloc (strlen (program) + strlen (temp_filename) + 10);
+  scmd = (char *) xmalloc (strlen (program) + strlen (temp_filename) + 10);
   rf = scmd + strlen(program) + 2 + el;
   sprintf (scmd, "%s.exe @%s.gp", program, temp_filename);
   argfile = fopen (rf, "w");

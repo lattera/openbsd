@@ -1,5 +1,5 @@
 /* BFD back-end for we32k COFF files.
-   Copyright (C) 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 1997 Free Software Foundation, Inc.
    Contributed by Brendan Kehoe (brendan@cs.widener.edu).
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/we32k.h"
 #include "coff/internal.h"
 #include "libcoff.h"
