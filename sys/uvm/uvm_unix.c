@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19.2.2 2002/10/29 00:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19.2.3 2002/10/29 02:12:53 art Exp $	*/
 /*	$NetBSD: uvm_unix.c,v 1.26 2001/12/08 00:35:34 thorpej Exp $	*/
 
 /*
@@ -92,15 +92,16 @@ sys_obreak(p, v, retval)
 	/*
 	 * grow or shrink?
 	 */
-	if (diff > 0) {
-		rv = uvm_map(&vm->vm_map, &old, diff, NULL, UVM_UNKNOWN_OFFSET,
-		    0, UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RWX, UVM_INH_COPY,
+	if (new > old) {
+		error = uvm_map(&vm->vm_map, &old, new - old, NULL,
+		    UVM_UNKNOWN_OFFSET, 0,
+		    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RWX, UVM_INH_COPY,
 		    UVM_ADV_NORMAL, UVM_FLAG_AMAPPAD|UVM_FLAG_FIXED|
 		    UVM_FLAG_OVERLAY|UVM_FLAG_COPYONW));
 		if (error) {
 			uprintf("sbrk: grow %ld failed, error = %d\n",
-				new - old, error);
-			return error;
+			    new - old, error);
+			return (error);
 		}
 		vm->vm_dsize += atop(new - old);
 	} else {
