@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/arc/ramdisk/Attic/install.md,v 1.17 2004/08/06 22:30:02 pefo Exp $
+#	$OpenBSD: src/distrib/sgi/ramdisk/install.md,v 1.1 2004/08/06 22:33:27 deraadt Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.

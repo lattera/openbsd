@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/arc/ramdisk/Attic/Makefile,v 1.10 2004/08/06 22:30:02 pefo Exp $
+#	$OpenBSD: src/distrib/sgi/ramdisk/Makefile,v 1.1 2004/08/06 22:33:27 deraadt Exp $
 
 REV=		${OSrev}
 
