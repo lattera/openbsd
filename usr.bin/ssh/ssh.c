@@ -324,10 +324,13 @@ main(int ac, char **av)
 	  break;
 
 	case 'v':
+	case 'V':
 	  debug_flag = 1;
 	  fprintf(stderr, "SSH Version %s, protocol version %d.%d.\n",
 		  SSH_VERSION, PROTOCOL_MAJOR, PROTOCOL_MINOR);
 	  fprintf(stderr, "Compiled with SSL.\n");
+	  if (opt == 'V')
+	    exit(0);
 	  break;
 
 	case 'q':
