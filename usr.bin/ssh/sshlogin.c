@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.5 2002/08/29 15:57:25 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.5.4.1 2003/09/16 20:50:44 brad Exp $");
 
 #include <util.h>
 #include <utmp.h>
@@ -79,8 +79,8 @@ get_last_login_time(uid_t uid, const char *logname,
 }
 
 /*
- * Records that the user has logged in.  I these parts of operating systems
- * were more standardized.
+ * Records that the user has logged in.  I wish these parts of operating
+ * systems were more standardized.
  */
 void
 record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
@@ -117,7 +117,7 @@ record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
 		if (fd >= 0) {
 			lseek(fd, (off_t) ((long) uid * sizeof(ll)), SEEK_SET);
 			if (write(fd, &ll, sizeof(ll)) != sizeof(ll))
-				log("Could not write %.100s: %.100s", lastlog, strerror(errno));
+				logit("Could not write %.100s: %.100s", lastlog, strerror(errno));
 			close(fd);
 		}
 	}

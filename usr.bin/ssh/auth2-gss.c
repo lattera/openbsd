@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.3 2003/09/01 20:44:54 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.3.4.1 2003/09/16 20:50:42 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.

@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.22 2003/02/16 17:30:33 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.22.2.1 2003/09/16 20:50:43 brad Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/dh.h>
@@ -52,6 +52,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.22 2003/02/16 17:30:33 marku
 #include "channels.h"
 #include "session.h"
 
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
+
 /* Imports */
 extern int compat20;
 extern Newkeys *newkeys[];
@@ -70,9 +74,9 @@ mm_request_send(int socket, enum monitor_reqtype type, Buffer *m)
 
 	PUT_32BIT(buf, mlen + 1);
 	buf[4] = (u_char) type;		/* 1st byte of payload is mesg-type */
-	if (atomicio(write, socket, buf, sizeof(buf)) != sizeof(buf))
+	if (atomicio(vwrite, socket, buf, sizeof(buf)) != sizeof(buf))
 		fatal("%s: write", __func__);
-	if (atomicio(write, socket, buffer_ptr(m), mlen) != mlen)
+	if (atomicio(vwrite, socket, buffer_ptr(m), mlen) != mlen)
 		fatal("%s: write", __func__);
 }
 
@@ -518,6 +522,8 @@ mm_send_keystate(struct monitor *pmonitor)
 	Buffer m;
 	u_char *blob, *p;
 	u_int bloblen, plen;
+	u_int32_t seqnr, packets;
+	u_int64_t blocks;
 
 	buffer_init(&m);
 
@@ -566,8 +572,14 @@ mm_send_keystate(struct monitor *pmonitor)
 	buffer_put_string(&m, blob, bloblen);
 	xfree(blob);
 
-	buffer_put_int(&m, packet_get_seqnr(MODE_OUT));
-	buffer_put_int(&m, packet_get_seqnr(MODE_IN));
+	packet_get_state(MODE_OUT, &seqnr, &blocks, &packets);
+	buffer_put_int(&m, seqnr);
+	buffer_put_int64(&m, blocks);
+	buffer_put_int(&m, packets);
+	packet_get_state(MODE_IN, &seqnr, &blocks, &packets);
+	buffer_put_int(&m, seqnr);
+	buffer_put_int64(&m, blocks);
+	buffer_put_int(&m, packets);
 
 	debug3("%s: New keys have been sent", __func__);
  skip:
@@ -930,73 +942,69 @@ mm_auth_rsa_verify_response(Key *key, BIGNUM *p, u_char response[16])
 	return (success);
 }
 
-#ifdef KRB4
-int
-mm_auth_krb4(Authctxt *authctxt, void *_auth, char **client, void *_reply)
+#ifdef GSSAPI
+OM_uint32
+mm_ssh_gssapi_server_ctx(Gssctxt **ctx, gss_OID oid)
 {
-	KTEXT auth, reply;
- 	Buffer m;
-	u_int rlen;
-	int success = 0;
-	char *p;
-
-	debug3("%s entering", __func__);
-	auth = _auth;
-	reply = _reply;
-
-	buffer_init(&m);
-	buffer_put_string(&m, auth->dat, auth->length);
-
-	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_KRB4, &m);
-	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_KRB4, &m);
-
-	success = buffer_get_int(&m);
-	if (success) {
-		*client = buffer_get_string(&m, NULL);
-		p = buffer_get_string(&m, &rlen);
-		if (rlen >= MAX_KTXT_LEN)
-			fatal("%s: reply from monitor too large", __func__);
-		reply->length = rlen;
-		memcpy(reply->dat, p, rlen);
-		memset(p, 0, rlen);
-		xfree(p);
-	}
-	buffer_free(&m);
-	return (success);
-}
-#endif
-
-#ifdef KRB5
-int
-mm_auth_krb5(void *ctx, void *argp, char **userp, void *resp)
-{
-	krb5_data *tkt, *reply;
 	Buffer m;
-	int success;
+	OM_uint32 major;
 
-	debug3("%s entering", __func__);
-	tkt = (krb5_data *) argp;
-	reply = (krb5_data *) resp;
+	/* Client doesn't get to see the context */
+	*ctx = NULL;
 
 	buffer_init(&m);
-	buffer_put_string(&m, tkt->data, tkt->length);
+	buffer_put_string(&m, oid->elements, oid->length);
 
-	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_KRB5, &m);
-	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_KRB5, &m);
+	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_GSSSETUP, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_GSSSETUP, &m);
 
-	success = buffer_get_int(&m);
-	if (success) {
-		u_int len;
-
-		*userp = buffer_get_string(&m, NULL);
-		reply->data = buffer_get_string(&m, &len);
-		reply->length = len;
-	} else {
-		memset(reply, 0, sizeof(*reply));
-		*userp = NULL;
-	}
+	major = buffer_get_int(&m);
 
 	buffer_free(&m);
-	return (success);
+	return (major);
 }
-#endif
+
+OM_uint32
+mm_ssh_gssapi_accept_ctx(Gssctxt *ctx, gss_buffer_desc *in,
+    gss_buffer_desc *out, OM_uint32 *flags)
+{
+	Buffer m;
+	OM_uint32 major;
+	u_int len;
+
+	buffer_init(&m);
+	buffer_put_string(&m, in->value, in->length);
+
+	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_GSSSTEP, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_GSSSTEP, &m);
+
+	major = buffer_get_int(&m);
+	out->value = buffer_get_string(&m, &len);
+	out->length = len;
+	if (flags)
+		*flags = buffer_get_int(&m);
+
+	buffer_free(&m);
+
+	return (major);
+}
+
+int
+mm_ssh_gssapi_userok(char *user)
+{
+	Buffer m;
+	int authenticated = 0;
+
+	buffer_init(&m);
+
+	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_GSSUSEROK, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_GSSUSEROK,
+				  &m);
+
+	authenticated = buffer_get_int(&m);
+
+	buffer_free(&m);
+	debug3("%s: user %sauthenticated",__func__, authenticated ? "" : "not ");
+	return (authenticated);
+}
+#endif /* GSSAPI */

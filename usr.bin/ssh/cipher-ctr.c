@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.2 2003/06/17 18:14:23 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.2.4.1 2003/09/16 20:50:42 brad Exp $");
 
 #include <openssl/evp.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/gss-genr.c,v 1.1 2003/08/22 10:56:09 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/gss-genr.c,v 1.1.4.1 2003/09/16 20:50:43 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
