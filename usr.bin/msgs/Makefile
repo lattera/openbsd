@@ -1,7 +1,7 @@
-#	$OpenBSD: src/usr.bin/msgs/Attic/Makefile,v 1.6 1998/07/24 00:10:57 millert Exp $
+#	$OpenBSD: src/usr.bin/msgs/Attic/Makefile,v 1.7 2002/05/11 00:20:20 espie Exp $
 
 PROG=	msgs
-DPADD=	${LIBTERMLIB}
+DPADD=	${LIBCURSES}
 LDADD=	-lcurses
 
 .include <bsd.prog.mk>
