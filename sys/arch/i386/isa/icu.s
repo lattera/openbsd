@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.4 2001/10/27 09:57:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.5 2001/10/28 08:16:45 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -108,7 +108,6 @@ IDTVEC(doreti)
 	bsfl    %eax,%eax               # slow, but not worth optimizing
 	btrl    %eax,_ipending
 	jnc     1b			# some intr cleared the in-memory bit
-	cli
 	jmp	*_Xresume(,%eax,4)
 2:	/* Check for ASTs on exit to user mode. */
 	CHECK_ASTPENDING(%ecx)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.4 2001/07/16 21:41:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.5 2001/10/28 08:16:45 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -304,6 +304,7 @@ isa_strayintr(irq)
 
 int fastvec;
 int intrtype[ICU_LEN], intrmask[ICU_LEN], intrlevel[ICU_LEN];
+int ilevel[ICU_LEN];
 struct intrhand *intrhand[ICU_LEN];
 
 /*
@@ -322,12 +323,12 @@ intr_calculatemasks()
 	for (irq = 0; irq < ICU_LEN; irq++) {
 		register int levels = 0;
 		for (q = intrhand[irq]; q; q = q->ih_next)
-			levels |= 1 << q->ih_level;
+			levels |= 1 << q->ih_level >> 4;
 		intrlevel[irq] = levels;
 	}
 
 	/* Then figure out which IRQs use each level. */
-	for (level = 0; level < 5; level++) {
+	for (level = 0; level < IPL_HIGH >> 4; level++) {
 		register int irqs = 0;
 		for (irq = 0; irq < ICU_LEN; irq++)
 			if (intrlevel[irq] & (1 << level))
@@ -339,28 +340,50 @@ intr_calculatemasks()
 	 * There are tty, network and disk drivers that use free() at interrupt
 	 * time, so imp > (tty | net | bio).
 	 */
-	imask[IPL_IMP] |= imask[IPL_TTY] | imask[IPL_NET] | imask[IPL_BIO];
-	imask[IPL_AUDIO] |= imask[IPL_IMP];
+	imask[IPL_IMP >> 4] |= imask[IPL_TTY >> 4] | imask[IPL_NET >> 4] |
+	    imask[IPL_BIO >> 4];
+	imask[IPL_AUDIO >> 4] |= imask[IPL_IMP >> 4];
 
 	/*
 	 * Enforce a hierarchy that gives slow devices a better chance at not
 	 * dropping data.
 	 */
-	imask[IPL_TTY] |= imask[IPL_NET] | imask[IPL_BIO];
-	imask[IPL_NET] |= imask[IPL_BIO];
+	imask[IPL_TTY >> 4] |= imask[IPL_NET >> 4] | imask[IPL_BIO >> 4];
+	imask[IPL_NET >> 4] |= imask[IPL_BIO >> 4];
 
 	/*
 	 * These are pseudo-levels.
 	 */
-	imask[IPL_NONE] = 0x00000000;
-	imask[IPL_HIGH] = 0xffffffff;
+	imask[IPL_NONE >> 4] = 0x00000000;
+	imask[IPL_HIGH >> 4] = 0xffffffff;
 
 	/* And eventually calculate the complete masks. */
+	/* And eventually calculate the complete masks. */
 	for (irq = 0; irq < ICU_LEN; irq++) {
-		register int irqs = 1 << irq;
-		for (q = intrhand[irq]; q; q = q->ih_next)
-			irqs |= imask[q->ih_level];
+		int irqs = 1 << irq;
+		int level = 0;
+
+		if (intrhand[irq] == NULL) {
+			level = IPL_HIGH;
+			irqs = IMASK(IPL_HIGH);
+		} else {
+			for (q = intrhand[irq]; q; q = q->ih_next) {
+				irqs |= IMASK(q->ih_level);
+				if (q->ih_level > level)
+					level = q->ih_level;
+			}
+		}
+		if (irqs != IMASK(level))
+			panic("irq %d level %x mask mismatch: %x vs %x", irq, level, irqs, IMASK(level));
+		
+		ilevel[irq] = level;
+
+		/* XXX NetBSD does not have SIR_ALLMASK, why do we?  */
 		intrmask[irq] = irqs | SIR_ALLMASK;
+#if 0
+		printf("irq %d: level %x, mask 0x%x (%x)\n",
+		    irq, ilevel[irq], intrmask[irq], IMASK(ilevel[irq]));
+#endif
 	}
 
 	/* Lastly, determine which IRQs are actually in use. */
@@ -374,6 +397,8 @@ intr_calculatemasks()
 		imen = ~irqs;
 		SET_ICUS();
 	}
+	for (irq = 0; irq < ICU_LEN; irq++)
+		iunmask[irq] = ~imask[irq];
 }
 
 int
@@ -539,7 +564,7 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 	}
 
 	if (!LEGAL_IRQ(irq) || type == IST_NONE) {
-		printf("%s: intr_establish: bogus irq or type\n", ih_what);
+		printf("%s: isa_intr_establish: bogus irq or type\n", ih_what);
 		return (NULL);
 	}
 	switch (intrtype[irq]) {
