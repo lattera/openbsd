@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.11 2003/06/02 05:09:14 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.12 2004/01/14 20:50:48 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -65,7 +65,7 @@ struct cfattach nvram_ca = {
 };
 
 struct cfdriver nvram_cd = {
-	NULL, "nvram", DV_DULL, 0
+	NULL, "nvram", DV_DULL
 };
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.11 2003/12/20 00:34:28 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.12 2004/01/14 20:50:48 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -54,7 +54,7 @@ struct cfattach vmel_ca = {
 };
 
 struct cfdriver vmel_cd = {
-	NULL, "vmel", DV_DULL, 0
+	NULL, "vmel", DV_DULL
 };
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/bugtty.c,v 1.8 2003/08/15 20:32:14 tedu Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/bugtty.c,v 1.9 2004/01/14 20:50:48 miod Exp $ */
 
 /* Copyright (c) 1998 Steve Murphree, Jr. 
  * Copyright (c) 1995 Dale Rahn.
@@ -53,7 +53,7 @@ struct cfattach bugtty_ca = {
 };      
 
 struct cfdriver bugtty_cd = {
-        NULL, "bugtty", DV_TTY, 0
+        NULL, "bugtty", DV_TTY
 };
 
 /* prototypes */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.9 2003/10/08 20:18:34 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.10 2004/01/14 20:50:48 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -113,7 +113,7 @@ struct cfattach clock_ca = {
 };
 
 struct cfdriver clock_cd = {
-	NULL, "clock", DV_DULL, 0
+	NULL, "clock", DV_DULL
 };
 
 int	clockintr(void *);
