@@ -1,0 +1,241 @@
+#!/usr/bin/perl
+# ex:ts=8 sw=4:
+# $OpenBSD: src/usr.sbin/pkg_add/Attic/pkg_delete,v 1.87 2005/01/22 13:00:35 espie Exp $
+#
+# Copyright (c) 2003-2004 Marc Espie <espie@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+use OpenBSD::Getopt;
+use OpenBSD::PackingList;
+use OpenBSD::PackingOld;
+use OpenBSD::RequiredBy;
+use OpenBSD::Error;
+use OpenBSD::ProgressMeter;
+use OpenBSD::Delete;
+use OpenBSD::PackageInfo;
+
+our %forced = ();
+our $not;
+
+set_usage('pkg_delete [-cInqvx] [-B pkg-destdir] [-F keywords] pkgname [...]');
+our ($opt_v, $opt_D, $opt_d, $opt_n, $opt_q, $opt_p, $opt_c, $opt_L, $opt_B, $opt_I, $opt_x);
+
+$opt_v = 0;
+
+try { 
+	getopts('vchxDdnf:F:qpS:L:B:I',
+	    {'v' => sub {++$opt_v;},
+	     'h' => sub { Usage(); },
+	     'F' => sub { 
+			    for my $o (split/,/, shift) { 
+				    $forced{$o} = 1;
+			    }
+		    },
+	     'f' => sub { 
+			    for my $o (split/,/, shift) { 
+				    $forced{$o} = 1;
+			    }
+	    	}}); 
+} catchall {
+	Usage($_);
+};
+
+if ($opt_D) {
+	$opt_I = 1;
+}
+$opt_B = $ENV{'PKG_DESTDIR'} unless defined $opt_B;
+$opt_B = '' unless defined $opt_B;
+if ($opt_B ne '') {
+	$opt_B.='/' unless $opt_B =~ m/\/$/;
+}
+$ENV{'PKG_DESTDIR'} = $opt_B;
+
+$opt_L = '/usr/local' unless defined $opt_L;
+
+if (defined $opt_p) {
+	Usage "Option p is obsolete";
+}
+if (defined $opt_d) {
+	Usage "Option d is obsolete";
+}
+
+my %done;
+my $removed;
+
+try {
+my $state = new OpenBSD::Error;
+$state->{not} = $opt_n;
+$not = $opt_n;
+$state->{quick} = $opt_q;
+$state->{verbose} = $opt_v >= 2;
+$state->{very_verbose} = $opt_v;
+$state->{beverbose} = $opt_n || ($opt_v >= 2);
+$state->{extra} = $opt_c;
+$state->{dont_run_scripts} = $opt_I;
+$state->{forced} = \%forced;
+$state->{destdir} = $opt_B;
+if ($opt_B eq '') {
+    $state->{destdirname} = '';
+} else {
+    $state->{destdirname} = '${PKG_DESTDIR}';
+}
+
+$ENV{'PKG_DELETE_EXTRA'} = $state->{extra} ? "Yes" : "No";
+
+lock_db($opt_n);
+if (!$opt_x && !$state->{beverbose}) {
+	OpenBSD::ProgressMeter::enable();
+}
+
+if ($< && !$forced{nonroot}) {
+	if ($state->{not}) {
+		Warn "$0 should be run as root\n";
+	} else {
+		Fatal "$0 must be run as root";
+	}
+}
+
+# First, resolve pkg names
+
+my @realnames;
+my $bad;
+
+for my $pkgname (@ARGV) {
+    $pkgname =~ s/\.tgz$//;
+    if (is_installed($pkgname)) {
+	push(@realnames, installed_name($pkgname));
+    } else {
+	if (OpenBSD::PackageName::is_stem($pkgname)) {
+	    my @l = OpenBSD::PackageName::findstem($pkgname, 
+		installed_packages());
+	    if (@l == 0) {
+		print "Can't resolve $pkgname to an installed package name\n";
+		$bad = 1 unless $forced{uninstalled};
+	    } elsif (@l == 1) {
+		push(@realnames, $l[0]);
+	    } elsif (@l != 0) {
+		print "Ambiguous: $pkgname could be ", join(' ', @l),"\n";
+		if ($forced{ambiguous}) {
+		    print "(removing them all)\n";
+		    push(@realnames, @l);
+		} else {
+		    $bad = 1;
+		}
+	    }
+	}
+    }
+}
+
+# Then check that dependencies are okay
+my (%toremove, %extra_rm);
+my @todo;
+for my $pkgname (@realnames) {
+	$toremove{$pkgname} = 1;
+}
+
+push(@todo, @realnames);
+
+while (my $pkgname = pop @todo) {
+	for my $dep (OpenBSD::RequiredBy->new($pkgname)->list()) {
+		next if defined $toremove{$dep};
+		next if defined $extra_rm{$dep};
+		$extra_rm{$dep}=$pkgname;
+		push(@todo, $dep);
+	}
+}
+
+if (keys(%extra_rm) != 0) {
+	print "Can't remove ", join(' ', @ARGV), " without also removing:\n",
+	    join(' ', keys(%extra_rm)), "\n";
+	if ($forced{dependencies}) {
+		if (keys(%extra_rm) > 1) {
+			print "(removing them as well)\n";
+		} else {
+			print "(removing it as well)\n";
+		}
+		push(@realnames, keys(%extra_rm));
+	} else {
+		$bad = 1;
+	}
+}
+
+if ($bad) {
+	exit(1);
+}
+
+eval {
+# and finally, handle the removal
+{ do {
+	$removed = 0;
+	DELETE: for my $pkgname (@realnames) {
+		next if $done{$pkgname};
+		unless (is_installed($pkgname)) {
+			print "$pkgname was not installed\n";
+			$done{$pkgname} = 1;
+			$removed++;
+			next;
+		}
+		my $r = OpenBSD::RequiredBy->new($pkgname);
+		if ($r->list() > 0) {
+			if ($forced{baddepend}) {
+				for my $p ($r->list()) {
+					if ($done{$p}) {
+						$r->delete($p);
+					} else {
+						next DELETE;
+					}
+				}
+			} else {
+				next;
+			}
+		}
+		if (!OpenBSD::ProgressMeter::set_header($pkgname)) {
+			print $opt_n ? "Pretending to delete " : "Deleting ", 
+			    "$pkgname\n";
+		}
+		$state->set_pkgname($pkgname);
+		OpenBSD::Delete::delete_package($pkgname, $state);
+		delete_installed($pkgname);
+		$done{$pkgname} = 1;
+		$removed++;
+	}
+	# we're not actually doing anything, so we can't expect this loop 
+	# to ever finish
+	last if $opt_n;
+} while ($removed); } };
+
+my $dielater = $@;
+
+OpenBSD::PackingElement::Lib::ensure_ldconfig($state);
+# delayed directory/user/group removal
+if (defined $state->{dirs_to_rm} or defined $state->{users_to_rm} or
+	defined $state->{groups_to_rm}) {
+	require OpenBSD::SharedItems;
+
+	OpenBSD::SharedItems::cleanup($state) unless $state->{not};
+}
+
+OpenBSD::PackingElement::Fontdir::finish_fontdirs($state);
+
+if ($state->{beverbose}) {
+	OpenBSD::Vstat::tally();
+}
+$state->delayed_output();
+rethrow $dielater;
+} catch {
+	print STDERR "$0: $_\n";
+	exit(1);
+};
