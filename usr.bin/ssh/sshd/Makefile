@@ -5,10 +5,11 @@ BINOWN=	root
 BINMODE=555
 BINDIR=	/usr/sbin
 MAN=	sshd.8
+CFLAGS+=
 
 SRCS=	sshd.c auth-rhosts.c auth-passwd.c auth-rsa.c auth-rh-rsa.c \
 	pty.c log-server.c login.c servconf.c serverloop.c \
-	auth.c auth1.c auth2.c session.c
+	auth.c auth1.c auth2.c auth-options.c session.c
 
 .include <bsd.own.mk> # for KERBEROS and AFS
 
