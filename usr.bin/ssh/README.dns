@@ -52,4 +52,4 @@ the remote host key, the user will be notified.
 	Wesley Griffin
 
 
-$OpenBSD: src/usr.bin/ssh/Attic/README.dns,v 1.1 2003/05/14 18:16:20 jakob Exp $
+$OpenBSD: src/usr.bin/ssh/Attic/README.dns,v 1.1.6.1 2003/09/16 21:20:23 brad Exp $

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.13.4.1 2003/04/01 00:12:13 margarida Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.13.4.2 2003/09/16 21:20:25 brad Exp $	*/
 
 /*
  * Copyright (c) 2003 Markus Friedl.  All rights reserved.

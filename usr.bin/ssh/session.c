@@ -33,7 +33,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.150.2.1 2003/04/01 00:12:14 margarida Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.150.2.2 2003/09/16 21:20:27 brad Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -57,6 +57,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.150.2.1 2003/04/01 00:12:14 marga
 #include "canohost.h"
 #include "session.h"
 #include "monitor_wrap.h"
+
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
 
 /* func */
 
@@ -179,7 +183,7 @@ auth_input_request_forwarding(struct passwd * pw)
 	nc = channel_new("auth socket",
 	    SSH_CHANNEL_AUTH_SOCKET, sock, sock, -1,
 	    CHAN_X11_WINDOW_DEFAULT, CHAN_X11_PACKET_DEFAULT,
-	    0, xstrdup("auth socket"), 1);
+	    0, "auth socket", 1);
 	strlcpy(nc->path, auth_sock_name, sizeof(nc->path));
 	return 1;
 }
@@ -211,10 +215,6 @@ do_authenticated(Authctxt *authctxt)
 	/* remove agent socket */
 	if (auth_sock_name != NULL)
 		auth_sock_cleanup_proc(authctxt->pw);
-#ifdef KRB4
-	if (options.kerberos_ticket_cleanup)
-		krb4_cleanup_proc(authctxt);
-#endif
 #ifdef KRB5
 	if (options.kerberos_ticket_cleanup)
 		krb5_cleanup_proc(authctxt);
@@ -327,58 +327,6 @@ do_authenticated1(Authctxt *authctxt)
 				success = 1;
 			break;
 
-#if defined(AFS) || defined(KRB5)
-		case SSH_CMSG_HAVE_KERBEROS_TGT:
-			if (!options.kerberos_tgt_passing) {
-				verbose("Kerberos TGT passing disabled.");
-			} else {
-				char *kdata = packet_get_string(&dlen);
-				packet_check_eom();
-
-				/* XXX - 0x41, see creds_to_radix version */
-				if (kdata[0] != 0x41) {
-#ifdef KRB5
-					krb5_data tgt;
-					tgt.data = kdata;
-					tgt.length = dlen;
-
-					if (auth_krb5_tgt(s->authctxt, &tgt))
-						success = 1;
-					else
-						verbose("Kerberos v5 TGT refused for %.100s", s->authctxt->user);
-#endif /* KRB5 */
-				} else {
-#ifdef AFS
-					if (auth_krb4_tgt(s->authctxt, kdata))
-						success = 1;
-					else
-						verbose("Kerberos v4 TGT refused for %.100s", s->authctxt->user);
-#endif /* AFS */
-				}
-				xfree(kdata);
-			}
-			break;
-#endif /* AFS || KRB5 */
-
-#ifdef AFS
-		case SSH_CMSG_HAVE_AFS_TOKEN:
-			if (!options.afs_token_passing || !k_hasafs()) {
-				verbose("AFS token passing disabled.");
-			} else {
-				/* Accept AFS token. */
-				char *token = packet_get_string(&dlen);
-				packet_check_eom();
-
-				if (auth_afs_token(s->authctxt, token))
-					success = 1;
-				else
-					verbose("AFS token refused for %.100s",
-					    s->authctxt->user);
-				xfree(token);
-			}
-			break;
-#endif /* AFS */
-
 		case SSH_CMSG_EXEC_SHELL:
 		case SSH_CMSG_EXEC_CMD:
 			if (type == SSH_CMSG_EXEC_CMD) {
@@ -398,7 +346,7 @@ do_authenticated1(Authctxt *authctxt)
 			 * Any unknown messages in this phase are ignored,
 			 * and a failure message is returned.
 			 */
-			log("Unknown packet type received after authentication: %d", type);
+			logit("Unknown packet type received after authentication: %d", type);
 		}
 		packet_start(success ? SSH_SMSG_SUCCESS : SSH_SMSG_FAILURE);
 		packet_send();
@@ -625,6 +573,14 @@ do_exec(Session *s, const char *command)
 		debug("Forced command '%.900s'", command);
 	}
 
+#ifdef GSSAPI
+	if (options.gss_authentication) {
+		temporarily_use_uid(s->pw);
+		ssh_gssapi_storecreds();
+		restore_uid();
+	}
+#endif
+
 	if (s->ttyfd != -1)
 		do_exec_pty(s, command);
 	else
@@ -662,7 +618,7 @@ do_login(Session *s, const char *command)
 	if (!use_privsep)
 		record_login(pid, s->tty, pw->pw_name, pw->pw_uid,
 		    get_remote_name_or_ip(utmp_len,
-		    options.verify_reverse_mapping),
+		    options.use_dns),
 		    (struct sockaddr *)&from, fromlen);
 
 	if (check_quietlogin(s, command))
@@ -735,7 +691,7 @@ check_quietlogin(Session *s, const char *command)
  * Sets the value of the given variable in the environment.  If the variable
  * already exists, its value is overriden.
  */
-static void
+void
 child_set_env(char ***envp, u_int *envsizep, const char *name,
 	const char *value)
 {
@@ -831,6 +787,13 @@ do_setup_env(Session *s, const char *shell)
 	env = xmalloc(envsize * sizeof(char *));
 	env[0] = NULL;
 
+#ifdef GSSAPI
+	/* Allow any GSSAPI methods that we've used to alter 
+	 * the childs environment as they see fit
+	 */
+	ssh_gssapi_do_child(&env, &envsize);
+#endif
+
 	if (!options.use_login) {
 		/* Set basic environment. */
 		child_set_env(&env, &envsize, "USER", pw->pw_name);
@@ -893,11 +856,6 @@ do_setup_env(Session *s, const char *shell)
 	if (original_command)
 		child_set_env(&env, &envsize, "SSH_ORIGINAL_COMMAND",
 		    original_command);
-#ifdef KRB4
-	if (s->authctxt->krb4_ticket_file)
-		child_set_env(&env, &envsize, "KRBTKFILE",
-		    s->authctxt->krb4_ticket_file);
-#endif
 #ifdef KRB5
 	if (s->authctxt->krb5_ticket_file)
 		child_set_env(&env, &envsize, "KRB5CCNAME",
@@ -1009,7 +967,7 @@ do_nologin(struct passwd *pw)
 #endif
 	if (f) {
 		/* /etc/nologin exists.  Print its contents and exit. */
-		log("User %.100s not allowed because %s exists",
+		logit("User %.100s not allowed because %s exists",
 		    pw->pw_name, _PATH_NOLOGIN);
 		while (fgets(buf, sizeof(buf), f))
 			fputs(buf, stderr);
@@ -1115,7 +1073,7 @@ do_child(Session *s, const char *command)
 	/* we have to stash the hostname before we close our socket. */
 	if (options.use_login)
 		hostname = get_remote_name_or_ip(utmp_len,
-		    options.verify_reverse_mapping);
+		    options.use_dns);
 	/*
 	 * Close the connection descriptors; note that this is the child, and
 	 * the server will still have the socket open, and it is important
@@ -1156,18 +1114,6 @@ do_child(Session *s, const char *command)
 	 * /etc/ssh/sshrc and xauth are run in the proper environment.
 	 */
 	environ = env;
-
-#ifdef AFS
-	/* Try to get AFS tokens for the local cell. */
-	if (k_hasafs()) {
-		char cell[64];
-
-		if (k_afs_cell_of_file(pw->pw_dir, cell, sizeof(cell)) == 0)
-			krb_afslog(cell, 0);
-
-		krb_afslog(0, 0);
-	}
-#endif /* AFS */
 
 	/* Change current directory to the user\'s home directory. */
 	if (chdir(pw->pw_dir) < 0) {
@@ -1438,7 +1384,7 @@ session_subsystem_req(Session *s)
 	int i;
 
 	packet_check_eom();
-	log("subsystem request for %.100s", subsys);
+	logit("subsystem request for %.100s", subsys);
 
 	for (i = 0; i < options.num_subsystems; i++) {
 		if (strcmp(subsys, options.subsystem_name[i]) == 0) {
@@ -1457,7 +1403,7 @@ session_subsystem_req(Session *s)
 	}
 
 	if (!success)
-		log("subsystem request for %.100s failed, subsystem not found",
+		logit("subsystem request for %.100s failed, subsystem not found",
 		    subsys);
 
 	xfree(subsys);
@@ -1505,6 +1451,20 @@ session_exec_req(Session *s)
 }
 
 static int
+session_break_req(Session *s)
+{
+	u_int break_length;
+
+	break_length = packet_get_int();	/* ignored */
+	packet_check_eom();
+
+	if (s->ttyfd == -1 ||
+	    tcsendbreak(s->ttyfd, 0) < 0)
+		return 0;
+	return 1;
+}
+
+static int
 session_auth_agent_req(Session *s)
 {
 	static int called = 0;
@@ -1528,7 +1488,7 @@ session_input_channel_req(Channel *c, const char *rtype)
 	Session *s;
 
 	if ((s = session_by_channel(c->self)) == NULL) {
-		log("session_input_channel_req: no session %d req %.100s",
+		logit("session_input_channel_req: no session %d req %.100s",
 		    c->self, rtype);
 		return 0;
 	}
@@ -1551,6 +1511,8 @@ session_input_channel_req(Channel *c, const char *rtype)
 			success = session_auth_agent_req(s);
 		} else if (strcmp(rtype, "subsystem") == 0) {
 			success = session_subsystem_req(s);
+		} else if (strcmp(rtype, "break") == 0) {
+			success = session_break_req(s);
 		}
 	}
 	if (strcmp(rtype, "window-change") == 0) {
@@ -1859,4 +1821,8 @@ static void
 do_authenticated2(Authctxt *authctxt)
 {
 	server_loop2(authctxt);
+#if defined(GSSAPI)
+	if (options.gss_cleanup_creds)
+		ssh_gssapi_cleanup_creds(NULL);
+#endif
 }

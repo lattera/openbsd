@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.c,v 1.7.2.1 2003/04/01 00:12:14 margarida Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.c,v 1.7.2.2 2003/09/16 21:20:29 brad Exp $");
 
 #include <util.h>
 #include "sshpty.h"
@@ -181,7 +181,7 @@ pty_release(const char *ttyname)
 		error("chmod %.100s 0666 failed: %.100s", ttyname, strerror(errno));
 }
 
-/* Makes the tty the processes controlling tty and sets it to sane modes. */
+/* Makes the tty the process's controlling tty and sets it to sane modes. */
 
 void
 pty_make_controlling_tty(int *ttyfd, const char *ttyname)
@@ -290,10 +290,10 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 			if (errno == EROFS &&
 			    (st.st_mode & (S_IRGRP | S_IROTH)) == 0)
 				debug("chmod(%.100s, 0%o) failed: %.100s",
-				    ttyname, mode, strerror(errno));
+				    ttyname, (u_int)mode, strerror(errno));
 			else
 				fatal("chmod(%.100s, 0%o) failed: %.100s",
-				    ttyname, mode, strerror(errno));
+				    ttyname, (u_int)mode, strerror(errno));
 		}
 	}
 }

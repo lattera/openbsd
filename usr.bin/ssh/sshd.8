@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.193.2.1 2003/04/01 00:12:14 margarida Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.193.2.2 2003/09/16 21:20:29 brad Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -292,7 +292,6 @@ may also be used to prevent
 from making DNS requests unless the authentication
 mechanism or configuration requires it.
 Authentication mechanisms that may require DNS include
-.Cm RhostsAuthentication ,
 .Cm RhostsRSAAuthentication ,
 .Cm HostbasedAuthentication
 and using a
@@ -429,13 +428,13 @@ that option keywords are case-insensitive):
 Specifies that in addition to public key authentication, the canonical name
 of the remote host must be present in the comma-separated list of
 patterns
-.Pf ( Ql *
+.Pf ( Ql \&*
 and
-.Ql ?
+.Ql \&?
 serve as wildcards).
 The list may also contain
 patterns negated by prefixing them with
-.Ql ! ;
+.Ql \&! ;
 if the canonical host name matches a negated pattern, the key is not accepted.
 The purpose
 of this option is to optionally increase security: public key authentication
@@ -497,9 +496,9 @@ IPv6 addresses can be specified with an alternative syntax:
 .Ar host/port .
 Multiple
 .Cm permitopen
-options may be applied separated by commas. No pattern matching is
-performed on the specified hostnames, they must be literal domains or
-addresses.
+options may be applied separated by commas.
+No pattern matching is performed on the specified hostnames,
+they must be literal domains or addresses.
 .El
 .Ss Examples
 1024 33 12121.\|.\|.\|312314325 ylo@foo.bar
@@ -524,12 +523,16 @@ Each line in these files contains the following fields: hostnames,
 bits, exponent, modulus, comment.
 The fields are separated by spaces.
 .Pp
-Hostnames is a comma-separated list of patterns ('*' and '?' act as
+Hostnames is a comma-separated list of patterns
+.Pf ( Ql \&*
+and
+.Ql \&?
+act as
 wildcards); each pattern in turn is matched against the canonical host
 name (when authenticating a client) or against the user-supplied
 name (when authenticating a server).
 A pattern may also be preceded by
-.Ql !
+.Ql \&!
 to indicate negation: if the host name matches a negated
 pattern, it is not accepted (by that line) even if it matched another
 pattern on the line.
@@ -767,17 +770,6 @@ This can be used to specify
 machine-specific login-time initializations globally.
 This file should be writable only by root, and should be world-readable.
 .El
-.Sh AUTHORS
-OpenSSH is a derivative of the original and free
-ssh 1.2.12 release by Tatu Ylonen.
-Aaron Campbell, Bob Beck, Markus Friedl, Niels Provos,
-Theo de Raadt and Dug Song
-removed many bugs, re-added newer features and
-created OpenSSH.
-Markus Friedl contributed the support for SSH
-protocol versions 1.5 and 2.0.
-Niels Provos and Markus Friedl contributed support
-for privilege separation.
 .Sh SEE ALSO
 .Xr scp 1 ,
 .Xr sftp 1 ,
@@ -809,3 +801,14 @@ for privilege separation.
 .%D January 2002
 .%O work in progress material
 .Re
+.Sh AUTHORS
+OpenSSH is a derivative of the original and free
+ssh 1.2.12 release by Tatu Ylonen.
+Aaron Campbell, Bob Beck, Markus Friedl, Niels Provos,
+Theo de Raadt and Dug Song
+removed many bugs, re-added newer features and
+created OpenSSH.
+Markus Friedl contributed the support for SSH
+protocol versions 1.5 and 2.0.
+Niels Provos and Markus Friedl contributed support
+for privilege separation.

@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.104 2002/09/19 16:03:15 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.104.2.1 2003/09/16 21:20:27 brad Exp $");
 
 #include "xmalloc.h"
 #include "packet.h"
@@ -156,7 +156,7 @@ sigchld_handler(int sig)
 static void
 make_packets_from_stderr_data(void)
 {
-	int len;
+	u_int len;
 
 	/* Send buffered stderr data to the client. */
 	while (buffer_len(&stderr_buffer) > 0 &&
@@ -185,7 +185,7 @@ make_packets_from_stderr_data(void)
 static void
 make_packets_from_stdout_data(void)
 {
-	int len;
+	u_int len;
 
 	/* Send buffered stdout data to the client. */
 	while (buffer_len(&stdout_buffer) > 0 &&
@@ -769,8 +769,14 @@ server_loop2(Authctxt *authctxt)
 		    &nalloc, 0);
 
 		collect_children();
-		if (!rekeying)
+		if (!rekeying) {
 			channel_after_select(readset, writeset);
+			if (packet_need_rekeying()) {
+				debug("need rekeying");
+				xxx_kex->done = 0;
+				kex_send_kexinit(xxx_kex);
+			}
+		}
 		process_input(readset);
 		if (connection_closed)
 			break;
@@ -872,7 +878,7 @@ server_request_direct_tcpip(char *ctype)
 		return NULL;
 	c = channel_new(ctype, SSH_CHANNEL_CONNECTING,
 	    sock, sock, -1, CHAN_TCP_WINDOW_DEFAULT,
-	    CHAN_TCP_PACKET_DEFAULT, 0, xstrdup("direct-tcpip"), 1);
+	    CHAN_TCP_PACKET_DEFAULT, 0, "direct-tcpip", 1);
 	return c;
 }
 
@@ -891,7 +897,7 @@ server_request_session(char *ctype)
 	 */
 	c = channel_new(ctype, SSH_CHANNEL_LARVAL,
 	    -1, -1, -1, /*window size*/0, CHAN_SES_PACKET_DEFAULT,
-	    0, xstrdup("server-session"), 1);
+	    0, "server-session", 1);
 	if (session_open(xxx_authctxt, c->self) != 1) {
 		debug("session open failed, free channel %d", c->self);
 		channel_free(c);
@@ -969,7 +975,7 @@ server_input_global_request(int type, u_int32_t seq, void *ctxt)
 		pw = auth_get_user();
 		if (pw == NULL)
 			fatal("server_input_global_request: no user");
-		listen_address = packet_get_string(NULL); /* XXX currently ignored */
+		listen_address = packet_get_string(NULL);
 		listen_port = (u_short)packet_get_int();
 		debug("server_input_global_request: tcpip-forward listen %s port %d",
 		    listen_address, listen_port);

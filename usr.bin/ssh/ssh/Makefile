@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.42 2002/06/20 19:56:07 stevesk Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.42.2.1 2003/09/16 21:20:30 brad Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -17,24 +17,16 @@ SRCS=	ssh.c readconf.c clientloop.c sshtty.c \
 
 .include <bsd.own.mk> # for AFS
 
-.if (${KERBEROS5:L} == "yes")
-CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV
-LDADD+=  -lkrb5 -lasn1 -lcom_err
-DPADD+=  ${LIBKRB5} ${LIBASN1} ${LIBCOM_ERR}
-.endif # KERBEROS5
-
-.if (${KERBEROS:L} == "yes")
-CFLAGS+= -DKRB4 -I${DESTDIR}/usr/include/kerberosIV
-LDADD+=	 -lkrb
-DPADD+=	 ${LIBKRB}
-.if (${AFS:L} == "yes")
-CFLAGS+= -DAFS
-LDADD+=  -lkafs
-DPADD+=  ${LIBKAFS}
-.endif # AFS
-.endif # KERBEROS
+#.if (${KERBEROS5:L} == "yes")
+#CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV -DGSSAPI 
+#.endif # KERBEROS5
 
 .include <bsd.prog.mk>
 
-LDADD+=	-lcrypto -lz -ldes
+#.if (${KERBEROS5:L} == "yes")
+#DPADD+=  ${LIBGSSAPI} ${LIBKRB5}
+#LDADD+=  -lgssapi -lkrb5
+#.endif # KERBEROS5
+
 DPADD+=	${LIBCRYPTO} ${LIBZ} ${LIBDES}
+LDADD+=	-lcrypto -lz -ldes

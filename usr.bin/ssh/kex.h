@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.32.2.1 2003/04/01 00:12:13 margarida Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.32.2.2 2003/09/16 21:20:25 brad Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.

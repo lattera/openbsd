@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/msg.h,v 1.1.6.1 2003/04/01 00:12:13 margarida Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/msg.h,v 1.1.6.2 2003/09/16 21:20:26 brad Exp $	*/
 /*
  * Copyright (c) 2002 Markus Friedl.  All rights reserved.
  *

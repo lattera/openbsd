@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/moduli.h,v 1.1 2003/07/28 09:49:56 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/moduli.h,v 1.1.6.1 2003/09/16 21:20:26 brad Exp $ */
 
 #include <sys/types.h>
 #include <openssl/bn.h>

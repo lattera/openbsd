@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.11 2002/06/30 21:59:45 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.11.2.1 2003/09/16 21:20:26 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -36,5 +36,6 @@
 Key	**sc_get_keys(const char *, const char *);
 void	 sc_close(void);
 int	 sc_put_key(Key *, const char *);
+char	*sc_get_key_label(Key *);
 
 #endif

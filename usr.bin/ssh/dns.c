@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dns.c,v 1.6 2003/06/11 10:18:47 jakob Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/dns.c,v 1.6.6.1 2003/09/16 21:20:25 brad Exp $	*/
 
 /*
  * Copyright (c) 2003 Wesley Griffin. All rights reserved.
@@ -44,7 +44,7 @@
 #include "uuencode.h"
 
 extern char *__progname;
-RCSID("$OpenBSD: src/usr.bin/ssh/dns.c,v 1.6 2003/06/11 10:18:47 jakob Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/dns.c,v 1.6.6.1 2003/09/16 21:20:25 brad Exp $");
 
 #ifndef LWRES
 static const char *errset_text[] = {

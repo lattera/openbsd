@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.19 2002/06/30 21:59:45 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.19.2.1 2003/09/16 21:20:27 brad Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -68,4 +68,7 @@ Session	*session_new(void);
 Session	*session_by_tty(char *);
 void	 session_close(Session *);
 void	 do_setusercontext(struct passwd *);
+void	 child_set_env(char ***envp, u_int *envsizep, const char *name,
+		       const char *value);
+
 #endif

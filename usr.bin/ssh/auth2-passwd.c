@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-passwd.c,v 1.2 2002/05/31 11:35:15 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-passwd.c,v 1.2.6.1 2003/09/16 21:20:24 brad Exp $");
 
 #include "xmalloc.h"
 #include "packet.h"
@@ -44,11 +44,10 @@ userauth_passwd(Authctxt *authctxt)
 	u_int len;
 	change = packet_get_char();
 	if (change)
-		log("password change not supported");
+		logit("password change not supported");
 	password = packet_get_string(&len);
 	packet_check_eom();
-	if (authctxt->valid &&
-	    PRIVSEP(auth_password(authctxt, password)) == 1)
+	if (PRIVSEP(auth_password(authctxt, password)) == 1)
 		authenticated = 1;
 	memset(password, 0, len);
 	xfree(password);

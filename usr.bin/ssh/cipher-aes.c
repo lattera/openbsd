@@ -24,7 +24,7 @@
 
 #if OPENSSL_VERSION_NUMBER < 0x00907000L
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-aes.c,v 1.1 2003/05/15 03:08:29 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-aes.c,v 1.1.6.1 2003/09/16 21:20:25 brad Exp $");
 
 #include <openssl/evp.h>
 #include "rijndael.h"

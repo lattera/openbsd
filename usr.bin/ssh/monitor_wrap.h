@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.8 2002/09/26 11:38:43 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.8.2.1 2003/09/16 21:20:26 brad Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -55,6 +55,14 @@ int mm_auth_rsa_key_allowed(struct passwd *, BIGNUM *, Key **);
 int mm_auth_rsa_verify_response(Key *, BIGNUM *, u_char *);
 BIGNUM *mm_auth_rsa_generate_challenge(Key *);
 
+#ifdef GSSAPI
+#include "ssh-gss.h"
+OM_uint32 mm_ssh_gssapi_server_ctx(Gssctxt **ctxt, gss_OID oid);
+OM_uint32 mm_ssh_gssapi_accept_ctx(Gssctxt *ctxt,
+   gss_buffer_desc *recv, gss_buffer_desc *send, OM_uint32 *flags);
+int mm_ssh_gssapi_userok(char *user);
+#endif
+
 void mm_terminate(void);
 int mm_pty_allocate(int *, int *, char *, int);
 void mm_session_pty_cleanup2(void *);
@@ -78,16 +86,6 @@ int mm_bsdauth_respond(void *, u_int, char **);
 /* skey */
 int mm_skey_query(void *, char **, char **, u_int *, char ***, u_int **);
 int mm_skey_respond(void *, u_int, char **);
-
-/* auth_krb */
-#ifdef KRB4
-int mm_auth_krb4(struct Authctxt *, void *, char **, void *);
-#endif
-#ifdef KRB5
-/* auth and reply are really krb5_data objects, but we don't want to
- * include all of the krb5 headers here */
-int mm_auth_krb5(void *authctxt, void *auth, char **client, void *reply);
-#endif
 
 /* zlib allocation hooks */
 

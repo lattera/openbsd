@@ -24,16 +24,16 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.10 2001/05/08 22:48:07 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.10.6.1 2003/09/16 21:20:23 brad Exp $");
 
 #include "atomicio.h"
 
 /*
- * ensure all of data on socket comes through. f==read || f==write
+ * ensure all of data on socket comes through. f==read || f==vwrite
  */
 ssize_t
 atomicio(f, fd, _s, n)
-	ssize_t (*f) ();
+	ssize_t (*f) (int, void *, size_t);
 	int fd;
 	void *_s;
 	size_t n;

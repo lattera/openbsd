@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.22.4.1 2003/04/01 00:12:13 margarida Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.22.4.2 2003/09/16 21:20:26 brad Exp $");
 
 #include <openssl/evp.h>
 

@@ -34,12 +34,13 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/log.c,v 1.24.2.1 2003/04/01 00:12:13 margarida Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/log.c,v 1.24.2.2 2003/09/16 21:20:26 brad Exp $");
 
 #include "log.h"
 #include "xmalloc.h"
 
 #include <syslog.h>
+#include <vis.h>
 
 static LogLevel log_level = SYSLOG_LEVEL_INFO;
 static int log_on_stderr = 1;
@@ -124,7 +125,7 @@ error(const char *fmt,...)
 /* Log this message (information that usually should go to the log). */
 
 void
-log(const char *fmt,...)
+logit(const char *fmt,...)
 {
 	va_list args;
 
@@ -331,6 +332,7 @@ log_init(char *av0, LogLevel level, SyslogFacility facility, int on_stderr)
 void
 do_log(LogLevel level, const char *fmt, va_list args)
 {
+	struct syslog_data sdata = SYSLOG_DATA_INIT;
 	char msgbuf[MSGBUFSIZ];
 	char fmtbuf[MSGBUFSIZ];
 	char *txt = NULL;
@@ -379,11 +381,13 @@ do_log(LogLevel level, const char *fmt, va_list args)
 	} else {
 		vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
 	}
+	strnvis(fmtbuf, msgbuf, sizeof(fmtbuf), VIS_SAFE|VIS_OCTAL);
 	if (log_on_stderr) {
-		fprintf(stderr, "%s\r\n", msgbuf);
+		snprintf(msgbuf, sizeof msgbuf, "%s\r\n", fmtbuf);
+		write(STDERR_FILENO, msgbuf, strlen(msgbuf));
 	} else {
-		openlog(argv0 ? argv0 : __progname, LOG_PID, log_facility);
-		syslog(pri, "%.500s", msgbuf);
-		closelog();
+		openlog_r(argv0 ? argv0 : __progname, LOG_PID, log_facility, &sdata);
+		syslog_r(pri, &sdata, "%.500s", fmtbuf);
+		closelog_r(&sdata);
 	}
 }
