@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
+ *  Copyright (c) 1999-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  *
  * By using this file, you agree to the terms and conditions set
@@ -9,7 +9,7 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: main.c,v 8.34 2000/02/11 02:43:45 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: main.c,v 8.34.4.11 2001/05/07 22:06:37 gshapiro Exp $";
 #endif /* ! lint */
 
 #if _FFR_MILTER
@@ -17,6 +17,7 @@ static char id[] = "@(#)$Sendmail: main.c,v 8.34 2000/02/11 02:43:45 gshapiro Ex
 #include "libmilter.h"
 #include <fcntl.h>
 #include <sys/stat.h>
+
 
 static smfiDesc_ptr smfi = NULL;
 
@@ -42,7 +43,7 @@ smfi_register(smfilter)
 		if (smfi == NULL)
 			return MI_FAILURE;
 	}
-	(void)memcpy(smfi, &smfilter, sizeof *smfi);
+	(void) memcpy(smfi, &smfilter, sizeof *smfi);
 	if (smfilter.xxfi_name == NULL)
 		smfilter.xxfi_name = "Unknown";
 
@@ -51,12 +52,42 @@ smfi_register(smfilter)
 	if (smfi->xxfi_name == NULL)
 		return MI_FAILURE;
 	(void) strlcpy(smfi->xxfi_name, smfilter.xxfi_name, len);
+
+	/* compare milter version with hard coded version */
+	if (smfi->xxfi_version != SMFI_VERSION)
+	{
+		/* hard failure for now! */
+		smi_log(SMI_LOG_ERR,
+			"%s: smfi_register: version mismatch application: %d != milter: %d",
+			smfi->xxfi_name, smfi->xxfi_version,
+			(int) SMFI_VERSION);
+		return MI_FAILURE;
+	}
+
+	return MI_SUCCESS;
+}
+
+/*
+**  SMFI_STOP -- stop milter
+**
+**	Parameters:
+**		none.
+**
+**	Returns:
+**		success.
+*/
+
+int
+smfi_stop()
+{
+	mi_stop_milters(MILTER_STOP);
 	return MI_SUCCESS;
 }
 
 static int dbg = 0;
 static char *conn = NULL;
 static int timeout = MI_TIMEOUT;
+static int backlog= MI_SOMAXCONN;
 
 int
 smfi_setdbg(odbg)
@@ -91,14 +122,26 @@ smfi_setconn(oconn)
 }
 
 int
+smfi_setbacklog(obacklog)
+	int obacklog;
+{
+	if (obacklog <= 0)
+		return MI_FAILURE;
+	backlog = obacklog;
+	return MI_SUCCESS;
+}
+
+
+int
 smfi_main()
 {
+
 	signal(SIGPIPE, SIG_IGN);
 	if (conn == NULL)
 	{
 		smi_log(SMI_LOG_FATAL, "%s: missing connection information",
 			smfi->xxfi_name);
-		exit(EX_DATAERR);
+		return MI_FAILURE;
 	}
 
 	(void) atexit(mi_clean_signals);
@@ -107,13 +150,14 @@ smfi_main()
 		smi_log(SMI_LOG_FATAL,
 			"%s: Couldn't start signal thread",
 			smfi->xxfi_name);
-		exit(EX_OSERR);
+		return MI_FAILURE;
 	}
 
-	/* Startup the listener */
-	if (mi_listener(conn, dbg, smfi, timeout) != MI_SUCCESS)
-		return(MI_FAILURE);
 
-	return(MI_SUCCESS);
+	/* Startup the listener */
+	if (mi_listener(conn, dbg, smfi, timeout, backlog) != MI_SUCCESS)
+		return MI_FAILURE;
+
+	return MI_SUCCESS;
 }
 #endif /* _FFR_MILTER */

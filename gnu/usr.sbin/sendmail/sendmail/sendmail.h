@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -20,7 +20,7 @@
 #ifdef _DEFINE
 # define EXTERN
 # ifndef lint
-static char SmailId[] =	"@(#)$Sendmail: sendmail.h,v 8.517 2000/03/21 04:57:53 ca Exp $";
+static char SmailId[] =	"@(#)$Sendmail: sendmail.h,v 8.517.4.64 2001/05/23 17:49:13 ca Exp $";
 # endif /* ! lint */
 #else /* _DEFINE */
 # define EXTERN extern
@@ -28,16 +28,26 @@ static char SmailId[] =	"@(#)$Sendmail: sendmail.h,v 8.517 2000/03/21 04:57:53 c
 
 
 #include <unistd.h>
+
+#if SFIO
+# include <sfio/stdio.h>
+# if defined(SFIO_VERSION) && SFIO_VERSION > 20000000L
+   ERROR README: SFIO 2000 does not work with sendmail, use SFIO 1999 instead.
+# endif /* defined(SFIO_VERSION) && SFIO_VERSION > 20000000L */
+#endif /* SFIO */
+
 #include <stddef.h>
 #include <stdlib.h>
+#if !SFIO
 # include <stdio.h>
+#endif /* !SFIO */
 #include <ctype.h>
 #include <setjmp.h>
 #include <string.h>
 #include <time.h>
-#ifdef EX_OK
-# undef EX_OK			/* for SVr4.2 SMP */
-#endif /* EX_OK */
+# ifdef EX_OK
+#  undef EX_OK			/* for SVr4.2 SMP */
+# endif /* EX_OK */
 #include <sysexits.h>
 
 #include "sendmail/sendmail.h"
@@ -48,46 +58,57 @@ static char SmailId[] =	"@(#)$Sendmail: sendmail.h,v 8.517 2000/03/21 04:57:53 c
 # include <syslog.h>
 #endif /* LOG */
 
-#if NETINET || NETINET6 || NETUNIX || NETISO || NETNS || NETX25
-# include <sys/socket.h>
-#endif /* NETINET || NETINET6 || NETUNIX || NETISO || NETNS || NETX25 */
-#if NETUNIX
-# include <sys/un.h>
-#endif /* NETUNIX */
-#if NETINET || NETINET6
-# include <netinet/in.h>
-#endif /* NETINET || NETINET6 */
-#if NETINET6
+
+
+# if NETINET || NETINET6 || NETUNIX || NETISO || NETNS || NETX25
+#  include <sys/socket.h>
+# endif /* NETINET || NETINET6 || NETUNIX || NETISO || NETNS || NETX25 */
+# if NETUNIX
+#  include <sys/un.h>
+# endif /* NETUNIX */
+# if NETINET || NETINET6
+#  include <netinet/in.h>
+# endif /* NETINET || NETINET6 */
+# if NETINET6
 /*
 **  There is no standard yet for IPv6 includes.
 **  Specify OS specific implementation in conf.h
 */
-#endif /* NETINET6 */
-#if NETISO
-# include <netiso/iso.h>
-#endif /* NETISO */
-#if NETNS
-# include <netns/ns.h>
-#endif /* NETNS */
-#if NETX25
-# include <netccitt/x25.h>
-#endif /* NETX25 */
+# endif /* NETINET6 */
+# if NETISO
+#  include <netiso/iso.h>
+# endif /* NETISO */
+# if NETNS
+#  include <netns/ns.h>
+# endif /* NETNS */
+# if NETX25
+#  include <netccitt/x25.h>
+# endif /* NETX25 */
 
-#if NAMED_BIND
-# include <arpa/nameser.h>
-# ifdef NOERROR
-#  undef NOERROR		/* avoid <sys/streams.h> conflict */
-# endif /* NOERROR */
-# include <resolv.h>
-#endif /* NAMED_BIND */
+# if NAMED_BIND
+#  include <arpa/nameser.h>
+#  ifdef NOERROR
+#   undef NOERROR		/* avoid <sys/streams.h> conflict */
+#  endif /* NOERROR */
+#  include <resolv.h>
+# endif /* NAMED_BIND */
 
-#ifdef HESIOD
-# include <hesiod.h>
-# if !defined(HES_ER_OK) || defined(HESIOD_INTERFACES)
-#  define HESIOD_INIT		/* support for the new interface */
-# endif /* !defined(HES_ER_OK) || defined(HESIOD_INTERFACES) */
-#endif /* HESIOD */
+# ifdef HESIOD
+#  include <hesiod.h>
+#  if !defined(HES_ER_OK) || defined(HESIOD_INTERFACES)
+#   define HESIOD_INIT		/* support for the new interface */
+#  endif /* !defined(HES_ER_OK) || defined(HESIOD_INTERFACES) */
+# endif /* HESIOD */
 
+#if STARTTLS
+# if !SFIO && !_FFR_TLS_TOREK
+  ERROR README: STARTTLS requires SFIO
+# endif /* !SFIO && !_FFR_TLS_TOREK */
+# if SFIO && _FFR_TLS_TOREK
+  ERROR README: Can not do both SFIO and _FFR_TLS_TOREK
+# endif /* SFIO && _FFR_TLS_TOREK */
+#  include <openssl/ssl.h>
+#endif /* STARTTLS */
 
 #if SASL  /* include the sasl include files if we have them */
 # include <sasl.h>
@@ -131,6 +152,9 @@ static char SmailId[] =	"@(#)$Sendmail: sendmail.h,v 8.517 2000/03/21 04:57:53 c
 #ifndef INT32SZ
 # define INT32SZ	4		/* size of a 32 bit integer in bytes */
 #endif /* ! INT32SZ */
+#ifndef INADDR_LOOPBACK
+# define INADDR_LOOPBACK	0x7f000001	/* loopback address */
+#endif /* ! INADDR_LOOPBACK */
 
 /*
 **  Error return from inet_addr(3), in case not defined in /usr/include.
@@ -205,14 +229,14 @@ typedef struct address ADDRESS;
 #define QS_QUEUEUP	3		/* save address in queue */
 #define QS_VERIFIED	4		/* verified, but not expanded */
 #define QS_DONTSEND	5		/* don't send to this address */
-#define QS_EXPANDED	6		/* expanded */
-#define QS_SENDER	7		/* message sender (MeToo) */
-#define QS_CLONED	8		/* addr cloned to a split envelope */
-#define QS_DISCARDED	9		/* recipient discarded (EF_DISCARD) */
-#define QS_REPLACED	10		/* maplocaluser()/UserDB replaced */
-#define QS_REMOVED	11		/* removed (removefromlist()) */
-#define QS_DUPLICATE	12		/* duplicate suppressed */
-#define QS_INCLUDED	13		/* :include: delivery */
+#define QS_EXPANDED	6		/* QS_DONTSEND: expanded */
+#define QS_SENDER	7		/* QS_DONTSEND: message sender (MeToo) */
+#define QS_CLONED	8		/* QS_DONTSEND: addr cloned to split envelope */
+#define QS_DISCARDED	9		/* QS_DONTSEND: rcpt discarded (EF_DISCARD) */
+#define QS_REPLACED	10		/* QS_DONTSEND: maplocaluser()/UserDB replaced */
+#define QS_REMOVED	11		/* QS_DONTSEND: removed (removefromlist()) */
+#define QS_DUPLICATE	12		/* QS_DONTSEND: duplicate suppressed */
+#define QS_INCLUDED	13		/* QS_DONTSEND: :include: delivery */
 
 /* address state testing primitives */
 #define QS_IS_OK(s)		((s) == QS_OK)
@@ -221,6 +245,7 @@ typedef struct address ADDRESS;
 #define QS_IS_QUEUEUP(s)	((s) == QS_QUEUEUP)
 #define QS_IS_VERIFIED(s)	((s) == QS_VERIFIED)
 #define QS_IS_EXPANDED(s)	((s) == QS_EXPANDED)
+#define QS_IS_REMOVED(s)	((s) == QS_REMOVED)
 #define QS_IS_UNDELIVERED(s)	((s) == QS_OK || \
 				 (s) == QS_QUEUEUP || \
 				 (s) == QS_VERIFIED)
@@ -298,6 +323,9 @@ struct mailer
 	gid_t	m_gid;		/* GID to run as */
 	char	*m_defcharset;	/* default character set */
 	time_t	m_wait;		/* timeout to wait for end */
+#if _FFR_DYNAMIC_TOBUF
+	int	m_maxrcpt;	/* max recipients per envelope client-side */
+#endif /* _FFR_DYNAMIC_TOBUF */
 };
 
 /* bits for m_flags */
@@ -379,8 +407,13 @@ MCI
 	short		mci_state;	/* SMTP state */
 	int		mci_deliveries;	/* delivery attempts for connection */
 	long		mci_maxsize;	/* max size this server will accept */
+#if SFIO
+	Sfio_t		*mci_in;	/* input side of connection */
+	Sfio_t		*mci_out;	/* output side of connection */
+#else /* SFIO */
 	FILE		*mci_in;	/* input side of connection */
 	FILE		*mci_out;	/* output side of connection */
+#endif /* SFIO */
 	pid_t		mci_pid;	/* process id of subordinate proc */
 	char		*mci_phase;	/* SMTP phase string */
 	struct mailer	*mci_mailer;	/* ptr to the mailer for this conn */
@@ -397,6 +430,9 @@ MCI
 	char		*mci_saslcap;	/* SASL list of mechanisms */
 	sasl_conn_t	*mci_conn;	/* SASL connection */
 #endif /* SASL */
+#if STARTTLS
+	SSL		*mci_ssl;	/* SSL connection */
+#endif /* STARTTLS */
 };
 
 
@@ -419,7 +455,15 @@ MCI
 #define MCIF_AUTH	0x00008000	/* AUTH= supported */
 #define MCIF_AUTHACT	0x00010000	/* SASL (AUTH) active */
 #define MCIF_ENHSTAT	0x00020000	/* ENHANCEDSTATUSCODES supported */
+#if STARTTLS
+#define MCIF_TLS	0x00100000	/* STARTTLS supported */
+#define MCIF_TLSACT	0x00200000	/* STARTTLS active */
+#define MCIF_EXTENS	(MCIF_EXPN | MCIF_SIZE | MCIF_8BITMIME | MCIF_DSN | MCIF_8BITOK | MCIF_AUTH | MCIF_ENHSTAT | MCIF_TLS)
+#else /* STARTTLS */
 #define MCIF_EXTENS	(MCIF_EXPN | MCIF_SIZE | MCIF_8BITMIME | MCIF_DSN | MCIF_8BITOK | MCIF_AUTH | MCIF_ENHSTAT)
+#endif /* STARTTLS */
+#define MCIF_ONLY_EHLO	0x10000000	/* use only EHLO in smtpinit */
+
 
 /* states */
 #define MCIS_CLOSED	0		/* no traffic on this connection */
@@ -497,18 +541,17 @@ extern struct hdrinfo	HdrInfo[];
 #define H_ENCODABLE	0x00008000	/* field can be RFC 1522 encoded */
 #define H_STRIPCOMM	0x00010000	/* header check: strip comments */
 #define H_BINDLATE	0x00020000	/* only expand macros at deliver */
+#define H_USER		0x00040000	/* header came from the user/SMTP */
 
 /* bits for chompheader() */
 #define CHHDR_DEF	0x0001	/* default header */
 #define CHHDR_CHECK	0x0002	/* call ruleset for header */
 #define CHHDR_USER	0x0004	/* header from user */
-#if _FFR_MILTER
-# define CHHDR_MILTER	0x0008	/* call milter filter for header */
-#endif /* _FFR_MILTER */
+#define CHHDR_QUEUE	0x0008	/* header from qf file */
 
 /* functions */
-extern void	addheader __P((char *, char *, HDR **));
-extern u_long	chompheader __P((char *, int *, HDR **, ENVELOPE *));
+extern void	addheader __P((char *, char *, int, HDR **));
+extern u_long	chompheader __P((char *, int, HDR **, ENVELOPE *));
 extern void	commaize __P((HDR *, char *, bool, MCI *, ENVELOPE *));
 extern HDR	*copyheader __P((HDR *));
 extern void	eatheader __P((ENVELOPE *, bool));
@@ -552,6 +595,12 @@ struct envelope
 	char		**e_fromdomain;	/* the domain part of the sender */
 	ADDRESS		*e_sendqueue;	/* list of message recipients */
 	ADDRESS		*e_errorqueue;	/* the queue for error responses */
+
+	/*
+	**  Overflow detection is based on < 0, so don't change this
+	**  to unsigned.  We don't use unsigned and == ULONG_MAX because
+	**  some libc's don't have strtoul(), see mail_esmtp_args().
+	*/
 	long		e_msgsize;	/* size of the message in bytes */
 	long		e_flags;	/* flags, see below */
 	int		e_nrcpts;	/* number of recipients */
@@ -583,7 +632,8 @@ struct envelope
 	int		e_ntries;	/* number of delivery attempts */
 	dev_t		e_dfdev;	/* df file's device, for crash recov */
 	ino_t		e_dfino;	/* df file's ino, for crash recovery */
-	char		*e_macro[256];	/* macro definitions */
+	char		*e_macro[MAXMACROID + 1]; /* macro definitions */
+	char		*e_if_macros[2]; /* HACK: incoming interface info */
 	char		*e_auth_param;
 	TIMERS		e_timers;	/* per job timers */
 #if _FFR_QUEUEDELAY
@@ -618,6 +668,10 @@ struct envelope
 #define EF_IS_MIME	0x0400000L	/* really is a MIME message */
 #define EF_DONT_MIME	0x0800000L	/* never MIME this message */
 #define EF_DISCARD	0x1000000L	/* discard the message */
+#define EF_TOOBIG	0x2000000L	/* message is too big */
+
+/* values for e_if_macros */
+#define EIF_ADDR	0		/* ${if_addr} */
 
 /* functions */
 extern void	clearenvelope __P((ENVELOPE *, bool));
@@ -727,7 +781,7 @@ extern void	expand __P((char *, char *, size_t, ENVELOPE *));
 extern int	macid __P((char *, char **));
 extern char	*macname __P((int));
 extern char	*macvalue __P((int, ENVELOPE *));
-extern int	rscheck __P((char *, char *, char *, ENVELOPE *, bool, bool, int));
+extern int	rscheck __P((char *, char *, char *, ENVELOPE *, bool, bool, int, char *));
 extern void	setclass __P((int, char *));
 extern int	strtorwset __P((char *, char **, int));
 extern void	translate_dollars __P((char *));
@@ -803,6 +857,7 @@ MAP
 	short		map_return[MAXMAPACTIONS]; /* return bitmaps for stacked maps */
 };
 
+
 /* bit values for map_mflags */
 #define MF_VALID	0x00000001	/* this entry is valid */
 #define MF_INCLNULL	0x00000002	/* include null byte in key */
@@ -826,6 +881,7 @@ MAP
 #define MF_DEFER	0x00080000	/* don't lookup map in defer mode */
 #define MF_SINGLEMATCH	0x00100000	/* successful only if match one key */
 #define MF_NOREWRITE	0x00200000	/* don't rewrite result, return as-is */
+#define MF_CLOSING	0x00400000	/* map is being closed */
 
 #define DYNOPENMAP(map) if (!bitset(MF_OPEN, (map)->map_mflags)) \
 	{	\
@@ -914,6 +970,9 @@ struct ldapmap_struct
 	/* args for ldap_result */
 	struct timeval	ldap_timeout;
 	LDAPMessage	*ldap_res;
+
+	/* Linked list of maps sharing the same LDAP binding */
+	MAP		*ldap_next;
 };
 
 typedef struct ldapmap_struct	LDAPMAP_STRUCT;
@@ -995,48 +1054,6 @@ extern int	proc_list_drop __P((pid_t));
 extern void	proc_list_probe __P((void));
 extern void	proc_list_set __P((pid_t, char *));
 
-#if _FFR_MILTER
-/*
-**  Mail Filters (milter)
-*/
-
-#include <libmilter/milter.h>
-
-#define SMFTO_WRITE	0		/* Timeout for sending information */
-#define SMFTO_READ	1		/* Timeout waiting for a response */
-#define SMFTO_EOM	2		/* Timeout for ACK/NAK to EOM */
-
-#define SMFTO_NUM_TO	3		/* Total number of timeouts */
-
-struct milter
-{
-	char		*mf_name;	/* filter name */
-	BITMAP256	mf_flags;	/* MTA flags */
-	u_long		mf_fflags;	/* filter flags */
-	char		*mf_conn;	/* connection info */
-	int		mf_sock;	/* connected socket */
-	char		mf_state;	/* state of filter */
-	time_t		mf_timeout[SMFTO_NUM_TO]; /* timeouts */
-};
-
-/* MTA flags */
-# define SMF_REJECT		'R'	/* Reject connection on filter fail */
-# define SMF_TEMPFAIL		'T'	/* tempfail connection on failure */
-
-/* states */
-# define SMFS_CLOSED		'C'	/* closed for all further actions */
-# define SMFS_OPEN		'O'	/* connected to remote milter filter */
-# define SMFS_INMSG		'M'	/* currently servicing a message */
-# define SMFS_DONE		'D'	/* done with current message */
-# define SMFS_ERROR		'E'	/* error state */
-# define SMFS_READY		'R'	/* ready for action */
-
-/* 32-bit type used by milter */
-typedef SM_INT32	mi_int32;
-
-EXTERN struct milter	*InputFilters[MAXFILTERS];
-EXTERN char		*InputFilterList;
-#endif /* _FFR_MILTER */
 /*
 **  Symbol table definitions
 */
@@ -1063,7 +1080,7 @@ struct symtab
 		struct hdrinfo	sv_header;	/* header metainfo */
 		char		*sv_service[MAXMAPSTACK]; /* service switch */
 #ifdef LDAPMAP
-		LDAP		*sv_ldap;	/* LDAP connection */
+		MAP		*sv_lmap;	/* Maps for LDAP connection */
 #endif /* LDAPMAP */
 #if _FFR_MILTER
 		struct milter	*sv_milter;	/* milter filter name */
@@ -1088,7 +1105,7 @@ typedef struct symtab	STAB;
 #define ST_SERVICE	11	/* service switch entry */
 #define ST_HEADER	12	/* special header flags */
 #ifdef LDAPMAP
-# define ST_LDAP	13	/* LDAP connection */
+# define ST_LMAP	13	/* List head of maps for LDAP connection */
 #endif /* LDAPMAP */
 #if _FFR_MILTER
 # define ST_MILTER	14	/* milter filter */
@@ -1109,7 +1126,7 @@ typedef struct symtab	STAB;
 #define s_service	s_value.sv_service
 #define s_header	s_value.sv_header
 #ifdef LDAPMAP
-# define s_ldap		s_value.sv_ldap
+# define s_lmap		s_value.sv_lmap
 #endif /* LDAPMAP */
 #if _FFR_MILTER
 # define s_milter	s_value.sv_milter
@@ -1138,7 +1155,7 @@ struct event
 	void		(*ev_func)__P((int));
 					/* function to call */
 	int		ev_arg;		/* argument to ev_func */
-	int		ev_pid;		/* pid that set this event */
+	pid_t		ev_pid;		/* pid that set this event */
 	struct event	*ev_link;	/* link to next item */
 };
 
@@ -1148,6 +1165,7 @@ typedef struct event	EVENT;
 extern void	clrevent __P((EVENT *));
 extern void	clear_events __P((void));
 extern EVENT	*setevent __P((time_t, void(*)(), int));
+extern EVENT	*sigsafe_setevent __P((time_t, void(*)(), int));
 
 /*
 **  Operation, send, error, and MIME modes
@@ -1332,6 +1350,51 @@ extern char	*validate_connection __P((SOCKADDR *, char *, ENVELOPE *));
 
 #endif /* NETINET || NETINET6 || NETUNIX || NETISO || NETNS || NETX25 */
 
+#if _FFR_MILTER
+/*
+**  Mail Filters (milter)
+*/
+
+#include <libmilter/milter.h>
+
+#define SMFTO_WRITE	0		/* Timeout for sending information */
+#define SMFTO_READ	1		/* Timeout waiting for a response */
+#define SMFTO_EOM	2		/* Timeout for ACK/NAK to EOM */
+
+#define SMFTO_NUM_TO	3		/* Total number of timeouts */
+
+struct milter
+{
+	char		*mf_name;	/* filter name */
+	BITMAP256	mf_flags;	/* MTA flags */
+	u_long		mf_fvers;	/* filter version */
+	u_long		mf_fflags;	/* filter flags */
+	u_long		mf_pflags;	/* protocol flags */
+	char		*mf_conn;	/* connection info */
+	int		mf_sock;	/* connected socket */
+	char		mf_state;	/* state of filter */
+	time_t		mf_timeout[SMFTO_NUM_TO]; /* timeouts */
+};
+
+/* MTA flags */
+# define SMF_REJECT		'R'	/* Reject connection on filter fail */
+# define SMF_TEMPFAIL		'T'	/* tempfail connection on failure */
+
+/* states */
+# define SMFS_CLOSED		'C'	/* closed for all further actions */
+# define SMFS_OPEN		'O'	/* connected to remote milter filter */
+# define SMFS_INMSG		'M'	/* currently servicing a message */
+# define SMFS_DONE		'D'	/* done with current message */
+# define SMFS_CLOSABLE		'Q'	/* done with current connection */
+# define SMFS_ERROR		'E'	/* error state */
+# define SMFS_READY		'R'	/* ready for action */
+
+/* 32-bit type used by milter */
+typedef SM_INT32	mi_int32;
+
+EXTERN struct milter	*InputFilters[MAXFILTERS];
+EXTERN char		*InputFilterList;
+#endif /* _FFR_MILTER */
 
 /*
 **  Vendor codes
@@ -1376,17 +1439,22 @@ struct termescape
 */
 
 /* d_flags, see daemon.c */
-/* generic rule: lower case: required, upper case: No */
+/* general rule: lower case: required, upper case: No */
 #define D_AUTHREQ	'a'	/* authentication required */
 #define D_BINDIF	'b'	/* use if_addr for outgoing connection */
 #define D_CANONREQ	'c'	/* canonification required (cf) */
 #define D_IFNHELO	'h'	/* use if name for HELO */
 #define D_FQMAIL	'f'	/* fq sender address required (cf) */
+#if _FFR_TLS_CLT1
+#define D_CLTNOTLS	'S'	/* don't use STARTTLS in client */
+#endif /* _FFR_TLS_CLT1 */
 #define D_FQRCPT	'r'	/* fq recipient address required (cf) */
 #define D_UNQUALOK	'u'	/* unqualified address is ok (cf) */
 #define D_NOCANON	'C'	/* no canonification (cf) */
 #define D_NOETRN	'E'	/* no ETRN (MSA) */
 #define D_ETRNONLY	((char)0x01)	/* allow only ETRN (disk low) */
+#define D_OPTIONAL	'O'	/* optional socket */
+#define D_DISABLE	((char)0x02)	/* optional socket disabled */
 
 /* Flags for submitmode */
 #define SUBMIT_UNKNOWN	0x0000	/* unknown agent type */
@@ -1420,6 +1488,49 @@ ERROR: change SASL_SEC_MASK_ notify sendmail.org!
 # define MAXOUTLEN 1024			/* length of output buffer */
 #endif /* SASL */
 
+#if STARTTLS
+/*
+**  TLS
+*/
+
+/* what to do in the TLS initialization */
+#define TLS_I_NONE	0x00000000	/* no requirements... */
+#define TLS_I_CERT_EX	0x00000001	/* CERT must exist */
+#define TLS_I_CERT_UNR	0x00000002	/* CERT must be g/o unreadable */
+#define TLS_I_KEY_EX	0x00000004	/* KEY must exist */
+#define TLS_I_KEY_UNR	0x00000008	/* KEY must be g/o unreadable */
+#define TLS_I_CERTP_EX	0x00000010	/* CA CERT PATH must exist */
+#define TLS_I_CERTP_UNR	0x00000020	/* CA CERT PATH must be g/o unreadable */
+#define TLS_I_CERTF_EX	0x00000040	/* CA CERT FILE must exist */
+#define TLS_I_CERTF_UNR	0x00000080	/* CA CERT FILE must be g/o unreadable */
+#define TLS_I_RSA_TMP	0x00000100	/* RSA TMP must be generated */
+#define TLS_I_USE_KEY	0x00000200	/* private key must usable */
+#define TLS_I_USE_CERT	0x00000400	/* certificate must be usable */
+#define TLS_I_VRFY_PATH	0x00000800	/* load verify path must succeed */
+#define TLS_I_VRFY_LOC	0x00001000	/* load verify default must succeed */
+#define TLS_I_CACHE	0x00002000	/* require cache */
+#define TLS_I_TRY_DH	0x00004000	/* try DH certificate */
+#define TLS_I_REQ_DH	0x00008000	/* require DH certificate */
+#define TLS_I_DHPAR_EX	0x00010000	/* require DH parameters */
+#define TLS_I_DHPAR_UNR	0x00020000	/* DH param. must be g/o unreadable */
+#define TLS_I_DH512	0x00040000	/* generate 512bit DH param */
+#define TLS_I_DH1024	0x00080000	/* generate 1024bit DH param */
+#define TLS_I_DH2048	0x00100000	/* generate 2048bit DH param */
+
+/* server requirements */
+#define TLS_I_SRV	(TLS_I_CERT_EX | TLS_I_KEY_EX | TLS_I_KEY_UNR | \
+			 TLS_I_CERTP_EX | TLS_I_CERTF_EX | TLS_I_RSA_TMP | \
+			 TLS_I_USE_KEY | TLS_I_USE_CERT | TLS_I_VRFY_PATH | \
+			 TLS_I_VRFY_LOC | TLS_I_TRY_DH | \
+			 TLS_I_DH512)
+
+/* client requirements */
+#define TLS_I_CLT	(TLS_I_KEY_UNR)
+
+#define TLS_AUTH_OK	0
+#define TLS_AUTH_NO	1
+#define TLS_AUTH_FAIL	(-1)
+#endif /* STARTTLS */
 
 
 /*
@@ -1522,6 +1633,51 @@ extern void	inittimeouts __P((char *, bool));
 /* variables */
 extern u_char	tTdvect[100];	/* trace vector */
 /*
+**  Critical signal sections
+*/
+
+#define PEND_SIGHUP	0x0001
+#define PEND_SIGINT	0x0002
+#define PEND_SIGTERM	0x0004
+#define PEND_SIGUSR1	0x0008
+
+#define ENTER_CRITICAL()	InCriticalSection++
+
+#define LEAVE_CRITICAL()						\
+do									\
+{									\
+	if (InCriticalSection > 0)					\
+		InCriticalSection--;					\
+} while (0)
+
+#define CHECK_CRITICAL(sig)						\
+{									\
+	if (InCriticalSection > 0 && (sig) != 0)			\
+	{								\
+		pend_signal((sig));					\
+		return SIGFUNC_RETURN;					\
+	}								\
+}
+
+/* reset signal in case System V semantics */
+#ifdef SYS5SIGNALS
+# define FIX_SYSV_SIGNAL(sig, handler)					\
+{									\
+	if ((sig) != 0)							\
+		(void) setsignal((sig), (handler));			\
+}
+#else /* SYS5SIGNALS */
+# define FIX_SYSV_SIGNAL(sig, handler)	{ /* EMPTY */ }
+#endif /* SYS5SIGNALS */
+
+/* variables */
+EXTERN u_int	volatile InCriticalSection;	/* >0 if in a critical section */
+EXTERN int	volatile PendingSignal;	/* pending signal to resend */
+
+/* functions */
+extern void	pend_signal __P((int));
+
+/*
 **  Miscellaneous information.
 */
 
@@ -1558,9 +1714,9 @@ EXTERN bool	CheckAliases;	/* parse addresses during newaliases */
 EXTERN bool	ChownAlwaysSafe;	/* treat chown(2) as safe */
 EXTERN bool	ColonOkInAddr;	/* single colon legal in address */
 EXTERN bool	ConfigFileRead;	/* configuration file has been read */
-EXTERN bool	DataProgress;	/* have we sent anything since last check */
+EXTERN bool	volatile DataProgress;	/* have we sent anything since last check */
 EXTERN bool	DisConnected;	/* running with OutChannel redirected to xf */
-EXTERN bool	DoQueueRun;	/* non-interrupt time queue run needed */
+EXTERN bool	volatile DoQueueRun;	/* non-interrupt time queue run needed */
 EXTERN bool	DontExpandCnames;	/* do not $[...$] expand CNAMEs */
 EXTERN bool	DontInitGroups;	/* avoid initgroups() because of NIS cost */
 EXTERN bool	DontLockReadFiles;	/* don't read lock support files */
@@ -1576,6 +1732,7 @@ EXTERN bool	IgnoreHostStatus;	/* ignore long term host status files */
 EXTERN bool	IgnrDot;	/* don't let dot end messages */
 EXTERN bool	InChild;	/* true if running in an SMTP subprocess */
 EXTERN bool	LogUsrErrs;	/* syslog user errors (e.g., SMTP RCPT cmd) */
+EXTERN bool	MapOpenErr;	/* error opening a non-optional map */
 EXTERN bool	MatchGecos;	/* look for user names in gecos field */
 EXTERN bool	MeToo;		/* send to the sender also */
 EXTERN bool	NoAlias;	/* suppress aliasing */
@@ -1588,9 +1745,13 @@ EXTERN bool	SendMIMEErrors;	/* send error messages in MIME format */
 EXTERN bool	SevenBitInput;	/* force 7-bit data on input */
 EXTERN bool	SingleLineFromHeader;	/* force From: header to be one line */
 EXTERN bool	SingleThreadDelivery;	/* single thread hosts on delivery */
+EXTERN bool	volatile StopRequest;	/* stop sending output */
 EXTERN bool	SuperSafe;	/* be extra careful, even if expensive */
 EXTERN bool	SuprErrs;	/* set if we are suppressing errors */
 EXTERN bool	TryNullMXList;	/* if we are the best MX, try host directly */
+#if _FFR_WORKAROUND_BROKEN_NAMESERVERS
+EXTERN bool	WorkAroundBrokenAAAA;	/* some nameservers return SERVFAIL on AAAA queries */
+#endif /* _FFR_WORKAROUND_BROKEN_NAMESERVERS */
 EXTERN bool	UseErrorsTo;	/* use Errors-To: header (back compat) */
 EXTERN bool	UseHesiod;	/* using Hesiod -- interpret Hesiod errors */
 EXTERN bool	UseNameServer;	/* using DNS -- interpret h_errno & MX RRs */
@@ -1600,7 +1761,7 @@ EXTERN char	SpaceSub;	/* substitution for <lwsp> */
 EXTERN int	CheckpointInterval;	/* queue file checkpoint interval */
 EXTERN int	ConfigLevel;	/* config file level */
 EXTERN int	ConnRateThrottle;	/* throttle for SMTP connection rate */
-EXTERN int	CurChildren;	/* current number of daemonic children */
+EXTERN int	volatile CurChildren;	/* current number of daemonic children */
 EXTERN int	CurrentLA;	/* current load average */
 EXTERN int	DefaultNotify;	/* default DSN notification flags */
 EXTERN int	Errors;		/* set if errors (local to single pass) */
@@ -1617,6 +1778,8 @@ EXTERN int	MaxMacroRecursion;	/* maximum depth of macro recursion */
 EXTERN int	MaxMciCache;		/* maximum entries in MCI cache */
 EXTERN int	MaxMimeFieldLength;	/* maximum MIME field length */
 EXTERN int	MaxMimeHeaderLength;	/* maximum MIME header length */
+
+
 EXTERN int	MaxQueueRun;	/* maximum number of jobs in one queue run */
 EXTERN int	MaxRcptPerMsg;	/* max recipients per SMTP message */
 EXTERN int	MaxRuleRecursion;	/* maximum depth of ruleset recursion */
@@ -1661,6 +1824,20 @@ EXTERN char	*AuthMechanisms;	/* AUTH mechanisms */
 EXTERN char	*SASLInfo;		/* file with AUTH info */
 #endif /* SASL */
 EXTERN int	SASLOpts;		/* options for SASL */
+#if STARTTLS
+EXTERN char	*CACERTpath;	/* path to CA certificates (dir. with hashes) */
+EXTERN char	*CACERTfile;	/* file with CA certificate */
+EXTERN char	*SrvCERTfile;	/* file with server certificate */
+EXTERN char	*Srvkeyfile;	/* file with server private key */
+EXTERN char	*CltCERTfile;	/* file with client certificate */
+EXTERN char	*Cltkeyfile;	/* file with client private key */
+EXTERN char	*DHParams;	/* file with DH parameters */
+EXTERN char	*RandFile;	/* source of random data */
+# if _FFR_TLS_1
+EXTERN char	*DHParams5;	/* file with DH parameters (512) */
+EXTERN char	*CipherList;	/* list of ciphers */
+# endif /* _FFR_TLS_1 */
+#endif /* STARTTLS */
 EXTERN char	*ConfFile;	/* location of configuration file [conf.c] */
 EXTERN char	*ControlSocketName; /* control socket filename [control.c] */
 EXTERN char	*CurHostName;	/* current host we are dealing with */
@@ -1689,9 +1866,11 @@ EXTERN time_t	QueueMaxDelay;	/* maximum queue delay */
 #endif /* _FFR_QUEUEDELAY */
 EXTERN char	*RealHostName;	/* name of host we are talking to */
 EXTERN char	*RealUserName;	/* real user name of caller */
+EXTERN char	*volatile RestartRequest;/* a sendmail restart has been requested */
 EXTERN char	*RunAsUserName;	/* user to become for bulk of run */
 EXTERN char	*SafeFileEnv;	/* chroot location for file delivery */
 EXTERN char	*ServiceSwitchFile;	/* backup service switch */
+EXTERN char	*volatile ShutdownRequest;/* a sendmail shutdown has been requested */
 EXTERN char	*SmtpGreeting;	/* SMTP greeting message (old $e macro) */
 EXTERN char	*SmtpPhase;	/* current phase in SMTP processing */
 EXTERN char	SmtpError[MAXLINE];	/* save failure error messages */
@@ -1701,15 +1880,20 @@ EXTERN char	*UdbSpec;	/* user database source spec */
 EXTERN char	*UnixFromLine;	/* UNIX From_ line (old $l macro) */
 EXTERN char	**ExternalEnviron;	/* input environment */
 					/* saved user environment */
+EXTERN char	**SaveArgv;	/* argument vector for re-execing */
 EXTERN BITMAP256	DontBlameSendmail;	/* DontBlameSendmail bits */
+#if SFIO
+EXTERN Sfio_t	*InChannel;	/* input connection */
+EXTERN Sfio_t	*OutChannel;	/* output connection */
+#else /* SFIO */
 EXTERN FILE	*InChannel;	/* input connection */
 EXTERN FILE	*OutChannel;	/* output connection */
+#endif /* SFIO */
 EXTERN FILE	*TrafficLogFile;	/* file in which to log all traffic */
 #ifdef HESIOD
 EXTERN void	*HesiodContext;
 #endif /* HESIOD */
 EXTERN ENVELOPE	*CurEnv;	/* envelope currently being processed */
-EXTERN EVENT	*EventQueue;	/* head of event queue */
 EXTERN MAILER	*LocalMailer;	/* ptr to local mailer */
 EXTERN MAILER	*ProgMailer;	/* ptr to program mailer */
 EXTERN MAILER	*FileMailer;	/* ptr to *file* mailer */
@@ -1745,6 +1929,18 @@ extern int	sasl_decode64 __P((const char *, unsigned, char *, unsigned *));
 extern int	sasl_encode64 __P((const char *, unsigned, char *, unsigned, unsigned *));
 #endif /* SASL */
 
+#if STARTTLS
+extern void	apps_ssl_info_cb __P((SSL *, int , int));
+extern bool	init_tls_library __P((void));
+extern bool	inittls __P((SSL_CTX **, u_long, bool, char *, char *, char *, char *, char *));
+extern bool	initclttls __P((void));
+extern bool	initsrvtls __P((void));
+extern int	tls_get_info __P((SSL *, ENVELOPE *, bool, char *, bool));
+extern int	endtls __P((SSL *, char *));
+extern int	endtlsclt __P((MCI *));
+extern void	tlslogerr __P((void));
+extern bool	tls_rand_init __P((char *, int));
+#endif /* STARTTLS */
 
 /* Transcript file */
 extern void	closexscript __P((ENVELOPE *));
@@ -1817,9 +2013,8 @@ extern int	opencontrolsocket __P((void));
 
 #if _FFR_MILTER
 /* milter functions */
-extern int	milter_open __P((struct milter *, bool, ENVELOPE *));
 extern void	milter_parse_list __P((char *, struct milter **, int));
-extern void	milter_parse_timeouts __P((char *, struct milter *));
+extern void	milter_setup __P((char *));
 extern void	milter_set_option __P((char *, char *, bool));
 extern bool	milter_can_delrcpts __P((void));
 extern void	milter_init __P((ENVELOPE *, char *));
@@ -1829,12 +2024,11 @@ extern char	*milter_connect __P((char *, SOCKADDR, ENVELOPE *, char *));
 extern char	*milter_helo __P((char *, ENVELOPE *, char *));
 extern char	*milter_envfrom __P((char **, ENVELOPE *, char *));
 extern char	*milter_envrcpt __P((char **, ENVELOPE *, char *));
-extern char	*milter_header __P((char *, char *, ENVELOPE *, char *));
-extern char	*milter_eoh __P((ENVELOPE *, char *));
-extern char	*milter_body __P((ENVELOPE *, char *));
+extern char	*milter_data __P((ENVELOPE *, char *));
 #endif /* _FFR_MILTER */
 
 extern char	*addquotes __P((char *));
+extern void	allsignals __P((bool));
 extern char	*arpadate __P((char *));
 extern bool	atobool __P((char *));
 extern int	atooct __P((char *));
@@ -1861,7 +2055,7 @@ extern char	*defcharset __P((ENVELOPE *));
 extern char	*denlstring __P((char *, bool, bool));
 extern void	disconnect __P((int, ENVELOPE *));
 extern bool	dns_getcanonname __P((char *, int, bool, int *));
-extern int	dofork __P((void));
+extern pid_t	dofork __P((void));
 extern int	drop_privileges __P((bool));
 extern int	dsntoexitstat __P((char *));
 extern void	dumpfd __P((int, bool, bool));
@@ -1875,6 +2069,11 @@ extern struct passwd	*finduser __P((char *, bool *));
 extern void	finis __P((bool, volatile int));
 extern void	fixcrlf __P((char *, bool));
 extern long	freediskspace __P((char *, long *));
+#if NETINET6 && NEEDSGETIPNODE
+# if _FFR_FREEHOSTENT
+extern void	freehostent __P((struct hostent *));
+# endif /* _FFR_FREEHOSTENT */
+#endif /* NEEDSGETIPNODE && NETINET6 */
 extern char	*get_column __P((char *, int, int, char *, int));
 extern char	*getauthinfo __P((int, bool *));
 extern char	*getcfname __P((void));
@@ -1889,7 +2088,6 @@ extern void	inithostmaps __P((void));
 extern void	initmacros __P((ENVELOPE *));
 extern void	initsetproctitle __P((int, char **, char **));
 extern void	init_vendor_macros __P((ENVELOPE *));
-extern SIGFUNC_DECL	intindebug __P((int));
 extern SIGFUNC_DECL	intsig __P((int));
 extern bool	isloopback __P((SOCKADDR sa));
 extern void	load_if_names __P((void));
@@ -1909,14 +2107,12 @@ extern void	printmailer __P((MAILER *));
 extern void	printopenfds __P((bool));
 extern void	printqueue __P((void));
 extern void	printrules __P((void));
-extern int	prog_open __P((char **, int *, ENVELOPE *));
+extern pid_t	prog_open __P((char **, int *, ENVELOPE *));
 extern void	putline __P((char *, MCI *));
 extern void	putxline __P((char *, size_t, MCI *, int));
 extern void	queueup_macros __P((int, FILE *, ENVELOPE *));
-extern SIGFUNC_DECL	quiesce __P((int));
 extern void	readcf __P((char *, bool, ENVELOPE *));
 extern SIGFUNC_DECL	reapchild __P((int));
-extern bool	refuseconnections __P((char *, ENVELOPE *, int));
 extern int	releasesignal __P((int));
 extern void	resetlimits __P((void));
 extern bool	rfc822_string __P((char *));
@@ -1934,11 +2130,11 @@ extern void	setuserenv __P((const char *, const char *));
 extern void	settime __P((ENVELOPE *));
 extern char	*sfgets __P((char *, int, FILE *, time_t, char *));
 extern char	*shortenstring __P((const char *, int));
-extern void	shorten_hostname __P((char []));
+extern char	*shorten_hostname __P((char []));
 extern bool	shorten_rfc822_string __P((char *, size_t));
-extern SIGFUNC_DECL	sigusr1 __P((int));
-extern SIGFUNC_DECL	sighup __P((int));
+extern void	shutdown_daemon __P((void));
 extern void	sm_dopr __P((char *, const char *, va_list));
+extern void	sm_free __P((void *));
 extern struct hostent	*sm_gethostbyname __P((char *, int));
 extern struct hostent	*sm_gethostbyaddr __P((char *, int, int));
 extern int	sm_getla __P((ENVELOPE *));
@@ -1946,13 +2142,13 @@ extern struct passwd	*sm_getpwnam __P((char *));
 extern struct passwd	*sm_getpwuid __P((UID_T));
 extern void	sm_setproctitle __P((bool, ENVELOPE *, const char *, ...));
 extern int	sm_strcasecmp __P((const char *, const char *));
+extern void	stop_sendmail __P((void));
 extern bool	strcontainedin __P((char *, char *));
 extern void	stripquotes __P((char *));
 extern int	switch_map_find __P((char *, char *[], short []));
 extern bool	transienterror __P((int));
 extern void	tTflag __P((char *));
 extern void	tTsetup __P((u_char *, int, char *));
-extern SIGFUNC_DECL	tick __P((int));
 extern char	*ttypath __P((void));
 extern void	unlockqueue __P((ENVELOPE *));
 #if !HASUNSETENV
@@ -1965,6 +2161,8 @@ extern void	vendor_pre_defaults __P((ENVELOPE *));
 extern int	waitfor __P((pid_t));
 extern bool	writable __P((char *, ADDRESS *, long));
 extern char	*xalloc __P((int));
+extern char	*xcalloc __P((size_t, size_t));
+extern char	*xrealloc __P((void *, size_t));
 extern void	xputs __P((const char *));
 extern char	*xtextify __P((char *, char *));
 extern bool	xtextok __P((char *));

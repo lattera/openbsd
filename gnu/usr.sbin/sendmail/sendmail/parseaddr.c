@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: parseaddr.c,v 8.234 2000/03/17 07:32:48 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: parseaddr.c,v 8.234.4.12 2001/05/03 17:24:11 gshapiro Exp $";
 #endif /* ! lint */
 
 #include <sendmail.h>
@@ -1154,10 +1154,10 @@ rewrite(pvp, ruleset, reclevel, e)
 					/* save the remainder of the input */
 					for (xpvp = pvp; *xpvp != NULL; xpvp++)
 						trsize += sizeof *xpvp;
-					if (trsize > pvpb1_size)
+					if ((size_t) trsize > pvpb1_size)
 					{
 						if (pvpb1 != NULL)
-							free(pvpb1);
+							sm_free(pvpb1);
 						pvpb1 = (char **)xalloc(trsize);
 						pvpb1_size = trsize;
 					}
@@ -1583,7 +1583,7 @@ map_lookup(smap, key, argvect, pstat, e)
 		if (i > rwbuflen)
 		{
 			if (rwbuf != NULL)
-				free(rwbuf);
+				sm_free(rwbuf);
 			rwbuflen = i;
 			rwbuf = (char *) xalloc(rwbuflen);
 		}
@@ -2054,7 +2054,7 @@ static struct qflags	AddressFlags[] =
 	{ "QDELAYED",		QDELAYED	},
 	{ "QTHISPASS",		QTHISPASS	},
 	{ "QRCPTOK",		QRCPTOK		},
-	{ NULL }
+	{ NULL,			0		}
 };
 
 void
@@ -2461,7 +2461,7 @@ maplocaluser(a, sendq, aliaslevel, e)
 		if (tTd(29, 9))
 			dprintf("maplocaluser: address unchanged\n");
 		if (a1 != NULL)
-			free(a1);
+			sm_free(a1);
 		return;
 	}
 
@@ -2644,6 +2644,7 @@ dequote_map(map, name, av, statp)
 **		rmcomm -- remove comments?
 **		cnt -- count rejections (statistics)?
 **		logl -- logging level
+**		host -- NULL or relay host.
 **
 **	Returns:
 **		EX_OK -- if the rwset doesn't resolve to $#error
@@ -2651,13 +2652,14 @@ dequote_map(map, name, av, statp)
 */
 
 int
-rscheck(rwset, p1, p2, e, rmcomm, cnt, logl)
+rscheck(rwset, p1, p2, e, rmcomm, cnt, logl, host)
 	char *rwset;
 	char *p1;
 	char *p2;
 	ENVELOPE *e;
 	bool rmcomm, cnt;
 	int logl;
+	char *host;
 {
 	char *buf;
 	int bufsize;
@@ -2721,7 +2723,16 @@ rscheck(rwset, p1, p2, e, rmcomm, cnt, logl)
 */
 		goto finis;
 	}
+
+	MapOpenErr = FALSE;
 	(void) rewrite(pvp, rsno, 0, e);
+	if (MapOpenErr)
+	{
+  		usrerrenh("4.3.0", "451 Temporary failure");
+		rstat = EX_TEMPFAIL;
+		goto finis;
+	}
+
 	if (pvp[0] == NULL || (pvp[0][0] & 0377) != CANONNET ||
 	    pvp[1] == NULL || (strcmp(pvp[1], "error") != 0 &&
 			       strcmp(pvp[1], "discard") != 0))
@@ -2770,7 +2781,12 @@ rscheck(rwset, p1, p2, e, rmcomm, cnt, logl)
 				p2);
 			p += strlen(p);
 		}
-		if ((relay = macvalue('_', e)) != NULL)
+
+		if (host != NULL)
+			relay = host;
+		else
+			relay = macvalue('_', e);
+		if (relay != NULL)
 		{
 			snprintf(p, SPACELEFT(lbuf, p),
 				", relay=%s", relay);
@@ -2792,7 +2808,7 @@ rscheck(rwset, p1, p2, e, rmcomm, cnt, logl)
 	QuickAbort = saveQuickAbort;
 	setstat(rstat);
 	if (buf != buf0)
-		free(buf);
+		sm_free(buf);
 
 	if (rstat != EX_OK && QuickAbort)
 		longjmp(TopFrame, 2);

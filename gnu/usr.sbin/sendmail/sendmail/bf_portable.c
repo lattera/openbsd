@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1999-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  *
  * By using this file, you agree to the terms and conditions set
@@ -11,9 +11,12 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: bf_portable.c,v 8.25 2000/02/26 01:32:25 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: bf_portable.c,v 8.25.4.6 2001/05/03 17:24:01 gshapiro Exp $";
 #endif /* ! lint */
 
+#if SFIO
+# include <sfio/stdio.h>
+#endif /* SFIO */
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -22,10 +25,15 @@ static char id[] = "@(#)$Sendmail: bf_portable.c,v 8.25 2000/02/26 01:32:25 gsha
 #include <string.h>
 #include <sys/uio.h>
 #include <errno.h>
+#if !SFIO
 # include <stdio.h>
-#ifndef BF_STANDALONE
+#endif /* !SFIO */
+#ifdef BF_STANDALONE
+# define sm_free free
+# define xalloc malloc
+#else /* BF_STANDALONE */
 # include "sendmail.h"
-#endif /* ! BF_STANDALONE */
+#endif /* BF_STANDALONE */
 #include "bf_portable.h"
 #include "bf.h"
 
@@ -90,7 +98,7 @@ bfopen(filename, fmode, bsize, flags)
 	}
 
 	/* Allocate memory */
-	bfp = (struct bf *)malloc(sizeof(struct bf));
+	bfp = (struct bf *)xalloc(sizeof(struct bf));
 	if (bfp == NULL)
 	{
 		(void) fclose(retval);
@@ -105,10 +113,10 @@ bfopen(filename, fmode, bsize, flags)
 			filename, (long) sizeof(struct bf));
 
 	l = strlen(filename) + 1;
-	bfp->bf_filename = (char *)malloc(l);
+	bfp->bf_filename = (char *)xalloc(l);
 	if (bfp->bf_filename == NULL)
 	{
-		free(bfp);
+		sm_free(bfp);
 		(void) fclose(retval);
 
 		/* don't care about errors */
@@ -120,7 +128,7 @@ bfopen(filename, fmode, bsize, flags)
 
 	/* Fill in the other fields, then add it to the list */
 	bfp->bf_key = retval;
-	bfp->bf_committed = 0;
+	bfp->bf_committed = FALSE;
 	bfp->bf_refcount = 1;
 
 	bfinsert(bfp);
@@ -219,7 +227,6 @@ bfrewind(fp)
 
 	/* check to see if there is an error on the stream */
 	err = ferror(fp);
-
 	(void) fflush(fp);
 
 	/*
@@ -278,6 +285,47 @@ bftruncate(fp)
 }
 
 /*
+**  BFFSYNC -- fsync the fd associated with the FILE *
+**
+**	Parameters:
+**		fp -- FILE * to fsync
+**
+**	Returns:
+**		0 on success, -1 on error
+**
+**	Sets errno:
+**		EINVAL if FILE * not bfcommitted yet.
+**		any value of errno specified by fsync()
+*/
+
+int
+bffsync(fp)
+	FILE *fp;
+{
+	int fd;
+	struct bf *bfp;
+
+	/* Get associated bf structure */
+	bfp = bflookup(fp);
+
+	/* If called on a normal FILE *, noop */
+	if (bfp != NULL && !bfp->bf_committed)
+		fd = -1;
+	else
+		fd = fileno(fp);
+
+	if (tTd(58, 10))
+		dprintf("bffsync: fd = %d\n", fd);
+
+	if (fd < 0)
+	{
+		errno = EINVAL;
+		return -1;
+	}
+	return fsync(fd);
+}
+
+/*
 **  BFCLOSE -- close a buffered file
 **
 **	Parameters:
@@ -333,8 +381,8 @@ bfclose(fp)
 		if (!bfp->bf_committed)
 			retval = unlink(bfp->bf_filename);
 
-		free(bfp->bf_filename);
-		free(bfp);
+		sm_free(bfp->bf_filename);
+		sm_free(bfp);
 		if (tTd(58, 8))
 			dprintf("bfclose: freed %ld\n",
 				(long) sizeof(struct bf));

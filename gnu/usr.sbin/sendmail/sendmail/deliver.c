@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -12,15 +12,19 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: deliver.c,v 8.600 2000/04/06 00:50:14 gshapiro Exp $";
+static char id[] = "@(#)$Sendmail: deliver.c,v 8.600.2.1.2.81 2001/05/23 02:15:42 ca Exp $";
 #endif /* ! lint */
 
 #include <sendmail.h>
+
 
 #if HASSETUSERCONTEXT
 # include <login_cap.h>
 #endif /* HASSETUSERCONTEXT */
 
+#if STARTTLS || (SASL && SFIO)
+# include "sfsasl.h"
+#endif /* STARTTLS || (SASL && SFIO) */
 
 static int	deliver __P((ENVELOPE *, ADDRESS *));
 static void	dup_queue_file __P((ENVELOPE *, ENVELOPE *, int));
@@ -31,6 +35,9 @@ static void	sendenvelope __P((ENVELOPE *, int));
 static char	*hostsignature __P((MAILER *, char *));
 
 #if SMTP
+# if STARTTLS
+static int	starttls __P((MAILER *, MCI *, ENVELOPE *));
+# endif /* STARTTLS */
 #endif /* SMTP */
 
 /*
@@ -128,21 +135,31 @@ sendall(e, mode)
 
 	if (e->e_hopcount > MaxHopCount)
 	{
+		char *recip;
+
+		if (e->e_sendqueue != NULL &&
+		    e->e_sendqueue->q_paddr != NULL)
+			recip = e->e_sendqueue->q_paddr;
+		else
+			recip = "(nobody)";
+
 		errno = 0;
 #if QUEUE
 		queueup(e, mode == SM_QUEUE || mode == SM_DEFER);
 #endif /* QUEUE */
 		e->e_flags |= EF_FATALERRS|EF_PM_NOTIFY|EF_CLRQUEUE;
 		ExitStat = EX_UNAVAILABLE;
-		syserr("554 5.0.0 Too many hops %d (%d max): from %s via %s, to %s",
-			e->e_hopcount, MaxHopCount, e->e_from.q_paddr,
-			RealHostName == NULL ? "localhost" : RealHostName,
-			e->e_sendqueue->q_paddr);
+		syserr("554 5.4.6 Too many hops %d (%d max): from %s via %s, to %s",
+		       e->e_hopcount, MaxHopCount, e->e_from.q_paddr,
+		       RealHostName == NULL ? "localhost" : RealHostName,
+		       recip);
 		for (q = e->e_sendqueue; q != NULL; q = q->q_next)
 		{
 			if (QS_IS_DEAD(q->q_state))
 				continue;
+			q->q_state = QS_BADADDR;
 			q->q_status = "5.4.6";
+			q->q_rstatus = "554 5.4.6 Too many hops";
 		}
 		return;
 	}
@@ -455,17 +472,19 @@ sendall(e, mode)
 	if (!somedeliveries && mode != SM_QUEUE && mode != SM_DEFER &&
 	    mode != SM_VERIFY)
 	{
+		time_t now = curtime();
+
 		if (tTd(13, 29))
 			dprintf("No deliveries: auto-queuing\n");
 		mode = SM_QUEUE;
 
 		/* treat this as a delivery in terms of counting tries */
-		e->e_dtime = curtime();
+		e->e_dtime = now;
 		if (!expensive)
 			e->e_ntries++;
 		for (ee = splitenv; ee != NULL; ee = ee->e_sibling)
 		{
-			ee->e_dtime = curtime();
+			ee->e_dtime = now;
 			if (!expensive)
 				ee->e_ntries++;
 		}
@@ -476,10 +495,16 @@ sendall(e, mode)
 	     (mode != SM_VERIFY && SuperSafe)) &&
 	    (!bitset(EF_INQUEUE, e->e_flags) || splitenv != NULL))
 	{
-		/* be sure everything is instantiated in the queue */
-		queueup(e, mode == SM_QUEUE || mode == SM_DEFER);
+		/*
+		**  Be sure everything is instantiated in the queue.
+		**  Split envelopes first in case the machine crashes.
+		**  If the original were done first, we may lose
+		**  recipients.
+		*/
+
 		for (ee = splitenv; ee != NULL; ee = ee->e_sibling)
 			queueup(ee, mode == SM_QUEUE || mode == SM_DEFER);
+		queueup(e, mode == SM_QUEUE || mode == SM_DEFER);
 	}
 #endif /* QUEUE */
 
@@ -618,6 +643,20 @@ sendall(e, mode)
 			(void) waitfor(pid);
 			return;
 		}
+
+		/* Reset global flags */
+		RestartRequest = NULL;
+		ShutdownRequest = NULL;
+		PendingSignal = 0;
+
+		/*
+		**  Since we have accepted responsbility for the message,
+		**  change the SIGTERM handler.  intsig() (the old handler)
+		**  would remove the envelope if this was a command line
+		**  message submission.
+		*/
+
+		(void) setsignal(SIGTERM, SIG_DFL);
 
 		/* double fork to avoid zombies */
 		pid = fork();
@@ -779,7 +818,8 @@ sendenvelope(e, mode)
 			**  Checkpoint the send list every few addresses
 			*/
 
-			if (e->e_nsent >= CheckpointInterval)
+			if (CheckpointInterval > 0 &&
+			    e->e_nsent >= CheckpointInterval)
 			{
 				queueup(e, FALSE);
 				e->e_nsent = 0;
@@ -905,7 +945,7 @@ dup_queue_file(e, ee, type)
 **		returns twice, once in parent and once in child.
 */
 
-int
+pid_t
 dofork()
 {
 	register pid_t pid = -1;
@@ -975,11 +1015,18 @@ deliver(e, firstto)
 	bool anyok;			/* at least one address was OK */
 	bool goodmxfound = FALSE;	/* at least one MX was OK */
 	bool ovr;
+#if _FFR_DYNAMIC_TOBUF
+	int strsize;
+	int rcptcount;
+	static int tobufsize = 0;
+	static char *tobuf = NULL;
+#else /* _FFR_DYNAMIC_TOBUF */
+	char tobuf[TOBUFSIZE];		/* text line of to people */
+#endif /* _FFR_DYNAMIC_TOBUF */
 	int mpvect[2];
 	int rpvect[2];
 	char *mxhosts[MAXMXHOSTS + 1];
 	char *pv[MAXPV + 1];
-	char tobuf[TOBUFSIZE];		/* text line of to people */
 	char buf[MAXNAME + 1];
 	char rpathbuf[MAXNAME + 1];	/* translated return path */
 
@@ -1099,7 +1146,7 @@ deliver(e, firstto)
 
 	if (*mvp == NULL)
 	{
-		/* running SMTP */
+		/* running LMTP or SMTP */
 #if SMTP
 		clever = TRUE;
 		*pvp = NULL;
@@ -1109,6 +1156,14 @@ deliver(e, firstto)
 		return EX_SOFTWARE;
 #endif /* SMTP */
 	}
+	else if (bitnset(M_LMTP, m->m_flags))
+	{
+		/* not running LMTP */
+		sm_syslog(LOG_ERR, NULL,
+			  "Warning: mailer %s: LMTP flag (F=z) turned off",
+			  m->m_name);
+		clrbitn(M_LMTP, m->m_flags);
+	}
 
 	/*
 	**  At this point *mvp points to the argument with $u.  We
@@ -1117,15 +1172,27 @@ deliver(e, firstto)
 	**  always send another copy later.
 	*/
 
+#if _FFR_DYNAMIC_TOBUF
+	e->e_to = NULL;
+	strsize = 2;
+	rcptcount = 0;
+#else /* _FFR_DYNAMIC_TOBUF */
 	tobuf[0] = '\0';
 	e->e_to = tobuf;
+#endif /* _FFR_DYNAMIC_TOBUF */
+
 	ctladdr = NULL;
 	firstsig = hostsignature(firstto->q_mailer, firstto->q_host);
 	for (; to != NULL; to = to->q_next)
 	{
 		/* avoid sending multiple recipients to dumb mailers */
+#if _FFR_DYNAMIC_TOBUF
+		if (tochain != NULL && !bitnset(M_MUSER, m->m_flags))
+			break;
+#else /* _FFR_DYNAMIC_TOBUF */
 		if (tobuf[0] != '\0' && !bitnset(M_MUSER, m->m_flags))
 			break;
+#endif /* _FFR_DYNAMIC_TOBUF */
 
 		/* if already sent or not for this host, don't send */
 		if (!QS_IS_OK(to->q_state) ||
@@ -1135,8 +1202,17 @@ deliver(e, firstto)
 			continue;
 
 		/* avoid overflowing tobuf */
+#if _FFR_DYNAMIC_TOBUF
+		strsize += strlen(to->q_paddr) + 1;
+		if (!clever && strsize > TOBUFSIZE)
+			break;
+
+		if (++rcptcount > to->q_mailer->m_maxrcpt)
+			break;
+#else /* _FFR_DYNAMIC_TOBUF */
 		if (sizeof tobuf < (strlen(to->q_paddr) + strlen(tobuf) + 2))
 			break;
+#endif /* _FFR_DYNAMIC_TOBUF */
 
 		if (tTd(10, 1))
 		{
@@ -1160,9 +1236,11 @@ deliver(e, firstto)
 		/*
 		**  Check to see that these people are allowed to
 		**  talk to each other.
+		**  Check also for overflow of e_msgsize.
 		*/
 
-		if (m->m_maxsize != 0 && e->e_msgsize > m->m_maxsize)
+		if (m->m_maxsize != 0 &&
+		    (e->e_msgsize > m->m_maxsize || e->e_msgsize < 0))
 		{
 			e->e_flags |= EF_NO_BODY_RETN;
 			if (bitnset(M_LOCALMAILER, to->q_mailer->m_flags))
@@ -1179,13 +1257,13 @@ deliver(e, firstto)
 			continue;
 		}
 #if NAMED_BIND
-		h_errno = 0;
+		SM_SET_H_ERRNO(0);
 #endif /* NAMED_BIND */
 
 		ovr = TRUE;
 		/* do config file checking of compatibility */
 		rcode = rscheck("check_compat", e->e_from.q_paddr, to->q_paddr,
-				e, TRUE, TRUE, 4);
+				e, TRUE, TRUE, 4, NULL);
 		if (rcode == EX_OK)
 		{
 			/* do in-code checking if not discarding */
@@ -1306,9 +1384,14 @@ deliver(e, firstto)
 		to->q_tchain = tochain;
 		tochain = to;
 
+#if _FFR_DYNAMIC_TOBUF
+		e->e_to = "[CHAIN]";
+#else /* _FFR_DYNAMIC_TOBUF */
 		/* create list of users for error messages */
 		(void) strlcat(tobuf, ",", sizeof tobuf);
 		(void) strlcat(tobuf, to->q_paddr, sizeof tobuf);
+#endif /* _FFR_DYNAMIC_TOBUF */
+
 		define('u', user, e);		/* to user */
 		p = to->q_home;
 		if (p == NULL && ctladdr != NULL)
@@ -1358,13 +1441,44 @@ deliver(e, firstto)
 	}
 
 	/* see if any addresses still exist */
+#if _FFR_DYNAMIC_TOBUF
+	if (tochain == NULL)
+#else /* _FFR_DYNAMIC_TOBUF */
 	if (tobuf[0] == '\0')
+#endif /* _FFR_DYNAMIC_TOBUF */
 	{
 		define('g', (char *) NULL, e);
+		e->e_to = NULL;
 		return 0;
 	}
 
 	/* print out messages as full list */
+#if _FFR_DYNAMIC_TOBUF
+	{
+		int l = 1;
+		char *tobufptr;
+
+		for (to = tochain; to != NULL; to = to->q_tchain)
+			l += strlen(to->q_paddr) + 1;
+		if (l < TOBUFSIZE)
+			l = TOBUFSIZE;
+		if (l > tobufsize)
+		{
+			if (tobuf != NULL)
+				sm_free(tobuf);
+			tobufsize = l;
+			tobuf = xalloc(tobufsize);
+		}
+		tobufptr = tobuf;
+		*tobufptr = '\0';
+		for (to = tochain; to != NULL; to = to->q_tchain)
+		{
+			snprintf(tobufptr, tobufsize - (tobufptr - tobuf),
+				 ",%s", to->q_paddr);
+			tobufptr += strlen(tobufptr);
+		}
+	}
+#endif /* _FFR_DYNAMIC_TOBUF */
 	e->e_to = tobuf + 1;
 
 	/*
@@ -1406,7 +1520,7 @@ deliver(e, firstto)
 	}
 	errno = 0;
 #if NAMED_BIND
-	h_errno = 0;
+	SM_SET_H_ERRNO(0);
 #endif /* NAMED_BIND */
 
 	CurHostName = NULL;
@@ -1508,7 +1622,7 @@ deliver(e, firstto)
 # endif /* NETUNIX */
 		    )
 		{
-			port = htons(atoi(pv[2]));
+			port = htons((u_short)atoi(pv[2]));
 			if (port == 0)
 			{
 # ifdef NO_GETSERVBYNAME
@@ -1619,10 +1733,10 @@ tryhost:
 						m->m_name);
 				i = makeconnection(hostbuf, port, mci, e);
 			}
+			mci->mci_errno = errno;
 			mci->mci_lastuse = curtime();
 			mci->mci_deliveries = 0;
 			mci->mci_exitstat = i;
-			mci->mci_errno = errno;
 # if NAMED_BIND
 			mci->mci_herrno = h_errno;
 # endif /* NAMED_BIND */
@@ -1784,8 +1898,11 @@ tryhost:
 			(void) fflush(e->e_xfp);	/* for debugging */
 		(void) fflush(stdout);
 		(void) setsignal(SIGCHLD, SIG_DFL);
+
+
 		DOFORK(FORK);
 		/* pid is set by DOFORK */
+
 		if (pid < 0)
 		{
 			/* failure */
@@ -1810,6 +1927,11 @@ tryhost:
 			struct stat stb;
 			extern int DtableSize;
 
+			/* Reset global flags */
+			RestartRequest = NULL;
+			ShutdownRequest = NULL;
+			PendingSignal = 0;
+
 			if (e->e_lockfp != NULL)
 				(void) close(fileno(e->e_lockfp));
 
@@ -1821,7 +1943,7 @@ tryhost:
 			if (m != FileMailer || stat(tochain->q_user, &stb) < 0)
 				stb.st_mode = 0;
 
-#if HASSETUSERCONTEXT
+# if HASSETUSERCONTEXT
 			/*
 			**  Set user resources.
 			*/
@@ -1839,7 +1961,7 @@ tryhost:
 						pwd, pwd->pw_uid,
 						LOGIN_SETRESOURCES|LOGIN_SETPRIORITY);
 			}
-#endif /* HASSETUSERCONTEXT */
+# endif /* HASSETUSERCONTEXT */
 
 			/* tweak niceness */
 			if (m->m_nice != 0)
@@ -1860,8 +1982,11 @@ tryhost:
 						u = ctladdr->q_user;
 
 					if (initgroups(u, ctladdr->q_gid) == -1 && suidwarn)
+					{
 						syserr("openmailer: initgroups(%s, %d) failed",
 							u, ctladdr->q_gid);
+						exit(EX_TEMPFAIL);
+					}
 				}
 				else
 				{
@@ -1869,7 +1994,10 @@ tryhost:
 
 					gidset[0] = ctladdr->q_gid;
 					if (setgroups(1, gidset) == -1 && suidwarn)
+					{
 						syserr("openmailer: setgroups() failed");
+						exit(EX_TEMPFAIL);
+					}
 				}
 				new_gid = ctladdr->q_gid;
 			}
@@ -1878,8 +2006,11 @@ tryhost:
 				if (!DontInitGroups)
 				{
 					if (initgroups(DefUser, DefGid) == -1 && suidwarn)
+					{
 						syserr("openmailer: initgroups(%s, %d) failed",
 							DefUser, DefGid);
+						exit(EX_TEMPFAIL);
+					}
 				}
 				else
 				{
@@ -1887,16 +2018,35 @@ tryhost:
 
 					gidset[0] = DefGid;
 					if (setgroups(1, gidset) == -1 && suidwarn)
+					{
 						syserr("openmailer: setgroups() failed");
+						exit(EX_TEMPFAIL);
+					}
 				}
 				if (m->m_gid == 0)
 					new_gid = DefGid;
 				else
 					new_gid = m->m_gid;
 			}
-			if (new_gid != NO_GID && setgid(new_gid) < 0 && suidwarn)
-				syserr("openmailer: setgid(%ld) failed",
-					(long) new_gid);
+			if (new_gid != NO_GID)
+			{
+				if (RunAsUid != 0 &&
+				    bitnset(M_SPECIFIC_UID, m->m_flags) &&
+				    new_gid != getgid() &&
+				    new_gid != getegid())
+				{
+					/* Only root can change the gid */
+					syserr("openmailer: insufficient privileges to change gid");
+					exit(EX_TEMPFAIL);
+				}
+
+				if (setgid(new_gid) < 0 && suidwarn)
+				{
+					syserr("openmailer: setgid(%ld) failed",
+					       (long) new_gid);
+					exit(EX_TEMPFAIL);
+				}
+			}
 
 			/* change root to some "safe" directory */
 			if (m->m_rootdir != NULL)
@@ -1906,10 +2056,16 @@ tryhost:
 					dprintf("openmailer: chroot %s\n",
 						buf);
 				if (chroot(buf) < 0)
+				{
 					syserr("openmailer: Cannot chroot(%s)",
 					       buf);
+					exit(EX_TEMPFAIL);
+				}
 				if (chdir("/") < 0)
+				{
 					syserr("openmailer: cannot chdir(/)");
+					exit(EX_TEMPFAIL);
+				}
 			}
 
 			/* reset user id */
@@ -1926,29 +2082,48 @@ tryhost:
 				new_ruid = DefUid;
 			if (new_euid != NO_UID)
 			{
+				if (RunAsUid != 0 && new_euid != RunAsUid)
+				{
+					/* Only root can change the uid */
+					syserr("openmailer: insufficient privileges to change uid");
+					exit(EX_TEMPFAIL);
+				}
+
 				vendor_set_uid(new_euid);
-#if MAILER_SETUID_METHOD == USE_SETEUID
+# if MAILER_SETUID_METHOD == USE_SETEUID
 				if (seteuid(new_euid) < 0 && suidwarn)
+				{
 					syserr("openmailer: seteuid(%ld) failed",
 						(long) new_euid);
-#endif /* MAILER_SETUID_METHOD == USE_SETEUID */
-#if MAILER_SETUID_METHOD == USE_SETREUID
+					exit(EX_TEMPFAIL);
+				}
+# endif /* MAILER_SETUID_METHOD == USE_SETEUID */
+# if MAILER_SETUID_METHOD == USE_SETREUID
 				if (setreuid(new_ruid, new_euid) < 0 && suidwarn)
+				{
 					syserr("openmailer: setreuid(%ld, %ld) failed",
 						(long) new_ruid, (long) new_euid);
-#endif /* MAILER_SETUID_METHOD == USE_SETREUID */
-#if MAILER_SETUID_METHOD == USE_SETUID
+					exit(EX_TEMPFAIL);
+				}
+# endif /* MAILER_SETUID_METHOD == USE_SETREUID */
+# if MAILER_SETUID_METHOD == USE_SETUID
 				if (new_euid != geteuid() && setuid(new_euid) < 0 && suidwarn)
+				{
 					syserr("openmailer: setuid(%ld) failed",
 						(long) new_euid);
-#endif /* MAILER_SETUID_METHOD == USE_SETUID */
+					exit(EX_TEMPFAIL);
+				}
+# endif /* MAILER_SETUID_METHOD == USE_SETUID */
 			}
 			else if (new_ruid != NO_UID)
 			{
 				vendor_set_uid(new_ruid);
 				if (setuid(new_ruid) < 0 && suidwarn)
+				{
 					syserr("openmailer: setuid(%ld) failed",
 						(long) new_ruid);
+					exit(EX_TEMPFAIL);
+				}
 			}
 
 			if (tTd(11, 2))
@@ -2092,23 +2267,248 @@ tryhost:
 #if SMTP
 	if (clever && mci->mci_state != MCIS_CLOSED)
 	{
-		static u_short again = 0;
-# define ONLY_HELO_B	0x04
-# define ONLY_HELO	bitset(ONLY_HELO_B, again)
-# define SET_HELO	again |= ONLY_HELO_B
-# define CLR_HELO	again &= ~ONLY_HELO_B
+# if SASL && SFIO
+#  define DONE_AUTH(f)		bitset(MCIF_AUTHACT, f)
+# endif /* SASL && SFIO */
+# if STARTTLS
+#  define DONE_STARTTLS(f)	bitset(MCIF_TLSACT, f)
+# endif /* STARTTLS */
+# define ONLY_HELO(f)		bitset(MCIF_ONLY_EHLO, f)
+# define SET_HELO(f)		f |= MCIF_ONLY_EHLO
+# define CLR_HELO(f)		f &= ~MCIF_ONLY_EHLO
 
+
+# if STARTTLS || (SASL && SFIO)
+reconnect:	/* after switching to an authenticated connection */
+# endif /* STARTTLS || (SASL && SFIO) */
 
 # if SASL
 		mci->mci_saslcap = NULL;
 # endif /* SASL */
-		smtpinit(m, mci, e, ONLY_HELO);
-		CLR_HELO;
+		smtpinit(m, mci, e, ONLY_HELO(mci->mci_flags));
+		CLR_HELO(mci->mci_flags);
 
+# if STARTTLS
+		/* first TLS then AUTH to provide a security layer */
+		if (mci->mci_state != MCIS_CLOSED &&
+		    !DONE_STARTTLS(mci->mci_flags))
+		{
+			int olderrors;
+			int dotpos;
+			bool usetls;
+			bool saveQuickAbort = QuickAbort;
+			bool saveSuprErrs = SuprErrs;
+			char *host = NULL;
+#  if _FFR_TLS_CLT1
+			char *p;
+#  endif /* _FFR_TLS_CLT1 */
+			char *srvname;
+			extern SOCKADDR CurHostAddr;
+
+			rcode = EX_OK;
+			usetls = bitset(MCIF_TLS, mci->mci_flags);
+#  if _FFR_TLS_CLT1
+			if (usetls &&
+			    (p = macvalue(macid("{client_flags}", NULL), e))
+			    != NULL)
+			{
+				for (; *p != '\0'; p++)
+				{
+					/* look for just this one flag */
+					if (*p == D_CLTNOTLS)
+					{
+						usetls = FALSE;
+						break;
+					}
+				}
+			}
+#  endif /* _FFR_TLS_CLT1 */
+
+			if (mci->mci_host != NULL)
+			{
+				srvname = mci->mci_host;
+				dotpos = strlen(srvname) - 1;
+				if (dotpos >= 0)
+				{
+					if (srvname[dotpos] == '.')
+						srvname[dotpos] = '\0';
+					else
+						dotpos = -1;
+				}
+			}
+			else
+			{
+				srvname = "";
+				dotpos = -1;
+			}
+			define(macid("{server_name}", NULL),
+			       newstr(srvname), e);
+			if (CurHostAddr.sa.sa_family != 0)
+				define(macid("{server_addr}", NULL),
+				       newstr(anynet_ntoa(&CurHostAddr)), e);
+			else
+				define(macid("{server_addr}", NULL), NULL, e);
+			if (usetls)
+			{
+				host = macvalue(macid("{server_name}", NULL),
+						e);
+#  if _FFR_TLS_O_T
+				olderrors = Errors;
+				QuickAbort = FALSE;
+				SuprErrs = TRUE;
+				if (rscheck("try_tls", srvname, NULL,
+					    e, TRUE, FALSE, 8, host) != EX_OK
+				    || Errors > olderrors)
+					usetls = FALSE;
+				SuprErrs = saveSuprErrs;
+				QuickAbort = saveQuickAbort;
+#  endif /* _FFR_TLS_O_T */
+			}
+
+			/* undo change of srvname */
+			if (dotpos >= 0)
+				srvname[dotpos] = '.';
+			if (usetls)
+			{
+				if ((rcode = starttls(m, mci, e)) == EX_OK)
+				{
+					/* start again without STARTTLS */
+					mci->mci_flags |= MCIF_TLSACT;
+				}
+				else
+				{
+					char *s;
+
+					/*
+					**  TLS negotation failed, what to do?
+					**  fall back to unencrypted connection
+					**  or abort? How to decide?
+					**  set a macro and call a ruleset.
+					*/
+					mci->mci_flags &= ~MCIF_TLS;
+					switch (rcode)
+					{
+					  case EX_TEMPFAIL:
+						s = "TEMP";
+						break;
+					  case EX_USAGE:
+						s = "USAGE";
+						break;
+					  case EX_PROTOCOL:
+						s = "PROTOCOL";
+						break;
+					  case EX_SOFTWARE:
+						s = "SOFTWARE";
+						break;
+
+					  /* everything else is a failure */
+					  default:
+						s = "FAILURE";
+						rcode = EX_TEMPFAIL;
+					}
+					define(macid("{verify}", NULL),
+					       newstr(s), e);
+				}
+			}
+			else if (mci->mci_ssl != NULL)
+			{
+				/* active TLS connection, use that data */
+				(void) tls_get_info(mci->mci_ssl, e, FALSE,
+						    mci->mci_host, FALSE);
+			}
+			else
+				define(macid("{verify}", NULL), "NONE", e);
+			olderrors = Errors;
+			QuickAbort = FALSE;
+			SuprErrs = TRUE;
+
+			/*
+			**  rcode == EX_SOFTWARE is special:
+			**  the TLS negotation failed
+			**  we have to drop the connection no matter what
+			**  However, we call tls_server to give it the chance
+			**  to log the problem and return an appropriate
+			**  error code.
+			*/
+			if (rscheck("tls_server",
+				     macvalue(macid("{verify}", NULL), e),
+				     NULL, e, TRUE, TRUE, 6, host) != EX_OK ||
+			    Errors > olderrors ||
+			    rcode == EX_SOFTWARE)
+			{
+				char enhsc[ENHSCLEN];
+				extern char MsgBuf[];
+
+				if (ISSMTPCODE(MsgBuf) &&
+				    extenhsc(MsgBuf + 4, ' ', enhsc) > 0)
+				{
+					p = newstr(MsgBuf);
+				}
+				else
+				{
+					p = "403 4.7.0 server not authenticated.";
+					(void) strlcpy(enhsc, "4.7.0",
+						       sizeof enhsc);
+				}
+				SuprErrs = saveSuprErrs;
+				QuickAbort = saveQuickAbort;
+
+				if (rcode == EX_SOFTWARE)
+				{
+					/* drop the connection */
+					mci->mci_state = MCIS_QUITING;
+					if (mci->mci_in != NULL)
+					{
+						(void) fclose(mci->mci_in);
+						mci->mci_in = NULL;
+					}
+					mci->mci_flags &= ~MCIF_TLSACT;
+					(void) endmailer(mci, e, pv);
+				}
+				else
+				{
+					/* abort transfer */
+					smtpquit(m, mci, e);
+				}
+
+				/* avoid bogus error msg */
+				mci->mci_errno = 0;
+
+				/* temp or permanent failure? */
+				rcode = (*p == '4') ? EX_TEMPFAIL
+						    : EX_UNAVAILABLE;
+				mci_setstat(mci, rcode, newstr(enhsc), p);
+
+				/*
+				**  hack to get the error message into
+				**  the envelope (done in giveresponse())
+				*/
+				(void) strlcpy(SmtpError, p, sizeof SmtpError);
+			}
+			QuickAbort = saveQuickAbort;
+			SuprErrs = saveSuprErrs;
+			if (DONE_STARTTLS(mci->mci_flags) &&
+			    mci->mci_state != MCIS_CLOSED)
+			{
+				SET_HELO(mci->mci_flags);
+				mci->mci_flags &= ~MCIF_EXTENS;
+				goto reconnect;
+			}
+		}
+		else if (mci->mci_ssl != NULL)
+		{
+			/* active TLS connection, use that data */
+			(void) tls_get_info(mci->mci_ssl, e, FALSE,
+					    mci->mci_host, FALSE);
+		}
+# endif /* STARTTLS */
 # if SASL
 		/* if other server supports authentication let's authenticate */
 		if (mci->mci_state != MCIS_CLOSED &&
 		    mci->mci_saslcap != NULL &&
+#  if SFIO
+		    !DONE_AUTH(mci->mci_flags) &&
+#  endif /* SFIO */
 		    SASLInfo != NULL)
 		{
 			/*
@@ -2117,6 +2517,49 @@ tryhost:
 			*/
 			if (smtpauth(m, mci, e) == EX_OK)
 			{
+#  if SFIO
+				int result;
+				sasl_ssf_t *ssf;
+
+				/* get security strength (features) */
+				result = sasl_getprop(mci->mci_conn, SASL_SSF,
+						      (void **) &ssf);
+				if (LogLevel > 9)
+					sm_syslog(LOG_INFO, NOQID,
+						  "SASL: outgoing connection to %.64s: mech=%.16s, bits=%d",
+						  mci->mci_host,
+						  macvalue(macid("{auth_type}",
+								 NULL), e),
+						  result == SASL_OK ? *ssf
+						  		    : 0);
+
+				/*
+				**  only switch to encrypted connection
+				**  if a security layer has been negotiated
+				*/
+				if (result == SASL_OK && *ssf > 0)
+				{
+					/*
+					**  convert sfio stuff to use SASL
+					**  check return values
+					**  if the call fails,
+					**  fall back to unencrypted version
+					**  unless some cf option requires
+					**  encryption then the connection must
+					**  be aborted
+					*/
+					if (sfdcsasl(mci->mci_in, mci->mci_out,
+						     mci->mci_conn) == 0)
+					{
+						SET_HELO(mci->mci_flags);
+						mci->mci_flags &= ~MCIF_EXTENS;
+						mci->mci_flags |= MCIF_AUTHACT;
+						goto reconnect;
+					}
+					syserr("SASL TLS switch failed in client");
+				}
+				/* else? XXX */
+#  endif /* SFIO */
 				mci->mci_flags |= MCIF_AUTHACT;
 
 			}
@@ -2163,7 +2606,7 @@ do_transfer:
 		rcode = mci->mci_exitstat;
 		errno = mci->mci_errno;
 #if NAMED_BIND
-		h_errno = mci->mci_herrno;
+		SM_SET_H_ERRNO(mci->mci_herrno);
 #endif /* NAMED_BIND */
 		if (rcode == EX_OK)
 		{
@@ -2194,6 +2637,18 @@ do_transfer:
 
 		/* get the exit status */
 		rcode = endmailer(mci, e, pv);
+		if (rcode == EX_TEMPFAIL &&
+		    SmtpError[0] == '\0')
+		{
+			/*
+			**  Need an e_message for mailq display.
+			**  We set SmtpError as
+			*/
+
+			snprintf(SmtpError, sizeof SmtpError,
+				 "%s mailer (%s) exited with EX_TEMPFAIL",
+				 m->m_name, m->m_mailer);
+		}
 	}
 	else
 #if SMTP
@@ -2210,16 +2665,34 @@ do_transfer:
 
 			/* send the recipient list */
 			tobuf[0] = '\0';
+
 			for (to = tochain; to != NULL; to = to->q_tchain)
 			{
 				e->e_to = to->q_paddr;
+#if !_FFR_DYNAMIC_TOBUF
 				if (strlen(to->q_paddr) +
 				    (t - tobuf) + 2 > sizeof tobuf)
 				{
 					/* not enough room */
 					continue;
 				}
+#endif /* !_FFR_DYNAMIC_TOBUF */
 
+# if STARTTLS
+#  if _FFR_TLS_RCPT
+				i = rscheck("tls_rcpt", to->q_user, NULL, e,
+					    TRUE, TRUE, 4, mci->mci_host);
+				if (i != EX_OK)
+				{
+					/* avoid bogus error msg */
+					errno = 0;
+					markfailure(e, to, mci, i, FALSE);
+					giveresponse(i, to->q_status,  m,
+						     mci, ctladdr, xstart, e);
+					continue;
+				}
+#  endif /* _FFR_TLS_RCPT */
+# endif /* STARTTLS */
 
 				if ((i = smtprcpt(to, m, mci, e)) != EX_OK)
 				{
@@ -2306,6 +2779,10 @@ do_transfer:
 				rcode = smtpgetstat(m, mci, e);
 			if (rcode == EX_OK)
 			{
+#if _FFR_DYNAMIC_TOBUF
+				(void) strlcat(tobuf, ",", tobufsize);
+				(void) strlcat(tobuf, to->q_paddr, tobufsize);
+#else /* _FFR_DYNAMIC_TOBUF */
 				if (strlen(to->q_paddr) +
 				    strlen(tobuf) + 2 > sizeof tobuf)
 				{
@@ -2318,6 +2795,7 @@ do_transfer:
 					(void) strlcat(tobuf, to->q_paddr,
 						       sizeof tobuf);
 				}
+#endif /* _FFR_DYNAMIC_TOBUF */
 				anyok = TRUE;
 			}
 			else
@@ -2353,7 +2831,7 @@ do_transfer:
 		**  Checkpoint the send list every few addresses
 		*/
 
-		if (e->e_nsent >= CheckpointInterval)
+		if (CheckpointInterval > 0 && e->e_nsent >= CheckpointInterval)
 		{
 			queueup(e, FALSE);
 			e->e_nsent = 0;
@@ -2427,6 +2905,7 @@ do_transfer:
 
 	errno = 0;
 	define('g', (char *) NULL, e);
+	e->e_to = NULL;
 	return rcode;
 }
 
@@ -2583,6 +3062,12 @@ static jmp_buf	EndWaitTimeout;
 static void
 endwaittimeout()
 {
+	/*
+	**  NOTE: THIS CAN BE CALLED FROM A SIGNAL HANDLER.  DO NOT ADD
+	**	ANYTHING TO THIS ROUTINE UNLESS YOU KNOW WHAT YOU ARE
+	**	DOING.
+	*/
+
 	errno = ETIMEDOUT;
 	longjmp(EndWaitTimeout, 1);
 }
@@ -2598,7 +3083,21 @@ endmailer(mci, e, pv)
 	char buf[MAXLINE];
 	EVENT *ev = NULL;
 
+
 	mci_unlock_host(mci);
+
+	/* close output to mailer */
+	if (mci->mci_out != NULL)
+		(void) fclose(mci->mci_out);
+
+	/* copy any remaining input to transcript */
+	if (mci->mci_in != NULL && mci->mci_state != MCIS_ERROR &&
+	    e->e_xfp != NULL)
+	{
+		while (sfgets(buf, sizeof buf, mci->mci_in,
+		       TimeOuts.to_quit, "Draining Input") != NULL)
+			(void) fputs(buf, e->e_xfp);
+	}
 
 #if SASL
 	/* shutdown SASL */
@@ -2609,19 +3108,10 @@ endmailer(mci, e, pv)
 	}
 #endif /* SASL */
 
-
-	/* close output to mailer */
-	if (mci->mci_out != NULL)
-		(void) fclose(mci->mci_out);
-
-	/* copy any remaining input to transcript */
-	if (mci->mci_in != NULL && e->e_xfp != NULL)
-	{
-		while (sfgets(buf, sizeof buf, mci->mci_in,
-		       TimeOuts.to_quit, "Draining Input") != NULL)
-		/* while (fgets(buf, sizeof buf, mci->mci_in) != NULL) */
-			(void) fputs(buf, e->e_xfp);
-	}
+#if STARTTLS
+	/* shutdown TLS */
+	(void) endtlsclt(mci);
+#endif /* STARTTLS */
 
 	/* now close the input */
 	if (mci->mci_in != NULL)
@@ -2643,9 +3133,9 @@ endmailer(mci, e, pv)
 				      endwaittimeout, 0);
 		else
 		{
-			syserr("endmailer %s: wait timeout (%d)",
+			syserr("endmailer %s: wait timeout (%ld)",
 			       mci->mci_mailer->m_name,
-			       mci->mci_mailer->m_wait);
+			       (long) mci->mci_mailer->m_wait);
 			return EX_TEMPFAIL;
 		}
 	}
@@ -2912,12 +3402,12 @@ giveresponse(status, dsn, m, mci, ctladdr, xstart, e)
 	if (status != EX_OK && (status != EX_TEMPFAIL || e->e_message == NULL))
 	{
 		if (e->e_message != NULL)
-			free(e->e_message);
+			sm_free(e->e_message);
 		e->e_message = newstr(statmsg + off);
 	}
 	errno = 0;
 #if NAMED_BIND
-	h_errno = 0;
+	SM_SET_H_ERRNO(0);
 #endif /* NAMED_BIND */
 }
 /*
@@ -2958,6 +3448,7 @@ logdelivery(m, mci, dsn, status, ctladdr, xstart, e)
 	register char *bp;
 	register char *p;
 	int l;
+	time_t now;
 	char buf[1024];
 
 #if (SYSLOG_BUFSIZE) >= 256
@@ -2978,14 +3469,15 @@ logdelivery(m, mci, dsn, status, ctladdr, xstart, e)
 	}
 
 	/* delay & xdelay: max 41 bytes */
+	now = curtime();
 	snprintf(bp, SPACELEFT(buf, bp), ", delay=%s",
-		 pintvl(curtime() - e->e_ctime, TRUE));
+		 pintvl(now - e->e_ctime, TRUE));
 	bp += strlen(bp);
 
 	if (xstart != (time_t) 0)
 	{
 		snprintf(bp, SPACELEFT(buf, bp), ", xdelay=%s",
-			 pintvl(curtime() - xstart, TRUE));
+			 pintvl(now - xstart, TRUE));
 		bp += strlen(bp);
 	}
 
@@ -3067,16 +3559,32 @@ logdelivery(m, mci, dsn, status, ctladdr, xstart, e)
 	p = e->e_to == NULL ? "NO-TO-LIST" : e->e_to;
 	while (strlen(p) >= (SIZE_T) l)
 	{
-		register char *q = strchr(p + l, ',');
+		register char *q;
 
+#if _FFR_DYNAMIC_TOBUF
+		for (q = p + l; q > p; q--)
+		{
+			if (*q == ',')
+				break;
+		}
+		if (p == q)
+			break;
+#else /* _FFR_DYNAMIC_TOBUF */
+		q = strchr(p + l, ',');
 		if (q == NULL)
 			break;
+#endif /* _FFR_DYNAMIC_TOBUF */
+
 		sm_syslog(LOG_INFO, e->e_id,
 			  "to=%.*s [more]%s",
-			  ++q - p, p, buf);
+			  (int) (++q - p), p, buf);
 		p = q;
 	}
+#if _FFR_DYNAMIC_TOBUF
+	sm_syslog(LOG_INFO, e->e_id, "to=%.*s%s", l, p, buf);
+#else /* _FFR_DYNAMIC_TOBUF */
 	sm_syslog(LOG_INFO, e->e_id, "to=%s%s", p, buf);
+#endif /* _FFR_DYNAMIC_TOBUF */
 
 #else /* (SYSLOG_BUFSIZE) >= 256 */
 
@@ -3084,16 +3592,32 @@ logdelivery(m, mci, dsn, status, ctladdr, xstart, e)
 	p = e->e_to == NULL ? "NO-TO-LIST" : e->e_to;
 	while (strlen(p) >= (SIZE_T) l)
 	{
-		register char *q = strchr(p + l, ',');
+		register char *q;
 
+#if _FFR_DYNAMIC_TOBUF
+		for (q = p + l; q > p; q--)
+		{
+			if (*q == ',')
+				break;
+		}
+		if (p == q)
+			break;
+#else /* _FFR_DYNAMIC_TOBUF */
+		q = strchr(p + l, ',');
 		if (q == NULL)
 			break;
+#endif /* _FFR_DYNAMIC_TOBUF */
+
 		sm_syslog(LOG_INFO, e->e_id,
 			  "to=%.*s [more]",
-			  ++q - p, p);
+			  (int) (++q - p), p);
 		p = q;
 	}
+#if _FFR_DYNAMIC_TOBUF
+	sm_syslog(LOG_INFO, e->e_id, "to=%.*s", l, p);
+#else /* _FFR_DYNAMIC_TOBUF */
 	sm_syslog(LOG_INFO, e->e_id, "to=%s", p);
+#endif /* _FFR_DYNAMIC_TOBUF */
 
 	if (ctladdr != NULL)
 	{
@@ -3111,12 +3635,12 @@ logdelivery(m, mci, dsn, status, ctladdr, xstart, e)
 	}
 	bp = buf;
 	snprintf(bp, SPACELEFT(buf, bp), "delay=%s",
-		 pintvl(curtime() - e->e_ctime, TRUE));
+		 pintvl(now - e->e_ctime, TRUE));
 	bp += strlen(bp);
 	if (xstart != (time_t) 0)
 	{
 		snprintf(bp, SPACELEFT(buf, bp), ", xdelay=%s",
-			 pintvl(curtime() - xstart, TRUE));
+			 pintvl(now - xstart, TRUE));
 		bp += strlen(bp);
 	}
 
@@ -3271,8 +3795,13 @@ putbody(mci, e, separator)
 
 		e->e_dfp = fopen(df, "r");
 		if (e->e_dfp == NULL)
-			syserr("putbody: Cannot open %s for %s from %s",
-				df, e->e_to, e->e_from.q_paddr);
+		{
+			char *msg = "!putbody: Cannot open %s for %s from %s";
+
+			if (errno == ENOENT)
+				msg++;
+			syserr(msg, df, e->e_to, e->e_from.q_paddr);
+		}
 	}
 	if (e->e_dfp == NULL)
 	{
@@ -3284,6 +3813,7 @@ putbody(mci, e, separator)
 		putline("<<< No Message Collected >>>", mci);
 		goto endofmessage;
 	}
+
 	if (e->e_dfino == (ino_t) 0)
 	{
 		struct stat stbuf;
@@ -3384,7 +3914,7 @@ putbody(mci, e, separator)
 		ostate = OS_HEAD;
 		bp = buf;
 		pbp = peekbuf;
-		while (!ferror(mci->mci_out))
+		while (!ferror(mci->mci_out) && !dead)
 		{
 			if (pbp > peekbuf)
 				c = *--pbp;
@@ -3440,27 +3970,39 @@ putbody(mci, e, separator)
 						(void) putc(padc,
 							    TrafficLogFile);
 					for (xp = buf; xp < bp; xp++)
-						(void) putc(*xp, TrafficLogFile);
+						(void) putc((unsigned char) *xp,
+							    TrafficLogFile);
 					if (c == '\n')
 						(void) fputs(mci->mci_mailer->m_eol,
-						      TrafficLogFile);
+							     TrafficLogFile);
 				}
 				if (padc != EOF)
 				{
 					if (putc(padc, mci->mci_out) == EOF)
+					{
+						dead = TRUE;
 						continue;
+					}
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 					pos++;
 				}
 				for (xp = buf; xp < bp; xp++)
 				{
-					if (putc(*xp, mci->mci_out) == EOF)
+					if (putc((unsigned char) *xp,
+						 mci->mci_out) == EOF)
 					{
 						dead = TRUE;
 						break;
 					}
-
-					/* record progress for DATA timeout */
-					DataProgress = TRUE;
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 				}
 				if (dead)
 					continue;
@@ -3469,6 +4011,11 @@ putbody(mci, e, separator)
 					if (fputs(mci->mci_mailer->m_eol,
 						  mci->mci_out) == EOF)
 						break;
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 					pos = 0;
 				}
 				else
@@ -3478,8 +4025,6 @@ putbody(mci, e, separator)
 						*pbp++ = c;
 				}
 
-				/* record progress for DATA timeout */
-				DataProgress = TRUE;
 				bp = buf;
 
 				/* determine next state */
@@ -3498,9 +4043,11 @@ putbody(mci, e, separator)
 					if (fputs(mci->mci_mailer->m_eol,
 						  mci->mci_out) == EOF)
 						continue;
-
-					/* record progress for DATA timeout */
-					DataProgress = TRUE;
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 
 					if (TrafficLogFile != NULL)
 					{
@@ -3544,9 +4091,19 @@ putch:
 					if (d == '\n' || d == EOF)
 					{
 						if (TrafficLogFile != NULL)
-							(void) putc(c, TrafficLogFile);
-						if (putc(c, mci->mci_out) == EOF)
+							(void) putc((unsigned char) c,
+							    TrafficLogFile);
+						if (putc((unsigned char) c,
+							 mci->mci_out) == EOF)
+						{
+							dead = TRUE;
 							continue;
+						}
+						else
+						{
+							/* record progress for DATA timeout */
+							DataProgress = TRUE;
+						}
 						pos++;
 						continue;
 					}
@@ -3554,10 +4111,15 @@ putch:
 					if (putc('!', mci->mci_out) == EOF ||
 					    fputs(mci->mci_mailer->m_eol,
 						  mci->mci_out) == EOF)
+					{
+						dead = TRUE;
 						continue;
-
-					/* record progress for DATA timeout */
-					DataProgress = TRUE;
+					}
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 
 					if (TrafficLogFile != NULL)
 					{
@@ -3576,21 +4138,33 @@ putch:
 					if (fputs(mci->mci_mailer->m_eol,
 						  mci->mci_out) == EOF)
 						continue;
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 					pos = 0;
 					ostate = OS_HEAD;
 				}
 				else
 				{
 					if (TrafficLogFile != NULL)
-						(void) putc(c, TrafficLogFile);
-					if (putc(c, mci->mci_out) == EOF)
+						(void) putc((unsigned char) c,
+							    TrafficLogFile);
+					if (putc((unsigned char) c,
+						 mci->mci_out) == EOF)
+					{
+						dead = TRUE;
 						continue;
+					}
+					else
+					{
+						/* record progress for DATA timeout */
+						DataProgress = TRUE;
+					}
 					pos++;
 					ostate = OS_INLINE;
 				}
-
-				/* record progress for DATA timeout */
-				DataProgress = TRUE;
 				break;
 			}
 		}
@@ -3601,18 +4175,22 @@ putch:
 			if (TrafficLogFile != NULL)
 			{
 				for (xp = buf; xp < bp; xp++)
-					(void) putc(*xp, TrafficLogFile);
+					(void) putc((unsigned char) *xp,
+						    TrafficLogFile);
 			}
 			for (xp = buf; xp < bp; xp++)
 			{
-				if (putc(*xp, mci->mci_out) == EOF)
+				if (putc((unsigned char) *xp, mci->mci_out) ==
+				    EOF)
 				{
 					dead = TRUE;
 					break;
 				}
-
-				/* record progress for DATA timeout */
-				DataProgress = TRUE;
+				else
+				{
+					/* record progress for DATA timeout */
+					DataProgress = TRUE;
+				}
 			}
 			pos += bp - buf;
 		}
@@ -3651,7 +4229,7 @@ endofmessage:
 		(void) bfrewind(e->e_dfp);
 
 	/* some mailers want extra blank line at end of message */
-	if (bitnset(M_BLANKEND, mci->mci_mailer->m_flags) &&
+	if (!dead && bitnset(M_BLANKEND, mci->mci_mailer->m_flags) &&
 	    buf[0] != '\0' && buf[0] != '\n')
 		putline("", mci);
 
@@ -3824,6 +4402,11 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 		int err;
 		volatile int oflags = O_WRONLY|O_APPEND;
 
+		/* Reset global flags */
+		RestartRequest = NULL;
+		ShutdownRequest = NULL;
+		PendingSignal = 0;
+
 		if (e->e_lockfp != NULL)
 			(void) close(fileno(e->e_lockfp));
 
@@ -3840,7 +4423,8 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 		}
 
 		if (TimeOuts.to_fileopen > 0)
-			ev = setevent(TimeOuts.to_fileopen, mailfiletimeout, 0);
+			ev = setevent(TimeOuts.to_fileopen,
+				      mailfiletimeout, 0);
 		else
 			ev = NULL;
 
@@ -3884,6 +4468,12 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 			{
 				RealUserName = NULL;
 				RealUid = mailer->m_uid;
+				if (RunAsUid != 0 && RealUid != RunAsUid)
+				{
+					/* Only root can change the uid */
+					syserr("mailfile: insufficient privileges to change uid");
+					exit(EX_TEMPFAIL);
+				}
 			}
 			else if (bitset(S_ISUID, mode))
 			{
@@ -3911,15 +4501,34 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 
 			/* select a new group to run as */
 			if (bitnset(M_SPECIFIC_UID, mailer->m_flags))
+			{
 				RealGid = mailer->m_gid;
+				if (RunAsUid != 0 &&
+				    (RealGid != getgid() ||
+				     RealGid != getegid()))
+				{
+					/* Only root can change the gid */
+					syserr("mailfile: insufficient privileges to change gid");
+					exit(EX_TEMPFAIL);
+				}
+			}
 			else if (bitset(S_ISGID, mode))
 				RealGid = stb.st_gid;
-			else if (ctladdr != NULL && ctladdr->q_uid != 0)
-				RealGid = ctladdr->q_gid;
 			else if (ctladdr != NULL &&
 				 ctladdr->q_uid == DefUid &&
 				 ctladdr->q_gid == 0)
+			{
+				/*
+				**  Special case:  This means it is an
+				**  alias and we should act as DefaultUser.
+				**  See alias()'s comments.
+				*/
+
 				RealGid = DefGid;
+				RealUserName = DefUser;
+			}
+			else if (ctladdr != NULL && ctladdr->q_uid != 0)
+				RealGid = ctladdr->q_gid;
 			else if (mailer != NULL && mailer->m_gid != 0)
 				RealGid = mailer->m_gid;
 			else
@@ -3939,8 +4548,11 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 		if (RealUserName != NULL && !DontInitGroups)
 		{
 			if (initgroups(RealUserName, RealGid) == -1 && suidwarn)
+			{
 				syserr("mailfile: initgroups(%s, %d) failed",
 					RealUserName, RealGid);
+				exit(EX_TEMPFAIL);
+			}
 		}
 		else
 		{
@@ -3948,7 +4560,10 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 
 			gidset[0] = RealGid;
 			if (setgroups(1, gidset) == -1 && suidwarn)
+			{
 				syserr("mailfile: setgroups() failed");
+				exit(EX_TEMPFAIL);
+			}
 		}
 
 		/*
@@ -3973,15 +4588,24 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 			dprintf("mailfile: deliver to %s\n", realfile);
 
 		if (chdir("/") < 0)
+		{
 			syserr("mailfile: cannot chdir(/)");
+			exit(EX_CANTCREAT);
+		}
 
 		/* now reset the group and user ids */
 		endpwent();
 		if (setgid(RealGid) < 0 && suidwarn)
+		{
 			syserr("mailfile: setgid(%ld) failed", (long) RealGid);
+			exit(EX_TEMPFAIL);
+		}
 		vendor_set_uid(RealUid);
 		if (setuid(RealUid) < 0 && suidwarn)
+		{
 			syserr("mailfile: setuid(%ld) failed", (long) RealUid);
+			exit(EX_TEMPFAIL);
+		}
 
 		if (tTd(11, 2))
 			dprintf("mailfile: running as r/euid=%d/%d, r/egid=%d/%d\n",
@@ -4114,7 +4738,7 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 		(*e->e_puthdr)(&mcibuf, e->e_header, e, M87F_OUTER);
 		(*e->e_putbody)(&mcibuf, e, NULL);
 		putline("\n", &mcibuf);
-		if (fflush(f) < 0 ||
+		if (fflush(f) != 0 ||
 		    (SuperSafe && fsync(fileno(f)) < 0) ||
 		    ferror(f))
 		{
@@ -4164,6 +4788,13 @@ mailfile(filename, mailer, ctladdr, sfflags, e)
 static void
 mailfiletimeout()
 {
+	/*
+	**  NOTE: THIS CAN BE CALLED FROM A SIGNAL HANDLER.  DO NOT ADD
+	**	ANYTHING TO THIS ROUTINE UNLESS YOU KNOW WHAT YOU ARE
+	**	DOING.
+	*/
+
+	errno = ETIMEDOUT;
 	longjmp(CtxMailfileTimeout, 1);
 }
 /*
@@ -4199,6 +4830,7 @@ hostsignature(m, host)
 	int len;
 	int nmx;
 	int hl;
+	time_t now;
 	char *hp;
 	char *endp;
 	int oldoptions = _res.options;
@@ -4210,17 +4842,19 @@ hostsignature(m, host)
 		dprintf("hostsignature(%s)\n", host);
 
 	/*
-	**  If local delivery, just return a constant.
+	**  If local delivery (and not remote), just return a constant.
 	*/
 
-	if (bitnset(M_LOCALMAILER, m->m_flags))
+	p = m->m_mailer;
+	if (bitnset(M_LOCALMAILER, m->m_flags) &&
+	    strcmp(p, "[IPC]") != 0 &&
+	    strcmp(p, "[TCP]") != 0)
 		return "localhost";
 
 	/*
 	**  Check to see if this uses IPC -- if not, it can't have MX records.
 	*/
 
-	p = m->m_mailer;
 	if (strcmp(p, "[IPC]") != 0 &&
 	    strcmp(p, "[TCP]") != 0)
 	{
@@ -4257,6 +4891,7 @@ hostsignature(m, host)
 	if (ConfigLevel < 2)
 		_res.options &= ~(RES_DEFNAMES | RES_DNSRCH);	/* XXX */
 
+	now = curtime();
 	for (hp = host; hp != NULL; hp = endp)
 	{
 #if NETINET6
@@ -4296,7 +4931,7 @@ hostsignature(m, host)
 				mci = mci_get(hp, m);
 				mci->mci_errno = errno;
 				mci->mci_herrno = h_errno;
-				mci->mci_lastuse = curtime();
+				mci->mci_lastuse = now;
 				if (rcode == EX_NOHOST)
 					mci_setstat(mci, rcode, "5.1.2",
 						"550 Host unknown");
@@ -4327,7 +4962,7 @@ hostsignature(m, host)
 		if (s->s_hostsig != NULL)
 		{
 			(void) strlcpy(p, s->s_hostsig, len);
-			free(s->s_hostsig);
+			sm_free(s->s_hostsig);
 			s->s_hostsig = p;
 			hl = strlen(p);
 			p += hl;
@@ -4496,4 +5131,206 @@ parse_hostsignature(sig, mxhosts, mailer)
 }
 
 #if SMTP
+# if STARTTLS
+static SSL_CTX	*clt_ctx = NULL;
+
+/*
+**  INITCLTTLS -- initialize client side TLS
+**
+**	Parameters:
+**		none.
+**
+**	Returns:
+**		succeeded?
+*/
+
+bool
+initclttls()
+{
+	if (clt_ctx != NULL)
+		return TRUE;	/* already done */
+	return inittls(&clt_ctx, TLS_I_CLT, FALSE, CltCERTfile, Cltkeyfile,
+		       CACERTpath, CACERTfile, DHParams);
+}
+
+/*
+**  STARTTLS -- try to start secure connection (client side)
+**
+**	Parameters:
+**		m -- the mailer.
+**		mci -- the mailer connection info.
+**		e -- the envelope.
+**
+**	Returns:
+**		success?
+**		(maybe this should be some other code than EX_
+**		that denotes which stage failed.)
+*/
+
+static int
+starttls(m, mci, e)
+	MAILER *m;
+	MCI *mci;
+	ENVELOPE *e;
+{
+	int smtpresult;
+	int result = 0;
+	int rfd, wfd;
+	SSL *clt_ssl = NULL;
+
+	if (clt_ctx == NULL && !initclttls())
+		return EX_TEMPFAIL;
+	smtpmessage("STARTTLS", m, mci);
+
+	/* get the reply */
+	smtpresult = reply(m, mci, e, TimeOuts.to_datafinal, NULL, NULL);
+	/* which timeout? XXX */
+
+	/* check return code from server */
+	if (smtpresult == 454)
+		return EX_TEMPFAIL;
+	if (smtpresult == 501)
+		return EX_USAGE;
+	if (smtpresult == -1)
+		return smtpresult;
+	if (smtpresult != 220)
+		return EX_PROTOCOL;
+
+	if (LogLevel > 13)
+		sm_syslog(LOG_INFO, e->e_id, "TLS: start client");
+
+	/* start connection */
+	if ((clt_ssl = SSL_new(clt_ctx)) == NULL)
+	{
+		if (LogLevel > 5)
+		{
+			sm_syslog(LOG_ERR, e->e_id,
+				  "TLS: error: client: SSL_new failed");
+			if (LogLevel > 9)
+				tlslogerr();
+		}
+		return EX_SOFTWARE;
+	}
+
+	rfd = fileno(mci->mci_in);
+	wfd = fileno(mci->mci_out);
+
+	/* SSL_clear(clt_ssl); ? */
+	if (rfd < 0 || wfd < 0 ||
+	    (result = SSL_set_rfd(clt_ssl, rfd)) <= 0 ||
+	    (result = SSL_set_wfd(clt_ssl, wfd)) <= 0)
+	{
+		if (LogLevel > 5)
+		{
+			sm_syslog(LOG_ERR, e->e_id,
+				  "TLS: error: SSL_set_xfd failed=%d", result);
+			if (LogLevel > 9)
+				tlslogerr();
+		}
+		return EX_SOFTWARE;
+	}
+	SSL_set_connect_state(clt_ssl);
+	if ((result = SSL_connect(clt_ssl)) <= 0)
+	{
+		int i;
+
+		/* what to do in this case? */
+		i = SSL_get_error(clt_ssl, result);
+		if (LogLevel > 5)
+		{
+			sm_syslog(LOG_ERR, e->e_id,
+				  "TLS: error: SSL_connect failed=%d (%d)",
+				  result, i);
+			if (LogLevel > 9)
+				tlslogerr();
+		}
+		SSL_free(clt_ssl);
+		clt_ssl = NULL;
+		return EX_SOFTWARE;
+	}
+	mci->mci_ssl = clt_ssl;
+	result = tls_get_info(clt_ssl, e, FALSE, mci->mci_host, TRUE);
+
+	/* switch to use SSL... */
+#if SFIO
+	if (sfdctls(mci->mci_in, mci->mci_out, mci->mci_ssl) == 0)
+		return EX_OK;
+#else /* SFIO */
+# if _FFR_TLS_TOREK
+	if (sfdctls(&mci->mci_in, &mci->mci_out, mci->mci_ssl) == 0)
+		return EX_OK;
+# endif /* _FFR_TLS_TOREK */
+#endif /* SFIO */
+
+	/* failure */
+	SSL_free(clt_ssl);
+	clt_ssl = NULL;
+	return EX_SOFTWARE;
+}
+
+/*
+**  ENDTLSCLT -- shutdown secure connection (client side)
+**
+**	Parameters:
+**		mci -- the mailer connection info.
+**
+**	Returns:
+**		success?
+*/
+int
+endtlsclt(mci)
+	MCI *mci;
+{
+	int r;
+
+	if (!bitset(MCIF_TLSACT, mci->mci_flags))
+		return EX_OK;
+	r = endtls(mci->mci_ssl, "client");
+	mci->mci_flags &= ~MCIF_TLSACT;
+	return r;
+}
+/*
+**  ENDTLS -- shutdown secure connection
+**
+**	Parameters:
+**		ssl -- SSL connection information.
+**		side -- srv/clt (for logging).
+**
+**	Returns:
+**		success?
+*/
+
+int
+endtls(ssl, side)
+	SSL *ssl;
+	char *side;
+{
+	int ret = EX_OK;
+
+	if (ssl != NULL)
+	{
+		int r;
+
+		if ((r = SSL_shutdown(ssl)) < 0)
+		{
+			if (LogLevel > 11)
+				sm_syslog(LOG_WARNING, NOQID,
+					  "SSL_shutdown %s failed: %d",
+					  side, r);
+			ret = EX_SOFTWARE;
+		}
+		else if (r == 0)
+		{
+			if (LogLevel > 13)
+				sm_syslog(LOG_WARNING, NOQID,
+					  "SSL_shutdown %s not done",
+					  side);
+			ret = EX_SOFTWARE;
+		}
+		SSL_free(ssl);
+		ssl = NULL;
+	}
+	return ret;
+}
+# endif /* STARTTLS */
 #endif /* SMTP */

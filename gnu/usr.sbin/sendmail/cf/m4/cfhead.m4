@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+# Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
 #	All rights reserved.
 # Copyright (c) 1983, 1995 Eric P. Allman.  All rights reserved.
 # Copyright (c) 1988, 1993
@@ -16,10 +16,11 @@
 #####
 #####		SENDMAIL CONFIGURATION FILE
 #####
-define(`TEMPFILE', maketemp(/tmp/cfXXXXXX))dnl
+ifdef(`unix', `dnl
+ifdef(`TEMPFILE', `dnl', `define(`TEMPFILE', maketemp(/tmp/cfXXXXXX))dnl
 syscmd(sh _CF_DIR_`'sh/makeinfo.sh _CF_DIR_ > TEMPFILE)dnl
 include(TEMPFILE)dnl
-syscmd(rm -f TEMPFILE)dnl
+syscmd(rm -f TEMPFILE)dnl')', `dnl')
 #####
 ######################################################################
 ######################################################################
@@ -153,26 +154,28 @@ define(`SITE', `ifelse(CONCAT($'2`, $3), SU,
 		CONCAT(CY, $'1`),
 		CONCAT(C, $3, $'1`))')
 sinclude(_CF_DIR_`'siteconfig/$1.m4)')
-define(`EXPOSED_USER', `PUSHDIVERT(5)CE$1
+define(`EXPOSED_USER', `PUSHDIVERT(5)C{E}$1
 POPDIVERT`'dnl`'')
-define(`LOCAL_USER', `PUSHDIVERT(5)CL$1
+ifdef(`_FFR_EXPOSED_USER_FILE', `define(`EXPOSED_USER_FILE', `PUSHDIVERT(5)F{E}$1
+POPDIVERT`'dnl`'')', `dnl')
+define(`LOCAL_USER', `PUSHDIVERT(5)C{L}$1
 POPDIVERT`'dnl`'')
 define(`MASQUERADE_AS', `define(`MASQUERADE_NAME', $1)')
-define(`MASQUERADE_DOMAIN', `PUSHDIVERT(5)CM$1
+define(`MASQUERADE_DOMAIN', `PUSHDIVERT(5)C{M}$1
 POPDIVERT`'dnl`'')
-define(`MASQUERADE_EXCEPTION', `PUSHDIVERT(5)CN$1
+define(`MASQUERADE_EXCEPTION', `PUSHDIVERT(5)C{N}$1
 POPDIVERT`'dnl`'')
-define(`MASQUERADE_DOMAIN_FILE', `PUSHDIVERT(5)FM$1
+define(`MASQUERADE_DOMAIN_FILE', `PUSHDIVERT(5)F{M}$1
 POPDIVERT`'dnl`'')
-define(`LOCAL_DOMAIN', `PUSHDIVERT(5)Cw$1
+define(`LOCAL_DOMAIN', `PUSHDIVERT(5)C{w}$1
 POPDIVERT`'dnl`'')
 define(`CANONIFY_DOMAIN', `PUSHDIVERT(5)C{Canonify}$1
 POPDIVERT`'dnl`'')
 define(`CANONIFY_DOMAIN_FILE', `PUSHDIVERT(5)F{Canonify}$1
 POPDIVERT`'dnl`'')
-define(`GENERICS_DOMAIN', `PUSHDIVERT(5)CG$1
+define(`GENERICS_DOMAIN', `PUSHDIVERT(5)C{G}$1
 POPDIVERT`'dnl`'')
-define(`GENERICS_DOMAIN_FILE', `PUSHDIVERT(5)FG$1
+define(`GENERICS_DOMAIN_FILE', `PUSHDIVERT(5)F{G}$1
 POPDIVERT`'dnl`'')
 define(`LDAPROUTE_DOMAIN', `PUSHDIVERT(5)C{LDAPRoute}$1
 POPDIVERT`'dnl`'')
@@ -184,9 +187,9 @@ POPDIVERT`'dnl`'')
 define(`VIRTUSER_DOMAIN_FILE', `PUSHDIVERT(5)F{VirtHost}$1
 define(`_VIRTHOSTS_')
 POPDIVERT`'dnl`'')
-define(`RELAY_DOMAIN', `PUSHDIVERT(5)CR$1
+define(`RELAY_DOMAIN', `PUSHDIVERT(5)C{R}$1
 POPDIVERT`'dnl`'')
-define(`RELAY_DOMAIN_FILE', `PUSHDIVERT(5)FR$1
+define(`RELAY_DOMAIN_FILE', `PUSHDIVERT(5)F{R}$1
 POPDIVERT`'dnl`'')
 define(`TRUST_AUTH_MECH', `PUSHDIVERT(5)C{TrustAuthMech}$1
 POPDIVERT`'dnl`'')
@@ -212,12 +215,14 @@ define(`_REC_FULL_AUTH_', `$.$?{auth_type}(authenticated as ${auth_authen} $?{au
 define(`_REC_HDR_', `$?sfrom $s $.$?_($?s$|from $.$_)')
 define(`_REC_END_', `for $u; $|;
 	$.$b')
+define(`_REC_TLS_', `(using ${tls_version} with cipher ${cipher} (${cipher_bits} bits) verified ${verify})$.$?u')
+define(`_REC_BY_', `$.by $j ($v/$Z)$?r with $r$. id $i$?{tls_version}')
 define(`confRECEIVED_HEADER', `_REC_HDR_
-	_REC_AUTH_)
-	$.by $j ($v/$Z)$?r with $r$. id $i$?u
+	_REC_AUTH_$?{auth_ssf} (${auth_ssf} bits)$.)
+	_REC_BY_
+	_REC_TLS_
 	_REC_END_')
 define(`confSEVEN_BIT_INPUT', `False')
-define(`confEIGHT_BIT_HANDLING', `pass8')
 define(`confALIAS_WAIT', `10')
 define(`confMIN_FREE_BLOCKS', `100')
 define(`confBLANK_SUB', `.')
@@ -240,9 +245,10 @@ define(`confMIME_FORMAT_ERRORS', `True')
 define(`confFORWARD_PATH', `$z/.forward.$w:$z/.forward')
 define(`confCR_FILE', `-o MAIL_SETTINGS_DIR`'relay-domains')
 define(`confMILTER_MACROS_CONNECT', ``j, _, {daemon_name}, {if_name}, {if_addr}'')
-define(`confMILTER_MACROS_ENVFROM', ``i, {auth_type}, {auth_authen}, {auth_author}, {mail_mailer}, {mail_host}, {mail_addr}'')
+define(`confMILTER_MACROS_HELO', ``{tls_version}, {cipher}, {cipher_bits}, {cert_subject}, {cert_issuer}'')
+define(`confMILTER_MACROS_ENVFROM', ``i, {auth_type}, {auth_authen}, {auth_ssf}, {auth_author}, {mail_mailer}, {mail_host}, {mail_addr}'')
 define(`confMILTER_MACROS_ENVRCPT', ``{rcpt_mailer}, {rcpt_host}, {rcpt_addr}'')
 
 
 divert(0)dnl
-VERSIONID(`$Sendmail: cfhead.m4,v 8.76 2000/03/21 23:56:59 gshapiro Exp $')
+VERSIONID(`$Sendmail: cfhead.m4,v 8.76.4.16 2001/03/06 22:56:36 ca Exp $')

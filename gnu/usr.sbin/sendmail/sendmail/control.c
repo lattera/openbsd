@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  *
  * By using this file, you agree to the terms and conditions set
@@ -9,10 +9,33 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: control.c,v 8.44 1999/11/29 22:03:49 ca Exp $";
+static char id[] = "@(#)$Sendmail: control.c,v 8.44.14.20 2001/05/03 17:24:03 gshapiro Exp $";
 #endif /* ! lint */
 
 #include <sendmail.h>
+
+/* values for cmd_code */
+# define CMDERROR	0	/* bad command */
+# define CMDRESTART	1	/* restart daemon */
+# define CMDSHUTDOWN	2	/* end daemon */
+# define CMDHELP	3	/* help */
+# define CMDSTATUS	4	/* daemon status */
+
+struct cmd
+{
+	char	*cmd_name;	/* command name */
+	int	cmd_code;	/* internal code, see below */
+};
+
+static struct cmd	CmdTab[] =
+{
+	{ "help",	CMDHELP		},
+	{ "restart",	CMDRESTART	},
+	{ "shutdown",	CMDSHUTDOWN	},
+	{ "status",	CMDSTATUS	},
+	{ NULL,		CMDERROR	}
+};
+
 
 int ControlSocket = -1;
 
@@ -76,16 +99,26 @@ opencontrolsocket()
 		return -1;
 	}
 
-	if (geteuid() == 0 && TrustedUid != 0)
+	if (geteuid() == 0)
 	{
-		if (chown(ControlSocketName, TrustedUid, -1) < 0)
+		uid_t u = 0;
+
+		if (RunAsUid != 0)
+			u = RunAsUid;
+		else if (TrustedUid != 0)
+			u = TrustedUid;
+
+		if (u != 0 &&
+		    chown(ControlSocketName, u, -1) < 0)
 		{
 			save_errno = errno;
 			sm_syslog(LOG_ALERT, NOQID,
-				  "ownership change on %s failed: %s",
-				  ControlSocketName, errstring(save_errno));
-			message("050 ownership change on %s failed: %s",
-				ControlSocketName, errstring(save_errno));
+				  "ownership change on %s to uid %d failed: %s",
+				  ControlSocketName, (int) u,
+				  errstring(save_errno));
+			message("050 ownership change on %s to uid %d failed: %s",
+				ControlSocketName, (int) u,
+				errstring(save_errno));
 			closecontrolsocket(TRUE);
 			errno = save_errno;
 			return -1;
@@ -140,8 +173,8 @@ closecontrolsocket(fullclose)
 			ControlSocket = -1;
 		}
 
-		rval = safefile(ControlSocketName, RunAsUid, RunAsGid, RunAsUserName,
-				sff, S_IRUSR|S_IWUSR, NULL);
+		rval = safefile(ControlSocketName, RunAsUid, RunAsGid,
+				RunAsUserName, sff, S_IRUSR|S_IWUSR, NULL);
 
 		/* if not safe, don't unlink */
 		if (rval != 0)
@@ -197,34 +230,19 @@ clrcontrol()
 **		none.
 */
 
-struct cmd
-{
-	char	*cmd_name;	/* command name */
-	int	cmd_code;	/* internal code, see below */
-};
-
-/* values for cmd_code */
-# define CMDERROR	0	/* bad command */
-# define CMDRESTART	1	/* restart daemon */
-# define CMDSHUTDOWN	2	/* end daemon */
-# define CMDHELP	3	/* help */
-# define CMDSTATUS	4	/* daemon status */
-
-static struct cmd	CmdTab[] =
-{
-	{ "help",	CMDHELP		},
-	{ "restart",	CMDRESTART	},
-	{ "shutdown",	CMDSHUTDOWN	},
-	{ "status",	CMDSTATUS	},
-	{ NULL,		CMDERROR	}
-};
-
 static jmp_buf	CtxControlTimeout;
 
 static void
 controltimeout(timeout)
 	time_t timeout;
 {
+	/*
+	**  NOTE: THIS CAN BE CALLED FROM A SIGNAL HANDLER.  DO NOT ADD
+	**	ANYTHING TO THIS ROUTINE UNLESS YOU KNOW WHAT YOU ARE
+	**	DOING.
+	*/
+
+	errno = ETIMEDOUT;
 	longjmp(CtxControlTimeout, 1);
 }
 
@@ -300,7 +318,7 @@ control_command(sock, e)
 	/* decode command */
 	for (c = CmdTab; c->cmd_name != NULL; c++)
 	{
-		if (!strcasecmp(c->cmd_name, cmdbuf))
+		if (strcasecmp(c->cmd_name, cmdbuf) == 0)
 			break;
 	}
 
@@ -328,8 +346,23 @@ control_command(sock, e)
 
 	  case CMDSTATUS:	/* daemon status */
 		proc_list_probe();
-		fprintf(s, "%d/%d/%ld/%d\r\n", CurChildren, MaxChildren,
-			freediskspace(QueueDir, NULL), sm_getla(NULL));
+		{
+			long bsize;
+			long free;
+
+			free = freediskspace(QueueDir, &bsize);
+
+			/*
+			**  Prevent overflow and don't lose
+			**  precision (if bsize == 512)
+			*/
+
+			free = (long)((double)free * ((double)bsize / 1024));
+
+			fprintf(s, "%d/%d/%ld/%d\r\n",
+				CurChildren, MaxChildren,
+				free, sm_getla(NULL));
+		}
 		proc_list_display(s);
 		break;
 
@@ -343,3 +376,4 @@ control_command(sock, e)
 	exit(exitstat);
 }
 #endif /* ! NOT_SENDMAIL */
+

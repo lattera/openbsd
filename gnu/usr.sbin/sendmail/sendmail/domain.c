@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1986, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -15,11 +15,12 @@
 
 #ifndef lint
 # if NAMED_BIND
-static char id[] = "@(#)$Sendmail: domain.c,v 8.114 2000/02/01 05:49:56 gshapiro Exp $ (with name server)";
+static char id[] = "@(#)$Sendmail: domain.c,v 8.114.6.1.2.8 2001/02/12 21:40:19 gshapiro Exp $ (with name server)";
 # else /* NAMED_BIND */
-static char id[] = "@(#)$Sendmail: domain.c,v 8.114 2000/02/01 05:49:56 gshapiro Exp $ (without name server)";
+static char id[] = "@(#)$Sendmail: domain.c,v 8.114.6.1.2.8 2001/02/12 21:40:19 gshapiro Exp $ (without name server)";
 # endif /* NAMED_BIND */
 #endif /* ! lint */
+
 
 #if NAMED_BIND
 
@@ -227,12 +228,16 @@ getmxrr(host, mxhosts, mxprefs, droplocalhost, rcode)
 	hp = (HEADER *)&answer;
 	cp = (u_char *)&answer + HFIXEDSZ;
 	eom = (u_char *)&answer + n;
-	for (qdcount = ntohs(hp->qdcount); qdcount--; cp += n + QFIXEDSZ)
+	for (qdcount = ntohs((u_short)hp->qdcount);
+	     qdcount--;
+	     cp += n + QFIXEDSZ)
+	{
 		if ((n = dn_skipname(cp, eom)) < 0)
 			goto punt;
+	}
 	buflen = sizeof(MXHostBuf) - 1;
 	bp = MXHostBuf;
-	ancount = ntohs(hp->ancount);
+	ancount = ntohs((u_short)hp->ancount);
 	while (--ancount >= 0 && cp < eom && nmx < MAXMXHOSTS - 1)
 	{
 		if ((n = dn_expand((u_char *)&answer,
@@ -333,14 +338,10 @@ getmxrr(host, mxhosts, mxprefs, droplocalhost, rcode)
 	if (nmx == 0)
 	{
 punt:
-		if (seenlocal &&
-		    (!TryNullMXList ||
-		     (sm_gethostbyname(host, AF_INET) == NULL
-# if NETINET6
-		      && sm_gethostbyname(host, AF_INET6) == NULL
-# endif /* NETINET6 */
-		      )))
+		if (seenlocal)
 		{
+			struct hostent *h = NULL;
+
 			/*
 			**  If we have deleted all MX entries, this is
 			**  an error -- we should NEVER send to a host that
@@ -353,10 +354,49 @@ punt:
 			**  bad idea, but it's up to you....
 			*/
 
-			*rcode = EX_CONFIG;
-			syserr("MX list for %s points back to %s",
-				host, MyHostName);
-			return -1;
+			if (TryNullMXList)
+			{
+				SM_SET_H_ERRNO(0);
+				errno = 0;
+				h = sm_gethostbyname(host, AF_INET);
+				if (h == NULL)
+				{
+					if (errno == ETIMEDOUT ||
+					    h_errno == TRY_AGAIN ||
+					    (errno == ECONNREFUSED &&
+					     UseNameServer))
+					{
+						*rcode = EX_TEMPFAIL;
+						return -1;
+					}
+# if NETINET6
+					SM_SET_H_ERRNO(0);
+					errno = 0;
+					h = sm_gethostbyname(host, AF_INET6);
+					if (h == NULL &&
+					    (errno == ETIMEDOUT ||
+					     h_errno == TRY_AGAIN ||
+					     (errno == ECONNREFUSED &&
+					      UseNameServer)))
+					{
+						*rcode = EX_TEMPFAIL;
+						return -1;
+					}
+# endif /* NETINET6 */
+				}
+			}
+
+			if (h == NULL)
+			{
+				*rcode = EX_CONFIG;
+				syserr("MX list for %s points back to %s",
+				       host, MyHostName);
+				return -1;
+			}
+# if _FFR_FREEHOSTENT && NETINET6
+			freehostent(h);
+			hp = NULL;
+# endif /* _FFR_FREEHOSTENT && NETINET6 */
 		}
 		if (strlen(host) >= (SIZE_T) sizeof MXHostBuf)
 		{
@@ -604,6 +644,8 @@ dns_getcanonname(host, hbsize, trymx, statp)
 		return FALSE;
 	}
 
+	*statp = EX_OK;
+
 	/*
 	**  Initialize domain search list.  If there is at least one
 	**  dot in the name, search the unmodified name first so we
@@ -694,6 +736,7 @@ cnameloop:
 				qtype == T_A ? "A" :
 				qtype == T_MX ? "MX" :
 				"???");
+		errno = 0;
 		ret = res_querydomain(host, *dp, C_IN, qtype,
 				      answer.qb2, sizeof(answer.qb2));
 		if (ret <= 0)
@@ -704,15 +747,19 @@ cnameloop:
 
 			if (errno == ECONNREFUSED || h_errno == TRY_AGAIN)
 			{
-				/* the name server seems to be down */
-				h_errno = TRY_AGAIN;
+				/*
+				**  the name server seems to be down or
+				**  broken.
+				*/
+
+				SM_SET_H_ERRNO(TRY_AGAIN);
 				*statp = EX_TEMPFAIL;
 
 				/*
 				**  If the ANY query is larger than the
 				**  UDP packet size, the resolver will
 				**  fall back to TCP.  However, some
-				**  misconfigured firewalls black 53/TCP
+				**  misconfigured firewalls block 53/TCP
 				**  so the ANY lookup fails whereas an MX
 				**  or A record might work.  Therefore,
 				**  don't fail on ANY queries.
@@ -721,8 +768,27 @@ cnameloop:
 				**  the cache so this isn't dangerous.
 				*/
 
+#if _FFR_WORKAROUND_BROKEN_NAMESERVERS
+				if (WorkAroundBrokenAAAA)
+				{
+					/*
+					**  Only return if not TRY_AGAIN as an
+					**  attempt with a different qtype may
+					**  succeed (res_querydomain() calls
+					**  res_query() calls res_send() which
+					**  sets errno to ETIMEDOUT if the
+					**  nameservers could be contacted but
+					**  didn't give an answer).
+					*/
+
+					if (qtype != T_ANY &&
+					    errno != ETIMEDOUT)
+						return FALSE;
+				}
+#else /* _FFR_WORKAROUND_BROKEN_NAMESERVERS */
 				if (qtype != T_ANY)
 					return FALSE;
+#endif /* _FFR_WORKAROUND_BROKEN_NAMESERVERS */
 			}
 
 			if (h_errno != HOST_NOT_FOUND)
@@ -775,21 +841,24 @@ cnameloop:
 		eom = (u_char *) &answer + ret;
 
 		/* skip question part of response -- we know what we asked */
-		for (qdcount = ntohs(hp->qdcount); qdcount--; ap += ret + QFIXEDSZ)
+		for (qdcount = ntohs((u_short)hp->qdcount);
+		     qdcount--;
+		     ap += ret + QFIXEDSZ)
 		{
 			if ((ret = dn_skipname(ap, eom)) < 0)
 			{
 				if (tTd(8, 20))
 					dprintf("qdcount failure (%d)\n",
-						ntohs(hp->qdcount));
+						ntohs((u_short)hp->qdcount));
 				*statp = EX_SOFTWARE;
 				return FALSE;		/* ???XXX??? */
 			}
 		}
 
 		amatch = FALSE;
-		for (ancount = ntohs(hp->ancount); --ancount >= 0 && ap < eom;
-									ap += n)
+		for (ancount = ntohs((u_short)hp->ancount);
+		     --ancount >= 0 && ap < eom;
+		     ap += n)
 		{
 			n = dn_expand((u_char *) &answer, eom, ap,
 				      (RES_UNC_T) nbuf, sizeof nbuf);
@@ -866,7 +935,7 @@ cnameloop:
 							host);
 						CurEnv->e_message = newstr(ebuf);
 					}
-					h_errno = NO_RECOVERY;
+					SM_SET_H_ERRNO(NO_RECOVERY);
 					*statp = EX_CONFIG;
 					return FALSE;
 				}
@@ -937,7 +1006,8 @@ cnameloop:
 	/* if nothing was found, we are done */
 	if (mxmatch == NULL)
 	{
-		*statp = EX_NOHOST;
+		if (*statp == EX_OK)
+			*statp = EX_NOHOST;
 		return FALSE;
 	}
 

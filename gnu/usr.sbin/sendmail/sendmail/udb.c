@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-1999, 2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1983, 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -15,9 +15,9 @@
 
 #ifndef lint
 # if USERDB
-static char id[] = "@(#)$Sendmail: udb.c,v 8.111 1999/11/16 02:04:04 gshapiro Exp $ (with USERDB)";
+static char id[] = "@(#)$Sendmail: udb.c,v 8.111.16.2 2001/05/03 17:24:17 gshapiro Exp $ (with USERDB)";
 # else /* USERDB */
-static char id[] = "@(#)$Sendmail: udb.c,v 8.111 1999/11/16 02:04:04 gshapiro Exp $ (without USERDB)";
+static char id[] = "@(#)$Sendmail: udb.c,v 8.111.16.2 2001/05/03 17:24:17 gshapiro Exp $ (without USERDB)";
 # endif /* USERDB */
 #endif /* ! lint */
 
@@ -290,7 +290,7 @@ udbexpand(a, sendq, aliaslevel, e)
 
 					memmove(nuser, user, usersize);
 					if (user != userbuf)
-						free(user);
+						sm_free(user);
 					user = nuser;
 					usersize += size;
 					userleft += size;
@@ -545,7 +545,7 @@ udbexpand(a, sendq, aliaslevel, e)
 			break;
 		}
 		if (user != userbuf)
-			free(user);
+			sm_free(user);
 	}
 	return EX_OK;
 }
@@ -1011,6 +1011,10 @@ _udbx_init(e)
 								0644);
 					if (ret != 0)
 					{
+#ifdef DB_OLD_VERSION
+						if (ret == DB_OLD_VERSION)
+							ret = EINVAL;
+#endif /* DB_OLD_VERSION */
 						(void) up->udb_dbp->close(up->udb_dbp, 0);
 						up->udb_dbp = NULL;
 					}
@@ -1051,11 +1055,11 @@ _udbx_init(e)
 							  errstring(errno));
 					up->udb_type = UDB_EOLIST;
 					if (up->udb_dbname != spec)
-						free(up->udb_dbname);
+						sm_free(up->udb_dbname);
 					goto tempfail;
 				}
 				if (up->udb_dbname != spec)
-					free(up->udb_dbname);
+					sm_free(up->udb_dbname);
 				break;
 			}
 			if (tTd(28, 1))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2000 Sendmail, Inc. and its suppliers.
+ * Copyright (c) 1998-2001 Sendmail, Inc. and its suppliers.
  *	All rights reserved.
  * Copyright (c) 1995-1997 Eric P. Allman.  All rights reserved.
  * Copyright (c) 1988, 1993
@@ -12,13 +12,16 @@
  */
 
 #ifndef lint
-static char id[] = "@(#)$Sendmail: mci.c,v 8.133 2000/01/18 01:19:07 ca Exp $";
+static char id[] = "@(#)$Sendmail: mci.c,v 8.133.10.8 2001/05/03 17:24:10 gshapiro Exp $";
 #endif /* ! lint */
 
 #include <sendmail.h>
+
+
 #if NETINET || NETINET6
 # include <arpa/inet.h>
 #endif /* NETINET || NETINET6 */
+
 #include <dirent.h>
 
 static int	mci_generate_persistent_path __P((const char *, char *,
@@ -271,8 +274,10 @@ mci_flush(doquit, allbut)
 		return;
 
 	for (i = 0; i < MaxMciCache; i++)
+	{
 		if (allbut != MciCache[i])
 			mci_uncache(&MciCache[i], doquit);
+	}
 }
 /*
 **  MCI_GET -- get information about a particular host
@@ -297,7 +302,7 @@ mci_get(host, m)
 	(void) mci_scan(NULL);
 
 	if (m->m_mno < 0)
-		syserr("negative mno %d (%s)", m->m_mno, m->m_name);
+		syserr("!negative mno %d (%s)", m->m_mno, m->m_name);
 
 	s = stab(host, ST_MCI + m->m_mno, ST_ENTER);
 	mci = &s->s_mci;
@@ -380,7 +385,7 @@ mci_match(host, m)
 	register MCI *mci;
 	register STAB *s;
 
-	if (m->m_mno < 0)
+	if (m->m_mno < 0 || m->m_mno > MAXMAILERS)
 		return FALSE;
 	s = stab(host, ST_MCI + m->m_mno, ST_FIND);
 	if (s == NULL)
@@ -417,7 +422,7 @@ mci_setstat(mci, xstat, dstat, rstat)
 
 	mci->mci_status = dstat;
 	if (mci->mci_rstatus != NULL)
-		free(mci->mci_rstatus);
+		sm_free(mci->mci_rstatus);
 	if (rstat != NULL)
 		rstat = newstr(rstat);
 	mci->mci_rstatus = rstat;
@@ -457,7 +462,7 @@ static struct mcifbits	MciFlags[] =
 	{ MCIF_8BITOK,		"8BITOK"	},
 	{ MCIF_CVT7TO8,		"CVT7TO8"	},
 	{ MCIF_INMIME,		"INMIME"	},
-	{ 0,			NULL }
+	{ 0,			NULL		}
 };
 
 
@@ -802,7 +807,7 @@ mci_read_persistent(fp, mci)
 
 	mci->mci_status = NULL;
 	if (mci->mci_rstatus != NULL)
-		free(mci->mci_rstatus);
+		sm_free(mci->mci_rstatus);
 	mci->mci_rstatus = NULL;
 
 	rewind(fp);
@@ -949,6 +954,7 @@ mci_store_persistent(mci)
 **		< 0 -- if any action routine returns a negative value, that
 **			value is returned.
 **		0 -- if we successfully went to completion.
+**		> 0 -- return status from action()
 */
 
 int
@@ -1020,6 +1026,8 @@ mci_traverse_persistent(action, pathname)
 					       sizeof newpath -
 					       (newptr - newpath));
 
+				if (StopRequest)
+					stop_sendmail();
 				ret = mci_traverse_persistent(action, newpath);
 				if (ret < 0)
 					break;
@@ -1120,6 +1128,9 @@ mci_print_persistent(pathname, hostname)
 	if (hostname == NULL)
 		return 0;
 
+	if (StopRequest)
+		stop_sendmail();
+
 	if (!initflag)
 	{
 		initflag = TRUE;
@@ -1192,7 +1203,7 @@ mci_print_persistent(pathname, hostname)
 **
 **	Returns:
 **		0 -- ok
-**		1 -- file too young to be deleted
+**		1 -- file not deleted (too young, incorrect format)
 **		< 0 -- some error occurred
 */
 
@@ -1232,7 +1243,7 @@ mci_purge_persistent(pathname, hostname)
 	{
 		/* remove the directory */
 		if (*end != '.')
-			return 0;
+			return 1;
 
 		if (tTd(56, 1))
 			dprintf("mci_purge_persistent: dpurge %s\n", pathname);
@@ -1323,12 +1334,12 @@ mci_generate_persistent_path(host, path, pathlen, createflag)
 
 #if NETINET || NETINET6
 	/* check for bogus bracketed address */
-	if (host[0] == '[' &&
+	if (host[0] == '['
 # if NETINET6
-	    inet_pton(AF_INET6, t_host, &in6_addr) != 1 &&
+	    && inet_pton(AF_INET6, t_host, &in6_addr) != 1
 # endif /* NETINET6 */
 # if NETINET
-	    inet_addr(t_host) == INADDR_NONE
+	    && inet_addr(t_host) == INADDR_NONE
 # endif /* NETINET */
 	    )
 		return -1;
