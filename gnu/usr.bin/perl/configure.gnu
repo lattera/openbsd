@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Id: configure,v 3.0.1.1 1995/07/25 14:16:21 ram Exp $
+# $Id: configure.gnu,v 1.6 2003/12/03 03:02:19 millert Exp $
 #
 # GNU configure-like front end to metaconfig's Configure.
 #
@@ -15,7 +15,10 @@
 # The remaining of this leading shell comment may be removed if you
 # include this script in your own package.
 #
-# $Log: configure,v $
+# $Log: configure.gnu,v $
+# Revision 1.6  2003/12/03 03:02:19  millert
+# Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
+#
 # Revision 3.0.1.1  1995/07/25  14:16:21  ram
 # patch56: created
 #

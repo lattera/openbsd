@@ -5,6 +5,9 @@
  *		Adapted from dl_dlopen.xs reference implementation by
  *              Paul Marquess (pmarquess@bfsec.bt.co.uk)
  * $Log: dl_mac.xs,v $
+ * Revision 1.4  2003/12/03 03:02:28  millert
+ * Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
+ *
  * Revision 1.3  1998/04/07 01:47:24  neeri
  * MacPerl 5.2.0r4b1
  *

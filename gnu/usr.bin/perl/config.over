@@ -1,40 +1,57 @@
 #
 # Override default paths when building in the OpenBSD src tree
 #
+# $OpenBSD: src/gnu/usr.bin/perl/config.over,v 1.1.1.1 2004/08/09 17:45:37 millert Exp $
+#
 
 # We use a different architecture name than the default
-archname="`uname -m`-${osname}"
+archname="`arch -s`-${osname}"
 myarchname="$archname"
 
 # Use correct paths for a distribution
 prefix='/usr'
 prefixexp='/usr'
 
-archlib="/usr/lib/perl5/${archname}/${version}"
+# But site binaries go in /usr/local/bin for ports
+siteprefix='/usr/local'
+siteprefixexp='/usr/local'
+installsitebin='/usr/local/bin'
+
+installarchlib="/usr/libdata/perl5/${archname}/${version}"
+archlib="${installarchlib}:/usr/local/libdata/perl5/${archname}/${version}"
 archlibexp="${archlib}"
-installarchlib="${archlib}"
 
-privlib='/usr/lib/perl5'
+test $useshrplib = "true" && ccdlflags="-Wl,-R${installarchlib}/CORE"   
+
+installprivlib="/usr/libdata/perl5"
+privlib="${installprivlib}:/usr/local/libdata/perl5"
 privlibexp="${privlib}"
-installprivlib="${privlib}"    
 
-sitearch="/usr/lib/perl5/site_perl/${archname}"
+# NOTE: primary dir for sitearch lives in /usr/local
+installsitearch="/usr/local/libdata/perl5/site_perl/${archname}"
+sitearch="${installsitearch}:/usr/libdata/perl5/site_perl/${archname}"
 sitearchexp="${sitearch}"
-installsitearch="${sitearch}"
 
-sitelib='/usr/lib/perl5/site_perl'
+# NOTE: primary dir for sitelib lives in /usr/local
+installsitelib="/usr/local/libdata/perl5/site_perl"
+sitelib="${installsitelib}:/usr/libdata/perl5/site_perl"
 sitelibexp="${sitelib}"
-installsitelib="${sitelib}"
 
-# We install the man oages ourselves until installman gets smarter
+# We install the man pages ourselves until installman gets smarter
 man1dir=''
 man1direxp=''
 installman1dir=''
-man1ext='0'
+man1ext='1'
 man3dir=''
 man3direxp=''
 installman3dir=''
-man3ext='0'
+man3ext='3p'
+siteman1dir='/usr/local/man/man1'
+siteman1direxp='/usr/local/man/man1'
+installsiteman1dir='/usr/local/man/man1'
+siteman3dir='/usr/local/man/man3p'
+siteman3direxp='/usr/local/man/man3p'
+installsiteman3dir='/usr/local/man/man3p'
 
 # Never hardcode developer info into a distribution
 cf_by='root'
@@ -43,3 +60,6 @@ perladmin='root@localhost'
 mydomain=''
 myhostname=''
 myuname='openbsd'
+
+# force to use ranlib
+ranlib='ranlib'

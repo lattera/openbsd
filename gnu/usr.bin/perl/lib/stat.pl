@@ -1,4 +1,4 @@
-;# $RCSfile: stat.pl,v $$Revision: 4.1 $$Date: 92/08/07 18:24:13 $
+;# $RCSfile: stat.pl,v $$Revision: 1.7 $$Date: 2003/12/03 03:02:36 $
 
 ;# Usage:
 ;#	require 'stat.pl';

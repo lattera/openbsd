@@ -1,4 +1,4 @@
-# $Id: Embed.pm,v 1.1.1.1 2002/01/16 19:27:19 schwern Exp $
+# $Id: Embed.pm,v 1.6 2003/12/03 03:02:37 millert Exp $
 require 5.002;
 
 package ExtUtils::Embed;

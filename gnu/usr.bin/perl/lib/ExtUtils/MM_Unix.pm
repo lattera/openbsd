@@ -1572,7 +1572,7 @@ sub init_dirscan {	# --- File and Directory Lists (.xs .pm .pod etc)
 	unless ($self->{"${man}PODS"}) {
 	    $self->{"${man}PODS"} = {};
 	    $pods{$man} = 1 unless 
-              $self->{"INSTALL${man}DIR"} =~ /^(none|\s*)$/;
+              $self->{"INST_${man}DIR"} =~ /^(none|\s*)$/;
 	}
     }
 

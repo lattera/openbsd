@@ -1,4 +1,4 @@
-# $Id: dgux.sh,v 1.9 2001-05-07 00:06:00-05 Takis Exp $
+# $Id: dgux.sh,v 1.7 2003/12/03 03:02:34 millert Exp $
 
 # This is a hints file for DGUX, which is EMC's Data General's Unix.  It 
 # was originally developed with version 5.4.3.10 of the OS, and then was

@@ -21,7 +21,7 @@ BEGIN {
 use File::Basename;
 use vars qw($Revision @ISA $VERSION);
 ($VERSION) = '5.70';
-($Revision) = q$Revision: 1.110 $ =~ /Revision:\s+(\S+)/;
+($Revision) = q$Revision: 1.7 $ =~ /Revision:\s+(\S+)/;
 
 require ExtUtils::MM_Any;
 require ExtUtils::MM_Unix;

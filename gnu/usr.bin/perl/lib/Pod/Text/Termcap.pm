@@ -1,5 +1,5 @@
 # Pod::Text::Termcap -- Convert POD data to ASCII text with format escapes.
-# $Id: Termcap.pm,v 1.11 2003/07/09 21:52:30 eagle Exp $
+# $Id: Termcap.pm,v 1.5 2003/12/03 03:02:40 millert Exp $
 #
 # Copyright 1999, 2001, 2002 by Russ Allbery <rra@stanford.edu>
 #

@@ -79,11 +79,11 @@ You can get gzip from ftp://prep.ai.mit.edu/pub/gnu/
 
 Or, you can combine this step with the next to save disk space:
 
-     gzip -dc yourmodule.tar.gz | tar -xof -
+     gzip -dc yourmodule.tar.gz | tar -xf -
 
 B. UNPACK
 
-Unpack the result with C<tar -xof yourmodule.tar>
+Unpack the result with C<tar -xf yourmodule.tar>
 
 C. BUILD
 
@@ -138,7 +138,7 @@ If you used WinZip, this was already done for you.
    C. BUILD
 
 You'll need the C<nmake> utility, available at
-ftp://ftp.microsoft.com/Softlib/MSLFILES/nmake15.exe
+http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/nmake15.exe
 or dmake, available on CPAN.
 http://search.cpan.org/dist/dmake/
 
