@@ -31,9 +31,9 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')                                                  
-VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/corpse.mc,v 1.1.1.1 1998/07/12 17:11:50 millert Exp $')dnl
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/corpse.mc,v 1.2 1998/08/15 18:17:11 millert Exp $')dnl
 
-OSTYPE(bsd4.4)dnl
+OSTYPE(openbsd)dnl
 
 define(`confFROM_HEADER', <$g$s>)dnl
 define(`LOCAL_RELAY',`mail.$m')dnl

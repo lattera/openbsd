@@ -30,6 +30,6 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')dnl
-VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/saruman.mc,v 1.1.1.1 1998/07/12 17:11:58 millert Exp $')dnl
-OSTYPE(bsd4.4)dnl
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/saruman.mc,v 1.2 1998/08/15 18:17:18 millert Exp $')dnl
+OSTYPE(openbsd)dnl
 FEATURE(nullclient, gandalf.$m)dnl
