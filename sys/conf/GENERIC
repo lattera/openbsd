@@ -1,0 +1,110 @@
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.113 2005/01/14 14:51:27 mcbride Exp $
+#
+#	Machine-independent option; used by all architectures for their
+#	GENERIC kernel
+
+#option		INSECURE	# default to secure
+
+option		DDB		# in-kernel debugger
+#option		DDB_SAFE_CONSOLE # allow break into ddb during boot
+#makeoptions	DEBUG="-g"	# compile full symbol table
+#makeoptions	PROF="-pg"	# build profiled kernel
+#option		GPROF		# kernel profiling, kgmon(8)
+option		DIAGNOSTIC	# internal consistency checks
+option		KTRACE		# system call tracing, a la ktrace(1)
+option		ACCOUNTING	# acct(2) process accounting
+option		KMEMSTATS	# collect malloc(9) statistics
+option		PTRACE		# ptrace(2) system call
+
+option		CRYPTO		# Cryptographic framework
+
+option		SYSVMSG		# System V-like message queues
+option		SYSVSEM		# System V-like semaphores
+option		SYSVSHM		# System V-like memory sharing
+
+option		UVM_SWAP_ENCRYPT# support encryption of pages going to swap
+
+#option		COMPAT_23	# Kernel compatibility with OpenBSD 2.3,
+#option		COMPAT_25	# 2.5,
+option		COMPAT_35	# 3.5,
+option		COMPAT_43	# and 4.3BSD
+#option		TCP_COMPAT_42	# TCP bug compatibility with 4.2BSD
+
+option		LKM		# loadable kernel modules
+
+option		FFS		# UFS
+option		FFS_SOFTUPDATES	# Soft updates
+option		UFS_DIRHASH	# hash large directories
+option		QUOTA		# UFS quotas
+option		EXT2FS		# Second Extended Filesystem
+option		MFS		# memory file system
+option		XFS		# xfs filesystem
+
+option		TCP_SACK	# Selective Acknowledgements for TCP
+option		TCP_ECN		# Explicit Congestion Notification for TCP
+option		TCP_SIGNATURE	# TCP MD5 Signatures, for BGP routing sessions
+#option		TCP_FACK	# Forward Acknowledgements for TCP
+
+option		NFSCLIENT	# Network File System client
+option		NFSSERVER	# Network File System server
+
+option		CD9660		# ISO 9660 + Rock Ridge file system
+option		MSDOSFS		# MS-DOS file system
+option		FDESC		# /dev/fd
+option		FIFO		# FIFOs; RECOMMENDED
+#option		KERNFS		# /kern
+option		PORTAL		# dynamically created filesystem objects
+option		PROCFS		# /proc
+# layer filesystems
+#option		NULLFS		# loopback file system
+#option		UMAPFS		# NULLFS + uid and gid remapping
+#option		UNION		# union file system
+
+option		INET		# IP + ICMP + TCP + UDP
+option		ALTQ		# ALTQ base
+option		INET6		# IPv6 (needs INET)
+option		IPSEC		# IPsec
+#option		KEY		# PF_KEY (implied by IPSEC)
+#option		NS		# XNS
+#option		NSIP		# XNS tunneling over IP
+#option		IPX		# IPX+SPX
+#option		IPXIP		# IPX tunneling over IP
+#option		NETATALK	# AppleTalk
+#option		CCITT,LLC,HDLC	# X.25
+option		PPP_BSDCOMP	# PPP BSD compression
+option		PPP_DEFLATE
+#option		MROUTING	# Multicast router
+#option		PIM		# Protocol Independent Multicast
+
+pseudo-device	pf		# packet filter
+pseudo-device	pflog		# pf log if
+pseudo-device	pfsync		# pf sync if
+pseudo-device	sppp	1	# Sync PPP/HDLC
+pseudo-device	enc	1	# option IPSEC needs the encapsulation interface
+#pseudo-device	strip	1	# Starmode Radio IP interface
+
+pseudo-device	pty	16	# initial number of pseudo-terminals
+pseudo-device	tb	1	# tablet line discipline
+pseudo-device	vnd	4	# paging to files
+pseudo-device	ccd	4	# concatenated disk devices
+pseudo-device	ksyms	1	# kernel symbols device
+pseudo-device	systrace 1	# system call tracing device
+
+# clonable devices
+pseudo-device	bpfilter 	# packet filter
+pseudo-device	bridge		# network bridging support
+pseudo-device	carp		# CARP protocol support
+pseudo-device	gif		# IPv[46] over IPv[46] tunnel (RFC1933)
+pseudo-device	gre		# GRE encapsulation interface
+pseudo-device	loop		# network loopback
+pseudo-device	ppp		# PPP
+pseudo-device	sl		# CSLIP
+pseudo-device	tun		# network tunneling over tty
+pseudo-device	vlan 		# IEEE 802.1Q VLAN 
+
+# for IPv6
+#pseudo-device	faith	1	# IPv[46] tcp relay translation i/f
+
+pseudo-device	pppoe	1	# PPP over Ethernet (RFC 2516)
+
+option		BOOT_CONFIG	# add support for boot -c
