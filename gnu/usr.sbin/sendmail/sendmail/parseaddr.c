@@ -574,7 +574,7 @@ unsigned char	TokTypeNoC[256] =
 };
 
 
-#define NOCHAR		-1	/* signal nothing in lookahead token */
+#define NOCHAR		(-1)	/* signal nothing in lookahead token */
 
 char **
 prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
@@ -660,6 +660,7 @@ prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
 				/* see if there is room */
 				if (q >= &pvpbuf[pvpbsize - 5])
 				{
+	addrtoolong:
 					usrerr("553 5.1.1 Address too long");
 					if (strlen(addr) > MAXNAME)
 						addr[MAXNAME] = '\0';
@@ -671,11 +672,15 @@ prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
 				}
 
 				/* squirrel it away */
+#if !ALLOW_255
+				if ((char) c == (char) -1 && !tTd(82, 101))
+					c &= 0x7f;
+#endif /* !ALLOW_255 */
 				*q++ = c;
 			}
 
 			/* read a new input character */
-			c = *p++;
+			c = (*p++) & 0x00ff;
 			if (c == '\0')
 			{
 				/* diagnose and patch up bad syntax */
@@ -730,6 +735,9 @@ prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
 				}
 				else if (c != '!' || state == QST)
 				{
+					/* see if there is room */
+					if (q >= &pvpbuf[pvpbsize - 5])
+						goto addrtoolong;
 					*q++ = '\\';
 					continue;
 				}
@@ -815,6 +823,9 @@ prescan(addr, delim, pvpbuf, pvpbsize, delimptr, toktab)
 		/* new token */
 		if (tok != q)
 		{
+			/* see if there is room */
+			if (q >= &pvpbuf[pvpbsize - 5])
+				goto addrtoolong;
 			*q++ = '\0';
 			if (tTd(22, 36))
 			{
