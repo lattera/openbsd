@@ -1,0 +1,8 @@
+KeyNote-Version: 2
+Comment: This policy accepts ESP SAs from a remote that uses the right password
+ 	$OpenBSD: src/sbin/isakmpd/samples/Attic/policy,v 1.4 2000/01/26 15:20:40 niklas Exp $
+	$EOM: policy,v 1.5 2000/01/26 14:03:07 niklas Exp $
+Authorizer: "POLICY"
+Licensees: "passphrase:mekmitasdigoat"
+Conditions: app_domain == "IPsec policy" &&
+	    esp_present == "yes" -> "true";
