@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.5 2002/10/31 21:13:26 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.6 2002/11/04 16:38:31 art Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -5571,6 +5571,8 @@ pmap_kenter_pa4m(vaddr_t va, paddr_t pa, vm_prot_t prot)
 		panic("pmap_kenter_pa4m: mapping exists");
 #endif
 	sp->sg_npte++;
+
+	tlb_flush_page(va);	/* XXX - necessary? there is no mapping */
 	setpgt4m(ptep, pteproto);
 }
 
@@ -5586,7 +5588,7 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 	int nleft;
 
 	endva = va + len;
-	ctx = getcontext();
+	ctx = getcontext4m();
 	for (; va < endva; va = nva) {
 		/* do one virtual segment at a time */
 		vr = VA_VREG(va);
@@ -5634,13 +5636,14 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 				if (perpage && (tpte & SRMMU_PG_C))
 					cache_flush_page(va);
 			}
+			tlb_flush_page(va);
 			setpgt4m(&sp->sg_pte[VA_SUN4M_VPG(va)],
 			    SRMMU_TEINVALID);
 			nleft--;
 		}
 		sp->sg_npte = nleft;
 	}
-	setcontext(ctx);
+	setcontext4m(ctx);
 }
 
 #endif /* sun4m */
