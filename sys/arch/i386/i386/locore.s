@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.28 2004/06/08 07:33:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.29 2004/06/09 18:59:29 art Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -865,20 +865,32 @@ ENTRY(fillw)
 	popl	%edi
 	ret
 
+
+/* Frame pointer reserve on stack. */
+#ifdef DDB
+#define FPADD 4
+#else
+#define FPADD 0
+#endif
+
 /*
  * kcopy(caddr_t from, caddr_t to, size_t len);
  * Copy len bytes, abort on fault.
  */
 ENTRY(kcopy)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 	GET_CURPCB(%eax)		# load curpcb into eax and set on-fault
 	pushl	PCB_ONFAULT(%eax)
 	movl	$_C_LABEL(copy_fault), PCB_ONFAULT(%eax)
 
-	movl	16(%esp),%esi
-	movl	20(%esp),%edi
-	movl	24(%esp),%ecx
+	movl	16+FPADD(%esp),%esi
+	movl	20+FPADD(%esp),%edi
+	movl	24+FPADD(%esp),%ecx
 	movl	%edi,%eax
 	subl	%esi,%eax
 	cmpl	%ecx,%eax		# overlapping?
@@ -887,7 +899,7 @@ ENTRY(kcopy)
 	shrl	$2,%ecx			# copy by 32-bit words
 	rep
 	movsl
-	movl	24(%esp),%ecx
+	movl	24+FPADD(%esp),%ecx
 	andl	$3,%ecx			# any bytes left?
 	rep
 	movsb
@@ -897,6 +909,9 @@ ENTRY(kcopy)
 	popl	%edi
 	popl	%esi
 	xorl	%eax,%eax
+#ifdef DDB
+	leave
+#endif
 	ret
 
 	ALIGN_TEXT
@@ -908,7 +923,7 @@ ENTRY(kcopy)
 	decl	%esi
 	rep
 	movsb
-	movl	24(%esp),%ecx		# copy remainder by 32-bit words
+	movl	24+FPADD(%esp),%ecx	# copy remainder by 32-bit words
 	shrl	$2,%ecx
 	subl	$3,%esi
 	subl	$3,%edi
@@ -921,6 +936,9 @@ ENTRY(kcopy)
 	popl	%edi
 	popl	%esi
 	xorl	%eax,%eax
+#ifdef DDB
+	leave
+#endif
 	ret
 	
 /*
@@ -985,13 +1003,6 @@ ENTRY(memcpy)
  * The following primitives are used to copy data in and out of the user's
  * address space.
  */
-
-/* Frame pointer reserve on stack. */
-#ifdef DDB
-#define FPADD 4
-#else
-#define FPADD 0
-#endif
 
 /*
  * copyout(caddr_t from, caddr_t to, size_t len);
@@ -1155,6 +1166,9 @@ ENTRY(copy_fault)
 	popl	%edi
 	popl	%esi
 	movl	$EFAULT,%eax
+#ifdef DDB
+	leave
+#endif
 	ret
 
 /*
