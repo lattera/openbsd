@@ -1,0 +1,379 @@
+.\" $OpenBSD: src/share/man/man9/VOP_LOOKUP.9,v 1.6 2003/03/18 12:48:31 david Exp $
+.\"
+.\" Copyright (c) 2003 Ted Unangst
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 9, 2003
+.Dt VOP 9
+.Os
+.Sh NAME
+.Nm VOP functions
+.Nd vnode operations
+.Sh SYNOPSIS
+.Fd #include <sys/vnode.h>
+.Ft int
+.Fo VOP_CREATE
+.Fa "struct vnode *dvp"
+.Fa "struct vnode **vpp"
+.Fa "struct componentname *cnp"
+.Fa "struct vattr *vap"
+.Fc
+.Ft int
+.Fo VOP_FSYNC
+.Fa "struct vnode *vp"
+.Fa "struct ucred *cred"
+.Fa "int waitfor"
+.Fa "struct proc *p"
+.Fc
+.Ft int
+.Fo VOP_GETEXTATTR
+.Fa "struct vnode *vp"
+.Fa "int attrnamespace"
+.Fa "const char *name"
+.Fa "struct uio *uio"
+.Fa "size_t *size"
+.Fa "struct ucred *cred"
+.Fa "struct proc *p"
+.Fc
+.Ft int
+.Fo VOP_ISLOCKED
+.Fa "struct vnode *"
+.Fc
+.Ft int
+.Fo VOP_LINK
+.Fa "struct vnode *dvp"
+.Fa "struct vnode *vp"
+.Fa "struct componentname *cnp"
+.Fc
+.Ft int
+.Fo VOP_LOCK
+.Fa "struct vnode *vp"
+.Fa "int flags"
+.Fa "struct proc *p"
+.Fc
+.Ft int
+.Fo VOP_LOOKUP
+.Fa "struct vnode *dvp"
+.Fa "struct vnode **vpp"
+.Fa "struct componentname *cnp"
+.Fc
+.Ft int
+.Fo VOP_MKDIR
+.Fa "struct vnode *dvp"
+.Fa "struct vnode **vpp"
+.Fa "struct componentname *cnp"
+.Fa "struct vattr *vap"
+.Fc
+.Ft int
+.Fo VOP_READLINK
+.Fa "struct vnode *vp"
+.Fa "struct uio *uio"
+.Fa "struct ucred *cred"
+.Fc
+.Ft int
+.Fo VOP_RECLAIM
+.Fa "struct vnode *vp"
+.Fa "struct proc *p"
+.Fc
+.Ft int
+.Fo VOP_REMOVE
+.Fa "struct vnode *dvp"
+.Fa "struct vnode *vp"
+.Fa "struct componentname *cnp"
+.Fc
+.Ft int
+.Fo VOP_REVOKE
+.Fa "struct vnode *vp"
+.Fa "int flags"
+.Fc
+.Ft int
+.Fo VOP_RMDIR
+.Fa "struct vnode *dvp"
+.Fa "struct vnode *vp"
+.Fa "struct componentname *cnp"
+.Fc
+.Ft int
+.Fo VOP_SETEXTATTR
+.Fa "struct vnode *vp"
+.Fa "int attrnamespace"
+.Fa "const char *name"
+.Fa "struct uio *uio"
+.Fa "struct ucred *cred"
+.Fa "struct proc *p"
+.Fc
+.Ft int
+.Fo VOP_SYMLINK
+.Fa "struct vnode *dvp"
+.Fa "struct vnode *vpp"
+.Fa "struct componentname *cnp"
+.Fa "struct vattr *vap"
+.Fa "char *target"
+.Fc
+.Ft int
+.Fo VOP_UNLOCK
+.Fa "struct vnode *vp"
+.Fa "int flags"
+.Fa "struct proc *p"
+.Fc
+.\" and many more
+.Sh DESCRIPTION
+The
+.Nm
+functions implement a generic way to perform operations on vnodes.
+The VOP function called passes the arguments to the correct file system
+specific function.
+Not all file systems implement all operations, in which case a generic
+method will be used.
+These functions exist to provide an abstract method to invoke vnode
+operations without needing to know anything about the underlying file system.
+Many syscalls map directly to a specific VOP function.
+.Pp
+The arguments for each VOP
+function consist of one or more vnode pointers along with other data
+needed to perform the operation.
+Care must be taken to obey the vnode locking discipline when using
+VOP functions.
+The locking discipline for all currently defined VOP
+functions is described in the file
+.Pa sys/kern/vnode_if.src .
+Many VOP calls take a struct proc *p argument.
+This should be the current process.
+VOP calls are not safe to call in an interrupt context.
+.Pp
+The following sections comment on the VOP functions from the consumer's
+perspective.
+Some notes for file system implementors follow.
+.Sh VOP_CREATE
+.Nm VOP_CREATE
+creates a new directory entry for a regular file in the directory
+.Ar dvp
+and returns a locked, referenced vnode in
+.Ar vpp .
+The file name is in
+.Ar cnp
+and its permissions will be
+.Ar vap .
+.Sh VOP_FSYNC
+.Nm VOP_FSYNC
+flushes any dirty buffers associated with
+.Ar vp
+to disk.
+The vnode is locked on entry and exit.
+.Ar waitfor
+can be set to MNT_WAIT to indicate VOP_FSYNC should not return
+until all data is written.
+.Sh VOP_GETEXTATTR
+.Nm VOP_GETEXTATTR
+and
+.Nm VOP_SETEXTATTR
+are called to get and set named extended file attributes (see
+.Xr extattr 9 ) .
+.Ar vp
+is the vnode for which to get or set the attribute.
+It must be locked.
+.Ar attrnamespace
+is an integer describing whether the attribute belongs in the
+user or system namespace.
+.Ar name
+is the extended attribute to get or set.
+.Ar uio
+is a
+.Xr uio 9
+structure with the userland address containing the userland data.
+VOP_GETEXTATTR will return the actual length of the attribute
+in
+.Ar size
+if it is non-NULL.
+.Ar cred
+is a pointer to the credentials used to access the file.
+.Sh VOP_LINK
+.Nm VOP_LINK
+increases the link count for the vnode
+.Ar vp .
+A new entry with name
+.Ar cnp
+should be added to the directory
+.Ar dvp .
+.Ar dvp
+is locked on entry and unlocked on exit.
+.Sh VOP_LOOKUP
+.Nm VOP_LOOKUP
+finds the file corresponding to the name
+.Ar cnp
+in the directory
+.Ar dvp
+and returns a vnode in
+.Ar vpp .
+.Ar dvp
+is locked on entry and exit, and
+.Ar vpp
+is locked upon a successful return.
+.Ar vpp
+will be NULL on error, and cnp->cn_flags will be set to PDIRUNLOCK
+if
+.Ar dvp
+has been unlocked for an unsuccessful return.
+.Sh VOP_MKDIR
+.Nm VOP_MKDIR
+implements the mkdir syscall.
+A new directory with name matching that in
+.Ar cnp
+and with permissions
+.Ar vattr
+will be created in the directory
+.Ar dvp .
+On success, the new vnode is returned locked in
+.Ar vpp .
+.Ar dvp
+must be locked on entry and is unlocked on exit.
+.Sh VOP_READLINK
+.Nm VOP_READLINK
+reads a symbolic link and returns the target's name in
+.Ar uio .
+.Ar vp
+is locked on entry and exit and must be a symlink.
+.Sh VOP_RECLAIM
+.Nm VOP_RECLAIM
+is used by
+.Xr vclean 9
+so that the file system has an opportunity to free memory
+and perform any other cleanup activity related to
+.Ar vp .
+.Ar vp
+is unlocked on entry and exit.
+VOP_RECLAIM should not be used by generic code.
+.Sh VOP_REMOVE
+.Nm VOP_REMOVE
+removes the link named
+.Ar cnp
+from the directory
+.Ar dvp .
+This file corresponds to the vnode
+.Ar vp .
+Both dvp and vp are locked on entry and unlocked on exit, and
+each has its reference count decremented by one.
+VOP_REMOVE does not delete the file from disk unless its link count
+becomes zero (for file systems which support multiple links).
+.Sh VOP_REVOKE
+.Nm VOP_REVOKE
+is used by the
+.Xr revoke 2
+syscall to prevent any further access to a vnode.
+The vnode ops will be changed to those of deadfs, which returns only
+errors.
+.Ar vp
+must be unlocked.
+.Sh VOP_RMDIR
+.Nm VOP_RMDIR
+implements the rmdir syscall.
+The directory
+.Ar vp
+will be removed from the directory
+.Ar dvp .
+Both are locked on entry and unlocked on exit.
+The name of the directory for removal is additionally contained in
+.Ar cnp .
+.Sh VOP_SYMLINK
+.Nm VOP_SYMLINK
+creates a symbolic link with name
+.Ar cnp
+in the directory
+.Ar dvp
+with mode
+.Ar vap .
+The link will point to
+.Ar target
+and a vnode for it is returned in
+.Ar vpp .
+The directory vnode is locked on entry and unlocked on exit.
+Note that unlike most VOP calls returning a vnode, VOP_SYMLINK
+does not lock or reference
+.Ar vpp .
+.Sh VOP_UNLOCK
+.Nm VOP_LOCK
+is used internally by
+.Xr vn_lock 9
+to lock a vnode.
+It should not be used by other file system code.
+.Nm VOP_UNLOCK
+unlocks a vnode.
+.Ar flags
+should be zero in most cases.
+.Nm VOP_ISLOCKED
+returns 1 if
+.Ar vp
+is locked and 0 if not.
+It should be used cautiously, as not all file systems implement locks
+effectively.
+Note the asymmetry between vn_lock and VOP_UNLOCK.
+.Sh IMPLEMENTATION NOTES
+The
+.Nm VOP
+functions are stubs which redirect their arguments to the
+appropriate function for each file system.
+In order to allow for layered file systems and generic bypass methods,
+all vnode operation implementing functions take only a single void *
+pointer as an argument.
+This points to a structure containing the real arguments.
+Additionally, this structure contains a struct vnodeop_desc *,
+or vnodeop description.
+The description is typically used by the abstract VOP code, but can
+be useful to the lower implementation as well.
+Every file system defines an array of struct vnodeopv_entry_desc
+that contains one entry for each implemented vnode op.
+Unimplemented vnode operations match the default description,
+.Em vop_default_desc .
+Most non-layer file systems should assign the default error handler,
+.Em vn_default_error ,
+to the generic description.
+.Pp
+All lower level implementations should conform to the interfaces described
+above.
+The rules for locking and referencing vnodes are enforced by each
+file system implementation, not the VOP stubs.
+.Sh RETURN VALUES
+The
+.Nm
+functions return 0 to indicate success and a non-zero error code
+to indicate failure.
+.Sh FILES
+.Bl -tag -width sys/kern/vnode_if.src
+.It Pa sys/kern/vnode_if.src
+source file containing
+.Nm
+definitions
+.It Pa sys/kern/vnode_if.c
+C file with implementations of each
+.Nm
+stub call
+.El
+.Sh SEE ALSO
+.Xr errno 2 ,
+.Xr vn_lock 9 ,
+.Xr vnode 9
+.Sh AUTHORS
+This man page was written by Ted Unangst for OpenBSD.
+.Sh BUGS
+The locking discipline is too complex.
+Refer to
+.Xr vn_lock 9 .
