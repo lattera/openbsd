@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.29 2004/06/07 20:41:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.30 2004/06/08 21:38:02 grange Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -485,6 +485,7 @@ i386_proc0_tss_ldt_init()
 	lldt(pcb->pcb_ldt_sel);
 }
 
+#ifdef MULTIPROCESSOR
 void
 i386_init_pcb_tss_ldt(struct cpu_info *ci)
 {
@@ -501,6 +502,7 @@ i386_init_pcb_tss_ldt(struct cpu_info *ci)
 	pcb->pcb_cr0 = rcr0();
 	ci->ci_idle_tss_sel = tss_alloc(pcb);
 }  
+#endif	/* MULTIPROCESSOR */
 
 
 /*
@@ -2812,6 +2814,7 @@ fix_f00f(void)
 }
 #endif
 
+#ifdef MULTIPROCESSOR
 void
 cpu_init_idt()
 {
@@ -2819,6 +2822,7 @@ cpu_init_idt()
 	setregion(&region, idt, NIDT * sizeof(idt[0]) - 1);
 	lidt(&region);
 }
+#endif	/* MULTIPROCESSOR */
 
 void
 init386(paddr_t first_avail)
@@ -3245,7 +3249,6 @@ need_resched(struct cpu_info *ci)
 	ci->ci_want_resched = 1;
 	ci->ci_astpending = 1;
 }
-#endif
 
 /* Allocate an IDT vector slot within the given range.
  * XXX needs locking to avoid MP allocation races.
@@ -3273,6 +3276,7 @@ idt_vec_free(int vec)
 {
 	unsetgate(&idt[vec]);
 }
+#endif	/* MULTIPROCESSOR */
 
 /*  
  * machine dependent system variables.
