@@ -1,4 +1,4 @@
-The SMP branch is irregularily updated from the trunk.  To do this
+The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
 
 * Determine the new synchronization tag to use.  There are two used
