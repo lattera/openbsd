@@ -8,11 +8,11 @@ you mainly need to carry out the following procedure.
   operations in lines matching '^T'.  Call the tag you will be using
   for $NEW_TAG and the other one $OLD_TAG.
 
-* Remove every trace of the old synchronization tag, note that cvs rtag -F
-  won't cut it, as it does not remove files that have been removed since
-  last time.
+* Remove every trace of the "old" new synchronization tag, note that cvs 
+  rtag -F won't cut it, as it does not remove files that have been removed
+  since last time.
 
-  $ cvs -d cvs.openbsd.org:/cvs rtag -d $OLD_TAG src/sys
+  $ cvs -d cvs.openbsd.org:/cvs rtag -d $NEW_TAG src/sys
 
 * Tag the trunk with the new synchronization tag.
 
