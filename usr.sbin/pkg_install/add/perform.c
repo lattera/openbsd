@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/add/Attic/perform.c,v 1.30 2003/08/06 20:46:36 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/add/Attic/perform.c,v 1.31 2003/08/16 17:31:56 deraadt Exp $	*/
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/add/Attic/perform.c,v 1.30 2003/08/06 20:46:36 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/add/Attic/perform.c,v 1.31 2003/08/16 17:31:56 deraadt Exp $";
 #endif
 
 /*
@@ -284,7 +284,7 @@ pkg_do(char *pkg)
 	/* was: */
         /* if (!vsystem("/usr/sbin/pkg_info -qe '%s'", p->name)) {*/
 	if(findmatchingname(dbdir, p->name, check_if_installed, installed, sizeof(installed))){
-	    pwarnx("Conflicting package installed, please use\n\t\"pkg_delete %s\" first to remove it!\n",  installed); 
+	    pwarnx("Conflicting package installed, please use\n\t\"pkg_delete %s\" first to remove it!",  installed); 
 	    ++code;
 	}
     }
