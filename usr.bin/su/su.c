@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)su.c	5.26 (Berkeley) 7/6/91";*/
-static char rcsid[] = "$Id: su.c,v 1.1.1.1 1995/10/18 08:46:10 deraadt Exp $";
+static char rcsid[] = "$Id: su.c,v 1.2 1995/12/16 22:20:38 tholo Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -155,7 +155,8 @@ main(argc, argv)
 #endif
 	    {
 		/* only allow those in group zero to su to root. */
-		if (pwd->pw_uid == 0 && (gr = getgrgid((gid_t)0)))
+		if (pwd->pw_uid == 0 && (gr = getgrgid((gid_t)0))
+		    && gr->gr_mem && *(gr->gr_mem))
 			for (g = gr->gr_mem;; ++g) {
 				if (!*g) {
 					(void)fprintf(stderr,
