@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/db/btree/bt_get.c,v 1.4 1999/02/15 05:11:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libc/db/btree/bt_get.c,v 1.5 2003/05/01 20:23:40 avsm Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993, 1994
@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)bt_get.c	8.6 (Berkeley) 7/20/94";
 #else
-static char rcsid[] = "$OpenBSD: src/lib/libc/db/btree/bt_get.c,v 1.4 1999/02/15 05:11:22 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/lib/libc/db/btree/bt_get.c,v 1.5 2003/05/01 20:23:40 avsm Exp $";
 #endif
 #endif /* LIBC_SCCS and not lint */
 
