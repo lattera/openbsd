@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.2 2001/07/04 10:16:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.3 2001/07/14 10:02:27 ho Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -43,6 +43,8 @@
 #include "npx.h"
 #include "assym.h"
 #include "apm.h"
+#include "lapic.h"
+#include "ioapic.h"
 #include "pctr.h"
 #include "ksyms.h"
 
@@ -67,6 +69,10 @@
 
 #include <dev/isa/isareg.h>
 
+#if NLAPIC > 0 
+#include <machine/i82489reg.h>
+#endif
+
 /*
  * override user-land alignment before including asm.h
  */
@@ -84,6 +90,71 @@
 #else
 #define	FASTER_NOP	pushl %eax ; inb $0x84,%al ; popl %eax
 #define	NOP	pushl %eax ; inb $0x84,%al ; inb $0x84,%al ; popl %eax
+#endif
+
+#define CPL _C_LABEL(lapic_tpr)
+
+#if defined(MULTIPROCESSOR)
+#include <machine/i82489reg.h>
+
+#define	GET_CPUINFO(reg)				\
+	movzbl	_C_LABEL(lapic_id)+3,reg	;	\
+	movl	_C_LABEL(cpu_info)(,reg,4),reg
+
+#define	GET_CURPROC(reg, treg)				\
+	GET_CPUINFO(treg)			;	\
+	movl	CPU_INFO_CURPROC(treg),reg
+
+#define	PUSH_CURPROC(treg)				\
+	GET_CPUINFO(treg)			;	\
+	pushl	CPU_INFO_CURPROC(treg)
+       
+#define	CLEAR_CURPROC(treg)				\
+	GET_CPUINFO(treg)			;	\
+	movl	$0,CPU_INFO_CURPROC(treg)
+       
+#define	SET_CURPROC(proc,cpu)				\
+	GET_CPUINFO(cpu)			;	\
+	movl	proc,CPU_INFO_CURPROC(cpu)	;	\
+	movl	cpu,P_CPU(proc)
+       
+#define	GET_CURPCB(reg)					\
+	GET_CPUINFO(reg)			;	\
+	movl	CPU_INFO_CURPCB(reg),reg
+
+#define	SET_CURPCB(reg,treg)				\
+	GET_CPUINFO(treg)			;	\
+	movl	reg,CPU_INFO_CURPCB(treg)
+
+#define	CLEAR_RESCHED(treg)				\
+	GET_CPUINFO(treg)			;	\
+	xorl	%eax,%eax			;	\
+	movl	%eax,CPU_INFO_RESCHED(treg)
+
+#define	CHECK_ASTPENDING(treg)				\
+	GET_CPUINFO(treg)			;	\
+	cmpl	$0,CPU_INFO_ASTPENDING(treg)
+               
+#define	CLEAR_ASTPENDING(cireg)				\
+	movl	$0,CPU_INFO_ASTPENDING(cireg)
+
+#else
+
+#define	GET_CURPROC(reg,treg)		movl	_C_LABEL(curproc),reg
+#define	CLEAR_CURPROC(treg)		movl	$0,_C_LABEL(curproc)
+#define	SET_CURPROC(reg,treg)		movl	reg,_C_LABEL(curproc)
+#define	PUSH_CURPROC(treg)		pushl	_C_LABEL(curproc)
+
+#define	GET_CURPCB(reg)			movl	_C_LABEL(curpcb),reg    
+#define	SET_CURPCB(reg,treg)		movl	reg,_C_LABEL(curpcb)
+
+#define	CHECK_ASTPENDING(treg)		cmpb	$0,_C_LABEL(astpending) 
+#define	CLEAR_ASTPENDING(treg)		movb	$0,_C_LABEL(astpending)
+       
+#define	CLEAR_RESCHED(treg)				\
+	xorl	%eax,%eax			;	\
+	movl	%eax,_C_LABEL(want_resched)	; 
+       
 #endif
 
 /*
@@ -143,8 +214,35 @@
 	.globl	_cpu_cache_eax,_cpu_cache_ebx,_cpu_cache_ecx,_cpu_cache_edx
 	.globl	_cold,_cnvmem,_extmem,_esym
 	.globl	_boothowto,_bootdev,_atdevbase
-	.globl	_proc0paddr,_curpcb,_PTDpaddr,_dynamic_gdt
+	.globl	_proc0paddr,_PTDpaddr,_dynamic_gdt
 	.globl	_bootapiver, _bootargc, _bootargv
+#ifndef MULTIPROCESSOR
+	.globl	_curpcb
+#endif
+	.globl	_lapic_tpr
+
+#if NLAPIC > 0
+#ifdef __ELF__
+	.align NBPG
+#else
+	.align 12
+#endif
+	.globl _local_apic,_lapic_id
+_local_apic:
+	.space	LAPIC_ID
+_lapic_id:
+	.long	0x00000000
+	.space	LAPIC_TPRI-(LAPIC_ID+4)
+_lapic_tpr:
+	.space	LAPIC_PPRI-LAPIC_TPRI
+_lapic_ppr:
+	.space	LAPIC_ISR-LAPIC_PPRI
+_lapic_isr:
+	.space	NBPG-LAPIC_ISR
+#else
+_lapic_tpr:
+	.long	0
+#endif
 
 _cpu:		.long	0	# are we 386, 386sx, 486, 586 or 686
 _cpu_id:	.long	0	# saved from 'cpuid' instruction
@@ -603,6 +701,7 @@ NENTRY(proc_trampoline)
 	pushl	%ebx
 	call	%esi
 	addl	$4,%esp
+	movl	$0,CPL
 	INTRFASTEXIT
 	/* NOTREACHED */
 
@@ -741,7 +840,7 @@ ENTRY(fillw)
 ENTRY(kcopy)
 	pushl	%esi
 	pushl	%edi
-	movl	_C_LABEL(curpcb),%eax	# load curpcb into eax and set on-fault
+	GET_CURPCB(%eax)		# load curpcb into eax and set on-fault
 	pushl	PCB_ONFAULT(%eax)
 	movl	$_C_LABEL(copy_fault), PCB_ONFAULT(%eax)
 
@@ -761,7 +860,7 @@ ENTRY(kcopy)
 	rep
 	movsb
 
-	movl	_C_LABEL(curpcb),%edx
+	GET_CURPCB(%edx)		# XXX save curpcb?
 	popl	PCB_ONFAULT(%edx)
 	popl	%edi
 	popl	%esi
@@ -785,7 +884,7 @@ ENTRY(kcopy)
 	movsl
 	cld
 
-	movl	_C_LABEL(curpcb),%edx
+	GET_CURPCB(%edx)
 	popl	PCB_ONFAULT(%edx)
 	popl	%edi
 	popl	%esi
@@ -862,7 +961,7 @@ ENTRY(memcpy)
 ENTRY(copyout)
 	pushl	%esi
 	pushl	%edi
-	movl	_curpcb,%eax
+	GET_CURPCB(%eax)
 	movl	$_copy_fault,PCB_ONFAULT(%eax)
 	
 	movl	12(%esp),%esi
@@ -906,6 +1005,9 @@ ENTRY(copyout)
 	/* Compute PTE offset for start address. */
 	shrl	$PGSHIFT,%edi
 
+	GET_CURPCB(%edx)
+	movl	$_C_LABEL(copy_fault),PCB_ONFAULT(%edx)
+
 1:	/* Check PTE for each page. */
 	testb	$PG_RW,_PTmap(,%edi,4)
 	jz	2f
@@ -932,7 +1034,10 @@ ENTRY(copyout)
 	jmp	_copy_fault
 #endif /* I386_CPU */
 
-3:	/* bcopy(%esi, %edi, %eax); */
+3:	GET_CURPCB(%edx)
+	movl    $_C_LABEL(copy_fault),PCB_ONFAULT(%edx)
+
+	/* bcopy(%esi, %edi, %eax); */
 	cld
 	movl	%eax,%ecx
 	shrl	$2,%ecx
@@ -946,7 +1051,7 @@ ENTRY(copyout)
 
 	popl	%edi
 	popl	%esi
-	movl	_curpcb,%edx
+	GET_CURPCB(%edx)
 	movl	%eax,PCB_ONFAULT(%edx)
 	ret
 
@@ -957,7 +1062,7 @@ ENTRY(copyout)
 ENTRY(copyin)
 	pushl	%esi
 	pushl	%edi
-	movl	_curpcb,%eax
+	GET_CURPCB(%eax)
 	movl	$_copy_fault,PCB_ONFAULT(%eax)
 	
 	movl	12(%esp),%esi
@@ -989,14 +1094,14 @@ ENTRY(copyin)
 
 	popl	%edi
 	popl	%esi
-	movl	_curpcb,%edx
+	GET_CURPCB(%edx)
 	movl	%eax,PCB_ONFAULT(%edx)
 	ret
 
 ENTRY(copy_fault)
 	popl	%edi
 	popl	%esi
-	movl	_curpcb,%edx
+	GET_CURPCB(%edx)
 	movl	$0,PCB_ONFAULT(%edx)
 	movl	$EFAULT,%eax
 	ret
@@ -1011,7 +1116,7 @@ ENTRY(copy_fault)
 ENTRY(copyoutstr)
 	pushl	%esi
 	pushl	%edi
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_copystr_fault,PCB_ONFAULT(%ecx)
 
 	movl	12(%esp),%esi		# esi = from
@@ -1029,6 +1134,9 @@ ENTRY(copyoutstr)
 	andl	$PGOFSET,%eax
 	movl	$NBPG,%ecx
 	subl	%eax,%ecx		# ecx = NBPG - (src % NBPG)
+
+	GET_CURPCB(%eax)
+	movl	$6f,PCB_ONFAULT(%eax)
 
 	/* Compute PTE offset for start address. */
 	movl	%edi,%eax
@@ -1088,7 +1196,9 @@ ENTRY(copyoutstr)
 #endif /* I386_CPU */
 
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-5:	/*
+5:	GET_CURPCB(%eax)
+	movl	$_C_LABEL(copystr_fault),PCB_ONFAULT(%eax)
+	/*
 	 * Get min(%edx, VM_MAXUSER_ADDRESS-%edi).
 	 */
 	movl	$VM_MAXUSER_ADDRESS,%eax
@@ -1130,7 +1240,7 @@ ENTRY(copyoutstr)
 ENTRY(copyinstr)
 	pushl	%esi
 	pushl	%edi
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_copystr_fault,PCB_ONFAULT(%ecx)
 
 	movl	12(%esp),%esi		# %esi = from
@@ -1173,7 +1283,7 @@ ENTRY(copystr_fault)
 
 copystr_return:	
 	/* Set *lencopied and return %eax. */
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$0,PCB_ONFAULT(%ecx)
 	movl	20(%esp),%ecx
 	subl	%edx,%ecx
@@ -1237,7 +1347,7 @@ ENTRY(fuword)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-4,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 	movl	(%edx),%eax
 	movl	$0,PCB_ONFAULT(%ecx)
@@ -1251,7 +1361,7 @@ ENTRY(fusword)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 	movzwl	(%edx),%eax
 	movl	$0,PCB_ONFAULT(%ecx)
@@ -1266,7 +1376,7 @@ ENTRY(fuswintr)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusubail,PCB_ONFAULT(%ecx)
 	movzwl	(%edx),%eax
 	movl	$0,PCB_ONFAULT(%ecx)
@@ -1280,7 +1390,7 @@ ENTRY(fubyte)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-1,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 	movzbl	(%edx),%eax
 	movl	$0,PCB_ONFAULT(%ecx)
@@ -1319,7 +1429,7 @@ ENTRY(suword)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-4,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 
 #if defined(I386_CPU)
@@ -1339,14 +1449,17 @@ ENTRY(suword)
 	call	_trapwrite		# trapwrite(addr)
 	addl	$4,%esp			# clear parameter from the stack
 	popl	%edx
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	testl	%eax,%eax
 	jnz	_fusufault
 
 1:	/* XXX also need to check the following 3 bytes for validity! */
 #endif
 
-2:	movl	8(%esp),%eax
+2:	GET_CURPCB(%ecx)
+	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
+
+	movl	8(%esp),%eax
 	movl	%eax,(%edx)
 	xorl	%eax,%eax
 	movl	%eax,PCB_ONFAULT(%ecx)
@@ -1360,7 +1473,7 @@ ENTRY(susword)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 
 #if defined(I386_CPU)
@@ -1380,14 +1493,17 @@ ENTRY(susword)
 	call	_trapwrite		# trapwrite(addr)
 	addl	$4,%esp			# clear parameter from the stack
 	popl	%edx
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	testl	%eax,%eax
 	jnz	_fusufault
 
 1:	/* XXX also need to check the following byte for validity! */
 #endif
 
-2:	movl	8(%esp),%eax
+2:	GET_CURPCB(%ecx)
+	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
+
+	movl	8(%esp),%eax
 	movw	%ax,(%edx)
 	xorl	%eax,%eax
 	movl	%eax,PCB_ONFAULT(%ecx)
@@ -1402,7 +1518,7 @@ ENTRY(suswintr)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusubail,PCB_ONFAULT(%ecx)
 
 #if defined(I386_CPU)
@@ -1436,7 +1552,7 @@ ENTRY(subyte)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-1,%edx
 	ja	_fusuaddrfault
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	movl	$_fusufault,PCB_ONFAULT(%ecx)
 
 #if defined(I386_CPU)
@@ -1456,14 +1572,17 @@ ENTRY(subyte)
 	call	_trapwrite		# trapwrite(addr)
 	addl	$4,%esp			# clear parameter from the stack
 	popl	%edx
-	movl	_curpcb,%ecx
+	GET_CURPCB(%ecx)
 	testl	%eax,%eax
 	jnz	_fusufault
 
 1:
 #endif
 
-2:	movb	8(%esp),%al
+2:	GET_CURPCB(%ecx)
+	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
+
+	movb	8(%esp),%al
 	movb	%al,(%edx)
 	xorl	%eax,%eax
 	movl	%eax,PCB_ONFAULT(%ecx)
@@ -1643,9 +1762,9 @@ ENTRY(cpu_switch)
 	pushl	%ebx
 	pushl	%esi
 	pushl	%edi
-	pushl	_cpl
+	pushl	CPL
 
-	movl	_curproc,%esi
+	GET_CURPROC(%esi,%ecx)
 
 	/*
 	 * Clear curproc so that we don't accumulate system time while idle.
@@ -1654,9 +1773,9 @@ ENTRY(cpu_switch)
 	 * below and changes the priority.  (See corresponding comment in
 	 * userret()).
 	 */
-	movl	$0,_curproc
+	CLEAR_CURPROC(%ecx)
 
-	movl	$0,_cpl			# spl0()
+	movl	$0,CPL			# spl0()
 	call	_Xspllower		# process pending interrupts
 
 switch_search:
@@ -1674,7 +1793,7 @@ switch_search:
 
 	/* Wait for new process. */
 	cli				# splhigh doesn't do a cli
-	movl	_whichqs,%ecx
+	movl	_whichqs,%ecx		# XXX MP
 
 sw1:	bsfl	%ecx,%ebx		# find a full q
 	jz	_idle			# if none, idle
@@ -1697,8 +1816,7 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 	movl	%ecx,_whichqs		# update q status
 
 3:	/* We just did it. */
-	xorl	%eax,%eax
-	movl	%eax,_want_resched
+	CLEAR_RESCHED(%ecx)
 
 #ifdef	DIAGNOSTIC
 	cmpl	%eax,P_WCHAN(%edi)	# Waiting for something?
@@ -1805,7 +1923,7 @@ switch_restored:
 	movl	%ecx,%cr0
 
 	/* Record new pcb. */
-	movl	%esi,_curpcb
+	SET_CURPCB(%esi, %ecx)
 
 	/* Interrupts are okay again. */
 	sti
@@ -1815,7 +1933,7 @@ switch_return:
 	 * Restore old cpl from stack.  Note that this is always an increase,
 	 * due to the spl0() on entry.
 	 */
-	popl	_cpl
+	popl	CPL
 
 	movl	%edi,%eax		# return (p);
 	popl	%edi
@@ -1825,21 +1943,30 @@ switch_return:
 
 /*
  * switch_exit(struct proc *p);
- * Switch to proc0's saved context and deallocate the address space and kernel
- * stack for p.  Then jump into cpu_switch(), as if we were in proc0 all along.
+ * Switch to the appropriate idle context (proc0's if uniprocessor; the cpu's if
+ * multiprocessor) and deallocate the address space and kernel stack for p.
+ * Then jump into cpu_switch(), as if we were in the idle proc all along.
  */
-	.globl	_C_LABEL(proc0),_C_LABEL(uvmspace_free),_C_LABEL(kernel_map)
+	.globl	_C_LABEL(uvmspace_free),_C_LABEL(kernel_map)
 	.globl	_C_LABEL(uvm_km_free),_C_LABEL(tss_free)
+#ifndef MULTIPROCESSOR
+	.globl	_C_LABEL(proc0)
+#endif
 ENTRY(switch_exit)
 	movl	4(%esp),%edi		# old process
+#ifndef MULTIPROCESSOR
 	movl	$_proc0,%ebx
+	movl	P_ADDR(%ebx,%esi)
+#else
+	GET_CPUINFO(%ebx)
+	movl	CPU_INFO_IDLE_PCB(%ebx),%esi
+#endif
 
 	/* In case we fault... */
-	movl	$0,_curproc
+	CLEAR_CURPROC(%ecx)
 
-	/* Restore proc0's context. */
+	/* Restore the idle context. */
 	cli
-	movl	P_ADDR(%ebx),%esi
 
 	/* Restore stack pointers. */
 	movl	PCB_ESP(%esi),%esp
@@ -1869,7 +1996,7 @@ ENTRY(switch_exit)
 	movl	%ecx,%cr0
 
 	/* Record new pcb. */
-	movl	%esi,_curpcb
+	SET_CURPCB(%esi, %ecx)
 
 	/* Interrupts are okay again. */
 	sti
@@ -1882,8 +2009,8 @@ ENTRY(switch_exit)
 	addl    $4,%esp
 
 	/* Jump into cpu_switch() with the right state. */
-	movl	%ebx,%esi
-	movl	$0,_curproc
+	xorl	%esi,%esi
+	CLEAR_CURPROC(%ecx)
 	jmp	switch_search
 
 /*
@@ -1955,7 +2082,12 @@ IDTVEC(dna)
 	pushl	$0			# dummy error code
 	pushl	$T_DNA
 	INTRENTRY
-	pushl	_curproc
+#ifdef MULTIPROCESSOR
+	GET_CPUINFO(%eax)
+	pushl	%eax
+#else
+	pushl	_C_LABEL(cpu_info_store)
+#endif
 	call	_npxdna
 	addl	$4,%esp
 	testl	%eax,%eax
@@ -1993,6 +2125,18 @@ IDTVEC(page)
 	TRAP(T_PAGEFLT)
 IDTVEC(rsvd)
 	ZTRAP(T_RESERVED)
+#if 0
+IDTVEC(intrspurios)
+	/*
+	 * The Pentium Pro local APIC may erroneously call this vector for a
+	 * default IR7.  Just ignore it.
+	 *
+	 * (The local APIC does this when CPL is raised while it's on the 
+	 * way to delivering an interrupt.. presumably enough has been set 
+	 * up that it's inconvenient to abort delivery completely..)
+	 */
+	iret
+#endif
 IDTVEC(fpu)
 #if NNPX > 0
 	/*
@@ -2003,7 +2147,7 @@ IDTVEC(fpu)
 	pushl	$0			# dummy error code
 	pushl	$T_ASTFLT
 	INTRENTRY
-	pushl	_cpl			# if_ppl in intrframe
+	pushl	CPL			# if_ppl in intrframe
 	pushl	%esp			# push address of intrframe
 	incl	_C_LABEL(uvmexp)+V_TRAP
 	call	_npxintr
@@ -2035,12 +2179,12 @@ NENTRY(alltraps)
 	INTRENTRY
 calltrap:
 #ifdef DIAGNOSTIC
-	movl	_cpl,%ebx
+	movl	CPL,%ebx
 #endif /* DIAGNOSTIC */
 	call	_trap
 2:	/* Check for ASTs on exit to user mode. */
 	cli
-	cmpb	$0,_astpending
+	CHECK_ASTPENDING(%ecx)
 	je	1f
 	testb	$SEL_RPL,TF_CS(%esp)
 #ifdef VM86
@@ -2048,15 +2192,15 @@ calltrap:
 	testl	$PSL_VM,TF_EFLAGS(%esp)
 #endif
 	jz	1f
-5:	movb	$0,_astpending
+5:	CLEAR_ASTPENDING(%ecx)
 	sti
 	movl	$T_ASTFLT,TF_TRAPNO(%esp)
 	call	_trap
 	jmp	2b
 #ifndef DIAGNOSTIC
 1:	INTRFASTEXIT
-#else /* DIAGNOSTIC */
-1:	cmpl	_cpl,%ebx
+#else 
+1:	cmpl	CPL,%ebx
 	jne	3f
 	INTRFASTEXIT
 3:	sti
@@ -2066,7 +2210,7 @@ calltrap:
 #ifdef DDB
 	int	$3
 #endif /* DDB */
-	movl	%ebx,_cpl
+	movl	%ebx,CPL
 	jmp	2b
 4:	.asciz	"WARNING: SPL NOT LOWERED ON TRAP EXIT\n"
 #endif /* DIAGNOSTIC */
@@ -2095,15 +2239,24 @@ syscall1:
 	pushl	$T_ASTFLT	# trap # for doing ASTs
 	INTRENTRY
 #ifdef DIAGNOSTIC
-	movl	_cpl,%ebx
+	movzbl	CPL,%ebx
+	testl	%ebx,%ebx
+	jz	1f
+	pushl	$5f
+	call	_printf
+	addl	$4,%esp
+#ifdef DDB
+	int	$3
+#endif
+1:
 #endif /* DIAGNOSTIC */
 	call	_syscall
 2:	/* Check for ASTs on exit to user mode. */
 	cli
-	cmpb	$0,_astpending
+	CHECK_ASTPENDING(%ecx)
 	je	1f
 	/* Always returning to user mode here. */
-	movb	$0,_astpending
+	CLEAR_ASTPENDING(%ecx)
 	sti
 	/* Pushed T_ASTFLT into tf_trapno on entry. */
 	call	_trap
@@ -2111,7 +2264,7 @@ syscall1:
 #ifndef DIAGNOSTIC
 1:	INTRFASTEXIT
 #else /* DIAGNOSTIC */
-1:	cmpl	_cpl,%ebx
+1:	cmpl	CPL,%ebx
 	jne	3f
 	INTRFASTEXIT
 3:	sti
@@ -2121,9 +2274,10 @@ syscall1:
 #ifdef DDB
 	int	$3
 #endif /* DDB */
-	movl	%ebx,_cpl
+	movl	%ebx,CPL
 	jmp	2b
 4:	.asciz	"WARNING: SPL NOT LOWERED ON SYSCALL EXIT\n"
+5:	.asciz	"WARNING: SPL NOT ZERO ON SYSCALL ENTRY\n"
 #endif /* DIAGNOSTIC */
 
 #include <i386/isa/vector.s>
@@ -2200,3 +2354,7 @@ ENTRY(bzero)
 
 	popl	%edi
 	ret
+
+#if NLAPIC > 0 
+#include <i386/i386/apicvec.s>
+#endif

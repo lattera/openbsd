@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/mp.h,v 1.1.2.1 2000/02/20 10:26:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/mp.h,v 1.1.2.2 2001/07/14 10:02:38 ho Exp $	*/
 
 /*-
  * Copyright (c) 1996 SigmaSoft, Th. Lockert <tholo@sigmasoft.com>
@@ -30,6 +30,9 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#ifndef _MACHINE_MP_H
+#define _MACHINE_MP_H
 
 /*
  * Configuration structures as defined in the Intel MP specification,
@@ -215,3 +218,5 @@ struct mp_buscompat {
 #ifdef _KERNEL
 extern int napics;
 #endif /* _KERNEL */
+
+#endif /* _MACHINE_MP_H */

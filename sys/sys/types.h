@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/types.h,v 1.15.6.2 2001/07/04 11:00:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/types.h,v 1.15.6.3 2001/07/14 10:02:48 ho Exp $	*/
 /*	$NetBSD: types.h,v 1.29 1996/11/15 22:48:25 jtc Exp $	*/
 
 /*-
@@ -59,7 +59,9 @@ typedef	unsigned long	u_long;
 typedef unsigned char	unchar;		/* Sys V compatibility */
 typedef	unsigned short	ushort;		/* Sys V compatibility */
 typedef	unsigned int	uint;		/* Sys V compatibility */
-typedef unsigned long	ulong;		/* Sys V compatibility */
+typedef	unsigned long	ulong;		/* Sys V compatibility */
+
+typedef	unsigned long	cpuid_t;
 #endif
 
 typedef	u_int64_t	u_quad_t;	/* quads */

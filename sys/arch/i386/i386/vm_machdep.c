@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.2 2001/07/04 10:16:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.3 2001/07/14 10:02:33 ho Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -69,9 +69,6 @@
 #include <machine/specialreg.h>
 
 #include "npx.h"
-#if NNPX > 0
-extern struct proc *npxproc;
-#endif
 
 void	setredzone __P((u_short *, caddr_t));
 
@@ -95,22 +92,13 @@ cpu_fork(p1, p2, stack, stacksize)
 	register struct switchframe *sf;
 
 #if NNPX > 0
-	/*
-	 * If npxproc != p1, then the npx h/w state is irrelevant and the
-	 * state had better already be in the pcb.  This is true for forks
-	 * but not for dumps.
-	 *
-	 * If npxproc == p1, then we have to save the npx h/w state to
-	 * p1's pcb so that we can copy it.
-	 */
-	if (npxproc == p1)
-		npxsave();
+	npxsave_proc(p1);
 #endif
 
 	p2->p_md.md_flags = p1->p_md.md_flags;
 
 	/* Sync curpcb (which is presumably p1's PCB) and copy it to p2. */
-	savectx(curpcb);
+	savectx(curcpu()->ci_curpcb);
 	*pcb = p1->p_addr->u_pcb;
 	/*
 	 * Preset these so that gdt_compact() doesn't get confused if called
@@ -171,8 +159,7 @@ cpu_swapout(p)
 	/*
 	 * Make sure we save the FP state before the user area vanishes.
 	 */
-	if (npxproc == p)
-		npxsave();
+	npxsave_proc(p);
 #endif
 }
 
@@ -190,8 +177,13 @@ cpu_exit(p)
 {
 #if NNPX > 0
 	/* If we were using the FPU, forget about it. */
-	if (npxproc == p)
-		npxproc = 0;
+	npxdrop(p);
+#endif
+
+#ifdef USER_LDT
+	pcb = &p->p_addr->u_pcb;
+	if (pcb->pcb_flags & PCB_USER_LDT)
+		i386_user_cleanup(pcb);
 #endif
 
 	uvmexp.swtch++;
@@ -200,7 +192,7 @@ cpu_exit(p)
 
 void
 cpu_wait(p)
-	struct proc *p;
+     struct proc *p;
 {
 	struct pcb *pcb;
 

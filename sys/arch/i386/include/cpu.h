@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.2 2001/07/04 10:16:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.3 2001/07/14 10:02:35 ho Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -49,6 +49,15 @@
 #include <machine/frame.h>
 #include <machine/segments.h>
 
+#ifdef MULTIPROCESSOR
+#include <machine/i82489reg.h>
+#include <machine/i82489var.h>
+
+/* XXX for now... */
+#define NLAPIC 1
+
+#endif
+
 /*
  * definitions of cpu-dependent requirements
  * referenced in generic code
@@ -64,17 +73,132 @@
  */
 #define clockframe intrframe
 
-#define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
-#define	CLKF_BASEPRI(frame)	((frame)->if_ppl == 0)
-#define	CLKF_PC(frame)		((frame)->if_eip)
-#define	CLKF_INTR(frame)	(IDXSEL((frame)->if_cs) == GICODE_SEL)
+#include <sys/device.h>
+#include <sys/lock.h>                  /* will also get LOCKDEBUG */
+#include <sys/systm.h>
+#include <sys/proc.h>
+#include <sys/sched.h>
 
+/* XXX stuff to move to cpuvar.h later */
+struct cpu_info {
+	struct device ci_dev;		/* pointer to our device */
+	struct schedstate_percpu ci_schedstate; /* scheduler state */
+	
+	/* 
+	 * Public members. 
+	 */
+	struct proc *ci_curproc; 	/* current owner of the processor */
+	struct simplelock ci_slock;	/* lock on this data structure */
+	cpuid_t ci_cpuid; 		/* our CPU ID */
+#if defined(DIAGNOSTIC) || defined(LOCKDEBUG)
+	u_long ci_spin_locks;		/* # of spin locks held */
+	u_long ci_simple_locks;		/* # of simple locks held */
+#endif
+
+	/*
+	 * Private members.
+	 */
+	struct proc *ci_fpcurproc;	/* current owner of the FPU */
+	int ci_fpsaving;		/* save in progress */
+	struct pcb *ci_curpcb;		/* VA of current HW PCB */
+	struct pcb *ci_idle_pcb;	/* VA of current PCB */
+
+	paddr_t ci_idle_pcb_paddr;	/* PA of idle PCB */
+	u_long ci_flags;		/* flags; see below */
+	u_int32_t ci_ipis; 		/* interprocessor interrupts pending */
+	int sc_apic_version;  		/* local APIC version */
+	
+	u_int32_t	ci_level;
+	u_int32_t	ci_vendor[4];
+	u_int32_t	ci_signature;		/* X86 cpuid type */
+	u_int32_t	ci_feature_flags;	/* X86 CPUID feature bits */
+	u_int32_t	cpu_class;		/* CPU class */
+
+	struct cpu_functions *ci_func;	/* start/stop functions */
+	void (*cpu_setup) __P((const char *, int, int));	/* proc-dependant init */
+
+	int		ci_want_resched;
+	int		ci_astpending;
+};
+	
+/*
+ * Processor flag notes: The "primary" CPU has certain MI-defined
+ * roles (mostly relating to hardclock handling); we distinguish
+ * betwen the processor which booted us, and the processor currently
+ * holding the "primary" role just to give us the flexibility later to
+ * change primaries should we be sufficiently twisted.  
+ */
+
+#define	CPUF_BSP	0x0001		/* CPU is the original BSP */
+#define	CPUF_AP		0x0002		/* CPU is an AP */
+#define	CPUF_SP		0x0004		/* CPU is only processor */
+#define	CPUF_PRIMARY	0x0008		/* CPU is active primary processor */
+#define	CPUF_APIC_CD	0x0010		/* CPU has apic configured */
+
+#define	CPUF_PRESENT	0x1000		/* CPU is present */
+#define	CPUF_RUNNING	0x2000		/* CPU is running */
+
+#ifdef MULTIPROCESSOR
+
+#define I386_MAXPROCS		0x10
+#define CPU_STARTUP(_ci)	((_ci)->ci_func->start(_ci))
+#define CPU_STOP(_ci)		((_ci)->ci_func->stop(_ci))
+
+#define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
+#define curcpu()		(cpu_info[cpu_number()])
+#define curpcb			curcpu()->ci_curpcb
+
+extern struct cpu_info	*cpu_info[I386_MAXPROCS];
+extern u_long		 cpus_running;
+
+extern void cpu_boot_secondary_processors __P((void));
+
+#define want_resched (curcpu()->ci_want_resched)
+#define astpending (curcpu()->ci_astpending)
+
+/*
+ * Preemt the current process if in interrupt from user monre,
+ * or after the current trap/syscall if in system mode.
+ */
+extern void need_resched __P((void));
+
+extern void (*delay_func) __P((int));
+struct timeval;
+extern void (*microtime_func) __P((struct timeval *));
+
+#define	DELAY(x)	(*delay_func)(x)
+#define delay(x)	(*delay_func)(x)
+#define microtime(tv)	(*microtime_func)(tv)
+
+#else /* MULTIPROCESSOR */
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
 int	want_resched;		/* resched() was called */
 #define	need_resched()		(want_resched = 1, setsoftast())
+
+#define cpu_number()		0
+
+/*
+ * We need a machine-independent name for this.
+ */
+#define	DELAY(x)		delay(x)
+void	delay __P((int));
+
+/*
+ * definitions of cpu-dependent requirements
+ * referenced in generic code
+ */
+#define	cpu_swapin(p)			/* nothing */
+#define	cpu_wait(p)			/* nothing */
+
+#endif /* MULTIPROCESSOR */
+
+#define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
+#define	CLKF_BASEPRI(frame)	((frame)->if_ppl == 0)
+#define	CLKF_PC(frame)		((frame)->if_eip)
+#define	CLKF_INTR(frame)	(IDXSEL((frame)->if_cs) == GICODE_SEL)
 
 /*
  * Give a profiling tick to the current process when the user profiling
@@ -88,12 +212,6 @@ int	want_resched;		/* resched() was called */
  * process as soon as possible.
  */
 #define	signotify(p)		setsoftast()
-
-/*
- * We need a machine-independent name for this.
- */
-#define	DELAY(x)		delay(x)
-void	delay __P((int));
 
 #if defined(I586_CPU) || defined(I686_CPU)
 /*
@@ -178,10 +296,11 @@ void fix_f00f __P((void));
 void	dkcsumattach __P((void));
 
 /* machdep.c */
-void	delay __P((int));
+/* XXX MULTIPROCESSOR void	delay __P((int)); */
 void	dumpconf __P((void));
 void	cpu_reset __P((void));
 void	i386_proc0_tss_ldt_init __P((void));
+void	i386_init_pcb_tss_ldt __P((struct pcb *));
 
 /* locore.s */
 struct region_descriptor;
@@ -199,10 +318,14 @@ void	proc_trampoline __P((void));
 void	initrtclock __P((void));
 void	startrtclock __P((void));
 void	rtcdrain __P((void *));
+void	i8254_delay __P((int));
+void	i8254_microtime __P((struct timeval *));
+void	i8254_initclocks __P((void));
 
 /* npx.c */
-void	npxdrop __P((void));
-void	npxsave __P((void));
+void	npxdrop __P((struct proc *));
+void	npxsave_proc __P((struct proc *));
+void	npxsave_cpu __P((struct cpu_info *));
 
 #if defined(MATH_EMULATE) || defined(GPL_MATH_EMULATE)
 /* math_emulate.c */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.2 2001/07/04 10:16:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.3 2001/07/14 10:02:24 ho Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -63,6 +63,12 @@
 
 #include <dev/cons.h>
 
+#include "ioapic.h"
+
+#if NIOAPIC > 0
+#include <machine/i82093var.h>
+#endif
+
 void rootconf __P((void));
 void swapconf __P((void));
 void setroot __P((void));
@@ -90,6 +96,14 @@ cpu_configure()
 	printf("biomask %x netmask %x ttymask %x\n",
 	    (u_short)imask[IPL_BIO], (u_short)imask[IPL_NET],
 	    (u_short)imask[IPL_TTY]);
+/* XXXSMP - NetBSD's diff were like this:
++           (u_short)IMASK(IPL_BIO), (u_short)IMASK(IPL_NET),
++           (u_short)IMASK(IPL_TTY));
+*/
+
+#if NIOAPIC > 0
+	ioapic_enable();
+#endif
 
 	spl0();
 

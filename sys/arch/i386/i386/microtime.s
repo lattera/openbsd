@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/microtime.s,v 1.13 1998/08/27 05:00:34 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/microtime.s,v 1.13.8.1 2001/07/14 10:02:28 ho Exp $	*/
 /*	$NetBSD: microtime.s,v 1.16 1995/04/17 12:06:47 cgd Exp $	*/
 
 /*-
@@ -46,7 +46,7 @@
  * overridden (i.e. it is 100Hz).
  */
 #ifndef HZ
-ENTRY(microtime)
+ENTRY(i8254_microtime)
 
 #if (defined(I586_CPU) || defined(I686_CPU)) && defined(NTP) 
 	movl	_pentium_mhz, %ecx

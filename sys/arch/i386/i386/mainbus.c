@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.3 2000/07/03 14:19:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.4 2001/07/14 10:02:28 ho Exp $	*/
 /*	$NetBSD: mainbus.c,v 1.21 1997/06/06 23:14:20 thorpej Exp $	*/
 
 /*
@@ -49,12 +49,20 @@
 #include "isa.h"
 #include "apm.h"
 #include "bios.h"
+#include "mpbios.h"
+
+#include <machine/cpuvar.h>
+#include <machine/i82093var.h>
+#include <machine/mpbiosvar.h>
 
 #if NBIOS > 0
 #include <machine/biosvar.h>
 #endif
-#ifdef MULTIPROCESSOR
+
+#if 0
+#ifdef SMP /* XXX MULTIPROCESSOR */
 #include <machine/mp.h>
+#endif
 #endif
 
 int	mainbus_match __P((struct device *, void *, void *));
@@ -78,6 +86,8 @@ union mainbus_attach_args {
 #if NBIOS > 0
 	struct bios_attach_args mba_bios;
 #endif
+	struct cpu_attach_args mba_caa;
+	struct apic_attach_args	aaa_caa;
 };
 
 /*
@@ -107,6 +117,7 @@ mainbus_attach(parent, self, aux)
 	void *aux;
 {
 	union mainbus_attach_args mba;
+	extern int cpu_id, cpu_feature;
 
 	printf("\n");
 
@@ -119,13 +130,38 @@ mainbus_attach(parent, self, aux)
 	}
 #endif
 
-#ifdef MULTIPROCESSOR
+#if NMBIOS > 0
+	if (mpbios_probe(self))
+		mpbios_scan(self);
+	else
+#endif
+	{
+		struct cpu_attach_args caa;
+		
+		memset(&caa, 0, sizeof(caa));
+		caa.caa_name = "cpu";
+		caa.cpu_number = 0;
+		caa.cpu_role = CPU_ROLE_SP;
+		caa.cpu_func = 0;
+		caa.cpu_signature = cpu_id;
+		caa.feature_flags = cpu_feature;
+
+		config_found(self, &caa, mainbus_print);
+	}
+
+#if 0
+#ifdef SMP
 	if (bios_smpinfo != NULL) {
 		struct mp_float *mp = bios_smpinfo;
 
 		printf("%s: MP 1.%d configuration %d\n", self->dv_xname,
 		    mp->revision, mp->feature1);
 	}
+#ifdef CPU_DEBUG
+	else
+		printf ("%s: No MP configuration found.", self->dv_xname);
+#endif
+#endif
 #endif
 
 	/*

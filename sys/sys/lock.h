@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.1 2001/07/04 11:00:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.2 2001/07/14 10:02:47 ho Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -118,6 +118,9 @@ struct lock {
 #define LK_SLEEPFAIL	0x00000020	/* sleep, then return failure */
 #define LK_CANRECURSE	0x00000040	/* allow recursive exclusive lock */
 #define LK_REENABLE	0x00000080	/* lock is be reenabled after drain */
+#define LK_SETRECURSE	0x00100000	/* other locks while we have it OK */
+#define LK_RECURSEFAIL	0x00200000	/* attempt at recursive lock fails */
+#define LK_SPIN		0x00400000	/* lock spins instead of sleeps */
 /*
  * Internal lock flags.
  *
@@ -160,6 +163,7 @@ struct lock {
  */
 #define LK_KERNPROC ((pid_t) -2)
 #define LK_NOPROC ((pid_t) -1)
+#define LK_NOCPU ((cpuid_t) -1)
 
 struct proc;
 
@@ -169,6 +173,14 @@ int	lockmgr __P((__volatile struct lock *, u_int flags,
 			struct simplelock *, struct proc *p));
 void    lockmgr_printinfo __P((struct lock *));
 int	lockstatus __P((struct lock *));
+
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
+#define spinlockinit(lkp, name, flags)
+#define spinlockmgr(lkp, flags, intrlk)
+#else
+#define spinlockinit(lkp, name, flags)          (void)(lkp)
+#define spinlockmgr(lkp, flags, intrlk)         (0)
+#endif
 
 #endif /* !_LOCK_H_ */
 

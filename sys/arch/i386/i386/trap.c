@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.2 2001/07/04 10:16:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.3 2001/07/14 10:02:31 ho Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -211,7 +211,7 @@ trap(frame)
 	if (trapdebug) {
 		printf("trap %d code %x eip %x cs %x eflags %x cr2 %x cpl %x\n",
 		    frame.tf_trapno, frame.tf_err, frame.tf_eip, frame.tf_cs,
-		    frame.tf_eflags, rcr2(), cpl);
+		    frame.tf_eflags, rcr2(), lapic_tpr);
 		printf("curproc %p\n", curproc);
 	}
 #endif
@@ -272,7 +272,7 @@ trap(frame)
 			printf("unknown trap %d", frame.tf_trapno);
 		printf(" in %s mode\n", (type & T_USER) ? "user" : "supervisor");
 		printf("trap type %d code %x eip %x cs %x eflags %x cr2 %x cpl %x\n",
-		    type, frame.tf_err, frame.tf_eip, frame.tf_cs, frame.tf_eflags, rcr2(), cpl);
+		    type, frame.tf_err, frame.tf_eip, frame.tf_cs, frame.tf_eflags, rcr2(), lapic_tpr);
 
 		panic("trap");
 		/*NOTREACHED*/

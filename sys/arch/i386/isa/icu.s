@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.1 2001/04/18 16:07:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.2 2001/07/14 10:02:42 ho Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -33,7 +33,10 @@
 #include <net/netisr.h>
 
 	.data
-	.globl	_imen,_cpl,_ipending,_astpending,_netisr
+	.globl	_imen,_ipending,_netisr
+#ifndef MULTIPROCESSOR
+	.globl	_astpending
+#endif
 _imen:
 	.long	0xffff		# interrupt mask enable (all off)
 
@@ -45,13 +48,13 @@ _imen:
 	ALIGN_TEXT
 _splhigh:
 	movl	$-1,%eax
-	xchgl	%eax,_cpl
+	xchgl	%eax,CPL
 	ret
 
 	ALIGN_TEXT
 _splx:
 	movl	4(%esp),%eax
-	movl	%eax,_cpl
+	movl	%eax,CPL
 	testl	%eax,%eax
 	jnz	_Xspllower
 	ret
@@ -69,7 +72,7 @@ IDTVEC(spllower)
 	pushl	%ebx
 	pushl	%esi
 	pushl	%edi
-	movl	_cpl,%ebx		# save priority
+	movl	CPL,%ebx		# save priority
 	movl	$1f,%esi		# address to resume loop at
 1:	movl	%ebx,%eax
 	notl	%eax
@@ -94,7 +97,7 @@ IDTVEC(spllower)
  */
 IDTVEC(doreti)
 	popl	%ebx			# get previous priority
-	movl	%ebx,_cpl
+	movl	%ebx,CPL
 	movl	$1f,%esi		# address to resume loop at
 1:	movl	%ebx,%eax
 	notl	%eax
@@ -106,8 +109,8 @@ IDTVEC(doreti)
 	cli
 	jmp	*_Xresume(,%eax,4)
 2:	/* Check for ASTs on exit to user mode. */
+	CHECK_ASTPENDING(%ecx)
 	cli
-	cmpb	$0,_astpending
 	je	3f
 	testb   $SEL_RPL,TF_CS(%esp)
 #ifdef VM86
@@ -115,10 +118,12 @@ IDTVEC(doreti)
 	testl	$PSL_VM,TF_EFLAGS(%esp)
 #endif
 	jz	3f
-4:	movb	$0,_astpending
+4:	CLEAR_ASTPENDING(%ecx)
 	sti
+	movl	$T_ASTFLT,TF_TRAPNO(%esp)	/* XXX undo later. */
 	/* Pushed T_ASTFLT into tf_trapno on entry. */
 	call	_trap
+	cli
 	jmp	2b
 3:	INTRFASTEXIT
 
@@ -132,9 +137,9 @@ IDTVEC(doreti)
 IDTVEC(softtty)
 #if NPCCOM > 0
 	leal	SIR_TTYMASK(%ebx),%eax
-	movl	%eax,_cpl
+	movl	%eax,CPL
 	call	_comsoft
-	movl	%ebx,_cpl
+	movl	%ebx,CPL
 #endif
 	jmp	%esi
 
@@ -147,17 +152,60 @@ IDTVEC(softtty)
 
 IDTVEC(softnet)
 	leal	SIR_NETMASK(%ebx),%eax
-	movl	%eax,_cpl
+	movl	%eax,CPL
 	xorl	%edi,%edi
 	xchgl	_netisr,%edi
+/*-
+ * XXX SMP XXX 
+ * #ifdef INET
+ * #include "ether.h"
+ * #if NETHER > 0
+ *	DONET(NETISR_ARP, _arpintr)
+ * #endif
+ *	DONET(NETISR_IP, _ipintr)
+ * #endif
+ * #ifdef INET6
+ *	DONET(NETISR_IPV6, _ip6intr)
+ * #endif 
+ * #ifdef NETATALK
+ *	DONET(NETISR_ATALK, _atintr)
+ * #endif
+ * #ifdef IMP
+ *	DONET(NETISR_IMP, _impintr)
+ * #endif
+ * #ifdef IPX
+ *	DONET(NETISR_IPX, _ipxintr)
+ * #endif
+ * #ifdef NS
+ *	DONET(NETISR_NS, _nsintr)
+ * #endif
+ * #ifdef ISO
+ *	DONET(NETISR_ISO, _clnlintr)
+ * #endif
+ * #ifdef CCITT
+ *	DONET(NETISR_CCITT, _ccittintr)
+ * #endif
+ * #ifdef NATM
+ *	DONET(NETISR_NATM, _natmintr)
+ * #endif
+ * #include "ppp.h"
+ * #if NPPP > 0
+ *	DONET(NETISR_PPP, _pppintr)
+ * #endif
+ * #include "bridge.h"
+ * #if NBRIDGE > 0
+ *	DONET(NETISR_BRIDGE, _bridgeintr)
+ * #endif
+ *	movl	%ebx,CPL
+ */
 #include <net/netisr_dispatch.h>
-	movl	%ebx,_cpl
+ 	movl	%ebx,_cpl 
 	jmp	%esi
 #undef DONETISR
 
 IDTVEC(softclock)
 	leal	SIR_CLOCKMASK(%ebx),%eax
-	movl	%eax,_cpl
+	movl	%eax,CPL
 	call	_softclock
-	movl	%ebx,_cpl
+	movl	%ebx,CPL
 	jmp	%esi

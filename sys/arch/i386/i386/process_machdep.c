@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7 1996/08/27 10:46:52 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7.16.1 2001/07/14 10:02:31 ho Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.22 1996/05/03 19:42:25 christos Exp $	*/
 
 /*
@@ -149,8 +149,7 @@ process_read_fpregs(p, regs)
 		struct save87 *frame = process_fpframe(p);
 
 #if NNPX > 0
-		if (npxproc == p)
-			npxsave();
+		npxsave_proc(p);
 #endif
 
 		bcopy(frame, regs, sizeof(frame));
@@ -236,8 +235,7 @@ process_write_fpregs(p, regs)
 	struct save87 *frame = process_fpframe(p);
 
 #if NNPX > 0
-	if (npxproc == p)
-		npxdrop();
+	npxdrop(p);
 #endif
 
 	p->p_md.md_flags |= MDP_USEDFPU;

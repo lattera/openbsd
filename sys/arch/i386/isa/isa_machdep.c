@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.2 2001/07/04 10:16:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.3 2001/07/14 10:02:42 ho Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -125,6 +125,13 @@
 #include <sys/proc.h>
 
 #include <vm/vm.h>
+
+#include "ioapic.h"
+
+#if NIOAPIC > 0
+#include <machine/i82093var.h>
+#include <machine/mpbiosvar.h>
+#endif
 
 #define _I386_BUS_DMA_PRIVATE
 #include <machine/bus.h>
@@ -492,6 +499,28 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 	struct intrhand **p, *q, *ih;
 	static struct intrhand fakehand = {fakeintr};
 
+#if NIOAPIC > 0
+	struct mp_intr_map *mip;
+
+ 	if (mp_busses != NULL) {
+ 		int mpspec_pin = irq;
+ 		int bus = mp_isa_bus;
+ 		int airq;
+
+ 		for (mip = mp_busses[bus].mb_intrs; mip != NULL; 
+ 		     mip=mip->next) {
+ 			if (mip->bus_pin == mpspec_pin) {
+ 				airq = mip->ioapic_ih | irq;
+ 				break;
+ 			}
+ 		}
+ 		if (mip == NULL)
+			printf("isa_intr_establish: no MP mapping found\n");
+ 		else
+			return apic_intr_establish (airq, type, level, ih_fun,
+ 						    ih_arg);
+ 	}
+#endif
 	/* no point in sleeping unless someone can free memory. */
 	ih = malloc(sizeof *ih, M_DEVBUF, cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL) {

@@ -1,0 +1,1273 @@
+/*-
+ * Copyright (c) 2000 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to The NetBSD Foundation
+ * by RedBack Networks Inc.
+ *
+ * Author: Bill Sommerfeld
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *        This product includes software developed by the NetBSD
+ *        Foundation, Inc. and its contributors.
+ * 4. Neither the name of The NetBSD Foundation nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+/*
+ * Copyright (c) 1999 Stefan Grefen
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by the NetBSD
+ *      Foundation, Inc. and its contributors.
+ * 4. Neither the name of The NetBSD Foundation nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.  
+ *
+ * THIS SOFTWARE IS PROVIDED BY AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR AND CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+/*
+ * Derived from FreeBSD's mp_machdep.c
+ */
+/*
+ * Copyright (c) 1996, by Steve Passe
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. The name of the developer may NOT be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *	$Id: mpbios.c,v 1.1.2.4 2000/02/29 13:20:07 sommerfeld Exp $
+ */
+
+/*
+ * The Intel MP-stuff is just one way of x86 SMP systems
+ * so only Intel MP specific stuff is here.
+ */
+
+#include "mpbios.h"
+
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/kernel.h>
+#include <sys/device.h>
+#include <sys/malloc.h>
+
+#include <vm/vm.h>
+#include <vm/vm_param.h>
+#include <vm/pmap.h>
+#include <vm/vm_kern.h>
+#include <vm/vm_extern.h>
+#include <machine/specialreg.h>
+#include <machine/cputypes.h>
+#include <machine/cpuvar.h>
+#include <machine/bus.h>
+#include <machine/mpbiosreg.h>
+#include <machine/mpbiosvar.h>
+
+#include <machine/i82093reg.h>
+#include <machine/i82093var.h>
+#include <machine/i82489reg.h>
+#include <machine/i82489var.h>
+#include <dev/isa/isareg.h>
+
+#include <dev/ic/mc146818reg.h>		/* for NVRAM POST */
+#include <i386/isa/nvram.h>		/* for NVRAM POST */
+
+#include <dev/eisa/eisavar.h>	/* for ELCR* def'ns */
+
+
+static struct mpbios_ioapic default_ioapic = {
+    2,0,1,IOAPICENTRY_FLAG_EN,(caddr_t)IOAPIC_BASE_DEFAULT
+};
+
+/* descriptions of MP basetable entries */
+struct mpbios_baseentry {
+	u_int8_t  	type;
+	u_int8_t  	length;
+	u_int16_t	count;
+	const char    	*name;
+};
+
+static const char *loc_where[] = {
+	"extended bios data area",
+	"last page of base memory",
+	"bios"
+};
+
+struct mp_map 
+{
+	vaddr_t 	baseva;
+	int	 	vsize;
+	paddr_t 	pa;
+	paddr_t 	pg;
+	int		psize;
+};
+
+/* XXX */
+char *bitmask_snprintf(u_quad_t, const char *, char *, size_t);
+
+int mp_print __P((void *, const char *));
+int mp_match __P((struct device *,void *,void *));
+int mpbios_cpu_start __P((struct cpu_info *));
+static const void *mpbios_search __P((struct device *, paddr_t, int,
+    struct mp_map *));
+static inline int mpbios_cksum __P((const void *,int));
+
+static void mp_cfg_special_intr __P((const struct mpbios_int *, u_int32_t *));
+static void mp_cfg_pci_intr __P((const struct mpbios_int *, u_int32_t *));
+static void mp_cfg_eisa_intr __P((const struct mpbios_int *, u_int32_t *));
+static void mp_cfg_isa_intr __P((const struct mpbios_int *, u_int32_t *));
+static void mp_print_special_intr (int intr);
+static void mp_print_pci_intr (int intr);
+static void mp_print_eisa_intr (int intr);
+static void mp_print_isa_intr (int intr);
+
+static void mpbios_cpu __P((const u_int8_t *, struct device *));
+static void mpbios_bus __P((const u_int8_t *, struct device *));
+static void mpbios_ioapic __P((const u_int8_t *, struct device *));
+static void mpbios_int __P((const u_int8_t *, int, struct mp_intr_map *));
+
+static const void *mpbios_map __P((paddr_t, int, struct mp_map *));
+static void mpbios_unmap __P((struct mp_map *));
+
+/*
+ * globals to help us bounce our way through parsing the config table.
+ */
+
+static struct mp_map mp_cfg_table_map;
+static struct mp_map mp_fp_map;
+const struct mpbios_cth	*mp_cth;
+const struct mpbios_fps	*mp_fps;
+
+#ifdef MPVERBOSE
+int mp_verbose = 1;
+#else
+int mp_verbose = 0;
+#endif
+	
+struct cpu_functions mpbios_cpu_funcs = { mpbios_cpu_start, NULL };
+
+int
+mp_print(aux, pnp)
+	void *aux;
+	const char *pnp;
+{
+	struct cpu_attach_args * caa = (struct cpu_attach_args *) aux;
+	if (pnp)
+		printf("%s at %s:",caa->caa_name, pnp);
+	return (UNCONF);
+}
+
+int
+mp_match(parent, cfv, aux)
+	struct device *parent;
+	void *cfv;
+	void *aux;
+{
+        struct cfdata *cf = (struct cfdata *)cfv;
+	struct cpu_attach_args * caa = (struct cpu_attach_args *) aux;
+	if (strcmp(caa->caa_name, cf->cf_driver->cd_name))
+		return 0;
+
+	return ((*cf->cf_attach->ca_match)(parent, cf, aux));
+}
+
+/* -------------- XXX XXX XXX - rewrite ! */
+
+char *
+bitmask_snprintf(val, p, buf, buflen)
+        u_quad_t val;
+        const char *p;
+        char *buf;
+        size_t buflen;
+{
+        char *bp, *q;
+        size_t left;
+#define KPRINTF_BUFSIZE              (sizeof(quad_t) * NBBY / 3 + 2)
+        char *sbase, snbuf[KPRINTF_BUFSIZE];
+        int base, bit, ch, len, sep;
+        u_quad_t field;
+
+        bp = buf;
+        memset(buf, 0, buflen);
+
+        /*
+         * Always leave room for the trailing NULL.
+         */
+        left = buflen - 1;
+
+        /*
+         * Print the value into the buffer.  Abort if there's not
+         * enough room.
+         */
+        if (buflen < KPRINTF_BUFSIZE)
+                return (buf);
+
+        ch = *p++;
+        base = ch != '\177' ? ch : *p++;
+        sbase = base == 8 ? "%qo" : base == 10 ? "%qd" : base == 16 ? "%qx" : 0;
+        if (sbase == 0)
+                return (buf);   /* punt if not oct, dec, or hex */
+
+        sprintf(snbuf, sbase, val);
+        for (q = snbuf ; *q ; q++) {
+                *bp++ = *q;
+                left--;
+        }
+
+        /*
+         * If the value we printed was 0 and we're using the old-style format,
+         * or if we don't have room for "<x>", we're done.
+         */
+        if (((val == 0) && (ch != '\177')) || left < 3)
+                return (buf);
+
+#define PUTBYTE(b, c, l)        \
+        *(b)++ = (c);           \
+        if (--(l) == 0)         \
+                goto out;
+#define PUTSTR(b, p, l) do {            \
+        int c;                          \
+        while ((c = *(p)++) != 0) {     \
+                *(b)++ = c;             \
+                if (--(l) == 0)         \
+                        goto out;       \
+        }                               \
+} while (0)
+
+        /*
+         * Chris Torek's new style %b format is identified by a leading \177
+         */
+        sep = '<';
+        if (ch != '\177') {
+                /* old (standard) %b format. */
+                for (;(bit = *p++) != 0;) {
+                        if (val & (1 << (bit - 1))) {
+                                PUTBYTE(bp, sep, left);
+                                for (; (ch = *p) > ' '; ++p) {
+                                        PUTBYTE(bp, ch, left);
+                                }
+                                sep = ',';
+                        } else
+                                for (; *p > ' '; ++p)
+                                        continue;
+                }
+        } else {
+                /* new quad-capable %b format; also does fields. */
+                field = val;
+                while ((ch = *p++) != '\0') {
+                        bit = *p++;     /* now 0-origin */
+                        switch (ch) {
+                        case 'b':
+                                if (((u_int)(val >> bit) & 1) == 0)
+                                        goto skip;
+                                PUTBYTE(bp, sep, left);
+                                PUTSTR(bp, p, left);
+                                sep = ',';
+                                break;
+                        case 'f':
+                        case 'F':
+                                len = *p++;     /* field length */
+                                field = (val >> bit) & ((1ULL << len) - 1);
+                                if (ch == 'F')  /* just extract */
+                                        break;
+                                PUTBYTE(bp, sep, left);
+                                sep = ',';
+                                PUTSTR(bp, p, left);
+                                PUTBYTE(bp, '=', left);
+                                sprintf(snbuf, sbase, field);
+                                q = snbuf; PUTSTR(bp, q, left);
+                                break;
+                        case '=':
+                        case ':':
+                                /*
+                                 * Here "bit" is actually a value instead,
+                                 * to be compared against the last field.
+                                 * This only works for values in [0..255],
+                                 * of course.
+                                 */
+                                if ((int)field != bit)
+                                        goto skip;
+                                if (ch == '=')
+                                        PUTBYTE(bp, '=', left);
+                                PUTSTR(bp, p, left);
+                                break;
+                        default:
+                        skip:
+                                while (*p++ != '\0')
+                                        continue;
+                                break;
+                        }
+                }
+        }
+        if (sep != '<')
+                PUTBYTE(bp, '>', left);
+
+out:
+        return (buf);
+
+#undef PUTBYTE
+#undef PUTSTR
+}
+
+/*
+ * Map a chunk of memory read-only and return an appropraitely
+ * const'ed pointer.
+ */
+
+static const void *
+mpbios_map (pa, len, handle)
+	paddr_t pa;
+	int len;
+	struct mp_map *handle;
+{
+	paddr_t pgpa = i386_trunc_page(pa);
+	paddr_t endpa = i386_round_page(pa + len);
+	vaddr_t va = uvm_km_valloc(kernel_map, endpa - pgpa);
+	vaddr_t retva = va + (pa & PGOFSET);
+	
+	handle->pa = pa;
+	handle->pg = pgpa;
+	handle->psize = len;
+	handle->baseva = va;
+	handle->vsize = endpa-pgpa;
+
+	do {	  
+		/* pmap_kenter_pa (va, pgpa, VM_PROT_READ); */
+	        pmap_enter(pmap_kernel(), va, pgpa, VM_PROT_READ, TRUE,
+			   VM_PROT_READ);
+		va += NBPG;
+		pgpa += NBPG;
+	} while (pgpa < endpa);
+
+	return (const void *)retva;
+}
+
+inline static void
+mpbios_unmap (handle)
+	struct mp_map *handle;
+{
+	bus_addr_t curaddr;
+  	/* pmap_kremove (handle->baseva, handle->vsize); */
+  	pmap_extract(pmap_kernel(), handle->baseva, (paddr_t *)&curaddr);
+	uvm_km_free (kernel_map, handle->baseva, handle->vsize);
+}
+
+/*
+ * Look for an Intel MP spec table, indicating SMP capable hardware.
+ */
+int
+mpbios_probe(self)
+	struct device *self;
+{
+	paddr_t  	ebda, memtop;
+
+	paddr_t		cthpa;
+	int		cthlen;
+	const u_int8_t	*mpbios_page;
+	int 		scan_loc;
+	
+	struct		mp_map t;
+	
+	/* see if EBDA exists */
+
+	mpbios_page = mpbios_map (0, NBPG, &t);
+
+	ebda =   *(const u_int16_t *) (&mpbios_page[0x40e]);
+	ebda <<= 4;
+	
+	memtop = *(const u_int16_t *) (&mpbios_page[0x413]);
+	memtop <<= 10;
+
+	mpbios_page = NULL;
+	mpbios_unmap(&t);
+	
+	scan_loc = 0;
+
+	if (ebda && ebda < IOM_BEGIN ) {
+		mp_fps = mpbios_search(self, ebda, 1024, &mp_fp_map);
+		if (mp_fps != NULL)
+			goto found;
+	}
+	
+	scan_loc = 1;
+
+	if (memtop && memtop <= IOM_BEGIN ) {
+		mp_fps = mpbios_search(self, memtop - 1024, 1024, &mp_fp_map);
+		if (mp_fps != NULL)
+			goto found;
+	}
+	
+	scan_loc = 2;
+	
+	mp_fps = mpbios_search(self, BIOS_BASE, BIOS_COUNT, &mp_fp_map);
+	if (mp_fps != NULL)
+		goto found;
+
+	/* nothing found */
+	return 0;
+
+ found:
+	if (mp_verbose)
+		printf("%s: MP floating pointer found in %s at 0x%lx\n",
+		    self->dv_xname, loc_where[scan_loc], mp_fp_map.pa);
+
+	if (mp_fps->pap == 0) {
+		if (mp_fps->mpfb1 == 0) {
+			printf("%s: MP fps invalid: "
+			    "no default config and no configuration table\n",
+			    self->dv_xname);
+			
+			goto err;
+		}
+		printf("%s: MP default configuration %d\n",
+		    self->dv_xname, mp_fps->mpfb1);
+		return 10;
+	}
+
+	cthpa = mp_fps->pap;
+
+	mp_cth = mpbios_map (cthpa, sizeof (*mp_cth), &mp_cfg_table_map);
+	cthlen = mp_cth->base_len;
+	mpbios_unmap(&mp_cfg_table_map);
+	
+	mp_cth = mpbios_map (cthpa, cthlen, &mp_cfg_table_map);
+	
+	if (mp_verbose)
+		printf("%s: MP config table at 0x%lx, %d bytes long\n",
+		    self->dv_xname, cthpa, cthlen);
+
+	if (mp_cth->signature != MP_CT_SIG) {
+		printf("%s: MP signature mismatch (%x vs %x)\n",
+		    self->dv_xname,
+		    MP_CT_SIG, mp_cth->signature);
+		goto err;
+	}
+	
+	if (mpbios_cksum(mp_cth, cthlen)) {
+		printf ("%s: MP Configuration Table checksum mismatch\n",
+		    self->dv_xname);
+		goto err;
+	}
+	return 10;
+ err:
+	if (mp_fps) {
+		mp_fps = NULL;
+		mpbios_unmap(&mp_fp_map);
+	}
+	if (mp_cth) {
+		mp_cth = NULL;
+		mpbios_unmap(&mp_cfg_table_map);
+	}
+	return 0;
+}
+
+
+/*
+ * Simple byte checksum used on config tables.
+ */
+
+inline static int     
+mpbios_cksum (start, len) 
+	const void *start;
+	int len;
+{
+	unsigned char res=0;
+	const char *p = start;
+	const char *end = p + len;
+	
+	while (p < end)
+		res += *p++;
+
+	return res;
+}
+
+
+/*
+ * Look for the MP floating pointer signature in the given physical
+ * address range.
+ *
+ * We map the memory, scan through it, and unmap it.
+ * If we find it, remap the floating pointer structure and return it.
+ */
+
+const void *
+mpbios_search (self, start, count, map)
+	struct device *self;
+	paddr_t start;
+	int count;
+	struct mp_map *map;
+{
+	struct mp_map t;
+
+	int i, len;
+	const struct mpbios_fps *m;
+	int end = count - sizeof(*m);
+	const u_int8_t *base = mpbios_map (start, count, &t);	
+
+	if (mp_verbose)
+		printf("%s: scanning 0x%lx to 0x%lx for MP signature\n",
+		    self->dv_xname, start, start+count-sizeof(*m));
+		
+	for (i = 0; i <= end; i += 4) {
+		m = (struct mpbios_fps *)&base[i];
+		
+		if ((m->signature == MP_FP_SIG) &&
+		    ((len = m->length << 4) != 0) &&
+		    mpbios_cksum(m, (m->length << 4)) == 0) {
+
+			mpbios_unmap (&t);
+
+			return mpbios_map (start+i, len, map);
+		}
+	}
+	mpbios_unmap(&t);
+	
+	return 0;
+}
+
+/*
+ * MP configuration table parsing.
+ */
+
+static struct mpbios_baseentry mp_conf[] =
+{
+	{0, 20, 0, "cpu"},
+	{1, 8, 0, "bus"},
+	{2, 8, 0, "ioapic"},
+	{3, 8, 0, "ioint"},
+	{4, 8, 0, "lint"},
+};
+
+struct mp_bus *mp_busses; 
+struct mp_intr_map *mp_intrs;
+extern struct ioapic_softc *ioapics[]; /* XXX */
+
+struct mp_intr_map *lapic_ints[2]; /* XXX */
+int mp_isa_bus = -1;		/* XXX */
+
+static struct mp_bus extint_bus = {
+	"ExtINT",
+	-1,
+	mp_print_special_intr,
+	mp_cfg_special_intr,
+	0
+};
+static struct mp_bus smi_bus = {
+	"SMI",
+	-1,
+	mp_print_special_intr,
+	mp_cfg_special_intr,
+	0
+};
+static struct mp_bus nmi_bus = {
+	"NMI",
+	-1,
+	mp_print_special_intr,
+	mp_cfg_special_intr,
+	0
+};
+
+
+/*
+ * 1st pass on BIOS's Intel MP specification table.
+ *
+ * initializes:
+ *	mp_ncpus = 1
+ *
+ * determines:
+ *	cpu_apic_address (common to all CPUs)
+ *	ioapic_address[N]
+ *	mp_naps
+ *	mp_nbusses
+ *	mp_napics
+ *	nintrs
+ */
+void
+mpbios_scan(self)
+	struct device *self;
+{
+	const u_int8_t 	*position, *end;
+	int		count;
+	int		type;
+	int		intr_cnt, cur_intr;
+	paddr_t		lapic_base;
+	
+	printf ("%s: Intel MP Specification ", self->dv_xname);
+
+	switch (mp_fps->spec_rev) {
+	case 1:
+		printf("(Version 1.1)");
+		break;
+	case 4:
+		printf("(Version 1.4)");
+		break;
+	default:
+		printf("(unrecognized rev %d)", mp_fps->spec_rev);
+	}
+	
+	/*
+	 * looks like we've got a MP system.  start setting up
+	 * infrastructure..
+	 * XXX is this the right place??
+	 */
+
+	lapic_base = LAPIC_BASE;
+	if (mp_cth != NULL)
+		lapic_base = (paddr_t)mp_cth->apic_address;
+	
+	lapic_boot_init(lapic_base);
+		
+	/* check for use of 'default' configuration */
+	if (mp_fps->mpfb1 != 0) {
+		struct mpbios_proc pe;
+
+		extern int cpu_id, cpu_feature;	/* XXX */
+
+		printf("\n%s: MP default configuration %d\n",
+		    self->dv_xname, mp_fps->mpfb1);
+		
+		/* use default addresses */
+		pe.apic_id = cpu_number();
+		pe.cpu_flags = PROCENTRY_FLAG_EN|PROCENTRY_FLAG_BP;
+		pe.cpu_signature = cpu_id;
+		pe.feature_flags = cpu_feature;
+
+		mpbios_cpu((u_int8_t *)&pe, self);
+
+		pe.apic_id = 1 - cpu_number();
+		pe.cpu_flags = PROCENTRY_FLAG_EN;
+
+		mpbios_cpu((u_int8_t *)&pe, self);
+
+		mpbios_ioapic((u_int8_t *)&default_ioapic, self);
+
+		/* XXX */
+		printf("%s: WARNING: interrupts not configured\n",
+		    self->dv_xname);
+		panic("lazy bum");
+		return;
+	} else {
+		/*
+		 * should not happen; mp_probe returns 0 in this case,
+		 * but..
+		 */
+		if (mp_cth == NULL)
+			panic ("mpbios_scan: no config (can't happen?)");
+
+		printf("\n%s: MP OEM %8.8s Product %12.12s\n",
+		    self->dv_xname, mp_cth->oem_id, mp_cth->product_id);
+
+		/*
+		 * Walk the table once, counting items
+		 */
+		position = (const u_int8_t *)(mp_cth);
+		end = position + mp_cth->base_len;
+		position += sizeof(*mp_cth);
+		
+		count = mp_cth->entry_count;
+		intr_cnt = 0;
+		
+		while ((count--) && (position < end)) {
+			type = *position;
+			if (type >= MPS_MCT_NTYPES) {
+				printf("%s: unknown entry type %x"
+				    " in MP config table\n",
+				    self->dv_xname, type);
+				break;
+			}
+			mp_conf[type].count++;
+			/*
+			 * Count actual interrupt instances.
+			 * APIC id 0xff means "wired to all apics of this
+			 * type".
+			 */
+			if ((type == MPS_MCT_IOINT) ||
+			    (type == MPS_MCT_LINT)) {
+				const struct mpbios_int *ie =
+				    (const struct mpbios_int *)position;
+				if (ie->dst_apic_id != 0xff)
+					intr_cnt++;
+				else if (type == MPS_MCT_IOINT)
+					intr_cnt += mp_conf[MPS_MCT_IOAPIC].count;
+				else
+					intr_cnt += mp_conf[MPS_MCT_CPU].count;
+			}
+			position += mp_conf[type].length;
+		}
+
+		mp_busses = malloc(sizeof(struct mp_bus)*
+		    mp_conf[MPS_MCT_BUS].count, M_DEVBUF, M_NOWAIT);
+		mp_intrs = malloc(sizeof(struct mp_intr_map)*intr_cnt,
+		    M_DEVBUF, M_NOWAIT);
+		
+		/* re-walk the table, recording info of interest */
+		position = (const u_int8_t *) mp_cth + sizeof(*mp_cth);
+		count = mp_cth->entry_count;
+		cur_intr = 0;
+		
+		while ((count--) && (position < end)) {
+			switch (type = *(u_char *) position) {
+			case MPS_MCT_CPU:
+				mpbios_cpu(position, self);
+				break;
+			case MPS_MCT_BUS:
+				mpbios_bus(position, self);
+				break;
+			case MPS_MCT_IOAPIC:
+				mpbios_ioapic(position, self);
+				break;
+			case MPS_MCT_IOINT:
+			case MPS_MCT_LINT:
+				mpbios_int(position, type,
+				    &mp_intrs[cur_intr]);
+				cur_intr++;
+				break;
+			default:
+				printf("%s: unknown entry type %x in MP config table\n",
+				    self->dv_xname, type);
+				/* NOTREACHED */
+				return;
+			}
+
+			(u_char*)position += mp_conf[type].length;
+		}
+		if (mp_verbose && mp_cth->ext_len)
+			printf("%s: MP WARNING: %d bytes of extended entries not examined\n",
+			    self->dv_xname, 
+			    mp_cth->ext_len);
+	}
+	/* Clean up. */
+	mp_fps = NULL;
+	mpbios_unmap (&mp_fp_map);
+	if (mp_cth != NULL) {
+		mp_cth = NULL;
+		mpbios_unmap (&mp_cfg_table_map);
+	}
+}
+
+static void
+mpbios_cpu(ent, self)
+	const u_int8_t *ent;
+	struct device *self;
+{
+	const struct mpbios_proc *entry = (const struct mpbios_proc *)ent;
+	struct cpu_attach_args caa;
+
+	/* XXX move this into the CPU attachment goo. */
+	/* check for usability */
+	if (!(entry->cpu_flags & PROCENTRY_FLAG_EN))
+		return;
+
+	/* check for BSP flag */
+	if (entry->cpu_flags & PROCENTRY_FLAG_BP)
+		caa.cpu_role = CPU_ROLE_BP;
+	else
+		caa.cpu_role = CPU_ROLE_AP;
+
+	caa.caa_name   = "cpu";
+	caa.cpu_number = entry->apic_id;
+	caa.cpu_func = &mpbios_cpu_funcs;
+	caa.cpu_signature = entry->cpu_signature;
+
+	/*
+	 * XXX this is truncated to just contain the low-order 16 bits
+	 * of the flags on at least some MP bioses
+	 */
+	caa.feature_flags = entry->feature_flags;
+
+	config_found_sm(self, &caa, mp_print, mp_match);
+}
+
+/*
+ * The following functions conspire to compute base ioapic redirection
+ * table entry for a given interrupt line.
+ *
+ * Fill in: trigger mode, polarity, and possibly delivery mode.
+ */
+static void mp_cfg_special_intr (entry, redir)
+	const struct mpbios_int *entry;
+	u_int32_t *redir;
+{
+
+	/*
+	 * All of these require edge triggered, zero vector,
+	 * appropriate delivery mode.
+	 * see page 13 of the 82093AA datasheet.
+	 */
+	*redir &= ~IOAPIC_REDLO_DEL_MASK;
+	*redir &= ~IOAPIC_REDLO_VECTOR_MASK;
+	*redir &= ~IOAPIC_REDLO_LEVEL;
+
+	switch (entry->int_type) {
+	case MPS_INTTYPE_NMI:
+		*redir |= (IOAPIC_REDLO_DEL_NMI<<IOAPIC_REDLO_DEL_SHIFT);
+		break;
+
+	case MPS_INTTYPE_SMI:
+		*redir |= (IOAPIC_REDLO_DEL_SMI<<IOAPIC_REDLO_DEL_SHIFT);
+		break;
+	case MPS_INTTYPE_ExtINT:
+		/*
+		 * We are using the ioapic in "native" mode.
+		 * This indicates where the 8259 is wired to the ioapic
+		 * and/or local apic..
+		 */
+		*redir |= (IOAPIC_REDLO_DEL_EXTINT<<IOAPIC_REDLO_DEL_SHIFT);
+		*redir |= (IOAPIC_REDLO_MASK);
+		break;
+	default:
+		panic("unknown MPS interrupt type %d", entry->int_type);
+	}
+}
+
+/* XXX too much duplicated code here. */
+
+static void mp_cfg_pci_intr (entry, redir)
+	const struct mpbios_int *entry;
+	u_int32_t *redir;
+{
+	int mpspo = entry->int_flags & 0x03; /* XXX magic */
+	int mpstrig = (entry->int_flags >> 2) & 0x03; /* XXX magic */
+
+	*redir &= ~IOAPIC_REDLO_DEL_MASK;
+	switch (mpspo) {
+	case MPS_INTPO_ACTHI:
+		*redir &= ~IOAPIC_REDLO_ACTLO;
+		break;
+	case MPS_INTPO_DEF:
+	case MPS_INTPO_ACTLO:
+		*redir |= IOAPIC_REDLO_ACTLO;
+		break;
+	default:
+		panic("unknown MPS interrupt polarity %d", mpspo);
+	}
+	
+	if (entry->int_type != MPS_INTTYPE_INT) {
+		mp_cfg_special_intr(entry, redir);
+		return;
+	}
+	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
+	
+	switch (mpstrig) {
+	case MPS_INTTR_DEF:
+	case MPS_INTTR_LEVEL:
+		*redir |= IOAPIC_REDLO_LEVEL;
+		break;
+	case MPS_INTTR_EDGE:
+		*redir &= ~IOAPIC_REDLO_LEVEL;
+		break;
+	default:
+		panic("unknown MPS interrupt trigger %d", mpstrig);	
+	}
+}
+
+static void mp_cfg_eisa_intr (entry, redir)
+	const struct mpbios_int *entry;
+	u_int32_t *redir;
+{
+	int mpspo = entry->int_flags & 0x03; /* XXX magic */
+	int mpstrig = (entry->int_flags >> 2) & 0x03; /* XXX magic */
+
+	*redir &= ~IOAPIC_REDLO_DEL_MASK;
+	switch (mpspo) {
+	case MPS_INTPO_DEF:
+	case MPS_INTPO_ACTHI:
+		*redir &= ~IOAPIC_REDLO_ACTLO;
+		break;
+	case MPS_INTPO_ACTLO:
+		*redir |= IOAPIC_REDLO_ACTLO;
+		break;
+	default:
+		panic("unknown MPS interrupt polarity %d", mpspo);
+	}
+	
+	if (entry->int_type != MPS_INTTYPE_INT) {
+		mp_cfg_special_intr(entry, redir);
+		return;
+	}
+	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
+	
+	switch (mpstrig) {
+	case MPS_INTTR_LEVEL:
+		*redir |= IOAPIC_REDLO_LEVEL;
+		break;
+	case MPS_INTTR_EDGE:
+		*redir &= ~IOAPIC_REDLO_LEVEL;
+		break;
+	case MPS_INTTR_DEF:
+		/*
+		 * Set "default" setting based on ELCR value snagged
+		 * earlier.
+		 */
+		if (mp_busses[entry->src_bus_id].mb_data &
+		    (1<<entry->src_bus_irq)) {
+			*redir |= IOAPIC_REDLO_LEVEL;			
+		} else {
+			*redir &= ~IOAPIC_REDLO_LEVEL;
+		}
+		break;
+	default:
+		panic("unknown MPS interrupt trigger %d", mpstrig);	
+	}
+}
+
+
+static void mp_cfg_isa_intr (entry, redir)
+	const struct mpbios_int *entry;
+	u_int32_t *redir;
+{
+	int mpspo = entry->int_flags & 0x03; /* XXX magic */
+	int mpstrig = (entry->int_flags >> 2) & 0x03; /* XXX magic */
+
+	*redir &= ~IOAPIC_REDLO_DEL_MASK;
+	switch (mpspo) {
+	case MPS_INTPO_DEF:
+	case MPS_INTPO_ACTHI:
+		*redir &= ~IOAPIC_REDLO_ACTLO;
+		break;
+	case MPS_INTPO_ACTLO:
+		*redir |= IOAPIC_REDLO_ACTLO;
+		break;
+	default:
+		panic("unknown MPS interrupt polarity %d", mpspo);
+	}
+	
+	if (entry->int_type != MPS_INTTYPE_INT) {
+		mp_cfg_special_intr(entry, redir);
+		return;
+	}
+	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
+	
+	switch (mpstrig) {
+	case MPS_INTTR_LEVEL:
+		*redir |= IOAPIC_REDLO_LEVEL;
+		break;
+	case MPS_INTTR_DEF:
+	case MPS_INTTR_EDGE:
+		*redir &= ~IOAPIC_REDLO_LEVEL;
+		break;
+	default:
+		panic("unknown MPS interrupt trigger %d", mpstrig);	
+	}
+}
+
+
+static void mp_print_special_intr (intr)
+	int intr;
+{
+}
+
+static void mp_print_pci_intr (intr)
+	int intr;
+{
+	printf(" device %d INT_%c", (intr>>2)&0x1f, 'A' + (intr & 0x3));
+}
+
+static void mp_print_isa_intr (intr)
+	int intr;
+{
+	printf(" irq %d", intr);
+}
+
+static void mp_print_eisa_intr (intr)
+	int intr;
+{
+	printf(" EISA irq %d", intr);
+}
+
+
+
+#define TAB_UNIT	4
+#define TAB_ROUND(a)	_TAB_ROUND(a, TAB_UNIT)
+
+#define _TAB_ROUND(a,u)	(((a) + (u - 1)) & ~(u-1))
+#define EXTEND_TAB(a,u)	(!(_TAB_ROUND(a,u) == _TAB_ROUND((a+1),u)))
+
+static void
+mpbios_bus(ent, self)
+	const u_int8_t *ent;
+	struct device *self;
+{
+	const struct mpbios_bus *entry = (const struct mpbios_bus *)ent;
+	/* XXX should also add EISA support here. */
+	mp_busses[entry->bus_id].mb_intrs = NULL;
+	
+	if (memcmp(entry->bus_type, "PCI   ", 6) == 0) {
+		mp_busses[entry->bus_id].mb_name = "pci";
+		mp_busses[entry->bus_id].mb_idx = entry->bus_id;
+		mp_busses[entry->bus_id].mb_intr_print = mp_print_pci_intr;
+		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_pci_intr;
+	} else if (memcmp(entry->bus_type, "EISA  ", 6) == 0) {
+		mp_busses[entry->bus_id].mb_name = "eisa";
+		mp_busses[entry->bus_id].mb_idx = entry->bus_id;
+		mp_busses[entry->bus_id].mb_intr_print = mp_print_eisa_intr;
+		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_eisa_intr;
+
+		mp_busses[entry->bus_id].mb_data =
+		    inb(ELCR0) | (inb(ELCR1) << 8);
+		
+	} else if (memcmp(entry->bus_type, "ISA   ", 6) == 0) {
+		mp_busses[entry->bus_id].mb_name = "isa";
+		mp_busses[entry->bus_id].mb_idx = 0; /* XXX */
+		mp_busses[entry->bus_id].mb_intr_print = mp_print_isa_intr;
+		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_isa_intr;
+		if (mp_isa_bus != -1)
+			printf("oops: multiple isa busses?\n");
+		else
+			mp_isa_bus = entry->bus_id;
+	} else {
+		printf("%s: unsupported bus type %6.6s\n", self->dv_xname,
+		    entry->bus_type);
+	}
+}
+
+
+static void
+mpbios_ioapic(ent, self)
+	const u_int8_t *ent;
+	struct device *self;
+{
+	const struct mpbios_ioapic *entry = (const struct mpbios_ioapic *)ent;
+	struct apic_attach_args aaa;
+
+	/* XXX let flags checking happen in ioapic driver.. */
+	if (!(entry->apic_flags & IOAPICENTRY_FLAG_EN))
+		return;
+
+	aaa.aaa_name   = "ioapic";
+	aaa.apic_id = entry->apic_id;
+	aaa.apic_version = entry->apic_version;
+	aaa.apic_address = (paddr_t)entry->apic_address;
+	aaa.flags =  (mp_fps->mpfb2 & 0x80) ? IOAPIC_PICMODE : IOAPIC_VWIRE;
+
+	config_found_sm(self, &aaa, mp_print, mp_match);
+}
+
+static const char inttype_fmt[] = "\177\020"		
+		"f\0\2type\0" "=\1NMI\0" "=\2SMI\0" "=\3ExtINT\0";
+
+static const char flagtype_fmt[] = "\177\020"		
+		"f\0\2pol\0" "=\1Act Hi\0" "=\3Act Lo\0"
+		"f\2\2trig\0" "=\1Edge\0" "=\3Level\0";
+
+static void
+mpbios_int(ent, enttype, mpi)
+	const u_int8_t *ent;
+	int enttype;
+	struct mp_intr_map *mpi;
+{
+	const struct mpbios_int *entry = (const struct mpbios_int *)ent;
+	struct ioapic_softc *sc = NULL;
+
+	struct mp_intr_map *altmpi;
+	struct mp_bus *mpb;
+	
+	u_int32_t id = entry->dst_apic_id;
+	u_int32_t pin = entry->dst_apic_int;
+	u_int32_t bus = entry->src_bus_id;
+	u_int32_t dev = entry->src_bus_irq;
+	u_int32_t type = entry->int_type;
+	u_int32_t flags = entry->int_flags;
+
+	switch (type) {
+	case MPS_INTTYPE_INT:
+		mpb = &(mp_busses[bus]);
+		break;
+	case MPS_INTTYPE_ExtINT:
+		mpb = &extint_bus;
+		break;
+	case MPS_INTTYPE_SMI:
+		mpb = &smi_bus;
+		break;
+	case MPS_INTTYPE_NMI:
+		mpb = &nmi_bus;
+		break;
+	}
+	mpi->next = mpb->mb_intrs;
+	mpb->mb_intrs = mpi;
+	mpi->bus = mpb;
+	mpi->bus_pin = dev;
+	
+	mpi->ioapic_ih = APIC_INT_VIA_APIC |
+	    ((id<<APIC_INT_APIC_SHIFT) | ((pin<<APIC_INT_PIN_SHIFT)));
+
+	mpi->type = type;
+	mpi->flags = flags;
+	mpi->redir = 0;
+	if (mpb->mb_intr_cfg == NULL) {
+		printf("mpbios: can't find bus %d for apic %d pin %d\n",
+		    bus, id, pin);
+		return;
+	}
+	
+	(*mpb->mb_intr_cfg)(entry, &mpi->redir);
+
+	if (enttype == MPS_MCT_IOINT) {
+		/* XXX */
+		if (id == 0xff)
+			panic("can't deal with all-ioapics interrupt yet!");
+
+		sc = ioapics[id]; /* XXX XXX XXX */
+		mpi->ioapic = sc;
+		mpi->ioapic_pin = pin;
+
+		altmpi = sc->sc_pins[pin].ip_map;
+	
+		if (altmpi != NULL) {
+			if ((altmpi->type != type) ||
+			    (altmpi->flags != flags)) {
+				printf("%s: conflicting map entries for pin %d\n",
+				    sc->sc_dev.dv_xname, pin);
+			}
+		} else {
+			sc->sc_pins[pin].ip_map = mpi;
+		}
+	} else {
+		if (id != 0xff)
+			panic("can't deal with not-all-lapics interrupt yet!");
+		if (pin >= 2)
+			printf("pin %d of local apic doesn't exist!\n", pin);
+		else {
+			mpi->ioapic = NULL;
+			mpi->ioapic_pin = pin;
+			lapic_ints[pin] = mpi;
+		}
+	}
+	if (mp_verbose) {
+		char buf[256];
+
+		printf("%s: int%d attached to %s",
+		    sc? sc->sc_dev.dv_xname : "local apic",
+		    pin,
+		    mpb->mb_name);
+		if (mpb->mb_idx != -1)
+			printf("%d", mpb->mb_idx);
+
+		if (mpb != NULL) 
+
+		(*(mpb->mb_intr_print))(dev);
+
+		printf(" (type %s", 
+		    bitmask_snprintf(type, inttype_fmt, buf, sizeof(buf)));
+		
+		printf(" flags %s)\n",
+		    bitmask_snprintf(flags, flagtype_fmt, buf, sizeof(buf)));
+	}
+}
+
+
+int
+mpbios_cpu_start(struct cpu_info *ci)
+{
+	int error;
+	unsigned short dwordptr[2];
+	bus_addr_t curaddr;
+
+	/*
+	 * "The BSP must initialize CMOS shutdown code to 0Ah ..."
+	 */
+
+	outb(IO_RTC, NVRAM_RESET);
+	outb(IO_RTC+1, NVRAM_RESET_SOFT);
+	
+	/*
+	 * "and the warm reset vector (DWORD based at 40:67) to point
+	 * to the AP startup code ..."
+	 */
+
+	dwordptr[0] = 0;
+	dwordptr[1] = MP_TRAMPOLINE >> 4;
+	
+	/* pmap_kenter_pa (0, 0, VM_PROT_READ|VM_PROT_WRITE); */
+	pmap_enter (pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
+		    VM_PROT_READ|VM_PROT_WRITE);
+	memcpy ((u_int8_t *) 0x467, dwordptr, 4);
+	/* pmap_kremove (0, NBPG); */
+	pmap_extract (pmap_kernel(), 0, (paddr_t *)&curaddr);
+	
+	/*
+	 * ... prior to executing the following sequence:"
+	 */
+
+	if (ci->ci_flags & CPUF_AP) {
+		if ((error = i386_ipi_init(ci->ci_cpuid)) != 0)
+			return error;
+
+		delay(10000);
+
+		if (ci->ci_feature_flags & CPUID_APIC) {
+
+			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
+			    LAPIC_DLMODE_STARTUP)) != 0)
+				return error;
+			delay(200);
+
+			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
+			    LAPIC_DLMODE_STARTUP)) != 0)
+				return error;
+			delay(200);
+		}
+	}
+	return 0;
+}
+

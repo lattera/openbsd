@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mc146818reg.h,v 1.4.14.1 2001/07/04 10:40:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mc146818reg.h,v 1.4.14.2 2001/07/14 10:02:46 ho Exp $	*/
 /*	$NetBSD: mc146818reg.h,v 1.1 1995/05/04 19:31:18 cgd Exp $	*/
 
 /*
@@ -65,6 +65,9 @@
 /*
  * The registers, and the bits within each register.
  */
+
+#ifndef _IC_MC146818REG_H_
+#define _IC_MC146818REG_H_
 
 #define	MC_SEC		0x0	/* Time of year: seconds (0-59) */
 #define	MC_ASEC		0x1	/* Alarm: seconds */
@@ -195,3 +198,4 @@ typedef u_int mc_todregs[MC_NTODREGS];
 	} while (0);
 #endif
 
+#endif /* _IC_MC146818REG_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.2 2001/07/04 10:16:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.3 2001/07/14 10:02:38 ho Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -43,10 +43,6 @@
 #define	IPL_CLOCK	6	/* clock */
 #define	IPL_HIGH	7	/* everything */
 
-#ifndef _LOCORE
-int imask[IPL_HIGH+1];
-#endif
-
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
 #define	IST_PULSE	1	/* pulsed */
@@ -64,14 +60,30 @@ int imask[IPL_HIGH+1];
 
 #ifndef _LOCORE
 
-volatile int cpl, ipending, astpending;
+#ifdef MULTIPROCESSOR
+#include <machine/i82489reg.h>
+#include <machine/i82489var.h>
+#endif
+
+extern volatile u_int32_t lapic_tpr;
+volatile u_int32_t ipending;
+
+#ifndef MULTIPROCESSOR
+volatile u_int32_t astpending;
+#endif
+
+int imask[IPL_HIGH+1];
+int iunmask[IPL_HIGH+1];
+
+#define IMASK(level) imask[(level)]
+#define IUNMASK(level) iunmask[(level)]
 
 extern void Xspllower __P((void));
 
 static __inline int splraise __P((int));
 static __inline int spllower __P((int));
 static __inline void splx __P((int));
-static __inline void softintr __P((int));
+static __inline void softintr __P((int, int));
 
 /*
  * Add a mask to cpl, and return the old value of cpl.
@@ -80,9 +92,10 @@ static __inline int
 splraise(ncpl)
 	register int ncpl;
 {
-	register int ocpl = cpl;
+	register int ocpl = lapic_tpr;
 
-	cpl = ocpl | ncpl;
+	if (ncpl > ocpl)
+		lapic_tpr = ncpl;
 	return (ocpl);
 }
 
@@ -94,9 +107,8 @@ static __inline void
 splx(ncpl)
 	register int ncpl;
 {
-
-	cpl = ncpl;
-	if (ipending & ~ncpl)
+	lapic_tpr = ncpl;
+	if (ipending & IUNMASK(ncpl))
 		Xspllower();
 }
 
@@ -108,11 +120,15 @@ static __inline int
 spllower(ncpl)
 	register int ncpl;
 {
-	register int ocpl = cpl;
+	register int ocpl = lapic_tpr;
 
-	cpl = ncpl;
-	if (ipending & ~ncpl)
+	splx(ncpl);
+
+/* XXX - instead of splx() call above.
+	lapic_tpr = ncpl;
+	if (ipending & IUNMASK(ncpl))
 		Xspllower();
+*/
 	return (ocpl);
 }
 
@@ -151,17 +167,36 @@ spllower(ncpl)
  * We hand-code this to ensure that it's atomic.
  */
 static __inline void
-softintr(mask)
-	register int mask;
+softintr(sir, vec)
+	register int sir;
+	register int vec;
 {
-
-	__asm __volatile("orl %0,_ipending" : : "ir" (mask));
+	__asm __volatile("orl %0,_ipending" : : "ir" (sir));
+#ifdef MULTIPROCESSOR
+	i82489_writereg(LAPIC_ICRLO,
+	    vec | LAPIC_DLMODE_FIXED | LAPIC_LVL_ASSERT | LAPIC_DEST_SELF);
+#endif
 }
 
 #define	setsoftast()	(astpending = 1)
-#define	setsoftclock()	softintr(1 << SIR_CLOCK)
-#define	setsoftnet()	softintr(1 << SIR_NET)
-#define	setsofttty()	softintr(1 << SIR_TTY)
+#define	setsoftclock()	softintr(1 << SIR_CLOCK,SIR_CLOCK)
+#define	setsoftnet()	softintr(1 << SIR_NET,SIR_NET)
+#define	setsofttty()	softintr(1 << SIR_TTY,SIR_TTY)
+
+#define I386_IPI_HALT	0x00000001
+#define I386_IPI_TLB	0x00000002
+#define I386_IPI_FPSAVE	0x00000004
+
+/* the following are for debugging.. */
+#define I386_IPI_GMTB	0x00000010
+#define I386_IPI_NYCHI	0x00000020
+
+#define I386_NIPI	6
+
+struct cpu_info;
+void i386_send_ipi (struct cpu_info *, int);
+void i386_broadcast_ipi (int);
+void i386_ipi_handler (void);
 
 #endif /* !_LOCORE */
 
