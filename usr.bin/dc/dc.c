@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/dc/dc.c,v 1.2 2003/09/19 19:00:36 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/dc/dc.c,v 1.3 2003/09/19 19:06:29 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2003, Otto Moerbeek <otto@drijf.net>
@@ -17,7 +17,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.bin/dc/dc.c,v 1.2 2003/09/19 19:00:36 deraadt Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/dc/dc.c,v 1.3 2003/09/19 19:06:29 deraadt Exp $";
 #endif /* not lint */
 
 #include <err.h>
@@ -45,7 +45,6 @@ main(int argc, char *argv[])
 
 	if (argc > 2)
 		usage();
-
 
 	init_bmachine();
 	setlinebuf(stdout);
