@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/httpd/src/modules/standard/mod_vhost_alias.c,v 1.6 2002/08/15 16:06:11 henning Exp $ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
