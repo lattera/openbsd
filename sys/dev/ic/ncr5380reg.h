@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/ncr5380reg.h,v 1.3 1996/10/31 01:01:35 niklas Exp $	*/
 /*	$NetBSD: ncr5380reg.h,v 1.2 1996/01/01 22:24:35 thorpej Exp $	*/
 
 /* 

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/elink3reg.h,v 1.5 1996/10/31 01:01:29 niklas Exp $	*/
 /*	$NetBSD: elink3reg.h,v 1.3 1996/05/10 05:28:09 thorpej Exp $	*/
 
 /*

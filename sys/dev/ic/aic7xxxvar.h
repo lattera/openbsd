@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/aic7xxxvar.h,v 1.8 1996/10/31 01:01:25 niklas Exp $	*/
 /*
  * Interface to the generic driver for the aic7xxx based adaptec
  * SCSI controllers.  This is used to implement product specific
@@ -29,8 +30,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id: aic7xxxvar.h,v 1.6 1996/06/27 21:15:49 shawn Exp $
  */
 
 #ifndef _AIC7XXX_H_

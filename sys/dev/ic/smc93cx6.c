@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/dev/ic/smc93cx6.c,v 1.4 1996/10/31 01:01:40 niklas Exp $	*/
+
 /*
  * Interface for the 93C46/26/06 serial eeprom parts.
  *
@@ -17,8 +19,6 @@
  *    Daniel M. Eischen.
  * 4. Modifications may be freely made to this file if the above conditions
  *    are met.
- *
- *      $Id: smc93cx6.c,v 1.2 1996/06/27 21:15:50 shawn Exp $
  */
 
 /*
