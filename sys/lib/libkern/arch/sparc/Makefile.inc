@@ -1,0 +1,42 @@
+#	$OpenBSD: src/sys/lib/libkern/arch/sparc/Attic/Makefile.inc,v 1.9 2000/12/18 18:40:47 provos Exp $
+#	$NetBSD: Makefile.inc,v 1.12 1996/04/23 23:05:22 christos Exp $
+
+SRCS+=  __main.c imax.c imin.c lmax.c lmin.c max.c min.c ulmax.c ulmin.c \
+	memchr.c memcmp.c memset.c \
+	bcmp.c bzero.S strcat.c strcmp.c strcpy.c strlcat.c strlcpy.c \
+	strlen.S strncmp.c \
+	strncpy.c htonl.S htons.S ntohl.S ntohs.S scanc.c skpc.c \
+	strncasecmp.c
+
+SRCS+=	rem.S sdiv.S udiv.S urem.S
+SRCS+=	saveregs.S
+
+# `source' files built from m4 source
+# the name `div.o' is taken for the ANSI C `div' function, hence sdiv here
+SRCS+=	rem.S sdiv.S udiv.S urem.S
+CLEANFILES+=rem.S sdiv.S udiv.S urem.S
+
+sdiv.S: divrem.m4
+	echo 'building ${.TARGET} from ${.ALLSRC}'
+	(echo "define(NAME,\`.div')define(NAME2,\`__div')define(OP,\`div')define(S,\`true')"; \
+	 cat ${.ALLSRC}) | m4 > ${.TARGET}
+	chmod 444 ${.TARGET}
+
+udiv.S: divrem.m4
+	@echo 'building ${.TARGET} from ${.ALLSRC}'
+	@(echo "define(NAME,\`.udiv')define(NAME2,\`__udiv')define(OP,\`div')define(S,\`false')"; \
+	 cat ${.ALLSRC}) | m4 > ${.TARGET}
+	@chmod 444 ${.TARGET}
+
+rem.S:	divrem.m4
+	echo 'building ${.TARGET} from ${.ALLSRC}'
+	(echo "define(NAME,\`.rem')define(NAME2,\`__rem')define(OP,\`rem')define(S,\`true')"; \
+	 cat ${.ALLSRC}) | m4 > ${.TARGET}
+	chmod 444 ${.TARGET}
+
+urem.S: divrem.m4
+	@echo 'building ${.TARGET} from ${.ALLSRC}'
+	@(echo "define(NAME,\`.urem')define(NAME2,\`__urem')define(OP,\`rem')define(S,\`false')"; \
+	 cat ${.ALLSRC}) | m4 > ${.TARGET}
+	@chmod 444 ${.TARGET}
+
