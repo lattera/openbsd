@@ -1,0 +1,39 @@
+.\"	Copyright (c) 2001 Kungliga Tekniska Högskolan
+.\"	$KTH: DynRootDB.5,v 1.1.2.2 2001/06/10 21:13:14 lha Exp $
+.Dd April 30, 2001
+.Dt DynRootDB 5
+.Os Arla
+.Sh NAME
+.Nm DynRootDB
+.Nd AFS cells and database servers
+.Sh DESCRIPTION
+The file
+.Nm
+lists AFS cells that should appear in the afs root
+.Pa ( /afs )
+when starting
+.Nm afsd .
+.Pp
+Each line in the file should contain one cell, for example:
+.Bd -literal
+stacken.kth.se
+e.kth.se
+nada.kth.se
+it.kth.se
+.Ed
+.Pp
+.Nm
+is read when 
+.Nm afsd
+is started, normally when the system boots.
+.Pp
+If
+.Nm
+doesn't exist, then all cells listed in CellServDB and dynamically
+found nodes appear in the afs root.
+.Sh FILES
+.Pa /etc/afs/DynRootDB
+.Pa /etc/afs/CellServDB
+.Sh SEE ALSO
+.Xr CellServDB 5 ,
+.Xr afsd 8
