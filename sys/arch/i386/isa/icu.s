@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.2 2001/07/14 10:02:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.3 2001/07/14 13:40:45 ho Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -199,7 +199,7 @@ IDTVEC(softnet)
  *	movl	%ebx,CPL
  */
 #include <net/netisr_dispatch.h>
- 	movl	%ebx,_cpl 
+ 	movl	%ebx,CPL
 	jmp	%esi
 #undef DONETISR
 
