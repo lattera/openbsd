@@ -28,7 +28,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/gen/getbsize.c,v 1.8 2003/06/02 20:18:34 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/gen/getbsize.c,v 1.9 2003/06/11 21:03:10 deraadt Exp $";
 #endif /* not lint */
 
 #include <err.h>
@@ -37,9 +37,7 @@ static char rcsid[] = "$OpenBSD: src/lib/libc/gen/getbsize.c,v 1.8 2003/06/02 20
 #include <string.h>
 
 char *
-getbsize(headerlenp, blocksizep)
-	int *headerlenp;
-	long *blocksizep;
+getbsize(int *headerlenp, long *blocksizep)
 {
 	static char header[20];
 	long n, max, mul, blocksize;
