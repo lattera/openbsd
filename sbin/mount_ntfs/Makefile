@@ -1,4 +1,4 @@
-#	$Id$
+#	$OpenBSD: src/sbin/mount_ntfs/Makefile,v 1.2 2003/05/20 03:19:57 tedu Exp $
 
 PROG=	mount_ntfs
 SRCS=	mount_ntfs.c getmntopts.c
