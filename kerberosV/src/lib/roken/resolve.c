@@ -45,7 +45,7 @@
 
 #include <assert.h>
 
-RCSID("$Id$");
+RCSID("$KTH: resolve.c,v 1.38.2.1 2003/04/22 15:02:47 lha Exp $");
 
 #undef HAVE_RES_NSEARCH
 #if (defined(HAVE_RES_SEARCH) || defined(HAVE_RES_NSEARCH)) && defined(HAVE_DN_EXPAND)
