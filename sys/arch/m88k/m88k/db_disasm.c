@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_disasm.c,v 1.13 2004/01/07 17:52:30 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/db_disasm.c,v 1.1 2004/06/19 18:28:37 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University

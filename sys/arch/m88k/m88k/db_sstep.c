@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/ddb/Attic/db_sstep.c,v 1.1.1.1 2004/04/21 15:23:51 aoyama Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/db_sstep.c,v 1.1 2004/06/19 18:28:37 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University

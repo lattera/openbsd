@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_trace.c,v 1.27 2004/01/29 21:39:05 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/db_trace.c,v 1.1 2004/06/19 18:28:37 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
