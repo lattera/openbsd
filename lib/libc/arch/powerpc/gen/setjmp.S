@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/powerpc/gen/setjmp.S,v 1.3 2002/05/08 20:33:42 drahn Exp $ */
+/*	$OpenBSD: src/lib/libc/arch/powerpc/gen/setjmp.S,v 1.3.4.1 2004/03/02 22:00:38 brad Exp $ */
 /*
  * Copyright (c) 1996 Dale Rahn. All rights reserved.
  *
@@ -152,5 +152,11 @@ ENTRY(_longjmp)
 	lwz 0, JMP_xer(3)
 	mtxer 0
 	/* f14-f31, fpscr */
-	mr 3, 4
+
+	/* if r4 == 0, return 1, not 0 */
+	mr	3, 4
+	cmpwi	4,0
+	bne	1f
+	li	3, 1
+1:
 	blr
