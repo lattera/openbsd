@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1997 Brian Somers <brian@Awfulhak.org>
+ * Copyright (c) 1999 Brian Somers <brian@Awfulhak.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,14 +23,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: vjcomp.h,v 1.2 1999/02/06 03:22:49 brian Exp $
+ *	$Id:$
  */
+
+#define	LAYER_ASYNC	2
+#define	LAYER_SYNC	3
+#define	LAYER_HDLC	4
+#define	LAYER_ACF	5
+#define	LAYER_PROTO	6
+#define	LAYER_LQR	7
+#define	LAYER_CCP	8
+#define	LAYER_VJ	9
+#define	LAYER_ALIAS	10
+
+#define	LAYER_MAX	10	/* How many layers we can handle on a link */
 
 struct mbuf;
 struct link;
-struct ipcp;
 struct bundle;
 
-extern const char *vj2asc(u_int32_t);
-
-extern struct layer vjlayer;
+struct layer {
+  int type;
+  const char *name;
+  struct mbuf *(*push)(struct bundle *, struct link *, struct mbuf *,
+                       int pri, u_short *proto);
+  struct mbuf *(*pull)(struct bundle *, struct link *, struct mbuf *,
+                       u_short *);
+};

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1997 Brian Somers <brian@Awfulhak.org>
+ * Copyright (c) 1999 Brian Somers <brian@Awfulhak.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,14 +23,46 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: vjcomp.h,v 1.2 1999/02/06 03:22:49 brian Exp $
+ *	$Id:$
  */
 
-struct mbuf;
-struct link;
-struct ipcp;
-struct bundle;
+#include <sys/types.h>
 
-extern const char *vj2asc(u_int32_t);
+#include <stdio.h>
+#include <termios.h>
 
-extern struct layer vjlayer;
+#include "layer.h"
+#include "defs.h"
+#include "mbuf.h"
+#include "log.h"
+#include "sync.h"
+#include "timer.h"
+#include "lqr.h"
+#include "hdlc.h"
+#include "throughput.h"
+#include "fsm.h"
+#include "lcp.h"
+#include "ccp.h"
+#include "link.h"
+#include "async.h"
+#include "descriptor.h"
+#include "physical.h"
+
+static struct mbuf *
+sync_LayerPull(struct bundle *b, struct link *l, struct mbuf *bp,
+               u_short *proto)
+{
+  struct physical *p = link2physical(l);
+
+  if (!p)
+    log_Printf(LogERROR, "Can't Pull a sync packet from a logical link\n");
+  else {
+    /* Normally done by the HDLC layer */
+    p->hdlc.lqm.SaveInOctets += mbuf_Length(bp) + 1;
+    p->hdlc.lqm.SaveInPackets++;
+  }
+
+  return bp;
+}
+
+struct layer synclayer = { LAYER_SYNC, "sync", NULL, sync_LayerPull };

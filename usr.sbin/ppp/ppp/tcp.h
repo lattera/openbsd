@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1997 Brian Somers <brian@Awfulhak.org>
+ * Copyright (c) 1999 Brian Somers <brian@Awfulhak.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,14 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: vjcomp.h,v 1.2 1999/02/06 03:22:49 brian Exp $
+ *	$Id:$
  */
 
-struct mbuf;
-struct link;
-struct ipcp;
-struct bundle;
-
-extern const char *vj2asc(u_int32_t);
-
-extern struct layer vjlayer;
+extern const struct device tcpdevice;
