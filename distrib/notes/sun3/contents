@@ -1,0 +1,33 @@
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		installboot	The OpenBSD/sun3 boot loader installation
+				program.
+		bootxx		The OpenBSD/sun3 boot block.
+		netboot		The OpenBSD/sun3 network boot loader.
+		tapeboot	The OpenBSD/sun3 tape boot loader.
+		ufsboot		The OpenBSD/sun3 disk boot loader.
+
+These files can be used to make a boot tape suitable for installing
+OpenBSD/sun3.  These files can also be used to configure an NFS server
+to support installation "over the network".  See the section "Getting
+the OpenBSD System onto Useful Media" for instructions on either method.
+
+DistributionDescription
+
+OpenBSDbase(21.1M,63.6M)
+
+OpenBSDcomp(14.2M,42.0M)
+
+OpenBSDetc(1.0M,3.2M)
+
+OpenBSDgame(2.8M,6.6M)
+
+OpenBSDman(5.4M,19.5M)
+
+OpenBSDmisc(1.7M,5.6M)
