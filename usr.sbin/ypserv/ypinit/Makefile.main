@@ -1,5 +1,8 @@
-#	$Id: Makefile,v 1.2 1995/11/01 16:56:03 deraadt Exp $
+#	from: @(#)Makefile	5.6.1.2 (Berkeley) 5/8/91
+#	$Id: Makefile.main,v 1.1 1996/01/13 23:49:08 moj Exp $
 
 SUBDIR=	
+
+passwd group hosts networks rpc services protocols netid: _SUBDIRUSE
 
 .include <bsd.subdir.mk>
