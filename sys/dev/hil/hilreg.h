@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hilreg.h,v 1.3 2003/02/15 01:02:28 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hilreg.h,v 1.3.4.1 2003/03/28 14:05:52 niklas Exp $	*/
 /*	$NetBSD: hilreg.h,v 1.6 1997/02/02 09:39:21 thorpej Exp $	*/
 
 /*

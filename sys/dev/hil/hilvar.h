@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hilvar.h,v 1.5 2003/02/26 20:22:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hilvar.h,v 1.5.4.1 2003/03/28 14:05:52 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.

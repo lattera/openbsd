@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/tcdsreg.h,v 1.1 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/dev/tc/tcdsreg.h,v 1.1.8.1 2003/03/28 14:05:52 niklas Exp $ */
 /* $NetBSD: tcdsreg.h,v 1.1 2000/07/04 02:22:20 nisimura Exp $ */
 
 /*

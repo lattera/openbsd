@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hilkbd.c,v 1.9 2003/02/26 20:22:54 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hilkbd.c,v 1.9.4.1 2003/03/28 14:05:52 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.

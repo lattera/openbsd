@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hilkbdmap.h,v 1.1 2003/02/11 19:39:30 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hilkbdmap.h,v 1.1.4.1 2003/03/28 14:05:52 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
