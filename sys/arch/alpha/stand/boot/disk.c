@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/boot/disk.c,v 1.3 1996/07/29 23:01:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/boot/disk.c,v 1.4 1996/10/30 22:40:42 niklas Exp $	*/
 /*	$NetBSD: disk.c,v 1.3 1995/11/23 02:39:40 cgd Exp $	*/
 
 /*

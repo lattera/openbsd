@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/Attic/trap.h,v 1.2 1996/07/29 22:59:25 niklas Exp $	*/
-/*	$NetBSD: trap.h,v 1.1 1995/02/13 23:07:58 cgd Exp $	*/
+/*	$NetBSD: aout_machdep.h,v 1.1 1995/02/13 23:07:37 cgd Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -28,22 +27,12 @@
  * rights to redistribute these changes.
  */
 
-#define	T_ASTFLT	0x00
-#define	T_UNAFLT	0x01
-#define	T_ARITHFLT	0x02
+#ifndef _ALPHA_EXEC_H_
+#define	_ALPHA_EXEC_H_
 
-#define	T_IFLT		0x10
-#define	T_BPT		(T_IFLT|0x00)
-#define	T_BUGCHK	(T_IFLT|0x01)
-#define	T_GENTRAP	(T_IFLT|0x02)
-#define	T_FPDISABLED	(T_IFLT|0x03)
-#define	T_OPDEC		(T_IFLT|0x04)
+#define cpu_exec_aout_makecmds(p, epp)	ENOEXEC
 
-#define	T_MMFLT		0x20
-#define	T_INVALTRANS	(T_MMFLT|0x00)
-#define	T_ACCESS	(T_MMFLT|0x01)
-#define	T_FOR		(T_MMFLT|0x02)
-#define	T_FOE		(T_MMFLT|0x03)
-#define	T_FOW		(T_MMFLT|0x04)
+/* Size of a page in an object file. */
+#define	__LDPGSZ	8192
 
-#define	T_USER		0x80		/* user-mode flag or'ed with type */
+#endif /* !_ALPHA_EXEC_H_ */
