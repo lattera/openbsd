@@ -17,7 +17,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: packet.c,v 1.26 2000/04/04 21:37:27 markus Exp $");
+RCSID("$Id: packet.c,v 1.27 2000/04/12 09:39:10 markus Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -1053,6 +1053,12 @@ packet_get_raw(int *length_ptr)
 	if (length_ptr != NULL)
 		*length_ptr = bytes;
 	return buffer_ptr(&incoming_packet);
+}
+
+int
+packet_remaining(void)
+{
+	return buffer_len(&incoming_packet);
 }
 
 /*
