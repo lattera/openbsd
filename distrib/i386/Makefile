@@ -1,5 +1,5 @@
-#	$OpenBSD: src/distrib/i386/Makefile,v 1.3 1997/09/17 14:19:19 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/Makefile,v 1.4 1997/09/18 17:18:37 deraadt Exp $
 
-SUBDIR=	../crunch floppies
+SUBDIR=	floppies
 
 .include <bsd.subdir.mk>
