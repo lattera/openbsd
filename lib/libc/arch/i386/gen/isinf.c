@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.5 2003/06/02 20:18:30 millert Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.6 2003/06/25 21:15:04 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -34,11 +34,12 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.5 2003/06/02 20:18:30 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.6 2003/06/25 21:15:04 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
 #include <machine/ieee.h>
+#include <math.h>
 
 int
 isinf(d)
