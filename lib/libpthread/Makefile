@@ -1,22 +1,53 @@
-#	from: @(#)Makefile	5.2 (Berkeley) 3/5/91
+# Generated automatically from Makefile.in by configure.
+#	@(#)Makefile	5.2 (Berkeley) 3/5/91
+#
 
 LIB=pthread
-NOPIC= no
-CPPFLAGS+= -DPTHREAD_KERNEL -I. -I${.CURDIR}/include -I${.CURDIR}/arch/${MACHINE}
-CFLAGS+= ${CPPFLAGS}
+#NOPIC=
+#NOPROFILE=1
+CPPFLAGS+= -I${.CURDIR} -I${.CURDIR}/include -I${srcdir}/include -DPTHREAD_KERNEL
+CDEBUGFLAGS= -g -O2 -Werror
+CFLAGS+= ${CDEBUGFLAGS}
+# CFLAGS+= ${CPPFLAGS} <- done by bsd.lib.mk
+CFLAGS+= ${CPPFLAGS} 
+LIBDIR= $(exec_prefix)/lib
+BINDIR= $(exec_prefix)/bin
+INCDIR= $(exec_prefix)/include
+MANDIR= $(exec_prefix)/man
 
-.include "${.CURDIR}/arch/${MACHINE}/Makefile.inc"
-.include "${.CURDIR}/pthreads/Makefile.inc"
-.include "${.CURDIR}/stdio/Makefile.inc"
+.OBJDIR != if test -d ${.CURDIR}/obj ; then true ; else mkdir ${.CURDIR}/obj || exit 1 ; fi ; echo ${.CURDIR}/obj
 
-all beforedepend: pthread
+# Standard bsd install rules look for the "install" program, rather than
+# using some variable.  So, hack things so that that install rule works.
+BINGRP != echo " " `groups` " " | sed 's/ [0-9][0-9]* / /g' | awk '{print $$1}'
+BINOWN != echo $${USER}
+LIBMODE = 644 # so ranlib can run!
 
-CLEANFILES+=pthread 
+.include "config.flags"
 
-pthread: 
-	if [ ! -e pthread ]; then \
-		ln -s ${.CURDIR}/include pthread; \
-	fi
-	
+# %!$@ pmake seems to automagically cd into the obj directory, so relative 
+# srcdir references are completely botched.  Try to figure out an absolute
+# pathname for srcdir here, and live with it.
+srcdir = $(srctop)
+
+beforeinstall: install-dirs
+
+.include "${srcdir}/pthreads/Makefile.inc"
+.include "${srcdir}/stdlib/Makefile.inc"
+.include "${srcdir}/stdio/Makefile.inc"
+.include "${srcdir}/string/Makefile.inc"
+.include "${srcdir}/gen/Makefile.inc"
+.include "${srcdir}/net/Makefile.inc"
+.include "${srcdir}/scripts/Makefile.inc"
+
+$(OBJS) : $(config) $(types) $(paths)
+
+Makefile: ${srcdir}/config/Makefile.in
+	cd ${.CURDIR} && sh config.status
+
+all-lib : libpthread.a
+# Removed make install since mysql uses this in place.
+#install : install-bin install-include
+install:
+
 .include <bsd.lib.mk>
-

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,7 +37,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)freopen.c	5.6 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: freopen.c,v 1.1 1994/02/07 22:05:56 proven Exp $";
+static char *rcsid = "$Id: freopen.c,v 1.54 1995/03/29 04:24:44 proven Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <pthread.h>
@@ -71,7 +72,7 @@ freopen(file, mode, fp)
 		return (NULL);
 	}
 
-	pthread_once(&__sdidinit, __sinit);
+	__sinit ();
 
 	/*
 	 * There are actually programs that depend on being able to "freopen"
@@ -118,7 +119,8 @@ freopen(file, mode, fp)
 			/*
 			 * If reopening something that was open before on a real file, try
 	 		 * to maintain the descriptor.  Various C library routines (perror)
-	 		 * assume stderr is always fd STDERR_FILENO, even if being freopen'd.
+	 		 * assume stderr is always fd STDERR_FILENO, even if being 
+			 * freopen'd.
 	 		 */
 			/* Testing f == fp->_file may no longer be necessary */
 			if (fp->_file >= 0 && f != fp->_file) {
@@ -130,13 +132,14 @@ freopen(file, mode, fp)
 			fp->_flags = flags;
 			fp->_file = f;
 			ret = fp;
-			break;
 		} else {
 			/* unlock __sfp_mutex, and try again later */
 			pthread_mutex_unlock(&__sfp_mutex);
 			pthread_yield();
 			continue;
 		}
+		/* @@ Yo, Chris!  Between the "break" and "continue" statements
+		   above, the program will never get here.  What gives?  */
 		pthread_mutex_unlock(&__sfp_mutex);
 		funlockfile(fp);
 		return(ret);

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,10 +37,9 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)wsetup.c	5.2 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: wsetup.c,v 1.1 1994/02/07 22:07:02 proven Exp $";
+static char *rcsid = "$Id: wsetup.c,v 1.52 1994/09/18 22:19:59 raeburn Exp $";
 #endif /* LIBC_SCCS and not lint */
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "local.h"
@@ -53,8 +53,7 @@ __swsetup(fp)
 	register FILE *fp;
 {
 	/* make sure stdio is set up */
-	if (!__sdidinit)
-		__sinit();
+	__sinit ();
 
 	/*
 	 * If we are not writing, we had better be reading and writing.

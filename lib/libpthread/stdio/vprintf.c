@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,14 +37,15 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)vprintf.c	5.6 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: vprintf.c,v 1.1 1994/02/07 22:06:55 proven Exp $";
+static char *rcsid = "$Id: vprintf.c,v 1.53 1995/09/25 08:29:33 proven Exp $";
 #endif /* LIBC_SCCS and not lint */
 
+#include <stdarg.h>
 #include <stdio.h>
 
 vprintf(fmt, ap)
 	char const *fmt;
-	va_list ap;
+	pthread_va_list ap;
 {
 	return (vfprintf(stdout, fmt, ap));
 }

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,13 +37,15 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)flags.c	5.1 (Berkeley) 1/20/91";*/
-static char *rcsid = "$Id: flags.c,v 1.1 1994/02/07 22:05:47 proven Exp $";
+static char *rcsid = "$Id: flags.c,v 1.54 1995/02/18 18:11:33 ghudson Exp $";
 #endif /* LIBC_SCCS and not lint */
 
+#include <pthread.h>
 #include <sys/types.h>
-#include <sys/file.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 /*
  * Return the (stdio) flags for a given mode.  Store the flags

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1993, 1994 Chris Provenzano. 
  * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -36,9 +37,10 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)printf.c	5.6 (Berkeley) 1/20/91";*/
-static char *rcsid = "$Id: printf.c,v 1.1 1994/02/07 22:06:22 proven Exp $";
+static char *rcsid = "$Id: printf.c,v 1.52 1994/12/11 09:16:47 raeburn Exp $";
 #endif /* LIBC_SCCS and not lint */
 
+#include <stdarg.h>
 #include <pthread.h>
 #include <stdio.h>
 
