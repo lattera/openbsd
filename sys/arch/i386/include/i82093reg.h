@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82093reg.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/i82093reg.h,v 1.1.2.3 2004/03/23 23:26:06 niklas Exp $	*/
 /* $NetBSD: i82093reg.h,v 1.1.2.2 2000/02/21 18:54:07 sommerfeld Exp $ */
 
 /*-
@@ -119,3 +119,6 @@
 #define IMCR_REGISTER		0x70
 #define		IMCR_PIC	0x00
 #define 	IMCR_APIC	0x01
+
+#define ioapic_asm_ack(num) \
+    movl	$0,_C_LABEL(local_apic) + LAPIC_EOI
