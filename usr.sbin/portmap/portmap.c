@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/portmap/portmap.c,v 1.13 1997/01/17 16:07:27 millert Exp $	*/
+
 /*-
  * Copyright (c) 1996 Theo de Raadt (OpenBSD). All rights reserved.
  * Copyright (c) 1990 The Regents of the University of California.
@@ -39,8 +41,11 @@ char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-/*static char sccsid[] = "from: @(#)portmap.c	5.4 (Berkeley) 4/19/91";*/
-static char rcsid[] = "$Id: portmap.c,v 1.11 1996/10/06 04:13:12 deraadt Exp $";
+#if 0
+static char sccsid[] = "from: @(#)portmap.c	5.4 (Berkeley) 4/19/91";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.sbin/portmap/portmap.c,v 1.13 1997/01/17 16:07:27 millert Exp $";
+#endif
 #endif /* not lint */
 
 /*
