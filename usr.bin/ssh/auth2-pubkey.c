@@ -23,8 +23,9 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-pubkey.c,v 1.7 2004/06/21 17:36:31 avsm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-pubkey.c,v 1.7.2.1 2005/03/10 16:28:27 brad Exp $");
 
+#include "ssh.h"
 #include "ssh2.h"
 #include "xmalloc.h"
 #include "packet.h"
@@ -40,6 +41,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth2-pubkey.c,v 1.7 2004/06/21 17:36:31 avsm E
 #include "auth-options.h"
 #include "canohost.h"
 #include "monitor_wrap.h"
+#include "misc.h"
 
 /* import */
 extern ServerOptions options;
@@ -163,7 +165,7 @@ done:
 static int
 user_key_allowed2(struct passwd *pw, Key *key, char *file)
 {
-	char line[8192];
+	char line[SSH_MAX_PUBKEY_BYTES];
 	int found_key = 0;
 	FILE *f;
 	u_long linenum = 0;
@@ -200,9 +202,9 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
 	found_key = 0;
 	found = key_new(key->type);
 
-	while (fgets(line, sizeof(line), f)) {
+	while (read_keyfile_line(f, file, line, sizeof(line), &linenum) != -1) {
 		char *cp, *key_options = NULL;
-		linenum++;
+
 		/* Skip leading whitespace, empty and comment lines. */
 		for (cp = line; *cp == ' ' || *cp == '\t'; cp++)
 			;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.11 2002/03/04 17:27:39 stevesk Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.11.12.1 2005/03/10 16:28:27 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -39,5 +39,9 @@ void	 buffer_consume(Buffer *, u_int);
 void	 buffer_consume_end(Buffer *, u_int);
 
 void     buffer_dump(Buffer *);
+
+int	 buffer_get_ret(Buffer *, void *, u_int);
+int	 buffer_consume_ret(Buffer *, u_int);
+int	 buffer_consume_end_ret(Buffer *, u_int);
 
 #endif				/* BUFFER_H */

@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.58 2004/08/23 11:48:09 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.58.2.1 2005/03/10 16:28:27 brad Exp $");
 
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -51,6 +51,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.58 2004/08/23 11:48:09 djm Exp $
 #include "log.h"
 #include "authfile.h"
 #include "rsa.h"
+#include "misc.h"
 
 /* Version identification string for SSH v1 identity files. */
 static const char authfile_id_string[] =
@@ -598,13 +599,14 @@ static int
 key_try_load_public(Key *k, const char *filename, char **commentp)
 {
 	FILE *f;
-	char line[4096];
+	char line[SSH_MAX_PUBKEY_BYTES];
 	char *cp;
+	u_long linenum = 0;
 
 	f = fopen(filename, "r");
 	if (f != NULL) {
-		while (fgets(line, sizeof(line), f)) {
-			line[sizeof(line)-1] = '\0';
+		while (read_keyfile_line(f, filename, line, sizeof(line),
+			    &linenum) != -1) {
 			cp = line;
 			switch (*cp) {
 			case '#':
