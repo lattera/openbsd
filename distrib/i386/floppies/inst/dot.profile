@@ -1,3 +1,4 @@
+#       $OpenBSD: src/distrib/i386/floppies/inst/Attic/dot.profile,v 1.5 1997/04/17 02:10:37 niklas Exp $
 #
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.
@@ -27,7 +28,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#       $Id: dot.profile,v 1.3 1995/12/14 07:00:10 deraadt Exp $
 
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 export PATH

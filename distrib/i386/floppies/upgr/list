@@ -1,4 +1,4 @@
-#	$Id: list,v 1.2 1994/10/18 07:03:15 glass Exp $
+#	$OpenBSD: src/distrib/i386/floppies/upgr/Attic/list,v 1.3 1997/04/17 02:10:51 niklas Exp $
 
 # and the upgrade tools
 COPY	dot.profile			.profile

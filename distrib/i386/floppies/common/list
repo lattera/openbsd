@@ -1,4 +1,4 @@
-#	$Id: list,v 1.2 1997/04/14 10:56:22 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/floppies/common/Attic/list,v 1.4 1997/04/17 02:10:32 niklas Exp $
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin	instbin
