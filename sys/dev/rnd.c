@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rnd.c,v 1.63 2003/08/15 20:32:16 tedu Exp $	*/
+/*	$OpenBSD: src/sys/dev/rnd.c,v 1.63.2.1 2004/07/17 03:02:25 brad Exp $	*/
 
 /*
  * rnd.c -- A strong random number generator
@@ -263,6 +263,7 @@ int	rnd_debug = 0x0000;
  * For a pool of size 64, try x^64+x^62+x^38+x^10+x^6+x+1.
  */
 #define POOLBITS (POOLWORDS*32)
+#define POOLBYTES (POOLWORDS*4)
 #if POOLWORDS == 2048
 #define	TAP1	1638
 #define	TAP2	1231
@@ -948,15 +949,17 @@ randomread(dev, uio, ioflag)
 	struct uio *uio;
 	int	ioflag;
 {
-	int	ret = 0;
-	int	i;
+	int		ret = 0;
+	int		i;
+	u_int32_t 	*buf;
 
 	if (uio->uio_resid == 0)
 		return 0;
 
+	MALLOC(buf, u_int32_t *, POOLBYTES, M_TEMP, M_WAITOK);
+
 	while (!ret && uio->uio_resid > 0) {
-		u_int32_t buf[ POOLWORDS ];
-		int	n = min(sizeof(buf), uio->uio_resid);
+		int	n = min(POOLBYTES, uio->uio_resid);
 
 		switch(minor(dev)) {
 		case RND_RND:
@@ -1017,6 +1020,8 @@ randomread(dev, uio, ioflag)
 		if (n != 0 && ret == 0)
 			ret = uiomove((caddr_t)buf, n, uio);
 	}
+
+	FREE(buf, M_TEMP);
 	return ret;
 }
 
@@ -1109,7 +1114,8 @@ randomwrite(dev, uio, flags)
 	struct uio *uio;
 	int	flags;
 {
-	int	ret = 0;
+	int		ret = 0;
+	u_int32_t	*buf;
 
 	if (minor(dev) == RND_RND || minor(dev) == RND_PRND)
 		return ENXIO;
@@ -1117,9 +1123,10 @@ randomwrite(dev, uio, flags)
 	if (uio->uio_resid == 0)
 		return 0;
 
+	MALLOC(buf, u_int32_t *, POOLBYTES, M_TEMP, M_WAITOK);
+
 	while (!ret && uio->uio_resid > 0) {
-		u_int32_t	buf[ POOLWORDS ];
-		u_short		n = min(sizeof(buf),uio->uio_resid);
+		u_short	n = min(POOLBYTES, uio->uio_resid);
 
 		ret = uiomove((caddr_t)buf, n, uio);
 		if (!ret) {
@@ -1132,6 +1139,7 @@ randomwrite(dev, uio, flags)
 	if (minor(dev) == RND_ARND && !ret)
 		arc4random_initialized = 0;
 
+	FREE(buf, M_TEMP);
 	return ret;
 }
 
