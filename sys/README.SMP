@@ -8,14 +8,33 @@ you mainly need to carry out the following procedure.
   operations in lines matching '^T'.  Call the tag you will be using
   for $NEW_TAG and the other one $OLD_TAG.
 
+* Remove every trace of the old synchronization tag, note that cvs rtag -F
+  won't cut it, as it does not remove files that have been removed since
+  last time.
+
+  $ cvs -d cvs.openbsd.org:/cvs rtag -d $OLD_TAG src/sys
+
 * Tag the trunk with the new synchronization tag.
 
-  $ cvs -d cvs.openbsd.org:/cvs rtag -F -rHEAD $NEW_TAG src/sys
+  $ cvs -d cvs.openbsd.org:/cvs rtag -rHEAD $NEW_TAG src/sys
 
 * Have an SMP branch checkout available with -kk substitution done.
   For example check out a fresh one:
 
   $ cvs get -rSMP -kk src/sys
+
+* Create and add directories that have been added to the trunk since
+  last synchronization.  Say you have a clean standard trunk checkout in $STD
+  and your clean SMP checkout is in $SMP:
+
+  $ cd $STD/src/sys
+  $ find . -type d \! -name CVS \! -path "*/compile/*" |sort>/tmp/stddirs
+  $ cd $SMP/src/sys
+  $ find . -type d \! -name CVS \! -path "*/compile/*" |sort>/tmp/smpdirs
+  $ comm -23 /tmp/{std,smp}dirs |while read d; do
+  >   mkdir $d
+  >   cvs add $d
+  > done
 
 * Go into src/sys and merge from the trunk (make sure that the repository
   you use have the new tags from the tagging above, i.e. don't use a mirror
@@ -27,30 +46,60 @@ you mainly need to carry out the following procedure.
 
   $ cvs -q up -dP -rSMP -kk 2>&1 | grep '^C '
 
-* Build and test a GENERIC.MP kernel, fix every regression you can find.
+* Build and test an i386 GENERIC.MP kernel as well as an alpha GENERIC,
+  fix every regression you can find.
+
+* Time to fixup some cvs bugs.  Files that has got added since last
+  synchronization will make cvs choke and leave the RCS file locked
+  on cvs.openbsd.org.  However it will succeed in update the file first,
+  and after removing it locally, two updates are needed, the 1st to
+  remove the local CVS/Entries entry, and the second to get it
+  checked out.
+
+  $ fixup() {
+  >   cvs -qd cvs.openbsd.org:/cvs ci -m'dummy message' $1
+  >   ssh cvs.openbsd.org 'rcs -u /cvs/src/sys/'$1',v'
+  >   rm $1
+  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
+  >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
+  > }
+
+  Now you can use the fixup function to fix all the files that are new.
+  This command will make you a script you can source:
+
+  $ find . -path "*/CVS/Entries" |xargs grep /0/ \
+  >   |sed -e 's#CVS/Entries:/##' -e 's#/0/.*##' -e 's/^/fixup /' >fixups
+  $ . ./fixups
+
+  It will go slow and report stuff like:
+
+  Checking in ./foo/bar;
+  /cvs/src/sys/foo/bar,v  <--  bar
+  cvs server: bar: No such file or directory
+  cvs [server aborted]: error diffing bar
+  RCS file: /cvs/src/sys/./foo/bar,v
+  1.1 unlocked
+  done
+  cvs server: warning: new-born ./foo/bar has disappeared
+  U ./foo/bar
+
+  All other reports are abnormal and you should check them closer.
+  Also this will make /tmp dirty on cvs, please login and clen your stuff.
 
 * Commit to the SMP branch in pieces to not lock too much of the sys tree
   in the repository, Nice chunks are perhaps 100-300 files.
-
-  [ There are some bugs in cvs related to brach merges:
-    I) Readdition of files that have gone dead.  They need to have
-       the timestamp in the Entries file changed to /dummy timestamp/
-       in order to be accepted by commit.
-    II) Under som circumstances cvs just bombs on a file leaving it
-        updated and locked in the repository.  In that case something
-        like this is needed:
-
-	x=path/to/file/relative/to/sys
-	ssh cvs.openbsd.org "rcs -u /cvs/src/sys/$x,v"
-        rm $x
-        cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $x
-        cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $x
-
-    Readdition of directories is not working at all, they need to be
-    manually added. ]
 
 * A nice check is to browse the output of:
 
   $ cvs -q rdiff -u -r$NEW_TAG -rSMP
 
   It should just by differences related to multiprocessor support.
+
+PS
+  Here is a note I once wrote, I do not know if the fixup function above
+  covers files like this as well, if not, look here for a hint of how to
+  deal:
+
+  Readdition of files that have gone dead.  They need to have
+  the timestamp in the Entries file changed to /dummy timestamp/
+  in order to be accepted by commit.
