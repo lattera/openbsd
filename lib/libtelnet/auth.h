@@ -31,7 +31,8 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)auth.h	8.1 (Berkeley) 6/4/93
- *	$Id: auth.h,v 1.4 1995/06/05 19:46:56 pk Exp $
+ *	$OpenBSD: src/lib/libtelnet/Attic/auth.h,v 1.2 1996/03/19 23:15:49 niklas Exp $
+ *	$NetBSD: auth.h,v 1.5 1996/02/24 01:15:18 jtk Exp $
  */
 
 /*

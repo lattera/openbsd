@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libkvm/kvm_m68k.c,v 1.2 1996/03/19 23:15:24 niklas Exp $	*/
+/*	$OpenBSD: src/lib/libkvm.old/Attic/kvm_mips.c,v 1.1 1996/03/19 23:15:36 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1989, 1992, 1993
@@ -6,7 +6,7 @@
  *
  * This code is derived from software developed by the Computer Systems
  * Engineering group at Lawrence Berkeley Laboratory under DARPA contract
- * BG 91-66 and contributed to Berkeley.
+ * BG 91-66 and contributed to Berkeley. Modified for MIPS by Ralph Campbell.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,12 +38,10 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/* from: static char sccsid[] = "@(#)kvm_hp300.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$OpenBSD: src/lib/libkvm/kvm_m68k.c,v 1.2 1996/03/19 23:15:24 niklas Exp $";
+static char sccsid[] = "@(#)kvm_mips.c	8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
-
 /*
- * m68k machine dependent routines for kvm.  Hopefully, the forthcoming 
+ * MIPS machine dependent routines for kvm.  Hopefully, the forthcoming 
  * vm code will one day obsolete this module.
  */
 
@@ -51,30 +49,26 @@ static char *rcsid = "$OpenBSD: src/lib/libkvm/kvm_m68k.c,v 1.2 1996/03/19 23:15
 #include <sys/user.h>
 #include <sys/proc.h>
 #include <sys/stat.h>
-
-#include <sys/core.h>
-#include <sys/exec_aout.h>
-#include <sys/kcore.h>
-
 #include <unistd.h>
-#include <limits.h>
 #include <nlist.h>
 #include <kvm.h>
 
 #include <vm/vm.h>
 #include <vm/vm_param.h>
 
+#include <limits.h>
 #include <db.h>
 
 #include "kvm_private.h"
 
+#include <machine/machConst.h>
 #include <machine/pte.h>
-#include <machine/kcore.h>
+#include <machine/pmap.h>
 
-#ifndef btop
-#define	btop(x)		(((unsigned)(x)) >> PGSHIFT)	/* XXX */
-#define	ptob(x)		((caddr_t)((x) << PGSHIFT))	/* XXX */
-#endif
+struct vmstate {
+	pt_entry_t	*Sysmap;
+	u_int		Sysmapsize;
+};
 
 #define KREAD(kd, addr, p)\
 	(kvm_read(kd, addr, (char *)(p), sizeof(*(p))) != sizeof(*(p)))
@@ -91,113 +85,80 @@ int
 _kvm_initvtop(kd)
 	kvm_t *kd;
 {
+	struct vmstate *vm;
+	struct nlist nlist[3];
+
+	vm = (struct vmstate *)_kvm_malloc(kd, sizeof(*vm));
+	if (vm == 0)
+		return (-1);
+	kd->vmst = vm;
+
+	nlist[0].n_name = "Sysmap";
+	nlist[1].n_name = "Sysmapsize";
+	nlist[2].n_name = 0;
+
+	if (kvm_nlist(kd, nlist) != 0) {
+		_kvm_err(kd, kd->program, "bad namelist");
+		return (-1);
+	}
+	if (KREAD(kd, (u_long)nlist[0].n_value, &vm->Sysmap)) {
+		_kvm_err(kd, kd->program, "cannot read Sysmap");
+		return (-1);
+	}
+	if (KREAD(kd, (u_long)nlist[1].n_value, &vm->Sysmapsize)) {
+		_kvm_err(kd, kd->program, "cannot read mmutype");
+		return (-1);
+	}
 	return (0);
 }
 
-static int
-_kvm_vatop(kd, sta, va, pa)
-	kvm_t *kd;
-	st_entry_t *sta;
-	u_long va;
-	u_long *pa;
-{
-	register cpu_kcore_hdr_t *cpu_kh;
-	register u_long addr;
-	int p, ste, pte;
-	int offset;
-
-	if (ISALIVE(kd)) {
-		_kvm_err(kd, 0, "vatop called in live kernel!");
-		return((off_t)0);
-	}
-	offset = va & PGOFSET;
-	cpu_kh = kd->cpu_hdr;
-	/*
-	 * If we are initializing (kernel segment table pointer not yet set)
-	 * then return pa == va to avoid infinite recursion.
-	 */
-	if (cpu_kh->sysseg_pa == 0) {
-		*pa = va + cpu_kh->kernel_pa;
-		return (NBPG - offset);
-	}
-	if (cpu_kh->mmutype == -2) {
-		st_entry_t *sta2;
-
-		addr = (u_long)&sta[va >> SG4_SHIFT1];
-		/*
-		 * Can't use KREAD to read kernel segment table entries.
-		 * Fortunately it is 1-to-1 mapped so we don't have to. 
-		 */
-		if (sta == cpu_kh->sysseg_pa) {
-			if (lseek(kd->pmfd, _kvm_pa2off(kd, addr), 0) == -1 ||
-			    read(kd->pmfd, (char *)&ste, sizeof(ste)) < 0)
-				goto invalid;
-		} else if (KREAD(kd, addr, &ste))
-			goto invalid;
-		if ((ste & SG_V) == 0) {
-			_kvm_err(kd, 0, "invalid level 1 descriptor (%x)",
-				 ste);
-			return((off_t)0);
-		}
-		sta2 = (st_entry_t *)(ste & SG4_ADDR1);
-		addr = (u_long)&sta2[(va & SG4_MASK2) >> SG4_SHIFT2];
-		/*
-		 * Address from level 1 STE is a physical address,
-		 * so don't use kvm_read.
-		 */
-		if (lseek(kd->pmfd, _kvm_pa2off(kd, addr), 0) == -1 || 
-		    read(kd->pmfd, (char *)&ste, sizeof(ste)) < 0)
-			goto invalid;
-		if ((ste & SG_V) == 0) {
-			_kvm_err(kd, 0, "invalid level 2 descriptor (%x)",
-				 ste);
-			return((off_t)0);
-		}
-		sta2 = (st_entry_t *)(ste & SG4_ADDR2);
-		addr = (u_long)&sta2[(va & SG4_MASK3) >> SG4_SHIFT3];
-	} else {
-		addr = (u_long)&sta[va >> SEGSHIFT];
-		/*
-		 * Can't use KREAD to read kernel segment table entries.
-		 * Fortunately it is 1-to-1 mapped so we don't have to. 
-		 */
-		if (sta == cpu_kh->sysseg_pa) {
-			if (lseek(kd->pmfd, _kvm_pa2off(kd, addr), 0) == -1 ||
-			    read(kd->pmfd, (char *)&ste, sizeof(ste)) < 0)
-				goto invalid;
-		} else if (KREAD(kd, addr, &ste))
-			goto invalid;
-		if ((ste & SG_V) == 0) {
-			_kvm_err(kd, 0, "invalid segment (%x)", ste);
-			return((off_t)0);
-		}
-		p = btop(va & SG_PMASK);
-		addr = (ste & SG_FRAME) + (p * sizeof(pt_entry_t));
-	}
-	/*
-	 * Address from STE is a physical address so don't use kvm_read.
-	 */
-	if (lseek(kd->pmfd, _kvm_pa2off(kd, addr), 0) == -1 || 
-	    read(kd->pmfd, (char *)&pte, sizeof(pte)) < 0)
-		goto invalid;
-	addr = pte & PG_FRAME;
-	if (pte == PG_NV) {
-		_kvm_err(kd, 0, "page not valid");
-		return (0);
-	}
-	*pa = addr + offset;
-	
-	return (NBPG - offset);
-invalid:
-	_kvm_err(kd, 0, "invalid address (%x)", va);
-	return (0);
-}
-
+/*
+ * Translate a kernel virtual address to a physical address.
+ */
 int
 _kvm_kvatop(kd, va, pa)
 	kvm_t *kd;
 	u_long va;
 	u_long *pa;
 {
-	return (_kvm_vatop(kd, (u_long)kd->cpu_hdr->sysseg_pa, va, pa));
+	register struct vmstate *vm;
+	u_long pte, addr, offset;
+
+	if (ISALIVE(kd)) {
+		_kvm_err(kd, 0, "vatop called in live kernel!");
+		return((off_t)0);
+	}
+	vm = kd->vmst;
+	offset = va & PGOFSET;
+	/*
+	 * If we are initializing (kernel segment table pointer not yet set)
+	 * then return pa == va to avoid infinite recursion.
+	 */
+	if (vm->Sysmap == 0) {
+		*pa = va;
+		return (NBPG - offset);
+	}
+	if (va < KERNBASE ||
+	    va >= VM_MIN_KERNEL_ADDRESS + vm->Sysmapsize * NBPG)
+		goto invalid;
+	if (va < VM_MIN_KERNEL_ADDRESS) {
+		*pa = MACH_CACHED_TO_PHYS(va);
+		return (NBPG - offset);
+	}
+	addr = (u_long)(vm->Sysmap + ((va - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT));
+	/*
+	 * Can't use KREAD to read kernel segment table entries.
+	 * Fortunately it is 1-to-1 mapped so we don't have to. 
+	 */
+	if (lseek(kd->pmfd, (off_t)addr, 0) < 0 ||
+	    read(kd->pmfd, (char *)&pte, sizeof(pte)) < 0)
+		goto invalid;
+	if (!(pte & PG_V))
+		goto invalid;
+	*pa = (pte & PG_FRAME) | offset;
+	return (NBPG - offset);
+
+invalid:
+	_kvm_err(kd, 0, "invalid address (%x)", va);
+	return (0);
 }
