@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-pflog.c,v 1.6 2001/06/26 22:51:03 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-pflog.c,v 1.7 2001/07/17 20:36:00 provos Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-pflog.c,v 1.5 2001/06/26 22:26:14 deraadt Exp $ (LBL)";
+    "@(#) $Header: /mnt/src/usr.sbin/tcpdump/print-pflog.c,v 1.6 2001/06/26 22:51:03 deraadt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -37,12 +37,13 @@ static const char rcsid[] =
 struct rtentry;
 #endif
 #include <net/if.h>
-#include <net/pfvar.h>
 #include <net/if_pflog.h>
 
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+
+#include <net/pfvar.h>
 
 #include <ctype.h>
 #include <netdb.h>
