@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9 1999/11/22 19:22:00 matthieu Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/mem.c,v 1.9.2.1 2001/04/18 16:10:40 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2 2001/04/14 22:19:11 mjacob Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2.2.1 2001/04/18 16:01:32 niklas Exp $ */
 /* $NetBSD: tsc.c,v 1.3 2000/06/25 19:17:40 thorpej Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/zs.c,v 1.8 2000/01/29 04:11:25 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/zs.c,v 1.8.2.1 2001/04/18 16:10:33 niklas Exp $ */
 
 /*
  * Copyright (c) 2000 Steve Murphree, Jr.
@@ -42,7 +42,6 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>

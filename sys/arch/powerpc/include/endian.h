@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/endian.h,v 1.10 1999/05/10 16:02:15 espie Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/endian.h,v 1.10.4.1 2001/04/18 16:13:02 niklas Exp $ */
 
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
@@ -34,5 +34,7 @@
 
 #define BYTE_ORDER BIG_ENDIAN
 #include <sys/endian.h>
+
+#define	__STRICT_ALIGNMENT
 
 #endif /* _POWERPC_ENDIAN_H_ */

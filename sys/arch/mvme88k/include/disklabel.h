@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/disklabel.h,v 1.4 1999/02/09 06:36:26 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/disklabel.h,v 1.4.6.1 2001/04/18 16:11:16 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1995 Dale Rahn.
@@ -30,8 +30,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */  
 
-#ifndef _MACHINE_DISKLABEL_H_
-#define _MACHINE_DISKLABEL_H_
+#ifndef __MACHINE_DISKLABEL_H__
+#define __MACHINE_DISKLABEL_H__
 
 /* number of boot pieces , ie xxboot bootxx */
 #define NUMBOOT		2
@@ -49,8 +49,6 @@
  */
 #define DISKUNIT(dev)	(minor(dev) / MAXPARTITIONS)
 #define DISKPART(dev)	(minor(dev) % MAXPARTITIONS)
-#define MAKEDISKDEV(maj, unit, part) \
-    (makedev((maj), ((unit) * MAXPARTITIONS) + (part)))
 
 /*
  * Note: this structure is exactly 512 bytes in size. If you move fields
@@ -134,4 +132,4 @@ struct cpu_disklabel {
 	u_long		magic2;
 	u_char		cfg_4[192];
 };
-#endif _MACHINE_DISKLABEL_H_
+#endif __MACHINE_DISKLABEL_H__

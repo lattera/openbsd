@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/include/ieeefp.h,v 1.1.1.1.16.1 2001/04/18 16:07:33 niklas Exp $	*/
+
 /* 
  * Written by J.T. Conklin, Apr 6, 1995
  * Public domain.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16 1999/02/26 04:20:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.1 2001/04/18 16:07:53 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
@@ -49,6 +49,7 @@
 #include <sys/conf.h>
 #include <sys/file.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
 #include <sys/ioctl.h>
 #include <sys/device.h>
@@ -143,6 +144,10 @@ static	int			npx_nointr;
 static	volatile u_int		npx_intrs_while_probing;
 static	volatile u_int		npx_traps_while_probing;
 
+extern int i386_fpu_present;
+extern int i386_fpu_exception;
+extern int i386_fpu_fdivbug;
+
 /*
  * Special interrupt handlers.  Someday intr0-intr15 will be used to count
  * interrupts.  We'll still need a special exception 16 handler.  The busy
@@ -220,6 +225,7 @@ npxprobe1(ia)
 				 */
 				npx_type = NPX_EXCEPTION;
 				ia->ia_irq = IRQUNK;	/* zap the interrupt */
+				i386_fpu_exception = 1;
 			} else if (npx_intrs_while_probing != 0) {
 				/*
 				 * Bad, we are stuck with IRQ13.
@@ -353,9 +359,12 @@ npxattach(parent, self, aux)
 
 	lcr0(rcr0() & ~(CR0_EM|CR0_TS));
 	fninit();
-	if (npx586bug1(4195835, 3145727) != 0)
+	if (npx586bug1(4195835, 3145727) != 0) {
+		i386_fpu_fdivbug = 1;
 		printf("WARNING: Pentium FDIV bug detected!\n");
+	}
 	lcr0(rcr0() | (CR0_TS));
+	i386_fpu_present = 1;
 }
 
 /*

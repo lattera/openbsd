@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsp_bus_io.c,v 1.1 2000/11/16 04:50:18 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsp_bus_io.c,v 1.1.2.1 2001/04/18 16:01:33 niklas Exp $ */
 /* $NetBSD: tsp_bus_io.c,v 1.4 2000/06/26 19:46:24 thorpej Exp $ */
 
 /*-

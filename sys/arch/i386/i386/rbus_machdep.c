@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/rbus_machdep.c,v 1.7 2001/01/25 01:00:52 mickey Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/rbus_machdep.c,v 1.7.2.1 2001/04/18 16:07:23 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.c,v 1.2 1999/10/15 06:43:06 haya Exp $	*/
 
 /*

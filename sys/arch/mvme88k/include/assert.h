@@ -1,4 +1,7 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/assert.h,v 1.4 1999/02/09 06:36:25 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/assert.h,v 1.4.6.1 2001/04/18 16:11:12 niklas Exp $ */
+#ifndef __MACHINE_ASSERT_H__
+#define __MACHINE_ASSERT_H__
+#ifndef assert
 #define assert(x) \
 ({\
 	if (!(x)) {\
@@ -7,3 +10,6 @@
 		panic("assertion"); \
 	} \
 })
+#endif /* assert */
+#endif __MACHINE_ASSERT_H__
+

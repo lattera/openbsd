@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2 1999/06/11 04:48:11 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2.4.1 2001/04/18 16:10:08 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.8 1997/11/07 07:33:18 scottr Exp $	*/
 
 /*
@@ -101,17 +101,18 @@ extern unsigned short	mac68k_schedipl;
  * everything at spl2, and everything but the panic switch and
  * power at spl4.
  */
-#define	splsoftclock()	splsoft()
-#define	splsoftnet()	splsoft()
-#define	spltty()	_splraise(mac68k_ttyipl)
-#define	splbio()	_splraise(mac68k_bioipl)
-#define	splnet()	_splraise(mac68k_netipl)
-#define	splimp()	_splraise(mac68k_impipl)
-#define	splclock()	_splraise(mac68k_clockipl)
-#define	splstatclock()	_splraise(mac68k_statclockipl)
-#define	splsched()	_splsched(mac68k_schedipl)
-#define	splserial()	spl4()
-#define	splhigh()	spl7()
+#define	spllowersoftclock()	splsoft()
+#define	splsoftclock()		splsoft()
+#define	splsoftnet()		splsoft()
+#define	spltty()		_splraise(mac68k_ttyipl)
+#define	splbio()		_splraise(mac68k_bioipl)
+#define	splnet()		_splraise(mac68k_netipl)
+#define	splimp()		_splraise(mac68k_impipl)
+#define	splclock()		_splraise(mac68k_clockipl)
+#define	splstatclock()		_splraise(mac68k_statclockipl)
+#define	splsched()		_splsched(mac68k_schedipl)
+#define	splserial()		spl4()
+#define	splhigh()		spl7()
 
 /* watch out for side effects */
 #define splx(s)         ((s) & PSL_IPL ? _spl(s) : spl0())

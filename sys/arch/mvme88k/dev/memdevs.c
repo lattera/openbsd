@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/memdevs.c,v 1.2 1998/12/15 05:52:30 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/memdevs.c,v 1.2.6.1 2001/04/18 16:10:58 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -36,10 +36,12 @@
 #include <sys/systm.h>
 #include <sys/uio.h>
 #include <sys/malloc.h>
-
 #include <sys/device.h>
-#include <machine/cpu.h>
+
 #include <machine/autoconf.h>
+#include <machine/cpu.h>
+
+#include <mvme88k/dev/memdevs.h>
 
 /*ARGSUSED*/
 int
@@ -49,7 +51,7 @@ memdevrw(base, len, uio, flags)
 	struct uio *uio;
 	int flags;
 {
-	register vm_offset_t o, v;
+	register vm_offset_t v;
 	register int c;
 	register struct iovec *iov;
 	int error = 0;

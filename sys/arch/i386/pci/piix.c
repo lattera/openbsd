@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/piix.c,v 1.5 2001/01/25 00:07:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/piix.c,v 1.5.2.1 2001/04/18 16:08:31 niklas Exp $	*/
 /*	$NetBSD: piix.c,v 1.1 1999/11/17 01:21:20 thorpej Exp $	*/
 
 /*-

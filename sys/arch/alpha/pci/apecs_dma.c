@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/apecs_dma.c,v 1.1 2001/02/16 05:17:31 jason Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/apecs_dma.c,v 1.1.2.1 2001/04/18 16:01:06 niklas Exp $ */
 /* $NetBSD: apecs_dma.c,v 1.13 2000/06/29 08:58:45 mrg Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_mouse.h,v 1.2 2000/10/07 03:12:47 aaron Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_mouse.h,v 1.2.4.1 2001/04/18 16:08:02 niklas Exp $ */
 
 /*
  * Copyright (c) 2000 Jean-Baptiste Marchand, Julien Montagne and Jerome Verdon

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1 2000/09/02 13:45:40 espie Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1.4.1 2001/04/18 16:02:14 niklas Exp $ */
 
 /*
  * Copyright (c) 2000 Marc Espie.

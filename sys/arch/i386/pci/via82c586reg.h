@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/via82c586reg.h,v 1.4 2000/04/29 03:49:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/via82c586reg.h,v 1.4.6.1 2001/04/18 16:08:36 niklas Exp $	*/
 /*	$NetBSD: via82c586reg.h,v 1.2 2000/04/22 15:00:41 uch Exp $	*/
 
 /*

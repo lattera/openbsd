@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/advfsops.c,v 1.16 2000/02/07 04:57:15 assar Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/advfsops.c,v 1.16.2.1 2001/04/18 16:00:04 niklas Exp $	*/
 /*	$NetBSD: advfsops.c,v 1.24 1996/12/22 10:10:12 cgd Exp $	*/
 
 /*
@@ -51,7 +51,7 @@
 #include <adosfs/adosfs.h>
 
 int	 adosfs_init __P((struct vfsconf *));
-int	 adosfs_mount __P((struct mount *, const char *, caddr_t, struct nameidata *,
+int	 adosfs_mount __P((struct mount *, const char *, void *, struct nameidata *,
     struct proc *));
 int	 adosfs_start __P((struct mount *, int, struct proc *));
 int	 adosfs_unmount __P((struct mount *, int, struct proc *));
@@ -72,7 +72,7 @@ int
 adosfs_mount(mp, path, data, ndp, p)
 	struct mount *mp;
 	const char *path;
-	caddr_t data;
+	void *data;
 	struct nameidata *ndp;
 	struct proc *p;
 {
@@ -83,7 +83,7 @@ adosfs_mount(mp, path, data, ndp, p)
 	int error;
 	mode_t accessmode;
 
-	error = copyin(data, (caddr_t)&args, sizeof(struct adosfs_args));
+	error = copyin(data, &args, sizeof(struct adosfs_args));
 	if (error)
 		return(error);
 	
@@ -665,11 +665,9 @@ adosfs_fhtovp(mp, fhp, vpp)
 	struct vnode **vpp;
 {
 	struct ifid *ifhp = (struct ifid *)fhp;
-	struct adosfsmount *amp = VFSTOADOSFS(mp);
 #if 0
 	struct anode *ap;
 #endif
-	struct netcred *np;
 	struct vnode *nvp;
 	int error;
 
@@ -690,8 +688,6 @@ adosfs_fhtovp(mp, fhp, vpp)
 	}
 #endif
 	*vpp = nvp;
-	*exflagsp = np->netc_exflags;
-	*credanonp = &np->netc_anon;
 	return(0);
 }
 

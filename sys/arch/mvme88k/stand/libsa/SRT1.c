@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Attic/SRT1.c,v 1.1.1.1.14.1 2000/03/24 09:08:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/Attic/SRT1.c,v 1.1.1.1.14.2 2001/04/18 16:11:50 niklas Exp $ */
 
 /*
  * Copyright (c) 1996 Nivas Madhur
@@ -88,6 +88,7 @@ exit()
 
 	asm volatile ("or r9, r0, 0x63; tb0 0, r0, 496");
 	/* NOTREACHED */
+	for(;;); /* keep compiler happy */
 }
 
 struct brdid brdid;

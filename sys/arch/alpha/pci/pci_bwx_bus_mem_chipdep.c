@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_bwx_bus_mem_chipdep.c,v 1.2 2000/11/08 20:59:25 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_bwx_bus_mem_chipdep.c,v 1.2.2.1 2001/04/18 16:01:24 niklas Exp $ */
 /* $NetBSD: pcs_bus_mem_common.c,v 1.15 1996/12/02 22:19:36 cgd Exp $ */
 
 /*

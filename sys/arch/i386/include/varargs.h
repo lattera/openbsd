@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/varargs.h,v 1.3.16.1 2001/04/18 16:07:48 niklas Exp $	*/
 /*	$NetBSD: varargs.h,v 1.14 1995/12/26 01:16:26 mycroft Exp $	*/
 
 /*-

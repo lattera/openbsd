@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5 2001/01/11 21:24:41 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5.2.1 2001/04/18 16:06:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff

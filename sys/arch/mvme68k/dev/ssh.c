@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1 2001/02/18 17:41:08 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1.2.1 2001/04/18 16:10:29 niklas Exp $ */
 
 /*
  * Copyright (c) 1994 Michael L. Hitch

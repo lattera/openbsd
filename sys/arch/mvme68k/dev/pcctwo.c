@@ -1,5 +1,5 @@
 
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcctwo.c,v 1.6 2000/01/06 03:21:42 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcctwo.c,v 1.6.2.1 2001/04/18 16:10:26 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -42,7 +42,6 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/files.mvme68k,v 1.13 2000/01/25 04:18:17 smurph Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/files.mvme68k,v 1.13.2.1 2001/04/18 16:10:20 niklas Exp $
 
 # config file for mvme68k
 
@@ -68,10 +68,10 @@ device fooip
 attach fooip at ipic
 file	arch/mvme68k/dev/fooip.c		fooip
 
-device siop: scsi
-attach siop at mc, pcctwo
-file	arch/mvme68k/dev/siopdma.c		siop
-file	arch/mvme68k/dev/siop.c			siop
+device ssh: scsi
+attach ssh at mc, pcctwo
+file	arch/mvme68k/dev/sshdma.c		ssh
+file	arch/mvme68k/dev/ssh.c		ssh
 
 device memc
 attach memc at mc, pcctwo
@@ -142,9 +142,7 @@ device wl: tty
 attach wl at vmes
 file arch/mvme68k/dev/wl.c			wl needs-count
 
-file	arch/mvme88k/dev/memdevs.c			nvram | sram
-
 device vs: scsi
 attach vs at vmes
-file	arch/mvme68k/dev/vs.c				vs
-file	arch/mvme68k/dev/vsdma.c			vs
+file	arch/mvme68k/dev/vs.c			vs
+file	arch/mvme68k/dev/vsdma.c		vs

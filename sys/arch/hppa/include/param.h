@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.1 2000/03/02 07:04:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.2 2001/04/18 16:06:26 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -43,6 +43,7 @@
  */
 #define	ALIGNBYTES	7
 #define	ALIGN(p)	(((u_long)(p) + ALIGNBYTES) &~ ALIGNBYTES)
+#define	ALIGNED_POINTER(p,t) ((((u_long)(p)) & (sizeof(t) - 1)) == 0)
 
 #define	PAGE_SIZE	4096
 #define	PAGE_MASK	(PAGE_SIZE-1)

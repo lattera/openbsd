@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshreg.h,v 1.1 2001/02/18 17:41:09 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshreg.h,v 1.1.2.1 2001/04/18 16:10:30 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

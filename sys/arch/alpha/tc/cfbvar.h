@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/cfbvar.h,v 1.4 1997/11/06 12:27:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/cfbvar.h,v 1.4.10.1 2001/04/18 16:01:49 niklas Exp $	*/
 /*	$NetBSD: cfbvar.h,v 1.1 1996/05/01 23:25:04 cgd Exp $	*/
 
 /*
@@ -30,7 +30,6 @@
 
 #include <machine/cfbreg.h>
 #include <dev/rcons/raster.h>
-#include <dev/wscons/wsconsvar.h>
 #include <dev/wscons/wscons_raster.h>
 
 struct cfb_devconfig;
@@ -60,4 +59,10 @@ struct cfb_softc {
 	struct device sc_dev;
 
 	struct cfb_devconfig *sc_dc;	/* device configuration */
+	
+	int nscreens;
 };
+
+#if 0
+int cfb_cnattach __P((tc_addr_t));
+#endif

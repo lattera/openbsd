@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.1 2000/01/25 04:18:18 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.1.2.1 2001/04/18 16:10:32 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -46,7 +46,7 @@
 #include <scsi/scsiconf.h>
 #include <machine/autoconf.h>
 
-#if defined(MVME187) || defined(MVME188) || defined(MVME197)
+#ifdef __m88k__
 #include <machine/board.h>
 #include <mvme88k/dev/vsreg.h>
 #include <mvme88k/dev/vsvar.h>

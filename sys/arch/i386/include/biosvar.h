@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.3 2000/03/24 09:07:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.4 2001/04/18 16:07:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -33,11 +33,17 @@
 
 #ifndef _I386_BIOSVAR_H_
 #define _I386_BIOSVAR_H_
+#pragma pack(1)
 
 	/* some boxes put apm data seg in the 2nd page */
 #define	BOOTARG_OFF	(NBPG*2)
 #define	BOOTARG_LEN	(NBPG*1)
 #define	BOOTBIOS_ADDR	(0x7c00)
+
+	/* BIOS configure flags */
+#define	BIOSF_BIOS32	0x0001
+#define	BIOSF_PCIBIOS	0x0002
+#define	BIOSF_PROMSCAN	0x0004
 
 /* BIOS media ID */
 #define BIOSM_F320K	0xff	/* floppy ds/sd  8 spt */
@@ -59,6 +65,53 @@
 #define	BIOS_MAP_RES	0x02	/* Reserved memory */
 #define	BIOS_MAP_ACPI	0x03	/* ACPI Reclaim memory */
 #define	BIOS_MAP_NVS	0x04	/* ACPI NVS memory */
+
+/*
+ * Optional ROM header
+ */
+typedef
+struct bios_romheader {
+	u_int16_t	signature;	/* 0xaa55 */
+	u_int8_t	len;		/* length in pages (512 bytes) */
+	u_int32_t	entry;		/* initialization entry point */
+	u_int8_t	reserved[19];
+	u_int16_t	pnpheaader;	/* offset to PnP expansion header */
+} *bios_romheader_t;
+
+/*
+ * BIOS32
+ */
+typedef
+struct bios32_header {
+	u_int32_t	signature;	/* 00: signature "_32_" */
+	u_int32_t	entry;		/* 04: entry point */
+	u_int8_t	rev;		/* 08: revision */
+	u_int8_t	length;		/* 09: header length */
+	u_int8_t	cksum;		/* 0a: modulo 256 checksum */
+	u_int8_t	reserved[5];
+} *bios32_header_t;
+
+typedef
+struct bios32_entry_info {
+	paddr_t	bei_base;
+	psize_t	bei_size;
+	paddr_t	bei_entry;
+} *bios32_entry_info_t;
+
+typedef
+struct bios32_entry {
+	u_int32_t offset;
+	u_int16_t segment;
+} *bios32_entry_t;
+
+#define	BIOS32_START	0xe0000
+#define	BIOS32_SIZE	0x20000
+#define	BIOS32_END	(BIOS32_START + BIOS32_SIZE - 0x10)
+
+#define	BIOS32_MAKESIG(a, b, c, d) \
+	((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+#define	BIOS32_SIGNATURE	BIOS32_MAKESIG('_', '3', '2', '_')
+#define	PCIBIOS_SIGNATURE	BIOS32_MAKESIG('$', 'P', 'C', 'I')
 
 /*
  * CTL_BIOS definitions.
@@ -194,6 +247,9 @@ int bioscngetc __P((dev_t));
 void bioscnpollc __P((dev_t, int));
 void bios_getopt __P((void));
 
+/* bios32.c */
+int  bios32_service __P((u_int32_t, bios32_entry_t, bios32_entry_info_t));
+
 extern u_int bootapiver;
 extern bios_memmap_t *bios_memmap;
 extern void *bios_smpinfo;
@@ -203,4 +259,5 @@ extern bios_pciinfo_t *bios_pciinfo;
 #endif /* _LOCORE */
 #endif /* _KERNEL || _STANDALONE */
 
+#pragma pack()
 #endif /* _I386_BIOSVAR_H_ */

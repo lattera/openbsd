@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_6600.c,v 1.2 2000/11/16 23:32:20 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_6600.c,v 1.2.2.1 2001/04/18 16:00:17 niklas Exp $ */
 /* $NetBSD: dec_6600.c,v 1.7 2000/06/20 03:48:54 matt Exp $ */
 
 /*

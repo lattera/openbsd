@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14 2000/02/09 05:10:10 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14.2.1 2001/04/18 16:06:20 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998 Michael Shalayeff
+ * Copyright (c) 1998,2000 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,8 +70,8 @@
 #define hptbtop(b) ((b) >> 17)
 
 /* Get space register for an address */
-static __inline u_int ldsid(vaddr_t p) {
-	register u_int ret;
+static __inline register_t ldsid(vaddr_t p) {
+	register_t ret;
 	__asm __volatile("ldsid (%1),%0" : "=r" (ret) : "r" (p));
 	return ret;
 }
@@ -86,8 +86,8 @@ static __inline u_int ldsid(vaddr_t p) {
 #define rsm(v,r) __asm __volatile("rsm %1,%0": "=r" (r): "i" (v))
 
 /* Move to system mask. Old value of system mask is returned. */
-static __inline u_int mtsm(u_int mask) {
-	register u_int ret;
+static __inline register_t mtsm(register_t mask) {
+	register_t ret;
 	__asm __volatile("ssm 0,%0\n\t"
 			 "mtsm %1": "=&r" (ret) : "r" (mask));
 	return ret;
@@ -95,7 +95,7 @@ static __inline u_int mtsm(u_int mask) {
 
 static __inline register_t get_psw(void)
 {
-	register u_int ret;
+	register_t ret;
 	__asm __volatile("break %1, %2\n\tcopy %%ret0, %0" : "=r" (ret)
 		: "i" (HPPA_BREAK_KERNEL), "i" (HPPA_BREAK_GET_PSW)
 		: "r28");
@@ -104,7 +104,7 @@ static __inline register_t get_psw(void)
 
 static __inline register_t set_psw(register_t psw)
 {
-	register u_int ret;
+	register_t ret;
 	__asm __volatile("copy	%0, %%arg0\n\tbreak %1, %2\n\tcopy %%ret0, %0"
 		: "=r" (ret)
 		: "i" (HPPA_BREAK_KERNEL), "i" (HPPA_BREAK_SET_PSW), "0" (psw)
@@ -117,42 +117,6 @@ static __inline register_t set_psw(register_t psw)
 #define	fice(sp,off) __asm __volatile("fice 0(%0,%1)":: "i" (sp), "r" (off))
 #define sync_caches() \
     __asm __volatile("sync\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop")
-
-static __inline void
-ficache(pa_space_t sp, vaddr_t va, vsize_t size)
-{
-	extern int icache_stride;
-	register vaddr_t eva = (va + size + icache_stride-1) & ~(icache_stride-1);
-
-	mtsp(sp, 1);
-	while (va < eva)
-		__asm __volatile ("fic,m %1(%%sr1, %0)"
-				  : "+r" (va) : "r" (icache_stride));
-}
-
-static __inline void
-fdcache(pa_space_t sp, vaddr_t va, vsize_t size)
-{
-	extern int dcache_stride;
-	register vaddr_t eva = (va + size + dcache_stride-1) & ~(dcache_stride-1);
-
-	mtsp(sp, 1);
-	while (va < eva)
-		__asm __volatile ("fdc,m %1(%%sr1, %0)"
-				  : "+r" (va) : "r" (dcache_stride));
-}
-
-static __inline void
-pdcache(pa_space_t sp, vaddr_t va, vsize_t size)
-{
-	extern int dcache_stride;
-	register vaddr_t eva = (va + size + dcache_stride-1) & ~(dcache_stride-1);
-
-	mtsp(sp, 1);
-	while (va < eva)
-		__asm __volatile ("pdc,m %1(%%sr1, %0)"
-				  : "+r" (va) : "r" (dcache_stride));
-}
 
 static __inline void
 iitlba(u_int pg, pa_space_t sp, vaddr_t va)
@@ -254,12 +218,14 @@ ledctl(int on, int off, int toggle)
 #endif
 
 #ifdef _KERNEL
+void ficache __P((pa_space_t sp, vaddr_t va, vsize_t size));
+void fdcache __P((pa_space_t sp, vaddr_t va, vsize_t size));
+void pdcache __P((pa_space_t sp, vaddr_t va, vsize_t size));
 void fcacheall __P((void));
 void ptlball __P((void));
 int btlb_insert __P((pa_space_t space, vaddr_t va, paddr_t pa,
 		     vsize_t *lenp, u_int prot));
 hppa_hpa_t cpu_gethpa __P((int n));
-void heartbeat __P((int on));
 #endif
 
 #endif /* _MACHINE_CPUFUNC_H_ */

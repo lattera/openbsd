@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_hdr.h,v 1.32.2.2 2000/03/24 09:07:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_hdr.h,v 1.32.2.3 2001/04/18 16:07:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis and Joerg Wunsch.
@@ -79,6 +79,7 @@
 #include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/fcntl.h>
 #include <sys/user.h>
 #include <sys/tty.h>
@@ -275,7 +276,7 @@
 #define CRTC_HSYNCE	0x05		/* horizontal sync end */
 #define CRTC_VTOTAL	0x06		/* vertical total */
 #define CRTC_OVERFLL	0x07		/* overflow low */
-#define CRTC_IROWADDR	0x08		/* inital row address */
+#define CRTC_IROWADDR	0x08		/* initial row address */
 #define CRTC_MAXROW	0x09		/* maximum row address */
 #define CRTC_CURSTART	0x0A		/* cursor start row address */
 #define 	CURSOR_ON_BIT 0x20	/* cursor on/off on mda/cga/vga */
@@ -612,7 +613,6 @@ typedef struct video_state {
 	u_short	cur_offset;		/* current cursor position offset */
 	u_char	bell_on;		/* flag, bell enabled */
 	u_char	sevenbit;		/* flag, data path 7 bits wide */
-	u_char	dis_fnc;		/* flag, display functions enable */
 	u_char	transparent;		/* flag, mk path tmp trnsprnt for ctls*/
 	u_char	C1_ctls;		/* flag, process C1 ctls */
 	u_char	scrr_beg;		/* scrolling region, begin */
@@ -703,6 +703,32 @@ typedef struct video_state {
 	unsigned vt_status;		/* state of the vt */
 					/*  becoming active */
 	int	kbd_state;		/* keyboard raw or translated */
+	
+	unsigned short mouse; 		/* mouse cursor position */
+	unsigned short cursor;		/* selection cursor position ( if 
+					different from mouse cursor pos) */
+	unsigned short cpy_start; 	/* position of the copy start mark*/
+	unsigned short cpy_end;		/* position of the copy end mark */
+	unsigned short orig_start;	/* position of the original sel. start*/
+	unsigned short orig_end;	/* position of the original sel. end */
+#define MOUSE_VISIBLE 	(1 << 0)	/* flag, the mouse cursor is visible */
+#define SEL_EXISTS 	(1 << 1)	/* flag, a selection exists */
+#define SEL_IN_PROGRESS (1 << 2)	/* flag, a selection is in progress */
+#define SEL_EXT_AFTER 	(1 << 3)	/* flag, selection is extended after */
+#define BLANK_TO_EOL	(1 << 4)	/* flag, there are only blanks
+					   characters to eol */
+#define SEL_BY_CHAR	(1 << 5)	/* flag, select character by character*/
+#define SEL_BY_WORD	(1 << 6)	/* flag, select word by word */
+#define SEL_BY_LINE	(1 << 7)	/* flag, select line by line */
+#define IS_MOUSE_VISIBLE(vsp) ((vsp)->mouse_flags & MOUSE_VISIBLE)
+#define IS_SEL_EXISTS(vsp) ((vsp)->mouse_flags & SEL_EXISTS)
+#define IS_SEL_IN_PROGRESS(vsp) ((vsp)->mouse_flags & SEL_IN_PROGRESS)
+#define IS_SEL_EXT_AFTER(vsp) ((vsp)->mouse_flags & SEL_EXT_AFTER)
+#define IS_BLANK_TO_EOL(vsp) ((vsp)->mouse_flags & BLANK_TO_EOL)
+#define IS_SEL_BY_CHAR(vsp) ((vsp)->mouse_flags & SEL_BY_CHAR)
+#define IS_SEL_BY_WORD(vsp) ((vsp)->mouse_flags & SEL_BY_WORD)
+#define IS_SEL_BY_LINE(vsp) ((vsp)->mouse_flags & SEL_BY_LINE)
+	unsigned char mouse_flags;	/* flags, status of the mouse */
 } video_state;
 
 EXTERN video_state vs[PCVT_NSCREENS];	/* parameters for screens */
@@ -994,6 +1020,7 @@ void	set_2ndcharset ( void );
 void	set_charset ( struct video_state *svsp, int curvgacs );
 void	set_screen_size ( struct video_state *svsp, int size );
 void	reallocate_scrollbuffer ( struct video_state *svsp, int pages );
+void	reallocate_copybuffer ( struct video_state *svsp );
 u_char *sgetc ( int noblock );
 void	sixel_vga ( struct sixels *charsixel, u_char *charvga );
 void	sput ( u_char *s, U_char attrib, int len, int page );
@@ -1001,9 +1028,8 @@ void	sw_cursor ( int onoff );
 void	toggl_awm ( struct video_state *svsp );
 void	toggl_bell ( struct video_state *svsp );
 void	toggl_columns ( struct video_state *svsp );
-void	toggl_dspf ( struct video_state *svsp );
 void	toggl_sevenbit ( struct video_state *svsp );
-void	update_led ( void );
+void	update_led ( u_char cause );
 void	vga10_vga10 ( u_char *invga, u_char *outvga );
 void	vga10_vga14 ( u_char *invga, u_char *outvga );
 void	vga10_vga16 ( u_char *invga, u_char *outvga );
@@ -1113,5 +1139,17 @@ static __inline void vt_selattr(struct video_state *svsp)
 				/* keyboard controller                    */
 #define PCVT_KBD_DELAY()	delay(7)
 #endif /* PCVT_PORTIO_DELAY */
+
+/* mouse console support prototype */
+
+char *Copybuffer; /* buffer that contains mouse selections */
+unsigned int Copybuffer_size;
+char Paste_avail; /* flag, to indicate whether a selection is in the
+			 Copy buffer */
+
+int mouse_ioctl(Dev_t, u_long, caddr_t, int, struct proc *);
+void remove_selection(void);
+void mouse_hide(void);
+void scrollback_mouse(int);
 
 /*---------------------------------- E O F ----------------------------------*/

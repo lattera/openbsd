@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6 1998/03/26 14:20:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.1 2001/04/18 16:02:19 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.16 1997/07/12 16:18:36 perry Exp $	*/
 
 /*
@@ -165,10 +165,34 @@
 #define VM_KMEM_SIZE		(NKMEMCLUSTERS*CLBYTES)
 #define VM_PHYS_SIZE		(USRIOSIZE*CLBYTES)
 
+#define MACHINE_NEW_NONCONTIG
+
+#define VM_PHYSSEG_MAX		(16)
+#define VM_PHYSSEG_STRAT	VM_PSTRAT_RANDOM
+#define VM_PHYSSEG_NOADD	/* XXX this should be done right later */
+
+/*
+ * Allow supporting Zorro-II memory as lower priority:
+ *
+ *     - DEFAULT for Zorro-III memory (presumably 32 bit)
+ *     - ZORROII for Zorro-II memory (16 bit, Zorro-II DMA)
+ */
+#define VM_NFREELIST		2
+#define VM_FREELIST_DEFAULT	0
+#define VM_FREELIST_ZORROII	1
+
+/* 
+ * pmap-specific data stored in the vm_physmem[] array.
+ */   
+struct pmap_physseg { 
+	struct pv_entry *pvent;         /* pv table for this seg */
+	char *attrs;                    /* page attributes for this seg */
+}; 
+
 /*
  * number of kernel PT pages (initial only, can grow dynamically)
  */
-#define VM_KERNEL_PT_PAGES	((vm_size_t)2)		/* XXX: SYSPTSIZE */
+#define VM_KERNEL_PT_PAGES	((vm_size_t)8)
 
 /*
  * XXX Override MI values for number of kernel maps and entries to statically

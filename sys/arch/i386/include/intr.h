@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.1 2001/04/18 16:07:33 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -128,12 +129,13 @@ spllower(ncpl)
 /*
  * Software interrupt masks
  *
- * NOTE: splsoftclock() is used by hardclock() to lower the priority from
+ * NOTE: spllowersoftclock() is used by hardclock() to lower the priority from
  * clock to softclock before it calls softclock().
  */
-#define	splsoftclock()	spllower(SIR_CLOCKMASK)
-#define	splsoftnet()	splraise(SIR_NETMASK)
-#define	splsofttty()	splraise(SIR_TTYMASK)
+#define	spllowersoftclock()	spllower(SIR_CLOCKMASK)
+#define	splsoftclock()		splraise(SIR_CLOCKMASK)
+#define	splsoftnet()		splraise(SIR_NETMASK)
+#define	splsofttty()		splraise(SIR_TTYMASK)
 
 /*
  * Miscellaneous

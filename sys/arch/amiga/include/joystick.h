@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/amiga/include/Attic/joystick.h,v 1.1 2000/09/02 13:45:40 espie Exp $ */
+/* $OpenBSD: src/sys/arch/amiga/include/Attic/joystick.h,v 1.1.4.1 2001/04/18 16:02:17 niklas Exp $ */
 #ifndef _AMIGA_JOYSTICK_H
 #define _AMIGA_JOYSTICK_H
 

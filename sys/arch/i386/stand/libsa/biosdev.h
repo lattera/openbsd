@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.h,v 1.24 1997/11/30 21:51:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/biosdev.h,v 1.24.10.1 2001/04/18 16:08:42 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -57,7 +57,7 @@ void pc_putc __P((dev_t, int));
 void pc_pollc __P((dev_t, int));
 void com_probe __P((struct consdev *));
 void com_init __P((struct consdev *));
-int com_setsp __P((int));
+int comspeed __P((dev_t, int));
 int com_getc __P((dev_t));
 void com_putc __P((dev_t, int));
 void com_pollc __P((dev_t, int));

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/trap.h,v 1.2.14.1 2001/04/18 16:07:47 niklas Exp $	*/
 /*	$NetBSD: trap.h,v 1.4 1994/10/27 04:16:30 cgd Exp $	*/
 
 /*-

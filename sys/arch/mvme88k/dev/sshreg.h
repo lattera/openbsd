@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshreg.h,v 1.2 2001/03/07 23:57:47 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshreg.h,v 1.2.2.1 2001/04/18 16:11:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990 The Regents of the University of California.

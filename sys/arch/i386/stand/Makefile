@@ -1,6 +1,9 @@
-#	$OpenBSD: src/sys/arch/i386/stand/Makefile,v 1.8 1998/02/24 22:06:36 weingart Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/Makefile,v 1.8.10.1 2001/04/18 16:08:37 niklas Exp $
 
-SUBDIR=	etc libsa libz biosboot installboot boot mbr
+.if ${MACHINE} == "i386"
+SUBDIR=	etc libsa libz mbr
+.endif
+SUBDIR+= biosboot installboot boot
 
 test-fd0:
 	sudo mount /dev/fd0a /mnt

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/spmath/Attic/Makefile.inc,v 1.3 2000/01/11 21:26:24 mickey Exp $
+#	$OpenBSD: src/sys/arch/hppa/spmath/Attic/Makefile.inc,v 1.3.2.1 2001/04/18 16:06:30 niklas Exp $
 #
 #	NOTE:	$S must correspond to the top of the 'sys' tree
 #		$HPPA must correspond to the top of hppa tree
@@ -32,7 +32,7 @@ clean::		.NOTMAIN __always_make_spmath
 	@echo cleaning the kern library objects
 	@${SPMATHMAKE} clean
 
-depend:: 	.NOTMAIN __always_make_spmath
+depend::	.NOTMAIN __always_make_spmath
 	@echo depending the kern library objects
 	@${SPMATHMAKE} depend
 

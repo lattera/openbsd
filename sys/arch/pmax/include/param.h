@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/include/Attic/param.h,v 1.8.12.1 2001/04/18 16:12:45 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.18 1997/02/26 01:45:41 jonathan Exp $	*/
 
 /*
@@ -75,9 +76,8 @@
 #define	SINCR		1		/* increment of stack/NBPG */
 
 #define	UPAGES		2		/* pages of u-area */
-#define	UADDR		0xffffd000	/* address of u */
+#define	UADDR		(-0x3000)	/* address of u */
 #define USPACE          (UPAGES*NBPG)   /* size of u-area in bytes */
-#define	UVPN		(UADDR>>PGSHIFT)/* virtual page number of u */
 #define	KERNELSTACK	(UADDR+UPAGES*NBPG)	/* top of kernel stack */
 
 /*
@@ -104,6 +104,8 @@
 #define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
 #endif
 #endif
+
+#define MSGBUFSIZE	NBPG
 
 #ifdef _KERNEL
 #ifndef _LOCORE

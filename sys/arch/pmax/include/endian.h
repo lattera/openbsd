@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/include/Attic/endian.h,v 1.12 1999/05/10 16:02:14 espie Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/include/Attic/endian.h,v 1.12.4.1 2001/04/18 16:12:44 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
@@ -34,5 +34,7 @@
 
 #define BYTE_ORDER LITTLE_ENDIAN
 #include <sys/endian.h>
+
+#define	__STRICT_ALIGNMENT
 
 #endif /* _PMAX_ENDIAN_H_ */

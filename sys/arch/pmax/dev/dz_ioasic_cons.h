@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dz_ioasic_cons.h,v 1.1 2000/08/19 18:36:19 maja Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dz_ioasic_cons.h,v 1.1.4.1 2001/04/18 16:12:39 niklas Exp $	*/
 /*	$NetBSD: dc_ioasic_cons.h,v 1.1 1996/09/25 20:48:56 jonathan Exp $	*/
 
 #ifdef _KERNEL

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/bus_dma.c,v 1.1 2001/03/21 17:26:38 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/bus_dma.c,v 1.1.2.1 2001/04/18 16:00:40 niklas Exp $ */
 /* $NetBSD: bus_dma.c,v 1.40 2000/07/17 04:47:56 thorpej Exp $ */
 
 /*-

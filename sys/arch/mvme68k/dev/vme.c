@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.c,v 1.10 2000/01/24 05:20:54 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.c,v 1.10.2.1 2001/04/18 16:10:31 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -39,7 +39,6 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>

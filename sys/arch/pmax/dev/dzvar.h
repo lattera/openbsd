@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dzvar.h,v 1.1 2000/08/19 18:36:19 maja Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dzvar.h,v 1.1.4.1 2001/04/18 16:12:40 niklas Exp $	*/
 /*	$NetBSD: dcvar.h,v 1.4 1997/05/28 14:21:39 jonathan Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/ptrace.h,v 1.1.1.1.16.1 2001/04/18 16:07:42 niklas Exp $	*/
 /*	$NetBSD: ptrace.h,v 1.6 1995/08/06 05:33:23 mycroft Exp $	*/
 
 /*

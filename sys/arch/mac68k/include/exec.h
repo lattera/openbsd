@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/exec.h,v 1.6 1997/11/30 06:12:25 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/exec.h,v 1.6.10.1 2001/04/18 16:10:07 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.8 1996/05/05 06:17:40 briggs Exp $	*/
 
 /*-
@@ -54,6 +54,8 @@ struct relocation_info_mac68k {
 			  r_copy :  1;	/* run time copy */
 };
 #define relocation_info	relocation_info_mac68k
+
+#define ARCH_ELFSIZE		32
 
 #define ELF_TARG_CLASS		ELFCLASS32
 #define ELF_TARG_DATA		ELFDATA2MSB

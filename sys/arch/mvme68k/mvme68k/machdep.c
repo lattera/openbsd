@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.2 2000/03/24 09:08:07 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.3 2001/04/18 16:10:39 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -173,6 +173,7 @@ static struct consdev bootcons = {
 	bootcngetc, 
 	bootcnputc,
 	bootcnpollc, 
+	NULL,
 	makedev(14,0), 
 	1};
 

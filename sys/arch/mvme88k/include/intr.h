@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2 2001/03/16 00:05:24 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2.2.1 2001/04/18 16:11:21 niklas Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.

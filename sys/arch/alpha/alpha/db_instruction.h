@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.2 2000/11/08 19:16:58 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_instruction.h,v 1.2.2.1 2001/04/18 16:00:11 niklas Exp $ */
 /* $NetBSD: db_instruction.h,v 1.6 2000/03/20 02:54:45 thorpej Exp $ */
 
 /*

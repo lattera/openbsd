@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/locore.s,v 1.22 1999/01/20 13:31:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/locore.s,v 1.22.6.1 2001/04/18 16:10:10 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.74 1997/02/02 08:17:46 thorpej Exp $	*/
 
 /*
@@ -1232,12 +1232,10 @@ ENTRY(switch_exit)
 	movl	#nullpcb,_curpcb	| save state into garbage pcb
 	lea	tmpstk,sp		| goto a tmp stack
 
-	/* Free old process's user area. */
-	movl	#USPACE,sp@-		| size of u-area
-	movl	a0@(P_ADDR),sp@-	| address of process's u-area
-	movl	_kernel_map,sp@-	| map it was allocated in
-	jbsr	_kmem_free		| deallocate it
-	lea	sp@(12),sp		| pop args
+        /* Schedule the vmspace and stack to be freed. */
+	movl    a0,sp@-                 | exit2(p)
+	jbsr    _C_LABEL(exit2)
+	lea     sp@(4),sp               | pop args
 
 	jra	_cpu_switch
 
@@ -1349,7 +1347,7 @@ Lswnofpsave:
 	tstl	a0			| map == VM_MAP_NULL?
 	jeq	Lbadsw			| panic
 #endif /* DIAGNOSTIC */
-	lea	a0@(VM_PMAP),a0		| pmap = &vmspace.vm_pmap
+	movl	a0@(VM_PMAP),a0		| pmap = vmspace->vm_map.pmap
 	tstl	a0@(PM_STCHG)		| pmap->st_changed?
 	jeq	Lswnochg		| no, skip
 	pea	a1@			| push pcb (at p_addr)

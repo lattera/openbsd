@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/tcds_dma.c,v 1.5 1997/01/24 19:58:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/tcds_dma.c,v 1.5.14.1 2001/04/18 16:01:53 niklas Exp $	*/
 /*	$NetBSD: tcds_dma.c,v 1.15 1996/12/04 22:35:08 mycroft Exp $	*/
 
 /*
@@ -48,8 +48,8 @@
 #include <dev/tc/tcvar.h>
 #include <alpha/tc/tcdsreg.h>
 #include <alpha/tc/tcdsvar.h>
-#include <alpha/tc/espreg.h>
-#include <alpha/tc/espvar.h>
+#include <alpha/tc/ascreg.h>
+#include <alpha/tc/ascvar.h>
 
 void
 tcds_dma_reset(sc)
@@ -236,7 +236,7 @@ tcds_dma_setup(sc, addr, len, datain, dmasize)
 	/* Load address, set/clear unaligned transfer and read/write bits. */
 	/* XXX PICK AN ADDRESS TYPE, AND STICK TO IT! */
 	if ((u_long)*addr > VM_MIN_KERNEL_ADDRESS) {
-		*sc->sc_sda = vatopa((u_long)*addr) >> 2;
+		*sc->sc_sda = vtophys((u_long)*addr) >> 2;
 	} else {
 		*sc->sc_sda = ALPHA_K0SEG_TO_PHYS((u_long)*addr) >> 2;
 	}

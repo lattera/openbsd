@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/pmax/conf/Attic/GENERIC.NFS,v 1.5 1999/10/01 21:59:33 maja Exp $
+#	$OpenBSD: src/sys/arch/pmax/conf/Attic/GENERIC.NFS,v 1.5.4.1 2001/04/18 16:12:32 niklas Exp $
 #
 # GENERIC netboot / nfs root + swap kernel for the distribition simpleroot
 #
@@ -67,6 +67,8 @@ option		KERNFS			# kernel data-structure filesystem
 #option		ISO			# osi networking
 #option		TPIP
 #option		EON
+option		IPFILTER		# IP packet filter for security
+option		IPFILTER_LOG		# use /dev/ipl to log IPF
 # i think this is not required for us - NetBSD backwards compatibility
 #option		COMPAT_10		# NetBSD 1.0
 #option		COMPAT_11		# NetBSD 1.1
@@ -97,15 +99,15 @@ xcfb0		at tc?			# tc framebuffer "option"
 dtop0		at ioasic0 offset?	# destop bus,  lk501 kbd,  mouse
 # 5000/200-only (aka 3MAX aka KN02) baseboard devices (tc but no ioasic)
 clock0		at mainbus0		# rtc
-dc0		at mainbus0
+dz0		at mainbus0
 le0		at tc?			# tc ether "option" on baseboard
 asc0		at tc?			# tc scsi  "option" on baseboard
 # for now, pretend this machine has an ioasic
-dc0		at ioasic? offset?	# dc7083 four-port dz device
+dz0		at ioasic? offset?	# dc7083 four-port dz device
 # 2100/3100-only (aka PMAX aka KN01) baseboard devices.
 clock0		at mainbus0		# rtc
 pm0		at mainbus0		# 3100 onboard fb
-dc0		at mainbus0		# dc7083 four-port dz device
+dz0		at mainbus0		# dc7083 four-port dz device
 le*		at mainbus0		# 3100 onboard lance
 sii0		at mainbus0		# onboard scsi
 # the scsi busses

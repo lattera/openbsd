@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.1 2000/03/24 09:07:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_disasm.c,v 1.7.2.2 2001/04/18 16:06:07 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -50,7 +50,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <vm/vm.h>
 
 #include <machine/db_machdep.h>
 #include <ddb/db_access.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4 1999/11/09 04:13:54 rahnds Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.1 2001/04/18 16:13:02 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB and RTMX Inc, USA.
@@ -50,6 +50,10 @@
 
 #ifndef _LOCORE
 
+#define PPC_NIRQ	65
+#define PPC_CLK_IRQ	64
+extern int intrcnt[PPC_NIRQ];
+
 void setsoftclock __P((void));
 void clearsoftclock __P((void));
 int  splsoftclock __P((void));
@@ -60,8 +64,8 @@ int  splsoftnet   __P((void));
 void do_pending_int __P((void));
 
 
-volatile int cpl, ipending, astpending, tickspending;
-int imask[7];
+volatile extern int cpl, ipending, astpending, tickspending;
+extern int imask[7];
 
 /*
  *  Reorder protection in the following inline functions is
@@ -133,7 +137,8 @@ set_sint(pending)
 #define splclock()	splraise(SPL_CLOCK|SINT_MASK)
 #define splimp()	splraise(imask[IPL_IMP])
 #define splstatclock()	splhigh()
-#define	splsoftclock()	spllower(SINT_CLOCK)
+#define	spllowersoftclock()	spllower(SINT_CLOCK)
+#define	splsoftclock()	splraise(SINT_CLOCK)
 #define	splsoftnet()	splraise(SINT_NET)
 #define	splsofttty()	splraise(SINT_TTY)
 
@@ -157,6 +162,9 @@ struct intrhand {
 	int     ih_irq;
 	char    *ih_what;
 };
+extern int ppc_configed_intr_cnt;
+#define MAX_PRECONF_INTR 16
+extern struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
 
 #endif /* _LOCORE */
 

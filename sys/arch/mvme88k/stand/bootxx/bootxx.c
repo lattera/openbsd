@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootxx/bootxx.c,v 1.3 1999/09/27 19:29:59 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootxx/bootxx.c,v 1.3.4.1 2001/04/18 16:11:47 niklas Exp $ */
 
 /*
  * Copyright (c) 1994 Paul Kranenburg
@@ -51,8 +51,6 @@
 /*
  * Boot device is derived from ROM provided information.
  */
-#define LOADADDR	0x7F0000 /* where to load level 2 bootstrap */
-				/* (l2 must relocate itself) */
 
 /* This determines the largest boot program we can load. */
 #define MAXBLOCKNUM	64
@@ -86,7 +84,7 @@ main()
 		_rtt();
 	}
 
-	addr = (char*)LOADADDR;
+	addr = (char*)STAGE2_RELOC;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

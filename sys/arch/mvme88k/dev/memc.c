@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3 1999/05/29 04:41:44 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.1 2001/04/18 16:10:56 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -43,14 +43,15 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>
 #include <sys/fcntl.h>
 #include <sys/device.h>
-#include <machine/cpu.h>
+
 #include <machine/autoconf.h>
+#include <machine/cpu.h>
+
 #include <dev/cons.h>
 
 #include <mvme88k/dev/memcreg.h>
@@ -80,11 +81,10 @@ memcmatch(parent, vcf, args)
 	struct device *parent;
 	void *vcf, *args;
 {
-	struct cfdata *cf = vcf;
 	struct confargs *ca = args;
 	struct memcreg *memc = (struct memcreg *)ca->ca_vaddr;
 
-	if (badvaddr(memc, 4))
+	if (badvaddr((vm_offset_t)memc, 4))
 		return (0);
 	if (memc->memc_chipid==MEMC_CHIPID || memc->memc_chipid==MCECC_CHIPID)
 		return (1);
@@ -112,8 +112,8 @@ memcattach(parent, self, args)
 #if 0
 	sc->sc_ih.ih_fn = memcintr;
 	sc->sc_ih.ih_arg = 0;
-	sc->sc_ih.ih_ipl = 7;
 	sc->sc_ih.ih_wantframe = 1;
+	sc->sc_ih.ih_ipl = 7;
 	mcintr_establish(xxx, &sc->sc_ih);
 #endif
 
@@ -127,9 +127,11 @@ memcattach(parent, self, args)
 	printf("\n");
 }
 
-/*int
-memcintr(frame)
-	struct frame *frame;
+#if 0
+int
+memcintr(eframe)
+	void *eframe;
 {
 	return (0);
-}*/
+}
+#endif

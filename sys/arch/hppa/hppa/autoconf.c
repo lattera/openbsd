@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7 1999/11/25 18:31:53 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.1 2001/04/18 16:06:06 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998 Michael Shalayeff
+ * Copyright (c) 1998-2001 Michael Shalayeff
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -52,6 +52,7 @@
 #include <sys/conf.h>
 #include <sys/reboot.h>
 #include <sys/device.h>
+#include <sys/timeout.h>
 
 #include <machine/iomod.h>
 #include <machine/autoconf.h>
@@ -59,7 +60,6 @@
 #include <dev/cons.h>
 
 #include <hppa/dev/cpudevs.h>
-#include <hppa/dev/cpudevs_data.h>
 
 void	setroot __P((void));
 void	swapconf __P((void));
@@ -69,6 +69,15 @@ static int findblkmajor __P((struct device *dv));
 
 void (*cold_hook) __P((void)); /* see below */
 register_t	kpsw = PSW_Q | PSW_P | PSW_C | PSW_D;
+
+/*
+ * LED blinking thing
+ */
+#ifdef USELEDS
+struct timeout heartbeat_tmo;
+void heartbeat __P((void *));
+extern int hz;
+#endif
 
 /*
  * configure:
@@ -94,7 +103,45 @@ configure()
 	cold = 0;
 	if (cold_hook)
 		(*cold_hook)();
+
+#ifdef USELEDS
+	timeout_set(&heartbeat_tmo, heartbeat, NULL);
+	heartbeat(NULL);
+#endif
 }
+
+#ifdef USELEDS
+/*
+ * turn the heartbeat alive.
+ * right thing would be to pass counter to each subsequent timeout
+ * as an argument to heartbeat() incrementing every turn,
+ * i.e. avoiding the static hbcnt, but doing timeout_set() on each
+ * timeout_add() sounds ugly, guts of struct timeout looks ugly
+ * to ponder in even more.
+ */
+void
+heartbeat(v)
+	void *v;
+{
+	static u_int hbcnt = 0;
+
+	/*
+	 * do this:
+	 *
+	 *   |~| |~|
+	 *  _| |_| |_,_,_,_
+	 *   0 1 2 3 4 6 7
+	 */
+	if (hbcnt < 4) {
+		ledctl(0, 0, PALED_HEARTBEAT);
+		hbcnt++;
+		timeout_add(&heartbeat_tmo, hz / 8);
+	} else {
+		hbcnt = 0;
+		timeout_add(&heartbeat_tmo, hz / 2);
+	}
+}
+#endif
 
 /*
  * Configure swap space and related parameters.
@@ -144,7 +191,7 @@ dumpconf()
 	if (nblks <= ctod(1))
 		goto bad;
 	dumpblks = cpu_dumpsize();
-	if (dumpblks < 0)  
+	if (dumpblks < 0)
 		goto bad;
 	dumpblks += ctod(physmem);
 
@@ -164,8 +211,8 @@ bad:
 	return;
 }
 
-struct nam2blk {
-	char *name;
+static const struct nam2blk {
+	char name[4];
 	int maj;
 } nam2blk[] = {
 	{ "st",		2 },
@@ -173,7 +220,6 @@ struct nam2blk {
 	{ "rd",		6 },
 	{ "sd",		8 },
 #if 0
-	{ "acd",	4 },
 	{ "wd",		0 },
 	{ "fd",		XXX },
 #endif
@@ -349,6 +395,10 @@ pdc_scanbus(self, ca, bus, maxmod)
 		config_found_sm(self, &nca, mbprint, mbsubmatch);
 	}
 }
+
+static const struct hppa_mod_info hppa_knownmods[] = {
+#include <hppa/dev/cpudevs_data.h>
+};
 
 const char *
 hppa_mod_info(type, sv)

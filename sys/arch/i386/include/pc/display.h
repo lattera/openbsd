@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/pc/Attic/display.h,v 1.1.1.1.16.1 2001/04/18 16:07:50 niklas Exp $	*/
 /*	$NetBSD: display.h,v 1.4 1994/10/27 04:16:36 cgd Exp $	*/
 
 /*

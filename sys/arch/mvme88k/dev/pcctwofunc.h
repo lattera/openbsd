@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/pcctwofunc.h,v 1.1 2001/03/08 00:03:14 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/pcctwofunc.h,v 1.1.2.1 2001/04/18 16:11:00 niklas Exp $ */
 
 #ifndef _MVME88K_PCCTWO_H_
 #define _MVME88K_PCCTWO_H_

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.h,v 1.2 2000/11/08 20:59:25 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.h,v 1.2.2.1 2001/04/18 16:01:21 niklas Exp $ */
 /* $NetBSD: pci_550.h,v 1.4 2000/06/05 21:47:23 thorpej Exp $ */
 
 /*

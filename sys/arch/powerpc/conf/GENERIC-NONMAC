@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/powerpc/conf/Attic/GENERIC-NONMAC,v 1.2 2001/03/08 03:37:19 itojun Exp $
+#	$OpenBSD: src/sys/arch/powerpc/conf/Attic/GENERIC-NONMAC,v 1.2.2.1 2001/04/18 16:12:54 niklas Exp $
 #
 # PPC GENERIC config file
 #

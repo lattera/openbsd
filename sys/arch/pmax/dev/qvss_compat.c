@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/qvss_compat.c,v 1.7.6.1 2001/04/18 16:12:41 niklas Exp $	*/
 /*	$NetBSD: qvss_compat.c,v 1.8 1997/05/25 10:53:33 jonathan Exp $	*/
 
 /*-
@@ -89,8 +90,8 @@
 #include <pmax/pmax/cons.h>
 #include <pmax/pmax/pmaxtype.h>
 
-#include "dc_ds.h"
-#include "dc_ioasic.h"
+#include "dz_ds.h"
+#include "dz_ioasic.h"
 #include "scc.h"
 #include "dtop.h"
 
@@ -104,7 +105,7 @@
 struct termios; struct dcregs;
 #include <pmax/dev/dtopvar.h>			/* dtop console I/O decls */
 #include <pmax/tc/sccvar.h>			/* ioasic z8530 I/O decls */
-#include <pmax/dev/dcvar.h>			/* DZ-11 chip console I/O */
+#include <pmax/dev/dzvar.h>			/* DZ-11 chip console I/O */
 
 extern int pmax_boardtype;
 
@@ -547,21 +548,21 @@ genConfigMouse()
 
 	s = spltty();
 	switch (pmax_boardtype) {
-#if NDC_IOASIC > 0
+#if NDZ_IOASIC > 0
 	case DS_3MAX:
-		dcDivertXInput = genKbdEvent;
-		dcMouseEvent = (void (*) __P((int)))genMouseEvent;
-		dcMouseButtons = (void (*) __P((int)))genMouseButtons;
+		dzDivertXInput = genKbdEvent;
+		dzMouseEvent = (void (*) __P((int)))genMouseEvent;
+		dzMouseButtons = (void (*) __P((int)))genMouseButtons;
 		break;
-#endif /* NDC_IOASIC */
+#endif /* NDZ_IOASIC */
 
-#if NDC_DS > 0
+#if NDZ_DS > 0
 	case DS_PMAX:
-		dcDivertXInput = genKbdEvent;
-		dcMouseEvent = (void (*) __P((int)))genMouseEvent;
-		dcMouseButtons = (void (*) __P((int)))genMouseButtons;
+		dzDivertXInput = genKbdEvent;
+		dzMouseEvent = (void (*) __P((int)))genMouseEvent;
+		dzMouseButtons = (void (*) __P((int)))genMouseButtons;
 		break;
-#endif /* NDC_DS */
+#endif /* NDZ_DS */
 
 #if NSCC > 0
 	case DS_3MIN:
@@ -594,22 +595,22 @@ genDeconfigMouse()
 
 	s = spltty();
 	switch (pmax_boardtype) {
-#if NDC_IOASIC > 0
+#if NDZ_IOASIC > 0
 	case DS_3MAX:
 
-		dcDivertXInput = (void (*) __P((int)) )0;
-		dcMouseEvent = (void (*) __P((int)) )0;
-		dcMouseButtons = (void (*) __P((int)) )0;
+		dzDivertXInput = (void (*) __P((int)) )0;
+		dzMouseEvent = (void (*) __P((int)) )0;
+		dzMouseButtons = (void (*) __P((int)) )0;
 		break;
-#endif  /* NDC_IOASIC */
+#endif  /* NDZ_IOASIC */
 
-#if NDC_DS > 0
+#if NDZ_DS > 0
 	case DS_PMAX:
-		dcDivertXInput = (void (*) __P((int)) )0;
-		dcMouseEvent = (void (*) __P((int)) )0;
-		dcMouseButtons =  (void (*) __P((int)) )0;
+		dzDivertXInput = (void (*) __P((int)) )0;
+		dzMouseEvent = (void (*) __P((int)) )0;
+		dzMouseButtons =  (void (*) __P((int)) )0;
 		break;
-#endif /* NDC_DS */
+#endif /* NDZ_DS */
 
 #if NSCC > 0
 	case DS_3MIN:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/ispcvt/Attic/ispcvt.c,v 1.9 2000/01/19 15:51:54 aaron Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/ispcvt/Attic/ispcvt.c,v 1.9.2.1 2001/04/18 16:08:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis
@@ -116,12 +116,7 @@ char *argv[];
 		if((fd = open(device, O_RDWR)) == -1)
 		{
 			if(verbose)
-			{
-				char buffer[80];
-				strcpy(buffer,"ERROR opening ");
-				strncat(buffer,device,sizeof(buffer) - strlen(buffer));
-				perror(buffer);
-			}
+				err(1, "ERROR opening %s", device);
 			exit(1);
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29 2000/01/29 04:27:48 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.1 2001/04/18 16:07:29 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -54,7 +54,6 @@
  * referenced in generic code
  */
 #define	cpu_swapin(p)			/* nothing */
-#define	cpu_wait(p)			/* nothing */
 
 /*
  * Arguments to hardclock, softclock and statclock
@@ -101,6 +100,7 @@ void	delay __P((int));
  * High resolution clock support (Pentium only)
  */
 void	calibrate_cyclecounter __P((void));
+#ifndef	HZ
 extern u_quad_t pentium_base_tsc;
 #define CPU_CLOCKUPDATE(otime, ntime)					\
 	do {								\
@@ -121,6 +121,7 @@ extern u_quad_t pentium_base_tsc;
 			*(otime) = *(ntime);				\
 		}							\
 	} while (0)
+#endif
 #endif
 void	delay __P((int));
 
@@ -158,9 +159,10 @@ extern int cpu;
 extern int cpu_class;
 extern int cpu_feature;
 extern int cpu_apmwarn;
+extern int cpu_apmhalt;
 extern int cpuid_level;
-extern struct cpu_nocpuid_nameclass i386_nocpuid_cpus[];
-extern struct cpu_cpuid_nameclass i386_cpuid_cpus[];
+extern const struct cpu_nocpuid_nameclass i386_nocpuid_cpus[];
+extern const struct cpu_cpuid_nameclass i386_cpuid_cpus[];
 
 #if defined(I586_CPU) || defined(I686_CPU)
 extern int pentium_mhz;
@@ -198,6 +200,7 @@ void	proc_trampoline __P((void));
 /* clock.c */
 void	initrtclock __P((void));
 void	startrtclock __P((void));
+void	rtcdrain __P((void *));
 
 /* npx.c */
 void	npxdrop __P((void));
@@ -254,7 +257,8 @@ void	setconf __P((void));
 #define CPU_CPUFEATURE		8	/* cpuid features */
 #define CPU_APMWARN		9	/* APM battery warning percentage */
 #define CPU_KBDRESET		10	/* keyboard reset under pcvt */
-#define	CPU_MAXID		11	/* number of valid machdep ids */
+#define CPU_APMHALT		11	/* halt -p hack */
+#define	CPU_MAXID		12	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
@@ -268,6 +272,7 @@ void	setconf __P((void));
 	{ "cpufeature", CTLTYPE_INT }, \
 	{ "apmwarn", CTLTYPE_INT }, \
 	{ "kbdreset", CTLTYPE_INT }, \
+	{ "apmhalt", CTLTYPE_INT }, \
 }
 
 #endif /* !_I386_CPU_H_ */

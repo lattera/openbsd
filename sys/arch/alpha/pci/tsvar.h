@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsvar.h,v 1.2 2001/04/15 01:33:00 mjacob Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsvar.h,v 1.2.2.1 2001/04/18 16:01:37 niklas Exp $ */
 /* $NetBSD: tsvar.h,v 1.1 1999/06/29 06:46:47 ross Exp $ */
 
 /*-

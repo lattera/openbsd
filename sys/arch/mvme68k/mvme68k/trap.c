@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23 2000/01/06 03:21:43 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.1 2001/04/18 16:10:41 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -950,7 +950,7 @@ u_int a, d;
 			 num, a, d, f7sz[(s & SSW4_SZMASK) >> 5],
 			 f7tt[(s & SSW4_TTMASK) >> 3], f7tm[s & SSW4_TMMASK]);
 	printf("	       PA ");
-	pa = pmap_extract(&p->p_vmspace->vm_pmap, (vm_offset_t)a);
+	pa = pmap_extract(p->p_vmspace->vm_map.pmap, (vm_offset_t)a);
 	if (pa == 0)
 		printf("<invalid address>");
 	else
@@ -1063,7 +1063,7 @@ struct frame frame;
 #endif
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSCALL))
-		ktrsyscall(p->p_tracep, code, argsize, args);
+		ktrsyscall(p, code, argsize, args);
 #endif
 	if (error)
 		goto bad;
@@ -1106,7 +1106,7 @@ struct frame frame;
 	userret(p, &frame, sticks, (u_int)0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p->p_tracep, code, error, rval[0]);
+		ktrsysret(p, code, error, rval[0]);
 #endif
 }
 
@@ -1123,7 +1123,7 @@ struct frame frame;
 	userret(p, &frame, 0, (u_int)0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p->p_tracep, SYS_fork, 0, 0);
+		ktrsysret(p, SYS_fork, 0, 0);
 #endif
 }
 

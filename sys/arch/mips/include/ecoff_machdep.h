@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips/include/Attic/ecoff_machdep.h,v 1.1 2000/09/10 05:27:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips/include/Attic/ecoff_machdep.h,v 1.1.4.1 2001/04/18 16:10:15 niklas Exp $	*/
 /*	$NetBSD: ecoff.h,v 1.4 1995/06/16 02:07:33 mellon Exp $	*/
 
 /*

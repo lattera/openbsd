@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/tss.h,v 1.3.12.1 2001/04/18 16:07:47 niklas Exp $	*/
 /*	$NetBSD: tss.h,v 1.6 1995/10/11 04:20:28 mycroft Exp $	*/
 
 /*-

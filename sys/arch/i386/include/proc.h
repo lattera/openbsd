@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/proc.h,v 1.1.1.1.16.1 2001/04/18 16:07:41 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.10 1995/08/06 05:33:23 mycroft Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_550.c,v 1.4 2000/11/16 23:32:20 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_550.c,v 1.4.2.1 2001/04/18 16:00:16 niklas Exp $ */
 /* $NetBSD: dec_550.c,v 1.10 2000/06/20 03:48:53 matt Exp $ */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/ieeefp.h,v 1.2.12.1 2001/04/18 16:13:02 niklas Exp $	*/
 /* 
  * Written by J.T. Conklin, Apr 6, 1995
  * Public domain.

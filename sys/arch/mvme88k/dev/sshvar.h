@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshvar.h,v 1.1 2001/03/07 01:57:56 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshvar.h,v 1.1.2.1 2001/04/18 16:11:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995 Theo de Raadt

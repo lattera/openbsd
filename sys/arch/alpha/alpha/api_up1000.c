@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/api_up1000.c,v 1.2 2001/04/17 14:51:32 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/api_up1000.c,v 1.2.2.1 2001/04/18 16:00:07 niklas Exp $	*/
 /* $NetBSD: api_up1000.c,v 1.4 2000/06/20 03:48:53 matt Exp $ */
 
 /*

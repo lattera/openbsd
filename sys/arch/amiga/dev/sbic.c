@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10 1999/01/11 05:11:07 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.1 2001/04/18 16:02:14 niklas Exp $	*/
 /*	$NetBSD: sbic.c,v 1.28 1996/10/13 03:07:29 christos Exp $	*/
 
 /*
@@ -1042,7 +1042,7 @@ sbicselectbus(dev, regs, target, lun, our_addr)
 	SET_SBIC_cmd(regs, SBIC_CMD_SEL_ATN);
 
 	/*
-	 * wait for select (merged from seperate function may need
+	 * wait for select (merged from separate function may need
 	 * cleanup)
 	 */
 	WAIT_CIP(regs);

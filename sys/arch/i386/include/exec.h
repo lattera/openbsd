@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/exec.h,v 1.6.6.1 2001/04/18 16:07:31 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.6 1994/10/27 04:16:05 cgd Exp $	*/
 
 /*
@@ -45,6 +46,8 @@ struct relocation_info_i386 {
 			  r_copy :  1;	/* run time copy */
 };
 #define relocation_info	relocation_info_i386
+
+#define ARCH_ELFSIZE		32
 
 #define ELF_TARG_CLASS		ELFCLASS32
 #define ELF_TARG_DATA		ELFDATA2LSB

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12 2000/01/05 18:37:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12.2.1 2001/04/18 16:06:07 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -34,8 +34,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-
-#include <vm/vm.h>
 
 #include <machine/db_machdep.h>
 #include <machine/frame.h>
@@ -118,8 +116,10 @@ struct db_variable db_regs[] = {
 
 	{ "pidr1", (long *)&ddb_regs.tf_pidr1, FCN_NULL },
 	{ "pidr2", (long *)&ddb_regs.tf_pidr2, FCN_NULL },
+#ifdef pbably_not_worth_it
 	{ "pidr3", (long *)&ddb_regs.tf_pidr3, FCN_NULL },
 	{ "pidr4", (long *)&ddb_regs.tf_pidr4, FCN_NULL },
+#endif
 
 	{ "hptm",  (long *)&ddb_regs.tf_hptm,  FCN_NULL },
 	{ "vtop",  (long *)&ddb_regs.tf_vtop,  FCN_NULL },
@@ -247,9 +247,6 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 	char *name;
 	char **argnp, *argnames[HPPA_FRAME_NARGS];
 
-	if (USERMODE(pc))
-		return;
-
 	if (count < 0)
 		count = 65536;
 
@@ -267,6 +264,9 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 	/* db_printf (">> %x, %x, %x\t", fp, pc, rp); */
 #endif
 	while (fp && count--) {
+
+		if (USERMODE(pc))
+			return;
 
 		sym = db_search_symbol(pc, DB_STGY_ANY, &off);
 		db_symbol_values (sym, &name, NULL);

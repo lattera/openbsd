@@ -20,6 +20,7 @@ file	arch/powerpc/powerpc/fuswintr.c
 file	arch/powerpc/powerpc/in_cksum.c
 file	arch/powerpc/powerpc/ipkdb_glue.c	ipkdb
 file	arch/powerpc/powerpc/machdep.c
+file	arch/powerpc/powerpc/wscons_machdep.c
 file	arch/powerpc/powerpc/mem.c
 file	arch/powerpc/powerpc/dma.c
 file	arch/powerpc/powerpc/ofw_machdep.c
@@ -69,6 +70,8 @@ include "../../../dev/ofw/files.ofw"
 file	arch/powerpc/powerpc/opendev.c ofcons | ofnet | ofdisk | ofrtc
 major	{ ofdisk = 4 }
 
+file	arch/powerpc/mac/uni_n.c ofbus
+
 file	arch/powerpc/powerpc/rd_root.c			ramdisk_hooks
 major   {rd = 17}
 
@@ -76,33 +79,13 @@ include "dev/pci/files.pci"
 
 device	mpcpcibr {} : pcibus
 attach	mpcpcibr at mainbus
-file	arch/powerpc/pci/mpcpcibus.c	mpcpcibr
+file	arch/powerpc/pci/mpcpcibus.c		mpcpcibr
+#file	arch/powerpc/pci/pci_addr_fixup.c	mpcpcibr
 
-device	isabr {} : isabus
-attach	isabr at mainbus, pci
-file	arch/powerpc/isa/isabus.c	isabr
-include "../../../scsi/files.scsi"
+
 major	{sd = 2}		# hey this was 0 but at slot 2 in bdevsw XXX
 major	{cd = 3}
-
-define	pcmcia {}			# XXX dummy decl...
-include	"../../../dev/isa/files.isa"
-#major	{ wd = 5 }		# Not even in bdevsw XXX
-
-device	pckbc { } 
-attach	pckbc at isa
-file	arch/powerpc/isa/pcppi.c	pckbc
-
-device	pckbd
-attach	pckbd at pckbc
-file	arch/powerpc/isa/pckbd.c	pckbd
-
-device	pms
-attach	pms at pckbc
-file	arch/powerpc/isa/pms.c		pms
-
-include "../../../dev/isa/files.isapnp"
-file    arch/powerpc/isa/isapnp_machdep.c   isapnp   
+include "../../../scsi/files.scsi"
 
 #
 # "workstation console" routines
@@ -144,9 +127,9 @@ device obio {}
 attach obio at pci
 file arch/powerpc/pci/macobio.c			obio
 
-device esp: scsi, ncr53c9x
-attach esp at obio
-file arch/powerpc/mac/esp.c			esp
+#device esp: scsi, ncr53c9x
+#attach esp at obio
+#file arch/powerpc/mac/esp.c			esp
 
 device mesh: scsi
 attach mesh at obio
@@ -162,8 +145,8 @@ attach bm at obio
 file arch/powerpc/mac/if_bm.c			bm
 
 device gm: ether, ifnet, ifmedia, mii
-attach gm at obio
-file arch/powerpc/mac/if_gm.c			gm
+attach gm at pci
+file arch/powerpc/mac/if_gm.c			gm needs-flag
 
 device macintr {}
 attach macintr at obio
@@ -197,21 +180,33 @@ file arch/powerpc/mac/aed.c                      aed needs-flag
 #define wsmousedev {}
 #??
 
-#device akbd: wskbddev
-#attach akbd at adb
-#file arch/powerpc/mac/akbd.c                     akbd needs-flag
+device akbd: wskbddev
+attach akbd at adb
+file arch/powerpc/mac/akbd.c                     akbd needs-flag
 
-#device ams: wsmousedev
-#attach ams at adb
-#file arch/powerpc/mac/ams.c                      ams
+device ams: wsmousedev
+attach ams at adb
+file arch/powerpc/mac/ams.c                      ams
+
+device abtn
+attach abtn at adb
+file arch/powerpc/mac/abtn.c			abtn
+
+device awacs: audio, auconv, mulaw
+attach awacs at obio
+file arch/powerpc/mac/awacs.c			awacs
 
 device nvram
 attach nvram at obio
-file arch/powerpc/mac/nvram.c                    nvram needs-flag
+file arch/powerpc/mac/nvram.c			nvram needs-flag
 
+device gpio {}
+attach gpio at obio with gpio_obio
+attach gpio at gpio with gpio_gpio
+file arch/powerpc/mac/gpio.c			gpio
 
 attach wdc at obio with wdc_obio
-file arch/powerpc/mac/wdc_obio.c                 wdc_obio
+file arch/powerpc/mac/wdc_obio.c		wdc_obio
 
 define grfdev {}
 
@@ -227,6 +222,27 @@ file arch/powerpc/mac/grf_subr.c                 grf
 device ite: tty
 attach ite at grf
 file arch/powerpc/mac/ite.c                      ite needs-flag
+
+
+# VGA framebuffer
+device        vgafb: wsemuldisplaydev, wsrasteremulops
+file  arch/powerpc/pci/vgafb.c          	vgafb & vgafb_pci
+
+# Generic VGA Framebuffer version
+attach  vgafb at pci with vgafb_pci
+file    arch/powerpc/pci/vgafb_pci.c             vgafb_pci       needs-flag
+
+
+#
+# CARDBUS
+#
+include	"dev/cardbus/files.cardbus"
+#file	arch/powerpc/powerpc/rbus_machdep.c	cardbus
+
+#
+# Machine-independent PCMCIA drivers
+#
+include "dev/pcmcia/files.pcmcia"
 
 #
 # Machine-independent USB drivers

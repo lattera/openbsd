@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.1 2000/03/02 07:04:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.2 2001/04/18 16:07:35 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1996/03/04 05:04:26 cgd Exp $	*/
 
 /*-
@@ -82,7 +82,9 @@
 #define	DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
 #define	DEV_BSIZE	(1 << DEV_BSHIFT)
 #define	BLKDEV_IOSIZE	2048
+#ifndef	MAXPHYS
 #define	MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
+#endif
 
 #define	CLSIZELOG2	0
 #define	CLSIZE		(1 << CLSIZELOG2)
@@ -95,6 +97,14 @@
 
 #ifndef MSGBUFSIZE
 #define MSGBUFSIZE	2*NBPG		/* default message buffer size */
+#endif
+
+#if !defined(UVM) && defined(PMAP_NEW)
+#error PMAP_NEW is not compatible with old VM
+#elif defined(UVM) && !defined(PMAP_NEW) && !defined(PMAP_OLD)
+#define PMAP_NEW
+#elif defined(PMAP_NEW) && defined(PMAP_OLD)
+#error Both PMAP_NEW and PMAP_OLD cannot be defined concurrently
 #endif
 
 /*

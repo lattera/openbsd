@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/pm_ds.c,v 1.3.8.1 2001/04/18 16:12:40 niklas Exp $	*/
 /*	$NetBSD: pm_ds.c,v 1.4 1997/05/24 08:19:52 jonathan Exp $	*/
 
 /*
@@ -36,10 +37,10 @@
 
 #include "fb.h"
 #include "pm.h"
-#include "dc_ds.h"
+#include "dz_ds.h"
 
 #if 0
-#if NDC_DS == 0
+#if NDZ_DS == 0
 pm needs dc device
 #endif
 #endif
@@ -83,7 +84,7 @@ extern struct pmax_fbtty pmfb;
  * we hardcode an entry point.
  * XXX
  */
-void dcPutc	__P((dev_t, int));		/* XXX */
+void dzPutc	__P((dev_t, int));		/* XXX */
 
 
 /*
@@ -197,7 +198,7 @@ pminit(fi, unit, cold_console_flag)
 	/*
 	 * set putc/getc entry point
 	 */
-	fi->fi_glasstty->KBDPutc = dcPutc;	/* XXX */
+	fi->fi_glasstty->KBDPutc = dzPutc;	/* XXX */
 	fi->fi_glasstty->kbddev = makedev(DCDEV, DCKBD_PORT);
 
 	/* call back-end to initialize hardware and attach to rcons */

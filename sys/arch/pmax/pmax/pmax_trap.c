@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/pmax_trap.c,v 1.6.8.1 2001/04/18 16:12:49 niklas Exp $	*/
 /*	$NetBSD: pmax_trap.c,v 1.44 1997/05/31 20:33:35 mhitch Exp $	*/
 
 /*
@@ -91,7 +92,7 @@ struct ifnet; struct ethercom;
 #include "asc.h"
 #include "sii.h"
 #include "le_pmax.h"
-#include "dc_ds.h"
+#include "dz_ds.h"
 #include "led.h"
 
 #include <sys/cdefs.h>
@@ -180,8 +181,8 @@ int leintr __P((void *));
 #if NSII > 0
 int siiintr __P((void *));
 #endif
-#if NDC_DS > 0
-int dcintr __P((void *));
+#if NDZ_DS > 0
+int dzintr __P((void *));
 #endif
 
 /*
@@ -199,7 +200,7 @@ kn01_intr(mask, pc, statusReg, causeReg)
 	int temp;
 	extern struct cfdriver sii_cd;
 	extern struct cfdriver le_cd;
-	extern struct cfdriver dc_cd;
+	extern struct cfdriver dz_cd;
 
 	/* handle clock interrupts ASAP */
 	if (mask & MIPS_INT_MASK_3) {
@@ -236,12 +237,12 @@ kn01_intr(mask, pc, statusReg, causeReg)
 	}
 #endif /* NLE_PMAX */
 
-#if NDC_DS > 0
+#if NDZ_DS > 0
 	if (mask & MIPS_INT_MASK_2) {
-		dcintr(dc_cd.cd_devs[0]);
+		dzintr(dz_cd.cd_devs[0]);
 		intrcnt[SERIAL0_INTR]++;
 	}
-#endif /* NDC_DS */
+#endif /* NDZ_DS */
 
 	if (mask & MIPS_INT_MASK_4) {
 		pmax_errintr();

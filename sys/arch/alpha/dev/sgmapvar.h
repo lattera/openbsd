@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/sgmapvar.h,v 1.1 2001/03/21 17:26:38 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/sgmapvar.h,v 1.1.2.1 2001/04/18 16:00:44 niklas Exp $ */
 /* $NetBSD: sgmapvar.h,v 1.10 1998/08/14 16:50:02 thorpej Exp $ */
 
 /*-

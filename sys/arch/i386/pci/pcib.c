@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/pci/pcib.c,v 1.5.2.1 2001/04/18 16:08:29 niklas Exp $	*/
 /*	$NetBSD: pcib.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*-
@@ -50,6 +51,10 @@
 #include <dev/pci/pcidevs.h>
 
 #include "isa.h"
+#include "pcibios.h"
+#if NPCIBIOS > 0
+#include <i386/pci/pcibiosvar.h>
+#endif
 
 int	pcibmatch __P((struct device *, void *, void *));
 void	pcibattach __P((struct device *, struct device *, void *));
@@ -80,7 +85,7 @@ pcibmatch(parent, match, aux)
 		switch (PCI_PRODUCT(pa->pa_id)) {
 		case PCI_PRODUCT_INTEL_SIO:
 		case PCI_PRODUCT_INTEL_82371MX:
-		case PCI_PRODUCT_INTEL_82371AB:
+		case PCI_PRODUCT_INTEL_82371AB_ISA:
 			/* The above bridges mis-identify themselves */
 			return (1);
 		}
@@ -113,6 +118,10 @@ pcib_callback(self)
 	struct device *self;
 {
 	struct isabus_attach_args iba;
+
+#if NPCIBIOS > 0
+	pci_intr_post_fixup();
+#endif
 
 	/*
 	 * Attach the ISA bus behind this bridge.

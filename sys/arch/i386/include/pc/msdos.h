@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/pc/Attic/msdos.h,v 1.1.1.1.16.1 2001/04/18 16:07:51 niklas Exp $	*/
 /*	$NetBSD: msdos.h,v 1.3 1994/10/27 04:16:37 cgd Exp $	*/
 
 /*

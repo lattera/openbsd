@@ -1,14 +1,18 @@
-#	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/keycap/Attic/Makefile,v 1.7 1999/11/18 09:03:39 deraadt Exp $
+#	$OpenBSD: src/sys/arch/i386/isa/pcvt/Util/keycap/Attic/Makefile,v 1.7.2.1 2001/04/18 16:08:13 niklas Exp $
 
+MAN3	=	keycap.3
+MAN5	=	keycap.5
+MLINKS	=	keycap.3 kgetent.3 keycap.3 kgetnum.3 keycap.3 kgetflag.3 \
+		keycap.3 kgetstr.3
+MANSUBDIR=/i386
+
+.if ${MACHINE} == "i386"
 LIB	=	keycap
 CAPDIR	=	/usr/share/misc
 CAPPATH	=	$(CAPDIR)/keycap.pcvt
 KEYCAPSRC=	keycap.src
 CFLAGS	+=	-DKEYCAP_PATH=\"$(CAPPATH)\"
 SRCS	=	keycap.c
-MAN3	=	keycap.3 keycap.5
-MLINKS	=	keycap.3 kgetent.3 keycap.3 kgetnum.3 keycap.3 kgetflag.3 \
-		keycap.3 kgetstr.3
 
 beforeinstall:
 	-@if [ ! -d ${DESTDIR}${LIBDIR} ]; then \
@@ -16,5 +20,9 @@ beforeinstall:
 	fi
 	install -c -m ${LIBMODE} -o ${LIBOWN} -g ${LIBGRP} \
 	    ${.CURDIR}/${KEYCAPSRC} ${DESTDIR}${CAPPATH}
-
 .include <bsd.lib.mk>
+.else
+NOPROG=
+.include <bsd.prog.mk>
+.endif
+

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.2 2000/03/24 09:08:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.3 2001/04/18 16:10:10 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.134 1997/02/14 06:15:30 scottr Exp $	*/
 
 /*
@@ -898,13 +898,13 @@ microtime(tvp)
 
 	*tvp = time;
 	tvp->tv_usec += clkread();
-	while (tvp->tv_usec > 1000000) {
+	while (tvp->tv_usec >= 1000000) {
 		tvp->tv_sec++;
 		tvp->tv_usec -= 1000000;
 	}
 	if (tvp->tv_sec == lasttime.tv_sec &&
 	    tvp->tv_usec <= lasttime.tv_usec &&
-	    (tvp->tv_usec = lasttime.tv_usec + 1) > 1000000) {
+	    (tvp->tv_usec = lasttime.tv_usec + 1) >= 1000000) {
 		tvp->tv_sec++;
 		tvp->tv_usec -= 1000000;
 	}

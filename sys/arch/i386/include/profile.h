@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/profile.h,v 1.3.14.1 2001/04/18 16:07:41 niklas Exp $	*/
 /*	$NetBSD: profile.h,v 1.6 1995/03/28 18:17:08 jtc Exp $	*/
 
 /*

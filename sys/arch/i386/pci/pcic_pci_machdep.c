@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1 2000/08/01 07:55:38 aaron Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1.4.1 2001/04/18 16:08:30 niklas Exp $ */
 /*	$NetBSD: pcic_pci_machdep.c,v 1.1 1998/12/20 17:53:29 nathanw Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.4 1996/06/11 10:15:13 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.4.16.1 2001/04/18 16:10:25 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -43,7 +43,6 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/reg.h,v 1.1.1.1.16.1 2001/04/18 16:07:43 niklas Exp $	*/
 /*	$NetBSD: reg.h,v 1.14 1995/10/11 04:20:24 mycroft Exp $	*/
 
 /*-

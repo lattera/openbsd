@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/bwx.h,v 1.2 2000/11/08 21:27:17 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/bwx.h,v 1.2.2.1 2001/04/18 16:00:48 niklas Exp $ */
 /* $NetBSD: bwx.h,v 1.3 2000/06/08 02:55:37 thorpej Exp $ */
 
 /*-

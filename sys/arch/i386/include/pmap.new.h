@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/pmap.new.h,v 1.1 2001/03/22 23:36:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/pmap.new.h,v 1.1.2.1 2001/04/18 16:07:40 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.43 2000/02/11 07:00:13 thorpej Exp $	*/
 
 /*

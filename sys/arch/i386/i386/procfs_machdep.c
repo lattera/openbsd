@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/procfs_machdep.c,v 1.1 2001/04/09 07:14:16 tholo Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/procfs_machdep.c,v 1.1.2.1 2001/04/18 16:07:23 niklas Exp $	*/
 /*	$NetBSD: procfs_machdep.c,v 1.6 2001/02/21 21:39:59 jdolecek Exp $	*/
 
 /*

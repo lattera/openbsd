@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/npx.h,v 1.3.14.1 2001/04/18 16:07:35 niklas Exp $	*/
 /*	$NetBSD: npx.h,v 1.11 1994/10/27 04:16:11 cgd Exp $	*/
 
 /*-

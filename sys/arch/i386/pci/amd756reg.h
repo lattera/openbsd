@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/amd756reg.h,v 1.1 2000/11/07 18:21:22 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/amd756reg.h,v 1.1.2.1 2001/04/18 16:08:22 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*

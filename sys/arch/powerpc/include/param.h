@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.1 2000/03/02 07:04:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.2 2001/04/18 16:13:03 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.1 1996/09/30 16:34:28 ws Exp $	*/
 
 /*-
@@ -54,6 +54,9 @@
 #define	PGSHIFT		12
 #define	NBPG		4096
 #define	PGOFSET		(NBPG - 1)
+#define PAGE_SIZE	NBPG
+#define PAGE_MASK	PGOFSET
+#define PAGE_SHIFT	PGSHIFT
 
 #define	DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
 #define	DEV_BSIZE	(1 << DEV_BSHIFT)
@@ -88,7 +91,7 @@
 #endif
 #endif
 
-#define MSGBUFSIZE	NBPG
+#define MSGBUFSIZE	(NBPG*2)
 
 /*
  * Size of kernel malloc arena in CLBYTES-sized logical pages.
@@ -138,9 +141,6 @@
 /*
  * Some system constants
  */
-#ifndef	HTABENTS
-#define	HTABENTS	1024	/* Number of hashslots in HTAB */
-#endif
 #ifndef	NPMAPS
 #define	NPMAPS		32768	/* Number of pmaps in system */
 #endif

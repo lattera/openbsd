@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/asm.h,v 1.3.10.1 2001/04/18 16:07:26 niklas Exp $	*/
 /*	$NetBSD: asm.h,v 1.7 1994/10/27 04:15:56 cgd Exp $	*/
 
 /*-

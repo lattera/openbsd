@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/asc.c,v 1.2 2001/02/03 19:40:41 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/asc.c,v 1.2.2.1 2001/04/18 16:01:46 niklas Exp $	*/
 /*	$NetBSD: esp.c,v 1.26 1996/12/05 01:39:40 cgd Exp $	*/
 
 #ifdef __sparc__

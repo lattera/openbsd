@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/conf.c,v 1.16.6.1 2001/04/18 16:12:45 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.23 1996/09/07 12:40:38 mycroft Exp $	*/
 
 /*
@@ -111,9 +112,9 @@ cdev_decl(mm);
 #include "bpfilter.h"
 #include "dtop.h"
 cdev_decl(dtop);
-#include "dc_ioasic.h"
-#include "dc_ds.h"
-cdev_decl(dc);
+#include "dz_ioasic.h"
+#include "dz_ds.h"
+cdev_decl(dz);
 #include "scc.h"
 cdev_decl(scc);
 cdev_decl(rz);
@@ -144,10 +145,10 @@ cdev_decl(xfs_dev);
 #define NIPF 0
 #endif
 
-#if (NDC_DS > 0) || (NDC_IOASIC > 0)
-# define NDC 1
+#if (NDZ_DS > 0) || (NDZ_IOASIC > 0)
+# define NDZ 1
 #else
-# define NDC 0
+# define NDZ 0
 #endif
 
 /* a framebuffer with an attached mouse: */
@@ -181,7 +182,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 13: color frame buffer */
 	cdev_notdef(),			/* 14: maxine color frame buffer */
 	cdev_tty_init(NDTOP,dtop),	/* 15: desktop bus interface */
-	cdev_tty_init(NDC,dc),		/* 16: dc7085 serial interface */
+	cdev_tty_init(NDZ,dz),		/* 16: dc7085 serial interface */
 	cdev_tty_init(NSCC,scc),	/* 17: scc 82530 serial interface */
 	cdev_notdef(),			/* 18: mono frame buffer */
         cdev_notdef(),		        /* 19: mt */
@@ -297,6 +298,12 @@ iszerodev(dev)
 #else
 	return (major(dev) == 3 && minor(dev) == 12);
 #endif
+}
+
+dev_t
+getnulldev()
+{
+	return makedev(3, 2);
 }
 
 static int chrtoblktbl[] =  {

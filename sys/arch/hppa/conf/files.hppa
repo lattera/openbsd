@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21 2000/01/11 21:26:24 mickey Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.1 2001/04/18 16:05:52 niklas Exp $
 #
 # hppa-specific configuration info
 
@@ -10,8 +10,12 @@ maxusers 2 8 64
 # 
 # "workstation console" routines
 #
+include "dev/wscons/files.wscons"
 
-#include "dev/wscons/files.wscons"
+#
+# Media Independent Interface (mii)
+#
+include "dev/mii/files.mii"
 
 #
 # Machine-independent SCSI drivers
@@ -44,7 +48,8 @@ include "dev/eisa/files.eisa"
 include "dev/pci/files.pci"
 
 #
-# General System Connect Bus
+# Gonzo System Connect Bus
+#	(GSC, GSC-1X, GSC+, GSC-1.5X, GSC-2X)
 #
 define	gscbus	{ }
 
@@ -97,9 +102,8 @@ device	dino: pcibus
 attach	dino at mainbus
 file	arch/hppa/dev/dino.c		dino
 
-device	sti # : wsemuldisplaydev
-attach	sti at mainbus
-file	arch/hppa/dev/sti.c		sti needs-flag
+attach	sti at mainbus with sti_sgc
+file	arch/hppa/dev/sti_sgc.c		sti_sgc
 
 ###
 
@@ -134,7 +138,6 @@ file	arch/hppa/gsc/lpt_gsc.c		lpt
 attach	ie at gsc with ie_gsc
 file	arch/hppa/gsc/if_ie_gsc.c	ie_gsc
 
-device	siop: ncr53c7xx, scsi
 attach	siop at gsc
 file	arch/hppa/gsc/siop_gsc.c	siop
 
@@ -150,10 +153,15 @@ device	aone: audio, mulaw, auconv
 attach	aone at gsc
 file	arch/hppa/gsc/aone.c		aone
 
-# CS4215 based 16bit mono/stereo audio iface (most of others not w/ aone)
-device	atwo: audio, mulaw, auconv
-attach	atwo at gsc
-file	arch/hppa/gsc/atwo.c		atwo
+# CS4215/AD1849 based 16bit mono/stereo audio iface (most of others not w/ aone)
+# a.k.a. Audio Type 2 (optional beeper)
+device	harmony {} : audio, mulaw, auconv
+attach	harmony at gsc
+file	arch/hppa/gsc/harmony.c		harmony
+
+# fax/modem/voice on harmony
+attach	com at harmony with com_harmony
+file	arch/hppa/gsc/com_harmony.c	com_harmony
 
 # HPA4011A/B w/ TMS380C26PQL, TMS38054FNL
 #device	tms: tokenring
@@ -204,8 +212,7 @@ file	arch/hppa/hppa/process_machdep.c
 file	arch/hppa/hppa/sys_machdep.c
 file	arch/hppa/hppa/trap.c
 file	arch/hppa/hppa/vm_machdep.c
-#file	arch/hppa/hppa/in_cksum.S		inet
-file	netinet/in_cksum.c			inet
+file	arch/hppa/hppa/in_cksum.c		inet
 file	arch/hppa/dev/clock.c
 file	arch/hppa/hppa/fpemu.S			fpemul
 

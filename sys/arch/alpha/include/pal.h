@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/pal.h,v 1.2 2000/11/08 21:27:20 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/pal.h,v 1.2.2.1 2001/04/18 16:00:55 niklas Exp $ */
 /* $NetBSD: pal.h,v 1.1 1997/09/06 01:23:53 thorpej Exp $ */
 
 /* 

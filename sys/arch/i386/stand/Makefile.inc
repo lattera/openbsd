@@ -1,8 +1,9 @@
-#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27 2000/02/08 17:48:53 mickey Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27.2.1 2001/04/18 16:08:38 niklas Exp $
 
 CFLAGS=${DEBUG} -Os -Wall -Werror
 CPPFLAGS+=-I${S} -I${SADIR}/libsa -I. -I${.CURDIR}
 SACFLAGS=-D_STANDALONE
+DEBUGLIBS=no
 DEBUGFLAGS=
 # DEBUGFLAGS+=-DDEBUG
 # DEBUGFLAGS+=-DGIDT_DEBUG
@@ -49,3 +50,5 @@ LIBZ=${SADIR}/libz/${__objdir}/libz.a
 
 # NO_NET=no_net
 BINDIR=	/usr/mdec
+
+MANSUBDIR=/i386

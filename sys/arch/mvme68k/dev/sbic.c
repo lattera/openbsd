@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.5 1997/11/24 01:13:51 mickey Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.5.10.1 2001/04/18 16:10:26 niklas Exp $ */
 /*	$NetBSD: sbic.c,v 1.2 1996/04/23 16:32:54 chuck Exp $	*/
 
 /*
@@ -1014,7 +1014,7 @@ sbicselectbus(dev)
     SET_SBIC_cmd(regs, SBIC_CMD_SEL_ATN);
 
     /*
-     * wait for select (merged from seperate function may need
+     * wait for select (merged from separate function may need
      * cleanup)
      */
     WAIT_CIP(regs);

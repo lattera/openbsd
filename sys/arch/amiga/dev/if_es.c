@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/if_es.c,v 1.11 1999/05/13 15:44:48 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/if_es.c,v 1.11.4.1 2001/04/18 16:02:11 niklas Exp $	*/
 /*	$NetBSD: if_es.c,v 1.16 1996/12/23 09:10:17 veego Exp $	*/
 
 /*
@@ -198,10 +198,6 @@ esattach(parent, self, aux)
 
 	/* Print additional info when attached. */
 	printf(": address %s\n", ether_sprintf(sc->sc_arpcom.ac_enaddr));
-
-#if NBPFILTER > 0
-	bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
-#endif
 
 	sc->sc_isr.isr_intr = esintr;
 	sc->sc_isr.isr_arg = sc;

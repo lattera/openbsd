@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/in_cksum.c,v 1.1 2001/01/13 00:00:20 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/in_cksum.c,v 1.1.2.1 2001/04/18 16:06:12 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/limits.h,v 1.1 1998/06/23 19:45:24 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/limits.h,v 1.1.8.1 2001/04/18 16:06:26 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1992-1994, The University of Utah and
@@ -109,6 +109,9 @@
 					/* max value for a quad_t */
 #define	QUAD_MAX	((quad_t)(UQUAD_MAX >> 1))
 #define	QUAD_MIN	(-QUAD_MAX-1)	/* min value for a quad_t */
+#define ULLONG_MAX	(UQUAD_MAX)	/* max value for unsigned long long */
+#define LLONG_MAX	(QUAD_MAX)	/* max value for a signed long long */
+#define LLONG_MIN	(QUAD_MIN)	/* min value for a signed long long */
 
 #endif /* !_POSIX_SOURCE */
 #endif /* !_ANSI_SOURCE */

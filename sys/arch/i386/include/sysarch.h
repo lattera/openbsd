@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/sysarch.h,v 1.2.16.1 2001/04/18 16:07:46 niklas Exp $	*/
 /*	$NetBSD: sysarch.h,v 1.8 1996/01/08 13:51:44 mycroft Exp $	*/
 
 #ifndef _I386_SYSARCH_H_

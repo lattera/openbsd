@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/vm_machdep.c,v 1.14 1999/09/03 18:00:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/vm_machdep.c,v 1.14.4.1 2001/04/18 16:05:42 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.37 1997/05/26 00:27:43 thorpej Exp $	*/
 
 /*
@@ -46,6 +46,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/malloc.h>
 #include <sys/buf.h>
 #include <sys/vnode.h>
@@ -133,8 +134,6 @@ void
 cpu_exit(p)
 	struct proc *p;
 {
-
-	vmspace_free(p->p_vmspace);
 
 	(void) splimp();
 	cnt.v_swtch++;

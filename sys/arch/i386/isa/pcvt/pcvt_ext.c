@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_ext.c,v 1.26 1999/12/01 09:59:59 deraadt Exp $	*/
-
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_ext.c,v 1.26.2.1 2001/04/18 16:07:56 niklas Exp $	*/
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis and Joerg Wunsch.
  *
@@ -2320,8 +2319,23 @@ switch_screen(int n, int oldgrafx, int newgrafx)
 
 	if(!newgrafx)
 	{
-		update_led();	/* update led's */
-
+		/*
+		 * update_led() was moved to vgapage() because switching
+		 * from X with kbd leds on under heavy IO (e.g. cd /; ls -R
+		 * in an XTerm) to a VT caused kbd lockup.
+		 * The following remaining problems will be solved later:
+		 * 1. killing X under heavy IO as above, with leds on,
+		 *    still causes kbd lockup
+		 * 2. starting X takes the led state from the first VT, and
+		 *    not from the VT where startx is executed
+		 * 3. switching back and forth between X and VTs causes some
+		 *    mismatch in the kbd led state
+		 * grep update_led in the pcvt sources to see where
+		 * Mathias Schmocker <smat@acm.org>, 27 Nov. 2000
+		 */
+#if 0 
+		update_led(1);	/* update led's */
+#endif 	
 		/* if we switch to a vt with force 24 lines mode and	*/
 		/* pure VT emulation and 25 rows charset, then we have	*/
 		/* to clear the last line on display ...		*/
@@ -2417,6 +2431,12 @@ vgapage(int new_screen)
 {
 	int x;
 
+	if (IS_SEL_EXISTS(vsp)) 
+		/* hides a potential selection */
+		remove_selection();
+	
+	mouse_hide(); /* hides a potential mouse cursor */
+	
 	if(new_screen < 0 || new_screen >= totalscreens)
 		return EINVAL;
 
@@ -2486,6 +2506,7 @@ vgapage(int new_screen)
 			/* we are committed */
 			vt_switch_pending = 0;
 			reallocate_scrollbuffer(vsp, scrollback_pages);
+			update_led(1); /* was in switch_screen() before */
 		}
 	}
 	return 0;
@@ -2623,7 +2644,7 @@ usl_vt_ioctl(Dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 					 * if the new vt is also in process
 					 * mode, we have to wait until its
 					 * controlling process acknowledged
-					 * the switch
+					 * the switch 
 					 */
 					vsp->vt_status
 						|= VT_WAIT_ACK;
@@ -2636,6 +2657,14 @@ usl_vt_ioctl(Dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 					/* we are committed */
 					vt_switch_pending = 0;
 				}
+				/*
+				 *  We send here a USR2 signal to the mouse 
+				 *  daemon (moused(8))
+				 *  to tell him he can reuse the mouse device.
+				 */      
+				if (moused_proc)
+					psignal(moused_proc, SIGUSR2);
+
 				return 0;
 			}
 			break;
@@ -2646,6 +2675,13 @@ usl_vt_ioctl(Dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			{
 				vt_switch_pending = 0;
 				vsp->vt_status &= ~VT_WAIT_ACK;
+				/*
+				 *  We send a USR1 signal to the mouse 
+				 *  daemon (moused(8))
+				 *  to ask him to free the mouse device.
+				 */
+				if (moused_proc)
+					psignal(moused_proc, SIGUSR1);
 
 				return 0;
 			}
@@ -2762,8 +2798,17 @@ usl_vt_ioctl(Dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		case KD_TEXT:
 			haschanged = (vsx->vt_status & VT_GRAFX) != 0;
 			vsx->vt_status &= ~VT_GRAFX;
-			if(haschanged && vsx == vsp)
+			if (haschanged && vsx == vsp)
 				switch_screen(current_video_screen, 1, 0);
+			
+			/*
+			 *  We send here a USR2 signal to the mouse
+			 *  daemon (moused(8))
+			 *  to tell him he can reuse the mouse device.
+			 */                                
+			if (moused_proc)
+				psignal(moused_proc, SIGUSR2);
+
 			return 0;
 
 		case KD_GRAPHICS:
@@ -2774,6 +2819,15 @@ usl_vt_ioctl(Dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			vsx->vt_status |= VT_GRAFX;
 			if(haschanged && vsx == vsp)
 				switch_screen(current_video_screen, 0, 1);
+
+			/*
+			 *  We send a USR1 signal to the mouse
+			 *  daemon (moused(8))
+			 *  to ask him to free the mouse device.
+			 */                                    
+			if (moused_proc)
+				psignal(moused_proc, SIGUSR1);
+			
 			return 0;
 
 		}

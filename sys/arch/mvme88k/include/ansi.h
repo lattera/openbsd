@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.2 2000/03/24 09:08:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.3 2001/04/18 16:11:11 niklas Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,8 +34,8 @@
  *	from: @(#)ansi.h	8.2 (Berkeley) 1/4/94
  */
 
-#ifndef	_ANSI_H_
-#define	_ANSI_H_
+#ifndef	__MACHINE_ANSI_H__
+#define	__MACHINE_ANSI_H__
 
 /*
  * Types which are fundamental to the implementation and may appear in
@@ -85,4 +85,4 @@
  */
 #define _BSD_OFF_T_	long long		/* file offset */
 
-#endif	/* _ANSI_H_ */
+#endif __MACHINE_ANSI_H__

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30 1999/09/12 19:44:04 weingart Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.1 2001/04/18 16:07:12 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -59,6 +59,7 @@
 
 #include <machine/pte.h>
 #include <machine/cpu.h>
+#include <machine/biosvar.h>
 
 #include <dev/cons.h>
 
@@ -367,7 +368,9 @@ noask:
 	}
 
 doswap:
+#ifndef DISKLESS
 	mountroot = dk_mountroot;
+#endif
 	swdevt[0].sw_dev = argdev = dumpdev =
 	    makedev(major(rootdev), minor(rootdev) + 1);
 	/* swap size and dumplo set during autoconfigure */

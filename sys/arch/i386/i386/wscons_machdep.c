@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/wscons_machdep.c,v 1.5 2001/03/14 18:24:10 todd Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/wscons_machdep.c,v 1.5.2.1 2001/04/18 16:07:25 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell

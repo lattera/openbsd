@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.2 2001/02/16 16:02:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.2.2.1 2001/04/18 16:01:19 niklas Exp $	*/
 /* $NetBSD: lca_dma.c,v 1.13 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-

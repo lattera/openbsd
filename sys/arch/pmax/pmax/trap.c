@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/trap.c,v 1.20 1999/05/24 23:09:06 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/trap.c,v 1.20.4.1 2001/04/18 16:12:50 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.50 1996/10/13 21:37:49 jonathan Exp $	*/
 
 /*
@@ -476,7 +476,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 		register pt_entry_t *pte;
 		register unsigned entry;
 		register vm_offset_t pa;
-		pmap_t pmap = &p->p_vmspace->vm_pmap;
+		pmap_t pmap = p->p_vmspace->vm_map.pmap;
 
 		if (!(pte = pmap_segmap(pmap, vadr)))
 			panic("trap: utlbmod: invalid segmap");
@@ -561,7 +561,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 		rv = vm_fault(map, va, ftype, FALSE);
 #ifdef VMFAULT_TRACE
 		printf("vm_fault(%x (pmap %x), %x (%x), %x, %d) -> %x at pc %x\n",
-		       map, &vm->vm_pmap, va, vadr, ftype, FALSE, rv, pc);
+		       map, vm->vm_map.pmap, va, vadr, ftype, FALSE, rv, pc);
 #endif
 		/*
 		 * If this was a stack access we keep track of the maximum
@@ -658,7 +658,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 #ifdef KTRACE
 					if (KTRPOINT(p, KTR_SYSCALL))
-						ktrsyscall(p->p_tracep, code,
+						ktrsyscall(p, code,
 							callp->sy_argsize,
 							args.i);
 #endif
@@ -693,7 +693,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 #ifdef KTRACE
 					if (KTRPOINT(p, KTR_SYSCALL))
-						ktrsyscall(p->p_tracep, code,
+						ktrsyscall(p, code,
 							callp->sy_argsize,
 							args.i);
 #endif
@@ -725,7 +725,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 #ifdef KTRACE
 					if (KTRPOINT(p, KTR_SYSCALL))
-						ktrsyscall(p->p_tracep, code,
+						ktrsyscall(p, code,
 							callp->sy_argsize,
 							args.i);
 #endif
@@ -738,7 +738,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_SYSCALL))
-			ktrsyscall(p->p_tracep, code, callp->sy_argsize, args.i);
+			ktrsyscall(p, code, callp->sy_argsize, args.i);
 #endif
 		rval[0] = 0;
 		rval[1] = locr0[V1];
@@ -801,7 +801,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_SYSRET))
-			ktrsysret(p->p_tracep, code, i, rval[0]); /*XXX*/
+			ktrsysret(p, code, i, rval[0]); /*XXX*/
 #endif
 		goto out;
 	    }

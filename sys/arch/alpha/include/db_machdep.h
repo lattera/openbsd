@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7 1997/07/23 23:32:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7.12.1 2001/04/18 16:00:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
@@ -31,6 +31,17 @@
 
 #ifndef	_ALPHA_DB_MACHDEP_H_
 #define	_ALPHA_DB_MACHDEP_H_
+
+/* XXX - Need to include vm.h for boolean_t */
+#include <vm/vm.h>
+
+#define DB_MACHINE_COMMANDS
+
+/*
+ * We use Elf64 symbols in DDB.
+ */
+#define	DB_ELF_SYMBOLS
+#define	DB_ELFSIZE	64
 
 struct opcode {
 	enum opc_fmt { OPC_PAL, OPC_RES, OPC_MEM, OPC_OP, OPC_BR } opc_fmt;
@@ -71,14 +82,30 @@ db_regs_t		ddb_regs;
 #define	inst_trap_return(ins)	((ins) & 0)		/* XXX */
 #define	inst_return(ins)	(((ins) & 0xfc000000) == 0x68000000)
 
-int inst_call __P((u_int));
-int inst_branch __P((u_int));
-int inst_load __P((u_int));
-int inst_store __P((u_int));
-db_addr_t branch_taken __P((u_int, db_addr_t,
-    register_t (*) __P((db_regs_t *, int)), db_regs_t *));
+int	alpha_debug __P((unsigned long, unsigned long, unsigned long,
+    unsigned long, struct trapframe *));
+db_addr_t db_branch_taken __P((int, db_addr_t, db_regs_t *));
+boolean_t db_inst_branch __P((int));
+boolean_t db_inst_call __P((int));
+boolean_t db_inst_load __P((int));
+boolean_t db_inst_return __P((int));
+boolean_t db_inst_store __P((int));
+boolean_t db_inst_trap_return __P((int));
+boolean_t db_inst_unconditional_flow_transfer __P((int));
+u_long	db_register_value  __P((db_regs_t *, int));
+int	db_valid_breakpoint __P((db_addr_t));
+int	ddb_trap __P((unsigned long, unsigned long, unsigned long,
+    unsigned long, struct trapframe *));
+int	kdb_trap __P((int, int, db_regs_t *));
 db_addr_t next_instr_address __P((db_addr_t, int));
-int kdb_trap __P((int, int, db_regs_t *));
-int db_valid_breakpoint __P((db_addr_t));
+
+#if 1
+/* Backwards compatibility until we switch all archs to use the db_ prefix */
+#define branch_taken(ins, pc, fun, regs) db_branch_taken((ins), (pc), (regs))
+#define inst_branch db_inst_branch
+#define inst_call db_inst_call
+#define inst_load db_inst_load
+#define inst_store db_inst_store
+#endif
 
 #endif	/* _ALPHA_DB_MACHDEP_H_ */

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia_bwx_bus_io.c,v 1.2 2000/11/08 20:59:25 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia_bwx_bus_io.c,v 1.2.2.1 2001/04/18 16:01:10 niklas Exp $ */
 /* $NetBSD: cia_bwx_bus_io.c,v 1.3 2000/06/29 08:58:46 mrg Exp $ */
 
 /*

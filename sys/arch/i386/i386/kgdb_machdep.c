@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/kgdb_machdep.c,v 1.1 2001/01/24 09:37:58 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/kgdb_machdep.c,v 1.1.2.1 2001/04/18 16:07:19 niklas Exp $	*/
 /*	$NetBSD: kgdb_machdep.c,v 1.6 1998/08/13 21:36:03 thorpej Exp $	*/
 
 /*-

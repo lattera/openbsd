@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.1 2000/03/24 09:07:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.2 2001/04/18 16:07:55 niklas Exp $	*/
 /*	$NetBSD: pccons.c,v 1.99.4.1 1996/06/04 20:03:53 cgd Exp $	*/
 
 /*-
@@ -56,6 +56,7 @@
 #include <sys/kernel.h>
 #include <sys/syslog.h>
 #include <sys/device.h>
+#include <sys/timeout.h>
 #ifdef DDB
 #include <ddb/db_var.h>
 #endif
@@ -101,6 +102,8 @@ static int pc_blank = 300;
 #ifdef XSERVER
 int pc_xmode = 0;
 #endif
+struct timeout pccons_aup_tmo;
+struct timeout pccons_blank_tmo;
 
 #define	PCUNIT(x)	(minor(x))
 
@@ -130,6 +133,7 @@ int pcprobe __P((struct device *, void *, void *));
 void pcattach __P((struct device *, struct device *, void *));
 int pcintr __P((void *));
 static void screen_restore __P((int));
+static void screen_blank __P((void *));
 
 struct cfattach pc_ca = {
 	sizeof(struct pc_softc), pcprobe, pcattach
@@ -193,7 +197,7 @@ kbd_wait_output()
 	u_int i;
 
 	for (i = 100000; i; i--)
-		if ((inb(KBSTATP) & KBS_IBF) == 0) {
+		if ((inb(IO_KBD + KBSTATP) & KBS_IBF) == 0) {
 			KBD_DELAY;
 			return 1;
 		}
@@ -206,7 +210,7 @@ kbd_wait_input()
 	u_int i;
 
 	for (i = 100000; i; i--)
-		if ((inb(KBSTATP) & KBS_DIB) != 0) {
+		if ((inb(IO_KBD + KBSTATP) & KBS_DIB) != 0) {
 			KBD_DELAY;
 			return 1;
 		}
@@ -219,10 +223,10 @@ kbd_flush_input()
 	u_int i;
 
 	for (i = 10; i; i--) {
-		if ((inb(KBSTATP) & KBS_DIB) == 0)
+		if ((inb(IO_KBD + KBSTATP) & KBS_DIB) == 0)
 			return;
 		KBD_DELAY;
-		(void) inb(KBDATAP);
+		(void) inb(IO_KBD + KBDATAP);
 	}
 }
 
@@ -236,10 +240,10 @@ kbc_get8042cmd()
 
 	if (!kbd_wait_output())
 		return -1;
-	outb(KBCMDP, K_RDCMDBYTE);
+	outb(IO_KBD + KBCMDP, K_RDCMDBYTE);
 	if (!kbd_wait_input())
 		return -1;
-	return inb(KBDATAP);
+	return inb(IO_KBD + KBDATAP);
 }
 #endif
 
@@ -253,10 +257,10 @@ kbc_put8042cmd(val)
 
 	if (!kbd_wait_output())
 		return 0;
-	outb(KBCMDP, K_LDCMDBYTE);
+	outb(IO_KBD + KBCMDP, K_LDCMDBYTE);
 	if (!kbd_wait_output())
 		return 0;
-	outb(KBOUTP, val);
+	outb(IO_KBD + KBOUTP, val);
 	return 1;
 }
 
@@ -275,14 +279,14 @@ kbd_cmd(val, polling)
 		if (!kbd_wait_output())
 			return 0;
 		ack = nak = 0;
-		outb(KBOUTP, val);
+		outb(IO_KBD + KBOUTP, val);
 		if (polling)
 			for (i = 100000; i; i--) {
-				if (inb(KBSTATP) & KBS_DIB) {
+				if (inb(IO_KBD + KBSTATP) & KBS_DIB) {
 					register u_char c;
 
 					KBD_DELAY;
-					c = inb(KBDATAP);
+					c = inb(IO_KBD + KBDATAP);
 					if (c == KBR_ACK || c == KBR_ECHO) {
 						ack = 1;
 						return 1;
@@ -298,7 +302,7 @@ kbd_cmd(val, polling)
 			}
 		else
 			for (i = 100000; i; i--) {
-				(void) inb(KBSTATP);
+				(void) inb(IO_KBD + KBSTATP);
 				if (ack)
 					return 1;
 				if (nak)
@@ -394,13 +398,13 @@ async_update()
 
 	if (kernel || polling) {
 		if (async)
-			untimeout(do_async_update, NULL);
+			timeout_del(&pccons_aup_tmo);
 		do_async_update((void *)1);
 	} else {
 		if (async)
 			return;
 		async = 1;
-		timeout(do_async_update, NULL, 1);
+		timeout_add(&pccons_aup_tmo, 1);
 	}
 }
 
@@ -435,11 +439,11 @@ pcprobe(parent, match, aux)
 #endif
 	}
 	for (i = 600000; i; i--)
-		if ((inb(KBSTATP) & KBS_DIB) != 0) {
+		if ((inb(IO_KBD + KBSTATP) & KBS_DIB) != 0) {
 			KBD_DELAY;
 			break;
 		}
-	if (i == 0 || inb(KBDATAP) != KBR_RSTDONE) {
+	if (i == 0 || inb(IO_KBD + KBDATAP) != KBR_RSTDONE) {
 #ifdef DIAGNOSTIC
 		printf("pcprobe: reset error %d\n", 2);
 		/* XXX - this would make some - maybe very
@@ -635,7 +639,7 @@ pcintr(arg)
 	register struct tty *tp = sc->sc_tty;
 	u_char *cp;
 
-	if ((inb(KBSTATP) & KBS_DIB) == 0)
+	if ((inb(IO_KBD + KBSTATP) & KBS_DIB) == 0)
 		return 0;
 	if (polling)
 		return 1;
@@ -647,7 +651,7 @@ pcintr(arg)
 			do
 				(*linesw[tp->t_line].l_rint)(*cp++, tp);
 			while (*cp);
-	} while (inb(KBSTATP) & KBS_DIB);
+	} while (inb(IO_KBD + KBSTATP) & KBS_DIB);
 	return 1;
 }
 
@@ -768,7 +772,7 @@ pcstart(tp)
 	tp->t_state &= ~TS_BUSY;
 	if (cl->c_cc) {
 		tp->t_state |= TS_TIMEOUT;
-		timeout(ttrstrt, tp, 1);
+		timeout_add(&tp->t_rstrt_to, 1);
 	}
 	if (cl->c_cc <= tp->t_lowat) {
 		if (tp->t_state & TS_ASLEEP) {
@@ -847,7 +851,7 @@ pccngetc(dev)
 
 	do {
 		/* wait for byte */
-		while ((inb(KBSTATP) & KBS_DIB) == 0);
+		while ((inb(IO_KBD + KBSTATP) & KBS_DIB) == 0);
 		/* see if it's worthwhile */
 		cp = sget();
 	} while (!cp);
@@ -907,6 +911,9 @@ pcinit()
 	u_short volatile *cp;
 	u_short was;
 	unsigned cursorat;
+
+	timeout_set(&pccons_aup_tmo, do_async_update, NULL);
+	timeout_set(&pccons_blank_tmo, screen_blank, NULL);
 
 	cp = ISA_HOLE_VADDR(CGA_BUF);
 	was = *cp;
@@ -988,7 +995,6 @@ static u_char iso2ibm437[] = {
 static u_short screen_backup[ROW*COL];
 static int screen_saved = 0;
 static u_short *saved_Crtat;
-static void screen_blank __P((void *));
 
 static void
 screen_blank(arg)
@@ -1014,7 +1020,7 @@ static void
 screen_restore(perm)
 	int perm;
 {
-	untimeout(screen_blank, NULL);
+	timeout_del(&pccons_blank_tmo);
 	if (screen_saved) {
 		Crtat = saved_Crtat;
 		crtat = Crtat + (crtat - screen_backup);
@@ -1022,7 +1028,7 @@ screen_restore(perm)
 		screen_saved = 0;
 	}
 	if (!perm && (pc_blank > 0))
-		timeout(screen_blank, NULL, pc_blank * hz);
+		timeout_add(&pccons_blank_tmo, pc_blank * hz);
 }
 
 /*
@@ -1663,7 +1669,7 @@ sget()
 
 top:
 	KBD_DELAY;
-	dt = inb(KBDATAP);
+	dt = inb(IO_KBD + KBDATAP);
 
 	switch (dt) {
 	case KBR_ACK:
@@ -1879,7 +1885,7 @@ top:
 
 	extended = 0;
 loop:
-	if ((inb(KBSTATP) & KBS_DIB) == 0)
+	if ((inb(IO_KBD + KBSTATP) & KBS_DIB) == 0)
 		return 0;
 	goto top;
 }

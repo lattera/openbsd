@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsreg.h,v 1.1 2000/11/16 04:50:18 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsreg.h,v 1.1.2.1 2001/04/18 16:01:37 niklas Exp $ */
 /* $NetBSD: tsreg.h,v 1.1 1999/06/29 06:46:47 ross Exp $ */
 
 /*-

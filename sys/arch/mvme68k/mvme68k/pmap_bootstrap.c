@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.1 2000/03/02 07:04:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.2 2001/04/18 16:10:40 niklas Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt

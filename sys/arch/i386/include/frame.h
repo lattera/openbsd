@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/frame.h,v 1.3.14.1 2001/04/18 16:07:32 niklas Exp $	*/
 /*	$NetBSD: frame.h,v 1.12 1995/10/11 04:20:08 mycroft Exp $	*/
 
 /*-

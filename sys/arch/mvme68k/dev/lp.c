@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3 1996/04/28 11:06:07 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.1 2001/04/18 16:10:23 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -38,7 +38,6 @@
 #include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
-#include <sys/callout.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>

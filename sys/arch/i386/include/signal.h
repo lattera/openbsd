@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/signal.h,v 1.2.16.1 2001/04/18 16:07:45 niklas Exp $	*/
 /*	$NetBSD: signal.h,v 1.6 1996/01/08 13:51:43 mycroft Exp $	*/
 
 /*

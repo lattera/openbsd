@@ -1,8 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK,v 1.77.2.1 2000/03/24 09:07:35 niklas Exp $
-#	from: OpenBSD: INST,v 1.19 1996/11/05 03:49:13 tholo Exp 
-#
-#	Install kernels no longer support X.
-#
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK,v 1.77.2.2 2001/04/18 16:07:07 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -50,8 +46,9 @@ config		bsd	root on rd0a swap on rd0b and wd0b and sd0b
 mainbus0 at root
 
 bios0	at mainbus0
-apm0	at bios0
+apm0	at bios0 flags 0x0000	# flags 0x0101 to force protocol version 1.1
 #option	APMDEBUG
+pcibios0 at bios0 flags 0x0000
 
 isa0	at mainbus0
 eisa0	at mainbus0
@@ -70,6 +67,9 @@ pcic0	at isa? port 0x3e0 iomem 0xd0000 iosiz 0x4000
 pcic1	at isa? port 0x3e2 iomem 0xd4000 iosiz 0x4000
 pcic2	at isa? port 0x3e4 iomem 0xd4000 iosiz 0x4000
 
+# PCI PCMCIA controllers
+pcic*	at pci? dev? function ?
+
 # PCMCIA bus support
 pcmcia*	at pcic? controller ? socket ?
 
@@ -77,8 +77,14 @@ npx0	at isa? port 0xf0 irq 13	# math coprocessor
 isadma0	at isa?
 isapnp0	at isa?
 
-#pc0	at isa? port 0x60 irq 1		# generic PC console device
-vt0	at isa? port 0x60 irq 1
+pckbc0		at isa?			# PC keyboard controller
+pckbd*		at pckbc?		# PC keyboard
+wskbd*		at pckbd? console ?
+vga0		at isa?
+vga*		at pci? dev ? function ?
+pcdisplay0	at isa?			# CGA, MDA, EGA, HGA
+wsdisplay*	at vga? console ?
+wsdisplay*	at pcdisplay? console ?
 
 pccom0	at isa? port 0x3f8 irq 4	# standard PC serial ports
 pccom1	at isa? port 0x2f8 irq 3
@@ -117,17 +123,21 @@ ahc0	at isa? port ? irq ?		# Adaptec 284x SCSI controllers
 ahc*	at eisa? slot ?			# Adaptec 274x, aic7770 SCSI controllers
 ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
 scsibus* at ahc?
+#twe*	at pcu? dev ? function ?	# 3ware Escalade RAID controllers
+#scsibus* at twe?
 #isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
 #scsibus* at isp?
 aic0	at isa? port 0x340 irq 11	# Adaptec 152[02] SCSI controllers
 aic*	at pcmcia? function ?		# PCMCIA based aic SCSI controllers
 scsibus* at aic?
-ncr*	at pci? dev ? function ?	# NCR 538XX SCSI controllers
-scsibus* at ncr?
+#ncr*	at pci? dev ? function ?	# NCR 538XX SCSI controllers(old)
+#scsibus* at ncr?
+siop*	at pci? dev ? function ?	# NCR 538XX SCSI controllers(new)
+scsibus* at siop?
 adv*	at pci? dev ? function ?	# AdvanSys 1200A/B and ULTRA SCSI
 scsibus* at adv?
-adw*	at pci? dev ? function ?	# AdvanSys ULTRA WIDE SCSI
-scsibus* at adw?
+#adw*	at pci? dev ? function ?	# AdvanSys ULTRA WIDE SCSI
+#scsibus* at adw?
 #sea0	at isa? iomem 0xc8000 irq 5	# Seagate ST0[12] SCSI controllers
 #scsibus* at sea?
 #uha0	at isa? port 0x330 irq ? drq ?	# UltraStor [13]4f SCSI controllers
@@ -182,10 +192,10 @@ ne*	at isapnp?				# NE[12]000 PnP ethernet cards
 ep0	at isa? port ? irq ?			# 3C509 ethernet cards
 ep*	at isa? port ? irq ?			# 3C509 ethernet cards
 ef*	at isapnp?				# 3C515 PnP ethernet
-ie0	at isa? port 0x360 iomem 0xd0000 irq 7	# StarLAN and 3C507
-ie1	at isa? port 0x300 irq 10		# EtherExpress
+#ie0	at isa? port 0x360 iomem 0xd0000 irq 7	# StarLAN and 3C507
+#ie1	at isa? port 0x300 irq 10		# EtherExpress
 le0	at isa? port 0x360 irq 15 drq 6		# IsoLan, NE2100, and DEPCA
-ex0	at isa? port 0x320 irq 5		# Intel EtherExpress PRO/10
+#ex0	at isa? port 0x320 irq 5		# Intel EtherExpress PRO/10
 ep0	at eisa? slot ?
 ep*	at eisa? slot ?				# 3C579 ethernet cards
 #fea*	at eisa? slot ?				# DEC DEFEA FDDI cards
@@ -199,9 +209,8 @@ ep*	at pci? dev ? function ?		# 3C59x ethernet cards
 ne*	at pci? dev ? function ?		# NE2000-compat ethernet cards
 ne*	at pcmcia? function ?			# PCMCIA based NE2000 cards
 ep*	at pcmcia? function ?			# PCMCIA based 3c5xx cards
-sm*	at pcmcia? function ?			# PCMCIA based sm cards
+#sm*	at pcmcia? function ?			# PCMCIA based sm cards
 #xe*	at pcmcia? function ?			# Xircom ethernet
-wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11
 #fpa*	at pci? dev ? function ?		# DEC DEFPA FDDI cards
 xl*	at pci? dev ? function ?		# 3C9xx ethernet cards
 rl*	at pci? dev ? function ?		# RealTek 81[23]9 ethernet
@@ -210,6 +219,14 @@ tl*	at pci? dev ? function ?		# Compaq Thunderlan ethernet cards
 vr*	at pci? dev ? function ?		# VIA Rhine ethernet
 wb*	at pci? dev ? function ?		# Winbond W89C840F ethernet
 dc*	at pci? dev ? function ?		# 21143, "tulip" clone ethernet
+sis*	at pci? dev ? function ?		# SiS 900/7016 ethernet
+
+# Wireless network cards
+wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
+#awi*	at pcmcia? function ?			# Bay Networks IEEE 802.11FH
+#an*	at pcmcia? function ?			# Aironet IEEE 802.11DS
+#cnw*	at pcmcia? function ?			# Xircom Netwave
+#ray*	at pcmcia? function ?			# Raylink Aviator2.4/Pro 802.11FH
 
 # Media Independent Interface (mii) drivers
 exphy*	at mii? phy ?				# 3Com internal PHYs
@@ -218,11 +235,15 @@ iophy*	at mii? phy ?				# Intel 82553 PHYs
 icsphy*	at mii? phy ?				# ICS 1890 PHYs
 #lxtphy*	at mii? phy ?			# Level1 LXT970 PHYs
 nsphy*	at mii? phy ?				# NS and compatible PHYs
+nsphyter*	at mii? phy ?			# NS and compatible PHYs
 #qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 #sqphy*	at mii? phy ?				# Seeq 8x220 PHYs
 rlphy* at mii? phy ?				# RealTek 8139 internal PHYs
 #mtdphy*	at mii? phy ?			# Myson MTD972 PHYs
 dcphy*	at mii? phy ?				# Digital Clone PHYs
+amphy*	at mii? phy ?				# AMD 79C873 PHYs
+tqphy*	at mii? phy ?				# TDK 78Q212x PHYs
+bmtphy* at mii? phy ?				# Broadcom 10/100 PHYs
 ukphy*	at mii? phy ?				# "unknown" PHYs
 
 pseudo-device	loop	1		# network loopback

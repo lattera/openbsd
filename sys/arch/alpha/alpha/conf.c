@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20 1999/07/30 19:05:49 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.1 2001/04/18 16:00:09 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.16 1996/10/18 21:26:57 cgd Exp $	*/
 
 /*-
@@ -53,6 +53,8 @@ bdev_decl(sw);
 #include "ss.h"
 #include "uk.h"
 #include "vnd.h"
+#include "raid.h"
+bdev_decl(raid);
 #include "ccd.h"
 #include "rd.h"
 bdev_decl(rd);
@@ -75,14 +77,9 @@ struct bdevsw	bdevsw[] =
 	bdev_lkm_dummy(),		/* 13 */
 	bdev_lkm_dummy(),		/* 14 */
 	bdev_lkm_dummy(),		/* 15 */
+	bdev_disk_init(NRAID,raid),	/* 16 */
 };
 int	nblkdev = sizeof (bdevsw) / sizeof (bdevsw[0]);
-
-/* open, close, read, write, ioctl, tty, mmap */
-#define cdev_wscons_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
-	dev_init(c,n,write), dev_init(c,n,ioctl), dev_init(c,n,stop), \
-	dev_init(c,n,tty), ttselect /* ttpoll */, dev_init(c,n,mmap), D_TTY }
 
 /* open, close, write, ioctl */
 #define cdev_lpt_init(c,n) { \
@@ -103,15 +100,15 @@ dev_type_open(filedescopen);
 cdev_decl(scc);
 #include "audio.h"
 cdev_decl(audio);
-#include "wscons.h"
-cdev_decl(wscons);
 #include "com.h"
 cdev_decl(com);
-cdev_decl(kbd);
-cdev_decl(ms);
+#include "wsdisplay.h"
+#include "wskbd.h"
+#include "wsmouse.h"
 #include "lpt.h"
 cdev_decl(lpt);
 cdev_decl(rd);
+cdev_decl(raid);
 #ifdef IPFILTER
 #define NIPF 1
 #else
@@ -127,6 +124,20 @@ cdev_decl(xfs_dev);
 #endif
 #include "ksyms.h"
 cdev_decl(ksyms);
+
+/* USB Devices */
+#include "usb.h"
+cdev_decl(usb);
+#include "uhid.h"
+cdev_decl(uhid);
+#include "ugen.h"
+cdev_decl(ugen);
+#include "ulpt.h"
+cdev_decl(ulpt);
+#include "ucom.h"
+cdev_decl(ucom);
+#include "ugen.h"
+cdev_decl(ugen);
 
 struct cdevsw	cdevsw[] =
 {
@@ -155,12 +166,12 @@ struct cdevsw	cdevsw[] =
 	cdev_lkm_dummy(),		/* 22 */
 	cdev_tty_init(1,prom),          /* 23: XXX prom console */
 	cdev_audio_init(NAUDIO,audio),	/* 24: generic audio I/O */
-	cdev_wscons_init(NWSCONS,wscons), /* 25: workstation console */
+	cdev_wsdisplay_init(NWSDISPLAY,wsdisplay), /* 25: workstation console */
 	cdev_tty_init(NCOM,com),	/* 26: ns16550 UART */
 	cdev_disk_init(NCCD,ccd),	/* 27: concatenated disk driver */
 	cdev_disk_init(NRD,rd),		/* 28: ram disk driver */
-	cdev_mouse_init(NWSCONS,kbd),	/* 29: /dev/kbd XXX */
-	cdev_mouse_init(NWSCONS,ms),	/* 30: /dev/mouse XXX */
+	cdev_mouse_init(NWSKBD,wskbd),	/* 29: /dev/kbd XXX */
+	cdev_mouse_init(NWSMOUSE,wsmouse),	/* 30: /dev/mouse XXX */
 	cdev_lpt_init(NLPT,lpt),	/* 31: parallel printer */
 	cdev_scanner_init(NSS,ss),	/* 32: SCSI scanner */
 	cdev_uk_init(NUK,uk),		/* 33: SCSI unknown */
@@ -173,13 +184,13 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 40 */
 	cdev_notdef(),			/* 41 */
 	cdev_notdef(),			/* 42 */
-	cdev_notdef(),			/* 43 */
+	cdev_disk_init(NRAID,raid),	/* 43: RAIDframe disk driver */
 	cdev_notdef(),			/* 44 */
-	cdev_notdef(),			/* 45 */
-	cdev_notdef(),			/* 46 */
-	cdev_notdef(),			/* 47 */
-	cdev_notdef(),			/* 48 */
-	cdev_notdef(),			/* 49 */
+	cdev_usb_init(NUSB,usb),	/* 45: USB controller */
+	cdev_usbdev_init(NUHID,uhid),	/* 46: USB generic HID */
+	cdev_lpt_init(NULPT,ulpt),	/* 47: USB printer */
+	cdev_ugen_init(NUGEN,ugen),	/* 48: USB generic driver */
+	cdev_tty_init(NUCOM, ucom),	/* 49: USB tty */
 	cdev_notdef(),			/* 50 */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
@@ -224,6 +235,12 @@ iszerodev(dev)
 	return (major(dev) == mem_no && minor(dev) == 12);
 }
 
+dev_t
+getnulldev()
+{
+	return makedev(mem_no, 2);
+}
+
 static int chrtoblktbl[] = {
 	/* XXXX This needs to be dynamic for LKMs. */
 	/*VCHR*/	/*VBLK*/
@@ -265,6 +282,20 @@ static int chrtoblktbl[] = {
 	/* 35 */	NODEV,
 	/* 36 */	0,
 	/* 37 */	4,
+	/* 38 */	NODEV,
+	/* 39 */	NODEV,
+	/* 40 */	NODEV,
+	/* 41 */	NODEV,
+	/* 42 */	NODEV,
+	/* 43 */	16,
+	/* 44 */	NODEV,
+	/* 45 */	NODEV,
+	/* 46 */	NODEV,
+	/* 47 */	NODEV,
+	/* 48 */	NODEV,
+	/* 49 */	NODEV,
+	/* 50 */	NODEV,
+	/* 51 */	NODEV,
 };
 
 /*

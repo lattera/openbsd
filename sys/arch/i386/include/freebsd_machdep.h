@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/freebsd_machdep.h,v 1.4.10.1 2001/04/18 16:07:32 niklas Exp $	*/
 /*	$NetBSD: freebsd_machdep.h,v 1.1 1995/10/10 01:22:35 mycroft Exp $	*/
 
 /*

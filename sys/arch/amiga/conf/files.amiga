@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/amiga/conf/Attic/files.amiga,v 1.34.2.1 2000/03/02 07:04:26 niklas Exp $
+#	$OpenBSD: src/sys/arch/amiga/conf/Attic/files.amiga,v 1.34.2.2 2001/04/18 16:02:05 niklas Exp $
 #	$NetBSD: files.amiga,v 1.62 1997/08/27 19:32:47 is Exp $
 
 
@@ -25,6 +25,11 @@ device	clock
 attach	clock at mainbus
 file	arch/amiga/dev/clock.c
 file	dev/clock_subr.c
+
+# joystick
+device	joy
+attach	joy at mainbus
+file	arch/amiga/dev/joy.c		joy needs-flag
 
 # A2000 internal hwc
 device	a2kbbc
@@ -386,7 +391,7 @@ file	arch/m68k/m68k/sunos_machdep.c	compat_sunos
 # XXX this needs to be done very late, so it's done here.  This feels
 # like a kludge, but it might be for the best.
 
-device	pcic {[controller = -1], [socket = -1]}
+device	pcic: pcmciabus
 file	dev/ic/i82365.c			pcic
 
 # PCIC pcmcia controller on ISA bus.
@@ -405,3 +410,8 @@ file	dev/isa/i82365_isasubr.c	pcic_isa | pcic_isapnp
 # Machine-independent PCMCIA drivers
 #
 include "dev/pcmcia/files.pcmcia"
+
+#
+# Media Indepedent Interface (mii)
+#
+include "../../../dev/mii/files.mii"

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88100_fp.S,v 1.6 1999/09/27 19:13:22 smurph Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88100_fp.S,v 1.6.4.1 2001/04/18 16:11:36 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -27,10 +27,9 @@
  */
 
 /* Floating point trouble routines */
-
-#define LOCORE
-
-#define ASSEMBLER
+#ifndef ASSEMBLER
+#define	ASSEMBLER
+#endif /* ASSEMBLER */
 
 #include "assym.s"
 #include <machine/trap.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcibios.c,v 1.23 2001/02/28 20:33:30 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pcibios.c,v 1.23.2.1 2001/04/18 16:08:29 niklas Exp $	*/
 /*	$NetBSD: pcibios.c,v 1.5 2000/08/01 05:23:59 uch Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-;	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh_script.ss,v 1.1 2001/03/07 01:57:56 miod Exp $
+;	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh_script.ss,v 1.1.2.1 2001/04/18 16:11:03 niklas Exp $
 
 ;
 ; Copyright (c) 1995 Michael L. Hitch

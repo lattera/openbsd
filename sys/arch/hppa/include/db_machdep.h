@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/db_machdep.h,v 1.3 1999/08/14 03:31:50 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/db_machdep.h,v 1.3.4.1 2001/04/18 16:06:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -32,6 +32,11 @@
 
 #ifndef	_MACHINE_DB_MACHDEP_H_
 #define	_MACHINE_DB_MACHDEP_H_
+
+#include <vm/vm.h>
+
+#define	DB_ELF_SYMBOLS
+#define	DB_ELFSIZE	32
 
 /* types the generic ddb module needs */
 typedef	vaddr_t db_addr_t;

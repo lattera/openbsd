@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17 1999/08/17 10:32:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.1 2001/04/18 16:07:24 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -49,6 +49,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/malloc.h>
 #include <sys/vnode.h>
 #include <sys/buf.h>
@@ -113,21 +114,29 @@ cpu_fork(p1, p2, stack, stacksize)
 	/* Sync curpcb (which is presumably p1's PCB) and copy it to p2. */
 	savectx(curpcb);
 	*pcb = p1->p_addr->u_pcb;
+#ifndef PMAP_NEW
 	pmap_activate(p2);
-
+#endif
 	/*
 	 * Preset these so that gdt_compact() doesn't get confused if called
 	 * during the allocations below.
 	 */
 	pcb->pcb_tss_sel = GSEL(GNULL_SEL, SEL_KPL);
+#ifndef PMAP_NEW
 	pcb->pcb_ldt_sel = GSEL(GLDT_SEL, SEL_KPL);
+#else
+	/*
+	 * Activate the addres space.  Note this will refresh pcb_ldt_sel.
+	 */
+	pmap_activate(p2);
+#endif
 
 	/* Fix up the TSS. */
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = (int)p2->p_addr + USPACE - 16;
 	tss_alloc(pcb);
 
-#ifdef USER_LDT
+#if defined(USER_LDT) && !defined(PMAP_NEW)
 	/* Copy the LDT, if necessary. */
 	if (pcb->pcb_flags & PCB_USER_LDT) {
 		size_t len;
@@ -206,27 +215,10 @@ void
 cpu_exit(p)
 	register struct proc *p;
 {
-#ifdef USER_LDT
-	struct pcb *pcb;
-#endif
-	struct vmspace *vm;
-
 #if NNPX > 0
 	/* If we were using the FPU, forget about it. */
 	if (npxproc == p)
 		npxproc = 0;
-#endif
-
-#ifdef USER_LDT
-	pcb = &p->p_addr->u_pcb;
-	if (pcb->pcb_flags & PCB_USER_LDT)
-		i386_user_cleanup(pcb);
-#endif
-
-	vm = p->p_vmspace;
-#if !defined(UVM)
-	if (vm->vm_refcnt == 1)
-		vm_map_remove(&vm->vm_map, VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS);
 #endif
 
 #if defined(UVM)
@@ -235,6 +227,27 @@ cpu_exit(p)
 	cnt.v_swtch++;
 #endif
 	switch_exit(p);
+}
+
+void
+cpu_wait(p)
+	struct proc *p;
+{
+	struct pcb *pcb;
+
+	pcb = &p->p_addr->u_pcb;
+#ifndef PMAP_NEW
+#ifdef USER_LDT
+	if (pcb->pcb_flags & PCB_USER_LDT)
+		i386_user_cleanup(pcb);
+#endif
+#else
+	/*
+	 * No need to do user LDT cleanup here; it's handled in
+	 * pmap_destroy().
+	 */
+#endif
+	tss_free(pcb);
 }
 
 /*
@@ -317,23 +330,51 @@ setredzone(pte, vaddr)
  */
 void
 pagemove(from, to, size)
-	register caddr_t from, to;
+	caddr_t from, to;
 	size_t size;
 {
-	register pt_entry_t *fpte, *tpte;
+	pt_entry_t *fpte, *tpte;
+#ifdef PMAP_NEW
+	pt_entry_t ofpte, otpte;
+#endif
 
-	if (size % CLBYTES)
+#ifdef DIAGNOSTIC
+	if ((size & PAGE_MASK) != 0)
 		panic("pagemove");
+#endif
 	fpte = kvtopte(from);
 	tpte = kvtopte(to);
 	while (size > 0) {
+#ifdef PMAP_NEW
+		ofpte = *fpte;
+		otpte = *tpte;
+#endif
 		*tpte++ = *fpte;
 		*fpte++ = 0;
+#ifdef PMAP_NEW
+#if defined(I386_CPU)
+		if (cpu_class != CPUCLASS_386)
+#endif
+		{
+			if (otpte & PG_V)
+				pmap_update_pg((vm_offset_t) to);
+			if (ofpte & PG_V)
+				pmap_update_pg((vm_offset_t) from);
+		}
+#endif
+
 		from += NBPG;
 		to += NBPG;
 		size -= NBPG;
 	}
+#ifdef PMAP_NEW
+#if defined(I386_CPU)
+	if (cpu_class != CPUCLASS_386)
+		tlbflush();		
+#endif
+#else
 	pmap_update();
+#endif
 }
 
 /*
@@ -343,12 +384,12 @@ int
 kvtop(addr)
 	register caddr_t addr;
 {
-	vm_offset_t va;
+	vm_offset_t pa;
 
-	va = pmap_extract(pmap_kernel(), (vm_offset_t)addr);
-	if (va == 0)
+	pa = pmap_extract(pmap_kernel(), (vm_offset_t)addr);
+	if (pa == 0)
 		panic("kvtop: zero page frame");
-	return((int)va);
+	return((int)pa);
 }
 
 extern vm_map_t phys_map;
@@ -377,8 +418,12 @@ vmapbuf(bp, len)
 	vm_size_t len;
 {
 	vm_offset_t faddr, taddr, off;
+#ifdef PMAP_NEW
+	paddr_t fpa;
+#else
 	pt_entry_t *fpte, *tpte;
 	pt_entry_t *pmap_pte __P((pmap_t, vm_offset_t));
+#endif
 
 	if ((bp->b_flags & B_PHYS) == 0)
 		panic("vmapbuf");
@@ -391,16 +436,42 @@ vmapbuf(bp, len)
 	taddr = kmem_alloc_wait(phys_map, len);
 #endif
 	bp->b_data = (caddr_t)(taddr + off);
+#ifdef PMAP_NEW
 	/*
 	 * The region is locked, so we expect that pmap_pte() will return
 	 * non-NULL.
+	 * XXX: unwise to expect this in a multithreaded environment.
+	 * anything can happen to a pmap between the time we lock a 
+	 * region, release the pmap lock, and then relock it for
+	 * the pmap_extract().
+	 *
+	 * no need to flush TLB since we expect nothing to be mapped
+	 * where we we just allocated (TLB will be flushed when our
+	 * mapping is removed).
 	 */
-	fpte = pmap_pte(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map), faddr);
-	tpte = pmap_pte(vm_map_pmap(phys_map), taddr);
-	do {
-		*tpte++ = *fpte++;
+	while (len) {
+		fpa = pmap_extract(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map),
+		    faddr);
+		pmap_enter(vm_map_pmap(phys_map), taddr, fpa,
+		    VM_PROT_READ | VM_PROT_WRITE, TRUE,
+		    VM_PROT_READ | VM_PROT_WRITE);
+		faddr += PAGE_SIZE;
+		taddr += PAGE_SIZE;
 		len -= PAGE_SIZE;
-	} while (len);
+	}
+#else
+        /*
+         * The region is locked, so we expect that pmap_pte() will return
+         * non-NULL.
+         */
+        fpte = pmap_pte(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map), faddr);
+        tpte = pmap_pte(vm_map_pmap(phys_map), taddr);
+        do {
+                *tpte++ = *fpte++;
+                len -= PAGE_SIZE;
+        } while (len);
+#endif
+
 }
 
 /*

@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7 1999/05/29 04:41:45 smurph Exp $ */
-#ifndef _MACHINE_EXEC_H_
-#define _MACHINE_EXEC_H_ 
+/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7.4.1 2001/04/18 16:11:17 niklas Exp $ */
+#ifndef __MACHINE_EXEC_H__
+#define __MACHINE_EXEC_H__
 
 #define __LDPGSZ        4096
 
@@ -17,6 +17,8 @@ struct relocation_info_m88k {
 };
 #define relocation_info relocation_info_m88k
 
+#define ARCH_ELFSIZE		32
+
 #define ELF_TARG_CLASS		ELFCLASS32
 #define ELF_TARG_DATA		ELFDATA2MSB
 #define ELF_TARG_MACH		EM_88K
@@ -27,4 +29,4 @@ struct relocation_info_m88k {
 #define _KERN_DO_AOUT
 #define _KERN_DO_ELF
 
-#endif _MACHINE_EXEC_H_ 
+#endif __MACHINE_EXEC_H__

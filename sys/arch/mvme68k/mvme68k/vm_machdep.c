@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14 1999/09/27 20:30:32 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vm_machdep.c,v 1.14.4.1 2001/04/18 16:10:42 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -45,6 +45,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/malloc.h>
 #include <sys/buf.h>
 #include <sys/vnode.h>
@@ -82,8 +83,6 @@ cpu_fork(p1, p2, stack, stacksize)
 	/* Sync curpcb (which is presumably p1's PCB) and copy it to p2. */
 	savectx(curpcb);
 	*pcb = p1->p_addr->u_pcb;
-
-	PMAP_ACTIVATE(&p2->p_vmspace->vm_pmap, pcb, 0);
 
 	/*
 	 * Copy the trap frame, and arrange for the child to return directly
@@ -129,8 +128,6 @@ void
 cpu_exit(p)
 	struct proc *p;
 {
-
-	vmspace_free(p->p_vmspace);
 
 	(void) splimp();
 	cnt.v_swtch++;

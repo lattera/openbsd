@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/piixreg.h,v 1.3 2000/03/28 03:37:59 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/piixreg.h,v 1.3.6.1 2001/04/18 16:08:32 niklas Exp $	*/
 /*	$NetBSD: piixreg.h,v 1.1 1999/11/17 01:21:21 thorpej Exp $	*/
 
 /*

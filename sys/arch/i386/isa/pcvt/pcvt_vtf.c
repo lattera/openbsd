@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_vtf.c,v 1.12.2.1 2000/03/24 09:07:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/pcvt/Attic/pcvt_vtf.c,v 1.12.2.2 2001/04/18 16:08:03 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992, 1995 Hellmuth Michaelis and Joerg Wunsch.
@@ -146,8 +146,10 @@ vt_sgr(struct video_state *svsp)
 		switch(svsp->parms[i++]) {
 		case 0:		/* reset to normal attributes */
 			svsp->vtsgr = VT_NORMAL;
-			if (pcdisp)
-				setcolor = 0;
+			if (pcdisp) {
+				setcolor = (FG_LIGHTGREY << 8);
+				colortouched = 1;
+			}
 			break;
 
 		case 1:		/* bold */
@@ -180,8 +182,7 @@ vt_sgr(struct video_state *svsp)
 			break;
 
 		case 7:		/* reverse */
-			svsp->vtsgr |= VT_INVERSE;
-			if (pcdisp) {
+			if (pcdisp && !(svsp->vtsgr & VT_INVERSE)) {
 				if ((setcolor >> 8) == 0)
 					setcolor = (FG_LIGHTGREY << 8);
 				setcolor = (((setcolor >> 8) & 0x88) |
@@ -189,6 +190,7 @@ vt_sgr(struct video_state *svsp)
 				    ((setcolor >> 8) << 4)) & 0x77)) << 8;
 				colortouched = 1;
 			}
+			svsp->vtsgr |= VT_INVERSE;
 			break;
 
 		case 22:	/* not bold */
@@ -216,13 +218,13 @@ vt_sgr(struct video_state *svsp)
 			break;
 
 		case 27:	/* not reverse */
-			svsp->vtsgr &= ~VT_INVERSE;
-			if (pcdisp) {
+			if (pcdisp && (svsp->vtsgr & VT_INVERSE)) {
 				setcolor = (((setcolor >> 8) & 0x88) |
 				    ((((setcolor >> 8) >> 4) |
 				    ((setcolor >> 8) << 4)) & 0x77)) << 8;
 				colortouched = 1;
 			}
+			svsp->vtsgr &= ~VT_INVERSE;
 			break;
 
 		case 30:	/* foreground colors */
@@ -503,7 +505,6 @@ vt_str(struct video_state *svsp)
 	clr_parms(svsp);			/* escape parameter init */
 	svsp->state = STATE_INIT;		/* initial state */
 
-	svsp->dis_fnc = 0;			/* display functions reset */
 	svsp->sc_flag = 0;			/* save cursor position */
 	svsp->transparent = 0;			/* enable ctrl code processing*/
 	svsp->C1_ctls = 0;			/* but only for C0 codes */
@@ -540,17 +541,15 @@ vt_str(struct video_state *svsp)
 		svsp->G1 = cse_ascii;		/* G1 = ascii	*/
 		svsp->G2 = cse_supplemental;	/* G2 = supplemental */
 		svsp->G3 = cse_supplemental;	/* G3 = supplemental */
-		svsp->GL = svsp->G0;		/* GL = G0 */
-		svsp->GR = svsp->G2;		/* GR = G2 */
 	}
 	else {
 		svsp->G0 = csd_ascii;		/* G0 = ascii	*/
 		svsp->G1 = csd_ascii;		/* G1 = ascii	*/
 		svsp->G2 = csd_supplemental;	/* G2 = supplemental */
 		svsp->G3 = csd_supplemental;	/* G3 = supplemental */
-		svsp->GL = svsp->G0;		/* GL = G0 */
-		svsp->GR = svsp->G2;		/* GR = G2 */
 	}
+	svsp->GL = svsp->G0;			/* GL = G0 */
+	svsp->GR = svsp->G2;			/* GR = G2 */
 
 	svsp->vtsgr = VT_NORMAL;		/* no attributes */
 	svsp->c_attr = user_attr;		/* reset sgr to normal */
@@ -558,7 +557,7 @@ vt_str(struct video_state *svsp)
 	svsp->selchar = 0;			/* selective attribute off */
 	vt_initsel(svsp);
 
-	update_led();				/* update keyboard LED's */
+	update_led(2);				/* update keyboard LED's */
 }
 
 /*---------------------------------------------------------------------------*
@@ -1907,7 +1906,7 @@ vt_sca(struct video_state *svsp)
 }
 
 /*---------------------------------------------------------------------------*
- *	initalize selective attribute bit array
+ *	initialize selective attribute bit array
  *---------------------------------------------------------------------------*/
 void
 vt_initsel(struct video_state *svsp)
@@ -2013,9 +2012,6 @@ roll_up(struct video_state *svsp, int n)
 	fillw(user_attr | ' ',
 	    (caddr_t)(svsp->Crtat + ((svsp->scrr_end - n + 1) * svsp->maxcol)),
 	    n * svsp->maxcol);
-
-/*XXX*/	if (svsp->scroll_lock && svsp->openf && curproc)
-		tsleep((caddr_t)&(svsp->scroll_lock), PUSER, "scrlck", 0);
 }
 
 /*---------------------------------------------------------------------------*
@@ -2064,9 +2060,6 @@ roll_down(struct video_state *svsp, int n)
 	fillw(user_attr | ' ',
 	    (caddr_t)(svsp->Crtat + (svsp->scrr_beg * svsp->maxcol)),
 	    n * svsp->maxcol);
-
-/*XXX*/	if (svsp->scroll_lock && svsp->openf && curproc)
-		tsleep((caddr_t)&(svsp->scroll_lock), PUSER, "scrlck", 0);
 }
 
 /*---------------------------------------------------------------------------*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_swiz_bus_io_chipdep.c,v 1.1 2001/02/06 19:26:39 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_swiz_bus_io_chipdep.c,v 1.1.2.1 2001/04/18 16:01:27 niklas Exp $	*/
 /*	$NetBSD: pcs_bus_io_common.c,v 1.14 1996/12/02 22:19:35 cgd Exp $	*/
 
 /*

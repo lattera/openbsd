@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.12 1995/12/24 01:08:03 mycroft Exp $	*/
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.7 1999/07/07 23:16:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.7.4.1 2001/04/18 16:07:48 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -81,5 +81,7 @@ typedef	unsigned long long	u_int64_t;
 typedef	unsigned long long	 uint64_t;
 
 typedef int32_t			register_t;
+
+#define __HAVE_NWSCONS
 
 #endif	/* _MACHTYPES_H_ */

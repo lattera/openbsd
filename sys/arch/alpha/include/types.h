@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/Attic/types.h,v 1.7 1999/07/07 23:16:40 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/Attic/types.h,v 1.7.4.1 2001/04/18 16:00:59 niklas Exp $	*/
 /*	$NetBSD: types.h,v 1.6 1996/12/05 00:13:47 cgd Exp $	*/
 
 /*-
@@ -80,5 +80,7 @@ typedef	unsigned long		 uint64_t;
 typedef int64_t			register_t;
 
 #define	__BROKEN_INDIRECT_CONFIG
+
+#define __HAVE_NWSCONS
 
 #endif	/* _MACHTYPES_H_ */

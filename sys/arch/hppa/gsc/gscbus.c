@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbus.c,v 1.9 2000/02/09 05:04:22 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/gscbus.c,v 1.9.2.1 2001/04/18 16:06:03 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -257,7 +257,7 @@ gsc_intr(v)
 			s = splx(iv->pri);
 			ret = (iv->handler)(iv->arg);
 			splx(s);
-#ifdef DEBUG
+#ifdef GSCDEBUG_INTR
 			if (!ret)
 				printf ("%s: can't handle interrupt\n",
 					iv->evcnt.ev_name);
@@ -407,5 +407,5 @@ gsc_dmamem_mmap(v, segs, nsegs, off, prot, flags)
 	int prot;
 	int flags;
 {
-	return 0;
+	return (-1);
 }

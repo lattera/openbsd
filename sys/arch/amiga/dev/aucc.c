@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/aucc.c,v 1.5 1999/01/02 00:02:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/aucc.c,v 1.5.6.1 2001/04/18 16:02:06 niklas Exp $	*/
 /*	$NetBSD: aucc.c,v 1.22 1998/01/12 10:39:10 thorpej Exp $	*/
 
 /*
@@ -69,12 +69,6 @@ int     auccdebug = 1;
 #else
 #define DPRINTF(x)
 #endif
-
-#ifdef splaudio
-#undef splaudio
-#endif
-
-#define splaudio() spl4();
 
 /* clock frequency.. */
 extern int eclockfreq; 

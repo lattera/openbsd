@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/stdarg.h,v 1.2.12.1 2001/04/18 16:13:05 niklas Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.1 1996/09/30 16:34:35 ws Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/opti82c700.c,v 1.5 2001/01/25 00:07:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/opti82c700.c,v 1.5.2.1 2001/04/18 16:08:25 niklas Exp $	*/
 /*	$NetBSD: opti82c700.c,v 1.2 2000/07/18 11:07:20 soda Exp $	*/
 
 /*-

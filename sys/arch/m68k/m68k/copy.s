@@ -1,7 +1,8 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/copy.s,v 1.8 1999/11/13 21:34:06 deraadt Exp $	*/
-/*	$NetBSD: copy.s,v 1.28 1997/05/21 03:51:04 jeremy Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/copy.s,v 1.8.2.1 2001/04/18 16:10:00 niklas Exp $	*/
+/*	$NetBSD: copy.s,v 1.30 1998/03/04 06:39:14 thorpej Exp $	*/
 
 /*-
+ * Copyright (c) 1998 Jason R. Thorpe.  All rights reserved.
  * Copyright (c) 1994, 1995 Charles Hannum.
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -313,6 +314,39 @@ Lcosexit:
 Lcosfault:
 	moveq	#EFAULT,d0
 	bra	Lcosdone
+
+#if defined(UVM)
+/*
+ * kcopy(const void *src, void *dst, size_t len);
+ *
+ * Copy len bytes from src to dst, aborting if we encounter a fatal
+ * page fault.
+ *
+ * kcopy() _must_ save and restore the old fault handler since it is
+ * called by uiomove(), which may be in the path of servicing a non-fatal
+ * page fault.
+ */
+ENTRY(kcopy)
+	link	a6,#-4
+	movl	_C_LABEL(curpcb),a0	 | set fault handler
+	movl	a0@(PCB_ONFAULT),a6@(-4) | save old handler first
+	movl    #Lkcfault,a0@(PCB_ONFAULT)
+	movl    a6@(16),sp@-		| push len
+	movl    a6@(12),sp@-		| push dst
+	movl    a6@(8),sp@-		| push src
+	jbsr    _C_LABEL(bcopy)		| copy it
+	addl    #12,sp			| pop args
+	clrl    d0			| success!
+Lkcdone:
+	movl	_C_LABEL(curpcb),a0	| restore fault handler
+	movl	a6@(-4),a0@(PCB_ONFAULT)
+	unlk    a6
+	rts
+Lkcfault:
+	addl    #16,sp			| pop args and return address
+	moveq   #EFAULT,d0		| indicate a fault
+	bra     Lkcdone
+#endif /* UVM */
 
 /*
  * fuword(caddr_t uaddr);

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/Makefile.inc,v 1.6 1999/12/23 04:11:56 mickey Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/Makefile.inc,v 1.6.2.1 2001/04/18 16:06:52 niklas Exp $
 
 CFLAGS=${DEBUG} -O2 -g -Wall -Werror
 CPPFLAGS+=-I${S} -I. -I${.CURDIR}
@@ -13,6 +13,7 @@ LINKADDR=0x700000
 LOADADDR=0x700000
 HEAP_LIMIT=0x7c0000
 CLEANFILES+=	machine
+DEBUGLIBS=	no
 
 .if !make(libdep) && !make(sadep) && !make(salibdir) && !make(kernlibdir) && !make(obj) && !(defined(PROG) && ${PROG} == "mkboot")
 .BEGIN:

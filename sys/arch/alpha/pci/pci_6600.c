@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_6600.c,v 1.2 2001/01/20 20:46:46 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_6600.c,v 1.2.2.1 2001/04/18 16:01:22 niklas Exp $ */
 /* $NetBSD: pci_6600.c,v 1.5 2000/06/06 00:50:15 thorpej Exp $ */
 
 /*-

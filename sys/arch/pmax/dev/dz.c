@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dz.c,v 1.2 2001/04/17 04:30:47 aaron Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/dev/Attic/dz.c,v 1.2.2.1 2001/04/18 16:12:36 niklas Exp $	*/
 /*	$NetBSD: dc.c,v 1.30 1996/10/16 02:10:33 jonathan Exp $	*/
 
 /*-

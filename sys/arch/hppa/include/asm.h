@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10 2000/01/12 00:14:19 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10.2.1 2001/04/18 16:06:17 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1990,1991,1994 The University of Utah and
@@ -19,7 +19,7 @@
  * CSL requests users of this software to return to csl-dist@cs.utah.edu any
  * improvements that they make and grant CSL redistribution rights.
  *
- * 	Utah $Hdr: asm.h 1.8 94/12/14$
+ *	Utah $Hdr: asm.h 1.8 94/12/14$
  */
 
 #ifndef _MACHINE_ASM_H_
@@ -171,16 +171,6 @@ tr6	.reg	%cr30
 tr7	.reg	%cr31
 
 /*
- * CPU-secific additional control registers
- */
-#define	dtlb_reg	8
-#define	dtlb_size_even	26
-#define	dtlb_size_odd	27
-#define	itlb_reg	9
-#define	itlb_size_even	24
-#define	itlb_size_odd	25
-
-/*
  * Calling Convention
  */
 rp	.reg	%r2
@@ -236,31 +226,6 @@ tf4	.reg	%fr8
 #define	__CONCAT(a,b)	a/**/b
 #endif
 
-/*
- * Standard space and subspace definitions.
- */
-	.SPACE	$TEXT$,0
-/*	.subspa $FIRST$,	QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=4 */
-	.subspa $MILLICODE$,	QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=8
-	.subspa $LIT$,		QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=16
-	.subspa $CODE$,		QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=24,CODE_ONLY
-/*	.subspa	$UNWIND$MILLICODE$,QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=64
-	.subspa	$UNWIND$,	QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=72
-	.subspa	$RECOVER$,	QUAD=0,ALIGN=4,ACCESS=0x2c,SORT=80
-*/
-
-/*
- * additional code subspaces should have ALIGN=8 for an interspace BV
- */
-	.SPACE $PRIVATE$,1
-/*	.subspa $GLOBAL$,	QUAD=1,ALIGN=8,ACCESS=0x1f,SORT=8 */
-/*	.subspa $SHORTDATA$,	QUAD=1,ALIGN=8,ACCESS=0x1f,SORT=16 */
-	.subspa $DATA$,		QUAD=1,ALIGN=8,ACCESS=0x1f,SORT=24
-	.import $global$, data
-/*	.subspa	$PFA_COUNTER$,	QUAD=1,ALIGN=4,ACCESS=0x1f,SORT=72 */
-	.subspa $BSS$,		QUAD=1,ALIGN=8,ACCESS=0x1f,SORT=80,ZERO
-
-
 #ifdef PROF
 #define	_PROF_PROLOGUE !\
 	stw rp, HPPA_FRAME_CRP(sr0,sp)	!\
@@ -272,23 +237,17 @@ tf4	.reg	%fr8
 #define	_PROF_PROLOGUE
 #endif
 
-#define	ENTRY(x)		!\
-	.space	.text		!\
-	.subspa $CODE$		!\
-	/* XXX broken gas 2.7.1 .align	4 */	!\
-	.export	x, entry	!\
-	.label	x               !\
-	.proc			!\
-	.callinfo calls		!\
-	.entry			!\
-	_PROF_PROLOGUE
+#define	LEAF_ENTRY(x) ! .text ! .align	4	!\
+	.export	x, entry ! .label x ! .proc	!\
+	.callinfo frame=0,no_calls,save_rp	!\
+	.entry ! _PROF_PROLOGUE
 
-#define ALTENTRY(x)		!\
-	.export x, entry	!\
-	.label  x
+#define	ENTRY(x,n) ! .text ! .align 4			!\
+	.export	x, entry ! .label x ! .proc		!\
+	.callinfo frame=n,calls, save_rp, save_sp	!\
+	.entry ! _PROF_PROLOGUE
 
-#define EXIT(x)		!\
-	.exit		!\
-	.procend
+#define ALTENTRY(x) ! .export x, entry ! .label  x
+#define EXIT(x) ! .exit ! .procend
 
 #endif /* _MACHINE_ASM_H_ */

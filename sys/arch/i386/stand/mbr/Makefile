@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/mbr/Makefile,v 1.10 1999/07/08 22:49:25 deraadt Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/mbr/Makefile,v 1.10.4.1 2001/04/18 16:08:46 niklas Exp $
 #
 
 PROG=	mbr
@@ -9,7 +9,6 @@ LDFLAGS=-nostdlib -Ttext 0 -x -N -s -Bstatic
 
 NOMAN=
 #MAN+=	mbr.8
-#MANSUBDIR=/i386
 
 INSTALL_STRIP=
 SADIR=${.CURDIR}/..

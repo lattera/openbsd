@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/libkern/Attic/Makefile,v 1.2 1999/05/28 03:50:54 mickey Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/libkern/Attic/Makefile,v 1.2.4.1 2001/04/18 16:06:56 niklas Exp $
 
 LIB=	kern
 

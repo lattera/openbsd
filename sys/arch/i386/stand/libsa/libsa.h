@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.1 2000/03/24 09:07:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.2 2001/04/18 16:08:44 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996-1999 Michael Shalayeff
@@ -41,11 +41,11 @@
 void gateA20 __P((int));
 
 void smpprobe __P((void));
+void pciprobe __P((void));
 void memprobe __P((void));
 void diskprobe __P((void));
 void apmprobe __P((void));
 void apmcheck __P((void));
-void pciprobe __P((void));
 void dump_biosmem __P((bios_memmap_t *));
 int mem_add __P((long, long));
 int mem_delete __P((long, long));

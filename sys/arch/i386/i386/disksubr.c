@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/disksubr.c,v 1.37 1999/07/17 17:00:26 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/disksubr.c,v 1.37.4.1 2001/04/18 16:07:15 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -45,8 +45,6 @@
 #include <sys/syslog.h>
 #include <sys/disk.h>
 
-#define	b_cylin	b_resid
-
 void
 dk_establish(dk, dev)
 	struct disk *dk;
@@ -56,7 +54,7 @@ dk_establish(dk, dev)
 
 /*
  * Attempt to read a disk label from a device
- * using the indicated stategy routine.
+ * using the indicated strategy routine.
  * The label must be partly set up before this:
  * secpercyl, secsize and anything required for a block i/o read
  * operation in the driver's strategy/start routines
@@ -130,7 +128,7 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 			bp->b_blkno = part_blkno;
 			bp->b_bcount = lp->d_secsize;
 			bp->b_flags = B_BUSY | B_READ;
-			bp->b_cylin = part_blkno / lp->d_secpercyl;
+			bp->b_cylinder = part_blkno / lp->d_secpercyl;
 			(*strat)(bp);
 		     
 			/* if successful, wander through dos partition table */
@@ -229,6 +227,7 @@ donot:
 					n++;
 					break;
 				case DOSPTYP_EXTEND:
+				case DOSPTYP_EXTENDL:
 					part_blkno = get_le(&dp2->dp_start) + extoff;
 					if (!extoff)
 						extoff = get_le(&dp2->dp_start);
@@ -252,7 +251,7 @@ donot:
 
 	/* next, dig out disk label */
 	bp->b_blkno = dospartoff + LABELSECTOR;
-	bp->b_cylin = cyl;
+	bp->b_cylinder = cyl;
 	bp->b_bcount = lp->d_secsize;
 	bp->b_flags = B_BUSY | B_READ;
 	(*strat)(bp);
@@ -301,7 +300,7 @@ donot:
 			else
 				bp->b_blkno /= DEV_BSIZE / lp->d_secsize;
 			bp->b_bcount = lp->d_secsize;
-			bp->b_cylin = lp->d_ncylinders - 1;
+			bp->b_cylinder = lp->d_ncylinders - 1;
 			(*strat)(bp);
 
 			/* if successful, validate, otherwise try another */
@@ -416,7 +415,7 @@ writedisklabel(dev, strat, lp, osdep)
 		bp->b_blkno = DOSBBSECTOR;
 		bp->b_bcount = lp->d_secsize;
 		bp->b_flags = B_BUSY | B_READ;
-		bp->b_cylin = DOSBBSECTOR / lp->d_secpercyl;
+		bp->b_cylinder = DOSBBSECTOR / lp->d_secpercyl;
 		(*strat)(bp);
 
 		if ((error = biowait(bp)) != 0)
@@ -450,7 +449,7 @@ writedisklabel(dev, strat, lp, osdep)
 
 	/* next, dig out disk label */
 	bp->b_blkno = dospartoff + LABELSECTOR;
-	bp->b_cylin = cyl;
+	bp->b_cylinder = cyl;
 	bp->b_bcount = lp->d_secsize;
 	bp->b_flags = B_BUSY | B_READ;
 	(*strat)(bp);
@@ -536,8 +535,8 @@ bounds_check_with_label(bp, lp, osdep, wlabel)
 	}
 
 	/* calculate cylinder for disksort to order transfers with */
-	bp->b_cylin = (bp->b_blkno + blockpersec(p->p_offset, lp)) /
-	    lp->d_secpercyl;
+	bp->b_cylinder = (bp->b_blkno + blockpersec(p->p_offset, lp)) /
+		lp->d_secpercyl;
 	return (1);
 
 bad:
