@@ -1,0 +1,131 @@
+dnl	$OpenBSD: src/distrib/notes/alpha/prep,v 1.20 2003/09/06 22:22:42 miod Exp $
+OpenBSD/MACHINE requires the SRM console.  Some alphas come with
+the AlphaBIOS (also known as the ARC firmware on older machines) instead;
+this is what Windows NT uses. It is fairly simple to replace the AlphaBIOS
+with the SRM firmware.
+
+Switching your MACHINE to SRM console:
+    Recent machines (such as the Miata and later models) have enough flash
+    rom space to carry both the AlphaBIOS and the SRM console.
+    To switch to SRM from AlphaBIOS, do the following:
+    - enter the AlphaBIOS setup upon startup
+      (F2 key, or ^B from serial console)
+    - choose "CMOS Setup" from the menu
+    - select "Advanced CMOS Setup" (F6 key, or ^F from serial console)
+    - change the "Console Selection" setting to "OpenVMS console (SRM)"
+    - confirm your changes with F10 (or ^U) twice, then enter.
+    - power-cycle your system for the changes to take effect.
+
+    If you didn't find a "Console Selection" entry (for example on 164SX or
+    164LX), your system can not hold both the AlphaBIOS and SRM console in
+    flash, and you will have to upgrade your firmware.
+
+    You can get replacement firmware either from a firmware update CD-ROM
+    or via ftp from
+	ftp://ftp.digital.com/pub/DEC/Alpha/firmware/
+    Please refer to
+	http://ftp.digital.com/pub/DEC/Alpha/firmware/readme.html
+    for more information.
+
+AXPpci33 Motherboard specific notes:
+    The 1994 version of the OEM guide has an incorrect pinout
+    for the serial ports.  The newer version from
+    ftp://gatekeeper.dec.com/pub/DEC/axppci/design_guide.ps.Z
+    has a corrected pinout (as well as more information than
+    the 1994 edition).  Note that there are two flavors
+    of PC serial connectors.  If you have the wrong kind,
+    you won't get any output from the serial console.
+
+Using the SRM console:
+    This is not intended to be an exhaustive guide on using the
+    SRM firmware console.  It should, however, give you enough
+    information to boot OpenBSD/MACHINE.
+
+    To see a list of devices connected to your alpha, you can
+    use the "show device" command.  For booting the devices you
+    are interested in are "dva0" (the floppy drive) and
+    "dka*" (the disk drives).
+
+    You can set ROM variables by saying "set VARIABLE VALUE".
+    Some variables you will want to set:
+	auto_action	Determines what happens when you turn power on,
+			halt, or crash your machine.  Valid values
+			{:-include-:} "halt", "boot", and "restart".
+			Most users will want to set this to "boot".
+	bootdef_dev	Default boot device (or list of devices).
+	boot_file	Name of the kernel to boot.  If this variable is
+			empty, "bsd" will be loaded.  Note that this
+			variable does not exist in all versions of the SRM
+			console, in which case you need to always specify a
+			kernel filename if it differs from "bsd".
+	boot_osflags	Flags to pass to the kernel.
+			IMPORTANT! For multiuser boot, this needs to be
+			set to "a".
+    To see a list of all variables on your machine use the "show"
+    command with no arguments.
+
+    You can bypass the boot_file and boot_osflags values from the command
+    prompt, with the -fi (to override boot_file) and -fl (to override
+    boot_osflags) options. For example,
+	boot -fi bsd -fl ac dka0
+    will boot the "bsd" kernel with the "ac" flags on dka0. However, some
+    versions of the SRM console (mainly on DEC 3000 series) will only let
+    you specify uppercase filenames.
+
+
+SRM console boot device restrictions:
+    The SRM firmware on your system may or may not be able to boot from
+    any disk controller you may install in your MACHINE.
+    The built-in disk controllers on your MACHINE will always be supported,
+    however on IDE-based machines, such as the EB164, 164SX and 164LX, as
+    well as the low-end Personal Workstation (non-u models), you can plug
+    an SCSI controller, and boot from it if it is recognized.
+
+    Recent SRM releases for these machines will be able to boot from the
+    following controllers:
+	QLogic PCI SCSI controllers
+	Symbios Logic (NCR) 53C8xx (but not on PC164)
+	Adaptec AHA-[23]9[34]x[U][W] cards
+    The following controllers are known not to be supported as boot devices
+    by the SRM:
+	Adaptec AHA-[23]9[34]xU2 cards
+
+    Depending on your specific model, your mileage may vary, though.
+    A more detailed, and perhaps more up-to-date, list is available at the
+    following URL: http://www.pofo.de/alpha-boot
+
+
+OpenBSD/MACHINE console device restrictions:
+    On systems with no framebuffer supported, including all
+    TURBOchannel-based machines, OpenBSD/MACHINE must be used with a
+    serial console.  Setting an Alpha system to use a serial console
+    is system-specific.  The procedure for most common hardware is:
+
+	DEC 3000/[4-9]00's:
+		Flip the appropriate switch on the back of the machine.
+
+	DEC 3000/300 family machines:
+		Boot the machine with the keyboard/mouse connector
+		unplugged.
+
+	Other machines running the SRM console on local display:
+		From the SRM console, enter
+			set console serial
+		at the SRM prompt, then enter
+			init
+		or cycle power.
+
+    See your owner's manual for more details on how to set your machine
+    to use a serial console.
+
+    Note that some MACHINE computers currently *require* a serial console
+    and can't be used from a regular keyboard/display console, even though
+    the motherboard has appropriate connectors.
+    Currently, only the TURBOchannel MACHINE computers (DEC 3000) require
+    use of a serial console.
+
+    If booting using the regular console aborts with ``not configured to
+    use display && keyboard console'', then you need to use a serial
+    console.
+    If your machine was not listed in the list above, please report this
+    on <alpha@OpenBSD.org>.
