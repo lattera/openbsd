@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/vmparam.h,v 1.8 2001/03/29 18:52:19 drahn Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-

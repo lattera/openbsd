@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/varargs.h,v 1.2 2001/03/29 18:52:19 drahn Exp $	*/
 /*	$NetBSD: varargs.h,v 1.1 1996/09/30 16:34:37 ws Exp $	*/
 
 /*-
