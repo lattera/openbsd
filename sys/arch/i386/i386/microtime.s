@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/microtime.s,v 1.3 1996/02/28 14:38:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/microtime.s,v 1.4 1996/03/19 21:09:20 mickey Exp $	*/
+/*	$NetBSD: microtime.s,v 1.16 1995/04/17 12:06:47 cgd Exp $	*/
 
 /*-
  * Copyright (c) 1993 The Regents of the University of California.
