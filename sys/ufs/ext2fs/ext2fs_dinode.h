@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_dinode.h,v 1.7 2002/03/30 10:37:40 niklas Exp $	*/
 /*	$NetBSD: ext2fs_dinode.h,v 1.6 2000/01/26 16:21:33 bouyer Exp $	*/
 
 /*
