@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet6/tcpipv6.h,v 1.5 2000/02/07 06:09:10 itojun Exp $ */
+/*	$OpenBSD: src/sys/netinet6/tcpipv6.h,v 1.5.2.1 2000/03/02 07:04:46 niklas Exp $	*/
 
 /*
 %%% copyright-nrl-95

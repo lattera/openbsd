@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/rmd160.h,v 1.1 2000/02/28 23:13:05 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/rmd160.h,v 1.1.2.1 2000/03/02 07:04:36 niklas Exp $	*/
 
 /*
  *      FILE:     rmd160.h

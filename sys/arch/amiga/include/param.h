@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10 1997/09/18 13:40:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.1 2000/03/02 07:04:26 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:36 veego Exp $	*/
 
 /*
@@ -74,6 +74,8 @@
 #ifndef NKMEMCLUSTERS
 #define	NKMEMCLUSTERS	(3072 * 1024 / CLBYTES)
 #endif
+
+#define MSGBUFSIZE	8192
 
 /*
  * spl functions; all are normally done in-line

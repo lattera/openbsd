@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.1 2000/02/20 11:56:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.2 2000/03/02 07:04:33 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -123,6 +123,8 @@ extern int nbpg, pgofset, pgshift;
 #define	NMBCLUSTERS	512		/* map size, max cluster allocation */
 #endif
 #endif
+
+#define MSGBUFSIZE	4096		/* cannot be changed without great pain */
 
 /*
  * Size of kernel malloc arena in CLBYTES-sized logical pages.

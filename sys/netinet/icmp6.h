@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.2 2000/02/07 05:45:55 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.2.2.1 2000/03/02 07:04:42 niklas Exp $	*/
+/*	$KAME: icmp6.h,v 1.8 2000/02/28 10:59:30 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -322,6 +323,13 @@ struct icmp6_nodeinfo {
 #if BYTE_ORDER == BIG_ENDIAN
 #define NI_SUPTYPE_FLAG_COMPRESS	0x1
 #define NI_FQDN_FLAG_VALIDTTL		0x1
+#elif BYTE_ORDER == LITTLE_ENDIAN
+#define NI_SUPTYPE_FLAG_COMPRESS	0x0100
+#define NI_FQDN_FLAG_VALIDTTL		0x0100
+#endif
+
+#ifdef NAME_LOOKUPS_04
+#if BYTE_ORDER == BIG_ENDIAN
 #define NI_NODEADDR_FLAG_LINKLOCAL	0x1
 #define NI_NODEADDR_FLAG_SITELOCAL	0x2
 #define NI_NODEADDR_FLAG_GLOBAL		0x4
@@ -329,14 +337,31 @@ struct icmp6_nodeinfo {
 #define NI_NODEADDR_FLAG_TRUNCATE	0x10
 #define NI_NODEADDR_FLAG_ANYCAST	0x20 /* just experimental. not in spec */
 #elif BYTE_ORDER == LITTLE_ENDIAN
-#define NI_SUPTYPE_FLAG_COMPRESS	0x0100
-#define NI_FQDN_FLAG_VALIDTTL		0x0100
 #define NI_NODEADDR_FLAG_LINKLOCAL	0x0100
 #define NI_NODEADDR_FLAG_SITELOCAL	0x0200
 #define NI_NODEADDR_FLAG_GLOBAL		0x0400
 #define NI_NODEADDR_FLAG_ALL		0x0800
 #define NI_NODEADDR_FLAG_TRUNCATE	0x1000
 #define NI_NODEADDR_FLAG_ANYCAST	0x2000 /* just experimental. not in spec */
+#endif
+#else  /* draft-ietf-ipngwg-icmp-name-lookups-05 (and later?) */
+#if BYTE_ORDER == BIG_ENDIAN
+#define NI_NODEADDR_FLAG_TRUNCATE	0x1
+#define NI_NODEADDR_FLAG_ALL		0x2
+#define NI_NODEADDR_FLAG_COMPAT		0x4
+#define NI_NODEADDR_FLAG_LINKLOCAL	0x8
+#define NI_NODEADDR_FLAG_SITELOCAL	0x10
+#define NI_NODEADDR_FLAG_GLOBAL		0x20
+#define NI_NODEADDR_FLAG_ANYCAST	0x40 /* just experimental. not in spec */
+#elif BYTE_ORDER == LITTLE_ENDIAN
+#define NI_NODEADDR_FLAG_TRUNCATE	0x0100
+#define NI_NODEADDR_FLAG_ALL		0x0200
+#define NI_NODEADDR_FLAG_COMPAT		0x0400
+#define NI_NODEADDR_FLAG_LINKLOCAL	0x0800
+#define NI_NODEADDR_FLAG_SITELOCAL	0x1000
+#define NI_NODEADDR_FLAG_GLOBAL		0x2000
+#define NI_NODEADDR_FLAG_ANYCAST	0x4000 /* just experimental. not in spec */
+#endif
 #endif
 
 struct ni_reply_fqdn {
@@ -469,12 +494,12 @@ struct icmp6_filter {
 
 #ifdef _KERNEL
 #define	ICMP6_FILTER_SETPASSALL(filterp) \
-    {								\
+do {								\
 	int i; u_char *p;					\
 	p = (u_char *)filterp;					\
 	for (i = 0; i < sizeof(struct icmp6_filter); i++)	\
 		p[i] = 0xff;					\
-    }
+} while (0)
 #define	ICMP6_FILTER_SETBLOCKALL(filterp) \
 	bzero(filterp, sizeof(struct icmp6_filter))
 #else /* _KERNEL */
@@ -525,7 +550,7 @@ struct icmp6stat {
 #define ICMPV6CTL_ND6_UMAXTRIES	9
 #define ICMPV6CTL_ND6_MMAXTRIES		10
 #define ICMPV6CTL_ND6_USELOOPBACK	11
-#define ICMPV6CTL_ND6_PROXYALL	12
+/*#define ICMPV6CTL_ND6_PROXYALL	12	obsoleted, do not reuse here */
 #define ICMPV6CTL_NODEINFO	13
 #define ICMPV6CTL_MAXID		14
 
@@ -542,26 +567,8 @@ struct icmp6stat {
 	{ "nd6_umaxtries", CTLTYPE_INT }, \
 	{ "nd6_mmaxtries", CTLTYPE_INT }, \
 	{ "nd6_useloopback", CTLTYPE_INT }, \
-	{ "nd6_proxyall", CTLTYPE_INT }, \
+	{ 0, 0 }, \
 	{ "nodeinfo", CTLTYPE_INT }, \
-}
-
-#define ICMPV6CTL_VARS { \
-	0, \
-	0, \
-	&icmp6_rediraccept,   \
-	&icmp6_redirtimeout,  \
-	0, \
-	0, \
-	&icmp6errratelim, \
-	&nd6_prune,	\
-	0, \
-	&nd6_delay,	\
-	&nd6_umaxtries, \
-	&nd6_mmaxtries,	\
-	&nd6_useloopback, \
-	&nd6_proxyall, \
-	&icmp6_nodeinfo, \
 }
 
 #define RTF_PROBEMTU	RTF_PROTO1

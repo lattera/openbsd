@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/if_ne_zbus.c,v 1.1 2000/02/29 19:05:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/if_ne_zbus.c,v 1.1.2.1 2000/03/02 07:04:26 niklas Exp $	*/
 /*	$NetBSD: if_ne_zbus.c,v 1.5 2000/01/23 21:06:13 aymeric Exp $	*/
 
 /*-

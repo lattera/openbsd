@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17 2000/02/07 06:09:10 itojun Exp $ */
+/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.1 2000/03/02 07:04:45 niklas Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -149,7 +149,7 @@ struct ip6protosw inet6sw[] = {
 },
 #endif /*TCP6*/
 { SOCK_RAW,	&inet6domain,	IPPROTO_RAW,	PR_ATOMIC | PR_ADDR,
-  rip6_input,	rip6_output,	0,		rip6_ctloutput,
+  rip6_input,	rip6_output,	rip6_ctlinput,	rip6_ctloutput,
   rip6_usrreq,
   0,		0,		0,		0,
 },

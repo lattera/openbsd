@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29.2.2 2000/02/21 22:29:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29.2.3 2000/03/02 07:04:33 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.73 1997/09/13 20:36:48 pk Exp $	*/
 
 /*
@@ -269,8 +269,6 @@ sun4_notsup:
  * kernel space we remap it in configure() to another location and
  * invalidate the mapping at KERNBASE.
  */
-	.globl _msgbuf
-_msgbuf = KERNBASE
 
 /*
  * Each trap has room for four instructions, of which one perforce must
@@ -4674,7 +4672,7 @@ Lsw_havectx:
 #endif
 1:
 #if defined(SUN4M)
-        /*
+	/*
 	 * Flush caches that need to be flushed on context switch.
 	 * We know this is currently only necessary on the sun4m hypersparc.
 	 */
@@ -5920,19 +5918,69 @@ ENTRY(ffs)
 	add	%o0, 24, %o0
 
 /*
- * V8 sparc mul/umul replacements.
+ * V8 sparc .{,u}{mul,div,rem} replacements.
+ * We try to mimic them 100%.  Full 64 bit sources or outputs, and
+ * these routines are required to update the condition codes.
  */
 .globl __mulreplace, __mulreplace_end
 __mulreplace:
+	smulcc	%o0, %o1, %o0
 	retl
-	 smul	%o0, %o1, %o0
+	 rd	%y, %o1
 __mulreplace_end:
 
 .globl __umulreplace, __umulreplace_end
 __umulreplace:
+	umulcc	%o0, %o1, %o0
 	retl
-	 umul	%o0, %o1, %o0
+	 rd	%y, %o1
 __umulreplace_end:
+
+.globl __divreplace, __divreplace_end
+__divreplace:
+	sra	%o0, 31, %g1
+	wr	%g1, 0, %y
+	nop
+	nop
+	nop
+	retl
+	 sdivcc	%o0, %o1, %o0
+__divreplace_end:
+
+.globl __udivreplace, __udivreplace_end
+__udivreplace:
+	wr	%g0, 0, %y
+	nop
+	nop
+	nop
+	retl
+	 udivcc	%o0, %o1, %o0
+__udivreplace_end:
+
+.globl __remreplace, __remreplace_end
+__remreplace:
+	sra	%o0, 31, %g1
+	wr	%g1, 0, %y
+	nop
+	nop
+	nop
+	sdiv	%o0, %o1, %o2
+	smul	%o1, %o2, %o2
+	retl
+	 subcc	%o0, %o2, %o0
+__remreplace_end:
+
+.globl __uremreplace, __uremreplace_end
+__uremreplace:
+	wr	%g0, 0, %y
+	nop
+	nop
+	nop
+	udiv	%o0, %o1, %o2
+	umul	%o1, %o2, %o2
+	retl
+	 subcc	%o0, %o2, %o0
+__uremreplace_end:
 
 /*
  * Signed multiply, from Appendix E of the Sparc Version 8

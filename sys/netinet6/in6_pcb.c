@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9 2000/02/07 06:09:10 itojun Exp $ */
+/*	$OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9.2.1 2000/03/02 07:04:45 niklas Exp $	*/
 
 /*
 %%% copyright-nrl-95

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/sk.h,v 1.1 2000/02/28 23:13:05 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/sk.h,v 1.1.2.1 2000/03/02 07:04:37 niklas Exp $	*/
 
 /* lib/des/sk.h */
 /* Copyright (C) 1995 Eric Young (eay@mincom.oz.au)
