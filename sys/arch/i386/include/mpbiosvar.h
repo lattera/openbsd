@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/mpbiosvar.h,v 1.1.2.2 2001/07/15 15:13:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/mpbiosvar.h,v 1.1.2.3 2001/10/27 10:54:59 niklas Exp $	*/
 /* $NetBSD: mpbiosvar.h,v 1.1.2.3 2000/02/29 13:17:20 sommerfeld Exp $ */
 
 /*-
@@ -43,7 +43,7 @@
 #ifndef _I386_MPBIOSVAR_H_
 #define _I386_MPBIOSVAR_H_
 
-#define MP_TRAMPOLINE  (3 * NBPG)
+#define MP_TRAMPOLINE  (4 * NBPG)
 
 #if !defined(_LOCORE)
 
