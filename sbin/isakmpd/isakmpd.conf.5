@@ -1,8 +1,8 @@
-.\" $OpenBSD: src/sbin/isakmpd/isakmpd.conf.5,v 1.42 2000/10/16 23:28:22 niklas Exp $
-.\" $EOM: isakmpd.conf.5,v 1.52 2000/10/15 20:01:28 niklas Exp $
+.\" $OpenBSD: src/sbin/isakmpd/isakmpd.conf.5,v 1.42.2.1 2001/05/08 12:45:23 ho Exp $
+.\" $EOM: isakmpd.conf.5,v 1.57 2000/12/21 14:43:17 ho Exp $
 .\"
 .\" Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
-.\" Copyright (c) 2000 Håkan Olsson.  All rights reserved.
+.\" Copyright (c) 2000, 2001 Håkan Olsson.  All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -82,12 +82,12 @@ to fully specify the Main Mode transforms and Quick Mode suites, protocols
 and transforms.
 .Pp
 For Main Mode:
-.Bd -filled -offset indent -compact
+.Bd -filled -compact
 .Ar {DES,BLF,3DES,CAST}-{MD5,SHA}[-{DSS,RSA_SIG}]
 .Ed
 .Pp
 For Quick Mode:
-.Bd -filled -offset indent -compact
+.Bd -filled -compact
 .Ar QM-{ESP,AH}[-TRP]-{DES,3DES,CAST,BLF,AES}[-{MD5,SHA,RIPEMD}][-PFS]-SUITE
 .Ed
 .Pp
@@ -128,12 +128,27 @@ Default-phase-2-lifetime=	1200,60:86400
 .\"XXX Following empty .Ss works around a nroff bug, we want the new line."
 .Ss
 .Pp
+Also, the default Phase 1 ID can be set by creating a <Phase1-ID>
+section, as shown below, and adding this tag under the "General"
+section;
+.Pp
+.Bd -literal
+[General]
+Default-phase-1-ID=		Phase1-ID-name
+
+[Phase1-ID-name]
+ID-type=			USER_FQDN
+Name=				foo@bar.com
+.Ed
+.\"XXX Following empty .Ss works around a nroff bug, we want the new line."
+.Ss
+.Pp
 .Ss Roots
 .Bl -hang -width 12n
 .It Em General
 Generic global configuration parameters
 .Bl -tag -width 12n
-.It Em Policy-File
+.It Em Policy-file
 The name of the file that contains
 .Xr KeyNote 4
 policies.
@@ -306,8 +321,9 @@ For Phase 1 this is currently
 .Li IPV4_ADDR ,
 .Li IPV4_ADDR_SUBNET ,
 .Li FQDN ,
+.Li USER_FQDN ,
 or
-.Li USER_FQDN .
+.Li KEY_ID .
 .It Em Address
 If the ID-type is
 .Li IPV4_ADDR ,
@@ -324,11 +340,12 @@ this tag should exist and
 be a network subnet mask.
 .It Em Name
 If the ID-type is
-.Li FQDN
-or
+.Li FQDN ,
 .Li USER_FQDN ,
-this tag should exist and contain a domain name or a user@domain
-string respectively.
+or
+.Li KEY_ID ,
+this tag should exist and contain a domain name, user@domain, or
+other identifying string respectively.
 .El
 .It Em <ISAKMP-configuration>
 .Bl -tag -width 12n
@@ -386,7 +403,7 @@ proposed lifetime type and value will be accepted.
 .It Em LIFE_TYPE
 .Li SECONDS
 or
-.Li BYTES
+.Li KILOBYTES
 depending on the type of the duration.
 Notice that this field may NOT be set to ANY.
 .It Em LIFE_DURATION
@@ -519,9 +536,29 @@ If the ID-type is
 .Li IPV4_ADDR_SUBNET
 this tag should exist and
 be a network subnet mask.
+.It Em Protocol
+If the ID-type is
+.Li IPV4_ADDR
+or
+.Li IPV4_ADDR_SUBNET ,
+this tag indicates what transport protocol should be transmitted over
+the SA.
+If left unspecified, all transport protocols between the two address
+(ranges) will be sent (or permitted) over that SA.
+.It Em Port
+If the ID-type is
+.Li IPV4_ADDR
+or
+.Li IPV4_ADDR_SUBNET ,
+this tag indicates what source or destination port is allowed to be
+transported over the SA (depending on whether this is a local or
+remote ID).
+If left unspecified, all ports of the given transport protocol
+will be transmitted (or permitted) over the SA.
+The Protocol tag must be specified in conjunction with this tag.
 .El
 .El
-.Sh EXAMPLE
+.Sh EXAMPLES
 An example of a configuration file:
 .Pp
 .Bd -literal
@@ -592,7 +629,7 @@ Suites=			QM-ESP-3DES-SHA-PFS-SUITE,QM-ESP-DES-MD5-SUITE
 #
 
 [General]
-Policy-File=		/etc/isakmpd/isakmpd.policy
+Policy-file=		/etc/isakmpd/isakmpd.policy
 Retransmits=		3
 Exchange-max-time=	120
 
@@ -900,6 +937,17 @@ LIFE_DURATION=		4608000,4096000:8192000
 does not currently verify the Remote-ID as specified in the
 ISAKMP-peer section.
 It is still possible to verify this through the policy file.
+.Sh FILES
+.Bl -tag -width /etc/isakmpd/isakmpd.conf
+.It Pa /etc/isakmpd/isakmpd.conf
+The default
+.Nm isakmpd
+configuration file.
+.It Pa /usr/share/ipsec/isakmpd/
+A directory containing some sample
+.Nm isakmpd
+configuration files.
+.El
 .Sh SEE ALSO
 .Xr ipsec 4 ,
 .Xr keynote 1 ,

@@ -1,10 +1,11 @@
-/*	$OpenBSD: src/sbin/isakmpd/ike_auth.c,v 1.29.2.1 2000/12/11 05:38:23 jason Exp $	*/
-/*	$EOM: ike_auth.c,v 1.57 2000/10/13 13:04:16 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_auth.c,v 1.29.2.2 2001/05/08 12:45:22 ho Exp $	*/
+/*	$EOM: ike_auth.c,v 1.59 2000/11/21 00:21:31 angelos Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
  * Copyright (c) 1999 Niels Provos.  All rights reserved.
  * Copyright (c) 1999 Angelos D. Keromytis.  All rights reserved.
+ * Copyright (c) 2000, 2001 Håkan Olsson.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,7 +46,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#if defined(USE_KEYNOTE)
 #include <keynote.h>
+#endif
 #include <policy.h>
 
 #include "sysdep.h"
@@ -53,8 +56,10 @@
 #include "cert.h"
 #include "conf.h"
 #include "constants.h"
+#if defined(USE_DNSSEC)
+#include "dnssec.h"
+#endif
 #include "exchange.h"
-#include "gmp.h"
 #include "gmp_util.h"
 #include "hash.h"
 #include "ike_auth.h"
@@ -194,7 +199,7 @@ ike_auth_get_key (int type, char *id, char *local_id, size_t *keylen)
 	  int fd;
 
 	  privkeyfile = calloc (strlen (keyfile) + strlen (local_id) +
-				strlen (PRIVATE_KEY_FILE) + 3, sizeof(char));
+				strlen (PRIVATE_KEY_FILE) + 3, sizeof (char));
 	  if (privkeyfile == NULL)
 	    {
 	      log_print ("ike_auth_get_key: failed to allocate %d bytes",
@@ -208,7 +213,10 @@ ike_auth_get_key (int type, char *id, char *local_id, size_t *keylen)
 	  keyfile = privkeyfile;
 
 	  if (stat (keyfile, &sb) < 0)
-	    goto ignorekeynote;
+	    {
+	      free (keyfile);
+	      goto ignorekeynote;
+	    }
 
 	  fd = open (keyfile, O_RDONLY, 0);
 	  if (fd < 0)
@@ -218,7 +226,7 @@ ike_auth_get_key (int type, char *id, char *local_id, size_t *keylen)
 	      return 0;
 	    }
 
-	  buf = calloc (sb.st_size + 1, sizeof(char));
+	  buf = calloc (sb.st_size + 1, sizeof (char));
 	  if (buf == NULL)
 	    {
 	      log_print ("ike_auth_get_key: failed allocating %d bytes",
@@ -544,7 +552,7 @@ rsa_sig_decode_hash (struct message *msg)
   struct payload *p;
   void *cert;
   u_int8_t *rawcert = NULL;
-  u_int32_t rawlen;
+  u_int32_t rawcertlen;
   RSA *key;
   size_t hashsize = ie->hash->hashsize;
   char header[80];
@@ -554,6 +562,10 @@ rsa_sig_decode_hash (struct message *msg)
   u_int32_t *id_cert_len;
   size_t id_len;
   int found = 0, n, i, id_found;
+#if defined(USE_DNSSEC)
+  u_int8_t *rawkey = NULL;
+  u_int32_t rawkeylen;
+#endif
 
   /* Choose the right fields to fill-in.  */
   hash_p = initiator ? &ie->hash_r : &ie->hash_i;
@@ -566,9 +578,10 @@ rsa_sig_decode_hash (struct message *msg)
       return -1;
     }
 
-  /* XXX Assume we should use the same kind of certification as the
-     XXX remote...moreover, just use the first CERT payload to
-     XXX decide what to use. */
+  /*
+   * XXX Assume we should use the same kind of certification as the remote...
+   * moreover, just use the first CERT payload to decide what to use.
+   */
   p = TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_CERT]);
   if (!p)
     handler = cert_get (ISAKMP_CERTENC_KEYNOTE);
@@ -596,11 +609,11 @@ rsa_sig_decode_hash (struct message *msg)
 #endif /* USE_POLICY || USE_KEYNOTE */
 
   /* Obtain a certificate from our certificate storage */
-  if (handler->cert_obtain (id, id_len, 0, &rawcert, &rawlen))
+  if (handler->cert_obtain (id, id_len, 0, &rawcert, &rawcertlen))
     {
       if (handler->id == ISAKMP_CERTENC_X509_SIG)
         {
-	  cert = handler->cert_get (rawcert, rawlen);
+	  cert = handler->cert_get (rawcert, rawcertlen);
 	  if (!cert)
 	    LOG_DBG ((LOG_CRYPTO, 50,
 		      "rsa_sig_decode_hash: certificate malformed"));
@@ -728,7 +741,7 @@ rsa_sig_decode_hash (struct message *msg)
 	    }
 
 	  exchange->recv_key = calloc (strlen (pp) + strlen ("rsa-hex:") + 1,
-				       sizeof(char));
+				       sizeof (char));
 	  if (exchange->recv_key == NULL)
 	    {
 	      free (pp);
@@ -746,7 +759,26 @@ rsa_sig_decode_hash (struct message *msg)
       found++;
     }
 
-  /* If no certificate provided a key, try the config file.  */
+  /* If no certificate provided a key, try to find a validated DNSSEC KEY. */
+#if defined(USE_DNSSEC)
+  if (!found)
+    {
+      rawkey = dns_get_key (IKE_AUTH_RSA_SIG, msg, &rawkeylen);
+      if (rawkey)
+	found++;
+      
+      /* We need to convert 'void *rawkey' into 'RSA *key'. */
+      if (dns_RSA_dns_to_x509 (rawkey, rawkeylen, &key) == -1)
+	{
+	  log_print ("rsa_sig_decode_hash: KEY to RSA key conversion failed");
+	  free (rawkey);
+	  return -1;
+	}
+      free (rawkey);
+    }
+#endif /* USE_DNSSEC */
+
+  /* If we still have not found a key, try the config file.  */
   if (!found)
     {
 #ifdef notyet

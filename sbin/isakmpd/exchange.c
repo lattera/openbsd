@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.34 2000/10/16 23:27:33 niklas Exp $	*/
-/*	$EOM: exchange.c,v 1.134 2000/10/16 18:16:58 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.34.2.1 2001/05/08 12:45:22 ho Exp $	*/
+/*	$EOM: exchange.c,v 1.143 2000/12/04 00:02:25 angelos Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
- * Copyright (c) 1999 Angelos D. Keromytis.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1999, 2001 Angelos D. Keromytis.  All rights reserved.
  * Copyright (c) 1999, 2000 Håkan Olsson.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -631,14 +631,14 @@ exchange_create (int phase, int initiator, int doi, int type)
 	}
     }
 
-  gettimeofday(&expiration, 0);
+  gettimeofday (&expiration, 0);
   delta = conf_get_num ("General", "Exchange-max-time", EXCHANGE_MAX_TIME);
   expiration.tv_sec += delta;
   exchange->death = timer_add_event ("exchange_free_aux", exchange_free_aux,
 				     exchange, &expiration);
   if (!exchange->death)
     {
-      /* If we don't give up we might start leaking... */
+      /* If we don't give up we might start leaking...  */
       exchange_free_aux (exchange);
       return 0;
     }
@@ -817,8 +817,7 @@ exchange_establish_p1 (struct transport *t, u_int8_t type, u_int32_t doi,
 	  exchange_free (exchange);
 	  return;
 	}
-      else
-        sa_reference (msg->isakmp_sa);
+      sa_reference (msg->isakmp_sa);
     }
 
   msg->extra = args;
@@ -838,6 +837,7 @@ exchange_establish_p2 (struct sa *isakmp_sa, u_int8_t type, char *name,
   int i;
   char *tag, *str;
   u_int32_t doi = ISAKMP_DOI_ISAKMP;
+  u_int32_t seq = 0;
 
   if (isakmp_sa)
     doi = isakmp_sa->doi->id;
@@ -852,6 +852,8 @@ exchange_establish_p2 (struct sa *isakmp_sa, u_int8_t type, char *name,
 		     name);
 	  return;
 	}
+
+      seq = (u_int32_t) conf_get_num (name, "Acquire-ID", 0);
 
       /* Figure out the DOI.  */
       str = conf_get_str (tag, "DOI");
@@ -906,6 +908,7 @@ exchange_establish_p2 (struct sa *isakmp_sa, u_int8_t type, char *name,
   exchange->policy = name ? conf_get_str (name, "Configuration") : 0;
   exchange->finalize = finalize;
   exchange->finalize_arg = arg;
+  exchange->seq = seq;
   memcpy (exchange->cookies, isakmp_sa->cookies, ISAKMP_HDR_COOKIES_LEN);
   getrandom (exchange->message_id, ISAKMP_HDR_MESSAGE_ID_LEN);
   exchange->flags |= EXCHANGE_FLAG_ENCRYPT;
@@ -928,8 +931,8 @@ exchange_establish_p2 (struct sa *isakmp_sa, u_int8_t type, char *name,
     }
 
   msg = message_alloc (isakmp_sa->transport, 0, ISAKMP_HDR_SZ);
-  sa_reference (isakmp_sa);
   msg->isakmp_sa = isakmp_sa;
+  sa_reference (isakmp_sa);
   
   msg->extra = args;
 
@@ -1085,7 +1088,7 @@ exchange_dump_real (char *header, struct exchange *exchange, int class,
 		    int level)
 {
   char buf[LOG_SIZE];
-  /* Don't risk overflowing the final log buffer. */
+  /* Don't risk overflowing the final log buffer.  */
   int bufsize_max = LOG_SIZE - strlen (header) - 32; 
   struct sa *sa;
 
@@ -1196,7 +1199,7 @@ exchange_free_aux (void *v_exch)
   if (exchange->finalize)
     exchange->finalize (exchange, exchange->finalize_arg, 1);
 
-  /* Remove any SAs that has not been dissociated from us.  */
+  /* Remove any SAs that has not been disassociated from us.  */
   for (sa = TAILQ_FIRST (&exchange->sa_list); sa; sa = next_sa)
     {
       next_sa = TAILQ_NEXT (sa, next);
@@ -1235,13 +1238,37 @@ static int
 exchange_check_old_sa (struct sa *sa, void *v_arg)
 {
   struct sa *new_sa = v_arg;
-  
+  char res1[1024];
+
   if (sa == new_sa || !sa->name || !(sa->flags & SA_FLAG_READY) || 
       (sa->flags & SA_FLAG_REPLACED))
     return 0;
 
-  return sa->phase == new_sa->phase && new_sa->name &&
-    strcasecmp (sa->name, new_sa->name) == 0;
+  if (sa->phase != new_sa->phase || new_sa->name == NULL ||
+      strcasecmp (sa->name, new_sa->name))
+    return 0;
+
+  if (sa->initiator)
+    strlcpy (res1, ipsec_decode_ids ("%s %s", sa->id_i, sa->id_i_len, sa->id_r,
+				     sa->id_r_len, 0), sizeof res1);
+  else
+    strlcpy (res1, ipsec_decode_ids ("%s %s", sa->id_r, sa->id_r_len, sa->id_i,
+				     sa->id_i_len, 0), sizeof res1);
+
+  LOG_DBG ((LOG_EXCHANGE, 30,
+	    "checking whether new SA replaces existing SA with IDs %s",
+	    res1));
+
+  if (new_sa->initiator)
+    return strcasecmp (res1, ipsec_decode_ids ("%s %s", new_sa->id_i,
+					       new_sa->id_i_len,
+					       new_sa->id_r,
+					       new_sa->id_r_len, 0)) == 0;
+  else
+    return strcasecmp (res1, ipsec_decode_ids ("%s %s", new_sa->id_r,
+					       new_sa->id_r_len,
+					       new_sa->id_i,
+					       new_sa->id_i_len, 0)) == 0;
 }
 
 void
@@ -1336,8 +1363,8 @@ exchange_finalize (struct message *msg)
 	    msg->isakmp_sa->recv_cert = malloc (exchange->recv_certlen);
 	    if (!msg->isakmp_sa->recv_cert)
 	      {
-		log_error ("exchange_finalize: strdup (\"%s\") failed",
-			   exchange->recv_cert);
+		log_error ("exchange_finalize: malloc (%d) failed",
+			   exchange->recv_certlen);
 		/* XXX How to cleanup?  */
 		return;
 	      }
@@ -1407,7 +1434,6 @@ exchange_finalize (struct message *msg)
 	}
     }
 
-
   /*
    * There is no reason to keep the SAs connected to us anymore, in fact
    * it can hurt us if we have short lifetimes on the SAs and we try
@@ -1418,10 +1444,13 @@ exchange_finalize (struct message *msg)
     {
       struct sa *sa = TAILQ_FIRST (&exchange->sa_list);
 
-      ipsec_clone_id (&sa->id_i, &sa->id_i_len, exchange->id_i,
-		      exchange->id_i_len);
-      ipsec_clone_id (&sa->id_r, &sa->id_r_len, exchange->id_r,
-		      exchange->id_r_len);
+      if (exchange->id_i && exchange->id_r)
+	{
+          ipsec_clone_id (&sa->id_i, &sa->id_i_len, exchange->id_i,
+		          exchange->id_i_len);
+          ipsec_clone_id (&sa->id_r, &sa->id_r_len, exchange->id_r,
+		          exchange->id_r_len);
+	}
 
       TAILQ_REMOVE (&exchange->sa_list, sa, next);
       sa_release (sa);
@@ -1639,7 +1668,7 @@ exchange_establish (char *name,
       trpt = conf_get_str (name, "Transport");
       if (!trpt)
 	{
-	  /* Phase 1 transport defaults to "udp". */
+	  /* Phase 1 transport defaults to "udp".  */
 	  trpt = ISAKMP_DEFAULT_TRANSPORT;
 	}
 
@@ -1676,7 +1705,7 @@ exchange_establish (char *name,
 
 	  if (conf_get_num (peer, "Phase", 0) != 1)
 	    {
-	      log_error ("exchange_establish: "
+	      log_print ("exchange_establish: "
 			 "[%s]:ISAKMP-peer's (%s) phase is not 1", name, peer);
 	      return;
 	    }

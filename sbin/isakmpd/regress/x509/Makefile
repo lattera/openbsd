@@ -1,9 +1,9 @@
-#	$OpenBSD: src/sbin/isakmpd/regress/x509/Attic/Makefile,v 1.10 2000/10/07 07:00:53 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/x509/Attic/Makefile,v 1.10.2.1 2001/05/08 12:45:28 ho Exp $
 #	$EOM: Makefile,v 1.16 2000/09/28 12:53:27 niklas Exp $
 
 #
 # Copyright (c) 1999 Niels Provos.  All rights reserved.
-# Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.
+# Copyright (c) 1999, 2001 Niklas Hallqvist.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -50,6 +50,14 @@ CFLAGS+=	-I${TOPSRC} -I${TOPSRC}/sysdep/${OS} -I${TOPOBJ} -Wall \
 		-DUSE_X509
 NOMAN=
 DEBUG=		-g
+
+.if ${FEATURES:Mgmp} == "gmp"
+CFLAGS+=	-DMP_FLAVOUR=MP_FLAVOUR_GMP
+LDADD+=		-lgmp
+DPADD+=		${LIBGMP}
+.else
+CFLAGS+=	-DMP_FLAVOUR=MP_FLAVOUR_OPENSSL
+.endif
 
 .include "${TOPSRC}/sysdep/${OS}/Makefile.sysdep"
 

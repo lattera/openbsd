@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sbin/isakmpd/libcrypto.c,v 1.7 2000/10/07 06:57:08 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/libcrypto.c,v 1.7.2.1 2001/05/08 12:45:24 ho Exp $	*/
 /*	$EOM: libcrypto.c,v 1.14 2000/09/28 12:53:27 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
  * Copyright (c) 1999, 2000 Angelos D. Keromytis.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,10 +59,13 @@ BIO *(*lc_BIO_new) (BIO_METHOD *type);
 int (*lc_BIO_write) (BIO *, char *, int);
 BIO_METHOD *(*lc_BIO_s_file) (void);
 BIO_METHOD *(*lc_BIO_s_mem) (void);
+BIGNUM *(*lc_BN_bin2bn) (const unsigned char *, int, BIGNUM *);
+int (*lc_BN_num_bits) (const BIGNUM *);
 int (*lc_BN_print_fp) (FILE *, BIGNUM *);
 char *(*lc_PEM_ASN1_read_bio) (char *(*) (), char *, BIO *, char **,
 			       int (*) ());
 void (*lc_RSA_free) (RSA *);
+RSA *(*lc_RSA_new) (void);
 RSA *(*lc_RSA_generate_key) (int, unsigned long, void (*) (int, int, char *),
 			     char *);
 int (*lc_RSA_private_encrypt) (int, unsigned char *, unsigned char *, RSA *,
@@ -108,7 +111,8 @@ int (*lc_i2d_RSAPublicKey) (RSA *, unsigned char **);
 int (*lc_i2d_RSAPrivateKey) (RSA *, unsigned char **);
 int (*lc_i2d_X509) (X509 *, unsigned char **);
 int (*lc_i2d_X509_NAME) (X509_NAME *, unsigned char **);
-#if SSLEAY_VERSION_NUMBER >= 0x00904100L
+#if (SSLEAY_VERSION_NUMBER >= 0x00904100L \
+     && SSLEAY_VERSION_NUMBER < 0x0090600fL)
 void (*lc_sk_X509_free) (STACK_OF (X509) *);
 STACK_OF (X509) *(*lc_sk_X509_new_null) ();
 #else
@@ -177,7 +181,8 @@ static struct dynload_script libcrypto_script[] = {
   SYMENTRY (i2d_RSAPrivateKey),
   SYMENTRY (i2d_X509),
   SYMENTRY (i2d_X509_NAME),
-#if SSLEAY_VERSION_NUMBER >= 0x00904100L
+#if (SSLEAY_VERSION_NUMBER >= 0x00904100L \
+     && SSLEAY_VERSION_NUMBER < 0x0090600fL)
   SYMENTRY (sk_X509_free),
   SYMENTRY (sk_X509_new_null),
 #else

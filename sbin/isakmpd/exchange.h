@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sbin/isakmpd/exchange.h,v 1.15 2000/10/07 06:59:46 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/exchange.h,v 1.15.2.1 2001/05/08 12:45:22 ho Exp $	*/
 /*	$EOM: exchange.h,v 1.28 2000/09/28 12:54:28 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2001 Niklas Hallqvist.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -162,7 +162,10 @@ struct exchange {
   void *recv_cert;
   void *recv_key;
 
-  /* XXX This is no longer necessary, it is covered by policy. */
+  /* ACQUIRE sequence number */
+  u_int32_t seq;
+
+  /* XXX This is no longer necessary, it is covered by policy.  */
 
   /* Acceptable authorities for cert requests */
   TAILQ_HEAD (aca_head, certreq_aca) aca_list;

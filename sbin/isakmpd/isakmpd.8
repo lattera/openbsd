@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/sbin/isakmpd/isakmpd.8,v 1.19 2000/05/02 14:36:51 niklas Exp $
+.\" $OpenBSD: src/sbin/isakmpd/isakmpd.8,v 1.19.4.1 2001/05/08 12:45:23 ho Exp $
 .\" $EOM: isakmpd.8,v 1.23 2000/05/02 00:30:23 niklas Exp $
 .\"
 .\" Copyright (c) 1998, 1999 Niklas Hallqvist.  All rights reserved.
@@ -40,15 +40,17 @@
 .Nm isakmpd
 .Nd ISAKMP/Oakley a.k.a. IKE key management daemon
 .Sh SYNOPSIS
-.Nm isakmpd
+.Nm 
 .Op Fl c Ar config-file
 .Op Fl d
-.Op Fl D Ar debug-class=level
+.Op Fl D Ar class=level
 .Op Fl f Ar fifo
 .Op Fl i Ar pid-file
 .Op Fl n
 .Op Fl p Ar listen-port
 .Op Fl P Ar local-port
+.Op Fl L
+.Op Fl l Ar packetlog-file
 .Op Fl r Ar seed
 .Op Fl R Ar report-file
 .Sh DESCRIPTION
@@ -72,10 +74,14 @@ a FIFO or by signals, upcalls from the kernel via a
 .Dv PF_KEY
 socket, and lastly by scheduled events triggered by timers running out.
 .Pp
-Most uses of isakmpd will be to implement so called "virtual private
+Most uses of 
+.Nm
+will be to implement so called "virtual private
 networks" or VPNs for short.  The
 .Xr vpn 8
-manual page describes how to setup isakmpd for a simple VPN.  For other
+manual page describes how to setup 
+.Nm
+for a simple VPN.  For other
 uses, some more knowledge of IKE as a protocol is required.  One source
 of information are the RFCs mentioned below.
 .Pp
@@ -93,8 +99,9 @@ The
 .Fl d
 option is used to make the daemon run in the foreground, logging to stderr.
 .It Xo Fl D
-.Ar debug-class Ns No = Ns Ar level
+.Ar class Ns No = Ns Ar level
 .Xc
+Debugging class.
 This argument is possible to specify many times.
 It takes a parameter of the form
 .Ar class Ns No = Ns Ar level
@@ -113,6 +120,35 @@ If
 .Ar class
 is set to 'A',
 then all debugging classes are set to the specified level.
+.Pp
+Valid values for
+.Ar class
+are as follows:
+.Pp
+.Bl -tag -width 1n -compact -offset indent
+.It 0
+Misc
+.It 1
+Transport
+.It 2
+Message
+.It 3
+Crypto
+.It 4
+Timer
+.It 5
+Sysdep
+.It 6
+SA
+.It 7
+Exchange
+.It 8
+Negotiation
+.It 9
+Policy
+.It A
+All
+.El
 .It Fl f Ar fifo
 The
 .Fl f
@@ -143,7 +179,20 @@ option specifies the listen port the daemon will bind to.
 .It Fl P Ar local-port
 On the other hand, the port specified to capital
 .Fl P
-will be what the daemon binds its local end to when acting as initiator.
+will be what the daemon binds its local end to when acting as
+initiator.
+.It Fl L
+Enable IKE packet capture. When this option is given, 
+.Nm
+will capture to file an unencrypted copy of the negotiation packets it
+is sending and receiveing. This file can later be read by 
+.Xr tcpdump 8
+and other utilities using 
+.Xr pcap 3 .
+.It Fl l Ar packetlog-file
+As option
+.Fl L
+above, but capture to a specified file.
 .It Fl r Ar seed
 If given a deterministic random number sequence will be used internally.
 This is useful for setting up regression tests.
@@ -198,6 +247,7 @@ value, if you enter '.', the field will be left blank.
 .Bd -literal
 # openssl x509 -req -days 365 -in /etc/ssl/private/ca.csr \\
 	-signkey /etc/ssl/private/ca.key \\
+	-extfile /etc/ssl/x509v3.cnf -extensions x509v3_CA \\
 	-out /etc/ssl/ca.crt
 .Ed
 .Pp
@@ -218,19 +268,35 @@ unique.
 .Pp
 Now take these certificate signing requests to your CA and process
 them like below.  You have to add some extensions to the certificate
-in order to make it usable for isakmpd, which is why you will need
-to run
-.Xr certpatch 8 .
+in order to make it usable for 
+.Nm isakmpd .
+There are two possible ways to add the extensions to the certificate.
+Either you have to to run
+.Xr certpatch 8
+or you have to make use of an OpenSSL configuration file, for example
+.Pa /etc/ssl/x509v3.cnf .
 Replace 10.0.0.1 with the IP-address which
 .Nm
 will be using for identity.
 .Pp
+For using
+.Xr certpach 8 ,
+do the following
 .Bd -literal
 # openssl x509 -req -days 365 -in 10.0.0.1.csr -CA /etc/ssl/ca.crt \\
 	-CAkey /etc/ssl/private/ca.key -CAcreateserial \\
 	-out 10.0.0.1.crt
 # certpatch -i 10.0.0.1 -k /etc/ssl/private/ca.key \\
 	10.0.0.1.crt 10.0.0.1.crt
+.Ed
+.Pp
+Otherwise do
+.Bd -literal
+# setenv CERTIP 10.0.0.1
+# openssl x509 -req -days 365 -in 10.0.0.1.csr -CA /etc/ssl/ca.crt \\
+	-CAkey /etc/ssl/private/ca.key -CAcreateserial \\
+	-extfile /etc/ssl/x509v3.cnf -extensions x509v3_IPAddr \\
+	-out 10.0.0.1.crt
 .Ed
 .Pp
 Put the certificate (the file ending in .crt) in
@@ -245,7 +311,7 @@ The
 .Fl P
 flag does not do what we document, rather it does nothing.
 .Sh FILES
-.Bl -tag -width /var/run/isakmpd.report
+.Bl -tag -width /etc/isakmpd/private/local.
 .It Pa /etc/isakmpd/ca/
 The directory where CA certificates can be found.
 .It Pa /etc/isakmpd/certs/
@@ -253,28 +319,41 @@ The directory where IKE certificates can be found, both the local
 certificate(s) and those of the peers, if a choice to have them kept
 permanently has been made.
 .It Pa /etc/isakmpd/isakmpd.conf
-The configuration file.
+The configuration file. As this file can contain sensitive information
+it must not be readable by anyone but the user running
+.Nm isakmpd .
 .It Pa /etc/isakmpd/isakmpd.policy
-The keynote policy configuration file.
+The keynote policy configuration file.  The same mode 
+requirements as
+.Nm isakmpd.conf .
 .It Pa /etc/isakmpd/private/local.key
 A local private key for certificate based authentication.  There has
-to be a certificate for this key in the cerifcate directory mentioned
-above.
+to be a certificate for this key in the certificate directory mentioned
+above.  The same mode requirements as
+.Nm isakmpd.conf .
 .It Pa /var/run/isakmpd.fifo
 The FIFO used to manually control
 .Nm isakmpd .
+.It Pa /var/run/isakmpd.pcap
+The default IKE packet capture file.
 .It Pa /var/run/isakmpd.report
 The report file written when
 .Dv SIGUSR1
 is received.
+.It Pa /usr/share/ipsec/isakmpd/
+A directory containing some sample 
+.Nm 
+and keynote policy configuration files.
 .El
 .Sh SEE ALSO
 .Xr ipsec 4 ,
 .Xr isakmpd.conf 5 ,
 .Xr isakmpd.policy 5 ,
 .Xr openssl 8 ,
+.Xr pcap 3 ,
 .Xr photurisd 8 ,
 .Xr ssl 8 ,
+.Xr tcpdump 8 ,
 .Xr vpn 8
 .Sh HISTORY
 The ISAKMP/Oakley key management protocol is described in the RFCs

@@ -1,10 +1,11 @@
-/*	$OpenBSD: src/sbin/isakmpd/apps/certpatch/Attic/certpatch.c,v 1.10 2000/10/26 22:28:07 niklas Exp $	*/
-/*	$EOM: certpatch.c,v 1.10 2000/10/24 13:34:24 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/apps/certpatch/Attic/certpatch.c,v 1.10.2.1 2001/05/08 12:45:27 ho Exp $	*/
+/*	$EOM: certpatch.c,v 1.11 2000/12/21 14:50:09 ho Exp $	*/
 
 /*
  * Copyright (c) 1999 Niels Provos.  All rights reserved.
  * Copyright (c) 1999, 2000 Angelos D. Keromytis.  All rights reserved.
- * Copyright (c) 2000 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 2000, 2001 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 2001 Håkan Olsson.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -50,7 +51,6 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <gmp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -73,8 +73,9 @@
 #include <openssl/pem.h>
 
 #include "conf.h"
-#include "log.h"
 #include "ipsec_num.h"
+#include "log.h"
+#include "math_mp.h"
 #include "x509.h"
 
 #define IDTYPE_IP	"ip"
@@ -91,7 +92,7 @@ main (int argc, char **argv)
   EVP_PKEY *pkey_priv;
   X509 *cert;
   BIO *file;
-  EVP_MD *digest = EVP_md5 ();
+  const EVP_MD *digest;
   X509_EXTENSION *ex = NULL;
   ASN1_OCTET_STRING *data = NULL;
   struct in_addr saddr;
@@ -109,7 +110,7 @@ main (int argc, char **argv)
 
   /* read command line arguments */
   while ((ch = getopt (argc, argv, "t:k:i:")) != -1)
-    switch(ch) {
+    switch (ch) {
     case 't':
       type = optarg;
       break;
@@ -160,7 +161,7 @@ main (int argc, char **argv)
   if (BIO_read_filename (file, certin) == -1) 
     {
       perror ("read");
-      exit(1);
+      exit (1);
     }
 #if SSLEAY_VERSION_NUMBER >= 0x00904100L
   cert = PEM_read_bio_X509 (file, NULL, NULL, NULL);
@@ -173,6 +174,9 @@ main (int argc, char **argv)
       printf ("PEM_read_bio_X509 () failed\n");
       exit (1);
     }
+
+  /* Get the digest for the actual signing */
+  digest = EVP_get_digestbyname (OBJ_nid2sn (OBJ_obj2nid (cert->sig_alg->algorithm)));
 
   if (!X509_set_version (cert, 2))
     {
@@ -262,8 +266,7 @@ main (int argc, char **argv)
 #endif
       free (new_id);
     }
-  
-  
+
   /* XXX This is a hack, how to do better?  */
   data->type = 0x30;
   data->data[0] = 0x30;

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sbin/isakmpd/x509.h,v 1.8 2000/10/07 06:57:08 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/x509.h,v 1.8.2.1 2001/05/08 12:45:26 ho Exp $	*/
 /*	$EOM: x509.h,v 1.11 2000/09/28 12:53:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999 Niels Provos.  All rights reserved.
  * Copyright (c) 1999 Angelos D. Keromytis.  All rights reserved.
- * Copyright (c) 2000 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 2000, 2001 Niklas Hallqvist.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -79,7 +79,6 @@ void x509_free_aca (void *);
 
 int x509_cert_insert (int, void *);
 int x509_cert_subjectaltname (X509 *cert, u_char **, u_int *);
-int x509_check_subjectaltname (u_char *, u_int, X509 *);
 X509 *x509_from_asn (u_char *, u_int);
 int x509_generate_kn(X509 *);
 int x509_read_from_dir (X509_STORE *, char *, int);

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sbin/isakmpd/Attic/pf_encap.c,v 1.17 2000/06/08 20:49:19 niklas Exp $	*/
-/*	$EOM: pf_encap.c,v 1.71 2000/05/12 12:41:23 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/pf_encap.c,v 1.17.2.1 2001/05/08 12:45:24 ho Exp $	*/
+/*	$EOM: pf_encap.c,v 1.73 2000/12/04 04:46:34 angelos Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2001 Niklas Hallqvist.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -281,7 +281,8 @@ pf_encap_write (struct encap_msghdr *em)
     }
   if ((size_t)n != em->em_msglen)
     {
-      log_error ("pf_encap_write: write (%d, ...) returned prematurely", pf_encap_socket);
+      log_error ("pf_encap_write: write (%d, ...) returned prematurely",
+		 pf_encap_socket);
       return -1;
     }
   return 0;
@@ -707,7 +708,7 @@ pf_encap_delete_spi (struct sa *sa, struct proto *proto, int incoming)
 
 /* Enable a flow given an SA.  */
 int
-pf_encap_enable_sa (struct sa *sa)
+pf_encap_enable_sa (struct sa *sa, struct sa *isakmp_sa)
 {
   struct ipsec_sa *isa = sa->data;
   struct sockaddr *dst;
@@ -741,7 +742,7 @@ pf_encap_enable_spi (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
   emsg->em_ena_dst.s_addr = dst;
 
   LOG_DBG ((LOG_SYSDEP, 50, "pf_encap_enable_spi: src %x %x dst %x %x",
-	    htonl(laddr), htonl(lmask), htonl(raddr), htonl(rmask)));
+	    htonl (laddr), htonl (lmask), htonl (raddr), htonl (rmask)));
   emsg->em_ena_isrc.s_addr = laddr;
   emsg->em_ena_ismask.s_addr = lmask;
   emsg->em_ena_idst.s_addr = raddr;
@@ -853,7 +854,7 @@ pf_encap_route (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
 
   LOG_DBG ((LOG_SYSDEP, 70, "pf_encap_route: rtmsg", rtmsg,
 	    rtmsg->rtm_msglen));
-  if (write(s, (caddr_t)rtmsg, rtmsg->rtm_msglen) == -1)
+  if (write (s, (caddr_t)rtmsg, rtmsg->rtm_msglen) == -1)
     {
       if (errno == EEXIST)
 	{
@@ -861,17 +862,17 @@ pf_encap_route (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
 
 	  LOG_DBG ((LOG_SYSDEP, 70, "pf_encap_route: rtmsg", rtmsg,
 		    rtmsg->rtm_msglen));
-	  if (write(s, (caddr_t)rtmsg, rtmsg->rtm_msglen) == -1)
+	  if (write (s, (caddr_t)rtmsg, rtmsg->rtm_msglen) == -1)
 	    {
-	      log_error("pf_encap_route: write(%d, %p, %d) failed", s, rtmsg,
-			rtmsg->rtm_msglen);
+	      log_error ("pf_encap_route: write(%d, %p, %d) failed", s, rtmsg,
+			 rtmsg->rtm_msglen);
 	      goto fail;
 	    }
 	}
       else
 	{
-	  log_error("pf_encap_route: write(%d, %p, %d) failed", s, rtmsg,
-		    rtmsg->rtm_msglen);
+	  log_error ("pf_encap_route: write(%d, %p, %d) failed", s, rtmsg,
+		     rtmsg->rtm_msglen);
 	  goto fail;
 	}
     }
@@ -904,6 +905,8 @@ pf_encap_connection_check (char *conn)
   char *conf, *doi_str, *local_id, *remote_id, *peer, *address;
   struct in_addr laddr, lmask, raddr, rmask, gwaddr;
   int lid, rid, err;
+  u_int8_t tproto;
+  u_int16_t sport, dport;
 
   if (sa_lookup_by_name (conn, 2) || exchange_lookup_by_name (conn, 2))
     {
@@ -940,9 +943,9 @@ pf_encap_connection_check (char *conn)
       return;
     }
 
-  if (ipsec_get_id (local_id, &lid, &laddr, &lmask))
+  if (ipsec_get_id (local_id, &lid, &laddr, &lmask, &tproto, &sport))
     return;
-  if (ipsec_get_id (remote_id, &rid, &raddr, &rmask))
+  if (ipsec_get_id (remote_id, &rid, &raddr, &rmask, &tproto, &dport))
     return;
 
   peer = conf_get_str (conn, "ISAKMP-peer");

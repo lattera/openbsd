@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.32 2000/10/16 23:27:43 niklas Exp $	*/
-/*	$EOM: sa.c,v 1.110 2000/10/16 18:16:59 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.32.2.1 2001/05/08 12:45:25 ho Exp $	*/
+/*	$EOM: sa.c,v 1.112 2000/12/12 00:22:52 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
- * Copyright (c) 1999 Angelos D. Keromytis.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1999, 2001 Angelos D. Keromytis.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,6 +39,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(USE_KEYNOTE) || defined(USE_POLICY)
+#include <regex.h>
+#include <keynote.h>
+#endif /* USE_KEYNOTE || USE_POLICY */
+
 #include "sysdep.h"
 
 #include "cookie.h"
@@ -52,6 +57,11 @@
 #include "transport.h"
 #include "util.h"
 #include "cert.h"
+#include "policy.h"
+
+#ifndef SA_LEN
+#define SA_LEN(x)		(x)->sa_len
+#endif
 
 /* Initial number of bits from the cookies used as hash.  */
 #define INITIAL_BUCKET_BITS 6
@@ -195,6 +205,50 @@ sa_check_peer (struct sa *sa, void *v_addr)
   return dstlen == addr->len && memcmp (dst, addr->addr, dstlen) == 0;
 }
 
+struct dst_isakmpspi_arg {
+  struct sockaddr *dst;
+  u_int8_t *spi;			/* must be ISAKMP_SPI_SIZE octets */
+};
+
+/*
+ * Check if SA matches what we are asking for through V_ARG.  It has to
+ * be a finished phaes 1 (ISAKMP) SA.
+ */
+static int
+isakmp_sa_check (struct sa *sa, void *v_arg)
+{
+  struct dst_isakmpspi_arg *arg = v_arg;
+  struct sockaddr *dst, *src;
+  int dstlen, srclen;
+
+  if (sa->phase != 1 || !(sa->flags & SA_FLAG_READY))
+    return 0;
+
+  /* verify address is either src or dst for this sa */
+  sa->transport->vtbl->get_dst (sa->transport, &dst, &dstlen);
+  sa->transport->vtbl->get_src (sa->transport, &src, &srclen);
+  if (memcmp (src, arg->dst, SA_LEN(src)) &&
+      memcmp (dst, arg->dst, SA_LEN(dst)))
+    return 0;
+
+  /* match icookie+rcookie against spi */
+  if (memcmp (sa->cookies, arg->spi, ISAKMP_HDR_COOKIES_LEN) == 0)
+    return 1;
+
+  return 0;
+}
+
+/* 
+ * Find an ISAKMP SA with a "name" of DST & SPI. 
+ */
+struct sa *
+sa_lookup_isakmp_sa (struct sockaddr *dst, u_int8_t *spi)
+{
+  struct dst_isakmpspi_arg arg = { dst, spi };
+
+  return sa_find (isakmp_sa_check, &arg);
+}
+
 /* Lookup a ready SA by the peer's address.  */
 struct sa *
 sa_lookup_by_peer (struct sockaddr *dst, socklen_t dstlen)
@@ -236,6 +290,7 @@ sa_enter (struct sa *sa)
     }
   bucket &= bucket_mask;
   LIST_INSERT_HEAD (&sa_tab[bucket], sa, link);
+  sa_reference (sa);
   LOG_DBG ((LOG_SA, 70, "sa_enter: SA %p added to SA list", sa));
   return 1;
 }
@@ -448,15 +503,15 @@ sa_free (struct sa *sa)
       sa->soft_death = 0;
       sa->refcnt--;
     }
-  sa_free_aux (sa);
+  sa_remove (sa);
 }
 
-/* Release all resources this SA is using except the death timers.  */
+/* Remove the SA from the hash table of live SAs.  */
 void
-sa_free_aux (struct sa *sa)
+sa_remove (struct sa *sa)
 {
   LIST_REMOVE (sa, link);
-  LOG_DBG ((LOG_SA, 70, "sa_free_aux: SA %p removed from SA list", sa));
+  LOG_DBG ((LOG_SA, 70, "sa_remove: SA %p removed from SA list", sa));
   sa_release (sa);
 }
 
@@ -506,9 +561,9 @@ sa_release (struct sa *sa)
     }
   if (sa->recv_key)
     free (sa->recv_key);
-#if defined(POLICY) || defined(KEYNOTE)
+#if defined(USE_POLICY) || defined(USE_KEYNOTE)
   if (sa->policy_id != -1)
-    LK (kn_close, (sa->policy-id));
+    LK (kn_close, (sa->policy_id));
 #endif
   if (sa->name)
     free (sa->name);
@@ -528,7 +583,7 @@ sa_isakmp_upgrade (struct message *msg)
 {
   struct sa *sa = TAILQ_FIRST (&msg->exchange->sa_list);
 
-  LIST_REMOVE (sa, link);
+  sa_remove (sa);
   GET_ISAKMP_HDR_RCOOKIE (msg->iov[0].iov_base,
 			  sa->cookies + ISAKMP_HDR_ICOOKIE_LEN);
 
@@ -625,7 +680,9 @@ sa_add_transform (struct sa *sa, struct payload *xf, int initiator,
 void
 sa_delete (struct sa *sa, int notify)
 {
-  message_send_delete (sa);
+  /* Don't bother notifying of Phase 1 SA deletes.  */
+  if (sa->phase != 1 && notify)
+    message_send_delete (sa);
   sa_free (sa);
 }
 
@@ -636,7 +693,9 @@ static void
 sa_soft_expire (void *v_sa)
 {
   struct sa *sa = v_sa;
+
   sa->soft_death = 0;
+  sa_release (sa);
 
   if ((sa->flags & (SA_FLAG_STAYALIVE | SA_FLAG_REPLACED))
       == SA_FLAG_STAYALIVE)
@@ -647,8 +706,6 @@ sa_soft_expire (void *v_sa)
      * happen as soon as it is shown to be alive.
      */
     sa->flags |= SA_FLAG_FADING;
-
-  sa_release (sa);
 }
 
 /* SA has passed its best before date.  */
@@ -658,6 +715,7 @@ sa_hard_expire (void *v_sa)
   struct sa *sa = v_sa;
 
   sa->death = 0;
+  sa_release (sa);
 
   if ((sa->flags & (SA_FLAG_STAYALIVE | SA_FLAG_REPLACED))
       == SA_FLAG_STAYALIVE)
@@ -693,7 +751,8 @@ sa_flag (char *attr)
 void
 sa_mark_replaced (struct sa *sa)
 {
-  LOG_DBG ((LOG_SA, 60, "sa_mark_replaced: SA %p marked as replaced", sa));
+  LOG_DBG ((LOG_SA, 60, "sa_mark_replaced: SA %p (%s) marked as replaced",
+	    sa, sa->name ? sa->name : "unnamed"));
   sa->flags |= SA_FLAG_REPLACED;
 }
 
@@ -732,7 +791,7 @@ sa_setup_expirations (struct sa *sa)
 	= timer_add_event ("sa_soft_expire", sa_soft_expire, sa, &expiration);
       if (!sa->soft_death)
 	{
-	  /* If we don't give up we might start leaking... */
+	  /* If we don't give up we might start leaking...  */
 	  sa_delete (sa, 1);
 	  return -1;
 	}
@@ -741,7 +800,7 @@ sa_setup_expirations (struct sa *sa)
 
   if (!sa->death)
     {
-      gettimeofday(&expiration, 0);
+      gettimeofday (&expiration, 0);
       LOG_DBG ((LOG_TIMER, 95,
 		"sa_setup_expirations: SA %p hard timeout in %qd seconds",
 		sa, sa->seconds));
@@ -750,7 +809,7 @@ sa_setup_expirations (struct sa *sa)
 	= timer_add_event ("sa_hard_expire", sa_hard_expire, sa, &expiration);
       if (!sa->death)
 	{
-	  /* If we don't give up we might start leaking... */
+	  /* If we don't give up we might start leaking...  */
 	  sa_delete (sa, 1);
 	  return -1;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/log.h,v 1.8 2000/04/07 22:05:08 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/log.h,v 1.8.4.1 2001/05/08 12:45:24 ho Exp $	*/
 /*	$EOM: log.h,v 1.19 2000/03/30 14:27:23 ho Exp $	*/
 
 /*
@@ -38,6 +38,8 @@
 #define _LOG_H_
 
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
 #include <stdio.h>
 
 /*
@@ -48,10 +50,11 @@
 
 enum log_classes {
   LOG_MISC, LOG_TRANSPORT, LOG_MESSAGE, LOG_CRYPTO, LOG_TIMER, LOG_SYSDEP,
-  LOG_SA, LOG_EXCHANGE, LOG_ENDCLASS
+  LOG_SA, LOG_EXCHANGE, LOG_NEGOTIATION, LOG_POLICY, LOG_ENDCLASS
 };
 #define LOG_CLASSES_TEXT \
-  { "Misc", "Trpt", "Mesg", "Cryp", "Timr", "Sdep", "SA  ", "Exch" }
+  { "Misc", "Trpt", "Mesg", "Cryp", "Timr", "Sdep", "SA  ", "Exch", "Negt", \
+    "Plcy" }
 
 /*
  * "Class" LOG_REPORT will always be logged to the current log channel,
@@ -69,7 +72,14 @@ extern void log_debug (int, int, const char *, ...);
 extern void log_debug_buf (int, int, const char *, const u_int8_t *, size_t);
 extern void log_debug_cmd (int, int);
 
-#else /* USE_DEBUG */
+#define PCAP_FILE_DEFAULT "/var/run/isakmpd.pcap"
+extern void log_packet_init (char *);
+extern void log_packet_iov (struct sockaddr *, struct sockaddr *, 
+			    struct iovec *, int);
+extern void log_packet_restart (char *);
+extern void log_packet_stop (void);
+
+#else /* !USE_DEBUG */
 
 #define LOG_DBG(x)
 #define LOG_DBG_BUF(x)

@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sbin/isakmpd/conf.c,v 1.24 2000/10/27 19:22:36 niklas Exp $	*/
-/*	$EOM: conf.c,v 1.46 2000/10/26 16:17:19 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/conf.c,v 1.24.2.1 2001/05/08 12:45:21 ho Exp $	*/
+/*	$EOM: conf.c,v 1.48 2000/12/04 02:04:29 angelos Exp $	*/
 
 /*
- * Copyright (c) 1998, 1999, 2000 Niklas Hallqvist.  All rights reserved.
- * Copyright (c) 2000 Håkan Olsson.  All rights reserved.
+ * Copyright (c) 1998, 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 2000, 2001 Håkan Olsson.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -202,7 +202,7 @@ conf_set_now (char *section, char *tag, char *value, int override,
   node->is_default = is_default;
 
   LIST_INSERT_HEAD (&conf_bindings[conf_hash (section)], node, link);
-  LOG_DBG ((LOG_MISC, 70, "[%s]:%s->%s", node->section, node->tag,
+  LOG_DBG ((LOG_MISC, 70, "conf_set: [%s]:%s->%s", node->section, node->tag,
 	    node->value));
   return 0;
 }
@@ -316,17 +316,36 @@ conf_parse (int trans, char *buf, size_t sz)
  * XXX No EC2N DH support here yet.
  */
 
+/* Find the value for a section+tag in the transaction list */
+char *
+conf_get_trans_str (int trans, char *section, char *tag)
+{
+  struct conf_trans *node, *nf = 0;
+  
+  for (node = TAILQ_FIRST (&conf_trans_queue); node;
+       node = TAILQ_NEXT (node, link))
+    if (node->trans == trans && strcmp (section, node->section) == 0 && 
+	strcmp (tag, node->tag) == 0)
+      {
+	if (!nf)
+	  nf = node;
+	else if (node->override)
+	  nf = node;
+      }
+  return nf ? nf->value : NULL;
+}
+
 int
 conf_find_trans_xf (int phase, char *xf)
 {
   struct conf_trans *node;
   char *p;
 
-  /* Find the relevant transforms and suites, if any. */
+  /* Find the relevant transforms and suites, if any.  */
   for (node = TAILQ_FIRST (&conf_trans_queue); node;
        node = TAILQ_NEXT (node, link))
-    if (( phase == 1 && !strcmp ("Transforms", node->tag)) ||
-	( phase == 2 && !strcmp ("Suites", node->tag)))
+    if ((phase == 1 && strcmp ("Transforms", node->tag) == 0) ||
+	(phase == 2 && strcmp ("Suites", node->tag) == 0))
       {
 	p = node->value;
 	while ((p = strstr (p, xf)) != NULL)
@@ -383,6 +402,19 @@ conf_load_defaults (int tr)
 	    0, 1);
 #endif
 
+  /* Lifetimes. XXX p1/p2 vs main/quick mode may be unclear.  */
+  dflt = conf_get_trans_str (tr, "General", "Default-phase-1-lifetime");
+  conf_set (tr, CONF_DFLT_TAG_LIFE_MAIN_MODE, "LIFE_TYPE",
+	    CONF_DFLT_TYPE_LIFE_MAIN_MODE, 0, 1);
+  conf_set (tr, CONF_DFLT_TAG_LIFE_MAIN_MODE, "LIFE_DURATION",
+	    (dflt ? dflt : CONF_DFLT_VAL_LIFE_MAIN_MODE), 0, 1);
+
+  dflt = conf_get_trans_str (tr, "General", "Default-phase-2-lifetime");
+  conf_set (tr, CONF_DFLT_TAG_LIFE_QUICK_MODE, "LIFE_TYPE",
+	    CONF_DFLT_TYPE_LIFE_QUICK_MODE, 0, 1);
+  conf_set (tr, CONF_DFLT_TAG_LIFE_QUICK_MODE, "LIFE_DURATION",
+	    (dflt ? dflt : CONF_DFLT_VAL_LIFE_QUICK_MODE), 0, 1);
+
   /* Main modes */
   for (enc = 0; mm_enc[enc]; enc ++)
     for (hash = 0; mm_hash[hash]; hash ++)
@@ -399,7 +431,7 @@ conf_load_defaults (int tr)
 	  LOG_DBG ((LOG_MISC, 40, "conf_load_defaults : main mode %s", sect));
 
 	  conf_set (tr, sect, "ENCRYPTION_ALGORITHM", mm_enc[enc], 0, 1);
-	  if (!strcmp (mm_enc[enc], "BLOWFISH_CBC"))
+	  if (strcmp (mm_enc[enc], "BLOWFISH_CBC") == 0)
 	    conf_set (tr, sect, "KEY_LENGTH", CONF_DFLT_VAL_BLF_KEYLEN, 0, 1);
 
 	  conf_set (tr, sect, "HASH_ALGORITHM", mm_hash[hash], 0, 1);
@@ -411,14 +443,28 @@ conf_load_defaults (int tr)
 	  conf_set (tr, sect, "Life", CONF_DFLT_TAG_LIFE_MAIN_MODE, 0, 1);
 	}
 
-  /* Quick modes */
+  /* Setup a default Phase 1 entry */
+  conf_set (tr, "Phase 1", "Default", "Default-phase-1", 0, 1);
+
+  conf_set (tr, "Default-phase-1", "Phase", "1", 0, 1);
+  conf_set (tr, "Default-phase-1", "Configuration",
+            "Default-phase-1-configuration", 0, 1);
+  dflt = conf_get_trans_str (tr, "General", "Default-phase-1-ID");
+  if (dflt)
+    conf_set (tr, "Default-phase-1", "ID", dflt, 0, 1);
+
+  conf_set (tr, "Default-phase-1-configuration",
+            "EXCHANGE_TYPE", "ID_PROT", 0, 1);
+  conf_set (tr, "Default-phase-1-configuration", "Transforms",
+            "3DES-SHA-RSA_SIG", 0, 1);
+
+   /* Quick modes */
   for (enc = 0; qm_enc[enc]; enc ++)
     for (proto = 0; proto < 2; proto ++)
       for (mode = 0; mode < 2; mode ++)
 	for (pfs = 0; pfs < 2; pfs ++)
 	  for (hash = 0; qm_hash[hash]; hash ++)
-	    if ((proto == 1 && /* AH */
-		 !strcmp (qm_hash[hash], "NONE")))
+	    if ((proto == 1 && strcmp (qm_hash[hash], "NONE") == 0)) /* AH */
 	      continue;
 	    else
 	      {
@@ -451,7 +497,7 @@ conf_load_defaults (int tr)
 
 		conf_set (tr, sect, "TRANSFORM_ID", qm_enc[enc], 0, 1);
 
-                if (!strcmp (qm_enc[enc], "BLOWFISH"))
+                if (strcmp (qm_enc[enc], "BLOWFISH") == 0)
 		  conf_set (tr, sect, "KEY_LENGTH", CONF_DFLT_VAL_BLF_KEYLEN,
 			    0, 1);
 
@@ -472,20 +518,6 @@ conf_load_defaults (int tr)
 		conf_set (tr, sect, "Life", CONF_DFLT_TAG_LIFE_QUICK_MODE, 0,
 			  1);
 	      }
-
-  /* Lifetimes. XXX p1/p2 vs main/quick mode may be unclear.  */
-  dflt = conf_get_str ("General", "Default-phase-1-lifetime");
-  conf_set (tr, CONF_DFLT_TAG_LIFE_MAIN_MODE, "LIFE_TYPE",
-	    CONF_DFLT_TYPE_LIFE_MAIN_MODE, 0, 1);
-  conf_set (tr, CONF_DFLT_TAG_LIFE_MAIN_MODE, "LIFE_DURATION",
-	    (dflt ? dflt : CONF_DFLT_VAL_LIFE_MAIN_MODE), 0, 1);
-
-  dflt = conf_get_str ("General", "Default-phase-2-lifetime");
-  conf_set (tr, CONF_DFLT_TAG_LIFE_QUICK_MODE, "LIFE_TYPE",
-	    CONF_DFLT_TYPE_LIFE_QUICK_MODE, 0, 1);
-  conf_set (tr, CONF_DFLT_TAG_LIFE_QUICK_MODE, "LIFE_DURATION",
-	    (dflt ? dflt : CONF_DFLT_VAL_LIFE_QUICK_MODE), 0, 1);
-
   return;
 }
 
@@ -740,7 +772,7 @@ conf_decode_base64 (u_int8_t *out, u_int32_t *len, u_char *buf)
 	  if (c2 & 0xF)
 	    return 0;
 
-	  if (!strcmp (buf, "=="))
+	  if (strcmp (buf, "==") == 0)
 	    buf++;
 	  else
 	    return 0;
@@ -980,8 +1012,10 @@ conf_end (int transaction, int commit)
   return 0;
 }
 
-/* Dump running configuration upon SIGUSR1. */
-/* XXX Configuration is "stored in reverse order", so reverse it. */
+/*
+ * Dump running configuration upon SIGUSR1.
+ * XXX Configuration is "stored in reverse order", so reverse it.
+ */
 struct dumper {
   char *s, *v;
   struct dumper *next;
@@ -990,7 +1024,7 @@ struct dumper {
 static void
 conf_report_dump (struct dumper *node)
 {
-  /* Recursive, cleanup when we're done. */
+  /* Recursive, cleanup when we're done.  */
 
   if (node->next)
     conf_report_dump (node->next);

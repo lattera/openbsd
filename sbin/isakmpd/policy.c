@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sbin/isakmpd/policy.c,v 1.17 2000/10/16 23:28:43 niklas Exp $	*/
-/*	$EOM: policy.c,v 1.48 2000/10/14 20:19:51 angelos Exp $ */
+/*	$OpenBSD: src/sbin/isakmpd/policy.c,v 1.17.2.1 2001/05/08 12:45:25 ho Exp $	*/
+/*	$EOM: policy.c,v 1.49 2000/10/24 13:33:39 niklas Exp $ */
 
 /*
- * Copyright (c) 1999, 2000 Angelos D. Keromytis.  All rights reserved.
- * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1999, 2000, 2001 Angelos D. Keromytis.  All rights reserved.
+ * Copyright (c) 1999, 2000, 2001 Niklas Hallqvist.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -132,6 +132,11 @@ struct exchange *policy_exchange = 0;
 struct sa *policy_sa = 0;
 struct sa *policy_isakmp_sa = 0;
 
+static const char hextab[] = {
+  '0', '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+};
+
 /*
  * Adaptation of Vixie's inet_ntop4 ()
  */
@@ -167,7 +172,7 @@ policy_callback (char *name)
   struct sockaddr_in *sin;
   struct ipsec_exch *ie;
   struct ipsec_sa *is;
-  int fmt, lifetype = 0;
+  int fmt, i, lifetype = 0;
   in_addr_t net, subnet;
   u_int16_t len, type;
   time_t tt;
@@ -389,7 +394,7 @@ policy_callback (char *name)
 		  > (proto->chosen->p
 		     + GET_ISAKMP_GEN_LENGTH (proto->chosen->p)))
 		return "";
-		
+
 	      type = GET_ISAKMP_ATTR_TYPE (attr);
 	      fmt = ISAKMP_ATTR_FORMAT (type);
 	      type = ISAKMP_ATTR_TYPE (type);
@@ -627,25 +632,25 @@ policy_callback (char *name)
 
       /* XXX IPv4-specific.  */
       policy_sa->transport->vtbl->get_src (policy_sa->transport,
-					   (struct sockaddr **) &sin, &fmt);
+					   (struct sockaddr **)&sin, &fmt);
       my_inet_ntop4 (&(sin->sin_addr.s_addr), local_ike_address,
 		     sizeof local_ike_address - 1, 0);
 
       policy_sa->transport->vtbl->get_dst (policy_sa->transport,
-					   (struct sockaddr **) &sin, &fmt);
+					   (struct sockaddr **)&sin, &fmt);
       my_inet_ntop4 (&(sin->sin_addr.s_addr), remote_ike_address,
 		     sizeof remote_ike_address - 1, 0);
 
       switch (policy_isakmp_sa->exch_type)
-      {
-	  case ISAKMP_EXCH_AGGRESSIVE:
-	      phase_1 = "aggressive";
-	      break;
+	{
+	case ISAKMP_EXCH_AGGRESSIVE:
+	  phase_1 = "aggressive";
+	  break;
 
- 	  case ISAKMP_EXCH_ID_PROT:
-	      phase_1 = "main";
-	      break;
-      }
+	case ISAKMP_EXCH_ID_PROT:
+	  phase_1 = "main";
+	  break;
+	}
 
       if (policy_isakmp_sa->initiator)
         {
@@ -671,9 +676,9 @@ policy_callback (char *name)
 	  remote_id = strdup (remote_id_addr_upper);
 	  if (!remote_id)
   	    {
-		log_print ("policy_callback: strdup (\"%s\") failed",
-			   remote_id_addr_upper);
-		goto bad;
+	      log_error ("policy_callback: strdup (\"%s\") failed",
+			 remote_id_addr_upper);
+	      goto bad;
 	    }
 	  break;
 
@@ -691,13 +696,13 @@ policy_callback (char *name)
 			      sizeof (char));
 	  if (!remote_id)
 	    {
-		log_print ("policy_callback: calloc (%d, %d) failed",
-			   strlen (remote_id_addr_upper)
-			   + strlen (remote_id_addr_lower) + 2,
-			   sizeof (char));
-		goto bad;
+	      log_error ("policy_callback: calloc (%d, %d) failed",
+			 strlen (remote_id_addr_upper)
+			 + strlen (remote_id_addr_lower) + 2,
+			 sizeof (char));
+	      goto bad;
 	    }
-		
+
 	  strcpy (remote_id, remote_id_addr_lower);
 	  remote_id[strlen (remote_id_addr_lower)] = '-';
 	  strcpy (remote_id + strlen (remote_id_addr_lower) + 1,
@@ -720,11 +725,11 @@ policy_callback (char *name)
 			      sizeof (char));
 	  if (!remote_id)
 	    {
-		log_print ("policy_callback: calloc (%d, %d) failed",
-			   strlen (remote_id_addr_upper)
-			   + strlen (remote_id_addr_lower) + 2,
-			   sizeof (char));
-		goto bad;
+	      log_error ("policy_callback: calloc (%d, %d) failed",
+			 strlen (remote_id_addr_upper)
+			 + strlen (remote_id_addr_lower) + 2,
+			 sizeof (char));
+	      goto bad;
 	    }
 
 	  strcpy (remote_id, remote_id_addr_lower);
@@ -733,15 +738,18 @@ policy_callback (char *name)
 		  remote_id_addr_upper);
 	  break;
 
-	case IPSEC_ID_IPV6_ADDR: /* XXX we need decode_128 ().  */
+	case IPSEC_ID_IPV6_ADDR:
+	  /* XXX Not yet implemented.  */
 	  remote_id_type = "IPv6 address";
 	  break;
 
-	case IPSEC_ID_IPV6_RANGE: /* XXX we need decode_128 ().  */
+	case IPSEC_ID_IPV6_RANGE:
+	  /* XXX Not yet implemented.  */
 	  remote_id_type = "IPv6 range";
 	  break;
 
-	case IPSEC_ID_IPV6_ADDR_SUBNET: /* XXX we need decode_128 ().  */
+	case IPSEC_ID_IPV6_ADDR_SUBNET:
+	  /* XXX Not yet implemented.  */
 	  remote_id_type = "IPv6 address";
 	  break;
 
@@ -751,12 +759,12 @@ policy_callback (char *name)
 			      sizeof (char));
 	  if (!remote_id)
 	    {
-		log_print ("policy_callback: calloc (%d, %d) failed",
-			   id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ + 1,
-			   sizeof (char));
-		goto bad;
+	      log_error ("policy_callback: calloc (%d, %d) failed",
+			 id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ + 1,
+			 sizeof (char));
+	      goto bad;
 	    }
-	  memcpy (remote_id, id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ, 
+	  memcpy (remote_id, id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ,
 		  id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ);
 	  break;
 
@@ -766,12 +774,12 @@ policy_callback (char *name)
 			      sizeof (char));
 	  if (!remote_id)
 	    {
-		log_print ("policy_callback: calloc (%d, %d) failed",
-			   id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ + 1,
-			   sizeof (char));
-		goto bad;
+	      log_error ("policy_callback: calloc (%d, %d) failed",
+			 id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ + 1,
+			 sizeof (char));
+	      goto bad;
 	    }
-	  memcpy (remote_id, id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ, 
+	  memcpy (remote_id, id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ,
 		  id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ);
 	  break;
 
@@ -783,8 +791,25 @@ policy_callback (char *name)
 	  remote_id_type = "ASN1 GN";
 	  break;
 
-	case IPSEC_ID_KEY_ID: /* XXX -- hex-encode this.  */
+	case IPSEC_ID_KEY_ID:
 	  remote_id_type = "Key ID";
+	  remote_id
+	    = calloc (2 * (id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ) + 1,
+		      sizeof (char));
+	  if (!remote_id)
+	    {
+	      log_error ("policy_callback: calloc (%d, %d) failed",
+			 2 * (id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ) + 1,
+			 sizeof (char));
+	      goto bad;
+	    }
+          for (i = 0; i < id_sz - ISAKMP_ID_DATA_OFF + ISAKMP_GEN_SZ; i++)
+	    {
+	      remote_id[2 * i]
+		= hextab[*(id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ) >> 4];
+	      remote_id[2 * i + 1]
+		= hextab[*(id + ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ) & 0xF];
+	    }
 	  break;
 
 	default:
@@ -846,13 +871,13 @@ policy_callback (char *name)
 	      my_inet_ntop4 (&net, remote_filter_addr_upper,
 			     sizeof remote_filter_addr_upper - 1, 1);
 	      my_inet_ntop4 (&net, remote_filter_addr_lower,
-			     sizeof (remote_filter_addr_lower) - 1, 1);
+			     sizeof remote_filter_addr_lower - 1, 1);
 	      remote_filter = strdup (remote_filter_addr_upper);
 	      if (!remote_filter)
 	        {
-		    log_print ("policy_callback: strdup (\"%s\") failed",
-			       remote_filter_addr_upper);
-		    goto bad;
+		  log_error ("policy_callback: strdup (\"%s\") failed",
+			     remote_filter_addr_upper);
+		  goto bad;
 		}
 	      break;
 
@@ -870,11 +895,11 @@ policy_callback (char *name)
 				      sizeof (char));
 	      if (!remote_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       strlen (remote_filter_addr_upper)
-			       + strlen (remote_filter_addr_lower) + 2,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     strlen (remote_filter_addr_upper)
+			     + strlen (remote_filter_addr_lower) + 2,
+			     sizeof (char));
+		  goto bad;
 		}
 	      strcpy (remote_filter, remote_filter_addr_lower);
 	      remote_filter[strlen (remote_filter_addr_lower)] = '-';
@@ -898,11 +923,11 @@ policy_callback (char *name)
 				      sizeof (char));
 	      if (!remote_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       strlen (remote_filter_addr_upper)
-			       + strlen (remote_filter_addr_lower) + 2,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     strlen (remote_filter_addr_upper)
+			     + strlen (remote_filter_addr_lower) + 2,
+			     sizeof (char));
+		  goto bad;
 		}
 	      strcpy (remote_filter, remote_filter_addr_lower);
 	      remote_filter[strlen (remote_filter_addr_lower)] = '-';
@@ -910,15 +935,18 @@ policy_callback (char *name)
 		      remote_filter_addr_upper);
 	      break;
 
-	    case IPSEC_ID_IPV6_ADDR: /* XXX we need decode_128 (). */
+	    case IPSEC_ID_IPV6_ADDR:
+	      /* XXX Not yet implemented.  */
 	      remote_filter_type = "IPv6 address";
 	      break;
 
-	    case IPSEC_ID_IPV6_RANGE: /* XXX we need decode_128 ().  */
+	    case IPSEC_ID_IPV6_RANGE:
+	      /* XXX Not yet implemented.  */
 	      remote_filter_type = "IPv6 range";
 	      break;
 
-	    case IPSEC_ID_IPV6_ADDR_SUBNET: /* XXX we need decode_128 ().  */
+	    case IPSEC_ID_IPV6_ADDR_SUBNET:
+	      /* XXX Not yet implemented.  */
 	      remote_filter_type = "IPv6 address";
 	      break;
 
@@ -928,10 +956,10 @@ policy_callback (char *name)
 				      sizeof (char));
 	      if (!remote_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       idremotesz - ISAKMP_ID_DATA_OFF + 1,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     idremotesz - ISAKMP_ID_DATA_OFF + 1,
+			     sizeof (char));
+		  goto bad;
 		}
 	      memcpy (remote_filter, idremote + ISAKMP_ID_DATA_OFF,
 		      idremotesz);
@@ -943,10 +971,10 @@ policy_callback (char *name)
 				      sizeof (char));
 	      if (!remote_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       idremotesz - ISAKMP_ID_DATA_OFF + 1,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     idremotesz - ISAKMP_ID_DATA_OFF + 1,
+			     sizeof (char));
+		  goto bad;
 		}
 	      memcpy (remote_filter, idremote + ISAKMP_ID_DATA_OFF,
 		      idremotesz);
@@ -960,8 +988,25 @@ policy_callback (char *name)
 	      remote_filter_type = "ASN1 GN";
 	      break;
 
-	    case IPSEC_ID_KEY_ID: /* XXX -- hex-encode this.  */
+	    case IPSEC_ID_KEY_ID:
 	      remote_filter_type = "Key ID";
+	      remote_filter
+		= calloc (2 * (idremotesz - ISAKMP_ID_DATA_OFF) + 1,
+			  sizeof (char));
+	      if (!remote_filter)
+	        {
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     2 * (idremotesz - ISAKMP_ID_DATA_OFF) + 1,
+			     sizeof (char));
+		  goto bad;
+	        }
+              for (i = 0; i < idremotesz - ISAKMP_ID_DATA_OFF; i++)
+	        {
+		  remote_filter[2 * i]
+		    = hextab[*(idremote + ISAKMP_ID_DATA_OFF) >> 4];
+		  remote_filter[2 * i + 1]
+		    = hextab[*(idremote + ISAKMP_ID_DATA_OFF) & 0xF];
+	        }
 	      break;
 
 	    default:
@@ -979,7 +1024,7 @@ policy_callback (char *name)
 	    case IPPROTO_UDP:
 	      remote_filter_proto = "udp";
 	      break;
-	
+
 #ifdef IPPROTO_ETHERIP
 	    case IPPROTO_ETHERIP:
 	      remote_filter_proto = "etherip";
@@ -987,7 +1032,8 @@ policy_callback (char *name)
 #endif
 
  	    default:
-	      sprintf (remote_filter_proto_num, "%2d", idremote[ISAKMP_GEN_SZ + 1]);
+	      sprintf (remote_filter_proto_num, "%2d",
+		       idremote[ISAKMP_GEN_SZ + 1]);
 	      remote_filter_proto = remote_filter_proto_num;
 	      break;
 	    }
@@ -1009,9 +1055,9 @@ policy_callback (char *name)
 	  remote_filter = strdup (remote_filter_addr_upper);
 	  if (!remote_filter)
 	    {
-		log_print ("policy_callback: strdup (\"%s\") failed",
-			   remote_filter_addr_upper);
-		goto bad;
+	      log_error ("policy_callback: strdup (\"%s\") failed",
+			 remote_filter_addr_upper);
+	      goto bad;
 	    }
 	}
 
@@ -1030,9 +1076,9 @@ policy_callback (char *name)
 	      local_filter = strdup (local_filter_addr_upper);
 	      if (!local_filter)
 	        {
-		    log_print ("policy_callback: strdup (\"%s\") failed",
-			       local_filter_addr_upper);
-		    goto bad;
+		  log_error ("policy_callback: strdup (\"%s\") failed",
+			     local_filter_addr_upper);
+		  goto bad;
 		}
 	      break;
 
@@ -1050,11 +1096,11 @@ policy_callback (char *name)
 				     sizeof (char));
 	      if (!local_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       strlen (local_filter_addr_upper)
-			       + strlen (local_filter_addr_lower) + 2,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     strlen (local_filter_addr_upper)
+			     + strlen (local_filter_addr_lower) + 2,
+			     sizeof (char));
+		  goto bad;
 		}
 	      strcpy (local_filter, local_filter_addr_lower);
 	      local_filter[strlen (local_filter_addr_lower)] = '-';
@@ -1078,11 +1124,11 @@ policy_callback (char *name)
 				     sizeof (char));
 	      if (!local_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       strlen (local_filter_addr_upper)
-			       + strlen (local_filter_addr_lower) + 2,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     strlen (local_filter_addr_upper)
+			     + strlen (local_filter_addr_lower) + 2,
+			     sizeof (char));
+		  goto bad;
 		}
 	      strcpy (local_filter, local_filter_addr_lower);
 	      local_filter[strlen (local_filter_addr_lower)] = '-';
@@ -1090,15 +1136,18 @@ policy_callback (char *name)
 		      local_filter_addr_upper);
 	      break;
 
-	    case IPSEC_ID_IPV6_ADDR: /* XXX we need decode_128 ().  */
+	    case IPSEC_ID_IPV6_ADDR:
+	      /* XXX Not yet implemented.  */
 	      local_filter_type = "IPv6 address";
 	      break;
 
-	    case IPSEC_ID_IPV6_RANGE: /* XXX we need decode_128 ().  */
+	    case IPSEC_ID_IPV6_RANGE:
+	      /* XXX Not yet implemented.  */
 	      local_filter_type = "IPv6 range";
 	      break;
 
-	    case IPSEC_ID_IPV6_ADDR_SUBNET: /* XXX we need decode_128 ().  */
+	    case IPSEC_ID_IPV6_ADDR_SUBNET:
+	      /* XXX Not yet implemented.  */
 	      local_filter_type = "IPv6 address";
 	      break;
 
@@ -1108,10 +1157,10 @@ policy_callback (char *name)
 				     sizeof (char));
 	      if (!local_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       idlocalsz - ISAKMP_ID_DATA_OFF + 1,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     idlocalsz - ISAKMP_ID_DATA_OFF + 1,
+			     sizeof (char));
+		  goto bad;
 		}
 	      memcpy (local_filter, idlocal + ISAKMP_ID_DATA_OFF,
 		      idlocalsz);
@@ -1123,10 +1172,10 @@ policy_callback (char *name)
 				     sizeof (char));
 	      if (!local_filter)
 	        {
-		    log_print ("policy_callback: calloc (%d, %d) failed",
-			       idlocalsz - ISAKMP_ID_DATA_OFF + 1,
-			       sizeof (char));
-		    goto bad;
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     idlocalsz - ISAKMP_ID_DATA_OFF + 1,
+			     sizeof (char));
+		  goto bad;
 		}
 	      memcpy (local_filter, idlocal + ISAKMP_ID_DATA_OFF,
 		      idlocalsz);
@@ -1140,8 +1189,24 @@ policy_callback (char *name)
 	      local_filter_type = "ASN1 GN";
 	      break;
 
-	    case IPSEC_ID_KEY_ID: /* XXX -- hex-encode this.  */
+	    case IPSEC_ID_KEY_ID:
 	      local_filter_type = "Key ID";
+	      local_filter = calloc (2 * (idlocalsz - ISAKMP_ID_DATA_OFF) + 1,
+				     sizeof (char));
+	      if (!local_filter)
+	        {
+		  log_error ("policy_callback: calloc (%d, %d) failed",
+			     2 * (idlocalsz - ISAKMP_ID_DATA_OFF) + 1,
+			     sizeof (char));
+		  goto bad;
+	        }
+              for (i = 0; i < idremotesz - ISAKMP_ID_DATA_OFF; i++)
+	        {
+		  local_filter[2 * i]
+		    = hextab[*(idlocal + ISAKMP_ID_DATA_OFF) >> 4];
+		  local_filter[2 * i + 1]
+		    = hextab[*(idlocal + ISAKMP_ID_DATA_OFF) & 0xF];
+	        }
 	      break;
 
 	    default:
@@ -1167,7 +1232,8 @@ policy_callback (char *name)
 #endif
 
  	    default:
-	      sprintf (local_filter_proto_num, "%2d", idlocal[ISAKMP_GEN_SZ + 1]);
+	      sprintf (local_filter_proto_num, "%2d",
+		       idlocal[ISAKMP_GEN_SZ + 1]);
 	      local_filter_proto = local_filter_proto_num;
 	      break;
 	    }
@@ -1178,7 +1244,7 @@ policy_callback (char *name)
       else
         {
 	  policy_sa->transport->vtbl->get_src (policy_sa->transport,
-					       (struct sockaddr **) &sin,
+					       (struct sockaddr **)&sin,
 					       &fmt);
 
 	  local_filter_type = "IPv4 address";
@@ -1190,62 +1256,78 @@ policy_callback (char *name)
 	  local_filter = strdup (local_filter_addr_upper);
 	  if (!local_filter)
 	    {
-		log_print ("policy_callback: strdup (\"%s\") failed",
-			   local_filter_addr_upper);
-		goto bad;
+	      log_error ("policy_callback: strdup (\"%s\") failed",
+			 local_filter_addr_upper);
+	      goto bad;
 	    }
         }
 
-      LOG_DBG ((LOG_SA, 80, "Policy context (action attributes):"));
-      LOG_DBG ((LOG_SA, 80, "esp_present == %s", esp_present));
-      LOG_DBG ((LOG_SA, 80, "ah_present == %s", ah_present));
-      LOG_DBG ((LOG_SA, 80, "comp_present == %s", comp_present));
-      LOG_DBG ((LOG_SA, 80, "ah_hash_alg == %s", ah_hash_alg));
-      LOG_DBG ((LOG_SA, 80, "esp_enc_alg == %s", esp_enc_alg));
-      LOG_DBG ((LOG_SA, 80, "comp_alg == %s", comp_alg));
-      LOG_DBG ((LOG_SA, 80, "ah_auth_alg == %s", ah_auth_alg));
-      LOG_DBG ((LOG_SA, 80, "esp_auth_alg == %s", esp_auth_alg));
-      LOG_DBG ((LOG_SA, 80, "ah_life_seconds == %s", ah_life_seconds));
-      LOG_DBG ((LOG_SA, 80, "ah_life_kbytes == %s", ah_life_kbytes));
-      LOG_DBG ((LOG_SA, 80, "esp_life_seconds == %s", esp_life_seconds));
-      LOG_DBG ((LOG_SA, 80, "esp_life_kbytes == %s", esp_life_kbytes));
-      LOG_DBG ((LOG_SA, 80, "comp_life_seconds == %s", comp_life_seconds));
-      LOG_DBG ((LOG_SA, 80, "comp_life_kbytes == %s", comp_life_kbytes));
-      LOG_DBG ((LOG_SA, 80, "ah_encapsulation == %s", ah_encapsulation));
-      LOG_DBG ((LOG_SA, 80, "esp_encapsulation == %s", esp_encapsulation));
-      LOG_DBG ((LOG_SA, 80, "comp_encapsulation == %s", comp_encapsulation));
-      LOG_DBG ((LOG_SA, 80, "comp_dict_size == %s", comp_dict_size));
-      LOG_DBG ((LOG_SA, 80, "comp_private_alg == %s", comp_private_alg));
-      LOG_DBG ((LOG_SA, 80, "ah_key_length == %s", ah_key_length));
-      LOG_DBG ((LOG_SA, 80, "ah_key_rounds == %s", ah_key_rounds));
-      LOG_DBG ((LOG_SA, 80, "esp_key_length == %s", esp_key_length));
-      LOG_DBG ((LOG_SA, 80, "esp_key_rounds == %s", esp_key_rounds));
-      LOG_DBG ((LOG_SA, 80, "ah_group_desc == %s", ah_group_desc));
-      LOG_DBG ((LOG_SA, 80, "esp_group_desc == %s", esp_group_desc));
-      LOG_DBG ((LOG_SA, 80, "comp_group_desc == %s", comp_group_desc));
-      LOG_DBG ((LOG_SA, 80, "remote_filter_type == %s", remote_filter_type));
-      LOG_DBG ((LOG_SA, 80, "remote_filter_addr_upper == %s", remote_filter_addr_upper));
-      LOG_DBG ((LOG_SA, 80, "remote_filter_addr_lower == %s", remote_filter_addr_lower));
-      LOG_DBG ((LOG_SA, 80, "remote_filter == %s", remote_filter));
-      LOG_DBG ((LOG_SA, 80, "remote_filter_port == %s", remote_filter_port));
-      LOG_DBG ((LOG_SA, 80, "remote_filter_proto == %s", remote_filter_proto));
-      LOG_DBG ((LOG_SA, 80, "local_filter_type == %s", local_filter_type));
-      LOG_DBG ((LOG_SA, 80, "local_filter_addr_upper == %s", local_filter_addr_upper));
-      LOG_DBG ((LOG_SA, 80, "local_filter_addr_lower == %s", local_filter_addr_lower));
-      LOG_DBG ((LOG_SA, 80, "local_filter == %s", local_filter));
-      LOG_DBG ((LOG_SA, 80, "local_filter_port == %s", local_filter_port));
-      LOG_DBG ((LOG_SA, 80, "local_filter_proto == %s", local_filter_proto));
-      LOG_DBG ((LOG_SA, 80, "remote_id_type == %s", remote_id_type));
-      LOG_DBG ((LOG_SA, 80, "remote_id_addr_upper == %s", remote_id_addr_upper));
-      LOG_DBG ((LOG_SA, 80, "remote_id_addr_lower == %s", remote_id_addr_lower));
-      LOG_DBG ((LOG_SA, 80, "remote_id == %s", remote_id));
-      LOG_DBG ((LOG_SA, 80, "remote_id_port == %s", remote_id_port));
-      LOG_DBG ((LOG_SA, 80, "remote_id_proto == %s", remote_id_proto));
-      LOG_DBG ((LOG_SA, 80, "remote_negotiation_address == %s", remote_ike_address));
-      LOG_DBG ((LOG_SA, 80, "local_negotiation_address == %s", local_ike_address));
-      LOG_DBG ((LOG_SA, 80, "pfs == %s", pfs));
-      LOG_DBG ((LOG_SA, 80, "initiator == %s", initiator));
-      LOG_DBG ((LOG_SA, 80, "phase1_group_desc == %s", phase1_group));
+      LOG_DBG ((LOG_POLICY, 80, "Policy context (action attributes):"));
+      LOG_DBG ((LOG_POLICY, 80, "esp_present == %s", esp_present));
+      LOG_DBG ((LOG_POLICY, 80, "ah_present == %s", ah_present));
+      LOG_DBG ((LOG_POLICY, 80, "comp_present == %s", comp_present));
+      LOG_DBG ((LOG_POLICY, 80, "ah_hash_alg == %s", ah_hash_alg));
+      LOG_DBG ((LOG_POLICY, 80, "esp_enc_alg == %s", esp_enc_alg));
+      LOG_DBG ((LOG_POLICY, 80, "comp_alg == %s", comp_alg));
+      LOG_DBG ((LOG_POLICY, 80, "ah_auth_alg == %s", ah_auth_alg));
+      LOG_DBG ((LOG_POLICY, 80, "esp_auth_alg == %s", esp_auth_alg));
+      LOG_DBG ((LOG_POLICY, 80, "ah_life_seconds == %s", ah_life_seconds));
+      LOG_DBG ((LOG_POLICY, 80, "ah_life_kbytes == %s", ah_life_kbytes));
+      LOG_DBG ((LOG_POLICY, 80, "esp_life_seconds == %s", esp_life_seconds));
+      LOG_DBG ((LOG_POLICY, 80, "esp_life_kbytes == %s", esp_life_kbytes));
+      LOG_DBG ((LOG_POLICY, 80, "comp_life_seconds == %s", comp_life_seconds));
+      LOG_DBG ((LOG_POLICY, 80, "comp_life_kbytes == %s", comp_life_kbytes));
+      LOG_DBG ((LOG_POLICY, 80, "ah_encapsulation == %s", ah_encapsulation));
+      LOG_DBG ((LOG_POLICY, 80, "esp_encapsulation == %s", esp_encapsulation));
+      LOG_DBG ((LOG_POLICY, 80, "comp_encapsulation == %s",
+		comp_encapsulation));
+      LOG_DBG ((LOG_POLICY, 80, "comp_dict_size == %s", comp_dict_size));
+      LOG_DBG ((LOG_POLICY, 80, "comp_private_alg == %s", comp_private_alg));
+      LOG_DBG ((LOG_POLICY, 80, "ah_key_length == %s", ah_key_length));
+      LOG_DBG ((LOG_POLICY, 80, "ah_key_rounds == %s", ah_key_rounds));
+      LOG_DBG ((LOG_POLICY, 80, "esp_key_length == %s", esp_key_length));
+      LOG_DBG ((LOG_POLICY, 80, "esp_key_rounds == %s", esp_key_rounds));
+      LOG_DBG ((LOG_POLICY, 80, "ah_group_desc == %s", ah_group_desc));
+      LOG_DBG ((LOG_POLICY, 80, "esp_group_desc == %s", esp_group_desc));
+      LOG_DBG ((LOG_POLICY, 80, "comp_group_desc == %s", comp_group_desc));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter_type == %s",
+		remote_filter_type));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter_addr_upper == %s",
+		remote_filter_addr_upper));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter_addr_lower == %s",
+		remote_filter_addr_lower));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter == %s",
+		(remote_filter ? remote_filter : "")));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter_port == %s",
+		remote_filter_port));
+      LOG_DBG ((LOG_POLICY, 80, "remote_filter_proto == %s",
+		remote_filter_proto));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter_type == %s", local_filter_type));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter_addr_upper == %s",
+		local_filter_addr_upper));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter_addr_lower == %s",
+		local_filter_addr_lower));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter == %s",
+		(local_filter ? local_filter : "")));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter_port == %s", local_filter_port));
+      LOG_DBG ((LOG_POLICY, 80, "local_filter_proto == %s",
+		local_filter_proto));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id_type == %s", remote_id_type));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id_addr_upper == %s",
+		remote_id_addr_upper));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id_addr_lower == %s",
+		remote_id_addr_lower));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id == %s",
+		(remote_id ? remote_id : "")));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id_port == %s", remote_id_port));
+      LOG_DBG ((LOG_POLICY, 80, "remote_id_proto == %s", remote_id_proto));
+      LOG_DBG ((LOG_POLICY, 80, "remote_negotiation_address == %s",
+		remote_ike_address));
+      LOG_DBG ((LOG_POLICY, 80, "local_negotiation_address == %s",
+		local_ike_address));
+      LOG_DBG ((LOG_POLICY, 80, "pfs == %s", pfs));
+      LOG_DBG ((LOG_POLICY, 80, "initiator == %s", initiator));
+      LOG_DBG ((LOG_POLICY, 80, "phase1_group_desc == %s", phase1_group));
 
       /* Unset dirty now.  */
       dirty = 0;
@@ -1256,16 +1338,16 @@ policy_callback (char *name)
 
   if (strcmp (name, "GMTTimeOfDay") == 0)
     {
-	tt = time ((time_t) NULL);
-	strftime (mytimeofday, 14, "%G%m%d%H%M%S", gmtime (&tt));
-	return mytimeofday;
+      tt = time ((time_t) NULL);
+      strftime (mytimeofday, 14, "%G%m%d%H%M%S", gmtime (&tt));
+      return mytimeofday;
     }
 
   if (strcmp (name, "LocalTimeOfDay") == 0)
     {
-	tt = time ((time_t) NULL);
-	strftime (mytimeofday, 14, "%G%m%d%H%M%S", localtime (&tt));
-	return mytimeofday;
+      tt = time ((time_t) NULL);
+      strftime (mytimeofday, 14, "%G%m%d%H%M%S", localtime (&tt));
+      return mytimeofday;
     }
 
   if (strcmp (name, "initiator") == 0)
@@ -1353,7 +1435,7 @@ policy_callback (char *name)
     return remote_filter_type;
 
   if (strcmp (name, "remote_filter") == 0)
-    return remote_filter;
+    return (remote_filter ? remote_filter : "");
 
   if (strcmp (name, "remote_filter_addr_upper") == 0)
     return remote_filter_addr_upper;
@@ -1371,7 +1453,7 @@ policy_callback (char *name)
     return local_filter_type;
 
   if (strcmp (name, "local_filter") == 0)
-    return local_filter;
+    return (local_filter ? local_filter : "");
 
   if (strcmp (name, "local_filter_addr_upper") == 0)
     return local_filter_addr_upper;
@@ -1401,7 +1483,7 @@ policy_callback (char *name)
     return remote_id_type;
 
   if (strcmp (name, "remote_id") == 0)
-    return remote_id;
+    return (remote_id ? remote_id : "");
 
   if (strcmp (name, "remote_id_addr_upper") == 0)
     return remote_id_addr_upper;
@@ -1430,10 +1512,10 @@ policy_init (void)
 {
   char *ptr, *policy_file;
   char **asserts;
-  struct stat st;
+  off_t sz;
   int fd, len, i;
 
-  LOG_DBG ((LOG_MISC, 50, "policy_init: initializing"));
+  LOG_DBG ((LOG_POLICY, 30, "policy_init: initializing"));
 
 #if defined (HAVE_DLOPEN) && !defined (USE_KEYNOTE)
   if (!dyn_load (libkeynote_script))
@@ -1450,39 +1532,39 @@ policy_init (void)
     log_fatal ("policy_init: kn_init () failed");
 
   /* Get policy file from configuration.  */
-  policy_file = conf_get_str ("General", "policy-file");
+  policy_file = conf_get_str ("General", "Policy-file");
   if (!policy_file)
     policy_file = POLICY_FILE_DEFAULT;
+
+  /* Check file modes and collect file size */
+  if (check_file_secrecy (policy_file, &sz))
+    log_fatal ("policy_init: cannot read %s", policy_file);
 
   /* Open policy file.  */
   fd = open (policy_file, O_RDONLY);
   if (fd == -1)
     log_fatal ("policy_init: open (\"%s\", O_RDONLY) failed", policy_file);
 
-  /* Get size.  */
-  if (fstat (fd, &st) == -1)
-    log_fatal ("policy_init: fstat (%d, &st) failed", fd);
-
   /* Allocate memory to keep policies.  */
-  ptr = calloc (st.st_size + 1, sizeof (char));
+  ptr = calloc (sz + 1, sizeof (char));
   if (!ptr)
-    log_fatal ("policy_init: calloc (%d, %d) failed", st.st_size,
+    log_fatal ("policy_init: calloc (%d, %d) failed", sz + 1,
 	       sizeof (char));
 
-  /* Just in case there are short reads... */
-  for (len = 0; len < st.st_size; len += i)
+  /* Just in case there are short reads...  */
+  for (len = 0; len < sz; len += i)
     {
-      i = read (fd, ptr + len, st.st_size - len);
+      i = read (fd, ptr + len, sz - len);
       if (i == -1)
 	log_fatal ("policy_init: read (%d, %p, %d) failed", fd, ptr + len,
-		   st.st_size - len);
+		   sz - len);
     }
 
   /* We're done with this.  */
   close (fd);
 
   /* Parse buffer, break up into individual policies.  */
-  asserts = LK (kn_read_asserts, (ptr, st.st_size, &i));
+  asserts = LK (kn_read_asserts, (ptr, sz, &i));
 
   /* Begone!  */
   free (ptr);
@@ -1519,11 +1601,11 @@ keynote_cert_init (void)
   return 1;
 }
 
-/* Just copy and return */
+/* Just copy and return.  */
 void *
 keynote_cert_get (u_int8_t *data, u_int32_t len)
 {
-  char *foo = calloc (len + 1, sizeof(char));
+  char *foo = calloc (len + 1, sizeof (char));
 
   if (foo == NULL)
     return NULL;
@@ -1552,8 +1634,8 @@ keynote_cert_validate (void *scert)
 
   for (i = 0; i < num; i++)
     {
-      if (LK (kn_verify_assertion, (scert, strlen ((char *) scert))) !=
-	  SIGRESULT_TRUE)
+      if (LK (kn_verify_assertion, (scert, strlen ((char *) scert)))
+	  != SIGRESULT_TRUE)
         {
 	  for (; i < num; i++)
 	    free (foo[i]);
@@ -1568,7 +1650,7 @@ keynote_cert_validate (void *scert)
   return 1;
 }
 
-/* Add received credentials */
+/* Add received credentials.  */
 int
 keynote_cert_insert (int sid, void *scert)
 {
@@ -1589,38 +1671,42 @@ keynote_cert_insert (int sid, void *scert)
   return 1;
 }
 
-/* Just regular memory free */
+/* Just regular memory free.  */
 void
 keynote_cert_free (void *cert)
 {
   free (cert);
 }
 
-/* Verify that the key given to us is valid */
+/* Verify that the key given to us is valid.  */
 int
 keynote_certreq_validate (u_int8_t *data, u_int32_t len)
 {
-    struct keynote_deckey dc;
-    int err = 1;
-    char *dat;
+  struct keynote_deckey dc;
+  int err = 1;
+  char *dat;
 
-    dat = calloc (len + 1, sizeof(char));
-    if (dat == NULL)
-      return 0;
+  dat = calloc (len + 1, sizeof (char));
+  if (!dat)
+    {
+      log_error ("keynote_certreq_validate: calloc (%d, %d) failed", len + 1,
+		 sizeof (char));
+	return 0;
+    }
 
-    memcpy (dat, data, len);
+  memcpy (dat, data, len);
 
-    if (LK (kn_decode_key, (&dc, dat, KEYNOTE_PUBLIC_KEY)) != 0)
-      err = 0;
-    else
-      LK (kn_free_key, (&dc));
+  if (LK (kn_decode_key, (&dc, dat, KEYNOTE_PUBLIC_KEY)) != 0)
+    err = 0;
+  else
+    LK (kn_free_key, (&dc));
 
-    free (dat);
+  free (dat);
 
-    return err;
+  return err;
 }
 
-/* Beats me what we should be doing with this */
+/* Beats me what we should be doing with this.  */
 void *
 keynote_certreq_decode (u_int8_t *data, u_int32_t len)
 {
@@ -1648,7 +1734,7 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
       return 0;
     }
 
-  /* Get type of ID */
+  /* Get type of ID.  */
   idtype = id[0];
   id += ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ;
   id_len -= ISAKMP_ID_DATA_OFF - ISAKMP_GEN_SZ;
@@ -1656,7 +1742,8 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
   dirname = conf_get_str ("KeyNote", "Credential-directory");
   if (!dirname)
     {
-      log_print ("keynote_cert_obtain: no Credential-directory");
+      LOG_DBG ((LOG_POLICY, 30,
+		"keynote_cert_obtain: no Credential-directory"));
       return 0;
     }
 
@@ -1668,15 +1755,15 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
       {
 	struct in_addr in;
 
-	file = calloc (len + 15, sizeof(char));
+	file = calloc (len + 15, sizeof (char));
 	if (file == NULL)
 	  {
-	    log_print ("keynote_cert_obtain: failed to allocate %d bytes",
+	    log_error ("keynote_cert_obtain: failed to allocate %d bytes",
 		       len + 15);
 	    return 0;
 	  }
 
-	memcpy (&in, id, sizeof(in));
+	memcpy (&in, id, sizeof in);
 	sprintf (file, "%s/%s/%s", dirname, inet_ntoa (in), CREDENTIAL_FILE);
 	break;
       }
@@ -1684,10 +1771,10 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
     case IPSEC_ID_FQDN:
     case IPSEC_ID_USER_FQDN:
       {
-        file = calloc (len + id_len, sizeof(char));
+        file = calloc (len + id_len, sizeof (char));
 	if (file == NULL)
 	  {
-	    log_print ("keynote_cert_obtain: failed to allocate %d bytes",
+	    log_error ("keynote_cert_obtain: failed to allocate %d bytes",
 		       len + id_len);
 	    return 0;
 	  }
@@ -1704,15 +1791,16 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
 
   if (stat (file, &sb) < 0)
     {
-      log_print ("keynote_cert_obtain: failed to stat \"%s\"", file);
+      LOG_DBG ((LOG_POLICY, 30, "keynote_cert_obtain: failed to stat \"%s\"",
+		file));
       free (file);
       return 0;
     }
 
-  *cert = calloc (sb.st_size, sizeof(char));
+  *cert = calloc (sb.st_size, sizeof (char));
   if (*cert == NULL)
     {
-      log_print ("keynote_cert_obtain: failed to allocate %d bytes",
+      log_error ("keynote_cert_obtain: failed to allocate %d bytes",
 		 sb.st_size);
       free (file);
       return 0;
@@ -1721,15 +1809,16 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
   fd = open (file, O_RDONLY, 0);
   if (fd < 0)
     {
-      log_print ("keynote_cert_obtain: failed to open \"%s\"", file);
+      LOG_DBG ((LOG_POLICY, 30, "keynote_cert_obtain: failed to open \"%s\"",
+		file));
       free (file);
       return 0;
     }
 
   if (read (fd, *cert, sb.st_size) != sb.st_size)
     {
-      log_print ("keynote_cert_obtain: failed to read %d bytes from \"%s\"",
-		 sb.st_size, file);
+      LOG_DBG ((LOG_POLICY, 30, "keynote_cert_obtain: failed to read %d "
+		"bytes from \"%s\"", sb.st_size, file));
       free (file);
       close (fd);
       return 0;
@@ -1741,7 +1830,7 @@ keynote_cert_obtain (u_int8_t *id, size_t id_len, void *data, u_int8_t **cert,
   return 1;
 }
 
-/* This should never be called */
+/* This should never be called.  */
 int
 keynote_cert_get_subjects (void *scert, int *n, u_int8_t ***id,
 			   u_int32_t **id_len)
@@ -1749,7 +1838,7 @@ keynote_cert_get_subjects (void *scert, int *n, u_int8_t ***id,
   return 0;
 }
 
-/* Get the Authorizer key */
+/* Get the authorizer key.  */
 int
 keynote_cert_get_key (void *scert, void *keyp)
 {
@@ -1757,8 +1846,8 @@ keynote_cert_get_key (void *scert, void *keyp)
   int sid, num;
   char **foo;
 
-  foo = LK (kn_read_asserts, ((char *) scert, strlen ((char *) scert), &num));
-  if ((foo == NULL) || (num == 0))
+  foo = LK (kn_read_asserts, ((char *)scert, strlen ((char *)scert), &num));
+  if (foo == NULL || num == 0)
     return 0;
 
   sid = LK (kn_add_assertion, (keynote_sessid, foo[num - 1],
@@ -1776,10 +1865,10 @@ keynote_cert_get_key (void *scert, void *keyp)
   while (kl)
     {
       if (kl->key_alg == KEYNOTE_ALGORITHM_RSA)
-      {
+	{
 	  *(RSA **)keyp = LC (RSAPublicKey_dup, (kl->key_key));
 	  break;
-      }
+	}
 
       kl = kl->key_next;
     }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/sysdep/openbsd/Attic/keynote_compat.c,v 1.1 2000/10/16 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sysdep/openbsd/Attic/keynote_compat.c,v 1.1.2.1 2001/05/08 12:45:29 ho Exp $	*/
 /*	$EOM: keynote_compat.c,v 1.1 2000/10/15 19:18:26 niklas Exp $	*/
 
 /*

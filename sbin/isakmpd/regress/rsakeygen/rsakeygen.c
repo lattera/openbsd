@@ -1,9 +1,10 @@
-/*	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/rsakeygen.c,v 1.9 1999/08/26 22:30:46 niklas Exp $	*/
-/*	$EOM: rsakeygen.c,v 1.9 1999/08/12 22:34:30 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/rsakeygen.c,v 1.9.6.1 2001/05/08 12:45:28 ho Exp $	*/
+/*	$EOM: rsakeygen.c,v 1.10 2000/12/21 15:18:53 ho Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999 Niels Provos.  All rights reserved.
- * Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1999, 2001 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 2001 Håkan Olsson.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,10 +41,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <gmp.h>
 
 #include "libcrypto.h"
 #include "log.h"
+#include "math_mp.h"
 
 #define nibble2bin(y) (tolower (y) < 'a' ? (y) - '0' : tolower (y) - 'a' + 10)
 #define hexchar2bin(x) ((nibble2bin ((x)[0]) << 4) + nibble2bin ((x)[1]))

@@ -1,9 +1,9 @@
-#	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/Makefile,v 1.10 2000/04/07 22:07:18 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/Makefile,v 1.10.4.1 2001/05/08 12:45:28 ho Exp $
 #	$EOM: Makefile,v 1.10 2000/03/28 21:23:24 ho Exp $
 
 #
 # Copyright (c) 1999 Niels Provos.  All rights reserved.
-# Copyright (c) 1999 Niklas Hallqvist.  All rights reserved.
+# Copyright (c) 1999, 2001 Niklas Hallqvist.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -42,11 +42,20 @@ SRCS=		libcrypto.c log.c rsakeygen.c sysdep.c util.c
 TOPSRC=		${.CURDIR}/../..
 TOPOBJ!=	cd ${TOPSRC}; printf "all:\n\t@pwd\n" |${MAKE} -f-
 OS!=		awk '/^OS=/ { print $$2 }' ${.CURDIR}/../../Makefile
+FEATURES!=	awk '/^FEATURES=/ { print $$0 }' ${.CURDIR}/../../Makefile | sed 's/FEATURES=.//'
 .PATH:		${TOPSRC} ${TOPSRC}/sysdep/${OS} ${TOPOBJ}
 CFLAGS+=	-I${TOPSRC} -I${TOPSRC}/sysdep/${OS} -I${TOPOBJ} -Wall \
 		-DUSE_DEBUG
 NOMAN=
 DEBUG=		-g
+
+.if ${FEATURES:Mgmp} == "gmp"
+CFLAGS+=	-DMP_FLAVOUR=MP_FLAVOUR_GMP
+LDADD+=		-lgmp
+DPADD+=		${LIBGMP}
+.else
+CFLAGS+=	-DMP_FLAVOUR=MP_FLAVOUR_OPENSSL
+.endif
 
 .include "${TOPSRC}/sysdep/${OS}/Makefile.sysdep"
 
