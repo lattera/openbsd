@@ -33,10 +33,10 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pathnames.h	5.2 (Berkeley) 6/1/90
- *	$Id: pathnames.h,v 1.3 1995/06/14 15:19:52 christos Exp $
+ *	$Id: pathnames.h,v 1.1.1.1 1995/10/18 08:45:43 deraadt Exp $
  */
 
 #define	_PATH_OBJDIR		"obj"
 #define	_PATH_DEFSHELLDIR	"/bin"
-#define	_PATH_DEFSYSMK		"/usr/share/mk/sys.mk"
+#define	_PATH_DEFSYSMK		"sys.mk"
 #define	_PATH_DEFSYSPATH	"/usr/share/mk"
