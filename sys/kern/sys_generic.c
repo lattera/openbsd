@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.7 2003/03/28 00:41:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.8 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: sys_generic.c,v 1.24 1996/03/29 00:25:32 cgd Exp $	*/
 
 /*
@@ -857,7 +857,7 @@ selwakeup(sip)
 	p = pfind(sip->si_selpid);
 	sip->si_selpid = 0;
 	if (p != NULL) {
-		s = splhigh();
+		SCHED_LOCK(s);
 		if (p->p_wchan == (caddr_t)&selwait) {
 			if (p->p_stat == SSLEEP)
 				setrunnable(p);
@@ -865,7 +865,7 @@ selwakeup(sip)
 				unsleep(p);
 		} else if (p->p_flag & P_SELECT)
 			p->p_flag &= ~P_SELECT;
-		splx(s);
+		SCHED_UNLOCK(s);
 	}
 }
 

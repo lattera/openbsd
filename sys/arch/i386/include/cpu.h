@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.11 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.12 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -45,8 +45,8 @@
 /*
  * Definitions unique to i386 cpu support.
  */
-#include <machine/psl.h>
 #include <machine/frame.h>
+#include <machine/psl.h>
 #include <machine/segments.h>
 
 #ifdef MULTIPROCESSOR
@@ -101,6 +101,9 @@ struct cpu_info {
 	 */
 	struct proc *ci_fpcurproc;	/* current owner of the FPU */
 	int ci_fpsaving;		/* save in progress */
+
+	volatile u_int32_t ci_tlb_ipi_mask;
+
 	struct pcb *ci_curpcb;		/* VA of current HW PCB */
 	struct pcb *ci_idle_pcb;	/* VA of current PCB */
 	int ci_idle_tss_sel;		/* TSS selector of idle PCB */
@@ -122,7 +125,7 @@ struct cpu_info {
 	int		ci_want_resched;
 	int		ci_astpending;
 
-	volatile u_int32_t ci_tlb_ipi_mask;
+	union descriptor *ci_gdt;
 };
 	
 /*

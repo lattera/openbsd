@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.14 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.15 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -81,6 +81,7 @@
 #define IPL_IMP		IPL_VM		/* XXX - should not be here. */
 #define	IPL_AUDIO	MAKEIPL(7)	/* audio */
 #define	IPL_CLOCK	MAKEIPL(8)	/* clock */
+#define	IPL_SCHED	IPL_CLOCK
 #define	IPL_STATCLOCK	MAKEIPL(9)	/* statclock */
 #define	IPL_HIGH	MAKEIPL(9)	/* everything */
 #define	IPL_IPI		MAKEIPL(10)	/* interprocessor interrupt */
@@ -101,6 +102,7 @@
 #ifdef MULTIPROCESSOR
 #include <machine/i82489reg.h>
 #include <machine/i82489var.h>
+#include <machine/cpu.h>
 #endif
 
 extern volatile u_int32_t lapic_tpr;
@@ -232,6 +234,7 @@ spllower(ncpl)
 #define	splvm()		splraise(IPL_VM)
 #define splimp()	splvm()
 #define	splhigh()	splraise(IPL_HIGH)
+#define	splsched()	splraise(IPL_SCHED)
 #define	spl0()		spllower(IPL_NONE)
 
 /*
@@ -267,9 +270,23 @@ softintr(sir, vec)
 #define I386_NIPI	6
 
 struct cpu_info;
-int i386_send_ipi (struct cpu_info *, int);
-void i386_broadcast_ipi (int);
-void i386_ipi_handler (void);
+
+#ifdef MULTIPROCESSOR
+int i386_send_ipi(struct cpu_info *, int);
+void i386_broadcast_ipi(int);
+void i386_multicast_ipi(int, int);
+void i386_ipi_handler(void);
+void i386_intlock(struct intrframe);
+void i386_intunlock(struct intrframe);
+void i386_softintlock(void);
+void i386_softintunlock(void);
+
+#ifdef notyet
+extern void (*ipifunc[I386_NIPI])(struct cpu_info *);
+#else
+extern void (*ipifunc[I386_NIPI])(void);
+#endif
+#endif
 
 #endif /* !_LOCORE */
 

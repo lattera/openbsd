@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.7 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.8 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -63,6 +63,8 @@ int	lbolt;			/* once a second sleep address */
 
 int whichqs;			/* Bit mask summary of non-empty Q's. */
 struct prochd qs[NQS];
+
+struct simplelock sched_lock;
 
 void scheduler_start(void);
 
@@ -262,6 +264,8 @@ schedcpu(arg)
 		p->p_cpticks = 0;
 		newcpu = (u_int) decay_cpu(loadfac, p->p_estcpu);
 		p->p_estcpu = newcpu;
+		splx(s);
+		SCHED_LOCK(s);
 		resetpriority(p);
 		if (p->p_priority >= PUSER) {
 			if ((p != curproc) &&
@@ -274,7 +278,7 @@ schedcpu(arg)
 			} else
 				p->p_priority = p->p_usrpri;
 		}
-		splx(s);
+		SCHED_UNLOCK(s);
 	}
 	uvm_meter();
 	wakeup((caddr_t)&lbolt);
@@ -292,6 +296,8 @@ updatepri(p)
 {
 	register unsigned int newcpu = p->p_estcpu;
 	register fixpt_t loadfac = loadfactor(averunnable.ldavg[0]);
+
+	SCHED_ASSERT_LOCKED();
 
 	if (p->p_slptime > 5 * loadfac)
 		p->p_estcpu = 0;
@@ -356,11 +362,6 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 	int catch = priority & PCATCH;
 	int relock = (priority & PNORELOCK) == 0;
 
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_CSW))
-		ktrcsw(p, 1, 0);
-#endif
-	s = splhigh();
 	if (cold || panicstr) {
 		/*
 		 * After a panic, or during autoconfiguration,
@@ -368,16 +369,26 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 		 * don't run any other procs or panic below,
 		 * in case this is the idle process and already asleep.
 		 */
+		s = splhigh();
 		splx(safepri);
 		splx(s);
 		if (interlock != NULL && relock == 0)
 			simple_unlock(interlock);
 		return (0);
 	}
+
+#ifdef KTRACE
+	if (KTRPOINT(p, KTR_CSW))
+		ktrcsw(p, 1, 0);
+#endif
+
+	SCHED_LOCK(s);
+
 #ifdef DIAGNOSTIC
-	if (ident == NULL || p->p_stat != SRUN || p->p_back)
+	if (ident == NULL || p->p_stat != SONPROC || p->p_back != NULL)
 		panic("tsleep");
 #endif
+
 	p->p_wchan = ident;
 	p->p_wmesg = wmesg;
 	p->p_slptime = 0;
@@ -416,25 +427,31 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 		if ((sig = CURSIG(p)) != 0) {
 			if (p->p_wchan)
 				unsleep(p);
-			p->p_stat = SRUN;
+			p->p_stat = SONPROC;
+			SCHED_UNLOCK(s);
 			goto resume;
 		}
 		if (p->p_wchan == 0) {
 			catch = 0;
+			SCHED_UNLOCK(s);
 			goto resume;
 		}
 	} else
 		sig = 0;
 	p->p_stat = SSLEEP;
 	p->p_stats->p_ru.ru_nvcsw++;
+	SCHED_ASSERT_LOCKED();
 	mi_switch();
 #ifdef	DDB
 	/* handy breakpoint location after process "wakes" */
 	__asm(".globl bpendtsleep\nbpendtsleep:");
 #endif
+
+	SCHED_ASSERT_UNLOCKED();
+	splx(s);
+
 resume:
 	curpriority = p->p_usrpri;
-	splx(s);
 	p->p_flag &= ~P_SINTR;
 	if (p->p_flag & P_TIMEOUT) {
 		p->p_flag &= ~P_TIMEOUT;
@@ -464,6 +481,7 @@ resume:
 	if (KTRPOINT(p, KTR_CSW))
 		ktrcsw(p, 0, 0);
 #endif
+
 	if (interlock != NULL && relock)
 		simple_lock(interlock);
 	return (0);
@@ -483,7 +501,7 @@ endtsleep(arg)
 	int s;
 
 	p = (struct proc *)arg;
-	s = splhigh();
+	SCHED_LOCK(s);
 	if (p->p_wchan) {
 		if (p->p_stat == SSLEEP)
 			setrunnable(p);
@@ -491,7 +509,7 @@ endtsleep(arg)
 			unsleep(p);
 		p->p_flag |= P_TIMEOUT;
 	}
-	splx(s);
+	SCHED_UNLOCK(s);
 }
 
 /*
@@ -505,6 +523,8 @@ sleep(ident, priority)
 	register struct proc *p = curproc;
 	register struct slpque *qp;
 	register int s;
+
+	SCHED_ASSERT_LOCKED();
 
 #ifdef DIAGNOSTIC
 	if (priority > PZERO) {
@@ -567,9 +587,15 @@ unsleep(p)
 {
 	register struct slpque *qp;
 	register struct proc **hp;
+#if 0
 	int s;
 
-	s = splhigh();
+	/*
+	 * XXX we cannot do recursive SCHED_LOCKing yet.  All callers lock
+	 * anyhow.
+	 */
+	SCHED_LOCK(s);
+#endif
 	if (p->p_wchan) {
 		hp = &(qp = &slpque[LOOKUP(p->p_wchan)])->sq_head;
 		while (*hp != p)
@@ -579,8 +605,26 @@ unsleep(p)
 			qp->sq_tailp = hp;
 		p->p_wchan = 0;
 	}
-	splx(s);
+#if 0
+	SCHED_UNLOCK(s);
+#endif
 }
+
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
+void
+sched_unlock_idle(void)
+{
+
+	simple_unlock(&sched_lock);
+}
+
+void
+sched_lock_idle(void)
+{
+
+	simple_lock(&sched_lock);
+}
+#endif /* MULTIPROCESSOR || LOCKDEBUG */
 
 /*
  * Make all processes sleeping on the specified identifier runnable.
@@ -594,7 +638,7 @@ wakeup_n(ident, n)
 	struct proc *p, **q;
 	int s;
 
-	s = splhigh();
+	SCHED_LOCK(s);
 	qp = &slpque[LOOKUP(ident)];
 restart:
 	for (q = &qp->sq_head; (p = *q) != NULL; ) {
@@ -637,7 +681,7 @@ restart:
 		} else
 			q = &p->p_forw;
 	}
-	splx(s);
+	SCHED_UNLOCK(s);
 }
 
 void
@@ -657,11 +701,12 @@ yield()
 	struct proc *p = curproc;
 	int s;
 
-	s = splstatclock();
+	SCHED_LOCK(s);
 	p->p_priority = p->p_usrpri;
 	setrunqueue(p);
 	p->p_stats->p_ru.ru_nvcsw++;
 	mi_switch();
+	SCHED_ASSERT_UNLOCKED();
 	splx(s);
 }
 
@@ -684,11 +729,13 @@ preempt(newp)
 	if (newp != NULL)
 		panic("preempt: cpu_preempt not yet implemented");
 
-	s = splstatclock();
+	SCHED_LOCK(s);
 	p->p_priority = p->p_usrpri;
+	p->p_stat = SRUN;
 	setrunqueue(p);
 	p->p_stats->p_ru.ru_nivcsw++;
 	mi_switch();
+	SCHED_ASSERT_UNLOCKED();
 	splx(s);
 }
 
@@ -703,8 +750,27 @@ mi_switch()
 	struct rlimit *rlim;
 	long s, u;
 	struct timeval tv;
+#ifdef notyet
+#if defined(MULTIPROCESSOR)
+	int hold_count;
+#endif
+#endif
 
-	splassert(IPL_STATCLOCK);
+	SCHED_ASSERT_LOCKED();
+
+#if defined(MULTIPROCESSOR)
+	/*
+	 * Release the kernel_lock, as we are about to yield the CPU.
+	 * The scheduler lock is still held until cpu_switch()
+	 * selects a new process and removes it from the run queue.
+	 */
+	if (p->p_flag & P_BIGLOCK)
+#ifdef notyet
+		hold_count = spinlock_release_all(&kernel_lock);
+#else
+		KERNEL_UNLOCK();
+#endif
+#endif
 
 	/*
 	 * Compute the amount of time during which the current
@@ -750,6 +816,26 @@ mi_switch()
 	uvmexp.swtch++;
 	cpu_switch(p);
 	microtime(&runtime);
+
+	/*
+	 * Make sure that MD code released the scheduler lock before
+	 * resuming us.
+	 */
+	SCHED_ASSERT_UNLOCKED();
+
+#if defined(MULTIPROCESSOR)
+	/*
+	 * Reacquire the kernel_lock now.  We do this after we've
+	 * released the scheduler lock to avoid deadlock, and before
+	 * we reacquire the interlock.
+	 */
+	if (p->p_flag & P_BIGLOCK)
+#ifdef notyet
+		spinlock_acquire_count(&kernel_lock, hold_count);
+#else
+		KERNEL_LOCK(LK_CANRECURSE|LK_EXCLUSIVE);
+#endif
+#endif
 }
 
 /*
@@ -763,6 +849,7 @@ rqinit()
 
 	for (i = 0; i < NQS; i++)
 		qs[i].ph_link = qs[i].ph_rlink = (struct proc *)&qs[i];
+	simple_lock_init(&sched_lock);
 }
 
 /*
@@ -774,12 +861,12 @@ void
 setrunnable(p)
 	register struct proc *p;
 {
-	register int s;
+	SCHED_ASSERT_LOCKED();
 
-	s = splhigh();
 	switch (p->p_stat) {
 	case 0:
 	case SRUN:
+	case SONPROC:
 	case SZOMB:
 	case SDEAD:
 	default:
@@ -800,7 +887,6 @@ setrunnable(p)
 	p->p_stat = SRUN;
 	if (p->p_flag & P_INMEM)
 		setrunqueue(p);
-	splx(s);
 	if (p->p_slptime > 1)
 		updatepri(p);
 	p->p_slptime = 0;
@@ -820,6 +906,8 @@ resetpriority(p)
 	register struct proc *p;
 {
 	register unsigned int newpriority;
+
+	SCHED_ASSERT_LOCKED();
 
 	newpriority = PUSER + p->p_estcpu + NICE_WEIGHT * (p->p_nice - NZERO);
 	newpriority = min(newpriority, MAXPRI);
@@ -847,8 +935,12 @@ void
 schedclock(p)
 	struct proc *p;
 {
+	int s;
+
 	p->p_estcpu = ESTCPULIM(p->p_estcpu + 1);
+	SCHED_LOCK(s);
 	resetpriority(p);
+	SCHED_UNLOCK(s);
 	if (p->p_priority >= PUSER)
 		p->p_priority = p->p_usrpri;
 }

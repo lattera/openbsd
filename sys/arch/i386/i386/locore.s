@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.14 2003/05/13 19:42:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.15 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -220,7 +220,7 @@
 	.globl	_C_LABEL(esym)
 	.globl	_C_LABEL(boothowto), _C_LABEL(bootdev), _C_LABEL(atdevbase)
 	.globl	_C_LABEL(proc0paddr), _C_LABEL(PTDpaddr)
-	.globl	_C_LABEL(dynamic_gdt)
+	.globl	_C_LABEL(gdt)
 	.globl	_C_LABEL(bootapiver), _C_LABEL(bootargc), _C_LABEL(bootargv)
 #ifndef MULTIPROCESSOR
 	.globl	_C_LABEL(curpcb)
@@ -699,10 +699,13 @@ begin:
 	call	_C_LABEL(main)
 
 NENTRY(proc_trampoline)
+#ifdef MULTIPROCESSOR
+	call	_C_LABEL(proc_trampoline_mp)
+#endif
+	movl	$IPL_NONE,CPL
 	pushl	%ebx
 	call	*%esi
 	addl	$4,%esp
-	movl	$0,CPL
 	INTRFASTEXIT
 	/* NOTREACHED */
 
@@ -1503,11 +1506,80 @@ NENTRY(remrunqueue)
  * something to come ready.
  */
 ENTRY(idle)
+	/*
+	 * idling:	save old context.
+	 *
+	 * Registers:
+	 *   %eax, %ebx, %ecx - scratch
+	 *   %esi - old proc, then old pcb
+	 *   %edi - idle pcb
+	 *   %edx - idle TSS selector
+	 */
+
+	pushl	%esi
+	call	_C_LABEL(pmap_deactivate)	# pmap_deactivate(oldproc)
+	addl	$4,%esp
+
+	movl	P_ADDR(%esi),%esi
+
+	/* Save stack pointers. */
+	movl	%esp,PCB_ESP(%esi)
+	movl	%ebp,PCB_EBP(%esi)
+
+	/* Find idle PCB for this CPU */
+#ifndef MULTIPROCESSOR
+	movl	$_C_LABEL(proc0),%ebx
+	movl	P_ADDR(%ebx),%edi
+	movl	P_MD_TSS_SEL(%ebx),%edx
+#else
+	GET_CPUINFO(%ebx)
+	movl	CPU_INFO_IDLE_PCB(%ebx),%edi
+	movl	CPU_INFO_IDLE_TSS_SEL(%ebx),%edx
+#endif
+
+	/* Restore the idle context (avoid interrupts) */
 	cli
-	movl	_C_LABEL(whichqs),%ecx
-	testl	%ecx,%ecx
-	jnz	sw1
+
+	/* Restore stack pointers. */
+	movl	PCB_ESP(%edi),%esp
+	movl	PCB_EBP(%edi),%ebp
+
+
+	/* Switch address space. */
+	movl	PCB_CR3(%edi),%ecx
+	movl	%ecx,%cr3
+
+	/* Switch TSS. Reset "task busy" flag before loading. */
+#ifdef MULTIPROCESSOR
+	movl	CPU_INFO_GDT(%ebx),%eax
+#else
+	movl	_C_LABEL(gdt),%eax
+#endif
+	andl	$~0x0200,4-SEL_KPL(%eax,%edx,1)
+	ltr	%dx
+
+	/* We're always in the kernel, so we don't need the LDT. */
+
+	/* Restore cr0 (including FPU state). */
+	movl	PCB_CR0(%edi),%ecx
+	movl	%ecx,%cr0
+
+	/* Record new pcb. */
+	SET_CURPCB(%edi,%ecx)
+
+	xorl	%esi,%esi
 	sti
+	
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)	
+	call	_C_LABEL(sched_unlock_idle)
+#endif
+
+	movl	$IPL_NONE,CPL		# spl0()
+	call	_C_LABEL(Xspllower)	# process pending interrupts
+
+ENTRY(idle_loop)
+	cmpl	$0,_C_LABEL(whichqs)
+	jnz	_C_LABEL(idle_exit)
 #if NAPM > 0
 	call	_C_LABEL(apm_cpu_idle)
 	cmpl	$0,_C_LABEL(apm_dobusy)
@@ -1521,8 +1593,24 @@ ENTRY(idle)
 #else
 	hlt
 #endif
-	jmp	_C_LABEL(idle)
+	jmp	_C_LABEL(idle_loop)
 
+ENTRY(idle_exit)
+	movl	$IPL_HIGH,CPL		# splhigh
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)	
+	call	_C_LABEL(sched_lock_idle)
+#endif
+#if 1
+	GET_CPUINFO(%ebx)
+	leal	CPU_INFO_NAME(%ebx),%ebx
+	pushl	%ebx
+	pushl	$1f
+	call	_C_LABEL(printf)
+	addl	$8,%esp
+#endif
+	jmp	switch_search
+1:	.asciz	"%s: unidle\n"
+		
 #ifdef DIAGNOSTIC
 NENTRY(switch_error)
 	pushl	$1f
@@ -1554,9 +1642,6 @@ ENTRY(cpu_switch)
 	 */
 	CLEAR_CURPROC(%ecx)
 
-	movl	$IPL_NONE,CPL		# spl0()
-	call	_C_LABEL(Xspllower)	# process pending interrupts
-
 switch_search:
 	/*
 	 * First phase: find new process.
@@ -1571,14 +1656,10 @@ switch_search:
 	 */
 
 	/* Wait for new process. */
-	cli				# splhigh doesn't do a cli
-	movl	_C_LABEL(whichqs),%ecx	# XXX MP
-
-sw1:	bsfl	%ecx,%ebx		# find a full q
+	movl	_C_LABEL(whichqs),%ecx
+	bsfl	%ecx,%ebx		# find a full q
 	jz	_C_LABEL(idle)		# if none, idle
-
 	leal	_C_LABEL(qs)(,%ebx,8),%eax	# select q
-
 	movl	P_FORW(%eax),%edi	# unlink from front of process q
 #ifdef	DIAGNOSTIC
 	cmpl	%edi,%eax		# linked to self (i.e. nothing queued)?
@@ -1608,10 +1689,8 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 	movl	%eax,P_BACK(%edi)
 
 	/* Record new process. */
+	movb	$SONPROC,P_STAT(%edi)	# p->p_stat = SONPROC
 	SET_CURPROC(%edi,%ecx)
-
-	/* It's okay to take interrupts here. */
-	sti
 
 	/* Skip context switch if same process. */
 	cmpl	%edi,%esi
@@ -1685,7 +1764,12 @@ switch_exited:
 	addl	$4,%esp
 	
 	/* Load TSS info. */
-	movl	_C_LABEL(dynamic_gdt),%eax
+#ifdef MULTIPROCESSOR
+	GET_CPUINFO(%ebx)
+	movl	CPU_INFO_GDT(%ebx),%eax
+#else
+	movl	_C_LABEL(gdt),%eax
+#endif
 	movl	P_MD_TSS_SEL(%edi),%edx
 
 	/* Switch TSS. */
@@ -1722,6 +1806,18 @@ switch_restored:
 	sti
 
 switch_return:
+#if 1
+	pushl	%edi
+	GET_CPUINFO(%ebx)
+	leal	CPU_INFO_NAME(%ebx),%ebx
+	pushl	%ebx
+	pushl	$1f
+	call	_C_LABEL(printf)
+	addl	$0xc,%esp
+#endif
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)     
+	call    _C_LABEL(sched_unlock_idle)
+#endif
 	/*
 	 * Restore old cpl from stack.  Note that this is always an increase,
 	 * due to the spl0() on entry.
@@ -1733,7 +1829,7 @@ switch_return:
 	popl	%esi
 	popl	%ebx
 	ret
-
+1:	.asciz	"%s: scheduled %x\n"
 /*
  * switch_exit(struct proc *p);
  * Switch to the appropriate idle context (proc0's if uniprocessor; the cpu's if
@@ -1766,7 +1862,11 @@ ENTRY(switch_exit)
 	movl	PCB_EBP(%esi),%ebp
 
 	/* Load TSS info. */
-	movl	_C_LABEL(dynamic_gdt),%eax
+#ifdef MULTIPROCESSOR
+	movl	CPU_INFO_GDT(%ebx),%eax
+#else
+	movl	_C_LABEL(gdt),%eax
+#endif
 
 	/* Switch address space. */
 	movl	PCB_CR3(%esi),%ecx

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cy82c693.c,v 1.4.4.1 2001/05/14 22:25:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cy82c693.c,v 1.4.4.2 2003/05/15 04:08:02 niklas Exp $	*/
 /* $NetBSD: cy82c693.c,v 1.1 2000/06/06 03:07:39 thorpej Exp $ */
 
 /*-
@@ -60,7 +60,7 @@
 static struct cy82c693_handle cyhc_handle;
 static int cyhc_initialized;
 
-struct simplelock cyhc_slock = SLOCK_INITIALIZER;
+struct simplelock cyhc_slock;
 
 #define	CYHC_LOCK(s)							\
 do {									\
@@ -80,6 +80,8 @@ cy82c693_init(bus_space_tag_t iot)
 	bus_space_handle_t ioh;
 	int s;
 	int error;
+
+	simple_lock_init(&cyhc_slock);
 
 	CYHC_LOCK(s);
 

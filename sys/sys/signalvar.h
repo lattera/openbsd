@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/signalvar.h,v 1.7.12.2 2002/03/28 14:52:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/signalvar.h,v 1.7.12.3 2003/05/15 04:08:03 niklas Exp $	*/
 /*	$NetBSD: signalvar.h,v 1.17 1996/04/22 01:23:31 christos Exp $	*/
 
 /*
@@ -161,7 +161,9 @@ void	csignal(pid_t pgid, int signum, uid_t uid, uid_t euid);
 int	issignal(struct proc *p);
 void	pgsignal(struct pgrp *pgrp, int sig, int checkctty);
 void	postsig(int sig);
-void	psignal(struct proc *p, int sig);
+void	psignal1(struct proc *p, int sig, int dolock);
+#define	psignal(p, sig)		psignal1((p), (sig), 1)
+#define	sched_psignal(p, sig)	psignal1((p), (sig), 0)
 void	siginit(struct proc *p);
 void	trapsignal(struct proc *p, int sig, u_long code, int type,
 	    union sigval val);

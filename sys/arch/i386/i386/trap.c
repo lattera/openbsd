@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.10 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.11 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -187,6 +187,7 @@ trap(frame)
 	vm_prot_t vftype, ftype;
 	union sigval sv;
 	caddr_t onfault;
+	uint32_t cr2;
 
 	uvmexp.traps++;
 
@@ -334,35 +335,47 @@ trap(frame)
 
 	case T_TSSFLT|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGBUS, vftype, BUS_OBJERR, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_SEGNPFLT|T_USER:
 	case T_STKFLT|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_ALIGNFLT|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGBUS, vftype, BUS_ADRALN, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_PRIVINFLT|T_USER:	/* privileged instruction fault */
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGILL, type &~ T_USER, ILL_PRVOPC, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_FPOPFLT|T_USER:		/* coprocessor operand fault */
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGILL, type &~ T_USER, ILL_COPROC, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_ASTFLT|T_USER:		/* Allow process switch */
 		uvmexp.softs++;
 		if (p->p_flag & P_OWEUPC) {
 			p->p_flag &= ~P_OWEUPC;
+			KERNEL_PROC_LOCK(p);
 			ADDUPROF(p);
+			KERNEL_PROC_UNLOCK(p);
 		}
 		goto out;
 
@@ -375,56 +388,90 @@ trap(frame)
 			return;
 		}
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, rv, type &~ T_USER, FPE_FLTINV, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 #else
 		printf("pid %d killed due to lack of floating point\n",
 		    p->p_pid);
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGKILL, type &~ T_USER, FPE_FLTINV, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 #endif
 	}
 
 	case T_BOUND|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGFPE, type &~ T_USER, FPE_FLTSUB, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 	case T_OFLOW|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGFPE, type &~ T_USER, FPE_INTOVF, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 	case T_DIVIDE|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGFPE, type &~ T_USER, FPE_INTDIV, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_ARITHTRAP|T_USER:
 		sv.sival_int = frame.tf_eip;
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGFPE, frame.tf_err, FPE_INTOVF, sv);
+		KERNEL_PROC_UNLOCK(p);
 		goto out;
 
 	case T_PAGEFLT:			/* allow page faults in kernel mode */
 		if (p == 0 || p->p_addr == 0)
 			goto we_re_toast;
+#ifdef LOCKDEBUG
+		/* If we page-fault while in scheduler, we're doomed. */
+		if (simple_lock_held(&sched_lock))
+			goto we_re_toast;
+#endif
+
+#ifdef MULTIPROCESSOR
+		/*
+		 * process doing kernel-mode page fault must have
+		 * been running with big lock held
+		 */
+		if ((p->p_flag & P_BIGLOCK) == 0)
+			goto we_re_toast;
+#endif
+
 		pcb = &p->p_addr->u_pcb;
 #if 0
 		/* XXX - check only applies to 386's and 486's with WP off */
 		if (frame.tf_err & PGEX_P)
 			goto we_re_toast;
 #endif
-		/* FALLTHROUGH */
+		cr2 = rcr2();
+		KERNEL_LOCK(LK_CANRECURSE|LK_EXCLUSIVE);
+		goto faultcommon;
+
 	page_fault:
 	case T_PAGEFLT|T_USER: {	/* page fault */
 		vaddr_t va, fa;
-		struct vmspace *vm = p->p_vmspace;
+		struct vmspace *vm;
 		struct vm_map *map;
 		int rv;
 		unsigned nss;
 
+		cr2 = rcr2();
+		KERNEL_PROC_LOCK(p);
+	faultcommon:
+		vm = p->p_vmspace;
 		if (vm == NULL)
 			goto we_re_toast;
-		fa = (vaddr_t)rcr2();
+		fa = (vaddr_t)cr2;
 		va = trunc_page(fa);
 		/*
 		 * It is only a kernel address space fault iff:
@@ -472,20 +519,26 @@ trap(frame)
 		if (rv == 0) {
 			if (nss > vm->vm_ssize)
 				vm->vm_ssize = nss;
-			if (type == T_PAGEFLT)
+			if (type == T_PAGEFLT) {
+				KERNEL_UNLOCK();
 				return;
+			}
+			KERNEL_PROC_UNLOCK(p);
 			goto out;
 		}
 
 		if (type == T_PAGEFLT) {
-			if (pcb->pcb_onfault != 0)
+			if (pcb->pcb_onfault != 0) {
+				KERNEL_UNLOCK();
 				goto copyfault;
+			}
 			printf("uvm_fault(%p, 0x%lx, 0, %d) -> %x\n",
 			    map, va, ftype, rv);
 			goto we_re_toast;
 		}
 		sv.sival_int = fa;
 		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
+		KERNEL_PROC_UNLOCK(p);
 		break;
 	}
 
@@ -500,14 +553,18 @@ trap(frame)
 
 	case T_BPTFLT|T_USER:		/* bpt instruction fault */
 		sv.sival_int = rcr2();
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGTRAP, type &~ T_USER, TRAP_BRKPT, sv);
+		KERNEL_PROC_UNLOCK(p);
 		break;
 	case T_TRCTRAP|T_USER:		/* trace trap */
 #if defined(MATH_EMULATE) || defined(GPL_MATH_EMULATE)
 	trace:
 #endif
 		sv.sival_int = rcr2();
+		KERNEL_PROC_LOCK(p);
 		trapsignal(p, SIGTRAP, type &~ T_USER, TRAP_TRACE, sv);
+		KERNEL_PROC_UNLOCK(p);
 		break;
 
 #if	NISA > 0
@@ -710,12 +767,14 @@ syscall(frame)
 		goto bad;
 	rval[0] = 0;
 	rval[1] = frame.tf_edx;
+	KERNEL_PROC_LOCK(p);
 #if NSYSTRACE > 0
 	if (ISSET(p->p_flag, P_SYSTRACE))
 		orig_error = error = systrace_redirect(code, p, args, rval);
 	else
 #endif
 		orig_error = error = (*callp->sy_call)(p, args, rval);
+	KERNEL_PROC_UNLOCK(p);
 	switch (error) {
 	case 0:
 		/*
@@ -752,8 +811,11 @@ syscall(frame)
 #endif
 	userret(p, frame.tf_eip, sticks);
 #ifdef KTRACE
-	if (KTRPOINT(p, KTR_SYSRET))
+	if (KTRPOINT(p, KTR_SYSRET)) {
+		KERNEL_PROC_LOCK(p);
 		ktrsysret(p, code, orig_error, rval[0]);
+		KERNEL_PROC_UNLOCK(p);
+	}
 #endif
 }
 
@@ -767,9 +829,15 @@ child_return(arg)
 	tf->tf_eax = 0;
 	tf->tf_eflags &= ~PSL_C;
 
+#ifdef notyet
+	KERNEL_PROC_UNLOCK(p);
+#endif
+
 	userret(p, tf->tf_eip, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
+		KERNEL_PROC_LOCK(p);
 		ktrsysret(p, SYS_fork, 0, 0);
+		KERNEL_PROC_UNLOCK(p);
 #endif
 }

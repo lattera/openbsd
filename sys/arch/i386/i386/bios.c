@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.10 2003/05/13 19:42:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.11 2003/05/15 04:08:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -385,9 +385,6 @@ bios32_service(service, e, ei)
 	bios32_entry_t e;
 	bios32_entry_info_t ei;
 {
-	extern union descriptor *dynamic_gdt;
-	extern int gdt_get_slot(void);
-
 	u_long pa, endpa;
 	vaddr_t va, sva;
 	u_int32_t base, count, off, ent;
@@ -417,8 +414,7 @@ bios32_service(service, e, ei)
 		return (0);
 
 	slot = gdt_get_slot();
-	setsegment(&dynamic_gdt[slot].sd, (caddr_t)va, BIOS32_END,
-	    SDT_MEMERA, SEL_KPL, 1, 0);
+	setgdt(slot, (caddr_t)va, BIOS32_END, SDT_MEMERA, SEL_KPL, 1, 0);
 
 	for (pa = i386_trunc_page(BIOS32_START),
 	     va += i386_trunc_page(BIOS32_START);

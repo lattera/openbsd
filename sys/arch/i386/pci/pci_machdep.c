@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.8 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.9 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.28 1997/06/06 23:29:17 thorpej Exp $	*/
 
 /*-
@@ -473,10 +473,6 @@ pci_intr_map(pa, ihp)
 	}
 #if NIOAPIC > 0
 	pci_decompose_tag (pc, intrtag, &bus, &dev, &func);
-#if 0
-	printf("pci_intr_map: bus %d dev %d func %d pin %d; line %d\n",
-		bus, dev, func, pin, line);
-#endif
 
 	if (mp_busses != NULL) {
 		/*
@@ -492,8 +488,22 @@ pci_intr_map(pa, ihp)
 				return 0;
 			}
 		}
-		if (mip == NULL)
+		if (mip == NULL && mp_isa_bus != -1) {
+			for (mip = mp_busses[mp_isa_bus].mb_intrs; mip != NULL;
+			    mip=mip->next) {
+				if (mip->bus_pin == line) {
+					ihp->line = mip->ioapic_ih | line;
+					return 0;
+				}
+			}
+		}
+		/* XXX scan the EISA bus too */
+		if (mip == NULL) {
+			printf("pci_intr_map: "
+			    "bus %d dev %d func %d pin %d; line %d\n",
+			    bus, dev, func, pin, line);
 			printf("pci_intr_map: no MP mapping found\n");
+		}
 	}
 #endif
 

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/i386/include/gdt.h,v 1.5.10.4 2003/04/11 16:12:57 niklas Exp $	*/
-/*	$NetBSD: gdt.h,v 1.3 1996/02/27 22:32:11 jtc Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/gdt.h,v 1.5.10.5 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$NetBSD: gdt.h,v 1.7.10.6 2002/08/19 01:22:36 sommerfeld Exp $	*/
 
 /*-
- * Copyright (c) 1996 The NetBSD Foundation, Inc.
+ * Copyright (c) 1996, 1997 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -37,10 +37,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef _KERNEL
+#ifndef _LOCORE
+
+struct cpu_info;
+struct pcb;
+struct pmap;
+union descriptor;
+
+void gdt_alloc_cpu(struct cpu_info *);
+int gdt_get_slot(void);
 void gdt_init(void);
-int tss_alloc(struct pcb *);
-void tss_free(int);
+void gdt_init_cpu(struct cpu_info *);
+void gdt_reload_cpu(/* XXX struct cpu_info * */ void);
 void ldt_alloc(struct pmap *, union descriptor *, size_t);
 void ldt_free(struct pmap *);
+int tss_alloc(struct pcb *);
+void tss_free(int);
+void setgdt(int, void *, size_t, int, int, int, int);
 #endif
+
+/*
+ * The initial GDT size (as a descriptor count), and the maximum
+ * GDT size possible.
+ *
+ * These are actually not arbitrary.  To start with, they have to be
+ * multiples of 512 and at least 512, in order to work with the
+ * allocation strategy set forth by gdt_init and gdt_grow.  Then, the
+ * max cannot exceed 65536 since the selector field of a descriptor is
+ * just 16 bits, and used as free list link.
+ */
+
+#define MINGDTSIZ 512
+#define MAXGDTSIZ 8192

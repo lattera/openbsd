@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.7 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.8 2003/05/15 04:08:02 niklas Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-
@@ -191,7 +191,7 @@ u_int64_t lapic_frac_cycle_per_usec;
 u_int32_t lapic_delaytab[26];
 
 void
-lapic_clockintr (arg)
+lapic_clockintr(arg)
 	void *arg;
 {
 	struct clockframe *frame = arg;
@@ -200,7 +200,7 @@ lapic_clockintr (arg)
 }
 
 void
-lapic_initclocks ()
+lapic_initclocks()
 {
 	/*
 	 * Start local apic countdown timer running, in repeated mode.
@@ -209,10 +209,10 @@ lapic_initclocks ()
 	 * then set divisor,
 	 * then unmask and set the vector.
 	 */
-	i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_LVTT_M);
-	i82489_writereg (LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
-	i82489_writereg (LAPIC_ICR_TIMER, lapic_tval);
-	i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_TIMER_VECTOR);
+	i82489_writereg(LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_LVTT_M);
+	i82489_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
+	i82489_writereg(LAPIC_ICR_TIMER, lapic_tval);
+	i82489_writereg(LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_TIMER_VECTOR);
 }
 
 extern int gettick __P((void));	/* XXX put in header file */
@@ -245,9 +245,9 @@ lapic_calibrate_timer(ci)
 	 * Configure timer to one-shot, interrupt masked,
 	 * large positive number.
 	 */
-	i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_M);
-	i82489_writereg (LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
-	i82489_writereg (LAPIC_ICR_TIMER, 0x80000000);
+	i82489_writereg(LAPIC_LVTT, LAPIC_LVTT_M);
+	i82489_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
+	i82489_writereg(LAPIC_ICR_TIMER, 0x80000000);
 
 	starttick = gettick();
 	startapic = lapic_gettick();
@@ -323,10 +323,10 @@ lapic_calibrate_timer(ci)
 		lapic_tval = (lapic_per_second * 2) / hz;
 		lapic_tval = (lapic_tval / 2) + (lapic_tval & 0x1);
 
-		i82489_writereg (LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_LVTT_M
-		    |LAPIC_TIMER_VECTOR);
-		i82489_writereg (LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
-		i82489_writereg (LAPIC_ICR_TIMER, lapic_tval);
+		i82489_writereg(LAPIC_LVTT, LAPIC_LVTT_TM | LAPIC_LVTT_M |
+		    LAPIC_TIMER_VECTOR);
+		i82489_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
+		i82489_writereg(LAPIC_ICR_TIMER, lapic_tval);
 
 		/*
 		 * Compute fixed-point ratios between cycles and
@@ -393,7 +393,7 @@ void lapic_delay(usec)
  * XXX need to make work correctly on other than cpu 0.
  */
 
-void lapic_microtime (tv)
+void lapic_microtime(tv)
 	struct timeval *tv;
 {
 	struct timeval now;
@@ -468,5 +468,5 @@ i386_ipi(vec,target,dl)
 	     j--)
 		;
 
-	return (i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY)?EBUSY:0;
+	return (i82489_readreg(LAPIC_ICRLO) & LAPIC_DLSTAT_BUSY) ? EBUSY : 0;
 }

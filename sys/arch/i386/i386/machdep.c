@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.16 2003/05/13 19:42:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.17 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -2348,7 +2348,6 @@ setregs(p, pack, stack, retval)
  * Initialize segments and descriptor tables
  */
 
-union descriptor gdt[NGDT];
 union descriptor ldt[NLDT];
 struct gate_descriptor idt_region[NIDT];
 struct gate_descriptor *idt = idt_region;
@@ -2498,18 +2497,20 @@ init386(paddr_t first_avail)
 	    (caddr_t)iomem_ex_storage, sizeof(iomem_ex_storage),
 	    EX_NOCOALESCE|EX_NOWAIT);
 
-	/* make gdt gates and memory segments */
+	/* make bootstrap gdt gates and memory segments */
 	setsegment(&gdt[GCODE_SEL].sd, 0, 0xfffff, SDT_MEMERA, SEL_KPL, 1, 1);
 	setsegment(&gdt[GICODE_SEL].sd, 0, 0xfffff, SDT_MEMERA, SEL_KPL, 1, 1);
 	setsegment(&gdt[GDATA_SEL].sd, 0, 0xfffff, SDT_MEMRWA, SEL_KPL, 1, 1);
-	setsegment(&gdt[GLDT_SEL].sd, ldt, sizeof(ldt) - 1, SDT_SYSLDT, SEL_KPL,
-	    0, 0);
+	setsegment(&gdt[GLDT_SEL].sd, ldt, sizeof(ldt) - 1, SDT_SYSLDT,
+	    SEL_KPL, 0, 0);
 	setsegment(&gdt[GUCODE1_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
 	setsegment(&gdt[GUCODE_SEL].sd, 0, i386_btop(I386_MAX_EXE_ADDR) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
 	setsegment(&gdt[GUDATA_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMRWA, SEL_UPL, 1, 1);
+	setsegment(&gdt[GCPU_SEL].sd, &cpu_info_primary,
+	    sizeof(struct cpu_info)-1, SDT_MEMRWA, SEL_KPL, 1, 1);
 
 	/* make ldt gates and memory segments */
 	setgate(&ldt[LSYS5CALLS_SEL].gd, &IDTVEC(osyscall), 1, SDT_SYS386CGT,
@@ -2545,7 +2546,7 @@ init386(paddr_t first_avail)
 		unsetgate(&idt[i]);
 	setgate(&idt[128], &IDTVEC(syscall), 0, SDT_SYS386TGT, SEL_UPL, GCODE_SEL);
 
-	setregion(&region, gdt, sizeof(gdt) - 1);
+	setregion(&region, gdt, NGDT * sizeof(union descriptor) - 1);
 	lgdt(&region);
 	setregion(&region, idt, sizeof(idt_region) - 1);
 	lidt(&region);
@@ -3865,6 +3866,34 @@ splassert_check(int wantipl, const char *func)
 	if (cpl < wantipl) {
 		splassert_fail(wantipl, cpl, func);
 	}
+}
+#endif
+
+#ifdef MULTIPROCESSOR
+void
+i386_intlock(struct intrframe iframe)
+{
+	if (iframe.if_ppl < IPL_SCHED)
+		spinlockmgr(&kernel_lock, LK_EXCLUSIVE|LK_CANRECURSE, 0);
+}
+
+void
+i386_intunlock(struct intrframe iframe)
+{
+	if (iframe.if_ppl < IPL_SCHED)
+		spinlockmgr(&kernel_lock, LK_RELEASE, 0);
+}
+
+void
+i386_softintlock(void)
+{
+	spinlockmgr(&kernel_lock, LK_EXCLUSIVE|LK_CANRECURSE, 0);
+}
+
+void
+i386_softintunlock(void)
+{
+	spinlockmgr(&kernel_lock, LK_RELEASE, 0);
 }
 #endif
 

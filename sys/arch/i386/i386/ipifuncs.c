@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.6 2003/04/15 03:56:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.7 2003/05/15 04:08:02 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -62,8 +62,6 @@
 
 void i386_ipi_halt(void);
 void i386_ipi_fpsave(void);
-void i386_ipi_gmtb(void);
-void i386_ipi_nychi(void);
 
 void (*ipifunc[I386_NIPI])(void) = 
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/segments.h,v 1.6.10.4 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/segments.h,v 1.6.10.5 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: segments.h,v 1.23 1996/02/01 22:31:03 mycroft Exp $	*/
 
 /*-
@@ -128,7 +128,7 @@ struct region_descriptor {
 #endif
 
 #ifdef _KERNEL
-extern union descriptor gdt[], ldt[];
+extern union descriptor *gdt, ldt[];
 extern struct gate_descriptor idt_region[];
 extern struct gate_descriptor *idt;
 
@@ -231,7 +231,8 @@ void idt_vec_free(int);
 #define	GAPM16CODE_SEL	8	/* 16 bit APM code descriptor */
 #define	GAPMDATA_SEL	9	/* APM data descriptor */
 #define	GICODE_SEL	10	/* Interrupt code descriptor (same as Kernel code) */
-#define	NGDT		11
+#define GCPU_SEL	11	/* per-CPU segment */
+#define	NGDT		12
 
 /*
  * Entries in the Local Descriptor Table (LDT)

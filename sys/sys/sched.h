@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.3 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.4 2003/05/15 04:08:03 niklas Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -148,5 +148,39 @@ struct schedstate_percpu {
 #define SPCF_SHOULDYIELD        0x0002  /* process should yield the CPU */
 
 #define SPCF_SWITCHCLEAR        (SPCF_SEENRR|SPCF_SHOULDYIELD)
+
+#if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
+#include <sys/lock.h>
+
+extern struct simplelock sched_lock;
+
+#define	SCHED_ASSERT_LOCKED()	LOCK_ASSERT(simple_lock_held(&sched_lock))
+#define	SCHED_ASSERT_UNLOCKED()	LOCK_ASSERT(simple_lock_held(&sched_lock) == 0)
+
+#define	SCHED_LOCK(s)							\
+do {									\
+	s = splsched();							\
+	simple_lock(&sched_lock);					\
+} while (/* CONSTCOND */ 0)
+
+#define	SCHED_UNLOCK(s)							\
+do {									\
+	simple_unlock(&sched_lock);					\
+	splx(s);							\
+} while (/* CONSTCOND */ 0)
+
+void	sched_lock_idle(void);
+void	sched_unlock_idle(void);
+
+#else /* ! MULTIPROCESSOR || LOCKDEBUG */
+
+#define	SCHED_ASSERT_LOCKED()		splassert(IPL_SCHED);
+#define	SCHED_ASSERT_UNLOCKED()		/* nothing */
+
+#define	SCHED_LOCK(s)			s = splsched()
+#define	SCHED_UNLOCK(s)			splx(s)
+
+#endif /* MULTIPROCESSOR || LOCKDEBUG */
+
 #endif	/* _KERNEL */
 #endif	/* _SYS_SCHED_H_ */

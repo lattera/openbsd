@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.11 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.12 2003/05/15 04:08:03 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -222,6 +222,7 @@ struct	proc {
 #define	SSTOP	4		/* Process debugging or suspension. */
 #define	SZOMB	5		/* Awaiting collection by parent. */
 #define SDEAD	6		/* Process is almost a zombie. */
+#define	SONPROC	7		/* Process is currently on a CPU. */
 
 #define P_ZOMBIE(p)	((p)->p_stat == SZOMB || (p)->p_stat == SDEAD)
 
@@ -255,6 +256,7 @@ struct	proc {
 #define	P_NOZOMBIE	0x100000	/* Pid 1 waits for me instead of dad */
 #define P_INEXEC	0x200000	/* Process is doing an exec right now */
 #define P_SYSTRACE	0x400000	/* Process system call tracing active*/
+#define P_BIGLOCK	0x800000	/* Process needs kernel "big lock" to run */
 
 /* Macro to compute the exit signal to be delivered. */
 #define P_EXITSIG(p) \
@@ -415,5 +417,9 @@ void	child_return(void *);
 
 int	proc_cansugid(struct proc *);
 void	proc_zap(struct proc *);
+
+#if defined(MULTIPROCESSOR)
+void	proc_trampoline_mp(void);	/* XXX */
+#endif
 #endif	/* _KERNEL */
 #endif	/* !_SYS_PROC_H_ */

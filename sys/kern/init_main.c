@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.14 2003/05/13 19:21:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.15 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -178,6 +178,7 @@ main(framep)
 	int s, i;
 	register_t rval[2];
 	extern struct pdevinit pdevinit[];
+	extern struct simplelock kprintf_slock;
 	extern void scheduler_start(void);
 	extern void disk_init(void);
 	extern void endtsleep(void *);
@@ -196,8 +197,13 @@ main(framep)
 	 */
 	config_init();		/* init autoconfiguration data structures */
 	consinit();
+
+	simple_lock_init(&kprintf_slock);
+
 	printf(copyright);
 	printf("\n");
+
+	KERNEL_LOCK_INIT();
 
 	uvm_init();
 	disk_init();		/* must come before autoconfiguration */
@@ -251,7 +257,7 @@ main(framep)
 	session0.s_leader = p;
 
 	p->p_flag = P_INMEM | P_SYSTEM | P_NOCLDWAIT;
-	p->p_stat = SRUN;
+	p->p_stat = SONPROC;
 	p->p_nice = NZERO;
 	p->p_emul = &emul_native;
 	bcopy("swapper", p->p_comm, sizeof ("swapper"));
@@ -324,6 +330,9 @@ main(framep)
 
 	/* Start real time and statistics clocks. */
 	initclocks();
+
+	/* Lock the kernel on behalf of proc0. */
+	KERNEL_PROC_LOCK(p);
 
 #ifdef SYSVSHM
 	/* Initialize System V style shared memory. */
@@ -598,8 +607,10 @@ start_init(arg)
 		 * Now try to exec the program.  If can't for any reason
 		 * other than it doesn't exist, complain.
 		 */
-		if ((error = sys_execve(p, &args, retval)) == 0)
+		if ((error = sys_execve(p, &args, retval)) == 0) {
+			KERNEL_PROC_UNLOCK(p);
 			return;
+		}
 		if (error != ENOENT)
 			printf("exec %s: error %d\n", path, error);
 	}

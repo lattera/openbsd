@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.9 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.10 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -288,6 +288,9 @@ exit1(p, rv)
 	limfree(p->p_limit);
 	p->p_limit = NULL;
 
+	/* This process no longer needs to hold the kernel lock. */
+	KERNEL_PROC_UNLOCK(p);
+
 	/*
 	 * Finally, call machine-dependent code to switch to a new
 	 * context (possibly the idle context).  Once we are no longer
@@ -334,6 +337,8 @@ reaper(void)
 {
 	struct proc *p;
 
+	KERNEL_PROC_UNLOCK(curproc);
+
 	for (;;) {
 		simple_lock(&deadproc_slock);
 		p = LIST_FIRST(&deadproc);
@@ -347,6 +352,7 @@ reaper(void)
 		/* Remove us from the deadproc list. */
 		LIST_REMOVE(p, p_hash);
 		simple_unlock(&deadproc_slock);
+		KERNEL_PROC_LOCK(curproc);
 
 		/*
 		 * Give machine-dependent code a chance to free any
@@ -374,6 +380,9 @@ reaper(void)
 			/* Noone will wait for us. Just zap the process now */
 			proc_zap(p);
 		}
+		/* XXXNJW where should this be with respect to 
+		 * the wakeup() above? */
+		KERNEL_PROC_UNLOCK(curproc);
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.7 2003/04/11 16:12:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.8 2003/05/15 04:08:01 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -91,6 +91,7 @@
 #include <machine/pcb.h>
 #include <machine/specialreg.h>
 #include <machine/segments.h>
+#include <machine/gdt.h>
 
 #if NLAPIC > 0
 #include <machine/apicvar.h>
@@ -112,6 +113,9 @@ void    cpu_attach __P((struct device *, struct device *, void *));
  */
 struct cpu_info cpu_info_primary;
 struct cpu_info *cpu_info_list = &cpu_info_primary;
+
+void	cpu_init_tss(struct i386tss *, void *, void *);
+void	cpu_set_tss_gates(struct cpu_info *);
 
 #ifdef MULTIPROCESSOR
 /*
@@ -210,7 +214,7 @@ cpu_attach(parent, self, aux)
 	 * Allocate UPAGES contiguous pages for the idle PCB and stack.
 	 */
 
-	kstack = uvm_km_alloc (kernel_map, USPACE);
+	kstack = uvm_km_alloc(kernel_map, USPACE);
 	if (kstack == 0) {
 		if (cpunum == 0) { /* XXX */
 			panic("cpu_attach: unable to allocate idle stack for"
@@ -269,13 +273,17 @@ cpu_attach(parent, self, aux)
 		/*
 		 * report on an AP
 		 */
-		printf("apid %d (", caa->cpu_number);
+		printf("apid %d (application processor)\n", caa->cpu_number);
+
+#ifdef MULTIPROCESSOR
+		gdt_alloc_cpu(ci);
 		ci->ci_flags |= CPUF_PRESENT | CPUF_AP;
-		printf("application processor");
-		printf(")\n");
 		identifycpu(ci);
 		ci->ci_next = cpu_info_list->ci_next;
 		cpu_info_list->ci_next = ci;
+#else
+		printf("%s: not started\n", sc->sc_dev.dv_xname);
+#endif
 		break;
 
 	default:
@@ -392,7 +400,7 @@ cpu_boot_secondary (ci)
 
 }
 
-struct cpu_info *first_app_cpu = NULL;
+int relcpus = 0;
 
 /*
  * The CPU ends up here when its ready to run
@@ -403,46 +411,29 @@ void
 cpu_hatch(void *v)
 {
 	struct cpu_info *ci = (struct cpu_info *)v;
-        struct region_descriptor region;
-#if 0
-	volatile int i;
-#endif
 	int s;
 
 	cpu_init_idt();
-
 	lapic_enable();
 	lapic_set_lvt();
+	gdt_init_cpu(ci);
+
+	lldt(GSEL(GLDT_SEL, SEL_KPL));
 
 	cpu_init(ci);
 
 	s = splhigh();		/* XXX prevent softints from running here.. */
-
+	lapic_tpr = 0;
 	enable_intr();
-	printf("%s: CPU %d reporting for duty, Sir!\n",ci->ci_dev.dv_xname,
-	    cpu_number());
-	printf("%s: stack is %p\n", ci->ci_dev.dv_xname, &region);
+	printf("%s: CPU %ld running\n", ci->ci_dev.dv_xname, ci->ci_cpuid);
+	splx(s);
 
 #if 0
-	if (first_app_cpu == NULL)
-		first_app_cpu = ci;
-	printf("%s: sending IPI to CPU %d\n", ci->ci_dev.dv_xname,
-	    cpu_info_primary.ci_cpuid);
-	i386_send_ipi(&cpu_info_primary, I386_IPI_GMTB);
-
-	/* give it a chance to be handled.. */
-	for (i = 0; i < 1000000; i++)
+	while(!relcpus)
 		;
-
-	printf("%s: sending another IPI to CPU %d\n", ci->ci_dev.dv_xname,
-	    cpu_info_primary.ci_cpuid);
-	i386_send_ipi(&cpu_info_primary, I386_IPI_GMTB);
 #endif
 
-	splx(s);
-	/* XXX Just run and collect IPIs */
-	for (;;)
-		;
+	printf("%s: CPU %ld released\n", ci->ci_dev.dv_xname, ci->ci_cpuid);
 }
 
 void
@@ -461,4 +452,135 @@ cpu_copy_trampoline()
 	    cpu_spinup_trampoline_end - cpu_spinup_trampoline);
 }
 
+#endif
+
+#ifdef notyet
+void
+cpu_init_tss(struct i386tss *tss, void *stack, void *func)
+{
+	memset(tss, 0, sizeof *tss);
+	tss->tss_esp0 = tss->tss_esp = (int)((char *)stack + USPACE - 16);
+	tss->tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
+	tss->__tss_cs = GSEL(GCODE_SEL, SEL_KPL);
+	tss->tss_fs = GSEL(GCPU_SEL, SEL_KPL);
+	tss->tss_gs = tss->__tss_es = tss->__tss_ds =
+	    tss->__tss_ss = GSEL(GDATA_SEL, SEL_KPL);
+	tss->tss_cr3 = pmap_kernel()->pm_pdirpa;
+	tss->tss_esp = (int)((char *)stack + USPACE - 16);
+	tss->tss_ldt = GSEL(GLDT_SEL, SEL_KPL);
+	tss->__tss_eflags = PSL_MBO | PSL_NT;	/* XXX not needed? */
+	tss->__tss_eip = (int)func;
+}
+
+/* XXX */
+#define IDTVEC(name)	__CONCAT(X, name)
+typedef void (vector)(void);
+extern vector IDTVEC(tss_trap08);
+#ifdef DDB
+extern vector Xintrddbipi;
+extern int ddb_vec;
+#endif
+
+void
+cpu_set_tss_gates(struct cpu_info *ci)
+{
+	struct segment_descriptor sd;
+
+	ci->ci_doubleflt_stack = (char *)uvm_km_alloc(kernel_map, USPACE);
+	cpu_init_tss(&ci->ci_doubleflt_tss, ci->ci_doubleflt_stack,
+	    IDTVEC(tss_trap08));
+	setsegment(&sd, &ci->ci_doubleflt_tss, sizeof(struct i386tss) - 1,
+	    SDT_SYS386TSS, SEL_KPL, 0, 0);
+	ci->ci_gdt[GTRAPTSS_SEL].sd = sd;
+	setgate(&idt[8], NULL, 0, SDT_SYSTASKGT, SEL_KPL,
+	    GSEL(GTRAPTSS_SEL, SEL_KPL));
+
+#if defined(DDB) && defined(MULTIPROCESSOR)
+	/*
+	 * Set up seperate handler for the DDB IPI, so that it doesn't
+	 * stomp on a possibly corrupted stack.
+	 *
+	 * XXX overwriting the gate set in db_machine_init.
+	 * Should rearrange the code so that it's set only once.
+	 */
+	ci->ci_ddbipi_stack = (char *)uvm_km_alloc(kernel_map, USPACE);
+	cpu_init_tss(&ci->ci_ddbipi_tss, ci->ci_ddbipi_stack,
+	    Xintrddbipi);
+
+	setsegment(&sd, &ci->ci_ddbipi_tss, sizeof(struct i386tss) - 1,
+	    SDT_SYS386TSS, SEL_KPL, 0, 0);
+	ci->ci_gdt[GIPITSS_SEL].sd = sd;
+
+	setgate(&idt[ddb_vec], NULL, 0, SDT_SYSTASKGT, SEL_KPL,
+	    GSEL(GIPITSS_SEL, SEL_KPL));
+#endif
+}
+
+int
+mp_cpu_start(struct cpu_info *ci)
+{
+#if NLAPIC > 0
+	int error;
+#endif
+	unsigned short dwordptr[2];
+
+	/*
+	 * "The BSP must initialize CMOS shutdown code to 0Ah ..."
+	 */
+
+	outb(IO_RTC, NVRAM_RESET);
+	outb(IO_RTC+1, NVRAM_RESET_JUMP);
+
+	/*
+	 * "and the warm reset vector (DWORD based at 40:67) to point
+	 * to the AP startup code ..."
+	 */
+
+	dwordptr[0] = 0;
+	dwordptr[1] = MP_TRAMPOLINE >> 4;
+
+	pmap_kenter_pa (0, 0, VM_PROT_READ|VM_PROT_WRITE);
+	memcpy ((u_int8_t *) 0x467, dwordptr, 4);
+	pmap_kremove (0, PAGE_SIZE);
+
+#if NLAPIC > 0
+	/*
+	 * ... prior to executing the following sequence:"
+	 */
+
+	if (ci->ci_flags & CPUF_AP) {
+		if ((error = x86_ipi_init(ci->ci_apicid)) != 0)
+			return error;
+
+		delay(10000);
+
+		if (cpu_feature & CPUID_APIC) {
+
+			if ((error = x86_ipi(MP_TRAMPOLINE/PAGE_SIZE,
+					     ci->ci_apicid,
+					     LAPIC_DLMODE_STARTUP)) != 0)
+				return error;
+			delay(200);
+
+			if ((error = x86_ipi(MP_TRAMPOLINE/PAGE_SIZE,
+					     ci->ci_apicid,
+					     LAPIC_DLMODE_STARTUP)) != 0)
+				return error;
+			delay(200);
+		}
+	}
+#endif
+	return 0;
+}
+
+void
+mp_cpu_start_cleanup(struct cpu_info *ci)
+{
+	/*
+	 * Ensure the NVRAM reset byte contains something vaguely sane.
+	 */
+
+	outb(IO_RTC, NVRAM_RESET);
+	outb(IO_RTC+1, NVRAM_RESET_RST);
+}
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.7 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.8 2003/05/15 04:08:02 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*
@@ -132,6 +132,14 @@
 
 	.globl	_C_LABEL(isa_strayintr)
 
+#ifdef MULTIPROCESSOR
+#define LOCK_KERNEL	call _C_LABEL(i386_intlock)
+#define UNLOCK_KERNEL	call _C_LABEL(i386_intunlock)
+#else
+#define LOCK_KERNEL
+#define UNLOCK_KERNEL
+#endif
+
 /*
  * Normal vectors.
  *
@@ -176,6 +184,7 @@ Xresume/**/irq_num/**/:						;\
 	testl	%ebx,%ebx						;\
 	jz	_C_LABEL(Xstray)/**/irq_num	/* no handlears; we're stray */	;\
 	STRAY_INITIALIZE		/* nobody claimed it yet */	;\
+	LOCK_KERNEL							;\
 7:	movl	IH_ARG(%ebx),%eax	/* get handler arg */		;\
 	testl	%eax,%eax						;\
 	jnz	4f							;\
@@ -190,6 +199,7 @@ Xresume/**/irq_num/**/:						;\
 5:	movl	IH_NEXT(%ebx),%ebx	/* next handler in chain */	;\
 	testl	%ebx,%ebx						;\
 	jnz	7b							;\
+	UNLOCK_KERNEL							;\
 	STRAY_TEST			/* see if it's a stray */	;\
 6:	UNMASK(irq_num, icu)		/* unmask it in hardware */	;\
 	jmp	_C_LABEL(Xdoreti)	/* lower spl and do ASTs */	;\
