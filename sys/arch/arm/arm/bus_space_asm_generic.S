@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/bus_space_asm_generic.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/bus_space_asm_generic.S,v 1.1.2.1 2004/02/19 10:42:41 niklas Exp $	*/
 /*	$NetBSD: bus_space_asm_generic.S,v 1.3 2003/03/27 19:46:14 mycroft Exp $	*/
 
 /*
