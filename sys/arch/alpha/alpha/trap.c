@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.7 2003/05/13 19:41:02 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.8 2004/02/19 09:59:33 niklas Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -392,7 +392,7 @@ trap(a0, a1, a2, entry, framep)
 				ucode =  a0;	/* exception summary */
 				break;
 			}
-			/* FALLTHROUTH */
+			/* FALLTHROUGH */
 		case ALPHA_IF_CODE_BPT:
 		case ALPHA_IF_CODE_BUGCHK:
 #ifdef PTRACE
@@ -825,8 +825,11 @@ const static int reg_to_framereg[32] = {
 		fpusave_proc(p, 1);
 
 #define	unaligned_load(storage, ptrf, mod)				\
-	if (copyin((caddr_t)va, &(storage), sizeof (storage)) != 0)	\
-		break;							\
+	if (copyin((caddr_t)va, &(storage), sizeof (storage)) != 0) {	\
+		p->p_md.md_tf->tf_regs[FRAME_PC] -= 4;			\
+		signal = SIGSEGV;					\
+		goto out;						\
+	}								\
 	signal = 0;							\
 	if ((regptr = ptrf(p, reg)) != NULL)				\
 		*regptr = mod (storage);
@@ -836,8 +839,11 @@ const static int reg_to_framereg[32] = {
 		(storage) = mod (*regptr);				\
 	else								\
 		(storage) = 0;						\
-	if (copyout(&(storage), (caddr_t)va, sizeof (storage)) != 0)	\
-		break;							\
+	if (copyout(&(storage), (caddr_t)va, sizeof (storage)) != 0) {	\
+		p->p_md.md_tf->tf_regs[FRAME_PC] -= 4;			\
+		signal = SIGSEGV;					\
+		goto out;						\
+	}								\
 	signal = 0;
 
 #define	unaligned_load_integer(storage)					\
@@ -974,14 +980,13 @@ struct unaligned_fixup_data {
 	const char *type;	/* opcode name */
 	int fixable;		/* fixable, 0 if fixup not supported */
 	int size;		/* size, 0 if unknown */
-	int acc;		/* useracc type; B_READ or B_WRITE */
 };
 
-#define	UNKNOWN()	{ "0x%lx", 0, 0, 0 }
-#define	FIX_LD(n,s)	{ n, 1, s, B_READ }
-#define	FIX_ST(n,s)	{ n, 1, s, B_WRITE }
-#define	NOFIX_LD(n,s)	{ n, 0, s, B_READ }
-#define	NOFIX_ST(n,s)	{ n, 0, s, B_WRITE }
+#define	UNKNOWN()	{ "0x%lx", 0, 0 }
+#define	FIX_LD(n,s)	{ n, 1, s }
+#define	FIX_ST(n,s)	{ n, 1, s }
+#define	NOFIX_LD(n,s)	{ n, 0, s }
+#define	NOFIX_ST(n,s)	{ n, 0, s }
 
 int
 unaligned_fixup(va, opcode, reg, p)
@@ -1045,21 +1050,6 @@ unaligned_fixup(va, opcode, reg, p)
 		selected_tab = &tab_20[opcode - 0x20];
 	else
 		selected_tab = tab_unknown;
-
-	/*
-	 * See if the user can access the memory in question.
-	 * If it's an unknown opcode, we don't know whether to
-	 * read or write, so we don't check.
-	 *
-	 * We adjust the PC backwards so that the instruction will
-	 * be re-run.
-	 */
-	if (selected_tab->size != 0 &&
-	   !uvm_useracc((caddr_t)va, selected_tab->size, selected_tab->acc)) {
-		p->p_md.md_tf->tf_regs[FRAME_PC] -= 4;
-		signal = SIGSEGV;
-		goto out;
-	}
 
 	/*
 	 * If we're supposed to be noisy, squawk now.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/promcons.c,v 1.5.14.2 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/promcons.c,v 1.5.14.3 2004/02/19 09:59:33 niklas Exp $	*/
 /*	$NetBSD: promcons.c,v 1.5 1996/11/13 22:20:55 cgd Exp $	*/
 
 /*
@@ -74,9 +74,8 @@ promopen(dev, flag, mode, p)
 
 	s = spltty();
 
-	if (!prom_tty[unit]) {
+	if (prom_tty[unit] == NULL) {
 		tp = prom_tty[unit] = ttymalloc();
-		tty_attach(tp);
 	} else
 		tp = prom_tty[unit];
 

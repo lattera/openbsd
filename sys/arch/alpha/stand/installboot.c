@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/installboot.c,v 1.10.12.1 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/installboot.c,v 1.10.12.2 2004/02/19 09:59:34 niklas Exp $	*/
 /*	$NetBSD: installboot.c,v 1.2 1997/04/06 08:41:12 cgd Exp $	*/
 
 /*
@@ -339,7 +339,7 @@ loadblocknums(boot, devfd, partoffset)
 	struct fs	*fs;
 	char		*buf;
 	daddr_t		blk, *ap;
-	struct dinode	*ip;
+	struct ufs1_dinode	*ip;
 	int		ndb;
 	int32_t		cksum;
 
@@ -401,7 +401,7 @@ loadblocknums(boot, devfd, partoffset)
 
 	blk = fsbtodb(fs, ino_to_fsba(fs, statbuf.st_ino));
 	devread(devfd, buf, blk + partoffset, fs->fs_bsize, "inode");
-	ip = (struct dinode *)(buf) + ino_to_fsbo(fs, statbuf.st_ino);
+	ip = (struct ufs1_dinode *)(buf) + ino_to_fsbo(fs, statbuf.st_ino);
 
 	/*
 	 * Register filesystem block size.

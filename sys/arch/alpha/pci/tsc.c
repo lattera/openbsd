@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2.2.5 2002/03/28 10:06:13 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2.2.6 2004/02/19 09:59:34 niklas Exp $ */
 /* $NetBSD: tsc.c,v 1.3 2000/06/25 19:17:40 thorpej Exp $ */
 
 /*-
@@ -219,6 +219,11 @@ tsp_init(mallocsafe, n)
 	pcp->pc_pslot = n;
 	pcp->pc_iobase = TS_Pn(n, 0);
 	pcp->pc_csr = S_PAGE(TS_Pn(n, P_CSRBASE));
+	snprintf(pcp->pc_io_ex_name, sizeof pcp->pc_io_ex_name,
+	    "tsp%d_bus_io", n);
+	snprintf(pcp->pc_mem_ex_name, sizeof pcp->pc_mem_ex_name,
+	    "tsp%d_bus_mem", n);
+	    
 	if (!pcp->pc_initted) {
 		tsp_bus_io_init(&pcp->pc_iot, pcp);
 		tsp_bus_mem_init(&pcp->pc_memt, pcp);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/sfbreg.h,v 1.3 1996/10/30 22:39:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/sfbreg.h,v 1.3.14.1 2004/02/19 09:59:34 niklas Exp $	*/
 /*	$NetBSD: sfbreg.h,v 1.1 1996/05/01 21:15:46 cgd Exp $	*/
 
 /*
@@ -30,7 +30,7 @@
 
 /*
  * Smart ("CXTurbo") Frame Buffer definitions, from:
- * ``DEC 3000 300/400/500/600/700/800/900 AXP Models System Prgrammer's Manual''
+ * "DEC 3000 300/400/500/600/700/800/900 AXP Models System Programmer's Manual"
  * (DEC order number EK-D3SYS-PM), section 6.
  *
  * All definitions are in "dense" TurboChannel space.

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/db_trace.c,v 1.4.12.5 2003/06/07 11:11:33 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/db_trace.c,v 1.4.12.6 2004/02/19 09:59:33 niklas Exp $	*/
 
 /*
- * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
- * Copyright (c) 1997 Theo de Raadt.  All rights reserverd.
+ * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
+ * Copyright (c) 1997 Theo de Raadt.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.2.2.3 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lca_dma.c,v 1.2.2.4 2004/02/19 09:59:34 niklas Exp $	*/
 /* $NetBSD: lca_dma.c,v 1.13 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-
@@ -193,7 +193,7 @@ lca_dma_init(lcp)
 	REGVAL64(LCA_IOC_W_T_BASE0) = lcp->lc_sgmap.aps_ptpa;
 	alpha_mb();
 
-	/* Enble the scatter/gather TLB. */
+	/* Enable the scatter/gather TLB. */
 	REGVAL64(LCA_IOC_TB_ENA) = IOC_TB_ENA_TEN;
 	alpha_mb();
 

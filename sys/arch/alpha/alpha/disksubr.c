@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.29.4.5 2003/06/07 11:11:33 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.29.4.6 2004/02/19 09:59:33 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -235,7 +235,7 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 	int i;
 	struct disklabel minilabel, fallbacklabel;
 
-	/* minimal requirements for archtypal disk label */
+	/* minimal requirements for archetypal disk label */
 	if (lp->d_secsize == 0)
 		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
@@ -591,7 +591,7 @@ setdisklabel(olp, nlp, openmask, osdep)
 	 * XXX Nice thought, but it doesn't work, if the intention was to
 	 * force a reread at the next *readdisklabel call.  That does not
 	 * happen.  There's still some use for it though as you can pseudo-
-	 * partitition the disk.
+	 * partition the disk.
 	 *
 	 * Special case to allow disklabel to be invalidated.
 	 */

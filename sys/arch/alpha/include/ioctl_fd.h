@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/ioctl_fd.h,v 1.1.2.1 2001/10/31 02:52:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/ioctl_fd.h,v 1.1.2.2 2004/02/19 09:59:34 niklas Exp $	*/
 /*	from: ioctl_fd.h,v 1.4 1995/06/29 03:49:32 jtk Exp 	*/
 
 /*
@@ -46,7 +46,7 @@ struct fd_formb {
 		struct fd_form_data {
 			/*
 			 * DO NOT CHANGE THE LAYOUT OF THIS STRUCTS
-			 * it is hardware-dependant since it exactly
+			 * it is hardware-dependent since it exactly
 			 * matches the byte sequence to write to FDC
 			 * during its `format track' operation
 			 */

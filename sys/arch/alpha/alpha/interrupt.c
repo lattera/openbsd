@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.4 2003/03/27 23:18:05 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.5 2004/02/19 09:59:33 niklas Exp $ */
 /* $NetBSD: interrupt.c,v 1.46 2000/06/03 20:47:36 thorpej Exp $ */
 
 /*-
@@ -381,6 +381,8 @@ badaddr_read(void *addr, size_t size, void *rptr)
 	/* Return non-zero (i.e. true) if it's a bad address. */
 	return (rv);
 }
+
+int netisr;
 
 void
 netintr()

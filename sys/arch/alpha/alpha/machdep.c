@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.12 2003/06/07 11:11:33 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.13 2004/02/19 09:59:33 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.210 2000/06/01 17:12:38 thorpej Exp $ */
 
 /*-
@@ -1557,24 +1557,6 @@ sendsig(catcher, sig, mask, code, type, val)
 		printf("sendsig(%d): sig %d ssp %p usp %p\n", p->p_pid,
 		    sig, &oonstack, scp);
 #endif
-	if (uvm_useracc((caddr_t)scp, fsize, B_WRITE) == 0) {
-#ifdef DEBUG
-		if ((sigdebug & SDB_KSTACK) && p->p_pid == sigpid)
-			printf("sendsig(%d): uvm_useracc failed on sig %d\n",
-			    p->p_pid, sig);
-#endif
-		/*
-		 * Process has trashed its stack; give it an illegal
-		 * instruction to halt it in its tracks.
-		 */
-		SIGACTION(p, SIGILL) = SIG_DFL;
-		sig = sigmask(SIGILL);
-		p->p_sigignore &= ~sig;
-		p->p_sigcatch &= ~sig;
-		p->p_sigmask &= ~sig;
-		psignal(p, SIGILL);
-		return;
-	}
 
 	/*
 	 * Build the signal context to be used by sigreturn.
@@ -1612,14 +1594,33 @@ sendsig(catcher, sig, mask, code, type, val)
 	if (psp->ps_siginfo & sigmask(sig)) {
 		initsiginfo(&ksi, sig, code, type, val);
 		sip = (void *)scp + kscsize;
-		(void) copyout((caddr_t)&ksi, (caddr_t)sip, fsize - kscsize);
+		if (copyout((caddr_t)&ksi, (caddr_t)sip, fsize - kscsize) != 0)
+			goto trash;
 	} else
 		sip = NULL;
 
 	/*
 	 * copy the frame out to userland.
 	 */
-	(void) copyout((caddr_t)&ksc, (caddr_t)scp, kscsize);
+	if (copyout((caddr_t)&ksc, (caddr_t)scp, kscsize) != 0) {
+trash:
+#ifdef DEBUG
+		if ((sigdebug & SDB_KSTACK) && p->p_pid == sigpid)
+			printf("sendsig(%d): copyout failed on sig %d\n",
+			    p->p_pid, sig);
+#endif
+		/*
+		 * Process has trashed its stack; give it an illegal
+		 * instruction to halt it in its tracks.
+		 */
+		SIGACTION(p, SIGILL) = SIG_DFL;
+		sig = sigmask(SIGILL);
+		p->p_sigignore &= ~sig;
+		p->p_sigcatch &= ~sig;
+		p->p_sigmask &= ~sig;
+		psignal(p, SIGILL);
+		return;
+	}
 #ifdef DEBUG
 	if (sigdebug & SDB_FOLLOW)
 		printf("sendsig(%d): sig %d scp %p code %lx\n", p->p_pid, sig,
@@ -1890,7 +1891,6 @@ fpusave_proc(struct proc *p, int save)
 #endif
 
 	KDASSERT(p->p_addr != NULL);
-	KDASSERT(p->p_flag & P_INMEM);
 
 	oci = p->p_addr->u_pcb.pcb_fpcpu;
 	if (oci == NULL) {
@@ -2133,25 +2133,3 @@ alpha_XXX_dmamap(v)						/* XXX */
 	return (vtophys(v) | alpha_XXX_dmamap_or);		/* XXX */
 }								/* XXX */
 /* XXX XXX END XXX XXX */
-
-char *
-dot_conv(x)
-	unsigned long x;
-{
-	int i;
-	char *xc;
-	static int next;
-	static char space[2][20];
-
-	xc = space[next ^= 1] + sizeof space[0];
-	*--xc = '\0';
-	for (i = 0;; ++i) {
-		if (i && (i & 3) == 0)
-			*--xc = '.';
-		*--xc = "0123456789abcdef"[x & 0xf];
-		x >>= 4;
-		if (x == 0)
-			break;
-	}
-	return xc;
-}

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsvar.h,v 1.2.2.3 2002/03/28 10:06:13 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsvar.h,v 1.2.2.4 2004/02/19 09:59:34 niklas Exp $ */
 /* $NetBSD: tsvar.h,v 1.1 1999/06/29 06:46:47 ross Exp $ */
 
 /*-
@@ -60,6 +60,9 @@ struct tsp_config {
 	u_int32_t pc_hae_io;
 
 	struct	extent *pc_io_ex, *pc_mem_ex;
+	char	pc_io_ex_name[16], pc_mem_ex_name[16];
+	long	pc_io_ex_storage[EXTENT_FIXED_STORAGE_SIZE(8) / sizeof(long)];
+	long	pc_mem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(8) / sizeof(long)];
 	int	pc_mallocsafe;
 };
 

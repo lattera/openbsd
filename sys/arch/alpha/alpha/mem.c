@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/mem.c,v 1.9.2.4 2003/06/07 11:11:33 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/mem.c,v 1.9.2.5 2004/02/19 09:59:33 niklas Exp $ */
 /* $NetBSD: mem.c,v 1.26 2000/03/29 03:48:20 simonb Exp $ */
 
 /*
@@ -82,7 +82,7 @@ mmopen(dev, flag, mode, p)
 		return (0);
 #ifdef APERTURE
 	case 4:
-	        if (suser(p->p_ucred, &p->p_acflag) != 0 || !allowaperture)
+	        if (suser(p, 0) != 0 || !allowaperture)
 			return (EPERM);
 
 		/* authorize only one simultaneous open() from the same pid */

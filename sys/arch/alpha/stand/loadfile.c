@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.4 2003/06/07 11:11:33 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.5 2004/02/19 09:59:34 niklas Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*
@@ -275,7 +275,7 @@ elf_exec(fd, elf, entryp)
 	ffp_save = roundup(ffp_save, sizeof(long));
 
 	/*
-	 * Retreive symbols.
+	 * Retrieve symbols.
 	 */
 	ssym = ffp_save;
 	ffp_save += sizeof(Elf64_Ehdr);

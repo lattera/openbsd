@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/clock.c,v 1.9.4.2 2003/06/07 11:11:33 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/clock.c,v 1.9.4.3 2004/02/19 09:59:33 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.29 2000/06/05 21:47:10 thorpej Exp $	*/
 
 /*
@@ -100,7 +100,7 @@ clockattach(dev, fns)
  *
  * Inittodr initializes the time of day hardware which provides
  * date functions.  Its primary function is to use some file
- * system information in case the hardare clock lost state.
+ * system information in case the hardware clock lost state.
  *
  * Resettodr restores the time of day hardware after a time change.
  */
@@ -160,7 +160,7 @@ setstatclockrate(newhz)
 }
 
 /*
- * Initialze the time of day register, based on the time base which is, e.g.
+ * Initialize the time of day register, based on the time base which is, e.g.
  * from a filesystem.  Base provides the time to within six months,
  * and the time of year clock (if any) provides the rest.
  */

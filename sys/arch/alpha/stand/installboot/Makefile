@@ -1,10 +1,10 @@
-#	$OpenBSD: src/sys/arch/alpha/stand/installboot/Makefile,v 1.5.14.2 2001/07/04 10:14:52 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/stand/installboot/Makefile,v 1.5.14.3 2004/02/19 09:59:34 niklas Exp $
 #	$NetBSD: Makefile,v 1.2 1996/11/06 23:09:13 cgd Exp $
 
 .PATH:	${.CURDIR}/..
 
 MAN=	installboot.8
-MANSUBDIR=/alpha
+MANSUBDIR=alpha
 
 .if ${MACHINE} == "alpha"
 PROG=	installboot

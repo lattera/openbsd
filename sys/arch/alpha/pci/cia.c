@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.6 2003/03/27 23:18:06 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.7 2004/02/19 09:59:34 niklas Exp $ */
 /* $NetBSD: cia.c,v 1.56 2000/06/29 08:58:45 mrg Exp $ */
 
 /*-
@@ -204,7 +204,7 @@ cia_init(ccp, mallocsafe)
 	/*
 	 * Use BWX iff:
 	 *
-	 *	- It hasn't been disbled by the user,
+	 *	- It hasn't been disabled by the user,
 	 *	- it's enabled in CNFG,
 	 *	- we're implementation version ev5,
 	 *	- BWX is enabled in the CPU's capabilities mask (yes,

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.4 2003/03/27 23:18:06 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.5 2004/02/19 09:59:33 niklas Exp $ */
 /* $NetBSD: locore.s,v 1.94 2001/04/26 03:10:44 ross Exp $ */
 
 /*-
@@ -237,7 +237,7 @@ Lstart1: LDGP(pv)
 
 #if defined(MULTIPROCESSOR)
 /*
- * Pull in the multiprocssor glue.
+ * Pull in the multiprocessor glue.
  */
 #include <alpha/alpha/multiproc.s>
 #endif /* MULTIPROCESSOR */

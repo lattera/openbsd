@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.7 2003/03/27 23:18:06 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.8 2004/02/19 09:59:33 niklas Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 
 machine	alpha
@@ -231,6 +231,7 @@ midi*	at	pcppi?
 pckbc*	at	isa?				# PC keyboard controller
 pckbd*	at	pckbc?				# PC keyboard (kbd port)
 pms*	at	pckbc?				# PS/2-style mouse (aux port)
+pmsi*	at	pckbc?				# PS/2 "Intelli"mouse
 com*	at	isa? port 0x3f8 irq 4		# standard serial ports
 com*	at	isa? port 0x2f8 irq 3
 lpt*	at	isa? port 0x3bc irq 7		# standard parallel port
@@ -315,6 +316,7 @@ wsdisplay*	at	vga?
 wsdisplay*	at	tga?
 wskbd*		at	pckbd?
 wsmouse*	at	pms?
+wsmouse*	at	pmsi?
 
 # crypto support
 hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card

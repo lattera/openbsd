@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/sio.c,v 1.15.6.3 2002/03/28 10:06:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/sio.c,v 1.15.6.4 2004/02/19 09:59:34 niklas Exp $	*/
 /*	$NetBSD: sio.c,v 1.15 1996/12/05 01:39:36 cgd Exp $	*/
 
 /*
@@ -122,6 +122,10 @@ siomatch(parent, match, aux)
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_INTEL &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_INTEL_SIO)
 		return (1);
+
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_ALI &&
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ALI_M1533)
+		return(1);
 
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_ALI &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ALI_M1543)

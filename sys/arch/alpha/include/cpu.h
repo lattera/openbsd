@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.6 2003/06/07 11:11:33 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.7 2004/02/19 09:59:34 niklas Exp $ */
 /* $NetBSD: cpu.h,v 1.45 2000/08/21 02:03:12 thorpej Exp $ */
 
 /*-
@@ -155,7 +155,6 @@ void	trap(unsigned long, unsigned long, unsigned long, unsigned long,
 	    struct trapframe *);
 void	trap_init(void);
 void	enable_nsio_ide(bus_space_tag_t);
-char *	dot_conv(unsigned long);
 
 void	release_fpu(int);
 void	synchronize_fpstate(struct proc *, int);
