@@ -1,5 +1,5 @@
-#	$OpenBSD: src/distrib/mac68k/Attic/Makefile,v 1.2 1997/09/21 11:45:55 deraadt Exp $
+#	$OpenBSD: src/distrib/mac68k/Attic/Makefile,v 1.3 1999/06/13 10:33:30 downsj Exp $
 
-SUBDIR= inst
+SUBDIR= ramdisk
 
 .include <bsd.subdir.mk>
