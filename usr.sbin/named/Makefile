@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/named/Attic/Makefile,v 1.11 2001/01/28 02:18:13 niklas Exp $
+#	$OpenBSD: src/usr.sbin/named/Attic/Makefile,v 1.11.4.1 2002/11/14 23:44:14 millert Exp $
 
 SUBDIR= named named-xfer ndc reload restart dig nslookup \
 	host dnsquery
@@ -6,6 +6,6 @@ SUBDIR= named named-xfer ndc reload restart dig nslookup \
 SUBDIR+= doc/bog
 .endif
 
-VER= 4.9.8-REL
+VER= 4.9.11-REL
 
 .include <bsd.subdir.mk>
