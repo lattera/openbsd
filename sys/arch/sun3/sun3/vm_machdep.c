@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.5 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vm_machdep.c,v 1.10.2.6 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.35 1996/04/26 18:38:06 gwr Exp $	*/
 
 /*
@@ -271,6 +271,7 @@ pagemove(from, to, size)
 		to += NBPG;
 		size -= NBPG;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -368,6 +369,7 @@ vunmapbuf(bp, sz)
 
 	/* Actually remove mappings, which does cache flush. */
 	pmap_remove(pmap_kernel(), pgva, pgva + size);
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Now remove the map entry, which may also call

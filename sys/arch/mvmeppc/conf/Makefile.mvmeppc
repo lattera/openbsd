@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.1.2.1 2001/10/31 03:01:20 nate Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.1.2.2 2002/03/06 02:04:45 niklas Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -46,7 +46,7 @@ CWARNFLAGS=	-Werror -Wreturn-type
 CFLAGS=		${DEBUG} ${CWARNFLAGS} -O2 -msoft-float
 AFLAGS=		-D_LOCORE
 LINKFLAGS=	-N -Ttext 100074 -e start
-STRIPFLAGS=	-d
+STRIPFLAGS=	-g -X -x
 
 HOSTCC?=	${CC}
 HOSTED_CPPFLAGS=${CPPFLAGS:S/^-nostdinc$//}

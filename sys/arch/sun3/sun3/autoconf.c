@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8.2.4 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8.2.5 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.37 1996/11/20 18:57:22 gwr Exp $	*/
 
 /*-
@@ -52,8 +52,6 @@
 #include <sys/device.h>
 #include <sys/disklabel.h>
 #include <sys/dkstat.h>
-#include <sys/dmap.h>
-#include <sys/map.h>
 #include <sys/reboot.h>
 
 #include <scsi/scsi_all.h>
@@ -291,6 +289,7 @@ bus_mapin(bustype, paddr, sz)
 		pa += NBPG;
 	} while ((sz -= NBPG) > 0);
 #endif
+	pmap_update(pmap_kernel());
 
 	return ((char*)retval);
 }

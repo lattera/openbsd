@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.4 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.5 2002/03/06 02:07:09 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -194,14 +194,16 @@ struct auth_hash auth_hash_key_sha1 = {
 
 struct auth_hash auth_hash_md5 = {
 	CRYPTO_MD5, "MD5",
-	0, 16, 0, 0,
-	NULL, NULL, NULL
+	0, 16, 16, sizeof(MD5_CTX),
+	(void (*) (void *)) MD5Init, MD5Update_int,
+	(void (*) (u_int8_t *, void *)) MD5Final
 };
 
 struct auth_hash auth_hash_sha1 = {
 	CRYPTO_SHA1, "SHA1",
-	0, 20, 0, 0,
-	NULL, NULL, NULL
+	0, 20, 20, sizeof(SHA1_CTX),
+	(void (*)(void *)) SHA1Init, SHA1Update_int,
+	(void (*)(u_int8_t *, void *)) SHA1Final 
 };
 
 /* Compression instance */

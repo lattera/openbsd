@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/dart.c,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/dart.c,v 1.1.4.3 2002/03/06 02:04:44 niklas Exp $	*/
 
 /*
  * Mach Operating System
@@ -185,10 +185,11 @@ dartmatch(parent, vcf, args)
 	union dartreg *addr;
 
 	/* Don't match if wrong cpu */
-	if (cputyp != CPU_188) return (0);
+	if (brdtyp != BRD_188) return (0);
 	ca->ca_vaddr = ca->ca_paddr; /* 1:1 */
 	addr = (union dartreg *)ca->ca_vaddr;
-	if (badvaddr((vaddr_t)addr, 2) <= 0) {
+	
+	if (badvaddr((vaddr_t)addr, 2)) {
 		printf("==> dart: failed address check.\n");
 		return (0);
 	}
@@ -1138,7 +1139,7 @@ dartcnprobe(cp)
 {
 	int maj;
 
-	if (cputyp != CPU_188) {
+	if (brdtyp != BRD_188) {
 		cp->cn_pri = CN_DEAD;
 		return 0;
 	}

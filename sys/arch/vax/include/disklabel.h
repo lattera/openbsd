@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/disklabel.h,v 1.5.12.1 2001/05/14 21:37:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/disklabel.h,v 1.5.12.2 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.4 1997/03/09 15:55:58 ragge Exp $	*/
 
 /*
@@ -42,7 +42,7 @@
 /* Just a dummy */
 #ifndef _LOCORE
 struct cpu_disklabel {
-	int	cd_dummy;			/* must have one element. */
+	/* EMPTY */
 };
 #endif
 #endif /* _MACHINE_DISKLABEL_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19.2.4 2001/12/05 01:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.19.2.5 2002/03/06 02:07:09 niklas Exp $	*/
 /*	$NetBSD: cd9660_vfsops.c,v 1.26 1997/06/13 15:38:58 pk Exp $	*/
 
 /*-
@@ -53,6 +53,8 @@
 #include <sys/file.h>
 #include <sys/disklabel.h>
 #include <sys/ioctl.h>
+#include <sys/cdio.h>
+#include <sys/conf.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
 #include <sys/stat.h>
@@ -238,6 +240,7 @@ iso_mountfs(devvp, mp, p, argp)
 	struct iso_supplementary_descriptor *sup = NULL;
 	struct iso_directory_record *rootp;
 	int logical_block_size;
+	int sess = 0;
 	
 	if (!ronly)
 		return (EROFS);
@@ -265,11 +268,16 @@ iso_mountfs(devvp, mp, p, argp)
 	 * whichever is greater.  For now, we'll just use a constant.
 	 */
 	iso_bsize = ISO_DEFAULT_BLOCK_SIZE;
+
+	error = VOP_IOCTL(devvp, CDIOREADMSADDR, (caddr_t)&sess, 0, FSCRED, p);
+	if (error)
+		sess = 0;
 	
 	joliet_level = 0;
 	for (iso_blknum = 16; iso_blknum < 100; iso_blknum++) {
-		if ((error = bread(devvp, iso_blknum * btodb(iso_bsize),
-				   iso_bsize, NOCRED, &bp)) != 0)
+		if ((error = bread(devvp,
+		    (iso_blknum + sess) * btodb(iso_bsize),
+		    iso_bsize, NOCRED, &bp)) != 0)
 			goto out;
 		
 		vdp = (struct iso_volume_descriptor *)bp->b_data;
@@ -359,8 +367,6 @@ iso_mountfs(devvp, mp, p, argp)
 	mp->mnt_stat.f_fsid.val[1] = mp->mnt_vfc->vfc_typenum;
 	mp->mnt_maxsymlinklen = 0;
 	mp->mnt_flag |= MNT_LOCAL;
-	mp->mnt_dev_bshift = iso_bsize;
-	mp->mnt_fs_bshift = isomp->im_bshift;
 	isomp->im_mountp = mp;
 	isomp->im_dev = dev;
 	isomp->im_devvp = devvp;

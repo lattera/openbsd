@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.4.2.3 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/conf.h,v 1.4.2.4 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.9 2001/03/26 12:33:26 lukem Exp $	*/
 
 /*-
@@ -47,12 +47,27 @@ cdev_decl(ksyms);
 
 cdev_decl(openprom);
 
+
 /* open, close, ioctl */
 #define cdev_openprom_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
 	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
 	(dev_type_stop((*))) nullop, 0, (dev_type_select((*))) enodev, \
 	(dev_type_mmap((*))) enodev }
+
+cdev_decl(uperf);
+
+/* open, close, ioctl */
+#define cdev_uperf_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) nullop, 0, (dev_type_select((*))) enodev, \
+	(dev_type_mmap((*))) enodev }
+
+#define	cdev_gen_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) nullop, \
+	0, dev_init(c,n,select), (dev_type_mmap((*))) enodev }
 
 cdev_decl(cn);
 
@@ -84,15 +99,6 @@ cdev_decl(tcx);
 
 cdev_decl(cgfourteen);
 
-bdev_decl(sw);
-cdev_decl(sw);
-
-bdev_decl(raid);
-cdev_decl(raid);
-
-bdev_decl(md);
-cdev_decl(md);
-
 cdev_decl(bpp);
 cdev_decl(lpt);
 
@@ -106,3 +112,16 @@ cdev_decl(sabtty);
 cdev_decl(pcons);
 
 cdev_decl(com);
+
+cdev_decl(usb);
+cdev_decl(uhid);
+cdev_decl(ugen);
+cdev_decl(ulpt);
+cdev_decl(urio);
+cdev_decl(ucom);
+cdev_decl(uscanner);
+
+cdev_decl(mtty);
+cdev_decl(mbpp);
+cdev_decl(stty);
+cdev_decl(sbpp);

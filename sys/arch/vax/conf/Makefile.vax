@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/Makefile.vax,v 1.12.8.3 2001/10/31 03:08:01 nate Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/Makefile.vax,v 1.12.8.4 2002/03/06 02:04:47 niklas Exp $
 #	$NetBSD: Makefile.vax,v 1.49 1999/07/26 05:20:49 cgd Exp $
 
 # Makefile for OpenBSD/vax
@@ -66,7 +66,7 @@ SIZE?=	size
 .endif
 
 TSORT?=	tsort -q
-COPTS?= -O0
+COPTS?= -O2
 
 # source tree is located via $S relative to the compilation directory
 .ifndef S

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.6 2001/12/05 00:39:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.7 2002/03/06 02:04:44 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -33,10 +33,8 @@
  */
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/dkstat.h>
-#include <sys/dmap.h>
 #include <sys/reboot.h>
 #include <sys/conf.h>
 #include <sys/device.h>
@@ -47,7 +45,6 @@
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
 #include <machine/disklabel.h>
-#include <machine/pte.h>
 #include <machine/vmparam.h>
 
 /*

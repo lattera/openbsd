@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/iommuvar.h,v 1.4.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/iommuvar.h,v 1.4.4.2 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: iommuvar.h,v 1.9 2001/10/07 20:30:41 eeh Exp $	*/
 
 /*
@@ -40,6 +40,7 @@ struct iommu_state {
 	int64_t			*is_tsb;	/* TSB virtual address */
 	int			is_tsbsize;	/* 0 = 8K, ... */
 	u_int			is_dvmabase;
+	u_int			is_dvmaend;
 	int64_t			is_cr;		/* IOMMU control regiter value */
 	struct extent		*is_dvmamap;	/* DVMA map for this instance */
 

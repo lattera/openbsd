@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.17.6.2 2001/07/04 10:39:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_socket.c,v 1.17.6.3 2002/03/06 02:07:08 niklas Exp $	*/
 /*	$NetBSD: linux_socket.c,v 1.14 1996/04/05 00:01:50 christos Exp $	*/
 
 /*
@@ -993,13 +993,53 @@ linux_ioctl_socket(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	register struct linux_sys_ioctl_args /* {
+	struct linux_sys_ioctl_args /* {
 		syscallarg(int) fd;
 		syscallarg(u_long) com;
 		syscallarg(caddr_t) data;
 	} */ *uap = v;
 	u_long com;
 	struct sys_ioctl_args ia;
+	struct file *fp;
+	struct filedesc *fdp;
+	struct vnode *vp;
+	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
+	struct ioctl_pt pt;
+	int error = 0, isdev = 0, dosys = 1;
+
+	fdp = p->p_fd;
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
+		return (EBADF);
+	FREF(fp);
+
+	if (fp->f_type == DTYPE_VNODE) {
+		vp = (struct vnode *)fp->f_data;
+		isdev = vp->v_type == VCHR;
+	}
+
+	/*
+	 * Don't try to interpret socket ioctl calls that are done
+	 * on a device filedescriptor, just pass them through, to
+	 * emulate Linux behaviour. Use PTIOCLINUX so that the
+	 * device will only handle these if it's prepared to do
+	 * so, to avoid unexpected things from happening.
+	 */
+	if (isdev) {
+		dosys = 0;
+		ioctlf = fp->f_ops->fo_ioctl;
+		pt.com = SCARG(uap, com);
+		pt.data = SCARG(uap, data);
+		error = ioctlf(fp, PTIOCLINUX, (caddr_t)&pt, p);
+		/*
+		 * XXX hack: if the function returns EJUSTRETURN,       
+		 * it has stuffed a sysctl return value in pt.data.
+		 */
+		if (error == EJUSTRETURN) {
+			retval[0] = (register_t)pt.data;
+			error = 0;
+		}
+		goto out;
+	}
 
 	com = SCARG(uap, com);
 	retval[0] = 0;
@@ -1074,19 +1114,27 @@ linux_ioctl_socket(p, v, retval)
 				if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
 				    (sdl->sdl_family == AF_LINK) &&
 				    (sdl->sdl_type == IFT_ETHER)) {
-					return copyout(LLADDR(sdl),
+					error = copyout(LLADDR(sdl),
 					    (caddr_t)&ifr->ifr_hwaddr.sa_data,
 					    LINUX_IFHWADDRLEN);
+					dosys = 0;
+					goto out;
 				}
 			}
 		}
-		return ENOENT;
+		error = ENOENT;
 	    }
 	default:
-		return EINVAL;
+		error = EINVAL;
 	}
 
-	SCARG(&ia, fd) = SCARG(uap, fd);
-	SCARG(&ia, data) = SCARG(uap, data);
-	return sys_ioctl(p, &ia, retval);
+out:
+	if (error == 0 && dosys) {
+		SCARG(&ia, fd) = SCARG(uap, fd);
+		SCARG(&ia, data) = SCARG(uap, data);
+		error = sys_ioctl(p, &ia, retval);
+	}
+
+	FRELE(fp);
+	return (error);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.6.2.4 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.6.2.5 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: iommu.c,v 1.13 1997/07/29 09:42:04 fair Exp $ */
 
 /*
@@ -199,6 +199,7 @@ iommu_attach(parent, self, aux)
 		va += PAGE_SIZE;
 		m = TAILQ_NEXT(m, pageq);
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Now we build our own copy of the IOMMU page tables. We need to
@@ -304,7 +305,7 @@ iommu_enter(va, pa)
 }
 
 /*
- * iommu_clear: clears mappings created by iommu_enter
+ * iommu_remove: clears mappings created by iommu_enter
  */
 void
 iommu_remove(va, len)
@@ -321,7 +322,7 @@ iommu_remove(va, len)
 #ifdef notyet
 #ifdef DEBUG
 		if ((sc->sc_ptes[atop(va - sc->sc_dvmabase)] & IOPTE_V) == 0)
-			panic("iommu_clear: clearing invalid pte at va 0x%x",
+			panic("iommu_remove: clearing invalid pte at va 0x%x",
 				va);
 #endif
 #endif

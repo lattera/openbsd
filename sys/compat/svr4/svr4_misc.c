@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.5 2001/12/05 00:43:28 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_misc.c,v 1.25.4.6 2002/03/06 02:07:08 niklas Exp $	 */
 /*	$NetBSD: svr4_misc.c,v 1.42 1996/12/06 03:22:34 christos Exp $	 */
 
 /*
@@ -304,9 +304,12 @@ svr4_sys_getdents(p, v, retval)
 
 	args.resid = SCARG(uap, nbytes);
 	args.outp = (caddr_t)SCARG(uap, buf);
-	
-	if ((error = readdir_with_callback(fp, &fp->f_offset, SCARG(uap, nbytes),
-	    svr4_readdir_callback, &args)) != 0)
+
+	FREF(fp);
+	error = readdir_with_callback(fp, &fp->f_offset, SCARG(uap, nbytes),
+	    svr4_readdir_callback, &args);
+	FRELE(fp);
+	if (error)
 		return (error);
 
 	*retval = SCARG(uap, nbytes) - args.resid;
@@ -330,9 +333,12 @@ svr4_sys_getdents64(p, v, retval)
 
 	args.resid = SCARG(uap, nbytes);
 	args.outp = (caddr_t)SCARG(uap, dp);
-	
-	if ((error = readdir_with_callback(fp, &fp->f_offset, SCARG(uap, nbytes),
-	    svr4_readdir64_callback, &args)) != 0)
+
+	FREF(fp);
+	error = readdir_with_callback(fp, &fp->f_offset, SCARG(uap, nbytes),
+	    svr4_readdir64_callback, &args);
+	FRELE(fp);
+	if (error)
 		return (error);
 
 	*retval = SCARG(uap, nbytes) - args.resid;
@@ -424,6 +430,7 @@ svr4_sys_fchroot(p, v, retval)
 		return error;
 	if ((error = getvnode(fdp, SCARG(uap, fd), &fp)) != 0)
 		return error;
+	FREF(fp);
 	vp = (struct vnode *) fp->f_data;
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (vp->v_type != VDIR)
@@ -431,12 +438,15 @@ svr4_sys_fchroot(p, v, retval)
 	else
 		error = VOP_ACCESS(vp, VEXEC, p->p_ucred, p);
 	VOP_UNLOCK(vp, 0, p);
-	if (error)
+	if (error) {
+		FRELE(fp);
 		return error;
+	}
 	VREF(vp);
 	if (fdp->fd_rdir != NULL)
 		vrele(fdp->fd_rdir);
 	fdp->fd_rdir = vp;
+	FRELE(fp);
 	return 0;
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231var.h,v 1.2.4.1 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231var.h,v 1.2.4.2 2002/03/06 02:04:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -88,4 +88,5 @@ struct ce4231_softc {
 	u_int32_t	sc_lastaddr;
 	struct cs_dma	*sc_dmas;	/* dma list */
 	struct cs_dma	*sc_nowplaying;
+	void *sc_pih, *sc_cih;
 };

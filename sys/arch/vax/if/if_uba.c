@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.5.12.2 2001/07/04 10:24:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.5.12.3 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: if_uba.c,v 1.15 1999/01/01 21:43:18 ragge Exp $	*/
 
 /*
@@ -41,7 +41,6 @@
 #include <sys/systm.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/socket.h>
 #include <sys/syslog.h>

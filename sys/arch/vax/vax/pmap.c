@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.4 2001/11/13 21:04:18 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.5 2002/03/06 02:04:48 niklas Exp $ */
 /*	$NetBSD: pmap.c,v 1.74 1999/11/13 21:32:25 matt Exp $	   */
 /*
  * Copyright (c) 1994, 1998, 1999 Ludd, University of Lule}, Sweden.
@@ -733,6 +733,7 @@ if (startpmapdebug)
 			bzero((caddr_t)(phys|KERNBASE), NBPG);
 			pmap_kenter_pa(ptaddr, phys,
 			    VM_PROT_READ|VM_PROT_WRITE);
+			pmap_update(pmap_kernel());
 		}
 	}
 
@@ -779,11 +780,11 @@ if (startpmapdebug)
 			pv->pv_next = tmp;
 		}
 		splx(s);
+		pmap->pm_stats.resident_count++;
 	} else {
 		/* No mapping change, just flush the TLB; necessary? */
 		mtpr(0, PR_TBIA);
 	}
-	pmap->pm_stats.resident_count++;
 
 	if (flags & VM_PROT_READ) {
 		pv->pv_attr |= PG_V;

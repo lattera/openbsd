@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.7.14.2 2001/07/04 10:23:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/conf.h,v 1.7.14.3 2002/03/06 02:04:47 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1996 Kenneth Stailey.  All rights reserved.
@@ -33,10 +33,6 @@
 bdev_decl(rd);
 cdev_decl(rd);
 
-/* swap device (required) */
-bdev_decl(sw);
-cdev_decl(sw);
-
 bdev_decl(xd);
 cdev_decl(xd);
 
@@ -52,8 +48,6 @@ cdev_decl(xy);
  */
 
 cdev_decl(fd);
-
-dev_decl(filedesc,open);
 
 cdev_decl(idprom);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pcons.c,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pcons.c,v 1.2.4.2 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: pcons.c,v 1.7 2001/05/02 10:32:20 scw Exp $	*/
 
 /*-
@@ -69,8 +69,8 @@ typedef struct cnm_state {
 	int	cnm_state;
 	u_short	*cnm_magic;
 } cnm_state_t;
-extern int db_console;
 #ifdef DDB
+#include <ddb/db_var.h>
 #define cn_trap()	do { if (db_console) Debugger(); } while (0)
 #else
 #define cn_trap()
@@ -463,7 +463,7 @@ cn_set_magic(char *magic)
 }
 
 /*
- * Translatea state machine table back to
+ * Translate a state machine table back to
  * a magic string.
  */
 int 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.5 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.6 2002/03/06 02:04:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -50,7 +50,6 @@
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/user.h>
 #include <sys/vnode.h>
@@ -64,7 +63,6 @@
 #include <machine/cpu.h>
 #include <machine/cpu_number.h>
 #include <machine/locore.h>
-#include <machine/pte.h>
 #include <machine/trap.h>
 
 extern struct extent *iomap_extent;
@@ -264,6 +262,7 @@ vmapbuf(bp, len)
 		kva += PAGE_SIZE;
 		len -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -338,6 +337,7 @@ iomap_mapin(vm_offset_t pa, vm_size_t len, boolean_t canwait)
 		tva += PAGE_SIZE;
 		ppa += PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 #ifndef NEW_MAPPING
 	return (iova + off);
 #else
@@ -360,6 +360,7 @@ iomap_mapout(vm_offset_t kva, vm_size_t len)
 	len = round_page(off + len);
 
 	pmap_remove(vm_map_pmap(iomap_map), kva, kva + len);
+	pmap_update(vm_map_pmap(iomap_map));
 
 	s = splhigh();
 	error = extent_free(iomap_extent, kva, len, EX_NOWAIT);
@@ -409,6 +410,7 @@ mapiospace(caddr_t pa, int len)
 
 	pmap_kenter_pa(phys_map_vaddr1, (vm_offset_t)pa,
 	    VM_PROT_READ|VM_PROT_WRITE);
+	pmap_update(pmap_kernel());
 	
 	return (phys_map_vaddr1 + off);
 }
@@ -423,29 +425,31 @@ unmapiospace(vm_offset_t va)
 	va = trunc_page(va);
 
 	pmap_kremove(va, PAGE_SIZE);
+	pmap_update(pmap_kernel());
 }
 
 int
 badvaddr(vm_offset_t va, int size)
 {
 	register int 	x;
-
 	if (badaddr(va, size)) {
 		return -1;
 	}
 
 	switch (size) {
 	case 1:
-		x = *(volatile unsigned char *)va;
+		x = *(unsigned char *volatile)va;
 		break;
 	case 2:
-		x = *(volatile unsigned short *)va;
+		x = *(unsigned short *volatile)va;
 		break;
 	case 4:
-		x = *(volatile unsigned long *)va;
+		x = *(unsigned long *volatile)va;
 		break;
+	default:
+                return -1;
 	}
-	return(x);
+	return(0);
 }
 
 int
@@ -496,6 +500,7 @@ pagemove(from, to, size)
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 u_int

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.7 2001/12/05 00:43:28 niklas Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.8 2002/03/06 02:07:09 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -101,7 +101,8 @@ file	dev/ic/wdc.c wdc_base
 # Adaptec 2[789]4X, 394X, aic7770 and aic78[5678]0 SCSI controllers
 device	ahc: scsi
 file	dev/ic/aic7xxx.c	ahc
-file	dev/ic/smc93cx6.c	ahc
+file	dev/ic/aic7xxx_openbsd.c	ahc
+file	dev/ic/aic7xxx_93cx6.c	ahc
 
 # Adaptec AIC-6[23]60 SCSI controllers
 device	aic: scsi
@@ -121,7 +122,7 @@ file	dev/ic/adw.c		adw
 
 # BusLogic MultiMaster and MultiMaster Ultra SCSI controllers
 device	bha: scsi
-file	dev/ic/bha.c		bha
+file	dev/ic/bha.c		bha & (bha_pci | bha_isa | bha_eisa) needs-flag
 
 # ICP Vortex GDT RAID controllers
 device	gdt: scsi
@@ -265,6 +266,10 @@ file	dev/ic/sti.c		sti & (sti_pci | sti_sgc)	needs-flag
 # Initio ULTRA WIDE/ULTRA2 WIDE SCSI Controllers
 device	iha: scsi
 file	dev/ic/iha.c		iha
+
+# Tekram TRM-S1040 SCSI Cards (DC395U/UW/F,DC315/U)
+device	trm: scsi
+file	dev/ic/trm.c		trm
 
 # Attributes which machine-independent bus support can be attached to.
 # These should be defined here, because some of these busses can have
@@ -493,7 +498,6 @@ file kern/subr_log.c
 file kern/subr_pool.c
 file kern/subr_prf.c
 file kern/subr_prof.c
-file kern/subr_rmap.c
 file kern/subr_userconf.c		boot_config
 file kern/subr_xxx.c
 file kern/sys_generic.c
@@ -675,7 +679,6 @@ file crypto/crypto.c			(inet & ipsec) | crypto
 file crypto/cryptodev.c			((inet & ipsec) | crypto)	needs-flag
 file crypto/criov.c			(inet & ipsec) | crypto
 file crypto/cryptosoft.c		(inet & ipsec) | crypto
-file crypto/cryptombuf.c		(inet & ipsec) | crypto
 file crypto/xform.c			(inet & ipsec) | crypto
 file crypto/deflate.c			(inet & ipsec) | crypto
 file netatalk/aarp.c			netatalk
@@ -768,6 +771,7 @@ file ufs/ffs/ffs_softdep.c		ffs_softupdates
 file ufs/mfs/mfs_vfsops.c		mfs
 file ufs/mfs/mfs_vnops.c		mfs
 file ufs/ufs/ufs_bmap.c			ffs | mfs | ext2fs
+file ufs/ufs/ufs_extattr.c		ffs | mfs
 file ufs/ufs/ufs_ihash.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_inode.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_lookup.c		ffs | mfs | ext2fs
@@ -801,7 +805,6 @@ file xfs/xfs_syscalls-dummy.c		!xfs
 file uvm/uvm_amap.c
 file uvm/uvm_anon.c
 file uvm/uvm_aobj.c
-file uvm/uvm_bio.c
 file uvm/uvm_device.c
 file uvm/uvm_fault.c
 file uvm/uvm_glue.c

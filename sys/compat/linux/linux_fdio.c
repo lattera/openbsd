@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_fdio.c,v 1.1.4.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_fdio.c,v 1.1.4.3 2002/03/06 02:07:08 niklas Exp $	*/
 /*	$NetBSD: linux_fdio.c,v 1.1 2000/12/10 14:12:16 fvdl Exp $	*/
 
 /*
@@ -78,6 +78,7 @@ linux_ioctl_fdio(struct proc *p, struct linux_sys_ioctl_args *uap,
 	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL)
 		return (EBADF);
 
+	FREF(fp);
 	com = SCARG(uap, com);
 	ioctlf = fp->f_ops->fo_ioctl;
 
@@ -144,9 +145,6 @@ linux_ioctl_fdio(struct proc *p, struct linux_sys_ioctl_args *uap,
 		error = EINVAL;
 	}
 
-#ifdef notdef
-	FILE_UNUSE(fp, p);
-#endif
-
+	FRELE(fp);
 	return 0;
 }

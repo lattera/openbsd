@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3.4.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3.4.3 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.38 2001/06/30 00:02:20 eeh Exp $ */
 
 /*
@@ -99,7 +99,7 @@ pagemove(from, to, size)
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
-	pmap_update();
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -154,7 +154,7 @@ vmapbuf(bp, len)
 		kva += PAGE_SIZE;
 		len -= PAGE_SIZE;
 	} while (len);
-	pmap_update();
+	pmap_update(pmap_kernel());
 }
 
 /*

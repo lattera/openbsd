@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_misc.c,v 1.22.2.4 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_misc.c,v 1.22.2.5 2002/03/06 02:07:08 niklas Exp $	*/
 /*	$NetBSD: sunos_misc.c,v 1.65 1996/04/22 01:44:31 christos Exp $	*/
 
 /*
@@ -441,9 +441,12 @@ sunos_sys_getdents(p, v, retval)
 
 	args.resid = SCARG(uap, nbytes);
 	args.outp = (caddr_t)SCARG(uap, buf);
-	
-	if ((error = readdir_with_callback(fp, &fp->f_offset, args.resid,
-	    sunos_readdir_callback, &args)) != 0)
+
+	FREF(fp);
+	error = readdir_with_callback(fp, &fp->f_offset, args.resid,
+	    sunos_readdir_callback, &args);
+	FRELE(fp);
+	if (error)
 		return (error);
 
 	*retval = SCARG(uap, nbytes) - args.resid;
@@ -519,20 +522,23 @@ sunos_sys_setsockopt(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	register struct sunos_sys_setsockopt_args *uap = v;
+	struct sunos_sys_setsockopt_args *uap = v;
 	struct file *fp;
 	struct mbuf *m = NULL;
 	int error;
 
 	if ((error = getsock(p->p_fd, SCARG(uap, s), &fp)) != 0)
 		return (error);
+	FREF(fp);
 #define	SO_DONTLINGER (~SO_LINGER)
 	if (SCARG(uap, name) == SO_DONTLINGER) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		mtod(m, struct linger *)->l_onoff = 0;
 		m->m_len = sizeof(struct linger);
-		return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+		error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 		    SO_LINGER, m));
+		FRELE(fp);
+		return (error);
 	}
 	if (SCARG(uap, level) == IPPROTO_IP) {
 #define		SUNOS_IP_MULTICAST_IF		2
@@ -553,20 +559,25 @@ sunos_sys_setsockopt(p, v, retval)
 			    ipoptxlat[SCARG(uap, name) - SUNOS_IP_MULTICAST_IF];
 		}
 	}
-	if (SCARG(uap, valsize) > MLEN)
+	if (SCARG(uap, valsize) > MLEN) {
+		FRELE(fp);
 		return (EINVAL);
+	}
 	if (SCARG(uap, val)) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		error = copyin(SCARG(uap, val), mtod(m, caddr_t),
 		    (u_int)SCARG(uap, valsize));
 		if (error) {
+			FRELE(fp);
 			(void) m_free(m);
 			return (error);
 		}
 		m->m_len = SCARG(uap, valsize);
 	}
-	return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+	error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 	    SCARG(uap, name), m));
+	FRELE(fp);
+	return (error);
 }
 
 int
@@ -586,18 +597,22 @@ sunos_sys_fchroot(p, v, retval)
 	if ((error = getvnode(fdp, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 	vp = (struct vnode *)fp->f_data;
+	FREF(fp);
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (vp->v_type != VDIR)
 		error = ENOTDIR;
 	else
 		error = VOP_ACCESS(vp, VEXEC, p->p_ucred, p);
 	VOP_UNLOCK(vp, 0, p);
-	if (error)
+	if (error) {
+		FRELE(fp);
 		return (error);
+	}
 	VREF(vp);
 	if (fdp->fd_rdir != NULL)
 		vrele(fdp->fd_rdir);
 	fdp->fd_rdir = vp;
+	FRELE(fp);
 	return (0);
 }
 
@@ -685,11 +700,15 @@ sunos_sys_open(p, v, retval)
 
 	if (!ret && !noctty && SESS_LEADER(p) && !(p->p_flag & P_CONTROLT)) {
 		struct filedesc *fdp = p->p_fd;
-		struct file *fp = fdp->fd_ofiles[*retval];
+		struct file *fp;
 
+		if ((fp = fd_getfile(fdp, *retval)) == NULL)
+			return (EBADF);
+		FREF(fp);
 		/* ignore any error, just give it a try */
 		if (fp->f_type == DTYPE_VNODE)
 			(fp->f_ops->fo_ioctl)(fp, TIOCSCTTY, (caddr_t)0, p);
+		FRELE(fp);
 	}
 	return ret;
 }
@@ -839,14 +858,17 @@ sunos_sys_fstatfs(p, v, retval)
 	struct sunos_sys_fstatfs_args *uap = v;
 	struct file *fp;
 	struct mount *mp;
-	register struct statfs *sp;
+	struct statfs *sp;
 	int error;
 
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 	mp = ((struct vnode *)fp->f_data)->v_mount;
 	sp = &mp->mnt_stat;
-	if ((error = VFS_STATFS(mp, sp, p)) != 0)
+	FREF(fp);
+	error = VFS_STATFS(mp, sp, p);
+	FRELE(fp);
+	if (error)
 		return (error);
 	sp->f_flags = mp->mnt_flag & MNT_VISFLAGMASK;
 	return sunstatfs(sp, (caddr_t)SCARG(uap, buf));

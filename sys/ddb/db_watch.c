@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_watch.c,v 1.5.4.1 2001/12/05 00:43:29 niklas Exp $ */
+/*	$OpenBSD: src/sys/ddb/db_watch.c,v 1.5.4.2 2002/03/06 02:07:09 niklas Exp $ */
 /*	$NetBSD: db_watch.c,v 1.9 1996/03/30 22:30:12 christos Exp $	*/
 
 /* 
@@ -219,7 +219,7 @@ db_set_watchpoints()
 {
 	register db_watchpoint_t	watch;
 
-	if (!db_watchpoints_inserted) {
+	if (!db_watchpoints_inserted && db_watchpoint_list != NULL) {
 	    for (watch = db_watchpoint_list;
 	         watch != 0;
 	         watch = watch->link)
@@ -227,7 +227,7 @@ db_set_watchpoints()
 			     trunc_page(watch->loaddr),
 			     round_page(watch->hiaddr),
 			     VM_PROT_READ);
-
+	    pmap_update(watch->map->pmap);
 	    db_watchpoints_inserted = TRUE;
 	}
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.4 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.15.2.5 2002/03/06 02:07:09 niklas Exp $	*/
 /*	$NetBSD: ultrix_misc.c,v 1.23 1996/04/07 17:23:04 jonathan Exp $	*/
 
 /*
@@ -353,27 +353,35 @@ ultrix_sys_setsockopt(p, v, retval)
 
 	if ((error = getsock(p->p_fd, SCARG(uap, s), &fp))  != 0)
 		return (error);
+	FREF(fp);
 #define	SO_DONTLINGER (~SO_LINGER)
 	if (SCARG(uap, name) == SO_DONTLINGER) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		mtod(m, struct linger *)->l_onoff = 0;
 		m->m_len = sizeof(struct linger);
-		return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+		error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 		    SO_LINGER, m));
+		FRELE(fp);
+		return (error);
 	}
-	if (SCARG(uap, valsize) > MLEN)
+	if (SCARG(uap, valsize) > MLEN) {
+		FRELE(fp);
 		return (EINVAL);
+	}
 	if (SCARG(uap, val)) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		if ((error = copyin(SCARG(uap, val), mtod(m, caddr_t),
 				    (u_int)SCARG(uap, valsize))) != 0) {
+			FRELE(fp);
 			(void) m_free(m);
 			return (error);
 		}
 		m->m_len = SCARG(uap, valsize);
 	}
-	return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+	error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 	    SCARG(uap, name), m));
+	FRELE(fp);
+	return (error);
 }
 
 struct ultrix_utsname {

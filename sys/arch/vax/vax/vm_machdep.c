@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.4 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.5 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.67 2000/06/29 07:14:34 mrg Exp $	     */
 
 /*
@@ -328,6 +328,7 @@ vmapbuf(bp, len)
 		faddr += PAGE_SIZE;
 		taddr += PAGE_SIZE;
 	}
+	pmap_update(vm_map_pmap(phys_map));
 #endif
 }
 

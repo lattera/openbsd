@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.4.1 2001/10/31 03:07:59 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.4.2 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.16 2001/07/20 00:07:14 eeh Exp $	*/
 
 /*
@@ -557,15 +557,15 @@ prom_get_msgbuf(len, align)
  * Low-level prom I/O routines.
  */
 
-static u_int stdin = NULL;
-static u_int stdout = NULL;
+static u_int stdin;
+static u_int stdout;
 
 int 
 OF_stdin() 
 {
 	u_int chosen;
 
-	if (stdin != NULL) 
+	if (stdin != 0) 
 		return stdin;
 		
 	chosen = OF_finddevice("/chosen");
@@ -578,7 +578,7 @@ OF_stdout()
 {
 	u_int chosen;
 
-	if (stdout != NULL) 
+	if (stdout != 0) 
 		return stdout;
 		
 	chosen = OF_finddevice("/chosen");

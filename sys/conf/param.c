@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.5 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.6 2002/03/06 02:07:09 niklas Exp $	*/
 /*	$NetBSD: param.c,v 1.16 1996/03/12 03:08:40 mrg Exp $	*/
 
 /*
@@ -92,7 +92,7 @@ int	maxproc = NPROC;
 #define	NVNODE (NPROC * 2 + NTEXT + 100)
 int	desiredvnodes = NVNODE;
 int	maxfiles = 3 * (NPROC + MAXUSERS) + 80;
-int	nmbclusters = NMBCLUSTERS;
+int	nmbclust = NMBCLUSTERS;
 
 #ifndef MBLOWAT
 #define MBLOWAT		16

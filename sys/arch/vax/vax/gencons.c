@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.6.12.3 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.6.12.4 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: gencons.c,v 1.22 2000/01/24 02:40:33 matt Exp $	*/
 
 /*
@@ -256,7 +256,8 @@ gencnprobe(struct consdev *cndev)
 	    (vax_boardtype == VAX_BTYP_660) ||
 	    (vax_boardtype == VAX_BTYP_670) ||
 	    (vax_boardtype == VAX_BTYP_1301) ||
-	    (vax_boardtype == VAX_BTYP_1303)) {
+	    (vax_boardtype == VAX_BTYP_1303) ||
+	    (vax_boardtype == VAX_BTYP_1305)) {
 		cndev->cn_dev = makedev(25, 0);
 		cndev->cn_pri = CN_NORMAL;
 	} else

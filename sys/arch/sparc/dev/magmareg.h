@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/magmareg.h,v 1.2.8.2 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/magmareg.h,v 1.2.8.3 2002/03/06 02:04:46 niklas Exp $	*/
 
 /* magmareg.h
  *
@@ -70,8 +70,9 @@
  * Supported Card Types
  */
 struct magma_board_info {
-	char *mb_name;			/* cardname to match against */
-	char *mb_realname;		/* english card name */
+	const char *mb_sbusname;	/* sbus name */
+	const char *mb_name;		/* cardname to match against */
+	const char *mb_realname;	/* english card name */
 	int mb_nser;			/* number of serial ports */
 	int mb_npar;			/* number of parallel ports */
 	int mb_ncd1400;			/* number of CD1400 chips */
@@ -191,13 +192,6 @@ struct mbpp_softc {
 	int ms_nports;			/* parallel ports */
 	struct mbpp_port ms_port[MAGMA_MAX_BPP];
 };
-
-/*
- * useful macros
- */
-#define SET(t, f)	((t) |= (f))
-#define CLR(t, f)	((t) &= ~(f))
-#define ISSET(t, f)	((t) & (f))
 
 /* internal function prototypes */
 

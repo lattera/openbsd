@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.2 2001/11/13 21:04:15 niklas Exp $        */
+/*      $OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/bus_dma.c,v 1.2.2.3 2002/03/06 02:04:46 niklas Exp $        */
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-
@@ -521,6 +521,7 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
                             VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
                 }
         }
+	pmap_update(pmap_kernel());
 
         return (0);
 }

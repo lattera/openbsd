@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.4 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.5 2002/03/06 02:04:45 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -138,11 +138,13 @@ mmrw(dev, uio, flags)
 			pmap_enter(pmap_kernel(), (vm_offset_t)vmmap,
 			    trunc_page(v), uio->uio_rw == UIO_READ ?
 			    VM_PROT_READ : VM_PROT_WRITE, PMAP_WIRED);
+			pmap_update(pmap_kernel());
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));
 			error = uiomove((caddr_t)vmmap + o, c, uio);
 			pmap_remove(pmap_kernel(), (vm_offset_t)vmmap,
 			    (vm_offset_t)vmmap + NBPG);
+			pmap_update(pmap_kernel());
 			continue;
 
 /* minor device 1 is kernel memory */

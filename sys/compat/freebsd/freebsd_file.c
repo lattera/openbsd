@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8.2.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_file.c,v 1.8.2.3 2002/03/06 02:07:07 niklas Exp $	*/
 /*	$NetBSD: freebsd_file.c,v 1.3 1996/05/03 17:03:09 christos Exp $	*/
 
 /*
@@ -623,7 +623,10 @@ freebsd_sys_fstatfs(p, v, retval)
 		return (error);
 	mp = ((struct vnode *)fp->f_data)->v_mount;
 	sp = &mp->mnt_stat;
-	if ((error = VFS_STATFS(mp, sp, p)) != 0)
+	FREF(fp);
+	error = VFS_STATFS(mp, sp, p);
+	FRELE(fp);
+	if (error)
 		return (error);
 	sp->f_flags = mp->mnt_flag & MNT_VISFLAGMASK;
 
@@ -796,7 +799,7 @@ freebsd_sys_fcntl(p, v, retval)
 		syscallarg(int) cmd;
 		syscallarg(void *) arg;
 	} */ *uap = v;
-	int fd, cmd;
+	int fd, cmd, error;
 	struct filedesc *fdp;
 	struct file *fp;
 
@@ -810,10 +813,14 @@ freebsd_sys_fcntl(p, v, retval)
 		fdp = p->p_fd;
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
 			return (EBADF);
-		if (fp->f_type == DTYPE_PIPE)
-			return ((*fp->f_ops->fo_ioctl)(fp,
+		if (fp->f_type == DTYPE_PIPE) {
+			FREF(fp);
+			error = (*fp->f_ops->fo_ioctl)(fp,
 			    cmd == F_GETOWN ? SIOCGPGRP : SIOCSPGRP,
-			    (caddr_t)&SCARG(uap, arg), p));
+			    (caddr_t)&SCARG(uap, arg), p);
+			FRELE(fp);
+			return (error);
+		}
 		break;
 	}
 

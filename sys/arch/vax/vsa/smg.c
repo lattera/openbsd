@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/smg.c,v 1.2.4.3 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/smg.c,v 1.2.4.4 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: smg.c,v 1.21 2000/03/23 06:46:44 thorpej Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
@@ -570,7 +570,6 @@ smg_show_screen(void *v, void *cookie, int waitok,
 }
 
 cons_decl(smg);
-cdev_decl(wsdisplay);
 
 void
 smgcninit(cndev)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.5.4.2 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.5.4.3 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: intr.c,v 1.39 2001/07/19 23:38:11 eeh Exp $ */
 
 /*
@@ -282,6 +282,8 @@ intr_establish(level, ih)
 		if (q->ih_fun != intr_list_handler) {
 			nih = (struct intrhand *)malloc(sizeof(struct intrhand),
 			    M_DEVBUF, M_NOWAIT);
+			if (nih == NULL)
+				panic("intr_establish");
 			/* Point the old IH at the new handler */
 			*nih = *q;
 			q->ih_fun = intr_list_handler;
@@ -290,6 +292,8 @@ intr_establish(level, ih)
 		}
 		nih = (struct intrhand *)malloc(sizeof(struct intrhand),
 		    M_DEVBUF, M_NOWAIT);
+		if (nih == NULL)
+			panic("intr_establish");
 		*nih = *ih;
 		/* Add the ih to the head of the list */
 		nih->ih_next = (struct intrhand *)q->ih_arg;

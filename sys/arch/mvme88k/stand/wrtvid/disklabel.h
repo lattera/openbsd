@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/wrtvid/Attic/disklabel.h,v 1.1.8.1 2001/10/31 03:01:20 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/wrtvid/Attic/disklabel.h,v 1.1.8.2 2002/03/06 02:04:45 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1995 Dale Rahn.
@@ -31,7 +31,7 @@
  */  
 
 #ifndef _MACHINE_DISKLABEL_H_
-#define /* _MACHINE_DISKLABEL_H_ */
+#define _MACHINE_DISKLABEL_H_
 
 /* number of boot pieces , ie xxboot bootxx */
 #define NUMBOOT		2
@@ -134,4 +134,4 @@ struct cpu_disklabel {
 	u_long		magic2;
 	u_char		cfg_4[192];
 };
-#endif _MACHINE_DISKLABEL_H_
+#endif	/* _MACHINE_DISKLABEL_H_ */

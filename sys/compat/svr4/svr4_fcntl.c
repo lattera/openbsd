@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_fcntl.c,v 1.14.4.2 2001/10/31 03:11:47 nate Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_fcntl.c,v 1.14.4.3 2002/03/06 02:07:08 niklas Exp $	 */
 /*	$NetBSD: svr4_fcntl.c,v 1.14 1995/10/14 20:24:24 christos Exp $	 */
 
 /*
@@ -272,8 +272,10 @@ fd_truncate(p, fd, flp, retval)
 	if (fp->f_type != DTYPE_VNODE || vp->v_type == VFIFO)
 		return ESPIPE;
 
+	FREF(fp);
+
 	if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred, p)) != 0)
-		return error;
+		goto out;
 
 	length = vattr.va_size;
 
@@ -291,18 +293,23 @@ fd_truncate(p, fd, flp, retval)
 		break;
 
 	default:
-		return EINVAL;
+		error = EINVAL;
+		goto out;
 	}
 
 	if (start + flp->l_len < length) {
 		/* We don't support free'ing in the middle of the file */
-		return EINVAL;
+		error = EINVAL;
+		goto out;
 	}
 
 	SCARG(&ft, fd) = fd;
 	SCARG(&ft, length) = start;
 
-	return sys_ftruncate(p, &ft, retval);
+	error = sys_ftruncate(p, &ft, retval);
+out:
+	FRELE(fp);
+	return (error);
 }
 
 int
@@ -334,11 +341,15 @@ svr4_sys_open(p, v, retval)
 	if (!(SCARG(&cup, flags) & O_NOCTTY) && SESS_LEADER(p) &&
 	    !(p->p_flag & P_CONTROLT)) {
 		struct filedesc	*fdp = p->p_fd;
-		struct file	*fp = fdp->fd_ofiles[*retval];
+		struct file	*fp;
 
+		if ((fp = fd_getfile(fdp, *retval)) == NULL)
+			return (EBADF);
+		FREF(fp);
 		/* ignore any error, just give it a try */
 		if (fp->f_type == DTYPE_VNODE)
 			(fp->f_ops->fo_ioctl) (fp, TIOCSCTTY, (caddr_t) 0, p);
+		FRELE(fp);
 	}
 	return 0;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/bugtty.c,v 1.1.2.1 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/bugtty.c,v 1.1.2.2 2002/03/06 02:04:45 niklas Exp $ */
 /* Copyright (c) 1998 Steve Murphree, Jr. 
  * Copyright (c) 1995 Dale Rahn.
  * All rights reserved.
@@ -153,7 +153,7 @@ bugttymctl(dev, bits, how)
 	case DMGET:
 		break;
 	}
-	(void)splx(s);
+	splx(s);
 
 	bits = 0;
 	/* proper defaults? */

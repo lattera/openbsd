@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sbus.c,v 1.7.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sbus.c,v 1.7.4.2 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: sbus.c,v 1.46 2001/10/07 20:30:41 eeh Exp $ */
 
 /*-
@@ -123,6 +123,8 @@
 #include <sparc64/dev/sbusreg.h>
 #include <dev/sbus/sbusvar.h>
 
+#include <uvm/uvm_extern.h>
+
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
 #include <machine/sparc64.h>
@@ -144,7 +146,6 @@ static int sbus_get_intr __P((struct sbus_softc *, int,
 			      struct sbus_intr **, int *, int));
 int sbus_bus_mmap __P((bus_space_tag_t, bus_type_t, bus_addr_t,
 			      int, bus_space_handle_t *));
-bus_addr_t sbus_bus_addr __P((bus_space_tag_t, u_int, u_int));
 static int sbus_overtemp __P((void *));
 static int _sbus_bus_map __P((
 		bus_space_tag_t,
@@ -338,6 +339,8 @@ sbus_attach(parent, self, aux)
 	/* Enable the over temp intr */
 	ih = (struct intrhand *)
 		malloc(sizeof(struct intrhand), M_DEVBUF, M_NOWAIT);
+	if (ih == NULL)
+		panic("couldn't malloc intrhand");
 	ih->ih_map = &sc->sc_sysio->therm_int_map;
 	ih->ih_clr = NULL; /* &sc->sc_sysio->therm_clr_int; */
 	ih->ih_fun = sbus_overtemp;
@@ -512,10 +515,11 @@ sbus_bus_mmap(t, btype, paddr, flags, hp)
 
 		paddr = sc->sc_range[i].poffset + offset;
 		paddr |= ((bus_addr_t)sc->sc_range[i].pspace<<32);
-		return (bus_space_mmap(sc->sc_bustag, 0, paddr, flags, hp));
+		*hp = bus_space_mmap(sc->sc_bustag, paddr, 0,
+		    VM_PROT_READ|VM_PROT_WRITE, flags);
 	}
 
-		return (-1);
+	return (*hp == -1 ? -1 : 0);
 }
 
 bus_addr_t

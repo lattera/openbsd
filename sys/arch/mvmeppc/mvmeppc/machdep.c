@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.2 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.3 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -40,7 +40,6 @@
 #include <sys/timeout.h>
 #include <sys/exec.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
 #include <sys/mbuf.h>
 #include <sys/mount.h>
 #include <sys/msgbuf.h>
@@ -125,17 +124,22 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef BUFPAGES
 int bufpages = BUFPAGES;
 #else
 int bufpages = 0;
 #endif
+int bufcachepercent = BUFCACHEPERCENT;
 
 struct bat battable[16];
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *phys_map = NULL;
 
 int astpending;
 int ppc_malloc_ok = 0;
@@ -567,10 +571,6 @@ cpu_startup()
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
 	
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
 	printf("avail mem = %d\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
 	    bufpages * PAGE_SIZE);
@@ -610,14 +610,11 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Decide on buffer space to use.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem * BUFCACHEPERCENT / 100;
+		bufpages = physmem * bufcachepercent / 100;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -1155,6 +1152,7 @@ bus_space_unmap(t, bsh, size)
 	}
 #endif
 	pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
+	pmap_update(vm_map_pmap(phys_map));
 }
 
 int
@@ -1260,7 +1258,7 @@ unmapiodev(kva, p_size)
 #endif
 		vaddr += NBPG;
 	}
-	return;
+	pmap_update(pmap_kernel());
 }
 
 #if 0

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3.12.3 2001/11/13 21:04:19 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3.12.4 2002/03/06 02:04:48 niklas Exp $ */
 /*	$NetBSD: vsbus.c,v 1.29 2000/06/29 07:14:37 mrg Exp $ */
 /*
  * Copyright (c) 1996, 1999 Ludd, University of Lule}, Sweden.
@@ -41,7 +41,6 @@
 #include <sys/ioctl.h>
 #include <sys/proc.h>
 #include <sys/user.h>
-#include <sys/map.h>
 #include <sys/device.h>
 #include <sys/dkstat.h>
 #include <sys/disklabel.h>

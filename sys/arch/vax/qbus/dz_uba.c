@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dz_uba.c,v 1.1.8.2 2001/10/31 03:08:01 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dz_uba.c,v 1.1.8.3 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: dz_uba.c,v 1.11 2000/06/04 06:17:02 matt Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -36,7 +36,6 @@
 #include <sys/ioctl.h>
 #include <sys/tty.h>
 #include <sys/proc.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/conf.h>
 #include <sys/file.h>

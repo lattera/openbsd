@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.4 2001/11/13 21:05:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.9.10.5 2002/03/06 02:07:07 niklas Exp $	*/
 /*	$NetBSD: vfs_syscalls_43.c,v 1.4 1996/03/14 19:31:52 christos Exp $	*/
 
 /*
@@ -185,20 +185,22 @@ compat_43_sys_fstat(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	register struct compat_43_sys_fstat_args /* {
+	struct compat_43_sys_fstat_args /* {
 		syscallarg(int) fd;
 		syscallarg(struct ostat *) sb;
 	} */ *uap = v;
 	int fd = SCARG(uap, fd);
-	register struct filedesc *fdp = p->p_fd;
-	register struct file *fp;
+	struct filedesc *fdp = p->p_fd;
+	struct file *fp;
 	struct stat ub;
 	struct ostat oub;
 	int error;
 
 	if ((fp = fd_getfile(fdp, fd)) == NULL)
 		return (EBADF);
+	FREF(fp);
 	error = (*fp->f_ops->fo_stat)(fp, &ub, p);
+	FRELE(fp);
 	cvtstat(&ub, &oub);
 	if (error == 0)
 		error = copyout((caddr_t)&oub, (caddr_t)SCARG(uap, sb),
@@ -355,10 +357,13 @@ compat_43_sys_getdirentries(p, v, retval)
 		return (error);
 	if ((fp->f_flag & FREAD) == 0)
 		return (EBADF);
+	FREF(fp);
 	vp = (struct vnode *)fp->f_data;
 unionread:
-	if (vp->v_type != VDIR)
-		return (EINVAL);
+	if (vp->v_type != VDIR) {
+		error = EINVAL;
+		goto bad;
+	}
 	aiov.iov_base = SCARG(uap, buf);
 	aiov.iov_len = SCARG(uap, count);
 	auio.uio_iov = &aiov;
@@ -428,13 +433,13 @@ unionread:
 	}
 	VOP_UNLOCK(vp, 0, p);
 	if (error)
-		return (error);
+		goto bad;
 	if ((SCARG(uap, count) == auio.uio_resid) &&
 	    union_check_p &&
 	    (union_check_p(p, &vp, fp, auio, &error) != 0))
 		goto unionread;
 	if (error)
-		return (error);
+		goto bad;
 
 	if ((SCARG(uap, count) == auio.uio_resid) &&
 	    (vp->v_flag & VROOT) &&
@@ -450,5 +455,7 @@ unionread:
 	error = copyout((caddr_t)&loff, (caddr_t)SCARG(uap, basep),
 	    sizeof(long));
 	*retval = SCARG(uap, count) - auio.uio_resid;
+bad:
+	FRELE(fp);
 	return (error);
 }

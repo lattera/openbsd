@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/Makefile,v 1.2.6.1 2001/05/14 21:37:43 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/Makefile,v 1.2.6.2 2002/03/06 02:04:47 niklas Exp $
 #	$NetBSD: Makefile,v 1.4 1999/05/23 21:58:19 ragge Exp $
 
 S!=	cd ${.CURDIR}/../../../../; pwd
@@ -16,7 +16,7 @@ CLEANFILES+=${PROG}.mop
 CPPFLAGS+=-DSUPPORT_BOOTPARAMS -DSUPPORT_DHCP -D_STANDALONE 
 #CPPFLAGS+=-DBOOTP_DEBUG -DNETIF_DEBUG -DETHER_DEBUG -DNFS_DEBUG -DDEV_DEBUG \
 #	-DRPC_DEBUG -DRARP_DEBUG -DPARANOID -DSUPPORT_BOOTP
-BINDIR=	/
+BINDIR=	/usr/mdec
 
 SA_ZLIB=	yes
 SAREL=

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.8 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.9 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -59,7 +59,6 @@
 #include <sys/buf.h>
 #include <sys/exec.h>
 #include <sys/vnode.h>
-#include <sys/map.h>
 #include <sys/extent.h>
 
 #include <uvm/uvm_extern.h>
@@ -95,6 +94,7 @@ pagemove(from, to, size)
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -231,6 +231,7 @@ dvma_mapin_space(map, va, len, canwait, space)
 				pa |= PG_IOC;
 #endif
 #endif
+			/* XXX - this should probably be pmap_kenter */
 			pmap_enter(pmap_kernel(), tva, pa | PMAP_NC,
 				   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 		}
@@ -238,6 +239,7 @@ dvma_mapin_space(map, va, len, canwait, space)
 		tva += PAGE_SIZE;
 		va += PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * XXX Only have to do this on write.
@@ -269,7 +271,10 @@ dvma_mapout(kva, va, len)
 		iommu_remove(kva, klen);
 	else
 #endif
+	{
 		pmap_remove(pmap_kernel(), kva, kva + klen);
+		pmap_update(pmap_kernel());
+	}
 
 	s = splhigh();
 	error = extent_free(dvmamap_extent, kva, klen, EX_NOWAIT);
@@ -340,6 +345,7 @@ vmapbuf(bp, sz)
 		kva += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -518,6 +524,7 @@ cpu_coredump(p, vp, cred, chdr)
 	chdr->c_cpusize = sizeof(md_core);
 
 	md_core.md_tf = *p->p_md.md_tf;
+	md_core.md_wcookie = p->p_addr->u_pcb.pcb_wcookie;
 	if (p->p_md.md_fpstate) {
 		if (p == cpuinfo.fpproc)
 			savefpstate(p->p_md.md_fpstate);

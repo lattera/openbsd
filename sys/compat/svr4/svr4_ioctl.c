@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7.10.2 2001/10/31 03:11:47 nate Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_ioctl.c,v 1.7.10.3 2002/03/06 02:07:08 niklas Exp $	 */
 /*	$NetBSD: svr4_ioctl.c,v 1.16 1996/04/11 12:54:41 christos Exp $	 */
 
 /*
@@ -95,6 +95,7 @@ svr4_sys_ioctl(p, v, retval)
 	u_long		 cmd;
 	int (*fun) __P((struct file *, struct proc *, register_t *,
 			int, u_long, caddr_t));
+	int error = 0;
 #ifdef DEBUG_SVR4
 	char		 dir[4];
 	char		 c;
@@ -142,11 +143,16 @@ svr4_sys_ioctl(p, v, retval)
 
 	case SVR4_XIOC:
 		/* We do not support those */
-		return (EINVAL);
+		error = EINVAL;
+		goto out;
 
 	default:
 		DPRINTF(("Unimplemented ioctl %lx\n", cmd));
-		return (0);	/* XXX: really ENOSYS */
+		error = 0;	/* XXX: really ENOSYS */
+		goto out;
 	}
-	return (*fun)(fp, p, retval, SCARG(uap, fd), cmd, SCARG(uap, data));
+	error = (*fun)(fp, p, retval, SCARG(uap, fd), cmd, SCARG(uap, data));
+out:
+	FRELE(fp);
+	return (error);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sclock.c,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sclock.c,v 1.1.4.3 2002/03/06 02:04:44 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * 
@@ -90,7 +90,6 @@
 #include <machine/board.h>
 #include <machine/psl.h>
 #include <machine/autoconf.h>
-#include <machine/bugio.h>
 #include <machine/cpu.h>
 #include "pcctwo.h"
 #if NPCCTWO > 0 
@@ -191,7 +190,7 @@ sclockattach(parent, self, args)
 		sc->sc_statih.ih_ipl = ca->ca_ipl;
 		stat_reset = ca->ca_ipl | PCC2_IRQ_IEN | PCC2_IRQ_ICLR;
 		pcctwointr_establish(PCC2V_TIMER2, &sc->sc_statih);
-		mdfp.statclock_init_func = &sbc_initstatclock;
+		md.statclock_init_func = sbc_initstatclock;
 		printf(": VME1x7");
 		break;
 #endif /* NPCCTWO */
@@ -202,7 +201,7 @@ sclockattach(parent, self, args)
 		sc->sc_statih.ih_wantframe = 1;
 		sc->sc_statih.ih_ipl = ca->ca_ipl;
 		sysconintr_establish(SYSCV_TIMER2, &sc->sc_statih);
-		mdfp.statclock_init_func = &m188_initstatclock;
+		md.statclock_init_func = m188_initstatclock;
 		printf(": VME188");
 		break;
 #endif /* NSYSCON */
@@ -353,7 +352,7 @@ write_cio(reg, val)
 	unsigned reg,val;
 {
 	int s, i;
-	volatile int *cio_ctrl = (volatile int *)CIO_CNTRL;
+	int *volatile cio_ctrl = (int *volatile)CIO_CNTRL;
 	
 	s = splclock();
 	CIO_LOCK;
@@ -376,7 +375,7 @@ read_cio(reg)
 {
 	int c;
 	int s, i;
-	volatile int *cio_ctrl = (volatile int *)CIO_CNTRL;
+	int *volatile cio_ctrl = (int *volatile)CIO_CNTRL;
 
 	s = splclock();
 	CIO_LOCK;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_types.h,v 1.3.16.1 2001/05/14 22:04:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_types.h,v 1.3.16.2 2002/03/06 02:07:08 niklas Exp $	*/
 /*	$NetBSD: linux_types.h,v 1.5 1996/05/20 01:59:28 fvdl Exp $	*/
 
 /*
@@ -48,6 +48,7 @@ typedef unsigned short linux_nlink_t;
 typedef long linux_time_t;
 typedef long linux_clock_t;
 typedef long linux_off_t;
+typedef u_int64_t linux_loff_t;
 typedef int linux_pid_t;
 
 struct linux_statfs {

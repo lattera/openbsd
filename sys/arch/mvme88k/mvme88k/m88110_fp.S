@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_fp.S,v 1.1.4.3 2001/10/31 03:01:19 nate Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_fp.S,v 1.1.4.4 2002/03/06 02:04:45 niklas Exp $	*/
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -82,7 +82,7 @@ ASGLOBAL(m88110_FPuimp)
 	st      r3,r31,32       /* save exception frame */
 	or      r2,r0,T_FPEPFLT /* load trap type */
 	or	r3, r29, r0
-	bsr     _C_LABEL(trap197)        /* trap */
+	bsr     _C_LABEL(m88110_trap)	/* trap */
 	ld      r1,r31,36       /* recover return address */
 	addu    r31,r31,40      /* deallocate stack */
  	jmp	r1
@@ -93,7 +93,7 @@ ASGLOBAL(m88110_FPpriviol)
 	st      r3,r31,32       /* save exception frame */
 	or      r2,r0,T_PRIVINFLT /* load trap type */
 	or	r3, r29, r0
-	bsr     _C_LABEL(trap197)        /* trap */
+	bsr     _C_LABEL(m88110_trap)	/* trap */
 	ld      r1,r31,36       /* recover return address */
 	addu    r31,r31,40      /* deallocate stack */
  	jmp	r1

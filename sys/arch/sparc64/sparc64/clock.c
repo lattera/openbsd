@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.3.4.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.3.4.3 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.41 2001/07/24 19:29:25 eeh Exp $ */
 
 /*
@@ -100,8 +100,6 @@ extern u_int64_t cpu_clockrate;
 struct rtc_info {
 	bus_space_tag_t	rtc_bt;		/* bus tag & handle */
 	bus_space_handle_t rtc_bh;	/* */
-	u_int		rtc_year0;	/* What year is represented on the system
-					   by the chip's year counter at 0 */
 };
 
 struct cfdriver clock_cd = {
@@ -140,7 +138,6 @@ static int	clockmatch_rtc __P((struct device *, void *, void *));
 static void	clockattach_rtc __P((struct device *, struct device *, void *));
 static void	clockattach __P((int, bus_space_tag_t, bus_space_handle_t));
 
-
 struct cfattach clock_sbus_ca = {
 	sizeof(struct device), clockmatch_sbus, clockattach_sbus
 };
@@ -153,7 +150,9 @@ struct cfattach rtc_ebus_ca = {
 	sizeof(struct device), clockmatch_rtc, clockattach_rtc
 };
 
-extern struct cfdriver clock_cd;
+struct cfdriver rtc_cd = {
+	NULL, "rtc", DV_DULL
+};
 
 /* Global TOD clock handle & idprom pointer */
 static todr_chip_handle_t todr_handle = NULL;
@@ -512,6 +511,8 @@ clockattach_rtc(parent, self, aux)
 	/* Setup our todr_handle */
 	sz = ALIGN(sizeof(struct todr_chip_handle)) + sizeof(struct rtc_info);
 	handle = malloc(sz, M_DEVBUF, M_NOWAIT);
+	if (handle == NULL)
+		panic("clockattach_rtc");
 	rtc = (struct rtc_info*)((u_long)handle +
 				 ALIGN(sizeof(struct todr_chip_handle)));
 	handle->cookie = rtc;
@@ -522,8 +523,6 @@ clockattach_rtc(parent, self, aux)
 	handle->todr_setwen = NULL;
 	rtc->rtc_bt = bt;
 	rtc->rtc_bh = ebi.ei_bh;
-	/* Our TOD clock year 0 is 1968 */
-	rtc->rtc_year0 = 1968;	/* XXX Really? */
 
 	/* Save info for the clock wenable call. */
 	ebi.ei_bt = bt;
@@ -874,11 +873,6 @@ tickintr(cap)
 {
 	int s;
 
-#if	NKBD	> 0
-	extern int cnrom __P((void));
-	extern int rom_console_input;
-#endif
-
 	hardclock((struct clockframe *)cap);
 	if (poll_console)
 		setsoftint();
@@ -1063,14 +1057,8 @@ rtc_gettime(handle, tv)
 	dt.dt_wday = rtc_read_reg(bt, bh, MC_DOW);
 	dt.dt_mon = rtc_read_reg(bt, bh, MC_MONTH);
 	year = rtc_read_reg(bt, bh, MC_YEAR);
-printf("rtc_gettime: read y %x/%d m %x/%d wd %d d %x/%d "
-	"h %x/%d m %x/%d s %x/%d\n",
-	year, year, dt.dt_mon, dt.dt_mon, dt.dt_wday,
-	dt.dt_day, dt.dt_day, dt.dt_hour, dt.dt_hour,
-	dt.dt_min, dt.dt_min, dt.dt_sec, dt.dt_sec);
 
-	year += rtc->rtc_year0;
-	if (year < POSIX_BASE_YEAR && rtc_auto_century_adjust != 0)
+	if ((year += 1900) < POSIX_BASE_YEAR)
 		year += 100;
 
 	dt.dt_year = year;
@@ -1110,9 +1098,7 @@ rtc_settime(handle, tv)
 	/* Note: we ignore `tv_usec' */
 	clock_secs_to_ymdhms(tv->tv_sec, &dt);
 
-	year = dt.dt_year - rtc->rtc_year0;
-	if (year > 99 && rtc_auto_century_adjust != 0)
-		year -= 100;
+	year = dt.dt_year % 100;
 
 	todr_wenable(handle, 1);
 	/* enable write */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.h,v 1.9.8.2 2001/07/04 10:40:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.h,v 1.9.8.3 2002/03/06 02:07:09 niklas Exp $	*/
 /*	$NetBSD: db_command.h,v 1.8 1996/02/05 01:56:55 christos Exp $	*/
 
 /* 
@@ -41,7 +41,10 @@ void db_command __P((struct db_command **, struct db_command *));
 void db_map_print_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_malloc_print_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_object_print_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_page_print_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_extent_print_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_pool_print_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_uvmexp_print_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_machine_commands_install __P((struct db_command *));
 void db_help_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_command_loop __P((void));
@@ -51,6 +54,8 @@ void db_boot_sync_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_boot_crash_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_boot_dump_cmd __P((db_expr_t, int, db_expr_t, char *));
 void db_boot_halt_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_boot_reboot_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_boot_poweroff_cmd __P((db_expr_t, int, db_expr_t, char *));
 
 db_addr_t	db_dot;		/* current location */
 db_addr_t	db_last_addr;	/* last explicit address typed */

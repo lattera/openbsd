@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.3 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -50,7 +50,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/disklabel.h>
 #include <sys/device.h>
@@ -121,7 +120,8 @@ void	setroot __P((void));
 void	swapconf __P((void));
 void	diskconf __P((void));
 static	struct device *getdisk __P((char *, int, int, dev_t *));
-static int findblkmajor __P((struct device *));
+int	findblkmajor __P((struct device *));
+char	*findblkname __P((int));
 
 struct device *booted_device;
 struct	bootpath bootpath[8];
@@ -618,6 +618,22 @@ setroot()
 #endif
 
 	/*
+	 * (raid) device auto-configuration could have returned
+	 * the root device's id in rootdev.  Check this case.
+	 */
+	if (rootdev != NODEV) {
+		majdev = major(rootdev);
+		unit = DISKUNIT(rootdev);
+		part = DISKPART(rootdev);
+
+		len = sprintf(buf, "%s%d", findblkname(majdev), unit);
+		if (len >= sizeof(buf))
+			panic("setroot: device name too long");
+
+		bootdv = getdisk(buf, len, part, &rootdev);
+	}
+
+	/*
 	 * If `swap generic' and we couldn't determine boot device,
 	 * ask the user.
 	 */
@@ -784,13 +800,14 @@ struct nam2blk {
 	char *name;
 	int maj;
 } nam2blk[] = {
-	{ "sd",         7 },
-	{ "rd",         5 },
+	{ "sd",		 7 },
+	{ "rd",		 5 },
 	{ "wd",		12 },
-	{ "cd",         18 },
+	{ "cd",		18 },
+	{ "raid",	25 },
 };
 
-static int
+int
 findblkmajor(dv)
 	struct device *dv;
 {
@@ -798,9 +815,21 @@ findblkmajor(dv)
 	int i;
 
 	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
-		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[0].name)) == 0)      
+		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[i].name)) == 0)
 			return (nam2blk[i].maj);
 	return (-1);
+}
+
+char *
+findblkname(maj)
+	int maj;
+{
+	int i;
+
+	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
+		if (nam2blk[i].maj == maj)
+			return (nam2blk[i].name);
+	return (NULL);
 }
 
 static struct device *
@@ -1324,47 +1353,30 @@ node_has_property(node, prop)	/* returns 1 if node has given property */
 	return (OF_getproplen(node, (caddr_t)prop) != -1);
 }
 
-#ifdef RASTERCONSOLE
-/* Pass a string to the FORTH PROM to be interpreted */
-void
-rominterpret(s)
-	register char *s;
-{
-
-	if (promvec->pv_romvec_vers < 2)
-		promvec->pv_fortheval.v0_eval(strlen(s), s);
-	else
-		promvec->pv_fortheval.v2_eval(s);
-}
-
 /*
  * Try to figure out where the PROM stores the cursor row & column
  * variables.  Returns nonzero on error.
  */
 int
 romgetcursoraddr(rowp, colp)
-	register int **rowp, **colp;
+	int **rowp, **colp;
 {
-	char buf[100];
+	cell_t row = NULL, col = NULL;
+
+	OF_interpret("stdout @ is my-self addr line# addr column# ",
+	    2, &col, &row);
 
 	/*
-	 * line# and column# are global in older proms (rom vector < 2)
-	 * and in some newer proms.  They are local in version 2.9.  The
-	 * correct cutoff point is unknown, as yet; we use 2.9 here.
+	 * We are running on a 64-bit machine, so these things point to
+	 * 64-bit values.  To convert them to pointers to interfaces, add
+	 * 4 to the address.
 	 */
-	if (promvec->pv_romvec_vers < 2 || promvec->pv_printrev < 0x00020009)
-		sprintf(buf,
-		    "' line# >body >user %lx ! ' column# >body >user %lx !",
-		    (u_long)rowp, (u_long)colp);
-	else
-		sprintf(buf,
-		    "stdout @ is my-self addr line# %lx ! addr column# %lx !",
-		    (u_long)rowp, (u_long)colp);
-	*rowp = *colp = NULL;
-	rominterpret(buf);
-	return (*rowp == NULL || *colp == NULL);
+	if (row == NULL || col == NULL)
+		return (-1);
+	*rowp = (int *)(row + 4);
+	*colp = (int *)(col + 4);
+	return (0);
 }
-#endif
 
 void
 callrom()
@@ -1455,7 +1467,9 @@ static struct {
 	{ "ide",	BUSCLASS_PCI,		"pciide" },
 	{ "disk",	BUSCLASS_NONE,		"wd" },
 	{ "cmdk",	BUSCLASS_NONE,		"wd" },
+	{ "pci108e,1101.1", BUSCLASS_NONE,	"gem" },
 	{ "network",	BUSCLASS_NONE,		"hme" },
+	{ "ethernet",	BUSCLASS_NONE,		"dc" },
 	{ "SUNW,fas",	BUSCLASS_NONE,		"esp" },
 	{ "SUNW,hme",	BUSCLASS_NONE,		"hme" },
 	{ "glm",	BUSCLASS_PCI,		"siop" },

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4 1997/05/29 00:05:08 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4.12.1 2002/03/06 02:04:48 niklas Exp $ */
 /*	$NetBSD: ts.c,v 1.11 1997/01/11 11:34:43 ragge Exp $ */
 
 /*-
@@ -126,7 +126,6 @@ int tstrace = 1;
 #include <sys/conf.h>
 #include <sys/errno.h>
 #include <sys/file.h>
-#include <sys/map.h>
 #include <sys/syslog.h>
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
@@ -1125,11 +1124,11 @@ tsopen (dev, flag, type, p)
 	s = splbio ();
 	if (sc->sc_state < ST_RUNNING) {		/* XXX */
 		printf ("%s not running.\n", sc->sc_dev.dv_xname);
-		(void) splx (s);
+		splx(s);
 		sc->sc_openf = 0;
 		return (ENXIO);
 	}
-	(void) splx (s);
+	splx(s);
 
 	/*
 	 * check if transport is really online.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.6 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.7 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.73 1997/07/29 09:41:53 fair Exp $ */
 
 /*
@@ -50,14 +50,12 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/disklabel.h>
 #include <sys/device.h>
 #include <sys/disk.h>
 #include <sys/dkstat.h>
 #include <sys/conf.h>
-#include <sys/dmap.h>
 #include <sys/reboot.h>
 #include <sys/socket.h>
 #include <sys/malloc.h>
@@ -109,7 +107,8 @@ static	int rootnode;
 void	setroot __P((void));
 static	char *str2hex __P((char *, int *));
 static	int getstr __P((char *, int));
-static	int findblkmajor __P((struct device *));
+int	findblkmajor __P((struct device *));
+char	*findblkname __P((int));
 static	struct device *getdisk __P((char *, int, int, dev_t *));
 static	int mbprint __P((void *, const char *));
 static	void crazymap __P((char *, int *));
@@ -352,6 +351,7 @@ bootstrap()
 		pmap_kenter_pa(INTRREG_VA,
 			   INT_ENABLE_REG_PHYSADR | PMAP_NC | PMAP_OBIO,
 			   VM_PROT_READ | VM_PROT_WRITE);
+		pmap_update(pmap_kernel());
 		/* Disable all interrupts */
 		*((unsigned char *)INTRREG_VA) = 0;
 	}
@@ -1269,7 +1269,7 @@ mainbus_attach(parent, dev, aux)
 			if (strcmp(cp, "zs") == 0)
 				autoconf_nzs++;
 			if (/*audio &&*/ autoconf_nzs >= 2)	/*XXX*/
-				(void) splx(11 << 8);		/*XXX*/
+				splx(11 << 8);		/*XXX*/
 #endif
 			oca.ca_bustype = BUS_MAIN;
 			(void) config_found(dev, (void *)&oca, mbprint);
@@ -1749,26 +1749,39 @@ struct nam2blk {
 	char *name;
 	int maj;
 } nam2blk[] = {
-	{ "xy",		3 },
-	{ "sd",		7 },
+	{ "xy",		 3 },
+	{ "sd",		 7 },
 	{ "xd",		10 },
 	{ "st",		11 },
 	{ "fd",		16 },
 	{ "rd",		17 },
 	{ "cd",		18 },
+	{ "raid",	25 },
 };
 
-static int
+int
 findblkmajor(dv)
 	struct device *dv;
 {
 	char *name = dv->dv_xname;
-	register int i;
+	int i;
 
 	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
-		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[0].name)) == 0)
+		if (strncmp(name, nam2blk[i].name, strlen(nam2blk[i].name)) == 0)
 			return (nam2blk[i].maj);
 	return (-1);
+}
+
+char *
+findblkname(maj)
+	int maj;
+{
+	int i;
+
+	for (i = 0; i < sizeof(nam2blk)/sizeof(nam2blk[0]); ++i)
+		if (nam2blk[i].maj == maj)
+			return (nam2blk[i].name);
+	return (NULL);
 }
 
 static struct device *
@@ -1883,6 +1896,22 @@ setroot()
 
 	bp = nbootpath == 0 ? NULL : &bootpath[nbootpath-1];
 	bootdv = (bp == NULL) ? NULL : bp->dev;
+
+	/*
+	 * (raid) device auto-configuration could have returned
+	 * the root device's id in rootdev.  Check this case.
+	 */
+	if (rootdev != NODEV) {
+		majdev = major(rootdev);
+		unit = DISKUNIT(rootdev);
+		part = DISKPART(rootdev);
+
+		len = sprintf(buf, "%s%d", findblkname(majdev), unit);
+		if (len >= sizeof(buf))
+			panic("setroot: device name too long");
+
+		bootdv = getdisk(buf, len, part, &rootdev);
+	}
 
 	/*
 	 * If `swap generic' and we couldn't determine boot device,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2.2.3 2001/12/05 00:39:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2.2.4 2002/03/06 02:04:44 niklas Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.
@@ -47,7 +47,7 @@
 #define M88K_LEVEL6_IRQ	6
 #define M88K_LEVEL7_IRQ	7
 /* 
- * We keep track of these seperately, but   
+ * We keep track of these separately, but   
  * they will be reflected with the above also.
  */
 #define M88K_CLK_IRQ	8

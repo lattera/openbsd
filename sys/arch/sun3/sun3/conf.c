@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/conf.c,v 1.23.8.4 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/conf.c,v 1.23.8.5 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.51 1996/11/04 16:16:09 gwr Exp $	*/
 
 /*-
@@ -46,8 +46,6 @@
 #include <sys/vnode.h>
 
 #include <machine/conf.h>
-
-int	ttselect	__P((dev_t, int, struct proc *));
 
 #include "bpfilter.h"
 #include "bwtwo.h"

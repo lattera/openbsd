@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dl.c,v 1.1.8.1 2001/05/14 21:38:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dl.c,v 1.1.8.2 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: dl.c,v 1.11 2000/01/24 02:40:29 matt Exp $	*/
 
 /*-
@@ -86,7 +86,6 @@
 #include <sys/ioctl.h>
 #include <sys/tty.h>
 #include <sys/proc.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/conf.h>
 #include <sys/file.h>

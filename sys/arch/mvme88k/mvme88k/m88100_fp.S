@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88100_fp.S,v 1.6.4.4 2001/12/05 00:39:12 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88100_fp.S,v 1.6.4.5 2002/03/06 02:04:45 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -164,7 +164,7 @@ fp_p_trap:
 	st      r3,r31,32       /* save exception frame */
 	or      r2,r0,T_FPEPFLT /* load trap type */
 	or	r3, r29, r0
-	bsr     _C_LABEL(trap18x)           /* trap */
+	bsr     _C_LABEL(m88100_trap)	/* trap */
 	ld      r1,r31,36       /* recover return address */
 	addu    r31,r31,40      /* deallocate stack */
  	br	fp_p_return

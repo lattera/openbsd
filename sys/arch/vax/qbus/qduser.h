@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qduser.h,v 1.1.8.1 2001/05/14 21:38:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qduser.h,v 1.1.8.2 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: qduser.h,v 1.1 1998/03/21 10:02:39 ragge Exp $	*/
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.
@@ -179,7 +179,7 @@ struct qdinput {
 
 	    struct _vs_eventqueue header;  /* event queue ring handling */
 
-	    /* for VS100 and QVSS compatability reasons, additions to this
+	    /* for VS100 and QVSS compatibility reasons, additions to this
 	    *  structure must be made below this point.  */
 
 	    struct _vs_cursor curs_pos;	/* current mouse position */

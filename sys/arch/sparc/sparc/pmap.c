@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.75.2.7 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.75.2.8 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -214,8 +214,12 @@ pvfree(pv)
  */
 static struct pool L1_pool;
 static struct pool L23_pool;
-void *pgt_page_alloc __P((unsigned long, int, int));
-void  pgt_page_free __P((void *, unsigned long, int));
+void *pgt_page_alloc(struct pool *, int);
+void  pgt_page_free(struct pool *, void *);
+
+struct pool_allocator pgt_allocator = {
+	pgt_page_alloc, pgt_page_free, 0,
+};
 
 void    pcache_flush __P((caddr_t, caddr_t, int));
 void
@@ -233,30 +237,23 @@ pcache_flush(va, pa, n)
  * Page table pool back-end.
  */
 void *
-pgt_page_alloc(sz, flags, mtype)
-        unsigned long sz;
-        int flags;
-        int mtype;
+pgt_page_alloc(struct pool *pp, int flags)
 {
         caddr_t p;
 
         p = (caddr_t)uvm_km_kmemalloc(kernel_map, uvm.kernel_object,
-                                      (vsize_t)sz, UVM_KMF_NOWAIT);
-
+                                      PAGE_SIZE, UVM_KMF_NOWAIT);
         if (p != NULL && ((cpuinfo.flags & CPUFLG_CACHEPAGETABLES) == 0)) {
-                pcache_flush(p, (caddr_t)VA2PA(p), sz);
-                kvm_uncache(p, atop(sz));
+                pcache_flush(p, (caddr_t)VA2PA(p), PAGE_SIZE);
+                kvm_uncache(p, atop(PAGE_SIZE));
         }
         return (p);
 }       
    
 void
-pgt_page_free(v, sz, mtype)
-        void *v;
-        unsigned long sz;
-        int mtype;
+pgt_page_free(struct pool *pp, void *v)
 {
-        uvm_km_free(kernel_map, (vaddr_t)v, sz);
+        uvm_km_free(kernel_map, (vaddr_t)v, PAGE_SIZE);
 }
 #endif /* SUN4M */
 
@@ -3359,8 +3356,7 @@ pmap_init()
 			sizeof(struct pvlist);
 	}
 
-	pool_init(&pvpool, sizeof(struct pvlist), 0, 0, 0, "pvpl", 0,
-	    NULL, NULL, 0);
+	pool_init(&pvpool, sizeof(struct pvlist), 0, 0, 0, "pvpl", NULL);
 
 	/*
 	 * We can set it here since it's only used in pmap_enter to see
@@ -3378,12 +3374,12 @@ pmap_init()
                 int n;
 
                 n = SRMMU_L1SIZE * sizeof(int);
-                pool_init(&L1_pool, n, n, 0, 0, "L1 pagetable", 0,
-                          pgt_page_alloc, pgt_page_free, 0);
+                pool_init(&L1_pool, n, n, 0, 0, "L1 pagetable",
+		    &pgt_allocator);
 
                 n = SRMMU_L2SIZE * sizeof(int);
-                pool_init(&L23_pool, n, n, 0, 0, "L2/L3 pagetable", 0,
-                          pgt_page_alloc, pgt_page_free, 0);
+                pool_init(&L23_pool, n, n, 0, 0, "L2/L3 pagetable",
+                    &pgt_allocator);
         }
 #endif
 }
@@ -5200,7 +5196,7 @@ pmap_enu4_4c(pm, va, prot, flags, pv, pteproto)
 
 	splx(s);
 
-	return (0);
+	return (KERN_SUCCESS);
 }
 
 void
@@ -5409,7 +5405,7 @@ pmap_enu4m(pm, va, prot, flags, pv, pteproto)
 	vr = VA_VREG(va);
 	vs = VA_VSEG(va);
 	rp = &pm->pm_regmap[vr];
-	s = splpmap();			/* XXX conservative */
+	s = splvm();			/* XXX conservative */
 	if (rp->rg_segmap == NULL) {
 		/* definitely a new mapping */
 		int size = NSEGRG * sizeof (struct segmap);
@@ -5516,7 +5512,7 @@ pmap_enu4m(pm, va, prot, flags, pv, pteproto)
 
 	splx(s);
 
-	return (0);
+	return (KERN_SUCCESS);
 }
 
 void
@@ -5707,24 +5703,6 @@ pmap_extract4m(pm, va, pa)
 	return (TRUE);
 }
 #endif /* sun4m */
-
-/*
- * Copy the range specified by src_addr/len
- * from the source map to the range dst_addr/len
- * in the destination map.
- *
- * This routine is only advisory and need not do anything.
- */
-/* ARGSUSED */
-int pmap_copy_disabled=0;
-void
-pmap_copy(dst_pmap, src_pmap, dst_addr, len, src_addr)
-	struct pmap *dst_pmap, *src_pmap;
-	vaddr_t dst_addr;
-	vsize_t len;
-	vaddr_t src_addr;
-{
-}
 
 /*
  * Garbage collects the physical map system for

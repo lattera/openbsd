@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.5 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.6 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.13 1996/03/30 21:12:16 christos Exp $ */
 
 /*
@@ -146,10 +146,12 @@ mmrw(dev, uio, flags)
 			pmap_enter(pmap_kernel(), mem_page,
 			    trunc_page(pa), uio->uio_rw == UIO_READ ?
 			    VM_PROT_READ : VM_PROT_WRITE, PMAP_WIRED);
+			pmap_update(pmap_kernel());
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));
 			error = uiomove((caddr_t)mem_page + o, c, uio);
 			pmap_remove(pmap_kernel(), mem_page, mem_page + NBPG);
+			pmap_update(pmap_kernel());
 			continue;
 
 		/* minor device 1 is kernel memory */

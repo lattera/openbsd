@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1.8.3 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1.8.4 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: uba.c,v 1.52 2000/06/04 02:14:12 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.
@@ -42,7 +42,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/proc.h>
 #include <sys/user.h>
@@ -117,6 +116,8 @@ uba_reset_establish(void (*reset)(struct device *), struct device *dev)
 	struct uba_reset *ur;
 
 	ur = malloc(sizeof(struct uba_reset), M_DEVBUF, M_NOWAIT);
+	if (ur == NULL)
+		panic("uba_reset_establish");
 	ur->ur_dev = dev;
 	ur->ur_reset = reset;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/qec.c,v 1.12.4.1 2001/05/14 21:37:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/qec.c,v 1.12.4.2 2002/03/06 02:04:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -310,25 +310,21 @@ qec_reset(sc)
  * network buffer memory.
  */
 int
-qec_put(buf, m)
+qec_put(buf, m0)
 	u_int8_t *buf;
-	struct mbuf *m;
+	struct mbuf *m0;
 {
-	struct mbuf *n;
+	struct mbuf *m;
 	int len, tlen = 0;
 
-	for (; m != NULL; m = n) {
+	for (m = m0; m != NULL; m = m->m_next) {
 		len = m->m_len;
-		if (len == 0) {
-			MFREE(m, n);
-			continue;
-		}
 		bcopy(mtod(m, caddr_t), buf, len);
 		buf += len;
 		tlen += len;
-		MFREE(m, n);
 	}
-	return tlen;
+	m_freem(m0);
+	return (tlen);
 }
 
 /*

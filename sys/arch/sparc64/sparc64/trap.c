@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.11.4.3 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.11.4.4 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.73 2001/08/09 01:03:01 eeh Exp $ */
 
 /*
@@ -87,7 +87,7 @@
 #include <machine/svr4_32_machdep.h>
 #endif
 
-#include <sparc/fpu/fpu_extern.h>
+#include <sparc64/fpu/fpu_extern.h>
 #include <sparc64/sparc64/cache.h>
 
 #ifndef offsetof
@@ -617,6 +617,7 @@ badtrap:
 			ADVANCE;
 			break;
 		}
+		/* XXX sv.sival_ptr should be the fault address! */
 		trapsignal(p, SIGBUS, 0, BUS_ADRALN, sv);	/* XXX code?? */
 		break;
 
@@ -785,7 +786,7 @@ data_access_fault(tf, type, pc, addr, sfva, sfsr)
 	u_quad_t sticks;
 	union sigval sv;
 
-	sv.sival_ptr = (void *)pc;
+	sv.sival_ptr = (void *)addr;
 
 	uvmexp.traps++;
 	if ((p = curproc) == NULL)	/* safety check */
@@ -1051,7 +1052,6 @@ text_access_fault(tf, type, pc, sfsr)
 			panic("kernel fault");
 			/* NOTREACHED */
 		}
-		sv.sival_ptr = (void *)va;
 		trapsignal(p, SIGSEGV, access_type, SEGV_MAPERR, sv);
 	}
 	if ((tstate & TSTATE_PRIV) == 0) {
@@ -1161,7 +1161,6 @@ text_access_error(tf, type, pc, sfsr, afva, afsr)
 			panic("kernel fault");
 			/* NOTREACHED */
 		}
-		sv.sival_ptr = (void *)va;
 		trapsignal(p, SIGSEGV, access_type, SEGV_MAPERR, sv);
 	}
 out:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.6 2001/12/05 00:39:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.7 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.77 1996/10/13 03:47:51 christos Exp $	*/
 
 /*
@@ -48,7 +48,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -103,7 +102,6 @@ label_t *nofault;
 vm_offset_t vmmap;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 /*
@@ -111,6 +109,10 @@ struct vm_map *phys_map = NULL;
  * during autoconfiguration or after a panic.
  */
 int	safepri = PSL_LOWIPL;
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -125,6 +127,7 @@ int	bufpages = BUFPAGES;
 #else
 int	bufpages = 0;
 #endif
+int	bufcachepercent = BUFCACHEPERCENT;
 
 static caddr_t allocsys __P((caddr_t));
 static void identifycpu __P((void));
@@ -197,9 +200,6 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Determine how many buffers to allocate. By default we allocate
 	 * the BSD standard of use 10% of memory for the first 2 Meg,
@@ -212,7 +212,7 @@ allocsys(v)
 	if (bufpages == 0) {
 		/* We always have more than 2MB of memory. */
 		bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-		    BUFCACHEPERCENT / 100;
+		    bufcachepercent / 100;
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;
@@ -317,6 +317,7 @@ cpu_startup()
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(kernel_map->pmap);
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -331,9 +332,6 @@ cpu_startup()
 	 * the kernel map (any kernel mapping is OK) and then the
 	 * device drivers clone the kernel mappings into DVMA space.
 	 */
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 	printf("avail mem = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n",
@@ -788,8 +786,10 @@ dumpsys()
 			printf("\r%4d", todo);
 		pmap_enter(pmap_kernel(), vmmap, paddr | PMAP_NC,
 			VM_PROT_READ, VM_PROT_READ);
+		pmap_update(pmap_kernel());
 		error = (*dsw->d_dump)(dumpdev, blkno, vaddr, NBPG);
 		pmap_remove(pmap_kernel(), vmmap, vmmap + NBPG);
+		pmap_update(pmap_kernel());
 		if (error)
 			goto fail;
 		paddr += NBPG;

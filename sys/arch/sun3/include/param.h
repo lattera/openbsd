@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.5 2001/12/05 00:39:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.6 2002/03/06 02:04:47 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.34 1996/03/04 05:04:40 cgd Exp $	*/
 
 /*
@@ -79,11 +79,11 @@
 #define MSGBUFSIZE	(NBPG - MSGBUFOFF)
 
 /*
- * Size of kernel malloc arena in logical pages
- */ 
-#ifndef NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(2048*1024/PAGE_SIZE)
-#endif
+ * Minimum and maximum sizes of the kernel malloc arena in PAGE_SIZE-sized
+ * logical pages.
+ */
+#define	NKMEMPAGES_MIN_DEFAULT	((2 * 1024 * 1024) >> PAGE_SHIFT)
+#define	NKMEMPAGES_MAX_DEFAULT	((2 * 1024 * 1024) >> PAGE_SHIFT)
 
 /*
  * spl functions; all are done in-line

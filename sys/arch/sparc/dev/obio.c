@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/obio.c,v 1.8.8.1 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/obio.c,v 1.8.8.2 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: obio.c,v 1.37 1997/07/29 09:58:11 fair Exp $	*/
 
 /*
@@ -302,6 +302,8 @@ vmesattach(parent, self, args)
 	if (vmeints == NULL) {
 		vmeints = (struct intrhand **)malloc(256 *
 		    sizeof(struct intrhand *), M_TEMP, M_NOWAIT);
+		if (vmeints == NULL)
+			panic("vmesattach: can't allocate intrhand");
 		bzero(vmeints, 256 * sizeof(struct intrhand *));
 	}
 	(void)config_search(vmes_scan, self, args);
@@ -323,6 +325,8 @@ vmelattach(parent, self, args)
 	if (vmeints == NULL) {
 		vmeints = (struct intrhand **)malloc(256 *
 		    sizeof(struct intrhand *), M_TEMP, M_NOWAIT);
+		if (vmeints == NULL)
+			panic("vmelattach: can't allocate intrhand");
 		bzero(vmeints, 256 * sizeof(struct intrhand *));
 	}
 	(void)config_search(vmel_scan, self, args);
@@ -663,4 +667,5 @@ void
 bus_untmp()
 {
 	pmap_remove(pmap_kernel(), TMPMAP_VA, TMPMAP_VA+NBPG);
+	pmap_update(pmap_kernel());
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.1 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.2 2002/03/06 02:04:44 niklas Exp $ */
 /*  Copyright (c) 1998 Steve Murphree, Jr. */
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -69,7 +69,7 @@ mainbus_attach(parent, self, args)
 	struct device *parent, *self;
 	void *args;
 {
-	printf (" machine type MVME%x\n", cputyp);
+	printf (" machine type MVME%x\n", brdtyp);
 
 	/* XXX
 	 * should have a please-attach-first list for mainbus,

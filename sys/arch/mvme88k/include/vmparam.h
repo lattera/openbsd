@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.6.4.4 2001/12/05 00:39:12 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.6.4.5 2002/03/06 02:04:44 niklas Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -90,8 +90,6 @@
 #define INTSTACK_SIZE		(3 * PAGE_SIZE)	/* interrupt stack size */
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS * MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS * PAGE_SIZE)
 #define VM_PHYS_SIZE		(1 * NPTEPG * PAGE_SIZE)
 
 /*
@@ -113,7 +111,6 @@
 struct pmap_physseg {
 	struct pv_entry *pvent;		/* pv table for this seg */
 	char *attrs;			/* page modify list for this seg */
-	struct simplelock *plock;	/* page lock for this seg */
 };
 #endif /* _LOCORE */
 

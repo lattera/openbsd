@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_stat.c,v 1.4.14.2 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_stat.c,v 1.4.14.3 2002/03/06 02:07:08 niklas Exp $	*/
 /*	$NetBSD: ibcs2_stat.c,v 1.5 1996/05/03 17:05:32 christos Exp $	*/
 
 /*
@@ -149,7 +149,10 @@ ibcs2_sys_fstatfs(p, v, retval)
 		return (error);
 	mp = ((struct vnode *)fp->f_data)->v_mount;
 	sp = &mp->mnt_stat;
-	if ((error = VFS_STATFS(mp, sp, p)) != 0)
+	FREF(fp);
+	error = VFS_STATFS(mp, sp, p);
+	FRELE(fp);
+	if (error)
 		return (error);
 	sp->f_flags = mp->mnt_flag & MNT_VISFLAGMASK;
 	return cvt_statfs(sp, (caddr_t)SCARG(uap, buf), SCARG(uap, len));

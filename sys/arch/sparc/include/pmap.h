@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.4 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.5 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -295,7 +295,6 @@ void		pmap_pinit __P((pmap_t));
 void		pmap_reference __P((pmap_t));
 void		pmap_release __P((pmap_t));
 void		pmap_remove __P((pmap_t, vaddr_t, vaddr_t));
-#define		pmap_update()	/* nothing */
 void		pmap_init __P((void));
 int		pmap_page_index __P((paddr_t));
 void		pmap_virtual_space __P((vaddr_t *, vaddr_t *));
@@ -309,6 +308,9 @@ void		switchexit __P((struct proc *));
 int		mmu_pagein __P((struct pmap *pm, vaddr_t, int));
 void		pmap_writetext __P((unsigned char *, int));
 
+#define		pmap_update(pm)		/* nothing */
+#define		pmap_copy(DP,SP,D,L,S)	/* nothing */
+
 /* SUN4/SUN4C SPECIFIC DECLARATIONS */
 
 #if defined(SUN4) || defined(SUN4C)
@@ -320,7 +322,6 @@ boolean_t	pmap_extract4_4c __P((pmap_t, vaddr_t, paddr_t *));
 boolean_t	pmap_is_modified4_4c __P((struct vm_page *));
 boolean_t	pmap_is_referenced4_4c __P((struct vm_page *));
 void		pmap_kenter_pa4_4c __P((vaddr_t, paddr_t, vm_prot_t));
-void		pmap_kenter_pgs4_4c __P((vaddr_t, struct vm_page **, int));
 void		pmap_kremove4_4c __P((vaddr_t, vsize_t));
 void		pmap_page_protect4_4c __P((struct vm_page *, vm_prot_t));
 void		pmap_protect4_4c __P((pmap_t, vaddr_t, vaddr_t, vm_prot_t));
@@ -339,7 +340,6 @@ boolean_t	pmap_extract4m __P((pmap_t, vaddr_t, paddr_t *));
 boolean_t	pmap_is_modified4m __P((struct vm_page *));
 boolean_t	pmap_is_referenced4m __P((struct vm_page *));
 void		pmap_kenter_pa4m __P((vaddr_t, paddr_t, vm_prot_t));
-void		pmap_kenter_pgs4m __P((vaddr_t, struct vm_page **, int));
 void		pmap_kremove4m __P((vaddr_t, vsize_t));
 void		pmap_page_protect4m __P((struct vm_page *, vm_prot_t));
 void		pmap_protect4m __P((pmap_t, vaddr_t, vaddr_t, vm_prot_t));
@@ -390,8 +390,6 @@ extern boolean_t	(*pmap_extract_p) __P((pmap_t, vaddr_t, paddr_t *));
 extern boolean_t	(*pmap_is_modified_p) __P((struct vm_page *));
 extern boolean_t	(*pmap_is_referenced_p) __P((struct vm_page *));
 extern void		(*pmap_kenter_pa_p) __P((vaddr_t, paddr_t, vm_prot_t));
-extern void		(*pmap_kenter_pgs_p) __P((vaddr_t, struct vm_page **,
-						  int));
 extern void		(*pmap_kremove_p) __P((vaddr_t, vsize_t));
 extern void		(*pmap_page_protect_p) __P((struct vm_page *, 
 						    vm_prot_t));

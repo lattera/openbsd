@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getdents.c,v 1.2.4.2 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_getdents.c,v 1.2.4.3 2002/03/06 02:07:08 niklas Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
@@ -167,9 +167,11 @@ netbsd_sys_getdents(p, v, retval)
 		return (error);
 	if ((fp->f_flag & FREAD) == 0)
 		return (EBADF);
+	FREF(fp);
 	error = netbsd_vn_readdir(fp, SCARG(uap, buf), UIO_USERSPACE,
 			SCARG(uap, count), &done, p, 0, 0);
 	*retval = done;
+	FRELE(fp);
 	return (error);
 }
 

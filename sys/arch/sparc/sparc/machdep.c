@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.9 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.10 2002/03/06 02:04:46 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -50,7 +50,6 @@
 #include <sys/signalvar.h>
 #include <sys/proc.h>
 #include <sys/user.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/device.h>
 #include <sys/reboot.h>
@@ -78,6 +77,8 @@
 #include <sys/extent.h>
 
 #include <uvm/uvm_extern.h>
+
+#include <dev/rndvar.h>
 
 #include <machine/autoconf.h>
 #include <machine/frame.h>
@@ -111,7 +112,6 @@
 #endif
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 /*
@@ -122,11 +122,17 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef	BUFPAGES
 int	bufpages = BUFPAGES;
 #else
 int	bufpages = 0;
 #endif
+int	bufcachepercent = BUFCACHEPERCENT;
 
 int	physmem;
 
@@ -274,8 +280,6 @@ cpu_startup()
 	if (dvmamap_extent == 0)
 		panic("unable to allocate extent for dvma");
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif
@@ -321,16 +325,13 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Determine how many buffers to allocate (enough to
 	 * hold 5% of total physical memory, but at least 16).
 	 * Allocate 1/2 as many swap buffer headers as file i/o buffers.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem * BUFCACHEPERCENT / 100;
+		bufpages = physmem * bufcachepercent / 100;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -368,6 +369,27 @@ setregs(p, pack, stack, retval)
 	struct trapframe *tf = p->p_md.md_tf;
 	struct fpstate *fs;
 	int psr;
+
+	/* Setup the process StackGhost cookie which will be XORed into
+	 * the return pointer as register windows are over/underflowed
+	 */
+	p->p_addr->u_pcb.pcb_wcookie = 0;	/* XXX later arc4random(); */
+
+	/* The cookie needs to guarantee invalid alignment after the XOR */
+	switch (p->p_addr->u_pcb.pcb_wcookie % 3) {
+	case 0: /* Two lsb's already both set except if the cookie is 0 */
+		p->p_addr->u_pcb.pcb_wcookie |= 0x3;
+		break;
+	case 1: /* Set the lsb */
+		p->p_addr->u_pcb.pcb_wcookie = 1 |
+			(p->p_addr->u_pcb.pcb_wcookie & ~0x3);
+		break;
+	case 2: /* Set the second most lsb */
+		p->p_addr->u_pcb.pcb_wcookie = 2 |
+			(p->p_addr->u_pcb.pcb_wcookie & ~0x3);
+		break;
+	}
+
 
 	/* Don't allow misaligned code by default */
 	p->p_md.md_flags &= ~MDP_FIXALIGN;

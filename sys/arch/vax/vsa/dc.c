@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.2 2001/10/31 03:08:02 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/Attic/dc.c,v 1.2.12.3 2002/03/06 02:04:48 niklas Exp $	*/
 /*	$NetBSD: dc.c,v 1.4 1996/10/13 03:36:10 christos Exp $	*/
 /*-
  * Copyright (c) 1992, 1993
@@ -68,7 +68,6 @@
 #include <sys/ioctl.h>
 #include <sys/tty.h>
 #include <sys/proc.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/conf.h>
 #include <sys/file.h>
@@ -843,7 +842,7 @@ dcmctl(dev, bits, how)
 		break;
 
 	case DMGET:
-		(void) splx(s);
+		splx(s);
 		return (mbits);
 	}
 	switch (unit & 03) {
@@ -864,7 +863,7 @@ dcmctl(dev, bits, how)
 	}
 	if ((mbits & DML_DTR) && (dcsoftCAR[unit >> 2] & b))
 		dc_tty[unit]->t_state |= TS_CARR_ON;
-	(void) splx(s);
+	splx(s);
 	return (mbits);
 }
 

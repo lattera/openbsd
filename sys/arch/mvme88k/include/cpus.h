@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/cpus.h,v 1.5.4.2 2001/10/31 03:01:18 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/cpus.h,v 1.5.4.3 2002/03/06 02:04:44 niklas Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -58,8 +58,8 @@ union cpupid {
 };
 #endif /* _LOCORE */
 
-#define M88100 0
-#define M88200 5
-#define M88204 6
+#define M88100_ID 0
+#define M88200_ID 5
+#define M88204_ID 6
 
 #endif /* __MACHINE_CPUS_H__ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_exit_43.c,v 1.2.16.3 2001/12/05 00:43:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_exit_43.c,v 1.2.16.4 2002/03/06 02:07:07 niklas Exp $	*/
 /*	$NetBSD: kern_exit_43.c,v 1.3 1995/10/07 06:26:20 mycroft Exp $	*/
 
 /*
@@ -43,7 +43,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/ioctl.h>
 #include <sys/proc.h>
 #include <sys/tty.h>

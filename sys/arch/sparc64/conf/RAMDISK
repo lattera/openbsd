@@ -1,4 +1,4 @@
-# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.1 2001/10/31 03:07:57 nate Exp $
+# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.2 2002/03/06 02:04:46 niklas Exp $
 
 # Machine architecture; required by config(8)
 machine		sparc64
@@ -42,11 +42,13 @@ ebus*	at pci?
 
 hme*	at pci? dev ? function ?
 gem*	at pci? dev ? function ?
+dc*	at pci? dev ? function ?
 
 auxio*	at ebus?
 #com*	at ebus?
 clock*	at sbus? slot ? offset ?		# Mostek clock 
 clock*	at ebus?
+rtc*	at ebus?				# DS1287/M5819 clock
 timer*	at mainbus0				# Timer chip
 
 ## PROM console driver -- if all else fails

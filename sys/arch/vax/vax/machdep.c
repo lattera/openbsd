@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.5 2001/11/13 21:04:18 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.6 2002/03/06 02:04:48 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -49,7 +49,8 @@
 #include <sys/signal.h>
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
+#include <sys/extent.h>
+#include <sys/malloc.h>
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/user.h>
@@ -136,6 +137,7 @@ int bufpages = BUFPAGES;
 #else
 int bufpages = 0;
 #endif
+int bufcachepercent = BUFCACHEPERCENT;
 
 extern int *chrtoblktbl;
 extern int virtual_avail, virtual_end;
@@ -151,12 +153,18 @@ int		physmem;
 int		dumpsize = 0;
 int		cold = 1; /* coldstart */
 
+/*
+ * XXX some storage space must be allocated statically because of
+ * early console init
+ */
 #define	IOMAPSZ	100
-static	struct map iomap[IOMAPSZ];
+char extiospace[EXTENT_FIXED_STORAGE_SIZE(IOMAPSZ)];
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct extent *extio;
+extern vaddr_t iospace;
+
+struct vm_map *exec_map = NULL;
+struct vm_map *phys_map = NULL;
 
 #ifdef DEBUG
 int iospace_inited = 0;
@@ -250,6 +258,7 @@ cpu_startup()
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(kernel_map->pmap);
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively limits
@@ -265,9 +274,6 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr, 
-		VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-	
 	printf("avail memory = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n", nbuf, bufpages * PAGE_SIZE);
 
@@ -276,6 +282,10 @@ cpu_startup()
 	 */
 
 	bufinit();
+#ifdef DDB
+	if (boothowto & RB_KDB)
+		Debugger();
+#endif
 
 	/*
 	 * Configure the system.
@@ -340,8 +350,13 @@ consinit()
 	/*
 	 * Init I/O memory resource map. Must be done before cninit()
 	 * is called; we may want to use iospace in the console routines.
+	 *
+	 * XXX console code uses the first page at iospace, so do not make
+	 * the extent start at iospace.
 	 */
-	rminit(iomap, IOSPSZ, (long)1, "iomap", IOMAPSZ);
+	extio = extent_create("extio",
+	    (u_long)iospace + VAX_NBPG, (u_long)iospace + IOSPSZ * VAX_NBPG,
+	    M_DEVBUF, extiospace, sizeof(extiospace), EX_NOWAIT);
 #ifdef DEBUG
 	iospace_inited = 1;
 #endif
@@ -351,10 +366,6 @@ consinit()
 #ifdef DEBUG
 	if (sizeof(struct user) > REDZONEADDR)
 		panic("struct user inside red zone");
-#endif
-#ifdef donotworkbyunknownreason
-	if (boothowto & RB_KDB)
-		Debugger();
 #endif
 #endif
 }
@@ -700,9 +711,8 @@ vax_map_physmem(phys, size)
 	paddr_t phys;
 	int size;
 {
-	extern vaddr_t iospace;
 	vaddr_t addr;
-	int pageno;
+	int error;
 	static int warned = 0;
 
 #ifdef DEBUG
@@ -714,13 +724,13 @@ vax_map_physmem(phys, size)
 		if (addr == 0)
 			panic("vax_map_physmem: kernel map full");
 	} else {
-		pageno = rmalloc(iomap, size);
-		if (pageno == 0) {
+		error = extent_alloc(extio, size * VAX_NBPG, VAX_NBPG, 0,
+		    EX_NOBOUNDARY, EX_NOWAIT | EX_MALLOCOK, (u_long *)&addr);
+		if (error != 0) {
 			if (warned++ == 0) /* Warn only once */
 				printf("vax_map_physmem: iomap too small");
 			return 0;
 		}
-		addr = iospace + (pageno * VAX_NBPG);
 	}
 	ioaccess(addr, phys, size);
 #ifdef PHYSMEMDEBUG
@@ -738,8 +748,6 @@ vax_unmap_physmem(addr, size)
 	vaddr_t addr;
 	int size;
 {
-	extern vaddr_t iospace;
-	int pageno = (addr - iospace) / VAX_NBPG;
 #ifdef PHYSMEMDEBUG
 	printf("vax_unmap_physmem: unmapping %d pages at addr %lx\n", 
 	    size, addr);
@@ -748,7 +756,8 @@ vax_unmap_physmem(addr, size)
 	if (size >= LTOHPN)
 		uvm_km_free(kernel_map, addr, size * VAX_NBPG);
 	else
-		rmfree(iomap, size, pageno);
+		extent_free(extio, (u_long)addr & ~VAX_PGOFSET,
+		    size * VAX_NBPG, EX_NOWAIT);
 }
 
 /*
@@ -793,7 +802,7 @@ allocsys(v)
 	        bufpages = physmem / 10;
 	    else
 		bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-		    BUFCACHEPERCENT / 100;
+		    bufcachepercent / 100;
 	}
     if (nbuf == 0) 
         nbuf = bufpages < 16 ? 16 : bufpages;

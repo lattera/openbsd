@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptosoft.h,v 1.1.2.4 2001/10/31 03:11:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptosoft.h,v 1.1.2.5 2002/03/06 02:07:09 niklas Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -9,7 +9,7 @@
  *
  * Copyright (c) 2000 Angelos D. Keromytis
  *
- * Permission to use, copy, and modify this software without fee
+ * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all source code copies of any software which is or includes a copy or
  * modification of this software. 
@@ -63,7 +63,7 @@ extern u_int8_t hmac_ipad_buffer[64];
 extern u_int8_t hmac_opad_buffer[64];
 
 int	swcr_encdec(struct cryptodesc *, struct swcr_data *, caddr_t, int);
-int	swcr_authcompute(struct cryptodesc *, struct swcr_data *,
+int	swcr_authcompute(struct cryptop *, struct cryptodesc *, struct swcr_data *,
 	caddr_t, int);
 int	swcr_compdec(struct cryptodesc *, struct swcr_data *, caddr_t, int);
 int	swcr_process(struct cryptop *);
