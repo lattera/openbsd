@@ -1,15 +1,15 @@
 /*                      _             _
-**  _ __ ___   ___   __| |    ___ ___| |
-** | '_ ` _ \ / _ \ / _` |   / __/ __| |
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+**  _ __ ___   ___   __| |    ___ ___| |  mod_ssl
+** | '_ ` _ \ / _ \ / _` |   / __/ __| |  Apache Interface to OpenSSL
+** | | | | | | (_) | (_| |   \__ \__ \ |  www.modssl.org
+** |_| |_| |_|\___/ \__,_|___|___/___/_|  ftp.modssl.org
 **                      |_____|
 **  ssl_engine_compat.c
 **  Backward Compatibility
 */
 
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  *    software must display the following acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -42,7 +42,7 @@
  *    acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -78,9 +78,13 @@
  * The mapping of obsolete directives to official ones...
  */
 
-static char *ssl_compat_SSLRequireCipher(pool *p, const char *, const char *, const char *);
-static char *ssl_compat_SSLBanCipher(pool *p, const char *, const char *, const char *);
-static char *ssl_compat_words2list(pool *p, const char *);
+static char *ssl_compat_RequireSSL(pool *, const char *, const char *, const char *);
+static char *ssl_compat_SSLSessionLockFile(pool *, const char *, const char *, const char *);
+static char *ssl_compat_SSLCacheDisable(pool *, const char *, const char *, const char *);
+static char *ssl_compat_SSLRequireCipher(pool *, const char *, const char *, const char *);
+static char *ssl_compat_SSLBanCipher(pool *, const char *, const char *, const char *);
+static char *ssl_compat_SSL_SessionDir(pool *, const char *, const char *, const char *);
+static char *ssl_compat_words2list(pool *, const char *);
 
 #define CRM_BEGIN              /* nop */
 #define CRM_ENTRY(what,action) { what, action },
@@ -133,7 +137,7 @@ static struct {
     CRM_ENTRY( CRM_CMD("SSL_ClientAuth"),          CRM_SUB("SSLVerifyClient")                 )
     CRM_ENTRY( CRM_CMD("SSL_X509VerifyDepth"),     CRM_SUB("SSLVerifyDepth")                  )
     CRM_ENTRY( CRM_CMD("SSL_FetchKeyPhraseFrom"),  CRM_LOG("Use SSLPassPhraseDialog instead") )
-    CRM_ENTRY( CRM_CMD("SSL_SessionDir"),          CRM_LOG("Use SSLSessionCache instead")     )
+    CRM_ENTRY( CRM_CMD("SSL_SessionDir"),          CRM_CAL(ssl_compat_SSL_SessionDir)         )
     CRM_ENTRY( CRM_CMD("SSL_Require"),             CRM_LOG("Use SSLRequire instead (Syntax!)"))
     CRM_ENTRY( CRM_CMD("SSL_CertFileType"),        CRM_LOG("Not supported by mod_ssl")        )
     CRM_ENTRY( CRM_CMD("SSL_KeyFileType"),         CRM_LOG("Not supported by mod_ssl")        )
@@ -143,24 +147,67 @@ static struct {
     /*
      * Stronghold 2.x backward compatibility
      */
+    CRM_ENTRY( CRM_CMD("StrongholdAccelerator"),     CRM_LOG("Not supported by mod_ssl")      )
+    CRM_ENTRY( CRM_CMD("StrongholdKey"),             CRM_LOG("Not supported by mod_ssl")      )
+    CRM_ENTRY( CRM_CMD("StrongholdLicenseFile"),     CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLFlag"),                   CRM_SUB("SSLEngine")                     )
-    CRM_ENTRY( CRM_CMD("SSLSessionLockFile"),        CRM_SUB("SSLMutex")                      )
-    CRM_ENTRY( CRM_CMD("RequireSSL"),                CRM_SUB("SSLRequireSSL")                 )
+    CRM_ENTRY( CRM_CMD("SSLClientCAfile"),           CRM_SUB("SSLCACertificateFile")          )
+    CRM_ENTRY( CRM_CMD("SSLSessionLockFile"),        CRM_CAL(ssl_compat_SSLSessionLockFile)   )
+    CRM_ENTRY( CRM_CMD("SSLCacheDisable"),           CRM_CAL(ssl_compat_SSLCacheDisable)      )
+    CRM_ENTRY( CRM_CMD("RequireSSL"),                CRM_CAL(ssl_compat_RequireSSL)           )
     CRM_ENTRY( CRM_CMD("SSLCipherList"),             CRM_SUB("SSLCipherSuite")                )
     CRM_ENTRY( CRM_CMD("SSLErrorFile"),              CRM_LOG("Not needed for mod_ssl")        )
     CRM_ENTRY( CRM_CMD("SSLRoot"),                   CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSL_CertificateLogDir"),     CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("AuthCertDir"),               CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSL_Group"),                 CRM_LOG("Not supported by mod_ssl")      )
+#ifndef SSL_EXPERIMENTAL_PROXY
     CRM_ENTRY( CRM_CMD("SSLProxyMachineCertPath"),   CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLProxyMachineCertFile"),   CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLProxyCACertificatePath"), CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLProxyCACertificateFile"), CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLProxyVerifyDepth"),       CRM_LOG("Not supported by mod_ssl")      )
     CRM_ENTRY( CRM_CMD("SSLProxyCipherList"),        CRM_LOG("Not supported by mod_ssl")      )
+#else
+    CRM_ENTRY( CRM_CMD("SSLProxyCipherList"),        CRM_SUB("SSLProxyCipherSuite")           )
+#endif
 
     CRM_END
 };
+
+static char *ssl_compat_RequireSSL(
+    pool *p, const char *oline, const char *cmd, const char *args)
+{
+    char *cp;
+    
+    for (cp = (char *)args; ap_isspace(*cp); cp++)
+        ;
+    if (strcEQ(cp, "on"))
+        return "SSLRequireSSL";
+    return "";
+}
+
+static char *ssl_compat_SSLSessionLockFile(
+    pool *p, const char *oline, const char *cmd, const char *args)
+{
+    char *cp;
+
+    for (cp = (char *)args; ap_isspace(*cp); cp++)
+        ;
+    return ap_pstrcat(p, "SSLMutex file:", cp, NULL);
+}
+
+static char *ssl_compat_SSLCacheDisable(
+    pool *p, const char *oline, const char *cmd, const char *args)
+{
+    char *cp;
+
+    for (cp = (char *)args; ap_isspace(*cp); cp++)
+        ;
+    if (strcEQ(cp, "on"))
+        return "SSLSessionCache none";
+    return "";
+}
 
 static char *ssl_compat_SSLRequireCipher(pool *p, const char *oline, const char *cmd, const char *args)
 {
@@ -174,6 +221,16 @@ static char *ssl_compat_SSLBanCipher(pool *p, const char *oline, const char *cmd
     return ap_pstrcat(p, "SSLRequire not (%{SSL_CIPHER} in {",
                           ssl_compat_words2list(p, args),
                           "})", NULL);
+}
+
+static char *ssl_compat_SSL_SessionDir(
+    pool *p, const char *oline, const char *cmd, const char *args)
+{
+    char *cp;
+   
+    for (cp = (char *)args; ap_isspace(*cp); cp++)
+        ;
+    return ap_pstrcat(p, "SSLSessionCache dir:", cp, NULL);
 }
 
 static char *ssl_compat_words2list(pool *p, const char *oline)
@@ -252,7 +309,7 @@ char *ssl_compat_directive(server_rec *s, pool *p, const char *oline)
      * Extract directive name
      */
     cp = (char *)oline;
-    for (i = 0; *cp != ' ' && *cp != '\t' && *cp != NUL && i < 1024; )
+    for (i = 0; *cp != ' ' && *cp != '\t' && *cp != NUL && i < sizeof(caCmd)-1; )
         caCmd[i++] = *cp++;
     caCmd[i] = NUL;
     cpArgs = cp;
@@ -347,6 +404,8 @@ static struct {
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CERTIFICATE"),        VRM_SUB("SSL_SERVER_CERT")          )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CERT_START"),         VRM_SUB("SSL_SERVER_V_START")       )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CERT_END"),           VRM_SUB("SSL_SERVER_V_END")         )
+    VRM_ENTRY( VRM_VAR("SSL_SERVER_CERT_SERIAL"),        VRM_SUB("SSL_SERVER_M_SERIAL")      )
+    VRM_ENTRY( VRM_VAR("SSL_SERVER_SIGNATURE_ALGORITHM"),VRM_SUB("SSL_SERVER_A_SIG")         )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_DN"),                 VRM_SUB("SSL_SERVER_S_DN")          )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CN"),                 VRM_SUB("SSL_SERVER_S_DN_CN")       )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_EMAIL"),              VRM_SUB("SSL_SERVER_S_DN_Email")    )
@@ -366,6 +425,8 @@ static struct {
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_CERTIFICATE"),        VRM_SUB("SSL_CLIENT_CERT")          )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_CERT_START"),         VRM_SUB("SSL_CLIENT_V_START")       )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_CERT_END"),           VRM_SUB("SSL_CLIENT_V_END")         )
+    VRM_ENTRY( VRM_VAR("SSL_CLIENT_CERT_SERIAL"),        VRM_SUB("SSL_CLIENT_M_SERIAL")      )
+    VRM_ENTRY( VRM_VAR("SSL_CLIENT_SIGNATURE_ALGORITHM"),VRM_SUB("SSL_CLIENT_A_SIG")         )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_DN"),                 VRM_SUB("SSL_CLIENT_S_DN")          )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_CN"),                 VRM_SUB("SSL_CLIENT_S_DN_CN")       )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_EMAIL"),              VRM_SUB("SSL_CLIENT_S_DN_Email")    )
@@ -382,10 +443,15 @@ static struct {
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_IC"),                 VRM_SUB("SSL_CLIENT_I_DN_C")        )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_ISP"),                VRM_SUB("SSL_CLIENT_I_DN_SP")       )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_IL"),                 VRM_SUB("SSL_CLIENT_I_DN_L")        )
+    VRM_ENTRY( VRM_VAR("SSL_EXPORT"),                    VRM_SUB("SSL_CIPHER_EXPORT")        )
+    VRM_ENTRY( VRM_VAR("SSL_KEYSIZE"),                   VRM_SUB("SSL_CIPHER_ALGKEYSIZE")    )
+    VRM_ENTRY( VRM_VAR("SSL_SECRETKEYSIZE"),             VRM_SUB("SSL_CIPHER_USEKEYSIZE")    )
+    VRM_ENTRY( VRM_VAR("SSL_SSLEAY_VERSION"),            VRM_SUB("SSL_VERSION_LIBRARY")      )
 
+    VRM_ENTRY( VRM_VAR("SSL_STRONG_CRYPTO"),             VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_KEY_EXP"),            VRM_LOG("Not supported by mod_ssl") )
+    VRM_ENTRY( VRM_VAR("SSL_SERVER_KEY_SIZE"),           VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_KEY_ALGORITHM"),      VRM_LOG("Not supported by mod_ssl") )
-    VRM_ENTRY( VRM_VAR("SSL_SERVER_SIGNATURE_ALGORITHM"),VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_SESSIONDIR"),         VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CERTIFICATELOGDIR"),  VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_SERVER_CERTFILE"),           VRM_LOG("Not supported by mod_ssl") )
@@ -394,7 +460,6 @@ static struct {
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_KEY_EXP"),            VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_KEY_ALGORITHM"),      VRM_LOG("Not supported by mod_ssl") )
     VRM_ENTRY( VRM_VAR("SSL_CLIENT_KEY_SIZE"),           VRM_LOG("Not supported by mod_ssl") )
-    VRM_ENTRY( VRM_VAR("SSL_CLIENT_SIGNATURE_ALGORITHM"),VRM_LOG("Not supported by mod_ssl") )
 
     VRM_END
 };
@@ -417,9 +482,25 @@ void ssl_compat_variables(request_rec *r)
                 ap_table_set(r->subprocess_env, cpOld, cpVal);
         }
         else if (cpMsg != NULL) {
+#ifdef SSL_VENDOR
+           /*
+            * something that isn't provided by mod_ssl, so at least
+            * let vendor extensions provide a reasonable value first.
+            */
+            cpVal = NULL;
+            ap_hook_use("ap::mod_ssl::vendor::compat_variables_lookup",
+                        AP_HOOK_SIG3(ptr,ptr,ptr),
+                        AP_HOOK_DECLINE(NULL),
+                        &cpVal, r, cpOld);
+            if (cpVal != NULL) {
+                ap_table_set(r->subprocess_env, cpOld, cpVal);
+                continue;
+            }
+#endif
+
             /*
-             * we cannot print a message, so we at least the
-             * variables contents to the message
+             * we cannot print a message, so we set at least
+             * the variables content to the compat message
              */
             ap_table_set(r->subprocess_env, cpOld, cpMsg);
         }

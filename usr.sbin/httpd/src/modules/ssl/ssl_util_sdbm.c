@@ -1,15 +1,15 @@
 /*                      _             _
-**  _ __ ___   ___   __| |    ___ ___| |
-** | '_ ` _ \ / _ \ / _` |   / __/ __| |
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+**  _ __ ___   ___   __| |    ___ ___| |  mod_ssl
+** | '_ ` _ \ / _ \ / _` |   / __/ __| |  Apache Interface to OpenSSL
+** | | | | | | (_) | (_| |   \__ \__ \ |  www.modssl.org
+** |_| |_| |_|\___/ \__,_|___|___/___/_|  ftp.modssl.org
 **                      |_____|
 **  ssl_util_sdbm.c
 **  Built-in Simple DBM
 */
 
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  *    software must display the following acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -42,7 +42,7 @@
  *    acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -499,14 +499,17 @@ register long dbit;
 {
         register long c;
         register long dirb;
+        int got;
 
         c = dbit / BYTESIZ;
         dirb = c / DBLKSIZ;
 
         if (dirb != db->dirbno) {
                 if (lseek(db->dirf, OFF_DIR(dirb), SEEK_SET) < 0
-                    || read(db->dirf, db->dirbuf, DBLKSIZ) < 0)
+                    || (got = read(db->dirf, db->dirbuf, DBLKSIZ)) < 0)
                         return 0;
+                if (got == 0) 
+                        memset(db->dirbuf, 0, DBLKSIZ);
                 db->dirbno = dirb;
 
                 debug(("dir read: %d\n", dirb));
@@ -522,14 +525,17 @@ register long dbit;
 {
         register long c;
         register long dirb;
+        int got;
 
         c = dbit / BYTESIZ;
         dirb = c / DBLKSIZ;
 
         if (dirb != db->dirbno) {
                 if (lseek(db->dirf, OFF_DIR(dirb), SEEK_SET) < 0
-                    || read(db->dirf, db->dirbuf, DBLKSIZ) < 0)
+                    || (got = read(db->dirf, db->dirbuf, DBLKSIZ)) < 0)
                         return 0;
+                if (got == 0) 
+                        memset(db->dirbuf, 0, DBLKSIZ);
                 db->dirbno = dirb;
 
                 debug(("dir read: %d\n", dirb));
@@ -537,8 +543,13 @@ register long dbit;
 
         db->dirbuf[c % DBLKSIZ] |= (1 << dbit % BYTESIZ);
 
+#if 0
         if (dbit >= db->maxbno)
                 db->maxbno += DBLKSIZ * BYTESIZ;
+#else
+        if (OFF_DIR((dirb+1))*BYTESIZ > db->maxbno) 
+                db->maxbno = OFF_DIR((dirb+1)) * BYTESIZ;
+#endif
 
         if (lseek(db->dirf, OFF_DIR(dirb), SEEK_SET) < 0
             || write(db->dirf, db->dirbuf, DBLKSIZ) < 0)

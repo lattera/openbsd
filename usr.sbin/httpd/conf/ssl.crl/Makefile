@@ -1,6 +1,6 @@
 ##
 ##  Makefile to keep the hash symlinks in SSLCARevocationPath up to date
-##  Copyright (c) 1998-1999 Ralf S. Engelschall, All Rights Reserved. 
+##  Copyright (c) 1998-2001 Ralf S. Engelschall, All Rights Reserved. 
 ##
 
 SSL_PROGRAM=
@@ -36,7 +36,7 @@ update: clean
 	        n=0; \
 	        while [ 1 ]; do \
 	            hash="`$$ssl_program crl -noout -hash <$$file`"; \
-	            if [ -r "$$hash.$$n" ]; then \
+	            if [ -r "$$hash.r$$n" ]; then \
 	                n=`expr $$n + 1`; \
 	            else \
 	                echo dummy |\

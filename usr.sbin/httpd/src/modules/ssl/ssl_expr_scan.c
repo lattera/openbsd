@@ -323,7 +323,7 @@ static yyconst int yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    4,    5,    1,    1,    1,    6,    1,    1,
         1,    1,    1,    1,    7,    1,    1,    8,    8,    8,
-        8,    8,    8,    8,    8,    9,    9,    1,    1,   10,
+        8,    8,    8,    8,    8,    9,    9,    7,    1,   10,
        11,   12,    1,    1,   13,   13,   13,   13,   13,   13,
        13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
        13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
@@ -448,14 +448,14 @@ char *yytext;
 /*                      _             _ 
 **  _ __ ___   ___   __| |    ___ ___| |  
 ** | '_ ` _ \ / _ \ / _` |   / __/ __| |  
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to OpenSSL
+** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.modssl.org/
 **                      |_____|         
 **  ssl_expr_scan.l
 **  Expression Scanner
 */
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -473,7 +473,7 @@ char *yytext;
  *    software must display the following acknowledgment:
  *    "This product includes software developed by 
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -488,7 +488,7 @@ char *yytext;
  *    acknowledgment:
  *    "This product includes software developed by 
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

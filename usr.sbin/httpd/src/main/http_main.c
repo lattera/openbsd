@@ -279,6 +279,9 @@ int ap_acceptfilter =
 
 int ap_dump_settings = 0;
 API_VAR_EXPORT int ap_extended_status = 0;
+#ifdef EAPI
+API_VAR_EXPORT ap_ctx *ap_global_ctx;
+#endif /* EAPI */
 
 /*
  * The max child slot ever assigned, preserved across restarts.  Necessary
@@ -384,6 +387,7 @@ static int my_child_num;
 #ifdef TPF
 int tpf_child = 0;
 char tpf_server_name[INETD_SERVNAME_LENGTH+1];
+char tpf_mutex_key[TPF_MUTEX_KEY_SIZE];
 #endif /* TPF */
 
 scoreboard *ap_scoreboard_image = NULL;
@@ -397,6 +401,11 @@ static int version_locked = 0;
 
 /* Global, alas, so http_core can talk to us */
 enum server_token_type ap_server_tokens = SrvTk_FULL;
+
+/* Also global, for http_core and http_protocol */
+API_VAR_EXPORT int ap_protocol_req_check = 1;
+
+API_VAR_EXPORT int ap_change_shmem_uid = 0;
 
 /*
  * This routine is called when the pconf pool is vacuumed.  It resets the
@@ -462,6 +471,30 @@ static void ap_set_version(void)
 	version_locked++;
     }
 }
+
+#ifdef EAPI
+API_EXPORT(void) ap_add_config_define(const char *define)
+{
+    char **var;
+    var = (char **)ap_push_array(ap_server_config_defines);
+    *var = ap_pstrdup(pcommands, define);
+    return;
+}
+
+/*
+ * Invoke the `close_connection' hook of modules to let them do
+ * some connection dependent actions before we close it.
+ */
+static void ap_call_close_connection_hook(conn_rec *c)
+{
+    module *m;
+    for (m = top_module; m != NULL; m = m->next)
+        if (m->magic == MODULE_MAGIC_COOKIE_EAPI)
+            if (m->close_connection != NULL)
+                (*m->close_connection)(c);
+    return;
+}
+#endif /* EAPI */
 
 #ifndef NETWARE
 static APACHE_TLS int volatile exit_after_unblock = 0;
@@ -745,9 +778,8 @@ accept_mutex_methods_s accept_mutex_pthread_s = {
 #include <sys/sem.h>
 
 #ifdef NEED_UNION_SEMUN
-/* it makes no sense, but this isn't defined on solaris */
 union semun {
-    long val;
+    int val;
     struct semid_ds *buf;
     ushort *array;
 };
@@ -1077,7 +1109,7 @@ static int tpf_core_held;
 static void accept_mutex_cleanup_tpfcore(void *foo)
 {
     if(tpf_core_held)
-        coruc(RESOURCE_KEY);
+        deqc(tpf_mutex_key, QUAL_S);
 }
 
 #define accept_mutex_init_tpfcore(x)
@@ -1090,14 +1122,14 @@ static void accept_mutex_child_init_tpfcore(pool *p)
 
 static void accept_mutex_on_tpfcore(void)
 {
-    corhc(RESOURCE_KEY);
+    enqc(tpf_mutex_key, ENQ_WAIT, 0, QUAL_S);
     tpf_core_held = 1;
     ap_check_signals();
 }
 
 static void accept_mutex_off_tpfcore(void)
 {
-    coruc(RESOURCE_KEY);
+    deqc(tpf_mutex_key, QUAL_S);
     tpf_core_held = 0;
     ap_check_signals();
 }
@@ -1518,6 +1550,10 @@ static void timeout(int sig)
 	    ap_log_transaction(log_req);
 	}
 
+#ifdef EAPI
+	ap_call_close_connection_hook(save_req->connection);
+#endif /* EAPI */
+
 	ap_bsetflag(save_req->connection->client, B_EOUT, 1);
 	ap_bclose(save_req->connection->client);
 	
@@ -1526,6 +1562,9 @@ static void timeout(int sig)
         ap_longjmp(jmpbuffer, 1);
     }
     else {			/* abort the connection */
+#ifdef EAPI
+	ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 	ap_bsetflag(current_conn->client, B_EOUT, 1);
 	ap_bclose(current_conn->client);
 	current_conn->aborted = 1;
@@ -1828,10 +1867,16 @@ static void lingering_close(request_rec *r)
     /* Send any leftover data to the client, but never try to again */
 
     if (ap_bflush(r->connection->client) == -1) {
+#ifdef EAPI
+	ap_call_close_connection_hook(r->connection);
+#endif /* EAPI */
 	ap_kill_timeout(r);
 	ap_bclose(r->connection->client);
 	return;
     }
+#ifdef EAPI
+    ap_call_close_connection_hook(r->connection);
+#endif /* EAPI */
     ap_bsetflag(r->connection->client, B_EOUT, 1);
 
     /* Close our half of the connection --- send the client a FIN */
@@ -2327,7 +2372,9 @@ static void setup_shared_mem(pool *p)
 	 * We exit below, after we try to remove the segment
 	 */
     }
-    else {			/* only worry about permissions if we attached the segment */
+    /* only worry about permissions if we attached the segment
+       and we want/need to change the uid/gid */
+    else if (ap_change_shmem_uid) {
 	if (shmctl(shmid, IPC_STAT, &shmbuf) != 0) {
 	    ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
 		"shmctl() could not stat segment #%d", shmid);
@@ -2558,6 +2605,9 @@ static void clean_parent_exit(int code)
 #else
     /* Clear the pool - including any registered cleanups */
     ap_destroy_pool(pglobal);
+#endif
+#ifdef EAPI
+    ap_kill_alloc_shared();
 #endif
     exit(code);
 }
@@ -3570,6 +3620,24 @@ static conn_rec *new_connection(pool *p, server_rec *server, BUFF *inout,
     conn->remote_addr = *remaddr;
     conn->remote_ip = ap_pstrdup(conn->pool,
 			      inet_ntoa(conn->remote_addr.sin_addr));
+#ifdef EAPI
+    conn->ctx = ap_ctx_new(conn->pool);
+#endif /* EAPI */
+
+#ifdef EAPI
+    /*
+     * Invoke the `new_connection' hook of modules to let them do
+     * some connection dependent actions before we go on with
+     * processing the request on this connection.
+     */
+    {
+        module *m;
+        for (m = top_module; m != NULL; m = m->next)
+            if (m->magic == MODULE_MAGIC_COOKIE_EAPI)
+                if (m->new_connection != NULL)
+                    (*m->new_connection)(conn);
+    }
+#endif /* EAPI */
 
     return conn;
 }
@@ -3998,6 +4066,15 @@ static void show_compile_settings(void)
     printf("Server's Module Magic Number: %u:%u\n",
 	   MODULE_MAGIC_NUMBER_MAJOR, MODULE_MAGIC_NUMBER_MINOR);
     printf("Server compiled with....\n");
+#ifdef EAPI
+    printf(" -D EAPI\n");
+#endif
+#ifdef EAPI_MM
+    printf(" -D EAPI_MM\n");
+#ifdef EAPI_MM_CORE_PATH
+    printf(" -D EAPI_MM_CORE_PATH=\"" EAPI_MM_CORE_PATH "\"\n");
+#endif
+#endif
 #ifdef TPF
     show_os_specific_compile_settings();
 #endif
@@ -4079,6 +4156,7 @@ static void show_compile_settings(void)
 	printf(" -D PIPE_BUF=%ld\n",(long)PIPE_BUF);
 #endif
 #endif
+    printf(" -D HARD_SERVER_LIMIT=%ld\n",(long)HARD_SERVER_LIMIT);
 #ifdef MULTITHREAD
     printf(" -D MULTITHREAD\n");
 #endif
@@ -4167,6 +4245,22 @@ static void common_init(void)
     ap_server_pre_read_config  = ap_make_array(pcommands, 1, sizeof(char *));
     ap_server_post_read_config = ap_make_array(pcommands, 1, sizeof(char *));
     ap_server_config_defines   = ap_make_array(pcommands, 1, sizeof(char *));
+
+#ifdef EAPI
+    ap_hook_init();
+    ap_hook_configure("ap::buff::read", 
+                      AP_HOOK_SIG4(int,ptr,ptr,int), AP_HOOK_TOPMOST);
+    ap_hook_configure("ap::buff::write",  
+                      AP_HOOK_SIG4(int,ptr,ptr,int), AP_HOOK_TOPMOST);
+    ap_hook_configure("ap::buff::writev",  
+                      AP_HOOK_SIG4(int,ptr,ptr,int), AP_HOOK_TOPMOST);
+    ap_hook_configure("ap::buff::sendwithtimeout", 
+                      AP_HOOK_SIG4(int,ptr,ptr,int), AP_HOOK_TOPMOST);
+    ap_hook_configure("ap::buff::recvwithtimeout", 
+                      AP_HOOK_SIG4(int,ptr,ptr,int), AP_HOOK_TOPMOST);
+
+    ap_global_ctx = ap_ctx_new(NULL);
+#endif /* EAPI */
 }
 
 #ifndef MULTITHREAD
@@ -4617,6 +4711,9 @@ static void child_main(int child_num_arg)
 
 	    ap_sync_scoreboard_image();
 	    if (ap_scoreboard_image->global.running_generation != ap_my_generation) {
+#ifdef EAPI
+		ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 		ap_bclose(conn_io);
 		clean_child_exit(0);
 	    }
@@ -4645,6 +4742,9 @@ static void child_main(int child_num_arg)
 	 */
 
 #ifdef NO_LINGCLOSE
+#ifdef EAPI
+	ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 	ap_bclose(conn_io);	/* just close it */
 #else
 	if (r && r->connection
@@ -4655,6 +4755,9 @@ static void child_main(int child_num_arg)
 	    lingering_close(r);
 	}
 	else {
+#ifdef EAPI
+	    ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 	    ap_bsetflag(conn_io, B_EOUT, 1);
 	    ap_bclose(conn_io);
 	}
@@ -5420,16 +5523,31 @@ int REALMAIN(int argc, char *argv[])
 	    usage(argv[0]);
 	}
     }
+#ifdef EAPI
+    ap_init_alloc_shared(TRUE);
+#endif
 
     ap_suexec_enabled = init_suexec();
     server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
 
+#ifdef EAPI
+    ap_init_alloc_shared(FALSE);
+#endif
+
     if (ap_configtestonly) {
         fprintf(stderr, "Syntax OK\n");
+#ifdef EAPI
+        clean_parent_exit(0);
+#else
         exit(0);
+#endif
     }
     if (ap_dump_settings) {
+#ifdef EAPI
+        clean_parent_exit(0);
+#else
         exit(0);
+#endif
     }
 
     child_timeouts = !ap_standalone || one_process;
@@ -5452,6 +5570,7 @@ int REALMAIN(int argc, char *argv[])
         memcpy(tpf_server_name, input_parms.parent.servname,
                INETD_SERVNAME_LENGTH);
         tpf_server_name[INETD_SERVNAME_LENGTH + 1] = '\0';
+        sprintf(tpf_mutex_key, "%.*x", TPF_MUTEX_KEY_SIZE - 1, getpid());
         ap_open_logs(server_conf, plog);
         ap_tpf_zinet_checks(ap_standalone, tpf_server_name, server_conf);
         ap_tpf_save_argv(argc, argv);    /* save argv parms for children */
@@ -5575,6 +5694,10 @@ int REALMAIN(int argc, char *argv[])
 
 	    ap_destroy_pool(r->pool);
 	}
+
+#ifdef EAPI
+	ap_call_close_connection_hook(conn);
+#endif /* EAPI */
 
 	ap_bclose(cio);
     }
@@ -5952,6 +6075,9 @@ static void child_sub_main(int child_num)
 	ap_kill_cleanups_for_socket(ptrans, csd);
 
 #ifdef NO_LINGCLOSE
+#ifdef EAPI
+	ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 	ap_bclose(conn_io);	/* just close it */
 #else
 	if (r && r->connection
@@ -5962,6 +6088,9 @@ static void child_sub_main(int child_num)
 	    lingering_close(r);
 	}
 	else {
+#ifdef EAPI
+	    ap_call_close_connection_hook(current_conn);
+#endif /* EAPI */
 	    ap_bsetflag(conn_io, B_EOUT, 1);
 	    ap_bclose(conn_io);
 	}
@@ -7260,7 +7389,7 @@ int REALMAIN(int argc, char *argv[])
 
     while ((c = getopt(argc, argv, "D:C:c:Xd:f:vVlLz:Z:wiuStThk:n:W:")) != -1) {
 #else /* !WIN32 */
-    while ((c = getopt(argc, argv, "D:C:c:Xd:fF:vVlLesStTh")) != -1) {
+    while ((c = getopt(argc, argv, "D:C:c:Xd:Ff:vVlLesStTh")) != -1) {
 #endif
         char **new;
 	switch (c) {
@@ -7530,6 +7659,10 @@ int REALMAIN(int argc, char *argv[])
     if (!conf_specified)
         ap_cpystrn(ap_server_confname, SERVER_CONFIG_FILE, sizeof(ap_server_confname));
 
+#ifdef EAPI
+    ap_init_alloc_shared(TRUE);
+#endif
+
     if (!ap_os_is_path_absolute(ap_server_confname))
         ap_cpystrn(ap_server_confname,
                    ap_server_root_relative(pcommands, ap_server_confname),
@@ -7569,6 +7702,9 @@ int REALMAIN(int argc, char *argv[])
     }
 #else /* ndef WIN32 */
     server_conf = ap_read_config(pconf, ptrans, ap_server_confname);
+#endif
+#ifdef EAPI
+    ap_init_alloc_shared(FALSE);
 #endif
 
     if (ap_configtestonly) {

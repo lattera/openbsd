@@ -447,3 +447,67 @@ EXPORTS
         ap_getline @439
         ap_get_chunk_size @440
         ap_escape_logitem @441
+	
+	; EAPI extended symbols
+	; note; no ID's, so these all bind by name rather than ordinal since 
+	; their ordinals would change with symbol changes in the distribution
+	ap_add_config_define
+	ap_global_ctx  DATA
+	ap_ctx_new
+	ap_ctx_get
+	ap_ctx_overlay
+	ap_ctx_set
+	ap_hook_init
+	ap_hook_kill
+	ap_hook_configure
+	ap_hook_register_I
+	ap_hook_unregister_I
+	ap_hook_status
+	ap_hook_use
+	ap_hook_call
+	ap_set_callback_and_alarm
+	ap_acquire_pool
+	ap_make_shared_sub_pool
+	ap_release_pool
+	ap_mm_useable
+	ap_MM_create
+	ap_MM_permission
+	ap_MM_destroy
+	ap_MM_lock
+	ap_MM_unlock
+	ap_MM_malloc
+	ap_MM_realloc
+	ap_MM_free
+	ap_MM_calloc
+	ap_MM_strdup
+	ap_MM_sizeof
+	ap_MM_maxsize
+	ap_MM_available
+	ap_MM_error
+	ap_mm_create
+	ap_mm_permission
+	ap_mm_destroy
+	ap_mm_lock
+	ap_mm_unlock
+	ap_mm_malloc
+	ap_mm_realloc
+	ap_mm_free
+	ap_mm_calloc
+	ap_mm_strdup
+	ap_mm_sizeof
+	ap_mm_maxsize
+	ap_mm_available
+	ap_mm_error
+	ap_mm_display_info
+	ap_mm_core_create
+	ap_mm_core_permission
+	ap_mm_core_delete
+	ap_mm_core_size
+	ap_mm_core_lock
+	ap_mm_core_unlock
+	ap_mm_core_align2page
+	ap_mm_core_align2word
+	ap_mm_lib_error_set
+	ap_mm_lib_error_get
+	ap_mm_lib_version
+

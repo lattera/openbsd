@@ -1,3 +1,7 @@
+#ifndef YYERRCODE
+#define YYERRCODE 256
+#endif
+
 #define T_TRUE 257
 #define T_FALSE 258
 #define T_DIGIT 259

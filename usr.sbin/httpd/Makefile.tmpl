@@ -141,10 +141,14 @@ suexec_gidmin   = @suexec_gidmin@
 suexec_safepath = @suexec_safepath@
 suexec_umask    = @suexec_umask@
 
+#  SSL (optional)
+ssl = @ssl@
+
 #   some substituted configuration parameters
 conf_user        = @conf_user@
 conf_group       = @conf_group@
 conf_port        = @conf_port@
+conf_port_ssl    = @conf_port_ssl@
 conf_serveradmin = @conf_serveradmin@
 conf_servername  = @conf_servername@
 
@@ -153,6 +157,13 @@ build-support     = @build_support@
 install-support   = @install_support@
 clean-support     = @clean_support@
 distclean-support = @distclean_support@
+
+#   `make certificate' parameters
+TYPE =
+ALGO =
+CRT  =
+KEY  =
+VIEW =
 
 #   forwarding arguments
 MFWD = root=$(root)
@@ -175,6 +186,7 @@ build:
 	@if [ "x$(build-support)" != "x" ]; then \
 	    $(MAKE) -f $(TOP)/$(MKF) $(MFLAGS) $(MFWD) $(build-support); \
         fi
+	@$(MAKE) -f $(TOP)/$(MKF) $(MFLAGS) $(MFWD) build-certificate
 	@touch $(TOP)/$(SRC)/.apaci.build.ok
 	@echo "<=== $(SRC)"
 
@@ -210,6 +222,44 @@ build-support:
 		suexec; \
 	fi
 	@echo "<=== $(SRC)/support"
+
+#   SSL certificate generation
+build-certificate:
+	-@if [ ".$(ssl)" = .1 ]; then \
+		if [ ".`grep '(SKIPME)' $(TOP)/conf/ssl.crt/server.crt`" != . ]; then \
+			if [ ".$(QUIET)" != .1 ]; then \
+				echo "+---------------------------------------------------------------------+"; \
+				echo "| Before you install the package you now should prepare the SSL       |"; \
+				echo "| certificate system by running the 'make certificate' command.       |"; \
+				echo "| For different situations the following variants are provided:       |"; \
+				echo "|                                                                     |"; \
+				echo "| % make certificate TYPE=dummy    (dummy self-signed Snake Oil cert) |"; \
+				echo "| % make certificate TYPE=test     (test cert signed by Snake Oil CA) |"; \
+				echo "| % make certificate TYPE=custom   (custom cert signed by own CA)     |"; \
+				echo "| % make certificate TYPE=existing (existing cert)                    |"; \
+				echo "|        CRT=/path/to/your.crt [KEY=/path/to/your.key]                |"; \
+				echo "|                                                                     |"; \
+				echo "| Use TYPE=dummy    when you're a  vendor package maintainer,         |"; \
+				echo "| the TYPE=test     when you're an admin but want to do tests only,   |"; \
+				echo "| the TYPE=custom   when you're an admin willing to run a real server |"; \
+				echo "| and TYPE=existing when you're an admin who upgrades a server.       |"; \
+				echo "| (The default is TYPE=test)                                          |"; \
+				echo "|                                                                     |"; \
+				echo "| Additionally add ALGO=RSA (default) or ALGO=DSA to select           |"; \
+				echo "| the signature algorithm used for the generated certificate.         |"; \
+				echo "|                                                                     |"; \
+				echo "| Use 'make certificate VIEW=1' to display the generated data.        |"; \
+				echo "|                                                                     |"; \
+				echo "| Thanks for using Apache & mod_ssl.       Ralf S. Engelschall        |"; \
+				echo "|                                          rse@engelschall.com        |"; \
+				echo "|                                          www.engelschall.com        |"; \
+				echo "+---------------------------------------------------------------------+"; \
+			fi \
+		fi \
+	fi
+
+certificate:
+	@cd $(TOP)/$(SRC); $(MAKE) $(MFLAGS) certificate TYPE="$(TYPE)" ALGO="$(ALGO)" CRT="$(CRT)" KEY="$(KEY)" VIEW="$(VIEW)"
 
 ## ------------------------------------------------------------------
 ##                       Installation Targets
@@ -252,6 +302,10 @@ install-all:
 		echo "|                                                        |"; \
 		echo "|   $(sbindir)/$${apachectl} start"; \
 		echo "|                                                        |"; \
+		echo "| Or when you want to run it with SSL enabled use:       |"; \
+		echo "|                                                        |"; \
+		echo "|   $(sbindir)/$${apachectl} startssl"; \
+		echo "|                                                        |"; \
 		echo "| Thanks for using Apache.       The Apache Group        |"; \
 		echo "|                                http://www.apache.org/  |"; \
 		echo "+--------------------------------------------------------+"; \
@@ -270,6 +324,11 @@ install-mktree:
 	$(MKDIR) $(root)$(mandir)/man1
 	$(MKDIR) $(root)$(mandir)/man8
 	$(MKDIR) $(root)$(sysconfdir)
+	$(MKDIR) $(root)$(sysconfdir)/ssl.crt
+	$(MKDIR) $(root)$(sysconfdir)/ssl.crl
+	$(MKDIR) $(root)$(sysconfdir)/ssl.csr
+	$(MKDIR) $(root)$(sysconfdir)/ssl.key
+	$(MKDIR) $(root)$(sysconfdir)/ssl.prm
 	$(MKDIR) $(root)$(htdocsdir)
 	$(MKDIR) $(root)$(manualdir)
 	$(MKDIR) $(root)$(iconsdir)
@@ -329,19 +388,34 @@ install-programs:
 			echo "$(INSTALL_DSO) $(TOP)/$(SRC)/$${mod} $(root)$(libexecdir)/$${file}"; \
 			$(INSTALL_DSO) $(TOP)/$(SRC)/$${mod} $(root)$(libexecdir)/$${file}; \
 			name=`$(TOP)/$(AUX)/fmn.sh $(TOP)/$(SRC)/$${mod}`; \
+			if [ ".$$name" = .ssl_module ]; then \
+				echo "<IfDefine SSL>" >>$(SRC)/.apaci.install.conf; \
+			fi; \
 			echo dummy | awk '{ printf("LoadModule %-18s %s\n", modname, modpath); }' \
 			modname="$${name}" modpath="$(libexecdir_relative)$${file}" >>$(SRC)/.apaci.install.conf; \
+			if [ ".$$name" = .ssl_module ]; then \
+				echo "</IfDefine>" >>$(SRC)/.apaci.install.conf; \
+			fi; \
 		done; \
 		echo "" >>$(SRC)/.apaci.install.conf; \
 		echo "#  Reconstruction of the complete module list from all available modules" >>$(SRC)/.apaci.install.conf; \
 		echo "#  (static and shared ones) to achieve correct module execution order." >>$(SRC)/.apaci.install.conf; \
 		echo "#  [WHENEVER YOU CHANGE THE LOADMODULE SECTION ABOVE UPDATE THIS, TOO]" >>$(SRC)/.apaci.install.conf; \
 		echo "ClearModuleList" >>$(SRC)/.apaci.install.conf; \
-		egrep "^[ 	]*(Add|Shared)Module" $(SRC)/Configuration.apaci |\
-		sed	-e 's:SharedModule:AddModule:' \
-			-e 's:modules/[^/]*/::' \
-			-e 's:[ 	]lib: mod_:' \
-			-e 's:\.[soam].*$$:.c:' >>$(SRC)/.apaci.install.conf; \
+		for mod in `egrep "^[ 	]*(Add|Shared)Module" $(SRC)/Configuration.apaci |\
+		            sed	-e 's:[ 	]*SharedModule::' \
+		                -e 's:[ 	]*AddModule::' \
+		                -e 's:modules/[^/]*/::' \
+		                -e 's:[ 	]lib: mod_:' \
+		                -e 's:\.[soam]*$$:.c:'`; do \
+			if [ ".$$mod" = .mod_ssl.c ]; then \
+				echo "<IfDefine SSL>" >>$(SRC)/.apaci.install.conf; \
+			fi; \
+			echo "AddModule $$mod" >>$(SRC)/.apaci.install.conf; \
+			if [ ".$$mod" = .mod_ssl.c ]; then \
+				echo "</IfDefine>" >>$(SRC)/.apaci.install.conf; \
+			fi; \
+		done; \
 	fi
 	@echo "<=== [programs]"
 
@@ -514,6 +588,15 @@ install-config:
 		 echo ""; \
 		 cat $(TOP)/conf/$${conf}-dist ) |\
 		 sed -e '/# LoadModule/r $(TOP)/$(SRC)/.apaci.install.conf' \
+			-e "s;logs/ssl_mutex;$(runtimedir)/$${target_prefix}ssl_mutex;" \
+			-e "s;logs/ssl_scache;$(runtimedir)/$${target_prefix}ssl_scache;" \
+			-e "s;logs/ssl_engine_log;$(logfiledir)/$${target_prefix}ssl_engine_log;" \
+			-e "s;logs/ssl_request_log;$(logfiledir)/$${target_prefix}ssl_request_log;" \
+			-e 's;@@ServerRoot@@/conf/ssl.crt;$(sysconfdir)/ssl.crt;' \
+			-e 's;@@ServerRoot@@/conf/ssl.crl;$(sysconfdir)/ssl.crl;' \
+			-e 's;@@ServerRoot@@/conf/ssl.csr;$(sysconfdir)/ssl.csr;' \
+			-e 's;@@ServerRoot@@/conf/ssl.key;$(sysconfdir)/ssl.key;' \
+			-e 's;@@ServerRoot@@/conf/ssl.prm;$(sysconfdir)/ssl.prm;' \
 			-e 's;@@ServerRoot@@/htdocs/manual;$(manualdir);' \
 			-e 's;@@ServerRoot@@/htdocs;$(htdocsdir);' \
 			-e 's;@@ServerRoot@@/icons;$(iconsdir);' \
@@ -534,9 +617,12 @@ install-config:
 			-e 's;Group #-1;Group $(conf_group);' \
 			-e 's;Group "#-1";Group $(conf_group);' \
 			-e 's;Port 80;Port $(conf_port);' \
+			-e 's;Listen 80;Listen $(conf_port);' \
+			-e 's;Listen 443;Listen $(conf_port_ssl);' \
 			-e 's;ServerAdmin you@your.address;ServerAdmin $(conf_serveradmin);' \
 			-e 's;ServerName new.host.name;ServerName $(conf_servername);' \
-			> $(TOP)/$(SRC)/.apaci.install.tmp && \
+			-e 's;VirtualHost _default_:443;VirtualHost _default_:$(conf_port_ssl);' \
+        	> $(TOP)/$(SRC)/.apaci.install.tmp && \
 		echo "$(INSTALL_DATA) $(TOP)/conf/$${conf}-dist[*] $(root)$(sysconfdir)/$${target_conf}.default"; \
 		$(INSTALL_DATA) $(TOP)/$(SRC)/.apaci.install.tmp $(root)$(sysconfdir)/$${target_conf}.default; \
 		if [ ! -f "$(root)$(sysconfdir)/$${target_conf}" ]; then \
@@ -556,6 +642,91 @@ install-config:
 			echo "[PRESERVING EXISTING CONFIG FILE: $(root)$(sysconfdir)/$${conf}]"; \
 		fi; \
 	done
+	-@if [ ".$(ssl)" = .1 ]; then \
+		echo "chmod 755 $(root)$(sysconfdir)/ssl.crt"; \
+		chmod 755 $(root)$(sysconfdir)/ssl.crt; \
+		echo "chmod 755 $(root)$(sysconfdir)/ssl.crl"; \
+		chmod 755 $(root)$(sysconfdir)/ssl.crl; \
+		echo "chmod 755 $(root)$(sysconfdir)/ssl.csr"; \
+		chmod 755 $(root)$(sysconfdir)/ssl.csr; \
+		echo "chmod 700 $(root)$(sysconfdir)/ssl.key"; \
+		chmod 700 $(root)$(sysconfdir)/ssl.key; \
+		echo "chmod 755 $(root)$(sysconfdir)/ssl.prm"; \
+		chmod 755 $(root)$(sysconfdir)/ssl.prm; \
+		if [ ! -f "$(root)$(sysconfdir)/ssl.crt/README.CRT" ]; then \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.crt/README.CRT $(root)$(sysconfdir)/ssl.crt/README.CRT"; \
+			$(INSTALL) $(TOP)/conf/ssl.crt/README.CRT $(root)$(sysconfdir)/ssl.crt/README.CRT; \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.crt/Makefile $(root)$(sysconfdir)/ssl.crt/Makefile"; \
+			$(INSTALL) $(TOP)/conf/ssl.crt/Makefile $(root)$(sysconfdir)/ssl.crt/Makefile; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/ca-bundle.crt $(root)$(sysconfdir)/ssl.crt/ca-bundle.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/ca-bundle.crt $(root)$(sysconfdir)/ssl.crt/ca-bundle.crt; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/snakeoil-ca-rsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-ca-rsa.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/snakeoil-ca-rsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-ca-rsa.crt; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/snakeoil-ca-dsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-ca-dsa.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/snakeoil-ca-dsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-ca-dsa.crt; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/snakeoil-rsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-rsa.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/snakeoil-rsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-rsa.crt; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/snakeoil-dsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-dsa.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/snakeoil-dsa.crt $(root)$(sysconfdir)/ssl.crt/snakeoil-dsa.crt; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/server.crt $(root)$(sysconfdir)/ssl.crt/server.crt"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/server.crt $(root)$(sysconfdir)/ssl.crt/server.crt; \
+			if [ -f "$(TOP)/conf/ssl.crt/ca.crt" ]; then \
+				echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.crt/ca.crt $(root)$(sysconfdir)/ssl.crt/ca.crt"; \
+				$(INSTALL) -m 400 $(TOP)/conf/ssl.crt/ca.crt $(root)$(sysconfdir)/ssl.crt/ca.crt; \
+			fi; \
+		else \
+			echo "[PRESERVING EXISTING CERTIFICATE FILES: $(root)$(sysconfdir)/ssl.crt/*]"; \
+		fi; \
+		echo "Updating hash symlinks in $(root)$(sysconfdir)/ssl.crt/:"; \
+		SSL_PROGRAM="`grep '^SSL_PROGRAM=' $(TOP)/$(SRC)/Makefile.config | sed -e 's:^.*=::'`"; \
+		(cd $(root)$(sysconfdir)/ssl.crt/ && $(MAKE) $(MFLAGS) SSL_PROGRAM=$$SSL_PROGRAM); \
+		if [ ! -f "$(root)$(sysconfdir)/ssl.csr/README.CSR" ]; then \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.csr/README.CSR $(root)$(sysconfdir)/ssl.csr/README.CSR"; \
+			$(INSTALL) $(TOP)/conf/ssl.csr/README.CSR $(root)$(sysconfdir)/ssl.csr/README.CSR; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.csr/server.csr $(root)$(sysconfdir)/ssl.csr/server.csr"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.csr/server.csr $(root)$(sysconfdir)/ssl.csr/server.csr; \
+		else \
+			echo "[PRESERVING EXISTING CSR FILES: $(root)$(sysconfdir)/ssl.csr/*]"; \
+		fi; \
+		if [ ! -f "$(root)$(sysconfdir)/ssl.crl/README.CRL" ]; then \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.crl/README.CRL $(root)$(sysconfdir)/ssl.crl/README.CRL"; \
+			$(INSTALL) $(TOP)/conf/ssl.crl/README.CRL $(root)$(sysconfdir)/ssl.crl/README.CRL; \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.crl/Makefile $(root)$(sysconfdir)/ssl.crl/Makefile"; \
+			$(INSTALL) $(TOP)/conf/ssl.crl/Makefile $(root)$(sysconfdir)/ssl.crl/Makefile; \
+		else \
+			echo "[PRESERVING EXISTING CRL FILES: $(root)$(sysconfdir)/ssl.crl/*]"; \
+		fi; \
+		if [ ! -f "$(root)$(sysconfdir)/ssl.key/README.KEY" ]; then \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.key/README.KEY $(root)$(sysconfdir)/ssl.key/README.KEY"; \
+			$(INSTALL) $(TOP)/conf/ssl.key/README.KEY $(root)$(sysconfdir)/ssl.key/README.KEY; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/snakeoil-ca-rsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-ca-rsa.key"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.key/snakeoil-ca-rsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-ca-rsa.key; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/snakeoil-ca-dsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-ca-dsa.key"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.key/snakeoil-ca-dsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-ca-dsa.key; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/snakeoil-rsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-rsa.key"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.key/snakeoil-rsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-rsa.key; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/snakeoil-dsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-dsa.key"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.key/snakeoil-dsa.key $(root)$(sysconfdir)/ssl.key/snakeoil-dsa.key; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/server.key $(root)$(sysconfdir)/ssl.key/server.key"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.key/server.key $(root)$(sysconfdir)/ssl.key/server.key; \
+			if [ -f "$(TOP)/conf/ssl.key/ca.key" ]; then \
+				echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.key/ca.key $(root)$(sysconfdir)/ssl.key/ca.key"; \
+				$(INSTALL) -m 400 $(TOP)/conf/ssl.key/ca.key $(root)$(sysconfdir)/ssl.key/ca.key; \
+			fi; \
+		else \
+			echo "[PRESERVING EXISTING KEY FILES: $(root)$(sysconfdir)/ssl.key/*]"; \
+		fi; \
+		if [ ! -f "$(root)$(sysconfdir)/ssl.prm/README.PRM" ]; then \
+			echo "$(INSTALL_DATA) $(TOP)/conf/ssl.prm/README.PRM $(root)$(sysconfdir)/ssl.prm/README.PRM"; \
+			$(INSTALL) $(TOP)/conf/ssl.prm/README.PRM $(root)$(sysconfdir)/ssl.prm/README.PRM; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.prm/snakeoil-ca-dsa.prm $(root)$(sysconfdir)/ssl.prm/snakeoil-ca-dsa.prm"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.prm/snakeoil-ca-dsa.prm $(root)$(sysconfdir)/ssl.prm/snakeoil-ca-dsa.prm; \
+			echo "$(INSTALL_DATA) -m 400 $(TOP)/conf/ssl.prm/snakeoil-dsa.prm $(root)$(sysconfdir)/ssl.prm/snakeoil-dsa.prm"; \
+			$(INSTALL) -m 400 $(TOP)/conf/ssl.prm/snakeoil-dsa.prm $(root)$(sysconfdir)/ssl.prm/snakeoil-dsa.prm; \
+		else \
+			echo "[PRESERVING EXISTING PRM FILES: $(root)$(sysconfdir)/ssl.prm/*]"; \
+		fi; \
+	fi
 	@echo "<=== [config]"
 
 

@@ -50,6 +50,9 @@ CLEAN :
 	-@erase "$(INTDIR)\ap_cpystrn.obj"
 	-@erase "$(INTDIR)\ap_fnmatch.obj"
 	-@erase "$(INTDIR)\ap_md5c.obj"
+	-@erase "$(INTDIR)\ap_hook.obj"
+	-@erase "$(INTDIR)\ap_ctx.obj"
+	-@erase "$(INTDIR)\ap_mm.obj"
 	-@erase "$(INTDIR)\ap_sha1.obj"
 	-@erase "$(INTDIR)\ap_signal.obj"
 	-@erase "$(INTDIR)\ap_slack.obj"
@@ -108,6 +111,9 @@ LIB32_OBJS= \
 	"$(INTDIR)\ap_cpystrn.obj" \
 	"$(INTDIR)\ap_fnmatch.obj" \
 	"$(INTDIR)\ap_md5c.obj" \
+	"$(INTDIR)\ap_hook.obj" \
+	"$(INTDIR)\ap_ctx.obj" \
+	"$(INTDIR)\ap_mm.obj" \
 	"$(INTDIR)\ap_sha1.obj" \
 	"$(INTDIR)\ap_signal.obj" \
 	"$(INTDIR)\ap_slack.obj" \
@@ -144,6 +150,9 @@ CLEAN :
 	-@erase "$(INTDIR)\ap_cpystrn.obj"
 	-@erase "$(INTDIR)\ap_fnmatch.obj"
 	-@erase "$(INTDIR)\ap_md5c.obj"
+	-@erase "$(INTDIR)\ap_hook.obj"
+	-@erase "$(INTDIR)\ap_ctx.obj"
+	-@erase "$(INTDIR)\ap_mm.obj"
 	-@erase "$(INTDIR)\ap_sha1.obj"
 	-@erase "$(INTDIR)\ap_signal.obj"
 	-@erase "$(INTDIR)\ap_slack.obj"
@@ -202,6 +211,9 @@ LIB32_OBJS= \
 	"$(INTDIR)\ap_cpystrn.obj" \
 	"$(INTDIR)\ap_fnmatch.obj" \
 	"$(INTDIR)\ap_md5c.obj" \
+	"$(INTDIR)\ap_hook.obj" \
+	"$(INTDIR)\ap_ctx.obj" \
+	"$(INTDIR)\ap_mm.obj" \
 	"$(INTDIR)\ap_sha1.obj" \
 	"$(INTDIR)\ap_signal.obj" \
 	"$(INTDIR)\ap_slack.obj" \

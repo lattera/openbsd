@@ -7,7 +7,7 @@
 #use wml::std::toc style=nbsp
 
 <quotation width=400 
-           author="A. Tannenbaum, ``Introduction to Computer Networks''">
+           author="A. Tanenbaum, ``Introduction to Computer Networks''">
 ``The nice thing about standards is that there are so many to choose from.
 And if you really don't like all the standards you just have to wait another
 year until the one arises you are looking for.''
@@ -122,7 +122,7 @@ public key.  Only the bank will be able to decrypt it.
 <h3>Message Digests</h3>
 
 Although Alice may encrypt her message to make it private, there is still a
-concern that someone might modify her original message message or substitute
+concern that someone might modify her original message or substitute
 it with a different one, in order to transfer the money to themselves, for
 instance.  One way of guaranteeing the integrity of Alice's message is to
 create a concise summary of her message and send this to the bank as well.
@@ -389,7 +389,7 @@ a protocol session.
 <td>First SSL protocol for which implementations exists</td>
 <td>- NS Navigator 1.x/2.x<br> 
     - MS IE 3.x<br>
-    - Lynx/2.8+SSLeay 
+    - Lynx/2.8+OpenSSL 
 </td>
 </tr>
 <tr valign=top>
@@ -398,7 +398,7 @@ a protocol session.
 <td>Revisions to prevent specific security attacks, add non-RSA ciphers, and support for certificate chains</td>
 <td>- NS Navigator 2.x/3.x/4.x<br> 
     - MS IE 3.x/4.x<br>
-    - Lynx/2.8+SSLeay 
+    - Lynx/2.8+OpenSSL 
 </td>
 </tr>
 <tr valign=top>
@@ -407,7 +407,7 @@ a protocol session.
 <td>Revision of SSL 3.0 to update the MAC layer to HMAC, add block padding for
     block ciphers, message order standardization and more alert messages.
 </td>
-<td>- Lynx/2.8+SSLeay</td>
+<td>- Lynx/2.8+OpenSSL</td>
 </table>
 </float>
 
@@ -505,7 +505,7 @@ choices, including the choice to perform no encryption:
     <ul>
     <li>RC2 with 40 bit key
     <li>DES with 40 bit key
-    <li>DES with 54 bit key
+    <li>DES with 56 bit key
     <li>Triple-DES with 168 bit key
     <li>Idea (128 bit key)
     <li>Fortezza (96 bit key)
@@ -619,7 +619,7 @@ is what mod_ssl provides to you for the Apache webserver...
      http://www.rsa.com/rsalabs/pubs/PKCS/</a>.
 <p>
 <li><a name="MIME"></a>
-[MIME] N. Freed, N. Borenstein, <em>ultipurpose Internet Mail Extensions
+[MIME] N. Freed, N. Borenstein, <em>Multipurpose Internet Mail Extensions
        (MIME) Part One: Format of Internet Message Bodies</em>, RFC2045.
        See for instance <a href="ftp://ftp.isi.edu/in-notes/rfc2045.txt">
        ftp://ftp.isi.edu/in-notes/rfc2045.txt</a>.

@@ -81,6 +81,7 @@
 #include "http_conf_globals.h"	/* Sigh... */
 #include "http_vhost.h"
 #include "explain.h"
+#include "fnmatch.h"
 
 DEF_Explain
 
@@ -599,6 +600,20 @@ API_EXPORT(void) ap_add_module(module *m)
 	m->name = tmp;
     }
 #endif /*_OSD_POSIX*/
+
+#ifdef EAPI
+    /*
+     * Invoke the `add_module' hook inside the now existing set
+     * of modules to let them all now that this module was added.
+     */
+    {
+        module *m2;
+        for (m2 = top_module; m2 != NULL; m2 = m2->next)
+            if (m2->magic == MODULE_MAGIC_COOKIE_EAPI)
+                if (m2->add_module != NULL)
+                    (*m2->add_module)(m);
+    }
+#endif /* EAPI */
 }
 
 /* 
@@ -612,6 +627,21 @@ API_EXPORT(void) ap_add_module(module *m)
 API_EXPORT(void) ap_remove_module(module *m)
 {
     module *modp;
+
+#ifdef EAPI
+    /*
+     * Invoke the `remove_module' hook inside the now existing
+     * set of modules to let them all now that this module is
+     * beeing removed.
+     */
+    {
+        module *m2;
+        for (m2 = top_module; m2 != NULL; m2 = m2->next)
+            if (m2->magic == MODULE_MAGIC_COOKIE_EAPI)
+                if (m2->remove_module != NULL)
+                    (*m2->remove_module)(m);
+    }
+#endif /* EAPI */
 
     modp = top_module;
     if (modp == m) {
@@ -1006,6 +1036,27 @@ CORE_EXPORT(const char *) ap_handle_command(cmd_parms *parms, void *config, cons
     const command_rec *cmd;
     module *mod = top_module;
 
+#ifdef EAPI
+    /*
+     * Invoke the `rewrite_command' of modules to allow
+     * they to rewrite the directive line before we
+     * process it.
+     */
+    {
+        module *m;
+        char *cp;
+        for (m = top_module; m != NULL; m = m->next) {
+            if (m->magic == MODULE_MAGIC_COOKIE_EAPI) {
+                if (m->rewrite_command != NULL) {
+                    cp = (m->rewrite_command)(parms, config, l);
+                    if (cp != NULL)
+                        l = cp;
+                }
+            }
+        }
+    }
+#endif /* EAPI */
+
     if ((l[0] == '#') || (!l[0]))
 	return NULL;
 
@@ -1211,7 +1262,7 @@ CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p
     const char *errmsg;
     cmd_parms parms;
     struct stat finfo;
-
+    int ispatt;
     fname = ap_server_root_relative(p, fname);
 
     if (!(strcmp(fname, ap_server_root_relative(p, RESOURCE_CONFIG_FILE))) ||
@@ -1233,12 +1284,36 @@ CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p
      * horrible loops).  If so, let's recurse and toss it back into
      * the function.
      */
-    if (ap_is_rdirectory(fname)) {
+    ispatt = ap_is_fnmatch(fname);
+    if (ispatt || ap_is_rdirectory(fname)) {
 	DIR *dirp;
 	struct DIR_TYPE *dir_entry;
 	int current;
 	array_header *candidates = NULL;
 	fnames *fnew;
+	char *path = ap_pstrdup(p,fname);
+	char *pattern = NULL;
+
+        if(ispatt && (pattern = strrchr(path, '/')) != NULL) {
+            *pattern++ = '\0';
+            if (ap_is_fnmatch(path)) {
+                fprintf(stderr, "%s: wildcard patterns not allowed in Include "
+                        "%s\n", ap_server_argv0, fname);
+                exit(1);
+            }
+
+            if (!ap_is_rdirectory(path)){ 
+                fprintf(stderr, "%s: Include directory '%s' not found",
+                        ap_server_argv0, path);
+                exit(1);
+            }
+            if (!ap_is_fnmatch(pattern)) {
+                fprintf(stderr, "%s: must include a wildcard pattern "
+                        "for Include %s\n", ap_server_argv0, fname);
+                exit(1);
+            }
+        }
+
 
 	/*
 	 * first course of business is to grok all the directory
@@ -1246,11 +1321,11 @@ CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p
 	 * for this.
 	 */
 	fprintf(stderr, "Processing config directory: %s\n", fname);
-	dirp = ap_popendir(p, fname);
+	dirp = ap_popendir(p, path);
 	if (dirp == NULL) {
 	    perror("fopen");
 	    fprintf(stderr, "%s: could not open config directory %s\n",
-		ap_server_argv0, fname);
+		ap_server_argv0, path);
 #ifdef NETWARE
 	    clean_parent_exit(1);
 #else
@@ -1261,9 +1336,11 @@ CORE_EXPORT(void) ap_process_resource_config(server_rec *s, char *fname, pool *p
 	while ((dir_entry = readdir(dirp)) != NULL) {
 	    /* strip out '.' and '..' */
 	    if (strcmp(dir_entry->d_name, ".") &&
-		strcmp(dir_entry->d_name, "..")) {
+		strcmp(dir_entry->d_name, "..") &&
+                (!ispatt ||
+                 !ap_fnmatch(pattern,dir_entry->d_name, FNM_PERIOD)) ) {
 		fnew = (fnames *) ap_push_array(candidates);
-		fnew->fname = ap_make_full_path(p, fname, dir_entry->d_name);
+		fnew->fname = ap_make_full_path(p, path, dir_entry->d_name);
 	    }
 	}
 	ap_pclosedir(p, dirp);
@@ -1440,6 +1517,10 @@ CORE_EXPORT(const char *) ap_init_virtual_host(pool *p, const char *hostname,
     s->limit_req_fieldsize = main_server->limit_req_fieldsize;
     s->limit_req_fields = main_server->limit_req_fields;
 
+#ifdef EAPI
+    s->ctx = ap_ctx_new(p);
+#endif /* EAPI */
+
     *ps = s;
 
     return ap_parse_vhost_addrs(p, hostname, s);
@@ -1550,6 +1631,10 @@ static server_rec *init_server_config(pool *p)
 
     s->module_config = create_server_config(p, s);
     s->lookup_defaults = create_default_per_dir_config(p);
+
+#ifdef EAPI
+    s->ctx = ap_ctx_new(p);
+#endif /* EAPI */
 
     return s;
 }

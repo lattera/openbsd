@@ -631,6 +631,12 @@ case "$PLAT" in
 	LIBS="$LIBS -lsocket -lnsl -lcrypt -lgen -lresolv"
 	DBM_LIB=""
 	;;
+    *-OpenUNIX)
+	OS='OpenUNIX'
+	CFLAGS="$CFLAGS -DUW=800"
+	LIBS="$LIBS -lsocket -lnsl -lcrypt -lgen -lresolv"
+	DBM_LIB=""
+	;;
     maxion-*-sysv4*)
     	OS='SVR4'
 	CFLAGS="$CFLAGS -DSVR4"
@@ -1268,6 +1274,16 @@ if [ "x$using_shlib" = "x1" ] ; then
 	    LDFLAGS_MOD_SHLIB=$LDFLAGS_SHLIB
 	    LDFLAGS_SHLIB_EXPORT="-Wl,-Bexport"
 	    ;;
+	*-OpenUNIX*)
+	    case $CC in
+		*/gcc|gcc ) CFLAGS_SHLIB="-fpic" ;;
+		*/cc|cc   ) CFLAGS_SHLIB="-KPIC" ;;
+	    esac
+	    LDFLAGS_SHLIB="-Bdynamic -G"
+	    LDFLAGS_MOD_SHLIB=$LDFLAGS_SHLIB
+	    LDFLAGS_SHLIB_EXPORT="-Wl,-Bexport"
+	    LD_SHLIB=$CC
+	    ;;
 	 *-sco5*)
 	     case $CC in
 		 */gcc*|gcc* ) CFLAGS_SHLIB="-fpic" ;;
@@ -1869,6 +1885,72 @@ if [ "x$RULE_WANTHSREGEX" = "xyes" ]; then
 fi
 
 ####################################################################
+## Extended API (EAPI) support:
+##
+if [ "x$RULE_EAPI" = "x" ]; then
+    RULE_EAPI=`./helpers/CutRule EAPI $file`
+fi
+if [ "x$RULE_EAPI" = "xyes" ]; then
+    echo " + enabling Extended API (EAPI)"
+    CFLAGS="$CFLAGS -DEAPI"
+    #   some vendor compilers are too restrictive
+    #   for our ap_hook and ap_ctx sources.
+    case "$OS:$CC" in
+        *IRIX-32*:*/cc|*IRIX-32*:cc )
+            CFLAGS="$CFLAGS -woff 1048,1110,1164"
+            ;;
+    esac
+    #   MM Shared Memory Library support for EAPI
+    if [ "x$EAPI_MM" = "x" ]; then
+        EAPI_MM=`egrep '^EAPI_MM=' $file | sed -n -e '$p' | awk -F= '{print $2}'`
+    fi
+    if [ "x$EAPI_MM" != "x" ]; then
+        case $EAPI_MM in
+            SYSTEM|/* ) ;;
+            * ) for p in . .. ../..; do
+                    if [ -d "$p/$EAPI_MM" ]; then
+                        EAPI_MM="`echo $p/$EAPI_MM | sed -e 's;/\./;/;g'`" 
+                        break
+                    fi
+                done
+                ;;
+        esac
+        if [ "x$EAPI_MM" = "xSYSTEM" ]; then
+            echo "   using MM library for EAPI: (system-wide)"
+            CFLAGS="$CFLAGS -DEAPI_MM"
+            __INCLUDES="`mm-config --cflags`"
+            if [ "x$__INCLUDES" != "x-I/usr/include" ]; then
+                INCLUDES="$INCLUDES $__INCLUDES"
+            fi
+            LDFLAGS="$LDFLAGS `mm-config --ldflags`"
+            LIBS="$LIBS `mm-config --libs`"
+        else
+            if [ -f "$EAPI_MM/.libs/libmm.a" -a -f "$EAPI_MM/mm.h" ]; then
+                echo "   using MM library: $EAPI_MM (source-tree only)"
+                case $EAPI_MM in
+                    /* ) ;;
+                    *  ) EAPI_MM="\$(SRCDIR)/$EAPI_MM" ;;
+                esac
+                CFLAGS="$CFLAGS -DEAPI_MM"
+                INCLUDES="$INCLUDES -I$EAPI_MM"
+                LDFLAGS="$LDFLAGS -L$EAPI_MM/.libs"
+                LIBS="$LIBS -lmm"
+            elif [ -f "$EAPI_MM/bin/mm-config" ]; then
+                echo "   using MM library: $EAPI_MM (installed)"
+                CFLAGS="$CFLAGS -DEAPI_MM"
+                INCLUDES="$INCLUDES `$EAPI_MM/bin/mm-config --cflags`"
+                LDFLAGS="$LDFLAGS `$EAPI_MM/bin/mm-config --ldflags`"
+                LIBS="$LIBS `$EAPI_MM/bin/mm-config --libs`"
+            else
+                echo "Configure:Error: Cannot find MM library under $EAPI_MM" 1>&2
+                exit 1
+            fi
+        fi
+    fi
+fi
+
+
+####################################################################
 ## Add in the Expat library if needed/wanted.
 ##
 
@@ -1937,7 +2019,7 @@ if [ "x$using_shlib" = "x1" ] ; then
 	#    select the special subtarget for shared core generation
 	SUBTARGET=target_shared
 	#    determine additional suffixes for libhttpd.so
-	V=1 R=3 P=26
+	V=1 R=3 P=27
 	if [ "x$SHLIB_SUFFIX_DEPTH" = "x0" ]; then
 	    SHLIB_SUFFIX_LIST=""
 	fi

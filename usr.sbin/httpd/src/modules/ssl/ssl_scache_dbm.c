@@ -9,7 +9,7 @@
 */
 
 /* ====================================================================
- * Copyright (c) 1998-2000 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -143,8 +143,10 @@ BOOL ssl_scache_dbm_store(server_rec *s, UCHAR *id, int idlen, time_t expiry, SS
     UCHAR *ucp;
 
     /* streamline session data */
+    if ((nData = i2d_SSL_SESSION(sess, NULL)) > sizeof(ucaData))
+        return FALSE;
     ucp = ucaData;
-    nData = i2d_SSL_SESSION(sess, &ucp);
+    i2d_SSL_SESSION(sess, &ucp);
 
     /* be careful: do not try to store too much bytes in a DBM file! */
 #ifdef SSL_USE_SDBM

@@ -1,15 +1,15 @@
 /*                      _             _
-**  _ __ ___   ___   __| |    ___ ___| |
-** | '_ ` _ \ / _ \ / _` |   / __/ __| |
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+**  _ __ ___   ___   __| |    ___ ___| |  mod_ssl
+** | '_ ` _ \ / _ \ / _` |   / __/ __| |  Apache Interface to OpenSSL
+** | | | | | | (_) | (_| |   \__ \__ \ |  www.modssl.org
+** |_| |_| |_|\___/ \__,_|___|___/___/_|  ftp.modssl.org
 **                      |_____|
 **  mod_ssl.c
 **  Apache API interface structures
 */
 
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  *    software must display the following acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -42,7 +42,7 @@
  *    acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -92,6 +92,11 @@ static command_rec ssl_config_cmds[] = {
     AP_SRV_CMD(SessionCache, TAKE1,
                "SSL Session Cache storage "
                "(`none', `dbm:/path/to/file')")
+#ifdef SSL_EXPERIMENTAL_ENGINE
+    AP_SRV_CMD(CryptoDevice, TAKE1,
+               "SSL external Crypto Device usage "
+               "(`builtin', `...')")
+#endif
     AP_SRV_CMD(RandomSeed, TAKE23,
                "SSL Pseudo Random Number Generator (PRNG) seeding source "
                "(`startup|connect builtin|file:/path|exec:/path [bytes]')")
@@ -107,11 +112,14 @@ static command_rec ssl_config_cmds[] = {
                "(`XXX:...:XXX' - see manual)")
     AP_SRV_CMD(CertificateFile, TAKE1,
                "SSL Server Certificate file "
-               "(`/path/to/file' - PEM encoded)")
+               "(`/path/to/file' - PEM or DER encoded)")
     AP_SRV_CMD(CertificateKeyFile, TAKE1,
                "SSL Server Private Key file "
+               "(`/path/to/file' - PEM or DER encoded)")
+    AP_SRV_CMD(CertificateChainFile, TAKE1,
+               "SSL Server CA Certificate Chain file "
                "(`/path/to/file' - PEM encoded)")
-#ifdef SSL_EXPERIMENTAL
+#ifdef SSL_EXPERIMENTAL_PERDIRCA
     AP_ALL_CMD(CACertificatePath, TAKE1,
                "SSL CA Certificate path "
                "(`/path/to/dir' - contains PEM encoded files)")
@@ -126,12 +134,18 @@ static command_rec ssl_config_cmds[] = {
                "SSL CA Certificate file "
                "(`/path/to/file' - PEM encoded)")
 #endif
+    AP_SRV_CMD(CARevocationPath, TAKE1,
+               "SSL CA Certificate Revocation List (CRL) path "
+               "(`/path/to/dir' - contains PEM encoded files)")
+    AP_SRV_CMD(CARevocationFile, TAKE1,
+               "SSL CA Certificate Revocation List (CRL) file "
+               "(`/path/to/file' - PEM encoded)")
     AP_ALL_CMD(VerifyClient, TAKE1,
                "SSL Client verify type "
                "(`none', `optional', `require', `optional_no_ca')")
     AP_ALL_CMD(VerifyDepth, TAKE1,
                "SSL Client verify depth "
-               "(`N' - number of intermediate certifcates)")
+               "(`N' - number of intermediate certificates)")
     AP_SRV_CMD(SessionCacheTimeout, TAKE1,
                "SSL Session Cache object lifetime "
                "(`N' - number of seconds)")
@@ -145,6 +159,36 @@ static command_rec ssl_config_cmds[] = {
                "Enable or disable various SSL protocols"
                "(`[+-][SSLv2|SSLv3|TLSv1] ...' - see manual)")
 
+#ifdef SSL_EXPERIMENTAL_PROXY
+    /* 
+     * Proxy configuration for remote SSL connections
+     */
+    AP_SRV_CMD(ProxyProtocol, RAW_ARGS,
+               "SSL Proxy: enable or disable SSL protocol flavors "
+               "(`[+-][SSLv2|SSLv3|TLSv1] ...' - see manual)")
+    AP_SRV_CMD(ProxyCipherSuite, TAKE1,
+               "SSL Proxy: colon-delimited list of permitted SSL ciphers "
+               "(`XXX:...:XXX' - see manual)")
+    AP_SRV_CMD(ProxyVerify, FLAG,
+               "SSL Proxy: whether to verify the remote certificate "
+               "(`on' or `off')")
+    AP_SRV_CMD(ProxyVerifyDepth, TAKE1,
+               "SSL Proxy: maximum certificate verification depth "
+               "(`N' - number of intermediate certificates)")
+    AP_SRV_CMD(ProxyCACertificateFile, TAKE1,
+               "SSL Proxy: file containing server certificates "
+               "(`/path/to/file' - PEM encoded certificates)")
+    AP_SRV_CMD(ProxyCACertificatePath, TAKE1,
+               "SSL Proxy: directory containing server certificates "
+               "(`/path/to/dir' - contains PEM encoded certificates)")
+    AP_SRV_CMD(ProxyMachineCertificateFile, TAKE1,
+               "SSL Proxy: file containing client certificates "
+               "(`/path/to/file' - PEM encoded certificates)")
+    AP_SRV_CMD(ProxyMachineCertificatePath, TAKE1,
+               "SSL Proxy: directory containing client certificates "
+               "(`/path/to/dir' - contains PEM encoded certificates)")
+#endif
+
     /*
      * Per-directory context configuration directives
      */
@@ -156,7 +200,7 @@ static command_rec ssl_config_cmds[] = {
                "(no arguments)")
     AP_DIR_CMD(Require, AUTHCFG, RAW_ARGS,
                "Require a boolean expresion to evaluate to true for granting access"
-               "(arbitraty complex boolean expression - see manual)")
+               "(arbitrary complex boolean expression - see manual)")
 
     AP_END_CMD
 };
@@ -181,9 +225,9 @@ module MODULE_VAR_EXPORT ssl_module = {
     ssl_config_server_merge,  /* merge  per-server config structures */
     ssl_config_cmds,          /* table of config file commands       */
     ssl_config_handler,       /* [#8] MIME-typed-dispatched handlers */
-    NULL,                     /* [#1] URI to filename translation    */
+    ssl_hook_Translate,       /* [#1] URI to filename translation    */
     ssl_hook_Auth,            /* [#4] validate user id from request  */
-    NULL,                     /* [#5] check if the user is ok _here_ */
+    ssl_hook_UserCheck,       /* [#5] check if the user is ok _here_ */
     ssl_hook_Access,          /* [#3] check access by host address   */
     NULL,                     /* [#6] determine MIME type            */
     ssl_hook_Fixup,           /* [#7] pre-run fixups                 */
@@ -198,7 +242,7 @@ module MODULE_VAR_EXPORT ssl_module = {
     ssl_hook_AddModule,       /* after modules was added to core     */
     ssl_hook_RemoveModule,    /* before module is removed from core  */
     ssl_hook_RewriteCommand,  /* configuration command rewriting     */
-    ssl_hook_NewConnection    /* configuration command rewriting     */
+    ssl_hook_NewConnection,   /* socket connection open              */
+    ssl_hook_CloseConnection  /* socket connection close             */
 };
-
 

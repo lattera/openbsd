@@ -1,15 +1,15 @@
 /*                      _             _
-**  _ __ ___   ___   __| |    ___ ___| |
-** | '_ ` _ \ / _ \ / _` |   / __/ __| |
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+**  _ __ ___   ___   __| |    ___ ___| |  mod_ssl
+** | '_ ` _ \ / _ \ / _` |   / __/ __| |  Apache Interface to OpenSSL
+** | | | | | | (_) | (_| |   \__ \__ \ |  www.modssl.org
+** |_| |_| |_|\___/ \__,_|___|___/___/_|  ftp.modssl.org
 **                      |_____|
 **  ssl_engine_vars.c
 **  Variable Lookup Facility
 */
 
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  *    software must display the following acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -42,7 +42,7 @@
  *    acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -77,10 +77,11 @@ static char *ssl_var_lookup_ssl_cert(pool *p, X509 *xs, char *var);
 static char *ssl_var_lookup_ssl_cert_dn(pool *p, X509_NAME *xsname, char *var);
 static char *ssl_var_lookup_ssl_cert_valid(pool *p, ASN1_UTCTIME *tm);
 static char *ssl_var_lookup_ssl_cert_serial(pool *p, X509 *xs);
-static char *ssl_var_lookup_ssl_cert_chain(pool *p, STACK *sk, char *var);
+static char *ssl_var_lookup_ssl_cert_chain(pool *p, STACK_OF(X509) *sk, char *var);
 static char *ssl_var_lookup_ssl_cert_PEM(pool *p, X509 *xs);
+static char *ssl_var_lookup_ssl_cert_verify(pool *p, conn_rec *c);
 static char *ssl_var_lookup_ssl_cipher(pool *p, conn_rec *c, char *var);
-static void  ssl_var_lookup_ssl_cipher_bits(char *cipher, int *usekeysize, int *algkeysize);
+static void  ssl_var_lookup_ssl_cipher_bits(SSL *ssl, int *usekeysize, int *algkeysize);
 static char *ssl_var_lookup_ssl_version(pool *p, char *var);
 
 void ssl_var_register(void)
@@ -145,7 +146,7 @@ char *ssl_var_lookup(pool *p, server_rec *s, conn_rec *c, request_rec *r, char *
         else if (strcEQ(var, "THE_REQUEST"))
             result = r->the_request;
         else if (strcEQ(var, "REQUEST_METHOD"))
-            result = r->method;
+            result = (char *)(r->method);
         else if (strcEQ(var, "REQUEST_SCHEME"))
             result = ap_http_method(r);
         else if (strcEQ(var, "REQUEST_URI"))
@@ -188,6 +189,12 @@ char *ssl_var_lookup(pool *p, server_rec *s, conn_rec *c, request_rec *r, char *
             result = c->ap_auth_type;
         else if (strlen(var) > 4 && strcEQn(var, "SSL_", 4))
             result = ssl_var_lookup_ssl(p, c, var+4);
+        else if (strcEQ(var, "HTTPS")) {
+            if (ap_ctx_get(c->client->ctx, "ssl") != NULL)
+                result = "on";
+            else
+                result = "off";
+        }
     }
 
     /*
@@ -279,33 +286,38 @@ static char *ssl_var_lookup_ssl(pool *p, conn_rec *c, char *var)
 {
     char *result;
     X509 *xs;
-    STACK *sk;
+    STACK_OF(X509) *sk;
     SSL *ssl;
 
     result = NULL;
 
+    ssl = ap_ctx_get(c->client->ctx, "ssl");
     if (strlen(var) > 8 && strcEQn(var, "VERSION_", 8)) {
         result = ssl_var_lookup_ssl_version(p, var+8);
     }
-    else if (strcEQ(var, "PROTOCOL")) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
-        result = SSL_get_version(ssl);
+    else if (ssl != NULL && strcEQ(var, "PROTOCOL")) {
+        result = (char *)SSL_get_version(ssl);
     }
-    else if (strlen(var) >= 6 && strcEQn(var, "CIPHER", 6)) {
+    else if (ssl != NULL && strcEQ(var, "SESSION_ID")) {
+        SSL_SESSION *pSession = SSL_get_session(ssl);
+        result = ap_pstrdup(p, SSL_SESSION_id2sz(pSession->session_id, 
+                                                 pSession->session_id_length));
+    }
+    else if (ssl != NULL && strlen(var) >= 6 && strcEQn(var, "CIPHER", 6)) {
         result = ssl_var_lookup_ssl_cipher(p, c, var+6);
     }
-    else if (strlen(var) > 18 && strcEQn(var, "CLIENT_CERT_CHAIN_", 18)) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
+    else if (ssl != NULL && strlen(var) > 18 && strcEQn(var, "CLIENT_CERT_CHAIN_", 18)) {
         sk = SSL_get_peer_cert_chain(ssl);
-        result = ssl_var_lookup_ssl_cert_chain(p, sk, var+17);
+        result = ssl_var_lookup_ssl_cert_chain(p, sk, var+18);
     }
-    else if (strlen(var) > 7 && strcEQn(var, "CLIENT_", 7)) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
+    else if (ssl != NULL && strcEQ(var, "CLIENT_VERIFY")) {
+        result = ssl_var_lookup_ssl_cert_verify(p, c);
+    }
+    else if (ssl != NULL && strlen(var) > 7 && strcEQn(var, "CLIENT_", 7)) {
         if ((xs = SSL_get_peer_certificate(ssl)) != NULL)
             result = ssl_var_lookup_ssl_cert(p, xs, var+7);
     }
-    else if (strlen(var) > 7 && strcEQn(var, "SERVER_", 7)) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
+    else if (ssl != NULL && strlen(var) > 7 && strcEQn(var, "SERVER_", 7)) {
         if ((xs = SSL_get_certificate(ssl)) != NULL)
             result = ssl_var_lookup_ssl_cert(p, xs, var+7);
     }
@@ -384,11 +396,22 @@ static const struct {
     int   nid;
 } ssl_var_lookup_ssl_cert_dn_rec[] = {
     { "C",     NID_countryName            },
-    { "SP",    NID_stateOrProvinceName    },
+    { "ST",    NID_stateOrProvinceName    }, /* officially    (RFC2156) */
+    { "SP",    NID_stateOrProvinceName    }, /* compatibility (SSLeay)  */
     { "L",     NID_localityName           },
     { "O",     NID_organizationName       },
     { "OU",    NID_organizationalUnitName },
     { "CN",    NID_commonName             },
+    { "T",     NID_title                  },
+    { "I",     NID_initials               },
+    { "G",     NID_givenName              },
+    { "S",     NID_surname                },
+    { "D",     NID_description            },
+#if SSL_LIBRARY_VERSION >= 0x00907000
+    { "UID",   NID_x500UniqueIdentifier   },
+#else
+    { "UID",   NID_uniqueIdentifier       },
+#endif
     { "Email", NID_pkcs9_emailAddress     },
     { NULL,    0                          }
 };
@@ -403,12 +426,15 @@ static char *ssl_var_lookup_ssl_cert_dn(pool *p, X509_NAME *xsname, char *var)
 
     for (i = 0; ssl_var_lookup_ssl_cert_dn_rec[i].name != NULL; i++) {
         if (strEQ(var, ssl_var_lookup_ssl_cert_dn_rec[i].name)) {
-            for (j = 0; j < sk_num(xsname->entries); j++) {
-                xsne = (X509_NAME_ENTRY *)sk_value(xsname->entries, j);
+            for (j = 0; j < sk_X509_NAME_ENTRY_num(xsname->entries); j++) {
+                xsne = sk_X509_NAME_ENTRY_value(xsname->entries, j);
                 n = OBJ_obj2nid(xsne->object);
                 if (n == ssl_var_lookup_ssl_cert_dn_rec[i].nid) {
                     result = ap_palloc(p, xsne->value->length+1);
                     ap_cpystrn(result, (char *)xsne->value->data, xsne->value->length+1);
+#ifdef CHARSET_EBCDIC
+                    ascii2ebcdic(result, result, xsne->value->length);
+#endif /* CHARSET_EBCDIC */
                     result[xsne->value->length] = NUL;
                     break;
                 }
@@ -439,7 +465,7 @@ static char *ssl_var_lookup_ssl_cert_valid(pool *p, ASN1_UTCTIME *tm)
 static char *ssl_var_lookup_ssl_cert_serial(pool *p, X509 *xs)
 {
     char *result;
-    BIO* bio;
+    BIO *bio;
     int n;
 
     if ((bio = BIO_new(BIO_s_mem())) == NULL)
@@ -453,7 +479,7 @@ static char *ssl_var_lookup_ssl_cert_serial(pool *p, X509 *xs)
     return result;
 }
 
-static char *ssl_var_lookup_ssl_cert_chain(pool *p, STACK *sk, char *var)
+static char *ssl_var_lookup_ssl_cert_chain(pool *p, STACK_OF(X509) *sk, char *var)
 {
     char *result;
     X509 *xs;
@@ -463,8 +489,8 @@ static char *ssl_var_lookup_ssl_cert_chain(pool *p, STACK *sk, char *var)
 
     if (strspn(var, "0123456789") == strlen(var)) {
         n = atoi(var);
-        if (sk_num(sk) >= n) {
-            xs = (X509 *)sk_value(sk, n);
+        if (n < sk_X509_num(sk)) {
+            xs = sk_X509_value(sk, n);
             result = ssl_var_lookup_ssl_cert_PEM(p, xs);
         }
     }
@@ -489,38 +515,59 @@ static char *ssl_var_lookup_ssl_cert_PEM(pool *p, X509 *xs)
     return result;
 }
 
+static char *ssl_var_lookup_ssl_cert_verify(pool *p, conn_rec *c)
+{
+    char *result;
+    long vrc;
+    char *verr;
+    char *vinfo;
+    SSL *ssl;
+    X509 *xs;
+
+    result = NULL;
+    ssl   = ap_ctx_get(c->client->ctx, "ssl");
+    verr  = ap_ctx_get(c->client->ctx, "ssl::verify::error");
+    vinfo = ap_ctx_get(c->client->ctx, "ssl::verify::info");
+    vrc   = SSL_get_verify_result(ssl);
+    xs    = SSL_get_peer_certificate(ssl);
+
+    if (vrc == X509_V_OK && verr == NULL && vinfo == NULL && xs == NULL)
+        /* no client verification done at all */
+        result = "NONE";
+    else if (vrc == X509_V_OK && verr == NULL && vinfo == NULL && xs != NULL)
+        /* client verification done successful */
+        result = "SUCCESS";
+    else if (vrc == X509_V_OK && vinfo != NULL && strEQ(vinfo, "GENEROUS"))
+        /* client verification done in generous way */
+        result = "GENEROUS";
+    else
+        /* client verification failed */
+        result = ap_psprintf(p, "FAILED:%s", verr);
+    return result;
+}
+
 static char *ssl_var_lookup_ssl_cipher(pool *p, conn_rec *c, char *var)
 {
     char *result;
     BOOL resdup;
-    char *cipher;
     int usekeysize, algkeysize;
     SSL *ssl;
 
     result = NULL;
     resdup = TRUE;
 
-    if (strEQ(var, "")) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
-        result = SSL_get_cipher_name(ssl);
-    }
-    else if (strcEQ(var, "_EXPORT")) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
-        cipher = SSL_get_cipher_name(ssl);
-        ssl_var_lookup_ssl_cipher_bits(cipher, &usekeysize, &algkeysize);
+    ssl = ap_ctx_get(c->client->ctx, "ssl");
+    ssl_var_lookup_ssl_cipher_bits(ssl, &usekeysize, &algkeysize);
+
+    if (strEQ(var, ""))
+        result = (ssl != NULL ? (char *)SSL_get_cipher_name(ssl) : NULL);
+    else if (strcEQ(var, "_EXPORT"))
         result = (usekeysize < 56 ? "true" : "false");
-    }
     else if (strcEQ(var, "_USEKEYSIZE")) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
-        cipher = SSL_get_cipher_name(ssl);
-        ssl_var_lookup_ssl_cipher_bits(cipher, &usekeysize, &algkeysize);
         result = ap_psprintf(p, "%d", usekeysize);
         resdup = FALSE;
     }
     else if (strcEQ(var, "_ALGKEYSIZE")) {
-        ssl = ap_ctx_get(c->client->ctx, "ssl");
-        cipher = SSL_get_cipher_name(ssl);
-        ssl_var_lookup_ssl_cipher_bits(cipher, &usekeysize, &algkeysize);
         result = ap_psprintf(p, "%d", algkeysize);
         resdup = FALSE;
     }
@@ -530,69 +577,15 @@ static char *ssl_var_lookup_ssl_cipher(pool *p, conn_rec *c, char *var)
     return result;
 }
 
-/*
- * This structure is used instead of SSL_get_cipher_bits() because
- * this SSLeay function has rounding problems, but we want the
- * correct sizes.
- */
-static const struct {
-    char *szName;
-    int nUseKeySize;
-    int nAlgKeySize;
-} ssl_var_lookup_ssl_cipher_bits_rec[] = {
-    { SSL3_TXT_RSA_IDEA_128_SHA          /*IDEA-CBC-SHA*/,           128, 128 },
-    { SSL3_TXT_RSA_NULL_MD5              /*NULL-MD5*/,                 0,   0 },
-    { SSL3_TXT_RSA_NULL_SHA              /*NULL-SHA*/,                 0,   0 },
-    { SSL3_TXT_RSA_RC4_40_MD5            /*EXP-RC4-MD5*/,             40, 128 },
-    { SSL3_TXT_RSA_RC4_128_MD5           /*RC4-MD5*/,                128, 128 },
-    { SSL3_TXT_RSA_RC4_128_SHA           /*RC4-SHA*/,                128, 128 },
-    { SSL3_TXT_RSA_RC2_40_MD5            /*EXP-RC2-CBC-MD5*/,         40, 128 },
-    { SSL3_TXT_RSA_IDEA_128_SHA          /*IDEA-CBC-MD5*/,           128, 128 },
-    { SSL3_TXT_RSA_DES_40_CBC_SHA        /*EXP-DES-CBC-SHA*/,         40,  56 },
-    { SSL3_TXT_RSA_DES_64_CBC_SHA        /*DES-CBC-SHA*/ ,            56,  56 },
-    { SSL3_TXT_RSA_DES_192_CBC3_SHA      /*DES-CBC3-SHA*/ ,          168, 168 },
-    { SSL3_TXT_DH_DSS_DES_40_CBC_SHA     /*EXP-DH-DSS-DES-CBC-SHA*/,  40,  56 },
-    { SSL3_TXT_DH_DSS_DES_64_CBC_SHA     /*DH-DSS-DES-CBC-SHA*/,      56,  56 },
-    { SSL3_TXT_DH_DSS_DES_192_CBC3_SHA   /*DH-DSS-DES-CBC3-SHA*/,    168, 168 },
-    { SSL3_TXT_DH_RSA_DES_40_CBC_SHA     /*EXP-DH-RSA-DES-CBC-SHA*/,  40,  56 },
-    { SSL3_TXT_DH_RSA_DES_64_CBC_SHA     /*DH-RSA-DES-CBC-SHA*/,      56,  56 },
-    { SSL3_TXT_DH_RSA_DES_192_CBC3_SHA   /*DH-RSA-DES-CBC3-SHA*/,    168, 168 },
-    { SSL3_TXT_EDH_DSS_DES_40_CBC_SHA    /*EXP-EDH-DSS-DES-CBC-SHA*/, 40,  56 },
-    { SSL3_TXT_EDH_DSS_DES_64_CBC_SHA    /*EDH-DSS-DES-CBC-SHA*/,     56,  56 },
-    { SSL3_TXT_EDH_DSS_DES_192_CBC3_SHA  /*EDH-DSS-DES-CBC3-SHA*/,   168, 168 },
-    { SSL3_TXT_EDH_RSA_DES_40_CBC_SHA    /*EXP-EDH-RSA-DES-CBC*/,     40,  56 },
-    { SSL3_TXT_EDH_RSA_DES_64_CBC_SHA    /*EDH-RSA-DES-CBC-SHA*/,     56,  56 },
-    { SSL3_TXT_EDH_RSA_DES_192_CBC3_SHA  /*EDH-RSA-DES-CBC3-SHA*/,   168, 168 },
-    { SSL3_TXT_ADH_RC4_40_MD5            /*EXP-ADH-RC4-MD5*/,         40, 128 },
-    { SSL3_TXT_ADH_RC4_128_MD5           /*ADH-RC4-MD5*/,            128, 128 },
-    { SSL3_TXT_ADH_DES_40_CBC_SHA        /*EXP-ADH-DES-CBC-SHA*/,     40, 128 },
-    { SSL3_TXT_ADH_DES_64_CBC_SHA        /*ADH-DES-CBC-SHA*/,         56,  56 },
-    { SSL3_TXT_ADH_DES_192_CBC_SHA       /*ADH-DES-CBC3-SHA*/,       168, 168 },
-    { SSL3_TXT_FZA_DMS_NULL_SHA          /*FZA-NULL-SHA*/,             0,   0 },
-    { SSL3_TXT_FZA_DMS_FZA_SHA           /*FZA-FZA-CBC-SHA*/,          0,   0 },
-    { SSL3_TXT_FZA_DMS_RC4_SHA           /*FZA-RC4-SHA*/,            128, 128 },
-    { SSL2_TXT_DES_64_CFB64_WITH_MD5_1   /*DES-CFB-M1*/,              56,  56 },
-    { SSL2_TXT_RC2_128_CBC_WITH_MD5      /*RC2-CBC-MD5*/,            128, 128 },
-    { SSL2_TXT_DES_64_CBC_WITH_MD5       /*DES-CBC-MD5*/,             56,  56 },
-    { SSL2_TXT_DES_192_EDE3_CBC_WITH_MD5 /*DES-CBC3-MD5*/,           168, 168 },
-    { SSL2_TXT_RC4_64_WITH_MD5           /*RC4-64-MD5*/,              64,  64 },
-    { SSL2_TXT_NULL                      /*NULL*/,                     0,   0 },
-    { NULL,                                                            0,   0 }
-};
-
-static void ssl_var_lookup_ssl_cipher_bits(char *cipher, int *usekeysize, int *algkeysize)
+static void ssl_var_lookup_ssl_cipher_bits(SSL *ssl, int *usekeysize, int *algkeysize)
 {
-    int n;
+    SSL_CIPHER *cipher;
 
     *usekeysize = 0;
     *algkeysize = 0;
-    for (n = 0; ssl_var_lookup_ssl_cipher_bits_rec[n].szName; n++) {
-        if (strEQ(cipher, ssl_var_lookup_ssl_cipher_bits_rec[n].szName)) {
-            *algkeysize = ssl_var_lookup_ssl_cipher_bits_rec[n].nAlgKeySize;
-            *usekeysize = ssl_var_lookup_ssl_cipher_bits_rec[n].nUseKeySize;
-            break;
-        }
-    }
+    if (ssl != NULL)
+        if ((cipher = SSL_get_current_cipher(ssl)) != NULL)
+            *usekeysize = SSL_CIPHER_get_bits(cipher, algkeysize);
     return;
 }
 
@@ -614,7 +607,7 @@ static char *ssl_var_lookup_ssl_version(pool *p, char *var)
         result = ap_psprintf(p, "mod_ssl/%s", MOD_SSL_VERSION);
     }
     else if (strEQ(var, "LIBRARY")) {
-        result = ap_pstrdup(p, SSLeay_version(SSLEAY_VERSION));
+        result = ap_pstrdup(p, SSL_LIBRARY_TEXT);
         if ((cp = strchr(result, ' ')) != NULL) {
             *cp = '/';
             if ((cp2 = strchr(cp, ' ')) != NULL)

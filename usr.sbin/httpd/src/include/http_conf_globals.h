@@ -95,6 +95,9 @@ extern int ap_acceptfilter;
 #endif
 extern int ap_dump_settings;
 extern API_VAR_EXPORT int ap_extended_status;
+#ifdef EAPI
+extern API_VAR_EXPORT ap_ctx *ap_global_ctx;
+#endif /* EAPI */
 
 extern API_VAR_EXPORT char *ap_pid_fname;
 extern API_VAR_EXPORT char *ap_scoreboard_fname;
@@ -102,6 +105,9 @@ extern API_VAR_EXPORT char *ap_lock_fname;
 extern API_VAR_EXPORT char *ap_server_argv0;
 
 extern enum server_token_type ap_server_tokens;
+
+extern API_VAR_EXPORT int ap_protocol_req_check;
+extern API_VAR_EXPORT int ap_change_shmem_uid;
 
 /* Trying to allocate these in the config pool gets us into some *nasty*
  * chicken-and-egg problems in http_main.c --- where do you stick them

@@ -1,4 +1,6 @@
 #ifndef lint
+static char const 
+ssl_expr_yyrcsid[] = "$FreeBSD: src/usr.bin/yacc/skeleton.c,v 1.28 2000/01/17 02:04:06 bde Exp $";
 #endif
 #include <stdlib.h>
 #define YYBYACC 1
@@ -8,20 +10,18 @@
 #define YYEMPTY -1
 #define ssl_expr_yyclearin (ssl_expr_yychar=(YYEMPTY))
 #define ssl_expr_yyerrok (ssl_expr_yyerrflag=0)
-#define YYRECOVERING (ssl_expr_yyerrflag!=0)
-#if defined(c_plusplus) || defined(__cplusplus)
-#include <stdlib.h>
-#else
-extern char *getenv();
-extern void *realloc();
-#endif
+#define YYRECOVERING() (ssl_expr_yyerrflag!=0)
 static int ssl_expr_yygrowstack();
 #define YYPREFIX "ssl_expr_yy"
+#line 72 "ssl_expr_parse.y"
 #include "mod_ssl.h"
+#line 75 "ssl_expr_parse.y"
 typedef union {
     char     *cpVal;
     ssl_expr *exVal;
 } YYSTYPE;
+#line 24 "y.tab.c"
+#define YYERRCODE 256
 #define T_TRUE 257
 #define T_FALSE 258
 #define T_DIGIT 259
@@ -42,7 +42,6 @@ typedef union {
 #define T_OP_OR 274
 #define T_OP_AND 275
 #define T_OP_NOT 276
-#define YYERRCODE 256
 const short ssl_expr_yylhs[] = {                                        -1,
     0,    1,    1,    1,    1,    1,    1,    1,    2,    2,
     2,    2,    2,    2,    2,    2,    2,    5,    5,    6,
@@ -147,8 +146,6 @@ const short ssl_expr_yycheck[] = {                                      37,
 #define YYFINAL 9
 #ifndef YYDEBUG
 #define YYDEBUG 0
-#elif YYDEBUG
-#include <stdio.h>
 #endif
 #define YYMAXTOKEN 276
 #if YYDEBUG
@@ -194,6 +191,9 @@ const char * const ssl_expr_yyrule[] = {
 "funccall : T_FUNC_FILE '(' T_STRING ')'",
 };
 #endif
+#if YYDEBUG
+#include <stdio.h>
+#endif
 #ifdef YYSTACKSIZE
 #undef YYMAXDEPTH
 #define YYMAXDEPTH YYSTACKSIZE
@@ -218,6 +218,7 @@ short *ssl_expr_yyss;
 short *ssl_expr_yysslim;
 YYSTYPE *ssl_expr_yyvs;
 int ssl_expr_yystacksize;
+#line 180 "ssl_expr_parse.y"
 
 int ssl_expr_yyerror(char *s)
 {
@@ -225,6 +226,7 @@ int ssl_expr_yyerror(char *s)
     return 2;
 }
 
+#line 230 "y.tab.c"
 /* allocate initial stack or double stack size, up to YYMAXDEPTH */
 static int ssl_expr_yygrowstack()
 {
@@ -239,11 +241,15 @@ static int ssl_expr_yygrowstack()
     else if ((newsize *= 2) > YYMAXDEPTH)
         newsize = YYMAXDEPTH;
     i = ssl_expr_yyssp - ssl_expr_yyss;
-    if ((newss = (short *)realloc(ssl_expr_yyss, newsize * sizeof *newss)) == NULL)
+    newss = ssl_expr_yyss ? (short *)realloc(ssl_expr_yyss, newsize * sizeof *newss) :
+      (short *)malloc(newsize * sizeof *newss);
+    if (newss == NULL)
         return -1;
     ssl_expr_yyss = newss;
     ssl_expr_yyssp = newss + i;
-    if ((newvs = (YYSTYPE *)realloc(ssl_expr_yyvs, newsize * sizeof *newvs)) == NULL)
+    newvs = ssl_expr_yyvs ? (YYSTYPE *)realloc(ssl_expr_yyvs, newsize * sizeof *newvs) :
+      (YYSTYPE *)malloc(newsize * sizeof *newvs);
+    if (newvs == NULL)
         return -1;
     ssl_expr_yyvs = newvs;
     ssl_expr_yyvsp = newvs + i;
@@ -257,8 +263,30 @@ static int ssl_expr_yygrowstack()
 #define YYACCEPT goto ssl_expr_yyaccept
 #define YYERROR goto ssl_expr_yyerrlab
 
+#ifndef YYPARSE_PARAM
+#if defined(__cplusplus) || __STDC__
+#define YYPARSE_PARAM_ARG void
+#define YYPARSE_PARAM_DECL
+#else	/* ! ANSI-C/C++ */
+#define YYPARSE_PARAM_ARG
+#define YYPARSE_PARAM_DECL
+#endif	/* ANSI-C/C++ */
+#else	/* YYPARSE_PARAM */
+#ifndef YYPARSE_PARAM_TYPE
+#define YYPARSE_PARAM_TYPE void *
+#endif
+#if defined(__cplusplus) || __STDC__
+#define YYPARSE_PARAM_ARG YYPARSE_PARAM_TYPE YYPARSE_PARAM
+#define YYPARSE_PARAM_DECL
+#else	/* ! ANSI-C/C++ */
+#define YYPARSE_PARAM_ARG YYPARSE_PARAM
+#define YYPARSE_PARAM_DECL YYPARSE_PARAM_TYPE YYPARSE_PARAM;
+#endif	/* ANSI-C/C++ */
+#endif	/* ! YYPARSE_PARAM */
+
 int
-ssl_expr_yyparse()
+ssl_expr_yyparse (YYPARSE_PARAM_ARG)
+    YYPARSE_PARAM_DECL
 {
     register int ssl_expr_yym, ssl_expr_yyn, ssl_expr_yystate;
 #if YYDEBUG
@@ -394,75 +422,99 @@ ssl_expr_yyreduce:
     switch (ssl_expr_yyn)
     {
 case 1:
+#line 118 "ssl_expr_parse.y"
 { ssl_expr_info.expr = ssl_expr_yyvsp[0].exVal; }
 break;
 case 2:
+#line 121 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_True,  NULL, NULL); }
 break;
 case 3:
+#line 122 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_False, NULL, NULL); }
 break;
 case 4:
+#line 123 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_Not,   ssl_expr_yyvsp[0].exVal,   NULL); }
 break;
 case 5:
+#line 124 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_Or,    ssl_expr_yyvsp[-2].exVal,   ssl_expr_yyvsp[0].exVal);   }
 break;
 case 6:
+#line 125 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_And,   ssl_expr_yyvsp[-2].exVal,   ssl_expr_yyvsp[0].exVal);   }
 break;
 case 7:
+#line 126 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_Comp,  ssl_expr_yyvsp[0].exVal,   NULL); }
 break;
 case 8:
+#line 127 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_yyvsp[-1].exVal; }
 break;
 case 9:
+#line 130 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_EQ,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 10:
+#line 131 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_NE,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 11:
+#line 132 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_LT,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 12:
+#line 133 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_LE,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 13:
+#line 134 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_GT,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 14:
+#line 135 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_GE,  ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 15:
+#line 136 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_IN,  ssl_expr_yyvsp[-4].exVal, ssl_expr_yyvsp[-1].exVal); }
 break;
 case 16:
+#line 137 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_REG, ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 17:
+#line 138 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_NRE, ssl_expr_yyvsp[-2].exVal, ssl_expr_yyvsp[0].exVal); }
 break;
 case 18:
+#line 141 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_ListElement, ssl_expr_yyvsp[0].exVal, NULL); }
 break;
 case 19:
+#line 142 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_ListElement, ssl_expr_yyvsp[0].exVal, ssl_expr_yyvsp[-2].exVal);   }
 break;
 case 20:
+#line 145 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_Digit,  ssl_expr_yyvsp[0].cpVal, NULL); }
 break;
 case 21:
+#line 146 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_String, ssl_expr_yyvsp[0].cpVal, NULL); }
 break;
 case 22:
+#line 147 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_make(op_Var,    ssl_expr_yyvsp[-1].cpVal, NULL); }
 break;
 case 23:
+#line 148 "ssl_expr_parse.y"
 { ssl_expr_yyval.exVal = ssl_expr_yyvsp[0].exVal; }
 break;
 case 24:
+#line 151 "ssl_expr_parse.y"
 { 
                 regex_t *regex;
                 if ((regex = ap_pregcomp(ssl_expr_info.pool, ssl_expr_yyvsp[0].cpVal, 
@@ -475,6 +527,7 @@ case 24:
             }
 break;
 case 25:
+#line 161 "ssl_expr_parse.y"
 {
                 regex_t *regex;
                 if ((regex = ap_pregcomp(ssl_expr_info.pool, ssl_expr_yyvsp[0].cpVal, 
@@ -487,11 +540,13 @@ case 25:
             }
 break;
 case 26:
+#line 173 "ssl_expr_parse.y"
 { 
                ssl_expr *args = ssl_expr_make(op_ListElement, ssl_expr_yyvsp[-1].cpVal, NULL);
                ssl_expr_yyval.exVal = ssl_expr_make(op_Func, "file", args);
             }
 break;
+#line 550 "y.tab.c"
     }
     ssl_expr_yyssp -= ssl_expr_yym;
     ssl_expr_yystate = *ssl_expr_yyssp;

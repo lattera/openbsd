@@ -11,6 +11,12 @@ OBJS= \
   $(OSDIR)/libos.a \
   ap/libap.a
 
+TYPE=
+ALGO=
+CRT=
+KEY=
+VIEW=
+
 .c.o:
 	$(CC) -c $(INCLUDES) $(CFLAGS) $<
 
@@ -59,6 +65,13 @@ lib$(TARGET).$(SHLIB_SUFFIX_NAME): subdirs modules.o
 		    ln lib$(TARGET).$(SHLIB_SUFFIX_NAME) lib$(TARGET).$(SHLIB_SUFFIX_NAME).$$suffix; \
 		done; \
 	fi
+
+certificate:   
+	@./support/mkcert.sh \
+		"$(MAKE)" "$(MFLAGS) $(MFLAGS_STATIC)" \
+		"$(SSL_PROGRAM)" ./support \
+		"$(TYPE)" "$(ALGO)" "$(CRT)" "$(KEY)" "$(VIEW)"
+	@cd ../conf/ssl.crt; $(MAKE) $(MFLAGS_STATIC) SSL_PROGRAM=$(SSL_PROGRAM) >/dev/null 2>&1
 
 subdirs:
 	@for i in $(SUBDIRS); do \

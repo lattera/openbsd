@@ -1,15 +1,15 @@
 /*                      _             _
-**  _ __ ___   ___   __| |    ___ ___| |
-** | '_ ` _ \ / _ \ / _` |   / __/ __| |
-** | | | | | | (_) | (_| |   \__ \__ \ | mod_ssl - Apache Interface to SSLeay
-** |_| |_| |_|\___/ \__,_|___|___/___/_| http://www.engelschall.com/sw/mod_ssl/
+**  _ __ ___   ___   __| |    ___ ___| |  mod_ssl
+** | '_ ` _ \ / _ \ / _` |   / __/ __| |  Apache Interface to OpenSSL
+** | | | | | | (_) | (_| |   \__ \__ \ |  www.modssl.org
+** |_| |_| |_|\___/ \__,_|___|___/___/_|  ftp.modssl.org
 **                      |_____|
 **  ssl_util.c
 **  Utility Functions
 */
 
 /* ====================================================================
- * Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+ * Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  *    software must display the following acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * 4. The names "mod_ssl" must not be used to endorse or promote
  *    products derived from this software without prior written
@@ -42,7 +42,7 @@
  *    acknowledgment:
  *    "This product includes software developed by
  *     Ralf S. Engelschall <rse@engelschall.com> for use in the
- *     mod_ssl project (http://www.engelschall.com/sw/mod_ssl/)."
+ *     mod_ssl project (http://www.modssl.org/)."
  *
  * THIS SOFTWARE IS PROVIDED BY RALF S. ENGELSCHALL ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -116,13 +116,27 @@
 **  _________________________________________________________________
 */
 
+char *ssl_util_server_root_relative(pool *p, char *what, char *arg)
+{
+    char *rv = NULL;
+
+#ifdef SSL_VENDOR
+    ap_hook_use("ap::mod_ssl::vendor::ssl_server_root_relative",
+                AP_HOOK_SIG4(ptr,ptr,ptr,ptr), AP_HOOK_ALL, &rv, p, what, arg);
+    if (rv != NULL)
+        return rv;
+#endif
+    rv = ap_server_root_relative(p, arg);
+    return rv;
+}
+
 char *ssl_util_vhostid(pool *p, server_rec *s)
 {
     char *id;
     SSLSrvConfigRec *sc;
     char *host;
-    int port;
-    
+    unsigned int port;
+
     host = s->server_hostname;
     if (s->port != 0)
         port = s->port;
@@ -133,7 +147,7 @@ char *ssl_util_vhostid(pool *p, server_rec *s)
         else
             port = DEFAULT_HTTP_PORT;
     }
-    id = ap_psprintf(p, "%s:%d", host, port);
+    id = ap_psprintf(p, "%s:%u", host, port);
     return id;
 }
 
@@ -202,13 +216,48 @@ int ssl_util_ppopen_child(void *cmd, child_info *pinfo)
 {
     int child_pid = 1;
 
+    /*
+     * Prepare for exec
+     */
     ap_cleanup_for_exec();
 #ifdef SIGHUP
     signal(SIGHUP, SIG_IGN);
 #endif
-#if defined(__EMX__)
-    execl(SHELL_PATH, SHELL_PATH, "/c", (char *)cmd, NULL);
+
+    /*
+     * Exec() the child program
+     */
+#if defined(WIN32)
+    /* MS Windows */
+    {
+        char pCommand[MAX_STRING_LEN];
+        STARTUPINFO si;
+        PROCESS_INFORMATION pi;
+
+        ap_snprintf(pCommand, sizeof(pCommand), "%s /C %s", SHELL_PATH, cmd);
+
+        memset(&si, 0, sizeof(si));
+        memset(&pi, 0, sizeof(pi));
+
+        si.cb          = sizeof(si);
+        si.dwFlags     = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+        si.wShowWindow = SW_HIDE;
+        si.hStdInput   = pinfo->hPipeInputRead;
+        si.hStdOutput  = pinfo->hPipeOutputWrite;
+        si.hStdError   = pinfo->hPipeErrorWrite;
+
+        if (CreateProcess(NULL, pCommand, NULL, NULL, TRUE, 0,
+                          environ, NULL, &si, &pi)) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+            child_pid = pi.dwProcessId;
+        }
+    }
+#elif defined(OS2)
+    /* IBM OS/2 */
+    spawnl(P_NOWAIT, SHELL_PATH, SHELL_PATH, "/c", (char *)cmd, NULL);
 #else
+    /* Standard Unix */
     execl(SHELL_PATH, SHELL_PATH, "-c", (char *)cmd, NULL);
 #endif
     return (child_pid);
@@ -234,7 +283,7 @@ char *ssl_util_readfilter(server_rec *s, pool *p, char *cmd)
         return NULL;
     for (k = 0;    read(fileno(fp), &c, 1) == 1
                 && (k < MAX_STRING_LEN-1)       ; ) {
-        if (c == '\n')
+        if (c == '\n' || c == '\r')
             break;
         buf[k++] = c;
     }
@@ -259,6 +308,46 @@ BOOL ssl_util_path_check(ssl_pathcheck_t pcm, char *path)
     if (pcm & SSL_PCM_ISNONZERO && sb.st_mode <= 0)
         return FALSE;
     return TRUE;
+}
+
+ssl_algo_t ssl_util_algotypeof(X509 *pCert, EVP_PKEY *pKey) 
+{
+    ssl_algo_t t;
+            
+    t = SSL_ALGO_UNKNOWN;
+    if (pCert != NULL)
+        pKey = X509_get_pubkey(pCert);
+    if (pKey != NULL) {
+        switch (EVP_PKEY_type(pKey->type)) {
+            case EVP_PKEY_RSA: 
+                t = SSL_ALGO_RSA;
+                break;
+            case EVP_PKEY_DSA: 
+                t = SSL_ALGO_DSA;
+                break;
+            default:
+                break;
+        }
+    }
+    return t;
+}
+
+char *ssl_util_algotypestr(ssl_algo_t t) 
+{
+    char *cp;
+
+    cp = "UNKNOWN";
+    switch (t) {
+        case SSL_ALGO_RSA: 
+            cp = "RSA";
+            break;
+        case SSL_ALGO_DSA: 
+            cp = "DSA";
+            break;
+        default:
+            break;
+    }
+    return cp;
 }
 
 char *ssl_util_ptxtsub(
@@ -316,7 +405,7 @@ char *ssl_util_ptxtsub(
 
 /*  _________________________________________________________________
 **
-**  Special Functions for Win32/SSLeay
+**  Special Functions for Win32/OpenSSL
 **  _________________________________________________________________
 */
 
@@ -340,8 +429,20 @@ void ssl_util_thread_setup(void)
 
     for (i = 0; i < CRYPTO_NUM_LOCKS; i++)
         lock_cs[i] = CreateMutex(NULL, FALSE, NULL);
-    CRYPTO_set_locking_callback((void(*)(int, int, char*, int))
+    CRYPTO_set_locking_callback((void(*)(int, int, const char *, int))
                                 win32_locking_callback);
+#endif /* WIN32 */
+    return;
+}
+
+void ssl_util_thread_cleanup(void)
+{
+#ifdef WIN32
+    int i;
+
+    CRYPTO_set_locking_callback(NULL);
+    for (i = 0; i < CRYPTO_NUM_LOCKS; i++)
+        CloseHandle(lock_cs[i]);
 #endif /* WIN32 */
     return;
 }

@@ -1,6 +1,6 @@
 ##
 ## ssl_template.inc -- mod_ssl User Manual: The Heart
-## Copyright (c) 1998-1999 Ralf S. Engelschall, All Rights Reserved. 
+## Copyright (c) 1998-2001 Ralf S. Engelschall, All Rights Reserved. 
 ##
 
 #use wml::std::page
@@ -16,7 +16,7 @@
 <head>\
 <protect>
 <!--
-  Copyright (c) 1998-1999 Ralf S. Engelschall. All rights reserved.
+  Copyright (c) 1998-2001 Ralf S. Engelschall. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -148,7 +148,7 @@ H4 {
 <table width=600 cellspacing=0 cellpadding=0 border=0>
 <tr>
   <td>
-    <ifeq "$(tag)" "title" "" <prog
+    <ifeq "$(tag)" "title" "" "
       <imgdot height=1 width=600><br>
       <table width=600 cellspacing=0 cellpadding=0>
       <tr>
@@ -160,13 +160,13 @@ H4 {
             <font face="Arial,Helvetica" size=+2><b>mod_ssl</b></font>
             </td>
             <td <ifeq "$(num)" "0" "align=left" "align=right">>
-              <ifeq "$(num)" "0" <prog
+              <ifeq "$(num)" "0" "
                   <br>
                   <img src="ssl_template.title-$(tag).gif" alt="$(title)">
-              > <prog
+              " "
               <img src="ssl_template.head-chapter.gif"    alt="Chapter"> \
               <img src="ssl_template.head-num-$(num).gif" alt="$(num)">
-              >>
+              ">
             </td>
         </tr>
         </table>
@@ -183,10 +183,10 @@ H4 {
            <table width=600 border=0>
            <tr>
             <td valign=top align=left width=250>\
-              <<NAVBUT_TOP_PREV>>
+              {#NAVBUT_TOP_PREV#}
             </td>
             <td valign=top align=right width=250>\
-              <<NAVBUT_TOP_NEXT>>
+              {#NAVBUT_TOP_NEXT#}
             </td>
            </tr>
            </table>
@@ -194,16 +194,16 @@ H4 {
       </tr>
       <tr>
         <td>
-          <ifeq "$(num)" "0" "" <prog
+          <ifeq "$(num)" "0" "" "
           <br>
           <img src="ssl_template.title-$(tag).gif" alt="$(title)">
-          >>
+          ">
         </td>
       </tr>
       </table>
-     >>
-     <<BODY>>
-    <ifeq "$(tag)" "title" "" <prog
+     ">
+     {#BODY#}
+    <ifeq "$(tag)" "title" "" "
       <p>
       <br>
       <table>
@@ -212,10 +212,10 @@ H4 {
            <table width=600 border=0>
            <tr>
             <td valign=top align=left width=250>\
-              <<NAVBUT_BOT_PREV>>
+              {#NAVBUT_BOT_PREV#}
             </td>
             <td valign=top align=right width=250>\
-              <<NAVBUT_BOT_NEXT>>
+              {#NAVBUT_BOT_NEXT#}
             </td>
            </tr>
            </table>
@@ -228,55 +228,53 @@ H4 {
       </tr>
       <tr>
         <td>\
-
         <table width=598>
         <tr>
         <td align=left>\
         <font face="Arial,Helvetica"> 
-        <a href="http://www.modssl.org/">mod_ssl</a> 2.4, User Manual<br>
+        <a href="http://www.modssl.org/">mod_ssl</a> 2.8, User Manual<br>
         The Apache Interface to OpenSSL
         </font>
         </td>
         <td align=right>\
         <font face="Arial,Helvetica"> 
-        Copyright &copy; 1998-1999
+        Copyright &copy; 1998-2001
         <a href="http://www.engelschall.com/">Ralf S. Engelschall</a><br>
         All Rights Reserved<br>
         </font>
         </td>
         </tr>
         </table>
-
         </td>
       </tr>
       </table>
-      >>
+      ">
   </td>
 </tr>
 </table>
 </center>
-..BODY>>
+{#BODY#:
 
 <define-tag page_prev>
 <preserve name>
 <preserve url>
 <set-var %attributes>
-..NAVBUT_TOP_PREV>>
+{#NAVBUT_TOP_PREV#:
 <rollover
 name="prev_top"
 src="ssl_template.navbut-prev-n.gif"
 oversrc="ssl_template.navbut-prev-s.gif" 
 href="<get-var url>" alt="previous page"
 ><br><font color="#000000"><get-var name></font>
-<<..
-..NAVBUT_BOT_PREV>>
+:##}
+{#NAVBUT_BOT_PREV#:
 <rollover
 name="prev_bot"
 src="ssl_template.navbut-prev-n.gif"
 oversrc="ssl_template.navbut-prev-s.gif" 
 href="<get-var url>" alt="previous page"
 ><br><font color="#000000"><get-var name></font>
-<<..
+:##}
 <restore url>
 <restore name>
 </define-tag>
@@ -285,27 +283,27 @@ href="<get-var url>" alt="previous page"
 <preserve name>
 <preserve url>
 <set-var %attributes>
-..NAVBUT_TOP_NEXT>>
+{#NAVBUT_TOP_NEXT#:
 <rollover
 name="next_top"
 src="ssl_template.navbut-next-n.gif"
 oversrc="ssl_template.navbut-next-s.gif" 
 href="<get-var url>" alt="next page"
 ><br><font color="#000000"><get-var name></font>
-<<..
-..NAVBUT_BOT_NEXT>>
+:##}
+{#NAVBUT_BOT_NEXT#:
 <rollover
 name="next_bot"
 src="ssl_template.navbut-next-n.gif"
 oversrc="ssl_template.navbut-next-s.gif" 
 href="<get-var url>" alt="next page"
 ><br><font color="#000000"><get-var name></font>
-<<..
+:##}
 <restore url>
 <restore name>
 </define-tag>
 
-<define-container float>
+<define-tag float endtag=required>
 <preserve name>
 <preserve caption>
 <set-var %attributes>
@@ -324,7 +322,7 @@ href="<get-var url>" alt="next page"
 </center>
 <restore caption>
 <restore name>
-</define-container>
+</define-tag>
 
 <define-tag directive>
 <preserve name>
@@ -380,7 +378,7 @@ href="<get-var url>" alt="next page"
 <restore name>
 </define-tag>
 
-<define-container quotation>
+<define-tag quotation endtag=required>
 <preserve width>
 <preserve author>
 <set-var %attributes>
@@ -391,7 +389,7 @@ href="<get-var url>" alt="next page"
 <em>%body</em>
 </td>
 </tr>
-<ifeq "<get-var author>" "" "" <prog
+<ifeq "<get-var author>" "" "" "
 <tr>
 <td align=right>
 <font size=-1>
@@ -399,9 +397,9 @@ href="<get-var url>" alt="next page"
 </font>
 </td>
 </tr>
->>
+">
 </table>
 </div>
 <restore author>
 <restore width>
-</define-container>
+</define-tag>

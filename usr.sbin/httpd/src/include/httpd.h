@@ -70,7 +70,19 @@ extern "C" {
 /* Headers in which EVERYONE has an interest... */
 
 #include "ap_config.h"
+#ifdef EAPI
+#include "ap_mm.h"
+#endif
 #include "ap_alloc.h"
+/*
+ * Include the Extended API headers.
+ * Don't move the position. It has to be after ap_alloc.h because it uses the
+ * pool stuff but before buff.h because the buffer stuff uses the EAPI, too. 
+ */
+#ifdef EAPI
+#include "ap_hook.h"
+#include "ap_ctx.h"
+#endif /* EAPI */
 #include "buff.h"
 #include "ap.h"
 
@@ -141,12 +153,17 @@ extern "C" {
 #define DEFAULT_HTTP_PORT	80
 #define DEFAULT_HTTPS_PORT	443
 #define ap_is_default_port(port,r)	((port) == ap_default_port(r))
+#ifdef EAPI
+#define ap_http_method(r)   (((r)->ctx != NULL && ap_ctx_get((r)->ctx, "ap::http::method") != NULL) ? ((char *)ap_ctx_get((r)->ctx, "ap::http::method")) : "http")
+#define ap_default_port(r)  (((r)->ctx != NULL && ap_ctx_get((r)->ctx, "ap::default::port") != NULL) ? atoi((char *)ap_ctx_get((r)->ctx, "ap::default::port")) : DEFAULT_HTTP_PORT)
+#else /* EAPI */
 #ifdef NETWARE
 #define ap_http_method(r) ap_os_http_method(r)
 #else
 #define ap_http_method(r)	"http"
 #endif
 #define ap_default_port(r)	DEFAULT_HTTP_PORT
+#endif /* EAPI */
 
 /* --------- Default user name and group name running standalone ---------- */
 /* --- These may be specified as numbers by placing a # before a number --- */
@@ -351,6 +368,19 @@ extern "C" {
 #define SCOREBOARD_MAINTENANCE_INTERVAL 1000000
 #endif
 
+/*
+ * Unix only:
+ * Path to Shared Memory Files 
+ */
+#ifdef EAPI
+#ifndef EAPI_MM_CORE_PATH
+#define EAPI_MM_CORE_PATH "logs/mm"
+#endif
+#ifndef EAPI_MM_CORE_MAXSIZE
+#define EAPI_MM_CORE_MAXSIZE 1024*1024*1 /* max. 1MB */
+#endif
+#endif
+
 /* Number of requests to try to handle in a single process.  If <= 0,
  * the children don't die off.  That's the default here, since I'm still
  * interested in finding and stanching leaks.
@@ -427,7 +457,7 @@ extern "C" {
 
 #define SERVER_BASEVENDOR   "Apache Group"
 #define SERVER_BASEPRODUCT  "Apache"
-#define SERVER_BASEREVISION "1.3.26"
+#define SERVER_BASEREVISION "1.3.27"
 #define SERVER_BASEVERSION  SERVER_BASEPRODUCT "/" SERVER_BASEREVISION
 
 #define SERVER_PRODUCT  SERVER_BASEPRODUCT
@@ -443,12 +473,15 @@ enum server_token_type {
 API_EXPORT(const char *) ap_get_server_version(void);
 API_EXPORT(void) ap_add_version_component(const char *component);
 API_EXPORT(const char *) ap_get_server_built(void);
+#ifdef EAPI
+API_EXPORT(void) ap_add_config_define(const char *define);
+#endif /* EAPI */
 
 /* Numeric release version identifier: MMNNFFRBB: major minor fix final beta
  * Always increases along the same track as the source branch.
  * For example, Apache 1.4.2 would be '10402100', 2.5b7 would be '20500007'.
  */
-#define APACHE_RELEASE 10326100
+#define APACHE_RELEASE 10327100
 
 #define SERVER_PROTOCOL "HTTP/1.1"
 #ifndef SERVER_SUPPORT
@@ -846,6 +879,10 @@ struct request_rec {
  * record to improve 64bit alignment the next time we need to break
  * binary compatibility for some other reason.
  */
+
+#ifdef EAPI
+    ap_ctx *ctx;
+#endif /* EAPI */
 };
 
 
@@ -894,6 +931,9 @@ struct conn_rec {
     char *local_host;		/* used for ap_get_server_name when
 				 * UseCanonicalName is set to DNS
 				 * (ignores setting of HostnameLookups) */
+#ifdef EAPI
+    ap_ctx *ctx;
+#endif /* EAPI */
 };
 
 /* Per-vhost config... */
@@ -966,6 +1006,10 @@ struct server_rec {
     int limit_req_line;      /* limit on size of the HTTP request line    */
     int limit_req_fieldsize; /* limit on size of any request header field */
     int limit_req_fields;    /* limit on number of request header fields  */
+
+#ifdef EAPI
+    ap_ctx *ctx;
+#endif /* EAPI */
 };
 
 /* These are more like real hosts than virtual hosts */
