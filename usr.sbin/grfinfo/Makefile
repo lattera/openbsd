@@ -1,8 +1,10 @@
-#	$OpenBSD: src/usr.sbin/grfinfo/Attic/Makefile,v 1.4 2000/05/18 16:46:38 espie Exp $
+#	$OpenBSD: src/usr.sbin/grfinfo/Attic/Makefile,v 1.5 2002/09/06 22:08:36 miod Exp $
 
 .if ${MACHINE} == "hp300"
 PROG=	grfinfo
 CFLAGS+= -I${.CURDIR}/../../sys/arch/hp300
+DPADD=	${LIBUTIL}
+LDADD=	-lutil
 .else
 NOPROG=yes
 .endif
