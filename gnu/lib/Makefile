@@ -1,5 +1,5 @@
-#	$OpenBSD: src/gnu/lib/Makefile,v 1.8 2001/03/18 17:39:55 millert Exp $
+#	$OpenBSD: src/gnu/lib/Makefile,v 1.9 2003/11/24 17:12:55 espie Exp $
 
-SUBDIR+=../egcs libreadline
+SUBDIR+=libiberty ../egcs libreadline 
 
 .include <bsd.subdir.mk>
