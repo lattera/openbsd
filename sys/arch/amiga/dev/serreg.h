@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/serreg.h,v 1.2 1997/01/16 09:25:23 niklas Exp $	*/
 /*	$NetBSD: serreg.h,v 1.7 1994/10/26 02:04:54 cgd Exp $	*/
 
 /*

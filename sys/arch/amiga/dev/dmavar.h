@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/dmavar.h,v 1.2 1997/01/16 09:23:54 niklas Exp $	*/
 /*	$NetBSD: dmavar.h,v 1.9 1995/03/28 18:14:51 jtc Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/if_aereg.h,v 1.2 1997/01/16 09:24:37 niklas Exp $	*/
 /*	$NetBSD: if_aereg.h,v 1.2 1995/08/18 15:53:32 chopps Exp $	*/
 
 /*

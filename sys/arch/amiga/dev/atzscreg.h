@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/atzscreg.h,v 1.2 1997/01/16 09:23:46 niklas Exp $	*/
 /*	$NetBSD: atzscreg.h,v 1.2 1994/10/26 02:02:49 cgd Exp $	*/
 
 /*
