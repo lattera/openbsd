@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.4 2002/10/29 00:28:10 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.5 2002/10/31 21:13:26 art Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -234,8 +234,8 @@ pgt_page_free(struct pool *pp, void *v)
 	if (pmap_extract(pmap_kernel(), va, &pa) == FALSE)
 		panic("pgt_page_free");
 	uvm_pagefree(PHYS_TO_VM_PAGE(pa));
-	pmap_kremove(va, sz);
-	uvm_km_free(kernel_map, (vaddr_t)v, sz);
+	pmap_kremove(va, PAGE_SIZE);
+	uvm_km_free(kernel_map, (vaddr_t)v, PAGE_SIZE);
 }
 #endif /* SUN4M */
 
