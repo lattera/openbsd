@@ -5,10 +5,13 @@
  *
  * Jim Rees, University of Michigan, July 2000
  */
-static char *rcsid = "$Id: input.c,v 1.1 2001/05/22 15:35:58 rees Exp $";
+static char *rcsid = "$Id: input.c,v 1.6 2001/06/07 16:09:21 rees Exp $";
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
+
+#include "sectok.h"
 
 #ifdef TEST
 main(ac, av)

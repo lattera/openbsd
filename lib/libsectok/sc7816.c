@@ -7,10 +7,12 @@
  * Mukesh Agrawal
  * University of Michigan CITI, August 2000
  */
-static char *rcsid = "$Id: sc7816.c,v 1.20 2001/06/06 22:45:53 rees Exp $";
+static char *rcsid = "$Id: sc7816.c,v 1.21 2001/06/07 16:09:21 rees Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <dlfcn.h>

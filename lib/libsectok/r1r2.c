@@ -3,7 +3,7 @@
  *
  * See copyright notice at end of file
  */
-static char *rcsid = "$Id: r1r2.c,v 1.1 2001/05/22 15:35:58 rees Exp $";
+static char *rcsid = "$Id: r1r2.c,v 1.4 2001/06/07 16:09:21 rees Exp $";
 
 #ifdef __palmos__
 #define NULL 0
@@ -94,7 +94,6 @@ char *
 scr1r2s(int r1, int r2)
 {
     int i;
-    char *s;
     static char buf[64];
 
     for (i = 0; r1r2s[i].s; i++)
@@ -124,7 +123,7 @@ fdump_reply(FILE *f, unsigned char *p, int n, int r1, int r2)
 int
 dump_reply(unsigned char *p, int n, int r1, int r2)
 {
-    fdump_reply(stdout, p, n, r1, r2);
+    return fdump_reply(stdout, p, n, r1, r2);
 }
 #endif
 
