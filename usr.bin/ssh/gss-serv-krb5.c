@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.1.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.1.2.2 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -45,7 +45,7 @@ static krb5_context krb_context = NULL;
 /* Initialise the krb5 library, for the stuff that GSSAPI won't do */
 
 static int
-ssh_gssapi_krb5_init()
+ssh_gssapi_krb5_init(void)
 {
 	krb5_error_code problem;
 

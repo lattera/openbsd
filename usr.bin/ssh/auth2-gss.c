@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.3.2.1 2004/02/28 03:51:32 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.3.2.2 2004/08/19 22:37:30 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -54,7 +54,7 @@ static void input_gssapi_errtok(int, u_int32_t, void *);
 static int
 userauth_gssapi(Authctxt *authctxt)
 {
-	gss_OID_desc oid = {0, NULL};
+	gss_OID_desc goid = {0, NULL};
 	Gssctxt *ctxt = NULL;
 	int mechs;
 	gss_OID_set supported;
@@ -85,9 +85,9 @@ userauth_gssapi(Authctxt *authctxt)
 		if (len > 2 &&
 		   doid[0] == SSH_GSS_OIDTYPE &&
 		   doid[1] == len - 2) {
-			oid.elements = doid + 2;
-			oid.length   = len - 2;
-			gss_test_oid_set_member(&ms, &oid, supported,
+			goid.elements = doid + 2;
+			goid.length   = len - 2;
+			gss_test_oid_set_member(&ms, &goid, supported,
 			    &present);
 		} else {
 			logit("Badly formed OID received");
@@ -101,7 +101,7 @@ userauth_gssapi(Authctxt *authctxt)
 		return (0);
 	}
 
-	if (GSS_ERROR(PRIVSEP(ssh_gssapi_server_ctx(&ctxt, &oid)))) {
+	if (GSS_ERROR(PRIVSEP(ssh_gssapi_server_ctx(&ctxt, &goid)))) {
 		xfree(doid);
 		return (0);
 	}

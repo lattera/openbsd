@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.11.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.11.2.2 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>

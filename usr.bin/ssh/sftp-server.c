@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.43.2.1 2004/02/28 03:51:34 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.43.2.2 2004/08/19 22:37:32 brad Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
@@ -254,7 +254,7 @@ send_msg(Buffer *m)
 }
 
 static void
-send_status(u_int32_t id, u_int32_t error)
+send_status(u_int32_t id, u_int32_t status)
 {
 	Buffer msg;
 	const char *status_messages[] = {
@@ -270,14 +270,14 @@ send_status(u_int32_t id, u_int32_t error)
 		"Unknown error"			/* Others */
 	};
 
-	TRACE("sent status id %u error %u", id, error);
+	TRACE("sent status id %u error %u", id, status);
 	buffer_init(&msg);
 	buffer_put_char(&msg, SSH2_FXP_STATUS);
 	buffer_put_int(&msg, id);
-	buffer_put_int(&msg, error);
+	buffer_put_int(&msg, status);
 	if (version >= 3) {
 		buffer_put_cstring(&msg,
-		    status_messages[MIN(error,SSH2_FX_MAX)]);
+		    status_messages[MIN(status,SSH2_FX_MAX)]);
 		buffer_put_cstring(&msg, "");
 	}
 	send_msg(&msg);
@@ -819,9 +819,25 @@ process_rename(void)
 		status = errno_to_portable(errno);
 	else if (S_ISREG(sb.st_mode)) {
 		/* Race-free rename of regular files */
-		if (link(oldpath, newpath) == -1)
-			status = errno_to_portable(errno);
-		else if (unlink(oldpath) == -1) {
+		if (link(oldpath, newpath) == -1) {
+			if (errno == EOPNOTSUPP) {
+				struct stat st;
+
+				/*
+				 * fs doesn't support links, so fall back to
+				 * stat+rename.  This is racy.
+				 */
+				if (stat(newpath, &st) == -1) {
+					if (rename(oldpath, newpath) == -1)
+						status =
+						    errno_to_portable(errno);
+					else
+						status = SSH2_FX_OK;
+				}
+			} else {
+				status = errno_to_portable(errno);
+			}
+		} else if (unlink(oldpath) == -1) {
 			status = errno_to_portable(errno);
 			/* clean spare link */
 			unlink(newpath);
@@ -843,20 +859,20 @@ process_readlink(void)
 {
 	u_int32_t id;
 	int len;
-	char link[MAXPATHLEN];
+	char buf[MAXPATHLEN];
 	char *path;
 
 	id = get_int();
 	path = get_string(NULL);
 	TRACE("readlink id %u path %s", id, path);
-	if ((len = readlink(path, link, sizeof(link) - 1)) == -1)
+	if ((len = readlink(path, buf, sizeof(buf) - 1)) == -1)
 		send_status(id, errno_to_portable(errno));
 	else {
 		Stat s;
 
-		link[len] = '\0';
+		buf[len] = '\0';
 		attrib_clear(&s.attrib);
-		s.name = s.long_name = link;
+		s.name = s.long_name = buf;
 		send_names(id, 1, &s);
 	}
 	xfree(path);

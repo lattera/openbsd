@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keysign.c,v 1.13.2.1 2004/02/28 03:51:34 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keysign.c,v 1.13.2.2 2004/08/19 22:37:32 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -158,7 +158,7 @@ main(int argc, char **argv)
 	/* verify that ssh-keysign is enabled by the admin */
 	original_real_uid = getuid();	/* XXX readconf.c needs this */
 	initialize_options(&options);
-	(void)read_config_file(_PATH_HOST_CONFIG_FILE, "", &options);
+	(void)read_config_file(_PATH_HOST_CONFIG_FILE, "", &options, 0);
 	fill_default_options(&options);
 	if (options.enable_ssh_keysign != 1)
 		fatal("ssh-keysign not enabled in %s",

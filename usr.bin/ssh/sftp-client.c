@@ -20,7 +20,7 @@
 /* XXX: copy between two remote sites */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.44.2.1 2004/02/28 03:51:34 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.44.2.2 2004/08/19 22:37:32 brad Exp $");
 
 #include <sys/queue.h>
 
@@ -36,6 +36,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.44.2.1 2004/02/28 03:51:34 br
 #include "sftp-common.h"
 #include "sftp-client.h"
 
+extern volatile sig_atomic_t interrupted;
 extern int showprogress;
 
 /* Minimum amount of data to read at at time */
@@ -330,7 +331,7 @@ do_lsreaddir(struct sftp_conn *conn, char *path, int printflag,
 		(*dir)[0] = NULL;
 	}
 
-	for (;;) {
+	for (; !interrupted;) {
 		int count;
 
 		id = expected_id = conn->msg_id++;
@@ -406,6 +407,13 @@ do_lsreaddir(struct sftp_conn *conn, char *path, int printflag,
 	buffer_free(&msg);
 	do_close(conn, handle, handle_len);
 	xfree(handle);
+
+	/* Don't return partial matches on interrupt */
+	if (interrupted && dir != NULL && *dir != NULL) {
+		free_sftp_dirents(*dir);
+		*dir = xmalloc(sizeof(**dir));
+		**dir = NULL;
+	}
 
 	return(0);
 }
@@ -643,7 +651,7 @@ do_symlink(struct sftp_conn *conn, char *oldpath, char *newpath)
 
 	buffer_init(&msg);
 
-	/* Send rename request */
+	/* Send symlink request */
 	id = conn->msg_id++;
 	buffer_put_char(&msg, SSH2_FXP_SYMLINK);
 	buffer_put_int(&msg, id);
@@ -805,17 +813,22 @@ do_download(struct sftp_conn *conn, char *remote_path, char *local_path,
 	max_req = 1;
 	progress_counter = 0;
 
-	if (showprogress) {
-		if (size)
-			start_progress_meter(remote_path, size,
-			    &progress_counter);
-		else
-			printf("Fetching %s to %s\n", remote_path, local_path);
-	}
+	if (showprogress && size != 0)
+		start_progress_meter(remote_path, size, &progress_counter);
 
 	while (num_req > 0 || max_req > 0) {
 		char *data;
 		u_int len;
+
+		/*
+		 * Simulate EOF on interrupt: stop sending new requests and
+		 * allow outstanding requests to drain gracefully
+		 */
+		if (interrupted) {
+			if (num_req == 0) /* If we haven't started yet... */
+				break;
+			max_req = 0;
+		}
 
 		/* Send some more requests */
 		while (num_req < max_req) {
@@ -904,8 +917,7 @@ do_download(struct sftp_conn *conn, char *remote_path, char *local_path,
 					    (unsigned long long)offset,
 					    num_req);
 					max_req = 1;
-				}
-				else if (max_req < conn->num_requests + 1) {
+				} else if (max_req <= conn->num_requests) {
 					++max_req;
 				}
 			}
@@ -976,7 +988,7 @@ do_upload(struct sftp_conn *conn, char *local_path, char *remote_path,
 		TAILQ_ENTRY(outstanding_ack) tq;
 	};
 	TAILQ_HEAD(ackhead, outstanding_ack) acks;
-	struct outstanding_ack *ack;
+	struct outstanding_ack *ack = NULL;
 
 	TAILQ_INIT(&acks);
 
@@ -1032,17 +1044,19 @@ do_upload(struct sftp_conn *conn, char *local_path, char *remote_path,
 	offset = 0;
 	if (showprogress)
 		start_progress_meter(local_path, sb.st_size, &offset);
-	else
-		printf("Uploading %s to %s\n", local_path, remote_path);
 
 	for (;;) {
 		int len;
 
 		/*
-		 * Can't use atomicio here because it returns 0 on EOF, thus losing
-		 * the last block of the file
+		 * Can't use atomicio here because it returns 0 on EOF,
+		 * thus losing the last block of the file.
+		 * Simulate an EOF on interrupt, allowing ACKs from the
+		 * server to drain.
 		 */
-		do
+		if (interrupted)
+			len = 0;
+		else do
 			len = read(local_fd, data, conn->transfer_buflen);
 		while ((len == -1) && (errno == EINTR || errno == EAGAIN));
 

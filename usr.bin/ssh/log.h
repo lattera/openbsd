@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.9.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.9.2.2 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -48,7 +48,7 @@ void     log_init(char *, LogLevel, SyslogFacility, int);
 SyslogFacility	log_facility_number(char *);
 LogLevel log_level_number(char *);
 
-void     fatal(const char *, ...) __attribute__((format(printf, 1, 2)));
+void     fatal(const char *, ...) __dead __attribute__((format(printf, 1, 2)));
 void     error(const char *, ...) __attribute__((format(printf, 1, 2)));
 void     logit(const char *, ...) __attribute__((format(printf, 1, 2)));
 void     verbose(const char *, ...) __attribute__((format(printf, 1, 2)));
@@ -57,5 +57,5 @@ void     debug2(const char *, ...) __attribute__((format(printf, 1, 2)));
 void     debug3(const char *, ...) __attribute__((format(printf, 1, 2)));
 
 void	 do_log(LogLevel, const char *, va_list);
-void	 cleanup_exit(int);
+void	 cleanup_exit(int) __dead;
 #endif

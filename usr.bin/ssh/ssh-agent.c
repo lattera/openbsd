@@ -35,7 +35,7 @@
 
 #include "includes.h"
 #include <sys/queue.h>
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.111.2.1 2004/02/28 03:51:34 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.111.2.2 2004/08/19 22:37:32 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -50,7 +50,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.111.2.1 2004/02/28 03:51:34 bra
 #include "authfd.h"
 #include "compat.h"
 #include "log.h"
-#include "readpass.h"
 #include "misc.h"
 
 #ifdef SMARTCARD
@@ -782,8 +781,7 @@ new_socket(sock_type type, int fd)
 {
 	u_int i, old_alloc, new_alloc;
 
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-		error("fcntl O_NONBLOCK: %s", strerror(errno));
+	set_nonblock(fd);
 
 	if (fd > max_fd)
 		max_fd = fd;
@@ -814,7 +812,7 @@ new_socket(sock_type type, int fd)
 }
 
 static int
-prepare_select(fd_set **fdrp, fd_set **fdwp, int *fdl, int *nallocp)
+prepare_select(fd_set **fdrp, fd_set **fdwp, int *fdl, u_int *nallocp)
 {
 	u_int i, sz;
 	int n = 0;
@@ -1000,7 +998,8 @@ int
 main(int ac, char **av)
 {
 	int c_flag = 0, d_flag = 0, k_flag = 0, s_flag = 0;
-	int sock, fd,  ch, nalloc;
+	int sock, fd,  ch;
+	u_int nalloc;
 	char *shell, *format, *pidstr, *agentsocket = NULL;
 	fd_set *readsetp = NULL, *writesetp = NULL;
 	struct sockaddr_un sunaddr;

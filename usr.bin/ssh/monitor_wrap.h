@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.11.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.11.2.2 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -58,9 +58,9 @@ BIGNUM *mm_auth_rsa_generate_challenge(Key *);
 
 #ifdef GSSAPI
 #include "ssh-gss.h"
-OM_uint32 mm_ssh_gssapi_server_ctx(Gssctxt **ctxt, gss_OID oid);
-OM_uint32 mm_ssh_gssapi_accept_ctx(Gssctxt *ctxt,
-   gss_buffer_desc *recv, gss_buffer_desc *send, OM_uint32 *flags);
+OM_uint32 mm_ssh_gssapi_server_ctx(Gssctxt **, gss_OID);
+OM_uint32 mm_ssh_gssapi_accept_ctx(Gssctxt *,
+   gss_buffer_desc *, gss_buffer_desc *, OM_uint32 *);
 int mm_ssh_gssapi_userok(char *user);
 OM_uint32 mm_ssh_gssapi_checkmic(Gssctxt *, gss_buffer_t, gss_buffer_t);
 #endif

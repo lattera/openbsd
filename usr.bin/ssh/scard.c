@@ -24,7 +24,7 @@
 
 #ifdef SMARTCARD
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/scard.c,v 1.28 2003/06/12 19:12:02 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/scard.c,v 1.28.2.1 2004/08/19 22:37:32 brad Exp $");
 
 #include <openssl/evp.h>
 #include <sectok.h>
@@ -32,7 +32,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/Attic/scard.c,v 1.28 2003/06/12 19:12:02 markus
 #include "key.h"
 #include "log.h"
 #include "xmalloc.h"
-#include "readpass.h"
+#include "misc.h"
 #include "scard.h"
 
 #if OPENSSL_VERSION_NUMBER < 0x00907000L

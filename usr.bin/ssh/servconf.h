@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.65.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.65.2.2 2004/08/19 22:37:32 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -16,6 +16,8 @@
 #ifndef SERVCONF_H
 #define SERVCONF_H
 
+#include "buffer.h"
+
 #define MAX_PORTS		256	/* Max # ports. */
 
 #define MAX_ALLOW_USERS		256	/* Max # users on allow list. */
@@ -24,6 +26,7 @@
 #define MAX_DENY_GROUPS		256	/* Max # groups on deny list. */
 #define MAX_SUBSYSTEMS		256	/* Max # subsystems. */
 #define MAX_HOSTKEYS		256	/* Max # hostkeys. */
+#define MAX_ACCEPT_ENV		256	/* Max # of env vars. */
 
 /* permit_root_login */
 #define	PERMIT_NOT_SET		-1
@@ -32,6 +35,7 @@
 #define	PERMIT_NO_PASSWD	2
 #define	PERMIT_YES		3
 
+#define DEFAULT_AUTH_FAIL_MAX	6	/* Default for MaxAuthTries */
 
 typedef struct {
 	u_int num_ports;
@@ -107,9 +111,13 @@ typedef struct {
 	char   *subsystem_name[MAX_SUBSYSTEMS];
 	char   *subsystem_command[MAX_SUBSYSTEMS];
 
+	u_int num_accept_env;
+	char   *accept_env[MAX_ACCEPT_ENV];
+
 	int	max_startups_begin;
 	int	max_startups_rate;
 	int	max_startups;
+	int	max_authtries;
 	char   *banner;			/* SSH-2 banner message */
 	int	use_dns;
 	int	client_alive_interval;	/*
@@ -127,9 +135,9 @@ typedef struct {
 }       ServerOptions;
 
 void	 initialize_server_options(ServerOptions *);
-void	 read_server_config(ServerOptions *, const char *);
 void	 fill_default_server_options(ServerOptions *);
 int	 process_server_config_line(ServerOptions *, char *, const char *, int);
-
+void	 load_server_config(const char *, Buffer *);
+void	 parse_server_config(ServerOptions *, const char *, Buffer *);
 
 #endif				/* SERVCONF_H */

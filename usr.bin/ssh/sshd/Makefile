@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.61.2.1 2004/02/28 03:51:35 brad Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.61.2.2 2004/08/19 22:37:33 brad Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -15,8 +15,8 @@ SRCS=	sshd.c auth-rhosts.c auth-passwd.c auth-rsa.c auth-rh-rsa.c \
 	auth-chall.c auth2-chall.c groupaccess.c \
 	auth-skey.c auth-bsdauth.c auth2-hostbased.c auth2-kbdint.c \
 	auth2-none.c auth2-passwd.c auth2-pubkey.c \
-	monitor_mm.c monitor.c monitor_wrap.c monitor_fdpass.c \
-	kexdhs.c kexgexs.c
+	monitor_mm.c monitor.c monitor_wrap.c \
+	kexdhs.c kexgexs.c closefrom.c
 
 .include <bsd.own.mk> # for KERBEROS and AFS
 

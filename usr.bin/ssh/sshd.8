@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.199.2.1 2004/02/28 03:51:34 brad Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.199.2.2 2004/08/19 22:37:33 brad Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -173,7 +173,7 @@ configuration file.
 .Nm
 rereads its configuration file when it receives a hangup signal,
 .Dv SIGHUP ,
-by executing itself with the name it was started as, i.e.,
+by executing itself with the name and options it was started with, e.g.,
 .Pa /usr/sbin/sshd .
 .Pp
 The options are as follows:

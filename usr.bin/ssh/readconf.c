@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.121.2.1 2004/02/28 03:51:33 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.121.2.2 2004/08/19 22:37:31 brad Exp $");
 
 #include "ssh.h"
 #include "xmalloc.h"
@@ -105,7 +105,8 @@ typedef enum {
 	oClearAllForwardings, oNoHostAuthenticationForLocalhost,
 	oEnableSSHKeysign, oRekeyLimit, oVerifyHostKeyDNS, oConnectTimeout,
 	oAddressFamily, oGssAuthentication, oGssDelegateCreds,
-	oServerAliveInterval, oServerAliveCountMax,
+	oServerAliveInterval, oServerAliveCountMax, oIdentitiesOnly,
+	oSendEnv, oControlPath, oControlMaster,
 	oDeprecated, oUnsupported
 } OpCodes;
 
@@ -147,6 +148,7 @@ static struct {
 	{ "usersh", oDeprecated },
 	{ "identityfile", oIdentityFile },
 	{ "identityfile2", oIdentityFile },			/* alias */
+	{ "identitiesonly", oIdentitiesOnly },
 	{ "hostname", oHostName },
 	{ "hostkeyalias", oHostKeyAlias },
 	{ "proxycommand", oProxyCommand },
@@ -192,6 +194,9 @@ static struct {
 	{ "addressfamily", oAddressFamily },
 	{ "serveraliveinterval", oServerAliveInterval },
 	{ "serveralivecountmax", oServerAliveCountMax },
+	{ "sendenv", oSendEnv },
+	{ "controlpath", oControlPath },
+	{ "controlmaster", oControlMaster },
 	{ NULL, oBadOption }
 };
 
@@ -734,6 +739,10 @@ parse_int:
 		intptr = &options->enable_ssh_keysign;
 		goto parse_flag;
 
+	case oIdentitiesOnly:
+		intptr = &options->identities_only;
+		goto parse_flag;
+
 	case oServerAliveInterval:
 		intptr = &options->server_alive_interval;
 		goto parse_time;
@@ -741,6 +750,27 @@ parse_int:
 	case oServerAliveCountMax:
 		intptr = &options->server_alive_count_max;
 		goto parse_int;
+
+	case oSendEnv:
+		while ((arg = strdelim(&s)) != NULL && *arg != '\0') {
+			if (strchr(arg, '=') != NULL)
+				fatal("%s line %d: Invalid environment name.",
+				    filename, linenum);
+			if (options->num_send_env >= MAX_SEND_ENV)
+				fatal("%s line %d: too many send env.",
+				    filename, linenum);
+			options->send_env[options->num_send_env++] =
+			    xstrdup(arg);
+		}
+		break;
+
+	case oControlPath:
+		charptr = &options->control_path;
+		goto parse_string;
+
+	case oControlMaster:
+		intptr = &options->control_master;
+		goto parse_yesnoask;
 
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
@@ -772,7 +802,8 @@ parse_int:
  */
 
 int
-read_config_file(const char *filename, const char *host, Options *options)
+read_config_file(const char *filename, const char *host, Options *options,
+    int checkperm)
 {
 	FILE *f;
 	char line[1024];
@@ -780,9 +811,18 @@ read_config_file(const char *filename, const char *host, Options *options)
 	int bad_options = 0;
 
 	/* Open the file. */
-	f = fopen(filename, "r");
-	if (!f)
+	if ((f = fopen(filename, "r")) == NULL)
 		return 0;
+
+	if (checkperm) {
+		struct stat sb;
+
+		if (fstat(fileno(f), &sb) == -1)
+			fatal("fstat %s: %s", filename, strerror(errno));
+		if (((sb.st_uid != 0 && sb.st_uid != getuid()) ||
+		    (sb.st_mode & 022) != 0))
+			fatal("Bad owner or permissions on %s", filename);
+	}
 
 	debug("Reading configuration data %.200s", filename);
 
@@ -867,10 +907,14 @@ initialize_options(Options * options)
 	options->smartcard_device = NULL;
 	options->enable_ssh_keysign = - 1;
 	options->no_host_authentication_for_localhost = - 1;
+	options->identities_only = - 1;
 	options->rekey_limit = - 1;
 	options->verify_host_key_dns = -1;
 	options->server_alive_interval = -1;
 	options->server_alive_count_max = -1;
+	options->num_send_env = 0;
+	options->control_path = NULL;
+	options->control_master = -1;
 }
 
 /*
@@ -979,6 +1023,8 @@ fill_default_options(Options * options)
 		clear_forwardings(options);
 	if (options->no_host_authentication_for_localhost == - 1)
 		options->no_host_authentication_for_localhost = 0;
+	if (options->identities_only == -1)
+		options->identities_only = 0;
 	if (options->enable_ssh_keysign == -1)
 		options->enable_ssh_keysign = 0;
 	if (options->rekey_limit == -1)
@@ -989,6 +1035,8 @@ fill_default_options(Options * options)
 		options->server_alive_interval = 0;
 	if (options->server_alive_count_max == -1)
 		options->server_alive_count_max = 3;
+	if (options->control_master == -1)
+		options->control_master = 0;
 	/* options->proxy_command should not be set by default */
 	/* options->user will be set in the main program if appropriate */
 	/* options->hostname will be set in the main program if appropriate */

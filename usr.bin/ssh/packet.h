@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.40 2003/06/24 08:23:46 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.40.2.1 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -82,7 +82,7 @@ void	 tty_make_modes(int, struct termios *);
 void	 tty_parse_modes(int, int *);
 
 extern u_int max_packet_size;
-u_int	 packet_set_maxsize(u_int);
+int	 packet_set_maxsize(u_int);
 #define  packet_get_maxsize() max_packet_size
 
 /* don't allow remaining bytes after the end of the message */

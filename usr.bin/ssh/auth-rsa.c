@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.57.2.1 2004/02/28 03:51:32 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.57.2.2 2004/08/19 22:37:30 brad Exp $");
 
 #include <openssl/rsa.h>
 #include <openssl/md5.h>
@@ -23,7 +23,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth-rsa.c,v 1.57.2.1 2004/02/28 03:51:32 brad 
 #include "packet.h"
 #include "xmalloc.h"
 #include "ssh1.h"
-#include "mpaux.h"
 #include "uidswap.h"
 #include "match.h"
 #include "auth-options.h"
@@ -204,7 +203,7 @@ auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 	 */
 	while (fgets(line, sizeof(line), f)) {
 		char *cp;
-		char *options;
+		char *key_options;
 
 		linenum++;
 
@@ -222,7 +221,7 @@ auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 		 */
 		if (*cp < '0' || *cp > '9') {
 			int quoted = 0;
-			options = cp;
+			key_options = cp;
 			for (; *cp && (quoted || (*cp != ' ' && *cp != '\t')); cp++) {
 				if (*cp == '\\' && cp[1] == '"')
 					cp++;	/* Skip both */
@@ -230,7 +229,7 @@ auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 					quoted = !quoted;
 			}
 		} else
-			options = NULL;
+			key_options = NULL;
 
 		/* Parse the key from the line. */
 		if (hostfile_read_key(&cp, &bits, key) == 0) {
@@ -255,7 +254,7 @@ auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 		 * If our options do not allow this key to be used,
 		 * do not send challenge.
 		 */
-		if (!auth_parse_options(pw, options, file, linenum))
+		if (!auth_parse_options(pw, key_options, file, linenum))
 			continue;
 
 		/* break out, this key is allowed */

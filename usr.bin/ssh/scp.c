@@ -71,7 +71,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.108.2.1 2004/02/28 03:51:33 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.108.2.2 2004/08/19 22:37:32 brad Exp $");
 
 #include "xmalloc.h"
 #include "atomicio.h"
@@ -654,7 +654,7 @@ bwlimit(int amount)
 {
 	static struct timeval bwstart, bwend;
 	static int lamt, thresh = 16384;
-	u_int64_t wait;
+	u_int64_t waitlen;
 	struct timespec ts, rm;
 
 	if (!timerisset(&bwstart)) {
@@ -672,10 +672,10 @@ bwlimit(int amount)
 		return;
 
 	lamt *= 8;
-	wait = (double)1000000L * lamt / limit_rate;
+	waitlen = (double)1000000L * lamt / limit_rate;
 
-	bwstart.tv_sec = wait / 1000000L;
-	bwstart.tv_usec = wait % 1000000L;
+	bwstart.tv_sec = waitlen / 1000000L;
+	bwstart.tv_usec = waitlen % 1000000L;
 
 	if (timercmp(&bwstart, &bwend, >)) {
 		timersub(&bwstart, &bwend, &bwend);
@@ -750,6 +750,8 @@ sink(int argc, char **argv)
 			*cp++ = ch;
 		} while (cp < &buf[sizeof(buf) - 1] && ch != '\n');
 		*cp = 0;
+		if (verbose_mode)
+			fprintf(stderr, "Sink: %s", buf);
 
 		if (buf[0] == '\01' || buf[0] == '\02') {
 			if (iamremote == 0)
@@ -813,6 +815,10 @@ sink(int argc, char **argv)
 			size = size * 10 + (*cp++ - '0');
 		if (*cp++ != ' ')
 			SCREWUP("size not delimited");
+		if ((strchr(cp, '/') != NULL) || (strcmp(cp, "..") == 0)) {
+			run_err("error: unexpected filename: %s", cp);
+			exit(1);
+		}
 		if (targisdir) {
 			static char *namebuf;
 			static int cursize;
@@ -834,6 +840,8 @@ sink(int argc, char **argv)
 		exists = stat(np, &stb) == 0;
 		if (buf[0] == 'D') {
 			int mod_flag = pflag;
+			if (!iamrecursive)
+				SCREWUP("received directory without -r");
 			if (exists) {
 				if (!S_ISDIR(stb.st_mode)) {
 					errno = ENOTDIR;
@@ -885,11 +893,8 @@ bad:			run_err("%s: %s", np, strerror(errno));
 				amt = size - i;
 			count += amt;
 			do {
-				j = read(remin, cp, amt);
-				if (j == -1 && (errno == EINTR ||
-				    errno == EAGAIN)) {
-					continue;
-				} else if (j <= 0) {
+				j = atomicio(read, remin, cp, amt);
+				if (j <= 0) {
 					run_err("%s", j ? strerror(errno) :
 					    "dropped connection");
 					exit(1);
@@ -928,14 +933,18 @@ bad:			run_err("%s: %s", np, strerror(errno));
 		}
 		if (pflag) {
 			if (exists || omode != mode)
-				if (fchmod(ofd, omode))
+				if (fchmod(ofd, omode)) {
 					run_err("%s: set mode: %s",
 					    np, strerror(errno));
+					wrerr = DISPLAYED;
+				}
 		} else {
 			if (!exists && omode != mode)
-				if (fchmod(ofd, omode & ~mask))
+				if (fchmod(ofd, omode & ~mask)) {
 					run_err("%s: set mode: %s",
 					    np, strerror(errno));
+					wrerr = DISPLAYED;
+				}
 		}
 		if (close(ofd) == -1) {
 			wrerr = YES;

@@ -9,7 +9,7 @@
 .\"
 .\" Created: Sun May  7 00:14:37 1995 ylo
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/scp.1,v 1.28.2.1 2004/02/28 03:51:33 brad Exp $
+.\" $OpenBSD: src/usr.bin/ssh/scp.1,v 1.28.2.2 2004/08/19 22:37:32 brad Exp $
 .\"
 .Dd September 25, 1999
 .Dt SCP 1
@@ -127,7 +127,9 @@ For full details of the options listed below, and their possible values, see
 .It Compression
 .It CompressionLevel
 .It ConnectionAttempts
-.It ConnectionTimeout
+.It ConnectTimeout
+.It ControlMaster
+.It ControlPath
 .It GlobalKnownHostsFile
 .It GSSAPIAuthentication
 .It GSSAPIDelegateCredentials
@@ -137,6 +139,7 @@ For full details of the options listed below, and their possible values, see
 .It HostKeyAlias
 .It HostName
 .It IdentityFile
+.It IdentitiesOnly
 .It LogLevel
 .It MACs
 .It NoHostAuthenticationForLocalhost
@@ -149,6 +152,7 @@ For full details of the options listed below, and their possible values, see
 .It PubkeyAuthentication
 .It RhostsRSAAuthentication
 .It RSAAuthentication
+.It SendEnv
 .It ServerAliveInterval
 .It ServerAliveCountMax
 .It SmartcardDevice

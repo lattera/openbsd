@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.55.2.1 2004/02/28 03:51:33 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.55.2.2 2004/08/19 22:37:31 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -26,6 +26,8 @@ typedef struct {
 	u_short	  host_port;	/* Port to connect on host. */
 }       Forward;
 /* Data structure for representing option data. */
+
+#define MAX_SEND_ENV	256
 
 typedef struct {
 	int     forward_agent;	/* Forward authentication agent. */
@@ -100,14 +102,21 @@ typedef struct {
 	int	enable_ssh_keysign;
 	int	rekey_limit;
 	int	no_host_authentication_for_localhost;
-	int	server_alive_interval; 
+	int	identities_only;
+	int	server_alive_interval;
 	int	server_alive_count_max;
+
+	int     num_send_env;
+	char   *send_env[MAX_SEND_ENV];
+
+	char	*control_path;
+	int	control_master;
 }       Options;
 
 
 void     initialize_options(Options *);
 void     fill_default_options(Options *);
-int	 read_config_file(const char *, const char *, Options *);
+int	 read_config_file(const char *, const char *, Options *, int);
 
 int
 process_config_line(Options *, const char *, char *, const char *, int, int *);

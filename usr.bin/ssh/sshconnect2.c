@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.124.2.1 2004/02/28 03:51:34 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.124.2.2 2004/08/19 22:37:33 brad Exp $");
 
 #include "ssh.h"
 #include "ssh2.h"
@@ -41,7 +41,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.124.2.1 2004/02/28 03:51:34 b
 #include "authfd.h"
 #include "log.h"
 #include "readconf.h"
-#include "readpass.h"
+#include "misc.h"
 #include "match.h"
 #include "dispatch.h"
 #include "canohost.h"
@@ -118,6 +118,7 @@ ssh_kex2(char *host, struct sockaddr *hostaddr)
 	/* start key exchange */
 	kex = kex_setup(myproposal);
 	kex->kex[KEX_DH_GRP1_SHA1] = kexdh_client;
+	kex->kex[KEX_DH_GRP14_SHA1] = kexdh_client;
 	kex->kex[KEX_DH_GEX_SHA1] = kexgex_client;
 	kex->client_version_string=client_version_string;
 	kex->server_version_string=server_version_string;
@@ -1042,7 +1043,7 @@ pubkey_prepare(Authctxt *authctxt)
 					break;
 				}
 			}
-			if (!found) {
+			if (!found && !options.identities_only) {
 				id = xmalloc(sizeof(*id));
 				memset(id, 0, sizeof(*id));
 				id->key = key;

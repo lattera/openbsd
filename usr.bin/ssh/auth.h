@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.46.2.1 2004/02/28 03:51:32 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.46.2.2 2004/08/19 22:37:30 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -170,8 +170,6 @@ void	 auth_debug_reset(void);
 
 struct passwd *fakepw(void);
 
-#define AUTH_FAIL_MAX 6
-#define AUTH_FAIL_LOG (AUTH_FAIL_MAX/2)
 #define AUTH_FAIL_MSG "Too many authentication failures for %.100s"
 
 #define SKEY_PROMPT "\nS/Key Password: "
