@@ -1,0 +1,61 @@
+dnl	$OpenBSD: src/distrib/notes/mac68k/Attic/contents,v 1.42 2004/03/27 23:33:09 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+	bsd.tgz		The OpenBSD/MACHINE OSREV kernel binary. You MUST
+			install either this file or bsd-sbc.tgz below. It is
+			the kernel that you need to boot the system.
+
+	bsd-sbc.tgz	Another OpenBSD/MACHINE OSREV kernel binary. This is
+			identical in every way to bsd.tgz except that it
+			enables a different SCSI driver which may allow some
+			otherwise incompatible SCSI disks to function with
+			OpenBSD/MACHINE.  You must install either this or
+			bsd.tgz.
+
+	utils/		The MACHINE installation utilities for Mac OS.
+
+DistributionDescription(ten)
+
+OpenBSDbase(30.1,88.5,shared)
+
+OpenBSDcomp(15.6,47.3,shared)
+
+OpenBSDetc(1.6,6.3)
+
+OpenBSDgame(2.6,6.3)
+
+OpenBSDman(6.4,22.8)
+
+OpenBSDmisc(2.2,7.2)
+
+OpenBSDxbase(7.5,22.6)
+
+OpenBSDxfont(33.4,37.4)
+
+OpenBSDxserv(0.5,1.1)
+
+OpenBSDxshare(1.7,8.5)
+
+The directory '../OSREV/MACHINE/utils' contains a number of utilities for the
+Mac OS to aid the installation and configuration of OpenBSD.  The files are
+distributed in Macintosh BinHex format, which is used to make SEA (Self-
+Extracting Archive) files, which are then used to make the executables.  The
+files in this directory are as follows:
+
+	Booter1.11.3.sea.hqx
+		 This Mac OS program is used to load the OpenBSD kernel and
+		 start the operating system.  In all cases, you will need to
+		 download this file.
+
+	Installer_1.2.sea.hqx
+		 This is the Mac OS program used to install downloaded sets
+		 (such as those from the bins directory) onto a BSD partition.
+		 It is necessary in either the case of a fresh install or an
+		 upgrade.
+
+	Mkfs_1.45.sea.hqx
+		 A Mac OS program to build BSD filesystems on various
+		 partitions you have created (see below).  You will need this
+		 if you are performing a new installation.
