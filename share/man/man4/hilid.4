@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/hilms.4,v 1.2 2003/02/15 23:55:27 miod Exp $
+.\"	$OpenBSD: src/share/man/man4/hilid.4,v 1.1 2003/02/15 23:55:27 miod Exp $
 .\"
 .\" Copyright (c) 2003 Miodrag Vallat.
 .\" All rights reserved.
@@ -24,24 +24,23 @@
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
 .\"
-.Dd February 12, 2003
-.Dt HILMS 4
+.Dd February 15, 2003
+.Dt HILID 4
 .Os
 .Sh NAME
-.Nm hilms
-.Nd HIL mouse and graphics tablet driver
+.Nm hilid
+.Nd HIL ID module driver
 .Sh SYNOPSIS
-.Cd "hilms* at hil? code ?"
-.Cd "wsmouse* at hilms?"
+.Cd "hilid* at hil? code ?"
 .Sh DESCRIPTION
-This driver supports HIL mice and graphics tablet within the
-.Xr wscons 4
-framework.
-It doesn't prowide direct device driver entry points, but makes its
-functions available through the internal
-.Xr wsmouse 4
-interface.
+This driver recognizes the HIL
+.Dq ID module
+device.
+The only purpose of this device is to provide a small, unique,
+bitstring.
 .Sh SEE ALSO
 .Xr hil 4 ,
-.Xr intro 4 ,
-.Xr wsmouse 4
+.Xr intro 4
+.Sh BUGS
+There is currently no way to communicated the ID module bitstring to
+userland applications.
