@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.1 1996/10/14 13:39:45 mickey Exp $ */
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_subr.c,v 1.1.2.2 1996/10/18 11:22:19 mickey Exp $ */
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -95,7 +95,6 @@ kernfs_allocvp(mp, vpp, kt, type)
 {
 	struct kernfs_node *kfs;
 	struct vnode *vp;
-	struct kernfs_node **pp;
 	int error;
 
 loop:
@@ -153,7 +152,7 @@ loop:
 		kfs->kf_kt = kt;
 		break;
 
-	case Ksymtab:	/* /kern/sym/* = -rw-r--r-- */
+	case Ksymtab:	/* /kern/sym/ ... = -rw-r--r-- */
 		kfs->kf_mode = (VREAD|VWRITE) |
 				(VREAD) >> 3 |
 				(VREAD) >> 6;

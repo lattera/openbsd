@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.1 1996/10/14 13:38:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.2 1996/10/18 11:22:20 mickey Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -514,6 +514,9 @@ kernfs_close(v)
 		if ((ap->a_fflag & FWRITE) && (kfs->kf_flags & O_EXCL))
 			kfs->kf_flags &= ~(FWRITE|O_EXCL);
 		break;
+
+	default:
+		break;
 	}
 
 	return 0;
@@ -681,6 +684,9 @@ kernfs_read(v)
 		len = min(len, uio->uio_resid);
 		if ((error = uiomove(kfs->kf_st->start + off, len, uio)) != 0)
 			return error;
+		break;
+
+	default:
 		break;
 	}
 
@@ -870,9 +876,9 @@ kernfs_reclaim(v)
 	struct vop_reclaim_args /* {
 		struct vnode *a_vp;
 	} */ *ap = v;
+#ifdef KERNFS_DIAGNOSTIC
 	struct vnode *vp = ap->a_vp;
 
-#ifdef KERNFS_DIAGNOSTIC
 	printf("kernfs_reclaim(%x)\n", vp);
 #endif
 	return (kernfs_freevp(ap->a_vp));
