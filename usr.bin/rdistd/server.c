@@ -32,7 +32,7 @@
  */
 #ifndef lint
 static char RCSid[] = 
-"$Id: server.c,v 6.82 1996/01/30 02:29:43 mcooper Exp $";
+"$Id: server.c,v 1.2 1996/03/05 03:16:21 dm Exp $";
 
 static char sccsid[] = "@(#)server.c	5.3 (Berkeley) 6/7/86";
 
@@ -752,9 +752,9 @@ static void recvfile(new, opts, mode, owner, group, mtime, atime, size)
 	/*
 	 * Create temporary file
 	 */
-	if ((f = creat(new, mode)) < 0) {
+	if ((f = open(new, O_CREAT|O_EXCL|O_WRONLY, mode)) < 0) {
 		if (errno != ENOENT || chkparent(new, opts) < 0 ||
-		    (f = creat(new, mode)) < 0) {
+		    (f = open(new, O_CREAT|O_EXCL|O_WRONLY, mode)) < 0) {
 			error("%s: create failed: %s", new, SYSERR);
 			(void) unlink(new);
 			return;
