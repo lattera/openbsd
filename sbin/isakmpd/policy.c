@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/policy.c,v 1.12 2000/05/02 14:35:27 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/policy.c,v 1.12.2.1 2000/06/10 17:22:57 jason Exp $	*/
 /*	$EOM: policy.c,v 1.26 2000/05/01 19:52:50 niklas Exp $ */
 
 /*
@@ -146,7 +146,7 @@ my_inet_ntop4 (const in_addr_t *src, char *dst, size_t size, int normalize)
   return dst;
 }
 
-static char *
+char *
 policy_callback (char *name)
 {
   struct proto *proto;

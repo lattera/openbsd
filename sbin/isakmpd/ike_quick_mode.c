@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.34 2000/04/07 22:05:19 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.34.2.1 2000/06/10 17:22:57 jason Exp $	*/
 /*	$EOM: ike_quick_mode.c,v 1.121 2000/04/07 19:02:42 niklas Exp $	*/
 
 /*
@@ -118,6 +118,7 @@ check_policy (struct exchange *exchange, struct sa *sa, struct sa *isakmp_sa)
   X509_NAME *subject;
   RSA *key;
 #endif
+  extern char *policy_callback(char *);
 
   /* If there is no policy setup, everything fails.  */
   if (keynote_sessid < 0)
@@ -127,6 +128,9 @@ check_policy (struct exchange *exchange, struct sa *sa, struct sa *isakmp_sa)
   policy_exchange = exchange;
   policy_sa = sa;
   policy_isakmp_sa = isakmp_sa;
+
+  /* Reset information */
+  policy_callback(KEYNOTE_CALLBACK_INITIALIZE);
 
   /* Set the return values; true/false for now at least.  */
   return_values[0] = "false"; /* Order of values in array is important.  */
@@ -243,6 +247,7 @@ check_policy (struct exchange *exchange, struct sa *sa, struct sa *isakmp_sa)
 
   /* Ask policy.  */
   result = LK (kn_do_query, (keynote_sessid, return_values, RETVALUES_NUM));
+  policy_callback(KEYNOTE_CALLBACK_CLEANUP); /* Just to make sure */
 
   /* Remove authorizer from the session.  */
   LK (kn_remove_authorizer, (keynote_sessid, principal));
