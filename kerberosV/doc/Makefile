@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/06/21 23:45:27 hin Exp $
+# $Id: Makefile,v 1.2 2003/05/17 07:12:43 hin Exp $
 
 KRBDEPTH=..
 .include "../Makefile.inc"
@@ -12,7 +12,7 @@ infodir = ${DESTDIR}/usr/share/info
 
 INSTALL = /usr/bin/install
 
-info = heimdal.info heimdal.info-1 heimdal.info-2
+info = heimdal.info
 
 SRCS = 	heimdal.texi intro.texi install.texi setup.texi kerberos4.texi
 
