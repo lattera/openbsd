@@ -1,0 +1,4 @@
+dnl	$OpenBSD: src/distrib/notes/hp300/whatis,v 1.7 2005/03/18 13:29:45 miod Exp $
+
+OpenBSD OSREV runs on the HP 9000/300 and 400 series of workstations,
+based on Motorola 680x0 processors.
