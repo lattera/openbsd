@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.3 2001/07/16 23:05:15 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -56,7 +56,7 @@
  *      Foundation, Inc. and its contributors.
  * 4. Neither the name of The NetBSD Foundation nor the names of its
  *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.  
+ *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -83,7 +83,7 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
- 
+
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
@@ -118,9 +118,9 @@ void    cpu_attach __P((struct device *, struct device *, void *));
 static struct cpu_info dummy_cpu_info; /* XXX */
 struct cpu_info *cpu_info[I386_MAXPROCS] = { &dummy_cpu_info };
 
-void    	cpu_hatch __P((void *));
-static void    	cpu_boot_secondary __P((struct cpu_info *ci));
-static void	cpu_copy_trampoline __P((void));
+void   	cpu_hatch __P((void *));
+void   	cpu_boot_secondary __P((struct cpu_info *));
+void	cpu_copy_trampoline __P((void));
 
 /*
  * Runs once per boot once multiprocessor goo has been detected and
@@ -140,7 +140,7 @@ cpu_init_first()
 	cpu_copy_trampoline();
 }
 #endif
-	
+
 struct cfattach cpu_ca = {
 	sizeof(struct cpu_info), cpu_match, cpu_attach
 };
@@ -151,25 +151,25 @@ struct cfdriver cpu_cd = {
 
 int
 cpu_match(parent, matchv, aux)
-    struct device *parent;  
-    void *matchv;   
+    struct device *parent;
+    void *matchv;
     void *aux;
 {
-  	struct cfdata *match = (struct cfdata *)matchv;   
-	struct cpu_attach_args * caa = (struct cpu_attach_args *) aux;
+  	struct cfdata *match = (struct cfdata *)matchv;
+	struct cpu_attach_args *caa = (struct cpu_attach_args *)aux;
 
 	if (strcmp(caa->caa_name, match->cf_driver->cd_name) == 0)
-		return 1;
-	return 0;
+		return (1);
+	return (0);
 }
 
-void 
-cpu_attach(parent, self, aux)   
+void
+cpu_attach(parent, self, aux)
 	struct device *parent, *self;
 	void *aux;
 {
-	struct cpu_info *ci = (struct cpu_info *)self;  
-	struct cpu_attach_args  *caa = (struct cpu_attach_args  *) aux;
+	struct cpu_info *ci = (struct cpu_info *)self;
+	struct cpu_attach_args *caa = (struct cpu_attach_args *)aux;
 
 #ifdef MULTIPROCESSOR
 	int cpunum = caa->cpu_number;
@@ -182,7 +182,7 @@ cpu_attach(parent, self, aux)
 			    " instead of at expected %d\n",
 			    self->dv_xname, cpu_number(), cpunum);
 		}
-			
+
 		/* special-case boot CPU */			    /* XXX */
 		if (cpu_info[cpunum] == &dummy_cpu_info) {	    /* XXX */
 			ci->ci_curproc = dummy_cpu_info.ci_curproc; /* XXX */
@@ -193,7 +193,7 @@ cpu_attach(parent, self, aux)
 		panic("cpu at apic id %d already attached?", cpunum);
 
 	cpu_info[cpunum] = ci;
-#endif			
+#endif
 
 	ci->ci_cpuid = caa->cpu_number;
 	ci->ci_signature = caa->cpu_signature;
@@ -219,8 +219,10 @@ cpu_attach(parent, self, aux)
 	memset(pcb, 0, USPACE);
 
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
-	pcb->pcb_tss.tss_esp0 = kstack + USPACE - 16 - sizeof (struct trapframe);
-	pcb->pcb_tss.tss_esp = kstack + USPACE - 16 - sizeof (struct trapframe);
+	pcb->pcb_tss.tss_esp0 = kstack + USPACE - 16 -
+	    sizeof (struct trapframe);
+	pcb->pcb_tss.tss_esp = kstack + USPACE - 16 -
+	    sizeof (struct trapframe);
 	pcb->pcb_pmap = pmap_kernel();
 	pcb->pcb_cr3 = vtophys(pcb->pcb_pmap->pm_pdir);
 	/* pcb->pcb_cr3 = pcb->pcb_pmap->pm_pdir - KERNBASE; XXX ??? */
@@ -257,7 +259,7 @@ cpu_attach(parent, self, aux)
 		ioapic_bsp_id = caa->cpu_number;
 #endif
 		break;
-		
+
 	case CPU_ROLE_AP:
 		/*
 		 * report on an AP
@@ -268,7 +270,7 @@ cpu_attach(parent, self, aux)
 		printf(")\n");
 		identifycpu(ci);
 		break;
-		
+
 	default:
 		panic("unknown processor type??\n");
 	}
@@ -277,7 +279,7 @@ cpu_attach(parent, self, aux)
 	if (mp_verbose) {
 		printf("%s: kstack at 0x%lx for %d bytes\n",
 		    ci->ci_dev.dv_xname, kstack, USPACE);
-		printf("%s: idle pcb at %p, idle sp at 0x%x\n", 
+		printf("%s: idle pcb at %p, idle sp at 0x%x\n",
 		    ci->ci_dev.dv_xname, pcb, pcb->pcb_esp);
 	}
 #endif
@@ -317,7 +319,7 @@ cpu_boot_secondary_processors()
 	struct cpu_info *ci;
 	u_long i;
 
-	for (i=0; i < I386_MAXPROCS; i++) {
+	for (i = 0; i < I386_MAXPROCS; i++) {
 		ci = cpu_info[i];
 		if (ci == NULL)
 			continue;
@@ -344,26 +346,26 @@ cpu_boot_secondary (ci)
 	printf("%s: starting\n", ci->ci_dev.dv_xname);
 
 	/* XXX move elsewhere, not per CPU. */
-	mp_pdirpa = vtophys(kpm->pm_pdir); 
-	
+	mp_pdirpa = vtophys(kpm->pm_pdir);
+
 	pcb = ci->ci_idle_pcb;
 
 	printf("%s: init idle stack ptr is 0x%x\n", ci->ci_dev.dv_xname,
 	    pcb->pcb_esp);
-	
+
 	CPU_STARTUP(ci);
 
 	/*
 	 * wait for it to become ready
 	 */
-	for (i = 100000; (!(ci->ci_flags & CPUF_RUNNING)) && i>0;i--) {
+	for (i = 100000; (!(ci->ci_flags & CPUF_RUNNING)) && i > 0; i--) {
 		delay(10);
 	}
-	if (! (ci->ci_flags & CPUF_RUNNING)) {
+	if (!(ci->ci_flags & CPUF_RUNNING)) {
 		printf("cpu failed to become ready\n");
 		Debugger();
 	}
-	
+
 }
 
 /*
@@ -372,14 +374,14 @@ cpu_boot_secondary (ci)
  * for now it jumps into an infinite loop.
  */
 void
-cpu_hatch(void *v) 
+cpu_hatch(void *v)
 {
 	struct cpu_info *ci = (struct cpu_info *)v;
         struct region_descriptor region;
 #if 0
 	volatile int i;
 #endif
-	
+
 	cpu_init_idt();
 
 	lapic_enable();
@@ -390,7 +392,8 @@ cpu_hatch(void *v)
 	splbio();		/* XXX prevent softints from running here.. */
 
 	enable_intr();
-	printf("%s: CPU %d reporting for duty, Sir!\n",ci->ci_dev.dv_xname, cpu_number());
+	printf("%s: CPU %d reporting for duty, Sir!\n",ci->ci_dev.dv_xname,
+	    cpu_number());
 	printf("%s: stack is %p\n", ci->ci_dev.dv_xname, &region);
 #if 0
 	printf("%s: sending IPI to cpu 0\n",ci->ci_dev.dv_xname);
@@ -399,18 +402,16 @@ cpu_hatch(void *v)
 	/* give it a chance to be handled.. */
 	for (i=0; i<1000000; i++)
 		;
-	
+
 	printf("%s: sending another IPI to cpu 0\n",
 	    ci->ci_dev.dv_xname);
 	i386_send_ipi(cpu_primary, I386_IPI_GMTB);
-#endif	
+#endif
 	for (;;)
 		;
-
-
 }
 
-static void
+void
 cpu_copy_trampoline()
 {
 	/*
@@ -418,19 +419,12 @@ cpu_copy_trampoline()
 	 */
 	extern u_char cpu_spinup_trampoline[];
 	extern u_char cpu_spinup_trampoline_end[];
-#if 0 
+
 	pmap_kenter_pa((vaddr_t)MP_TRAMPOLINE,	/* virtual */
-		       (paddr_t)MP_TRAMPOLINE,	/* physical */
-		       VM_PROT_ALL);		/* protection */
-	memcpy((caddr_t)MP_TRAMPOLINE, 
-	    cpu_spinup_trampoline, 
-	    cpu_spinup_trampoline_end-cpu_spinup_trampoline);
-#endif
-	pmap_enter (pmap_kernel(), (vaddr_t)MP_TRAMPOLINE,
-		    (paddr_t)MP_TRAMPOLINE, VM_PROT_ALL, TRUE, VM_PROT_ALL);
-	bcopy (cpu_spinup_trampoline, (caddr_t)MP_TRAMPOLINE, 
-	       cpu_spinup_trampoline_end-cpu_spinup_trampoline);
+	    (paddr_t)MP_TRAMPOLINE,		/* physical */
+	    VM_PROT_ALL);			/* protection */
+	bcopy(cpu_spinup_trampoline, (caddr_t)MP_TRAMPOLINE,
+	    cpu_spinup_trampoline_end - cpu_spinup_trampoline);
 }
 
 #endif
-
