@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.1.1.1 1996/09/30 05:09:55 drahn Exp $
+#	$Id: Makefile.inc,v 1.1.1.1 1996/12/21 20:42:21 rahnds Exp $
 
-KMINCLUDES= arch/ppc/SYS.h
+KMINCLUDES= arch/powerpc/SYS.h
 KMSRCS=
