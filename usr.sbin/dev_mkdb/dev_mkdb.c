@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/dev_mkdb/dev_mkdb.c,v 1.9 2003/06/02 23:36:52 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/dev_mkdb/dev_mkdb.c,v 1.10 2005/04/04 09:03:07 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -37,7 +37,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)dev_mkdb.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$Id: dev_mkdb.c,v 1.8 2002/07/14 04:13:54 deraadt Exp $";
+static char rcsid[] = "$Id: dev_mkdb.c,v 1.9 2003/06/02 23:36:52 millert Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -48,8 +48,6 @@ static char rcsid[] = "$Id: dev_mkdb.c,v 1.8 2002/07/14 04:13:54 deraadt Exp $";
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <kvm.h>
-#include <nlist.h>
 #include <paths.h>
 #include <stdio.h>
 #include <stdlib.h>
