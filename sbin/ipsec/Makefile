@@ -1,5 +1,5 @@
-#	$OpenBSD: src/sbin/ipsec/Attic/Makefile,v 1.3 1997/06/20 21:11:31 deraadt Exp $
+#	$OpenBSD: src/sbin/ipsec/Attic/Makefile,v 1.4 1997/07/18 22:59:06 provos Exp $
 
-SUBDIR=	ipsecadm rt rtdelete
+SUBDIR=	ipsecadm rt rtdelete photurisd startkey
 
 .include <bsd.subdir.mk>
