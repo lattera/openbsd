@@ -1,0 +1,437 @@
+.\"	$OpenBSD: src/share/man/man8/release.8,v 1.14 2001/04/24 19:20:35 todd Exp $
+.\"
+.\"	Copyright (c) 2000 Marco S. Hyman
+.\"
+.\"	Permission to copy all or part of this material for any purpose is
+.\"	granted provided that the above copyright notice and this paragraph
+.\"	are duplicated in all copies.  THIS SOFTWARE IS PROVIDED ``AS IS''
+.\"	AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT
+.\"	LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+.\"	FOR A PARTICULAR PURPOSE.
+.\"
+.Dd July 6, 2000
+.Dt RELEASE 8
+.Os
+.Sh NAME
+.Nm release
+.Nd building an
+.Ox
+release
+.Sh DESCRIPTION
+There are several steps necessary to build a system release.
+They are:
+.Pp
+.Bl -enum -compact
+.It
+Update sources.
+.It
+Build and install a new kernel.
+.It
+Build a new system.
+.It
+Make and validate the system release.
+.It
+Build and install XF4.
+.It
+Make and validate the XF4 release.
+.It
+Make the third party packages.
+.El
+.Pp
+The following sections describe each of the required steps in detail.
+.Ss "1. Update sources"
+.Pp
+A
+.Nm
+should always start from a known set of
+.Em coherent
+sources.
+The easiest way to ensure that the sources are complete and coherent
+is to check them out using the
+.Tn CVS
+tag the
+.Ox
+developers add to the repository prior to making a release.
+There are two tags, one which identifies the release as it exists on the
+.Tn CD\-ROM
+and another which identifies the
+.Em stable
+branch.
+The
+.Em stable
+branch, starting with
+.Ox 2.7 ,
+contains the patches described in
+.Pa http://www.openbsd.org/errata.html .
+The tags are of the form:
+.Bl -tag -width OPENBSD_x_y_BASE
+.It Va OPENBSD_x_y_BASE
+This tag marks the source as it exists on the release
+.Tn CD\-ROM
+where
+.Ar x
+is the major release number and
+.Ar y
+is the minor release number.
+.It Va OPENBSD_x_y
+This tag is a moving target.
+It marks the sources that belong to the stable branch.
+This branch
+.Em only
+contains errata, no new features.
+.El
+.Pp
+To update your sources to the versions identified by one of the above
+tags use the commands:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li "cd /usr/src && cvs up -r TAG -Pd"
+.It
+.Li "cd XF4SRC && cvs up -r TAG -Pd"
+.It
+.Li "cd PORTSPATH && cvs up -r TAG -Pd"
+.El
+.Pp
+Replace
+.Va XF4SRC
+with the path to your
+.Tn X11R6
+sources.
+Replace
+.Va PORTSPATH
+with the path to your ports tree sources, typically
+.Pa /usr/ports .
+The above command assume an existing source tree.
+.Pp
+See
+.Pa http://www.openbsd.org/anoncvs.html
+for instructions on fetching the sources for the first time.
+.Bd -offset indent
+.Sy Warning :
+.Tn CVS
+tags are
+.Sq sticky .
+See
+.Xr cvs 1
+for more information.
+.Ed
+.Ss "2. Build and install a new kernel"
+.Pp
+For safety, you should always build and install a new kernel before
+building the programs that will use the kernel.
+This ensures that any new system calls, for example, will be present
+when needed.
+To build a kernel the steps are:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li "cd /sys/arch/${ARCH}/conf"
+.br
+where
+.Va ${ARCH}
+is the architecture of your machine, e.g.,
+.Li i386 .
+.It
+.Li "vi ${NAME}"
+.br
+where
+.Va ${NAME}
+is your kernel configuration file.
+You should
+.Em not
+edit
+.Li GENERIC ,
+create your own kernel configuration if you need to make modifications.
+If using
+.Li GENERIC
+you can skip this step.
+And yes, you may use
+.Li emacs
+or any other editor you choose.
+.It
+.Li "config ${NAME}"
+.It
+.Li "cd ../compile/${NAME}"
+.It
+.Li "make clean && make depend && make"
+.br
+In this instance
+.Li "make clean"
+is your friend.
+.It
+.Li su
+.It
+.Li "mv /bsd /bsd.old && mv bsd / && chown root.wheel /bsd"
+.It
+.Li "shutdown -r now"
+.El
+.Pp
+If the system does not come up you can boot using
+.Pa bsd.old .
+.Ss "3. Build a new system"
+.Pp
+Now that you are running using your new kernel you can build a new system.
+It's safer (but slower) to remove and re-build your object directories
+and re-building them before the build.
+The steps are:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li "cd /usr/obj && mkdir -p .old && sudo mv * .old && sudo rm -rf .old &"
+.br
+This moves all your existing object out of the way and then removes them in
+the background.
+.It
+.Li "cd /usr/src && nice make obj"
+.br
+this re-builds your obj directories
+.It
+.Li su
+.It
+.Li "nice make build"
+.br
+If you have set
+.Xr sudo 8
+up, you can combine this with the previous step using the command
+.Bd -literal -offset indent -compact
+nice make SUDO=sudo build
+.Ed
+.It
+Update
+.Pa /etc ,
+.Pa /var ,
+and
+.Pa /dev/MAKEDEV
+by hand.
+.El
+.Pp
+At this point your system is up-to-date and running the code that you
+are going to make into a release.
+.Ss "4. Make and validate the system release"
+.Pp
+The system release consists of a generic kernel, one
+.Tn CD\-ROM
+and two floppy boot-able file-systems, the release
+.Sq tarballs ,
+installation instructions, and checksum files.
+.Pp
+The release process requires two work areas.
+They are:
+.Bl -tag -width "RELEASEDIR "
+.It Va DESTDIR
+This is the name of a directory which will be the root of a a complete
+.Ox
+installation, thus it must be on a disk partition large enough to
+store the entire operating system (less
+.Tn X11R6
+and any third party
+.Sq packages ) .
+The directory can be removed once the release is created.
+In any case the release process ensures the directory is empty before starting.
+.It Va RELEASEDIR
+This is the name of a directory where the release output files are stored.
+The following process will create the directory if necessary.
+.It " "
+.Sy Warning :
+.Va DESTDIR
+and 
+.Va RELEASEDIR
+must not refer to any directory with
+.Pa /mnt
+in its path as
+.Pa /mnt
+is used in the release generation process.
+.El
+.Pp
+The floppy and
+.Tn CD\-ROM
+.Pa RAMDISK
+images require a special tool which is created first.
+The release process is:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li su
+.br
+you must be root to create a release
+.It
+.Li "cd /usr/src/distrib/crunch && make clean && make && make install"
+.br
+create the special tools needed to build the release
+.It
+.Li "export DESTDIR=your-destdir RELEASEDIR=your-releasedir"
+.It
+.Li "test -d ${DESTDIR} && mv ${DESTDIR} ${DESTDIR}- && rm -rf ${DESTDIR}- &"
+.It
+.Li "mkdir -p ${DESTDIR} ${RELEASEDIR}"
+.br
+these two steps ensure
+.Va ${DESTDIR}
+exists as an empty directory and
+.Va ${RELEASEDIR}
+exists.
+.Va ${RELEASEDIR}
+need not be empty.
+.It
+.Li "cd /usr/src/etc && nice make release"
+.It
+.Li "cd /usr/src/distrib/sets && csh checkflist"
+.br
+this checks that the contents of
+.Va ${DESTDIR}
+pretty much match the contents of the release
+.Sq tarballs .
+.It
+.Li "unset RELEASEDIR DESTDIR"
+.El
+.Pp
+At this point you have most of an
+.Ox
+release.
+The only thing missing is
+.Va X11R6
+(which is covered in the next section).
+.Ss "5. Build and install XF4"
+.Pp
+The
+.Va XF4
+tree is primarily
+.Xr imake 1 No Ns -based
+and doesn't contain the
+.Dq obj
+directory mechanism that comes with Berkeley
+.Xr make 1 .
+While the tree can be built in place, it's better to refrain from
+polluting the cvs sources.
+An alternate build location needs to be selected, large enough to hold the
+.Tn X11R6
+object files, libraries, and binaries.
+Call this location
+.Va XF4BLD .
+.Va XF4SRC
+is the path to your
+.Tn X11R6
+sources.
+Once you've selected
+.Va XF4BLD
+the build process is:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li su
+.It
+.Li "test -d XF4BLD && mv XF4BLD XF4BLD- && rm -rf XF4BLD- &"
+.It
+.Li "mkdir -p XF4BLD"
+.It
+.Li "cd XF4BLD && lndir XF4SRC && nice make build"
+.El
+.Pp
+.Sy Note (only for i386) :
+.Pa XF86Setup ,
+built and installed above, requires version 8.3 of the
+.Pa tcl/tk
+libraries.   They must be installed to do a proper build. Version 8.3 of
+.Pa tcl/tk
+can be found in the ports tree at
+.Pa /usr/ports/lang/tcl/8.3/
+and
+.Pa /usr/ports/x11/tk/8.3/ .
+Version 8.3 is required to build XF4.
+Version 8.3 may coexist with version 8.0.
+.Pp
+The above method mimics a
+.Ic "make build"
+in the
+.Pa /usr/src
+directory.
+.Pa X11R6
+is created and installed in
+.Pa
+/usr/X11R6 .
+However, the install phase of the build does
+.Em not
+overwrite
+.Pa /etc/X11/xdm .
+That directory must be installed by hand.   Or you can
+.Ic "cd /etc/X11 && mv xdm xdm-"
+before the build and copy any local configuration from
+.Pa xdm-
+to
+.Pa xdm
+after the build.
+.Ss "6. Make and validate the XF4 release"
+.Pp
+.Va X11R6
+uses the same
+.Va DESTDIR
+and
+.Va RELEASEDIR
+mechanism noted in the section on building a system release, above.
+They may be the same values used above, but be warned that the
+contents of
+.Va DESTDIR
+will be removed if you follow this procedure.   However,
+.Va DESTDIR
+should not be the same directory used to build the system release.  
+It may be the same if you don't care to keep the contents of the
+system release
+.Va DESTDIR .
+(The XF4
+.Va DESTDIR
+needs to be emptied for release checklist processing.)
+.Pp
+The steps to build the release are (assuming you are still root, and still in
+.Va XF4BLD ) :
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+.Li "export DESTDIR=your-destdir RELEASEDIR=your-releasedir"
+.It
+.Li "test -d ${DESTDIR} && mv ${DESTDIR} ${DESTDIR}- && rm -rf ${DESTDIR}- &"
+.It
+.Li "mkdir -p ${DESTDIR} ${RELEASEDIR}"
+.It
+.Li "nice make release"
+.It
+.Li "unset RELEASEDIR DESTDIR"
+.El
+.Pp
+At this point you have both system and
+.Tn X11R6
+.Sq tarballs
+in your release directory.
+.Ss "7. Make the third party packages"
+.Pp
+The
+.Sq ports
+sub-system of contributed applications is described in
+.Xr ports 7 .
+For ease of installation ports can be pre-compiled into
+.Sq packages
+which can then be installed onto machines using
+.Xr pkg_add 1 .
+Packages are created by:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+Select an application to build, we'll call it
+.Va CATEGORY/PORT .
+.It
+.Li "cd /usr/ports/CATEGORY/PORT"
+.It
+.Li su
+.It
+.Li "make package"
+.El
+.Pp
+That's all there is to it.
+.Sh SEE ALSO
+.Xr cvs 1 ,
+.Xr pkg_add 1 ,
+.Xr ports 7 ,
+.Xr sudo 8
+.Sh HISTORY
+This document first appeared in
+.Ox 2.8 .
