@@ -1,5 +1,5 @@
+#	$OpenBSD: src/lib/csu/vax/Makefile,v 1.4 1999/08/20 14:11:36 niklas Exp $
 #	from: @(#)Makefile	5.6 (Berkeley) 5/22/91
-#	$Id: Makefile,v 1.2 1996/12/08 15:22:23 downsj Exp $
 
 CFLAGS+=	-DLIBC_SCCS -I${.CURDIR}/..
 OBJS=		crt0.o gcrt0.o scrt0.o

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/csu/mips/Attic/crt0.S,v 1.2 1999/08/20 14:11:35 niklas Exp $	*/
+
 /*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)crt0.s	8.2 (Berkeley) 3/21/94
- *	$Id: crt0.S,v 1.6 1995/06/15 21:58:44 mellon Exp $    
  */
 
 #include <machine/regdef.h>
