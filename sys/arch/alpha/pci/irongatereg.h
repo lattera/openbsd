@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/pci/irongatereg.h,v 1.2 2001/04/17 14:53:33 art Exp $	*/
 /* $NetBSD: irongatereg.h,v 1.2 2000/06/26 02:42:10 thorpej Exp $ */
 
 /*-
