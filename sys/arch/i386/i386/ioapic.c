@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.7 2003/05/13 19:42:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.8 2003/05/15 16:44:33 niklas Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-
@@ -245,7 +245,7 @@ ioapic_attach(struct device *parent, struct device *self, void *aux)
 		printf("%s: misconfigured as apic %d\n", sc->sc_dev.dv_xname,
 		    apic_id);
 
-		ioapic_write(sc, IOAPIC_VER,
+		ioapic_write(sc, IOAPIC_ID,
 		    (ioapic_read(sc, IOAPIC_ID) & ~IOAPIC_ID_MASK)
 		    | (sc->sc_apicid << IOAPIC_ID_SHIFT));
 
