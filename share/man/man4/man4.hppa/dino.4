@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.hppa/dino.4,v 1.4 2004/02/17 19:30:22 jmc Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.hppa/dino.4,v 1.5 2004/09/15 21:33:22 mickey Exp $
 .\"
 .\" Copyright (c) 2003 Michael Shalayeff
 .\" All rights reserved.
@@ -31,6 +31,7 @@
 .Nd Dino and Cujo Host/PCI bridges
 .Sh SYNOPSIS
 .Cd "dino* at phantomas?"
+.Cd "dino* at uturn?"
 .Cd "com1 at dino? irq 11"
 .Cd "pci* at dino?"
 .Sh DESCRIPTION
@@ -38,7 +39,7 @@ This driver supports
 .Tn Dino
 and
 .Tn Cujo
-Host/PCI bridges found on the A, B, and C models of workstations.
+Host/PCI bridges found on the A, B, C and J-class workstations.
 .Tn Cujo
 is a 64 bit datapath version of
 .Tn Dino .
@@ -52,7 +53,8 @@ keyboard and mouse ports, though the latter are not yet supported.
 .Xr com 4 ,
 .Xr intro 4 ,
 .Xr pci 4 ,
-.Xr phantomas 4
+.Xr phantomas 4 ,
+.Xr uturn 4
 .Sh HISTORY
 The
 .Nm
