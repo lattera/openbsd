@@ -1,5 +1,5 @@
 /*
- * Copyright 1997 Niels Provos <provos@physnet.uni-hamburg.de>
+ * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: packet.c,v 1.1 1998/11/14 23:37:25 deraadt Exp $";
+static char rcsid[] = "$Id: packet.c,v 1.2 2000/12/11 21:21:18 provos Exp $";
 #endif
 
 #define _PACKET_C_
