@@ -1,0 +1,43 @@
+#!/bin/sh
+
+cd /root/etc/rc.d || exit $?
+
+rmmod zbsdmod 2>/dev/null
+
+mount -o remount,rw /
+
+if [ ! -f rc.rofilesys.openbsd ]; then
+	cp -p rc.rofilesys rc.rofilesys.openbsd
+fi
+
+cat rc.rofilesys | sed -e '/vfat/s/^/#/' > tmp || exit $?
+mv tmp rc.rofilesys
+cat rc.rofilesys | sed -e '/^LINUXFMT=ext3$/s/^/#/' \
+    -e '/^#LINUXFMT=ext2$/s/^#//' > tmp || exit $?
+mv tmp rc.rofilesys
+cat rc.rofilesys | sed \
+    -e '/\/pcmcia start$/s,$,; sh /root/etc/rc.d/rc.zboot,' > tmp || exit $?
+mv tmp rc.rofilesys
+chown root:root rc.rofilesys
+chmod 775 rc.rofilesys
+
+# Convert all mounted ext3 filesystems back into ext2 on reboot.
+for dev in `mount | awk '/on \/hdd[123] type ext3/ {print $1}'`; do
+	cat <<- EOF | debugfs
+	open -f -w ${dev}
+	features -has_journal -needs_recovery
+	quit
+EOF
+done
+
+rm -f rc.zboot
+rm -f zboot
+rm -f zbsdmod.o
+cp /hdd2/OpenBSD/rc.zboot .
+cp /hdd2/OpenBSD/zboot .
+cp /hdd2/OpenBSD/zbsdmod.o .
+
+sync; sleep 3
+mount -o remount,ro /
+
+insmod /hdd2/OpenBSD/zbsdmod.o
