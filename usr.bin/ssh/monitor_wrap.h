@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.5 2002/05/12 23:53:45 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.5.2.1 2002/05/17 00:03:23 miod Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>

@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.41.2.1 2002/03/07 17:37:48 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.41.2.2 2002/05/17 00:03:24 miod Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/md5.h>
@@ -459,6 +459,8 @@ try_krb4_authentication(void)
 
 		/* Get server's response. */
 		reply = packet_get_string((u_int *) &auth.length);
+		if (auth.length >= MAX_KTXT_LEN)
+			fatal("Kerberos v4: Malformed response from server");
 		memcpy(auth.dat, reply, auth.length);
 		xfree(reply);
 
@@ -843,7 +845,7 @@ try_challenge_response_authentication(void)
 			error("Permission denied, please try again.");
 		if (options.cipher == SSH_CIPHER_NONE)
 			log("WARNING: Encryption is disabled! "
-			    "Reponse will be transmitted in clear text.");
+			    "Response will be transmitted in clear text.");
 		response = read_passphrase(prompt, 0);
 		if (strcmp(response, "") == 0) {
 			xfree(response);

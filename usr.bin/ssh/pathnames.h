@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.9.2.2 2002/03/08 15:17:18 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.9.2.3 2002/05/17 00:03:24 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -122,3 +122,6 @@
 /* for sftp */
 #define _PATH_SFTP_SERVER		"/usr/libexec/sftp-server"
 #define _PATH_LS			"ls"
+
+/* chroot directory for unprivileged user when UsePrivilegeSeparation=yes */
+#define _PATH_PRIVSEP_CHROOT_DIR	"/var/empty"

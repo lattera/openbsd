@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/kexdh.c,v 1.7.2.1 2002/03/07 17:37:46 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/kexdh.c,v 1.7.2.2 2002/05/17 00:03:23 miod Exp $");
 
 #include <openssl/crypto.h>
 #include <openssl/bn.h>
@@ -37,6 +37,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/kexdh.c,v 1.7.2.1 2002/03/07 17:37:46 jason Exp
 #include "packet.h"
 #include "dh.h"
 #include "ssh2.h"
+#include "monitor_wrap.h"
 
 static u_char *
 kex_dh_hash(
@@ -275,7 +276,7 @@ kexdh_server(Kex *kex)
 
 	/* sign H */
 	/* XXX hashlen depends on KEX */
-	key_sign(server_host_key, &signature, &slen, hash, 20);
+	PRIVSEP(key_sign(server_host_key, &signature, &slen, hash, 20));
 
 	/* destroy_sensitive_data(); */
 

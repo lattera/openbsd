@@ -1,15 +1,15 @@
-#	$OpenBSD: src/usr.bin/ssh/lib/Makefile,v 1.29.2.1 2002/03/07 17:37:48 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/lib/Makefile,v 1.29.2.2 2002/05/17 00:03:30 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
 LIB=	ssh
-SRCS=   authfd.c authfile.c bufaux.c buffer.c canohost.c channels.c \
+SRCS=	authfd.c authfile.c bufaux.c buffer.c canohost.c channels.c \
 	cipher.c compat.c compress.c crc32.c deattack.c fatal.c \
 	hostfile.c log.c match.c mpaux.c nchan.c packet.c readpass.c \
 	rsa.c tildexpand.c ttymodes.c uidswap.c xmalloc.c atomicio.c \
 	key.c dispatch.c kex.c mac.c uuencode.c misc.c \
 	rijndael.c ssh-dss.c ssh-rsa.c dh.c kexdh.c kexgex.c \
-	scard.c
+	scard.c monitor_wrap.c monitor_fdpass.c
 
 DEBUGLIBS= no
 NOPROFILE= yes

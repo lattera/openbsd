@@ -75,7 +75,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.85.2.1 2002/03/07 17:37:47 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.85.2.2 2002/05/17 00:03:24 miod Exp $");
 
 #include "xmalloc.h"
 #include "atomicio.h"
@@ -756,7 +756,7 @@ sink(argc, argv)
 				cursize = need;
 			}
 			(void) snprintf(namebuf, need, "%s%s%s", targ,
-			    *targ ? "/" : "", cp);
+			    strcmp(targ, "/") ? "/" : "", cp);
 			np = namebuf;
 		} else
 			np = targ;
@@ -1073,7 +1073,7 @@ progressmeter(int flag)
 	off_t cursize, abbrevsize;
 	double elapsed;
 	int ratio, barlength, i, remaining;
-	char buf[256];
+	char buf[512];
 
 	if (flag == -1) {
 		(void) gettimeofday(&start, (struct timezone *) 0);
@@ -1099,10 +1099,13 @@ progressmeter(int flag)
 		i = barlength * ratio / 100;
 		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
 		    "|%.*s%*s|", i,
-		    "***************************************"
-		    "***************************************"
-		    "***************************************"
-		    "***************************************",
+		    "*******************************************************"
+		    "*******************************************************"
+		    "*******************************************************"
+		    "*******************************************************"
+		    "*******************************************************"
+		    "*******************************************************"
+		    "*******************************************************",
 		    barlength - i, "");
 	}
 	i = 0;

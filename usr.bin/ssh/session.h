@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.13.2.1 2002/03/07 17:37:47 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.13.2.2 2002/05/17 00:03:24 miod Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -26,12 +26,46 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#define TTYSZ 64
+typedef struct Session Session;
+struct Session {
+	int	used;
+	int	self;
+	struct passwd *pw;
+	Authctxt *authctxt;
+	pid_t	pid;
+	/* tty */
+	char	*term;
+	int	ptyfd, ttyfd, ptymaster;
+	int	row, col, xpixel, ypixel;
+	char	tty[TTYSZ];
+	/* last login */
+	char	hostname[MAXHOSTNAMELEN];
+	time_t	last_login_time;
+	/* X11 */
+	int	display_number;
+	char	*display;
+	int	screen;
+	char	*auth_display;
+	char	*auth_proto;
+	char	*auth_data;
+	int	single_connection;
+	/* proto 2 */
+	int	chanid;
+	int	is_subsystem;
+};
+
 void	 do_authenticated(Authctxt *);
 
 int	 session_open(Authctxt*, int);
 int	 session_input_channel_req(Channel *, const char *);
 void	 session_close_by_pid(pid_t, int);
 void	 session_close_by_channel(int, void *);
-void	 session_destroy_all(void);
+void	 session_destroy_all(void (*)(Session *));
+void	 session_pty_cleanup2(void *);
 
+Session	*session_new(void);
+Session	*session_by_tty(char *);
+void	 session_close(Session *);
+void	 do_setusercontext(struct passwd *);
 #endif

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.5.2.1 2002/03/07 17:37:47 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.5.2.2 2002/05/17 00:03:24 miod Exp $ */
 
 /*
  * Copyright (c) 2001,2002 Damien Miller.  All rights reserved.
@@ -32,7 +32,7 @@
 #include "sftp-client.h"
 
 int
-remote_glob(struct sftp_conn *, const char *, int, 
+remote_glob(struct sftp_conn *, const char *, int,
     int (*)(const char *, int), glob_t *);
 
 #endif

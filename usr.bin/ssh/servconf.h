@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.49.2.1 2002/03/07 17:37:47 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.49.2.2 2002/05/17 00:03:24 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -129,7 +129,6 @@ typedef struct {
 
 	char   *authorized_keys_file;	/* File containing public keys */
 	char   *authorized_keys_file2;
-
 }       ServerOptions;
 
 void	 initialize_server_options(ServerOptions *);

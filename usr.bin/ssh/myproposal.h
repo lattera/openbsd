@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/myproposal.h,v 1.12.4.1 2002/03/07 17:37:46 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/myproposal.h,v 1.12.4.2 2002/05/17 00:03:23 miod Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -27,7 +27,7 @@
 #define	KEX_DEFAULT_PK_ALG	"ssh-rsa,ssh-dss"
 #define	KEX_DEFAULT_ENCRYPT \
 	"aes128-cbc,3des-cbc,blowfish-cbc,cast128-cbc,arcfour," \
-	"aes192-cbc,aes256-cbc"
+	"aes192-cbc,aes256-cbc,rijndael-cbc@lysator.liu.se"
 #define	KEX_DEFAULT_MAC \
 	"hmac-md5,hmac-sha1,hmac-ripemd160," \
 	"hmac-ripemd160@openssh.com," \

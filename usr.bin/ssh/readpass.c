@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.22.2.2 2002/03/07 17:37:47 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.22.2.3 2002/05/17 00:03:24 miod Exp $");
 
 #include <readpassphrase.h>
 
@@ -120,8 +120,11 @@ read_passphrase(const char *prompt, int flags)
 		return ssh_askpass(askpass, prompt);
 	}
 
-	if (readpassphrase(prompt, buf, sizeof buf, rppflags) == NULL)
+	if (readpassphrase(prompt, buf, sizeof buf, rppflags) == NULL) {
+		if (flags & RP_ALLOW_EOF)
+			return NULL;
 		return xstrdup("");
+	}
 
 	ret = xstrdup(buf);
 	memset(buf, 'x', sizeof buf);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.26.2.1 2002/03/07 17:37:46 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.26.2.2 2002/05/17 00:03:23 miod Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -111,6 +111,7 @@ struct Kex {
 	char	*server_version_string;
 	int	(*verify_host_key)(Key *);
 	Key	*(*load_host_key)(int);
+	int	(*host_key_index)(Key *);
 };
 
 Kex	*kex_setup(char *[PROPOSAL_MAX]);

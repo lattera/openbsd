@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.6.1 2002/03/07 17:37:47 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.6.2 2002/05/17 00:03:24 miod Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -24,17 +24,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openssl/engine.h>
-
 #ifndef SCARD_H
 #define SCARD_H
+
+#include "key.h"
 
 #define SCARD_ERROR_FAIL	-1
 #define SCARD_ERROR_NOCARD	-2
 #define SCARD_ERROR_APPLET	-3
 
-Key	*sc_get_key(const char*);
-ENGINE	*sc_get_engine(void);
+Key	**sc_get_keys(const char*, const char*);
 void	 sc_close(void);
+int	 sc_put_key(Key *, const char*);
 
 #endif

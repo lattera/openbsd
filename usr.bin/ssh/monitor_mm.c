@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_mm.c,v 1.4 2002/03/25 20:12:10 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_mm.c,v 1.4.4.1 2002/05/17 00:03:23 miod Exp $");
 
 #include <sys/mman.h>
 
