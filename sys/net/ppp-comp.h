@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/net/ppp-comp.h,v 1.3 1997/02/24 13:34:03 niklas Exp $	*/
 /*	$NetBSD: ppp-comp.h,v 1.2 1996/03/15 02:28:07 paulus Exp $	*/
 
 /*
@@ -26,7 +27,6 @@
  * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS,
  * OR MODIFICATIONS.
  *
- * $Id: ppp-comp.h,v 1.1.1.1 1995/10/18 08:53:07 deraadt Exp $
  */
 
 #ifndef _NET_PPP_COMP_H
