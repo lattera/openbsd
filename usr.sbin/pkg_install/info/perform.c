@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/perform.c,v 1.13 2003/07/04 17:23:15 avsm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/perform.c,v 1.14 2003/07/04 17:31:19 avsm Exp $	*/
 
 #ifndef lint
-static const char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/perform.c,v 1.13 2003/07/04 17:23:15 avsm Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/perform.c,v 1.14 2003/07/04 17:31:19 avsm Exp $";
 #endif
 
 /* This is OpenBSD pkg_install, based on:

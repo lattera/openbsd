@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/str.c,v 1.10 2003/04/05 18:02:32 avsm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/str.c,v 1.11 2003/07/04 17:31:19 avsm Exp $	*/
 
 #ifndef lint
-static const char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/str.c,v 1.10 2003/04/05 18:02:32 avsm Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/str.c,v 1.11 2003/07/04 17:31:19 avsm Exp $";
 #endif
 
 /*
