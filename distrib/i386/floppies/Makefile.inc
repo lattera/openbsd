@@ -1,5 +1,5 @@
-#	$OpenBSD: src/distrib/i386/floppies/Attic/Makefile.inc,v 1.3 1996/04/25 21:27:59 niklas Exp $
+#	$OpenBSD: src/distrib/i386/floppies/Attic/Makefile.inc,v 1.4 1996/05/14 14:51:45 mickey Exp $
 
-# Revision is 1.1
+# Revision is 1.2
 # all these private copies of the version number really lose.
-REV=	11
+REV=	12
