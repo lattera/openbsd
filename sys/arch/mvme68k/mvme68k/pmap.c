@@ -1,4 +1,4 @@
-/*	$Id: pmap.c,v 1.3 1995/11/28 20:43:19 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/pmap.c,v 1.5 1996/04/28 10:59:04 deraadt Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt

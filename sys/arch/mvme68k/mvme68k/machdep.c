@@ -1,4 +1,4 @@
-/*	$Id: machdep.c,v 1.5 1995/11/29 17:02:49 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.7 1996/04/28 10:59:02 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

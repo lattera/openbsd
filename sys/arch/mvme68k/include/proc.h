@@ -1,4 +1,4 @@
-/*	$Id: proc.h,v 1.2 1995/11/07 08:49:58 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/proc.h,v 1.4 1996/04/28 10:56:25 deraadt Exp $ */
 
 /*
  * Copyright (c) 1991, 1993

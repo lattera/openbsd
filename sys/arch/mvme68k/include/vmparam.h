@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/vmparam.h,v 1.3 1996/04/28 10:56:37 deraadt Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.

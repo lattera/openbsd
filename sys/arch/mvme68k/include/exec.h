@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/exec.h,v 1.3 1996/04/28 10:56:16 deraadt Exp $ */
 
 /*
  * Copyright (c) 1993 Christopher G. Demetriou

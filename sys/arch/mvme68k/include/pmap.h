@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/pmap.h,v 1.3 1996/04/28 10:56:25 deraadt Exp $ */
 
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University

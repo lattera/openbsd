@@ -1,4 +1,4 @@
-/*	$Id: swapgeneric.c,v 1.2 1995/11/07 08:50:25 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/swapgeneric.c,v 1.4 1996/04/28 10:59:12 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1994

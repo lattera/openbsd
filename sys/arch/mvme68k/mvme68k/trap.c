@@ -1,4 +1,4 @@
-/*	$Id: trap.c,v 1.4 1995/11/23 13:14:31 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.6 1996/04/28 10:59:15 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

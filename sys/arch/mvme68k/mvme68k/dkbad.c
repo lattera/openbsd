@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/dkbad.c,v 1.3 1996/04/28 10:59:00 deraadt Exp $ */
 
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
