@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50 2003/03/11 13:26:09 dhartmei Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50.2.1 2003/08/12 02:23:47 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1566,7 +1566,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			break;
 		}
 
-		pool = pf_get_pool(pca->anchor, pca->ruleset, 0,
+		pool = pf_get_pool(pca->anchor, pca->ruleset, pca->ticket,
 		    pca->r_action, pca->r_num, pca->r_last, 1, 1);
 		if (pool == NULL) {
 			error = EBUSY;
