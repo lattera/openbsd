@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/mopd/mopchk/mopchk.c,v 1.9 2003/06/02 21:38:39 maja Exp $	*/
+/*	$OpenBSD: src/usr.sbin/mopd/mopchk/mopchk.c,v 1.10 2003/12/01 00:56:51 avsm Exp $	*/
 
 /*
  * Copyright (c) 1995-96 Mats O Jansson.  All rights reserved.
@@ -25,7 +25,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/mopchk/mopchk.c,v 1.9 2003/06/02 21:38:39 maja Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/mopchk/mopchk.c,v 1.10 2003/12/01 00:56:51 avsm Exp $";
 #endif
 
 /*
