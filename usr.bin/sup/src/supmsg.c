@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supmsg.c,v 1.2 1996/06/26 05:39:55 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supmsg.c,v 1.3 1996/07/31 11:11:33 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -33,6 +33,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supmsg.c,v $
+ * Revision 1.2  1996/06/26 05:39:55  deraadt
+ * rcsid
+ *
  * Revision 1.1  1995/12/16 11:47:00  deraadt
  * add sup to the tree
  *
@@ -134,7 +137,7 @@ extern char	*collname;		/* base directory */
 extern char	*basedir;		/* base directory */
 extern int	basedev;		/* base directory device */
 extern int	baseino;		/* base directory inode */
-extern long	lasttime;		/* time of last upgrade */
+extern time_t	lasttime;		/* time of last upgrade */
 extern int	listonly;		/* only listing files, no data xfer */
 extern int	newonly;		/* only send new files */
 extern char	*release;		/* release name */
@@ -304,7 +307,7 @@ int msgrefuse ()
  * list files message
  */
 extern TREE	*listT;			/* tree of files to list */
-extern long	scantime;		/* time that collection was scanned */
+extern time_t	scantime;		/* time that collection was scanned */
 
 static int listone (t)
 register TREE *t;

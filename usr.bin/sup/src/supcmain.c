@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmain.c,v 1.2 1996/06/26 05:39:51 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmain.c,v 1.3 1996/07/31 11:11:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -176,6 +176,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supcmain.c,v $
+ * Revision 1.2  1996/06/26 05:39:51  deraadt
+ * rcsid
+ *
  * Revision 1.1  1995/12/16 11:46:56  deraadt
  * add sup to the tree
  *
@@ -585,7 +588,7 @@ char **argv;
 	register struct passwd *pw;
 	register TREE *t;
 	TREE *collT;			/* collections we are interested in */
-	long timenow;			/* startup time */
+	time_t timenow;			/* startup time */
 	int checkcoll ();
 	int oflags,aflags;
 	int cwant;
@@ -701,7 +704,7 @@ char **argv;
 	if (cwant)  (void) Tprocess (collT,checkcoll);
 	Tfree (&collT);
 	if (firstC == NULL)  logquit (1,"No collections to upgrade");
-	timenow = time ((long *)NULL);
+	timenow = time ((time_t *)NULL);
 	if (*supfname == '\0')
 		p = "standard input";
 	else if (sysflag)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmeat.c,v 1.2 1996/06/26 05:39:51 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmeat.c,v 1.3 1996/07/31 11:11:28 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -34,6 +34,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supcmeat.c,v $
+ * Revision 1.2  1996/06/26 05:39:51  deraadt
+ * rcsid
+ *
  * Revision 1.1  1995/12/16 11:46:56  deraadt
  * add sup to the tree
  *
@@ -270,7 +273,7 @@ int *tout;
 {
 	register int x;
 	int timeout;
-	long tloc;
+	time_t tloc;
 
 	if ((thisC->Cflags&CFLOCAL) == 0 && thishost (thisC->Chost->Tname)) {
 		vnotify ("SUP: Skipping local collection %s\n",collname);
@@ -301,7 +304,7 @@ int *tout;
 	x = msgsignonack ();	/* receive signon ack from fileserver */
 	if (x != SCMOK)
 		goaway ("Error reading signon reply from fileserver");
-	tloc = time ((long *)NULL);
+	tloc = time ((time_t *)NULL);
 	vnotify ("SUP Fileserver %d.%d (%s) %d on %s at %.8s\n",
 		protver,pgmver,scmver,fspid,remotehost(),ctime (&tloc) + 11);
 	free (scmver);
@@ -871,7 +874,7 @@ register struct stat *statp;
 		(void) chown (t->Tname,t->Tuid,t->Tgid);
 		(void) chmod (t->Tname,t->Tmode&S_IMODE);
 	}
-	tbuf[0].tv_sec = time((long *)NULL);  tbuf[0].tv_usec = 0;
+	tbuf[0].tv_sec = time((time_t *)NULL);  tbuf[0].tv_usec = 0;
 	tbuf[1].tv_sec = t->Tmtime;  tbuf[1].tv_usec = 0;
 	(void) utimes (t->Tname,tbuf);
 	vnotify ("SUP %s directory %s\n",new?"Created":"Updated",t->Tname);
@@ -947,7 +950,7 @@ register struct stat *statp;
 			(void) chown (t->Tname,t->Tuid,t->Tgid);
 			(void) chmod (t->Tname,t->Tmode&S_IMODE);
 		}
-		tbuf[0].tv_sec = time((long *)NULL);  tbuf[0].tv_usec = 0;
+		tbuf[0].tv_sec = time((time_t *)NULL);  tbuf[0].tv_usec = 0;
 		tbuf[1].tv_sec = t->Tmtime;  tbuf[1].tv_usec = 0;
 		(void) utimes (t->Tname,tbuf);
 		return (FALSE);
@@ -1006,7 +1009,7 @@ register struct stat *statp;
 		(void) chown (t->Tname,t->Tuid,t->Tgid);
 		(void) chmod (t->Tname,t->Tmode&S_IMODE);
 	}
-	tbuf[0].tv_sec = time((long *)NULL);  tbuf[0].tv_usec = 0;
+	tbuf[0].tv_sec = time((time_t *)NULL);  tbuf[0].tv_usec = 0;
 	tbuf[1].tv_sec = t->Tmtime;  tbuf[1].tv_usec = 0;
 	(void) utimes (t->Tname,tbuf);
 	return (FALSE);
@@ -1292,7 +1295,7 @@ int x;
 	char tname[STRINGLENGTH],fname[STRINGLENGTH];
 	char relsufix[STRINGLENGTH];
 	char collrelname[STRINGLENGTH];
-	long tloc;
+	time_t tloc;
 	FILE *finishfile;		/* record of all filenames */
 	int f,finishone();
 
@@ -1311,7 +1314,7 @@ int x;
 			goaway ((char *)NULL);
 		(void) requestend ();
 	}
-	tloc = time ((long *)NULL);
+	tloc = time ((time_t *)NULL);
 	if (x != SCMOK) {
 		notify ("SUP: Upgrade of %s aborted at %s",
 			collrelname,ctime (&tloc) + 4);
