@@ -7,7 +7,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.30.2.1 2002/03/07 17:37:47 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.30.2.2 2002/06/22 07:23:18 miod Exp $");
 
 #include <sys/queue.h>
 #include <errno.h>
@@ -581,7 +581,7 @@ conloop(void)
 	con *c;
 
 	gettimeofday(&now, NULL);
-	c = tq.tqh_first;
+	c = TAILQ_FIRST(&tq);
 
 	if (c && (c->c_tv.tv_sec > now.tv_sec ||
 	    (c->c_tv.tv_sec == now.tv_sec && c->c_tv.tv_usec > now.tv_usec))) {
@@ -614,12 +614,12 @@ conloop(void)
 	xfree(r);
 	xfree(e);
 
-	c = tq.tqh_first;
+	c = TAILQ_FIRST(&tq);
 	while (c && (c->c_tv.tv_sec < now.tv_sec ||
 	    (c->c_tv.tv_sec == now.tv_sec && c->c_tv.tv_usec < now.tv_usec))) {
 		int s = c->c_fd;
 
-		c = c->c_link.tqe_next;
+		c = TAILQ_NEXT(c, c_link);
 		conrecycle(s);
 	}
 }

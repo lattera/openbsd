@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/authfile.h,v 1.8.2.1 2002/03/07 17:37:46 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/authfile.h,v 1.8.2.2 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -20,5 +20,6 @@ Key	*key_load_public(const char *, char **);
 Key	*key_load_public_type(int, const char *, char **);
 Key	*key_load_private(const char *, const char *, char **);
 Key	*key_load_private_type(int, const char *, const char *, char **);
+Key	*key_load_private_pem(int, int, const char *, char **);
 
 #endif

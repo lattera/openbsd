@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.50.2.3 2002/05/17 00:03:23 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.50.2.4 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -213,9 +213,6 @@ void	 deny_input_open(int, u_int32_t, void *);
 /* agent forwarding */
 
 void	 auth_request_forwarding(void);
-char	*auth_get_socket_name(void);
-void	 auth_sock_cleanup_proc(void *);
-int	 auth_input_request_forwarding(struct passwd *);
 void	 auth_input_open_request(int, u_int32_t, void *);
 
 /* channel close */

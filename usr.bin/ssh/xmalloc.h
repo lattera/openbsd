@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.7.2.1 2002/03/07 17:37:48 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.7.2.2 2002/06/22 07:23:18 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -22,6 +22,6 @@
 void	*xmalloc(size_t);
 void	*xrealloc(void *, size_t);
 void     xfree(void *);
-char 	*xstrdup(const char *);
+char	*xstrdup(const char *);
 
 #endif				/* XMALLOC_H */

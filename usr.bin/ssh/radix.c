@@ -26,7 +26,7 @@
 #include "includes.h"
 #include "uuencode.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.16.2.3 2002/04/23 14:17:47 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.16.2.4 2002/06/22 07:23:17 miod Exp $");
 
 #ifdef AFS
 #include <krb.h>
@@ -148,7 +148,7 @@ radix_to_creds(const char *buf, CREDENTIALS *creds)
 		goto done;
 	memcpy(&creds->ticket_st.dat, p, len);
 	creds->ticket_st.length = len;
-	
+
 	ret = 1;
 done:
 	buffer_free(&b);

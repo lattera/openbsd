@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.4.2.1 2002/03/07 17:37:46 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/log.h,v 1.4.2.2 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -28,7 +28,7 @@ typedef enum {
 	SYSLOG_FACILITY_LOCAL5,
 	SYSLOG_FACILITY_LOCAL6,
 	SYSLOG_FACILITY_LOCAL7,
-	SYSLOG_FACILITY_NOT_SET = -1,
+	SYSLOG_FACILITY_NOT_SET = -1
 }       SyslogFacility;
 
 typedef enum {
@@ -40,7 +40,7 @@ typedef enum {
 	SYSLOG_LEVEL_DEBUG1,
 	SYSLOG_LEVEL_DEBUG2,
 	SYSLOG_LEVEL_DEBUG3,
-	SYSLOG_LEVEL_NOT_SET = -1,
+	SYSLOG_LEVEL_NOT_SET = -1
 }       LogLevel;
 
 void     log_init(char *, LogLevel, SyslogFacility, int);

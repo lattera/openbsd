@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/canohost.c,v 1.27.2.1 2002/03/07 17:37:46 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/canohost.c,v 1.27.2.2 2002/06/22 07:23:17 miod Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -42,12 +42,13 @@ get_remote_hostname(int socket, int verify_reverse_mapping)
 		debug("getpeername failed: %.100s", strerror(errno));
 		fatal_cleanup();
 	}
-	if (from.ss_family == AF_INET)
-		check_ip_options(socket, ntop);
 
 	if (getnameinfo((struct sockaddr *)&from, fromlen, ntop, sizeof(ntop),
 	    NULL, 0, NI_NUMERICHOST) != 0)
 		fatal("get_remote_hostname: getnameinfo NI_NUMERICHOST failed");
+
+	if (from.ss_family == AF_INET)
+		check_ip_options(socket, ntop);
 
 	debug3("Trying to reverse map address %.100s.", ntop);
 	/* Map the IP address to a host name. */

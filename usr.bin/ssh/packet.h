@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.25.2.3 2002/05/17 00:03:23 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.25.2.4 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -24,6 +24,7 @@ int      packet_get_connection_in(void);
 int      packet_get_connection_out(void);
 void     packet_close(void);
 void	 packet_set_encryption_key(const u_char *, u_int, int);
+u_int	 packet_get_encryption_key(u_char *);
 void     packet_set_protocol_flags(u_int);
 u_int	 packet_get_protocol_flags(void);
 void     packet_start_compression(int);

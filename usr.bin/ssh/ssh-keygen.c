@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.82.2.3 2002/05/17 00:03:24 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.82.2.4 2002/06/22 07:23:18 miod Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -136,7 +136,7 @@ load_identity(char *filename)
 }
 
 #define SSH_COM_PUBLIC_BEGIN		"---- BEGIN SSH2 PUBLIC KEY ----"
-#define SSH_COM_PUBLIC_END  		"---- END SSH2 PUBLIC KEY ----"
+#define SSH_COM_PUBLIC_END		"---- END SSH2 PUBLIC KEY ----"
 #define SSH_COM_PRIVATE_BEGIN		"---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----"
 #define	SSH_COM_PRIVATE_KEY_MAGIC	0x3f6ff9eb
 
@@ -412,7 +412,7 @@ do_upload(struct passwd *pw, const char *sc_reader_id)
 	key_free(prv);
 	if (ret < 0)
 		exit(1);
-        log("loading key done");
+	log("loading key done");
 	exit(0);
 }
 

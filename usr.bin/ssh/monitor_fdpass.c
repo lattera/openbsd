@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.2.4.1 2002/05/17 00:03:23 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.2.4.2 2002/06/22 07:23:17 miod Exp $");
 
 #include <sys/uio.h>
 
@@ -56,11 +56,11 @@ mm_send_fd(int socket, int fd)
 	msg.msg_iovlen = 1;
 
 	if ((n = sendmsg(socket, &msg, 0)) == -1)
-		fatal("%s: sendmsg(%d): %s", __FUNCTION__, fd,
+		fatal("%s: sendmsg(%d): %s", __func__, fd,
 		    strerror(errno));
 	if (n != 1)
 		fatal("%s: sendmsg: expected sent 1 got %d",
-		    __FUNCTION__, n);
+		    __func__, n);
 }
 
 int
@@ -82,14 +82,14 @@ mm_receive_fd(int socket)
 	msg.msg_controllen = sizeof(tmp);
 
 	if ((n = recvmsg(socket, &msg, 0)) == -1)
-		fatal("%s: recvmsg: %s", __FUNCTION__, strerror(errno));
+		fatal("%s: recvmsg: %s", __func__, strerror(errno));
 	if (n != 1)
 		fatal("%s: recvmsg: expected received 1 got %d",
-		    __FUNCTION__, n);
+		    __func__, n);
 
 	cmsg = CMSG_FIRSTHDR(&msg);
 	if (cmsg->cmsg_type != SCM_RIGHTS)
-		fatal("%s: expected type %d got %d", __FUNCTION__,
+		fatal("%s: expected type %d got %d", __func__,
 		    SCM_RIGHTS, cmsg->cmsg_type);
 	fd = (*(int *)CMSG_DATA(cmsg));
 	return fd;

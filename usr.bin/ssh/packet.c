@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.70.2.3 2002/05/17 00:03:23 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.70.2.4 2002/06/22 07:23:17 miod Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -60,6 +60,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.70.2.3 2002/05/17 00:03:23 miod Ex
 #include "log.h"
 #include "canohost.h"
 #include "misc.h"
+#include "ssh.h"
 
 #ifdef PACKET_DEBUG
 #define DBG(x) x
@@ -117,6 +118,10 @@ static int interactive_mode = 0;
 Newkeys *newkeys[MODE_MAX];
 static u_int32_t read_seqnr = 0;
 static u_int32_t send_seqnr = 0;
+
+/* Session key for protocol v1 */
+static u_char ssh1_key[SSH_SESSION_KEY_LENGTH];
+static u_int ssh1_keylen;
 
 /* roundup current message to extra_pad bytes */
 static u_char extra_pad = 0;
@@ -263,7 +268,7 @@ packet_set_seqnr(int mode, u_int32_t seqnr)
 	else if (mode == MODE_OUT)
 		send_seqnr = seqnr;
 	else
-		fatal("%s: bad mode %d", __FUNCTION__, mode);
+		fatal("packet_set_seqnr: bad mode %d", mode);
 }
 
 /* returns 1 if connection is via ipv4 */
@@ -386,6 +391,7 @@ packet_start_compression(int level)
  * key is used for both sending and reception.  However, both directions are
  * encrypted independently of each other.
  */
+
 void
 packet_set_encryption_key(const u_char *key, u_int keylen,
     int number)
@@ -395,8 +401,21 @@ packet_set_encryption_key(const u_char *key, u_int keylen,
 		fatal("packet_set_encryption_key: unknown cipher number %d", number);
 	if (keylen < 20)
 		fatal("packet_set_encryption_key: keylen too small: %d", keylen);
+	if (keylen > SSH_SESSION_KEY_LENGTH)
+		fatal("packet_set_encryption_key: keylen too big: %d", keylen);
+	memcpy(ssh1_key, key, keylen);
+	ssh1_keylen = keylen;
 	cipher_init(&send_context, cipher, key, keylen, NULL, 0, CIPHER_ENCRYPT);
 	cipher_init(&receive_context, cipher, key, keylen, NULL, 0, CIPHER_DECRYPT);
+}
+
+u_int
+packet_get_encryption_key(u_char *key)
+{
+	if (key == NULL)
+		return (ssh1_keylen);
+	memcpy(key, ssh1_key, ssh1_keylen);
+	return (ssh1_keylen);
 }
 
 /* Start constructing a packet to send. */

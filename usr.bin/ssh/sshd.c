@@ -42,7 +42,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206.2.3 2002/05/17 00:03:25 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206.2.4 2002/06/22 07:23:18 miod Exp $");
 
 #include <openssl/dh.h>
 #include <openssl/bn.h>
@@ -365,7 +365,7 @@ sshd_exchange_identification(int sock_in, int sock_out)
 			fatal_cleanup();
 		}
 
-		/* Read other side's version identification. */
+		/* Read other sides version identification. */
 		memset(buf, 0, sizeof(buf));
 		for (i = 0; i < sizeof(buf) - 1; i++) {
 			if (atomicio(read, sock_in, &buf[i], 1) != 1) {
@@ -561,7 +561,7 @@ privsep_preauth(void)
 	if (pid == -1) {
 		fatal("fork of unprivileged child failed");
 	} else if (pid != 0) {
-		debug2("Network child is on pid %d", pid);
+		debug2("Network child is on pid %ld", (long)pid);
 
 		close(pmonitor->m_recvfd);
 		authctxt = monitor_child_preauth(pmonitor);
@@ -596,7 +596,11 @@ privsep_postauth(Authctxt *authctxt)
 	/* XXX - Remote port forwarding */
 	x_authctxt = authctxt;
 
+#ifdef __sparc__
+	if (1) {
+#else
 	if (authctxt->pw->pw_uid == 0 || options.use_login) {
+#endif
 		/* File descriptor passing is broken or root login */
 		monitor_apply_keystate(pmonitor);
 		use_privsep = 0;
@@ -617,7 +621,7 @@ privsep_postauth(Authctxt *authctxt)
 	if (pmonitor->m_pid == -1)
 		fatal("fork of unprivileged child failed");
 	else if (pmonitor->m_pid != 0) {
-		debug2("User child is on pid %d", pmonitor->m_pid);
+		debug2("User child is on pid %ld", (long)pmonitor->m_pid);
 		close(pmonitor->m_recvfd);
 		monitor_child_postauth(pmonitor);
 
@@ -972,6 +976,19 @@ main(int ac, char **av)
 		}
 	}
 
+	if (use_privsep) {
+		struct passwd *pw;
+		struct stat st;
+
+		if ((pw = getpwnam(SSH_PRIVSEP_USER)) == NULL)
+			fatal("Privilege separation user %s does not exist",
+			    SSH_PRIVSEP_USER);
+		if ((stat(_PATH_PRIVSEP_CHROOT_DIR, &st) == -1) ||
+		    (S_ISDIR(st.st_mode) == 0))
+			fatal("Missing privilege separation directory: %s",
+			    _PATH_PRIVSEP_CHROOT_DIR);
+	}
+
 	/* Configuration looks good, so exit if in test mode. */
 	if (test_flag)
 		exit(0);
@@ -1118,7 +1135,7 @@ main(int ac, char **av)
 			 */
 			f = fopen(options.pid_file, "w");
 			if (f) {
-				fprintf(f, "%u\n", (u_int) getpid());
+				fprintf(f, "%ld\n", (long) getpid());
 				fclose(f);
 			}
 		}
@@ -1265,7 +1282,7 @@ main(int ac, char **av)
 				if (pid < 0)
 					error("fork: %.100s", strerror(errno));
 				else
-					debug("Forked child %d.", pid);
+					debug("Forked child %ld.", (long)pid);
 
 				close(startup_p[1]);
 
@@ -1371,7 +1388,7 @@ main(int ac, char **av)
 	sshd_exchange_identification(sock_in, sock_out);
 	/*
 	 * Check that the connection comes from a privileged port.
-	 * Rhosts-Authentication only makes sense from priviledged
+	 * Rhosts-Authentication only makes sense from privileged
 	 * programs.  Of course, if the intruder has root access on his local
 	 * machine, he can connect from any port.  So do not use these
 	 * authentication methods from machines that you do not trust.
@@ -1676,7 +1693,7 @@ do_ssh1_kex(void)
 
 	debug("Received session key; encryption turned on.");
 
-	/* Send an acknowledgement packet.  Note that this packet is sent encrypted. */
+	/* Send an acknowledgment packet.  Note that this packet is sent encrypted. */
 	packet_start(SSH_SMSG_SUCCESS);
 	packet_send();
 	packet_write_wait();
@@ -1702,6 +1719,10 @@ do_ssh2_kex(void)
 	if (options.macs != NULL) {
 		myproposal[PROPOSAL_MAC_ALGS_CTOS] =
 		myproposal[PROPOSAL_MAC_ALGS_STOC] = options.macs;
+	}
+	if (!options.compression) {
+		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
+		myproposal[PROPOSAL_COMP_ALGS_STOC] = "none";
 	}
 	myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = list_hostkey_types();
 

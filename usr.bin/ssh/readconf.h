@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.40.2.2 2002/03/08 15:17:18 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.40.2.3 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -54,8 +54,6 @@ typedef struct {
 						 * authentication. */
 	int     kbd_interactive_authentication; /* Try keyboard-interactive auth. */
 	char	*kbd_interactive_devices; /* Keyboard-interactive auth devices. */
-	int     fallback_to_rsh;/* Use rsh if cannot connect with ssh. */
-	int     use_rsh;	/* Always use rsh (don\'t try ssh). */
 	int     batch_mode;	/* Batch mode: do not ask for passwords. */
 	int     check_host_ip;	/* Also keep track of keys for IP address */
 	int     strict_host_key_checking;	/* Strict host key checking. */

@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.82.2.3 2002/05/17 00:03:24 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.82.2.4 2002/06/22 07:23:17 miod Exp $");
 
 #include "xmalloc.h"
 #include "packet.h"
@@ -674,8 +674,8 @@ server_loop(pid_t pid, int fdin_arg, int fdout_arg, int fderr_arg)
 		if (errno != EINTR)
 			packet_disconnect("wait: %.100s", strerror(errno));
 	if (wait_pid != pid)
-		error("Strange, wait returned pid %d, expected %d",
-		    wait_pid, pid);
+		error("Strange, wait returned pid %ld, expected %ld",
+		    (long)wait_pid, (long)pid);
 
 	/* Check if it exited normally. */
 	if (WIFEXITED(wait_status)) {

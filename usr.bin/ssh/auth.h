@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.22.2.2 2002/05/17 00:03:23 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth.h,v 1.22.2.3 2002/06/22 07:23:16 miod Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -43,6 +43,7 @@
 #endif
 
 typedef struct Authctxt Authctxt;
+typedef struct Authmethod Authmethod;
 typedef struct KbdintDevice KbdintDevice;
 
 struct Authctxt {
@@ -69,6 +70,12 @@ struct Authctxt {
 	krb5_principal	 krb5_user;
 	char		*krb5_ticket_file;
 #endif
+};
+
+struct Authmethod {
+	char	*name;
+	int	(*userauth)(Authctxt *authctxt);
+	int	*enabled;
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.49.2.2 2002/05/17 00:03:24 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.49.2.3 2002/06/22 07:23:17 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -98,6 +98,7 @@ typedef struct {
 	int     permit_empty_passwd;	/* If false, do not permit empty
 					 * passwords. */
 	int     use_login;	/* If true, login(1) is used */
+	int     compression;	/* If true, compression is allowed */
 	int	allow_tcp_forwarding;
 	u_int num_allow_users;
 	char   *allow_users[MAX_ALLOW_USERS];

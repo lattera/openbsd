@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-kbdint.c,v 1.2 2002/05/31 11:35:15 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-kbdint.c,v 1.2.2.1 2002/06/22 07:23:16 miod Exp $");
 
 #include "packet.h"
 #include "auth.h"
