@@ -24,9 +24,8 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.7.2.4 2001/05/07 21:09:25 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/atomicio.c,v 1.7.2.5 2001/09/27 00:15:41 miod Exp $");
 
-#include "xmalloc.h"
 #include "atomicio.h"
 
 /*

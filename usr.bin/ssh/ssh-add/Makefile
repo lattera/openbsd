@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-add/Makefile,v 1.17.2.4 2001/05/07 21:09:41 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-add/Makefile,v 1.17.2.5 2001/09/27 00:16:02 miod Exp $
 
 .PATH:		${.CURDIR}/..
 

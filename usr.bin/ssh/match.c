@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.9.2.4 2001/05/07 21:09:31 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.9.2.5 2001/09/27 00:15:42 miod Exp $");
 
 #include "match.h"
 #include "xmalloc.h"
@@ -162,7 +162,56 @@ match_hostname(const char *host, const char *pattern, u_int len)
 	return got_positive;
 }
 
+/*
+ * returns 0 if we get a negative match for the hostname or the ip
+ * or if we get no match at all.  returns 1 otherwise.
+ */
+int
+match_host_and_ip(const char *host, const char *ipaddr,
+    const char *patterns)
+{
+	int mhost, mip;
 
+	/* negative ipaddr match */
+	if ((mip = match_hostname(ipaddr, patterns, strlen(patterns))) == -1)
+		return 0;
+	/* negative hostname match */
+	if ((mhost = match_hostname(host, patterns, strlen(patterns))) == -1)
+		return 0;
+	/* no match at all */
+	if (mhost == 0 && mip == 0)
+		return 0;
+	return 1;
+}
+
+/*
+ * match user, user@host_or_ip, user@host_or_ip_list against pattern
+ */
+int
+match_user(const char *user, const char *host, const char *ipaddr,
+    const char *pattern)
+{
+	char *p, *pat;
+	int ret;
+
+	if ((p = strchr(pattern,'@')) == NULL)
+		return match_pattern(user, pattern);
+
+	pat = xstrdup(pattern);
+	p = strchr(pat, '@');
+	*p++ = '\0';
+
+	if ((ret = match_pattern(user, pat)) == 1)
+		ret = match_host_and_ip(host, ipaddr, p);
+	xfree(pat);
+
+	return ret;
+}
+
+/*
+ * Returns first item from client-list that is also supported by server-list,
+ * caller must xfree() returned string.
+ */
 #define	MAX_PROP	20
 #define	SEP	","
 char *

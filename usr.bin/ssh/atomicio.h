@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.2.2.4 2001/05/07 21:09:25 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/atomicio.h,v 1.2.2.5 2001/09/27 00:15:41 miod Exp $	*/
 
 /*
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
@@ -28,4 +28,4 @@
 /*
  * Ensure all of data on socket comes through. f==read || f==write
  */
-ssize_t	atomicio(ssize_t (*f)(), int fd, void *s, size_t n);
+ssize_t	atomicio(ssize_t (*)(), int, void *, size_t);

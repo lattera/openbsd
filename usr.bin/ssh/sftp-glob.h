@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.1.4.2 2001/05/07 21:09:34 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/sftp-glob.h,v 1.1.4.3 2001/09/27 00:15:42 miod Exp $ */
 
 /*
  * Copyright (c) 2001 Damien Miller.  All rights reserved.
@@ -27,6 +27,4 @@
 /* Remote sftp filename globbing */
 
 int
-remote_glob(int fd_in, int fd_out, const char *pattern, int flags,
-    int (*errfunc)(const char *, int), glob_t *pglob);
-
+remote_glob(int, int, const char *, int, int (*)(const char *, int), glob_t *);

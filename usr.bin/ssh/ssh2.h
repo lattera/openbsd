@@ -52,7 +52,7 @@
  *
  *     192-255  Local extensions
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.5.2.1 2001/05/07 21:09:37 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.5.2.2 2001/09/27 00:15:43 miod Exp $"); */
 
 /* transport layer: generic */
 

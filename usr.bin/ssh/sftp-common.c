@@ -24,17 +24,17 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.2.4 2001/05/07 21:09:34 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.2.2.5 2001/09/27 00:15:42 miod Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
-#include "getput.h"
 #include "log.h"
 #include "xmalloc.h"
 
 #include "sftp.h"
 #include "sftp-common.h"
 
+/* Clear contents of attributes structure */
 void
 attrib_clear(Attrib *a)
 {
@@ -47,6 +47,7 @@ attrib_clear(Attrib *a)
 	a->mtime = 0;
 }
 
+/* Convert from struct stat to filexfer attribs */
 void
 stat_to_attrib(struct stat *st, Attrib *a)
 {
@@ -64,6 +65,7 @@ stat_to_attrib(struct stat *st, Attrib *a)
 	a->mtime = st->st_mtime;
 }
 
+/* Decode attributes in buffer */
 Attrib *
 decode_attrib(Buffer *b)
 {
@@ -98,6 +100,7 @@ decode_attrib(Buffer *b)
 	return &a;
 }
 
+/* Encode attributes to buffer */
 void
 encode_attrib(Buffer *b, Attrib *a)
 {
@@ -116,6 +119,7 @@ encode_attrib(Buffer *b, Attrib *a)
 	}
 }
 
+/* Convert from SSH2_FX_ status to text error message */
 const char *
 fx2txt(int status)
 {
@@ -143,4 +147,3 @@ fx2txt(int status)
 	};
 	/* NOTREACHED */
 }
-

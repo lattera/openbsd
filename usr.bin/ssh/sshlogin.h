@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.1.4.2 2001/05/07 21:09:38 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.1.4.3 2001/09/27 00:15:43 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -14,27 +14,10 @@
 #ifndef SSHLOGIN_H
 #define SSHLOGIN_H
 
-/*
- * Returns the time when the user last logged in.  Returns 0 if the
- * information is not available.  This must be called before record_login.
- * The host from which the user logged in is stored in buf.
- */
-u_long
-get_last_login_time(uid_t uid, const char *logname,
-    char *buf, u_int bufsize);
-
-/*
- * Records that the user has logged in.  This does many things normally done
- * by login(1).
- */
 void
-record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
-    const char *host, struct sockaddr *addr);
-
-/*
- * Records that the user has logged out.  This does many thigs normally done
- * by login(1) or init.
- */
-void    record_logout(pid_t pid, const char *ttyname);
+record_login(pid_t, const char *, const char *, uid_t,
+    const char *, struct sockaddr *);
+void	 record_logout(pid_t, const char *);
+u_long	 get_last_login_time(uid_t, const char *, char *, u_int);
 
 #endif

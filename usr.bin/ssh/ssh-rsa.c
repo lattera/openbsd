@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-rsa.c,v 1.6.2.4 2001/05/07 21:09:36 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-rsa.c,v 1.6.2.5 2001/09/27 00:15:42 miod Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -103,7 +103,6 @@ ssh_rsa_sign(
 		*lenp = len;
 	if (sigp != NULL)
 		*sigp = ret;
-	debug2("ssh_rsa_sign: done");
 	return 0;
 }
 
@@ -131,7 +130,7 @@ ssh_rsa_verify(
 		return -1;
 	}
 	buffer_init(&b);
-	buffer_append(&b, (char *) signature, signaturelen);
+	buffer_append(&b, signature, signaturelen);
 	ktype = buffer_get_string(&b, NULL);
 	if (strcmp("ssh-rsa", ktype) != 0) {
 		error("ssh_rsa_verify: cannot handle type %s", ktype);
@@ -140,7 +139,7 @@ ssh_rsa_verify(
 		return -1;
 	}
 	xfree(ktype);
-	sigblob = (u_char *)buffer_get_string(&b, &len);
+	sigblob = buffer_get_string(&b, &len);
 	rlen = buffer_len(&b);
 	buffer_free(&b);
 	if(rlen != 0) {

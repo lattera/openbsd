@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.20.2.4 2001/05/07 21:09:26 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.20.2.5 2001/09/27 00:15:41 miod Exp $");
 
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -62,7 +62,7 @@ static const char authfile_id_string[] =
  * passphrase.
  */
 
-int
+static int
 key_save_private_rsa1(Key *key, const char *filename, const char *passphrase,
     const char *comment)
 {
@@ -125,7 +125,7 @@ key_save_private_rsa1(Key *key, const char *filename, const char *passphrase,
 	buffer_put_int(&encrypted, BN_num_bits(key->rsa->n));
 	buffer_put_bignum(&encrypted, key->rsa->n);
 	buffer_put_bignum(&encrypted, key->rsa->e);
-	buffer_put_string(&encrypted, comment, strlen(comment));
+	buffer_put_cstring(&encrypted, comment);
 
 	/* Allocate space for the private part of the key in the buffer. */
 	buffer_append_space(&encrypted, &cp, buffer_len(&buffer));
@@ -159,7 +159,7 @@ key_save_private_rsa1(Key *key, const char *filename, const char *passphrase,
 }
 
 /* save SSH v2 key in OpenSSL PEM format */
-int
+static int
 key_save_private_pem(Key *key, const char *filename, const char *_passphrase,
     const char *comment)
 {
@@ -226,7 +226,7 @@ key_save_private(Key *key, const char *filename, const char *passphrase,
  * otherwise.
  */
 
-Key *
+static Key *
 key_load_public_rsa1(int fd, const char *filename, char **commentp)
 {
 	Buffer buffer;
@@ -306,7 +306,7 @@ key_load_public_type(int type, const char *filename, char **commentp)
  * Assumes we are called under uid of the owner of the file.
  */
 
-Key *
+static Key *
 key_load_private_rsa1(int fd, const char *filename, const char *passphrase,
     char **commentp)
 {
@@ -430,7 +430,7 @@ fail:
 	return NULL;
 }
 
-Key *
+static Key *
 key_load_private_pem(int fd, int type, const char *passphrase,
     char **commentp)
 {
@@ -481,20 +481,23 @@ key_load_private_pem(int fd, int type, const char *passphrase,
 	return prv;
 }
 
-int
+static int
 key_perm_ok(int fd, const char *filename)
 {
 	struct stat st;
 
-	/* check owner and modes */
-	if (fstat(fd, &st) < 0 ||
-	    (st.st_uid != 0 && getuid() != 0 && st.st_uid != getuid()) ||
-	    (st.st_mode & 077) != 0) {
-		close(fd);
+	if (fstat(fd, &st) < 0)
+		return 0;
+	/*
+	 * if a key owned by the user is accessed, then we check the
+	 * permissions of the file. if the key owned by a different user,
+	 * then we don't care.
+	 */
+	if ((st.st_uid == getuid()) && (st.st_mode & 077) != 0) {
 		error("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		error("@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @");
 		error("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		error("Bad ownership or mode(0%3.3o) for '%s'.",
+		error("Permissions 0%3.3o for '%s' are too open.",
 		    st.st_mode & 0777, filename);
 		error("It is recommended that your private key files are NOT accessible by others.");
 		error("This private key will be ignored.");
@@ -540,7 +543,7 @@ Key *
 key_load_private(const char *filename, const char *passphrase,
     char **commentp)
 {
-	Key *pub;
+	Key *pub, *prv;
 	int fd;
 
 	fd = open(filename, O_RDONLY);
@@ -555,16 +558,20 @@ key_load_private(const char *filename, const char *passphrase,
 	lseek(fd, (off_t) 0, SEEK_SET);		/* rewind */
 	if (pub == NULL) {
 		/* closes fd */
-		return key_load_private_pem(fd, KEY_UNSPEC, passphrase, NULL);
+		prv = key_load_private_pem(fd, KEY_UNSPEC, passphrase, NULL);
+		/* use the filename as a comment for PEM */
+		if (commentp && prv)
+			*commentp = xstrdup(filename);
 	} else {
 		/* it's a SSH v1 key if the public key part is readable */
 		key_free(pub);
 		/* closes fd */
-		return key_load_private_rsa1(fd, filename, passphrase, NULL);
+		prv = key_load_private_rsa1(fd, filename, passphrase, NULL);
 	}
+	return prv;
 }
 
-int
+static int
 key_try_load_public(Key *k, const char *filename, char **commentp)
 {
 	FILE *f;

@@ -1,14 +1,17 @@
-#	$OpenBSD: src/usr.bin/ssh/lib/Makefile,v 1.16.2.4 2001/05/07 21:09:39 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/lib/Makefile,v 1.16.2.5 2001/09/27 00:15:47 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
 LIB=	ssh
-SRCS=   authfd.c authfile.c bufaux.c buffer.c canohost.c channels.c \
-	cipher.c compat.c compress.c crc32.c deattack.c \
+SRCS=   authfd.c authfile.c bufaux.c buffer.c canohost.c \
+	channels.c cipher.c compat.c compress.c crc32.c deattack.c \
 	hostfile.c log.c match.c mpaux.c nchan.c packet.c readpass.c \
 	rsa.c tildexpand.c ttymodes.c uidswap.c xmalloc.c atomicio.c \
 	key.c dispatch.c kex.c mac.c uuencode.c misc.c \
-	cli.c rijndael.c ssh-dss.c ssh-rsa.c dh.c kexdh.c kexgex.c
+	rijndael.c ssh-dss.c ssh-rsa.c dh.c kexdh.c kexgex.c \
+	scard.c
+
+SRCS+=	readpassphrase.c
 
 NOPROFILE= yes
 NOPIC=	yes
@@ -25,5 +28,9 @@ CFLAGS+= -DAFS
 SRCS+=  radix.c
 .endif # AFS
 .endif # KERBEROS
+
+.if (${KERBEROS5:L} == "yes")
+CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV
+.endif # KERBEROS5
 
 .include <bsd.lib.mk>

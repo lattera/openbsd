@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.4 2001/05/07 21:09:33 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/rsa.h,v 1.8.2.5 2001/09/27 00:15:42 miod Exp $"); */
 
 #ifndef RSA_H
 #define RSA_H
@@ -19,9 +19,8 @@
 #include <openssl/bn.h>
 #include <openssl/rsa.h>
 
-void rsa_public_encrypt __P((BIGNUM * out, BIGNUM * in, RSA * prv));
-int rsa_private_decrypt __P((BIGNUM * out, BIGNUM * in, RSA * prv));
-
-void generate_additional_parameters __P((RSA *rsa));
+void	 rsa_public_encrypt(BIGNUM *, BIGNUM *, RSA *);
+int	 rsa_private_decrypt(BIGNUM *, BIGNUM *, RSA *);
+void	 rsa_generate_additional_parameters(RSA *);
 
 #endif				/* RSA_H */

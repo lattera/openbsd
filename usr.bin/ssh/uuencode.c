@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.4 2001/05/07 21:09:39 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.5 2001/09/27 00:15:43 miod Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -30,7 +30,7 @@
 
 #include <resolv.h>
 
-RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.4 2001/05/07 21:09:39 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.7.2.5 2001/09/27 00:15:43 miod Exp $");
 
 int
 uuencode(u_char *src, u_int srclength,
