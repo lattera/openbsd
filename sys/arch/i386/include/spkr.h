@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/spkr.h,v 1.2 2000/08/05 22:07:32 niklas Exp $	*/
 /*	$NetBSD: spkr.h,v 1.3 1994/10/27 04:16:27 cgd Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/float.h,v 1.3 2000/08/05 22:07:31 niklas Exp $	*/
 /*	$NetBSD: float.h,v 1.8 1995/06/20 20:45:37 jtc Exp $	*/
 
 /*
