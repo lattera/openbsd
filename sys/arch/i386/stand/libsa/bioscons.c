@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/bioscons.c,v 1.17.4.1 2001/04/18 16:08:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/bioscons.c,v 1.17.4.2 2003/03/27 23:26:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -166,7 +166,7 @@ comspeed(dev, sp)
 	if (sp <= 0)
 		return com_speed;
 	/* valid baud rate? */
-	if (sp > 38400 || sp < 75)
+	if (115200 < sp || sp < 75)
 		return -1;
 
 	for (i = sp; i != 75; i >>= 1)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.4.16.2 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.4.16.3 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -79,11 +79,10 @@ memcmatch(parent, vcf, args)
 	struct device *parent;
 	void *vcf, *args;
 {
-	struct cfdata *cf = vcf;
 	struct confargs *ca = args;
 	struct memcreg *memc = (struct memcreg *)ca->ca_vaddr;
 
-	if (badvaddr(memc, 1))
+	if (badvaddr((vaddr_t)memc, 1))
 		return (0);
 	if (memc->memc_chipid==MEMC_CHIPID || memc->memc_chipid==MCECC_CHIPID)
 		return (1);
@@ -110,7 +109,6 @@ memcattach(parent, self, args)
 
 #if 0
 	sc->sc_ih.ih_fn = memcintr;
-	sc->sc_ih.ih_arg = 0;
 	sc->sc_ih.ih_ipl = 7;
 	sc->sc_ih.ih_wantframe = 1;
 	mcintr_establish(xxx, &sc->sc_ih);

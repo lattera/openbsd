@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/mvme68k/genassym.cf,v 1.3.2.5 2001/12/05 00:39:11 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/mvme68k/genassym.cf,v 1.3.2.6 2003/03/27 23:32:17 niklas Exp $
 
 #
 # Copyright (c) 1995 Theo de Raadt
@@ -100,16 +100,6 @@ export	PSL_LOWIPL
 export	PSL_USER
 define	SPL1			PSL_S | PSL_IPL1
 
-# magic
-export	CACHE_ON
-export	CACHE_OFF
-export	CACHE_CLR
-export	IC_CLEAR
-export	DC_CLEAR
-export	CACHE60_ON
-export	IC60_CUBC
-export	IC60_CABC
-
 # pte/ste bits
 export	PG_FRAME
 
@@ -142,18 +132,6 @@ export	CPU_166
 export	CPU_167
 export	CPU_172
 export	CPU_177
-
-export	MMU_68030
-export	MMU_68040
-export	MMU_68060
-
-export	CPU_68030
-export	CPU_68040
-export	CPU_68060
-
-export	FPU_68881
-export	FPU_68040
-export	FPU_68060
 
 struct	prom_netctrl		NETCTRL_
 member	dev

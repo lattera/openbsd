@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK,v 1.77.2.5 2002/03/06 01:01:00 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK,v 1.77.2.6 2003/03/27 23:26:55 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -128,15 +128,16 @@ scsibus* at ahc?
 #scsibus* at twe?
 #isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
 #scsibus* at isp?
-aic0	at isa? port 0x340 irq 11	# Adaptec 152[02] SCSI controllers
-aic*	at pcmcia? function ?		# PCMCIA based aic SCSI controllers
-scsibus* at aic?
+#aic0	at isa? port 0x340 irq 11	# Adaptec 152[02] SCSI controllers
+#aic*	at isapnp?
+#aic*	at pcmcia? function ?		# PCMCIA based aic SCSI controllers
+#scsibus* at aic?
 #ncr*	at pci? dev ? function ?	# NCR 538XX SCSI controllers(old)
 #scsibus* at ncr?
 siop*	at pci? dev ? function ?	# NCR 538XX SCSI controllers(new)
 scsibus* at siop?
-adv*	at pci? dev ? function ?	# AdvanSys 1200A/B and ULTRA SCSI
-scsibus* at adv?
+#adv*	at pci? dev ? function ?	# AdvanSys 1200A/B and ULTRA SCSI
+#scsibus* at adv?
 #adw*	at pci? dev ? function ?	# AdvanSys ULTRA WIDE SCSI
 #scsibus* at adw?
 #sea0	at isa? iomem 0xc8000 irq 5	# Seagate ST0[12] SCSI controllers
@@ -223,6 +224,7 @@ dc*	at pci? dev ? function ?		# 21143, "tulip" clone ethernet
 sis*	at pci? dev ? function ?		# SiS 900/7016 ethernet
 
 # Wireless network cards
+wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
 #awi*	at pcmcia? function ?			# Bay Networks IEEE 802.11FH
 #an*	at pcmcia? function ?			# Aironet IEEE 802.11DS

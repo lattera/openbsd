@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/mpcpcibus.c,v 1.2.4.4 2002/03/28 10:36:01 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/mpcpcibus.c,v 1.2.4.5 2003/03/27 23:29:46 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -239,7 +239,7 @@ mpcpcibrattach(parent, self, aux)
 			if ( bus_space_map(&(sc->sc_iobus_space), 0, NBPG, 0,
 				&lcp->ioh_cf8) != 0 )
 			{
-				panic("mpcpcibus: unable to map self\n");
+				panic("mpcpcibus: unable to map self");
 			}
 			lcp->ioh_cfc = lcp->ioh_cf8;
 		} else {
@@ -252,12 +252,12 @@ mpcpcibrattach(parent, self, aux)
 			if ( bus_space_map(&(sc->sc_iobus_space), 0xfec00000,
 				NBPG, 0, &lcp->ioh_cf8) != 0 )
 			{
-				panic("mpcpcibus: unable to map self\n");
+				panic("mpcpcibus: unable to map self");
 			}
 			if ( bus_space_map(&(sc->sc_iobus_space), 0xfee00000,
 				NBPG, 0, &lcp->ioh_cfc) != 0 )
 			{
-				panic("mpcpcibus: unable to map self\n");
+				panic("mpcpcibus: unable to map self");
 			}
 		}
 
@@ -367,8 +367,10 @@ mpcpcibrattach(parent, self, aux)
 
 				sc->sc_membus_space.bus_base = 0;
 				sc->sc_membus_space.bus_reverse = 1;
+				sc->sc_membus_space.bus_io = 0;
 				sc->sc_iobus_space.bus_base = 0;
 				sc->sc_iobus_space.bus_reverse = 1;
+				sc->sc_iobus_space.bus_io = 1;
 
 				/* find io(config) base, flag == 0x01000000 */
 				found = 0;
@@ -445,7 +447,7 @@ mpcpcibrattach(parent, self, aux)
 					" compatible %s\n", compat);
 				return;
 			}
-#ifdef PCI_DEBUG
+#ifdef DEBUG_FIXUP
 			printf(" mem base %x sz %x io base %x sz %x\n config addr %x"
 				" config data %x\n",
 				sc->sc_membus_space.bus_base,
@@ -460,12 +462,12 @@ mpcpcibrattach(parent, self, aux)
 			if ( bus_space_map(&(sc->sc_iobus_space), addr_offset,
 				NBPG, 0, &lcp->ioh_cf8) != 0 )
 			{
-				panic("mpcpcibus: unable to map self\n");
+				panic("mpcpcibus: unable to map self");
 			}
 			if ( bus_space_map(&(sc->sc_iobus_space), data_offset,
 				NBPG, 0, &lcp->ioh_cfc) != 0 )
 			{
-				panic("mpcpcibus: unable to map self\n");
+				panic("mpcpcibus: unable to map self");
 			}
 			of_node = ca->ca_node;
 
@@ -492,9 +494,7 @@ mpcpcibrattach(parent, self, aux)
 			printf(": %s, Revision 0x%x\n", compat, 
 				mpc_cfg_read_1(lcp, MPC106_PCI_REVID));
 
-#if 0
-			pci_addr_fixup(sc, &lcp->lc_pc, 32, &null_reserve);
-#endif
+			pci_addr_fixup(sc, &lcp->lc_pc, 32);
 		}
 		break;
 
@@ -523,9 +523,6 @@ mpcpcibrattach(parent, self, aux)
 			len = OF_getprop(node, "name", name,
 				sizeof(name));
 			name[len] = 0;
-#ifdef DEBUG_FIXUP
-			printf("checking node %s", name);
-#endif
 			fix_node_irq(node, &pba);
 
 			/* iterate section */
@@ -574,9 +571,6 @@ find_node_intr(int parent, u_int32_t *addr, u_int32_t *intr)
 	len = OF_getprop(parent, "interrupt-map", map, sizeof(map));
 	mlen = OF_getprop(parent, "interrupt-map-mask", imask, sizeof(imask));
 
-#ifdef DEBUG_FIXUP
-	printf("parent %x len %x mlen %x\n", parent, len, mlen);
-#endif
 	if ((len == -1) || (mlen == -1))
 		goto nomap;
 	n_mlen = mlen/sizeof(u_int32_t);
@@ -601,11 +595,6 @@ find_node_intr(int parent, u_int32_t *addr, u_int32_t *intr)
 	}
 
 	while (len > mlen) {
-#ifdef DEBUG_FIXUP
-		printf ("[%x %x %x %x] [%x %x %x %x] %x\n",
-		    maskedaddr[0], maskedaddr[1], maskedaddr[2], maskedaddr[3],
-		    mp[0], mp[1], mp[2], mp[3], step);
-#endif
 		match = bcmp(maskedaddr, mp, mlen);
 		mp1 = mp + n_mlen;
 
@@ -651,7 +640,7 @@ fix_node_irq(node, pba)
 	}
 
 	/* if this node has a AAPL,interrupts property, firmware
-	 * has intialized the register correctly.
+	 * has initialized the register correctly.
 	 */
 	len = OF_getprop(node, "AAPL,interrupts", &intr, 4);
 	if (len != 4) {
@@ -672,11 +661,6 @@ fix_node_irq(node, pba)
 		pcifunc(addr[0].phys_hi));
 
 	intr = pci_conf_read(pc, tag, PCI_INTERRUPT_REG);
-#ifdef DEBUG_FIXUP
-	printf("changing interrupt from %x to %x\n",
-		intr & PCI_INTERRUPT_LINE_MASK,
-		irq & PCI_INTERRUPT_LINE_MASK);
-#endif
 	intr &= ~PCI_INTERRUPT_LINE_MASK;
 	intr |= irq & PCI_INTERRUPT_LINE_MASK;
 	pci_conf_write(pc, tag, PCI_INTERRUPT_REG, intr);
@@ -689,15 +673,15 @@ mpcpcibrprint(aux, pnp)
 {
 	struct pcibus_attach_args *pba = aux;
 
-	if(pnp)
+	if (pnp)
 		printf("%s at %s", pba->pba_busname, pnp);
 	printf(" bus %d", pba->pba_bus);
 	return(UNCONF);
 }
 
 /*
- *  Get PCI physical address from given viritual address.
- *  XXX Note that cross page boundarys are *not* guarantee to work!
+ *  Get PCI physical address from given virtual address.
+ *  XXX Note that cross page boundaries are *not* guaranteed to work!
  */
 
 paddr_t
@@ -706,7 +690,7 @@ vtophys(pa)
 {
 	vaddr_t va = (vaddr_t) pa;
 
-	if(va < VM_MIN_KERNEL_ADDRESS)
+	if (va < VM_MIN_KERNEL_ADDRESS)
 		pa = va;
 	else
 		pmap_extract(vm_map_pmap(phys_map), va, &pa);
@@ -728,20 +712,18 @@ of_ether_hw_addr(struct ppc_pci_chipset *lcpc, u_int8_t *oaddr)
 	struct pcibr_config *lcp = lcpc->pc_conf_v;
 	int of_node = lcp->node;
 	int node, nn;
-	for (node = OF_child(of_node); node; node = nn)
-	{
+	for (node = OF_child(of_node); node; node = nn) {
 		char name[32];
 		int len;
 		len = OF_getprop(node, "name", name,
 			sizeof(name));
 		name[len] = 0;
-		if (sizeof (laddr) ==
-			OF_getprop(node, "local-mac-address", laddr,
-				sizeof laddr))
-		{
+
+		len = OF_getprop(node, "local-mac-address", laddr,
+		    sizeof laddr);
+		if (sizeof (laddr) == len) {
 			bcopy (laddr, oaddr, sizeof laddr);
 			return 1;
-			
 		}
 
 		/* iterate section */
@@ -842,7 +824,7 @@ mpc_gen_config_reg(cpv, tag, offset)
 			/*
 			 * config type 1 
 			 */
-			reg =  tag  | offset | 1;
+			reg =  tag | offset | 1;
 
 		}
 	} else {
@@ -872,7 +854,7 @@ mpc_conf_read(cpv, tag, offset)
 
 
 
-	if(offset & 3 || offset < 0 || offset >= 0x100) {
+	if (offset & 3 || offset < 0 || offset >= 0x100) {
 #ifdef DEBUG_CONFIG 
 		printf ("pci_conf_read: bad reg %x\n", offset);
 #endif /* DEBUG_CONFIG */
@@ -882,7 +864,7 @@ mpc_conf_read(cpv, tag, offset)
 	reg = mpc_gen_config_reg(cpv, tag, offset);
 	/* if invalid tag, return -1 */
 	if (reg == 0xffffffff) {
-		return 0xffffffff;
+		return(~0);
 	}
 
 	if ((cp->config_type & 2) && (offset & 0x04)) {
@@ -892,7 +874,7 @@ mpc_conf_read(cpv, tag, offset)
 	s = splhigh();
 
 	oldh = curpcb->pcb_onfault;
-	if (setfault(env)) {
+	if (setfault(&env)) {
 		/* we faulted during the read? */
 		curpcb->pcb_onfault = oldh;
 		return 0xffffffff;
@@ -985,7 +967,7 @@ mpc_intr_map(lcv, bustag, buspin, line, ihp)
                 error = 1;
         }
 
-	if(!error)
+	if (!error)
 		*ihp = line;
 	return error;
 }
@@ -1125,4 +1107,11 @@ mpc_cfg_read_4(cp, reg)
 	_v_ = bus_space_read_4(cp->lc_iot, cp->ioh_cfc, 0);
 	splx(s);
 	return(_v_);
+}
+
+int
+pci_intr_line(ih)
+	pci_intr_handle_t ih;
+{
+	return (ih);
 }

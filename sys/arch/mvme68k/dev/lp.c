@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.2 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.3 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -32,7 +32,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/proc.h>
 #include <sys/user.h>
@@ -43,8 +42,11 @@
 #include <sys/syslog.h>
 #include <sys/fcntl.h>
 #include <sys/device.h>
+
 #include <machine/autoconf.h>
+#include <machine/conf.h>
 #include <machine/cpu.h>
+
 #include <mvme68k/dev/pccreg.h>
 
 struct lpsoftc {
@@ -102,16 +104,15 @@ int
 lpintr(dev)
 	void *dev;
 {
-	struct lpsoftc *sc = dev; 
-
 	return (0);
 }
 
 /*ARGSUSED*/
 int
-lpopen(dev, flag, mode)
+lpopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -119,9 +120,10 @@ lpopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-lpclose(dev, flag, mode)
+lpclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -134,8 +136,10 @@ lpwrite(dev, uio, flags)
 	struct uio *uio;
 	int flags;
 {
+	return (EOPNOTSUPP);
 }
 
+int
 lpioctl(dev, cmd, data, flag, p)
 	dev_t dev;
 	u_long cmd;
@@ -143,5 +147,6 @@ lpioctl(dev, cmd, data, flag, p)
 	int flag;
 	struct proc *p;
 {
+	return (EOPNOTSUPP);
 }
 

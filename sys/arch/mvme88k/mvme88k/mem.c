@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.6 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.7 2003/03/27 23:32:18 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -57,17 +57,16 @@
 
 caddr_t zeropage;
 
-int mmopen(dev_t, int, int);
-int mmclose(dev_t, int, int);
-int mmrw(dev_t, struct uio *, int);
-paddr_t mmmmap(dev_t, off_t, int);
-int mmioctl(dev_t, u_long, caddr_t, int, struct proc *);
+#define	mmread	mmrw
+#define	mmwrite	mmrw
+cdev_decl(mm);
 
 /*ARGSUSED*/
 int
-mmopen(dev, flag, mode)
+mmopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	switch (minor(dev)) {
@@ -83,9 +82,10 @@ mmopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-mmclose(dev, flag, mode)
+mmclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -136,8 +136,9 @@ mmrw(dev, uio, flags)
 				goto unlock;
 			}
 			pmap_enter(pmap_kernel(), (vm_offset_t)vmmap,
-			    trunc_page(v), uio->uio_rw == UIO_READ ?
-			    VM_PROT_READ : VM_PROT_WRITE, PMAP_WIRED);
+			    trunc_page(v),
+			    uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE,
+			    (uio->uio_rw == UIO_READ ? VM_PROT_READ : VM_PROT_WRITE) | PMAP_WIRED);
 			pmap_update(pmap_kernel());
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));

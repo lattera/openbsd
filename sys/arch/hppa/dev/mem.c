@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.4 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.5 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -117,9 +117,6 @@ struct cfdriver mem_cd = {
 	NULL, "mem", DV_DULL
 };
 
-/* A lock for the vmmap, 16-byte aligned as PA-RISC semaphores must be. */
-static volatile int32_t vmmap_lock __attribute__ ((aligned (32))) = 1;
-extern char *vmmap;
 caddr_t zeropage;
 
 int
@@ -154,7 +151,7 @@ memattach(parent, self, aux)
 	if (ca->ca_hpa == (hppa_hpa_t)VIPER_HPA) {
 
 		sc->sc_vp = (struct vi_trs *)
-			&((struct iomod *)ca->ca_hpa)->priv_trs;
+		    &((struct iomod *)ca->ca_hpa)->priv_trs;
 
 		printf(" viper rev %x,", sc->sc_vp->vi_status.hw_rev);
 #if 0
@@ -172,20 +169,20 @@ memattach(parent, self, aux)
 			sc->sc_vp->vi_control = VI_CTRL;
 			splx(s);
 
-			printf (" >> %b, ", VI_CTRL, VIPER_BITS);
+			printf (" >> %b,", VI_CTRL, VIPER_BITS);
 		}
 #endif
 	} else
 		sc->sc_vp = NULL;
 
 	if ((err = pdc_call((iodcio_t)pdc, 0, PDC_IODC, PDC_IODC_NINIT,
-			    &pdc_minit, ca->ca_hpa, PAGE0->imm_spa_size)) < 0)
+	    &pdc_minit, ca->ca_hpa, PAGE0->imm_spa_size)) < 0)
 		pdc_minit.max_spa = PAGE0->imm_max_mem;
 
-	printf (" size %d", pdc_minit.max_spa / (1024*1024));
+	printf(" size %d", pdc_minit.max_spa / (1024*1024));
 	if (pdc_minit.max_spa % (1024*1024))
-		printf (".%d", pdc_minit.max_spa % (1024*1024));
-	printf ("MB\n");
+		printf(".%d", pdc_minit.max_spa % (1024*1024));
+	printf("MB\n");
 }
 
 void
@@ -206,9 +203,10 @@ viper_eisa_en()
 	register struct mem_softc *sc;
 
 	sc = mem_cd.cd_devs[0];
-
+#if 0
 	if (sc->sc_vp)
 		((struct vi_ctrl *)&VI_CTRL)->eisa_den = 0;
+#endif
 }
 
 int
@@ -238,11 +236,8 @@ mmrw(dev, uio, flags)
 	int flags;
 {
 	extern u_int totalphysmem;
-	extern vaddr_t virtual_avail;
 	struct iovec	*iov;
-	int32_t lockheld = 0;
 	vaddr_t	v, o;
-	vm_prot_t prot;
 	int rw, error = 0;
 	u_int	c;
 
@@ -266,52 +261,18 @@ mmrw(dev, uio, flags)
 				/* this will break us out of the loop */
 				continue;
 			}
-
-			/*
-			 * If the address is inside our large
-			 * directly-mapped kernel BTLB entry,
-			 * use kmem instead.
-			 */
-			if (v < virtual_avail)
-				goto use_kmem;
-
-			/*
-			 * If we don't already hold the vmmap lock,
-			 * acquire it.
-			 */
-			while (!lockheld) {
-				__asm __volatile("ldcws 0(%1), %0\n\tsync"
-				    : "=r" (lockheld) : "r" (&vmmap_lock));
-				if (lockheld)
-					break;
-				error = tsleep((caddr_t)&vmmap_lock,
-				    PZERO | PCATCH,
-				    "mmrw", 0);
-				if (error)
-					return (error);
-			}
-
-			/* Temporarily map the memory at vmmap. */
-			prot = uio->uio_rw == UIO_READ ? VM_PROT_READ :
-			    VM_PROT_WRITE;
-			pmap_enter(pmap_kernel(), (vaddr_t)vmmap,
-			    trunc_page(v), prot, prot|PMAP_WIRED);
-			pmap_update(pmap_kernel());
-			o = v & PGOFSET;
-			c = min(uio->uio_resid, (int)(PAGE_SIZE - o));
-			error = uiomove((caddr_t)vmmap + o, c, uio);
-			pmap_remove(pmap_kernel(), (vaddr_t)vmmap,
-			    (vaddr_t)vmmap + PAGE_SIZE);
-			pmap_update(pmap_kernel());
+			c = ctob(totalphysmem) - v;
+			c = min(c, uio->uio_resid);
+			error = uiomove((caddr_t)v, c, uio);
 			break;
 
 		case 1:				/*  /dev/kmem  */
 			v = uio->uio_offset;
-use_kmem:
 			o = v & PGOFSET;
 			c = min(uio->uio_resid, (int)(PAGE_SIZE - o));
 			rw = (uio->uio_rw == UIO_READ) ? B_READ : B_WRITE;
-			if (!uvm_kernacc((caddr_t)v, c, rw)) {
+			if (btoc(v) > totalphysmem &&
+			    !uvm_kernacc((caddr_t)v, c, rw)) {
 				error = EFAULT;
 				/* this will break us out of the loop */
 				continue;
@@ -335,9 +296,8 @@ use_kmem:
 			 * of memory for use with /dev/zero.
 			 */
 			if (zeropage == NULL) {
-				zeropage = (caddr_t)
-				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
-				memset(zeropage, 0, PAGE_SIZE);
+				zeropage = malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				bzero(zeropage, PAGE_SIZE);
 			}
 			c = min(iov->iov_len, PAGE_SIZE);
 			error = uiomove(zeropage, c, uio);
@@ -346,13 +306,6 @@ use_kmem:
 		default:
 			return (ENXIO);
 		}
-	}
-
-	/* If we hold the vmmap lock, release it. */
-	if (lockheld) {
-		__asm __volatile("sync\n\tstw	%1, 0(%0)"
-		    :: "r" (&vmmap_lock), "r" (1));
-		wakeup((caddr_t)&vmmap_lock);
 	}
 
 	return (error);

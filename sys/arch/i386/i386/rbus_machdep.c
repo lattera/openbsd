@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/rbus_machdep.c,v 1.7.2.4 2001/11/13 21:00:52 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/rbus_machdep.c,v 1.7.2.5 2003/03/27 23:26:55 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.c,v 1.2 1999/10/15 06:43:06 haya Exp $	*/
 
 /*
@@ -41,10 +41,11 @@
 
 #include <sys/sysctl.h>
 
+#include <sys/device.h>
+
 #include <machine/bus.h>
 #include <dev/cardbus/rbus.h>
 
-#include <sys/device.h>
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
 
@@ -126,16 +127,17 @@ _bus_space_unmap(t, bsh, size, adrp)
 #define RBUS_MEM_SIZE	0x00100000
 
 rbus_tag_t
-rbus_pccbb_parent_mem(pa)
+rbus_pccbb_parent_mem(self, pa)
+     struct device *self;
      struct pci_attach_args *pa;
 {
 	bus_addr_t start;
 	bus_size_t size;
 	struct extent *ex;
 
-#if NPCIBIOS > 0
 	size = RBUS_MEM_SIZE;
 	start = RBUS_MEM_START;
+#if NPCIBIOS > 0
 	if ((ex = pciaddr_search(PCIADDR_SEARCH_MEM, &start, size)) == NULL)
 #endif
 	{
@@ -173,7 +175,8 @@ rbus_pccbb_parent_mem(pa)
 #define RBUS_IO_SIZE	0x1000
 
 rbus_tag_t
-rbus_pccbb_parent_io(pa)
+rbus_pccbb_parent_io(self, pa)
+     struct device *self;
      struct pci_attach_args *pa;
 {
 	struct extent *ex;

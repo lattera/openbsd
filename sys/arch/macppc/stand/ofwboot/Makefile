@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/stand/ofwboot/Makefile,v 1.1.4.1 2001/10/31 03:01:17 nate Exp $
+#	$OpenBSD: src/sys/arch/macppc/stand/ofwboot/Makefile,v 1.1.4.2 2003/03/27 23:29:46 niklas Exp $
 #	$NetBSD: Makefile,v 1.2 1997/04/17 07:46:24 thorpej Exp $
 
 S=	${.CURDIR}/../../../..
@@ -19,7 +19,7 @@ BINDIR=         /usr/mdec
 NEWVERSWHAT=	"OpenFirmware Boot"
 
 # For now...
-RELOC=		20074
+RELOC=		20000
 
 ENTRY=		_start
 
@@ -32,7 +32,7 @@ CPPFLAGS+=	-DXCOFF_GLUE		# for booting PCI Powermacs
 LIBS!=          cd $(.CURDIR)/$(R); $(MAKE) libdep
 
 ${PROG}: ${OBJS} ${LIBSA} ${LIBZ} ${LIBKERN}
-	${LD} -X -Ttext ${RELOC} -e ${ENTRY} -o ${PROG} \
+	${LD} -N -X -Ttext ${RELOC} -e ${ENTRY} -o ${PROG} \
 	    ${OBJS} ${LIBS}
 
 .include <bsd.prog.mk>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.14.4.5 2002/03/28 10:34:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.14.4.6 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: nubus.c,v 1.35 1997/04/22 20:20:32 scottr Exp $	*/
 
 /*
@@ -266,7 +266,7 @@ nubus_video_resource(slot)
  * end of the slot.  If so, then we check for a bytelanes byte.  We
  * could probably just return a failure status if we bus error on
  * the first try, but there really is little reason not to go ahead
- * and check the other three locations in case there's a wierd card
+ * and check the other three locations in case there's a weird card
  * out there.
  *
  * Checking for a card involves locating the "bytelanes" byte which

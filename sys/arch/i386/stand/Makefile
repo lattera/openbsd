@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/Makefile,v 1.8.10.1 2001/04/18 16:08:37 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/Makefile,v 1.8.10.2 2003/03/27 23:26:56 niklas Exp $
 
 .if ${MACHINE} == "i386"
 SUBDIR=	etc libsa libz mbr
@@ -10,5 +10,12 @@ test-fd0:
 	sudo cp /usr/mdec/boot /mnt
 	sudo /usr/mdec/installboot -v /mnt/boot /usr/mdec/biosboot fd0
 	sudo umount /mnt
+
+zero-fd0:
+	sudo dd if=/dev/zero of=/dev/rfd0a count=144 bs=10240
+
+prep-fd0:
+	sudo disklabel -rw fd0 floppy
+	sudo newfs -O -m 0 -o space -i 3000 -c 80 /dev/rfd0a
 
 .include <bsd.subdir.mk>

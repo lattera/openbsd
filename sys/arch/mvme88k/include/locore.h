@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.5 2002/03/28 10:36:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.6 2003/03/27 23:32:18 niklas Exp $	*/
 
 #ifndef _MACHINE_LOCORE_H_
 #define _MACHINE_LOCORE_H_
@@ -50,13 +50,7 @@ void dae_print(unsigned *eframe);
 void data_access_emulation(unsigned *eframe);
 #endif 
 
-unsigned spl(void);
 unsigned getipl(void);
-#ifdef DDB
-unsigned db_spl(void);
-unsigned db_getipl(void);
-#endif
-
 
 /* machdep.c */
 

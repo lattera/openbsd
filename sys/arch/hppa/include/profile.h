@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/profile.h,v 1.1 1998/12/05 17:25:55 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/profile.h,v 1.1.6.1 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -35,13 +35,9 @@
  *	@(#)profile.h	8.1 (Berkeley) 6/11/93
  */
 
-#define	_MCOUNT_DECL static __inline void _mcount
+#define	_MCOUNT_DECL void _mcount
 
-#define	MCOUNT \
-void									\
-mcount()								\
-{									\
-}
+#define	MCOUNT
 
 #ifdef _KERNEL
 /*

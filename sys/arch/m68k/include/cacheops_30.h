@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/Attic/cacheops_30.h,v 1.1.12.3 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/Attic/cacheops_30.h,v 1.1.12.4 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: cacheops_30.h,v 1.1 1997/06/02 20:26:40 leo Exp $	*/
 
 /*-
@@ -112,6 +112,8 @@ ICPA_30()
 #define	DCIS_30()
 #define	DCIU_30()
 #define	DCIAS_30(va)
+#define	DCFA_30()
+#define	DCPA_30()
 
 
 void PCIA_30(void);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cdefs.h,v 1.5.6.3 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cdefs.h,v 1.5.6.4 2003/03/27 23:32:18 niklas Exp $ */
 /*	$NetBSD: cdefs.h,v 1.2 1995/03/23 20:10:48 jtc Exp $	*/
 
 /*
@@ -23,6 +23,8 @@
 #define __warn_references(sym,msg)	\
 	__asm__(".stabs \"" msg "\",30,0,0,0");		\
 	__asm__(".stabs \"_" #sym "\",1,0,0,0")
+#define __weak_alias(alias,sym)				\
+	__asm__(".weak _" #alias "; _" #alias "= _" __STRING(sym))
 #else
 #define __indr_reference(sym,alias)	\
 	__asm__(".stabs \"_/**/alias\",11,0,0,0");	\
@@ -30,6 +32,8 @@
 #define __warn_references(sym,msg)	\
 	__asm__(".stabs msg,30,0,0,0");			\
 	__asm__(".stabs \"_/**/sym\",1,0,0,0")
+#define __weak_alias(alias,sym)				\
+	__asm__(".weak _/**/alias; _/**/alias = _/**/sym")
 #endif
 #endif
 

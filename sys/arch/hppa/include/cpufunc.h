@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14.2.2 2002/03/28 10:27:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpufunc.h,v 1.14.2.3 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,2000 Michael Shalayeff
@@ -220,6 +220,7 @@ ledctl(int on, int off, int toggle)
 #ifdef _KERNEL
 extern int (*cpu_hpt_init)(vaddr_t hpt, vsize_t hptsize);
 
+void fpu_save(vaddr_t va);
 void ficache(pa_space_t sp, vaddr_t va, vsize_t size);
 void fdcache(pa_space_t sp, vaddr_t va, vsize_t size);
 void pdcache(pa_space_t sp, vaddr_t va, vsize_t size);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/XBUG.S,v 1.4.10.1 2001/07/04 10:19:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/XBUG.S,v 1.4.10.2 2003/03/27 23:32:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1989,1990,1995 Theo de Raadt
@@ -32,7 +32,7 @@
  */
 
 /*
- * Theo sez: I wrote a bootrom for the MVME147 *years* ago. To write
+ * Theo says: I wrote a bootrom for the MVME147 *years* ago. To write
  * this ROM I copied a few chunks from the old bootrom, like this piece:
  * 
  * "watch this, the moto bastard struck here, shouldn't have hired people

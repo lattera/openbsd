@@ -1,6 +1,6 @@
-#	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/Makefile,v 1.10 2000/01/24 05:20:56 smurph Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/Makefile,v 1.10.2.1 2003/03/27 23:32:17 niklas Exp $
 
-RELOC=0x3F0000
+RELOC=0x6F0000
 SIZE?=	size
 
 S=	${.CURDIR}/../../../..

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/files.mvme88k,v 1.7.2.6 2002/03/06 01:08:05 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/files.mvme88k,v 1.7.2.7 2003/03/27 23:32:17 niklas Exp $
 #	
 maxpartitions 16
 
@@ -105,6 +105,8 @@ file	arch/mvme88k/mvme88k/pmap_table.c
 file	arch/mvme88k/mvme88k/process.S
 file	arch/mvme88k/mvme88k/process_machdep.c
 file	arch/mvme88k/mvme88k/trap.c
+file	arch/mvme88k/mvme88k/vectors_88100.S		mvme187 | mvme188
+file	arch/mvme88k/mvme88k/vectors_88110.S		mvme197
 file	arch/mvme88k/mvme88k/vm_machdep.c
 file	arch/mvme88k/ddb/db_disasm.c			ddb
 file	arch/mvme88k/ddb/db_interface.c			ddb

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.6 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.7 2003/03/27 23:32:18 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -84,7 +84,6 @@ struct clockframe {
 extern int intstack;
 
 #define	CLKF_USERMODE(framep)	((((struct trapframe *)(framep))->epsr & PSR_MODE) == 0)
-#define	CLKF_BASEPRI(framep)	(((struct trapframe *)(framep))->mask == 0)
 #define	CLKF_PC(framep)		(((struct trapframe *)(framep))->sxip & ~3)
 #define	CLKF_INTR(framep)	(((struct trapframe *)(framep))->r[31] > intstack)
 

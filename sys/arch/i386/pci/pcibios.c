@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcibios.c,v 1.23.2.3 2002/03/28 10:31:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pcibios.c,v 1.23.2.4 2003/03/27 23:26:56 niklas Exp $	*/
 /*	$NetBSD: pcibios.c,v 1.5 2000/08/01 05:23:59 uch Exp $	*/
 
 /*
@@ -258,9 +258,18 @@ pcibios_pir_init(sc)
 		int i;
 
 		pirh = (struct pcibios_pir_header *)p = ISA_HOLE_VADDR(pa);
-		if (pirh->signature != BIOS32_MAKESIG('$', 'P', 'I', 'R'))
+		/*
+		 * Some laptops (such as the Toshiba Libretto L series)
+		 * use _PIR instead of the standard $PIR for the signature
+		 * so we check for that too.
+		 */
+		if (pirh->signature != BIOS32_MAKESIG('$', 'P', 'I', 'R') &&
+		    pirh->signature != BIOS32_MAKESIG('_', 'P', 'I', 'R'))
 			continue;
 		
+		if (pirh->tablesize < sizeof(*pirh))
+			continue;
+
 		cksum = 0;
 		for (i = 0; i < pirh->tablesize; i++)
 			cksum += p[i];
@@ -268,7 +277,7 @@ pcibios_pir_init(sc)
 		printf("%s: PCI IRQ Routing Table rev. %d.%d @ 0x%lx/%d "
 		    "(%d entries)\n", sc->sc_dev.dv_xname,
 		    pirh->version >> 8, pirh->version & 0xff, pa,
-		    pirh->tablesize, (pirh->tablesize - 32) / 16);
+		    pirh->tablesize, (pirh->tablesize - sizeof(*pirh)) / 16);
 
 		if (cksum != 0) {
 			printf("%s: bad IRQ table checksum\n",
@@ -276,7 +285,7 @@ pcibios_pir_init(sc)
 			continue;
 		}
 
-		if (pirh->tablesize < 32 || (pirh->tablesize % 16) != 0) {
+		if (pirh->tablesize % 16 != 0) {
 			printf("%s: bad IRQ table size\n", sc->sc_dev.dv_xname);
 			continue;
 		}

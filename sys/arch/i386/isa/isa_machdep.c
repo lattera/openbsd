@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.11 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.12 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -153,7 +153,7 @@
  */
 #define	ISA_DMA_BOUNCE_THRESHOLD	0x00ffffff
 
-extern	vm_offset_t avail_end;
+extern	paddr_t avail_end;
 
 #define	IDTVEC(name)	__CONCAT(X,name)
 /* default interrupt vector table entries */
@@ -1028,7 +1028,7 @@ _isa_bus_dmamem_alloc(t, size, alignment, boundary, segs, nsegs, rsegs, flags)
 	int *rsegs;
 	int flags;
 {
-	vm_offset_t high;
+	paddr_t high;
 
 	if (avail_end > ISA_DMA_BOUNCE_THRESHOLD)
 		high = trunc_page(ISA_DMA_BOUNCE_THRESHOLD);
@@ -1112,8 +1112,9 @@ _isa_dma_check_buffer(buf, buflen, segcnt, boundary, p)
 	bus_size_t boundary;
 	struct proc *p;
 {
-	vm_offset_t vaddr = (vm_offset_t)buf;
-	vm_offset_t pa, lastpa, endva;
+	vaddr_t vaddr = (vaddr_t)buf;
+	vaddr_t endva;
+	paddr_t pa, lastpa;
 	u_long pagemask = ~(boundary - 1);
 	pmap_t pmap;
 	int nsegs;
@@ -1132,7 +1133,7 @@ _isa_dma_check_buffer(buf, buflen, segcnt, boundary, p)
 		/*
 		 * Get physical address for this segment.
 		 */
-		pmap_extract(pmap, (vm_offset_t)vaddr, &pa);
+		pmap_extract(pmap, (vaddr_t)vaddr, &pa);
 		pa = trunc_page(pa);
 
 		/*
@@ -1215,106 +1216,4 @@ _isa_dma_free_bouncebuf(t, map)
 	cookie->id_nbouncesegs = 0;
 	cookie->id_flags &= ~ID_HAS_BOUNCE;
 }
-
-#ifdef __ISADMA_COMPAT
-/*
- * setup (addr, nbytes) for an ISA dma transfer.
- * flags&ISADMA_MAP_WAITOK	may wait
- * flags&ISADMA_MAP_BOUNCE	may use a bounce buffer if necessary
- * flags&ISADMA_MAP_CONTIG	result must be physically contiguous
- * flags&ISADMA_MAP_8BIT	must not cross 64k boundary
- * flags&ISADMA_MAP_16BIT	must not cross 128k boundary
- *
- * returns the number of used phys entries, 0 on failure.
- * if flags&ISADMA_MAP_CONTIG result is 1 on sucess!
- */
-int
-isadma_map(addr, nbytes, phys, flags)
-	caddr_t addr;
-	vm_size_t nbytes;
-	struct isadma_seg *phys;
-	int flags;
-{
-	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
-	bus_dmamap_t dmam;
-	int i;
-
-/* XXX if this turns out to be too low, convert the driver to real bus_dma */
-#define ISADMA_MAX_SEGMENTS 64
-#define ISADMA_MAX_SEGSZ 0xffffff
-
-	if (bus_dmamap_create(dmat, nbytes,
-	    (flags & ISADMA_MAP_CONTIG) ? 1 : ISADMA_MAX_SEGMENTS,
-	    ISADMA_MAX_SEGSZ,
-	    (flags & ISADMA_MAP_8BIT) ? 0xffff :
-	    ((flags & ISADMA_MAP_16BIT) ? 0x1ffff : 0),
-	    (flags & ISADMA_MAP_WAITOK) ? BUS_DMA_WAITOK : BUS_DMA_NOWAIT,
-	    &dmam) != 0)
-		return (0);
-	if (bus_dmamap_load(dmat, dmam, addr, nbytes, 0,
-	    (flags & ISADMA_MAP_WAITOK) ? BUS_DMA_WAITOK : BUS_DMA_NOWAIT) !=
-	     0) {
-		bus_dmamap_destroy(dmat, dmam);
-		return (0);
-	}
-	for (i = 0; i < dmam->dm_nsegs; i++) {
-		phys[i].addr = dmam->dm_segs[i].ds_addr;
-		phys[i].length = dmam->dm_segs[i].ds_len;
-	}
-	phys[0].dmam = dmam;
-	return (dmam->dm_nsegs);
-}
-
-/*
- * undo a ISA dma mapping. Simply return the bounced segments to the pool.
- */
-void
-isadma_unmap(addr, nbytes, nphys, phys)
-	caddr_t addr;
-	vm_size_t nbytes;
-	int nphys;
-	struct isadma_seg *phys;
-{
-	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
-	bus_dmamap_t dmam = phys[0].dmam;
-
-	if (dmam == NULL)
-		return;
-	bus_dmamap_unload(dmat, dmam);
-	bus_dmamap_destroy(dmat, dmam);
-	phys[0].dmam = NULL;
-}
-
-/*
- * copy bounce buffer to buffer where needed
- */
-void
-isadma_copyfrombuf(addr, nbytes, nphys, phys)
-	caddr_t addr;
-	vm_size_t nbytes;
-	int nphys;
-	struct isadma_seg *phys;
-{
-	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
-	bus_dmamap_t dmam = phys[0].dmam;
-
-	bus_dmamap_sync(dmat, dmam, 0, dmam->dm_mapsize, BUS_DMASYNC_POSTREAD);
-}
-
-/*
- * copy buffer to bounce buffer where needed
- */
-void
-isadma_copytobuf(addr, nbytes, nphys, phys)
-	caddr_t addr;
-	vm_size_t nbytes;
-	int nphys;
-	struct isadma_seg *phys;
-{
-	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
-	bus_dmamap_t dmam = phys[0].dmam;
-
-	bus_dmamap_sync(dmat, dmam, 0, dmam->dm_mapsize, BUS_DMASYNC_PREWRITE);
-}
-#endif /* __ISADMA_COMPAT */
 #endif /* NISADMA > 0 */

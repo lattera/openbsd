@@ -1,6 +1,7 @@
-#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27.2.2 2001/07/14 10:02:45 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/Makefile.inc,v 1.27.2.3 2003/03/27 23:26:56 niklas Exp $
 
 CFLAGS=${DEBUG} -Os -Wall -Werror
+CFLAGS+=	-fno-stack-protector
 CPPFLAGS+=-I${S} -I${SADIR}/libsa -I. -I${.CURDIR}
 SACFLAGS=-D_STANDALONE
 DEBUGLIBS=no

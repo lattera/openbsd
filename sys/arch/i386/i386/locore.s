@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.9 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.10 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1342,250 +1342,31 @@ ENTRY(copystr)
 /*
  * fuword(caddr_t uaddr);
  * Fetch an int from the user's address space.
+ * Not used outside locore anymore.
  */
-ENTRY(fuword)
+ASENTRY(fuword)
 	movl	4(%esp),%edx
 	cmpl	$VM_MAXUSER_ADDRESS-4,%edx
-	ja	_C_LABEL(fusuaddrfault)
+	ja	_ASM_LABEL(fusuaddrfault)
 	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
+	movl	$_ASM_LABEL(fusufault),PCB_ONFAULT(%ecx)
 	movl	(%edx),%eax
 	movl	$0,PCB_ONFAULT(%ecx)
 	ret
 
 /*
- * fusword(caddr_t uaddr);
- * Fetch a short from the user's address space.
+ * Handle faults from fuword.  Clean up and return -1.
  */
-ENTRY(fusword)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-	movzwl	(%edx),%eax
-	movl	$0,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * fuswintr(caddr_t uaddr);
- * Fetch a short from the user's address space.  Can be called during an
- * interrupt.
- */
-ENTRY(fuswintr)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusubail),PCB_ONFAULT(%ecx)
-	movzwl	(%edx),%eax
-	movl	$0,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * fubyte(caddr_t uaddr);
- * Fetch a byte from the user's address space.
- */
-ENTRY(fubyte)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-1,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-	movzbl	(%edx),%eax
-	movl	$0,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * Handle faults from [fs]u*().  Clean up and return -1.
- */
-ENTRY(fusufault)
+ASENTRY(fusufault)
 	movl	$0,PCB_ONFAULT(%ecx)
 	movl	$-1,%eax
 	ret
 
 /*
- * Handle faults from [fs]u*().  Clean up and return -1.  This differs from
- * fusufault() in that trap() will recognize it and return immediately rather
- * than trying to page fault.
+ * Handle earlier faults from fuword, due to our of range addresses.
  */
-ENTRY(fusubail)
-	movl	$0,PCB_ONFAULT(%ecx)
+ASENTRY(fusuaddrfault)
 	movl	$-1,%eax
-	ret
-
-/*
- * Handle earlier faults from [fs]u*(), due to our of range addresses.
- */
-ENTRY(fusuaddrfault)
-	movl	$-1,%eax
-	ret
-
-/*
- * suword(caddr_t uaddr, int x);
- * Store an int in the user's address space.
- */
-ENTRY(suword)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-4,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-#if defined(I386_CPU)
-#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-	cmpl	$CPUCLASS_386,_C_LABEL(cpu_class)
-	jne	2f
-#endif /* I486_CPU || I586_CPU || I686_CPU */
-
-	movl	%edx,%eax
-	shrl	$PGSHIFT,%eax		# calculate pte address
-	testb	$PG_RW,_C_LABEL(PTmap)(,%eax,4)
-	jnz	1f
-
-	/* Simulate a trap. */
-	pushl	%edx
-	pushl	%edx
-	call	_C_LABEL(trapwrite)	# trapwrite(addr)
-	addl	$4,%esp			# clear parameter from the stack
-	popl	%edx
-	GET_CURPCB(%ecx)
-	testl	%eax,%eax
-	jnz	_C_LABEL(fusufault)
-
-1:	/* XXX also need to check the following 3 bytes for validity! */
-#endif
-
-2:	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-	movl	8(%esp),%eax
-	movl	%eax,(%edx)
-	xorl	%eax,%eax
-	movl	%eax,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * susword(caddr_t uaddr, short x);
- * Store a short in the user's address space.
- */
-ENTRY(susword)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-#if defined(I386_CPU)
-#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-	cmpl	$CPUCLASS_386,_C_LABEL(cpu_class)
-	jne	2f
-#endif /* I486_CPU || I586_CPU || I686_CPU */
-
-	movl	%edx,%eax
-	shrl	$PGSHIFT,%eax		# calculate pte address
-	testb	$PG_RW,_C_LABEL(PTmap)(,%eax,4)
-	jnz	1f
-
-	/* Simulate a trap. */
-	pushl	%edx
-	pushl	%edx
-	call	_C_LABEL(trapwrite)	# trapwrite(addr)
-	addl	$4,%esp			# clear parameter from the stack
-	popl	%edx
-	GET_CURPCB(%ecx)
-	testl	%eax,%eax
-	jnz	_C_LABEL(fusufault)
-
-1:	/* XXX also need to check the following byte for validity! */
-#endif
-
-2:	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-	movl	8(%esp),%eax
-	movw	%ax,(%edx)
-	xorl	%eax,%eax
-	movl	%eax,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * suswintr(caddr_t uaddr, short x);
- * Store a short in the user's address space.  Can be called during an
- * interrupt.
- */
-ENTRY(suswintr)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-2,%edx
-	ja	_C_LABEL(fusuaddrfault)	
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusubail),PCB_ONFAULT(%ecx)
-
-#if defined(I386_CPU)
-#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-	cmpl	$CPUCLASS_386,_C_LABEL(cpu_class)
-	jne	2f
-#endif /* I486_CPU || I586_CPU || I686_CPU */
-
-	movl	%edx,%eax
-	shrl	$PGSHIFT,%eax		# calculate pte address
-	testb	$PG_RW,_C_LABEL(PTmap)(,%eax,4)
-	jnz	1f
-
-	/* Simulate a trap. */
-	jmp	_C_LABEL(fusubail)
-
-1:	/* XXX also need to check the following byte for validity! */
-#endif
-
-2:	movl	8(%esp),%eax
-	movw	%ax,(%edx)
-	xorl	%eax,%eax
-	movl	%eax,PCB_ONFAULT(%ecx)
-	ret
-
-/*
- * subyte(caddr_t uaddr, char x);
- * Store a byte in the user's address space.
- */
-ENTRY(subyte)
-	movl	4(%esp),%edx
-	cmpl	$VM_MAXUSER_ADDRESS-1,%edx
-	ja	_C_LABEL(fusuaddrfault)
-	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-#if defined(I386_CPU)
-#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-	cmpl	$CPUCLASS_386,_C_LABEL(cpu_class)
-	jne	2f
-#endif /* I486_CPU || I586_CPU || I686_CPU */
-
-	movl	%edx,%eax
-	shrl	$PGSHIFT,%eax		# calculate pte address
-	testb	$PG_RW,_C_LABEL(PTmap)(,%eax,4)
-	jnz	1f
-
-	/* Simulate a trap. */
-	pushl	%edx
-	pushl	%edx
-	call	_C_LABEL(trapwrite)	# trapwrite(addr)
-	addl	$4,%esp			# clear parameter from the stack
-	popl	%edx
-	GET_CURPCB(%ecx)
-	testl	%eax,%eax
-	jnz	_C_LABEL(fusufault)
-
-1:
-#endif
-
-2:	GET_CURPCB(%ecx)
-	movl	$_C_LABEL(fusufault),PCB_ONFAULT(%ecx)
-
-	movb	8(%esp),%al
-	movb	%al,(%edx)
-	xorl	%eax,%eax
-	movl	%eax,PCB_ONFAULT(%ecx)
 	ret
 
 /*****************************************************************************/
@@ -1853,8 +1634,8 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 
 	/* Save segment registers. */
 #ifdef DDB
-	xorl	%ax, %ax
-	xorl	%cx, %cx
+	xorl	%eax, %eax
+	xorl	%ecx, %ecx
 #endif
 	movl	%fs,%ax
 	movl	%gs,%cx
@@ -1949,8 +1730,6 @@ switch_return:
  * multiprocessor) and deallocate the address space and kernel stack for p.
  * Then jump into cpu_switch(), as if we were in the idle proc all along.
  */
-	.globl	_C_LABEL(uvmspace_free),_C_LABEL(kernel_map)
-	.globl	_C_LABEL(uvm_km_free),_C_LABEL(tss_free)
 #ifndef MULTIPROCESSOR
 	.globl	_C_LABEL(proc0)
 #endif
@@ -2024,8 +1803,8 @@ ENTRY(savectx)
 
 	/* Save segment registers. */
 #ifdef DDB
-	xorl	%ax, %ax
-	xorl	%cx, %cx
+	xorl	%eax, %eax
+	xorl	%ecx, %ecx
 #endif
 	movl	%fs,%ax
 	movl	%gs,%cx
@@ -2278,7 +2057,7 @@ syscall1:
 	cmpl	$SYS_syscall,%esi
 	jne	5f
 	pushl	%edi
-	CALL	_C_LABEL(fuword)
+	CALL	_ASM_LABEL(fuword)
 	movl	%eax,%esi		# indirect syscall no for SYS_syscall
 	leal	4(%edi),%edi		# shift parameters
 	jmp	6f
@@ -2286,20 +2065,20 @@ syscall1:
 	cmpl	$SYS___syscall,%esi
 	jne	6f
 	pushl	%edi
-	CALL	_C_LABEL(fuword)
+	CALL	_ASM_LABEL(fuword)
 	movl	%eax,%esi		# indirect syscall no for SYS___syscall
 	leal	8(%edi),%edi		# shift parameters (quad alignment)
 6:
 	leal	8(%edi),%ecx
 	pushl	%ecx
-	call	_C_LABEL(fuword)
+	call	_ASM_LABEL(fuword)
 	movl	%eax,(%esp)		# 3rd syscall arg
 	leal	4(%edi),%ecx
 	pushl	%ecx
-	call	_C_LABEL(fuword)
+	call	_ASM_LABEL(fuword)
 	movl	%eax,(%esp)		# 2nd syscall arg
 	pushl	%edi
-	call	_C_LABEL(fuword)
+	call	_ASM_LABEL(fuword)
 	movl	%eax,(%esp)		# 1st syscall arg
 	pushl	%esi			# syscall no
 	pushl	_C_LABEL(cpl)		# current spl

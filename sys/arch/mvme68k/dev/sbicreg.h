@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbicreg.h,v 1.3 1996/04/28 11:24:46 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbicreg.h,v 1.3.16.1 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1990 The Regents of the University of California.
@@ -105,10 +105,10 @@
  * My ID register, and/or CDB Size
  */
 
-#define SBIC_ID_FS_8_10         0x00    /* Input clock is  8-10 Mhz */
-                                    /* 11 Mhz is invalid */
-#define SBIC_ID_FS_12_15        0x40    /* Input clock is 12-15 Mhz */
-#define SBIC_ID_FS_16_20        0x80    /* Input clock is 16-20 Mhz */
+#define SBIC_ID_FS_8_10         0x00    /* Input clock is  8-10 MHz */
+                                    /* 11 MHz is invalid */
+#define SBIC_ID_FS_12_15        0x40    /* Input clock is 12-15 MHz */
+#define SBIC_ID_FS_16_20        0x80    /* Input clock is 16-20 MHz */
 #define SBIC_ID_EHP             0x10    /* Enable host parity */
 #define SBIC_ID_EAF             0x08    /* Enable Advanced Features */
 #define SBIC_ID_MASK            0x07
@@ -130,7 +130,7 @@
 
 /*
  * Timeout period register
- * [val in msecs, input clk in 0.1 Mhz]
+ * [val in msecs, input clk in 0.1 MHz]
  */
 
 #define SBIC_TIMEOUT(val,clk)   ((((val) * (clk)) / 800) + 1)
@@ -138,7 +138,7 @@
 /*
  * CDBn registers, note that
  *  cdb11 is used for status byte in target mode (send-status-and-cc)
- *  cdb12 sez if linked command complete, and w/flag if so
+ *  cdb12 says if linked command complete, and w/flag if so
  */
 
 /*

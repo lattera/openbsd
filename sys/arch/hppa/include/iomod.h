@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.3 2002/03/28 10:29:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.4 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
- * Copyright (c) 2000 Michael Shalayeff
+ * Copyright (c) 2000-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -425,9 +425,5 @@ struct iomod {
 
 /* io_spa */
 #define	SPA_ENABLE	0x20	/* io_spa register enable spa bit */
-
-#define	EIM_GRPMASK	0x1F	/* EIM register group mask */
-#define	EIEM_MASK(eim)	(0x80000000 >> (eim & EIM_GRPMASK))
-#define	EIEM_BITCNT	32	/* number of bits in EIEM register */
 
 #endif	/* _MACHINE_IOMOD_H_ */

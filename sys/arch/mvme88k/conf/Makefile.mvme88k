@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.5 2002/03/06 01:08:05 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.6 2003/03/27 23:32:17 niklas Exp $
 #
 # Makefile for OpenBSD
 #
@@ -23,10 +23,6 @@
 
 .include <bsd.own.mk>
 
-AS?= 	as
-CC?=    cc
-CPP?=   cpp
-LD?=    ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?= strip
@@ -41,9 +37,9 @@ INCLUDES=	-nostdinc -I. -I$S/arch -I$S
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -Dmvme88k -Dm88k
 CWARNFLAGS=	-Wall -Werror -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main -Wstrict-prototypes
-CMACHFLAGS=
+CMACHFLAGS=	-fno-stack-protector
 COPTS?=		-O
-CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0x10000 -e start
 STRIPFLAGS=	-d
@@ -130,7 +126,7 @@ LINKFLAGS+=	-x
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${MVME88K}/mvme88k/genassym.cf
+assym.h: $S/kern/genassym.sh ${MVME88K}/mvme88k/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    ${PARAM} < ${MVME88K}/mvme88k/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

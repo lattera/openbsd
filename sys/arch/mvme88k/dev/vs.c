@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vs.c,v 1.2.4.6 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vs.c,v 1.2.4.7 2003/03/27 23:32:18 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
@@ -806,7 +806,7 @@ vs_nintr(sc)
 	/*
 	 * If this is a controller error, there won't be a m328_cmd
 	 * pointer in the CTAG feild.  Bad things happen if you try 
-	 * to point to address 0.  Controller error should be handeled
+	 * to point to address 0.  Controller error should be handled
 	 * in vsdma.c  I'll change this soon - steve.
 	 */
 	if (m328_cmd) {
@@ -995,8 +995,8 @@ vs_build_memory_structure(xs, iopb)
 
 	/*
 	 * We have the following things:
-	 *	virt			the virtuell address of the contiguous virtual memory block
-	 *	len			the lenght of the contiguous virtual memory block
+	 *	virt			the virtual address of the contiguous virtual memory block
+	 *	len			the length of the contiguous virtual memory block
 	 *	starting_point_virt	the virtual address of the contiguous *physical* memory block
 	 *	starting_point_phys	the *physical* address of the contiguous *physical* memory block
 	 *	point_virt		the pointer to the virtual memory we are checking at the moment

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.4 2002/03/28 10:31:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.5 2003/03/27 23:26:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996-1999 Michael Shalayeff
@@ -45,7 +45,7 @@ void pciprobe(void);
 void memprobe(void);
 void diskprobe(void);
 void apmprobe(void);
-void apmcheck(void);
+void apmfixmem(void);
 void dump_biosmem(bios_memmap_t *);
 int mem_add(long, long);
 int mem_delete(long, long);
@@ -53,6 +53,9 @@ void mem_pass(void);
 
 void devboot(dev_t, char *);
 void machdep(void);
+
+void *getSYSCONFaddr(void);
+void *getEBDAaddr(void);
 
 extern const char bdevs[][4];
 extern const int nbdevs;

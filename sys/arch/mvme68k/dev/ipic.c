@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.6.2.2 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.6.2.3 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -43,13 +43,20 @@
 #include <sys/syslog.h>
 #include <sys/fcntl.h>
 #include <sys/device.h>
+
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
+
 #include <mvme68k/dev/ipicreg.h>
 #include <mvme68k/dev/mcreg.h>
 
-void ipicattach(struct device *, struct device *, void *);
-int  ipicmatch(struct device *, void *, void *);
+void	ipicattach(struct device *, struct device *, void *);
+int	ipicmatch(struct device *, void *, void *);
+
+int	ipicprint(void *, const char *);
+int	ipicscan(struct device *, void *, void *);
+caddr_t	ipicmap(struct ipicsoftc *, caddr_t, int);
+void	ipicunmap(struct ipicsoftc *, caddr_t, int);
 
 struct cfattach ipic_ca = {
 	sizeof(struct ipicsoftc), ipicmatch, ipicattach
@@ -68,7 +75,7 @@ ipicmatch(parent, cf, args)
 	struct confargs *ca = args;
 	struct ipicreg *ipic = (struct ipicreg *)ca->ca_vaddr;
 
-	if (badvaddr(ipic, 1) || ipic->ipic_chipid != IPIC_CHIPID)
+	if (badvaddr((vaddr_t)ipic, 1) || ipic->ipic_chipid != IPIC_CHIPID)
 		return (0);
 	return (1);
 }
@@ -95,7 +102,6 @@ ipicscan(parent, child, args)
 {
 	struct cfdata *cf = child;
 	struct ipicsoftc *sc = (struct ipicsoftc *)parent;
-	register struct confargs *ca = args;
 	struct confargs oca;
 	int slot, n = 0;
 	caddr_t ipv, ipp;
@@ -109,10 +115,10 @@ ipicscan(parent, child, args)
 	}
 #endif
 
-	/* XXX can we determing IPIC_IPSPACE automatically? */
+	/* XXX can we determine IPIC_IPSPACE automatically? */
 	for (slot = 0; slot < sc->sc_nip; slot++) {
 		ipp = sc->sc_ipspace + (slot * IPIC_IP_MODSIZE);
-		if (badpaddr(ipp + IPIC_IP_IDOFFSET, 2))
+		if (badpaddr((paddr_t)ipp + IPIC_IP_IDOFFSET, 2))
 			continue;
 
 		ipv = mapiodev(ipp, NBPG);

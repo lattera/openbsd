@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/cpu.h,v 1.4.12.3 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/cpu.h,v 1.4.12.4 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.3 1997/02/02 06:56:57 thorpej Exp $	*/
 
 /*
@@ -200,10 +200,6 @@ extern	u_int mappedcopysize;
 /* locore.s */
 u_long getdfc(void);
 u_long getsfc(void);
-
-/* copy.s */
-int	fusword(caddr_t);
-int	susword(caddr_t, u_short);
 
 /* m68k_machdep.c */
 struct proc;

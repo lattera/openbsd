@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.7 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.8 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -95,12 +95,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 	dev_init(c,n,write), dev_init(c,n,ioctl), dev_init(c,n,stop), \
 	dev_init(c,n,tty), ttselect, dev_init(c,n,mmap), D_TTY }
 
-/* open, close, write, ioctl */
-#define	cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
-
 /* open, close, read, ioctl */
 #define cdev_joy_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
@@ -122,13 +116,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
         (dev_type_stop((*))) enodev, 0,  dev_init(c,n,select), \
         (dev_type_mmap((*))) enodev, 0 }
 
-/* open, close, read, ioctl, mmap */
-#define	cdev_bktr_init(c, n) { \
-        dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
-        (dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) enodev, 0, seltrue, \
-        dev_init(c,n,mmap) }
-
 /* open, close, read, ioctl */
 #define	cdev_wdt_init(c, n) { \
 	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
@@ -140,7 +127,8 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #define	mmwrite	mmrw
 cdev_decl(mm);
 cdev_decl(wd);
-cdev_decl(crypto);
+#include "systrace.h"
+#include "bio.h"
 #include "pty.h"
 #include "com.h"
 #include "pccom.h"
@@ -148,8 +136,6 @@ cdev_decl(com);
 cdev_decl(fd);
 cdev_decl(wt);
 cdev_decl(scd);
-#include "pc.h"
-cdev_decl(pc);
 #include "ss.h"
 #include "lpt.h"
 cdev_decl(lpt);
@@ -187,28 +173,20 @@ cdev_decl(music);
 cdev_decl(xfs_dev);
 #endif
 #include "bktr.h"
-cdev_decl(bktr);
 #include "wdt.h"
 cdev_decl(wdt);
 #include "ksyms.h"
-cdev_decl(ksyms);   
 #include "usb.h"
-cdev_decl(usb);
 #include "uhid.h"
-cdev_decl(uhid);
 #include "ugen.h"
-cdev_decl(ugen);
 #include "ulpt.h"
-cdev_decl(ulpt);
 #include "urio.h"
-cdev_decl(urio);
 #include "ucom.h"
-cdev_decl(ucom);
 #include "uscanner.h"
-cdev_decl(uscanner);
 #include "cz.h"
 cdev_decl(cztty);
 #include "radio.h"
+#include "gpr.h"
 
 /* XXX -- this needs to be supported by config(8)! */
 #if (NCOM > 0) && (NPCCOM > 0)
@@ -226,8 +204,6 @@ cdev_decl(pci);
 #endif
 
 #include "pf.h"
-
-#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -247,12 +223,8 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(NFD,fd),		/* 9: floppy disk */
 	cdev_tape_init(NWT,wt),		/* 10: QIC-02/QIC-36 tape */
 	cdev_disk_init(NSCD,scd),	/* 11: Sony CD-ROM */
-#if NPC > 0
-	cdev_pc_init(NPC,pc),		/* 12: PC console */
-#else
 	cdev_wsdisplay_init(NWSDISPLAY,	/* 12: frame buffers, etc. */
 	    wsdisplay),
-#endif
 	cdev_disk_init(NSD,sd),		/* 13: SCSI disk */
 	cdev_tape_init(NST,st),		/* 14: SCSI tape */
 	cdev_disk_init(NCD,cd),		/* 15: SCSI CD-ROM */
@@ -317,7 +289,7 @@ struct cdevsw	cdevsw[] =
 	/* End of reserved slots for isdn4bsd. */
 	cdev_usb_init(NUSB,usb),	/* 61: USB controller */
 	cdev_usbdev_init(NUHID,uhid),	/* 62: USB generic HID */
-	cdev_ugen_init(NUGEN,ugen),	/* 63: USB generic driver */
+	cdev_usbdev_init(NUGEN,ugen),	/* 63: USB generic driver */
 	cdev_ulpt_init(NULPT,ulpt), 	/* 64: USB printers */
 	cdev_usbdev_init(NURIO,urio),	/* 65: USB Diamond Rio 500 */
 	cdev_tty_init(NUCOM,ucom),	/* 66: USB tty */
@@ -333,10 +305,13 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),
 #endif
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
-	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
+	cdev_notdef(),			/* 74: ALTQ (deprecated) */
 	cdev_iop_init(NIOP,iop),	/* 75: I2O IOP control interface */
 	cdev_radio_init(NRADIO, radio), /* 76: generic radio I/O */
-	cdev_ugen_init(NUSCANNER,uscanner),	/* 77: USB scanners */
+	cdev_usbdev_init(NUSCANNER,uscanner),	/* 77: USB scanners */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 78: system call tracing */
+ 	cdev_oci_init(NBIO,bio),	/* 79: ioctl tunnel */
+	cdev_ch_init(NGPR,gpr)		/* 80: GPR400 SmartCard reader */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -524,9 +499,6 @@ cons_decl(ws);
 struct	consdev constab[] = {
 #if NWSDISPLAY > 0
 	cons_init(ws),
-#endif
-#if NPC > 0
-	cons_init(pc),
 #endif
 #if NCOM + NPCCOM > 0
 	cons_init(com),

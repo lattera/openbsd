@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/aedvar.h,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/aedvar.h,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: aedvar.h,v 1.2 2000/03/23 06:40:33 thorpej Exp $	*/
 
 /*
@@ -31,12 +31,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __NetBSD__
-#include <sys/callout.h>
-#endif /* __NetBSD__ */
-#ifdef __OpenBSD__
 #include <sys/timeout.h>
-#endif /* __OpenBSD__ */
 #include <machine/adbsys.h>
 
 /* Event queue definitions */
@@ -48,12 +43,7 @@
 struct aed_softc {
 	struct  device  sc_dev;
 
-#ifdef __NetBSD__
-	struct callout sc_repeat_ch;
-#endif /* __NetBSD__ */
-#ifdef __OpenBSD__
 	struct timeout sc_repeat_ch;
-#endif /* __OpenBSD__ */
 
 	/* ADB info */
 	u_char		origaddr;	/* ADB device type (ADBADDR_AED) */
@@ -84,9 +74,3 @@ struct aed_softc {
 #define AED_MSEMUL	0x1		/* emulate mouse buttons */
 
 void	aed_input(adb_event_t *event);
-int	aedopen(dev_t dev, int flag, int mode, struct proc *p);
-int	aedclose(dev_t dev, int flag, int mode, struct proc *p);
-int	aedread(dev_t dev, struct uio *uio, int flag);
-int	aedwrite(dev_t dev, struct uio *uio, int flag);
-int	aedioctl(dev_t , int , caddr_t , int , struct proc *);
-int	aedpoll(dev_t dev, int events, struct proc *p);

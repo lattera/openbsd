@@ -1,9 +1,10 @@
-#	$OpenBSD: src/sys/arch/hppa/stand/Makefile.inc,v 1.6.2.2 2002/03/28 10:31:03 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/stand/Makefile.inc,v 1.6.2.3 2003/03/27 23:26:54 niklas Exp $
 
 CFLAGS=${DEBUG} -Os -Wall -Werror
 CPPFLAGS+=-I${S} -I. -I${.CURDIR}
 SACFLAGS=-nostdinc -fno-builtin -D_STANDALONE -I${SADIR}/libsa
 SACFLAGS+=-mdisable-fpregs -mfast-indirect-calls -mpa-risc-1-0
+SACFLAGS+=-fno-stack-protector
 #DEBUGFLAGS=-DDEBUG
 #DEBUGFLAGS+=-DPDCDEBUG
 #DEBUGFLAGS+=-DLIFDEBUG

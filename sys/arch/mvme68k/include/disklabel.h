@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/disklabel.h,v 1.5.14.1 2001/04/18 16:10:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/include/disklabel.h,v 1.5.14.2 2003/03/27 23:32:17 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Nivas Madhur
@@ -34,22 +34,10 @@
 #ifndef _MVME68K_DISKLABEL_H_
 #define _MVME68K_DISKLABEL_H_
 
-/* number of boot pieces , ie xxboot bootxx */
-#define NUMBOOT		2
-
-#define	PARTITIONSHIFT	4
-
 #define LABELSECTOR     0                       /* sector containing label */
 #define LABELOFFSET	0			/* offset of label in sector */
-#define MAXPARTITIONS	(1 << PARTITIONSHIFT)	/* number of partitions */
+#define MAXPARTITIONS	16			/* number of partitions */
 #define RAW_PART	2			/* raw partition: xx?c */
-
-/* 
- * used to encode disk minor numbers
- * this should probably be moved to sys/disklabel.h
- */
-#define DISKUNIT(dev)	(minor(dev) / MAXPARTITIONS)
-#define DISKPART(dev)	(minor(dev) % MAXPARTITIONS)
 
 /*
  * a cpu_disklabel is a disklabel that the bug (prom) can understand

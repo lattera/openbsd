@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbd.c,v 1.2.4.2 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbd.c,v 1.2.4.3 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: akbd.c,v 1.13 2001/01/25 14:08:55 tsubai Exp $	*/
 
 /*
@@ -32,6 +32,8 @@
  */
 
 #include <sys/param.h>
+#include <sys/timeout.h>
+#include <sys/kernel.h>
 #include <sys/device.h>
 #include <sys/fcntl.h>
 #include <sys/poll.h>
@@ -55,7 +57,6 @@
 #include <macppc/dev/akbdvar.h>
 #include <macppc/dev/amsvar.h>
 #include <macppc/dev/adb_direct.h>
-#include <macppc/dev/pm_direct.h>
 
 #include "aed.h"
 
@@ -81,12 +82,12 @@ struct cfdriver akbd_cd = {
 };
 
 
-extern struct cfdriver akbd_cd;
-
 int akbd_enable(void *, int);
 void akbd_set_leds(void *, int);
 int akbd_ioctl(void *, u_long, caddr_t, int, struct proc *);
 int akbd_intr(adb_event_t *event);
+void akbd_rawrepeat(void *v);
+
 
 struct wskbd_accessops akbd_accessops = {
 	akbd_enable,
@@ -246,6 +247,11 @@ akbdattach(parent, self, aux)
 	if (adb_debug)
 		printf("akbd: returned %d from SetADBInfo\n", error);
 #endif
+
+#ifdef WSDISPLAY_COMPAT_RAWKBD
+	timeout_set(&sc->sc_rawrepeat_ch, akbd_rawrepeat, sc);
+#endif
+
 
 	a.console = akbd_is_console;
 	a.keymap = &akbd_keymapdata;
@@ -450,6 +456,10 @@ akbd_ioctl(v, cmd, data, flag, p)
 	int flag;
 	struct proc *p;
 {
+#ifdef WSDISPLAY_COMPAT_RAWKBD
+	struct akbd_softc *sc = v;
+#endif
+
 	switch (cmd) {
 
 	case WSKBDIO_GTYPE:
@@ -460,14 +470,35 @@ akbd_ioctl(v, cmd, data, flag, p)
 	case WSKBDIO_GETLEDS:
 		*(int *)data = 0;
 		return 0;
+#ifdef WSDISPLAY_COMPAT_RAWKBD
+	case WSKBDIO_SETMODE:
+		sc->sc_rawkbd = *(int *)data == WSKBD_RAW;
+		timeout_del(&sc->sc_rawrepeat_ch);
+		return (0);
+#endif
+
 	}
 	/* kbdioctl(...); */
 
 	return -1;
 }
 
+#ifdef WSDISPLAY_COMPAT_RAWKBD
+void
+akbd_rawrepeat(void *v)
+{
+	struct akbd_softc *sc = v;
+	int s;
+
+	s = spltty();   
+	wskbd_rawinput(sc->sc_wskbddev, sc->sc_rep, sc->sc_nrep);
+	splx(s);
+	timeout_add(&sc->sc_rawrepeat_ch, hz * REP_DELAYN / 1000);
+}
+#endif
+
+
 static int polledkey;
-extern int adb_polling;
 
 int
 akbd_intr(event)
@@ -475,37 +506,87 @@ akbd_intr(event)
 {
 	int key, press, val;
 	int type;
+	static int shift;
 
 	struct akbd_softc *sc = akbd_cd.cd_devs[0];
 
 	key = event->u.k.key;
+
+	/*
+	 * Caps lock is weird. The key sequence generated is:
+	 * press:   down(57) [57]  (LED turns on)
+	 * release: up(127)  [255]
+	 * press:   up(127)  [255]
+	 * release: up(57)   [185] (LED turns off)
+	 */
+	if (ADBK_KEYVAL(key) == ADBK_CAPSLOCK)
+		shift = 0;
+
+	if (key == 255) {
+		if (shift == 0) {
+			key = ADBK_KEYUP(ADBK_CAPSLOCK);
+			shift = 1;
+		} else {
+			key = ADBK_KEYDOWN(ADBK_CAPSLOCK);
+			shift = 0;
+		}
+	}
+
 	press = ADBK_PRESS(key);
 	val = ADBK_KEYVAL(key);
 
 	type = press ? WSCONS_EVENT_KEY_DOWN : WSCONS_EVENT_KEY_UP;
 
-	switch (key) {
-	case 57:	/* Caps Lock pressed */
-	case 185:	/* Caps Lock released */
-		type = WSCONS_EVENT_KEY_DOWN;
-		wskbd_input(sc->sc_wskbddev, type, val);
-		type = WSCONS_EVENT_KEY_UP;
-		break;
+	switch (val) {
 #if 0
 	/* not supported... */
-	case 245:
+	case ADBK_KEYVAL(245):
 		pm_eject_pcmcia(0);
 		break;
-	case 244:
+	case ADBK_KEYVAL(244):
 		pm_eject_pcmcia(1);
 		break;
 #endif
 	}
 
-	if (adb_polling)
+	if (adb_polling) {
 		polledkey = key;
-	else
+#ifdef WSDISPLAY_COMPAT_RAWKBD
+	} else if (sc->sc_rawkbd) {
+		char cbuf[MAXKEYS *2];
+		int c, j, s; 
+		int npress;
+
+		j = npress = 0;
+
+		c = keyboard[val][3];
+		if (c == 0) {
+			return 0; /* XXX */
+		}
+		if (c & 0x80)
+			cbuf[j++] = 0xe0;
+		cbuf[j] = c & 0x7f;
+		if (type == WSCONS_EVENT_KEY_UP) {
+			cbuf[j] |= 0x80;
+		} else {
+			/* this only records last key pressed */
+			if (c & 0x80)
+				sc->sc_rep[npress++] = 0xe0;
+			sc->sc_rep[npress++] = c & 0x7f;
+		}
+		j++;
+		s = spltty();
+		wskbd_rawinput(sc->sc_wskbddev, cbuf, j);
+		splx(s);
+		timeout_del(&sc->sc_rawrepeat_ch);
+		sc->sc_nrep = npress;
+		if (npress != 0)
+			timeout_add(&sc->sc_rawrepeat_ch, hz * REP_DELAY1/1000);
+		return 0;
+#endif
+	} else {
 		wskbd_input(sc->sc_wskbddev, type, val);
+	}
 
 	return 0;
 }

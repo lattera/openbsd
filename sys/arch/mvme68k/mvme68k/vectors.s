@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.2 2001/10/31 03:01:17 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.3 2003/03/27 23:32:17 niklas Exp $ */
 
 | Copyright (c) 1995 Theo de Raadt
 |
@@ -74,7 +74,7 @@
 	VECTOR(badtrap) ; VECTOR(badtrap) ; \
 	VECTOR(badtrap) ; VECTOR(badtrap)
 
-	.text
+	.data
 GLOBAL(vectab)
 	.long	0x12345678	/* 0: jmp 0x7400:w (unused reset SSP) */
 	VECTOR_UNUSED		/* 1: NOT USED (reset PC) */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.9.4.4 2002/03/06 02:04:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.9.4.5 2003/03/27 23:32:18 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -405,22 +405,6 @@ GLOBAL(spin_cpu)
 /*****************************************************************************/
 
 	data
-#ifdef M88100
-	.align 4096		  /* VBR points to page aligned list */
-	global _vector_list, _vector_list_end
-_vector_list:     		  /* references memory BELOW this line */
-#include "machine/exception_vectors.h"
-_vector_list_end:
-	word END_OF_VECTOR_LIST
-#endif /* M88100 */
-#ifdef M88110
-	.align 4096		  /* VBR points to page aligned list */
-	global _m88110_vector_list, _m88110_vector_list_end
-_m88110_vector_list:   		  /* references memory BELOW this line */ 
-#include "machine/exception_vectors2.h"
-_m88110_vector_list_end:
-	word END_OF_VECTOR_LIST
-#endif /* M88110 */	
 	.align 4096		  /* SDT (segment descriptor table */
 	global _kernel_sdt
 _kernel_sdt:	

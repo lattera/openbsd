@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/mcreg.h,v 1.5.2.1 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/mcreg.h,v 1.5.2.2 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -174,3 +174,4 @@ void mc_enableflashwrite(int on);
 #define MC_DISFLASHWRITE_OFFSET	0xc8000
 int mc_hasflash(void);
 
+int  mcintr_establish(int, struct intrhand *);

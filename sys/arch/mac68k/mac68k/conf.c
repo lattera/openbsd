@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.4 2002/03/06 01:05:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.5 2003/03/27 23:28:44 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.41 1997/02/11 07:35:49 scottr Exp $	*/
 
 /*
@@ -103,7 +103,6 @@ cdev_decl(zs);
 #include "asc.h"
 cdev_decl(asc);
 #include "ksyms.h"
-cdev_decl(ksyms);
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
@@ -111,7 +110,7 @@ cdev_decl(xfs_dev);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -133,7 +132,7 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(NCD,cd),		/* 15: SCSI CD-ROM */
 	cdev_notdef(),			/* 16 */
 	cdev_ch_init(NCH,ch),		/* 17: SCSI autochanger */
-	cdev_notdef(),			/* 18 */
+        cdev_disk_init(NRD,rd),         /* 18: ramdisk device */
 	cdev_disk_init(NVND,vnd),	/* 19: vnode disk driver */
 	cdev_disk_init(NCCD,ccd),	/* 20: concatenated disk driver */
 	cdev_fd_init(1,filedesc),	/* 21: file descriptor pseudo-device */
@@ -165,13 +164,12 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 47 */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
 	cdev_notdef(),			/* 51 */
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 52: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -237,7 +235,7 @@ static int chrtoblktab[] = {
 	/* 15 */	6,
 	/* 16 */	NODEV,
 	/* 17 */	NODEV,
-	/* 18 */	NODEV,
+	/* 18 */	13,
 	/* 19 */	8,
 	/* 20 */	9,
 };

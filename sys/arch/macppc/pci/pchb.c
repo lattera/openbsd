@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1.4.3 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: pchb.c,v 1.4 2000/01/25 07:19:11 tsubai Exp $	*/
 
 /*-
@@ -83,6 +83,9 @@ pchbmatch(parent, cf, aux)
 		case PCI_PRODUCT_APPLE_UNINORTH2:
 		case PCI_PRODUCT_APPLE_UNINORTH2ETH:
 		case PCI_PRODUCT_APPLE_UNINORTH2AGP:
+		case PCI_PRODUCT_APPLE_UNINORTH_AGP3:
+		case PCI_PRODUCT_APPLE_UNINORTH5:
+		case PCI_PRODUCT_APPLE_UNINORTH6:
 			return (1);
 		}
 		break;

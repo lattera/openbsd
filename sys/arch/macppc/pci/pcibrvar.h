@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pcibrvar.h,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pcibrvar.h,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -68,10 +68,11 @@ struct pci_reserve_mem {
 	char *name;
 };
 
-void pci_addr_fixup(struct pcibr_softc *, pci_chipset_tag_t, int,
-	struct pci_reserve_mem *);
+void pci_addr_fixup(struct pcibr_softc *, pci_chipset_tag_t, int);
 
 #define PCIADDR_SEARCH_IO  0
 #define PCIADDR_SEARCH_MEM 1
-struct extent *pciaddr_search(struct device *, int, bus_addr_t *, bus_size_t);
 
+
+struct extent * pciaddr_search(int mem_port, struct device *,
+    bus_addr_t *startp, bus_size_t size);

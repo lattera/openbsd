@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.4 2002/03/28 10:34:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.5 2003/03/27 23:32:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -96,8 +96,17 @@
 #include <machine/cpu.h>
 #include <machine/pte.h>
 
-struct	device *parsedisk(char *, int, int, dev_t *);
 void	setroot(void);
+void	swapconf(void);
+int	mainbus_print(void *, const char *);
+int	mainbus_scan(struct device *, void *, void *);
+int	findblkmajor(struct device *);
+struct	device *getdevunit(char *, int);
+struct	device *getdisk(char *, int, int, dev_t *);
+struct	device *parsedisk(char *, int, int, dev_t *);
+
+extern void init_sir(void);
+extern void dumpconf(void);
 
 /*
  * XXX some storage space must be allocated statically because of
@@ -224,7 +233,7 @@ mapiodev(pa, size)
 	if (error != 0)
 	        return NULL;
 
-	physaccess(kva, pa, size, PG_RW|PG_CI);
+	physaccess((vaddr_t)kva, (paddr_t)pa, size, PG_RW|PG_CI);
 	return (kva);
 }
 
@@ -241,7 +250,7 @@ unmapiodev(kva, size)
 	if (kva < extiobase || kva >= extiobase + ctob(EIOMAPSIZE))
 	        panic("unmapiodev: bad address");
 #endif
-	physunaccess(kva, size);
+	physunaccess((vaddr_t)kva, size);
 
 	error = extent_free(extio, (u_long)kva, size, EX_NOWAIT);
 
@@ -252,6 +261,7 @@ unmapiodev(kva, size)
 /*
  * Configure swap space and related parameters.
  */
+void
 swapconf()
 {
 	register struct swdevt *swp;
@@ -282,7 +292,7 @@ struct nam2blk {
    { "rd",     9 },
 };
 
-static int
+int
 findblkmajor(dv)
 	struct device *dv;
 {
@@ -295,7 +305,7 @@ findblkmajor(dv)
 	return (-1);
 }
 
-static struct device *
+struct device *
 getdisk(str, len, defpart, devp)
 	char *str;
 	int len, defpart;
@@ -327,7 +337,7 @@ parsedisk(str, len, defpart, devp)
 {
 	register struct device *dv;
 	register char *cp, c;
-	int majdev, mindev, part;
+	int majdev, unit, part;
 
 	if (len == 0)
 		return (NULL);
@@ -343,10 +353,10 @@ parsedisk(str, len, defpart, devp)
 		if (dv->dv_class == DV_DISK &&
 		    strcmp(str, dv->dv_xname) == 0) {
 			majdev = findblkmajor(dv);
+			unit = dv->dv_unit;
 			if (majdev < 0)
 				panic("parsedisk");
-			mindev = (dv->dv_unit << PARTITIONSHIFT) + part;
-			*devp = makedev(majdev, mindev);
+			*devp = MAKEDISKDEV(majdev, unit, part);
 			break;
 		}
 #ifdef NFSCLIENT
@@ -376,7 +386,7 @@ setroot()
 {
 	register struct swdevt *swp;
 	register struct device *dv;
-	register int len, majdev, mindev;
+	register int len, majdev, unit;
 	dev_t nrootdev, nswapdev = NODEV;
 	char buf[128];
 	dev_t temp;
@@ -392,9 +402,8 @@ setroot()
 			printf("root device ");
 			if (bootdv != NULL)
 				printf("(default %s%c)",
-					bootdv->dv_xname,
-					bootdv->dv_class == DV_DISK
-						? 'a' : ' ');
+				    bootdv->dv_xname,
+				    bootdv->dv_class == DV_DISK ? 'a' : ' ');
 			printf(": ");
 			len = getsn(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
@@ -428,8 +437,8 @@ setroot()
 			printf("swap device ");
 			if (bootdv != NULL)
 				printf("(default %s%c)",
-					bootdv->dv_xname,
-					bootdv->dv_class == DV_DISK?'b':' ');
+				    bootdv->dv_xname,
+				    bootdv->dv_class == DV_DISK ? 'b' : ' ');
 			printf(": ");
 			len = getsn(buf, sizeof(buf));
 			if (len == 0 && bootdv != NULL) {
@@ -438,8 +447,8 @@ setroot()
 					nswapdev = NODEV;
 					break;
 				case DV_DISK:
-					nswapdev = makedev(major(nrootdev),
-					    (minor(nrootdev) & ~ PARTITIONMASK) | 1);
+					nswapdev = MAKEDISKDEV(major(nrootdev),
+					    DISKUNIT(nrootdev), 1);
 					break;
 				case DV_TAPE:
 				case DV_TTY:
@@ -477,11 +486,10 @@ gotswap:
 			 * val[2] of the boot device is the partition number.
 			 * Assume swap is on partition b.
 			 */
-			int part = bootpart;
-			mindev = (bootdv->dv_unit << PARTITIONSHIFT) + part;
-			rootdev = makedev(majdev, mindev);
-			nswapdev = dumpdev = makedev(major(rootdev),
-			    (minor(rootdev) & ~ PARTITIONMASK) | 1);
+			unit = bootdv->dv_unit;
+			rootdev = MAKEDISKDEV(majdev, unit, bootpart);
+			nswapdev = dumpdev = MAKEDISKDEV(major(rootdev),
+			    DISKUNIT(rootdev), 1);
 		} else {
 			/*
 			 * Root and swap are on a net.
@@ -511,9 +519,9 @@ gotswap:
 	case DV_DISK:
 		mountroot = dk_mountroot;
 		majdev = major(rootdev);
-		mindev = minor(rootdev);
+		unit = DISKUNIT(rootdev);
 		printf("root on %s%c\n", bootdv->dv_xname,
-		    (mindev & PARTITIONMASK) + 'a');
+		    DISKPART(rootdev) + 'a');
 		break;
 #endif
 	default:
@@ -522,13 +530,12 @@ gotswap:
 	}
 
 	/*
-	 * XXX: What is this doing?
+	 * Make the swap partition on the root drive the primary swap.
 	 */
-	mindev &= ~PARTITIONMASK;
 	temp = NODEV;
 	for (swp = swdevt; swp->sw_dev != NODEV; swp++) {
 		if (majdev == major(swp->sw_dev) &&
-		    mindev == (minor(swp->sw_dev) & ~PARTITIONMASK)) {
+		    unit == DISKUNIT(swp->sw_dev)) {
 			temp = swdevt[0].sw_dev;
 			swdevt[0].sw_dev = swp->sw_dev;
 			swp->sw_dev = temp;

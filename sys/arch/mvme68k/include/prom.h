@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/prom.h,v 1.7.16.2 2001/07/04 10:19:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/prom.h,v 1.7.16.3 2003/03/27 23:32:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -30,6 +30,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _MACHINE_PROM_H_
+#define _MACHINE_PROM_H_
 
 #define MVMEPROM_INCHR		0x00
 #define MVMEPROM_INSTAT		0x01
@@ -190,3 +192,4 @@ struct mvmeprom_args {
 #define RB_NOSYM 0x4000
 #endif
 
+#endif /* _MACHINE_PROM_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.h,v 1.6.4.1 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.h,v 1.6.4.2 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -338,3 +338,6 @@ void * vmepmap(struct vmesoftc *sc, void * vmeaddr, int len,
 void * vmemap(struct vmesoftc *sc, void * vmeaddr, int len,
 	    int bustype);
 int	vmerw(struct vmesoftc *sc, struct uio *uio, int flags, int bus);
+
+int vmeintr_establish(int, struct intrhand *);
+int vmescan(struct device *, void *, void *, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.6 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.7 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: linux_machdep.c,v 1.29 1996/05/03 19:42:11 christos Exp $	*/
 
 /*
@@ -72,8 +72,8 @@
  * To see whether wsdisplay is configured (for virtual console ioctl calls).
  */
 #include "wsdisplay.h"
-#if NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL)
 #include <sys/ioctl.h>
+#if NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL)
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsdisplay_usl_io.h>
 #endif
@@ -116,7 +116,6 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	struct linux_sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack;
-	extern char linux_sigcode[], linux_esigcode[];
 
 	tf = p->p_md.md_regs;
 	oonstack = psp->ps_sigstk.ss_flags & SS_ONSTACK;
@@ -184,8 +183,7 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	 */
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
-	tf->tf_eip = (int)(((char *)PS_STRINGS) -
-	     (linux_esigcode - linux_sigcode));
+	tf->tf_eip = p->p_sigcode;
 	tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;
@@ -446,8 +444,8 @@ linux_machdepioctl(p, v, retval)
 	} */ *uap = v;
 	struct sys_ioctl_args bia;
 	u_long com;
-#if (NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL))
 	int error;
+#if (NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL))
 	struct vt_mode lvt;
 	caddr_t bvtp, sg;
 #endif
@@ -576,8 +574,12 @@ linux_machdepioctl(p, v, retval)
 		com = VT_GETSTATE;
 		break;
 	case LINUX_KDGKBTYPE:
+	{
+		char tmp = KB_101;
+
 		/* This is what Linux does */
-		return (subyte(SCARG(uap, data), KB_101));
+		return copyout(&tmp, SCARG(uap, data), sizeof(char));
+	}
 #endif
 	default:
 		/*

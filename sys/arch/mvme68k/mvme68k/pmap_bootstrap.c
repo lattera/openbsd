@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.5 2002/03/06 01:07:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.6 2003/03/27 23:32:17 niklas Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt
@@ -156,5 +156,5 @@ pmap_init_md()
 	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
 	      UVM_INH_NONE, UVM_ADV_RANDOM, UVM_FLAG_FIXED)))
-		panic("pmap_init: bogons in the VM system!\n");
+		panic("pmap_init: bogons in the VM system!");
 }

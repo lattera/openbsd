@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3.4.3 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: wdc_obio.c,v 1.15 2001/07/25 20:26:33 bouyer Exp $	*/
 
 /*-
@@ -365,6 +365,8 @@ wdc_obio_ata4_adjust_timing(chp)
 		if (drvp->drive_flags & DRIVE_UDMA) {
 			if (udmamode == -1 || udmamode > drvp->UDMA_mode)
 				udmamode = drvp->UDMA_mode;
+		} else {
+			udmamode = -2;
 		}
 	}
 	if (piomode == -1)
@@ -375,10 +377,19 @@ wdc_obio_ata4_adjust_timing(chp)
 			drvp->PIO_mode = piomode;
 			if (drvp->drive_flags & DRIVE_DMA)
 				drvp->DMA_mode = dmamode;
-			if (drvp->drive_flags & DRIVE_UDMA)
-				drvp->UDMA_mode = udmamode;
+			if (drvp->drive_flags & DRIVE_UDMA) {
+				if (udmamode == -2) {
+					drvp->drive_flags &= ~DRIVE_UDMA;
+				} else {
+					drvp->UDMA_mode = udmamode;
+				}
+			}
 		}
 	}
+
+	if (udmamode == -2)
+		udmamode = -1;
+
 	min_cycle = pio_timing[piomode].cycle;
 	min_active = pio_timing[piomode].active;
 

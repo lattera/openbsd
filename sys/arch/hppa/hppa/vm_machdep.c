@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.7 2002/03/28 10:19:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.8 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999-2002 Michael Shalayeff
+ * Copyright (c) 1999-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,20 +66,22 @@ cpu_coredump(p, vp, cred, core)
 	off_t off;
 	int error;
 
-	CORE_SETMAGIC(*core, COREMAGIC, MID_ZERO, 0);
+	CORE_SETMAGIC(*core, COREMAGIC, MID_HPPA, 0);
 	core->c_hdrsize = ALIGN(sizeof(*core));
 	core->c_seghdrsize = ALIGN(sizeof(cseg));
 	core->c_cpusize = sizeof(md_core);
 
 	process_read_regs(p, &md_core.md_reg);
+	process_read_fpregs(p, &md_core.md_fpreg);
 
-	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_ZERO, CORE_CPU);
+	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_HPPA, CORE_CPU);
 	cseg.c_addr = 0;
 	cseg.c_size = core->c_cpusize;
 
-#define	write(vp, addr, n) vn_rdwr(UIO_WRITE, (vp), (caddr_t)(addr), (n), off, \
-			     UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, NULL, p)
-	
+#define	write(vp, addr, n) \
+	vn_rdwr(UIO_WRITE, (vp), (caddr_t)(addr), (n), off, \
+	    UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, NULL, p)
+
 	off = core->c_hdrsize;
 	if ((error = write(vp, &cseg, core->c_seghdrsize)))
 		return error;
@@ -105,10 +107,10 @@ pagemove(from, to, size)
 	paddr_t pa;
 
 	while (size > 0) {
-		pmap_extract(pmap_kernel(), (vaddr_t)from, &pa);
+		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
+			panic("pagemove");
 		pmap_kremove((vaddr_t)from, PAGE_SIZE);
-		pmap_kenter_pa((vaddr_t)to, pa,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		pmap_kenter_pa((vaddr_t)to, pa, UVM_PROT_RW);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
@@ -127,7 +129,7 @@ cpu_swapin(p)
 	 * Stash the physical for the pcb of U for later perusal
 	 */
 	if (!pmap_extract(pmap_kernel(), (vaddr_t)p->p_addr, &pa))
-		panic("pmap_extract(p_addr) failed");
+		panic("pmap_extract(%p) failed", p->p_addr);
 
 	tf->tf_cr30 = pa;
 }
@@ -136,44 +138,11 @@ void
 cpu_swapout(p)
 	struct proc *p;
 {
-	extern paddr_t fpu_curpcb;
+	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct trapframe *tf = p->p_md.md_regs;
 
 	if (tf->tf_cr30 == fpu_curpcb) {
-		__asm __volatile(
-		    "fstds,ma %%fr0 , 8(%0)\n\t"
-		    "fstds,ma %%fr1 , 8(%0)\n\t"
-		    "fstds,ma %%fr2 , 8(%0)\n\t"
-		    "fstds,ma %%fr3 , 8(%0)\n\t"
-		    "fstds,ma %%fr4 , 8(%0)\n\t"
-		    "fstds,ma %%fr5 , 8(%0)\n\t"
-		    "fstds,ma %%fr6 , 8(%0)\n\t"
-		    "fstds,ma %%fr7 , 8(%0)\n\t"
-		    "fstds,ma %%fr8 , 8(%0)\n\t"
-		    "fstds,ma %%fr9 , 8(%0)\n\t"
-		    "fstds,ma %%fr10, 8(%0)\n\t"
-		    "fstds,ma %%fr11, 8(%0)\n\t"
-		    "fstds,ma %%fr12, 8(%0)\n\t"
-		    "fstds,ma %%fr13, 8(%0)\n\t"
-		    "fstds,ma %%fr14, 8(%0)\n\t"
-		    "fstds,ma %%fr15, 8(%0)\n\t"
-		    "fstds,ma %%fr16, 8(%0)\n\t"
-		    "fstds,ma %%fr17, 8(%0)\n\t"
-		    "fstds,ma %%fr18, 8(%0)\n\t"
-		    "fstds,ma %%fr19, 8(%0)\n\t"
-		    "fstds,ma %%fr20, 8(%0)\n\t"
-		    "fstds,ma %%fr21, 8(%0)\n\t"
-		    "fstds,ma %%fr22, 8(%0)\n\t"
-		    "fstds,ma %%fr23, 8(%0)\n\t"
-		    "fstds,ma %%fr24, 8(%0)\n\t"
-		    "fstds,ma %%fr25, 8(%0)\n\t"
-		    "fstds,ma %%fr26, 8(%0)\n\t"
-		    "fstds,ma %%fr27, 8(%0)\n\t"
-		    "fstds,ma %%fr28, 8(%0)\n\t"
-		    "fstds,ma %%fr29, 8(%0)\n\t"
-		    "fstds,ma %%fr30, 8(%0)\n\t"
-		    "fstds    %%fr31, 0(%0)\n\t"
-		    : "+r" (fpu_curpcb) :: "memory");
+		fpu_save(fpu_curpcb);
 		fpu_curpcb = 0;
 	}
 }
@@ -186,6 +155,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	void (*func)(void *);
 	void *arg;
 {
+	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct pcb *pcbp;
 	struct trapframe *tf;
 	register_t sp, osp;
@@ -194,12 +164,20 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	if (round_page(sizeof(struct user)) > NBPG)
 		panic("USPACE too small for user");
 #endif
+	if (p1->p_md.md_regs->tf_cr30 == fpu_curpcb)
+		fpu_save(fpu_curpcb);
 
 	pcbp = &p2->p_addr->u_pcb;
 	bcopy(&p1->p_addr->u_pcb, pcbp, sizeof(*pcbp));
 	/* space is cached for the copy{in,out}'s pleasure */
 	pcbp->pcb_space = p2->p_vmspace->vm_map.pmap->pm_space;
 	pcbp->pcb_uva = (vaddr_t)p2->p_addr;
+	/* reset any of the pending FPU exceptions from parent */
+	pcbp->pcb_fpregs[0] = HPPA_FPU_FORK(pcbp->pcb_fpregs[0]);
+	pcbp->pcb_fpregs[1] = 0;
+	pcbp->pcb_fpregs[2] = 0;
+	pcbp->pcb_fpregs[3] = 0;
+	fdcache(HPPA_SID_KERNEL, (vaddr_t)&pcbp->pcb_fpregs[0], 8 * 4);
 
 	sp = (register_t)p2->p_addr + NBPG;
 	p2->p_md.md_regs = tf = (struct trapframe *)sp;
@@ -223,9 +201,8 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	 * but just in case.
 	 */
 	tf->tf_sr7 = HPPA_SID_KERNEL;
-	tf->tf_eiem = ~0;
-	tf->tf_ipsw = PSW_C | PSW_Q | PSW_P | PSW_D | PSW_I /* | PSW_L */;
-	pcbp->pcb_fpregs[32] = 0;
+	mfctl(CR_EIEM, tf->tf_eiem);
+	tf->tf_ipsw = PSL_C | PSL_Q | PSL_P | PSL_D | PSL_I /* | PSL_L */;
 
 	/*
 	 * Set up return value registers as libc:fork() expects
@@ -243,14 +220,15 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	/*
 	 * Build a stack frame for the cpu_switch & co.
 	 */
-	osp = sp;
-	sp += HPPA_FRAME_SIZE + 16*4; /* std frame + calee-save registers */
+	osp = sp + HPPA_FRAME_SIZE;
+	sp += 2*HPPA_FRAME_SIZE + 20*4; /* std frame + calee-save registers */
 	*HPPA_FRAME_CARG(0, sp) = tf->tf_sp;
 	*HPPA_FRAME_CARG(1, sp) = KERNMODE(func);
 	*HPPA_FRAME_CARG(2, sp) = (register_t)arg;
+	*(register_t*)(osp) = (sp - HPPA_FRAME_SIZE);
 	*(register_t*)(sp + HPPA_FRAME_PSP) = osp;
-	*(register_t*)(sp + HPPA_FRAME_CRP) =
-		(register_t)switch_trampoline;
+	*(register_t*)(osp + HPPA_FRAME_CRP) = (register_t)&switch_trampoline;
+	*(register_t*)(osp + HPPA_FRAME_SL) = 0;	/* cpl */
 	tf->tf_sp = sp;
 	fdcache(HPPA_SID_KERNEL, (vaddr_t)p2->p_addr, sp - (vaddr_t)p2->p_addr);
 }
@@ -262,14 +240,11 @@ cpu_exit(p)
 	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct trapframe *tf = p->p_md.md_regs;
 
-	uvmexp.swtch++;
-
-	splhigh();
-	curproc = NULL;
 	if (fpu_curpcb == tf->tf_cr30)
 		fpu_curpcb = 0;
 
-	switch_exit(p);
+	exit2(p);
+	cpu_switch(p);
 }
 
 void
@@ -286,55 +261,39 @@ vmapbuf(bp, len)
 	struct buf *bp;
 	vsize_t len;
 {
-	vaddr_t addr, kva;
-	paddr_t pa;
+	struct pmap *pm = vm_map_pmap(&bp->b_proc->p_vmspace->vm_map);
+	vaddr_t kva, uva;
 	vsize_t size, off;
-	int npf;
-	struct proc *p;
-	struct vm_map *map;
 
 #ifdef DIAGNOSTIC
 	if ((bp->b_flags & B_PHYS) == 0)
 		panic("vmapbuf");
 #endif
-	p = bp->b_proc;
-	map = &p->p_vmspace->vm_map;
 	bp->b_saveaddr = bp->b_data;
-	addr = (vaddr_t)bp->b_saveaddr;
-	off = addr & PGOFSET;
-	size = round_page(bp->b_bcount + off);
+	uva = trunc_page((vaddr_t)bp->b_data);
+	off = (vaddr_t)bp->b_data - uva;
+	size = round_page(off + len);
 
 	/*
-	 * Note that this is an expanded version of:
-	 *   kva = uvm_km_valloc_wait(kernel_map, size);
 	 * We do it on our own here to be able to specify an offset to uvm_map
 	 * so that we can get all benefits of PMAP_PREFER.
 	 * - art@
 	 */
-	while (1) {
-		kva = vm_map_min(phys_map);
-		if (uvm_map(phys_map, &kva, size, NULL, addr, 0,
-		    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == 0)
-			break;
-		tsleep(phys_map, PVM, "vallocwait", 0);
-	}
-
+	kva = uvm_km_valloc_prefer_wait(kernel_map, size, uva);
+	fdcache(pm->pm_space, uva, size);
 	bp->b_data = (caddr_t)(kva + off);
-	addr = trunc_page(addr);
-	npf = btoc(size);
-	while (npf--) {
-		/* not needed, thanks to PMAP_PREFER() */
-		/* fdcache(vm_map_pmap(map)->pmap_space, addr, PAGE_SIZE); */
+	while (size > 0) {
+		paddr_t pa;
 
-		if (pmap_extract(vm_map_pmap(map), addr, &pa) == FALSE)
+		if (pmap_extract(pm, uva, &pa) == FALSE)
 			panic("vmapbuf: null page frame");
-		pmap_enter(vm_map_pmap(phys_map), kva, pa,
-		    VM_PROT_READ|VM_PROT_WRITE, PMAP_WIRED);
-
-		addr += PAGE_SIZE;
+		else
+			pmap_kenter_pa(kva, pa, UVM_PROT_RW);
+		uva += PAGE_SIZE;
 		kva += PAGE_SIZE;
+		size -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*
@@ -354,7 +313,7 @@ vunmapbuf(bp, len)
 	addr = trunc_page((vaddr_t)bp->b_data);
 	off = (vaddr_t)bp->b_data - addr;
 	len = round_page(off + len);
-	uvm_km_free_wakeup(phys_map, addr, len);
+	uvm_km_free_wakeup(kernel_map, addr, len);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = NULL;
 }

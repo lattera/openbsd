@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pcb.h,v 1.6 2000/01/12 07:24:35 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pcb.h,v 1.6.2.1 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -46,6 +46,7 @@ struct pcb {
 
 struct md_coredump {
 	struct reg md_reg;
+	struct fpreg md_fpreg;
 }; 
 
 

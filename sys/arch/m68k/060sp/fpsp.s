@@ -1,5 +1,5 @@
 #
-# $OpenBSD: src/sys/arch/m68k/060sp/fpsp.s,v 1.2.16.1 2001/10/31 03:01:13 nate Exp $
+# $OpenBSD: src/sys/arch/m68k/060sp/fpsp.s,v 1.2.16.2 2003/03/27 23:28:42 niklas Exp $
 # $NetBSD: fpsp.s,v 1.2 1996/05/15 19:48:03 is Exp $
 #
 
@@ -3891,7 +3891,7 @@ _fpsp_fline:
 # FP Unimplemented Instruction stack frame and jump to that entry
 # point.
 #
-# but, if the FPU is disabled, then we need to jump to the FPU diabled
+# but, if the FPU is disabled, then we need to jump to the FPU disabled
 # entry point.
 	movc		%pcr,%d0
 	btst		&0x1,%d0

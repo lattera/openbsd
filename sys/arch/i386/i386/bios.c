@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.8 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.9 2003/03/27 23:26:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -230,12 +230,16 @@ biosattach(parent, self, aux)
 			if (romh->signature != 0xaa55)
 				continue;
 
+			/*
+			 * for this and the next check we probably want
+			 * to reserve the page in the extent anyway
+			 */
 			if (!romh->len || romh->len == 0xff)
 				continue;
 
 			len = romh->len * 512;
-			off = 0xc0000 + (va - (u_int8_t *)
-			    ISA_HOLE_VADDR(0xc0000));
+			if (va + len > eva)
+				continue;
 
 			for (cksum = 0, i = len; i--; cksum += va[i])
 				;
@@ -243,6 +247,9 @@ biosattach(parent, self, aux)
 			if (cksum != 0)
 				continue;
 #endif
+
+			off = 0xc0000 + (va - (u_int8_t *)
+			    ISA_HOLE_VADDR(0xc0000));
 
 			if (!str)
 				printf("%s: ROM list:",

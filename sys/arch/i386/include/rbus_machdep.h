@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/rbus_machdep.h,v 1.1.6.2 2002/03/28 10:31:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/include/rbus_machdep.h,v 1.1.6.3 2003/03/27 23:26:55 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.h,v 1.2 1999/10/15 06:43:05 haya Exp $	*/
 
 /*
@@ -47,7 +47,9 @@ void _bus_space_unmap(bus_space_tag_t, bus_space_handle_t,
 	_bus_space_unmap((bt), (bsh), (size), (adrp))
 
 
-rbus_tag_t rbus_pccbb_parent_io(struct pci_attach_args *pa);
-rbus_tag_t rbus_pccbb_parent_mem(struct pci_attach_args *pa);
+rbus_tag_t rbus_pccbb_parent_io(struct device *self,
+    struct pci_attach_args *pa);
+rbus_tag_t rbus_pccbb_parent_mem(struct device *self,
+    struct pci_attach_args *pa);
 
 #endif /* _ARCH_I386_I386_RBUS_MACHDEP_H_ */

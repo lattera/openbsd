@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.7 2002/03/28 10:34:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.8 2003/03/27 23:32:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -86,15 +86,19 @@
 #include <sys/ktrace.h>
 #endif
 
-#include <machine/psl.h>
-#include <machine/trap.h>
+#include <machine/db_machdep.h>
 #include <machine/cpu.h>
+#include <machine/psl.h>
 #include <machine/reg.h>
+#include <machine/trap.h>
 
 #ifdef COMPAT_SUNOS
 #include <compat/sunos/sunos_syscall.h>
 extern struct emul emul_sunos;
 #endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_pmap.h>
@@ -102,6 +106,9 @@ extern struct emul emul_sunos;
 #ifdef COMPAT_HPUX
 #include <compat/hpux/hpux.h>
 #endif
+
+int	astpending;
+int	want_resched;
 
 char  *trap_type[] = {
 	"Bus error",
@@ -162,11 +169,15 @@ int mmupid = -1;
 #endif
 
 #define NSIR	8
-void (*sir_routines[NSIR])();
+void (*sir_routines[NSIR])(void *);
 void *sir_args[NSIR];
 u_char next_sir;
 
-int  writeback(struct frame *fp, int docachepush);
+void trap(int, u_int, u_int, struct frame);
+void syscall(register_t, struct frame);
+void init_sir(void);
+void hardintr(int, int, void *);
+int writeback(struct frame *fp, int docachepush);
 
 /*
  * trap and syscall both need the following work done before returning
@@ -181,7 +192,7 @@ userret(p, fp, oticks, faultaddr, fromtrap)
 	int fromtrap;
 {
 	int sig;
-#if defined(M68040) || defined(M68060)
+#if defined(M68040)
 	int beenhere = 0;
 
 again:
@@ -214,7 +225,7 @@ again:
 	 * If any writeback fails, go back and attempt signal delivery.
 	 * unless we have already been here and attempted the writeback
 	 * (e.g. bad address with user ignoring SIGSEGV).  In that case
-	 * we just return to the user without sucessfully completing
+	 * we just return to the user without successfully completing
 	 * the writebacks.  Maybe we should just drop the sucker?
 	 */
 	if (mmutype == MMU_68040 && fp->f_format == FMT7) {
@@ -226,7 +237,7 @@ again:
 			 "pid %d(%s): writeback aborted in sigreturn, pc=%x\n",
 				     p->p_pid, p->p_comm, fp->f_pc, faultaddr);
 #endif
-		} else if (sig = writeback(fp, fromtrap)) {
+		} else if ((sig = writeback(fp, fromtrap))) {
 			register union sigval sv;
 
 			beenhere = 1;
@@ -246,13 +257,13 @@ again:
  * System calls are broken out for efficiency. T_ADDRERR
  */
 /*ARGSUSED*/
+void
 trap(type, code, v, frame)
 	int type;
-	unsigned code;
-	register unsigned v;
+	u_int code;
+	register u_int v;
 	struct frame frame;
 {
-	extern char fubail[], subail[];
 	register struct proc *p;
 	register int i;
 	u_int ucode;
@@ -279,12 +290,12 @@ trap(type, code, v, frame)
 dopanic:
 		printf("trap type %d, code = %x, v = %x\n", type, code, v);
 #ifdef DDB
-		if (kdb_trap(type, &frame))
+		if (kdb_trap(type, (db_regs_t *)&frame))
 			return;
 #endif
 		regdump(&(frame.F_t), 128);
 		type &= ~T_USER;
-		if ((unsigned)type < trap_types)
+		if ((u_int)type < trap_types)
 			panic(trap_type[type]);
 		panic("trap");
 
@@ -502,7 +513,7 @@ copyfault:
 
 	case T_SSIR:		/* software interrupt */
 	case T_SSIR|T_USER:
-		while (bit = ffs(ssir)) {
+		while ((bit = ffs(ssir))) {
 			--bit;
 			ssir &= ~(1 << bit);
 			uvmexp.softs++;
@@ -524,15 +535,6 @@ copyfault:
 		goto out;
 
 	case T_MMUFLT:		/* kernel mode page fault */
-		/*
-		 * If we were doing profiling ticks or other user mode
-		 * stuff from interrupt code, Just Say No.
-		 */
-		if (p && (p->p_addr->u_pcb.pcb_onfault == fubail ||
-		    p->p_addr->u_pcb.pcb_onfault == subail))
-			goto copyfault;
-		/* FALLTHROUGH */
-
 	case T_MMUFLT|T_USER:	/* page fault */
 		{
 			vm_offset_t va;
@@ -603,9 +605,9 @@ copyfault:
 			 */
 			if ((caddr_t)va >= vm->vm_maxsaddr && map != kernel_map) {
 				if (rv == 0) {
-					unsigned nss;
+					u_int nss;
 
-					nss = btoc(USRSTACK-(unsigned)va);
+					nss = btoc(USRSTACK-(u_int)va);
 					if (nss > vm->vm_ssize)
 						vm->vm_ssize = nss;
 				} else if (rv == EACCES)
@@ -722,7 +724,7 @@ writeback(fp, docachepush)
 							(vm_offset_t)&vmmap[NBPG]);
 			pmap_update(pmap_kernel());
 		} else
-			printf("WARNING: pid %d(%s) uid %d: CPUSH not done\n",
+			printf("WARNING: pid %d(%s) uid %u: CPUSH not done\n",
 					 p->p_pid, p->p_comm, p->p_ucred->cr_uid);
 	} else if ((f->f_ssw & (SSW4_RW|SSW4_TTMASK)) == SSW4_TTM16) {
 		/*
@@ -757,8 +759,8 @@ writeback(fp, docachepush)
 		 * Writeback #1.
 		 * Position the "memory-aligned" data and write it out.
 		 */
-		register u_int wb1d = f->f_wb1d;
-		register int off;
+		u_int wb1d = f->f_wb1d;
+		int off;
 
 #ifdef DEBUG
 		if ((mmudebug & MDB_WBFOLLOW) || MDB_ISPID(p->p_pid))
@@ -774,7 +776,8 @@ writeback(fp, docachepush)
 				if (KDFAULT(f->f_wb1s))
 					*(long *)f->f_wb1a = wb1d;
 				else
-					err = suword((caddr_t)f->f_wb1a, wb1d);
+					err = copyout(&wb1d,
+					    (caddr_t)f->f_wb1a, sizeof(int));
 				break;
 			case SSW4_SZB:
 				off = 24 - off;
@@ -782,8 +785,12 @@ writeback(fp, docachepush)
 					wb1d >>= off;
 				if (KDFAULT(f->f_wb1s))
 					*(char *)f->f_wb1a = wb1d;
-				else
-					err = subyte((caddr_t)f->f_wb1a, wb1d);
+				else {
+					char tmp = wb1d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb1a, sizeof(char));
+				}
 				break;
 			case SSW4_SZW:
 				off = (off + 16) % 32;
@@ -791,8 +798,12 @@ writeback(fp, docachepush)
 					wb1d = (wb1d >> (32 - off)) | (wb1d << off);
 				if (KDFAULT(f->f_wb1s))
 					*(short *)f->f_wb1a = wb1d;
-				else
-					err = susword((caddr_t)f->f_wb1a, wb1d);
+				else {
+					short tmp = wb1d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb1a, sizeof(long));
+				}
 				break;
 		}
 		if (err) {
@@ -824,19 +835,28 @@ writeback(fp, docachepush)
 				if (KDFAULT(f->f_wb2s))
 					*(long *)f->f_wb2a = f->f_wb2d;
 				else
-					err = suword((caddr_t)f->f_wb2a, f->f_wb2d);
+					err = copyout(&f->f_wb2d,
+					    (caddr_t)f->f_wb2a, sizeof(int));
 				break;
 			case SSW4_SZB:
 				if (KDFAULT(f->f_wb2s))
 					*(char *)f->f_wb2a = f->f_wb2d;
-				else
-					err = subyte((caddr_t)f->f_wb2a, f->f_wb2d);
+				else {
+					char tmp = f->f_wb2d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb2a, sizeof(char));
+				}
 				break;
 			case SSW4_SZW:
 				if (KDFAULT(f->f_wb2s))
 					*(short *)f->f_wb2a = f->f_wb2d;
-				else
-					err = susword((caddr_t)f->f_wb2a, f->f_wb2d);
+				else {
+					short tmp = f->f_wb2d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb2a, sizeof(short));
+				}
 				break;
 		}
 		if (err) {
@@ -864,19 +884,28 @@ writeback(fp, docachepush)
 				if (KDFAULT(f->f_wb3s))
 					*(long *)f->f_wb3a = f->f_wb3d;
 				else
-					err = suword((caddr_t)f->f_wb3a, f->f_wb3d);
+					err = copyout(&f->f_wb3d,
+					    (caddr_t)f->f_wb3a, sizeof(int));
 				break;
 			case SSW4_SZB:
 				if (KDFAULT(f->f_wb3s))
 					*(char *)f->f_wb3a = f->f_wb3d;
-				else
-					err = subyte((caddr_t)f->f_wb3a, f->f_wb3d);
+				else {
+					char tmp = f->f_wb3d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb3a, sizeof(char));
+				}
 				break;
 			case SSW4_SZW:
 				if (KDFAULT(f->f_wb3s))
 					*(short *)f->f_wb3a = f->f_wb3d;
-				else
-					err = susword((caddr_t)f->f_wb3a, f->f_wb3d);
+				else {
+					short tmp = f->f_wb3d;
+
+					err = copyout(&tmp,
+					    (caddr_t)f->f_wb3a, sizeof(short));
+				}
 				break;
 #ifdef DEBUG
 			case SSW4_SZLN:
@@ -938,6 +967,7 @@ dumpwb(num, s, a, d)
 {
 	register struct proc *p = curproc;
 	vm_offset_t pa;
+	int tmp;
 
 	printf(" writeback #%d: VA %x, data %x, SZ=%s, TT=%s, TM=%s\n",
 			 num, a, d, f7sz[(s & SSW4_SZMASK) >> 5],
@@ -945,8 +975,12 @@ dumpwb(num, s, a, d)
 	printf("	       PA ");
 	if (pmap_extract(p->p_vmspace->vm_map.pmap, (vm_offset_t)a, &pa) == FALSE)
 		printf("<invalid address>");
-	else
-		printf("%x, current value %x", pa, fuword((caddr_t)a));
+	else {
+		if (copyin((caddr_t)a, &tmp, sizeof(int)) == 0)
+			printf("%lx, current value %lx", pa, tmp);
+		else
+			printf("%lx, current value inaccessible", pa);
+	}
 	printf("\n");
 }
 #endif
@@ -955,6 +989,7 @@ dumpwb(num, s, a, d)
 /*
  * Process a system call.
  */
+void
 syscall(code, frame)
 	register_t code;
 	struct frame frame;
@@ -990,7 +1025,9 @@ syscall(code, frame)
 		 * code assumes the kernel pops the syscall argument the
 		 * glue pushed on the stack. Sigh...
 		 */
-		code = fuword((caddr_t)frame.f_regs[SP]);
+		if (copyin((caddr_t)frame.f_regs[SP], &code,
+		    sizeof(register_t)) != 0)
+			code = -1;
 
 		/*
 		 * XXX
@@ -1018,7 +1055,8 @@ syscall(code, frame)
 		/*
 		 * Code is first argument, followed by actual args.
 		 */
-		code = fuword(params);
+		if (copyin(params, &code, sizeof(register_t)) != 0)
+			code = -1;
 		params += sizeof(int);
 		/*
 		 * XXX sigreturn requires special stack manipulation
@@ -1035,7 +1073,9 @@ syscall(code, frame)
 		 */
 		if (callp != sysent)
 			break;
-		code = fuword(params + _QUAD_LOWWORD * sizeof(int));
+		if (copyin(params + _QUAD_LOWWORD * sizeof(int), &code,
+		    sizeof(register_t)) != 0)
+			code = -1;
 		params += sizeof(quad_t);
 		break;
 	default:
@@ -1061,7 +1101,12 @@ syscall(code, frame)
 		goto bad;
 	rval[0] = 0;
 	rval[1] = frame.f_regs[D1];
-	error = (*callp->sy_call)(p, args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, args, rval);
 	switch (error) {
 	case 0:
 		frame.f_regs[D0] = rval[0];
@@ -1107,7 +1152,7 @@ bad:
  */
 u_long
 allocate_sir(proc, arg)
-	void (*proc)();
+	void (*proc)(void *);
 	void *arg;
 {
 	int bit;
@@ -1123,10 +1168,10 @@ allocate_sir(proc, arg)
 void
 init_sir()
 {
-	extern void netintr();
+	extern void netintr(void *);
 
 	sir_routines[0] = netintr;
-	sir_routines[1] = softclock;
+	sir_routines[1] = (void (*)(void *))softclock;
 	next_sir = 2;
 }
 
@@ -1137,14 +1182,15 @@ struct intrhand *intrs[256];
  * This is an EXTREMELY good candidate for rewriting in assembly!!
  */
 #ifndef INTR_ASM
-int
+void
 hardintr(pc, evec, frame)
 	int pc;
 	int evec;
 	void *frame;
 {
+	extern void straytrap(int, u_short);
 	int vec = (evec & 0xfff) >> 2;	/* XXX should be m68k macro? */
-	extern u_long intrcnt[];	/* XXX from locore */
+	/*extern u_long intrcnt[];*/	/* XXX from locore */
 	struct intrhand *ih;
 	int count = 0;
 	int r;
@@ -1158,12 +1204,14 @@ hardintr(pc, evec, frame)
 			zscnputc(0, '0' + (vec - 0x70));
 		}
 #endif
-		r = (*ih->ih_fn)(ih->ih_wantframe ? frame : ih->ih_arg, vec);
+		r = (*ih->ih_fn)(ih->ih_wantframe ? frame : ih->ih_arg);
 		if (r > 0)
 			count++;
 	}
-	if (count == 0)
-		return (straytrap(pc, evec));
+	if (count != 0)
+		return;
+
+	straytrap(pc, evec);
 }
 #endif /* !INTR_ASM */
 
@@ -1210,7 +1258,7 @@ intr_establish(vec, ih)
 	ih->ih_next = NULL;	/* just in case */
 
 	/* attach at tail */
-	if (ihx = intrs[vec]) {
+	if ((ihx = intrs[vec])) {
 		while (ihx->ih_next)
 			ihx = ihx->ih_next;
 		ihx->ih_next = ih;
@@ -1224,8 +1272,16 @@ intr_establish(vec, ih)
 #include <machine/db_machdep.h>
 #include <ddb/db_command.h>
 
+void db_prom_cmd(db_expr_t, int, db_expr_t, char *);
+void db_machine_init(void);
+
+/* ARGSUSED */
 void
-db_prom_cmd()
+db_prom_cmd(addr, have_addr, count, modif)
+	db_expr_t addr;
+	int have_addr;
+	db_expr_t count;
+	char *modif;
 {
 	doboot();
 }

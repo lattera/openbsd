@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/bus.h,v 1.1.4.4 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/bus.h,v 1.1.4.5 2003/03/27 23:29:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Per Fogelstrom.  All rights reserved.
@@ -56,6 +56,7 @@ struct ppc_bus_space {
 	u_int32_t	bus_base;
 	u_int32_t	bus_size;
 	u_int8_t	bus_reverse;	/* Reverse bytes */
+	u_int8_t	bus_io;		/* IO or memory */
 };
 #define POWERPC_BUS_TAG_BASE(x)  ((x)->bus_base)
 
@@ -244,6 +245,108 @@ bus_space_write_region_4(bus_space_tag_t tag, bus_space_handle_t bsh,
 #endif
 
 /*
+ *	void bus_space_read_raw_region_N(bus_space_tag_t tag,
+ *	    bus_space_handle_t bsh, bus_size_t offset,
+ *	    u_intN_t *addr, size_t count);
+ *
+ * Read `count' 1, 2, 4, or 8 byte quantities from bus space
+ * described by tag/handle and starting at `offset' and copy into
+ * buffer provided.
+ */
+
+static __inline void
+bus_space_read_raw_region_1(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int8_t *addr, size_t count)
+{
+	volatile u_int8_t *s = __BA(tag, bsh, offset);
+	u_int8_t *laddr = (void *)addr;
+
+	while (count--)
+		*laddr++ = *s++;
+	__asm __volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_read_raw_region_2(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int8_t *addr, size_t count)
+{
+	volatile u_int16_t *s = __BA(tag, bsh, offset);
+	u_int16_t *laddr = (void *)addr;
+
+	while (count--)
+		*laddr++ = *s++;
+	__asm __volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_read_raw_region_4(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int8_t *addr, size_t count)
+{
+	volatile u_int32_t *s = __BA(tag, bsh, offset);
+	u_int32_t *laddr = (void *)addr;
+
+	while (count--)
+		*laddr++ = *s++;
+	__asm __volatile("eieio; sync");
+}
+
+#if 0	/* Cause a link error for bus_space_read_raw_region_8 */
+#define	bus_space_read_raw_region_8	\
+    !!! bus_space_read_raw_region_8		unimplemented !!!
+#endif
+
+
+/*
+ *	void bus_space_write_raw_region_N(bus_space_tag_t tag,
+ *	    bus_space_handle_t bsh, bus_size_t offset,
+ *	    const u_intN_t *addr, size_t count);
+ *
+ * Write `count' 1, 2, 4, or 8 byte quantities from the buffer provided
+ * to bus space described by tag/handle starting at `offset'.
+ */
+
+static __inline void
+bus_space_write_raw_region_1(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int8_t *addr, size_t count)
+{
+	volatile u_int8_t *d = __BA(tag, bsh, offset);
+	const u_int8_t *laddr = (void *)addr;
+
+	while (count--)
+		*d++ = *laddr++;
+	__asm __volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_write_raw_region_2(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int8_t *addr, size_t count)
+{
+	volatile u_int16_t *d = __BA(tag, bsh, offset);
+	const u_int16_t *laddr = (void *)addr;
+
+	while (count--)
+		*d++ = *laddr++;
+	__asm __volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_write_raw_region_4(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int8_t *addr, size_t count)
+{
+	volatile u_int32_t *d = __BA(tag, bsh, offset);
+	const u_int32_t *laddr = (void *)addr;
+
+	while (count--)
+		*d++ = *laddr++;
+	__asm __volatile("eieio; sync");
+}
+
+#if 0
+#define	bus_space_write_raw_region_8 \
+    !!! bus_space_write_raw_region_8 unimplemented !!!
+#endif
+
+/*
  *	void bus_space_set_multi_N(bus_space_tag_t tag,
  *	    bus_space_handle_t bsh, bus_size_t offset, u_intN_t val,
  *	    size_t count);
@@ -342,7 +445,7 @@ void
 bus_space_set_region_4(void *v, bus_space_handle_t h, bus_size_t o,
     u_int32_t val, bus_size_t c);
 #define	bus_space_set_region_8 \
-    !!! bus_space_write_raw_multi_8 not implemented !!!
+    !!! bus_space_set_region_8 not implemented !!!
 
 void
 bus_space_copy_1(void *v, bus_space_handle_t h1, bus_space_handle_t h2,

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.6 2002/03/28 10:27:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.7 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
- * Copyright (c) 2000-2001 Michael Shalayeff
+ * Copyright (c) 2000-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,23 @@ extern const char *cpu_typename;
  */
 #define	HPPA_FPUS	0xc0
 #define	HPPA_FPUVER(w)	(((w) & 0x003ff800) >> 11)
+#define	HPPA_FPU_OP(w)	((w) >> 26)
+#define	HPPA_FPU_UNMPL	0x9
+#define	HPPA_FPU_I	0x01
+#define	HPPA_FPU_U	0x02
+#define	HPPA_FPU_O	0x04
+#define	HPPA_FPU_Z	0x08
+#define	HPPA_FPU_V	0x10
+#define	HPPA_FPU_D	0x20
+#define	HPPA_FPU_T	0x40
+#define	HPPA_FPU_XMASK	0x7f
+#define	HPPA_FPU_T_POS	25
+#define	HPPA_FPU_RM	0x00000600
+#define	HPPA_FPU_CQ	0x00fff800
+#define	HPPA_FPU_C	0x04000000
+#define	HPPA_FPU_FLSH	27
+#define	HPPA_FPU_INIT	(0)
+#define	HPPA_FPU_FORK(s) ((s) & ~((u_int64_t)(HPPA_FPU_XMASK)<<32))
 #define	HPPA_PMSFUS	0x20	/* ??? */
 
 /*
@@ -103,8 +120,15 @@ extern const char *cpu_typename;
 #define	HPPA_SPA_ENABLE	0x00000020
 #define	HPPA_NMODSPBUS	64
 
+#define	CPU_CLOCKUPDATE() do {					\
+	register_t __itmr;					\
+	__asm __volatile("mfctl	%%cr16, %0" : "=r" (__itmr));	\
+	cpu_itmr = __itmr;					\
+	__itmr += cpu_hzticks;					\
+	__asm __volatile("mtctl	%0, %%cr16" :: "r" (__itmr));	\
+} while (0)
+
 #define	clockframe		trapframe
-#define	CLKF_BASEPRI(framep)	((framep)->tf_eiem == ~0U)
 #define	CLKF_PC(framep)		((framep)->tf_iioq_head)
 #define	CLKF_INTR(framep)	((framep)->tf_flags & TFF_INTR)
 #define	CLKF_USERMODE(framep)	((framep)->tf_flags & T_USER)
@@ -122,6 +146,7 @@ extern const char *cpu_typename;
 	(((t)? pdcache : fdcache) (HPPA_SID_KERNEL,(vaddr_t)(a),(s)))
 
 extern int want_resched;
+extern u_int cpu_itmr, cpu_hzticks;
 
 #define DELAY(x) delay(x)
 
@@ -136,7 +161,6 @@ int	spstrcpy(pa_space_t ssp, const void *src,
 		      pa_space_t dsp, void *dst, size_t size, size_t *rsize);
 int	copy_on_fault(void);
 void	switch_trampoline(void);
-void	switch_exit(struct proc *p);
 int	cpu_dumpsize(void);
 int	cpu_dump(void);
 #endif

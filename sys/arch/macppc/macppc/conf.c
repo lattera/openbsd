@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.5.4.3 2002/03/06 01:06:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.5.4.4 2003/03/27 23:29:46 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -117,26 +117,17 @@ cdev_decl(xfs_dev);
 #endif
 
 #include "ksyms.h"
-cdev_decl(ksyms);
 #include "usb.h"
-cdev_decl(usb);
 #include "uhid.h"
-cdev_decl(uhid);
 #include "ugen.h"
-cdev_decl(ugen);
 #include "ulpt.h"
-cdev_decl(ulpt);
 #include "urio.h"
-cdev_decl(urio);
 #include "ucom.h"
-cdev_decl(ucom);
 #include "uscanner.h"
-cdev_decl(uscanner);
 
 #include "inet.h"
 
 #include "apm.h"
-cdev_decl(apm);
 
 #include "wsmux.h"
 
@@ -149,7 +140,10 @@ cdev_decl(pci);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
+
+#include "radio.h"
+#include "bktr.h"
 
 struct cdevsw cdevsw[] = {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -202,7 +196,7 @@ struct cdevsw cdevsw[] = {
 	cdev_crypto_init(NCRYPTO,crypto), /* 47: /dev/crypto */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
@@ -221,7 +215,7 @@ struct cdevsw cdevsw[] = {
 	/* End of reserved slots for isdn4bsd. */
 	cdev_usb_init(NUSB,usb),	/* 61: USB controller */
 	cdev_usbdev_init(NUHID,uhid),	/* 62: USB generic HID */
-	cdev_ugen_init(NUGEN,ugen),	/* 63: USB generic driver */
+	cdev_usbdev_init(NUGEN,ugen),	/* 63: USB generic driver */
 	cdev_ulpt_init(NULPT,ulpt),	/* 64: USB printers */
 	cdev_usbdev_init(NURIO,urio),	/* 65: USB Diamond Rio 500 */
 	cdev_tty_init(NUCOM,ucom),	/* 66: USB tty */
@@ -236,9 +230,11 @@ struct cdevsw cdevsw[] = {
 #else
 	cdev_notdef(),
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 72: ALTQ control interface */
+	cdev_notdef(),			/* 72: ALTQ (deprecated) */
 	cdev_iop_init(NIOP,iop),	/* 73: I2O IOP control interface */
-	cdev_ugen_init(NUSCANNER,uscanner), /* 74: usb scanner */
+	cdev_usbdev_init(NUSCANNER,uscanner), /* 74: usb scanner */
+	cdev_bktr_init(NBKTR,bktr),	/* 75: Bt848 video capture device */
+	cdev_radio_init(NRADIO, radio),	/* 76: generic radio I/O */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 
@@ -375,18 +371,18 @@ blktochr(dev)
 #include "vgafb_pci.h"
 
 cons_decl(ws);
-cons_decl(com);
+cons_decl(zs);
 cons_decl(ofc);
 
 struct consdev constab[] = {
 #if NWSDISPLAY > 0
 	cons_init(ws),
 #endif
+#if NZSTTY > 0
+	cons_init(zs),
+#endif
 #if NOFCONS > 0
 	cons_init(ofc),
-#endif
-#if NCOM > 0
-	cons_init(com),
 #endif
 	{ 0 },
 };

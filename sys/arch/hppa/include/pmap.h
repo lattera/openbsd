@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.4 2002/03/28 10:29:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.5 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -43,7 +43,7 @@ struct pmap {
 #define	pm_lock	pm_obj.vmobjlock
 	struct vm_page	*pm_ptphint;
 	struct vm_page	*pm_pdir_pg;	/* vm_page for pdir */
-	paddr_t		pm_pdir;	/* PA of PD (read-only after create) */
+	u_int32_t	*pm_pdir;	/* page dir (read-only after create) */
 	pa_space_t	pm_space;	/* space id (read-only after create) */
 	u_int		pm_pid;		/* prot id (read-only after create) */
 
@@ -52,21 +52,13 @@ struct pmap {
 typedef struct pmap *pmap_t;
 
 #define HPPA_MAX_PID    0xfffa
-#define	HPPA_SID_MAX	0x7fff
+#define	HPPA_SID_MAX	0x7ffd
 #define HPPA_SID_KERNEL 0
 #define HPPA_PID_KERNEL 2
 
 #define KERNEL_ACCESS_ID 1
 #define KERNEL_TEXT_PROT (TLB_AR_KRX | (KERNEL_ACCESS_ID << 1))
 #define KERNEL_DATA_PROT (TLB_AR_KRW | (KERNEL_ACCESS_ID << 1))
-
-struct pv_entry;
-
-struct pv_head {
-	struct simplelock pvh_lock;	/* locks every pv on this list */
-	struct pv_entry	*pvh_list;	/* head of list (locked by pvh_lock) */
-	pt_entry_t	pvh_attrs;	/* to preserve ref/mod */
-};
 
 struct pv_entry {			/* locked by its list's pvh_lock */
 	struct pv_entry	*pv_next;
@@ -93,7 +85,11 @@ extern int pmap_hptsize;
 extern struct pdc_hwtlb pdc_hwtlb;
 #endif
 
-#define	PMAP_STEAL_MEMORY	/* we have some memory to steal */
+/*
+ * pool quickmaps
+ */
+#define	PMAP_MAP_POOLPAGE(pg)	((vaddr_t)VM_PAGE_TO_PHYS(pg))
+#define	PMAP_UNMAP_POOLPAGE(va) PHYS_TO_VM_PAGE((paddr_t)(va))
 
 /*
  * according to the parisc manual aliased va's should be
@@ -111,8 +107,6 @@ extern struct pdc_hwtlb pdc_hwtlb;
 #define pmap_kernel()			(&kernel_pmap_store)
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_update(pm)			(void)(pm)
-#define	pmap_activate(pm)		(void)(pm)
-#define	pmap_deactivate(pm)		(void)(pm)
 #define pmap_copy(dpmap,spmap,da,len,sa)
 
 #define pmap_clear_modify(pg)	pmap_changebit(pg, 0, PTE_PROT(TLB_DIRTY))
@@ -138,10 +132,9 @@ pmap_prot(struct pmap *pmap, int prot)
 static __inline void
 pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
-	if ((prot & VM_PROT_WRITE) == 0) {
-		if (prot & (VM_PROT_READ|VM_PROT_EXECUTE))
-			(void) pmap_changebit(pg, PTE_PROT(TLB_READ),
-			    PTE_PROT(TLB_WRITE));
+	if ((prot & UVM_PROT_WRITE) == 0) {
+		if (prot & (UVM_PROT_RX))
+			pmap_changebit(pg, 0, PTE_PROT(TLB_WRITE));
 		else
 			pmap_page_remove(pg);
 	}
@@ -150,8 +143,8 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 static __inline void
 pmap_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
-	if ((prot & VM_PROT_WRITE) == 0) {
-		if (prot & (VM_PROT_READ|VM_PROT_EXECUTE))
+	if ((prot & UVM_PROT_WRITE) == 0) {
+		if (prot & (UVM_PROT_RX))
 			pmap_write_protect(pmap, sva, eva, prot);
 		else
 			pmap_remove(pmap, sva, eva);

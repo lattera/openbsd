@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.5 2002/03/06 01:07:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.6 2003/03/27 23:32:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -83,6 +83,7 @@
 
 
 #ifdef _KERNEL
+extern void delay(int);
 #define DELAY(n)	delay(n)
 #endif
 

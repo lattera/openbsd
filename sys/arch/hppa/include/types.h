@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/Attic/types.h,v 1.5.4.1 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/Attic/types.h,v 1.5.4.2 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -54,10 +54,6 @@ typedef	unsigned long		vaddr_t;
 typedef	unsigned long		vsize_t;
 typedef	unsigned long		paddr_t;
 typedef	unsigned long		psize_t;
-/* XXX DIE DIE DIE */
-typedef	unsigned long vm_offset_t;
-typedef unsigned long vm_size_t;
-
 #endif
 
 /*
@@ -89,5 +85,7 @@ typedef	unsigned long		 uint64_t;
 #endif
 
 typedef int32_t			register_t;
+
+#define	__HAVE_DEVICE_REGISTER
 
 #endif	/* _MACHINE_TYPES_H_ */

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/M197,v 1.1.4.6 2002/03/06 01:08:05 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/M197,v 1.1.4.7 2003/03/27 23:32:17 niklas Exp $
 
 machine mvme88k
 
@@ -35,9 +35,9 @@ nvram0	at pcctwo0 offset 0xc0000
 ie0	at pcctwo0 offset 0x46000 ipl 1
 ssh0	at pcctwo0 offset 0x47000 ipl 2
 cl0	at pcctwo0 offset 0x45000 ipl 3
-#lptwo0	at pcctwo0 addr 0xfff45000 ipl 1 size
-#memc0	at pcctwo0 addr 0xfff43000
-#memc1	at pcctwo0 addr 0xfff43100
+#lptwo0	at pcctwo0 addr 0x45000 ipl 1 size
+#memc0	at pcctwo0 addr 0x43000
+#memc1	at pcctwo0 addr 0x43100
 
 # ------------------------------ vme0 devices --------------------------
 vmes0	at vme0

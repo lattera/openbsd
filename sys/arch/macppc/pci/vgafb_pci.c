@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.3 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: vga_pci.c,v 1.4 1996/12/05 01:39:38 cgd Exp $	*/
 
 /*
@@ -44,10 +44,11 @@
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pcidevs.h>
 
-#include <dev/rcons/raster.h>
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsdisplayvar.h>
 #include <dev/wscons/wscons_raster.h>
+#include <dev/rasops/rasops.h>
+#include <dev/wsfont/wsfont.h>
 
 #include <arch/macppc/pci/vgafbvar.h>
 #include <arch/macppc/pci/vgafb_pcivar.h>
@@ -104,17 +105,21 @@ vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, m
 	*iosize   = 0x0;
 	*memsize  = 0x0;
 	*mmiosize = 0x0;
-	for (i = 0x10; i < 0x18; i += 4) {
+	for (i = PCI_MAPREG_START; i <= PCI_MAPREG_PPB_END; i += 4) {
 #ifdef DEBUG_VGAFB
 		printf("vgafb confread %x %x\n",
 			i, pci_conf_read(pc, pa->pa_tag, i));
 #endif
 		/* need to check more than just two base addresses? */
-		if (0x1 & pci_conf_read(pc, pa->pa_tag, i) ) {
+		if (PCI_MAPREG_TYPE(pci_conf_read(pc, pa->pa_tag, i)) ==
+		    PCI_MAPREG_TYPE_IO) {
 			retval = pci_io_find(pc, pa->pa_tag, i,
 				&addr, &size);
-			if (retval) {
+#ifdef DEBUG_VGAFB
 	printf("vgafb_pci_probe: io %x addr %x size %x\n", i, addr, size);
+#endif
+
+			if (retval) {
 				return 0;
 			}
 			if (*iosize == 0) {
@@ -130,12 +135,11 @@ vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, m
 #endif
 
 			if (retval) {
-	printf("vgafb_pci_probe: mem %x addr %x size %x\n", i, addr, size);
 				return 0;
 			}
 			if (size == 0) {
 				/* ignore this entry */
-			}else if (size <= (64 * 1024)) {
+			} else if (size <= (1024 * 1024)) {
 #ifdef DEBUG_VGAFB
 	printf("vgafb_pci_probe: mem %x addr %x size %x iosize %x\n",
 		i, addr, size, *iosize);
@@ -143,6 +147,10 @@ vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, m
 				if (*mmiosize == 0) {
 					/* this is mmio, not memory */
 					*mmioaddr = addr;
+					if (size < 0x80000) {
+						/* ATI driver maps 0x80000, grr */
+						size = 0x80000;
+					}
 					*mmiosize = size;
 					/* need skew in here for io memspace */
 				}
@@ -205,6 +213,7 @@ vgafb_pci_probe(pa, id, ioaddr, iosize, memaddr, memsize, cacheable, mmioaddr, m
 #endif
 	return 1;
 }
+
 int
 vgafb_pci_match(parent, match, aux)
 	struct device *parent;
@@ -216,11 +225,13 @@ vgafb_pci_match(parent, match, aux)
 	void *aux;
 {
 	struct pci_attach_args *pa = aux;
+#ifdef SUPPORTS_NON_CONSOLE
 	u_int32_t memaddr, memsize, cacheable;
 	u_int32_t ioaddr, iosize;
 	u_int32_t mmioaddr, mmiosize;
-	int potential;
 	int retval;
+#endif
+	int potential;
 	static int id = 0;
 	int myid;
 
@@ -262,6 +273,12 @@ vgafb_pci_match(parent, match, aux)
 	}
 #endif
 
+#ifdef SUPPORTS_NON_CONSOLE
+	/* ALL non-console vga support removed for now.
+	 * when the problems with it are resolved,
+	 * it can be reenabled.
+	 */
+
 	memaddr=0xb8000; /* default to isa addresses? */
 	ioaddr = 0; 	 /* default to isa addresses? */
 
@@ -283,6 +300,8 @@ vgafb_pci_match(parent, match, aux)
 	id++;
 
 	return (1);
+#endif
+	return (0);
 }
 
 void
@@ -305,6 +324,7 @@ vgafb_pci_attach(parent, self, aux)
 	vgafb_pci_probe(pa, myid, &ioaddr, &iosize,
 		&memaddr, &memsize, &cacheable, &mmioaddr, &mmiosize);
 
+
 	console = (!bcmp(&pa->pa_tag, &vgafb_pci_console_tag, sizeof(pa->pa_tag)));
 	if (console)
 		vc = sc->sc_vc = &vgafb_pci_console_vc;
@@ -318,6 +338,10 @@ vgafb_pci_attach(parent, self, aux)
 	}
 	vc->vc_mmap = vgafbpcimmap;
 	vc->vc_ioctl = vgafbpciioctl;
+	vc->membase = memaddr;
+	vc->memsize = memsize;
+	vc->mmiobase = mmioaddr;
+	vc->mmiosize = mmiosize;
 
 	sc->sc_pcitag = pa->pa_tag;
 
@@ -413,10 +437,11 @@ vgafb_alloc_screen(v, type, cookiep, curxp, curyp, attrp)
 	if (sc->nscreens > 0)
 		return (ENOMEM);
   
-	*cookiep = &sc->sc_vc->dc_rcons; /* one and only for now */
+	*cookiep = &sc->sc_vc->dc_rinfo; /* one and only for now */
 	*curxp = 0;
 	*curyp = 0;
-	rcons_alloc_attr(&sc->sc_vc->dc_rcons, 0, 0, 0, &defattr);
+	sc->sc_vc->dc_rinfo.ri_ops.alloc_attr(&sc->sc_vc->dc_rinfo,
+	    0, 0, 0, &defattr);
 	*attrp = defattr;
 	sc->nscreens++; 
 	return (0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshreg.h,v 1.1.2.1 2001/04/18 16:10:30 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sshreg.h,v 1.1.2.2 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -294,7 +294,7 @@ typedef volatile ssh_regmap_t *ssh_regmap_p;
 #define	SSH_ISTAT_SIP		0x02	/* SCSI Interrupt pending */
 #define	SSH_ISTAT_DIP		0x01	/* DMA Interrupt pending */
 
-/* Chip test register 8 (ctest8)
+/* Chip test register 8 (ctest8) */
 
 #define	SSH_CTEST8_V		0xf0	/* Chip revision level */
 #define	SSH_CTEST8_FLF		0x08	/* Flush DMA FIFO */
@@ -324,10 +324,10 @@ typedef volatile ssh_regmap_t *ssh_regmap_p;
 /* DMA control register (dcntl) */
 
 #define	SSH_DCNTL_CF_MASK	0xc0	/* Clock frequency dividers:
-						0 --> 37.51..50.00 Mhz, div=2
-						1 --> 25.01..37.50 Mhz, div=1.5
-						2 --> 16.67..25.00 Mhz, div=1
-						3 --> 50.01..66.67 Mhz, div=3
+						0 --> 37.51..50.00 MHz, div=2
+						1 --> 25.01..37.50 MHz, div=1.5
+						2 --> 16.67..25.00 MHz, div=1
+						3 --> 50.01..66.67 MHz, div=3
 					 */
 #define	SSH_DCNTL_EA		0x20	/* Enable ack */
 #define	SSH_DCNTL_SSM		0x10	/* Single step mode */

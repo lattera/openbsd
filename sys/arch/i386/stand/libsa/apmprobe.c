@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.8 2000/01/29 21:49:36 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.8.2.1 2003/03/27 23:26:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2000 Michael Shalayeff
@@ -186,12 +186,13 @@ apmprobe()
 }
 
 void
-apmcheck()
+apmfixmem(void)
 {
 #ifdef DEBUG
-	printf("apm");
+	printf("apmremove (%d)", ai.apm_detail);
 #endif
-	mem_delete(i386_trunc_page(ai.apm_data_base),
-		   i386_round_page(ai.apm_data_base + ai.apm_data_len));
+	if (ai.apm_detail)
+		mem_delete(i386_trunc_page(ai.apm_data_base),
+			i386_round_page(ai.apm_data_base + ai.apm_data_len));
 }
 

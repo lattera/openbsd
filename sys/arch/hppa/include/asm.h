@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10.2.1 2001/04/18 16:06:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/asm.h,v 1.10.2.2 2003/03/27 23:26:54 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1990,1991,1994 The University of Utah and
@@ -249,5 +249,7 @@ tf4	.reg	%fr8
 
 #define ALTENTRY(x) ! .export x, entry ! .label  x
 #define EXIT(x) ! .exit ! .procend
+
+#define	BSS(n,s)	! .data ! .label n ! .comm s
 
 #endif /* _MACHINE_ASM_H_ */

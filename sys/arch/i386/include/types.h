@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.12 1995/12/24 01:08:03 mycroft Exp $	*/
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.7.4.2 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/types.h,v 1.7.4.3 2003/03/27 23:26:55 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -46,9 +46,6 @@ typedef struct label_t {
 	int val[6];
 } label_t;
 #endif
-
-typedef	unsigned long	vm_offset_t;
-typedef	unsigned long	vm_size_t;
 
 typedef unsigned long	vaddr_t;
 typedef unsigned long	paddr_t;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.3 2002/03/28 10:31:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.4 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990, 1993
@@ -43,7 +43,7 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.3 2002/03/28 10:31:03 niklas Exp $";
+static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.4 2003/03/27 23:26:54 niklas Exp $";
 #endif /* not lint */
 #endif
 
@@ -253,7 +253,7 @@ putfile(from_file, to)
 	} else if (*(u_char *)&ex == 0x1f && ((u_char *)&ex)[1] == 0x8b) {
 		entry = 0;
 	} else
-		errx(1, "%s: bad magic number\n", from_file);
+		errx(1, "%s: bad magic number", from_file);
 
 	entry += sizeof(load);
 	lseek(to, sizeof(load), SEEK_CUR);

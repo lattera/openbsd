@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vectors.s,v 1.2.16.1 2001/07/04 10:18:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vectors.s,v 1.2.16.2 2003/03/27 23:28:44 niklas Exp $	*/
 |	$NetBSD: vectors.s,v 1.9 1997/09/03 06:16:24 scottr Exp $
 
 | Copyright (c) 1988 University of Utah
@@ -46,7 +46,7 @@
 	VECTOR(badtrap) ; VECTOR(badtrap) ;	\
 	VECTOR(badtrap) ; VECTOR(badtrap)
 
-	.text
+	.data
 GLOBAL(vectab)
 	VECTOR_UNUSED		/* 0: NOT USED (reset SSP) */
 	VECTOR_UNUSED		/* 1: NOT USED (reset PC) */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.8 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.9 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -196,7 +196,6 @@ void	delay(int);
 #endif /* MULTIPROCESSOR */
 
 #define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
-#define	CLKF_BASEPRI(frame)	((frame)->if_ppl == 0)
 #define	CLKF_PC(frame)		((frame)->if_eip)
 #define	CLKF_INTR(frame)	(IDXSEL((frame)->if_cs) == GICODE_SEL)
 
@@ -220,23 +219,14 @@ void	delay(int);
 void	calibrate_cyclecounter(void);
 #ifndef	HZ
 extern u_quad_t pentium_base_tsc;
-#define CPU_CLOCKUPDATE(otime, ntime)					\
+#define CPU_CLOCKUPDATE()						\
 	do {								\
 		if (pentium_mhz) {					\
 			__asm __volatile("cli\n"			\
-					 "movl (%3), %%eax\n"		\
-					 "movl %%eax, (%2)\n"		\
-					 "movl 4(%3), %%eax\n"		\
-					 "movl %%eax, 4(%2)\n"		\
 					 ".byte 0xf, 0x31\n"		\
 					 "sti\n"			\
-					 "#%0 %1 %2 %3"			\
-					 : "=m" (*otime),		\
-					 "=A" (pentium_base_tsc)	\
-					 : "c" (otime), "b" (ntime));	\
-		}							\
-		else {							\
-			*(otime) = *(ntime);				\
+					 : "=A" (pentium_base_tsc)	\
+					 : );				\
 		}							\
 	} while (0)
 #endif
@@ -304,8 +294,6 @@ void	i386_init_pcb_tss_ldt(struct pcb *);
 struct region_descriptor;
 void	lgdt(struct region_descriptor *);
 void	fillw(short, void *, size_t);
-short	fusword(u_short *);
-int	susword(u_short *t, u_short);
 
 struct pcb;
 void	savectx(struct pcb *);
@@ -343,7 +331,7 @@ void	isa_nodefaultirq(void);
 int	isa_nmi(void);
 
 /* pmap.c */
-void	pmap_bootstrap(vm_offset_t);
+void	pmap_bootstrap(vaddr_t);
 
 /* vm_machdep.c */
 int	kvtop(caddr_t);

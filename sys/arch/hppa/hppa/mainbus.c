@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.6 2002/03/28 10:19:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.7 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998-2001 Michael Shalayeff
+ * Copyright (c) 1998-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
 				len = pdc_btlb.max_size << PGSHIFT;
 			if (btlb_insert(HPPA_SID_KERNEL, spa, spa, &len,
 			    pmap_sid2pid(HPPA_SID_KERNEL) |
-			    pmap_prot(pmap_kernel(), VM_PROT_ALL)) >= 0) {
+			    pmap_prot(pmap_kernel(), UVM_PROT_RW)) >= 0) {
 				pa = spa + len - 1;
 #ifdef BTLBDEBUG
 				printf("--- %x/%x, %qx, %qx-%qx",
@@ -138,7 +138,7 @@ mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
 					epa = (u_int64_t)~0U + 1;
 
 				for (; spa < epa; spa += PAGE_SIZE)
-					pmap_kenter_pa(spa, spa, VM_PROT_ALL);
+					pmap_kenter_pa(spa, spa, UVM_PROT_RW);
 
 			}
 #ifdef BTLBDEBUG
@@ -396,18 +396,18 @@ mbus_sm_8(void *v, bus_space_handle_t h, bus_size_t o, u_int64_t vv, bus_size_t 
 }
 
 void mbus_rrm_2(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int16_t*a, bus_size_t c);
+	    bus_size_t o, u_int16_t*a, bus_size_t c);
 void mbus_rrm_4(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int32_t*a, bus_size_t c);
+	    bus_size_t o, u_int32_t*a, bus_size_t c);
 void mbus_rrm_8(void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int64_t*a, bus_size_t c);
+	    bus_size_t o, u_int64_t*a, bus_size_t c);
 
 void mbus_wrm_2(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int16_t *a, bus_size_t c);
+	    bus_size_t o, const u_int16_t *a, bus_size_t c);
 void mbus_wrm_4(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int32_t *a, bus_size_t c);
+	    bus_size_t o, const u_int32_t *a, bus_size_t c);
 void mbus_wrm_8(void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int64_t *a, bus_size_t c);
+	    bus_size_t o, const u_int64_t *a, bus_size_t c);
 
 void
 mbus_rr_1(void *v, bus_space_handle_t h, bus_size_t o, u_int8_t *a, bus_size_t c)
@@ -705,14 +705,14 @@ void
 mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_addr_t offset, bus_size_t len,
     int ops)
 {
-
-	if (ops & (BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE))
-		__asm __volatile ("syncdma");
-
-	if (ops & BUS_DMASYNC_PREREAD)
-		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
-	else if (ops & BUS_DMASYNC_PREWRITE)
+	if (ops & BUS_DMASYNC_PREWRITE)
 		fdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
+	else
+		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
+
+	/* for either operation sync the shit away */
+	__asm __volatile ("sync\n\tsyncdma\n\tsync\n\t"
+	    "nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\t");
 }
 
 int
@@ -720,6 +720,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 		  bus_size_t boundary, bus_dma_segment_t *segs, int nsegs,
 		  int *rsegs, int flags)
 {
+	extern paddr_t avail_end;
 	struct pglist pglist;
 	struct vm_page *pg;
 	vaddr_t va;
@@ -727,33 +728,31 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 	size = round_page(size);
 
 	TAILQ_INIT(&pglist);
-	if (uvm_pglistalloc(size, VM_MIN_KERNEL_ADDRESS, VM_MAX_KERNEL_ADDRESS,
-	    alignment, 0, &pglist, 1, FALSE))
-		return ENOMEM;
+	if (uvm_pglistalloc(size, 0, avail_end, alignment, boundary,
+	    &pglist, nsegs, flags & BUS_DMA_NOWAIT))
+		return (ENOMEM);
 
 	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
-	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
-	      UVM_ADV_RANDOM, 0))) {
+	    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
+	    UVM_ADV_RANDOM, 0))) {
 		uvm_pglistfree(&pglist);
-		return ENOMEM;
+		return (ENOMEM);
 	}
 
 	segs[0].ds_addr = va;
 	segs[0].ds_len = size;
 	*rsegs = 1;
 
-	for (pg = TAILQ_FIRST(&pglist); pg; pg = TAILQ_NEXT(pg, pageq)) {
+	TAILQ_FOREACH(pg, &pglist, pageq) {
 
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg),
-		    VM_PROT_READ|VM_PROT_WRITE);
-#if notused
-		pmap_changebit(va, TLB_UNCACHEABLE, 0); /* XXX for now */
-#endif
+		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), UVM_PROT_RW);
+		/* XXX for now */
+		pmap_changebit(pg, PTE_PROT(TLB_UNCACHABLE), 0);
 		va += PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());
 
-	return 0;
+	return (0);
 }
 
 void
@@ -851,7 +850,10 @@ mbattach(parent, self, aux)
 	nca.ca_hpamask = HPPA_IOSPACE;
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
-	pdc_scanbus(self, &nca, -1, MAXMODBUS);
+	nca.ca_dp.dp_bc[0] = nca.ca_dp.dp_bc[1] = nca.ca_dp.dp_bc[2] =
+	nca.ca_dp.dp_bc[3] = nca.ca_dp.dp_bc[4] = nca.ca_dp.dp_bc[5] = -1;
+	nca.ca_dp.dp_mod = -1;
+	pdc_scanbus(self, &nca, MAXMODBUS);
 }
 
 /*
@@ -879,7 +881,7 @@ mbprint(aux, pnp)
 		printf("\"%s\" at %s (type %x, sv %x)", ca->ca_name, pnp,
 		    ca->ca_type.iodc_type, ca->ca_type.iodc_sv_model);
 	if (ca->ca_hpa) {
-		if (ca->ca_hpa & ~ca->ca_hpamask)
+		if (~ca->ca_hpamask)
 			printf(" offset %x", ca->ca_hpa & ~ca->ca_hpamask);
 		if (!pnp && ca->ca_irq >= 0)
 			printf(" irq %d", ca->ca_irq);
@@ -896,6 +898,10 @@ mbsubmatch(parent, match, aux)
 	register struct cfdata *cf = match;
 	register struct confargs *ca = aux;
 	register int ret;
+
+	if (autoconf_verbose)
+		printf(">> hpa %x off %x cf_off %x\n",
+		    ca->ca_hpa, ca->ca_hpa & ~ca->ca_hpamask, cf->hppacf_off);
 
 	if (ca->ca_hpa && ~ca->ca_hpamask && cf->hppacf_off != -1 &&
 	    ((ca->ca_hpa & ~ca->ca_hpamask) != cf->hppacf_off))

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.2 2002/03/06 00:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/boot/conf.c,v 1.11.4.3 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -34,25 +34,18 @@
 #include <libsa.h>
 #include <lib/libsa/ufs.h>
 #include <lib/libsa/cd9660.h>
-#include <lib/libsa/exec.h>
 #include <dev/cons.h>
 
-const char version[] = "0.7";
+const char version[] = "0.8";
 int	debug = 0;
 
-const struct x_sw execsw[] = {
-	{ "elf", elf_probe,	elf_load,	elf_ldsym },
-/*	{ "som", som_probe,	som_load,	som_ldsym }, */
-	{ ""   , NULL,		NULL,		NULL },
-};
-
 struct fs_ops file_system[] = {
-	{ lif_open,    lif_close,    lif_read,    lif_write,    lif_seek,
-	  lif_stat,    lif_readdir    },
 	{ ufs_open,    ufs_close,    ufs_read,    ufs_write,    ufs_seek,
 	  ufs_stat,    ufs_readdir    },
 	{ cd9660_open, cd9660_close, cd9660_read, cd9660_write, cd9660_seek,
 	  cd9660_stat, cd9660_readdir },
+	{ lif_open,    lif_close,    lif_read,    lif_write,    lif_seek,
+	  lif_stat,    lif_readdir    },
 };
 int nfsys = NENTS(file_system);
 

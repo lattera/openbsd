@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/XBUG.S,v 1.1.1.1.14.1 2001/10/31 03:01:20 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/XBUG.S,v 1.1.1.1.14.2 2003/03/27 23:32:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -32,7 +32,7 @@
  */
 
 /*
- * Theo sez: I wrote a bootrom for the MVME147 *years* ago. To write
+ * Theo says: I wrote a bootrom for the MVME147 *years* ago. To write
  * this ROM I copied a few chunks from the old bootrom, like this piece:
  * 
  * "watch this, the moto bastard struck here, shouldn't have hired people

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/disksubr.c,v 1.5.2.3 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/disksubr.c,v 1.5.2.4 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -621,6 +621,11 @@ readliflabel (bp, strat, lp, osdep, partoffp, cylp, spoofonly)
 		fsoff = 0;
 	} else {
 		register struct lifdir *p;
+		dev_t dev;
+
+		dev = bp->b_dev;
+		bp = geteblk(LIF_DIRSIZE);
+		bp->b_dev = dev;
 
 		/* read LIF directory */
 		bp->b_blkno = btodb(LIF_DIRSTART);
@@ -632,22 +637,29 @@ readliflabel (bp, strat, lp, osdep, partoffp, cylp, spoofonly)
 		if (biowait(bp)) {
 			if (partoffp)
 				*partoffp = -1;
-			return "LIF directory I/O error";
+
+			bp->b_flags |= B_INVAL;
+			brelse(bp);
+			return ("LIF directory I/O error");
 		}
 
 		bcopy(bp->b_data, osdep->u._hppa.lifdir, LIF_DIRSIZE);
+		bp->b_flags |= B_INVAL;
+		brelse(bp);
+
 		/* scan for LIF_DIR_FS dir entry */
 		for (fsoff = -1,  p = &osdep->u._hppa.lifdir[0];
-		     fsoff < 0 && p < &osdep->u._hppa.lifdir[LIF_NUMDIR]; p++)
+		    fsoff < 0 && p < &osdep->u._hppa.lifdir[LIF_NUMDIR]; p++)
 			if (p->dir_type == LIF_DIR_FS)
 				fsoff = lifstodb(p->dir_addr);
 
-		/* if no suitable lifdir entry found assume LIF_FILESTART */
+		/* if no suitable lifdir entry found assume zero */
 		if (fsoff < 0)
-			fsoff = btodb(LIF_FILESTART);
+			fsoff = 0;
 	}
 
-	*partoffp = fsoff;
+	if (partoffp)
+		*partoffp = fsoff;
 
 	return readbsdlabel(bp, strat, 0,  fsoff + HPPA_LABELSECTOR,
 	    HPPA_LABELOFFSET, BIG_ENDIAN, lp, spoofonly);

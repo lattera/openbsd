@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_disasm.c,v 1.5.16.3 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_disasm.c,v 1.5.16.4 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.11 1996/05/03 19:41:58 christos Exp $	*/
 
 /* 
@@ -911,7 +911,7 @@ db_read_address(loc, short_addr, regmodrm, addrp)
 			break;
 		}
 	} else {
-		if (mod != 3 && rm == 4) {
+		if (rm == 4) {
 			get_value_inc(sib, loc, 1, FALSE);
 			rm = sib_base(sib);
 			index = sib_index(sib);
@@ -959,7 +959,7 @@ db_print_address(seg, size, addrp)
 	if (seg)
 		db_printf("%s:", seg);
 
-	db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
+	db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY, db_printf);
 	if (addrp->base != 0 || addrp->index != 0) {
 		db_printf("(");
 		if (addrp->base)
@@ -1301,15 +1301,18 @@ db_disasm(loc, altfmt)
 			if (seg)
 				db_printf("%s:%#r",seg, displ);
 			else
-				db_printsym((db_addr_t)displ, DB_STGY_ANY);
+				db_printsym((db_addr_t)displ, DB_STGY_ANY,
+				    db_printf);
 			break;
 		    case Db:
 			get_value_inc(displ, loc, 1, TRUE);
-			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN);
+			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN,
+			    db_printf);
 			break;
 		    case Dl:
 			get_value_inc(displ, loc, 4, TRUE);
-			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN);
+			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN,
+			    db_printf);
 			break;
 		    case o1:
 			db_printf("$1");

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.4 2002/03/06 01:07:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.5 2003/03/27 23:32:17 niklas Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -69,8 +69,9 @@
 #include <sys/buf.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
-#include <sys/conf.h>
 #include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include "st.h"
 #include "sd.h"
@@ -78,8 +79,10 @@
 #include "ch.h"
 #include "ss.h"
 #include "uk.h"
+#ifdef notyet
 #include "xd.h"
 bdev_decl(xd);
+#endif
 #include "vnd.h"
 #include "ccd.h"
 #include "rd.h"
@@ -96,7 +99,11 @@ struct bdevsw	bdevsw[] =
 	bdev_tape_init(NST,st),		/* 7: SCSI tape */
 	bdev_disk_init(NCD,cd),		/* 8: SCSI CD-ROM */
 	bdev_disk_init(NRD,rd),		/* 9: RAM disk - for install tape */
+#ifdef notyet
 	bdev_disk_init(NXD,xd),		/* 10: XD disk */
+#else
+	bdev_notdef(),			/* 10 */
+#endif
 	bdev_notdef(),			/* 11 */
 	bdev_notdef(),			/* 12 */
 	bdev_lkm_dummy(),		/* 13 */
@@ -108,37 +115,19 @@ struct bdevsw	bdevsw[] =
 };
 int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 
-#define mmread  mmrw
-#define mmwrite mmrw
-cdev_decl(mm);
-
 #include "sram.h"
-cdev_decl(sram);
-
 #include "vmel.h"
-cdev_decl(vmel);
-
 #include "vmes.h"
-cdev_decl(vmes);
-
 #include "nvram.h"
-cdev_decl(nvram);
-
 #include "flash.h"
-cdev_decl(flash);
 
 #include "pty.h"
 cdev_decl(fd);
 
 #include "zs.h"
-cdev_decl(zs);
 #include "cl.h"
-cdev_decl(cl);
 #include "wl.h"
-cdev_decl(wl);
 #include "bugtty.h"
-cdev_decl(bugtty);
-
 
 /* open, close, write, ioctl */
 #define	cdev_lp_init(c,n) { \
@@ -154,7 +143,6 @@ cdev_decl(bugtty);
 	dev_init(c,n,mmap) }
 
 #include "lp.h"
-cdev_decl(lp);
 #include "lptwo.h"
 cdev_decl(lptwo);
 #ifdef XFS
@@ -162,16 +150,17 @@ cdev_decl(lptwo);
 cdev_decl(xfs_dev);
 #endif
 #include "ksyms.h"
-cdev_decl(ksyms);
 
+#ifdef notyet
 cdev_decl(xd);
+#endif
 
 #include "bpfilter.h"
 #include "tun.h"
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -192,8 +181,8 @@ struct cdevsw	cdevsw[] =
 	cdev_tty_init(NBUGTTY,bugtty),	/* 14: BUGtty (ttyB) */
 	cdev_notdef(),			/* 15 */
 	cdev_notdef(),			/* 16 */
-	cdev_notdef(),			/* 17: concatenated disk */
-        cdev_disk_init(NRD,rd),         /* 18: ramdisk device */
+	cdev_disk_init(NCCD,ccd),	/* 17: concatenated disk */
+	cdev_disk_init(NRD,rd),		/* 18: ramdisk device */
 	cdev_disk_init(NVND,vnd),	/* 19: vnode disk */
 	cdev_tape_init(NST,st),		/* 20: SCSI tape */
 	cdev_fd_init(1,filedesc),	/* 21: file descriptor pseudo-dev */
@@ -201,7 +190,11 @@ struct cdevsw	cdevsw[] =
 	cdev_bpftun_init(NTUN,tun),	/* 23: network tunnel */
 	cdev_lkm_init(NLKM,lkm),	/* 24: loadable module driver */
 	cdev_notdef(),			/* 25 */
+#ifdef notyet
 	cdev_disk_init(NXD,xd),		/* 26: XD disk */
+#else
+	cdev_notdef(),			/* 26 */
+#endif
 	cdev_notdef(),			/* 27 */
 	cdev_lp_init(NLP,lp),		/* 28: lp */
 	cdev_lp_init(NLPTWO,lptwo),	/* 29: lptwo */
@@ -225,13 +218,12 @@ struct cdevsw	cdevsw[] =
 	cdev_lkm_dummy(),		/* 47 */
 	cdev_lkm_dummy(),		/* 48 */
 	cdev_lkm_dummy(),		/* 49 */
-	cdev_lkm_dummy(),		/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
 	cdev_lkm_dummy(),		/* 51 */
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 52: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -251,6 +243,7 @@ dev_t	swapdev = makedev(3, 0);
 /*
  * Returns true if dev is /dev/mem or /dev/kmem.
  */
+int
 iskmemdev(dev)
 	dev_t dev;
 {
@@ -261,6 +254,7 @@ iskmemdev(dev)
 /*
  * Returns true if dev is /dev/zero.
  */
+int
 iszerodev(dev)
 	dev_t dev;
 {
@@ -309,6 +303,7 @@ static int chrtoblktbl[] = {
 /*
  * Convert a character device number to a block device number.
  */
+dev_t
 chrtoblk(dev)
 	dev_t dev;
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.6 2002/03/29 23:46:49 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.7 2003/03/27 23:32:18 niklas Exp $ */
 
 /*
  * This file bears almost no resemblance to the original m68k file,
@@ -215,7 +215,7 @@ typedef	u_int32_t	pt_ind_entry_t;
 #define	PDTIDX(va)	(((va) & PDT_MASK) >> PDT_SHIFT)
 
 /* XXX uses knowledge of pmap structure */
-#define SDTENT(map, va)	((sdt_entry_t *)((map)->sdt_vaddr + SDTIDX(va)))
+#define SDTENT(map, va)	((sdt_entry_t *)((map)->pm_stab + SDTIDX(va)))
 
 /*
  * Size of a PDT table group.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.h,v 1.2.4.2 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.h,v 1.2.4.3 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: pm_direct.h,v 1.5 1999/07/12 15:54:55 tsubai Exp $	*/
 
 /*
@@ -47,11 +47,15 @@ typedef	struct	{
 	char	data[32];	/* data buffer (is it too much?)	*/
 }	PMData;
 
-int pmgrop(PMData *);
-void pm_adb_restart(void);
-void pm_adb_poweroff(void);
-void pm_read_date_time(u_long *);
-void pm_set_date_time(u_long);
+int	pmgrop(PMData *);
+int	pm_adb_op(u_char *, void *, void *, int);
+void	pm_adb_restart(void);
+void	pm_adb_poweroff(void);
+void	pm_check_adb_devices(int);
+void	pm_intr(void);
+void	pm_read_date_time(u_long *);
+void	pm_set_date_time(u_long);
+void	pm_setup_adb(void);
 
 struct pmu_battery_info
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/pccreg.h,v 1.3.16.1 2002/03/28 10:34:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/pccreg.h,v 1.3.16.2 2003/03/27 23:32:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -154,5 +154,6 @@ extern struct pccreg *sys_pcc;
 
 /* XXX */
 int	pccintr_establish(int vec, struct intrhand *ih);
+int	pccspeed(struct pccreg *);
 
 #define PCC_GENCTL_IEN	0x10

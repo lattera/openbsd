@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/disksubr.c,v 1.1.4.3 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/disksubr.c,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -131,7 +131,6 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 	part = (struct part_map_entry *)bp->b_data;
 	/* if first partition is not valid, assume not HFS/DPME partitioned */
         if (part->pmSig != PART_ENTRY_MAGIC) {
-		msg = "DPME partition invalid";
 		osdep->macparts[0].pmSig = 0; /* make invalid */
 		goto hfs_done;
         }

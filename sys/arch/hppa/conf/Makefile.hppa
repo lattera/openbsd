@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/Makefile.hppa,v 1.8.2.3 2002/03/28 10:07:19 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/Makefile.hppa,v 1.8.2.4 2003/03/27 23:26:53 niklas Exp $
 
 # Makefile for OpenBSD
 #
@@ -23,10 +23,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -42,18 +38,19 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dhppa
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wno-uninitialized \
 		-Wno-format -Wno-main
-CMACHFLAGS=	-mfast-indirect-calls -mportable-runtime -mno-space-regs
+CMACHFLAGS=	-mfast-indirect-calls -mportable-runtime -mno-space-regs \
+		-fno-stack-protector
 COPTS?=		-Os
-CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS}
+CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
-LINKFLAGS=	-T ${HPPA}/conf/ld.script -Ttext 12000 -Map bsd.map
-STRIPFLAGS=	-g -X -x
+LINKFLAGS=	-X -T ${HPPA}/conf/ld.script -Ttext 80000 -Map bsd.map
+STRIPFLAGS=	-g -x
 
 .if ${IDENT:M-DDDB} != ""
 CFLAGS+=	-fno-omit-frame-pointer
 .endif
 
-.if ${IDENT:M-DHP7[01]00_CPU} != ""
+.if ${IDENT:M-DHP7000_CPU} != ""
 CFLAGS+=	-mpa-risc-1-0 -mschedule=700
 .elif ${IDENT:M-DHP8*_CPU} != ""
 CFLAGS+=	-mpa-risc-2-0
@@ -123,7 +120,6 @@ SYSTEM_LD_TAIL=	@${SIZE} $@; chmod 755 $@
 
 DEBUG?=
 .if ${DEBUG} == "-g"
-LINKFLAGS+=	-X
 SYSTEM_LD_TAIL+=; \
 		echo cp $@ $@.gdb; rm -f $@.gdb; cp $@ $@.gdb; \
 		echo ${STRIP} ${STRIPFLAGS} $@; ${STRIP} ${STRIPFLAGS} $@
@@ -133,7 +129,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${HPPA}/hppa/genassym.cf
+assym.h: $S/kern/genassym.sh ${HPPA}/hppa/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} ${PROF} \
 	    < ${HPPA}/hppa/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

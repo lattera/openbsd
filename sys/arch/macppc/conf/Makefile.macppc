@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.1.4.3 2002/03/06 01:06:10 niklas Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/Makefile.macppc,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -25,10 +25,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 STRIP?=	strip
 SIZE?=	size
@@ -44,12 +40,11 @@ CPPFLAGS=	${INCLUDES} ${IDENT} -D_KERNEL \
 		-Dmacppc
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
-CMACHFLAGS=	-msoft-float
-#CMACHFLAGS=	-msoft-float -Wa,-m7400
+CMACHFLAGS=	-msoft-float -Wa,-m7400 -fno-stack-protector
 COPTS?=		-O2
-CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS}
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE
-LINKFLAGS=	-N -Ttext 100074 -e start
+LINKFLAGS=	-N -Ttext 100114 -e start
 STRIPFLAGS=	-g -X -x
 
 HOSTCC?=	${CC}
@@ -120,7 +115,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${MACPPC}/macppc/genassym.cf
+assym.h: $S/kern/genassym.sh ${MACPPC}/macppc/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    < ${MACPPC}/macppc/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

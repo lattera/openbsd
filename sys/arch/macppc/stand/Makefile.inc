@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/stand/Makefile.inc,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $
+#	$OpenBSD: src/sys/arch/macppc/stand/Makefile.inc,v 1.2.4.2 2003/03/27 23:29:46 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.1 1996/09/30 16:34:59 ws Exp $
 
 .if !defined(__stand_makefile_inc)
@@ -22,6 +22,7 @@ INCLUDES+=	-I. -I$(.OBJDIR) -I$(.CURDIR)/.. -I$(S)/arch -I$(S)
 INCLUDES+=	-I$(S)/lib/libsa
 DEFS+=		-DSTANDALONE -DFIREPOWERBUGS
 CFLAGS+=	$(INCLUDES) $(DEFS) $(EXTRACFLAGS)
+CFLAGS+=	-fno-stack-protector
 LDFLAGS?=	-X -N -Ttext $(RELOC) -e $(ENTRY)
 
 cleandir:

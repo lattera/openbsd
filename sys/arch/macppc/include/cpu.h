@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/cpu.h,v 1.1.4.3 2002/03/06 01:06:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/cpu.h,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*
@@ -36,39 +36,15 @@
 
 #include <powerpc/cpu.h>
 
-#define	CACHELINESIZE	32			/* For now		XXX */
-
-static __inline void
-syncicache(void *from, int len)
-{
-	int l;
-	char *p = from;
-	len = len + (((u_int32_t) from) & (CACHELINESIZE-1));
-	l = len;
-	
-	do {
-		__asm__ __volatile__ ("dcbst 0,%0" :: "r"(p));
-		p += CACHELINESIZE;
-	} while ((l -= CACHELINESIZE) > 0);
-	__asm__ __volatile__ ("sync");
-	p = from;
-	l = len;
-	do {
-		__asm__ __volatile__ ("icbi 0,%0" :: "r"(p));
-		p += CACHELINESIZE;
-	} while ((l -= CACHELINESIZE) > 0);
-	__asm__ __volatile__ ("isync");
-}
-
 /* 
  * CTL_MACHDEP definitions.
  */
 #define CPU_ALLOWAPERTURE	1	/* allow mmap of /dev/xf86 */
 #define	CPU_MAXID		2	/* number of valid machdep ids */
 
-
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
 	{ "allowaperture", CTLTYPE_INT }, \
 }
+
 #endif	/* _MACHINE_CPU_H_ */

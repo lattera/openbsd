@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.6.6.7 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.6.6.8 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.28 1996/05/03 19:42:29 christos Exp $	*/
 
 /*-
@@ -165,9 +165,9 @@ i386_set_ldt(p, args, retval)
 	    ua.num, ua.desc);
 #endif
 
-	if (ua.start < 0 || ua.num < 0)
-		return (EINVAL);
-	if (ua.start > 8192 || (ua.start + ua.num) > 8192)
+	if (ua.start < 0 || ua.num < 0 ||
+	    ua.start > 8192 || ua.num > 8192 ||
+	    (ua.start + ua.num) > 8192)
 		return (EINVAL);
 
 	/*

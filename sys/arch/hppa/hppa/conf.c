@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.4 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.5 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -52,6 +52,7 @@
 #include "cd.h"
 #include "ch.h"
 #include "ss.h"
+#include "ses.h"
 #include "uk.h"
 #if 0
 #include "fd.h"
@@ -87,22 +88,22 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 	dev_init(c,n,write), dev_init(c,n,ioctl), dev_init(c,n,stop), \
 	dev_init(c,n,tty), ttselect /* ttpoll */, dev_init(c,n,mmap) }
 
-#define	cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl),(dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
-
+#include "audio.h"
 #include "pty.h"
 #include "wsdisplay.h"
 #include "wskbd.h"
 #include "wsmouse.h"
 #include "wsmux.h"
+#ifdef XFS
+#include <xfs/nxfs.h>
+cdev_decl(xfs_dev);
+#endif
 
+#include "inet.h"
 #include "bpfilter.h"
 #include "tun.h"
 
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 #include "lpt.h"
 cdev_decl(lpt);
@@ -112,7 +113,7 @@ cdev_decl(com);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw   cdevsw[] =
 {
@@ -148,13 +149,18 @@ struct cdevsw   cdevsw[] =
 	cdev_mouse_init(NWSKBD,wskbd),	/* 28: keyboards */
 	cdev_mouse_init(NWSMOUSE,wsmouse), /* 29: mice */
 	cdev_mouse_init(NWSMUX,wsmux),	/* 30: mux */
-					/* 31 */
+	cdev_notdef(),			/* 31 */
+
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 32: xfs communication device */
 #else
 	cdev_notdef(),			/* 32 */
 #endif
-	cdev_altq_init(NALTQ,altq),	/* 33: ALTQ control interface */
+	cdev_notdef(),			/* 33: ALTQ (deprecated) */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 34: system call tracing */
+	cdev_audio_init(NAUDIO,audio),	/* 35: /dev/audio */
+	cdev_crypto_init(NCRYPTO,crypto), /* 36: /dev/crypto */
+	cdev_ses_init(NSES,ses),	/* 37: SCSI SES/SAF-TE */
 	cdev_lkm_dummy(),
 	cdev_lkm_dummy(),
 	cdev_lkm_dummy(),

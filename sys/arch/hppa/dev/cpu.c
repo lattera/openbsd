@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.6.2.3 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/cpu.c,v 1.6.2.4 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -80,6 +80,13 @@ cpumatch(parent, cfdata, aux)
 	return 1;
 }
 
+int
+cpu_hardclock(void *v)
+{
+	hardclock(v);
+	return (1);
+}
+
 void
 cpuattach(parent, self, aux)
 	struct device *parent;
@@ -118,7 +125,9 @@ cpuattach(parent, self, aux)
 		/* XXX p = hppa_mod_info(HPPA_TYPE_CPU,pdc_cversion[0]); */
 	}
 
-	printf (": %s rev %d ", p? p : cpu_typename, (*cpu_desidhash)());
+	printf (": %s ", p? p : cpu_typename);
+	if (sc->sc_dev.dv_xname)
+		(*cpu_desidhash)();
 
 	if ((err = pdc_call((iodcio_t)pdc, 0, PDC_MODEL, PDC_MODEL_INFO,
 			    &pdc_model)) < 0) {
@@ -137,21 +146,18 @@ cpuattach(parent, self, aux)
 	printf("MHz, ");
 
 	if (fpu_enable) {
-		const char *name;
-		u_int ver;
+		u_int32_t ver[2];
 
 		mtctl(fpu_enable, CR_CCR);
 		__asm volatile(
+		    "fstds   %%fr0,0(%0)\n\t"
 		    "copr,0,0\n\t"
-		    "fstws   %%fr0,0(%0)"
+		    "fstds   %%fr0,0(%0)"
 		    :: "r" (&ver) : "memory");
 		mtctl(0, CR_CCR);
-		ver = HPPA_FPUVER(ver);
-		name = hppa_mod_info(HPPA_TYPE_FPU, ver >> 5);
-		if (name)
-			printf("FPU %s rev %d", name, ver);
-		else
-			printf("FPU v%d.%02d", ver >> 5, ver & 0x1f);
+		ver[0] = HPPA_FPUVER(ver[0]);
+		printf("FPU %s rev %d",
+		    hppa_mod_info(HPPA_TYPE_FPU, ver[0] >> 5), ver[0] & 0x1f);
 	}
 
 	/* if (pdc_model.sh)
@@ -187,7 +193,7 @@ cpuattach(parent, self, aux)
 	/* sanity against lusers amongst config editors */
 	if (ca->ca_irq == 31)
 		sc->sc_ih = cpu_intr_establish(IPL_CLOCK, ca->ca_irq,
-		    clock_intr, NULL /*trapframe*/, &sc->sc_dev);
+		    cpu_hardclock, NULL /*frame*/, &sc->sc_dev);
 	else
 		printf ("%s: bad irq %d\n", sc->sc_dev.dv_xname, ca->ca_irq);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2.4.4 2002/03/28 10:34:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2.4.5 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.8 1997/11/07 07:33:18 scottr Exp $	*/
 
 /*
@@ -90,6 +90,24 @@ extern unsigned short	mac68k_netipl;
 extern unsigned short	mac68k_impipl;
 extern unsigned short	mac68k_clockipl;
 extern unsigned short	mac68k_statclockipl;
+
+/*
+ * Interrupt "levels".  These are a more abstract representation
+ * of interrupt levels, and do not have the same meaning as m68k
+ * CPU interrupt levels.  They serve two purposes:
+ *
+ *	- properly order ISRs in the list for that CPU ipl
+ *	- compute CPU PSL values for the spl*() calls.
+ */
+#define	IPL_NONE	0
+#define	IPL_SOFTNET	1
+#define	IPL_SOFTCLOCK	1
+#define	IPL_BIO		PSLTOIPL(mac68k_bioipl)
+#define	IPL_NET		PSLTOIPL(mac68k_netipl)
+#define	IPL_TTY		PSLTOIPL(mac68k_ttyipl)
+#define	IPL_CLOCK	PSLTOIPL(mac68k_clockipl)
+#define	IPL_STATCLOCK	PSLTOIPL(mac68k_statclockipl)
+#define	IPL_HIGH	7
 
 /*
  * These should be used for:

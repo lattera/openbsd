@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mcvar.h,v 1.1.8.1 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mcvar.h,v 1.1.8.2 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: if_mcvar.h,v 1.3 1997/12/07 17:47:48 scottr Exp $	*/
 
 /*-
@@ -25,14 +25,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#ifdef DDB
-#define	integrate
-#define hide
-#else
-#define	integrate	static __inline
-#define hide		static
-#endif
 
 #define	MC_REGSPACING	16
 #define	MC_REGSIZE	MACE_NREGS * MC_REGSPACING

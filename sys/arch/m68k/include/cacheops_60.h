@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/Attic/cacheops_60.h,v 1.1.12.3 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/Attic/cacheops_60.h,v 1.1.12.4 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: cacheops_60.h,v 1.1 1997/06/02 20:26:43 leo Exp $	*/
 
 /*-
@@ -199,7 +199,7 @@ ICPP_60(pa)
 void DCPL_60(paddr_t);
 extern __inline__ void
 DCPL_60(pa)
-	paddr_t	va;
+	paddr_t	pa;
 {
 	register paddr_t	r_pa __asm("a0") = pa;
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/Makefile.mvme68k,v 1.10.2.2 2002/03/06 01:06:59 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/Makefile.mvme68k,v 1.10.2.3 2003/03/27 23:32:16 niklas Exp $
 
 # This makefile is constructed from a machine description:
 #	config machineid
@@ -21,10 +21,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 SIZE?=	size
 STRIP?=	strip
@@ -39,17 +35,18 @@ M68K=	$S/arch/m68k
 INCLUDES=	 -I. -I$S/arch -I$S -nostdinc
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dmc68020 -Dmvme68k
-CWARNFLAGS=	-Werror
+CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
+		-Wno-uninitialized -Wno-format -Wno-main
 
 .if empty(IDENT:M-DM68060)
 CMACHFLAGS=	-m68020
 .else
 CMACHFLAGS=	-m68060 -Wa,-m68030
 .endif
-CMACHFLAGS+=	-msoft-float
+CMACHFLAGS+=	-msoft-float -fno-stack-protector
 
-COPTS?=	-O2
-CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS}
+COPTS?=		-O2
+CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
 LINKFLAGS=	-Ttext 0x10000 -z -e start
 STRIPFLAGS=	-d
@@ -120,7 +117,7 @@ LINKFLAGS+=	-S
 %LOAD
 
 assym.h: $S/kern/genassym.sh \
-	 ${M68K}/m68k/genassym.cf ${MVME68K}/mvme68k/genassym.cf
+	 ${M68K}/m68k/genassym.cf ${MVME68K}/mvme68k/genassym.cf Makefile
 	cat ${M68K}/m68k/genassym.cf ${MVME68K}/mvme68k/genassym.cf | \
 	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} ${PROF} \
 	    > assym.h.tmp && \

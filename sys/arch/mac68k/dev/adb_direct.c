@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb_direct.c,v 1.10.8.1 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb_direct.c,v 1.10.8.2 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: adb_direct.c,v 1.5 1997/04/21 18:04:28 scottr Exp $	*/
 
 /*  From: adb_direct.c 2.02 4/18/97 jpw */
@@ -1666,8 +1666,6 @@ adb_reinit(void)
 	int nonewtimes;		/* times thru loop w/o any new devices */
 	ADBDataBlock data;	/* temp. holder for getting device info */
 
-	(void)(&s);		/* work around lame GCC bug */
-
 	/* Make sure we are not interrupted while building the table. */
 	if (adbHardware != ADB_HW_PB)	/* ints must be on for PB? */
 		s = splhigh();
@@ -1739,8 +1737,8 @@ adb_reinit(void)
 	default:
 		via_reg(VIA1, vIER) = 0x04;	/* turn interrupts off - TO
 						 * DO: turn PB ints off? */
+		splx(s);
 		return;
-		break;
 	}
 
 	/*

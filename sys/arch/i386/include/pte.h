@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pte.h,v 1.2.16.3 2001/07/04 10:16:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pte.h,v 1.2.16.4 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: pte.h,v 1.11 1998/02/06 21:58:05 thorpej Exp $	*/
 
 /*
@@ -164,7 +164,7 @@ typedef u_int32_t pt_entry_t;		/* PTE */
 #define	PG_RO		0x00000000	/* read-only page */
 #define	PG_RW		0x00000002	/* read-write page */
 #define	PG_u		0x00000004	/* user accessible page */
-#define	PG_PROT		0x00000006	/* all protection bits */
+#define	PG_PROT		0x00000806	/* all protection bits */
 #define	PG_N		0x00000018	/* non-cacheable */
 #define	PG_U		0x00000020	/* has been used */
 #define	PG_M		0x00000040	/* has been modified */

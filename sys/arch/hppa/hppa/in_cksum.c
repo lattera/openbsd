@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/in_cksum.c,v 1.1.2.1 2001/04/18 16:06:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/in_cksum.c,v 1.1.2.2 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -106,10 +106,10 @@ in_cksum(m, len)
 				if ((4 & (u_long)w) != 0)
 					ADDWORD;
 			}
-	
+
 			while ((mlen -= 32) >= 0)
 				ADD32;
-	
+
 			mlen += 32;
 			if (mlen >= 16) {
 				ADD16;

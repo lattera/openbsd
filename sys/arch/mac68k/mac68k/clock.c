@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/clock.c,v 1.12.8.1 2002/03/28 10:34:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/clock.c,v 1.12.8.2 2003/03/27 23:28:44 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.36 1997/10/07 03:04:55 scottr Exp $	*/
 
 /*
@@ -80,13 +80,13 @@
 
 #include <sys/param.h>
 #include <sys/device.h>
+#include <sys/limits.h>
 #include <sys/kernel.h>
 #include <sys/systm.h>
 
 #include <machine/autoconf.h>
 #include <machine/psl.h>
 #include <machine/cpu.h>
-#include <machine/limits.h>
 
 #if defined(GPROF) && defined(PROFTIMER)
 #include <sys/gprof.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/locore.S,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/locore.S,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*
@@ -137,43 +137,6 @@ start:
 	bl	_C_LABEL(initppc)
 	bl	_C_LABEL(main)
 	b	_C_LABEL(OF_exit)
-
-#define LED_ADDR 0x800008c0
-_ENTRY(_C_LABEL(led_dbg))
-	stwu	1,-32(1)
-	mflr	0
-	stw	0,36(1)
-
-	stw	4,8(1)
-	stw	5,12(1)
-	stw	6,16(1)
-	stw	7,20(1)
-	mfmsr	5
-
-	mr	6,5
-	ori	6,6,(PSL_IR|PSL_DR)@l	/* turn on MMU */
-	mtmsr	6
-	sync
-	isync
-
-	lis	4,LED_ADDR@ha
-	addi	4,4,LED_ADDR@l
-	li	7,0
-	ori	3,3,0x2000
-	sthbrx	3,7,4
-
-	sync
-	mtmsr	5
-	isync
-	lwz	4,8(1)
-	lwz	5,12(1)
-	lwz	6,16(1)
-	lwz	7,20(1)
-
-	lwz	0,36(1)
-	mtlr	0
-	addi	1,1,32
-	blr
 
 /*
  * No processes are runnable, so loop waiting for one.
@@ -911,7 +874,10 @@ s_trap:
 	FRAME_SETUP(tempsave)
 /* Now we can recover interrupts again: */
 	mfmsr	7
-	ori	7,7,(PSL_EE|PSL_ME|PSL_RI)
+	mfsrr1	31
+	andi.	31,31,PSL_EE	/* restore EE from previous context */
+	or	7,7,31
+	ori	7,7,(PSL_ME|PSL_RI)
 	mtmsr	7
 	isync
 /* Call C trap code: */
@@ -981,6 +947,7 @@ s_dsitrap:
 	mfdar	3
 	mfsrr1  4
 	mfdsisr	5
+	li	6, 0
 s_pte_spill:
 	bl	_C_LABEL(pte_spill_r)		/* try a spill */
 	cmpwi	0,3,0
@@ -1035,6 +1002,7 @@ s_isitrap:
 	mfsrr0	3
 	mfsrr1  4
 	li	5, 0
+	li	6, 1
 	b	s_pte_spill		/* above */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.7 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.8 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -39,10 +39,6 @@
 
 #ifndef	_I386_PMAP_H_
 #define	_I386_PMAP_H_
-
-#if defined(_KERNEL) && !defined(_LKM) && defined(__NetBSD__)
-#include "opt_user_ldt.h"
-#endif
 
 #include <machine/cpufunc.h>
 #include <machine/pte.h>
@@ -238,7 +234,7 @@
 
 #define PG_W		PG_AVAIL1	/* "wired" mapping */
 #define PG_PVLIST	PG_AVAIL2	/* mapping has entry on pvlist */
-/* PG_AVAIL3 not used */
+#define	PG_X		PG_AVAIL3	/* executable mapping */
 
 #ifdef _KERNEL
 /*
@@ -270,6 +266,7 @@ struct pmap {
 	struct vm_page *pm_ptphint;	/* pointer to a PTP in our pmap */
 	struct pmap_statistics pm_stats;  /* pmap stats (lck by object lock) */
 
+	int pm_nxpages;			/* # of executable pages on stack */
 	int pm_flags;			/* see below */
 
 	union descriptor *pm_ldt;	/* user-set LDT */
@@ -413,7 +410,7 @@ vaddr_t reserve_dumppages(vaddr_t); /* XXX: not a pmap fn */
  * Do idle page zero'ing uncached to avoid polluting the cache.
  */
 boolean_t	pmap_zero_page_uncached(paddr_t);
-#define	PMAP_PAGEIDLEZERO(pa)	pmap_zero_page_uncached((pa))
+#define	PMAP_PAGEIDLEZERO(pg)	pmap_zero_page_uncached(VM_PAGE_TO_PHYS(pg))
 
 /*
  * inline functions

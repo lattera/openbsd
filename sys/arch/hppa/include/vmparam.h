@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.6 2002/03/28 10:31:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.7 2003/03/27 23:26:54 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -88,7 +88,7 @@
 #define	VM_MIN_ADDRESS		((vaddr_t)0)
 #define	VM_MAXUSER_ADDRESS	((vaddr_t)0xc0000000)
 #define	VM_MAX_ADDRESS		VM_MAXUSER_ADDRESS
-#define	VM_MIN_KERNEL_ADDRESS	((vaddr_t)0)
+#define	VM_MIN_KERNEL_ADDRESS	((vaddr_t)0xc0001000)
 #define	VM_MAX_KERNEL_ADDRESS	((vaddr_t)0xf0000000)
 
 /* virtual sizes (bytes) for various kernel submaps */
@@ -101,13 +101,22 @@
 
 #define	VM_NFREELIST		2
 #define	VM_FREELIST_DEFAULT	0
-#define	VM_FREELIST_FIRST16	1
+#define	VM_FREELIST_ARCH	1
 
-#ifndef _LOCORE
-#define __HAVE_PMAP_PHYSSEG
-struct pmap_physseg {
-	struct pv_head *pvhead;
+#if defined(_KERNEL) && !defined(_LOCORE)
+#define __HAVE_VM_PAGE_MD
+struct pv_entry;
+struct vm_page_md {
+	struct simplelock pvh_lock;	/* locks every pv on this list */
+	struct pv_entry	*pvh_list;	/* head of list (locked by pvh_lock) */
+	u_int		pvh_attrs;	/* to preserve ref/mod */
 };
+
+#define	VM_MDPAGE_INIT(pg) do {				\
+	simple_lock_init(&(pg)->mdpage.pvh_lock);	\
+	(pg)->mdpage.pvh_list = NULL;			\
+	(pg)->mdpage.pvh_attrs = 0;			\
+} while (0)
 #endif
 
 #endif	/* _MACHINE_VMPARAM_H_ */

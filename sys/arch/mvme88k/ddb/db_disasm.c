@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_disasm.c,v 1.4.6.4 2002/03/28 10:36:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_disasm.c,v 1.4.6.5 2003/03/27 23:32:17 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -293,7 +293,7 @@ symofset(int  disp, int  bit, int iadr)
 	} else {
 		addr = iadr + (disp << 2);
 	}
-	db_printsym(addr,DB_STGY_PROC);
+	db_printsym(addr,DB_STGY_PROC, db_printf);
 	return;
 }
 

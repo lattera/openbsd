@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7.2.3 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7.2.4 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -62,7 +62,7 @@ com_gsc_probe(parent, match, aux)
 	struct device *parent;
 	void *match, *aux;
 {
-	register struct gsc_attach_args *ga = aux;
+	struct gsc_attach_args *ga = aux;
 
 	if (ga->ga_type.iodc_type != HPPA_TYPE_FIO ||
 	    (ga->ga_type.iodc_sv_model != HPPA_FIO_GRS232 &&
@@ -82,6 +82,7 @@ com_gsc_attach(parent, self, aux)
 	struct gsc_attach_args *ga = aux;
 	struct com_gsc_regs *regs;
 
+	sc->sc_frequency = COM_FREQ;
 	sc->sc_iobase = (bus_addr_t)ga->ga_hpa + IOMOD_DEVOFFSET;
 	sc->sc_iot = ga->ga_iot;
 	if (sc->sc_iobase == CONADDR)
@@ -94,7 +95,7 @@ com_gsc_attach(parent, self, aux)
 
 	regs = (struct com_gsc_regs *)ga->ga_hpa;
 	if (sc->sc_iobase != CONADDR) {
-		regs->reset = 0xd0;
+		/*regs->reset = 0xd0;*/
 		DELAY(1000);
 	}
 

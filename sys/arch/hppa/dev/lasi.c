@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/lasi.c,v 1.3.4.3 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/lasi.c,v 1.3.4.4 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -39,16 +39,19 @@
 
 #include <machine/bus.h>
 #include <machine/iomod.h>
+#include <machine/reg.h>
 #include <machine/autoconf.h>
 
 #include <hppa/dev/cpudevs.h>
 
 #include <hppa/gsc/gscbusvar.h>
 
+#define	LASI_IOMASK	0xfff00000
+
 struct lasi_hwr {
 	u_int32_t lasi_power;
 #define	LASI_BLINK	0x01
-#define	LASI_ON		0x02
+#define	LASI_OFF	0x02
 	u_int32_t lasi_error;
 	u_int32_t lasi_version;
 	u_int32_t lasi_reset;
@@ -66,6 +69,7 @@ struct lasi_trs {
 struct lasi_softc {
 	struct device sc_dev;
 	struct gscbus_ic sc_ic;
+	int sc_phantomassed;
 
 	struct lasi_hwr volatile *sc_hw;
 	struct lasi_trs volatile *sc_trs;
@@ -74,22 +78,23 @@ struct lasi_softc {
 
 int	lasimatch(struct device *, void *, void *);
 void	lasiattach(struct device *, struct device *, void *);
+void	lasi_mainbus_attach(struct device *, struct device *, void *);
+void	lasi_phantomas_attach(struct device *, struct device *, void *);
 void	lasi_gsc_attach(struct device *);
 
-struct cfattach lasi_ca = {
-	sizeof(struct lasi_softc), lasimatch, lasiattach
+struct cfattach lasi_mainbus_ca = {
+	sizeof(struct lasi_softc), lasimatch, lasi_mainbus_attach
+};
+
+struct cfattach lasi_phantomas_ca = {
+	sizeof(struct lasi_softc), lasimatch, lasi_phantomas_attach
 };
 
 struct cfdriver lasi_cd = {
 	NULL, "lasi", DV_DULL
 };
 
-void lasi_intr_establish(void *v, u_int32_t mask);
-void lasi_intr_disestablish(void *v, u_int32_t mask);
-u_int32_t lasi_intr_check(void *v);
-void lasi_intr_ack(void *v, u_int32_t mask);
 void lasi_cold_hook(int on);
-
 
 int
 lasimatch(parent, cfdata, aux)   
@@ -108,13 +113,34 @@ lasimatch(parent, cfdata, aux)
 }
 
 void
+lasi_mainbus_attach(parent, self, aux)
+	struct device *parent;
+	struct device *self;
+	void *aux;
+{
+	lasiattach(parent, self, aux);
+}
+
+void
+lasi_phantomas_attach(parent, self, aux)
+	struct device *parent;
+	struct device *self;
+	void *aux;
+{
+	struct lasi_softc *sc = (struct lasi_softc *)self;
+
+	sc->sc_phantomassed = 1;
+	lasiattach(parent, self, aux);
+}
+
+void
 lasiattach(parent, self, aux)
 	struct device *parent;
 	struct device *self;
 	void *aux;
 {
-	register struct confargs *ca = aux;
-	register struct lasi_softc *sc = (struct lasi_softc *)self;
+	struct lasi_softc *sc = (struct lasi_softc *)self;
+	struct confargs *ca = aux;
 	bus_space_handle_t ioh;
 	int s, in;
 
@@ -131,8 +157,8 @@ lasiattach(parent, self, aux)
 
 	/* XXX should we reset the chip here? */
 
-	printf (": rev %d.%d\n", (sc->sc_hw->lasi_version & 0xf0) >> 4,
-		sc->sc_hw->lasi_version & 0xf);
+	printf(": rev %d.%d\n", (sc->sc_hw->lasi_version & 0xf0) >> 4,
+	    sc->sc_hw->lasi_version & 0xf);
 
 	/* interrupts guts */
 	s = splhigh();
@@ -145,12 +171,18 @@ lasiattach(parent, self, aux)
 
 	sc->sc_ic.gsc_type = gsc_lasi;
 	sc->sc_ic.gsc_dv = sc;
-	sc->sc_ic.gsc_intr_establish = lasi_intr_establish;
-	sc->sc_ic.gsc_intr_disestablish = lasi_intr_disestablish;
-	sc->sc_ic.gsc_intr_check = lasi_intr_check;
-	sc->sc_ic.gsc_intr_ack = lasi_intr_ack;
+	sc->sc_ic.gsc_base = sc->sc_trs;
 
 	sc->ga.ga_ca = *ca;	/* clone from us */
+	if (!sc->sc_phantomassed) {
+		sc->ga.ga_dp.dp_bc[0] = sc->ga.ga_dp.dp_bc[1];
+		sc->ga.ga_dp.dp_bc[1] = sc->ga.ga_dp.dp_bc[2];
+		sc->ga.ga_dp.dp_bc[2] = sc->ga.ga_dp.dp_bc[3];
+		sc->ga.ga_dp.dp_bc[3] = sc->ga.ga_dp.dp_bc[4];
+		sc->ga.ga_dp.dp_bc[4] = sc->ga.ga_dp.dp_bc[5];
+		sc->ga.ga_dp.dp_bc[5] = sc->ga.ga_dp.dp_mod;
+		sc->ga.ga_dp.dp_mod = 0;
+	}
 	if (sc->sc_dev.dv_unit)
 		config_defer(self, lasi_gsc_attach);
 	else {
@@ -168,6 +200,7 @@ lasi_gsc_attach(self)
 	struct lasi_softc *sc = (struct lasi_softc *)self;
 
 	sc->ga.ga_name = "gsc";
+	sc->ga.ga_hpamask = LASI_IOMASK;
 	sc->ga.ga_ic = &sc->sc_ic;
 	config_found(self, &sc->ga, gscprint);
 }
@@ -189,58 +222,7 @@ lasi_cold_hook(on)
 		sc->sc_hw->lasi_power = 0;
 		break;
 	case HPPA_COLD_OFF:
-		sc->sc_hw->lasi_power = LASI_BLINK;
+		sc->sc_hw->lasi_power = LASI_OFF;
 		break;
 	}
-}
-
-void
-lasi_intr_establish(v, mask)
-	void *v;
-	u_int32_t mask;
-{
-	register struct lasi_softc *sc = v;
-
-	sc->sc_trs->lasi_imr |= mask;
-}
-
-void
-lasi_intr_disestablish(v, mask)
-	void *v;
-	u_int32_t mask;
-{
-	register struct lasi_softc *sc = v;
-
-	sc->sc_trs->lasi_imr &= ~mask;
-}
-
-u_int32_t
-lasi_intr_check(v)
-	void *v;
-{
-	register struct lasi_softc *sc = v;
-	register u_int32_t irr, imr, ipr;
-
-	imr = sc->sc_trs->lasi_imr;
-	ipr = sc->sc_trs->lasi_ipr;
-	irr = sc->sc_trs->lasi_irr;
-	sc->sc_trs->lasi_irr = irr;
-
-#ifdef LASIDEBUG
-	printf ("%s: imr=0x%x, irr=0x%x, ipr=0x%x, iar=0x%x, icr=0x%x\n",
-		sc->sc_dev.dv_xname, imr, irr, ipr,
-		sc->sc_trs->lasi_iar, sc->sc_trs->lasi_icr);
-#endif
-
-	return irr;
-}
-
-void
-lasi_intr_ack(v, mask)
-	void *v;
-	u_int32_t mask;
-{
-	register struct lasi_softc *sc = v;
-
-	sc->sc_trs->lasi_imr |= mask;
 }

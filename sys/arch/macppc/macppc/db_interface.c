@@ -1,9 +1,11 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.3 2003/03/27 23:29:46 niklas Exp $	*/
 /*      $NetBSD: db_interface.c,v 1.12 2001/07/22 11:29:46 wiz Exp $ */
 
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/systm.h>
+
+#include <dev/cons.h>
 
 #include <machine/db_machdep.h>
 #include <ddb/db_extern.h>
@@ -22,8 +24,7 @@ ddb_trap_glue(frame)
 {
 	if (!(frame->srr1 & PSL_PR)
 	    && (frame->exc == EXC_TRC
-		|| (frame->exc == EXC_PGM
-		    && (frame->srr1 & 0x20000))
+		|| (frame->exc == EXC_PGM && (frame->srr1 & 0x20000))
 		|| frame->exc == EXC_BPT)) {
 
 		bcopy(frame->fixreg, DDB_REGS->tf.fixreg,
@@ -31,7 +32,9 @@ ddb_trap_glue(frame)
 		DDB_REGS->tf.srr0 = frame->srr0;
 		DDB_REGS->tf.srr1 = frame->srr1;
 
+		cnpollc(TRUE);
 		db_trap(T_BREAKPOINT, 0);
+		cnpollc(FALSE);
 
 		bcopy(DDB_REGS->tf.fixreg, frame->fixreg,
 			32 * sizeof(u_int32_t));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.7 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.8 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -264,9 +264,9 @@ pagemove(from, to, size)
 #endif
 		{
 			if (otpte & PG_V)
-				pmap_update_pg((vm_offset_t) to);
+				pmap_update_pg((vaddr_t) to);
 			if (ofpte & PG_V)
-				pmap_update_pg((vm_offset_t) from);
+				pmap_update_pg((vaddr_t) from);
 		}
 
 		from += PAGE_SIZE;
@@ -274,7 +274,7 @@ pagemove(from, to, size)
 		size -= PAGE_SIZE;
 	}
 #if defined(I386_CPU)
-	if (cpu_class != CPUCLASS_386)
+	if (cpu_class == CPUCLASS_386)
 		tlbflush();		
 #endif
 }
@@ -283,12 +283,11 @@ pagemove(from, to, size)
  * Convert kernel VA to physical address
  */
 int
-kvtop(addr)
-	caddr_t addr;
+kvtop(caddr_t addr)
 {
-	vm_offset_t pa;
+	paddr_t pa;
 
-	if (pmap_extract(pmap_kernel(), (vm_offset_t)addr, &pa) == FALSE)
+	if (pmap_extract(pmap_kernel(), (vaddr_t)addr, &pa) == FALSE)
 		panic("kvtop: zero page frame");
 	return((int)pa);
 }
@@ -312,17 +311,15 @@ kvtop(addr)
  * (a name with only slightly more meaning than "kernelmap")
  */
 void
-vmapbuf(bp, len)
-	struct buf *bp;
-	vm_size_t len;
+vmapbuf(struct buf *bp, vsize_t len)
 {
-	vm_offset_t faddr, taddr, off;
+	vaddr_t faddr, taddr, off;
 	paddr_t fpa;
 
 	if ((bp->b_flags & B_PHYS) == 0)
 		panic("vmapbuf");
 	faddr = trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
-	off = (vm_offset_t)bp->b_data - faddr;
+	off = (vaddr_t)bp->b_data - faddr;
 	len = round_page(off + len);
 	taddr= uvm_km_valloc_wait(phys_map, len);
 	bp->b_data = (caddr_t)(taddr + off);
@@ -354,16 +351,14 @@ vmapbuf(bp, len)
  * We also invalidate the TLB entries and restore the original b_addr.
  */
 void
-vunmapbuf(bp, len)
-	struct buf *bp;
-	vm_size_t len;
+vunmapbuf(struct buf *bp, vsize_t len)
 {
-	vm_offset_t addr, off;
+	vaddr_t addr, off;
 
 	if ((bp->b_flags & B_PHYS) == 0)
 		panic("vunmapbuf");
 	addr = trunc_page((vaddr_t)bp->b_data);
-	off = (vm_offset_t)bp->b_data - addr;
+	off = (vaddr_t)bp->b_data - addr;
 	len = round_page(off + len);
 	pmap_kremove(addr, len);
 	pmap_update(pmap_kernel());

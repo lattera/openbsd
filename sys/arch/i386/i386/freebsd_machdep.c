@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.2 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.3 2003/03/27 23:26:55 niklas Exp $	*/
 /*	$NetBSD: freebsd_machdep.c,v 1.10 1996/05/03 19:42:05 christos Exp $	*/
 
 /*-
@@ -89,7 +89,6 @@ freebsd_sendsig(catcher, sig, mask, code, type, val)
 	struct freebsd_sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack;
-	extern char freebsd_sigcode[], freebsd_esigcode[];
 
 	/* 
 	 * Build the argument list for the signal handler.
@@ -160,8 +159,7 @@ freebsd_sendsig(catcher, sig, mask, code, type, val)
 	 */
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
-	tf->tf_eip = (int)(((char *)PS_STRINGS) - 
-	     (freebsd_esigcode - freebsd_sigcode));
+	tf->tf_eip = p->p_sigcode;
 	tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;
@@ -360,12 +358,10 @@ freebsd_to_netbsd_ptrace_regs(fregs, nregs, nfpregs)
 #define	FREEBSD_REGS_OFFSET 0x2000
 
 int
-freebsd_ptrace_getregs(fregs, addr, datap)
-	struct freebsd_ptrace_reg *fregs;
-	caddr_t addr;
-	register_t *datap;
+freebsd_ptrace_getregs(struct freebsd_ptrace_reg *fregs, caddr_t addr,
+    register_t *datap)
 {
-	vm_offset_t offset = (vm_offset_t)addr;
+	vaddr_t offset = (vaddr_t)addr;
 
 	if (offset == FREEBSD_U_AR0_OFFSET) {
 		*datap = FREEBSD_REGS_OFFSET + FREEBSD_USRSTACK;
@@ -374,7 +370,7 @@ freebsd_ptrace_getregs(fregs, addr, datap)
 		   offset <= FREEBSD_REGS_OFFSET + 
 		      sizeof(fregs->freebsd_ptrace_regs)-sizeof(register_t)) {
 		*datap = *(register_t *)&((caddr_t)&fregs->freebsd_ptrace_regs)
-			[(vm_offset_t) addr - FREEBSD_REGS_OFFSET];
+			[(vaddr_t) addr - FREEBSD_REGS_OFFSET];
 		return 0;
 	} else if (offset >= FREEBSD_U_SAVEFP_OFFSET &&
 		   offset <= FREEBSD_U_SAVEFP_OFFSET + 
@@ -395,7 +391,7 @@ freebsd_ptrace_setregs(fregs, addr, data)
 	caddr_t addr;
 	int data;
 {
-	vm_offset_t offset = (vm_offset_t)addr;
+	vaddr_t offset = (vaddr_t)addr;
 
 	if (offset >= FREEBSD_REGS_OFFSET &&
 	    offset <= FREEBSD_REGS_OFFSET +

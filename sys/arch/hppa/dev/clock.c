@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.5 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.6 2003/03/27 23:26:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -52,43 +52,11 @@
 #include <ddb/db_extern.h>
 #endif
 
-struct timeval time;
-
-void startrtclock(void);
-
 void
 cpu_initclocks()
 {
-	extern u_int cpu_hzticks;
-	u_int time_inval;
-
-	/* Start the interval timer. */
-	mfctl(CR_ITMR, time_inval);
-	mtctl(time_inval + cpu_hzticks, CR_ITMR);
+	CPU_CLOCKUPDATE();
 }
-
-int
-clock_intr (v)
-	void *v;
-{
-	struct trapframe *frame = v;
-
-	/* printf ("clock int 0x%x @ 0x%x for %p\n", t,
-	   frame->tf_iioq_head, curproc); */
-
-	cpu_initclocks();
-	hardclock(frame);
-
-#if 0
-	ddb_regs = *frame;
-	db_show_regs(NULL, 0, 0, NULL);
-#endif
-
-	/* printf ("clock out 0x%x\n", t); */
-
-	return 1;
-}
-
 
 /*
  * initialize the system time from the time of day clock
@@ -98,16 +66,17 @@ inittodr(t)
 	time_t t;
 {
 	struct pdc_tod tod PDC_ALIGNMENT;
-	int 	tbad = 0;
+	int 	error, tbad = 0;
 
-	if (t < 5*SECYR) {
+	if (t < 12*SECYR) {
 		printf ("WARNING: preposterous time in file system");
 		t = 6*SECYR + 186*SECDAY + SECDAY/2;
 		tbad = 1;
 	}
 
-	pdc_call((iodcio_t)PAGE0->mem_pdc, 1, PDC_TOD, PDC_TOD_READ,
-		&tod, 0, 0, 0, 0, 0);
+	if ((error = pdc_call((iodcio_t)pdc,
+	    1, PDC_TOD, PDC_TOD_READ, &tod, 0, 0, 0, 0, 0)))
+		printf("clock: failed to fetch (%d)\n", error);
 
 	time.tv_sec = tod.sec;
 	time.tv_usec = tod.usec;
@@ -132,12 +101,11 @@ inittodr(t)
 void
 resettodr()
 {
-	struct pdc_tod tod PDC_ALIGNMENT;
+	int error;
 
-	tod.sec = time.tv_sec;
-	tod.usec = time.tv_usec;
-
-	pdc_call((iodcio_t)PAGE0->mem_pdc, 1, PDC_TOD, PDC_TOD_WRITE, &tod);
+	if ((error = pdc_call((iodcio_t)pdc, 1, PDC_TOD, PDC_TOD_WRITE,
+	    time.tv_sec, time.tv_usec)))
+		printf("clock: failed to save (%d)\n");
 }
 
 void
@@ -146,4 +114,3 @@ setstatclockrate(newhz)
 {
 	/* nothing we can do */
 }
-

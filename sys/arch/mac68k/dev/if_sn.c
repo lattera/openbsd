@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.25.4.5 2002/03/28 10:34:04 niklas Exp $        */
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.25.4.6 2003/03/27 23:28:43 niklas Exp $        */
 /*    $NetBSD: if_sn.c,v 1.13 1997/04/25 03:40:10 briggs Exp $        */
 
 /*
@@ -237,7 +237,7 @@ snsetup(sc, lladdr)
 #ifdef SNDEBUG
 	camdump(sc);
 #endif
-	printf(" address %s\n", ether_sprintf(lladdr));
+	printf("address %s\n", ether_sprintf(lladdr));
 
 #ifdef SNDEBUG
 	printf("%s: buffers: rra=%p cda=%p rda=%p tda=%p\n",
@@ -430,7 +430,7 @@ sninit(sc)
 
 	s = splnet();
 
-	NIC_PUT(sc, SNR_CR, CR_RST);	/* DCR only accessable in reset mode! */
+	NIC_PUT(sc, SNR_CR, CR_RST);	/* DCR only accessible in reset mode! */
 
 	/* config it */
 	NIC_PUT(sc, SNR_DCR, (sc->snr_dcr |
@@ -973,12 +973,9 @@ sonictxint(sc)
 
 		if ((txp_status & TCR_PTX) == 0) {
 			ifp->if_oerrors++;
-			printf("%s: Tx packet status=0x%x\n",
-			    sc->sc_dev.dv_xname, txp_status);
 			
 			/* XXX - DG This looks bogus */
 			if (mtd_hw != sc->mtd_free) {
-				printf("resubmitting remaining packets\n");
 				mtd = &sc->mtda[mtd_hw];
 				NIC_PUT(sc, SNR_CTDA, LOWER(mtd->mtd_vtxp));
 				NIC_PUT(sc, SNR_CR, CR_TXP);
@@ -1171,7 +1168,7 @@ sonic_get(sc, eh, datalen)
 				if (top) m_freem(top);
 				return (0);
 			}
-			len = MLEN;
+			len = MCLBYTES;
 		}
 		m->m_len = len = min(datalen, len);
 

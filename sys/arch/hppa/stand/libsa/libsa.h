@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/libsa.h,v 1.7.2.2 2002/03/28 10:31:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/libsa.h,v 1.7.2.3 2003/03/27 23:26:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -36,7 +36,7 @@
 /* #define	EXEC_ECOFF */
 #define	EXEC_SOM
 
-#define	DEFAULT_KERNEL_ADDRESS	0x12000
+#define	DEFAULT_KERNEL_ADDRESS	0
 
 extern dev_t bootdev;
 

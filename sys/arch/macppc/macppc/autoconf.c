@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.1.4.3 2002/03/28 10:36:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.1.4.4 2003/03/27 23:29:46 niklas Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -66,14 +66,14 @@ struct  device *parsedisk(char *, int, int, dev_t *);
 void    setroot(void);
 void	swapconf(void);
 extern void	dumpconf(void);
-int findblkmajor(struct device *);
-char *findblkname(int);
-static struct device * getdisk(char *, int, int, dev_t *);
-struct device * getdevunit(char *, int);
-static struct devmap * findtype(char **);
-void makebootdev(char *cp);
-int getpno(char **);
-void diskconf(void);
+int	findblkmajor(struct device *);
+char	*findblkname(int);
+static	struct device * getdisk(char *, int, int, dev_t *);
+struct	device * getdevunit(char *, int);
+static	struct devmap * findtype(char **);
+void	makebootdev(char *cp);
+int	getpno(char **);
+void	diskconf(void);
 
 /*
  * The following several variables are related to
@@ -94,11 +94,6 @@ cpu_configure()
 	(void)splhigh();	/* To be really sure.. */
 	calc_delayconst();
 
-	/*
-	if(system_type == OFWMACH) {
-		ofrootfound();
-	}
-	*/
 	if(config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");
 	(void)spl0();
@@ -328,7 +323,8 @@ setroot()
 	extern char *nfsbootdevname;
 #endif
 
-printf("bootpath: '%s'\n", bootpath);
+	printf("bootpath: '%s'\n", bootpath);
+
 	makebootdev(bootpath);
 	if(boothowto & RB_DFLTROOT)
 		return;		/* Boot compiled in */
@@ -564,6 +560,8 @@ findtype(s)
 	static struct devmap devmap[] = {
 		{ "/pci@",	NULL, T_BUS },
 		{ "/pci",	NULL, T_BUS },
+		{ "/AppleKiwi@",NULL, T_BUS },
+		{ "/AppleKiwi",	NULL, T_BUS },
 		{ "/mac-io@",	NULL, T_BUS },
 		{ "/mac-io",	NULL, T_BUS },
 		{ "/@",		NULL, T_BUS },
@@ -584,7 +582,7 @@ findtype(s)
 		dp++;
 	}
 	if (dp->att == NULL) {
-		printf("string [%s]not found\n", *s);
+		printf("string [%s] not found\n", *s);
 	}
 	return(dp);
 }

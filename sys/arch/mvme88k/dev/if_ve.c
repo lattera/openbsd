@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/if_ve.c,v 1.1.4.5 2002/03/28 10:36:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/if_ve.c,v 1.1.4.6 2003/03/27 23:32:18 niklas Exp $ */
 /*-
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1982, 1992, 1993
@@ -149,12 +149,8 @@ nvram_cmd(sc, cmd, addr)
 	u_short addr;
 {
 	int i;
-	u_char rcmd = 0;
 	struct vereg1 *reg1 = ((struct ve_softc *)sc)->sc_r1;
 
-	rcmd = addr;
-	rcmd = rcmd << 3;
-	rcmd |= cmd;
 	for (i=0;i<8;i++) {
 		reg1->ver1_ear=((cmd|(addr<<1))>>i); 
 		CDELAY; 

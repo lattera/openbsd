@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/mappedcopy.c,v 1.2.4.4 2002/03/06 01:03:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/mappedcopy.c,v 1.2.4.5 2003/03/27 23:28:43 niklas Exp $	*/
 /*	$NetBSD: mappedcopy.c,v 1.1 1997/02/02 06:54:10 thorpej Exp $	*/
 
 /*
@@ -82,7 +82,7 @@ mappedcopyin(fromp, top, count)
 	register vaddr_t kva;
 	register paddr_t upa;
 	register size_t len;
-	int off, alignable;
+	int off, alignable, tmp;
 	pmap_t upmap;
 	extern caddr_t CADDR1;
 
@@ -99,10 +99,10 @@ mappedcopyin(fromp, top, count)
 	upmap = vm_map_pmap(&curproc->p_vmspace->vm_map);
 	while (count > 0) {
 		/*
-		 * First access of a page, use fubyte to make sure
+		 * First access of a page, use copyin to make sure
 		 * page is faulted in and read access allowed.
 		 */
-		if (fubyte(fromp) == -1)
+		if (copyin(fromp, &tmp, sizeof(u_char)) != 0)
 			return (EFAULT);
 		/*
 		 * Map in the page and bcopy data in from it
@@ -152,10 +152,10 @@ mappedcopyout(fromp, top, count)
 	upmap = vm_map_pmap(&curproc->p_vmspace->vm_map);
 	while (count > 0) {
 		/*
-		 * First access of a page, use subyte to make sure
+		 * First access of a page, use copyout to make sure
 		 * page is faulted in and write access allowed.
 		 */
-		if (subyte(top, *((char *)fromp)) == -1)
+		if (copyout(fromp, top, sizeof(char)) != 0)
 			return (EFAULT);
 		/*
 		 * Map in the page and bcopy data out to it
