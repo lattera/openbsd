@@ -1,11 +1,13 @@
-/*	$OpenBSD: src/lib/libpthread/arch/m68k/Attic/uthread_machdep.c,v 1.1 2000/09/25 09:03:44 d Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/arch/m68k/Attic/uthread_machdep.c,v 1.2 2003/06/02 08:11:15 miod Exp $	*/
 /* David Leonard, <d@csee.uq.edu.au>. Public domain. */
 
 /*
  * Machine-dependent thread state functions for OpenBSD/m68k
  */
 
-#include "uthread_machdep.h"
+#include <pthread.h>
+#include "pthread_private.h"
+
 #define ALIGNBYTES	0x3
 
 struct frame {
