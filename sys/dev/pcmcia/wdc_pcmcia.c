@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/wdc_pcmcia.c,v 1.7.2.2 2001/07/04 10:43:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/wdc_pcmcia.c,v 1.7.2.3 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD: wdc_pcmcia.c,v 1.19 1999/02/19 21:49:43 abs Exp $ */
 
 /*-
@@ -372,7 +372,7 @@ wdc_pcmcia_attach(parent, self, aux)
 #else
 	/* Establish the interrupt handler. */
 	sc->sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_BIO, wdcintr,
-	    &sc->wdc_channel);
+	    &sc->wdc_channel, "");
 	if (sc->sc_ih == NULL) {
 		printf("couldn't establish interrupt handler");
 	}
@@ -457,7 +457,7 @@ wdc_pcmcia_activate(self, act)
 		}
 
 		sc->sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_BIO, 
-		    wdcintr, &sc->wdc_channel);
+		    wdcintr, &sc->wdc_channel, sc->sc_wdcdev.sc_dev.dv_xname);
 		if (sc->sc_ih == NULL) {
 			printf("%s: "
 			    "couldn't establish interrupt handler\n",
@@ -498,7 +498,7 @@ wdc_pcmcia_enable(arg, onoff)
 			}
 
 			sc->sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_BIO, 
-			    wdcintr, &sc->wdc_channel);
+			    wdcintr, &sc->wdc_channel, sc->sc_dev.dv_xname);
 			if (sc->sc_ih == NULL) {
 				printf("%s: "
 				    "couldn't establish interrupt handler\n",

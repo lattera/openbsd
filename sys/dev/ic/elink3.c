@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.3 2001/07/04 10:40:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.4 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: elink3.c,v 1.32 1997/05/14 00:22:00 thorpej Exp $	*/
 
 /*
@@ -353,7 +353,6 @@ epconfig(sc, chipset, enaddr)
 	ifp->if_watchdog = epwatchdog;
 	ifp->if_flags =
 	    IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
-	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
 	IFQ_SET_READY(&ifp->if_snd);
 
 	if_attach(ifp);
@@ -666,7 +665,7 @@ epinit(sc)
 	    S_CARD_FAILURE | S_RX_COMPLETE | S_TX_COMPLETE | S_TX_AVAIL);
 
 	/*
-	 * Attempt to get rid of any stray interrupts that occured during
+	 * Attempt to get rid of any stray interrupts that occurred during
 	 * configuration.  On the i386 this isn't possible because one may
 	 * already be queued.  However, a single stray interrupt is
 	 * unimportant.

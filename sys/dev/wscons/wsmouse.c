@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.2 2001/07/04 10:44:13 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.3 2001/10/31 03:22:50 nate Exp $ */
 /* $NetBSD: wsmouse.c,v 1.12 2000/05/01 07:36:58 takemura Exp $ */
 
 /*
@@ -98,6 +98,7 @@
 #include <dev/wscons/wsmousevar.h>
 #include <dev/wscons/wseventvar.h>
 #include <dev/wscons/wsdisplayvar.h>
+#include <dev/rndvar.h>
 
 #include "wsmouse.h"
 #include "wsmux.h"
@@ -304,6 +305,8 @@ wsmouse_input(wsmousedev, btns, x, y, z, flags)
          */
 	if (sc->sc_ready == 0)
 		return;
+
+	add_mouse_randomness(x ^ y ^ z ^ btns);
 
 #if NWSMUX > 0
 	if (sc->sc_mux)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.2 2001/07/04 10:40:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.3 2001/10/31 03:22:40 nate Exp $	*/
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  * Copyright (c) 2001 Artur Grabowski <art@openbsd.org>
@@ -44,7 +44,11 @@
 #include <vm/vm.h>
 
 extern char *esym;				/* end of symbol table */
+#ifdef __sparc64__
+extern char *ssym;				/* end of kernel */
+#else
 extern long end;				/* end of kernel */
+#endif
 
 static caddr_t ksym_head;
 static caddr_t ksym_syms;
@@ -66,14 +70,25 @@ ksymsattach(num)
 	int num;
 {
 
+#ifdef __sparc64__
+	if (esym <= ssym) {
+		printf("/dev/ksyms: Symbol table not valid.\n");
+		return;
+	}
+#else
 	if (esym <= (char *)&end) {
 		printf("/dev/ksyms: Symbol table not valid.\n");
 		return;
 	}
+#endif
 
 #ifdef _NLIST_DO_ELF
 	do {
+#ifdef __sparc64__
+		caddr_t symtab = ssym;
+#else
 		caddr_t symtab = (caddr_t)&end;
+#endif
 		Elf_Ehdr *elf;
 		Elf_Shdr *shdr;
 		int i;
@@ -88,7 +103,7 @@ ksymsattach(num)
 		for (i = 0; i < elf->e_shnum; i++) {
 			if (shdr[i].sh_type == SHT_SYMTAB) {
 				break;
-  			}
+			}
 		}
 
 		/*

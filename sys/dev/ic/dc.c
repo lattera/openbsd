@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.27.4.2 2001/07/04 10:40:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.27.4.3 2001/10/31 03:22:41 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -123,7 +123,6 @@
 #endif
 
 #include <vm/vm.h>		/* for vtophys */
-#include <vm/pmap.h>		/* for vtophys */
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
@@ -1614,8 +1613,8 @@ void dc_attach(sc)
 		break;
 	case DC_TYPE_AL981:
 	case DC_TYPE_AN983:
-		dc_read_eeprom(sc, (caddr_t)&sc->arpcom.ac_enaddr,
-		    DC_AL_EE_NODEADDR, 3, 0);
+		bcopy(&sc->dc_srom[DC_AL_EE_NODEADDR], &sc->arpcom.ac_enaddr,
+		    ETHER_ADDR_LEN);
 		break;
 	case DC_TYPE_XIRCOM:
 		break;
@@ -1652,6 +1651,10 @@ void dc_attach(sc)
 	IFQ_SET_MAXLEN(&ifp->if_snd, DC_TX_LIST_CNT - 1);
 	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
+
+#if NVLAN > 0
+	ifp->if_capabilities = IFCAP_VLAN_MTU;
+#endif
 
 	/* Do MII setup. If this is a 21143, check for a PHY on the
 	 * MII bus after applying any necessary fixups to twiddle the

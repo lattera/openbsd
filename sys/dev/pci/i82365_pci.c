@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3.6.2 2001/07/04 10:42:09 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3.6.3 2001/10/31 03:22:45 nate Exp $ */
 /*	$NetBSD: i82365_pci.c,v 1.11 2000/02/24 03:42:44 itohy Exp $	*/
 
 /*
@@ -217,7 +217,7 @@ pcic_pci_attach(parent, self, aux)
         } else
                 printf("%s: no irq, ", sc->dev.dv_xname);
 
-        printf("polling enabled\n", sc->dev.dv_xname);
+        printf("polling enabled\n");
         if (sc->poll_established == 0) {
                 timeout_set(&sc->poll_timeout, pcic_poll_intr, sc);
                 timeout_add(&sc->poll_timeout, hz / 2);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.2 2001/07/04 10:42:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.3 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -105,6 +105,10 @@ fxp_pci_match(parent, match, aux)
 	case PCI_PRODUCT_INTEL_82559:
 	case PCI_PRODUCT_INTEL_82559ER:
 	case PCI_PRODUCT_INTEL_82562:
+	case PCI_PRODUCT_INTEL_PRO_100_VE_0:
+	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
 		return (1);
 	}
 
@@ -137,12 +141,12 @@ fxp_pci_attach(parent, self, aux)
 		return;
 	}
 	sc->sc_st = iot;
+	sc->sc_dmat = pa->pa_dmat;
 
 	/*
 	 * Allocate our interrupt.
 	 */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		return;
 	}
@@ -161,9 +165,12 @@ fxp_pci_attach(parent, self, aux)
 	switch (PCI_PRODUCT(pa->pa_id)) {
 	case PCI_PRODUCT_INTEL_82562:
 		sc->sc_flags |= FXPF_HAS_RESUME_BUG;
+		/* FALLTHROUGH */
+	case PCI_PRODUCT_INTEL_82559:
+	case PCI_PRODUCT_INTEL_82559ER:
 		sc->not_82557 = 1;
 		break;
-	default:
+	case PCI_PRODUCT_INTEL_82557:
 		/*
 		 * revisions
 		 * 2 = 82557
@@ -171,6 +178,16 @@ fxp_pci_attach(parent, self, aux)
 		 * 8 = 82559
 		 */
 		sc->not_82557 = (rev >= 4) ? 1 : 0;
+		break;
+	case PCI_PRODUCT_INTEL_PRO_100_VE_0:
+	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
+		sc->sc_flags |= FXPF_HAS_RESUME_BUG;
+		sc->not_82557 = 0;
+		break;
+	default:
+		sc->not_82557 = 0;
 		break;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cs4231.c,v 1.7 2001/10/01 04:10:49 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cs4231.c,v 1.7.4.1 2001/10/31 03:22:49 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ess_isapnp.c,v 1.1.4.2 2001/07/04 10:41:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ess_isapnp.c,v 1.1.4.3 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: ess_isa.c,v 1.4 1999/03/18 20:57:11 mycroft Exp $	*/
 
 /*-
@@ -94,7 +94,7 @@ void ess_isapnp_attach(parent, self, aux)
 	sc->sc_isa = parent->dv_parent;
 
 	if (!essmatch(sc)) {
-		printf(": essmatch failed\n", sc->sc_dev.dv_xname);
+		printf(": essmatch failed\n");
 		return;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10.4.2 2001/07/04 10:43:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10.4.3 2001/10/31 03:22:49 nate Exp $ */
 /*	$NetBSD: umass.c,v 1.49 2001/01/21 18:56:38 augustss Exp $	*/
 /*-
  * Copyright (c) 1999 MAEKAWA Masahide <bishop@rr.iij4u.or.jp>,
@@ -867,6 +867,8 @@ USB_MATCH(umass)
 	return (umass_match_proto(sc, uaa->iface, uaa->device));
 }
 
+void umass_delayed_attach(struct umass_softc  *sc);
+
 USB_ATTACH(umass)
 {
 	USB_ATTACH_START(umass, sc, uaa);
@@ -1156,6 +1158,22 @@ USB_ATTACH(umass)
 		USB_ATTACH_ERROR_RETURN;
 	}
 
+	if (cold) {
+		startuphook_establish((void (*)(void *))umass_delayed_attach,
+			sc);
+	} else {
+		/* hot plug, do it now */
+		umass_delayed_attach(sc);
+	}
+
+	DPRINTF(UDMASS_GEN, ("%s: Attach finished\n", USBDEVNAME(sc->sc_dev)));
+
+	USB_ATTACH_SUCCESS_RETURN;
+}
+
+void
+umass_delayed_attach(struct umass_softc  *sc)
+{
 	sc->sc_child = config_found(&sc->sc_dev, &sc->u, scsipiprint);
 	if (sc->sc_child == NULL) {
 		umass_disco(sc);
@@ -1165,10 +1183,6 @@ USB_ATTACH(umass)
 
 	usbd_add_drv_event(USB_EVENT_DRIVER_ATTACH, sc->sc_udev,
 			   USBDEV(sc->sc_dev));
-
-	DPRINTF(UDMASS_GEN, ("%s: Attach finished\n", USBDEVNAME(sc->sc_dev)));
-
-	USB_ATTACH_SUCCESS_RETURN;
 }
 
 Static int

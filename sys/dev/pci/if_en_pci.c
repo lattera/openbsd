@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_en_pci.c,v 1.6.10.1 2001/05/14 22:25:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_en_pci.c,v 1.6.10.2 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
  *
@@ -212,8 +212,7 @@ void *aux;
    * interrupt map
    */
 
-  if (pci_intr_map(scp->en_pc, pa->pa_intrtag, pa->pa_intrpin, 
-					pa->pa_intrline, &ih)) {
+  if (pci_intr_map(pa, &ih)) {
     printf(": couldn't map interrupt\n");
     return;
   }

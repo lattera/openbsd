@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/isapnp.c,v 1.28.4.1 2001/05/14 22:24:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/isapnp.c,v 1.28.4.2 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: isapnp.c,v 1.9.4.3 1997/10/29 00:40:43 thorpej Exp $	*/
 
 /*
@@ -899,7 +899,7 @@ isapnp_attach(parent, self, aux)
 		panic("%s: bus map failed", sc->sc_dev.dv_xname);
 
 	if (!isapnp_find(sc, 1)) {
-		printf(": no cards found\n", sc->sc_dev.dv_xname);
+		printf(": no cards found\n");
 		return;
 	}
 

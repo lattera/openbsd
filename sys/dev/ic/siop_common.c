@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.2 2001/07/04 10:41:08 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.3 2001/10/31 03:22:43 nate Exp $ */
 /*	$NetBSD: siop_common.c,v 1.12 2001/02/11 18:04:50 bouyer Exp $	*/
 
 /*
@@ -54,6 +54,8 @@
 
 #undef DEBUG
 #undef DEBUG_DR
+
+int siop_find_lun0_quirks __P((struct siop_softc *, u_int8_t, u_int16_t));
 
 void
 siop_common_reset(sc)
@@ -121,6 +123,26 @@ siop_common_reset(sc)
 	sc->sc_reset(sc);
 }
 
+int
+siop_find_lun0_quirks(sc, bus, target)
+	struct siop_softc *sc;
+	u_int8_t bus;
+	u_int16_t target;
+{
+	struct scsi_link *sc_link;
+	struct device *dev;
+
+	for (dev = TAILQ_FIRST(&alldevs); dev != NULL; dev = TAILQ_NEXT(dev, dv_list))
+		if (dev->dv_parent == (struct device *)sc) {
+			sc_link = ((struct scsibus_softc *)dev)->sc_link[target][0];
+			if ((sc_link != NULL) && (sc_link->scsibus == bus))
+				return sc_link->quirks;
+		}
+
+	/* If we can't find a quirks entry, assume the worst */
+	return (SDEV_NOTAGS | SDEV_NOWIDE | SDEV_NOSYNC);
+}
+
 /* prepare tables before sending a cmd */
 void
 siop_setuptables(siop_cmd)
@@ -131,7 +153,8 @@ siop_setuptables(siop_cmd)
 	struct scsi_xfer *xs = siop_cmd->xs;
 	int target = xs->sc_link->target;
 	int lun = xs->sc_link->lun;
-	int targ_flags = sc->targets[target]->flags;
+	int *targ_flags = &sc->targets[target]->flags;
+	int quirks;
 
 	siop_cmd->siop_tables.id = htole32(sc->targets[target]->id);
 	memset(siop_cmd->siop_tables.msg_out, 0, 8);
@@ -141,16 +164,35 @@ siop_setuptables(siop_cmd)
 		siop_cmd->siop_tables.msg_out[0] = MSG_IDENTIFY(lun, 0);
 	siop_cmd->siop_tables.t_msgout.count= htole32(1);
 	if (sc->targets[target]->status == TARST_ASYNC) {
-		if (targ_flags & TARF_PPR) {
+		*targ_flags = 0;
+		if (lun == 0)
+			quirks = xs->sc_link->quirks;
+		else
+			quirks = siop_find_lun0_quirks(sc, xs->sc_link->scsibus, target);
+
+		if ((quirks & SDEV_NOTAGS) == 0) {
+			*targ_flags |= TARF_TAG;
+			xs->sc_link->openings += SIOP_NTAG - SIOP_OPENINGS;
+		}
+		if ((quirks & SDEV_NOWIDE) == 0)
+			*targ_flags |= TARF_WIDE;
+		if ((quirks & SDEV_NOSYNC) == 0)
+			*targ_flags |= TARF_SYNC;
+
+		/* Safe to call siop_add_dev() multiple times */
+		siop_add_dev(sc, target, 0);
+
+		if ((sc->features & SF_CHIP_C10)
+		    && (*targ_flags & TARF_WIDE)
+		    && (xs->sc_link->inquiry_flags2 & (SID_CLOCKING | SID_QAS | SID_IUS))) {
 			sc->targets[target]->status = TARST_PPR_NEG;
-			if (sc->min_dt_sync != 0)
-				siop_ppr_msg(siop_cmd, 1, sc->min_dt_sync, sc->maxoff);
-			else
-				siop_ppr_msg(siop_cmd, 1, sc->min_st_sync, sc->maxoff);
-		} else if (targ_flags & TARF_WIDE) {
+			siop_ppr_msg(siop_cmd, 1, 
+				     (sc->min_dt_sync == 0) ? sc->min_st_sync : sc->min_dt_sync,
+				     sc->maxoff);
+		} else if (*targ_flags & TARF_WIDE) {
 			sc->targets[target]->status = TARST_WIDE_NEG;
 			siop_wdtr_msg(siop_cmd, 1, MSG_EXT_WDTR_BUS_16_BIT);
-		} else if (targ_flags & TARF_SYNC) {
+		} else if (*targ_flags & TARF_SYNC) {
 			sc->targets[target]->status = TARST_SYNC_NEG;
 			siop_sdtr_msg(siop_cmd, 1, sc->min_st_sync, sc->maxoff);
 		} else {
@@ -158,7 +200,7 @@ siop_setuptables(siop_cmd)
 			siop_print_info(sc, target);
 		}
 	} else if (sc->targets[target]->status == TARST_OK &&
-	    (targ_flags & TARF_TAG) &&
+	    (*targ_flags & TARF_TAG) &&
 	    siop_cmd->status != CMDST_SENSE) {
 		siop_cmd->flags |= CMDFL_TAG;
 	}
@@ -584,7 +626,7 @@ siop_clearfifo(sc)
 	int timeout = 0;
 	int ctest3 = bus_space_read_1(sc->sc_rt, sc->sc_rh, SIOP_CTEST3);
 
-#ifdef DEBUG_INTR
+#ifdef SIOP_DEBUG_INTR
 	printf("DMA fifo not empty!\n");
 #endif
 	bus_space_write_1(sc->sc_rt, sc->sc_rh, SIOP_CTEST3,

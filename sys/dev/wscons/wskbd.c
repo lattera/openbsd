@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.2 2001/07/04 10:44:11 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wskbd.c,v 1.16.2.3 2001/10/31 03:22:50 nate Exp $ */
 /* $NetBSD: wskbd.c,v 1.38 2000/03/23 07:01:47 thorpej Exp $ */
 
 /*
@@ -197,6 +197,7 @@ struct wskbd_softc {
 #define MOD_COMMAND		(1 << 12)
 #define MOD_COMMAND1		(1 << 13)
 #define MOD_COMMAND2		(1 << 14)
+#define MOD_MODELOCK		(1 << 15)
 
 #define MOD_ANYSHIFT		(MOD_SHIFT_L | MOD_SHIFT_R | MOD_SHIFTLOCK)
 #define MOD_ANYCONTROL		(MOD_CONTROL_L | MOD_CONTROL_R)
@@ -425,9 +426,11 @@ wskbd_attach(parent, self, aux)
 	printf("\n");
 
 #if NWSMUX > 0
-	if (mux != WSKBDDEVCF_MUX_DEFAULT)
+	if (mux != WSKBDDEVCF_MUX_DEFAULT) {
 		wsmux_attach(mux, WSMUX_KBD, &sc->sc_dv, &sc->sc_events, 
 			     &sc->sc_mux, &wskbd_muxops);
+		wsdisplay_set_console_kbd(self);
+	}
 #endif
 
 }
@@ -543,6 +546,11 @@ wskbd_detach(self, flags)
 		timeout_del(&sc->sc_repeat_ch);
 	}
 #endif
+
+	if (sc->sc_isconsole) {
+		KASSERT(wskbd_console_device == sc);
+		wskbd_console_device = NULL;
+	}
 
 	evar = &sc->sc_events;
 	if (evar->io) {
@@ -985,6 +993,8 @@ getkeyrepeat:
 		if ((flag & FWRITE) == 0)
 			return (EACCES);
 		umdp = (struct wskbd_map_data *)data;
+		if (umdp->maplen > WSKBDIO_MAXMAPLEN)
+			return (EINVAL);
 		len = umdp->maplen*sizeof(struct wscons_keymap);
 		buf = malloc(len, M_TEMP, M_WAITOK);
 		error = copyin(umdp->map, buf, len);
@@ -1460,7 +1470,7 @@ wskbd_translate(id, type, value)
 		id->t_modifiers &= ~(MOD_SHIFT_L | MOD_SHIFT_R
 				| MOD_CONTROL_L | MOD_CONTROL_R
 				| MOD_META_L | MOD_META_R
-				| MOD_MODESHIFT
+				| MOD_MODESHIFT | MOD_MODELOCK
 				| MOD_COMMAND | MOD_COMMAND1 | MOD_COMMAND2);
 		update_leds(id);
 		return (0);
@@ -1523,6 +1533,10 @@ wskbd_translate(id, type, value)
 		update_modifier(id, type, 0, MOD_MODESHIFT);
 		break;
 
+	case KS_Mode_Lock:
+		update_modifier(id, type, 1, MOD_MODELOCK);
+		break;
+
 	case KS_Num_Lock:
 		update_modifier(id, type, 1, MOD_NUMLOCK);
 		break;
@@ -1560,7 +1574,8 @@ wskbd_translate(id, type, value)
 	}
 
 	/* Get the keysym */
-	if (id->t_modifiers & MOD_MODESHIFT)
+	if (id->t_modifiers & (MOD_MODESHIFT|MOD_MODELOCK) &&
+	    !MOD_ONESET(id, MOD_ANYCONTROL))
 		group = & kp->group2[0];
 	else
 		group = & kp->group1[0];

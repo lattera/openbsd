@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.2 2001/07/04 10:43:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.3 2001/10/31 03:22:48 nate Exp $ */
 /* $NetBSD: tga.c,v 1.31 2001/02/11 19:34:58 nathanw Exp $ */
 
 /*
@@ -440,8 +440,7 @@ tgaattach(parent, self, aux)
 
 	/* XXX say what's going on. */
 	intrstr = NULL;
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &intrh)) {
+	if (pci_intr_map(pa, &intrh)) {
 		printf(": couldn't map interrupt");
 		return;
 	}
@@ -832,7 +831,8 @@ tga_builtin_set_cursor(dc, cursorp)
 {
 	struct ramdac_funcs *dcrf = dc->dc_ramdac_funcs;
 	struct ramdac_cookie *dcrc = dc->dc_ramdac_cookie;
-	int count, error, v;
+	u_int count, v;
+	int error;
 
 	v = cursorp->which;
 	if (v & WSDISPLAY_CURSOR_DOCMAP) {
@@ -887,7 +887,8 @@ tga_builtin_get_cursor(dc, cursorp)
 {
 	struct ramdac_funcs *dcrf = dc->dc_ramdac_funcs;
 	struct ramdac_cookie *dcrc = dc->dc_ramdac_cookie;
-	int count, error;
+	int error;
+	u_int count;
 
 	cursorp->which = WSDISPLAY_CURSOR_DOALL &
 	    ~(WSDISPLAY_CURSOR_DOHOT | WSDISPLAY_CURSOR_DOCMAP);

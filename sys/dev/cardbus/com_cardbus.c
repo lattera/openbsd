@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/cardbus/com_cardbus.c,v 1.4.4.1 2001/05/14 22:23:12 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/cardbus/com_cardbus.c,v 1.4.4.2 2001/10/31 03:22:40 nate Exp $ */
 /* $NetBSD: com_cardbus.c,v 1.4 2000/04/17 09:21:59 joda Exp $ */
 
 /*
@@ -122,6 +122,8 @@ static struct csdev {
 	int		type;
 } csdevs[] = {
 	{ CARDBUS_VENDOR_XIRCOM, CARDBUS_PRODUCT_XIRCOM_MODEM56,
+	  CARDBUS_BASE0_REG, CARDBUS_MAPREG_TYPE_IO },
+	{ CARDBUS_VENDOR_XIRCOM, CARDBUS_PRODUCT_XIRCOM_CBEM56G,
 	  CARDBUS_BASE0_REG, CARDBUS_MAPREG_TYPE_IO },
 	{ CARDBUS_VENDOR_INTEL, CARDBUS_PRODUCT_INTEL_MODEM56,
 	  CARDBUS_BASE0_REG, CARDBUS_MAPREG_TYPE_IO },

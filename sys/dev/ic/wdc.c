@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdc.c,v 1.15.2.2 2001/07/04 10:41:17 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdc.c,v 1.15.2.3 2001/10/31 03:22:43 nate Exp $     */
 /*	$NetBSD: wdc.c,v 1.68 1999/06/23 19:00:17 bouyer Exp $ */
 
 
@@ -347,20 +347,8 @@ wdc_floating_bus(chp, drive)
 			return 1;
 	}
 
-	/*
-	 * Test register writability
-	 */
-	CHP_WRITE_REG(chp, wdr_cyl_lo, 0xaa);
-	CHP_WRITE_REG(chp, wdr_cyl_hi, 0x55);
-	CHP_WRITE_REG(chp, wdr_seccnt, 0xff);
 
-	if (CHP_READ_REG(chp, wdr_cyl_lo) == 0xaa &&
-	    CHP_READ_REG(chp, wdr_cyl_hi) == 0x55)
-		return 0;
-
-	CHP_WRITE_REG(chp, wdr_seccnt, 0x58);
-
-	return 1;
+	return 0;
 }
 
 
@@ -403,7 +391,12 @@ wdc_ata_present(chp, drive)
 	int drive;
 {
 	int time_to_done;
+	int retry_cnt = 0;
 
+	CHP_WRITE_REG(chp, wdr_sdh, WDSD_IBM | (drive << 4));
+	delay(10);
+
+ retry:
 	/* 
 	   You're actually supposed to wait up to 10 seconds
 	   for DRDY. However, as a practical matter, most
@@ -413,59 +406,53 @@ wdc_ata_present(chp, drive)
 	   to the ATA standard, the master should reply with 00
 	   for any reads to a non-existant slave. 
 	*/
+	time_to_done = wdc_wait_for_status(chp,
+	    (WDCS_DRDY | WDCS_DSC | WDCS_DRQ), 
+	    (WDCS_DRDY | WDCS_DSC), 1000);
+      	if (time_to_done == -1) {
+		if (retry_cnt == 0 && chp->ch_status == 0x00) {
+			/* At least one flash card needs to be kicked */
+			wdccommandshort(chp, drive, WDCC_CHECK_PWR);
+			retry_cnt++;
+			goto retry;
+		}
+		WDCDEBUG_PRINT(("%s:%d:%d: DRDY test timed out with status"
+		    " %02x\n", 
+		    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe", 
+		    chp->channel, drive, chp->ch_status),
+		    DEBUG_PROBE);
+		return 0;
+	}
 
-	time_to_done = wdc_wait_for_status(chp, WDCS_DRDY, WDCS_DRDY, 1000);
-      	if (time_to_done == -1) return 0;
+	if ((chp->ch_status & 0xfc) != (WDCS_DRDY | WDCS_DSC)) {
+		WDCDEBUG_PRINT(("%s:%d:%d: status test for 0x50 failed with"
+		    " %02x\n", 
+		    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe", 
+		    chp->channel, drive, chp->ch_status),
+		    DEBUG_PROBE);
+
+		return 0;
+	}
 
 	WDCDEBUG_PRINT(("%s:%d:%d: waiting for ready %d msec\n",
 	    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe",
 	    chp->channel, drive, time_to_done), DEBUG_PROBE);
 
-	/* 
-	   This section has been disabled because my Promise Ultra/66
-	   starts interrupting like crazy when I issue a NOP. This
-	   needs to be researched. - csapuntz@openbsd.org
-	*/
-#if 0
-	/* 
-	   The NOP command always aborts.
+	/*
+	 * Test register writability
+	 */
+	CHP_WRITE_REG(chp, wdr_cyl_lo, 0xaa);
+	CHP_WRITE_REG(chp, wdr_cyl_hi, 0x55);
+	CHP_WRITE_REG(chp, wdr_seccnt, 0xff);
+       	DELAY(10);
 
-	   If a drive doesn't understand NOP, it will abort the
-	   command.
-
-	   If a drive does understand NOP, it will abort the command.
-
-	   If a drive is not present, we may get random crud on
-	   register reads which will hopefully not pass the test.
-
-	   Thanks to gluk@ptci.ru for designing this check.
-	*/
-
-	CHP_WRITE_REG(chp, wdr_features, 0);
-	CHP_WRITE_REG(chp, wdr_command, WDCC_NOP);
-      	delay(10);
-
-	time_to_done = wdc_wait_for_status(chp, 0, 0, 1000);
-
-	if (time_to_done == -1) {
-		WDCDEBUG_PRINT(("%s:%d:%d: timeout waiting for NOP to complete\n", 
-		    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe",
-		    chp->channel, drive), DEBUG_PROBE);
+	if (CHP_READ_REG(chp, wdr_cyl_lo) != 0xaa &&
+	    CHP_READ_REG(chp, wdr_cyl_hi) != 0x55) {
+		WDCDEBUG_PRINT(("%s:%d:%d: register writability failed\n",
+		  chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe",
+	          chp->channel, drive), DEBUG_PROBE);
 		return 0;
 	}
-
-	WDCDEBUG_PRINT(("%s:%d:%d: NOP completed in %d msec\n",
-	    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe",
-	    chp->channel, drive, time_to_done), DEBUG_PROBE);
-
-	if (!(chp->ch_status & WDCS_ERR) &&
-	    !(chp->ch_error & WDCE_ABRT)) {
-		WDCDEBUG_PRINT(("%s:%d:%d: NOP command did not ABORT command\n",
-		    chp->wdc ? chp->wdc->sc_dev.dv_xname : "wdcprobe",
-		    chp->channel, drive), DEBUG_PROBE);
-		return 0;
-	}
-#endif
 
 	return 1;
 }
@@ -484,17 +471,18 @@ wdcprobe(chp)
 	u_int8_t st0, st1, sc, sn, cl, ch;
 	u_int8_t ret_value = 0x03;
 	u_int8_t drive;
-	
-	if (!chp->_vtbl)
+
+	if (chp->_vtbl == 0) {
+		int s = splbio();
 		chp->_vtbl = &wdc_default_vtbl;
+		splx(s);
+	}
 
 #ifdef WDCDEBUG
 	if ((chp->ch_flags & WDCF_VERBOSE_PROBE) ||
 	    (chp->wdc &&
 	    (chp->wdc->sc_dev.dv_cfdata->cf_flags & WDC_OPTION_PROBE_VERBOSE)))
-		wdcdebug_mask |= DEBUG_PROBE;
-
-	
+		wdcdebug_mask |= DEBUG_PROBE;	
 #endif
 
 	if (chp->wdc == NULL ||
@@ -538,12 +526,10 @@ wdcprobe(chp)
 		return 0;
 
 	/*
-	 * Use signatures to find ATAPI drives
-	 *
-	 * Also detect presence of ATA drive (wdc_ata_present)
+	 * Use signatures to find potential ATAPI drives
 	 */
 	for (drive = 0; drive < 2; drive++) {
-		if ((ret_value & (0x01 << drive)) == 0)
+ 		if ((ret_value & (0x01 << drive)) == 0)
 			continue;
 		CHP_WRITE_REG(chp, wdr_sdh, WDSD_IBM | (drive << 4));
 		delay(10);
@@ -563,9 +549,22 @@ wdcprobe(chp)
 		 * spec since not all drives seem to set the other regs
 		 * correctly.
 		 */
-		if (cl == 0x14 && ch == 0xeb) {
+		if (cl == 0x14 && ch == 0xeb)
 			chp->ch_drive[drive].drive_flags |= DRIVE_ATAPI;
-		} else if (wdc_ata_present(chp, drive)) {
+	}
+
+	/* 
+	 * Detect ATA drives by poking around the registers
+	 */ 
+	for (drive = 0; drive < 2; drive++) {
+ 		if ((ret_value & (0x01 << drive)) == 0)
+			continue;
+		if (chp->ch_drive[drive].drive_flags & DRIVE_ATAPI)
+			continue;
+
+		wdc_disable_intr(chp);
+		/* ATA detect */
+		if (wdc_ata_present(chp, drive)) {
 			chp->ch_drive[drive].drive_flags |= DRIVE_ATA;
 			if (chp->wdc == NULL ||
 			    (chp->wdc->cap & WDC_CAPABILITY_PREATA) != 0)
@@ -573,6 +572,7 @@ wdcprobe(chp)
 		} else {
 			ret_value &= ~(1 << drive);
 		}
+		wdc_enable_intr(chp);
 	}
 
 #ifdef WDCDEBUG
@@ -619,6 +619,8 @@ wdcattach(chp)
 	if (!cold)
 		at_poll = AT_WAIT;
 
+	timeout_set(&chp->ch_timo, wdctimeout, chp);
+
 #ifndef __OpenBSD__
 	if ((error = wdc_addref(chp)) != 0) {
 		printf("%s: unable to enable controller\n",
@@ -661,7 +663,6 @@ wdcattach(chp)
 		inited++;
 	}
 	TAILQ_INIT(&chp->ch_queue->sc_xfer);
-	timeout_set(&chp->ch_timo, wdctimeout, chp);
 	
 	for (i = 0; i < 2; i++) {
 		struct ata_drive_datas *drvp = &chp->ch_drive[i];
@@ -845,8 +846,16 @@ wdcintr(arg)
 	struct channel_softc *chp = arg;
 	struct wdc_xfer *xfer;
 	int ret;
-
+	
 	if ((chp->ch_flags & WDCF_IRQ_WAIT) == 0) {
+		/* Acknowledge interrupt by reading status */
+		if (chp->_vtbl == 0) {
+			bus_space_read_1(chp->cmd_iot, chp->cmd_ioh, 
+			    wdr_status & _WDC_REGMASK);
+		} else {
+			CHP_READ_REG(chp, wdr_status);
+		}
+
 		WDCDEBUG_PRINT(("wdcintr: inactive controller\n"), DEBUG_INTR);
 		return 0;
 	}
@@ -854,7 +863,6 @@ wdcintr(arg)
 	WDCDEBUG_PRINT(("wdcintr\n"), DEBUG_INTR);
 	xfer = chp->ch_queue->sc_xfer.tqh_first;
 	chp->ch_flags &= ~WDCF_IRQ_WAIT;
-	timeout_del(&chp->ch_timo);
         ret = xfer->c_intr(chp, xfer, 1);
 	if (ret == 0)	/* irq was not for us, still waiting for irq */
 		chp->ch_flags |= WDCF_IRQ_WAIT;
@@ -1389,11 +1397,12 @@ wdc_downgrade_mode(drvp)
 		return 0;
 
 	/*
-	 * If we were using Ultra-DMA mode > 2, downgrade to mode 2 first.
-	 * Maybe we didn't properly notice the cable type
+	 * We'd ideally like to use an Ultra DMA mode since they have the
+	 * protection of a CRC. So we try each Ultra DMA mode and see if
+	 * we can find any working combo
 	 */
-	if ((drvp->drive_flags & DRIVE_UDMA) && drvp->UDMA_mode >= 2) {
-		drvp->UDMA_mode = (drvp->UDMA_mode == 2) ? 1 : 2;
+	if ((drvp->drive_flags & DRIVE_UDMA) && drvp->UDMA_mode > 0) {
+		drvp->UDMA_mode = drvp->UDMA_mode - 1;
 		printf("%s: transfer error, downgrading to Ultra-DMA mode %d\n",
 		    drvp->drive_name, drvp->UDMA_mode);
 	} else 	if ((drvp->drive_flags & DRIVE_UDMA) &&

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3.4.2 2001/07/04 10:41:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3.4.3 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: cac_pci.c,v 1.10 2001/01/10 16:48:04 ad Exp $	*/
 
 /*-
@@ -220,8 +220,7 @@ cac_pci_attach(parent, self, aux)
 		       reg | PCI_COMMAND_MASTER_ENABLE);
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": can't map interrupt\n");
 		return;
 	}
@@ -275,7 +274,7 @@ int
 cac_pci_l0_intr_pending(struct cac_softc *sc)
 {
 
-	return (cac_inl(sc, CAC_42REG_STATUS) & CAC_42_EXTINT);
+	return ((cac_inl(sc, CAC_42REG_STATUS) & CAC_42_EXTINT) != 0);
 }
 
 void
@@ -289,5 +288,5 @@ int
 cac_pci_l0_fifo_full(struct cac_softc *sc)
 {
 
-	return (~cac_inl(sc, CAC_42REG_CMD_FIFO));
+	return (cac_inl(sc, CAC_42REG_CMD_FIFO) != 0);
 }

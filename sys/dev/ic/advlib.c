@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/advlib.c,v 1.3.6.1 2001/07/04 10:40:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/advlib.c,v 1.3.6.2 2001/10/31 03:22:41 nate Exp $	*/
 /*      $NetBSD: advlib.c,v 1.7 1998/10/28 20:39:46 dante Exp $        */
 
 /*
@@ -68,8 +68,6 @@
 #include <scsi/scsiconf.h>
 
 #include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/pmap.h>
 
 #include <dev/ic/adv.h>
 #include <dev/ic/advlib.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_devar.h,v 1.9.6.2 2001/07/04 10:42:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_devar.h,v 1.9.6.3 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: if_devar.h,v 1.13 1997/06/08 18:46:36 thorpej Exp $	*/
 
 /*-
@@ -1027,7 +1027,7 @@ extern struct cfdriver de_cd;
 #endif
 
 #if !defined(TULIP_KVATOPHYS)
-#define	TULIP_KVATOPHYS(sc, va)	vtophys(va)
+#define	TULIP_KVATOPHYS(sc, va)	vtophys((vaddr_t)va)
 #endif
 
 #ifndef TULIP_RAISESPL

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsksymdef.h,v 1.11.2.2 2001/07/04 10:44:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsksymdef.h,v 1.11.2.3 2001/10/31 03:22:50 nate Exp $	*/
 /*	$NetBSD: wsksymdef.h,v 1.34.4.1 2000/07/07 09:49:54 hannken Exp $ */
 
 /*-
@@ -350,6 +350,10 @@
 #define KS_Cyrillic_e		0xdc
 #define KS_Cyrillic_yu		0xc0
 #define KS_Cyrillic_ya		0xd1
+#define KS_Cyrillic_gheukr	0xad
+#define KS_Cyrillic_GHEUKR	0xbd
+#define KS_Cyrillic_yeukr	0xa4
+#define KS_Cyrillic_YEUKR	0xb4
 
 /*
  * Group 1 (modifiers)
@@ -377,6 +381,7 @@
 #define KS_Henkan_Mode		0xf114	/* Start/Stop Conversion */
 #define KS_Henkan		0xf115	/* Alias for Henkan_Mode */
 #define KS_Muhenkan		0xf116	/* Cancel Conversion */
+#define KS_Mode_Lock		0xf117
 
 /*
  * Group 2 (keypad) character in low byte
@@ -572,6 +577,7 @@
 #define KB_SG			0x0f00
 #define KB_SF			0x1000
 #define KB_PT			0x1100
+#define KB_UA			0x1200
 
 #define KB_NODEAD		0x0001
 #define KB_DECLK		0x0002	/* DEC LKnnn layout */
@@ -597,6 +603,7 @@
 	{ KB_HU,	"hu" }, \
 	{ KB_BE,	"be" }, \
 	{ KB_RU,	"ru" }, \
+	{ KB_UA,	"ua" }, \
 	{ KB_SG,	"sg" }, \
 	{ KB_SF,	"sf" }, \
 	{ KB_PT,	"pt" }

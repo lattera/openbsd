@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/eapreg.h,v 1.1 2001/09/06 14:47:07 naddy Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/eapreg.h,v 1.1.4.1 2001/10/31 03:22:45 nate Exp $ */
 /*	$NetBSD: eapreg.h,v 1.2 2000/04/30 21:59:58 augustss Exp $ */
 
 /*

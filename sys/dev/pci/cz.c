@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cz.c,v 1.2 2001/06/25 20:25:55 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/cz.c,v 1.2.2.1 2001/10/31 03:22:45 nate Exp $ */
 /*	$NetBSD: cz.c,v 1.15 2001/01/20 19:10:36 thorpej Exp $	*/
 
 /*-
@@ -348,8 +348,7 @@ cz_attach(parent, self, aux)
 	 * Now that we're ready to roll, map and establish the interrupt
 	 * handler.
 	 */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &ih) != 0) {
+	if (pci_intr_map(pa, &ih) != 0) {
 		/*
 		 * The common case is for Cyclades-Z boards to run
 		 * in polling mode, and thus not have an interrupt
@@ -855,7 +854,7 @@ cz_wait_pci_doorbell(struct cz_softc *cz, char *wstring)
  * Cyclades-Z TTY code starts here...
  *****************************************************************************/
 
-#define CZTTYDIALOUT_MASK	0x80000
+#define CZTTYDIALOUT_MASK	0x80
 
 #define	CZTTY_DIALOUT(dev)	(minor((dev)) & CZTTYDIALOUT_MASK)
 #define	CZTTY_CZ(sc)		((sc)->sc_parent)

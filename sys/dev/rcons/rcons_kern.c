@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rcons/Attic/rcons_kern.c,v 1.3.16.1 2001/05/14 22:26:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/rcons/Attic/rcons_kern.c,v 1.3.16.2 2001/10/31 03:22:49 nate Exp $ */
 /*	$NetBSD: rcons_kern.c,v 1.4 1996/03/14 19:02:33 christos Exp $ */
 
 /*
@@ -137,7 +137,7 @@ rcons_bell(rc)
 		splx(s);
 		(*rc->rc_bell)(1);
 		/* XXX Chris doesn't like the following divide */
-		timeout(rcons_belltmr, rc, hz/10);
+		timeout_add(&rc->bell_timeout, hz / 10);
 	}
 }
 
@@ -156,12 +156,12 @@ rcons_belltmr(p)
 		(*rc->rc_bell)(0);
 		if (i != 0)
 			/* XXX Chris doesn't like the following divide */
-			timeout(rcons_belltmr, rc, hz/30);
+			timeout_add(&rc->bell_timeout, hz / 30);
 	} else {
 		rc->rc_ringing = 1;
 		splx(s);
 		(*rc->rc_bell)(1);
-		timeout(rcons_belltmr, rc, hz/10);
+		timeout_add(&rc->bell_timeout, hz / 10);
 	}
 }
 
@@ -247,6 +247,8 @@ rcons_init(rc)
 		/* Prom emulator cursor is currently visible */
 		rc->rc_bits |= FB_CURSOR;
 	}
+
+	timeout_set(&rc->bell_timeout, rcons_belltmr, rc);
 
 	/* Initialization done; hook us up */
 	fbconstty->t_oproc = rcons_output;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/isavar.h,v 1.39.4.1 2001/05/14 22:24:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/isavar.h,v 1.39.4.2 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: isavar.h,v 1.26 1997/06/06 23:43:57 thorpej Exp $	*/
 
 /*-
@@ -141,7 +141,11 @@ struct isabus_attach_args;
 #include <wgrisc/isa/isa_machdep.h>
 #endif
 #ifdef __powerpc__
+#ifdef __mvmeppc__
+#include <mvmeppc/isa/isa_machdep.h>
+#else
 #include <powerpc/isa/isa_machdep.h>
+#endif 
 #endif
 #ifdef __hppa__
 #include <hppa/isa/isa_machdep.h>

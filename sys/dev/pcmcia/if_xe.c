@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.2 2001/07/04 10:43:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.3 2001/10/31 03:22:48 nate Exp $	*/
 
 /*
  * Copyright (c) 1999 Niklas Hallqvist, Brandon Creighton, Job de Haas
@@ -382,11 +382,10 @@ xe_pcmcia_attach(parent, self, aux)
 	ifp->if_ioctl = xe_ioctl;
 	ifp->if_start = xe_start;
 	ifp->if_watchdog = xe_watchdog;
-	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
 	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Establish the interrupt. */
-	sc->sc_ih = pcmcia_intr_establish(pa->pf, IPL_NET, xe_intr, sc);
+	sc->sc_ih = pcmcia_intr_establish(pa->pf, IPL_NET, xe_intr, sc, "");
 	if (sc->sc_ih == NULL) {
 		printf(", couldn't establish interrupt\n");
 		goto bad;
@@ -484,10 +483,8 @@ xe_pcmcia_activate(dev, act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		pcmcia_function_enable(sc->sc_pf);
-		printf("%s:", sc->sc_xe.sc_dev.dv_xname);
-		sc->sc_xe.sc_ih =
-		    pcmcia_intr_establish(sc->sc_pf, IPL_NET, xe_intr, sc);
-		printf("\n");
+		sc->sc_xe.sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_NET,
+		    xe_intr, sc, sc->sc_xe.sc_dev.dv_xname);
 		xe_init(&sc->sc_xe);
 		break;
 

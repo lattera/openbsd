@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/sf64pcr.c,v 1.1 2001/10/04 20:22:11 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/sf64pcr.c,v 1.1.4.1 2001/10/31 03:22:48 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Vladimir Popov <jumbo@narod.ru>

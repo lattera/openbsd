@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.3 2001/07/04 10:42:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.4 2001/10/31 03:22:46 nate Exp $	*/
 /* $FreeBSD: src/sys/pci/if_tx.c,v 1.45 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -116,7 +116,6 @@
 #endif
 
 #include <vm/vm.h>
-#include <vm/pmap.h>
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
@@ -271,8 +270,7 @@ epic_openbsd_attach(
 	if( epic_common_attach(sc) ) return;
 
 	/* Map interrupt */
-	if( pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if( pci_intr_map(pa, &ih)) {
 		printf(": can't map interrupt\n");
 		return;
 	}
@@ -1042,7 +1040,7 @@ epic_intr(arg)
 		      INTSTAT_APE|INTSTAT_DPE|INTSTAT_TXU|INTSTAT_RXE) ){
     	    if( status & (INTSTAT_FATAL|INTSTAT_PMA|INTSTAT_PTA|
 			  INTSTAT_APE|INTSTAT_DPE) ){
-		printf(EPIC_FORMAT ": PCI fatal error occured (%s%s%s%s)\n",
+		printf(EPIC_FORMAT ": PCI fatal error occurred (%s%s%s%s)\n",
     		    EPIC_ARGS(sc),
 		    (status&INTSTAT_PMA)?"PMA":"",
 		    (status&INTSTAT_PTA)?" PTA":"",

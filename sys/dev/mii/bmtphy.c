@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1.4.2 2001/07/04 10:41:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1.4.3 2001/10/31 03:22:44 nate Exp $	*/
 /*	$NetBSD: nsphy.c,v 1.25 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*-
@@ -106,6 +106,7 @@ bmtphyattach(parent, self, aux)
 	sc->mii_status = bmtphy_status;
 	sc->mii_pdata = mii;
 	sc->mii_flags = mii->mii_flags;
+	sc->mii_anegticks = 5;
 
 	bmtphy_reset(sc);
 
@@ -188,7 +189,7 @@ bmtphy_service(sc, mii, cmd)
 		/*
 		 * Only retry autonegotiation every 5 seconds.
 		 */
-		if (++sc->mii_ticks != 5)
+		if (++sc->mii_ticks != sc->mii_anegticks)
 			return (0);
 
 		sc->mii_ticks = 0;

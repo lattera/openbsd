@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/addcom_isa.c,v 1.5 2001/08/22 05:26:37 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/addcom_isa.c,v 1.5.4.1 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: addcom_isa.c,v 1.2 2000/04/21 20:13:41 explorer Exp $	*/
 
 /*

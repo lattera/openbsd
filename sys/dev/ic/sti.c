@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5.4.1 2001/05/14 22:24:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5.4.2 2001/10/31 03:22:43 nate Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -43,7 +43,6 @@
 #include <sys/malloc.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <uvm/uvm.h>
 
 #include <machine/bus.h>

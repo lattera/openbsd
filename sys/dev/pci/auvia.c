@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.2 2001/07/04 10:41:54 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.3 2001/10/31 03:22:45 nate Exp $ */
 /*	$NetBSD: auvia.c,v 1.7 2000/11/15 21:06:33 jdolecek Exp $	*/
 
 /*-
@@ -224,8 +224,7 @@ auvia_attach(struct device *parent, struct device *self, void *aux)
 	u_int16_t v;
 	int r, i;
 
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin, pa->pa_intrline,
-			&ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf("%s: couldn't map interrupt\n", sc->sc_dev.dv_xname);
 		return;
 	}

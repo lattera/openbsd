@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.3 2001/07/04 10:42:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751reg.h,v 1.4.2.4 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
- * Invertex AEON / Hi/fn 7751 driver
+ * Invertex AEON / Hifn 7751 driver
  * Copyright (c) 1999 Invertex Inc. All rights reserved.
  * Copyright (c) 1999 Theo de Raadt
  * Copyright (c) 2000-2001 Network Security Technologies, Inc.
@@ -51,12 +51,12 @@
  * any command the driver implements.
  *
  * MAX_COMMAND = base command + mac command + encrypt command +
- *			mac-key + des-iv + 3des-key
+ *			mac-key + rc4-key
  * MAX_RESULT  = base result + mac result + mac + encrypt result
  *			
  *
  */
-#define	HIFN_MAX_COMMAND	(8 + 8 + 8 + 64 + 8 + 24)
+#define	HIFN_MAX_COMMAND	(8 + 8 + 8 + 64 + 260)
 #define	HIFN_MAX_RESULT		(8 + 4 + 20 + 4)
 
 /*
@@ -384,8 +384,10 @@ typedef struct hifn_mac_command {
 #define	HIFN_MAC_CMD_ALG_MASK		0x0001
 #define	HIFN_MAC_CMD_ALG_SHA1		0x0000
 #define	HIFN_MAC_CMD_ALG_MD5		0x0001
-#define	HIFN_MAC_CMD_MODE_MASK		0x0004
+#define	HIFN_MAC_CMD_MODE_MASK		0x000c
 #define	HIFN_MAC_CMD_MODE_HMAC		0x0000
+#define	HIFN_MAC_CMD_MODE_SSL_MAC	0x0004
+#define	HIFN_MAC_CMD_MODE_HASH		0x0008
 #define	HIFN_MAC_CMD_MODE_FULL		0x0004
 #define	HIFN_MAC_CMD_TRUNC		0x0010
 #define	HIFN_MAC_CMD_RESULT		0x0020

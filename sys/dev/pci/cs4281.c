@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4281.c,v 1.2.4.2 2001/07/04 10:41:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/cs4281.c,v 1.2.4.3 2001/10/31 03:22:45 nate Exp $ */
 /*	$Tera: cs4281.c,v 1.18 2000/12/27 14:24:45 tacha Exp $	*/
 
 /*
@@ -34,7 +34,7 @@
 /*
  * Cirrus Logic CS4281 driver.
  * Data sheets can be found
- * http://www.cirrus.com/ftp/pub/4281.pdf
+ * http://www.cirrus.com/pubs/4281.pdf?DocumentID=30
  * ftp://ftp.alsa-project.org/pub/manuals/cirrus/cs4281tm.pdf
  *
  * TODO:
@@ -344,8 +344,7 @@ cs4281_attach(parent, self, aux)
 	    csr | PCI_COMMAND_MASTER_ENABLE);
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin, pa->pa_intrline,
-	    &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf("%s: couldn't map interrupt\n", sc->sc_dev.dv_xname);
 		return;
 	}
@@ -1131,7 +1130,7 @@ cs4281_init(sc)
 		0x00 <<  0;    /* PLSS[4:0] Left  PCM Playback */
 	BA0WRITE4(sc, CS4281_SRCSA, dat32);
 	
-	/* Set interrupt to occured at Half and Full terminal
+	/* Set interrupt to occurred at Half and Full terminal
 	 * count interrupt enable for DMA channel 0 and 1.
 	 * To keep DMA stop, set MSK.
 	 */

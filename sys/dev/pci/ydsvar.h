@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/pci/ydsvar.h,v 1.1.4.2 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD$	*/
 
 /*

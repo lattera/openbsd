@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/Attic/awivar.h,v 1.1.2.2 2001/10/31 03:22:41 nate Exp $ */
 /* $NetBSD: awivar.h,v 1.12 2000/07/21 04:48:56 onoe Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.8.2.2 2001/07/04 10:41:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.8.2.3 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: cs4280.c,v 1.5 2000/06/26 04:56:23 simonb Exp $	*/
 
 /*
@@ -602,8 +602,7 @@ cs4280_attach(parent, self, aux)
 	}
 	
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		return;
 	}

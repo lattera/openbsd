@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/nsgphy.c,v 1.3 2001/07/02 06:29:49 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/nsgphy.c,v 1.3.2.1 2001/10/31 03:22:44 nate Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 2001
@@ -127,6 +127,7 @@ nsgphyattach(parent, self, aux)
 	sc->mii_status = nsgphy_status;
 	sc->mii_pdata = mii;
 	sc->mii_flags = mii->mii_flags;
+	sc->mii_anegticks = 10;
 
 	mii_phy_reset(sc);
 
@@ -146,19 +147,6 @@ nsgphyattach(parent, self, aux)
                 printf(", pre-C5 BCM5400 compat enabled");
         printf("\n");
 #endif
-
-#define	ADD(m, c)	ifmedia_add(&mii->mii_media, (m), (c), NULL)
-
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_NONE, 0, sc->mii_inst),
-	    BMCR_ISO);
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, 0, sc->mii_inst),
-	    NSGPHY_S1000);
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_1000_TX, IFM_FDX, sc->mii_inst),
-	    NSGPHY_S1000|NSGPHY_BMCR_FDX);
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_100_TX, IFM_LOOP,
-	    sc->mii_inst), BMCR_LOOP|BMCR_S100);
-
-#undef ADD
 }
 
 int
@@ -268,12 +256,9 @@ nsgphy_service(sc, mii, cmd)
 			return (0);
 
 		/*
-		 * Only retry autonegotiation every 5 seconds.
-		 * Actually, for gigE PHYs, we should wait longer, since
-		 * 5 seconds is the mimimum time the documentation
-		 * says to wait for a 1000mbps link to be established.
+		 * Only retry autonegotiation if we've hit the timeout.
 		 */
-		if (++sc->mii_ticks != 10)
+		if (++sc->mii_ticks != sc->mii_anegticks)
 			return (0);
 		
 		sc->mii_ticks = 0;
@@ -424,7 +409,8 @@ nsgphy_mii_phy_auto(mii, waitfor)
 	 */
 	if ((mii->mii_flags & MIIF_DOINGAUTO) == 0) {
 		mii->mii_flags |= MIIF_DOINGAUTO;
-		timeout(mii_phy_auto_timeout, mii, hz >> 1);
+		timeout_set(&mii->mii_phy_timo, mii_phy_auto_timeout, mii);
+		timeout_add(&mii->mii_phy_timo, hz >> 1);
 	}
 	return (EJUSTRETURN);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.3.4.2 2001/07/04 10:41:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ami_pci.c,v 1.3.4.3 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -178,8 +178,7 @@ ami_pci_attach(parent, self, aux)
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
 	    csr | PCI_COMMAND_MASTER_ENABLE);
 
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": can't map interrupt\n");
 		bus_space_unmap(sc->iot, sc->ioh, size);
 		return;

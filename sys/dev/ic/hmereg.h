@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/hmereg.h,v 1.4 2001/09/23 20:03:01 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/hmereg.h,v 1.4.4.1 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: hmereg.h,v 1.8 2001/04/30 12:22:42 bouyer Exp $	*/
 
 /*-

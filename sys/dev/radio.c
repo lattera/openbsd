@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/radio.c,v 1.1 2001/10/04 19:18:00 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/radio.c,v 1.1.4.1 2001/10/31 03:22:40 nate Exp $	*/
 /* $RuOBSD: radio.c,v 1.5 2001/09/30 14:52:49 pva Exp $ */
 
 /*

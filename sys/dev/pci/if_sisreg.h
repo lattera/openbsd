@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.1 2001/05/14 22:25:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.2 2001/10/31 03:22:46 nate Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -106,6 +106,7 @@
 #define SIS_CSR_RX_RESET	0x00000020
 #define SIS_CSR_SOFTINTR	0x00000080
 #define SIS_CSR_RESET		0x00000100
+#define SIS_CSR_RELOAD		0x00000400
 
 #define SIS_CFG_BIGENDIAN	0x00000001
 #define SIS_CFG_PERR_DETECT	0x00000008

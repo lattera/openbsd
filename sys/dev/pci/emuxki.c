@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3 2001/10/24 23:23:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3.2.1 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: emuxki.c,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-

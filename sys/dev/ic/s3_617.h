@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/dev/ic/s3_617.h,v 1.1.8.1 2001/10/31 03:22:43 nate Exp $	*/
+
 /*
  * Copyright (c) 1998 Constantine Paul Sapuntzakis
  * All rights reserved

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/isesreg.h,v 1.1.4.2 2001/07/04 10:42:35 niklas Exp $ $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/isesreg.h,v 1.1.4.3 2001/10/31 03:22:46 nate Exp $ $	*/
 
 /*
  * Copyright (c) 2000 Håkan Olsson (ho@crt.se)
@@ -147,6 +147,7 @@
 
 #define ISES_STAT_IDP_MASK	0x0f000000	/* IDP state mask (HW_DA=0) */
 #define ISES_STAT_IDP_STATE(x)  (((x) & ISES_STAT_IDP_MASK) >> 24)
+#define ISES_IDP_WFPL		0x4		/* Waiting for pgm len state */
 
 static const char *ises_idp_state[] = 
 {

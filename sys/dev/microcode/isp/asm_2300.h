@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/isp/asm_2300.h,v 1.1 2001/09/01 07:16:40 mjacob Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/isp/asm_2300.h,v 1.1.4.1 2001/10/31 03:22:44 nate Exp $ */
 /*
  * Copyright (C) 2001 Qlogic, Inc.
  * All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmciachip.h,v 1.2.4.1 2001/05/14 22:26:08 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmciachip.h,v 1.2.4.2 2001/10/31 03:22:48 nate Exp $ */
 /*	$NetBSD: pcmciachip.h,v 1.5 2000/01/13 08:58:51 joda Exp $	*/
 
 /*
@@ -83,7 +83,7 @@ struct pcmcia_chip_functions {
 
 	/* interrupt glue */
 	void	*(*intr_establish) __P((pcmcia_chipset_handle_t,
-		    struct pcmcia_function *, int, int (*)(void *), void *));
+		    struct pcmcia_function *, int, int (*)(void *), void *, char *));
 	void	(*intr_disestablish) __P((pcmcia_chipset_handle_t, void *));
 
 	/* card enable/disable */
@@ -125,8 +125,8 @@ struct pcmcia_chip_functions {
 	((*(tag)->io_unmap)((handle), (window)))
 
 /* Interrupt functions. */
-#define pcmcia_chip_intr_establish(tag, handle, pf, ipl, fct, arg)	\
-	((*(tag)->intr_establish)((handle), (pf), (ipl), (fct), (arg)))
+#define pcmcia_chip_intr_establish(tag, handle, pf, ipl, fct, arg, xname)	\
+	((*(tag)->intr_establish)((handle), (pf), (ipl), (fct), (arg), (xname)))
 
 #define pcmcia_chip_intr_disestablish(tag, handle, ih)			\
 	((*(tag)->intr_disestablish)((handle), (ih)))

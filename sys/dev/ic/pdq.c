@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/pdq.c,v 1.9 1999/11/23 04:49:29 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/pdq.c,v 1.9.2.1 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: pdq.c,v 1.9 1996/10/13 01:37:26 christos Exp $	*/
 
 /*-
@@ -531,6 +531,7 @@ pdq_queue_commands(
 	    break;
 	}
 	default:
+	    break;
     }
     /*
      * At this point the command is done.  All that needs to be done is to
@@ -1238,6 +1239,7 @@ pdq_run(
 	case PDQS_RING_MEMBER: {
 	}
 	default:
+	    break;
     }
 }
 
@@ -1421,7 +1423,7 @@ pdq_initialize(
     pdq->pdq_host_smt_info.rx_buffers = (void *) pdq->pdq_dbp->pdqdb_host_smt_buffers;
 
     PDQ_PRINTF(("\nPDQ Descriptor Block = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp));
-    PDQ_PRINTF(("    Recieve Queue          = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp->pdqdb_receives));
+    PDQ_PRINTF(("    Receive Queue          = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp->pdqdb_receives));
     PDQ_PRINTF(("    Transmit Queue         = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp->pdqdb_transmits));
     PDQ_PRINTF(("    Host SMT Queue         = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp->pdqdb_host_smt));
     PDQ_PRINTF(("    Command Response Queue = " PDQ_OS_PTR_FMT "\n", pdq->pdq_dbp->pdqdb_command_responses));

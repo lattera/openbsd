@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11 2001/10/03 18:18:01 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.1 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*

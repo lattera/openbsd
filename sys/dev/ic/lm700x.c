@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/lm700x.c,v 1.1 2001/10/04 19:46:46 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/lm700x.c,v 1.1.4.1 2001/10/31 03:22:42 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Vladimir Popov <jumbo@narod.ru>

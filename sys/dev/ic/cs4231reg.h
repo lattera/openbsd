@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/cs4231reg.h,v 1.4 1999/03/08 22:54:33 jason Exp $ */
+/* $OpenBSD: src/sys/dev/ic/cs4231reg.h,v 1.4.6.1 2001/10/31 03:22:41 nate Exp $ */
 /* $NetBSD: cs4231reg.h,v 1.4 1996/02/16 08:12:33 mycroft Exp $ */
 
 /*-
@@ -99,6 +99,7 @@
 
 #define MONO_INPUT_ATTEN_BITS	0x0f
 #define MONO_INPUT_ATTEN_MASK	0xf0
+#define MONO_OUTPUT_MUTE	0x40
 #define MONO_INPUT_MUTE		0x80
 #define MONO_INPUT_MUTE_MASK	0x7f
 

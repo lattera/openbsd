@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/ramdac.h,v 1.1.6.2 2001/10/31 03:22:43 nate Exp $ */
 /* $NetBSD: ramdac.h,v 1.1 2000/03/04 10:23:39 elric Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/lemacreg.h,v 1.1 2001/07/13 17:26:44 niklas Exp $ */
+/*      $OpenBSD: src/sys/dev/ic/lemacreg.h,v 1.1.4.1 2001/10/31 03:22:42 nate Exp $ */
 /*      $NetBSD: lemacreg.h,v 1.2 2001/06/13 10:46:03 wiz Exp $ */
 
 /*

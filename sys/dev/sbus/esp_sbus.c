@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/esp_sbus.c,v 1.5 2001/09/27 04:01:42 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/esp_sbus.c,v 1.5.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: esp_sbus.c,v 1.14 2001/04/25 17:53:37 bouyer Exp $	*/
 
 /*-

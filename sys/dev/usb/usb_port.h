@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.2 2001/07/04 10:44:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.3 2001/10/31 03:22:50 nate Exp $ */
 /*	$NetBSD: usb_port.h,v 1.42 2001/03/28 19:00:39 ichiro Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb_port.h,v 1.21 1999/11/17 22:33:47 n_hibma Exp $	*/
 
@@ -224,6 +224,8 @@ __CONCAT(dname,_detach)(self, flags) \
 #define scsipi_minphys		scsi_minphys
 #define scsipi_sense		scsi_sense
 #define scsipi_xfer		scsi_xfer
+#define show_scsipi_xs          show_scsi_xs
+#define show_scsipi_cmd         show_scsi_cmd
 #define xs_control		flags
 #define xs_status		status
 
@@ -259,10 +261,6 @@ typedef int usb_malloc_type;
 #define	ugenpoll		ugenselect
 #define	uriopoll		urioselect
 #define uscannerpoll		uscannerselect
-
-#define powerhook_establish(fn, sc) (fn)
-#define powerhook_disestablish(hdl)
-#define PWR_RESUME 0
 
 #define logprintf printf
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adv.c,v 1.5.4.1 2001/05/14 22:23:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/adv.c,v 1.5.4.2 2001/10/31 03:22:41 nate Exp $	*/
 /*	$NetBSD: adv.c,v 1.6 1998/10/28 20:39:45 dante Exp $	*/
 
 /*
@@ -54,8 +54,6 @@
 #include <machine/intr.h>
 
 #include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/pmap.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -780,9 +778,10 @@ adv_scsi_cmd(xs)
 			adv_free_ccb(sc, ccb);
 			return (COMPLETE);
 		}
-		bus_dmamap_sync(dmat, ccb->dmamap_xfer,
-			      (flags & SCSI_DATA_IN) ? BUS_DMASYNC_PREREAD :
-				BUS_DMASYNC_PREWRITE);
+		adv_bus_dmamap_sync(dmat, ccb->dmamap_xfer,
+		    0, ccb->dmamap_xfer->dm_mapsize,
+		    ((flags & SCSI_DATA_IN) ? BUS_DMASYNC_PREREAD :
+			BUS_DMASYNC_PREWRITE));
 
 
 		memset(&ccb->sghead, 0, sizeof(ASC_SG_HEAD));
@@ -991,9 +990,10 @@ adv_narrow_isr_callback(sc, qdonep)
          * the data buffer.
          */
 	if (xs->datalen) {
-		bus_dmamap_sync(dmat, ccb->dmamap_xfer,
-			 (xs->flags & SCSI_DATA_IN) ? BUS_DMASYNC_POSTREAD :
-				BUS_DMASYNC_POSTWRITE);
+		adv_bus_dmamap_sync(dmat, ccb->dmamap_xfer,
+		    0, ccb->dmamap_xfer->dm_mapsize,
+		    ((xs->flags & SCSI_DATA_IN) ? BUS_DMASYNC_POSTREAD :
+			BUS_DMASYNC_POSTWRITE));
 		bus_dmamap_unload(dmat, ccb->dmamap_xfer);
 	}
 	if ((ccb->flags & CCB_ALLOC) == 0) {

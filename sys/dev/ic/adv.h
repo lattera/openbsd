@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adv.h,v 1.2 1998/09/28 01:56:57 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/adv.h,v 1.2.8.1 2001/10/31 03:22:41 nate Exp $	*/
 /*      $NetBSD: adv.h,v 1.3 1998/09/26 16:02:56 dante Exp $        */
 
 /*
@@ -92,5 +92,13 @@ void adv_attach __P((ASC_SOFTC *sc));
 int adv_intr __P((void *arg));
 
 /******************************************************************************/
+
+#ifdef __HAS_NEW_BUS_DMAMAP_SYNC
+#define	adv_bus_dmamap_sync(tag, map, off, len, op)	\
+    bus_dmamap_sync((tag), (map), (off), (len), (op))
+#else
+#define	adv_bus_dmamap_sync(tag, map, off, len, op)	\
+    bus_dmamap_sync((tag), (map), (op))
+#endif
 
 #endif /* _ADVANSYS_NARROW_H_ */

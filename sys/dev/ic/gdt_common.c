@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.4.2.2 2001/05/14 22:23:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.4.2.3 2001/10/31 03:22:42 nate Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
@@ -44,7 +44,6 @@
 #include <machine/bus.h>
 
 #include <vm/vm.h>
-#include <vm/pmap.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsi_disk.h>
@@ -215,7 +214,7 @@ gdt_attach(gdt)
 		gdt->sc_bus_cnt = i;
 	}
 
-	/* Read cache confgiuration */
+	/* Read cache configuration */
 	if (!gdt_internal_cmd(gdt, GDT_CACHESERVICE, GDT_IOCTL, GDT_CACHE_INFO,
 	    GDT_INVALID_CHANNEL, GDT_CINFO_SZ)) {
 		printf("cannot get cache info, error %d\n", gdt->sc_status);
@@ -508,7 +507,9 @@ gdt_scsi_cmd(xs)
 	while ((xs = gdt_dequeue(gdt))) {
 		xs->error = XS_NOERROR;
 		ccb = NULL;
-
+		link = xs->sc_link;
+		target = link->target;
+ 
 		if (!gdt_polling && !(xs->flags & SCSI_POLL) &&
 		    gdt->sc_test_busy(gdt)) {
 			/*

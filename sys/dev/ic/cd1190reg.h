@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/dev/ic/cd1190reg.h,v 1.1.8.1 2001/10/31 03:22:41 nate Exp $	*/
+
 /*
  * Copyright (c) 1998 Iain Hibbert.
  * All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qecreg.h,v 1.1 2001/08/20 22:09:27 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qecreg.h,v 1.1.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: qecreg.h,v 1.2 1999/01/16 12:46:08 pk Exp $	*/
 
 /*-

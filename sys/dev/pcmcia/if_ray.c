@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2.2.3 2001/07/04 10:43:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2.2.4 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD: if_ray.c,v 1.21 2000/07/05 02:35:54 onoe Exp $	*/
 
 /*
@@ -780,7 +780,7 @@ ray_enable(sc)
 
 	if ((error = ray_init(sc)) == 0) {
 		sc->sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_NET,
-		    ray_intr, sc);
+		    ray_intr, sc, "");
 		if (sc->sc_ih == NULL) {
 			ray_stop(sc);
 			return (EIO);

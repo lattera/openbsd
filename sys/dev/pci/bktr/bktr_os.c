@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.2 2001/07/04 10:43:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.3 2001/10/31 03:22:48 nate Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_os.c,v 1.20 2000/10/20 08:16:53 roger Exp $ */
 
 /*
@@ -78,7 +78,6 @@
 #include <sys/vnode.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/pmap.h>
 #include <vm/vm_extern.h>
 
@@ -1398,8 +1397,7 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 	/*
 	 * map interrupt
 	 */
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf("%s: couldn't map interrupt\n",
 		       bktr_name(bktr));
 		return;
@@ -1561,7 +1559,7 @@ bktr_open(dev_t dev, int flags, int fmt, struct proc *p)
 	unit = UNIT(dev);
 
 	/* unit out of range */
-	if ((unit > bktr_cd.cd_ndevs) || (bktr_cd.cd_devs[unit] == NULL))
+	if ((unit >= bktr_cd.cd_ndevs) || (bktr_cd.cd_devs[unit] == NULL))
 		return(ENXIO);
 
 	bktr = bktr_cd.cd_devs[unit];

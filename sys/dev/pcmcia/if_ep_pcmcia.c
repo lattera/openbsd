@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ep_pcmcia.c,v 1.21.2.1 2001/05/14 22:26:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ep_pcmcia.c,v 1.21.2.2 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD: if_ep_pcmcia.c,v 1.16 1998/08/17 23:20:40 thorpej Exp $  */
 
 /*-
@@ -211,7 +211,8 @@ ep_pcmcia_enable(sc)
 	struct pcmcia_function *pf = psc->sc_pf;
 
 	/* establish the interrupt. */
-	sc->sc_ih = pcmcia_intr_establish(pf, IPL_NET, epintr, sc);
+	sc->sc_ih = pcmcia_intr_establish(pf, IPL_NET, epintr,
+	    sc, sc->sc_dev.dv_xname);
 	if (sc->sc_ih == NULL) {
 		printf("%s: couldn't establish interrupt\n",
 		    sc->sc_dev.dv_xname);
@@ -371,7 +372,8 @@ ep_pcmcia_attach(parent, self, aux)
 #endif
 
 	/* establish the interrupt. */
-	sc->sc_ih = pcmcia_intr_establish(pa->pf, IPL_NET, epintr, sc);
+	sc->sc_ih = pcmcia_intr_establish(pa->pf, IPL_NET, epintr,
+	    sc, "");
 	if (sc->sc_ih == NULL)
 		printf(", couldn't establish interrupt");
 
@@ -417,10 +419,8 @@ ep_pcmcia_activate(dev, act)
 	switch (act) {
 	case DVACT_ACTIVATE:
 		pcmcia_function_enable(sc->sc_pf);
-		printf("%s:", esc->sc_dev.dv_xname);
-		sc->sc_ep.sc_ih =
-		    pcmcia_intr_establish(sc->sc_pf, IPL_NET, epintr, sc);
-		printf("\n");
+		sc->sc_ep.sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_NET,
+		    epintr, sc, esc->sc_dev.dv_xname);
 		epinit(esc);
 		break;
 

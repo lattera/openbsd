@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txpreg.h,v 1.22.2.2 2001/07/04 10:42:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_txpreg.h,v 1.22.2.3 2001/10/31 03:22:46 nate Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell <aaron@monkey.org>.
@@ -618,3 +618,11 @@ struct txp_fw_section_header {
     bus_space_write_4((sc)->sc_bt, (sc)->sc_bh, reg, val)
 #define	READ_REG(sc,reg) \
     bus_space_read_4((sc)->sc_bt, (sc)->sc_bh, reg)
+
+#ifdef __HAS_NEW_BUS_DMAMAP_SYNC
+#define	txp_bus_dmamap_sync(tag, map, off, len, op)	\
+    bus_dmamap_sync((tag), (map), (off), (len), (op))
+#else
+#define	txp_bus_dmamap_sync(tag, map, off, len, op)	\
+    bus_dmamap_sync((tag), (map), (op))
+#endif

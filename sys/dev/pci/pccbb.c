@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.2 2001/07/04 10:42:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.3 2001/10/31 03:22:46 nate Exp $ */
 /*	$NetBSD: pccbb.c,v 1.42 2000/06/16 23:41:35 cgd Exp $	*/
 
 /*
@@ -152,7 +152,7 @@ int	pccbb_pcmcia_io_map __P((pcmcia_chipset_handle_t, int, bus_addr_t,
     bus_size_t, struct pcmcia_io_handle *, int *));
 void	pccbb_pcmcia_io_unmap __P((pcmcia_chipset_handle_t, int));
 void   *pccbb_pcmcia_intr_establish __P((pcmcia_chipset_handle_t,
-    struct pcmcia_function *, int, int (*)(void *), void *));
+    struct pcmcia_function *, int, int (*)(void *), void *, char *));
 void	pccbb_pcmcia_intr_disestablish __P((pcmcia_chipset_handle_t,
     void *));
 void	pccbb_pcmcia_socket_enable __P((pcmcia_chipset_handle_t));
@@ -473,20 +473,19 @@ pccbbattach(parent, self, aux)
 	sc->sc_function = pa->pa_function;
 	sc->sc_sockbase = sock_base;
 	sc->sc_busnum = busreg;
-
-	sc->sc_intrline = pa->pa_intrline;
 	sc->sc_intrtag = pa->pa_intrtag;
 	sc->sc_intrpin = pa->pa_intrpin;
 
 	sc->sc_pcmcia_flags = flags;   /* set PCMCIA facility */
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, sc->sc_intrtag, sc->sc_intrpin,
-	    sc->sc_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		return;
 	}
 	intrstr = pci_intr_string(pc, ih);
+	/* must do this after intr is mapped and established */
+	sc->sc_intrline = pci_intr_line(ih);
 
 	/*
 	 * XXX pccbbintr should be called under the priority lower
@@ -1280,6 +1279,7 @@ struct cb_poll_str {
 
 static struct cb_poll_str cb_poll[10];
 static int cb_poll_n = 0;
+static struct timeout cb_poll_timeout;
 
 void cb_pcmcia_poll __P((void *arg));
 
@@ -1293,7 +1293,8 @@ cb_pcmcia_poll(arg)
 	int s;
 	u_int32_t spsr;		       /* socket present-state reg */
 
-	timeout(cb_pcmcia_poll, arg, hz / 10);
+	timeout_set(&cb_poll_timeout, cb_pcmcia_poll, arg);
+	timeout_add(&cb_poll_timeout, hz / 10);
 	switch (poll->level) {
 	case IPL_NET:
 		s = splnet();
@@ -2677,6 +2678,7 @@ struct pccbb_poll_str {
 
 static struct pccbb_poll_str pccbb_poll[10];
 static int pccbb_poll_n = 0;
+static struct timeout pccbb_poll_timeout;
 
 void pccbb_pcmcia_poll __P((void *arg));
 
@@ -2690,7 +2692,8 @@ pccbb_pcmcia_poll(arg)
 	int s;
 	u_int32_t spsr;		       /* socket present-state reg */
 
-	timeout(pccbb_pcmcia_poll, arg, hz * 2);
+	timeout_set(&pccbb_poll_timeout, pccbb_pcmcia_poll, arg);
+	timeout_add(&pccbb_poll_timeout, hz * 2);
 	switch (poll->level) {
 	case IPL_NET:
 		s = splnet();
@@ -2737,12 +2740,13 @@ pccbb_pcmcia_poll(arg)
  * This function enables PC-Card interrupt.  PCCBB uses PCI interrupt line.
  */
 void *
-pccbb_pcmcia_intr_establish(pch, pf, ipl, func, arg)
+pccbb_pcmcia_intr_establish(pch, pf, ipl, func, arg, xname)
 	pcmcia_chipset_handle_t pch;
 	struct pcmcia_function *pf;
 	int ipl;
 	int (*func) __P((void *));
 	void *arg;
+	char *xname;
 {
 	struct pcic_handle *ph = (struct pcic_handle *)pch;
 	struct pccbb_softc *sc = (struct pccbb_softc *)ph->ph_parent;
@@ -3015,10 +3019,9 @@ pccbb_winset(align, sc, bst)
 	struct pccbb_win_chain *chainp;
 	int offs;
 
-	win[0].win_start = 0xffffffff;
-	win[0].win_limit = 0;
-	win[1].win_start = 0xffffffff;
-	win[1].win_limit = 0;
+	win[0].win_start = win[1].win_start = 0xffffffff;
+	win[0].win_limit = win[1].win_limit = 0;
+	win[0].win_flags = win[1].win_flags = 0;
 
 	chainp = TAILQ_FIRST(&sc->sc_iowindow);
 	offs = 0x2c;
@@ -3112,16 +3115,14 @@ pccbb_winset(align, sc, bst)
 	    pci_conf_read(pc, tag, offs + 12) + align));
 
 	if (bst == sc->sc_memt) {
-		if (win[0].win_flags & PCCBB_MEM_CACHABLE) {
-			pcireg_t bcr = pci_conf_read(pc, tag, PCI_BCR_INTR);
+		pcireg_t bcr = pci_conf_read(pc, tag, PCI_BCR_INTR);
+
+		bcr &= ~(CB_BCR_PREFETCH_MEMWIN0 | CB_BCR_PREFETCH_MEMWIN1);
+		if (win[0].win_flags & PCCBB_MEM_CACHABLE)
 			bcr |= CB_BCR_PREFETCH_MEMWIN0;
-			pci_conf_write(pc, tag, PCI_BCR_INTR, bcr);
-		}
-		if (win[1].win_flags & PCCBB_MEM_CACHABLE) {
-			pcireg_t bcr = pci_conf_read(pc, tag, PCI_BCR_INTR);
+		if (win[1].win_flags & PCCBB_MEM_CACHABLE)
 			bcr |= CB_BCR_PREFETCH_MEMWIN1;
-			pci_conf_write(pc, tag, PCI_BCR_INTR, bcr);
-		}
+		pci_conf_write(pc, tag, PCI_BCR_INTR, bcr);
 	}
 }
 

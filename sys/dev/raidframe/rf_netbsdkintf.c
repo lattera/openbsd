@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_netbsdkintf.c,v 1.6.2.2 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD: rf_netbsdkintf.c,v 1.93 2000/07/14 15:26:29 oster Exp $	*/
 /*-
  * Copyright (c) 1996, 1997, 1998 The NetBSD Foundation, Inc.

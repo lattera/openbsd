@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/radio_if.h,v 1.1 2001/10/04 19:17:59 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/radio_if.h,v 1.1.4.1 2001/10/31 03:22:40 nate Exp $	*/
 /* $RuOBSD: radio_if.h,v 1.5 2001/09/29 20:33:02 gluk Exp $ */
 
 /*

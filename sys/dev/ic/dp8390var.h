@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390var.h,v 1.1.8.1 2001/05/14 22:23:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390var.h,v 1.1.8.2 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: dp8390var.h,v 1.8 1998/08/12 07:19:09 scottr Exp $	*/
 
 /*
@@ -67,6 +67,7 @@ struct dp8390_softc {
 
 	int	(*test_mem) __P((struct dp8390_softc *));
 	void	(*init_card) __P((struct dp8390_softc *));
+	void	(*stop_card) __P((struct dp8390_softc *));
 	void	(*read_hdr) __P((struct dp8390_softc *,
 		    int, struct dp8390_ring *));
 	void	(*recv_int) __P((struct dp8390_softc *));

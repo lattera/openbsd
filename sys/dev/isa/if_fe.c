@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.2 2001/07/04 10:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.3 2001/10/31 03:22:43 nate Exp $	*/
 
 /*
  * All Rights Reserved, Copyright (C) Fujitsu Limited 1995
@@ -1001,21 +1001,6 @@ feattach(parent, self, aux)
 	    IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
 	IFQ_SET_READY(&ifp->if_snd);
 
-	/*
-	 * Set maximum size of output queue, if it has not been set.
-	 * It is done here as this driver may be started after the
-	 * system intialization (i.e., the interface is PCMCIA.)
-	 *
-	 * I'm not sure this is really necessary, but, even if it is,
-	 * it should be done somewhere else, e.g., in if_attach(),
-	 * since it must be a common workaround for all network drivers.
-	 * FIXME.
-	 */
-	if (ifp->if_snd.ifq_maxlen == 0) {
-		extern int ifqmaxlen;		/* Don't be so shocked... */
-		ifp->if_snd.ifq_maxlen = ifqmaxlen;
-	}
-
 #if FE_DEBUG >= 3
 	log(LOG_INFO, "%s: feattach()\n", sc->sc_dev.dv_xname);
 	fe_dump(LOG_INFO, sc);
@@ -1631,7 +1616,7 @@ fe_tint(sc, tstat)
 		 * packet transmission.  When we send two or more packets
 		 * with one start command (that's what we do when the
 		 * transmission queue is clauded), 86960 informs us number
-		 * of collisions occured on the last packet on the
+		 * of collisions occurred on the last packet on the
 		 * transmission only.  Number of collisions on previous
 		 * packets are lost.  I have told that the fact is clearly
 		 * stated in the Fujitsu document.
@@ -2088,7 +2073,7 @@ fe_get_packet(sc, len)
  *
  * I wrote a code for an experimental "delayed padding" technique.
  * When employed, it postpones the padding process for short packets.
- * If xmit() occured at the moment, the padding process is omitted, and
+ * If xmit() occurred at the moment, the padding process is omitted, and
  * garbages are sent as pad data.  If next packet is stored in the
  * transmission buffer before xmit(), write_mbuf() pads the previous
  * packet before transmitting new packet.  This *may* gain the

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/Attic/awireg.h,v 1.1.2.3 2001/10/31 03:22:41 nate Exp $ */
 /* $NetBSD: awireg.h,v 1.3 2000/03/22 11:22:22 onoe Exp $ */
 
 /*-

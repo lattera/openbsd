@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/com_isa.c,v 1.1 2001/09/29 23:26:07 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/com_isa.c,v 1.1.4.1 2001/10/31 03:22:43 nate Exp $	*/
 /*
  * Copyright (c) 1997 - 1999, Jason Downs.  All rights reserved.
  *

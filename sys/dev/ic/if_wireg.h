@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.5 2001/06/25 18:04:23 drahn Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.5.2.1 2001/10/31 03:22:42 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -263,8 +263,30 @@
 #define WI_AUX_OFFSET		0x3C
 #define WI_AUX_DATA		0x3E
 
-#define WI_COR_OFFSET		0x3E0
-#define WI_COR_VALUE		0x41
+#define WI_PLX_COR_OFFSET	0x3E0
+#define WI_PLX_COR_VALUE	0x41
+
+/*
+ * PCI Host Interface Registers (HFA3842 Specific)
+ * The value of all Register's Offset, such as WI_INFO_FID and WI_PARAM0,
+ * has doubled.
+ * About WI_PCI_COR: In this Register, only soft-reset bit implement; Bit(7).
+ */
+#define WI_PCI_COR		0x4C
+#define WI_PCI_HCR		0x5C
+#define WI_PCI_MASTER0_ADDRH	0x80
+#define WI_PCI_MASTER0_ADDRL	0x84
+#define WI_PCI_MASTER0_LEN	0x88
+#define WI_PCI_MASTER0_CON	0x8C
+
+#define WI_PCI_STATUS		0x98
+
+#define WI_PCI_MASTER1_ADDRH	0xA0
+#define WI_PCI_MASTER1_ADDRL	0xA4
+#define WI_PCI_MASTER1_LEN	0xA8
+#define WI_PCI_MASTER1_CON	0xAC
+
+#define WI_PCI_SOFT_RESET       (1 << 7)
 
 /*
  * One form of communication with the Hermes is with what Lucent calls
@@ -346,6 +368,7 @@ struct wi_ltv_ver {
 #define	WI_NIC_HWB1153	0x8007
 #define	WI_NIC_P2_SST	0x8008  /* Prism2 with SST flush */
 #define	WI_NIC_PRISM2_5	0x800C
+#define	WI_NIC_3874A	0x8013	/* Prism2.5 Mini-PCI */
 };
 
 /*

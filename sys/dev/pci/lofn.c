@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7 2001/06/26 23:34:18 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7.2.1 2001/10/31 03:22:46 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -32,7 +32,7 @@
  */
 
 /*
- * Driver for the Hi/Fn 6500 assymmetric encryption processor.
+ * Driver for the Hifn 6500 assymmetric encryption processor.
  */
 
 #include <sys/param.h>
@@ -42,11 +42,9 @@
 #include <sys/malloc.h>
 #include <sys/kernel.h>
 #include <sys/mbuf.h>
-#include <vm/vm.h>
-#include <vm/vm_extern.h>
-#include <vm/pmap.h>
-#include <machine/pmap.h>
 #include <sys/device.h>
+
+#include <vm/vm.h>
 
 #include <crypto/cryptodev.h>
 #include <dev/rndvar.h>
@@ -124,8 +122,7 @@ lofn_attach(parent, self, aux)
 
 	sc->sc_dmat = pa->pa_dmat;
 
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		goto fail;
 	}

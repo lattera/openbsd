@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qecvar.h,v 1.1 2001/08/20 22:09:27 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qecvar.h,v 1.1.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: qecvar.h,v 1.4 1999/01/17 20:47:50 pk Exp $	*/
 
 /*-

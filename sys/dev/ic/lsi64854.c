@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/lsi64854.c,v 1.3 2001/09/11 20:05:25 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/lsi64854.c,v 1.3.4.1 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: lsi64854.c,v 1.18 2001/06/04 20:56:51 mrg Exp $ */
 
 /*-

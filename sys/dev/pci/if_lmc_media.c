@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.1 2001/07/04 10:42:15 niklas Exp $ */
-/* $Id: if_lmc_media.c,v 1.4 2000/02/06 17:57:56 chris Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.2 2001/10/31 03:22:46 nate Exp $ */
+/* $Id: if_lmc_media.c,v 1.4.2.1 2001/07/04 10:42:15 niklas Exp $ */
 
 /*-
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)
@@ -78,8 +78,6 @@
 #endif
 
 #include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/vm_kern.h>
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <net/if_sppp.h>
@@ -136,10 +134,14 @@
  * Sigh.  Every OS puts these in different places.  NetBSD and FreeBSD use
  * a C preprocessor that allows this hack, but BSDI does not.
  */
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__) || defined(__FreeBSD__)
 #include INCLUDE_PATH_PREFIX "if_lmc_types.h"
 #include INCLUDE_PATH_PREFIX "if_lmcioctl.h"
 #include INCLUDE_PATH_PREFIX "if_lmcvar.h"
+#elif defined(__OpenBSD__)
+#include <dev/pci/if_lmc_types.h>
+#include <dev/pci/if_lmcioctl.h>
+#include <dev/pci/if_lmcvar.h>
 #else /* BSDI */
 #include "i386/pci/if_lmc_types.h"
 #include "i386/pci/if_lmcioctl.h"
@@ -1128,7 +1130,7 @@ lmc_t1_watchdog(lmc_softc_t * const sc)
 	/* blue alarm -- RAIS */
 	if (t1stat & 0x08) {
 		if (sc->lmc_blue != 1)
-			printf ("%s: AIS Recieved\n", sc->lmc_xname);
+			printf ("%s: AIS Received\n", sc->lmc_xname);
 		lmc_led_on (sc, LMC_DS3_LED1 | LMC_DS3_LED2);
 		sc->lmc_blue = 1;
 	} else {
@@ -1154,12 +1156,12 @@ lmc_t1_watchdog(lmc_softc_t * const sc)
 	sc->lmc_red = 0;
 	}
 
-	/* check for Recieve Multiframe Yellow Alarm
-	 * Ignore Recieve Yellow Alarm
+	/* check for Receive Multiframe Yellow Alarm
+	 * Ignore Receive Yellow Alarm
 	 */
 	if (t1stat & 0x80) {
 		if (sc->lmc_yel != 1) {
-			printf ("%s: Recieve Yellow Alarm\n", sc->lmc_xname);
+			printf ("%s: Receive Yellow Alarm\n", sc->lmc_xname);
 		}
 			lmc_led_on (sc, LMC_DS3_LED0 | LMC_DS3_LED2);
 			sc->lmc_yel = 1;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxkireg.h,v 1.2 2001/10/24 15:09:28 brad Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxkireg.h,v 1.2.2.1 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: emuxkireg.h,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-

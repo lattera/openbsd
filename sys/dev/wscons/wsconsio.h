@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.2 2001/07/04 10:44:08 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.3 2001/10/31 03:22:50 nate Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -148,6 +148,7 @@ struct wskbd_keyrepeat_data {
 /* Manipulate keysym groups. */
 struct wskbd_map_data {
 	u_int	maplen;				/* number of entries in map */
+#define WSKBDIO_MAXMAPLEN	65536
 	struct wscons_keymap *map;		/* map to get or set */
 };
 #define WSKBDIO_GETMAP		_IOWR('W', 13, struct wskbd_map_data)
@@ -314,7 +315,8 @@ struct wsdisplay_font {
 #define WSDISPLAY_FONTENC_PCVT 2
 #define WSDISPLAY_FONTENC_ISO7 3 /* greek */
 #define WSDISPLAY_FONTENC_SONY 4
-	int fontwidth, fontheight, stride;
+	u_int fontwidth, fontheight, stride;
+#define WSDISPLAY_MAXFONTSZ	(512*1024)
 	int bitorder, byteorder;
 #define	WSDISPLAY_FONTORDER_KNOWN	0	/* i.e, no need to convert */
 #define	WSDISPLAY_FONTORDER_L2R		1
@@ -358,8 +360,8 @@ struct wsdisplay_delscreendata {
 };
 #define WSDISPLAYIO_DELSCREEN	_IOW('W', 84, struct wsdisplay_delscreendata)
 
-#define WSDISPLAYIO_GETSCREEN	_IOR('W', 85, struct wsdisplay_addscreendata)
-#define	WSDISPLAYIO_SETSCREEN	_IOR('W', 86, u_int)
+#define WSDISPLAYIO_GETSCREEN	_IOWR('W', 85, struct wsdisplay_addscreendata)
+#define	WSDISPLAYIO_SETSCREEN	_IOW('W', 86, u_int)
 
 /* Display information: number of bytes per row, may be same as pixels */
 #define	WSDISPLAYIO_LINEBYTES	_IOR('W', 95, u_int)

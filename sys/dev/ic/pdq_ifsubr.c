@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/pdq_ifsubr.c,v 1.6.14.1 2001/07/04 10:41:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/pdq_ifsubr.c,v 1.6.14.2 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: pdq_ifsubr.c,v 1.5 1996/05/20 00:26:21 thorpej Exp $	*/
 
 /*-
@@ -84,8 +84,6 @@
 #endif
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_param.h>
 
 #include "pdqvar.h"
 #include "pdqreg.h"

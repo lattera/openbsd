@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/dev/eisa/eisadevs,v 1.13.4.2 2001/05/14 22:23:16 niklas Exp $
+$OpenBSD: src/sys/dev/eisa/eisadevs,v 1.13.4.3 2001/10/31 03:22:41 nate Exp $
 
 /*
  * Copyright (c) 1995, 1996 Christopher G. Demetriou
@@ -125,6 +125,7 @@ product TCM 5092	3C579-TP Ethernet
 product TCM 5093	3C579 Ethernet
 product TCM 5094	3C509-Combo Ethernet
 product TCM 5095	3C509-TPO Ethernet
+product	TCM 5098	3C509-TP Ethernet
 product TCM 5920 	3C592 Etherlink III
 product TCM 5970 	3C597 Fast Etherlink TX
 product TCM 5971	3C597 Fast Etherlink T4

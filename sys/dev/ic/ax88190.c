@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ax88190.c,v 1.1 2001/08/18 16:15:39 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ax88190.c,v 1.1.4.1 2001/10/31 03:22:41 nate Exp $	*/
 /*	$NetBSD$	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.3 2001/07/04 10:42:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.4 2001/10/31 03:22:46 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -101,9 +101,6 @@
 #endif
 
 #include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
-#include <vm/vm_kern.h>
-#include <vm/vm_extern.h>
 #include <machine/bus.h>
 
 #include <dev/mii/mii.h>
@@ -764,13 +761,11 @@ skc_probe(parent, match, aux)
 {
 	struct pci_attach_args *pa = aux;
 
-	if (PCI_VENDOR(pa->pa_id) != PCI_VENDOR_SCHNEIDERKOCH)
-		return (0);
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SCHNEIDERKOCH &&
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SCHNEIDERKOCH_GE)
+		return (1);
 
-	if (PCI_PRODUCT(pa->pa_id) != PCI_PRODUCT_SCHNEIDERKOCH_GE)
-		return (0);
-
-	return (1);
+	return (0);
 }
 
 /*
@@ -1109,8 +1104,7 @@ skc_attach(parent, self, aux)
 	sc->sc_dmatag = pa->pa_dmat;
 
 	/* Allocate interrupt */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		goto fail;
 	}
@@ -1545,14 +1539,16 @@ void sk_intr_xmac(sc_if)
 	sc = sc_if->sk_softc;
 	status = SK_XM_READ_2(sc_if, XM_ISR);
 
-	if (status & XM_ISR_LINKEVENT) {
-		SK_XM_SETBIT_2(sc_if, XM_IMR, XM_IMR_LINKEVENT);
-		if (sc_if->sk_link == 1)
-			sc_if->sk_link = 0;
-	}
+	if (sc_if->sk_phytype == SK_PHYTYPE_XMAC) {
+		if (status & XM_ISR_GP0_SET) {
+			SK_XM_SETBIT_2(sc_if, XM_IMR, XM_IMR_GP0_SET);
+			timeout_add(&sc_if->sk_tick_ch, hz);
+		}
 
-	if (status & XM_ISR_AUTONEG_DONE)
-		timeout_add(&sc_if->sk_tick_ch, hz);
+		if (status & XM_ISR_AUTONEG_DONE) {
+			timeout_add(&sc_if->sk_tick_ch, hz);
+		}
+	}
 
 	if (status & XM_IMR_TX_UNDERRUN)
 		SK_XM_SETBIT_4(sc_if, XM_MODE, XM_MODE_FLUSH_TXFIFO);

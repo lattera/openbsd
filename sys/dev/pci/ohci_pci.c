@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.6.2.2 2001/07/04 10:42:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.6.2.3 2001/10/31 03:22:46 nate Exp $	*/
 /*	$NetBSD: ohci_pci.c,v 1.9 1999/05/20 09:52:35 augustss Exp $	*/
 
 /*
@@ -133,11 +133,14 @@ ohci_pci_attach(parent, self, aux)
 	    OHCI_INTERRUPT_DISABLE, OHCI_ALL_INTRS);
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		return;
 	}
+
+#if defined(__OpenBSD__)
+	timeout_set(&sc->sc.sc_tmo_rhsc, ohci_rhsc_enable, sc);
+#endif
 
 	intrstr = pci_intr_string(pc, ih);
 	sc->sc_ih = pci_intr_establish(pc, ih, IPL_USB, ohci_intr, sc,

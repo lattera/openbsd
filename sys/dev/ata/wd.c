@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.2 2001/07/04 10:40:17 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.3 2001/10/31 03:22:40 nate Exp $ */
 /*	$NetBSD: wd.c,v 1.193 1999/02/28 17:15:27 explorer Exp $ */
 
 /*
@@ -277,6 +277,11 @@ wdattach(parent, self, aux)
 	strncpy(wd->drvp->drive_name, wd->sc_dev.dv_xname, 
 		sizeof(wd->drvp->drive_name) - 1);
 	wd->drvp->cf_flags = wd->sc_dev.dv_cfdata->cf_flags;
+
+	if ((NERRS_MAX - 2) > 0)
+		wd->drvp->n_dmaerrs = NERRS_MAX - 2;
+	else
+		wd->drvp->n_dmaerrs = 0;
 
 	/* read our drive info */
 	if (wd_get_params(wd, at_poll, &wd->sc_params) != 0) {
@@ -572,7 +577,14 @@ __wdstart(wd, bp)
 	case WDC_QUEUED:
 		break;
 	case WDC_COMPLETE:
-		wddone(wd);
+		/* 
+		 * This code is never executed because we never set
+		 * the ATA_POLL flag above
+		 */
+#if 0
+		if (wd->sc_wdc_bio.flags & ATA_POLL)
+			wddone(wd);
+#endif
 		break;
 	default:
 		panic("__wdstart: bad return code from wdc_ata_bio()");
@@ -1088,7 +1100,6 @@ wdsize(dev)
 	return (size);
 }
 
-#ifndef __BDEVSW_DUMP_OLD_TYPE
 /* #define WD_DUMP_NOT_TRUSTED if you just want to watch */
 static int wddoingadump = 0;
 static int wddumprecalibrated = 0;
@@ -1221,21 +1232,6 @@ again:
 	wddoingadump = 0;
 	return 0;
 }
-#else /* __BDEVSW_DUMP_NEW_TYPE */
-
-
-int
-wddump(dev, blkno, va, size)
-	dev_t dev;
-	daddr_t blkno;
-	caddr_t va;
-	size_t size;
-{
-
-	/* Not implemented. */
-	return ENXIO;
-}
-#endif /* __BDEVSW_DUMP_NEW_TYPE */
 
 #ifdef DKBAD
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5 2001/08/31 15:12:05 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: if_le_ledma.c,v 1.14 2001/05/30 11:46:35 mrg Exp $	*/
 
 /*-

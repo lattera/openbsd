@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ukbd.c,v 1.6.2.2 2001/07/04 10:43:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ukbd.c,v 1.6.2.3 2001/10/31 03:22:49 nate Exp $	*/
 /*      $NetBSD: ukbd.c,v 1.66 2001/04/06 22:54:15 augustss Exp $        */
 
 /*
@@ -397,8 +397,10 @@ USB_ATTACH(ukbd)
 	a.accessops = &ukbd_accessops;
 	a.accesscookie = sc;
 
-#if defined(__OpenBSD__) && defined(WSDISPLAY_COMPAT_RAWKBD)
+#if defined(__OpenBSD__)
+#ifdef WSDISPLAY_COMPAT_RAWKBD
 	timeout_set(&sc->sc_rawrepeat_ch, ukbd_rawrepeat, sc);
+#endif
 	timeout_set(&sc->sc_delay, ukbd_delayed_decode, sc);
 #endif
 
@@ -451,6 +453,7 @@ ukbd_enable(void *v, int on)
 		/* Disable interrupts. */
 		usbd_abort_pipe(sc->sc_intrpipe);
 		usbd_close_pipe(sc->sc_intrpipe);
+		sc->sc_intrpipe = NULL;
 	}
 	sc->sc_enabled = on;
 
@@ -512,6 +515,13 @@ USB_DETACH(ukbd)
 	if (sc->sc_wskbddev != NULL)
 		rv = config_detach(sc->sc_wskbddev, flags);
 
+	/* The console keyboard does not get a disable call, so check pipe. */
+	if (sc->sc_intrpipe != NULL) {
+		usbd_abort_pipe(sc->sc_intrpipe);
+		usbd_close_pipe(sc->sc_intrpipe);
+		sc->sc_intrpipe = NULL;
+	}
+
 	usbd_add_drv_event(USB_EVENT_DRIVER_DETACH, sc->sc_udev,
 			   USBDEV(sc->sc_dev));
 
@@ -537,7 +547,7 @@ ukbd_intr(xfer, addr, status)
 		return;
 	}
 
-	if (sc->sc_debounce) {
+	if (sc->sc_debounce && !sc->sc_polling) {
 		/*
 		 * Some keyboards have a peculiar quirk.  They sometimes
 		 * generate a key up followed by a key down for the same
@@ -550,6 +560,20 @@ ukbd_intr(xfer, addr, status)
 #else
 		callout_reset(&sc->sc_delay, hz / 50, ukbd_delayed_decode, sc);
 #endif
+	} else if (sc->sc_console_keyboard && !sc->sc_polling) {
+		/* 
+		 * For the console keyboard we can't deliver CTL-ALT-ESC
+		 * from the interrupt routine. Doing so would start
+		 * polling from iside the interrupt routine and that
+		 * loses bigtime.
+		 */
+		sc->sc_data = *ud;
+#if defined(__OpenBSD__)
+		timeout_add(&sc->sc_delay, 1);  /* NOT an immediate timeout */
+#else
+		callout_reset(&sc->sc_delay, 0, ukbd_delayed_decode, sc);
+#endif
+
 	} else {
 		ukbd_decode(sc, ud);
 	}

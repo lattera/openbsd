@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/apcdmareg.h,v 1.1 2001/10/01 03:31:03 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/apcdmareg.h,v 1.1.4.1 2001/10/31 03:22:41 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)

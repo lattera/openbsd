@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27.2.2 2001/07/04 10:42:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27.2.3 2001/10/31 03:22:46 nate Exp $	*/
 
 /*
  * Copyright (c) 2001
@@ -74,9 +74,6 @@
 #endif
 
 #include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
-#include <vm/vm_kern.h>
-#include <vm/vm_extern.h>
 #include <machine/bus.h>
 
 #include <dev/mii/mii.h>
@@ -126,9 +123,11 @@ void txp_capabilities __P((struct txp_softc *));
 void txp_ifmedia_sts __P((struct ifnet *, struct ifmediareq *));
 int txp_ifmedia_upd __P((struct ifnet *));
 void txp_show_descriptor __P((void *));
-void txp_tx_reclaim __P((struct txp_softc *, struct txp_tx_ring *));
+void txp_tx_reclaim __P((struct txp_softc *, struct txp_tx_ring *,
+    struct txp_dma_alloc *));
 void txp_rxbuf_reclaim __P((struct txp_softc *));
-void txp_rx_reclaim __P((struct txp_softc *, struct txp_rx_ring *));
+void txp_rx_reclaim __P((struct txp_softc *, struct txp_rx_ring *,
+    struct txp_dma_alloc *));
 
 struct cfattach txp_ca = {
 	sizeof(struct txp_softc), txp_probe, txp_attach,
@@ -201,8 +200,7 @@ txp_attach(parent, self, aux)
 	/*
 	 * Allocate our interrupt.
 	 */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		return;
 	}
@@ -393,7 +391,7 @@ txp_download_fw(sc)
 	WRITE_REG(sc, TXP_H2A_0, TXP_BOOTCMD_RUNTIME_IMAGE);
 
 	if (txp_download_fw_wait(sc)) {
-		printf(": fw wait failed, initial\n");
+		printf("%s: fw wait failed, initial\n", sc->sc_dev.dv_xname);
 		return (-1);
 	}
 
@@ -440,7 +438,7 @@ txp_download_fw_wait(sc)
 	}
 
 	if (!(r & TXP_INT_A2H_0)) {
-		printf(": fw wait failed comm0\n", sc->sc_dev.dv_xname);
+		printf(": fw wait failed comm0\n");
 		return (-1);
 	}
 
@@ -448,7 +446,7 @@ txp_download_fw_wait(sc)
 
 	r = READ_REG(sc, TXP_A2H_0);
 	if (r != STAT_WAITING_FOR_SEGMENT) {
-		printf(": fw not waiting for segment\n", sc->sc_dev.dv_xname);
+		printf(": fw not waiting for segment\n");
 		return (-1);
 	}
 	return (0);
@@ -507,7 +505,8 @@ txp_download_fw_section(sc, sect, sectnum)
 		goto bail;
 	}
 
-	bus_dmamap_sync(sc->sc_dmat, dma.dma_map, BUS_DMASYNC_PREREAD);
+	txp_bus_dmamap_sync(sc->sc_dmat, dma.dma_map, 0,
+	    dma.dma_map->dm_mapsize, BUS_DMASYNC_PREWRITE);
 
 	WRITE_REG(sc, TXP_H2A_1, sect->nbytes);
 	WRITE_REG(sc, TXP_H2A_2, sect->cksum);
@@ -517,11 +516,13 @@ txp_download_fw_section(sc, sect, sectnum)
 	WRITE_REG(sc, TXP_H2A_0, TXP_BOOTCMD_SEGMENT_AVAILABLE);
 
 	if (txp_download_fw_wait(sc)) {
-		printf(": fw wait failed, section %d\n", sectnum);
+		printf("%s: fw wait failed, section %d\n",
+		    sc->sc_dev.dv_xname, sectnum);
 		err = -1;
 	}
 
-	bus_dmamap_sync(sc->sc_dmat, dma.dma_map, BUS_DMASYNC_POSTREAD);
+	txp_bus_dmamap_sync(sc->sc_dmat, dma.dma_map, 0,
+	    dma.dma_map->dm_mapsize, BUS_DMASYNC_POSTWRITE);
 
 bail:
 	txp_dma_free(sc, &dma);
@@ -545,29 +546,35 @@ txp_intr(vsc)
 	    TXP_INT_DMA3 | TXP_INT_DMA2 | TXP_INT_DMA1 | TXP_INT_DMA0 |
 	    TXP_INT_PCI_TABORT | TXP_INT_PCI_MABORT |  TXP_INT_LATCH);
 
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_host_dma.dma_map, 0,
+	    sizeof(struct txp_hostvar), BUS_DMASYNC_POSTWRITE|BUS_DMASYNC_POSTREAD);
+
 	isr = READ_REG(sc, TXP_ISR);
 	while (isr) {
 		claimed = 1;
 		WRITE_REG(sc, TXP_ISR, isr);
 
 		if ((*sc->sc_rxhir.r_roff) != (*sc->sc_rxhir.r_woff))
-			txp_rx_reclaim(sc, &sc->sc_rxhir);
+			txp_rx_reclaim(sc, &sc->sc_rxhir, &sc->sc_rxhiring_dma);
 		if ((*sc->sc_rxlor.r_roff) != (*sc->sc_rxlor.r_woff))
-			txp_rx_reclaim(sc, &sc->sc_rxlor);
+			txp_rx_reclaim(sc, &sc->sc_rxlor, &sc->sc_rxloring_dma);
 
 		if (hv->hv_rx_buf_write_idx == hv->hv_rx_buf_read_idx)
 			txp_rxbuf_reclaim(sc);
 
 		if (sc->sc_txhir.r_cnt && (sc->sc_txhir.r_cons !=
 		    TXP_OFFSET2IDX(*(sc->sc_txhir.r_off))))
-			txp_tx_reclaim(sc, &sc->sc_txhir);
+			txp_tx_reclaim(sc, &sc->sc_txhir, &sc->sc_txhiring_dma);
 
 		if (sc->sc_txlor.r_cnt && (sc->sc_txlor.r_cons !=
 		    TXP_OFFSET2IDX(*(sc->sc_txlor.r_off))))
-			txp_tx_reclaim(sc, &sc->sc_txlor);
+			txp_tx_reclaim(sc, &sc->sc_txlor, &sc->sc_txloring_dma);
 
 		isr = READ_REG(sc, TXP_ISR);
 	}
+
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_host_dma.dma_map, 0,
+	    sizeof(struct txp_hostvar), BUS_DMASYNC_POSTWRITE|BUS_DMASYNC_POSTREAD);
 
 	/* unmask all interrupts */
 	WRITE_REG(sc, TXP_IMR, TXP_INT_A2H_3);
@@ -578,22 +585,29 @@ txp_intr(vsc)
 }
 
 void
-txp_rx_reclaim(sc, r)
+txp_rx_reclaim(sc, r, dma)
 	struct txp_softc *sc;
 	struct txp_rx_ring *r;
+	struct txp_dma_alloc *dma;
 {
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct txp_rx_desc *rxd;
 	struct mbuf *m;
 	struct txp_swdesc *sd;
 	u_int32_t roff, woff;
-	int sumflags = 0;
+	int sumflags = 0, idx;
 
 	roff = *r->r_roff;
 	woff = *r->r_woff;
-	rxd = r->r_desc + (roff / sizeof(struct txp_rx_desc));
+	idx = roff / sizeof(struct txp_rx_desc);
+	rxd = r->r_desc + idx;
 
 	while (roff != woff) {
+
+		txp_bus_dmamap_sync(sc->sc_dmat, dma->dma_map,
+		    idx * sizeof(struct txp_rx_desc), sizeof(struct txp_rx_desc),
+		    BUS_DMASYNC_POSTREAD);
+
 		if (rxd->rx_flags & RX_FLAGS_ERROR) {
 			printf("%s: error 0x%x\n", sc->sc_dev.dv_xname,
 			    rxd->rx_stat);
@@ -604,8 +618,8 @@ txp_rx_reclaim(sc, r)
 		/* retrieve stashed pointer */
 		bcopy((u_long *)&rxd->rx_vaddrlo, &sd, sizeof(sd));
 
-		bus_dmamap_sync(sc->sc_dmat, sd->sd_map,
-		    BUS_DMASYNC_POSTWRITE);
+		txp_bus_dmamap_sync(sc->sc_dmat, sd->sd_map, 0,
+		    sd->sd_map->dm_mapsize, BUS_DMASYNC_POSTREAD);
 		bus_dmamap_unload(sc->sc_dmat, sd->sd_map);
 		bus_dmamap_destroy(sc->sc_dmat, sd->sd_map);
 		m = sd->sd_mbuf;
@@ -680,13 +694,19 @@ txp_rx_reclaim(sc, r)
 		ether_input_mbuf(ifp, m);
 
 next:
+		txp_bus_dmamap_sync(sc->sc_dmat, dma->dma_map,
+		    idx * sizeof(struct txp_rx_desc), sizeof(struct txp_rx_desc),
+		    BUS_DMASYNC_PREREAD);
 
 		roff += sizeof(struct txp_rx_desc);
 		if (roff == (RX_ENTRIES * sizeof(struct txp_rx_desc))) {
+			idx = 0;
 			roff = 0;
 			rxd = r->r_desc;
-		} else
+		} else {
+			idx++;
 			rxd++;
+		}
 		woff = *r->r_woff;
 	}
 
@@ -734,8 +754,11 @@ txp_rxbuf_reclaim(sc)
 			bus_dmamap_destroy(sc->sc_dmat, sd->sd_map);
 			goto err_mbuf;
 		}
-		bus_dmamap_sync(sc->sc_dmat, sd->sd_map, BUS_DMASYNC_PREWRITE);
 
+		txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_rxbufring_dma.dma_map,
+		    i * sizeof(struct txp_rxbuf_desc),
+		    sizeof(struct txp_rxbuf_desc), BUS_DMASYNC_POSTWRITE);
+		    
 		/* stash away pointer */
 		bcopy(&sd, (u_long *)&rbd->rb_vaddrlo, sizeof(sd));
 
@@ -743,6 +766,13 @@ txp_rxbuf_reclaim(sc)
 		    & 0xffffffff;
 		rbd->rb_paddrhi = ((u_int64_t)sd->sd_map->dm_segs[0].ds_addr)
 		    >> 32;
+
+		txp_bus_dmamap_sync(sc->sc_dmat, sd->sd_map, 0,
+		    sd->sd_map->dm_mapsize, BUS_DMASYNC_PREREAD);
+
+		txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_rxbufring_dma.dma_map,
+		    i * sizeof(struct txp_rxbuf_desc),
+		    sizeof(struct txp_rxbuf_desc), BUS_DMASYNC_PREWRITE);
 
 		hv->hv_rx_buf_write_idx = TXP_IDX2OFFSET(i);
 
@@ -764,9 +794,10 @@ err_sd:
  * Reclaim mbufs and entries from a transmit ring.
  */
 void
-txp_tx_reclaim(sc, r)
+txp_tx_reclaim(sc, r, dma)
 	struct txp_softc *sc;
 	struct txp_tx_ring *r;
+	struct txp_dma_alloc *dma;
 {
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	u_int32_t idx = TXP_OFFSET2IDX(*(r->r_off));
@@ -779,12 +810,16 @@ txp_tx_reclaim(sc, r)
 		if (cnt == 0)
 			break;
 
+		txp_bus_dmamap_sync(sc->sc_dmat, dma->dma_map,
+		    cons * sizeof(struct txp_tx_desc),
+		    sizeof(struct txp_tx_desc),
+		    BUS_DMASYNC_POSTWRITE);
+
 		if ((txd->tx_flags & TX_FLAGS_TYPE_M) ==
 		    TX_FLAGS_TYPE_DATA) {
-			bus_dmamap_sync(sc->sc_dmat, sd->sd_map,
-			    BUS_DMASYNC_POSTREAD);
+			txp_bus_dmamap_sync(sc->sc_dmat, sd->sd_map, 0,
+			    sd->sd_map->dm_mapsize, BUS_DMASYNC_POSTWRITE);
 			bus_dmamap_unload(sc->sc_dmat, sd->sd_map);
-			bus_dmamap_destroy(sc->sc_dmat, sd->sd_map);
 			m = sd->sd_mbuf;
 			if (m != NULL) {
 				m_freem(m);
@@ -838,7 +873,7 @@ txp_alloc_rings(sc)
 	struct txp_boot_record *boot;
 	struct txp_swdesc *sd;
 	u_int32_t r;
-	int i;
+	int i, j;
 
 	/* boot record */
 	if (txp_dma_malloc(sc, sizeof(struct txp_boot_record), &sc->sc_boot_dma,
@@ -875,6 +910,18 @@ txp_alloc_rings(sc)
 	sc->sc_txhir.r_desc = (struct txp_tx_desc *)sc->sc_txhiring_dma.dma_vaddr;
 	sc->sc_txhir.r_cons = sc->sc_txhir.r_prod = sc->sc_txhir.r_cnt = 0;
 	sc->sc_txhir.r_off = &sc->sc_hostvar->hv_tx_hi_desc_read_idx;
+	for (i = 0; i < TX_ENTRIES; i++) {
+		if (bus_dmamap_create(sc->sc_dmat, TXP_MAX_PKTLEN,
+		    TX_ENTRIES - 4, TXP_MAX_SEGLEN, 0,
+		    BUS_DMA_NOWAIT, &sc->sc_txd[i].sd_map) != 0) {
+			for (j = 0; j < i; j++) {
+				bus_dmamap_destroy(sc->sc_dmat,
+				    sc->sc_txd[j].sd_map);
+				sc->sc_txd[j].sd_map = NULL;
+			}
+			goto bail_txhiring;
+		}
+	}
 
 	/* low priority tx ring */
 	if (txp_dma_malloc(sc, sizeof(struct txp_tx_desc) * TX_ENTRIES,
@@ -905,6 +952,8 @@ txp_alloc_rings(sc)
 	    (struct txp_rx_desc *)sc->sc_rxhiring_dma.dma_vaddr;
 	sc->sc_rxhir.r_roff = &sc->sc_hostvar->hv_rx_hi_read_idx;
 	sc->sc_rxhir.r_woff = &sc->sc_hostvar->hv_rx_hi_write_idx;
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_rxhiring_dma.dma_map,
+	    0, sc->sc_rxhiring_dma.dma_map->dm_mapsize, BUS_DMASYNC_PREREAD);
 
 	/* low priority ring */
 	if (txp_dma_malloc(sc, sizeof(struct txp_rx_desc) * RX_ENTRIES,
@@ -920,6 +969,8 @@ txp_alloc_rings(sc)
 	    (struct txp_rx_desc *)sc->sc_rxloring_dma.dma_vaddr;
 	sc->sc_rxlor.r_roff = &sc->sc_hostvar->hv_rx_lo_read_idx;
 	sc->sc_rxlor.r_woff = &sc->sc_hostvar->hv_rx_lo_write_idx;
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_rxloring_dma.dma_map,
+	    0, sc->sc_rxloring_dma.dma_map->dm_mapsize, BUS_DMASYNC_PREREAD);
 
 	/* command ring */
 	if (txp_dma_malloc(sc, sizeof(struct txp_cmd_desc) * CMD_ENTRIES,
@@ -986,7 +1037,8 @@ txp_alloc_rings(sc)
 			bus_dmamap_destroy(sc->sc_dmat, sd->sd_map);
 			goto bail_rxbufring;
 		}
-		bus_dmamap_sync(sc->sc_dmat, sd->sd_map, BUS_DMASYNC_PREWRITE);
+		txp_bus_dmamap_sync(sc->sc_dmat, sd->sd_map, 0,
+		    sd->sd_map->dm_mapsize, BUS_DMASYNC_PREREAD);
 
 		/* stash away pointer */
 		bcopy(&sd, (u_long *)&sc->sc_rxbufs[i].rb_vaddrlo, sizeof(sd));
@@ -996,6 +1048,9 @@ txp_alloc_rings(sc)
 		sc->sc_rxbufs[i].rb_paddrhi =
 		    ((u_int64_t)sd->sd_map->dm_segs[0].ds_addr) >> 32;
 	}
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_rxbufring_dma.dma_map,
+	    0, sc->sc_rxbufring_dma.dma_map->dm_mapsize,
+	    BUS_DMASYNC_PREWRITE);
 	sc->sc_hostvar->hv_rx_buf_write_idx = (RXBUF_ENTRIES - 1) *
 	    sizeof(struct txp_rxbuf_desc);
 
@@ -1291,21 +1346,16 @@ txp_start(ifp)
 		sd = sc->sc_txd + prod;
 		sd->sd_mbuf = m;
 
-		if (bus_dmamap_create(sc->sc_dmat, TXP_MAX_SEGLEN,
-		    TX_ENTRIES - 4, TXP_MAX_PKTLEN, 0,
-		    BUS_DMA_NOWAIT, &sd->sd_map))
-			goto oactive1;
-
 		if (bus_dmamap_load_mbuf(sc->sc_dmat, sd->sd_map, m,
 		    BUS_DMA_NOWAIT)) {
 			MGETHDR(mnew, M_DONTWAIT, MT_DATA);
 			if (mnew == NULL)
-				goto oactive2;
+				goto oactive1;
 			if (m->m_pkthdr.len > MHLEN) {
 				MCLGET(mnew, M_DONTWAIT);
 				if ((mnew->m_flags & M_EXT) == 0) {
 					m_freem(mnew);
-					goto oactive2;
+					goto oactive1;
 				}
 			}
 			m_copydata(m, 0, m->m_pkthdr.len, mtod(mnew, caddr_t));
@@ -1314,7 +1364,7 @@ txp_start(ifp)
 			m = mnew;
 			if (bus_dmamap_load_mbuf(sc->sc_dmat, sd->sd_map, m,
 			    BUS_DMA_NOWAIT))
-				goto oactive2;
+				goto oactive1;
 		}
 
 		if ((TX_ENTRIES - cnt) < 4)
@@ -1328,6 +1378,7 @@ txp_start(ifp)
 		txd->tx_addrhi = 0;
 		txd->tx_totlen = 0;
 		txd->tx_pflags = 0;
+		txd->tx_numdesc = sd->sd_map->dm_nsegs;
 
 		if (++prod == TX_ENTRIES)
 			prod = 0;
@@ -1353,12 +1404,14 @@ txp_start(ifp)
 			txd->tx_pflags |= TX_PFLAGS_UDPCKSUM;
 #endif
 
+		txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_txhiring_dma.dma_map,
+		    prod * sizeof(struct txp_tx_desc), sizeof(struct txp_tx_desc),
+		    BUS_DMASYNC_PREWRITE);
+
 		fxd = (struct txp_frag_desc *)(r->r_desc + prod);
 		for (i = 0; i < sd->sd_map->dm_nsegs; i++) {
 			if (++cnt >= (TX_ENTRIES - 4))
 				goto oactive;
-
-			txd->tx_numdesc++;
 
 			fxd->frag_flags = FRAG_FLAGS_TYPE_FRAG;
 			fxd->frag_rsvd1 = 0;
@@ -1370,6 +1423,11 @@ txp_start(ifp)
 			    ((u_int64_t)sd->sd_map->dm_segs[i].ds_addr) >>
 			    32;
 			fxd->frag_rsvd2 = 0;
+
+			txp_bus_dmamap_sync(sc->sc_dmat,
+			    sc->sc_txhiring_dma.dma_map,
+			    prod * sizeof(struct txp_frag_desc),
+			    sizeof(struct txp_frag_desc), BUS_DMASYNC_PREWRITE);
 
 			if (++prod == TX_ENTRIES) {
 				fxd = (struct txp_frag_desc *)r->r_desc;
@@ -1386,7 +1444,8 @@ txp_start(ifp)
 			bpf_mtap(ifp->if_bpf, m);
 #endif
 
-		bus_dmamap_sync(sc->sc_dmat, sd->sd_map, BUS_DMASYNC_PREREAD);
+		txp_bus_dmamap_sync(sc->sc_dmat, sd->sd_map, 0,
+		    sd->sd_map->dm_mapsize, BUS_DMASYNC_PREWRITE);
 		WRITE_REG(sc, r->r_reg, TXP_IDX2OFFSET(prod));
 	}
 
@@ -1396,8 +1455,6 @@ txp_start(ifp)
 
 oactive:
 	bus_dmamap_unload(sc->sc_dmat, sd->sd_map);
-oactive2:
-	bus_dmamap_destroy(sc->sc_dmat, sd->sd_map);
 oactive1:
 	ifp->if_flags |= IFF_OACTIVE;
 	r->r_prod = firstprod;
@@ -1483,11 +1540,15 @@ txp_command2(sc, id, in1, in2, in3, in_extp, in_extn, rspp, wait)
 	sc->sc_cmdring.lastwrite = idx;
 
 	WRITE_REG(sc, TXP_H2A_2, sc->sc_cmdring.lastwrite);
+	txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_host_dma.dma_map, 0,
+	    sizeof(struct txp_hostvar), BUS_DMASYNC_PREREAD);
 
 	if (!wait)
 		return (0);
 
 	for (i = 0; i < 10000; i++) {
+		txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_host_dma.dma_map, 0,
+		    sizeof(struct txp_hostvar), BUS_DMASYNC_POSTREAD);
 		idx = hv->hv_resp_read_idx;
 		if (idx != hv->hv_resp_write_idx) {
 			*rspp = NULL;
@@ -1496,6 +1557,8 @@ txp_command2(sc, id, in1, in2, in3, in_extp, in_extn, rspp, wait)
 			if (*rspp != NULL)
 				break;
 		}
+		txp_bus_dmamap_sync(sc->sc_dmat, sc->sc_host_dma.dma_map, 0,
+		    sizeof(struct txp_hostvar), BUS_DMASYNC_PREREAD);
 		DELAY(50);
 	}
 	if (i == 1000 || (*rspp) == NULL) {

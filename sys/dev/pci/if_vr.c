@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.3 2001/07/04 10:42:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.4 2001/10/31 03:22:46 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -88,7 +88,6 @@
 #endif
 
 #include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
@@ -682,8 +681,7 @@ vr_attach(parent, self, aux)
 #endif
 
 	/* Allocate interrupt */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		goto fail;
 	}

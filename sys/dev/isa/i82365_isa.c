@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.1 2001/05/14 22:24:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.2 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: i82365_isa.c,v 1.11 1998/06/09 07:25:00 thorpej Exp $	*/
 
 /*
@@ -64,7 +64,7 @@ int	pcic_isa_probe __P((struct device *, void *, void *));
 void	pcic_isa_attach __P((struct device *, struct device *, void *));
 
 void	*pcic_isa_chip_intr_establish __P((pcmcia_chipset_handle_t,
-	    struct pcmcia_function *, int, int (*) (void *), void *));
+	    struct pcmcia_function *, int, int (*) (void *), void *, char *));
 void	pcic_isa_chip_intr_disestablish __P((pcmcia_chipset_handle_t, void *));
 
 struct cfattach pcic_isa_ca = {
@@ -224,7 +224,7 @@ pcic_isa_attach(parent, self, aux)
 	} else
 		printf("%s: no irq, ", sc->dev.dv_xname);
 
-	printf("polling enabled\n", sc->dev.dv_xname);
+	printf("polling enabled\n");
 	if (sc->poll_established == 0) {
 		timeout_set(&sc->poll_timeout, pcic_poll_intr, sc);
 		timeout_add(&sc->poll_timeout, hz / 2);

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.64.2.3 2001/07/04 10:42:03 niklas Exp $
+#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.64.2.4 2001/10/31 03:22:45 nate Exp $
 #	$NetBSD: files.pci,v 1.20 1996/09/24 17:47:15 christos Exp $
 #
 # Config file and device description for machine-independent PCI code.
@@ -14,7 +14,7 @@ file	dev/pci/pci_subr.c		pci
 
 # Generic VGA
 attach	vga at pci with vga_pci
-file	dev/pci/vga_pci.c		vga_pci		needs-flag
+file	dev/pci/vga_pci.c		vga_pci
 
 device	tga: wsemuldisplaydev, rasops8, rasops32
 attach	tga at pci
@@ -38,7 +38,6 @@ file	dev/pci/cy82c693.c		cy82c693
 # device declaration in sys/conf/files
 attach	ahc at pci with ahc_pci
 file	dev/pci/ahc_pci.c		ahc_pci
-file	dev/ic/smc93cx6.c		ahc_pci
 
 # DPT EATA SCSI controllers
 attach	dpt at pci with dpt_pci
@@ -92,6 +91,11 @@ file	dev/pci/opl_eso.c		opl_eso
 device	auich: audio, auconv, mulaw, ac97
 attach	auich at pci
 file	dev/pci/auich.c			auich
+
+# Creative Labs EMU10k1 (SBLive! series and PCI512)
+device	emu: audio, auconv, mulaw, ac97
+attach	emu at pci
+file	dev/pci/emuxki.c		emu
 
 # CS4280 CrystalClear Audio
 device	clcs: audio, auconv, mulaw, ac97
@@ -277,6 +281,10 @@ file	dev/pci/if_ti.c			ti
 attach	ne at pci with ne_pci: rtl80x9
 file	dev/pci/if_ne_pci.c		ne_pci
 
+# Sun GEM ethernet
+attach	gem at pci with gem_pci
+file	dev/pci/if_gem_pci.c		gem_pci
+
 # Hi/fn 6500
 device	lofn: crypto
 attach	lofn at pci
@@ -379,12 +387,32 @@ device	pcscp: scsi, ncr53c9x
 attach	pcscp at pci
 file	dev/pci/pcscp.c			pcscp
 
+# Guillemot Maxi Radio FM 2000 Radio Card
+device	mr: radio, pci
+attach	mr at pci
+file	dev/pci/maxiradio.c		mr	needs-flag
+
+# MediaForte SoundForte SF64-PCR Radio card
+device	sf4r: radio, pci, tea5757
+attach	sf4r at pci
+file	dev/pci/sf64pcr.c		sf4r	needs-flag
+
 # National Semiconductor DP83820/DP83821 based GigE
 device	nge: ether, ifnet, mii, ifmedia, mii_phy
 attach	nge at pci
 file	dev/pci/if_nge.c		nge
- 
+
 # Cyclades-Z series of intelligent multi-port serial adapters
 device	cz
 attach	cz at pci
 file	dev/pci/cz.c			cz		needs-flag
+
+# Level-1 LXT1001 Gigabit MAC
+device	lge: ether, ifnet, mii, ifmedia, mii_phy
+attach	lge at pci
+file	dev/pci/if_lge.c		lge
+
+# Broadcom BCM570x gigabit ethernet
+device	bge: ether, ifnet, mii, ifmedia, mii_phy
+attach	bge at pci
+file	dev/pci/if_bge.c		bge

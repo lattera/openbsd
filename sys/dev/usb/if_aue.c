@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.13.2.2 2001/07/04 10:43:40 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.13.2.3 2001/10/31 03:22:49 nate Exp $ */
 /*	$NetBSD: if_aue.c,v 1.55 2001/03/25 22:59:43 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -176,6 +176,7 @@ Static const struct aue_type aue_devs[] = {
   { USB_VENDOR_DLINK,		USB_PRODUCT_DLINK_DSB650,	1 },
   { USB_VENDOR_DLINK,		USB_PRODUCT_DLINK_DSB650TX,	1 },
   { USB_VENDOR_DLINK,		USB_PRODUCT_DLINK_DSB650TX_PNA,	0 },
+  { USB_VENDOR_SOHOWARE,	USB_PRODUCT_SOHOWARE_NUB100,	0 },
   { USB_VENDOR_SMC,		USB_PRODUCT_SMC_2202USB,	0 },
   { USB_VENDOR_COREGA,		USB_PRODUCT_COREGA_FETHER_USB_TX, 0 },
   { USB_VENDOR_IODATA,		USB_PRODUCT_IODATA_USBETTX,	0 },
@@ -750,9 +751,6 @@ USB_ATTACH(aue)
 	ifp->if_ioctl = aue_ioctl;
 	ifp->if_start = aue_start;
 	ifp->if_watchdog = aue_watchdog;
-#if defined(__OpenBSD__)
-	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
-#endif
 	IFQ_SET_READY(&ifp->if_snd);
 	strncpy(ifp->if_xname, USBDEVNAME(sc->aue_dev), IFNAMSIZ);
 

@@ -1,4 +1,5 @@
-/* $NetBSD: pckbc_isa.c,v 1.2 2000/03/23 07:01:35 thorpej Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/pckbc_isa.c,v 1.1.4.2 2001/10/31 03:22:43 nate Exp $	*/
+/*	$NetBSD: pckbc_isa.c,v 1.2 2000/03/23 07:01:35 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1998

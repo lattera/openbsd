@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lgereg.h,v 1.1 2001/09/04 20:36:38 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lgereg.h,v 1.1.4.1 2001/10/31 03:22:45 nate Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001

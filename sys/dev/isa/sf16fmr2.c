@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sf16fmr2.c,v 1.1 2001/10/04 20:17:43 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sf16fmr2.c,v 1.1.4.1 2001/10/31 03:22:43 nate Exp $	*/
 /* $RuOBSD: sf16fmr2.c,v 1.10 2001/10/04 18:51:50 pva Exp $ */
 
 /*

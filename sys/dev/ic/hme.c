@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/hme.c,v 1.12 2001/10/09 15:07:20 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/hme.c,v 1.12.4.1 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: hme.c,v 1.21 2001/07/07 15:59:37 thorpej Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ep_pci.c,v 1.18.8.1 2001/05/14 22:25:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_ep_pci.c,v 1.18.8.2 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: if_ep_pci.c,v 1.13 1996/10/21 22:56:38 thorpej Exp $	*/
 
 /*
@@ -154,8 +154,7 @@ ep_pci_attach(parent, self, aux)
 	    PCI_COMMAND_MASTER_ENABLE);
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(", couldn't map interrupt\n");
 		return;
 	}

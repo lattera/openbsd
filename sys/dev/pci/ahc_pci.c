@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ahc_pci.c,v 1.12.2.3 2001/07/04 10:41:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ahc_pci.c,v 1.12.2.4 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: ahc_pci.c,v 1.9 1996/10/21 22:56:24 thorpej Exp $	*/
 
 /*
@@ -200,6 +200,9 @@ void *match, *aux;
 		case PCI_PRODUCT_ADP2_3950U2B:
 		case PCI_PRODUCT_ADP2_3950U2D:
 		case PCI_PRODUCT_ADP2_AIC7896:
+		case PCI_PRODUCT_ADP2_AIC7899B:
+		case PCI_PRODUCT_ADP2_AIC7899D:
+		case PCI_PRODUCT_ADP2_AIC7899F:
 		case PCI_PRODUCT_ADP2_AIC7899:
 		case PCI_PRODUCT_ADP2_3960D:
 			return (1);
@@ -360,6 +363,7 @@ void *aux;
 			break;
 		default:
 			/* TTT */
+			break;
 		}
 	}
 
@@ -465,9 +469,8 @@ void *aux;
 					|TARGCRCENDEN|TARGCRCCNTEN);
 	}
 
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &ih)) {
-		printf(": couldn't map interrupt\n", ahc->sc_dev.dv_xname);
+	if (pci_intr_map(pa, &ih)) {
+		printf(": couldn't map interrupt\n");
 		ahc_free(ahc);
 		return;
 	}

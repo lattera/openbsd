@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/tropicvar.h,v 1.1 1999/12/27 21:51:35 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/tropicvar.h,v 1.1.2.1 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: tropicvar.h,v 1.4 1999/10/17 23:53:45 cgd Exp $	*/
 
 /* 
@@ -69,6 +69,9 @@ struct	tr_softc {
 	bus_space_handle_t sc_pioh;	/* handle pio area */
 	bus_space_handle_t sc_sramh;	/* handle for the shared ram area */
 	bus_space_handle_t sc_mmioh;	/* handle for the bios/mmio area */
+
+	struct timeout init_timeout;
+	struct timeout reinit_timeout;
 
 	int (*sc_mediachange) __P((struct tr_softc *));
 	void (*sc_mediastatus) __P((struct tr_softc *, struct ifmediareq *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.2 2001/07/04 10:40:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.3 2001/10/31 03:22:41 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -90,10 +90,8 @@ struct an_req {
  */
 #define AN_RID_IFACE_STATS	0x0100
 #define AN_RID_MGMT_XMIT	0x0200
-#ifdef ANCACHE
 #define AN_RID_ZERO_CACHE	0x0300
 #define AN_RID_READ_CACHE	0x0400
-#endif
 
 struct an_80211_hdr {
 	u_int16_t		frame_ctl;
@@ -151,7 +149,6 @@ struct an_mgmt_hdr {
  *
  * Each entry in the wi_sigcache has a unique macsrc.
  */
-#ifdef ANCACHE
 #define MAXANCACHE      10
 
 struct an_sigcache {
@@ -161,7 +158,6 @@ struct an_sigcache {
 	int	noise;		/* noise value */
 	int	quality;	/* quality of the packet */
 };
-#endif
 
 struct an_ltv_key {
 	u_int16_t		an_len;
@@ -645,7 +641,9 @@ struct an_tx_ring_data {
 struct an_softc	{
 	struct device	sc_dev;
 	struct arpcom	arpcom;
+	struct ifmedia	an_ifmedia;
 	void		*sc_ih;
+	struct timeout	an_stat_ch;
 
 	bus_space_tag_t		an_btag;
 	bus_space_handle_t	an_bhandle;
@@ -663,15 +661,13 @@ struct an_softc	{
 	struct an_ltv_stats	an_stats;
 	struct an_ltv_status	an_status;
 	u_int8_t		an_associated;
-#ifdef ANCACHE
+
+	/* ANCACHE stuff */
 	int			an_cache_iponly;
 	int			an_cache_mcastonly;
-
 	int			an_sigitems;
 	struct an_sigcache	an_sigcache[MAXANCACHE];
 	int			an_nextitem;
-#endif
-	struct timeout		an_stat_ch;
 };
 
 void	an_release_resources    __P((struct device *));

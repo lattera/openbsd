@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_geniq.c,v 1.3.4.1 2001/10/31 03:22:48 nate Exp $	*/
 /*	$NetBSD: rf_geniq.c,v 1.3 1999/02/05 00:06:12 oster Exp $	*/
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2 2001/08/18 22:08:18 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.4.1 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: mk48txx.c,v 1.7 2001/04/08 17:05:10 tsutsui Exp $ */
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.3 2001/07/14 10:02:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.4 2001/10/31 03:22:46 nate Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -222,9 +222,10 @@
 #ifndef __OpenBSD__
 #include <sys/sysctl.h>
 #include <machine/clock.h>
+#else
+#include <sys/timeout.h>
 #endif
 #include <vm/vm.h>
-#include <vm/pmap.h>
 #include <vm/vm_extern.h>
 #endif /* KERNEL */
 
@@ -1214,6 +1215,8 @@ struct ncb {
 	u_long		lasttime;
 #ifdef __FreeBSD__
 	struct		callout_handle timeout_ch;
+#elif defined (__OpenBSD__)
+	struct		timeout sc_timeout;
 #endif
 
 	/*-----------------------------------------------
@@ -1464,7 +1467,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.3 2001/07/14 10:02:17 ho Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.4 2001/10/31 03:22:46 nate Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11
@@ -3714,8 +3717,7 @@ ncr_attach(parent, self, aux)
 	/*
 	**	Set up the controller chip's interrupt.
 	*/
-	retval = pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &intrhandle);
+	retval = pci_intr_map(pa, &intrhandle);
 	if (retval) {
 		printf(": couldn't map interrupt\n");
 		return;
@@ -4262,6 +4264,7 @@ static	void ncr_attach (pcici_t config_id, int unit)
 	/*
 	**	start the timeout daemon
 	*/
+	timeout_set(&np->sc_timeout, ncr_timeout, np);
 	ncr_timeout (np);
 	np->lasttime=0;
 
@@ -4428,11 +4431,6 @@ static int32_t ncr_start (struct scsi_xfer * xp)
 	*/
 
 	flags = xp->flags;
-	if (!(flags & INUSE)) {
-		printf("%s: ?INUSE?\n", ncr_name (np));
-		xp->flags |= INUSE;
-	};
-
 	if(flags & ITSDONE) {
 		printf("%s: ?ITSDONE?\n", ncr_name (np));
 		xp->flags &= ~ITSDONE;
@@ -5867,7 +5865,7 @@ static void ncr_timeout (void *arg)
 #ifdef __FreeBSD__
 	np->timeout_ch = timeout (ncr_timeout, (caddr_t) np, step ? step : 1);
 #else
-	timeout (ncr_timeout, (caddr_t) np, step ? step : 1);
+	timeout_add(&np->sc_timeout, step ? step : 1);
 #endif
 
 	if (INB(nc_istat) & (INTF|SIP|DIP)) {
@@ -6238,7 +6236,7 @@ void ncr_exception (ncb_p np)
 #ifdef __FreeBSD__
 		untimeout (ncr_timeout, (caddr_t) np, np->timeout_ch);
 #else
-		untimeout (ncr_timeout, (caddr_t) np);
+		timeout_del(&np->sc_timeout);
 #endif
 
 		printf ("%s: halted!\n", ncr_name(np));

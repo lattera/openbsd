@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/aztech.c,v 1.1 2001/10/04 20:15:42 gluk Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/aztech.c,v 1.1.4.1 2001/10/31 03:22:43 nate Exp $	*/
 /* $RuOBSD: aztech.c,v 1.8 2001/10/04 18:51:50 pva Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_ed.c,v 1.41.6.2 2001/07/04 10:41:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_ed.c,v 1.41.6.3 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: if_ed.c,v 1.105 1996/10/21 22:40:45 thorpej Exp $	*/
 
 /*
@@ -198,7 +198,6 @@ ed_pcmcia_isa_attach(parent, match, aux, pc_link)
 	struct isa_attach_args *ia = aux;
 	struct pcmciadevs *dev=pc_link->device;
 	int err;
-	extern int ifqmaxlen;
 	u_char enaddr[ETHER_ADDR_LEN];
 
 	if ((int)dev->param != -1)
@@ -230,7 +229,6 @@ ed_pcmcia_isa_attach(parent, match, aux, pc_link)
 		/* clear ED_NOTPRESENT, set ED_REATTACH if needed */
 		sc->spec_flags=pc_link->flags&PCMCIA_REATTACH?ED_REATTACH:0;
 		sc->type_str = dev->model;
-		IFQ_SET_MAXLEN(&sc->sc_arpcom.ac_if.if_snd, ifqmaxlen);
 		sc->sc_ic = ia->ia_ic;
 		return 1;
 	} else
@@ -516,8 +514,7 @@ ed_pci_attach(parent, self, aux)
 	printf("%s", sc->isa16bit ? "(16-bit)" : "(8-bit)");	/* XXX */
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf("\n%s: couldn't map interrupt\n", sc->sc_dev.dv_xname);
 		return;
 	}
@@ -2297,7 +2294,7 @@ edintr(arg)
 
 			/*
 			 * Decrement buffer in-use count if not zero (can only
-			 * be zero if a transmitter interrupt occured while not
+			 * be zero if a transmitter interrupt occurred while not
 			 * actually transmitting).
 			 * If data is ready to transmit, start it transmitting,
 			 * otherwise defer until after handling receiver.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.1 2001/05/14 22:23:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.2 2001/10/31 03:22:42 nate Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -381,7 +381,7 @@ dpt_init(sc, intrstr)
 	for (i = 0; ei->ei_model[i] != ' ' && i < 7; i++)
 		model[i] = ei->ei_model[i];
 	for (j = 0; ei->ei_suffix[j] != ' ' && j < 7; j++)
-		model[i++] = ei->ei_model[i];
+		model[i++] = ei->ei_suffix[j];
 	model[i] = '\0';
 
 	/* Find the cannonical name for the board */
@@ -435,6 +435,8 @@ dpt_init(sc, intrstr)
 #ifdef __OpenBSD__
 		link->scsibus = i;
 		link->adapter_target = sc->sc_hbaid[i];
+		link->luns = ec->ec_maxlun + 1;
+		link->adapter_buswidth = ec->ec_maxtarget + 1;
 #endif /* __OpenBSD__ */
 		link->device = &dpt_dev;
 		link->adapter = &sc->sc_adapter;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.2 2001/07/04 10:42:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.3 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -62,6 +62,7 @@
 
 #include <net/if.h>
 #include <net/if_dl.h>
+#include <net/if_media.h>
 
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
@@ -133,8 +134,7 @@ an_pci_attach(parent, self, aux)
 	    csr | PCI_COMMAND_MASTER_ENABLE);
 
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf("\n%s: couldn't map interrupt\n", sc->sc_dev.dv_xname);
 		return;
 	}

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/isa/wdc_isapnp.c,v 1.4.4.2 2001/10/31 03:22:43 nate Exp $	*/
 /*	$NetBSD: wdc_isapnp.c,v 1.13 1999/03/22 10:00:12 mycroft Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/be.c,v 1.3 2001/09/12 19:48:11 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/be.c,v 1.3.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: be.c,v 1.26 2001/03/20 15:39:20 pk Exp $	*/
 
 /*-

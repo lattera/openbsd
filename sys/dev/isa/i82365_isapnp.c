@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1.4.1 2001/05/14 22:24:37 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1.4.2 2001/10/31 03:22:43 nate Exp $ */
 /*	$NetBSD: i82365_isapnp.c,v 1.8 2000/02/23 17:22:11 soren Exp $	*/
 
 /*
@@ -206,7 +206,7 @@ pcic_isapnp_attach(parent, self, aux)
 	} else
 		printf("%s: no irq, ", sc->dev.dv_xname);
 
-	printf("polling enabled\n", sc->dev.dv_xname);
+	printf("polling enabled\n");
 	if (sc->poll_established == 0) {
 		timeout_set(&sc->poll_timeout, pcic_poll_intr, sc);
 		timeout_add(&sc->poll_timeout, hz / 2);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_lc_isa.c,v 1.1 2001/07/13 17:26:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/if_lc_isa.c,v 1.1.4.1 2001/10/31 03:22:43 nate Exp $ */
 /*	$NetBSD: if_lc_isa.c,v 1.10 2001/06/13 10:46:03 wiz Exp $ */
 
 /*-

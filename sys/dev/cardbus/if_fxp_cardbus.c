@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2.6.1 2001/05/14 22:23:13 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2.6.2 2001/10/31 03:22:40 nate Exp $ */
 /*	$NetBSD: if_fxp_cardbus.c,v 1.12 2000/05/08 18:23:36 thorpej Exp $	*/
 
 /*
@@ -175,8 +175,8 @@ fxp_cardbus_attach(parent, self, aux)
 	else
 		printf("\n");
 
-#if 0
 	sc->sc_dmat = ca->ca_dmat;
+#if 0
 	sc->sc_enable = fxp_cardbus_enable;
 	sc->sc_disable = fxp_cardbus_disable;
 	sc->sc_enabled = 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.2 2001/07/04 10:41:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.3 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
  * Copyright (c) 2000,2001 Michael Shalayeff
@@ -201,6 +201,7 @@ static const struct auich_devtype {
 	{ PCI_PRODUCT_INTEL_82801AA_ACA, 0, "ICH" },
 	{ PCI_PRODUCT_INTEL_82801AB_ACA, 0, "ICH0" },
 	{ PCI_PRODUCT_INTEL_82801BA_ACA, 0, "ICH2" },
+	{ PCI_PRODUCT_INTEL_82801CA_CAM, 0, "ICH3" },
 	{ PCI_PRODUCT_INTEL_82440MX_ACA, 0, "440MX" },
 };
 
@@ -310,8 +311,7 @@ auich_attach(parent, self, aux)
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
 	    csr | PCI_COMMAND_MASTER_ENABLE);
 
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": can't map interrupt\n");
 		bus_space_unmap(sc->iot, sc->aud_ioh, aud_size);
 		bus_space_unmap(sc->iot, sc->mix_ioh, mix_size);
@@ -690,8 +690,7 @@ auich_allocm(v, size, pool, flags)
 	p = malloc(sizeof(*p), pool, flags);
 	if (!p)
 		return NULL;
-
-	bzero(p, sizeof(p));
+	bzero(p, sizeof(*p));
 
 	p->size = size;
 	if ((error = bus_dmamem_alloc(sc->dmat, p->size, NBPG, 0, p->segs,
@@ -935,20 +934,16 @@ auich_trigger_output(v, start, end, blksize, intr, arg, param)
 {
 	struct auich_softc *sc = v;
 	struct auich_dmalist *q;
+	struct auich_dma *p;
 
 	DPRINTF(AUICH_DEBUG_DMA,
 	    ("auich_trigger_output(%x, %x, %d, %p, %p, %p)\n",
-	    kvtop((caddr_t)start), kvtop((caddr_t)end),
-	    blksize, intr, arg, param));
+	    start, end, blksize, intr, arg, param));
 
-#ifdef DIAGNOSTIC
-	{
-	struct auich_dma *p;
 	for (p = sc->sc_dmas; p && p->addr != start; p = p->next);
 	if (!p)
 		return -1;
-	}
-#endif
+
 	sc->sc_pintr = intr;
 	sc->sc_parg = arg;
 
@@ -957,9 +952,9 @@ auich_trigger_output(v, start, end, blksize, intr, arg, param)
 	 * setup one buffer to play, then LVI dump out the rest
 	 * to the scatter-gather chain.
 	 */
-	sc->pcmo_start = kvtop((caddr_t)start);
+	sc->pcmo_start = p->segs->ds_addr;
 	sc->pcmo_p = sc->pcmo_start + blksize;
-	sc->pcmo_end = kvtop((caddr_t)end);
+	sc->pcmo_end = sc->pcmo_start + (end - start);
 	sc->pcmo_blksize = blksize;
 
 	q = sc->dmap_pcmo = sc->dmalist_pcmo;
@@ -990,20 +985,16 @@ auich_trigger_input(v, start, end, blksize, intr, arg, param)
 {
 	struct auich_softc *sc = v;
 	struct auich_dmalist *q;
+	struct auich_dma *p;
 
 	DPRINTF(AUICH_DEBUG_DMA,
 	    ("auich_trigger_input(%x, %x, %d, %p, %p, %p)\n",
-	    kvtop((caddr_t)start), kvtop((caddr_t)end),
-	    blksize, intr, arg, param));
+	    start, end, blksize, intr, arg, param));
 
-#ifdef DIAGNOSTIC
-	{
-	struct auich_dma *p;
 	for (p = sc->sc_dmas; p && p->addr != start; p = p->next);
 	if (!p)
 		return -1;
-	}
-#endif
+
 	sc->sc_rintr = intr;
 	sc->sc_rarg = arg;
 
@@ -1012,9 +1003,9 @@ auich_trigger_input(v, start, end, blksize, intr, arg, param)
 	 * setup one buffer to play, then LVI dump out the rest
 	 * to the scatter-gather chain.
 	 */
-	sc->pcmi_start = kvtop((caddr_t)start);
+	sc->pcmi_start = p->segs->ds_addr;
 	sc->pcmi_p = sc->pcmi_start + blksize;
-	sc->pcmi_end = kvtop((caddr_t)end);
+	sc->pcmi_end = sc->pcmi_start + (end - start);
 	sc->pcmi_blksize = blksize;
 
 	q = sc->dmap_pcmi = sc->dmalist_pcmi;

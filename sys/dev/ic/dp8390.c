@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.2 2001/07/04 10:40:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.3 2001/10/31 03:22:41 nate Exp $	*/
 /*	$NetBSD: dp8390.c,v 1.13 1998/07/05 06:49:11 jonathan Exp $	*/
 
 /*
@@ -130,7 +130,7 @@ dp8390_config(sc)
 		ifp->if_watchdog = dp8390_watchdog;
 	ifp->if_flags =
 	    IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
-	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Print additional info when attached. */
 	printf("%s: address %s\n", sc->sc_dev.dv_xname,
@@ -178,7 +178,6 @@ dp8390_mediastatus(ifp, ifmr)
 		ifmr->ifm_status = 0;
 		return;
 	}
-	IFQ_SET_READY(&ifp->if_snd);
 
 	if (sc->sc_mediastatus)
 		(*sc->sc_mediastatus)(sc, ifmr);
@@ -222,6 +221,9 @@ dp8390_stop(sc)
 	while (((NIC_GET(regt, regh,
 	    ED_P0_ISR) & ED_ISR_RST) == 0) && --n)
 		;
+
+	if (sc->stop_card != NULL)
+		(*sc->stop_card)(sc);
 }
 
 /*
@@ -700,7 +702,7 @@ dp8390_intr(arg)
 
 			/*
 			 * Decrement buffer in-use count if not zero (can only
-			 * be zero if a transmitter interrupt occured while not
+			 * be zero if a transmitter interrupt occurred while not
 			 * actually transmitting).
 			 * If data is ready to transmit, start it transmitting,
 			 * otherwise defer until after handling receiver.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5.4.2 2001/07/04 10:43:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5.4.3 2001/10/31 03:22:48 nate Exp $ */
 /*	$NetBSD: siop_pci_common.c,v 1.6 2001/01/10 15:50:20 thorpej Exp $	*/
 
 /*
@@ -267,8 +267,7 @@ siop_pci_attach_common(sc, pa)
 			sc->siop.features &= ~SF_CHIP_RAM;
 	}
 
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			 pa->pa_intrline, &intrhandle)) {
+	if (pci_intr_map(pa, &intrhandle)) {
 		printf("\n%s: couldn't map interrupt\n",
 		    sc->siop.sc_dev.dv_xname);
 		return 0;
@@ -276,9 +275,7 @@ siop_pci_attach_common(sc, pa)
 	intrstr = pci_intr_string(pa->pa_pc, intrhandle);
 	sc->sc_ih = pci_intr_establish(pa->pa_pc, intrhandle, IPL_BIO,
 	    siop_intr, &sc->siop, sc->siop.sc_dev.dv_xname);
-	if (sc->sc_ih != NULL)
-		printf(": %s, ", (intrstr != NULL) ? intrstr : "irq ?");
-	else {
+	if (sc->sc_ih == NULL) {
 		printf("\n%s: couldn't establish interrupt",
 		    sc->siop.sc_dev.dv_xname);
 		if (intrstr != NULL)
@@ -287,8 +284,10 @@ siop_pci_attach_common(sc, pa)
 		return 0;
 	}
 
+	printf(": %s", (intrstr != NULL) ? intrstr : "irq ?");
 	if (sc->siop.features & SF_CHIP_RAM)
-		printf("has RAM\n");
+		printf(", has RAM");
+	printf("\n");
 
 	return 1;
 }

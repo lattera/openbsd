@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.2 2001/07/04 10:44:09 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.3 2001/10/31 03:22:50 nate Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -1133,6 +1133,12 @@ wsdisplay_internal_ioctl(sc, scr, cmd, data, flag, p)
 		}
 		return (error);
 #undef d
+	case WSDISPLAYIO_GETSCREEN:
+		return (wsdisplay_getscreen(sc,
+		    (struct wsdisplay_addscreendata *)data));
+
+	case WSDISPLAYIO_SETSCREEN:
+		return (wsdisplay_switch((void *)sc, *(int *)data, 1));
 	}
 
 	/* check ioctls for display */
@@ -1150,6 +1156,7 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 {
 	int error;
 	void *buf;
+	size_t fontsz;
 #if defined(COMPAT_14) && NWSKBD > 0
 	struct wsmux_device wsmuxdata;
 #endif
@@ -1170,9 +1177,8 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 		return (wsdisplay_delscreen(sc, d->idx, d->flags));
 #undef d
 	case WSDISPLAYIO_GETSCREEN:
-#define d ((struct wsdisplay_addscreendata *)data)
-		return (wsdisplay_getscreen(sc, d));
-#undef d
+		return (wsdisplay_getscreen(sc,
+		    (struct wsdisplay_addscreendata *)data));
 	case WSDISPLAYIO_SETSCREEN:
 		return (wsdisplay_switch((void *)sc, *(int *)data, 1));
 	case WSDISPLAYIO_LDFONT:
@@ -1181,10 +1187,12 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 			return (EINVAL);
 		if (d->index >= WSDISPLAY_MAXFONT)
 			return (EINVAL);
-		buf = malloc(d->fontheight * d->stride * d->numchars,
-			     M_DEVBUF, M_WAITOK);
-		error = copyin(d->data, buf,
-			       d->fontheight * d->stride * d->numchars);
+		fontsz = d->fontheight * d->stride * d->numchars;
+		if (fontsz > WSDISPLAY_MAXFONTSZ)
+			return (EINVAL);
+
+		buf = malloc(fontsz, M_DEVBUF, M_WAITOK);
+		error = copyin(d->data, buf, fontsz);
 		if (error) {
 			free(buf, M_DEVBUF);
 			return (error);
@@ -2127,6 +2135,7 @@ motion_event(u_int type, int value)
 			mouse_zaxis(value);
 			break;
 		default:
+			break;
 	}
 }
 

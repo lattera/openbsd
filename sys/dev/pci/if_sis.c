@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sis.c,v 1.2.2.3 2001/07/04 10:42:19 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sis.c,v 1.2.2.4 2001/10/31 03:22:46 nate Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -89,8 +89,7 @@
 #include <net/bpf.h>
 #endif
 
-#include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
+#include <vm/vm.h>		/* for vtophys */
 
 #include <sys/device.h>
 
@@ -132,6 +131,7 @@ void sis_eeprom_getword	__P((struct sis_softc *, int, u_int16_t *));
 #ifdef __i386__
 void sis_read_cmos	__P((struct sis_softc *, struct pci_attach_args *, caddr_t, int, int));
 #endif
+void sis_read_630ea1_enaddr    __P((struct sis_softc *, struct pci_attach_args *));
 void sis_read_eeprom	__P((struct sis_softc *, caddr_t, int, int, int));
 
 int sis_miibus_readreg	__P((struct device *, int, int));
@@ -338,6 +338,27 @@ void sis_read_cmos(sc, pa, dest, off, cnt)
 }
 #endif
 
+void sis_read_630ea1_enaddr(sc, pa)
+	struct sis_softc *sc;
+	struct pci_attach_args *pa;
+{
+	u_int16_t *enaddr = (u_int16_t *) &sc->arpcom.ac_enaddr;
+
+	SIS_SETBIT(sc, SIS_CSR, SIS_CSR_RELOAD);
+	SIS_CLRBIT(sc, SIS_CSR, SIS_CSR_RELOAD);
+
+	SIS_CLRBIT(sc, SIS_RXFILT_CTL, SIS_RXFILTCTL_ENABLE);
+
+	CSR_WRITE_4(sc, SIS_RXFILT_CTL, SIS_FILTADDR_PAR0);
+	enaddr[0] = CSR_READ_4(sc, SIS_RXFILT_DATA) & 0xffff;
+	CSR_WRITE_4(sc, SIS_RXFILT_CTL, SIS_FILTADDR_PAR1);
+	enaddr[1] = CSR_READ_4(sc, SIS_RXFILT_DATA) & 0xffff;
+	CSR_WRITE_4(sc, SIS_RXFILT_CTL, SIS_FILTADDR_PAR2);
+	enaddr[2] = CSR_READ_4(sc, SIS_RXFILT_DATA) & 0xffff;
+
+	SIS_SETBIT(sc, SIS_RXFILT_CTL, SIS_RXFILTCTL_ENABLE);
+}
+
 int sis_miibus_readreg(self, phy, reg)
 	struct device		*self;
 	int			phy, reg;
@@ -467,10 +488,10 @@ u_int32_t sis_crc(sc, addr)
 void sis_setmulti_ns(sc)
 	struct sis_softc	*sc;
 {
-        struct ifnet            *ifp;
-        struct arpcom           *ac = &sc->arpcom;
-        struct ether_multi      *enm;
-        struct ether_multistep  step;
+	struct ifnet		*ifp;
+	struct arpcom		*ac = &sc->arpcom;
+	struct ether_multi	*enm;
+	struct ether_multistep  step;
 	u_int32_t		h = 0, i, filtsave;
 	int			bit, index;
 
@@ -497,8 +518,8 @@ void sis_setmulti_ns(sc)
 		CSR_WRITE_4(sc, SIS_RXFILT_DATA, 0);
 	}
 
-        ETHER_FIRST_MULTI(step, ac, enm);
-        while (enm != NULL) {
+	ETHER_FIRST_MULTI(step, ac, enm);
+	while (enm != NULL) {
 		h = sis_crc(sc, enm->enm_addrlo);
 		index = h >> 3;
 		bit = h & 0x1F;
@@ -581,7 +602,7 @@ void sis_reset(sc)
 		CSR_WRITE_4(sc, NS_CLKRUN, 0);
 	}
 
-        return;
+	return;
 }
 
 /*
@@ -714,8 +735,7 @@ void sis_attach(parent, self, aux)
 #endif
 
 	/* Allocate interrupt */
-	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin, pa->pa_intrline,
-	    &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
 		goto fail;
 	}
@@ -794,19 +814,21 @@ void sis_attach(parent, self, aux)
 		command = pci_conf_read(pc, pa->pa_tag,
 		    PCI_CLASS_REG) & 0x000000ff;
 		if (command == SIS_REV_630S ||
-		    command == SIS_REV_630E ||
-		    command == SIS_REV_630EA1)
-		        sis_read_cmos(sc, pa, (caddr_t)&sc->arpcom.ac_enaddr,
+		    command == SIS_REV_630E)
+			sis_read_cmos(sc, pa, (caddr_t)&sc->arpcom.ac_enaddr,
 			    0x9, 6);
 		else
 #endif
+		if (command == SIS_REV_630EA1)
+			sis_read_630ea1_enaddr(sc, pa);
+		else
 			sis_read_eeprom(sc, (caddr_t)&sc->arpcom.ac_enaddr,
 			    SIS_EE_NODEADDR, 3, 0);
 		break;
 	}
 
 	printf(" address %s\n", ether_sprintf(sc->arpcom.ac_enaddr));
-        
+
 	sc->sis_ldata_ptr = malloc(sizeof(struct sis_list_data) + 8,
 				M_DEVBUF, M_NOWAIT);
 	if (sc->sis_ldata_ptr == NULL) {
@@ -976,8 +998,8 @@ int sis_newbuf(sc, c, m)
 void sis_rxeof(sc)
 	struct sis_softc	*sc;
 {
-        struct mbuf		*m;
-        struct ifnet		*ifp;
+	struct mbuf		*m;
+	struct ifnet		*ifp;
 	struct sis_desc		*cur_rx;
 	int			i, total_len = 0;
 	u_int32_t		rxstat;

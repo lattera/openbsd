@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.2 2001/07/04 10:41:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.3 2001/10/31 03:22:44 nate Exp $	*/
 /*	$NetBSD: miivar.h,v 1.17 2000/03/06 20:56:57 thorpej Exp $	*/
 
 /*-
@@ -144,12 +144,12 @@ struct mii_softc {
 
 #if defined(__NetBSD__)
 	struct callout mii_nway_ch;	/* NWAY callout */
+#elif defined(__OpenBSD__)
+	struct timeout mii_phy_timo;	/* timeout handle */
 #endif
 
 	int mii_media_active;		/* last active media */
 	int mii_media_status;		/* last active status */
-
-	struct timeout mii_phy_timo;	/* timeout handle */
 };
 typedef struct mii_softc mii_softc_t;
 
@@ -159,6 +159,8 @@ typedef struct mii_softc mii_softc_t;
 #define	MIIF_NOLOOP	0x0004		/* no loopback capability */
 #define	MIIF_DOINGAUTO	0x0008		/* doing autonegotiation (mii_softc) */
 #define MIIF_AUTOTSLEEP	0x0010		/* use tsleep(), not timeout() */
+#define MIIF_HAVEFIBER	0x0020		/* from parent: has fiber interface */
+#define	MIIF_HAVE_GTCR	0x0040		/* has 100base-T2/1000base-T CR */
 
 #define	MIIF_INHERIT_MASK	(MIIF_NOISOLATE|MIIF_NOLOOP|MIIF_AUTOTSLEEP)
 
@@ -189,6 +191,7 @@ typedef struct mii_attach_args mii_attach_args_t;
 struct mii_media {
 	int	mm_bmcr;		/* BMCR settings for this media */
 	int	mm_anar;		/* ANAR settings for this media */
+	int	mm_gtcr;		/* 100base-T2 or 1000base-T CR */
 };
 
 #define	MII_MEDIA_NONE		0
@@ -197,9 +200,11 @@ struct mii_media {
 #define	MII_MEDIA_100_T4	3
 #define	MII_MEDIA_100_TX	4
 #define	MII_MEDIA_100_TX_FDX	5
-#define MII_MEDIA_1000		6
-#define MII_MEDIA_1000_FDX	7
-#define	MII_NMEDIA		8
+#define	MII_MEDIA_1000_X	6
+#define	MII_MEDIA_1000_X_FDX	7
+#define	MII_MEDIA_1000_T	8
+#define	MII_MEDIA_1000_T_FDX	9
+#define	MII_NMEDIA		10
 
 #ifdef _KERNEL
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/lebuffervar.h,v 1.2 2001/08/20 19:48:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/lebuffervar.h,v 1.2.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: lebuffervar.h,v 1.2 1998/07/27 19:25:34 pk Exp $ */
 
 /*-

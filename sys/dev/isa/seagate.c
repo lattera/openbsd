@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/seagate.c,v 1.13.6.2 2001/07/04 10:41:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/seagate.c,v 1.13.6.3 2001/10/31 03:22:43 nate Exp $	*/
 
 /*
  * ST01/02, Future Domain TMC-885, TMC-950 SCSI driver
@@ -548,10 +548,9 @@ sea_scsi_cmd(xs)
 	SC_DEBUG(sc_link, SDEV_DB2, ("sea_scsi_cmd\n"));
 
 	flags = xs->flags;
-	if ((flags & (ITSDONE|INUSE)) != INUSE) {
-		printf("%s: done or not in use?\n", sea->sc_dev.dv_xname);
+	if (flags & ITSDONE) {
+		printf("%s: done?\n", sea->sc_dev.dv_xname);
 		xs->flags &= ~ITSDONE;
-		xs->flags |= INUSE;
 	}
 	if ((scb = sea_get_scb(sea, flags)) == NULL) {
 		xs->error = XS_DRIVER_STUFFUP;

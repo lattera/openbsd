@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.8.2.2 2001/07/04 10:42:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.8.2.3 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: eso.c,v 1.3 1999/08/02 17:37:43 augustss Exp $	*/
 
 /*
@@ -334,8 +334,7 @@ eso_attach(parent, self, aux)
 	eso_set_recsrc(sc, ESO_MIXREG_ERS_MIC);
 	
 	/* Map and establish the interrupt. */
-	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-	    pa->pa_intrline, &ih)) {
+	if (pci_intr_map(pa, &ih)) {
 		printf(", couldn't map interrupt\n");
 		return;
 	}
@@ -347,8 +346,7 @@ eso_attach(parent, self, aux)
 	sc->sc_ih  = pci_intr_establish(pa->pa_pc, ih, IPL_AUDIO, eso_intr, sc);
 #endif
 	if (sc->sc_ih == NULL) {
-		printf(", couldn't establish interrupt",
-		    sc->sc_dev.dv_xname);
+		printf(", couldn't establish interrupt");
 		if (intrstring != NULL)
 			printf(" at %s", intrstring);
 		printf("\n");

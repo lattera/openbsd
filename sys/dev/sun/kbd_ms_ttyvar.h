@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/Attic/kbd_ms_ttyvar.h,v 1.1 2001/08/19 05:38:27 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/Attic/kbd_ms_ttyvar.h,v 1.1.4.1 2001/10/31 03:22:49 nate Exp $	*/
 /*	$NetBSD: kbd_ms_ttyvar.h,v 1.1 2000/09/21 22:25:08 eeh Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.41.4.2 2001/07/04 10:42:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.41.4.3 2001/10/31 03:22:45 nate Exp $	*/
 /*	$NetBSD: if_de.c,v 1.45 1997/06/09 00:34:18 thorpej Exp $	*/
 
 /*-
@@ -91,8 +91,6 @@
 #endif
 
 #include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/vm_kern.h>
 
 #if defined(__FreeBSD__)
 #include <vm/pmap.h>
@@ -5539,8 +5537,7 @@ tulip_pci_attach(
 	    pci_intr_handle_t intrhandle;
 	    const char *intrstr;
 
-	    if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
-			     pa->pa_intrline, &intrhandle)) {
+	    if (pci_intr_map(pa, &intrhandle)) {
 		printf(", couldn't map interrupt\n");
 		return;
 	    }
@@ -5548,8 +5545,7 @@ tulip_pci_attach(
 	    sc->tulip_ih = pci_intr_establish(pa->pa_pc, intrhandle, IPL_NET,
 					      intr_rtn, sc, self->dv_xname);
 	    if (sc->tulip_ih == NULL) {
-		printf(", couldn't establish interrupt",
-		       sc->tulip_dev.dv_xname);
+		printf(", couldn't establish interrupt");
 		if (intrstr != NULL)
 		    printf(" at %s", intrstr);
 		printf("\n");

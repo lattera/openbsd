@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23.4.2 2001/07/04 10:41:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23.4.3 2001/10/31 03:22:43 nate Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -143,7 +143,6 @@
 #endif
 
 #include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
 
 #include <dev/ic/xlreg.h>
 
@@ -196,6 +195,30 @@ void xl_testpacket	__P((struct xl_softc *));
 int xl_miibus_readreg	__P((struct device *, int, int));
 void xl_miibus_writereg	__P((struct device *, int, int, int));
 void xl_miibus_statchg	__P((struct device *));
+
+void xl_power __P((int, void *));
+
+void
+xl_power(why, arg)
+	int why;
+	void *arg;
+{
+	struct xl_softc *sc = arg;
+	struct ifnet *ifp;
+	int s;
+
+	s = splimp();
+	if (why != PWR_RESUME)
+		xl_stop(sc);
+	else {
+		ifp = &sc->arpcom.ac_if;
+		if (ifp->if_flags & IFF_UP) {
+			xl_reset(sc, 1);
+			xl_init(sc);
+		}
+	}
+	splx(s);
+}
 
 /*
  * Murphy's law says that it's possible the chip can wedge and
@@ -2500,6 +2523,16 @@ xl_attach(sc)
 	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 
+#if NVLAN > 0
+	if (sc->xl_type == XL_TYPE_905B)
+		ifp->if_capabilities = IFCAP_VLAN_MTU;
+	/*
+	 * XXX
+	 * Do other cards filter large packets or simply pass them through?
+	 * Apparently only the 905B has the capability to set a larger size.
+ 	 */
+#endif
+
 	XL_SEL_WIN(3);
 	sc->xl_media = CSR_READ_2(sc, XL_W3_MEDIA_OPT);
 
@@ -2640,6 +2673,7 @@ xl_attach(sc)
 	ether_ifattach(ifp);
 
 	sc->sc_sdhook = shutdownhook_establish(xl_shutdown, sc);
+	sc->sc_pwrhook = powerhook_establish(xl_power, sc);
 }
 
 int

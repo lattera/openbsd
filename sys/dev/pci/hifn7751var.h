@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.3 2001/07/04 10:42:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.4 2001/10/31 03:22:45 nate Exp $	*/
 
 /*
- * Invertex AEON / Hi/fn 7751 driver
+ * Invertex AEON / Hifn 7751 driver
  * Copyright (c) 1999 Invertex Inc. All rights reserved.
  * Copyright (c) 1999 Theo de Raadt
  * Copyright (c) 2000-2001 Network Security Technologies, Inc.
@@ -38,6 +38,8 @@
 
 #ifndef __HIFN7751VAR_H__
 #define __HIFN7751VAR_H__
+
+#ifdef _KERNEL
 
 /*
  *  Some configurable values for the driver
@@ -80,24 +82,50 @@ struct hifn_dma {
 
 	struct hifn_command	*hifn_commands[HIFN_D_RES_RSIZE];
 
-	u_char	command_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_COMMAND];
-	u_char	result_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_RESULT];
+	u_char			command_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_COMMAND];
+	u_char			result_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_RESULT];
+	u_int32_t		slop[HIFN_D_CMD_RSIZE];
 
-	u_int64_t	test_src, test_dst;
+	u_int64_t		test_src, test_dst;
 
 	/*
 	 *  Our current positions for insertion and removal from the desriptor
 	 *  rings. 
 	 */
-	int		cmdi, srci, dsti, resi;
-	volatile int	cmdu, srcu, dstu, resu;
-	int		cmdk, srck, dstk, resk;
+	int			cmdi, srci, dsti, resi;
+	volatile int		cmdu, srcu, dstu, resu;
+	int			cmdk, srck, dstk, resk;
 };
 
 struct hifn_session {
-	int hs_flags;
+	int hs_state;
+	int hs_prev_op; /* XXX collapse into hs_flags? */
 	u_int8_t hs_iv[HIFN_IV_LENGTH];
 };
+
+#define	HIFN_RING_SYNC(sc, r, i, f)					\
+	hifn_bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
+	    offsetof(struct hifn_dma, r[i]), sizeof(struct hifn_desc), (f))
+
+#define	HIFN_CMDR_SYNC(sc, i, f)	HIFN_RING_SYNC((sc), cmdr, (i), (f))
+#define	HIFN_RESR_SYNC(sc, i, f)	HIFN_RING_SYNC((sc), resr, (i), (f))
+#define	HIFN_SRCR_SYNC(sc, i, f)	HIFN_RING_SYNC((sc), srcr, (i), (f))
+#define	HIFN_DSTR_SYNC(sc, i, f)	HIFN_RING_SYNC((sc), dstr, (i), (f))
+
+#define	HIFN_CMD_SYNC(sc, i, f)						\
+	hifn_bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
+	    offsetof(struct hifn_dma, command_bufs[(i)][0]),		\
+	    HIFN_MAX_COMMAND, (f))
+
+#define	HIFN_RES_SYNC(sc, i, f)						\
+	hifn_bus_dmamap_sync((sc)->sc_dmat, (sc)->sc_dmamap,		\
+	    offsetof(struct hifn_dma, result_bufs[(i)][0]),		\
+	    HIFN_MAX_RESULT, (f))
+
+/* We use a state machine to on sessions */
+#define	HS_STATE_FREE	0		/* unused session entry */
+#define	HS_STATE_USED	1		/* allocated, but key not on card */
+#define	HS_STATE_KEY	2		/* allocated and key is on card */
 
 /*
  * Holds data specific to a single HIFN board.
@@ -120,9 +148,10 @@ struct hifn_softc {
 	int sc_flags;
 #define	HIFN_HAS_RNG		1
 #define	HIFN_HAS_PUBLIC		2
-	struct timeout sc_rngto;
+	struct timeout sc_rngto, sc_tickto;
 	int sc_rngfirst;
 	int sc_rnghz;
+	int sc_c_busy, sc_s_busy, sc_d_busy, sc_r_busy, sc_active;
 	struct hifn_session sc_sessions[2048];
 };
 
@@ -200,6 +229,8 @@ struct hifn_command {
 	u_int16_t session_num;
 	u_int16_t base_masks, cry_masks, mac_masks;
 	u_int8_t iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
+	int cklen;
+	int sloplen, slopidx;
 
 	union {
 		struct mbuf *src_m;
@@ -224,8 +255,6 @@ struct hifn_command {
 #define HIFN_CRYPTO_SUCCESS	0
 #define HIFN_CRYPTO_BAD_INPUT	(-1)
 #define HIFN_CRYPTO_RINGS_FULL	(-2)
-
-#ifdef _KERNEL
 
 /**************************************************************************
  *
@@ -260,5 +289,15 @@ struct hifn_command {
 #define HIFN_SID(crd,ses)	(((crd) << 28) | ((ses) & 0x7ff))
 
 #endif /* _KERNEL */
+
+struct hifn_stats {
+	u_int64_t hst_ibytes;
+	u_int64_t hst_obytes;
+	u_int32_t hst_ipackets;
+	u_int32_t hst_opackets;
+	u_int32_t hst_invalid;
+	u_int32_t hst_nomem;
+	u_int32_t hst_abort;
+};
 
 #endif /* __HIFN7751VAR_H__ */
