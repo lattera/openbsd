@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/Attic/exec_hppa.c,v 1.2 1998/07/13 03:35:59 mickey Exp $	*/
-/*	$NOWHERE: exec_hppa.c,v 2.2 1998/06/22 19:34:46 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/Attic/exec_hppa.c,v 1.3 1998/07/13 03:52:11 mickey Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
