@@ -35,7 +35,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pica.h	8.1 (Berkeley) 6/10/93
- *      $Id: pica.h,v 1.3 1994/05/27 09:03:21 glass Exp $
+ *      $Id: pica.h,v 1.1.1.1 1995/10/18 10:39:16 deraadt Exp $
  */
 
 /*
@@ -52,21 +52,6 @@
 
 #ifndef	MIPS_PICA_H
 #define	MIPS_PICA_H 1
-
-/*
- * I/O macros.
- */
-
-#define	outb(a,v)	(*(volatile unsigned char*)(a) = (v))
-#define	outh(a,v)	(*(volatile unsigned short*)(a) = (v))
-#define	out16(a,v)	outh(a,v)
-#define	outw(a,v)	(*(volatile unsigned int*)(a) = (v))
-#define	out32(a,v)	outw(a,v)
-#define	inb(a)		(*(volatile unsigned char*)(a))
-#define	inh(a)		(*(volatile unsigned short*)(a))
-#define	in16(a)		inh(a)
-#define	inw(a)		(*(volatile unsigned int*)(a))
-#define	in32(a)		inw(a)
 
 /*
  * PICA's Physical address space
