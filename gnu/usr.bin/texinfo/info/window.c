@@ -1,5 +1,5 @@
 /* window.c -- Windows in Info.
-   $Id: window.c,v 1.4 1997/07/15 18:35:59 karl Exp $
+   $Id: window.c,v 1.5 1998/02/23 22:43:38 karl Exp $
 
    This file is part of GNU Info, a program for reading online documentation
    stored in Info format.
@@ -723,7 +723,7 @@ character_width (character, hpos)
   int width = 1;
 
   if (ISO_Latin_p)
-    printable_limit = 160;
+    printable_limit = 255;
 
   if (character > printable_limit)
     width = 3;
