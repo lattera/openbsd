@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-fddi.c,v 1.5 1996/12/12 16:22:38 bitblt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-fddi.c,v 1.6 1997/07/25 20:12:24 mickey Exp $ (LBL)";
 #endif
 
 #ifdef HAVE_FDDI
@@ -58,7 +58,8 @@ struct rtentry;
 /*
  * Some FDDI interfaces use bit-swapped addresses.
  */
-#if defined(ultrix) || defined(__alpha)
+#if defined(ultrix) || defined(__alpha) || defined(__bsdi) || \
+	defined(__NetBSD__) || defined(__OpenBSD__)
 int	fddi_bitswap = 0;
 #else
 int	fddi_bitswap = 1;
