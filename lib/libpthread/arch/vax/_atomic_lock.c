@@ -1,7 +1,8 @@
-/*	$OpenBSD: src/lib/libpthread/arch/vax/Attic/_atomic_lock.c,v 1.3 2002/11/01 20:14:59 miod Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/arch/vax/Attic/_atomic_lock.c,v 1.4 2003/05/19 18:31:49 miod Exp $	*/
 
 /*
  * Atomic lock for vax
+ * Written by Miodrag Vallat <miod@openbsd.org> - placed in the public domain.
  */
 
 #include "spinlock.h"
