@@ -21,62 +21,58 @@
    allocating any.  It is a good idea to use alloca(0) in
    your main control loop, etc. to force garbage collection.  */
 
+/*
+
+@deftypefn Replacement void* alloca (size_t @var{size})
+
+This function allocates memory which will be automatically reclaimed
+after the procedure exits.  The @libib{} implementation does not free
+the memory immediately but will do so eventually during subsequent
+calls to this function.  Memory is allocated using @code{xmalloc} under
+normal circumstances.
+
+The header file @file{alloca-conf.h} can be used in conjunction with the
+GNU Autoconf test @code{AC_FUNC_ALLOCA} to test for and properly make
+available this function.  The @code{AC_FUNC_ALLOCA} test requires that
+client code use a block of preprocessor code to be safe (see the Autoconf
+manual for more); this header incorporates that logic and more, including
+the possibility of a GCC built-in function.
+
+@end deftypefn
+
+*/
+
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif
 
-/* If compiling with GCC, this file's not needed.  */
-#ifndef alloca
+#include <libiberty.h>
 
-#ifdef emacs
-#ifdef static
-/* actually, only want this if static is defined as ""
-   -- this is for usg, in which emacs must undefine static
-   in order to make unexec workable
-   */
-#ifndef STACK_DIRECTION
-you
-lose
--- must know STACK_DIRECTION at compile-time
-#endif /* STACK_DIRECTION undefined */
-#endif /* static */
-#endif /* emacs */
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
+/* These variables are used by the ASTRDUP implementation that relies
+   on C_alloca.  */
+const char *libiberty_optr;
+char *libiberty_nptr;
+unsigned long libiberty_len;
 
 /* If your stack is a linked list of frames, you have to
    provide an "address metric" ADDRESS_FUNCTION macro.  */
 
 #if defined (CRAY) && defined (CRAY_STACKSEG_END)
-long i00afunc ();
+static long i00afunc ();
 #define ADDRESS_FUNCTION(arg) (char *) i00afunc (&(arg))
 #else
 #define ADDRESS_FUNCTION(arg) &(arg)
 #endif
 
-#if __STDC__
-#include <stddef.h>
-typedef void *pointer;
-#else
-typedef char *pointer;
-typedef unsigned size_t;
-#endif
-
 #ifndef NULL
 #define	NULL	0
-#endif
-
-/* Different portions of Emacs need to call different versions of
-   malloc.  The Emacs executable needs alloca to call xmalloc, because
-   ordinary malloc isn't protected from input signals.  On the other
-   hand, the utilities in lib-src need alloca to call malloc; some of
-   them are very simple, and don't have an xmalloc routine.
-
-   Non-Emacs programs expect this to call use xmalloc.
-
-   Callers below should use malloc.  */
-
-#ifndef emacs
-#define malloc xmalloc
-extern pointer xmalloc ();
 #endif
 
 /* Define STACK_DIRECTION if you know the direction of stack
@@ -154,8 +150,10 @@ static header *last_alloca_header = NULL;	/* -> last alloca header.  */
    caller, but that method cannot be made to work for some
    implementations of C, for example under Gould's UTX/32.  */
 
-pointer
-alloca (size)
+/* @undocumented C_alloca */
+
+PTR
+C_alloca (size)
      size_t size;
 {
   auto char probe;		/* Probes stack depth: */
@@ -167,7 +165,7 @@ alloca (size)
 #endif
 
   /* Reclaim garbage, defined as all alloca'd storage that
-     was allocated from deeper in the stack than currently. */
+     was allocated from deeper in the stack than currently.  */
 
   {
     register header *hp;	/* Traverses linked list.  */
@@ -178,7 +176,7 @@ alloca (size)
 	{
 	  register header *np = hp->h.next;
 
-	  free ((pointer) hp);	/* Collect garbage.  */
+	  free ((PTR) hp);	/* Collect garbage.  */
 
 	  hp = np;		/* -> next header.  */
 	}
@@ -194,8 +192,11 @@ alloca (size)
   /* Allocate combined header + user data storage.  */
 
   {
-    register pointer new = malloc (sizeof (header) + size);
+    register PTR new = xmalloc (sizeof (header) + size);
     /* Address of header.  */
+
+    if (new == 0)
+      abort();
 
     ((header *) new)->h.next = last_alloca_header;
     ((header *) new)->h.deep = depth;
@@ -204,7 +205,7 @@ alloca (size)
 
     /* User storage begins just after header.  */
 
-    return (pointer) ((char *) new + sizeof (header));
+    return (PTR) ((char *) new + sizeof (header));
   }
 }
 
@@ -326,7 +327,7 @@ struct stk_trailer
 
 #ifdef CRAY2
 /* Determine a "stack measure" for an arbitrary ADDRESS.
-   I doubt that "lint" will like this much. */
+   I doubt that "lint" will like this much.  */
 
 static long
 i00afunc (long *address)
@@ -475,5 +476,3 @@ i00afunc (long address)
 
 #endif /* not CRAY2 */
 #endif /* CRAY */
-
-#endif /* no alloca */
