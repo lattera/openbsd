@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.10 2004/03/30 09:07:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.11 2004/06/09 18:37:04 drahn Exp $	*/
 /* 	$NetBSD: ioapic.c,v 1.7 2003/07/14 22:32:40 lukem Exp $	*/
 
 /*-
@@ -494,13 +494,13 @@ ioapic_enable(void)
 
 	ioapic_cold = 0;
 
+	if (ioapics == NULL)
+		return;
+
 #if 1 /* XXX Will probably get removed */
 	lapic_set_softvectors();
 	lapic_set_lvt();
 #endif
-
-	if (ioapics == NULL)
-		return;
 
 	if (ioapics->sc_flags & IOAPIC_PICMODE) {
 		printf("%s: writing to IMCR to disable pics\n",
