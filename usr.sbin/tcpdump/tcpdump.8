@@ -1,4 +1,4 @@
-.\" @(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.8,v 1.10 1998/09/22 22:03:01 provos Exp $ (LBL)
+.\" @(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.8,v 1.11 1999/03/10 02:43:11 pjanzen Exp $ (LBL)
 .\"
 .\" Copyright (c) 1987, 1988, 1989, 1990, 1991, 1992, 1994, 1995, 1996
 .\"	The Regents of the University of California.  All rights reserved.
@@ -623,7 +623,7 @@ ping packets):
 .RS
 .nf
 .B
-tcpdump 'icmp[0] != 8 and icmp[0] != 0"
+tcpdump 'icmp[0] != 8 and icmp[0] != 0'
 .fi
 .RE
 .SH OUTPUT FORMAT
