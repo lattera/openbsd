@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/librpcsvc/rwall.x,v 1.2 1997/08/19 07:54:51 niklas Exp $	*/
+
 /*
  * Copyright (c) 1993 Christopher G. Demetriou
  * All rights reserved.
@@ -35,7 +37,7 @@
 
 #ifndef RPC_HDR
 %#ifndef lint
-%static char rcsid[] = "$Id: rwall.x,v 1.1 1995/01/12 19:39:57 jtc Exp $";
+%static char rcsid[] = "$OpenBSD: src/lib/librpcsvc/rwall.x,v 1.2 1997/08/19 07:54:51 niklas Exp $";
 %#endif /* not lint */
 #endif
 
