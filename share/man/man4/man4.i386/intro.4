@@ -1,0 +1,218 @@
+.\"	$OpenBSD: src/share/man/man4/man4.i386/intro.4,v 1.16 1999/10/01 20:11:20 jason Exp $
+.\"
+.\" Copyright (c) 1994 Christopher G. Demetriou
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed by Christopher G. Demetriou.
+.\" 3. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 16, 1999
+.Dt INTRO 4 i386
+.Os
+.Sh NAME
+.Nm intro
+.Nd introduction to special files and hardware support
+.Sh DESCRIPTION
+This section describes the special files, related driver functions,
+and networking support
+available in the system.
+In this part of the manual, the
+.Tn SYNOPSIS
+section of
+each configurable device gives a sample specification
+for use in constructing a system description for the
+.Xr config 8
+program.
+The
+.Tn DIAGNOSTICS
+section lists messages which may appear on the console
+and/or in the system error log
+.Pa /var/log/messages
+due to errors in device operation;
+see
+.Xr syslogd 8
+for more information.
+.Pp
+This section contains both devices
+which may be configured into the system
+and network related information.
+The networking support is introduced in
+.Xr netintro 4 .
+.Sh DEVICE SUPPORT
+This section describes the hardware supported on the i386
+(PC-clone) platform.
+Software support for these devices comes in two forms.  A hardware
+device may be supported with a character or block
+.Em device driver ,
+or it may be used within the networking subsystem and have a
+.Em network interface driver .
+Block and character devices are accessed through files in the file
+system of a special type; see
+.Xr mknod 8 .
+Network interfaces are indirectly accessed through the interprocess
+communication facilities provided by the system; see
+.Xr socket 2 .
+.Pp
+A hardware device is identified to the system at configuration time
+and the appropriate device or network interface driver is then compiled
+into the system.  When the resultant system is booted, the
+autoconfiguration facilities in the system probe for the device
+and, if found, enable the software support for it.
+If a device does not respond at autoconfiguration
+time it is not accessible at any time afterwards.
+To enable a device which did not autoconfigure,
+the system must be rebooted.
+.Pp
+The autoconfiguration system is described in
+.Xr autoconf 4 .
+A list of the supported devices is given below.
+.Sh SEE ALSO
+.Xr autoconf 4 ,
+.Xr intro 4 ,
+.Xr config 8
+.Sh LIST OF DEVICES
+The devices listed below are supported in this incarnation of
+the system.  Devices are indicated by their functional interface.
+Not all supported devices are listed.
+.Pp
+.Bl -tag -width speaker -offset xxxx -compact
+.It aha
+Adaptec 154x ISA SCSI adapter boards.
+.It ahb
+Adaptec 1742 EISA SCSI adapter boards.
+.It ahc
+Adaptec 2xxx and 3xxx series PCI/VLB/EISA SCSI adapter boards
+.It adv
+AdvanSys PCI narrow SCSI Host Adapters
+.It adw
+AdvanSys PCI wide SCSI Host Adapters
+.It aic
+Adaptec AIC-6260, Adaptec AIC-6360, Adaptec 152x, and SoundBlaster SCSI boards.
+.It apm
+advanced power management.
+.It aria
+Sierra Semiconductor Aria 16 sound cards
+.It ast
+multiplexing serial communications card first made by AST.
+.It ax
+ASIX AX88104A and AX88141 based PCI Ethernet adapters
+.It bktr
+Brooktree video capture.
+.It boca
+BOCA serial cards.
+.It bt
+Buslogic BT-445, BT-74x, and BT-9xx SCSI boards.
+.It com
+NS8250-, NS16450-, and NS16550-based asynchronous serial
+communications.
+.It cy
+Cyclades Cyclom-4Y, -8Y, and -16Y asynchronous serial communications.
+.It de
+DEC tulip-based ethernet cards
+.It ec
+3Com Etherlink II Ethernet (3C503).
+.It ef
+3Com Fast Etherlink ISA Ethernet (3C515).
+.It eg
+3Com EtherLink Plus Ethernet (3C505).
+.It el
+3Com EtherLink Ethernet (3C501).
+.It ep
+3Com Etherlink III Ethernet (3C5x9, 3C59x).
+.It ex
+Intel EtherExpress PRO/10 ethernet cards
+.It ie
+AT&T StarLAN 10, EN100, StarLan Fiber, and 3Com 3c507 Ethernet.
+.It isp
+QLogic PCI SCSI controllers.
+.It iy
+Ether-Express PRO/10
+.It joy
+Joystick
+.It le
+BICC Isolan, Novell NE2100, and Digital DEPCA Ethernet.
+.It lms
+Logitech-style bus mouse.
+.It lpt
+Parallel port.
+.It mcd
+Mitsumi CD-ROM drives.
+.It mem
+Main memory interface.
+.It mms
+Microsoft-style bus mouse.
+.It mx
+Macronix 98713/98715/98725 Ethernet.
+.It ncr
+NCR PCI SCSI adapter boards.
+.It ne
+Novell NE1000 and 2000 Ethernet interface.
+.It npx
+Numeric Processing Extension coprocessor and emulator.
+.It pctr
+CPU performance counter registers
+.It pms
+PS/2 auxiliary port mouse.
+.It pn
+Lite-On 82c168/82c169 PNIC ethernet.
+.It rtfps
+another multiplexing serial communications card.
+.It rl
+RealTek 8129/8139 Ethernet.
+.It sb
+Sound Blaster card.
+.It sea
+Seagate/Future Domain SCSI cards.  ST01/02, Future Domain TMC-885, and
+Future Domain TMC-950.
+.It sk
+SysKonnect 984x Gigabit Ethernet (9841/9842/9843/9844).
+.It speaker
+console speaker.
+.It ti
+Alteon Tigon I & II Gigabit ethernet (3COM 3C985, Netgear GA620, etc).
+.It tl
+Texas Instruments ThunderLAN ethernet
+.It tx
+SMC 9432 10/100 Mbps Ethernet cards
+.It uha
+Ultrastor ISA and EISA SCSI adapter cards.  Ultrastore 14f, Ultrastore 34f,
+and Ultrastore 24f.
+.It vr
+VIA Rhine Ethernet.
+.It wb
+Winbond W89C840F fast ethernet.
+.It wdc
+Standard ISA Western Digital type hard drives.  MFM, RLL, ESDI, and IDE.
+.It wds
+WD-7000 SCSI host adapters.
+.It wdt
+Industrial Computer Source PCI-WDT50x watchdog timer cards.
+.It we
+Western Digital/SMC WD 80x3, SMC Elite Ultra and SMC EtherEZ Ethernet cards.
+.It wt
+Wangtek and compatible tape drives.  QIC-02 and QIC-36.
+.It xl
+3COM Etherlink XL and Fast Etherlink XL (3c9xx)
+.El
