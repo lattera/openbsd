@@ -28,7 +28,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#	$Id: install.sh,v 1.6 1995/11/28 23:57:26 jtc Exp $
+#	$Id: install.sh,v 1.4 1995/12/14 07:00:10 deraadt Exp $
 
 #	NetBSD installation script.
 #	In a perfect world, this would be a nice C program, with a reasonable
@@ -168,7 +168,7 @@ echo -n "View the boot messages again? [n] "
 getresp "n"
 case "$resp" in
 	y*|Y*)
-		more /kern/msgbuf
+		less /kern/msgbuf
 		;;
 	*)
 		echo	""
