@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/vme.c,v 1.4 1997/01/16 04:03:55 kstailey Exp $	*/
 /*	$NetBSD: vme.c,v 1.6 1996/11/20 18:57:02 gwr Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/buserr.h,v 1.3 1997/01/16 04:04:12 kstailey Exp $	*/
 /*	$NetBSD: buserr.h,v 1.6 1996/11/20 18:57:23 gwr Exp $	*/
 
 /*-

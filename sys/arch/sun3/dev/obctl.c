@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/obctl.c,v 1.4 1997/01/16 04:03:50 kstailey Exp $	*/
 /*	$NetBSD: obctl.c,v 1.11 1996/11/20 18:56:55 gwr Exp $	*/
 
 /*-
