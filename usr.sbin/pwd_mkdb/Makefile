@@ -1,4 +1,6 @@
-#	$OpenBSD: src/usr.sbin/pwd_mkdb/Makefile,v 1.7 1999/06/06 13:03:05 espie Exp $
+#	$OpenBSD: src/usr.sbin/pwd_mkdb/Makefile,v 1.8 2002/06/27 20:01:59 art Exp $
+
+# static because it's used by the boot floppy through a chroot.
 
 LDSTATIC=	${STATIC}
 PROG=	pwd_mkdb
