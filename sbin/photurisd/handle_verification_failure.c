@@ -34,7 +34,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: handle_verification_failure.c,v 1.1.1.1 1997/07/18 22:48:50 provos Exp $";
+static char rcsid[] = "$Id: handle_verification_failure.c,v 1.1 1998/11/14 23:37:24 deraadt Exp $";
 #endif
 
 #include <stdio.h>
@@ -48,7 +48,7 @@ static char rcsid[] = "$Id: handle_verification_failure.c,v 1.1.1.1 1997/07/18 2
 #include "buffer.h"
 #include "packet.h"
 #include "schedule.h"
-#include "errlog.h"
+#include "log.h"
 
 int
 handle_verification_failure(u_char *packet, int size, char *address)
@@ -63,12 +63,12 @@ handle_verification_failure(u_char *packet, int size, char *address)
 
 	if ((st = state_find_cookies(address, header->icookie, 
 				     header->rcookie)) == NULL) {
-	     log_error(0, "No state for VERIFICATION_FAILURE message from %s", 
+	     log_print("No state for VERIFICATION_FAILURE message from %s", 
 		       address);
 	     return -1;
 	}
 	
-	log_error(0, "Received VERIFICATION_FAILURE from %s", address);
+	log_print("Received VERIFICATION_FAILURE from %s", address);
 
 	return 0;
 }
