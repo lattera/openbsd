@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.10 2001/04/09 07:14:18 tholo Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.10.2.1 2002/02/20 08:52:33 miod Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -108,6 +108,9 @@ sys_ptrace(p, v, retval)
 		if ((t = pfind(SCARG(uap, pid))) == NULL)
 			return (ESRCH);
 	}
+
+	if ((t->p_flag & P_INEXEC) != 0)
+		return (EAGAIN);
 
 	/* Make sure we can operate on it. */
 	switch (SCARG(uap, req)) {

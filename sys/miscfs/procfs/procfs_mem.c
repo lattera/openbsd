@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.10 2000/08/15 02:44:12 ericj Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.10.4.1 2002/02/20 08:52:36 miod Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -281,6 +281,8 @@ procfs_findtextvp(p)
  *	    of the entire system, and the system was not
  *	    compiled with permanently insecure mode turned
  *	    on.
+ *
+ *	(3) It's currently execing.
  */
 int
 procfs_checkioperm(p, t)
@@ -295,6 +297,9 @@ procfs_checkioperm(p, t)
 
 	if ((t->p_pid == 1) && (securelevel > -1))
 		return (EPERM);
+
+	if (t->p_flag & P_INEXEC)
+		return (EAGAIN);
 
 	return (0);
 }
