@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sbin/isakmpd/pf_key_v2.c,v 1.50 2001/04/24 07:27:37 niklas Exp $  */
+/*      $OpenBSD: src/sbin/isakmpd/pf_key_v2.c,v 1.50.2.1 2001/06/06 03:39:07 jason Exp $  */
 /*	$EOM: pf_key_v2.c,v 1.79 2000/12/12 00:33:19 niklas Exp $	*/
 
 /*
@@ -1215,7 +1215,7 @@ pf_key_v2_flow (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
 	    goto cleanup;
 
 	  sid->sadb_ident_len = ((sizeof *sid) / PF_KEY_V2_CHUNK)
-	    + PF_KEY_V2_ROUND (srcid_len) / PF_KEY_V2_CHUNK;
+	    + PF_KEY_V2_ROUND (srcid_len + 1) / PF_KEY_V2_CHUNK;
 	  sid->sadb_ident_exttype = SADB_EXT_IDENTITY_SRC;
 	  sid->sadb_ident_type = srcid_type;
 
@@ -1237,7 +1237,7 @@ pf_key_v2_flow (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
 	    goto cleanup;
 
 	  sid->sadb_ident_len = ((sizeof *sid) / PF_KEY_V2_CHUNK)
-	    + PF_KEY_V2_ROUND (dstid_len) / PF_KEY_V2_CHUNK;
+	    + PF_KEY_V2_ROUND (dstid_len + 1) / PF_KEY_V2_CHUNK;
 	  sid->sadb_ident_exttype = SADB_EXT_IDENTITY_DST;
 	  sid->sadb_ident_type = dstid_type;
 
