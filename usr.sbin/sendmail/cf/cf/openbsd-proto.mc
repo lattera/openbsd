@@ -1,9 +1,9 @@
 divert(-1)
 #
-# Copyright (c) 1993, 1994, 1995 Adam Glass
+# Copyright (c) 1994 Adam Glass
 # Copyright (c) 1983 Eric P. Allman
-# Copyright (c) 1988 The Regents of the University of California.
-# All rights reserved.
+# Copyright (c) 1988, 1993
+#	The Regents of the University of California.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,16 +33,18 @@ divert(-1)
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
+
 #
+#  This is the prototype file for a configuration that supports nothing
+#  but basic SMTP connections via TCP.
+#
+#  You may want to add an OSTYPE macro to get the location of various
+#  support files for your operating system environment.
+#
+
 include(`../m4/cf.m4')
-VERSIONID(`@(#)pain.mc	$Revision: 1.1 $')
+VERSIONID(`@(#)openbsd-proto.mc	$Revision$')
 OSTYPE(bsd4.4)dnl
 MAILER(local)dnl
 MAILER(smtp)dnl
-define(`MAIL_HUB', mail.netbsd.org)dnl
-define(`SMART_HOST', nobozo.cs.berkeley.edu)dnl
-define(`confCHECKPOINT_INTERVAL', 10)dnl
-define(`confAUTO_REBUILD', True)dnl
-define(`confMESSAGE_TIMEOUT', 3d/4h)dnl
-MASQUERADE_AS(netbsd.org)dnl
-LOCAL_USER(root)
+
