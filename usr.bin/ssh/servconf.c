@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.2 2002/05/18 04:50:38 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.3 2002/06/22 04:33:15 jason Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 #include <krb.h>
@@ -231,9 +231,9 @@ fill_default_server_options(ServerOptions *options)
 	if (options->authorized_keys_file == NULL)
 		options->authorized_keys_file = _PATH_SSH_USER_PERMITTED_KEYS;
 
-	/* Turn privilege separation _off_ by default */
+	/* Turn privilege separation on by default */
 	if (use_privsep == -1)
-		use_privsep = 0;
+		use_privsep = 1;
 }
 
 /* Keyword tokens. */

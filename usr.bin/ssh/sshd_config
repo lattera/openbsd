@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd_config,v 1.49.2.2 2002/05/18 04:50:38 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd_config,v 1.49.2.3 2002/06/22 04:33:15 jason Exp $
 
 # This is the sshd server system-wide configuration file.  See sshd(8)
 # for more information.
@@ -74,7 +74,7 @@
 #PrintLastLog yes
 #KeepAlive yes
 #UseLogin no
-#UsePrivilegeSeparation no
+#UsePrivilegeSeparation yes
 
 #MaxStartups 10
 # no default banner path
