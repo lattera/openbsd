@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.12 1997/07/18 22:32:08 assar Exp $
+# $Id: Makefile,v 1.1 1998/01/20 23:40:25 art Exp $
 
 SHELL = /bin/sh
 
@@ -25,10 +25,10 @@ all: $(info)
 
 install: $(info)
 	$(INSTALL-INFO) ${.OBJDIR}/$(info) $(infodir)/dir 
-	$(INSTALL) -m 444 -o root -g wheel -p ${.OBJDIR}/$(info) $(infodir)
+	${INSTALL} ${INSTALL_COPY} -m 444 -o ${BINOWN} -g ${BINGRP} -p ${.OBJDIR}/$(info) $(infodir)
 
 $(info): $(SRCS)
-	$(MAKEINFO) -I${.CURDIR} -o ${.OBJDIR}/$@ ${.CURDIR}/kth-krb.texi
+	${MAKEINFO} -I${.CURDIR} -o ${.OBJDIR}/$@ ${.CURDIR}/kth-krb.texi
 
 clean:
 	(cd ${.OBJDIR} ; rm -f *.aux *.cp *.cps *.dvi *.fn *.ky *.log *.pg *.toc *.tp *.vr *.info)
