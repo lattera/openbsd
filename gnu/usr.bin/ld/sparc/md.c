@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/sparc/Attic/md.c,v 1.6 1998/03/26 19:47:33 niklas Exp $*/
 /*
  * Copyright (c) 1993 Paul Kranenburg
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: md.c,v 1.4 1996/08/22 01:24:21 deraadt Exp $
  */
 
 #include <sys/param.h>

@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/i386/Attic/mdprologue.S,v 1.2 1998/03/26 19:46:42 niklas Exp $*/
 /*
  * Copyright (c) 1993 Paul Kranenburg
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: mdprologue.S,v 1.7 1994/12/04 07:42:44 mycroft Exp $
  */
 
 /*

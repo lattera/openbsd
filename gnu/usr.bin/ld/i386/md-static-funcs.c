@@ -1,5 +1,5 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/i386/Attic/md-static-funcs.c,v 1.2 1998/03/26 19:46:36 niklas Exp $*/
 /*
- *	$Id: md-static-funcs.c,v 1.2 1993/12/08 10:14:44 pk Exp $
  *
  * Called by ld.so when onanating.
  * This *must* be a static function, so it is not called through a jmpslot.

@@ -1,5 +1,5 @@
+/* * $OpenBSD: src/gnu/usr.bin/ld/Attic/lib.c,v 1.2 1998/03/26 19:46:21 niklas Exp $	- library routines*/
 /*
- * $Id: lib.c,v 1.16 1995/06/04 21:33:14 pk Exp $	- library routines
  */
 
 #include <sys/param.h>

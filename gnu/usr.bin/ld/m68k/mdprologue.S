@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/m68k/Attic/mdprologue.S,v 1.2 1998/03/26 19:47:03 niklas Exp $*/
 /*
  * Copyright (c) 1993 Paul Mackerras
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: mdprologue.S,v 1.7 1995/05/07 13:22:12 briggs Exp $
  */
 
 /*

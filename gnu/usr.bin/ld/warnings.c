@@ -1,5 +1,5 @@
+/* * $OpenBSD: src/gnu/usr.bin/ld/Attic/warnings.c,v 1.3 1998/03/26 19:46:29 niklas Exp $*/
 /*
- * $Id: warnings.c,v 1.1.1.1 1995/10/18 08:40:56 deraadt Exp $
  */
 
 #include <sys/param.h>

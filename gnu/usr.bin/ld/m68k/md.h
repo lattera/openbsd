@@ -1,5 +1,5 @@
+/* * $OpenBSD: src/gnu/usr.bin/ld/m68k/Attic/md.h,v 1.2 1998/03/26 19:47:01 niklas Exp $*/
 /*
- * $Id: md.h,v 1.4 1995/01/17 06:44:40 mycroft Exp $
  *	- m68k dependent definitions
  */
 

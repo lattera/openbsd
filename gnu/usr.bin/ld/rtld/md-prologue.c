@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/ld/rtld/Attic/md-prologue.c,v 1.2 1998/03/26 19:47:25 niklas Exp $	*/
+
 /*
  * rtld entry pseudo code - turn into assembler and tweak it
  */

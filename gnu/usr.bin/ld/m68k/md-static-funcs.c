@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/ld/m68k/Attic/md-static-funcs.c,v 1.2 1998/03/26 19:46:58 niklas Exp $	*/
+
 
 /*
  * Called by ld.so when onanating.

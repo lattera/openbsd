@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/ns32k/Attic/mdprologue.S,v 1.2 1998/03/26 19:47:17 niklas Exp $*/
 /*
  * Copyright (c) 1994 Matthias Pfaller.
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: mdprologue.S,v 1.3 1995/05/29 18:11:35 phil Exp $
  */
 
 /*

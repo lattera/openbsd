@@ -1,10 +1,10 @@
+/* *	$OpenBSD: src/gnu/usr.bin/ld/Attic/symseg.h,v 1.2 1998/03/26 19:46:28 niklas Exp $*/
 /*-
  *
  * This code is derived from software copyrighted by the Free Software
  * Foundation.
  *
  *	from: @(#)symseg.h	5.4 (Berkeley) 4/30/91
- *	$Id: symseg.h,v 1.3 1993/12/08 10:14:07 pk Exp $
  */
 
 /* GDB symbol table format definitions.
