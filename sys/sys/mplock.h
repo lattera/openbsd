@@ -163,4 +163,7 @@ __mp_lock_held(struct __mp_lock *lock) {
 
 extern struct __mp_lock kernel_lock;
 
+/* XXX Should really be in proc.h but then __mp_lock is not defined. */
+extern struct SIMPLELOCK deadproc_slock;
+
 #endif /* !_MPLOCK_H */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.13 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.14 2004/04/21 09:40:50 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -323,9 +323,9 @@ exit2(p)
 {
 	int s;
 
-	simple_lock(&deadproc_slock);
+	SIMPLE_LOCK(&deadproc_slock);
 	LIST_INSERT_HEAD(&deadproc, p, p_hash);
-	simple_unlock(&deadproc_slock);
+	SIMPLE_UNLOCK(&deadproc_slock);
 
 	wakeup(&deadproc);
 
@@ -345,18 +345,18 @@ reaper(void)
 	KERNEL_PROC_UNLOCK(curproc);
 
 	for (;;) {
-		simple_lock(&deadproc_slock);
+		SIMPLE_LOCK(&deadproc_slock);
 		p = LIST_FIRST(&deadproc);
 		if (p == NULL) {
 			/* No work for us; go to sleep until someone exits. */
-			simple_unlock(&deadproc_slock);
+			SIMPLE_UNLOCK(&deadproc_slock);
 			(void) tsleep(&deadproc, PVM, "reaper", 0);
 			continue;
 		}
 
 		/* Remove us from the deadproc list. */
 		LIST_REMOVE(p, p_hash);
-		simple_unlock(&deadproc_slock);
+		SIMPLE_UNLOCK(&deadproc_slock);
 		KERNEL_PROC_LOCK(curproc);
 
 		/*

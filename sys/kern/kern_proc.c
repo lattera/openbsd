@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_proc.c,v 1.6.4.6 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_proc.c,v 1.6.4.7 2004/04/21 09:40:50 niklas Exp $	*/
 /*	$NetBSD: kern_proc.c,v 1.14 1996/02/09 18:59:41 christos Exp $	*/
 
 /*
@@ -85,7 +85,7 @@ struct pool pcred_pool;
  * proclist.  Processes on this proclist are also on zombproc;
  * we use the p_hash member to linkup to deadproc.
  */
-struct simplelock deadproc_slock;
+struct SIMPLELOCK deadproc_slock;
 struct proclist deadproc;		/* dead, but not yet undead */
 
 static void orphanpg(struct pgrp *);
@@ -104,7 +104,7 @@ procinit()
 	LIST_INIT(&zombproc);
 
 	LIST_INIT(&deadproc);
-	simple_lock_init(&deadproc_slock);
+	SIMPLE_LOCK_INIT(&deadproc_slock);
 
 	pidhashtbl = hashinit(maxproc / 4, M_PROC, M_WAITOK, &pidhash);
 	pgrphashtbl = hashinit(maxproc / 4, M_PROC, M_WAITOK, &pgrphash);
