@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.91 2004/02/16 20:40:34 markus Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/exchange.c,v 1.91.2.1 2005/03/16 23:45:20 brad Exp $	*/
 /*	$EOM: exchange.c,v 1.143 2000/12/04 00:02:25 angelos Exp $	*/
 
 /*
@@ -1839,7 +1839,7 @@ exchange_establish (char *name,
 	   */
 	  if (exchange)
 	    exchange_add_finalization (exchange, finalize, arg);
-	  else
+	  else if (finalize)
 	    finalize (0, arg, 1); /* Indicate failure */
 	  return;
 	}
