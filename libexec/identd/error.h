@@ -1,7 +1,7 @@
 /*
-**	$Id: error.h,v 1.2 1994/02/04 23:17:53 cgd Exp $
+**	$Id: error.h,v 1.1.1.1 1995/10/18 08:43:17 deraadt Exp $
 **
-** error.h                                               Error handling macros
+** error.h						 Error handling macros
 **
 ** This program is in the public domain and may be used freely by anyone
 ** who wants to. 

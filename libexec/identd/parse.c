@@ -1,7 +1,7 @@
 /*
-**	$Id: parse.c,v 1.1.1.1 1995/10/18 08:43:18 deraadt Exp $
+**	$Id: parse.c,v 1.2 1995/12/18 22:15:08 deraadt Exp $
 **
-** parse.c                         This file contains the protocol parser
+** parse.c			   This file contains the protocol parser
 **
 ** This program is in the public domain and may be used freely by anyone
 ** who wants to. 
