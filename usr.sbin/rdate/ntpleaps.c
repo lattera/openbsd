@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/rdate/ntpleaps.c,v 1.5 2002/08/03 12:20:34 jakob Exp $	*/
+/*	$OpenBSD: src/usr.sbin/rdate/ntpleaps.c,v 1.6 2002/08/10 21:37:28 jakob Exp $	*/
 
 /*
  * Copyright (c) 2002 by Thorsten "mirabile" Glaser <x86@ePOST.de>
@@ -21,7 +21,7 @@
 
 /* Leap second support for NTP clients (generic) */
 
-static const char RCSId[] = "$OpenBSD: src/usr.sbin/rdate/ntpleaps.c,v 1.5 2002/08/03 12:20:34 jakob Exp $";
+static const char RCSId[] = "$OpenBSD: src/usr.sbin/rdate/ntpleaps.c,v 1.6 2002/08/10 21:37:28 jakob Exp $";
 
 
 /*
@@ -29,12 +29,15 @@ static const char RCSId[] = "$OpenBSD: src/usr.sbin/rdate/ntpleaps.c,v 1.5 2002/
  * at no real benefit. Read tzfile.h for why.
  */
 
+#include <sys/types.h>
+#include <netinet/in.h>
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
+
 #include "ntpleaps.h"
 
 u_int64_t *leapsecs = NULL;
