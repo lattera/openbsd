@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/kerberosIV/include/Attic/sl.h,v 1.2 1998/02/18 11:53:38 art Exp $	*/
 /* $KTH: sl.h,v 1.4 1997/08/15 21:40:10 joda Exp $ */
 
 /*

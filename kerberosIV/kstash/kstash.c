@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/kerberosIV/kstash/Attic/kstash.c,v 1.3 1998/02/18 11:54:09 art Exp $	*/
 /* $KTH: kstash.c,v 1.10 1997/03/30 17:35:37 assar Exp $ */
 
 /*-

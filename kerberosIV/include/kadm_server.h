@@ -1,4 +1,9 @@
-/*	$Id: kadm_server.h,v 1.1.1.1 1995/12/14 06:52:34 tholo Exp $	*/
+/*	$OpenBSD: src/kerberosIV/include/Attic/kadm_server.h,v 1.3 1998/02/18 11:53:34 art Exp $	*/
+/*	$Id: kadm_server.h,v 1.2 1997/06/29 10:48:35 provos Exp $	*/
+
+/*
+ * This software may now be redistributed outside the US.
+ */
 
 /*-
  * Copyright (C) 1989 by the Massachusetts Institute of Technology

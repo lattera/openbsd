@@ -1,4 +1,4 @@
-/*	$Id: adm_locl.h,v 1.2 1997/06/29 10:48:34 provos Exp $	*/
+/*	$OpenBSD: src/kerberosIV/include/Attic/adm_locl.h,v 1.4 1998/02/18 11:53:33 art Exp $	*/
 
 /*-
  * Copyright 1987, 1988 by the Student Information Processing Board

@@ -1,4 +1,4 @@
-/*	$Id: kpasswdd.c,v 1.3 1997/02/15 19:56:16 tholo Exp $	*/
+/*	$OpenBSD: src/kerberosIV/kpasswdd/Attic/kpasswdd.c,v 1.5 1998/02/18 11:53:57 art Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993

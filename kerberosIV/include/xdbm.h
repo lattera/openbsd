@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/kerberosIV/include/Attic/xdbm.h,v 1.2 1998/02/18 11:53:39 art Exp $	*/
+
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -35,8 +37,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-/* $Id: xdbm.h,v 1.2 1997/04/01 08:19:16 joda Exp $ */
 
 /* Generic *dbm include file */
 

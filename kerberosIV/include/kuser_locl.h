@@ -1,4 +1,4 @@
-/*	$Id: kuser_locl.h,v 1.1.1.1 1995/12/14 06:52:33 tholo Exp $	*/
+/*	$OpenBSD: src/kerberosIV/include/Attic/kuser_locl.h,v 1.3 1998/02/18 11:53:37 art Exp $	*/
 /*      $KTH: kuser_locl.h,v 1.10 1997/05/20 18:40:43 bg Exp $          */
 
 

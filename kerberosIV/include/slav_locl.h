@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$OpenBSD: src/kerberosIV/include/Attic/slav_locl.h,v 1.2 1998/02/18 11:53:39 art Exp $	*/
 
 #ifndef __slav_locl_h
 #define __slav_locl_h
