@@ -1,4 +1,4 @@
-/* $Id: cyberflex.c,v 1.20 2001/08/24 17:27:57 rees Exp $ */
+/* $Id: cyberflex.c,v 1.9 2002/03/19 18:13:42 rees Exp $ */
 
 /*
 copyright 1999, 2000
@@ -121,20 +121,25 @@ get_AUT0(int ac, char *av[], char *prompt, int confirm, unsigned char *digest)
 
     if (!dflag && !xflag) {
 	SHA1Init(&ctx);
+	/* "-" means DFLTAUT0 */
 	s = getpass(prompt);
-	if (confirm) {
-	    s2 = strdup(s);
-	    s = getpass("Re-enter passphrase: ");
-	    if (strcmp(s, s2)) {
-		printf("passphrase mismatch\n");
-		return -1;
+	if (!strcmp(s, "-"))
+	    memcpy(digest, DFLTAUT0, sizeof DFLTAUT0);
+	else {
+	    if (confirm) {
+		s2 = strdup(s);
+		s = getpass("Re-enter passphrase: ");
+		if (strcmp(s, s2)) {
+		    printf("passphrase mismatch\n");
+		    return -1;
+		}
+		bzero(s2, strlen(s2));
+		free(s2);
 	    }
-	    bzero(s2, strlen(s2));
-	    free(s2);
+	    SHA1Update(&ctx, s, strlen(s));
+	    bzero(s, strlen(s));
+	    SHA1Final(digest, &ctx);
 	}
-	SHA1Update(&ctx, s, strlen(s));
-	bzero(s, strlen(s));
-	SHA1Final(digest, &ctx);
     }
 #endif
 
