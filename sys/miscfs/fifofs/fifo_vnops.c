@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.15 2003/06/02 23:28:10 millert Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.15.2.1 2004/03/03 08:32:11 brad Exp $	*/
 /*	$NetBSD: fifo_vnops.c,v 1.18 1996/03/16 23:52:42 christos Exp $	*/
 
 /*
@@ -433,6 +433,9 @@ fifo_close(v)
 	register struct fifoinfo *fip = vp->v_fifoinfo;
 	int error1, error2;
 
+	if (fip == NULL)
+		return (0);
+
 	if (ap->a_fflag & FREAD) {
 		if (--fip->fi_readers == 0)
 			socantsendmore(fip->fi_writesock);
@@ -450,6 +453,24 @@ fifo_close(v)
 	if (error1)
 		return (error1);
 	return (error2);
+}
+
+int
+fifo_reclaim(void *v)
+{
+	struct vop_reclaim_args *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct fifoinfo *fip = vp->v_fifoinfo;
+
+	if (fip == NULL)
+		return (0);
+
+	soclose(fip->fi_readsock);
+	soclose(fip->fi_writesock);
+	FREE(fip, M_VNODE);
+	vp->v_fifoinfo = NULL;
+
+	return (0);
 }
 
 /*
