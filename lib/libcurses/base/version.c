@@ -1,7 +1,5 @@
-/*	$OpenBSD: src/lib/libpanel/p_move.c,v 1.3 1999/11/28 17:49:19 millert Exp $	*/
-
 /****************************************************************************
- * Copyright (c) 1998 Free Software Foundation, Inc.                        *
+ * Copyright (c) 1999 Free Software Foundation, Inc.                        *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,28 +27,22 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Zeyd M. Ben-Halim <zmbenhal@netcom.com> 1995                    *
- *     and: Eric S. Raymond <esr@snark.thyrsus.com>                         *
+ *  Author: Thomas E. Dickey <dickey@clark.net> 1999                        *
  ****************************************************************************/
 
-/* p_move.c
- * Move a panel to a new location
- */
-#include "panel.priv.h"
+#include <curses.priv.h>
 
-MODULE_ID("$From: p_move.c,v 1.5 1999/11/25 13:49:26 juergen Exp $")
+MODULE_ID("$From: version.c,v 1.1 1999/10/23 13:28:49 tom Exp $")
 
-int
-move_panel(PANEL *pan, int starty, int startx)
+const char *
+curses_version(void)
 {
-  if(!pan)
-    return(ERR);
+    static char my_version[80];
 
-  if (IS_LINKED(pan))
-    PANEL_UPDATE(pan,(PANEL*)0, TRUE);
-
-  if (mvwin(pan->win,starty,startx))
-    return(ERR);
-
-  return(OK);
+    T((T_CALLED("curses_version()")));
+    sprintf(my_version, "ncurses %d.%d.%d",
+	NCURSES_VERSION_MAJOR,
+	NCURSES_VERSION_MINOR,
+	NCURSES_VERSION_PATCH);
+    returnPtr(my_version);
 }
