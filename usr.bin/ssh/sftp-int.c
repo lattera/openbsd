@@ -28,7 +28,7 @@
 /* XXX: recursive operations */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.26 2001/03/07 10:11:23 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.26.2.1 2001/03/12 15:44:15 jason Exp $");
 
 #include "buffer.h"
 #include "xmalloc.h"
@@ -39,12 +39,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.26 2001/03/07 10:11:23 djm
 #include "sftp-common.h"
 #include "sftp-client.h"
 #include "sftp-int.h"
-
-/* File to read commands from */
-extern FILE *infile;
-
-/* Version of server we are speaking to */
-int version;
 
 /* Seperators for interactive commands */
 #define WHITESPACE " \t\r\n"
@@ -70,7 +64,6 @@ int version;
 #define I_RM		18
 #define I_RMDIR		19
 #define I_SHELL		20
-#define I_SYMLINK	21
 
 struct CMD {
 	const char *c;
@@ -91,7 +84,6 @@ const struct CMD cmds[] = {
 	{ "lchdir",	I_LCHDIR },
 	{ "lls",	I_LLS },
 	{ "lmkdir",	I_LMKDIR },
-	{ "ln",		I_SYMLINK },
 	{ "lpwd",	I_LPWD },
 	{ "ls",		I_LS },
 	{ "lumask",	I_LUMASK },
@@ -102,7 +94,6 @@ const struct CMD cmds[] = {
 	{ "rename",	I_RENAME },
 	{ "rm",		I_RM },
 	{ "rmdir",	I_RMDIR },
-	{ "symlink",	I_SYMLINK },
 	{ "!",		I_SHELL },
 	{ "?",		I_HELP },
 	{ NULL,			-1}
@@ -120,7 +111,6 @@ help(void)
 	printf("help                          Display this help text\n");
 	printf("get remote-path [local-path]  Download file\n");
 	printf("lls [ls-options [path]]       Display local directory listing\n");
-	printf("ln oldpath newpath            Symlink remote file\n");
 	printf("lmkdir path                   Create local directory\n");
 	printf("lpwd                          Print local working directory\n");
 	printf("ls [path]                     Display remote directory listing\n");
@@ -133,7 +123,6 @@ help(void)
 	printf("rename oldpath newpath        Rename remote file\n");
 	printf("rmdir path                    Remove remote directory\n");
 	printf("rm path                       Delete remote file\n");
-	printf("symlink oldpath newpath       Symlink remote file\n");
 	printf("!command                      Execute 'command' in local shell\n");
 	printf("!                             Escape to local shell\n");
 	printf("?                             Synonym for help\n");
@@ -365,7 +354,7 @@ parse_args(const char **cpp, int *pflag, unsigned long *n_arg,
 			return(-1);
 		break;
 	case I_RENAME:
-	case I_SYMLINK:
+		/* Get first pathname (mandatory) */
 		if (get_pathname(&cp, path1))
 			return(-1);
 		if (get_pathname(&cp, path2))
@@ -454,8 +443,7 @@ parse_dispatch_command(int in, int out, const char *cmd, char **pwd)
 	int pflag, cmdnum;
 	unsigned long n_arg;
 	Attrib a, *aa;
-	char path_buf[MAXPATHLEN];
-	int err = 0;
+	char path_buf[PATH_MAX];
 
 	path1 = path2 = NULL;
 	cmdnum = parse_args(&cmd, &pflag, &n_arg, &path1, &path2);
@@ -466,64 +454,49 @@ parse_dispatch_command(int in, int out, const char *cmd, char **pwd)
 		break;
 	case I_GET:
 		path1 = make_absolute(path1, *pwd);
-		err = do_download(in, out, path1, path2, pflag);
+		do_download(in, out, path1, path2, pflag);
 		break;
 	case I_PUT:
 		path2 = make_absolute(path2, *pwd);
-		err = do_upload(in, out, path1, path2, pflag);
+		do_upload(in, out, path1, path2, pflag);
 		break;
 	case I_RENAME:
 		path1 = make_absolute(path1, *pwd);
 		path2 = make_absolute(path2, *pwd);
-		err = do_rename(in, out, path1, path2);
-		break;
-	case I_SYMLINK:
-		if (version < 3) {
-			error("The server (version %d) does not support "
-			    "this operation", version);
-			err = -1;
-		} else {
-			path2 = make_absolute(path2, *pwd);
-			err = do_symlink(in, out, path1, path2);
-		}
+		do_rename(in, out, path1, path2);
 		break;
 	case I_RM:
 		path1 = make_absolute(path1, *pwd);
-		err = do_rm(in, out, path1);
+		do_rm(in, out, path1);
 		break;
 	case I_MKDIR:
 		path1 = make_absolute(path1, *pwd);
 		attrib_clear(&a);
 		a.flags |= SSH2_FILEXFER_ATTR_PERMISSIONS;
 		a.perm = 0777;
-		err = do_mkdir(in, out, path1, &a);
+		do_mkdir(in, out, path1, &a);
 		break;
 	case I_RMDIR:
 		path1 = make_absolute(path1, *pwd);
-		err = do_rmdir(in, out, path1);
+		do_rmdir(in, out, path1);
 		break;
 	case I_CHDIR:
 		path1 = make_absolute(path1, *pwd);
-		if ((tmp = do_realpath(in, out, path1)) == NULL) {
-			err = 1;
+		if ((tmp = do_realpath(in, out, path1)) == NULL)
 			break;
-		}
 		if ((aa = do_stat(in, out, tmp)) == NULL) {
 			xfree(tmp);
-			err = 1;
 			break;
 		}
 		if (!(aa->flags & SSH2_FILEXFER_ATTR_PERMISSIONS)) {
 			error("Can't change directory: Can't check target");
 			xfree(tmp);
-			err = 1;
 			break;
 		}
 		if (!S_ISDIR(aa->perm)) {
 			error("Can't change directory: \"%s\" is not "
 			    "a directory", tmp);
 			xfree(tmp);
-			err = 1;
 			break;
 		}
 		xfree(*pwd);
@@ -549,18 +522,14 @@ parse_dispatch_command(int in, int out, const char *cmd, char **pwd)
 		do_ls(in, out, path1);
 		break;
 	case I_LCHDIR:
-		if (chdir(path1) == -1) {
+		if (chdir(path1) == -1)
 			error("Couldn't change local directory to "
 			    "\"%s\": %s", path1, strerror(errno));
-			err = 1;
-		}
 		break;
 	case I_LMKDIR:
-		if (mkdir(path1, 0777) == -1) {
+		if (mkdir(path1, 0777) == -1)
 			error("Couldn't create local directory "
 			    "\"%s\": %s", path1, strerror(errno));
-			err = 1;
-		}
 		break;
 	case I_LLS:
 		local_do_ls(cmd);
@@ -610,7 +579,7 @@ parse_dispatch_command(int in, int out, const char *cmd, char **pwd)
 		break;
 	case I_LPWD:
 		if (!getcwd(path_buf, sizeof(path_buf)))
-			error("Couldn't get local cwd: %s",
+			error("Couldn't get local cwd: %s\n",
 			    strerror(errno));
 		else
 			printf("Local working directory: %s\n",
@@ -629,11 +598,6 @@ parse_dispatch_command(int in, int out, const char *cmd, char **pwd)
 		xfree(path1);
 	if (path2)
 		xfree(path2);
-
-	/* If an error occurs in batch mode we should abort. */
-	if (infile != stdin && err > 0)
-		return -1;
-
 	return(0);
 }
 
@@ -643,16 +607,12 @@ interactive_loop(int fd_in, int fd_out)
 	char *pwd;
 	char cmd[2048];
 
-	version = do_init(fd_in, fd_out);
-	if (version == -1)
-		fatal("Couldn't initialise connection to server");
-
 	pwd = do_realpath(fd_in, fd_out, ".");
 	if (pwd == NULL)
 		fatal("Need cwd");
 
 	setvbuf(stdout, NULL, _IOLBF, 0);
-	setvbuf(infile, NULL, _IOLBF, 0);
+	setvbuf(stdin, NULL, _IOLBF, 0);
 
 	for(;;) {
 		char *cp;
@@ -660,16 +620,13 @@ interactive_loop(int fd_in, int fd_out)
 		printf("sftp> ");
 
 		/* XXX: use libedit */
-		if (fgets(cmd, sizeof(cmd), infile) == NULL) {
+		if (fgets(cmd, sizeof(cmd), stdin) == NULL) {
 			printf("\n");
 			break;
-		} else if (infile != stdin) /* Bluff typing */
-			printf("%s", cmd);
-
+		}
 		cp = strrchr(cmd, '\n');
 		if (cp)
 			*cp = '\0';
-
 		if (parse_dispatch_command(fd_in, fd_out, cmd, &pwd))
 			break;
 	}

@@ -12,11 +12,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compress.c,v 1.7.2.2 2000/11/08 21:30:39 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compress.c,v 1.7.2.3 2001/03/12 15:44:09 jason Exp $");
 
-#include "ssh.h"
+#include "log.h"
 #include "buffer.h"
 #include "zlib.h"
+#include "compress.h"
 
 static z_stream incoming_stream;
 static z_stream outgoing_stream;
@@ -39,7 +40,7 @@ buffer_compress_init(int level)
 /* Frees any data structures allocated for compression. */
 
 void
-buffer_compress_uninit()
+buffer_compress_uninit(void)
 {
 	debug("compress outgoing: raw data %lu, compressed %lu, factor %.2f",
 	      outgoing_stream.total_in, outgoing_stream.total_out,
@@ -73,13 +74,13 @@ buffer_compress(Buffer * input_buffer, Buffer * output_buffer)
 		return;
 
 	/* Input is the contents of the input buffer. */
-	outgoing_stream.next_in = (unsigned char *) buffer_ptr(input_buffer);
+	outgoing_stream.next_in = (u_char *) buffer_ptr(input_buffer);
 	outgoing_stream.avail_in = buffer_len(input_buffer);
 
 	/* Loop compressing until deflate() returns with avail_out != 0. */
 	do {
 		/* Set up fixed-size output buffer. */
-		outgoing_stream.next_out = (unsigned char *)buf;
+		outgoing_stream.next_out = (u_char *)buf;
 		outgoing_stream.avail_out = sizeof(buf);
 
 		/* Compress as much data into the buffer as possible. */
@@ -112,12 +113,12 @@ buffer_uncompress(Buffer * input_buffer, Buffer * output_buffer)
 	char buf[4096];
 	int status;
 
-	incoming_stream.next_in = (unsigned char *) buffer_ptr(input_buffer);
+	incoming_stream.next_in = (u_char *) buffer_ptr(input_buffer);
 	incoming_stream.avail_in = buffer_len(input_buffer);
 
 	for (;;) {
 		/* Set up fixed-size output buffer. */
-		incoming_stream.next_out = (unsigned char *) buf;
+		incoming_stream.next_out = (u_char *) buf;
 		incoming_stream.avail_out = sizeof(buf);
 
 		status = inflate(&incoming_stream, Z_PARTIAL_FLUSH);

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.7.2.2 2000/11/08 21:31:35 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.7.2.3 2001/03/12 15:44:18 jason Exp $"); */
 
 /* The tty mode description is a stream of bytes.  The stream consists of
  * opcode-arguments pairs.  It is terminated by opcode TTY_OP_END (0).

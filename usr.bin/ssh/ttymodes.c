@@ -15,10 +15,11 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.6.2.2 2000/11/08 21:31:35 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.6.2.3 2001/03/12 15:44:18 jason Exp $");
 
 #include "packet.h"
-#include "ssh.h"
+#include "log.h"
+#include "ssh1.h"
 
 #define TTY_OP_END	0
 #define TTY_OP_ISPEED	192	/* int follows */

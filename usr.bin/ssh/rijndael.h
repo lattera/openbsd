@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/rijndael.h,v 1.1.4.2 2001/03/12 15:44:13 jason Exp $	*/
+
 #ifndef _RIJNDAEL_H_
 #define _RIJNDAEL_H_
 

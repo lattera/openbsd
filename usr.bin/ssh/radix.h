@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/radix.h,v 1.2 2001/01/29 01:58:17 niklas Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/radix.h,v 1.2.4.1 2001/03/12 15:44:13 jason Exp $	*/
 
 /*
  * Copyright (c) 1999 Dug Song.  All rights reserved.

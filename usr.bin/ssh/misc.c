@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.4 2001/02/28 17:52:54 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.c,v 1.4.2.1 2001/03/12 15:44:12 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -25,11 +25,10 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.4 2001/02/28 17:52:54 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.4.2.1 2001/03/12 15:44:12 jason Exp $");
 
 #include "misc.h"
 #include "log.h"
-#include "xmalloc.h"
 
 char *
 chop(char *s)
@@ -95,21 +94,4 @@ strdelim(char **s)
 		*s += strspn(*s + 1, WHITESPACE) + 1;
 
 	return (old);
-}
-
-struct passwd *
-pwcopy(struct passwd *pw)
-{
-	struct passwd *copy = xmalloc(sizeof(*copy));
-
-	memset(copy, 0, sizeof(*copy));
-	copy->pw_name = xstrdup(pw->pw_name);
-	copy->pw_passwd = xstrdup(pw->pw_passwd);
-	copy->pw_gecos = xstrdup(pw->pw_gecos);
-	copy->pw_uid = pw->pw_uid;
-	copy->pw_gid = pw->pw_gid;
-	copy->pw_class = xstrdup(pw->pw_class);
-	copy->pw_dir = xstrdup(pw->pw_dir);
-	copy->pw_shell = xstrdup(pw->pw_shell);
-	return copy;
 }

@@ -75,12 +75,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.30.2.2 2000/11/08 21:31:12 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.30.2.3 2001/03/12 15:44:13 jason Exp $");
 
-#include "ssh.h"
 #include "xmalloc.h"
-
-#define _PATH_CP "cp"
+#include "atomicio.h"
+#include "pathnames.h"
+#include "log.h"
 
 /* For progressmeter() -- number of seconds before xfer considered "stalled" */
 #define STALLTIME	5
@@ -99,7 +99,7 @@ void addargs(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static struct timeval start;
 
 /* Number of bytes of current file transferred so far. */
-volatile unsigned long statbytes;
+volatile u_long statbytes;
 
 /* Total size of current file. */
 off_t totalbytes = 0;
@@ -110,14 +110,11 @@ char *curfile;
 /* This is set to non-zero to enable verbose mode. */
 int verbose_mode = 0;
 
-/* This is set to non-zero if compression is desired. */
-int compress = 0;
-
 /* This is set to zero if the progressmeter is not desired. */
 int showprogress = 1;
 
 /* This is the program to execute for the secured connection. ("ssh" or -S) */
-char *ssh_program = SSH_PROGRAM;
+char *ssh_program = _PATH_SSH_PROGRAM;
 
 /* This is the list of arguments that scp passes to ssh */
 struct {
@@ -185,19 +182,6 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	return 0;
 }
 
-void
-fatal(const char *fmt,...)
-{
-	va_list ap;
-	char buf[1024];
-
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "%s\n", buf);
-	exit(255);
-}
-
 typedef struct {
 	int cnt;
 	char *buf;
@@ -221,11 +205,13 @@ int pflag, iamremote, iamrecursive, targetshouldbedirectory;
 #define	CMDNEEDS	64
 char cmd[CMDNEEDS];		/* must hold "rcp -r -p -d\0" */
 
+int main(int, char *[]);
 int response(void);
 void rsource(char *, struct stat *);
 void sink(int, char *[]);
 void source(int, char *[]);
 void tolocal(int, char *[]);
+char *cleanhostname(char *);
 void toremote(char *, int, char *[]);
 void usage(void);
 
@@ -245,7 +231,7 @@ main(argc, argv)
 	addargs("-oFallBackToRsh no");
 
 	fflag = tflag = 0;
-	while ((ch = getopt(argc, argv, "dfprtvBCc:i:P:q46S:o:")) != EOF)
+	while ((ch = getopt(argc, argv, "dfprtvBCc:i:P:q46S:o:")) != -1)
 		switch (ch) {
 		/* User-visible flags. */
 		case '4':
@@ -308,7 +294,7 @@ main(argc, argv)
 	remin = STDIN_FILENO;
 	remout = STDOUT_FILENO;
 
-	if (fflag) {	
+	if (fflag) {
 		/* Follow "protocol", send data. */
 		(void) response();
 		source(argc, argv);
@@ -326,7 +312,8 @@ main(argc, argv)
 
 	remin = remout = -1;
 	/* Command to be executed on remote system using "ssh". */
-	(void) sprintf(cmd, "scp%s%s%s%s", verbose_mode ? " -v" : "",
+	(void) snprintf(cmd, sizeof cmd, "scp%s%s%s%s",
+	    verbose_mode ? " -v" : "",
 	    iamrecursive ? " -r" : "", pflag ? " -p" : "",
 	    targetshouldbedirectory ? " -d" : "");
 
@@ -397,20 +384,22 @@ toremote(targ, argc, argv)
 					suser = pwd->pw_name;
 				else if (!okname(suser))
 					continue;
-				(void) sprintf(bp,
-				    "%s%s -x -o'FallBackToRsh no' -n -l %s %s %s %s '%s%s%s:%s'",
-				     ssh_program, verbose_mode ? " -v" : "",
-				     suser, host, cmd, src,
-				     tuser ? tuser : "", tuser ? "@" : "",
-				     thost, targ);
+				snprintf(bp, len,
+				    "%s%s -x -o'FallBackToRsh no' -n "
+				    "-l %s %s %s %s '%s%s%s:%s'",
+				    ssh_program, verbose_mode ? " -v" : "",
+				    suser, host, cmd, src,
+				    tuser ? tuser : "", tuser ? "@" : "",
+				    thost, targ);
 			} else {
 				host = cleanhostname(argv[i]);
-				(void) sprintf(bp,
-				    "exec %s%s -x -o'FallBackToRsh no' -n %s %s %s '%s%s%s:%s'",
-				     ssh_program, verbose_mode ? " -v" : "",
-				     host, cmd, src,
-				     tuser ? tuser : "", tuser ? "@" : "",
-				     thost, targ);
+				snprintf(bp, len,
+				    "exec %s%s -x -o'FallBackToRsh no' -n %s "
+				    "%s %s '%s%s%s:%s'",
+				    ssh_program, verbose_mode ? " -v" : "",
+				    host, cmd, src,
+				    tuser ? tuser : "", tuser ? "@" : "",
+				    thost, targ);
 			}
 			if (verbose_mode)
 				fprintf(stderr, "Executing: %s\n", bp);
@@ -420,7 +409,7 @@ toremote(targ, argc, argv)
 			if (remin == -1) {
 				len = strlen(targ) + CMDNEEDS + 20;
 				bp = xmalloc(len);
-				(void) sprintf(bp, "%s -t %s", cmd, targ);
+				(void) snprintf(bp, len, "%s -t %s", cmd, targ);
 				host = cleanhostname(thost);
 				if (do_cmd(host, tuser, bp, &remin,
 				    &remout, argc) < 0)
@@ -447,7 +436,7 @@ tolocal(argc, argv)
 			len = strlen(_PATH_CP) + strlen(argv[i]) +
 			    strlen(argv[argc - 1]) + 20;
 			bp = xmalloc(len);
-			(void) sprintf(bp, "exec %s%s%s %s %s", _PATH_CP,
+			(void) snprintf(bp, len, "exec %s%s%s %s %s", _PATH_CP,
 			    iamrecursive ? " -r" : "", pflag ? " -p" : "",
 			    argv[i], argv[argc - 1]);
 			if (verbose_mode)
@@ -474,7 +463,7 @@ tolocal(argc, argv)
 		host = cleanhostname(host);
 		len = strlen(src) + CMDNEEDS + 20;
 		bp = xmalloc(len);
-		(void) sprintf(bp, "%s -f %s", cmd, src);
+		(void) snprintf(bp, len, "%s -f %s", cmd, src);
 		if (do_cmd(host, suser, bp, &remin, &remout, argc) < 0) {
 			(void) xfree(bp);
 			++errs;
@@ -531,18 +520,17 @@ syserr:			run_err("%s: %s", name, strerror(errno));
 			 * Make it compatible with possible future
 			 * versions expecting microseconds.
 			 */
-			(void) sprintf(buf, "T%lu 0 %lu 0\n",
-			    (unsigned long) stb.st_mtime,
-			    (unsigned long) stb.st_atime);
+			(void) snprintf(buf, sizeof buf, "T%lu 0 %lu 0\n",
+			    (u_long) stb.st_mtime,
+			    (u_long) stb.st_atime);
 			(void) atomicio(write, remout, buf, strlen(buf));
 			if (response() < 0)
 				goto next;
 		}
 #define	FILEMODEMASK	(S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO)
-		(void) sprintf(buf, "C%04o %lu %s\n",
-			     (unsigned int) (stb.st_mode & FILEMODEMASK),
-			       (unsigned long) stb.st_size,
-			       last);
+		snprintf(buf, sizeof buf, "C%04o %lu %s\n",
+		    (u_int) (stb.st_mode & FILEMODEMASK),
+		    (u_long) stb.st_size, last);
 		if (verbose_mode) {
 			fprintf(stderr, "Sending file modes: %s", buf);
 			fflush(stderr);
@@ -609,17 +597,17 @@ rsource(name, statp)
 	else
 		last++;
 	if (pflag) {
-		(void) sprintf(path, "T%lu 0 %lu 0\n",
-		    (unsigned long) statp->st_mtime,
-		    (unsigned long) statp->st_atime);
+		(void) snprintf(path, sizeof(path), "T%lu 0 %lu 0\n",
+		    (u_long) statp->st_mtime,
+		    (u_long) statp->st_atime);
 		(void) atomicio(write, remout, path, strlen(path));
 		if (response() < 0) {
 			closedir(dirp);
 			return;
 		}
 	}
-	(void) sprintf(path, "D%04o %d %.1024s\n",
-	    (unsigned int) (statp->st_mode & FILEMODEMASK), 0, last);
+	(void) snprintf(path, sizeof path, "D%04o %d %.1024s\n",
+	    (u_int) (statp->st_mode & FILEMODEMASK), 0, last);
 	if (verbose_mode)
 		fprintf(stderr, "Entering directory: %s", path);
 	(void) atomicio(write, remout, path, strlen(path));
@@ -636,7 +624,7 @@ rsource(name, statp)
 			run_err("%s/%s: name too long", name, dp->d_name);
 			continue;
 		}
-		(void) sprintf(path, "%s/%s", name, dp->d_name);
+		(void) snprintf(path, sizeof path, "%s/%s", name, dp->d_name);
 		vect[0] = path;
 		source(1, vect);
 	}
@@ -697,7 +685,7 @@ sink(argc, argv)
 		if (buf[0] == '\01' || buf[0] == '\02') {
 			if (iamremote == 0)
 				(void) atomicio(write, STDERR_FILENO,
-					     buf + 1, strlen(buf + 1));
+				    buf + 1, strlen(buf + 1));
 			if (buf[0] == '\02')
 				exit(1);
 			++errs;
@@ -766,9 +754,13 @@ sink(argc, argv)
 			size_t need;
 
 			need = strlen(targ) + strlen(cp) + 250;
-			if (need > cursize)
+			if (need > cursize) {
+				if (namebuf)
+					xfree(namebuf);
 				namebuf = xmalloc(need);
-			(void) sprintf(namebuf, "%s%s%s", targ,
+				cursize = need;
+			}
+			(void) snprintf(namebuf, need, "%s%s%s", targ,
 			    *targ ? "/" : "", cp);
 			np = namebuf;
 		} else
@@ -791,16 +783,18 @@ sink(argc, argv)
 				if (mkdir(np, mode | S_IRWXU) < 0)
 					goto bad;
 			}
-			vect[0] = np;
+			vect[0] = xstrdup(np);
 			sink(1, vect);
 			if (setimes) {
 				setimes = 0;
-				if (utimes(np, tv) < 0)
+				if (utimes(vect[0], tv) < 0)
 					run_err("%s: set times: %s",
-						np, strerror(errno));
+					    vect[0], strerror(errno));
 			}
 			if (mod_flag)
-				(void) chmod(np, mode);
+				(void) chmod(vect[0], mode);
+			if (vect[0])
+				xfree(vect[0]);
 			continue;
 		}
 		omode = mode;
@@ -1022,7 +1016,8 @@ okname(cp0)
 		c = *cp;
 		if (c & 0200)
 			goto bad;
-		if (!isalpha(c) && !isdigit(c) && c != '_' && c != '-' && c != '.')
+		if (!isalpha(c) && !isdigit(c) &&
+		    c != '_' && c != '-' && c != '.' && c != '+')
 			goto bad;
 	} while (*++cp);
 	return (1);
@@ -1089,7 +1084,7 @@ updateprogressmeter(int ignore)
 }
 
 int
-foregroundproc()
+foregroundproc(void)
 {
 	static pid_t pgrp = -1;
 	int ctty_pgrp;
@@ -1147,9 +1142,9 @@ progressmeter(int flag)
 		i++;
 		abbrevsize >>= 10;
 	}
-	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %5qd %c%c ",
-	     (quad_t) abbrevsize, prefixes[i], prefixes[i] == ' ' ? ' ' :
-		 'B');
+	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %5llu %c%c ",
+	    (unsigned long long) abbrevsize, prefixes[i],
+	    prefixes[i] == ' ' ? ' ' : 'B');
 
 	timersub(&now, &lastupdate, &wait);
 	if (cursize > lastsize) {
@@ -1164,16 +1159,17 @@ progressmeter(int flag)
 	timersub(&now, &start, &td);
 	elapsed = td.tv_sec + (td.tv_usec / 1000000.0);
 
-	if (statbytes <= 0 || elapsed <= 0.0 || cursize > totalbytes) {
+	if (flag != 1 &&
+	    (statbytes <= 0 || elapsed <= 0.0 || cursize > totalbytes)) {
 		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-			 "   --:-- ETA");
+		    "   --:-- ETA");
 	} else if (wait.tv_sec >= STALLTIME) {
 		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-			 " - stalled -");
+		    " - stalled -");
 	} else {
 		if (flag != 1)
-			remaining =
-			    (int)(totalbytes / (statbytes / elapsed) - elapsed);
+			remaining = (int)(totalbytes / (statbytes / elapsed) -
+			    elapsed);
 		else
 			remaining = elapsed;
 

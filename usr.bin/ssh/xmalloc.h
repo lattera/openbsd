@@ -14,7 +14,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.3.2.2 2000/11/08 21:31:41 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/xmalloc.h,v 1.3.2.3 2001/03/12 15:44:18 jason Exp $"); */
 
 #ifndef XMALLOC_H
 #define XMALLOC_H

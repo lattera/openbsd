@@ -23,17 +23,16 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/nchan.c,v 1.17.2.2 2000/11/08 21:30:59 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/nchan.c,v 1.17.2.3 2001/03/12 15:44:12 jason Exp $");
 
-#include "ssh.h"
-
+#include "ssh1.h"
+#include "ssh2.h"
 #include "buffer.h"
 #include "packet.h"
 #include "channels.h"
 #include "nchan.h"
-
-#include "ssh2.h"
 #include "compat.h"
+#include "log.h"
 
 /* functions manipulating channel states */
 /*
@@ -253,6 +252,8 @@ chan_send_oclose1(Channel *c)
 static void
 chan_delete_if_full_closed1(Channel *c)
 {
+	debug3("channel %d: chan_delete_if_full_closed1: istate %d ostate %d",
+	    c->self, c->istate, c->ostate);
 	if (c->istate == CHAN_INPUT_CLOSED && c->ostate == CHAN_OUTPUT_CLOSED) {
 		debug("channel %d: full closed", c->self);
 		channel_free(c->self);
@@ -403,6 +404,8 @@ chan_send_close2(Channel *c)
 static void
 chan_delete_if_full_closed2(Channel *c)
 {
+	debug3("channel %d: chan_delete_if_full_closed2: istate %d ostate %d",
+	    c->self, c->istate, c->ostate);
 	if (c->istate == CHAN_INPUT_CLOSED && c->ostate == CHAN_OUTPUT_CLOSED) {
 		if (!(c->flags & CHAN_CLOSE_SENT)) {
 			chan_send_close2(c);

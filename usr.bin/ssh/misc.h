@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.3 2001/02/22 21:59:44 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/misc.h,v 1.3.2.1 2001/03/12 15:44:12 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -19,5 +19,3 @@ char	*strdelim(char **s);
 
 /* set filedescriptor to non-blocking */
 void	set_nonblock(int fd);
-
-struct passwd * pwcopy(struct passwd *pw);

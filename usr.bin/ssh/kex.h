@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.2.2.3 2001/03/12 15:44:11 jason Exp $	*/
+
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -24,9 +26,11 @@
 #ifndef KEX_H
 #define KEX_H
 
+#include <openssl/evp.h>
+#include "buffer.h"
+
 #define	KEX_DH1		"diffie-hellman-group1-sha1"
 #define	KEX_DHGEX	"diffie-hellman-group-exchange-sha1"
-#define	KEX_DSS		"ssh-dss"
 
 enum kex_init_proposals {
 	PROPOSAL_KEX_ALGS,
@@ -52,7 +56,7 @@ enum kex_exchange {
 	DH_GRP1_SHA1,
 	DH_GEX_SHA1
 };
-		
+
 typedef struct Kex Kex;
 typedef struct Mac Mac;
 typedef struct Comp Comp;
@@ -62,15 +66,15 @@ struct Enc {
 	char		*name;
 	Cipher		*cipher;
 	int		enabled;
-	unsigned char	*key;
-	unsigned char	*iv;
+	u_char	*key;
+	u_char	*iv;
 };
 struct Mac {
 	char		*name;
 	int		enabled;
 	EVP_MD		*md;
 	int		mac_len;
-	unsigned char	*key;
+	u_char	*key;
 	int		key_len;
 };
 struct Comp {
@@ -85,7 +89,7 @@ struct Kex {
 	int		we_need;
 	int		server;
 	char		*name;
-	char		*hostkeyalg;
+	int		hostkey_type;
 	int		kex_type;
 };
 
@@ -97,14 +101,15 @@ kex_exchange_kexinit(
 Kex *
 kex_choose_conf(char *cprop[PROPOSAL_MAX],
     char *sprop[PROPOSAL_MAX], int server);
-int	kex_derive_keys(Kex *k, unsigned char *hash, BIGNUM *shared_secret);
+int	kex_derive_keys(Kex *k, u_char *hash, BIGNUM *shared_secret);
 void	packet_set_kex(Kex *k);
 int	dh_pub_is_valid(DH *dh, BIGNUM *dh_pub);
 DH	*dh_new_group_asc(const char *, const char *);
 DH	*dh_new_group(BIGNUM *, BIGNUM *);
-DH	*dh_new_group1();
+void	dh_gen_key(DH *);
+DH	*dh_new_group1(void);
 
-unsigned char *
+u_char *
 kex_hash(
     char *client_version_string,
     char *server_version_string,
@@ -115,7 +120,7 @@ kex_hash(
     BIGNUM *server_dh_pub,
     BIGNUM *shared_secret);
 
-unsigned char *
+u_char *
 kex_hash_gex(
     char *client_version_string,
     char *server_version_string,

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.12.2.2 2001/03/12 15:44:11 jason Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland

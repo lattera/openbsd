@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/nchan.h,v 1.7.2.2 2000/11/08 21:31:00 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/nchan.h,v 1.7.2.3 2001/03/12 15:44:12 jason Exp $"); */
 
 #ifndef NCHAN_H
 #define NCHAN_H

@@ -12,11 +12,11 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.c,v 1.13.2.2 2000/11/08 21:31:03 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.c,v 1.13.2.3 2001/03/12 15:44:12 jason Exp $");
 
 #include <util.h>
 #include "pty.h"
-#include "ssh.h"
+#include "log.h"
 
 /* Pty allocated with _getpty gets broken if we do I_PUSH:es to it. */
 #if defined(HAVE__GETPTY) || defined(HAVE_OPENPTY)
@@ -190,7 +190,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 
 	/* First disconnect from the old controlling tty. */
 #ifdef TIOCNOTTY
-	fd = open("/dev/tty", O_RDWR | O_NOCTTY);
+	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
 		(void) ioctl(fd, TIOCNOTTY, NULL);
 		close(fd);
@@ -203,7 +203,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	 * Verify that we are successfully disconnected from the controlling
 	 * tty.
 	 */
-	fd = open("/dev/tty", O_RDWR | O_NOCTTY);
+	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
 		error("Failed to disconnect from controlling tty.");
 		close(fd);
@@ -211,12 +211,8 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	/* Make it our controlling tty. */
 #ifdef TIOCSCTTY
 	debug("Setting controlling tty using TIOCSCTTY.");
-	/*
-	 * We ignore errors from this, because HPSUX defines TIOCSCTTY, but
-	 * returns EINVAL with these arguments, and there is absolutely no
-	 * documentation.
-	 */
-	ioctl(*ttyfd, TIOCSCTTY, NULL);
+	if (ioctl(*ttyfd, TIOCSCTTY, NULL) < 0)
+		error("ioctl(TIOCSCTTY): %.100s", strerror(errno));
 #endif /* TIOCSCTTY */
 	fd = open(ttyname, O_RDWR);
 	if (fd < 0)
@@ -225,7 +221,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 		close(fd);
 
 	/* Verify that we now have a controlling tty. */
-	fd = open("/dev/tty", O_WRONLY);
+	fd = open(_PATH_TTY, O_WRONLY);
 	if (fd < 0)
 		error("open /dev/tty failed - could not set controlling tty: %.100s",
 		      strerror(errno));
@@ -254,6 +250,7 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 	struct group *grp;
 	gid_t gid;
 	mode_t mode;
+	struct stat st;
 
 	/* Determine the group to make the owner of the tty. */
 	grp = getgrnam("tty");
@@ -265,11 +262,36 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 		mode = S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH;
 	}
 
-	/* Change ownership of the tty. */
-	if (chown(ttyname, pw->pw_uid, gid) < 0)
-		fatal("chown(%.100s, %d, %d) failed: %.100s",
-		    ttyname, pw->pw_uid, gid, strerror(errno));
-	if (chmod(ttyname, mode) < 0)
-		fatal("chmod(%.100s, 0%o) failed: %.100s",
-		    ttyname, mode, strerror(errno));
+	/*
+	 * Change owner and mode of the tty as required.
+	 * Warn but continue if filesystem is read-only and the uids match.
+	 */
+	if (stat(ttyname, &st))
+		fatal("stat(%.100s) failed: %.100s", ttyname,
+		    strerror(errno));
+
+	if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
+		if (chown(ttyname, pw->pw_uid, gid) < 0) {
+			if (errno == EROFS && st.st_uid == pw->pw_uid)
+				error("chown(%.100s, %d, %d) failed: %.100s",
+				      ttyname, pw->pw_uid, gid,
+				      strerror(errno));
+			else
+				fatal("chown(%.100s, %d, %d) failed: %.100s",
+				      ttyname, pw->pw_uid, gid,
+				      strerror(errno));
+		}
+	}
+
+	if ((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != mode) {
+		if (chmod(ttyname, mode) < 0) {
+			if (errno == EROFS &&
+			    (st.st_mode & (S_IRGRP | S_IROTH)) == 0)
+				error("chmod(%.100s, 0%o) failed: %.100s",
+				      ttyname, mode, strerror(errno));
+			else
+				fatal("chmod(%.100s, 0%o) failed: %.100s",
+				      ttyname, mode, strerror(errno));
+		}
+	}
 }

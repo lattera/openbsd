@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/match.h,v 1.1.2.3 2001/03/12 15:44:12 jason Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -26,6 +28,6 @@ int     match_pattern(const char *s, const char *pattern);
  * indicate negation).  Returns -1 if negation matches, 1 if there is
  * a positive match, 0 if there is no match at all.
  */
-int     match_hostname(const char *host, const char *pattern, unsigned int len);
+int     match_hostname(const char *host, const char *pattern, u_int len);
 
 #endif

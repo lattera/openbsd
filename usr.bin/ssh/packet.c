@@ -37,13 +37,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.32.2.2 2000/11/08 21:31:01 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.32.2.3 2001/03/12 15:44:12 jason Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
 #include "packet.h"
 #include "bufaux.h"
-#include "ssh.h"
 #include "crc32.h"
 #include "getput.h"
 
@@ -52,15 +51,14 @@ RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.32.2.2 2000/11/08 21:31:01 jason E
 #include "channels.h"
 
 #include "compat.h"
+#include "ssh1.h"
 #include "ssh2.h"
 
-#include <openssl/bn.h>
-#include <openssl/dh.h>
-#include <openssl/hmac.h>
-#include "buffer.h"
 #include "cipher.h"
 #include "kex.h"
-#include "hmac.h"
+#include "mac.h"
+#include "log.h"
+#include "canohost.h"
 
 #ifdef PACKET_DEBUG
 #define DBG(x) x
@@ -84,7 +82,7 @@ static int connection_out = -1;
 static int cipher_type = SSH_CIPHER_NONE;
 
 /* Protocol flags for the remote side. */
-static unsigned int remote_protocol_flags = 0;
+static u_int remote_protocol_flags = 0;
 
 /* Encryption context for receiving data.  This is only used for decryption. */
 static CipherContext receive_context;
@@ -167,8 +165,8 @@ packet_set_connection(int fd_in, int fd_out)
 	connection_in = fd_in;
 	connection_out = fd_out;
 	cipher_type = SSH_CIPHER_NONE;
-	cipher_init(&send_context, none, (unsigned char *) "", 0, NULL, 0);
-	cipher_init(&receive_context, none, (unsigned char *) "", 0, NULL, 0);
+	cipher_init(&send_context, none, (u_char *) "", 0, NULL, 0);
+	cipher_init(&receive_context, none, (u_char *) "", 0, NULL, 0);
 	if (!initialized) {
 		initialized = 1;
 		buffer_init(&input);
@@ -281,7 +279,7 @@ packet_close()
 /* Sets remote side protocol flags. */
 
 void
-packet_set_protocol_flags(unsigned int protocol_flags)
+packet_set_protocol_flags(u_int protocol_flags)
 {
 	remote_protocol_flags = protocol_flags;
 	channel_set_options((protocol_flags & SSH_PROTOFLAG_HOST_IN_FWD_OPEN) != 0);
@@ -289,7 +287,7 @@ packet_set_protocol_flags(unsigned int protocol_flags)
 
 /* Returns the remote protocol flags set earlier by the above function. */
 
-unsigned int
+u_int
 packet_get_protocol_flags()
 {
 	return remote_protocol_flags;
@@ -318,7 +316,7 @@ packet_start_compression(int level)
 
 void
 packet_encrypt(CipherContext * cc, void *dest, void *src,
-    unsigned int bytes)
+    u_int bytes)
 {
 	cipher_encrypt(cc, dest, src, bytes);
 }
@@ -329,7 +327,7 @@ packet_encrypt(CipherContext * cc, void *dest, void *src,
  */
 
 void
-packet_decrypt(CipherContext *context, void *dest, void *src, unsigned int bytes)
+packet_decrypt(CipherContext *context, void *dest, void *src, u_int bytes)
 {
 	/*
 	 * Cryptographic attack detector for ssh - Modifications for packet.c
@@ -350,7 +348,7 @@ packet_decrypt(CipherContext *context, void *dest, void *src, unsigned int bytes
  */
 
 void
-packet_set_encryption_key(const unsigned char *key, unsigned int keylen,
+packet_set_encryption_key(const u_char *key, u_int keylen,
     int number)
 {
 	Cipher *cipher = cipher_by_number(number);
@@ -410,7 +408,7 @@ packet_put_char(int value)
 /* Appends an integer to the packet data. */
 
 void
-packet_put_int(unsigned int value)
+packet_put_int(u_int value)
 {
 	buffer_put_int(&outgoing_packet, value);
 }
@@ -418,7 +416,7 @@ packet_put_int(unsigned int value)
 /* Appends a string to packet data. */
 
 void
-packet_put_string(const char *buf, unsigned int len)
+packet_put_string(const char *buf, u_int len)
 {
 	buffer_put_string(&outgoing_packet, buf, len);
 }
@@ -429,7 +427,7 @@ packet_put_cstring(const char *str)
 }
 
 void
-packet_put_raw(const char *buf, unsigned int len)
+packet_put_raw(const char *buf, u_int len)
 {
 	buffer_append(&outgoing_packet, buf, len);
 }
@@ -454,11 +452,11 @@ packet_put_bignum2(BIGNUM * value)
  */
 
 void
-packet_send1()
+packet_send1(void)
 {
 	char buf[8], *cp;
 	int i, padding, len;
-	unsigned int checksum;
+	u_int checksum;
 	u_int32_t rand = 0;
 
 	/*
@@ -493,7 +491,7 @@ packet_send1()
 	buffer_consume(&outgoing_packet, 8 - padding);
 
 	/* Add check bytes. */
-	checksum = ssh_crc32((unsigned char *) buffer_ptr(&outgoing_packet),
+	checksum = ssh_crc32((u_char *) buffer_ptr(&outgoing_packet),
 	    buffer_len(&outgoing_packet));
 	PUT_32BIT(buf, checksum);
 	buffer_append(&outgoing_packet, buf, 4);
@@ -528,14 +526,14 @@ packet_send1()
  * Finalize packet in SSH2 format (compress, mac, encrypt, enqueue)
  */
 void
-packet_send2()
+packet_send2(void)
 {
-	unsigned char *macbuf = NULL;
+	static u_int32_t seqnr = 0;
+	u_char *macbuf = NULL;
 	char *cp;
-	unsigned int packet_length = 0;
-	unsigned int i, padlen, len;
+	u_int packet_length = 0;
+	u_int i, padlen, len;
 	u_int32_t rand = 0;
-	static unsigned int seqnr = 0;
 	int type;
 	Enc *enc   = NULL;
 	Mac *mac   = NULL;
@@ -603,11 +601,9 @@ packet_send2()
 
 	/* compute MAC over seqnr and packet(length fields, payload, padding) */
 	if (mac && mac->enabled) {
-		macbuf = hmac( mac->md, seqnr,
-		    (unsigned char *) buffer_ptr(&outgoing_packet),
-		    buffer_len(&outgoing_packet),
-		    mac->key, mac->key_len
-		);
+		macbuf = mac_compute(mac, seqnr,
+		    (u_char *) buffer_ptr(&outgoing_packet),
+		    buffer_len(&outgoing_packet));
 		DBG(debug("done calc MAC out #%d", seqnr));
 	}
 	/* encrypt packet and append to output buffer. */
@@ -692,7 +688,9 @@ packet_read(int *payload_len_ptr)
 		FD_SET(connection_in, &set);
 
 		/* Wait for some data to arrive. */
-		select(connection_in + 1, &set, NULL, NULL, NULL);
+		while (select(connection_in + 1, &set, NULL, NULL, NULL) == -1 &&
+		    (errno == EAGAIN || errno == EINTR))
+			;
 
 		/* Read data from the socket. */
 		len = read(connection_in, buf, sizeof(buf));
@@ -742,16 +740,16 @@ packet_read_expect(int *payload_len_ptr, int expected_type)
 int
 packet_read_poll1(int *payload_len_ptr)
 {
-	unsigned int len, padded_len;
-	unsigned char *ucp;
+	u_int len, padded_len;
+	u_char *ucp;
 	char buf[8], *cp;
-	unsigned int checksum, stored_checksum;
+	u_int checksum, stored_checksum;
 
 	/* Check if input size is less than minimum packet size. */
 	if (buffer_len(&input) < 4 + 8)
 		return SSH_MSG_NONE;
 	/* Get length of incoming packet. */
-	ucp = (unsigned char *) buffer_ptr(&input);
+	ucp = (u_char *) buffer_ptr(&input);
 	len = GET_32BIT(ucp);
 	if (len < 1 + 2 + 2 || len > 256 * 1024)
 		packet_disconnect("Bad packet length %d.", len);
@@ -778,7 +776,7 @@ packet_read_poll1(int *payload_len_ptr)
 #endif
 
 	/* Compute packet checksum. */
-	checksum = ssh_crc32((unsigned char *) buffer_ptr(&incoming_packet),
+	checksum = ssh_crc32((u_char *) buffer_ptr(&incoming_packet),
 	    buffer_len(&incoming_packet) - 4);
 
 	/* Skip padding. */
@@ -790,7 +788,7 @@ packet_read_poll1(int *payload_len_ptr)
 		packet_disconnect("packet_read_poll: len %d != buffer_len %d.",
 		    len, buffer_len(&incoming_packet));
 
-	ucp = (unsigned char *) buffer_ptr(&incoming_packet) + len - 4;
+	ucp = (u_char *) buffer_ptr(&incoming_packet) + len - 4;
 	stored_checksum = GET_32BIT(ucp);
 	if (checksum != stored_checksum)
 		packet_disconnect("Corrupted check bytes on input.");
@@ -811,18 +809,18 @@ packet_read_poll1(int *payload_len_ptr)
 	*payload_len_ptr = buffer_len(&incoming_packet);
 
 	/* Return type. */
-	return (unsigned char) buf[0];
+	return (u_char) buf[0];
 }
 
 int
 packet_read_poll2(int *payload_len_ptr)
 {
-	unsigned int padlen, need;
-	unsigned char buf[8], *macbuf;
-	unsigned char *ucp;
+	static u_int32_t seqnr = 0;
+	static u_int packet_length = 0;
+	u_int padlen, need;
+	u_char buf[8], *macbuf;
+	u_char *ucp;
 	char *cp;
-	static unsigned int packet_length = 0;
-	static unsigned int seqnr = 0;
 	int type;
 	int maclen, block_size;
 	Enc *enc   = NULL;
@@ -848,7 +846,7 @@ packet_read_poll2(int *payload_len_ptr)
 		buffer_append_space(&incoming_packet, &cp, block_size);
 		packet_decrypt(&receive_context, cp, buffer_ptr(&input),
 		    block_size);
-		ucp = (unsigned char *) buffer_ptr(&incoming_packet);
+		ucp = (u_char *) buffer_ptr(&incoming_packet);
 		packet_length = GET_32BIT(ucp);
 		if (packet_length < 1 + 4 || packet_length > 256 * 1024) {
 			buffer_dump(&incoming_packet);
@@ -882,11 +880,9 @@ packet_read_poll2(int *payload_len_ptr)
 	 * increment sequence number for incoming packet
 	 */
 	if (mac && mac->enabled) {
-		macbuf = hmac( mac->md, seqnr,
-		    (unsigned char *) buffer_ptr(&incoming_packet),
-		    buffer_len(&incoming_packet),
-		    mac->key, mac->key_len
-		);
+		macbuf = mac_compute(mac, seqnr,
+		    (u_char *) buffer_ptr(&incoming_packet),
+		    buffer_len(&incoming_packet));
 		if (memcmp(macbuf, buffer_ptr(&input), mac->mac_len) != 0)
 			packet_disconnect("Corrupted MAC on input.");
 		DBG(debug("MAC #%d ok", seqnr));
@@ -926,7 +922,7 @@ packet_read_poll2(int *payload_len_ptr)
 	packet_length = 0;
 
 	/* extract packet type */
-	type = (unsigned char)buf[0];
+	type = (u_char)buf[0];
 
 	if (type == SSH2_MSG_NEWKEYS) {
 		if (kex==NULL || mac==NULL || enc==NULL || comp==NULL)
@@ -949,7 +945,7 @@ packet_read_poll2(int *payload_len_ptr)
 	fprintf(stderr, "read/plain[%d]:\r\n",type);
 	buffer_dump(&incoming_packet);
 #endif
-	return (unsigned char)type;
+	return (u_char)type;
 }
 
 int
@@ -979,14 +975,15 @@ packet_read_poll(int *payload_len_ptr)
 			case SSH2_MSG_DISCONNECT:
 				reason = packet_get_int();
 				msg = packet_get_string(NULL);
-				log("Received disconnect: %d: %.900s", reason, msg);
+				log("Received disconnect from %s: %d: %.400s", get_remote_ipaddr(),
+					reason, msg);
 				xfree(msg);
 				fatal_cleanup();
 				break;
 			default:
 				return type;
 				break;
-			}	
+			}
 		} else {
 			switch(type) {
 			case SSH_MSG_IGNORE:
@@ -998,7 +995,8 @@ packet_read_poll(int *payload_len_ptr)
 				break;
 			case SSH_MSG_DISCONNECT:
 				msg = packet_get_string(NULL);
-				log("Received disconnect: %.900s", msg);
+				log("Received disconnect from %s: %.400s", get_remote_ipaddr(),
+					msg);
 				fatal_cleanup();
 				xfree(msg);
 				break;
@@ -1007,7 +1005,7 @@ packet_read_poll(int *payload_len_ptr)
 					DBG(debug("received packet type %d", type));
 				return type;
 				break;
-			}	
+			}
 		}
 	}
 }
@@ -1018,24 +1016,24 @@ packet_read_poll(int *payload_len_ptr)
  */
 
 void
-packet_process_incoming(const char *buf, unsigned int len)
+packet_process_incoming(const char *buf, u_int len)
 {
 	buffer_append(&input, buf, len);
 }
 
 /* Returns a character from the packet. */
 
-unsigned int
+u_int
 packet_get_char()
 {
 	char ch;
 	buffer_get(&incoming_packet, &ch, 1);
-	return (unsigned char) ch;
+	return (u_char) ch;
 }
 
 /* Returns an integer from the packet data. */
 
-unsigned int
+u_int
 packet_get_int()
 {
 	return buffer_get_int(&incoming_packet);
@@ -1081,7 +1079,7 @@ packet_remaining(void)
  */
 
 char *
-packet_get_string(unsigned int *length_ptr)
+packet_get_string(u_int *length_ptr)
 {
 	return buffer_get_string(&incoming_packet, length_ptr);
 }
@@ -1100,6 +1098,9 @@ packet_send_debug(const char *fmt,...)
 {
 	char buf[1024];
 	va_list args;
+
+	if (compat20 && (datafellows & SSH_BUG_DEBUG))
+		return;
 
 	va_start(args, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, args);
@@ -1196,9 +1197,12 @@ packet_write_wait()
 	packet_write_poll();
 	while (packet_have_data_to_write()) {
 		fd_set set;
+
 		FD_ZERO(&set);
 		FD_SET(connection_out, &set);
-		select(connection_out + 1, NULL, &set, NULL, NULL);
+		while (select(connection_out + 1, NULL, &set, NULL, NULL) == -1 &&
+		    (errno == EAGAIN || errno == EINTR))
+			;
 		packet_write_poll();
 	}
 }
@@ -1225,9 +1229,16 @@ packet_not_very_much_data_to_write()
 /* Informs that the current session is interactive.  Sets IP flags for that. */
 
 void
-packet_set_interactive(int interactive, int keepalives)
+packet_set_interactive(int interactive)
 {
+	static int called = 0;
+	int lowdelay = IPTOS_LOWDELAY;
+	int throughput = IPTOS_THROUGHPUT;
 	int on = 1;
+
+	if (called)
+		return;
+	called = 1;
 
 	/* Record that we are in interactive mode. */
 	interactive_mode = interactive;
@@ -1235,35 +1246,28 @@ packet_set_interactive(int interactive, int keepalives)
 	/* Only set socket options if using a socket.  */
 	if (!packet_connection_is_on_socket())
 		return;
-	if (keepalives) {
-		/* Set keepalives if requested. */
-		if (setsockopt(connection_in, SOL_SOCKET, SO_KEEPALIVE, (void *) &on,
-		    sizeof(on)) < 0)
-			error("setsockopt SO_KEEPALIVE: %.100s", strerror(errno));
-	}
 	/*
-	 * IPTOS_LOWDELAY, TCP_NODELAY and IPTOS_THROUGHPUT are IPv4 only
+	 * IPTOS_LOWDELAY and IPTOS_THROUGHPUT are IPv4 only
 	 */
-	if (!packet_connection_is_ipv4())
-		return;
 	if (interactive) {
 		/*
 		 * Set IP options for an interactive connection.  Use
 		 * IPTOS_LOWDELAY and TCP_NODELAY.
 		 */
-		int lowdelay = IPTOS_LOWDELAY;
-		if (setsockopt(connection_in, IPPROTO_IP, IP_TOS, (void *) &lowdelay,
-		    sizeof(lowdelay)) < 0)
-			error("setsockopt IPTOS_LOWDELAY: %.100s", strerror(errno));
+		if (packet_connection_is_ipv4()) {
+			if (setsockopt(connection_in, IPPROTO_IP, IP_TOS,
+			    (void *) &lowdelay, sizeof(lowdelay)) < 0)
+				error("setsockopt IPTOS_LOWDELAY: %.100s",
+				    strerror(errno));
+		}
 		if (setsockopt(connection_in, IPPROTO_TCP, TCP_NODELAY, (void *) &on,
 		    sizeof(on)) < 0)
 			error("setsockopt TCP_NODELAY: %.100s", strerror(errno));
-	} else {
+	} else if (packet_connection_is_ipv4()) {
 		/*
 		 * Set IP options for a non-interactive connection.  Use
 		 * IPTOS_THROUGHPUT.
 		 */
-		int throughput = IPTOS_THROUGHPUT;
 		if (setsockopt(connection_in, IPPROTO_IP, IP_TOS, (void *) &throughput,
 		    sizeof(throughput)) < 0)
 			error("setsockopt IPTOS_THROUGHPUT: %.100s", strerror(errno));

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* $OpenBSD: src/usr.bin/ssh/authfile.h,v 1.1.2.1 2000/11/08 21:30:27 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/authfile.h,v 1.1.2.2 2001/03/12 15:44:08 jason Exp $ */
 
 #ifndef AUTHFILE_H
 #define AUTHFILE_H

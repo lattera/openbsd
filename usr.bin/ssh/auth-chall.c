@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001 Markus Friedl.  All rights reserved.
+ * Copyright (c) 2001 Markus Friedl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-chall.c,v 1.5 2001/03/02 18:54:30 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-chall.c,v 1.5.2.1 2001/03/12 15:44:07 jason Exp $");
 
 #include "auth.h"
 

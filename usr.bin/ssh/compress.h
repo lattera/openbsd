@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/compress.h,v 1.4.2.2 2000/11/08 21:30:40 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/compress.h,v 1.4.2.3 2001/03/12 15:44:09 jason Exp $"); */
 
 #ifndef COMPRESS_H
 #define COMPRESS_H
@@ -23,7 +23,7 @@
 void    buffer_compress_init(int level);
 
 /* Frees any data structures allocated by buffer_compress_init. */
-void    buffer_compress_uninit();
+void    buffer_compress_uninit(void);
 
 /*
  * Compresses the contents of input_buffer into output_buffer.  All packets

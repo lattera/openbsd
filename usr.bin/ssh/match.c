@@ -12,9 +12,9 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.6.2.3 2000/11/08 21:30:56 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.6.2.4 2001/03/12 15:44:12 jason Exp $");
 
-#include "ssh.h"
+#include "match.h"
 
 /*
  * Returns true if the given string matches the pattern (which may contain ?
@@ -87,12 +87,12 @@ match_pattern(const char *s, const char *pattern)
  */
 
 int
-match_hostname(const char *host, const char *pattern, unsigned int len)
+match_hostname(const char *host, const char *pattern, u_int len)
 {
 	char sub[1024];
 	int negated;
 	int got_positive;
-	unsigned int i, subi;
+	u_int i, subi;
 
 	got_positive = 0;
 	for (i = 0; i < len;) {

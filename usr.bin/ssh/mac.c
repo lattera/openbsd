@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/mac.c,v 1.1 2001/02/11 12:59:24 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/mac.c,v 1.1.4.1 2001/03/12 15:44:11 jason Exp $");
 
 #include <openssl/hmac.h>
 

@@ -23,13 +23,14 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.13.2.3 2000/11/08 21:30:38 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.13.2.4 2001/03/12 15:44:09 jason Exp $");
 
-#include "ssh.h"
+#include <regex.h>
+
 #include "packet.h"
 #include "xmalloc.h"
 #include "compat.h"
-#include <regex.h>
+#include "log.h"
 
 int compat13 = 0;
 int compat20 = 0;
@@ -58,19 +59,27 @@ compat_datafellows(const char *version)
 		char	*pat;
 		int	bugs;
 	} check[] = {
-		{ "^OpenSSH[-_]2\\.[012]",	SSH_OLD_SESSIONID },
+		{ "^OpenSSH[-_]2\\.[012]",
+					SSH_OLD_SESSIONID|SSH_BUG_BANNER },
+		{ "^OpenSSH_2\\.3\\.0", SSH_BUG_BANNER },
+		{ "^OpenSSH",		0 },
 		{ "MindTerm",		0 },
-		{ "^2\\.1\\.0 ",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
-					SSH_OLD_SESSIONID },
+		{ "^2\\.1\\.0",		SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
+					SSH_OLD_SESSIONID|SSH_BUG_DEBUG },
+		{ "^2\\.0\\.1[3-9]",	SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
+					SSH_OLD_SESSIONID|SSH_BUG_DEBUG|
+					SSH_BUG_PKSERVICE|SSH_BUG_X11FWD },
 		{ "^2\\.0\\.",		SSH_BUG_SIGBLOB|SSH_BUG_HMAC|
-					SSH_OLD_SESSIONID|
-					SSH_BUG_PUBKEYAUTH|SSH_BUG_X11FWD },
-		{ "^2\\.[23]\\.0 ",	SSH_BUG_HMAC},
+					SSH_OLD_SESSIONID|SSH_BUG_DEBUG|
+					SSH_BUG_PKSERVICE|SSH_BUG_X11FWD|
+					SSH_BUG_PKAUTH },
+		{ "^2\\.[23]\\.0",	SSH_BUG_HMAC},
 		{ "^2\\.[2-9]\\.",	0 },
 		{ "^2\\.4$",		SSH_OLD_SESSIONID}, /* Van Dyke */
 		{ "^3\\.0 SecureCRT",	SSH_OLD_SESSIONID},
 		{ "^1\\.7 SecureFX",	SSH_OLD_SESSIONID},
-		{ "^2\\.",		SSH_BUG_HMAC},	/* XXX fallback */
+		{ "^1\\.2\\.1[89]",	SSH_BUG_IGNOREMSG},
+		{ "^1\\.2\\.2[012]",	SSH_BUG_IGNOREMSG},
 		{ NULL,			0 }
 	};
 	/* process table, return first match */
@@ -85,7 +94,7 @@ compat_datafellows(const char *version)
 		ret = regexec(&reg, version, 0, NULL, 0);
 		regfree(&reg);
 		if (ret == 0) {
-			debug("match: %s pat %s\n", version, check[i].pat);
+			debug("match: %s pat %s", version, check[i].pat);
 			datafellows = check[i].bugs;
 			return;
 		}

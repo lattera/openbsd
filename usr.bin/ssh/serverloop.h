@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/serverloop.h,v 1.2 2001/01/29 01:58:17 niklas Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/serverloop.h,v 1.2.4.1 2001/03/12 15:44:14 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

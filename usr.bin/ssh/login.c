@@ -39,11 +39,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/login.c,v 1.13.2.2 2000/11/08 21:30:56 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/login.c,v 1.13.2.3 2001/03/12 15:44:11 jason Exp $");
 
 #include <util.h>
 #include <utmp.h>
-#include "ssh.h"
+#include "login.h"
+#include "log.h"
 
 /*
  * Returns the time when the user last logged in.  Returns 0 if the
@@ -56,9 +57,9 @@ RCSID("$OpenBSD: src/usr.bin/ssh/Attic/login.c,v 1.13.2.2 2000/11/08 21:30:56 ja
  * is found).  The name of the host used last time is returned in buf.
  */
 
-unsigned long
+u_long
 get_last_login_time(uid_t uid, const char *logname,
-		    char *buf, unsigned int bufsize)
+		    char *buf, u_int bufsize)
 {
 	struct lastlog ll;
 	char *lastlog;

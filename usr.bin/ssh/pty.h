@@ -12,7 +12,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.h,v 1.6.2.2 2000/11/08 21:31:05 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.h,v 1.6.2.3 2001/03/12 15:44:13 jason Exp $"); */
 
 #ifndef PTY_H
 #define PTY_H
