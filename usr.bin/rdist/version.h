@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1989 The Regents of the University of California.
+ * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,27 @@
  */
 
 /*
- * $Id: pathnames.h,v 6.8 1993/01/05 21:27:59 mcooper Exp mcooper $
- * @(#)pathnames.h	5.4 (Berkeley) 8/27/90
+ * $Id: version.h,v 6.26 1996/01/17 21:04:13 mcooper Exp $
  */
 
-#include "config.h"
+/*
+ * The rdist protocol version number.  This should be changed
+ * whenever the protocol changes.
+ */
+#define VERSION			6
 
-#if	!defined(_RDIST_TMP)
-#	define _RDIST_TMP	"rdistXXXXXX"		/* Temporary file */
-#endif	/* _RDIST_TMP */
+/*
+ * Distribution version.  The major distribution number should match
+ * the protocol version number (VERSION) defined above.
+ */
+#define DISTVERSION		"6.1"
 
-#if	!defined(_PATH_RDISTD)
-#	define _PATH_RDISTD	"rdistd"		/* Rdist server */
-#endif	/* _PATH_RDISTD */
+/*
+ * Patch level
+ */
+#define PATCHLEVEL 		1
+
+/*
+ * Distribution status
+ */
+#define DISTSTATUS		"RELEASE"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1989 The Regents of the University of California.
+ * Copyright (c) 1993 Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,17 +31,59 @@
  * SUCH DAMAGE.
  */
 
-/*
- * $Id: pathnames.h,v 6.8 1993/01/05 21:27:59 mcooper Exp mcooper $
- * @(#)pathnames.h	5.4 (Berkeley) 8/27/90
- */
+#ifndef lint
+static char RCSid[] = 
+"$Id: signal.c,v 6.1 1993/07/15 22:47:30 mcooper Exp mcooper $";
 
-#include "config.h"
+static char sccsid[] = "@(#)signal.c";
 
-#if	!defined(_RDIST_TMP)
-#	define _RDIST_TMP	"rdistXXXXXX"		/* Temporary file */
-#endif	/* _RDIST_TMP */
+static char copyright[] =
+"@(#) Copyright (c) 1993 Regents of the University of California.\n\
+ All rights reserved.\n";
+#endif /* not lint */
 
-#if	!defined(_PATH_RDISTD)
-#	define _PATH_RDISTD	"rdistd"		/* Rdist server */
-#endif	/* _PATH_RDISTD */
+#include "defs.h"
+
+#if     defined(NEED_SIGBLOCK)
+static int current_mask = 0;
+
+int sigblock(mask)
+int mask;
+{
+    int sig;
+    int m;
+    int oldmask;
+
+    oldmask = current_mask;
+    for ( sig = 1, m = 1; sig <= MAXSIG; sig++, m <<= 1 ) {
+        if (mask & m)  {
+            sighold(sig);
+            current_mask |= m;
+        }
+    }
+    return oldmask;
+}
+#endif	/* NEED_SIGBLOCK */
+
+#if	defined(NEED_SIGSETMASK)
+int sigsetmask(mask)
+int mask;
+{
+    int sig;
+    int m;
+    int oldmask;
+
+    oldmask = current_mask;
+    for ( sig = 1, m = 1; sig <= MAXSIG; sig++, m <<= 1 ) {
+        if (mask & m)  {
+            sighold(sig);
+            current_mask |= m;
+        }
+        else  {
+            sigrelse(sig);
+            current_mask &= ~m;
+        }
+    }
+    return oldmask;
+}
+#endif	/* NEED_SIGSETMASK */
