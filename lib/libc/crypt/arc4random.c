@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: arc4random.c,v 1.1 1996/12/28 06:33:01 dm Exp $ */
 
 /*
  * Arc4 random number generator for OpenBSD.
@@ -25,8 +25,9 @@
  * RC4 is a registered trademark of RSA Laboratories.
  */
 
-#include <stdlib.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
 
