@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1990, 1993, 1994, 1995, 1996
+ * Copyright (c) 1997
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -18,22 +18,10 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: /cvs/src/usr.sbin/tcpdump/lbl/os-ultrix4.h,v 1.1 1996/12/12 16:08:24 bitblt Exp $ (LBL)
+ * @(#) $Header: gmt2local.h,v 1.2 97/01/23 22:31:40 leres Exp $ (LBL)
  */
+#ifndef gmt2local_h
+#define gmt2local_h
 
-/* Prototypes missing in Ultrix 4 */
-int	bcmp(const char *, const char *, u_int);
-void	bcopy(const void *, void *, u_int);
-void	bzero(void *, u_int);
-void	endservent(void);
-int	getopt(int, char * const *, const char *);
-#ifdef __STDC__
-struct timeval;
-struct timezone;
+int32_t gmt2local(time_t);
 #endif
-int	gettimeofday(struct timeval *, struct timezone *);
-int	ioctl(int, int, caddr_t);
-int	pfopen(char *, int);
-int	setlinebuf(FILE *);
-int	socket(int, int, int);
-int	strcasecmp(const char *, const char *);

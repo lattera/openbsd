@@ -25,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ntp.c,v 1.5 1996/12/12 16:22:31 bitblt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ntp.c,v 1.6 1997/07/25 20:12:26 mickey Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -47,7 +47,9 @@ struct rtentry;
 
 #include "interface.h"
 #include "addrtoname.h"
+#ifdef MODEMASK
 #undef MODEMASK					/* Solaris sucks */
+#endif
 #include "ntp.h"
 
 static void p_sfix(const struct s_fixedpt *);
