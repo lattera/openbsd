@@ -9,7 +9,7 @@
 
 #include "adm_locl.h"
 
-RCSID("$KTH: kdb_destroy.c,v 1.9 1998/06/09 19:24:13 joda Exp $");
+RCSID("$KTH: kdb_destroy.c,v 1.12 2001/09/13 00:34:06 assar Exp $");
 
 int
 main(int argc, char **argv)
@@ -21,7 +21,7 @@ main(int argc, char **argv)
     char   *file1, *file2;	/* database file names */
 #endif
 
-    set_progname (argv[0]);
+    setprogname (argv[0]);
 
 #ifdef HAVE_NEW_DB
     asprintf(&file, "%s.db", DBM_FILE);

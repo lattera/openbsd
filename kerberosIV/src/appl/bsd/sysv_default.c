@@ -1,8 +1,24 @@
+/************************************************************************
+* Copyright 1995 by Wietse Venema.  All rights reserved.  Some individual
+* files may be covered by other copyrights.
+*
+* This material was originally written and compiled by Wietse Venema at
+* Eindhoven University of Technology, The Netherlands, in 1990, 1991,
+* 1992, 1993, 1994 and 1995.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that this entire copyright notice
+* is duplicated in all such copies.
+*
+* This software is provided "as is" and without any expressed or implied
+* warranties, including, without limitation, the implied warranties of
+* merchantibility and fitness for any particular purpose.
+************************************************************************/
 /* Author: Wietse Venema <wietse@wzv.win.tue.nl> */
 
 #include "bsd_locl.h"
 
-RCSID("$KTH: sysv_default.c,v 1.11 1999/03/13 21:15:24 assar Exp $");
+RCSID("$KTH: sysv_default.c,v 1.12 2001/06/04 14:08:41 assar Exp $");
 
 #include "sysv_default.h"
 

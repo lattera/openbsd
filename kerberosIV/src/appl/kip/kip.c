@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -33,7 +33,7 @@
 
 #include "kip.h"
 
-RCSID("$KTH: kip.c,v 1.18.2.1 2000/06/23 02:55:01 assar Exp $");
+RCSID("$KTH: kip.c,v 1.22 2001/09/17 04:58:07 assar Exp $");
 
 static char *cmd_str		= NULL;
 static char *arg_str		= NULL;
@@ -73,7 +73,7 @@ connect_host (char *host, int port,
      MSG_DAT msg;
      int status;
      struct sockaddr_in thisaddr, thataddr;
-     int addrlen;
+     socklen_t addrlen;
      struct hostent *hostent;
      int s;
      u_char b;
@@ -215,7 +215,7 @@ main(int argc, char **argv)
     int optind = 0;
     char *hostname;
 
-    set_progname (argv[0]);
+    setprogname (argv[0]);
     if (getarg (args, sizeof(args) / sizeof(args[0]), argc, argv,
 		&optind))
 	usage (1);

@@ -18,13 +18,13 @@
 
 #include "sample.h"
 
-RCSID("$KTH: sample_server.c,v 1.14.2.1 2000/06/28 19:08:00 assar Exp $");
+RCSID("$KTH: sample_server.c,v 1.17 2001/09/17 04:42:50 assar Exp $");
 
 static void
 usage (void)
 {
     fprintf (stderr, "Usage: %s [-i] [-s service] [-t srvtab]\n",
-	     __progname);
+	     getprogname());
     exit (1);
 }
 
@@ -32,7 +32,7 @@ int
 main(int argc, char **argv)
 {
     struct sockaddr_in peername, myname;
-    int namelen = sizeof(peername);
+    socklen_t namelen = sizeof(peername);
     int status, count, len;
     long authopts;
     AUTH_DAT auth_data;
@@ -49,9 +49,9 @@ main(int argc, char **argv)
 
     /* open a log connection */
 
-    set_progname (argv[0]);
+    setprogname (argv[0]);
 
-    roken_openlog(__progname, LOG_ODELAY, LOG_DAEMON);
+    roken_openlog(getprogname(), LOG_ODELAY, LOG_DAEMON);
 
     strlcpy (service, SAMPLE_SERVICE, sizeof(service));
     *srvtab = '\0';
