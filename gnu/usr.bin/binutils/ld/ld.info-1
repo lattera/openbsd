@@ -1,14 +1,13 @@
-This is Info file ld.info, produced by Makeinfo-1.64 from the input
-file ./ld.texinfo.
+This is ld.info, produced by makeinfo version 4.0 from ./ld.texinfo.
 
 START-INFO-DIR-ENTRY
 * Ld: (ld).                       The GNU linker.
 END-INFO-DIR-ENTRY
 
-   This file documents the GNU linker LD.
+   This file documents the GNU linker LD version 2.10.1.
 
-   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
-Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 97, 98, 99, 2000 Free
+Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -29,13 +28,13 @@ File: ld.info,  Node: Top,  Next: Overview,  Up: (dir)
 Using ld
 ********
 
-   This file documents the GNU linker ld.
+   This file documents the GNU linker ld version 2.10.1.
 
 * Menu:
 
 * Overview::                    Overview
 * Invocation::                  Invocation
-* Commands::                    Command Language
+* Scripts::                     Linker Scripts
 
 * Machine Dependent::           Machine Dependent Features
 
@@ -72,7 +71,7 @@ execution immediately upon encountering an error; whenever possible,
 some cases, to get an output file in spite of the error).
 
 
-File: ld.info,  Node: Invocation,  Next: Commands,  Prev: Overview,  Up: Top
+File: ld.info,  Node: Invocation,  Next: Scripts,  Prev: Overview,  Up: Top
 
 Invocation
 **********
@@ -105,21 +104,24 @@ linking the file `/lib/crt0.o' with `hello.o' and the library `libc.a',
 which will come from the standard search directories.  (See the
 discussion of the `-l' option below.)
 
-   The command-line options to `ld' may be specified in any order, and
-may be repeated at will.  Repeating most options with a different
+   Some of the command-line options to `ld' may be specified at any
+point in the command line.  However, options which refer to files, such
+as `-l' or `-T', cause the file to be read at the point at which the
+option appears in the command line, relative to the object files and
+other file options.  Repeating non-file options with a different
 argument will either have no further effect, or override prior
 occurrences (those further to the left on the command line) of that
 option.  Options which may be meaningfully specified more than once are
 noted in the descriptions below.
 
-   Non-option arguments are objects files which are to be linked
-together.  They may follow, precede, or be mixed in with command-line
-options, except that an object file argument may not be placed between
-an option and its argument.
+   Non-option arguments are object files or archives which are to be
+linked together.  They may follow, precede, or be mixed in with
+command-line options, except that an object file argument may not be
+placed between an option and its argument.
 
    Usually the linker is invoked with at least one object file, but you
 can specify other forms of binary input files using `-l', `-R', and the
-script command language.  If *no* binary input files at all are
+script command language.  If _no_ binary input files at all are
 specified, the linker does not produce any output, and issues the
 message `No input files'.
 
@@ -133,7 +135,7 @@ or an archive, but actually merely defines some symbol values, or uses
 script in this way should only be used to augment the main linker
 script; if you want to use some command that logically can only appear
 once, such as the `SECTIONS' or `MEMORY' command, you must replace the
-default linker script using the `-T' option.  *Note Commands::.
+default linker script using the `-T' option.  *Note Scripts::.
 
    For options whose names are a single letter, option arguments must
 either follow the option letter without intervening whitespace, or be
@@ -148,6 +150,19 @@ separate arguments immediately following the option that requires them.
 For example, `--oformat srec' and `--oformat=srec' are equivalent.
 Unique abbreviations of the names of multiple-letter options are
 accepted.
+
+   Note - if the linker is being invoked indirectly, via a compiler
+driver (eg `gcc') then all the linker command line options should be
+prefixed by `-Wl,' (or whatever is appropriate for the particular
+compiler driver) like this:
+
+       gcc -Wl,--startgroup foo.o bar.o -Wl,--endgroup
+
+   This is important, because otherwise the compiler driver program may
+silently drop the linker options, resulting in a bad link.
+
+   Here is a table of the generic command line switches accepted by the
+GNU linker:
 
 `-aKEYWORD'
      This option is supported for HP/UX compatibility.  The KEYWORD
@@ -179,7 +194,7 @@ accepted.
      expect as a default input format the most usual format on each
      machine.  INPUT-FORMAT is a text string, the name of a particular
      format supported by the BFD libraries.  (You can list the
-     available binary formats with `objdump -i'.) *Note BFD::.
+     available binary formats with `objdump -i'.)  *Note BFD::.
 
      You may want to use this option if you are linking files with an
      unusual binary format.  You can also use `-b' to switch formats
@@ -189,7 +204,7 @@ accepted.
 
      The default format is taken from the environment variable
      `GNUTARGET'.  *Note Environment::.  You can also define the input
-     format from a script, using the command `TARGET'; see *Note Option
+     format from a script, using the command `TARGET'; see *Note Format
      Commands::.
 
 `-c MRI-COMMANDFILE'
@@ -209,21 +224,39 @@ accepted.
      for compatibility with other linkers.  They assign space to common
      symbols even if a relocatable output file is specified (with
      `-r').  The script command `FORCE_COMMON_ALLOCATION' has the same
-     effect.  *Note Option Commands::.
+     effect.  *Note Miscellaneous Commands::.
 
 `-e ENTRY'
 `--entry=ENTRY'
      Use ENTRY as the explicit symbol for beginning execution of your
-     program, rather than the default entry point. *Note Entry Point::,
-     for a discussion of defaults and other ways of specifying the
-     entry point.
+     program, rather than the default entry point.  If there is no
+     symbol named ENTRY, the linker will try to parse ENTRY as a number,
+     and use that as the entry address (the number will be interpreted
+     in base 10; you may use a leading `0x' for base 16, or a leading
+     `0' for base 8).  *Note Entry Point::, for a discussion of defaults
+     and other ways of specifying the entry point.
 
 `-E'
 `--export-dynamic'
      When creating a dynamically linked executable, add all symbols to
-     the dynamic symbol table.  Normally, the dynamic symbol table
-     contains only symbols which are used by a dynamic object.  This
-     option is needed for some uses of `dlopen'.
+     the dynamic symbol table.  The dynamic symbol table is the set of
+     symbols which are visible from dynamic objects at run time.
+
+     If you do not use this option, the dynamic symbol table will
+     normally contain only those symbols which are referenced by some
+     dynamic object mentioned in the link.
+
+     If you use `dlopen' to load a dynamic object which needs to refer
+     back to the symbols defined by the program, rather than some other
+     dynamic object, then you will probably need to use this option when
+     linking the program itself.
+
+`-EB'
+     Link big-endian objects.  This affects the default output format.
+
+`-EL'
+     Link little-endian objects.  This affects the default output
+     format.
 
 `-f'
 `--auxiliary NAME'
@@ -270,15 +303,11 @@ accepted.
      variable.  The GNU linker will ignore the `-F' option when not
      creating an ELF shared object.
 
-`--force-exe-suffix'
-     Make sure that an output file has a .exe suffix.
-
-     If a successfully built fully linked output file does not have a
-     `.exe' or `.dll' suffix, this option forces the linker to copy the
-     output file to one of the same name with a `.exe' suffix. This
-     option is useful when using unmodified Unix makefiles on a
-     Microsoft Windows host, since some versions of Windows won't run
-     an image unless it ends in a `.exe' suffix.
+`-fini NAME'
+     When creating an ELF executable or shared object, call NAME when
+     the executable or shared object is unloaded, by setting DT_FINI to
+     the address of the function.  By default, the linker uses `_fini'
+     as the function to call.
 
 `-g'
      Ignored.  Provided for compatibility with other tools.
@@ -302,6 +331,12 @@ accepted.
 
 `-i'
      Perform an incremental link (same as option `-r').
+
+`-init NAME'
+     When creating an ELF executable or shared object, call NAME when
+     the executable or shared object is loaded, by setting DT_INIT to
+     the address of the function.  By default, the linker uses `_init'
+     as the function to call.
 
 `-lARCHIVE'
 `--library=ARCHIVE'
@@ -354,18 +389,29 @@ accepted.
 
 `-mEMULATION'
      Emulate the EMULATION linker.  You can list the available
-     emulations with the `--verbose' or `-V' options.  The default
-     depends on how your `ld' was configured.
+     emulations with the `--verbose' or `-V' options.
+
+     If the `-m' option is not used, the emulation is taken from the
+     `LDEMULATION' environment variable, if that is defined.
+
+     Otherwise, the default emulation depends upon how the linker was
+     configured.
 
 `-M'
 `--print-map'
-     Print (to the standard output) a link map--diagnostic information
-     about where symbols are mapped by `ld', and information on global
-     common storage allocation.
+     Print a link map to the standard output.  A link map provides
+     information about the link, including the following:
+
+        * Where object files and symbols are mapped into memory.
+
+        * How common symbols are allocated.
+
+        * All archive members included in the link, with a mention of
+          the symbol which caused the archive member to be brought in.
 
 `-n'
 `--nmagic'
-     Set the text segment to be read only, and mark the output as
+     Turn off page alignment of sections, and mark the output as
      `NMAGIC' if possible.
 
 `-N'
@@ -380,6 +426,11 @@ accepted.
      option is not specified, the name `a.out' is used by default.  The
      script command `OUTPUT' can also specify the output file name.
 
+`-O LEVEL'
+     If LEVEL is a numeric values greater than zero `ld' optimizes the
+     output.  This might take significantly longer and therefore
+     probably should only be enabled for the final binary.
+
 `-r'
 `--relocateable'
      Generate relocatable output--i.e., generate an output file that
@@ -387,8 +438,8 @@ accepted.
      linking".  As a side effect, in environments that support standard
      Unix magic numbers, this option also sets the output file's magic
      number to `OMAGIC'.  If this option is not specified, an absolute
-     file is produced.  When linking C++ programs, this option *will
-     not* resolve references to constructors; to do that, use `-Ur'.
+     file is produced.  When linking C++ programs, this option _will
+     not_ resolve references to constructors; to do that, use `-Ur'.
 
      This option does the same thing as `-i'.
 
@@ -416,24 +467,35 @@ accepted.
 `--trace'
      Print the names of the input files as `ld' processes them.
 
-`-T COMMANDFILE'
-`--script=COMMANDFILE'
-     Read link commands from the file COMMANDFILE.  These commands
-     replace `ld''s default link script (rather than adding to it), so
-     COMMANDFILE must specify everything necessary to describe the
-     target format.  You must use this option if you want to use a
-     command which can only appear once in a linker script, such as the
-     `SECTIONS' or `MEMORY' command.  *Note Commands::.  If COMMANDFILE
-     does not exist, `ld' looks for it in the directories specified by
-     any preceding `-L' options.  Multiple `-T' options accumulate.
+`-T SCRIPTFILE'
+`--script=SCRIPTFILE'
+     Use SCRIPTFILE as the linker script.  This script replaces `ld''s
+     default linker script (rather than adding to it), so COMMANDFILE
+     must specify everything necessary to describe the output file.
+     You must use this option if you want to use a command which can
+     only appear once in a linker script, such as the `SECTIONS' or
+     `MEMORY' command.  *Note Scripts::.  If SCRIPTFILE does not exist
+     in the current directory, `ld' looks for it in the directories
+     specified by any preceding `-L' options.  Multiple `-T' options
+     accumulate.
 
 `-u SYMBOL'
 `--undefined=SYMBOL'
      Force SYMBOL to be entered in the output file as an undefined
-     symbol.  Doing this may, for example, trigger linking of
-     additional modules from standard libraries.  `-u' may be repeated
-     with different option arguments to enter additional undefined
-     symbols.
+     symbol.  Doing this may, for example, trigger linking of additional
+     modules from standard libraries.  `-u' may be repeated with
+     different option arguments to enter additional undefined symbols.
+     This option is equivalent to the `EXTERN' linker script command.
+
+`-Ur'
+     For anything other than C++ programs, this option is equivalent to
+     `-r': it generates relocatable output--i.e., an output file that
+     can in turn serve as input to `ld'.  When linking C++ programs,
+     `-Ur' _does_ resolve references to constructors, unlike `-r'.  It
+     does not work to use `-Ur' on files that were themselves linked
+     with `-Ur'; once the constructor table has been built, it cannot
+     be added to.  Use `-Ur' only for the last partial link, and `-r'
+     for the others.
 
 `-v'
 `--version'
@@ -515,6 +577,16 @@ accepted.
      override the definition within the shared library.  This option is
      only meaningful on ELF platforms which support shared libraries.
 
+`--check-sections'
+`--no-check-sections'
+     Asks the linker _not_ to check section addresses after they have
+     been assigned to see if there any overlaps.  Normally the linker
+     will perform this check, and if it finds any overlaps it will
+     produce suitable error messages.  The linker does know about, and
+     does make allowances for sections in overlays.  The default
+     behaviour can be restored by using the command line switch
+     `--check-sections'.
+
 `--cref'
      Output a cross reference table.  If a linker map file is being
      generated, the cross reference table is printed to the map file.
@@ -536,22 +608,26 @@ accepted.
      an existing symbol, or use `+' and `-' to add or subtract
      hexadecimal constants or symbols.  If you need more elaborate
      expressions, consider using the linker command language from a
-     script (*note Assignment: Symbol Definitions: Assignment.).
-     *Note:*  there should be no white space between SYMBOL, the equals
-     sign ("="), and EXPRESSION.
+     script (*note Assignment: Symbol Definitions: Assignments.).
+     _Note:_ there should be no white space between SYMBOL, the equals
+     sign ("<=>"), and EXPRESSION.
+
+`--demangle'
+`--no-demangle'
+     These options control whether to demangle symbol names in error
+     messages and other output.  When the linker is told to demangle,
+     it tries to present symbol names in a readable fashion: it strips
+     leading underscores if they are used by the object file format,
+     and converts C++ mangled symbol names into user readable names.
+     The linker will demangle by default unless the environment
+     variable `COLLECT_NO_DEMANGLE' is set.  These options may be used
+     to override the default.
 
 `--dynamic-linker FILE'
      Set the name of the dynamic linker.  This is only meaningful when
      generating dynamically linked ELF executables.  The default dynamic
      linker is normally correct; don't use this unless you know what
      you are doing.
-
-`-EB'
-     Link big-endian objects.  This affects the default output format.
-
-`-EL'
-     Link little-endian objects.  This affects the default output
-     format.
 
 `--embedded-relocs'
      This option is only meaningful when linking MIPS embedded PIC code,
@@ -561,14 +637,32 @@ accepted.
      initialized to pointer values.  See the code in testsuite/ld-empic
      for details.
 
+`--force-exe-suffix'
+     Make sure that an output file has a .exe suffix.
+
+     If a successfully built fully linked output file does not have a
+     `.exe' or `.dll' suffix, this option forces the linker to copy the
+     output file to one of the same name with a `.exe' suffix. This
+     option is useful when using unmodified Unix makefiles on a
+     Microsoft Windows host, since some versions of Windows won't run
+     an image unless it ends in a `.exe' suffix.
+
+`--no-gc-sections'
+`--gc-sections'
+     Enable garbage collection of unused input sections.  It is ignored
+     on targets that do not support this option.  This option is not
+     compatible with `-r', nor should it be used with dynamic linking.
+     The default behaviour (of not performing this garbage collection)
+     can be restored by specifying `--no-gc-sections' on the command
+     line.
+
 `--help'
      Print a summary of the command-line options on the standard output
      and exit.
 
 `-Map MAPFILE'
-     Print to the file MAPFILE a link map--diagnostic information about
-     where symbols are mapped by `ld', and information on global common
-     storage allocation.
+     Print a link map to the file MAPFILE.  See the description of the
+     `-M' option, above.
 
 `--no-keep-memory'
      `ld' normally optimizes for speed over memory usage by caching the
@@ -576,6 +670,20 @@ accepted.
      instead optimize for memory usage, by rereading the symbol tables
      as necessary.  This may be required if `ld' runs out of memory
      space while linking a large executable.
+
+`--no-undefined'
+     Normally when creating a non-symbolic shared library, undefined
+     symbols are allowed and left to be resolved by the runtime loader.
+     This option disallows such undefined symbols.
+
+`--no-warn-mismatch'
+     Normally `ld' will give an error if you try to link together input
+     files that are mismatched for some reason, perhaps because they
+     have been compiled for different processors or for different
+     endiannesses.  This option tells `ld' that it should silently
+     permit such possible errors.  This option should only be used with
+     care, in cases when you have taken some special action that
+     ensures that the linker errors are inappropriate.
 
 `--no-whole-archive'
      Turn off the effect of the `--whole-archive' option for subsequent
@@ -616,17 +724,22 @@ accepted.
      addressing in the program, such as relaxing address modes and
      synthesizing new instructions in the output object file.
 
+     On some platforms these link time global optimizations may make
+     symbolic debugging of the resulting executable impossible.  This
+     is known to be the case for the Matsushita MN10200 and MN10300
+     family of processors.
+
      On platforms where this is not supported, `--relax' is accepted,
      but ignored.
 
 `--retain-symbols-file FILENAME'
-     Retain *only* the symbols listed in the file FILENAME, discarding
+     Retain _only_ the symbols listed in the file FILENAME, discarding
      all others.  FILENAME is simply a flat file, with one symbol name
      per line.  This option is especially useful in environments (such
      as VxWorks) where a large global symbol table is accumulated
      gradually, to conserve run-time memory.
 
-     `--retain-symbols-file' does *not* discard undefined symbols, or
+     `--retain-symbols-file' does _not_ discard undefined symbols, or
      symbols needed for relocations.
 
      You may only specify `--retain-symbols-file' once in the command
@@ -661,7 +774,7 @@ accepted.
      as one of the input files.
 
      When the linker encounters such a dependency when doing a
-     non-shared, non-relocateable link, it will automatically try to
+     non-shared, non-relocatable link, it will automatically try to
      locate the required shared library and include it in the link, if
      it is not included explicitly.  In such a case, the `-rpath-link'
      option specifies the first set of directories to search.  The
@@ -690,6 +803,10 @@ accepted.
           `LD_LIBRARY_PATH'.
 
        6. The default directories, normally `/lib' and `/usr/lib'.
+
+       7. For a native linker on an ELF system, if the file
+          `/etc/ld.so.conf' exists, the list of directories found in
+          that file.
 
      If the required shared library is not found, the linker will issue
      a warning and continue with the link.
@@ -749,16 +866,7 @@ accepted.
      you may omit the leading `0x' usually associated with hexadecimal
      values.
 
-`-Ur'
-     For anything other than C++ programs, this option is equivalent to
-     `-r': it generates relocatable output--i.e., an output file that
-     can in turn serve as input to `ld'.  When linking C++ programs,
-     `-Ur' *does* resolve references to constructors, unlike `-r'.  It
-     does not work to use `-Ur' on files that were themselves linked
-     with `-Ur'; once the constructor table has been built, it cannot
-     be added to.  Use `-Ur' only for the last partial link, and `-r'
-     for the others.
-
+`--dll-verbose'
 `--verbose'
      Display the version number for `ld' and list the linker emulations
      supported.  Display which input files can and cannot be opened.
@@ -769,7 +877,7 @@ accepted.
      typically used when creating shared libraries to specify
      additional information about the version heirarchy for the library
      being created.  This option is only meaningful on ELF platforms
-     which support shared libraries.  *Note Version Script::.
+     which support shared libraries.  *Note VERSION::.
 
 `--warn-common'
      Warn when a common symbol is combined with another common symbol
@@ -867,7 +975,7 @@ accepted.
      alignment.  Typically, the alignment will be set by an input
      section.  The address will only be changed if it not explicitly
      specified; that is, if the `SECTIONS' command does not specify a
-     start address for the section (*note SECTIONS::.).
+     start address for the section (*note SECTIONS::).
 
 `--whole-archive'
      For each archive mentioned on the command line after the
@@ -906,241 +1014,128 @@ accepted.
      file as `__wrap_malloc'; if you do, the assembler may resolve the
      call before the linker has a chance to wrap it to `malloc'.
 
-
-File: ld.info,  Node: Environment,  Prev: Options,  Up: Invocation
+Options specific to i386 PE targets
+-----------------------------------
 
-Environment Variables
-=====================
+   The i386 PE linker supports the `-shared' option, which causes the
+output to be a dynamically linked library (DLL) instead of a normal
+executable.  You should name the output `*.dll' when you use this
+option.  In addition, the linker fully supports the standard `*.def'
+files, which may be specified on the linker command line like an object
+file (in fact, it should precede archives it exports symbols from, to
+ensure that they get linked in, just like a normal object file).
 
-   You can change the behavior of `ld' with the environment variable
-`GNUTARGET'.
+   In addition to the options common to all targets, the i386 PE linker
+support additional command line options that are specific to the i386
+PE target.  Options that take values may be separated from their values
+by either a space or an equals sign.
 
-   `GNUTARGET' determines the input-file object format if you don't use
-`-b' (or its synonym `--format').  Its value should be one of the BFD
-names for an input format (*note BFD::.).  If there is no `GNUTARGET'
-in the environment, `ld' uses the natural format of the target. If
-`GNUTARGET' is set to `default' then BFD attempts to discover the input
-format by examining binary input files; this method often succeeds, but
-there are potential ambiguities, since there is no method of ensuring
-that the magic number used to specify object-file formats is unique.
-However, the configuration procedure for BFD on each system places the
-conventional format for that system first in the search-list, so
-ambiguities are resolved in favor of convention.
+`--add-stdcall-alias'
+     If given, symbols with a stdcall suffix (@NN) will be exported
+     as-is and also with the suffix stripped.
 
-
-File: ld.info,  Node: Commands,  Next: Machine Dependent,  Prev: Invocation,  Up: Top
+`--base-file FILE'
+     Use FILE as the name of a file in which to save the base addresses
+     of all the relocations needed for generating DLLs with `dlltool'.
 
-Command Language
-****************
+`--dll'
+     Create a DLL instead of a regular executable.  You may also use
+     `-shared' or specify a `LIBRARY' in a given `.def' file.
 
-   The command language provides explicit control over the link process,
-allowing complete specification of the mapping between the linker's
-input files and its output.  It controls:
-   * input files
+`--enable-stdcall-fixup'
+`--disable-stdcall-fixup'
+     If the link finds a symbol that it cannot resolve, it will attempt
+     to do "fuzzy linking" by looking for another defined symbol that
+     differs only in the format of the symbol name (cdecl vs stdcall)
+     and will resolve that symbol by linking to the match.  For
+     example, the undefined symbol `_foo' might be linked to the
+     function `_foo@12', or the undefined symbol `_bar@16' might be
+     linked to the function `_bar'.  When the linker does this, it
+     prints a warning, since it normally should have failed to link,
+     but sometimes import libraries generated from third-party dlls may
+     need this feature to be usable.  If you specify
+     `--enable-stdcall-fixup', this feature is fully enabled and
+     warnings are not printed.  If you specify
+     `--disable-stdcall-fixup', this feature is disabled and such
+     mismatches are considered to be errors.
 
-   * file formats
+`--export-all-symbols'
+     If given, all global symbols in the objects used to build a DLL
+     will be exported by the DLL.  Note that this is the default if
+     there otherwise wouldn't be any exported symbols.  When symbols are
+     explicitly exported via DEF files or implicitly exported via
+     function attributes, the default is to not export anything else
+     unless this option is given.  Note that the symbols `DllMain@12',
+     `DllEntryPoint@0', and `impure_ptr' will not be automatically
+     exported.
 
-   * output file layout
+`--exclude-symbols SYMBOL,SYMBOL,...'
+     Specifies a list of symbols which should not be automatically
+     exported.  The symbol names may be delimited by commas or colons.
 
-   * addresses of sections
+`--file-alignment'
+     Specify the file alignment.  Sections in the file will always
+     begin at file offsets which are multiples of this number.  This
+     defaults to 512.
 
-   * placement of common blocks
+`--heap RESERVE'
+`--heap RESERVE,COMMIT'
+     Specify the amount of memory to reserve (and optionally commit) to
+     be used as heap for this program.  The default is 1Mb reserved, 4K
+     committed.
 
-   You may supply a command file (also known as a linker script) to the
-linker either explicitly through the `-T' option, or implicitly as an
-ordinary file.  Normally you should use the `-T' option.  An implicit
-linker script should only be used when you want to augment, rather than
-replace, the default linker script; typically an implicit linker script
-would consist only of `INPUT' or `GROUP' commands.
+`--image-base VALUE'
+     Use VALUE as the base address of your program or dll.  This is the
+     lowest memory location that will be used when your program or dll
+     is loaded.  To reduce the need to relocate and improve performance
+     of your dlls, each should have a unique base address and not
+     overlap any other dlls.  The default is 0x400000 for executables,
+     and 0x10000000 for dlls.
 
-   If the linker opens a file which it cannot recognize as a supported
-object or archive format, nor as a linker script, it reports an error.
+`--kill-at'
+     If given, the stdcall suffixes (@NN) will be stripped from symbols
+     before they are exported.
 
-* Menu:
+`--major-image-version VALUE'
+     Sets the major number of the "image version".  Defaults to 1.
 
-* Scripts::                     Linker Scripts
-* Expressions::                 Expressions
-* MEMORY::                      MEMORY Command
-* SECTIONS::                    SECTIONS Command
-* PHDRS::			PHDRS Command
-* Entry Point::                 The Entry Point
-* Version Script::              Version Script
-* Option Commands::             Option Commands
+`--major-os-version VALUE'
+     Sets the major number of the "os version".  Defaults to 4.
 
-
-File: ld.info,  Node: Scripts,  Next: Expressions,  Up: Commands
+`--major-subsystem-version VALUE'
+     Sets the major number of the "subsystem version".  Defaults to 4.
 
-Linker Scripts
-==============
+`--minor-image-version VALUE'
+     Sets the minor number of the "image version".  Defaults to 0.
 
-   The `ld' command language is a collection of statements; some are
-simple keywords setting a particular option, some are used to select and
-group input files or name output files; and two statement types have a
-fundamental and pervasive impact on the linking process.
+`--minor-os-version VALUE'
+     Sets the minor number of the "os version".  Defaults to 0.
 
-   The most fundamental command of the `ld' command language is the
-`SECTIONS' command (*note SECTIONS::.).  Every meaningful command
-script must have a `SECTIONS' command: it specifies a "picture" of the
-output file's layout, in varying degrees of detail.  No other command
-is required in all cases.
+`--minor-subsystem-version VALUE'
+     Sets the minor number of the "subsystem version".  Defaults to 0.
 
-   The `MEMORY' command complements `SECTIONS' by describing the
-available memory in the target architecture.  This command is optional;
-if you don't use a `MEMORY' command, `ld' assumes sufficient memory is
-available in a contiguous block for all output.  *Note MEMORY::.
+`--output-def FILE'
+     The linker will create the file FILE which will contain a DEF file
+     corresponding to the DLL the linker is generating.  This DEF file
+     (which should be called `*.def') may be used to create an import
+     library with `dlltool' or may be used as a reference to
+     automatically or implicitly exported symbols.
 
-   You may include comments in linker scripts just as in C: delimited
-by `/*' and `*/'.  As in C, comments are syntactically equivalent to
-whitespace.
+`--section-alignment'
+     Sets the section alignment.  Sections in memory will always begin
+     at addresses which are a multiple of this number.  Defaults to
+     0x1000.
 
-
-File: ld.info,  Node: Expressions,  Next: MEMORY,  Prev: Scripts,  Up: Commands
+`--stack RESERVE'
+`--stack RESERVE,COMMIT'
+     Specify the amount of memory to reserve (and optionally commit) to
+     be used as stack for this program.  The default is 32Mb reserved,
+     4K committed.
 
-Expressions
-===========
-
-   Many useful commands involve arithmetic expressions.  The syntax for
-expressions in the command language is identical to that of C
-expressions, with the following features:
-   * All expressions evaluated as integers and are of "long" or
-     "unsigned long" type.
-
-   * All constants are integers.
-
-   * All of the C arithmetic operators are provided.
-
-   * You may reference, define, and create global variables.
-
-   * You may call special purpose built-in functions.
-
-* Menu:
-
-* Integers::                    Integers
-* Symbols::                     Symbol Names
-* Location Counter::            The Location Counter
-* Operators::                   Operators
-* Evaluation::                  Evaluation
-* Assignment::                  Assignment: Defining Symbols
-* Arithmetic Functions::        Built-In Functions
-* Semicolons::                  Semicolon Usage
-
-
-File: ld.info,  Node: Integers,  Next: Symbols,  Up: Expressions
-
-Integers
---------
-
-   An octal integer is `0' followed by zero or more of the octal digits
-(`01234567').
-     _as_octal = 0157255;
-
-   A decimal integer starts with a non-zero digit followed by zero or
-more digits (`0123456789').
-     _as_decimal = 57005;
-
-   A hexadecimal integer is `0x' or `0X' followed by one or more
-hexadecimal digits chosen from `0123456789abcdefABCDEF'.
-     _as_hex = 0xdead;
-
-   To write a negative integer, use the prefix operator `-' (*note
-Operators::.).
-     _as_neg = -57005;
-
-   Additionally the suffixes `K' and `M' may be used to scale a
-constant by `1024' or `1024*1024' respectively. For example, the
-following all refer to the same quantity:
-
-             _fourk_1 = 4K;
-             _fourk_2 = 4096;
-             _fourk_3 = 0x1000;
-
-
-File: ld.info,  Node: Symbols,  Next: Location Counter,  Prev: Integers,  Up: Expressions
-
-Symbol Names
-------------
-
-   Unless quoted, symbol names start with a letter, underscore, or point
-and may include any letters, underscores, digits, points, and hyphens.
-Unquoted symbol names must not conflict with any keywords.  You can
-specify a symbol which contains odd characters or has the same name as
-a keyword, by surrounding the symbol name in double quotes:
-             "SECTION" = 9;
-             "with a space" = "also with a space" + 10;
-
-   Since symbols can contain many non-alphabetic characters, it is
-safest to delimit symbols with spaces.  For example, `A-B' is one
-symbol, whereas `A - B' is an expression involving subtraction.
-
-
-File: ld.info,  Node: Location Counter,  Next: Operators,  Prev: Symbols,  Up: Expressions
-
-The Location Counter
---------------------
-
-   The special linker variable "dot" `.' always contains the current
-output location counter. Since the `.' always refers to a location in
-an output section, it must always appear in an expression within a
-`SECTIONS' command. The `.' symbol may appear anywhere that an ordinary
-symbol is allowed in an expression, but its assignments have a side
-effect. Assigning a value to the `.' symbol will cause the location
-counter to be moved.  This may be used to create holes in the output
-section.  The location counter may never be moved backwards.
-     SECTIONS
-     {
-       output :
-       {
-       file1(.text)
-       . = . + 1000;
-       file2(.text)
-       . += 1000;
-       file3(.text)
-       } = 0x1234;
-     }
-
-In the previous example, `file1' is located at the beginning of the
-output section, then there is a 1000 byte gap.  Then `file2' appears,
-also with a 1000 byte gap following before `file3' is loaded.  The
-notation `= 0x1234' specifies what data to write in the gaps (*note
-Section Options::.).
-
-
-File: ld.info,  Node: Operators,  Next: Evaluation,  Prev: Location Counter,  Up: Expressions
-
-Operators
----------
-
-   The linker recognizes  the standard C set of arithmetic operators,
-with the standard bindings and precedence levels:
-     precedence      associativity   Operators                Notes
-     (highest)
-     1               left            !  -  ~                  (1)
-     2               left            *  /  %
-     3               left            +  -
-     4               left            >>  <<
-     5               left            ==  !=  >  <  <=  >=
-     6               left            &
-     7               left            |
-     8               left            &&
-     9               left            ||
-     10              right           ? :
-     11              right           &=  +=  -=  *=  /=       (2)
-     (lowest)
-   Notes: (1) Prefix operators (2) *Note Assignment::.
-
-
-File: ld.info,  Node: Evaluation,  Next: Assignment,  Prev: Operators,  Up: Expressions
-
-Evaluation
-----------
-
-   The linker uses "lazy evaluation" for expressions; it only calculates
-an expression when absolutely necessary.  The linker needs the value of
-the start address, and the lengths of memory regions, in order to do any
-linking at all; these values are computed as soon as possible when the
-linker reads in the command file.  However, other values (such as symbol
-values) are not known or needed until after storage allocation.  Such
-values are evaluated later, when other information (such as the sizes of
-output sections) is available for use in the symbol assignment
-expression.
+`--subsystem WHICH'
+`--subsystem WHICH:MAJOR'
+`--subsystem WHICH:MAJOR.MINOR'
+     Specifies the subsystem under which your program will execute.  The
+     legal values for WHICH are `native', `windows', `console', and
+     `posix'.  You may optionally set the subsystem version also.
 

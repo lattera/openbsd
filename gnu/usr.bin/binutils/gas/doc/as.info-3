@@ -1,5 +1,4 @@
-This is Info file as.info, produced by Makeinfo-1.64 from the input
-file ./as.texinfo.
+This is as.info, produced by makeinfo version 4.0 from as.texinfo.
 
 START-INFO-DIR-ENTRY
 * As: (as).                     The GNU assembler.
@@ -7,8 +6,8 @@ END-INFO-DIR-ENTRY
 
    This file documents the GNU Assembler "as".
 
-   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
-Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 97, 98, 99, 2000 Free
+Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -22,6 +21,256 @@ permission notice identical to this one.
    Permission is granted to copy and distribute translations of this
 manual into another language, under the above conditions for modified
 versions.
+
+
+File: as.info,  Node: Irp,  Next: Irpc,  Prev: Int,  Up: Pseudo Ops
+
+`.irp SYMBOL,VALUES'...
+=======================
+
+   Evaluate a sequence of statements assigning different values to
+SYMBOL.  The sequence of statements starts at the `.irp' directive, and
+is terminated by an `.endr' directive.  For each VALUE, SYMBOL is set
+to VALUE, and the sequence of statements is assembled.  If no VALUE is
+listed, the sequence of statements is assembled once, with SYMBOL set
+to the null string.  To refer to SYMBOL within the sequence of
+statements, use \SYMBOL.
+
+   For example, assembling
+
+             .irp    param,1,2,3
+             move    d\param,sp@-
+             .endr
+
+   is equivalent to assembling
+
+             move    d1,sp@-
+             move    d2,sp@-
+             move    d3,sp@-
+
+
+File: as.info,  Node: Irpc,  Next: Lcomm,  Prev: Irp,  Up: Pseudo Ops
+
+`.irpc SYMBOL,VALUES'...
+========================
+
+   Evaluate a sequence of statements assigning different values to
+SYMBOL.  The sequence of statements starts at the `.irpc' directive,
+and is terminated by an `.endr' directive.  For each character in VALUE,
+SYMBOL is set to the character, and the sequence of statements is
+assembled.  If no VALUE is listed, the sequence of statements is
+assembled once, with SYMBOL set to the null string.  To refer to SYMBOL
+within the sequence of statements, use \SYMBOL.
+
+   For example, assembling
+
+             .irpc    param,123
+             move    d\param,sp@-
+             .endr
+
+   is equivalent to assembling
+
+             move    d1,sp@-
+             move    d2,sp@-
+             move    d3,sp@-
+
+
+File: as.info,  Node: Lcomm,  Next: Lflags,  Prev: Irpc,  Up: Pseudo Ops
+
+`.lcomm SYMBOL , LENGTH'
+========================
+
+   Reserve LENGTH (an absolute expression) bytes for a local common
+denoted by SYMBOL.  The section and value of SYMBOL are those of the
+new local common.  The addresses are allocated in the bss section, so
+that at run-time the bytes start off zeroed.  SYMBOL is not declared
+global (*note `.global': Global.), so is normally not visible to `ld'.
+
+   Some targets permit a third argument to be used with `.lcomm'.  This
+argument specifies the desired alignment of the symbol in the bss
+section.
+
+   The syntax for `.lcomm' differs slightly on the HPPA.  The syntax is
+`SYMBOL .lcomm, LENGTH'; SYMBOL is optional.
+
+
+File: as.info,  Node: Lflags,  Next: Line,  Prev: Lcomm,  Up: Pseudo Ops
+
+`.lflags'
+=========
+
+   `as' accepts this directive, for compatibility with other
+assemblers, but ignores it.
+
+
+File: as.info,  Node: Line,  Next: Ln,  Prev: Lflags,  Up: Pseudo Ops
+
+`.line LINE-NUMBER'
+===================
+
+   Change the logical line number.  LINE-NUMBER must be an absolute
+expression.  The next line has that logical line number.  Therefore any
+other statements on the current line (after a statement separator
+character) are reported as on logical line number LINE-NUMBER - 1.  One
+day `as' will no longer support this directive: it is recognized only
+for compatibility with existing assembler programs.
+
+   _Warning:_ In the AMD29K configuration of as, this command is not
+available; use the synonym `.ln' in that context.
+
+   Even though this is a directive associated with the `a.out' or
+`b.out' object-code formats, `as' still recognizes it when producing
+COFF output, and treats `.line' as though it were the COFF `.ln' _if_
+it is found outside a `.def'/`.endef' pair.
+
+   Inside a `.def', `.line' is, instead, one of the directives used by
+compilers to generate auxiliary symbol information for debugging.
+
+
+File: as.info,  Node: Linkonce,  Next: List,  Prev: Ln,  Up: Pseudo Ops
+
+`.linkonce [TYPE]'
+==================
+
+   Mark the current section so that the linker only includes a single
+copy of it.  This may be used to include the same section in several
+different object files, but ensure that the linker will only include it
+once in the final output file.  The `.linkonce' pseudo-op must be used
+for each instance of the section.  Duplicate sections are detected
+based on the section name, so it should be unique.
+
+   This directive is only supported by a few object file formats; as of
+this writing, the only object file format which supports it is the
+Portable Executable format used on Windows NT.
+
+   The TYPE argument is optional.  If specified, it must be one of the
+following strings.  For example:
+     .linkonce same_size
+   Not all types may be supported on all object file formats.
+
+`discard'
+     Silently discard duplicate sections.  This is the default.
+
+`one_only'
+     Warn if there are duplicate sections, but still keep only one copy.
+
+`same_size'
+     Warn if any of the duplicates have different sizes.
+
+`same_contents'
+     Warn if any of the duplicates do not have exactly the same
+     contents.
+
+
+File: as.info,  Node: Ln,  Next: Linkonce,  Prev: Line,  Up: Pseudo Ops
+
+`.ln LINE-NUMBER'
+=================
+
+   `.ln' is a synonym for `.line'.
+
+
+File: as.info,  Node: MRI,  Next: Nolist,  Prev: Macro,  Up: Pseudo Ops
+
+`.mri VAL'
+==========
+
+   If VAL is non-zero, this tells `as' to enter MRI mode.  If VAL is
+zero, this tells `as' to exit MRI mode.  This change affects code
+assembled until the next `.mri' directive, or until the end of the
+file.  *Note MRI mode: M.
+
+
+File: as.info,  Node: List,  Next: Long,  Prev: Linkonce,  Up: Pseudo Ops
+
+`.list'
+=======
+
+   Control (in conjunction with the `.nolist' directive) whether or not
+assembly listings are generated.  These two directives maintain an
+internal counter (which is zero initially).   `.list' increments the
+counter, and `.nolist' decrements it.  Assembly listings are generated
+whenever the counter is greater than zero.
+
+   By default, listings are disabled.  When you enable them (with the
+`-a' command line option; *note Command-Line Options: Invoking.), the
+initial value of the listing counter is one.
+
+
+File: as.info,  Node: Long,  Next: Macro,  Prev: List,  Up: Pseudo Ops
+
+`.long EXPRESSIONS'
+===================
+
+   `.long' is the same as `.int', *note `.int': Int..
+
+
+File: as.info,  Node: Macro,  Next: MRI,  Prev: Long,  Up: Pseudo Ops
+
+`.macro'
+========
+
+   The commands `.macro' and `.endm' allow you to define macros that
+generate assembly output.  For example, this definition specifies a
+macro `sum' that puts a sequence of numbers into memory:
+
+             .macro  sum from=0, to=5
+             .long   \from
+             .if     \to-\from
+             sum     "(\from+1)",\to
+             .endif
+             .endm
+
+With that definition, `SUM 0,5' is equivalent to this assembly input:
+
+             .long   0
+             .long   1
+             .long   2
+             .long   3
+             .long   4
+             .long   5
+
+`.macro MACNAME'
+`.macro MACNAME MACARGS ...'
+     Begin the definition of a macro called MACNAME.  If your macro
+     definition requires arguments, specify their names after the macro
+     name, separated by commas or spaces.  You can supply a default
+     value for any macro argument by following the name with `=DEFLT'.
+     For example, these are all valid `.macro' statements:
+
+    `.macro comm'
+          Begin the definition of a macro called `comm', which takes no
+          arguments.
+
+    `.macro plus1 p, p1'
+    `.macro plus1 p p1'
+          Either statement begins the definition of a macro called
+          `plus1', which takes two arguments; within the macro
+          definition, write `\p' or `\p1' to evaluate the arguments.
+
+    `.macro reserve_str p1=0 p2'
+          Begin the definition of a macro called `reserve_str', with two
+          arguments.  The first argument has a default value, but not
+          the second.  After the definition is complete, you can call
+          the macro either as `reserve_str A,B' (with `\p1' evaluating
+          to A and `\p2' evaluating to B), or as `reserve_str ,B' (with
+          `\p1' evaluating as the default, in this case `0', and `\p2'
+          evaluating to B).
+
+     When you call a macro, you can specify the argument values either
+     by position, or by keyword.  For example, `sum 9,17' is equivalent
+     to `sum to=17, from=9'.
+
+`.endm'
+     Mark the end of a macro definition.
+
+`.exitm'
+     Exit early from the current macro definition.
+
+`\@'
+     `as' maintains a counter of how many macros it has executed in
+     this pseudo-variable; you can copy that number to your output with
+     `\@', but _only within a macro definition_.
 
 
 File: as.info,  Node: Nolist,  Next: Octa,  Prev: MRI,  Up: Pseudo Ops
@@ -45,7 +294,7 @@ File: as.info,  Node: Octa,  Next: Org,  Prev: Nolist,  Up: Pseudo Ops
 For each bignum, it emits a 16-byte integer.
 
    The term "octa" comes from contexts in which a "word" is two bytes;
-hence *octa*-word for 16 bytes.
+hence _octa_-word for 16 bytes.
 
 
 File: as.info,  Node: Org,  Next: P2align,  Prev: Octa,  Up: Pseudo Ops
@@ -77,7 +326,7 @@ the intervening bytes are filled with FILL which should be an absolute
 expression.  If the comma and FILL are omitted, FILL defaults to zero.
 
 
-File: as.info,  Node: P2align,  Next: Psize,  Prev: Org,  Up: Pseudo Ops
+File: as.info,  Node: P2align,  Next: Print,  Prev: Org,  Up: Pseudo Ops
 
 `.p2align[wl] ABS-EXPR, ABS-EXPR, ABS-EXPR'
 ===========================================
@@ -114,7 +363,16 @@ bytes depends upon the endianness of the processor).  If it skips 1 or
 3 bytes, the fill value is undefined.
 
 
-File: as.info,  Node: Psize,  Next: Quad,  Prev: P2align,  Up: Pseudo Ops
+File: as.info,  Node: Print,  Next: Psize,  Prev: P2align,  Up: Pseudo Ops
+
+`.print STRING'
+===============
+
+   `as' will print STRING on the standard output during assembly.  You
+must put STRING in double quotes.
+
+
+File: as.info,  Node: Psize,  Next: Purgem,  Prev: Print,  Up: Pseudo Ops
 
 `.psize LINES , COLUMNS'
 ========================
@@ -133,7 +391,16 @@ exceeded (or whenever you explicitly request one, using `.eject').
 explicitly specified with `.eject'.
 
 
-File: as.info,  Node: Quad,  Next: Rept,  Prev: Psize,  Up: Pseudo Ops
+File: as.info,  Node: Purgem,  Next: Quad,  Prev: Psize,  Up: Pseudo Ops
+
+`.purgem NAME'
+==============
+
+   Undefine the macro NAME, so that later uses of the string will not be
+expanded.  *Note Macro::.
+
+
+File: as.info,  Node: Quad,  Next: Rept,  Prev: Purgem,  Up: Pseudo Ops
 
 `.quad BIGNUMS'
 ===============
@@ -144,7 +411,7 @@ bytes, it prints a warning message; and just takes the lowest order 8
 bytes of the bignum.
 
    The term "quad" comes from contexts in which a "word" is two bytes;
-hence *quad*-word for 8 bytes.
+hence _quad_-word for 8 bytes.
 
 
 File: as.info,  Node: Rept,  Next: Sbttl,  Prev: Quad,  Up: Pseudo Ops
@@ -233,12 +500,15 @@ recognized:
 `x'
      executable section
 
+`s'
+     shared section (meaningful for PE targets)
+
    If no flags are specified, the default flags depend upon the section
 name.  If the section name is not recognized, the default will be for
 the section to be loaded and writable.
 
    If the optional argument to the `.section' directive is not quoted,
-it is taken as a subsegment number (*note Sub-Sections::.).
+it is taken as a subsegment number (*note Sub-Sections::).
 
    For ELF targets, the `.section' directive is used like this:
      .section NAME[, "FLAGS"[, @TYPE]]
@@ -288,7 +558,7 @@ File: as.info,  Node: Set,  Next: Short,  Prev: Section,  Up: Pseudo Ops
 
    Set the value of SYMBOL to EXPRESSION.  This changes SYMBOL's value
 and type to conform to EXPRESSION.  If SYMBOL was flagged as external,
-it remains flagged (*note Symbol Attributes::.).
+it remains flagged (*note Symbol Attributes::).
 
    You may `.set' a symbol many times in the same assembly.
 
@@ -306,7 +576,7 @@ File: as.info,  Node: Short,  Next: Single,  Prev: Set,  Up: Pseudo Ops
    `.short' is normally the same as `.word'.  *Note `.word': Word.
 
    In some configurations, however, `.short' and `.word' generate
-numbers of different lengths; *note Machine Dependencies::..
+numbers of different lengths; *note Machine Dependencies::.
 
 
 File: as.info,  Node: Single,  Next: Size,  Prev: Short,  Up: Pseudo Ops
@@ -333,7 +603,17 @@ debugging information in the symbol table.  It is only permitted inside
 `as' is generating `b.out', it accepts this directive but ignores it.
 
 
-File: as.info,  Node: Skip,  Next: Space,  Prev: Size,  Up: Pseudo Ops
+File: as.info,  Node: Sleb128,  Next: Space,  Prev: Skip,  Up: Pseudo Ops
+
+`.sleb128 EXPRESSIONS'
+======================
+
+   SLEB128 stands for "signed little endian base 128."  This is a
+compact, variable length representation of numbers used by the DWARF
+symbolic debugging format.  *Note `.uleb128': Uleb128.
+
+
+File: as.info,  Node: Skip,  Next: Sleb128,  Prev: Size,  Up: Pseudo Ops
 
 `.skip SIZE , FILL'
 ===================
@@ -343,7 +623,7 @@ FILL are absolute expressions.  If the comma and FILL are omitted, FILL
 is assumed to be zero.  This is the same as `.space'.
 
 
-File: as.info,  Node: Space,  Next: Stab,  Prev: Skip,  Up: Pseudo Ops
+File: as.info,  Node: Space,  Next: Stab,  Prev: Sleb128,  Up: Pseudo Ops
 
 `.space SIZE , FILL'
 ====================
@@ -352,7 +632,7 @@ File: as.info,  Node: Space,  Next: Stab,  Prev: Skip,  Up: Pseudo Ops
 FILL are absolute expressions.  If the comma and FILL are omitted, FILL
 is assumed to be zero.  This is the same as `.skip'.
 
-     *Warning:* `.space' has a completely different meaning for HPPA
+     _Warning:_ `.space' has a completely different meaning for HPPA
      targets; use `.block' as a substitute.  See `HP9000 Series 800
      Assembly Language Reference Manual' (HP 92432-90001) for the
      meaning of the `.space' directive.  *Note HPPA Assembler
@@ -361,7 +641,7 @@ is assumed to be zero.  This is the same as `.skip'.
    On the AMD 29K, this directive is ignored; it is accepted for
 compatibility with other AMD 29K assemblers.
 
-     *Warning:* In most versions of the GNU assembler, the directive
+     _Warning:_ In most versions of the GNU assembler, the directive
      `.space' has the effect of `.block'  *Note Machine Dependencies::.
 
 
@@ -371,7 +651,7 @@ File: as.info,  Node: Stab,  Next: String,  Prev: Space,  Up: Pseudo Ops
 ========================
 
    There are three directives that begin `.stab'.  All emit symbols
-(*note Symbols::.), for use by symbolic debuggers.  The symbols are not
+(*note Symbols::), for use by symbolic debuggers.  The symbols are not
 entered in the `as' hash table: they cannot be referenced elsewhere in
 the source file.  Up to five fields are required:
 
@@ -419,7 +699,7 @@ earlier assemblers!
      All five fields are specified.
 
 
-File: as.info,  Node: String,  Next: Symver,  Prev: Stab,  Up: Pseudo Ops
+File: as.info,  Node: String,  Next: Struct,  Prev: Stab,  Up: Pseudo Ops
 
 `.string' "STR"
 ===============
@@ -431,7 +711,28 @@ string with a 0 byte.  You can use any of the escape sequences
 described in *Note Strings: Strings.
 
 
-File: as.info,  Node: Symver,  Next: Tag,  Prev: String,  Up: Pseudo Ops
+File: as.info,  Node: Struct,  Next: Symver,  Prev: String,  Up: Pseudo Ops
+
+`.struct EXPRESSION'
+====================
+
+   Switch to the absolute section, and set the section offset to
+EXPRESSION, which must be an absolute expression.  You might use this
+as follows:
+             .struct 0
+     field1:
+             .struct field1 + 4
+     field2:
+             .struct field2 + 4
+     field3:
+   This would define the symbol `field1' to have the value 0, the symbol
+`field2' to have the value 4, and the symbol `field3' to have the value
+8.  Assembly would be left in the absolute section, and you would need
+to use a `.section' directive of some sort to change to some other
+section before further assembly.
+
+
+File: as.info,  Node: Symver,  Next: Tag,  Prev: Struct,  Up: Pseudo Ops
 
 `.symver'
 =========
@@ -510,7 +811,7 @@ the integer INT as the type attribute of a symbol table entry.
 configured for `b.out' output, it accepts this directive but ignores it.
 
 
-File: as.info,  Node: Val,  Next: Word,  Prev: Type,  Up: Pseudo Ops
+File: as.info,  Node: Val,  Next: Visibility,  Prev: Type,  Up: Pseudo Ops
 
 `.val ADDR'
 ===========
@@ -522,7 +823,46 @@ the address ADDR as the value attribute of a symbol table entry.
 `b.out', it accepts this directive but ignores it.
 
 
-File: as.info,  Node: Word,  Next: Deprecated,  Prev: Val,  Up: Pseudo Ops
+File: as.info,  Node: Uleb128,  Next: Word,  Prev: Visibility,  Up: Pseudo Ops
+
+`.uleb128 EXPRESSIONS'
+======================
+
+   ULEB128 stands for "unsigned little endian base 128."  This is a
+compact, variable length representation of numbers used by the DWARF
+symbolic debugging format.  *Note `.sleb128': Sleb128.
+
+
+File: as.info,  Node: Visibility,  Next: Uleb128,  Prev: Val,  Up: Pseudo Ops
+
+`.internal', `.hidden', `.protected'
+====================================
+
+   These directives can be used to set the visibility of a specified
+symbol.  By default a symbol's visibility is set by its binding (local,
+global or weak), but these directives can be used to override that.
+
+   A visibility of `protected' means that any references to the symbol
+from within the component that defines the symbol must be resolved to
+the definition in that component, even if a definition in another
+component would normally preempt this.
+
+   A visibility of `hidden' means that the symbol is not visible to
+other components.  Such a symbol is always considered to be protected
+as well.
+
+   A visibility of `internal' is the same as a visibility of `hidden',
+except that some extra, processor specific processing must also be
+performed upon the symbol.
+
+   For ELF targets, the directives are used like this:
+
+     .internal NAME
+     .hidden NAME
+     .protected NAME
+
+
+File: as.info,  Node: Word,  Next: Deprecated,  Prev: Uleb128,  Up: Pseudo Ops
 
 `.word EXPRESSIONS'
 ===================
@@ -533,12 +873,12 @@ separated by commas.
    The size of the number emitted, and its byte order, depend on what
 target computer the assembly is for.
 
-     *Warning: Special Treatment to support Compilers*
+     _Warning: Special Treatment to support Compilers_
 
    Machines with a 32-bit address space, but that do less than 32-bit
 addressing, require the following special treatment.  If the machine of
 interest to you does 32-bit addressing (or doesn't require it; *note
-Machine Dependencies::.), you can ignore this issue.
+Machine Dependencies::), you can ignore this issue.
 
    In order to assemble compiler output into something that works, `as'
 occasionlly does strange things to `.word' directives.  Directives of
@@ -570,7 +910,7 @@ Deprecated Directives
    One day these directives won't work.  They are included for
 compatibility with older assemblers.
 .abort
-.app-file
+
 .line
 
 File: as.info,  Node: Machine Dependencies,  Next: Reporting Bugs,  Prev: Pseudo Ops,  Up: Top
@@ -594,13 +934,21 @@ subject, see the hardware manufacturer's manual.
 
 * AMD29K-Dependent::            AMD 29K Dependent Features
 
+* ARC-Dependent::               ARC Dependent Features
+
+* ARM-Dependent::               ARM Dependent Features
+
 * D10V-Dependent::              D10V Dependent Features
+
+* D30V-Dependent::              D30V Dependent Features
 
 * H8/300-Dependent::            Hitachi H8/300 Dependent Features
 
 * H8/500-Dependent::            Hitachi H8/500 Dependent Features
 
 * HPPA-Dependent::              HPPA Dependent Features
+
+* ESA/390-Dependent::           IBM ESA/390 Dependent Features
 
 * i386-Dependent::              Intel 80386 Dependent Features
 
@@ -612,14 +960,75 @@ subject, see the hardware manufacturer's manual.
 
 * SH-Dependent::                Hitachi SH Dependent Features
 
+* PJ-Dependent::                picoJava Dependent Features
+
 * Sparc-Dependent::             SPARC Dependent Features
+
+* V850-Dependent::              V850 Dependent Features
 
 * Z8000-Dependent::             Z8000 Dependent Features
 
 * Vax-Dependent::               VAX Dependent Features
 
 
-File: as.info,  Node: AMD29K-Dependent,  Next: D10V-Dependent,  Up: Machine Dependencies
+File: as.info,  Node: ARC-Dependent,  Next: ARM-Dependent,  Prev: AMD29K-Dependent,  Up: Machine Dependencies
+
+ARC Dependent Features
+======================
+
+* Menu:
+
+* ARC-Opts::                    Options
+* ARC-Float::                   Floating Point
+* ARC-Directives::              Sparc Machine Directives
+
+
+File: as.info,  Node: ARC-Opts,  Next: ARC-Float,  Up: ARC-Dependent
+
+Options
+-------
+
+   The ARC chip family includes several successive levels (or other
+variants) of chip, using the same core instruction set, but including a
+few additional instructions at each level.
+
+   By default, `as' assumes the core instruction set (ARC base).  The
+`.cpu' pseudo-op is intended to be used to select the variant.
+
+`-mbig-endian'
+`-mlittle-endian'
+     Any ARC configuration of `as' can select big-endian or
+     little-endian output at run time (unlike most other GNU development
+     tools, which must be configured for one or the other).  Use
+     `-mbig-endian' to select big-endian output, and `-mlittle-endian'
+     for little-endian.
+
+
+File: as.info,  Node: ARC-Float,  Next: ARC-Directives,  Prev: ARC-Opts,  Up: ARC-Dependent
+
+Floating Point
+--------------
+
+   The ARC cpu family currently does not have hardware floating point
+support.  Software floating point support is provided by `GCC' and uses
+IEEE floating-point numbers.
+
+
+File: as.info,  Node: ARC-Directives,  Prev: ARC-Float,  Up: ARC-Dependent
+
+ARC Machine Directives
+----------------------
+
+   The ARC version of `as' supports the following additional machine
+directives:
+
+`.cpu'
+     This must be followed by the desired cpu.  The ARC is intended to
+     be customizable, `.cpu' is used to select the desired variant
+     [though currently there are none].
+
+
+File: as.info,  Node: AMD29K-Dependent,  Next: ARC-Dependent,  Up: Machine Dependencies
 
 AMD 29K Dependent Features
 ==========================
@@ -740,7 +1149,7 @@ AMD 29K Machine Directives
      This directive is ignored; it is accepted for compatibility with
      other AMD 29K assemblers.
 
-          *Warning:* in other versions of the GNU assembler, `.file' is
+          _Warning:_ in other versions of the GNU assembler, `.file' is
           used for the directive called `.app-file' in the AMD 29K
           support.
 
@@ -772,7 +1181,243 @@ pseudo-instructions are needed on this family.
 User's Manual', Advanced Micro Devices, Inc.
 
 
-File: as.info,  Node: D10V-Dependent,  Next: H8/300-Dependent,  Prev: AMD29K-Dependent,  Up: Machine Dependencies
+File: as.info,  Node: ARM-Dependent,  Next: D10V-Dependent,  Prev: ARC-Dependent,  Up: Machine Dependencies
+
+ARM Dependent Features
+======================
+
+* Menu:
+
+* ARM Options::              Options
+* ARM Syntax::               Syntax
+* ARM Floating Point::       Floating Point
+* ARM Directives::           ARM Machine Directives
+* ARM Opcodes::              Opcodes
+
+
+File: as.info,  Node: ARM Options,  Next: ARM Syntax,  Up: ARM-Dependent
+
+Options
+-------
+
+`-marm`[2|250|3|6|60|600|610|620|7|7m|7d|7dm|7di|7dmi|70|700|700i|710|710c|7100|7500|7500fe|7tdmi|8|810|9|9tdmi|920|strongarm|strongarm110|strongarm1100]''
+     This option specifies the target processor.  The assembler will
+     issue an error message if an attempt is made to assemble an
+     instruction which will not execute on the target processor.
+
+`-marmv`[2|2a|3|3m|4|4t|5|5t]''
+     This option specifies the target architecture.  The assembler will
+     issue an error message if an attempt is made to assemble an
+     instruction which will not execute on the target architecture.
+
+`-mthumb'
+     This option specifies that only Thumb instructions should be
+     assembled.
+
+`-mall'
+     This option specifies that any Arm or Thumb instruction should be
+     assembled.
+
+`-mfpa [10|11]'
+     This option specifies the floating point architecture in use on the
+     target processor.
+
+`-mfpe-old'
+     Do not allow the assemble of floating point multiple instructions.
+
+`-mno-fpu'
+     Do not allow the assembly of any floating point instructions.
+
+`-mthumb-interwork'
+     This option specifies that the output generated by the assembler
+     should be marked as supporting interworking.
+
+`-mapcs [26|32]'
+     This option specifies that the output generated by the assembler
+     should be marked as supporting the indicated version of the Arm
+     Procedure.  Calling Standard.
+
+`-mapcs-float'
+     This indicates the the floating point variant of the APCS should be
+     used.  In this variant floating point arguments are passed in FP
+     registers rather than integer registers.
+
+`-mapcs-reentrant'
+     This indicates that the reentrant variant of the APCS should be
+     used.  This variant supports position independent code.
+
+`-EB'
+     This option specifies that the output generated by the assembler
+     should be marked as being encoded for a big-endian processor.
+
+`-EL'
+     This option specifies that the output generated by the assembler
+     should be marked as being encoded for a little-endian processor.
+
+`-k'
+     This option enables the generation of PIC (position independent
+     code).
+
+`-moabi'
+     This indicates that the code should be assembled using the old ARM
+     ELF conventions, based on a beta release release of the ARM-ELF
+     specifications, rather than the default conventions which are
+     based on the final release of the ARM-ELF specifications.
+
+
+File: as.info,  Node: ARM Syntax,  Next: ARM Floating Point,  Prev: ARM Options,  Up: ARM-Dependent
+
+Syntax
+------
+
+* Menu:
+
+* ARM-Chars::                Special Characters
+* ARM-Regs::                 Register Names
+
+
+File: as.info,  Node: ARM-Chars,  Next: ARM-Regs,  Up: ARM Syntax
+
+Special Characters
+..................
+
+   The presence of a `@' on a line indicates the start of a comment
+that extends to the end of the current line.  If a `#' appears as the
+first character of a line, the whole line is treated as a comment.
+
+   On ARM systems running the GNU/Linux operating system, `;' can be
+used instead of a newline to separate statements.
+
+   Either `#' or `$' can be used to indicate immediate operands.
+
+   *TODO* Explain about /data modifier on symbols.
+
+
+File: as.info,  Node: ARM-Regs,  Prev: ARM-Chars,  Up: ARM Syntax
+
+Register Names
+..............
+
+   *TODO* Explain about ARM register naming, and the predefined names.
+
+
+File: as.info,  Node: ARM Floating Point,  Next: ARM Directives,  Prev: ARM Syntax,  Up: ARM-Dependent
+
+Floating Point
+--------------
+
+   The ARM family uses IEEE floating-point numbers.
+
+
+File: as.info,  Node: ARM Directives,  Next: ARM Opcodes,  Prev: ARM Floating Point,  Up: ARM-Dependent
+
+ARM Machine Directives
+----------------------
+
+`.align EXPRESSION [, EXPRESSION]'
+     This is the generic .ALIGN directive.  For the ARM however if the
+     first argument is zero (ie no alignment is needed) the assembler
+     will behave as if the argument had been 2 (ie pad to the next four
+     byte boundary).  This is for compatability with ARM's own
+     assembler.
+
+`NAME .req REGISTER NAME'
+     This creates an alias for REGISTER NAME called NAME.  For example:
+
+                  foo .req r0
+
+`.code [16|32]'
+     This directive selects the instruction set being generated. The
+     value 16 selects Thumb, with the value 32 selecting ARM.
+
+`.thumb'
+     This performs the same action as .CODE 16.
+
+`.arm'
+     This performs the same action as .CODE 32.
+
+`.force_thumb'
+     This directive forces the selection of Thumb instructions, even if
+     the target processor does not support those instructions
+
+`.thumb_func'
+     This directive specifies that the following symbol is the name of a
+     Thumb encoded function.  This information is necessary in order to
+     allow the assembler and linker to generate correct code for
+     interworking between Arm and Thumb instructions and should be used
+     even if interworking is not going to be performed.
+
+`.thumb_set'
+     This performs the equivalent of a `.set' directive in that it
+     creates a symbol which is an alias for another symbol (possibly
+     not yet defined).  This directive also has the added property in
+     that it marks the aliased symbol as being a thumb function entry
+     point, in the same way that the `.thumb_func' directive does.
+
+`.ltorg'
+     This directive causes the current contents of the literal pool to
+     be dumped into the current section (which is assumed to be the
+     .text section) at the current location (aligned to a word
+     boundary).
+
+`.pool'
+     This is a synonym for .ltorg.
+
+
+File: as.info,  Node: ARM Opcodes,  Prev: ARM Directives,  Up: ARM-Dependent
+
+Opcodes
+-------
+
+   `as' implements all the standard ARM opcodes.  It also implements
+several pseudo opcodes, including several synthetic load instructions.
+
+`NOP'
+            nop
+
+     This pseudo op will always evaluate to a legal ARM instruction
+     that does nothing.  Currently it will evaluate to MOV r0, r0.
+
+`LDR'
+            ldr <register> , = <expression>
+
+     If expression evaluates to a numeric constant then a MOV or MVN
+     instruction will be used in place of the LDR instruction, if the
+     constant can be generated by either of these instructions.
+     Otherwise the constant will be placed into the nearest literal
+     pool (if it not already there) and a PC relative LDR instruction
+     will be generated.
+
+`ADR'
+            adr <register> <label>
+
+     This instruction will load the address of LABEL into the indicated
+     register.  The instruction will evaluate to a PC relative ADD or
+     SUB instruction depending upon where the label is located.  If the
+     label is out of range, or if it is not defined in the same file
+     (and section) as the ADR instruction, then an error will be
+     generated.  This instruction will not make use of the literal pool.
+
+`ADRL'
+            adrl <register> <label>
+
+     This instruction will load the address of LABEL into the indicated
+     register.  The instruction will evaluate to one or two a PC
+     relative ADD or SUB instructions depending upon where the label is
+     located.  If a second instruction is not needed a NOP instruction
+     will be generated in its place, so that this instruction is always
+     8 bytes long.
+
+     If the label is out of range, or if it is not defined in the same
+     file (and section) as the ADRL instruction, then an error will be
+     generated.  This instruction will not make use of the literal pool.
+
+   For information on the ARM or Thumb instruction sets, see `ARM
+Software Development Toolkit Reference Manual', Advanced RISC Machines
+Ltd.
+
+
+File: as.info,  Node: D10V-Dependent,  Next: D30V-Dependent,  Prev: ARM-Dependent,  Up: Machine Dependencies
 
 D10V Dependent Features
 =======================
@@ -797,6 +1442,12 @@ options.
      The D10V can often execute two sub-instructions in parallel. When
      this option is used, `as' will attempt to optimize its output by
      detecting when instructions can be executed in parallel.
+
+`--nowarnswap'
+     To optimize execution performance, `as' will sometimes swap the
+     order of instructions. Normally this generates a warning. When
+     this option is used, no warning will be generated when
+     instructions are swapped.
 
 
 File: as.info,  Node: D10V-Syntax,  Next: D10V-Float,  Prev: D10V-Opts,  Up: D10V-Dependent
@@ -835,663 +1486,4 @@ assembly program and you want to do a branch to a symbol that is
 defined later in your program, you can write `bra.s   foo'.  Objdump
 and GDB will always append `.s' or `.l' to instructions which have both
 short and long forms.
-
-
-File: as.info,  Node: D10V-Subs,  Next: D10V-Chars,  Prev: D10V-Size,  Up: D10V-Syntax
-
-Sub-Instructions
-................
-
-   The D10V assembler takes as input a series of instructions, either
-one-per-line, or in the special two-per-line format described in the
-next section.  Some of these instructions will be short-form or
-sub-instructions.  These sub-instructions can be packed into a single
-instruction.  The assembler will do this automatically.  It will also
-detect when it should not pack instructions.  For example, when a label
-is defined, the next instruction will never be packaged with the
-previous one.  Whenever a branch and link instruction is called, it
-will not be packaged with the next instruction so the return address
-will be valid.  Nops are automatically inserted when necessary.
-
-   If you do not want the assembler automatically making these
-decisions, you can control the packaging and execution type (parallel
-or sequential) with the special execution symbols described in the next
-section.
-
-
-File: as.info,  Node: D10V-Chars,  Next: D10V-Regs,  Prev: D10V-Subs,  Up: D10V-Syntax
-
-Special Characters
-..................
-
-   `;' and `#' are the line comment characters.  Sub-instructions may
-be executed in order, in reverse-order, or in parallel.  Instructions
-listed in the standard one-per-line format will be executed
-sequentially.  To specify the executing order, use the following
-symbols:
-`->'
-     Sequential with instruction on the left first.
-
-`<-'
-     Sequential with instruction on the right first.
-
-`||'
-     Parallel The D10V syntax allows either one instruction per line,
-one instruction per line with the execution symbol, or two instructions
-per line.  For example
-`abs       a1      ->      abs     r0'
-     Execute these sequentially.  The instruction on the right is in
-     the right container and is executed second.
-
-`abs       r0      <-      abs     a1'
-     Execute these reverse-sequentially.  The instruction on the right
-     is in the right container, and is executed first.
-
-`ld2w    r2,@r8+         ||      mac     a0,r0,r7'
-     Execute these in parallel.
-
-`ld2w    r2,@r8+         ||'
-`mac     a0,r0,r7'
-     Two-line format. Execute these in parallel.
-
-`ld2w    r2,@r8+'
-`mac     a0,r0,r7'
-     Two-line format. Execute these sequentially.  Assembler will put
-     them in the proper containers.
-
-`ld2w    r2,@r8+         ->'
-`mac     a0,r0,r7'
-     Two-line format. Execute these sequentially.  Same as above but
-     second instruction will always go into right container.  Since `$'
-has no special meaning, you may use it in symbol names.
-
-
-File: as.info,  Node: D10V-Regs,  Next: D10V-Addressing,  Prev: D10V-Chars,  Up: D10V-Syntax
-
-Register Names
-..............
-
-   You can use the predefined symbols `r0' through `r15' to refer to
-the D10V registers.  You can also use `sp' as an alias for `r15'.  The
-accumulators are `a0' and `a1'.  There are special register-pair names
-that may optionally be used in opcodes that require even-numbered
-registers. Register names are not case sensitive.
-
-   Register Pairs
-`r0-r1'
-`r2-r3'
-`r4-r5'
-`r6-r7'
-`r8-r9'
-`r10-r11'
-`r12-r13'
-`r14-r15'
-   The D10V also has predefined symbols for these control registers and
-status bits:
-`psw'
-     Processor Status Word
-
-`bpsw'
-     Backup Processor Status Word
-
-`pc'
-     Program Counter
-
-`bpc'
-     Backup Program Counter
-
-`rpt_c'
-     Repeat Count
-
-`rpt_s'
-     Repeat Start address
-
-`rpt_e'
-     Repeat End address
-
-`mod_s'
-     Modulo Start address
-
-`mod_e'
-     Modulo End address
-
-`iba'
-     Instruction Break Address
-
-`f0'
-     Flag 0
-
-`f1'
-     Flag 1
-
-`c'
-     Carry flag
-
-
-File: as.info,  Node: D10V-Addressing,  Next: D10V-Word,  Prev: D10V-Regs,  Up: D10V-Syntax
-
-Addressing Modes
-................
-
-   `as' understands the following addressing modes for the D10V.  `RN'
-in the following refers to any of the numbered registers, but *not* the
-control registers.
-`RN'
-     Register direct
-
-`@RN'
-     Register indirect
-
-`@RN+'
-     Register indirect with post-increment
-
-`@RN-'
-     Register indirect with post-decrement
-
-`@-SP'
-     Register indirect with pre-decrement
-
-`@(DISP, RN)'
-     Register indirect with displacement
-
-`ADDR'
-     PC relative address (for branch or rep).
-
-`#IMM'
-     Immediate data (the `#' is optional and ignored)
-
-
-File: as.info,  Node: D10V-Word,  Prev: D10V-Addressing,  Up: D10V-Syntax
-
-@WORD Modifier
-..............
-
-   Any symbol followed by `@word' will be replaced by the symbol's value
-shifted right by 2.  This is used in situations such as loading a
-register with the address of a function (or any other code fragment).
-For example, if you want to load a register with the location of the
-function `main' then jump to that function, you could do it as follws:
-     ldi     r2, main@word
-     jmp     r2
-
-
-File: as.info,  Node: D10V-Float,  Next: D10V-Opcodes,  Prev: D10V-Syntax,  Up: D10V-Dependent
-
-Floating Point
---------------
-
-   The D10V has no hardware floating point, but the `.float' and
-`.double' directives generates IEEE floating-point numbers for
-compatibility with other development tools.
-
-
-File: as.info,  Node: D10V-Opcodes,  Prev: D10V-Float,  Up: D10V-Dependent
-
-Opcodes
--------
-
-   For detailed information on the D10V machine instruction set, see
-`D10V Architecture: A VLIW Microprocessor for Multimedia Applications'
-(Mitsubishi Electric Corp.).  `as' implements all the standard D10V
-opcodes.  The only changes are those described in the section on size
-modifiers
-
-
-File: as.info,  Node: H8/300-Dependent,  Next: H8/500-Dependent,  Prev: D10V-Dependent,  Up: Machine Dependencies
-
-H8/300 Dependent Features
-=========================
-
-* Menu:
-
-* H8/300 Options::              Options
-* H8/300 Syntax::               Syntax
-* H8/300 Floating Point::       Floating Point
-* H8/300 Directives::           H8/300 Machine Directives
-* H8/300 Opcodes::              Opcodes
-
-
-File: as.info,  Node: H8/300 Options,  Next: H8/300 Syntax,  Up: H8/300-Dependent
-
-Options
--------
-
-   `as' has no additional command-line options for the Hitachi H8/300
-family.
-
-
-File: as.info,  Node: H8/300 Syntax,  Next: H8/300 Floating Point,  Prev: H8/300 Options,  Up: H8/300-Dependent
-
-Syntax
-------
-
-* Menu:
-
-* H8/300-Chars::                Special Characters
-* H8/300-Regs::                 Register Names
-* H8/300-Addressing::           Addressing Modes
-
-
-File: as.info,  Node: H8/300-Chars,  Next: H8/300-Regs,  Up: H8/300 Syntax
-
-Special Characters
-..................
-
-   `;' is the line comment character.
-
-   `$' can be used instead of a newline to separate statements.
-Therefore *you may not use `$' in symbol names* on the H8/300.
-
-
-File: as.info,  Node: H8/300-Regs,  Next: H8/300-Addressing,  Prev: H8/300-Chars,  Up: H8/300 Syntax
-
-Register Names
-..............
-
-   You can use predefined symbols of the form `rNh' and `rNl' to refer
-to the H8/300 registers as sixteen 8-bit general-purpose registers.  N
-is a digit from `0' to `7'); for instance, both `r0h' and `r7l' are
-valid register names.
-
-   You can also use the eight predefined symbols `rN' to refer to the
-H8/300 registers as 16-bit registers (you must use this form for
-addressing).
-
-   On the H8/300H, you can also use the eight predefined symbols `erN'
-(`er0' ... `er7') to refer to the 32-bit general purpose registers.
-
-   The two control registers are called `pc' (program counter; a 16-bit
-register, except on the H8/300H where it is 24 bits) and `ccr'
-(condition code register; an 8-bit register).  `r7' is used as the
-stack pointer, and can also be called `sp'.
-
-
-File: as.info,  Node: H8/300-Addressing,  Prev: H8/300-Regs,  Up: H8/300 Syntax
-
-Addressing Modes
-................
-
-   as understands the following addressing modes for the H8/300:
-`rN'
-     Register direct
-
-`@rN'
-     Register indirect
-
-`@(D, rN)'
-`@(D:16, rN)'
-`@(D:24, rN)'
-     Register indirect: 16-bit or 24-bit displacement D from register
-     N.  (24-bit displacements are only meaningful on the H8/300H.)
-
-`@rN+'
-     Register indirect with post-increment
-
-`@-rN'
-     Register indirect with pre-decrement
-
-``@'AA'
-``@'AA:8'
-``@'AA:16'
-``@'AA:24'
-     Absolute address `aa'.  (The address size `:24' only makes sense
-     on the H8/300H.)
-
-`#XX'
-`#XX:8'
-`#XX:16'
-`#XX:32'
-     Immediate data XX.  You may specify the `:8', `:16', or `:32' for
-     clarity, if you wish; but `as' neither requires this nor uses
-     it--the data size required is taken from context.
-
-``@'`@'AA'
-``@'`@'AA:8'
-     Memory indirect.  You may specify the `:8' for clarity, if you
-     wish; but `as' neither requires this nor uses it.
-
-
-File: as.info,  Node: H8/300 Floating Point,  Next: H8/300 Directives,  Prev: H8/300 Syntax,  Up: H8/300-Dependent
-
-Floating Point
---------------
-
-   The H8/300 family has no hardware floating point, but the `.float'
-directive generates IEEE floating-point numbers for compatibility with
-other development tools.
-
-
-File: as.info,  Node: H8/300 Directives,  Next: H8/300 Opcodes,  Prev: H8/300 Floating Point,  Up: H8/300-Dependent
-
-H8/300 Machine Directives
--------------------------
-
-   `as' has only one machine-dependent directive for the H8/300:
-
-`.h8300h'
-     Recognize and emit additional instructions for the H8/300H
-     variant, and also make `.int' emit 32-bit numbers rather than the
-     usual (16-bit) for the H8/300 family.
-
-   On the H8/300 family (including the H8/300H) `.word' directives
-generate 16-bit numbers.
-
-
-File: as.info,  Node: H8/300 Opcodes,  Prev: H8/300 Directives,  Up: H8/300-Dependent
-
-Opcodes
--------
-
-   For detailed information on the H8/300 machine instruction set, see
-`H8/300 Series Programming Manual' (Hitachi ADE-602-025).  For
-information specific to the H8/300H, see `H8/300H Series Programming
-Manual' (Hitachi).
-
-   `as' implements all the standard H8/300 opcodes.  No additional
-pseudo-instructions are needed on this family.
-
-   The following table summarizes the H8/300 opcodes, and their
-arguments.  Entries marked `*' are opcodes used only on the H8/300H.
-
-              Legend:
-                 Rs   source register
-                 Rd   destination register
-                 abs  absolute address
-                 imm  immediate data
-              disp:N  N-bit displacement from a register
-             pcrel:N  N-bit displacement relative to program counter
-     
-        add.b #imm,rd              *  andc #imm,ccr
-        add.b rs,rd                   band #imm,rd
-        add.w rs,rd                   band #imm,@rd
-     *  add.w #imm,rd                 band #imm,@abs:8
-     *  add.l rs,rd                   bra  pcrel:8
-     *  add.l #imm,rd              *  bra  pcrel:16
-        adds #imm,rd                  bt   pcrel:8
-        addx #imm,rd               *  bt   pcrel:16
-        addx rs,rd                    brn  pcrel:8
-        and.b #imm,rd              *  brn  pcrel:16
-        and.b rs,rd                   bf   pcrel:8
-     *  and.w rs,rd                *  bf   pcrel:16
-     *  and.w #imm,rd                 bhi  pcrel:8
-     *  and.l #imm,rd              *  bhi  pcrel:16
-     *  and.l rs,rd                   bls  pcrel:8
-     
-     *  bls  pcrel:16                 bld  #imm,rd
-        bcc  pcrel:8                  bld  #imm,@rd
-     *  bcc  pcrel:16                 bld  #imm,@abs:8
-        bhs  pcrel:8                  bnot #imm,rd
-     *  bhs  pcrel:16                 bnot #imm,@rd
-        bcs  pcrel:8                  bnot #imm,@abs:8
-     *  bcs  pcrel:16                 bnot rs,rd
-        blo  pcrel:8                  bnot rs,@rd
-     *  blo  pcrel:16                 bnot rs,@abs:8
-        bne  pcrel:8                  bor  #imm,rd
-     *  bne  pcrel:16                 bor  #imm,@rd
-        beq  pcrel:8                  bor  #imm,@abs:8
-     *  beq  pcrel:16                 bset #imm,rd
-        bvc  pcrel:8                  bset #imm,@rd
-     *  bvc  pcrel:16                 bset #imm,@abs:8
-        bvs  pcrel:8                  bset rs,rd
-     *  bvs  pcrel:16                 bset rs,@rd
-        bpl  pcrel:8                  bset rs,@abs:8
-     *  bpl  pcrel:16                 bsr  pcrel:8
-        bmi  pcrel:8                  bsr  pcrel:16
-     *  bmi  pcrel:16                 bst  #imm,rd
-        bge  pcrel:8                  bst  #imm,@rd
-     *  bge  pcrel:16                 bst  #imm,@abs:8
-        blt  pcrel:8                  btst #imm,rd
-     *  blt  pcrel:16                 btst #imm,@rd
-        bgt  pcrel:8                  btst #imm,@abs:8
-     *  bgt  pcrel:16                 btst rs,rd
-        ble  pcrel:8                  btst rs,@rd
-     *  ble  pcrel:16                 btst rs,@abs:8
-        bclr #imm,rd                  bxor #imm,rd
-        bclr #imm,@rd                 bxor #imm,@rd
-        bclr #imm,@abs:8              bxor #imm,@abs:8
-        bclr rs,rd                    cmp.b #imm,rd
-        bclr rs,@rd                   cmp.b rs,rd
-        bclr rs,@abs:8                cmp.w rs,rd
-        biand #imm,rd                 cmp.w rs,rd
-        biand #imm,@rd             *  cmp.w #imm,rd
-        biand #imm,@abs:8          *  cmp.l #imm,rd
-        bild #imm,rd               *  cmp.l rs,rd
-        bild #imm,@rd                 daa  rs
-        bild #imm,@abs:8              das  rs
-        bior #imm,rd                  dec.b rs
-        bior #imm,@rd              *  dec.w #imm,rd
-        bior #imm,@abs:8           *  dec.l #imm,rd
-        bist #imm,rd                  divxu.b rs,rd
-        bist #imm,@rd              *  divxu.w rs,rd
-        bist #imm,@abs:8           *  divxs.b rs,rd
-        bixor #imm,rd              *  divxs.w rs,rd
-        bixor #imm,@rd                eepmov
-        bixor #imm,@abs:8          *  eepmovw
-     
-     *  exts.w rd                     mov.w rs,@abs:16
-     *  exts.l rd                  *  mov.l #imm,rd
-     *  extu.w rd                  *  mov.l rs,rd
-     *  extu.l rd                  *  mov.l @rs,rd
-        inc  rs                    *  mov.l @(disp:16,rs),rd
-     *  inc.w #imm,rd              *  mov.l @(disp:24,rs),rd
-     *  inc.l #imm,rd              *  mov.l @rs+,rd
-        jmp  @rs                   *  mov.l @abs:16,rd
-        jmp  abs                   *  mov.l @abs:24,rd
-        jmp  @@abs:8               *  mov.l rs,@rd
-        jsr  @rs                   *  mov.l rs,@(disp:16,rd)
-        jsr  abs                   *  mov.l rs,@(disp:24,rd)
-        jsr  @@abs:8               *  mov.l rs,@-rd
-        ldc  #imm,ccr              *  mov.l rs,@abs:16
-        ldc  rs,ccr                *  mov.l rs,@abs:24
-     *  ldc  @abs:16,ccr              movfpe @abs:16,rd
-     *  ldc  @abs:24,ccr              movtpe rs,@abs:16
-     *  ldc  @(disp:16,rs),ccr        mulxu.b rs,rd
-     *  ldc  @(disp:24,rs),ccr     *  mulxu.w rs,rd
-     *  ldc  @rs+,ccr              *  mulxs.b rs,rd
-     *  ldc  @rs,ccr               *  mulxs.w rs,rd
-     *  mov.b @(disp:24,rs),rd        neg.b rs
-     *  mov.b rs,@(disp:24,rd)     *  neg.w rs
-        mov.b @abs:16,rd           *  neg.l rs
-        mov.b rs,rd                   nop
-        mov.b @abs:8,rd               not.b rs
-        mov.b rs,@abs:8            *  not.w rs
-        mov.b rs,rd                *  not.l rs
-        mov.b #imm,rd                 or.b #imm,rd
-        mov.b @rs,rd                  or.b rs,rd
-        mov.b @(disp:16,rs),rd     *  or.w #imm,rd
-        mov.b @rs+,rd              *  or.w rs,rd
-        mov.b @abs:8,rd            *  or.l #imm,rd
-        mov.b rs,@rd               *  or.l rs,rd
-        mov.b rs,@(disp:16,rd)        orc  #imm,ccr
-        mov.b rs,@-rd                 pop.w rs
-        mov.b rs,@abs:8            *  pop.l rs
-        mov.w rs,@rd                  push.w rs
-     *  mov.w @(disp:24,rs),rd     *  push.l rs
-     *  mov.w rs,@(disp:24,rd)        rotl.b rs
-     *  mov.w @abs:24,rd           *  rotl.w rs
-     *  mov.w rs,@abs:24           *  rotl.l rs
-        mov.w rs,rd                   rotr.b rs
-        mov.w #imm,rd              *  rotr.w rs
-        mov.w @rs,rd               *  rotr.l rs
-        mov.w @(disp:16,rs),rd        rotxl.b rs
-        mov.w @rs+,rd              *  rotxl.w rs
-        mov.w @abs:16,rd           *  rotxl.l rs
-        mov.w rs,@(disp:16,rd)        rotxr.b rs
-        mov.w rs,@-rd              *  rotxr.w rs
-     
-     *  rotxr.l rs                 *  stc  ccr,@(disp:24,rd)
-        bpt                        *  stc  ccr,@-rd
-        rte                        *  stc  ccr,@abs:16
-        rts                        *  stc  ccr,@abs:24
-        shal.b rs                     sub.b rs,rd
-     *  shal.w rs                     sub.w rs,rd
-     *  shal.l rs                  *  sub.w #imm,rd
-        shar.b rs                  *  sub.l rs,rd
-     *  shar.w rs                  *  sub.l #imm,rd
-     *  shar.l rs                     subs #imm,rd
-        shll.b rs                     subx #imm,rd
-     *  shll.w rs                     subx rs,rd
-     *  shll.l rs                  *  trapa #imm
-        shlr.b rs                     xor  #imm,rd
-     *  shlr.w rs                     xor  rs,rd
-     *  shlr.l rs                  *  xor.w #imm,rd
-        sleep                      *  xor.w rs,rd
-        stc  ccr,rd                *  xor.l #imm,rd
-     *  stc  ccr,@rs               *  xor.l rs,rd
-     *  stc  ccr,@(disp:16,rd)        xorc #imm,ccr
-
-   Four H8/300 instructions (`add', `cmp', `mov', `sub') are defined
-with variants using the suffixes `.b', `.w', and `.l' to specify the
-size of a memory operand.  `as' supports these suffixes, but does not
-require them; since one of the operands is always a register, `as' can
-deduce the correct size.
-
-   For example, since `r0' refers to a 16-bit register,
-     mov    r0,@foo
-is equivalent to
-     mov.w  r0,@foo
-
-   If you use the size suffixes, `as' issues a warning when the suffix
-and the register size do not match.
-
-
-File: as.info,  Node: H8/500-Dependent,  Next: HPPA-Dependent,  Prev: H8/300-Dependent,  Up: Machine Dependencies
-
-H8/500 Dependent Features
-=========================
-
-* Menu:
-
-* H8/500 Options::              Options
-* H8/500 Syntax::               Syntax
-* H8/500 Floating Point::       Floating Point
-* H8/500 Directives::           H8/500 Machine Directives
-* H8/500 Opcodes::              Opcodes
-
-
-File: as.info,  Node: H8/500 Options,  Next: H8/500 Syntax,  Up: H8/500-Dependent
-
-Options
--------
-
-   `as' has no additional command-line options for the Hitachi H8/500
-family.
-
-
-File: as.info,  Node: H8/500 Syntax,  Next: H8/500 Floating Point,  Prev: H8/500 Options,  Up: H8/500-Dependent
-
-Syntax
-------
-
-* Menu:
-
-* H8/500-Chars::                Special Characters
-* H8/500-Regs::                 Register Names
-* H8/500-Addressing::           Addressing Modes
-
-
-File: as.info,  Node: H8/500-Chars,  Next: H8/500-Regs,  Up: H8/500 Syntax
-
-Special Characters
-..................
-
-   `!' is the line comment character.
-
-   `;' can be used instead of a newline to separate statements.
-
-   Since `$' has no special meaning, you may use it in symbol names.
-
-
-File: as.info,  Node: H8/500-Regs,  Next: H8/500-Addressing,  Prev: H8/500-Chars,  Up: H8/500 Syntax
-
-Register Names
-..............
-
-   You can use the predefined symbols `r0', `r1', `r2', `r3', `r4',
-`r5', `r6', and `r7' to refer to the H8/500 registers.
-
-   The H8/500 also has these control registers:
-
-`cp'
-     code pointer
-
-`dp'
-     data pointer
-
-`bp'
-     base pointer
-
-`tp'
-     stack top pointer
-
-`ep'
-     extra pointer
-
-`sr'
-     status register
-
-`ccr'
-     condition code register
-
-   All registers are 16 bits long.  To represent 32 bit numbers, use two
-adjacent registers; for distant memory addresses, use one of the segment
-pointers (`cp' for the program counter; `dp' for `r0'-`r3'; `ep' for
-`r4' and `r5'; and `tp' for `r6' and `r7'.
-
-
-File: as.info,  Node: H8/500-Addressing,  Prev: H8/500-Regs,  Up: H8/500 Syntax
-
-Addressing Modes
-................
-
-   as understands the following addressing modes for the H8/500:
-`RN'
-     Register direct
-
-`@RN'
-     Register indirect
-
-`@(d:8, RN)'
-     Register indirect with 8 bit signed displacement
-
-`@(d:16, RN)'
-     Register indirect with 16 bit signed displacement
-
-`@-RN'
-     Register indirect with pre-decrement
-
-`@RN+'
-     Register indirect with post-increment
-
-`@AA:8'
-     8 bit absolute address
-
-`@AA:16'
-     16 bit absolute address
-
-`#XX:8'
-     8 bit immediate
-
-`#XX:16'
-     16 bit immediate
-
-
-File: as.info,  Node: H8/500 Floating Point,  Next: H8/500 Directives,  Prev: H8/500 Syntax,  Up: H8/500-Dependent
-
-Floating Point
---------------
-
-   The H8/500 family has no hardware floating point, but the `.float'
-directive generates IEEE floating-point numbers for compatibility with
-other development tools.
-
-
-File: as.info,  Node: H8/500 Directives,  Next: H8/500 Opcodes,  Prev: H8/500 Floating Point,  Up: H8/500-Dependent
-
-H8/500 Machine Directives
--------------------------
-
-   `as' has no machine-dependent directives for the H8/500.  However,
-on this platform the `.int' and `.word' directives generate 16-bit
-numbers.
 

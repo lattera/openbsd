@@ -1,14 +1,13 @@
-This is Info file ld.info, produced by Makeinfo-1.64 from the input
-file ./ld.texinfo.
+This is ld.info, produced by makeinfo version 4.0 from ./ld.texinfo.
 
 START-INFO-DIR-ENTRY
 * Ld: (ld).                       The GNU linker.
 END-INFO-DIR-ENTRY
 
-   This file documents the GNU linker LD.
+   This file documents the GNU linker LD version 2.10.1.
 
-   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
-Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 97, 98, 99, 2000 Free
+Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,163 +23,856 @@ manual into another language, under the above conditions for modified
 versions.
 
 
-File: ld.info,  Node: Option Commands,  Prev: Version Script,  Up: Commands
+File: ld.info,  Node: Overlay Description,  Prev: Output Section Attributes,  Up: SECTIONS
 
-Option Commands
-===============
+Overlay description
+-------------------
 
-   The command language includes a number of other commands that you can
-use for specialized purposes.  They are similar in purpose to
-command-line options.
+   An overlay description provides an easy way to describe sections
+which are to be loaded as part of a single memory image but are to be
+run at the same memory address.  At run time, some sort of overlay
+manager will copy the overlaid sections in and out of the runtime
+memory address as required, perhaps by simply manipulating addressing
+bits.  This approach can be useful, for example, when a certain region
+of memory is faster than another.
 
-`CONSTRUCTORS'
-     When linking using the `a.out' object file format, the linker uses
-     an unusual set construct to support C++ global constructors and
-     destructors.  When linking object file formats which do not support
-     arbitrary sections, such as `ECOFF' and `XCOFF', the linker will
-     automatically recognize C++ global constructors and destructors by
-     name.  For these object file formats, the `CONSTRUCTORS' command
-     tells the linker where this information should be placed.  The
-     `CONSTRUCTORS' command is ignored for other object file formats.
+   Overlays are described using the `OVERLAY' command.  The `OVERLAY'
+command is used within a `SECTIONS' command, like an output section
+description.  The full syntax of the `OVERLAY' command is as follows:
+     OVERLAY [START] : [NOCROSSREFS] [AT ( LDADDR )]
+       {
+         SECNAME1
+           {
+             OUTPUT-SECTION-COMMAND
+             OUTPUT-SECTION-COMMAND
+             ...
+           } [:PHDR...] [=FILL]
+         SECNAME2
+           {
+             OUTPUT-SECTION-COMMAND
+             OUTPUT-SECTION-COMMAND
+             ...
+           } [:PHDR...] [=FILL]
+         ...
+       } [>REGION] [:PHDR...] [=FILL]
 
-     The symbol `__CTOR_LIST__' marks the start of the global
-     constructors, and the symbol `__DTOR_LIST' marks the end.  The
-     first word in the list is the number of entries, followed by the
-     address of each constructor or destructor, followed by a zero
-     word.  The compiler must arrange to actually run the code.  For
-     these object file formats GNU C++ calls constructors from a
-     subroutine `__main'; a call to `__main' is automatically inserted
-     into the startup code for `main'.  GNU C++ runs destructors either
-     by using `atexit', or directly from the function `exit'.
+   Everything is optional except `OVERLAY' (a keyword), and each
+section must have a name (SECNAME1 and SECNAME2 above).  The section
+definitions within the `OVERLAY' construct are identical to those
+within the general `SECTIONS' contruct (*note SECTIONS::), except that
+no addresses and no memory regions may be defined for sections within
+an `OVERLAY'.
 
-     For object file formats such as `COFF' or `ELF' which support
-     multiple sections, GNU C++ will normally arrange to put the
-     addresses of global constructors and destructors into the `.ctors'
-     and `.dtors' sections.  Placing the following sequence into your
-     linker script will build the sort of table which the GNU C++
-     runtime code expects to see.
+   The sections are all defined with the same starting address.  The
+load addresses of the sections are arranged such that they are
+consecutive in memory starting at the load address used for the
+`OVERLAY' as a whole (as with normal section definitions, the load
+address is optional, and defaults to the start address; the start
+address is also optional, and defaults to the current value of the
+location counter).
 
-                __CTOR_LIST__ = .;
-                LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2)
-                *(.ctors)
-                LONG(0)
-                __CTOR_END__ = .;
-                __DTOR_LIST__ = .;
-                LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2)
-                *(.dtors)
-                LONG(0)
-                __DTOR_END__ = .;
+   If the `NOCROSSREFS' keyword is used, and there any references among
+the sections, the linker will report an error.  Since the sections all
+run at the same address, it normally does not make sense for one
+section to refer directly to another.  *Note NOCROSSREFS: Miscellaneous
+Commands.
 
-     Normally the compiler and linker will handle these issues
-     automatically, and you will not need to concern yourself with
-     them.  However, you may need to consider this if you are using C++
-     and writing your own linker scripts.
+   For each section within the `OVERLAY', the linker automatically
+defines two symbols.  The symbol `__load_start_SECNAME' is defined as
+the starting load address of the section.  The symbol
+`__load_stop_SECNAME' is defined as the final load address of the
+section.  Any characters within SECNAME which are not legal within C
+identifiers are removed.  C (or assembler) code may use these symbols
+to move the overlaid sections around as necessary.
 
-`FLOAT'
-`NOFLOAT'
-     These keywords were used in some older linkers to request a
-     particular math subroutine library.  `ld' doesn't use the
-     keywords, assuming instead that any necessary subroutines are in
-     libraries specified using the general mechanisms for linking to
-     archives; but to permit the use of scripts that were written for
-     the older linkers, the keywords `FLOAT' and `NOFLOAT' are accepted
-     and ignored.
+   At the end of the overlay, the value of the location counter is set
+to the start address of the overlay plus the size of the largest
+section.
 
-`FORCE_COMMON_ALLOCATION'
-     This command has the same effect as the `-d' command-line option:
-     to make `ld' assign space to common symbols even if a relocatable
-     output file is specified (`-r').
+   Here is an example.  Remember that this would appear inside a
+`SECTIONS' construct.
+       OVERLAY 0x1000 : AT (0x4000)
+        {
+          .text0 { o1/*.o(.text) }
+          .text1 { o2/*.o(.text) }
+        }
 
-`INCLUDE FILENAME'
-     Include the linker script FILENAME at this point.  The file will
-     be searched for in the current directory, and in any directory
-     specified with the `-L' option.  You can nest calls to `INCLUDE'
-     up to 10 levels deep.
+This will define both `.text0' and `.text1' to start at address 0x1000.
+`.text0' will be loaded at address 0x4000, and `.text1' will be loaded
+immediately after `.text0'.  The following symbols will be defined:
+`__load_start_text0', `__load_stop_text0', `__load_start_text1',
+`__load_stop_text1'.
 
-`INPUT ( FILE, FILE, ... )'
-`INPUT ( FILE FILE ... )'
-     Use this command to include binary input files in the link, without
-     including them in a particular section definition.  Specify the
-     full name for each FILE, including `.a' if required.
+   C code to copy overlay `.text1' into the overlay area might look
+like the following.
 
-     `ld' searches for each FILE through the archive-library search
-     path, just as for files you specify on the command line.  See the
-     description of `-L' in *Note Command Line Options: Options.
+       extern char __load_start_text1, __load_stop_text1;
+       memcpy ((char *) 0x1000, &__load_start_text1,
+               &__load_stop_text1 - &__load_start_text1);
 
-     If you use `-lFILE', `ld' will transform the name to `libFILE.a'
-     as with the command line argument `-l'.
+   Note that the `OVERLAY' command is just syntactic sugar, since
+everything it does can be done using the more basic commands.  The above
+example could have been written identically as follows.
 
-`GROUP ( FILE, FILE, ... )'
-`GROUP ( FILE FILE ... )'
-     This command is like `INPUT', except that the named files should
-     all be archives, and they are searched repeatedly until no new
-     undefined references are created.  See the description of `-(' in
-     *Note Command Line Options: Options.
-
-`OUTPUT ( FILENAME )'
-     Use this command to name the link output file FILENAME.  The
-     effect of `OUTPUT(FILENAME)' is identical to the effect of
-     `-o FILENAME', which overrides it.  You can use this command to
-     supply a default output-file name other than `a.out'.
-
-`OUTPUT_ARCH ( BFDNAME )'
-     Specify a particular output machine architecture, with one of the
-     names used by the BFD back-end routines (*note BFD::.).  This
-     command is often unnecessary; the architecture is most often set
-     implicitly by either the system BFD configuration or as a side
-     effect of the `OUTPUT_FORMAT' command.
-
-`OUTPUT_FORMAT ( BFDNAME )'
-     When `ld' is configured to support multiple object code formats,
-     you can use this command to specify a particular output format.
-     BFDNAME is one of the names used by the BFD back-end routines
-     (*note BFD::.).  The effect is identical to the effect of the
-     `--oformat' command-line option.  This selection affects only the
-     output file; the related command `TARGET' affects primarily input
-     files.
-
-`SEARCH_DIR ( PATH )'
-     Add PATH to the list of paths where `ld' looks for archive
-     libraries.  `SEARCH_DIR(PATH)' has the same effect as `-LPATH' on
-     the command line.
-
-`STARTUP ( FILENAME )'
-     Ensure that FILENAME is the first input file used in the link
-     process.
-
-`TARGET ( FORMAT )'
-     When `ld' is configured to support multiple object code formats,
-     you can use this command to change the input-file object code
-     format (like the command-line option `-b' or its synonym
-     `--format').  The argument FORMAT is one of the strings used by
-     BFD to name binary formats.  If `TARGET' is specified but
-     `OUTPUT_FORMAT' is not, the last `TARGET' argument is also used as
-     the default format for the `ld' output file.  *Note BFD::.
-
-     If you don't use the `TARGET' command, `ld' uses the value of the
-     environment variable `GNUTARGET', if available, to select the
-     output file format.  If that variable is also absent, `ld' uses
-     the default format configured for your machine in the BFD
-     libraries.
-
-`NOCROSSREFS ( SECTION SECTION ... )'
-     This command may be used to tell `ld' to issue an error about any
-     references among certain sections.
-
-     In certain types of programs, particularly on embedded systems,
-     when one section is loaded into memory, another section will not
-     be.  Any direct references between the two sections would be
-     errors.  For example, it would be an error if code in one section
-     called a function defined in the other section.
-
-     The `NOCROSSREFS' command takes a list of section names.  If `ld'
-     detects any cross references between the sections, it reports an
-     error and returns a non-zero exit status.  The `NOCROSSREFS'
-     command uses output section names, defined in the `SECTIONS'
-     command.  It does not use the names of input sections.
+       .text0 0x1000 : AT (0x4000) { o1/*.o(.text) }
+       __load_start_text0 = LOADADDR (.text0);
+       __load_stop_text0 = LOADADDR (.text0) + SIZEOF (.text0);
+       .text1 0x1000 : AT (0x4000 + SIZEOF (.text0)) { o2/*.o(.text) }
+       __load_start_text1 = LOADADDR (.text1);
+       __load_stop_text1 = LOADADDR (.text1) + SIZEOF (.text1);
+       . = 0x1000 + MAX (SIZEOF (.text0), SIZEOF (.text1));
 
 
-File: ld.info,  Node: Machine Dependent,  Next: BFD,  Prev: Commands,  Up: Top
+File: ld.info,  Node: MEMORY,  Next: PHDRS,  Prev: SECTIONS,  Up: Scripts
+
+MEMORY command
+==============
+
+   The linker's default configuration permits allocation of all
+available memory.  You can override this by using the `MEMORY' command.
+
+   The `MEMORY' command describes the location and size of blocks of
+memory in the target.  You can use it to describe which memory regions
+may be used by the linker, and which memory regions it must avoid.  You
+can then assign sections to particular memory regions.  The linker will
+set section addresses based on the memory regions, and will warn about
+regions that become too full.  The linker will not shuffle sections
+around to fit into the available regions.
+
+   A linker script may contain at most one use of the `MEMORY' command.
+However, you can define as many blocks of memory within it as you
+wish.  The syntax is:
+     MEMORY
+       {
+         NAME [(ATTR)] : ORIGIN = ORIGIN, LENGTH = LEN
+         ...
+       }
+
+   The NAME is a name used in the linker script to refer to the region.
+The region name has no meaning outside of the linker script.  Region
+names are stored in a separate name space, and will not conflict with
+symbol names, file names, or section names.  Each memory region must
+have a distinct name.
+
+   The ATTR string is an optional list of attributes that specify
+whether to use a particular memory region for an input section which is
+not explicitly mapped in the linker script.  As described in *Note
+SECTIONS::, if you do not specify an output section for some input
+section, the linker will create an output section with the same name as
+the input section.  If you define region attributes, the linker will use
+them to select the memory region for the output section that it creates.
+
+   The ATTR string must consist only of the following characters:
+`R'
+     Read-only section
+
+`W'
+     Read/write section
+
+`X'
+     Executable section
+
+`A'
+     Allocatable section
+
+`I'
+     Initialized section
+
+`L'
+     Same as `I'
+
+`!'
+     Invert the sense of any of the preceding attributes
+
+   If a unmapped section matches any of the listed attributes other than
+`!', it will be placed in the memory region.  The `!' attribute
+reverses this test, so that an unmapped section will be placed in the
+memory region only if it does not match any of the listed attributes.
+
+   The ORIGIN is an expression for the start address of the memory
+region.  The expression must evaluate to a constant before memory
+allocation is performed, which means that you may not use any section
+relative symbols.  The keyword `ORIGIN' may be abbreviated to `org' or
+`o' (but not, for example, `ORG').
+
+   The LEN is an expression for the size in bytes of the memory region.
+As with the ORIGIN expression, the expression must evaluate to a
+constant before memory allocation is performed.  The keyword `LENGTH'
+may be abbreviated to `len' or `l'.
+
+   In the following example, we specify that there are two memory
+regions available for allocation: one starting at `0' for 256 kilobytes,
+and the other starting at `0x40000000' for four megabytes.  The linker
+will place into the `rom' memory region every section which is not
+explicitly mapped into a memory region, and is either read-only or
+executable.  The linker will place other sections which are not
+explicitly mapped into a memory region into the `ram' memory region.
+
+     MEMORY
+       {
+         rom (rx)  : ORIGIN = 0, LENGTH = 256K
+         ram (!rx) : org = 0x40000000, l = 4M
+       }
+
+   Once you define a memory region, you can direct the linker to place
+specific output sections into that memory region by using the `>REGION'
+output section attribute.  For example, if you have a memory region
+named `mem', you would use `>mem' in the output section definition.
+*Note Output Section Region::.  If no address was specified for the
+output section, the linker will set the address to the next available
+address within the memory region.  If the combined output sections
+directed to a memory region are too large for the region, the linker
+will issue an error message.
+
+
+File: ld.info,  Node: PHDRS,  Next: VERSION,  Prev: MEMORY,  Up: Scripts
+
+PHDRS Command
+=============
+
+   The ELF object file format uses "program headers", also knows as
+"segments".  The program headers describe how the program should be
+loaded into memory.  You can print them out by using the `objdump'
+program with the `-p' option.
+
+   When you run an ELF program on a native ELF system, the system loader
+reads the program headers in order to figure out how to load the
+program.  This will only work if the program headers are set correctly.
+This manual does not describe the details of how the system loader
+interprets program headers; for more information, see the ELF ABI.
+
+   The linker will create reasonable program headers by default.
+However, in some cases, you may need to specify the program headers more
+precisely.  You may use the `PHDRS' command for this purpose.  When the
+linker sees the `PHDRS' command in the linker script, it will not
+create any program headers other than the ones specified.
+
+   The linker only pays attention to the `PHDRS' command when
+generating an ELF output file.  In other cases, the linker will simply
+ignore `PHDRS'.
+
+   This is the syntax of the `PHDRS' command.  The words `PHDRS',
+`FILEHDR', `AT', and `FLAGS' are keywords.
+
+     PHDRS
+     {
+       NAME TYPE [ FILEHDR ] [ PHDRS ] [ AT ( ADDRESS ) ]
+             [ FLAGS ( FLAGS ) ] ;
+     }
+
+   The NAME is used only for reference in the `SECTIONS' command of the
+linker script.  It is not put into the output file.  Program header
+names are stored in a separate name space, and will not conflict with
+symbol names, file names, or section names.  Each program header must
+have a distinct name.
+
+   Certain program header types describe segments of memory which the
+system loader will load from the file.  In the linker script, you
+specify the contents of these segments by placing allocatable output
+sections in the segments.  You use the `:PHDR' output section attribute
+to place a section in a particular segment.  *Note Output Section
+Phdr::.
+
+   It is normal to put certain sections in more than one segment.  This
+merely implies that one segment of memory contains another.  You may
+repeat `:PHDR', using it once for each segment which should contain the
+section.
+
+   If you place a section in one or more segments using `:PHDR', then
+the linker will place all subsequent allocatable sections which do not
+specify `:PHDR' in the same segments.  This is for convenience, since
+generally a whole set of contiguous sections will be placed in a single
+segment.  You can use `:NONE' to override the default segment and tell
+the linker to not put the section in any segment at all.
+
+   You may use the `FILEHDR' and `PHDRS' keywords appear after the
+program header type to further describe the contents of the segment.
+The `FILEHDR' keyword means that the segment should include the ELF
+file header.  The `PHDRS' keyword means that the segment should include
+the ELF program headers themselves.
+
+   The TYPE may be one of the following.  The numbers indicate the
+value of the keyword.
+
+`PT_NULL' (0)
+     Indicates an unused program header.
+
+`PT_LOAD' (1)
+     Indicates that this program header describes a segment to be
+     loaded from the file.
+
+`PT_DYNAMIC' (2)
+     Indicates a segment where dynamic linking information can be found.
+
+`PT_INTERP' (3)
+     Indicates a segment where the name of the program interpreter may
+     be found.
+
+`PT_NOTE' (4)
+     Indicates a segment holding note information.
+
+`PT_SHLIB' (5)
+     A reserved program header type, defined but not specified by the
+     ELF ABI.
+
+`PT_PHDR' (6)
+     Indicates a segment where the program headers may be found.
+
+EXPRESSION
+     An expression giving the numeric type of the program header.  This
+     may be used for types not defined above.
+
+   You can specify that a segment should be loaded at a particular
+address in memory by using an `AT' expression.  This is identical to the
+`AT' command used as an output section attribute (*note Output Section
+LMA::).  The `AT' command for a program header overrides the output
+section attribute.
+
+   The linker will normally set the segment flags based on the sections
+which comprise the segment.  You may use the `FLAGS' keyword to
+explicitly specify the segment flags.  The value of FLAGS must be an
+integer.  It is used to set the `p_flags' field of the program header.
+
+   Here is an example of `PHDRS'.  This shows a typical set of program
+headers used on a native ELF system.
+
+     PHDRS
+     {
+       headers PT_PHDR PHDRS ;
+       interp PT_INTERP ;
+       text PT_LOAD FILEHDR PHDRS ;
+       data PT_LOAD ;
+       dynamic PT_DYNAMIC ;
+     }
+     
+     SECTIONS
+     {
+       . = SIZEOF_HEADERS;
+       .interp : { *(.interp) } :text :interp
+       .text : { *(.text) } :text
+       .rodata : { *(.rodata) } /* defaults to :text */
+       ...
+       . = . + 0x1000; /* move to a new page in memory */
+       .data : { *(.data) } :data
+       .dynamic : { *(.dynamic) } :data :dynamic
+       ...
+     }
+
+
+File: ld.info,  Node: VERSION,  Next: Expressions,  Prev: PHDRS,  Up: Scripts
+
+VERSION Command
+===============
+
+   The linker supports symbol versions when using ELF.  Symbol versions
+are only useful when using shared libraries.  The dynamic linker can use
+symbol versions to select a specific version of a function when it runs
+a program that may have been linked against an earlier version of the
+shared library.
+
+   You can include a version script directly in the main linker script,
+or you can supply the version script as an implicit linker script.  You
+can also use the `--version-script' linker option.
+
+   The syntax of the `VERSION' command is simply
+     VERSION { version-script-commands }
+
+   The format of the version script commands is identical to that used
+by Sun's linker in Solaris 2.5.  The version script defines a tree of
+version nodes.  You specify the node names and interdependencies in the
+version script.  You can specify which symbols are bound to which
+version nodes, and you can reduce a specified set of symbols to local
+scope so that they are not globally visible outside of the shared
+library.
+
+   The easiest way to demonstrate the version script language is with a
+few examples.
+
+     VERS_1.1 {
+     	 global:
+     		 foo1;
+     	 local:
+     		 old*;
+     		 original*;
+     		 new*;
+     };
+     
+     VERS_1.2 {
+     		 foo2;
+     } VERS_1.1;
+     
+     VERS_2.0 {
+     		 bar1; bar2;
+     } VERS_1.2;
+
+   This example version script defines three version nodes.  The first
+version node defined is `VERS_1.1'; it has no other dependencies.  The
+script binds the symbol `foo1' to `VERS_1.1'.  It reduces a number of
+symbols to local scope so that they are not visible outside of the
+shared library.
+
+   Next, the version script defines node `VERS_1.2'.  This node depends
+upon `VERS_1.1'.  The script binds the symbol `foo2' to the version
+node `VERS_1.2'.
+
+   Finally, the version script defines node `VERS_2.0'.  This node
+depends upon `VERS_1.2'.  The scripts binds the symbols `bar1' and
+`bar2' are bound to the version node `VERS_2.0'.
+
+   When the linker finds a symbol defined in a library which is not
+specifically bound to a version node, it will effectively bind it to an
+unspecified base version of the library.  You can bind all otherwise
+unspecified symbols to a given version node by using `global: *'
+somewhere in the version script.
+
+   The names of the version nodes have no specific meaning other than
+what they might suggest to the person reading them.  The `2.0' version
+could just as well have appeared in between `1.1' and `1.2'.  However,
+this would be a confusing way to write a version script.
+
+   When you link an application against a shared library that has
+versioned symbols, the application itself knows which version of each
+symbol it requires, and it also knows which version nodes it needs from
+each shared library it is linked against.  Thus at runtime, the dynamic
+loader can make a quick check to make sure that the libraries you have
+linked against do in fact supply all of the version nodes that the
+application will need to resolve all of the dynamic symbols.  In this
+way it is possible for the dynamic linker to know with certainty that
+all external symbols that it needs will be resolvable without having to
+search for each symbol reference.
+
+   The symbol versioning is in effect a much more sophisticated way of
+doing minor version checking that SunOS does.  The fundamental problem
+that is being addressed here is that typically references to external
+functions are bound on an as-needed basis, and are not all bound when
+the application starts up.  If a shared library is out of date, a
+required interface may be missing; when the application tries to use
+that interface, it may suddenly and unexpectedly fail.  With symbol
+versioning, the user will get a warning when they start their program if
+the libraries being used with the application are too old.
+
+   There are several GNU extensions to Sun's versioning approach.  The
+first of these is the ability to bind a symbol to a version node in the
+source file where the symbol is defined instead of in the versioning
+script.  This was done mainly to reduce the burden on the library
+maintainer.  You can do this by putting something like:
+     __asm__(".symver original_foo,foo@VERS_1.1");
+
+in the C source file.  This renames the function `original_foo' to be
+an alias for `foo' bound to the version node `VERS_1.1'.  The `local:'
+directive can be used to prevent the symbol `original_foo' from being
+exported.
+
+   The second GNU extension is to allow multiple versions of the same
+function to appear in a given shared library.  In this way you can make
+an incompatible change to an interface without increasing the major
+version number of the shared library, while still allowing applications
+linked against the old interface to continue to function.
+
+   To do this, you must use multiple `.symver' directives in the source
+file.  Here is an example:
+
+     __asm__(".symver original_foo,foo@");
+     __asm__(".symver old_foo,foo@VERS_1.1");
+     __asm__(".symver old_foo1,foo@VERS_1.2");
+     __asm__(".symver new_foo,foo@@VERS_2.0");
+
+   In this example, `foo@' represents the symbol `foo' bound to the
+unspecified base version of the symbol.  The source file that contains
+this example would define 4 C functions: `original_foo', `old_foo',
+`old_foo1', and `new_foo'.
+
+   When you have multiple definitions of a given symbol, there needs to
+be some way to specify a default version to which external references to
+this symbol will be bound.  You can do this with the `foo@@VERS_2.0'
+type of `.symver' directive.  You can only declare one version of a
+symbol as the default in this manner; otherwise you would effectively
+have multiple definitions of the same symbol.
+
+   If you wish to bind a reference to a specific version of the symbol
+within the shared library, you can use the aliases of convenience (i.e.
+`old_foo'), or you can use the `.symver' directive to specifically bind
+to an external version of the function in question.
+
+
+File: ld.info,  Node: Expressions,  Next: Implicit Linker Scripts,  Prev: VERSION,  Up: Scripts
+
+Expressions in Linker Scripts
+=============================
+
+   The syntax for expressions in the linker script language is
+identical to that of C expressions.  All expressions are evaluated as
+integers.  All expressions are evaluated in the same size, which is 32
+bits if both the host and target are 32 bits, and is otherwise 64 bits.
+
+   You can use and set symbol values in expressions.
+
+   The linker defines several special purpose builtin functions for use
+in expressions.
+
+* Menu:
+
+* Constants::			Constants
+* Symbols::			Symbol Names
+* Location Counter::		The Location Counter
+* Operators::			Operators
+* Evaluation::			Evaluation
+* Expression Section::		The Section of an Expression
+* Builtin Functions::		Builtin Functions
+
+
+File: ld.info,  Node: Constants,  Next: Symbols,  Up: Expressions
+
+Constants
+---------
+
+   All constants are integers.
+
+   As in C, the linker considers an integer beginning with `0' to be
+octal, and an integer beginning with `0x' or `0X' to be hexadecimal.
+The linker considers other integers to be decimal.
+
+   In addition, you can use the suffixes `K' and `M' to scale a
+constant by `1024' or `1024*1024' respectively. For example, the
+following all refer to the same quantity:
+       _fourk_1 = 4K;
+       _fourk_2 = 4096;
+       _fourk_3 = 0x1000;
+
+
+File: ld.info,  Node: Symbols,  Next: Location Counter,  Prev: Constants,  Up: Expressions
+
+Symbol Names
+------------
+
+   Unless quoted, symbol names start with a letter, underscore, or
+period and may include letters, digits, underscores, periods, and
+hyphens.  Unquoted symbol names must not conflict with any keywords.
+You can specify a symbol which contains odd characters or has the same
+name as a keyword by surrounding the symbol name in double quotes:
+       "SECTION" = 9;
+       "with a space" = "also with a space" + 10;
+
+   Since symbols can contain many non-alphabetic characters, it is
+safest to delimit symbols with spaces.  For example, `A-B' is one
+symbol, whereas `A - B' is an expression involving subtraction.
+
+
+File: ld.info,  Node: Location Counter,  Next: Operators,  Prev: Symbols,  Up: Expressions
+
+The Location Counter
+--------------------
+
+   The special linker variable "dot" `.' always contains the current
+output location counter.  Since the `.' always refers to a location in
+an output section, it may only appear in an expression within a
+`SECTIONS' command.  The `.' symbol may appear anywhere that an
+ordinary symbol is allowed in an expression.
+
+   Assigning a value to `.' will cause the location counter to be
+moved.  This may be used to create holes in the output section.  The
+location counter may never be moved backwards.
+
+     SECTIONS
+     {
+       output :
+         {
+           file1(.text)
+           . = . + 1000;
+           file2(.text)
+           . += 1000;
+           file3(.text)
+         } = 0x1234;
+     }
+
+In the previous example, the `.text' section from `file1' is located at
+the beginning of the output section `output'.  It is followed by a 1000
+byte gap.  Then the `.text' section from `file2' appears, also with a
+1000 byte gap following before the `.text' section from `file3'.  The
+notation `= 0x1234' specifies what data to write in the gaps (*note
+Output Section Fill::).
+
+   Note: `.' actually refers to the byte offset from the start of the
+current containing object.  Normally this is the `SECTIONS' statement,
+whoes start address is 0, hence `.' can be used as an absolute address.
+If `.' is used inside a section description however, it refers to the
+byte offset from the start of that section, not an absolute address.
+Thus in a script like this:
+
+     SECTIONS
+     {
+         . = 0x100
+         .text: {
+           *(.text)
+           . = 0x200
+         }
+         . = 0x500
+         .data: {
+           *(.data)
+           . += 0x600
+         }
+     }
+
+   The `.text' section will be assigned a starting address of 0x100 and
+a size of exactly 0x200 bytes, even if there is not enough data in the
+`.text' input sections to fill this area.  (If there is too much data,
+an error will be produced because this would be an attempt to move `.'
+backwards).  The `.data' section will start at 0x500 and it will have
+an extra 0x600 bytes worth of space after the end of the values from
+the `.data' input sections and before the end of the `.data' output
+section itself.
+
+
+File: ld.info,  Node: Operators,  Next: Evaluation,  Prev: Location Counter,  Up: Expressions
+
+Operators
+---------
+
+   The linker recognizes the standard C set of arithmetic operators,
+with the standard bindings and precedence levels:
+     precedence      associativity   Operators                Notes
+     (highest)
+     1               left            !  -  ~                  (1)
+     2               left            *  /  %
+     3               left            +  -
+     4               left            >>  <<
+     5               left            ==  !=  >  <  <=  >=
+     6               left            &
+     7               left            |
+     8               left            &&
+     9               left            ||
+     10              right           ? :
+     11              right           &=  +=  -=  *=  /=       (2)
+     (lowest)
+   Notes: (1) Prefix operators (2) *Note Assignments::.
+
+
+File: ld.info,  Node: Evaluation,  Next: Expression Section,  Prev: Operators,  Up: Expressions
+
+Evaluation
+----------
+
+   The linker evaluates expressions lazily.  It only computes the value
+of an expression when absolutely necessary.
+
+   The linker needs some information, such as the value of the start
+address of the first section, and the origins and lengths of memory
+regions, in order to do any linking at all.  These values are computed
+as soon as possible when the linker reads in the linker script.
+
+   However, other values (such as symbol values) are not known or needed
+until after storage allocation.  Such values are evaluated later, when
+other information (such as the sizes of output sections) is available
+for use in the symbol assignment expression.
+
+   The sizes of sections cannot be known until after allocation, so
+assignments dependent upon these are not performed until after
+allocation.
+
+   Some expressions, such as those depending upon the location counter
+`.', must be evaluated during section allocation.
+
+   If the result of an expression is required, but the value is not
+available, then an error results.  For example, a script like the
+following
+     SECTIONS
+       {
+         .text 9+this_isnt_constant :
+           { *(.text) }
+       }
+
+will cause the error message `non constant expression for initial
+address'.
+
+
+File: ld.info,  Node: Expression Section,  Next: Builtin Functions,  Prev: Evaluation,  Up: Expressions
+
+The Section of an Expression
+----------------------------
+
+   When the linker evaluates an expression, the result is either
+absolute or relative to some section.  A relative expression is
+expressed as a fixed offset from the base of a section.
+
+   The position of the expression within the linker script determines
+whether it is absolute or relative.  An expression which appears within
+an output section definition is relative to the base of the output
+section.  An expression which appears elsewhere will be absolute.
+
+   A symbol set to a relative expression will be relocatable if you
+request relocatable output using the `-r' option.  That means that a
+further link operation may change the value of the symbol.  The symbol's
+section will be the section of the relative expression.
+
+   A symbol set to an absolute expression will retain the same value
+through any further link operation.  The symbol will be absolute, and
+will not have any particular associated section.
+
+   You can use the builtin function `ABSOLUTE' to force an expression
+to be absolute when it would otherwise be relative.  For example, to
+create an absolute symbol set to the address of the end of the output
+section `.data':
+     SECTIONS
+       {
+         .data : { *(.data) _edata = ABSOLUTE(.); }
+       }
+
+If `ABSOLUTE' were not used, `_edata' would be relative to the `.data'
+section.
+
+
+File: ld.info,  Node: Builtin Functions,  Prev: Expression Section,  Up: Expressions
+
+Builtin Functions
+-----------------
+
+   The linker script language includes a number of builtin functions for
+use in linker script expressions.
+
+`ABSOLUTE(EXP)'
+     Return the absolute (non-relocatable, as opposed to non-negative)
+     value of the expression EXP.  Primarily useful to assign an
+     absolute value to a symbol within a section definition, where
+     symbol values are normally section relative.  *Note Expression
+     Section::.
+
+`ADDR(SECTION)'
+     Return the absolute address (the VMA) of the named SECTION.  Your
+     script must previously have defined the location of that section.
+     In the following example, `symbol_1' and `symbol_2' are assigned
+     identical values:
+          SECTIONS { ...
+            .output1 :
+              {
+              start_of_output_1 = ABSOLUTE(.);
+              ...
+              }
+            .output :
+              {
+              symbol_1 = ADDR(.output1);
+              symbol_2 = start_of_output_1;
+              }
+          ... }
+
+`ALIGN(EXP)'
+     Return the location counter (`.') aligned to the next EXP
+     boundary.  EXP must be an expression whose value is a power of
+     two.  This is equivalent to
+          (. + EXP - 1) & ~(EXP - 1)
+
+     `ALIGN' doesn't change the value of the location counter--it just
+     does arithmetic on it.  Here is an example which aligns the output
+     `.data' section to the next `0x2000' byte boundary after the
+     preceding section and sets a variable within the section to the
+     next `0x8000' boundary after the input sections:
+          SECTIONS { ...
+            .data ALIGN(0x2000): {
+              *(.data)
+              variable = ALIGN(0x8000);
+            }
+          ... }
+
+     The first use of `ALIGN' in this example specifies the location of
+     a section because it is used as the optional ADDRESS attribute of
+     a section definition (*note Output Section Address::).  The second
+     use of `ALIGN' is used to defines the value of a symbol.
+
+     The builtin function `NEXT' is closely related to `ALIGN'.
+
+`BLOCK(EXP)'
+     This is a synonym for `ALIGN', for compatibility with older linker
+     scripts.  It is most often seen when setting the address of an
+     output section.
+
+`DEFINED(SYMBOL)'
+     Return 1 if SYMBOL is in the linker global symbol table and is
+     defined, otherwise return 0.  You can use this function to provide
+     default values for symbols.  For example, the following script
+     fragment shows how to set a global symbol `begin' to the first
+     location in the `.text' section--but if a symbol called `begin'
+     already existed, its value is preserved:
+
+          SECTIONS { ...
+            .text : {
+              begin = DEFINED(begin) ? begin : . ;
+              ...
+            }
+            ...
+          }
+
+`LOADADDR(SECTION)'
+     Return the absolute LMA of the named SECTION.  This is normally
+     the same as `ADDR', but it may be different if the `AT' attribute
+     is used in the output section definition (*note Output Section
+     LMA::).
+
+`MAX(EXP1, EXP2)'
+     Returns the maximum of EXP1 and EXP2.
+
+`MIN(EXP1, EXP2)'
+     Returns the minimum of EXP1 and EXP2.
+
+`NEXT(EXP)'
+     Return the next unallocated address that is a multiple of EXP.
+     This function is closely related to `ALIGN(EXP)'; unless you use
+     the `MEMORY' command to define discontinuous memory for the output
+     file, the two functions are equivalent.
+
+`SIZEOF(SECTION)'
+     Return the size in bytes of the named SECTION, if that section has
+     been allocated.  If the section has not been allocated when this is
+     evaluated, the linker will report an error.  In the following
+     example, `symbol_1' and `symbol_2' are assigned identical values:
+          SECTIONS{ ...
+            .output {
+              .start = . ;
+              ...
+              .end = . ;
+              }
+            symbol_1 = .end - .start ;
+            symbol_2 = SIZEOF(.output);
+          ... }
+
+`SIZEOF_HEADERS'
+`sizeof_headers'
+     Return the size in bytes of the output file's headers.  This is
+     information which appears at the start of the output file.  You
+     can use this number when setting the start address of the first
+     section, if you choose, to facilitate paging.
+
+     When producing an ELF output file, if the linker script uses the
+     `SIZEOF_HEADERS' builtin function, the linker must compute the
+     number of program headers before it has determined all the section
+     addresses and sizes.  If the linker later discovers that it needs
+     additional program headers, it will report an error `not enough
+     room for program headers'.  To avoid this error, you must avoid
+     using the `SIZEOF_HEADERS' function, or you must rework your linker
+     script to avoid forcing the linker to use additional program
+     headers, or you must define the program headers yourself using the
+     `PHDRS' command (*note PHDRS::).
+
+
+File: ld.info,  Node: Implicit Linker Scripts,  Prev: Expressions,  Up: Scripts
+
+Implicit Linker Scripts
+=======================
+
+   If you specify a linker input file which the linker can not
+recognize as an object file or an archive file, it will try to read the
+file as a linker script.  If the file can not be parsed as a linker
+script, the linker will report an error.
+
+   An implicit linker script will not replace the default linker script.
+
+   Typically an implicit linker script would contain only symbol
+assignments, or the `INPUT', `GROUP', or `VERSION' commands.
+
+   Any input files read because of an implicit linker script will be
+read at the position in the command line where the implicit linker
+script was read.  This can affect archive searching.
+
+
+File: ld.info,  Node: Machine Dependent,  Next: BFD,  Prev: Scripts,  Up: Top
 
 Machine Dependent Features
 **************************
@@ -193,6 +885,7 @@ functionality are not listed.
 
 * H8/300::                      `ld' and the H8/300
 * i960::                        `ld' and the Intel 960 family
+* ARM::				`ld' and the ARM family
 
 
 File: ld.info,  Node: H8/300,  Next: i960,  Up: Machine Dependent
@@ -203,12 +896,12 @@ File: ld.info,  Node: H8/300,  Next: i960,  Up: Machine Dependent
    For the H8/300, `ld' can perform these global optimizations when you
 specify the `--relax' command-line option.
 
-*relaxing address modes*
+_relaxing address modes_
      `ld' finds all `jsr' and `jmp' instructions whose targets are
      within eight bits, and turns them into eight-bit program-counter
      relative `bsr' and `bra' instructions, respectively.
 
-*synthesizing instructions*
+_synthesizing instructions_
      `ld' finds all `mov.b' instructions which use the sixteen-bit
      absolute address form, but refer to the top page of memory, and
      changes them to use the eight-bit address form.  (That is: the
@@ -216,7 +909,7 @@ specify the `--relax' command-line option.
      address AA is in the top page of memory).
 
 
-File: ld.info,  Node: i960,  Prev: H8/300,  Up: Machine Dependent
+File: ld.info,  Node: i960,  Next: ARM,  Prev: H8/300,  Up: Machine Dependent
 
 `ld' and the Intel 960 family
 =============================
@@ -253,6 +946,29 @@ relative `bal' and `cal' instructions, respectively.  `ld' also turns
 `cal' instructions into `bal' instructions when it determines that the
 target subroutine is a leaf routine (that is, the target subroutine does
 not itself call any subroutines).
+
+
+File: ld.info,  Node: ARM,  Prev: i960,  Up: Machine Dependent
+
+`ld''s support for interworking between ARM and Thumb code
+==========================================================
+
+   For the ARM, `ld' will generate code stubs to allow functions calls
+betweem ARM and Thumb code.  These stubs only work with code that has
+been compiled and assembled with the `-mthumb-interwork' command line
+option.  If it is necessary to link with old ARM object files or
+libraries, which have not been compiled with the -mthumb-interwork
+option then the `--support-old-code' command line switch should be
+given to the linker.  This will make it generate larger stub functions
+which will work with non-interworking aware ARM code.  Note, however,
+the linker does not support generating stubs for function calls to
+non-interworking aware Thumb code.
+
+   The `--thumb-entry' switch is a duplicate of the generic `--entry'
+switch, in that it sets the program's starting address.  But it also
+sets the bottom bit of the address, so that it can be branched to using
+a BX instruction, and the program will start executing in Thumb mode
+straight away.
 
 
 File: ld.info,  Node: BFD,  Next: Reporting Bugs,  Prev: Machine Dependent,  Up: Top
@@ -322,7 +1038,7 @@ File: ld.info,  Node: BFD information loss,  Next: Canonical format,  Up: BFD ou
 Information Loss
 ----------------
 
-   *Information can be lost during output.* The output formats
+   _Information can be lost during output._ The output formats
 supported by BFD do not provide identical facilities, and information
 which can be described in one form has nowhere to go in another format.
 One example of this is alignment information in `b.out'. There is
@@ -340,7 +1056,7 @@ the link cannot be done simply. You can circumvent this problem by
 describing the desired input-to-output section mapping with the linker
 command language.
 
-   *Information can be lost during canonicalization.* The BFD internal
+   _Information can be lost during canonicalization._ The BFD internal
 canonical form of the external formats is not exhaustive; there are
 structures in input formats for which there is no direct representation
 internally.  This means that the BFD back ends cannot maintain all
@@ -375,7 +1091,7 @@ destination format. A brief description of the canonical form may help
 you understand which kinds of data you can count on preserving across
 conversions.
 
-*files*
+_files_
      Information stored on a per-file basis includes target machine
      architecture, particular implementation format type, a demand
      pageable bit, and a write protected bit.  Information like Unix
@@ -385,13 +1101,13 @@ conversions.
      stored on a per-file basis, so that big- and little-endian object
      files may be used with one another.
 
-*sections*
+_sections_
      Each section in the input file contains the name of the section,
      the section's original address in the object file, size and
      alignment information, various flags, and pointers into other BFD
      data structures.
 
-*symbols*
+_symbols_
      Each symbol contains a pointer to the information for the object
      file which originally defined it, its name, its value, and various
      flag bits.  When a BFD back end reads in a symbol table, it
@@ -417,7 +1133,7 @@ conversions.
      within one word (nearly everything but aggregates), the
      information will be preserved.
 
-*relocation level*
+_relocation level_
      Each canonical BFD relocation record contains a pointer to the
      symbol to relocate to, the offset of the data to relocate, the
      section the data is in, and a pointer to a relocation type
@@ -431,7 +1147,7 @@ conversions.
      byte being written to a 68k COFF file, even though 68k COFF has no
      such relocation type.
 
-*line numbers*
+_line numbers_
      Object formats can contain, for debugging purposes, some form of
      mapping between symbols, source line numbers, and addresses in the
      output file.  These addresses have to be relocated along with the
@@ -485,269 +1201,4 @@ guidelines:
 
    * If you are an experienced user of linkers, your suggestions for
      improvement of `ld' are welcome in any case.
-
-
-File: ld.info,  Node: Bug Reporting,  Prev: Bug Criteria,  Up: Reporting Bugs
-
-How to report bugs
-==================
-
-   A number of companies and individuals offer support for GNU
-products.  If you obtained `ld' from a support organization, we
-recommend you contact that organization first.
-
-   You can find contact information for many support companies and
-individuals in the file `etc/SERVICE' in the GNU Emacs distribution.
-
-   In any event, we also recommend that you send bug reports for `ld'
-to `bug-gnu-utils@prep.ai.mit.edu'.
-
-   The fundamental principle of reporting bugs usefully is this:
-*report all the facts*.  If you are not sure whether to state a fact or
-leave it out, state it!
-
-   Often people omit facts because they think they know what causes the
-problem and assume that some details do not matter.  Thus, you might
-assume that the name of a symbol you use in an example does not matter.
-Well, probably it does not, but one cannot be sure.  Perhaps the bug is
-a stray memory reference which happens to fetch from the location where
-that name is stored in memory; perhaps, if the name were different, the
-contents of that location would fool the linker into doing the right
-thing despite the bug.  Play it safe and give a specific, complete
-example.  That is the easiest thing for you to do, and the most helpful.
-
-   Keep in mind that the purpose of a bug report is to enable us to fix
-the bug if it is new to us.  Therefore, always write your bug reports
-on the assumption that the bug has not been reported previously.
-
-   Sometimes people give a few sketchy facts and ask, "Does this ring a
-bell?"  Those bug reports are useless, and we urge everyone to *refuse
-to respond to them* except to chide the sender to report bugs properly.
-
-   To enable us to fix the bug, you should include all these things:
-
-   * The version of `ld'.  `ld' announces it if you start it with the
-     `--version' argument.
-
-     Without this, we will not know whether there is any point in
-     looking for the bug in the current version of `ld'.
-
-   * Any patches you may have applied to the `ld' source, including any
-     patches made to the `BFD' library.
-
-   * The type of machine you are using, and the operating system name
-     and version number.
-
-   * What compiler (and its version) was used to compile `ld'--e.g.
-     "`gcc-2.7'".
-
-   * The command arguments you gave the linker to link your example and
-     observe the bug.  To guarantee you will not omit something
-     important, list them all.  A copy of the Makefile (or the output
-     from make) is sufficient.
-
-     If we were to try to guess the arguments, we would probably guess
-     wrong and then we might not encounter the bug.
-
-   * A complete input file, or set of input files, that will reproduce
-     the bug.  It is generally most helpful to send the actual object
-     files, uuencoded if necessary to get them through the mail system.
-     Making them available for anonymous FTP is not as good, but may
-     be the only reasonable choice for large object files.
-
-     If the source files were assembled using `gas' or compiled using
-     `gcc', then it may be OK to send the source files rather than the
-     object files.  In this case, be sure to say exactly what version of
-     `gas' or `gcc' was used to produce the object files.  Also say how
-     `gas' or `gcc' were configured.
-
-   * A description of what behavior you observe that you believe is
-     incorrect.  For example, "It gets a fatal signal."
-
-     Of course, if the bug is that `ld' gets a fatal signal, then we
-     will certainly notice it.  But if the bug is incorrect output, we
-     might not notice unless it is glaringly wrong.  You might as well
-     not give us a chance to make a mistake.
-
-     Even if the problem you experience is a fatal signal, you should
-     still say so explicitly.  Suppose something strange is going on,
-     such as, your copy of `ld' is out of synch, or you have
-     encountered a bug in the C library on your system.  (This has
-     happened!)  Your copy might crash and ours would not.  If you told
-     us to expect a crash, then when ours fails to crash, we would know
-     that the bug was not happening for us.  If you had not told us to
-     expect a crash, then we would not be able to draw any conclusion
-     from our observations.
-
-   * If you wish to suggest changes to the `ld' source, send us context
-     diffs, as generated by `diff' with the `-u', `-c', or `-p' option.
-     Always send diffs from the old file to the new file.  If you even
-     discuss something in the `ld' source, refer to it by context, not
-     by line number.
-
-     The line numbers in our development sources will not match those
-     in your sources.  Your line numbers would convey no useful
-     information to us.
-
-   Here are some things that are not necessary:
-
-   * A description of the envelope of the bug.
-
-     Often people who encounter a bug spend a lot of time investigating
-     which changes to the input file will make the bug go away and which
-     changes will not affect it.
-
-     This is often time consuming and not very useful, because the way
-     we will find the bug is by running a single example under the
-     debugger with breakpoints, not by pure deduction from a series of
-     examples.  We recommend that you save your time for something else.
-
-     Of course, if you can find a simpler example to report *instead*
-     of the original one, that is a convenience for us.  Errors in the
-     output will be easier to spot, running under the debugger will take
-     less time, and so on.
-
-     However, simplification is not vital; if you do not want to do
-     this, report the bug anyway and send us the entire test case you
-     used.
-
-   * A patch for the bug.
-
-     A patch for the bug does help us if it is a good one.  But do not
-     omit the necessary information, such as the test case, on the
-     assumption that a patch is all we need.  We might see problems
-     with your patch and decide to fix the problem another way, or we
-     might not understand it at all.
-
-     Sometimes with a program as complicated as `ld' it is very hard to
-     construct an example that will make the program follow a certain
-     path through the code.  If you do not send us the example, we will
-     not be able to construct one, so we will not be able to verify
-     that the bug is fixed.
-
-     And if we cannot understand what bug you are trying to fix, or why
-     your patch should be an improvement, we will not install it.  A
-     test case will help us to understand.
-
-   * A guess about what the bug is or what it depends on.
-
-     Such guesses are usually wrong.  Even we cannot guess right about
-     such things without first using the debugger to find the facts.
-
-
-File: ld.info,  Node: MRI,  Next: Index,  Prev: Reporting Bugs,  Up: Top
-
-MRI Compatible Script Files
-***************************
-
-   To aid users making the transition to GNU `ld' from the MRI linker,
-`ld' can use MRI compatible linker scripts as an alternative to the
-more general-purpose linker scripting language described in *Note
-Command Language: Commands.  MRI compatible linker scripts have a much
-simpler command set than the scripting language otherwise used with
-`ld'.  GNU `ld' supports the most commonly used MRI linker commands;
-these commands are described here.
-
-   In general, MRI scripts aren't of much use with the `a.out' object
-file format, since it only has three sections and MRI scripts lack some
-features to make use of them.
-
-   You can specify a file containing an MRI-compatible script using the
-`-c' command-line option.
-
-   Each command in an MRI-compatible script occupies its own line; each
-command line starts with the keyword that identifies the command (though
-blank lines are also allowed for punctuation).  If a line of an
-MRI-compatible script begins with an unrecognized keyword, `ld' issues
-a warning message, but continues processing the script.
-
-   Lines beginning with `*' are comments.
-
-   You can write these commands using all upper-case letters, or all
-lower case; for example, `chip' is the same as `CHIP'.  The following
-list shows only the upper-case form of each command.
-
-`ABSOLUTE SECNAME'
-`ABSOLUTE SECNAME, SECNAME, ... SECNAME'
-     Normally, `ld' includes in the output file all sections from all
-     the input files.  However, in an MRI-compatible script, you can
-     use the `ABSOLUTE' command to restrict the sections that will be
-     present in your output program.  If the `ABSOLUTE' command is used
-     at all in a script, then only the sections named explicitly in
-     `ABSOLUTE' commands will appear in the linker output.  You can
-     still use other input sections (whatever you select on the command
-     line, or using `LOAD') to resolve addresses in the output file.
-
-`ALIAS OUT-SECNAME, IN-SECNAME'
-     Use this command to place the data from input section IN-SECNAME
-     in a section called OUT-SECNAME in the linker output file.
-
-     IN-SECNAME may be an integer.
-
-`ALIGN SECNAME = EXPRESSION'
-     Align the section called SECNAME to EXPRESSION.  The EXPRESSION
-     should be a power of two.
-
-`BASE EXPRESSION'
-     Use the value of EXPRESSION as the lowest address (other than
-     absolute addresses) in the output file.
-
-`CHIP EXPRESSION'
-`CHIP EXPRESSION, EXPRESSION'
-     This command does nothing; it is accepted only for compatibility.
-
-`END'
-     This command does nothing whatever; it's only accepted for
-     compatibility.
-
-`FORMAT OUTPUT-FORMAT'
-     Similar to the `OUTPUT_FORMAT' command in the more general linker
-     language, but restricted to one of these output formats:
-
-       1. S-records, if OUTPUT-FORMAT is `S'
-
-       2. IEEE, if OUTPUT-FORMAT is `IEEE'
-
-       3. COFF (the `coff-m68k' variant in BFD), if OUTPUT-FORMAT is
-          `COFF'
-
-`LIST ANYTHING...'
-     Print (to the standard output file) a link map, as produced by the
-     `ld' command-line option `-M'.
-
-     The keyword `LIST' may be followed by anything on the same line,
-     with no change in its effect.
-
-`LOAD FILENAME'
-`LOAD FILENAME, FILENAME, ... FILENAME'
-     Include one or more object file FILENAME in the link; this has the
-     same effect as specifying FILENAME directly on the `ld' command
-     line.
-
-`NAME OUTPUT-NAME'
-     OUTPUT-NAME is the name for the program produced by `ld'; the
-     MRI-compatible command `NAME' is equivalent to the command-line
-     option `-o' or the general script language command `OUTPUT'.
-
-`ORDER SECNAME, SECNAME, ... SECNAME'
-`ORDER SECNAME SECNAME SECNAME'
-     Normally, `ld' orders the sections in its output file in the order
-     in which they first appear in the input files.  In an
-     MRI-compatible script, you can override this ordering with the
-     `ORDER' command.  The sections you list with `ORDER' will appear
-     first in your output file, in the order specified.
-
-`PUBLIC NAME=EXPRESSION'
-`PUBLIC NAME,EXPRESSION'
-`PUBLIC NAME EXPRESSION'
-     Supply a value (EXPRESSION) for external symbol NAME used in the
-     linker input files.
-
-`SECT SECNAME, EXPRESSION'
-`SECT SECNAME=EXPRESSION'
-`SECT SECNAME EXPRESSION'
-     You can use any of these three forms of the `SECT' command to
-     specify the start address (EXPRESSION) for section SECNAME.  If
-     you have more than one `SECT' statement for the same SECNAME, only
-     the *first* sets the start address.
 
