@@ -1,5 +1,5 @@
 #! /usr/bin/awk -f
-# $OpenBSD: src/sys/arch/sparc64/sparc64/busop.awk,v 1.1 2003/02/17 01:29:20 henric Exp $
+# $OpenBSD: src/sys/arch/sparc64/sparc64/busop.awk,v 1.1.6.1 2003/05/19 21:27:50 tedu Exp $
 #
 # Copyright (c) 2003 Henric Jungheim
 # All rights reserved.
