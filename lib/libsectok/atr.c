@@ -1,4 +1,4 @@
-/* $Id: atr.c,v 1.3 2001/08/02 23:15:39 rees Exp $ */
+/* $Id: atr.c,v 1.3 2001/08/02 23:15:39 rees Exp rees $ */
 
 /*
 copyright 1997, 1999, 2000, 2001
@@ -218,18 +218,17 @@ sectok_parse_atr(int ttyn, int flags, unsigned char *atr, int len, struct scpara
     if (nhb) {
 	hb = ap;
 	ap += nhb;
-    }
-
-    if (nhb && (flags & STRV)) {
-	printf("%d historical bytes:", nhb);
-	for (i = 0; i < nhb; i++) {
-	    c = hb[i];
-	    if (c >= ' ' && c <= '~')
-		printf(" %c", c);
-	    else
-		printf(" %02x", c);
+	if (flags & STRV) {
+	    printf("%d historical bytes:", nhb);
+	    for (i = 0; i < nhb; i++) {
+		c = hb[i];
+		if (c >= ' ' && c <= '~')
+		    printf(" %c", c);
+		else
+		    printf(" %02x", c);
+	    }
+	    printf("\n");
 	}
-	printf("\n");
     }
 
     if (hiproto > 0)
