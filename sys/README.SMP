@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.8 2003/05/24 10:59:08 ho Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.9 2003/06/07 10:30:33 ho Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
@@ -63,7 +63,7 @@ you mainly need to carry out the following procedure.
   checked out.
 
   $ fixup() {
-  >   cvs -qd cvs.openbsd.org:/cvs ci -m'dummy message' $1
+  >   cvs -qd cvs.openbsd.org:/cvs ci -m'add file to SMP branch' $1
   >   ssh cvs.openbsd.org 'rcs -u /cvs/src/sys/'$1',v'
   >   rm $1
   >   cvs -qd cvs.openbsd.org:/cvs up -dP -rSMP -kk $1
