@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/httpd/src/main/http_main.c,v 1.25 2002/09/09 14:21:18 henning Exp $ */
+/* $OpenBSD: src/usr.sbin/httpd/src/main/http_main.c,v 1.25.2.1 2002/11/08 00:04:04 jason Exp $ */
 
 /* ====================================================================
  * The Apache Software License, Version 1.1
@@ -2376,20 +2376,6 @@ static void setup_shared_mem(pool *p)
 	/*
 	 * We exit below, after we try to remove the segment
 	 */
-    }
-    else {			/* only worry about permissions if we attached the segment */
-	if (shmctl(shmid, IPC_STAT, &shmbuf) != 0) {
-	    ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
-		"shmctl() could not stat segment #%d", shmid);
-	}
-	else {
-	    shmbuf.shm_perm.uid = ap_user_id;
-	    shmbuf.shm_perm.gid = ap_group_id;
-	    if (shmctl(shmid, IPC_SET, &shmbuf) != 0) {
-		ap_log_error(APLOG_MARK, APLOG_ERR, server_conf,
-		    "shmctl() could not set segment #%d", shmid);
-	    }
-	}
     }
     /*
      * We must avoid leaving segments in the kernel's
