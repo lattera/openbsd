@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.12 2003/04/05 20:41:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.13 2003/04/06 14:04:33 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -267,7 +267,7 @@ softintr(sir, vec)
 #define I386_NIPI	6
 
 struct cpu_info;
-void i386_send_ipi (struct cpu_info *, int);
+int i386_send_ipi (struct cpu_info *, int);
 void i386_broadcast_ipi (int);
 void i386_ipi_handler (void);
 
