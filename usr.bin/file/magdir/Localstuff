@@ -1,0 +1,6 @@
+#------------------------------------------------------------------------------
+# Localstuff:  file(1) magic for locally observed files
+#
+#	$OpenBSD: src/usr.bin/file/magdir/Localstuff,v 1.4 2004/06/03 03:14:19 tedu Exp $
+# Add any locally observed files here.  Remember:
+# text if readable, executable if runnable binary, data if unreadable.
