@@ -1,9 +1,21 @@
-/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4 1996/06/02 11:18:14 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4.2.1 1996/09/17 09:34:13 mickey Exp $	*/
 /*	$NetBSD: start.S,v 1.12 1995/01/18 17:34:18 mycroft Exp $	*/
+
+/*
+ * Copyright (c) 1996 Michael Shalayeff
+ */
+
+/* Copyright (c) 1996 VaX#n8 (vax@linkdead.paranoia.com)
+ * last edited 9 July 1996
+ * many thanks to Erich Boleyn (erich@uruk.org) for putting up with
+ * all my questions, and for his work on GRUB
+ * You may use this code or fragments thereof in a manner consistent
+ * with the other copyrights as long as you retain my pseudonym and
+ * this copyright notice in the file.
+ */
 
 /*-
  *
- * Changes by Michael Shalayeff May 1996
  * Ported to boot 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
  *
  * Mach Operating System
@@ -58,128 +70,185 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define	addr32	.byte 0x67
 #define	data32	.byte 0x66
 
-BOOTSEG		=	0x1000	# boot will be loaded here (below 640K)
+BOOTSEG		=	0x0100	# boot will be loaded here (below 640K)
 BOOTSTACK	=	0xfffc	# boot stack
-SIGNATURE	=	0xaa55
-LOADSZ		=	15	# size of unix boot
+BOOTBIOS	=	0x7c0	# segment where we loaded
+BOOTRELOC	=	0x5c0	# segment where to relocate
+SIGNATURE	=	0xaa55	# MBR signature
 PARTSTART	=	0x1be	# starting address of partition table
 NUMPART		=	4	# number of partitions in partition table
 PARTSZ		=	16	# each partition table entry is 16 bytes
 BSDPART		=	0xA5	# value of boot_ind, means bootable partition
 BOOTABLE	=	0x80	# value of boot_ind, means bootable partition
+CHAR_S		=	'S'	# started
+CHAR_2		=	'2'	# loading 2nd stage boot
+CHAR_G		=	'G'	# jumping to it
+CHAR_F		=	'F'	# booting from floppy
+CHAR_H		=	'H'	# booting from HD
+CHAR_L		=	'L'	# looking up bootable partition
+CHAR_R		=	'R'	# relocating
+CHAR_D		=	'D'	# booting from non-BSD partition
+CHAR_P		=	'P'	# partition table corrupted
 
-	.text	
+#ifdef DEBUG
+#define DBGMSG(msg) \
+	movb    $msg, %al ; \
+	call    chr
+#else /* !DEBUG */
+#define DBGMSG(msg)
+#endif /* !DEBUG */
+
+	.text
 	.globl	start
 
 ENTRY(boot1)
 start:
 #ifndef DOSREAD
+	cli	# disable interrupts w/o stack
+	/*
+	 * os-bs and other mbrs pass us part entry in %ds:%si
+	 */
 	# start (aka boot1) is loaded at 0x0:0x7c00 but we want 0x7c0:0
 	# ljmp to the next instruction to adjust %cs
 	data32
-	ljmp $0x7c0, $start1
+	ljmp $BOOTBIOS, $start1
 
 start1:
-	# set up %ds
-	movl	%cs, %ax
-	movl	%ax, %ds
-
-	# set up %ss and %esp
-	data32
-	movl	$BOOTSEG, %eax
+	# set up stack(%ss:%esp)
+	movl	$BOOTSEG, %ax
 	movl	%ax, %ss
 	data32
 	movl	$BOOTSTACK, %esp
+
+	sti	# we have stack, do ints
 
 	/*** set up %es, (where we will load boot2 to) ***/
 	movl	%ax, %es
 
 #ifdef SERIAL
 	# Initialize the serial port to 9600 baud, 8N1.
-	data32
-	pushl	%edx
-	data32
-	movl	$0x00e3, %eax
-	xorl	%edx, %edx
+	pushl	%dx
+	movl	$0x00e3, %ax
+	movl	SERIAL, %dx
 	int	$0x14
-	data32
-	popl	%edx
+	popl	%dx
 #endif
 
-#ifdef	FDDEBUG
-	data32
-	movl	$one, %esi
-	data32
-	call	message
-#endif
 #if	!defined(NOFD) && !defined(NOHD)
+	DBGMSG(CHAR_S)
+
 	# bootstrap passes us drive number in %dl
 	testb	$0x80, %dl
-	data32
 	jnz	hd
 #endif
 #ifndef	NOFD
 fd:
-#	reset the disk system
-#ifdef	FDDEBUG
-	data32
-	movl	$two, %esi
-	data32
-	call	message
-#endif
-	movb	$0x00, %ah
-	int	$0x13
-#ifdef	FDDEBUG
-	data32
-	movl	$three, %esi
-	data32
-	call	message
-#endif
+	DBGMSG(CHAR_F)
+	# set up %ds
+	pushl	%cs
+	popl	%ds
 	data32
 	movl	$0x0001, %ecx	# cyl 0, sector 1
 	movb	$0x00, %dh	# head
-	# XXX Override the drive number.
-	# movb	$0x00, %dl
-	data32
-	jmp	load
+	jmp	doload
 #endif
 #ifndef	NOHD
-hd:	/**** load sector 0 into the BOOTSEG ****/
-#ifdef	DEBUG
-	data32
-	movl	$four, %esi
-	data32
-	call	message
-#endif
-	data32
-	movl	$0x0201, %eax
-	xorl	%ebx, %ebx	# %bx = 0
-	data32
-	movl	$0x0001, %ecx
-	data32
-	andl	$0xff, %edx
-	int	$0x13
-	data32
-	jb	read_error
+hd:
+	DBGMSG(CHAR_H)
+	# movl	%si, %bx
+	# movb	1(%ebx), %dh	# head
+	.byte   0x8a, 0x74, 0x01
+	# movl	2(%ebx), %ecx	# sect, cyl (+ 2 bytes junk in top word)
+	.byte   0x8b, 0x4c, 0x02
+	# movb	4(%ebx), %al	# partition type
+	.byte   0x8a, 0x44, 0x04
+	cmpb	$BSDPART, %al
+	# set up %ds
+	pushl	%cs
+	popl	%ds
+	je	doload		# we are not a MBR
 
-	/***# find the first active partition *****/
+	movl	$signature, %esi
+	cmpl	$SIGNATURE, (%esi)
+	je	pt_ok
+	DBGMSG(CHAR_P)
+
+pt_ok:
+	/* find the first active partition */
+	DBGMSG(CHAR_L)
 	data32
-	movl	$PARTSTART, %ebx
+	movl	$PARTSTART, %esi
 	data32
 	movl	$NUMPART, %ecx
 again:
 	addr32
-	cmpb    $BOOTABLE, %es:(%ebx)
-	data32
+	cmpb	$BOOTABLE, (%esi)
 	je	found
 	data32
-	addl	$PARTSZ, %ebx
-	data32
+	addl	$PARTSZ, %esi
 	loop	again
 	data32
 	movl	$enoboot, %esi
-	data32
 	jmp	err_stop
+#endif
+
+#ifndef	NOHD
+found:
+	DBGMSG(CHAR_2)
+	addr32
+	movb	1(%esi), %dh /* head */
+	addr32
+	movl	2(%esi), %ecx /*sect, cyl (+ 2 bytes junk in top word) */
+
+	cmpb	$BSDPART, 4(%esi)
+	jne	foreign	/* foreign partition */
+#endif
+doload:
+	call	load
+
+	DBGMSG(CHAR_G)
+
+	# ljmp to the second stage boot loader (boot2).
+	# After ljmp, %cs is BOOTSEG and boot1 (512 bytes) will be used
+	# as an internal buffer "intbuf".
+
+	data32
+	ljmp	$BOOTSEG, $_C_LABEL(boot2)
+	/* not reached */
+
+#ifndef	NOHD
+foreign:
+	# relocate the code to leave the space for next stage
+	DBGMSG(CHAR_R)
+	data32
+	pushl	%ecx
+	movl	$BOOTRELOC, %ax
+	movl	%ax, %es
+	data32
+	xorl	%esi, %esi
+	data32
+	xorl	%edi, %edi
+	movl	$0x100, %cx
+	cld
+	rep
+	movsl
+	data32
+	popl	%ecx
+	# jump to the new code
+	data32
+	ljmp $BOOTRELOC, $start2
+
+start2:
+	/*** set up %es, (where we will load boot2 to) ***/
+	pushl	$BOOTBIOS
+	popl	%es
+
+	data32
+	call	load
+
+	DBGMSG(CHAR_D)
+	ljmp	$0, $BOOTBIOS << 4
+	/* not reached */
 #endif
 
 /*
@@ -194,87 +263,12 @@ again:
 #       Return:
 #                       %al = 0x0 on success; err code on failure
 */
-#ifndef	NOHD
-found:
-	addr32
-	movb	%es:1(%ebx), %dh /* head */
-	addr32
-	movl	%es:2(%ebx), %ecx /*sect, cyl (+ 2 bytes junk in top word) */
-	data32
-	pushl	%ecx
-
-	addr32
-	movb	%es:4(%ebx), %al
-	cmpb	$BSDPART, %al
-	je	loadbsd
-
-	# set up %ds
-	movl	%cs, %ax
-	movl	%ax, %ds
-
-	# relocate the code to leave the space for next stage
-	movl	$0x5c0, %ax
-	movl	%ax, %es
-	data32
-	xorl	%esi, %esi
-	data32
-	xorl	%edi, %edi
-	data32
-	movl	$0x100, %ecx
-	cld
-	rep
-	movsl
-	# jump to the new code
-	data32
-	ljmp $0x5c0, $start2
-
-start2:
-	movl	$0x7c0, %ax
-	movl	%ax, %es
-
-loadbsd:
-	data32
-	popl	%ecx
-#endif
 load:
-	data32
-	pushl	%ebx
-	movb	$0x2, %ah	/* function 2 */
-	movb	$LOADSZ, %al	/* number of blocks */
-	xorl	%ebx, %ebx	/* %bx = 0, put it at 0 in the BOOTSEG */
+	movl	$0x200 | LOADSZ, %ax	/* number of blocks */
+	xorl	%bx, %bx		/* put it at BOOTSEG:0 */
 	int	$0x13
-	data32
-	popl	%ebx
-	data32
-	jb	read_error
-
-#ifndef	NOHD
-	testb	$0x80, %dl	/* no fdisk partion table on floppy */
-	data32
-	jz	dobsd
-
-	addr32
-	movb	%es:4(%ebx), %al
-	cmpb	$BSDPART, %al
-	je	dobsd
-
-	ljmp	$0, $0x7c00
-
-dobsd:
-#endif
-#ifdef	DEBUG
-	data32
-	movl	$six, %esi
-	data32
-	call	message
-#endif
-
-	# ljmp to the second stage boot loader (boot2).
-	# After ljmp, %cs is BOOTSEG and boot1 (512 bytes) will be used
-	# as an internal buffer "intbuf".
-
-	data32
-	ljmp	$BOOTSEG, $_C_LABEL(boot2)
+	jc	read_error
+	ret
 
 #
 #	read_error
@@ -284,16 +278,14 @@ read_error:
 	data32
 	movl	$eread, %esi
 err_stop:
-	data32
 	call	message
-	data32
 	jmp	stop
 
 #
 #	message: write the error message in %ds:%esi to console
 #
 
-message:
+chr:
 /*
 #ifndef SERIAL
 # BIOS call "INT 10H Function 0Eh" to write character to console
@@ -310,40 +302,51 @@ message:
 */
 	data32
 	pushl	%eax
-	data32
-	pushl	%ebx
-	data32
-	pushl	%edx
-
-nextb:
-	cld
-	lodsb			# load a byte into %al
-	testb	%al, %al
-	data32
-	jz	done
 
 #ifndef SERIAL
+	data32
+	pushl	%ebx
 	movb	$0x0e, %ah
 	data32
 	movl	$0x0001, %ebx
 	int	$0x10
+	data32
+	popl	%ebx
 #else
+	data32
+	pushl	%edx
 	movb	$0x01, %ah
-	xorl	%edx, %edx
+	movl	SERIAL, %edx
 	int	$0x14
+	data32
+	popl	%edx
 #endif
+	data32
+	popl	%eax
+	ret
+
+/*
+ * Display string
+ */
+message:
+	data32
+	pushl	%eax
+
+nextb:
+	cld
+	addr32
+	lodsb			# load a byte into %al
+	testb	%al, %al
+	data32
+	jz	done
+	call	chr
 
 	data32
 	jmp	nextb
 
 done:
 	data32
-	popl	%edx
-	data32
-	popl	%ebx
-	data32
 	popl	%eax
-	data32
 	ret
 #else	/* !DOSREAD */
 	movb	$0xff, %dl
@@ -395,7 +398,7 @@ ENTRY(boot2)
 	movl	$_C_LABEL(edata), %edi
 	movl	$_C_LABEL(end), %ecx
 	subl	%edi, %ecx
-	subb	%al, %al
+	xorb	%al, %al
 	rep
 	stosb
 
@@ -410,20 +413,9 @@ stop:
 
 /* error messages */
 
-#if	defined(DEBUG) && !defined(DOSREAD)
-#ifdef	FDDEBUG
-one:	.asciz		"1\r\n"
-two:	.asciz		"2\r\n"
-three:	.asciz		"3\r\n"
-#endif	/* FDDEBUG */
-four:	.asciz		"4\r\n"
-five:	.asciz		"5\r\n"
-six:	.asciz		"6\r\n"
-seven:	.asciz		"7\r\n"
-#endif	/* DEBUG */
 #ifndef	DOSREAD
 eread:	.asciz		"Read error\r\n"
-enoboot: .asciz		"No bootable partition\r\n"
+enoboot: .asciz		"No partition to boot\r\n"
 endofcode:
 /* throw in a partition in case we are block0 as well */
 /* flag, head, sec, cyl, typ, ehead, esect, ecyl, start, len */
@@ -438,6 +430,7 @@ endofcode:
 	.long	0,50000
 /* the last 2 bytes in the sector 0 contain the signature */
 	. = _C_LABEL(boot1) + 0x1fe
+signature:
 	.short	SIGNATURE
 	. = _C_LABEL(boot1) + 0x200
 #endif
