@@ -21,7 +21,7 @@ SOFTWARE.
 ************************************************************************/
 
 #ifndef lint
-static char rcsid[] = "$Id: bootpd.c,v 1.9 2001/01/16 23:34:41 deraadt Exp $";
+static char rcsid[] = "$Id: bootpd.c,v 1.10 2002/05/27 19:49:58 deraadt Exp $";
 #endif
 
 /*
@@ -195,7 +195,8 @@ main(argc, argv)
 	struct servent *servp;
 	struct hostent *hep;
 	char *stmp;
-	int n, ba_len, ra_len;
+	int n;
+	socklen_t ba_len, ra_len;
 	int nfound, readfds;
 	int standalone;
 
