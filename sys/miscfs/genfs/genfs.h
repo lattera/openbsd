@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1.2.2 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1.2.3 2003/05/20 04:04:46 tedu Exp $	*/
 /* $NetBSD: genfs_node.h,v 1.3 2001/12/18 07:49:36 chs Exp $ */
 
 /*
@@ -65,5 +65,12 @@ int	genfs_getpages(void *);
 int	genfs_putpages(void *);
 int	genfs_compat_getpages(void *);
 int	genfs_null_putpages(void *);
+
+int	genfs_nolock(void *);
+int	genfs_noislocked(void *);
+int	genfs_nounlock(void *);
+int	genfs_lock(void *);
+int	genfs_islocked(void *);
+int	genfs_unlock(void *);
 
 #endif	/* _MISCFS_GENFS_GENFS_NODE_H_ */

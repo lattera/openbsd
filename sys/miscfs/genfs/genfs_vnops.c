@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.3 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.4 2003/05/20 04:04:46 tedu Exp $	*/
 /*	$NetBSD: genfs_vnops.c,v 1.67 2002/10/25 05:44:41 yamt Exp $	*/
 
 /*
@@ -60,6 +60,88 @@ static __inline void genfs_rel_pages(struct vm_page **, int);
 int genfs_rapages = MAX_READ_AHEAD; /* # of pages in each chunk of readahead */
 int genfs_racount = 2;		/* # of page chunks to readahead */
 int genfs_raskip = 2;		/* # of busy page chunks allowed to skip */
+
+/*
+ * Lock the node.
+ */
+int
+genfs_lock(void *v)
+{
+	struct vop_lock_args /* {
+		struct vnode *a_vp;
+		int a_flags;
+		struct proc *a_p;
+	} */ *ap = v;
+	struct vnode *vp = ap->a_vp;
+
+	return (lockmgr(&vp->v_lock, ap->a_flags, &vp->v_interlock, ap->a_p));
+}
+
+/*
+ * Unlock the node.
+ */
+int
+genfs_unlock(void *v)
+{
+	struct vop_unlock_args /* {
+		struct vnode *a_vp;
+		int a_flags;
+		struct proc *a_p;
+	} */ *ap = v;
+	struct vnode *vp = ap->a_vp;
+
+	return (lockmgr(&vp->v_lock, ap->a_flags | LK_RELEASE,
+	    &vp->v_interlock, ap->a_p));
+}
+
+/*
+ * Return whether or not the node is locked.
+ */
+int
+genfs_islocked(void *v)
+{
+	struct vop_islocked_args /* {
+		struct vnode *a_vp;
+	} */ *ap = v;
+	struct vnode *vp = ap->a_vp;
+
+	return (lockstatus(&vp->v_lock));
+}
+
+/*
+ * Stubs to use when there is no locking to be done on the underlying object.
+ */
+int
+genfs_nolock(void *v)
+{
+	struct vop_lock_args /* {
+		struct vnode *a_vp;
+		int a_flags;
+		struct proc *a_p;
+	} */ *ap = v;
+
+	/*
+	 * Since we are not using the lock manager, we must clear
+	 * the interlock here.
+	 */
+	if (ap->a_flags & LK_INTERLOCK)
+		simple_unlock(&ap->a_vp->v_interlock);
+	return (0);
+}
+
+int
+genfs_nounlock(void *v)
+{
+
+	return (0);
+}
+
+int
+genfs_noislocked(void *v)
+{
+
+	return (0);
+}
 
 static __inline void
 genfs_rel_pages(struct vm_page **pgs, int npages)
