@@ -36,7 +36,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: check.c,v 1.122 1996/11/14 02:37:16 millert Exp $";
+static char rcsid[] = "$Id: check.c,v 1.2 1996/11/17 16:33:55 millert Exp $";
 #endif /* lint */
 
 #include "config.h"
@@ -75,7 +75,7 @@ static char rcsid[] = "$Id: check.c,v 1.122 1996/11/14 02:37:16 millert Exp $";
 #  include <prot.h>
 #endif /* SPW_SECUREWARE */
 #ifdef HAVE_KERB4
-#  include <krb.h>
+#  include <kerberosIV/krb.h>
 #endif /* HAVE_KERB4 */
 #ifdef HAVE_AFS
 #  include <afs/stds.h>
