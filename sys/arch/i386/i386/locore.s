@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.18 2003/05/18 17:16:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.19 2003/05/25 17:32:07 ho Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -2195,7 +2195,7 @@ syscall1:
 	call	_ASM_LABEL(fuword)
 	movl	%eax,(%esp)		# 1st syscall arg
 	pushl	%esi			# syscall no
-	pushl	_C_LABEL(cpl)		# current spl
+	pushl	CPL			# current spl
 	pushl	$4f			# format string
 	call	_C_LABEL(printf)
 	addl	$24,%esp
