@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/isp.c,v 1.4 1999/03/17 05:26:08 mjacob Exp $ */
+/* 	$OpenBSD: src/sys/dev/ic/isp.c,v 1.5 1999/03/17 12:54:31 mjacob Exp $ */
 /* release_03_16_99 */
 /*
  * Machine and OS Independent (well, as best as possible)
