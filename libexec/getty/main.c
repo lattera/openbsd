@@ -202,12 +202,9 @@ main(argc, argv)
 	 * that the file descriptors are already set up for us. 
 	 * J. Gettys - MIT Project Athena.
 	 */
-	if (isatty(0) == 0) {
-		fprintf(stderr, "not a tty\n");
-		exit(1);
-	} else if (argc <= 2 || strcmp(argv[2], "-") == 0)
-		strlcpy(ttyn, ttyname(0), sizeof(ttyn));
-	else {
+	if (argc <= 2 || strcmp(argv[2], "-") == 0) {
+		snprintf(ttyn, sizeof ttyn, "%s", ttyname(0));
+	} else {
 		int i;
 
 		snprintf(ttyn, sizeof ttyn, "%s%s", dev, argv[2]);
