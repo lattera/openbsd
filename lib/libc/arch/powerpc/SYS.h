@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/powerpc/SYS.h,v 1.7 2000/03/01 17:31:22 todd Exp $	*/
 /*-
  * Copyright (c) 1994
  *	Andrew Cagney.  All rights reserved.
@@ -34,7 +35,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)SYS.h	8.1 (Berkeley) 6/4/93
- *      $Id: SYS.h,v 1.5 1999/03/12 04:37:20 rahnds Exp $ 
  */
 
 #include <sys/syscall.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libc/arch/m88k/sys/sigsuspend.S,v 1.2 2000/03/01 17:31:22 todd Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -38,7 +40,7 @@
 #if defined(LIBC_SCCS) && !defined(lint)
 	.data
 	/*.asciz "from: @(#)sigsuspend.s	5.2 (Berkeley) 6/6/90"*/
-	.asciz "$Id: sigsuspend.S,v 1.1 1997/03/25 17:07:26 rahnds Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/m88k/sys/sigsuspend.S,v 1.2 2000/03/01 17:31:22 todd Exp $"
 	.text
 #endif /* LIBC_SCCS and not lint */
 

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/powerpc/gen/Attic/modf.c,v 1.4 2000/03/01 17:31:23 todd Exp $	*/
 /* @(#)s_modf.c 5.1 93/09/24 */
 /*
  * ====================================================
@@ -11,7 +12,7 @@
  */
 
 #if defined(LIBM_SCCS) && !defined(lint)
-static char rcsid[] = "$NetBSD: s_modf.c,v 1.8 1995/05/10 20:47:55 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/powerpc/gen/Attic/modf.c,v 1.4 2000/03/01 17:31:23 todd Exp $";
 #endif
 
 /*
@@ -39,7 +40,6 @@ static char rcsid[] = "$NetBSD: s_modf.c,v 1.8 1995/05/10 20:47:55 jtc Exp $";
 
 /*
  * from: @(#)fdlibm.h 5.1 93/09/24
- * $Id: modf.c,v 1.2 1997/01/02 03:12:07 rahnds Exp $
  */
 
 #ifndef _MATH_PRIVATE_H_

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/mvme88k/Attic/SYS.h,v 1.2 2000/03/01 17:31:22 todd Exp $	*/
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -35,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)SYS.h	5.5 (Berkeley) 5/7/91
- *	$Id: SYS.h,v 1.3 1996/06/03 11:09:32 build Exp $
  */
 
 #include <sys/syscall.h>

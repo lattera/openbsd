@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libc/arch/m88k/net/ntohs.S,v 1.2 2000/03/01 17:31:21 todd Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -38,7 +40,7 @@
 #if defined(LIBC_SCCS) && !defined(lint)
 	.text
 	/*.asciz "from: @(#)ntohs.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: ntohs.S,v 1.1 1997/03/25 17:07:11 rahnds Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/m88k/net/ntohs.S,v 1.2 2000/03/01 17:31:21 todd Exp $"
 #endif /* LIBC_SCCS and not lint */
 
 /* hostorder = ntohs(netorder) */

@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.2 1995/11/20 14:07:50 build Exp build $
+#	$OpenBSD: src/lib/libc/arch/mvme88k/Attic/Makefile.inc,v 1.2 2000/03/01 17:31:22 todd Exp $
 
 KMINCLUDES=	arch/m88k/DEFS.h arch/m88k/SYS.h
 #KMSRCS=	bcmp.S bzero.S ffs.S strcat.c strcmp.S strcpy.S strlen.S strncmp.S \

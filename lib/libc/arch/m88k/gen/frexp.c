@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/lib/libc/arch/m88k/gen/Attic/frexp.c,v 1.2 2000/03/01 17:31:20 todd Exp $*/
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +36,6 @@
  * SUCH DAMAGE.
  *
  * from: Header: frexp.c,v 1.1 91/07/07 04:45:01 torek Exp
- * $Id: frexp.c,v 1.2 1997/07/23 20:55:26 kstailey Exp $
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)

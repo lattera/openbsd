@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.1.1.1 1996/12/21 20:42:21 rahnds Exp $
+#	$OpenBSD: src/lib/libc/arch/powerpc/Makefile.inc,v 1.3 2000/03/01 17:31:22 todd Exp $
 
 KMINCLUDES= arch/powerpc/SYS.h
 KMSRCS=
