@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/sys/Attic/xfs_message.h,v 1.2 1998/08/30 17:35:43 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
