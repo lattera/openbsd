@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ypwhich/ypwhich.c,v 1.6 1997/04/22 02:55:42 gene Exp $
+/*	$OpenBSD: src/usr.bin/ypwhich/ypwhich.c,v 1.7 1997/06/23 01:03:57 deraadt Exp $
 /*	$NetBSD: ypwhich.c,v 1.6 1996/05/13 02:43:48 thorpej Exp $	*/
 
 /*
@@ -34,7 +34,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: ypwhich.c,v 1.5 1997/04/22 01:49:16 deraadt Exp $";
+static char rcsid[] = "$Id: ypwhich.c,v 1.6 1997/04/22 02:55:42 gene Exp $";
 #endif
 
 #include <sys/param.h>
@@ -84,7 +84,7 @@ struct sockaddr_in *sin;
 	struct timeval tv;
 	CLIENT *client;
 	int sock, r;
-	u_long ss_addr;
+	u_int32_t ss_addr;
 
 	sock = RPC_ANYSOCK;
 	tv.tv_sec = 15;
