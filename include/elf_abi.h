@@ -1,4 +1,4 @@
-/*	$Id$
+/*	$Id: elf_abi.h,v 1.1 1996/02/15 07:36:38 etheisen Exp $ */
 /*
  * Copyright (c) 1995 Erik Theisen
  * All rights reserved.
