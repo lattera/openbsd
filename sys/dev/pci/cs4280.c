@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.8.2.3 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cs4280.c,v 1.8.2.4 2001/12/05 00:43:29 niklas Exp $	*/
 /*	$NetBSD: cs4280.c,v 1.5 2000/06/26 04:56:23 simonb Exp $	*/
 
 /*
@@ -617,7 +617,7 @@ cs4280_attach(parent, self, aux)
 		printf("\n");
 		return;
 	}
-	printf(" %s\n", intrstr);
+	printf(": %s\n", intrstr);
 
 	/* Initialization */
 	if(cs4280_init(sc, 1) != 0)

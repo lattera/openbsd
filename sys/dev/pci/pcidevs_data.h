@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.462 2001/11/09 00:49:41 millert Exp 
+ *		OpenBSD: pcidevs,v 1.473 2001/12/04 14:33:21 mickey Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -355,24 +355,24 @@ static const struct pci_known_product pci_known_products[] = {
 	    "M1523 Host-PCI",
 	},
 	{
-	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1531,
-	    "M1531 Host-PCI",
-	},
-	{
-	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1541,
-	    "M1543 Host-PCI",
-	},
-	{
-	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1621,
-	    "M1621 Host-PCI",
-	},
-	{
 	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1523,
 	    "M1523 PCI-ISA",
 	},
 	{
+	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1531,
+	    "M1531 Host-PCI",
+	},
+	{
 	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1543,
 	    "M1543 PCI-ISA",
+	},
+	{
+	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1541,
+	    "M1541 Host-PCI",
+	},
+	{
+	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1621,
+	    "M1621 Host-PCI",
 	},
 	{
 	    PCI_VENDOR_ALI, PCI_PRODUCT_ALI_M1647,
@@ -943,8 +943,8 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Rage P/M",
 	},
 	{
-	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RADEON_M,
-	    "Radeon Mobility",
+	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RADEON_M6LY,
+	    "Radeon Mobility M6 LY",
 	},
 	{
 	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RAGE_FURY,
@@ -1077,6 +1077,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5820,
 	    "5820",
+	},
+	{
+	    PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5821,
+	    "5821",
 	},
 	{
 	    PCI_VENDOR_BROOKTREE, PCI_PRODUCT_BROOKTREE_BT848,
@@ -1315,6 +1319,18 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Triflex Host-PCI",
 	},
 	{
+	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_CSA5300,
+	    "Smart Array 5300",
+	},
+	{
+	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_CSA5i,
+	    "Smart Array 5i",
+	},
+	{
+	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_CSA532,
+	    "Smart Array 532",
+	},
+	{
 	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_USB,
 	    "USB",
 	},
@@ -1477,6 +1493,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOMZ_2,
 	    "Cyclom-Z",
+	},
+	{
+	    PCI_VENDOR_CYCLONE, PCI_PRODUCT_CYCLONE_PCI_700,
+	    "IQ80310 (PCI-700)",
 	},
 	{
 	    PCI_VENDOR_CYRIX, PCI_PRODUCT_CYRIX_GXMPCI,
@@ -1665,6 +1685,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_DPT, PCI_PRODUCT_DPT_RAID_I2O,
 	    "SmartRAID (I2O)",
+	},
+	{
+	    PCI_VENDOR_DPT, PCI_PRODUCT_DPT_2005S,
+	    "SmartRAID 2005S",
 	},
 	{
 	    PCI_VENDOR_DPT, PCI_PRODUCT_DPT_MEMCTLR,
@@ -2164,11 +2188,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_ACA,
-	    "82801AA AC-97 Audio",
+	    "82801AA AC97 Audio",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_ACM,
-	    "82801AA AC-97 Modem",
+	    "82801AA AC97 Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_HPB,
@@ -2192,11 +2216,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_ACA,
-	    "82801AB AC-97 Audio",
+	    "82801AB AC97 Audio",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_ACM,
-	    "82801AB AC-97 Modem",
+	    "82801AB AC97 Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_HPB,
@@ -2220,11 +2244,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_ACA,
-	    "82801BA AC-97 Audio",
+	    "82801BA AC97 Audio",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_ACM,
-	    "82801BA AC-97 Modem",
+	    "82801BA AC97 Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BAM_HPB,
@@ -2252,7 +2276,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_CAM,
-	    "82801CA AC-97 Audio",
+	    "82801CA AC97 Audio",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CAM_IDE,
@@ -3136,7 +3160,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_SYMBIOS, PCI_PRODUCT_SYMBIOS_895,
-	    "53c89",
+	    "53c895",
 	},
 	{
 	    PCI_VENDOR_SYMBIOS, PCI_PRODUCT_SYMBIOS_885,
@@ -3303,16 +3327,60 @@ static const struct pci_known_product pci_known_products[] = {
 	    "RM861HA",
 	},
 	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI010L,
+	    "VScom PCI 010L",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI100L,
+	    "VScom PCI 100L",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI110L,
+	    "VScom PCI 110L",
+	},
+	{
 	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI200L,
-	    "VScom PCI 200-L",
+	    "VScom PCI 200L",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI210L,
+	    "VScom PCI 210L",
+	},
+	{
+	    PCI_VENDOR_MOLEX, PCI_PRODUCT_MOLEX_VSCOM_PCI400L,
+	    "VScom PCI 400L",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI800L,
+	    "VScom PCI 800L",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCIx10H,
+	    "VScom PCI x10H",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI100H,
+	    "VScom PCI 100H",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI200H,
+	    "VScom PCI 200H",
+	},
+	{
+	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI200HV2,
+	    "VScom PCI 200HV2",
 	},
 	{
 	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI800H_0,
-	    "VScom PCI 800-H",
+	    "VScom PCI 400H/800H",
 	},
 	{
 	    PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI800H_1,
-	    "VScom PCI 800-H",
+	    "VScom PCI 800H",
+	},
+	{
+	    PCI_VENDOR_OXFORD2, PCI_PRODUCT_OXFORD2_VSCOM_PCI011H,
+	    "VScom PCI 011H",
 	},
 	{
 	    PCI_VENDOR_PE, PCI_PRODUCT_PE_GNIC2,
@@ -3769,6 +3837,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_7016,
 	    "7016 10/100BaseTX",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_7018,
+	    "Trident 4D WAVE",
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5511,
@@ -4484,7 +4556,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_AC97,
-	    "VT82C686 AC-97 Audio",
+	    "VT82C686 AC97 Audio",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII_2,
@@ -4492,7 +4564,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_ACM,
-	    "VT82C686 AC-97 Modem",
+	    "VT82C686 AC97 Modem",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII,
@@ -6909,6 +6981,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_LAVA,
 	    "Lava",
+	},
+	{
+	    PCI_VENDOR_OXFORD2,
+	    "Oxford",
 	},
 	{
 	    PCI_VENDOR_TAMARACK,

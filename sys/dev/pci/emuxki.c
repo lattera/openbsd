@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3.2.2 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/emuxki.c,v 1.3.2.3 2001/12/05 00:43:29 niklas Exp $	*/
 /*	$NetBSD: emuxki.c,v 1.1 2001/10/17 18:39:41 jdolecek Exp $	*/
 
 /*-
@@ -834,8 +834,8 @@ emuxki_mem_new(struct emuxki_softc *sc, int ptbidx,
 		return (NULL);
 
 	mem->ptbidx = ptbidx;
-	if ((mem->dmamem = emuxki_dmamem_alloc(sc->sc_dmat, size, EMU_DMA_ALIGN,
-	    EMU_DMAMEM_NSEG, type, flags)) == NULL) {
+	if ((mem->dmamem = emuxki_dmamem_alloc(sc->sc_dmat, size,
+	    EMU_DMA_ALIGN, EMU_DMAMEM_NSEG, type, flags)) == NULL) {
 		free(mem, type);
 		return (NULL);
 	}
@@ -922,7 +922,7 @@ void
 emuxki_chanparms_set_defaults(struct emuxki_channel *chan)
 {
 	chan->fxsend.a.level = chan->fxsend.b.level =
-	chan->fxsend.c.level = chan->fxsend.d.level = 0xff;	/* max */
+	chan->fxsend.c.level = chan->fxsend.d.level = 0xc0;	/* not max */
 	chan->fxsend.a.dest = 0x0;
 	chan->fxsend.b.dest = 0x1;
 	chan->fxsend.c.dest = 0x2;
@@ -1284,24 +1284,31 @@ emuxki_voice_new(struct emuxki_softc *sc, u_int8_t use)
 	struct emuxki_voice *voice;
 	int             s;
 
-	if ((voice = malloc(sizeof(*voice), M_DEVBUF, M_WAITOK)) == NULL)
-		return (NULL);
-	voice->sc = sc;
+	s = splaudio();
+	voice = sc->lvoice;
+	sc->lvoice = NULL;
+	splx(s);
+
+	if (!voice) {
+		if (!(voice = malloc(sizeof(*voice), M_DEVBUF, M_WAITOK)))
+			return (NULL);
+		voice->sc = sc;
+		voice->state = !EMU_VOICE_STATE_STARTED;
+		voice->stereo = EMU_VOICE_STEREO_NOTSET;
+		voice->b16 = 0;
+		voice->sample_rate = 0;
+		if (use & EMU_VOICE_USE_PLAY)
+			voice->dataloc.chan[0] = voice->dataloc.chan[0] = NULL;
+		else
+			voice->dataloc.source = EMU_RECSRC_NOTSET;
+		voice->buffer = NULL;
+		voice->blksize = 0;
+		voice->trigblk = 0;
+		voice->blkmod = 0;
+		voice->inth = NULL;
+		voice->inthparam = NULL;
+	}
 	voice->use = use;
-	voice->state = !EMU_VOICE_STATE_STARTED;
-	voice->stereo = EMU_VOICE_STEREO_NOTSET;
-	voice->b16 = 0;
-	voice->sample_rate = 0;
-	if (use & EMU_VOICE_USE_PLAY)
-		voice->dataloc.chan[0] = voice->dataloc.chan[0] = NULL;
-	else
-		voice->dataloc.source = EMU_RECSRC_NOTSET;
-	voice->buffer = NULL;
-	voice->blksize = 0;
-	voice->trigblk = 0;
-	voice->blkmod = 0;
-	voice->inth = NULL;
-	voice->inthparam = NULL;
 
 	s = splaudio();
 	LIST_INSERT_HEAD((&sc->voices), voice, next);
@@ -1313,17 +1320,23 @@ emuxki_voice_new(struct emuxki_softc *sc, u_int8_t use)
 void
 emuxki_voice_delete(struct emuxki_voice *voice)
 {
-	int             s;
+	struct emuxki_softc *sc = voice->sc;
+	struct emuxki_voice *lvoice;
+	int s;
 
 	if (voice->state & EMU_VOICE_STATE_STARTED)
 		emuxki_voice_halt(voice);
 
 	s = splaudio();
 	LIST_REMOVE(voice, next);
+	lvoice = sc->lvoice;
+	sc->lvoice = voice;
 	splx(s);
 
-	emuxki_voice_dataloc_destroy(voice);
-	free(voice, M_DEVBUF);
+	if (lvoice) {
+		emuxki_voice_dataloc_destroy(lvoice);
+		free(lvoice, M_DEVBUF);
+	}
 }
 
 int
@@ -1342,12 +1355,12 @@ emuxki_voice_set_stereo(struct emuxki_voice *voice, u_int8_t stereo)
 		fxsend.c.dest = 0x2;
 		fxsend.d.dest = 0x3;
 		if (voice->stereo) {
-			fxsend.a.level = fxsend.c.level = 0xff;
+			fxsend.a.level = fxsend.c.level = 0xc0;
 			fxsend.b.level = fxsend.d.level = 0x00;
 			emuxki_channel_set_fxsend(voice->dataloc.chan[0],
 						   &fxsend);
 			fxsend.a.level = fxsend.c.level = 0x00;
-			fxsend.b.level = fxsend.d.level = 0xff;
+			fxsend.b.level = fxsend.d.level = 0xc0;
 			emuxki_channel_set_fxsend(voice->dataloc.chan[1],
 						   &fxsend);
 		} /* No else : default is good for mono */	

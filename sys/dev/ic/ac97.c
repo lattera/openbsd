@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.4 2001/11/13 21:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.5 2001/12/05 00:43:29 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -323,9 +323,9 @@ const struct ac97_codecid {
 }, ac97_av[] = {
 	{ 0x10, 0xff, 0, 0,	"ALC200" },
 }, ac97_rl[] = {
-	{ 0x00, 0xff, 0, 0,	"RL5306" },
-	{ 0x10, 0xff, 0, 0,	"RL5382" },
-	{ 0x20, 0xff, 0, 0,	"RL5383" },
+	{ 0x00, 0xf0, 0xf, 0,	"RL5306" },
+	{ 0x10, 0xf0, 0xf, 0,	"RL5382" },
+	{ 0x20, 0xf0, 0xf, 0,	"RL5383" },
 }, ac97_cs[] = {
 	{ 0x00,	0xf8, 7, 0,	"CS4297" },
 	{ 0x10,	0xf8, 7, 0,	"CS4297A" },
@@ -680,12 +680,13 @@ ac97_attach(host_if)
 					if (codec->id == (id & codec->mask))
 						break;
 				}
-				if (codec->mask)
+				if (codec >= vendor->codecs && codec->mask)
 					printf(" %s", codec->name);
 				else
 					printf(" <%02x>", id & 0xff);
-				if (codec->rev)
-					printf(" rev %d", id & codec->rev);
+				if (codec >= vendor->codecs && codec->rev)
+					printf(" rev %d",
+					    id & codec->rev);
 				printf(")");
 				break;
 			}

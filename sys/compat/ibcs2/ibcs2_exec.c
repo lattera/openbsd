@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_exec.c,v 1.10.2.1 2001/11/13 21:05:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_exec.c,v 1.10.2.2 2001/12/05 00:43:28 niklas Exp $	*/
 /*	$NetBSD: ibcs2_exec.c,v 1.12 1996/10/12 02:13:52 thorpej Exp $	*/
 
 /*
@@ -368,7 +368,7 @@ n	 */
 #endif
 		return ETXTBSY;
 	}
-	epp->ep_vp->v_flag |= VTEXT;
+	vn_marktext(epp->ep_vp);
 #endif
 	
 	/* DPRINTF(("VMCMD: addr %x size %d offset %d\n", epp->ep_taddr,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.c,v 1.3.2.1 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.c,v 1.3.2.2 2001/12/05 00:43:28 niklas Exp $	*/
 /*	$NetBSD: m68k4k_exec.c,v 1.1 1996/09/10 22:01:20 thorpej Exp $	*/
 
 /*
@@ -154,7 +154,7 @@ exec_m68k4k_prep_zmagic(p, epp)
 #endif
 		return ETXTBSY;
 	}
-	epp->ep_vp->v_flag |= VTEXT;
+	vn_marktext(epp->ep_vp);
 
 	/* set up command for text segment */
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_pagedvn, execp->a_text,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/vnd.c,v 1.23.8.1 2001/05/14 22:23:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/vnd.c,v 1.23.8.2 2001/12/05 00:43:29 niklas Exp $	*/
 /*	$NetBSD: vnd.c,v 1.26 1996/03/30 23:06:11 christos Exp $	*/
 
 /*
@@ -558,12 +558,6 @@ vndstrategy(bp)
 		nbp->vb_buf.b_proc = bp->b_proc;
 		nbp->vb_buf.b_iodone = vndiodone;
 		nbp->vb_buf.b_vp = vp;
-		nbp->vb_buf.b_rcred = vnd->sc_cred;	/* XXX crdup? */
-		nbp->vb_buf.b_wcred = vnd->sc_cred;	/* XXX crdup? */
-		nbp->vb_buf.b_dirtyoff = bp->b_dirtyoff;
-		nbp->vb_buf.b_dirtyend = bp->b_dirtyend;
-		nbp->vb_buf.b_validoff = bp->b_validoff;
-		nbp->vb_buf.b_validend = bp->b_validend;
 		LIST_INIT(&nbp->vb_buf.b_dep);
 
 		/* save a reference to the old buffer */

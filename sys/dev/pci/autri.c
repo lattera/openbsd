@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.3 2001/12/01 16:43:32 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/autri.c,v 1.3.2.1 2001/12/05 00:43:29 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.

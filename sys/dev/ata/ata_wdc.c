@@ -1,3 +1,4 @@
+/*      $OpenBSD: src/sys/dev/ata/ata_wdc.c,v 1.4.2.3 2001/12/05 00:43:29 niklas Exp $	*/
 /*	$NetBSD: ata_wdc.c,v 1.21 1999/08/09 09:43:11 bouyer Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.6 2001/11/13 21:05:48 niklas Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.7 2001/12/05 00:43:28 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -656,7 +656,7 @@ file netinet/ip_gre.c			inet
 file netinet/ip_ipsp.c			(inet | inet6) & (ipsec | tcp_signature)
 file netinet/ip_spd.c			(inet | inet6) & (ipsec | tcp_signature)
 file netinet/ip_ipip.c			inet | inet6
-file netinet/ip_ether.c			inet & ipsec
+file netinet/ip_ether.c			inet
 file netinet/ipsec_input.c		(inet | inet6) & ipsec
 file netinet/ipsec_output.c		(inet | inet6) & ipsec
 file netinet/ip_esp.c			inet & ipsec
@@ -772,6 +772,7 @@ file ufs/ufs/ufs_ihash.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_inode.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_lookup.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_quota.c		quota & ( ffs | mfs | ext2fs )
+file ufs/ufs/ufs_quota_stub.c		ffs | mfs
 file ufs/ufs/ufs_vfsops.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_vnops.c		ffs | mfs | ext2fs
 file ufs/ext2fs/ext2fs_alloc.c		ext2fs
@@ -800,6 +801,7 @@ file xfs/xfs_syscalls-dummy.c		!xfs
 file uvm/uvm_amap.c
 file uvm/uvm_anon.c
 file uvm/uvm_aobj.c
+file uvm/uvm_bio.c
 file uvm/uvm_device.c
 file uvm/uvm_fault.c
 file uvm/uvm_glue.c

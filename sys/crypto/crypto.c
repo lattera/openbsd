@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.5 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.2.2.6 2001/12/05 00:43:29 niklas Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -67,9 +67,6 @@ crypto_newsession(u_int64_t *sid, struct cryptoini *cri, int hard)
 		 */
 		if (crypto_drivers[hid].cc_newsession == NULL ||
 		    (crypto_drivers[hid].cc_flags & CRYPTOCAP_F_CLEANUP))
-			continue;
-
-		if (crypto_drivers[hid].cc_sessions == 0)
 			continue;
 
 		/* Hardware requested -- ignore software drivers. */
@@ -181,6 +178,7 @@ crypto_get_driverid(u_int8_t flags)
 		    !(crypto_drivers[i].cc_flags & CRYPTOCAP_F_CLEANUP) &&
 		    crypto_drivers[i].cc_sessions == 0) {
 			crypto_drivers[i].cc_sessions = 1; /* Mark */
+			crypto_drivers[i].cc_flags = flags;
 			splx(s);
 			return i;
 		}

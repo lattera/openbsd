@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/compat_exec.c,v 1.5.2.1 2001/11/13 21:05:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/compat_exec.c,v 1.5.2.2 2001/12/05 00:43:28 niklas Exp $	*/
 /*	$NetBSD: compat_exec.c,v 1.1 1996/05/18 15:52:21 christos Exp $	*/
 
 /*
@@ -75,7 +75,7 @@ exec_aout_prep_oldzmagic(p, epp)
 #endif
 		return ETXTBSY;
 	}
-	epp->ep_vp->v_flag |= VTEXT;
+	vn_marktext(epp->ep_vp);
 
 	/* set up command for text segment */
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_pagedvn, execp->a_text,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.2 2001/07/04 10:42:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.3 2001/12/05 00:43:30 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_txvar.h,v 1.8 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -223,7 +223,7 @@ struct epic_rx_desc {
 
 /* This structure defines EPIC's fragment list, maximum number of frags */
 /* is 63. Let use maximum, becouse size of struct MUST be divisor of */
-/* PAGE_SIZE, and sometimes come mbufs with more then 30 frags */
+/* PAGE_SIZE, and sometimes come mbufs with more than 30 frags */
 #define EPIC_MAX_FRAGS 63
 struct epic_frag_list {
 	volatile u_int32_t		numfrags;
