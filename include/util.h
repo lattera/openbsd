@@ -1,5 +1,7 @@
+/*	$NetBSD: util.h,v 1.2 1996/05/16 07:00:22 thorpej Exp $	*/
+
 /*-
- * Copyright (c) 1990, 1993
+ * Copyright (c) 1995
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,27 +33,35 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-/* from: static char sccsid[] = "@(#)login_tty.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: login_tty.c,v 1.1.1.1 1995/10/18 08:43:13 deraadt Exp $";
-#endif /* LIBC_SCCS and not lint */
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
-#include <sys/param.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <util.h>
+#include <pwd.h>
+#include <utmp.h>
+#include <termios.h>
+#include <sys/ttycom.h>
+#include <sys/types.h>
+#include <sys/cdefs.h>
 
-int
-login_tty(fd)
-	int fd;
-{
-	(void) setsid();
-	if (ioctl(fd, TIOCSCTTY, (char *)NULL) == -1)
-		return (-1);
-	(void) dup2(fd, 0);
-	(void) dup2(fd, 1);
-	(void) dup2(fd, 2);
-	if (fd > 2)
-		(void) close(fd);
-	return (0);
-}
+__BEGIN_DECLS
+void	login __P((struct utmp *));
+int	login_tty __P((int));
+int	logout __P((const char *));
+void	logwtmp __P((const char *, const char *, const char *));
+int	pw_lock __P((int retries));
+int	pw_mkdb __P((void));
+int	pw_abort __P((void));
+void	pw_init __P((void));
+void	pw_edit __P((int notsetuid, const char *filename));
+void	pw_prompt __P((void));
+void	pw_copy __P((int ffd, int tfd, struct passwd *pw));
+int	pw_scan __P((char *bp, struct passwd *pw, int *flags));
+void	pw_error __P((const char *name, int err, int eval));
+int	openpty __P((int *, int *, char *, struct termios *,
+		     struct winsize *));
+pid_t	forkpty __P((int *, char *, struct termios *, struct winsize *));
+int	getmaxpartitions __P((void));
+int	getrawpartition __P((void));
+__END_DECLS
+
+#endif /* !_UTIL_H_ */
