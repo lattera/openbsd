@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: log.c,v 1.3 1999/03/07 11:55:26 brian Exp $
+ *	$Id: log.c,v 1.4 1999/05/09 20:04:01 brian Exp $
  */
 
 #include <sys/types.h>
@@ -55,6 +55,8 @@ static const char *LogNames[] = {
   "LCP",
   "LQM",
   "Phase",
+  "Physical",
+  "Sync",
   "TCP/IP",
   "Timer",
   "Tun",

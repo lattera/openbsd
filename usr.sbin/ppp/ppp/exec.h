@@ -23,7 +23,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id:$
+ *	$Id: exec.h,v 1.1 1999/05/08 11:06:35 brian Exp $
  */
 
-extern const struct device execdevice;
+struct physical;
+struct device;
+
+extern struct device *exec_Create(struct physical *);
+extern struct device *exec_iov2device(int, struct physical *,
+                                      struct iovec *, int *, int);

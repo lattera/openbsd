@@ -23,12 +23,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: tty.h,v 1.1 1999/05/08 11:06:40 brian Exp $
+ *	$Id: tcp.h,v 1.1 1999/05/08 11:07:45 brian Exp $
  */
 
 struct physical;
 struct device;
 
-extern struct device *tty_Create(struct physical *);
-extern struct device *tty_iov2device(int, struct physical *,
+extern struct device *udp_Create(struct physical *);
+extern struct device *udp_iov2device(int, struct physical *,
                                      struct iovec *, int *, int);
