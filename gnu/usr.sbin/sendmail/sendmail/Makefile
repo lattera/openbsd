@@ -1,0 +1,44 @@
+#	$OpenBSD: src/gnu/usr.sbin/sendmail/sendmail/Makefile,v 1.9 2000/10/09 23:45:00 millert Exp $
+
+PROG=	sendmail
+
+WANT_LIBWRAP=1
+WANT_LIBSMUTIL=1
+
+# To casue sendmail to drop privs in test mode (-bt) uncomment the following
+#ENVDEF+= -D_FFR_TESTMODE_DROP_PRIVS
+
+SRCS=	main.c alias.c arpadate.c bf_torek.c clock.c collect.c \
+	conf.c control.c convtime.c daemon.c deliver.c domain.c \
+	envelope.c err.c headers.c macro.c map.c mci.c milter.c \
+	mime.c parseaddr.c queue.c readcf.c recipient.c savemail.c \
+	sfsasl.c shmticklib.c srvrsmtp.c stab.c stats.c sysexits.c \
+	timers.c trace.c udb.c usersmtp.c util.c version.c
+MAN=	aliases.5 mailq.1 newaliases.8 sendmail.8
+MLINKS=	sendmail.8 hoststat.1 sendmail.8 purgestat.1
+BINDIR=	/usr/libexec/sendmail
+BINOWN=	root
+BINGRP=	bin
+BINMODE=4555
+
+beforeinstall:
+	# Force user to make the world sane for us
+	@if [ -f /etc/sendmail.cf ]; then \
+		if [ ! -f /etc/mail/sendmail.cf ]; then \
+			echo "Error: /etc/sendmail.cf exists but /etc/mail/sendmail.cf does not.  Please move /etc/sendmail.cf to /etc/mail/sendmail.cf."; \
+			false; \
+		else \
+			echo "Warning: both /etc/mail/sendmail.cf and /etc/sendmail.cf exist.  Sendmail will use /etc/mail/sendmail.cf."; \
+		fi ; \
+	fi
+	@if test -f /etc/rc && grep -q /etc/sendmail.cf /etc/rc; \
+	    then echo "Error: /etc/rc must check for /etc/mail/sendmail.cf, not /etc/sendmail.cf"; \
+	    false; \
+	fi
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
+	    ${.CURDIR}/helpfile ${DESTDIR}/etc/mail/helpfile
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 644 \
+	    /dev/null ${DESTDIR}/var/log/sendmail.st
+
+.include "../../Makefile.inc"
+.include <bsd.prog.mk>
