@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.3 1998/11/11 03:40:41 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.4 1998/11/11 03:48:41 jason Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
