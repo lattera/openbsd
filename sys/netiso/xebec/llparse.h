@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/netiso/xebec/Attic/llparse.h,v 1.2 1996/03/04 10:37:05 mickey Exp $	*/
 /*	$NetBSD: llparse.h,v 1.4 1994/06/29 06:41:04 cgd Exp $	*/
 
 	/************************************************************
