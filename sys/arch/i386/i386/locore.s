@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.25 2004/04/06 13:31:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.26 2004/04/15 15:44:56 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -986,18 +986,29 @@ ENTRY(memcpy)
  * address space.
  */
 
+/* Frame pointer reserve on stack. */
+#ifdef DDB
+#define FPADD 4
+#else
+#define FPADD 0
+#endif
+
 /*
  * copyout(caddr_t from, caddr_t to, size_t len);
  * Copy len bytes into the user's address space.
  */
 ENTRY(copyout)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 	pushl	$0	
 	
-	movl	16(%esp),%esi
-	movl	20(%esp),%edi
-	movl	24(%esp),%eax
+	movl	16+FPADD(%esp),%esi
+	movl	20+FPADD(%esp),%edi
+	movl	24+FPADD(%esp),%eax
 
 	/*
 	 * We check that the end of the destination buffer is not past the end
@@ -1047,8 +1058,8 @@ ENTRY(copyout)
 	decl	%ecx
 	jns	1b
 
-	movl	20(%esp),%edi
-	movl	24(%esp),%eax
+	movl	20+FPADD(%esp),%edi
+	movl	24+FPADD(%esp),%eax
 	jmp	3f
 
 2:	/* Simulate a trap. */
@@ -1082,6 +1093,9 @@ ENTRY(copyout)
 	popl	%edi
 	popl	%esi
 	xorl	%eax,%eax
+#ifdef DDB
+	leave
+#endif
 	ret
 
 /*
@@ -1089,15 +1103,19 @@ ENTRY(copyout)
  * Copy len bytes from the user's address space.
  */
 ENTRY(copyin)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 	GET_CURPCB(%eax)
 	pushl	$0
 	movl	$_C_LABEL(copy_fault),PCB_ONFAULT(%eax)
 	
-	movl	16(%esp),%esi
-	movl	20(%esp),%edi
-	movl	24(%esp),%eax
+	movl	16+FPADD(%esp),%esi
+	movl	20+FPADD(%esp),%edi
+	movl	24+FPADD(%esp),%eax
 
 	/*
 	 * We check that the end of the destination buffer is not past the end
@@ -1126,6 +1144,9 @@ ENTRY(copyin)
 	popl	%edi
 	popl	%esi
 	xorl	%eax,%eax
+#ifdef DDB
+	leave
+#endif
 	ret
 
 ENTRY(copy_fault)
@@ -1144,12 +1165,16 @@ ENTRY(copy_fault)
  * return 0 or EFAULT.
  */
 ENTRY(copyoutstr)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 
-	movl	12(%esp),%esi		# esi = from
-	movl	16(%esp),%edi		# edi = to
-	movl	20(%esp),%edx		# edx = maxlen
+	movl	12+FPADD(%esp),%esi		# esi = from
+	movl	16+FPADD(%esp),%edi		# edi = to
+	movl	20+FPADD(%esp),%edx		# edx = maxlen
 
 #if defined(I386_CPU)
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
@@ -1228,7 +1253,7 @@ ENTRY(copyoutstr)
 	cmpl	%edx,%eax
 	jae	1f
 	movl	%eax,%edx
-	movl	%eax,20(%esp)
+	movl	%eax,20+FPADD(%esp)
 
 1:	incl	%edx
 	cld
@@ -1260,14 +1285,18 @@ ENTRY(copyoutstr)
  * return 0 or EFAULT.
  */
 ENTRY(copyinstr)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 	GET_CURPCB(%ecx)
 	movl	$_C_LABEL(copystr_fault),PCB_ONFAULT(%ecx)
 
-	movl	12(%esp),%esi		# %esi = from
-	movl	16(%esp),%edi		# %edi = to
-	movl	20(%esp),%edx		# %edx = maxlen
+	movl	12+FPADD(%esp),%esi		# %esi = from
+	movl	16+FPADD(%esp),%edi		# %edi = to
+	movl	20+FPADD(%esp),%edx		# %edx = maxlen
 
 	/*
 	 * Get min(%edx, VM_MAXUSER_ADDRESS-%esi).
@@ -1277,7 +1306,7 @@ ENTRY(copyinstr)
 	cmpl	%edx,%eax
 	jae	1f
 	movl	%eax,%edx
-	movl	%eax,20(%esp)
+	movl	%eax,20+FPADD(%esp)
 
 1:	incl	%edx
 	cld
@@ -1307,15 +1336,18 @@ copystr_return:
 	/* Set *lencopied and return %eax. */
 	GET_CURPCB(%ecx)
 	movl	$0,PCB_ONFAULT(%ecx)
-	movl	20(%esp),%ecx
+	movl	20+FPADD(%esp),%ecx
 	subl	%edx,%ecx
-	movl	24(%esp),%edx
+	movl	24+FPADD(%esp),%edx
 	testl	%edx,%edx
 	jz	8f
 	movl	%ecx,(%edx)
 
 8:	popl	%edi
 	popl	%esi
+#ifdef DDB
+	leave
+#endif
 	ret
 
 /*
@@ -1325,12 +1357,16 @@ copystr_return:
  * string is too long, return ENAMETOOLONG; else return 0.
  */
 ENTRY(copystr)
+#ifdef DDB
+	pushl	%ebp
+	movl	%esp,%ebp
+#endif
 	pushl	%esi
 	pushl	%edi
 
-	movl	12(%esp),%esi		# esi = from
-	movl	16(%esp),%edi		# edi = to
-	movl	20(%esp),%edx		# edx = maxlen
+	movl	12+FPADD(%esp),%esi		# esi = from
+	movl	16+FPADD(%esp),%edi		# edi = to
+	movl	20+FPADD(%esp),%edx		# edx = maxlen
 	incl	%edx
 	cld
 
@@ -1350,15 +1386,18 @@ ENTRY(copystr)
 	movl	$ENAMETOOLONG,%eax
 
 6:	/* Set *lencopied and return %eax. */
-	movl	20(%esp),%ecx
+	movl	20+FPADD(%esp),%ecx
 	subl	%edx,%ecx
-	movl	24(%esp),%edx
+	movl	24+FPADD(%esp),%edx
 	testl	%edx,%edx
 	jz	7f
 	movl	%ecx,(%edx)
 
 7:	popl	%edi
 	popl	%esi
+#ifdef DDB
+	leave
+#endif
 	ret
 
 /*****************************************************************************/
