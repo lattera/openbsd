@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.24.2.3 2003/05/19 22:36:11 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.24.2.4 2003/05/20 04:05:39 tedu Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -58,6 +58,8 @@
 #include <sys/buf.h>
 #include <sys/dirent.h>
 #include <sys/msgbuf.h>
+
+#include <miscfs/genfs/genfs.h>
 #include <miscfs/kernfs/kernfs.h>
 
 #include <uvm/uvm_extern.h>
@@ -145,12 +147,12 @@ int	kernfs_readdir(void *);
 #define	kernfs_readlink	eopnotsupp
 int	kernfs_inactive(void *);
 int	kernfs_reclaim(void *);
-#define	kernfs_lock	vop_generic_lock
-#define	kernfs_unlock	vop_generic_unlock
+#define	kernfs_lock	genfs_lock
+#define	kernfs_unlock	genfs_unlock
 #define	kernfs_bmap	kernfs_badop
 #define	kernfs_strategy	kernfs_badop
 int	kernfs_print(void *);
-#define	kernfs_islocked	vop_generic_islocked
+#define	kernfs_islocked	genfs_islocked
 int	kernfs_pathconf(void *);
 #define	kernfs_advlock	eopnotsupp
 #define	kernfs_blkatoff	eopnotsupp

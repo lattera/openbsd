@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.9.2.1 2002/06/11 03:30:20 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.9.2.2 2003/05/20 04:05:38 tedu Exp $	*/
 /*	$NetBSD: dead_vnops.c,v 1.16 1996/02/13 13:12:48 mycroft Exp $	*/
 
 /*
@@ -45,6 +45,8 @@
 #include <sys/buf.h>
 #include <sys/proc.h>
 
+#include <miscfs/genfs/genfs.h>
+
 /*
  * Prototypes for dead operations on vnodes.
  */
@@ -76,11 +78,11 @@ int	dead_select(void *);
 #define dead_inactive	nullop
 #define dead_reclaim	nullop
 int	dead_lock(void *);
-#define dead_unlock	vop_generic_unlock
+#define dead_unlock	genfs_nounlock
 int	dead_bmap(void *);
 int	dead_strategy(void *);
 int	dead_print(void *);
-#define dead_islocked	vop_generic_islocked
+#define dead_islocked	genfs_noislocked
 #define dead_pathconf	dead_ebadf
 #define dead_advlock	dead_ebadf
 #define dead_bwrite	nullop

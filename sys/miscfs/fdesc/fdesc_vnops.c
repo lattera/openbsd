@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.3 2003/05/19 22:36:11 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.4 2003/05/20 04:05:38 tedu Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -66,6 +66,7 @@
 #include <sys/tty.h>
 
 #include <miscfs/fdesc/fdesc.h>
+#include <miscfs/genfs/genfs.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -114,13 +115,13 @@ int	fdesc_readdir(void *);
 int	fdesc_readlink(void *);
 int	fdesc_inactive(void *);
 int	fdesc_reclaim(void *);
-#define	fdesc_lock	vop_generic_lock
-#define	fdesc_unlock	vop_generic_unlock
+#define	fdesc_lock	genfs_nolock
+#define	fdesc_unlock	genfs_nounlock
 #define	fdesc_bmap	fdesc_badop
 #define	fdesc_strategy	fdesc_badop
 int	fdesc_print(void *);
 int	fdesc_pathconf(void *);
-#define	fdesc_islocked	vop_generic_islocked
+#define	fdesc_islocked	genfs_noislocked
 #define	fdesc_advlock	eopnotsupp
 #define	fdesc_bwrite	eopnotsupp
 #define	fdesc_mmap	eopnotsupp

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.10.2.2 2003/05/19 22:36:11 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.10.2.3 2003/05/20 04:05:39 tedu Exp $	*/
 /*	$NetBSD: portal_vnops.c,v 1.17 1996/02/13 13:12:57 mycroft Exp $	*/
 
 /*
@@ -63,6 +63,8 @@
 #include <sys/un.h>
 #include <sys/unpcb.h>
 #include <sys/syscallargs.h>
+
+#include <miscfs/genfs/genfs.h>
 #include <miscfs/portal/portal.h>
 
 static int portal_fileid = PORTAL_ROOTFILEID+1;
@@ -97,12 +99,12 @@ int	portal_readdir(void *);
 #define	portal_readlink	eopnotsupp
 int	portal_inactive(void *);
 int	portal_reclaim(void *);
-#define	portal_lock	vop_generic_lock
-#define	portal_unlock	vop_generic_unlock
+#define	portal_lock	genfs_nolock
+#define	portal_unlock	genfs_nounlock
 #define	portal_bmap	portal_badop
 #define	portal_strategy	portal_badop
 int	portal_print(void *);
-#define	portal_islocked	vop_generic_islocked
+#define	portal_islocked	genfs_noislocked
 int	portal_pathconf(void *);
 #define	portal_advlock	eopnotsupp
 #define	portal_bwrite	eopnotsupp

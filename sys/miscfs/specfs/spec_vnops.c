@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.21.2.3 2003/05/19 22:36:12 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/spec_vnops.c,v 1.21.2.4 2003/05/20 04:05:39 tedu Exp $	*/
 /*	$NetBSD: spec_vnops.c,v 1.29 1996/04/22 01:42:38 christos Exp $	*/
 
 /*
@@ -52,6 +52,7 @@
 #include <sys/disklabel.h>
 #include <sys/lockf.h>
 
+#include <miscfs/genfs/genfs.h>
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/genfs/genfs.h>
 

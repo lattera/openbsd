@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.11.2.3 2003/05/19 22:36:11 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo_vnops.c,v 1.11.2.4 2003/05/20 04:05:38 tedu Exp $	*/
 /*	$NetBSD: fifo_vnops.c,v 1.18 1996/03/16 23:52:42 christos Exp $	*/
 
 /*
@@ -51,6 +51,8 @@
 #include <sys/errno.h>
 #include <sys/malloc.h>
 #include <sys/un.h>
+
+#include <miscfs/genfs/genfs.h>
 #include <miscfs/fifofs/fifo.h>
 
 /*
