@@ -1,3 +1,5 @@
+#	$Id$
+#
 #	@(#)Makefile	5.4 (Berkeley) 5/11/93
 
 PROG=	timedc

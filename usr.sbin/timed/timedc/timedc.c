@@ -1,3 +1,5 @@
+/*	$Id$	*/
+
 /*-
  * Copyright (c) 1985, 1993 The Regents of the University of California.
  * All rights reserved.
@@ -42,7 +44,7 @@ static char sccsid[] = "@(#)timedc.c	5.1 (Berkeley) 5/11/93";
 #endif /* not lint */
 
 #ifdef sgi
-#ident "$Revision: 1.2 $"
+#ident "$Revision: 1.3 $"
 #endif
 
 #include "timedc.h"
