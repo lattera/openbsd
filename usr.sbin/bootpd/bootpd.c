@@ -21,7 +21,7 @@ SOFTWARE.
 ************************************************************************/
 
 #ifndef lint
-static char rcsid[] = "$Id: bootpd.c,v 1.10 2002/05/27 19:49:58 deraadt Exp $";
+static char rcsid[] = "$Id: bootpd.c,v 1.11 2002/09/06 19:52:26 deraadt Exp $";
 #endif
 
 /*
@@ -168,8 +168,8 @@ char hostname[MAXHOSTNAMELEN];	/* System host name */
 struct in_addr my_ip_addr;
 
 /* Flags set by signal catcher. */
-PRIVATE int do_readtab = 0;
-PRIVATE int do_dumptab = 0;
+PRIVATE volatile sig_atomic_t do_readtab = 0;
+PRIVATE volatile sig_atomic_t do_dumptab = 0;
 
 /*
  * Globals below are associated with the bootp database file (bootptab).
