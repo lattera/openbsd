@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/talkd/talkd.c,v 1.4 1996/07/18 00:04:09 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/talkd/talkd.c,v 1.5 1996/07/18 00:18:54 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1983 Regents of the University of California.
@@ -41,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)talkd.c	5.8 (Berkeley) 2/26/91";*/
-static char rcsid[] = "$Id: talkd.c,v 1.3 1996/07/15 05:10:12 mickey Exp $";
+static char rcsid[] = "$Id: talkd.c,v 1.4 1996/07/18 00:04:09 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -50,6 +50,7 @@ static char rcsid[] = "$Id: talkd.c,v 1.3 1996/07/15 05:10:12 mickey Exp $";
  * disconnect all descriptors and ttys, and then endless
  * loop on waiting for and processing requests
  */
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <protocols/talkd.h>
