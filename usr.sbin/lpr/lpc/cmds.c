@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/lpr/lpc/cmds.c,v 1.8 1997/01/17 16:12:35 millert Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,7 +41,11 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)cmds.c	8.2 (Berkeley) 4/28/95";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/lpc/cmds.c,v 1.8 1997/01/17 16:12:35 millert Exp $";
+#endif
 #endif /* not lint */
 
 /*

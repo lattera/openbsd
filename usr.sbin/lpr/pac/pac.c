@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/lpr/pac/pac.c,v 1.7 1996/11/03 23:24:13 millert Exp $ */
+/*	$OpenBSD: src/usr.sbin/lpr/pac/pac.c,v 1.8 1997/01/17 16:12:50 millert Exp $ */
 /*	$NetBSD: pac.c,v 1.7 1996/03/21 18:21:20 jtc Exp $	*/
 
 /*
@@ -42,7 +42,11 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)pac.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/pac/pac.c,v 1.8 1997/01/17 16:12:50 millert Exp $";
+#endif
 #endif /* not lint */
 
 /*
