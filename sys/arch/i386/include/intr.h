@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.5 2001/10/28 22:41:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.6 2001/10/29 08:41:00 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -46,7 +46,7 @@
 #define	IPL_CLOCK	(NRSVIDT + 0x90)	/* clock */
 #define	IPL_HIGH	(NRSVIDT + 0xa0)	/* everything, except... */
 #define	IPL_IPI		(NRSVIDT + 0xb0)	/* interprocessor interrupt */
-#define NIPL		12
+#define NIPL		16
 
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
