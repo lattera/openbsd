@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/w/w.c,v 1.8 1996/08/22 02:16:01 downsj Exp $	*/
+/*	$OpenBSD: src/usr.bin/w/w.c,v 1.9 1996/08/22 06:46:36 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1980, 1991, 1993, 1994
@@ -340,7 +340,7 @@ pr_args(kp)
 	if (kp == 0)
 		goto nothing;
 	left = argwidth;
-	argv = kvm_getargv(kd, kp, argwidth);
+	argv = kvm_getargv(kd, kp, argwidth+60);  /*+60 for ftpd snip */
 	if (argv == 0)
 		goto nothing;
 
