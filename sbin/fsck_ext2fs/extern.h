@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sbin/fsck_ext2fs/extern.h,v 1.3 1997/06/14 04:16:51 downsj Exp $	*/
 /*	$NetBSD: extern.h,v 1.1 1997/06/11 11:21:46 bouyer Exp $	*/
 
 /*
