@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.13 2003/03/15 19:16:10 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.13.2.1 2003/06/09 17:09:47 brad Exp $	*/
 /*	$NetBSD: cac.c,v 1.15 2000/11/08 19:20:35 ad Exp $	*/
 
 /*
@@ -254,6 +254,8 @@ cac_init(struct cac_softc *sc, int startfw)
 	if (cac_sdh == NULL)
 		cac_sdh = shutdownhook_establish(cac_shutdown, NULL);
 
+	(*sc->sc_cl->cl_intr_enable)(sc, 1);
+
 	return (0);
 }
 
@@ -301,7 +303,6 @@ cac_intr(v)
 	if (!(istat = (sc->sc_cl->cl_intr_pending)(sc)))
 		return 0;
 
-	(*sc->sc_cl->cl_intr_enable)(sc, 0);
 	if (istat & CAC_INTR_FIFO_NEMPTY)
 		while ((ccb = (*sc->sc_cl->cl_completed)(sc)) != NULL) {
 			ret = 1;
@@ -377,7 +378,6 @@ cac_cmd(struct cac_softc *sc, int command, void *data, int datasize,
 	ccb->ccb_datasize = size;
 	ccb->ccb_xs = xs;
 
-	(*sc->sc_cl->cl_intr_enable)(sc, 0);
 	if (!xs || xs->flags & SCSI_POLL) {
 
 		/* Synchronous commands musn't wait. */
@@ -389,7 +389,6 @@ cac_cmd(struct cac_softc *sc, int command, void *data, int datasize,
 			(*sc->sc_cl->cl_submit)(sc, ccb);
 			rv = cac_ccb_poll(sc, ccb, 2000);
 		}
-		(*sc->sc_cl->cl_intr_enable)(sc, 1);
 	} else
 		rv = cac_ccb_start(sc, ccb);
 
@@ -435,8 +434,6 @@ cac_ccb_start(struct cac_softc *sc, struct cac_ccb *ccb)
 		ccb->ccb_flags |= CAC_CCB_ACTIVE;
 		(*sc->sc_cl->cl_submit)(sc, ccb);
 	}
-
-	(*sc->sc_cl->cl_intr_enable)(sc, 1);
 
 	return (0);
 }
