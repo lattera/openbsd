@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/ccl.c,v 1.4 2001/06/17 07:30:42 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/ccl.c,v 1.5 2001/11/19 19:02:14 mpech Exp $	*/
 
 /* ccl - routines for character classes */
 
@@ -28,7 +28,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* $Header: /cvs/src/usr.bin/lex/ccl.c,v 1.3 1996/07/13 22:21:56 millert Exp $ */
+/* $Header: /cvs/src/usr.bin/lex/ccl.c,v 1.4 2001/06/17 07:30:42 deraadt Exp $ */
 
 #include "flexdef.h"
 
@@ -122,7 +122,7 @@ void list_character_set( file, cset )
 FILE *file;
 int cset[];
 	{
-	register int i;
+	int i;
 
 	putc( '[', file );
 
@@ -130,7 +130,7 @@ int cset[];
 		{
 		if ( cset[i] )
 			{
-			register int start_char = i;
+			int start_char = i;
 
 			putc( ' ', file );
 
