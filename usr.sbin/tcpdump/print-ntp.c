@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ntp.c,v 1.9 2000/10/03 14:31:58 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ntp.c,v 1.10 2001/11/07 18:48:16 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -27,7 +27,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ntp.c,v 1.8 1999/09/16 20:58:47 brad Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ntp.c,v 1.9 2000/10/03 14:31:58 ho Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -161,8 +161,7 @@ ntp_print(register const u_char *cp, u_int length)
 		break;
 
 	case PRIM_REF:
-		strncpy(rclock, (char *)&(bp->refid), 4);
-		rclock[4] = '\0';
+		strlcpy(rclock, (char *)&(bp->refid), sizeof(rclock));
 		fputs(rclock, stdout);
 		break;
 
