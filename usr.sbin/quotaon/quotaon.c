@@ -42,7 +42,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)quotaon.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: quotaon.c,v 1.13 2002/05/22 09:09:32 deraadt Exp $";
+static char *rcsid = "$Id: quotaon.c,v 1.14 2002/05/29 09:45:08 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -86,7 +86,7 @@ main(argc, argv)
 		exit(1);
 	}
 	while ((ch = getopt(argc, argv, "avug")) != -1) {
-		switch(ch) {
+		switch (ch) {
 		case 'a':
 			aflag++;
 			break;
