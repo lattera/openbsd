@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: env.c,v 1.4 1996/11/01 23:27:33 millert Exp $";
+static char rcsid[] = "$Id: env.c,v 1.5 1998/03/30 06:59:44 deraadt Exp $";
 #endif
 
 
@@ -170,7 +170,7 @@ load_env(envstr, f)
 			if (val[0] == '\'' || val[0] == '"') {
 				if (val[len-1] == val[0]) {
 					val[len-1] = '\0';
-					(void) strcpy(val, val+1);
+					memmove(val, val+1, len);
 				}
 			}
 		}
