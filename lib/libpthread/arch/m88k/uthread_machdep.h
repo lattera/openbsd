@@ -1,1 +1,4 @@
-/*	$OpenBSD: src/lib/libpthread/arch/m88k/Attic/uthread_machdep.h,v 1.3 2000/10/04 05:55:34 d Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/arch/m88k/Attic/uthread_machdep.h,v 1.4 2001/02/21 00:24:38 miod Exp $	*/
+
+struct _machdep_state {
+};
