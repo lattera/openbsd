@@ -1,0 +1,127 @@
+#	$OpenBSD: src/gnu/usr.bin/binutils/Makefile.bsd-wrapper,v 1.50 2003/02/16 15:09:03 espie Exp $
+
+NEW_BINUTILS=alpha mips powerpc hppa sparc64 sparc
+
+SUBDIRS=	opcodes bfd
+ALL_X11_MODULES=
+INSTALL_X11_MODULES=
+
+
+# This allows moving the whole binutils installation around for 
+# testing purposes
+PREFIX=/usr
+.if ${PREFIX} != "/usr"
+MANDIR=${PREFIX}/share/man/cat
+.endif
+
+MAN=		binutils/objdump.1 c++filt.1
+
+.if (${MACHINE_ARCH} != "unknown")
+SUBDIRS+=	gdb mmalloc
+MAN+=		gdb/gdb.1
+ALL_X11_MODULES+=all-gdb
+INSTALL_X11_MODULES+=install-gdb
+.endif
+
+.for _arch in ${MACHINE_ARCH}
+.  if !empty(NEW_BINUTILS:M${_arch})
+SUBDIRS+=	binutils ld gas
+MAN+=		binutils/ar.1 binutils/nm.1 \
+		binutils/objcopy.1 binutils/ranlib.1 \
+		binutils/size.1 binutils/strings.1 binutils/strip.1 \
+		gas/doc/as.1 ld/ld.1
+.  endif
+.endfor
+
+# Used by the GNU Makefile
+ALL_MODULES=${SUBDIRS:S/^/all-/g}
+INSTALL_MODULES=${SUBDIRS:S/^/install-/g}
+	
+all:	config.status
+	SUBDIRS='${SUBDIRS}' ${MAKE} CC="${CC}" \
+	    CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS=${LDSTATIC} \
+	    scriptdir=${PREFIX}/libdata \
+	    tooldir=${PREFIX} \
+	    BSDSRCDIR=${BSDSRCDIR} \
+	    ALL_MODULES="${ALL_MODULES}" \
+	    ALL_X11_MODULES="${ALL_X11_MODULES}" all info
+	cd ${.OBJDIR}/binutils && \
+	    ${MAKE} CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+	    LDFLAGS=${LDSTATIC} objdump
+
+.include <bsd.own.mk>
+
+.ifdef GLOBAL_AUTOCONF_CACHE
+CF=	--cache-file=${GLOBAL_AUTOCONF_CACHE}
+.else
+CF=
+.endif
+
+do-config: .USE
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	sh ${.CURDIR}/configure --prefix=${PREFIX} \
+	    --infodir='$${prefix}/share/info' \
+	    --disable-nls --disable-gdbtk --disable-commonbfdlib ${CF}
+	cd ${.OBJDIR} && \
+	    sed -e 's,SUBDIRS *=,SUBDIRS ?=,' <Makefile >Makefile.tmp && \
+	    mv -f Makefile.tmp Makefile
+
+config: do-config
+.ifndef GLOBAL_AUTOCONF_CACHE
+	-rm -f config.cache
+.endif
+
+config.status: do-config
+
+# Need to pass SUBDIRS because of install-info
+install: maninstall
+	SUBDIRS='${SUBDIRS}' ${MAKE} DESTDIR='${DESTDIR}' \
+	    INSTALL_X11_MODULES="${INSTALL_X11_MODULES}" \
+	    INSTALL_MAN= \
+	    scriptdir=${PREFIX}/libdata \
+	    tooldir=${PREFIX} \
+	    BSDSRCDIR=${BSDSRCDIR} \
+	    INSTALL_MODULES='${INSTALL_MODULES}' install install-info
+	cd ${.OBJDIR}/binutils && \
+		${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} -o ${BINOWN} -g ${BINGRP} \
+			-m ${BINMODE} objdump ${DESTDIR}${PREFIX}/bin
+
+clean cleandir:
+	-@if [ -e Makefile ]; then ${MAKE} distclean; fi
+
+prereq: config.status
+	cd ${.OBJDIR}/bfd && ${MAKE} bfd.h
+	# we don't install ansidecl.h, we merge it into the file that
+	# needs it instead.
+	sed -e '/^#include "ansidecl.h"/r${.CURDIR}/include/ansidecl.h' -e '//d' \
+		bfd/bfd.h >bfd/mybfd.h
+
+c++filt.1: binutils/cxxfilt.man
+	sed -e 's,@PROGRAM@,c++filt,' <${.CURDIR}/binutils/cxxfilt.man >$@
+
+includes:
+	install -C -o ${BINOWN} -g ${BINGRP} -m ${NONBINMODE} \
+		${.CURDIR}/include/bfdlink.h ${DESTDIR}/usr/include
+	install -C -o ${BINOWN} -g ${BINGRP} -m ${NONBINMODE} \
+		bfd/mybfd.h ${DESTDIR}/usr/include/bfd.h
+
+depend:
+	# Nothing here so far...
+
+lint:
+	# Nothing here so far...
+
+tags:
+	# Nothing here so far...
+
+.PHONY: config
+
+.include <bsd.obj.mk>
+.include <bsd.subdir.mk>
+
+.ifdef NOMAN
+maninstall:
+	@echo NOMAN is set
+.else
+.include <bsd.man.mk>
+.endif
