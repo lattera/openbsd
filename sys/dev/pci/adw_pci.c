@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/adw_pci.c,v 1.3.2.2 2001/05/14 22:25:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/adw_pci.c,v 1.3.2.3 2001/07/04 10:41:50 niklas Exp $ */
 /* $NetBSD: adw_pci.c,v 1.7 2000/05/26 15:13:46 dante Exp $	 */
 
 /*
@@ -162,7 +162,7 @@ adw_pci_attach(parent, self, aux)
 	 * Map Device Registers for I/O
 	 */
 	if (pci_mapreg_map(pa, PCI_BASEADR_IO, PCI_MAPREG_TYPE_IO, 0,
-			   &iot, &ioh, NULL, NULL)) {
+			   &iot, &ioh, NULL, NULL, 0)) {
 		printf("\n%s: unable to map device registers\n",
 		       sc->sc_dev.dv_xname);
 		return;

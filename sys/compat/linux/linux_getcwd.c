@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1.8.1 2001/05/14 22:04:41 niklas Exp $ */
+/* $OpenBSD: src/sys/compat/linux/Attic/linux_getcwd.c,v 1.1.8.2 2001/07/04 10:39:23 niklas Exp $ */
 /* $NetBSD: vfs_getcwd.c,v 1.3.2.3 1999/07/11 10:24:09 sommerfeld Exp $ */
 
 /*-
@@ -585,8 +585,6 @@ int linux_sys_getcwd(p, v, retval)
 		return ERANGE;
 
 	path = (char *)malloc(len, M_TEMP, M_WAITOK);
-	if (!path)
-		return ENOMEM;
 
 	bp = &path[len];
 	bend = bp;

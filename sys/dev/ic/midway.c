@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25.4.1 2001/05/14 22:24:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25.4.2 2001/07/04 10:40:59 niklas Exp $	*/
 /*	(sync'd to midway.c 1.68)	*/
 
 /*
@@ -742,6 +742,7 @@ done_probe:
   ifp->if_ioctl = en_ioctl;
   ifp->if_output = atm_output;
   ifp->if_start = en_start;
+  IFQ_SET_READY(&ifp->if_snd);
 
   /*
    * init softc
@@ -1481,7 +1482,6 @@ struct ifnet *ifp;
 #else
     struct en_softc *sc = (struct en_softc *) ifp->if_softc;
 #endif
-    struct ifqueue *ifq = &ifp->if_snd; /* if INPUT QUEUE */
     struct mbuf *m, *lastm, *prev;
     struct atm_pseudohdr *ap, *new_ap;
     int txchan, mlen, got, need, toadd, cellcnt, first;
@@ -1498,7 +1498,7 @@ struct ifnet *ifp;
 
     while (1) {
 
-      IF_DEQUEUE(ifq, m);
+      IFQ_DEQUEUE(&ifp->if_snd, m);
       if (m == NULL)
 	return;		/* EMPTY: >>> exit here <<< */
     

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/bt485reg.h,v 1.2.4.2 2001/07/04 10:40:43 niklas Exp $ */
 /* $NetBSD: bt485reg.h,v 1.1 1998/04/15 20:16:30 drochner Exp $ */
 
 /*

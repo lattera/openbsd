@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9.2.2 2001/05/14 22:25:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9.2.3 2001/07/04 10:42:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -121,8 +121,8 @@
 #include <dev/pci/pcidevs.h>
 
 #include <dev/pci/if_tireg.h>
-#include <dev/pci/ti_fw.h>
-#include <dev/pci/ti_fw2.h>
+#include <dev/microcode/tigon/ti_fw.h>
+#include <dev/microcode/tigon/ti_fw2.h>
 
 #ifdef M_HWCKSUM
 /*#define TI_CSUM_OFFLOAD*/
@@ -166,8 +166,7 @@ void ti_cmd_ext		__P((struct ti_softc *, struct ti_cmd_desc *,
 void ti_handle_events	__P((struct ti_softc *));
 int ti_alloc_jumbo_mem	__P((struct ti_softc *));
 void *ti_jalloc		__P((struct ti_softc *));
-void ti_jfree		__P((struct mbuf *));
-void ti_jref		__P((struct mbuf *));
+void ti_jfree		__P((caddr_t, u_int, void *));
 int ti_newbuf_std		__P((struct ti_softc *, int, struct mbuf *));
 int ti_newbuf_mini		__P((struct ti_softc *, int, struct mbuf *));
 int ti_newbuf_jumbo		__P((struct ti_softc *, int, struct mbuf *));
@@ -641,61 +640,23 @@ void *ti_jalloc(sc)
 }
 
 /*
- * Adjust usage count on a jumbo buffer. In general this doesn't
- * get used much because our jumbo buffers don't get passed around
- * too much, but it's implemented for correctness.
- */
-void
-ti_jref(m)
-	struct mbuf *m;
-{
-	caddr_t buf = m->m_ext.ext_buf;
-	u_int size = m->m_ext.ext_size;
-	struct ti_softc *sc;
-	register int i;
-
-	/* Extract the softc struct pointer. */
-	sc = (struct ti_softc *)m->m_ext.ext_handle;
-
-	if (sc == NULL)
-		panic("ti_jref: can't find softc pointer!");
-
-	if (size != TI_JUMBO_FRAMELEN)
-		panic("ti_jref: adjusting refcount of buf of wrong size!");
-
-	/* calculate the slot this buffer belongs to */
-	i = ((vaddr_t)buf - (vaddr_t)sc->ti_cdata.ti_jumbo_buf) / TI_JLEN;
-
-	if ((i < 0) || (i >= TI_JSLOTS))
-		panic("ti_jref: asked to reference buffer "
-		    "that we don't manage!");
-	else if (sc->ti_cdata.ti_jslots[i].ti_inuse == 0)
-		panic("ti_jref: buffer already free!");
-	else
-		sc->ti_cdata.ti_jslots[i].ti_inuse++;
-}
-
-/*
  * Release a jumbo buffer.
  */
 void
-ti_jfree(m)
-	struct mbuf *m;
+ti_jfree(buf, size, arg)
+	caddr_t			buf;
+	u_int			size;
+	void *arg;
 {
-	caddr_t buf = m->m_ext.ext_buf;
-	u_int size = m->m_ext.ext_size;
 	struct ti_softc *sc;
 	int i;
 	struct ti_jpool_entry *entry;
 
 	/* Extract the softc struct pointer. */
-	sc = (struct ti_softc *)m->m_ext.ext_handle;
+	sc = (struct ti_softc *)arg;
 
 	if (sc == NULL)
 		panic("ti_jfree: can't find softc pointer!");
-
-	if (size != TI_JUMBO_FRAMELEN)
-		panic("ti_jfree: freeing buffer of wrong size!");
 
 	/* calculate the slot this buffer belongs to */
 	i = ((vaddr_t)buf - (vaddr_t)sc->ti_cdata.ti_jumbo_buf) / TI_JLEN;
@@ -846,14 +807,13 @@ int ti_newbuf_jumbo(sc, i, m)
 		m_new->m_len = m_new->m_pkthdr.len =
 		    m_new->m_ext.ext_size = TI_JUMBO_FRAMELEN;
 		m_new->m_ext.ext_free = ti_jfree;
-		m_new->m_ext.ext_ref = ti_jref;
+		m_new->m_ext.ext_arg = sc;
+		MCLINITREFERENCE(m_new);
 	} else {
 		m_new = m;
 		m_new->m_data = m_new->m_ext.ext_buf;
 		m_new->m_ext.ext_size = TI_JUMBO_FRAMELEN;
 	}
-
-	m_new->m_ext.ext_handle = sc;
 
 	m_adj(m_new, ETHER_ALIGN);
 	/* Set up the descriptor. */
@@ -1683,7 +1643,8 @@ ti_attach(parent, self, aux)
 	ifp->if_start = ti_start;
 	ifp->if_watchdog = ti_watchdog;
 	ifp->if_mtu = ETHERMTU;
-	ifp->if_snd.ifq_maxlen = TI_TX_RING_CNT - 1;
+	IFQ_SET_MAXLEN(&ifp->if_snd, TI_TX_RING_CNT - 1);
+	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->sc_dv.dv_xname, ifp->if_xname, IFNAMSIZ);
 
 	/* Set up ifmedia support. */
@@ -1736,7 +1697,7 @@ fail:
  * Note: we have to be able to handle three possibilities here:
  * 1) the frame is from the mini receive ring (can only happen)
  *    on Tigon 2 boards)
- * 2) the frame is from the jumbo recieve ring
+ * 2) the frame is from the jumbo receive ring
  * 3) the frame is from the standard receive ring
  */
 
@@ -1751,7 +1712,6 @@ void ti_rxeof(sc)
 	while(sc->ti_rx_saved_considx != sc->ti_return_prodidx.ti_idx) {
 		struct ti_rx_desc	*cur_rx;
 		u_int32_t		rxidx;
-		struct ether_header	*eh;
 		struct mbuf		*m = NULL;
 #if NVLAN > 0
 		u_int16_t		vlan_tag = 0;
@@ -1819,7 +1779,6 @@ void ti_rxeof(sc)
 
 		m->m_pkthdr.len = m->m_len = cur_rx->ti_len;
 		ifp->if_ipackets++;
-		eh = mtod(m, struct ether_header *);
 		m->m_pkthdr.rcvif = ifp;
 
 #if NBPFILTER > 0
@@ -1830,11 +1789,8 @@ void ti_rxeof(sc)
 			bpf_mtap(ifp->if_bpf, m);
 #endif
 
-		/* Remove header from mbuf and pass it on. */
-		m_adj(m, sizeof(struct ether_header));
-
 #ifdef TI_CSUM_OFFLOAD
-		ip = mtod(m, struct ip *);
+		ip = (struct ip *)(mtod(m, caddr_t) + ETHER_HDR_LEN);
 		if (!(cur_rx->ti_tcp_udp_cksum ^ 0xFFFF) &&
 		    !(ip->ip_off & htons(IP_MF | IP_OFFMASK | IP_RF)))
 			m->m_flags |= M_HWCKSUM;
@@ -1846,13 +1802,13 @@ void ti_rxeof(sc)
 		 * to vlan_input() instead of ether_input().
 		 */
 		if (have_tag) {
-			if (vlan_input_tag(eh, m, vlan_tag) < 0)
+			if (vlan_input_tag(m, vlan_tag) < 0)
 				ifp->if_data.ifi_noproto++;
 			have_tag = vlan_tag = 0;
 			continue;
 		}
 #endif
-		ether_input(ifp, eh, m);
+		ether_input_mbuf(ifp, m);
 	}
 
 	/* Only necessary on the Tigon 1. */
@@ -1946,7 +1902,7 @@ int ti_intr(xsc)
 	/* Re-enable interrupts. */
 	CSR_WRITE_4(sc, TI_MB_HOSTINTR, 0);
 
-	if (ifp->if_flags & IFF_RUNNING && ifp->if_snd.ifq_head != NULL)
+	if (ifp->if_flags & IFF_RUNNING && !IFQ_IS_EMPTY(&ifp->if_snd))
 		ti_start(ifp);
 
 	return (1);
@@ -1985,8 +1941,7 @@ int ti_encap(sc, m_head, txidx)
 	struct ifvlan		*ifv = NULL;
 
 	if ((m_head->m_flags & (M_PROTO1|M_PKTHDR)) == (M_PROTO1|M_PKTHDR) &&
-	    m_head->m_pkthdr.rcvif != NULL &&
-	    m_head->m_pkthdr.rcvif->if_type == IFT_8021_VLAN)
+	    m_head->m_pkthdr.rcvif != NULL)
 		ifv = m_head->m_pkthdr.rcvif->if_softc;
 #endif
 
@@ -2070,13 +2025,14 @@ void ti_start(ifp)
 	struct ti_softc		*sc;
 	struct mbuf		*m_head = NULL;
 	u_int32_t		prodidx = 0;
+	int			pkts = 0;
 
 	sc = ifp->if_softc;
 
 	prodidx = CSR_READ_4(sc, TI_MB_SENDPROD_IDX);
 
 	while(sc->ti_cdata.ti_tx_chain[prodidx] == NULL) {
-		IF_DEQUEUE(&ifp->if_snd, m_head);
+		IFQ_POLL(&ifp->if_snd, m_head);
 		if (m_head == NULL)
 			break;
 
@@ -2086,10 +2042,13 @@ void ti_start(ifp)
 		 * for the NIC to drain the ring.
 		 */
 		if (ti_encap(sc, m_head, &prodidx)) {
-			IF_PREPEND(&ifp->if_snd, m_head);
 			ifp->if_flags |= IFF_OACTIVE;
 			break;
 		}
+
+		/* now we are committed to transmit the packet */
+		IFQ_DEQUEUE(&ifp->if_snd, m_head);
+		pkts++;
 
 		/*
 		 * If there's a BPF listener, bounce a copy of this frame
@@ -2100,6 +2059,8 @@ void ti_start(ifp)
 			bpf_mtap(ifp->if_bpf, m_head);
 #endif
 	}
+	if (pkts == 0)
+		return;
 
 	/* Transmit */
 	CSR_WRITE_4(sc, TI_MB_SENDPROD_IDX, prodidx);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.1 2001/05/14 22:25:52 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.2 2001/07/04 10:42:44 niklas Exp $ */
 /*	$NetBSD: pccbb.c,v 1.42 2000/06/16 23:41:35 cgd Exp $	*/
 
 /*
@@ -82,10 +82,8 @@ struct cfdriver cbb_cd = {
 
 #if defined CBB_DEBUG
 #define DPRINTF(x) printf x
-#define STATIC
 #else
 #define DPRINTF(x)
-#define STATIC static
 #endif
 
 int	pcicbbmatch __P((struct device *, void *, void *));
@@ -417,16 +415,17 @@ pccbbattach(parent, self, aux)
 	    PCI_MAPREG_MEM_ADDR(sock_base) != 0xfffffff0) {
 		/* The address must be valid. */
 		if (pci_mapreg_map(pa, PCI_SOCKBASE, PCI_MAPREG_TYPE_MEM, 0,
-		    &sc->sc_base_memt, &sc->sc_base_memh, &sockbase, NULL)) {
+		    &sc->sc_base_memt, &sc->sc_base_memh, &sockbase, NULL, 0))
+		    {
 			printf("%s: can't map socket base address 0x%x\n",
 			    sc->sc_dev.dv_xname, sock_base);
 			/*
 			 * I think it's funny: socket base registers must be
 			 * mapped on memory space, but ...
 			 */
-			if (pci_mapreg_map(pa, PCI_SOCKBASE, PCI_MAPREG_TYPE_IO,
-			    0, &sc->sc_base_memt, &sc->sc_base_memh, &sockbase,
-			    NULL)) {
+			if (pci_mapreg_map(pa, PCI_SOCKBASE,
+			    PCI_MAPREG_TYPE_IO, 0, &sc->sc_base_memt,
+			    &sc->sc_base_memh, &sockbase, NULL, 0)) {
 				printf("%s: can't map socket base address"
 				    " 0x%lx: io mode\n", sc->sc_dev.dv_xname,
 				    sockbase);
@@ -472,6 +471,8 @@ pccbbattach(parent, self, aux)
 	sc->sc_dmat = pa->pa_dmat;
 	sc->sc_tag = pa->pa_tag;
 	sc->sc_function = pa->pa_function;
+	sc->sc_sockbase = sock_base;
+	sc->sc_busnum = busreg;
 
 	sc->sc_intrline = pa->pa_intrline;
 	sc->sc_intrtag = pa->pa_intrtag;
@@ -984,7 +985,7 @@ pccbbintr_function(sc)
 		 * sentense instead of switch-case sentense because of
 		 * avoiding duplicate case value error.  More than one
 		 * IPL_XXX use same value.  It depends on
-		 * implimentation.
+		 * implementation.
 		 */
 		splchanged = 1;
 #if 0
@@ -1280,7 +1281,7 @@ struct cb_poll_str {
 static struct cb_poll_str cb_poll[10];
 static int cb_poll_n = 0;
 
-static void cb_pcmcia_poll __P((void *arg));
+void cb_pcmcia_poll __P((void *arg));
 
 void
 cb_pcmcia_poll(arg)
@@ -1686,11 +1687,8 @@ pccbb_intr_establish(sc, irq, level, func, arg)
 	/* 
 	 * Allocate a room for interrupt handler structure.
 	 */
-	if (NULL == (newpil =
-	    (struct pccbb_intrhand_list *)malloc(sizeof(struct
-	    pccbb_intrhand_list), M_DEVBUF, M_WAITOK))) {
-		return NULL;
-	}
+	newpil = (struct pccbb_intrhand_list *)
+		malloc(sizeof(struct pccbb_intrhand_list), M_DEVBUF, M_WAITOK);
 
 	newpil->pil_func = func;
 	newpil->pil_arg = arg;
@@ -2680,7 +2678,7 @@ struct pccbb_poll_str {
 static struct pccbb_poll_str pccbb_poll[10];
 static int pccbb_poll_n = 0;
 
-static void pccbb_pcmcia_poll __P((void *arg));
+void pccbb_pcmcia_poll __P((void *arg));
 
 void
 pccbb_pcmcia_poll(arg)
@@ -3154,6 +3152,14 @@ pccbb_powerhook(why, arg)
 	}
 
 	if (why == PWR_RESUME) {
+		if (pci_conf_read (sc->sc_pc, sc->sc_tag, PCI_SOCKBASE) == 0)
+			/* BIOS did not recover this register */
+			pci_conf_write (sc->sc_pc, sc->sc_tag,
+					PCI_SOCKBASE, sc->sc_sockbase);
+		if (pci_conf_read (sc->sc_pc, sc->sc_tag, PCI_BUSNUM) == 0)
+			/* BIOS did not recover this register */
+			pci_conf_write (sc->sc_pc, sc->sc_tag,
+					PCI_BUSNUM, sc->sc_busnum);
 		/* CSC Interrupt: Card detect interrupt on */
 		reg = bus_space_read_4(base_memt, base_memh, CB_SOCKET_MASK);
 		/* Card detect intr is turned on. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.1 2001/05/14 22:24:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.2 2001/07/04 10:41:30 niklas Exp $	*/
 
 /*
  * All Rights Reserved, Copyright (C) Fujitsu Limited 1995
@@ -236,8 +236,6 @@ struct cfdriver fe_cd = {
 /* Ethernet constants.  To be defined in if_ehter.h?  FIXME. */
 #define ETHER_MIN_LEN	60	/* with header, without CRC. */
 #define ETHER_MAX_LEN	1514	/* with header, without CRC. */
-#define ETHER_ADDR_LEN	6	/* number of bytes in an address. */
-#define ETHER_HDR_SIZE	14	/* src addr, dst addr, and data type. */
 
 /*
  * Fe driver specific constants which relate to 86960/86965.
@@ -1001,6 +999,7 @@ feattach(parent, self, aux)
 	ifp->if_watchdog = fe_watchdog;
 	ifp->if_flags =
 	    IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/*
 	 * Set maximum size of output queue, if it has not been set.
@@ -1510,7 +1509,7 @@ fe_start(ifp)
 		/*
 		 * Get the next mbuf chain for a packet to send.
 		 */
-		IF_DEQUEUE(&ifp->if_snd, m);
+		IFQ_DEQUEUE(&ifp->if_snd, m);
 		if (m == 0) {
 			/* No more packets to send. */
 			goto indicate_inactive;
@@ -2019,7 +2018,6 @@ fe_get_packet(sc, len)
 	struct fe_softc *sc;
 	int len;
 {
-	struct ether_header *eh;
 	struct mbuf *m;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 
@@ -2059,7 +2057,6 @@ fe_get_packet(sc, len)
 	 * header mbuf.
 	 */
 	m->m_data += EOFF;
-	eh = mtod(m, struct ether_header *);
 
 	/* Set the length of this packet. */
 	m->m_len = len;
@@ -2076,9 +2073,7 @@ fe_get_packet(sc, len)
 		bpf_mtap(ifp->if_bpf, m);
 #endif
 
-	/* Fix up data start offset in mbuf to point past ether header. */
-	m_adj(m, sizeof(struct ether_header));
-	ether_input(ifp, eh, m);
+	ether_input_mbuf(ifp, m);
 	return (1);
 }
 

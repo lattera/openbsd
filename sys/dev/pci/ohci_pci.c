@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.6.2.1 2001/05/14 22:25:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.6.2.2 2001/07/04 10:42:43 niklas Exp $	*/
 /*	$NetBSD: ohci_pci.c,v 1.9 1999/05/20 09:52:35 augustss Exp $	*/
 
 /*
@@ -110,7 +110,7 @@ ohci_pci_attach(parent, self, aux)
 
 	/* Map I/O registers */
 	if (pci_mapreg_map(pa, PCI_CBMEM, PCI_MAPREG_TYPE_MEM, 0,
-			   &sc->sc.iot, &sc->sc.ioh, NULL, &sc->sc.sc_size)) {
+	    &sc->sc.iot, &sc->sc.ioh, NULL, &sc->sc.sc_size, 0)) {
 		printf(": can't map mem space\n");
 		return;
 	}
@@ -127,11 +127,10 @@ ohci_pci_attach(parent, self, aux)
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
 		       csr | PCI_COMMAND_MASTER_ENABLE);
 
-	r = ohci_init(&sc->sc);
-	if (r != USBD_NORMAL_COMPLETION) {
-		printf(": init failed, error=%d\n", r);
-		return;
-	}
+	bus_space_barrier(sc->sc.iot, sc->sc.ioh, 0, sc->sc.sc_size,
+	    BUS_SPACE_BARRIER_READ|BUS_SPACE_BARRIER_WRITE);
+	bus_space_write_4(sc->sc.iot, sc->sc.ioh,
+	    OHCI_INTERRUPT_DISABLE, OHCI_ALL_INTRS);
 
 	/* Map and establish the interrupt. */
 	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
@@ -150,7 +149,14 @@ ohci_pci_attach(parent, self, aux)
 		printf("\n");
 		return;
 	}
-	printf(": %s\n", intrstr);
+	printf(": %s", intrstr);
+
+	r = ohci_init(&sc->sc);
+	if (r != USBD_NORMAL_COMPLETION) {
+		printf("%s: init failed, error=%d\n",
+		    sc->sc.sc_bus.bdev.dv_xname, r);
+		return;
+	}
 
 	/* Attach usb device. */
 	sc->sc.sc_child = config_found((void *)sc, &sc->sc.sc_bus,

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/bt463var.h,v 1.2.4.2 2001/07/04 10:40:42 niklas Exp $ */
 /* $NetBSD: bt485var.h,v 1.1 2000/03/04 10:25:57 elric Exp $ */
 
 /*-

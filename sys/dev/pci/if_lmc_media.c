@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4 2000/02/06 17:57:56 chris Exp $ */
-/* $Id: if_lmc_media.c,v 1.3 2000/02/01 18:01:41 chris Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.1 2001/07/04 10:42:15 niklas Exp $ */
+/* $Id: if_lmc_media.c,v 1.4 2000/02/06 17:57:56 chris Exp $ */
 
 /*-
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)
@@ -407,7 +407,7 @@ lmc_ds3_watchdog (lmc_softc_t * const sc)
 	sc->lmc_miireg16 = lmc_mii_readreg (sc, 0, 16);
 	if (sc->lmc_miireg16 & 0x0018)
 	{
-		printf("%s: AIS Recieved\n", sc->lmc_xname);
+		printf("%s: AIS Received\n", sc->lmc_xname);
 		lmc_led_on (sc, LMC_DS3_LED1 | LMC_DS3_LED2);
 	}
 }
@@ -894,6 +894,10 @@ static void
         sc->ictl.cardtype = LMC_CTL_CARDTYPE_LMC1200;
         mii16 = lmc_mii_readreg(sc, 0, 16);
 
+	mii16 &= ~LMC_MII16_T1_XOE;
+	lmc_mii_writereg (sc, 0, 16, mii16);
+	sc->lmc_miireg16 = mii16;
+
         /* reset 8370 */
         mii16 &= ~LMC_MII16_T1_RST;
         lmc_mii_writereg(sc, 0, 16, mii16 | LMC_MII16_T1_RST);
@@ -943,9 +947,10 @@ static void
 	{                lmc_t1_write(sc, 0x0E0+i, 0x0D);
 					/* SBCn - sys bus per-channel ctl    */
 	}
-        /*  XXX
-        mii16 |= LMC_MII16_T1_XOE;        lmc_mii_writereg(sc, 0, 16, mii16);
-        sc->lmc_miireg16 = mii16;        */
+
+	mii16 |= LMC_MII16_T1_XOE;
+	lmc_mii_writereg(sc, 0, 16, mii16);
+        sc->lmc_miireg16 = mii16;
 }
 
 static void   lmc_t1_default(lmc_softc_t * const sc)
@@ -1118,7 +1123,7 @@ lmc_t1_watchdog(lmc_softc_t * const sc)
 {
 	int t1stat;
 
-	/* read alarm 1 status (recieve) */
+	/* read alarm 1 status (receive) */
 	t1stat = lmc_t1_read (sc, 0x47);
 	/* blue alarm -- RAIS */
 	if (t1stat & 0x08) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_devar.h,v 1.9.6.1 2001/05/14 22:25:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_devar.h,v 1.9.6.2 2001/07/04 10:42:12 niklas Exp $	*/
 /*	$NetBSD: if_devar.h,v 1.13 1997/06/08 18:46:36 thorpej Exp $	*/
 
 /*-
@@ -890,7 +890,6 @@ static tulip_softc_t *tulips[TULIP_MAX_DEVICES];
 #define	tulip_intrfunc_t	void
 #define	TULIP_VOID_INTRFUNC
 #define	IFF_NOTRAILERS		0
-#define	CLBYTES			PAGE_SIZE
 #if 0
 #define	TULIP_KVATOPHYS(sc, va)	kvtop(va)
 #endif

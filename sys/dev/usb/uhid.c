@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uhid.c,v 1.6.2.1 2001/05/14 22:26:22 niklas Exp $ */
-/*	$NetBSD: uhid.c,v 1.40 2000/10/10 12:37:01 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhid.c,v 1.6.2.2 2001/07/04 10:43:54 niklas Exp $ */
+/*	$NetBSD: uhid.c,v 1.42 2000/12/29 01:47:49 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhid.c,v 1.22 1999/11/17 22:33:43 n_hibma Exp $	*/
 
 /*

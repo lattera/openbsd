@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.1 2001/05/14 22:23:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.2 2001/07/04 10:40:52 niklas Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*
@@ -182,6 +182,7 @@ void fxp_read_eeprom		__P((struct fxp_softc *, u_int16_t *,
 				    int, int));
 void fxp_stats_update		__P((void *));
 void fxp_mc_setup		__P((struct fxp_softc *));
+static __inline void fxp_scb_cmd __P((struct fxp_softc *, u_int8_t));
 
 /*
  * Set initial transmit threshold at 64 (512 bytes). This is
@@ -316,6 +317,7 @@ fxp_attach_common(sc, enaddr, intrstr)
 	    M_DEVBUF, M_NOWAIT);
 	if (sc->cbl_base == NULL)
 		goto fail;
+	memset(sc->cbl_base, 0, sizeof(struct fxp_cb_tx) * FXP_NTXCB);
 
 	sc->fxp_stats = malloc(sizeof(struct fxp_stats), M_DEVBUF, M_NOWAIT);
 	if (sc->fxp_stats == NULL)
@@ -361,6 +363,7 @@ fxp_attach_common(sc, enaddr, intrstr)
 	ifp->if_ioctl = fxp_ioctl;
 	ifp->if_start = fxp_start;
 	ifp->if_watchdog = fxp_watchdog;
+	IFQ_SET_READY(&ifp->if_snd);
 
 	printf(": %s, address %s\n", intrstr,
 	    ether_sprintf(sc->arpcom.ac_enaddr));
@@ -399,7 +402,7 @@ fxp_attach_common(sc, enaddr, intrstr)
 	 * Let the system queue as many packets as we have available
 	 * TX descriptors.
 	 */
-	ifp->if_snd.ifq_maxlen = FXP_NTXCB - 1;
+	IFQ_SET_MAXLEN(&ifp->if_snd, FXP_NTXCB - 1);
 	ether_ifattach(ifp);
 
 	/*
@@ -628,14 +631,16 @@ fxp_start(ifp)
 	 * NOTE: One TxCB is reserved to guarantee that fxp_mc_setup() can add
 	 *       a NOP command when needed.
 	 */
-	while (ifp->if_snd.ifq_head != NULL && sc->tx_queued < FXP_NTXCB - 1) {
+	while (IFQ_IS_EMPTY(&ifp->if_snd) == 0 && sc->tx_queued < FXP_NTXCB - 1) {
 		struct mbuf *m, *mb_head;
 		int segment;
 
 		/*
 		 * Grab a packet to transmit.
 		 */
-		IF_DEQUEUE(&ifp->if_snd, mb_head);
+		IFQ_DEQUEUE(&ifp->if_snd, mb_head);
+		if (mb_head == NULL)
+			break;
 
 		/*
 		 * Get pointer to next available tx desc.
@@ -734,10 +739,17 @@ tbdinit:
 	 * going again if suspended.
 	 */
 	if (txp != NULL) {
+#ifdef ALTQ
+		/* if tb regulator is used, we need tx complete interrupt */
+		if (TBR_IS_ENABLED(&ifp->if_snd))
+			txp->cb_command |= FXP_CB_COMMAND_I;
+#endif
 		fxp_scb_wait(sc);
 		CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_RESUME);
 	}
 }
+
+volatile int _fxp_debugit;
 
 /*
  * Process interface interrupts.
@@ -749,7 +761,7 @@ fxp_intr(arg)
 	struct fxp_softc *sc = arg;
 	struct ifnet *ifp = &sc->arpcom.ac_if;
 	u_int8_t statack;
-	int claimed = 0;
+	int claimed = 0, rnr;
 
 	/*
 	 * If the interface isn't running, don't try to
@@ -766,6 +778,8 @@ fxp_intr(arg)
 
 	while ((statack = CSR_READ_1(sc, FXP_CSR_SCB_STATACK)) != 0) {
 		claimed = 1;
+		rnr = 0;
+
 		/*
 		 * First ACK all the interrupts in this pass.
 		 */
@@ -781,7 +795,9 @@ fxp_intr(arg)
 			    (txp->cb_status & FXP_CB_STATUS_C) != 0;
 			    txp = txp->next) {
 				if (txp->mb_head != NULL) {
+					_fxp_debugit = 1;
 					m_freem(txp->mb_head);
+					_fxp_debugit = 0;
 					txp->mb_head = NULL;
 				}
 				sc->tx_queued--;
@@ -795,7 +811,7 @@ fxp_intr(arg)
 			/*
 			 * Try to start more packets transmitting.
 			 */
-			if (ifp->if_snd.ifq_head != NULL)
+			if (IFQ_IS_EMPTY(&ifp->if_snd) == 0)
 				fxp_start(ifp);
 		}
 		/*
@@ -813,6 +829,11 @@ rcvloop:
 			if (*(u_int16_t *)(rfap +
 			    offsetof(struct fxp_rfa, rfa_status)) &
 			    FXP_RFA_STATUS_C) {
+				if (*(u_int16_t *)(rfap +
+				    offsetof(struct fxp_rfa, rfa_status)) &
+				    FXP_RFA_STATUS_RNR)
+					rnr = 1;
+
 				/*
 				 * Remove first packet from the chain.
 				 */
@@ -825,7 +846,6 @@ rcvloop:
 				 * instead.
 				 */
 				if (fxp_add_rfabuf(sc, m) == 0) {
-					struct ether_header *eh;
 					u_int16_t total_len;
 
 					total_len = *(u_int16_t *)(rfap +
@@ -834,33 +854,28 @@ rcvloop:
 					    (MCLBYTES - 1);
 					if (total_len <
 					    sizeof(struct ether_header)) {
+						_fxp_debugit = 2;
 						m_freem(m);
+						_fxp_debugit = 0;
 						goto rcvloop;
 					}
 					m->m_pkthdr.rcvif = ifp;
 					m->m_pkthdr.len = m->m_len =
-					    total_len -
-					    sizeof(struct ether_header);
-					eh = mtod(m, struct ether_header *);
+					    total_len;
 #if NBPFILTER > 0
 					if (ifp->if_bpf)
-						bpf_tap(ifp->if_bpf,
-						    mtod(m, caddr_t),
-						    total_len); 
+						bpf_mtap(ifp->if_bpf, m);
 #endif /* NBPFILTER > 0 */
-					m->m_data +=
-					    sizeof(struct ether_header);
-					ether_input(ifp, eh, m);
+					ether_input_mbuf(ifp, m);
 				}
 				goto rcvloop;
 			}
-			if (statack & FXP_SCB_STATACK_RNR) {
+			if (rnr) {
 				fxp_scb_wait(sc);
 				CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
 				    vtophys(sc->rfa_headm->m_ext.ext_buf) +
 					RFA_ALIGNMENT_FUDGE);
-				CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND,
-				    FXP_SCB_COMMAND_RU_START);
+				fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
 			}
 		}
 	}
@@ -911,7 +926,7 @@ fxp_stats_update(arg)
 	}
 	s = splimp();
 	/*
-	 * If we haven't received any packets in FXP_MAC_RX_IDLE seconds,
+	 * If we haven't received any packets in FXP_MAX_RX_IDLE seconds,
 	 * then assume the receiver has locked up and attempt to clear
 	 * the condition by reprogramming the multicast filter. This is
 	 * a work-around for a bug in the 82557 where the receiver locks
@@ -932,8 +947,7 @@ fxp_stats_update(arg)
 		/*
 		 * Start another stats dump.
 		 */
-		CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND,
-		    FXP_SCB_COMMAND_CU_DUMPRESET);
+		fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_DUMPRESET);
 	} else {
 		/*
 		 * A previous command is still waiting to be accepted.
@@ -995,10 +1009,11 @@ fxp_stop(sc, drain)
 	/*
 	 * Release any xmit buffers.
 	 */
-	for (txp = sc->cbl_first; txp != NULL && txp->mb_head != NULL;
-	    txp = txp->next) {
-		m_freem(txp->mb_head);
-		txp->mb_head = NULL;
+	txp = sc->cbl_base;
+	for (i = 0; i < FXP_NTXCB; i++) {
+		if (txp[i].mb_head != NULL)
+			m_freem(txp[i].mb_head);
+		txp[i].mb_head = NULL;
 	}
 	sc->tx_queued = 0;
 
@@ -1042,6 +1057,22 @@ fxp_watchdog(ifp)
 	fxp_init(sc);
 }
 
+/*
+ * Submit a command to the i82557.
+ */
+static __inline void
+fxp_scb_cmd(sc, cmd)
+	struct fxp_softc *sc;
+	u_int8_t cmd;
+{
+	if (cmd == FXP_SCB_COMMAND_CU_RESUME &&
+	    (sc->sc_flags & FXPF_FIX_RESUME_BUG) != 0) {
+		CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_CB_COMMAND_NOP);
+		fxp_scb_wait(sc);
+	}
+	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, cmd);
+}
+
 void
 fxp_init(xsc)
 	void *xsc;
@@ -1066,17 +1097,17 @@ fxp_init(xsc)
 	 * sets it up for regular linear addressing.
 	 */
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL, 0);
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_BASE);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_BASE);
 
 	fxp_scb_wait(sc);
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_RU_BASE);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_BASE);
 
 	/*
 	 * Initialize base of dump-stats buffer.
 	 */
 	fxp_scb_wait(sc);
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL, vtophys(sc->fxp_stats));
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_DUMP_ADR);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_DUMP_ADR);
 
 	/*
 	 * We temporarily use memory that contains the TxCB list to
@@ -1133,7 +1164,7 @@ fxp_init(xsc)
 	 */
 	fxp_scb_wait(sc);
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL, vtophys(&cbp->cb_status));
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_START);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_START);
 	/* ...and wait for it to complete. */
 	while (!(cbp->cb_status & FXP_CB_STATUS_C));
 
@@ -1152,7 +1183,7 @@ fxp_init(xsc)
 	 * Start the IAS (Individual Address Setup) command/DMA.
 	 */
 	fxp_scb_wait(sc);
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_START);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_START);
 	/* ...and wait for it to complete. */
 	while (!(cb_ias->cb_status & FXP_CB_STATUS_C));
 
@@ -1178,7 +1209,7 @@ fxp_init(xsc)
 	sc->tx_queued = 1;
 
 	fxp_scb_wait(sc);
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_START);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_START);
 
 	/*
 	 * Initialize receiver buffer area - RFA.
@@ -1186,7 +1217,7 @@ fxp_init(xsc)
 	fxp_scb_wait(sc);
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
 	    vtophys(sc->rfa_headm->m_ext.ext_buf) + RFA_ALIGNMENT_FUDGE);
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_RU_START);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
 
 	/*
 	 * Set current media.
@@ -1343,8 +1374,18 @@ void
 fxp_statchg(self)
 	struct device *self;
 {
+	struct fxp_softc *sc = (struct fxp_softc *)self;
 
-	/* XXX Update ifp->if_baudrate */
+	/*
+	 * Determine whether or not we have to work-around the
+	 * Resume Bug.
+	 */
+	if (sc->sc_flags & FXPF_HAS_RESUME_BUG) {
+		if (IFM_TYPE(sc->sc_mii.mii_media_active) == IFM_10_T)
+			sc->sc_flags |= FXPF_FIX_RESUME_BUG;
+		else
+			sc->sc_flags &= ~FXPF_FIX_RESUME_BUG;
+	}
 }
 
 void
@@ -1540,11 +1581,9 @@ fxp_mc_setup(sc)
 		 * Issue a resume in case the CU has just suspended.
 		 */
 		fxp_scb_wait(sc);
-		CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_RESUME);
-		/*
-		 * Set a 5 second timer just in case we don't hear from the
-		 * card again.
-		 */
+		fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_RESUME);
+
+		/* Set a 5 watchdog timer in case the chip flakes out. */
 		ifp->if_timer = 5;
 
 		return;
@@ -1599,7 +1638,7 @@ fxp_mc_setup(sc)
 	 */
 	fxp_scb_wait(sc);
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL, vtophys(&mcsp->cb_status));
-	CSR_WRITE_1(sc, FXP_CSR_SCB_COMMAND, FXP_SCB_COMMAND_CU_START);
+	fxp_scb_cmd(sc, FXP_SCB_COMMAND_CU_START);
 
 	ifp->if_timer = 2;
 	return;

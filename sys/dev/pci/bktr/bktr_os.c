@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.1 2001/05/14 22:26:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.2 2001/07/04 10:43:17 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_os.c,v 1.20 2000/10/20 08:16:53 roger Exp $ */
 
 /*
@@ -1381,7 +1381,7 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 				PCI_MAPREG_TYPE_MEM
 				| PCI_MAPREG_MEM_TYPE_32BIT, 0,
 				&bktr->memt, &bktr->memh, NULL,
-				&bktr->obmemsz);
+				&bktr->obmemsz, 0);
 	DPR(("pci_mapreg_map: memt %x, memh %x, size %x\n",
 	     bktr->memt, (u_int)bktr->memh, (u_int)bktr->obmemsz));
 	if (retval) {
@@ -1499,9 +1499,6 @@ get_bktr_mem(bktr, dmapp, size)
                 bus_dmamem_free(dmat, &seg, rseg);
                 return 0;
         }
-#ifdef __OpenBSD__
-        bktr->dm_mapsize = size;
-#endif
         /*
          * Create and locd the DMA map for the DMA area
          */
@@ -1531,11 +1528,7 @@ free_bktr_mem(bktr, dmap, kva)
 {
         bus_dma_tag_t dmat = bktr->dmat;
 
-#ifdef __NetBSD__ 
         bus_dmamem_unmap(dmat, (caddr_t)kva, dmap->dm_mapsize);
-#else
-        bus_dmamem_unmap(dmat, (caddr_t)kva, bktr->dm_mapsize);
-#endif
         bus_dmamem_free(dmat, dmap->dm_segs, 1);
         bus_dmamap_destroy(dmat, dmap);
 }

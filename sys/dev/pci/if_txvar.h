@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.1 2001/05/14 22:25:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.2 2001/07/04 10:42:28 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_txvar.h,v 1.8 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -34,15 +34,6 @@
 /*#define	EPIC_USEIOSPACE	1*/
 #define	EARLY_RX	1
 
-#ifndef ETHER_MAX_LEN
-#define ETHER_MAX_LEN		1518
-#endif
-#ifndef ETHER_MIN_LEN
-#define ETHER_MIN_LEN		64
-#endif
-#ifndef ETHER_CRC_LEN
-#define ETHER_CRC_LEN		4
-#endif
 #define TX_RING_SIZE		16		/* Leave this a power of 2 */
 #define RX_RING_SIZE		16		/* And this too, to do not */
 						/* confuse RX(TX)_RING_MASK */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ne_pci.c,v 1.6.4.1 2001/05/14 22:25:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_ne_pci.c,v 1.6.4.2 2001/07/04 10:42:17 niklas Exp $	*/
 /*	$NetBSD: if_ne_pci.c,v 1.8 1998/07/05 00:51:24 jonathan Exp $	*/
 
 /*-
@@ -213,7 +213,7 @@ ne_pci_attach(parent, self, aux)
 
 #ifdef __NetBSD__
 	if (pci_mapreg_map(pa, PCI_CBIO, PCI_MAPREG_TYPE_IO, 0,
-	    &nict, &nich, NULL, NULL)) {
+	    &nict, &nich, NULL, NULL, 0)) {
 		printf(": can't map i/o space\n");
 		return;
 	}

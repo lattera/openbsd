@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.2 2001/05/14 22:25:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.3 2001/07/04 10:42:08 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hi/fn 7751 driver
  * Copyright (c) 1999 Invertex Inc. All rights reserved.
  * Copyright (c) 1999 Theo de Raadt
- * Copyright (c) 2000 Network Security Technologies, Inc.
+ * Copyright (c) 2000-2001 Network Security Technologies, Inc.
  *			http://www.netsec.net
  *
  * Please send any comments, feedback, bug-fixes, or feature requests to
@@ -40,6 +40,14 @@
 #define __HIFN7751VAR_H__
 
 /*
+ *  Some configurable values for the driver
+ */
+#define	HIFN_D_CMD_RSIZE	24	/* command descriptors */
+#define	HIFN_D_SRC_RSIZE	80	/* source descriptors */
+#define	HIFN_D_DST_RSIZE	80	/* destination descriptors */
+#define	HIFN_D_RES_RSIZE	24	/* result descriptors */
+
+/*
  *  Length values for cryptography
  */
 #define HIFN_DES_KEY_LENGTH		8
@@ -56,6 +64,72 @@
 #define HIFN_MAC_TRUNC_LENGTH		12
 
 #define MAX_SCATTER 64
+
+/*
+ * Data structure to hold all 4 rings and any other ring related data.
+ */
+struct hifn_dma {
+	/*
+	 *  Descriptor rings.  We add +1 to the size to accomidate the
+	 *  jump descriptor.
+	 */
+	struct hifn_desc	cmdr[HIFN_D_CMD_RSIZE+1];
+	struct hifn_desc	srcr[HIFN_D_SRC_RSIZE+1];
+	struct hifn_desc	dstr[HIFN_D_DST_RSIZE+1];
+	struct hifn_desc	resr[HIFN_D_RES_RSIZE+1];
+
+	struct hifn_command	*hifn_commands[HIFN_D_RES_RSIZE];
+
+	u_char	command_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_COMMAND];
+	u_char	result_bufs[HIFN_D_CMD_RSIZE][HIFN_MAX_RESULT];
+
+	u_int64_t	test_src, test_dst;
+
+	/*
+	 *  Our current positions for insertion and removal from the desriptor
+	 *  rings. 
+	 */
+	int		cmdi, srci, dsti, resi;
+	volatile int	cmdu, srcu, dstu, resu;
+	int		cmdk, srck, dstk, resk;
+};
+
+struct hifn_session {
+	int hs_flags;
+	u_int8_t hs_iv[HIFN_IV_LENGTH];
+};
+
+/*
+ * Holds data specific to a single HIFN board.
+ */
+struct hifn_softc {
+	struct device	sc_dv;		/* generic device */
+	void *		sc_ih;		/* interrupt handler cookie */
+	u_int32_t	sc_dmaier;
+	u_int32_t	sc_drammodel;	/* 1=dram, 0=sram */
+
+	bus_space_handle_t	sc_sh0, sc_sh1;
+	bus_space_tag_t		sc_st0, sc_st1;
+	bus_dma_tag_t		sc_dmat;
+
+	struct hifn_dma *sc_dma;
+	bus_dmamap_t sc_dmamap;
+	int32_t sc_cid;
+	int sc_maxses;
+	int sc_ramsize;
+	int sc_flags;
+#define	HIFN_HAS_RNG		1
+#define	HIFN_HAS_PUBLIC		2
+	struct timeout sc_rngto;
+	int sc_rngfirst;
+	int sc_rnghz;
+	struct hifn_session sc_sessions[2048];
+};
+
+#define	WRITE_REG_0(sc,reg,val) \
+    bus_space_write_4((sc)->sc_st0, (sc)->sc_sh0, reg, val)
+#define	READ_REG_0(sc,reg) \
+    bus_space_read_4((sc)->sc_st0, (sc)->sc_sh0, reg)
 
 /*
  *  hifn_command_t
@@ -89,19 +163,6 @@
  *
  *	HIFN_CRYPT_NEW_KEY, HIFN_MAC_NEW_KEY
  *
- *  result_flags
- *  ------------
- *  result_flags is a bitwise "or" of result values.  The result_flags
- *  values should not be considered valid until:
- *
- *	callback routine NULL:  hifn_crypto() returns
- *	callback routine set:   callback routine called
- *
- *  Right now there is only one result flag:  HIFN_MAC_BAD
- *  It's bit is set on decode operations using authentication when a
- *  hash result does not match the input hash value.
- *  The HIFN_MAC_OK(r) macro can be used to help inspect this flag.
- *
  *  session_num
  *  -----------
  *  A number between 0 and 2048 (for DRAM models) or a number between 
@@ -123,76 +184,39 @@
  *  ---------------
  *  The number of bytes of the source_buf that are skipped over before
  *  authentication begins.  This must be a number between 0 and 2^16-1
- *  and can be used by IPSec implementers to skip over IP headers.
+ *  and can be used by IPsec implementers to skip over IP headers.
  *  *** Value ignored if authentication not used ***
  *
  *  crypt_header_skip
  *  -----------------
  *  The number of bytes of the source_buf that are skipped over before
  *  the cryptographic operation begins.  This must be a number between 0
- *  and 2^16-1.  For IPSec, this number will always be 8 bytes larger
+ *  and 2^16-1.  For IPsec, this number will always be 8 bytes larger
  *  than the auth_header_skip (to skip over the ESP header).
  *  *** Value ignored if cryptography not used ***
  *
- *  source_length
- *  -------------
- *  Length of input data including all skipped headers.  On decode
- *  operations using authentication, the length must also include the
- *  the appended MAC hash (12, 16, or 20 bytes depending on algorithm
- *  and truncation settings).
- *
- *  If encryption is used, the encryption payload must be a non-zero
- *  multiple of 8.  On encode operations, the encryption payload size
- *  is (source_length - crypt_header_skip - (MAC hash size)).  On
- *  decode operations, the encryption payload is
- *  (source_length - crypt_header_skip).
- *
- *  dest_length
- *  -----------
- *  Length of the dest buffer.  It must be at least as large as the
- *  source buffer when authentication is not used.  When authentication
- *  is used on an encode operation, it must be at least as long as the
- *  source length plus an extra 12, 16, or 20 bytes to hold the MAC
- *  value (length of mac value varies with algorithm used).  When
- *  authentication is used on decode operations, it must be at least
- *  as long as the source buffer minus 12, 16, or 20 bytes for the MAC
- *  value which is not included in the dest data.  Unlike source_length,
- *  the dest_length does not have to be exact, values larger than required
- *  are fine.
- *
- *  private_data
- *  ------------
- *  An unsigned long quantity (i.e. large enough to hold a pointer), that
- *  can be used by the callback routine if desired.
  */
-struct hifn_softc;
-
-typedef struct hifn_command {
-	volatile u_int result_flags;
-
-	u_short	session_num;
+struct hifn_command {
+	u_int16_t session_num;
 	u_int16_t base_masks, cry_masks, mac_masks;
+	u_int8_t iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
 
-	u_char	iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
+	union {
+		struct mbuf *src_m;
+		struct uio *src_io;
+	} srcu;
+	bus_dmamap_t src_map;
 
-	struct mbuf *src_m;
-	long	src_packp[MAX_SCATTER];
-	int	src_packl[MAX_SCATTER];
-	int	src_npa;
-	int	src_l;
+	union {
+		struct mbuf *dst_m;
+		struct uio *dst_io;
+	} dstu;
+	bus_dmamap_t dst_map;
 
-	struct mbuf *dst_m;
-	long	dst_packp[MAX_SCATTER];
-	int	dst_packl[MAX_SCATTER];
-	int	dst_npa;
-	int	dst_l;
-
-	u_short mac_header_skip, mac_process_len;
-	u_short crypt_header_skip, crypt_process_len;
-
-	u_long private_data;
 	struct hifn_softc *softc;
-} hifn_command_t;
+	struct cryptop *crp;
+	struct cryptodesc *enccrd, *maccrd;
+};
 
 /*
  *  Return values for hifn_crypto()
@@ -200,12 +224,6 @@ typedef struct hifn_command {
 #define HIFN_CRYPTO_SUCCESS	0
 #define HIFN_CRYPTO_BAD_INPUT	(-1)
 #define HIFN_CRYPTO_RINGS_FULL	(-2)
-
-/*
- *  Defines for the "result_flags" parameter of hifn_command_t.
- */
-#define HIFN_MAC_BAD		1
-#define HIFN_MAC_OK(r)		(!((r) & HIFN_MAC_BAD))
 
 #ifdef _KERNEL
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sis.c,v 1.2.2.2 2001/05/14 22:25:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sis.c,v 1.2.2.3 2001/07/04 10:42:19 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -601,9 +601,7 @@ int sis_probe(parent, match, aux)
 
 	switch (PCI_PRODUCT(pa->pa_id)) {
 	case PCI_PRODUCT_SIS_900:
-		return(1);
 	case PCI_PRODUCT_SIS_7016:
-		return(1);
 	case PCI_PRODUCT_NS_DP83815:
 		return(1);
 	}
@@ -828,7 +826,8 @@ void sis_attach(parent, self, aux)
 	ifp->if_start = sis_start;
 	ifp->if_watchdog = sis_watchdog;
 	ifp->if_baudrate = 10000000;
-	ifp->if_snd.ifq_maxlen = SIS_TX_LIST_CNT - 1;
+	IFQ_SET_MAXLEN(&ifp->if_snd, SIS_TX_LIST_CNT - 1);
+	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 
 	sc->sc_mii.mii_ifp = ifp;
@@ -977,7 +976,6 @@ int sis_newbuf(sc, c, m)
 void sis_rxeof(sc)
 	struct sis_softc	*sc;
 {
-        struct ether_header	*eh;
         struct mbuf		*m;
         struct ifnet		*ifp;
 	struct sis_desc		*cur_rx;
@@ -1023,16 +1021,14 @@ void sis_rxeof(sc)
 		m = m0;
 
 		ifp->if_ipackets++;
-		eh = mtod(m, struct ether_header *);
 
 #if NBPFILTER > 0
 		if (ifp->if_bpf)
 			bpf_mtap(ifp->if_bpf, m);
 #endif
 
-		/* Remove header from mbuf and pass it on. */
-		m_adj(m, sizeof(struct ether_header));
-		ether_input(ifp, eh, m);
+		/* pass it on. */
+		ether_input_mbuf(ifp, m);
 	}
 
 	sc->sis_cdata.sis_rx_prod = i;
@@ -1132,7 +1128,7 @@ void sis_tick(xsc)
 		if (mii->mii_media_status & IFM_ACTIVE &&
 		    IFM_SUBTYPE(mii->mii_media_active) != IFM_NONE)
 			sc->sis_link++;
-			if (ifp->if_snd.ifq_head != NULL)
+			if (!IFQ_IS_EMPTY(&ifp->if_snd))
 				sis_start(ifp);
 	}
 	timeout_add(&sc->sis_timeout, hz);
@@ -1195,7 +1191,7 @@ int sis_intr(arg)
 	/* Re-enable interrupts. */
 	CSR_WRITE_4(sc, SIS_IER, 1);
 
-	if (ifp->if_snd.ifq_head != NULL)
+	if (!IFQ_IS_EMPTY(&ifp->if_snd))
 		sis_start(ifp);
 
 	return claimed;
@@ -1263,7 +1259,6 @@ void sis_start(ifp)
 	struct sis_softc	*sc;
 	struct mbuf		*m_head = NULL;
 	u_int32_t		idx;
-	int			s;
 
 	sc = ifp->if_softc;
 
@@ -1276,19 +1271,17 @@ void sis_start(ifp)
 		return;
 
 	while(sc->sis_ldata->sis_tx_list[idx].sis_mbuf == NULL) {
-		s = splimp();
-		IF_DEQUEUE(&ifp->if_snd, m_head);
-		splx(s);
+		IFQ_POLL(&ifp->if_snd, m_head);
 		if (m_head == NULL)
 			break;
 
 		if (sis_encap(sc, m_head, &idx)) {
-			s = splimp();
-			IF_PREPEND(&ifp->if_snd, m_head);
-			splx(s);
 			ifp->if_flags |= IFF_OACTIVE;
 			break;
 		}
+
+		/* now we are committed to transmit the packet */
+		IFQ_DEQUEUE(&ifp->if_snd, m_head);
 
 		/*
 		 * If there's a BPF listener, bounce a copy of this frame
@@ -1299,6 +1292,8 @@ void sis_start(ifp)
 			bpf_mtap(ifp->if_bpf, m_head);
 #endif
 	}
+	if (idx == sc->sis_cdata.sis_tx_prod)
+		return;
 
 	/* Transmit */
 	sc->sis_cdata.sis_tx_prod = idx;
@@ -1604,7 +1599,7 @@ void sis_watchdog(ifp)
 	sis_reset(sc);
 	sis_init(sc);
 
-	if (ifp->if_snd.ifq_head != NULL)
+	if (!IFQ_IS_EMPTY(&ifp->if_snd))
 		sis_start(ifp);
 
 	splx(s);

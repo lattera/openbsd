@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/mulaw.h,v 1.4.6.2 2001/07/04 10:40:11 niklas Exp $ */
 /*	$NetBSD: mulaw.h,v 1.11 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3.6.1 2001/05/14 22:25:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3.6.2 2001/07/04 10:42:09 niklas Exp $ */
 /*	$NetBSD: i82365_pci.c,v 1.11 2000/02/24 03:42:44 itohy Exp $	*/
 
 /*
@@ -124,7 +124,7 @@ pcic_pci_attach(parent, self, aux)
 	int irq, i;
 
 	if (pci_mapreg_map(pa, PCI_CBIO, PCI_MAPREG_TYPE_IO, 0,
-	    &sc->iot, &sc->ioh, NULL, &size)) {
+	    &sc->iot, &sc->ioh, NULL, &size, 0)) {
 		printf(": can't map i/o space\n");
 		return;
 	}

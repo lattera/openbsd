@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.1 2001/05/14 22:23:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.2 2001/07/04 10:40:55 niklas Exp $	*/
 /*	$NetBSD: i82586.c,v 1.18 1998/08/15 04:42:42 mycroft Exp $	*/
 
 /*-
@@ -329,6 +329,7 @@ i82596_attach(sc, name, etheraddr, media, nmedia, defmedia)
 		IFF_DEBUG |
 #endif
 		IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS | IFF_MULTICAST;
+	IFQ_SET_READY(&ifp->if_snd);
 
         /* Initialize media goo. */
         ifmedia_init(&sc->sc_media, 0, i82596_mediachange, i82596_mediastatus);
@@ -1260,7 +1261,7 @@ i82596_start(ifp)
 			break;
 		}
 
-		IF_DEQUEUE(&ifp->if_snd, m0);
+		IFQ_DEQUEUE(&ifp->if_snd, m0);
 		if (m0 == 0)
 			break;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.1 2001/05/14 22:25:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.2 2001/07/04 10:41:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Takuya SHIOZAKI
@@ -323,7 +323,7 @@ cmpci_attach(parent, self, aux)
 
 	/* map I/O space */
 	if (pci_mapreg_map(pa, CMPCI_PCI_IOBASEREG, PCI_MAPREG_TYPE_IO, 0,
-			   &sc->sc_iot, &sc->sc_ioh, NULL, NULL)) {
+			   &sc->sc_iot, &sc->sc_ioh, NULL, NULL, 0)) {
 		printf("\n%s: failed to map I/O space\n", sc->sc_dev.dv_xname);
 		return;
 	}

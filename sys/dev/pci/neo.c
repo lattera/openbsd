@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5.4.1 2001/05/14 22:25:51 niklas Exp $       */
+/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5.4.2 2001/07/04 10:42:42 niklas Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>
@@ -48,7 +48,7 @@
 #include <dev/ic/ac97.h>
 
 #include <dev/pci/neoreg.h>
-#include <dev/pci/neo-coeff.h>
+#include <dev/microcode/neomagic/neo-coeff.h>
 
 /* -------------------------------------------------------------------- */
 /* 
@@ -563,14 +563,14 @@ neo_attach(parent, self, aux)
 
 	/* Map I/O register */
 	if (pci_mapreg_map(pa, PCI_MAPS, PCI_MAPREG_TYPE_MEM, 0,
-			   &sc->bufiot, &sc->bufioh, NULL, NULL)) {
+			   &sc->bufiot, &sc->bufioh, NULL, NULL, 0)) {
 		printf("\n%s: can't map i/o space\n", sc->dev.dv_xname);
 		return;
 	}
 
 
 	if (pci_mapreg_map(pa, PCI_MAPS + 4, PCI_MAPREG_TYPE_MEM, 0,
-			   &sc->regiot, &sc->regioh, NULL, NULL)) {
+			   &sc->regiot, &sc->regioh, NULL, NULL, 0)) {
 		printf("\n%s: can't map i/o space\n", sc->dev.dv_xname);
 		return;
 	}

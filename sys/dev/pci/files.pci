@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.64.2.2 2001/05/14 22:25:40 niklas Exp $
+#	$OpenBSD: src/sys/dev/pci/files.pci,v 1.64.2.3 2001/07/04 10:42:03 niklas Exp $
 #	$NetBSD: files.pci,v 1.20 1996/09/24 17:47:15 christos Exp $
 #
 # Config file and device description for machine-independent PCI code.
@@ -70,6 +70,10 @@ file	dev/pci/twe_pci.c		twe_pci
 # AMI MegaRAID Express x00/Elite 1500/Express 1x00 RAID Controllers
 attach	ami at pci with ami_pci
 file	dev/pci/ami_pci.c		ami_pci
+
+# I2O
+attach	iop at pci with iop_pci
+file	dev/pci/iop_pci.c		iop_pci
 
 # Ensoniq AudioPCI S5016, 1371
 device	eap: audio, auconv, mulaw, ac97
@@ -273,6 +277,11 @@ file	dev/pci/if_ti.c			ti
 attach	ne at pci with ne_pci: rtl80x9
 file	dev/pci/if_ne_pci.c		ne_pci
 
+# Hi/fn 6500
+device	lofn: crypto
+attach	lofn at pci
+file	dev/pci/lofn.c			lofn
+
 # Hi/fn 7751 
 device	hifn: crypto
 attach	hifn at pci
@@ -346,6 +355,11 @@ attach	puc at pci
 file	dev/pci/puc.c			puc
 file	dev/pci/pucdata.c		puc
 
+# WaveLAN/PrismII card behind a PLX 805x dumb bridge
+# device declaration in sys/conf/files
+attach	wi at pci with wi_pci
+file	dev/pci/if_wi_pci.c		wi_pci
+
 # Aironet 4500/4800 802.11 DS WLAN
 # device declaration in sys/conf/files
 attach	an at pci with an_pci
@@ -364,3 +378,13 @@ file	dev/pci/iha_pci.c		iha_pci
 device	pcscp: scsi, ncr53c9x
 attach	pcscp at pci
 file	dev/pci/pcscp.c			pcscp
+
+# National Semiconductor DP83820/DP83821 based GigE
+device	nge: ether, ifnet, mii, ifmedia, mii_phy
+attach	nge at pci
+file	dev/pci/if_nge.c		nge
+ 
+# Cyclades-Z series of intelligent multi-port serial adapters
+device	cz
+attach	cz at pci
+file	dev/pci/cz.c			cz		needs-flag

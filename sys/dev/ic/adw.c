@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.2 2001/05/14 22:23:21 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.3 2001/07/04 10:40:25 niklas Exp $ */
 /* $NetBSD: adw.c,v 1.23 2000/05/27 18:24:50 dante Exp $	 */
 
 /*
@@ -219,13 +219,12 @@ adw_alloc_carriers(sc)
 	/*
          * Allocate the control structure.
          */
-	sc->sc_control->carriers = malloc(sizeof(ADW_CARRIER) * ADW_MAX_CARRIER,
-			M_DEVBUF, M_WAITOK);
-	if(!sc->sc_control->carriers) {
-		printf("%s: malloc() failed in allocating carrier structures\n",
-		       sc->sc_dev.dv_xname);
+	sc->sc_control->carriers = 
+		malloc(sizeof(ADW_CARRIER) * ADW_MAX_CARRIER, M_DEVBUF, 
+		       M_NOWAIT);
+	if (sc->sc_control->carriers == NULL)
 		return (ENOMEM);
-	}
+
 
 	if ((error = bus_dmamem_alloc(sc->sc_dmat,
 			sizeof(ADW_CARRIER) * ADW_MAX_CARRIER,

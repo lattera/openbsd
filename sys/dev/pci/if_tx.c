@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.2 2001/05/14 22:25:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.3 2001/07/04 10:42:25 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_tx.c,v 1.45 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -243,13 +243,13 @@ epic_openbsd_attach(
 
 	if (command & PCI_COMMAND_MEM_ENABLE) {
 		if (pci_mapreg_map(pa, PCI_BASEMEM, PCI_MAPREG_TYPE_MEM, 0,
-		    &sc->sc_st, &sc->sc_sh, NULL, &iosize)) {
+		    &sc->sc_st, &sc->sc_sh, NULL, &iosize, 0)) {
 			printf(": can't map mem space\n");
 			return;
 		}
 	} else {
 		if (pci_mapreg_map(pa, PCI_BASEIO, PCI_MAPREG_TYPE_IO, 0,
-		    &sc->sc_st, &sc->sc_sh, NULL, &iosize)) {
+		    &sc->sc_st, &sc->sc_sh, NULL, &iosize, 0)) {
 			printf(": can't map i/o space\n");
 			return;
 		}
@@ -447,7 +447,8 @@ epic_freebsd_attach(dev)
 	ifp->if_init = (if_init_f_t*)epic_init;
 	ifp->if_timer = 0;
 	ifp->if_baudrate = 10000000;
-	ifp->if_snd.ifq_maxlen = TX_RING_SIZE - 1;
+	IFQ_SET_MAXLEN(&ifp->if_snd, TX_RING_SIZE - 1);
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Enable ports, memory and busmastering */
 	command = pci_read_config(dev, PCIR_COMMAND, 4);
@@ -819,7 +820,7 @@ epic_ifstart(ifp)
 		flist = sc->tx_flist + sc->cur_tx;
 
 		/* Get next packet to send */
-		IF_DEQUEUE( &ifp->if_snd, m0 );
+		IFQ_DEQUEUE( &ifp->if_snd, m0 );
 
 		/* If nothing to send, return */
 		if( NULL == m0 ) return;
@@ -890,7 +891,6 @@ epic_rx_done(sc)
 	struct epic_rx_buffer *buf;
 	struct epic_rx_desc *desc;
 	struct mbuf *m;
-	struct ether_header *eh;
 
 	while( !(sc->rx_desc[sc->cur_rx].status & 0x8000) ) { 
 		buf = sc->rx_buffer + sc->cur_rx;
@@ -931,7 +931,6 @@ epic_rx_done(sc)
 		 * First mbuf in packet holds the ethernet and
 		 * packet headers.
 		 */
-		eh = mtod( m, struct ether_header * );
 		m->m_pkthdr.rcvif = &(sc->sc_if);
 		m->m_pkthdr.len = m->m_len = len;
 
@@ -943,12 +942,8 @@ epic_rx_done(sc)
 #endif /* NBPFILTER > 0 */
 #endif /* !__FreeBSD__ */
 
-		/* Second mbuf holds packet ifself */
-		m->m_pkthdr.len = m->m_len = len - sizeof(struct ether_header);
-		m->m_data += sizeof( struct ether_header );
-
 		/* Give mbuf to OS */
-		ether_input(&sc->sc_if, eh, m);
+		ether_input_mbuf(&sc->sc_if, m);
 
 		/* Successfuly received frame */
 		sc->sc_if.if_ipackets++;
@@ -1038,7 +1033,7 @@ epic_intr(arg)
         if( status & (INTSTAT_TXC|INTSTAT_TCC|INTSTAT_TQE) ) {
             epic_tx_done( sc );
 	    if(!(sc->sc_if.if_flags & IFF_OACTIVE) &&
-		sc->sc_if.if_snd.ifq_head )
+		!IFQ_IS_EMPTY( &sc->sc_if.if_snd ))
 		    epic_ifstart( &sc->sc_if );
 	}
 
@@ -1128,7 +1123,7 @@ epic_ifwatchdog(ifp)
 		printf("seems we can continue normaly\n");
 
 	/* Start output */
-	if( ifp->if_snd.ifq_head ) epic_ifstart( ifp );
+	if( !IFQ_IS_EMPTY( &ifp->if_snd ) ) epic_ifstart( ifp );
 
 	splx(x);
 }

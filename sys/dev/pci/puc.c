@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/puc.c,v 1.2.2.1 2001/05/14 22:25:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/puc.c,v 1.2.2.2 2001/07/04 10:43:02 niklas Exp $	*/
 /*	$NetBSD: puc.c,v 1.3 1999/02/06 06:29:54 cgd Exp $	*/
 
 /*
@@ -202,11 +202,10 @@ puc_attach(parent, self, aux)
 
 		type = (PCI_MAPREG_TYPE(bar) == PCI_MAPREG_TYPE_IO ?
 		    PCI_MAPREG_TYPE_IO : PCI_MAPREG_MEM_TYPE(bar));
-
 		sc->sc_bar_mappings[i].mapped = (pci_mapreg_map(pa,
 		    PCI_MAPREG_START + 4 * i, type, 0,
 		    &sc->sc_bar_mappings[i].t, &sc->sc_bar_mappings[i].h,
-		    &sc->sc_bar_mappings[i].a, &sc->sc_bar_mappings[i].s)
+		    &sc->sc_bar_mappings[i].a, &sc->sc_bar_mappings[i].s, 0)
 		      == 0);
 		if (sc->sc_bar_mappings[i].mapped)
 			continue;

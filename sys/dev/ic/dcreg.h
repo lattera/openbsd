@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.1 2001/05/14 22:23:41 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/dcreg.h,v 1.13.4.2 2001/07/04 10:40:49 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -990,10 +990,6 @@ struct dc_eblock_reset {
 #ifdef __alpha__
 #undef vtophys
 #define vtophys(va)		alpha_XXX_dmamap((vm_offset_t)va)
-#endif
-
-#ifndef ETHER_CRC_LEN
-#define ETHER_CRC_LEN	4
 #endif
 
 extern void dc_attach	__P((struct dc_softc *));

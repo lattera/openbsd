@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.1 2001/05/14 22:06:48 niklas Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.2 2001/07/04 10:39:55 niklas Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -59,7 +59,8 @@ id=`basename ${d}`
 #		OSMINOR
 #	src/distrib/miniroot/install.sub
 #		VERSION
-#
+#	src/etc/root/root.mail
+#		VERSION and other bits
 
 ost="OpenBSD"
 osr="2.9"
@@ -70,7 +71,7 @@ char osrelease[] = "${osr}";
 char osversion[] = "${id}#${v}";
 char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };
 char version[] =
-    "${ost} ${osr}-beta (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
+    "${ost} ${osr}-current (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
 eof
 
 expr ${v} + 1 > version

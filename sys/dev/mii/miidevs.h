@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.3 2001/05/14 22:25:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.4 2001/07/04 10:41:43 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.18 2001/04/13 00:25:02 mjacob Exp 
+ *	OpenBSD: miidevs,v 1.21 2001/06/01 19:47:13 deraadt Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -119,6 +119,8 @@
 #define	MII_STR_BROADCOM_BCM5401	"BCM5401 1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5411	0x0007
 #define	MII_STR_BROADCOM_BCM5411	"BCM5411 1000baseTX PHY"
+#define	MII_MODEL_BROADCOM_BCM5221	0x001e
+#define	MII_STR_BROADCOM_BCM5221	"BCM5221 100baseTX PHY"
 
 /* Davicom Semiconductor PHYs */
 #define	MII_MODEL_xxDAVICOM_DM9101	0x0000
@@ -135,6 +137,8 @@
 /* Integrated Circuit Systems PHYs */
 #define	MII_MODEL_xxICS_1890	0x0002
 #define	MII_STR_xxICS_1890	"ICS1890 10/100 media interface"
+#define	MII_MODEL_xxICS_1892	0x0003
+#define	MII_STR_xxICS_1892	"ICS1892 10/100 media interface"
 
 /* Intel PHYs */
 #define	MII_MODEL_xxINTEL_I82553	0x0000
@@ -163,6 +167,10 @@
 #define	MII_STR_NATSEMI_DP83843	"DP83843 10/100 media interface"
 #define	MII_MODEL_NATSEMI_DP83815	0x0002
 #define	MII_STR_NATSEMI_DP83815	"DP83815 10/100 integrated"
+#define	MII_MODEL_NATSEMI_DP83891	0x0005
+#define	MII_STR_NATSEMI_DP83891	"DP83891 10/100/1000 media interface"
+#define	MII_MODEL_NATSEMI_DP83861	0x0006
+#define	MII_STR_NATSEMI_DP83861	"DP83861 10/100/1000 media interface"
 
 /* Quality Semiconductor PHYs */
 #define	MII_MODEL_QUALSEMI_QS6612	0x0000

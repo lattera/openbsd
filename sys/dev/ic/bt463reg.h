@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/ic/bt463reg.h,v 1.2.4.2 2001/07/04 10:40:41 niklas Exp $ */
 /*	$NetBSD: bt463reg.h,v 1.1 1998/08/18 07:43:09 thorpej Exp $	*/
 
 /*-

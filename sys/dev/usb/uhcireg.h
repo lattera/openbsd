@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uhcireg.h,v 1.2.4.1 2001/05/14 22:26:22 niklas Exp $ */
-/*	$NetBSD: uhcireg.h,v 1.11.4.1 2000/08/22 04:11:56 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhcireg.h,v 1.2.4.2 2001/07/04 10:43:53 niklas Exp $ */
+/*	$NetBSD: uhcireg.h,v 1.13 2000/08/13 18:20:15 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhcireg.h,v 1.12 1999/11/17 22:33:42 n_hibma Exp $ */
 
 /*

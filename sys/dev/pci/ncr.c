@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.1 2001/05/14 22:25:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.2 2001/07/04 10:42:40 niklas Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -1464,7 +1464,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.1 2001/05/14 22:25:50 niklas Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.2 2001/07/04 10:42:40 niklas Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11
@@ -3661,8 +3661,9 @@ ncr_attach(parent, self, aux)
 #endif /*__mips__*/
 
 	np->sc_pc = pc;
-	np->ccb = (ccb_p) malloc (sizeof (struct ccb), M_DEVBUF, M_WAITOK);
-	if (!np->ccb) return;
+	np->ccb = (ccb_p) malloc (sizeof (struct ccb), M_DEVBUF, M_NOWAIT);
+	if (np->ccb == NULL)
+		return;
 #if defined(__mips__)
 	pci_sync_cache(pc, (vm_offset_t)np->ccb, sizeof (struct ccb));
 	np->ccb = (struct ccb *)PHYS_TO_UNCACHED(NCR_KVATOPHYS(np, np->ccb));
@@ -3674,12 +3675,11 @@ ncr_attach(parent, self, aux)
 	**	virtual and physical memory.
 	*/
 
-	ioh_valid = (pci_mapreg_map(pa, 0x10,
-	    PCI_MAPREG_TYPE_IO, 0,
-	    &iot, &ioh, &ioaddr, NULL) == 0);
+	ioh_valid = (pci_mapreg_map(pa, 0x10, PCI_MAPREG_TYPE_IO, 0,
+	    &iot, &ioh, &ioaddr, NULL, 0) == 0);
 	memh_valid = (pci_mapreg_map(pa, 0x14,
 	    PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT, 0,
-	    &memt, &memh, &memaddr, NULL) == 0);
+	    &memt, &memh, &memaddr, NULL, 0) == 0);
 
 #if defined(NCR_IOMAPPED)
 	if (ioh_valid) {
@@ -3768,13 +3768,11 @@ static	void ncr_attach (pcici_t config_id, int unit)
 
 	if (!np) {
 		np = (ncb_p) malloc (sizeof (struct ncb), M_DEVBUF, M_WAITOK);
-		if (!np) return;
 		ncrp[unit]=np;
 	}
 	bzero (np, sizeof (*np));
 
 	np->ccb = (ccb_p) malloc (sizeof (struct ccb), M_DEVBUF, M_WAITOK);
-	if (!np->ccb) return;
 #if defined(__mips__)
 	pci_sync_cache(pc, (vm_offset_t)np->ccb, sizeof (struct ccb));
 	np->ccb = (struct ccb *)PHYS_TO_UNCACHED(NCR_KVATOPHYS(np, np->ccb));
@@ -3996,7 +3994,7 @@ static	void ncr_attach (pcici_t config_id, int unit)
 	if ((np->features & FE_RAM) && sizeof(struct script) <= 4096) {
 		if (pci_mapreg_map(pa, 0x18,
 		    PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT, 0,
-		    &memt, &memh, &memaddr, NULL) == 0) {
+		    &memt, &memh, &memaddr, NULL, 0) == 0) {
 			np->ram_tag = memt;
 			np->ram_handle = memh;
 			np->paddr2 = memaddr;

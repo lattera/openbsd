@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcscp.c,v 1.2.4.1 2001/05/14 22:25:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcscp.c,v 1.2.4.2 2001/07/04 10:43:01 niklas Exp $	*/
 /*	$NetBSD: pcscp.c,v 1.11 2000/11/14 18:42:58 thorpej Exp $	*/
 
 /*-
@@ -188,13 +188,12 @@ pcscp_attach(parent, self, aux)
 	bus_dma_segment_t seg;
 	int error, rseg;
 
-	ioh_valid = (pci_mapreg_map(pa, IO_MAP_REG,
-	    PCI_MAPREG_TYPE_IO, 0,
-	    &iot, &ioh, NULL, NULL) == 0);
+	ioh_valid = (pci_mapreg_map(pa, IO_MAP_REG, PCI_MAPREG_TYPE_IO, 0,
+	    &iot, &ioh, NULL, NULL, 0) == 0);
 #if 0	/* XXX cannot use memory map? */
 	memh_valid = (pci_mapreg_map(pa, MEM_MAP_REG,
 	    PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT, 0,
-	    &memt, &memh, NULL, NULL) == 0);
+	    &memt, &memh, NULL, NULL, 0) == 0);
 #else
 	memh_valid = 0;
 #endif

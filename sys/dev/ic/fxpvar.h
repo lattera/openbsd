@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.1 2001/05/14 22:23:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.2 2001/07/04 10:40:53 niklas Exp $	*/
 /*	$NetBSD: if_fxpvar.h,v 1.1 1997/06/05 02:01:58 thorpej Exp $	*/
 
 /*                  
@@ -51,6 +51,10 @@ struct fxp_softc {
 	struct mbuf *rfa_headm;		/* first mbuf in receive frame area */
 	struct mbuf *rfa_tailm;		/* last mbuf in receive frame area */
 	struct fxp_cb_tx *cbl_first;	/* first active TxCB in list */
+	int sc_flags;			/* misc. flags */
+#define	FXPF_HAS_RESUME_BUG	0x08	/* has the resume bug */
+#define	FXPF_FIX_RESUME_BUG	0x10	/* currently need to work-around
+					   the resume bug */
 	int tx_queued;			/* # of active TxCB's */
 	int need_mcsetup;		/* multicast filter needs programming */
 	struct fxp_cb_tx *cbl_last;	/* last active TxCB in list */

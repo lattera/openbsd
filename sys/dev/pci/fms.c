@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2.6.1 2001/05/14 22:25:41 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2.6.2 2001/07/04 10:42:04 niklas Exp $ */
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-
@@ -277,7 +277,7 @@ fms_attach(parent, self, aux)
 	printf("%s: interrupting at %s\n", sc->sc_dev.dv_xname, intrstr);
 	
 	if (pci_mapreg_map(pa, 0x10, PCI_MAPREG_TYPE_IO, 0, &sc->sc_iot,
-			   &sc->sc_ioh, &sc->sc_ioaddr, &sc->sc_iosize)) {
+			   &sc->sc_ioh, &sc->sc_ioaddr, &sc->sc_iosize, 0)) {
 		printf("%s: can't map i/o space\n", sc->sc_dev.dv_xname);
 		return;
 	}

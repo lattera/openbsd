@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/seagate.c,v 1.13.6.1 2001/05/14 22:24:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/seagate.c,v 1.13.6.2 2001/07/04 10:41:36 niklas Exp $	*/
 
 /*
  * ST01/02, Future Domain TMC-885, TMC-950 SCSI driver
@@ -1378,7 +1378,7 @@ sea_information_transfer(sea)
 				sea_done(sea, scb);
 				return;
 			case MSG_MESSAGE_REJECT:
-				printf("%s: message_reject recieved\n",
+				printf("%s: message_reject received\n",
 				    sea->sc_dev.dv_xname);
 				break;
 			case MSG_DISCONNECT:

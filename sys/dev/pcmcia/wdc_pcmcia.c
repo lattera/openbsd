@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/wdc_pcmcia.c,v 1.7.2.1 2001/05/14 22:26:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/wdc_pcmcia.c,v 1.7.2.2 2001/07/04 10:43:31 niklas Exp $	*/
 /*	$NetBSD: wdc_pcmcia.c,v 1.19 1999/02/19 21:49:43 abs Exp $ */
 
 /*-
@@ -127,6 +127,10 @@ struct wdc_pcmcia_product {
 	/* Mobile Dock 2, which doesn't have vendor ID nor product ID */
 	{ PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
 	  0, PCMCIA_CIS_SHUTTLE_IDE_ATAPI },
+
+	/* Archos MiniCD */
+	{ PCMCIA_VENDOR_ARCHOS, PCMCIA_PRODUCT_ARCHOS_ARC_ATAPI,
+	  0, PCMCIA_CIS_ARCHOS_ARC_ATAPI },
 };
 
 struct wdc_pcmcia_disk_device_interface_args {

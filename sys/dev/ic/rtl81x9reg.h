@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9reg.h,v 1.1.4.1 2001/05/14 22:24:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9reg.h,v 1.1.4.2 2001/07/04 10:41:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -431,6 +431,12 @@ struct rl_softc {
  */
 #define ADDTRON_DEVICEID_8139			0x1360
 
+/* D-Link Vendor ID */
+#define DLINK_VENDORID				0x1186
+
+/* D-Link device IDs */
+#define DLINK_DEVICEID_8139			0x1300
+
 /*
  * PCI low memory base and low I/O base register, and
  * other PCI registers. Note: some are only available on
@@ -466,13 +472,6 @@ struct rl_softc {
 #define RL_PSTATE_D3		0x0003
 #define RL_PME_EN		0x0010
 #define RL_PME_STATUS		0x8000
-
-/*
- * FreeBSDism
- */
-#ifndef	ETHER_CRC_LEN
-#define	ETHER_CRC_LEN		4
-#endif
 
 #ifdef __alpha__
 #undef vtophys

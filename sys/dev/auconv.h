@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/auconv.h,v 1.1.12.2 2001/07/04 10:40:09 niklas Exp $ */
 /*	$NetBSD: auconv.h,v 1.5 1999/11/01 18:12:19 augustss Exp $	*/
 
 /*-

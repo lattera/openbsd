@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/crypto/Attic/skipjack.h,v 1.1.2.2 2001/07/04 10:40:04 niklas Exp $	*/
+
 /* 
  * Further optimized test implementation of SKIPJACK algorithm 
  * Mark Tillotson <markt@chaos.org.uk>, 25 June 98

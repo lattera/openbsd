@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.1 2001/05/14 22:26:30 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.2 2001/07/04 10:44:08 niklas Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -304,11 +304,6 @@ struct wsdisplay_cursor {
 #define		WSDISPLAYIO_MODE_EMUL	0	/* emulation (text) mode */
 #define		WSDISPLAYIO_MODE_MAPPED	1	/* mapped (graphics) mode */
 
-/*
- * XXX WARNING
- * XXX The following definitions are very preliminary and are likely
- * XXX to be changed without care about backwards compatibility!
- */
 struct wsdisplay_font {
 	char name[WSFONT_NAME_SIZE];
 	int index;
@@ -332,19 +327,39 @@ struct wsdisplay_font {
 #define	WSDISPLAYIO_DELFONT	_IOW ('W', 79, struct wsdisplay_font)
 #define WSDISPLAYIO_USEFONT	_IOW ('W', 80, struct wsdisplay_font)
 
+struct wsdisplay_burner {
+	u_int	off;
+	u_int	on;
+	u_int	flags;
+#define	WSDISPLAY_BURN_VBLANK	0x0001
+#define	WSDISPLAY_BURN_KBD	0x0002
+#define	WSDISPLAY_BURN_MOUSE	0x0004
+#define	WSDISPLAY_BURN_OUTPUT	0x0008
+};
+#define	WSDISPLAYIO_SBURNER	_IOW('W', 81, struct wsdisplay_burner)
+#define	WSDISPLAYIO_GBURNER	_IOR('W', 82, struct wsdisplay_burner) 
+
+/*
+ * XXX WARNING
+ * XXX The following definitions are very preliminary and are likely
+ * XXX to be changed without care about backwards compatibility!
+ */
 struct wsdisplay_addscreendata {
 	int idx; /* screen index */
 	char screentype[WSSCREEN_NAME_SIZE];
 	char emul[WSEMUL_NAME_SIZE];
 };
-#define WSDISPLAYIO_ADDSCREEN _IOW('W', 82, struct wsdisplay_addscreendata)
+#define WSDISPLAYIO_ADDSCREEN	_IOW('W', 83, struct wsdisplay_addscreendata)
 
 struct wsdisplay_delscreendata {
 	int idx; /* screen index */
 	int flags;
 #define WSDISPLAY_DELSCR_FORCE 1
 };
-#define WSDISPLAYIO_DELSCREEN _IOW('W', 83, struct wsdisplay_delscreendata)
+#define WSDISPLAYIO_DELSCREEN	_IOW('W', 84, struct wsdisplay_delscreendata)
+
+#define WSDISPLAYIO_GETSCREEN	_IOR('W', 85, struct wsdisplay_addscreendata)
+#define	WSDISPLAYIO_SETSCREEN	_IOR('W', 86, u_int)
 
 /* Display information: number of bytes per row, may be same as pixels */
 #define	WSDISPLAYIO_LINEBYTES	_IOR('W', 95, u_int)
@@ -357,10 +372,10 @@ struct wsdisplay_kbddata {
 #define _O_WSDISPLAY_KBD_DEL 1
 	int idx;
 };
-#define _O_WSDISPLAYIO_SETKEYBOARD _IOWR('W', 81, struct wsdisplay_kbddata)
+#define _O_WSDISPLAYIO_SETKEYBOARD _IOWR('W', 87, struct wsdisplay_kbddata)
 
 /* Mouse console support */
-#define WSDISPLAYIO_WSMOUSED	_IOW('W', 82, struct wscons_event)
+#define WSDISPLAYIO_WSMOUSED	_IOW('W', 88, struct wscons_event)
 
 /* Misc control.  Not applicable to all display types. */
 struct wsdisplay_param {
@@ -371,8 +386,8 @@ struct wsdisplay_param {
         int min, max, curval;
         int reserved[4];
 };
-#define	WSDISPLAYIO_GETPARAM	_IOWR('W', 82, struct wsdisplay_param)
-#define	WSDISPLAYIO_SETPARAM	_IOWR('W', 83, struct wsdisplay_param)
+#define	WSDISPLAYIO_GETPARAM	_IOWR('W', 89, struct wsdisplay_param)
+#define	WSDISPLAYIO_SETPARAM	_IOWR('W', 90, struct wsdisplay_param)
 
 /* XXX NOT YET DEFINED */
 /* Mapping information retrieval. */

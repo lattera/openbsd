@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/bt485.c,v 1.5.4.2 2001/07/04 10:40:42 niklas Exp $ */
 /* $NetBSD: bt485.c,v 1.2 2000/04/02 18:55:01 nathanw Exp $ */
 
 /*
@@ -46,6 +47,8 @@
 #include <dev/ic/ramdac.h>
 
 #include <dev/wscons/wsconsio.h>
+#include <dev/wscons/wsdisplayvar.h>
+#include <dev/rasops/rasops.h>
 
 /*
  * Functions exported via the RAMDAC configuration table.
@@ -247,8 +250,11 @@ bt485_init(rc)
 
 	/* Initial colormap: 0 is black, everything else is white */
 	data->cmap_r[0] = data->cmap_g[0] = data->cmap_b[0] = 0;
-	for (i = 1; i < 256; i++)
-		data->cmap_r[i] = data->cmap_g[i] = data->cmap_b[i] = 255;
+	for (i = 0; i < 256; i++) {
+		data->cmap_r[i] = rasops_cmap[3*i + 0];
+		data->cmap_g[i] = rasops_cmap[3*i + 1];
+		data->cmap_b[i] = rasops_cmap[3*i + 2];
+	}
 
 	bt485_update((void *)data);
 }
@@ -270,17 +276,10 @@ bt485_set_cmap(rc, cmapp)
 	if ((u_int)cmapp->index >= 256 ||
 	    ((u_int)cmapp->index + (u_int)cmapp->count) > 256)
 		return (EINVAL);
-#if defined(UVM)
 	if (!uvm_useracc(cmapp->red, cmapp->count, B_READ) ||
 	    !uvm_useracc(cmapp->green, cmapp->count, B_READ) ||
 	    !uvm_useracc(cmapp->blue, cmapp->count, B_READ))
 		return (EFAULT);
-#else
-	if (!useracc(cmapp->red, cmapp->count, B_READ) ||
-            !useracc(cmapp->green, cmapp->count, B_READ) ||
-            !useracc(cmapp->blue, cmapp->count, B_READ))
-                return (EFAULT);
-#endif
 
 	s = spltty();
 
@@ -346,32 +345,19 @@ bt485_set_cursor(rc, cursorp)
 		     (u_int)cursorp->cmap.count) > 2)
 			return (EINVAL);
 		count = cursorp->cmap.count;
-#if defined(UVM)
 		if (!uvm_useracc(cursorp->cmap.red, count, B_READ) ||
 		    !uvm_useracc(cursorp->cmap.green, count, B_READ) ||
 		    !uvm_useracc(cursorp->cmap.blue, count, B_READ))
 			return (EFAULT);
-#else
-		if (!useracc(cursorp->cmap.red, count, B_READ) ||
-                    !useracc(cursorp->cmap.green, count, B_READ) ||
-                    !useracc(cursorp->cmap.blue, count, B_READ))
-                        return (EFAULT);
-#endif
 	}
 	if (v & WSDISPLAY_CURSOR_DOSHAPE) {
 		if ((u_int)cursorp->size.x > CURSOR_MAX_SIZE ||
 		    (u_int)cursorp->size.y > CURSOR_MAX_SIZE)
 			return (EINVAL);
 		count = (CURSOR_MAX_SIZE / NBBY) * data->cursize.y;
-#if defined(UVM)
 		if (!uvm_useracc(cursorp->image, count, B_READ) ||
 		    !uvm_useracc(cursorp->mask, count, B_READ))
 			return (EFAULT);
-#else
-		if (!useracc(cursorp->image, count, B_READ) ||
-                    !useracc(cursorp->mask, count, B_READ))
-                        return (EFAULT);
-#endif
 	}
 
 	if (v & (WSDISPLAY_CURSOR_DOPOS | WSDISPLAY_CURSOR_DOCUR)) {

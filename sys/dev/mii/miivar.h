@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.1 2001/05/14 22:25:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.2 2001/07/04 10:41:44 niklas Exp $	*/
 /*	$NetBSD: miivar.h,v 1.17 2000/03/06 20:56:57 thorpej Exp $	*/
 
 /*-
@@ -138,7 +138,9 @@ struct mii_softc {
 
 	int mii_flags;			/* misc. flags; see below */
 	int mii_capabilities;		/* capabilities from BMSR */
+	int mii_extcapabilities;	/* extended capabilities */
 	int mii_ticks;			/* MII_TICK counter */
+	int mii_anegticks;		/* ticks before retrying aneg */
 
 #if defined(__NetBSD__)
 	struct callout mii_nway_ch;	/* NWAY callout */
@@ -156,8 +158,9 @@ typedef struct mii_softc mii_softc_t;
 #define	MIIF_NOISOLATE	0x0002		/* do not isolate the PHY */
 #define	MIIF_NOLOOP	0x0004		/* no loopback capability */
 #define	MIIF_DOINGAUTO	0x0008		/* doing autonegotiation (mii_softc) */
+#define MIIF_AUTOTSLEEP	0x0010		/* use tsleep(), not timeout() */
 
-#define	MIIF_INHERIT_MASK	(MIIF_NOISOLATE|MIIF_NOLOOP)
+#define	MIIF_INHERIT_MASK	(MIIF_NOISOLATE|MIIF_NOLOOP|MIIF_AUTOTSLEEP)
 
 /*
  * Special `locators' passed to mii_attach().  If one of these is not
@@ -194,7 +197,9 @@ struct mii_media {
 #define	MII_MEDIA_100_T4	3
 #define	MII_MEDIA_100_TX	4
 #define	MII_MEDIA_100_TX_FDX	5
-#define	MII_NMEDIA		6
+#define MII_MEDIA_1000		6
+#define MII_MEDIA_1000_FDX	7
+#define	MII_NMEDIA		8
 
 #ifdef _KERNEL
 
@@ -236,6 +241,8 @@ void	mii_phy_update __P((struct mii_softc *, int));
 void	mii_phy_statusmsg __P((struct mii_softc *));
 
 void	ukphy_status __P((struct mii_softc *));
+
+int	mii_anar __P((int));
 #endif /* _KERNEL */
 
 #endif /* _DEV_MII_MIIVAR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/rln.c,v 1.7.2.1 2001/05/14 22:24:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/rln.c,v 1.7.2.2 2001/07/04 10:41:04 niklas Exp $	*/
 /*
  * David Leonard <d@openbsd.org>, 1999. Public Domain.
  *
@@ -142,7 +142,8 @@ rlnconfig(sc)
 	ifp->if_ioctl = rlnioctl;
 	ifp->if_watchdog = rlnwatchdog;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS;
-	ifp->if_snd.ifq_maxlen = IFQ_MAXLEN;
+	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
+	IFQ_SET_READY(&ifp->if_snd);
 	if_attach(ifp);
 	ether_ifattach(ifp);
 }
@@ -155,7 +156,6 @@ rlninit(sc)
 	/* LLDInit() */
 	struct ifnet * ifp = &sc->sc_arpcom.ac_if;
 	int s;
-	extern int cold;
 
 	s = splnet();
 	dprintf(" [init]");
@@ -240,7 +240,7 @@ rlnstart(ifp)
 
     startagain:
 	s = splimp();
-	IF_DEQUEUE(&ifp->if_snd, m0);
+	IFQ_DEQUEUE(&ifp->if_snd, m0);
 	splx(s);
 
 	if (m0 == NULL) {
@@ -408,7 +408,6 @@ rlnintr(arg)
 	void *	arg;
 {
 	struct rln_softc * sc = (struct rln_softc *)arg;
-	extern int cold;
 
 	dprintf("!");
 
@@ -497,7 +496,6 @@ rlnread(sc, hdr, len)
 {
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct mbuf *m;
-	struct ether_header *eh;
 	u_int8_t data[1538];
 	u_int8_t  *buf;
 	size_t	  buflen;
@@ -593,11 +591,8 @@ rlnread(sc, hdr, len)
 		if (ifp->if_bpf)
 			bpf_mtap(ifp->if_bpf, m);
 #endif
-		/* Split the ether header from the mbuf */
-		eh = mtod(m, struct ether_header *);
-		m_adj(m, sizeof *eh);
 
-		ether_input(ifp, eh, m);
+		ether_input_mbuf(ifp, m);
 		return;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11 1999/11/16 09:24:59 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11.2.1 2001/07/04 10:40:12 niklas Exp $	*/
 /*	$NetBSD: ramdisk.c,v 1.8 1996/04/12 08:30:09 leo Exp $	*/
 
 /*
@@ -62,9 +62,7 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 #include <dev/ramdisk.h>
 
@@ -161,10 +159,6 @@ rdattach(n)
 	for (i = 0; i < n; i++) {
 
 		sc = malloc(sizeof(*sc), M_DEVBUF, M_WAITOK);
-		if (!sc) {
-			printf("ramdisk: malloc for attach failed!\n");
-			return;
-		}
 		bzero((caddr_t)sc, sizeof(*sc));
 		ramdisk_devs[i] = sc;
 		sc->sc_dev.dv_unit = i;
@@ -546,11 +540,7 @@ rd_ioctl_kalloc(sc, urd, proc)
 
 	/* Sanity check the size. */
 	size = urd->rd_size;
-#if defined(UVM)
 	addr = uvm_km_zalloc(kernel_map, size);
-#else
-	addr = kmem_alloc(kernel_map, size);
-#endif
 	if (!addr)
 		return ENOMEM;
 

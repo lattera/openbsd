@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5.2.1 2001/05/14 22:26:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5.2.2 2001/07/04 10:43:22 niklas Exp $	*/
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -434,6 +434,7 @@ cnw_attach(parent, self, aux)
 	ifp->if_ioctl = cnw_ioctl;
 	ifp->if_watchdog = cnw_watchdog;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_NOTRAILERS;
+	IFQ_SET_READY(&ifp->if_snd);
 
 	/* Attach the interface */
 	if_attach(ifp);
@@ -471,7 +472,7 @@ cnw_start(ifp)
 			return;
 		}
 
-		IF_DEQUEUE(&ifp->if_snd, m0);
+		IFQ_DEQUEUE(&ifp->if_snd, m0);
 		if (m0 == 0)
 			return;
 
@@ -683,9 +684,7 @@ cnw_recv(sc)
 			continue;
 		}
 
-		/* Pass the packet up, with the ether header sort-of removed */
-		m_adj(m, sizeof(struct ether_header));
-		ether_input(ifp, eh, m);
+		ether_input_mbuf(ifp, m);
 	}
 }
 

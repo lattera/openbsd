@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ugen.c,v 1.7.2.1 2001/05/14 22:26:21 niklas Exp $ */
-/*	$NetBSD: ugen.c,v 1.43 2000/10/24 14:53:59 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ugen.c,v 1.7.2.2 2001/07/04 10:43:51 niklas Exp $ */
+/*	$NetBSD: ugen.c,v 1.45 2000/12/13 04:05:14 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ugen.c,v 1.26 1999/11/17 22:33:41 n_hibma Exp $	*/
 
 /*

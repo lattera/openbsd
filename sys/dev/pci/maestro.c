@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/maestro.c,v 1.4.4.1 2001/05/14 22:25:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/maestro.c,v 1.4.4.2 2001/07/04 10:42:38 niklas Exp $	*/
 /* $FreeBSD: /c/ncvs/src/sys/dev/sound/pci/maestro.c,v 1.3 2000/11/21 12:22:11 julian Exp $ */
 /*
  * FreeBSD's ESS Agogo/Maestro driver 
@@ -361,7 +361,7 @@ maestro_attach(parent, self, aux)
 
 	/* Map i/o */
 	if ((error = pci_mapreg_map(pa, PCI_MAPS, PCI_MAPREG_TYPE_IO, 
-	    0, &sc->iot, &sc->ioh, NULL, NULL)) != 0) {
+	    0, &sc->iot, &sc->ioh, NULL, NULL, 0)) != 0) {
 		printf(", couldn't map i/o space\n");
 		goto bad;
 	};
@@ -1507,7 +1507,7 @@ salloc_new(addr, size, nzones)
 	int i;
 
 	MALLOC(pool, salloc_t, sizeof *pool + nzones * sizeof pool->zones[0],
-	    M_TEMP, M_WAITOK);
+	    M_TEMP, M_NOWAIT);
 	if (pool == NULL)
 		return NULL;
 	SLIST_INIT(&pool->free);

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/usscanner.c,v 1.3.2.1 2001/05/14 22:26:27 niklas Exp $	*/
-/*	$NetBSD$	*/
+/*	$OpenBSD: src/sys/dev/usb/Attic/usscanner.c,v 1.3.2.2 2001/07/04 10:44:05 niklas Exp $	*/
+/*	$NetBSD: usscanner.c,v 1.6 2001/01/23 14:04:14 augustss Exp $	*/
 
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
@@ -349,10 +349,10 @@ USB_ATTACH(usscanner)
 	
 	sc->sc_child = config_found(&sc->sc_dev, &sc->sc_link, scsiprint);
 
-	DPRINTFN(10, ("usscanner_attach: %p\n", sc->sc_udev));
-
 	usbd_add_drv_event(USB_EVENT_DRIVER_ATTACH, sc->sc_udev,
 			   USBDEV(sc->sc_dev));
+
+	DPRINTFN(10, ("usscanner_attach: %p\n", sc->sc_udev));
 
 	USB_ATTACH_SUCCESS_RETURN;
 }

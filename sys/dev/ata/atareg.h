@@ -1,5 +1,8 @@
-/*	$OpenBSD: src/sys/dev/ata/atareg.h,v 1.2.4.1 2001/05/14 22:23:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ata/atareg.h,v 1.2.4.2 2001/07/04 10:40:16 niklas Exp $	*/
 /*	$NetBSD: atareg.h,v 1.5 1999/01/18 20:06:24 bouyer Exp $	*/
+
+#ifndef __DEV_ATA_ATAREG_H__
+#define __DEV_ATA_ATAREG_H__
 
 /*
  * Drive parameter structure for ATA/ATAPI.
@@ -219,3 +222,5 @@ struct ataparams {
     u_int8_t	atap_signature; 	/* 255: Signature */
 #endif
 };
+
+#endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.1 2001/05/14 22:24:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.2 2001/07/04 10:41:10 niklas Exp $ */
 /*	$NetBSD: siopvar_common.h,v 1.10 2001/01/26 21:58:56 bouyer Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/Attic/kbd.c,v 1.8.12.1 2001/05/14 22:26:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/Attic/kbd.c,v 1.8.12.2 2001/07/04 10:43:32 niklas Exp $	*/
 /*	$NetBSD: kbd.c,v 1.14 1997/07/17 01:17:45 jtk Exp $	*/
 
 /*
@@ -1073,7 +1073,7 @@ kbd_stint(cs)
 }
 
 /*
- * Get input from the recieve ring and pass it on.
+ * Get input from the receive ring and pass it on.
  * Note: this is called at splsoftclock()
  */
 static void

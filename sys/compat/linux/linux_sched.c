@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_sched.c,v 1.1.4.1 2001/05/14 22:04:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_sched.c,v 1.1.4.2 2001/07/04 10:39:25 niklas Exp $	*/
 /*	$NetBSD: linux_sched.c,v 1.6 2000/05/28 05:49:05 thorpej Exp $	*/
 
 /*-
@@ -220,7 +220,7 @@ linux_sys_sched_setscheduler(cp, v, retval)
 	}
 
 	/*
-	 * We can't emulate anything put the default scheduling policy.
+	 * We can't emulate anything but the default scheduling policy.
 	 */
 	if (SCARG(uap, policy) != LINUX_SCHED_OTHER || lp.sched_priority != 0)
 		return (EINVAL);
@@ -260,7 +260,7 @@ linux_sys_sched_getscheduler(cp, v, retval)
 	}
 
 	/*
-	 * We can't emulate anything put the default scheduling policy.
+	 * We can't emulate anything but the default scheduling policy.
 	 */
 	*retval = LINUX_SCHED_OTHER;
 	return (0);
@@ -287,7 +287,7 @@ linux_sys_sched_get_priority_max(cp, v, retval)
 	} */ *uap = v;
 
 	/*
-	 * We can't emulate anything put the default scheduling policy.
+	 * We can't emulate anything but the default scheduling policy.
 	 */
 	if (SCARG(uap, policy) != LINUX_SCHED_OTHER) {
 		*retval = -1;
@@ -309,7 +309,7 @@ linux_sys_sched_get_priority_min(cp, v, retval)
 	} */ *uap = v;
 
 	/*
-	 * We can't emulate anything put the default scheduling policy.
+	 * We can't emulate anything but the default scheduling policy.
 	 */
 	if (SCARG(uap, policy) != LINUX_SCHED_OTHER) {
 		*retval = -1;

@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/dev/ic/isp_openbsd.c,v 1.6.2.3 2001/05/14 22:23:55 niklas Exp $ */
+/* 	$OpenBSD: src/sys/dev/ic/isp_openbsd.c,v 1.6.2.4 2001/07/04 10:40:57 niklas Exp $ */
 /*
  * Platform (OpenBSD) dependent common attachment code for Qlogic adapters.
  *
@@ -189,7 +189,6 @@ ispminphys(struct buf *bp)
 static int32_t
 ispcmd_slow(XS_T *xs)
 {
-	extern int cold;
 	sdparam *sdp;
 	int tgt, chan;
 	u_int16_t f;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscallargs.h,v 1.26.4.1 2001/05/14 22:05:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscallargs.h,v 1.26.4.2 2001/07/04 10:39:47 niklas Exp $	*/
 
 /*
  * System call argument lists.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.h,v 1.4.10.1 2001/05/14 22:04:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_ioctl.h,v 1.4.10.2 2001/07/04 10:39:23 niklas Exp $	*/
 /*	$NetBSD: linux_ioctl.h,v 1.4 1996/04/05 00:01:36 christos Exp $	*/
 
 /*
@@ -82,12 +82,9 @@ struct linux_sys_ioctl_args;
 int linux_ioctl_audio __P((struct proc *, struct linux_sys_ioctl_args *,
     register_t *));
 int linux_machdepioctl __P((struct proc *, void *, register_t *));
-int linux_ioctl_termios __P((struct proc *, struct linux_sys_ioctl_args *,
-    register_t *));
-int linux_ioctl_cdrom __P((struct proc *, struct linux_sys_ioctl_args *,
-    register_t *));
-int linux_ioctl_socket __P((struct proc *, struct linux_sys_ioctl_args *,
-    register_t *));
+int linux_ioctl_termios __P((struct proc *, void *, register_t *));
+int linux_ioctl_cdrom __P((struct proc *, void *, register_t *));
+int linux_ioctl_socket __P((struct proc *, void *, register_t *));
 int linux_ioctl_hdio __P((struct proc *, struct linux_sys_ioctl_args *,
     register_t *));
 int linux_ioctl_fdio __P((struct proc *, struct linux_sys_ioctl_args *,

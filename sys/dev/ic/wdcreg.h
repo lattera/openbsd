@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.2.2.1 2001/05/14 22:24:24 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.2.2.2 2001/07/04 10:41:18 niklas Exp $     */
 /*	$NetBSD: wdcreg.h,v 1.22 1999/03/07 14:02:54 bouyer Exp $	*/
 
 /*-
@@ -160,6 +160,7 @@
 #define ATAPI_PKT_CMD		0xa0 
 #define ATAPI_IDENTIFY_DEVICE	0xa1 
 #define ATAPI_SOFT_RESET	0x08
+#define ATAPI_DEVICE_RESET      0x08 /* ATA/ATAPI-5 name for soft reset */
 #define ATAPI_SLEEP		0xe6
 #define ATAPI_STANDBY_IMMEDIATE	0xe0
 #define ATAPI_SMART		0xB0 /* SMART operations */

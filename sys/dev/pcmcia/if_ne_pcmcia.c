@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.1 2001/05/14 22:26:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.2 2001/07/04 10:43:23 niklas Exp $	*/
 /*	$NetBSD: if_ne_pcmcia.c,v 1.17 1998/08/15 19:00:04 thorpej Exp $	*/
 
 /*
@@ -103,9 +103,6 @@ const struct ne2000dev {
     int function;
     int enet_maddr;
     unsigned char enet_vendor[3];
-    int flags;
-#define NE2000DVF_DL10019	0x0001		/* chip is D-Link DL10019 */
-#define NE2000DVF_AX88190	0x0002		/* chip is ASIX AX88190 */
 } ne2000devs[] = {
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_AMBICOM_AMB8002T,
@@ -168,8 +165,8 @@ const struct ne2000dev {
       0, -1, { 0x00, 0x80, 0xc6 } },
 
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
-      PCMCIA_CIS_NETGEAR_FA410TX,
-      0, -1, { 0x00, 0xe0, 0x98 } },
+      PCMCIA_CIS_SYNERGY21_S21810,
+      0, -1, { 0x00, 0x48, 0x54 } },
 
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_TAMARACK_NE2000,
@@ -178,6 +175,10 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_GVC_NIC2000P,
       0, 0x0ff0, { 0x00, 0x00, 0xe8 } },
+
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
+      PCMCIA_CIS_WISECOM_T210CT,
+      0, -1, { 0x00, 0x20, 0x18 } },
 
     /*
      * You have to add new entries which contains
@@ -211,6 +212,14 @@ const struct ne2000dev {
       0, -1, { 0x00, 0x80, 0xc8 } },
 
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_COMBO_ECARD,
+      PCMCIA_CIS_LINKSYS_COMBO_ECARD,
+      0, -1, { 0x00, 0x04, 0x5a } },
+
+    { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_COMBO_ECARD,
+      PCMCIA_CIS_LINKSYS_COMBO_ECARD,
+      0, -1, { 0x00, 0x80, 0xc8 } },
+
+    { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_COMBO_ECARD,
       PCMCIA_CIS_PLANEX_FNW3600T,
       0, -1, { 0x00, 0x90, 0xcc } },
 
@@ -225,7 +234,7 @@ const struct ne2000dev {
      */
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_COMBO_ECARD,
       PCMCIA_CIS_PLANEX_FNW3700T,
-      0, -1, { 0x00, 0x90, 0xcc }, NE2000DVF_AX88190 },
+      0, -1, { 0x00, 0x90, 0xcc }, /* NE2000DVF_AX88190 */ },
 
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_ETHERFAST,
       PCMCIA_CIS_LINKSYS_ETHERFAST,
@@ -238,10 +247,6 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_ETHERFAST,
       PCMCIA_CIS_DLINK_DE650,
       0, -1, { 0x00, 0xe0, 0x98 } },
-
-    { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_COMBO_ECARD,
-      PCMCIA_CIS_LINKSYS_COMBO_ECARD,
-      0, -1, { 0x00, 0x80, 0xc8 } },
 
     { PCMCIA_VENDOR_LINKSYS, PCMCIA_PRODUCT_LINKSYS_TRUST_COMBO_ECARD,
       PCMCIA_CIS_LINKSYS_TRUST_COMBO_ECARD,
@@ -317,6 +322,14 @@ const struct ne2000dev {
       PCMCIA_CIS_COREGA_FAST_ETHER_PCC_TX,
       0, -1, { 0x00, 0x00, 0xf4 } },
 
+    { PCMCIA_VENDOR_COREGA, PCMCIA_PRODUCT_COREGA_FETHER_PCC_TXF,
+      PCMCIA_CIS_COREGA_FETHER_PCC_TXF,
+      0, -1, { 0x00, 0x90, 0x99 } },
+
+    { PCMCIA_VENDOR_COREGA, PCMCIA_PRODUCT_COREGA_FETHER_PCC_TXD,
+      PCMCIA_CIS_COREGA_FETHER_PCC_TXD,
+      0, -1, { 0x00, 0x90, 0x99 } },
+
     { PCMCIA_VENDOR_COMPEX, PCMCIA_PRODUCT_COMPEX_LINKPORT_ENET_B,
       PCMCIA_CIS_COMPEX_LINKPORT_ENET_B,
       0, 0x01c0, { 0x00, 0xa0, 0x0c } },
@@ -329,13 +342,17 @@ const struct ne2000dev {
       PCMCIA_CIS_SOCKET_LP_ETHER_CF,
       0, -1, { 0x00, 0xc0, 0x1b} },
 
+    { PCMCIA_VENDOR_SOCKET, PCMCIA_PRODUCT_SOCKET_LP_ETHER,
+      PCMCIA_CIS_SOCKET_LP_ETHER,
+      0, -1, { 0x00, 0xc0, 0x1b } },
+
     { PCMCIA_VENDOR_XIRCOM, PCMCIA_PRODUCT_XIRCOM_CFE_10,
       PCMCIA_CIS_XIRCOM_CFE_10,
       0, -1, { 0x00, 0x10, 0xa4 } },
 
     { PCMCIA_VENDOR_MELCO, PCMCIA_PRODUCT_MELCO_LPC3_TX,
       PCMCIA_CIS_MELCO_LPC3_TX,
-      0, -1, { 0x00, 0x40, 0x26 }, NE2000DVF_AX88190 },
+      0, -1, { 0x00, 0x40, 0x26 }, /* NE2000DVF_AX88190 */ },
 
     { PCMCIA_VENDOR_DUAL, PCMCIA_PRODUCT_DUAL_NE2000,
       PCMCIA_CIS_DUAL_NE2000,
@@ -348,6 +365,23 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_KINGSTON, PCMCIA_PRODUCT_KINGSTON_KNE_PC2,
       PCMCIA_CIS_KINGSTON_KNE_PC2,
       0, 0x0180, { 0x00, 0xc0, 0xf0 } },
+
+    { PCMCIA_VENDOR_TELECOMDEVICE, PCMCIA_PRODUCT_TELECOMDEVICE_TCD_HPC100,
+      PCMCIA_CIS_TELECOMDEVICE_TCD_HPC100,
+      0, -1, { 0x00, 0x40, 0x26 }, /* NE2000DVF_AX88190 */ },
+
+    { PCMCIA_VENDOR_MACNICA, PCMCIA_PRODUCT_MACNICA_ME1_JEIDA,
+      PCMCIA_CIS_MACNICA_ME1_JEIDA,
+      0, 0x00b8, { 0x08, 0x00, 0x42 } },
+
+    { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
+      PCMCIA_CIS_NETGEAR_FA410TXC,
+      0, -1, { 0x00, 0x40, 0xf4 } },
+
+    { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
+      PCMCIA_CIS_NETGEAR_FA410TXC,
+      0, -1, { 0x00, 0x48, 0x54 } },
+
 #if 0
     /* the rest of these are stolen from the linux pcnet pcmcia device
        driver.  Since I don't know the manfid or cis info strings for
@@ -562,7 +596,7 @@ ne_pcmcia_attach(parent, self, aux)
 		goto fail_4;
 	}
 
-	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, NE2000_NIC_NPORTS);
+	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, NE2000_NPORTS);
 
 	/*
 	 * Read the station address from the board.
@@ -586,8 +620,7 @@ again:
 		}
 	}
 	if (i == NE2000_NDEVS) {
-		printf(": can't match ethernet vendor code\n",
-		    dsc->sc_dev.dv_xname);
+		printf(": can't match ethernet vendor code\n");
 		goto fail_5;
 	}
 

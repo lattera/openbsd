@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lmcvar.h,v 1.4 2000/02/06 20:56:02 chris Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_lmcvar.h,v 1.4.2.1 2001/07/04 10:42:16 niklas Exp $ */
 /*	$NetBSD: if_lmcvar.h,v 1.1 1999/03/25 03:32:43 explorer Exp $	*/
 
 /*-
@@ -463,7 +463,6 @@ static lmc_softc_t *tulips[LMC_MAX_DEVICES];
 #endif
 #define	LMC_VOID_INTRFUNC
 #define	IFF_NOTRAILERS		0
-#define	CLBYTES			PAGE_SIZE
 #define	LMC_EADDR_FMT		"%6D"
 #define	LMC_EADDR_ARGS(addr)	addr, ":"
 #else

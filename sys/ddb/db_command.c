@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.1 2001/05/14 22:06:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.2 2001/07/04 10:40:05 niklas Exp $	*/
 /*	$NetBSD: db_command.c,v 1.20 1996/03/30 22:30:05 christos Exp $	*/
 
 /* 
@@ -52,10 +52,8 @@
 
 #include <vm/vm.h>
 
-#ifdef UVM
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_ddb.h>
-#endif
 
 /*
  * Exported global variables
@@ -295,11 +293,7 @@ db_map_print_cmd(addr, have_addr, count, modif)
         if (modif[0] == 'f')
                 full = TRUE;
 
-#if defined(UVM)
         uvm_map_printit((vm_map_t) addr, full, db_printf);
-#else
-        _vm_map_print((vm_map_t) addr, full, db_printf);
-#endif
 }
 /*ARGSUSED*/
 void
@@ -334,11 +328,7 @@ db_object_print_cmd(addr, have_addr, count, modif)
         if (modif[0] == 'f')
                 full = TRUE;
 
-#if defined(UVM)
 	uvm_object_printit((struct uvm_object *) addr, full, db_printf);
-#else
-        _vm_object_print((vm_object_t) addr, full, db_printf);
-#endif
 }
 
 /*ARGSUSED*/
@@ -378,7 +368,8 @@ struct db_command db_boot_cmds[] = {
 	{ "sync",	db_boot_sync_cmd,	0,	0 },
 	{ "crash",	db_boot_crash_cmd,	0,	0 },
 	{ "dump",	db_boot_dump_cmd,	0,	0 },
-	{ (char *)0, }
+	{ "halt",	db_boot_halt_cmd,	0,	0 },
+	{ NULL, }
 };
 
 struct db_command db_command_table[] = {
@@ -576,4 +567,14 @@ db_boot_dump_cmd(addr, haddr, count, modif)
 	char *modif;
 {
 	boot(RB_DUMP | RB_TIMEBAD);
+}
+
+void
+db_boot_halt_cmd(addr, haddr, count, modif)
+	db_expr_t addr;
+	int haddr;
+	db_expr_t count;
+	char *modif;
+{
+	boot(RB_NOSYNC | RB_HALT | RB_TIMEBAD);
 }

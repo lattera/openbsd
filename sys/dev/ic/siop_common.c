@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.1 2001/05/14 22:24:11 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.2 2001/07/04 10:41:08 niklas Exp $ */
 /*	$NetBSD: siop_common.c,v 1.12 2001/02/11 18:04:50 bouyer Exp $	*/
 
 /*
@@ -683,31 +683,33 @@ siop_resetbus(sc)
  */
 void
 siop_print_info(sc, target)
-	struct siop_softc *sc;
-	int target;
+        struct siop_softc *sc;
+        int target;
 {
-	struct siop_target *siop_target = sc->targets[target];
+	struct siop_target *siop_target;
 	u_int8_t scf, offset;
-	int scf_index, i;
+	int scf_index, factors, i;
 
-	const int factors = sizeof(period_factor) / sizeof(period_factor[0]);
-
-	offset = ((siop_target->id >> 8) & 0xff) >> SXFER_MO_SHIFT;
-
-	scf = ((siop_target->id >> 24) & SCNTL3_SCF_MASK) >> SCNTL3_SCF_SHIFT;
-	scf_index = sc->scf_index;
-
+	siop_target = sc->targets[target];
+	
 	printf("%s: target %d now using %s%s%s%s%d bit ",
-	    sc->sc_dev.dv_xname, target,
+            sc->sc_dev.dv_xname, target,
 	    (siop_target->flags & TARF_TAG) ? "tagged " : "",
 	    (siop_target->flags & TARF_ISDT) ? "DT " : "",
 	    (siop_target->flags & TARF_ISQAS) ? "QAS " : "",
 	    (siop_target->flags & TARF_ISIUS) ? "IUS " : "",
 	    (siop_target->flags & TARF_ISWIDE) ? 16 : 8);
 
+	offset = ((siop_target->id >> 8) & 0xff) >> SXFER_MO_SHIFT;
+
 	if (offset == 0)
 		printf("async ");
 	else { 
+		factors = sizeof(period_factor) / sizeof(period_factor[0]);
+		
+		scf = ((siop_target->id >> 24) & SCNTL3_SCF_MASK) >> SCNTL3_SCF_SHIFT;
+		scf_index = sc->scf_index;
+
 		for (i = 0; i < factors; i++)
 			if (siop_target->flags & TARF_ISDT) {
 				if (period_factor[i].scf[scf_index].dt_scf == scf)

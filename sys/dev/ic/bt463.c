@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/bt463.c,v 1.3.4.2 2001/07/04 10:40:41 niklas Exp $ */
 /* $NetBSD: bt463.c,v 1.2 2000/06/13 17:21:06 nathanw Exp $ */
 
 /*-
@@ -303,9 +304,11 @@ bt463_init(rc)
 
 	/* Initial colormap: 0 is black, everything else is white */
 	data->cmap_r[0] = data->cmap_g[0] = data->cmap_b[0] = 0;
-	for (i = 1; i < 256; i++)
-		data->cmap_r[i] = data->cmap_g[i] = data->cmap_b[i] = 255;
-
+	for (i = 1; i < 256; i++) {
+		data->cmap_r[i] = rasops_cmap[3*i + 0];
+		data->cmap_g[i] = rasops_cmap[3*i + 1];
+		data->cmap_b[i] = rasops_cmap[3*i + 2];
+	}
 
 	/* Initialize the window type table:
 	 *
@@ -366,17 +369,10 @@ bt463_set_cmap(rc, cmapp)
 	if ((u_int)cmapp->index >= BT463_NCMAP_ENTRIES ||
 	    ((u_int)cmapp->index + (u_int)cmapp->count) > BT463_NCMAP_ENTRIES)
 		return (EINVAL);
-#if defined(UVM)
 	if (!uvm_useracc(cmapp->red, cmapp->count, B_READ) ||
 	    !uvm_useracc(cmapp->green, cmapp->count, B_READ) ||
 	    !uvm_useracc(cmapp->blue, cmapp->count, B_READ))
 		return (EFAULT);
-#else
-	if (!useracc(cmapp->red, cmapp->count, B_READ) ||
-            !useracc(cmapp->green, cmapp->count, B_READ) ||
-            !useracc(cmapp->blue, cmapp->count, B_READ))
-                return (EFAULT);
-#endif
 
 	s = spltty();
 
@@ -431,17 +427,10 @@ bt463_check_curcmap(rc, cursorp)
 	     (u_int)cursorp->cmap.count) > 2)
 		return (EINVAL);
 	count = cursorp->cmap.count; 
-#if defined(UVM)
 	if (!uvm_useracc(cursorp->cmap.red, count, B_READ) ||
 	    !uvm_useracc(cursorp->cmap.green, count, B_READ) ||
 	    !uvm_useracc(cursorp->cmap.blue, count, B_READ))
 		return (EFAULT);
-#else
-	if (!useracc(cursorp->cmap.red, count, B_READ) ||
-            !useracc(cursorp->cmap.green, count, B_READ) ||
-            !useracc(cursorp->cmap.blue, count, B_READ))
-                return (EFAULT);
-#endif
 	return (0);
 }
 

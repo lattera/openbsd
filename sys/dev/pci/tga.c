@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.1 2001/05/14 22:25:57 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.2 2001/07/04 10:43:04 niklas Exp $ */
 /* $NetBSD: tga.c,v 1.31 2001/02/11 19:34:58 nathanw Exp $ */
 
 /*
@@ -426,7 +426,9 @@ tgaattach(parent, self, aux)
 		sc->nscreens = 1;
 	} else {
 		sc->sc_dc = (struct tga_devconfig *)
-		    malloc(sizeof(struct tga_devconfig), M_DEVBUF, M_WAITOK);
+		    malloc(sizeof(struct tga_devconfig), M_DEVBUF, M_NOWAIT);
+		if (sc->sc_dc == NULL)
+			return;
 		bzero(sc->sc_dc, sizeof(struct tga_devconfig));
 		tga_getdevconfig(pa->pa_memt, pa->pa_pc, pa->pa_tag,
 		    sc->sc_dc);

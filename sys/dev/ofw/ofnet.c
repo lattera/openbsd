@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofnet.c,v 1.3.2.1 2001/05/14 22:25:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofnet.c,v 1.3.2.2 2001/07/04 10:41:48 niklas Exp $	*/
 /*	$NetBSD: ofnet.c,v 1.4 1996/10/16 19:33:21 ws Exp $	*/
 
 /*
@@ -173,7 +173,6 @@ ofnread(of)
 	struct ofn_softc *of;
 {
 	struct ifnet *ifp = &of->sc_arpcom.ac_if;
-	struct ether_header *eh;
 	struct mbuf *m, **mp, *head;
 	int l, len;
 	char *bufp;
@@ -232,15 +231,13 @@ ofnread(of)
 		}
 		if (head == 0)
 			continue;
-		eh = mtod(head, struct ether_header *);
 
 #if	NBPFILTER > 0
 		if (ifp->if_bpf) {
 			bpf->mtap(ifp->if_bpf, m);
 #endif
-		m_adj(head, sizeof(struct ether_header));
 		ifp->if_ipackets++;
-		ether_input(ifp, eh, head);
+		ether_input_mbuf(ifp, head);
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_syscallargs.h,v 1.11 1999/06/07 07:18:36 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/compat/sunos/Attic/sunos_syscallargs.h,v 1.11.4.1 2001/07/04 10:39:43 niklas Exp $	*/
 
 /*
  * System call argument lists.

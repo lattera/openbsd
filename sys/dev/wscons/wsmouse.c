@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.1 2001/05/14 22:26:32 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsmouse.c,v 1.6.2.2 2001/07/04 10:44:13 niklas Exp $ */
 /* $NetBSD: wsmouse.c,v 1.12 2000/05/01 07:36:58 takemura Exp $ */
 
 /*
@@ -97,6 +97,7 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsmousevar.h>
 #include <dev/wscons/wseventvar.h>
+#include <dev/wscons/wsdisplayvar.h>
 
 #include "wsmouse.h"
 #include "wsmux.h"
@@ -436,6 +437,7 @@ out:
 		sc->sc_ub = ub;
 		evar->put = put;
 		WSEVENT_WAKEUP(evar);
+		/* wsdisplay_burn(sc->sc_displaydv, WSDISPLAY_BURN_MOUSE); */
 	}
 }
 

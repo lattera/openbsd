@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhcivar.h,v 1.5.2.1 2001/05/14 22:26:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uhcivar.h,v 1.5.2.2 2001/07/04 10:43:54 niklas Exp $ */
 /*	$NetBSD: uhcivar.h,v 1.32 2000/08/13 16:18:09 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhcivar.h,v 1.14 1999/11/17 22:33:42 n_hibma Exp $	*/
 
@@ -182,6 +182,7 @@ typedef struct uhci_softc {
 } uhci_softc_t;
 
 usbd_status	uhci_init(uhci_softc_t *);
+usbd_status	uhci_run(uhci_softc_t *, int run);
 int		uhci_intr(void *);
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 int		uhci_detach(uhci_softc_t *, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/uhci_pci.c,v 1.5.2.1 2001/05/14 22:26:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/uhci_pci.c,v 1.5.2.2 2001/07/04 10:43:14 niklas Exp $	*/
 /*	$NetBSD: uhci_pci.c,v 1.14 2000/01/25 11:26:06 augustss Exp $	*/
 
 /*
@@ -104,7 +104,7 @@ uhci_pci_attach(parent, self, aux)
 
 	/* Map I/O registers */
 	if (pci_mapreg_map(pa, PCI_CBIO, PCI_MAPREG_TYPE_IO, 0,
-			   &sc->sc.iot, &sc->sc.ioh, NULL, &sc->sc.sc_size)) {
+	    &sc->sc.iot, &sc->sc.ioh, NULL, &sc->sc.sc_size, 0)) {
 		printf(": can't map i/o space\n");
 		return;
 	}
@@ -142,11 +142,11 @@ uhci_pci_attach(parent, self, aux)
 		break;
 	}
 
-	r = uhci_init(&sc->sc);
-	if (r != USBD_NORMAL_COMPLETION) {
-		printf(": init failed, error=%d\n", r);
-		return;
-	}
+	uhci_run(&sc->sc, 0);			/* stop the controller */
+						/* disable interrupts */
+	bus_space_barrier(sc->sc.iot, sc->sc.ioh, 0, sc->sc.sc_size,
+	    BUS_SPACE_BARRIER_READ|BUS_SPACE_BARRIER_WRITE);
+	bus_space_write_2(sc->sc.iot, sc->sc.ioh, UHCI_INTR, 0);
 
 	/* Map and establish the interrupt. */
 	if (pci_intr_map(pc, pa->pa_intrtag, pa->pa_intrpin,
@@ -165,6 +165,12 @@ uhci_pci_attach(parent, self, aux)
 		return;
 	}
 	printf(": %s\n", intrstr);
+
+	r = uhci_init(&sc->sc);
+	if (r != USBD_NORMAL_COMPLETION) {
+		printf(": init failed, error=%d\n", r);
+		return;
+	}
 
 	/* Attach usb device. */
 	sc->sc.sc_child = config_found((void *)sc, &sc->sc.sc_bus,
