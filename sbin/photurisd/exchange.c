@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/exchange.c,v 1.5 2001/01/28 22:45:07 niklas Exp $	*/
+
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -33,7 +35,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: exchange.c,v 1.3 2000/12/11 21:21:17 provos Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/photurisd/Attic/exchange.c,v 1.5 2001/01/28 22:45:07 niklas Exp $";
 #endif
 
 #define _EXCHANGE_C_

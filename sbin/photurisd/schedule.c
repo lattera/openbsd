@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/schedule.c,v 1.6 2001/01/28 22:45:15 niklas Exp $	*/
+
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -35,7 +37,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: schedule.c,v 1.4 2000/12/15 02:42:09 provos Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/photurisd/Attic/schedule.c,v 1.6 2001/01/28 22:45:15 niklas Exp $";
 #endif
 
 #define _SCHEDULE_C_

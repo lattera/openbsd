@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sbin/photurisd/Attic/secrets.h,v 1.4 2001/01/28 22:45:16 niklas Exp $ */
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: secrets.h,v 1.2 2000/12/11 02:16:50 provos Exp $ */
 /*
  * secrets.h:
  * prototypes for compute_secrets.c

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sbin/photurisd/Attic/state.h,v 1.7 2001/01/28 22:45:18 niklas Exp $ */
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: state.h,v 1.5 2000/12/15 02:42:09 provos Exp $ */
 /*
  * state.h: 
  * state object

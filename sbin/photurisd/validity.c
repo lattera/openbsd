@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/validity.c,v 1.4 2001/01/28 22:45:18 niklas Exp $	*/
+
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -33,7 +35,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: validity.c,v 1.2 2000/12/11 21:21:18 provos Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/photurisd/Attic/validity.c,v 1.4 2001/01/28 22:45:18 niklas Exp $";
 #endif
 
 #define _VALIDITY_C_

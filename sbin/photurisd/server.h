@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sbin/photurisd/Attic/server.h,v 1.3 2001/01/28 22:45:17 niklas Exp $ */
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -27,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: server.h,v 1.1 1998/11/14 23:37:28 deraadt Exp $ */
 /*
  * server.h: 
  * handling interfaces and communication

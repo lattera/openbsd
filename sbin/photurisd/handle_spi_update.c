@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/handle_spi_update.c,v 1.7 2001/01/28 22:45:10 niklas Exp $	*/
+
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -34,7 +36,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: handle_spi_update.c,v 1.5 2000/12/14 23:28:57 provos Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/photurisd/Attic/handle_spi_update.c,v 1.7 2001/01/28 22:45:10 niklas Exp $";
 #endif
 
 #include <stdio.h>

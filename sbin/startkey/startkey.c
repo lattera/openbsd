@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/startkey/Attic/startkey.c,v 1.2 2001/01/28 22:45:20 niklas Exp $	*/
+
 /*
  * Copyright 1997 Niels Provos <provos@physnet.uni-hamburg.de>
  * All rights reserved.
@@ -31,7 +33,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: startkey.c,v 1.3 1997/08/24 18:31:25 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/startkey/Attic/startkey.c,v 1.2 2001/01/28 22:45:20 niklas Exp $";
 #endif
 
 #include <stdio.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/handle_cookie_request.c,v 1.3 2001/01/28 22:45:08 niklas Exp $	*/
+
  /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -34,7 +36,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: handle_cookie_request.c,v 1.1 1998/11/14 23:37:23 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/photurisd/Attic/handle_cookie_request.c,v 1.3 2001/01/28 22:45:08 niklas Exp $";
 #endif
 
 #include <stdio.h>

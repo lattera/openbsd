@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sbin/photurisd/Attic/attributes.h,v 1.3 2001/01/28 22:45:06 niklas Exp $	*/
+
 /*
  * Copyright 1997-2000 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
