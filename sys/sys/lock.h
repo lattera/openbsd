@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.12 2004/02/19 11:01:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.13 2004/02/20 12:43:05 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -173,9 +173,9 @@ struct lock {
  *
  * Non-persistent external flags.
  */
-#define LK_INTERLOCK	0x00100000	/* unlock passed simple lock after
+#define LK_INTERLOCK	0x00010000	/* unlock passed simple lock after
 					   getting lk_interlock */
-#define LK_RETRY	0x00200000	/* vn_lock: retry until locked */
+#define LK_RETRY	0x00020000	/* vn_lock: retry until locked */
 
 /*
  * Lock return status.
