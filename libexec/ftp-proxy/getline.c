@@ -35,7 +35,7 @@
 
 /*
  * RCS information:
- * $Id: telnet_getline.c,v 1.1.1.1 1998/12/19 07:46:25 danny Exp $
+ * $Id: getline.c,v 1.1 2001/08/19 04:11:12 beck Exp $
  */
 
 #include <sys/types.h>
@@ -95,8 +95,8 @@ refill_buffer(register struct csiob *iobp)
 	} else if (iobp->next_byte == iobp->io_buffer_len)
 		iobp->io_buffer_len = 0;
 	else {
-		syslog(LOG_ERR,"next_byte(%d) > io_buffer_len(%d)\n",
-		    iobp->next_byte,iobp->io_buffer_len);
+		syslog(LOG_ERR, "next_byte(%d) > io_buffer_len(%d)\n",
+		    iobp->next_byte, iobp->io_buffer_len);
 		exit(EX_OSERR);
 	}
 	
