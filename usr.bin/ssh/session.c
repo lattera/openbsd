@@ -33,7 +33,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.74 2001/04/17 19:34:25 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.74.2.1 2001/06/12 22:31:48 jason Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -108,9 +108,6 @@ extern u_int utmp_len;
 extern int startup_pipe;
 extern void destroy_sensitive_data(void);
 
-/* Local Xauthority file. */
-static char *xauthfile;
-
 /* original command from peer. */
 char *original_command = NULL;
 
@@ -154,27 +151,10 @@ do_authenticated(Authctxt *authctxt)
 		do_authenticated2(authctxt);
 	else
 		do_authenticated1(authctxt);
-}
 
-/*
- * Remove local Xauthority file.
- */
-void
-xauthfile_cleanup_proc(void *ignore)
-{
-	debug("xauthfile_cleanup_proc called");
-
-	if (xauthfile != NULL) {
-		char *p;
-		unlink(xauthfile);
-		p = strrchr(xauthfile, '/');
-		if (p != NULL) {
-			*p = '\0';
-			rmdir(xauthfile);
-		}
-		xfree(xauthfile);
-		xauthfile = NULL;
-	}
+	/* remove agent socket */
+	if (auth_get_socket_name())
+		auth_sock_cleanup_proc(authctxt->pw);
 }
 
 /*
@@ -209,7 +189,7 @@ do_authenticated1(Authctxt *authctxt)
 {
 	Session *s;
 	char *command;
-	int success, type, fd, n_bytes, plen, screen_flag, have_pty = 0;
+	int success, type, n_bytes, plen, screen_flag, have_pty = 0;
 	int compression_level = 0, enable_compression_after_reply = 0;
 	u_int proto_len, data_len, dlen;
 
@@ -330,25 +310,6 @@ do_authenticated1(Authctxt *authctxt)
 			if (s->display == NULL)
 				break;
 
-			/* Setup to always have a local .Xauthority. */
-			xauthfile = xmalloc(MAXPATHLEN);
-			strlcpy(xauthfile, "/tmp/ssh-XXXXXXXX", MAXPATHLEN);
-			temporarily_use_uid(s->pw);
-			if (mkdtemp(xauthfile) == NULL) {
-				restore_uid();
-				error("private X11 dir: mkdtemp %s failed: %s",
-				    xauthfile, strerror(errno));
-				xfree(xauthfile);
-				xauthfile = NULL;
-				/* XXXX remove listening channels */
-				break;
-			}
-			strlcat(xauthfile, "/cookies", MAXPATHLEN);
-			fd = open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
-			if (fd >= 0)
-				close(fd);
-			restore_uid();
-			fatal_add_cleanup(xauthfile_cleanup_proc, NULL);
 			success = 1;
 			break;
 
@@ -402,9 +363,6 @@ do_authenticated1(Authctxt *authctxt)
 
 			if (command != NULL)
 				xfree(command);
-			/* Cleanup user's local Xauthority file. */
-			if (xauthfile)
-				xauthfile_cleanup_proc(NULL);
 			return;
 
 		default:
@@ -973,8 +931,6 @@ do_child(Session *s, const char *command)
 	}
 #endif /* KRB4 */
 
-	if (xauthfile)
-		child_set_env(&env, &envsize, "XAUTHORITY", xauthfile);
 	if (auth_get_socket_name() != NULL)
 		child_set_env(&env, &envsize, SSH_AUTHSOCKET_ENV_NAME,
 			      auth_get_socket_name());
@@ -1372,7 +1328,6 @@ session_subsystem_req(Session *s)
 int
 session_x11_req(Session *s)
 {
-	int fd;
 	if (no_x11_forwarding_flag) {
 		debug("X11 forwarding disabled in user configuration file.");
 		return 0;
@@ -1381,11 +1336,6 @@ session_x11_req(Session *s)
 		debug("X11 forwarding disabled in server configuration file.");
 		return 0;
 	}
-	if (xauthfile != NULL) {
-		debug("X11 fwd already started.");
-		return 0;
-	}
-
 	debug("Received request for X11 forwarding with auth spoofing.");
 	if (s->display != NULL)
 		packet_disconnect("Protocol error: X11 display already set.");
@@ -1402,26 +1352,6 @@ session_x11_req(Session *s)
 		xfree(s->auth_data);
 		return 0;
 	}
-	xauthfile = xmalloc(MAXPATHLEN);
-	strlcpy(xauthfile, "/tmp/ssh-XXXXXXXX", MAXPATHLEN);
-	temporarily_use_uid(s->pw);
-	if (mkdtemp(xauthfile) == NULL) {
-		restore_uid();
-		error("private X11 dir: mkdtemp %s failed: %s",
-		    xauthfile, strerror(errno));
-		xfree(xauthfile);
-		xauthfile = NULL;
-		xfree(s->auth_proto);
-		xfree(s->auth_data);
-		/* XXXX remove listening channels */
-		return 0;
-	}
-	strlcat(xauthfile, "/cookies", MAXPATHLEN);
-	fd = open(xauthfile, O_RDWR|O_CREAT|O_EXCL, 0600);
-	if (fd >= 0)
-		close(fd);
-	restore_uid();
-	fatal_add_cleanup(xauthfile_cleanup_proc, s);
 	return 1;
 }
 
@@ -1715,6 +1645,4 @@ do_authenticated2(Authctxt *authctxt)
 {
 
 	server_loop2();
-	if (xauthfile)
-		xauthfile_cleanup_proc(NULL);
 }

@@ -32,7 +32,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.31 2001/04/13 22:46:53 beck Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.31.2.1 2001/06/12 22:31:48 jason Exp $"); */
 
 #ifndef CHANNELS_H
 #define CHANNELS_H
@@ -292,6 +292,8 @@ void    auth_request_forwarding(void);
  * a static buffer.
  */
 char   *auth_get_socket_name(void);
+
+void	auth_sock_cleanup_proc(void *_pw);
 
 /*
  * This is called to process SSH_CMSG_AGENT_REQUEST_FORWARDING on the server.
