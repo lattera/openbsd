@@ -1,3 +1,5 @@
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.8 2003/05/24 10:59:08 ho Exp $
+
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure.
 
