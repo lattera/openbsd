@@ -1,5 +1,5 @@
-#	$Id: Makefile,v 1.7 1998/08/11 20:32:01 provos Exp $
-#	$OpenBSD: src/sbin/isakmpd/regress/Attic/Makefile,v 1.4 1998/11/17 11:10:23 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/Attic/Makefile,v 1.5 1998/12/20 11:29:33 niklas Exp $
+#	$EOM: Makefile,v 1.4 1998/11/17 11:10:23 niklas Exp $
 
 #
 # Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.
