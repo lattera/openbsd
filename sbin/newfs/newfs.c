@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/newfs/newfs.c,v 1.44 2003/07/16 18:02:36 tedu Exp $	*/
+/*	$OpenBSD: src/sbin/newfs/newfs.c,v 1.44.2.1 2003/11/03 23:47:26 brad Exp $	*/
 /*	$NetBSD: newfs.c,v 1.20 1996/05/16 07:13:03 thorpej Exp $	*/
 
 /*
@@ -40,7 +40,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)newfs.c	8.8 (Berkeley) 4/18/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/newfs/newfs.c,v 1.44 2003/07/16 18:02:36 tedu Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/newfs/newfs.c,v 1.44.2.1 2003/11/03 23:47:26 brad Exp $";
 #endif
 #endif /* not lint */
 
@@ -587,8 +587,8 @@ havelabel:
 		pp->p_size *= blkpersec;
 	}
 	ncyls = fssize / secpercyl;
-	if (ncyls == 0)
-		ncyls = 1;
+	if (ncyls < 2)
+		ncyls = 2;
 	if (cpg == 0)
 		cpg = DESCPG < ncyls ? DESCPG : ncyls;
 	else if (cpg > ncyls) {
