@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.72 2004/01/29 21:39:05 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/trap.c,v 1.1 2004/04/29 14:33:27 miod Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur

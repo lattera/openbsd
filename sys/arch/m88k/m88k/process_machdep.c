@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process_machdep.c,v 1.12 2004/01/12 21:33:15 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/m88k/process_machdep.c,v 1.1 2004/04/29 14:33:27 miod Exp $ */
 
 /*
  * Copyright (c) 1993 The Regents of the University of California.

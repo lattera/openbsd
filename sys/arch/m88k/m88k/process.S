@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process.S,v 1.29 2004/01/17 22:35:41 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/process.S,v 1.1 2004/04/29 14:33:27 miod Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.27 2004/01/20 14:35:54 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/Attic/cmmu.c,v 1.1 2004/04/29 14:33:27 miod Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur

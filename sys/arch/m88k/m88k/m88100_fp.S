@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88100_fp.S,v 1.21 2004/01/16 00:13:43 miod Exp $	*/
+/* $OpenBSD: src/sys/arch/m88k/m88k/m88100_fp.S,v 1.1 2004/04/29 14:33:27 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
