@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb_pcivar.h,v 1.1 2000/09/06 02:12:15 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb_pcivar.h,v 1.1.2.1 2000/12/15 01:20:36 jason Exp $	*/
 /*	$NetBSD: vga_pcivar.h,v 1.1 1996/11/19 04:38:36 cgd Exp $	*/
 
 /*
@@ -31,6 +31,8 @@
 #define	DEVICE_IS_VGA_PCI(class, id)					\
 	    (((PCI_CLASS(class) == PCI_CLASS_DISPLAY &&			\
 	      PCI_SUBCLASS(class) == PCI_SUBCLASS_DISPLAY_VGA) ||	\
+	    (((PCI_CLASS(class) == PCI_CLASS_DISPLAY &&			\
+	      PCI_SUBCLASS(class) == PCI_SUBCLASS_DISPLAY_MISC) ||	\
 	     (PCI_CLASS(class) == PCI_CLASS_PREHISTORIC &&		\
 	      PCI_SUBCLASS(class) == PCI_SUBCLASS_PREHISTORIC_VGA)) ? 1 : 0)
 
