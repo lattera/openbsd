@@ -1,9 +1,9 @@
-.\" $Id: tmac.mse,v 1.27 1995/04/24 05:37:46 jh Exp $
+.\" $Id: tmac.mse,v 1.28 1996/05/15 05:39:24 jh Exp $
 .\"
 .\" swedish version of mm
 .\" See tmac.m for version-information.
-.mso tmac.m
 .ds @language se
+.mso tmac.m
 .\"
 .ds Lf Figurer
 .ds Lt Tabeller
