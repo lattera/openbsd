@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/tunefs/tunefs.c,v 1.17 2002/02/12 22:22:32 fgsch Exp $	*/
+/*	$OpenBSD: src/sbin/tunefs/tunefs.c,v 1.18 2002/02/12 22:28:02 fgsch Exp $	*/
 /*	$NetBSD: tunefs.c,v 1.10 1995/03/18 15:01:31 cgd Exp $	*/
 
 /*
@@ -35,7 +35,7 @@
  */
 
 #ifndef lint
-static char copyright[] =
+static const char copyright[] =
 "@(#) Copyright (c) 1983, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
@@ -44,7 +44,8 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)tunefs.c	8.2 (Berkeley) 4/19/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/tunefs/tunefs.c,v 1.17 2002/02/12 22:22:32 fgsch Exp $";
+static const char rcsid[] =
+	"$OpenBSD: src/sbin/tunefs/tunefs.c,v 1.18 2002/02/12 22:28:02 fgsch Exp $";
 #endif
 #endif /* not lint */
 
