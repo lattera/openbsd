@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.4 2003/05/20 04:04:46 tedu Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs_vnops.c,v 1.1.2.5 2004/02/21 01:22:40 tedu Exp $	*/
 /*	$NetBSD: genfs_vnops.c,v 1.67 2002/10/25 05:44:41 yamt Exp $	*/
 
 /*
@@ -1214,8 +1214,9 @@ genfs_null_putpages(void *v)
 		voff_t a_offhi;
 		int a_flags;
 	} */ *ap = v;
-	struct vnode *vp = ap->a_vp;
-
+	struct vnode *vp;
+	
+	vp = ap->a_vp;
 	KASSERT(vp->v_uobj.uo_npages == 0);
 	simple_unlock(&vp->v_interlock);
 	return (0);
