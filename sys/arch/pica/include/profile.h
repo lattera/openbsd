@@ -34,13 +34,13 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)profile.h	8.1 (Berkeley) 6/10/93
- *      $Id: profile.h,v 1.3 1994/05/27 09:01:50 glass Exp $
+ *      $Id: profile.h,v 1.1.1.1 1995/10/18 10:39:13 deraadt Exp $
  */
 
 #define	_MCOUNT_DECL static void __mcount
 
 #define	MCOUNT \
-	asm(".globl _mcount;" \
+	__asm(".globl _mcount;" \
 	"_mcount:;" \
 	".set noreorder;" \
 	".set noat;" \
