@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.13 2004/06/05 23:11:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.14 2004/06/07 20:41:38 niklas Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -221,6 +221,7 @@ route_output(struct mbuf *m, ...)
 		senderr(EINVAL);
 	if (gate != 0 && (gate->sa_family >= AF_MAX))
 		senderr(EINVAL);
+	sroute_compact(&info, rtm->rtm_type);
 	if (genmask) {
 		struct radix_node *t;
 		t = rn_addmask((caddr_t)genmask, 0, 1);
@@ -324,6 +325,7 @@ route_output(struct mbuf *m, ...)
 					ifaaddr = 0;
 				}
 			}
+			sroute_expand(&info);
 			len = rt_msg2(rtm->rtm_type, &info, (caddr_t)0,
 				(struct walkarg *)0);
 			if (len > rtm->rtm_msglen) {
@@ -637,6 +639,7 @@ rt_missmsg(type, rtinfo, flags, error)
 
 	if (route_cb.any_count == 0)
 		return;
+	sroute_expand(rtinfo);
 	m = rt_msg1(type, rtinfo);
 	if (m == 0)
 		return;
@@ -725,6 +728,7 @@ rt_newaddrmsg(cmd, ifa, error, rt)
 			netmask = rt_mask(rt);
 			dst = sa = rt_key(rt);
 			gate = rt->rt_gateway;
+			sroute_expand(&info);
 			if ((m = rt_msg1(cmd, &info)) == NULL)
 				continue;
 			rtm = mtod(m, struct rt_msghdr *);
@@ -791,6 +795,7 @@ sysctl_dumpentry(rn, v)
 		if (rt->rt_ifp->if_flags & IFF_POINTOPOINT)
 			brdaddr = rt->rt_ifa->ifa_dstaddr;
 	}
+	sroute_expand(&info);
 	size = rt_msg2(RTM_GET, &info, 0, w);
 	if (w->w_where && w->w_tmem && w->w_needed <= 0) {
 		struct rt_msghdr *rtm = (struct rt_msghdr *)w->w_tmem;

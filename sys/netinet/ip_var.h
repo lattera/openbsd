@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_var.h,v 1.13.2.7 2004/06/05 23:11:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_var.h,v 1.13.2.8 2004/06/07 20:41:39 niklas Exp $	*/
 /*	$NetBSD: ip_var.h,v 1.16 1996/02/13 23:43:20 christos Exp $	*/
 
 /*
@@ -183,7 +183,7 @@ struct mbuf *
 struct in_ifaddr *
 	 in_iawithaddr(struct in_addr, struct mbuf *);
 struct in_ifaddr *
-	 ip_rtaddr(struct in_addr);
+	 ip_rtaddr(struct in_addr, struct in_addr);
 u_int16_t
 	 ip_randomid(void);
 int	 ip_setmoptions(int, struct ip_moptions **, struct mbuf *);

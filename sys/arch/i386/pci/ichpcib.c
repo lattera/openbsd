@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/ichpcib.c,v 1.2.2.1 2004/06/05 23:09:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/ichpcib.c,v 1.2.2.2 2004/06/07 20:41:11 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *
@@ -211,6 +211,9 @@ ichss_setperf(int level)
 		/* Restore bus mastering arbitration state */
 		bus_space_write_1(sc->sc_pm_iot, sc->sc_pm_ioh, ICH_PM_CNTL,
 		    cntl);
+
+		if (update_cpuspeed != NULL)
+			update_cpuspeed();
 	}
 	splx(s);
 

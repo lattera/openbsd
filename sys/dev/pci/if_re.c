@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_re.c,v 1.5.2.1 2004/06/05 23:12:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_re.c,v 1.5.2.2 2004/06/07 20:41:25 niklas Exp $	*/
 /*
  * Copyright (c) 1997, 1998-2003
  *	Bill Paul <wpaul@windriver.com>.  All rights reserved.
@@ -164,7 +164,6 @@ struct re_pci_softc {
 int redebug = 0;
 #define DPRINTF(x)	if (redebug) printf x
 
-/* XXX add the rest from pcidevs */
 const struct pci_matchid re_devices[] = {
 	{ PCI_VENDOR_REALTEK, PCI_PRODUCT_REALTEK_RT8169 },
 };
@@ -833,11 +832,11 @@ re_attach(struct device *parent, struct device *self, void *aux)
 	u_char			eaddr[ETHER_ADDR_LEN];
 	u_int16_t		as[3];
 	struct re_pci_softc	*psc = (struct re_pci_softc *)self;
-	struct rl_softc	*sc = &psc->sc_rl;
-	struct pci_attach_args 	*pa = aux;
-	pci_chipset_tag_t pc = pa->pa_pc;
-	pci_intr_handle_t ih;
-	const char *intrstr = NULL;
+	struct rl_softc		*sc = &psc->sc_rl;
+	struct pci_attach_args	*pa = aux;
+	pci_chipset_tag_t	pc = pa->pa_pc;
+	pci_intr_handle_t	ih;
+	const char		*intrstr = NULL;
 	struct ifnet		*ifp;
 	u_int16_t		re_did = 0;
 	int			error = 0, i;
@@ -903,8 +902,7 @@ re_attach(struct device *parent, struct device *self, void *aux)
 	/* Allocate interrupt */
 	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
-		error = ENXIO;
-		goto fail;
+		return;
 	}
 	intrstr = pci_intr_string(pc, ih);
 	psc->sc_ih = pci_intr_establish(pc, ih, IPL_NET, re_intr, sc,
@@ -913,7 +911,7 @@ re_attach(struct device *parent, struct device *self, void *aux)
 		printf(": couldn't establish interrupt");
 		if (intrstr != NULL)
 			printf(" at %s", intrstr);
-		goto fail;
+		return;
 	}
 	printf(": %s", intrstr);
 
@@ -923,19 +921,14 @@ re_attach(struct device *parent, struct device *self, void *aux)
 	/* Reset the adapter. */
 	re_reset(sc);
 
-#if 0
-	hw_rev = re_hwrevs;
-	hwrev = CSR_READ_4(sc, RL_TXCFG) & RL_TXCFG_HWREV;
-	while (hw_rev->rl_desc != NULL) {
-		if (hw_rev->rl_rev == hwrev) {
-			sc->rl_type = hw_rev->rl_type;
-			break;
-		}
-		hw_rev++;
+	switch (PCI_PRODUCT(pa->pa_id)) {
+	case PCI_PRODUCT_REALTEK_RT8139:
+		sc->rl_type = RL_8139CPLUS;
+		break;
+	default:
+		sc->rl_type = RL_8169;
+		break;
 	}
-#endif
-	/* XXX Add proper check */
-	sc->rl_type = RL_8169;
 
 	if (sc->rl_type == RL_8169) {
 
@@ -985,7 +978,7 @@ re_attach(struct device *parent, struct device *self, void *aux)
 	error = re_allocmem(sc);
 
 	if (error)
-		goto fail;
+		return;
 
 	ifp = &sc->sc_arpcom.ac_if;
 	ifp->if_softc = sc;
@@ -1046,13 +1039,10 @@ re_attach(struct device *parent, struct device *self, void *aux)
 		printf("%s: attach aborted due to hardware diag failure\n",
 		    sc->sc_dev.dv_xname);
 		ether_ifdetach(ifp);
-		goto fail;
+		return;
 	}
 
 	DPRINTF(("leaving re_attach\n"));
-
-fail:
-	return;
 }
 
 

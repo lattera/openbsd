@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.26 2004/06/07 20:27:12 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.27 2004/06/07 20:41:10 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -333,6 +333,8 @@ extern int i386_use_fxsave;
 extern int i386_has_sse;
 extern int i386_has_sse2;
 
+extern void (*update_cpuspeed)(void);
+
 /* machdep.c */
 void	dumpconf(void);
 void	cpu_reset(void);
@@ -361,14 +363,12 @@ void	i8254_initclocks(void);
 /* est.c */
 #if !defined(SMALL_KERNEL) && defined(I686_CPU)
 void	est_init(const char *);
-int     est_cpuspeed(int *);
 int     est_setperf(int);
 #endif
 
 /* longrun.c */
 #if !defined(SMALL_KERNEL) && defined(I586_CPU)
 void	longrun_init(void);
-int	longrun_cpuspeed(int *);
 int	longrun_setperf(int);
 #endif
 

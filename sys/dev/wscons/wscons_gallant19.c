@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_gallant19.c,v 1.1.6.3 2003/06/07 11:02:34 ho Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/Attic/wscons_gallant19.c,v 1.1.6.4 2004/06/07 20:41:32 niklas Exp $ */
 /* $NetBSD: wscons_rfont.h,v 1.1 1998/03/22 14:24:02 drochner Exp $ */
 
 /*
@@ -39,7 +39,6 @@
 #include <sys/types.h>
 
 #include <dev/rcons/raster.h>
-#include "dev/wscons/wscons_raster.h"
 
 static u_int32_t gallant19_32_pixels[] = {
     0x00000000,

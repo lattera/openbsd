@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2.2.2 2004/06/05 23:09:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2.2.3 2004/06/07 20:41:10 niklas Exp $ */
 /*
  * Copyright (c) 2003 Ted Unangst
  * All rights reserved.
@@ -92,16 +92,6 @@ p4tcc_init(int model, int step)
 	setperf_prio = 1;
 }
 
-#if 0
-/* possible? not sure */
-int
-p4tcc_cpuspeed(int *)
-{
-
-	return EINVAL;
-}
-#endif
-
 int
 p4tcc_setperf(int level)
 {
@@ -118,6 +108,9 @@ p4tcc_setperf(int level)
 	if (tcc[i].reg != 0) /* enable it */
 		msreg |= tcc[i].reg << 1 | 1 << 4;
 	wrmsr(MSR_THERM_CONTROL, msreg);
+
+	if (update_cpuspeed != NULL)
+		update_cpuspeed();
 
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/est.c,v 1.5.2.2 2004/06/05 23:08:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/est.c,v 1.5.2.3 2004/06/07 20:41:09 niklas Exp $ */
 /*
  * Copyright (c) 2003 Michael Eriksson.
  * All rights reserved.
@@ -260,7 +260,6 @@ est_init(const char *cpu_device)
 		    i < est_fqlist->n - 1 ? ", " : " MHz\n");
 
 	cpu_setperf = est_setperf;
-	cpu_cpuspeed = est_cpuspeed;
 	setperf_prio = 3;
 }
 
@@ -285,13 +284,5 @@ est_setperf(int level)
 	wrmsr(MSR_PERF_CTL, msr);
 	pentium_mhz = est_fqlist->table[i].mhz;
 	
-	return (0);
-}
-
-
-int
-est_cpuspeed(int *freq)
-{
-	*freq = MSR2MHZ(rdmsr(MSR_PERF_STATUS));
 	return (0);
 }
