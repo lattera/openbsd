@@ -1,6 +1,4 @@
-/*
- *	$OpenBSD: src/lib/libc_r/uthread/Attic/uthread_vfork.c,v 1.1 1998/11/09 03:13:21 d Exp $
- */
+/*	$OpenBSD: src/lib/libc_r/uthread/Attic/uthread_vfork.c,v 1.2 1999/11/25 07:01:47 d Exp $	*/
 #include <unistd.h>
 #ifdef _THREAD_SAFE
 
@@ -9,4 +7,4 @@ vfork(void)
 {
 	return (fork());
 }
-#endif /* _THREAD_SAFE */
+#endif
