@@ -1461,6 +1461,8 @@
 ./usr/share/man/cat5/shells.0
 ./usr/share/man/cat5/sparc
 ./usr/share/man/cat5/sparc64
+./usr/share/man/cat5/ssh_config.0
+./usr/share/man/cat5/sshd_config.0
 ./usr/share/man/cat5/stab.0
 ./usr/share/man/cat5/sudoers.0
 ./usr/share/man/cat5/sun3
@@ -1878,6 +1880,7 @@
 ./usr/share/man/cat8/spppcontrol.0
 ./usr/share/man/cat8/spray.0
 ./usr/share/man/cat8/sprayd.0
+./usr/share/man/cat8/ssh-keysign.0
 ./usr/share/man/cat8/sshd.0
 ./usr/share/man/cat8/ssl.0
 ./usr/share/man/cat8/starttls.0
