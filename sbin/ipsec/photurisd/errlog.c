@@ -31,11 +31,14 @@
  */
 
 /*
- * $Header: /cvs/src/sbin/ipsec/photurisd/errlog.c,v 1.2 1997/07/23 12:28:47 provos Exp $
+ * $Header: /cvs/src/sbin/ipsec/photurisd/errlog.c,v 1.3 1997/07/25 19:13:20 mickey Exp $
  *
- * $Author: provos $
+ * $Author: mickey $
  *
  * $Log: errlog.c,v $
+ * Revision 1.3  1997/07/25 19:13:20  mickey
+ * #if __STDC__ --> #ifdef __STDC__
+ *
  * Revision 1.2  1997/07/23 12:28:47  provos
  * tunnel,lifetimes,hostname via startkey/startup
  * errors to stderr before daemon, to syslog afterwards
@@ -49,7 +52,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: errlog.c,v 1.2 1997/07/23 12:28:47 provos Exp $";
+static char rcsid[] = "$Id: errlog.c,v 1.3 1997/07/25 19:13:20 mickey Exp $";
 #endif
 
 #define _ERRLOG_C_
@@ -61,7 +64,7 @@ static char rcsid[] = "$Id: errlog.c,v 1.2 1997/07/23 12:28:47 provos Exp $";
 #else
 #include <varargs.h>
 #endif
-#include <stdio.h>
+#include <string.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <errno.h>
