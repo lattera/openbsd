@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/rlnvar.h,v 1.6 2002/03/14 03:16:05 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/rlnvar.h,v 1.7 2002/06/09 03:14:18 todd Exp $	*/
 /*
  * David Leonard <d@openbsd.org>, 1999. Public domain.
  *
