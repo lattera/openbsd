@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.6 2001/09/29 21:54:00 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.6.4.1 2002/06/11 03:42:25 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -80,8 +80,8 @@
 #define AN_PCI_PLX_LOIO		0x14	/* PLX chip iobase */
 #define AN_PCI_LOIO		0x18	/* Aironet iobase */
 
-int an_pci_match	__P((struct device *, void *, void *));
-void an_pci_attach	__P((struct device *, struct device *, void *));
+int an_pci_match(struct device *, void *, void *);
+void an_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach an_pci_ca = {
 	sizeof (struct an_softc), an_pci_match, an_pci_attach
@@ -98,7 +98,8 @@ an_pci_match(parent, match, aux)
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_AIRONET &&
 	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PCI352 ||
 	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4500 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4800))
+	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4800 ||
+	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_AIRONET_PC4800_1))
 		return(1);
 
 	return(0);

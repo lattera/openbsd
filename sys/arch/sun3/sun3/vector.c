@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vector.c,v 1.7 2000/08/28 22:06:36 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/vector.c,v 1.7.8.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: vector.c,v 1.15 1996/11/20 18:57:40 gwr Exp $	*/
 
 /*-
@@ -59,9 +59,9 @@
 #define fpsnan fpfault
 #define fpunfl fpfault
 
-void (*vector_table[NVECTORS]) __P((void)) = {
-	(void*)0xfffe000,		/* 0: NOT USED (reset SP) */
-	(void*)0xfef0000,		/* 1: NOT USED (reset PC) */
+void (*vector_table[NVECTORS])(void) = {
+	(void *)0xfffe000,		/* 0: NOT USED (reset SP) */
+	(void *)0xfef0000,		/* 1: NOT USED (reset PC) */
 	buserr,				/* 2: bus error */
 	addrerr,			/* 3: address error */
 	illinst,			/* 4: illegal instruction */

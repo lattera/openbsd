@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20.2.2 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_device.c,v 1.39 2001/11/10 07:36:59 lukem Exp $	*/
 
 /*
@@ -63,11 +63,11 @@ static struct simplelock udv_lock;
  * functions
  */
 
-static void	udv_init __P((void));
-static void	udv_reference __P((struct uvm_object *));
-static void	udv_detach __P((struct uvm_object *));
-static int	udv_fault __P((struct uvm_faultinfo *, vaddr_t,
-    struct vm_page **, int, int, vm_fault_t, vm_prot_t, int));
+static void	udv_init(void);
+static void	udv_reference(struct uvm_object *);
+static void	udv_detach(struct uvm_object *);
+static int	udv_fault(struct uvm_faultinfo *, vaddr_t,
+    struct vm_page **, int, int, vm_fault_t, vm_prot_t, int);
 
 /*
  * master pager structure
@@ -116,7 +116,7 @@ udv_attach(arg, accessprot, off, size)
 {
 	dev_t device = *((dev_t *)arg);
 	struct uvm_device *udv, *lcv;
-	paddr_t (*mapfn) __P((dev_t, off_t, int));
+	paddr_t (*mapfn)(dev_t, off_t, int);
 	UVMHIST_FUNC("udv_attach"); UVMHIST_CALLED(maphist);
 
 	UVMHIST_LOG(maphist, "(device=0x%x)", device,0,0,0);
@@ -127,8 +127,8 @@ udv_attach(arg, accessprot, off, size)
 
 	mapfn = cdevsw[major(device)].d_mmap;
 	if (mapfn == NULL ||
-	    mapfn == (paddr_t (*) __P((dev_t, off_t, int))) enodev ||
-	    mapfn == (paddr_t (*) __P((dev_t, off_t, int))) nullop)
+	    mapfn == (paddr_t (*)(dev_t, off_t, int)) enodev ||
+	    mapfn == (paddr_t (*)(dev_t, off_t, int)) nullop)
 		return(NULL);
 
 	/*
@@ -365,7 +365,7 @@ udv_fault(ufi, vaddr, pps, npages, centeridx, fault_type, access_type, flags)
 	paddr_t paddr, mdpgno;
 	int lcv, retval;
 	dev_t device;
-	paddr_t (*mapfn) __P((dev_t, off_t, int));
+	paddr_t (*mapfn)(dev_t, off_t, int);
 	vm_prot_t mapprot;
 	UVMHIST_FUNC("udv_fault"); UVMHIST_CALLED(maphist);
 	UVMHIST_LOG(maphist,"  flags=%d", flags,0,0,0);

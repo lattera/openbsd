@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_url.c,v 1.4 2002/05/09 16:13:31 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_url.c,v 1.4.2.1 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: if_url.c,v 1.2 2002/03/28 21:49:19 ichiro Exp $	*/
 /*
  * Copyright (c) 2001, 2002

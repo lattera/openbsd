@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.4.1 2002/01/31 22:55:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.4.2 2002/06/11 03:36:06 art Exp $	*/
 
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University
@@ -149,11 +149,15 @@ extern pt_entry_t	*Sysmap;
 extern char		*vmmap;		/* map for mem, dumps, etc. */
 
 #ifdef M68K_MMU_HP
-void	pmap_prefer __P((vaddr_t, vaddr_t *));
+void	pmap_prefer(vaddr_t, vaddr_t *);
 #define	PMAP_PREFER(foff, vap)	pmap_prefer((foff), (vap))
 #endif
 
-vaddr_t	pmap_map __P((vaddr_t, paddr_t, paddr_t, int));
+vaddr_t	pmap_map(vaddr_t, paddr_t, paddr_t, int);
+
+#ifdef COMPAT_HPUX
+int	pmap_mapmulti(pmap_t, vaddr_t);
+#endif
 
 #endif	/* _KERNEL */
 

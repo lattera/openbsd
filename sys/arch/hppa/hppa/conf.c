@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.15 2001/09/28 02:53:13 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.15.4.1 2002/06/11 03:35:36 art Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -92,9 +92,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 	dev_init(c,n,write), dev_init(c,n,ioctl),(dev_type_stop((*))) enodev, \
 	0, seltrue, (dev_type_mmap((*))) enodev }
 
-#define mmread  mmrw
-#define mmwrite mmrw
-cdev_decl(mm);
 #include "pty.h"
 #include "wsdisplay.h"
 #include "wskbd.h"
@@ -116,6 +113,8 @@ cdev_decl(com);
 #include "pf.h"
 
 #include <altq/altqconf.h>
+
+#include "systrace.h"
 
 struct cdevsw   cdevsw[] =
 {
@@ -158,12 +157,13 @@ struct cdevsw   cdevsw[] =
 	cdev_notdef(),			/* 32 */
 #endif
 	cdev_altq_init(NALTQ,altq),	/* 33: ALTQ control interface */
-	cdev_lkm_dummy(),
-	cdev_lkm_dummy(),
-	cdev_lkm_dummy(),
-	cdev_lkm_dummy(),
-	cdev_lkm_dummy(),
-	cdev_lkm_dummy(),
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 34: system call tracing */
+	cdev_lkm_dummy(),		/* 35 */
+	cdev_lkm_dummy(),		/* 36 */
+	cdev_lkm_dummy(),		/* 37 */
+	cdev_lkm_dummy(),		/* 38 */
+	cdev_lkm_dummy(),		/* 39 */
+	cdev_lkm_dummy(),		/* 40 */
 };
 int nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -274,13 +274,13 @@ iskmemdev(dev)
 #include <dev/cons.h>
 
 cons_decl(pdc);
-/*cons_decl(wscons);*/
+cons_decl(ws);
 cons_decl(com);
 
 struct  consdev constab[] = {
 	cons_init(pdc),		/* XXX you'd better leave it here for pdc.c */
-#if NWSCONS1 > 0
-	cons_init(wscons),
+#if NWSDISPLAY > 0
+	cons_init(ws),
 #endif
 #if NCOM > 0
 	cons_init(com),

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.2 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.3 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.57 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*
@@ -232,30 +232,30 @@ struct lock swap_syscall_lock;
 /*
  * prototypes
  */
-static struct swapdev	*swapdrum_getsdp __P((int));
+static struct swapdev	*swapdrum_getsdp(int);
 
 static struct swapdev	*swaplist_find __P((struct vnode *, int));
 static void		 swaplist_insert __P((struct swapdev *,
 					     struct swappri *, int));
 static void		 swaplist_trim __P((void));
 
-static int swap_on __P((struct proc *, struct swapdev *));
-static int swap_off __P((struct proc *, struct swapdev *));
+static int swap_on(struct proc *, struct swapdev *);
+static int swap_off(struct proc *, struct swapdev *);
 
-static void sw_reg_strategy __P((struct swapdev *, struct buf *, int));
-static void sw_reg_iodone __P((struct buf *));
-static void sw_reg_start __P((struct swapdev *));
+static void sw_reg_strategy(struct swapdev *, struct buf *, int);
+static void sw_reg_iodone(struct buf *);
+static void sw_reg_start(struct swapdev *);
 
-static int uvm_swap_io __P((struct vm_page **, int, int, int));
+static int uvm_swap_io(struct vm_page **, int, int, int);
 
-static void swapmount __P((void));
+static void swapmount(void);
 
 #ifdef UVM_SWAP_ENCRYPT
 /* for swap encrypt */
-boolean_t uvm_swap_allocpages __P((struct vm_page **, int));
-void uvm_swap_markdecrypt __P((struct swapdev *, int, int, int));
-boolean_t uvm_swap_needdecrypt __P((struct swapdev *, int));
-void uvm_swap_initcrypt __P((struct swapdev *, int));
+boolean_t uvm_swap_allocpages(struct vm_page **, int);
+void uvm_swap_markdecrypt(struct swapdev *, int, int, int);
+boolean_t uvm_swap_needdecrypt(struct swapdev *, int);
+void uvm_swap_initcrypt(struct swapdev *, int);
 #endif
 
 /*
@@ -890,7 +890,7 @@ swap_on(p, sdp)
 	u_long result;
 	struct vattr va;
 #if defined(NFSCLIENT)
-	extern int (**nfsv2_vnodeop_p) __P((void *));
+	extern int (**nfsv2_vnodeop_p)(void *);
 #endif /* defined(NFSCLIENT) */
 	dev_t dev;
 	UVMHIST_FUNC("swap_on"); UVMHIST_CALLED(pdhist);
@@ -1222,7 +1222,9 @@ swstrategy(bp)
 	if (sdp == NULL) {
 		bp->b_error = EINVAL;
 		bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		UVMHIST_LOG(pdhist, "  failed to get swap device", 0, 0, 0, 0);
 		return;
 	}
@@ -1473,7 +1475,7 @@ sw_reg_iodone(bp)
 	struct vndxfer *vnx = vbp->vb_xfer;
 	struct buf *pbp = vnx->vx_bp;		/* parent buffer */
 	struct swapdev	*sdp = vnx->vx_sdp;
-	int		s, resid;
+	int resid;
 	UVMHIST_FUNC("sw_reg_iodone"); UVMHIST_CALLED(pdhist);
 
 	UVMHIST_LOG(pdhist, "  vbp=%p vp=%p blkno=%x addr=%p",
@@ -1481,11 +1483,8 @@ sw_reg_iodone(bp)
 	UVMHIST_LOG(pdhist, "  cnt=%lx resid=%lx",
 	    vbp->vb_buf.b_bcount, vbp->vb_buf.b_resid, 0, 0);
 
-	/*
-	 * protect vbp at splbio and update.
-	 */
+	splassert(IPL_BIO);
 
-	s = splbio();
 	resid = vbp->vb_buf.b_bcount - vbp->vb_buf.b_resid;
 	pbp->b_resid -= resid;
 	vnx->vx_pending--;
@@ -1535,7 +1534,6 @@ sw_reg_iodone(bp)
 	 */
 	sdp->swd_tab.b_active--;
 	sw_reg_start(sdp);
-	splx(s);
 }
 
 

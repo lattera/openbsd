@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.29.2.1 2002/01/31 22:55:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.29.2.2 2002/06/11 03:34:57 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.56 1997/07/16 00:01:47 is Exp $	*/
 
 /*
@@ -57,6 +57,10 @@
 #endif
 
 #include <sys/user.h>
+
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_pmap.h>
 
@@ -178,20 +182,20 @@ extern struct pcb *curpcb;
 extern char fubail[], subail[];
 
 /* XXX until we get it from m68k/cpu.h */
-extern void    regdump __P((struct trapframe *, int));
+extern void    regdump(struct trapframe *, int);
 
-int	_write_back __P((u_int, u_int, u_int, u_int, struct vm_map *));
-void	panictrap __P((int, u_int, u_int, struct frame *));
-void	trapcpfault __P((struct proc *, struct frame *));
-void	trapmmufault __P((int, u_int, u_int, struct frame *, struct proc *,
-    u_quad_t));
-void	trap __P((int, u_int, u_int, struct frame));
+int	_write_back(u_int, u_int, u_int, u_int, struct vm_map *);
+void	panictrap(int, u_int, u_int, struct frame *);
+void	trapcpfault(struct proc *, struct frame *);
+void	trapmmufault(int, u_int, u_int, struct frame *, struct proc *,
+    u_quad_t);
+void	trap(int, u_int, u_int, struct frame);
 #ifdef DDB
 #include <m68k/db_machdep.h>
-int	db_trap __P((int, db_regs_t *));
+int	db_trap(int, db_regs_t *);
 #endif
-void	syscall __P((register_t, struct frame));
-void	_wb_fault __P((void));
+void	syscall(register_t, struct frame);
+void	_wb_fault(void);
 
 /*ARGSUSED*/
 void
@@ -889,7 +893,12 @@ syscall(code, frame)
 		goto bad;
 	rval[0] = 0;
 	rval[1] = frame.f_regs[D1];
-	error = (*callp->sy_call)(p, args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, args, rval);
 	switch (error) {
 	case 0:
 		/*
@@ -949,6 +958,11 @@ _write_back (wb, wb_sts, wb_data, wb_addr, wb_map)
 {
 	u_int wb_extra_page = 0;
 	u_int wb_rc, mmusr;
+	caddr_t oonfault = curpcb->pcb_onfault;
+	int rv = 0;
+
+	/* A fault in here must *not* go to the registered fault handler.  */
+	curpcb->pcb_onfault = NULL;
 
 #ifdef DEBUG
 	if (mmudebug)
@@ -986,8 +1000,10 @@ _write_back (wb, wb_sts, wb_data, wb_addr, wb_map)
 			    trunc_page((vm_offset_t)wb_addr), 
 			    0, VM_PROT_READ | VM_PROT_WRITE);
 
-			if (wb_rc)
-				return (wb_rc);
+			if (wb_rc) {
+				rv = wb_rc;
+				goto out;
+			}
 #ifdef DEBUG
 			if (mmudebug)
 				printf("wb3: first page brought in.\n");
@@ -1018,8 +1034,10 @@ _write_back (wb, wb_sts, wb_data, wb_addr, wb_map)
 			wb_rc = uvm_fault(wb_map,
 			    trunc_page((vm_offset_t)wb_addr + wb_extra_page),
 			    0, VM_PROT_READ | VM_PROT_WRITE);
-			if (wb_rc)
-				return (wb_rc);
+			if (wb_rc) {
+				rv = wb_rc;
+				goto out;
+			}
 		}
 #ifdef DEBUG
 		if (mmudebug)
@@ -1028,8 +1046,9 @@ _write_back (wb, wb_sts, wb_data, wb_addr, wb_map)
 	}
 
 	/* Actually do the write now */
-	if ((wb_sts & WBS_TMMASK) == FC_USERD && !curpcb->pcb_onfault)
-	    	curpcb->pcb_onfault = (caddr_t)_wb_fault;
+	if ((wb_sts & WBS_TMMASK) == FC_USERD && oonfault != NULL)
+		__asm volatile("movl #Lwberr,%0@" : :
+		     "a" (&curpcb->pcb_onfault));
 
 	switch(wb_sts & WBS_SZMASK) {
 	case WBS_SIZE_BYTE :
@@ -1047,22 +1066,19 @@ _write_back (wb, wb_sts, wb_data, wb_addr, wb_map)
 		    "d" (wb_sts & WBS_TMMASK), "d" (wb_data), "a" (wb_addr));
 		break;
 
+	default:
+		/*
+		 * This is trickery, we need this assembly somewhere out
+		 * of the default execution path, but still not detectable as
+		 * dead code that the compiler can throw away erroneously.
+		 */
+		__asm volatile("Lwberr: addql #1,%0" : "=d" (rv));
 	}
-	if (curpcb->pcb_onfault == (caddr_t)_wb_fault)
-		curpcb->pcb_onfault = NULL;
+	curpcb->pcb_onfault = NULL;
 	if ((wb_sts & WBS_TMMASK) != FC_USERD)
 		__asm volatile("movec %0,dfc\n" : : "d" (FC_USERD));
-	return (0);
-}
 
-/*
- * fault handler for write back
- */
-void
-_wb_fault()
-{
-#ifdef DEBUG
-	printf ("trap: writeback fault\n");
-#endif
-	return;
+ out:
+	curpcb->pcb_onfault = oonfault;
+	return (rv);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/aac_pci.c,v 1.6 2001/09/16 18:31:22 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/aac_pci.c,v 1.6.4.1 2002/06/11 03:42:24 art Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith
@@ -59,8 +59,8 @@
 #include <dev/ic/aacreg.h>
 #include <dev/ic/aacvar.h>
 
-int	aac_pci_probe __P((struct device *, void *, void *));
-void	aac_pci_attach __P((struct device *, struct device *, void *));
+int	aac_pci_probe(struct device *, void *, void *);
+void	aac_pci_attach(struct device *, struct device *, void *);
 
 struct aac_ident {
 	u_int16_t vendor;
@@ -81,6 +81,12 @@ struct aac_ident {
 	    PCI_PRODUCT_DELL_PERC_3DI_SUB3, AAC_HWIF_I960RX },
 	{ PCI_VENDOR_DELL, PCI_PRODUCT_DELL_PERC_3DI_2, PCI_VENDOR_DELL,
 	    PCI_PRODUCT_DELL_PERC_3DI_2_SUB, AAC_HWIF_I960RX },
+	{ PCI_VENDOR_DELL, PCI_PRODUCT_DELL_PERC_3DI_3, PCI_VENDOR_DELL,
+	    PCI_PRODUCT_DELL_PERC_3DI_3_SUB, AAC_HWIF_I960RX },
+	{ PCI_VENDOR_DELL, PCI_PRODUCT_DELL_PERC_3DI_3, PCI_VENDOR_DELL,
+	    PCI_PRODUCT_DELL_PERC_3DI_3_SUB2, AAC_HWIF_I960RX },
+	{ PCI_VENDOR_DELL, PCI_PRODUCT_DELL_PERC_3DI_3, PCI_VENDOR_DELL,
+	    PCI_PRODUCT_DELL_PERC_3DI_3_SUB3, AAC_HWIF_I960RX },
 	/* Dell PERC 3/Si models */
 	{ PCI_VENDOR_DELL, PCI_PRODUCT_DELL_PERC_3SI, PCI_VENDOR_DELL,
 	    PCI_PRODUCT_DELL_PERC_3SI, AAC_HWIF_I960RX },

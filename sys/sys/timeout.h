@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/timeout.h,v 1.11.4.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/timeout.h,v 1.11.4.2 2002/06/11 03:32:34 art Exp $	*/
 /*
  * Copyright (c) 2000-2001 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
@@ -61,7 +61,7 @@ struct circq {
 
 struct timeout {
 	struct circq to_list;			/* timeout queue, don't move */
-	void (*to_func) __P((void *));		/* function to call */
+	void (*to_func)(void *);		/* function to call */
 	void *to_arg;				/* function argument */
 	int to_time;				/* ticks on event */
 	int to_flags;				/* misc flags */

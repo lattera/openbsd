@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -61,6 +61,9 @@
 
 #include <sys/syscallargs.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_map.h>
 
@@ -69,6 +72,7 @@ int	randompid;		/* when set to 1, pid's go random */
 pid_t	lastpid;
 struct	forkstat forkstat;
 
+int pidtaken(pid_t);
 
 /*ARGSUSED*/
 int
@@ -148,18 +152,10 @@ fork1(p1, exitsig, flags, stack, stacksize, func, arg, retval)
 	struct proc *newproc;
 	struct vmspace *vm;
 	int count;
-	static int pidchecked = 0;
 	vaddr_t uaddr;
 	int s;
-	extern void endtsleep __P((void *));
-	extern void realitexpire __P((void *));
-
-#ifndef RFORK_FDSHARE
-	/* XXX - Too dangerous right now. */
-	if (flags & FORK_SHAREFILES) {
-		return (EOPNOTSUPP);
-	}
-#endif
+	extern void endtsleep(void *);
+	extern void realitexpire(void *);
 
 	/*
 	 * Although process entries are dynamically created, we still keep
@@ -193,49 +189,10 @@ fork1(p1, exitsig, flags, stack, stacksize, func, arg, retval)
 	/* Allocate new proc. */
 	newproc = pool_get(&proc_pool, PR_WAITOK);
 
-	lastpid++;
-	if (randompid)
-		lastpid = PID_MAX;
-retry:
-	/*
-	 * If the process ID prototype has wrapped around,
-	 * restart somewhat above 0, as the low-numbered procs
-	 * tend to include daemons that don't exit.
-	 */
-	if (lastpid >= PID_MAX) {
-		lastpid = arc4random() % PID_MAX;
-		pidchecked = 0;
-	}
-	if (lastpid >= pidchecked) {
-		int doingzomb = 0;
-
-		pidchecked = PID_MAX;
-		/*
-		 * Scan the active and zombie procs to check whether this pid
-		 * is in use.  Remember the lowest pid that's greater
-		 * than lastpid, so we can avoid checking for a while.
-		 */
-		p2 = LIST_FIRST(&allproc);
-again:
-		for (; p2 != 0; p2 = LIST_NEXT(p2, p_list)) {
-			while (p2->p_pid == lastpid ||
-			    p2->p_pgrp->pg_id == lastpid) {
-				lastpid++;
-				if (lastpid >= pidchecked)
-					goto retry;
-			}
-			if (p2->p_pid > lastpid && pidchecked > p2->p_pid)
-				pidchecked = p2->p_pid;
-			if (p2->p_pgrp->pg_id > lastpid && 
-			    pidchecked > p2->p_pgrp->pg_id)
-				pidchecked = p2->p_pgrp->pg_id;
-		}
-		if (!doingzomb) {
-			doingzomb = 1;
-			p2 = LIST_FIRST(&zombproc);
-			goto again;
-		}
-	}
+	/* Find an unused pid satisfying 1 <= lastpid <= PID_MAX */
+	do {
+		lastpid = 1 + (randompid ? arc4random() : lastpid) % PID_MAX;
+	} while (pidtaken(lastpid));
 
 	nprocs++;
 	p2 = newproc;
@@ -324,6 +281,10 @@ again:
 			VREF(p2->p_tracep);
 	}
 #endif
+#if NSYSTRACE > 0
+	if (ISSET(p1->p_flag, P_SYSTRACE))
+		systrace_fork(p1, p2);
+#endif
 
 	/*
 	 * set priority of child to be that of parent
@@ -347,10 +308,20 @@ again:
 	PHOLD(p1);
 
 	if (flags & FORK_VMNOSTACK) {
-		/* share as much address space as possible */
-		(void) uvm_map_inherit(&p1->p_vmspace->vm_map,
-		    VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS - MAXSSIZ,
+		/* share everything, but ... */
+		uvm_map_inherit(&p1->p_vmspace->vm_map,
+		    VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS,
 		    MAP_INHERIT_SHARE);
+		/* ... don't share stack */
+#ifdef MACHINE_STACK_GROWS_UP
+		uvm_map_inherit(&p1->p_vmspace->vm_map,
+		    USRSTACK, USRSTACK + MAXSSIZ,
+		    MAP_INHERIT_COPY);
+#else
+		uvm_map_inherit(&p1->p_vmspace->vm_map,
+		    USRSTACK - MAXSSIZ, USRSTACK,
+		    MAP_INHERIT_COPY);
+#endif
 	}
 
 	p2->p_addr = (struct user *)uaddr;
@@ -422,3 +393,20 @@ again:
 	return (0);
 }
 
+/*
+ * Checks for current use of a pid, either as a pid or pgid.
+ */
+int
+pidtaken(pid_t pid)
+{
+	struct proc *p;
+
+	if (pfind(pid) != NULL)
+		return (1);
+	if (pgfind(pid) != NULL)
+		return (1);
+	LIST_FOREACH(p, &zombproc, p_list)
+		if (p->p_pid == pid || p->p_pgid == pid)
+			return (1);
+	return (0);
+}

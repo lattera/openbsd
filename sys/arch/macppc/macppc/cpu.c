@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1 2001/09/01 15:44:20 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.6.1 2002/06/11 03:36:34 art Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -53,6 +53,7 @@
 #define MPC7400         12
 #define MPC7410         0x800c
 #define MPC7450         0x8000
+#define MPC7455         0x8001
 
 /* only valid on 603(e,ev) and G3, G4 */
 #define HID0_DOZE	(1 << (31-8))
@@ -75,7 +76,7 @@ struct cfdriver cpu_cd = {
 	NULL, "cpu", DV_DULL, NULL, 0
 };
 
-void config_l2cr __P((void));
+void config_l2cr(int cpu);
 
 int
 cpumatch(parent, cfdata, aux)
@@ -134,7 +135,13 @@ cpuattach(parent, dev, aux)
 		sprintf(cpu_model, "7410");
 		break;
 	case MPC7450:
-		sprintf(cpu_model, "7450");
+		if ((pvr & 0xf) < 3)
+			sprintf(cpu_model, "7450");
+		 else
+			sprintf(cpu_model, "7451");
+		break;
+	case MPC7455:
+		sprintf(cpu_model, "7455");
 		break;
 	default:
 		sprintf(cpu_model, "Version %x", cpu);
@@ -177,6 +184,7 @@ cpuattach(parent, dev, aux)
 	case MPC7400:
 	case MPC7410:
 	case MPC7450:
+	case MPC7455:
 		/* select DOZE mode */
 		hid0 &= ~(HID0_NAP | HID0_SLEEP);
 		hid0 |= HID0_DOZE | HID0_DPM; 
@@ -184,10 +192,9 @@ cpuattach(parent, dev, aux)
 	asm ("mtspr %0,1008" : "=r" (hid0));
 
 	/* if processor is G3 or G4, configure l2 cache */ 
-	if  ( (cpu == MPC750) || (cpu == MPC7400) 
-		|| (cpu == MPC7410))
-	{
-		config_l2cr();
+	if ( (cpu == MPC750) || (cpu == MPC7400)
+	    || (cpu == MPC7410) || (cpu == MPC7450) || (cpu == MPC7455)) {
+		config_l2cr(cpu);
 	}
 	printf("\n");
 
@@ -235,8 +242,12 @@ u_int l2cr_config = L2CR_CONFIG;
 u_int l2cr_config = 0;
 #endif
 
+#define SPR_L3CR                0x3fa   /* .6. L3 Control Register */
+#define   L3CR_L3E                0x80000000 /*  0: L3 enable */
+#define   L3CR_L3SIZ              0x10000000 /*  3: L3 size (0=1MB, 1=2MB) */
+
 void
-config_l2cr()
+config_l2cr(int cpu)
 {
 	u_int l2cr, x;
 
@@ -266,18 +277,31 @@ config_l2cr()
 	}
 
 	if (l2cr & L2CR_L2E) {
-		switch (l2cr & L2CR_L2SIZ) {
-		case L2SIZ_256K:
-			printf(": 256KB");
-			break;
-		case L2SIZ_512K:
-			printf(": 512KB");
-			break;
-		case L2SIZ_1M:  
-			printf(": 1MB");
-			break;
-		default:
-			printf(": unknown size");
+		if (cpu == MPC7450 || cpu == MPC7455) {
+			u_int l3cr;
+
+			printf(": 256KB L2 cache");
+
+			__asm__ volatile("mfspr %0, %1" : "=r"(l3cr) :
+			    "n"(SPR_L3CR) );
+			if (l3cr & L3CR_L3E)
+				printf(", %cMB L3 cache",
+				    l3cr & L3CR_L3SIZ ? '2' : '1');
+		} else {
+			switch (l2cr & L2CR_L2SIZ) {
+			case L2SIZ_256K:
+				printf(": 256KB");
+				break;
+			case L2SIZ_512K:
+				printf(": 512KB");
+				break;
+			case L2SIZ_1M:  
+				printf(": 1MB");
+				break;
+			default:
+				printf(": unknown size");
+			}
+			printf(" backside cache");
 		}
 #if 0
 		switch (l2cr & L2CR_L2RAM) {
@@ -297,7 +321,6 @@ config_l2cr()
 		if (l2cr & L2CR_L2PE)
 			printf(" with parity");  
 #endif
-		printf(" backside cache");
 	} else
 		printf(": L2 cache not enabled");
 		

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/uperf.c,v 1.2.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/uperf.c,v 1.2.2.2 2002/06/11 03:38:43 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/types.h>
@@ -50,10 +55,10 @@ struct cfdriver uperf_cd = {
 	NULL, "uperf", DV_DULL
 };
 
-int uperf_getcntsrc __P((struct uperf_softc *, struct uperf_io *));
-int uperf_findbyval __P((struct uperf_softc *, int, u_int, int *));
-int uperf_findbysrc __P((struct uperf_softc *, int, int, u_int32_t *));
-int uperf_setcntsrc __P((struct uperf_softc *, struct uperf_io *));
+int uperf_getcntsrc(struct uperf_softc *, struct uperf_io *);
+int uperf_findbyval(struct uperf_softc *, int, u_int, int *);
+int uperf_findbysrc(struct uperf_softc *, int, int, u_int32_t *);
+int uperf_setcntsrc(struct uperf_softc *, struct uperf_io *);
 
 int
 uperfopen(dev, flags, mode, p)

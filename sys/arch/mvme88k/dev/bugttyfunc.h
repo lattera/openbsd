@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/bugttyfunc.h,v 1.1 2001/03/08 00:03:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/bugttyfunc.h,v 1.1.8.1 2002/06/11 03:37:09 art Exp $	*/
 
 #ifndef _MVME88K_BUGTTY_H_
 #define _MVME88K_BUGTTY_H_
 
-void bugtty_chkinput __P((void));
+void bugtty_chkinput(void);
 
 #endif	/* _MVME88K_BUGTTY_H_ */

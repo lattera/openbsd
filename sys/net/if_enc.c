@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_enc.c,v 1.36 2001/06/27 02:00:30 provos Exp $	*/
+/*	$OpenBSD: src/sys/net/if_enc.c,v 1.36.4.1 2002/06/11 03:30:45 art Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -81,12 +81,12 @@ extern struct ifqueue nsintrq;
 
 struct enc_softc encif[NENC];
 
-void	encattach __P((int));
-int	encoutput __P((struct ifnet *, struct mbuf *, struct sockaddr *,
-	    	       struct rtentry *));
-int	encioctl __P((struct ifnet *, u_long, caddr_t));
-void	encrtrequest __P((int, struct rtentry *, struct sockaddr *));
-void	encstart __P((struct ifnet *));
+void	encattach(int);
+int	encoutput(struct ifnet *, struct mbuf *, struct sockaddr *,
+	    	       struct rtentry *);
+int	encioctl(struct ifnet *, u_long, caddr_t);
+void	encrtrequest(int, struct rtentry *, struct sockaddr *);
+void	encstart(struct ifnet *);
 
 extern int ifqmaxlen;
 
@@ -114,9 +114,6 @@ encattach(int nenc)
 
 #if NBPFILTER > 0
 	bpfattach(&encif[i].sc_if.if_bpf, ifp, DLT_ENC, ENC_HDRLEN);
-#endif
-#ifdef INET6
-	nd6_ifattach(ifp);
 #endif
     }
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm.c,v 1.1 2000/03/22 02:50:49 smurph Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/aic7xxx/aicasm.c,v 1.1.12.1 2002/06/11 03:42:22 art Exp $ */
 /*
  * Aic7xxx SCSI host adapter firmware asssembler
  *
@@ -80,7 +80,7 @@ extern int yy_flex_debug;
 extern int yydebug;
 #endif
 extern FILE *yyin;
-extern int yyparse __P((void));
+extern int yyparse(void);
 
 int
 main(argc, argv)
@@ -342,7 +342,7 @@ ahc_patch%d_func(struct ahc_softc *ahc)
 	}
 
 	fprintf(ofile,
-"typedef int patch_func_t __P((struct ahc_softc *));
+"typedef int patch_func_t(struct ahc_softc *);
 struct patch {
 	patch_func_t	*patch_func;
 	u_int32_t	begin	   :10,

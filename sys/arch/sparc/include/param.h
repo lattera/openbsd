@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.22 2001/12/10 01:05:27 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.22.2.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -83,16 +83,6 @@
 #define SUN4_PGSHIFT	13	/* for a sun4 machine */
 #define SUN4CM_PGSHIFT	12	/* for a sun4c or sun4m machine */
 
-/*
- * The following variables are always defined and initialized (in locore)
- * so independently compiled modules (e.g. LKMs) can be used irrespective
- * of the `options SUN4?' combination a particular kernel was configured with.
- * See also the definitions of NBPG, PGOFSET and PGSHIFT below.
- */
-#if defined(_KERNEL) && !defined(_LOCORE)
-extern int nbpg, pgofset, pgshift;
-#endif
-
 #define	KERNBASE	0xf8000000	/* start of kernel virtual space */
 #define	KERNTEXTOFF	0xf8004000	/* start of kernel text */
 
@@ -175,12 +165,12 @@ extern vaddr_t		dvma_base;
 extern vaddr_t		dvma_end;
 extern struct extent	*dvmamap_extent;
 
-extern caddr_t	kdvma_mapin __P((caddr_t, int, int));
-extern caddr_t	dvma_malloc_space  __P((size_t, void *, int, int));
-extern void	dvma_free __P((caddr_t, size_t, void *));
+extern caddr_t	kdvma_mapin(caddr_t, int, int);
+extern caddr_t	dvma_malloc_space(size_t, void *, int, int);
+extern void	dvma_free(caddr_t, size_t, void *);
 #define		dvma_malloc(len,kaddr,flags)	dvma_malloc_space(len,kaddr,flags,0)
 
-extern void	delay __P((unsigned int));
+extern void	delay(unsigned int);
 #define	DELAY(n)	delay(n)
 
 extern int cputyp;
@@ -218,9 +208,6 @@ extern int mmumod;
 #	define CPU_ISSUN4	(cputyp == CPU_SUN4)
 #	define CPU_ISSUN4OR4C	(cputyp == CPU_SUN4 || cputyp == CPU_SUN4C)
 #	define CPU_ISSUN4COR4M	(cputyp == CPU_SUN4C || cputyp == CPU_SUN4M)
-#	define NBPG		nbpg
-#	define PGOFSET		pgofset
-#	define PGSHIFT		pgshift
 #elif defined(SUN4M) && defined(SUN4C) && !defined(SUN4)
 #	define CPU_ISSUN4M	(cputyp == CPU_SUN4M)
 #	define CPU_ISSUN4C	(cputyp == CPU_SUN4C)
@@ -239,9 +226,6 @@ extern int mmumod;
 #	define CPU_ISSUN4	(cputyp == CPU_SUN4)
 #	define CPU_ISSUN4OR4C	(cputyp == CPU_SUN4)
 #	define CPU_ISSUN4COR4M	(cputyp == CPU_SUN4M)
-#	define NBPG		nbpg
-#	define PGOFSET		pgofset
-#	define PGSHIFT		pgshift
 #elif defined(SUN4M) && !defined(SUN4C) && !defined(SUN4)
 #	define CPU_ISSUN4M	(1)
 #	define CPU_ISSUN4C	(0)
@@ -260,9 +244,6 @@ extern int mmumod;
 #	define CPU_ISSUN4	(cputyp == CPU_SUN4)
 #	define CPU_ISSUN4OR4C	(1)
 #	define CPU_ISSUN4COR4M	(cputyp == CPU_SUN4C)
-#	define NBPG		nbpg
-#	define PGOFSET		pgofset
-#	define PGSHIFT		pgshift
 #elif !defined(SUN4M) && defined(SUN4C) && !defined(SUN4)
 #	define CPU_ISSUN4M	(0)
 #	define CPU_ISSUN4C	(1)
@@ -293,9 +274,24 @@ extern int mmumod;
 #	define CPU_ISSUN4	(cputyp == CPU_SUN4)
 #	define CPU_ISSUN4OR4C	(cputyp == CPU_SUN4 || cputyp == CPU_SUN4C)
 #	define CPU_ISSUN4COR4M	(cputyp == CPU_SUN4C || cputyp == CPU_SUN4M)
+#endif
+
+#ifndef	NBPG
+#ifdef	STANDALONE	/* boot blocks */
 #	define NBPG		nbpg
 #	define PGOFSET		pgofset
 #	define PGSHIFT		pgshift
+#	define PAGE_SIZE	nbpg
+#	define PAGE_MASK	pgofset
+#	define PAGE_SHIFT	pgshift
+#else
+#	define NBPG		uvmexp.pagesize
+#	define PGOFSET		uvmexp.pagemask
+#	define PGSHIFT		uvmexp.pageshift
+#	define PAGE_SIZE	uvmexp.pagesize
+#	define PAGE_MASK	uvmexp.pagemask
+#	define PAGE_SHIFT	uvmexp.pageshift
+#endif
 #endif
 
 #endif /* _SPARC_PARAM_H_ */

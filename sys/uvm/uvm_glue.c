@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.30.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.30.2.2 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.55 2001/11/10 07:36:59 lukem Exp $	*/
 
 /*
@@ -89,7 +89,7 @@
  * local prototypes
  */
 
-static void uvm_swapout __P((struct proc *));
+static void uvm_swapout(struct proc *);
 
 /*
  * XXXCDC: do these really belong here?
@@ -263,7 +263,7 @@ uvm_fork(p1, p2, shared, stack, stacksize, func, arg)
 	boolean_t shared;
 	void *stack;
 	size_t stacksize;
-	void (*func) __P((void *));
+	void (*func)(void *);
 	void *arg;
 {
 	struct user *up = p2->p_addr;
@@ -448,7 +448,7 @@ loop:
 	 * we have found swapped out process which we would like to bring
 	 * back in.
 	 *
-	 * XXX: this part is really bogus cuz we could deadlock on memory
+	 * XXX: this part is really bogus because we could deadlock on memory
 	 * despite our feeble check
 	 */
 	if (uvmexp.free > atop(USPACE)) {

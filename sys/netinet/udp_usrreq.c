@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.74 2001/06/25 02:06:40 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.74.4.1 2002/06/11 03:31:37 art Exp $	*/
 /*	$NetBSD: udp_usrreq.c,v 1.28 1996/03/16 23:54:03 christos Exp $	*/
 
 /*
@@ -109,9 +109,9 @@ extern int ip6_defhlim;
 int	udpcksum = 1;
 
 
-static	void udp_detach __P((struct inpcb *));
-static	void udp_notify __P((struct inpcb *, int));
-static	struct mbuf *udp_saveopt __P((caddr_t, int, int));
+static	void udp_detach(struct inpcb *);
+static	void udp_notify(struct inpcb *, int);
+static	struct mbuf *udp_saveopt(caddr_t, int, int);
 
 #ifndef UDBHASHSIZE
 #define	UDBHASHSIZE	128
@@ -151,13 +151,7 @@ udp6_input(mp, offp, proto)
 #endif
 
 void
-#if __STDC__
 udp_input(struct mbuf *m, ...)
-#else
-udp_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register struct ip *ip;
 	register struct udphdr *uh;
@@ -544,15 +538,27 @@ udp_input(m, va_alist)
 		tdb = NULL;
 	ipsp_spd_lookup(m, srcsa.sa.sa_family, iphlen, &error,
 	    IPSP_DIRECTION_IN, tdb, inp);
+	if (error) {
+		splx(s);
+		goto bad;
+	}
 
 	/* Latch SA only if the socket is connected */
 	if (inp->inp_tdb_in != tdb &&
 	    (inp->inp_socket->so_state & SS_ISCONNECTED)) {
 		if (tdb) {
 		        tdb_add_inp(tdb, inp, 1);
-			if (inp->inp_ipsec_remoteid == NULL &&
+			if (inp->inp_ipo == NULL) {
+				inp->inp_ipo = ipsec_add_policy(inp,
+				    srcsa.sa.sa_family, IPSP_DIRECTION_OUT);
+				if (inp->inp_ipo == NULL) {
+					splx(s);
+					goto bad;
+				}
+			}
+			if (inp->inp_ipo->ipo_dstid == NULL &&
 			    tdb->tdb_srcid != NULL) {
-				inp->inp_ipsec_remoteid = tdb->tdb_srcid;
+				inp->inp_ipo->ipo_dstid = tdb->tdb_srcid;
 				tdb->tdb_srcid->ref_count++;
 			}
 			if (inp->inp_ipsec_remotecred == NULL &&
@@ -574,10 +580,6 @@ udp_input(m, va_alist)
 		}
 	}
         splx(s);
-
-	/* Error or otherwise drop-packet indication. */
-	if (error)
-		goto bad;
 #endif /*IPSEC */
 
 	opts = NULL;
@@ -684,7 +686,7 @@ udp6_ctlinput(cmd, sa, d)
 		u_int16_t uh_sport;
 		u_int16_t uh_dport;
 	} *uhp;
-	void (*notify) __P((struct inpcb *, int)) = udp_notify;
+	void (*notify)(struct inpcb *, int) = udp_notify;
 
 	if (sa == NULL)
 		return;
@@ -842,7 +844,7 @@ udp_ctlinput(cmd, sa, v)
 	register struct ip *ip = v;
 	register struct udphdr *uhp;
 	extern int inetctlerrmap[];
-	void (*notify) __P((struct inpcb *, int)) = udp_notify;
+	void (*notify)(struct inpcb *, int) = udp_notify;
 	int errno;
 
 	if (sa == NULL)
@@ -870,13 +872,7 @@ udp_ctlinput(cmd, sa, v)
 }
 
 int
-#if __STDC__
 udp_output(struct mbuf *m, ...)
-#else
-udp_output(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register struct inpcb *inp;
 	struct mbuf *addr, *control;

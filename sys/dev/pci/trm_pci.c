@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/trm_pci.c,v 1.1 2002/02/18 01:55:30 krw Exp $
+/*	$OpenBSD: src/sys/dev/pci/trm_pci.c,v 1.1.6.1 2002/06/11 03:42:27 art Exp $
  * ------------------------------------------------------------
  *       O.S     : OpenBSD
  *    FILE NAME  : trm_pci.c                          

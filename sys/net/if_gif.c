@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.c,v 1.20 2001/07/27 15:48:38 itojun Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.c,v 1.20.4.1 2002/06/11 03:30:45 art Exp $	*/
 /*	$KAME: if_gif.c,v 1.43 2001/02/20 08:51:07 itojun Exp $	*/
 
 /*
@@ -64,7 +64,7 @@
 extern int ifqmaxlen;
 
 int ngif;
-void gifattach __P((int));
+void gifattach(int);
 
 /*
  * gif global variable definitions
@@ -180,9 +180,6 @@ gif_output(ifp, m, dst, rt)
 	m->m_flags &= ~(M_BCAST|M_MCAST);
 	if (!(ifp->if_flags & IFF_UP) ||
 	    sc->gif_psrc == NULL || sc->gif_pdst == NULL) {
-		log(LOG_NOTICE,
-		    "gif_output: attempt to use unconfigured interface %s\n",
-		    ifp->if_xname);
 		m_freem(m);
 		error = ENETDOWN;
 		goto end;
@@ -519,6 +516,10 @@ gif_ioctl(ifp, cmd, data)
 	case SIOCSIFFLAGS:
 		/* if_ioctl() takes care of it */
 		break;
+
+        case SIOCSIFMTU:
+                ifp->if_mtu = ((struct ifreq *)data)->ifr_mtu;
+                break;
 
 	default:
 		error = EINVAL;

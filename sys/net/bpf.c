@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.c,v 1.30 2001/10/02 18:04:35 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.c,v 1.30.4.1 2002/06/11 03:30:45 art Exp $	*/
 /*	$NetBSD: bpf.c,v 1.33 1997/02/21 23:59:35 thorpej Exp $	*/
 
 /*
@@ -79,19 +79,23 @@ struct bpf_if	*bpf_iflist;
 struct bpf_d	*bpf_dtab;
 int nbpfilter;
 
-int	bpf_allocbufs __P((struct bpf_d *));
-void	bpf_freed __P((struct bpf_d *));
-void	bpf_ifname __P((struct ifnet *, struct ifreq *));
-void	bpf_mcopy __P((const void *, void *, size_t));
-int	bpf_movein __P((struct uio *, int, struct mbuf **, struct sockaddr *));
-void	bpf_attachd __P((struct bpf_d *, struct bpf_if *));
-void	bpf_detachd __P((struct bpf_d *));
-int	bpf_setif __P((struct bpf_d *, struct ifreq *));
-int	bpfselect __P((dev_t, int, struct proc *));
-static __inline void bpf_wakeup __P((struct bpf_d *));
-void	bpf_catchpacket __P((struct bpf_d *, u_char *, size_t, size_t,
-	    void (*)(const void *, void *, size_t)));
-void	bpf_reset_d __P((struct bpf_d *));
+int	bpf_allocbufs(struct bpf_d *);
+void	bpf_freed(struct bpf_d *);
+void	bpf_ifname(struct ifnet *, struct ifreq *);
+void	bpf_mcopy(const void *, void *, size_t);
+int	bpf_movein(struct uio *, int, struct mbuf **, struct sockaddr *);
+void	bpf_attachd(struct bpf_d *, struct bpf_if *);
+void	bpf_detachd(struct bpf_d *);
+int	bpf_setif(struct bpf_d *, struct ifreq *);
+int	bpfselect(dev_t, int, struct proc *);
+int	bpfkqfilter(dev_t, struct knote *);
+static __inline void bpf_wakeup(struct bpf_d *);
+void	bpf_catchpacket(struct bpf_d *, u_char *, size_t, size_t,
+	    void (*)(const void *, void *, size_t));
+void	bpf_reset_d(struct bpf_d *);
+
+void	filt_bpfrdetach(struct knote *);
+int	filt_bpfread(struct knote *, long);
 
 int
 bpf_movein(uio, linktype, mp, sockp)
@@ -476,6 +480,7 @@ bpf_wakeup(d)
 	selwakeup(&d->bd_sel);
 	/* XXX */
 	d->bd_sel.si_selpid = 0;
+	KNOTE(&d->bd_sel.si_note, 0);
 }
 
 int
@@ -967,6 +972,61 @@ bpfselect(dev, rw, p)
 	return (0);
 }
 
+struct filterops bpfread_filtops =
+	{ 1, NULL, filt_bpfrdetach, filt_bpfread };
+
+int
+bpfkqfilter(dev_t dev,struct knote *kn)
+{
+	struct bpf_d *d = &bpf_dtab[minor(dev)];
+	struct klist *klist;
+	int s;
+
+	switch (kn->kn_filter) {
+	case EVFILT_READ:
+		klist = &d->bd_sel.si_note;
+		kn->kn_fop = &bpfread_filtops;
+		break;
+	case EVFILT_WRITE:
+	default:
+		return (1);
+	}
+
+	kn->kn_hook = (caddr_t)((u_long)dev);
+
+	s = splimp();
+	SLIST_INSERT_HEAD(klist, kn, kn_selnext);
+	splx(s);
+
+	return (0);
+}
+
+void
+filt_bpfrdetach(struct knote *kn)
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct bpf_d *d = &bpf_dtab[minor(dev)];
+	int s = splimp();
+
+	SLIST_REMOVE(&d->bd_sel.si_note, kn, knote, kn_selnext);
+	splx(s);
+}
+
+int
+filt_bpfread(struct knote *kn, long hint)
+{
+	dev_t dev = (dev_t)((u_long)kn->kn_hook);
+	struct bpf_d *d = &bpf_dtab[minor(dev)];
+	int res, s;
+
+	kn->kn_data = 0;
+
+	s = splimp();
+	res = d->bd_hlen != 0 || (d->bd_immediate && d->bd_slen != 0);
+	splx(s);
+	return (res);
+}
+
 /*
  * Incoming linkage from device drivers.  Process the packet pkt, of length
  * pktlen, which is stored in a contiguous buffer.  The packet is parsed
@@ -1064,7 +1124,7 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 	register struct bpf_d *d;
 	register u_char *pkt;
 	register size_t pktlen, snaplen;
-	register void (*cpfn) __P((const void *, void *, size_t));
+	register void (*cpfn)(const void *, void *, size_t);
 {
 	register struct bpf_hdr *hp;
 	register int totlen, curlen;

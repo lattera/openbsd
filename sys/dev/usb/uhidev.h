@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhidev.h,v 1.3 2002/05/09 15:06:29 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhidev.h,v 1.3.2.1 2002/06/11 03:42:30 art Exp $	*/
 /*	$NetBSD: uhidev.h,v 1.2 2001/12/29 18:56:52 augustss Exp $	*/
 
 /*

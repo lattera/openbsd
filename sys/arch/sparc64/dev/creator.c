@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/creator.c,v 1.11 2002/06/03 16:32:04 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/creator.c,v 1.11.2.1 2002/06/11 03:38:42 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

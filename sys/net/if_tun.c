@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_tun.c,v 1.40 2001/12/10 06:10:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if_tun.c,v 1.40.2.1 2002/06/11 03:30:45 art Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -99,21 +99,22 @@ int ntun;
 
 extern int ifqmaxlen;
 
-void	tunattach __P((int));
-int	tunopen	__P((dev_t, int, int, struct proc *));
-int	tunclose __P((dev_t, int, int, struct proc *));
-int	tun_ioctl __P((struct ifnet *, u_long, caddr_t));
-int	tun_output __P((struct ifnet *, struct mbuf *, struct sockaddr *,
-		        struct rtentry *rt));
-int	tunioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
-int	tunread	__P((dev_t, struct uio *, int));
-int	tunwrite __P((dev_t, struct uio *, int));
-int	tunselect __P((dev_t, int, struct proc *));
+void	tunattach(int);
+int	tunopen(dev_t, int, int, struct proc *);
+int	tunclose(dev_t, int, int, struct proc *);
+int	tun_ioctl(struct ifnet *, u_long, caddr_t);
+int	tun_output(struct ifnet *, struct mbuf *, struct sockaddr *,
+		        struct rtentry *rt);
+int	tunioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int	tunread(dev_t, struct uio *, int);
+int	tunwrite(dev_t, struct uio *, int);
+int	tunselect(dev_t, int, struct proc *);
+int	tunkqfilter(dev_t, struct knote *);
 
 
-static int tuninit __P((struct tun_softc *));
+static int tuninit(struct tun_softc *);
 #ifdef ALTQ
-static void tunstart __P((struct ifnet *));
+static void tunstart(struct ifnet *);
 #endif
 
 void
@@ -742,6 +743,14 @@ tunselect(dev, rw, p)
 	splx(s);
 	TUNDEBUG(("%s: tunselect waiting\n", ifp->if_xname));
 	return 0;
+}
+
+/* Does not currently work */
+
+int
+tunkqfilter(dev_t dev,struct knote *kn)
+{
+	return (1);
 }
 
 #ifdef ALTQ

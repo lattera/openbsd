@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/clock.c,v 1.12.2.1 2002/01/31 22:55:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/clock.c,v 1.12.2.2 2002/06/11 03:34:57 art Exp $	*/
 /*	$NetBSD: clock.c,v 1.25 1997/01/02 20:59:42 is Exp $	*/
 
 /*
@@ -98,11 +98,11 @@ struct clockframe hardclock_frame;
  * periods where N is the value loaded into the counter.
  */
 
-int clockmatch __P((struct device *, void *, void *));
-void clockattach __P((struct device *, struct device *, void *));
-void cpu_initclocks __P((void));
-void calibrate_delay __P((struct device *));
-int clockintr __P((void *));
+int clockmatch(struct device *, void *, void *);
+void clockattach(struct device *, struct device *, void *);
+void cpu_initclocks(void);
+void calibrate_delay(struct device *);
+int clockintr(void *);
 
 struct cfattach clock_ca = {
 	sizeof(struct device), clockmatch, clockattach

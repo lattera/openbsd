@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/stand/common/ite_dv.c,v 1.1 1997/07/14 08:14:18 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/common/ite_dv.c,v 1.1.22.1 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: ite_dv.c,v 1.8 1996/03/03 04:23:35 thorpej Exp $	*/
 
 /*
@@ -57,8 +57,8 @@
 #define REGBASE		((struct dvboxfb *)(ip->regbase))
 #define WINDOWMOVER	dvbox_windowmove
 
-void	dvbox_windowmove __P((struct ite_data *, int, int, int, int,
-	    int, int, int));
+void	dvbox_windowmove(struct ite_data *, int, int, int, int,
+	    int, int, int);
 
 void
 dvbox_init(ip)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.15 2001/12/06 09:30:31 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.15.2.1 2002/06/11 03:42:20 art Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Michael Shalayeff.  All rights reserved.
@@ -67,7 +67,7 @@ struct cfdriver twe_cd = {
 	NULL, "twe", DV_DULL
 };
 
-int	twe_scsi_cmd __P((struct scsi_xfer *));
+int	twe_scsi_cmd(struct scsi_xfer *);
 
 struct scsi_adapter twe_switch = {
 	twe_scsi_cmd, tweminphys, 0, 0,
@@ -77,14 +77,14 @@ struct scsi_device twe_dev = {
 	NULL, NULL, NULL, NULL
 };
 
-static __inline struct twe_ccb *twe_get_ccb __P((struct twe_softc *sc));
-static __inline void twe_put_ccb __P((struct twe_ccb *ccb));
-void twe_dispose __P((struct twe_softc *sc));
-int  twe_cmd __P((struct twe_ccb *ccb, int flags, int wait));
-int  twe_start __P((struct twe_ccb *ccb, int wait));
-int  twe_complete __P((struct twe_ccb *ccb));
-int  twe_done __P((struct twe_softc *sc, int idx));
-void twe_copy_internal_data __P((struct scsi_xfer *xs, void *v, size_t size));
+static __inline struct twe_ccb *twe_get_ccb(struct twe_softc *sc);
+static __inline void twe_put_ccb(struct twe_ccb *ccb);
+void twe_dispose(struct twe_softc *sc);
+int  twe_cmd(struct twe_ccb *ccb, int flags, int wait);
+int  twe_start(struct twe_ccb *ccb, int wait);
+int  twe_complete(struct twe_ccb *ccb);
+int  twe_done(struct twe_softc *sc, int idx);
+void twe_copy_internal_data(struct scsi_xfer *xs, void *v, size_t size);
 
 
 static __inline struct twe_ccb *
@@ -672,13 +672,13 @@ twe_done(sc, idx)
 	lock = TWE_LOCK_TWE(sc);
 	TAILQ_REMOVE(&sc->sc_ccbq, ccb, ccb_link);
 	twe_put_ccb(ccb);
-	TWE_UNLOCK_TWE(sc, lock);
 
 	if (xs) {
 		xs->resid = 0;
 		xs->flags |= ITSDONE;
 		scsi_done(xs);
 	}
+	TWE_UNLOCK_TWE(sc, lock);
 
 	return 0;
 }
@@ -855,12 +855,12 @@ twe_scsi_cmd(xs)
 			}
 			if (blockno >= sc->sc_hdr[target].hd_size ||
 			    blockno + blockcnt > sc->sc_hdr[target].hd_size) {
-				TWE_UNLOCK_TWE(sc, lock);
 				printf("%s: out of bounds %u-%u >= %u\n",
 				    sc->sc_dev.dv_xname, blockno, blockcnt,
 				    sc->sc_hdr[target].hd_size);
 				xs->error = XS_DRIVER_STUFFUP;
 				scsi_done(xs);
+				TWE_UNLOCK_TWE(sc, lock);
 				return (COMPLETE);
 			}
 		}
@@ -874,9 +874,9 @@ twe_scsi_cmd(xs)
 		}
 
 		if ((ccb = twe_get_ccb(sc)) == NULL) {
-			TWE_UNLOCK_TWE(sc, lock);
 			xs->error = XS_DRIVER_STUFFUP;
 			scsi_done(xs);
+			TWE_UNLOCK_TWE(sc, lock);
 			return (COMPLETE);
 		}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_userconf.c,v 1.26 2001/06/13 07:14:39 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_userconf.c,v 1.26.4.1 2002/06/11 03:29:40 art Exp $	*/
 
 /*
  * Copyright (c) 1996-2001 Mats O Jansson <moj@stacken.kth.se>
@@ -65,32 +65,32 @@ char userconf_argbuf[40];			/* Additional input         */
 char userconf_cmdbuf[40];			/* Command line             */
 char userconf_histbuf[40];
 
-void userconf_init __P((void));
-int userconf_more __P((void));
-void userconf_modify __P((char *, int*));
-void userconf_hist_cmd __P((char));
-void userconf_hist_int __P((int));
-void userconf_hist_eoc __P((void));
-void userconf_pnum __P((int));
-void userconf_pdevnam __P((short));
-void userconf_pdev __P((short));
-int userconf_number __P((char *, int *));
-int userconf_device __P((char *, int *, short *, short *));
-int userconf_attr __P((char *, int *));
-void userconf_modify __P((char *, int *));
-void userconf_change __P((int));
-void userconf_disable __P((int));
-void userconf_enable __P((int));
-void userconf_help __P((void));
-void userconf_list __P((void));
-void userconf_show __P((void));
-void userconf_common_attr_val __P((short, int *, char));
-void userconf_show_attr __P((char *));
-void userconf_common_dev __P((char *, int, short, short, char));
-void userconf_common_attr __P((char *, int, char));
-void userconf_add_read __P((char *, char, char *, int, int *));
-void userconf_add __P((char *, int, short, short));
-int userconf_parse __P((char *));
+void userconf_init(void);
+int userconf_more(void);
+void userconf_modify(char *, int *);
+void userconf_hist_cmd(char);
+void userconf_hist_int(int);
+void userconf_hist_eoc(void);
+void userconf_pnum(int);
+void userconf_pdevnam(short);
+void userconf_pdev(short);
+int userconf_number(char *, int *);
+int userconf_device(char *, int *, short *, short *);
+int userconf_attr(char *, int *);
+void userconf_modify(char *, int *);
+void userconf_change(int);
+void userconf_disable(int);
+void userconf_enable(int);
+void userconf_help(void);
+void userconf_list(void);
+void userconf_show(void);
+void userconf_common_attr_val(short, int *, char);
+void userconf_show_attr(char *);
+void userconf_common_dev(char *, int, short, short, char);
+void userconf_common_attr(char *, int, char);
+void userconf_add_read(char *, char, char *, int, int *);
+void userconf_add(char *, int, short, short);
+int userconf_parse(char *);
 
 #define UC_CHANGE 'c'
 #define UC_DISABLE 'd'
@@ -1055,7 +1055,7 @@ userconf_add(dev, len, unit, state)
 {
 	int i = 0, found = 0;
 	struct cfdata new;
-	int  val, max_unit, orig;
+	int  val, max_unit, star_unit, orig;
 
 	bzero(&new, sizeof(struct cfdata));
 
@@ -1141,9 +1141,31 @@ userconf_add(dev, len, unit, state)
 			i++;
 		}
 
-		/* For all * entries set unit number to max+1 */
-
+		/*
+		 * For all * entries set unit number to max+1, and update
+		 * cf_starunit1 if necessary.
+		 */
 		max_unit++;
+		star_unit = -1;
+
+		i = 0;
+		while (cfdata[i].cf_attach != 0) {
+			if (strlen(cfdata[i].cf_driver->cd_name) == len &&
+			    strncasecmp(dev, cfdata[i].cf_driver->cd_name,
+			    len) == 0) {
+				switch (cfdata[i].cf_fstate) {
+				case FSTATE_NOTFOUND:
+				case FSTATE_DNOTFOUND:
+					if (cfdata[i].cf_unit > star_unit)
+						star_unit = cfdata[i].cf_unit;
+					break;
+				default:
+					break;
+				}
+			}
+			i++;
+		}
+		star_unit++;
 
 		i = 0;
 		while (cfdata[i].cf_attach != 0) {
@@ -1154,6 +1176,9 @@ userconf_add(dev, len, unit, state)
 				case FSTATE_STAR:
 				case FSTATE_DSTAR:
 					cfdata[i].cf_unit = max_unit;
+					if (cfdata[i].cf_starunit1 < star_unit)
+						cfdata[i].cf_starunit1 =
+						    star_unit;
 					break;
 				default:
 					break;
@@ -1164,7 +1189,7 @@ userconf_add(dev, len, unit, state)
 		userconf_pdev(val);
 	}
 
-	/* cf_attach, cf_driver, cf_unit, cf_state, cf_loc, cf_flags,
+	/* cf_attach, cf_driver, cf_unit, cf_fstate, cf_loc, cf_flags,
 	   cf_parents, cf_locnames, cf_locnames and cf_ivstubs */
 }
 

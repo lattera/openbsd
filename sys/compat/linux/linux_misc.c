@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_misc.c,v 1.39 2001/11/06 19:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_misc.c,v 1.39.2.1 2002/06/11 03:28:08 art Exp $	*/
 /*	$NetBSD: linux_misc.c,v 1.27 1996/05/20 01:59:21 fvdl Exp $	*/
 
 /*
@@ -81,9 +81,9 @@
 #include <compat/common/compat_dir.h>
 
 /* linux_misc.c */
-static void bsd_to_linux_statfs __P((struct statfs *, struct linux_statfs *));
-int	linux_select1 __P((struct proc *, register_t *, int, fd_set *,
-     fd_set *, fd_set *, struct timeval *));
+static void bsd_to_linux_statfs(struct statfs *, struct linux_statfs *);
+int	linux_select1(struct proc *, register_t *, int, fd_set *,
+     fd_set *, fd_set *, struct timeval *);
 
 /*
  * The information on a terminated (or stopped) process needs
@@ -521,8 +521,7 @@ linux_sys_uname(p, v, retval)
 	struct linux_sys_uname_args /* {
 		syscallarg(struct linux_utsname *) up;
 	} */ *uap = v;
-	extern char ostype[], hostname[], osrelease[], version[], machine[],
-	    domainname[];
+	extern char hostname[], machine[], domainname[];
 	struct linux_utsname luts;
 	int len;
 	char *cp;
@@ -558,7 +557,7 @@ linux_sys_olduname(p, v, retval)
 	struct linux_sys_uname_args /* {
 		syscallarg(struct linux_oldutsname *) up;
 	} */ *uap = v;
-	extern char ostype[], hostname[], osrelease[], version[], machine[];
+	extern char hostname[], machine[];
 	struct linux_oldutsname luts;
 	int len;
 	char *cp;
@@ -587,7 +586,7 @@ linux_sys_oldolduname(p, v, retval)
 	struct linux_sys_uname_args /* {
 		syscallarg(struct linux_oldoldutsname *) up;
 	} */ *uap = v;
-	extern char ostype[], hostname[], osrelease[], version[], machine[];
+	extern char hostname[], machine[];
 	struct linux_oldoldutsname luts;
 	int len;
 	char *cp;
@@ -935,7 +934,7 @@ linux_sys_readdir(p, v, retval)
  *
  * Note that this doesn't handle union-mounted filesystems.
  */
-int linux_readdir_callback __P((void *, struct dirent *, off_t));
+int linux_readdir_callback(void *, struct dirent *, off_t);
 
 struct linux_readdir_callback_args {
 	caddr_t outp;
@@ -1022,6 +1021,7 @@ linux_sys_getdents(p, v, retval)
 	args.resid = nbytes;
 	args.outp = (caddr_t)SCARG(uap, dirent);
 
+	FREF(fp);
 	if ((error = readdir_with_callback(fp, &fp->f_offset, nbytes,
 	    linux_readdir_callback, &args)) != 0)
 		goto exit;
@@ -1029,6 +1029,7 @@ linux_sys_getdents(p, v, retval)
 	*retval = nbytes - args.resid;
 
  exit:
+	FRELE(fp);
 	return (error);
 }
 
@@ -1485,4 +1486,37 @@ linux_sys_stime(p, v, retval)
 	settime(&atv);
 
 	return 0;
+}
+
+int
+linux_sys_getpid(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+
+	*retval = p->p_pid;
+	return (0);
+}
+
+int
+linux_sys_getuid(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+
+	*retval = p->p_cred->p_ruid;
+	return (0);
+}
+
+int
+linux_sys_getgid(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+
+	*retval = p->p_cred->p_rgid;
+	return (0);
 }

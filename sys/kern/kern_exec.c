@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.61.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.61.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -70,7 +70,7 @@
  * to it. Must be a n^2. If non-zero, the stack gap will be calculated as:
  * (arc4random() * ALIGNBYTES) & (stackgap_random - 1) + STACKGAPLEN.
  */
-int stackgap_random;
+int stackgap_random = 1024;
 
 /*
  * check exec:
@@ -321,7 +321,7 @@ sys_execve(p, v, retval)
 
 	/* Now get argv & environment */
 	if (!(cpp = SCARG(uap, argp))) {
-		error = EINVAL;
+		error = EFAULT;
 		goto bad;
 	}
 
@@ -535,9 +535,6 @@ sys_execve(p, v, retval)
 			 * allocated.  We do not want userland to accidentally
 			 * allocate descriptors in this range which has implied
 			 * meaning to libc.
-			 *
-			 * XXX - Shouldn't the exec fail if we can't allocate
-			 *       resources here?
 			 */
 			if (fp == NULL) {
 				short flags = FREAD | (i == 0 ? 0 : FWRITE);
@@ -545,21 +542,21 @@ sys_execve(p, v, retval)
 				int indx;
 
 				if ((error = falloc(p, &fp, &indx)) != 0)
-					break;
+					goto exec_abort;
 #ifdef DIAGNOSTIC
 				if (indx != i)
 					panic("sys_execve: falloc indx != i");
 #endif
 				if ((error = cdevvp(getnulldev(), &vp)) != 0) {
-					ffree(fp);
 					fdremove(p->p_fd, indx);
-					break;
+					closef(fp, p);
+					goto exec_abort;
 				}
 				if ((error = VOP_OPEN(vp, flags, p->p_ucred, p)) != 0) {
-					ffree(fp);
 					fdremove(p->p_fd, indx);
+					closef(fp, p);
 					vrele(vp);
-					break;
+					goto exec_abort;
 				}
 				if (flags & FWRITE)
 					vp->v_writecount++;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/bwtwo.c,v 1.1 2002/06/04 19:42:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/bwtwo.c,v 1.1.2.1 2002/06/11 03:42:29 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

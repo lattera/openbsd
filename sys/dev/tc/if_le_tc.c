@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/tc/if_le_tc.c,v 1.4 1998/09/16 22:41:22 jason Exp $	*/
-/*	$NetBSD: if_le_tc.c,v 1.2 1996/05/07 02:24:57 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/if_le_tc.c,v 1.4.18.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$NetBSD: if_le_tc.c,v 1.12 2001/11/13 06:26:10 lukem Exp $	*/
 
 /*
  * Copyright (c) 1996 Carnegie-Mellon University.
@@ -53,8 +53,8 @@
 #include <dev/tc/if_levar.h>
 #include <dev/tc/tcvar.h>
 
-int	le_tc_match __P((struct device *, void *, void *));
-void	le_tc_attach __P((struct device *, struct device *, void *));
+int	le_tc_match(struct device *, void *, void *);
+void	le_tc_attach(struct device *, struct device *, void *);
 
 struct cfattach le_tc_ca = {
 	sizeof(struct le_softc), le_tc_match, le_tc_attach
@@ -71,8 +71,7 @@ le_tc_match(parent, match, aux)
 {
 	struct tc_attach_args *d = aux;
 
-	if (strncmp("PMAD-AA ", d->ta_modname, TC_ROM_LLEN) &&
-	    strncmp("PMAD-BA ", d->ta_modname, TC_ROM_LLEN))
+	if (strncmp("PMAD-AA ", d->ta_modname, TC_ROM_LLEN) != 0)
 		return (0);
 
 	return (1);
@@ -83,8 +82,8 @@ le_tc_attach(parent, self, aux)
 	struct device *parent, *self;
 	void *aux;
 {
-	register struct le_softc *lesc = (void *)self;
-	register struct am7990_softc *sc = &lesc->sc_am7990;
+	struct le_softc *lesc = (void *)self;
+	struct am7990_softc *sc = &lesc->sc_am7990;
 	struct tc_attach_args *d = aux;
 
 	/*
@@ -106,7 +105,8 @@ le_tc_attach(parent, self, aux)
 	 * so  DMA setup is not required.
 	 */
 
-	dec_le_common_attach(sc, (u_char *)(d->ta_addr + LE_OFFSET_ROM + 2));
+	dec_le_common_attach(&lesc->sc_am7990,
+			     (u_char *)(d->ta_addr + LE_OFFSET_ROM + 2));
 
 	tc_intr_establish(parent, d->ta_cookie, TC_IPL_NET, am7990_intr, sc);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4.22.1 2002/01/31 22:55:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/ts.c,v 1.4.22.2 2002/06/11 03:39:19 art Exp $ */
 /*	$NetBSD: ts.c,v 1.11 1997/01/11 11:34:43 ragge Exp $ */
 
 /*-
@@ -179,25 +179,25 @@ struct	ts_softc {
 	short	sc_ipl;			/* interrupt priority, Q-bus */
 };
 
-void	tsintr __P((int));
-int	tsinit __P((struct ts_softc *));
-void	tscommand __P((dev_t, int, int));
-int	tsstatus __P((int));
-int	tsexec __P((int, int));
-int	tsstart __P((struct ts_softc *, struct buf *));
-int	tswchar __P((int));
-void	tsreset __P((int));
-void	tsxstatus __P((struct tsmsg *));
-int	tsmatch __P((struct device *, void *, void *));
-void	tsattach __P((struct device *, struct device *, void *));
-void	tsstrategy __P((struct buf *));
+void	tsintr(int);
+int	tsinit(struct ts_softc *);
+void	tscommand(dev_t, int, int);
+int	tsstatus(int);
+int	tsexec(int, int);
+int	tsstart(struct ts_softc *, struct buf *);
+int	tswchar(int);
+void	tsreset(int);
+void	tsxstatus(struct tsmsg *);
+int	tsmatch(struct device *, void *, void *);
+void	tsattach(struct device *, struct device *, void *);
+void	tsstrategy(struct buf *);
 
-int	tsopen __P((dev_t, int, int, struct proc *));
-int	tsclose __P((dev_t, int, int, struct proc *));
-int	tsioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
-int	tsread __P((dev_t, struct uio *));
-int	tswrite __P((dev_t, struct uio *));
-int	tsdump __P((dev_t, daddr_t, caddr_t, size_t));
+int	tsopen(dev_t, int, int, struct proc *);
+int	tsclose(dev_t, int, int, struct proc *);
+int	tsioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int	tsread(dev_t, struct uio *);
+int	tswrite(dev_t, struct uio *);
+int	tsdump(dev_t, daddr_t, caddr_t, size_t);
 
 struct	cfdriver ts_cd = {
 	NULL, "ts", DV_DULL
@@ -286,7 +286,7 @@ tsexec (ctlr, cmd)
 	register struct tscmd *tscmdp = &ts[ctlr].cmd;
 	register long tscmdma = (long)&sc->sc_ts->cmd;	/* mapped address */
 	volatile struct tsdevice *tsreg = ts[ctlr].reg;
-	volatile char *dbx = ((char*)tsreg) + 3;
+	volatile char *dbx = ((char *)tsreg) + 3;
 	volatile short sr;
 
 	sc->sc_cmdf |= TS_CF_ACK | TS_CF_IE;
@@ -319,7 +319,7 @@ tsexec (ctlr, cmd)
 		    sc->sc_dev.dv_xname, sr);
 		return (-1);
 	}
-	dbx = ((char*)tsreg) + 3;	/* dbx is located at the fourth byte */
+	dbx = ((char *)tsreg) + 3;	/* dbx is located at the fourth byte */
 	*dbx = (tscmdma >> 18) & 0x0F;	/* load bits 18-21 into dbx */ 
 
 	/* possible race-condition with ATTN !!! */
@@ -403,11 +403,11 @@ tscommand (dev, cmd, count)
 	 * This is the only case where count can be 0.
 	 */
 	if (count == 0) {
-		debug (("tscommand: direct return, no iowait.\n"));
+		debug (("tscommand: direct return, no biowait.\n"));
 		return;
 	}
-	debug (("tscommand: calling iowait ...\n"));;
-	iowait (bp);
+	debug (("tscommand: calling biowait ...\n"));;
+	biowait (bp);
 	if (bp->b_flags & B_WANTED)
 		wakeup ((caddr_t)bp);
 	bp->b_flags &= B_ERROR;
@@ -428,6 +428,7 @@ tsstart (sc, bp)
 	volatile int i, itmp;
 	int ioctl;
 	int cmd;
+	int s;
 
 	if ((dp = ts_wtab[ctlr]) != NULL) {
 		/*
@@ -439,7 +440,9 @@ tsstart (sc, bp)
 		/* bertram: ubarelse ??? */
 		ts_wtab[ctlr] = NULL;
 		dp->b_flags |= B_ERROR;
-		iodone (dp);
+		s = splbio();
+		biodone (dp);
+		splx(s);
 
 		if (tsreg->tssr & TS_SC) {	/* Special Condition; Error */
 			log (TS_PRI, "%s: tssr 0x%x, state %d\n",
@@ -567,7 +570,7 @@ tsstart (sc, bp)
 		/*
 		 * we are already waiting for something ...
 		 * this should not happen, so we have a problem now.
-		 * bertram: set error-flag and call iodone() ???
+		 * bertram: set error-flag and call biodone() ???
 		 */
 	}
 	ts_wtab[ctlr] = bp;
@@ -931,9 +934,9 @@ tsintr(ctlr)
 #endif
 			}
 			bp->b_resid = tsmsgp->rbpcr;
-			debug (("tsintr: iodone(NORM) [%d,%d,%d]\n",
+			debug (("tsintr: biodone(NORM) [%d,%d,%d]\n",
 				bp->b_resid, bp->b_bcount, tsmsgp->rbpcr));
-			iodone (bp); /* bertram: ioctl ??? */
+			biodone (bp); /* bertram: ioctl ??? */
 		}
 		return;
 
@@ -1081,8 +1084,8 @@ tsintr(ctlr)
 		debug (("resid:%d, count:%d, rbpcr:%d\n",
 			bp->b_resid, bp->b_bcount, tsmsgp->rbpcr));
 		bp->b_resid = tsmsgp->rbpcr; /* XXX */
-		debug (("tsintr: iodone(%x)\n", bp->b_flags));
-		iodone (bp);
+		debug (("tsintr: biodone(%x)\n", bp->b_flags));
+		biodone (bp);
 	}
 	if ((sr & TS_TC) > TS_TC_FR)
 		tsreset (ctlr);
@@ -1124,11 +1127,11 @@ tsopen (dev, flag, type, p)
 	s = splbio ();
 	if (sc->sc_state < ST_RUNNING) {		/* XXX */
 		printf ("%s not running.\n", sc->sc_dev.dv_xname);
-		(void) splx (s);
+		splx(s);
 		sc->sc_openf = 0;
 		return (ENXIO);
 	}
-	(void) splx (s);
+	splx(s);
 
 	/*
 	 * check if transport is really online.

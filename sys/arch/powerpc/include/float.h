@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/float.h,v 1.5 2001/09/01 15:49:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/float.h,v 1.5.4.1 2002/06/11 03:37:28 art Exp $	*/
 
 /*
  * Copyright (c) 1989 Regents of the University of California.
@@ -41,7 +41,7 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int __flt_rounds __P((void));
+int __flt_rounds(void);
 __END_DECLS
 
 #define FLT_RADIX	2		/* b */

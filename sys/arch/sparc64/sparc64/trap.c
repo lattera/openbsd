@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.14.2.1 2002/01/31 22:55:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.14.2.2 2002/06/11 03:38:44 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.73 2001/08/09 01:03:01 eeh Exp $ */
 
 /*
@@ -66,6 +66,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -319,19 +322,19 @@ const char *trap_type[] = {
 
 #define	N_TRAP_TYPES	(sizeof trap_type / sizeof *trap_type)
 
-static __inline void userret __P((struct proc *, int,  u_quad_t));
-static __inline void share_fpu __P((struct proc *, struct trapframe64 *));
+static __inline void userret(struct proc *, int,  u_quad_t);
+static __inline void share_fpu(struct proc *, struct trapframe64 *);
 
-void trap __P((struct trapframe64 *tf, unsigned type, vaddr_t pc, long tstate));
-void data_access_fault __P((struct trapframe64 *tf, unsigned type, vaddr_t pc, 
-	vaddr_t va, vaddr_t sfva, u_long sfsr));
-void data_access_error __P((struct trapframe64 *tf, unsigned type, 
-	vaddr_t afva, u_long afsr, vaddr_t sfva, u_long sfsr));
-void text_access_fault __P((struct trapframe64 *tf, unsigned type, 
-	vaddr_t pc, u_long sfsr));
-void text_access_error __P((struct trapframe64 *tf, unsigned type, 
-	vaddr_t pc, u_long sfsr, vaddr_t afva, u_long afsr));
-void syscall __P((struct trapframe64 *, register_t code, register_t pc));
+void trap(struct trapframe64 *tf, unsigned type, vaddr_t pc, long tstate);
+void data_access_fault(struct trapframe64 *tf, unsigned type, vaddr_t pc, 
+	vaddr_t va, vaddr_t sfva, u_long sfsr);
+void data_access_error(struct trapframe64 *tf, unsigned type, 
+	vaddr_t afva, u_long afsr, vaddr_t sfva, u_long sfsr);
+void text_access_fault(struct trapframe64 *tf, unsigned type, 
+	vaddr_t pc, u_long sfsr);
+void text_access_error(struct trapframe64 *tf, unsigned type, 
+	vaddr_t pc, u_long sfsr, vaddr_t afva, u_long afsr);
+void syscall(struct trapframe64 *, register_t code, register_t pc);
 
 /*
  * Define the code needed before returning to user mode, for
@@ -368,8 +371,11 @@ userret(p, pc, oticks)
 	/*
 	 * If profiling, charge recent system time to the trapped pc.
 	 */
-	if (p->p_flag & P_PROFIL)
-		addupc_task(p, pc, (int)(p->p_sticks - oticks));
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
+	}
 
 #ifdef notyet
 	curcpu()->ci_schedstate.spc_curpriority = p->p_priority;
@@ -617,6 +623,7 @@ badtrap:
 			ADVANCE;
 			break;
 		}
+		/* XXX sv.sival_ptr should be the fault address! */
 		trapsignal(p, SIGBUS, 0, BUS_ADRALN, sv);	/* XXX code?? */
 		break;
 
@@ -785,7 +792,7 @@ data_access_fault(tf, type, pc, addr, sfva, sfsr)
 	u_quad_t sticks;
 	union sigval sv;
 
-	sv.sival_ptr = (void *)pc;
+	sv.sival_ptr = (void *)addr;
 
 	uvmexp.traps++;
 	if ((p = curproc) == NULL)	/* safety check */
@@ -1051,7 +1058,6 @@ text_access_fault(tf, type, pc, sfsr)
 			panic("kernel fault");
 			/* NOTREACHED */
 		}
-		sv.sival_ptr = (void *)va;
 		trapsignal(p, SIGSEGV, access_type, SEGV_MAPERR, sv);
 	}
 	if ((tstate & TSTATE_PRIV) == 0) {
@@ -1161,7 +1167,6 @@ text_access_error(tf, type, pc, sfsr, afva, afsr)
 			panic("kernel fault");
 			/* NOTREACHED */
 		}
-		sv.sival_ptr = (void *)va;
 		trapsignal(p, SIGSEGV, access_type, SEGV_MAPERR, sv);
 	}
 out:
@@ -1358,7 +1363,12 @@ syscall(tf, code, pc)
 #endif
 	rval[0] = 0;
 	rval[1] = tf->tf_out[1];
-	error = (*callp->sy_call)(p, &args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, &args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, &args, rval);
 
 	switch (error) {
 		vaddr_t dest;

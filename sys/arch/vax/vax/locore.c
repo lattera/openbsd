@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.20.2.1 2002/01/31 22:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.20.2.2 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: locore.c,v 1.43 2000/03/26 11:39:45 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -50,8 +50,8 @@
 #include <machine/pmap.h>
 #include <machine/nexus.h>
 
-void	start __P((void));
-void	main __P((void));
+void	start(void);
+void	main(void);
 
 extern	paddr_t avail_end;
 paddr_t	esym;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/asc.c,v 1.21 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/dev/tc/asc.c,v 1.21.2.1 2002/06/11 03:42:29 art Exp $ */
 
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.

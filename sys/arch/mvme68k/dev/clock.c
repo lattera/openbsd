@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.3 1996/04/28 11:06:02 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/clock.c,v 1.3.26.1 2002/06/11 03:36:49 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -74,8 +74,9 @@
  */
 
 #include <sys/param.h>
-#include <sys/kernel.h>
 #include <sys/device.h>
+#include <sys/kernel.h>
+#include <sys/systm.h>
 
 #include <machine/psl.h>
 #include <machine/autoconf.h>
@@ -116,8 +117,8 @@ struct clocksoftc {
 	struct intrhand sc_statih;
 };
 
-void	clockattach __P((struct device *, struct device *, void *));
-int	clockmatch __P((struct device *, void *, void *));
+void	clockattach(struct device *, struct device *, void *);
+int	clockmatch(struct device *, void *, void *);
 
 struct cfattach clock_ca = {
 	sizeof(struct clocksoftc), clockmatch, clockattach
@@ -127,8 +128,8 @@ struct cfdriver clock_cd = {
 	NULL, "clock", DV_DULL, 0
 };
 
-int	clockintr __P((void *));
-int	statintr __P((void *));
+int	clockintr(void *);
+int	statintr(void *);
 
 int	clockbus;
 u_char	stat_reset, prof_reset;
@@ -226,6 +227,7 @@ clockintr(arg)
  * Set up real-time clock; we don't have a statistics clock at
  * present.
  */
+void
 cpu_initclocks()
 {
 	register int statint, minint;
@@ -375,10 +377,13 @@ statintr(cap)
 	return (1);
 }
 
+void
 delay(us)
-	register int us;
+	int us;
 {
+#if (NPCC > 0) || (NPCCTWO > 0)
 	volatile register int c;
+#endif
 
 	switch (clockbus) {
 #if NPCC > 0
@@ -391,7 +396,7 @@ delay(us)
 		c = 2 * us;
 		while (--c > 0)
 			;
-		return (0);
+		break;
 #endif
 #if NMC > 0
 	case BUS_MC:
@@ -406,7 +411,7 @@ delay(us)
 
 		while (sys_mc->mc_t3count < us)
 			;
-		return (0);
+		break;
 #endif
 #if NPCCTWO > 0
 	case BUS_PCCTWO:
@@ -418,7 +423,7 @@ delay(us)
 		c = 4 * us;
 		while (--c > 0)
 			;
-		return (0);
+		break;
 #endif
 	}
 }

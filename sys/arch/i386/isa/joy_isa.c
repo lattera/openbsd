@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/joy_isa.c,v 1.3 1999/01/13 07:26:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/joy_isa.c,v 1.3.16.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: joy.c,v 1.3 1996/05/05 19:46:15 christos Exp $	*/
 
 /*-
@@ -17,7 +17,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -49,8 +49,8 @@
 #include <i386/isa/timerreg.h>
 #include <i386/isa/joyreg.h>
 
-int		joy_isa_probe __P((struct device *, void *, void *));
-void		joy_isa_attach __P((struct device *, struct device *, void *));
+int		joy_isa_probe(struct device *, void *, void *);
+void		joy_isa_attach(struct device *, struct device *, void *);
 
 struct cfattach joy_isa_ca = {
 	sizeof(struct joy_softc), joy_isa_probe, joy_isa_attach

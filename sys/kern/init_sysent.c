@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.54 2001/08/26 04:11:12 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.54.4.1 2002/06/11 03:29:40 art Exp $	*/
 
 /*
  * System call switch table.
@@ -99,8 +99,13 @@ struct sysent sysent[] = {
 	    sys_getuid },			/* 24 = getuid */
 	{ 0, 0,
 	    sys_geteuid },			/* 25 = geteuid */
+#ifdef PTRACE
 	{ 4, s(struct sys_ptrace_args),
 	    sys_ptrace },			/* 26 = ptrace */
+#else
+	{ 0, 0,
+	    sys_nosys },			/* 26 = unimplemented ptrace */
+#endif
 	{ 3, s(struct sys_recvmsg_args),
 	    sys_recvmsg },			/* 27 = recvmsg */
 	{ 3, s(struct sys_sendmsg_args),
@@ -709,5 +714,36 @@ struct sysent sysent[] = {
 	    sys_munlockall },			/* 272 = munlockall */
 	{ 3, s(struct sys_getpeereid_args),
 	    sys_getpeereid },			/* 273 = getpeereid */
+#ifdef UFS_EXTATTR
+	{ 5, s(struct sys_extattrctl_args),
+	    sys_extattrctl },			/* 274 = extattrctl */
+	{ 5, s(struct sys_extattr_set_file_args),
+	    sys_extattr_set_file },		/* 275 = extattr_set_file */
+	{ 5, s(struct sys_extattr_get_file_args),
+	    sys_extattr_get_file },		/* 276 = extattr_get_file */
+	{ 3, s(struct sys_extattr_delete_file_args),
+	    sys_extattr_delete_file },		/* 277 = extattr_delete_file */
+	{ 5, s(struct sys_extattr_set_fd_args),
+	    sys_extattr_set_fd },		/* 278 = extattr_set_fd */
+	{ 5, s(struct sys_extattr_get_fd_args),
+	    sys_extattr_get_fd },		/* 279 = extattr_get_fd */
+	{ 3, s(struct sys_extattr_delete_fd_args),
+	    sys_extattr_delete_fd },		/* 280 = extattr_delete_fd */
+#else
+	{ 0, 0,
+	    sys_nosys },			/* 274 = unimplemented sys_extattrctl */
+	{ 0, 0,
+	    sys_nosys },			/* 275 = unimplemented sys_extattr_set_file */
+	{ 0, 0,
+	    sys_nosys },			/* 276 = unimplemented sys_extattr_get_file */
+	{ 0, 0,
+	    sys_nosys },			/* 277 = unimplemented sys_extattr_delete_file */
+	{ 0, 0,
+	    sys_nosys },			/* 278 = unimplemented sys_extattr_set_fd */
+	{ 0, 0,
+	    sys_nosys },			/* 279 = unimplemented sys_extattr_get_fd */
+	{ 0, 0,
+	    sys_nosys },			/* 280 = unimplemented sys_extattr_delete_fd */
+#endif
 };
 

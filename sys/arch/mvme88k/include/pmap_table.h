@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap_table.h,v 1.7 2001/08/12 12:03:02 heko Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap_table.h,v 1.7.4.1 2002/06/11 03:37:10 art Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -44,6 +44,6 @@ typedef struct {
 
 typedef pmap_table_entry *pmap_table_t;
 
-pmap_table_t pmap_table_build __P((unsigned memory_size));
+pmap_table_t pmap_table_build(unsigned memory_size);
 #endif /* __MACHINE_PAMP_TABLE_H__ */
 

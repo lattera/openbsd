@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pckbc.c,v 1.2 2001/04/14 03:27:47 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pckbc.c,v 1.2.8.1 2002/06/11 03:42:20 art Exp $ */
 /* $NetBSD: pckbc.c,v 1.5 2000/06/09 04:58:35 soda Exp $ */
 
 /*
@@ -81,10 +81,10 @@ struct pckbc_slotdata {
 
 #define CMD_IN_QUEUE(q) (TAILQ_FIRST(&(q)->cmdqueue) != NULL)
 
-void pckbc_init_slotdata __P((struct pckbc_slotdata *));
-int pckbc_attach_slot __P((struct pckbc_softc *, pckbc_slot_t));
-int pckbc_submatch __P((struct device *, void *, void *));
-int pckbcprint __P((void *, const char *));
+void pckbc_init_slotdata(struct pckbc_slotdata *);
+int pckbc_attach_slot(struct pckbc_softc *, pckbc_slot_t);
+int pckbc_submatch(struct device *, void *, void *);
+int pckbcprint(void *, const char *);
 
 struct pckbc_internal pckbc_consdata;
 int pckbc_console_attached;
@@ -92,19 +92,19 @@ int pckbc_console_attached;
 static int pckbc_console;
 static struct pckbc_slotdata pckbc_cons_slotdata;
 
-static int pckbc_wait_output __P((bus_space_tag_t, bus_space_handle_t));
+static int pckbc_wait_output(bus_space_tag_t, bus_space_handle_t);
 
-static int pckbc_get8042cmd __P((struct pckbc_internal *));
-static int pckbc_put8042cmd __P((struct pckbc_internal *));
-static int pckbc_send_devcmd __P((struct pckbc_internal *, pckbc_slot_t,
-				  u_char));
-static void pckbc_poll_cmd1 __P((struct pckbc_internal *, pckbc_slot_t,
-				 struct pckbc_devcmd *));
+static int pckbc_get8042cmd(struct pckbc_internal *);
+static int pckbc_put8042cmd(struct pckbc_internal *);
+static int pckbc_send_devcmd(struct pckbc_internal *, pckbc_slot_t,
+				  u_char);
+static void pckbc_poll_cmd1(struct pckbc_internal *, pckbc_slot_t,
+				 struct pckbc_devcmd *);
 
-void pckbc_cleanqueue __P((struct pckbc_slotdata *));
-void pckbc_cleanup __P((void *));
-int pckbc_cmdresponse __P((struct pckbc_internal *, pckbc_slot_t, u_char));
-void pckbc_start __P((struct pckbc_internal *, pckbc_slot_t));
+void pckbc_cleanqueue(struct pckbc_slotdata *);
+void pckbc_cleanup(void *);
+int pckbc_cmdresponse(struct pckbc_internal *, pckbc_slot_t, u_char);
+void pckbc_start(struct pckbc_internal *, pckbc_slot_t);
 
 const char *pckbc_slot_names[] = { "kbd", "aux" };
 
@@ -284,6 +284,8 @@ pckbc_attach_slot(sc, slot)
 	if (found && !t->t_slotdata[slot]) {
 		t->t_slotdata[slot] = malloc(sizeof(struct pckbc_slotdata),
 					     M_DEVBUF, M_NOWAIT);
+		if (t->t_slotdata[slot] == NULL)
+			return 0;
 		pckbc_init_slotdata(t->t_slotdata[slot]);
 	}
 	return (found);
@@ -360,14 +362,24 @@ pckbc_attach(sc)
 	}
 	bus_space_write_1(iot, ioh_d, 0, 0x5a);	/* a random value */
 	res = pckbc_poll_data1(iot, ioh_d, ioh_c, PCKBC_AUX_SLOT, 1);
-	if (res == 0x5a) {
+	if (res != -1) {
+		/*
+		 * In most cases, the 0x5a gets echoed.
+		 * Some old controllers (Gateway 2000 circa 1993)
+		 * return 0xfe here.
+		 * We are satisfied if there is anything in the
+		 * aux output buffer.
+		 */
+#ifdef PCKBCDEBUG
+		printf("kbc: aux echo: %x\n", res);
+#endif
 		t->t_haveaux = 1;
 		if (pckbc_attach_slot(sc, PCKBC_AUX_SLOT))
 			cmdbits |= KC8_MENABLE;
 	}
 #ifdef PCKBCDEBUG
-	  else
-		printf("kbc: aux echo: %x\n", res);
+	else
+		printf("kbc: aux echo test failed\n");
 #endif
 
 nomouse:

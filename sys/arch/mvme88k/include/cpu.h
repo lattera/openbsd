@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.15.2.1 2002/01/31 22:55:18 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.15.2.2 2002/06/11 03:37:10 art Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -84,7 +84,6 @@ struct clockframe {
 extern int intstack;
 
 #define	CLKF_USERMODE(framep)	((((struct trapframe *)(framep))->epsr & PSR_MODE) == 0)
-#define	CLKF_BASEPRI(framep)	(((struct trapframe *)(framep))->mask == 0)
 #define	CLKF_PC(framep)		(((struct trapframe *)(framep))->sxip & ~3)
 #define	CLKF_INTR(framep)	(((struct trapframe *)(framep))->r[31] > intstack)
 
@@ -150,14 +149,14 @@ extern int	want_resched;		/* resched() was called */
 #define	signotify(p)		(want_ast = 1)
 
 struct intrhand {
-	int	(*ih_fn) __P((void *));
+	int	(*ih_fn)(void *);
 	void	*ih_arg;
 	int	ih_ipl;
 	int	ih_wantframe;
 	struct	intrhand *ih_next;
 };
 
-int	intr_establish __P((int vec, struct intrhand *));
+int	intr_establish(int vec, struct intrhand *);
 
 /*
  * return values for intr_establish()
@@ -186,11 +185,11 @@ struct switchframe {
 
 /* This struct defines the machine dependant pointers */
 struct md_p {
-	void (*clock_init_func) __P((void));      /* interval clock init function */
-	void (*statclock_init_func) __P((void));  /* statistics clock init function */
-	void (*delayclock_init_func) __P((void)); /* delay clock init function */
-	void (*delay_func) __P((void));           /* delay clock function */
-	void (*interrupt_func) __P((u_int, struct m88100_saved_state *));       /* interrupt func */
+	void (*clock_init_func)(void);      /* interval clock init function */
+	void (*statclock_init_func)(void);  /* statistics clock init function */
+	void (*delayclock_init_func)(void); /* delay clock init function */
+	void (*delay_func)(void);           /* delay clock function */
+	void (*interrupt_func)(u_int, struct m88100_saved_state *);       /* interrupt func */
 	u_char *volatile intr_mask;
 	u_char *volatile intr_ipl;
 	u_char *volatile intr_src;
@@ -199,8 +198,8 @@ struct md_p {
 extern struct md_p md;
 
 
-int badvaddr __P((vm_offset_t va, int size));
-void nmihand __P((void *framep));
+int badvaddr(vm_offset_t va, int size);
+void nmihand(void *framep);
 
 #endif /* _KERNEL */
 #endif /* __MACHINE_CPU_H__ */

@@ -1,44 +1,18 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/dbl_float.h,v 1.5 2001/03/29 03:58:17 mickey Exp $	*/
-
+/*	$OpenBSD: src/sys/arch/hppa/spmath/dbl_float.h,v 1.5.6.1 2002/06/11 03:35:37 art Exp $	*/
 /*
- * Copyright 1996 1995 by Open Software Foundation, Inc.
- *              All Rights Reserved
- *
- * Permission to use, copy, modify, and distribute this software and
- * its documentation for any purpose and without fee is hereby granted,
- * provided that the above copyright notice appears in all copies and
- * that both the copyright notice and this permission notice appear in
- * supporting documentation.
- *
- * OSF DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE
- * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE.
- *
- * IN NO EVENT SHALL OSF BE LIABLE FOR ANY SPECIAL, INDIRECT, OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN ACTION OF CONTRACT,
- * NEGLIGENCE, OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-/*
- * pmk1.1
- */
-/*
- * (c) Copyright 1986 HEWLETT-PACKARD COMPANY
- *
- * To anyone who acknowledges that this file is provided "AS IS"
- * without any express or implied warranty:
- *     permission to use, copy, modify, and distribute this file
- * for any purpose is hereby granted without fee, provided that
- * the above copyright notice and this notice appears in all
- * copies, and that the name of Hewlett-Packard Company not be
- * used in advertising or publicity pertaining to distribution
- * of the software without specific, written prior permission.
- * Hewlett-Packard Company makes no representations about the
- * suitability of this software for any purpose.
- */
-
-#include <sys/cdefs.h>
+  (c) Copyright 1986 HEWLETT-PACKARD COMPANY
+  To anyone who acknowledges that this file is provided "AS IS"
+  without any express or implied warranty:
+      permission to use, copy, modify, and distribute this file
+  for any purpose is hereby granted without fee, provided that
+  the above copyright notice and this notice appears in all
+  copies, and that the name of Hewlett-Packard Company not be
+  used in advertising or publicity pertaining to distribution
+  of the software without specific, written prior permission.
+  Hewlett-Packard Company makes no representations about the
+  suitability of this software for any purpose.
+*/
+/* @(#)dbl_float.h: Revision: 2.9.88.1 Date: 93/12/07 15:05:32 */
 
 /**************************************
  * Declare double precision functions *
@@ -552,17 +526,17 @@
     }
 
 
-int dbl_fadd __P((dbl_floating_point *, dbl_floating_point*, dbl_floating_point*, unsigned int *));
-int dbl_fcmp __P((dbl_floating_point *, dbl_floating_point*, unsigned int, unsigned int *));
-int dbl_fdiv __P((dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *));
-int dbl_fmpy __P((dbl_floating_point *, dbl_floating_point *, dbl_floating_point*, unsigned int *));
-int dbl_frem __P((dbl_floating_point *, dbl_floating_point *, dbl_floating_point*, unsigned int *));
-int dbl_fsqrt __P((dbl_floating_point *, dbl_floating_point *, unsigned int *));
-int dbl_fsub __P((dbl_floating_point *, dbl_floating_point *, dbl_floating_point*, unsigned int *));
+int dbl_fadd(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_fcmp(dbl_floating_point *, dbl_floating_point *, unsigned int, unsigned int *);
+int dbl_fdiv(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_fmpy(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_frem(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_fsqrt(dbl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_fsub(dbl_floating_point *, dbl_floating_point *, dbl_floating_point *, unsigned int *);
 
-dbl_floating_point dbl_setoverflow __P((unsigned int));
+dbl_floating_point dbl_setoverflow(unsigned int);
 
-int sgl_to_dbl_fcnvff __P((sgl_floating_point *, dbl_floating_point *, unsigned int *));
-int dbl_to_sgl_fcnvff __P((dbl_floating_point *, sgl_floating_point *, unsigned int *));
+int sgl_to_dbl_fcnvff(sgl_floating_point *, dbl_floating_point *, unsigned int *);
+int dbl_to_sgl_fcnvff(dbl_floating_point *, sgl_floating_point *, unsigned int *);
 
-int dbl_frnd __P((dbl_floating_point *, dbl_floating_point *, unsigned int *));
+int dbl_frnd(dbl_floating_point *, dbl_floating_point *, unsigned int *);

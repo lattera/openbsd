@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/idprom.h,v 1.5 1997/01/16 04:04:07 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/idprom.h,v 1.5.24.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: idprom.h,v 1.12 1996/11/20 18:57:10 gwr Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@ struct idprom {
 
 extern struct idprom identity_prom;
 
-int  idprom_init __P((void));
-void idprom_etheraddr __P((u_char *));
+int  idprom_init(void);
+void idprom_etheraddr(u_char *);
 
 #endif

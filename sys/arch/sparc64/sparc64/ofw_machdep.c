@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.6.1 2002/01/31 22:55:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/ofw_machdep.c,v 1.3.6.2 2002/06/11 03:38:44 art Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.16 2001/07/20 00:07:14 eeh Exp $	*/
 
 /*
@@ -57,14 +57,14 @@
 
 #include <machine/sparc64.h>
 
-int vsprintf __P((char *, const char *, va_list));
+int vsprintf(char *, const char *, va_list);
 
-void dk_cleanup __P((void));
+void dk_cleanup(void);
 
 static u_int mmuh = -1, memh = -1;
 
-static u_int get_mmu_handle __P((void));
-static u_int get_memory_handle __P((void));
+static u_int get_mmu_handle(void);
+static u_int get_memory_handle(void);
 
 static u_int 
 get_mmu_handle()
@@ -592,13 +592,7 @@ OF_stdout()
  * This is not safe, but then what do you expect?
  */
 void
-#ifdef __STDC__
 prom_printf(const char *fmt, ...)
-#else
-prom_printf(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	int len;
 	static char buf[256];

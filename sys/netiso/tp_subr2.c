@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_subr2.c,v 1.3 1996/04/21 22:29:59 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_subr2.c,v 1.3.26.1 2002/06/11 03:31:38 art Exp $	*/
 /*	$NetBSD: tp_subr2.c,v 1.11 1996/03/26 22:27:01 christos Exp $	*/
 
 /*-
@@ -122,7 +122,7 @@ SOFTWARE.
 #include <netccitt/pk_extern.h>
 
 #if 0
-static void copyQOSparms __P((struct tp_conn_param *, struct tp_conn_param *));
+static void copyQOSparms(struct tp_conn_param *, struct tp_conn_param *);
 #endif
 
 /*
@@ -814,7 +814,7 @@ tp0_stash(tpcb, e)
 	}
 #endif
 	if (tpcb->tp_netservice != ISO_CONS)
-		printf("tp0_stash: tp running over something wierd\n");
+		printf("tp0_stash: tp running over something weird\n");
 	else {
 		register struct pklcd *lcp = (struct pklcd *) isop->isop_chan;
 		pk_flowcontrol(lcp, sbspace(sb) <= 0, 1);
@@ -827,7 +827,7 @@ tp0_openflow(tpcb)
 {
 	register struct isopcb *isop = (struct isopcb *) tpcb->tp_npcb;
 	if (tpcb->tp_netservice != ISO_CONS)
-		printf("tp0_openflow: tp running over something wierd\n");
+		printf("tp0_openflow: tp running over something weird\n");
 	else {
 		register struct pklcd *lcp = (struct pklcd *) isop->isop_chan;
 		if (lcp->lcd_rxrnr_condition)

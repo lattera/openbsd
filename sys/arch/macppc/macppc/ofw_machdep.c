@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.5.2.1 2002/01/31 22:55:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.5.2.2 2002/06/11 03:36:34 art Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*
@@ -50,6 +50,8 @@
 
 #include <dev/ofw/openfirm.h>
 
+#include <macppc/macppc/ofw_machdep.h>
+
 #include <ukbd.h>
 #include <akbd.h>
 #include <dev/usb/ukbdvar.h>
@@ -59,10 +61,10 @@
 int save_ofw_mapping(void);
 int restore_ofw_mapping(void);
 
-void OF_exit __P((void)) __attribute__((__noreturn__));
-void OF_boot __P((char *bootspec)) __attribute__((__noreturn__));
-void ofw_mem_regions __P((struct mem_region **memp, struct mem_region **availp));
-void ofw_vmon __P((void));
+void OF_exit(void) __attribute__((__noreturn__));
+void OF_boot(char *bootspec) __attribute__((__noreturn__));
+void ofw_mem_regions(struct mem_region **memp, struct mem_region **availp);
+void ofw_vmon(void);
 
 struct firmware ofw_firmware = {
 	ofw_mem_regions,
@@ -109,7 +111,7 @@ ofw_mem_regions(memp, availp)
 	*availp = OFavail;
 }
 
-typedef void (fwcall_f) __P((int, int));
+typedef void (fwcall_f)(int, int);
 extern fwcall_f *fwcall;
 fwcall_f fwentry;
 extern u_int32_t ofmsr;
@@ -119,6 +121,9 @@ ofw_vmon()
 {
 	fwcall = &fwentry;
 }
+
+int OF_stdout;
+int OF_stdin;
 
 /* code to save and create the necessary mappings for BSD to handle
  * the vm-setup for OpenFirmware
@@ -130,10 +135,6 @@ static struct {
 	vm_offset_t pa;
 	int mode;
 } ofw_mapping[256];
-
-int OF_stdout;
-int OF_stdin;
-
 int
 save_ofw_mapping()
 {
@@ -143,13 +144,13 @@ save_ofw_mapping()
 	if ((chosen = OF_finddevice("/chosen")) == -1) {
 		return 0;
 	}
-	if (OF_getprop(chosen, "stdin", &stdin, sizeof stdin) != sizeof stdin)
-	{
+
+	if (OF_getprop(chosen, "stdin", &stdin, sizeof stdin) != sizeof stdin) {
 		return 0;
 	}
 	OF_stdin = stdin;
-	if (OF_getprop(chosen, "stdout", &stdout, sizeof stdout) != sizeof stdout)
-	{
+	if (OF_getprop(chosen, "stdout", &stdout, sizeof stdout)
+	    != sizeof stdout) {
 		return 0;
 	}
 	if (stdout == 0) {
@@ -163,8 +164,9 @@ save_ofw_mapping()
 	OF_getprop(chosen, "mmu", &mmui, 4);
 	mmu = OF_instance_to_package(mmui);
 	bzero(ofw_mapping, sizeof(ofw_mapping));
-	N_mapping =
-	    OF_getprop(mmu, "translations", ofw_mapping, sizeof(ofw_mapping));
+
+	N_mapping = OF_getprop(mmu, "translations", ofw_mapping,
+	    sizeof(ofw_mapping));
 	N_mapping /= sizeof(ofw_mapping[0]);
 
 	fw = &ofw_firmware;
@@ -208,6 +210,7 @@ void ofw_do_pending_int(void);
 extern int system_type;
 
 void ofw_intr_init(void);
+
 void
 ofrootfound()
 {
@@ -224,6 +227,7 @@ ofrootfound()
 		ofw_intr_init();
 	}
 }
+
 void
 ofw_intr_establish()
 {
@@ -232,6 +236,7 @@ ofw_intr_establish()
 		ofw_intr_init();
 	}
 }
+
 void
 ofw_intr_init()
 {
@@ -262,12 +267,13 @@ ofw_intr_init()
 	imask[IPL_HIGH] = 0xffffffff;
 
 }
+
 void
 ofw_do_pending_int()
 {
 	int pcpl;
 	int emsr, dmsr;
-static int processing;
+	static int processing;
 
 	if(processing)
 		return;
@@ -332,6 +338,8 @@ bus_space_handle_t cons_display_ctl_h;
 int cons_height, cons_width, cons_linebytes, cons_depth;
 int cons_display_ofh;
 u_int32_t cons_addr;
+int cons_brightness;
+int cons_backlight_available;
 
 #include "vgafb_pci.h"
 
@@ -373,17 +381,116 @@ ofwconprobe()
 	return;
 }
 	
+#define DEVTREE_UNKNOWN 0
+#define DEVTREE_USB	1
+#define DEVTREE_ADB	2
+#define DEVTREE_HID	3
+int ofw_devtree = DEVTREE_UNKNOWN;
 
+#define OFW_HAVE_USBKBD 1
+#define OFW_HAVE_ADBKBD 2
+int ofw_have_kbd = 0;
+
+void ofw_recurse_keyboard(int pnode);
+void ofw_find_keyboard(void);
+
+void
+ofw_recurse_keyboard(int pnode)
+{
+	char name[32];
+	int old_devtree;
+	int len;
+	int node;
+
+	for (node = OF_child(pnode); node != 0; node = OF_peer(node)) {
+
+		len = OF_getprop(node, "name", name, 20);
+		if (len == 0)
+			continue;
+		name[len] = 0;
+		if (strcmp(name, "keyboard") == 0) {
+			/* found a keyboard node, where is it? */
+			if (ofw_devtree == DEVTREE_USB) {
+				ofw_have_kbd |= OFW_HAVE_USBKBD;
+			} else if (ofw_devtree == DEVTREE_ADB) {
+				ofw_have_kbd |= OFW_HAVE_ADBKBD;
+			} else {
+				/* hid or some other keyboard? igore */
+			}
+			continue;
+		}
+
+		old_devtree = ofw_devtree;
+
+		if (strcmp(name, "adb") == 0) {
+			ofw_devtree = DEVTREE_ADB;
+		}
+		if (strcmp(name, "usb") == 0) {
+			ofw_devtree = DEVTREE_USB;
+		}
+
+		ofw_recurse_keyboard(node);
+
+		ofw_devtree = old_devtree; /* nest? */
+	}
+}
+
+void
+ofw_find_keyboard()
+{
+	int stdin_node;
+	char iname[32];
+	int len;
+
+	stdin_node = OF_instance_to_package(OF_stdin);
+	len = OF_getprop(stdin_node, "name", iname, 20);
+	iname[len] = 0;
+	printf("console in [%s] ", iname);
+
+	/* GRR, apple removed the interface once used for keyboard
+	 * detection walk the OFW tree to find keyboards and what type.
+	 */
+
+	ofw_recurse_keyboard(OF_peer(0));
+
+	if (ofw_have_kbd == 0) {
+		printf("no keyboard found, hoping USB will be present\n");
+#if NUKBD > 0
+		ukbd_cnattach();
+#endif
+	}
+
+	if (ofw_have_kbd == (OFW_HAVE_USBKBD|OFW_HAVE_ADBKBD)) {
+#if NUKBD > 0
+		printf("USB and ADB found, using USB\n");
+		ukbd_cnattach();
+#else 		
+		ofw_have_kbd = OFW_HAVE_ADBKBD; /* ??? */
+#endif
+	}
+	if (ofw_have_kbd == OFW_HAVE_USBKBD) {
+#if NUKBD > 0
+		printf("USB found\n");
+		ukbd_cnattach();
+#endif
+	} else if (ofw_have_kbd == OFW_HAVE_ADBKBD) {
+#if NAKBD >0
+		printf("ADB found\n");
+		akbd_cnattach();
+#endif 
+	}
+}
 
 void
 of_display_console()
 {
 #if NVGAFB_PCI > 0
 	char name[32];
-	char iname[32];
 	int len;
-	int stdout_node, stdin_node;
+	int stdout_node;
+	int display_node;
 	int err;
+	int backlight_control[2];
 	u_int32_t memtag, iotag;
 	struct ppc_pci_chipset pa;
 	struct {
@@ -420,56 +527,27 @@ of_display_console()
 		OF_interpret("frame-buffer-adr", 1, &cons_addr);
 	}
 
-	stdin_node = OF_instance_to_package(OF_stdin);
-	len = OF_getprop(stdin_node, "name", iname, 20);
-	iname[len] = 0;
-	printf("console in [%s] ", iname);
-	/* what to do about serial console? */
-	if (strcmp ("keyboard", iname) == 0) {
-		struct usb_kbd_ihandles *ukbds;
-#if NAKBD > 0
-		int akbd;
-#endif
-		/* if there is a usb keyboard, we want it, do not 
-		 * dereference the pointer that is returned
-		 */
-		if (OF_call_method("`usb-kbd-ihandles", OF_stdin, 0, 1, &ukbds)
-			!= -1 && ukbds != NULL)
-		{
-			printf("USB");
-			ukbd_cnattach();
-			goto kbd_found;
-		}
-#if NAKBD > 0
-		if (OF_call_method("`adb-kbd-ihandle", OF_stdin, 0, 1, &akbd)
-			!= -1 &&
-		   akbd != 0 &&
-		   OF_instance_to_package(akbd) != -1)
-		{
-			printf("ADB");
-			akbd_cnattach();
-			goto kbd_found;
-		}
-#endif
-		panic("no console keyboard");
-kbd_found:
-	}
-	printf("\n");
+	ofw_find_keyboard();
 
+	display_node = stdout_node;
 	len = OF_getprop(stdout_node, "assigned-addresses", addr, sizeof(addr));
 	if (len == -1) {
-		int node;
-		node = OF_parent(stdout_node);
-		len = OF_getprop(node, "name", name, 20);
+		display_node = OF_parent(stdout_node);
+		len = OF_getprop(display_node, "name", name, 20);
 		name[len] = 0;
 
 		printf("using parent %s:", name);
-		len = OF_getprop(node, "assigned-addresses",
+		len = OF_getprop(display_node, "assigned-addresses",
 			addr, sizeof(addr));
 		if (len < sizeof(addr[0])) {
 			panic(": no address\n");
 		}
 	}
+	len = OF_getprop(display_node, "backlight-control",
+	    backlight_control, sizeof(backlight_control));
+	if (len > 0)
+		cons_backlight_available = 1;
+
 	memtag = ofw_make_tag(NULL, pcibus(addr[0].phys_hi),
 		pcidev(addr[0].phys_hi),
 		pcifunc(addr[0].phys_hi));
@@ -482,8 +560,8 @@ kbd_found:
 	printf(": consaddr %x, ", cons_addr);
 	printf(": ioaddr %x, size %x", addr[1].phys_lo, addr[1].size_lo);
 	printf(": memtag %x, iotag %x", memtag, iotag);
-	printf(": cons_width %d cons_linebytes %d cons_height %d\n",
-		cons_width, cons_linebytes, cons_height);
+	printf(": width %d linebytes %d height %d depth %d\n",
+		cons_width, cons_linebytes, cons_height, cons_depth);
 #endif
 
 	{
@@ -514,5 +592,30 @@ kbd_found:
 		}
 #endif
 	}
+
+	of_setbrightness(DEFAULT_BRIGHTNESS);
+#endif
+}
+
+void
+of_setbrightness(brightness)
+	int brightness;
+{
+
+#if NVGAFB_PCI > 0
+	if (cons_backlight_available == 0)
+		return;
+
+	if (brightness < MIN_BRIGHTNESS)
+		brightness = MIN_BRIGHTNESS;
+	else if (brightness > MAX_BRIGHTNESS)
+		brightness = MAX_BRIGHTNESS;
+
+	cons_brightness = brightness;
+
+	/* The OF method is called "set-contrast" but affects brightness. Don't ask. */
+	OF_call_method_1("set-contrast", cons_display_ofh, 1, cons_brightness);
+
+	/* XXX this routine should also save the brightness settings in the nvram */
 #endif
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.21 2001/12/05 01:57:15 provos Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/include/param.h,v 1.21.2.1 2002/06/11 03:39:19 art Exp $ */
 /*      $NetBSD: param.h,v 1.39 1999/10/22 21:14:34 ragge Exp $    */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -86,7 +86,7 @@
 #define	DEV_BSIZE	(1 << DEV_BSHIFT)
 
 #define BLKDEV_IOSIZE	2048
-#define	MAXPHYS		(63 * 1024)	/* max raw I/O transfer size */
+#define	MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 #define	MAXBSIZE	0x4000		/* max FS block size - XXX */
 
 #define	UPAGES		2		/* pages of u-area */
@@ -164,6 +164,10 @@
 #define       ovbcopy(x,y,z)  bcopy(x, y, z)
 
 #ifdef _KERNEL
+
+/* SPL asserts */
+#define	splassert(wantipl)	/* nothing */
+
 #ifndef lint
 #define splx(reg)						\
 ({								\
@@ -213,7 +217,7 @@
 #ifndef	_LOCORE
 #include <machine/cpu.h>
 
-void	delay __P((int));
+void	delay(int);
 /* inline macros used inside kernel */
 #include <machine/macros.h>
 #endif

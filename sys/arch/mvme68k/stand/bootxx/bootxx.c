@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/bootxx.c,v 1.4 2001/07/04 08:06:55 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/bootxx.c,v 1.4.4.1 2002/06/11 03:36:51 art Exp $ */
 /*	$NetBSD: bootxx.c,v 1.5 1995/10/13 21:44:57 gwr Exp $ */
 
 /*
@@ -52,7 +52,7 @@
 /*
  * Boot device is derived from ROM provided information.
  */
-#define LOADADDR	0x3F0000 /* where to load level 2 bootstrap */
+#define LOADADDR	0x6F0000 /* where to load level 2 bootstrap */
 				/* (l2 must relocate itself) */
 
 /* This determines the largest boot program we can load. */
@@ -87,7 +87,7 @@ main()
 		_rtt();
 	}
 
-	addr = (char*)LOADADDR;
+	addr = (char *)LOADADDR;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

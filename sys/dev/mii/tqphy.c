@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/tqphy.c,v 1.3 2000/08/26 20:04:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/tqphy.c,v 1.3.8.1 2002/06/11 03:42:24 art Exp $	*/
 /*	$NetBSD: tqphy.c,v 1.9 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*
@@ -89,9 +89,9 @@
 
 #include <dev/mii/tqphyreg.h>
 
-int	tqphymatch __P((struct device *, void *, void *));
-void	tqphyattach __P((struct device *, struct device *, void *));
-int	tqphydetach __P((struct device *, int));
+int	tqphymatch(struct device *, void *, void *);
+void	tqphyattach(struct device *, struct device *, void *);
+int	tqphydetach(struct device *, int);
 
 struct cfattach tqphy_ca = {
 	sizeof(struct mii_softc), tqphymatch, tqphyattach, mii_phy_detach,
@@ -102,8 +102,8 @@ struct cfdriver tqphy_cd = {
 	NULL, "tqphy", DV_DULL
 };
 
-int	tqphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	tqphy_status __P((struct mii_softc *));
+int	tqphy_service(struct mii_softc *, struct mii_data *, int);
+void	tqphy_status(struct mii_softc *);
 
 int
 tqphymatch(parent, match, aux)
@@ -235,19 +235,19 @@ tqphy_status(sc)
 	    PHY_READ(sc, MII_BMSR);
 	if (bmsr & BMSR_LINK)
 		mii->mii_media_status |= IFM_ACTIVE;
- 
+
 	bmcr = PHY_READ(sc, MII_BMCR);
 	if (bmcr & BMCR_ISO) {
 		mii->mii_media_active |= IFM_NONE;
 		mii->mii_media_status = 0;
 		return;
 	}
- 
+
 	if (bmcr & BMCR_LOOP)
 		mii->mii_media_active |= IFM_LOOP;
- 
+
 	if (bmcr & BMCR_AUTOEN) {
-		if ((bmsr & BMSR_ACOMP) == 0) { 
+		if ((bmsr & BMSR_ACOMP) == 0) {
 			/* Erg, still trying, I guess... */
 			mii->mii_media_active |= IFM_NONE;
 			return;
@@ -259,6 +259,6 @@ tqphy_status(sc)
 			mii->mii_media_active |= IFM_10_T;
 		if (diag & DIAG_DPLX)
 			mii->mii_media_active |= IFM_FDX;
-	} else 
+	} else
 		mii->mii_media_active = ife->ifm_media;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.6.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/clock.c,v 1.6.2.2 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: clock.c,v 1.41 2001/07/24 19:29:25 eeh Exp $ */
 
 /*
@@ -95,6 +95,7 @@
 #include <sparc64/dev/ebusreg.h>
 #include <sparc64/dev/ebusvar.h>
 
+static u_int64_t lasttick;
 extern u_int64_t cpu_clockrate;
 
 struct rtc_info {
@@ -120,7 +121,7 @@ int statmin;			/* statclock interval - 1/2*variance */
 int timerok;
 
 static long tick_increment;
-int schedintr __P((void *));
+int schedintr(void *);
 
 static struct intrhand level10 = { clockintr };
 static struct intrhand level0 = { tickintr };
@@ -130,13 +131,13 @@ static struct intrhand schedint = { schedintr };
 /*
  * clock (eeprom) attaches at the sbus or the ebus (PCI)
  */
-static int	clockmatch_sbus __P((struct device *, void *, void *));
-static void	clockattach_sbus __P((struct device *, struct device *, void *));
-static int	clockmatch_ebus __P((struct device *, void *, void *));
-static void	clockattach_ebus __P((struct device *, struct device *, void *));
-static int	clockmatch_rtc __P((struct device *, void *, void *));
-static void	clockattach_rtc __P((struct device *, struct device *, void *));
-static void	clockattach __P((int, bus_space_tag_t, bus_space_handle_t));
+static int	clockmatch_sbus(struct device *, void *, void *);
+static void	clockattach_sbus(struct device *, struct device *, void *);
+static int	clockmatch_ebus(struct device *, void *, void *);
+static void	clockattach_ebus(struct device *, struct device *, void *);
+static int	clockmatch_rtc(struct device *, void *, void *);
+static void	clockattach_rtc(struct device *, struct device *, void *);
+static void	clockattach(int, bus_space_tag_t, bus_space_handle_t);
 
 struct cfattach clock_sbus_ca = {
 	sizeof(struct device), clockmatch_sbus, clockattach_sbus
@@ -158,8 +159,8 @@ struct cfdriver rtc_cd = {
 static todr_chip_handle_t todr_handle = NULL;
 static struct idprom *idprom;
 
-static int	timermatch __P((struct device *, void *, void *));
-static void	timerattach __P((struct device *, struct device *, void *));
+static int	timermatch(struct device *, void *, void *);
+static void	timerattach(struct device *, struct device *, void *);
 
 struct timerreg_4u	timerreg_4u;	/* XXX - need more cleanup */
 
@@ -171,13 +172,14 @@ struct cfdriver timer_cd = {
 	NULL, "timer", DV_DULL
 };
 
-int sbus_wenable __P((struct todr_chip_handle *, int));
-int ebus_wenable __P((struct todr_chip_handle *, int));
+int sbus_wenable(struct todr_chip_handle *, int);
+int ebus_wenable(struct todr_chip_handle *, int);
 struct chiptime;
-void myetheraddr __P((u_char *));
-int chiptotime __P((int, int, int, int, int, int));
-void timetochip __P((struct chiptime *));
-void stopcounter __P((struct timer_4u *));
+void myetheraddr(u_char *);
+struct idprom *getidprom(void);
+int chiptotime(int, int, int, int, int, int);
+void timetochip(struct chiptime *);
+void stopcounter(struct timer_4u *);
 
 int timerblurb = 10; /* Guess a value; used before clock is attached */
 
@@ -425,8 +427,13 @@ clockattach(node, bt, bh)
 		panic("Can't attach %s tod clock", model);
 
 #define IDPROM_OFFSET (8*1024 - 40)	/* XXX - get nvram sz from driver */
-	idp = (struct idprom *)((u_long)bh + IDPROM_OFFSET);
-
+	if (idprom == NULL) {
+		idp = getidprom();
+		if (idp == NULL)
+			idp = (struct idprom *)((u_long)bh + IDPROM_OFFSET);
+		idprom = idp;
+	} else
+		idp = idprom;
 	h = idp->id_machine << 24;
 	h |= idp->id_hostid[0] << 16;
 	h |= idp->id_hostid[1] << 8;
@@ -434,7 +441,21 @@ clockattach(node, bt, bh)
 	hostid = h;
 	printf(": hostid %x\n", (u_int)hostid);
 
-	idprom = idp;
+}
+
+struct idprom *
+getidprom() {
+	struct idprom *idp = NULL;
+	int node, n;
+
+	node = findroot();
+	if (getprop(node, "idprom", sizeof(*idp), &n, (void **)&idp) != 0)
+		return (NULL);
+	if (n != 1) {
+		free(idp, M_DEVBUF);
+		return (NULL);
+	}
+	return (idp);
 }
 
 /*
@@ -570,55 +591,16 @@ timerattach(parent, self, aux)
 
 	/* Install the appropriate interrupt vector here */
 	level10.ih_number = ma->ma_interrupts[0];
-	level10.ih_clr = (void*)&timerreg_4u.t_clrintr[0];
+	level10.ih_clr = (void *)&timerreg_4u.t_clrintr[0];
 	intr_establish(10, &level10);
 	level14.ih_number = ma->ma_interrupts[1];
-	level14.ih_clr = (void*)&timerreg_4u.t_clrintr[1];
+	level14.ih_clr = (void *)&timerreg_4u.t_clrintr[1];
 
 	intr_establish(14, &level14);
 	printf(" irq vectors %lx and %lx", 
 	       (u_long)level10.ih_number, 
 	       (u_long)level14.ih_number);
 
-#if 0
-	cnt = &(timerreg_4u.t_timer[0].t_count);
-	lim = &(timerreg_4u.t_timer[0].t_limit);
-
-	/*
-	 * Calibrate delay() by tweaking the magic constant
-	 * until a delay(100) actually reads (at least) 100 us 
-	 * on the clock.  Since we're using the %tick register 
-	 * which should be running at exactly the CPU clock rate, it
-	 * has a period of somewhere between 7ns and 3ns.
-	 */
-
-#ifdef DEBUG
-	printf("Delay calibrarion....\n");
-#endif
-	for (timerblurb = 1; timerblurb > 0; timerblurb++) {
-		volatile int discard;
-		register int t0, t1;
-
-		/* Reset counter register by writing some large limit value */
-		discard = *lim;
-		*lim = tmr_ustolim(TMR_MASK-1);
-
-		t0 = *cnt;
-		delay(100);
-		t1 = *cnt;
-
-		if (t1 & TMR_LIMIT)
-			panic("delay calibration");
-
-		t0 = (t0 >> TMR_SHIFT) & TMR_MASK;
-		t1 = (t1 >> TMR_SHIFT) & TMR_MASK;
-
-		if (t1 >= t0 + 100)
-			break;
-	}
-
-	printf(" delay constant %d\n", timerblurb);
-#endif
 	printf("\n");
 	timerok = 1;
 }
@@ -710,6 +692,7 @@ cpu_initclocks()
 	start_time += cpu_clockrate / 1000000 * time.tv_usec;
 	
 	/* Initialize the %tick register */
+	lasttick = start_time;
 #ifdef __arch64__
 	__asm __volatile("wrpr %0, 0, %%tick" : : "r" (start_time));
 #else
@@ -878,6 +861,8 @@ tickintr(cap)
 		setsoftint();
 
 	s = splhigh();
+	__asm __volatile("rd %%tick, %0" : "=r" (lasttick) :);
+	lasttick &= TICK_TICKS;
 	/* Reset the interrupt */
 	next_tick(tick_increment);
 	splx(s);
@@ -1138,3 +1123,45 @@ rtc_setcal(handle, v)
 	return (EOPNOTSUPP);
 }
 
+#define	USECPERSEC	1000000
+
+void
+microtime(tvp)
+	struct timeval *tvp;
+{
+	if (timerreg_4u.t_timer == NULL) {
+		int s;
+		u_int64_t tick;
+
+		s = splhigh();
+		__asm __volatile("rd %%tick, %0" : "=r" (tick) :);
+		tick &= TICK_TICKS;
+		tick -= lasttick;
+		tvp->tv_sec = time.tv_sec;
+		tvp->tv_usec = time.tv_usec;
+		splx(s);
+
+		tick = (tick * USECPERSEC) / cpu_clockrate;
+
+		tvp->tv_sec += tick / USECPERSEC;
+		tvp->tv_usec += tick % USECPERSEC;
+	} else {
+		struct timeval t1, t2;
+		int64_t t_tick;
+
+		do {
+		
+			t1 = time;
+			t_tick = timerreg_4u.t_timer->t_count;
+			t2 = time;
+		} while (t1.tv_sec != t2.tv_sec || t1.tv_usec != t2.tv_usec);
+
+		tvp->tv_sec = t1.tv_sec;
+		tvp->tv_usec = t1.tv_usec + t_tick;
+	}
+
+	while (tvp->tv_usec >= USECPERSEC) {
+		tvp->tv_sec++;
+		tvp->tv_usec -= USECPERSEC;
+	}
+}

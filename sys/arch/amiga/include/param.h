@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.18.2.1 2002/01/31 22:55:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.18.2.2 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:36 veego Exp $	*/
 
 /*
@@ -92,8 +92,8 @@
 
 #include <machine/cpu.h>
 
-void delay __P((int));
-void DELAY __P((int));
+void delay(int);
+void DELAY(int);
 #endif	/* !_LOCORE */
 #endif	/* _KERNEL */
 

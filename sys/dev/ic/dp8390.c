@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.19.4.1 2002/01/31 22:55:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.19.4.2 2002/06/11 03:42:18 art Exp $	*/
 /*	$NetBSD: dp8390.c,v 1.13 1998/07/05 06:49:11 jonathan Exp $	*/
 
 /*
@@ -57,19 +57,19 @@
 #define __inline__	/* XXX for debugging porpoises */
 #endif
 
-static __inline__ void	dp8390_xmit __P((struct dp8390_softc *));
+static __inline__ void	dp8390_xmit(struct dp8390_softc *);
 
-static __inline__ void	dp8390_read_hdr __P((struct dp8390_softc *,
-			    int, struct dp8390_ring *));
-static __inline__ int	dp8390_ring_copy __P((struct dp8390_softc *,
-			    int, caddr_t, u_short));
-static __inline__ int	dp8390_write_mbuf __P((struct dp8390_softc *,
-			    struct mbuf *, int));
+static __inline__ void	dp8390_read_hdr(struct dp8390_softc *,
+			    int, struct dp8390_ring *);
+static __inline__ int	dp8390_ring_copy(struct dp8390_softc *,
+			    int, caddr_t, u_short);
+static __inline__ int	dp8390_write_mbuf(struct dp8390_softc *,
+			    struct mbuf *, int);
 
-static int		dp8390_test_mem __P((struct dp8390_softc *));
+static int		dp8390_test_mem(struct dp8390_softc *);
 
-int	dp8390_enable __P((struct dp8390_softc *));
-void	dp8390_disable __P((struct dp8390_softc *));
+int	dp8390_enable(struct dp8390_softc *);
+void	dp8390_disable(struct dp8390_softc *);
 
 int	dp8390_debug = 0;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/uperf_sbus.c,v 1.2.2.1 2002/01/31 22:55:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/uperf_sbus.c,v 1.2.2.2 2002/06/11 03:42:29 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/types.h>
@@ -48,8 +53,8 @@
 #include <dev/sbus/sbusvar.h>
 #include <dev/sbus/uperf_sbusreg.h>
 
-int uperf_sbus_match __P((struct device *, void *, void *));
-void uperf_sbus_attach __P((struct device *, struct device *, void *));
+int uperf_sbus_match(struct device *, void *, void *);
+void uperf_sbus_attach(struct device *, struct device *, void *);
 
 struct uperf_sbus_softc {
 	struct uperf_softc	sc_usc;
@@ -61,14 +66,14 @@ struct cfattach uperf_sbus_ca = {
 	sizeof(struct uperf_sbus_softc), uperf_sbus_match, uperf_sbus_attach
 };
 
-u_int32_t uperf_sbus_read_reg __P((struct uperf_sbus_softc *, bus_size_t));
-void uperf_sbus_write_reg __P((struct uperf_sbus_softc *,
-    bus_size_t, u_int32_t));
+u_int32_t uperf_sbus_read_reg(struct uperf_sbus_softc *, bus_size_t);
+void uperf_sbus_write_reg(struct uperf_sbus_softc *,
+    bus_size_t, u_int32_t);
 
-int uperf_sbus_getcnt __P((void *, int, u_int32_t *, u_int32_t *));
-int uperf_sbus_clrcnt __P((void *, int));
-int uperf_sbus_getcntsrc __P((void *, int, u_int *, u_int *));
-int uperf_sbus_setcntsrc __P((void *, int, u_int, u_int));
+int uperf_sbus_getcnt(void *, int, u_int32_t *, u_int32_t *);
+int uperf_sbus_clrcnt(void *, int);
+int uperf_sbus_getcntsrc(void *, int, u_int *, u_int *);
+int uperf_sbus_setcntsrc(void *, int, u_int, u_int);
 
 struct uperf_src uperf_sbus_srcs[] = {
 	{ UPERFSRC_SYSCK, UPERF_CNT0|UPERF_CNT1, SEL0_SYSCK },

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_autoconf.c,v 1.29 2001/09/01 05:48:18 jason Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_autoconf.c,v 1.29.4.1 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: subr_autoconf.c,v 1.21 1996/04/04 06:06:18 cgd Exp $	*/
 
 /*
@@ -49,9 +49,9 @@
 
 #include <sys/param.h>
 #include <sys/device.h>
+#include <sys/limits.h>
 #include <sys/malloc.h>
 #include <sys/systm.h>
-#include <machine/limits.h>
 /* Extra stuff from Matthias Drochner <drochner@zelux6.zel.kfa-juelich.de> */
 #include <sys/queue.h>
 
@@ -59,7 +59,7 @@
  * Autoconfiguration subroutines.
  */
 
-typedef int (*cond_predicate_t) __P((struct device *, void *));
+typedef int (*cond_predicate_t)(struct device *, void *);
 
 /*
  * ioconf.c exports exactly two names: cfdata and cfroots.  All system
@@ -87,18 +87,18 @@ static struct cftable staticcftable = {
 #endif /* AUTOCONF_VERBOSE */
 int autoconf_verbose = AUTOCONF_VERBOSE;	/* trace probe calls */
 
-static char *number __P((char *, int));
-static void mapply __P((struct matchinfo *, struct cfdata *));
+static char *number(char *, int);
+static void mapply(struct matchinfo *, struct cfdata *);
 
 struct deferred_config {
 	TAILQ_ENTRY(deferred_config) dc_queue;
 	struct device *dc_dev;
-	void (*dc_func) __P((struct device *));
+	void (*dc_func)(struct device *);
 };
 
 TAILQ_HEAD(, deferred_config) deferred_config_queue;
 
-void config_process_deferred_children __P((struct device *));
+void config_process_deferred_children(struct device *);
 
 struct devicelist alldevs;		/* list of all devices */
 struct evcntlist allevents;		/* list of all event counters */
@@ -678,7 +678,7 @@ config_deactivate(dev)
 void
 config_defer(dev, func)
 	struct device *dev;
-	void (*func) __P((struct device *));
+	void (*func)(struct device *);
 {
 	struct deferred_config *dc;
 
@@ -908,7 +908,7 @@ attach_loadable(parentname, parentunit, cftable)
 }
 
 int
-devcf_intable __P((struct device *, void *));
+devcf_intable(struct device *, void *);
 
 int
 devcf_intable(dev, arg)

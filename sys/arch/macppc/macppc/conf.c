@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.9 2001/12/12 19:19:17 jason Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.9.2.1 2002/06/11 03:36:34 art Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -136,7 +136,6 @@ cdev_decl(uscanner);
 #include "inet.h"
 
 #include "apm.h"
-cdev_decl(apm);
 
 #include "wsmux.h"
 
@@ -150,6 +149,8 @@ cdev_decl(pci);
 #include "pf.h"
 
 #include <altq/altqconf.h>
+
+#include "systrace.h"
 
 struct cdevsw cdevsw[] = {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -202,7 +203,7 @@ struct cdevsw cdevsw[] = {
 	cdev_crypto_init(NCRYPTO,crypto), /* 47: /dev/crypto */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else

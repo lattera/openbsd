@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket.c,v 1.39.2.1 2002/01/31 22:55:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket.c,v 1.39.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: uipc_socket.c,v 1.21 1996/02/04 02:17:52 christos Exp $	*/
 
 /*
@@ -120,6 +120,8 @@ socreate(dom, aso, type, proto)
 		so->so_state = SS_PRIV;
 	so->so_ruid = p->p_cred->p_ruid;
 	so->so_euid = p->p_ucred->cr_uid;
+	so->so_rgid = p->p_cred->p_rgid;
+	so->so_egid = p->p_ucred->cr_gid;
 	so->so_proto = prp;
 	error = (*prp->pr_usrreq)(so, PRU_ATTACH, NULL,
 	    (struct mbuf *)(long)proto, NULL);
@@ -935,7 +937,9 @@ sosetopt(so, level, optname, m0)
 		switch (optname) {
 
 		case SO_LINGER:
-			if (m == NULL || m->m_len != sizeof (struct linger)) {
+			if (m == NULL || m->m_len != sizeof (struct linger) ||
+			    mtod(m, struct linger *)->l_linger < 0 ||
+			    mtod(m, struct linger *)->l_linger > SHRT_MAX) {
 				error = EINVAL;
 				goto bad;
 			}

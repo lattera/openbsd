@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18.2.1 2002/01/31 22:55:18 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18.2.2 2002/06/11 03:37:10 art Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -90,7 +90,6 @@
 #define INTSTACK_SIZE		(3 * PAGE_SIZE)	/* interrupt stack size */
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS * MCLBYTES)
 #define VM_PHYS_SIZE		(1 * NPTEPG * PAGE_SIZE)
 
 /*

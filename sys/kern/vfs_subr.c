@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.2 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.3 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -101,21 +101,21 @@ struct simplelock mntvnode_slock;
 struct simplelock vnode_free_list_slock;
 struct simplelock spechash_slock;
 
-void	vclean __P((struct vnode *, int, struct proc *));
+void	vclean(struct vnode *, int, struct proc *);
 
-void insmntque __P((struct vnode *, struct mount *));
-int getdevvp __P((dev_t, struct vnode **, enum vtype));
+void insmntque(struct vnode *, struct mount *);
+int getdevvp(dev_t, struct vnode **, enum vtype);
 
-int vfs_hang_addrlist __P((struct mount *, struct netexport *,
-				  struct export_args *));
-int vfs_free_netcred __P((struct radix_node *, void *));
-void vfs_free_addrlist __P((struct netexport *));
-static __inline__ void vputonfreelist __P((struct vnode *));
+int vfs_hang_addrlist(struct mount *, struct netexport *,
+				  struct export_args *);
+int vfs_free_netcred(struct radix_node *, void *);
+void vfs_free_addrlist(struct netexport *);
+static __inline__ void vputonfreelist(struct vnode *);
 
 int vflush_vnode(struct vnode *, void *);
 
 #ifdef DEBUG
-void printlockedvnodes __P((void));
+void printlockedvnodes(void);
 #endif
 
 #define VN_KNOTE(vp, b) \
@@ -165,17 +165,13 @@ vfs_busy(mp, flags, interlkp, p)
 		if (flags & LK_NOWAIT)
 			return (ENOENT);
 		mp->mnt_flag |= MNT_MWAIT;
-		if (interlkp)
-			simple_unlock(interlkp);
 		/*
 		 * Since all busy locks are shared except the exclusive
 		 * lock granted when unmounting, the only place that a
 		 * wakeup needs to be done is at the release of the
 		 * exclusive lock at the end of dounmount.
 		 */
- 		sleep((caddr_t)mp, PVFS);
-		if (interlkp)
-			simple_lock(interlkp);
+		ltsleep(mp, PVFS, "vfs_bsy", 0, interlkp);
 		return (ENOENT);
 	}
 	lkflags = LK_SHARED;
@@ -254,7 +250,6 @@ int
 vfs_mountroot()
 {
 	struct vfsconf *vfsp;
-	extern int (*mountroot)(void);
 	int error;
 
 	if (mountroot != NULL)
@@ -364,7 +359,7 @@ vattr_null(vap)
 /*
  * Routines having to do with the management of the vnode table.
  */
-extern int (**dead_vnodeop_p) __P((void *));
+extern int (**dead_vnodeop_p)(void *);
 long numvnodes;
 
 /*
@@ -374,7 +369,7 @@ int
 getnewvnode(tag, mp, vops, vpp)
 	enum vtagtype tag;
 	struct mount *mp;
-	int (**vops) __P((void *));
+	int (**vops)(void *);
 	struct vnode **vpp;
 {
 	extern struct uvm_pagerops uvm_vnodeops;
@@ -1977,6 +1972,8 @@ vwaitforio(vp, slpflag, wmesg, timeo)
 {
 	int error = 0;
 
+	splassert(IPL_BIO);
+
 	while (vp->v_numoutput) {
 		vp->v_bioflag |= VBIOWAIT;
 		error = tsleep((caddr_t)&vp->v_numoutput,
@@ -1998,6 +1995,8 @@ void
 vwakeup(vp)
 	struct vnode *vp;
 {
+	splassert(IPL_BIO);
+
 	if (vp != NULL) {
 		if (vp->v_numoutput-- == 0)
 			panic("vwakeup: neg numoutput");
@@ -2163,6 +2162,8 @@ bgetvp(vp, bp)
 	register struct vnode *vp;
 	register struct buf *bp;
 {
+	splassert(IPL_BIO);
+
 
 	if (bp->b_vp)
 		panic("bgetvp: not free");
@@ -2187,6 +2188,8 @@ void
 brelvp(struct buf *bp)
 {
 	struct vnode *vp;
+
+	splassert(IPL_BIO);
 
 	if ((vp = bp->b_vp) == NULL)
 		panic("brelvp: NULL");
@@ -2223,6 +2226,8 @@ buf_replacevnode(bp, newvp)
 {
 	struct vnode *oldvp = bp->b_vp;
 
+	splassert(IPL_BIO);
+
 	if (oldvp)
 		brelvp(bp);
 
@@ -2249,6 +2254,8 @@ reassignbuf(bp)
 	struct buflists *listheadp;
 	int delay;
 	struct vnode *vp = bp->b_vp;
+
+	splassert(IPL_BIO);
 
 	/*
 	 * Delete from old vnode list, if on one.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.7 2001/05/01 16:51:10 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/mt.c,v 1.7.4.1 2002/06/11 03:35:19 art Exp $	*/
 /*	$NetBSD: mt.c,v 1.8 1997/03/31 07:37:29 scottr Exp $	*/
 
 /* 
@@ -94,8 +94,8 @@ int	mtdebug = 0;
 #define B_CMD		B_XXX		/* command buf instead of data */
 #define	b_cmd		b_blkno		/* blkno holds cmd when B_CMD */
 
-int	mtmatch __P((struct device *, void *, void *));
-void	mtattach __P((struct device *, struct device *, void *));
+int	mtmatch(struct device *, void *, void *);
+void	mtattach(struct device *, struct device *, void *);
 
 struct cfattach mt_ca = {
 	sizeof(struct mt_softc), mtmatch, mtattach
@@ -105,16 +105,16 @@ struct cfdriver mt_cd = {
 	NULL, "mt", DV_TAPE
 };
 
-int	mtident __P((struct mt_softc *, struct hpibbus_attach_args *));
-void	mtustart __P((struct mt_softc *));
-int	mtreaddsj __P((struct mt_softc *, int));
-int	mtcommand __P((dev_t, int, int));
-void	spl_mtintr __P((void *));
-void	spl_mtstart __P((void *));
+int	mtident(struct mt_softc *, struct hpibbus_attach_args *);
+void	mtustart(struct mt_softc *);
+int	mtreaddsj(struct mt_softc *, int);
+int	mtcommand(dev_t, int, int);
+void	spl_mtintr(void *);
+void	spl_mtstart(void *);
 
-void	mtstart __P((void *));
-void	mtgo __P((void *));
-void	mtintr __P((void *));
+void	mtstart(void *);
+void	mtgo(void *);
+void	mtintr(void *);
 
 bdev_decl(mt);
 cdev_decl(mt);
@@ -412,7 +412,7 @@ mtcommand(dev, cmd, cnt)
 	do {
 		bp->b_flags = B_BUSY | B_CMD;
 		mtstrategy(bp);
-		iowait(bp);
+		biowait(bp);
 		if (bp->b_flags & B_ERROR) {
 			error = (int) (unsigned) bp->b_error;
 			break;
@@ -473,7 +473,9 @@ mtstrategy(bp)
 #endif
 			bp->b_flags |= B_ERROR;
 			bp->b_error = EIO;
-			iodone(bp);
+			s = splbio();
+			biodone(bp);
+			splx(s);
 			return;
 		}
 	}
@@ -509,7 +511,7 @@ spl_mtintr(arg)
 
 	hpibppclear(sc->sc_hpibno);
 	mtintr(sc);
-	(void) splx(s);
+	splx(s);
 }
 
 void
@@ -519,7 +521,7 @@ spl_mtstart(arg)
 	int s = splbio();
 
 	mtstart(arg);
-	(void) splx(s);
+	splx(s);
 }
 
 void
@@ -712,7 +714,7 @@ errdone:
 	bp->b_flags |= B_ERROR;
 done:
 	sc->sc_flags &= ~(MTF_HITEOF | MTF_HITBOF);
-	iodone(bp);
+	biodone(bp);
 	if ((dp = bp->b_actf))
 		dp->b_actb = bp->b_actb;
 	else
@@ -901,7 +903,7 @@ mtintr(arg)
 	cmdbuf[0] = MTE_COMPLETE | MTE_IDLE;
 	(void) hpibsend(sc->sc_hpibno, sc->sc_slave, MTL_ECMD, cmdbuf, 1);
 	bp->b_flags &= ~B_CMD;
-	iodone(bp);
+	biodone(bp);
 	if ((dp = bp->b_actf))
 		dp->b_actb = bp->b_actb;
 	else

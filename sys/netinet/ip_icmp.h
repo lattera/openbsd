@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.h,v 1.14.4.1 2002/01/31 22:55:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.h,v 1.14.4.2 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: ip_icmp.h,v 1.10 1996/02/13 23:42:28 christos Exp $	*/
 
 /*
@@ -209,14 +209,16 @@ struct icmp {
 	(type) == ICMP_MASKREQ || (type) == ICMP_MASKREPLY)
 
 #ifdef _KERNEL
-void	icmp_error __P((struct mbuf *, int, int, n_long, struct ifnet *));
-void	icmp_input __P((struct mbuf *, ...));
-void	icmp_init __P((void));
-void	icmp_reflect __P((struct mbuf *));
-void	icmp_send __P((struct mbuf *, struct mbuf *));
-int	icmp_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+struct mbuf *
+	icmp_do_error(struct mbuf *, int, int, n_long, struct ifnet *);
+void	icmp_error(struct mbuf *, int, int, n_long, struct ifnet *);
+void	icmp_input(struct mbuf *, ...);
+void	icmp_init(void);
+void	icmp_reflect(struct mbuf *);
+void	icmp_send(struct mbuf *, struct mbuf *);
+int	icmp_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 struct rtentry *
 	icmp_mtudisc_clone(struct sockaddr *);
-void	icmp_mtudisc __P((struct icmp *));
+void	icmp_mtudisc(struct icmp *);
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_ICMP_H_ */

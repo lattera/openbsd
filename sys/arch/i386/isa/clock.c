@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.24 2001/09/21 20:38:42 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.24.4.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: clock.c,v 1.39 1996/05/12 23:11:54 mycroft Exp $	*/
 
 /*-
@@ -115,11 +115,11 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define __BROKEN_INDIRECT_CONFIG /* XXX */
 #ifdef __BROKEN_INDIRECT_CONFIG
-int sysbeepmatch __P((struct device *, void *, void *));
+int sysbeepmatch(struct device *, void *, void *);
 #else
-int sysbeepmatch __P((struct device *, struct cfdata *, void *));
+int sysbeepmatch(struct device *, struct cfdata *, void *);
 #endif
-void sysbeepattach __P((struct device *, struct device *, void *));
+void sysbeepattach(struct device *, struct device *, void *);
 
 struct cfattach sysbeep_ca = {
 	sizeof(struct device), sysbeepmatch, sysbeepattach
@@ -133,23 +133,23 @@ static int ppi_attached;
 static pcppi_tag_t ppicookie;
 #endif /* PCPPI */
 
-void	spinwait __P((int));
-void	findcpuspeed __P((void));
-int	clockintr __P((void *));
-int	gettick __P((void));
-void	sysbeep __P((int, int));
-int	rtcget __P((mc_todregs *));
-void	rtcput __P((mc_todregs *));
-int 	hexdectodec __P((int));
-int	dectohexdec __P((int));
-int	rtcintr __P((void *));
-void	rtcdrain __P((void *));
+void	spinwait(int);
+void	findcpuspeed(void);
+int	clockintr(void *);
+int	gettick(void);
+void	sysbeep(int, int);
+int	rtcget(mc_todregs *);
+void	rtcput(mc_todregs *);
+int 	hexdectodec(int);
+int	dectohexdec(int);
+int	rtcintr(void *);
+void	rtcdrain(void *);
 
-u_int mc146818_read __P((void *, u_int));
-void mc146818_write __P((void *, u_int, u_int));
+u_int mc146818_read(void *, u_int);
+void mc146818_write(void *, u_int, u_int);
 
-#if defined(I586_CPU) || defined(I686_CPU)
-int pentium_mhz;
+#if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
+int pentium_mhz, clock_broken_latch;
 #endif
 
 #define	SECMIN	((unsigned)60)			/* seconds per minute */
@@ -260,16 +260,68 @@ rtcintr(arg)
 int
 gettick()
 {
-	u_char lo, hi;
 
-	/* Don't want someone screwing with the counter while we're here. */
-	disable_intr();
-	/* Select counter 0 and latch it. */
-	outb(TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
-	lo = inb(TIMER_CNTR0);
-	hi = inb(TIMER_CNTR0);
-	enable_intr();
-	return ((hi << 8) | lo);
+#if defined(I586_CPU) || defined(I686_CPU)
+	if (clock_broken_latch) {
+		int v1, v2, v3;
+		int w1, w2, w3;
+
+		disable_intr();
+
+		v1 = inb(TIMER_CNTR0);
+		v1 |= inb(TIMER_CNTR0) << 8;
+		v2 = inb(TIMER_CNTR0);
+		v2 |= inb(TIMER_CNTR0) << 8;
+		v3 = inb(TIMER_CNTR0);
+		v3 |= inb(TIMER_CNTR0) << 8;
+
+		enable_intr();
+
+		if (v1 >= v2 && v2 >= v3 && v1 - v3 < 0x200)
+			return (v2);
+
+#define _swap_val(a, b) do { \
+	int c = a; \
+	a = b; \
+	b = c; \
+} while (0)
+
+		/* sort v1 v2 v3 */
+		if (v1 < v2)
+			_swap_val(v1, v2);
+		if (v2 < v3)
+			_swap_val(v2, v3);
+		if (v1 < v2)
+			_swap_val(v1, v2);
+
+		/* compute the middle value */
+		if (v1 - v3 < 0x200)
+			return (v2);
+		w1 = v2 - v3;
+		w2 = v3 - v1 + TIMER_DIV(hz);
+		w3 = v1 - v2;
+		if (w1 >= w2) {
+			if (w1 >= w3)
+				return (v1);
+		} else {
+			if (w2 >= w3)
+				return (v2);
+		}
+		return (v3);
+	} else
+#endif
+	{
+		u_char lo, hi;
+
+		disable_intr();
+		/* Select counter 0 and latch it. */
+		outb(TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
+		lo = inb(TIMER_CNTR0);
+		hi = inb(TIMER_CNTR0);
+
+		enable_intr();
+		return ((hi << 8) | lo);
+	}
 }
 
 /*
@@ -483,7 +535,7 @@ static int timeset;
  * check whether the CMOS layout is "standard"-like (ie, not PS/2-like),
  * to be called at splclock()
  */
-int cmoscheck __P((void));
+int cmoscheck(void);
 int
 cmoscheck()
 {
@@ -510,7 +562,7 @@ int rtc_update_century = 0;
  * into full width.
  * Being here, deal with the CMOS century byte.
  */
-int clock_expandyear __P((int));
+int clock_expandyear(int);
 int
 clock_expandyear(clockyear)
 	int clockyear;

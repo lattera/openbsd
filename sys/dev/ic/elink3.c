@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.54.4.1 2002/01/31 22:55:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.54.4.2 2002/06/11 03:42:18 art Exp $	*/
 /*	$NetBSD: elink3.c,v 1.32 1997/05/14 00:22:00 thorpej Exp $	*/
 
 /*
@@ -81,7 +81,7 @@
 struct ep_media {
 	int	epm_eeprom_data;	/* bitmask for eeprom config */
 	int	epm_conn;		/* sc->ep_connectors code for medium */
-	char*	epm_name;		/* name of medium */
+	char   *epm_name;		/* name of medium */
 	int	epm_ifmedia;		/* ifmedia word for medium */
 	int	epm_ifdata;
 };
@@ -95,7 +95,7 @@ struct ep_media {
  * (i.e., EPMEDIA_ constants)  forcing order of entries. 
  *  Note that 3 is reserved.
  */
-struct ep_media ep_vortex_media[8] = {
+const struct ep_media ep_vortex_media[8] = {
   { EP_PCI_UTP,        EPC_UTP, "utp",	    IFM_ETHER|IFM_10_T,
        EPMEDIA_10BASE_T },
   { EP_PCI_AUI,        EPC_AUI, "aui",	    IFM_ETHER|IFM_10_5,
@@ -140,45 +140,45 @@ struct cfdriver ep_cd = {
 	NULL, "ep", DV_IFNET
 };
 
-void ep_vortex_probemedia	__P((struct ep_softc *sc));
-void ep_isa_probemedia		__P((struct ep_softc *sc));
+void ep_vortex_probemedia(struct ep_softc *sc);
+void ep_isa_probemedia(struct ep_softc *sc);
 
-void eptxstat			__P((struct ep_softc *));
-int epstatus			__P((struct ep_softc *));
-int epioctl			__P((struct ifnet *, u_long, caddr_t));
-void epstart			__P((struct ifnet *));
-void epwatchdog			__P((struct ifnet *));
-void epreset			__P((struct ep_softc *));
-void epread			__P((struct ep_softc *));
-struct mbuf *epget		__P((struct ep_softc *, int));
-void epmbuffill			__P((void *));
-void epmbufempty		__P((struct ep_softc *));
-void epsetfilter		__P((struct ep_softc *));
-void ep_roadrunner_mii_enable	__P((struct ep_softc *));
-int epsetmedia			__P((struct ep_softc *, int));
+void eptxstat(struct ep_softc *);
+int epstatus(struct ep_softc *);
+int epioctl(struct ifnet *, u_long, caddr_t);
+void epstart(struct ifnet *);
+void epwatchdog(struct ifnet *);
+void epreset(struct ep_softc *);
+void epread(struct ep_softc *);
+struct mbuf *epget(struct ep_softc *, int);
+void epmbuffill(void *);
+void epmbufempty(struct ep_softc *);
+void epsetfilter(struct ep_softc *);
+void ep_roadrunner_mii_enable(struct ep_softc *);
+int epsetmedia(struct ep_softc *, int);
 
 /* ifmedia callbacks */
-int ep_media_change		__P((struct ifnet *));
-void ep_media_status		__P((struct ifnet *, struct ifmediareq *));
+int ep_media_change(struct ifnet *);
+void ep_media_status(struct ifnet *, struct ifmediareq *);
 
 /* MII callbacks */
-int ep_mii_readreg		__P((struct device *, int, int));
-void ep_mii_writereg		__P((struct device *, int, int, int));
-void ep_statchg			__P((struct device *));
+int ep_mii_readreg(struct device *, int, int);
+void ep_mii_writereg(struct device *, int, int, int);
+void ep_statchg(struct device *);
 
-void    ep_mii_setbit		__P((struct ep_softc *, u_int16_t));
-void    ep_mii_clrbit		__P((struct ep_softc *, u_int16_t));
-u_int16_t ep_mii_readbit	__P((struct ep_softc *, u_int16_t));
-void    ep_mii_sync		__P((struct ep_softc *));
-void    ep_mii_sendbits		__P((struct ep_softc *, u_int32_t, int));
+void    ep_mii_setbit(struct ep_softc *, u_int16_t);
+void    ep_mii_clrbit(struct ep_softc *, u_int16_t);
+u_int16_t ep_mii_readbit(struct ep_softc *, u_int16_t);
+void    ep_mii_sync(struct ep_softc *);
+void    ep_mii_sendbits(struct ep_softc *, u_int32_t, int);
 
-int epbusyeeprom		__P((struct ep_softc *));
-u_int16_t ep_read_eeprom	__P((struct ep_softc *, u_int16_t));
+int epbusyeeprom(struct ep_softc *);
+u_int16_t ep_read_eeprom(struct ep_softc *, u_int16_t);
 
-static inline void ep_reset_cmd __P((struct ep_softc *sc, u_int cmd,u_int arg));
-static inline void ep_finish_reset __P((bus_space_tag_t, bus_space_handle_t));
-static inline void ep_discard_rxtop __P((bus_space_tag_t, bus_space_handle_t));
-static __inline int ep_w1_reg	__P((struct ep_softc *, int));
+static inline void ep_reset_cmd(struct ep_softc *sc, u_int cmd,u_int arg);
+static inline void ep_finish_reset(bus_space_tag_t, bus_space_handle_t);
+static inline void ep_discard_rxtop(bus_space_tag_t, bus_space_handle_t);
+static __inline int ep_w1_reg(struct ep_softc *, int);
 
 /*
  * Issue a (reset) command, and be sure it has completed.
@@ -546,7 +546,7 @@ ep_vortex_probemedia(sc)
 	/* set available media options */
 	conn = 0;
 	for (i = 0; i < 8; i++) {
-		struct ep_media * epm = ep_vortex_media + i;
+		const struct ep_media *epm = ep_vortex_media + i;
 
 		if ((reset_options & epm->epm_eeprom_data) != 0) {
 			if (conn)
@@ -1520,7 +1520,6 @@ epioctl(ifp, cmd, data)
 			ifp->if_mtu = ifr->ifr_mtu;
 		}
 		break;
-	
 
 	case SIOCSIFFLAGS:
 		if ((ifp->if_flags & IFF_UP) == 0 &&
@@ -1538,14 +1537,12 @@ epioctl(ifp, cmd, data)
 			 * start it.
 			 */
 			epinit(sc);
-		} else {
+		} else if ((ifp->if_flags & IFF_UP) != 0) {
 			/*
-			 * deal with flags changes:
-			 * IFF_MULTICAST, IFF_PROMISC,
-			 * IFF_LINK0, IFF_LINK1.
+			 * Reset the interface to pick up changes in any other
+			 * flags that affect hardware registers.
 			 */
-			epsetfilter(sc);
-			epsetmedia(sc, sc->sc_mii.mii_media.ifm_cur->ifm_data);
+			epinit(sc);
 		}
 		break;
 

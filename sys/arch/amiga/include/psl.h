@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/psl.h,v 1.12 2001/06/24 17:05:34 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/psl.h,v 1.12.4.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: psl.h,v 1.11 1996/11/30 00:33:49 is Exp $	*/
 
 #ifndef _MACHINE_PSL_H_
@@ -7,10 +7,14 @@
 #include <m68k/psl.h>
 
 #if defined(_KERNEL) && !defined(_LOCORE)
-static	__inline int splraise __P((int));
-static	__inline int splexact __P((int));
-static	__inline void splx __P((int));
-static	__inline int spllower __P((int));
+
+/* SPL asserts */
+#define	splassert(wantipl)	/* nothing */
+
+static	__inline int splraise(int);
+static	__inline int splexact(int);
+static	__inline void splx(int);
+static	__inline int spllower(int);
 
 static __inline int
 splraise(npsl)
@@ -46,7 +50,7 @@ splx(npsl)
 
 #ifdef IPL_REMAP_1
 extern int isr_exter_ipl;
-extern void walk_ipls __P((int, int));
+extern void walk_ipls(int, int);
 
 static __inline void
 splx(npsl)
@@ -64,7 +68,7 @@ splx(npsl)
 #endif
 
 #ifdef IPL_REMAP_2
-extern int walk_ipls __P((int));
+extern int walk_ipls(int);
 
 static __inline void
 splx(npsl)

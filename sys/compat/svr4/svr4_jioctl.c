@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_jioctl.c,v 1.1 1997/11/04 07:45:33 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_jioctl.c,v 1.1.20.1 2002/06/11 03:28:08 art Exp $	 */
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist
@@ -56,7 +56,7 @@ svr4_jerq_ioctl(fp, p, retval, fd, cmd, data)
 	struct svr4_jwinsize jws;
 	struct winsize ws;
 	int error;
-	int (*ctl) __P((struct file *, u_long,  caddr_t, struct proc *)) =
+	int (*ctl)(struct file *, u_long,  caddr_t, struct proc *) =
 	    fp->f_ops->fo_ioctl;
 
 	switch (cmd) {

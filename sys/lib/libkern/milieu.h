@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/milieu.h,v 1.1 2002/04/28 20:55:14 pvalchev Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/milieu.h,v 1.1.2.1 2002/06/11 03:30:09 art Exp $	*/
 /*	$NetBSD: milieu.h,v 1.1 2001/04/26 03:10:47 ross Exp $	*/
 
 /* This is a derivative work. */

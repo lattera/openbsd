@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.51 2001/10/08 01:50:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.51.4.1 2002/06/11 03:32:14 art Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -89,22 +89,22 @@
 
 #define	SDLABELDEV(dev)	(MAKESDDEV(major(dev), SDUNIT(dev), RAW_PART))
 
-int	sdmatch __P((struct device *, void *, void *));
-void	sdattach __P((struct device *, struct device *, void *));
-int	sdactivate __P((struct device *, enum devact));
-int	sddetach __P((struct device *, int));
-void	sdzeroref __P((struct device *));
+int	sdmatch(struct device *, void *, void *);
+void	sdattach(struct device *, struct device *, void *);
+int	sdactivate(struct device *, enum devact);
+int	sddetach(struct device *, int);
+void	sdzeroref(struct device *);
 
-void	sdminphys __P((struct buf *));
-void	sdgetdisklabel __P((dev_t, struct sd_softc *, struct disklabel *,
-			    struct cpu_disklabel *, int));
-void	sdstart __P((void *));
-void	sddone __P((struct scsi_xfer *));
-void	sd_shutdown __P((void *));
-int	sd_reassign_blocks __P((struct sd_softc *, u_long));
-int	sd_interpret_sense __P((struct scsi_xfer *));
+void	sdminphys(struct buf *);
+void	sdgetdisklabel(dev_t, struct sd_softc *, struct disklabel *,
+			    struct cpu_disklabel *, int);
+void	sdstart(void *);
+void	sddone(struct scsi_xfer *);
+void	sd_shutdown(void *);
+int	sd_reassign_blocks(struct sd_softc *, u_long);
+int	sd_interpret_sense(struct scsi_xfer *);
 
-void	viscpy __P((u_char *, u_char *, int));
+void	viscpy(u_char *, u_char *, int);
 
 struct cfattach sd_ca = {
 	sizeof(struct sd_softc), sdmatch, sdattach,
@@ -596,8 +596,9 @@ done:
 	 * Correctly set the buf to indicate a completed xfer
 	 */
 	bp->b_resid = bp->b_bcount;
+	s = splbio();
 	biodone(bp);
-
+	splx(s);
 	if (sd != NULL)
 		device_unref(&sd->sc_dev);
 }
@@ -633,6 +634,9 @@ sdstart(v)
 	struct partition *p;
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("sdstart "));
+
+	splassert(IPL_BIO);
+
 	/*
 	 * Check if the device has room for another command
 	 */

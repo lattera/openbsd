@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/cmd_hppa.c,v 1.5 2002/04/29 00:13:25 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/cmd_hppa.c,v 1.5.2.1 2002/06/11 03:35:38 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Miodrag Vallat

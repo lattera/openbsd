@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/tc/tc_sgmap.h,v 1.1 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/tc/tc_sgmap.h,v 1.1.2.1 2002/06/11 03:33:41 art Exp $ */
 /* $NetBSD: tc_sgmap.h,v 1.2 1997/06/07 00:02:20 thorpej Exp $ */
 
 /*-

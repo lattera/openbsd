@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.41.2.1 2002/01/31 22:55:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.41.2.2 2002/06/11 03:37:28 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -41,6 +41,8 @@
 #include <sys/ktrace.h>
 #include <sys/pool.h>
 
+#include <dev/cons.h>
+
 #include <machine/cpu.h>
 #include <machine/fpu.h>
 #include <machine/frame.h>
@@ -50,14 +52,18 @@
 #include <machine/trap.h>
 #include <machine/db_machdep.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 
 #include <ddb/db_extern.h>
 #include <ddb/db_sym.h>
+#include <ddb/db_output.h>
 
-static int fix_unaligned __P((struct proc *p, struct trapframe *frame));
-int badaddr __P((char *addr, u_int32_t len));
-void trap __P((struct trapframe *frame));
+static int fix_unaligned(struct proc *p, struct trapframe *frame);
+int badaddr(char *addr, u_int32_t len);
+void trap(struct trapframe *frame);
 
 /* These definitions should probably be somewhere else				XXX */
 #define	FIRSTARG	3		/* first argument is in reg 3 */
@@ -68,7 +74,7 @@ volatile int want_resched;
 struct proc *ppc_vecproc;
 
 #ifdef DDB
-void ppc_dumpbt __P((struct trapframe *frame));
+void ppc_dumpbt(struct trapframe *frame);
 
 void
 ppc_dumpbt(struct trapframe *frame)
@@ -77,13 +83,13 @@ ppc_dumpbt(struct trapframe *frame)
 	/* dumpframe is defined in db_trace.c */
 	addr=frame->fixreg[1];
 	while (addr != 0) {
-		addr = db_dumpframe(addr);
+		addr = db_dumpframe(addr, db_printf);
 	}
 	return;
 }
 #endif
 
-#ifdef PPC_VECTOR_SUPPORTED
+#ifdef ALTIVEC
 /*
  * Save state of the vector processor, This is done lazily in the hope
  * that few processes in the system will be using the vector unit
@@ -105,6 +111,7 @@ void
 save_vec(struct proc *p)
 {
 	struct pcb *pcb = &p->p_addr->u_pcb;
+	struct vreg *pcb_vr = pcb->pcb_vr;
 	u_int32_t oldmsr, msr;
 	u_int32_t tmp;
 	/* first we enable vector so that we dont throw an exception
@@ -115,43 +122,47 @@ save_vec(struct proc *p)
 	__asm__ volatile ("mtmsr %0" :: "r" (msr));
 	__asm__ volatile ("sync;isync");
 
-	__asm__ volatile ("mfvscr %0" : "=r" (tmp));
-	pcb->pcb_vr->vrsave = tmp;
 	__asm__ volatile ("mfspr %0, 256" : "=r" (tmp));
-	pcb->pcb_vr->vscr = tmp;
+	pcb->pcb_vr->vrsave = tmp;
 
-	__asm__ volatile ("stvxl  0, 0, %0" ::"r" (&pcb->pcb_vr->vreg[0]));
-	__asm__ volatile ("stvxl  1, 0, %0" ::"r" (&pcb->pcb_vr->vreg[1]));
-	__asm__ volatile ("stvxl  2, 0, %0" ::"r" (&pcb->pcb_vr->vreg[2]));
-	__asm__ volatile ("stvxl  3, 0, %0" ::"r" (&pcb->pcb_vr->vreg[3]));
-	__asm__ volatile ("stvxl  4, 0, %0" ::"r" (&pcb->pcb_vr->vreg[4]));
-	__asm__ volatile ("stvxl  5, 0, %0" ::"r" (&pcb->pcb_vr->vreg[5]));
-	__asm__ volatile ("stvxl  6, 0, %0" ::"r" (&pcb->pcb_vr->vreg[6]));
-	__asm__ volatile ("stvxl  7, 0, %0" ::"r" (&pcb->pcb_vr->vreg[7]));
-	__asm__ volatile ("stvxl  8, 0, %0" ::"r" (&pcb->pcb_vr->vreg[8]));
-	__asm__ volatile ("stvxl  9, 0, %0" ::"r" (&pcb->pcb_vr->vreg[9]));
-	__asm__ volatile ("stvxl  10, 0, %0" ::"r" (&pcb->pcb_vr->vreg[10]));
-	__asm__ volatile ("stvxl  11, 0, %0" ::"r" (&pcb->pcb_vr->vreg[11]));
-	__asm__ volatile ("stvxl  12, 0, %0" ::"r" (&pcb->pcb_vr->vreg[12]));
-	__asm__ volatile ("stvxl  13, 0, %0" ::"r" (&pcb->pcb_vr->vreg[13]));
-	__asm__ volatile ("stvxl  14, 0, %0" ::"r" (&pcb->pcb_vr->vreg[14]));
-	__asm__ volatile ("stvxl  15, 0, %0" ::"r" (&pcb->pcb_vr->vreg[15]));
-	__asm__ volatile ("stvxl  16, 0, %0" ::"r" (&pcb->pcb_vr->vreg[16]));
-	__asm__ volatile ("stvxl  17, 0, %0" ::"r" (&pcb->pcb_vr->vreg[17]));
-	__asm__ volatile ("stvxl  18, 0, %0" ::"r" (&pcb->pcb_vr->vreg[18]));
-	__asm__ volatile ("stvxl  19, 0, %0" ::"r" (&pcb->pcb_vr->vreg[19]));
-	__asm__ volatile ("stvxl  20, 0, %0" ::"r" (&pcb->pcb_vr->vreg[20]));
-	__asm__ volatile ("stvxl  21, 0, %0" ::"r" (&pcb->pcb_vr->vreg[21]));
-	__asm__ volatile ("stvxl  22, 0, %0" ::"r" (&pcb->pcb_vr->vreg[22]));
-	__asm__ volatile ("stvxl  23, 0, %0" ::"r" (&pcb->pcb_vr->vreg[23]));
-	__asm__ volatile ("stvxl  24, 0, %0" ::"r" (&pcb->pcb_vr->vreg[24]));
-	__asm__ volatile ("stvxl  25, 0, %0" ::"r" (&pcb->pcb_vr->vreg[25]));
-	__asm__ volatile ("stvxl  26, 0, %0" ::"r" (&pcb->pcb_vr->vreg[26]));
-	__asm__ volatile ("stvxl  27, 0, %0" ::"r" (&pcb->pcb_vr->vreg[27]));
-	__asm__ volatile ("stvxl  28, 0, %0" ::"r" (&pcb->pcb_vr->vreg[28]));
-	__asm__ volatile ("stvxl  29, 0, %0" ::"r" (&pcb->pcb_vr->vreg[29]));
-	__asm__ volatile ("stvxl  30, 0, %0" ::"r" (&pcb->pcb_vr->vreg[30]));
-	__asm__ volatile ("stvxl  31, 0, %0" ::"r" (&pcb->pcb_vr->vreg[31]));
+#define STR(x) #x
+#define SAVE_VEC_REG(reg, addr)   \
+	__asm__ volatile ("stvxl %0, 0, %1" :: "n"(reg),"r" (addr));
+
+	SAVE_VEC_REG(0,&pcb_vr->vreg[0]);
+	SAVE_VEC_REG(1,&pcb_vr->vreg[1]);
+	SAVE_VEC_REG(2,&pcb_vr->vreg[2]);
+	SAVE_VEC_REG(3,&pcb_vr->vreg[3]);
+	SAVE_VEC_REG(4,&pcb_vr->vreg[4]);
+	SAVE_VEC_REG(5,&pcb_vr->vreg[5]);
+	SAVE_VEC_REG(6,&pcb_vr->vreg[6]);
+	SAVE_VEC_REG(7,&pcb_vr->vreg[7]);
+	SAVE_VEC_REG(8,&pcb_vr->vreg[8]);
+	SAVE_VEC_REG(9,&pcb_vr->vreg[9]);
+	SAVE_VEC_REG(10,&pcb_vr->vreg[10]);
+	SAVE_VEC_REG(11,&pcb_vr->vreg[11]);
+	SAVE_VEC_REG(12,&pcb_vr->vreg[12]);
+	SAVE_VEC_REG(13,&pcb_vr->vreg[13]);
+	SAVE_VEC_REG(14,&pcb_vr->vreg[14]);
+	SAVE_VEC_REG(15,&pcb_vr->vreg[15]);
+	SAVE_VEC_REG(16,&pcb_vr->vreg[16]);
+	SAVE_VEC_REG(17,&pcb_vr->vreg[17]);
+	SAVE_VEC_REG(18,&pcb_vr->vreg[18]);
+	SAVE_VEC_REG(19,&pcb_vr->vreg[19]);
+	SAVE_VEC_REG(20,&pcb_vr->vreg[20]);
+	SAVE_VEC_REG(21,&pcb_vr->vreg[21]);
+	SAVE_VEC_REG(22,&pcb_vr->vreg[22]);
+	SAVE_VEC_REG(23,&pcb_vr->vreg[23]);
+	SAVE_VEC_REG(24,&pcb_vr->vreg[24]);
+	SAVE_VEC_REG(25,&pcb_vr->vreg[25]);
+	SAVE_VEC_REG(26,&pcb_vr->vreg[26]);
+	SAVE_VEC_REG(27,&pcb_vr->vreg[27]);
+	SAVE_VEC_REG(28,&pcb_vr->vreg[28]);
+	SAVE_VEC_REG(29,&pcb_vr->vreg[29]);
+	SAVE_VEC_REG(30,&pcb_vr->vreg[30]);
+	SAVE_VEC_REG(31,&pcb_vr->vreg[31]);
+	__asm__ volatile ("mfvscr 0");
+	SAVE_VEC_REG(0,&pcb_vr->vscr);
 
 	/* fix kernel msr back */
 	__asm__ volatile ("mfmsr %0" :: "r" (oldmsr));
@@ -164,6 +175,7 @@ void
 enable_vec(struct proc *p)
 {
 	struct pcb *pcb = &p->p_addr->u_pcb;
+	struct vreg *pcb_vr = pcb->pcb_vr;
 	u_int32_t oldmsr, msr;
 	u_int32_t tmp;
 
@@ -183,48 +195,51 @@ enable_vec(struct proc *p)
 	__asm__ volatile ("mtmsr %0" :: "r" (msr));
 	__asm__ volatile ("sync;isync");
 
-	tmp = pcb->pcb_vr->vrsave;
-	__asm__ volatile ("mtvscr %0" :: "r" (tmp));
-	tmp = pcb->pcb_vr->vscr;
+#define LOAD_VEC_REG(reg, addr)   \
+	__asm__ volatile ("lvxl %0, 0, %1" :: "n"(reg), "r" (addr));
+
+	LOAD_VEC_REG(0, &pcb_vr->vscr);
+	__asm__ volatile ("mtvscr 0");
+	tmp = pcb_vr->vrsave;
 	__asm__ volatile ("mtspr 256, %0" :: "r" (tmp));
 
-	__asm__ volatile ("lvxl  0, 0, %0" ::"r" (&pcb->pcb_vr->vreg[0]));
-	__asm__ volatile ("lvxl  1, 0, %0" ::"r" (&pcb->pcb_vr->vreg[1]));
-	__asm__ volatile ("lvxl  2, 0, %0" ::"r" (&pcb->pcb_vr->vreg[2]));
-	__asm__ volatile ("lvxl  3, 0, %0" ::"r" (&pcb->pcb_vr->vreg[3]));
-	__asm__ volatile ("lvxl  4, 0, %0" ::"r" (&pcb->pcb_vr->vreg[4]));
-	__asm__ volatile ("lvxl  5, 0, %0" ::"r" (&pcb->pcb_vr->vreg[5]));
-	__asm__ volatile ("lvxl  6, 0, %0" ::"r" (&pcb->pcb_vr->vreg[6]));
-	__asm__ volatile ("lvxl  7, 0, %0" ::"r" (&pcb->pcb_vr->vreg[7]));
-	__asm__ volatile ("lvxl  8, 0, %0" ::"r" (&pcb->pcb_vr->vreg[8]));
-	__asm__ volatile ("lvxl  9, 0, %0" ::"r" (&pcb->pcb_vr->vreg[9]));
-	__asm__ volatile ("lvxl  10, 0, %0" ::"r" (&pcb->pcb_vr->vreg[10]));
-	__asm__ volatile ("lvxl  11, 0, %0" ::"r" (&pcb->pcb_vr->vreg[11]));
-	__asm__ volatile ("lvxl  12, 0, %0" ::"r" (&pcb->pcb_vr->vreg[12]));
-	__asm__ volatile ("lvxl  13, 0, %0" ::"r" (&pcb->pcb_vr->vreg[13]));
-	__asm__ volatile ("lvxl  14, 0, %0" ::"r" (&pcb->pcb_vr->vreg[14]));
-	__asm__ volatile ("lvxl  15, 0, %0" ::"r" (&pcb->pcb_vr->vreg[15]));
-	__asm__ volatile ("lvxl  16, 0, %0" ::"r" (&pcb->pcb_vr->vreg[16]));
-	__asm__ volatile ("lvxl  17, 0, %0" ::"r" (&pcb->pcb_vr->vreg[17]));
-	__asm__ volatile ("lvxl  18, 0, %0" ::"r" (&pcb->pcb_vr->vreg[18]));
-	__asm__ volatile ("lvxl  19, 0, %0" ::"r" (&pcb->pcb_vr->vreg[19]));
-	__asm__ volatile ("lvxl  20, 0, %0" ::"r" (&pcb->pcb_vr->vreg[20]));
-	__asm__ volatile ("lvxl  21, 0, %0" ::"r" (&pcb->pcb_vr->vreg[21]));
-	__asm__ volatile ("lvxl  22, 0, %0" ::"r" (&pcb->pcb_vr->vreg[22]));
-	__asm__ volatile ("lvxl  23, 0, %0" ::"r" (&pcb->pcb_vr->vreg[23]));
-	__asm__ volatile ("lvxl  24, 0, %0" ::"r" (&pcb->pcb_vr->vreg[24]));
-	__asm__ volatile ("lvxl  25, 0, %0" ::"r" (&pcb->pcb_vr->vreg[25]));
-	__asm__ volatile ("lvxl  26, 0, %0" ::"r" (&pcb->pcb_vr->vreg[26]));
-	__asm__ volatile ("lvxl  27, 0, %0" ::"r" (&pcb->pcb_vr->vreg[27]));
-	__asm__ volatile ("lvxl  28, 0, %0" ::"r" (&pcb->pcb_vr->vreg[28]));
-	__asm__ volatile ("lvxl  29, 0, %0" ::"r" (&pcb->pcb_vr->vreg[29]));
-	__asm__ volatile ("lvxl  30, 0, %0" ::"r" (&pcb->pcb_vr->vreg[30]));
-	__asm__ volatile ("lvxl  31, 0, %0" ::"r" (&pcb->pcb_vr->vreg[31]));
+	LOAD_VEC_REG(0, &pcb_vr->vreg[0]);
+	LOAD_VEC_REG(1, &pcb_vr->vreg[1]);
+	LOAD_VEC_REG(2, &pcb_vr->vreg[2]);
+	LOAD_VEC_REG(3, &pcb_vr->vreg[3]);
+	LOAD_VEC_REG(4, &pcb_vr->vreg[4]);
+	LOAD_VEC_REG(5, &pcb_vr->vreg[5]);
+	LOAD_VEC_REG(6, &pcb_vr->vreg[6]);
+	LOAD_VEC_REG(7, &pcb_vr->vreg[7]);
+	LOAD_VEC_REG(8, &pcb_vr->vreg[8]);
+	LOAD_VEC_REG(9, &pcb_vr->vreg[9]);
+	LOAD_VEC_REG(10, &pcb_vr->vreg[10]);
+	LOAD_VEC_REG(11, &pcb_vr->vreg[11]);
+	LOAD_VEC_REG(12, &pcb_vr->vreg[12]);
+	LOAD_VEC_REG(13, &pcb_vr->vreg[13]);
+	LOAD_VEC_REG(14, &pcb_vr->vreg[14]);
+	LOAD_VEC_REG(15, &pcb_vr->vreg[15]);
+	LOAD_VEC_REG(16, &pcb_vr->vreg[16]);
+	LOAD_VEC_REG(17, &pcb_vr->vreg[17]);
+	LOAD_VEC_REG(18, &pcb_vr->vreg[18]);
+	LOAD_VEC_REG(19, &pcb_vr->vreg[19]);
+	LOAD_VEC_REG(20, &pcb_vr->vreg[20]);
+	LOAD_VEC_REG(21, &pcb_vr->vreg[21]);
+	LOAD_VEC_REG(22, &pcb_vr->vreg[22]);
+	LOAD_VEC_REG(23, &pcb_vr->vreg[23]);
+	LOAD_VEC_REG(24, &pcb_vr->vreg[24]);
+	LOAD_VEC_REG(25, &pcb_vr->vreg[25]);
+	LOAD_VEC_REG(26, &pcb_vr->vreg[26]);
+	LOAD_VEC_REG(27, &pcb_vr->vreg[27]);
+	LOAD_VEC_REG(28, &pcb_vr->vreg[28]);
+	LOAD_VEC_REG(29, &pcb_vr->vreg[29]);
+	LOAD_VEC_REG(30, &pcb_vr->vreg[30]);
+	LOAD_VEC_REG(31, &pcb_vr->vreg[31]);
 
 	/* fix kernel msr back */
 	__asm__ volatile ("mfmsr %0" :: "r" (oldmsr));
 }
-#endif /* PPC_VECTOR_SUPPORTED */
+#endif /* ALTIVEC */
 
 
 void
@@ -277,14 +292,17 @@ trap(frame)
 			
 			map = kernel_map;
 			va = frame->dar;
-			if ((va >> ADDR_SR_SHFT) == USER_SR) {
+			if ((va >> ADDR_SR_SHIFT) == USER_SR) {
 				sr_t user_sr;
 				
 				asm ("mfsr %0, %1"
 				     : "=r"(user_sr) : "K"(USER_SR));
 				va &= ADDR_PIDX | ADDR_POFF;
-				va |= user_sr << ADDR_SR_SHFT;
+				va |= user_sr << ADDR_SR_SHIFT;
 				map = &p->p_vmspace->vm_map;
+				if (pte_spill_v(map->pmap, va, frame->dsisr)) {
+					return;
+				}
 			}
 			if (frame->dsisr & DSISR_STORE)
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
@@ -310,6 +328,13 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 		{
 			int ftype, vftype;
 			
+			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
+				frame->dar, frame->dsisr))
+			{
+				/* fault handled by spill handler */
+				break;
+			}
+
 			if (frame->dsisr & DSISR_STORE) {
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
 				vftype = VM_PROT_WRITE;
@@ -333,6 +358,12 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 		{
 			int ftype;
 			
+			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
+				frame->srr0, 0))
+			{
+				/* fault handled by spill handler */
+				break;
+			}
 			ftype = VM_PROT_READ | VM_PROT_EXECUTE;
 			if (uvm_fault(&p->p_vmspace->vm_map,
 				     trunc_page(frame->srr0), 0, ftype) == 0) {
@@ -340,7 +371,7 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 			}
 		}
 #if 0
-printf("isi iar %x\n", frame->srr0);
+printf("isi iar %x lr %x\n", frame->srr0, frame->lr);
 #endif
 	case EXC_MCHK|EXC_USER:
 /* XXX Likely that returning from this trap is bogus... */
@@ -415,11 +446,18 @@ printf("isi iar %x\n", frame->srr0);
 			rval[1] = frame->fixreg[FIRSTARG + 1];
 
 #ifdef SYSCALL_DEBUG
-	scdebug_call(p, code, params);
+			scdebug_call(p, code, params);
 #endif
 
 			
-			switch (error = (*callp->sy_call)(p, params, rval)) {
+#if NSYSTRACE > 0
+			if (ISSET(p->p_flag, P_SYSTRACE))
+				error = systrace_redirect(code, p, params,
+				    rval);
+			else
+#endif
+				error = (*callp->sy_call)(p, params, rval);
+			switch (error) {
 			case 0:
 				frame->fixreg[0] = error;
 				frame->fixreg[FIRSTARG] = rval[0];
@@ -487,8 +525,10 @@ mpc_print_pci_stat();
 #ifdef DDB
 		/* set up registers */
 		db_save_regs(frame);
-#endif
 		db_find_sym_and_offset(frame->srr0, &name, &offset);
+#else
+		name = NULL;
+#endif
 		if (!name) {
 			name = "0";
 			offset = frame->srr0;
@@ -514,7 +554,7 @@ mpc_print_pci_stat();
 		}
 		if (frame->srr1 & (1<<(31-13))) {
 			/* privileged instruction exception */
-			errstr[errnum] = "priviledged instr";
+			errstr[errnum] = "privileged instr";
 			errnum++;
 		}
 		if (frame->srr1 & (1<<(31-14))) {
@@ -524,7 +564,9 @@ mpc_print_pci_stat();
 			/*
 				instr = copyin (srr0)
 				if (instr == BKPT_INST && uid == 0) {
+					cnpollc(TRUE);
 					db_trap(T_BREAKPOINT?)
+					cnpollc(FALSE);
 					break;
 				}
 			*/
@@ -535,8 +577,11 @@ mpc_print_pci_stat();
 		}
 #if 0
 printf("pgm iar %x srr1 %x\n", frame->srr0, frame->srr1);
+{ 
+int i;
 for (i = 0; i < errnum; i++) {
 	printf("\t[%s]\n", errstr[i]);
+}
 }
 #endif
 		sv.sival_int = frame->srr0;
@@ -547,7 +592,9 @@ for (i = 0; i < errnum; i++) {
 		/* should check for correct byte here or panic */
 #ifdef DDB
 		db_save_regs(frame);
+		cnpollc(TRUE);
 		db_trap(T_BREAKPOINT, 0);
+		cnpollc(FALSE);
 #else
 		panic("trap EXC_PGM");
 #endif
@@ -557,7 +604,7 @@ for (i = 0; i < errnum; i++) {
 	 * if we do not handle it, kill the process with illegal instruction.
 	 */
 	case EXC_PERF|EXC_USER:
-#ifdef PPC_VECTOR_SUPPORTED
+#ifdef ALTIVEC 
 	case EXC_VEC|EXC_USER:
 		if (ppc_vecproc) {
 			save_vec(ppc_vecproc);
@@ -565,11 +612,11 @@ for (i = 0; i < errnum; i++) {
 		ppc_vecproc = p;
 		enable_vec(p);
 		break;
-#else /* PPC_VECTOR_SUPPORTED */
+#else  /* ALTIVEC */
 		sv.sival_int = frame->srr0;
 		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
 		break;
-#endif /* PPC_VECTOR_SUPPORTED */
+#endif
 
 	case EXC_AST|EXC_USER:
 		uvmexp.softs++;
@@ -622,7 +669,7 @@ for (i = 0; i < errnum; i++) {
 		frame->srr1 |= PSL_FP;
 	}
 
-#ifdef PPC_VECTOR_SUPPORTED
+#ifdef ALTIVEC
 	/*
 	 * If someone stole the vector unit while we were away, disable it
 	 */
@@ -631,7 +678,7 @@ for (i = 0; i < errnum; i++) {
 	} else {
 		frame->srr1 |= PSL_VEC;
 	}
-#endif /* PPC_VECTOR_SUPPORTED */
+#endif /* ALTIVEC */
 
 	curpriority = p->p_priority;
 }
@@ -655,13 +702,6 @@ child_return(arg)
 #endif
 	/* Profiling?							XXX */
 	curpriority = p->p_priority;
-}
-
-static inline void
-setusr(int content)
-{
-	asm volatile ("isync; mtsr %0,%1; isync"
-		      :: "n"(USER_SR), "r"(content));
 }
 
 int
@@ -692,65 +732,6 @@ badaddr(addr, len)
 	return(0);
 }
 
-int
-copyin(udaddr, kaddr, len)
-	const void *udaddr;
-	void *kaddr;
-	size_t len;
-{
-	void *p;
-	size_t l;
-	faultbuf env;
-	register void *oldh = curpcb->pcb_onfault;
-
-	if (setfault(env)) {
-		curpcb->pcb_onfault = oldh;
-		return EFAULT;
-	}
-	while (len > 0) {
-		p = USER_ADDR + ((u_int)udaddr & ~SEGMENT_MASK);
-		l = (USER_ADDR + SEGMENT_LENGTH) - p;
-		if (l > len)
-			l = len;
-		setusr(curpcb->pcb_pm->pm_sr[(u_int)udaddr >> ADDR_SR_SHFT]);
-		bcopy(p, kaddr, l);
-		udaddr += l;
-		kaddr += l;
-		len -= l;
-	}
-	curpcb->pcb_onfault = oldh;
-	return 0;
-}
-
-int
-copyout(kaddr, udaddr, len)
-	const void *kaddr;
-	void *udaddr;
-	size_t len;
-{
-	void *p;
-	size_t l;
-	faultbuf env;
-	register void *oldh = curpcb->pcb_onfault;
-
-	if (setfault(env)) {
-		curpcb->pcb_onfault = oldh;
-		return EFAULT;
-	}
-	while (len > 0) {
-		p = USER_ADDR + ((u_int)udaddr & ~SEGMENT_MASK);
-		l = (USER_ADDR + SEGMENT_LENGTH) - p;
-		if (l > len)
-			l = len;
-		setusr(curpcb->pcb_pm->pm_sr[(u_int)udaddr >> ADDR_SR_SHFT]);
-		bcopy(kaddr, p, l);
-		udaddr += l;
-		kaddr += l;
-		len -= l;
-	}
-	curpcb->pcb_onfault = oldh;
-	return 0;
-}
 
 /*
  * For now, this only deals with the particular unaligned access case

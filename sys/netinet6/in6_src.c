@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_src.c,v 1.11 2001/03/30 11:09:00 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_src.c,v 1.11.6.1 2002/06/11 03:31:37 art Exp $	*/
 /*	$KAME: in6_src.c,v 1.36 2001/02/06 04:08:17 itojun Exp $	*/
 
 /*
@@ -311,7 +311,7 @@ in6_selecthlim(in6p, ifp)
 	if (in6p && in6p->in6p_hops >= 0)
 		return(in6p->in6p_hops);
 	else if (ifp)
-		return(nd_ifinfo[ifp->if_index].chlim);
+		return(ND_IFINFO(ifp)->chlim);
 	else
 		return(ip6_defhlim);
 }
@@ -434,7 +434,6 @@ in6_recoverscope(sin6, in6, ifp)
 
 /*
  * just clear the embedded scope identifer.
- * XXX: currently used for bsdi4 only as a supplement function.
  */
 void
 in6_clearscope(addr)

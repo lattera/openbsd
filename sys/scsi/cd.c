@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/cd.c,v 1.57 2001/10/25 12:59:21 drahn Exp $	*/
+/*	$OpenBSD: src/sys/scsi/cd.c,v 1.57.2.1 2002/06/11 03:32:13 art Exp $	*/
 /*	$NetBSD: cd.c,v 1.100 1997/04/02 02:29:30 mycroft Exp $	*/
 
 /*
@@ -110,39 +110,39 @@ struct cd_toc {
 
 #define	CDLABELDEV(dev)	(MAKECDDEV(major(dev), CDUNIT(dev), RAW_PART))
 
-int	cdmatch __P((struct device *, void *, void *));
-void	cdattach __P((struct device *, struct device *, void *));
-int	cdactivate __P((struct device *, enum devact));
-int	cddetach __P((struct device *, int));
-void    cdzeroref __P((struct device *));
+int	cdmatch(struct device *, void *, void *);
+void	cdattach(struct device *, struct device *, void *);
+int	cdactivate(struct device *, enum devact);
+int	cddetach(struct device *, int);
+void    cdzeroref(struct device *);
 
-void	cdstart __P((void *));
-void	cdminphys __P((struct buf *));
-void	cdgetdisklabel __P((dev_t, struct cd_softc *, struct disklabel *,
-			    struct cpu_disklabel *, int));
-void	cddone __P((struct scsi_xfer *));
-u_long	cd_size __P((struct cd_softc *, int));
-void	lba2msf __P((u_long, u_char *, u_char *, u_char *));
-u_long	msf2lba __P((u_char, u_char, u_char));
-int	cd_play __P((struct cd_softc *, int, int));
-int	cd_play_tracks __P((struct cd_softc *, int, int, int, int));
-int	cd_play_msf __P((struct cd_softc *, int, int, int, int, int, int));
-int	cd_pause __P((struct cd_softc *, int));
-int	cd_reset __P((struct cd_softc *));
-int	cd_read_subchannel __P((struct cd_softc *, int, int, int,
-	    struct cd_sub_channel_info *, int ));
-int	cd_read_toc __P((struct cd_softc *, int, int, void *,
-			 int, int ));
-int	cd_get_parms __P((struct cd_softc *, int));
-int	cd_load_toc __P((struct cd_softc *, struct cd_toc *));
+void	cdstart(void *);
+void	cdminphys(struct buf *);
+void	cdgetdisklabel(dev_t, struct cd_softc *, struct disklabel *,
+			    struct cpu_disklabel *, int);
+void	cddone(struct scsi_xfer *);
+u_long	cd_size(struct cd_softc *, int);
+void	lba2msf(u_long, u_char *, u_char *, u_char *);
+u_long	msf2lba(u_char, u_char, u_char);
+int	cd_play(struct cd_softc *, int, int);
+int	cd_play_tracks(struct cd_softc *, int, int, int, int);
+int	cd_play_msf(struct cd_softc *, int, int, int, int, int, int);
+int	cd_pause(struct cd_softc *, int);
+int	cd_reset(struct cd_softc *);
+int	cd_read_subchannel(struct cd_softc *, int, int, int,
+	    struct cd_sub_channel_info *, int );
+int	cd_read_toc(struct cd_softc *, int, int, void *,
+			 int, int );
+int	cd_get_parms(struct cd_softc *, int);
+int	cd_load_toc(struct cd_softc *, struct cd_toc *);
 
-int    dvd_auth __P((struct cd_softc *, union dvd_authinfo *));
-int    dvd_read_physical __P((struct cd_softc *, union dvd_struct *));
-int    dvd_read_copyright __P((struct cd_softc *, union dvd_struct *));
-int    dvd_read_disckey __P((struct cd_softc *, union dvd_struct *));
-int    dvd_read_bca __P((struct cd_softc *, union dvd_struct *));
-int    dvd_read_manufact __P((struct cd_softc *, union dvd_struct *));
-int    dvd_read_struct __P((struct cd_softc *, union dvd_struct *));
+int    dvd_auth(struct cd_softc *, union dvd_authinfo *);
+int    dvd_read_physical(struct cd_softc *, union dvd_struct *);
+int    dvd_read_copyright(struct cd_softc *, union dvd_struct *);
+int    dvd_read_disckey(struct cd_softc *, union dvd_struct *);
+int    dvd_read_bca(struct cd_softc *, union dvd_struct *);
+int    dvd_read_manufact(struct cd_softc *, union dvd_struct *);
+int    dvd_read_struct(struct cd_softc *, union dvd_struct *);
 
 struct cfattach cd_ca = {
 	sizeof(struct cd_softc), cdmatch, cdattach,
@@ -504,7 +504,7 @@ cdstrategy(bp)
 	struct buf *bp;
 {
 	struct cd_softc *cd;
-	int opri;
+	int s;
 
 	if ((cd = cdlookup(CDUNIT(bp->b_dev))) == NULL) {
 		bp->b_error = ENXIO;
@@ -515,18 +515,18 @@ cdstrategy(bp)
 	SC_DEBUG(cd->sc_link, SDEV_DB1,
 	    ("%ld bytes @ blk %d\n", bp->b_bcount, bp->b_blkno));
 	/*
+	 * If the device has been made invalid, error out
+	 * maybe the media changed, or no media loaded
+	 */
+	if ((cd->sc_link->flags & SDEV_MEDIA_LOADED) == 0) {
+		bp->b_error = EIO;
+		goto bad;
+	}
+	/*
 	 * The transfer must be a whole number of blocks.
 	 */
 	if ((bp->b_bcount % cd->sc_dk.dk_label->d_secsize) != 0) {
 		bp->b_error = EINVAL;
-		goto bad;
-	}
-	/*
-	 * If the device has been made invalid, error out
-	 * maybe the media changed
-	 */
-	if ((cd->sc_link->flags & SDEV_MEDIA_LOADED) == 0) {
-		bp->b_error = EIO;
 		goto bad;
 	}
 	/*
@@ -545,7 +545,7 @@ cdstrategy(bp)
 	    (cd->flags & (CDF_WLABEL|CDF_LABELLING)) != 0) <= 0)
 		goto done;
 
-	opri = splbio();
+	s = splbio();
 
 	/*
 	 * Place it in the queue of disk activities for this disk
@@ -559,7 +559,7 @@ cdstrategy(bp)
 	cdstart(cd);
 	
 	device_unref(&cd->sc_dev);
-	splx(opri);
+	splx(s);
 	return;
 
 bad:
@@ -569,7 +569,9 @@ done:
 	 * Correctly set the buf to indicate a completed xfer
 	 */
 	bp->b_resid = bp->b_bcount;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 	if (cd != NULL)
 		device_unref(&cd->sc_dev);
 }
@@ -603,6 +605,8 @@ cdstart(v)
 	struct scsi_generic *cmdp;
 	int blkno, nblks, cmdlen;
 	struct partition *p;
+
+	splassert(IPL_BIO);
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("cdstart "));
 	/*
@@ -1010,7 +1014,7 @@ cdioctl(dev, cmd, addr, flag, p)
 	}
 	case CDIOREADMSADDR: {
 		struct cd_toc *toc;
-		int sessno = *(int*)addr;
+		int sessno = *(int *)addr;
 		struct cd_toc_entry *cte;
 
 		if (sessno != 0) {
@@ -1043,7 +1047,7 @@ cdioctl(dev, cmd, addr, flag, p)
 		else
 			toc->header.len = ntohs(toc->header.len);
 
-		*(int*)addr = (toc->header.len >= 10 && cte->track > 1) ?
+		*(int *)addr = (toc->header.len >= 10 && cte->track > 1) ?
 			cte->addr.lba : 0;
 		FREE(toc, M_DEVBUF);
 		break;
@@ -1302,7 +1306,7 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	if (i < MAXPARTITIONS)
 		bzero(&lp->d_partitions[i], sizeof(lp->d_partitions[i]));
 
-	lp->d_npartitions = max(RAW_PART, i - 1) + 1;
+	lp->d_npartitions = max((RAW_PART + 1), i);
 
 done:
 	if (toc)

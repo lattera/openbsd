@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.58.2.1 2002/01/31 22:55:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.58.2.2 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: in_pcb.c,v 1.25 1996/02/13 23:41:53 christos Exp $	*/
 
 /*
@@ -426,11 +426,15 @@ in_pcbconnect(v, nam)
 	inp->inp_fport = sin->sin_port;
 	in_pcbrehash(inp);
 #ifdef IPSEC
-        /* XXX Find IPsec TDB */
-        return (0);
-#else
-	return (0);
+	{
+		int error; /* This is just ignored */
+
+		/* Cause an IPsec SA to be established. */
+		ipsp_spd_inp(NULL, AF_INET, 0, &error, IPSP_DIRECTION_OUT,
+		    NULL, inp, NULL);
+	}		
 #endif
+	return (0);
 }
 
 void
@@ -477,7 +481,7 @@ in_pcbdetach(v)
 #endif
 		ip_freemoptions(inp->inp_moptions);
 #ifdef IPSEC
-	/* XXX IPsec cleanup here */
+	/* IPsec cleanup here */
 	s = spltdb();
 	if (inp->inp_tdb_in)
 		TAILQ_REMOVE(&inp->inp_tdb_in->tdb_inp_in,
@@ -485,18 +489,12 @@ in_pcbdetach(v)
 	if (inp->inp_tdb_out)
 	        TAILQ_REMOVE(&inp->inp_tdb_out->tdb_inp_out, inp,
 			     inp_tdb_out_next);
-	if (inp->inp_ipsec_localid)
-		ipsp_reffree(inp->inp_ipsec_localid);
-	if (inp->inp_ipsec_remoteid)
-		ipsp_reffree(inp->inp_ipsec_remoteid);
-	if (inp->inp_ipsec_localcred)
-		ipsp_reffree(inp->inp_ipsec_localcred);
 	if (inp->inp_ipsec_remotecred)
 		ipsp_reffree(inp->inp_ipsec_remotecred);
-	if (inp->inp_ipsec_localauth)
-		ipsp_reffree(inp->inp_ipsec_localauth);
 	if (inp->inp_ipsec_remoteauth)
 		ipsp_reffree(inp->inp_ipsec_remoteauth);
+	if (inp->inp_ipo)
+		ipsec_delete_policy(inp->inp_ipo);
 	splx(s);
 #endif
 	s = splnet();
@@ -563,7 +561,7 @@ in_pcbnotify(table, dst, fport_arg, laddr, lport_arg, errno, notify)
 	u_int fport_arg, lport_arg;
 	struct in_addr laddr;
 	int errno;
-	void (*notify) __P((struct inpcb *, int));
+	void (*notify)(struct inpcb *, int);
 {
 	register struct inpcb *inp, *oinp;
 	struct in_addr faddr;
@@ -611,7 +609,7 @@ in_pcbnotifyall(table, dst, errno, notify)
 	struct inpcbtable *table;
 	struct sockaddr *dst;
 	int errno;
-	void (*notify) __P((struct inpcb *, int));
+	void (*notify)(struct inpcb *, int);
 {
 	register struct inpcb *inp, *oinp;
 	struct in_addr faddr;

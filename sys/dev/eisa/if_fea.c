@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.12 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.12.2.1 2002/06/11 03:42:16 art Exp $	*/
 /*	$NetBSD: if_fea.c,v 1.9 1996/10/21 22:31:05 thorpej Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -81,11 +81,11 @@
  *
  */
 
-void pdq_eisa_subprobe	__P((bus_space_tag_t, bus_space_handle_t,
-    u_int32_t *, u_int32_t *, u_int32_t *));
-void pdq_eisa_devinit	__P((pdq_softc_t *));
-int pdq_eisa_match	__P((struct device *, void *, void *));
-void pdq_eisa_attach	__P((struct device *, struct device *, void *));
+void pdq_eisa_subprobe(bus_space_tag_t, bus_space_handle_t,
+    u_int32_t *, u_int32_t *, u_int32_t *);
+void pdq_eisa_devinit(pdq_softc_t *);
+int pdq_eisa_match(struct device *, void *, void *);
+void pdq_eisa_attach(struct device *, struct device *, void *);
 
 #define	DEFEA_INTRENABLE		0x8	/* level interrupt */
 static int pdq_eisa_irqs[4] = { 9, 10, 11, 15 };
@@ -224,7 +224,7 @@ pdq_eisa_attach(parent, self, aux)
 		printf(": interrupting at %s\n", intrstr);
 
 	bcopy((caddr_t) sc->sc_pdq->pdq_hwaddr.lanaddr_bytes,
-	    sc->sc_ac.ac_enaddr, 6);
+	    sc->sc_arpcom.ac_enaddr, 6);
 
 	pdq_ifattach(sc, NULL);
 

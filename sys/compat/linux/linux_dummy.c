@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.5 2001/07/04 19:59:47 jasoni Exp $ */
+/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.5.4.1 2002/06/11 03:28:08 art Exp $ */
 
 /*-
  * Copyright (c) 1994-1995 Søren Schmidt
@@ -14,7 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -57,7 +57,9 @@ unsupported_msg(struct proc *p, const char *fname)
 }
 
 DUMMY(ostat);			/* #18 */
+#ifdef PTRACE
 DUMMY(ptrace);			/* #26 */
+#endif
 DUMMY(ofstat);			/* #28 */
 DUMMY(stty);			/* #31 */
 DUMMY(gtty);			/* #32 */
@@ -120,4 +122,3 @@ DUMMY(pivot_root);		/* #217 */
 DUMMY(mincore);			/* #218 */
 DUMMY(madvise);			/* #219 */
 DUMMY(getdents64);		/* #220 */
-DUMMY(fcntl64);			/* #221 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.20 2001/11/28 16:13:29 art Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.20.2.1 2002/06/11 03:39:20 art Exp $     */
 /*	$NetBSD: trap.c,v 1.47 1999/08/21 19:26:20 matt Exp $     */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.
@@ -40,6 +40,9 @@
 #include <sys/signalvar.h>
 #include <sys/exec.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 
 #include <machine/mtpr.h>
@@ -61,10 +64,10 @@
 volatile int startsysc = 0, faultdebug = 0;
 #endif
 
-static __inline void userret __P((struct proc *, struct trapframe *, u_quad_t));
+static __inline void userret(struct proc *, struct trapframe *, u_quad_t);
 
-void	arithflt __P((struct trapframe *));
-void	syscall __P((struct trapframe *));
+void	arithflt(struct trapframe *);
+void	syscall(struct trapframe *);
 
 char *traptypes[]={
 	"reserved addressing",
@@ -313,8 +316,25 @@ if(faultdebug)printf("trap accflt type %lx, code %lx, pc %lx, psl %lx\n",
 	}
 
 	if (trapsig) { 
-		sv.sival_ptr = (caddr_t)frame->pc;		
+		sv.sival_ptr = (caddr_t)frame->pc;
 		trapsignal(p, sig, frame->code, typ, sv);
+
+		/*
+		 * Arithmetic exceptions can be of two kinds:
+		 * - traps (codes 1..7), where pc points to the
+		 *   next instruction to execute.
+		 * - faults (codes 8..10), where pc points to the
+		 *   faulting instruction.
+		 * In the latter case, we need to advance pc by ourselves
+		 * to prevent a signal loop.
+		 *
+		 * XXX this is gross -- miod
+		 */
+		if (type == (T_ARITHFLT | T_USER) && frame->code >= 8) {
+			extern long skip_opcode(long);
+
+			frame->pc = skip_opcode(frame->pc);
+		}
 	}
 
 	if (umode == 0)
@@ -382,7 +402,7 @@ if(startsysc)printf("trap syscall %s pc %lx, psl %lx, sp %lx, pid %d, frame %p\n
 	rval[0] = 0;
 	rval[1] = frame->r1;
 	if(callp->sy_narg) {
-		err = copyin((char*)frame->ap + 4, args, callp->sy_argsize);
+		err = copyin((char *)frame->ap + 4, args, callp->sy_argsize);
 		if (err) {
 #ifdef KTRACE
 			if (KTRPOINT(p, KTR_SYSCALL))
@@ -418,7 +438,12 @@ if(startsysc)printf("trap syscall %s pc %lx, psl %lx, sp %lx, pid %d, frame %p\n
 	if (KTRPOINT(p, KTR_SYSCALL))
 		ktrsyscall(p, frame->code, callp->sy_argsize, args);
 #endif
-	err = (*callp->sy_call)(curproc, args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		err = systrace_redirect(frame->code, curproc, args, rval);
+	else
+#endif
+		err = (*callp->sy_call)(curproc, args, rval);
 	exptr = curproc->p_addr->u_pcb.framep;
 
 #ifdef TRAPDEBUG

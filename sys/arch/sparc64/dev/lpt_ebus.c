@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.5 2002/05/27 20:07:06 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/lpt_ebus.c,v 1.5.2.1 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: lpt_ebus.c,v 1.8 2002/03/01 11:51:00 martin Exp $	*/
 
 /*

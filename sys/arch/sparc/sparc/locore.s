@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.43.2.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.43.2.2 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: locore.s,v 1.73 1997/09/13 20:36:48 pk Exp $	*/
 
 /*
@@ -218,12 +218,9 @@ _cputypvallen = _cputypvar - _cputypval
 #endif
 
 /*
- * There variables are pointed to by the cpp symbols PGSHIFT, NBPG,
- * and PGOFSET.
+ * nbpg is used by pmap_bootstrap(), pgofset is used internally.
  */
-	.globl	_pgshift, _nbpg, _pgofset
-_pgshift:
-	.word	0
+	.globl	_nbpg
 _nbpg:
 	.word	0
 _pgofset:
@@ -1559,15 +1556,18 @@ clean_trap_window:
 	 save	%g0, %g0, %g0		! in any case, enter window to save
 
 	/* The window to be pushed is a kernel window. */
+	std	%i6, [%sp + (7*8)]
 	std	%l0, [%sp + (0*8)]
+
 ctw_merge:
+	!! std	%l0, [%sp + (0*8)]	! Done by delay slot or above
 	std	%l2, [%sp + (1*8)]
 	std	%l4, [%sp + (2*8)]
 	std	%l6, [%sp + (3*8)]
 	std	%i0, [%sp + (4*8)]
 	std	%i2, [%sp + (5*8)]
 	std	%i4, [%sp + (6*8)]
-	std	%i6, [%sp + (7*8)]
+	!! std	%i6, [%sp + (7*8)]	! Done above or by StackGhost
 
 	/* Set up new window invalid mask, and update cpcb->pcb_wim. */
 	rd	%psr, %g7		! g7 = (junk << 5) + new_cwp
@@ -1586,6 +1586,16 @@ ctw_merge:
 	jmp	%l4 + 8			! return to caller
 	 mov	%l7, %g7		! ... and g7
 	/* NOTREACHED */
+
+
+ctw_stackghost:
+	!! StackGhost Encrypt
+	sethi	%hi(_cpcb), %g6			! get current *pcb
+	ld	[%g6 + %lo(_cpcb)], %g6		! dereference *pcb
+	ld	[%g6 + PCB_WCOOKIE], %l0	! get window cookie
+	xor	%l0, %i7, %i7			! mix in cookie
+	b	ctw_merge
+	 std	%i6, [%sp + (7*8)]
 
 ctw_user:
 	/*
@@ -1606,13 +1616,13 @@ ctw_user:
 	 EMPTY
 	/* Note side-effect of SLT_IF_1PAGE_RW: decrements %g6 by 62 */
 	SLT_IF_1PAGE_RW(%sp, %g7, %g6)
-	bl,a	ctw_merge		! all ok if only 1
+	bl,a	ctw_stackghost		! all ok if only 1
 	 std	%l0, [%sp]
 	add	%sp, 7*8, %g5		! check last addr too
 	add	%g6, 62, %g6		! restore %g6 to `pgofset'
 	PTE_OF_ADDR(%g5, %g7, ctw_invalid, %g6, NOP_ON_4M_3)
 	CMP_PTE_USER_WRITE(%g7, %g6, NOP_ON_4M_4)
-	be,a	ctw_merge		! all ok: store <l0,l1> and merge
+	be,a	ctw_stackghost		! all ok: store <l0,l1> and merge
 	 std	%l0, [%sp]
 
 	/*
@@ -1643,7 +1653,13 @@ ctw_invalid:
 	std	%i0, [%g5 + (4*8)]
 	std	%i2, [%g5 + (5*8)]
 	std	%i4, [%g5 + (6*8)]
+
+	!! StackGhost Encrypt  (PCP)
+	! pcb already dereferenced in %g6
+	ld	[%g6 + PCB_WCOOKIE], %l0	! get window cookie
+	xor	%l0, %i7, %i7			! mix in cookie
 	std	%i6, [%g5 + (7*8)]
+
 	deccc	%g7			!	if (n > 0) save(), rw++;
 	bge,a	1b			! } while (--n >= 0);
 	 save	%g5, 64, %g5
@@ -2348,13 +2364,17 @@ softintr_common:
 	b	3f
 	 st	%fp, [%sp + CCFSZ + 16]
 
-1:	ld	[%l4], %o1
-	ld	[%l4 + 4], %o0
+1:	rd	%psr, %o1
+	ld	[%l4 + IH_IPL], %o0
+	and	%o1, ~PSR_PIL, %o1
+	wr	%o1, %o0, %psr
+	ld	[%l4 + IH_ARG], %o0
+	ld	[%l4 + IH_FUN], %o1
 	tst	%o0
 	bz,a	2f
 	 add	%sp, CCFSZ, %o0
 2:	jmpl	%o1, %o7		!	(void)(*ih->ih_fun)(...)
-	 ld	[%l4 + 8], %l4		!	and ih = ih->ih_next
+	 ld	[%l4 + IH_NEXT], %l4	!	and ih = ih->ih_next
 3:	tst	%l4			! while ih != NULL
 	bnz	1b
 	 nop
@@ -2417,13 +2437,17 @@ _sparc_interrupt_common:
 	b	3f
 	 st	%fp, [%sp + CCFSZ + 16]
 
-1:	ld	[%l4], %o1
-	ld	[%l4 + 4], %o0
+1:	rd	%psr, %o1
+	ld	[%l4 + IH_IPL], %o0
+	and	%o1, ~PSR_PIL, %o1
+	wr	%o1, %o0, %psr
+	ld	[%l4 + IH_ARG], %o0
+	ld	[%l4 + IH_FUN], %o1
 	tst	%o0
 	bz,a	2f
 	 add	%sp, CCFSZ, %o0
 2:	jmpl	%o1, %o7		!	handled = (*ih->ih_fun)(...)
-	 ld	[%l4 + 8], %l4		!	and ih = ih->ih_next
+	 ld	[%l4 + IH_NEXT], %l4	!	and ih = ih->ih_next
 	cmp	%o0, 1
 	bge	4f			!	if (handled >= 1) break
 	 or	%o0, %l5, %l5		! 	and %l5 |= handled
@@ -2898,10 +2922,43 @@ winuf_invalid:
 	st	%l0, [%g6 + PCB_WIM]	! cpcb->pcb_wim = cwp;
 	nop				! unnecessary? old wim was 0...
 	save	%g0, %g0, %g0		! back to I
-	LOADWIN(%g6 + PCB_RW + 64)	! load from rw[1]
+
+	!!LOADWIN(%g6 + PCB_RW + 64)	! load from rw[1]
+
+	!! StackGhost Decrypt  (PCP)
+	! pcb already dereferenced in %g6
+	ld	[%g6 + PCB_WCOOKIE], %l0	! get window cookie
+	ldd	[%g6 + PCB_RW + 64 + 56], %i6
+	xor	%l0, %i7, %i7			! remove cookie
+
+	ldd	[%g6 + PCB_RW + 64], %l0	! load from rw[1]
+	ldd	[%g6 + PCB_RW + 64 + 8], %l2
+	ldd	[%g6 + PCB_RW + 64 + 16], %l4
+	ldd	[%g6 + PCB_RW + 64 + 24], %l6
+	ldd	[%g6 + PCB_RW + 64 + 32], %i0
+	ldd	[%g6 + PCB_RW + 64 + 40], %i2
+	ldd	[%g6 + PCB_RW + 64 + 48], %i4
+
 	save	%g0, %g0, %g0		! back to R
-	LOADWIN(%g6 + PCB_RW)		! load from rw[0]
+
+	!! StackGhost Decrypt  (PCP)
+	! pcb already dereferenced in %g6
+	! (If I was sober, I could potentially re-use the cookie from above)
+	ld	[%g6 + PCB_WCOOKIE], %l0	! get window cookie
+	ldd	[%g6 + PCB_RW + 56], %i6
+	xor	%l0, %i7, %i7			! remove cookie
+
+	!!LOADWIN(%g6 + PCB_RW)		! load from rw[0]
+	ldd	[%g6 + PCB_RW], %l0	! load from rw[0]
+	ldd	[%g6 + PCB_RW + 8], %l2
+	ldd	[%g6 + PCB_RW + 16], %l4
+	ldd	[%g6 + PCB_RW + 24], %l6
+	ldd	[%g6 + PCB_RW + 32], %i0
+	ldd	[%g6 + PCB_RW + 40], %i2
+	ldd	[%g6 + PCB_RW + 48], %i4
+
 	save	%g0, %g0, %g0		! back to T
+
 	wr	%l0, 0, %psr		! restore condition codes
 	mov	%l3, %g6		! fix %g6
 	RETT
@@ -2920,7 +2977,24 @@ winuf_ok:
 	and	%l0, 31, %l0
 	st	%l0, [%l2 + PCB_WIM]	! cpcb->pcb_wim = cwp;
 	save	%g0, %g0, %g0		! back to I
-	LOADWIN(%sp)
+
+	!! StackGhost Decrypt
+	sethi	%hi(_cpcb), %l0			! get current *pcb
+	ld	[%l0 + %lo(_cpcb)], %l1		! dereference *pcb
+	ld	[%l1 + PCB_WCOOKIE], %l0	! get window cookie
+	ldd	[%sp + 56], %i6			! get saved return pointer
+	xor	%l0, %i7, %i7			! remove cookie
+
+	!!LOADWIN(%sp)
+	ldd	[%sp], %l0
+	ldd	[%sp + 8], %l2
+	ldd	[%sp + 16], %l4
+	ldd	[%sp + 24], %l6
+	ldd	[%sp + 32], %i0
+	ldd	[%sp + 40], %i2
+	ldd	[%sp + 48], %i4
+
+
 	save	%g0, %g0, %g0		! back to R
 	save	%g0, %g0, %g0		! back to T
 	wr	%l0, 0, %psr		! restore condition codes
@@ -3061,7 +3135,23 @@ rft_user_ok:
 	and	%l0, 31, %l0
 	st	%l0, [%l1 + PCB_WIM]	! cpcb->pcb_wim = l0 & 31;
 	save	%g0, %g0, %g0		! back to window I
-	LOADWIN(%sp)			! suck hard
+
+	!! StackGhost Decrypt
+	sethi	%hi(_cpcb), %l0			! get current *pcb
+	ld	[%l0 + %lo(_cpcb)], %l1		! dereference *pcb
+	ld	[%l1 + PCB_WCOOKIE], %l0	! get window cookie
+	ldd	[%sp + 56], %i6			! get saved return pointer
+	xor	%l0, %i7, %i7			! remove cookie
+
+	!!LOADWIN(%sp)			! suck hard
+	ldd	[%sp], %l0
+	ldd	[%sp + 8], %l2
+	ldd	[%sp + 16], %l4
+	ldd	[%sp + 24], %l6
+	ldd	[%sp + 32], %i0
+	ldd	[%sp + 40], %i2
+	ldd	[%sp + 48], %i4
+
 	save	%g0, %g0, %g0		! back to window T
 	RETT
 
@@ -3139,7 +3229,22 @@ rft_user_or_recover_pcb_windows:
 	st	%l0, [%g6 + PCB_WIM]	! cpcb->pcb_wim = CWP;
 	nop				! unnecessary? old wim was 0...
 	save	%g0, %g0, %g0		! back to window I
-	LOADWIN(%g6 + PCB_RW)
+
+	!! StackGhost Decrypt (PCB)
+	! pcb already deferenced in %g6
+	ld	[%g6 + PCB_WCOOKIE], %l0	! get window cookie
+	ldd	[%g6 + PCB_RW + 56], %i6	! get saved return pointer
+	xor	%l0, %i7, %i7			! remove cookie
+
+	!LOADWIN(%g6 + PCB_RW)
+	ldd	[%g6 + PCB_RW], %l0
+	ldd	[%g6 + PCB_RW + 8], %l2
+	ldd	[%g6 + PCB_RW + 16], %l4
+	ldd	[%g6 + PCB_RW + 24], %l6
+	ldd	[%g6 + PCB_RW + 32], %i0
+	ldd	[%g6 + PCB_RW + 40], %i2
+	ldd	[%g6 + PCB_RW + 48], %i4
+
 	save	%g0, %g0, %g0		! back to window T (trap window)
 	wr	%l0, 0, %psr		! cond codes, cond codes everywhere
 	mov	%l3, %g6		! restore g6
@@ -3594,10 +3699,7 @@ startmap_done:
 	sethi	%hi(_cputyp), %o0	! what type of cpu we are on
 	st	%g4, [%o0 + %lo(_cputyp)]
 
-	sethi	%hi(_pgshift), %o0	! pgshift = log2(nbpg)
-	st	%g5, [%o0 + %lo(_pgshift)]
-
-	mov	1, %o0			! nbpg = 1 << pgshift
+	mov	1, %o0			! nbpg = 1 << pgshift (g5)
 	sll	%o0, %g5, %g5
 	sethi	%hi(_nbpg), %o0		! nbpg = bytes in a page
 	st	%g5, [%o0 + %lo(_nbpg)]
@@ -4373,7 +4475,7 @@ idle:
 	ld	[%g2 + %lo(_whichqs)], %o3
 	tst	%o3
 	bnz,a	Lsw_scan
-	 wr	%g1, PIL_CLOCK << 8, %psr	! (void) splclock();
+	 wr	%g1, IPL_CLOCK << 8, %psr	! (void) splclock();
 	b,a	1b
 
 Lsw_panic_rq:
@@ -4445,7 +4547,7 @@ ENTRY(cpu_switch)
 	st	%g0, [%g7 + %lo(_curproc)]	! curproc = NULL;
 	wr	%g1, 0, %psr			! (void) spl0();
 	nop; nop; nop				! paranoia
-	wr	%g1, PIL_CLOCK << 8 , %psr	! (void) splclock();
+	wr	%g1, IPL_CLOCK << 8 , %psr	! (void) splclock();
 
 Lsw_scan:
 	nop; nop; nop				! paranoia
@@ -4558,7 +4660,7 @@ Lsw_scan:
 	 */
 	tst	%g4
 	be,a	Lsw_load		! if no old process, go load
-	 wr	%g1, (PIL_CLOCK << 8) | PSR_ET, %psr
+	 wr	%g1, (IPL_CLOCK << 8) | PSR_ET, %psr
 
 	INCR(_nswitchdiff)		! clobbers %o0,%o1
 	/*
@@ -4572,15 +4674,15 @@ wb1:	SAVE; SAVE; SAVE; SAVE; SAVE; SAVE; SAVE	/* 7 of each: */
 	/*
 	 * Load the new process.  To load, we must change stacks and
 	 * alter cpcb and %wim, hence we must disable traps.  %psr is
-	 * currently equal to oldpsr (%g1) ^ (PIL_CLOCK << 8);
+	 * currently equal to oldpsr (%g1) ^ (IPL_CLOCK << 8);
 	 * this means that PSR_ET is on.  Likewise, PSR_ET is on
 	 * in newpsr (%g2), although we do not know newpsr's ipl.
 	 *
 	 * We also must load up the `in' and `local' registers.
 	 */
-	wr	%g1, (PIL_CLOCK << 8) | PSR_ET, %psr
+	wr	%g1, (IPL_CLOCK << 8) | PSR_ET, %psr
 Lsw_load:
-!	wr	%g1, (PIL_CLOCK << 8) | PSR_ET, %psr	! done above
+!	wr	%g1, (IPL_CLOCK << 8) | PSR_ET, %psr	! done above
 	/* compute new wim */
 	ld	[%g5 + PCB_WIM], %o0
 	mov	1, %o1
@@ -4706,6 +4808,13 @@ ENTRY(snapshot)
  * and when returning a child to user mode after a fork(2).
  */
 ENTRY(proc_trampoline)
+	/* Reset interrupt level */
+	rd 	%psr, %o0
+	andn	%o0, PSR_PIL, %o0	! psr &= ~PSR_PIL;
+	wr	%o0, 0, %psr		! (void) spl0();
+	 nop				! psr delay; the next 2 instructions
+					! can safely be made part of the
+					! required 3 instructions psr delay
 	call	%l0			! re-use current frame
 	 mov	%l1, %o0
 
@@ -6452,6 +6561,10 @@ _cold:
 	.globl	_proc0paddr
 _proc0paddr:
 	.word	_u0		! KVA of proc0 uarea
+
+! StackGhost:  added 2 symbols to ease debugging
+	.globl slowtrap
+	.globl winuf_invalid
 
 /* interrupt counters	XXX THESE BELONG ELSEWHERE (if anywhere) */
 	.globl	_intrcnt, _eintrcnt, _intrnames, _eintrnames

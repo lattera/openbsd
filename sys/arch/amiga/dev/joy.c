@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1 2000/09/02 13:45:40 espie Exp $ */
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/joy.c,v 1.1.10.1 2002/06/11 03:34:58 art Exp $ */
 
 /*
  * Copyright (c) 2000 Marc Espie.
@@ -38,8 +38,8 @@
 
 
 
-int joymatch __P((struct device *, void *, void *));
-void joyattach __P((struct device *, struct device *, void *));
+int joymatch(struct device *, void *, void *);
+void joyattach(struct device *, struct device *, void *);
 
 struct cfattach joy_ca = {
 	sizeof(struct device), joymatch, joyattach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16.2.3 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_loan.c,v 1.35 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
@@ -105,15 +105,14 @@
  * local prototypes
  */
 
-static int	uvm_loananon __P((struct uvm_faultinfo *, void ***,
-				int, struct vm_anon *));
-static int	uvm_loanentry __P((struct uvm_faultinfo *, void ***, int));
-static int	uvm_loanuobj __P((struct uvm_faultinfo *, void ***,
-				int, vaddr_t));
-static int	uvm_loanzero __P((struct uvm_faultinfo *, void ***, int));
-static void	uvm_unloananon __P((struct vm_anon **, int));
-static void	uvm_unloanpage __P((struct vm_page **, int));
-
+static int	uvm_loananon(struct uvm_faultinfo *, void ***,
+				int, struct vm_anon *);
+static int	uvm_loanentry(struct uvm_faultinfo *, void ***, int);
+static int	uvm_loanuobj(struct uvm_faultinfo *, void ***,
+				int, vaddr_t);
+static int	uvm_loanzero(struct uvm_faultinfo *, void ***, int);
+static void	uvm_unloananon(struct vm_anon **, int);
+static void	uvm_unloanpage(struct vm_page **, int);
 
 /*
  * inlines

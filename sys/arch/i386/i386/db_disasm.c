@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_disasm.c,v 1.6 2001/07/04 08:57:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_disasm.c,v 1.6.4.1 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.11 1996/05/03 19:41:58 christos Exp $	*/
 
 /* 
@@ -858,9 +858,9 @@ int db_lengths[] = {
 	} while (0)
 
 
-db_addr_t db_read_address __P((db_addr_t, int, int, struct i_addr *));
-void db_print_address __P((char *, int, struct i_addr *));
-db_addr_t db_disasm_esc __P((db_addr_t, int, int, int, char *));
+db_addr_t db_read_address(db_addr_t, int, int, struct i_addr *);
+void db_print_address(char *, int, struct i_addr *);
+db_addr_t db_disasm_esc(db_addr_t, int, int, int, char *);
 
 /*
  * Read address at location and return updated location.
@@ -959,7 +959,7 @@ db_print_address(seg, size, addrp)
 	if (seg)
 		db_printf("%s:", seg);
 
-	db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
+	db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY, db_printf);
 	if (addrp->base != 0 || addrp->index != 0) {
 		db_printf("(");
 		if (addrp->base)
@@ -1301,15 +1301,18 @@ db_disasm(loc, altfmt)
 			if (seg)
 				db_printf("%s:%#r",seg, displ);
 			else
-				db_printsym((db_addr_t)displ, DB_STGY_ANY);
+				db_printsym((db_addr_t)displ, DB_STGY_ANY,
+				    db_printf);
 			break;
 		    case Db:
 			get_value_inc(displ, loc, 1, TRUE);
-			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN);
+			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN,
+			    db_printf);
 			break;
 		    case Dl:
 			get_value_inc(displ, loc, 4, TRUE);
-			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN);
+			db_printsym((db_addr_t)(displ + loc), DB_STGY_XTRN,
+			    db_printf);
 			break;
 		    case o1:
 			db_printf("$1");

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.2.2.1 2002/01/31 22:55:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.2.2.2 2002/06/11 03:42:29 art Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/param.h>
@@ -48,7 +53,7 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsdisplayvar.h>
 #include <dev/wscons/wscons_raster.h>
-#include <dev/rcons/raster.h>
+#include <dev/rasops/rasops.h>
 
 union bt_cmap {
 	u_int8_t cm_map[256][3];	/* 256 r/b/g entries */
@@ -59,18 +64,6 @@ union bt_cmap {
 #define	BT_CMAP		0x04		/* colormap data register */
 #define	BT_CTRL		0x08		/* control register */
 #define	BT_OMAP		0x0c		/* overlay (cursor) map register */
-
-#define	BT_WRITE(sc, reg, val) \
-    bus_space_write_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg), (val))
-#define	BT_READ(sc, reg) \
-    bus_space_read_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg))
-
-#define	BT_INIT(sc) do {					\
-	BT_WRITE((sc), BT_ADDR, 0x06);	/* command reg */	\
-	BT_WRITE((sc), BT_CTRL, 0x73);	/* overlay plane */	\
-	BT_WRITE((sc), BT_ADDR, 0x04);  /* read mask */		\
-	BT_WRITE((sc), BT_CTRL, 0xff);	/* color planes */	\
-} while (0)
 
 #define	BT_D4M3(x)	((((x) >> 2) << 1) + ((x) >> 2)) /* (x / 4) * 3 */
 #define	BT_D4M4(x)	((x) & ~3)			 /* (x / 4) * 4 */
@@ -86,24 +79,82 @@ union bt_cmap {
 #define	CGSIX_THC_SIZE		(sizeof(u_int32_t) * 640)
 #define	CGSIX_FBC_OFFSET	0x700000
 #define	CGSIX_TEC_OFFSET	0x701000
+#define	CGSIX_TEC_SIZE		(sizeof(u_int32_t) * 3)
 #define	CGSIX_VID_OFFSET	0x800000
 #define	CGSIX_VID_SIZE		(1024 * 1024)
+
+#define	CG6_FHC			0x0		/* fhc register */
+
+#define	FHC_FBID_MASK		0xff000000	/* frame buffer id */
+#define	FHC_FBID_SHIFT		24
+#define	FHC_REV_MASK		0x00f00000	/* revision */
+#define	FHC_REV_SHIFT		20
+#define	FHC_FROP_DISABLE	0x00080000	/* disable fast rasterop */
+#define	FHC_ROW_DISABLE		0x00040000	/* ??? */
+#define	FHC_SRC_DISABLE		0x00020000	/* ??? */
+#define	FHC_DST_DISABLE		0x00010000	/* disable dst cache */
+#define	FHC_RESET		0x00008000	/* ??? */
+#define	FHC_LEBO		0x00002000	/* set little endian order */
+#define	FHC_RES_MASK		0x00001800	/* resolution: */
+#define	FHC_RES_1024		0x00000000	/*  1024x768 */
+#define	FHC_RES_1152		0x00000800	/*  1152x900 */
+#define	FHC_RES_1280		0x00001000	/*  1280x1024 */
+#define	FHC_RES_1600		0x00001800	/*  1600x1200 */
+#define	FHC_CPU_MASK		0x00000600	/* cpu type: */
+#define	FHC_CPU_SPARC		0x00000000	/*  sparc */
+#define	FHC_CPU_68020		0x00000200	/*  68020 */
+#define	FHC_CPU_386		0x00000400	/*  i386 */
+#define	FHC_TEST		0x00000100	/* test window */
+#define	FHC_TESTX_MASK		0x000000f0	/* test window X */
+#define	FHC_TESTX_SHIFT		4
+#define	FHC_TESTY_MASK		0x0000000f	/* test window Y */
+#define	FHC_TESTY_SHIFT		0
+
+#define	CG6_TEC_MV		0x0		/* matrix stuff */
+#define	CG6_TEC_CLIP		0x4		/* clipping stuff */
+#define	CG6_TEC_VDC		0x8		/* ??? */
+
+#define	CG6_THC_HSYNC1		0x800		/* horizontal sync timing */
+#define	CG6_THC_HSYNC2		0x804		/* more hsync timing */
+#define	CG6_THC_HSYNC3		0x808		/* yet more hsync timing */
+#define	CG6_THC_VSYNC1		0x80c		/* vertical sync timing */
+#define	CG6_THC_VSYNC2		0x810		/* only two of these */
+#define	CG6_THC_REFRESH		0x814		/* refresh counter */
+#define	CG6_THC_MISC		0x818		/* misc control/status */
+#define	CG6_THC_CURSXY		0x8fc		/* cursor x/y, 16 bit each */
+#define	CG6_THC_CURSMASK	0x900		/* cursor mask bits */
+#define	CG6_THC_CURSBITS	0x980		/* cursor bits */
+
+/* cursor x/y position for 'off' */
+#define	THC_CURSOFF		((65536-32) | ((65536-32) << 16))
+
+#define	THC_MISC_REV_M		0x000f0000	/* chip revision */
+#define	THC_MISC_REV_S		16
+#define	THC_MISC_RESET		0x00001000	/* reset */
+#define	THC_MISC_VIDEN		0x00000400	/* video enable */
+#define	THC_MISC_SYNC		0x00000200	/* not sure what ... */
+#define	THC_MISC_VSYNC		0x00000100	/* ... these really are */
+#define	THC_MISC_SYNCEN		0x00000080	/* sync enable */
+#define	THC_MISC_CURSRES	0x00000040	/* cursor resolution */
+#define	THC_MISC_INTEN		0x00000020	/* v.retrace intr enable */
+#define	THC_MISC_INTR		0x00000010	/* intr pending/ack */
+#define	THC_MISC_CYCLS		0x0000000f	/* cycles before transfer */
 
 struct cgsix_softc {
 	struct device sc_dev;
 	struct sbusdev sc_sd;
 	bus_space_tag_t sc_bustag;
 	bus_addr_t sc_paddr;
-	bus_type_t sc_btype;
 	bus_space_handle_t sc_bt_regs;
 	bus_space_handle_t sc_fhc_regs;
 	bus_space_handle_t sc_thc_regs;
+	bus_space_handle_t sc_tec_regs;
 	bus_space_handle_t sc_vid_regs;
+	struct rasops_info sc_rasops;
 	int sc_nscreens;
 	int sc_width, sc_height, sc_depth, sc_linebytes;
-	struct rcons sc_rcons;
-	struct raster sc_raster;
 	union bt_cmap sc_cmap;
+	void *sc_ih;
 };
 
 #define	CG6_USER_FBC	0x70000000
@@ -115,22 +166,28 @@ struct cgsix_softc {
 #define	CG6_USER_RAM	0x70016000
 #define	CG6_USER_DHC	0x80000000
 
-struct mmo {
-	u_long	mo_uaddr;		/* user (virtual address */
-	u_long	mo_size;		/* size, or 0 for video ram size */
-	u_long	mo_physoff;		/* offset from sc_physadr */
-};
+#define	THC_READ(sc,r) \
+    bus_space_read_4((sc)->sc_bustag, (sc)->sc_thc_regs, (r))
+#define	THC_WRITE(sc,r,v) \
+    bus_space_write_4((sc)->sc_bustag, (sc)->sc_thc_regs, (r), (v))
 
-struct wsdisplay_emulops cgsix_emulops = {
-	rcons_cursor,
-	rcons_mapchar,
-	rcons_putchar,
-	rcons_copycols,
-	rcons_erasecols,
-	rcons_copyrows,
-	rcons_eraserows,
-	rcons_alloc_attr
-};
+#define	TEC_READ(sc,r) \
+    bus_space_read_4((sc)->sc_bustag, (sc)->sc_tec_regs, (r))
+#define	TEC_WRITE(sc,r,v) \
+    bus_space_write_4((sc)->sc_bustag, (sc)->sc_tec_regs, (r), (v))
+
+#define	FHC_READ(sc) \
+    bus_space_read_4((sc)->sc_bustag, (sc)->sc_fhc_regs, CG6_FHC)
+#define	FHC_WRITE(sc,v) \
+    bus_space_write_4((sc)->sc_bustag, (sc)->sc_fhc_regs, CG6_FHC, (v))
+
+#define	BT_WRITE(sc, reg, val) \
+    bus_space_write_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg), (val))
+#define	BT_READ(sc, reg) \
+    bus_space_read_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg))
+#define	BT_BARRIER(sc,reg,flags) \
+    bus_space_barrier((sc)->sc_bustag, (sc)->sc_bt_regs, (reg), \
+	sizeof(u_int32_t), (flags))
 
 struct wsscreen_descr cgsix_stdscreen = {
 	"std",
@@ -149,21 +206,25 @@ struct wsscreen_list cgsix_screenlist = {
 	sizeof(cgsix_scrlist) / sizeof(struct wsscreen_descr *), cgsix_scrlist
 };
 
-int cgsix_ioctl __P((void *, u_long, caddr_t, int, struct proc *));
-int cgsix_alloc_screen __P((void *, const struct wsscreen_descr *, void **,
-    int *, int *, long *));
-void cgsix_free_screen __P((void *, void *));
-int cgsix_show_screen __P((void *, void *, int,
-    void (*cb) __P((void *, int, int)), void *));
-paddr_t cgsix_mmap __P((void *, off_t, int));
-int cgsix_is_console __P((int));
-int cg6_bt_getcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
-int cg6_bt_putcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
-void cgsix_loadcmap __P((struct cgsix_softc *, u_int, u_int));
-void cgsix_setcolor __P((struct cgsix_softc *, u_int,
-    u_int8_t, u_int8_t, u_int8_t));
-
-static int a2int __P((char *, int));
+int cgsix_ioctl(void *, u_long, caddr_t, int, struct proc *);
+int cgsix_alloc_screen(void *, const struct wsscreen_descr *, void **,
+    int *, int *, long *);
+void cgsix_free_screen(void *, void *);
+int cgsix_show_screen(void *, void *, int, void (*cb)(void *, int, int),
+    void *);
+paddr_t cgsix_mmap(void *, off_t, int);
+int cgsix_is_console(int);
+int cg6_bt_getcmap(union bt_cmap *, struct wsdisplay_cmap *);
+int cg6_bt_putcmap(union bt_cmap *, struct wsdisplay_cmap *);
+void cgsix_loadcmap_immediate(struct cgsix_softc *, u_int, u_int);
+void cgsix_loadcmap_deferred(struct cgsix_softc *, u_int, u_int);
+void cgsix_setcolor(struct cgsix_softc *, u_int,
+    u_int8_t, u_int8_t, u_int8_t);
+void cgsix_reset(struct cgsix_softc *);
+void cgsix_hardreset(struct cgsix_softc *);
+void cgsix_burner(void *, u_int, u_int);
+int cgsix_intr(void *);
+static int a2int(char *, int);
 
 struct wsdisplay_accessops cgsix_accessops = {
 	cgsix_ioctl,
@@ -171,11 +232,14 @@ struct wsdisplay_accessops cgsix_accessops = {
 	cgsix_alloc_screen,
 	cgsix_free_screen,
 	cgsix_show_screen,
-	0 /* load_font */
+	NULL,	/* load_font */
+	NULL,	/* scrollback */
+	NULL,	/* getchar */
+	cgsix_burner,
 };
 
-int	cgsixmatch	__P((struct device *, void *, void *));
-void	cgsixattach	__P((struct device *, struct device *, void *));
+int	cgsixmatch(struct device *, void *, void *);
+void	cgsixattach(struct device *, struct device *, void *);
 
 struct cfattach cgsix_ca = {
 	sizeof (struct cgsix_softc), cgsixmatch, cgsixattach
@@ -208,7 +272,6 @@ cgsixattach(parent, self, aux)
 	long defattr;
 
 	sc->sc_bustag = sa->sa_bustag;
-	sc->sc_btype = (bus_type_t)sa->sa_slot;
 	sc->sc_paddr = sbus_bus_addr(sa->sa_bustag, sa->sa_slot, sa->sa_offset);
 
 	if (sa->sa_nreg != 1) {
@@ -222,33 +285,53 @@ cgsixattach(parent, self, aux)
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset + CGSIX_BT_OFFSET,
 	    CGSIX_BT_SIZE, BUS_SPACE_MAP_LINEAR, 0, &sc->sc_bt_regs) != 0) {
-		printf(": cannot map bt registers\n", self->dv_xname);
+		printf(": cannot map bt registers\n");
 		goto fail_bt;
 	}
 
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset + CGSIX_FHC_OFFSET,
 	    CGSIX_FHC_SIZE, BUS_SPACE_MAP_LINEAR, 0, &sc->sc_fhc_regs) != 0) {
-		printf(": cannot map fhc registers\n", self->dv_xname);
+		printf(": cannot map fhc registers\n");
 		goto fail_fhc;
 	}
 
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset + CGSIX_THC_OFFSET,
 	    CGSIX_THC_SIZE, BUS_SPACE_MAP_LINEAR, 0, &sc->sc_thc_regs) != 0) {
-		printf(": cannot map thc registers\n", self->dv_xname);
+		printf(": cannot map thc registers\n");
 		goto fail_thc;
 	}
 
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset + CGSIX_VID_OFFSET,
 	    CGSIX_VID_SIZE, BUS_SPACE_MAP_LINEAR, 0, &sc->sc_vid_regs) != 0) {
-		printf(": cannot map vid registers\n", self->dv_xname);
+		printf(": cannot map vid registers\n");
 		goto fail_vid;
 	}
 
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
+	    sa->sa_reg[0].sbr_offset + CGSIX_TEC_OFFSET,
+	    CGSIX_TEC_SIZE, BUS_SPACE_MAP_LINEAR, 0, &sc->sc_tec_regs) != 0) {
+		printf(": cannot map tec registers\n");
+		goto fail_tec;
+	}
+
+	if ((sc->sc_ih = bus_intr_establish(sa->sa_bustag, sa->sa_pri,
+	    IPL_TTY, 0, cgsix_intr, sc)) == NULL) {
+		printf(": couldn't establish interrupt, pri %d\n", sa->sa_pri);
+		goto fail_intr;
+	}
+
+	/* if prom didn't initialize us, do it the hard way */
+	if (OF_getproplen(sa->sa_node, "width") != sizeof(u_int32_t))
+		cgsix_hardreset(sc);
+
 	console = cgsix_is_console(sa->sa_node);
 
+	cgsix_reset(sc);
+
+	/* grab the current palette */
 	BT_WRITE(sc, BT_ADDR, 0);
 	for (i = 0; i < 256; i++) {
 		sc->sc_cmap.cm_map[i][0] = BT_READ(sc, BT_CMAP) >> 24;
@@ -256,54 +339,39 @@ cgsixattach(parent, self, aux)
 		sc->sc_cmap.cm_map[i][2] = BT_READ(sc, BT_CMAP) >> 24;
 	}
 
-	sc->sc_depth = getpropint(sa->sa_node, "depth", -1);
-	if (sc->sc_depth == -1)
-		sc->sc_depth = 8;
+	cgsix_burner(sc, 1, 0);
 
-	sc->sc_linebytes = getpropint(sa->sa_node, "linebytes", -1);
-	if (sc->sc_linebytes == -1)
-		sc->sc_linebytes = 1152;
+	sc->sc_depth = getpropint(sa->sa_node, "depth", 8);
+	sc->sc_linebytes = getpropint(sa->sa_node, "linebytes", 1152);
+	sc->sc_height = getpropint(sa->sa_node, "height", 900);
+	sc->sc_width = getpropint(sa->sa_node, "width", 1152);
 
-	sc->sc_height = getpropint(sa->sa_node, "height", -1);
-	if (sc->sc_height == -1)
-		sc->sc_height = 900;
+	sbus_establish(&sc->sc_sd, self);
 
-	sc->sc_width = getpropint(sa->sa_node, "width", -1);
-	if (sc->sc_width == -1)
-		sc->sc_width = 1152;
+	sc->sc_rasops.ri_depth = sc->sc_depth;
+	sc->sc_rasops.ri_stride = sc->sc_linebytes;
+	sc->sc_rasops.ri_flg = RI_CENTER;
+	sc->sc_rasops.ri_bits = (void *)bus_space_vaddr(sc->sc_bustag,
+	    sc->sc_vid_regs);
+	sc->sc_rasops.ri_width = sc->sc_width;
+	sc->sc_rasops.ri_height = sc->sc_height;
+	sc->sc_rasops.ri_hw = sc;
 
-	sbus_establish(&sc->sc_sd, &sc->sc_dev);
+	rasops_init(&sc->sc_rasops,
+	    a2int(getpropstring(optionsnode, "screen-#rows"), 34),
+	    a2int(getpropstring(optionsnode, "screen-#columns"), 80));
 
-	sc->sc_rcons.rc_sp = &sc->sc_raster;
-	sc->sc_raster.width = sc->sc_width;
-	sc->sc_raster.height = sc->sc_height;
-	sc->sc_raster.depth = sc->sc_depth;
-	sc->sc_raster.linelongs = sc->sc_linebytes / 4;
-	sc->sc_raster.pixels = (void *)sc->sc_vid_regs;
-
-	if (console == 0 ||
-	    romgetcursoraddr(&sc->sc_rcons.rc_crowp, &sc->sc_rcons.rc_ccolp)) {
-		sc->sc_rcons.rc_crow = sc->sc_rcons.rc_ccol = -1;
-		sc->sc_rcons.rc_crowp = &sc->sc_rcons.rc_crow;
-		sc->sc_rcons.rc_ccolp = &sc->sc_rcons.rc_ccol;
-	}
-
-	sc->sc_rcons.rc_maxcol =
-	    a2int(getpropstring(optionsnode, "screen-#columns"), 80);
-	sc->sc_rcons.rc_maxrow =
-	    a2int(getpropstring(optionsnode, "screen-#rows"), 34);
-
-	rcons_init(&sc->sc_rcons,
-	    sc->sc_rcons.rc_maxrow, sc->sc_rcons.rc_maxcol);
-
-	cgsix_stdscreen.nrows = sc->sc_rcons.rc_maxrow;
-	cgsix_stdscreen.ncols = sc->sc_rcons.rc_maxcol;
-	cgsix_stdscreen.textops = &cgsix_emulops;
-	rcons_alloc_attr(&sc->sc_rcons, 0, 0, 0, &defattr);
+	cgsix_stdscreen.nrows = sc->sc_rasops.ri_rows;
+	cgsix_stdscreen.ncols = sc->sc_rasops.ri_cols;
+	cgsix_stdscreen.textops = &sc->sc_rasops.ri_ops;
+	sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops,
+	    WSCOL_WHITE, WSCOL_BLACK, WSATTR_WSCOLORS, &defattr);
 
 	printf("\n");
 
 	if (console) {
+		int *ccolp, *crowp;
+
 		cgsix_setcolor(sc, WSCOL_BLACK, 0, 0, 0);
 		cgsix_setcolor(sc, 255, 255, 255, 255);
 		cgsix_setcolor(sc, WSCOL_RED, 255, 0, 0);
@@ -314,8 +382,15 @@ cgsixattach(parent, self, aux)
 		cgsix_setcolor(sc, WSCOL_CYAN, 0, 255, 255);
 		cgsix_setcolor(sc, WSCOL_WHITE, 255, 255, 255);
 
-		wsdisplay_cnattach(&cgsix_stdscreen, &sc->sc_rcons,
-		    *sc->sc_rcons.rc_ccolp, *sc->sc_rcons.rc_crowp, defattr);
+		if (romgetcursoraddr(&crowp, &ccolp))
+			ccolp = crowp = NULL;
+		if (ccolp != NULL)
+			sc->sc_rasops.ri_ccol = *ccolp;
+		if (crowp != NULL)
+			sc->sc_rasops.ri_crow = *crowp;
+
+		wsdisplay_cnattach(&cgsix_stdscreen, &sc->sc_rasops,
+		    sc->sc_rasops.ri_ccol, sc->sc_rasops.ri_crow, defattr);
 	}
 
 	waa.console = console;
@@ -326,6 +401,10 @@ cgsixattach(parent, self, aux)
 
 	return;
 
+fail_intr:
+	bus_space_unmap(sa->sa_bustag, sc->sc_tec_regs, CGSIX_TEC_SIZE);
+fail_tec:
+	bus_space_unmap(sa->sa_bustag, sc->sc_vid_regs, CGSIX_VID_SIZE);
 fail_vid:
 	bus_space_unmap(sa->sa_bustag, sc->sc_thc_regs, CGSIX_THC_SIZE);
 fail_thc:
@@ -376,7 +455,7 @@ cgsix_ioctl(v, cmd, data, flags, p)
 		error = cg6_bt_putcmap(&sc->sc_cmap, cm);
 		if (error)
 			return (error);
-		cgsix_loadcmap(sc, cm->index, cm->count);
+		cgsix_loadcmap_deferred(sc, cm->index, cm->count);
 		break;
 
 	case WSDISPLAYIO_SVIDEO:
@@ -406,10 +485,11 @@ cgsix_alloc_screen(v, type, cookiep, curxp, curyp, attrp)
 	if (sc->sc_nscreens > 0)
 		return (ENOMEM);
 
-	*cookiep = &sc->sc_rcons;
-	*curyp = *sc->sc_rcons.rc_crowp;
-	*curxp = *sc->sc_rcons.rc_ccolp;
-	rcons_alloc_attr(&sc->sc_rcons, 0, 0, 0, attrp);
+	*cookiep = &sc->sc_rasops;
+	*curyp = 0;
+	*curxp = 0;
+	sc->sc_rasops.ri_ops.alloc_attr(&sc->sc_rasops,
+	    WSCOL_WHITE, WSCOL_BLACK, WSATTR_WSCOLORS, attrp);
 	sc->sc_nscreens++;
 	return (0);
 }
@@ -429,7 +509,7 @@ cgsix_show_screen(v, cookie, waitok, cb, cbarg)
 	void *v;
 	void *cookie;
 	int waitok;
-	void (*cb) __P((void *, int, int));
+	void (*cb)(void *, int, int);
 	void *cbarg;
 {
 	return (0);
@@ -442,47 +522,14 @@ cgsix_mmap(v, off, prot)
 	int prot;
 {
 	struct cgsix_softc *sc = v;
-	struct mmo *mo;
-	u_int u, sz;
-
-	static struct mmo mmo[] = {
-		{ CG6_USER_RAM, 0, CGSIX_VID_OFFSET },
-		{ CG6_USER_FBC, 1, CGSIX_FBC_OFFSET },
-		{ CG6_USER_TEC, 1, CGSIX_TEC_OFFSET },
-		{ CG6_USER_BTREGS, 8192 /* XXX */, CGSIX_BT_OFFSET },
-		{ CG6_USER_FHC, 1, CGSIX_FHC_OFFSET },
-		{ CG6_USER_THC, 1, CGSIX_THC_OFFSET },
-		{ CG6_USER_ROM, 1, CGSIX_ROM_OFFSET },
-		{ CG6_USER_DHC, 1, CGSIX_DHC_OFFSET },
-	};
-#define	NMMO	(sizeof(mmo) / sizeof(*mmo))
 
 	if (off & PGOFSET)
 		return (-1);
 
-	/*
-	 * Entries with size 0 map video RAM (i.e., the size in fb data).
-	 *
-	 * Since we work in pages, the fact that the map offset table's
-	 * sizes are sometimes bizarre (e.g., 1) is effectively ignored:
-	 * one byte is as good as one page.
-	 */
-	for (mo = mmo; mo < &mmo[NMMO]; mo++) {
-		if ((u_long)off < mo->mo_uaddr)
-			continue;
-		u = off - mo->mo_uaddr;
-		sz = mo->mo_size ? mo->mo_size :
-		    sc->sc_linebytes * sc->sc_height;
-		if (u < sz) {
-			bus_space_handle_t bh;
-
-			if (bus_space_mmap(sc->sc_bustag, sc->sc_btype,
-			    sc->sc_paddr + u + mo->mo_physoff,
-			    BUS_SPACE_MAP_LINEAR, &bh))
-				return (-1);
-			return ((paddr_t)bh);
-		}
-	}
+	/* Allow mapping as a dumb framebuffer from offset 0 */
+	if (off >= 0 && off < (sc->sc_linebytes * sc->sc_height))
+		return (bus_space_mmap(sc->sc_bustag, sc->sc_paddr,
+		    off + CGSIX_VID_OFFSET, prot, BUS_SPACE_MAP_LINEAR));
 
 	return (-1);
 }
@@ -558,7 +605,20 @@ cg6_bt_putcmap(bcm, rcm)
 }
 
 void
-cgsix_loadcmap(sc, start, ncolors)
+cgsix_loadcmap_deferred(sc, start, ncolors)
+	struct cgsix_softc *sc;
+	u_int start, ncolors;
+{
+	u_int32_t thcm;
+
+	thcm = THC_READ(sc, CG6_THC_MISC);
+	thcm &= ~THC_MISC_RESET;
+	thcm |= THC_MISC_INTEN;
+	THC_WRITE(sc, CG6_THC_MISC, thcm);
+}
+
+void
+cgsix_loadcmap_immediate(sc, start, ncolors)
 	struct cgsix_softc *sc;
 	u_int start, ncolors;
 {
@@ -590,5 +650,139 @@ cgsix_setcolor(sc, index, r, g, b)
 	bcm->cm_map[index][0] = r;
 	bcm->cm_map[index][1] = g;
 	bcm->cm_map[index][2] = b;
-	cgsix_loadcmap(sc, index, 1);
+	cgsix_loadcmap_immediate(sc, index, 1);
+}
+
+void
+cgsix_reset(sc)
+	struct cgsix_softc *sc;
+{
+	u_int32_t fhc, rev;
+
+	/* hide the cursor, just in case */
+	THC_WRITE(sc, CG6_THC_CURSXY, THC_CURSOFF);
+
+	TEC_WRITE(sc, CG6_TEC_MV, 0);
+	TEC_WRITE(sc, CG6_TEC_CLIP, 0);
+	TEC_WRITE(sc, CG6_TEC_VDC, 0);
+
+	fhc = FHC_READ(sc);
+	rev = (fhc & FHC_REV_MASK) >> FHC_REV_SHIFT;
+	/* take core of hardware bugs in old revisions */
+	if (rev < 5) {
+		/*
+		 * Keep current resolution; set cpu to 68020, set test
+		 * window (size 1Kx1K), and for rev 1, disable dest cache.
+		 */
+		fhc &= FHC_RES_MASK;
+		fhc |= FHC_CPU_68020 | FHC_TEST |
+		    (11 << FHC_TESTX_SHIFT) | (11 << FHC_TESTY_SHIFT);
+		if (rev < 2)
+			fhc |= FHC_DST_DISABLE;
+		FHC_WRITE(sc, fhc);
+	}
+
+	/* enable cursor in brooktree DAC */
+	BT_WRITE(sc, BT_ADDR, 0x6 << 24);
+	BT_WRITE(sc, BT_CTRL, BT_READ(sc, BT_CTRL) | (0x3 << 24));
+}
+
+void
+cgsix_hardreset(sc)
+	struct cgsix_softc *sc;
+{
+	u_int32_t fhc, rev;
+
+	/* setup brooktree */
+	BT_WRITE(sc, BT_ADDR, 0x04 << 24);
+	BT_BARRIER(sc, BT_ADDR, BUS_SPACE_BARRIER_WRITE);
+	BT_WRITE(sc, BT_CTRL, 0xff << 24);
+	BT_BARRIER(sc, BT_CTRL, BUS_SPACE_BARRIER_WRITE);
+
+	BT_WRITE(sc, BT_ADDR, 0x05 << 24);
+	BT_BARRIER(sc, BT_ADDR, BUS_SPACE_BARRIER_WRITE);
+	BT_WRITE(sc, BT_CTRL, 0x00 << 24);
+	BT_BARRIER(sc, BT_CTRL, BUS_SPACE_BARRIER_WRITE);
+
+	BT_WRITE(sc, BT_ADDR, 0x06 << 24);
+	BT_BARRIER(sc, BT_ADDR, BUS_SPACE_BARRIER_WRITE);
+	BT_WRITE(sc, BT_CTRL, 0x70 << 24);
+	BT_BARRIER(sc, BT_CTRL, BUS_SPACE_BARRIER_WRITE);
+
+	BT_WRITE(sc, BT_ADDR, 0x07 << 24);
+	BT_BARRIER(sc, BT_ADDR, BUS_SPACE_BARRIER_WRITE);
+	BT_WRITE(sc, BT_CTRL, 0x00 << 24);
+	BT_BARRIER(sc, BT_CTRL, BUS_SPACE_BARRIER_WRITE);
+
+
+	/* configure thc */
+	THC_WRITE(sc, CG6_THC_MISC, THC_MISC_RESET | THC_MISC_INTR |
+	    THC_MISC_CYCLS);
+	THC_WRITE(sc, CG6_THC_MISC, THC_MISC_INTR | THC_MISC_CYCLS);
+
+	THC_WRITE(sc, CG6_THC_HSYNC1, 0x10009);
+	THC_WRITE(sc, CG6_THC_HSYNC2, 0x570000);
+	THC_WRITE(sc, CG6_THC_HSYNC3, 0x15005d);
+	THC_WRITE(sc, CG6_THC_VSYNC1, 0x10005);
+	THC_WRITE(sc, CG6_THC_VSYNC2, 0x2403a8);
+	THC_WRITE(sc, CG6_THC_REFRESH, 0x16b);
+
+	THC_WRITE(sc, CG6_THC_MISC, THC_MISC_RESET | THC_MISC_INTR |
+	    THC_MISC_CYCLS);
+	THC_WRITE(sc, CG6_THC_MISC, THC_MISC_INTR | THC_MISC_CYCLS);
+
+	/* configure fhc (1152x900) */
+	fhc = FHC_READ(sc);
+	rev = (fhc & FHC_REV_MASK) >> FHC_REV_SHIFT;
+
+	fhc = FHC_RES_1152 | FHC_CPU_68020 | FHC_TEST;
+	if (rev < 1)
+		fhc |= FHC_FROP_DISABLE;
+	if (rev < 2)
+		fhc |= FHC_DST_DISABLE;
+	FHC_WRITE(sc, fhc);
+}
+
+void
+cgsix_burner(vsc, on, flags)
+	void *vsc;
+	u_int on, flags;
+{
+	struct cgsix_softc *sc = vsc;
+	int s;
+	u_int32_t thcm;
+
+	s = splhigh();
+	thcm = THC_READ(sc, CG6_THC_MISC);
+	if (on)
+		thcm |= THC_MISC_VIDEN | THC_MISC_SYNCEN;
+	else {
+		thcm &= ~THC_MISC_VIDEN;
+		if (flags & WSDISPLAY_BURN_VBLANK)
+			thcm &= ~THC_MISC_SYNCEN;
+	}
+	THC_WRITE(sc, CG6_THC_MISC, thcm);
+	splx(s);
+}
+
+int
+cgsix_intr(vsc)
+	void *vsc;
+{
+	struct cgsix_softc *sc = vsc;
+	u_int32_t thcm;
+
+	thcm = THC_READ(sc, CG6_THC_MISC);
+	if ((thcm & (THC_MISC_INTEN | THC_MISC_INTR)) !=
+	    (THC_MISC_INTEN | THC_MISC_INTR)) {
+		/* Not expecting an interrupt, it's not for us. */
+		return (0);
+	}
+
+	/* Acknowledge the interrupt and disable it. */
+	thcm &= ~(THC_MISC_RESET | THC_MISC_INTEN);
+	thcm |= THC_MISC_INTR;
+	THC_WRITE(sc, CG6_THC_MISC, thcm);
+	cgsix_loadcmap_immediate(sc, 0, 256);
+	return (1);
 }

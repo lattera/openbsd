@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/mii/eephy.c,v 1.3 2001/10/05 18:26:48 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/mii/eephy.c,v 1.3.4.1 2002/06/11 03:42:23 art Exp $	*/
 /*
  * Principal Author: Parag Patel
  * Copyright (c) 2001
@@ -82,6 +82,18 @@ eephymatch(struct device *parent, void *match, void *aux)
 	if (id == E1000_ID_88E1000 || id == E1000_ID_88E1000S) {
 		return(10);
 	}
+
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxMARVELL &&
+	    (MII_MODEL(ma->mii_id2) == MII_MODEL_xxMARVELL_E1000_3 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_xxMARVELL_E1000_5 ))
+		return (10);
+
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_MARVELL &&
+	    (MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_3 ||
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_MARVELL_E1000_6))
+		return (10);
+
 	return(0);
 }
 
@@ -102,7 +114,7 @@ eephyattach(struct device *parent, struct device *self, void *aux)
 	sc->mii_status = eephy_status;
 	sc->mii_pdata = mii;
 	sc->mii_flags = mii->mii_flags;
-	sc->mii_anegticks = 5;
+	sc->mii_anegticks = 10;
 
 	eephy_reset(sc);
 
@@ -344,9 +356,6 @@ eephy_status(struct mii_softc *sc)
 	struct mii_data *mii = sc->mii_pdata;
 	int bmsr, bmcr, esr, ssr, isr, ar, lpar;
 
-	if ((mii->mii_ifp->if_flags & IFF_UP) == 0)
-		return;
-
 	mii->mii_media_status = IFM_AVALID;
 	mii->mii_media_active = IFM_ETHER;
 
@@ -403,7 +412,7 @@ eephy_mii_phy_auto(struct mii_softc *sc, int waitfor)
 
 	if ((sc->mii_flags & MIIF_DOINGAUTO) == 0) {
 		PHY_WRITE(sc, E1000_AR, E1000_AR_10T | E1000_AR_10T_FD |
-		    E1000_AR_100TX | E1000_AR_100TX_FD | 
+		    E1000_AR_100TX | E1000_AR_100TX_FD |
 		    E1000_AR_PAUSE | E1000_AR_ASM_DIR);
 		PHY_WRITE(sc, E1000_1GCR, E1000_1GCR_1000T_FD);
 		PHY_WRITE(sc, E1000_CR,

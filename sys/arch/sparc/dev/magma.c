@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.8.4.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.8.4.2 2002/06/11 03:38:16 art Exp $	*/
 /*
  * magma.c
  *
@@ -71,11 +71,11 @@
 /*
  * Select tty soft interrupt bit based on TTY ipl. (stole from zs.c)
  */
-#if PIL_TTY == 1
+#if IPL_TTY == 1
 # define IE_MSOFT IE_L1
-#elif PIL_TTY == 4
+#elif IPL_TTY == 4
 # define IE_MSOFT IE_L4
-#elif PIL_TTY == 6
+#elif IPL_TTY == 6
 # define IE_MSOFT IE_L6
 #else
 # error "no suitable software interrupt bit"
@@ -362,11 +362,17 @@ struct confargs *ca = args;
 struct romaux *ra = &ca->ca_ra;
 struct magma_softc *sc = (struct magma_softc *)dev;
 struct magma_board_info *card;
-char *magma_prom, *clockstr;
-int chip, cd_clock;
+char magma_prom[40], *clockstr;
+int chip, cd_clock, len;
 void *base;
 
-	magma_prom = getpropstring(ra->ra_node, "magma_prom");
+
+	len = getprop(ra->ra_node, "magma_prom",
+	    magma_prom, sizeof(magma_prom) - 1);
+	if (len == -1)
+		len = 0;
+	magma_prom[len] = '\0';
+
 	for (card = supported_cards; card->mb_name != NULL; card++) {
 		if (strcmp(ra->ra_name, card->mb_sbusname) != 0)
 			continue;
@@ -390,7 +396,7 @@ void *base;
 	}
 
 	dprintf((" addr 0x%x", sc));
-	printf(" pri %d softpri %d:", ra->ra_intr[0].int_pri, PIL_TTY);
+	printf(" pri %d softpri %d:", ra->ra_intr[0].int_pri, IPL_TTY);
 	printf(" %s\n", card->mb_realname);
 
 	sc->ms_board = card;
@@ -459,11 +465,11 @@ void *base;
 	 */
 	sc->ms_hardint.ih_fun = magma_hard;
 	sc->ms_hardint.ih_arg = sc;
-	intr_establish(ra->ra_intr[0].int_pri, &sc->ms_hardint);
+	intr_establish(ra->ra_intr[0].int_pri, &sc->ms_hardint, -1);
 
 	sc->ms_softint.ih_fun = magma_soft;
 	sc->ms_softint.ih_arg = sc;
-	intr_establish(PIL_TTY, &sc->ms_softint);
+	intr_establish(IPL_TTY, &sc->ms_softint, IPL_TTY);
 }
 
 /*
@@ -680,7 +686,7 @@ int needsoftint = 0;
 	if( needsoftint ) {	/* trigger the soft interrupt */
 #if defined(SUN4M)
 		if( CPU_ISSUN4M )
-			raise(0, PIL_TTY);
+			raise(0, IPL_TTY);
 		else
 #endif
 			ienab_bis(IE_MSOFT);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3 2001/05/03 02:20:33 aaron Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.6.1 2002/06/11 03:42:30 art Exp $ 	*/
 /*	$NetBSD: uftdi.c,v 1.6 2001/01/23 21:56:17 augustss Exp $	*/
 
 /*

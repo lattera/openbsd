@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_signal.c,v 1.6 1998/12/22 07:58:44 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_signal.c,v 1.6.16.1 2002/06/11 03:28:08 art Exp $	*/
 /*	$NetBSD: ibcs2_signal.c,v 1.8 1996/05/03 17:05:27 christos Exp $	*/
 
 /*
@@ -126,11 +126,11 @@ int ibcs2_to_bsd_sig[] = {
 	0,			/* 31 */
 };
 
-void ibcs2_to_bsd_sigset __P((const ibcs2_sigset_t *, sigset_t *));
-void bsd_to_ibcs2_sigset __P((const sigset_t *, ibcs2_sigset_t *));
-void ibcs2_to_bsd_sigaction __P((struct ibcs2_sigaction *,
-    struct sigaction *));
-void bsd_to_ibcs2_sigaction __P((struct sigaction *, struct ibcs2_sigaction *));
+void ibcs2_to_bsd_sigset(const ibcs2_sigset_t *, sigset_t *);
+void bsd_to_ibcs2_sigset(const sigset_t *, ibcs2_sigset_t *);
+void ibcs2_to_bsd_sigaction(struct ibcs2_sigaction *,
+    struct sigaction *);
+void bsd_to_ibcs2_sigaction(struct sigaction *, struct ibcs2_sigaction *);
 
 void
 ibcs2_to_bsd_sigset(iss, bss)

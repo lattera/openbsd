@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbicreg.h,v 1.3 1997/01/16 09:25:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbicreg.h,v 1.3.24.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: sbicreg.h,v 1.2 1994/10/26 02:04:40 cgd Exp $	*/
 
 /*
@@ -404,7 +404,7 @@ typedef volatile sbic_padded_ind_regmap_t *sbic_regmap_p;
 
 #define SBIC_LOAD_COMMAND(regs,cmd,cmdsize) do { \
 	int n=(cmdsize)-1; \
-	char *ptr = (char*)(cmd); \
+	char *ptr = (char *)(cmd); \
 	sbic_write_reg(regs,SBIC_cdb1,*ptr++); \
 	while (n-- > 0) (regs)->sbic_value = *ptr++; \
 } while (0)

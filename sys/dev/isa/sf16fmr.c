@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sf16fmr.c,v 1.1 2002/04/25 04:56:59 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sf16fmr.c,v 1.1.2.1 2002/06/11 03:42:22 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Vladimir Popov <jumbo@narod.ru>

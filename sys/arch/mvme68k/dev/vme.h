@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.h,v 1.6 1999/09/27 20:30:31 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vme.h,v 1.6.14.1 2002/06/11 03:36:49 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -333,8 +333,11 @@ struct vme2reg {
 #define VME2_A16BASE	0xffff0000UL
 #define VME2_A24BASE	0xff000000UL
 
-void * vmepmap __P((struct vmesoftc *sc, void * vmeaddr, int len,
-	    int bustype));
-void * vmemap __P((struct vmesoftc *sc, void * vmeaddr, int len,
-	    int bustype));
-int	vmerw __P((struct vmesoftc *sc, struct uio *uio, int flags, int bus));
+void * vmepmap(struct vmesoftc *sc, void * vmeaddr, int len,
+	    int bustype);
+void * vmemap(struct vmesoftc *sc, void * vmeaddr, int len,
+	    int bustype);
+int	vmerw(struct vmesoftc *sc, struct uio *uio, int flags, int bus);
+
+int vmeintr_establish(int, struct intrhand *);
+int vmescan(struct device *, void *, void *, int);

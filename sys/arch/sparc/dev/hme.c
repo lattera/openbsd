@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34 2001/08/24 05:14:05 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hme.c,v 1.34.4.1 2002/06/11 03:38:16 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -82,47 +82,47 @@
 #include <sparc/dev/hmereg.h>
 #include <sparc/dev/hmevar.h>
 
-int	hmematch	__P((struct device *, void *, void *));
-void	hmeattach	__P((struct device *, struct device *, void *));
-void	hmewatchdog	__P((struct ifnet *));
-int	hmeintr		__P((void *));
-int	hmeioctl	__P((struct ifnet *, u_long, caddr_t));
-void	hmereset	__P((struct hme_softc *));
-void	hmestart	__P((struct ifnet *));
-void	hmestop		__P((struct hme_softc *));
-void	hmeinit		__P((struct hme_softc *));
-void	hme_meminit	__P((struct hme_softc *));
+int	hmematch(struct device *, void *, void *);
+void	hmeattach(struct device *, struct device *, void *);
+void	hmewatchdog(struct ifnet *);
+int	hmeintr(void *);
+int	hmeioctl(struct ifnet *, u_long, caddr_t);
+void	hmereset(struct hme_softc *);
+void	hmestart(struct ifnet *);
+void	hmestop(struct hme_softc *);
+void	hmeinit(struct hme_softc *);
+void	hme_meminit(struct hme_softc *);
 
-void	hme_tcvr_bb_writeb  __P((struct hme_softc *, int));
-int	hme_tcvr_bb_readb   __P((struct hme_softc *, int));
+void	hme_tcvr_bb_writeb(struct hme_softc *, int);
+int	hme_tcvr_bb_readb(struct hme_softc *, int);
 
-void	hme_poll_stop	__P((struct hme_softc *sc));
+void	hme_poll_stop(struct hme_softc *sc);
 
-int	hme_rint	__P((struct hme_softc *));
-int	hme_tint	__P((struct hme_softc *));
-int	hme_mint	__P((struct hme_softc *, u_int32_t));
-int	hme_eint	__P((struct hme_softc *, u_int32_t));
+int	hme_rint(struct hme_softc *);
+int	hme_tint(struct hme_softc *);
+int	hme_mint(struct hme_softc *, u_int32_t);
+int	hme_eint(struct hme_softc *, u_int32_t);
 
-void	hme_reset_rx	__P((struct hme_softc *));
-void	hme_reset_tx	__P((struct hme_softc *));
+void	hme_reset_rx(struct hme_softc *);
+void	hme_reset_tx(struct hme_softc *);
 
-void		hme_read __P((struct hme_softc *, int, int));
-int		hme_put __P((struct hme_softc *, int, struct mbuf *));
+void		hme_read(struct hme_softc *, int, int);
+int		hme_put(struct hme_softc *, int, struct mbuf *);
 
 /*
  * ifmedia glue
  */
-int	hme_mediachange __P((struct ifnet *));
-void	hme_mediastatus __P((struct ifnet *, struct ifmediareq *));
+int	hme_mediachange(struct ifnet *);
+void	hme_mediastatus(struct ifnet *, struct ifmediareq *);
 
 /*
  * mii glue
  */
-int	hme_mii_read __P((struct device *, int, int));
-void	hme_mii_write __P((struct device *, int, int, int));
-void	hme_mii_statchg __P((struct device *));
+int	hme_mii_read(struct device *, int, int);
+void	hme_mii_write(struct device *, int, int, int);
+void	hme_mii_statchg(struct device *);
 
-void	hme_mcreset __P((struct hme_softc *));
+void	hme_mcreset(struct hme_softc *);
 
 struct cfattach hme_ca = {
 	sizeof (struct hme_softc), hmematch, hmeattach
@@ -162,7 +162,7 @@ hmeattach(parent, self, aux)
 	int pri;
 	struct bootpath *bp;
 	/* XXX the following declaration should be elsewhere */
-	extern void myetheraddr __P((u_char *));
+	extern void myetheraddr(u_char *);
 
 	if (ca->ca_ra.ra_nintr != 1) {
 		printf(": expected 1 interrupt, got %d\n",
@@ -210,7 +210,7 @@ hmeattach(parent, self, aux)
 
 	sc->sc_ih.ih_fun = hmeintr;
 	sc->sc_ih.ih_arg = sc;
-	intr_establish(ca->ca_ra.ra_intr[0].int_pri, &sc->sc_ih);
+	intr_establish(ca->ca_ra.ra_intr[0].int_pri, &sc->sc_ih, IPL_NET);
 
 	/*
 	 * Get MAC address from card if 'local-mac-address' property exists.
@@ -384,7 +384,7 @@ hmeioctl(ifp, cmd, data)
 
 	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, cmd, data)) > 0) {
 		splx(s);
-		return error;
+		return (error);
 	}
 
 	switch (cmd) {
@@ -470,7 +470,7 @@ hmeioctl(ifp, cmd, data)
 		error = EINVAL;
 	}
 	splx(s);
-	return error;
+	return (error);
 }
 
 void
@@ -670,7 +670,7 @@ hme_mint(sc, why)
 {
 	printf("%s: link status changed\n", sc->sc_dev.dv_xname);
 	hme_poll_stop(sc);
-	return 1;
+	return (1);
 }
 
 /*
@@ -721,7 +721,7 @@ hme_tint(sc)
 	if (sc->sc_no_td == 0)
 		ifp->if_timer = 0;
 
-	return 1;
+	return (1);
 }
 
 int
@@ -756,7 +756,7 @@ hme_rint(sc)
 
 	sc->sc_last_rd = bix;
 
-	return 1;
+	return (1);
 }
 
 /*
@@ -776,7 +776,7 @@ hme_eint(sc, why)
 		hmereset(sc);
 	}
 
-	return 1;
+	return (1);
 }
 
 /*
@@ -829,7 +829,7 @@ hme_put(sc, idx, m)
 		tlen += len;
 		MFREE(m, n);
 	}
-	return tlen;
+	return (tlen);
 }
 
 void
@@ -1058,7 +1058,7 @@ hme_mii_read(self, phy, reg)
 		}
 		if (!tries) {
 			printf("%s: mii_read failed\n", sc->sc_dev.dv_xname);
-			return 0;
+			return (0);
 		}
 		return (tcvr->frame & 0xffff);
 	}
@@ -1090,7 +1090,7 @@ hme_mii_read(self, phy, reg)
 	hme_tcvr_bb_readb(sc, phy);			/* ignore... */
 	hme_tcvr_bb_readb(sc, phy);			/* ignore... */
 
-	return ret;
+	return (ret);
 }
 
 int

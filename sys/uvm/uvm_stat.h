@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.11 2001/11/28 19:28:15 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.11.2.1 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_stat.h,v 1.22 2001/05/30 11:57:17 mrg Exp $	*/
 
 /*
@@ -234,7 +234,7 @@ do { \
 	static char *_uvmhist_name = FNAME; \
 	int _uvmhist_call;
 
-static __inline void uvmhist_print __P((struct uvm_history_ent *));
+static __inline void uvmhist_print(struct uvm_history_ent *);
 
 static __inline void
 uvmhist_print(e)

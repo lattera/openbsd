@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.8.1 2002/01/31 22:55:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.8.2 2002/06/11 03:42:32 art Exp $	*/
 /*	$NetBSD: wsmux.c,v 1.9 2000/05/28 10:33:14 takemura Exp $	*/
 
 /*
@@ -87,21 +87,19 @@ struct wsplink {
 	struct wsmuxops *sc_ops;
 };
 
-int wsmuxdoclose __P((struct device *, int, int, struct proc *));
-int wsmux_set_display __P((struct device *, struct wsmux_softc *));
-int wsmux_isset_display __P((struct device *));
+int wsmuxdoclose(struct device *, int, int, struct proc *);
+int wsmux_set_display(struct device *, struct wsmux_softc *);
+int wsmux_isset_display(struct device *);
 
 #if NWSMUX > 0
-cdev_decl(wsmux);
-
-void wsmuxattach __P((int));
+void wsmuxattach(int);
 
 struct wsmuxops wsmux_muxops = {
 	wsmuxopen, wsmuxdoclose, wsmuxdoioctl, wsmux_displayioctl,
 	wsmux_set_display, wsmux_isset_display
 };
 
-void wsmux_setmax __P((int n));
+void wsmux_setmax(int n);
 
 int nwsmux = 0;
 struct wsmux_softc **wsmuxdevs = NULL;

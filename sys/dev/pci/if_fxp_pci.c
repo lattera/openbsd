@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.11 2001/11/06 19:53:19 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.11.2.1 2002/06/11 03:42:25 art Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -79,8 +79,8 @@
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcidevs.h>
 
-int fxp_pci_match __P((struct device *, void *, void *));
-void fxp_pci_attach __P((struct device *, struct device *, void *));
+int fxp_pci_match(struct device *, void *, void *);
+void fxp_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach fxp_pci_ca = {
 	sizeof(struct fxp_softc), fxp_pci_match, fxp_pci_attach
@@ -109,6 +109,7 @@ fxp_pci_match(parent, match, aux)
 	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_2:
 		return (1);
 	}
 
@@ -183,6 +184,7 @@ fxp_pci_attach(parent, self, aux)
 	case PCI_PRODUCT_INTEL_PRO_100_VE_1:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_0:
 	case PCI_PRODUCT_INTEL_PRO_100_VM_1:
+	case PCI_PRODUCT_INTEL_PRO_100_VM_2:
 		sc->sc_flags |= FXPF_HAS_RESUME_BUG;
 		sc->not_82557 = 0;
 		break;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.21.2.1 2002/01/31 22:55:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.21.2.2 2002/06/11 03:32:04 art Exp $	*/
 /*	$NetBSD: nfs_syscalls.c,v 1.19 1996/02/18 11:53:52 fvdl Exp $	*/
 
 /*
@@ -79,12 +79,12 @@
 #include <nfs/nfsrtt.h>
 #include <nfs/nfs_var.h>
 
-void	nfsrv_zapsock	__P((struct nfssvc_sock *));
+void	nfsrv_zapsock(struct nfssvc_sock *);
 
 /* Global defs. */
-extern int32_t (*nfsrv3_procs[NFS_NPROCS]) __P((struct nfsrv_descript *,
+extern int32_t (*nfsrv3_procs[NFS_NPROCS])(struct nfsrv_descript *,
 						struct nfssvc_sock *,
-						struct proc *, struct mbuf **));
+						struct proc *, struct mbuf **);
 extern struct proc *nfs_iodwant[NFS_MAXASYNCDAEMON];
 extern int nfs_numasync;
 extern int nfsrtton;
@@ -93,7 +93,6 @@ extern int nfsrvw_procrastinate;
 struct nfssvc_sock *nfs_udpsock, *nfs_cltpsock;
 int nuidhash_max = NFS_MAXUIDHASH;
 int nfsd_waiting = 0;
-int nfs_norsvport = 0;
 #ifdef NFSSERVER
 static int nfs_numnfsd = 0;
 static struct nfsdrt nfsdrt;
@@ -108,7 +107,7 @@ int nfs_niothreads = -1;
 #endif
 
 #ifdef NFSSERVER
-static void nfsd_rt __P((int, struct nfsrv_descript *, int));
+static void nfsd_rt(int, struct nfsrv_descript *, int);
 #endif
 
 int nfs_clientd(struct nfsmount *nmp, struct ucred *cred, 
@@ -288,6 +287,7 @@ sys_nfssvc(p, v, retval)
 		error = getsock(p->p_fd, nfsdarg.sock, &fp);
 		if (error)
 			return (error);
+		FREF(fp);
 		/*
 		 * Get the client address for connected sockets.
 		 */
@@ -296,10 +296,13 @@ sys_nfssvc(p, v, retval)
 		else {
 			error = sockargs(&nam, nfsdarg.name, nfsdarg.namelen,
 				MT_SONAME);
-			if (error)
+			if (error) {
+				FRELE(fp);
 				return (error);
+			}
 		}
 		error = nfssvc_addsock(fp, nam);
+		FRELE(fp);
 #endif /* !NFSSERVER */
 	} else {
 #ifndef NFSSERVER
@@ -781,11 +784,12 @@ nfsrv_zapsock(slp)
 	slp->ns_flag &= ~SLP_ALLFLAGS;
 	fp = slp->ns_fp;
 	if (fp) {
-		slp->ns_fp = (struct file *)0;
+		FREF(fp);
+		slp->ns_fp = NULL;
 		so = slp->ns_so;
 		so->so_upcall = NULL;
 		soshutdown(so, 2);
-		closef(fp, (struct proc *)0);
+		closef(fp, NULL);
 		if (slp->ns_nam)
 			MFREE(slp->ns_nam, m);
 		m_freem(slp->ns_raw);

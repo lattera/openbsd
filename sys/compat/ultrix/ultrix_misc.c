@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.22 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_misc.c,v 1.22.2.1 2002/06/11 03:28:09 art Exp $	*/
 /*	$NetBSD: ultrix_misc.c,v 1.23 1996/04/07 17:23:04 jonathan Exp $	*/
 
 /*
@@ -145,8 +145,8 @@ extern char *ultrix_syscallnames[];
 #endif /* __vax__ */
 
 
-extern void ULTRIX_EXEC_SETREGS __P((struct proc *, struct exec_package *,
-					u_long, register_t *));
+extern void ULTRIX_EXEC_SETREGS(struct proc *, struct exec_package *,
+					u_long, register_t *);
 extern char sigcode[], esigcode[];
 
 struct emul emul_ultrix = {
@@ -279,7 +279,7 @@ ultrix_sys_select(p, v, retval)
 #endif
 
 	}
-	error = sys_select(p, (void*) uap, retval);
+	error = sys_select(p, (void *) uap, retval);
 	if (error == EINVAL)
 		printf("ultrix select: bad args?\n");
 
@@ -353,27 +353,35 @@ ultrix_sys_setsockopt(p, v, retval)
 
 	if ((error = getsock(p->p_fd, SCARG(uap, s), &fp))  != 0)
 		return (error);
+	FREF(fp);
 #define	SO_DONTLINGER (~SO_LINGER)
 	if (SCARG(uap, name) == SO_DONTLINGER) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		mtod(m, struct linger *)->l_onoff = 0;
 		m->m_len = sizeof(struct linger);
-		return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+		error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 		    SO_LINGER, m));
+		FRELE(fp);
+		return (error);
 	}
-	if (SCARG(uap, valsize) > MLEN)
+	if (SCARG(uap, valsize) > MLEN) {
+		FRELE(fp);
 		return (EINVAL);
+	}
 	if (SCARG(uap, val)) {
 		m = m_get(M_WAIT, MT_SOOPTS);
 		if ((error = copyin(SCARG(uap, val), mtod(m, caddr_t),
 				    (u_int)SCARG(uap, valsize))) != 0) {
+			FRELE(fp);
 			(void) m_free(m);
 			return (error);
 		}
 		m->m_len = SCARG(uap, valsize);
 	}
-	return (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
+	error = (sosetopt((struct socket *)fp->f_data, SCARG(uap, level),
 	    SCARG(uap, name), m));
+	FRELE(fp);
+	return (error);
 }
 
 struct ultrix_utsname {
@@ -393,7 +401,7 @@ ultrix_sys_uname(p, v, retval)
 {
 	struct ultrix_sys_uname_args *uap = v;
 	struct ultrix_utsname sut;
-	extern char ostype[], machine[], osrelease[];
+	extern char machine[];
 
 	bzero(&sut, sizeof(sut));
 

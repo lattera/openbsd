@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/stand/bootxx/Attic/bootxx.c,v 1.2 2001/07/04 08:33:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/sun3/stand/bootxx/Attic/bootxx.c,v 1.2.4.1 2002/06/11 03:39:01 art Exp $ */
 /*	$NetBSD: bootxx.c,v 1.5 1995/10/13 21:44:57 gwr Exp $ */
 
 /*
@@ -83,7 +83,7 @@ main()
 		exit();
 	}
 
-	addr = (char*)LOADADDR;
+	addr = (char *)LOADADDR;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

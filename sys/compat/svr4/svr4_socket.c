@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_socket.c,v 1.3 1997/08/29 19:56:37 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_socket.c,v 1.3.22.1 2002/06/11 03:28:09 art Exp $	*/
 /*	$NetBSD: svr4_socket.c,v 1.4 1997/07/21 23:02:37 christos Exp $	*/
 
 /*
@@ -141,7 +141,8 @@ svr4_add_socket(p, path, st)
 	struct stat *st;
 {
 	struct svr4_sockcache_entry *e;
-	int len, error;
+	size_t len;
+	int error;
 
 	if (!initialized) {
 		TAILQ_INIT(&svr4_head);

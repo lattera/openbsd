@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.6 2001/10/31 17:20:21 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.6.2.1 2002/06/11 03:39:18 art Exp $ */
 /*	$NetBSD: autoconf.c,v 1.5 1999/08/23 19:09:27 ragge Exp $ */
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -159,6 +159,7 @@ autoconf()
 	case VAX_BTYP_49:
 	case VAX_BTYP_1301:
 	case VAX_BTYP_1303:
+	case VAX_BTYP_1305:
 		break;
 	}
 }

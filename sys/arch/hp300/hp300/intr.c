@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.9 2001/11/06 19:53:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.9.2.1 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: intr.c,v 1.5 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
 #include "ppp.h"
 #include "bridge.h"
 
-void	netintr __P((void));
+void	netintr(void);
 
 #include <machine/cpu.h>
 #include <machine/intr.h>
@@ -66,7 +66,7 @@ u_short	hp300_bioipl, hp300_netipl, hp300_ttyipl, hp300_impipl;
 
 extern	int intrcnt[];		/* from locore.s */
 
-void	intr_computeipl __P((void));
+void	intr_computeipl(void);
 
 void
 intr_init()
@@ -161,7 +161,7 @@ intr_printlevels()
  */
 void *
 intr_establish(func, arg, ipl, priority)
-	int (*func) __P((void *));
+	int (*func)(void *);
 	void *arg;
 	int ipl;
 	int priority;
@@ -286,56 +286,13 @@ intr_dispatch(evec)
 void
 netintr()
 {
-#ifdef INET
-	if (netisr & (1 << NETISR_ARP)) {
-		netisr &= ~(1 << NETISR_ARP);
-		arpintr();
-	}
-	if (netisr & (1 << NETISR_IP)) {
-		netisr &= ~(1 << NETISR_IP);
-		ipintr();
-	}
-#endif
-#ifdef INET6
-	if (netisr & (1 << NETISR_IPV6)) {
-		netisr &= ~(1 << NETISR_IPV6);
-		ip6intr();
-	}
-#endif
-#ifdef NETATALK
-	if (netisr & (1 << NETISR_ATALK)) {
-		netisr &= ~(1 << NETISR_ATALK);
-		atintr();
-	}
-#endif
-#ifdef NS
-	if (netisr & (1 << NETISR_NS)) {
-		netisr &= ~(1 << NETISR_NS);
-		nsintr();
-	}
-#endif
-#ifdef ISO
-	if (netisr & (1 << NETISR_ISO)) {
-		netisr &= ~(1 << NETISR_ISO);
-		clnlintr();
-	}
-#endif
-#ifdef CCITT
-	if (netisr & (1 << NETISR_CCITT)) {
-		netisr &= ~(1 << NETISR_CCITT);
-		ccittintr();
-	}
-#endif
-#if NPPP > 0
-	if (netisr & (1 << NETISR_PPP)) {
-		netisr &= ~(1 << NETISR_PPP);
-		pppintr();
-	}
-#endif
-#if NBRIDGE > 0
-	if (netisr & (1 << NETISR_BRIDGE)) {
-		netisr &= ~(1 << NETISR_BRIDGE);
-		bridgeintr();
-	}
-#endif
+#define	DONETISR(bit, fn) \
+	do { \
+		if (netisr & (1 << (bit))) { \
+			netisr &= ~(1 << (bit)); \
+			(fn)(); \
+		} \
+	} while (0)
+#include <net/netisr_dispatch.h>
+#undef	DONETISR
 }

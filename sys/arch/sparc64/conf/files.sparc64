@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22.2.1 2002/01/31 22:55:23 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22.2.2 2002/06/11 03:38:42 art Exp $
 #	$NetBSD: files.sparc64,v 1.50 2001/08/10 20:53:50 eeh Exp $
 
 # maxpartitions must be first item in files.${ARCH}
@@ -23,11 +23,14 @@ file	arch/sparc64/dev/uperf.c		uperf needs-flag
 
 include "dev/sun/files.sun"
 include "dev/wscons/files.wscons"
+include "dev/rasops/files.rasops"
+include "dev/wsfont/files.wsfont"
 include "dev/sbus/files.sbus"
 include "dev/i2o/files.i2o"
 include "dev/mii/files.mii"
 include "dev/atapiscsi/files.atapiscsi"
 include "dev/ata/files.ata"
+include "dev/pckbc/files.pckbc"
 
 # COMPAT_NETBSD
 include "compat/netbsd/files.netbsd"
@@ -36,20 +39,25 @@ file	arch/sparc64/sparc64/netbsd_machdep.c	compat_netbsd
 attach sbus at mainbus
 file	arch/sparc64/dev/sbus.c			sbus
 
-define psycho {}
+device creator: wsemuldisplaydev, rasops8, rasops16, rasops24, rasops32
+attach creator at mainbus
+file	arch/sparc64/dev/creator.c		creator
+
+include "dev/pci/files.pci"
+
 device psycho: pcibus
 attach psycho at mainbus
-include "dev/pci/files.pci"
 file	arch/sparc64/dev/psycho.c		psycho
-file	arch/sparc64/dev/pci_machdep.c		psycho
 
-attach	uperf at psycho with uperf_psycho
-file	arch/sparc64/dev/uperf_psycho.c		uperf_psycho needs-flag
+device schizo: pcibus
+attach schizo at mainbus
+file	arch/sparc64/dev/schizo.c		schizo
+file	arch/sparc64/dev/pci_machdep.c		psycho | schizo
 
 attach	hme at pci with hme_pci
-file	dev/pci/if_hme_pci.c		hme_pci
+file	dev/pci/if_hme_pci.c			hme_pci
 
-device vgafb: wsemuldisplaydev, wsrasteremulops, wsemul_sun
+device vgafb: wsemuldisplaydev, rasops8, rasops16, rasops24, rasops32, wsemul_sun
 attach vgafb at pci
 file	arch/sparc64/dev/vgafb.c		vgafb
 
@@ -59,6 +67,9 @@ file	arch/sparc64/dev/iommu.c		sbus | psycho
 device ebus {[addr = -1]}: pcibus
 attach ebus at pci
 file	arch/sparc64/dev/ebus.c			ebus
+
+attach	uperf at ebus with uperf_ebus
+file	arch/sparc64/dev/uperf_ebus.c		uperf_ebus
 
 device clock: mk48txx
 attach clock at mainbus, sbus with clock_sbus
@@ -82,7 +93,7 @@ file	arch/sparc64/sparc64/cpu.c
 device auxio
 attach auxio at ebus with auxio_ebus
 attach auxio at sbus with auxio_sbus
-file	arch/sparc64/dev/auxio.c		auxio
+file	arch/sparc64/dev/auxio.c		auxio needs-flag
 
 device beeper
 attach beeper at ebus
@@ -108,9 +119,15 @@ file	arch/sparc64/dev/com_ebus.c		com_ebus
 define sunkbd
 file	dev/sun/sunkbd.c			sunkbd
 
+attach pckbc at ebus with pckbc_ebus
+file	arch/sparc64/dev/pckbc_ebus.c		pckbc_ebus
+
 device comkbd: tty, wskbddev, sunkbd
 attach comkbd at ebus
 file	arch/sparc64/dev/comkbd_ebus.c		comkbd
+
+attach lpt at ebus with lpt_ebus
+file	arch/sparc64/dev/lpt_ebus.c		lpt_ebus
 
 device zs {channel = -1}
 attach zs at mainbus, sbus
@@ -120,11 +137,11 @@ file	arch/sparc64/dev/z8530sc.c		zs
 define zstty {}
 device zstty: tty
 attach zstty at zs
-file arch/sparc64/dev/z8530tty.c		zstty needs-flag
+file	arch/sparc64/dev/z8530tty.c		zstty needs-flag
 
 device zskbd: tty, wskbddev, sunkbd
 attach zskbd at zs
-file arch/sparc64/dev/z8530kbd.c		zskbd needs-flag
+file	arch/sparc64/dev/z8530kbd.c		zskbd needs-flag
 
 file	dev/cons.c
 file	arch/sparc64/dev/consinit.c

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/rtc.h,v 1.4 2000/01/24 16:02:04 espie Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/rtc.h,v 1.4.12.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: rtc.h,v 1.5 1997/07/17 23:29:28 is Exp $	*/
 
 /*
@@ -39,8 +39,8 @@
 /* this is a hook set by a clock driver for the configured realtime clock,
    returning plain current unix-time */
 
-time_t (*gettod) __P((void));
-int (*settod) __P((time_t));
+time_t (*gettod)(void);
+int (*settod)(time_t);
 
 struct rtclock2000 {
 	u_int  :28, second2:4;	/* lower digit */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_interface.h,v 1.3 1996/04/21 22:19:02 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_interface.h,v 1.3.26.1 2002/06/11 03:28:48 art Exp $	*/
 /*	$NetBSD: db_interface.h,v 1.1 1996/02/05 01:57:03 christos Exp $	*/
 
 /*
@@ -33,18 +33,19 @@
 #define _DDB_DB_INTERFACE_H_
 
 /* arch/<arch>/<arch>/db_trace.c */
-void db_stack_trace_cmd __P((db_expr_t, int, db_expr_t, char *));
+void db_stack_trace_print(db_expr_t, int, db_expr_t, char *,
+    int (*)(const char *, ...));
 
 /* arch/<arch>/<arch>/db_disasm.c */
-db_addr_t db_disasm __P((db_addr_t, boolean_t));
+db_addr_t db_disasm(db_addr_t, boolean_t);
 
 /* kern/kern_synch.c */
-void db_show_all_procs __P((db_expr_t, int, db_expr_t, char *));
+void db_show_all_procs(db_expr_t, int, db_expr_t, char *);
 
 /* kern/kern_clock.c */
-void db_show_callout __P((db_expr_t, int, db_expr_t, char *));
+void db_show_callout(db_expr_t, int, db_expr_t, char *);
 
 /* arch/<arch>/<arch>/db_interface.c */
-void db_machine_init __P((void));
+void db_machine_init(void);
 
 #endif /* _DDB_DB_INTERFACE_H_ */

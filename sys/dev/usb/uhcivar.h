@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhcivar.h,v 1.11 2001/06/12 19:11:59 mickey Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uhcivar.h,v 1.11.4.1 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: uhcivar.h,v 1.32 2000/08/13 16:18:09 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhcivar.h,v 1.14 1999/11/17 22:33:42 n_hibma Exp $	*/
 

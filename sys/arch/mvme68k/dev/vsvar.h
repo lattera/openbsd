@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vsvar.h,v 1.1 2000/01/25 04:18:18 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vsvar.h,v 1.1.12.1 2002/06/11 03:36:50 art Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1990 The Regents of the University of California.
@@ -47,7 +47,7 @@
 #define	DMAMAXIO	(MAXPHYS/NBPG+1)
 #define  LO(x) (u_short)((unsigned long)x & 0x0000FFFF)
 #define  HI(x) (u_short)((unsigned long)x >> 16)
-#define  OFF(x) (u_short)((long)kvtop(x) - (long)kvtop(sc->sc_vsreg))
+#define  OFF(x) (u_short)((long)kvtop((vaddr_t)x) - (long)kvtop((vaddr_t)sc->sc_vsreg))
 
 struct vs_tinfo {
 	int	cmds;		/* #commands processed */
@@ -126,7 +126,7 @@ struct	vs_softc {
 #define WQO_RFWQ           0x0020   /* report frozen work queue bit */
 #define WQO_INIT           0x8000   /* work queue init bit */
 
-void vs_minphys __P((struct buf *bp));
-int vs_scsicmd __P((struct scsi_xfer *));
+void vs_minphys(struct buf *bp);
+int vs_scsicmd(struct scsi_xfer *);
 
 #endif /* _M328VAR_H */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/math_emulate.c,v 1.4 1996/05/07 07:21:48 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/math_emulate.c,v 1.4.26.1 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: math_emulate.c,v 1.17 1996/05/03 19:42:17 christos Exp $	*/
 
 /*
@@ -580,7 +580,7 @@ char * ea(struct trapframe * info, u_short code)
 		I387.fos = 0x17;
 		return (char *) offset;
 	}
-	tmp = (long*)&REG(rm);
+	tmp = (long *)&REG(rm);
 	switch (mod) {
 		case 0: offset = 0; break;
 		case 1:

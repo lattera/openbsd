@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.13.4.1 2002/01/31 22:55:39 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.13.4.2 2002/06/11 03:42:31 art Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -73,8 +73,15 @@ struct wscons_event {
 #define	WSCONS_EVENT_MOUSE_ABSOLUTE_Y	9	/* Y location */
 #define	WSCONS_EVENT_MOUSE_DELTA_Z	10	/* Z delta amount */
 #define	WSCONS_EVENT_MOUSE_ABSOLUTE_Z	11	/* Z location */
+/* 
+ * Following events are not real wscons_event but are used as parameters of the
+ * WSDISPLAYIO_WSMOUSED ioctl 
+ */
 #define WSCONS_EVENT_WSMOUSED_ON	12	/* wsmoused(8) active */
 #define WSCONS_EVENT_WSMOUSED_OFF	13	/* wsmoused(8) inactive */
+#define WSCONS_EVENT_WSMOUSED_SLEEP	14	/* wsmoused(8) sleeping */
+#define WSCONS_EVENT_WSMOUSED_CLOSE	15	/* notify wsmoused(8) to close 
+						   mouse device */
 
 #define IS_MOTION_EVENT(type) (((type) == WSCONS_EVENT_MOUSE_DELTA_X) || \
 			       ((type) == WSCONS_EVENT_MOUSE_DELTA_Y) || \
@@ -82,7 +89,9 @@ struct wscons_event {
 #define IS_BUTTON_EVENT(type) (((type) == WSCONS_EVENT_MOUSE_UP) || \
 			       ((type) == WSCONS_EVENT_MOUSE_DOWN))
 #define IS_CTRL_EVENT(type) ((type == WSCONS_EVENT_WSMOUSED_ON) || \
-			     (type == WSCONS_EVENT_WSMOUSED_OFF))
+			     (type == WSCONS_EVENT_WSMOUSED_OFF)|| \
+			     (type == WSCONS_EVENT_WSMOUSED_SLEEP))
+
 /*
  * Keyboard ioctls (0 - 31)
  */
@@ -99,7 +108,8 @@ struct wscons_event {
 #define		WSKBD_TYPE_HPC_BTN	8	/* HPC/PsPC buttons */
 #define		WSKBD_TYPE_ARCHIMEDES	9	/* Archimedes keyboard */
 #define		WSKBD_TYPE_ADB		10	/* Apple ADB keyboard */
-#define		WSKBD_TYPE_SUN		11	/* Sun Type3/4/5 */
+#define		WSKBD_TYPE_SUN		11	/* Sun Type3/4 */
+#define		WSKBD_TYPE_SUN5		12	/* Sun Type5 */
 
 /* Manipulate the keyboard bell. */
 struct wskbd_bell_data {
@@ -177,6 +187,7 @@ struct wskbd_map_data {
 #define		WSMOUSE_TYPE_TPANEL	6	/* Generic Touch Panel */
 #define		WSMOUSE_TYPE_NEXT	7	/* NeXT mouse */
 #define		WSMOUSE_TYPE_ARCHIMEDES	8	/* Archimedes mouse */
+#define		WSMOUSE_TYPE_ADB	9	/* ADB */
 
 /* Set resolution.  Not applicable to all mouse types. */
 #define	WSMOUSEIO_SRES		_IOW('W', 33, u_int)
@@ -240,6 +251,7 @@ struct wsmouse_calibcoords {
 #define		WSDISPLAY_TYPE_SB_P9100	22	/* Tadpole SPARCbook P9100 */
 #define		WSDISPLAY_TYPE_EGA	23	/* (generic) EGA */
 #define		WSDISPLAY_TYPE_DCPVR	24	/* Dreamcast PowerVR */
+#define		WSDISPLAY_TYPE_SUNFFB	25	/* Sun UPA FFB */
 
 /* Basic display information.  Not applicable to all display types. */
 struct wsdisplay_fbinfo {
@@ -305,6 +317,7 @@ struct wsdisplay_cursor {
 #define	WSDISPLAYIO_SMODE	_IOW('W', 76, u_int)
 #define		WSDISPLAYIO_MODE_EMUL	0	/* emulation (text) mode */
 #define		WSDISPLAYIO_MODE_MAPPED	1	/* mapped (graphics) mode */
+#define		WSDISPLAYIO_MODE_DUMBFB	2	/* mapped (graphics) fb mode */
 
 struct wsdisplay_font {
 	char name[WSFONT_NAME_SIZE];

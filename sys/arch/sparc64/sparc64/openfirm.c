@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.5 2001/12/05 01:59:55 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.5.2.1 2002/06/11 03:38:44 art Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.13 2001/06/21 00:08:02 eeh Exp $	*/
 
 /*
@@ -323,16 +323,7 @@ OF_package_to_path(phandle, buf, buflen)
  * The following two functions may need to be re-worked to be 64-bit clean.
  */
 int
-#ifdef	__STDC__
 OF_call_method(char *method, int ihandle, int nargs, int nreturns, ...)
-#else
-OF_call_method(method, ihandle, nargs, nreturns, va_alist)
-	char *method;
-	int ihandle;
-	int nargs;
-	int nreturns;
-	va_dcl
-#endif
 {
 	va_list ap;
 	struct {
@@ -353,7 +344,7 @@ OF_call_method(method, ihandle, nargs, nreturns, va_alist)
 	args.method = ADR2CELL(method);
 	args.ihandle = HDL2CELL(ihandle);
 	va_start(ap, nreturns);
-	for (ip = (long*)(args.args_n_results + (n = nargs)); --n >= 0;)
+	for (ip = (long *)(args.args_n_results + (n = nargs)); --n >= 0;)
 		*--ip = va_arg(ap, unsigned long);
 	if (openfirmware(&args) == -1) {
 		va_end(ap);
@@ -363,22 +354,14 @@ OF_call_method(method, ihandle, nargs, nreturns, va_alist)
 		va_end(ap);
 		return args.args_n_results[nargs];
 	}
-	for (ip = (long*)(args.args_n_results + nargs + (n = args.nreturns)); --n > 0;)
+	for (ip = (long *)(args.args_n_results + nargs + (n = args.nreturns)); --n > 0;)
 		*va_arg(ap, unsigned long *) = *--ip;
 	va_end(ap);
 	return 0;
 }
 
 int
-#ifdef	__STDC__
 OF_call_method_1(char *method, int ihandle, int nargs, ...)
-#else
-OF_call_method_1(method, ihandle, nargs, va_alist)
-	char *method;
-	int ihandle;
-	int nargs;
-	va_dcl
-#endif
 {
 	va_list ap;
 	struct {
@@ -399,7 +382,7 @@ OF_call_method_1(method, ihandle, nargs, va_alist)
 	args.method = ADR2CELL(method);
 	args.ihandle = HDL2CELL(ihandle);
 	va_start(ap, nargs);
-	for (ip = (long*)(args.args_n_results + (n = nargs)); --n >= 0;)
+	for (ip = (long *)(args.args_n_results + (n = nargs)); --n >= 0;)
 		*--ip = va_arg(ap, unsigned long);
 	va_end(ap);
 	if (openfirmware(&args) == -1) {
@@ -457,7 +440,7 @@ OF_close(handle)
 
 int
 OF_test(service)
-	char* service;
+	char *service;
 {
 	struct {
 		cell_t name;
@@ -479,7 +462,7 @@ OF_test(service)
 int
 OF_test_method(service, method)
 	int service;
-	char* method;
+	char *method;
 {
 	struct {
 		cell_t name;
@@ -544,7 +527,7 @@ OF_read(handle, addr, len)
 	return act;
 }
 
-void prom_printf __P((const char *fmt, ...));	/* XXX for below */
+void prom_printf(const char *fmt, ...);	/* XXX for below */
 
 int
 OF_write(handle, addr, len)
@@ -699,8 +682,8 @@ void
 	args.nreturns = 1;
 	args.newfunc = ADR2CELL(newfunc);
 	if (openfirmware(&args) == -1)
-		return (void*)(long)-1;
-	return (void*)(long)args.oldfunc;
+		return (void *)(long)-1;
+	return (void *)(long)args.oldfunc;
 }
 
 void 
@@ -726,14 +709,7 @@ OF_set_symbol_lookup(s2v, v2s)
 }
 
 int
-#ifdef	__STDC__
 OF_interpret(char *cmd, int nreturns, ...)
-#else
-OF_interpret(cmd, nreturns, va_alist)
-	char *cmd;
-	int nreturns;
-	va_dcl
-#endif
 {
 	va_list ap;
 	struct {

@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/clockreg.h,v 1.2 1998/12/15 05:52:30 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc64/include/Attic/types.h,v 1.1.4.1 2002/06/11 03:38:43 art Exp $	*/
+/*	$NetBSD: types.h,v 1.17 2001/05/12 22:42:07 kleink Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -41,50 +42,35 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)clockreg.h	8.1 (Berkeley) 6/11/93
+ *	@(#)types.h	8.1 (Berkeley) 6/11/93
  */
 
-#include <machine/idprom.h>
+#ifndef	_MACHTYPES_H_
+#define	_MACHTYPES_H_
 
-/*
- * Sun-4/Sun-4c/Sun-4m clock Mostek TOD clock.
- */
+#include <sys/cdefs.h>
+#include <machine/int_types.h>
 
-/*
- * Mostek MK48T02 clock.
- *
- * The clock includes 2040 bytes of RAM, the last 32 of which serve to
- * identify the kind of Sun 4c this is.
- *
- * or, the Mostek MK48T08 clock.
- *
- * This is used in the Sun 4m machines. It is identical to the MK48T02,
- * except for being 8K in size. The following structure, then, describes
- * the last 2K of it's 8K address space. We simply ignore the first 6K..
- */
-struct clockreg {
-	char	cl_nvram[2008];		/* `free' nonvolatile memory */
-	struct	idprom	cl_idprom;	/* `id prom' */
-	volatile u_char	cl_csr;		/* control register */
-	volatile u_char	cl_sec;		/* seconds (0..59; BCD) */
-	volatile u_char	cl_min;		/* minutes (0..59; BCD) */
-	volatile u_char	cl_hour;	/* hour (0..23; BCD) */
-	volatile u_char	cl_wday;	/* weekday (1..7) */
-	volatile u_char	cl_mday;	/* day in month (1..31; BCD) */
-	volatile u_char	cl_month;	/* month (1..12; BCD) */
-	volatile u_char	cl_year;	/* year (0..99; BCD) */
-};
+#if !defined(_ANSI_SOURCE) && !defined(_POSIX_SOURCE)
+typedef struct label_t {
+	int val[2];
+} label_t;
+#endif
 
-/* bits in cl_csr */
-#define	CLK_WRITE	0x80		/* want to write */
-#define	CLK_READ	0x40		/* want to read (freeze clock) */
+/* The following are unsigned to prevent annoying sign extended pointers. */
+typedef unsigned long int	register_t;
+typedef unsigned int		register32_t;
+typedef unsigned long int	register64_t;
 
-#define CLK_MK48T08_OFF	6*1024		/* struct clockreg is 6K forward */
+#if !defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)
+typedef unsigned long int	vaddr_t;
+typedef vaddr_t			vsize_t;
+typedef unsigned long int	paddr_t;
+typedef paddr_t			psize_t;
+#endif
 
-struct clockreg *clockreg;
+#define	__HAVE_NWSCONS
+#define	__HAVE_DEVICE_REGISTER
+#define	__HAVE_GENERIC_SOFT_INTERRUPTS
 
-/*
- * Sun chose the year `68' as their base count, so that
- * cl_year==0 means 1968.
- */
-#define	YEAR0	68
+#endif	/* _MACHTYPES_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/joyreg.h,v 1.2 1999/01/13 07:26:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/joyreg.h,v 1.2.16.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: joy.c,v 1.3 1996/05/05 19:46:15 christos Exp $	*/
 
 /*-
@@ -17,7 +17,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -66,5 +66,5 @@ struct joy_softc {
 	int	timeout[2];
 };
 
-int		joyopen __P((dev_t, int, int, struct proc *));
-int		joyclose __P((dev_t, int, int, struct proc *));
+int		joyopen(dev_t, int, int, struct proc *);
+int		joyclose(dev_t, int, int, struct proc *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.35 2001/12/08 06:15:15 jason Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.c,v 1.35.2.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: if_ether.c,v 1.31 1996/05/11 12:59:58 mycroft Exp $	*/
 
 /*
@@ -44,6 +44,8 @@
 
 #ifdef INET
 
+#include "bridge.h"
+
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/mbuf.h>
@@ -55,6 +57,8 @@
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/route.h>
+#include <net/if_fddi.h>
+#include <net/if_types.h>
 
 #include <netinet/in.h>
 #include <netinet/in_var.h>
@@ -76,10 +80,10 @@ int	arpt_keep = (20*60);	/* once resolved, good for 20 more minutes */
 int	arpt_down = 20;		/* once declared down, don't send for 20 secs */
 #define	rt_expire rt_rmx.rmx_expire
 
-void arptfree __P((struct llinfo_arp *));
-void arptimer __P((void *));
-struct llinfo_arp *arplookup __P((u_int32_t, int, int));
-void in_arpinput __P((struct mbuf *));
+void arptfree(struct llinfo_arp *);
+void arptimer(void *);
+struct llinfo_arp *arplookup(u_int32_t, int, int);
+void in_arpinput(struct mbuf *);
 
 LIST_HEAD(, llinfo_arp) llinfo_arp;
 struct	ifqueue arpintrq = {0, 0, 0, 50};
@@ -97,10 +101,10 @@ struct ifnet *myip_ifp = NULL;
 #ifdef DDB
 #include <uvm/uvm_extern.h>
 
-void	db_print_sa __P((struct sockaddr *));
-void	db_print_ifa __P((struct ifaddr *));
-void	db_print_llinfo __P((caddr_t));
-int	db_show_radix_node __P((struct radix_node *, void *));
+void	db_print_sa(struct sockaddr *);
+void	db_print_ifa(struct ifaddr *);
+void	db_print_llinfo(caddr_t);
+int	db_show_radix_node(struct radix_node *, void *);
 #endif
 
 /*
@@ -117,10 +121,11 @@ arptimer(arg)
 
 	s = splsoftnet();
 	timeout_add(to, arpt_prune * hz);
-	for (la = llinfo_arp.lh_first; la != 0; la = nla) {
+	for (la = LIST_FIRST(&llinfo_arp); la != LIST_END(&llinfo_arp);
+	    la = nla) {
 		register struct rtentry *rt = la->la_rt;
 
-		nla = la->la_list.le_next;
+		nla = LIST_NEXT(la, la_list);
 		if (rt->rt_expire && rt->rt_expire <= time.tv_sec)
 			arptfree(la); /* timer has expired; clear */
 	}
@@ -155,8 +160,26 @@ arp_rtrequest(req, rt, info)
 		timeout_set(&arptimer_to, arptimer, &arptimer_to);
 		timeout_add(&arptimer_to, hz);
 	}
-	if (rt->rt_flags & RTF_GATEWAY)
+
+	if (rt->rt_flags & RTF_GATEWAY) {
+		if (req != RTM_ADD)
+			return;
+
+		/*
+		 * linklayers with particular link MTU limitation.  it is a bit
+		 * awkward to have FDDI handling here, we should split ARP from
+		 * netinet/if_ether.c like NetBSD does.
+		 */
+		switch (rt->rt_ifp->if_type) {
+		case IFT_FDDI:
+			if (rt->rt_ifp->if_mtu > FDDIIPMTU)
+				rt->rt_rmx.rmx_mtu = FDDIIPMTU;
+			break;
+		}
+
 		return;
+	}
+
 	switch (req) {
 
 	case RTM_ADD:
@@ -183,6 +206,18 @@ arp_rtrequest(req, rt, info)
 			 * from it do not need their expiration time set.
 			 */
 			rt->rt_expire = time.tv_sec;
+			/*
+			 * linklayers with particular link MTU limitation.
+			 */
+			switch (rt->rt_ifp->if_type) {
+			case IFT_FDDI:
+				if ((rt->rt_rmx.rmx_locks & RTV_MTU) == 0 &&
+				    (rt->rt_rmx.rmx_mtu > FDDIIPMTU ||
+				     (rt->rt_rmx.rmx_mtu == 0 &&
+				      rt->rt_ifp->if_mtu > FDDIIPMTU)))
+					rt->rt_rmx.rmx_mtu = FDDIIPMTU;
+				break;
+			}
 			break;
 		}
 		/* Announce a new entry if requested. */
@@ -450,7 +485,10 @@ in_arpinput(m)
 	struct ether_header *eh;
 	register struct llinfo_arp *la = 0;
 	register struct rtentry *rt;
-	struct in_ifaddr *ia, *maybe_ia = 0;
+	struct in_ifaddr *ia;
+#if NBRIDGE > 0
+	struct in_ifaddr *bridge_ia = NULL;
+#endif
 	struct sockaddr_dl *sdl;
 	struct sockaddr sa;
 	struct in_addr isaddr, itaddr, myaddr;
@@ -467,21 +505,62 @@ in_arpinput(m)
 		goto out;
 	}
 #endif
-	bcopy((caddr_t)ea->arp_spa, (caddr_t)&isaddr, sizeof(isaddr));
+
 	bcopy((caddr_t)ea->arp_tpa, (caddr_t)&itaddr, sizeof(itaddr));
+	bcopy((caddr_t)ea->arp_spa, (caddr_t)&isaddr, sizeof(isaddr));
+
 	TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
-		if (ia->ia_ifp == &ac->ac_if ||
-		    (ia->ia_ifp->if_bridge &&
-		    ia->ia_ifp->if_bridge == ac->ac_if.if_bridge)) {
-			maybe_ia = ia;
-			if (itaddr.s_addr == ia->ia_addr.sin_addr.s_addr ||
-			    isaddr.s_addr == ia->ia_addr.sin_addr.s_addr)
+		if (itaddr.s_addr != ia->ia_addr.sin_addr.s_addr)
+			continue;
+
+		if (ia->ia_ifp == m->m_pkthdr.rcvif)
+			break;
+#if NBRIDGE > 0
+		/*
+		 * If the interface we received the packet on
+		 * is part of a bridge, check to see if we need
+		 * to "bridge" the packet to ourselves at this
+		 * layer.  Note we still prefer a perfect match,
+		 * but allow this weaker match if necessary.
+		 */
+		if (m->m_pkthdr.rcvif->if_bridge != NULL &&
+		    m->m_pkthdr.rcvif->if_bridge == ia->ia_ifp->if_bridge)
+			bridge_ia = ia;
+#endif
+	}
+
+#if NBRIDGE > 0
+	if (ia == NULL && bridge_ia != NULL) {
+		ia = bridge_ia;
+		ac = (struct arpcom *)bridge_ia->ia_ifp;
+	}
+#endif
+
+	if (ia == NULL) {
+		TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
+			if (isaddr.s_addr != ia->ia_addr.sin_addr.s_addr)
+				continue;
+			if (ia->ia_ifp == m->m_pkthdr.rcvif)
 				break;
 		}
 	}
-	if (maybe_ia == 0)
+
+	if (ia == NULL) {
+		struct ifaddr *ifa;
+
+		TAILQ_FOREACH(ifa, &m->m_pkthdr.rcvif->if_addrlist, ifa_list) {
+			if (ifa->ifa_addr->sa_family == AF_INET)
+				break;
+		}
+		if (ifa)
+			ia = (struct in_ifaddr *)ifa;
+	}
+
+	if (ia == NULL)
 		goto out;
-	myaddr = ia ? ia->ia_addr.sin_addr : maybe_ia->ia_addr.sin_addr;
+
+	myaddr = ia->ia_addr.sin_addr;
+
 	if (!bcmp((caddr_t)ea->arp_sha, (caddr_t)ac->ac_enaddr,
 	    sizeof (ea->arp_sha)))
 		goto out;	/* it's from me, ignore it. */
@@ -497,7 +576,7 @@ in_arpinput(m)
 			inet_ntoa(isaddr));
 		goto out;
 	}
-	if (isaddr.s_addr == myaddr.s_addr) {
+	if (myaddr.s_addr && isaddr.s_addr == myaddr.s_addr) {
 		log(LOG_ERR,
 		   "duplicate IP address %s sent from ethernet address %s\n",
 		   inet_ntoa(isaddr), ether_sprintf(ea->arp_sha));
@@ -859,7 +938,7 @@ db_print_sa(sa)
 		return;
 	}
 
-	p = (u_char*)sa;
+	p = (u_char *)sa;
 	len = sa->sa_len;
 	db_printf("[");
 	while (len > 0) {

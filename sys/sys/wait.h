@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/wait.h,v 1.6.6.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/wait.h,v 1.6.6.2 2002/06/11 03:32:34 art Exp $	*/
 /*	$NetBSD: wait.h,v 1.11 1996/04/09 20:55:51 cgd Exp $	*/
 
 /*
@@ -155,11 +155,11 @@ union wait {
 __BEGIN_DECLS
 struct rusage;	/* forward declaration */
 
-pid_t	wait __P((int *));
-pid_t	waitpid __P((pid_t, int *, int));
+pid_t	wait(int *);
+pid_t	waitpid(pid_t, int *, int);
 #ifndef _POSIX_SOURCE
-pid_t	wait3 __P((int *, int, struct rusage *));
-pid_t	wait4 __P((pid_t, int *, int, struct rusage *));
+pid_t	wait3(int *, int, struct rusage *);
+pid_t	wait4(pid_t, int *, int, struct rusage *);
 #endif
 __END_DECLS
 #endif

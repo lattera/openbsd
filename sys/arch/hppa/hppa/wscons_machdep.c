@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/wscons_machdep.c,v 1.2 2002/03/18 00:19:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/wscons_machdep.c,v 1.2.6.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff

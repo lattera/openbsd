@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/altq/altq_red.c,v 1.2 2001/08/09 14:32:59 deraadt Exp $	*/
-/*	$KAME: altq_red.c,v 1.8 2000/12/14 08:12:46 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_red.c,v 1.2.4.1 2002/06/11 03:27:42 art Exp $	*/
+/*	$KAME: altq_red.c,v 1.10 2002/04/03 05:38:51 kjc Exp $	*/
 
 /*
- * Copyright (C) 1997-2000
+ * Copyright (C) 1997-2002
  *	Sony Computer Science Laboratories Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -180,26 +180,26 @@ static int default_th_max = TH_MAX;
 static int default_inv_pmax = INV_P_MAX;
 
 /* internal function prototypes */
-static int red_enqueue __P((struct ifaltq *, struct mbuf *,
-			    struct altq_pktattr *));
-static struct mbuf *red_dequeue __P((struct ifaltq *, int));
-static int red_request __P((struct ifaltq *, int, void *));
-static void red_purgeq __P((red_queue_t *));
-static int red_detach __P((red_queue_t *));
+static int red_enqueue(struct ifaltq *, struct mbuf *,
+			    struct altq_pktattr *);
+static struct mbuf *red_dequeue(struct ifaltq *, int);
+static int red_request(struct ifaltq *, int, void *);
+static void red_purgeq(red_queue_t *);
+static int red_detach(red_queue_t *);
 #ifdef ALTQ_FLOWVALVE
-static __inline struct fve *flowlist_lookup __P((struct flowvalve *,
-			 struct altq_pktattr *, struct timeval *));
-static __inline struct fve *flowlist_reclaim __P((struct flowvalve *,
-						  struct altq_pktattr *));
-static __inline void flowlist_move_to_head __P((struct flowvalve *,
-						struct fve *));
-static __inline int fv_p2f __P((struct flowvalve *, int));
-static struct flowvalve *fv_alloc __P((struct red *));
-static void fv_destroy __P((struct flowvalve *));
-static int fv_checkflow __P((struct flowvalve *, struct altq_pktattr *,
-			     struct fve **));
-static void fv_dropbyred __P((struct flowvalve *fv, struct altq_pktattr *,
-			      struct fve *));
+static __inline struct fve *flowlist_lookup(struct flowvalve *,
+			 struct altq_pktattr *, struct timeval *);
+static __inline struct fve *flowlist_reclaim(struct flowvalve *,
+						  struct altq_pktattr *);
+static __inline void flowlist_move_to_head(struct flowvalve *,
+						struct fve *);
+static __inline int fv_p2f(struct flowvalve *, int);
+static struct flowvalve *fv_alloc(struct red *);
+static void fv_destroy(struct flowvalve *);
+static int fv_checkflow(struct flowvalve *, struct altq_pktattr *,
+			     struct fve **);
+static void fv_dropbyred(struct flowvalve *fv, struct altq_pktattr *,
+			      struct fve *);
 #endif
 
 /*
@@ -837,46 +837,33 @@ mark_ecn(m, pktattr, flags)
 	case AF_INET:
 		if (flags & REDF_ECN4) {
 			struct ip *ip = (struct ip *)pktattr->pattr_hdr;
+			u_int8_t otos;
+			int sum;
 	    
 			if (ip->ip_v != 4)
 				return (0);	/* version mismatch! */
-			if (ip->ip_tos & IPTOS_ECT) {
-				/* ECN-capable, mark ECN bit. */
-				if ((ip->ip_tos & IPTOS_CE) == 0) {
-#if (IPTOS_CE == 0x01)
-					u_short sum;
 
-					ip->ip_tos |= IPTOS_CE;
-					/*
-					 * optimized version when IPTOS_CE
-					 * is 0x01.
-					 *   HC' = HC -1   when HC > 0
-					 *       = 0xfffe  when HC = 0
-					 */
-					sum = ntohs(ip->ip_sum);
-					if (sum == 0)
-						sum = 0xfffe;
-					else
-						sum -= 1;
-					ip->ip_sum = htons(sum);
-#else /* IPTOS_CE != 0x01 */
-					long sum;
+			if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_NOTECT)
+				return (0);	/* not-ECT */
+			if ((ip->ip_tos & IPTOS_ECN_MASK) == IPTOS_ECN_CE)
+				return (1);	/* already marked */
 
-					ip->ip_tos |= IPTOS_CE;
-					/*
-					 * update checksum (from RFC1624)
-					 *	   HC' = ~(~HC + ~m + m')
-					 */
-					sum = ~ntohs(ip->ip_sum) & 0xffff;
-					sum += 0xffff + IPTOS_CE;
-					sum = (sum >> 16) + (sum & 0xffff);
-					sum += (sum >> 16);  /* add carry */
-
-					ip->ip_sum = htons(~sum & 0xffff);
-#endif /* IPTOS_CE != 0x01 */
-				}
-				return (1);
-			}
+			/*
+			 * ecn-capable but not marked,
+			 * mark CE and update checksum
+			 */
+			otos = ip->ip_tos;
+			ip->ip_tos |= IPTOS_ECN_CE;
+			/*
+			 * update checksum (from RFC1624)
+			 *	   HC' = ~(~HC + ~m + m')
+			 */
+			sum = ~ntohs(ip->ip_sum) & 0xffff;
+			sum += (~otos & 0xffff) + ip->ip_tos;
+			sum = (sum >> 16) + (sum & 0xffff);
+			sum += (sum >> 16);  /* add carry */
+			ip->ip_sum = htons(~sum & 0xffff);
+			return (1);
 		}
 		break;
 #ifdef INET6
@@ -888,12 +875,18 @@ mark_ecn(m, pktattr, flags)
 			flowlabel = ntohl(ip6->ip6_flow);
 			if ((flowlabel >> 28) != 6)
 				return (0);	/* version mismatch! */
-			if (flowlabel & (IPTOS_ECT << 20)) {
-				/* ECN-capable, mark ECN bit. */
-				flowlabel |= (IPTOS_CE << 20);
-				ip6->ip6_flow = htonl(flowlabel);
-				return (1);
-			}
+			if ((flowlabel & (IPTOS_ECN_MASK << 20)) ==
+			    (IPTOS_ECN_NOTECT << 20))
+				return (0);	/* not-ECT */
+			if ((flowlabel & (IPTOS_ECN_MASK << 20)) ==
+			    (IPTOS_ECN_CE << 20))
+				return (1);	/* already marked */
+			/*
+			 * ecn-capable but not marked,  mark CE
+			 */
+			flowlabel |= (IPTOS_ECN_CE << 20);
+			ip6->ip6_flow = htonl(flowlabel);
+			return (1);
 		}
 		break;
 #endif  /* INET6 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/swapgeneric.c,v 1.13 2001/09/29 18:40:29 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/swapgeneric.c,v 1.13.4.1 2002/06/11 03:34:57 art Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.27 1997/01/26 22:58:32 rat Exp $	*/
 
 /*
@@ -54,9 +54,9 @@
 #include "wd.h"
 #include "cd.h"
 
-int (*mountroot) __P((void)) = dk_mountroot;
+int (*mountroot)(void) = dk_mountroot;
 
-void gets __P((char *));
+void gets(char *);
 
 /*
  * Generic configuration;  all in one
@@ -110,7 +110,7 @@ struct genericconf genericconf[] = {
 	{ 0 },
 };
 
-struct genericconf * getgenconf __P((char *)); 
+struct genericconf *getgenconf(char *); 
 
 struct genericconf *
 getgenconf(bp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mc_obio.c,v 1.2 2001/11/06 19:53:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mc_obio.c,v 1.2.2.1 2002/06/11 03:36:18 art Exp $	*/
 /*	$NetBSD: if_mc_obio.c,v 1.4 1998/01/13 19:24:54 scottr Exp $	*/
 
 /*-
@@ -60,23 +60,23 @@
 #define MACE_REG_BASE	0x50F1C000
 #define MACE_PROM_BASE	0x50F08000
 
-hide int	mc_obio_match __P((struct device *, void *, void *));
-hide void	mc_obio_attach __P((struct device *, struct device *, void *));
-hide void	mc_obio_init __P((struct mc_softc *sc));
-hide void	mc_obio_put __P((struct mc_softc *sc, u_int len));
-hide int	mc_dmaintr __P((void *arg));
-hide void	mc_reset_rxdma __P((struct mc_softc *sc));
-hide void	mc_reset_rxdma_set __P((struct mc_softc *, int set));
-hide void	mc_reset_txdma __P((struct mc_softc *sc));
-hide int	mc_obio_getaddr __P((struct mc_softc *, u_int8_t *));
+int	mc_obio_match(struct device *, void *, void *);
+void	mc_obio_attach(struct device *, struct device *, void *);
+void	mc_obio_init(struct mc_softc *sc);
+void	mc_obio_put(struct mc_softc *sc, u_int len);
+int	mc_dmaintr(void *arg);
+void	mc_reset_rxdma(struct mc_softc *sc);
+void	mc_reset_rxdma_set(struct mc_softc *, int set);
+void	mc_reset_txdma(struct mc_softc *sc);
+int	mc_obio_getaddr(struct mc_softc *, u_int8_t *);
 
-extern int	kvtop __P((register caddr_t addr));
+extern int	kvtop(register caddr_t addr);
 
 struct cfattach mc_obio_ca = {
 	sizeof(struct mc_softc), mc_obio_match, mc_obio_attach
 };
 
-hide int
+int
 mc_obio_match(parent, cf, aux)
 	struct device *parent;
 	void *cf;
@@ -110,7 +110,7 @@ mc_obio_match(parent, cf, aux)
 	return found;
 }
 
-hide void
+void
 mc_obio_attach(parent, self, aux)
 	struct device *parent, *self;
 	void	*aux;
@@ -216,7 +216,7 @@ mc_obio_attach(parent, self, aux)
 }
 
 /* Bus-specific initialization */
-hide void
+void
 mc_obio_init(sc)
 	struct mc_softc *sc;
 {
@@ -224,7 +224,7 @@ mc_obio_init(sc)
 	mc_reset_txdma(sc);
 }
 
-hide void
+void
 mc_obio_put(sc, len)
 	struct mc_softc *sc;
 	u_int len;
@@ -330,7 +330,7 @@ mc_dmaintr(arg)
 }
 
 
-hide void
+void
 mc_reset_rxdma(sc)
 	struct mc_softc *sc;
 {
@@ -355,7 +355,7 @@ mc_reset_rxdma(sc)
 	psc_reg2(PSC_ENETRD_CMD + PSC_SET1) = 0x9800;
 }
 
-hide void
+void
 mc_reset_rxdma_set(sc, set)
 	struct mc_softc *sc;
 	int set;
@@ -368,7 +368,7 @@ mc_reset_rxdma_set(sc, set)
 	sc->sc_tail = 0;
 }
 
-hide void
+void
 mc_reset_txdma(sc)
 	struct mc_softc *sc;
 {
@@ -382,7 +382,7 @@ mc_reset_txdma(sc)
 	NIC_PUT(sc, MACE_MACCC, maccc);
 }
 
-hide int
+int
 mc_obio_getaddr(sc, lladdr)
 	struct mc_softc *sc;
 	u_int8_t *lladdr;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/Attic/if_gx.c,v 1.6 2002/04/28 20:50:17 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/Attic/if_gx.c,v 1.6.2.1 2002/06/11 03:42:25 art Exp $ */
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon
  * All rights reserved.

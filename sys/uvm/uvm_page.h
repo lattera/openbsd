@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.h,v 1.16.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.h,v 1.16.2.2 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_page.h,v 1.31 2001/09/15 20:36:46 chs Exp $	*/
 
 /*
@@ -265,38 +265,38 @@ extern int vm_nphysseg;
  * prototypes: the following prototypes define the interface to pages
  */
 
-void uvm_page_init __P((vaddr_t *, vaddr_t *));
+void uvm_page_init(vaddr_t *, vaddr_t *);
 #if defined(UVM_PAGE_TRKOWN)
-void uvm_page_own __P((struct vm_page *, char *));
+void uvm_page_own(struct vm_page *, char *);
 #endif
 #if !defined(PMAP_STEAL_MEMORY)
-boolean_t uvm_page_physget __P((paddr_t *));
+boolean_t uvm_page_physget(paddr_t *);
 #endif
-void uvm_page_rehash __P((void));
-void uvm_page_recolor __P((int));
-void uvm_pageidlezero __P((void));
+void uvm_page_rehash(void);
+void uvm_page_recolor(int);
+void uvm_pageidlezero(void);
 
-PAGE_INLINE int uvm_lock_fpageq __P((void));
-PAGE_INLINE void uvm_unlock_fpageq __P((int));
+PAGE_INLINE int uvm_lock_fpageq(void);
+PAGE_INLINE void uvm_unlock_fpageq(int);
 
-PAGE_INLINE void uvm_pageactivate __P((struct vm_page *));
-vaddr_t uvm_pageboot_alloc __P((vsize_t));
-PAGE_INLINE void uvm_pagecopy __P((struct vm_page *, struct vm_page *));
-PAGE_INLINE void uvm_pagedeactivate __P((struct vm_page *));
-PAGE_INLINE void uvm_pagedequeue __P((struct vm_page *));
-void uvm_pagefree __P((struct vm_page *));
-void uvm_page_unbusy __P((struct vm_page **, int));
-PAGE_INLINE struct vm_page *uvm_pagelookup __P((struct uvm_object *, voff_t));
-PAGE_INLINE void uvm_pageunwire __P((struct vm_page *));
-PAGE_INLINE void uvm_pagewait __P((struct vm_page *, int));
-PAGE_INLINE void uvm_pagewake __P((struct vm_page *));
-PAGE_INLINE void uvm_pagewire __P((struct vm_page *));
-PAGE_INLINE void uvm_pagezero __P((struct vm_page *));
+PAGE_INLINE void uvm_pageactivate(struct vm_page *);
+vaddr_t uvm_pageboot_alloc(vsize_t);
+PAGE_INLINE void uvm_pagecopy(struct vm_page *, struct vm_page *);
+PAGE_INLINE void uvm_pagedeactivate(struct vm_page *);
+PAGE_INLINE void uvm_pagedequeue(struct vm_page *);
+void uvm_pagefree(struct vm_page *);
+void uvm_page_unbusy(struct vm_page **, int);
+PAGE_INLINE struct vm_page *uvm_pagelookup(struct uvm_object *, voff_t);
+PAGE_INLINE void uvm_pageunwire(struct vm_page *);
+PAGE_INLINE void uvm_pagewait(struct vm_page *, int);
+PAGE_INLINE void uvm_pagewake(struct vm_page *);
+PAGE_INLINE void uvm_pagewire(struct vm_page *);
+PAGE_INLINE void uvm_pagezero(struct vm_page *);
 
-PAGE_INLINE int uvm_page_lookup_freelist __P((struct vm_page *));
+PAGE_INLINE int uvm_page_lookup_freelist(struct vm_page *);
 
-static struct vm_page *PHYS_TO_VM_PAGE __P((paddr_t));
-static int vm_physseg_find __P((paddr_t, int *));
+static struct vm_page *PHYS_TO_VM_PAGE(paddr_t);
+static int vm_physseg_find(paddr_t, int *);
 
 /*
  * macros

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.2 2001/12/05 23:58:41 tdeval Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/autoconf.c,v 1.2.2.1 2002/06/11 03:36:34 art Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -41,7 +41,7 @@
  * from: Utah Hdr: autoconf.c 1.31 91/01/21
  *
  *	from: @(#)autoconf.c	8.1 (Berkeley) 6/10/93
- *      $Id: autoconf.c,v 1.1 2001/09/01 15:44:20 drahn Exp $
+ *      $Id: autoconf.c,v 1.2 2001/12/05 23:58:41 tdeval Exp $
  */
 
 /*
@@ -62,18 +62,18 @@
 
 #include <machine/autoconf.h>
 
-struct  device *parsedisk __P((char *, int, int, dev_t *));
-void    setroot __P((void));
-void	swapconf __P((void));
-extern void	dumpconf __P((void));
-int findblkmajor __P((struct device *));
-char *findblkname __P((int));
-static struct device * getdisk __P((char *, int, int, dev_t *));
-struct device * getdevunit __P((char *, int));
-static struct devmap * findtype __P((char **));
-void makebootdev __P((char *cp));
-int getpno __P((char **));
-void diskconf(void);
+struct  device *parsedisk(char *, int, int, dev_t *);
+void    setroot(void);
+void	swapconf(void);
+extern void	dumpconf(void);
+int	findblkmajor(struct device *);
+char	*findblkname(int);
+static	struct device * getdisk(char *, int, int, dev_t *);
+struct	device * getdevunit(char *, int);
+static	struct devmap * findtype(char **);
+void	makebootdev(char *cp);
+int	getpno(char **);
+void	diskconf(void);
 
 /*
  * The following several variables are related to
@@ -94,11 +94,6 @@ cpu_configure()
 	(void)splhigh();	/* To be really sure.. */
 	calc_delayconst();
 
-	/*
-	if(system_type == OFWMACH) {
-		ofrootfound();
-	}
-	*/
 	if(config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");
 	(void)spl0();
@@ -328,7 +323,8 @@ setroot()
 	extern char *nfsbootdevname;
 #endif
 
-printf("bootpath: '%s'\n", bootpath);
+	printf("bootpath: '%s'\n", bootpath);
+
 	makebootdev(bootpath);
 	if(boothowto & RB_DFLTROOT)
 		return;		/* Boot compiled in */

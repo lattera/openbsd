@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.35 2001/11/28 13:47:39 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.35.2.1 2002/06/11 03:38:17 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.58 1997/09/12 08:55:01 pk Exp $ */
 
 /*
@@ -64,6 +64,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -192,12 +195,12 @@ const char *trap_type[] = {
 
 #define	N_TRAP_TYPES	(sizeof trap_type / sizeof *trap_type)
 
-static __inline void userret __P((struct proc *, int,  u_quad_t));
-void trap __P((unsigned, int, int, struct trapframe *));
-static __inline void share_fpu __P((struct proc *, struct trapframe *));
-void mem_access_fault __P((unsigned, int, u_int, int, int, struct trapframe *));
-void mem_access_fault4m __P((unsigned, u_int, u_int, struct trapframe *));
-void syscall __P((register_t, struct trapframe *, register_t));
+static __inline void userret(struct proc *, int,  u_quad_t);
+void trap(unsigned, int, int, struct trapframe *);
+static __inline void share_fpu(struct proc *, struct trapframe *);
+void mem_access_fault(unsigned, int, u_int, int, int, struct trapframe *);
+void mem_access_fault4m(unsigned, u_int, u_int, struct trapframe *);
+void syscall(register_t, struct trapframe *, register_t);
 
 int ignore_bogus_traps = 0;
 
@@ -237,8 +240,11 @@ userret(p, pc, oticks)
 	/*
 	 * If profiling, charge recent system time to the trapped pc.
 	 */
-	if (p->p_flag & P_PROFIL)
-		addupc_task(p, pc, (int)(p->p_sticks - oticks));
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
+	}
 
 	curpriority = p->p_priority;
 }
@@ -1097,7 +1103,12 @@ syscall(code, tf, pc)
 #endif
 	rval[0] = 0;
 	rval[1] = tf->tf_out[1];
-	error = (*callp->sy_call)(p, &args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, &args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, &args, rval);
 
 	switch (error) {
 	case 0:

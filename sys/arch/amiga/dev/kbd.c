@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/kbd.c,v 1.5 1997/01/16 09:24:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/kbd.c,v 1.5.24.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: kbd.c,v 1.28 1996/12/23 09:10:22 veego Exp $	*/
 
 /*
@@ -72,10 +72,10 @@ struct kbd_softc {
 };
 struct kbd_softc kbd_softc;
 
-int kbdmatch __P((struct device *, void *, void *));
-void kbdattach __P((struct device *, struct device *, void *));
-void kbdintr __P((int));
-void kbdstuffchar __P((u_char));
+int kbdmatch(struct device *, void *, void *);
+void kbdattach(struct device *, struct device *, void *);
+void kbdintr(int);
+void kbdstuffchar(u_char);
 
 struct cfattach kbd_ca = {
 	sizeof(struct device), kbdmatch, kbdattach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.54 2001/08/26 04:11:12 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.54.4.1 2002/06/11 03:29:40 art Exp $	*/
 
 /*
  * System call names.
@@ -34,7 +34,11 @@ char *syscallnames[] = {
 	"setuid",			/* 23 = setuid */
 	"getuid",			/* 24 = getuid */
 	"geteuid",			/* 25 = geteuid */
+#ifdef PTRACE
 	"ptrace",			/* 26 = ptrace */
+#else
+	"#26 (unimplemented ptrace)",		/* 26 = unimplemented ptrace */
+#endif
 	"recvmsg",			/* 27 = recvmsg */
 	"sendmsg",			/* 28 = sendmsg */
 	"recvfrom",			/* 29 = recvfrom */
@@ -360,4 +364,21 @@ char *syscallnames[] = {
 	"mlockall",			/* 271 = mlockall */
 	"munlockall",			/* 272 = munlockall */
 	"getpeereid",			/* 273 = getpeereid */
+#ifdef UFS_EXTATTR
+	"extattrctl",			/* 274 = extattrctl */
+	"extattr_set_file",			/* 275 = extattr_set_file */
+	"extattr_get_file",			/* 276 = extattr_get_file */
+	"extattr_delete_file",			/* 277 = extattr_delete_file */
+	"extattr_set_fd",			/* 278 = extattr_set_fd */
+	"extattr_get_fd",			/* 279 = extattr_get_fd */
+	"extattr_delete_fd",			/* 280 = extattr_delete_fd */
+#else
+	"#274 (unimplemented sys_extattrctl)",		/* 274 = unimplemented sys_extattrctl */
+	"#275 (unimplemented sys_extattr_set_file)",		/* 275 = unimplemented sys_extattr_set_file */
+	"#276 (unimplemented sys_extattr_get_file)",		/* 276 = unimplemented sys_extattr_get_file */
+	"#277 (unimplemented sys_extattr_delete_file)",		/* 277 = unimplemented sys_extattr_delete_file */
+	"#278 (unimplemented sys_extattr_set_fd)",		/* 278 = unimplemented sys_extattr_set_fd */
+	"#279 (unimplemented sys_extattr_get_fd)",		/* 279 = unimplemented sys_extattr_get_fd */
+	"#280 (unimplemented sys_extattr_delete_fd)",		/* 280 = unimplemented sys_extattr_delete_fd */
+#endif
 };

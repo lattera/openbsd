@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.9 2001/10/31 04:24:44 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.9.2.1 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: ucom.c,v 1.39 2001/08/16 22:31:24 augustss Exp $	*/
 
 /*

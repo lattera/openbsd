@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/alloc.c,v 1.1 2001/09/01 15:39:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/alloc.c,v 1.1.6.1 2002/06/11 03:36:34 art Exp $	*/
 /*	$NetBSD: alloc.c,v 1.1 1997/04/16 20:29:16 thorpej Exp $	*/
 
 /*
@@ -181,7 +181,7 @@ free(ptr, size)
 	void *ptr;
 	unsigned size;	/* only for consistenct check */
 {
-	register struct ml *a = (struct ml *)((char*)ptr - OVERHEAD);
+	register struct ml *a = (struct ml *)((char *)ptr - OVERHEAD);
 
 #ifdef ALLOC_TRACE
 	printf("free(%lx, %u) (origsize %u)\n", (u_long)ptr, size, a->size);

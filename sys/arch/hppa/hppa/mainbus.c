@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20 2001/12/08 02:24:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.20.2.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -54,8 +54,8 @@ struct mainbus_softc {
 	hppa_hpa_t sc_hpa;
 };
 
-int	mbmatch __P((struct device *, void *, void *));
-void	mbattach __P((struct device *, struct device *, void *));
+int	mbmatch(struct device *, void *, void *);
+void	mbattach(struct device *, struct device *, void *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct mainbus_softc), mbmatch, mbattach
@@ -73,114 +73,88 @@ int
 mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
     bus_space_handle_t *bshp)
 {
-	extern u_int virtual_avail;
+	static u_int32_t bmm[0x4000/32];
 	register u_int64_t spa, epa;
-	int bank, off;
+	int bank, off, flex = HPPA_FLEX(bpa);
 
 #ifdef BTLBDEBUG
 	printf("bus_mem_add_mapping(%x,%x,%scachable,%p)\n",
-	    bpa, size, cachable?"":"non", bshp);
+	    bpa, size, cachable? "" : "non", bshp);
 #endif
-	if (bpa > 0 && bpa < virtual_avail)
-		*bshp = bpa;
-	else if ((bank = vm_physseg_find(atop(bpa), &off)) < 0) {
-		/*
-		 * determine if we are mapping IO space, or beyond the physmem
-		 * region. use block mapping then
-		 *
-		 * we map the whole bus module (there are 1024 of those max)
-		 * so, check here if it's mapped already, map if needed.
-		 * all mappings are equal mappings.
-		 */
-		static u_int32_t bmm[0x4000/32];
-		int flex = HPPA_FLEX(bpa);
 
+	if ((bank = vm_physseg_find(atop(bpa), &off)) >= 0)
+		panic("mbus_add_mapping: mapping real memory @0x%x", bpa);
+
+	/*
+	 * determine if we are mapping IO space, or beyond the physmem
+	 * region. use block mapping then
+	 *
+	 * we map the whole bus module (there are 1024 of those max)
+	 * so, check here if it's mapped already, map if needed.
+	 * all mappings are equal mappings.
+	 */
 #ifdef DEBUG
-		if (cachable) {
-			printf("WARNING: mapping I/O space cachable\n");
-			cachable = 0;
-		}
+	if (cachable) {
+		printf("WARNING: mapping I/O space cachable\n");
+		cachable = 0;
+	}
 #endif
 
-		/* need a new mapping */
-		if (!(bmm[flex / 32] & (1 << (flex % 32)))) {
-			spa = bpa & HPPA_FLEX_MASK;
-			epa = ((u_long)((u_int64_t)bpa + size +
-				~HPPA_FLEX_MASK - 1) & HPPA_FLEX_MASK) - 1;
+	/* need a new mapping */
+	if (!(bmm[flex / 32] & (1 << (flex % 32)))) {
+		spa = bpa & HPPA_FLEX_MASK;
+		epa = ((u_long)((u_int64_t)bpa + size +
+			~HPPA_FLEX_MASK - 1) & HPPA_FLEX_MASK) - 1;
 #ifdef BTLBDEBUG
-			printf ("bus_mem_add_mapping: adding flex=%x "
-				"%qx-%qx, ", flex, spa, epa);
+		printf("bus_mem_add_mapping: adding flex=%x "
+			"%qx-%qx, ", flex, spa, epa);
 #endif
-			while (spa < epa) {
-				vsize_t len = epa - spa;
-				u_int64_t pa;
-				if (len > pdc_btlb.max_size << PGSHIFT)
-					len = pdc_btlb.max_size << PGSHIFT;
-				if (btlb_insert(kernel_pmap->pmap_space, spa,
-						spa, &len,
-						kernel_pmap->pmap_pid |
-					    	pmap_prot(kernel_pmap,
-							  VM_PROT_ALL)) < 0)
-					return -1;
+		while (spa < epa) {
+			vsize_t len = epa - spa;
+			u_int64_t pa;
+			if (len > pdc_btlb.max_size << PGSHIFT)
+				len = pdc_btlb.max_size << PGSHIFT;
+			if (btlb_insert(HPPA_SID_KERNEL, spa, spa, &len,
+			    pmap_sid2pid(HPPA_SID_KERNEL) |
+			    pmap_prot(pmap_kernel(), UVM_PROT_RW)) >= 0) {
 				pa = spa + len - 1;
 #ifdef BTLBDEBUG
-				printf ("--- %x/%x, %qx, %qx-%qx",
-					flex, HPPA_FLEX(pa), pa, spa, epa);
+				printf("--- %x/%x, %qx, %qx-%qx",
+				    flex, HPPA_FLEX(pa), pa, spa, epa);
 #endif
 				/* do the mask */
 				for (; flex <= HPPA_FLEX(pa); flex++) {
 #ifdef BTLBDEBUG
-					printf ("mask %x ", flex);
+					printf("mask %x ", flex);
 #endif
 					bmm[flex / 32] |= (1 << (flex % 32));
 				}
 				spa = pa;
+			} else {
+				spa = max(spa, hppa_trunc_page(bpa));
+				epa = min(epa, hppa_round_page(bpa));
+
+				if (epa - 1 > ~0U)
+					epa = (u_int64_t)~0U + 1;
+
+				for (; spa < epa; spa += PAGE_SIZE)
+					pmap_kenter_pa(spa, spa, UVM_PROT_RW);
+
 			}
 #ifdef BTLBDEBUG
-			printf ("\n");
+			printf("\n");
 #endif
 		}
-#ifdef BTLBDEBUG
-		else {
-			printf("+++ already mapped flex=%x, mask=%x",
-			    flex, bmm[flex / 8]);
-		}
-#endif
-		*bshp = bpa;
-	} else {
-		/* register vaddr_t va; */
-
-#ifdef PMAPDEBUG
-		printf ("%d, %d, %x\n", bank, off, vm_physmem[0].end);
-#endif
-		spa = hppa_trunc_page(bpa);
-		epa = hppa_round_page(bpa + size);
-
-#ifdef DIAGNOSTIC
-		if (epa <= spa)
-			panic("bus_mem_add_mapping: overflow");
-#endif
-#if 0
-
-		if (!(va = uvm_pagealloc_contig(epa - spa, spa, epa, NBPG)))
-			return (ENOMEM);
-
-		*bshp = (bus_space_handle_t)(va + (bpa & PGOFSET));
-
-#if notused
-		for (; spa < epa; spa += NBPG, va += NBPG) {
-			if (!cachable)
-				pmap_changebit(va, TLB_UNCACHEABLE, ~0);
-			else
-				pmap_changebit(va, 0, ~TLB_UNCACHEABLE);
-		}
-#endif /* notused */
-#else
-		panic("mbus_add_mapping: not implemented");
-#endif
 	}
+#ifdef BTLBDEBUG
+	else {
+		printf("+++ already b-mapped flex=%x, mask=%x",
+		    flex, bmm[flex / 8]);
+	}
+#endif
 
-	return 0;
+	*bshp = bpa;
+	return (0);
 }
 
 int
@@ -194,9 +168,9 @@ mbus_map(void *v, bus_addr_t bpa, bus_size_t size,
 
 	if ((error = mbus_add_mapping(bpa, size, cachable, bshp))) {
 		if (extent_free(hppa_ex, bpa, size, EX_NOWAIT)) {
-			printf ("bus_space_map: pa 0x%lx, size 0x%lx\n",
+			printf("bus_space_map: pa 0x%lx, size 0x%lx\n",
 				bpa, size);
-			printf ("bus_space_map: can't free region\n");
+			printf("bus_space_map: can't free region\n");
 		}
 	}
 
@@ -206,8 +180,7 @@ mbus_map(void *v, bus_addr_t bpa, bus_size_t size,
 void
 mbus_unmap(void *v, bus_space_handle_t bsh, bus_size_t size)
 {
-	register u_long sva, eva;
-	register bus_addr_t bpa;
+	u_long sva, eva;
 
 	sva = hppa_trunc_page(bsh);
 	eva = hppa_round_page(bsh + size);
@@ -217,13 +190,14 @@ mbus_unmap(void *v, bus_space_handle_t bsh, bus_size_t size)
 		panic("bus_space_unmap: overflow");
 #endif
 
-	bpa = kvtop((caddr_t)bsh);
-	if (bpa != bsh)
-		uvm_km_free(kernel_map, sva, eva - sva);
+	if (pmap_extract(pmap_kernel(), bsh, NULL))
+		pmap_kremove(sva, eva - sva);
+	else
+		;	/* XXX assuming equ b-mapping been done */
 
-	if (extent_free(hppa_ex, bpa, size, EX_NOWAIT)) {
+	if (extent_free(hppa_ex, bsh, size, EX_NOWAIT)) {
 		printf("bus_space_unmap: ps 0x%lx, size 0x%lx\n",
-		    bpa, size);
+		    bsh, size);
 		printf("bus_space_unmap: can't free region\n");
 	}
 }
@@ -240,7 +214,7 @@ mbus_alloc(void *v, bus_addr_t rstart, bus_addr_t rend, bus_size_t size,
 		panic("bus_space_alloc: bad region start/end");
 
 	if ((error = extent_alloc_subregion(hppa_ex, rstart, rend, size,
-					    align, 0, boundary, EX_NOWAIT, &bpa)))
+	    align, 0, boundary, EX_NOWAIT, &bpa)))
 		return (error);
 
 	if ((error = mbus_add_mapping(bpa, size, cachable, bshp))) {
@@ -252,8 +226,7 @@ mbus_alloc(void *v, bus_addr_t rstart, bus_addr_t rend, bus_size_t size,
 	}
 
 	*addrp = bpa;
-
-	return error;
+	return (error);
 }
 
 void
@@ -267,7 +240,8 @@ int
 mbus_subregion(void *v, bus_space_handle_t bsh, bus_size_t offset,
     bus_size_t size, bus_space_handle_t *nbshp)
 {
-	panic("mbus_subregion: unimplemented");
+	*nbshp = bsh + offset;
+	return (0);
 }
 
 void
@@ -421,19 +395,19 @@ mbus_sm_8(void *v, bus_space_handle_t h, bus_size_t o, u_int64_t vv, bus_size_t 
 		*(volatile u_int64_t *)h = vv;
 }
 
-void mbus_rrm_2 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int16_t*a, bus_size_t c));
-void mbus_rrm_4 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int32_t*a, bus_size_t c));
-void mbus_rrm_8 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, u_int64_t*a, bus_size_t c));
+void mbus_rrm_2(void *v, bus_space_handle_t h,
+		     bus_size_t o, u_int16_t*a, bus_size_t c);
+void mbus_rrm_4(void *v, bus_space_handle_t h,
+		     bus_size_t o, u_int32_t*a, bus_size_t c);
+void mbus_rrm_8(void *v, bus_space_handle_t h,
+		     bus_size_t o, u_int64_t*a, bus_size_t c);
 
-void mbus_wrm_2 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int16_t *a, bus_size_t c));
-void mbus_wrm_4 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int32_t *a, bus_size_t c));
-void mbus_wrm_8 __P((void *v, bus_space_handle_t h,
-		     bus_size_t o, const u_int64_t *a, bus_size_t c));
+void mbus_wrm_2(void *v, bus_space_handle_t h,
+		     bus_size_t o, const u_int16_t *a, bus_size_t c);
+void mbus_wrm_4(void *v, bus_space_handle_t h,
+		     bus_size_t o, const u_int32_t *a, bus_size_t c);
+void mbus_wrm_8(void *v, bus_space_handle_t h,
+		     bus_size_t o, const u_int64_t *a, bus_size_t c);
 
 void
 mbus_rr_1(void *v, bus_space_handle_t h, bus_size_t o, u_int8_t *a, bus_size_t c)
@@ -499,19 +473,19 @@ mbus_wr_8(void *v, bus_space_handle_t h, bus_size_t o, const u_int64_t *a, bus_s
 		*((volatile u_int64_t *)h)++ = *(a++);
 }
 
-void mbus_rrr_2 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, u_int16_t *a, bus_size_t c));
-void mbus_rrr_4 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, u_int32_t *a, bus_size_t c));
-void mbus_rrr_8 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, u_int64_t *a, bus_size_t c));
+void mbus_rrr_2(void *v, bus_space_handle_t h,
+		   bus_size_t o, u_int16_t *a, bus_size_t c);
+void mbus_rrr_4(void *v, bus_space_handle_t h,
+		   bus_size_t o, u_int32_t *a, bus_size_t c);
+void mbus_rrr_8(void *v, bus_space_handle_t h,
+		   bus_size_t o, u_int64_t *a, bus_size_t c);
 
-void mbus_wrr_2 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, const u_int16_t *a, bus_size_t c));
-void mbus_wrr_4 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, const u_int32_t *a, bus_size_t c));
-void mbus_wrr_8 __P((void *v, bus_space_handle_t h,
-		   bus_size_t o, const u_int64_t *a, bus_size_t c));
+void mbus_wrr_2(void *v, bus_space_handle_t h,
+		   bus_size_t o, const u_int16_t *a, bus_size_t c);
+void mbus_wrr_4(void *v, bus_space_handle_t h,
+		   bus_size_t o, const u_int32_t *a, bus_size_t c);
+void mbus_wrr_8(void *v, bus_space_handle_t h,
+		   bus_size_t o, const u_int64_t *a, bus_size_t c);
 
 void
 mbus_sr_1(void *v, bus_space_handle_t h, bus_size_t o, u_int8_t vv, bus_size_t c)
@@ -591,8 +565,8 @@ mbus_cp_8(void *v, bus_space_handle_t h1, bus_size_t o1,
 
 
 /* ugly typecast macro */
-#define	crr(n)	((void (*) __P((void *, bus_space_handle_t, bus_size_t, u_int8_t *, bus_size_t)))(n))
-#define	cwr(n)	((void (*) __P((void *, bus_space_handle_t, bus_size_t, const u_int8_t *, bus_size_t)))(n))
+#define	crr(n)	((void (*)(void *, bus_space_handle_t, bus_size_t, u_int8_t *, bus_size_t))(n))
+#define	cwr(n)	((void (*)(void *, bus_space_handle_t, bus_size_t, const u_int8_t *, bus_size_t))(n))
 
 const struct hppa_bus_space_tag hppa_bustag = {
 	NULL,
@@ -637,14 +611,26 @@ mbus_dmamap_create(void *v, bus_size_t size, int nsegments,
 	map->_dm_maxsegsz = maxsegsz;
 	map->_dm_boundary = boundary;
 	map->_dm_flags = flags & ~(BUS_DMA_WAITOK|BUS_DMA_NOWAIT);
+	map->dm_mapsize = 0;
+	map->dm_nsegs = 0;
 
 	*dmamp = map;
 	return (0);
 }
 
 void
+mbus_dmamap_unload(void *v, bus_dmamap_t map)
+{
+	map->dm_mapsize = 0;
+	map->dm_nsegs = 0;
+}
+
+void
 mbus_dmamap_destroy(void *v, bus_dmamap_t map)
 {
+	if (map->dm_mapsize != 0)
+		mbus_dmamap_unload(v, map);
+
 	free(map, M_DEVBUF);
 }
 
@@ -652,7 +638,48 @@ int
 mbus_dmamap_load(void *v, bus_dmamap_t map, void *addr, bus_size_t size,
 		 struct proc *p, int flags)
 {
-	panic("_dmamap_load: not implemented");
+	paddr_t pa, pa_next;
+	bus_size_t mapsize;
+	bus_size_t off, pagesz;
+	int seg;
+
+	/*
+	 * Make sure that on error condition we return "no valid mappings".
+	 */
+	map->dm_nsegs = 0;
+	map->dm_mapsize = 0;
+	map->_dm_va = (vaddr_t)addr;
+
+	/* Load the memory. */
+	pa_next = 0;
+	seg = -1;
+	mapsize = size;
+	off = (bus_size_t)addr & (PAGE_SIZE - 1);
+	addr = (void *) ((caddr_t)addr - off);
+	for(; size > 0; ) {
+
+		pmap_extract(pmap_kernel(), (vaddr_t)addr, &pa);
+		if (pa != pa_next) {
+			if (++seg >= map->_dm_segcnt)
+				panic("mbus_dmamap_load: nsegs botch");
+			map->dm_segs[seg].ds_addr = pa + off;
+			map->dm_segs[seg].ds_len = 0;
+		}
+		pa_next = pa + PAGE_SIZE;
+		pagesz = PAGE_SIZE - off;
+		if (size < pagesz)
+			pagesz = size;
+		map->dm_segs[seg].ds_len += pagesz;
+		size -= pagesz;
+		addr = (caddr_t)addr + off + pagesz;
+		off = 0;
+	}
+
+	/* Make the map truly valid. */
+	map->dm_nsegs = seg + 1;
+	map->dm_mapsize = mapsize;
+
+	return (0);
 }
 
 int
@@ -675,38 +702,17 @@ mbus_dmamap_load_raw(void *v, bus_dmamap_t map, bus_dma_segment_t *segs,
 }
 
 void
-mbus_dmamap_unload(void *v, bus_dmamap_t map)
-{
-	panic("_dmamap_unload: not implemented");
-}
-
-void
 mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_addr_t offset, bus_size_t len,
     int ops)
 {
-	int i;
-	switch (ops) {
-	case BUS_DMASYNC_POSTREAD:
-	case BUS_DMASYNC_POSTWRITE:
+
+	if (ops & (BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE))
 		__asm __volatile ("syncdma");
-		break;
 
-	case BUS_DMASYNC_PREREAD:
-		for (i = map->dm_nsegs; i--; )
-			pdcache(HPPA_SID_KERNEL,
-			    map->dm_segs[i].ds_addr + offset,
-			    len);
-		sync_caches();
-		break;
-
-	case BUS_DMASYNC_PREWRITE:
-		for (i = map->dm_nsegs; i--; )
-			fdcache(HPPA_SID_KERNEL,
-			    map->dm_segs[i].ds_addr + offset,
-			    len);
-		sync_caches();
-		break;
-	}
+	if (ops & BUS_DMASYNC_PREREAD)
+		pdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
+	else if (ops & BUS_DMASYNC_PREWRITE)
+		fdcache(HPPA_SID_KERNEL, map->_dm_va + offset, len);
 }
 
 int
@@ -726,7 +732,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 		return ENOMEM;
 
 	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
-	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
+	    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
 	      UVM_ADV_RANDOM, 0))) {
 		uvm_pglistfree(&pglist);
 		return ENOMEM;
@@ -736,18 +742,16 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 	segs[0].ds_len = size;
 	*rsegs = 1;
 
-	for (pg = TAILQ_FIRST(&pglist); pg; pg = TAILQ_NEXT(pg, pageq)) {
+	TAILQ_FOREACH(pg, &pglist, pageq) {
 
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg),
-		    VM_PROT_READ|VM_PROT_WRITE);
-#if notused
-		pmap_changebit(va, TLB_UNCACHEABLE, 0); /* XXX for now */
-#endif
+		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), UVM_PROT_RW);
+		/* XXX for now */
+		pmap_changebit(pg, PTE_PROT(TLB_UNCACHABLE), 0);
 		va += PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());
 
-	return 0;
+	return (0);
 }
 
 void
@@ -774,16 +778,6 @@ mbus_dmamem_mmap(void *v, bus_dma_segment_t *segs, int nsegs, off_t off,
 		 int prot, int flags)
 {
 	panic("_dmamem_mmap: not implemented");
-}
-
-int
-dma_cachectl(p, size)
-	caddr_t p;
-	int size;
-{
-	fdcache(HPPA_SID_KERNEL, (vaddr_t)p, size);
-	sync_caches();
-	return 0;
 }
 
 const struct hppa_bus_dma_tag hppa_dmatag = {
@@ -837,7 +831,7 @@ mbattach(parent, self, aux)
 		(void *)((pdc_hpa.hpa & HPPA_FLEX_MASK) | DMA_ENABLE);
 
 	sc->sc_hpa = pdc_hpa.hpa;
-	printf (" [flex %x]\n", pdc_hpa.hpa & HPPA_FLEX_MASK);
+	printf(" [flex %x]\n", pdc_hpa.hpa & HPPA_FLEX_MASK);
 
 	/* PDC first */
 	bzero (&nca, sizeof(nca));
@@ -851,6 +845,7 @@ mbattach(parent, self, aux)
 	bzero (&nca, sizeof(nca));
 	nca.ca_name = "mainbus";
 	nca.ca_hpa = 0;
+	nca.ca_irq = -1;
 	nca.ca_hpamask = HPPA_IOSPACE;
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
@@ -882,7 +877,7 @@ mbprint(aux, pnp)
 		printf("\"%s\" at %s (type %x, sv %x)", ca->ca_name, pnp,
 		    ca->ca_type.iodc_type, ca->ca_type.iodc_sv_model);
 	if (ca->ca_hpa) {
-		if (ca->ca_hpa & ~ca->ca_hpamask)
+		if (~ca->ca_hpamask)
 			printf(" offset %x", ca->ca_hpa & ~ca->ca_hpamask);
 		if (!pnp && ca->ca_irq >= 0)
 			printf(" irq %d", ca->ca_irq);
@@ -900,12 +895,15 @@ mbsubmatch(parent, match, aux)
 	register struct confargs *ca = aux;
 	register int ret;
 
+	if (autoconf_verbose)
+		printf(">> hpa %x off %x cf_off %x\n",
+		    ca->ca_hpa, ca->ca_hpa & ~ca->ca_hpamask, cf->hppacf_off);
+
 	if (ca->ca_hpa && ~ca->ca_hpamask && cf->hppacf_off != -1 &&
 	    ((ca->ca_hpa & ~ca->ca_hpamask) != cf->hppacf_off))
 		return (0);
 
-	if ((ret = (*cf->cf_attach->ca_match)(parent, match, aux)) &&
-	    cf->hppacf_irq != -1)
+	if ((ret = (*cf->cf_attach->ca_match)(parent, match, aux)))
 		ca->ca_irq = cf->hppacf_irq;
 
 	return ret;

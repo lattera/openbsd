@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.37.4.1 2002/01/31 22:55:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.37.4.2 2002/06/11 03:31:37 art Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -61,14 +61,14 @@ struct sackhole {
  */
 struct tcpcb {
 	struct ipqehead segq;		/* sequencing queue */
+	struct timeout t_timer[TCPT_NTIMERS];	/* tcp timers */
 	short	t_state;		/* state of this connection */
-	short	t_timer[TCPT_NTIMERS];	/* tcp timers */
 	short	t_rxtshift;		/* log(2) of rexmt exp. backoff */
 	short	t_rxtcur;		/* current retransmit value */
 	short	t_dupacks;		/* consecutive dup acks recd */
 	u_short	t_maxseg;		/* maximum segment size */
 	char	t_force;		/* 1 if forcing out a byte */
-	u_short	t_flags;
+	u_int	t_flags;
 #define	TF_ACKNOW	0x0001		/* ack peer immediately */
 #define	TF_DELACK	0x0002		/* ack, but try to delay it */
 #define	TF_NODELAY	0x0004		/* don't delay packets to coalesce */
@@ -80,9 +80,16 @@ struct tcpcb {
 #define	TF_RCVD_TSTMP	0x0100		/* a timestamp was received in SYN */
 #define	TF_SACK_PERMIT	0x0200		/* other side said I could SACK */
 #define	TF_SIGNATURE	0x0400		/* require TCP MD5 signature */
+#ifdef TCP_ECN
+#define TF_ECN_PERMIT	0x00008000	/* other side said I could ECN */
+#define TF_RCVD_CE	0x00010000	/* send ECE in subsequent segs */
+#define TF_SEND_CWR	0x00020000	/* send CWR in next seg */
+#define TF_DISABLE_ECN	0x00040000	/* disable ECN for this connection */
+#endif
 
 	struct	mbuf *t_template;	/* skeletal packet for transmit */
 	struct	inpcb *t_inpcb;		/* back pointer to internet pcb */
+	struct	timeout t_delack_to;	/* delayed ACK callback */
 /*
  * The following fields are used as in the protocol specification.
  * See RFC783, Dec. 1981, page 21.
@@ -106,7 +113,7 @@ struct tcpcb {
 	int retran_data;		/* amount of outstanding retx. data  */
 #endif /* TCP_FACK */
 #endif /* TCP_SACK */
-#if defined(TCP_SACK)
+#if defined(TCP_SACK) || defined(TCP_ECN)
 	tcp_seq snd_last;		/* for use in fast recovery */
 #endif
 /* receive sequence variables */
@@ -144,8 +151,8 @@ struct tcpcb {
  * transmit timing stuff.  See below for scale of srtt and rttvar.
  * "Variance" is actually smoothed difference.
  */
-	short	t_idle;			/* inactivity time */
-	short	t_rtt;			/* round trip time */
+	uint32_t t_rcvtime;		/* time last segment received */
+	uint32_t t_rtttime;		/* time we started measuring rtt */
 	tcp_seq	t_rtseq;		/* sequence number being timed */
 	short	t_srtt;			/* smoothed round-trip time */
 	short	t_rttvar;		/* variance in round-trip time */
@@ -176,6 +183,33 @@ struct tcpcb {
 
 #define	intotcpcb(ip)	((struct tcpcb *)(ip)->inp_ppcb)
 #define	sototcpcb(so)	(intotcpcb(sotoinpcb(so)))
+
+#ifdef _KERNEL
+extern int tcp_delack_ticks;
+void	tcp_delack(void *);
+
+#define TCP_INIT_DELACK(tp)						\
+	timeout_set(&(tp)->t_delack_to, tcp_delack, tp)
+
+#define TCP_RESTART_DELACK(tp)						\
+	timeout_add(&(tp)->t_delack_to, tcp_delack_ticks)
+
+#define	TCP_SET_DELACK(tp)						\
+do {									\
+	if (((tp)->t_flags & TF_DELACK) == 0) {				\
+		(tp)->t_flags |= TF_DELACK;				\
+		TCP_RESTART_DELACK(tp);					\
+	}								\
+} while (/*CONSTCOND*/0)
+
+#define	TCP_CLEAR_DELACK(tp)						\
+do {									\
+	if ((tp)->t_flags & TF_DELACK) {				\
+		(tp)->t_flags &= ~TF_DELACK;				\
+		timeout_del(&(tp)->t_delack_to);			\
+	}								\
+} while (/*CONSTCOND*/0)
+#endif /* _KERNEL */
 
 /*
  * The smoothed round-trip time and estimated variance
@@ -277,6 +311,18 @@ struct	tcpstat {
 	u_int64_t tcps_rcvgoodsig;	/* rcvd good TCP signatures */
 	u_int32_t tcps_inhwcsum;	/* input hardware-checksummed packets */
 	u_int32_t tcps_outhwcsum;	/* output hardware-checksummed packets */
+
+	/* ECN stats */
+	u_int32_t tcps_ecn_accepts;	/* ecn connections accepted */
+	u_int32_t tcps_ecn_rcvece;	/* # of rcvd ece */
+	u_int32_t tcps_ecn_rcvcwr;	/* # of rcvd cwr */
+	u_int32_t tcps_ecn_rcvce;	/* # of rcvd ce in ip header */
+	u_int32_t tcps_ecn_sndect;	/* # of cwr sent */
+	u_int32_t tcps_ecn_sndece;	/* # of ece sent */
+	u_int32_t tcps_ecn_sndcwr;	/* # of cwr sent */
+	u_int32_t tcps_cwr_ecn;		/* # of cwnd reduced by ecn */
+	u_int32_t tcps_cwr_frecovery;	/* # of cwnd reduced by fastrecovery */
+	u_int32_t tcps_cwr_timeout;	/* # of cwnd reduced by timeout */
 };
 
 /*
@@ -295,7 +341,9 @@ struct	tcpstat {
 #define	TCPCTL_SACK	       10 /* selective acknowledgement, rfc 2018 */
 #define TCPCTL_MSSDFLT	       11 /* Default maximum segment size */
 #define	TCPCTL_RSTPPSLIMIT     12 /* RST pps limit */
-#define	TCPCTL_MAXID	       13
+#define	TCPCTL_ACK_ON_PUSH     13 /* ACK immediately on PUSH */
+#define	TCPCTL_ECN	       14 /* RFC3168 ECN */
+#define	TCPCTL_MAXID	       15
 
 #define	TCPCTL_NAMES { \
 	{ 0, 0 }, \
@@ -311,6 +359,8 @@ struct	tcpstat {
 	{ "sack",	CTLTYPE_INT }, \
 	{ "mssdflt",	CTLTYPE_INT }, \
 	{ "rstppslimit",	CTLTYPE_INT }, \
+	{ "ackonpush",	CTLTYPE_INT }, \
+	{ "ecn", 	CTLTYPE_INT }, \
 }
 
 struct tcp_ident_mapping {
@@ -324,92 +374,91 @@ extern	struct tcpstat tcpstat;	/* tcp statistics */
 u_int32_t tcp_now;		/* for RFC 1323 timestamps */
 extern	int tcp_do_rfc1323;	/* enabled/disabled? */
 extern	int tcp_mssdflt;	/* default maximum segment size */
+extern	int tcp_ack_on_push;	/* ACK immediately on PUSH */
 #ifdef TCP_SACK
 extern	int tcp_do_sack;	/* SACK enabled/disabled */
 extern	struct pool sackhl_pool;
 #endif
+extern	int tcp_do_ecn;		/* RFC3168 ECN enabled/disabled? */
 
-int	 tcp_attach __P((struct socket *));
-void	 tcp_canceltimers __P((struct tcpcb *));
+int	 tcp_attach(struct socket *);
+void	 tcp_canceltimers(struct tcpcb *);
 struct tcpcb *
-	 tcp_close __P((struct tcpcb *));
+	 tcp_close(struct tcpcb *);
 #if defined(INET6) && !defined(TCP6)
-void	 tcp6_ctlinput __P((int, struct sockaddr *, void *));
+void	 tcp6_ctlinput(int, struct sockaddr *, void *);
 #endif
-void	 *tcp_ctlinput __P((int, struct sockaddr *, void *));
-int	 tcp_ctloutput __P((int, struct socket *, int, int, struct mbuf **));
+void	 *tcp_ctlinput(int, struct sockaddr *, void *);
+int	 tcp_ctloutput(int, struct socket *, int, int, struct mbuf **);
 struct tcpcb *
-	 tcp_disconnect __P((struct tcpcb *));
+	 tcp_disconnect(struct tcpcb *);
 struct tcpcb *
-	 tcp_drop __P((struct tcpcb *, int));
-void	 tcp_dooptions __P((struct tcpcb *, u_char *, int, struct tcphdr *,
-		int *, u_int32_t *, u_int32_t *)); 
-void	 tcp_drain __P((void));
-void	 tcp_fasttimo __P((void));
-void	 tcp_init __P((void));
+	 tcp_drop(struct tcpcb *, int);
+void	 tcp_dooptions(struct tcpcb *, u_char *, int, struct tcphdr *,
+		int *, u_int32_t *, u_int32_t *); 
+void	 tcp_drain(void);
+void	 tcp_init(void);
 #if defined(INET6) && !defined(TCP6)
-int	 tcp6_input __P((struct mbuf **, int *, int));
+int	 tcp6_input(struct mbuf **, int *, int);
 #endif
-void	 tcp_input __P((struct mbuf *, ...));
-int	 tcp_mss __P((struct tcpcb *, int));
-void	 tcp_mss_update __P((struct tcpcb *));
-void	 tcp_mtudisc __P((struct inpcb *, int));
-void	 tcp_mtudisc_increase __P((struct inpcb *, int));
+void	 tcp_input(struct mbuf *, ...);
+int	 tcp_mss(struct tcpcb *, int);
+void	 tcp_mss_update(struct tcpcb *);
+void	 tcp_mtudisc(struct inpcb *, int);
+void	 tcp_mtudisc_increase(struct inpcb *, int);
 #ifdef INET6
-void	tcp6_mtudisc __P((struct inpcb *, int));
-void	tcp6_mtudisc_callback __P((struct in6_addr *));
+void	tcp6_mtudisc(struct inpcb *, int);
+void	tcp6_mtudisc_callback(struct in6_addr *);
 #endif
 struct tcpcb *
-	 tcp_newtcpcb __P((struct inpcb *));
-void	 tcp_notify __P((struct inpcb *, int));
-int	 tcp_output __P((struct tcpcb *));
-void	 tcp_pulloutofband __P((struct socket *, u_int, struct mbuf *, int));
-void	 tcp_quench __P((struct inpcb *, int));
-int	 tcp_reass __P((struct tcpcb *, struct tcphdr *, struct mbuf *, int *));
-void	 tcp_rscale __P((struct tcpcb *, u_long));
-void	 tcp_respond __P((struct tcpcb *, caddr_t, struct mbuf *, tcp_seq,
-		tcp_seq, int));
-void	 tcp_setpersist __P((struct tcpcb *));
-void	 tcp_slowtimo __P((void));
+	 tcp_newtcpcb(struct inpcb *);
+void	 tcp_notify(struct inpcb *, int);
+int	 tcp_output(struct tcpcb *);
+void	 tcp_pulloutofband(struct socket *, u_int, struct mbuf *, int);
+void	 tcp_quench(struct inpcb *, int);
+int	 tcp_reass(struct tcpcb *, struct tcphdr *, struct mbuf *, int *);
+void	 tcp_rscale(struct tcpcb *, u_long);
+void	 tcp_respond(struct tcpcb *, caddr_t, struct mbuf *, tcp_seq,
+		tcp_seq, int);
+void	 tcp_setpersist(struct tcpcb *);
+void	 tcp_slowtimo(void);
 struct mbuf *
-	 tcp_template __P((struct tcpcb *));
+	 tcp_template(struct tcpcb *);
+void	 tcp_trace(int, int, struct tcpcb *, caddr_t, int, int);
 struct tcpcb *
-	 tcp_timers __P((struct tcpcb *, int));
-void	 tcp_trace __P((int, int, struct tcpcb *, caddr_t, int, int));
-struct tcpcb *
-	 tcp_usrclosed __P((struct tcpcb *));
-int	 tcp_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+	 tcp_usrclosed(struct tcpcb *);
+int	 tcp_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 #if defined(INET6) && !defined(TCP6)
-int	 tcp6_usrreq __P((struct socket *,
-	    int, struct mbuf *, struct mbuf *, struct mbuf *, struct proc *));
+int	 tcp6_usrreq(struct socket *,
+	    int, struct mbuf *, struct mbuf *, struct mbuf *, struct proc *);
 #endif
-int	 tcp_usrreq __P((struct socket *,
-	    int, struct mbuf *, struct mbuf *, struct mbuf *));
-void	 tcp_xmit_timer __P((struct tcpcb *, int));
-void	 tcpdropoldhalfopen __P((struct tcpcb *, u_int16_t));
+int	 tcp_usrreq(struct socket *,
+	    int, struct mbuf *, struct mbuf *, struct mbuf *);
+void	 tcp_xmit_timer(struct tcpcb *, int);
+void	 tcpdropoldhalfopen(struct tcpcb *, u_int16_t);
 #ifdef TCP_SACK
-int	 tcp_sack_option __P((struct tcpcb *,struct tcphdr *,u_char *,int));
-void	 tcp_update_sack_list __P((struct tcpcb *tp));
-void	 tcp_del_sackholes __P((struct tcpcb *, struct tcphdr *));
-void	 tcp_clean_sackreport __P((struct tcpcb *tp));
-void	 tcp_sack_adjust __P((struct tcpcb *tp));
+int	 tcp_sack_option(struct tcpcb *,struct tcphdr *,u_char *,int);
+void	 tcp_update_sack_list(struct tcpcb *tp);
+void	 tcp_del_sackholes(struct tcpcb *, struct tcphdr *);
+void	 tcp_clean_sackreport(struct tcpcb *tp);
+void	 tcp_sack_adjust(struct tcpcb *tp);
 struct sackhole *
-	 tcp_sack_output __P((struct tcpcb *tp));
-int	 tcp_sack_partialack __P((struct tcpcb *, struct tcphdr *));
+	 tcp_sack_output(struct tcpcb *tp);
+int	 tcp_sack_partialack(struct tcpcb *, struct tcphdr *);
 #ifdef DEBUG
-void	 tcp_print_holes __P((struct tcpcb *tp));
+void	 tcp_print_holes(struct tcpcb *tp);
 #endif
 #endif /* TCP_SACK */
 #if defined(TCP_SACK)
-int	 tcp_newreno __P((struct tcpcb *, struct tcphdr *));
-u_long	 tcp_seq_subtract  __P((u_long, u_long )); 
+int	 tcp_newreno(struct tcpcb *, struct tcphdr *);
+u_long	 tcp_seq_subtract(u_long, u_long ); 
 #endif /* TCP_SACK */
 #ifdef TCP_SIGNATURE
-int	tcp_signature_apply __P((caddr_t, caddr_t, unsigned int));
+int	tcp_signature_apply(caddr_t, caddr_t, unsigned int);
 #endif /* TCP_SIGNATURE */
-void	tcp_rndiss_init __P((void));
-tcp_seq	tcp_rndiss_next __P((void));
+void	tcp_rndiss_init(void);
+tcp_seq	tcp_rndiss_next(void);
 u_int16_t
-	tcp_rndiss_encrypt __P((u_int16_t));
+	tcp_rndiss_encrypt(u_int16_t);
 #endif /* _KERNEL */
 #endif /* _NETINET_TCP_VAR_H_ */

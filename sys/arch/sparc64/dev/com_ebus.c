@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.6.1 2002/01/31 22:55:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.6.2 2002/06/11 03:38:42 art Exp $	*/
 /*	$NetBSD: com_ebus.c,v 1.6 2001/07/24 19:27:10 eeh Exp $	*/
 
 /*
@@ -52,8 +52,8 @@
 
 cdev_decl(com); /* XXX this belongs elsewhere */
 
-int	com_ebus_match __P((struct device *, void *, void *));
-void	com_ebus_attach __P((struct device *, struct device *, void *));
+int	com_ebus_match(struct device *, void *, void *);
+void	com_ebus_attach(struct device *, struct device *, void *);
 
 struct cfattach com_ebus_ca = {
 	sizeof(struct com_softc), com_ebus_match, com_ebus_attach
@@ -163,7 +163,12 @@ com_ebus_attach(parent, self, aux)
 		if (com_is_output)
 			cn_tab->cn_putc = comcnputc;
 	}
+
+        if (OF_getproplen(ea->ea_node, "keyboard") == 0)
+		printf(", keyboard");
+	else if (OF_getproplen(ea->ea_node, "mouse") == 0)
+		printf(", mouse");
+
 	/* Now attach the driver */
 	com_attach_subr(sc);
 }
-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44 2001/11/06 19:53:21 miod Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44.2.1 2002/06/11 03:32:34 art Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -49,7 +49,10 @@
 #include <sys/time.h>
 #include <sys/ucred.h>
 #include <sys/proc.h>
+#include <sys/resource.h>
 #endif
+
+#include <sys/resourcevar.h>	/* XXX */
 
 #include <uvm/uvm_extern.h>
 
@@ -165,7 +168,15 @@ struct ctlname {
 #define	KERN_POOL		49	/* struct: pool information */
 #define	KERN_STACKGAPRANDOM	50	/* int: stackgap_random */
 #define	KERN_SYSVIPC_INFO	51	/* struct: SysV sem/shm/msg info */
-#define	KERN_MAXID		52	/* number of valid kern ids */
+#define KERN_USERCRYPTO		52	/* int: usercrypto */
+#define KERN_CRYPTODEVALLOWSOFT	53	/* int: cryptodevallowsoft */
+#define KERN_SPLASSERT		54	/* int: splassert */
+#define KERN_PROC_ARGS		55	/* node: proc args and env */
+#define	KERN_NFILES		56	/* int: number of open files */
+#define	KERN_TTYCOUNT		57	/* int: number of tty devices */
+#define KERN_NUMVNODES		58	/* int: number of vnodes in use */
+#define	KERN_MBSTAT		59	/* struct: mbuf statistics */
+#define	KERN_MAXID		60	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -220,6 +231,14 @@ struct ctlname {
 	{ "pool", CTLTYPE_NODE }, \
 	{ "stackgap_random", CTLTYPE_INT }, \
 	{ "sysvipc_info", CTLTYPE_INT }, \
+	{ "usercrypto", CTLTYPE_INT }, \
+	{ "cryptodevallowsoft", CTLTYPE_INT }, \
+	{ "splassert", CTLTYPE_INT }, \
+	{ "procargs", CTLTYPE_NODE }, \
+	{ "nfiles", CTLTYPE_INT }, \
+	{ "ttycount", CTLTYPE_INT }, \
+	{ "numvnodes", CTLTYPE_INT }, \
+	{ "mbstat", CTLTYPE_STRUCT }, \
 }
 
 /*
@@ -242,6 +261,14 @@ struct ctlname {
 #define KERN_SYSVIPC_SHM_INFO	3	/* shminfo and shmid_ds */
 
 /*
+ * KERN_PROC_ARGS subtypes
+ */
+#define KERN_PROC_ARGV		1
+#define KERN_PROC_NARGV		2
+#define KERN_PROC_ENV		3
+#define KERN_PROC_NENV		4
+
+/*
  * KERN_PROC subtype ops return arrays of augmented proc structures:
  */
 struct kinfo_proc {
@@ -252,6 +279,8 @@ struct kinfo_proc {
 		struct	pcred e_pcred;		/* process credentials */
 		struct	ucred e_ucred;		/* current credentials */
 		struct	vmspace e_vm;		/* address space */
+		struct  pstats e_pstats;	/* process stats */
+		int	e_pstats_valid;		/* pstats valid? */
 		pid_t	e_ppid;			/* parent process id */
 		pid_t	e_pgid;			/* process group id */
 		short	e_jobc;			/* job control counter */
@@ -417,67 +446,64 @@ extern struct ctldebug debug15, debug16, debug17, debug18, debug19;
  * interpreted.  The namelen parameter is the number of integers in
  * the name.
  */
-typedef int (sysctlfn)
-    __P((int *, u_int, void *, size_t *, void *, size_t, struct proc *));
+typedef int (sysctlfn)(int *, u_int, void *, size_t *, void *, size_t, struct proc *);
 
-int sysctl_int __P((void *, size_t *, void *, size_t, int *));
-int sysctl_rdint __P((void *, size_t *, void *, int));
-int sysctl_quad __P((void *, size_t *, void *, size_t, int64_t *));
-int sysctl_rdquad __P((void *, size_t *, void *, int64_t));
-int sysctl_string __P((void *, size_t *, void *, size_t, char *, int));
-int sysctl_tstring __P((void *, size_t *, void *, size_t, char *, int));
-int sysctl__string __P((void *, size_t *, void *, size_t, char *, int, int));
-int sysctl_rdstring __P((void *, size_t *, void *, char *));
-int sysctl_rdstruct __P((void *, size_t *, void *, void *, int));
-int sysctl_struct __P((void *, size_t *, void *, size_t, void *, int));
-int sysctl_file __P((char *, size_t *));
-int sysctl_doproc __P((int *, u_int, char *, size_t *));
+int sysctl_int(void *, size_t *, void *, size_t, int *);
+int sysctl_rdint(void *, size_t *, void *, int);
+int sysctl_quad(void *, size_t *, void *, size_t, int64_t *);
+int sysctl_rdquad(void *, size_t *, void *, int64_t);
+int sysctl_string(void *, size_t *, void *, size_t, char *, int);
+int sysctl_tstring(void *, size_t *, void *, size_t, char *, int);
+int sysctl__string(void *, size_t *, void *, size_t, char *, int, int);
+int sysctl_rdstring(void *, size_t *, void *, const char *);
+int sysctl_rdstruct(void *, size_t *, void *, const void *, int);
+int sysctl_struct(void *, size_t *, void *, size_t, void *, int);
+int sysctl_file(char *, size_t *);
+int sysctl_doproc(int *, u_int, char *, size_t *);
 struct radix_node;
 struct walkarg;
-int sysctl_dumpentry __P((struct radix_node *, void *));
-int sysctl_iflist __P((int, struct walkarg *));
-int sysctl_rtable __P((int *, u_int, void *, size_t *, void *, size_t));
-int sysctl_clockrate __P((char *, size_t *));
-int sysctl_rdstring __P((void *, size_t *, void *, char *));
-int sysctl_rdstruct __P((void *, size_t *, void *, void *, int));
-int sysctl_vnode __P((char *, size_t *, struct proc *));
-int sysctl_ntptime __P((char *, size_t *));
+int sysctl_dumpentry(struct radix_node *, void *);
+int sysctl_iflist(int, struct walkarg *);
+int sysctl_rtable(int *, u_int, void *, size_t *, void *, size_t);
+int sysctl_clockrate(char *, size_t *);
+int sysctl_vnode(char *, size_t *, struct proc *);
+int sysctl_ntptime(char *, size_t *);
 #ifdef GPROF
-int sysctl_doprof __P((int *, u_int, void *, size_t *, void *, size_t));
+int sysctl_doprof(int *, u_int, void *, size_t *, void *, size_t);
 #endif
-int sysctl_dopool __P((int *, u_int, char *, size_t *));
+int sysctl_dopool(int *, u_int, char *, size_t *);
 
-void fill_eproc __P((struct proc *, struct eproc *));
+void fill_eproc(struct proc *, struct eproc *);
 
-int kern_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		     struct proc *));
-int hw_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		   struct proc *));
+int kern_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		     struct proc *);
+int hw_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		   struct proc *);
 #ifdef DEBUG
-int debug_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		      struct proc *));
+int debug_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		      struct proc *);
 #endif
-int vm_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		   struct proc *));
-int fs_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		   struct proc *));
-int fs_posix_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-			 struct proc *));
-int net_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		    struct proc *));
-int cpu_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		    struct proc *));
-int vfs_sysctl __P((int *, u_int, void *, size_t *, void *, size_t,
-		    struct proc *));
-int sysctl_sysvipc __P((int *, u_int, void *, size_t *));
+int vm_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		   struct proc *);
+int fs_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		   struct proc *);
+int fs_posix_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+			 struct proc *);
+int net_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		    struct proc *);
+int cpu_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		    struct proc *);
+int vfs_sysctl(int *, u_int, void *, size_t *, void *, size_t,
+		    struct proc *);
+int sysctl_sysvipc(int *, u_int, void *, size_t *);
 
-void sysctl_init __P((void));
+void sysctl_init(void);
 
 #else	/* !_KERNEL */
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int	sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+int	sysctl(int *, u_int, void *, size_t *, void *, size_t);
 __END_DECLS
 #endif	/* _KERNEL */
 #endif	/* !_SYS_SYSCTL_H_ */

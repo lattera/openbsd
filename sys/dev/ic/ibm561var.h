@@ -1,5 +1,5 @@
 /* $NetBSD: ibm561var.h,v 1.1 2001/12/12 07:46:48 elric Exp $ */
-/* $OpenBSD: src/sys/dev/ic/ibm561var.h,v 1.1 2002/04/01 11:26:32 matthieu Exp $ */
+/* $OpenBSD: src/sys/dev/ic/ibm561var.h,v 1.1.4.1 2002/06/11 03:42:18 art Exp $ */
 
 /*-
  * Copyright (c) 2001 The NetBSD Foundation, Inc.

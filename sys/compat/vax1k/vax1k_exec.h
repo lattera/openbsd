@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_exec.h,v 1.1 2001/11/14 14:37:22 hugh Exp $	*/
+/*	$OpenBSD: src/sys/compat/vax1k/Attic/vax1k_exec.h,v 1.1.2.1 2002/06/11 03:28:09 art Exp $	*/
 /*	$NetBSD: vax1k_exec.h,v 1.1 1998/08/21 13:25:47 ragge Exp $	*/
 
 /*-
@@ -43,6 +43,6 @@
 #define VAX1K_LDPGSZ		1024
 #define VAX1K_USRTEXT		VAX1K_LDPGSZ
 
-int	exec_vax1k_makecmds __P((struct proc *, struct exec_package *));
-int	vax1k_map_readvn __P((struct proc *, struct exec_vmcmd *));
+int	exec_vax1k_makecmds(struct proc *, struct exec_package *);
+int	vax1k_map_readvn(struct proc *, struct exec_vmcmd *);
 #endif /* _VAX1K_EXEC_H_ */

@@ -1,12 +1,13 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/varargs.h,v 1.5 2001/11/16 01:17:21 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/varargs.h,v 1.5.2.1 2002/06/11 03:37:10 art Exp $	*/
 
 #ifndef _M88K_VARARGS_H_
 #define _M88K_VARARGS_H_
 
+#define	_VARARGS_H
+
+#include <machine/ansi.h>
 #include <machine/va-m88k.h>
 
-/* Define va_list from __gnuc_va_list.  */
-typedef	__gnuc_va_list	va_list;
-typedef	_BSD_VA_LIST_	__gnuc_va_list
+typedef	_BSD_VA_LIST_	va_list;
 
 #endif	/* _M88K_VARARGS_H_ */

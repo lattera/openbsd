@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cs4231var.h,v 1.3.4.1 2002/01/31 22:55:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cs4231var.h,v 1.3.4.2 2002/06/11 03:38:16 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -61,9 +61,9 @@ struct cs4231_softc {
 	int	sc_open;		/* already open? */
 	int	sc_locked;		/* locked? */
 
-	void	(*sc_rintr)(void*);	/* input completion intr handler */
+	void	(*sc_rintr)(void *);	/* input completion intr handler */
 	void *	sc_rarg;		/* arg for sc_rintr() */
-	void	(*sc_pintr)(void*);	/* output completion intr handler */
+	void	(*sc_pintr)(void *);	/* output completion intr handler */
 	void *	sc_parg;		/* arg for sc_pintr() */
 
 	char		sc_mute[9];	/* which devs are muted */

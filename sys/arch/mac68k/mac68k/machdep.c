@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91.2.1 2002/01/31 22:55:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91.2.2 2002/06/11 03:36:20 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.207 1998/07/08 04:39:34 thorpej Exp $	*/
 
 /*
@@ -125,7 +125,7 @@
 #include <machine/pmap.h>
 #include <net/netisr.h>
 
-void netintr __P((void));
+void netintr(void);
 
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
 #include <uvm/uvm_extern.h>
@@ -141,7 +141,7 @@ void netintr __P((void));
 #include "ether.h"
 
 /* The following is used externally (sysctl_hw) */
-char	machine[] = "mac68k";	/* cpu "architecture" */
+char	machine[] = MACHINE;	/* from <machine/param.h> */
 
 struct mac68k_machine_S mac68k_machine;
 
@@ -176,7 +176,7 @@ u_int32_t mac68k_vidphys;	/* physical addr */
 u_int32_t mac68k_vidlen;	/* mem length */
 
 /* Callback and cookie to run bell */
-int	(*mac68k_bell_callback) __P((void *, int, int, int));
+int	(*mac68k_bell_callback)(void *, int, int, int);
 caddr_t	mac68k_bell_cookie;
 
 struct vm_map *exec_map = NULL;  
@@ -210,7 +210,7 @@ int	safepri = PSL_LOWIPL;
  * Q700/900/950 where the interrupt controller may be reprogrammed to
  * interrupt on different levels as listed in locore.s
  */
-unsigned short  mac68k_ttyipl = PSL_S | PSL_IPL1;
+unsigned short  mac68k_ttyipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_bioipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_netipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_impipl = PSL_S | PSL_IPL2;
@@ -227,26 +227,28 @@ unsigned short  mac68k_statclockipl = PSL_S | PSL_IPL2;
  * The extent maps are not static!  Machine-dependent NuBus and on-board
  * I/O routines need access to them for bus address space allocation.
  */
-static	long iomem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(8) / sizeof(long)];
+long iomem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(8) / sizeof(long)];
 struct	extent *iomem_ex;
 int	iomem_malloc_safe;
 
 /* XXX should be in locore.s for consistency */
 int	astpending = 0;
 
-static void	identifycpu __P((void));
-static u_long	get_physical __P((u_int, u_long *));
+void	identifycpu(void);
+u_long	get_physical(u_int, u_long *);
 
-void	initcpu __P((void));
-int	cpu_dumpsize __P((void));
-int	cpu_dump __P((int (*)(dev_t, daddr_t, caddr_t, size_t), daddr_t *));
-void	cpu_init_kcore_hdr __P((void));
+caddr_t	allocsys(caddr_t);
+void	initcpu(void);
+int	cpu_dumpsize(void);
+int	cpu_dump(int (*)(dev_t, daddr_t, caddr_t, size_t), daddr_t *);
+void	cpu_init_kcore_hdr(void);
+int	fpu_probe(void);
 
 /* functions called from locore.s */
-void	dumpsys __P((void));
-void	mac68k_init __P((void));
-void	straytrap __P((int, int));
-void	nmihand __P((struct frame));
+void	dumpsys(void);
+void	mac68k_init(void);
+void	straytrap(int, int);
+void	nmihand(struct frame);
 
 /*
  * Machine-dependent crash dump header info.
@@ -322,7 +324,7 @@ consinit(void)
 void
 cpu_startup(void)
 {
-	caddr_t v, firstaddr;
+	caddr_t v;
 	unsigned i;
 	int vers;
 	int base, residual;
@@ -340,10 +342,9 @@ cpu_startup(void)
 	 * high[numranges-1] was decremented in pmap_bootstrap.
 	 */
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
-		pmap_enter(pmap_kernel(), (vm_offset_t)msgbufp,
+		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp + i * NBPG,
 		    high[numranges - 1] + i * NBPG,
-		    VM_PROT_READ|VM_PROT_WRITE,
-		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		    VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
 	pmap_update(pmap_kernel());
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
@@ -366,81 +367,16 @@ cpu_startup(void)
 		printf("this kernel.\n\n");
 		for (delay = 0; delay < 1000000; delay++);
 	}
-	printf("real mem = %d\n", ctob(physmem));
+	printf("real mem = %u (%uK)\n", ctob(physmem), ctob(physmem)/1024);
 
 	/*
-	 * Allocate space for system data structures.
-	 * The first available real memory address is in "firstaddr".
-	 * The first available kernel virtual address is in "v".
-	 * As pages of kernel virtual memory are allocated, "v" is incremented.
-	 * As pages of memory are allocated and cleared,
-	 * "firstaddr" is incremented.
-	 * An index into the kernel page table corresponding to the
-	 * virtual memory address maintained in "v" is kept in "mapaddr".
+	 * Find out how much space we need, allocate it,
+	 * and then give everything true virtual addressses.
 	 */
-	/*
-	 * Make two passes.  The first pass calculates how much memory is
-	 * needed and allocates it.  The second pass assigns virtual
-	 * addresses to the various data structures.
-	 */
-	firstaddr = 0;
-again:
-	v = (caddr_t)firstaddr;
-
-#define	valloc(name, type, num) \
-	    (name) = (type *)v; v = (caddr_t)((name)+(num))
-#define	valloclim(name, type, num, lim) \
-	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
-#ifdef SYSVSHM
-	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-	valloc(sema, struct semid_ds, seminfo.semmni);
-	valloc(sem, struct sem, seminfo.semmns);
-	/* This is pretty disgusting! */
-	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
-#ifdef SYSVMSG
-	valloc(msgpool, char, msginfo.msgmax);
-	valloc(msgmaps, struct msgmap, msginfo.msgseg);
-	valloc(msghdrs, struct msg, msginfo.msgtql);
-	valloc(msqids, struct msqid_ds, msginfo.msgmni);
-#endif
-	/*
-	 * Determine how many buffers to allocate.
-	 * Use 10% of memory for the first 2 Meg, 5% of the remaining
-	 * memory. Insure a minimum of 16 buffers.
-	 * We allocate 3/4 as many swap buffer headers as file i/o buffers.
-	 */
-	if (bufpages == 0) {
-		if (physmem < btoc(2 * 1024 * 1024))
-			bufpages = physmem / 10;
-		else
-			bufpages = (btoc(2 * 1024 * 1024) + physmem) / 20;
-	}
-
-	if (nbuf == 0) {
-		nbuf = bufpages;
-		if (nbuf < 16)
-			nbuf = 16;
-	}
-
-	valloc(buf, struct buf, nbuf);
-
-	/*
-	 * End of first pass, size has been calculated so allocate memory
-	 */
-	if (firstaddr == 0) {
-		size = (vm_size_t)(v - firstaddr);
-		firstaddr = (caddr_t)uvm_km_alloc(kernel_map, round_page(size));
-		if (firstaddr == 0)
-			panic("startup: no room for tables");
-		goto again;
-	}
-	/*
-	 * End of second pass, addresses have been assigned
-	 */
-	if ((vm_size_t)(v - firstaddr) != size)
+	size = (vsize_t)allocsys((caddr_t)0);
+	if ((v = (caddr_t)uvm_km_zalloc(kernel_map, round_page(size))) == 0)
+		panic("startup: no room for tables");
+	if ((allocsys(v) - v) != size)
 		panic("startup: table size inconsistency");
 
 	/*
@@ -448,16 +384,16 @@ again:
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	size = MAXBSIZE * nbuf;
-	if (uvm_map(kernel_map, (vm_offset_t *) &buffers, round_page(size),
+	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE,
 	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate VM for buffers");
-	minaddr = (vm_offset_t)buffers;
+	minaddr = (vaddr_t)buffers;
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
 	for (i = 0; i < nbuf; i++) {
-		vm_size_t curbufsize;
-		vm_offset_t curbuf;
+		vsize_t curbufsize;
+		vaddr_t curbuf;
 		struct vm_page *pg;
 
 		/*
@@ -466,7 +402,7 @@ again:
 		 * for the first "residual" buffers, and then we allocate
 		 * "base" pages for the rest.
 		 */
-		curbuf = (vm_offset_t) buffers + (i * MAXBSIZE);
+		curbuf = (vaddr_t) buffers + (i * MAXBSIZE);
 		curbufsize = PAGE_SIZE * ((i < residual) ? (base+1) : base);
 
 		while (curbufsize) {
@@ -481,6 +417,7 @@ again:
 		}
 		pmap_update(pmap_kernel());
 	}
+
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
@@ -494,9 +431,10 @@ again:
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	printf("avail mem = %ld\n", ptoa(uvmexp.free));
-	printf("using %d buffers containing %d bytes of memory\n",
-	    nbuf, bufpages * PAGE_SIZE);
+	printf("avail mem = %lu (%uK)\n", ptoa(uvmexp.free),
+	    ptoa(uvmexp.free)/1024);
+	printf("using %d buffers containing %u bytes (%uK) of memory\n",
+	    nbuf, bufpages * PAGE_SIZE, bufpages * PAGE_SIZE / 1024);
 
 	/*
 	 * Set up CPU-specific registers, cache, etc.
@@ -521,18 +459,76 @@ again:
 	iomem_malloc_safe = 1;
 }
 
+/*
+ * Allocate space for system data structures.  We are given
+ * a starting virtual address and we return a final virtual
+ * address; along the way we set each data structure pointer.
+ *
+ * We call allocsys() with 0 to find out how much space we want,
+ * allocate that much and fill it with zeroes, and then call
+ * allocsys() again with the correct base virtual address.
+ */
+caddr_t
+allocsys(v)
+	caddr_t v;
+{
+
+#define	valloc(name, type, num) \
+	    (name) = (type *)v; v = (caddr_t)((name)+(num))
+#define	valloclim(name, type, num, lim) \
+	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
+
+#ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
+	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
+#endif
+#ifdef SYSVSEM
+	valloc(sema, struct semid_ds, seminfo.semmni);
+	valloc(sem, struct sem, seminfo.semmns);
+	/* This is pretty disgusting! */
+	valloc(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
+#endif
+#ifdef SYSVMSG
+	valloc(msgpool, char, msginfo.msgmax);
+	valloc(msgmaps, struct msgmap, msginfo.msgseg);
+	valloc(msghdrs, struct msg, msginfo.msgtql);
+	valloc(msqids, struct msqid_ds, msginfo.msgmni);
+#endif
+	/*
+	 * Determine how many buffers to allocate.
+	 * Use 10% of memory for the first 2 Meg, then 5% of the remaining
+	 * memory. Insure a minimum of 16 buffers.
+	 */
+	if (bufpages == 0) {
+		if (physmem < btoc(2 * 1024 * 1024))
+			bufpages = physmem / 10;
+		else
+			bufpages = (btoc(2 * 1024 * 1024) + physmem) / 20;
+	}
+
+	if (nbuf == 0) {
+		nbuf = bufpages;
+		if (nbuf < 16)
+			nbuf = 16;
+	}
+	valloc(buf, struct buf, nbuf);
+	return (v);
+}
+
 void
 initcpu()
 {
 #if defined(M68040) || defined(M68060)
-	extern void (*vectab[256]) __P((void));
-	void addrerr4060 __P((void));
+	extern void (*vectab[256])(void);
+	void addrerr4060(void);
 #endif
 #ifdef M68060
-	void buserr60 __P((void));
+	void buserr60(void);
 #endif
 #ifdef M68040
-	void buserr40 __P((void));
+	void buserr40(void);
 #endif
 
 	switch (cputype) {
@@ -554,9 +550,9 @@ initcpu()
 	DCIS();
 }
 
-void doboot __P((void))
+void doboot(void)
 	__attribute__((__noreturn__));
-void via_shutdown __P((void));
+void via_shutdown(void);
 
 /*
  * Set registers on exec.
@@ -565,7 +561,7 @@ void via_shutdown __P((void));
  */
 void
 setregs(p, pack, stack, retval)
-	register struct proc *p;
+	struct proc *p;
 	struct exec_package *pack;
 	u_long  stack;
 	register_t *retval;
@@ -615,17 +611,16 @@ setregs(p, pack, stack, retval)
 }
 
 int	waittime = -1;
-struct pcb dumppcb;
 
 void
 boot(howto)
-	register int howto;
+	int howto;
 {
 	extern u_long maxaddr;
 
 	/* take a snap shot before clobbering any registers */
-	if (curproc)
-		savectx((struct pcb *)curproc->p_addr);
+	if (curproc && curproc->p_addr)
+		savectx(&curproc->p_addr->u_pcb);
 
 	/* If system is cold, just halt. */
 	if (cold) {
@@ -635,34 +630,25 @@ boot(howto)
 
 	boothowto = howto;
 	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
-		extern struct proc proc0;
-		/* kill the panic on that boot away */
-		if (curproc == NULL)
-			curproc = &proc0;
-
 		waittime = 0;
-
-		/*
-		 * Release inodes, sync and unmount the filesystems.
-		 */
 		vfs_shutdown();
 
-#ifdef notyet
 		/*
 		 * If we've been adjusting the clock, the todr
 		 * will be out of synch; adjust it now unless
 		 * the system was sitting in ddb.
 		 */
 		if ((howto & RB_TIMEBAD) == 0) {
+#ifdef notyet
 			resettodr();
+#else
+#ifdef DIAGNOSTIC
+			printf("OpenBSD/mac68k does not trust itself to update the clock on shutdown.\n");
+#endif
+#endif
 		} else {
 			printf("WARNING: not updating battery clock\n");
 		}
-#else
-# ifdef DIAGNOSTIC
-		printf("OpenBSD/mac68k does not trust itself to update the clock on shutdown.\n");
-# endif
-#endif
 	}
 
 	/* Disable interrupts. */
@@ -670,7 +656,6 @@ boot(howto)
 
 	/* If rebooting and a dump is requested, do it. */
 	if (howto & RB_DUMP) {
-		savectx(&dumppcb);	/* XXX this goes away soon */
 		dumpsys();
 	}
 
@@ -699,7 +684,7 @@ haltsys:
 	}
 
 	/* Map the last physical page VA = PA for doboot() */
-	pmap_enter(pmap_kernel(), (vm_offset_t)maxaddr, (vm_offset_t)maxaddr,
+	pmap_enter(pmap_kernel(), (vaddr_t)maxaddr, (vaddr_t)maxaddr,
 	    VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
 	pmap_update(pmap_kernel());
 
@@ -751,7 +736,7 @@ cpu_dumpsize()
  */
 int
 cpu_dump(dump, blknop)
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	daddr_t *blknop;
 {
 	int buf[dbtob(1) / sizeof(int)];
@@ -791,42 +776,35 @@ void
 dumpconf()
 {
 	cpu_kcore_hdr_t *h = &cpu_kcore_hdr;
-	int chdrsize;	/* size of dump header */
 	int nblks;	/* size of dump area */
 	int maj;
 	int i;
 
 	if (dumpdev == NODEV)
 		return;
-
 	maj = major(dumpdev);
 	if (maj < 0 || maj >= nblkdev)
 		panic("dumpconf: bad dumpdev=0x%x", dumpdev);
-	if (bdevsw[maj].d_psize == NULL) {
-		printf ("dumpconf: returning for d_psize\n");
+	if (bdevsw[maj].d_psize == NULL)
 		return;
-	}
 	nblks = (*bdevsw[maj].d_psize)(dumpdev);
-	chdrsize = cpu_dumpsize();
+	if (nblks <= ctod(1))
+		return;
 
 	dumpsize = 0;
 	for (i = 0; h->ram_segs[i].size && i < NPHYS_RAM_SEGS; i++)
 		dumpsize += btoc(h->ram_segs[i].size);
+	dumpsize += cpu_dumpsize();
 
-	/*
-	 * Check to see if we will fit.  Note we always skip the
-	 * first block in case there is a disk label there.
-	 */
-	if (nblks < (ctod(dumpsize) + chdrsize + ctod(1))) {
-		dumpsize = 0;
-		dumplo = -1;
-		return;
-	}
+	/* Always skip the first block, in case there is a label there. */
+	if (dumplo < ctod(1))
+		dumplo = ctod(1);
 
-	/*
-	 * Put dump at the end of the partition.
-	 */
-	dumplo = (nblks - 1) - ctod(dumpsize) - chdrsize;
+	/* Put dump at end of partition, and make it fit. */
+	if (dumpsize < dtoc(nblks - dumplo))
+		dumpsize = dtoc(nblks - dumplo);
+	if (dumplo < nblks - ctod(dumpsize))
+		dumplo = nblks - ctod(dumpsize);
 }
 
 void
@@ -835,9 +813,9 @@ dumpsys()
 	cpu_kcore_hdr_t *h = &cpu_kcore_hdr;
 	daddr_t blkno;		/* current block to write */
 				/* dump routine */
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int pg;			/* page being dumped */
-	vm_offset_t maddr;	/* PA being dumped */
+	vaddr_t maddr;	/* PA being dumped */
 	int seg;		/* RAM segment being dumped */
 	int error;		/* error code from (*dump)() */
 	extern int msgbufmapped;
@@ -891,12 +869,12 @@ dumpsys()
 			}
 			maddr = h->ram_segs[seg].start;
 		}
-		pmap_enter(pmap_kernel(), (vm_offset_t)vmmap, maddr,
+		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, maddr,
 		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
 		pmap_update(pmap_kernel());
 
 		error = (*dump)(dumpdev, blkno, vmmap, NBPG);
- bad:
+bad:
 		switch (error) {
 		case 0:
 			maddr += NBPG;
@@ -964,8 +942,6 @@ microtime(tvp)
 	splx(s);
 }
 
-void straytrap __P((int, int));
-
 void
 straytrap(pc, evec)
 	int pc;
@@ -973,20 +949,22 @@ straytrap(pc, evec)
 {
 	printf("unexpected trap; vector offset 0x%x from 0x%x.\n",
 	    (int) (evec & 0xfff), pc);
+#ifdef DEBUG
 #ifdef DDB
 	Debugger();
+#endif
 #endif
 }
 
 int	*nofault;
 
-int badaddr __P((caddr_t));
+int badaddr(caddr_t);
 
 int
 badaddr(addr)
-	register caddr_t addr;
+	caddr_t addr;
 {
-	register int i;
+	int i;
 	label_t faultbuf;
 
 	nofault = (int *)&faultbuf;
@@ -1001,16 +979,11 @@ badaddr(addr)
 
 int
 badbaddr(addr)
-	register caddr_t addr;
+	caddr_t addr;
 {
-	register int i;
+	int i;
 	label_t faultbuf;
 
-#ifdef lint
-	i = *addr;
-	if (i)
-		return (0);
-#endif
 	nofault = (int *)&faultbuf;
 	if (setjmp((label_t *)nofault)) {
 		nofault = (int *)0;
@@ -1023,16 +996,11 @@ badbaddr(addr)
 
 int
 badwaddr(addr)
-	register caddr_t addr;
+	caddr_t addr;
 {
-	register int i;
+	int i;
 	label_t faultbuf;
 
-#ifdef lint
-	i = *addr;
-	if (i)
-		return (0);
-#endif
 	nofault = (int *)&faultbuf;
 	if (setjmp((label_t *)nofault)) {
 		nofault = (int *)0;
@@ -1045,16 +1013,11 @@ badwaddr(addr)
 
 int
 badladdr(addr)
-	register caddr_t addr;
+	caddr_t addr;
 {
-	register int i;
+	int i;
 	label_t faultbuf;
 
-#ifdef lint
-	i = *addr;
-	if (i)
-		return (0);
-#endif
 	nofault = (int *)&faultbuf;
 	if (setjmp((label_t *)nofault)) {
 		nofault = (int *)0;
@@ -1068,62 +1031,21 @@ badladdr(addr)
 void
 netintr()
 {
-#ifdef INET
-#if NETHER
-	if (netisr & (1 << NETISR_ARP)) {
-		netisr &= ~(1 << NETISR_ARP);
-		arpintr();
-	}
-#endif
-	if (netisr & (1 << NETISR_IP)) {
-		netisr &= ~(1 << NETISR_IP);
-		ipintr();
-	}
-#endif
-#ifdef INET6
-	if (netisr & (1 << NETISR_IPV6)) {
-		netisr &= ~(1 << NETISR_IPV6);
-		ip6intr();
-	}
-#endif
-#ifdef NETATALK
-	if (netisr & (1 << NETISR_ATALK)) {
-		netisr &= ~(1 << NETISR_ATALK);
-		atintr();
-	}
-#endif
-#ifdef NS
-	if (netisr & (1 << NETISR_NS)) {
-		netisr &= ~(1 << NETISR_NS);
-		nsintr();
-	}
-#endif
-#ifdef ISO
-	if (netisr & (1 << NETISR_ISO)) {
-		netisr &= ~(1 << NETISR_ISO);
-		clnlintr();
-	}
-#endif
-#include "ppp.h"
-#if NPPP > 0
-	if (netisr & (1 << NETISR_PPP)) {
-		netisr &= ~(1 << NETISR_PPP);
-		pppintr();
-	}
-#endif
-#include "bridge.h"
-#if NBRIDGE > 0
-	if (netisr & (1 << NETISR_BRIDGE)) {
-		netisr &= ~(1 << NETISR_BRIDGE);
-		bridgeintr();
-	}
-#endif
+#define	DONETISR(bit, fn) \
+	do { \
+		if (netisr & (1 << (bit))) { \
+			netisr &= ~(1 << (bit)); \
+			(fn)(); \
+		} \
+	} while (0)
+#include <net/netisr_dispatch.h>
+#undef	DONETISR
 }
 
 /*
  * Level 7 interrupts can be caused by the keyboard or parity errors.
  */
-void	nmihand __P((struct frame));
+void	nmihand(struct frame);
 
 void
 nmihand(frame)
@@ -1131,10 +1053,10 @@ nmihand(frame)
 {
 	static int nmihanddeep = 0;
 
-	if (nmihanddeep++)
+	if (nmihanddeep)
 		return;
-/*	regdump(&(frame.F_t), 128);
-	dumptrace(); */
+	nmihanddeep = 1;
+
 #ifdef DIAGNOSTIC
 	printf("Panic switch: PC is 0x%x.\n", frame.f_pc);
 #endif
@@ -1142,6 +1064,7 @@ nmihand(frame)
 	if (db_console)
 		Debugger();
 #endif
+
 	nmihanddeep = 0;
 }
 
@@ -1151,7 +1074,7 @@ nmihand(frame)
  * for RAM to be aliased across all memory--or for it to appear that
  * there is more RAM than there really is.
  */
-int	get_top_of_ram __P((void));
+int	get_top_of_ram(void);
 
 int
 get_top_of_ram()
@@ -1207,8 +1130,8 @@ cpu_exec_aout_makecmds(p, epp)
 
 #ifdef COMPAT_SUNOS
 	{
-		extern int sunos_exec_aout_makecmds __P((struct proc *,
-			        struct exec_package *));
+		extern int sunos_exec_aout_makecmds(struct proc *,
+			        struct exec_package *);
 		if ((error = sunos_exec_aout_makecmds(p, epp)) == 0)
 			return 0;
 	}
@@ -1221,8 +1144,8 @@ static char *envbuf = NULL;
 /*
  * getenvvars: Grab a few useful variables
  */
-void		getenvvars __P((u_long, char *));
-static long	getenv __P((char *));
+void	getenvvars(u_long, char *);
+long	getenv(char *);
 
 void
 getenvvars(flag, buf)
@@ -1298,11 +1221,13 @@ getenvvars(flag, buf)
 	/*
 	 * Get end of symbols for kernel debugging
 	 */
+#if defined(DDB) || NKSYMS > 0
 	esym = getenv("END_SYM");
 #ifndef SYMTAB_SPACE
 	if (esym == 0)
 #endif
 		esym = (long) &end;
+#endif
 
 	/* Get MacOS time */
 	macos_boottime = getenv("BOOTTIME");
@@ -1328,9 +1253,9 @@ getenvvars(flag, buf)
  	mrg_ADBIntrPtr = (caddr_t)getenv("ADBINTERRUPT");
 }
 
-static char	toupper __P((char));
+char	toupper(char);
 
-static char
+char
 toupper(c)
 	char c;
 {
@@ -1341,7 +1266,7 @@ toupper(c)
 	}
 }
 
-static long
+long
 getenv(str)
 	char *str;
 {
@@ -1466,7 +1391,7 @@ getenv(str)
  *
  *		Bob Nestor - <rnestor@metronet.com>
  */
-static romvec_t romvecs[] =
+romvec_t romvecs[] =
 {
 	/* Vectors verified for II, IIx, IIcx, SE/30 */
 	{			/* 0 */
@@ -2055,77 +1980,76 @@ static romvec_t romvecs[] =
 	/* Please fill these in! -BG */
 };
 
-
 struct cpu_model_info cpu_models[] = {
 
 /* The first four. */
-	{MACH_MACII, "II ", "", MACH_CLASSII, &romvecs[0]},
-	{MACH_MACIIX, "IIx ", "", MACH_CLASSII, &romvecs[0]},
-	{MACH_MACIICX, "IIcx ", "", MACH_CLASSII, &romvecs[0]},
-	{MACH_MACSE30, "SE/30 ", "", MACH_CLASSII, &romvecs[0]},
+	{MACH_MACII, "II", "", MACH_CLASSII, &romvecs[0]},
+	{MACH_MACIIX, "IIx", "", MACH_CLASSII, &romvecs[0]},
+	{MACH_MACIICX, "IIcx", "", MACH_CLASSII, &romvecs[0]},
+	{MACH_MACSE30, "SE/30", "", MACH_CLASSII, &romvecs[0]},
 
 /* The rest of the II series... */
-	{MACH_MACIICI, "IIci ", "", MACH_CLASSIIci, &romvecs[4]},
-	{MACH_MACIISI, "IIsi ", "", MACH_CLASSIIsi, &romvecs[2]},
-	{MACH_MACIIVI, "IIvi ", "", MACH_CLASSIIvx, &romvecs[2]},
-	{MACH_MACIIVX, "IIvx ", "", MACH_CLASSIIvx, &romvecs[2]},
-	{MACH_MACIIFX, "IIfx ", "", MACH_CLASSIIfx, &romvecs[18]},
+	{MACH_MACIICI, "IIci", "", MACH_CLASSIIci, &romvecs[4]},
+	{MACH_MACIISI, "IIsi", "", MACH_CLASSIIsi, &romvecs[2]},
+	{MACH_MACIIVI, "IIvi", "", MACH_CLASSIIvx, &romvecs[2]},
+	{MACH_MACIIVX, "IIvx", "", MACH_CLASSIIvx, &romvecs[2]},
+	{MACH_MACIIFX, "IIfx", "", MACH_CLASSIIfx, &romvecs[18]},
 
 /* The Centris/Quadra series. */
-	{MACH_MACQ700, "Quadra", " 700 ", MACH_CLASSQ, &romvecs[4]},
-	{MACH_MACQ900, "Quadra", " 900 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACQ950, "Quadra", " 950 ", MACH_CLASSQ, &romvecs[17]},
-	{MACH_MACQ800, "Quadra", " 800 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACQ650, "Quadra", " 650 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACC650, "Centris", " 650 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACQ605, "Quadra", " 605 ", MACH_CLASSQ, &romvecs[9]},
-	{MACH_MACQ605_33, "Quadra", " 605/33 ", MACH_CLASSQ, &romvecs[9]},
-	{MACH_MACC610, "Centris", " 610 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACQ610, "Quadra", " 610 ", MACH_CLASSQ, &romvecs[6]},
-	{MACH_MACQ630, "Quadra", " 630 ", MACH_CLASSQ2, &romvecs[13]},
-	{MACH_MACC660AV, "Centris", " 660AV ", MACH_CLASSAV, &romvecs[7]},
-	{MACH_MACQ840AV, "Quadra", " 840AV ", MACH_CLASSAV, &romvecs[7]},
+	{MACH_MACQ700, "Quadra", " 700", MACH_CLASSQ, &romvecs[4]},
+	{MACH_MACQ900, "Quadra", " 900", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACQ950, "Quadra", " 950", MACH_CLASSQ, &romvecs[17]},
+	{MACH_MACQ800, "Quadra", " 800", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACQ650, "Quadra", " 650", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACC650, "Centris", " 650", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACQ605, "Quadra", " 605", MACH_CLASSQ, &romvecs[9]},
+	{MACH_MACQ605_33, "Quadra", " 605/33", MACH_CLASSQ, &romvecs[9]},
+	{MACH_MACC610, "Centris", " 610", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACQ610, "Quadra", " 610", MACH_CLASSQ, &romvecs[6]},
+	{MACH_MACQ630, "Quadra", " 630", MACH_CLASSQ2, &romvecs[13]},
+	{MACH_MACC660AV, "Centris", " 660AV", MACH_CLASSAV, &romvecs[7]},
+	{MACH_MACQ840AV, "Quadra", " 840AV", MACH_CLASSAV, &romvecs[7]},
 
 /* The Powerbooks/Duos... */
-	{MACH_MACPB100, "PowerBook", " 100 ", MACH_CLASSPB, &romvecs[1]},
+	{MACH_MACPB100, "PowerBook", " 100", MACH_CLASSPB, &romvecs[1]},
 	/* PB 100 has no MMU! */
-	{MACH_MACPB140, "PowerBook", " 140 ", MACH_CLASSPB, &romvecs[1]},
-	{MACH_MACPB145, "PowerBook", " 145 ", MACH_CLASSPB, &romvecs[1]},
-	{MACH_MACPB150, "PowerBook", " 150 ", MACH_CLASSDUO, &romvecs[10]},
-	{MACH_MACPB160, "PowerBook", " 160 ", MACH_CLASSPB, &romvecs[5]},
-	{MACH_MACPB165, "PowerBook", " 165 ", MACH_CLASSPB, &romvecs[5]},
-	{MACH_MACPB165C, "PowerBook", " 165c ", MACH_CLASSPB, &romvecs[5]},
-	{MACH_MACPB170, "PowerBook", " 170 ", MACH_CLASSPB, &romvecs[1]},
-	{MACH_MACPB180, "PowerBook", " 180 ", MACH_CLASSPB, &romvecs[5]},
-	{MACH_MACPB180C, "PowerBook", " 180c ", MACH_CLASSPB, &romvecs[5]},
-	{MACH_MACPB500, "PowerBook", " 500 ", MACH_CLASSPB, &romvecs[8]},
+	{MACH_MACPB140, "PowerBook", " 140", MACH_CLASSPB, &romvecs[1]},
+	{MACH_MACPB145, "PowerBook", " 145", MACH_CLASSPB, &romvecs[1]},
+	{MACH_MACPB150, "PowerBook", " 150", MACH_CLASSDUO, &romvecs[10]},
+	{MACH_MACPB160, "PowerBook", " 160", MACH_CLASSPB, &romvecs[5]},
+	{MACH_MACPB165, "PowerBook", " 165", MACH_CLASSPB, &romvecs[5]},
+	{MACH_MACPB165C, "PowerBook", " 165c", MACH_CLASSPB, &romvecs[5]},
+	{MACH_MACPB170, "PowerBook", " 170", MACH_CLASSPB, &romvecs[1]},
+	{MACH_MACPB180, "PowerBook", " 180", MACH_CLASSPB, &romvecs[5]},
+	{MACH_MACPB180C, "PowerBook", " 180c", MACH_CLASSPB, &romvecs[5]},
+	{MACH_MACPB500, "PowerBook", " 500", MACH_CLASSPB, &romvecs[8]},
 
 /* The Duos */
-	{MACH_MACPB210, "PowerBook Duo", " 210 ", MACH_CLASSDUO, &romvecs[5]},
-	{MACH_MACPB230, "PowerBook Duo", " 230 ", MACH_CLASSDUO, &romvecs[5]},
-	{MACH_MACPB250, "PowerBook Duo", " 250 ", MACH_CLASSDUO, &romvecs[5]},
-	{MACH_MACPB270, "PowerBook Duo", " 270C ", MACH_CLASSDUO, &romvecs[5]},
-	{MACH_MACPB280, "PowerBook Duo", " 280 ", MACH_CLASSDUO, &romvecs[5]},
-	{MACH_MACPB280C, "PowerBook Duo", " 280C ", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB210, "PowerBook Duo", " 210", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB230, "PowerBook Duo", " 230", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB250, "PowerBook Duo", " 250", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB270, "PowerBook Duo", " 270C", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB280, "PowerBook Duo", " 280", MACH_CLASSDUO, &romvecs[5]},
+	{MACH_MACPB280C, "PowerBook Duo", " 280C", MACH_CLASSDUO, &romvecs[5]},
 
 /* The Performas... */
-	{MACH_MACP600, "Performa", " 600 ", MACH_CLASSIIvx, &romvecs[2]},
-	{MACH_MACP460, "Performa", " 460 ", MACH_CLASSLC, &romvecs[14]},
-	{MACH_MACP550, "Performa", " 550 ", MACH_CLASSLC, &romvecs[11]},
-	{MACH_MACP580, "Performa", " 580 ", MACH_CLASSQ2, &romvecs[19]},
-	{MACH_MACTV,   "TV ",      "",      MACH_CLASSLC, &romvecs[12]},
+	{MACH_MACP600, "Performa", " 600", MACH_CLASSIIvx, &romvecs[2]},
+	{MACH_MACP460, "Performa", " 460", MACH_CLASSLC, &romvecs[14]},
+	{MACH_MACP550, "Performa", " 550", MACH_CLASSLC, &romvecs[11]},
+	{MACH_MACP580, "Performa", " 580", MACH_CLASSQ2, &romvecs[19]},
+	{MACH_MACTV,   "TV",      "",      MACH_CLASSLC, &romvecs[12]},
 
 /* The LCs... */
-	{MACH_MACLCII,  "LC", " II ",  MACH_CLASSLC, &romvecs[3]},
-	{MACH_MACLCIII, "LC", " III ", MACH_CLASSLC, &romvecs[14]},
-	{MACH_MACLC475, "LC", " 475 ", MACH_CLASSQ,  &romvecs[9]},
-	{MACH_MACLC475_33, "LC", " 475/33 ", MACH_CLASSQ,  &romvecs[9]},
-	{MACH_MACLC520, "LC", " 520 ", MACH_CLASSLC, &romvecs[15]},
-	{MACH_MACLC575, "LC", " 575 ", MACH_CLASSQ2, &romvecs[16]},
-	{MACH_MACCCLASSIC, "Color Classic ", "", MACH_CLASSLC, &romvecs[3]},
-	{MACH_MACCCLASSICII, "Color Classic"," II ", MACH_CLASSLC, &romvecs[3]},
+	{MACH_MACLCII,  "LC", " II",  MACH_CLASSLC, &romvecs[3]},
+	{MACH_MACLCIII, "LC", " III", MACH_CLASSLC, &romvecs[14]},
+	{MACH_MACLC475, "LC", " 475", MACH_CLASSQ,  &romvecs[9]},
+	{MACH_MACLC475_33, "LC", " 475/33", MACH_CLASSQ,  &romvecs[9]},
+	{MACH_MACLC520, "LC", " 520", MACH_CLASSLC, &romvecs[15]},
+	{MACH_MACLC575, "LC", " 575", MACH_CLASSQ2, &romvecs[16]},
+	{MACH_MACCCLASSIC, "Color Classic", "", MACH_CLASSLC, &romvecs[3]},
+	{MACH_MACCCLASSICII, "Color Classic"," II", MACH_CLASSLC, &romvecs[3]},
 /* Does this belong here? */
-	{MACH_MACCLASSICII, "Classic", " II ", MACH_CLASSLC, &romvecs[3]},
+	{MACH_MACCLASSICII, "Classic", " II", MACH_CLASSLC, &romvecs[3]},
 
 /* The unknown one and the end... */
 	{0, "Unknown", "", MACH_CLASSII, NULL},
@@ -2183,7 +2107,7 @@ struct {
 
 char	cpu_model[120];		/* for sysctl() */
 
-int	mach_cputype __P((void));
+int	mach_cputype(void);
 
 int
 mach_cputype()
@@ -2191,37 +2115,157 @@ mach_cputype()
 	return (mac68k_machine.mach_processor);
 }
 
-static void
-identifycpu()
+int
+fpu_probe()
 {
-	extern u_int delay_factor;
-	char *mpu;
+	/*
+	 * A 68881 idle frame is 28 bytes and a 68882's is 60 bytes.
+	 * We, of course, need to have enough room for either.
+	 */
+	int	fpframe[60 / sizeof(int)];
+	label_t	faultbuf;
+	u_char	b;
 
-	switch (cputype) {
-	case CPU_68020:
-		mpu = ("(68020)");
-		break;
-	case CPU_68030:
-		mpu = ("(68030)");
-		break;
-	case CPU_68040:
-		mpu = ("(68040)");
-		break;
-	default:
-		mpu = ("(unknown processor)");
-		break;
+	nofault = (int *) &faultbuf;
+	if (setjmp(&faultbuf)) {
+		nofault = (int *) 0;
+		return (FPU_NONE);
 	}
-	sprintf(cpu_model, "Apple Macintosh %s%s %s",
-	    cpu_models[mac68k_machine.cpu_model_index].model_major,
-	    cpu_models[mac68k_machine.cpu_model_index].model_minor,
-	    mpu);
-	printf("%s\n", cpu_model);
-	printf("cpu: delay factor %d\n", delay_factor);
+
+	/*
+	 * Synchronize FPU or cause a fault.
+	 * This should leave the 881/882 in the IDLE state,
+	 * state, so we can determine which we have by
+	 * examining the size of the FP state frame
+	 */
+	asm("fnop");
+
+	nofault = (int *) 0;
+
+	/*
+	 * Presumably, if we're an 040 and did not take exception
+	 * above, we have an FPU.  Don't bother probing.
+	 */
+	if (mmutype == MMU_68040)
+		return (FPU_68040);
+
+	/*
+	 * Presumably, this will not cause a fault--the fnop should
+	 * have if this will.  We save the state in order to get the
+	 * size of the frame.
+	 */
+	asm("movl %0, a0; fsave a0@" : : "a" (fpframe) : "a0" );
+
+	b = *((u_char *) fpframe + 1);
+
+	/*
+	 * Now, restore a NULL state to reset the FPU.
+	 */
+	fpframe[0] = fpframe[1] = 0;
+	m68881_restore((struct fpframe *) fpframe);
+
+	/*
+	 * The size of a 68881 IDLE frame is 0x18
+	 *         and a 68882 frame is 0x38
+	 */
+	if (b == 0x18)
+		return (FPU_68881);
+	if (b == 0x38)
+		return (FPU_68882);
+
+	/*
+	 * If it's not one of the above, we have no clue what it is.
+	 */
+	return (FPU_UNKNOWN);
 }
 
-static void	get_machine_info __P((void));
+void
+identifycpu()
+{
+#ifdef DEBUG
+	extern u_int delay_factor;
+#endif
 
-static void
+	/*
+	 * Print the machine type...
+	 */
+	sprintf(cpu_model, "Apple Macintosh %s%s",
+	    cpu_models[mac68k_machine.cpu_model_index].model_major,
+	    cpu_models[mac68k_machine.cpu_model_index].model_minor);
+
+	/*
+	 * ... and the CPU type...
+	 */
+	switch (cputype) {
+	case CPU_68040:
+		strcat(cpu_model, ", 68040 CPU");
+		break;
+	case CPU_68030:
+		strcat(cpu_model, ", 68030 CPU");
+		break;
+	case CPU_68020:
+		strcat(cpu_model, ", 68020 CPU");
+		break;
+	default:
+		strcat(cpu_model, ", unknown CPU");
+		break;
+	}
+
+	/*
+	 * ... and the MMU type...
+	 */
+	switch (mmutype) {
+	case MMU_68040:
+	case MMU_68030:
+		strcat(cpu_model, "+MMU");
+		break;
+	case MMU_68851:
+		strcat(cpu_model, ", MC68851 MMU");
+		break;
+	default:
+		printf("%s\n", cpu_model);
+		panic("unknown MMU type %d", mmutype);
+		/* NOTREACHED */
+	}
+
+	/*
+	 * ... and the FPU type...
+	 */
+	fputype = fpu_probe();	/* should eventually move to locore */
+
+	switch (fputype) {
+	case FPU_68040:
+		strcat(cpu_model, "+FPU");
+		break;
+	case FPU_68882:
+		strcat(cpu_model, ", MC6882 FPU");
+		break;
+	case FPU_68881:
+		strcat(cpu_model, ", MC6881 FPU");
+		break;
+	case FPU_UNKNOWN:
+		strcat(cpu_model, ", unknown FPU");
+		break;
+	default:
+		/*strcat(cpu_model, ", no FPU");*/
+		break;
+	}
+
+	/*
+	 * ... and finally, the cache type.
+	 */
+	if (cputype == CPU_68040)
+		strcat(cpu_model, ", 4k on-chip physical I/D caches");
+
+	printf("%s\n", cpu_model);
+#ifdef DEBUG
+	printf("cpu: delay factor %d\n", delay_factor);
+#endif
+}
+
+void	get_machine_info(void);
+
+void
 get_machine_info()
 {
 	int i;
@@ -2242,7 +2286,7 @@ romvec_t *mrg_MacOSROMVectors = 0;
 /*
  * Sets a bunch of machine-specific variables
  */
-void	setmachdep __P((void));
+void	setmachdep(void);
 
 void
 setmachdep()
@@ -2505,7 +2549,7 @@ mac68k_set_io_offsets(base)
 }
 
 #if GRAYBARS
-static u_long gray_nextaddr = 0;
+u_long gray_nextaddr = 0;
 
 void
 gray_bar()
@@ -2545,8 +2589,8 @@ gray_bar()
 #endif
 
 /* in locore */
-extern u_long ptest040 __P((caddr_t addr, u_int fc));
-extern int get_pte __P((u_int addr, u_long pte[2], u_short * psr));
+extern u_long ptest040(caddr_t addr, u_int fc);
+extern int get_pte(u_int addr, u_long pte[2], u_short * psr);
 
 /*
  * LAK (7/24/94): given a logical address, puts the physical address
@@ -2554,7 +2598,7 @@ extern int get_pte __P((u_int addr, u_long pte[2], u_short * psr));
  *  to look through MacOS page tables.
  */
 
-static u_long
+u_long
 get_physical(u_int addr, u_long * phys)
 {
 	u_long pte[2], ph, mask;
@@ -2610,9 +2654,9 @@ get_physical(u_int addr, u_long * phys)
 	return 1;
 }
 
-static void	check_video __P((char *, u_long, u_long));
+void	check_video(char *, u_long, u_long);
 
-static void
+void
 check_video(id, limit, maxm)
 	char *id;
 	u_long limit, maxm;
@@ -2641,9 +2685,11 @@ check_video(id, limit, maxm)
 			mac68k_vidlen += 32768;
 			addr += 32768;
 		}
+#ifdef DIAGNOSTIC
 		printf("  %s internal video at addr 0x%x (phys 0x%x), ",
 		    id, mac68k_vidlog, mac68k_vidphys);
 		printf("len 0x%x.\n", mac68k_vidlen);
+#endif
 	}
 }
 
@@ -2678,7 +2724,7 @@ get_mapping(void)
 			high[numranges - 1] = phys + NBPG;
 		}
 	}
-#if 1
+#ifdef DIAGNOSTIC
 	printf("System RAM: %ld bytes in %ld pages.\n", addr, addr / NBPG);
 	for (i = 0; i < numranges; i++) {
 		printf("     Low = 0x%lx, high = 0x%lx\n", low[i], high[i]);
@@ -2691,8 +2737,10 @@ get_mapping(void)
 		 * setmachdep() (by using intvid_info[]).  Tell the user
 		 * what we know.
 		 */
+#ifdef DIAGNOSTIC
 		printf("On-board video at addr 0x%x (phys 0x%x), len 0x%x.\n",
 		    mac68k_vidlog, mac68k_vidphys, mac68k_vidlen);
+#endif
 	} else {
 		/*
 	 	* We should now look through all of NuBus space to find where
@@ -2787,7 +2835,9 @@ get_mapping(void)
 				    21888, 21888);
 			} else if (0x60000000 <= videoaddr &&
 			    videoaddr < 0x70000000) {
+#ifdef DIAGNOSTIC
 				printf("Checking for Internal Video ");
+#endif
 				/*
 				 * Kludge for IIvx internal video (60b0 0000).
 				 * PB 520 (6000 0000)
@@ -2809,15 +2859,19 @@ get_mapping(void)
 				check_video("AV video (0x50100100)",
 				    1 * 1024 * 1024, 1 * 1024 * 1024);
 			} else {
+#ifdef DIAGNOSTIC
 				printf( "  no internal video at address 0 -- "
 					"videoaddr is 0x%lx.\n", videoaddr);
+#endif
 			}
 		} else {
+#ifdef DIAGNOSTIC
 			printf("  Video address = 0x%lx\n", videoaddr);
 			printf("  Int video starts at 0x%x\n",
 			    mac68k_vidlog);
 			printf("  Length = 0x%x (%d) bytes\n",
 			    mac68k_vidlen, mac68k_vidlen);
+#endif
 		}
 	}
 
@@ -2827,7 +2881,7 @@ get_mapping(void)
 /*
  * Debugging code for locore page-traversal routine.
  */
-void printstar __P((void));
+void printstar(void);
 void
 printstar(void)
 {
@@ -2856,7 +2910,7 @@ printstar(void)
 
 void
 mac68k_set_bell_callback(callback, cookie)
-	int (*callback) __P((void *, int, int, int));
+	int (*callback)(void *, int, int, int);
 	void *cookie;
 {
 	mac68k_bell_callback = callback;

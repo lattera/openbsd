@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190.2.1 2002/01/31 22:55:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190.2.2 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -211,11 +211,17 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef	BUFPAGES
 int	bufpages = BUFPAGES;
 #else
 int	bufpages = 0;
 #endif
+int	bufcachepercent = BUFCACHEPERCENT;
 
 extern int	boothowto;
 int	physmem;
@@ -264,18 +270,18 @@ struct	extent *ioport_ex;
 struct	extent *iomem_ex;
 static	int ioport_malloc_safe;
 
-caddr_t	allocsys __P((caddr_t));
-void	setup_buffers __P((vm_offset_t *));
-void	dumpsys __P((void));
-int	cpu_dump __P((void));
-void	identifycpu __P((void));
-void	init386 __P((vm_offset_t));
-void	consinit __P((void));
+caddr_t	allocsys(caddr_t);
+void	setup_buffers(vm_offset_t *);
+void	dumpsys(void);
+int	cpu_dump(void);
+void	identifycpu(void);
+void	init386(vm_offset_t);
+void	consinit(void);
 
-int	bus_mem_add_mapping __P((bus_addr_t, bus_size_t,
-	    int, bus_space_handle_t *));
-int	_bus_dmamap_load_buffer __P((bus_dma_tag_t, bus_dmamap_t, void *,
-    bus_size_t, struct proc *, int, paddr_t *, int *, int));
+int	bus_mem_add_mapping(bus_addr_t, bus_size_t,
+	    int, bus_space_handle_t *);
+int	_bus_dmamap_load_buffer(bus_dma_tag_t, bus_dmamap_t, void *,
+    bus_size_t, struct proc *, int, paddr_t *, int *, int);
 
 #ifdef KGDB
 #ifndef KGDB_DEVNAME
@@ -300,7 +306,7 @@ int comkgdbrate = KGDBRATE;
 #endif
 int comkgdbmode = KGDBMODE;
 #endif /* NCOM  || NPCCOM */
-void kgdb_port_init __P((void));
+void kgdb_port_init(void);
 #endif /* KGDB */
 
 #ifdef APERTURE
@@ -311,12 +317,13 @@ int allowaperture = 0;
 #endif
 #endif
 
-void	winchip_cpu_setup __P((const char *, int, int));
-void	cyrix3_cpu_setup __P((const char *, int, int));
-void	cyrix6x86_cpu_setup __P((const char *, int, int));
-void	intel586_cpu_setup __P((const char *, int, int));
-void	intel686_cpu_setup __P((const char *, int, int));
-char *	intel686_cpu_name __P((int));
+void	winchip_cpu_setup(const char *, int, int);
+void	cyrix3_cpu_setup(const char *, int, int);
+void	cyrix6x86_cpu_setup(const char *, int, int);
+void	intel586_cpu_setup(const char *, int, int);
+void	intel686_cpu_setup(const char *, int, int);
+char *	intel686_cpu_name(int);
+char *	cyrix3_cpu_name(int, int);
 
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
 static __inline u_char
@@ -464,6 +471,9 @@ allocsys(v)
 #define	valloc(name, type, num) \
 	    v = (caddr_t)(((name) = (type *)v) + (num))
 #ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM
@@ -479,9 +489,6 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Determine how many buffers to allocate.  We use 10% of the
 	 * first 2MB of memory, and 5% of the rest, with a minimum of 16
@@ -493,7 +500,7 @@ allocsys(v)
 			bufpages = physmem / 10;
 		else
 			bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-			    BUFCACHEPERCENT / 100;
+			    bufcachepercent / 100;
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;
@@ -501,11 +508,12 @@ allocsys(v)
 			nbuf = 16;
 	}
 
-	/* Restrict to at most 70% filled kvm */
+	/* Restrict to at most 35% filled kvm */
+	/* XXX - This needs UBC... */
 	if (nbuf >
-	    (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) / MAXBSIZE * 7 / 10) 
+	    (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) / MAXBSIZE * 35 / 100) 
 		nbuf = (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) /
-		    MAXBSIZE * 7 / 10;
+		    MAXBSIZE * 35 / 100;
 
 	/* More buffer pages than fits into the buffers is senseless.  */
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
@@ -619,7 +627,6 @@ setup_buffers(maxaddr)
  * Info for CTL_HW
  */
 char	cpu_model[120];
-extern	char version[];
 
 /*
  * Note: these are just the ones that may not have a cpuid instruction.
@@ -853,9 +860,10 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 		{
 			CPUCLASS_686,
 			{
-				0, 0, 0, 0, 0, 0, "VIA Cyrix III", 0,
-				0, 0, 0, 0, 0, 0, 0, 0,
-				"VIA Cyrix III"		/* Default */
+				0, 0, 0, 0, 0, 0, "C3 Samuel 1",
+				"C3 Samule 2/Ezra",
+				"C3 Ezra-T", 0, 0, 0, 0, 0, 0, 0,
+				"C3"		/* Default */
 			},
 			cyrix3_cpu_setup
 		} }
@@ -929,6 +937,31 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 			},
 			NULL
 		} }
+	},
+	{
+		"Geode by NSC",
+		CPUVENDOR_NS,
+		"National Semiconductor",
+		/* Family 4, not available from National Semiconductor */
+		{ {
+			CPUCLASS_486,
+			{
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				"486 class"	/* Default */
+			},
+			NULL
+		},
+		/* Family 5 */
+		{
+			CPUCLASS_586,
+			{
+				0, 0, 0, 0, "Geode GX1", 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0,
+				"M1 class"	/* Default */
+			},
+			cyrix6x86_cpu_setup
+		} }
 	}
 };
 
@@ -988,7 +1021,9 @@ cyrix3_cpu_setup(cpu_device, model, step)
 	unsigned int val;
 
 	switch (model) {
-	case 6: /* VIA Cyrix III */
+	case 6: /* C3 Samuel 1 */
+	case 7: /* C3 Samuel 2 or C3 Ezra */
+	case 8: /* C3 Ezra-T */
 		__asm __volatile("cpuid"
 		    : "=d" (val) : "a" (0x80000001) : "ebx", "ecx");
 		if (val & (1U << 31)) {
@@ -1007,7 +1042,7 @@ cyrix6x86_cpu_setup(cpu_device, model, step)
 	int model, step;
 {
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-	extern int cpu_feature;
+	extern int clock_broken_latch;
 
 	switch (model) {
 	case -1: /* M1 w/o cpuid */
@@ -1027,9 +1062,8 @@ cyrix6x86_cpu_setup(cpu_device, model, step)
 
 		printf("%s: xchg bug workaround performed\n", cpu_device);
 		break;	/* fallthrough? */
-	case 4:	/* GXm */
-		/* Unset the TSC bit until calibrate_delay() gets fixed. */
-		cpu_feature &= ~CPUID_TSC;
+	case 4:
+		clock_broken_latch = 1;
 		break;
 	}
 #endif
@@ -1126,6 +1160,27 @@ intel686_cpu_name(model)
 	return (ret);
 }
 
+char *
+cyrix3_cpu_name(model, step)
+	int model, step;
+{
+	char	*name = NULL;
+
+	switch (model) {
+	case 7:
+		if (step < 8)
+			name = "C3 Samuel 2";
+		else
+			name = "C3 Ezra";
+		break;
+	case 8:
+		if (step < 8)
+			name = "C3 Ezra-T";
+		break;
+	}
+	return name;
+}
+
 void
 identifycpu()
 {
@@ -1142,7 +1197,7 @@ identifycpu()
 	int class = CPUCLASS_386, vendor, i, max;
 	int family, model, step, modif, cachesize;
 	const struct cpu_cpuid_nameclass *cpup = NULL;
-	void (*cpu_setup) __P((const char *, int, int));
+	void (*cpu_setup)(const char *, int, int);
 
 	if (cpuid_level == -1) {
 #ifdef DIAGNOSTIC
@@ -1192,6 +1247,8 @@ identifycpu()
 			if (family > CPU_MAXFAMILY)
 				family = CPU_MAXFAMILY;
 			class = family - 3;
+			if (class > CPUCLASS_686)
+				class = CPUCLASS_686;
 			modifier = "";
 			name = "";
 			token = "";
@@ -1200,6 +1257,11 @@ identifycpu()
 			token = cpup->cpu_id;
 			vendor = cpup->cpu_vendor;
 			vendorname = cpup->cpu_vendorname;
+			/* Special hack for the VIA C3 series. */
+			if (vendor == CPUVENDOR_IDT && family >= 6) {
+				vendor = CPUVENDOR_VIA;
+				vendorname = "VIA";
+			}
 			modifier = modifiers[modif];
 			if (family > CPU_MAXFAMILY) {
 				family = CPU_MAXFAMILY;
@@ -1212,10 +1274,17 @@ identifycpu()
 			if (vendor == CPUVENDOR_INTEL && family == 6 &&
 			    (model == 5 || model == 7)) {
 				name = intel686_cpu_name(model);
+			/* Special hack for the VIA C3 series. */
+			} else if (vendor == CPUVENDOR_VIA && family == 6 &&
+				   model >= 7 && model <= 8) {
+				name = cyrix3_cpu_name(model, step);
 			} else
 				name = cpup->cpu_family[i].cpu_models[model];
-			if (name == NULL)
+			if (name == NULL) {
 				name = cpup->cpu_family[i].cpu_models[CPU_DEFMODEL];
+				if (name == NULL)
+					name = "";
+			}
 			class = cpup->cpu_family[i].cpu_class;
 			cpu_setup = cpup->cpu_family[i].cpu_setup;
 		}
@@ -1350,7 +1419,7 @@ identifycpu()
 }
 
 #ifdef COMPAT_IBCS2
-void ibcs2_sendsig __P((sig_t, int, int, u_long, int, union sigval));
+void ibcs2_sendsig(sig_t, int, int, u_long, int, union sigval);
 
 void
 ibcs2_sendsig(catcher, sig, mask, code, type, val)
@@ -1432,8 +1501,8 @@ sendsig(catcher, sig, mask, code, type, val)
 	} else
 #endif
 	{
-		__asm("movl %%gs,%w0" : "=r" (frame.sf_sc.sc_gs));
-		__asm("movl %%fs,%w0" : "=r" (frame.sf_sc.sc_fs));
+		__asm("movw %%gs,%w0" : "=r" (frame.sf_sc.sc_gs));
+		__asm("movw %%fs,%w0" : "=r" (frame.sf_sc.sc_fs));
 		frame.sf_sc.sc_es = tf->tf_es;
 		frame.sf_sc.sc_ds = tf->tf_ds;
 		frame.sf_sc.sc_eflags = tf->tf_eflags;
@@ -1472,8 +1541,8 @@ sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Build context to run handler in.
 	 */
-	__asm("movl %w0,%%gs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
-	__asm("movl %w0,%%fs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%gs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%fs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = (int)(((char *)PS_STRINGS) - (esigcode - sigcode));
@@ -1700,7 +1769,7 @@ dumpconf()
 int
 cpu_dump()
 {
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	long buf[dbtob(1) / sizeof (long)];
 	kcore_seg_t	*segp;
 
@@ -1739,7 +1808,7 @@ dumpsys()
 	register u_int i, j, npg;
 	register int maddr;
 	daddr_t blkno;
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int error;
 	register char *str;
 	extern int msgbufmapped;
@@ -1874,8 +1943,8 @@ setregs(p, pack, stack, retval)
 	pcb->pcb_flags = 0;
 
 	tf = p->p_md.md_regs;
-	__asm("movl %w0,%%gs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
-	__asm("movl %w0,%%fs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%gs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%fs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
 	tf->tf_es = LSEL(LUDATA_SEL, SEL_UPL);
 	tf->tf_ds = LSEL(LUDATA_SEL, SEL_UPL);
 	tf->tf_ebp = 0;
@@ -2113,7 +2182,7 @@ init386(first_avail)
 #endif
 	for(i = 0, im = bios_memmap; im->type != BIOS_MAP_END; im++)
 		if (im->type == BIOS_MAP_FREE) {
-			register int32_t a, e;
+			register paddr_t a, e;
 
 			a = i386_round_page(im->addr);
 			e = i386_trunc_page(im->addr + im->size);
@@ -2167,8 +2236,8 @@ init386(first_avail)
 	printf("physload: ");
 #endif
 	for (i = 0; i < ndumpmem; i++) {
-		int32_t a, e;
-		int32_t lim;
+		paddr_t a, e;
+		paddr_t lim;
 
 		a = dumpmem[i].start;
 		e = dumpmem[i].end;
@@ -3321,6 +3390,16 @@ _bus_dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 
 	return (0);
 }
+
+#ifdef DIAGNOSTIC
+void
+splassert_check(int wantipl, const char *func)
+{
+	if (cpl < wantipl) {
+		splassert_fail(wantipl, cpl, func);
+	}
+}
+#endif
 
 /* If SMALL_KERNEL this results in an out of line definition of splx.  */
 SPLX_OUTLINED_BODY

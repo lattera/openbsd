@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.12 2001/10/30 00:02:55 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.12.2.1 2002/06/11 03:42:20 art Exp $ */
 /*	$NetBSD: siop_common.c,v 1.12 2001/02/11 18:04:50 bouyer Exp $	*/
 
 /*
@@ -55,7 +55,7 @@
 #undef DEBUG
 #undef DEBUG_DR
 
-int siop_find_lun0_quirks __P((struct siop_softc *, u_int8_t, u_int16_t));
+int siop_find_lun0_quirks(struct siop_softc *, u_int8_t, u_int16_t);
 
 void
 siop_common_reset(sc)

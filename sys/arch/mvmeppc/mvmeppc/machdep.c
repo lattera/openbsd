@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17.2.1 2002/01/31 22:55:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17.2.2 2002/06/11 03:37:22 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -81,6 +81,13 @@
 #include <ddb/db_extern.h>
 #endif
 
+void initppc(u_int, u_int, char *);
+void dumpsys(void);
+int lcsplx(int);
+void myetheraddr(u_char *);
+void systype(char *);
+void nameinterrupt(int, char *);
+
 /*
  * Global variables used here and there
  */
@@ -96,11 +103,11 @@ extern struct user *proc0paddr;
  */
 #include <dev/cons.h>
 
-int  bootcnprobe __P((struct consdev *));
-int  bootcninit __P((struct consdev *));
-void bootcnputc __P((dev_t, char));
-int  bootcngetc __P((dev_t));
-extern void nullcnpollc __P((dev_t, int));
+int  bootcnprobe(struct consdev *);
+int  bootcninit(struct consdev *);
+void bootcnputc(dev_t, char);
+int  bootcngetc(dev_t);
+extern void nullcnpollc(dev_t, int);
 #define bootcnpollc nullcnpollc
 static struct consdev bootcons = {
 	(void (*))NULL, 
@@ -113,8 +120,8 @@ static struct consdev bootcons = {
    1
 };
 
-u_int32_t	ppc_get_msr __P((void));
-u_int32_t	ppc_set_msr __P((u_int32_t));
+u_int32_t	ppc_get_msr(void);
+u_int32_t	ppc_set_msr(u_int32_t);
 
 /* 
  * Declare these as initialized data so we can patch them.
@@ -124,11 +131,17 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef BUFPAGES
 int bufpages = BUFPAGES;
 #else
 int bufpages = 0;
 #endif
+int bufcachepercent = BUFCACHEPERCENT;
 
 struct bat battable[16];
 
@@ -151,7 +164,7 @@ char bootpathbuf[512];
 struct firmware *fw = NULL;
 extern struct firmware ppc1_firmware;
 
-caddr_t allocsys __P((caddr_t));
+caddr_t allocsys(caddr_t);
 
 /*
  * Extent maps to manage I/O. Allocate storage for 8 regions in each,
@@ -188,21 +201,17 @@ initppc(startkernel, endkernel, args)
 #if NIPKDB > 0
 	extern caddr_t ipkdblow, ipkdbsize;
 #endif
-	extern void consinit __P((void));
-	extern void callback __P((void *));
+	extern void consinit(void);
+	extern void callback(void *);
+	extern void *msgbuf_addr;
 	int exc, scratch;
 
 	proc0.p_addr = proc0paddr;
 	bzero(proc0.p_addr, sizeof *proc0.p_addr);
 		
 	fw = &ppc1_firmware; /*  Just PPC1-Bug for now... */
-	/*
-	 * XXX We use the page just above the interrupt vector as
-	 * message buffer
-	 */
-	initmsgbuf((void *)0x3000, MSGBUFSIZE);
-	where = 3;
-	
+
+where = 3;
 	curpcb = &proc0paddr->u_pcb;
 	
 	curpm = curpcb->pcb_pmreal = curpcb->pcb_pm = pmap_kernel();
@@ -295,6 +304,7 @@ initppc(startkernel, endkernel, args)
 	__asm__ volatile ("mtdbatl 3,%0; mtdbatu 3,%1"
 		      :: "r"(battable[0x3].batl), "r"(battable[0x3].batu));
 #endif
+
 	/*
 	 * Set up trap vectors
 	 */
@@ -342,6 +352,17 @@ initppc(startkernel, endkernel, args)
 #endif
 		}
 
+	/* Grr, ALTIVEC_UNAVAIL is a vector not ~0xff aligned: 0x0f20 */
+	bcopy(&trapcode, (void *)0xf20, (size_t)&trapsize);
+
+	/*
+	 * since trapsize is > 0x20, we just overwrote the EXC_PERF handler
+	 * since we do not use it, we will "share" it with the EXC_VEC,
+	 * we dont support EXC_VEC either.
+	 * should be a 'ba 0xf20 written' at address 0xf00, but we
+	 * do not generate EXC_PERF exceptions...
+	 */
+
 	syncicache((void *)EXC_RST, EXC_LAST - EXC_RST + 0x100);
 
 	uvmexp.pagesize = 4096;
@@ -352,22 +373,27 @@ initppc(startkernel, endkernel, args)
 	 */
 	pmap_bootstrap(startkernel, endkernel);
 
-	ppc_vmon();
 
 	/*
 	 * Now enable translation (and machine checks/recoverable interrupts).
 	 * This will also start using the exception vector prefix of 0x000.
 	 */
+	ppc_vmon();
 
 	__asm__ volatile ("eieio; mfmsr %0; ori %0,%0,%1; mtmsr %0; sync;isync"
 		      : "=r"(scratch) : "K"(PSL_IR|PSL_DR|PSL_ME|PSL_RI));
+
+	/*
+	 * use the memory provided by pmap_bootstrap for message buffer
+	 */
+	initmsgbuf(msgbuf_addr, MSGBUFSIZE);
 
 	/*                                                              
 	 * Look at arguments passed to us and compute boothowto.      
 	 * Default to SINGLE and ASKNAME if no args or
 	 * SINGLE and DFLTROOT if this is a ramdisk kernel.                     
 	 */                                                               
-#ifdef RAMDISK_HOOKS                                         
+#ifdef RAMDISK_HOOKS
 	boothowto = RB_SINGLE | RB_DFLTROOT;
 #else
 	boothowto = RB_AUTOBOOT;
@@ -400,7 +426,12 @@ initppc(startkernel, endkernel, args)
 				break;
 			}
 		}
-	}			
+	}
+	bootpath= &bootpathbuf[0];
+
+#ifdef DDB
+	ddb_init();
+#endif
 	
 	/*
 	 * Set up extents for pci mappings
@@ -427,7 +458,7 @@ initppc(startkernel, endkernel, args)
 
 	/*
 	 * Now we can set up the console as mapping is enabled.
-    */
+	 */
 	consinit();
 	
 	if (boothowto & RB_CONFIG) {
@@ -454,17 +485,15 @@ initppc(startkernel, endkernel, args)
 		ipkdb_connect(0);
 #else
 #ifdef DDB
-	kdb_init();
 	if (boothowto & RB_KDB)
 		Debugger();
 #endif
 #endif
-
 }
 
 void
 install_extint(handler)
-	void (*handler) __P((void));
+	void (*handler)(void);
 {
 	extern caddr_t extint, extsize;
 	extern u_long extint_call;
@@ -500,7 +529,7 @@ cpu_startup()
 
 	printf("%s", version);
 	
-	printf("real mem = %d\n", ctob(physmem));
+	printf("real mem = %d (%dK)\n", ctob(physmem), ctob(physmem)/1024);
 
 	/*
 	 * Find out how much space we need, allocate it,
@@ -550,6 +579,7 @@ cpu_startup()
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+	pmap_update(pmap_kernel());
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -565,7 +595,8 @@ cpu_startup()
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
 	
-	printf("avail mem = %d\n", ptoa(uvmexp.free));
+	printf("avail mem = %d (%dK)\n", ptoa(uvmexp.free),
+	    ptoa(uvmexp.free)/1024);
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
 	    bufpages * PAGE_SIZE);
 	
@@ -590,6 +621,9 @@ allocsys(v)
 	v = (caddr_t)(((name) = (type *)v) + (num))
 
 #ifdef	SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef	SYSVSEM
@@ -604,14 +638,11 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Decide on buffer space to use.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem * BUFCACHEPERCENT / 100;
+		bufpages = physmem * bufcachepercent / 100;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -666,7 +697,7 @@ setregs(p, pack, stack, retval)
 	pargs = -roundup(-stack + 8, 16);
 	newstack = (u_int32_t)(pargs - 32);
 
-	copyin ((void*)(VM_MAX_ADDRESS-0x10), &args, 0x10);
+	copyin ((void *)(VM_MAX_ADDRESS-0x10), &args, 0x10);
 	
 	bzero(tf, sizeof *tf);
 	tf->fixreg[1] = newstack;
@@ -815,56 +846,23 @@ void
 softnet(isr)
 	int isr;
 {
-#ifdef	INET
-#include "ether.h"
-#if NETHER > 0
-	if (isr & (1 << NETISR_ARP))
-		arpintr();
-#endif
-	if (isr & (1 << NETISR_IP))
-		ipintr();
-#endif
-#ifdef INET6
-	if (isr & (1 << NETISR_IPV6))
-		ip6intr();
-#endif
-#ifdef NETATALK
-	if (isr & (1 << NETISR_ATALK))
-		atintr();
-#endif
-#ifdef	IMP
-	if (isr & (1 << NETISR_IMP))
-		impintr();
-#endif
-#ifdef	NS
-	if (isr & (1 << NETISR_NS))
-		nsintr();
-#endif
-#ifdef	ISO
-	if (isr & (1 << NETISR_ISO))
-		clnlintr();
-#endif
-#ifdef	CCITT
-	if (isr & (1 << NETISR_CCITT))
-		ccittintr();
-#endif
-#include "ppp.h"
-#if NPPP > 0
-	if (isr & (1 << NETISR_PPP))
-		pppintr();
-#endif
-#include "bridge.h"
-#if NBRIDGE > 0
-	if (isr & (1 << NETISR_BRIDGE))
-		bridgeintr();
-#endif
+#define	DONETISR(flag, func) \
+	if (isr & (1 << (flag))) \
+		(func)();
+
+#include <net/netisr_dispatch.h>
+#undef	DONETISR
 }
 
-void
+int
 lcsplx(ipl)
 	int ipl;
 {
+	int oldcpl;
+
+	oldcpl = cpl;
 	splx(ipl);
+	return oldcpl;
 }
 
 /*
@@ -879,7 +877,6 @@ boot(howto)
 {
 	static int syncing;
 	static char str[256];
-	char *ap = str;
 
 	boothowto = howto;
 	if (!cold && !(howto & RB_NOSYNC) && !syncing) {
@@ -914,6 +911,7 @@ boot(howto)
 /*
  *  Get Ethernet address for the onboard ethernet chip.
  */
+void mvmeprom_brdid(struct mvmeprom_brdid *);
 void
 myetheraddr(cp)
 	u_char *cp;
@@ -981,12 +979,18 @@ systype(char *name)
  *
  */
 #include <dev/pci/pcivar.h>
-typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
+typedef void     *(intr_establish_t)(void *, pci_intr_handle_t,
+            int, int, int (*func)(void *), void *, char *);
+typedef void     (intr_disestablish_t)(void *, void *);
 
 int ppc_configed_intr_cnt = 0;
 struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
+
+void *ppc_intr_establish(void *, pci_intr_handle_t, int, int, int (*)(void *),
+    void *, char *);
+void ppc_intr_setup(intr_establish_t *, intr_disestablish_t *);
+void ppc_intr_enable(int);
+int ppc_intr_disable(void);
 
 void *
 ppc_intr_establish(lcv, ih, type, level, func, arg, name)
@@ -994,7 +998,7 @@ ppc_intr_establish(lcv, ih, type, level, func, arg, name)
 	pci_intr_handle_t ih;
 	int type;
 	int level;
-	int (*func) __P((void *));
+	int (*func)(void *);
 	void *arg;
 	char *name;
 {
@@ -1067,6 +1071,8 @@ ppc_set_msr(msr)
 	return(msr);
 }
 
+vaddr_t ppc_kvm_stolen = VM_KERN_ADDRESS_SIZE;
+
 #if 0
 /* BUS functions */
 int
@@ -1106,10 +1112,10 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	}
 	return 0;
 }
-bus_addr_t bus_space_unmap_p __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
-void bus_space_unmap __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
+bus_addr_t bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
+void bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
 bus_addr_t
 bus_space_unmap_p(t, bsh, size)
 	bus_space_tag_t t;
@@ -1179,9 +1185,12 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 
 		/* need to steal vm space before kernel vm is initialized */
 		alloc_size = trunc_page(size + NBPG);
-		ppc_kvm_size -= alloc_size;
 
-		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_size;
+		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_stolen;
+		ppc_kvm_stolen -= alloc_size;
+		if (ppc_kvm_stolen > SEGMENT_LENGTH) {
+			panic("ppc_kvm_stolen, out of space");
+		}
 	} else {
 		vaddr = uvm_km_valloc_wait(phys_map, len);
 	}
@@ -1231,7 +1240,7 @@ mapiodev(pa, len)
 		spa += NBPG;
 		vaddr += NBPG;
 	}
-	return (void*) (va+off);
+	return (void *) (va+off);
 }
 void 
 unmapiodev(kva, p_size)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_cluster.c,v 1.26 2001/11/06 19:53:20 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_cluster.c,v 1.26.2.1 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: vfs_cluster.c,v 1.12 1996/04/22 01:39:05 christos Exp $	*/
 
 /*-
@@ -50,15 +50,15 @@
 /*
  * Local declarations
  */
-void	cluster_callback __P((struct buf *));
-struct buf *cluster_newbuf __P((struct vnode *, struct buf *, long, daddr_t,
-	    daddr_t, long, int));
-struct buf *cluster_rbuild __P((struct vnode *, u_quad_t, struct buf *,
-	    daddr_t, daddr_t, long, int, long));
-void	    cluster_wbuild __P((struct vnode *, struct buf *, long,
-	    daddr_t, int, daddr_t));
-struct cluster_save *cluster_collectbufs __P((struct vnode *, 
-	    struct cluster_info *, struct buf *));
+void	cluster_callback(struct buf *);
+struct buf *cluster_newbuf(struct vnode *, struct buf *, long, daddr_t,
+	    daddr_t, long, int);
+struct buf *cluster_rbuild(struct vnode *, u_quad_t, struct buf *,
+	    daddr_t, daddr_t, long, int, long);
+void	    cluster_wbuild(struct vnode *, struct buf *, long,
+	    daddr_t, int, daddr_t);
+struct cluster_save *cluster_collectbufs(struct vnode *, 
+	    struct cluster_info *, struct buf *);
 
 #ifdef DIAGNOSTIC
 /*
@@ -416,6 +416,8 @@ cluster_callback(bp)
 	long bsize;
 	caddr_t cp;
 	int error = 0;
+
+	splassert(IPL_BIO);
 
 	/*
 	 * Must propagate errors to all the components.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/m8820x.c,v 1.8.2.1 2002/01/31 22:55:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/m8820x.c,v 1.8.2.2 2002/06/11 03:37:11 art Exp $	*/
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -209,13 +209,13 @@ error("ack gag barf!");
 int      vme188_config;
 
 /* local prototypes */
-unsigned m8820x_cmmu_get __P((int mmu, int reg));
-void m8820x_cmmu_store __P((int, int, unsigned));
-void m8820x_cmmu_set __P((int, unsigned, int, int, int, int, vm_offset_t));
-void m8820x_cmmu_sync_cache __P((vm_offset_t, int));
-void m8820x_cmmu_sync_inval_cache __P((vm_offset_t, int));
-void m8820x_cmmu_inval_cache __P((vm_offset_t, int));
-int m8820x_cmmu_alive __P((int));
+unsigned m8820x_cmmu_get(int mmu, int reg);
+void m8820x_cmmu_store(int, int, unsigned);
+void m8820x_cmmu_set(int, unsigned, int, int, int, int, vm_offset_t);
+void m8820x_cmmu_sync_cache(vm_offset_t, int);
+void m8820x_cmmu_sync_inval_cache(vm_offset_t, int);
+void m8820x_cmmu_inval_cache(vm_offset_t, int);
+int m8820x_cmmu_alive(int);
 
 void
 m8820x_show_apr(value)
@@ -664,7 +664,7 @@ m8820x_cmmu_store(mmu, reg, val)
 	int mmu, reg;
 	unsigned val;
 {
-	*(unsigned *volatile)(reg + (char*)(m8820x_cmmu[mmu].cmmu_regs)) = val;
+	*(unsigned *volatile)(reg + (char *)(m8820x_cmmu[mmu].cmmu_regs)) = val;
 }
 
 int 
@@ -678,7 +678,7 @@ unsigned
 m8820x_cmmu_get(mmu, reg)
 	int mmu, reg;
 {
-	return *(unsigned *volatile)(reg + (char*)(m8820x_cmmu[mmu].cmmu_regs));
+	return *(unsigned *volatile)(reg + (char *)(m8820x_cmmu[mmu].cmmu_regs));
 }
 
 /*
@@ -1080,7 +1080,7 @@ m8820x_cmmu_cpu_number()
 void
 m8820x_cmmu_remote_set(unsigned cpu, unsigned r, unsigned data, unsigned x)
 {
-	*(unsigned *volatile)(r + (char*)&REGS(cpu,data)) = x;
+	*(unsigned *volatile)(r + (char *)&REGS(cpu,data)) = x;
 }
 
 /*
@@ -1090,7 +1090,7 @@ m8820x_cmmu_remote_set(unsigned cpu, unsigned r, unsigned data, unsigned x)
 unsigned
 m8820x_cmmu_remote_get(unsigned cpu, unsigned r, unsigned data)
 {
-	return (*(unsigned *volatile)(r + (char*)&REGS(cpu,data)));
+	return (*(unsigned *volatile)(r + (char *)&REGS(cpu,data)));
 }
 #endif 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_bio.c,v 1.32.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_bio.c,v 1.32.2.3 2002/06/11 03:32:03 art Exp $	*/
 /*	$NetBSD: nfs_bio.c,v 1.25.4.2 1996/07/08 20:47:04 jtc Exp $	*/
 
 /*
@@ -113,27 +113,21 @@ nfs_bioread(vp, uio, ioflag, cred)
 	 * attributes this could be forced by setting n_attrstamp to 0 before
 	 * the VOP_GETATTR() call.
 	 */
-	/* 
-	 * There is no way to modify a symbolic link via NFS or via
-	 * VFS, so we don't check if the link was modified 
-	 */
-	if (vp->v_type != VLNK) {
-		if (np->n_flag & NMODIFIED) {
-			np->n_attrstamp = 0;
-			error = VOP_GETATTR(vp, &vattr, cred, p);
+	if (np->n_flag & NMODIFIED) {
+		np->n_attrstamp = 0;
+		error = VOP_GETATTR(vp, &vattr, cred, p);
+		if (error)
+			return (error);
+		np->n_mtime = vattr.va_mtime.tv_sec;
+	} else {
+		error = VOP_GETATTR(vp, &vattr, cred, p);
+		if (error)
+			return (error);
+		if (np->n_mtime != vattr.va_mtime.tv_sec) {
+			error = nfs_vinvalbuf(vp, V_SAVE, cred, p, 1);
 			if (error)
 				return (error);
 			np->n_mtime = vattr.va_mtime.tv_sec;
-		} else {
-			error = VOP_GETATTR(vp, &vattr, cred, p);
-			if (error)
-				return (error);
-			if (np->n_mtime != vattr.va_mtime.tv_sec) {
-				error = nfs_vinvalbuf(vp, V_SAVE, cred, p, 1);
-				if (error)
-					return (error);
-				np->n_mtime = vattr.va_mtime.tv_sec;
-			}
 		}
 	}
 
@@ -485,6 +479,7 @@ nfs_doio(bp, p)
 	int error = 0, diff, len, iomode, must_commit = 0;
 	struct uio uio;
 	struct iovec io;
+	int s;
 
 	vp = bp->b_vp;
 	np = VTONFS(vp);
@@ -576,7 +571,9 @@ nfs_doio(bp, p)
 	bp->b_resid = uiop->uio_resid;
 	if (must_commit)
 		nfs_clearcommit(vp->v_mount);
+	s = splbio();
 	biodone(bp);
+	splx(s);
 	return (error);
 }
 

@@ -1,5 +1,6 @@
+/*	$OpenBSD: src/sys/lib/libz/Attic/infcodes.h,v 1.4.18.1 2002/06/11 03:30:09 art Exp $	*/
 /* infcodes.h -- header to use infcodes.c
- * Copyright (C) 1995-1998 Mark Adler
+ * Copyright (C) 1995-2002 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 

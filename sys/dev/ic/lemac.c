@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/lemac.c,v 1.1 2001/07/13 17:26:44 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/lemac.c,v 1.1.6.1 2002/06/11 03:42:19 art Exp $ */
 /* $NetBSD: lemac.c,v 1.20 2001/06/13 10:46:02 wiz Exp $ */
 
 /*-
@@ -446,7 +446,6 @@ lemac_read_macaddr(unsigned char *hwaddr, const bus_space_tag_t iot,
 	return (0);
 }
 
-#if 0
 void
 lemac_multicast_op(u_int16_t *mctbl, const u_char *mca, int enable)
 {
@@ -476,7 +475,6 @@ lemac_multicast_op(u_int16_t *mctbl, const u_char *mca, int enable)
 		mctbl[idx] &= ~bit;		/* Clear Bit */
 	}
 }
-#endif
 
 void
 lemac_multicast_filter(struct lemac_softc *sc)
@@ -488,9 +486,9 @@ lemac_multicast_filter(struct lemac_softc *sc)
 
 	bzero(sc->sc_mctbl, LEMAC_MCTBL_BITS / 8);
 
-#if 0
 	lemac_multicast_op(sc->sc_mctbl, etherbroadcastaddr, 1);
 
+#if 0
 	ETHER_FIRST_MULTI(step, &sc->sc_ec, enm);
 	while (enm != NULL) {
 		if (!LEMAC_ADDREQUAL(enm->enm_addrlo, enm->enm_addrhi)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.59 2001/11/06 19:53:19 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.59.2.1 2002/06/11 03:42:26 art Exp $	*/
 
 /*
  * Copyright (c) 2001
@@ -24,7 +24,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL Bill Paul OR THE VOICES IN HIS HEAD
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR THE VOICES IN THEIR HEADS
  * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -93,48 +93,48 @@
 #undef	TRY_TX_UDP_CSUM
 #undef	TRY_TX_TCP_CSUM
 
-int txp_probe		__P((struct device *, void *, void *));
-void txp_attach		__P((struct device *, struct device *, void *));
-int txp_intr		__P((void *));
-void txp_tick		__P((void *));
-void txp_shutdown	__P((void *));
-int txp_ioctl		__P((struct ifnet *, u_long, caddr_t));
-void txp_start		__P((struct ifnet *));
-void txp_stop		__P((struct txp_softc *));
-void txp_init		__P((struct txp_softc *));
-void txp_watchdog	__P((struct ifnet *));
+int txp_probe(struct device *, void *, void *);
+void txp_attach(struct device *, struct device *, void *);
+int txp_intr(void *);
+void txp_tick(void *);
+void txp_shutdown(void *);
+int txp_ioctl(struct ifnet *, u_long, caddr_t);
+void txp_start(struct ifnet *);
+void txp_stop(struct txp_softc *);
+void txp_init(struct txp_softc *);
+void txp_watchdog(struct ifnet *);
 
-int txp_chip_init __P((struct txp_softc *));
-int txp_reset_adapter __P((struct txp_softc *));
-int txp_download_fw __P((struct txp_softc *));
-int txp_download_fw_wait __P((struct txp_softc *));
-int txp_download_fw_section __P((struct txp_softc *,
-    struct txp_fw_section_header *, int));
-int txp_alloc_rings __P((struct txp_softc *));
-void txp_dma_free __P((struct txp_softc *, struct txp_dma_alloc *));
-int txp_dma_malloc __P((struct txp_softc *, bus_size_t, struct txp_dma_alloc *, int));
-void txp_set_filter __P((struct txp_softc *));
+int txp_chip_init(struct txp_softc *);
+int txp_reset_adapter(struct txp_softc *);
+int txp_download_fw(struct txp_softc *);
+int txp_download_fw_wait(struct txp_softc *);
+int txp_download_fw_section(struct txp_softc *,
+    struct txp_fw_section_header *, int);
+int txp_alloc_rings(struct txp_softc *);
+void txp_dma_free(struct txp_softc *, struct txp_dma_alloc *);
+int txp_dma_malloc(struct txp_softc *, bus_size_t, struct txp_dma_alloc *, int);
+void txp_set_filter(struct txp_softc *);
 
-int txp_cmd_desc_numfree __P((struct txp_softc *));
-int txp_command __P((struct txp_softc *, u_int16_t, u_int16_t, u_int32_t,
-    u_int32_t, u_int16_t *, u_int32_t *, u_int32_t *, int));
-int txp_command2 __P((struct txp_softc *, u_int16_t, u_int16_t,
+int txp_cmd_desc_numfree(struct txp_softc *);
+int txp_command(struct txp_softc *, u_int16_t, u_int16_t, u_int32_t,
+    u_int32_t, u_int16_t *, u_int32_t *, u_int32_t *, int);
+int txp_command2(struct txp_softc *, u_int16_t, u_int16_t,
     u_int32_t, u_int32_t, struct txp_ext_desc *, u_int8_t,
-    struct txp_rsp_desc **, int));
-int txp_response __P((struct txp_softc *, u_int32_t, u_int16_t, u_int16_t,
-    struct txp_rsp_desc **));
-void txp_rsp_fixup __P((struct txp_softc *, struct txp_rsp_desc *,
-    struct txp_rsp_desc *));
-void txp_capabilities __P((struct txp_softc *));
+    struct txp_rsp_desc **, int);
+int txp_response(struct txp_softc *, u_int32_t, u_int16_t, u_int16_t,
+    struct txp_rsp_desc **);
+void txp_rsp_fixup(struct txp_softc *, struct txp_rsp_desc *,
+    struct txp_rsp_desc *);
+void txp_capabilities(struct txp_softc *);
 
-void txp_ifmedia_sts __P((struct ifnet *, struct ifmediareq *));
-int txp_ifmedia_upd __P((struct ifnet *));
-void txp_show_descriptor __P((void *));
-void txp_tx_reclaim __P((struct txp_softc *, struct txp_tx_ring *,
-    struct txp_dma_alloc *));
-void txp_rxbuf_reclaim __P((struct txp_softc *));
-void txp_rx_reclaim __P((struct txp_softc *, struct txp_rx_ring *,
-    struct txp_dma_alloc *));
+void txp_ifmedia_sts(struct ifnet *, struct ifmediareq *);
+int txp_ifmedia_upd(struct ifnet *);
+void txp_show_descriptor(void *);
+void txp_tx_reclaim(struct txp_softc *, struct txp_tx_ring *,
+    struct txp_dma_alloc *);
+void txp_rxbuf_reclaim(struct txp_softc *);
+void txp_rx_reclaim(struct txp_softc *, struct txp_rx_ring *,
+    struct txp_dma_alloc *);
 
 struct cfattach txp_ca = {
 	sizeof(struct txp_softc), txp_probe, txp_attach,
@@ -394,7 +394,7 @@ txp_download_fw(sc)
 	}
 
 	/* Tell boot firmware to get ready for image */
-	WRITE_REG(sc, TXP_H2A_1, fileheader->addr);
+	WRITE_REG(sc, TXP_H2A_1, letoh32(fileheader->addr));
 	WRITE_REG(sc, TXP_H2A_0, TXP_BOOTCMD_RUNTIME_IMAGE);
 
 	if (txp_download_fw_wait(sc)) {
@@ -405,11 +405,12 @@ txp_download_fw(sc)
 	secthead = (struct txp_fw_section_header *)(((u_int8_t *)tc990image) +
 	    sizeof(struct txp_fw_file_header));
 
-	for (sect = 0; sect < fileheader->nsections; sect++) {
+	for (sect = 0; sect < letoh32(fileheader->nsections); sect++) {
 		if (txp_download_fw_section(sc, secthead, sect))
 			return (-1);
 		secthead = (struct txp_fw_section_header *)
-		    (((u_int8_t *)secthead) + secthead->nbytes + sizeof(*secthead));
+		    (((u_int8_t *)secthead) + letoh32(secthead->nbytes) +
+			sizeof(*secthead));
 	}
 
 	WRITE_REG(sc, TXP_H2A_0, TXP_BOOTCMD_DOWNLOAD_COMPLETE);
@@ -482,29 +483,30 @@ txp_download_fw_section(sc, sect, sectnum)
 	}
 
 	/* Make sure this section doesn't go past the end */
-	rseg += sect->nbytes;
+	rseg += letoh32(sect->nbytes);
 	if (rseg >= sizeof(tc990image)) {
 		printf(": fw truncated section %d\n", sectnum);
 		return (-1);
 	}
 
 	/* map a buffer, copy segment to it, get physaddr */
-	if (txp_dma_malloc(sc, sect->nbytes, &dma, 0)) {
+	if (txp_dma_malloc(sc, letoh32(sect->nbytes), &dma, 0)) {
 		printf(": fw dma malloc failed, section %d\n", sectnum);
 		return (-1);
 	}
 
-	bcopy(((u_int8_t *)sect) + sizeof(*sect), dma.dma_vaddr, sect->nbytes);
+	bcopy(((u_int8_t *)sect) + sizeof(*sect), dma.dma_vaddr,
+	    letoh32(sect->nbytes));
 
 	/*
 	 * dummy up mbuf and verify section checksum
 	 */
 	m.m_type = MT_DATA;
 	m.m_next = m.m_nextpkt = NULL;
-	m.m_len = sect->nbytes;
+	m.m_len = letoh32(sect->nbytes);
 	m.m_data = dma.dma_vaddr;
 	m.m_flags = 0;
-	csum = in_cksum(&m, sect->nbytes);
+	csum = in_cksum(&m, letoh32(sect->nbytes));
 	if (csum != sect->cksum) {
 		printf(": fw section %d, bad cksum (expected 0x%x got 0x%x)\n",
 		    sectnum, sect->cksum, csum);
@@ -515,9 +517,9 @@ txp_download_fw_section(sc, sect, sectnum)
 	bus_dmamap_sync(sc->sc_dmat, dma.dma_map, 0,
 	    dma.dma_map->dm_mapsize, BUS_DMASYNC_PREWRITE);
 
-	WRITE_REG(sc, TXP_H2A_1, sect->nbytes);
-	WRITE_REG(sc, TXP_H2A_2, sect->cksum);
-	WRITE_REG(sc, TXP_H2A_3, sect->addr);
+	WRITE_REG(sc, TXP_H2A_1, letoh32(sect->nbytes));
+	WRITE_REG(sc, TXP_H2A_2, letoh16(sect->cksum));
+	WRITE_REG(sc, TXP_H2A_3, letoh32(sect->addr));
 	WRITE_REG(sc, TXP_H2A_4, dma.dma_paddr >> 32);
 	WRITE_REG(sc, TXP_H2A_5, dma.dma_paddr & 0xffffffff);
 	WRITE_REG(sc, TXP_H2A_0, TXP_BOOTCMD_SEGMENT_AVAILABLE);
@@ -1243,7 +1245,7 @@ txp_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }
@@ -1344,9 +1346,10 @@ txp_start(ifp)
 	cnt = r->r_cnt;
 
 	while (1) {
-		IFQ_DEQUEUE(&ifp->if_snd, m);
+		IFQ_POLL(&ifp->if_snd, m);
 		if (m == NULL)
 			break;
+		mnew = NULL;
 
 		firstprod = prod;
 		firstcnt = cnt;
@@ -1368,6 +1371,7 @@ txp_start(ifp)
 			}
 			m_copydata(m, 0, m->m_pkthdr.len, mtod(mnew, caddr_t));
 			mnew->m_pkthdr.len = mnew->m_len = m->m_pkthdr.len;
+			IFQ_DEQUEUE(&ifp->if_snd, m);
 			m_freem(m);
 			m = mnew;
 			if (bus_dmamap_load_mbuf(sc->sc_dmat, sd->sd_map, m,
@@ -1451,6 +1455,13 @@ txp_start(ifp)
 
 		}
 
+		/*
+		 * if mnew isn't NULL, we already dequeued and copied
+		 * the packet.
+		 */
+		if (mnew == NULL)
+			IFQ_DEQUEUE(&ifp->if_snd, m);
+
 		ifp->if_timer = 5;
 
 #if NBPFILTER > 0
@@ -1494,7 +1505,6 @@ oactive1:
 	ifp->if_flags |= IFF_OACTIVE;
 	r->r_prod = firstprod;
 	r->r_cnt = firstcnt;
-	IF_PREPEND(&ifp->if_snd, m);
 }
 
 /*

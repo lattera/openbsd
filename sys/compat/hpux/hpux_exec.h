@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_exec.h,v 1.4 1997/03/26 08:11:07 downsj Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_exec.h,v 1.4.24.1 2002/06/11 03:28:07 art Exp $	*/
 /*	$NetBSD: hpux_exec.h,v 1.7 1997/03/16 10:16:02 thorpej Exp $	*/
 
 /*
@@ -119,6 +119,6 @@ struct hpux_exec {
 #define HPUXM_STKWT	0x02000000
 #define HPUXM_DATAWT	0x04000000
 
-int	exec_hpux_makecmds __P((struct proc *, struct exec_package *));
+int	exec_hpux_makecmds(struct proc *, struct exec_package *);
 
 #endif /* _HPUX_EXEC_H_ */

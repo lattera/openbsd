@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.7.2.1 2002/01/31 22:55:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.7.2.2 2002/06/11 03:35:36 art Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -57,8 +57,8 @@
 
 #define	STI_MEMSIZE	0x1000000
 
-int  sti_sgc_probe __P((struct device *, void *, void *));
-void sti_sgc_attach __P((struct device *, struct device *, void *));
+int  sti_sgc_probe(struct device *, void *, void *);
+void sti_sgc_attach(struct device *, struct device *, void *);
 
 struct cfattach sti_sgc_ca = {
 	sizeof(struct sti_softc), sti_sgc_probe, sti_sgc_attach

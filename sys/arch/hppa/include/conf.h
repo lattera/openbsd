@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/conf.h,v 1.2 1998/10/30 19:16:33 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/conf.h,v 1.2.16.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -38,8 +38,12 @@ struct tty;
 struct termios;
 
 cdev_decl(pdc);
-int pdcparam __P((struct tty *, struct termios *));
-void pdcstart __P((struct tty *));
+int pdcparam(struct tty *, struct termios *);
+void pdcstart(struct tty *);
+
+#define mmread  mmrw
+#define mmwrite mmrw
+cdev_decl(mm);
 
 cdev_decl(fd);
 bdev_decl(fd);

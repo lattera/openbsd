@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.74.2.1 2002/01/31 22:55:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.74.2.2 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -153,20 +153,20 @@ extern struct emul emul_sunos;
 char	extiospace[EXTENT_FIXED_STORAGE_SIZE(EIOMAPSIZE / 16)];
 
 /* prototypes for local functions */
-caddr_t	allocsys __P((caddr_t));
-void	parityenable __P((void));
-int	parityerror __P((struct frame *));
-int	parityerrorfind __P((void));
-void    identifycpu __P((void));
-void    initcpu __P((void));
-void	dumpmem __P((int *, int, int));
-char	*hexstr __P((int, int));
+caddr_t	allocsys(caddr_t);
+void	parityenable(void);
+int	parityerror(struct frame *);
+int	parityerrorfind(void);
+void    identifycpu(void);
+void    initcpu(void);
+void	dumpmem(int *, int, int);
+char	*hexstr(int, int);
 
 /* functions called from locore.s */
-void    dumpsys __P((void));
-void	hp300_init __P((void));
-void    straytrap __P((int, u_short));
-void	nmihand __P((struct frame));
+void    dumpsys(void);
+void	hp300_init(void);
+void    straytrap(int, u_short);
+void	nmihand(struct frame);
 
 /*
  * Select code of console.  Set to -1 if console is on
@@ -418,6 +418,9 @@ allocsys(v)
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
 
 #ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM 
@@ -505,7 +508,6 @@ setregs(p, pack, stack, retval)
  * Info for CTL_HW
  */
 char	cpu_model[120];
-extern	char version[];
 
 /*
  * Text description of models we support, indexed by machineid.
@@ -866,7 +868,7 @@ dumpsys()
 {
 	daddr_t blkno;		/* current block to write */
 				/* dump routine */
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int pg;			/* page being dumped */
 	paddr_t maddr;		/* PA being dumped */
 	int error;		/* error code from (*dump)() */
@@ -1068,27 +1070,11 @@ nmihand(frame)
 
 	/* Check for keyboard <CRTL>+<SHIFT>+<RESET>. */
 	if (kbdnmi()) {
-		printf("Got a keyboard NMI");
-
-		/*
-		 * We can:
-		 *
-		 *	- enter DDB
-		 *
-		 *	- Start the crashandburn sequence
-		 *
-		 *	- Ignore it.
-		 */
 #ifdef DDB
 		if (db_console) {
-			printf(": entering debugger\n");
 			Debugger();
-		} else
-			printf("\n");
-#else
-			printf(": ignoring\n");
+		}
 #endif /* DDB */
-
 		goto nmihand_out;	/* no more work to do */
 	}
 
@@ -1253,8 +1239,7 @@ cpu_exec_aout_makecmds(p, epp)
 	int error;
 	struct exec *execp = epp->ep_hdr;
 #ifdef COMPAT_SUNOS
-	extern int sunos_exec_aout_makecmds
-		__P((struct proc *, struct exec_package *));
+	extern int sunos_exec_aout_makecmds(struct proc *, struct exec_package *);
 #endif
 
 	midmag = ntohl(execp->a_midmag);

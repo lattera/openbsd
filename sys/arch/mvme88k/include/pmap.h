@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.22.2.1 2002/01/31 22:55:18 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.22.2.2 2002/06/11 03:37:10 art Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -14,7 +14,6 @@
  */
 #ifndef _MACHINE_PMAP_H_
 #define _MACHINE_PMAP_H_
-#define OMRON_PMAP
 
 #include <machine/mmu.h>		/* batc_template_t, BATC_MAX, etc.*/
 #include <machine/pcb.h>		/* pcb_t, etc.*/
@@ -27,6 +26,7 @@ typedef sdt_entry_t *sdt_ptr_t;
  */
 typedef struct pmap *pmap_t;
 
+/* #define PMAP_USE_BATC */
 struct pmap {
 	sdt_ptr_t		sdt_paddr;	/* physical pointer to sdt */
 	sdt_ptr_t		sdt_vaddr;	/* virtual pointer to sdt */
@@ -37,16 +37,15 @@ struct pmap {
 	/* cpus using of this pmap; NCPU must be <= 32 */
 	u_int32_t		cpus_using;
 
-#ifdef DEBUG
+#ifdef	PMAP_USE_BATC
+	batc_template_t		i_batc[BATC_MAX];	/* instruction BATCs */
+	batc_template_t		d_batc[BATC_MAX];	/* data BATCs */
+#endif
+
+#ifdef	DEBUG
 	pmap_t			next;
 	pmap_t			prev;
 #endif
-
-	/* for OMRON_PMAP */
-	batc_template_t		i_batc[BATC_MAX];	/* instruction BATCs */
-	batc_template_t		d_batc[BATC_MAX];	/* data BATCs */
-	/* end OMRON_PMAP */
-
 }; 
 
 #define PMAP_NULL ((pmap_t) 0)
@@ -72,6 +71,7 @@ extern	caddr_t		vmmap;
 
 #define	pmap_kernel()			(&kernel_pmap_store)
 #define pmap_resident_count(pmap)	((pmap)->stats.resident_count)
+#define	pmap_wired_count(pmap)		((pmap)->stats.wired_count)
 #define pmap_phys_address(frame)        ((paddr_t)(ptoa(frame)))
 
 #define pmap_update(pmap)	/* nothing (yet) */
@@ -79,8 +79,8 @@ extern	caddr_t		vmmap;
 #define PMAP_ACTIVATE(proc)	pmap_activate(proc)
 #define PMAP_DEACTIVATE(proc)	pmap_deactivate(proc)
 
-void pmap_bootstrap __P((vaddr_t, paddr_t *, paddr_t *, vaddr_t *, vaddr_t *));
-void pmap_cache_ctrl __P((pmap_t, vaddr_t, vaddr_t, unsigned));
+void pmap_bootstrap(vaddr_t, paddr_t *, paddr_t *, vaddr_t *, vaddr_t *);
+void pmap_cache_ctrl(pmap_t, vaddr_t, vaddr_t, u_int);
 
 #endif	/* _KERNEL */
 

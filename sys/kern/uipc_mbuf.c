@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf.c,v 1.44.2.2 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf.c,v 1.44.2.3 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.15.4.1 1996/06/13 17:11:44 cgd Exp $	*/
 
 /*
@@ -97,9 +97,9 @@ struct	pool mclpool;		/* mbuf cluster pool */
 
 struct vm_map *mb_map;
 
-void	*mclpool_alloc __P((struct pool *, int));
-void	mclpool_release __P((struct pool *, void *));
-struct mbuf *m_copym0 __P((struct mbuf *, int, int, int, int));
+void	*mclpool_alloc(struct pool *, int);
+void	mclpool_release(struct pool *, void *);
+struct mbuf *m_copym0(struct mbuf *, int, int, int, int);
 
 const char *mclpool_warnmsg =
     "WARNING: mclpool limit reached; increase NMBCLUSTERS";
@@ -117,7 +117,7 @@ mbinit()
 	vaddr_t minaddr, maxaddr;
 
 	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
+	    nmbclust*(MCLBYTES), VM_MAP_INTRSAFE, FALSE, NULL);
 
 	pool_init(&mbpool, MSIZE, 0, 0, 0, "mbpl", NULL);
 	pool_init(&mclpool, MCLBYTES, 0, 0, 0, "mclpl", &mclpool_allocator);
@@ -130,7 +130,7 @@ mbinit()
 	 * mbuf clusters the kernel is to support.  Log the limit
 	 * reached message max once a minute.
 	 */
-	pool_sethardlimit(&mclpool, nmbclusters, mclpool_warnmsg, 60);
+	(void)pool_sethardlimit(&mclpool, nmbclust, mclpool_warnmsg, 60);
 
 	/*
 	 * Set a low water mark for both mbufs and clusters.  This should
@@ -828,7 +828,7 @@ m_devget(buf, totlen, off0, ifp, copy)
 	char *buf;
 	int totlen, off0;
 	struct ifnet *ifp;
-	void (*copy) __P((const void *, void *, size_t));
+	void (*copy)(const void *, void *, size_t);
 {
 	register struct mbuf *m;
 	struct mbuf *top = NULL, **mp = &top;
@@ -900,15 +900,18 @@ m_zero(m)
 	struct mbuf *m;
 {
 	while (m) {
-		if (m->m_flags & M_PKTHDR)
-			memset((void *)(m + sizeof(struct m_hdr) +
-			    sizeof(struct pkthdr)), 0, MHLEN);
-		else
-			memset((void *)(m + sizeof(struct m_hdr)), 0, MLEN);
-		if ((m->m_flags & M_EXT) &&
-		    (m->m_ext.ext_free == NULL) &&
-		    !MCLISREFERENCED(m))
+#ifdef DIAGNOSTIC
+		if (M_READONLY(m))
+			panic("m_zero: M_READONLY");
+#endif /* DIAGNOSTIC */
+		if (m->m_flags & M_EXT)
 			memset(m->m_ext.ext_buf, 0, m->m_ext.ext_size);
+		else {
+			if (m->m_flags & M_PKTHDR)
+				memset(m->m_pktdat, 0, MHLEN);
+			else
+				memset(m->m_dat, 0, MLEN);
+		}
 		m = m->m_next;
 	}
 }

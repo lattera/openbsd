@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/opcodes.c,v 1.1 2002/05/16 07:37:44 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/opcodes.c,v 1.1.2.1 2002/06/11 03:39:19 art Exp $	*/
 
 /*
  * Copyright (c) 2002, Miodrag Vallat.

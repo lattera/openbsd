@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.7 2001/06/03 15:54:44 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.7.4.1 2002/06/11 03:42:23 art Exp $	*/
 /*	$NetBSD: icsphy.c,v 1.17 2000/02/02 23:34:56 thorpej Exp $	*/
 
 /*-
@@ -37,7 +37,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /*
  * Copyright (c) 1997 Manuel Bouyer.  All rights reserved.
  *
@@ -89,8 +89,8 @@
 
 #include <dev/mii/icsphyreg.h>
 
-int	icsphymatch __P((struct device *, void *, void *));
-void	icsphyattach __P((struct device *, struct device *, void *));
+int	icsphymatch(struct device *, void *, void *);
+void	icsphyattach(struct device *, struct device *, void *);
 
 struct cfattach icsphy_ca = {
 	sizeof(struct mii_softc), icsphymatch, icsphyattach, mii_phy_detach,
@@ -101,9 +101,9 @@ struct cfdriver icsphy_cd = {
 	NULL, "icsphy", DV_DULL
 };
 
-int	icsphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	icsphy_reset __P((struct mii_softc *));
-void	icsphy_status __P((struct mii_softc *));
+int	icsphy_service(struct mii_softc *, struct mii_data *, int);
+void	icsphy_reset(struct mii_softc *);
+void	icsphy_status(struct mii_softc *);
 
 int
 icsphymatch(parent, match, aux)
@@ -116,7 +116,7 @@ icsphymatch(parent, match, aux)
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxICS &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxICS_1890)
 		return (10);
-   
+
         if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxICS &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxICS_1892)
 		return (10);
@@ -278,7 +278,7 @@ icsphy_reset(sc)
 
 	mii_phy_reset(sc);
 	PHY_WRITE(sc, MII_ICSPHY_ECR2, ECR2_10TPROT|ECR2_Q10T);
-   
+
 	/*
 	 * XXX the ICS1892 doesn't set the BMCR properly after
 	 * XXX reset, which breaks autonegotiation.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.13 2001/12/08 02:24:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/iommu.c,v 1.13.2.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: iommu.c,v 1.13 1997/07/29 09:42:04 fair Exp $ */
 
 /*
@@ -66,9 +66,9 @@ int	has_iocache;
 
 
 /* autoconfiguration driver */
-int	iommu_print __P((void *, const char *));
-void	iommu_attach __P((struct device *, struct device *, void *));
-int	iommu_match __P((struct device *, void *, void *));
+int	iommu_print(void *, const char *);
+void	iommu_attach(struct device *, struct device *, void *);
+int	iommu_match(struct device *, void *, void *);
 
 struct cfattach iommu_ca = {
 	sizeof(struct iommu_softc), iommu_match, iommu_attach
@@ -305,7 +305,7 @@ iommu_enter(va, pa)
 }
 
 /*
- * iommu_clear: clears mappings created by iommu_enter
+ * iommu_remove: clears mappings created by iommu_enter
  */
 void
 iommu_remove(va, len)
@@ -322,7 +322,7 @@ iommu_remove(va, len)
 #ifdef notyet
 #ifdef DEBUG
 		if ((sc->sc_ptes[atop(va - sc->sc_dvmabase)] & IOPTE_V) == 0)
-			panic("iommu_clear: clearing invalid pte at va 0x%x",
+			panic("iommu_remove: clearing invalid pte at va 0x%x",
 				va);
 #endif
 #endif
@@ -332,48 +332,3 @@ iommu_remove(va, len)
 		va += sc->sc_pagesize;
 	}
 }
-
-#if 0	/* These registers aren't there??? */
-void
-iommu_error()
-{
-	struct iommu_softc *sc = X;
-	struct iommureg *iop = sc->sc_reg;
-
-	printf("iommu: afsr 0x%x, afar 0x%x\n", iop->io_afsr, iop->io_afar);
-	printf("iommu: mfsr 0x%x, mfar 0x%x\n", iop->io_mfsr, iop->io_mfar);
-}
-int
-iommu_alloc(va, len)
-	u_int va, len;
-{
-	struct iommu_softc *sc = X;
-	int off, tva, pa, iovaddr, pte;
-
-	off = (int)va & PGOFSET;
-	len = round_page(len + off);
-	va -= off;
-
-if ((int)sc->sc_dvmacur + len > 0)
-	sc->sc_dvmacur = sc->sc_dvmabase;
-
-	iovaddr = tva = sc->sc_dvmacur;
-	sc->sc_dvmacur += len;
-	while (len) {
-		pmap_extract(pmap_kernel(), va, &pa);
-
-#define IOMMU_PPNSHIFT	8
-#define IOMMU_V		0x00000002
-#define IOMMU_W		0x00000004
-
-		pte = atop(pa) << IOMMU_PPNSHIFT;
-		pte |= IOMMU_V | IOMMU_W;
-		sta(sc->sc_ptes + atop(tva - sc->sc_dvmabase), ASI_BYPASS, pte);
-		sc->sc_reg->io_flushpage = tva;
-		len -= NBPG;
-		va += NBPG;
-		tva += NBPG;
-	}
-	return iovaddr + off;
-}
-#endif

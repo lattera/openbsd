@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.27.2.1 2002/01/31 22:55:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.27.2.2 2002/06/11 03:42:16 art Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -287,12 +287,12 @@ struct ac97_softc {
 	u_int16_t shadow_reg[128];
 };
 
-int ac97_mixer_get_port __P((struct ac97_codec_if *self, mixer_ctrl_t *cp));
-int ac97_mixer_set_port __P((struct ac97_codec_if *self, mixer_ctrl_t *));
-int ac97_query_devinfo __P((struct ac97_codec_if *self, mixer_devinfo_t *));
-int ac97_get_portnum_by_name __P((struct ac97_codec_if *, char *, char *,
-				  char *));
-void ac97_restore_shadow __P((struct ac97_codec_if *self));
+int ac97_mixer_get_port(struct ac97_codec_if *self, mixer_ctrl_t *cp);
+int ac97_mixer_set_port(struct ac97_codec_if *self, mixer_ctrl_t *);
+int ac97_query_devinfo(struct ac97_codec_if *self, mixer_devinfo_t *);
+int ac97_get_portnum_by_name(struct ac97_codec_if *, char *, char *,
+				  char *);
+void ac97_restore_shadow(struct ac97_codec_if *self);
 
 struct ac97_codec_if_vtbl ac97civ = {
 	ac97_mixer_get_port,
@@ -450,11 +450,11 @@ const char * const ac97feature[] = {
 };
 
 
-int ac97_str_equal __P((const char *, const char *));
-void ac97_setup_source_info __P((struct ac97_softc *));
-void ac97_setup_defaults __P((struct ac97_softc *));
-int ac97_read __P((struct ac97_softc *, u_int8_t, u_int16_t *));
-int ac97_write __P((struct ac97_softc *, u_int8_t, u_int16_t));
+int ac97_str_equal(const char *, const char *);
+void ac97_setup_source_info(struct ac97_softc *);
+void ac97_setup_defaults(struct ac97_softc *);
+int ac97_read(struct ac97_softc *, u_int8_t, u_int16_t *);
+int ac97_write(struct ac97_softc *, u_int8_t, u_int16_t);
 
 #define AC97_DEBUG 10
 
@@ -829,8 +829,13 @@ ac97_mixer_set_port(codec_if, cp)
 		if (cp->un.value.num_channels == 1) {
 			l = r = cp->un.value.level[AUDIO_MIXER_LEVEL_MONO];
 		} else {
-			l = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
-			r = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			if (!(as->host_flags & AC97_HOST_SWAPPED_CHANNELS)) {
+				l = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
+				r = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			} else {
+				r = cp->un.value.level[AUDIO_MIXER_LEVEL_LEFT];
+				l = cp->un.value.level[AUDIO_MIXER_LEVEL_RIGHT];
+			}
 		}
 
 		if (!si->polarity) {
@@ -915,9 +920,17 @@ ac97_mixer_get_port(codec_if, cp)
 		    (cp->un.value.num_channels > value->num_channels))
 			return (EINVAL);
 
-		l = r = (val >> si->ofs) & mask;
-		if (value->num_channels > 1) 
-			r = (val >> (si->ofs + 8)) & mask;
+		if (value->num_channels == 1) 
+			l = r = (val >> si->ofs) & mask;
+		else {
+			if (!(as->host_flags & AC97_HOST_SWAPPED_CHANNELS)) {
+				l = (val >> si->ofs) & mask;
+				r = (val >> (si->ofs + 8)) & mask;
+			} else {
+				r = (val >> si->ofs) & mask;
+				l = (val >> (si->ofs + 8)) & mask;
+			}
+		}
 
 		l <<= 8 - si->bits;
 		r <<= 8 - si->bits;

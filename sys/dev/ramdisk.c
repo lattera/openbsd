@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.17 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.17.2.1 2002/06/11 03:42:15 art Exp $	*/
 /*	$NetBSD: ramdisk.c,v 1.8 1996/04/12 08:30:09 leo Exp $	*/
 
 /*
@@ -99,9 +99,9 @@ struct rd_softc {
 #define RD_ISOPEN	0x01
 #define RD_SERVED	0x02
 
-void rdattach __P((int));
-static void rd_attach __P((struct device *, struct device *, void *));
-struct disklabel *rdgetdisklabel __P((dev_t dev, struct rd_softc *sc));
+void rdattach(int);
+static void rd_attach(struct device *, struct device *, void *);
+struct disklabel *rdgetdisklabel(dev_t dev, struct rd_softc *sc);
 
 /*
  * Some ports (like i386) use a swapgeneric that wants to
@@ -113,7 +113,7 @@ struct cfdriver rd_cd = {
 	NULL, "rd", DV_DULL, NULL, 0
 };
 
-void rdstrategy __P((struct buf *bp));
+void rdstrategy(struct buf *bp);
 struct dkdriver rddkdriver = { rdstrategy };
 
 static int   ramdisk_ndevs;
@@ -191,12 +191,12 @@ rd_attach(parent, self, aux)
  */
 
 #if RAMDISK_SERVER
-static int rd_server_loop __P((struct rd_softc *sc));
-static int rd_ioctl_server __P((struct rd_softc *sc,
-		struct rd_conf *urd, struct proc *proc));
+static int rd_server_loop(struct rd_softc *sc);
+static int rd_ioctl_server(struct rd_softc *sc,
+		struct rd_conf *urd, struct proc *proc);
 #endif
-static int rd_ioctl_kalloc __P((struct rd_softc *sc,
-		struct rd_conf *urd, struct proc *proc));
+static int rd_ioctl_kalloc(struct rd_softc *sc,
+		struct rd_conf *urd, struct proc *proc);
 
 dev_type_open(rdopen);
 dev_type_close(rdclose);
@@ -325,6 +325,7 @@ rdstrategy(bp)
 	struct rd_softc *sc;
 	caddr_t addr;
 	size_t  off, xfer;
+	int s;
 
 	unit = DISKUNIT(bp->b_dev);
 	sc = ramdisk_devs[unit];
@@ -372,7 +373,9 @@ rdstrategy(bp)
 		bp->b_flags |= B_ERROR;
 		break;
 	}
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 int
@@ -587,6 +590,7 @@ rd_server_loop(sc)
 	size_t  off;	/* offset into "device" */
 	size_t  xfer;	/* amount to transfer */
 	int error;
+	int s;
 
 	for (;;) {
 		/* Wait for some work to arrive. */
@@ -627,7 +631,9 @@ rd_server_loop(sc)
 			bp->b_error = error;
 			bp->b_flags |= B_ERROR;
 		}
+		s = splbio();
 		biodone(bp);
+		splx(s);
 	}
 }
 

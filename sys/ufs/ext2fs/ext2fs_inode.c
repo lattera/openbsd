@@ -50,6 +50,7 @@
 
 #include <uvm/uvm_extern.h>
 
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
@@ -59,9 +60,8 @@
 #include <ufs/ext2fs/ext2fs_extern.h>
 
 extern int prtactive;
-
-static int ext2fs_indirtrunc __P((struct inode *, ufs_daddr_t, ufs_daddr_t,
-				  ufs_daddr_t, int, long *));
+static int ext2fs_indirtrunc(struct inode *, ufs_daddr_t, ufs_daddr_t,
+				ufs_daddr_t, int, long *);
 
 /*
  * Last reference to an inode.  If necessary, write or delete it.

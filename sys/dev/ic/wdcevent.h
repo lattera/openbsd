@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/wdcevent.h,v 1.2 2002/05/03 09:18:46 gluk Exp $ */
+/* $OpenBSD: src/sys/dev/ic/wdcevent.h,v 1.2.2.1 2002/06/11 03:42:20 art Exp $ */
 
 /*
  * Copyright (c) 2001 Constantine Sapuntzakis

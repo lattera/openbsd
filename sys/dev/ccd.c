@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.46 2001/11/28 16:13:29 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.46.2.1 2002/06/11 03:42:15 art Exp $	*/
 /*	$NetBSD: ccd.c,v 1.33 1996/05/05 04:21:14 thorpej Exp $	*/
 
 /*-
@@ -169,28 +169,28 @@ struct ccdbuf {
 	(MAKEDISKDEV(major((dev)), ccdunit((dev)), RAW_PART))
 
 /* called by main() at boot time */
-void	ccdattach __P((int));
+void	ccdattach(int);
 
 /* called by biodone() at interrupt time */
-void	ccdiodone __P((struct buf *));
-int	ccdsize __P((dev_t));
+void	ccdiodone(struct buf *);
+int	ccdsize(dev_t);
 
-void	ccdstart __P((struct ccd_softc *, struct buf *));
-void	ccdinterleave __P((struct ccd_softc *, int));
-void	ccdintr __P((struct ccd_softc *, struct buf *));
-int	ccdinit __P((struct ccddevice *, char **, struct proc *));
-int	ccdlookup __P((char *, struct proc *p, struct vnode **));
-long	ccdbuffer __P((struct ccd_softc *, struct buf *, daddr_t, caddr_t,
-    long, struct ccdbuf **, int));
-void	ccdgetdisklabel __P((dev_t));
-void	ccdmakedisklabel __P((struct ccd_softc *));
-int	ccdlock __P((struct ccd_softc *));
-void	ccdunlock __P((struct ccd_softc *));
-INLINE struct ccdbuf *getccdbuf __P((void));
-INLINE void putccdbuf __P((struct ccdbuf *));
+void	ccdstart(struct ccd_softc *, struct buf *);
+void	ccdinterleave(struct ccd_softc *, int);
+void	ccdintr(struct ccd_softc *, struct buf *);
+int	ccdinit(struct ccddevice *, char **, struct proc *);
+int	ccdlookup(char *, struct proc *p, struct vnode **);
+long	ccdbuffer(struct ccd_softc *, struct buf *, daddr_t, caddr_t,
+    long, struct ccdbuf **, int);
+void	ccdgetdisklabel(dev_t);
+void	ccdmakedisklabel(struct ccd_softc *);
+int	ccdlock(struct ccd_softc *);
+void	ccdunlock(struct ccd_softc *);
+INLINE struct ccdbuf *getccdbuf(void);
+INLINE void putccdbuf(struct ccdbuf *);
 
 #ifdef DEBUG
-void	printiinfo __P((struct ccdiinfo *));
+void	printiinfo(struct ccdiinfo *);
 #endif
 
 /* Non-private for the benefit of libkvm. */
@@ -733,7 +733,9 @@ ccdstrategy(bp)
 	splx(s);
 	return;
 done:
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 void
@@ -1002,6 +1004,8 @@ ccdintr(cs, bp)
 	struct buf *bp;
 {
 
+	splassert(IPL_BIO);
+
 #ifdef DEBUG
 	if (ccddebug & CCDB_FOLLOW)
 		printf("ccdintr(%p, %p)\n", cs, bp);
@@ -1029,11 +1033,12 @@ ccdiodone(vbp)
 	int unit = cbp->cb_unit;
 	struct ccd_softc *cs = &ccd_softc[unit];
 	int old_io = cbp->cb_flags & CBF_OLD;
-	int cbflags, s, i;
+	int cbflags, i;
 	long count = bp->b_bcount, off;
 	char *comptype;
 
-	s = splbio();
+	splassert(IPL_BIO);
+
 #ifdef DEBUG
 	if (ccddebug & CCDB_FOLLOW)
 		printf("ccdiodone(%p)\n", cbp);
@@ -1102,7 +1107,6 @@ ccdiodone(vbp)
 		if (bp->b_resid == 0)
 			ccdintr(&ccd_softc[unit], bp);
 	}
-	splx(s);
 }
 
 /* ARGSUSED */

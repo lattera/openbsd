@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/joy.c,v 1.8 1999/01/13 07:26:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/joy.c,v 1.8.16.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: joy.c,v 1.3 1996/05/05 19:46:15 christos Exp $	*/
 
 /*-
@@ -17,7 +17,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -49,7 +49,7 @@
 #include <i386/isa/timerreg.h>
 #include <i386/isa/joyreg.h>
 
-static int	joy_get_tick __P((void));
+static int	joy_get_tick(void);
 
 struct cfdriver joy_cd = {
 	NULL, "joy", DV_DULL

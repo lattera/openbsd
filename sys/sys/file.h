@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/file.h,v 1.14 2001/10/31 01:36:18 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/file.h,v 1.14.2.1 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: file.h,v 1.11 1995/03/26 20:24:13 jtc Exp $	*/
 
 /*
@@ -59,30 +59,32 @@ struct file {
 #define	DTYPE_PIPE	3	/* pipe */
 #define	DTYPE_KQUEUE	4	/* event queue */
 #define	DTYPE_CRYPTO	5	/* crypto */
+#define	DTYPE_SYSTRACE	6	/* system call tracing */
 	short	f_type;		/* descriptor type */
 	long	f_count;	/* reference count */
 	long	f_msgcount;	/* references from message queue */
 	struct	ucred *f_cred;	/* credentials associated with descriptor */
 	struct	fileops {
-		int	(*fo_read)	__P((struct file *fp, off_t *, 
+		int	(*fo_read)(struct file *fp, off_t *, 
 					     struct uio *uio,
-					     struct ucred *cred));
-		int	(*fo_write)	__P((struct file *fp, off_t *,
+					     struct ucred *cred);
+		int	(*fo_write)(struct file *fp, off_t *,
 					     struct uio *uio,
-					     struct ucred *cred));
-		int	(*fo_ioctl)	__P((struct file *fp, u_long com,
-					    caddr_t data, struct proc *p));
-		int	(*fo_select)	__P((struct file *fp, int which,
-					     struct proc *p));
-		int	(*fo_kqfilter)	__P((struct file *fp,
-					     struct knote *kn));
-		int	(*fo_stat)	__P((struct file *fp, struct stat *sb,
-					     struct proc *p));
-		int	(*fo_close)	__P((struct file *fp, struct proc *p));
+					     struct ucred *cred);
+		int	(*fo_ioctl)(struct file *fp, u_long com,
+					    caddr_t data, struct proc *p);
+		int	(*fo_select)(struct file *fp, int which,
+					     struct proc *p);
+		int	(*fo_kqfilter)(struct file *fp,
+					     struct knote *kn);
+		int	(*fo_stat)(struct file *fp, struct stat *sb,
+					     struct proc *p);
+		int	(*fo_close)(struct file *fp, struct proc *p);
 	} *f_ops;
 	off_t	f_offset;
 	caddr_t	f_data;		/* private data */
 	int	f_iflags;	/* internal flags */
+	int	f_usecount;	/* number of users (temporary references). */
 };
 
 #define FIF_WANTCLOSE		0x01	/* a close is waiting for usecount */
@@ -91,8 +93,16 @@ struct file {
 #define FILE_IS_USABLE(fp) \
 	(((fp)->f_iflags & (FIF_WANTCLOSE|FIF_LARVAL)) == 0)
 
-#define FILE_SET_MATURE(fp) do {	\
-	(fp)->f_iflags &= ~FIF_LARVAL;	\
+#define FREF(fp) do { (fp)->f_usecount++; } while (0)
+#define FRELE(fp) do {					\
+	--(fp)->f_usecount;					\
+	if (((fp)->f_iflags & FIF_WANTCLOSE) != 0)		\
+		wakeup(&(fp)->f_usecount);			\
+} while (0)
+
+#define FILE_SET_MATURE(fp) do {				\
+	(fp)->f_iflags &= ~FIF_LARVAL;				\
+	FRELE(fp);						\
 } while (0)
 
 LIST_HEAD(filelist, file);
@@ -101,9 +111,9 @@ extern int maxfiles;			/* kernel limit on number of open files */
 extern int nfiles;			/* actual number of open files */
 extern struct fileops vnops;		/* vnode operations for files */
 
-int     dofileread __P((struct proc *, int, struct file *, void *, size_t,
-            off_t *, register_t *));
-int     dofilewrite __P((struct proc *, int, struct file *, const void *,
-            size_t, off_t *, register_t *));
+int     dofileread(struct proc *, int, struct file *, void *, size_t,
+            off_t *, register_t *);
+int     dofilewrite(struct proc *, int, struct file *, const void *,
+            size_t, off_t *, register_t *);
 
 #endif /* _KERNEL */

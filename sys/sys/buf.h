@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/buf.h,v 1.36.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/buf.h,v 1.36.2.2 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
@@ -63,12 +63,12 @@ LIST_HEAD(workhead, worklist);
  * to each buffer.
  */
 extern struct bio_ops {
-	void	(*io_start) __P((struct buf *));
-	void	(*io_complete) __P((struct buf *));
-	void	(*io_deallocate) __P((struct buf *));
-	void	(*io_movedeps) __P((struct buf *, struct buf *));
-	int	(*io_countdeps) __P((struct buf *, int, int));
-	void	(*io_pageiodone) __P((struct buf *));
+	void	(*io_start)(struct buf *);
+	void	(*io_complete)(struct buf *);
+	void	(*io_deallocate)(struct buf *);
+	void	(*io_movedeps)(struct buf *, struct buf *);
+	int	(*io_countdeps)(struct buf *, int, int);
+	void	(*io_pageiodone)(struct buf *);
 } bioops;
 
 /*
@@ -94,8 +94,9 @@ struct buf {
 	void	*b_saveaddr;		/* Original b_addr for physio. */
 	daddr_t	b_lblkno;		/* Logical block number. */
 	daddr_t	b_blkno;		/* Underlying physical block number. */
-					/* Function to call upon completion. */
-	void	(*b_iodone) __P((struct buf *));
+					/* Function to call upon completion.
+					 * Will be called at splbio(). */
+	void	(*b_iodone)(struct buf *);
 	struct	vnode *b_vp;		/* Device vnode. */
 	void	*b_private;
  	struct	workhead b_dep;		/* List of filesystem dependencies. */
@@ -111,8 +112,6 @@ struct buf {
 #define	b_active b_bcount		/* Driver queue head: drive active. */
 #define	b_data	 b_un.b_addr		/* b_un.b_addr is not changeable. */
 #define	b_errcnt b_resid		/* Retry count while I/O in progress. */
-#define	iodone	 biodone		/* Old name for biodone. */
-#define	iowait	 biowait		/* Old name for biowait. */
 
 /*
  * These flags are kept in b_flags.
@@ -191,34 +190,33 @@ int	bufpages;		/* Number of memory pages in the buffer pool. */
 extern struct pool bufpool;
 
 __BEGIN_DECLS
-void	allocbuf __P((struct buf *, int));
-void	bawrite __P((struct buf *));
-void	bdwrite __P((struct buf *));
-void	biodone __P((struct buf *));
-int	biowait __P((struct buf *));
-int	bread __P((struct vnode *, daddr_t, int,
-		   struct ucred *, struct buf **));
-int	breadn __P((struct vnode *, daddr_t, int, daddr_t *, int *, int,
-		    struct ucred *, struct buf **));
-void	brelse __P((struct buf *));
-void	bremfree __P((struct buf *));
-void	bufinit __P((void));
-void	buf_dirty __P((struct buf *));
-void    buf_undirty __P((struct buf *));
-int	bwrite __P((struct buf *));
-struct buf *getblk __P((struct vnode *, daddr_t, int, int, int));
-struct buf *geteblk __P((int));
-struct buf *incore __P((struct vnode *, daddr_t));
+void	allocbuf(struct buf *, int);
+void	bawrite(struct buf *);
+void	bdwrite(struct buf *);
+void	biodone(struct buf *);
+int	biowait(struct buf *);
+int	bread(struct vnode *, daddr_t, int, struct ucred *, struct buf **);
+int	breadn(struct vnode *, daddr_t, int, daddr_t *, int *, int,
+		    struct ucred *, struct buf **);
+void	brelse(struct buf *);
+void	bremfree(struct buf *);
+void	bufinit(void);
+void	buf_dirty(struct buf *);
+void    buf_undirty(struct buf *);
+int	bwrite(struct buf *);
+struct buf *getblk(struct vnode *, daddr_t, int, int, int);
+struct buf *geteblk(int);
+struct buf *incore(struct vnode *, daddr_t);
 
-void	minphys __P((struct buf *bp));
-int	physio __P((void (*strategy)(struct buf *), struct buf *bp, dev_t dev,
-		    int flags, void (*minphys)(struct buf *), struct uio *uio));
-void  brelvp __P((struct buf *));
-void  reassignbuf __P((struct buf *));
-void  bgetvp __P((struct vnode *, struct buf *));
+void	minphys(struct buf *bp);
+int	physio(void (*strategy)(struct buf *), struct buf *bp, dev_t dev,
+		    int flags, void (*minphys)(struct buf *), struct uio *uio);
+void  brelvp(struct buf *);
+void  reassignbuf(struct buf *);
+void  bgetvp(struct vnode *, struct buf *);
 
-void  buf_replacevnode __P((struct buf *, struct vnode *));
-void  buf_daemon __P((struct proc *));
+void  buf_replacevnode(struct buf *, struct vnode *);
+void  buf_daemon(struct proc *);
 
 #ifdef DEBUG
 void buf_print(struct buf *);
@@ -261,9 +259,9 @@ buf_countdeps(struct buf *bp, int i, int islocked)
 		return (0);
 }
 
-int	cluster_read __P((struct vnode *, struct cluster_info *,
-	    u_quad_t, daddr_t, long, struct ucred *, struct buf **));
-void	cluster_write __P((struct buf *, struct cluster_info *, u_quad_t));
+int	cluster_read(struct vnode *, struct cluster_info *,
+	    u_quad_t, daddr_t, long, struct ucred *, struct buf **);
+void	cluster_write(struct buf *, struct cluster_info *, u_quad_t);
 
 int buf_cleanout(struct buf *bp);
 

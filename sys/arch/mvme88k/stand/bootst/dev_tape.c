@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/dev_tape.c,v 1.1 1998/12/15 06:09:51 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/dev_tape.c,v 1.1.16.1 2002/06/11 03:37:11 art Exp $ */
 
 /*
  * Copyright (c) 1993 Paul Kranenburg
@@ -61,7 +61,7 @@ devopen(f, fname, file)
 	struct devsw *dp;
 	int errorno;
 
-	*file = (char*)fname;
+	*file = (char *)fname;
 	dp = &devsw[0];
 	f->f_dev = dp;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.41.2.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.41.2.2 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -77,7 +77,7 @@ struct export_args {
  */
 struct ufs_args {
 	char	*fspec;			/* block special device to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;/* network export information */
 };
 
 /*
@@ -85,7 +85,7 @@ struct ufs_args {
  */
 struct mfs_args {
 	char	*fspec;			/* name to export for statfs */
-	struct	export_args export;	/* if exported MFSes are supported */
+	struct	export_args export_info;/* if exported MFSes are supported */
 	caddr_t	base;			/* base of file system in memory */
 	u_long	size;			/* size of file system */
 };
@@ -95,7 +95,7 @@ struct mfs_args {
  */
 struct iso_args {
 	char	*fspec;			/* block special device to mount */
-	struct	export_args export;	/* network export info */
+	struct	export_args export_info;/* network export info */
 	int	flags;			/* mounting flags, see below */
 };
 #define	ISOFSMNT_NORRIP	0x00000001	/* disable Rock Ridge Ext.*/
@@ -208,7 +208,8 @@ struct nfs_args3 {
  */
 struct msdosfs_args {
 	char	*fspec;		/* blocks special holding the fs to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;
+				/* network export information */
 	uid_t	uid;		/* uid that owns msdosfs files */
 	gid_t	gid;		/* gid that owns msdosfs files */
 	mode_t  mask;		/* mask to be applied for msdosfs perms */
@@ -228,7 +229,8 @@ struct msdosfs_args {
  */
 struct adosfs_args {
 	char	*fspec;		/* blocks special holding the fs to mount */
-	struct	export_args export;	/* network export information */
+	struct	export_args export_info;
+				/* network export information */
 	uid_t	uid;		/* uid that owns adosfs files */
 	gid_t	gid;		/* gid that owns adosfs files */
 	mode_t	mask;		/* mask to be applied for adosfs perms */
@@ -434,7 +436,7 @@ struct vfsconf {
 	int	vfc_typenum;		/* historic filesystem type number */
 	int	vfc_refcount;		/* number mounted of this type */
 	int	vfc_flags;		/* permanent flags */
-	int	(*vfc_mountroot)__P((void));	/* if != NULL, routine to mount root */
+	int	(*vfc_mountroot)(void);	/* if != NULL, routine to mount root */
 	struct	vfsconf *vfc_next;	/* next in list */
 };
 
@@ -451,30 +453,34 @@ extern int maxvfsconf;		/* highest defined filesystem type */
 extern struct vfsconf *vfsconf;	/* head of list of filesystem types */
 
 struct vfsops {
-	int	(*vfs_mount)	__P((struct mount *mp, const char *path,
+	int	(*vfs_mount)(struct mount *mp, const char *path,
 				    void *data,
-				    struct nameidata *ndp, struct proc *p));
-	int	(*vfs_start)	__P((struct mount *mp, int flags,
-				    struct proc *p));
-	int	(*vfs_unmount)	__P((struct mount *mp, int mntflags,
-				    struct proc *p));
-	int	(*vfs_root)	__P((struct mount *mp, struct vnode **vpp));
-	int	(*vfs_quotactl)	__P((struct mount *mp, int cmds, uid_t uid,
-				    caddr_t arg, struct proc *p));
-	int	(*vfs_statfs)	__P((struct mount *mp, struct statfs *sbp,
-				    struct proc *p));
-	int	(*vfs_sync)	__P((struct mount *mp, int waitfor,
-				    struct ucred *cred, struct proc *p));
-	int	(*vfs_vget)	__P((struct mount *mp, ino_t ino,
-				    struct vnode **vpp));
-	int	(*vfs_fhtovp)	__P((struct mount *mp, struct fid *fhp,
-				     struct vnode **vpp));
-	int	(*vfs_vptofh)	__P((struct vnode *vp, struct fid *fhp));
-	int	(*vfs_init)	__P((struct vfsconf *));
-	int     (*vfs_sysctl)   __P((int *, u_int, void *, size_t *, void *,
-				     size_t, struct proc *));
-	int	(*vfs_checkexp) __P((struct mount *mp, struct mbuf *nam,
-				    int *extflagsp, struct ucred **credanonp));
+				    struct nameidata *ndp, struct proc *p);
+	int	(*vfs_start)(struct mount *mp, int flags,
+				    struct proc *p);
+	int	(*vfs_unmount)(struct mount *mp, int mntflags,
+				    struct proc *p);
+	int	(*vfs_root)(struct mount *mp, struct vnode **vpp);
+	int	(*vfs_quotactl)(struct mount *mp, int cmds, uid_t uid,
+				    caddr_t arg, struct proc *p);
+	int	(*vfs_statfs)(struct mount *mp, struct statfs *sbp,
+				    struct proc *p);
+	int	(*vfs_sync)(struct mount *mp, int waitfor,
+				    struct ucred *cred, struct proc *p);
+	int	(*vfs_vget)(struct mount *mp, ino_t ino,
+				    struct vnode **vpp);
+	int	(*vfs_fhtovp)(struct mount *mp, struct fid *fhp,
+				     struct vnode **vpp);
+	int	(*vfs_vptofh)(struct vnode *vp, struct fid *fhp);
+	int	(*vfs_init)(struct vfsconf *);
+	int     (*vfs_sysctl)(int *, u_int, void *, size_t *, void *,
+				     size_t, struct proc *);
+	int	(*vfs_checkexp)(struct mount *mp, struct mbuf *nam,
+				    int *extflagsp, struct ucred **credanonp);
+	int     (*vfs_extattrctl)(struct mount *mp, int cmd,
+				    struct vnode *filename_vp,
+				    int attrnamespace, const char *attrname,
+				    struct proc *p);
 };
 
 #define VFS_MOUNT(MP, PATH, DATA, NDP, P) \
@@ -491,6 +497,18 @@ struct vfsops {
 #define	VFS_VPTOFH(VP, FIDP)	  (*(VP)->v_mount->mnt_op->vfs_vptofh)(VP, FIDP)
 #define VFS_CHECKEXP(MP, NAM, EXFLG, CRED) \
 	(*(MP)->mnt_op->vfs_checkexp)(MP, NAM, EXFLG, CRED)
+#define VFS_EXTATTRCTL(MP, C, FN, NS, N, P) \
+	(*(MP)->mnt_op->vfs_extattrctl)(MP, C, FN, NS, N, P)
+
+/* 
+ * Declarations for these vfs default operations are located in 
+ * kern/vfs_default.c, they should be used instead of making "dummy" 
+ * functions or casting entries in the VFS op table to "enopnotsupp()".
+ */ 
+int	vfs_stdextattrctl(struct mount *mp, int cmd,
+	    struct vnode *filename_vp, int attrnamespace, const char *attrname,
+	    struct proc *p);
+
 #endif /* _KERNEL */
 
 /*
@@ -537,38 +555,39 @@ struct netexport {
 /*
  * exported vnode operations
  */
-int	vfs_busy __P((struct mount *, int, struct simplelock *, struct proc *));
+int	vfs_busy(struct mount *, int, struct simplelock *, struct proc *);
 int     vfs_isbusy(struct mount *);
 int     vfs_mount_foreach_vnode(struct mount *, int (*func)(struct vnode *,
 				    void *), void *);
-void	vfs_getnewfsid __P((struct mount *));
-struct	mount *vfs_getvfs __P((fsid_t *));
-int	vfs_mountedon __P((struct vnode *));
-int	vfs_mountroot __P((void));
-int	vfs_rootmountalloc __P((char *, char *, struct mount **));
-void	vfs_unbusy __P((struct mount *, struct proc *));
-void	vfs_unmountall __P((void));
+void	vfs_getnewfsid(struct mount *);
+struct	mount *vfs_getvfs(fsid_t *);
+int	vfs_mountedon(struct vnode *);
+int	vfs_mountroot(void);
+int	vfs_rootmountalloc(char *, char *, struct mount **);
+void	vfs_unbusy(struct mount *, struct proc *);
+void	vfs_unmountall(void);
 extern	CIRCLEQ_HEAD(mntlist, mount) mountlist;
 extern	struct simplelock mountlist_slock;
 
-struct	mount *getvfs __P((fsid_t *));	    /* return vfs given fsid */
-int	vfs_export			    /* process mount export info */
-	  __P((struct mount *, struct netexport *, struct export_args *));
-struct	netcred *vfs_export_lookup	    /* lookup host in fs export list */
-	  __P((struct mount *, struct netexport *, struct mbuf *));
-int	vfs_allocate_syncvnode __P((struct mount *));
-int	speedup_syncer __P((void));
+struct	mount *getvfs(fsid_t *);	    /* return vfs given fsid */
+					    /* process mount export info */
+int	vfs_export(struct mount *, struct netexport *, struct export_args *);
+					    /* lookup host in fs export list */
+struct	netcred *vfs_export_lookup(struct mount *, struct netexport *,
+	    struct mbuf *);
+int	vfs_allocate_syncvnode(struct mount *);
+int	speedup_syncer(void);
 
-int	vfs_syncwait __P((int));	/* sync and wait for complete */
-void	vfs_shutdown __P((void));	/* unmount and sync file systems */
-long	makefstype __P((char *));
-int	dounmount __P((struct mount *, int, struct proc *));
-void	vfsinit __P((void));
+int	vfs_syncwait(int);	/* sync and wait for complete */
+void	vfs_shutdown(void);	/* unmount and sync file systems */
+long	makefstype(char *);
+int	dounmount(struct mount *, int, struct proc *);
+void	vfsinit(void);
 #ifdef DEBUG
-void	vfs_bufstats __P((void));
+void	vfs_bufstats(void);
 #endif
-int	vfs_register __P((struct vfsconf *));
-int	vfs_unregister __P((struct vfsconf *));
+int	vfs_register(struct vfsconf *);
+int	vfs_unregister(struct vfsconf *);
 #else /* _KERNEL */
 
 #include <sys/cdefs.h>
@@ -578,17 +597,17 @@ struct stat;
 #endif
 
 __BEGIN_DECLS
-int	fstatfs __P((int, struct statfs *));
-int	getfh __P((const char *, fhandle_t *));
-int	getfsstat __P((struct statfs *, size_t, int));
-int	getmntinfo __P((struct statfs **, int));
-int	mount __P((const char *, const char *, int, void *));
-int	statfs __P((const char *, struct statfs *));
-int	unmount __P((const char *, int));
+int	fstatfs(int, struct statfs *);
+int	getfh(const char *, fhandle_t *);
+int	getfsstat(struct statfs *, size_t, int);
+int	getmntinfo(struct statfs **, int);
+int	mount(const char *, const char *, int, void *);
+int	statfs(const char *, struct statfs *);
+int	unmount(const char *, int);
 #if !defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)
-int	fhopen __P((const fhandle_t *, int));
-int	fhstat __P((const fhandle_t *, struct stat *));
-int	fhstatfs __P((const fhandle_t *, struct statfs *));
+int	fhopen(const fhandle_t *, int);
+int	fhstat(const fhandle_t *, struct stat *);
+int	fhstatfs(const fhandle_t *, struct statfs *);
 #endif /* !_POSIX_C_SOURCE */
 
 __END_DECLS

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.2 2002/06/11 03:32:50 art Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -56,6 +56,7 @@
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/fifofs/fifo.h>
 
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/dir.h>
@@ -66,7 +67,7 @@
 #include <ufs/ffs/ffs_extern.h>
 
 /* Global vfs data structures for ufs. */
-int (**ffs_vnodeop_p) __P((void *));
+int (**ffs_vnodeop_p)(void *);
 struct vnodeopv_entry_desc ffs_vnodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, ufs_lookup },		/* lookup */
@@ -110,13 +111,17 @@ struct vnodeopv_entry_desc ffs_vnodeop_entries[] = {
 	{ &vop_getpages_desc, genfs_getpages },
 	{ &vop_putpages_desc, genfs_putpages },
 	{ &vop_mmap_desc, ufs_mmap },
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
 	{ NULL, NULL }
 };
 
 struct vnodeopv_desc ffs_vnodeop_opv_desc =
 	{ &ffs_vnodeop_p, ffs_vnodeop_entries };
 
-int (**ffs_specop_p) __P((void *));
+int (**ffs_specop_p)(void *);
 struct vnodeopv_entry_desc ffs_specop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, spec_lookup },		/* lookup */
@@ -156,13 +161,17 @@ struct vnodeopv_entry_desc ffs_specop_entries[] = {
 	{ &vop_advlock_desc, spec_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, spec_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_specop_opv_desc =
 	{ &ffs_specop_p, ffs_specop_entries };
 
 #ifdef FIFO
-int (**ffs_fifoop_p) __P((void *));
+int (**ffs_fifoop_p)(void *);
 struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, fifo_lookup },		/* lookup */
@@ -202,6 +211,10 @@ struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_advlock_desc, fifo_advlock },		/* advlock */
 	{ &vop_reallocblks_desc, fifo_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
+#ifdef UFS_EXTATTR
+	{ &vop_getextattr_desc, ufs_vop_getextattr },
+	{ &vop_setextattr_desc, ufs_vop_setextattr },
+#endif
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_fifoop_opv_desc =

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/ioasicreg.h,v 1.1 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/dev/tc/ioasicreg.h,v 1.1.2.1 2002/06/11 03:42:29 art Exp $ */
 /* $NetBSD: ioasicreg.h,v 1.6 2000/07/17 02:18:17 thorpej Exp $ */
 
 /* 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.4.2.1 2002/01/31 22:55:39 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/uscanner.c,v 1.4.2.2 2002/06/11 03:42:31 art Exp $ */
 /*	$NetBSD: uscanner.c,v 1.18 2001/10/11 12:05:10 augustss Exp $	*/
 /*	$FreeBSD$	*/
 

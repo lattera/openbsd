@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.2 2002/06/11 03:32:50 art Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*
@@ -63,6 +63,7 @@
 #include <miscfs/specfs/specdev.h>
 #include <miscfs/fifofs/fifo.h>
 
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/dir.h>
@@ -70,13 +71,12 @@
 #include <ufs/ufs/ufs_extern.h>
 #include <ufs/ext2fs/ext2fs_extern.h>
 
-static int ufs_chmod __P((struct vnode *, int, struct ucred *, struct proc *));
-static int ufs_chown
-	__P((struct vnode *, uid_t, gid_t, struct ucred *, struct proc *));
-int filt_ufsread __P((struct knote *kn, long hint));
-int filt_ufswrite __P((struct knote *kn, long hint));
-int filt_ufsvnode __P((struct knote *kn, long hint));
-void filt_ufsdetach __P((struct knote *kn));
+static int ufs_chmod(struct vnode *, int, struct ucred *, struct proc *);
+static int ufs_chown(struct vnode *, uid_t, gid_t, struct ucred *, struct proc *);
+int filt_ufsread(struct knote *kn, long hint);
+int filt_ufswrite(struct knote *kn, long hint);
+int filt_ufsvnode(struct knote *kn, long hint);
+void filt_ufsdetach(struct knote *kn);
 
 union _qcvt {
 	int64_t	qcvt;
@@ -1736,6 +1736,7 @@ ufs_strategy(v)
 	struct vnode *vp = bp->b_vp;
 	struct inode *ip;
 	int error;
+	int s;
 
 	ip = VTOI(vp);
 	if (vp->v_type == VBLK || vp->v_type == VCHR)
@@ -1746,14 +1747,18 @@ ufs_strategy(v)
 		if (error) {
 			bp->b_error = error;
 			bp->b_flags |= B_ERROR;
+			s = splbio();
 			biodone(bp);
+			splx(s);
 			return (error);
 		}
 		if ((long)bp->b_blkno == -1)
 			clrbuf(bp);
 	}
 	if ((long)bp->b_blkno == -1) {
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		return (0);
 	}
 	vp = ip->i_devvp;
@@ -1872,7 +1877,7 @@ ufsfifo_read(v)
 		int  a_ioflag;
 		struct ucred *a_cred;
 	} */ *ap = v;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 
 	/*
 	 * Set access flag.
@@ -1894,7 +1899,7 @@ ufsfifo_write(v)
 		int  a_ioflag;
 		struct ucred *a_cred;
 	} */ *ap = v;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 
 	/*
 	 * Set update and change flags.
@@ -1918,7 +1923,7 @@ ufsfifo_close(v)
 		struct ucred *a_cred;
 		struct proc *a_p;
 	} */ *ap = v;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
 
@@ -1995,8 +2000,8 @@ ufs_advlock(v)
 int
 ufs_vinit(mntp, specops, fifoops, vpp)
 	struct mount *mntp;
-	int (**specops) __P((void *));
-	int (**fifoops) __P((void *));
+	int (**specops)(void *);
+	int (**fifoops)(void *);
 	struct vnode **vpp;
 {
 	struct inode *ip;

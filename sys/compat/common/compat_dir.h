@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/compat/common/compat_dir.h,v 1.1 2001/01/23 05:48:04 csapuntz Exp $	*/
+/* 	$OpenBSD: src/sys/compat/common/compat_dir.h,v 1.1.8.1 2002/06/11 03:28:07 art Exp $	*/
 
 /*
  * Copyright (c) 2000 Constantine Sapuntzakis
@@ -27,7 +27,7 @@
 
 #ifdef _KERNEL
 
-int readdir_with_callback __P((struct file *, off_t *, u_long, 
-    int (*append_func) (void *, struct dirent *, off_t), void *));
+int readdir_with_callback(struct file *, off_t *, u_long, 
+    int (*append_func) (void *, struct dirent *, off_t), void *);
 
 #endif

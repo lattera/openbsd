@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhci.c,v 1.22.2.1 2002/01/31 22:55:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhci.c,v 1.22.2.2 2002/06/11 03:42:30 art Exp $	*/
 /*	$NetBSD: uhci.c,v 1.142 2001/10/25 02:08:13 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhci.c,v 1.33 1999/11/17 22:33:41 n_hibma Exp $	*/
 

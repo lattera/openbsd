@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/tcreg.h,v 1.2 1997/11/07 08:07:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/tcreg.h,v 1.2.20.1 2002/06/11 03:42:30 art Exp $	*/
 /*	$NetBSD: tcreg.h,v 1.1 1995/12/20 00:48:36 cgd Exp $	*/
 
 /*

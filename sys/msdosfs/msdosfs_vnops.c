@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.34.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.34.2.2 2002/06/11 03:30:32 art Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -1710,6 +1710,7 @@ msdosfs_strategy(v)
 	struct denode *dep = VTODE(bp->b_vp);
 	struct vnode *vp;
 	int error = 0;
+	int s;
 
 	if (bp->b_vp->v_type == VBLK || bp->b_vp->v_type == VCHR)
 		panic("msdosfs_strategy: spec");
@@ -1728,7 +1729,9 @@ msdosfs_strategy(v)
 			clrbuf(bp);
 	}
 	if (bp->b_blkno == -1) {
+		s = splbio();	
 		biodone(bp);
+		splx(s);
 		return (error);
 	}
 
@@ -1816,7 +1819,7 @@ msdosfs_pathconf(v)
 }
 
 /* Global vfs data structures for msdosfs */
-int (**msdosfs_vnodeop_p) __P((void *));
+int (**msdosfs_vnodeop_p)(void *);
 struct vnodeopv_entry_desc msdosfs_vnodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, msdosfs_lookup },		/* lookup */

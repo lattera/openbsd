@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.20.4.1 2002/01/31 22:55:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.20.4.2 2002/06/11 03:42:17 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -138,32 +138,32 @@ struct cfdriver an_cd = {
 	NULL, "an", DV_IFNET
 };
 
-void an_reset		__P((struct an_softc *));
-int an_ioctl		__P((struct ifnet *, u_long, caddr_t));
-int an_init_tx_ring	__P((struct an_softc *));
-void an_start		__P((struct ifnet *));
-void an_watchdog		__P((struct ifnet *));
-void an_rxeof		__P((struct an_softc *));
-void an_txeof		__P((struct an_softc *, int));
+void an_reset(struct an_softc *);
+int an_ioctl(struct ifnet *, u_long, caddr_t);
+int an_init_tx_ring(struct an_softc *);
+void an_start(struct ifnet *);
+void an_watchdog(struct ifnet *);
+void an_rxeof(struct an_softc *);
+void an_txeof(struct an_softc *, int);
 
-void an_promisc		__P((struct an_softc *, int));
-int an_cmd		__P((struct an_softc *, int, int));
-int an_read_record	__P((struct an_softc *, struct an_ltv_gen *));
-int an_write_record	__P((struct an_softc *, struct an_ltv_gen *));
-int an_read_data		__P((struct an_softc *, int,
-					int, caddr_t, int));
-int an_write_data	__P((struct an_softc *, int,
-					int, caddr_t, int));
-int an_seek		__P((struct an_softc *, int, int, int));
-int an_alloc_nicmem	__P((struct an_softc *, int, int *));
-void an_stats_update	__P((void *));
-void an_setdef		__P((struct an_softc *, struct an_req *));
+void an_promisc(struct an_softc *, int);
+int an_cmd(struct an_softc *, int, int);
+int an_read_record(struct an_softc *, struct an_ltv_gen *);
+int an_write_record(struct an_softc *, struct an_ltv_gen *);
+int an_read_data(struct an_softc *, int,
+					int, caddr_t, int);
+int an_write_data(struct an_softc *, int,
+					int, caddr_t, int);
+int an_seek(struct an_softc *, int, int, int);
+int an_alloc_nicmem(struct an_softc *, int, int *);
+void an_stats_update(void *);
+void an_setdef(struct an_softc *, struct an_req *);
 #ifdef ANCACHE
-void an_cache_store	__P((struct an_softc *, struct ether_header *,
-					struct mbuf *, unsigned short));
+void an_cache_store(struct an_softc *, struct ether_header *,
+					struct mbuf *, unsigned short);
 #endif
-int an_media_change	__P((struct ifnet *));
-void an_media_status	__P((struct ifnet *, struct ifmediareq *));
+int an_media_change(struct ifnet *);
+void an_media_status(struct ifnet *, struct ifmediareq *);
 
 static __inline void
 an_swap16(u_int16_t *p, int cnt)
@@ -176,7 +176,7 @@ int
 an_attach(sc)
 	struct an_softc *sc;
 {
-	struct ifnet	*ifp = &sc->arpcom.ac_if;
+	struct ifnet	*ifp = &sc->sc_arpcom.ac_if;
 
 	sc->an_gone = 0;
 	sc->an_associated = 0;
@@ -227,9 +227,9 @@ an_attach(sc)
 	}
 
 	bcopy((char *)&sc->an_caps.an_oemaddr,
-	   (char *)&sc->arpcom.ac_enaddr, ETHER_ADDR_LEN);
+	   (char *)&sc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN);
 
-	printf(": address %6s\n", ether_sprintf(sc->arpcom.ac_enaddr));
+	printf(": address %6s\n", ether_sprintf(sc->sc_arpcom.ac_enaddr));
 
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 	ifp->if_softc = sc;
@@ -239,6 +239,7 @@ an_attach(sc)
 	ifp->if_start = an_start;
 	ifp->if_watchdog = an_watchdog;
 	ifp->if_baudrate = 10000000;
+	IFQ_SET_READY(&ifp->if_snd);
 
 	bzero(sc->an_config.an_nodename, sizeof(sc->an_config.an_nodename));
 	bcopy(AN_DEFAULT_NODENAME, sc->an_config.an_nodename,
@@ -289,7 +290,7 @@ an_attach(sc)
 	ether_ifattach(ifp);
 	timeout_set(&sc->an_stat_ch, an_stats_update, sc);
 #if NBPFILTER > 0
-	BPFATTACH(&sc->arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
+	BPFATTACH(&sc->sc_arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
 	    sizeof(struct ether_header));
 #endif
 
@@ -314,7 +315,7 @@ an_rxeof(sc)
 	struct mbuf		*m;
 	int			id, error = 0;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	id = CSR_READ_2(sc, AN_RX_FID);
 
@@ -399,7 +400,7 @@ an_txeof(sc, status)
 	struct ifnet	*ifp;
 	int		id;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	ifp->if_timer = 0;
 	ifp->if_flags &= ~IFF_OACTIVE;
@@ -436,7 +437,7 @@ an_stats_update(xsc)
 	s = splimp();
 
 	sc = xsc;
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	sc->an_status.an_type = AN_RID_STATUS;
 	sc->an_status.an_len = sizeof(struct an_ltv_status);
@@ -471,7 +472,7 @@ an_intr(xsc)
 	if (sc->an_gone)
 		return 0;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	if (!(ifp->if_flags & IFF_UP)) {
 		CSR_WRITE_2(sc, AN_EVENT_ACK, 0xFFFF);
@@ -518,7 +519,7 @@ an_intr(xsc)
 	/* Re-enable interrupts. */
 	CSR_WRITE_2(sc, AN_INT_EN, AN_INTRS);
 
-	if (ifp->if_snd.ifq_head != NULL)
+	if (!IFQ_IS_EMPTY(&ifp->if_snd))
 		an_start(ifp);
 
 	return 1;
@@ -887,7 +888,7 @@ an_setdef(sc, areq)
 	struct an_ltv_gen	*sp;
 	extern struct ifaddr	**ifnet_addrs;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	switch (areq->an_type) {
 	case AN_RID_GENCONFIG:
@@ -895,7 +896,7 @@ an_setdef(sc, areq)
 
 		ifa = ifnet_addrs[ifp->if_index];
 		sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-		bcopy((char *)&cfg->an_macaddr, (char *)&sc->arpcom.ac_enaddr,
+		bcopy((char *)&cfg->an_macaddr, (char *)&sc->sc_arpcom.ac_enaddr,
 		    ETHER_ADDR_LEN);
 		bcopy((char *)&cfg->an_macaddr, LLADDR(sdl), ETHER_ADDR_LEN);
 
@@ -1010,7 +1011,7 @@ an_ioctl(ifp, command, data)
 		return(ENODEV);
 	}
 
-	if ((error = ether_ioctl(ifp, &sc->arpcom, command, data)) > 0) {
+	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, command, data)) > 0) {
 		splx(s);
 		return error;
 	}
@@ -1022,7 +1023,7 @@ an_ioctl(ifp, command, data)
 #ifdef INET
 		case AF_INET:
 			an_init(sc);
-			arp_ifinit(&sc->arpcom, ifa);
+			arp_ifinit(&sc->sc_arpcom, ifa);
 			break;
 #endif
 		default:
@@ -1134,7 +1135,7 @@ void
 an_init(sc)
 	struct an_softc *sc;
 {
-	struct ifnet		*ifp = &sc->arpcom.ac_if;
+	struct ifnet		*ifp = &sc->sc_arpcom.ac_if;
 	struct an_ltv_ssidlist	ssid;
 	struct an_ltv_aplist	aplist;
 	struct an_ltv_genconfig	genconf;
@@ -1159,7 +1160,7 @@ an_init(sc)
 	}
 
 	/* Set our MAC address. */
-	bcopy((char *)&sc->arpcom.ac_enaddr,
+	bcopy((char *)&sc->sc_arpcom.ac_enaddr,
 	    (char *)&sc->an_config.an_macaddr, ETHER_ADDR_LEN);
 
 	if (ifp->if_flags & IFF_BROADCAST)
@@ -1237,6 +1238,7 @@ an_start(ifp)
 	int			id;
 	int			idx;
 	unsigned char           txcontrol;
+	int			pkts = 0;
 
 	sc = ifp->if_softc;
 
@@ -1253,10 +1255,11 @@ an_start(ifp)
 	bzero((char *)&tx_frame_802_3, sizeof(tx_frame_802_3));
 
 	while(sc->an_rdata.an_tx_ring[idx] == 0) {
-		IF_DEQUEUE(&ifp->if_snd, m0);
+		IFQ_DEQUEUE(&ifp->if_snd, m0);
 		if (m0 == NULL)
 			break;
 
+		pkts++;
 		id = sc->an_rdata.an_tx_fids[idx];
 		eh = mtod(m0, struct ether_header *);
 
@@ -1301,6 +1304,8 @@ an_start(ifp)
 
 		AN_INC(idx, AN_TX_RING_CNT);
 	}
+	if (pkts == 0)
+		return;
 
 	if (m0 != NULL)
 		ifp->if_flags |= IFF_OACTIVE;
@@ -1323,7 +1328,7 @@ an_stop(sc)
 	if (sc->an_gone)
 		return;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	an_cmd(sc, AN_CMD_FORCE_SYNCLOSS, 0);
 	CSR_WRITE_2(sc, AN_INT_EN, 0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16.2.1 2002/01/31 22:55:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16.2.2 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*
@@ -80,7 +80,6 @@ struct clockframe {
 };
 
 #define	CLKF_USERMODE(framep)	(((framep)->sr & PSL_S) == 0)
-#define	CLKF_BASEPRI(framep)	(((framep)->sr & PSL_IPL) == 0)
 #define	CLKF_PC(framep)		((framep)->pc)
 #if 0
 /* We would like to do it this way... */
@@ -138,59 +137,59 @@ extern int astpending;		/* need to trap before returning to user mode */
 
 #ifdef _KERNEL
 extern	char *intiobase, *intiolimit;
-extern	void (*vectab[]) __P((void));
+extern	void (*vectab[])(void);
 
 struct frame;
 struct fpframe;
 struct pcb;
 
 /* locore.s functions */
-void	m68881_save __P((struct fpframe *));
-void	m68881_restore __P((struct fpframe *));
-void	DCIA __P((void));
-void	DCIS __P((void));
-void	DCIU __P((void));
-void	ICIA __P((void));
-void	ICPA __P((void));
-void	PCIA __P((void));
-void	TBIA __P((void));
-void	TBIS __P((vaddr_t));
-void	TBIAS __P((void));
-void	TBIAU __P((void));
+void	m68881_save(struct fpframe *);
+void	m68881_restore(struct fpframe *);
+void	DCIA(void);
+void	DCIS(void);
+void	DCIU(void);
+void	ICIA(void);
+void	ICPA(void);
+void	PCIA(void);
+void	TBIA(void);
+void	TBIS(vaddr_t);
+void	TBIAS(void);
+void	TBIAU(void);
 #if defined(M68040)
-void	DCFA __P((void));
-void	DCFP __P((paddr_t));
-void	DCFL __P((paddr_t));
-void	DCPL __P((paddr_t));
-void	DCPP __P((paddr_t));
-void	ICPL __P((paddr_t));
-void	ICPP __P((paddr_t));
+void	DCFA(void);
+void	DCFP(paddr_t);
+void	DCFL(paddr_t);
+void	DCPL(paddr_t);
+void	DCPP(paddr_t);
+void	ICPL(paddr_t);
+void	ICPP(paddr_t);
 #endif
-int	suline __P((caddr_t, caddr_t));
-void	savectx __P((struct pcb *));
-void	switch_exit __P((struct proc *));
-void	proc_trampoline __P((void));
-void	loadustp __P((int));
+int	suline(caddr_t, caddr_t);
+void	savectx(struct pcb *);
+void	switch_exit(struct proc *);
+void	proc_trampoline(void);
+void	loadustp(int);
 
-__dead void	doboot __P((void));
-void	ecacheon __P((void));
-void	ecacheoff __P((void));
+__dead void	doboot(void);
+void	ecacheon(void);
+void	ecacheoff(void);
 
 /* clock.c functions */
-void	hp300_calibrate_delay __P((void));
+void	hp300_calibrate_delay(void);
 
 /* machdep.c functions */
-int	badaddr __P((caddr_t));
-int	badbaddr __P((caddr_t));
-void	dumpconf __P((void));
+int	badaddr(caddr_t);
+int	badbaddr(caddr_t);
+void	dumpconf(void);
 
 /* sys_machdep.c functions */
-int	cachectl __P((int, vaddr_t, int));
+int	cachectl(int, vaddr_t, int);
 
 /* vm_machdep.c functions */
-void	physaccess __P((caddr_t, caddr_t, int, int));
-void	physunaccess __P((caddr_t, int));
-int	kvtop __P((caddr_t));
+void	physaccess(caddr_t, caddr_t, int, int);
+void	physunaccess(caddr_t, int);
+int	kvtop(caddr_t);
 
 /* what is this supposed to do? i.e. how is it different than startrtclock? */
 #define	enablertclock()

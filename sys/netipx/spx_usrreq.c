@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/spx_usrreq.c,v 1.17 2001/09/23 10:22:13 mickey Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/spx_usrreq.c,v 1.17.4.1 2002/06/11 03:31:38 art Exp $	*/
 
 /*-
  *
@@ -810,7 +810,6 @@ spx_output(cb, m0)
 			if (m0->m_len < sizeof(*sh)) {
 				if((m0 = m_pullup(m0, sizeof(*sh))) == NULL) {
 					(void) m_free(m);
-					m_freem(m0);
 					return (EINVAL);
 				}
 				m->m_next = m0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.9 2001/12/04 22:44:31 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/deadfs/dead_vnops.c,v 1.9.2.1 2002/06/11 03:30:20 art Exp $	*/
 /*	$NetBSD: dead_vnops.c,v 1.16 1996/02/13 13:12:48 mycroft Exp $	*/
 
 /*
@@ -48,21 +48,21 @@
 /*
  * Prototypes for dead operations on vnodes.
  */
-int	dead_badop	__P((void *));
-int	dead_ebadf	__P((void *));
+int	dead_badop(void *);
+int	dead_ebadf(void *);
 
-int	dead_lookup	__P((void *));
+int	dead_lookup(void *);
 #define dead_create	dead_badop
 #define dead_mknod	dead_badop
-int	dead_open	__P((void *));
+int	dead_open(void *);
 #define dead_close	nullop
 #define dead_access	dead_ebadf
 #define dead_getattr	dead_ebadf
 #define dead_setattr	dead_ebadf
-int	dead_read	__P((void *));
-int	dead_write	__P((void *));
-int	dead_ioctl	__P((void *));
-int	dead_select	__P((void *));
+int	dead_read(void *);
+int	dead_write(void *);
+int	dead_ioctl(void *);
+int	dead_select(void *);
 #define dead_fsync	nullop
 #define dead_remove	dead_badop
 #define dead_link	dead_badop
@@ -75,20 +75,20 @@ int	dead_select	__P((void *));
 #define dead_abortop	dead_badop
 #define dead_inactive	nullop
 #define dead_reclaim	nullop
-int	dead_lock	__P((void *));
+int	dead_lock(void *);
 #define dead_unlock	vop_generic_unlock
-int	dead_bmap	__P((void *));
-int	dead_strategy	__P((void *));
-int	dead_print	__P((void *));
+int	dead_bmap(void *);
+int	dead_strategy(void *);
+int	dead_print(void *);
 #define dead_islocked	vop_generic_islocked
 #define dead_pathconf	dead_ebadf
 #define dead_advlock	dead_ebadf
 #define dead_bwrite	nullop
 #define dead_mmap	dead_badop
 
-int	chkvnlock __P((struct vnode *));
+int	chkvnlock(struct vnode *);
 
-int (**dead_vnodeop_p) __P((void *));
+int (**dead_vnodeop_p)(void *);
 
 struct vnodeopv_entry_desc dead_vnodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
@@ -250,9 +250,13 @@ dead_strategy(v)
 	struct vop_strategy_args /* {
 		struct buf *a_bp;
 	} */ *ap = v;
+	int s;
+
 	if (ap->a_bp->b_vp == NULL || !chkvnlock(ap->a_bp->b_vp)) {
 		ap->a_bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(ap->a_bp);
+		splx(s);
 		return (EIO);
 	}
 	return (VOP_STRATEGY(ap->a_bp));
@@ -355,7 +359,7 @@ chkvnlock(vp)
 
 	while (vp->v_flag & VXLOCK) {
 		vp->v_flag |= VXWANT;
-		sleep((caddr_t)vp, PINOD);
+		tsleep(vp, PINOD, "chkvnlock", 0);
 		locked = 1;
 	}
 	return (locked);

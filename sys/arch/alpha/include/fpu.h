@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/fpu.h,v 1.1 2002/04/28 20:55:14 pvalchev Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/fpu.h,v 1.1.2.1 2002/06/11 03:33:40 art Exp $	*/
 /*	$NetBSD: fpu.h,v 1.4 2001/04/26 03:10:46 ross Exp $	*/
 
 /*-

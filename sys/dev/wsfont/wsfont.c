@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1 2001/03/18 04:30:24 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1.8.1 2002/06/11 03:42:32 art Exp $ */
 /* 	$NetBSD: wsfont.c,v 1.17 2001/02/07 13:59:24 ad Exp $	*/
 
 /*-
@@ -57,11 +57,6 @@
 #include <dev/wsfont/qvss8x15.h>
 #endif
 
-#ifdef FONT_GALLANT12x22
-#define HAVE_FONT 1
-#include <dev/wsfont/gallant12x22.h>
-#endif
-
 #ifdef FONT_LUCIDA16x29
 #define HAVE_FONT 1
 #include <dev/wsfont/lucida16x29.h>
@@ -92,15 +87,33 @@
 #include <dev/wsfont/omron12x20.h>
 #endif
 
+#ifdef FONT_BOLD8x16_ISO1
+#define HAVE_FONT 1
+#include <dev/wsfont/bold8x16-iso1.h>
+#endif
+
+#ifdef FONT_GALLANT12x22
+#define HAVE_FONT 1
+#endif
+
 /* Make sure we always have at least one font. */
 #ifndef HAVE_FONT
 #define HAVE_FONT 1
 #define FONT_BOLD8x16 1
+/* Add the gallant 12x22 font for high screen resolutions */
+#if !defined(SMALL_KERNEL) && !defined(FONT_GALLANT12x22)
+#define FONT_GALLANT12x22
+#endif
 #endif
 
 #ifdef FONT_BOLD8x16
 #include <dev/wsfont/bold8x16.h>
 #endif
+
+#ifdef FONT_GALLANT12x22
+#include <dev/wsfont/gallant12x22.h>
+#endif
+
 
 /* Placeholder struct used for linked list */
 struct font {
@@ -117,8 +130,8 @@ static struct font *list, builtin_fonts[] = {
 #ifdef FONT_BOLD8x16
 	{ NULL, NULL, &bold8x16, 0, 1, WSFONT_STATIC | WSFONT_BUILTIN  },
 #endif
-#ifdef FONT_ISO8x16
-	{ NULL, NULL, &iso8x16, 0, 2, WSFONT_STATIC | WSFONT_BUILTIN },
+#ifdef FONT_BOLD8x16_ISO1
+	{ NULL, NULL, &bold8x16_iso1, 0, 2, WSFONT_STATIC | WSFONT_BUILTIN },
 #endif
 #ifdef FONT_COURIER11x18
 	{ NULL, NULL, &courier11x18, 0, 3, WSFONT_STATIC | WSFONT_BUILTIN },
@@ -186,9 +199,9 @@ static const u_char reverse[256] = {
 	0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff, 
 };
 
-static struct	font *wsfont_find0 __P((int));
-static void	wsfont_revbit __P((struct wsdisplay_font *));
-static void	wsfont_revbyte __P((struct wsdisplay_font *));
+static struct	font *wsfont_find0(int);
+static void	wsfont_revbit(struct wsdisplay_font *);
+static void	wsfont_revbyte(struct wsdisplay_font *);
 
 /*
  * Reverse the bit order of a font
@@ -242,7 +255,7 @@ wsfont_revbyte(font)
  */
 void
 wsfont_enum(cb)
-	void (*cb) __P((char *, int, int, int));
+	void (*cb)(char *, int, int, int);
 {
 	struct wsdisplay_font *f;
 	struct font *ent;

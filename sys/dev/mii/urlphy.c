@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/urlphy.c,v 1.2 2002/05/07 19:50:01 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/mii/urlphy.c,v 1.2.2.1 2002/06/11 03:42:24 art Exp $ */
 /*	$NetBSD: urlphy.c,v 1.1 2002/03/28 21:07:53 ichiro Exp $	*/
 /*
  * Copyright (c) 2001, 2002

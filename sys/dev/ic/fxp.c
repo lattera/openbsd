@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.30 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.30.2.1 2002/06/11 03:42:18 art Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*
@@ -102,13 +102,13 @@
  * aligns the packet after the Ethernet header at a 32-bit
  * boundary.  HOWEVER!  This means that the RFA is misaligned!
  */
-#define	RFA_ALIGNMENT_FUDGE	(2 + sizeof(bus_dmamap_t))
+#define	RFA_ALIGNMENT_FUDGE	(2 + sizeof(bus_dmamap_t *))
 
 /*
  * Inline function to copy a 16-bit aligned 32-bit quantity.
  */
-static __inline void fxp_lwcopy __P((volatile u_int32_t *,
-	volatile u_int32_t *));
+static __inline void fxp_lwcopy(volatile u_int32_t *,
+	volatile u_int32_t *);
 static __inline void
 fxp_lwcopy(src, dst)
 	volatile u_int32_t *src, *dst;
@@ -152,24 +152,24 @@ static u_char fxp_cb_config_template[] = {
 	0x5	/* 21 */
 };
 
-int fxp_mediachange		__P((struct ifnet *));
-void fxp_mediastatus		__P((struct ifnet *, struct ifmediareq *));
-void fxp_scb_wait	__P((struct fxp_softc *));
-void fxp_start			__P((struct ifnet *));
-int fxp_ioctl			__P((struct ifnet *, u_long, caddr_t));
-void fxp_init			__P((void *));
-void fxp_stop			__P((struct fxp_softc *, int));
-void fxp_watchdog		__P((struct ifnet *));
-int fxp_add_rfabuf		__P((struct fxp_softc *, struct mbuf *));
-int fxp_mdi_read		__P((struct device *, int, int));
-void fxp_mdi_write		__P((struct device *, int, int, int));
-void fxp_autosize_eeprom	__P((struct fxp_softc *));
-void fxp_statchg		__P((struct device *));
-void fxp_read_eeprom		__P((struct fxp_softc *, u_int16_t *,
-				    int, int));
-void fxp_stats_update		__P((void *));
-void fxp_mc_setup		__P((struct fxp_softc *, int));
-void fxp_scb_cmd		__P((struct fxp_softc *, u_int8_t));
+int fxp_mediachange(struct ifnet *);
+void fxp_mediastatus(struct ifnet *, struct ifmediareq *);
+void fxp_scb_wait(struct fxp_softc *);
+void fxp_start(struct ifnet *);
+int fxp_ioctl(struct ifnet *, u_long, caddr_t);
+void fxp_init(void *);
+void fxp_stop(struct fxp_softc *, int);
+void fxp_watchdog(struct ifnet *);
+int fxp_add_rfabuf(struct fxp_softc *, struct mbuf *);
+int fxp_mdi_read(struct device *, int, int);
+void fxp_mdi_write(struct device *, int, int, int);
+void fxp_autosize_eeprom(struct fxp_softc *);
+void fxp_statchg(struct device *);
+void fxp_read_eeprom(struct fxp_softc *, u_int16_t *,
+				    int, int);
+void fxp_stats_update(void *);
+void fxp_mc_setup(struct fxp_softc *, int);
+void fxp_scb_cmd(struct fxp_softc *, u_int8_t);
 
 /*
  * Set initial transmit threshold at 64 (512 bytes). This is
@@ -177,15 +177,6 @@ void fxp_scb_cmd		__P((struct fxp_softc *, u_int8_t));
  * (1536 bytes), if an underrun occurs.
  */
 static int tx_threshold = 64;
-
-/*
- * Number of completed TX commands at which point an interrupt
- * will be generated to garbage collect the attached buffers.
- * Must be at least one less than FXP_NTXCB, and should be
- * enough less so that the transmitter doesn't becomes idle
- * during the buffer rundown (which would reduce performance).
- */
-#define FXP_CXINT_THRESH 120
 
 /*
  * TxCB list index mask. This is used to do list wrap-around.
@@ -220,8 +211,8 @@ fxp_scb_wait(sc)
  * Operating system-specific autoconfiguration glue
  *************************************************************/
 
-void	fxp_shutdown __P((void *));
-void	fxp_power __P((int, void *));
+void	fxp_shutdown(void *);
+void	fxp_power(int, void *);
 
 struct cfdriver fxp_cd = {
 	NULL, "fxp", DV_IFNET
@@ -258,7 +249,7 @@ fxp_power(why, arg)
 	if (why != PWR_RESUME)
 		fxp_stop(sc, 0);
 	else {
-		ifp = &sc->arpcom.ac_if;
+		ifp = &sc->sc_arpcom.ac_if;
 		if (ifp->if_flags & IFF_UP)
 			fxp_init(sc);
 	}
@@ -363,8 +354,8 @@ fxp_attach_common(sc, enaddr, intrstr)
 	 */
 	fxp_read_eeprom(sc, (u_int16_t *)enaddr, 0, 3);
 
-	ifp = &sc->arpcom.ac_if;
-	bcopy(enaddr, sc->arpcom.ac_enaddr, ETHER_ADDR_LEN);
+	ifp = &sc->sc_arpcom.ac_if;
+	bcopy(enaddr, sc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN);
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 	ifp->if_softc = sc;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
@@ -382,7 +373,7 @@ fxp_attach_common(sc, enaddr, intrstr)
 #endif
 
 	printf(": %s, address %s\n", intrstr,
-	    ether_sprintf(sc->arpcom.ac_enaddr));
+	    ether_sprintf(sc->sc_arpcom.ac_enaddr));
 
 	/*
 	 * Initialize our media structures and probe the MII.
@@ -463,7 +454,7 @@ int
 fxp_detach(sc)
 	struct fxp_softc *sc;
 {
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 
 	/* Unhook our tick handler. */
 	timeout_del(&sc->stats_update_to);
@@ -668,8 +659,10 @@ fxp_start(ifp)
 			m_copydata(m0, 0, m0->m_pkthdr.len, mtod(m, caddr_t));
 			m->m_pkthdr.len = m->m_len = m0->m_pkthdr.len;
 			if (bus_dmamap_load_mbuf(sc->sc_dmat, txs->tx_map,
-			    m, BUS_DMA_NOWAIT) != 0)
+			    m, BUS_DMA_NOWAIT) != 0) {
+				m_freem(m);
 				break;
+			}
 		}
 
 		IFQ_DEQUEUE(&ifp->if_snd, m0);
@@ -738,7 +731,7 @@ fxp_intr(arg)
 	void *arg;
 {
 	struct fxp_softc *sc = arg;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	u_int8_t statack;
 	int claimed = 0, rnr;
 
@@ -786,6 +779,8 @@ fxp_intr(arg)
 				}
 				--txcnt;
 				txs = txs->tx_next;
+				FXP_TXCB_SYNC(sc, txs,
+				    BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
 			}
 			sc->sc_cbt_cons = txs;
 			sc->sc_cbt_cnt = txcnt;
@@ -888,7 +883,7 @@ fxp_stats_update(arg)
 	void *arg;
 {
 	struct fxp_softc *sc = arg;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct fxp_stats *sp = &sc->sc_ctrl->stats;
 	int s;
 
@@ -928,6 +923,7 @@ fxp_stats_update(arg)
 	if (sc->rx_idle_secs > FXP_MAX_RX_IDLE) {
 		sc->rx_idle_secs = 0;
 		fxp_init(sc);
+		splx(s);
 		return;
 	}
 	/*
@@ -975,7 +971,7 @@ fxp_stop(sc, drain)
 	struct fxp_softc *sc;
 	int drain;
 {
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int i;
 
 	/*
@@ -1077,7 +1073,7 @@ fxp_init(xsc)
 	void *xsc;
 {
 	struct fxp_softc *sc = xsc;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct fxp_cb_config *cbp;
 	struct fxp_cb_ias *cb_ias;
 	struct fxp_cb_tx *txp;
@@ -1183,8 +1179,8 @@ fxp_init(xsc)
 	cb_ias->cb_status = 0;
 	cb_ias->cb_command = FXP_CB_COMMAND_IAS | FXP_CB_COMMAND_EL;
 	cb_ias->link_addr = 0xffffffff;
-	bcopy(sc->arpcom.ac_enaddr, (void *)cb_ias->macaddr,
-	    sizeof(sc->arpcom.ac_enaddr));
+	bcopy(sc->sc_arpcom.ac_enaddr, (void *)cb_ias->macaddr,
+	    sizeof(sc->sc_arpcom.ac_enaddr));
 
 	/*
 	 * Start the IAS (Individual Address Setup) command/DMA.
@@ -1466,7 +1462,7 @@ fxp_ioctl(ifp, command, data)
 
 	s = splimp();
 
-	if ((error = ether_ioctl(ifp, &sc->arpcom, command, data)) > 0) {
+	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, command, data)) > 0) {
 		splx(s);
 		return (error);
 	}
@@ -1479,7 +1475,7 @@ fxp_ioctl(ifp, command, data)
 #ifdef INET
 		case AF_INET:
 			fxp_init(sc);
-			arp_ifinit(&sc->arpcom, ifa);
+			arp_ifinit(&sc->sc_arpcom, ifa);
 			break;
 #endif
 #ifdef NS
@@ -1528,8 +1524,8 @@ fxp_ioctl(ifp, command, data)
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
 		error = (command == SIOCADDMULTI) ?
-		    ether_addmulti(ifr, &sc->arpcom) :
-		    ether_delmulti(ifr, &sc->arpcom);
+		    ether_addmulti(ifr, &sc->sc_arpcom) :
+		    ether_delmulti(ifr, &sc->sc_arpcom);
 		if (error == ENETRESET) {
 			/*
 			 * Multicast list has changed; set the hardware
@@ -1548,7 +1544,7 @@ fxp_ioctl(ifp, command, data)
 	default:
 		error = EINVAL;
 	}
-	(void) splx(s);
+	splx(s);
 	return (error);
 }
 
@@ -1572,7 +1568,7 @@ fxp_mc_setup(sc, doit)
 	int doit;
 {
 	struct fxp_cb_mcs *mcsp = &sc->sc_ctrl->u.mcs;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct ether_multistep step;
 	struct ether_multi *enm;
 	int nmcasts;
@@ -1586,7 +1582,7 @@ fxp_mc_setup(sc, doit)
 
 	nmcasts = 0;
 	if (!(ifp->if_flags & IFF_ALLMULTI)) {
-		ETHER_FIRST_MULTI(step, &sc->arpcom, enm);
+		ETHER_FIRST_MULTI(step, &sc->sc_arpcom, enm);
 		while (enm != NULL) {
 			if (nmcasts >= MAXMCADDR) {
 				ifp->if_flags |= IFF_ALLMULTI;

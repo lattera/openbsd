@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ucomvar.h,v 1.7.2.1 2002/01/31 22:55:39 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ucomvar.h,v 1.7.2.2 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: ucomvar.h,v 1.9 2001/01/23 21:56:17 augustss Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug.c,v 1.7 1998/06/09 13:45:07 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug.c,v 1.7.18.1 2002/06/11 03:35:55 art Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -44,7 +44,7 @@ struct reg reg;
 u_int32_t *const reg_values[] = { REG_VALUES(reg) };
 char *const trap_names[] = { TRAP_NAMES };
 
-void d_putc __P((dev_t, int));
+void d_putc(dev_t, int);
 
 #ifdef DEBUG_DEBUG
 #define	CKPT(c)	(*(u_short volatile *)(VBASE+160) = (0x1700 | (c)))
@@ -83,7 +83,7 @@ dump_regs(trapno, arg)
 			((i%4)? ' ': '\n'));
 
 	dump_mem("Code dump", (void *)*reg_values[8], 8);
-	/* %ebx (void*)((*reg_values[3] + 15) & ~0x0F) */
+	/* %ebx (void *)((*reg_values[3] + 15) & ~0x0F) */
 	dump_mem("Memory dump", (void *)0x1a000, 48);
 	dump_mem("Stack trace", (void *)(*reg_values[4]), 48);
 

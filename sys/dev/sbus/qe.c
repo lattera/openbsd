@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.6.2.1 2002/01/31 22:55:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.6.2.2 2002/06/11 03:42:29 art Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -148,29 +148,29 @@ struct qe_softc {
 #endif
 };
 
-int	qematch __P((struct device *, void *, void *));
-void	qeattach __P((struct device *, struct device *, void *));
+int	qematch(struct device *, void *, void *);
+void	qeattach(struct device *, struct device *, void *);
 
-void	qeinit __P((struct qe_softc *));
-void	qestart __P((struct ifnet *));
-void	qestop __P((struct qe_softc *));
-void	qewatchdog __P((struct ifnet *));
-int	qeioctl __P((struct ifnet *, u_long, caddr_t));
-void	qereset __P((struct qe_softc *));
+void	qeinit(struct qe_softc *);
+void	qestart(struct ifnet *);
+void	qestop(struct qe_softc *);
+void	qewatchdog(struct ifnet *);
+int	qeioctl(struct ifnet *, u_long, caddr_t);
+void	qereset(struct qe_softc *);
 
-int	qeintr __P((void *));
-int	qe_eint __P((struct qe_softc *, u_int32_t));
-int	qe_rint __P((struct qe_softc *));
-int	qe_tint __P((struct qe_softc *));
-void	qe_mcreset __P((struct qe_softc *));
+int	qeintr(void *);
+int	qe_eint(struct qe_softc *, u_int32_t);
+int	qe_rint(struct qe_softc *);
+int	qe_tint(struct qe_softc *);
+void	qe_mcreset(struct qe_softc *);
 
-static int	qe_put __P((struct qe_softc *, int, struct mbuf *));
-static void	qe_read __P((struct qe_softc *, int, int));
-static struct mbuf	*qe_get __P((struct qe_softc *, int, int));
+static int	qe_put(struct qe_softc *, int, struct mbuf *);
+static void	qe_read(struct qe_softc *, int, int);
+static struct mbuf	*qe_get(struct qe_softc *, int, int);
 
 /* ifmedia callbacks */
-void	qe_ifmedia_sts __P((struct ifnet *, struct ifmediareq *));
-int	qe_ifmedia_upd __P((struct ifnet *));
+void	qe_ifmedia_sts(struct ifnet *, struct ifmediareq *);
+int	qe_ifmedia_upd(struct ifnet *);
 
 struct cfattach qe_ca = {
 	sizeof(struct qe_softc), qematch, qeattach
@@ -206,7 +206,7 @@ qeattach(parent, self, aux)
 	bus_dma_segment_t seg;
 	bus_size_t size;
 	int rseg, error;
-	extern void myetheraddr __P((u_char *));
+	extern void myetheraddr(u_char *);
 
 	/* Pass on the bus tags */
 	sc->sc_bustag = sa->sa_bustag;
@@ -284,7 +284,6 @@ qeattach(parent, self, aux)
 			self->dv_xname, error);
 		return;
 	}
-	sc->sc_rb.rb_dmabase = sc->sc_dmamap->dm_segs[0].ds_addr;
 
 	/* Map DMA buffer in CPU addressable space */
 	if ((error = bus_dmamem_map(dmatag, &seg, rseg, size,
@@ -305,6 +304,7 @@ qeattach(parent, self, aux)
 		bus_dmamem_free(dmatag, &seg, rseg);
 		return;
 	}
+	sc->sc_rb.rb_dmabase = sc->sc_dmamap->dm_segs[0].ds_addr;
 
 	/* Initialize media properties */
 	ifmedia_init(&sc->sc_ifmedia, 0, qe_ifmedia_upd, qe_ifmedia_sts);
@@ -485,9 +485,11 @@ qestart(ifp)
 	bix = sc->sc_rb.rb_tdhead;
 
 	for (;;) {
-		IFQ_DEQUEUE(&ifp->if_snd, m);
-		if (m == 0)
+		IFQ_POLL(&ifp->if_snd, m);
+		if (m == NULL)
 			break;
+
+		IFQ_DEQUEUE(&ifp->if_snd, m);
 
 #if NBPFILTER > 0
 		/*
@@ -646,7 +648,7 @@ qeintr(arg)
 	if (qestat & QE_CR_STAT_RXIRQ)
 		r |= qe_rint(sc);
 
-	return (r);
+	return (1);
 }
 
 /*
@@ -679,12 +681,16 @@ qe_tint(sc)
 		--sc->sc_rb.rb_td_nbusy;
 	}
 
-	sc->sc_rb.rb_tdtail = bix;
-
-	qestart(ifp);
-
 	if (sc->sc_rb.rb_td_nbusy == 0)
 		ifp->if_timer = 0;
+
+	if (sc->sc_rb.rb_tdtail != bix) {
+		sc->sc_rb.rb_tdtail = bix;
+		if (ifp->if_flags & IFF_OACTIVE) {
+			ifp->if_flags &= ~IFF_OACTIVE;
+			qestart(ifp);
+		}
+	}
 
 	return (1);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/ams.c,v 1.2 2001/09/01 17:43:08 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/ams.c,v 1.2.6.1 2002/06/11 03:36:33 art Exp $	*/
 /*	$NetBSD: ams.c,v 1.11 2000/12/19 03:13:40 tsubai Exp $	*/
 
 /*
@@ -55,10 +55,10 @@
 /*
  * Function declarations.
  */
-static int	amsmatch __P((struct device *, void *, void *));
-static void	amsattach __P((struct device *, struct device *, void *));
-static void	ems_init __P((struct ams_softc *));
-static void	ms_processevent __P((adb_event_t *event, struct ams_softc *));
+static int	amsmatch(struct device *, void *, void *);
+static void	amsattach(struct device *, struct device *, void *);
+static void	ems_init(struct ams_softc *);
+static void	ms_processevent(adb_event_t *event, struct ams_softc *);
 
 /* Driver definition. */
 struct cfattach ams_ca = {
@@ -70,9 +70,9 @@ struct cfdriver ams_cd = {
 };
 
 
-int ams_enable __P((void *));
-int ams_ioctl __P((void *, u_long, caddr_t, int, struct proc *));
-void ams_disable __P((void *));
+int ams_enable(void *);
+int ams_ioctl(void *, u_long, caddr_t, int, struct proc *);
+void ams_disable(void *);
 
 const struct wsmouse_accessops ams_accessops = {
 	ams_enable,
@@ -544,6 +544,13 @@ ams_ioctl(v, cmd, data, flag, p)
 	int flag;
 	struct proc *p;
 {
+	switch (cmd) {
+	case WSMOUSEIO_GTYPE:
+		*(u_int *)data = WSMOUSE_TYPE_ADB;
+		return (0);
+	}
+
+
 	return -1;
 }
 

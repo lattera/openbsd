@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops.c,v 1.1 2001/03/18 04:32:44 nate Exp $ */
-/*	 $NetBSD: rasops.c,v 1.35 2001/02/02 06:01:01 marcus Exp $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops.c,v 1.1.8.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$NetBSD: rasops.c,v 1.35 2001/02/02 06:01:01 marcus Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -37,17 +37,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-//__KERNEL_RCSID(0, "$NetBSD: rasops.c,v 1.35 2001/02/02 06:01:01 marcus Exp $");
-
 #include "rasops_glue.h"
 
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/time.h>
 
-/* #include <machine/bswap.h> */
 #include <machine/endian.h>
 
 #include <dev/wscons/wsdisplayvar.h>
@@ -105,16 +100,16 @@ const u_char rasops_isgray[16] = {
 };
 
 /* Generic functions */
-static void	rasops_copyrows __P((void *, int, int, int));
-static int	rasops_mapchar __P((void *, int, u_int *));
-static void	rasops_cursor __P((void *, int, int, int));
-static int	rasops_alloc_cattr __P((void *, int, int, int, long *));
-static int	rasops_alloc_mattr __P((void *, int, int, int, long *));
-static void	rasops_do_cursor __P((struct rasops_info *));
-static void	rasops_init_devcmap __P((struct rasops_info *));
+static void	rasops_copyrows(void *, int, int, int);
+static int	rasops_mapchar(void *, int, u_int *);
+static void	rasops_cursor(void *, int, int, int);
+static int	rasops_alloc_cattr(void *, int, int, int, long *);
+static int	rasops_alloc_mattr(void *, int, int, int, long *);
+static void	rasops_do_cursor(struct rasops_info *);
+static void	rasops_init_devcmap(struct rasops_info *);
 
 /*
- * Initalize a 'rasops_info' descriptor.
+ * Initialize a 'rasops_info' descriptor.
  */
 int
 rasops_init(ri, wantrows, wantcols)
@@ -129,8 +124,14 @@ rasops_init(ri, wantrows, wantcols)
 
 		wsfont_init();
 
-		/* Want 8 pixel wide, don't care about aestethics */
-		if ((cookie = wsfont_find(NULL, 8, 0, 0)) <= 0)
+		if (ri->ri_width > 80*12)
+			/* High res screen, choose a big font */
+			cookie = wsfont_find(NULL, 12, 0, 0);
+		else
+			/*  lower res, choose a 8 pixel wide font */
+			cookie = wsfont_find(NULL, 8, 0, 0);
+
+		if (cookie <= 0)
 			cookie = wsfont_find(NULL, 0, 0, 0);
 
 		if (cookie <= 0) {
@@ -163,7 +164,7 @@ rasops_init(ri, wantrows, wantcols)
 
 	if (rasops_reconfig(ri, wantrows, wantcols))
 		return (-1);
- 
+
 	rasops_init_devcmap(ri);
 	return (0);
 }
@@ -234,7 +235,7 @@ rasops_reconfig(ri, wantrows, wantcols)
 	ri->ri_origbits = ri->ri_bits;
 
 	if ((ri->ri_flg & RI_CENTER) != 0) {
-		ri->ri_bits += (((ri->ri_width * bpp >> 3) - 
+		ri->ri_bits += (((ri->ri_width * bpp >> 3) -
 		    ri->ri_emustride) >> 1) & ~3;
 		ri->ri_bits += ((ri->ri_height - ri->ri_emuheight) >> 1) *
 		    ri->ri_stride;

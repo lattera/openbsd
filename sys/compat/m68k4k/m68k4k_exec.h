@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.h,v 1.1 1997/01/13 11:07:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/m68k4k/Attic/m68k4k_exec.h,v 1.1.24.1 2002/06/11 03:28:08 art Exp $	*/
 /*	$NetBSD: m68k4k_exec.h,v 1.1 1996/09/10 22:01:21 thorpej Exp $	*/
 
 /*-
@@ -43,6 +43,6 @@
 #define M68K4K_LDPGSZ		4096
 #define M68K4K_USRTEXT		M68K4K_LDPGSZ
 
-int	exec_m68k4k_makecmds __P((struct proc *, struct exec_package *));
+int	exec_m68k4k_makecmds(struct proc *, struct exec_package *);
 
 #endif /* _M68K4K_EXEC_H_ */

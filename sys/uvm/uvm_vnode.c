@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.2 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.55 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*
@@ -71,13 +71,13 @@
  * functions
  */
 
-void	uvn_detach __P((struct uvm_object *));
-int	uvn_get __P((struct uvm_object *, voff_t, struct vm_page **, int *, int,
-	    vm_prot_t, int, int));
-int	uvn_put __P((struct uvm_object *, voff_t, voff_t, int));
-void	uvn_reference __P((struct uvm_object *));
+void	uvn_detach(struct uvm_object *);
+int	uvn_get(struct uvm_object *, voff_t, struct vm_page **, int *, int,
+	    vm_prot_t, int, int);
+int	uvn_put(struct uvm_object *, voff_t, voff_t, int);
+void	uvn_reference(struct uvm_object *);
 
-int	uvn_findpage __P((struct uvm_object *, voff_t, struct vm_page **, int));
+int	uvn_findpage(struct uvm_object *, voff_t, struct vm_page **, int);
 
 /*
  * master pager structure

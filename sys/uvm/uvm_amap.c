@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.17.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.17.2.3 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_amap.c,v 1.40 2001/12/05 01:33:09 enami Exp $	*/
 
 /*
@@ -69,7 +69,7 @@ struct pool uvm_amap_pool;
  * local functions
  */
 
-static struct vm_amap *amap_alloc1 __P((int, int, int));
+static struct vm_amap *amap_alloc1(int, int, int);
 
 #ifdef UVM_AMAP_PPREF
 /*
@@ -105,8 +105,8 @@ static struct vm_amap *amap_alloc1 __P((int, int, int));
  * here are some in-line functions to help us.
  */
 
-static __inline void pp_getreflen __P((int *, int, int *, int *));
-static __inline void pp_setreflen __P((int *, int, int, int));
+static __inline void pp_getreflen(int *, int, int *, int *);
+static __inline void pp_setreflen(int *, int, int, int);
 
 /*
  * pp_getreflen: get the reference and length for a specific offset
@@ -934,15 +934,16 @@ amap_pp_adjref(amap, curslot, slotlen, adjval)
 	vsize_t slotlen;
 	int adjval;
 {
-	int stopslot, *ppref, lcv;
-	int ref, len;
+ 	int stopslot, *ppref, lcv, prevlcv;
+ 	int ref, len, prevref, prevlen;
 
 	stopslot = curslot + slotlen;
 	ppref = amap->am_ppref;
+ 	prevlcv = 0;
 
 	/*
-	 * first advance to the correct place in the ppref array, fragment
-	 * if needed.
+ 	 * first advance to the correct place in the ppref array,
+ 	 * fragment if needed.
 	 */
 
 	for (lcv = 0 ; lcv < curslot ; lcv += len) {
@@ -952,10 +953,23 @@ amap_pp_adjref(amap, curslot, slotlen, adjval)
 			pp_setreflen(ppref, curslot, ref, len - (curslot -lcv));
 			len = curslot - lcv;   /* new length of entry @ lcv */
 		}
+		prevlcv = lcv;
+	}
+	if (lcv != 0)
+		pp_getreflen(ppref, prevlcv, &prevref, &prevlen);
+	else {
+		/* Ensure that the "prevref == ref" test below always
+		 * fails, since we're starting from the beginning of
+		 * the ppref array; that is, there is no previous
+		 * chunk.  
+		 */
+		prevref = -1;
+		prevlen = 0;
 	}
 
 	/*
-	 * now adjust reference counts in range (make sure we dont overshoot)
+	 * now adjust reference counts in range.  merge the first
+	 * changed entry with the last unchanged entry if possible.
 	 */
 
 	if (lcv != curslot)
@@ -969,10 +983,14 @@ amap_pp_adjref(amap, curslot, slotlen, adjval)
 			    len - (stopslot - lcv));
 			len = stopslot - lcv;
 		}
-		ref = ref + adjval;    /* ADJUST! */
+		ref += adjval;
 		if (ref < 0)
 			panic("amap_pp_adjref: negative reference count");
-		pp_setreflen(ppref, lcv, ref, len);
+		if (lcv == prevlcv + prevlen && ref == prevref) {
+			pp_setreflen(ppref, prevlcv, ref, prevlen + len);
+		} else {
+			pp_setreflen(ppref, lcv, ref, len);
+		}
 		if (ref == 0)
 			amap_wiperange(amap, lcv, len);
 	}

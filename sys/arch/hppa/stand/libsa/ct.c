@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/ct.c,v 1.5 1999/04/20 20:01:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/ct.c,v 1.5.14.1 2002/06/11 03:35:38 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -67,12 +67,7 @@ iodcio_t ctiodc;	/* cartridge tape IODC entry point */
 int ctcode[IODC_MAXSIZE/sizeof(int)];
 
 int
-#ifdef __STDC__
 ctopen(struct open_file *f, ...)
-#else
-ctopen(f)
-	struct open_file *f;
-#endif
 {
 	register struct hppa_dev *dp = f->f_devdata;
 	int ret;

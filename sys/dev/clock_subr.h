@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/clock_subr.h,v 1.2 2001/08/19 05:34:05 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/clock_subr.h,v 1.2.4.1 2002/06/11 03:42:15 art Exp $	*/
 /*	$NetBSD: clock_subr.h,v 1.2 1997/03/15 18:11:17 is Exp $	*/
 
 /*-
@@ -50,8 +50,8 @@ struct clock_ymdhms {
 	u_char dt_sec;
 };
 
-time_t clock_ymdhms_to_secs __P((struct clock_ymdhms *));
-void clock_secs_to_ymdhms __P((time_t, struct clock_ymdhms *));
+time_t clock_ymdhms_to_secs(struct clock_ymdhms *);
+void clock_secs_to_ymdhms(time_t, struct clock_ymdhms *);
 
 /*
  * BCD to decimal and decimal to BCD.

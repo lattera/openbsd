@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.13.2.1 2002/01/31 22:55:21 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.13.2.2 2002/06/11 03:37:28 art Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB and RTMX Inc, USA.
@@ -54,18 +54,21 @@
 #define PPC_CLK_IRQ	64
 extern int intrcnt[PPC_NIRQ];
 
-void setsoftclock __P((void));
-void clearsoftclock __P((void));
-int  splsoftclock __P((void));
-void setsoftnet   __P((void));
-void clearsoftnet __P((void));
-int  splsoftnet   __P((void));
+void setsoftclock(void);
+void clearsoftclock(void);
+int  splsoftclock(void);
+void setsoftnet(void);
+void clearsoftnet(void);
+int  splsoftnet(void);
 
-void do_pending_int __P((void));
+void do_pending_int(void);
 
 
 volatile extern int cpl, ipending, astpending, tickspending;
 extern int imask[7];
+
+/* SPL asserts */
+#define	splassert(wantipl)	/* nothing */
 
 /*
  * Reorder protection in the following inline functions is
@@ -152,7 +155,7 @@ set_sint(int pending)
 
 struct intrhand {
 	struct	intrhand *ih_next;
-	int	(*ih_fun) __P((void *));
+	int	(*ih_fun)(void *);
 	void    *ih_arg;
 	u_long  ih_count;
 	int     ih_level;

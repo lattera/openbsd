@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.17.2.1 2002/01/31 22:55:19 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.17.2.2 2002/06/11 03:37:10 art Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -102,9 +102,9 @@ static char *bytes[] =
 #define DAE_DEBUG(stuff)
 #endif
 
-void setlevel __P((int));
+void setlevel(int);
 #ifdef DDB
-void db_setlevel __P((int));
+void db_setlevel(int);
 #endif
 
 #ifdef M88100
@@ -408,9 +408,8 @@ safe_level(mask, curlevel)
 	for (i = curlevel; i < 8; i++)
 		if (! (int_mask_val[i] & mask))
 			return i;
-	printf("safe_level: no safe level for mask 0x%08x level %d found\n",
+	panic("safe_level: no safe level for mask 0x%08x level %d found",
 	       mask, curlevel);
-	panic("safe_level");
 	/* NOTREACHED */
 }
 
@@ -466,19 +465,6 @@ db_setlevel(int level)
 }
 #endif /* DDB */
 
-#if 0
-void
-block_obio_interrupt(unsigned mask)
-{
-	blocked_interrupts_mask |= mask;
-}
-
-void
-unblock_obio_interrupt(unsigned mask)
-{
-	blocked_interrupts_mask |= ~mask;
-}
-#endif
 #endif  /* MVME188 */
 
 unsigned 

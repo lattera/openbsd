@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.27.2.1 2002/01/31 22:55:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.27.2.2 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.108 2001/07/24 19:30:14 eeh Exp $ */
 
 /*-
@@ -82,6 +82,8 @@
  *	@(#)machdep.c	8.6 (Berkeley) 1/14/94
  */
 
+#include "auxio.h"
+
 #include <sys/param.h>
 #include <sys/extent.h>
 #include <sys/signal.h>
@@ -136,6 +138,12 @@
 
 #include <sparc64/sparc64/cache.h>
 
+#include "pckbc.h"
+#include "pckbd.h"
+#if (NPCKBC > 0) && (NPCKBD == 0)
+#include <dev/ic/pckbcvar.h>
+#endif
+
 /* #include "fb.h" */
 
 int bus_space_debug = 0; /* This may be used by macros elsewhere. */
@@ -148,9 +156,28 @@ int bus_space_debug = 0; /* This may be used by macros elsewhere. */
 struct vm_map *exec_map = NULL;
 extern vaddr_t avail_end;
 
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
+int	bufcachepercent = BUFCACHEPERCENT;
+
 int	physmem;
 u_long	_randseed;
 extern	caddr_t msgbufaddr;
+
+#if NAUXIO > 0
+#include <sparc64/dev/auxiovar.h>
+int sparc_led_blink;
+#endif
+
+#ifdef APERTURE
+#ifdef INSECURE
+int allowaperture = 1;
+#else
+int allowaperture = 0;
+#endif
+#endif
 
 /*
  * Maximum number of DMA segments we'll allow in dmamem_load()
@@ -166,9 +193,9 @@ extern	caddr_t msgbufaddr;
  */
 int   safepri = 0;
 
-caddr_t	allocsys __P((caddr_t));
-void	dumpsys __P((void));
-void	stackdump __P((void));
+caddr_t	allocsys(caddr_t);
+void	dumpsys(void);
+void	stackdump(void);
 
 /* 
  * This is the table that tells us how to access different bus space types.
@@ -216,6 +243,21 @@ int bus_stream_asi[] = {
 	ASI_PRIMARY_LITTLE,			/* PCI I/O space */
 	0
 };
+#endif
+
+#if (NPCKBC > 0) && (NPCKBD == 0)
+/*
+ * This is called by the pckbc driver if no pckbd is configured.
+ * On the i386, it is used to glue in the old, deprecated console
+ * code.  On the sparc64, it does nothing.
+ */
+int
+pckbc_machdep_cnattach(kbctag, kbcslot)
+	pckbc_tag_t kbctag;
+	pckbc_slot_t kbcslot;
+{
+	return (ENXIO);
+}
 #endif
 
 /*
@@ -337,6 +379,9 @@ allocsys(caddr_t v)
 #define valloc(name, type, num) \
 	    v = (caddr_t)(((name) = (type *)v) + (num))
 #ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
         valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM
@@ -351,28 +396,23 @@ allocsys(caddr_t v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
         /*
 	 * Determine how many buffers to allocate (enough to
 	 * hold 5% of total physical memory, but at least 16).
 	 * Allocate 1/2 as many swap buffer headers as file i/o buffers.
 	 */
 	 if (bufpages == 0)
-	 	bufpages = physmem * BUFCACHEPERCENT / 100;
+	 	bufpages = physmem * bufcachepercent / 100;
 	 if (nbuf == 0) {
 	 	nbuf = bufpages;
 		if (nbuf < 16)
 			nbuf = 16;
 	}
-	if (nbuf > 200)
-		nbuf = 200;     /* or we run out of PMEGS */
-	/* Restrict to at most 70% filled kvm */
+	/* Restrict to at most 30% filled kvm */
 	if (nbuf * MAXBSIZE >
-	    (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) * 7 / 10)
+	    (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) * 3 / 10)
 		nbuf = (VM_MAX_KERNEL_ADDRESS-VM_MIN_KERNEL_ADDRESS) /
-		    MAXBSIZE * 7 / 10;
+		    MAXBSIZE * 3 / 10;
 
 	/* More buffer pages than fits into the buffers is senseless.  */
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
@@ -507,6 +547,9 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	size_t newlen;
 	struct proc *p;
 {
+#if NAUXIO > 0
+	int oldval, ret;
+#endif
 	u_int chosen;
 	char bootargs[256];
 	char *cp = NULL;
@@ -535,13 +578,40 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 				/*
 				 * We can leave it NULL && let userland handle
 				 * the failure or set it to the default name,
-				 * `netbsd' 
+				 * `bsd' 
 				 */
-				cp = "netbsd";
+				cp = "bsd";
 		}
 		if (cp == NULL || cp[0] == '\0')
 			return (ENOENT);
 		return (sysctl_rdstring(oldp, oldlenp, newp, cp));
+	case CPU_LED_BLINK:
+#if NAUXIO > 0
+		oldval = sparc_led_blink;
+		ret = sysctl_int(oldp, oldlenp, newp, newlen,
+		    &sparc_led_blink);
+
+		/*
+		 * If we were false and are now true, call auxio_led_blink().
+		 * auxio_led_blink() will catch the other case itself.
+		 */
+		if (!oldval && sparc_led_blink > oldval)
+			auxio_led_blink(NULL);
+		return (ret);
+#else
+		return (EOPNOTSUPP);
+#endif
+	case CPU_ALLOWAPERTURE:
+#ifdef APERTURE
+		if (securelevel > 0)
+			return (sysctl_rdint(oldp, oldlenp, newp,
+			    allowaperture));
+		else
+			return (sysctl_int(oldp, oldlenp, newp, newlen,
+			    &allowaperture));
+#else
+		return (sysctl_rdint(oldp, oldlenp, newp, 0));
+#endif
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -900,7 +970,7 @@ dumpsys()
 {
 	register int psize;
 	daddr_t blkno;
-	register int (*dump)	__P((dev_t, daddr_t, caddr_t, size_t));
+	register int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int error = 0;
 	register struct mem_region *mp;
 	extern struct mem_region *mem;
@@ -1005,7 +1075,7 @@ printf("starting dump, blkno %d\n", blkno);
 	}
 }
 
-void trapdump __P((struct trapframe64*));
+void trapdump(struct trapframe64*);
 /*
  * dump out a trapframe.
  */
@@ -1049,7 +1119,7 @@ stackdump()
 	printf("Call traceback:\n");
 	while (fp && ((u_long)fp >> PGSHIFT) == ((u_long)sfp >> PGSHIFT)) {
 		if( ((long)fp) & 1 ) {
-			fp64 = (struct frame64*)(((char*)fp)+BIAS);
+			fp64 = (struct frame64*)(((char *)fp)+BIAS);
 			/* 64-bit frame */
 			printf("%llx(%llx, %llx, %llx, %llx, %llx, %llx, %llx) fp = %llx\n",
 			       (unsigned long long)fp64->fr_pc,
@@ -1652,22 +1722,25 @@ struct sparc_bus_dma_tag mainbus_dma_tag = {
 /*
  * Base bus space handlers.
  */
-static int	sparc_bus_map __P(( bus_space_tag_t, bus_type_t, bus_addr_t,
+static int	sparc_bus_map( bus_space_tag_t, bus_type_t, bus_addr_t,
 				    bus_size_t, int, vaddr_t,
-				    bus_space_handle_t *));
-static int	sparc_bus_unmap __P((bus_space_tag_t, bus_space_handle_t,
-				     bus_size_t));
-static int	sparc_bus_subregion __P((bus_space_tag_t, bus_space_handle_t,
+				    bus_space_handle_t *);
+static int	sparc_bus_unmap(bus_space_tag_t, bus_space_handle_t,
+				     bus_size_t);
+static int	sparc_bus_subregion(bus_space_tag_t, bus_space_handle_t,
 					 bus_size_t, bus_size_t,
-					 bus_space_handle_t *));
-static int	sparc_bus_mmap __P((bus_space_tag_t, bus_type_t,
-				    bus_addr_t, int, bus_space_handle_t *));
-static void	*sparc_mainbus_intr_establish __P((bus_space_tag_t, int, int,
-						   int, int (*) __P((void *)),
-						   void *));
-static void     sparc_bus_barrier __P(( bus_space_tag_t, bus_space_handle_t,
-					bus_size_t, bus_size_t, int));
-
+					 bus_space_handle_t *);
+static paddr_t	sparc_bus_mmap(bus_space_tag_t, bus_addr_t, off_t, int, int);
+static void	*sparc_mainbus_intr_establish(bus_space_tag_t, int, int,
+						   int, int (*)(void *),
+						   void *);
+static void	sparc_bus_barrier(bus_space_tag_t, bus_space_handle_t,
+					  bus_size_t, bus_size_t, int);
+static int	sparc_bus_alloc(bus_space_tag_t, bus_addr_t, bus_addr_t,
+					bus_size_t, bus_size_t, bus_size_t, int,
+					bus_addr_t *, bus_space_handle_t *);
+static void	sparc_bus_free(bus_space_tag_t, bus_space_handle_t,
+				       bus_size_t);
 
 vaddr_t iobase = IODEV_BASE;
 struct extent *io_space = NULL;
@@ -1792,17 +1865,16 @@ sparc_bus_unmap(t, bh, size)
 	return (0);
 }
 
-int
-sparc_bus_mmap(t, iospace, paddr, flags, hp)
+paddr_t
+sparc_bus_mmap(t, paddr, off, prot, flags)
 	bus_space_tag_t t;
-	bus_type_t	iospace;
-	bus_addr_t	paddr;
-	int		flags;
-	bus_space_handle_t *hp;
+	bus_addr_t paddr;
+	off_t off;
+	int prot;
+	int flags;
 {
-
-	*hp = (bus_space_handle_t)(paddr>>PGSHIFT);
-	return (0);
+	/* Devices are un-cached... although the driver should do that */
+	return ((paddr+off)|PMAP_NC);
 }
 
 /*
@@ -1815,7 +1887,7 @@ bus_space_probe(tag, btype, paddr, size, offset, flags, callback, arg)
 	bus_size_t	size;
 	size_t		offset;
 	int		flags;
-	int		(*callback) __P((void *, void *));
+	int		(*callback)(void *, void *);
 	void		*arg;
 {
 	bus_space_handle_t bh;
@@ -1840,7 +1912,7 @@ sparc_mainbus_intr_establish(t, pil, level, flags, handler, arg)
 	int	pil;
 	int	level;
 	int	flags;
-	int	(*handler)__P((void *));
+	int	(*handler)(void *);
 	void	*arg;
 {
 	struct intrhand *ih;
@@ -1856,7 +1928,8 @@ sparc_mainbus_intr_establish(t, pil, level, flags, handler, arg)
 	return (ih);
 }
 
-void sparc_bus_barrier (t, h, offset, size, flags)
+void
+sparc_bus_barrier (t, h, offset, size, flags)
 	bus_space_tag_t	t;
 	bus_space_handle_t h;
 	bus_size_t	offset;
@@ -1880,10 +1953,37 @@ void sparc_bus_barrier (t, h, offset, size, flags)
 	return;
 }
 
+int
+sparc_bus_alloc(t, rs, re, s, a, b, f, ap, hp)
+	bus_space_tag_t	t;
+	bus_addr_t	rs;
+	bus_addr_t	re;
+	bus_size_t	s;
+	bus_size_t	a;
+	bus_size_t	b;
+	int		f;
+	bus_addr_t	*ap;
+	bus_space_handle_t *hp;
+{
+	return (ENOTTY);
+}
+
+void
+sparc_bus_free(t, h, s)
+	bus_space_tag_t	t;
+	bus_space_handle_t	h;
+	bus_size_t	s;
+{
+	return;
+}
+
+
 struct sparc_bus_space_tag mainbus_space_tag = {
 	NULL,				/* cookie */
 	NULL,				/* parent bus tag */
 	UPA_BUS_SPACE,			/* type */
+	sparc_bus_alloc,
+	sparc_bus_free,
 	sparc_bus_map,			/* bus_space_map */
 	sparc_bus_unmap,		/* bus_space_unmap */
 	sparc_bus_subregion,		/* bus_space_subregion */

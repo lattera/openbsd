@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_boot.c,v 1.12.2.1 2002/01/31 22:55:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/nfs/nfs_boot.c,v 1.12.2.2 2002/06/11 03:32:03 art Exp $ */
 /*	$NetBSD: nfs_boot.c,v 1.26 1996/05/07 02:51:25 thorpej Exp $	*/
 
 /*
@@ -67,10 +67,11 @@ nfs_boot_init(nd, procp)
 }
 
 int
-nfs_boot_getfh(bpsin, key, ndmntp)
+nfs_boot_getfh(bpsin, key, ndmntp, retries)
 	struct sockaddr_in *bpsin;
 	char *key;
 	struct nfs_dlmount *ndmntp;
+	int retries;
 {
 	/* can not get here */
 	return (EOPNOTSUPP);
@@ -99,14 +100,14 @@ nfs_boot_getfh(bpsin, key, ndmntp)
  */
 
 /* bootparam RPC */
-static int bp_whoami __P((struct sockaddr_in *bpsin,
-	struct in_addr *my_ip, struct in_addr *gw_ip));
-static int bp_getfile __P((struct sockaddr_in *bpsin, char *key,
-	struct sockaddr_in *mdsin, char *servname, char *path, int retries));
+static int bp_whoami(struct sockaddr_in *bpsin,
+	struct in_addr *my_ip, struct in_addr *gw_ip);
+static int bp_getfile(struct sockaddr_in *bpsin, char *key,
+	struct sockaddr_in *mdsin, char *servname, char *path, int retries);
 
 /* mountd RPC */
-static int md_mount __P((struct sockaddr_in *mdsin, char *path,
-	u_char *fh));
+static int md_mount(struct sockaddr_in *mdsin, char *path,
+	u_char *fh);
 
 char	*nfsbootdevname;
 

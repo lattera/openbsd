@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.h,v 1.1 2002/05/22 21:00:00 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.h,v 1.1.2.1 2002/06/11 03:36:34 art Exp $	*/
 
 /*
  * Copyright (c) 2002, Miodrag Vallat.

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops8.c,v 1.1 2001/03/18 04:32:45 nate Exp $ */
-/* 	$NetBSD: rasops8.c,v 1.8 2000/04/12 14:22:29 pk Exp $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops8.c,v 1.1.8.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$NetBSD: rasops8.c,v 1.8 2000/04/12 14:22:29 pk Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -37,10 +37,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-//__KERNEL_RCSID(0, "$NetBSD: rasops8.c,v 1.8 2000/04/12 14:22:29 pk Exp $");
-
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/time.h>
@@ -49,13 +45,12 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/rasops/rasops.h>
 
-static void 	rasops8_putchar __P((void *, int, int, u_int, long attr));
+static void 	rasops8_putchar(void *, int, int, u_int, long attr);
 #ifndef RASOPS_SMALL
-static void 	rasops8_putchar8 __P((void *, int, int, u_int, long attr));
-static void 	rasops8_putchar12 __P((void *, int, int, u_int, long attr));
-static void 	rasops8_putchar16 __P((void *, int, int, u_int, long attr));
-static void	rasops8_makestamp __P((struct rasops_info *ri, long));
-#endif
+static void 	rasops8_putchar8(void *, int, int, u_int, long attr);
+static void 	rasops8_putchar12(void *, int, int, u_int, long attr);
+static void 	rasops8_putchar16(void *, int, int, u_int, long attr);
+static void	rasops8_makestamp(struct rasops_info *ri, long);
 
 /*
  * 4x1 stamp for optimized character blitting
@@ -63,6 +58,7 @@ static void	rasops8_makestamp __P((struct rasops_info *ri, long));
 static int32_t	stamp[16];
 static long	stamp_attr;
 static int	stamp_mutex;	/* XXX see note in README */
+#endif
 
 /*
  * XXX this confuses the hell out of gcc2 (not egcs) which always insists
@@ -76,7 +72,7 @@ static int	stamp_mutex;	/* XXX see note in README */
 #define STAMP_READ(o)		(*(int32_t *)((caddr_t)stamp + (o)))
 
 /*
- * Initalize a 'rasops_info' descriptor for this depth.
+ * Initialize a 'rasops_info' descriptor for this depth.
  */
 void
 rasops8_init(ri)

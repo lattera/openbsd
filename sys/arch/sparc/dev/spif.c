@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.8.4.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.8.4.2 2002/06/11 03:38:16 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -58,52 +58,52 @@
 #include <sparc/dev/spifreg.h>
 #include <sparc/dev/spifvar.h>
 
-#if PIL_TTY == 1
+#if IPL_TTY == 1
 # define IE_MSOFT IE_L1
-#elif PIL_TTY == 4
+#elif IPL_TTY == 4
 # define IE_MSOFT IE_L4
-#elif PIL_TTY == 6
+#elif IPL_TTY == 6
 # define IE_MSOFT IE_L6
 #else
 # error "no suitable software interrupt bit"
 #endif
 
-int	spifmatch	__P((struct device *, void *, void *));
-void	spifattach	__P((struct device *, struct device *, void *));
+int	spifmatch(struct device *, void *, void *);
+void	spifattach(struct device *, struct device *, void *);
 
-int	sttymatch	__P((struct device *, void *, void *));
-void	sttyattach	__P((struct device *, struct device *, void *));
-int	sttyopen	__P((dev_t, int, int, struct proc *));
-int	sttyclose	__P((dev_t, int, int, struct proc *));
-int	sttyread	__P((dev_t, struct uio *, int));
-int	sttywrite	__P((dev_t, struct uio *, int));
-int	sttyioctl	__P((dev_t, u_long, caddr_t, int, struct proc *));
-int	sttystop	__P((struct tty *, int));
+int	sttymatch(struct device *, void *, void *);
+void	sttyattach(struct device *, struct device *, void *);
+int	sttyopen(dev_t, int, int, struct proc *);
+int	sttyclose(dev_t, int, int, struct proc *);
+int	sttyread(dev_t, struct uio *, int);
+int	sttywrite(dev_t, struct uio *, int);
+int	sttyioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int	sttystop(struct tty *, int);
 
-int	spifstcintr		__P((void *));
-int	spifstcintr_mx		__P((struct spif_softc *, int *));
-int	spifstcintr_tx		__P((struct spif_softc *, int *));
-int	spifstcintr_rx		__P((struct spif_softc *, int *));
-int	spifstcintr_rxexception	__P((struct spif_softc *, int *));
-int	spifsoftintr		__P((void *));
+int	spifstcintr(void *);
+int	spifstcintr_mx(struct spif_softc *, int *);
+int	spifstcintr_tx(struct spif_softc *, int *);
+int	spifstcintr_rx(struct spif_softc *, int *);
+int	spifstcintr_rxexception(struct spif_softc *, int *);
+int	spifsoftintr(void *);
 
-int	stty_param	__P((struct tty *, struct termios *));
-struct tty *sttytty	__P((dev_t));
-int	stty_modem_control __P((struct stty_port *, int, int));
-static __inline	void	stty_write_ccr __P((struct stcregs *, u_int8_t));
-int	stty_compute_baud __P((speed_t, int, u_int8_t *, u_int8_t *));
-void	stty_start	__P((struct tty *));
+int	stty_param(struct tty *, struct termios *);
+struct tty *sttytty(dev_t);
+int	stty_modem_control(struct stty_port *, int, int);
+static __inline	void	stty_write_ccr(struct stcregs *, u_int8_t);
+int	stty_compute_baud(speed_t, int, u_int8_t *, u_int8_t *);
+void	stty_start(struct tty *);
 
-int	sbppmatch	__P((struct device *, void *, void *));
-void	sbppattach	__P((struct device *, struct device *, void *));
-int	sbppopen	__P((dev_t, int, int, struct proc *));
-int	sbppclose	__P((dev_t, int, int, struct proc *));
-int	sbppread	__P((dev_t, struct uio *, int));
-int	sbppwrite	__P((dev_t, struct uio *, int));
-int	sbpp_rw	__P((dev_t, struct uio *));
-int	spifppcintr	__P((void *));
-int	sbppselect	__P((dev_t, int, struct proc *));
-int	sbppioctl	__P((dev_t, u_long, caddr_t, int, struct proc *));
+int	sbppmatch(struct device *, void *, void *);
+void	sbppattach(struct device *, struct device *, void *);
+int	sbppopen(dev_t, int, int, struct proc *);
+int	sbppclose(dev_t, int, int, struct proc *);
+int	sbppread(dev_t, struct uio *, int);
+int	sbppwrite(dev_t, struct uio *, int);
+int	sbpp_rw(dev_t, struct uio *);
+int	spifppcintr(void *);
+int	sbppselect(dev_t, int, struct proc *);
+int	sbppioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 struct cfattach spif_ca = {
 	sizeof (struct spif_softc), spifmatch, spifattach
@@ -205,22 +205,22 @@ spifattach(parent, self, aux)
 	sc->sc_regs->stc.gscr3 = 0;
 	printf(": rev %x chiprev %x osc %sMhz stcpri %d ppcpri %d softpri %d\n",
 	    sc->sc_rev, sc->sc_rev2, clockfreq(sc->sc_osc),
-	    stcpri, ppcpri, PIL_TTY);
+	    stcpri, ppcpri, IPL_TTY);
 
 	(void)config_found(self, sttymatch, NULL);
 	(void)config_found(self, sbppmatch, NULL);
 
 	sc->sc_ppcih.ih_fun = spifppcintr;
 	sc->sc_ppcih.ih_arg = sc;
-	intr_establish(ppcpri, &sc->sc_ppcih);
+	intr_establish(ppcpri, &sc->sc_ppcih, -1);
 
 	sc->sc_stcih.ih_fun = spifstcintr;
 	sc->sc_stcih.ih_arg = sc;
-	intr_establish(stcpri, &sc->sc_stcih);
+	intr_establish(stcpri, &sc->sc_stcih, -1);
 
 	sc->sc_softih.ih_fun = spifsoftintr;
 	sc->sc_softih.ih_arg = sc;
-	intr_establish(PIL_TTY, &sc->sc_softih);
+	intr_establish(IPL_TTY, &sc->sc_softih, IPL_TTY);
 
 	sbus_establish(&sc->sc_sd, &sc->sc_dev);
 }
@@ -885,7 +885,7 @@ spifstcintr(vsc)
 	if (needsoft) {
 #if defined(SUN4M)
 		if (CPU_ISSUN4M)
-			raise(0, PIL_TTY);
+			raise(0, IPL_TTY);
 		else
 #endif
 			ienab_bis(IE_MSOFT);

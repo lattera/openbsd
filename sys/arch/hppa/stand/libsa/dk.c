@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dk.c,v 1.5 1999/04/20 20:01:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dk.c,v 1.5.14.1 2002/06/11 03:35:38 art Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.   
@@ -50,12 +50,7 @@ dk_disklabel(dp, label)
 }
 
 int
-#ifdef __STDC__
 dkopen(struct open_file *f, ...)
-#else
-dkopen(f, va_alist)
-	struct open_file *f;
-#endif
 {
 	register struct disklabel *lp;
 	register struct hppa_dev *dp = f->f_devdata;

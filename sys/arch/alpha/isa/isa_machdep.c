@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/isa/isa_machdep.c,v 1.9.2.1 2002/01/31 22:55:05 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/isa/isa_machdep.c,v 1.9.2.2 2002/06/11 03:33:40 art Exp $ */
 /* $NetBSD: isa_machdep.c,v 1.12 1998/08/07 10:26:39 drochner Exp $ */
 
 /*
@@ -54,9 +54,9 @@
 #if (NPCPPI > 0)
 #include <dev/isa/pcppivar.h>
 
-int isabeepmatch __P((struct device *, void *, void *));
-void isabeepattach __P((struct device *, struct device *, void *));
-void isabeep __P((int, int));
+int isabeepmatch(struct device *, void *, void *);
+void isabeepattach(struct device *, struct device *, void *);
+void isabeep(int, int);
 
 struct cfattach isabeep_ca = {
 	sizeof(struct device), isabeepmatch, isabeepattach

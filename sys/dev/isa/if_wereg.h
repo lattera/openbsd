@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_wereg.h,v 1.1 1998/09/22 06:33:19 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_wereg.h,v 1.1.18.1 2002/06/11 03:42:21 art Exp $	*/
 /*	$NetBSD: if_wereg.h,v 1.1 1997/11/03 21:22:50 thorpej Exp $	*/
 
 /*
@@ -15,9 +15,9 @@
  * Compile-time config flags
  */
 /*
- * This sets the default for enabling/disablng the tranceiver.
+ * This sets the default for enabling/disablng the transceiver.
  */
-#define WE_FLAGS_DISABLE_TRANCEIVER	0x0001
+#define WE_FLAGS_DISABLE_TRANSCEIVER	0x0001
 
 /*
  * This forces the board to be used in 8/16-bit mode even if it autoconfigs

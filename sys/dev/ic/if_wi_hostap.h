@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wi_hostap.h,v 1.6 2002/06/08 22:19:47 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wi_hostap.h,v 1.6.2.1 2002/06/11 03:42:18 art Exp $	*/
 
 /*
  * Copyright (c) 2002

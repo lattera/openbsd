@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.30 2001/11/06 19:53:14 miod Exp $        */
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.30.2.1 2002/06/11 03:36:18 art Exp $        */
 /*    $NetBSD: if_sn.c,v 1.13 1997/04/25 03:40:10 briggs Exp $        */
 
 /*
@@ -53,31 +53,31 @@
 #include <mac68k/dev/if_snreg.h>
 #include <mac68k/dev/if_snvar.h>
 
-static void	snwatchdog __P((struct ifnet *));
-static int	sninit __P((struct sn_softc *sc));
-static int	snstop __P((struct sn_softc *sc));
-static int	snioctl __P((struct ifnet *ifp, u_long cmd, caddr_t data));
-static void	snstart __P((struct ifnet *ifp));
-static void	snreset __P((struct sn_softc *sc));
+static void	snwatchdog(struct ifnet *);
+static int	sninit(struct sn_softc *sc);
+static int	snstop(struct sn_softc *sc);
+static int	snioctl(struct ifnet *ifp, u_long cmd, caddr_t data);
+static void	snstart(struct ifnet *ifp);
+static void	snreset(struct sn_softc *sc);
 
-static void	caminitialise __P((struct sn_softc *));
-static void	camentry __P((struct sn_softc *, int, u_char *ea));
-static void	camprogram __P((struct sn_softc *));
-static void	initialise_tda __P((struct sn_softc *));
-static void	initialise_rda __P((struct sn_softc *));
-static void	initialise_rra __P((struct sn_softc *));
+static void	caminitialise(struct sn_softc *);
+static void	camentry(struct sn_softc *, int, u_char *ea);
+static void	camprogram(struct sn_softc *);
+static void	initialise_tda(struct sn_softc *);
+static void	initialise_rda(struct sn_softc *);
+static void	initialise_rra(struct sn_softc *);
 #ifdef SNDEBUG
-static void	camdump __P((struct sn_softc *sc));
+static void	camdump(struct sn_softc *sc);
 #endif
 
-static void	sonictxint __P((struct sn_softc *));
-static void	sonicrxint __P((struct sn_softc *));
+static void	sonictxint(struct sn_softc *);
+static void	sonicrxint(struct sn_softc *);
 
-static __inline__ int	sonicput __P((struct sn_softc *sc, struct mbuf *m0,
-			    int mtd_next));
-static __inline__ int	sonic_read __P((struct sn_softc *, caddr_t, int));
-static __inline__ struct mbuf *sonic_get __P((struct sn_softc *,
-			    struct ether_header *, int));
+static __inline__ int	sonicput(struct sn_softc *sc, struct mbuf *m0,
+			    int mtd_next);
+static __inline__ int	sonic_read(struct sn_softc *, caddr_t, int);
+static __inline__ struct mbuf *sonic_get(struct sn_softc *,
+			    struct ether_header *, int);
 
 struct cfdriver sn_cd = {
 	NULL, "sn", DV_IFNET
@@ -237,7 +237,7 @@ snsetup(sc, lladdr)
 #ifdef SNDEBUG
 	camdump(sc);
 #endif
-	printf(" address %s\n", ether_sprintf(lladdr));
+	printf("address %s\n", ether_sprintf(lladdr));
 
 #ifdef SNDEBUG
 	printf("%s: buffers: rra=%p cda=%p rda=%p tda=%p\n",
@@ -430,7 +430,7 @@ sninit(sc)
 
 	s = splnet();
 
-	NIC_PUT(sc, SNR_CR, CR_RST);	/* DCR only accessable in reset mode! */
+	NIC_PUT(sc, SNR_CR, CR_RST);	/* DCR only accessible in reset mode! */
 
 	/* config it */
 	NIC_PUT(sc, SNR_DCR, (sc->snr_dcr |
@@ -1171,7 +1171,7 @@ sonic_get(sc, eh, datalen)
 				if (top) m_freem(top);
 				return (0);
 			}
-			len = MLEN;
+			len = MCLBYTES;
 		}
 		m->m_len = len = min(datalen, len);
 

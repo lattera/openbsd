@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/tree.h,v 1.4 2002/03/26 02:47:28 hugh Exp $	*/
+/*	$OpenBSD: src/sys/sys/tree.h,v 1.4.4.1 2002/06/11 03:32:34 art Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.11.2.1 2002/01/31 22:55:38 niklas Exp $	*/
+/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.11.2.2 2002/06/11 03:42:28 art Exp $	*/
 /* $NetBSD: rf_netbsdkintf.c,v 1.109 2001/07/27 03:30:07 oster Exp $	*/
 /*-
  * Copyright (c) 1996, 1997, 1998 The NetBSD Foundation, Inc.
@@ -172,21 +172,21 @@ static RF_SparetWait_t *rf_sparet_wait_queue;
 static RF_SparetWait_t *rf_sparet_resp_queue;
 
 /* prototypes */
-void	rf_KernelWakeupFunc __P((struct buf *));
-void	rf_InitBP __P((struct buf *, struct vnode *, unsigned, dev_t,
+void	rf_KernelWakeupFunc(struct buf *);
+void	rf_InitBP(struct buf *, struct vnode *, unsigned, dev_t,
 	    RF_SectorNum_t, RF_SectorCount_t, caddr_t, void (*)(struct buf *),
-	    void *, int, struct proc *));
-void raidinit __P((RF_Raid_t *));
+	    void *, int, struct proc *);
+void raidinit(RF_Raid_t *);
 
-void	raidattach __P((int));
-int	raidsize __P((dev_t));
-int	raidopen __P((dev_t, int, int, struct proc *));
-int	raidclose __P((dev_t, int, int, struct proc *));
-int	raidioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
-int	raidwrite __P((dev_t, struct uio *, int));
-int	raidread __P((dev_t, struct uio *, int));
-void	raidstrategy __P((struct buf *));
-int	raiddump __P((dev_t, daddr_t, caddr_t, size_t));
+void	raidattach(int);
+int	raidsize(dev_t);
+int	raidopen(dev_t, int, int, struct proc *);
+int	raidclose(dev_t, int, int, struct proc *);
+int	raidioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int	raidwrite(dev_t, struct uio *, int);
+int	raidread(dev_t, struct uio *, int);
+void	raidstrategy(struct buf *);
+int	raiddump(dev_t, daddr_t, caddr_t, size_t);
 
 /*
  * Pilfered from ccd.c
@@ -239,11 +239,11 @@ int numraid = 0;
  * into the device tree.  This is needed by some archs that look for
  * bootable devices in there.
  */
-int	rf_probe	__P((struct device *, void *, void *));
-void	rf_attach	__P((struct device *, struct device *, void *));
-int	rf_detach	__P((struct device *, int));
-int	rf_activate	__P((struct device *, enum devact));
-void	rf_zeroref	__P((struct device *));
+int	rf_probe(struct device *, void *, void *);
+void	rf_attach(struct device *, struct device *, void *);
+int	rf_detach(struct device *, int);
+int	rf_activate(struct device *, enum devact);
+void	rf_zeroref(struct device *);
 
 struct cfattach raid_ca = {
 	sizeof(struct raid_softc), rf_probe, rf_attach,
@@ -278,44 +278,43 @@ struct cfattach raid_ca = {
 struct raid_softc *raid_softc;
 struct raid_softc **raid_scPtrs;
 
-void	raidgetdefaultlabel
-	     __P((RF_Raid_t *, struct raid_softc *, struct disklabel *));
-void	raidgetdisklabel __P((dev_t));
-void	raidmakedisklabel __P((struct raid_softc *));
+void	rf_shutdown_hook(RF_ThreadArg_t);
+void	raidgetdefaultlabel(RF_Raid_t *, struct raid_softc *, struct disklabel *);
+void	raidgetdisklabel(dev_t);
+void	raidmakedisklabel(struct raid_softc *);
 
-int	raidlock __P((struct raid_softc *));
-void	raidunlock __P((struct raid_softc *));
+int	raidlock(struct raid_softc *);
+void	raidunlock(struct raid_softc *);
 
-void	rf_markalldirty __P((RF_Raid_t *));
-void rf_mountroot_hook __P((struct device *));
+void	rf_markalldirty(RF_Raid_t *);
 
 struct device *raidrootdev;
 
-int findblkmajor __P((struct device *dv));
-char *findblkname __P((int));
+int findblkmajor(struct device *dv);
+char *findblkname(int);
 
-void rf_ReconThread __P((struct rf_recon_req *));
+void rf_ReconThread(struct rf_recon_req *);
 /* XXX what I want is: */
-/*void rf_ReconThread __P((RF_Raid_t *raidPtr));  */
-void rf_RewriteParityThread __P((RF_Raid_t *raidPtr));
-void rf_CopybackThread __P((RF_Raid_t *raidPtr));
-void rf_ReconstructInPlaceThread __P((struct rf_recon_req *));
+/*void rf_ReconThread(RF_Raid_t *raidPtr);  */
+void rf_RewriteParityThread(RF_Raid_t *raidPtr);
+void rf_CopybackThread(RF_Raid_t *raidPtr);
+void rf_ReconstructInPlaceThread(struct rf_recon_req *);
 #ifdef RAID_AUTOCONFIG
-void rf_buildroothack __P((void *));
-int rf_reasonable_label __P((RF_ComponentLabel_t *));
+void rf_buildroothack(void *);
+int rf_reasonable_label(RF_ComponentLabel_t *);
 #endif
 
-RF_AutoConfig_t *rf_find_raid_components __P((void));
-RF_ConfigSet_t *rf_create_auto_sets __P((RF_AutoConfig_t *));
-int rf_does_it_fit __P((RF_ConfigSet_t *,RF_AutoConfig_t *));
-void rf_create_configuration __P((RF_AutoConfig_t *,RF_Config_t *,
-				  RF_Raid_t *));
-int rf_set_autoconfig __P((RF_Raid_t *, int));
-int rf_set_rootpartition __P((RF_Raid_t *, int));
-void rf_release_all_vps __P((RF_ConfigSet_t *));
-void rf_cleanup_config_set __P((RF_ConfigSet_t *));
-int rf_have_enough_components __P((RF_ConfigSet_t *));
-int rf_auto_config_set __P((RF_ConfigSet_t *, int *));
+RF_AutoConfig_t *rf_find_raid_components(void);
+RF_ConfigSet_t *rf_create_auto_sets(RF_AutoConfig_t *);
+int rf_does_it_fit(RF_ConfigSet_t *,RF_AutoConfig_t *);
+void rf_create_configuration(RF_AutoConfig_t *,RF_Config_t *,
+				  RF_Raid_t *);
+int rf_set_autoconfig(RF_Raid_t *, int);
+int rf_set_rootpartition(RF_Raid_t *, int);
+void rf_release_all_vps(RF_ConfigSet_t *);
+void rf_cleanup_config_set(RF_ConfigSet_t *);
+int rf_have_enough_components(RF_ConfigSet_t *);
+int rf_auto_config_set(RF_ConfigSet_t *, int *);
 
 #ifdef RAID_AUTOCONFIG
 static int raidautoconfig = 0; /* Debugging, mostly.  Set to 0 to not
@@ -467,30 +466,27 @@ raidattach(num)
 #ifdef RAID_AUTOCONFIG
 	raidautoconfig = 1;
 
-if (raidautoconfig) {
-	/* 1. locate all RAID components on the system */
+	if (raidautoconfig) {
+		/* 1. locate all RAID components on the system */
 
 #ifdef DEBUG
-	printf("Searching for raid components...\n");
+		printf("Searching for raid components...\n");
 #endif
-	ac_list = rf_find_raid_components();
+		ac_list = rf_find_raid_components();
 
-	/* 2. sort them into their respective sets */
+		/* 2. sort them into their respective sets */
 
-	config_sets = rf_create_auto_sets(ac_list);
+		config_sets = rf_create_auto_sets(ac_list);
 
-	/* 3. evaluate each set and configure the valid ones
-	   This gets done in rf_buildroothack() */
+		/* 3. evaluate each set and configure the valid ones
+		   This gets done in rf_buildroothack() */
 
-	/* schedule the creation of the thread to do the 
-	   "/ on RAID" stuff */
+		/* schedule the creation of the thread to do the 
+		   "/ on RAID" stuff */
 
-	rf_buildroothack(config_sets);
+		rf_buildroothack(config_sets);
 
-#if 0
-	mountroothook_establish(rf_mountroot_hook, &raidrootdev[0]);
-#endif
-}
+	}
 #endif
 
 }
@@ -561,6 +557,38 @@ rf_buildroothack(arg)
 	}
 }
 #endif
+
+void
+rf_shutdown_hook(arg)
+	RF_ThreadArg_t arg;
+{
+	int unit;
+	struct raid_softc *rs;
+	RF_Raid_t *raidPtr;
+
+	/* Don't do it if we are not "safe" */
+	if (boothowto & RB_NOSYNC)
+		return;
+
+	raidPtr = (RF_Raid_t *) arg;
+	unit = raidPtr->raidid;
+	rs = &raid_softc[unit];
+
+	/* Shutdown the system */
+
+	rf_Shutdown(raidPtr);
+
+	pool_destroy(&rs->sc_cbufpool);
+
+	/* It's no longer initialized... */
+	rs->sc_flags &= ~RAIDF_INITED;
+
+	/* config_detach the device. */
+	config_detach(device_lookup(&raid_cd, unit), 0);
+
+	/* Detach the disk. */
+	disk_detach(&rs->sc_dkdev);
+}
 
 int
 raidsize(dev)
@@ -726,29 +754,9 @@ raidclose(dev, flags, fmt, p)
 	           Device shutdown has taken care of setting the
 	           clean bits if RAIDF_INITED is not set
 	           mark things as clean... */
-#if 0
-		printf("Last one on raid%d.  Updating status.\n",unit);
-#endif
+		db1_printf(("Last one on raid%d.  Updating status.\n",unit));
 		rf_update_component_labels(raidPtrs[unit],
 						 RF_FINAL_COMPONENT_UPDATE);
-#if 0
-		if (doing_shutdown) {
-/* #endif */
-			/* last one, and we're going down, so
-			   lights out for this RAID set too. */
-			error = rf_Shutdown(raidPtrs[unit]);
-			pool_destroy(&rs->sc_cbufpool);
-			
-			/* It's no longer initialized... */
-			rs->sc_flags &= ~RAIDF_INITED;
-			
-			/* config_detach the device. */
-			config_detach(device_lookup(&raid_cd, unit), 0);
-
-			disk_detach(&rs->sc_dkdev);
-/* #if 0 */
-		}
-#endif
 	}
 
 	raidunlock(rs);
@@ -767,19 +775,21 @@ raidstrategy(bp)
 	struct disklabel *lp;
 	int wlabel;
 
+	s = splbio();
+
 	if ((rs->sc_flags & RAIDF_INITED) ==0) {
 		bp->b_error = ENXIO;
 		bp->b_flags |= B_ERROR;
 		bp->b_resid = bp->b_bcount;
 		biodone(bp);
-  		return;
+  		goto raidstrategy_end;
 	}
 	if (raidID >= numraid || !raidPtrs[raidID]) {
 		bp->b_error = ENODEV;
 		bp->b_flags |= B_ERROR;
 		bp->b_resid = bp->b_bcount;
 		biodone(bp);
-		return;
+		goto raidstrategy_end;
 	}
 	raidPtr = raidPtrs[raidID];
 	if (!raidPtr->valid) {
@@ -787,12 +797,12 @@ raidstrategy(bp)
 		bp->b_flags |= B_ERROR;
 		bp->b_resid = bp->b_bcount;
 		biodone(bp);
-		return;
+		goto raidstrategy_end;
 	}
 	if (bp->b_bcount == 0) {
 		db1_printf(("b_bcount is zero..\n"));
 		biodone(bp);
-		return;
+		goto raidstrategy_end;
 	}
 	lp = rs->sc_dkdev.dk_label;
 
@@ -807,10 +817,8 @@ raidstrategy(bp)
 			db1_printf(("Bounds check failed!!:%d %d\n",
 			    (int)bp->b_blkno, (int)wlabel));
 			biodone(bp);
-			return;
+			goto raidstrategy_end;
 		}
-
-	s = splbio();
 
 	bp->b_resid = 0;
 
@@ -820,6 +828,7 @@ raidstrategy(bp)
 
 	raidstart(raidPtrs[raidID]);
 
+raidstrategy_end:
 	splx(s);
 }
 
@@ -1063,18 +1072,19 @@ raidioctl(dev, cmd, data, flag, p)
 			return (EBUSY);
 		}
 
-		retcode = rf_Shutdown(raidPtr);
+		if ((retcode = rf_Shutdown(raidPtr)) == 0) {
 
-		pool_destroy(&rs->sc_cbufpool);
+			pool_destroy(&rs->sc_cbufpool);
 
-		/* It's no longer initialized... */
-		rs->sc_flags &= ~RAIDF_INITED;
+			/* It's no longer initialized... */
+			rs->sc_flags &= ~RAIDF_INITED;
 
-		/* config_detach the device. */
-		config_detach(device_lookup(&raid_cd, unit), 0);
+			/* config_detach the device. */
+			config_detach(device_lookup(&raid_cd, unit), 0);
 
-		/* Detach the disk. */
-		disk_detach(&rs->sc_dkdev);
+			/* Detach the disk. */
+			disk_detach(&rs->sc_dkdev);
+		}
 
 		raidunlock(rs);
 
@@ -1799,6 +1809,9 @@ raidstart(raidPtr)
 			bp->b_error = ENOSPC;
 			bp->b_flags |= B_ERROR;
 			bp->b_resid = bp->b_bcount;
+			/* db1_printf(("%s: Calling biodone on 0x%x\n",
+				    __func__, bp)); */
+			splassert(IPL_BIO);
 			biodone(bp);
 			RF_LOCK_MUTEX(raidPtr->mutex);
 			continue;
@@ -1811,6 +1824,9 @@ raidstart(raidPtr)
 			bp->b_error = EINVAL;
 			bp->b_flags |= B_ERROR;
 			bp->b_resid = bp->b_bcount;
+			/* db1_printf(("%s: Calling biodone on 0x%x\n",
+				    __func__, bp)); */
+			splassert(IPL_BIO);
 			biodone(bp);
 			RF_LOCK_MUTEX(raidPtr->mutex);
 			continue;
@@ -2696,10 +2712,9 @@ rf_RewriteParityThread(raidPtr)
 	int retcode;
 	int s;
 
-	raidPtr->parity_rewrite_in_progress = 1;
 	s = splbio();
+	raidPtr->parity_rewrite_in_progress = 1;
 	retcode = rf_RewriteParity(raidPtr);
-	splx(s);
 	if (retcode) {
 		printf("raid%d: Error re-writing parity!\n",raidPtr->raidid);
 	} else {
@@ -2709,6 +2724,7 @@ rf_RewriteParityThread(raidPtr)
 		raidPtr->parity_good = RF_RAID_CLEAN;
 	}
 	raidPtr->parity_rewrite_in_progress = 0;
+	splx(s);
 
 	/* Anyone waiting for us to stop?  If so, inform them... */
 	if (raidPtr->waitShutdown) {
@@ -2726,11 +2742,11 @@ rf_CopybackThread(raidPtr)
 {
 	int s;
 
-	raidPtr->copyback_in_progress = 1;
 	s = splbio();
+	raidPtr->copyback_in_progress = 1;
 	rf_CopybackReconstructedData(raidPtr);
-	splx(s);
 	raidPtr->copyback_in_progress = 0;
+	splx(s);
 
 	/* That's all... */
 	kthread_exit(0);        /* does not return */
@@ -2755,13 +2771,6 @@ rf_ReconstructInPlaceThread(req)
 
 	/* That's all... */
 	kthread_exit(0);        /* does not return */
-}
-
-void
-rf_mountroot_hook(dev)
-	struct device *dev;
-{
-
 }
 
 

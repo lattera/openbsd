@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/sunkbdvar.h,v 1.1.2.1 2002/01/31 22:55:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/sunkbdvar.h,v 1.1.2.2 2002/06/11 03:42:29 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,8 +29,17 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 extern const keysym_t sunkbd_keydesc_us[];
 extern const struct wscons_keydesc sunkbd_keydesctab[];
 extern struct wskbd_mapdata sunkbd_keymapdata;
+extern const struct wscons_keydesc sunkbd5_keydesctab[];
+extern struct wskbd_mapdata sunkbd5_keymapdata;
+
+#define ISTYPE5(layout) ((layout) > 0x20)

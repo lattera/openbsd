@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.2 2001/10/03 20:06:00 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.2.6.1 2002/06/11 03:36:33 art Exp $	*/
 
 /*-
  * Copyright (c) 2001 Alexander Guy.  All rights reserved.
@@ -55,6 +55,7 @@
 #include <machine/apmvar.h>
 
 #include <macppc/dev/adbvar.h>
+#include <macppc/dev/adb_direct.h>
 #include <macppc/dev/pm_direct.h>
 
 #if defined(APMDEBUG)
@@ -69,16 +70,12 @@ struct apm_softc {
 	int    sc_flags;
 };
 
-int apmmatch __P((struct device *, void *, void *));
-void apmattach __P((struct device *, struct device *, void *));
+int apmmatch(struct device *, void *, void *);
+void apmattach(struct device *, struct device *, void *);
 
 struct cfattach apm_ca = {
 	sizeof(struct apm_softc), apmmatch, apmattach
 };
-
-int apmopen __P((dev_t dev, int flag, int mode, struct proc *p));
-int apmclose __P((dev_t dev, int flag, int mode, struct proc *p));
-int apmioctl __P((dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p));
 
 struct cfdriver apm_cd = {
 	NULL, "apm", DV_DULL
@@ -89,9 +86,9 @@ struct cfdriver apm_cd = {
 #define APMDEV_NORMAL	0
 #define APMDEV_CTL	8
 
-void filt_apmrdetach __P((struct knote *kn));
-int filt_apmread __P((struct knote *kn, long hint));
-int apmkqfilter __P((dev_t dev, struct knote *kn));
+void filt_apmrdetach(struct knote *kn);
+int filt_apmread(struct knote *kn, long hint);
+int apmkqfilter(dev_t dev, struct knote *kn);
 
 struct filterops apmread_filtops =
 	{ 1, NULL, filt_apmrdetach, filt_apmread};
@@ -245,7 +242,7 @@ apmioctl(dev, cmd, data, flag, p)
 		if ((flag & FWRITE) == 0)
 			error = EBADF;
 		else {
-			int flag = *(int*)data;
+			int flag = *(int *)data;
 			DPRINTF(( "APM_IOC_PRN_CTL: %d\n", flag ));
 			switch (flag) {
 			case APM_PRINT_ON:	/* enable printing */
@@ -274,14 +271,15 @@ apmioctl(dev, cmd, data, flag, p)
 
 		pm_battery_info(0, &batt);
 
-		power->ac_state = ((batt.flags & PMU_PWR_AC_PRESENT) ? APM_AC_ON : APM_AC_OFF);
-		power->battery_life = ((batt.cur_charge * 100) / batt.max_charge);
+		power->ac_state = ((batt.flags & PMU_PWR_AC_PRESENT) ?
+		    APM_AC_ON : APM_AC_OFF);
+		power->battery_life =
+		    ((batt.cur_charge * 100) / batt.max_charge);
 
-		/* XXX - If the battery is charging, return the minutes left until
-		 *       charging is complete.  This might cause problems as I don't
-		 *       think APM does this.. I don't have a machine to test with.
+		/*
+		 * If the battery is charging, return the minutes left until
+		 * charging is complete. apmd knows this.
 		 */
-
 
 		if (!(batt.flags & PMU_PWR_BATT_PRESENT)) {
 			power->battery_state = APM_BATT_UNKNOWN;
@@ -290,11 +288,12 @@ apmioctl(dev, cmd, data, flag, p)
 		} else if ((power->ac_state == APM_AC_ON) &&
 			   (batt.draw > 0)) {
 			power->minutes_left =
-				(((batt.max_charge - batt.cur_charge) * 3600) / batt.draw) / 60;
+			    (((batt.max_charge - batt.cur_charge) * 3600) /
+			    batt.draw) / 60;
 			power->battery_state = APM_BATT_CHARGING;
 		} else {
 			power->minutes_left = 
-			((batt.cur_charge * 3600) / (-batt.draw)) / 60;
+			    ((batt.cur_charge * 3600) / (-batt.draw)) / 60;
 
 			/* XXX - Arbitrary */
 			if (power->battery_life > 60) {
@@ -308,7 +307,6 @@ apmioctl(dev, cmd, data, flag, p)
 
 		break;
 		
-	
 	default:
 		error = ENOTTY;
 	}

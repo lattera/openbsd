@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/llc_input.c,v 1.2 1996/03/04 07:36:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/llc_input.c,v 1.2.26.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: llc_input.c,v 1.3 1996/02/13 22:04:44 christos Exp $	*/
 
 /* 
@@ -306,13 +306,7 @@ llcintr()
  *                 are then enacted accordingly.
  */
 int
-#if __STDC__
 llc_input(struct mbuf *m, ...)
-#else
-llc_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	int frame_kind;
 	int pollfinal;

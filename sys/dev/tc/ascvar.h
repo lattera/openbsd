@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/ascvar.h,v 1.9 2002/05/02 22:56:06 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/ascvar.h,v 1.9.2.1 2002/06/11 03:42:29 art Exp $	*/
 /*	$NetBSD: ascvar.h,v 1.7 2000/10/31 15:16:26 simonb Exp $	*/
 
 /*

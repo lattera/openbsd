@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.21.2.1 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.21.2.2 2002/06/11 03:27:30 art Exp $	*/
 /*	$NetBSD: advnops.c,v 1.32 1996/10/13 02:52:09 christos Exp $	*/
 
 /*
@@ -53,34 +53,34 @@
 
 extern struct vnodeops adosfs_vnodeops;
 
-int	adosfs_advlock	__P((void *));
-int	adosfs_open	__P((void *));
-int	adosfs_getattr	__P((void *));
-int	adosfs_read	__P((void *));
-int	adosfs_write	__P((void *));
-int	adosfs_ioctl	__P((void *));
-int	adosfs_select	__P((void *));
-int	adosfs_strategy	__P((void *));
-int	adosfs_link	__P((void *));
-int	adosfs_symlink	__P((void *));
-int	adosfs_lock	__P((void *));
-int	adosfs_unlock	__P((void *));
-int	adosfs_bmap	__P((void *));
-int	adosfs_print	__P((void *));
-int	adosfs_readdir	__P((void *));
-int	adosfs_access	__P((void *));
-int	adosfs_readlink	__P((void *));
-int	adosfs_inactive	__P((void *));
-int	adosfs_islocked	__P((void *));
-int	adosfs_reclaim	__P((void *));
-int	adosfs_pathconf	__P((void *));
-int	adnullop	__P((void *));
-int	adenotsup	__P((void *));
+int	adosfs_advlock(void *);
+int	adosfs_open(void *);
+int	adosfs_getattr(void *);
+int	adosfs_read(void *);
+int	adosfs_write(void *);
+int	adosfs_ioctl(void *);
+int	adosfs_select(void *);
+int	adosfs_strategy(void *);
+int	adosfs_link(void *);
+int	adosfs_symlink(void *);
+int	adosfs_lock(void *);
+int	adosfs_unlock(void *);
+int	adosfs_bmap(void *);
+int	adosfs_print(void *);
+int	adosfs_readdir(void *);
+int	adosfs_access(void *);
+int	adosfs_readlink(void *);
+int	adosfs_inactive(void *);
+int	adosfs_islocked(void *);
+int	adosfs_reclaim(void *);
+int	adosfs_pathconf(void *);
+int	adnullop(void *);
+int	adenotsup(void *);
 
 #define adosfs_close 		adnullop
 #define adosfs_fsync 		adnullop
 #ifdef NFSSERVER
-int	lease_check __P((void *));
+int	lease_check(void *);
 #define	adosfs_lease_check lease_check
 #else
 #define adosfs_lease_check 	adnullop
@@ -437,6 +437,7 @@ adosfs_strategy(v)
 	struct anode *ap;
 	struct vnode *vp;
 	int error;
+	int s;
 
 #ifdef ADOSFS_DIAGNOSTIC
 	advopprint(sp);
@@ -445,7 +446,9 @@ adosfs_strategy(v)
 	bp = sp->a_bp;
 	if (bp->b_vp == NULL) {
 		bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		error = EIO;
 		goto reterr;
 	}
@@ -455,7 +458,9 @@ adosfs_strategy(v)
 		error = VOP_BMAP(vp, bp->b_lblkno, NULL, &bp->b_blkno, NULL);
 		if (error) {
 			bp->b_flags |= B_ERROR;
+			s = splbio();
 			biodone(bp);
+			splx(s);
 			goto reterr;
 		}
 	}

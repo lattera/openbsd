@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_wi_obio.c,v 1.3 2001/09/19 20:18:57 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_wi_obio.c,v 1.3.6.1 2002/06/11 03:36:33 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -69,19 +69,19 @@
 #include <dev/ic/if_wi_ieee.h>
 #include <dev/ic/if_wivar.h>
 
-int	wi_obio_match		__P((struct device *, void *, void *));
-void	wi_obio_attach	__P((struct device *, struct device *, void *));
-int	wi_obio_detach	__P((struct device *, int));
-int	wi_obio_activate	__P((struct device *, enum devact));
-void	wi_obio_attach	__P((struct device *, struct device *, void *));
+int	wi_obio_match(struct device *, void *, void *);
+void	wi_obio_attach(struct device *, struct device *, void *);
+int	wi_obio_detach(struct device *, int);
+int	wi_obio_activate(struct device *, enum devact);
+void	wi_obio_attach(struct device *, struct device *, void *);
 int	wi_obio_enable(struct wi_softc *sc);
 void	wi_obio_disable(struct wi_softc *sc);
 
 
-int	wi_intr			__P((void *));
-int	wi_attach		__P((struct wi_softc *));
-void	wi_init			__P((void *));
-void	wi_stop			__P((struct wi_softc *));
+int	wi_intr(void *);
+int	wi_attach(struct wi_softc *);
+void	wi_init(void *);
+void	wi_stop(struct wi_softc *);
 
 struct wi_obio_softc {
 	struct wi_softc sc_wi;
@@ -145,7 +145,7 @@ wi_obio_detach(dev, flags)
 {
 	struct wi_obio_softc *psc = (struct wi_obio_softc *)dev;
 	struct wi_softc *sc = &psc->sc_wi;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 
 	/*
 	obio_io_unmap(psc->sc_pf, psc->sc_io_window);
@@ -166,7 +166,7 @@ wi_obio_activate(dev, act)
 {
 	struct wi_obio_softc *psc = (struct wi_obio_softc *)dev;
 	struct wi_softc *sc = &psc->sc_wi;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int s;
 
 	s = splnet();

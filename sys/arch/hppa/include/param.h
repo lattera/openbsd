@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.14.2.1 2002/01/31 22:55:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.14.2.2 2002/06/11 03:35:37 art Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -139,6 +139,7 @@
 #ifndef _LOCORE
 #define	CONADDR	conaddr
 #define	CONUNIT	conunit
+#define	COM_FREQ	7372800
 extern hppa_hpa_t conaddr;
 extern int conunit;
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_urlreg.h,v 1.3 2002/05/07 19:32:49 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_urlreg.h,v 1.3.2.1 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: if_urlreg.h,v 1.1 2002/03/28 21:09:11 ichiro Exp $	*/
 /*
  * Copyright (c) 2001, 2002

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.26 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.26.2.1 2002/06/11 03:37:10 art Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.
@@ -169,7 +169,7 @@
 #include <machine/intr.h>
 
 #ifdef   _KERNEL
-extern int delay __P((int));
+extern int delay(int);
 #define  DELAY(x)             delay(x)
 
 extern int cputyp;

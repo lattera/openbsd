@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.7 2001/11/05 19:45:34 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.7.2.1 2002/06/11 03:36:49 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -32,14 +32,16 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/device.h>
+
 #include <machine/autoconf.h>
+#include <machine/conf.h>
 #include <machine/cpu.h>
+
 #include <mvme68k/dev/vme.h>
 
 /*
@@ -48,8 +50,10 @@
  * functions will decide how many address bits are relevant.
  */
 
-void vmelattach __P((struct device *, struct device *, void *));
-int  vmelmatch __P((struct device *, void *, void *));
+void vmelattach(struct device *, struct device *, void *);
+int  vmelmatch(struct device *, void *, void *);
+
+int vmelscan(struct device *, void *, void *);
 
 struct cfattach vmel_ca = {
 	sizeof(struct vmelsoftc), vmelmatch, vmelattach
@@ -91,9 +95,10 @@ vmelattach(parent, self, args)
 
 /*ARGSUSED*/
 int
-vmelopen(dev, flag, mode)
+vmelopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 	if (minor(dev) >= vmel_cd.cd_ndevs ||
 	    vmel_cd.cd_devs[minor(dev)] == NULL)
@@ -103,9 +108,10 @@ vmelopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-vmelclose(dev, flag, mode)
+vmelclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -114,13 +120,12 @@ vmelclose(dev, flag, mode)
 /*ARGSUSED*/
 int
 vmelioctl(dev, cmd, data, flag, p)
-	dev_t   dev;
+	dev_t dev;
+	u_long cmd;
 	caddr_t data;
-	int     cmd, flag;
+	int flag;
 	struct proc *p;
 {
-	int unit = minor(dev);
-	struct vmelsoftc *sc = (struct vmelsoftc *) vmel_cd.cd_devs[unit];
 	int error = 0;
 
 	switch (cmd) {

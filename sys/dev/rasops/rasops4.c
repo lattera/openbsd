@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops4.c,v 1.1 2001/03/18 04:32:45 nate Exp $ */
-/* 	$NetBSD: $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops4.c,v 1.1.8.1 2002/06/11 03:42:29 art Exp $	*/
+/*	$NetBSD: rasops4.c,v 1.4 2001/11/15 09:48:15 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -37,10 +37,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-//__KERNEL_RCSID(0, "$NetBSD: $");
-
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/time.h>
@@ -51,16 +47,15 @@
 #include <dev/rasops/rasops.h>
 #include <dev/rasops/rasops_masks.h>
 
-static void	rasops4_copycols __P((void *, int, int, int, int));
-static void	rasops4_erasecols __P((void *, int, int, int, long));
-static void	rasops4_do_cursor __P((struct rasops_info *));
-static void	rasops4_putchar __P((void *, int, int col, u_int, long));
+static void	rasops4_copycols(void *, int, int, int, int);
+static void	rasops4_erasecols(void *, int, int, int, long);
+static void	rasops4_do_cursor(struct rasops_info *);
+static void	rasops4_putchar(void *, int, int col, u_int, long);
 #ifndef RASOPS_SMALL
-static void	rasops4_putchar8 __P((void *, int, int col, u_int, long));
-static void	rasops4_putchar12 __P((void *, int, int col, u_int, long));
-static void	rasops4_putchar16 __P((void *, int, int col, u_int, long));
-static void	rasops4_makestamp __P((struct rasops_info *, long));
-#endif
+static void	rasops4_putchar8(void *, int, int col, u_int, long);
+static void	rasops4_putchar12(void *, int, int col, u_int, long);
+static void	rasops4_putchar16(void *, int, int col, u_int, long);
+static void	rasops4_makestamp(struct rasops_info *, long);
 
 /*
  * 4x1 stamp for optimized character blitting
@@ -68,6 +63,7 @@ static void	rasops4_makestamp __P((struct rasops_info *, long));
 static u_int16_t	stamp[16];
 static long	stamp_attr;
 static int	stamp_mutex;	/* XXX see note in README */
+#endif
 
 /*
  * Initialize rasops_info struct for this colordepth.

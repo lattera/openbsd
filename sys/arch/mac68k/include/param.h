@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/param.h,v 1.15.2.1 2002/01/31 22:55:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/param.h,v 1.15.2.2 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: param.h,v 1.28 1997/03/01 06:57:45 scottr Exp $	*/
 
 /*
@@ -114,7 +114,7 @@
 #define MSGBUFSIZE	4096
 
 #if defined(_KERNEL) && !defined(_LOCORE)
-void	delay		__P((unsigned));
+void	delay(unsigned);
 #define DELAY(ms)	delay(ms)
 #endif	/* _KERNEL && !_LOCORE */
 

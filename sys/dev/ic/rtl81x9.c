@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.1 2002/01/31 22:55:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.2 2002/06/11 03:42:20 art Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -131,38 +131,38 @@
  * so failure to positively identify the chip is not a fatal error.
  */
 
-void rl_tick		__P((void *));
-void rl_shutdown	__P((void *));
+void rl_tick(void *);
+void rl_shutdown(void *);
 
-int rl_encap		__P((struct rl_softc *, struct mbuf * ));
+int rl_encap(struct rl_softc *, struct mbuf * );
 
-void rl_rxeof		__P((struct rl_softc *));
-void rl_txeof		__P((struct rl_softc *));
-void rl_start		__P((struct ifnet *));
-int rl_ioctl		__P((struct ifnet *, u_long, caddr_t));
-void rl_init		__P((void *));
-void rl_stop		__P((struct rl_softc *));
-void rl_watchdog	__P((struct ifnet *));
-int rl_ifmedia_upd	__P((struct ifnet *));
-void rl_ifmedia_sts	__P((struct ifnet *, struct ifmediareq *));
+void rl_rxeof(struct rl_softc *);
+void rl_txeof(struct rl_softc *);
+void rl_start(struct ifnet *);
+int rl_ioctl(struct ifnet *, u_long, caddr_t);
+void rl_init(void *);
+void rl_stop(struct rl_softc *);
+void rl_watchdog(struct ifnet *);
+int rl_ifmedia_upd(struct ifnet *);
+void rl_ifmedia_sts(struct ifnet *, struct ifmediareq *);
 
-void rl_eeprom_putbyte	__P((struct rl_softc *, int));
-void rl_eeprom_getword	__P((struct rl_softc *, int, u_int16_t *));
-void rl_read_eeprom	__P((struct rl_softc *, caddr_t, int, int, int));
+void rl_eeprom_getword(struct rl_softc *, int, int, u_int16_t *);
+void rl_eeprom_putbyte(struct rl_softc *, int, int);
+void rl_read_eeprom(struct rl_softc *, caddr_t, int, int, int, int);
 
-void rl_mii_sync	__P((struct rl_softc *));
-void rl_mii_send	__P((struct rl_softc *, u_int32_t, int));
-int rl_mii_readreg	__P((struct rl_softc *, struct rl_mii_frame *));
-int rl_mii_writereg	__P((struct rl_softc *, struct rl_mii_frame *));
+void rl_mii_sync(struct rl_softc *);
+void rl_mii_send(struct rl_softc *, u_int32_t, int);
+int rl_mii_readreg(struct rl_softc *, struct rl_mii_frame *);
+int rl_mii_writereg(struct rl_softc *, struct rl_mii_frame *);
 
-int rl_miibus_readreg	__P((struct device *, int, int));
-void rl_miibus_writereg	__P((struct device *, int, int, int));
-void rl_miibus_statchg	__P((struct device *));
+int rl_miibus_readreg(struct device *, int, int);
+void rl_miibus_writereg(struct device *, int, int, int);
+void rl_miibus_statchg(struct device *);
 
-u_int8_t rl_calchash	__P((caddr_t));
-void rl_setmulti	__P((struct rl_softc *));
-void rl_reset		__P((struct rl_softc *));
-int rl_list_tx_init	__P((struct rl_softc *));
+u_int8_t rl_calchash(caddr_t);
+void rl_setmulti(struct rl_softc *);
+void rl_reset(struct rl_softc *);
+int rl_list_tx_init(struct rl_softc *);
 
 #define EE_SET(x)					\
 	CSR_WRITE_1(sc, RL_EECMD,			\
@@ -175,19 +175,19 @@ int rl_list_tx_init	__P((struct rl_softc *));
 /*
  * Send a read command and address to the EEPROM, check for ACK.
  */
-void rl_eeprom_putbyte(sc, addr)
+void rl_eeprom_putbyte(sc, addr, addr_len)
 	struct rl_softc		*sc;
-	int			addr;
+	int			addr, addr_len;
 {
 	register int		d, i;
 
-	d = addr | RL_EECMD_READ;
+	d = (RL_EECMD_READ << addr_len) | addr;
 
 	/*
 	 * Feed in each bit and strobe the clock.
 	 */
-	for (i = 0x400; i; i >>= 1) {
-		if (d & i)
+	for (i = RL_EECMD_LEN + addr_len; i; i--) {
+		if (d & (1 << (i - 1)))
 			EE_SET(RL_EE_DATAIN);
 		else
 			EE_CLR(RL_EE_DATAIN);
@@ -203,9 +203,9 @@ void rl_eeprom_putbyte(sc, addr)
 /*
  * Read a word of data stored in the EEPROM at address 'addr.'
  */
-void rl_eeprom_getword(sc, addr, dest)
+void rl_eeprom_getword(sc, addr, addr_len, dest)
 	struct rl_softc		*sc;
-	int			addr;
+	int			addr, addr_len;
 	u_int16_t		*dest;
 {
 	register int		i;
@@ -217,18 +217,18 @@ void rl_eeprom_getword(sc, addr, dest)
 	/*
 	 * Send address of word we want to read.
 	 */
-	rl_eeprom_putbyte(sc, addr);
+	rl_eeprom_putbyte(sc, addr, addr_len);
 
 	CSR_WRITE_1(sc, RL_EECMD, RL_EEMODE_PROGRAM|RL_EE_SEL);
 
 	/*
 	 * Start reading bits from EEPROM.
 	 */
-	for (i = 0x8000; i; i >>= 1) {
+	for (i = 16; i > 0; i--) {
 		EE_SET(RL_EE_CLK);
 		DELAY(100);
 		if (CSR_READ_1(sc, RL_EECMD) & RL_EE_DATAOUT)
-			word |= i;
+			word |= 1 << (i - 1);
 		EE_CLR(RL_EE_CLK);
 		DELAY(100);
 	}
@@ -242,10 +242,11 @@ void rl_eeprom_getword(sc, addr, dest)
 /*
  * Read a sequence of words from the EEPROM.
  */
-void rl_read_eeprom(sc, dest, off, cnt, swap)
+void rl_read_eeprom(sc, dest, off, addr_len, cnt, swap)
 	struct rl_softc		*sc;
 	caddr_t			dest;
 	int			off;
+	int			addr_len;
 	int			cnt;
 	int			swap;
 {
@@ -253,7 +254,7 @@ void rl_read_eeprom(sc, dest, off, cnt, swap)
 	u_int16_t		word = 0, *ptr;
 
 	for (i = 0; i < cnt; i++) {
-		rl_eeprom_getword(sc, off + i, &word);
+		rl_eeprom_getword(sc, off + i, addr_len, &word);
 		ptr = (u_int16_t *)(dest + (i * 2));
 		if (swap)
 			*ptr = ntohs(word);
@@ -261,7 +262,6 @@ void rl_read_eeprom(sc, dest, off, cnt, swap)
 			*ptr = word;
 	}
 }
-
 
 /*
  * MII access routines are provided for the 8129, which
@@ -496,13 +496,13 @@ void rl_setmulti(sc)
 	struct ifnet		*ifp;
 	int			h = 0;
 	u_int32_t		hashes[2] = { 0, 0 };
-	struct arpcom		*ac = &sc->arpcom;
+	struct arpcom		*ac = &sc->sc_arpcom;
 	struct ether_multi	*enm;
 	struct ether_multistep	step;
 	u_int32_t		rxfilt;
 	int			mcnt = 0;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	rxfilt = CSR_READ_4(sc, RL_RXCFG);
 
@@ -623,7 +623,7 @@ rl_rxeof(sc)
 	u_int16_t		limit;
 	u_int16_t		rx_bytes = 0, max_bytes;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	cur_rx = (CSR_READ_2(sc, RL_CURRXADDR) + 16) % RL_RXBUFLEN;
 
@@ -740,7 +740,7 @@ void rl_txeof(sc)
 	struct ifnet		*ifp;
 	u_int32_t		txstat;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	/* Clear the timeout timer. */
 	ifp->if_timer = 0;
@@ -796,7 +796,7 @@ int rl_intr(arg)
 	u_int16_t		status;
 
 	sc = arg;
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 
 	/* Disable interrupts. */
 	CSR_WRITE_2(sc, RL_IMR, 0x0000);
@@ -906,7 +906,8 @@ void rl_start(ifp)
 			break;
 
 		/* Pack the data into the descriptor. */
-		rl_encap(sc, m_head);
+		if (rl_encap(sc, m_head))
+			break;
 		pkts++;
 
 #if NBPFILTER > 0
@@ -949,7 +950,7 @@ void rl_init(xsc)
 	void			*xsc;
 {
 	struct rl_softc		*sc = xsc;
-	struct ifnet		*ifp = &sc->arpcom.ac_if;
+	struct ifnet		*ifp = &sc->sc_arpcom.ac_if;
 	int			s, i;
 	u_int32_t		rxcfg = 0;
 
@@ -962,7 +963,7 @@ void rl_init(xsc)
 
 	/* Init our MAC address */
 	for (i = 0; i < ETHER_ADDR_LEN; i++) {
-		CSR_WRITE_1(sc, RL_IDR0 + i, sc->arpcom.ac_enaddr[i]);
+		CSR_WRITE_1(sc, RL_IDR0 + i, sc->sc_arpcom.ac_enaddr[i]);
 	}
 
 	/* Init the RX buffer pointer register. */
@@ -1028,7 +1029,7 @@ void rl_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 
 	timeout_set(&sc->sc_tick_tmo, rl_tick, sc);
 	timeout_add(&sc->sc_tick_tmo, hz);
@@ -1072,7 +1073,7 @@ int rl_ioctl(ifp, command, data)
 
 	s = splimp();
 
-	if ((error = ether_ioctl(ifp, &sc->arpcom, command, data)) > 0) {
+	if ((error = ether_ioctl(ifp, &sc->sc_arpcom, command, data)) > 0) {
 		splx(s);
 		return error;
 	}
@@ -1084,7 +1085,7 @@ int rl_ioctl(ifp, command, data)
 #ifdef INET
 		case AF_INET:
 			rl_init(sc);
-			arp_ifinit(&sc->arpcom, ifa);
+			arp_ifinit(&sc->sc_arpcom, ifa);
 			break;
 #endif /* INET */
 		default:
@@ -1111,8 +1112,8 @@ int rl_ioctl(ifp, command, data)
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
 		error = (command == SIOCADDMULTI) ?
-		    ether_addmulti(ifr, &sc->arpcom) :
-		    ether_delmulti(ifr, &sc->arpcom);
+		    ether_addmulti(ifr, &sc->sc_arpcom) :
+		    ether_delmulti(ifr, &sc->sc_arpcom);
 
 		if (error == ENETRESET) {
 			/*
@@ -1132,7 +1133,7 @@ int rl_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }
@@ -1161,7 +1162,7 @@ void rl_stop(sc)
 	register int		i;
 	struct ifnet		*ifp;
 
-	ifp = &sc->arpcom.ac_if;
+	ifp = &sc->sc_arpcom.ac_if;
 	ifp->if_timer = 0;
 
 	timeout_del(&sc->sc_tick_tmo);
@@ -1187,19 +1188,34 @@ int
 rl_attach(sc)
 	struct rl_softc *sc;
 {
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	bus_dma_segment_t seg;
 	bus_dmamap_t dmamap;
 	int rseg;
-	u_int16_t rl_did;
+	u_int16_t rl_id, rl_did;
 	caddr_t kva;
+	int addr_len;
 
 	rl_reset(sc);
 
-	rl_read_eeprom(sc, (caddr_t)sc->arpcom.ac_enaddr, RL_EE_EADDR, 3, 0);
-	printf(" address %s\n", ether_sprintf(sc->arpcom.ac_enaddr));
+	/*
+	 * Check EEPROM type 9346 or 9356.
+	 */
+	rl_read_eeprom(sc, (caddr_t)&rl_id, RL_EE_ID, RL_EEADDR_LEN1, 1, 0);
+	if (rl_id == 0x8129)
+		addr_len = RL_EEADDR_LEN1;
+	else
+		addr_len = RL_EEADDR_LEN0;
 
-	rl_read_eeprom(sc, (caddr_t)&rl_did, RL_EE_PCI_DID, 1, 0);
+	/*
+	 * Get station address.
+	 */
+	rl_read_eeprom(sc, (caddr_t)sc->sc_arpcom.ac_enaddr, RL_EE_EADDR,
+	    addr_len, 3, 0);
+
+	printf(" address %s\n", ether_sprintf(sc->sc_arpcom.ac_enaddr));
+
+	rl_read_eeprom(sc, (caddr_t)&rl_did, RL_EE_PCI_DID, addr_len, 1, 0);
 
 	if (rl_did == RT_DEVICEID_8139 || rl_did == ACCTON_DEVICEID_5030 ||
 	    rl_did == DELTA_DEVICEID_8139 || rl_did == ADDTRON_DEVICEID_8139
@@ -1285,7 +1301,31 @@ rl_attach(sc)
 	if_attach(ifp);
 	ether_ifattach(ifp);
 
-	shutdownhook_establish(rl_shutdown, sc);
+	sc->sc_sdhook = shutdownhook_establish(rl_shutdown, sc);
+
+	return (0);
+}
+
+int
+rl_detach(sc)
+	struct rl_softc *sc;
+{
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
+
+	/* Unhook our tick handler. */
+	timeout_del(&sc->sc_tick_tmo);
+
+	/* Detach any PHYs we might have. */
+	if (LIST_FIRST(&sc->sc_mii.mii_phys) != NULL)
+		mii_detach(&sc->sc_mii, MII_PHY_ANY, MII_OFFSET_ANY);
+
+	/* Delete any remaining media. */
+	ifmedia_delete_instance(&sc->sc_mii.mii_media, IFM_INST_ANY);
+
+	ether_ifdetach(ifp);
+	if_detach(ifp);
+
+	shutdownhook_disestablish(sc->sc_sdhook);
 
 	return (0);
 }

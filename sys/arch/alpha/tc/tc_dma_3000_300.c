@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/tc/tc_dma_3000_300.c,v 1.1 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/tc/tc_dma_3000_300.c,v 1.1.2.1 2002/06/11 03:33:41 art Exp $ */
 /* $NetBSD: tc_dma_3000_300.c,v 1.3 1997/09/02 13:20:29 thorpej Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uplcom.c,v 1.2 2001/10/31 04:24:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uplcom.c,v 1.2.2.1 2002/06/11 03:42:31 art Exp $	*/
 /*	$NetBSD: uplcom.c,v 1.20 2001/07/31 12:33:11 ichiro Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.

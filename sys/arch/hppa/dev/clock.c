@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.11 2001/11/06 19:53:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.11.2.1 2002/06/11 03:35:36 art Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -53,8 +53,9 @@
 #endif
 
 struct timeval time;
+int cpu_clockok;
 
-void startrtclock __P((void));
+void startrtclock(void);
 
 void
 cpu_initclocks()
@@ -65,6 +66,8 @@ cpu_initclocks()
 	/* Start the interval timer. */
 	mfctl(CR_ITMR, time_inval);
 	mtctl(time_inval + cpu_hzticks, CR_ITMR);
+
+	cpu_clockok = 1;
 }
 
 int
@@ -75,6 +78,9 @@ clock_intr (v)
 
 	/* printf ("clock int 0x%x @ 0x%x for %p\n", t,
 	   frame->tf_iioq_head, curproc); */
+
+	if (!cpu_clockok)
+		return (1);
 
 	cpu_initclocks();
 	hardclock(frame);
@@ -119,7 +125,7 @@ inittodr(t)
 
 		if (dt < 2 * SECDAY)
 			return;
-		printf("WARNING: clock %s %d days",
+		printf("WARNING: clock %s %ld days",
 		    time.tv_sec < t? "lost" : "gained", dt / SECDAY);
 	}
 
@@ -132,12 +138,8 @@ inittodr(t)
 void
 resettodr()
 {
-	struct pdc_tod tod PDC_ALIGNMENT;
-
-	tod.sec = time.tv_sec;
-	tod.usec = time.tv_usec;
-
-	pdc_call((iodcio_t)PAGE0->mem_pdc, 1, PDC_TOD, PDC_TOD_WRITE, &tod);
+	pdc_call((iodcio_t)PAGE0->mem_pdc, 1, PDC_TOD, PDC_TOD_WRITE,
+	    time.tv_sec, time.tv_usec);
 }
 
 void

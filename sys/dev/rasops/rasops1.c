@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops1.c,v 1.1 2001/03/18 04:32:44 nate Exp $ */
-/* 	$NetBSD: rasops1.c,v 1.11 2000/04/12 14:22:29 pk Exp $	*/
+/*	$OpenBSD: src/sys/dev/rasops/rasops1.c,v 1.1.8.1 2002/06/11 03:42:28 art Exp $	*/
+/*	$NetBSD: rasops1.c,v 1.11 2000/04/12 14:22:29 pk Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -37,10 +37,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-//__KERNEL_RCSID(0, "$NetBSD: rasops1.c,v 1.11 2000/04/12 14:22:29 pk Exp $");
-
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/time.h>
@@ -51,17 +47,17 @@
 #include <dev/rasops/rasops.h>
 #include <dev/rasops/rasops_masks.h>
 
-static void	rasops1_copycols __P((void *, int, int, int, int));
-static void	rasops1_erasecols __P((void *, int, int, int, long));
-static void	rasops1_do_cursor __P((struct rasops_info *));
-static void	rasops1_putchar __P((void *, int, int col, u_int, long));
+static void	rasops1_copycols(void *, int, int, int, int);
+static void	rasops1_erasecols(void *, int, int, int, long);
+static void	rasops1_do_cursor(struct rasops_info *);
+static void	rasops1_putchar(void *, int, int col, u_int, long);
 #ifndef RASOPS_SMALL
-static void	rasops1_putchar8 __P((void *, int, int col, u_int, long));
-static void	rasops1_putchar16 __P((void *, int, int col, u_int, long));
+static void	rasops1_putchar8(void *, int, int col, u_int, long);
+static void	rasops1_putchar16(void *, int, int col, u_int, long);
 #endif
 
 /*
- * Initalize rasops_info struct for this colordepth.
+ * Initialize rasops_info struct for this colordepth.
  */
 void
 rasops1_init(ri)

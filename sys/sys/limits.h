@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/sys/limits.h,v 1.4 2002/05/11 14:46:41 millert Exp $ */
+/* $OpenBSD: src/sys/sys/limits.h,v 1.4.2.1 2002/06/11 03:32:33 art Exp $ */
 /*
  * Copyright (c) 2002 Marc Espie.
  *

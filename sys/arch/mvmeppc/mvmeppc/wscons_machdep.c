@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/wscons_machdep.c,v 1.1 2001/06/26 21:57:56 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/wscons_machdep.c,v 1.1.6.1 2002/06/11 03:37:23 art Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell
@@ -47,11 +47,11 @@
 #include <dev/wscons/wsdisplayvar.h>
 #endif
 
-void wscnprobe __P((struct consdev *));
-void wscninit __P((struct consdev *));
-void wscnputc __P((dev_t, char));
-int wscngetc __P((dev_t));
-void wscnpollc __P((dev_t, int));
+void wscnprobe(struct consdev *);
+void wscninit(struct consdev *);
+void wscnputc(dev_t, char);
+int wscngetc(dev_t);
+void wscnpollc(dev_t, int);
 
 void
 wscnprobe(cp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/wdsc.c,v 1.5 1997/01/28 10:54:10 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/wdsc.c,v 1.5.24.1 2002/06/11 03:36:50 art Exp $ */
 
 /*
  * Copyright (c) 1996 Steve Woodford
@@ -48,15 +48,18 @@
 #include <machine/autoconf.h>
 #include <mvme68k/dev/pccreg.h>
 
-void    wdscattach      __P((struct device *, struct device *, void *));
-int     wdscmatch       __P((struct device *, struct cfdata *, void *));
+void    wdscattach(struct device *, struct device *, void *);
+int     wdscmatch(struct device *, struct cfdata *, void *);
 
-void    wdsc_enintr     __P((struct sbic_softc *));
-int     wdsc_dmago      __P((struct sbic_softc *, char *, int, int));
-int     wdsc_dmanext    __P((struct sbic_softc *));
-void    wdsc_dmastop    __P((struct sbic_softc *));
-int     wdsc_dmaintr    __P((struct sbic_softc *));
-int     wdsc_scsiintr   __P((struct sbic_softc *));
+void    wdsc_enintr(struct sbic_softc *);
+int     wdsc_dmago(struct sbic_softc *, char *, int, int);
+int     wdsc_dmanext(struct sbic_softc *);
+void    wdsc_dmastop(struct sbic_softc *);
+int     wdsc_dmaintr(void *);
+int     wdsc_scsiintr(void *);
+
+extern void sbicinit(struct sbic_softc *);
+extern int sbicintr(struct sbic_softc *);
 
 struct scsi_adapter wdsc_scsiswitch = {
     sbic_scsicmd,
@@ -114,7 +117,6 @@ wdscattach(pdp, dp, auxp)
     struct sbic_softc   *sc = (struct sbic_softc *)dp;
     struct confargs *ca = auxp;
     struct pccreg *pcc = (struct pccreg *)ca->ca_master;
-    int                 ipl;
     int tmp;
 
     sc->sc_enintr  = wdsc_enintr;
@@ -287,9 +289,10 @@ wdsc_dmastop(dev)
  * Come here following a DMA interrupt
  */
 int
-wdsc_dmaintr(dev)
-    struct sbic_softc *dev;
+wdsc_dmaintr(arg)
+	void *arg;
 {
+    struct sbic_softc *dev = (struct sbic_softc *)arg;
     volatile struct pccreg *pc = dev->sc_cregs;
     int                 found = 0;
 
@@ -316,9 +319,10 @@ wdsc_dmaintr(dev)
  * Come here for SCSI interrupts
  */
 int
-wdsc_scsiintr(dev)
-    struct sbic_softc *dev;
+wdsc_scsiintr(arg)
+	void *arg;
 {
+    struct sbic_softc *dev = (struct sbic_softc *)arg;
     volatile struct pccreg *pc = dev->sc_cregs;
     int                 found;
 

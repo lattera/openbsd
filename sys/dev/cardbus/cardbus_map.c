@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/cardbus_map.c,v 1.1 2000/04/08 05:50:52 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/cardbus_map.c,v 1.1.12.1 2002/06/11 03:42:16 art Exp $ */
 /*	$NetBSD: cardbus_map.c,v 1.10 2000/03/07 00:31:46 mycroft Exp $	*/
 
 /*
@@ -58,12 +58,12 @@
 #endif
 
 
-static int cardbus_io_find __P((cardbus_chipset_tag_t, cardbus_function_tag_t,
+static int cardbus_io_find(cardbus_chipset_tag_t, cardbus_function_tag_t,
 				cardbustag_t, int, cardbusreg_t,
-				bus_addr_t *, bus_size_t *, int *));
-static int cardbus_mem_find __P((cardbus_chipset_tag_t, cardbus_function_tag_t,
+				bus_addr_t *, bus_size_t *, int *);
+static int cardbus_mem_find(cardbus_chipset_tag_t, cardbus_function_tag_t,
 				 cardbustag_t, int, cardbusreg_t,
-				 bus_addr_t *, bus_size_t *, int *));
+				 bus_addr_t *, bus_size_t *, int *);
 
 /*
  * static int cardbus_io_find(cardbus_chipset_tag_t cc,

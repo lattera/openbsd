@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/route.c,v 1.27.2.1 2002/01/31 22:55:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/route.c,v 1.27.2.2 2002/06/11 03:30:46 art Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -138,7 +138,7 @@ extern struct ifnet encif;
 int	rttrash;		/* routes not in table but not freed */
 struct	sockaddr wildcard;	/* zero valued cookie for wildcard searches */
 
-static int okaytoclone __P((u_int, int));
+static int okaytoclone(u_int, int);
 
 #ifdef IPSEC
 
@@ -676,14 +676,6 @@ rtrequest1(req, info, ret_nrt)
 			 */
 			rt->rt_rmx = (*ret_nrt)->rt_rmx; /* copy metrics */
 			rt->rt_parent = *ret_nrt;	 /* Back ptr. to parent. */
-		} else if (!rt->rt_rmx.rmx_mtu &&
-		    !(rt->rt_rmx.rmx_locks & RTV_MTU)) { /* XXX */
-			if (rt->rt_gwroute) {
-				rt->rt_rmx.rmx_mtu =
-				    rt->rt_gwroute->rt_rmx.rmx_mtu;
-			} else {
-				rt->rt_rmx.rmx_mtu = ifa->ifa_ifp->if_mtu;
-			}
 		}
 		if (ifa->ifa_rtrequest)
 			ifa->ifa_rtrequest(req, rt, info);
@@ -741,10 +733,12 @@ rt_setgate(rt0, dst, gate)
 		 * If we switched gateways, grab the MTU from the new
 		 * gateway route if the current MTU is 0 or greater
 		 * than the MTU of gateway.
+		 * Note that, if the MTU of gateway is 0, we will reset the
+		 * MTU of the route to run PMTUD again from scratch. XXX
 		 */
 		if (rt->rt_gwroute && !(rt->rt_rmx.rmx_locks & RTV_MTU) &&
-		    (rt->rt_rmx.rmx_mtu == 0 ||
-		     rt->rt_rmx.rmx_mtu > rt->rt_gwroute->rt_rmx.rmx_mtu)) {
+		    rt->rt_rmx.rmx_mtu &&
+		    rt->rt_rmx.rmx_mtu > rt->rt_gwroute->rt_rmx.rmx_mtu) {
 			rt->rt_rmx.rmx_mtu = rt->rt_gwroute->rt_rmx.rmx_mtu;
 		}
 	}
@@ -838,7 +832,6 @@ rtinit(ifa, cmd, flags)
 			IFAFREE(rt->rt_ifa);
 			rt->rt_ifa = ifa;
 			rt->rt_ifp = ifa->ifa_ifp;
-			rt->rt_rmx.rmx_mtu = ifa->ifa_ifp->if_mtu;	/*XXX*/
 			ifa->ifa_refcnt++;
 			if (ifa->ifa_rtrequest)
 				ifa->ifa_rtrequest(RTM_ADD, rt, NULL);
@@ -988,16 +981,13 @@ rt_timer_remove_all(rt)
 int      
 rt_timer_add(rt, func, queue)
 	struct rtentry *rt;
-	void(*func) __P((struct rtentry *, struct rttimer *));
+	void(*func)(struct rtentry *, struct rttimer *);
 	struct rttimer_queue *queue;
 {
 	struct rttimer *r;
 	long current_time;
-	int s;
 
-	s = splclock();
 	current_time = mono_time.tv_sec;
-	splx(s);
 
 	/*
 	 * If there's already a timer with this action, destroy it before
@@ -1052,9 +1042,7 @@ rt_timer_timer(arg)
 	long current_time;
 	int s;
 
-	s = splclock();
 	current_time = mono_time.tv_sec;
-	splx(s);
 
 	s = splsoftnet();
 	for (rtq = LIST_FIRST(&rttimer_queue_head); rtq != NULL; 

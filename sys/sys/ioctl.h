@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.4.8.1 2002/01/31 22:55:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.4.8.2 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: ioctl.h,v 1.20 1996/01/30 18:21:47 thorpej Exp $	*/
 
 /*-
@@ -71,7 +71,7 @@ struct ttysize {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int	ioctl __P((int, unsigned long, ...));
+int	ioctl(int, unsigned long, ...);
 __END_DECLS
 #endif /* !_KERNEL */
 #endif /* !_SYS_IOCTL_H_ */
@@ -84,6 +84,7 @@ __END_DECLS
  * Kernel level -> options COMPAT_43 or COMPAT_SUNOS or ...
  */
 #if defined(USE_OLD_TTY) || defined(COMPAT_43) || defined(COMPAT_SUNOS) || \
-    defined(COMPAT_SVR4) || defined(COMPAT_FREEBSD) || defined(COMPAT_OSF1)
+    defined(COMPAT_SVR4) || defined(COMPAT_FREEBSD) || defined(COMPAT_OSF1) || \
+    defined(COMPAT_LINUX)
 #include <sys/ioctl_compat.h>
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.6 2001/12/08 02:24:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.6.2.1 2002/06/11 03:38:16 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -61,13 +61,13 @@
 #include <sparc/dev/fgavar.h>
 #include <machine/fgaio.h>
 
-int	fgamatch	__P((struct device *, void *, void *));
-void	fgaattach	__P((struct device *, struct device *, void *));
-int	fvmematch	__P((struct device *, void *, void *));
-void	fvmeattach	__P((struct device *, struct device *, void *));
-int	fgaprint	__P((void *, const char *));
-int	fvmeprint	__P((void *, const char *));
-int	fvmescan	__P((struct device *parent, void *, void *));
+int	fgamatch(struct device *, void *, void *);
+void	fgaattach(struct device *, struct device *, void *);
+int	fvmematch(struct device *, void *, void *);
+void	fvmeattach(struct device *, struct device *, void *);
+int	fgaprint(void *, const char *);
+int	fvmeprint(void *, const char *);
+int	fvmescan(struct device *parent, void *, void *);
 
 struct fga_softc {
 	struct		device sc_dev;		/* base device */
@@ -89,24 +89,24 @@ struct fga_softc {
 	u_int8_t	sc_established;		/* which hw intrs installed */
 };
 
-int	fgaopen		__P((dev_t, int, int, struct proc *));
-int	fgaclose	__P((dev_t, int, int, struct proc *));
-int	fgaioctl	__P((dev_t, u_long, caddr_t, int, struct proc *));
+int	fgaopen(dev_t, int, int, struct proc *);
+int	fgaclose(dev_t, int, int, struct proc *);
+int	fgaioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
-int	fga_vmerangemap	__P((struct fga_softc *, u_int32_t, u_int32_t,
-    int, int, u_int32_t, struct confargs *));
-int	fga_intr_establish __P((struct fga_softc *, int, int,
-    struct intrhand *));
-int	fga_hwintr_establish __P((struct fga_softc *, u_int8_t));
+int	fga_vmerangemap(struct fga_softc *, u_int32_t, u_int32_t,
+    int, int, u_int32_t, struct confargs *);
+int	fga_intr_establish(struct fga_softc *, int, int,
+    struct intrhand *);
+int	fga_hwintr_establish(struct fga_softc *, u_int8_t);
 
-int	fga_hwintr1 __P((void *));
-int	fga_hwintr2 __P((void *));
-int	fga_hwintr3 __P((void *));
-int	fga_hwintr4 __P((void *));
-int	fga_hwintr5 __P((void *));
-int	fga_hwintr6 __P((void *));
-int	fga_hwintr7 __P((void *));
-int	fga_intrvec __P((struct fga_softc *, int));
+int	fga_hwintr1(void *);
+int	fga_hwintr2(void *);
+int	fga_hwintr3(void *);
+int	fga_hwintr4(void *);
+int	fga_hwintr5(void *);
+int	fga_hwintr6(void *);
+int	fga_hwintr7(void *);
+int	fga_intrvec(struct fga_softc *, int);
 
 struct cfattach fga_ca = {
 	sizeof (struct fga_softc), fgamatch, fgaattach
@@ -289,7 +289,7 @@ fga_vmerangemap(sc, vmebase, vmelen, vmecap, sbusslot, sbusoffset, oca)
 	    (void *)(sc->sc_range[srange].poffset | sbusoffset);
 	oca->ca_ra.ra_reg[0].rr_iospace = sbusslot;
 	oca->ca_ra.ra_reg[1].rr_iospace = vmecap;
-	oca->ca_ra.ra_reg[1].rr_paddr = (void*)vmebase;
+	oca->ca_ra.ra_reg[1].rr_paddr = (void *)vmebase;
 	oca->ca_ra.ra_reg[1].rr_len = vmelen;
 
 	/* 1. Setup slot select register for this range. */
@@ -564,37 +564,37 @@ fga_hwintr_establish(sc, sint)
 	case 1:
 		sc->sc_ih1.ih_fun = fga_hwintr1;
 		sc->sc_ih1.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih1);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih1, -1);
 		break;
 	case 2:
 		sc->sc_ih2.ih_fun = fga_hwintr2;
 		sc->sc_ih2.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih2);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih2, -1);
 		break;
 	case 3:
 		sc->sc_ih3.ih_fun = fga_hwintr3;
 		sc->sc_ih3.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih3);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih3, -1);
 		break;
 	case 4:
 		sc->sc_ih4.ih_fun = fga_hwintr4;
 		sc->sc_ih4.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih4);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih4, -1);
 		break;
 	case 5:
 		sc->sc_ih5.ih_fun = fga_hwintr5;
 		sc->sc_ih5.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih5);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih5, -1);
 		break;
 	case 6:
 		sc->sc_ih6.ih_fun = fga_hwintr6;
 		sc->sc_ih6.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih6);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih6, -1);
 		break;
 	case 7:
 		sc->sc_ih7.ih_fun = fga_hwintr7;
 		sc->sc_ih7.ih_arg = sc;
-		intr_establish(sint_to_pri[sint], &sc->sc_ih7);
+		intr_establish(sint_to_pri[sint], &sc->sc_ih7, -1);
 		break;
 	default:
 		panic("fga_sint");

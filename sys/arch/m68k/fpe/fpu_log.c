@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/fpe/Attic/fpu_log.c,v 1.3 1997/01/13 11:51:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/fpe/Attic/fpu_log.c,v 1.3.24.1 2002/06/11 03:36:06 art Exp $	*/
 /*	$NetBSD: fpu_log.c,v 1.5 1996/10/13 03:19:18 christos Exp $	*/
 
 /*
@@ -185,7 +185,7 @@ static struct sfpn {
     { 0x3FFE - 0x3fff, 0xB07197A2U, 0x3C46C654U },
 };
 
-static struct fpn *__fpu_logn __P((struct fpemu *fe));
+static struct fpn *__fpu_logn(struct fpemu *fe);
 
 /*
  * natural log - algorithm taken from Motorola FPSP,

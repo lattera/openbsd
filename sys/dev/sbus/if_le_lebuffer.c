@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/if_le_lebuffer.c,v 1.2 2002/05/13 18:16:38 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/if_le_lebuffer.c,v 1.2.2.1 2002/06/11 03:42:29 art Exp $	*/
 /*	$NetBSD: if_le_lebuffer.c,v 1.10 2002/03/11 16:00:56 pk Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.16 2001/03/22 23:31:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.16.6.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -51,7 +51,7 @@
 
 #include <dev/cons.h>
 
-void kdbprinttrap __P((int, int));
+void kdbprinttrap(int, int);
 
 extern label_t *db_recover;
 extern int db_active;
@@ -79,18 +79,18 @@ struct db_variable db_regs[] = {
 	{ "r16",   (long *)&ddb_regs.tf_r16, FCN_NULL },
 	{ "r17",   (long *)&ddb_regs.tf_r17, FCN_NULL },
 	{ "r18",   (long *)&ddb_regs.tf_r18, FCN_NULL },
-	{ "t4",    (long *)&ddb_regs.tf_t4,  FCN_NULL },
-	{ "t3",    (long *)&ddb_regs.tf_t3,  FCN_NULL },
-	{ "t2",    (long *)&ddb_regs.tf_t2,  FCN_NULL },
-	{ "t1",    (long *)&ddb_regs.tf_t1,  FCN_NULL },
-	{ "arg3",  (long *)&ddb_regs.tf_arg3,  FCN_NULL },
-	{ "arg2",  (long *)&ddb_regs.tf_arg2,  FCN_NULL },
-	{ "arg1",  (long *)&ddb_regs.tf_arg1,  FCN_NULL },
-	{ "arg0",  (long *)&ddb_regs.tf_arg0,  FCN_NULL },
-	{ "dp",    (long *)&ddb_regs.tf_dp,    FCN_NULL },
-	{ "ret0",  (long *)&ddb_regs.tf_ret0,  FCN_NULL },
-	{ "ret1",  (long *)&ddb_regs.tf_ret1,  FCN_NULL },
-	{ "sp",    (long *)&ddb_regs.tf_sp,    FCN_NULL },
+	{ "r19",   (long *)&ddb_regs.tf_t4,  FCN_NULL },
+	{ "r20",   (long *)&ddb_regs.tf_t3,  FCN_NULL },
+	{ "r21",   (long *)&ddb_regs.tf_t2,  FCN_NULL },
+	{ "r22",   (long *)&ddb_regs.tf_t1,  FCN_NULL },
+	{ "r23",   (long *)&ddb_regs.tf_arg3,  FCN_NULL },
+	{ "r24",   (long *)&ddb_regs.tf_arg2,  FCN_NULL },
+	{ "r25",   (long *)&ddb_regs.tf_arg1,  FCN_NULL },
+	{ "r26",   (long *)&ddb_regs.tf_arg0,  FCN_NULL },
+	{ "r27",   (long *)&ddb_regs.tf_dp,    FCN_NULL },
+	{ "r28",   (long *)&ddb_regs.tf_ret0,  FCN_NULL },
+	{ "r29",   (long *)&ddb_regs.tf_ret1,  FCN_NULL },
+	{ "r30",   (long *)&ddb_regs.tf_sp,    FCN_NULL },
 	{ "r31",   (long *)&ddb_regs.tf_r31,   FCN_NULL },
 	{ "sar",   (long *)&ddb_regs.tf_sar,   FCN_NULL },
 
@@ -142,7 +142,7 @@ db_read_bytes(addr, size, data)
 	size_t size;
 	char *data;
 {
-	register char *src = (char*)addr;
+	register char *src = (char *)addr;
 
 	while (size--)
 		*data++ = *src++;
@@ -235,11 +235,12 @@ db_valid_breakpoint(addr)
 }
 
 void
-db_stack_trace_cmd(addr, have_addr, count, modif)
+db_stack_trace_print(addr, have_addr, count, modif, pr)
 	db_expr_t	addr;
 	int		have_addr;
 	db_expr_t	count;
 	char		*modif;
+	int		(*pr)(const char *, ...);
 {
 	register_t fp, pc, rp, nargs, *argp;
 	db_sym_t sym;
@@ -261,7 +262,7 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 	}
 
 #ifdef DDB_DEBUG
-	/* db_printf (">> %x, %x, %x\t", fp, pc, rp); */
+	/* (*pr) (">> %x, %x, %x\t", fp, pc, rp); */
 #endif
 	while (fp && count--) {
 
@@ -271,7 +272,7 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 		sym = db_search_symbol(pc, DB_STGY_ANY, &off);
 		db_symbol_values (sym, &name, NULL);
 
-		db_printf("%s(", name);
+		(*pr)("%s(", name);
 
 		/* args */
 		nargs = HPPA_FRAME_NARGS;
@@ -286,13 +287,13 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 		 */
 		for (argp = &((register_t *)fp)[-9]; nargs--; argp--) {
 			if (argnp)
-				db_printf("%s=", *argnp++);
-			db_printf("%x%s", db_get_value((int)argp, 4, FALSE),
+				(*pr)("%s=", *argnp++);
+			(*pr)("%x%s", db_get_value((int)argp, 4, FALSE),
 				  nargs? ",":"");
 		}
-		db_printf(") at ");
-		db_printsym(pc, DB_STGY_PROC);
-		db_printf("\n");
+		(*pr)(") at ");
+		db_printsym(pc, DB_STGY_PROC, pr);
+		(*pr)("\n");
 
 		/* TODO: print locals */
 
@@ -301,13 +302,13 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 		rp = ((register_t *)fp)[-5];
 		fp = ((register_t *)fp)[0];
 #ifdef DDB_DEBUG
-		/* db_printf (">> %x, %x, %x\t", fp, pc, rp); */
+		/* (*pr) (">> %x, %x, %x\t", fp, pc, rp); */
 #endif
 	}
 
 	if (count && pc) {
-		db_printsym(pc, DB_STGY_XTRN);
-		db_printf(":\n");
+		db_printsym(pc, DB_STGY_XTRN, pr);
+		(*pr)(":\n");
 	}
 }
 

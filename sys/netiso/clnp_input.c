@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_input.c,v 1.3 1996/04/21 22:29:13 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_input.c,v 1.3.26.1 2002/06/11 03:31:38 art Exp $	*/
 /*	$NetBSD: clnp_input.c,v 1.12 1996/04/13 01:34:26 cgd Exp $	*/
 
 /*-
@@ -287,13 +287,7 @@ next:
  *	will it be correctly aligned?
  */
 void
-#if __STDC__
 clnp_input(struct mbuf *m, ...)
-#else
-clnp_input(m, va_alist)
-	struct mbuf    *m;	/* ptr to first mbuf of pkt */
-	va_dcl
-#endif
 {
 	struct snpa_hdr *shp;	/* subnetwork header */
 	register struct clnp_fixed *clnp;	/* ptr to fixed part of

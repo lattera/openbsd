@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.14 2001/09/20 17:02:30 mpech Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/hd.c,v 1.14.4.1 2002/06/11 03:35:19 art Exp $	*/
 /*	$NetBSD: rd.c,v 1.33 1997/07/10 18:14:08 kleink Exp $	*/
 
 /*
@@ -217,25 +217,25 @@ int numhdidentinfo = sizeof(hdidentinfo) / sizeof(hdidentinfo[0]);
 bdev_decl(hd);
 cdev_decl(hd);
 
-int	hdident __P((struct device *, struct hd_softc *,
-	    struct hpibbus_attach_args *));
-void	hdreset __P((struct hd_softc *));
-void	hdustart __P((struct hd_softc *));
-int	hdgetinfo __P((dev_t, struct hd_softc *, struct disklabel *, int));
-void	hdrestart __P((void *));
-struct buf *hdfinish __P((struct hd_softc *, struct buf *));
+int	hdident(struct device *, struct hd_softc *,
+	    struct hpibbus_attach_args *);
+void	hdreset(struct hd_softc *);
+void	hdustart(struct hd_softc *);
+int	hdgetinfo(dev_t, struct hd_softc *, struct disklabel *, int);
+void	hdrestart(void *);
+struct buf *hdfinish(struct hd_softc *, struct buf *);
 
-void	hdstart __P((void *));
-void	hdinterupt __P((void *));
-void	hdgo __P((void *));
-int	hdstatus __P((struct hd_softc *));
-int	hderror __P((int));
+void	hdstart(void *);
+void	hdinterupt(void *);
+void	hdgo(void *);
+int	hdstatus(struct hd_softc *);
+int	hderror(int);
 #ifdef DEBUG
-void	hdprinterr __P((char *, short, char **));
+void	hdprinterr(char *, short, char **);
 #endif
 
-int	hdmatch __P((struct device *, void *, void *));
-void	hdattach __P((struct device *, struct device *, void *));
+int	hdmatch(struct device *, void *, void *);
+void	hdattach(struct device *, struct device *, void *);
 
 struct cfattach hd_ca = {
 	sizeof(struct hd_softc), hdmatch, hdattach
@@ -560,7 +560,7 @@ hdopen(dev, flags, mode, p)
 	 * Wait for any pending opens/closes to complete
 	 */
 	while (rs->sc_flags & (HDF_OPENING|HDF_CLOSING))
-		sleep((caddr_t)rs, PRIBIO);
+		tsleep((caddr_t)rs, PRIBIO, "hdopen", 0);
 
 	/*
 	 * On first open, get label and partition info.
@@ -629,7 +629,7 @@ hdclose(dev, flag, mode, p)
 		s = splbio();
 		while (rs->sc_tab.b_active) {
 			rs->sc_flags |= HDF_WANTED;
-			sleep((caddr_t)&rs->sc_tab, PRIBIO);
+			tsleep((caddr_t)&rs->sc_tab, PRIBIO, "hdclose", 0);
 		}
 		splx(s);
 		rs->sc_flags &= ~(HDF_CLOSING);
@@ -705,7 +705,9 @@ hdstrategy(bp)
 bad:
 	bp->b_flags |= B_ERROR;
 done:
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 /*
@@ -1043,7 +1045,7 @@ hderror(unit)
 	}
 	/*
 	 * Now output a generic message suitable for badsect.
-	 * Note that we don't use harderr cuz it just prints
+	 * Note that we don't use harderr because it just prints
 	 * out b_blkno which is just the beginning block number
 	 * of the transfer, not necessary where the error occurred.
 	 */

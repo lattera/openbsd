@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.9 2001/09/29 18:40:33 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.9.4.1 2002/06/11 03:39:20 art Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.13 1996/10/13 03:36:01 christos Exp $	*/
 
 /*-
@@ -43,7 +43,7 @@
 #include <sys/param.h>
 #include <sys/conf.h>
 
-int (*mountroot) __P((void)) = NULL;
+int (*mountroot)(void) = NULL;
 
 dev_t	rootdev = NODEV;
 dev_t	dumpdev = NODEV;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.22.2.1 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.22.2.2 2002/06/11 03:30:32 art Exp $	*/
 /*	$NetBSD: msdosfs_denode.c,v 1.23 1997/10/17 11:23:58 ws Exp $	*/
 
 /*-
@@ -80,9 +80,9 @@ struct genfs_ops msdosfs_genfsops = {
 	genfs_gop_write
 };
 
-static struct denode *msdosfs_hashget __P((dev_t, u_long, u_long));
-static int msdosfs_hashins __P((struct denode *));
-static void msdosfs_hashrem __P((struct denode *));
+static struct denode *msdosfs_hashget(dev_t, u_long, u_long);
+static int msdosfs_hashins(struct denode *);
+static void msdosfs_hashrem(struct denode *);
 
 /*ARGSUSED*/
 int
@@ -186,7 +186,7 @@ deget(pmp, dirclust, diroffset, depp)
 	struct denode **depp;		/* returns the addr of the gotten denode */
 {
 	int error;
-	extern int (**msdosfs_vnodeop_p) __P((void *));
+	extern int (**msdosfs_vnodeop_p)(void *);
 	struct direntry *direntptr;
 	struct denode *ldep;
 	struct vnode *nvp;

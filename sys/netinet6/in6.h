@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.25 2001/12/07 09:16:07 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.25.2.1 2002/06/11 03:31:37 art Exp $	*/
 /*	$KAME: in6.h,v 1.83 2001/03/29 02:55:07 jinmei Exp $	*/
 
 /*
@@ -356,6 +356,15 @@ extern const struct in6_addr in6addr_linklocal_allrouters;
 #define IN6_IS_SCOPE_LINKLOCAL(a)	\
 	((IN6_IS_ADDR_LINKLOCAL(a)) ||	\
 	 (IN6_IS_ADDR_MC_LINKLOCAL(a)))
+
+#define IFA6_IS_DEPRECATED(a) \
+	((a)->ia6_lifetime.ia6t_pltime != ND6_INFINITE_LIFETIME && \
+	 (u_int32_t)((time.tv_sec - (a)->ia6_updatetime)) > \
+	 (a)->ia6_lifetime.ia6t_pltime)
+#define IFA6_IS_INVALID(a) \
+	((a)->ia6_lifetime.ia6t_vltime != ND6_INFINITE_LIFETIME && \
+	 (u_int32_t)((time.tv_sec - (a)->ia6_updatetime)) > \
+	 (a)->ia6_lifetime.ia6t_vltime)
 #endif
 
 /*
@@ -395,7 +404,7 @@ struct route_in6 {
 #define IPV6_RTHDR		24 /* bool; routing header */
 #define IPV6_PKTOPTIONS		25 /* buf/cmsghdr; set/get IPv6 options */
 #define IPV6_CHECKSUM		26 /* int; checksum offset for raw socket */
-#define IPV6_BINDV6ONLY		27 /* bool; only bind INET6 at null bind */
+#define IPV6_V6ONLY		27 /* bool; make AF_INET6 sockets v6 only */
 
 #if 0 /*KAME IPSEC*/
 #define IPV6_IPSEC_POLICY	28 /* struct; get/set security policy */
@@ -531,9 +540,12 @@ struct in6_pktinfo {
 #define IPV6CTL_USE_DEPRECATED	21	/* use deprecated addr (RFC2462 5.5.4) */
 #define IPV6CTL_RR_PRUNE	22	/* walk timer for router renumbering */
 /*#define IPV6CTL_MAPPED_ADDR	23	not for openbsd */
+#define IPV6CTL_V6ONLY		24
+/* 25 to 40: resrved */
+#define IPV6CTL_MAXFRAGS	41	/* max fragments */
 /* New entries should be added here from current IPV6CTL_MAXID value. */
 /* to define items, should talk with KAME guys first, for *BSD compatibility */
-#define IPV6CTL_MAXID		24
+#define IPV6CTL_MAXID		42
 
 #define IPV6CTL_NAMES { \
 	{ 0, 0 }, \
@@ -560,6 +572,24 @@ struct in6_pktinfo {
 	{ "use_deprecated", CTLTYPE_INT }, \
 	{ "rr_prune", CTLTYPE_INT }, \
 	{ 0, 0 }, \
+	{ "v6only", CTLTYPE_INT }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
+	{ "maxfrags", CTLTYPE_INT }, \
 }
 
 #endif /* !_XOPEN_SOURCE */
@@ -567,12 +597,12 @@ struct in6_pktinfo {
 #ifdef _KERNEL
 struct cmsghdr;
 
-int	in6_cksum __P((struct mbuf *, u_int8_t, u_int32_t, u_int32_t));
-int	in6_localaddr __P((struct in6_addr *));
-int	in6_addrscope __P((struct in6_addr *));
-struct	in6_ifaddr *in6_ifawithscope __P((struct ifnet *, struct in6_addr *));
-struct	in6_ifaddr *in6_ifawithifp __P((struct ifnet *, struct in6_addr *));
-extern void in6_if_up __P((struct ifnet *));
+int	in6_cksum(struct mbuf *, u_int8_t, u_int32_t, u_int32_t);
+int	in6_localaddr(struct in6_addr *);
+int	in6_addrscope(struct in6_addr *);
+struct	in6_ifaddr *in6_ifawithscope(struct ifnet *, struct in6_addr *);
+struct	in6_ifaddr *in6_ifawithifp(struct ifnet *, struct in6_addr *);
+extern void in6_if_up(struct ifnet *);
 
 #define	satosin6(sa)	((struct sockaddr_in6 *)(sa))
 #define	sin6tosa(sin6)	((struct sockaddr *)(sin6))
@@ -582,25 +612,25 @@ extern void in6_if_up __P((struct ifnet *));
 __BEGIN_DECLS
 struct cmsghdr;
 
-extern int inet6_option_space __P((int));
-extern int inet6_option_init __P((void *, struct cmsghdr **, int));
-extern int inet6_option_append __P((struct cmsghdr *, const u_int8_t *,
-	int, int));
-extern u_int8_t *inet6_option_alloc __P((struct cmsghdr *, int, int, int));
-extern int inet6_option_next __P((const struct cmsghdr *, u_int8_t **));
-extern int inet6_option_find __P((const struct cmsghdr *, u_int8_t **, int));
+extern int inet6_option_space(int);
+extern int inet6_option_init(void *, struct cmsghdr **, int);
+extern int inet6_option_append(struct cmsghdr *, const u_int8_t *,
+	int, int);
+extern u_int8_t *inet6_option_alloc(struct cmsghdr *, int, int, int);
+extern int inet6_option_next(const struct cmsghdr *, u_int8_t **);
+extern int inet6_option_find(const struct cmsghdr *, u_int8_t **, int);
 
-extern size_t inet6_rthdr_space __P((int, int));
-extern struct cmsghdr *inet6_rthdr_init __P((void *, int));
-extern int inet6_rthdr_add __P((struct cmsghdr *, const struct in6_addr *,
-		unsigned int));
-extern int inet6_rthdr_lasthop __P((struct cmsghdr *, unsigned int));
+extern size_t inet6_rthdr_space(int, int);
+extern struct cmsghdr *inet6_rthdr_init(void *, int);
+extern int inet6_rthdr_add(struct cmsghdr *, const struct in6_addr *,
+		unsigned int);
+extern int inet6_rthdr_lasthop(struct cmsghdr *, unsigned int);
 #if 0 /* not implemented yet */
-extern int inet6_rthdr_reverse __P((const struct cmsghdr *, struct cmsghdr *));
+extern int inet6_rthdr_reverse(const struct cmsghdr *, struct cmsghdr *);
 #endif
-extern int inet6_rthdr_segments __P((const struct cmsghdr *));
-extern struct in6_addr *inet6_rthdr_getaddr __P((struct cmsghdr *, int));
-extern int inet6_rthdr_getflags __P((const struct cmsghdr *, int));
+extern int inet6_rthdr_segments(const struct cmsghdr *);
+extern struct in6_addr *inet6_rthdr_getaddr(struct cmsghdr *, int);
+extern int inet6_rthdr_getflags(const struct cmsghdr *, int);
 __END_DECLS
 
 #endif /* !_NETINET6_IN6_H_ */

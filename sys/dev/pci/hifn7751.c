@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.110.2.1 2002/01/31 22:55:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.110.2.2 2002/06/11 03:42:24 art Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -33,6 +33,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /*
@@ -65,8 +70,8 @@
 /*
  * Prototypes and count for the pci_device structure
  */
-int hifn_probe		__P((struct device *, void *, void *));
-void hifn_attach	__P((struct device *, struct device *, void *));
+int hifn_probe(struct device *, void *, void *);
+void hifn_attach(struct device *, struct device *, void *);
 
 struct cfattach hifn_ca = {
 	sizeof(struct hifn_softc), hifn_probe, hifn_attach,
@@ -76,34 +81,34 @@ struct cfdriver hifn_cd = {
 	0, "hifn", DV_DULL
 };
 
-void	hifn_reset_board __P((struct hifn_softc *, int));
-void	hifn_reset_puc __P((struct hifn_softc *));
-void	hifn_puc_wait __P((struct hifn_softc *));
-int	hifn_enable_crypto __P((struct hifn_softc *, pcireg_t));
-void	hifn_init_dma __P((struct hifn_softc *));
-void	hifn_init_pci_registers __P((struct hifn_softc *));
-int	hifn_sramsize __P((struct hifn_softc *));
-int	hifn_dramsize __P((struct hifn_softc *));
-int	hifn_ramtype __P((struct hifn_softc *));
-void	hifn_sessions __P((struct hifn_softc *));
-int	hifn_intr __P((void *));
-u_int	hifn_write_command __P((struct hifn_command *, u_int8_t *));
-u_int32_t hifn_next_signature __P((u_int32_t a, u_int cnt));
-int	hifn_newsession __P((u_int32_t *, struct cryptoini *));
-int	hifn_freesession __P((u_int64_t));
-int	hifn_process __P((struct cryptop *));
-void	hifn_callback __P((struct hifn_softc *, struct hifn_command *, u_int8_t *));
-int	hifn_crypto __P((struct hifn_softc *, struct hifn_command *, struct cryptop *));
-int	hifn_readramaddr __P((struct hifn_softc *, int, u_int8_t *));
-int	hifn_writeramaddr __P((struct hifn_softc *, int, u_int8_t *));
-int	hifn_dmamap_aligned __P((bus_dmamap_t));
-int	hifn_dmamap_load_src __P((struct hifn_softc *, struct hifn_command *));
-int	hifn_dmamap_load_dst __P((struct hifn_softc *, struct hifn_command *));
-int	hifn_init_pubrng __P((struct hifn_softc *));
-void	hifn_rng __P((void *));
-void	hifn_tick __P((void *));
-void	hifn_abort __P((struct hifn_softc *));
-void	hifn_alloc_slot __P((struct hifn_softc *, int *, int *, int *, int *));
+void	hifn_reset_board(struct hifn_softc *, int);
+void	hifn_reset_puc(struct hifn_softc *);
+void	hifn_puc_wait(struct hifn_softc *);
+int	hifn_enable_crypto(struct hifn_softc *, pcireg_t);
+void	hifn_init_dma(struct hifn_softc *);
+void	hifn_init_pci_registers(struct hifn_softc *);
+int	hifn_sramsize(struct hifn_softc *);
+int	hifn_dramsize(struct hifn_softc *);
+int	hifn_ramtype(struct hifn_softc *);
+void	hifn_sessions(struct hifn_softc *);
+int	hifn_intr(void *);
+u_int	hifn_write_command(struct hifn_command *, u_int8_t *);
+u_int32_t hifn_next_signature(u_int32_t a, u_int cnt);
+int	hifn_newsession(u_int32_t *, struct cryptoini *);
+int	hifn_freesession(u_int64_t);
+int	hifn_process(struct cryptop *);
+void	hifn_callback(struct hifn_softc *, struct hifn_command *, u_int8_t *);
+int	hifn_crypto(struct hifn_softc *, struct hifn_command *, struct cryptop *);
+int	hifn_readramaddr(struct hifn_softc *, int, u_int8_t *);
+int	hifn_writeramaddr(struct hifn_softc *, int, u_int8_t *);
+int	hifn_dmamap_aligned(bus_dmamap_t);
+int	hifn_dmamap_load_src(struct hifn_softc *, struct hifn_command *);
+int	hifn_dmamap_load_dst(struct hifn_softc *, struct hifn_command *);
+int	hifn_init_pubrng(struct hifn_softc *);
+void	hifn_rng(void *);
+void	hifn_tick(void *);
+void	hifn_abort(struct hifn_softc *);
+void	hifn_alloc_slot(struct hifn_softc *, int *, int *, int *, int *);
 
 struct hifn_stats hifnstats;
 
@@ -270,7 +275,7 @@ hifn_attach(parent, self, aux)
 		rbase = 'M';
 		rseg /= 1024;
 	}
-	printf(", %d%cB %cram, %s\n", rseg, rbase,
+	printf("%d%cB %cram, %s\n", rseg, rbase,
 	    sc->sc_drammodel ? 'd' : 's', intrstr);
 
 	sc->sc_cid = crypto_get_driverid(0);
@@ -670,18 +675,14 @@ report:
 	WRITE_REG_0(sc, HIFN_0_PUCNFG, ramcfg);
 	WRITE_REG_1(sc, HIFN_1_DMA_CNFG, dmacfg);
 
+	printf(": ");
 	switch (encl) {
-	case HIFN_PUSTAT_ENA_0:
-		printf(": no encr/auth");
-		break;
 	case HIFN_PUSTAT_ENA_1:
-		printf(": DES");
-		break;
 	case HIFN_PUSTAT_ENA_2:
-		printf(": 3DES");
 		break;
+	case HIFN_PUSTAT_ENA_0:
 	default:
-		printf(": disabled");
+		printf("disabled, ");
 		break;
 	}
 
@@ -710,6 +711,8 @@ hifn_init_pci_registers(sc)
 	    offsetof(struct hifn_dma, dstr[0]));
 	WRITE_REG_1(sc, HIFN_1_DMA_RRAR, sc->sc_dmamap->dm_segs[0].ds_addr +
 	    offsetof(struct hifn_dma, resr[0]));
+
+	DELAY(2000);
 
 	/* write status register */
 	WRITE_REG_1(sc, HIFN_1_DMA_CSR,
@@ -817,43 +820,36 @@ hifn_ramtype(sc)
 	return (0);
 }
 
-/*
- * For sram boards, just write/read memory until it fails, also check for
- * banking.
- */
+#define	HIFN_SRAM_MAX		(32 << 20)
+#define	HIFN_SRAM_STEP_SIZE	16384
+#define	HIFN_SRAM_GRANULARITY	(HIFN_SRAM_MAX / HIFN_SRAM_STEP_SIZE)
+
 int
 hifn_sramsize(sc)
 	struct hifn_softc *sc;
 {
-	u_int32_t a = 0, end;
-	u_int8_t data[8], dataexpect[8];
+	u_int32_t a;
+	u_int8_t data[8];
+	u_int8_t dataexpect[sizeof(data)];
+	int32_t i;
 
-	for (a = 0; a < sizeof(data); a++)
-		data[a] = dataexpect[a] = 0x5a;
+	for (i = 0; i < sizeof(data); i++)
+		data[i] = dataexpect[i] = i ^ 0x5a;
 
-	end = 1 << 20;	/* 1MB */
-	for (a = 0; a < end; a += 16384) {
-		if (hifn_writeramaddr(sc, a, data) < 0)
-			return (0);
+	for (i = HIFN_SRAM_GRANULARITY - 1; i >= 0; i--) {
+		a = i * HIFN_SRAM_STEP_SIZE;
+		bcopy(&i, data, sizeof(i));
+		hifn_writeramaddr(sc, a, data);
+	}
+
+	for (i = 0; i < HIFN_SRAM_GRANULARITY; i++) {
+		a = i * HIFN_SRAM_STEP_SIZE;
+		bcopy(&i, dataexpect, sizeof(i));
 		if (hifn_readramaddr(sc, a, data) < 0)
 			return (0);
 		if (bcmp(data, dataexpect, sizeof(data)) != 0)
 			return (0);
-		sc->sc_ramsize = a + 16384;
-	}
-
-	for (a = 0; a < sizeof(data); a++)
-		data[a] = dataexpect[a] = 0xa5;
-	if (hifn_writeramaddr(sc, 0, data) < 0)
-		return (0);
-
-	end = sc->sc_ramsize;
-	for (a = 0; a < end; a += 16384) {
-		if (hifn_readramaddr(sc, a, data) < 0)
-			return (0);
-		if (a != 0 && bcmp(data, dataexpect, sizeof(data)) == 0)
-			return (0);
-		sc->sc_ramsize = a + 16384;
+		sc->sc_ramsize = a + HIFN_SRAM_STEP_SIZE;
 	}
 
 	return (0);
@@ -965,17 +961,23 @@ hifn_writeramaddr(sc, addr, data)
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 
-	DELAY(3000);	/* let write command execute */
-
-	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
-	    0, sc->sc_dmamap->dm_mapsize,
-	    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
-
-	if (dma->resr[resi].l & htole32(HIFN_D_VALID)) {
-		printf("\n%s: writeramaddr error -- "
-		    "result[%d](addr %d) valid still set\n",
+	for (r = 10000; r >= 0; r--) {
+		DELAY(10);
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+		    0, sc->sc_dmamap->dm_mapsize,
+		    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
+		if ((dma->resr[resi].l & htole32(HIFN_D_VALID)) == 0)
+			break;
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+		    0, sc->sc_dmamap->dm_mapsize,
+		    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
+	}
+	if (r == 0) {
+		printf("%s: writeramaddr -- "
+		    "result[%d](addr %d) still valid\n",
 		    sc->sc_dv.dv_xname, resi, addr);
 		r = -1;
+		return (-1);
 	} else
 		r = 0;
 
@@ -1026,15 +1028,20 @@ hifn_readramaddr(sc, addr, data)
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 
-	DELAY(3000);	/* let read command execute */
-
-	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
-	    0, sc->sc_dmamap->dm_mapsize,
-	    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
-
-	if (dma->resr[resi].l & htole32(HIFN_D_VALID)) {
-		printf("\n%s: readramaddr error -- "
-		    "result[%d](addr %d) valid still set\n",
+	for (r = 10000; r >= 0; r--) {
+		DELAY(10);
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+		    0, sc->sc_dmamap->dm_mapsize,
+		    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
+		if ((dma->resr[resi].l & htole32(HIFN_D_VALID)) == 0)
+			break;
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+		    0, sc->sc_dmamap->dm_mapsize,
+		    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
+	}
+	if (r == 0) {
+		printf("%s: readramaddr -- "
+		    "result[%d](addr %d) still valid\n",
 		    sc->sc_dv.dv_xname, resi, addr);
 		r = -1;
 	} else {

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.85 2001/09/17 17:04:27 art Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.85.4.1 2002/06/11 03:28:26 art Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -15,6 +15,7 @@ option		DDB		# in-kernel debugger
 option		DIAGNOSTIC	# internal consistency checks
 option		KTRACE		# system call tracing, a la ktrace(1)
 option		KMEMSTATS	# collect malloc(9) statistics
+option		PTRACE		# ptrace(2) system call
 
 option		CRYPTO		# Cryptographic framework
 
@@ -39,6 +40,7 @@ option		MFS		# memory file system
 #option		XFS		# xfs filesystem
 
 option		TCP_SACK	# Selective Acknowledgements for TCP
+option		TCP_ECN		# Explicit Congestion Notification for TCP
 #option		TCP_FACK	# Forward Acknowledgements for TCP
 #option		TCP_SIGNATURE	# TCP MD5 Signatures, for BGP routing sessions
 
@@ -94,6 +96,7 @@ pseudo-device	tb	1	# tablet line discipline
 pseudo-device	vnd	4	# paging to files
 pseudo-device	ccd	4	# concatenated disk devices
 pseudo-device	ksyms	1	# kernel symbols device
+pseudo-device	systrace 1	# system call tracing device
 
 # for IPv6
 pseudo-device	gif	4	# IPv[46] over IPv[46] tunnel (RFC1933)

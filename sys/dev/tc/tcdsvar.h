@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/tcdsvar.h,v 1.1 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/dev/tc/tcdsvar.h,v 1.1.2.1 2002/06/11 03:42:30 art Exp $ */
 /* $NetBSD: tcdsvar.h,v 1.2 2001/08/22 05:00:27 nisimura Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_trace.c,v 1.2 2001/08/20 20:23:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_trace.c,v 1.2.6.1 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.23 2001/07/10 06:06:16 eeh Exp $ */
 
 /*
@@ -39,12 +39,12 @@
 #include <ddb/db_interface.h>
 #include <ddb/db_output.h>
 
-void db_dump_fpstate __P((db_expr_t, int, db_expr_t, char *));
-void db_dump_window __P((db_expr_t, int, db_expr_t, char *));
-void db_dump_stack __P((db_expr_t, int, db_expr_t, char *));
-void db_dump_trap __P((db_expr_t, int, db_expr_t, char *));
-void db_dump_ts __P((db_expr_t, int, db_expr_t, char *));
-void db_print_window __P((u_int64_t));
+void db_dump_fpstate(db_expr_t, int, db_expr_t, char *);
+void db_dump_window(db_expr_t, int, db_expr_t, char *);
+void db_dump_stack(db_expr_t, int, db_expr_t, char *);
+void db_dump_trap(db_expr_t, int, db_expr_t, char *);
+void db_dump_ts(db_expr_t, int, db_expr_t, char *);
+void db_print_window(u_int64_t);
 
 #if 0
 #define INKERNEL(va)	(((vaddr_t)(va)) >= USRSTACK) /* Not really true, y'know */
@@ -56,19 +56,17 @@ void db_print_window __P((u_int64_t));
 #define ULOAD(x)	probeget((paddr_t)(u_long)&(x), ASI_AIUS, sizeof(x))	
 
 void
-db_stack_trace_cmd(addr, have_addr, count, modif)
+db_stack_trace_print(addr, have_addr, count, modif, pr)
 	db_expr_t       addr;
 	int             have_addr;
 	db_expr_t       count;
 	char            *modif;
+	int		(*pr)(const char *, ...);
 {
 	vaddr_t		frame;
 	boolean_t	kernel_only = TRUE;
 	boolean_t	trace_thread = FALSE;
 	char		c, *cp = modif;
-	int		(*pr) __P((const char *, ...));
-
-	pr = db_printf;
 
 	while ((c = *cp++) != 0) {
 		if (c == 't')
@@ -159,7 +157,7 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 				(*pr)("%x, ", (u_int)KLOAD(f32->fr_arg[i]));
 			(*pr)("%x) at ", (u_int)KLOAD(f32->fr_arg[i]));
 		}
-		db_printsym(pc, DB_STGY_PROC);
+		db_printsym(pc, DB_STGY_PROC, pr);
 		(*pr)("\n");
 	}
 }
@@ -220,7 +218,7 @@ u_int64_t frame;
 				  (unsigned long long)f->fr_fp,
 				  (unsigned long long)f->fr_pc);
 			/* Sometimes this don't work.  Dunno why. */
-			db_printsym(f->fr_pc, DB_STGY_PROC);
+			db_printsym(f->fr_pc, DB_STGY_PROC, db_printf);
 			db_printf("\n");
 		} else {
 			struct frame64 fr;
@@ -254,7 +252,7 @@ u_int64_t frame;
 			db_printf("%8x %8x %8x %8x %8x %8x %8x=sp %8x=pc:",
 				  f->fr_arg[0], f->fr_arg[1], f->fr_arg[2], f->fr_arg[3],
 				  f->fr_arg[4], f->fr_arg[5], f->fr_fp, f->fr_pc);
-			db_printsym(f->fr_pc, DB_STGY_PROC);
+			db_printsym(f->fr_pc, DB_STGY_PROC, db_printf);
 			db_printf("\n");
 		} else {
 			struct frame32 fr;
@@ -526,7 +524,7 @@ db_dump_ts(addr, have_addr, count, modif)
 	for (i=0; i<tl; i++) {
 		printf("%d tt=%lx tstate=%lx tpc=%p tnpc=%p\n",
 		       i+1, (long)ts[i].tt, (u_long)ts[i].tstate,
-		       (void*)(u_long)ts[i].tpc, (void*)(u_long)ts[i].tnpc);
+		       (void *)(u_long)ts[i].tpc, (void *)(u_long)ts[i].tnpc);
 	}
 
 }

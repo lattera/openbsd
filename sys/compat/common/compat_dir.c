@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/compat/common/compat_dir.c,v 1.2 2001/04/10 17:35:40 csapuntz Exp $	*/
+/* 	$OpenBSD: src/sys/compat/common/compat_dir.c,v 1.2.8.1 2002/06/11 03:28:07 art Exp $	*/
 
 /*
  * Copyright (c) 2000 Constantine Sapuntzakis
@@ -45,7 +45,7 @@ readdir_with_callback(fp, off, nbytes, appendfunc, arg)
 	struct file *fp;
 	off_t *off;
 	u_long nbytes;
-	int (*appendfunc) __P((void *, struct dirent *, off_t));
+	int (*appendfunc)(void *, struct dirent *, off_t);
 	void *arg;
 {
 	caddr_t inp, buf;

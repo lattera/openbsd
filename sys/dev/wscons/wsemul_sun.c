@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_sun.c,v 1.3 2001/04/14 04:48:00 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_sun.c,v 1.3.8.1 2002/06/11 03:42:32 art Exp $ */
 /* $NetBSD: wsemul_sun.c,v 1.11 2000/01/05 11:19:36 drochner Exp $ */
 
 /*
@@ -47,15 +47,15 @@
 #include <dev/wscons/wsksymdef.h>
 #include <dev/wscons/ascii.h>
 
-void	*wsemul_sun_cnattach __P((const struct wsscreen_descr *, void *,
-				  int, int, long));
-void	*wsemul_sun_attach __P((int console, const struct wsscreen_descr *,
-				void *, int, int, void *, long));
-void	wsemul_sun_output __P((void *cookie, const u_char *data, u_int count,
-			       int));
-int	wsemul_sun_translate __P((void *cookie, keysym_t, char **));
-void	wsemul_sun_detach __P((void *cookie, u_int *crowp, u_int *ccolp));
-void	wsemul_sun_resetop __P((void *, enum wsemul_resetops));
+void	*wsemul_sun_cnattach(const struct wsscreen_descr *, void *,
+				  int, int, long);
+void	*wsemul_sun_attach(int console, const struct wsscreen_descr *,
+				void *, int, int, void *, long);
+void	wsemul_sun_output(void *cookie, const u_char *data, u_int count,
+			       int);
+int	wsemul_sun_translate(void *cookie, keysym_t, char **);
+void	wsemul_sun_detach(void *cookie, u_int *crowp, u_int *ccolp);
+void	wsemul_sun_resetop(void *, enum wsemul_resetops);
 
 const struct wsemul_ops wsemul_sun_ops = {
 	"sun",
@@ -95,11 +95,11 @@ struct wsemul_sun_emuldata {
 #endif
 };
 
-u_int wsemul_sun_output_normal __P((struct wsemul_sun_emuldata *, u_char,
-				    int));
-u_int wsemul_sun_output_haveesc __P((struct wsemul_sun_emuldata *, u_char));
-u_int wsemul_sun_output_control __P((struct wsemul_sun_emuldata *, u_char));
-void wsemul_sun_control __P((struct wsemul_sun_emuldata *, u_char));
+u_int wsemul_sun_output_normal(struct wsemul_sun_emuldata *, u_char,
+				    int);
+u_int wsemul_sun_output_haveesc(struct wsemul_sun_emuldata *, u_char);
+u_int wsemul_sun_output_control(struct wsemul_sun_emuldata *, u_char);
+void wsemul_sun_control(struct wsemul_sun_emuldata *, u_char);
 
 struct wsemul_sun_emuldata wsemul_sun_console_emuldata;
 
@@ -129,8 +129,7 @@ wsemul_sun_cnattach(type, cookie, ccol, crow, defattr)
 	edp->crow = crow;
 	edp->ccol = ccol;
 	edp->curattr = edp->defattr = defattr;
-#if defined(WS_KERNEL_FG) || defined(WS_KERNEL_BG) || \
-  defined(WS_KERNEL_COLATTR) || defined(WS_KERNEL_MONOATTR)
+
 #ifndef WS_KERNEL_FG
 #define WS_KERNEL_FG WSCOL_WHITE
 #endif
@@ -153,10 +152,7 @@ wsemul_sun_cnattach(type, cookie, ccol, crow, defattr)
 					    WS_KERNEL_MONOATTR,
 					    &edp->kernattr);
 	if (res)
-#else
-	res = 0; /* XXX gcc */
-#endif
-	edp->kernattr = defattr;
+		edp->kernattr = defattr;
 
 	edp->cbcookie = NULL;
 

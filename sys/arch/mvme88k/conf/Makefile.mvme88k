@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.16.2.1 2002/01/31 22:55:17 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.16.2.2 2002/06/11 03:37:09 art Exp $
 #
 # Makefile for OpenBSD
 #
@@ -192,6 +192,8 @@ assym.h machdep.o: Makefile
 
 # depend on CPU configuration 
 locore.o machdep.o: Makefile
+process.o locore_asm_routines.o eh.o: assym.h
+m88110_mmu.o m88110_fp.o  m88100_fp.o : assym.h
 
 locore.o: ${MVME88K}/mvme88k/locore.S assym.h
 	${NORMAL_S}

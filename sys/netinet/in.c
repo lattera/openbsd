@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.c,v 1.23 2001/11/24 19:29:06 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.c,v 1.23.2.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: in.c,v 1.26 1996/02/13 23:41:39 christos Exp $	*/
 
 /*
@@ -86,18 +86,25 @@
 
 #ifdef INET
 
-static int in_mask2len __P((struct in_addr *));
-static void in_len2mask __P((struct in_addr *, int));
-static int in_lifaddr_ioctl __P((struct socket *, u_long, caddr_t,
-	struct ifnet *));
+static int in_mask2len(struct in_addr *);
+static void in_len2mask(struct in_addr *, int);
+static int in_lifaddr_ioctl(struct socket *, u_long, caddr_t,
+	struct ifnet *);
 
-static int in_addprefix __P((struct in_ifaddr *, int));
-static int in_scrubprefix __P((struct in_ifaddr *));
+static int in_addprefix(struct in_ifaddr *, int);
+static int in_scrubprefix(struct in_ifaddr *);
 
 #ifndef SUBNETSARELOCAL
 #define	SUBNETSARELOCAL	0
 #endif
+
+#ifndef HOSTZEROBROADCAST
+#define HOSTZEROBROADCAST 1
+#endif
+
 int subnetsarelocal = SUBNETSARELOCAL;
+int hostzeroisbroadcast = HOSTZEROBROADCAST;
+
 /*
  * Return 1 if an internet address is for a ``local'' host
  * (one to which we have a connection).  If subnetsarelocal
@@ -360,6 +367,8 @@ in_control(so, cmd, data, ifp)
 
 	case SIOCSIFADDR:
 		error = in_ifinit(ifp, ia, satosin(&ifr->ifr_addr), 1);
+		if (!error)
+			dohooks(ifp->if_addrhooks);
 		return error;
 
 	case SIOCSIFNETMASK:
@@ -398,6 +407,8 @@ in_control(so, cmd, data, ifp)
 		if ((ifp->if_flags & IFF_BROADCAST) &&
 		    (ifra->ifra_broadaddr.sin_family == AF_INET))
 			ia->ia_broadaddr = ifra->ifra_broadaddr;
+		if (!error)
+			dohooks(ifp->if_addrhooks);
 		return (error);
 
 	case SIOCDIFADDR:
@@ -405,6 +416,7 @@ in_control(so, cmd, data, ifp)
 		TAILQ_REMOVE(&ifp->if_addrlist, (struct ifaddr *)ia, ifa_list);
 		TAILQ_REMOVE(&in_ifaddr, ia, ia_list);
 		IFAFREE((&ia->ia_ifa));
+		dohooks(ifp->if_addrhooks);
 		break;
 
 #ifdef MROUTING
@@ -831,16 +843,11 @@ in_broadcast(in, ifp)
 	if (in.s_addr == INADDR_BROADCAST ||
 	    in.s_addr == INADDR_ANY)
 		return 1;
-	if (ifp && ((ifp->if_flags & IFF_BROADCAST) == 0))
-		return 0;
 
-	if (ifp == NULL)
-	{
+	if (ifp == NULL) {
 	  	if_first = ifnet.tqh_first;
 		if_target = 0;
-	}
-	else
-	{
+	} else {
 		if_first = ifp;
 		if_target = ifp->if_list.tqe_next;
 	}
@@ -851,34 +858,23 @@ in_broadcast(in, ifp)
 	 * with a broadcast address.
 	 * If ifp is NULL, check against all the interfaces.
 	 */
-        for (ifn = if_first; ifn != if_target; ifn = ifn->if_list.tqe_next)
-	  for (ifa = ifn->if_addrlist.tqh_first; ifa;
-	       ifa = ifa->ifa_list.tqe_next)
-	      if (!ifp)
-	      {
-		  if (ifa->ifa_addr->sa_family == AF_INET &&
-		      ((ia->ia_subnetmask != 0xffffffff &&
-		      (((ifn->if_flags & IFF_BROADCAST) &&
-			in.s_addr == ia->ia_broadaddr.sin_addr.s_addr) ||
-			 in.s_addr == ia->ia_subnet)) ||
-		       /*
-			* Check for old-style (host 0) broadcast.
-			*/
-		       (in.s_addr == ia->ia_netbroadcast.s_addr ||
-			in.s_addr == ia->ia_net)))
-		              return 1;
-	      }
-	      else
-		  if (ifa->ifa_addr->sa_family == AF_INET &&
-		      (((ifn->if_flags & IFF_BROADCAST) &&
-		      in.s_addr == ia->ia_broadaddr.sin_addr.s_addr) ||
-		       in.s_addr == ia->ia_netbroadcast.s_addr ||
-		       /*
-			* Check for old-style (host 0) broadcast.
-			*/
-		       in.s_addr == ia->ia_subnet ||
-		       in.s_addr == ia->ia_net))
-		              return 1;
+        for (ifn = if_first; ifn != if_target; ifn = ifn->if_list.tqe_next) {
+		if ((ifn->if_flags & IFF_BROADCAST) == 0)
+			continue;
+		for (ifa = ifn->if_addrlist.tqh_first; ifa;
+		    ifa = ifa->ifa_list.tqe_next)
+			if (ifa->ifa_addr->sa_family == AF_INET &&
+			    in.s_addr != ia->ia_addr.sin_addr.s_addr &&
+			    (in.s_addr == ia->ia_broadaddr.sin_addr.s_addr ||
+			     in.s_addr == ia->ia_netbroadcast.s_addr ||
+			     (hostzeroisbroadcast &&
+			      /*
+			       * Check for old-style (host 0) broadcast.
+			       */
+			      (in.s_addr == ia->ia_subnet ||
+			       in.s_addr == ia->ia_net))))
+				return 1;
+	}
 	return (0);
 #undef ia
 }

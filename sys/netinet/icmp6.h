@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.18.2.1 2002/01/31 22:55:44 niklas Exp $	*/
-/*	$KAME: icmp6.h,v 1.39 2001/02/06 03:48:06 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.18.2.2 2002/06/11 03:31:36 art Exp $	*/
+/*	$KAME: icmp6.h,v 1.71 2002/05/27 04:18:29 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -506,8 +506,8 @@ struct icmp6errstat {
 struct icmp6stat {
 /* statistics related to icmp6 packets generated */
 	u_quad_t icp6s_error;		/* # of calls to icmp6_error */
-	u_quad_t icp6s_canterror;	/* no error 'cuz old was icmp */
-	u_quad_t icp6s_toofreq;		/* no error 'cuz rate limitation */
+	u_quad_t icp6s_canterror;	/* no error because old was icmp */
+	u_quad_t icp6s_toofreq;		/* no error because rate limitation */
 	u_quad_t icp6s_outhist[256];
 /* statistics related to input message processed */
 	u_quad_t icp6s_badcode;		/* icmp6_code out of range */
@@ -570,7 +570,9 @@ struct icmp6stat {
 #define ICMPV6CTL_MTUDISC_HIWAT	16
 #define ICMPV6CTL_MTUDISC_LOWAT	17
 #define ICMPV6CTL_ND6_DEBUG	18
-#define ICMPV6CTL_MAXID		19
+#define ICMPV6CTL_ND6_DRLIST	19
+#define ICMPV6CTL_ND6_PRLIST	20
+#define ICMPV6CTL_MAXID		21
 
 #define ICMPV6CTL_NAMES { \
 	{ 0, 0 }, \
@@ -592,6 +594,8 @@ struct icmp6stat {
 	{ "mtudisc_hiwat", CTLTYPE_INT }, \
 	{ "mtudisc_lowat", CTLTYPE_INT }, \
 	{ "nd6_debug", CTLTYPE_INT }, \
+	{ 0, 0 }, \
+	{ 0, 0 }, \
 }
 
 #define RTF_PROBEMTU	RTF_PROTO1
@@ -602,29 +606,26 @@ struct	rtentry;
 struct	rttimer;
 struct	in6_multi;
 # endif
-void	icmp6_init __P((void));
-void	icmp6_paramerror __P((struct mbuf *, int));
-void	icmp6_error __P((struct mbuf *, int, int, int));
-int	icmp6_input __P((struct mbuf **, int *, int));
-void	icmp6_fasttimo __P((void));
-void	icmp6_reflect __P((struct mbuf *, size_t));
-void	icmp6_prepare __P((struct mbuf *));
-void	icmp6_redirect_input __P((struct mbuf *, int));
-void	icmp6_redirect_output __P((struct mbuf *, struct rtentry *));
-int	icmp6_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+void	icmp6_init(void);
+void	icmp6_paramerror(struct mbuf *, int);
+void	icmp6_error(struct mbuf *, int, int, int);
+int	icmp6_input(struct mbuf **, int *, int);
+void	icmp6_fasttimo(void);
+void	icmp6_reflect(struct mbuf *, size_t);
+void	icmp6_prepare(struct mbuf *);
+void	icmp6_redirect_input(struct mbuf *, int);
+void	icmp6_redirect_output(struct mbuf *, struct rtentry *);
+int	icmp6_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 struct	ip6ctlparam;
-void	icmp6_mtudisc_update __P((struct ip6ctlparam *, int));
-void	icmp6_mtudisc_callback_register __P((void (*)(struct in6_addr *)));
+void	icmp6_mtudisc_update(struct ip6ctlparam *, int);
+void	icmp6_mtudisc_callback_register(void (*)(struct in6_addr *));
 
 /* XXX: is this the right place for these macros? */
 #define icmp6_ifstat_inc(ifp, tag) \
 do {								\
-	if ((ifp) && (ifp)->if_index <= if_index			\
-	 && (ifp)->if_index < icmp6_ifstatmax			\
-	 && icmp6_ifstat && icmp6_ifstat[(ifp)->if_index]) {	\
-		icmp6_ifstat[(ifp)->if_index]->tag++;		\
-	}							\
+	if (ifp)						\
+		((struct in6_ifextra *)((ifp)->if_afdata[AF_INET6]))->icmp6_ifstat->tag++; \
 } while (0)
 
 #define icmp6_ifoutstat_inc(ifp, type, code) \

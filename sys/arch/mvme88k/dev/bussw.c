@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/bussw.c,v 1.4 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/bussw.c,v 1.4.2.1 2002/06/11 03:37:09 art Exp $ */
 
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
@@ -40,7 +40,6 @@
 #include <sys/malloc.h>
 #include <machine/psl.h>
 #include <machine/autoconf.h>
-#include <machine/bugio.h>
 #include <machine/cpu.h>
 #include <machine/mioctl.h>
 #include <machine/vmparam.h>
@@ -57,8 +56,8 @@ struct bussw_softc {
 	struct bussw_reg        *sc_bussw;
 };
 
-void    bussw_attach    __P((struct device *, struct device *, void *));
-int     bussw_match __P((struct device *, void *, void *));
+void    bussw_attach(struct device *, struct device *, void *);
+int     bussw_match(struct device *, void *, void *);
 
 struct cfattach bussw_ca = { 
 	sizeof(struct bussw_softc), bussw_match, bussw_attach
@@ -68,9 +67,9 @@ struct cfdriver bussw_cd = {
 	NULL, "bussw", DV_DULL, 0
 };
 
-int bussw_print __P((void *args, const char *bus));
-int bussw_scan __P((struct device *parent, void *child, void *args));
-int busswabort __P((void *));
+int bussw_print(void *args, const char *bus);
+int bussw_scan(struct device *parent, void *child, void *args);
+int busswabort(void *);
 
 int
 bussw_match(parent, vcf, args)

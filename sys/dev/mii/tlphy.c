@@ -105,25 +105,25 @@ struct cfdriver tlphy_cd = {
 	NULL, "tlphy", DV_DULL
 };
 
-int	tlphymatch __P((struct device *, void *, void *));
-void	tlphyattach __P((struct device *, struct device *, void *));
+int	tlphymatch(struct device *, void *, void *);
+void	tlphyattach(struct device *, struct device *, void *);
 
 struct cfattach tlphy_ca = {
 	sizeof(struct tlphy_softc), tlphymatch, tlphyattach, mii_phy_detach,
 	    mii_phy_activate
 };
 
-int	tlphy_service __P((struct mii_softc *, struct mii_data *, int));
-int	tlphy_auto __P((struct tlphy_softc *, int));
-void	tlphy_acomp __P((struct tlphy_softc *));
-void	tlphy_status __P((struct mii_softc *));
+int	tlphy_service(struct mii_softc *, struct mii_data *, int);
+int	tlphy_auto(struct tlphy_softc *, int);
+void	tlphy_acomp(struct tlphy_softc *);
+void	tlphy_status(struct mii_softc *);
 
 int
 tlphymatch(parent, match, aux)
 	struct device *parent;
 	void *match, *aux;
 {
-	struct mii_attach_args *ma = aux;       
+	struct mii_attach_args *ma = aux;
 
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxTI &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxTI_TLAN10T)
@@ -216,7 +216,7 @@ tlphy_service(self, mii, cmd)
 			PHY_WRITE(&sc->sc_mii, MII_BMCR, reg | BMCR_ISO);
 			return (0);
 		}
-		
+
 		/*
 		 * If the interface is not up, don't do anything.
 		 */
@@ -299,7 +299,7 @@ tlphy_status(physc)
 	bmcr = PHY_READ(&sc->sc_mii, MII_BMCR);
 	if (bmcr & BMCR_ISO) {
 		mii->mii_media_active |= IFM_NONE;
-		mii->mii_media_status = 0;  
+		mii->mii_media_status = 0;
 		return;
 	}
 
@@ -312,7 +312,7 @@ tlphy_status(physc)
 
 	bmsr = PHY_READ(&sc->sc_mii, MII_BMSR) |
 	    PHY_READ(&sc->sc_mii, MII_BMSR);
-	if (bmsr & BMSR_LINK)   
+	if (bmsr & BMSR_LINK)
 		mii->mii_media_status |= IFM_ACTIVE;
 
 	if (bmcr & BMCR_LOOP)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.11 2001/08/11 23:51:28 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.11.4.1 2002/06/11 03:37:10 art Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -54,13 +54,9 @@
 #define	_BSD_CLOCKID_T_	int
 #define	_BSD_TIMER_T_	int
 
-#if 0
-#define	_BSD_VA_LIST_	char*			/* va_list */
-#endif
+#include <machine/va-m88k.h>
 
-#include "va-m88k.h"
-
-#define _BSD_VA_LIST_	__gnuc_va_list
+#define _BSD_VA_LIST_	__va_list
 
 /*
  * Runes (wchar_t) is declared to be an ``int'' instead of the more natural

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.6 2001/12/10 01:05:28 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.6.2.1 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: param.h,v 1.25 2001/05/30 12:28:51 mrg Exp $ */
 
 /*
@@ -205,9 +205,9 @@ extern int nbpg, pgofset, pgshift;
 
 #ifndef NMBCLUSTERS
 #ifdef GATEWAY
-#define	NMBCLUSTERS	512		/* map size, max cluster allocation */
+#define	NMBCLUSTERS	2048		/* map size, max cluster allocation */
 #else
-#define	NMBCLUSTERS	256		/* map size, max cluster allocation */
+#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
 #endif
 #endif
 
@@ -263,12 +263,12 @@ extern struct map	*dvmamap;
 #define rctov(n)		(ctob(((n)-1))+dvma_base)
 #define vtorc(v)		((btoc((v)-dvma_base))+1)
 
-extern caddr_t	kdvma_mapin __P((caddr_t, int, int));
-extern caddr_t	dvma_malloc __P((size_t, void *, int));
-extern void	dvma_free __P((caddr_t, size_t, void *));
+extern caddr_t	kdvma_mapin(caddr_t, int, int);
+extern caddr_t	dvma_malloc(size_t, void *, int);
+extern void	dvma_free(caddr_t, size_t, void *);
 #endif
 
-extern void	delay __P((unsigned int));
+extern void	delay(unsigned int);
 #define	DELAY(n)	delay(n)
 
 extern int cputyp;

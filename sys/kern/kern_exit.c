@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.37.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.37.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -71,6 +71,9 @@
 #include <sys/sem.h>
 #endif
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
@@ -78,7 +81,7 @@
 
 #include <uvm/uvm_extern.h>
 
-void proc_zap __P((struct proc *));
+void proc_zap(struct proc *);
 
 /*
  * exit --
@@ -197,6 +200,10 @@ exit1(p, rv)
 	p->p_traceflag = 0;	/* don't trace the vrele() */
 	if (p->p_tracep)
 		ktrsettracevnode(p, NULL);
+#endif
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		systrace_exit(p);
 #endif
 	/*
 	 * NOTE: WE ARE NO LONGER ALLOWED TO SLEEP!

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syscall.h,v 1.53 2001/08/26 04:11:12 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/syscall.h,v 1.53.4.1 2002/06/11 03:32:33 art Exp $	*/
 
 /*
  * System call numbers.
@@ -639,4 +639,25 @@
 /* syscall: "getpeereid" ret: "int" args: "int" "uid_t *" "gid_t *" */
 #define	SYS_getpeereid	273
 
-#define	SYS_MAXSYSCALL	274
+/* syscall: "extattrctl" ret: "int" args: "const char *" "int" "const char *" "int" "const char *" */
+#define	SYS_extattrctl	274
+
+/* syscall: "extattr_set_file" ret: "int" args: "const char *" "int" "const char *" "void *" "size_t" */
+#define	SYS_extattr_set_file	275
+
+/* syscall: "extattr_get_file" ret: "ssize_t" args: "const char *" "int" "const char *" "void *" "size_t" */
+#define	SYS_extattr_get_file	276
+
+/* syscall: "extattr_delete_file" ret: "int" args: "const char *" "int" "const char *" */
+#define	SYS_extattr_delete_file	277
+
+/* syscall: "extattr_set_fd" ret: "int" args: "int" "int" "const char *" "void *" "size_t" */
+#define	SYS_extattr_set_fd	278
+
+/* syscall: "extattr_get_fd" ret: "ssize_t" args: "int" "int" "const char *" "void *" "size_t" */
+#define	SYS_extattr_get_fd	279
+
+/* syscall: "extattr_delete_fd" ret: "int" args: "int" "int" "const char *" */
+#define	SYS_extattr_delete_fd	280
+
+#define	SYS_MAXSYSCALL	281

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.14 2000/09/21 17:45:12 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/si.c,v 1.14.8.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: si.c,v 1.38 1997/08/27 11:24:20 bouyer Exp $	*/
 
 /*-
@@ -201,31 +201,31 @@ int sw_options = SI_ENABLE_DMA;
 /* How long to wait for DMA before declaring an error. */
 int si_dma_intr_timo = 500;	/* ticks (sec. X 100) */
 
-static int	si_match __P((struct device *, void *, void *));
-static void	si_attach __P((struct device *, struct device *, void *));
-static int	si_intr __P((void *));
-static void	si_reset_adapter __P((struct ncr5380_softc *));
-static void	si_minphys __P((struct buf *));
+static int	si_match(struct device *, void *, void *);
+static void	si_attach(struct device *, struct device *, void *);
+static int	si_intr(void *);
+static void	si_reset_adapter(struct ncr5380_softc *);
+static void	si_minphys(struct buf *);
 
-void si_dma_alloc __P((struct ncr5380_softc *));
-void si_dma_free __P((struct ncr5380_softc *));
-void si_dma_poll __P((struct ncr5380_softc *));
+void si_dma_alloc(struct ncr5380_softc *);
+void si_dma_free(struct ncr5380_softc *);
+void si_dma_poll(struct ncr5380_softc *);
 
-void si_vme_dma_setup __P((struct ncr5380_softc *));
-void si_vme_dma_start __P((struct ncr5380_softc *));
-void si_vme_dma_eop __P((struct ncr5380_softc *));
-void si_vme_dma_stop __P((struct ncr5380_softc *));
+void si_vme_dma_setup(struct ncr5380_softc *);
+void si_vme_dma_start(struct ncr5380_softc *);
+void si_vme_dma_eop(struct ncr5380_softc *);
+void si_vme_dma_stop(struct ncr5380_softc *);
 
-void si_vme_intr_on  __P((struct ncr5380_softc *));
-void si_vme_intr_off __P((struct ncr5380_softc *));
+void si_vme_intr_on(struct ncr5380_softc *);
+void si_vme_intr_off(struct ncr5380_softc *);
 
-void si_obio_dma_setup __P((struct ncr5380_softc *));
-void si_obio_dma_start __P((struct ncr5380_softc *));
-void si_obio_dma_eop __P((struct ncr5380_softc *));
-void si_obio_dma_stop __P((struct ncr5380_softc *));
+void si_obio_dma_setup(struct ncr5380_softc *);
+void si_obio_dma_start(struct ncr5380_softc *);
+void si_obio_dma_eop(struct ncr5380_softc *);
+void si_obio_dma_stop(struct ncr5380_softc *);
 
-void si_obio_intr_on __P((struct ncr5380_softc *));
-void si_obio_intr_off __P((struct ncr5380_softc *));
+void si_obio_intr_on(struct ncr5380_softc *);
+void si_obio_intr_off(struct ncr5380_softc *);
 
 static struct scsi_adapter	si_ops = {
 	ncr5380_scsi_cmd,		/* scsi_cmd()		*/
@@ -448,7 +448,7 @@ si_attach(parent, self, args)
 		/*
 		 * This will be an "sw" controller.
 		 */
-		intr_establish(ra->ra_intr[0].int_pri, &sc->sc_ih);
+		intr_establish(ra->ra_intr[0].int_pri, &sc->sc_ih, IPL_BIO);
 		break;
 
 	case BUS_VME16:
@@ -456,7 +456,7 @@ si_attach(parent, self, args)
 		 * This will be an "si" controller.
 		 */
 		vmeintr_establish(ra->ra_intr[0].int_vec,
-		    ra->ra_intr[0].int_pri, &sc->sc_ih);
+		    ra->ra_intr[0].int_pri, &sc->sc_ih, IPL_BIO);
 		sc->sc_adapter_iv_am =
 		    VME_SUPV_DATA_24 | (ra->ra_intr[0].int_vec & 0xFF);
 		break;
@@ -669,7 +669,7 @@ found:
 
 	dh = &sc->sc_dma[i];
 	dh->dh_flags = SIDH_BUSY;
-	dh->dh_addr = (u_char*) addr;
+	dh->dh_addr = (u_char *) addr;
 	dh->dh_maplen  = xlen;
 	dh->dh_dvma = 0;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/ieeefp.h,v 1.2 2002/05/22 20:04:55 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/ieeefp.h,v 1.2.2.1 2002/06/11 03:35:37 art Exp $	*/
 
 /* 
  * Written by Miodrag Vallat.  Public domain.

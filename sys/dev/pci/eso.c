@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.14.2.1 2002/01/31 22:55:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/eso.c,v 1.14.2.2 2002/06/11 03:42:24 art Exp $	*/
 /*	$NetBSD: eso.c,v 1.3 1999/08/02 17:37:43 augustss Exp $	*/
 
 /*
@@ -101,9 +101,9 @@ struct eso_dma {
 #define DMAADDR(dma)	((dma)->ed_map->dm_segs[0].ds_addr)
 
 /* Autoconfiguration interface */
-HIDE int eso_match __P((struct device *, MATCH_ARG_2_T, void *));
-HIDE void eso_attach __P((struct device *, struct device *, void *));
-HIDE void eso_defer __P((struct device *));
+HIDE int eso_match(struct device *, MATCH_ARG_2_T, void *);
+HIDE void eso_attach(struct device *, struct device *, void *);
+HIDE void eso_defer(struct device *);
 
 struct cfattach eso_ca = {
 	sizeof (struct eso_softc), eso_match, eso_attach
@@ -116,30 +116,34 @@ struct cfdriver eso_cd = {
 #endif
 
 /* PCI interface */
-HIDE int eso_intr __P((void *));
+HIDE int eso_intr(void *);
 
 /* MI audio layer interface */
-HIDE int	eso_open __P((void *, int));
-HIDE void	eso_close __P((void *));
-HIDE int	eso_query_encoding __P((void *, struct audio_encoding *));
-HIDE int	eso_set_params __P((void *, int, int, struct audio_params *,
-		    struct audio_params *));
-HIDE int	eso_round_blocksize __P((void *, int));
-HIDE int	eso_halt_output __P((void *));
-HIDE int	eso_halt_input __P((void *));
-HIDE int	eso_getdev __P((void *, struct audio_device *));
-HIDE int	eso_set_port __P((void *, mixer_ctrl_t *));
-HIDE int	eso_get_port __P((void *, mixer_ctrl_t *));
-HIDE int	eso_query_devinfo __P((void *, mixer_devinfo_t *));
-HIDE void *	eso_allocm __P((void *, int, size_t, int, int));
-HIDE void	eso_freem __P((void *, void *, int));
-HIDE size_t	eso_round_buffersize __P((void *, int, size_t));
-HIDE paddr_t	eso_mappage __P((void *, void *, off_t, int));
-HIDE int	eso_get_props __P((void *));
-HIDE int	eso_trigger_output __P((void *, void *, void *, int,
-		    void (*)(void *), void *, struct audio_params *));
-HIDE int	eso_trigger_input __P((void *, void *, void *, int,
-		    void (*)(void *), void *, struct audio_params *));
+HIDE int	eso_open(void *, int);
+HIDE void	eso_close(void *);
+HIDE int	eso_query_encoding(void *, struct audio_encoding *);
+HIDE int	eso_set_params(void *, int, int, struct audio_params *,
+		    struct audio_params *);
+HIDE int	eso_round_blocksize(void *, int);
+HIDE int	eso_halt_output(void *);
+HIDE int	eso_halt_input(void *);
+HIDE int	eso_getdev(void *, struct audio_device *);
+HIDE int	eso_set_port(void *, mixer_ctrl_t *);
+HIDE int	eso_get_port(void *, mixer_ctrl_t *);
+HIDE int	eso_query_devinfo(void *, mixer_devinfo_t *);
+HIDE void *	eso_allocm(void *, int, size_t, int, int);
+HIDE void	eso_freem(void *, void *, int);
+HIDE size_t	eso_round_buffersize(void *, int, size_t);
+HIDE paddr_t	eso_mappage(void *, void *, off_t, int);
+HIDE int	eso_get_props(void *);
+HIDE int	eso_trigger_output(void *, void *, void *, int,
+		    void (*)(void *), void *, struct audio_params *);
+HIDE int	eso_trigger_input(void *, void *, void *, int,
+		    void (*)(void *), void *, struct audio_params *);
+HIDE void       eso_setup(struct eso_softc *, int);
+
+HIDE void       eso_powerhook(int, void *);
+
 
 HIDE struct audio_hw_if eso_hw_if = {
 	eso_open,
@@ -181,19 +185,19 @@ HIDE const char * const eso_rev2model[] = {
  * Utility routines
  */
 /* Register access etc. */
-HIDE uint8_t	eso_read_ctlreg __P((struct eso_softc *, uint8_t));
-HIDE uint8_t	eso_read_mixreg __P((struct eso_softc *, uint8_t));
-HIDE uint8_t	eso_read_rdr __P((struct eso_softc *));
-HIDE int	eso_reset __P((struct eso_softc *));
-HIDE void	eso_set_gain __P((struct eso_softc *, unsigned int));
-HIDE int	eso_set_recsrc __P((struct eso_softc *, unsigned int));
-HIDE void	eso_write_cmd __P((struct eso_softc *, uint8_t));
-HIDE void	eso_write_ctlreg __P((struct eso_softc *, uint8_t, uint8_t));
-HIDE void	eso_write_mixreg __P((struct eso_softc *, uint8_t, uint8_t));
+HIDE uint8_t	eso_read_ctlreg(struct eso_softc *, uint8_t);
+HIDE uint8_t	eso_read_mixreg(struct eso_softc *, uint8_t);
+HIDE uint8_t	eso_read_rdr(struct eso_softc *);
+HIDE int	eso_reset(struct eso_softc *);
+HIDE void	eso_set_gain(struct eso_softc *, unsigned int);
+HIDE int	eso_set_recsrc(struct eso_softc *, unsigned int);
+HIDE void	eso_write_cmd(struct eso_softc *, uint8_t);
+HIDE void	eso_write_ctlreg(struct eso_softc *, uint8_t, uint8_t);
+HIDE void	eso_write_mixreg(struct eso_softc *, uint8_t, uint8_t);
 /* DMA memory allocation */
-HIDE int	eso_allocmem __P((struct eso_softc *, size_t, size_t, size_t,
-		    int, struct eso_dma *));
-HIDE void	eso_freemem __P((struct eso_softc *, struct eso_dma *));
+HIDE int	eso_allocmem(struct eso_softc *, size_t, size_t, size_t,
+		    int, struct eso_dma *);
+HIDE void	eso_freemem(struct eso_softc *, struct eso_dma *);
 
 
 HIDE int
@@ -222,8 +226,6 @@ eso_attach(parent, self, aux)
 	pci_intr_handle_t ih;
 	bus_addr_t vcbase;
 	const char *intrstring;
-	int idx;
-	uint8_t a2mode;
 
 	sc->sc_revision = PCI_REVISION(pa->pa_class);
 
@@ -267,29 +269,110 @@ eso_attach(parent, self, aux)
 
 	/* Enable bus mastering. */
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
-	    pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG) |
-	    PCI_COMMAND_MASTER_ENABLE);
+		       pci_conf_read(pa->pa_pc, pa->pa_tag,
+				     PCI_COMMAND_STATUS_REG) |
+		       PCI_COMMAND_MASTER_ENABLE);
+	
+	eso_setup(sc, 1);
+
+	/* map and establish the interrupt. */
+	if (pci_intr_map(pa, &ih)) {
+		printf(", couldn't map interrupt\n");
+		return;
+	}
+	intrstring = pci_intr_string(pa->pa_pc, ih);
+#ifdef __OpenBSD__
+	sc->sc_ih  = pci_intr_establish(pa->pa_pc, ih, IPL_AUDIO, eso_intr, sc,
+					sc->sc_dev.dv_xname);
+#else
+	sc->sc_ih  = pci_intr_establish(pa->pa_pc, ih, IPL_AUDIO, eso_intr, sc);
+#endif
+	if (sc->sc_ih == NULL) {
+		printf(", couldn't establish interrupt");
+		if (intrstring != NULL)
+			printf(" at %s", intrstring);
+		printf("\n");
+		return;
+	}
+	printf(", %s\n", intrstring);
+
+	/*
+	 * Set up the DDMA Control register; a suitable I/O region has been
+	 * supposedly mapped in the VC base address register.
+	 *
+	 * The Solo-1 has an ... interesting silicon bug that causes it to
+	 * not respond to I/O space accesses to the Audio 1 DMA controller
+	 * if the latter's mapping base address is aligned on a 1K boundary.
+	 * As a consequence, it is quite possible for the mapping provided
+	 * in the VC BAR to be useless.  To work around this, we defer this
+	 * part until all autoconfiguration on our parent bus is completed
+	 * and then try to map it ourselves in fulfillment of the constraint.
+	 * 
+	 * According to the register map we may write to the low 16 bits
+	 * only, but experimenting has shown we're safe.
+	 * -kjk
+	 */
+
+	if (ESO_VALID_DDMAC_BASE(vcbase)) {
+		pci_conf_write(pa->pa_pc, pa->pa_tag, ESO_PCI_DDMAC,
+			       vcbase | ESO_PCI_DDMAC_DE);
+		sc->sc_dmac_configured = 1;
+		
+		printf("%s: mapping Audio 1 DMA using VC I/O space at 0x%lx\n",
+		       sc->sc_dev.dv_xname, (unsigned long)vcbase);
+	} else {
+		DPRINTF(("%s: VC I/O space at 0x%lx not suitable, deferring\n",
+			 sc->sc_dev.dv_xname, (unsigned long)vcbase));
+		sc->sc_pa = *pa; 
+		config_defer((struct device *)sc, eso_defer);
+	}
+	
+	audio_attach_mi(&eso_hw_if, sc, &sc->sc_dev);
+
+	aa.type = AUDIODEV_TYPE_OPL;
+	aa.hwif = NULL;
+	aa.hdl = NULL;
+	(void)config_found(&sc->sc_dev, &aa, audioprint);
+
+	sc->sc_powerhook = powerhook_establish(&eso_powerhook, sc);
+
+#if 0
+	aa.type = AUDIODEV_TYPE_MPU;
+	aa.hwif = NULL;
+	aa.hdl = NULL;
+	sc->sc_mpudev = config_found(&sc->sc_dev, &aa, audioprint);
+#endif
+}
+
+HIDE void
+eso_setup(sc, verbose)
+	struct eso_softc *sc;
+	int verbose;
+{
+	struct pci_attach_args *pa = &sc->sc_pa;	
+	uint8_t a2mode;
+	int idx; 
 
 	/* Reset the device; bail out upon failure. */
 	if (eso_reset(sc) != 0) {
-		printf(", can't reset\n");
+		if (verbose) printf(", can't reset\n");
 		return;
 	}
 	
 	/* Select the DMA/IRQ policy: DDMA, ISA IRQ emulation disabled. */
 	pci_conf_write(pa->pa_pc, pa->pa_tag, ESO_PCI_S1C,
-	    pci_conf_read(pa->pa_pc, pa->pa_tag, ESO_PCI_S1C) &
-	    ~(ESO_PCI_S1C_IRQP_MASK | ESO_PCI_S1C_DMAP_MASK));
+		       pci_conf_read(pa->pa_pc, pa->pa_tag, ESO_PCI_S1C) &
+		       ~(ESO_PCI_S1C_IRQP_MASK | ESO_PCI_S1C_DMAP_MASK));
 
 	/* Enable the relevant DMA interrupts. */
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, ESO_IO_IRQCTL,
-	    ESO_IO_IRQCTL_A1IRQ | ESO_IO_IRQCTL_A2IRQ);
+			  ESO_IO_IRQCTL_A1IRQ | ESO_IO_IRQCTL_A2IRQ);
 	
 	/* Set up A1's sample rate generator for new-style parameters. */
 	a2mode = eso_read_mixreg(sc, ESO_MIXREG_A2MODE);
 	a2mode |= ESO_MIXREG_A2MODE_NEWA1 | ESO_MIXREG_A2MODE_ASYNC;
 	eso_write_mixreg(sc, ESO_MIXREG_A2MODE, a2mode);
-	
+
 	/* Set mixer regs to something reasonable, needs work. */
 	for (idx = 0; idx < ESO_NGAINDEVS; idx++) {
 		int v;
@@ -320,71 +403,6 @@ eso_attach(parent, self, aux)
 		eso_set_gain(sc, idx);
 	}
 	eso_set_recsrc(sc, ESO_MIXREG_ERS_MIC);
-	
-	/* Map and establish the interrupt. */
-	if (pci_intr_map(pa, &ih)) {
-		printf(", couldn't map interrupt\n");
-		return;
-	}
-	intrstring = pci_intr_string(pa->pa_pc, ih);
-#ifdef __OpenBSD__
-	sc->sc_ih  = pci_intr_establish(pa->pa_pc, ih, IPL_AUDIO, eso_intr, sc,
-	    sc->sc_dev.dv_xname);
-#else
-	sc->sc_ih  = pci_intr_establish(pa->pa_pc, ih, IPL_AUDIO, eso_intr, sc);
-#endif
-	if (sc->sc_ih == NULL) {
-		printf(", couldn't establish interrupt");
-		if (intrstring != NULL)
-			printf(" at %s", intrstring);
-		printf("\n");
-		return;
-	}
-	printf(", %s\n", intrstring);
-
-	/*
-	 * Set up the DDMA Control register; a suitable I/O region has been
-	 * supposedly mapped in the VC base address register.
-	 *
-	 * The Solo-1 has an ... interesting silicon bug that causes it to
-	 * not respond to I/O space accesses to the Audio 1 DMA controller
-	 * if the latter's mapping base address is aligned on a 1K boundary.
-	 * As a consequence, it is quite possible for the mapping provided
-	 * in the VC BAR to be useless.  To work around this, we defer this
-	 * part until all autoconfiguration on our parent bus is completed
-	 * and then try to map it ourselves in fulfillment of the constraint.
-	 * 
-	 * According to the register map we may write to the low 16 bits
-	 * only, but experimenting has shown we're safe.
-	 * -kjk
-	 */
-	if (ESO_VALID_DDMAC_BASE(vcbase)) {
-		pci_conf_write(pa->pa_pc, pa->pa_tag, ESO_PCI_DDMAC,
-		    vcbase | ESO_PCI_DDMAC_DE);
-		sc->sc_dmac_configured = 1;
-
-		printf("%s: mapping Audio 1 DMA using VC I/O space at 0x%lx\n",
-		    sc->sc_dev.dv_xname, (unsigned long)vcbase);
-	} else {
-		DPRINTF(("%s: VC I/O space at 0x%lx not suitable, deferring\n",
-		    sc->sc_dev.dv_xname, (unsigned long)vcbase));
-		sc->sc_pa = *pa;
-		config_defer(self, eso_defer);
-	}
-	
-	audio_attach_mi(&eso_hw_if, sc, &sc->sc_dev);
-
-	aa.type = AUDIODEV_TYPE_OPL;
-	aa.hwif = NULL;
-	aa.hdl = NULL;
-	(void)config_found(&sc->sc_dev, &aa, audioprint);
-
-#if 0
-	aa.type = AUDIODEV_TYPE_MPU;
-	aa.hwif = NULL;
-	aa.hdl = NULL;
-	sc->sc_mpudev = config_found(&sc->sc_dev, &aa, audioprint);
-#endif
 }
 
 HIDE void
@@ -1604,7 +1622,7 @@ eso_trigger_output(hdl, start, end, blksize, intr, arg, param)
 	void *hdl;
 	void *start, *end;
 	int blksize;
-	void (*intr) __P((void *));
+	void (*intr)(void *);
 	void *arg;
 	struct audio_params *param;
 {
@@ -1679,7 +1697,7 @@ eso_trigger_input(hdl, start, end, blksize, intr, arg, param)
 	void *hdl;
 	void *start, *end;
 	int blksize;
-	void (*intr) __P((void *));
+	void (*intr)(void *);
 	void *arg;
 	struct audio_params *param;
 {
@@ -1876,4 +1894,29 @@ eso_set_gain(sc, port)
 
 	eso_write_mixreg(sc, mixreg, ESO_4BIT_GAIN_TO_STEREO(
 	    sc->sc_gain[port][ESO_LEFT], sc->sc_gain[port][ESO_RIGHT]));
+}
+
+
+HIDE void
+eso_powerhook(why, self)
+	int why;
+	void *self;
+{
+	struct eso_softc *sc = (struct eso_softc *)self;	
+
+	if (why != PWR_RESUME) {
+		eso_halt_output(sc);
+		eso_halt_input(sc);
+		
+		bus_space_write_1(sc->sc_iot, sc->sc_ioh, ESO_IO_A2DMAM, 0);
+		bus_space_write_1(sc->sc_dmac_iot,
+				  sc->sc_dmac_ioh, ESO_DMAC_CLEAR, 0);
+		bus_space_write_1(sc->sc_sb_iot,
+				  sc->sc_sb_ioh, ESO_SB_STATUSFLAGS, 3);
+		
+		/* shut down dma */
+		pci_conf_write(sc->sc_pa.pa_pc,
+			       sc->sc_pa.pa_tag, ESO_PCI_DDMAC, 0);
+	} else
+		eso_setup(sc, 0);
 }

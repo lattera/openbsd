@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.27.6.1 2002/01/31 22:55:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.27.6.2 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: pchb.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*
@@ -115,10 +115,10 @@ struct pchb_softc {
 	struct timeout sc_tmo;
 };
 
-int	pchbmatch __P((struct device *, void *, void *));
-void	pchbattach __P((struct device *, struct device *, void *));
+int	pchbmatch(struct device *, void *, void *);
+void	pchbattach(struct device *, struct device *, void *);
 
-int	pchb_print __P((void *, const char *));
+int	pchb_print(void *, const char *);
 
 struct cfattach pchb_ca = {
 	sizeof(struct pchb_softc), pchbmatch, pchbattach
@@ -128,7 +128,7 @@ struct cfdriver pchb_cd = {
 	NULL, "pchb", DV_DULL
 };
 
-void pchb_rnd __P((void *v));
+void pchb_rnd(void *v);
 
 int
 pchbmatch(parent, match, aux)
@@ -166,23 +166,33 @@ pchbattach(parent, self, aux)
 
 	switch (PCI_VENDOR(pa->pa_id)) {
 	case PCI_VENDOR_RCC:
-		bdnum = pci_conf_read(pa->pa_pc, pa->pa_tag, 0x44);
-
-		if (bdnum == 0)
+		switch (PCI_PRODUCT(pa->pa_id)) {
+		case PCI_PRODUCT_RCC_CNB20HE:
+			if ((sc->sc_dev.dv_unit == 0 &&
+			    PCI_REVISION(pa->pa_id) == 0x23) ||
+			    sc->sc_dev.dv_unit != 0)
+				break;
+		case PCI_PRODUCT_RCC_CIOB20:
+		case PCI_PRODUCT_RCC_CNB20LE:
+		case PCI_PRODUCT_RCC_CMIC_HE:
+			bdnum = pci_conf_read(pa->pa_pc, pa->pa_tag, 0x44);
+			if (bdnum == 0)
+				break;
+			/*
+			 * This host bridge has a second PCI bus.
+			 * Configure it.
+			 */
+			neednl = 0;
+			pba.pba_busname = "pci";
+			pba.pba_iot = pa->pa_iot;
+			pba.pba_memt = pa->pa_memt;
+			pba.pba_dmat = pa->pa_dmat;
+			pba.pba_bus = bdnum;
+			pba.pba_pc = pa->pa_pc;
+			printf("\n");
+			config_found(self, &pba, pchb_print);
 			break;
-		/*
-		 * This host bridge has a second PCI bus.
-		 * Configure it.
-		 */
-		neednl = 0;
-		pba.pba_busname = "pci";
-		pba.pba_iot = pa->pa_iot;
-		pba.pba_memt = pa->pa_memt;
-		pba.pba_dmat = pa->pa_dmat;
-		pba.pba_bus = bdnum;
-		pba.pba_pc = pa->pa_pc;
-		printf("\n");
-		config_found(self, &pba, pchb_print);
+		}
 		break;
 	case PCI_VENDOR_INTEL:
 		switch (PCI_PRODUCT(pa->pa_id)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.7 2001/12/07 10:38:11 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.7.2.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: psl.h,v 1.12 1997/03/10 21:49:11 pk Exp $ */
 
 /*
@@ -76,21 +76,42 @@
 
 #define	PSR_BITS "\20\16EC\15EF\10S\7PS\6ET"
 
-#define	PIL_CLOCK	10
+/*
+ * Various interrupt levels.
+ */
+#define IPL_SOFTINT	1
+#define IPL_SOFTCLOCK	IPL_SOFTINT	/* softclock() interrupts */
+#define IPL_SOFTNET	IPL_SOFTINT	/* soft network interrupts */
+#define IPL_AUSOFT	4		/* audio soft interrupts */
+#define IPL_FDSOFT	4		/* floppy soft interrupts */
+#define IPL_BIO		5		/* block devices are at 5 and below */
+#define IPL_TTY		6		/* tty soft interrupts */
+#define IPL_NET		7		/* network hardware at 7 or below */
+#define IPL_VM		7		/* max(BIO, NET, TTY) */
+#define	IPL_CLOCK	10		/* hardclock() */
+#define IPL_FD		11		/* hard floppy interrupts. */
+#define IPL_ZS		12		/* zs interrupts */
+/*
+ * XXX - this is called AUHARD instead of AUDIO because of some confusion
+ * with how MI audio code handles this. Stay tuned for a change in the future
+ */
+#define IPL_AUHARD	13		/* hard audio interrupts */
+#define IPL_STATCLOCK	14		/* statclock() */
 
 #if defined(_KERNEL) && !defined(_LOCORE)
 
-static __inline int getpsr __P((void));
-static __inline void setpsr __P((int));
-static __inline int spl0 __P((void));
-static __inline int splhigh __P((void));
-static __inline void splx __P((int));
-static __inline int getmid __P((void));
+static __inline int getpsr(void);
+static __inline void setpsr(int);
+static __inline int spl0(void);
+static __inline int splhigh(void);
+static __inline void splx(int);
+static __inline int getmid(void);
 
 /*
  * GCC pseudo-functions for manipulating PSR (primarily PIL field).
  */
-static __inline int getpsr()
+static __inline int
+getpsr()
 {
 	int psr;
 
@@ -98,7 +119,8 @@ static __inline int getpsr()
 	return (psr);
 }
 
-static __inline int getmid()
+static __inline int
+getmid()
 {
 	int mid;
 
@@ -106,7 +128,8 @@ static __inline int getmid()
 	return ((mid >> 20) & 0x3);
 }
 
-static __inline void setpsr(newpsr)
+static __inline void
+setpsr(newpsr)
 	int newpsr;
 {
 	__asm __volatile("wr %0,0,%%psr" : : "r" (newpsr));
@@ -115,7 +138,8 @@ static __inline void setpsr(newpsr)
 	__asm __volatile("nop");
 }
 
-static __inline int spl0()
+static __inline int
+spl0()
 {
 	int psr, oldipl;
 
@@ -136,13 +160,30 @@ static __inline int spl0()
 	return (oldipl);
 }
 
+#ifdef DIAGNOSTIC
+/*
+ * Although this function is implemented in MI code, it must be in this MD
+ * header because we don't want this header to include MI includes.
+ */
+void splassert_fail(int, int, const char *);
+extern int splassert_ctl;
+void splassert_check(int, const char *);
+#define splassert(__wantipl) do {			\
+	if (__predict_false(splassert_ctl > 0)) {	\
+		splassert_check(__wantipl, __func__);	\
+	}						\
+} while (0)
+#else
+#define splassert(wantipl) do { /* nada */ } while (0)
+#endif
+
 /*
  * PIL 1 through 14 can use this macro.
  * (spl0 and splhigh are special since they put all 0s or all 1s
  * into the ipl field.)
  */
 #define	SPL(name, newipl) \
-static __inline int name __P((void)); \
+static __inline int name(void); \
 static __inline int name() \
 { \
 	int psr, oldipl; \
@@ -156,7 +197,7 @@ static __inline int name() \
 }
 /* A non-priority-decreasing version of SPL */
 #define	SPLHOLD(name, newipl) \
-static __inline int name __P((void)); \
+static __inline int name(void); \
 static __inline int name() \
 { \
 	int psr, oldipl; \
@@ -171,51 +212,24 @@ static __inline int name() \
 	return (oldipl); \
 }
 
-SPLHOLD(splsoftint, 1)
+SPLHOLD(splsoftint, IPL_SOFTINT)
 #define	splsoftclock		splsoftint
 #define	splsoftnet		splsoftint
-
-SPL(spllowersoftclock, 1)
-
-/* audio software interrupts are at software level 4 */
-#define	PIL_AUSOFT	4
-SPLHOLD(splausoft, PIL_AUSOFT)
-
-/* floppy software interrupts are at software level 4 too */
-#define PIL_FDSOFT	4
-SPLHOLD(splfdsoft, PIL_FDSOFT)
-
-/* Block devices */
-#define PIL_BIO 5
-SPLHOLD(splbio, PIL_BIO)
-
-/* network hardware interrupts are at level 6 */
-#define	PIL_NET	6
-SPLHOLD(splnet, PIL_NET)
-
-/* tty input runs at software level 6 */
-#define	PIL_TTY	6
-SPLHOLD(spltty, PIL_TTY)
-
-/*
- * Memory allocation (must be as high as highest network, tty, or disk device)
- */
-SPLHOLD(splimp, 7)
-SPLHOLD(splvm, 7)
-
-SPLHOLD(splclock, PIL_CLOCK)
-
-/* fd hardware interrupts are at level 11 */
-SPLHOLD(splfd, 11)
-
-/* zs hardware interrupts are at level 12 */
-SPLHOLD(splzs, 12)
-
-/* audio hardware interrupts are at level 13 */
-SPLHOLD(splaudio, 13)
-
-/* second sparc timer interrupts at level 14 */
-SPLHOLD(splstatclock, 14)
+SPL(spllowersoftclock, IPL_SOFTCLOCK)
+SPLHOLD(splausoft, IPL_AUSOFT)
+SPLHOLD(splfdsoft, IPL_FDSOFT)
+SPLHOLD(splbio, IPL_BIO)
+SPLHOLD(splnet, IPL_NET)
+SPLHOLD(spltty, IPL_TTY)
+SPLHOLD(splvm, IPL_VM)
+/* XXX - the following two should die. */
+#define splimp splvm
+#define splpmap splvm
+SPLHOLD(splclock, IPL_CLOCK)
+SPLHOLD(splfd, IPL_FD)
+SPLHOLD(splzs, IPL_ZS)
+SPLHOLD(splaudio, IPL_AUHARD)
+SPLHOLD(splstatclock, IPL_STATCLOCK)
 
 static __inline int splhigh()
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.15.6.1 2002/01/31 22:55:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pdc.h,v 1.15.6.2 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 1990 mt Xinu, Inc.  All rights reserved.
@@ -92,6 +92,7 @@
 #define	IODC_MAXIOSIZ	(64 * 1024)	/* maximum buffer size for IODC call */
 
 #define	PDC_ALIGNMENT	__attribute__ ((__aligned__(64)))
+#define	PDC_STACKSIZE	(4*NBPG)
 
 /*
  * The PDC Entry Points and their arguments...
@@ -262,8 +263,8 @@
 
 struct iomod;
 
-typedef int (*pdcio_t) __P((int, int, ...));
-typedef int (*iodcio_t) __P((struct iomod *, int, ...));
+typedef int (*pdcio_t)(int, int, ...);
+typedef int (*iodcio_t)(struct iomod *, int, ...);
 
 /*
  * Commonly used PDC calls and the structures they return.
@@ -523,6 +524,14 @@ struct device_path {
 #define	PZF_TIMER	0x0f	/* power of 2 # secs "boot timer" (0 == dflt) */
 #define	PZF_BITS	"\020\010autoboot\07autosearch"
 
+/* macros to decode serial parameters out of dp_layers */
+#define	PZL_BITS(l)	(((l) & 0x03) + 5)
+#define	PZL_PARITY(l)	(((l) & 0x18) >> 3)
+#define	PZL_SPEED(l)	(((l) & 0x3c0) >> 6)
+#define	PZL_ENCODE(bits, parity, speed) \
+	(((bits) - 5) & 0x03) | (((parity) & 0x3) << 3) | \
+	(((speed) & 0x0f) << 6)
+
 /*
  * A processors Stable Storage is accessed through the PDC.  There are
  * at least 96 bytes of stable storage (the device path information may
@@ -621,14 +630,14 @@ struct consdev;
 
 extern int kernelmapped;
 
-void pdc_init __P((void));
-int pdc_call __P((iodcio_t, int, ...));
+void pdc_init(void);
+int pdc_call(iodcio_t, int, ...);
 
-void pdccnprobe __P((struct consdev *));
-void pdccninit __P((struct consdev *));
-int pdccngetc __P((dev_t));
-void pdccnputc __P((dev_t, int));
-void pdccnpollc __P((dev_t, int));
+void pdccnprobe(struct consdev *);
+void pdccninit(struct consdev *);
+int pdccngetc(dev_t);
+void pdccnputc(dev_t, int);
+void pdccnpollc(dev_t, int);
 #endif
 
 #endif	/* !(_LOCORE) */

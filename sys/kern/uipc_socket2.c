@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.25 2001/11/30 19:48:09 provos Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.25.2.1 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: uipc_socket2.c,v 1.11 1996/02/04 02:17:55 christos Exp $	*/
 
 /*
@@ -176,6 +176,8 @@ sonewconn(head, connstatus)
 	so->so_pgid = head->so_pgid;
 	so->so_euid = head->so_euid;
 	so->so_ruid = head->so_ruid;
+	so->so_egid = head->so_egid;
+	so->so_rgid = head->so_rgid;
 	so->so_siguid = head->so_siguid;
 	so->so_sigeuid = head->so_sigeuid;
 	(void) soreserve(so, head->so_snd.sb_hiwat, head->so_rcv.sb_hiwat);

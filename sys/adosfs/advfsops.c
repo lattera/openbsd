@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/advfsops.c,v 1.20 2001/12/10 04:45:31 art Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/advfsops.c,v 1.20.2.1 2002/06/11 03:27:30 art Exp $	*/
 /*	$NetBSD: advfsops.c,v 1.24 1996/12/22 10:10:12 cgd Exp $	*/
 
 /*
@@ -50,23 +50,22 @@
 #include <miscfs/specfs/specdev.h> /* XXX */
 #include <adosfs/adosfs.h>
 
-int	 adosfs_init __P((struct vfsconf *));
-int	 adosfs_mount __P((struct mount *, const char *, void *, struct nameidata *,
-    struct proc *));
-int	 adosfs_start __P((struct mount *, int, struct proc *));
-int	 adosfs_unmount __P((struct mount *, int, struct proc *));
-int	 adosfs_root __P((struct mount *, struct vnode **));
-int	 adosfs_quotactl __P((struct mount *, int, uid_t, caddr_t,
-    struct proc *));
-int	 adosfs_statfs __P((struct mount *, struct statfs *, struct proc *));
-int	 adosfs_sync __P((struct mount *, int, struct ucred *, struct proc *));
-int	 adosfs_vget __P((struct mount *, ino_t, struct vnode **));
-int	 adosfs_fhtovp __P((struct mount *, struct fid *, struct vnode **));
+int	 adosfs_init(struct vfsconf *);
+int	 adosfs_mount(struct mount *, const char *, void *, struct nameidata *,
+    struct proc *);
+int	 adosfs_start(struct mount *, int, struct proc *);
+int	 adosfs_unmount(struct mount *, int, struct proc *);
+int	 adosfs_root(struct mount *, struct vnode **);
+int	 adosfs_quotactl(struct mount *, int, uid_t, caddr_t, struct proc *);
+int	 adosfs_statfs(struct mount *, struct statfs *, struct proc *);
+int	 adosfs_sync(struct mount *, int, struct ucred *, struct proc *);
+int	 adosfs_vget(struct mount *, ino_t, struct vnode **);
+int	 adosfs_fhtovp(struct mount *, struct fid *, struct vnode **);
 
-int	 adosfs_vptofh __P((struct vnode *, struct fid *));
+int	 adosfs_vptofh(struct vnode *, struct fid *);
 
-int	 adosfs_mountfs __P((struct vnode *, struct mount *, struct proc *));
-int	 adosfs_loadbitmap __P((struct adosfsmount *));
+int	 adosfs_mountfs(struct vnode *, struct mount *, struct proc *);
+int	 adosfs_loadbitmap(struct adosfsmount *);
 
 int
 adosfs_mount(mp, path, data, ndp, p)
@@ -100,7 +99,8 @@ adosfs_mount(mp, path, data, ndp, p)
 	if (mp->mnt_flag & MNT_UPDATE) {
 		amp = VFSTOADOSFS(mp);
 		if (args.fspec == 0)
-			return (vfs_export(mp, &amp->export, &args.export));
+			return (vfs_export(mp, &amp->export, 
+			    &args.export_info));
 	}
 	/*
 	 * Not an update, or updating the name: look up the name

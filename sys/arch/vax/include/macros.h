@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/macros.h,v 1.8 2000/04/26 03:08:41 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/macros.h,v 1.8.10.1 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: macros.h,v 1.17 1998/11/07 17:22:58 ragge Exp $	*/
 
 /*
@@ -100,7 +100,7 @@ bcopy(const void *from, void *toe, u_int len)
 }
 #endif
 
-void	blkclr __P((void *, u_int));
+void	blkclr(void *, u_int);
 
 static __inline__ void *
 memset(void *block, int c, size_t len)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_axppci_33.h,v 1.4 1996/10/30 22:40:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_axppci_33.h,v 1.4.24.1 2002/06/11 03:33:40 art Exp $	*/
 /*	$NetBSD: pci_axppci_33.h,v 1.3 1996/04/12 06:08:47 cgd Exp $	*/
 
 /*
@@ -28,4 +28,4 @@
  * rights to redistribute these changes.
  */
 
-void	pci_axppci_33_pickintr __P((struct lca_config *));
+void	pci_axppci_33_pickintr(struct lca_config *);

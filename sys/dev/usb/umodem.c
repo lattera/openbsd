@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7 2001/05/03 02:20:34 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7.6.1 2002/06/11 03:42:31 art Exp $ */
 /*	$NetBSD: umodem.c,v 1.40 2001/03/25 23:02:34 augustss Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/esareg.h,v 1.1 2002/04/08 01:47:33 frantzen Exp $ */
+/* $OpenBSD: src/sys/dev/pci/esareg.h,v 1.1.4.1 2002/06/11 03:42:24 art Exp $ */
 /* $NetBSD: esareg.h,v 1.8 2002/03/06 18:30:31 jmcneill Exp $ */
 
 /*

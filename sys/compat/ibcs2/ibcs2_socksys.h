@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_socksys.h,v 1.3 1996/08/02 20:35:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_socksys.h,v 1.3.26.1 2002/06/11 03:28:08 art Exp $	*/
 /*	$NetBSD: ibcs2_socksys.h,v 1.2 1996/05/03 17:05:30 christos Exp $	*/
 
 /*
@@ -118,6 +118,6 @@ struct socknewproto {
 	int flags;
 };
 
-int ibcs2_socksys __P((struct proc *, void *, register_t *));
+int ibcs2_socksys(struct proc *, void *, register_t *);
 
 #endif /* _IBCS2_SOCKSYS_H */

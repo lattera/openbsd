@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.29.2.1 2002/01/31 22:55:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.29.2.2 2002/06/11 03:37:11 art Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -53,6 +53,9 @@
 #include <sys/systm.h>
 #include <sys/ktrace.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 
 #include <machine/asm_macro.h>   /* enable/disable interrupts */
@@ -102,12 +105,12 @@ unsigned traptrace = 0;
 #define SYSTEMMODE(PSR) (((struct psr*)&(PSR))->psr_mode != 0)
 
 /* sigh */
-extern int procfs_domem __P((struct proc *, struct proc *, void *, struct uio *));
+extern int procfs_domem(struct proc *, struct proc *, void *, struct uio *);
 
-extern void regdump __P((struct trapframe *f));
-void error_fatal __P((struct m88100_saved_state *frame));
-void error_fault __P((struct m88100_saved_state *frame));
-void error_reset __P((struct m88100_saved_state *frame));
+extern void regdump(struct trapframe *f);
+void error_fatal(struct m88100_saved_state *frame);
+void error_fault(struct m88100_saved_state *frame);
+void error_reset(struct m88100_saved_state *frame);
 
 char  *trap_type[] = {
 	"Reset",
@@ -159,8 +162,12 @@ userret(struct proc *p, struct m88100_saved_state *frame, u_quad_t oticks)
 	/*
 	 * If profiling, charge recent system time to the trapped pc.
 	 */
-	if (p->p_flag & P_PROFIL)
-		addupc_task(p, frame->sxip & ~3,(int)(p->p_sticks - oticks));
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, frame->sxip & ~3,
+		    (int)(p->p_sticks - oticks) * psratio);
+	}
 	curpriority = p->p_priority;
 }
 
@@ -711,7 +718,7 @@ m88110_trap(unsigned type, struct m88100_saved_state *frame)
 	extern struct vm_map *kernel_map;
 	extern unsigned guarded_access_start;
 	extern unsigned guarded_access_end;
-	extern pt_entry_t *pmap_pte __P((pmap_t, vm_offset_t));
+	extern pt_entry_t *pmap_pte(pmap_t, vm_offset_t);
 
 	uvmexp.traps++;
 
@@ -1313,7 +1320,12 @@ m88100_syscall(register_t code, struct m88100_saved_state *tf)
 #endif
 	rval[0] = 0;
 	rval[1] = 0;
-	error = (*callp->sy_call)(p, &args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, &args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, &args, rval);
 	/*
 	 * system call will look like:
 	 *	 ld r10, r31, 32; r10,r11,r12 might be garbage.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/if_en_sbus.c,v 1.3 1997/08/08 08:25:08 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/if_en_sbus.c,v 1.3.22.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: if_en_sbus.c,v 1.4 1997/05/24 20:16:22 pk Exp $	*/
 
 /*
@@ -84,8 +84,8 @@ struct en_sbus_softc {
  * prototypes
  */
 
-static	int en_sbus_match __P((struct device *, void *, void *));
-static	void en_sbus_attach __P((struct device *, struct device *, void *));
+static	int en_sbus_match(struct device *, void *, void *);
+static	void en_sbus_attach(struct device *, struct device *, void *);
 
 /*
  * SBUS autoconfig attachments
@@ -161,7 +161,7 @@ void *aux;
   }
   scs->sc_ih.ih_fun = en_intr;
   scs->sc_ih.ih_arg = sc;
-  intr_establish(EN_IPL, &scs->sc_ih);
+  intr_establish(EN_IPL, &scs->sc_ih, IPL_NET);
 
   /*
    * done SBUS specific stuff

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.11 2001/11/06 19:53:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.11.2.1 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: hpux_machdep.c,v 1.19 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*
@@ -547,7 +547,7 @@ hpux_sendsig(catcher, sig, mask, code, type, val)
  * Return to previous pc and psl as specified by
  * context left by sendsig. Check carefully to
  * make sure that the user has not modified the
- * psl to gain improper priviledges or to cause
+ * psl to gain improper privileges or to cause
  * a machine fault.
  */
 /* ARGSUSED */

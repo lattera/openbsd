@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/zbus.c,v 1.10 2000/02/29 19:05:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/zbus.c,v 1.10.10.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: zbus.c,v 1.33 1997/03/27 23:50:39 veego Exp $	*/
 
 /*
@@ -192,11 +192,11 @@ static struct preconfdata preconftab[] = {
 };
 static int npreconfent = sizeof(preconftab) / sizeof(struct preconfdata);
 
-void zbusattach __P((struct device *, struct device *, void *));
-int zbusprint __P((void *, const char *));
-int zbusmatch __P((struct device *, void *, void *));
-caddr_t zbusmap __P((caddr_t, u_int));
-static char *aconflookup __P((int, int));
+void zbusattach(struct device *, struct device *, void *);
+int zbusprint(void *, const char *);
+int zbusmatch(struct device *, void *, void *);
+caddr_t zbusmap(caddr_t, u_int);
+static char *aconflookup(int, int);
 
 /*
  * given a manufacturer id and product id, find the name

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/openpic.c,v 1.6 2001/11/06 22:45:54 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/openpic.c,v 1.6.2.1 2002/06/11 03:37:22 art Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -85,9 +85,9 @@ static int virq_max = 0;
 
 struct evcnt evirq[ICU_LEN];
 
-static int fakeintr __P((void *));
+static int fakeintr(void *);
 static char *intr_typename(int type);
-static void intr_calculatemasks();
+static void intr_calculatemasks(void);
 static __inline int cntlzw(int x);
 static int mapirq(int irq);
 void openpic_enable_irq_mask(int irq_mask);
@@ -97,31 +97,33 @@ static struct raven_reg *ravenp = (struct raven_reg *)NULL;
 #define HWIRQ_MAX 27
 #define HWIRQ_MASK 0x0fffffff
 
-static   __inline u_int openpic_read __P((int));
-static   __inline void openpic_write __P((int, u_int));
-void  openpic_enable_irq __P((int, int));
-void  openpic_disable_irq __P((int));
-void  openpic_init();
-void  openpic_set_priority __P((int, int));
-void  openpic_set_vec_pri __P((int, int));
-static   __inline int openpic_read_irq __P((int));
-static   __inline void openpic_eoi __P((int));
+static   __inline u_int openpic_read(int);
+static   __inline void openpic_write(int, u_int);
+void  openpic_enable_irq(int, int);
+void  openpic_disable_irq(int);
+void  openpic_init(void);
+void  openpic_set_priority(int, int);
+void  openpic_set_vec_pri(int, int);
+static   __inline int openpic_read_irq(int);
+static   __inline void openpic_eoi(int);
+void openpic_initirq(int, int, int, int, int);
 
-void  i8259_init __P((void));
-int   i8259_intr __P((void));
-void  i8259_enable_irq __P((int, int));
-void  i8259_disable_irq __P((int));
-void  *i8259_intr_establish( void * lcv, int irq, int type, int level,
-									  int (*ih_fun) __P((void *)), void *ih_arg, char *name);
+void  i8259_init(void);
+int   i8259_intr(void);
+void  i8259_enable_irq(int, int);
+void  i8259_disable_irq(int);
+void  *i8259_intr_establish(void *, int, int, int, int (*)(void *), void *,
+    char *);
+void  i8259_set_irq_mask(void);
 
 struct openpic_softc {
 	struct device sc_dev;
 };
 
-int   openpic_match __P((struct device *parent, void *cf, void *aux));
-void  openpic_attach __P((struct device *, struct device *, void *));
-void  openpic_do_pending_int();
-void  ext_intr_openpic();
+int   openpic_match(struct device *parent, void *cf, void *aux);
+void  openpic_attach(struct device *, struct device *, void *);
+void  openpic_do_pending_int(void);
+void  ext_intr_openpic(void);
 
 struct cfattach openpic_ca = { 
 	sizeof(struct openpic_softc),
@@ -174,15 +176,15 @@ static int i8259_dummy (void *arg);
 
 typedef int mac_intr_handle_t;
 
-typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
-														int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
+typedef void  *(intr_establish_t)(void *, mac_intr_handle_t,
+    int, int, int (*)(void *), void *, char *);
+typedef void (intr_disestablish_t)(void *, void *);
 
 static vaddr_t openpic_base;
-void * openpic_intr_establish( void * lcv, int irq, int type, int level,
-										 int (*ih_fun) __P((void *)), void *ih_arg, char *name);
-void openpic_intr_disestablish( void *lcp, void *arg);
-void openpic_collect_preconf_intr();
+void * openpic_intr_establish(void *, int, int, int, int (*)(void *), void *,
+    char *);
+void openpic_intr_disestablish(void *, void *);
+void openpic_collect_preconf_intr(void);
 
 void
 openpic_attach(parent, self, aux)
@@ -279,7 +281,7 @@ void * lcv;
 int irq;
 int type;
 int level;
-int (*ih_fun) __P((void *));
+int (*ih_fun)(void *);
 void *ih_arg;
 char *name;
 {
@@ -365,7 +367,7 @@ void * lcv;
 int irq;
 int type;
 int level;
-int (*ih_fun) __P((void *));
+int (*ih_fun)(void *);
 void *ih_arg;
 char *name;
 {

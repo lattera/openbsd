@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/ahc_eisa.c,v 1.9 2000/03/22 02:55:40 smurph Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/ahc_eisa.c,v 1.9.10.1 2002/06/11 03:42:16 art Exp $	*/
 /*	$NetBSD: ahc_eisa.c,v 1.10 1996/10/21 22:30:58 thorpej Exp $	*/
 
 /*
@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: ahc_eisa.c,v 1.8 1999/01/11 01:57:59 millert Exp $
+ *	$Id: ahc_eisa.c,v 1.9 2000/03/22 02:55:40 smurph Exp $
  */
 
 #include "eisa.h"
@@ -68,9 +68,9 @@
 #define bootverbose	1
 #endif
 
-int   ahc_eisa_irq __P((bus_space_tag_t, bus_space_handle_t));
-int   ahc_eisa_match __P((struct device *, void *, void *));
-void  ahc_eisa_attach __P((struct device *, struct device *, void *));
+int   ahc_eisa_irq(bus_space_tag_t, bus_space_handle_t);
+int   ahc_eisa_match(struct device *, void *, void *);
+void  ahc_eisa_attach(struct device *, struct device *, void *);
 
 
 struct cfattach ahc_eisa_ca = {

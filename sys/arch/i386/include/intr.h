@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.12 2001/12/14 08:35:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.12.2.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -104,12 +104,30 @@ int iunmask[NIPL];	/* Bitmasks telling what interrupts are accepted. */
 #define IMASK(level) imask[IPL(level)]
 #define IUNMASK(level) iunmask[IPL(level)]
 
-extern void Xspllower __P((void));
+extern void Xspllower(void);
 
-static __inline int splraise __P((int));
-static __inline int spllower __P((int));
-#define SPLX_DECL void splx __P((int));
-static __inline void softintr __P((int));
+static __inline int splraise(int);
+static __inline int spllower(int);
+#define SPLX_DECL void splx(int);
+static __inline void softintr(int);
+
+/* SPL asserts */
+#ifdef DIAGNOSTIC
+/*
+ * Although this function is implemented in MI code, it must be in this MD
+ * header because we don't want this header to include MI includes.
+ */
+void splassert_fail(int, int, const char *);
+extern int splassert_ctl;
+void splassert_check(int, const char *);
+#define splassert(__wantipl) do {			\
+	if (__predict_false(splassert_ctl > 0)) {	\
+		splassert_check(__wantipl, __func__);	\
+	}						\
+} while (0)
+#else
+#define splassert(wantipl) do { /* nada */ } while (0)
+#endif
 
 /*
  * Raise current interrupt priority level, and return the old one.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_input.c,v 1.8 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_input.c,v 1.8.2.1 2002/06/11 03:28:48 art Exp $	*/
 /*	$NetBSD: db_input.c,v 1.7 1996/02/05 01:57:02 christos Exp $	*/
 
 /* 
@@ -72,7 +72,7 @@ char *  db_history_prev = (char *) 0;	/* start of previous line */
 #define	BLANK		' '
 #define	BACKUP		'\b'
 
-static int cnmaygetc __P((void));
+static int cnmaygetc(void);
 
 void
 db_putstring(s, count)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.26.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.26.2.2 2002/06/11 03:29:20 art Exp $	*/
 /*	$NetBSD: cd9660_vfsops.c,v 1.26 1997/06/13 15:38:58 pk Exp $	*/
 
 /*-
@@ -90,10 +90,10 @@ struct genfs_ops cd9660_genfsops = {
  * Called by vfs_mountroot when iso is going to be mounted as root.
  */
 
-static	int iso_mountfs __P((struct vnode *devvp, struct mount *mp,
-    struct proc *p, struct iso_args *argp));
-int	iso_disklabelspoof __P((dev_t dev, void (*strat) __P((struct buf *)),
-    struct disklabel *lp));
+static	int iso_mountfs(struct vnode *devvp, struct mount *mp,
+	    struct proc *p, struct iso_args *argp);
+int	iso_disklabelspoof(dev_t dev, void (*strat)(struct buf *),
+	    struct disklabel *lp);
 
 int
 cd9660_mountroot()
@@ -127,6 +127,7 @@ cd9660_mountroot()
 	simple_unlock(&mountlist_slock);
         (void)cd9660_statfs(mp, &mp->mnt_stat, p);
 	vfs_unbusy(mp, p);
+	inittodr(0);
         return (0);
 }
 
@@ -163,7 +164,8 @@ cd9660_mount(mp, path, data, ndp, p)
 	if (mp->mnt_flag & MNT_UPDATE) {
 		imp = VFSTOISOFS(mp);
 		if (args.fspec == 0)
-			return (vfs_export(mp, &imp->im_export, &args.export));
+			return (vfs_export(mp, &imp->im_export, 
+			    &args.export_info));
 	}
 	/*
 	 * Not an update, or updating the name: look up the name
@@ -456,7 +458,7 @@ out:
 int
 iso_disklabelspoof(dev, strat, lp)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 {
 	struct buf *bp = NULL;

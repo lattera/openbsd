@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.9 2001/08/19 01:45:55 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.9.4.1 2002/06/11 03:42:20 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -500,7 +500,7 @@ struct xl_chain_data {
 #define XL_RXSTAT_UDPCKERR	0x08000000	/* 3c905B only */
 #define XL_RXSTAT_BUFEN		0x10000000	/* 3c905B only */
 #define XL_RXSTAT_IPCKOK	0x20000000	/* 3c905B only */
-#define XL_RXSTAT_TCPCOK	0x40000000	/* 3c905B only */
+#define XL_RXSTAT_TCPCKOK	0x40000000	/* 3c905B only */
 #define XL_RXSTAT_UDPCKOK	0x80000000	/* 3c905B only */
 
 #define XL_TXSTAT_LENMASK	0x00001FFF
@@ -563,7 +563,7 @@ struct xl_softc {
 	struct device		sc_dev;		/* generic device structure */
 	void *			xl_intrhand;	/* interrupt handler cookie */
 	struct timeout		xl_stsup_tmo;	/* stats update timeout */
-	struct arpcom		arpcom;		/* interface info */
+	struct arpcom		sc_arpcom;		/* interface info */
 	struct ifmedia		ifmedia;	/* media info */
 	mii_data_t		sc_mii;		/* mii bus */
 	bus_space_handle_t	xl_bhandle;
@@ -584,7 +584,7 @@ struct xl_softc {
 	struct xl_list_data	*xl_ldata;
 	struct xl_chain_data	xl_cdata;
 	int			xl_flags;
-	void (*intr_ack)	__P((struct xl_softc *));
+	void (*intr_ack)(struct xl_softc *);
 	void *			sc_sdhook, *sc_pwrhook;
 };
 
@@ -725,6 +725,6 @@ struct xl_stats {
 #define ETHER_ALIGN 2
 #endif
 
-extern int xl_intr __P((void *));
-extern void xl_attach __P((struct xl_softc *));
-extern int xl_detach __P((struct xl_softc *));
+extern int xl_intr(void *);
+extern void xl_attach(struct xl_softc *);
+extern int xl_detach(struct xl_softc *);

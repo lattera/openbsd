@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.14 2001/09/15 20:57:33 drahn Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ohci_pci.c,v 1.14.4.1 2002/06/11 03:42:26 art Exp $	*/
 /*	$NetBSD: ohci_pci.c,v 1.9 1999/05/20 09:52:35 augustss Exp $	*/
 
 /*
@@ -64,9 +64,9 @@
 #include <dev/usb/ohcireg.h>
 #include <dev/usb/ohcivar.h>
 
-int	ohci_pci_match __P((struct device *, void *, void *));
-void	ohci_pci_attach __P((struct device *, struct device *, void *));
-int	ohci_pci_detach __P((device_ptr_t, int));
+int	ohci_pci_match(struct device *, void *, void *);
+void	ohci_pci_attach(struct device *, struct device *, void *);
+int	ohci_pci_detach(device_ptr_t, int);
 
 struct ohci_pci_softc {
 	ohci_softc_t		sc;
@@ -107,6 +107,7 @@ ohci_pci_attach(parent, self, aux)
 	pci_intr_handle_t ih;
 	pcireg_t csr;
 	usbd_status r;
+	int s;
 
 	/* Map I/O registers */
 	if (pci_mapreg_map(pa, PCI_CBMEM, PCI_MAPREG_TYPE_MEM, 0,
@@ -132,15 +133,13 @@ ohci_pci_attach(parent, self, aux)
 	bus_space_write_4(sc->sc.iot, sc->sc.ioh,
 	    OHCI_INTERRUPT_DISABLE, OHCI_ALL_INTRS);
 
+	s = splusb();
 	/* Map and establish the interrupt. */
 	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
+		splx(s);
 		return;
 	}
-
-#if defined(__OpenBSD__)
-	timeout_set(&sc->sc.sc_tmo_rhsc, ohci_rhsc_enable, sc);
-#endif
 
 	intrstr = pci_intr_string(pc, ih);
 	sc->sc_ih = pci_intr_establish(pc, ih, IPL_USB, ohci_intr, sc,
@@ -150,6 +149,7 @@ ohci_pci_attach(parent, self, aux)
 		if (intrstr != NULL)
 			printf(" at %s", intrstr);
 		printf("\n");
+		splx(s);
 		return;
 	}
 	printf(": %s", intrstr);
@@ -158,8 +158,10 @@ ohci_pci_attach(parent, self, aux)
 	if (r != USBD_NORMAL_COMPLETION) {
 		printf("%s: init failed, error=%d\n",
 		    sc->sc.sc_bus.bdev.dv_xname, r);
+		splx(s);
 		return;
 	}
+	splx(s);
 
 	/* Attach usb device. */
 	sc->sc.sc_child = config_found((void *)sc, &sc->sc.sc_bus,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_input.c,v 1.3 2001/05/16 12:53:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_input.c,v 1.3.4.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: pk_input.c,v 1.7 1996/02/13 22:05:21 christos Exp $	*/
 
 /*
@@ -73,8 +73,8 @@
 
 struct pkcb_q   pkcb_q = {&pkcb_q, &pkcb_q};
 
-static void prune_dnic __P((char *, char *, char *, struct x25config *));
-static void save_extra __P((struct mbuf *, octet *, struct socket *));
+static void prune_dnic(char *, char *, char *, struct x25config *);
+static void save_extra(struct mbuf *, octet *, struct socket *);
 
 /*
  * ccittintr() is the generic interrupt handler for HDLC, LLC2, and X.25. This
@@ -340,13 +340,7 @@ struct mbuf_cache pk_input_cache = {0};
 	 ((xp)->packet_cause >= X25_RESTART_DTE_ORIGINATED2))
 
 void
-#if __STDC__
 pk_input(struct mbuf *m, ...)
-#else
-pk_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register struct x25_packet *xp;
 	register struct pklcd *lcp;

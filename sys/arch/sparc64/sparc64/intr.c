@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/intr.c,v 1.6.2.2 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: intr.c,v 1.39 2001/07/19 23:38:11 eeh Exp $ */
 
 /*
@@ -69,10 +69,10 @@
  */
 struct intrhand *intrlev[MAXINTNUM];
 
-void	strayintr __P((const struct trapframe64 *, int));
-int	softintr __P((void *));
-int	softnet __P((void *));
-int	intr_list_handler __P((void *));
+void	strayintr(const struct trapframe64 *, int);
+int	softintr(void *);
+int	softnet(void *);
+int	intr_list_handler(void *);
 
 /*
  * Stray interrupt handler.  Clear it if possible.
@@ -130,7 +130,7 @@ softintr(fp)
 	void *fp;
 {
 #if NPCONS >0
-	extern void pcons_dopoll __P((void));
+	extern void pcons_dopoll(void);
 
 	pcons_dopoll();
 #endif
@@ -314,14 +314,14 @@ intr_establish(level, ih)
 void *
 softintr_establish(level, fun, arg)
 	int level; 
-	void (*fun) __P((void *));
+	void (*fun)(void *);
 	void *arg;
 {
 	struct intrhand *ih;
 
 	ih = malloc(sizeof(*ih), M_DEVBUF, 0);
 	bzero(ih, sizeof(*ih));
-	ih->ih_fun = (int (*) __P((void *)))fun;	/* XXX */
+	ih->ih_fun = (int (*)(void *))fun;	/* XXX */
 	ih->ih_arg = arg;
 	ih->ih_pil = level;
 	ih->ih_pending = 0;
@@ -344,3 +344,17 @@ softintr_schedule(cookie)
 
 	send_softint(-1, ih->ih_pil, ih);
 }
+
+#ifdef DIAGNOSTIC
+void
+splassert_check(int wantipl, const char *func)
+{
+	int oldipl;
+
+	__asm __volatile("rdpr %%pil,%0" : "=r" (oldipl));
+
+	if (oldipl < wantipl) {
+		splassert_fail(wantipl, oldipl, func);
+	}
+}
+#endif

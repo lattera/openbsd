@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15.2.1 2002/01/31 22:55:37 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15.2.2 2002/06/11 03:42:28 art Exp $ */
 /* $NetBSD: if_wi_pcmcia.c,v 1.14 2001/11/26 04:34:56 ichiro Exp $ */
 
 /*
@@ -70,15 +70,16 @@
 #include <dev/ic/if_wi_ieee.h>
 #include <dev/ic/if_wivar.h>
 
-int	wi_pcmcia_match		__P((struct device *, void *, void *));
-void	wi_pcmcia_attach	__P((struct device *, struct device *, void *));
-int	wi_pcmcia_detach	__P((struct device *, int));
-int	wi_pcmcia_activate	__P((struct device *, enum devact));
+int	wi_pcmcia_match(struct device *, void *, void *);
+void	wi_pcmcia_attach(struct device *, struct device *, void *);
+int	wi_pcmcia_detach(struct device *, int);
+int	wi_pcmcia_activate(struct device *, enum devact);
 
-int	wi_intr			__P((void *));
-int	wi_attach		__P((struct wi_softc *, int));
-void	wi_init			__P((void *));
-void	wi_stop			__P((struct wi_softc *));
+int	wi_intr(void *);
+int	wi_attach(struct wi_softc *);
+void	wi_cor_reset(struct wi_softc *);
+void	wi_init(struct wi_softc *);
+void	wi_stop(struct wi_softc *);
 
 struct wi_pcmcia_softc {
 	struct wi_softc sc_wi;
@@ -107,6 +108,11 @@ static const struct wi_pcmcia_product {
 	{ PCMCIA_VENDOR_3COM,
 	  PCMCIA_PRODUCT_3COM_3CRWE737A,
 	  PCMCIA_CIS_3COM_3CRWE737A,
+	  "3Com AirConnect Wireless LAN"
+	},
+	{ PCMCIA_VENDOR_3COM,
+	  PCMCIA_PRODUCT_3COM_3CRWE777A,
+	  PCMCIA_CIS_3COM_3CRWE777A,
 	  "3Com AirConnect Wireless LAN"
 	},
 	{ PCMCIA_VENDOR_COREGA,
@@ -142,6 +148,11 @@ static const struct wi_pcmcia_product {
 	{ PCMCIA_VENDOR_LINKSYS2,
 	  PCMCIA_PRODUCT_LINKSYS2_IWN,
 	  PCMCIA_CIS_LINKSYS2_IWN,
+	  "Linksys Instant Wireless Network",
+	},
+	{ PCMCIA_VENDOR_LINKSYS2,
+	  PCMCIA_PRODUCT_LINKSYS2_IWN2,
+	  PCMCIA_CIS_LINKSYS2_IWN2,
 	  "Linksys Instant Wireless Network",
 	},
 	{ PCMCIA_VENDOR_LUCENT,
@@ -232,7 +243,28 @@ static const struct wi_pcmcia_product {
 	{ PCMCIA_VENDOR_ERICSSON,
 	  PCMCIA_PRODUCT_ERICSSON_WIRELESSLAN,
 	  PCMCIA_CIS_ERICSSON_WIRELESSLAN,
-	  "DSSS Wireless LAN PC Card" },
+	  "DSSS Wireless LAN PC Card" 
+	},
+	{ PCMCIA_VENDOR_PROXIM,
+	  PCMCIA_PRODUCT_PROXIM_RANGELANDS_8430,
+	  PCMCIA_CIS_PROXIM_RANGELANDS_8430,
+	  "Proxim RangeLAN-DS/LAN PC CARD",
+	},
+	{ PCMCIA_VENDOR_ACTIONTEC,
+	  PCMCIA_PRODUCT_ACTIONTEC_HWC01170,
+	  PCMCIA_CIS_ACTIONTEC_HWC01170,
+	  "ACTIONTEC PRISM Wireless LAN PC CARD",
+	},
+	{ PCMCIA_VENDOR_NOKIA,
+	  PCMCIA_PRODUCT_NOKIA_C020_WLAN,
+	  PCMCIA_CIS_NOKIA_C020_WLAN,
+	  "NOKIA C020 Wireless LAN PC CARD",
+	},
+	{ PCMCIA_VENDOR_NOKIA,
+	  PCMCIA_PRODUCT_NOKIA_C110_WLAN,
+	  PCMCIA_CIS_NOKIA_C110_WLAN,
+	  "NOKIA C110 Wireless LAN PC CARD",
+	},
 	{ 0,
 	  0,
 	  { NULL, NULL, NULL, NULL },
@@ -240,7 +272,7 @@ static const struct wi_pcmcia_product {
 	}
 };
 
-static const struct wi_pcmcia_product *wi_lookup __P((struct pcmcia_attach_args *pa));
+static const struct wi_pcmcia_product *wi_lookup(struct pcmcia_attach_args *pa);
 
 const struct wi_pcmcia_product *
 wi_lookup(pa)
@@ -321,8 +353,11 @@ wi_pcmcia_attach(parent, self, aux)
 	}
 	state++;
 
-	sc->wi_btag = psc->sc_pcioh.iot;
-	sc->wi_bhandle = psc->sc_pcioh.ioh;
+	printf(" port 0x%lx/%d", psc->sc_pcioh.addr, cfe->iospace[0].length);
+
+	sc->wi_ltag = sc->wi_btag = psc->sc_pcioh.iot;
+	sc->wi_lhandle = sc->wi_bhandle = psc->sc_pcioh.ioh;
+	sc->wi_cor_offset = WI_COR_OFFSET;
 
 	/* Make sure interrupts are disabled. */
 	CSR_WRITE_2(sc, WI_INT_EN, 0);
@@ -336,7 +371,7 @@ wi_pcmcia_attach(parent, self, aux)
 		goto bad;
 	}
 
-	wi_attach(sc, 0);
+	wi_attach(sc);
 	return;
 
 bad:
@@ -355,7 +390,17 @@ wi_pcmcia_detach(dev, flags)
 {
 	struct wi_pcmcia_softc *psc = (struct wi_pcmcia_softc *)dev;
 	struct wi_softc *sc = &psc->sc_wi;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
+
+	if (!(sc->wi_flags & WI_FLAGS_ATTACHED)) {
+		printf("%s: already detached\n", sc->sc_dev.dv_xname);
+		return (0);
+	}
+
+	if (ifp->if_flags & IFF_RUNNING)
+		wi_stop(sc);
+
+	sc->wi_flags = 0;
 
 	pcmcia_io_unmap(psc->sc_pf, psc->sc_io_window);
 	pcmcia_io_free(psc->sc_pf, &psc->sc_pcioh);
@@ -373,7 +418,7 @@ wi_pcmcia_activate(dev, act)
 {
 	struct wi_pcmcia_softc *psc = (struct wi_pcmcia_softc *)dev;
 	struct wi_softc *sc = &psc->sc_wi;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int s;
 
 	s = splnet();
@@ -382,6 +427,7 @@ wi_pcmcia_activate(dev, act)
 		pcmcia_function_enable(psc->sc_pf);
 		sc->sc_ih = pcmcia_intr_establish(psc->sc_pf, IPL_NET,
 		    wi_intr, sc, sc->sc_dev.dv_xname);
+		wi_cor_reset(sc);
 		wi_init(sc);
 		break;
 
@@ -389,6 +435,7 @@ wi_pcmcia_activate(dev, act)
 		ifp->if_timer = 0;
 		if (ifp->if_flags & IFF_RUNNING)
 			wi_stop(sc);
+		sc->wi_flags &= ~WI_FLAGS_INITIALIZED;
 		pcmcia_intr_disestablish(psc->sc_pf, sc->sc_ih);
 		pcmcia_function_disable(psc->sc_pf);
 		break;

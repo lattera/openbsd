@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.29 2001/11/28 16:13:27 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.29.2.1 2002/06/11 03:33:39 art Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -102,9 +102,16 @@
 #include <sys/user.h>
 #include <sys/syscall.h>
 #include <sys/buf.h>
+#ifndef NO_IEEE
+#include <sys/device.h>
+#endif
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+#include <sys/ptrace.h>
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -113,29 +120,34 @@
 #ifdef DDB
 #include <machine/db_machdep.h>
 #endif
-#include <alpha/alpha/db_instruction.h>		/* for handle_opdec() */
+#include <alpha/alpha/db_instruction.h>
 
 #ifdef COMPAT_OSF1
 #include <compat/osf1/osf1_syscall.h>
 #endif
 
-void		userret __P((struct proc *, u_int64_t, u_quad_t));
+void		userret(struct proc *, u_int64_t, u_quad_t);
 
-unsigned long	Sfloat_to_reg __P((unsigned int));
-unsigned int	reg_to_Sfloat __P((unsigned long));
-unsigned long	Tfloat_reg_cvt __P((unsigned long));
+unsigned long	Sfloat_to_reg(unsigned int);
+unsigned int	reg_to_Sfloat(unsigned long);
+unsigned long	Tfloat_reg_cvt(unsigned long);
 #ifdef FIX_UNALIGNED_VAX_FP
-unsigned long	Ffloat_to_reg __P((unsigned int));
-unsigned int	reg_to_Ffloat __P((unsigned long));
-unsigned long	Gfloat_reg_cvt __P((unsigned long));
+unsigned long	Ffloat_to_reg(unsigned int);
+unsigned int	reg_to_Ffloat(unsigned long);
+unsigned long	Gfloat_reg_cvt(unsigned long);
 #endif
 
-int		unaligned_fixup __P((unsigned long, unsigned long,
-		    unsigned long, struct proc *));
+int		unaligned_fixup(unsigned long, unsigned long,
+		    unsigned long, struct proc *);
 int		handle_opdec(struct proc *p, u_int64_t *ucodep);
 
-static void printtrap __P((const unsigned long, const unsigned long,
-      const unsigned long, const unsigned long, struct trapframe *, int, int));
+#ifndef NO_IEEE
+struct device fpevent_use;
+struct device fpevent_reuse;
+#endif
+
+static void printtrap(const unsigned long, const unsigned long,
+      const unsigned long, const unsigned long, struct trapframe *, int, int);
 
 /*
  * Initialize the trap vectors for the current processor.
@@ -290,7 +302,7 @@ trap(a0, a1, a2, entry, framep)
 		sticks = p->p_sticks;
 		p->p_md.md_tf = framep;
 #if	0
-/* This is to catch some wierd stuff on the UDB (mj) */
+/* This is to catch some weird stuff on the UDB (mj) */
 		if (framep->tf_regs[FRAME_PC] > 0 && 
 		    framep->tf_regs[FRAME_PC] < 0x120000000) {
 			printf("PC Out of Whack\n");
@@ -330,21 +342,19 @@ trap(a0, a1, a2, entry, framep)
 		goto dopanic;
 
 	case ALPHA_KENTRY_ARITH:
-		/* 
-		 * If user-land, just give a SIGFPE.  Should do
-		 * software completion and IEEE handling, if the
-		 * user has requested that.
+		/*
+		 * Resolve trap shadows, interpret FP ops requiring infinities,
+		 * NaNs, or denorms, and maintain FPCR corrections.
 		 */
 		if (user) {
-#ifdef COMPAT_OSF1
-			extern struct emul emul_osf1;
-
-			/* just punt on OSF/1.  XXX THIS IS EVIL */
-			if (p->p_emul == &emul_osf1) 
+#ifndef NO_IEEE
+			i = alpha_fp_complete(a0, a1, p, &ucode);
+			if (i == 0)
 				goto out;
-#endif
+#else
 			i = SIGFPE;
-			ucode =  a0;		/* exception summary */
+			ucode = a0;
+#endif
 			break;
 		}
 
@@ -384,6 +394,12 @@ trap(a0, a1, a2, entry, framep)
 			/* FALLTHROUTH */
 		case ALPHA_IF_CODE_BPT:
 		case ALPHA_IF_CODE_BUGCHK:
+#ifdef PTRACE
+			if (p->p_md.md_flags & (MDP_STEP1|MDP_STEP2)) {
+				process_sstep(p, 0);
+				p->p_md.md_tf->tf_regs[FRAME_PC] -= 4;
+			}
+#endif
 			ucode = a0;		/* trap type */
 			i = SIGTRAP;
 			break;
@@ -394,6 +410,10 @@ trap(a0, a1, a2, entry, framep)
 			break;
 
 		case ALPHA_IF_CODE_FEN:
+#ifndef NO_IEEE
+			alpha_enable_fp(p, 0);
+			alpha_pal_wrfen(0);
+#else
 			/*
 			 * on exit from the kernel, if proc == fpcurproc,
 			 * FP is enabled.
@@ -403,7 +423,7 @@ trap(a0, a1, a2, entry, framep)
 				    p);
 				goto dopanic;
 			}
-	
+
 			alpha_pal_wrfen(1);
 			if (fpcurproc)
 				savefpstate(&fpcurproc->p_addr->u_pcb.pcb_fp);
@@ -412,6 +432,7 @@ trap(a0, a1, a2, entry, framep)
 			alpha_pal_wrfen(0);
 
 			p->p_md.md_flags |= MDP_FPUSED;
+#endif
 			goto out;
 
 		default:
@@ -686,7 +707,12 @@ syscall(code, framep)
 	if (error == 0) {
 		rval[0] = 0;
 		rval[1] = 0;
-		error = (*callp->sy_call)(p, args + hidden, rval);
+#if NSYSTRACE > 0
+		if (ISSET(p->p_flag, P_SYSTRACE))
+			error = systrace_redirect(code, p, args + hidden, rval);
+		else
+#endif
+			error = (*callp->sy_call)(p, args + hidden, rval);
 	}
 
 	switch (error) {
@@ -744,6 +770,45 @@ child_return(arg)
 #endif
 }
 
+#ifndef NO_IEEE
+/*
+ * Set the float-point enable for the current process, and return
+ * the FPU context to the named process. If check == 0, it is an
+ * error for the named process to already be fpcurproc.
+ */
+void
+alpha_enable_fp(struct proc *p, int check)
+{
+	struct cpu_info *ci = curcpu();
+
+	if (check && ci->ci_fpcurproc == p) {
+		alpha_pal_wrfen(1);
+		return;
+	}
+	if (ci->ci_fpcurproc == p)
+		panic("trap: fp disabled for fpcurproc == %p", p);
+
+	if (ci->ci_fpcurproc != NULL)
+		fpusave_cpu(ci, 1);
+
+	KDASSERT(ci->ci_fpcurproc == NULL);
+
+#if defined(MULTIPROCESSOR)
+	if (p->p_addr->u_pcb.pcb_fpcpu != NULL)
+		fpusave_proc(p, 1);
+#else
+	KDASSERT(p->p_addr->u_pcb.pcb_fpcpu == NULL);
+#endif
+
+	p->p_addr->u_pcb.pcb_fpcpu = ci;
+	ci->ci_fpcurproc = p;
+
+	p->p_md.md_flags |= MDP_FPUSED;
+	alpha_pal_wrfen(1);
+	restorefpstate(&p->p_addr->u_pcb.pcb_fp);
+}
+#endif
+
 /*
  * Process an asynchronous software trap.
  * This is relatively easy.
@@ -797,12 +862,8 @@ const static int reg_to_framereg[32] = {
 	(&(p)->p_addr->u_pcb.pcb_fp.fpr_regs[(reg)])
 
 #define	dump_fp_regs()							\
-	if (p == fpcurproc) {						\
-		alpha_pal_wrfen(1);					\
-		savefpstate(&fpcurproc->p_addr->u_pcb.pcb_fp);		\
-		alpha_pal_wrfen(0);					\
-		fpcurproc = NULL;					\
-	}
+	if (p->p_addr->u_pcb.pcb_fpcpu != NULL)				\
+		fpusave_proc(p, 1);
 
 #define	unaligned_load(storage, ptrf, mod)				\
 	if (copyin((caddr_t)va, &(storage), sizeof (storage)) != 0)	\
@@ -949,9 +1010,6 @@ Gfloat_reg_cvt(input)
 	return (result);
 }
 #endif /* FIX_UNALIGNED_VAX_FP */
-
-extern int	alpha_unaligned_print, alpha_unaligned_fix;
-extern int	alpha_unaligned_sigbus;
 
 struct unaligned_fixup_data {
 	const char *type;	/* opcode name */

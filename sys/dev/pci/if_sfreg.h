@@ -1,4 +1,4 @@
-/*	$OpenBSD */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sfreg.h,v 1.4.6.1 2002/06/11 03:42:25 art Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.

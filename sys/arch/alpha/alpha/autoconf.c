@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/autoconf.c,v 1.17.2.1 2002/01/31 22:55:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/autoconf.c,v 1.17.2.2 2002/06/11 03:33:39 art Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.16 1996/11/13 21:13:04 cgd Exp $	*/
 
 /*
@@ -68,18 +68,18 @@ int			booted_partition;
 struct bootdev_data	*bootdev_data;
 char			boot_dev[128];
 
-void	parse_prom_bootdev __P((void));
-int	atoi __P((char *));
-void	setroot __P((void));
-void	swapconf __P((void));
+void	parse_prom_bootdev(void);
+int	atoi(char *);
+void	setroot(void);
+void	swapconf(void);
 
-static struct device *parsedisk __P((char *str, int len, int defpart,
-				     dev_t *devp));
-static struct device *getdisk __P((char *str, int len, int defpart,
-				   dev_t *devp));
-int findblkmajor __P((struct device *dv));
-char *findblkname __P((int));
-static int getstr __P((char *cp, int size));
+static struct device *parsedisk(char *str, int len, int defpart,
+				     dev_t *devp);
+static struct device *getdisk(char *str, int len, int defpart,
+				   dev_t *devp);
+int findblkmajor(struct device *dv);
+char *findblkname(int);
+static int getstr(char *cp, int size);
 
 /*
  * cpu_configure:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_dir.c,v 1.3 2000/06/17 20:25:54 provos Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_dir.c,v 1.3.10.1 2002/06/11 03:30:21 art Exp $	*/
 /*
  * Copyright 2000 The TCFS Project at http://tcfs.dia.unisa.it/
  * All rights reserved.
@@ -40,7 +40,7 @@
 #include <miscfs/tcfs/tcfs.h>
 #include <miscfs/tcfs/tcfs_rw.h>
 
-int tcfs_new_direntry	__P((void *, tcfs_fileinfo *));
+int tcfs_new_direntry(void *, tcfs_fileinfo *);
 
 int
 tcfs_new_direntry(void *v, tcfs_fileinfo *i)

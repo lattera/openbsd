@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/compat/linux/syscalls.master,v 1.31 2001/07/04 19:59:47 jasoni Exp $
+	$OpenBSD: src/sys/compat/linux/syscalls.master,v 1.31.4.1 2002/06/11 03:28:08 art Exp $
 ;	$NetBSD: syscalls.master,v 1.15 1995/12/18 14:35:10 fvdl Exp $
 
 ;	@(#)syscalls.master	8.1 (Berkeley) 7/19/93
@@ -68,14 +68,18 @@
 18	STD		{ int linux_sys_ostat(void); }
 19	NOARGS		{ long compat_43_sys_lseek(int fd, long offset, \
 			    int whence); }
-20	NOARGS		{ pid_t sys_getpid(void); }
+20	STD		{ pid_t linux_sys_getpid(void); }
 21	STD		{ int linux_sys_mount(char *specialfile, char *dir, \
 			    char *filesystemtype, long rwflag, void *data); }
 22	STD		{ int linux_sys_umount(char *specialfile); }
 23	NOARGS		linux_setuid16 { int sys_setuid(uid_t uid); }
-24	NOARGS		linux_getuid16 { uid_t sys_getuid(void); }
+24	STD		linux_getuid16 { uid_t linux_sys_getuid(void); }
 25	STD		{ int linux_sys_stime(linux_time_t *t); }
+#ifdef PTRACE
 26	STD		{ int linux_sys_ptrace(void); }
+#else
+26	UNIMPL		ptrace
+#endif
 27	STD		{ int linux_sys_alarm(unsigned int secs); }
 28	STD		{ int linux_sys_ofstat(void); }
 29	STD		{ int linux_sys_pause(void); }
@@ -97,7 +101,7 @@
 44	STD		{ int linux_sys_prof(void); }
 45	STD		{ int linux_sys_brk(char *nsize); }
 46	NOARGS		linux_setgid16 { int sys_setgid(gid_t gid); }
-47	NOARGS		linux_getgid16 { gid_t sys_getgid(void); }
+47	STD		linux_getgid16 { gid_t linux_sys_getgid(void); }
 48	STD		{ int linux_sys_signal(int sig, \
 			    linux_handler_t handler); }
 49	NOARGS		linux_geteuid16 { uid_t sys_geteuid(void); }
@@ -323,8 +327,8 @@
 197     STD        	{ int linux_sys_fstat64(int fd, \
 			    struct linux_stat64 *sp); }
 198	NOARGS		{ int linux_sys_lchown(void); }
-199	NOARGS		{ uid_t sys_getuid(void); }
-200	NOARGS		{ gid_t sys_getgid(void); }
+199	STD		{ uid_t linux_sys_getuid(void); }
+200	STD		{ gid_t linux_sys_getgid(void); }
 201	NOARGS		{ uid_t sys_geteuid(void); }
 202	NOARGS		{ gid_t sys_getegid(void); }
 203	NOARGS		{ int linux_sys_setreuid(void); }
@@ -346,4 +350,4 @@
 218	NOARGS		{ int linux_sys_mincore(void); }
 219	NOARGS		{ int linux_sys_madvise(void); }
 220	NOARGS		{ int linux_sys_getdents64(void); }
-221	NOARGS		{ int linux_sys_fcntl64(void); }
+221	STD		{ int linux_sys_fcntl64(u_int fd, u_int cmd, void *arg); }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.8 2001/09/01 15:49:05 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/cpu.h,v 1.8.4.1 2002/06/11 03:37:28 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*
@@ -39,14 +39,13 @@
 #include <machine/psl.h>
 
 #define	CLKF_USERMODE(frame)	(((frame)->srr1 & PSL_PR) != 0)
-#define	CLKF_BASEPRI(frame)	((frame)->pri == 0)
 #define	CLKF_PC(frame)		((frame)->srr0)
 #define	CLKF_INTR(frame)	((frame)->depth != 0)
 
 #define	cpu_swapout(p)
 #define cpu_wait(p)
 
-void	delay __P((unsigned));
+void	delay(unsigned);
 #define	DELAY(n)		delay(n)
 
 extern volatile int want_resched;
@@ -57,5 +56,48 @@ extern volatile int astpending;
 #define	signotify(p)		(astpending = 1)
 
 extern char *bootpath;
+
+#ifndef	CACHELINESIZE
+#define	CACHELINESIZE	32			/* For now		XXX */
+#endif
+
+static __inline void
+syncicache(void *from, int len)
+{
+	int l;
+	char *p = from;
+
+	len = len + (((u_int32_t) from) & (CACHELINESIZE - 1));
+	l = len;
+	
+	do {
+		__asm__ __volatile__ ("dcbst 0,%0" :: "r"(p));
+		p += CACHELINESIZE;
+	} while ((l -= CACHELINESIZE) > 0);
+	__asm__ __volatile__ ("sync");
+	p = from;
+	l = len;
+	do {
+		__asm__ __volatile__ ("icbi 0,%0" :: "r"(p));
+		p += CACHELINESIZE;
+	} while ((l -= CACHELINESIZE) > 0);
+	__asm__ __volatile__ ("isync");
+}
+
+static __inline void
+invdcache(void *from, int len)
+{
+	int l;
+	char *p = from;
+	
+	len = len + (((u_int32_t) from) & (CACHELINESIZE - 1));
+	l = len;
+	
+	do {
+		__asm__ __volatile__ ("dcbi 0,%0" :: "r"(p));
+		p += CACHELINESIZE;
+	} while ((l -= CACHELINESIZE) > 0);
+	__asm__ __volatile__ ("sync");
+}
 
 #endif	/* _POWERPC_CPU_H_ */

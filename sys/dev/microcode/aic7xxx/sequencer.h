@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/aic7xxx/Attic/sequencer.h,v 1.1 2000/03/22 02:50:50 smurph Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/aic7xxx/Attic/sequencer.h,v 1.1.12.1 2002/06/11 03:42:22 art Exp $ */
 /*
  * Instruction formats for the sequencer program downloaded to
  * Aic7xxx SCSI host adapters

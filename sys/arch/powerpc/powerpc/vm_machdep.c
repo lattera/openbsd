@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.29.2.1 2002/01/31 22:55:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.29.2.2 2002/06/11 03:37:28 art Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*
@@ -61,15 +61,14 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	struct callframe *cf;
 	struct switchframe *sf;
 	caddr_t stktop1, stktop2;
-	extern void fork_trampoline __P((void));
+	extern void fork_trampoline(void);
 	struct pcb *pcb = &p2->p_addr->u_pcb;
 
 	if (p1 == fpuproc)
 		save_fpu(p1);
 	*pcb = p1->p_addr->u_pcb;
 	
-#ifdef PPC_VECTOR_SUPPORTED
-	/* ALTIVEC */
+#ifdef ALTIVEC
 	if (p1->p_addr->u_pcb.pcb_vr != NULL) {
 		if (p1 == ppc_vecproc)
 			save_vec(p1);
@@ -78,7 +77,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	} else {
 		pcb->pcb_vr = NULL;
 	}
-#endif /* PPC_VECTOR_SUPPORTED */
+#endif /* ALTIVEC */
 
 	pcb->pcb_pm = p2->p_vmspace->vm_map.pmap;
 
@@ -173,8 +172,19 @@ void
 cpu_exit(p)
 	struct proc *p;
 {
+#ifdef ALTIVEC
+	struct pcb *pcb = &p->p_addr->u_pcb;
+#endif /* ALTIVEC */
+	
 	if (p == fpuproc)	/* release the fpu */
 		fpuproc = 0;
+
+#ifdef ALTIVEC
+	if (p == ppc_vecproc)
+		ppc_vecproc = NULL; 	/* release the Altivec Unit */
+	if (pcb->pcb_vr != NULL)
+		pool_put(&ppc_vecpl, pcb->pcb_vr);
+#endif /* ALTIVEC */
 	
 	(void)splhigh();
 	switchexit(p);
@@ -194,14 +204,14 @@ cpu_coredump(p, vp, cred, chdr)
 	struct md_coredump md_core;
 	int error;
 	
-	CORE_SETMAGIC(*chdr, COREMAGIC, MID_ZERO, 0);
+	CORE_SETMAGIC(*chdr, COREMAGIC, MID_POWERPC, 0);
 	chdr->c_hdrsize = ALIGN(sizeof *chdr);
 	chdr->c_seghdrsize = ALIGN(sizeof cseg);
 	chdr->c_cpusize = sizeof md_core;
 
 	process_read_regs(p, &(md_core.regs));
 	
-	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_ZERO, CORE_CPU);
+	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_POWERPC, CORE_CPU);
 	cseg.c_addr = 0;
 	cseg.c_size = chdr->c_cpusize;
 

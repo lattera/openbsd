@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.21 2001/12/05 16:25:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.21.2.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.13 1997/07/12 16:20:03 perry Exp $	*/
 
 /*
@@ -108,7 +108,7 @@
 #define VM_MAX_KERNEL_ADDRESS	((vaddr_t)0xfe000000)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
+#define VM_KMEM_SIZE		(NKMEMCLUSTERS*PAGE_SIZE)
 
 #define VM_PHYSSEG_MAX		32	/* we only have one "hole" */
 #define VM_PHYSSEG_STRAT	VM_PSTRAT_BSEARCH
@@ -128,8 +128,8 @@ struct pmap_physseg {
 #if defined (_KERNEL) && !defined(_LOCORE)
 struct vm_map;
 #define		dvma_mapin(map,va,len,canwait)	dvma_mapin_space(map,va,len,canwait,0)
-vaddr_t		dvma_mapin_space __P((struct vm_map *, vaddr_t, int, int, int));
-void		dvma_mapout __P((vaddr_t, vaddr_t, int));
+vaddr_t		dvma_mapin_space(struct vm_map *, vaddr_t, int, int, int);
+void		dvma_mapout(vaddr_t, vaddr_t, int);
 #endif
 
 #endif /* _SPARC_VMPARAM_H_ */

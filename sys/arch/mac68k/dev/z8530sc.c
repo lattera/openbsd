@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/z8530sc.c,v 1.3 1996/09/02 15:50:34 briggs Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/z8530sc.c,v 1.3.28.1 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: z8530sc.c,v 1.1 1996/05/18 18:54:28 briggs Exp $	*/
 
 /*
@@ -393,8 +393,8 @@ zsc_intr_soft(arg)
 	return (rval);
 }
 
-static void	zsnull_intr __P((struct zs_chanstate *));
-static void	zsnull_softint __P((struct zs_chanstate *));
+static void	zsnull_intr(struct zs_chanstate *);
+static void	zsnull_softint(struct zs_chanstate *);
 
 static void
 zsnull_intr(cs)

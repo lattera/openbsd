@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_fs.c,v 1.6 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/compat/ultrix/Attic/ultrix_fs.c,v 1.6.2.1 2002/06/11 03:28:09 art Exp $	*/
 /*	$NetBSD: ultrix_fs.c,v 1.4 1996/04/07 17:23:06 jonathan Exp $	*/
 
 /*
@@ -59,7 +59,7 @@
 /*
  * Ultrix file system data structure, as modified by
  * Ultrix getmntent(). This  structure is padded to 2560 bytes, for
- * compatiblity with the size the Ultrix kernel and user apps expect.
+ * compatibility with the size the Ultrix kernel and user apps expect.
  */
 struct ultrix_fs_data {
 	u_int32_t	ufsd_flags;	/* how mounted */
@@ -237,12 +237,12 @@ ultrix_sys_getmnt(p, v, retval)
 				    sizeof(*SCARG(uap, start))))  != 0)
 			goto bad;
 		for (skip = start, mp = mountlist.cqh_first;
-		    mp != (void*)&mountlist && skip-- > 0; mp = nmp)
+		    mp != (void *)&mountlist && skip-- > 0; mp = nmp)
 			nmp = mp->mnt_list.cqe_next;
 	}
 
 	for (count = 0, mp = mountlist.cqh_first;
-	    mp != (void*)&mountlist && count < maxcount; mp = nmp) {
+	    mp != (void *)&mountlist && count < maxcount; mp = nmp) {
 		nmp = mp->mnt_list.cqe_next;
 		if (sfsp != NULL && (mp->mnt_flag & MNT_MLOCK) == 0) {
 			struct ultrix_fs_data tem;
@@ -376,7 +376,7 @@ ultrix_sys_mount(p, v, retval)
 		struct ufs_args ua;
 
 		ua.fspec = SCARG(uap, special);
-		bzero(&ua.export, sizeof(ua.export));
+		bzero(&ua.export_info, sizeof(ua.export_info));
 		SCARG(&nuap, data) = usp;
 	
 		if ((error = copyout(&ua, SCARG(&nuap, data),
@@ -390,7 +390,7 @@ ultrix_sys_mount(p, v, retval)
 		 */
 		fsname[0] = 0;
 		if ((error = copyinstr((caddr_t)SCARG(&nuap, path), fsname,
-				      sizeof fsname, (u_int*)0)) != 0)
+				      sizeof fsname, (u_int *)0)) != 0)
 			return(error);
 		if (strcmp(fsname, "/") == 0) {
 			SCARG(&nuap, flags) |= MNT_UPDATE;

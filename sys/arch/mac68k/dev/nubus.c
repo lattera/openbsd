@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.24 2001/12/10 00:58:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.24.2.1 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: nubus.c,v 1.35 1997/04/22 20:20:32 scottr Exp $	*/
 
 /*
@@ -55,21 +55,21 @@ static int	nubus_debug = 0x01;
 #define NDB_ARITH	0x4
 #endif
 
-static int	nubus_print __P((void *, const char *));
-static int	nubus_match __P((struct device *, void *, void *));
-static void	nubus_attach __P((struct device *, struct device *, void *));
-int		nubus_video_resource __P((int));
+static int	nubus_print(void *, const char *);
+static int	nubus_match(struct device *, void *, void *);
+static void	nubus_attach(struct device *, struct device *, void *);
+int		nubus_video_resource(int);
 
-static int	probe_slot __P((int slot, nubus_slot *fmt));
-static u_long	IncPtr __P((nubus_slot *fmt, u_long base, long amt));
-static u_long	nubus_calc_CRC __P((nubus_slot *fmt));
-static u_char	GetByte __P((nubus_slot *fmt, u_long ptr));
+static int	probe_slot(int slot, nubus_slot *fmt);
+static u_long	IncPtr(nubus_slot *fmt, u_long base, long amt);
+static u_long	nubus_calc_CRC(nubus_slot *fmt);
+static u_char	GetByte(nubus_slot *fmt, u_long ptr);
 #ifdef notyet
-/* unused */ static u_short	GetWord __P((nubus_slot *fmt, u_long ptr));
+/* unused */ static u_short	GetWord(nubus_slot *fmt, u_long ptr);
 #endif
-static u_long	GetLong __P((nubus_slot *fmt, u_long ptr));
+static u_long	GetLong(nubus_slot *fmt, u_long ptr);
 
-static int	nubus_peek __P((vm_offset_t, int));
+static int	nubus_peek(vm_offset_t, int);
 
 struct cfattach nubus_ca = {
 	sizeof(struct nubus_softc), nubus_match, nubus_attach
@@ -266,7 +266,7 @@ nubus_video_resource(slot)
  * end of the slot.  If so, then we check for a bytelanes byte.  We
  * could probably just return a failure status if we bus error on
  * the first try, but there really is little reason not to go ahead
- * and check the other three locations in case there's a wierd card
+ * and check the other three locations in case there's a weird card
  * out there.
  *
  * Checking for a card involves locating the "bytelanes" byte which
@@ -833,5 +833,5 @@ nubus_mapin(paddr, sz)
 #endif
 	pmap_update(pmap_kernel());
 
-	return ((char*)retval);
+	return ((char *)retval);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_sstep.c,v 1.9.2.1 2002/01/31 22:55:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_sstep.c,v 1.9.2.2 2002/06/11 03:37:09 art Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -39,7 +39,7 @@
  *
  */
 
-boolean_t inst_delayed __P((unsigned int ins));
+boolean_t inst_delayed(unsigned int ins);
 
 #ifdef INTERNAL_SSTEP
 db_breakpoint_t db_not_taken_bkpt = 0;
@@ -225,7 +225,7 @@ db_addr_t
 branch_taken(inst, pc, func, func_data)
 	u_int inst;
 	db_addr_t pc;
-	db_expr_t (*func) __P((db_regs_t *, int));
+	db_expr_t (*func)(db_regs_t *, int);
 	db_regs_t *func_data;
 {
 	/* check if br/bsr */

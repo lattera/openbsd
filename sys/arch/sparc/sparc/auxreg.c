@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/auxreg.c,v 1.8 2000/07/19 15:31:26 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/auxreg.c,v 1.8.8.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: auxreg.c,v 1.21 1997/05/24 20:15:59 pk Exp $ */
 
 /*
@@ -56,8 +56,8 @@
 #include <sparc/sparc/vaddrs.h>
 #include <sparc/sparc/auxioreg.h>
 
-static int auxregmatch __P((struct device *, void *, void *));
-static void auxregattach __P((struct device *, struct device *, void *));
+static int auxregmatch(struct device *, void *, void *);
+static void auxregattach(struct device *, struct device *, void *);
 
 struct cfattach auxreg_ca = {
 	sizeof(struct device), auxregmatch, auxregattach

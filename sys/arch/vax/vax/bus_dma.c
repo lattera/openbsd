@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.8.2.1 2002/01/31 22:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.8.2.2 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: bus_dma.c,v 1.5 1999/11/13 00:32:20 thorpej Exp $	*/
 
 /*-
@@ -65,11 +65,11 @@
 
 extern	vaddr_t avail_start, avail_end, virtual_avail;
 
-int	_bus_dmamap_load_buffer __P((bus_dma_tag_t, bus_dmamap_t, void *,
-	    bus_size_t, struct proc *, int, vm_offset_t *, int *, int));
-int	_bus_dma_inrange __P((bus_dma_segment_t *, int, bus_addr_t));
-int	_bus_dmamem_alloc_range __P((bus_dma_tag_t, bus_size_t, bus_size_t,
-	    bus_size_t, bus_dma_segment_t*, int, int *, int, vaddr_t, vaddr_t));
+int	_bus_dmamap_load_buffer(bus_dma_tag_t, bus_dmamap_t, void *,
+	    bus_size_t, struct proc *, int, vm_offset_t *, int *, int);
+int	_bus_dma_inrange(bus_dma_segment_t *, int, bus_addr_t);
+int	_bus_dmamem_alloc_range(bus_dma_tag_t, bus_size_t, bus_size_t,
+	    bus_size_t, bus_dma_segment_t*, int, int *, int, vaddr_t, vaddr_t);
 /*
  * Common function for DMA map creation.  May be called by bus-specific
  * DMA map creation functions.

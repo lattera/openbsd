@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/pdc.c,v 1.10 1999/05/06 02:27:44 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/pdc.c,v 1.10.14.1 2002/06/11 03:35:38 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -444,10 +444,10 @@ fcacheall()
 	if (debug)
 		printf("pdc_cache:\nic={%u,%x,%x,%u,%u,%u}\n"
 		       "dc={%u,%x,%x,%u,%u,%u}\n",
-		       pdc_cacheinfo.ic_size, *(u_int*)&pdc_cacheinfo.ic_conf, 
+		       pdc_cacheinfo.ic_size, *(u_int *)&pdc_cacheinfo.ic_conf, 
 		       pdc_cacheinfo.ic_base, pdc_cacheinfo.ic_stride, 
 		       pdc_cacheinfo.ic_count, pdc_cacheinfo.ic_loop,
-		       pdc_cacheinfo.dc_size, *(u_int*)&pdc_cacheinfo.ic_conf, 
+		       pdc_cacheinfo.dc_size, *(u_int *)&pdc_cacheinfo.ic_conf, 
 		       pdc_cacheinfo.dc_base, pdc_cacheinfo.dc_stride, 
 		       pdc_cacheinfo.dc_count, pdc_cacheinfo.dc_loop);
 #endif

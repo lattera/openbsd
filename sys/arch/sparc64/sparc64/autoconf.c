@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17.2.2 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -108,32 +108,32 @@ extern	int kgdb_debug_panic;
 static	int rootnode;
 char platform_type[32];
 
-static	char *str2hex __P((char *, int *));
-static	int mbprint __P((void *, const char *));
-static	void crazymap __P((char *, int *));
-int	st_crazymap __P((int));
-void	sync_crash __P((void));
-int	mainbus_match __P((struct device *, void *, void *));
-static	void mainbus_attach __P((struct device *, struct device *, void *));
-static	int getstr __P((char *, int));
-void	setroot __P((void));
-void	swapconf __P((void));
-void	diskconf __P((void));
-static	struct device *getdisk __P((char *, int, int, dev_t *));
-int	findblkmajor __P((struct device *));
-char	*findblkname __P((int));
+static	char *str2hex(char *, int *);
+static	int mbprint(void *, const char *);
+static	void crazymap(char *, int *);
+int	st_crazymap(int);
+void	sync_crash(void);
+int	mainbus_match(struct device *, void *, void *);
+static	void mainbus_attach(struct device *, struct device *, void *);
+static	int getstr(char *, int);
+void	setroot(void);
+void	swapconf(void);
+void	diskconf(void);
+static	struct device *getdisk(char *, int, int, dev_t *);
+int	findblkmajor(struct device *);
+char	*findblkname(int);
 
 struct device *booted_device;
 struct	bootpath bootpath[8];
 int	nbootpath;
-static	void bootpath_build __P((void));
-static	void bootpath_print __P((struct bootpath *));
-void bootpath_compat __P((struct bootpath *, int));
+static	void bootpath_build(void);
+static	void bootpath_print(struct bootpath *);
+void bootpath_compat(struct bootpath *, int);
 
-char *bus_compatible __P((struct bootpath *, struct device *));
-int bus_class __P((struct device *));
-int instance_match __P((struct device *, void *, struct bootpath *bp));
-void nail_bootdev __P((struct device *, struct bootpath *));
+char *bus_compatible(struct bootpath *, struct device *);
+int bus_class(struct device *);
+int instance_match(struct device *, void *, struct bootpath *bp);
+void nail_bootdev(struct device *, struct bootpath *);
 
 /* Global interrupt mappings for all device types.  Match against the OBP
  * 'device_type' property. 
@@ -229,8 +229,8 @@ bootstrap(nctx)
 	extern int end;	/* End of kernel */
 #ifndef	__arch64__
 	/* Assembly glue for the PROM */
-	extern void OF_sym2val32 __P((void *));
-	extern void OF_val2sym32 __P((void *));
+	extern void OF_sym2val32(void *);
+	extern void OF_val2sym32(void *);
 #endif
 
 	/* 
@@ -320,7 +320,7 @@ bootpath_build()
 	register long chosen;
 	char buf[128];
 
-	bzero((void*)bootpath, sizeof(bootpath));
+	bzero((void *)bootpath, sizeof(bootpath));
 	bp = bootpath;
 
 	/*
@@ -663,6 +663,8 @@ setroot()
 					goto gotswap;
 				}
 			}
+			if (len == 4 && strncmp(buf, "exit", 4) == 0)
+				OF_exit();
 			dv = getdisk(buf, len, bp?bp->val[2]:0, &nrootdev);
 			if (dv != NULL) {
 				bootdv = dv;
@@ -702,6 +704,8 @@ setroot()
 				}
 				break;
 			}
+			if (len == 4 && strncmp(buf, "exit", 4) == 0)
+				OF_exit();
 			dv = getdisk(buf, len, 1, &nswapdev);
 			if (dv) {
 				if (dv->dv_class == DV_IFNET)
@@ -747,6 +751,9 @@ gotswap:
 		 * `root DEV swap DEV': honour rootdev/swdevt.
 		 * rootdev/swdevt/mountroot already properly set.
 		 */
+		if (bootdv->dv_class == DV_DISK)
+			printf("root on %s%c\n", bootdv->dv_xname,
+			    part + 'a');
 		majdev = major(rootdev);
 		unit = DISKUNIT(rootdev);
 		part = DISKPART(rootdev);
@@ -841,7 +848,7 @@ getdisk(str, len, defpart, devp)
 	struct device *dv;
 
 	if ((dv = parsedisk(str, len, defpart, devp)) == NULL) {
-		printf("use one of:");
+		printf("use one of: exit");
 #ifdef RAMDISK_HOOKS
 		printf(" %s[a-p]", fakerdrootdev.dv_xname);
 #endif
@@ -1166,7 +1173,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 		ma.ma_upaid = portid;
 
 		if (getprop(node, "reg", sizeof(*ma.ma_reg), 
-			     &ma.ma_nreg, (void**)&ma.ma_reg) != 0)
+			     &ma.ma_nreg, (void **)&ma.ma_reg) != 0)
 			continue;
 #ifdef DEBUG
 		if (autoconf_debug & ACDB_PROBE) {
@@ -1179,7 +1186,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 		}
 #endif
 		rv = getprop(node, "interrupts", sizeof(*ma.ma_interrupts), 
-			&ma.ma_ninterrupts, (void**)&ma.ma_interrupts);
+			&ma.ma_ninterrupts, (void **)&ma.ma_interrupts);
 		if (rv != 0 && rv != ENOENT) {
 			free(ma.ma_reg, M_DEVBUF);
 			continue;
@@ -1194,7 +1201,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 		}
 #endif
 		rv = getprop(node, "address", sizeof(*ma.ma_address), 
-			&ma.ma_naddress, (void**)&ma.ma_address);
+			&ma.ma_naddress, (void **)&ma.ma_address);
 		if (rv != 0 && rv != ENOENT) {
 			free(ma.ma_reg, M_DEVBUF);
 			if (ma.ma_ninterrupts)
@@ -1468,6 +1475,7 @@ static struct {
 	{ "disk",	BUSCLASS_NONE,		"wd" },
 	{ "cmdk",	BUSCLASS_NONE,		"wd" },
 	{ "pci108e,1101.1", BUSCLASS_NONE,	"gem" },
+	{ "dc",		BUSCLASS_NONE,		"dc" },
 	{ "network",	BUSCLASS_NONE,		"hme" },
 	{ "ethernet",	BUSCLASS_NONE,		"dc" },
 	{ "SUNW,fas",	BUSCLASS_NONE,		"esp" },

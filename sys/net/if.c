@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.c,v 1.50 2001/12/09 12:57:26 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if.c,v 1.50.2.1 2002/06/11 03:30:45 art Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -77,6 +77,7 @@
 #include <sys/protosw.h>
 #include <sys/kernel.h>
 #include <sys/ioctl.h>
+#include <sys/domain.h>
 
 #include <net/if.h>
 #include <net/if_dl.h>
@@ -97,6 +98,7 @@
 #include <netinet/in.h>
 #endif
 #include <netinet6/in6_ifattach.h>
+#include <netinet6/nd6.h>
 #endif
 
 #if NBPFILTER > 0
@@ -107,24 +109,17 @@
 #include <net/if_bridge.h>
 #endif
 
-void	if_attachsetup __P((struct ifnet *));
-int	if_detach_rtdelete __P((struct radix_node *, void *));
-int	if_mark_ignore __P((struct radix_node *, void *));
-int	if_mark_unignore __P((struct radix_node *, void *));
+void	if_attachsetup(struct ifnet *);
+void	if_attachdomain1(struct ifnet *);
+int	if_detach_rtdelete(struct radix_node *, void *);
+int	if_mark_ignore(struct radix_node *, void *);
+int	if_mark_unignore(struct radix_node *, void *);
 
 int	ifqmaxlen = IFQ_MAXLEN;
 
-void	if_detached_start __P((struct ifnet *));
-int	if_detached_ioctl __P((struct ifnet *, u_long, caddr_t));
-void	if_detached_watchdog __P((struct ifnet *));
-
-#ifdef INET6
-/*
- * XXX: declare here to avoid to include many inet6 related files..
- * should be more generalized?
- */
-extern void nd6_setmtu __P((struct ifnet *));
-#endif 
+void	if_detached_start(struct ifnet *);
+int	if_detached_ioctl(struct ifnet *, u_long, caddr_t);
+void	if_detached_watchdog(struct ifnet *);
 
 /*
  * Network interface utility routines.
@@ -239,6 +234,41 @@ if_attachsetup(ifp)
 	ifp->if_snd.altq_tbr  = NULL;
 	ifp->if_snd.altq_ifp  = ifp;
 #endif
+
+	if (domains)
+		if_attachdomain1(ifp);
+}
+
+void
+if_attachdomain()
+{
+	struct ifnet *ifp;
+	int s;
+
+	s = splnet();
+	for (ifp = TAILQ_FIRST(&ifnet); ifp; ifp = TAILQ_NEXT(ifp, if_list))
+		if_attachdomain1(ifp);
+	splx(s);
+}
+
+void
+if_attachdomain1(ifp)
+	struct ifnet *ifp;
+{
+	struct domain *dp;
+	int s;
+
+	s = splnet();
+
+	/* address family dependent data region */
+	bzero(ifp->if_afdata, sizeof(ifp->if_afdata));
+	for (dp = domains; dp; dp = dp->dom_next) {
+		if (dp->dom_ifattach)
+			ifp->if_afdata[dp->dom_family] =
+			    (*dp->dom_ifattach)(ifp);
+	}
+
+	splx(s);
 }
 
 void
@@ -248,6 +278,10 @@ if_attachhead(ifp)
 	if (if_index == 0)
 		TAILQ_INIT(&ifnet);
 	TAILQ_INIT(&ifp->if_addrlist);
+	ifp->if_addrhooks = malloc(sizeof(*ifp->if_addrhooks), M_TEMP, M_NOWAIT);
+	if (ifp->if_addrhooks == NULL)
+		panic("if_attachhead: malloc");
+	TAILQ_INIT(ifp->if_addrhooks);
 	TAILQ_INSERT_HEAD(&ifnet, ifp, if_list);
 	if_attachsetup(ifp);
 }
@@ -259,6 +293,10 @@ if_attach(ifp)
 	if (if_index == 0)
 		TAILQ_INIT(&ifnet);
 	TAILQ_INIT(&ifp->if_addrlist);
+	ifp->if_addrhooks = malloc(sizeof(*ifp->if_addrhooks), M_TEMP, M_NOWAIT);
+	if (ifp->if_addrhooks == NULL)
+		panic("if_attach: malloc");
+	TAILQ_INIT(ifp->if_addrhooks);
 	TAILQ_INSERT_TAIL(&ifnet, ifp, if_list);
 	if_attachsetup(ifp);
 }
@@ -328,6 +366,7 @@ if_detach(ifp)
 	struct ifaddr *ifa;
 	int i, s = splimp();
 	struct radix_node_head *rnh;
+	struct domain *dp;
 
 	ifp->if_flags &= ~IFF_OACTIVE;
 	ifp->if_start = if_detached_start;
@@ -393,6 +432,15 @@ if_detach(ifp)
 #endif
 		free(ifa, M_IFADDR);
 	}
+
+	free(ifp->if_addrhooks, M_TEMP);
+
+	for (dp = domains; dp; dp = dp->dom_next) {
+		if (dp->dom_ifdetach && ifp->if_afdata[dp->dom_family])
+			(*dp->dom_ifdetach)(ifp,
+			    ifp->if_afdata[dp->dom_family]);
+	}
+
 	splx(s);
 }
 
@@ -885,7 +933,7 @@ ifioctl(so, cmd, data, p)
 	if (((oif_flags ^ ifp->if_flags) & IFF_UP) != 0) {
 #ifdef INET6
 		if ((ifp->if_flags & IFF_UP) != 0) {
-			int s = splsoftnet();
+			int s = splnet();
 			in6_if_up(ifp);
 			splx(s);
 		}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/exec_aout.h,v 1.13 2001/11/14 14:43:42 hugh Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/exec_aout.h,v 1.13.2.1 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: exec_aout.h,v 1.15 1996/05/18 17:20:54 christos Exp $	*/
 
 /*
@@ -80,6 +80,7 @@ struct exec {
 #define	MID_VAX		150	/* vax */
 #define	MID_SPARC64	151	/* LP64 sparc */
 #define	MID_M88K	153	/* m88k BSD binary */ 
+#define	MID_HPPA	154	/* hppa */
 #define	MID_HP200	200	/* hp200 (68010) BSD binary */
 #define	MID_HP300	300	/* hp300 (68020+68881) BSD binary */
 #define	MID_HPUX	0x20C	/* hp200/300 HP-UX binary */
@@ -175,24 +176,26 @@ struct exec {
 #ifdef _KERNEL
 
 /* the "a.out" format's entry in the exec switch */
-int	exec_aout_makecmds __P((struct proc *, struct exec_package *));
+int	exec_aout_makecmds(struct proc *, struct exec_package *);
 
 /* functions which prepare various a.out executable types */
 /*
  * MI portion
  */
-int	exec_aout_prep_zmagic __P((struct proc *, struct exec_package *));
-int	exec_aout_prep_nmagic __P((struct proc *, struct exec_package *));
-int	exec_aout_prep_omagic __P((struct proc *, struct exec_package *));
+int	exec_aout_prep_zmagic(struct proc *, struct exec_package *);
+int	exec_aout_prep_nmagic(struct proc *, struct exec_package *);
+int	exec_aout_prep_omagic(struct proc *, struct exec_package *);
 
 /* For compatibility modules */
-int	exec_aout_prep_oldzmagic __P((struct proc *, struct exec_package *));
-int	exec_aout_prep_oldnmagic __P((struct proc *, struct exec_package *));
-int	exec_aout_prep_oldomagic __P((struct proc *, struct exec_package *));
+int	exec_aout_prep_oldzmagic(struct proc *, struct exec_package *);
+int	exec_aout_prep_oldnmagic(struct proc *, struct exec_package *);
+int	exec_aout_prep_oldomagic(struct proc *, struct exec_package *);
 
 /*
  * MD portion
  */
-int cpu_exec_aout_makecmds __P((struct proc *, struct exec_package *));
+#if !defined(cpu_exec_aout_makecmds)
+int cpu_exec_aout_makecmds(struct proc *, struct exec_package *);
+#endif
 
 #endif /* _KERNEL */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.11 2001/10/05 18:33:33 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.11.4.1 2002/06/11 03:42:24 art Exp $	*/
 /*	$NetBSD: mii_physubr.c,v 1.20 2001/04/13 23:30:09 thorpej Exp $	*/
 
 /*-
@@ -72,7 +72,7 @@ const struct mii_media mii_media_table[] = {
 	{ BMCR_S1000|BMCR_FDX,	ANAR_CSMA },		/* 1000base-FDX */
 };
 
-void	mii_phy_auto_timeout __P((void *));
+void	mii_phy_auto_timeout(void *);
 
 void
 mii_phy_setmedia(sc)
@@ -206,7 +206,7 @@ mii_phy_tick(sc)
 	 */
 	if (!sc->mii_anegticks)
 		sc->mii_anegticks = 5;
-	
+
 	if (++sc->mii_ticks != sc->mii_anegticks)
 		return (EJUSTRETURN);
 
@@ -237,7 +237,7 @@ mii_phy_reset(sc)
 
 	/* Wait 100ms for it to complete. */
 	for (i = 0; i < 100; i++) {
-		reg = PHY_READ(sc, MII_BMCR); 
+		reg = PHY_READ(sc, MII_BMCR);
 		if ((reg & BMCR_RESET) == 0)
 			break;
 		delay(1000);
@@ -386,7 +386,7 @@ mii_phy_add_media(sc)
 			    sc->mii_inst), MII_MEDIA_1000_T_FDX);
 		}
 	}
-	
+
 	if (sc->mii_capabilities & BMSR_ANEG) {
 		ADD(IFM_MAKEWORD(IFM_ETHER, IFM_AUTO, 0, sc->mii_inst),
 		    MII_NMEDIA);	/* intentionally invalid index */

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_3000_300.c,v 1.8 2000/11/08 21:48:43 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_3000_300.c,v 1.8.6.1 2002/06/11 03:33:39 art Exp $ */
 /* $NetBSD: dec_3000_300.c,v 1.30 2000/05/22 20:13:32 thorpej Exp $ */
 
 /*
@@ -44,7 +44,7 @@
 #include <machine/cpuconf.h>
 
 #include <dev/tc/tcvar.h>
-#include <alpha/tc/tcdsvar.h>
+#include <dev/tc/tcdsvar.h>
 #include <alpha/tc/tc_3000_300.h>
 #ifndef NEW_SCC_DRIVER
 #include <alpha/tc/sccvar.h>
@@ -60,9 +60,9 @@
 
 #include "wsdisplay.h"
 
-void dec_3000_300_init __P((void));
-static void dec_3000_300_cons_init __P((void));
-static void dec_3000_300_device_register __P((struct device *, void *));
+void dec_3000_300_init(void);
+static void dec_3000_300_cons_init(void);
+static void dec_3000_300_device_register(struct device *, void *);
 
 const struct alpha_variation_table dec_3000_300_variations[] = {
 	{ SV_ST_PELICAN, "DEC 3000/300 (\"Pelican\")" },
@@ -213,7 +213,7 @@ dec_3000_300_device_register(dev, aux)
 		if (parent != (struct device *)tcdsdev)
 			return;
 
-		if (ta->tcdsda_slot != b->channel)
+		if (ta->tcdsda_chip != b->channel)
 			return;
 
 		scsidev = dev;

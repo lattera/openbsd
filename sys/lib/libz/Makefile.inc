@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libz/Makefile.inc,v 1.6 1997/06/19 18:23:24 grr Exp $
+#	$OpenBSD: src/sys/lib/libz/Makefile.inc,v 1.6.22.1 2002/06/11 03:30:09 art Exp $
 #	$NetBSD: Makefile.inc,v 1.2 1997/01/23 22:29:09 cgd Exp $
 #
 #	Configuration variables (default values are below):
@@ -56,11 +56,13 @@ clean::			.NOTMAIN cleanzlib
 cleanzlib:		.NOTMAIN __always_make_zlib
 	@echo cleaning the z library objects
 	@${ZMAKE} clean
+	-rmdir -p ${ZDST}
 
 cleandir:		.NOTMAIN cleandirzlib
 cleandirzlib:		.NOTMAIN __always_make_zlib
 	@echo cleandiring the z library objects
 	@${ZMAKE} cleandir
+	-rmdir -p ${ZDST}
 
 depend::		.NOTMAIN dependzlib
 dependzlib:		.NOTMAIN __always_make_zlib

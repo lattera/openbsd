@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.12.4.1 2002/01/31 22:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.12.4.2 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: gencons.c,v 1.22 2000/01/24 02:40:33 matt Exp $	*/
 
 /*
@@ -67,8 +67,8 @@ static	int pr_rxdb[4] = {PR_RXDB, PR_RXDB1, PR_RXDB2, PR_RXDB3};
 cons_decl(gen);
 cdev_decl(gencn);
 
-static	int gencnparam __P((struct tty *, struct termios *));
-static	void gencnstart __P((struct tty *));
+static	int gencnparam(struct tty *, struct termios *);
+static	void gencnstart(struct tty *);
 
 int
 gencnopen(dev, flag, mode, p)

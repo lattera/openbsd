@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pcb.h,v 1.7 2001/11/13 14:31:52 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pcb.h,v 1.7.2.1 2002/06/11 03:37:28 art Exp $	*/
 /*	$NetBSD: pcb.h,v 1.1 1996/09/30 16:34:29 ws Exp $	*/
 
 /*-
@@ -68,6 +68,6 @@ struct md_coredump {
 extern struct pcb *curpcb;
 extern struct pmap *curpm;
 extern struct proc *fpuproc;
-int  setfault __P((faultbuf env));
+int  setfault(faultbuf env);
 #endif
 #endif	/* _POWERPC_PCB_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/conf.c,v 1.33 2001/12/11 23:19:02 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/conf.c,v 1.33.2.1 2002/06/11 03:34:57 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.42 1997/01/07 11:35:03 mrg Exp $	*/
 
 /*-
@@ -118,6 +118,8 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 
 #include <altq/altqconf.h>
 
+#include "systrace.h"
+
 struct cdevsw	cdevsw[] =
 {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -171,7 +173,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 47 */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
@@ -182,9 +184,9 @@ struct cdevsw	cdevsw[] =
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
 #ifdef BANKEDDEVPAGER
-extern int grfbanked_get __P((int, int, int));
-extern int grfbanked_set __P((int, int));
-extern int grfbanked_cur __P((int));
+extern int grfbanked_get(int, int, int);
+extern int grfbanked_set(int, int);
+extern int grfbanked_cur(int);
 
 struct bankeddevsw bankeddevsw[sizeof (cdevsw) / sizeof (cdevsw[0])] = {
   { 0, 0, 0 },						/* 0 */

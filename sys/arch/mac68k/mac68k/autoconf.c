@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/autoconf.c,v 1.14 2001/06/25 00:43:12 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/autoconf.c,v 1.14.4.1 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.38 1996/12/18 05:46:09 scottr Exp $	*/
 
 /*
@@ -81,15 +81,15 @@
 struct device	*booted_device;
 int		booted_partition;
 
-struct device *parsedisk __P((char *, int, int, dev_t *));
-static struct device *getdisk __P((char *, int, int, dev_t *));
-static int findblkmajor __P((struct device *));
-static int getstr __P((char *, int));
-static void findbootdev __P((void));
-static int target_to_unit __P((u_long, u_long, u_long));
+struct device *parsedisk(char *, int, int, dev_t *);
+static struct device *getdisk(char *, int, int, dev_t *);
+static int findblkmajor(struct device *);
+static int getstr(char *, int);
+static void findbootdev(void);
+static int target_to_unit(u_long, u_long, u_long);
 
-void	setroot __P((void));
-void	swapconf __P((void));
+void	setroot(void);
+void	swapconf(void);
 
 void
 cpu_configure()
@@ -137,6 +137,7 @@ struct nam2blk {
 } nam2blk[] = {
 	{ "sd",         4 },
 	{ "cd",         6 },
+	{ "rd",		13 },
 };
 
 static int
@@ -165,7 +166,7 @@ getdisk(str, len, defpart, devp)
 		for (dv = alldevs.tqh_first; dv != NULL;
 		    dv = dv->dv_list.tqe_next) {
 			if (dv->dv_class == DV_DISK)
-				printf(" %s[a-h]", dv->dv_xname);
+				printf(" %s[a-p]", dv->dv_xname);
 #ifdef NFSCLIENT
 			if (dv->dv_class == DV_IFNET)
 				printf(" %s", dv->dv_xname);

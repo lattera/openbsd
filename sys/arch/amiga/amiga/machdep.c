@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.63.2.1 2002/01/31 22:55:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.63.2.2 2002/06/11 03:34:57 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.95 1997/08/27 18:31:17 is Exp $	*/
 
 /*
@@ -47,7 +47,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -108,20 +107,20 @@
 #include <net/if.h>
 
 /* prototypes */
-void identifycpu __P((void));
-vm_offset_t reserve_dumppages __P((vm_offset_t));
-void dumpsys __P((void));
-void initcpu __P((void));
-void straytrap __P((int, u_short));
-void netintr __P((void));
-void call_sicallbacks __P((void));
-void _softintr_callit __P((void *, void *));
-void intrhand __P((int));
+void identifycpu(void);
+vm_offset_t reserve_dumppages(vm_offset_t);
+void dumpsys(void);
+void initcpu(void);
+void straytrap(int, u_short);
+void netintr(void);
+void call_sicallbacks(void);
+void _softintr_callit(void *, void *);
+void intrhand(int);
 #if NSER > 0
-void ser_outintr __P((void));
+void ser_outintr(void);
 #endif
 #if NFD > 0
-void fdintr __P((int));
+void fdintr(int);
 #endif
 
 /*
@@ -364,6 +363,9 @@ again:
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
 #ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM
@@ -577,7 +579,6 @@ setregs(p, pack, stack, retval)
  * Info for CTL_HW
  */
 char cpu_model[120];
-extern char version[];
 
 #if defined(M68060)
 int m68060_pcr_init = 0x21;	/* make this patchable */
@@ -852,7 +853,7 @@ dumpsys()
 	unsigned bytes, i, n, seg;
 	int     maddr, psize;
 	daddr_t blkno;
-	int     (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int     (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int     error = 0;
 	kcore_seg_t *kseg_p;
 	cpu_kcore_hdr_t *chdr_p;
@@ -993,7 +994,7 @@ microtime(tvp)
 void
 initcpu()
 {
-	typedef void trapfun __P((void));
+	typedef void trapfun(void);
 
 	/* XXX should init '40 vecs here, too */
 #if defined(M68060) || defined(M68040) || defined(DRACO) || defined(FPU_EMULATE)
@@ -1236,7 +1237,7 @@ netintr()
 
 struct si_callback {
 	struct si_callback *next;
-	void (*function) __P((void *rock1, void *rock2));
+	void (*function)(void *rock1, void *rock2);
 	void *rock1, *rock2;
 };
 static struct si_callback *si_callbacks;
@@ -1266,7 +1267,7 @@ _softintr_callit(rock1, rock2)
 void *
 softintr_establish(ipl, func, arg)
 	int ipl;
-	void func __P((void *));
+	void func(void *);
 	void *arg;
 {
 	struct si_callback *si;
@@ -1315,7 +1316,7 @@ softintr_schedule(vsi)
 
 void
 add_sicallback (function, rock1, rock2)
-	void (*function) __P((void *rock1, void *rock2));
+	void (*function)(void *rock1, void *rock2);
 	void *rock1, *rock2;
 {
 	struct si_callback *si;
@@ -1366,7 +1367,7 @@ add_sicallback (function, rock1, rock2)
 
 void
 rem_sicallback(function)
-	void (*function) __P((void *rock1, void *rock2));
+	void (*function)(void *rock1, void *rock2);
 {
 	struct si_callback *si, *psi, *nsi;
 	int s;
@@ -1399,7 +1400,7 @@ call_sicallbacks()
 	struct si_callback *si;
 	int s;
 	void *rock1, *rock2;
-	void (*function) __P((void *, void *));
+	void (*function)(void *, void *);
 
 	do {
 		s = splhigh ();
@@ -1720,7 +1721,7 @@ intrhand(sr)
 int panicbutton = 1;	/* non-zero if panic buttons are enabled */
 int crashandburn = 0;
 int candbdelay = 50;	/* give em half a second */
-void candbtimer __P((void));
+void candbtimer(void);
 
 void
 candbtimer()
@@ -1791,8 +1792,7 @@ cpu_exec_aout_makecmds(p, epp)
 #endif
 #ifdef COMPAT_SUNOS
 	{
-		extern int sunos_exec_aout_makecmds
-		    __P((struct proc *, struct exec_package *));
+		extern int sunos_exec_aout_makecmds(struct proc *, struct exec_package *);
 		if ((error = sunos_exec_aout_makecmds(p, epp)) == 0)
 			return(0);
 	}

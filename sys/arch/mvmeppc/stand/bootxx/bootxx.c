@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/stand/bootxx/Attic/bootxx.c,v 1.1 2001/06/26 21:58:01 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/bootxx/Attic/bootxx.c,v 1.1.6.1 2002/06/11 03:37:23 art Exp $ */
 
 /*
  * Copyright (c) 1994 Paul Kranenburg
@@ -86,7 +86,7 @@ main()
 		_rtt();
 	}
 
-	addr = (char*)STAGE2_RELOC;
+	addr = (char *)STAGE2_RELOC;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

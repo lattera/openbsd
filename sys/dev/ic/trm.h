@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/trm.h,v 1.1 2002/02/18 01:55:30 krw Exp $
+/*	$OpenBSD: src/sys/dev/ic/trm.h,v 1.1.6.1 2002/06/11 03:42:20 art Exp $
  * ------------------------------------------------------------
  *   O.S       : OpenBSD
  *   File Name : trm.h

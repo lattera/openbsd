@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/nvram.c,v 1.16 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/nvram.c,v 1.16.2.1 2002/06/11 03:37:09 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -44,11 +44,12 @@
 #include <sys/uio.h>
 #include <sys/malloc.h>
 
-#include <machine/psl.h>
 #include <machine/autoconf.h>
 #include <machine/bugio.h>
+#include <machine/conf.h>
 #include <machine/cpu.h>
 #include <machine/mioctl.h>
+#include <machine/psl.h>
 #include <machine/vmparam.h>
 
 #include <uvm/uvm_param.h>
@@ -65,8 +66,8 @@ struct nvramsoftc {
 	void *      sc_regs;
 };
 
-void    nvramattach     __P((struct device *, struct device *, void *));
-int     nvrammatch __P((struct device *, void *, void *));
+void    nvramattach(struct device *, struct device *, void *);
+int     nvrammatch(struct device *, void *, void *);
 
 struct cfattach nvram_ca = { 
 	sizeof(struct nvramsoftc), nvrammatch, nvramattach
@@ -76,15 +77,7 @@ struct cfdriver nvram_cd = {
 	NULL, "nvram", DV_DULL, 0
 };
 
-int nvramopen __P((dev_t dev, int flag, int mode));
-int nvramclose __P((dev_t dev, int flag, int mode));
-int nvramioctl __P((dev_t dev, int cmd, caddr_t data, int flag,
-    struct proc *p));
-int nvramread __P((dev_t dev, struct uio *uio, int flags));
-int nvramwrite __P((dev_t dev, struct uio *uio, int flags));
-paddr_t nvrammmap __P((dev_t dev, off_t off, int prot));
-
-u_long chiptotime __P((int, int, int, int, int, int));
+u_long chiptotime(int, int, int, int, int, int);
 
 int
 nvrammatch(parent, vcf, args)
@@ -95,7 +88,7 @@ nvrammatch(parent, vcf, args)
 	int ret;
 #endif
 	struct confargs *ca = args;
-	struct bugrtc rtc;
+	struct mvmeprom_time rtc;
 	ca->ca_vaddr = ca->ca_paddr;   /* map 1:1 */
 /*X*/	if (ca->ca_vaddr == (void *)-1)
 /*X*/		return (1);
@@ -242,7 +235,7 @@ struct chiptime {
 	int     year;
 };
 
-void timetochip __P((struct chiptime *c));
+void timetochip(struct chiptime *c);
 
 void
 timetochip(c)
@@ -368,7 +361,8 @@ inittodr(base)
  * and when rebooting.  Do nothing if the time is not yet known, e.g.,
  * when crashing during autoconfig.
  */
-void resettodr()
+void
+resettodr()
 {
 	struct nvramsoftc *sc = (struct nvramsoftc *) nvram_cd.cd_devs[0];
 	struct chiptime c;
@@ -407,9 +401,10 @@ void resettodr()
 
 /*ARGSUSED*/
 int
-nvramopen(dev, flag, mode)
+nvramopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 	if (minor(dev) >= nvram_cd.cd_ndevs ||
 	    nvram_cd.cd_devs[minor(dev)] == NULL)
@@ -419,9 +414,10 @@ nvramopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-nvramclose(dev, flag, mode)
+nvramclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 	return (0);
 }
@@ -430,7 +426,7 @@ nvramclose(dev, flag, mode)
 int
 nvramioctl(dev, cmd, data, flag, p)
 	dev_t dev;
-	int cmd;
+	u_long cmd;
 	caddr_t data;
 	int flag;
 	struct proc *p;

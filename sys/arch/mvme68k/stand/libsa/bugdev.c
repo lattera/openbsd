@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/bugdev.c,v 1.1 1996/05/16 02:30:36 chuck Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/bugdev.c,v 1.1.26.1 2002/06/11 03:36:51 art Exp $ */
 
 /*
  * Copyright (c) 1993 Paul Kranenburg
@@ -37,7 +37,7 @@
 #include "stand.h"
 #include "libsa.h"
 
-void cputobsdlabel __P((struct disklabel *lp, struct cpu_disklabel *clp));
+void cputobsdlabel(struct disklabel *lp, struct cpu_disklabel *clp);
 
 int errno;
 

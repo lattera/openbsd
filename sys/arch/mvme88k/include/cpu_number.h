@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/cpu_number.h,v 1.9 2001/12/19 07:04:41 smurph Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/cpu_number.h,v 1.9.2.1 2002/06/11 03:37:10 art Exp $	*/
 
 /* 
  * Mach Operating System
@@ -34,7 +34,7 @@
 #include <machine/param.h>
 extern unsigned number_cpus;
 
-static unsigned cpu_number __P((void));
+static unsigned cpu_number(void);
 
 static __inline__ unsigned cpu_number(void)
 {

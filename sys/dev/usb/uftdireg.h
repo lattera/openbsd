@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdireg.h,v 1.3 2001/10/31 04:24:44 nate Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdireg.h,v 1.3.2.1 2002/06/11 03:42:30 art Exp $ 	*/
 /*	$NetBSD: uftdireg.h,v 1.3 2001/06/12 14:59:28 wiz Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.2.1 2002/01/31 22:55:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.2.2 2002/06/11 03:42:17 art Exp $	*/
 /*	$NetBSD: bha.c,v 1.27 1998/11/19 21:53:00 thorpej Exp $	*/
 
 #undef BHADEBUG
@@ -92,24 +92,24 @@
 int     bha_debug = 1;
 #endif /* BHADEBUG */
 
-integrate void bha_finish_ccbs __P((struct bha_softc *));
-integrate void bha_reset_ccb __P((struct bha_softc *, struct bha_ccb *));
-void bha_free_ccb __P((struct bha_softc *, struct bha_ccb *));
-integrate int bha_init_ccb __P((struct bha_softc *, struct bha_ccb *));
-struct bha_ccb *bha_get_ccb __P((struct bha_softc *, int));
-struct bha_ccb *bha_ccb_phys_kv __P((struct bha_softc *, u_long));
-void bha_queue_ccb __P((struct bha_softc *, struct bha_ccb *));
-void bha_collect_mbo __P((struct bha_softc *));
-void bha_start_ccbs __P((struct bha_softc *));
-void bha_done __P((struct bha_softc *, struct bha_ccb *));
-int bha_init __P((struct bha_softc *));
-void bhaminphys __P((struct buf *));
-int bha_scsi_cmd __P((struct scsi_xfer *));
-int bha_poll __P((struct bha_softc *, struct scsi_xfer *, int));
-void bha_timeout __P((void *arg));
-int bha_create_ccbs __P((struct bha_softc *, struct bha_ccb *, int));
-void bha_enqueue __P((struct bha_softc *, struct scsi_xfer *, int));
-struct scsi_xfer *bha_dequeue __P((struct bha_softc *));
+integrate void bha_finish_ccbs(struct bha_softc *);
+integrate void bha_reset_ccb(struct bha_softc *, struct bha_ccb *);
+void bha_free_ccb(struct bha_softc *, struct bha_ccb *);
+integrate int bha_init_ccb(struct bha_softc *, struct bha_ccb *);
+struct bha_ccb *bha_get_ccb(struct bha_softc *, int);
+struct bha_ccb *bha_ccb_phys_kv(struct bha_softc *, u_long);
+void bha_queue_ccb(struct bha_softc *, struct bha_ccb *);
+void bha_collect_mbo(struct bha_softc *);
+void bha_start_ccbs(struct bha_softc *);
+void bha_done(struct bha_softc *, struct bha_ccb *);
+int bha_init(struct bha_softc *);
+void bhaminphys(struct buf *);
+int bha_scsi_cmd(struct scsi_xfer *);
+int bha_poll(struct bha_softc *, struct scsi_xfer *, int);
+void bha_timeout(void *arg);
+int bha_create_ccbs(struct bha_softc *, struct bha_ccb *, int);
+void bha_enqueue(struct bha_softc *, struct scsi_xfer *, int);
+struct scsi_xfer *bha_dequeue(struct bha_softc *);
 
 struct cfdriver bha_cd = {
 	NULL, "bha", DV_DULL
@@ -1038,7 +1038,7 @@ bha_find(iot, ioh, sc)
 
 
 /*
- * Disable the ISA-compatiblity ioports on  PCI bha devices,
+ * Disable the ISA-compatibility ioports on PCI bha devices,
  * to ensure they're not autoconfigured a second time as an ISA bha.
  */
 int
@@ -1050,7 +1050,7 @@ bha_disable_isacompat(sc)
 	isa_disable.cmd.opcode = BHA_MODIFY_IOPORT;
 	isa_disable.cmd.modifier = BHA_IOMODIFY_DISABLE1;
 	bha_cmd(sc->sc_iot, sc->sc_ioh, sc,
-	    sizeof(isa_disable.cmd), (u_char*)&isa_disable.cmd,
+	    sizeof(isa_disable.cmd), (u_char *)&isa_disable.cmd,
 	    0, (u_char *)0);
 	return (0);
 }

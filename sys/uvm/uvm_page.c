@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.2 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.3 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_page.c,v 1.71 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
@@ -140,8 +140,8 @@ static boolean_t have_recolored_pages /* = FALSE */;
  * local prototypes
  */
 
-static void uvm_pageinsert __P((struct vm_page *));
-static void uvm_pageremove __P((struct vm_page *));
+static void uvm_pageinsert(struct vm_page *);
+static void uvm_pageremove(struct vm_page *);
 
 /*
  * inline functions
@@ -516,7 +516,7 @@ uvm_pageboot_alloc(size)
  */
 
 /* subroutine: try to allocate from memory chunks on the specified freelist */
-static boolean_t uvm_page_physget_freelist __P((paddr_t *, int));
+static boolean_t uvm_page_physget_freelist(paddr_t *, int);
 
 static boolean_t
 uvm_page_physget_freelist(paddrp, freelist)

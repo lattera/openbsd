@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24 2001/12/02 04:14:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.24.2.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -62,7 +62,7 @@
 /*
  * CPU types and features
  */
-#define	HPPA_FTRS_BTLBS		0x00000001
+#define	HPPA_FTRS_TLBU		0x00000001
 #define	HPPA_FTRS_BTLBU		0x00000002
 #define	HPPA_FTRS_HVT		0x00000004
 #define	HPPA_FTRS_W32B		0x00000008
@@ -80,6 +80,7 @@ extern const char *cpu_typename;
  * COPR/SFUs
  */
 #define	HPPA_FPUS	0xc0
+#define	HPPA_FPUVER(w)	(((w) & 0x003ff800) >> 11)
 #define	HPPA_PMSFUS	0x20	/* ??? */
 
 /*
@@ -103,7 +104,6 @@ extern const char *cpu_typename;
 #define	HPPA_NMODSPBUS	64
 
 #define	clockframe		trapframe
-#define	CLKF_BASEPRI(framep)	((framep)->tf_eiem == ~0U)
 #define	CLKF_PC(framep)		((framep)->tf_iioq_head)
 #define	CLKF_INTR(framep)	((framep)->tf_flags & TFF_INTR)
 #define	CLKF_USERMODE(framep)	((framep)->tf_flags & T_USER)
@@ -124,29 +124,20 @@ extern int want_resched;
 
 #define DELAY(x) delay(x)
 
-static __inline long
-kvtop (const caddr_t va)
-{
-	long ret;
-	__asm __volatile ("lpa %%r0(%1), %0" : "=r" (ret) : "r" (va));
-	return ret;
-}
+extern int (*cpu_desidhash)(void);
 
-extern int (*cpu_desidhash) __P((void));
-
-void	delay __P((u_int us));
-void	hppa_init __P((paddr_t start));
-void	trap __P((int type, struct trapframe *frame));
-int	dma_cachectl __P((caddr_t p, int size));
-int	spcopy __P((pa_space_t ssp, const void *src,
-		    pa_space_t dsp, void *dst, size_t size));
-int	spstrcpy __P((pa_space_t ssp, const void *src,
-		      pa_space_t dsp, void *dst, size_t size, size_t *rsize));
-int	copy_on_fault __P((void));
-void	switch_trampoline __P((void));
-void	switch_exit __P((struct proc *p));
-int	cpu_dumpsize __P((void));
-int	cpu_dump __P((void));
+void	delay(u_int us);
+void	hppa_init(paddr_t start);
+void	trap(int type, struct trapframe *frame);
+int	spcopy(pa_space_t ssp, const void *src,
+		    pa_space_t dsp, void *dst, size_t size);
+int	spstrcpy(pa_space_t ssp, const void *src,
+		      pa_space_t dsp, void *dst, size_t size, size_t *rsize);
+int	copy_on_fault(void);
+void	switch_trampoline(void);
+void	switch_exit(struct proc *p);
+int	cpu_dumpsize(void);
+int	cpu_dump(void);
 #endif
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_output.c,v 1.44.2.1 2002/01/31 22:55:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_output.c,v 1.44.2.2 2002/06/11 03:31:37 art Exp $	*/
 /*	$NetBSD: tcp_output.c,v 1.16 1997/06/03 16:17:09 kml Exp $	*/
 
 /*
@@ -78,6 +78,7 @@
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
+#include <sys/kernel.h>
 
 #include <net/route.h>
 #include <net/if.h>
@@ -236,6 +237,9 @@ tcp_output(tp)
 #ifdef TCP_SIGNATURE
 	unsigned int sigoff;
 #endif /* TCP_SIGNATURE */
+#ifdef TCP_ECN
+	int needect;
+#endif
 
 #if defined(TCP_SACK) && defined(TCP_SIGNATURE) && defined(DIAGNOSTIC)
 	if (!tp->sack_disable && (tp->t_flags & TF_SIGNATURE))
@@ -249,7 +253,7 @@ tcp_output(tp)
 	 * to send, then transmit; otherwise, investigate further.
 	 */
 	idle = (tp->snd_max == tp->snd_una);
-	if (idle && tp->t_idle >= tp->t_rxtcur)
+	if (idle && (tcp_now - tp->t_rcvtime) >= tp->t_rxtcur)
 		/*
 		 * We have been idle for "a while" and no acks are
 		 * expected to clock out any data we send --
@@ -383,7 +387,7 @@ again:
 		len = tp->t_maxseg;
 		sendalot = 1;
 	}
-	if (SEQ_LT(tp->snd_nxt + len, tp->snd_una + so->so_snd.sb_cc))
+	if (off + len < so->so_snd.sb_cc)
 		flags &= ~TH_FIN;
 
 	win = sbspace(&so->so_rcv);
@@ -814,6 +818,39 @@ send:
 		bcopy((caddr_t)opt, (caddr_t)(th + 1), optlen);
 		th->th_off = (sizeof (struct tcphdr) + optlen) >> 2;
 	}
+#ifdef TCP_ECN
+	if (tcp_do_ecn) {
+		/*
+		 * if we have received congestion experienced segs,
+		 * set ECE bit.
+		 */
+		if (tp->t_flags & TF_RCVD_CE) {
+			flags |= TH_ECE;
+			tcpstat.tcps_ecn_sndece++;
+		}
+		if (!(tp->t_flags & TF_DISABLE_ECN)) {
+			/*
+			 * if this is a SYN seg, set ECE and CWR.
+			 * set only ECE for SYN-ACK if peer supports ECN.
+			 */
+			if ((flags & (TH_SYN|TH_ACK)) == TH_SYN)
+				flags |= (TH_ECE|TH_CWR);
+			else if ((tp->t_flags & TF_ECN_PERMIT) &&
+				 (flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK))
+				flags |= TH_ECE;
+		}
+		/*
+		 * if we have reduced the congestion window, notify
+		 * the peer by setting CWR bit.
+		 */
+		if ((tp->t_flags & TF_ECN_PERMIT) &&
+		    (tp->t_flags & TF_SEND_CWR)) {
+			flags |= TH_CWR;
+			tp->t_flags &= ~TF_SEND_CWR;
+			tcpstat.tcps_ecn_sndcwr++;
+		}
+	}
+#endif
 	th->th_flags = flags;
 
 	/*
@@ -982,8 +1019,8 @@ send:
 			 * Time this transmission if not a retransmission and
 			 * not currently timing anything.
 			 */
-			if (tp->t_rtt == 0) {
-				tp->t_rtt = 1;
+			if (tp->t_rtttime == 0) {
+				tp->t_rtttime = tcp_now;
 				tp->t_rtseq = startseq;
 				tcpstat.tcps_segstimed++;
 			}
@@ -1037,6 +1074,23 @@ send:
 	 */
 	m->m_pkthdr.len = hdrlen + len;
 
+#ifdef TCP_ECN
+	/*
+	 * if peer is ECN capable, set the ECT bit in the IP header.
+	 * but don't set ECT for a pure ack, a retransmit or a window probe.
+	 */
+	needect = 0;
+	if (tcp_do_ecn && (tp->t_flags & TF_ECN_PERMIT)) {
+		if (len == 0 || SEQ_LT(tp->snd_nxt, tp->snd_max) ||
+		    (tp->t_force && len == 1)) {
+			/* don't set ECT */
+		} else {
+			needect = 1;
+			tcpstat.tcps_ecn_sndect++;
+		}
+	}
+#endif
+
 	switch (tp->pf) {
 	case 0:	/*default to PF_INET*/
 #ifdef INET
@@ -1048,6 +1102,10 @@ send:
 			ip->ip_len = m->m_pkthdr.len;
 			ip->ip_ttl = tp->t_inpcb->inp_ip.ip_ttl;
 			ip->ip_tos = tp->t_inpcb->inp_ip.ip_tos;
+#ifdef TCP_ECN
+			if (needect)
+				ip->ip_tos |= IPTOS_ECN_ECT0;
+#endif
 		}
 		error = ip_output(m, tp->t_inpcb->inp_options,
 			&tp->t_inpcb->inp_route,
@@ -1059,13 +1117,17 @@ send:
 #ifdef INET6
 	case AF_INET6:
 		{
-			struct ip6_hdr *ipv6;
+			struct ip6_hdr *ip6;
 			
-			ipv6 = mtod(m, struct ip6_hdr *);
-			ipv6->ip6_plen = m->m_pkthdr.len -
+			ip6 = mtod(m, struct ip6_hdr *);
+			ip6->ip6_plen = m->m_pkthdr.len -
 				sizeof(struct ip6_hdr);
-			ipv6->ip6_nxt = IPPROTO_TCP;
-			ipv6->ip6_hlim = in6_selecthlim(tp->t_inpcb, NULL);
+			ip6->ip6_nxt = IPPROTO_TCP;
+			ip6->ip6_hlim = in6_selecthlim(tp->t_inpcb, NULL);
+#ifdef TCP_ECN
+			if (needect)
+				ip6->ip6_flow |= htonl(IPTOS_ECN_ECT0 << 20);
+#endif
 		}
 		error = ip6_output(m, tp->t_inpcb->inp_outputopts6,
 			  &tp->t_inpcb->inp_route6,
@@ -1107,9 +1169,16 @@ out:
 			tp->t_softerror = error;
 			return (0);
 		}
+
+		/* Restart the delayed ACK timer, if necessary. */
+		if (tp->t_flags & TF_DELACK)
+			TCP_RESTART_DELACK(tp);
+
 		return (error);
 	}
 	tcpstat.tcps_sndtotal++;
+	if (tp->t_flags & TF_DELACK)
+		tcpstat.tcps_delack++;
 
 	/*
 	 * Data sent (as far as we can tell).
@@ -1120,7 +1189,8 @@ out:
 	if (win > 0 && SEQ_GT(tp->rcv_nxt+win, tp->rcv_adv))
 		tp->rcv_adv = tp->rcv_nxt + win;
 	tp->last_ack_sent = tp->rcv_nxt;
-	tp->t_flags &= ~(TF_ACKNOW|TF_DELACK);
+	tp->t_flags &= ~TF_ACKNOW;
+	TCP_CLEAR_DELACK(tp);
 #if defined(TCP_SACK)
 	if (sendalot && --maxburst)
 #else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.17 2001/11/28 13:47:38 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.17.2.1 2002/06/11 03:35:19 art Exp $	*/
 /*	$NetBSD: grf.c,v 1.30 1998/08/20 08:33:41 kleink Exp $	*/
 
 /*
@@ -88,8 +88,8 @@ extern struct emul emul_hpux;
 /* prototypes for the devsw entry points */
 cdev_decl(grf);
 
-int	grfmatch __P((struct device *, void *, void *));
-void	grfattach __P((struct device *, struct device *, void *));
+int	grfmatch(struct device *, void *, void *);
+void	grfattach(struct device *, struct device *, void *);
 
 struct cfattach grf_ca = {
 	sizeof(struct grf_softc), grfmatch, grfattach
@@ -99,7 +99,7 @@ struct cfdriver grf_cd = {
 	NULL, "grf", DV_DULL
 };
 
-int	grfprint __P((void *, const char *));
+int	grfprint(void *, const char *);
 
 /*
  * Frambuffer state information, statically allocated for benefit

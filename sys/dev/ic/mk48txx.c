@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2 2001/08/18 22:08:18 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mk48txx.c,v 1.2.6.1 2002/06/11 03:42:19 art Exp $	*/
 /*	$NetBSD: mk48txx.c,v 1.7 2001/04/08 17:05:10 tsutsui Exp $ */
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -75,6 +75,7 @@ struct {
 } mk48txx_models[] = {
 	{ "mk48t02", MK48T02_CLKSZ, MK48T02_CLKOFF, 0 },
 	{ "mk48t08", MK48T08_CLKSZ, MK48T08_CLKOFF, 0 },
+	{ "mk48t18", MK48T18_CLKSZ, MK48T18_CLKOFF, 0 },
 	{ "mk48t59", MK48T59_CLKSZ, MK48T59_CLKOFF, MK48TXX_EXT_REGISTERS },
 };
 
@@ -108,6 +109,10 @@ mk48txx_attach(bt, bh, model, year0)
 
 	sz = ALIGN(sizeof(struct todr_chip_handle)) + sizeof(struct mk48txx);
 	handle = malloc(sz, M_DEVBUF, M_NOWAIT);
+	if (handle == NULL) {
+		printf(": failed to allocate memory");
+		return NULL;
+	}
 	mk = (struct mk48txx *)((u_long)handle +
 				 ALIGN(sizeof(struct todr_chip_handle)));
 	handle->cookie = mk;

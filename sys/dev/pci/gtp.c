@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/gtp.c,v 1.1 2002/06/03 16:13:21 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/gtp.c,v 1.1.2.1 2002/06/11 03:42:24 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Vladimir Popov <jumbo@narod.ru>

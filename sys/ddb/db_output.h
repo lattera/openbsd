@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_output.h,v 1.9 1997/11/04 20:45:17 chuck Exp $ */
+/*	$OpenBSD: src/sys/ddb/db_output.h,v 1.9.20.1 2002/06/11 03:28:48 art Exp $ */
 /*	$NetBSD: db_output.h,v 1.9 1996/04/04 05:13:50 cgd Exp $	*/
 
 /* 
@@ -33,9 +33,30 @@
 /*
  * Printing routines for kernel debugger.
  */
-void db_force_whitespace __P((void));
-void db_putchar __P((int));
-int db_print_position __P((void));
-int db_printf __P((const char *, ...))
+void db_force_whitespace(void);
+void db_putchar(int);
+int db_print_position(void);
+int db_printf(const char *, ...)
     __kprintf_attribute__((__format__(__kprintf__,1,2)));
-void db_end_line __P((int));
+void db_end_line(int);
+
+/*
+ * This is a replacement for the non-standard %z, %n and %r printf formats
+ * in db_printf.
+ *
+ * db_format(buf, bufsize, val, format, alt, width)
+ *
+ * val is the value we want printed.
+ * format is one of DB_FORMAT_[ZRN]
+ * alt specifies if we should provide an "alternate" format (# in the printf
+ *   format).
+ * width is the field width. 0 is the same as no width specifier.
+ */
+#define DB_FORMAT_Z	1
+#define DB_FORMAT_R	2
+#define DB_FORMAT_N	3
+#define DB_FORMAT_BUF_SIZE	64	/* should be plenty for all formats */
+char *db_format(char *, size_t, long, int, int, int);
+
+/* XXX - this is the wrong place, but we have no better. */
+void db_stack_dump(void);

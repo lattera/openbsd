@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.1 2002/01/31 22:55:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.2 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -150,8 +150,8 @@ struct	in_ifaddrhead in_ifaddr;
 struct	ifqueue ipintrq;
 
 int	ipq_locked;
-static __inline int ipq_lock_try __P((void));
-static __inline void ipq_unlock __P((void));
+static __inline int ipq_lock_try(void);
+static __inline void ipq_unlock(void);
 
 struct pool ipqent_pool;
 
@@ -209,7 +209,7 @@ static	struct ip_srcrt {
 	struct	in_addr route[MAX_IPOPTLEN/sizeof(struct in_addr)];
 } ip_srcrt;
 
-static void save_rte __P((u_char *, struct in_addr));
+static void save_rte(u_char *, struct in_addr);
 static int ip_weadvertise(u_int32_t);
 
 /*
@@ -489,7 +489,10 @@ ipv4_input(m)
 		m_freem(m);
 	} else {
 #ifdef IPSEC
-	        /* IPsec policy check for forwarded packets */
+	        /*
+		 * IPsec policy check for forwarded packets. Look at
+		 * inner-most IPsec SA used.
+		 */
 		mtag = m_tag_find(m, PACKET_TAG_IPSEC_IN_DONE, NULL);
                 s = splnet();
 		if (mtag != NULL) {
@@ -508,7 +511,10 @@ ipv4_input(m)
 			return;
 		}
 
-		/* Fall through, forward packet */
+		/*
+		 * Fall through, forward packet. Outbound IPsec policy
+		 * checking will occur in ip_output().
+		 */
 #endif /* IPSEC */
 
 		ip_forward(m, 0);
@@ -611,7 +617,8 @@ found:
          * That's because we really only care about the properties of
          * the protected packet, and not the intermediate versions.
          * While this is not the most paranoid setting, it allows
-         * some flexibility in handling of nested tunnels etc.
+         * some flexibility in handling nested tunnels (in setting up
+	 * the policies).
          */
         if ((ip->ip_p == IPPROTO_ESP) || (ip->ip_p == IPPROTO_AH) ||
 	    (ip->ip_p == IPPROTO_IPCOMP))
@@ -636,7 +643,17 @@ found:
 	if ((ip->ip_p == IPPROTO_TCP) || (ip->ip_p == IPPROTO_UDP))
 	  goto skipipsec;
 
-	/* IPsec policy check for local-delivery packets */
+	/*
+	 * IPsec policy check for local-delivery packets. Look at the
+	 * inner-most SA that protected the packet. This is in fact
+	 * a bit too restrictive (it could end up causing packets to
+	 * be dropped that semantically follow the policy, e.g., in
+	 * certain SA-bundle configurations); but the alternative is
+	 * very complicated (and requires keeping track of what
+	 * kinds of tunneling headers have been seen in-between the
+	 * IPsec headers), and I don't think we lose much functionality
+	 * that's needed in the real world (who uses bundles anyway ?).
+	 */
 	mtag = m_tag_find(m, PACKET_TAG_IPSEC_IN_DONE, NULL); 
         s = splnet();
 	if (mtag) {
@@ -648,7 +665,7 @@ found:
 	    tdb, NULL);
         splx(s);
 
-	/* Error or otherwise drop-packet indication */
+	/* Error or otherwise drop-packet indication. */
 	if (error) {
 	        ipstat.ips_cantforward++;
 		m_freem(m);
@@ -676,7 +693,7 @@ in_iawithaddr(ina, m)
 {
 	register struct in_ifaddr *ia;
 
-	for (ia = in_ifaddr.tqh_first; ia; ia = ia->ia_list.tqe_next) {
+	TAILQ_FOREACH(ia, &in_ifaddr, ia_list) {
 		if ((ina.s_addr == ia->ia_addr.sin_addr.s_addr) ||
 		    ((ia->ia_ifp->if_flags & (IFF_LOOPBACK|IFF_LINK1)) ==
 			(IFF_LOOPBACK|IFF_LINK1) &&
@@ -721,6 +738,7 @@ ip_reass(ipqe, fp)
 	struct mbuf *t;
 	int hlen = ipqe->ipqe_ip->ip_hl << 2;
 	int i, next;
+	u_int8_t ecn, ecn0;
 
 	/*
 	 * Presence of header sizes in mbufs
@@ -747,6 +765,22 @@ ip_reass(ipqe, fp)
 		p = NULL;
 		goto insert;
 	}
+
+	/*
+	 * Handle ECN by comparing this segment with the first one;
+	 * if CE is set, do not lose CE.
+	 * drop if CE and not-ECT are mixed for the same packet.
+	 */
+	ecn = ipqe->ipqe_ip->ip_tos & IPTOS_ECN_MASK;
+	ecn0 = fp->ipq_fragq.lh_first->ipqe_ip->ip_tos & IPTOS_ECN_MASK;
+	if (ecn == IPTOS_ECN_CE) {
+		if (ecn0 == IPTOS_ECN_NOTECT)
+			goto dropfrag;
+		if (ecn0 != IPTOS_ECN_CE)
+			fp->ipq_fragq.lh_first->ipqe_ip->ip_tos |= IPTOS_ECN_CE;
+	}
+	if (ecn == IPTOS_ECN_NOTECT && ecn0 != IPTOS_ECN_NOTECT)
+		goto dropfrag;
 
 	/*
 	 * Find a segment which begins after this one does.
@@ -1532,9 +1566,21 @@ ip_forward(m, srcrt)
 		break;
 
 	case ENOBUFS:
+#if 1
+		/*
+		 * a router should not generate ICMP_SOURCEQUENCH as
+		 * required in RFC1812 Requirements for IP Version 4 Routers.
+		 * source quench could be a big problem under DoS attacks,
+		 * or the underlying interface is rate-limited.
+		 */
+		if (mcopy)
+			m_freem(mcopy);
+		return;
+#else
 		type = ICMP_SOURCEQUENCH;
 		code = 0;
 		break;
+#endif
 	}
 
 	icmp_error(mcopy, type, code, dest, destifp);

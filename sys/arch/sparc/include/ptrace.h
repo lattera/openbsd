@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/ptrace.h,v 1.2 1997/08/08 08:26:43 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/ptrace.h,v 1.2.22.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: ptrace.h,v 1.4 1994/11/20 20:53:27 deraadt Exp $ */
 
 /*
@@ -52,3 +52,4 @@
 #define	PT_SETREGS	(PT_FIRSTMACH + 1)
 #define	PT_GETFPREGS	(PT_FIRSTMACH + 2)
 #define	PT_SETFPREGS	(PT_FIRSTMACH + 3)
+#define	PT_WCOOKIE	(PT_FIRSTMACH + 4)

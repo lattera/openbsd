@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/ppi.c,v 1.8 2001/05/01 16:51:10 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/ppi.c,v 1.8.4.1 2002/06/11 03:35:19 art Exp $	*/
 /*	$NetBSD: ppi.c,v 1.13 1997/04/02 22:37:33 scottr Exp $	*/
 
 /*
@@ -76,8 +76,8 @@ struct	ppi_softc {
 #define PPIF_TIMO	0x08
 #define PPIF_DELAY	0x10
 
-int	ppimatch __P((struct device *, void *, void *));
-void	ppiattach __P((struct device *, struct device *, void *));
+int	ppimatch(struct device *, void *, void *);
+void	ppiattach(struct device *, struct device *, void *);
 
 struct cfattach ppi_ca = {
 	sizeof(struct ppi_softc), ppimatch, ppiattach
@@ -87,13 +87,13 @@ struct cfdriver ppi_cd = {
 	NULL, "ppi", DV_DULL
 };
 
-void	ppistart __P((void *));
-void	ppinoop __P((void *));
+void	ppistart(void *);
+void	ppinoop(void *);
 
-void	ppitimo __P((void *));
-int	ppirw __P((dev_t, struct uio *));
-int	ppihztoms __P((int));
-int	ppimstohz __P((int));
+void	ppitimo(void *);
+int	ppirw(dev_t, struct uio *);
+int	ppihztoms(int);
+int	ppimstohz(int);
 
 bdev_decl(ppi);
 cdev_decl(ppi);
@@ -315,7 +315,7 @@ again:
 		s = splbio();
 		if ((sc->sc_flags & PPIF_UIO) &&
 		    hpibreq(sc->sc_dev.dv_parent, &sc->sc_hq) == 0)
-			sleep(sc, PRIBIO+1);
+			tsleep(sc, PRIBIO+1, "ppirw", 0);
 		/*
 		 * Check if we timed out during sleep or uiomove
 		 */

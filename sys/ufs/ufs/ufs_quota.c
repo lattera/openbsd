@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota.c,v 1.9 2001/11/22 04:41:38 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_quota.c,v 1.9.2.1 2002/06/11 03:32:50 art Exp $	*/
 /*	$NetBSD: ufs_quota.c,v 1.8 1996/02/09 22:36:09 christos Exp $	*/
 
 /*
@@ -48,6 +48,7 @@
 #include <sys/vnode.h>
 #include <sys/mount.h>
 
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
@@ -70,6 +71,7 @@ struct dquot {
 	u_int16_t dq_type;		/* quota type of this dquot */
 	u_int32_t dq_id;		/* identifier this applies to */
 	struct  vnode *dq_vp;           /* file backing this quota */
+	struct  ucred  *dq_cred;        /* credentials for writing file */
 	struct	dqblk dq_dqb;		/* actual usage & quotas */
 };
 /*
@@ -100,24 +102,24 @@ struct dquot {
  */
 #define	NODQUOT		NULL
 
-void	dqref __P((struct dquot *));
-void	dqrele __P((struct vnode *, struct dquot *));
-int	dqsync __P((struct vnode *, struct dquot *));
+void	dqref(struct dquot *);
+void	dqrele(struct vnode *, struct dquot *);
+int	dqsync(struct vnode *, struct dquot *);
 
 #ifdef DIAGNOSTIC
-void	chkdquot __P((struct inode *));
+void	chkdquot(struct inode *);
 #endif
 
-int	getquota __P((struct mount *, u_long, int, caddr_t));
-int	quotaon __P((struct proc *, struct mount *, int, caddr_t));
-int	setquota __P((struct mount *, u_long, int, caddr_t));
-int	setuse __P((struct mount *, u_long, int, caddr_t));
+int	getquota(struct mount *, u_long, int, caddr_t);
+int	quotaon(struct proc *, struct mount *, int, caddr_t);
+int	setquota(struct mount *, u_long, int, caddr_t);
+int	setuse(struct mount *, u_long, int, caddr_t);
 
-int	chkdqchg __P((struct inode *, long, struct ucred *, int));
-int	chkiqchg __P((struct inode *, long, struct ucred *, int));
+int	chkdqchg(struct inode *, long, struct ucred *, int);
+int	chkiqchg(struct inode *, long, struct ucred *, int);
 
-int dqget __P((struct vnode *, u_long, struct ufsmount *, int,
-	       struct dquot **));
+int dqget(struct vnode *, u_long, struct ufsmount *, int,
+	       struct dquot **);
 
 int     quotaon_vnode(struct vnode *, void *);
 int     quotaoff_vnode(struct vnode *, void *);
@@ -888,6 +890,8 @@ dqget(vp, id, ump, type, dqp)
 			panic("free dquot isn't");
 		TAILQ_REMOVE(&dqfreelist, dq, dq_freelist);
 		LIST_REMOVE(dq, dq_hash);
+		crfree(dq->dq_cred);
+		dq->dq_cred = NOCRED;
 	}
 	/*
 	 * Initialize the contents of the dquot structure.
@@ -900,6 +904,8 @@ dqget(vp, id, ump, type, dqp)
 	dq->dq_id = id;
 	dq->dq_vp = dqvp;
 	dq->dq_type = type;
+	crhold(ump->um_cred[type]);
+	dq->dq_cred = ump->um_cred[type];
 	auio.uio_iov = &aiov;
 	auio.uio_iovcnt = 1;
 	aiov.iov_base = (caddr_t)&dq->dq_dqb;
@@ -909,7 +915,7 @@ dqget(vp, id, ump, type, dqp)
 	auio.uio_segflg = UIO_SYSSPACE;
 	auio.uio_rw = UIO_READ;
 	auio.uio_procp = (struct proc *)0;
-	error = VOP_READ(dqvp, &auio, 0, ump->um_cred[type]);
+	error = VOP_READ(dqvp, &auio, 0, dq->dq_cred);
 	if (auio.uio_resid == sizeof(struct dqblk) && error == 0)
 		bzero((caddr_t)&dq->dq_dqb, sizeof(struct dqblk));
 	if (vp != dqvp)
@@ -979,7 +985,6 @@ dqsync(vp, dq)
 	struct iovec aiov;
 	struct uio auio;
 	int error;
-	struct ufsmount *ump = VFSTOUFS(vp->v_mount);
 
 	if (dq == NODQUOT)
 		panic("dqsync: dquot");
@@ -987,6 +992,7 @@ dqsync(vp, dq)
 		return (0);
 	if ((dqvp = dq->dq_vp) == NULLVP)
 		panic("dqsync: file");
+
 	if (vp != dqvp)
 		vn_lock(dqvp, LK_EXCLUSIVE | LK_RETRY, p);
 	while (dq->dq_flags & DQ_LOCK) {
@@ -1008,7 +1014,7 @@ dqsync(vp, dq)
 	auio.uio_segflg = UIO_SYSSPACE;
 	auio.uio_rw = UIO_WRITE;
 	auio.uio_procp = (struct proc *)0;
-	error = VOP_WRITE(dqvp, &auio, 0, ump->um_cred[dq->dq_type]);
+	error = VOP_WRITE(dqvp, &auio, 0, dq->dq_cred);
 	if (auio.uio_resid && error == 0)
 		error = EIO;
 	if (dq->dq_flags & DQ_WANT)

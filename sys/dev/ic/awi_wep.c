@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/awi_wep.c,v 1.6 2001/11/05 17:25:58 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi_wep.c,v 1.6.2.1 2002/06/11 03:42:17 art Exp $	*/
 /*	$NetBSD: awi_wep.c,v 1.2 2000/07/04 14:47:58 onoe Exp $	*/
 
 /*
@@ -97,6 +97,10 @@
 #include <dev/rndvar.h>
 #endif
 
+#ifdef __OpenBSD__
+#include <dev/rndvar.h>
+#endif
+
 #ifdef __NetBSD__
 #include <crypto/arc4/arc4.h>
 #endif
@@ -127,12 +131,12 @@ arc4_encrypt(void *ctx, u_int8_t *dst, u_int8_t *src, int len)
 }
 #endif
 
-static void awi_crc_init __P((void));
-static u_int32_t awi_crc_update __P((u_int32_t crc, u_int8_t *buf, int len));
+static void awi_crc_init(void);
+static u_int32_t awi_crc_update(u_int32_t crc, u_int8_t *buf, int len);
 
-static int awi_null_ctxlen __P((void));
-static void awi_null_setkey __P((void *ctx, u_int8_t *key, int keylen));
-static void awi_null_copy __P((void *ctx, u_int8_t *dst, u_int8_t *src, int len));
+static int awi_null_ctxlen(void);
+static void awi_null_setkey(void *ctx, u_int8_t *key, int keylen);
+static void awi_null_copy(void *ctx, u_int8_t *dst, u_int8_t *src, int len);
 
 /* XXX: the order should be known to wiconfig/user */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.31 2001/11/28 16:13:29 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.31.2.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.63-1.65ish 1997/01/16 15:41:40 gwr Exp $	*/
 
 /*
@@ -58,6 +58,9 @@
 #include <sys/ktrace.h>
 #endif
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_pmap.h>
 
@@ -78,9 +81,9 @@ extern struct emul emul_sunos;
 extern char fubail[], subail[];
 
 /* These are called from locore.s */
-void syscall __P((register_t code, struct frame));
-void trap __P((int type, u_int code, u_int v, struct frame));
-int  nodb_trap __P((int type, struct frame *));
+void syscall(register_t code, struct frame);
+void trap(int type, u_int code, u_int v, struct frame);
+int  nodb_trap(int type, struct frame *);
 
 
 int astpending;
@@ -704,7 +707,12 @@ syscall(code, frame)
 		goto bad;
 	rval[0] = 0;
 	rval[1] = frame.f_regs[D1];
-	error = (*callp->sy_call)(p, args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, args, rval);
 	switch (error) {
 	case 0:
 		frame.f_regs[D0] = rval[0];

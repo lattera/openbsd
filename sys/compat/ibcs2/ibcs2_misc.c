@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.19 2001/11/06 19:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_misc.c,v 1.19.2.1 2002/06/11 03:28:08 art Exp $	*/
 /*	$NetBSD: ibcs2_misc.c,v 1.23 1997/01/15 01:37:49 perry Exp $	*/
 
 /*
@@ -336,8 +336,8 @@ ibcs2_sys_mount(p, v, retval)
  * This is quite ugly, but what do you expect from compatibility code?
  */
 
-int ibcs2_readdir_callback __P((void *, struct dirent *, off_t));
-int ibcs2_classicread_callback __P((void *, struct dirent *, off_t));
+int ibcs2_readdir_callback(void *, struct dirent *, off_t);
+int ibcs2_classicread_callback(void *, struct dirent *, off_t);
 
 struct ibcs2_readdir_callback_args {
 	caddr_t outp;
@@ -434,15 +434,16 @@ ibcs2_sys_getdents(p, v, retval)
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 
+	FREF(fp);
 	args.resid = SCARG(uap, nbytes);
 	args.outp = (caddr_t)SCARG(uap, buf);
-	
-	if ((error = readdir_with_callback(fp, &fp->f_offset, args.resid,
-	    ibcs2_readdir_callback, &args)) != 0)
+	error = readdir_with_callback(fp, &fp->f_offset, args.resid,
+	    ibcs2_readdir_callback, &args);
+	FRELE(fp);
+	if (error)
 		return (error);
 
 	*retval = SCARG(uap, nbytes) - args.resid;
-
 	return (0);
 }
 
@@ -474,15 +475,17 @@ ibcs2_sys_read(p, v, retval)
 	if (vp->v_type != VDIR)
 		return sys_read(p, uap, retval);
 
+	FREF(fp);
 	args.resid = SCARG(uap, nbytes);
 	args.outp = (caddr_t)SCARG(uap, buf);
-	
-	if ((error = readdir_with_callback(fp, &fp->f_offset, args.resid,
-	    ibcs2_classicread_callback, &args)) != 0)
+
+	error = readdir_with_callback(fp, &fp->f_offset, args.resid,
+	    ibcs2_classicread_callback, &args);
+	FRELE(fp);
+	if (error)
 		return (error);
-	
-	*retval = SCARG(uap, nbytes) - args.resid;
-	
+
+	*retval = SCARG(uap, nbytes) - args.resid;	
 	return (0);
 }
 
@@ -691,7 +694,8 @@ ibcs2_sys_sysconf(p, v, retval)
 	struct ibcs2_sys_sysconf_args /* {
 		syscallarg(int) name;
 	} */ *uap = v;
-	int mib[2], value, len, error;
+	int mib[2], value, error;
+	size_t len;
 	struct sys___sysctl_args sa;
 	struct sys_getrlimit_args ga;
 
@@ -1142,7 +1146,7 @@ xenix_sys_rdchk(p, v, retval)
 	SCARG(&sa, data) = stackgap_alloc(&sg, sizeof(int));
 	if ((error = sys_ioctl(p, &sa, retval)) != 0)
 		return error;
-	*retval = (*((int*)SCARG(&sa, data))) ? 1 : 0;
+	*retval = (*((int *)SCARG(&sa, data))) ? 1 : 0;
 	return 0;
 }
 

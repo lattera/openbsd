@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/db_machdep.h,v 1.16 2002/06/08 16:02:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/db_machdep.h,v 1.16.2.1 2002/06/11 03:37:28 art Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.13 1996/04/29 20:50:08 leo Exp $	*/
 
 /*

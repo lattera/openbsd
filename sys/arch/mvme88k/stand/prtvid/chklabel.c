@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/prtvid/Attic/chklabel.c,v 1.2 1998/08/22 08:49:16 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/prtvid/Attic/chklabel.c,v 1.2.18.1 2002/06/11 03:37:12 art Exp $ */
 /*
  * Copyright (c) 1993 Paul Kranenburg
  * All rights reserved.
@@ -33,7 +33,7 @@
 #include <sys/disklabel.h>
 #include <stdio.h>
 
-void cputobsdlabel __P((struct disklabel *lp, struct cpu_disklabel *clp));
+void cputobsdlabel(struct disklabel *lp, struct cpu_disklabel *clp);
 
 main(int argc, char *argv[])
 {

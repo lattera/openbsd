@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.76.2.1 2002/01/31 22:55:19 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.76.2.2 2002/06/11 03:37:11 art Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -126,22 +126,22 @@ vm_offset_t interrupt_stack[MAX_CPUS] = {0};
 struct md_p md;
 
 /* prototypes */
-void m88100_Xfp_precise __P((void));
-void m88110_Xfp_precise __P((void));
-void setupiackvectors __P((void));
-void regdump __P((struct trapframe *f));
-void dumpsys __P((void));
-void consinit __P((void));
-vm_offset_t size_memory __P((void));
-int getcpuspeed __P((void));
-int getscsiid __P((void));
-void identifycpu __P((void));
-void save_u_area __P((struct proc *, vm_offset_t));
-void load_u_area __P((struct proc *));
-void dumpconf __P((void));
-void m187_ext_int __P((u_int v, struct m88100_saved_state *eframe));
-void m188_ext_int __P((u_int v, struct m88100_saved_state *eframe));
-void m197_ext_int __P((u_int v, struct m88100_saved_state *eframe));
+void m88100_Xfp_precise(void);
+void m88110_Xfp_precise(void);
+void setupiackvectors(void);
+void regdump(struct trapframe *f);
+void dumpsys(void);
+void consinit(void);
+vm_offset_t size_memory(void);
+int getcpuspeed(void);
+int getscsiid(void);
+void identifycpu(void);
+void save_u_area(struct proc *, vm_offset_t);
+void load_u_area(struct proc *);
+void dumpconf(void);
+void m187_ext_int(u_int v, struct m88100_saved_state *eframe);
+void m188_ext_int(u_int v, struct m88100_saved_state *eframe);
+void m197_ext_int(u_int v, struct m88100_saved_state *eframe);
 
 unsigned char *volatile ivec[] = {
 	(unsigned char *)0xFFFE0003, /* not used, no such thing as int 0 */
@@ -210,13 +210,19 @@ int   nbuf = NBUF;
 #else
 int   nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 5
+#endif
+
 #ifdef	BUFPAGES
 int   bufpages = BUFPAGES;
 #else
 int   bufpages = 0;
 #endif
+int   bufcachepercent = BUFCACHEPERCENT;
 
-caddr_t allocsys __P((caddr_t));
+caddr_t allocsys(caddr_t);
 
 /*
  * Info for CTL_HW
@@ -261,11 +267,11 @@ extern struct user *proc0paddr;
  *  XXX this is to fake out the console routines, while 
  *  booting. New and improved! :-) smurph
  */
-void bootcnprobe __P((struct consdev *));
-void bootcninit __P((struct consdev *));
-void bootcnputc __P((dev_t, int));
-int  bootcngetc __P((dev_t));
-extern void nullcnpollc __P((dev_t, int));
+void bootcnprobe(struct consdev *);
+void bootcninit(struct consdev *);
+void bootcnputc(dev_t, int);
+int  bootcngetc(dev_t);
+extern void nullcnpollc(dev_t, int);
 
 #define bootcnpollc nullcnpollc
 
@@ -321,9 +327,9 @@ size_memory()
 	/*
 	 * count it up.
 	 */
-	max = (void*)MAXPHYSMEM;
-	for (look = (void*)Roundup(end, STRIDE); look < max;
-	    look = (int*)((unsigned)look + STRIDE)) {
+	max = (void *)MAXPHYSMEM;
+	for (look = (void *)Roundup(end, STRIDE); look < max;
+	    look = (int *)((unsigned)look + STRIDE)) {
 		unsigned save;
 
 		/* if can't access, we've reached the end */
@@ -359,7 +365,7 @@ size_memory()
 int
 getcpuspeed()
 {
-	struct bugbrdid brdid;
+	struct mvmeprom_brdid brdid;
 	int speed = 0;
 	int i, c;
 	bugbrdid(&brdid);
@@ -376,7 +382,7 @@ getcpuspeed()
 int
 getscsiid()
 {
-	struct bugbrdid brdid;
+	struct mvmeprom_brdid brdid;
 	int scsiid = 0;
 	int i, c;
 	bugbrdid(&brdid);
@@ -699,6 +705,9 @@ allocsys(v)
 	    v = (caddr_t)(((name) = (type *)v) + (num))
 
 #ifdef SYSVSHM
+	shminfo.shmmax = shmmaxpgs;
+	shminfo.shmall = shmmaxpgs;
+	shminfo.shmseg = shmseg;
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM
@@ -714,9 +723,6 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
-#endif
 	/*
 	 * Determine how many buffers to allocate.  We use 10% of the
 	 * first 2MB of memory, and 5% of the rest, with a minimum of 16
@@ -728,7 +734,7 @@ allocsys(v)
 			bufpages = physmem / 10;
 		else
 			bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-			    BUFCACHEPERCENT / 100;
+			    bufcachepercent / 100;
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;
@@ -1012,7 +1018,7 @@ sendsig(catcher, sig, mask, code, type, val)
  * Return to previous pc and psl as specified by
  * context left by sendsig. Check carefully to
  * make sure that the user has not modified the
- * psl to gain improper priviledges or to cause
+ * psl to gain improper privileges or to cause
  * a machine fault.
  */
 
@@ -1176,6 +1182,7 @@ haltsys:
 	} else {
 		doboot();
 	}
+
 	for (;;);  /* to keep compiler happy, and me from going crazy */
 	/*NOTREACHED*/
 }
@@ -1260,7 +1267,7 @@ dumpsys()
 	int psize;
 	daddr_t blkno;		/* current block to write */
 				/* dump routine */
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int pg;			/* page being dumped */
 	paddr_t maddr;		/* PA being dumped */
 	int error;		/* error code from (*dump)() */
@@ -2156,7 +2163,7 @@ void
 myetheraddr(cp)
 	u_char *cp;
 {
-	struct bugbrdid brdid;
+	struct mvmeprom_brdid brdid;
 
 	bugbrdid(&brdid);
 	bcopy(&brdid.etheraddr, cp, 6);
@@ -2314,10 +2321,9 @@ mvme_bootstrap()
 {
 	extern int kernelstart;
 	extern struct consdev *cn_tab;
-	extern void set_tcfp __P((void));
+	extern void set_tcfp(void);
 
-	struct bugbrdid brdid;
-	
+	struct mvmeprom_brdid brdid;
 	
 	/*
 	 * Must initialize p_addr before autoconfig or
@@ -2334,7 +2340,7 @@ mvme_bootstrap()
 
 	buginit(); /* init the bug routines */
 	bugbrdid(&brdid);
-	brdtyp = brdid.brdno;
+	brdtyp = brdid.model;
 
 	/* to support the M8120.  It's based off of MVME187 */
 	if (brdtyp == BRD_8120)

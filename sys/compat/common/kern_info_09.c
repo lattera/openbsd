@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_09.c,v 1.8 2001/11/06 19:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_info_09.c,v 1.8.2.1 2002/06/11 03:28:07 art Exp $	*/
 /*	$NetBSD: kern_info_09.c,v 1.5 1996/02/21 00:10:59 cgd Exp $	*/
 
 /*
@@ -114,8 +114,8 @@ compat_09_sys_uname(p, v, retval)
 		syscallarg(struct outsname *) name;
 	} */ *uap = v;
 	struct outsname outsname;
-	char *cp, *dp, *ep;
-	extern char ostype[], osrelease[];
+	const char *cp;
+	char *dp, *ep;
 
 	strncpy(outsname.sysname, ostype, sizeof(outsname.sysname));
 	strncpy(outsname.nodename, hostname, sizeof(outsname.nodename));

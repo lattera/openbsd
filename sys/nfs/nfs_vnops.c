@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.44.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.44.2.3 2002/06/11 03:32:04 art Exp $	*/
 /*	$NetBSD: nfs_vnops.c,v 1.62.4.1 1996/07/08 20:26:52 jtc Exp $	*/
 
 /*
@@ -86,7 +86,7 @@
 /*
  * Global vfs data structures for nfs
  */
-int (**nfsv2_vnodeop_p) __P((void *));
+int (**nfsv2_vnodeop_p)(void *);
 struct vnodeopv_entry_desc nfsv2_vnodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, nfs_lookup },	/* lookup */
@@ -137,7 +137,7 @@ struct vnodeopv_desc nfsv2_vnodeop_opv_desc =
 /*
  * Special device vnode ops
  */
-int (**spec_nfsv2nodeop_p) __P((void *));
+int (**spec_nfsv2nodeop_p)(void *);
 struct vnodeopv_entry_desc spec_nfsv2nodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, spec_lookup },	/* lookup */
@@ -183,7 +183,7 @@ struct vnodeopv_desc spec_nfsv2nodeop_opv_desc =
 	{ &spec_nfsv2nodeop_p, spec_nfsv2nodeop_entries };
 
 #ifdef FIFO
-int (**fifo_nfsv2nodeop_p) __P((void *));
+int (**fifo_nfsv2nodeop_p)(void *);
 struct vnodeopv_entry_desc fifo_nfsv2nodeop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
 	{ &vop_lookup_desc, fifo_lookup },	/* lookup */
@@ -2538,7 +2538,7 @@ int
 nfs_commit(vp, offset, cnt, procp)
 	struct vnode *vp;
 	u_quad_t offset;
-	unsigned cnt;
+	unsigned int cnt;
 	struct proc *procp;
 {
 	caddr_t cp;
@@ -2897,7 +2897,7 @@ nfsfifo_read(v)
 		int  a_ioflag;
 		struct ucred *a_cred;
 	} */ *ap = v;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 	struct nfsnode *np = VTONFS(ap->a_vp);
 
 	/*
@@ -2922,7 +2922,7 @@ nfsfifo_write(v)
 		int  a_ioflag;
 		struct ucred *a_cred;
 	} */ *ap = v;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 	struct nfsnode *np = VTONFS(ap->a_vp);
 
 	/*
@@ -2952,7 +2952,7 @@ nfsfifo_close(v)
 	struct vnode *vp = ap->a_vp;
 	struct nfsnode *np = VTONFS(vp);
 	struct vattr vattr;
-	extern int (**fifo_vnodeop_p) __P((void *));
+	extern int (**fifo_vnodeop_p)(void *);
 
 	if (np->n_flag & (NACC | NUPD)) {
 		if (np->n_flag & NACC) {

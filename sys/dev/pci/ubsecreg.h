@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsecreg.h,v 1.15.2.1 2002/01/31 22:55:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsecreg.h,v 1.15.2.2 2002/06/11 03:42:27 art Exp $	*/
 
 /*
  * Copyright (c) 2000 Theo de Raadt
@@ -26,6 +26,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /*
@@ -165,4 +170,22 @@ struct ubsec_ctx_rngbypass {
 	volatile u_int16_t	rbp_len;	/* command length, 64 */
 	volatile u_int16_t	rbp_op;		/* rng bypass, 0x41 */
 	volatile u_int8_t	rbp_pad[60];	/* padding */
+};
+
+/* modexp: C = (M ^ E) mod N */
+struct ubsec_ctx_modexp {
+	volatile u_int16_t	me_len;		/* command length */
+	volatile u_int16_t	me_op;		/* modexp, 0x47 */
+	volatile u_int16_t	me_E_len;	/* E (bits) */
+	volatile u_int16_t	me_N_len;	/* N (bits) */
+	u_int8_t		me_N[1024/8];	/* N */
+};
+
+struct ubsec_ctx_rsapriv {
+	volatile u_int16_t	rpr_len;	/* command length */
+	volatile u_int16_t	rpr_op;		/* rsaprivate, 0x04 */
+	volatile u_int16_t	rpr_q_len;	/* q (bits) */
+	volatile u_int16_t	rpr_p_len;	/* p (bits) */
+	u_int8_t		rpr_buf[5 * 1024 / 8];	/* parameters: */
+						/* p, q, dp, dq, pinv */
 };

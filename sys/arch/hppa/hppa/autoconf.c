@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.15 2001/06/25 00:43:10 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.15.4.1 2002/06/11 03:35:36 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -61,13 +61,14 @@
 
 #include <hppa/dev/cpudevs.h>
 
-void	setroot __P((void));
-void	swapconf __P((void));
-void	dumpconf __P((void));
+void	setroot(void);
+void	swapconf(void);
+void	dumpconf(void);
 
-static int findblkmajor __P((struct device *dv));
+int findblkmajor(struct device *dv);
+const char *findblkname(int maj);
 
-void (*cold_hook) __P((void)); /* see below */
+void (*cold_hook)(int); /* see below */
 register_t	kpsw = PSW_Q | PSW_P | PSW_C | PSW_D;
 
 /*
@@ -75,7 +76,7 @@ register_t	kpsw = PSW_Q | PSW_P | PSW_C | PSW_D;
  */
 #ifdef USELEDS
 struct timeout heartbeat_tmo;
-void heartbeat __P((void *));
+void heartbeat(void *);
 extern int hz;
 #endif
 
@@ -100,7 +101,7 @@ cpu_configure()
 	dumpconf();
 	cold = 0;
 	if (cold_hook)
-		(*cold_hook)();
+		(*cold_hook)(HPPA_COLD_HOT);
 
 #ifdef USELEDS
 	timeout_set(&heartbeat_tmo, heartbeat, NULL);
@@ -227,7 +228,7 @@ static const struct nam2blk {
 /*static struct device fakerdrootdev = { DV_DISK, {}, NULL, 0, "rd0", NULL };*/
 #endif
 
-static int
+int
 findblkmajor(dv)
 	struct device *dv;
 {
@@ -239,6 +240,19 @@ findblkmajor(dv)
 			return (nam2blk[i].maj);
 	return (-1);
 }
+
+const char *
+findblkname(maj)
+	int maj;
+{
+	register int i;
+
+	for (i = 0; i < sizeof(nam2blk) / sizeof(nam2blk[0]); ++i)
+		if (maj == nam2blk[i].maj)
+			return (nam2blk[i].name);
+	return (NULL);
+} 
+
 
 /*
  * Attempt to find the device from which we were booted.
@@ -254,7 +268,9 @@ setroot()
 {
 	struct swdevt *swp;
 	dev_t temp, nswapdev;
+	const char *rootdevname;
 	struct device *bootdv;
+	struct device *swapdv;
 	int majdev, unit, part;
 #ifdef NFSCLIENT
 	extern char *nfsbootdevname;
@@ -297,6 +313,10 @@ setroot()
 		}
 		swdevt[0].sw_dev = nswapdev;
 		swdevt[1].sw_dev = NODEV;
+		rootdevname = findblkname(major(rootdev));
+		if (rootdevname == NULL) {
+			return;
+		}
 
 	} else {
 
@@ -323,8 +343,12 @@ setroot()
 		majdev = major(rootdev);
 		unit = DISKUNIT(rootdev);
 		part = DISKPART(rootdev);
-		printf("root on %s%c\n", bootdv->dv_xname,
-		    part + 'a');
+		printf("root on %s%c", bootdv->dv_xname,
+		    DISKPART(rootdev) + 'a');
+		if (nswapdev != NODEV)
+			printf(" swap on %s%c", swapdv->dv_xname,
+			    DISKPART(nswapdev) + 'a');
+		printf("\n");
 		break;
 #endif
 	default:
@@ -389,6 +413,16 @@ pdc_scanbus(self, ca, bus, maxmod)
 		nca.ca_pdc_iodc_read = &pdc_iodc_read;
 		nca.ca_name = hppa_mod_info(nca.ca_type.iodc_type,
 					    nca.ca_type.iodc_sv_model);
+
+		if (autoconf_verbose) {
+			printf(">> probing: flags %b bc %d/%d/%d/%d/%d/%d ",
+			    dp.dp_flags, PZF_BITS,
+			    dp.dp_bc[0], dp.dp_bc[1], dp.dp_bc[2],
+			    dp.dp_bc[3], dp.dp_bc[4], dp.dp_bc[5]);
+			printf("mod %x hpa %x type %x sv %x\n",
+			    dp.dp_mod, pdc_memmap.hpa,
+			    nca.ca_type.iodc_type, nca.ca_type.iodc_sv_model);
+		}
 
 		config_found_sm(self, &nca, mbprint, mbsubmatch);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_pdaemon.h,v 1.8 2001/11/28 19:28:15 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_pdaemon.h,v 1.8.2.1 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_pdaemon.h,v 1.9 2001/05/25 04:06:17 chs Exp $	*/
 
 /*
@@ -80,7 +80,7 @@
  * prototypes
  */
 
-void uvm_wait __P((const char *));
+void uvm_wait(const char *);
 
 #endif /* _KERNEL */
 

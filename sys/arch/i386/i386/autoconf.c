@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.41.2.1 2002/01/31 22:55:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.41.2.2 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -65,13 +65,13 @@
 
 #include <dev/cons.h>
 
-int findblkmajor __P((struct device *dv));
-char *findblkname __P((int));
+int findblkmajor(struct device *dv);
+char *findblkname(int);
 
-void rootconf __P((void));
-void swapconf __P((void));
-void setroot __P((void));
-void diskconf __P((void));
+void rootconf(void);
+void swapconf(void);
+void setroot(void);
+void diskconf(void);
 
 /*
  * The following several variables are related to
@@ -86,6 +86,10 @@ dev_t	bootdev = 0;		/* bootdevice, initialized in locore.s */
 void
 cpu_configure()
 {
+	/*
+	 * Note, on i386, configure is not running under splhigh unlike other
+	 * architectures.  This fact is used by the pcmcia irq line probing.
+	 */
 
 	startrtclock();
 
@@ -234,9 +238,9 @@ setroot()
 	 * If the original rootdev is the same as the one
 	 * just calculated, don't need to adjust the swap configuration.
 	 */
+	printf("root on %s%d%c\n", findblkname(majdev), unit, part + 'a');
 	if (rootdev == orootdev)
 		return;
-	printf("root on %s%d%c\n", findblkname(majdev), unit, part + 'a');
 
 #ifdef DOSWAP
 	for (swp = swdevt; swp->sw_dev != NODEV; swp++) {
@@ -394,6 +398,14 @@ noask:
 		setroot();
 	} else {
 		/* preconfigured */
+		int  majdev, unit, part;
+
+		majdev = major(rootdev);
+		if (findblkname(majdev) == NULL)
+			return;
+		part = minor(rootdev) % MAXPARTITIONS;
+		unit = minor(rootdev) / MAXPARTITIONS;
+		printf("root on %s%d%c\n", findblkname(majdev), unit, part + 'a');
 		return;
 	}
 

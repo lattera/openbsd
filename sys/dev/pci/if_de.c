@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.52 2001/11/06 19:53:19 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.52.2.1 2002/06/11 03:42:25 art Exp $	*/
 /*	$NetBSD: if_de.c,v 1.45 1997/06/09 00:34:18 thorpej Exp $	*/
 
 /*-
@@ -11,7 +11,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -5025,7 +5025,7 @@ tulip_pci_shutdown(
 }
 #endif
 
-static char*
+static char *
 tulip_pci_probe(
     pcici_t config_id,
     pcidi_t device_id)
@@ -5236,7 +5236,7 @@ tulip_pci_probe(
 	    || PCI_CHIPID(pa->pa_id) == CHIPID_21041
 	    || PCI_CHIPID(pa->pa_id) == CHIPID_21140
 	    || PCI_CHIPID(pa->pa_id) == CHIPID_21142)
-	return 1;
+	return 2;
 
     return 0;
 }
@@ -5561,7 +5561,7 @@ tulip_pci_attach(
 #endif
 #if defined(__FreeBSD__)
 	if ((sc->tulip_features & TULIP_HAVE_SLAVEDINTR) == 0) {
-	    if (!pci_map_int (config_id, intr_rtn, (void*) sc, &net_imask)) {
+	    if (!pci_map_int (config_id, intr_rtn, (void *) sc, &net_imask)) {
 		printf(TULIP_PRINTF_FMT ": couldn't map interrupt\n",
 		       TULIP_PRINTF_ARGS);
 		return;

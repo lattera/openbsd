@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.30.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.30.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -46,6 +46,7 @@
 #include <sys/dkstat.h>
 #include <sys/timeout.h>
 #include <sys/kernel.h>
+#include <sys/limits.h>
 #include <sys/proc.h>
 #include <sys/resourcevar.h>
 #include <sys/signalvar.h>
@@ -55,7 +56,6 @@
 #include <sys/sched.h>
 
 #include <machine/cpu.h>
-#include <machine/limits.h>
 
 #ifdef GPROF
 #include <sys/gmon.h>
@@ -691,20 +691,11 @@ hardclock(frame)
 	 * relatively high clock interrupt priority any longer than necessary.
 	 */
 	if (timeout_hardclock_update()) {
-		if (CLKF_BASEPRI(frame)) {
-			/*
-			 * Save the overhead of a software interrupt;
-			 * it will happen as soon as we return, so do it now.
-			 */
-			spllowersoftclock();
-			softclock();
-		} else {
 #ifdef __HAVE_GENERIC_SOFT_INTERRUPTS
-			softintr_schedule(softclock_si);
+		softintr_schedule(softclock_si);
 #else
-			setsoftclock();
+		setsoftclock();
 #endif
-		}
 	}
 }
 
@@ -751,6 +742,52 @@ hzto(tv)
 	if (sec < 0 || (sec == 0 && usec <= 0)) {
 		ticks = 0;
 	} else if (sec <= LONG_MAX / 1000000)
+		ticks = (sec * 1000000 + (unsigned long)usec + (tick - 1))
+		    / tick + 1;
+	else if (sec <= LONG_MAX / hz)
+		ticks = sec * hz
+		    + ((unsigned long)usec + (tick - 1)) / tick + 1;
+	else
+		ticks = LONG_MAX;
+	if (ticks > INT_MAX)
+		ticks = INT_MAX;
+	return ((int)ticks);
+}
+
+/*
+ * Compute number of hz in the specified amount of time.
+ */
+int
+tvtohz(struct timeval *tv)
+{
+	unsigned long ticks;
+	long sec, usec;
+
+	/*
+	 * If the number of usecs in the whole seconds part of the time
+	 * fits in a long, then the total number of usecs will
+	 * fit in an unsigned long.  Compute the total and convert it to
+	 * ticks, rounding up and adding 1 to allow for the current tick
+	 * to expire.  Rounding also depends on unsigned long arithmetic
+	 * to avoid overflow.
+	 *
+	 * Otherwise, if the number of ticks in the whole seconds part of
+	 * the time fits in a long, then convert the parts to
+	 * ticks separately and add, using similar rounding methods and
+	 * overflow avoidance.  This method would work in the previous
+	 * case but it is slightly slower and assumes that hz is integral.
+	 *
+	 * Otherwise, round the time down to the maximum
+	 * representable value.
+	 *
+	 * If ints have 32 bits, then the maximum value for any timeout in
+	 * 10ms ticks is 248 days.
+	 */
+	sec = tv->tv_sec;
+	usec = tv->tv_usec;
+	if (sec < 0 || (sec == 0 && usec <= 0))
+		ticks = 0;
+	else if (sec <= LONG_MAX / 1000000)
 		ticks = (sec * 1000000 + (unsigned long)usec + (tick - 1))
 		    / tick + 1;
 	else if (sec <= LONG_MAX / hz)
@@ -824,7 +861,7 @@ statclock(frame)
 	if (CLKF_USERMODE(frame)) {
 		p = curproc;
 		if (p->p_flag & P_PROFIL)
-			addupc_intr(p, CLKF_PC(frame), 1);
+			addupc_intr(p, CLKF_PC(frame));
 		if (--pscnt > 0)
 			return;
 		/*

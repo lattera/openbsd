@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.7 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.7.2.1 2002/06/11 03:37:10 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -32,17 +32,18 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/buf.h>
 #include <sys/systm.h>
 #include <sys/uio.h>
 #include <sys/malloc.h>
-
 #include <sys/device.h>
-#include <machine/cpu.h>
+
 #include <machine/autoconf.h>
+#include <machine/conf.h>
+#include <machine/cpu.h>
 #include <machine/mioctl.h>
+
 #include <uvm/uvm_extern.h>
 
 struct sramsoftc {
@@ -52,8 +53,8 @@ struct sramsoftc {
 	int		sc_len;
 };
 
-void sramattach __P((struct device *, struct device *, void *));
-int  srammatch __P((struct device *, void *, void *));
+void sramattach(struct device *, struct device *, void *);
+int  srammatch(struct device *, void *, void *);
 
 struct cfattach sram_ca = {
 	sizeof(struct sramsoftc), srammatch, sramattach
@@ -136,9 +137,10 @@ sramattach(parent, self, args)
 
 /*ARGSUSED*/
 int
-sramopen(dev, flag, mode)
+sramopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 	if (minor(dev) >= sram_cd.cd_ndevs ||
 	    sram_cd.cd_devs[minor(dev)] == NULL)
@@ -148,9 +150,10 @@ sramopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-sramclose(dev, flag, mode)
+sramclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -159,9 +162,10 @@ sramclose(dev, flag, mode)
 /*ARGSUSED*/
 int
 sramioctl(dev, cmd, data, flag, p)
-	dev_t   dev;
+	dev_t dev;
+	u_long cmd;
 	caddr_t data;
-	int     cmd, flag;
+	int flag;
 	struct proc *p;
 {
 	int unit = minor(dev);

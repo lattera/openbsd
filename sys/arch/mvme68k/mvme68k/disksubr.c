@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.23 2001/08/06 20:45:07 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/disksubr.c,v 1.23.4.1 2002/06/11 03:36:50 art Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -31,9 +31,9 @@
  */
 
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/buf.h>
 #include <sys/device.h>
-#define DKTYPENAMES
 #include <sys/disklabel.h>
 #include <sys/disk.h>
 
@@ -48,14 +48,14 @@
 int disksubr_debug = 0;
 #endif
 
-static void bsdtocpulabel __P((struct disklabel *lp,
-	struct cpu_disklabel *clp));
-static void cputobsdlabel __P((struct disklabel *lp,
-	struct cpu_disklabel *clp));
+static void bsdtocpulabel(struct disklabel *lp,
+	struct cpu_disklabel *clp);
+static void cputobsdlabel(struct disklabel *lp,
+	struct cpu_disklabel *clp);
 
 #ifdef DEBUG
-static void printlp __P((struct disklabel *lp, char *str));
-static void printclp __P((struct cpu_disklabel *clp, char *str));
+static void printlp(struct disklabel *lp, char *str);
+static void printclp(struct cpu_disklabel *clp, char *str);
 #endif
 
 void
@@ -113,7 +113,7 @@ dk_establish(dk, dev)
 char *
 readdisklabel(dev, strat, lp, clp, spoofonly)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	struct disklabel *lp;
 	struct cpu_disklabel *clp;
 	int spoofonly;
@@ -185,12 +185,12 @@ readdisklabel(dev, strat, lp, clp, spoofonly)
  */
 int
 setdisklabel(olp, nlp, openmask, clp)
-	register struct disklabel *olp, *nlp;
+	struct disklabel *olp, *nlp;
 	u_long openmask;
 	struct cpu_disklabel *clp;
 {
-	register i;
-	register struct partition *opp, *npp;
+	int i;
+	struct partition *opp, *npp;
 
 #ifdef DEBUG
 	if(disksubr_debug > 0) {
@@ -251,9 +251,10 @@ setdisklabel(olp, nlp, openmask, clp)
 /*
  * Write disk label back to device after modification.
  */
+int
 writedisklabel(dev, strat, lp, clp)
 	dev_t dev;
-	void (*strat)();
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *clp;
 {
@@ -277,7 +278,7 @@ writedisklabel(dev, strat, lp, clp)
 	bp->b_cylin = 0; /* contained in block 0 */
 	(*strat)(bp);
 
-	if (error = biowait(bp)) {
+	if ((error = biowait(bp)) != 0) {
 		/* nothing */
 	} else {
 		bcopy(bp->b_data, clp, sizeof(struct cpu_disklabel));
@@ -536,7 +537,6 @@ cputobsdlabel(lp, clp)
 	int i;
 
 	if (clp->version == 0) {
-		struct cpu_disklabel_old *clpo = (void *) clp;
 #ifdef DEBUG
 		if (disksubr_debug > 0) {
 			printf("Reading old disklabel\n");

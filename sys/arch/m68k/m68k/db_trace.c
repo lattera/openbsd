@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.14 2001/12/06 23:45:23 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.14.2.1 2002/06/11 03:36:06 art Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.20 1997/02/05 05:10:25 scottr Exp $	*/
 
 /* 
@@ -44,7 +44,7 @@ extern label_t	*db_recover;
 /*
  * Register list
  */
-static int db_var_short __P((struct db_variable *, db_expr_t *, int));
+static int db_var_short(struct db_variable *, db_expr_t *, int);
 
 struct db_variable db_regs[] = {
 	/* D0-D7 */
@@ -78,9 +78,9 @@ db_var_short(varp, valp, op)
     int op;
 {
     if (op == DB_VAR_GET)
-	*valp = (db_expr_t) *((short*)varp->valuep);
+	*valp = (db_expr_t) *((short *)varp->valuep);
     else
-	*((short*)varp->valuep) = (short) *valp;
+	*((short *)varp->valuep) = (short) *valp;
     return(0);
 }
 
@@ -114,10 +114,10 @@ struct stackpos {
 	 int	k_regloc[NREGISTERS];
 };
 
-static void findentry __P((struct stackpos *));
-static void findregs __P((struct stackpos *, db_addr_t));
-static int  nextframe __P((struct stackpos *, int));
-static void stacktop __P((db_regs_t *, struct stackpos *));
+static void findentry(struct stackpos *);
+static void findregs(struct stackpos *, db_addr_t);
+static int  nextframe(struct stackpos *, int);
+static void stacktop(db_regs_t *, struct stackpos *);
 
 
 #define FR_SAVFP	0
@@ -466,11 +466,12 @@ findregs(sp, addr)
  *	Frame tracing.
  */
 void
-db_stack_trace_cmd(addr, have_addr, count, modif)
+db_stack_trace_print(addr, have_addr, count, modif, pr)
 	db_expr_t	addr;
 	int		have_addr;
 	db_expr_t	count;
 	char		*modif;
+	int		(*pr)(const char *, ...);
 {
 	int i, nargs;
 	long val;
@@ -579,7 +580,7 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 			fault_pc = 0;
 		}
 
-		db_printf("%s", name);
+		(*pr)("%s", name);
 		if (pos.k_entry != MAXINT && name) {
 			char *	entry_name;
 			long	e_val;
@@ -588,22 +589,22 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 			    &e_val);
 			if (entry_name != 0 && entry_name != name &&
 			    e_val != val) {
-				db_printf("(?)\n%s", entry_name);
+				(*pr)("(?)\n%s", entry_name);
 			}
 		}
-		db_printf("(");
+		(*pr)("(");
 		regp = pos.k_fp + FR_SAVFP + 4;
 		if ((nargs = pos.k_nargs)) {
 			while (nargs--) {
-				db_printf("%lx", get(regp += 4, DSP));
+				(*pr)("%lx", get(regp += 4, DSP));
 				if (nargs)
-					db_printf(",");
+					(*pr)(",");
 			}
 		}
 		if (val == MAXINT)
-			db_printf(") at %x\n", pos.k_pc);
+			(*pr)(") at %x\n", pos.k_pc);
 		else
-			db_printf(") + %lx\n", val);
+			(*pr)(") + %lx\n", val);
 
 		/*
 		 * Stop tracing if frame ptr no longer points into kernel

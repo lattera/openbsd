@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/proc.h,v 1.5 2000/11/08 16:01:13 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/proc.h,v 1.5.6.1 2002/06/11 03:33:40 art Exp $	*/
 /*	$NetBSD: proc.h,v 1.2 1995/03/24 15:01:36 cgd Exp $	*/
 
 /*
@@ -33,14 +33,43 @@
  * Machine-dependent part of the proc struct for the Alpha.
  */
 
-struct mdproc {
-	u_long	md_flags;
-	struct	trapframe *md_tf;	/* trap/syscall registers */
-	struct pcb *md_pcbpaddr;	/* phys addr of the pcb */
+struct mdbpt {
+	vaddr_t	addr;
+	u_int32_t contents;
 };
 
+struct mdproc {
+	u_long md_flags;
+	struct trapframe *md_tf;	/* trap/syscall registers */
+	struct pcb *md_pcbpaddr;	/* phys addr of the pcb */
+	struct mdbpt md_sstep[2];	/* two breakpoints for sstep */
+};
+
+/*
+ * md_flags usage
+ * --------------
+ * MDP_FPUSED
+ *      A largely unused bit indicating the presence of FPU history.
+ *      Cleared on exec. Set but not used by the fpu context switcher
+ *      itself.
+ * 
+ * MDP_FP_C
+ *      The architected FP Control word. It should forever begin at bit 1,
+ *      as the bits are AARM specified and this way it doesn't need to be
+ *      shifted.
+ * 
+ *      Until C99 there was never an IEEE 754 API, making most of the
+ *      standard useless.  Because of overlapping AARM, OSF/1, NetBSD, and
+ *      C99 API's, the use of the MDP_FP_C bits is defined variously in
+ *      ieeefp.h and fpu.h.
+ */
 #define	MDP_FPUSED	0x0001		/* Process used the FPU */
+#ifndef NO_IEEE
+#define	MDP_FP_C	0x7ffffe	/* Extended FP_C Quadword bits */
+#endif
+#define MDP_STEP1	0x0002		/* Single step normal */
+#define MDP_STEP2	0x0003		/* Single step branch */
 
 #ifdef _KERNEL
-void switch_exit __P((struct proc *));
+void switch_exit(struct proc *);
 #endif

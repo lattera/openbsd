@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/Attic/float.h,v 1.3 1997/08/01 21:35:28 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/Attic/float.h,v 1.3.22.1 2002/06/11 03:36:06 art Exp $	*/
 /*	$NetBSD: float.h,v 1.10 1995/06/20 20:45:41 jtc Exp $	*/
 
 /*
@@ -42,7 +42,7 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int __flt_rounds __P((void));
+int __flt_rounds(void);
 __END_DECLS
 
 #define FLT_RADIX	2		/* b */

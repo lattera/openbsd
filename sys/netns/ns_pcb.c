@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netns/Attic/ns_pcb.c,v 1.3 1996/04/21 22:30:11 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netns/Attic/ns_pcb.c,v 1.3.26.1 2002/06/11 03:31:38 art Exp $	*/
 /*	$NetBSD: ns_pcb.c,v 1.10 1996/03/27 14:44:14 christos Exp $	*/
 
 /*
@@ -289,7 +289,7 @@ ns_pcbnotify(dst, errno, notify, param)
 	register struct ns_addr *dst;
 	long param;
 	int errno;
-	void (*notify) __P((struct nspcb *));
+	void (*notify)(struct nspcb *);
 {
 	register struct nspcb *nsp, *oinp;
 	int s = splimp();

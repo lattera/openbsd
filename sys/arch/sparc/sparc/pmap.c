@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.2 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.3 2002/06/11 03:38:17 art Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -1099,10 +1099,10 @@ mmu_setup4m_L3(pagtblptd, sp)
 /*
  * MMU management.
  */
-struct mmuentry *me_alloc __P((struct mmuhd *, struct pmap *, int, int));
-void		me_free __P((struct pmap *, u_int));
-struct mmuentry	*region_alloc __P((struct mmuhd *, struct pmap *, int));
-void		region_free __P((struct pmap *, u_int));
+struct mmuentry *me_alloc(struct mmuhd *, struct pmap *, int, int);
+void		me_free(struct pmap *, u_int);
+struct mmuentry	*region_alloc(struct mmuhd *, struct pmap *, int);
+void		region_free(struct pmap *, u_int);
 
 /*
  * Change contexts.  We need the old context number as well as the new
@@ -1662,7 +1662,6 @@ ctx_alloc(pm)
 		 */
 
 		setcontext4(cnum);
-		splx(s);
 		if (doflush)
 			cache_flush_context();
 
@@ -1689,6 +1688,7 @@ ctx_alloc(pm)
 				rp++;
 			}
 		}
+		splx(s);
 
 	} else if (CPU_ISSUN4M) {
 
@@ -2474,10 +2474,10 @@ int nptesg;
 #endif
 
 #if defined(SUN4M)
-static void pmap_bootstrap4m __P((void));
+static void pmap_bootstrap4m(void);
 #endif
 #if defined(SUN4) || defined(SUN4C)
-static void pmap_bootstrap4_4c __P((int, int, int));
+static void pmap_bootstrap4_4c(int, int, int);
 #endif
 
 /*
@@ -2491,13 +2491,14 @@ void
 pmap_bootstrap(nctx, nregion, nsegment)
 	int nsegment, nctx, nregion;
 {
+	extern int nbpg;	/* locore.s */
 
-	uvmexp.pagesize = NBPG;
+	uvmexp.pagesize = nbpg;
 	uvm_setpagesize();
 
 #if defined(SUN4) && (defined(SUN4C) || defined(SUN4M))
 	/* In this case NPTESG is not a #define */
-	nptesg = (NBPSG >> pgshift);
+	nptesg = (NBPSG >> uvmexp.pageshift);
 #endif
 
 #if 0

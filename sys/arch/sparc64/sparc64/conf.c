@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.1 2002/01/31 22:55:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.2 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -55,6 +55,12 @@
 
 #include <machine/conf.h>
 
+/* open, close, write, ioctl */
+#define cdev_lpt_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+	0, seltrue, (dev_type_mmap((*))) enodev }
+
 #include "pty.h"
 #include "bpfilter.h"
 #include "tun.h"
@@ -77,6 +83,7 @@
 #include "sab.h"
 #include "pcons.h"
 #include "com.h"
+#include "lpt.h"
 #ifdef notyet
 #include "bpp.h"
 #else
@@ -96,6 +103,11 @@
 #include "wskbd.h"
 #include "wsmouse.h"
 #include "wsmux.h"
+
+#ifdef USER_PCICONF
+#include "pci.h"
+cdev_decl(pci);
+#endif
 
 #include "rd.h"
 #include "ses.h"
@@ -119,6 +131,8 @@ cdev_decl(xfs_dev);
 
 #include "ksyms.h"
 #include "inet.h"
+
+#include "systrace.h"
 
 struct bdevsw	bdevsw[] =
 {
@@ -190,7 +204,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 34 */
 	cdev_notdef(),			/* 35 */
 	cdev_tty_init(NCOM,com),	/* 36: NS16x50 compatible ports */
-	cdev_notdef(),			/* 37 */
+	cdev_lpt_init(NLPT,lpt),	/* 37: parallel printer */
 	cdev_notdef(),			/* 38 */
 	cdev_notdef(),			/* 39 */
 	cdev_notdef(),			/* 40 */
@@ -203,13 +217,17 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 47 */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
 	cdev_notdef(),			/* 51 */
 #endif
+#ifdef USER_PCICONF
+	cdev_pci_init(NPCI,pci),	/* 52: PCI user */
+#else
 	cdev_notdef(),			/* 52 */
+#endif
 	cdev_notdef(),			/* 53 */
 	cdev_disk_init(NFD,fd),		/* 54: floppy disk */
 	cdev_notdef(),			/* 55 */

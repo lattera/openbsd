@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fmsreg.h,v 1.2 2002/05/28 04:19:53 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/fmsreg.h,v 1.2.2.1 2002/06/11 03:42:24 art Exp $	*/
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-

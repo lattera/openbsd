@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/obio.c,v 1.10.2.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/obio.c,v 1.10.2.2 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: obio.c,v 1.37 1997/07/29 09:58:11 fair Exp $	*/
 
 /*
@@ -74,20 +74,20 @@ struct bus_softc {
 
 
 /* autoconfiguration driver */
-static int	busmatch __P((struct device *, void *, void *));
-static void	obioattach __P((struct device *, struct device *, void *));
-static void	vmesattach __P((struct device *, struct device *, void *));
-static void	vmelattach __P((struct device *, struct device *, void *));
-static void	vmeattach __P((struct device *, struct device *, void *));
+static int	busmatch(struct device *, void *, void *);
+static void	obioattach(struct device *, struct device *, void *);
+static void	vmesattach(struct device *, struct device *, void *);
+static void	vmelattach(struct device *, struct device *, void *);
+static void	vmeattach(struct device *, struct device *, void *);
 
-int		busprint __P((void *, const char *));
-int		vmeprint __P((void *, const char *));
-static int	busattach __P((struct device *, void *, void *, int));
-int		obio_scan __P((struct device *, void *, void *));
-int 		vmes_scan __P((struct device *, void *, void *));
-int 		vmel_scan __P((struct device *, void *, void *));
-void		vmebus_translate __P((struct device *, struct confargs *, int));
-int 		vmeintr __P((void *));
+int		busprint(void *, const char *);
+int		vmeprint(void *, const char *);
+static int	busattach(struct device *, void *, void *, int);
+int		obio_scan(struct device *, void *, void *);
+int 		vmes_scan(struct device *, void *, void *);
+int 		vmel_scan(struct device *, void *, void *);
+void		vmebus_translate(struct device *, struct confargs *, int);
+int 		vmeintr(void *);
 
 struct cfattach obio_ca = {
 	sizeof(struct bus_softc), busmatch, obioattach
@@ -598,9 +598,10 @@ vmeintr(arg)
 }
 
 void
-vmeintr_establish(vec, level, ih)
+vmeintr_establish(vec, level, ih, ipl_block)
 	int vec, level;
 	struct intrhand *ih;
+	int ipl_block;
 {
 	struct intrhand *ihs;
 
@@ -630,7 +631,7 @@ vmeintr_establish(vec, level, ih)
 	bzero(ihs, sizeof *ihs);
 	ihs->ih_fun = vmeintr;
 	ihs->ih_arg = (void *)level;
-	intr_establish(level, ihs);
+	intr_establish(level, ihs, ipl_block);
 }
 
 #define	getpte(va)		lda(va, ASI_PTE)

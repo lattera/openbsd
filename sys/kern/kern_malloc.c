@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.44.2.2 2002/02/02 03:28:25 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.44.2.3 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*

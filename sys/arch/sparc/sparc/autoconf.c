@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.46.2.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.46.2.2 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.73 1997/07/29 09:41:53 fair Exp $ */
 
 /*
@@ -104,26 +104,26 @@ extern	int kgdb_debug_panic;
 #endif
 
 static	int rootnode;
-void	setroot __P((void));
-static	char *str2hex __P((char *, int *));
-static	int getstr __P((char *, int));
-int	findblkmajor __P((struct device *));
-char	*findblkname __P((int));
-static	struct device *getdisk __P((char *, int, int, dev_t *));
-static	int mbprint __P((void *, const char *));
-static	void crazymap __P((char *, int *));
-int	st_crazymap __P((int));
-void	swapconf __P((void));
-void	sync_crash __P((void));
-int	mainbus_match __P((struct device *, void *, void *));
-static	void mainbus_attach __P((struct device *, struct device *, void *));
+void	setroot(void);
+static	char *str2hex(char *, int *);
+static	int getstr(char *, int);
+int	findblkmajor(struct device *);
+char	*findblkname(int);
+static	struct device *getdisk(char *, int, int, dev_t *);
+static	int mbprint(void *, const char *);
+static	void crazymap(char *, int *);
+int	st_crazymap(int);
+void	swapconf(void);
+void	sync_crash(void);
+int	mainbus_match(struct device *, void *, void *);
+static	void mainbus_attach(struct device *, struct device *, void *);
 
 struct	bootpath bootpath[8];
 int	nbootpath;
-static	void bootpath_build __P((void));
-static	void bootpath_fake __P((struct bootpath *, char *));
-static	void bootpath_print __P((struct bootpath *));
-int	search_prom __P((int, char *));
+static	void bootpath_build(void);
+static	void bootpath_fake(struct bootpath *, char *);
+static	void bootpath_print(struct bootpath *);
+int	search_prom(int, char *);
 char	mainbus_model[30];
 
 /*
@@ -134,9 +134,13 @@ char	mainbus_model[30];
 struct mountroot_hook {
 	LIST_ENTRY(mountroot_hook) mr_link;
 	struct	device *mr_device;
-	void	(*mr_func) __P((struct device *));
+	void	(*mr_func)(struct device *);
 };
 LIST_HEAD(, mountroot_hook) mrh_list;
+
+#ifdef RAMDISK_HOOKS
+static struct device fakerdrootdev = { DV_DISK, {}, NULL, 0, "rd0", NULL };
+#endif
 
 /*
  * Most configuration on the SPARC is done by matching OPENPROM Forth
@@ -202,7 +206,7 @@ bootstrap()
 {
 #if defined(SUN4)
 	if (CPU_ISSUN4) {
-		extern void oldmon_w_cmd __P((u_long, char *));
+		extern void oldmon_w_cmd(u_long, char *);
 
 		/*
 		 * XXX:
@@ -272,7 +276,7 @@ bootstrap()
 		struct romaux ra;
 		register u_int pte;
 		register int i;
-		extern void setpte4m __P((u_int, u_int));
+		extern void setpte4m(u_int, u_int);
 		extern struct timer_4m *timerreg_4m;
 		extern struct counter_4m *counterreg_4m;
 
@@ -320,8 +324,8 @@ bootstrap()
 		*((u_int *)ICR_ITR) = 0;
 
 #ifdef DEBUG
-/*		printf("SINTR: mask: 0x%x, pend: 0x%x\n", *(int*)ICR_SI_MASK,
-		       *(int*)ICR_SI_PEND);
+/*		printf("SINTR: mask: 0x%x, pend: 0x%x\n", *(int *)ICR_SI_MASK,
+		       *(int *)ICR_SI_PEND);
 */
 #endif
 
@@ -385,7 +389,7 @@ bootpath_build()
 	 * that were given after the boot command.  On SS2s, pv_v0bootargs
 	 * is NULL but *promvec->pv_v2bootargs.v2_bootargs points to
 	 * "vmunix -s" or whatever.
-	 * XXX	DO THIS BEFORE pmap_boostrap?
+	 * XXX	DO THIS BEFORE pmap_bootstrap?
 	 */
 	bzero(bootpath, sizeof(bootpath));
 	bp = bootpath;
@@ -888,7 +892,6 @@ cpu_configure()
 	swapconf();
 	cold = 0;
 
-
 	/*
 	 * Re-zero proc0's user area, to nullify the effect of the
 	 * stack running into it during auto-configuration.
@@ -1269,7 +1272,7 @@ mainbus_attach(parent, dev, aux)
 			if (strcmp(cp, "zs") == 0)
 				autoconf_nzs++;
 			if (/*audio &&*/ autoconf_nzs >= 2)	/*XXX*/
-				(void) splx(11 << 8);		/*XXX*/
+				splx(11 << 8);		/*XXX*/
 #endif
 			oca.ca_bustype = BUS_MAIN;
 			(void) config_found(dev, (void *)&oca, mbprint);
@@ -1586,7 +1589,7 @@ nextsibling(node)
 	return (promvec->pv_nodeops->no_nextnode(node));
 }
 
-u_int      hexatoi __P((const char *));
+u_int      hexatoi(const char *);
 
 /* The following recursively searches a PROM tree for a given node */
 int
@@ -1794,6 +1797,9 @@ getdisk(str, len, defpart, devp)
 
 	if ((dv = parsedisk(str, len, defpart, devp)) == NULL) {
 		printf("use one of:");
+#ifdef RAMDISK_HOOKS
+		printf(" %s[a-p]", fakerdrootdev.dv_xname);
+#endif
 		for (dv = alldevs.tqh_first; dv != NULL;
 		    dv = dv->dv_list.tqe_next) {
 			if (dv->dv_class == DV_DISK)
@@ -1828,9 +1834,19 @@ parsedisk(str, len, defpart, devp)
 	} else
 		part = defpart;
 
+#ifdef RAMDISK_HOOKS
+	if (strcmp(str, fakerdrootdev.dv_xname) == 0) {
+		dv = &fakerdrootdev;
+		goto gotdisk;
+	}
+#endif
+
 	for (dv = alldevs.tqh_first; dv != NULL; dv = dv->dv_list.tqe_next) {
 		if (dv->dv_class == DV_DISK &&
 		    strcmp(str, dv->dv_xname) == 0) {
+#ifdef RAMDISK_HOOKS
+gotdisk:
+#endif
 			majdev = findblkmajor(dv);
 			unit = dv->dv_unit;
 			if (majdev < 0)
@@ -1853,7 +1869,7 @@ parsedisk(str, len, defpart, devp)
 
 void
 mountroot_hook_establish(func, dev)
-	void (*func) __P((struct device *));
+	void (*func)(struct device *);
 	struct device *dev;
 {
 	struct mountroot_hook *mrhp;
@@ -1895,7 +1911,11 @@ setroot()
 #endif
 
 	bp = nbootpath == 0 ? NULL : &bootpath[nbootpath-1];
+#ifdef RAMDISK_HOOKS
+	bootdv = &fakerdrootdev;
+#else
 	bootdv = (bp == NULL) ? NULL : bp->dev;
+#endif
 
 	/*
 	 * (raid) device auto-configuration could have returned
@@ -2027,6 +2047,9 @@ gotswap:
 		 * `root DEV swap DEV': honour rootdev/swdevt.
 		 * rootdev/swdevt/mountroot already properly set.
 		 */
+		if (bootdv->dv_class == DV_DISK)
+			printf("root on %s%c\n", bootdv->dv_xname,
+			    part + 'a');
 		majdev = major(rootdev);
 		unit = DISKUNIT(rootdev);
 		part = DISKPART(rootdev);

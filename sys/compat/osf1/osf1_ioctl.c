@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/compat/osf1/Attic/osf1_ioctl.c,v 1.4 2000/09/06 13:38:36 ericj Exp $ */
+/* 	$OpenBSD: src/sys/compat/osf1/Attic/osf1_ioctl.c,v 1.4.8.1 2002/06/11 03:28:08 art Exp $ */
 /*	$NetBSD: osf1_ioctl.c,v 1.11 1999/05/05 01:51:33 cgd Exp $	*/
 
 /*
@@ -72,14 +72,14 @@
 extern int scdebug;
 #endif
 
-int osf1_ioctl_f	__P((struct proc *p, struct sys_ioctl_args *nuap,
-			    register_t *retval, int cmd, int dir, int len));
-int osf1_ioctl_i	__P((struct proc *p, struct sys_ioctl_args *nuap,
-			    register_t *retval, int cmd, int dir, int len));
-int osf1_ioctl_t	__P((struct proc *p, struct sys_ioctl_args *nuap,
-			    register_t *retval, int cmd, int dir, int len));
-int osf1_ioctl_m 	__P((struct proc *p, struct sys_ioctl_args *nuap,
-			    register_t *retval, int cmd, int dir, int len));
+int osf1_ioctl_f(struct proc *p, struct sys_ioctl_args *nuap,
+			    register_t *retval, int cmd, int dir, int len);
+int osf1_ioctl_i(struct proc *p, struct sys_ioctl_args *nuap,
+			    register_t *retval, int cmd, int dir, int len);
+int osf1_ioctl_t(struct proc *p, struct sys_ioctl_args *nuap,
+			    register_t *retval, int cmd, int dir, int len);
+int osf1_ioctl_m(struct proc *p, struct sys_ioctl_args *nuap,
+			    register_t *retval, int cmd, int dir, int len);
 
 int
 osf1_sys_ioctl(p, v, retval)

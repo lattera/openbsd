@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/sbus/files.sbus,v 1.9.2.1 2002/01/31 22:55:38 niklas Exp $
+#	$OpenBSD: src/sys/dev/sbus/files.sbus,v 1.9.2.2 2002/06/11 03:42:29 art Exp $
 #	$NetBSD: files.sbus,v 1.16 2000/12/08 17:29:12 martin Exp $
 #
 # Config file and device description for machine-independent SBUS code.
@@ -52,11 +52,15 @@ file	dev/sbus/cs4231.c		audiocs
 attach	isp at sbus with isp_sbus
 file	dev/sbus/isp_sbus.c		isp_sbus
 
-device	cgsix: wsemuldisplaydev, wsrasteremulops, wsemul_sun
+device	bwtwo: wsemuldisplaydev, rasops1, wsemul_sun
+attach	bwtwo at sbus
+file	dev/sbus/bwtwo.c		bwtwo
+
+device	cgsix: wsemuldisplaydev, rasops8, wsemul_sun
 attach	cgsix at sbus
 file	dev/sbus/cgsix.c		cgsix
 
-device	cgthree: wsemuldisplaydev, wsrasteremulops, wsemul_sun
+device	cgthree: wsemuldisplaydev, rasops8, wsemul_sun
 attach	cgthree at sbus
 file	dev/sbus/cgthree.c		cgthree
 
@@ -78,3 +82,13 @@ file	dev/sbus/spif.c			spif | stty | sbpp needs-flag
 
 attach	uperf at sbus with uperf_sbus
 file	dev/sbus/uperf_sbus.c		uperf_sbus
+
+device asio {}
+attach asio at sbus
+attach com at asio with com_asio
+file	dev/sbus/asio.c			asio | com_asio needs-flag
+
+device apio {}
+attach apio at sbus
+attach lpt at apio with lpt_apio
+file	dev/sbus/apio.c			apio | lpt_apio needs-flag

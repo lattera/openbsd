@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.15.2.1 2002/01/31 22:55:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.15.2.2 2002/06/11 03:36:50 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -96,8 +96,17 @@
 #include <machine/cpu.h>
 #include <machine/pte.h>
 
-struct	device *parsedisk __P((char *, int, int, dev_t *));
-void	setroot __P((void));
+void	setroot(void);
+void	swapconf(void);
+int	mainbus_print(void *, const char *);
+int	mainbus_scan(struct device *, void *, void *);
+int	findblkmajor(struct device *);
+struct	device *getdevunit(char *, int);
+struct	device *getdisk(char *, int, int, dev_t *);
+struct	device *parsedisk(char *, int, int, dev_t *);
+
+extern void init_sir(void);
+extern void dumpconf(void);
 
 /*
  * XXX some storage space must be allocated statically because of
@@ -108,8 +117,8 @@ char	extiospace[EXTENT_FIXED_STORAGE_SIZE(EIOMAPSIZE / 16)];
 struct	extent *extio;
 extern	void *extiobase;
 
-void mainbus_attach __P((struct device *, struct device *, void *));
-int  mainbus_match __P((struct device *, void *, void *));
+void mainbus_attach(struct device *, struct device *, void *);
+int  mainbus_match(struct device *, void *, void *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct device), mainbus_match, mainbus_attach
@@ -224,7 +233,7 @@ mapiodev(pa, size)
 	if (error != 0)
 	        return NULL;
 
-	physaccess(kva, pa, size, PG_RW|PG_CI);
+	physaccess((vaddr_t)kva, (paddr_t)pa, size, PG_RW|PG_CI);
 	return (kva);
 }
 
@@ -241,7 +250,7 @@ unmapiodev(kva, size)
 	if (kva < extiobase || kva >= extiobase + ctob(EIOMAPSIZE))
 	        panic("unmapiodev: bad address");
 #endif
-	physunaccess(kva, size);
+	physunaccess((vaddr_t)kva, size);
 
 	error = extent_free(extio, (u_long)kva, size, EX_NOWAIT);
 
@@ -252,6 +261,7 @@ unmapiodev(kva, size)
 /*
  * Configure swap space and related parameters.
  */
+void
 swapconf()
 {
 	register struct swdevt *swp;
@@ -282,7 +292,7 @@ struct nam2blk {
    { "rd",     9 },
 };
 
-static int
+int
 findblkmajor(dv)
 	struct device *dv;
 {
@@ -295,7 +305,7 @@ findblkmajor(dv)
 	return (-1);
 }
 
-static struct device *
+struct device *
 getdisk(str, len, defpart, devp)
 	char *str;
 	int len, defpart;

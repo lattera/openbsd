@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/dev/mii/mii.h,v 1.5 2001/11/17 21:07:16 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii.h,v 1.5.2.1 2002/06/11 03:42:23 art Exp $	*/
 /*	$NetBSD: mii.h,v 1.8 2001/05/31 03:06:46 thorpej Exp $	*/
- 
+
 /*
  * Copyright (c) 1997 Manuel Bouyer.  All rights reserved.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/intr.h,v 1.6 2001/12/17 01:13:07 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/intr.h,v 1.6.2.1 2002/06/11 03:35:20 art Exp $	*/
 /*	$NetBSD: intr.h,v 1.2 1997/07/24 05:43:08 scottr Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
 
 struct isr {
 	LIST_ENTRY(isr) isr_link;
-	int		(*isr_func) __P((void *));
+	int		(*isr_func)(void *);
 	void		*isr_arg;
 	int		isr_ipl;
 	int		isr_priority;
@@ -87,6 +87,9 @@ struct isr {
 /*
  * spl functions; all but spl0 are done in-line
  */
+
+/* SPL asserts */
+#define	splassert(wantipl)	/* nothing */
 
 #define	_spl(s)								\
 ({									\
@@ -174,14 +177,14 @@ extern volatile u_int8_t ssir;
 #define	setsoftclock()	siron(SIR_CLOCK)
 
 /* locore.s */
-int	spl0 __P((void));
+int	spl0(void);
 
 /* intr.c */
-void	intr_init __P((void));
-void	*intr_establish __P((int (*)(void *), void *, int, int));
-void	intr_disestablish __P((void *));
-void	intr_dispatch __P((int));
-void	intr_printlevels __P((void));
+void	intr_init(void);
+void	*intr_establish(int (*)(void *), void *, int, int);
+void	intr_disestablish(void *);
+void	intr_dispatch(int);
+void	intr_printlevels(void);
 #endif /* _KERNEL */
 
 #endif /* _HP300_INTR_H_ */

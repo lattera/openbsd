@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.16 2001/08/28 12:20:43 ben Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.16.4.1 2002/06/11 03:28:34 art Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -179,29 +179,31 @@ struct auth_hash auth_hash_hmac_ripemd_160_96 = {
 };
 
 struct auth_hash auth_hash_key_md5 = {
-	CRYPTO_MD5_KPDK, "Keyed MD5", 
+	CRYPTO_MD5_KPDK, "Keyed MD5",
 	0, 16, 16, sizeof(MD5_CTX),
 	(void (*)(void *)) MD5Init, MD5Update_int,
-	(void (*)(u_int8_t *, void *)) MD5Final 
+	(void (*)(u_int8_t *, void *)) MD5Final
 };
 
 struct auth_hash auth_hash_key_sha1 = {
 	CRYPTO_SHA1_KPDK, "Keyed SHA1",
 	0, 20, 20, sizeof(SHA1_CTX),
 	(void (*)(void *)) SHA1Init, SHA1Update_int,
-	(void (*)(u_int8_t *, void *)) SHA1Final 
+	(void (*)(u_int8_t *, void *)) SHA1Final
 };
 
 struct auth_hash auth_hash_md5 = {
 	CRYPTO_MD5, "MD5",
-	0, 16, 0, 0,
-	NULL, NULL, NULL
+	0, 16, 16, sizeof(MD5_CTX),
+	(void (*) (void *)) MD5Init, MD5Update_int,
+	(void (*) (u_int8_t *, void *)) MD5Final
 };
 
 struct auth_hash auth_hash_sha1 = {
 	CRYPTO_SHA1, "SHA1",
-	0, 20, 0, 0,
-	NULL, NULL, NULL
+	0, 20, 20, sizeof(SHA1_CTX),
+	(void (*)(void *)) SHA1Init, SHA1Update_int,
+	(void (*)(u_int8_t *, void *)) SHA1Final
 };
 
 /* Compression instance */

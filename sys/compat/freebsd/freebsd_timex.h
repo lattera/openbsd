@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_timex.h,v 1.3 2001/09/20 17:02:31 mpech Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_timex.h,v 1.3.4.1 2002/06/11 03:28:07 art Exp $	*/
 
 /******************************************************************************
  *                                                                            *
@@ -294,8 +294,8 @@ struct freebsd_timex {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-extern int ntp_gettime	__P((struct ntptimeval *));
-extern int ntp_adjtime	__P((struct timex *));
+extern int ntp_gettime(struct ntptimeval *);
+extern int ntp_adjtime(struct timex *);
 __END_DECLS
 
 #endif /* not _KERNEL */

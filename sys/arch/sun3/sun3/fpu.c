@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/fpu.c,v 1.7 1997/04/05 20:24:24 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/fpu.c,v 1.7.24.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: fpu.c,v 1.9 1996/11/20 18:57:29 gwr Exp $	*/
 
 /*-
@@ -67,7 +67,7 @@ static char *fpu_descr[] = {
 	"mc68882",			/* 2 */
 	"?" };
 
-static int fpu_probe __P((void));
+static int fpu_probe(void);
 
 void
 initfpu()

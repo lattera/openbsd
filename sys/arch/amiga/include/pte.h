@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pte.h,v 1.4.2.1 2002/01/31 22:55:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/pte.h,v 1.4.2.2 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: pte.h,v 1.14 1995/09/29 13:52:09 chopps Exp $	*/
 
 /*

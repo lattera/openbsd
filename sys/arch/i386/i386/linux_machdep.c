@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.17.4.1 2002/01/31 22:55:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.17.4.2 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: linux_machdep.c,v 1.29 1996/05/03 19:42:11 christos Exp $	*/
 
 /*
@@ -72,18 +72,18 @@
  * To see whether wsdisplay is configured (for virtual console ioctl calls).
  */
 #include "wsdisplay.h"
-#if NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL)
 #include <sys/ioctl.h>
+#if NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL)
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsdisplay_usl_io.h>
 #endif
 
 #ifdef USER_LDT
 #include <machine/cpu.h>
-int linux_read_ldt __P((struct proc *, struct linux_sys_modify_ldt_args *,
-    register_t *));
-int linux_write_ldt __P((struct proc *, struct linux_sys_modify_ldt_args *,
-    register_t *));
+int linux_read_ldt(struct proc *, struct linux_sys_modify_ldt_args *,
+    register_t *);
+int linux_write_ldt(struct proc *, struct linux_sys_modify_ldt_args *,
+    register_t *);
 #endif
 
 /*
@@ -111,8 +111,8 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	int type;
 	union sigval val;
 {
-	register struct proc *p = curproc;
-	register struct trapframe *tf;
+	struct proc *p = curproc;
+	struct trapframe *tf;
 	struct linux_sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oonstack;
@@ -212,7 +212,7 @@ linux_sys_sigreturn(p, v, retval)
 		syscallarg(struct linux_sigcontext *) scp;
 	} */ *uap = v;
 	struct linux_sigcontext *scp, context;
-	register struct trapframe *tf;
+	struct trapframe *tf;
 
 	tf = p->p_md.md_regs;
 
@@ -446,15 +446,25 @@ linux_machdepioctl(p, v, retval)
 	} */ *uap = v;
 	struct sys_ioctl_args bia;
 	u_long com;
-#if (NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL))
 	int error;
+#if (NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL))
 	struct vt_mode lvt;
 	caddr_t bvtp, sg;
 #endif
+	struct filedesc *fdp;
+	struct file *fp;
+	int fd;
+	int (*ioctlf)(struct file *, u_long, caddr_t, struct proc *);
+	struct ioctl_pt pt;
 
+	fd = SCARG(uap, fd);
 	SCARG(&bia, fd) = SCARG(uap, fd);
 	SCARG(&bia, data) = SCARG(uap, data);
 	com = SCARG(uap, com);
+
+	fdp = p->p_fd;
+	if ((fp = fd_getfile(fdp, fd)) == NULL)
+		return (EBADF);
 
 	switch (com) {
 #if (NWSDISPLAY > 0 && defined(WSDISPLAY_COMPAT_USL))
@@ -570,8 +580,28 @@ linux_machdepioctl(p, v, retval)
 		return (subyte(SCARG(uap, data), KB_101));
 #endif
 	default:
-		printf("linux_machdepioctl: invalid ioctl %08lx\n", com);
-		return EINVAL;
+		/*
+		 * Unknown to us. If it's on a device, just pass it through
+		 * using PTIOCLINUX, the device itself might be able to
+		 * make some sense of it.
+		 * XXX hack: if the function returns EJUSTRETURN,
+		 * it has stuffed a sysctl return value in pt.data.
+		 */
+		FREF(fp);
+		ioctlf = fp->f_ops->fo_ioctl;
+		pt.com = SCARG(uap, com);
+		pt.data = SCARG(uap, data);
+		error = ioctlf(fp, PTIOCLINUX, (caddr_t)&pt, p);
+		FRELE(fp);
+		if (error == EJUSTRETURN) {
+			retval[0] = (register_t)pt.data;
+			error = 0;
+		}
+
+		if (error == ENOTTY)
+			printf("linux_machdepioctl: invalid ioctl %08lx\n",
+			    com);
+		return (error);
 	}
 	SCARG(&bia, com) = com;
 	return sys_ioctl(p, &bia, retval);

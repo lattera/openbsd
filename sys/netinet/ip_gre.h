@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.2 2001/06/09 07:03:42 angelos Exp $ */
+/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.2.4.1 2002/06/11 03:31:36 art Exp $ */
 /*	$NetBSD: ip_gre.h,v 1.3 1998/10/07 23:33:02 thorpej Exp $ */
 
 /*
@@ -40,15 +40,23 @@
 #ifndef _NETINET_IP_GRE_H_
 #define _NETINET_IP_GRE_H_
 
+/* Protocol number for Cisco's WCCP
+ * The Internet Draft is:
+ *   draft-forster-wrec-wccp-v1-00.txt
+ */
+#define GREPROTO_WCCP	0x883e
+
 /*
  * Names for GRE sysctl objects
  */
 #define GRECTL_ALLOW    1		/* accept incoming GRE packets */
-#define GRECTL_MAXID    2
+#define GRECTL_WCCP     2		/* accept WCCPv1-style GRE packets */
+#define GRECTL_MAXID    3
  
 #define GRECTL_NAMES { \
         { 0, 0 }, \
         { "allow", CTLTYPE_INT }, \
+        { "wccp", CTLTYPE_INT }, \
 } 
 
 /*
@@ -63,14 +71,14 @@
 }
 
 #ifdef _KERNEL
-void gre_input __P((struct mbuf *, ...));
-void gre_mobile_input __P((struct mbuf *, ...));
+void gre_input(struct mbuf *, ...);
+void gre_mobile_input(struct mbuf *, ...);
 
-int     ipmobile_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
-int     gre_sysctl __P((int *, u_int, void *, size_t *, void *, size_t));
+int     ipmobile_sysctl(int *, u_int, void *, size_t *, void *, size_t);
+int     gre_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 #ifndef MROUTING
-void gre_ipip_input __P((struct mbuf *, ...));
+void gre_ipip_input(struct mbuf *, ...);
 #endif /* MROUTING */
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_GRE_H_ */

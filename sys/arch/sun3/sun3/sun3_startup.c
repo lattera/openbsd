@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.20 2001/11/06 19:53:16 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.20.2.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: sun3_startup.c,v 1.55 1996/11/20 18:57:38 gwr Exp $	*/
 
 /*-
@@ -106,22 +106,22 @@ extern struct pcb *curpcb;
 extern vm_offset_t dumppage_pa;
 extern vm_offset_t dumppage_va;
 
-void sun3_bootstrap __P((struct exec));
+void sun3_bootstrap(struct exec);
 
-static void sun3_mode_monitor __P((void));
-static void sun3_mode_normal __P((void));
-static void sun3_mon_init __P((vm_offset_t sva, vm_offset_t eva, int keep));
-static void sun3_monitor_hooks __P((void));
-static void sun3_context_equiv __P((void));
+static void sun3_mode_monitor(void);
+static void sun3_mode_normal(void);
+static void sun3_mon_init(vm_offset_t sva, vm_offset_t eva, int keep);
+static void sun3_monitor_hooks(void);
+static void sun3_context_equiv(void);
 #if (defined(DDB) || NKSYMS > 0) && !defined(SYMTAB_SPACE)
-static void sun3_save_symtab __P((struct exec *kehp));
+static void sun3_save_symtab(struct exec *kehp);
 #endif
-static void sun3_verify_hardware __P((void));
-static void sun3_vm_init __P((struct exec *kehp));
-static void tracedump __P((int));
-static void v_handler __P((int addr, char *str));
+static void sun3_verify_hardware(void);
+static void sun3_vm_init(struct exec *kehp);
+static void tracedump(int);
+static void v_handler(int addr, char *str);
 
-static void internal_configure __P((void));
+static void internal_configure(void);
 
 vm_offset_t
 high_segment_alloc(npages)
@@ -331,7 +331,7 @@ sun3_save_symtab(kehp)
 
 	/* Check the symtab length word. */
 	endp = end;
-	symsz = (int*)endp;
+	symsz = (int *)endp;
 	if (kehp->a_syms != *symsz) {
 		errdesc = "a_syms";
 		goto err;
@@ -340,7 +340,7 @@ sun3_save_symtab(kehp)
 	endp += *symsz;			/* past nlist array */
 
 	/* Check the string table length. */
-	strsz = (int*)endp;
+	strsz = (int *)endp;
 	if ((*strsz < 4) || (*strsz > 0x80000)) {
 		errdesc = "strsize";
 		goto err;

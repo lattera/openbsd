@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.22 2001/11/06 18:41:09 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.22.2.1 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.45 1997/02/10 22:13:40 scottr Exp $	*/
 
 /*
@@ -102,7 +102,6 @@ struct clockframe {
 };
 
 #define	CLKF_USERMODE(framep)	(((framep)->sr & PSL_S) == 0)
-#define	CLKF_BASEPRI(framep)	(((framep)->sr & PSL_IPL) == 0)
 #define	CLKF_PC(framep)		((framep)->pc)
 #define	CLKF_INTR(framep)	(0) /* XXX should use PSL_M (see hp300) */
 
@@ -297,30 +296,40 @@ struct fpframe;
 struct pcb;
 
 /* machdep.c */
-void	mac68k_set_bell_callback __P((int (*)(void *, int, int, int), void *));
-int	mac68k_ring_bell __P((int, int, int));
-u_int	get_mapping __P((void));
+void	mac68k_set_bell_callback(int (*)(void *, int, int, int), void *);
+int	mac68k_ring_bell(int, int, int);
+u_int	get_mapping(void);
 
 /* locore.s */
-void	m68881_restore __P((struct fpframe *));
-void	m68881_save __P((struct fpframe *));
-void	TBIA __P((void));
-void	TBIAS __P((void));
-void	TBIS __P((vm_offset_t));
-void	DCFP __P((vm_offset_t));
-void	ICPP __P((vm_offset_t));
-void	DCIU __P((void));
-void	DCIS __P((void));
-void	ICIA __P((void));
-void	DCFL __P((vm_offset_t));
-int	suline __P((caddr_t, caddr_t));
-void	savectx __P((struct pcb *));
-void	proc_trampoline __P((void));
-void	loadustp __P((int));
+void	m68881_restore(struct fpframe *);
+void	m68881_save(struct fpframe *);
+void	DCIA(void);
+void	DCIS(void);
+void	DCIU(void);
+void	ICIA(void);
+void	ICPA(void);
+void	PCIA(void);
+void	TBIA(void);
+void	TBIAS(void);
+void	TBIAU(void);
+void	TBIS(vm_offset_t);
+#if defined(M68040)
+void	DCFA(void);
+void	DCFP(paddr_t);
+void	DCFL(paddr_t);
+void	DCPL(paddr_t);
+void	DCPP(paddr_t);
+void	ICPL(paddr_t);
+void	ICPP(paddr_t);
+#endif
+int	suline(caddr_t, caddr_t);
+void	savectx(struct pcb *);
+void	proc_trampoline(void);
+void	loadustp(int);
 
 /* vm_machdep.c */
-void	physaccess __P((caddr_t, caddr_t, register int, register int));
-void	physunaccess __P((caddr_t, register int));
+void	physaccess(caddr_t, caddr_t, register int, register int);
+void	physunaccess(caddr_t, register int);
 
 #endif
 

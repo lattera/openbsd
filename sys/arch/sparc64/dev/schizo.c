@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/schizo.c,v 1.2 2002/06/08 23:31:30 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/schizo.c,v 1.2.2.1 2002/06/11 03:38:43 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

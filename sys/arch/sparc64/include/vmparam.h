@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.5 2001/12/05 16:25:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/vmparam.h,v 1.5.2.1 2002/06/11 03:38:43 art Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.18 2001/05/01 02:19:19 thorpej Exp $ */
 
 /*
@@ -85,7 +85,7 @@
 #define	DFLDSIZ		(128L*1024*1024)	/* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(1L<<39)		/* max data size */
+#define	MAXDSIZ		(512L*1024*1024*1024)	/* max data size */
 #endif
 #ifndef	DFLSSIZ
 #define	DFLSSIZ		(1024*1024)		/* initial stack size limit */
@@ -152,8 +152,6 @@
 #define VM_MIN_KERNEL_ADDRESS	((vaddr_t)KERNBASE)
 #define VM_MAX_KERNEL_ADDRESS	((vaddr_t)KERNEND)
 
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-
 #define VM_PHYSSEG_MAX          32       /* up to 32 segments */
 #define VM_PHYSSEG_STRAT        VM_PSTRAT_BSEARCH
 #define VM_PHYSSEG_NOADD                /* can't add RAM after vm_mem_init */
@@ -174,7 +172,7 @@ struct pmap_physseg {
 
 #if defined (_KERNEL) && !defined(_LOCORE)
 struct vm_map;
-vaddr_t		dvma_mapin __P((struct vm_map *, vaddr_t, int, int));
-void		dvma_mapout __P((vaddr_t, vaddr_t, int));
+vaddr_t		dvma_mapin(struct vm_map *, vaddr_t, int, int);
+void		dvma_mapout(vaddr_t, vaddr_t, int);
 #endif
 #endif

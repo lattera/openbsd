@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_nge.c,v 1.15 2001/11/13 21:00:16 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_nge.c,v 1.15.2.1 2002/06/11 03:42:25 art Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -134,50 +134,50 @@
 
 #include <dev/pci/if_ngereg.h>
 
-int nge_probe		__P((struct device *, void *, void *));
-void nge_attach		__P((struct device *, struct device *, void *));
+int nge_probe(struct device *, void *, void *);
+void nge_attach(struct device *, struct device *, void *);
 
-int nge_alloc_jumbo_mem	__P((struct nge_softc *));
-void *nge_jalloc	__P((struct nge_softc *));
-void nge_jfree		__P((caddr_t, u_int, void *));
+int nge_alloc_jumbo_mem(struct nge_softc *);
+void *nge_jalloc(struct nge_softc *);
+void nge_jfree(caddr_t, u_int, void *);
 
-int nge_newbuf		__P((struct nge_softc *, struct nge_desc *,
-			     struct mbuf *));
-int nge_encap		__P((struct nge_softc *, struct mbuf *, u_int32_t *));
-void nge_rxeof		__P((struct nge_softc *));
-void nge_rxeoc		__P((struct nge_softc *));
-void nge_txeof		__P((struct nge_softc *));
-int nge_intr		__P((void *));
-void nge_tick		__P((void *));
-void nge_start		__P((struct ifnet *));
-int nge_ioctl		__P((struct ifnet *, u_long, caddr_t));
-void nge_init		__P((void *));
-void nge_stop		__P((struct nge_softc *));
-void nge_watchdog	__P((struct ifnet *));
-void nge_shutdown	__P((void *));
-int nge_ifmedia_upd	__P((struct ifnet *));
-void nge_ifmedia_sts	__P((struct ifnet *, struct ifmediareq *));
+int nge_newbuf(struct nge_softc *, struct nge_desc *,
+			     struct mbuf *);
+int nge_encap(struct nge_softc *, struct mbuf *, u_int32_t *);
+void nge_rxeof(struct nge_softc *);
+void nge_rxeoc(struct nge_softc *);
+void nge_txeof(struct nge_softc *);
+int nge_intr(void *);
+void nge_tick(void *);
+void nge_start(struct ifnet *);
+int nge_ioctl(struct ifnet *, u_long, caddr_t);
+void nge_init(void *);
+void nge_stop(struct nge_softc *);
+void nge_watchdog(struct ifnet *);
+void nge_shutdown(void *);
+int nge_ifmedia_upd(struct ifnet *);
+void nge_ifmedia_sts(struct ifnet *, struct ifmediareq *);
 
-void nge_delay		__P((struct nge_softc *));
-void nge_eeprom_idle	__P((struct nge_softc *));
-void nge_eeprom_putbyte	__P((struct nge_softc *, int));
-void nge_eeprom_getword	__P((struct nge_softc *, int, u_int16_t *));
-void nge_read_eeprom	__P((struct nge_softc *, caddr_t, int, int, int));
+void nge_delay(struct nge_softc *);
+void nge_eeprom_idle(struct nge_softc *);
+void nge_eeprom_putbyte(struct nge_softc *, int);
+void nge_eeprom_getword(struct nge_softc *, int, u_int16_t *);
+void nge_read_eeprom(struct nge_softc *, caddr_t, int, int, int);
 
-void nge_mii_sync	__P((struct nge_softc *));
-void nge_mii_send	__P((struct nge_softc *, u_int32_t, int));
-int nge_mii_readreg	__P((struct nge_softc *, struct nge_mii_frame *));
-int nge_mii_writereg	__P((struct nge_softc *, struct nge_mii_frame *));
+void nge_mii_sync(struct nge_softc *);
+void nge_mii_send(struct nge_softc *, u_int32_t, int);
+int nge_mii_readreg(struct nge_softc *, struct nge_mii_frame *);
+int nge_mii_writereg(struct nge_softc *, struct nge_mii_frame *);
 
-int nge_miibus_readreg	__P((struct device *, int, int));
-void nge_miibus_writereg	__P((struct device *, int, int, int));
-void nge_miibus_statchg	__P((struct device *));
+int nge_miibus_readreg(struct device *, int, int);
+void nge_miibus_writereg(struct device *, int, int, int);
+void nge_miibus_statchg(struct device *);
 
-void nge_setmulti	__P((struct nge_softc *));
-u_int32_t nge_crc	__P((struct nge_softc *, caddr_t));
-void nge_reset		__P((struct nge_softc *));
-int nge_list_rx_init	__P((struct nge_softc *));
-int nge_list_tx_init	__P((struct nge_softc *));
+void nge_setmulti(struct nge_softc *);
+u_int32_t nge_crc(struct nge_softc *, caddr_t);
+void nge_reset(struct nge_softc *);
+int nge_list_rx_init(struct nge_softc *);
+int nge_list_tx_init(struct nge_softc *);
 
 #ifdef NGE_USEIOSPACE
 #define NGE_RES			SYS_RES_IOPORT
@@ -927,7 +927,8 @@ void nge_attach(parent, self, aux)
 	ifp->if_start = nge_start;
 	ifp->if_watchdog = nge_watchdog;
 	ifp->if_baudrate = 1000000000;
-	ifp->if_snd.ifq_maxlen = NGE_TX_LIST_CNT - 1;
+	IFQ_SET_MAXLEN(&ifp->if_snd, NGE_TX_LIST_CNT - 1);
+	IFQ_SET_READY(&ifp->if_snd);
 	ifp->if_capabilities =
 	    IFCAP_CSUM_IPv4 | IFCAP_CSUM_TCPv4 | IFCAP_CSUM_UDPv4;
 #if NVLAN > 0
@@ -1439,7 +1440,7 @@ void nge_tick(xsc)
 			if (IFM_SUBTYPE(mii->mii_media_active) == IFM_1000_TX)
 				DPRINTFN("%s: gigabit link up\n",
 					 sc->sc_dv.dv_xname);
-			if (ifp->if_snd.ifq_head != NULL)
+			if (!IFQ_IS_EMPTY(&ifp->if_snd))
 				nge_start(ifp);
 		} else
 			timeout_add(&sc->nge_timeout, hz);
@@ -1507,7 +1508,7 @@ int nge_intr(arg)
 	/* Re-enable interrupts. */
 	CSR_WRITE_4(sc, NGE_IER, 1);
 
-	if (ifp->if_snd.ifq_head != NULL)
+	if (!IFQ_IS_EMPTY(&ifp->if_snd))
 		nge_start(ifp);
 
 	return claimed;
@@ -1607,6 +1608,7 @@ void nge_start(ifp)
 	struct nge_softc	*sc;
 	struct mbuf		*m_head = NULL;
 	u_int32_t		idx;
+	int			pkts = 0;
 
 	sc = ifp->if_softc;
 
@@ -1619,15 +1621,18 @@ void nge_start(ifp)
 		return;
 
 	while(sc->nge_ldata->nge_tx_list[idx].nge_mbuf == NULL) {
-		IF_DEQUEUE(&ifp->if_snd, m_head);
+		IFQ_POLL(&ifp->if_snd, m_head);
 		if (m_head == NULL)
 			break;
 
 		if (nge_encap(sc, m_head, &idx)) {
-			IF_PREPEND(&ifp->if_snd, m_head);
 			ifp->if_flags |= IFF_OACTIVE;
 			break;
 		}
+
+		/* now we are committed to transmit the packet */
+		IFQ_DEQUEUE(&ifp->if_snd, m_head);
+		pkts++;
 
 #if NBPFILTER > 0
 		/*
@@ -1638,6 +1643,8 @@ void nge_start(ifp)
 			bpf_mtap(ifp->if_bpf, m_head);
 #endif
 	}
+	if (pkts == 0)
+		return;
 
 	/* Transmit */
 	sc->nge_cdata.nge_tx_prod = idx;
@@ -1689,7 +1696,7 @@ void nge_init(xsc)
 		printf("%s: initialization failed: no "
 			"memory for rx buffers\n", sc->sc_dv.dv_xname);
 		nge_stop(sc);
-		(void)splx(s);
+		splx(s);
 		return;
 	}
 
@@ -1815,7 +1822,7 @@ void nge_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	(void)splx(s);
+	splx(s);
 }
 
 /*
@@ -1954,7 +1961,7 @@ int nge_ioctl(ifp, command, data)
 		break;
 	}
 
-	(void)splx(s);
+	splx(s);
 
 	return(error);
 }
@@ -1974,7 +1981,7 @@ void nge_watchdog(ifp)
 	ifp->if_flags &= ~IFF_RUNNING;
 	nge_init(sc);
 
-	if (ifp->if_snd.ifq_head != NULL)
+	if (!IFQ_IS_EMPTY(&ifp->if_snd))
 		nge_start(ifp);
 }
 

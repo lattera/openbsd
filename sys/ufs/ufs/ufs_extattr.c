@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.3 2002/05/01 13:36:18 drahn Exp $ */
+/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.3.2.1 2002/06/11 03:32:50 art Exp $ */
 /*-
  * Copyright (c) 1999, 2000, 2001, 2002 Robert N. M. Watson
  * Copyright (c) 2002 Networks Associates Technology, Inc.

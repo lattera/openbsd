@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/igmp.c,v 1.12 2001/11/06 21:26:33 jakob Exp $	*/
+/*	$OpenBSD: src/sys/netinet/igmp.c,v 1.12.2.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: igmp.c,v 1.15 1996/02/13 23:41:25 christos Exp $	*/
 
 /*
@@ -35,9 +35,9 @@
 int		igmp_timers_are_running;
 static struct router_info *rti_head;
 
-void igmp_sendpkt __P((struct in_multi *, int, in_addr_t));
-static int rti_fill __P((struct in_multi *));
-static struct router_info * rti_find __P((struct ifnet *));
+void igmp_sendpkt(struct in_multi *, int, in_addr_t);
+static int rti_fill(struct in_multi *);
+static struct router_info * rti_find(struct ifnet *);
 
 void
 igmp_init()
@@ -118,13 +118,7 @@ rti_delete(ifp)
 }
 
 void
-#if __STDC__
 igmp_input(struct mbuf *m, ...)
-#else
-igmp_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	register int iphlen;
 	register struct ifnet *ifp = m->m_pkthdr.rcvif;

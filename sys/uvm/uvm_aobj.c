@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23.2.3 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.49 2001/11/10 07:36:59 lukem Exp $	*/
 
 /*
@@ -170,14 +170,14 @@ struct pool uvm_aobj_pool;
  */
 
 static struct uao_swhash_elt *uao_find_swhash_elt
-    __P((struct uvm_aobj *, int, boolean_t));
+   (struct uvm_aobj *, int, boolean_t);
 
-static void	uao_free __P((struct uvm_aobj *));
-static int	uao_get __P((struct uvm_object *, voff_t, struct vm_page **,
-		    int *, int, vm_prot_t, int, int));
-static boolean_t uao_put __P((struct uvm_object *, voff_t, voff_t, int));
-static boolean_t uao_pagein __P((struct uvm_aobj *, int, int));
-static boolean_t uao_pagein_page __P((struct uvm_aobj *, int));
+static void	uao_free(struct uvm_aobj *);
+static int	uao_get(struct uvm_object *, voff_t, struct vm_page **,
+		    int *, int, vm_prot_t, int, int);
+static boolean_t uao_put(struct uvm_object *, voff_t, voff_t, int);
+static boolean_t uao_pagein(struct uvm_aobj *, int, int);
+static boolean_t uao_pagein_page(struct uvm_aobj *, int);
 
 /*
  * aobj_pager

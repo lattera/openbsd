@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.5.2.1 2002/01/31 22:55:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.5.2.2 2002/06/11 03:42:25 art Exp $	*/
 /*	$NetBSD: if_gem_pci.c,v 1.1 2001/09/16 00:11:42 eeh Exp $ */
 
 /*
@@ -62,6 +62,10 @@
 #include <machine/bus.h>
 #include <machine/intr.h>
 
+#ifdef __sparc64__
+#include <dev/ofw/openfirm.h>
+#endif
+
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
 #include <dev/mii/mii_bitbang.h>
@@ -80,8 +84,8 @@ struct gem_pci_softc {
 	void			*gsc_ih;
 };
 
-int	gem_match_pci __P((struct device *, void *, void *));
-void	gem_attach_pci __P((struct device *, struct device *, void *));
+int	gem_match_pci(struct device *, void *, void *);
+void	gem_attach_pci(struct device *, struct device *, void *);
 
 struct cfattach gem_pci_ca = {
 	sizeof(struct gem_pci_softc), gem_match_pci, gem_attach_pci
@@ -123,11 +127,10 @@ gem_attach_pci(parent, self, aux)
 	pci_intr_handle_t intrhandle;
 #ifdef __sparc__
 	/* XXX the following declarations should be elsewhere */
-	extern void myetheraddr __P((u_char *));
+	extern void myetheraddr(u_char *);
 #endif
 	const char *intrstr;
 	int type;
-	char enaddr[ETHER_ADDR_LEN];
 
 	if (pa->pa_memt) {
 		type = PCI_MAPREG_TYPE_MEM;
@@ -153,17 +156,21 @@ gem_attach_pci(parent, self, aux)
 	sc->sc_h = gsc->gsc_memh;
 
 #ifdef __sparc__
-	myetheraddr(enaddr);
+	if (OF_getprop(PCITAG_NODE(pa->pa_tag), "local-mac-address",
+	    sc->sc_enaddr, ETHER_ADDR_LEN) <= 0)
+		myetheraddr(sc->sc_enaddr);
 #endif
 #ifdef __powerpc__ 
-        pci_ether_hw_addr(pa->pa_pc, enaddr);
+        pci_ether_hw_addr(pa->pa_pc, sc->sc_enaddr);
 #endif
+
+	sc->sc_burst = 16;	/* XXX */
 
 	printf("\n");
 	/*
 	 * call the main configure
 	 */
-	gem_attach(sc, enaddr);
+	gem_config(sc);
 
 	if (pci_intr_map(pa, &intrhandle) != 0) {
 		printf("%s: couldn't map interrupt\n",

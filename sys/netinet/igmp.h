@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/igmp.h,v 1.4 2001/06/09 07:03:40 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/igmp.h,v 1.4.4.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: igmp.h,v 1.6 1995/05/31 06:08:21 mycroft Exp $	*/
 
 /*
@@ -96,6 +96,6 @@ struct igmp {
 #define	IGMP_AGE_THRESHOLD	540
 
 #ifdef _KERNEL
-void	rti_delete __P((struct ifnet *));
+void	rti_delete(struct ifnet *);
 #endif /* _KERNEL */
 #endif /* _NETINET_IGMP_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/color.h,v 1.2 1996/06/04 12:49:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/color.h,v 1.2.26.1 2002/06/11 03:34:56 art Exp $	*/
 /*	$NetBSD: color.h,v 1.8 1995/02/12 19:34:17 chopps Exp $	*/
 
 /*
@@ -57,5 +57,5 @@
 #define COL24_LGREY	0x0880
 #define COL24_WHITE	0xffff
 
-void rollcolor __P((int));
+void rollcolor(int);
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -82,9 +82,9 @@ int	filt_signal(struct knote *kn, long hint);
 struct filterops sig_filtops =
 	{ 0, filt_sigattach, filt_sigdetach, filt_signal };
 
-void proc_stop __P((struct proc *p));
-void killproc __P((struct proc *, char *));
-int cansignal __P((struct proc *, struct pcred *, struct proc *, int));
+void proc_stop(struct proc *p);
+void killproc(struct proc *, char *);
+int cansignal(struct proc *, struct pcred *, struct proc *, int);
 
 struct pool sigacts_pool;	/* memory pool for sigacts structures */
 
@@ -100,6 +100,9 @@ cansignal(p, pc, q, signum)
 {
 	if (pc->pc_ucred->cr_uid == 0)
 		return (1);		/* root can always signal */
+
+	if (p == q)
+		return (1);		/* process can always signal itself */
 
 	if (signum == SIGCONT && q->p_session == p->p_session)
 		return (1);		/* SIGCONT in session */
@@ -719,15 +722,19 @@ trapsignal(p, signum, code, type, sigval)
 	register struct sigacts *ps = p->p_sigacts;
 	int mask;
 
+#ifdef KTRACE
+	if (KTRPOINT(p, KTR_PSIG)) {
+		siginfo_t si;
+
+		initsiginfo(&si, signum, code, type, sigval);
+		ktrpsig(p, signum, ps->ps_sigact[signum],
+		    p->p_sigmask, code, &si);
+	}
+#endif
 	mask = sigmask(signum);
 	if ((p->p_flag & P_TRACED) == 0 && (p->p_sigcatch & mask) != 0 &&
 	    (p->p_sigmask & mask) == 0) {
 		p->p_stats->p_ru.ru_nsignals++;
-#ifdef KTRACE
-		if (KTRPOINT(p, KTR_PSIG))
-			ktrpsig(p, signum, ps->ps_sigact[signum],
-			    p->p_sigmask, code);
-#endif
 		(*p->p_emul->e_sendsig)(ps->ps_sigact[signum], signum,
 		    p->p_sigmask, code, type, sigval);
 		p->p_sigmask |= ps->ps_catchmask[signum];
@@ -1150,10 +1157,22 @@ postsig(signum)
 	mask = sigmask(signum);
 	p->p_siglist &= ~mask;
 	action = ps->ps_sigact[signum];
+
+	if (ps->ps_sig != signum) {
+		code = 0;
+	} else {
+		code = ps->ps_code;
+	}
+
 #ifdef KTRACE
-	if (KTRPOINT(p, KTR_PSIG))
+	if (KTRPOINT(p, KTR_PSIG)) {
+		siginfo_t si;
+		
+		null_sigval.sival_ptr = 0;
+		initsiginfo(&si, signum, 0, SI_USER, null_sigval);
 		ktrpsig(p, signum, action, ps->ps_flags & SAS_OLDMASK ?
-		    ps->ps_oldmask : p->p_sigmask, 0);
+		    ps->ps_oldmask : p->p_sigmask, code, &si);
+	}
 #endif
 	if (action == SIG_DFL) {
 		/*
@@ -1194,10 +1213,7 @@ postsig(signum)
 		}
 		splx(s);
 		p->p_stats->p_ru.ru_nsignals++;
-		if (ps->ps_sig != signum) {
-			code = 0;
-		} else {
-			code = ps->ps_code;
+		if (ps->ps_sig == signum) {
 			ps->ps_code = 0;
 		}
 		null_sigval.sival_ptr = 0;

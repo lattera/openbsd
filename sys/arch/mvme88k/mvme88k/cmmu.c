@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.17.2.1 2002/01/31 22:55:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.17.2.2 2002/06/11 03:37:10 art Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -80,7 +80,7 @@ int      cpu_cmmu_ratio;
 
 struct cmmu_p *cmmu;
 
-void md_cmmu_flush_tlb __P((unsigned kernel, vm_offset_t vaddr, int size));
+void md_cmmu_flush_tlb(unsigned kernel, vm_offset_t vaddr, int size);
 
 /* This is here so that process.S doesn't have to decide the CPU type */
 void 

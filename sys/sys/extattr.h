@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/extattr.h,v 1.2 2002/05/16 16:42:15 drahn Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/extattr.h,v 1.2.2.1 2002/06/11 03:32:33 art Exp $	*/
 
 /*-
  * Copyright (c) 1999, 2000, 2001 Robert N. M. Watson

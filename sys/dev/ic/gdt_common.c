@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.16 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.16.2.1 2002/06/11 03:42:18 art Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
@@ -58,28 +58,28 @@ int gdt_maxcmds = GDT_MAXCMDS;
 #define GDT_MAXCMDS gdt_maxcmds
 #endif
 
-int	gdt_async_event __P((struct gdt_softc *, int));
-void	gdt_chain __P((struct gdt_softc *));
-void	gdt_clear_events __P((struct gdt_softc *));
-void	gdt_copy_internal_data __P((struct scsi_xfer *, u_int8_t *, size_t));
-struct scsi_xfer *gdt_dequeue __P((struct gdt_softc *));
-void	gdt_enqueue __P((struct gdt_softc *, struct scsi_xfer *, int));
-void	gdt_enqueue_ccb __P((struct gdt_softc *, struct gdt_ccb *));
-void	gdt_eval_mapping __P((u_int32_t, int *, int *, int *));
-int	gdt_exec_ccb __P((struct gdt_ccb *));
-void	gdt_free_ccb __P((struct gdt_softc *, struct gdt_ccb *));
-struct gdt_ccb *gdt_get_ccb __P((struct gdt_softc *, int));
-int	gdt_internal_cache_cmd __P((struct scsi_xfer *));
-int	gdt_internal_cmd __P((struct gdt_softc *, u_int8_t, u_int16_t,
-    u_int32_t, u_int32_t, u_int32_t));
-int	gdt_raw_scsi_cmd __P((struct scsi_xfer *));
-int	gdt_scsi_cmd __P((struct scsi_xfer *));
-void	gdt_start_ccbs __P((struct gdt_softc *));
-int	gdt_sync_event __P((struct gdt_softc *, int, u_int8_t,
-    struct scsi_xfer *));
-void	gdt_timeout __P((void *));
-int	gdt_wait __P((struct gdt_softc *, struct gdt_ccb *, int));
-void	gdt_watchdog __P((void *));
+int	gdt_async_event(struct gdt_softc *, int);
+void	gdt_chain(struct gdt_softc *);
+void	gdt_clear_events(struct gdt_softc *);
+void	gdt_copy_internal_data(struct scsi_xfer *, u_int8_t *, size_t);
+struct scsi_xfer *gdt_dequeue(struct gdt_softc *);
+void	gdt_enqueue(struct gdt_softc *, struct scsi_xfer *, int);
+void	gdt_enqueue_ccb(struct gdt_softc *, struct gdt_ccb *);
+void	gdt_eval_mapping(u_int32_t, int *, int *, int *);
+int	gdt_exec_ccb(struct gdt_ccb *);
+void	gdt_free_ccb(struct gdt_softc *, struct gdt_ccb *);
+struct gdt_ccb *gdt_get_ccb(struct gdt_softc *, int);
+int	gdt_internal_cache_cmd(struct scsi_xfer *);
+int	gdt_internal_cmd(struct gdt_softc *, u_int8_t, u_int16_t,
+    u_int32_t, u_int32_t, u_int32_t);
+int	gdt_raw_scsi_cmd(struct scsi_xfer *);
+int	gdt_scsi_cmd(struct scsi_xfer *);
+void	gdt_start_ccbs(struct gdt_softc *);
+int	gdt_sync_event(struct gdt_softc *, int, u_int8_t,
+    struct scsi_xfer *);
+void	gdt_timeout(void *);
+int	gdt_wait(struct gdt_softc *, struct gdt_ccb *, int);
+void	gdt_watchdog(void *);
 
 struct cfdriver gdt_cd = {
 	NULL, "gdt", DV_DULL
@@ -379,6 +379,8 @@ gdt_attach(gdt)
 
 	gdt->sc_raw_link = malloc(gdt->sc_bus_cnt * sizeof (struct scsi_link),
 				  M_DEVBUF, M_NOWAIT);
+	if (gdt->sc_raw_link == NULL)
+		panic("gdt_attach");
 	bzero(gdt->sc_raw_link, gdt->sc_bus_cnt * sizeof (struct scsi_link));
 
 	for (i = 0; i < gdt->sc_bus_cnt; i++) {
@@ -600,16 +602,12 @@ gdt_scsi_cmd(xs)
 
 			ccb = gdt_get_ccb(gdt, xs->flags);
 			/*
-			 * Are we out of commands, something is wrong.
-			 * 
+			 * We are out of commands, try again in a little while.
 			 */
 			if (ccb == NULL) {
-				printf("%s: no ccb in gdt_scsi_cmd",
-				    gdt->sc_dev.dv_xname);
 				xs->error = XS_DRIVER_STUFFUP;
-				xs->flags |= ITSDONE;
-				scsi_done(xs);
-				goto ready;
+				GDT_UNLOCK_GDT(gdt, lock);
+				return (TRY_AGAIN_LATER);
 			}
 
 			ccb->gc_blockno = blockno;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/tc_machdep.h,v 1.3 2002/05/02 22:56:06 miod Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/tc_machdep.h,v 1.3.2.1 2002/06/11 03:33:40 art Exp $ */
 /* $NetBSD: tc_machdep.h,v 1.4 2000/06/01 00:04:50 cgd Exp $ */
 
 /*

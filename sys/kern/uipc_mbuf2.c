@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.15 2001/06/23 04:39:33 angelos Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.15.4.1 2002/06/11 03:29:40 art Exp $	*/
 /*	$KAME: uipc_mbuf2.c,v 1.29 2001/02/14 13:42:10 itojun Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.40 1999/04/01 00:23:25 thorpej Exp $	*/
 
@@ -77,7 +77,7 @@
 	 ((m)->m_ext.ext_free || MCLISREFERENCED((m))))
 
 /* can't call it m_dup(), as freebsd[34] uses m_dup() with different arg */
-static struct mbuf *m_dup1 __P((struct mbuf *, int, int, int));
+static struct mbuf *m_dup1(struct mbuf *, int, int, int);
 
 /*
  * ensure that [off, off + len) is contiguous on the mbuf chain "m".
@@ -277,8 +277,7 @@ m_tag_get(type, len, wait)
 
 	if (len < 0)
 		return (NULL);
-	MALLOC(t, struct m_tag *, len + sizeof(struct m_tag), M_PACKET_TAGS,
-	    wait);
+	t = malloc(len + sizeof(struct m_tag), M_PACKET_TAGS, wait);
 	if (t == NULL)
 		return (NULL);
 	t->m_tag_id = type;
@@ -291,7 +290,7 @@ void
 m_tag_free(t)
 	struct m_tag *t;
 {
-	FREE(t, M_PACKET_TAGS);
+	free(t, M_PACKET_TAGS);
 }
 
 /* Prepend a packet tag. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.6 2001/09/30 00:31:15 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.6.4.1 2002/06/11 03:42:28 art Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -54,10 +54,10 @@
 #include <dev/ic/anvar.h>
 #include <dev/ic/anreg.h>
 
-int  an_pcmcia_match         __P((struct device *, void *, void *));
-void an_pcmcia_attach        __P((struct device *, struct device *, void *));
-int  an_pcmcia_detach        __P((struct device *, int));
-int  an_pcmcia_activate      __P((struct device *, enum devact));
+int  an_pcmcia_match(struct device *, void *, void *);
+void an_pcmcia_attach(struct device *, struct device *, void *);
+int  an_pcmcia_detach(struct device *, int);
+int  an_pcmcia_activate(struct device *, enum devact);
 
 struct an_pcmcia_softc {
 	struct an_softc sc_an;
@@ -146,7 +146,7 @@ an_pcmcia_detach(dev, flags)
 {
 	struct an_pcmcia_softc *psc = (struct an_pcmcia_softc *)dev;
 	struct an_softc *sc = (struct an_softc *)dev;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 
 	if (sc->an_gone) {
 		printf ("%s: already detached\n", sc->sc_dev.dv_xname);
@@ -174,7 +174,7 @@ an_pcmcia_activate(dev, act)
 {
 	struct an_pcmcia_softc *psc = (struct an_pcmcia_softc *)dev;
 	struct an_softc *sc = &psc->sc_an;
-	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int s;
 
 	s = splnet();

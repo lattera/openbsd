@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/pool.h,v 1.4.4.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/pool.h,v 1.4.4.2 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: pool.h,v 1.27 2001/06/06 22:00:17 rafal Exp $	*/
 
 /*-
@@ -51,23 +51,16 @@
 #define KERN_POOL_NAME		2
 #define KERN_POOL_POOL		3
 
-#ifdef _KERNEL
-#define	__POOL_EXPOSE
-#endif
-
 #if defined(_KERNEL_OPT)
 #include "opt_pool.h"
 #endif
 
-#ifdef __POOL_EXPOSE
 #include <sys/lock.h>
 #include <sys/queue.h>
 #include <sys/time.h>
-#endif
 
 #define PR_HASHTABSIZE		8
 
-#ifdef __POOL_EXPOSE
 struct pool_cache {
 	TAILQ_ENTRY(pool_cache)
 			pc_poollist;	/* entry on pool's group list */
@@ -192,7 +185,6 @@ struct pool {
 	void		(*pr_drain_hook)(void *, int);
 	void		*pr_drain_hook_arg;
 };
-#endif /* __POOL_EXPOSE */
 
 #ifdef _KERNEL
 /*
@@ -202,6 +194,9 @@ struct pool {
 extern struct pool_allocator pool_allocator_nointr;
 /* Standard pool allocator, provided here for reference. */
 extern struct pool_allocator pool_allocator_kmem;
+
+int		pool_allocator_drain(struct pool_allocator *, struct pool *,
+		    int);
 
 void		pool_init(struct pool *, size_t, u_int, u_int, int,
 		    const char *, struct pool_allocator *);
@@ -220,7 +215,7 @@ int		pool_reclaim(struct pool *);
  */
 void		*_pool_get(struct pool *, int, const char *, long);
 void		_pool_put(struct pool *, void *, const char *, long);
-void		_pool_reclaim(struct pool *, const char *, long);
+int		_pool_reclaim(struct pool *, const char *, long);
 #define		pool_get(h, f)	_pool_get((h), (f), __FILE__, __LINE__)
 #define		pool_put(h, v)	_pool_put((h), (v), __FILE__, __LINE__)
 #define		pool_reclaim(h)	_pool_reclaim((h), __FILE__, __LINE__)
@@ -229,7 +224,7 @@ void		_pool_reclaim(struct pool *, const char *, long);
 int		pool_prime(struct pool *, int);
 void		pool_setlowat(struct pool *, int);
 void		pool_sethiwat(struct pool *, int);
-void		pool_sethardlimit(struct pool *, int, const char *, int);
+int		pool_sethardlimit(struct pool *, unsigned, const char *, int);
 void		pool_drain(void *);
 
 /*

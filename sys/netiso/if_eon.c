@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/if_eon.c,v 1.13 2001/06/27 03:49:54 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/if_eon.c,v 1.13.4.1 2002/06/11 03:31:38 art Exp $	*/
 /*	$NetBSD: if_eon.c,v 1.15 1996/05/09 22:29:37 scottr Exp $	*/
 
 /*-
@@ -447,13 +447,7 @@ flush:
 }
 
 void
-#if __STDC__
 eoninput(struct mbuf *m, ...)
-#else
-eoninput(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	int             iphlen;
 	register struct eon_hdr *eonhdr;
@@ -490,7 +484,8 @@ eoninput(m, va_alist)
 			}
 #endif
 			eonifp->if_ierrors++;
-			m_freem(m);
+			if (m != 0)
+				m_freem(m);
 			return;
 		}
 	}

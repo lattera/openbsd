@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.47 2001/12/03 14:29:24 mpech Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.47.2.1 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -57,6 +57,9 @@
 #endif
 #include <sys/syscall.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
@@ -91,10 +94,10 @@ extern struct emul emul_bsdos;
 
 #include "npx.h"
 
-static __inline void userret __P((struct proc *, int, u_quad_t));
-void trap __P((struct trapframe));
-int trapwrite __P((unsigned));
-void syscall __P((struct trapframe));
+static __inline void userret(struct proc *, int, u_quad_t);
+void trap(struct trapframe);
+int trapwrite(unsigned);
+void syscall(struct trapframe);
 
 /*
  * Define the code needed before returning to user mode, for
@@ -417,7 +420,7 @@ trap(frame)
 		/* FALLTHROUGH */
 
 	case T_PAGEFLT|T_USER: {	/* page fault */
-		vm_offset_t va;
+		vm_offset_t va, fa;
 		struct vmspace *vm = p->p_vmspace;
 		struct vm_map *map;
 		int rv;
@@ -426,7 +429,8 @@ trap(frame)
 
 		if (vm == NULL)
 			goto we_re_toast;
-		va = trunc_page((vm_offset_t)rcr2());
+		fa = (vm_offset_t)rcr2();
+		va = trunc_page(fa);
 		/*
 		 * It is only a kernel address space fault iff:
 		 *	1. (type & T_USER) == 0  and
@@ -485,7 +489,7 @@ trap(frame)
 			    map, va, ftype, rv);
 			goto we_re_toast;
 		}
-		sv.sival_int = rcr2();
+		sv.sival_int = fa;
 		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
 		break;
 	}
@@ -710,7 +714,12 @@ syscall(frame)
 		goto bad;
 	rval[0] = 0;
 	rval[1] = frame.tf_edx;
-	orig_error = error = (*callp->sy_call)(p, args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		orig_error = error = systrace_redirect(code, p, args, rval);
+	else
+#endif
+		orig_error = error = (*callp->sy_call)(p, args, rval);
 	switch (error) {
 	case 0:
 		/*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_ddb.h,v 1.8.2.1 2002/01/31 22:55:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_ddb.h,v 1.8.2.2 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_ddb.h,v 1.7 2001/06/02 18:09:26 chs Exp $	*/
 
 /*
@@ -41,13 +41,13 @@
 #ifdef _KERNEL
 
 #ifdef DDB
-void	uvm_map_printit __P((struct vm_map *, boolean_t,
-	    int (*) __P((const char *, ...))));
-void	uvm_object_printit __P((struct uvm_object *, boolean_t,
-	    int (*) __P((const char *, ...))));
-void	uvm_page_printit __P((struct vm_page *, boolean_t,
-	    int (*) __P((const char *, ...))));
-void	uvmexp_print(int (*) __P((const char *, ...)));
+void	uvm_map_printit(struct vm_map *, boolean_t,
+	    int (*)(const char *, ...));
+void	uvm_object_printit(struct uvm_object *, boolean_t,
+	    int (*)(const char *, ...));
+void	uvm_page_printit(struct vm_page *, boolean_t,
+	    int (*)(const char *, ...));
+void	uvmexp_print(int (*)(const char *, ...));
 #endif /* DDB */
 
 #endif /* _KERNEL */

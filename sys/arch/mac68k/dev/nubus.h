@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.h,v 1.16 1997/05/08 16:36:37 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.h,v 1.16.26.1 2002/06/11 03:36:19 art Exp $	*/
 /*	$NetBSD: nubus.h,v 1.25 1997/05/02 00:54:28 briggs Exp $	*/
 
 /*
@@ -80,6 +80,7 @@
 #define    NUBUS_DRHW_INTERLAN	0x0100
 #define    NUBUS_DRHW_KINETICS	0x0106
 #define    NUBUS_DRHW_CABLETRON	0x0109
+#define    NUBUS_DRHW_ASANTE_LC	0x010F
 #define    NUBUS_DRHW_SONIC	0x0110
 #define    NUBUS_DRHW_APPLE_SNT	0x0118
 #define    NUBUS_DRHW_APPLE_SN	0x0119
@@ -257,17 +258,17 @@ struct nubus_softc {
 	struct	device	sc_dev;
 };
 
-void	nubus_get_main_dir __P((nubus_slot *slot, nubus_dir *dir_return));
-int	nubus_find_rsrc __P((nubus_slot *slot, nubus_dir *dir, u_int8_t rsrcid,
-			     nubus_dirent *dirent_return));
-void	nubus_get_dir_from_rsrc __P((nubus_slot *slot, nubus_dirent *dirent,
-				     nubus_dir *dir_return));
-int	nubus_get_ind_data __P((nubus_slot *slot, nubus_dirent *dirent,
-				caddr_t data_return, int nbytes));
-int	nubus_get_c_string __P((nubus_slot *slot, nubus_dirent *dirent,
-				caddr_t data_return, int max_bytes));
-char	*nubus_get_vendor __P((nubus_slot *slot, int rsrc));
-char	*nubus_get_card_name __P((nubus_slot *slot));
-char	*nubus_mapin __P((int paddr, int sz));
+void	nubus_get_main_dir(nubus_slot *slot, nubus_dir *dir_return);
+int	nubus_find_rsrc(nubus_slot *slot, nubus_dir *dir, u_int8_t rsrcid,
+			     nubus_dirent *dirent_return);
+void	nubus_get_dir_from_rsrc(nubus_slot *slot, nubus_dirent *dirent,
+				     nubus_dir *dir_return);
+int	nubus_get_ind_data(nubus_slot *slot, nubus_dirent *dirent,
+				caddr_t data_return, int nbytes);
+int	nubus_get_c_string(nubus_slot *slot, nubus_dirent *dirent,
+				caddr_t data_return, int max_bytes);
+char	*nubus_get_vendor(nubus_slot *slot, int rsrc);
+char	*nubus_get_card_name(nubus_slot *slot);
+char	*nubus_mapin(int paddr, int sz);
 	int paddr, sz;
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/esavar.h,v 1.1 2002/04/08 01:47:33 frantzen Exp $ */
+/* $OpenBSD: src/sys/dev/pci/esavar.h,v 1.1.4.1 2002/06/11 03:42:24 art Exp $ */
 /* $NetBSD: esavar.h,v 1.4 2002/03/16 14:34:01 jmcneill Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.118 2001/08/19 06:31:56 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.118.4.1 2002/06/11 03:31:36 art Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -168,8 +168,10 @@ struct ipsec_acquire {
 	struct sockaddr_encap		ipa_mask;
 	struct timeout			ipa_timeout;
 	struct ipsec_policy		*ipa_policy;
+	struct inpcb                    *ipa_pcb;
 	TAILQ_ENTRY(ipsec_acquire)	ipa_ipo_next;
 	TAILQ_ENTRY(ipsec_acquire)	ipa_next;
+	TAILQ_ENTRY(ipsec_acquire)      ipa_inp_next;
 };
 
 struct ipsec_policy {
@@ -192,6 +194,8 @@ struct ipsec_policy {
 	u_int8_t		ipo_type;	/* USE/ACQUIRE/... */
 	u_int8_t		ipo_sproto;	/* ESP/AH; if zero, use system dflts */
 
+	int                     ipo_ref_count;
+       
 	struct tdb		*ipo_tdb;		/* Cached entry */
 
 	struct ipsec_ref	*ipo_srcid;
@@ -339,10 +343,8 @@ struct tdb {				/* tunnel descriptor block */
 
 	u_int32_t	tdb_rpl;	/* Replay counter */
 	u_int32_t	tdb_bitmap;	/* Used for replay sliding window */
-	u_int32_t	tdb_initial;	/* Initial replay value */
 
 	u_int32_t	tdb_epoch;	/* Used by the kernfs interface */
-
 	u_int8_t	tdb_iv[4];	/* Used for HALF-IV ESP */
 
 	struct ipsec_ref	*tdb_local_cred;
@@ -354,6 +356,9 @@ struct tdb {				/* tunnel descriptor block */
 
 	u_int32_t	tdb_mtu;	/* MTU at this point in the chain */
 	u_int64_t	tdb_mtutimeout;	/* When to ignore this entry */
+
+	struct sockaddr_encap   tdb_filter; /* What traffic is acceptable */
+	struct sockaddr_encap   tdb_filtermask; /* And the mask */
 
 	TAILQ_HEAD(tdb_inp_head_in, inpcb)	tdb_inp_in;
 	TAILQ_HEAD(tdb_inp_head_out, inpcb)	tdb_inp_out;
@@ -383,18 +388,6 @@ struct ipsecinit {
 	u_int8_t	ii_encalg;
 	u_int8_t	ii_authalg;
 	u_int8_t	ii_compalg;
-};
-
-struct xformsw {
-	u_short	xf_type;		/* Unique ID of xform */
-	u_short	xf_flags;		/* flags (see below) */
-	char	*xf_name;		/* human-readable name */
-	int	(*xf_attach)(void);	/* called at config time */
-	int	(*xf_init)(struct tdb *, struct xformsw *, struct ipsecinit *);
-	int	(*xf_zeroize)(struct tdb *); /* termination */
-	int	(*xf_input)(struct mbuf *, struct tdb *, int, int); /* input */
-	int	(*xf_output)(struct mbuf *, struct tdb *, struct mbuf **,
-	    int, int);        /* output */
 };
 
 /* xform IDs */
@@ -435,6 +428,18 @@ htonq(u_int64_t q)
 #endif
 
 #ifdef _KERNEL
+
+struct xformsw {
+	u_short	xf_type;		/* Unique ID of xform */
+	u_short	xf_flags;		/* flags (see below) */
+	char	*xf_name;		/* human-readable name */
+	int	(*xf_attach)(void);	/* called at config time */
+	int	(*xf_init)(struct tdb *, struct xformsw *, struct ipsecinit *);
+	int	(*xf_zeroize)(struct tdb *); /* termination */
+	int	(*xf_input)(struct mbuf *, struct tdb *, int, int); /* input */
+	int	(*xf_output)(struct mbuf *, struct tdb *, struct mbuf **,
+	    int, int);        /* output */
+};
 
 /*
  * Protects all tdb lists.
@@ -513,10 +518,12 @@ extern void tdb_add_inp(struct tdb *, struct inpcb *, int);
 extern u_int32_t reserve_spi(u_int32_t, u_int32_t, union sockaddr_union *,
     union sockaddr_union *, u_int8_t, int *);
 extern struct tdb *gettdb(u_int32_t, union sockaddr_union *, u_int8_t);
-extern struct tdb *gettdbbyaddr(union sockaddr_union *, struct ipsec_policy *,
-    struct mbuf *, int);
-extern struct tdb *gettdbbysrc(union sockaddr_union *, struct ipsec_policy *,
-    struct mbuf *, int);
+extern struct tdb *gettdbbyaddr(union sockaddr_union *, u_int8_t,
+    struct ipsec_ref *, struct ipsec_ref *, struct ipsec_ref *,
+    struct mbuf *, int, struct sockaddr_encap *, struct sockaddr_encap *);
+extern struct tdb *gettdbbysrc(union sockaddr_union *, u_int8_t,
+    struct ipsec_ref *, struct ipsec_ref *, struct mbuf *, int,
+    struct sockaddr_encap *, struct sockaddr_encap *);
 extern void puttdb(struct tdb *);
 extern void tdb_delete(struct tdb *);
 extern struct tdb *tdb_alloc(void);
@@ -528,21 +535,21 @@ extern int ipe4_attach(void);
 extern int ipe4_init(struct tdb *, struct xformsw *, struct ipsecinit *);
 extern int ipe4_zeroize(struct tdb *);
 extern int ipip_output(struct mbuf *, struct tdb *, struct mbuf **, int, int);
-extern void ipe4_input __P((struct mbuf *, ...));
-extern void ipip_input __P((struct mbuf *, int, struct ifnet *));
+extern void ipe4_input(struct mbuf *, ...);
+extern void ipip_input(struct mbuf *, int, struct ifnet *);
 
 #ifdef INET
-extern void ip4_input __P((struct mbuf *, ...));
+extern void ip4_input(struct mbuf *, ...);
 #endif /* INET */
 
 #ifdef INET6
-extern int ip4_input6 __P((struct mbuf **, int *, int));
+extern int ip4_input6(struct mbuf **, int *, int);
 #endif /* INET */
 
 /* XF_ETHERIP */
 extern int etherip_output(struct mbuf *, struct tdb *, struct mbuf **,
     int, int);
-extern void etherip_input __P((struct mbuf *, ...));
+extern void etherip_input(struct mbuf *, ...);
 
 /* XF_AH */
 extern int ah_attach(void);
@@ -556,14 +563,14 @@ extern int ah_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 extern int ah_massage_headers(struct mbuf **, int, int, int, int);
 
 #ifdef INET
-extern void ah4_input __P((struct mbuf *, ...));
-extern int ah4_input_cb __P((struct mbuf *, ...));
-extern void *ah4_ctlinput __P((int, struct sockaddr *, void *));
+extern void ah4_input(struct mbuf *, ...);
+extern int ah4_input_cb(struct mbuf *, ...);
+extern void *ah4_ctlinput(int, struct sockaddr *, void *);
 #endif /* INET */
 
 #ifdef INET6
-extern int ah6_input __P((struct mbuf **, int *, int));
-extern int ah6_input_cb __P((struct mbuf *, int, int));
+extern int ah6_input(struct mbuf **, int *, int);
+extern int ah6_input_cb(struct mbuf *, int, int);
 #endif /* INET6 */
 
 /* XF_ESP */
@@ -577,14 +584,14 @@ extern int esp_input_cb(void *);
 extern int esp_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 #ifdef INET
-extern void esp4_input __P((struct mbuf *, ...));
-extern int esp4_input_cb __P((struct mbuf *, ...));
-extern void *esp4_ctlinput __P((int, struct sockaddr *, void *));
+extern void esp4_input(struct mbuf *, ...);
+extern int esp4_input_cb(struct mbuf *, ...);
+extern void *esp4_ctlinput(int, struct sockaddr *, void *);
 #endif /* INET */
 
 #ifdef INET6
-extern int esp6_input __P((struct mbuf **, int *, int));
-extern int esp6_input_cb __P((struct mbuf *, int, int));
+extern int esp6_input(struct mbuf **, int *, int);
+extern int esp6_input_cb(struct mbuf *, int, int);
 #endif /* INET6 */
 
 /* XF_IPCOMP */
@@ -598,31 +605,31 @@ extern int ipcomp_input_cb(void *);
 extern int ipcomp_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 #ifdef INET
-extern void ipcomp4_input __P((struct mbuf *, ...));
-extern int ipcomp4_input_cb __P((struct mbuf *, ...));
+extern void ipcomp4_input(struct mbuf *, ...);
+extern int ipcomp4_input_cb(struct mbuf *, ...);
 #endif /* INET */
 
 #ifdef INET6
-extern int ipcomp6_input __P((struct mbuf **, int *, int));
-extern int ipcomp6_input_cb __P((struct mbuf *, int, int));
+extern int ipcomp6_input(struct mbuf **, int *, int);
+extern int ipcomp6_input_cb(struct mbuf *, int, int);
 #endif /* INET6 */
 
 /* XF_TCPSIGNATURE */
-extern int tcp_signature_tdb_attach __P((void));
-extern int tcp_signature_tdb_init __P((struct tdb *, struct xformsw *,
-    struct ipsecinit *));
-extern int tcp_signature_tdb_zeroize __P((struct tdb *));
-extern int tcp_signature_tdb_input __P((struct mbuf *, struct tdb *, int,
-    int));
-extern int tcp_signature_tdb_output __P((struct mbuf *, struct tdb *,
-    struct mbuf **, int, int));
+extern int tcp_signature_tdb_attach(void);
+extern int tcp_signature_tdb_init(struct tdb *, struct xformsw *,
+    struct ipsecinit *);
+extern int tcp_signature_tdb_zeroize(struct tdb *);
+extern int tcp_signature_tdb_input(struct mbuf *, struct tdb *, int,
+    int);
+extern int tcp_signature_tdb_output(struct mbuf *, struct tdb *,
+    struct mbuf **, int, int);
 
 /* Padding */
 extern caddr_t m_pad(struct mbuf *, int);
 
 /* Replay window */
 extern int checkreplaywindow32(u_int32_t, u_int32_t, u_int32_t *, u_int32_t,
-    u_int32_t *);
+    u_int32_t *, int);
 
 extern unsigned char ipseczeroes[];
 
@@ -637,8 +644,9 @@ extern int ipsec_common_input_cb(struct mbuf *, struct tdb *, int, int,
     struct m_tag *);
 extern int ipsp_acquire_sa(struct ipsec_policy *, union sockaddr_union *,
     union sockaddr_union *, struct sockaddr_encap *, struct mbuf *);
-extern struct ipsec_policy *ipsec_add_policy(struct sockaddr_encap *,
-    struct sockaddr_encap *, union sockaddr_union *, int, int);
+extern struct ipsec_policy *ipsec_add_policy(struct inpcb *, int, int);
+extern void ipsec_update_policy(struct inpcb *, struct ipsec_policy *,
+    int, int);
 extern int ipsec_delete_policy(struct ipsec_policy *);
 extern struct ipsec_acquire *ipsp_pending_acquire(struct ipsec_policy *,
     union sockaddr_union *);
@@ -653,5 +661,10 @@ extern ssize_t ipsec_hdrsz(struct tdb *);
 extern void ipsec_adjust_mtu(struct mbuf *, u_int32_t);
 extern int ipsp_print_tdb(struct tdb *, char *);
 extern struct ipsec_acquire *ipsec_get_acquire(u_int32_t);
+extern int ipsp_aux_match(struct ipsec_ref *, struct ipsec_ref *,
+    struct ipsec_ref *, struct ipsec_ref *, struct ipsec_ref *,
+    struct ipsec_ref *, struct ipsec_ref *, struct ipsec_ref *,
+    struct sockaddr_encap *, struct sockaddr_encap *,
+    struct sockaddr_encap *, struct sockaddr_encap *);
 #endif /* _KERNEL */
 #endif /* _NETINET_IPSP_H_ */

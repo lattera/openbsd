@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.h,v 1.3 1999/04/20 20:01:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/libsa/dev_hppa.h,v 1.3.14.1 2002/06/11 03:35:38 art Exp $	*/
 
 
 #define IOPGSHIFT	11
@@ -39,5 +39,5 @@ extern pdcio_t pdc;
 extern int pdcbuf[];			/* PDC returns, pdc.c */
 extern struct  pz_device ctdev;		/* cartridge tape (boot) device path */
 
-int iodc_rw __P((char *, u_int, u_int, int func, struct pz_device *));
+int iodc_rw(char *, u_int, u_int, int func, struct pz_device *);
 

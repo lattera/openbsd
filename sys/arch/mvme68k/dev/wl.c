@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.5 2001/06/27 05:44:48 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.5.4.1 2002/06/11 03:36:50 art Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -31,7 +31,6 @@
  */  
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/proc.h>
 #include <sys/tty.h>
@@ -39,16 +38,20 @@
 #include <sys/systm.h>
 #include <sys/time.h>
 #include <sys/device.h>
-#include <machine/cpu.h>
+#include <sys/syslog.h>
+
 #include <machine/autoconf.h>
+#include <machine/conf.h>
+#include <machine/cpu.h>
+
 #include <mvme68k/dev/wlreg.h>
 #include <mvme68k/dev/vme.h>
-#include <sys/syslog.h>
+
 #include "cl.h"
 
 #include "vmes.h"
 
-#define splcl() spl3()
+#define splcl() spltty()
 
 /* min timeout 0xa, what is a good value */
 #define CL_TIMEOUT	0x10
@@ -165,39 +168,32 @@ struct {
 };
 
 /* prototypes */
-u_char cl_clkdiv __P((int speed));
-u_char cl_clknum __P((int speed));
-u_char cl_clkrxtimeout __P((int speed));
-void clstart __P((struct tty *tp));
-void cl_unblock __P((struct tty *tp));
-int clccparam __P((struct wlsoftc *sc, struct termios *par, int channel));
+u_char cl_clkdiv(int speed);
+u_char cl_clknum(int speed);
+u_char cl_clkrxtimeout(int speed);
+void clstart(struct tty *tp);
+void cl_unblock(struct tty *tp);
+int clccparam(struct wlsoftc *sc, struct termios *par, int channel);
 
-int clparam __P((struct tty *tp, struct termios *t));
-int cl_intr __P((struct wlsoftc *sc, int));
-int cl_mintr __P((struct wlsoftc *sc));
-int cl_txintr __P((struct wlsoftc *sc));
-int cl_rxintr __P((struct wlsoftc *sc));
-void cl_overflow __P((struct wlsoftc *sc, int channel, long *ptime, u_char *msg));
-void cl_parity __P((struct wlsoftc *sc, int channel));
-void cl_frame __P((struct wlsoftc *sc, int channel));
-void cl_break __P(( struct wlsoftc *sc, int channel));
-int clmctl __P((dev_t dev, int bits, int how));
-void cl_dumpport __P((int channel));
+int clparam(struct tty *tp, struct termios *t);
+int cl_intr(struct wlsoftc *sc, int);
+int cl_mintr(struct wlsoftc *sc);
+int cl_txintr(struct wlsoftc *sc);
+int cl_rxintr(struct wlsoftc *sc);
+void cl_overflow(struct wlsoftc *sc, int channel, long *ptime, u_char *msg);
+void cl_parity(struct wlsoftc *sc, int channel);
+void cl_frame(struct wlsoftc *sc, int channel);
+void cl_break( struct wlsoftc *sc, int channel);
+int clmctl(dev_t dev, int bits, int how);
+void cl_dumpport(int channel);
 
-int	wlprobe __P((struct device *parent, void *self, void *aux));
-void	wlattach __P((struct device *parent, struct device *self, void *aux));
+int	wlprobe(struct device *parent, void *self, void *aux);
+void	wlattach(struct device *parent, struct device *self, void *aux);
 
-int wlopen  __P((dev_t dev, int flag, int mode, struct proc *p));
-int wlclose __P((dev_t dev, int flag, int mode, struct proc *p));
-int wlread  __P((dev_t dev, struct uio *uio, int flag));
-int wlwrite __P((dev_t dev, struct uio *uio, int flag));
-int wlioctl __P((dev_t dev, int cmd, caddr_t data, int flag, struct proc *p));
-int wlstop  __P((struct tty *tp, int flag));
-
-static void cl_initchannel __P((struct wlsoftc *sc, int channel));
-static void clputc __P((struct wlsoftc *sc, int unit, u_char c));
-static u_char clgetc __P((struct wlsoftc *sc, int *channel));
-static void cloutput __P( (struct tty *tp));
+static void cl_initchannel(struct wlsoftc *sc, int channel);
+static void clputc(struct wlsoftc *sc, int unit, u_char c);
+static u_char clgetc(struct wlsoftc *sc, int *channel);
+static void cloutput(struct tty *tp);
 
 struct cfattach wl_ca = {
 	sizeof(struct wlsoftc), wlprobe, wlattach
@@ -486,7 +482,7 @@ int clmctl (dev, bits, how)
 		}
 		break;
 	}
-	(void)splx(s);
+	splx(s);
 #if 0
 	bits = 0;
 	/* proper defaults? */
@@ -504,7 +500,8 @@ int clmctl (dev, bits, how)
 	return(bits);
 }
 
-int wlopen (dev, flag, mode, p)
+int
+wlopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag;
 	int mode;
@@ -645,7 +642,8 @@ void cloutput(tp)
 	splx(s);
 }
 
-int wlclose (dev, flag, mode, p)
+int
+wlclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag;
 	int mode;
@@ -685,7 +683,8 @@ int wlclose (dev, flag, mode, p)
 	return (0);
 }
 
-int wlread (dev, uio, flag)
+int
+wlread(dev, uio, flag)
 	dev_t dev;
 	struct uio *uio;
 	int flag;
@@ -706,7 +705,8 @@ int wlread (dev, uio, flag)
 		return ENXIO;
 	return((*linesw[tp->t_line].l_read)(tp, uio, flag));
 }
-int wlwrite (dev, uio, flag)
+int
+wlwrite(dev, uio, flag)
 	dev_t dev;
 	struct uio *uio;
 	int flag;
@@ -727,9 +727,10 @@ int wlwrite (dev, uio, flag)
 		return ENXIO;
 	return((*linesw[tp->t_line].l_write)(tp, uio, flag));
 }
-int wlioctl (dev, cmd, data, flag, p)
+int
+wlioctl(dev, cmd, data, flag, p)
 	dev_t dev;
-	int cmd;
+	u_long cmd;
 	caddr_t data;
 	int flag;
 	struct proc *p;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.36 2001/11/29 08:20:50 itojun Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.36.2.1 2002/06/11 03:31:36 art Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
@@ -74,13 +74,7 @@ struct etheripstat etheripstat;
  */
 
 void
-#if __STDC__
 etherip_input(struct mbuf *m, ...)
-#else
-etherip_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
 	union sockaddr_union ssrc, sdst;
 	struct ether_header eh;
@@ -161,7 +155,6 @@ etherip_input(m, va_alist)
 		    sizeof(struct etherip_header))) == NULL) {
 			DPRINTF(("etherip_input(): m_pullup() failed\n"));
 			etheripstat.etherip_adrops++;
-			m_freem(m);
 			return;
 		}
 	}
@@ -213,7 +206,7 @@ etherip_input(m, va_alist)
 	m_copydata(m, 0, sizeof(eh), (void *) &eh);
 
 	/* Reset the flags based on the inner packet */
-	m->m_flags &= ~(M_BCAST|M_MCAST|M_AUTH|M_CONF);
+	m->m_flags &= ~(M_BCAST|M_MCAST|M_AUTH|M_CONF|M_AUTH_AH);
 	if (eh.ether_dhost[0] & 1) {
 		if (bcmp((caddr_t) etherbroadcastaddr,
 		    (caddr_t)eh.ether_dhost, sizeof(etherbroadcastaddr)) == 0)

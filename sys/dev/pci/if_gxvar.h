@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/Attic/if_gxvar.h,v 1.1 2002/04/02 13:03:31 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/Attic/if_gxvar.h,v 1.1.4.1 2002/06/11 03:42:25 art Exp $ */
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon
  * All rights reserved.

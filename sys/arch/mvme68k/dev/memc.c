@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.5 2000/03/26 23:31:59 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/memc.c,v 1.5.10.1 2002/06/11 03:36:49 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -61,8 +61,8 @@ struct memcsoftc {
 	struct intrhand	sc_ih;
 };
 
-void memcattach __P((struct device *, struct device *, void *));
-int  memcmatch __P((struct device *, void *, void *));
+void memcattach(struct device *, struct device *, void *);
+int  memcmatch(struct device *, void *, void *);
 
 struct cfattach memc_ca = {
 	sizeof(struct memcsoftc), memcmatch, memcattach
@@ -72,18 +72,17 @@ struct cfdriver memc_cd = {
 	NULL, "memc", DV_DULL, 0
 };
 
-int memcintr __P((struct frame *frame));
+int memcintr(struct frame *frame);
 
 int
 memcmatch(parent, vcf, args)
 	struct device *parent;
 	void *vcf, *args;
 {
-	struct cfdata *cf = vcf;
 	struct confargs *ca = args;
 	struct memcreg *memc = (struct memcreg *)ca->ca_vaddr;
 
-	if (badvaddr(memc, 1))
+	if (badvaddr((vaddr_t)memc, 1))
 		return (0);
 	if (memc->memc_chipid==MEMC_CHIPID || memc->memc_chipid==MCECC_CHIPID)
 		return (1);
@@ -110,7 +109,6 @@ memcattach(parent, self, args)
 
 #if 0
 	sc->sc_ih.ih_fn = memcintr;
-	sc->sc_ih.ih_arg = 0;
 	sc->sc_ih.ih_ipl = 7;
 	sc->sc_ih.ih_wantframe = 1;
 	mcintr_establish(xxx, &sc->sc_ih);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/hsq.c,v 1.1 1999/11/28 12:15:08 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/hsq.c,v 1.1.12.1 2002/06/11 03:42:21 art Exp $	*/
 
 /*-
  * Copyright (c) 1999 Denis A. Doroshenko. All rights reserved.
@@ -114,10 +114,10 @@ struct hsq_softc {
 	bus_space_handle_t sc_slaveioh[NSLAVES];
 };
 
-int hsqprobe __P((struct device *, void *, void *));
-void hsqattach __P((struct device *, struct device *, void *));
-int hsqintr __P((void *));
-int hsqprint __P((void *, const char *));
+int hsqprobe(struct device *, void *, void *);
+void hsqattach(struct device *, struct device *, void *);
+int hsqintr(void *);
+int hsqprint(void *, const char *);
 
 struct cfattach hsq_ca = {
 	sizeof(struct hsq_softc), hsqprobe, hsqattach

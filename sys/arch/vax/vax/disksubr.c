@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.15.2.1 2002/01/31 22:55:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.15.2.2 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1999/06/30 18:48:06 ragge Exp $	*/
 
 /*
@@ -120,7 +120,7 @@ bad:
 char *
 readdisklabel(dev, strat, lp, osdep, spoofonly)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *osdep;
 	int spoofonly;
@@ -168,6 +168,12 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 			*lp = *dlp;
 		}
 	}
+
+#if defined(CD9660)
+	if (msg && iso_disklabelspoof(dev, strat, lp) == 0)
+		msg = NULL;
+#endif
+
 	bp->b_flags = B_INVAL | B_AGE | B_READ;
 	brelse(bp);
 	return (msg);
@@ -241,7 +247,7 @@ setdisklabel(olp, nlp, openmask, osdep)
 int
 writedisklabel(dev, strat, lp, osdep)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *osdep;
 {

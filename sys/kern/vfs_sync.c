@@ -1,4 +1,4 @@
-/*       $OpenBSD: src/sys/kern/vfs_sync.c,v 1.21 2001/11/27 05:27:12 art Exp $  */
+/*       $OpenBSD: src/sys/kern/vfs_sync.c,v 1.21.2.1 2002/06/11 03:29:40 art Exp $  */
 
 /*
  *  Portions of this code are:
@@ -56,7 +56,7 @@
 #include <sys/kernel.h>
 
 #ifdef FFS_SOFTUPDATES
-int   softdep_process_worklist __P((struct mount *));
+int   softdep_process_worklist(struct mount *);
 #endif
 
 /*
@@ -254,15 +254,15 @@ speedup_syncer()
  * Routine to create and manage a filesystem syncer vnode.
  */
 #define sync_close nullop
-int   sync_fsync __P((void *));
-int   sync_inactive __P((void *));
+int   sync_fsync(void *);
+int   sync_inactive(void *);
 #define sync_reclaim nullop
 #define sync_lock vop_generic_lock
 #define sync_unlock vop_generic_unlock
-int   sync_print __P((void *));
+int   sync_print(void *);
 #define sync_islocked vop_generic_islocked
 
-int (**sync_vnodeop_p) __P((void *));
+int (**sync_vnodeop_p)(void *);
 struct vnodeopv_entry_desc sync_vnodeop_entries[] = {
       { &vop_default_desc, vn_default_error },
       { &vop_close_desc, sync_close },                /* close */
@@ -273,7 +273,7 @@ struct vnodeopv_entry_desc sync_vnodeop_entries[] = {
       { &vop_unlock_desc, sync_unlock },              /* unlock */
       { &vop_print_desc, sync_print },                /* print */
       { &vop_islocked_desc, sync_islocked },          /* islocked */
-      { (struct vnodeop_desc*)NULL, (int(*) __P((void *)))NULL }
+      { (struct vnodeop_desc*)NULL, (int(*)(void *))NULL }
 };
 struct vnodeopv_desc sync_vnodeop_opv_desc = {
 	&sync_vnodeop_p, sync_vnodeop_entries

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.24 2001/08/19 17:49:00 frantzen Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_sym.c,v 1.24.4.1 2002/06/11 03:28:48 art Exp $	*/
 /*	$NetBSD: db_sym.c,v 1.24 2000/08/11 22:50:47 tv Exp $	*/
 
 /* 
@@ -71,16 +71,16 @@ const db_symformat_t *db_symformats[] = {
 
 const db_symformat_t *db_symformat;
 
-boolean_t	X_db_sym_init __P((int, void *, void *, const char *));
-db_sym_t	X_db_lookup __P((db_symtab_t *, char *));
-db_sym_t	X_db_search_symbol __P((db_symtab_t *, db_addr_t,
-		    db_strategy_t, db_expr_t *));
-void		X_db_symbol_values __P((db_symtab_t *, db_sym_t, char **,
-		    db_expr_t *));
-boolean_t	X_db_line_at_pc __P((db_symtab_t *, db_sym_t, char **,
-		    int *, db_expr_t));
-int		X_db_sym_numargs __P((db_symtab_t *, db_sym_t, int *,
-		    char **));
+boolean_t	X_db_sym_init(int, void *, void *, const char *);
+db_sym_t	X_db_lookup(db_symtab_t *, char *);
+db_sym_t	X_db_search_symbol(db_symtab_t *, db_addr_t,
+		    db_strategy_t, db_expr_t *);
+void		X_db_symbol_values(db_symtab_t *, db_sym_t, char **,
+		    db_expr_t *);
+boolean_t	X_db_line_at_pc(db_symtab_t *, db_sym_t, char **,
+		    int *, db_expr_t);
+int		X_db_sym_numargs(db_symtab_t *, db_sym_t, int *,
+		    char **);
 
 /*
  * Initialize the kernel debugger by initializing the master symbol
@@ -538,9 +538,8 @@ unsigned int	db_maxoff = 0x10000000;
 
 
 void
-db_printsym(off, strategy)
-	db_expr_t	off;
-	db_strategy_t	strategy;
+db_printsym(db_expr_t off, db_strategy_t strategy,
+    int (*pr)(const char *, ...))
 {
 	db_expr_t	d;
 	char 		*filename;
@@ -548,36 +547,38 @@ db_printsym(off, strategy)
 	db_expr_t	value;
 	int 		linenum;
 	db_sym_t	cursym;
+	char		buf[DB_FORMAT_BUF_SIZE];
 
 	if (off <= db_lastsym) {
 		cursym = db_search_symbol(off, strategy, &d);
 		db_symbol_values(cursym, &name, &value);
 		if (name && (d < db_maxoff) && value) {
-			db_printf("%s", name);
+			(*pr)("%s", name);
 			if (d) {
-				db_printf("+%#r", d);
+				(*pr)("+%s", db_format(buf, sizeof(buf),
+				    d, DB_FORMAT_R, 1, 0));
 			}
 			if (strategy == DB_STGY_PROC) {
 				if (db_line_at_pc(cursym, &filename, &linenum, off))
-					db_printf(" [%s:%d]", filename, linenum);
+					(*pr)(" [%s:%d]", filename, linenum);
 			}
 			return;
 		}
 	}
 
-	db_printf("%#ln", off);
+	(*pr)("%s", db_format(buf, sizeof(buf), off, DB_FORMAT_N, 1, 0));
 	return;
 }
 
 
 boolean_t
-db_line_at_pc( sym, filename, linenum, pc)
+db_line_at_pc(sym, filename, linenum, pc)
 	db_sym_t	sym;
 	char		**filename;
 	int		*linenum;
 	db_expr_t	pc;
 {
-	return X_db_line_at_pc( db_last_symtab, sym, filename, linenum, pc);
+	return X_db_line_at_pc(db_last_symtab, sym, filename, linenum, pc);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.20 2001/12/16 02:10:49 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.20.2.1 2002/06/11 03:35:54 art Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*
@@ -126,18 +126,18 @@ pciintr_icu_handle_t pciintr_icu_handle;
 int pcibios_irqs_hint = PCIBIOS_IRQS_HINT;
 #endif
 
-struct pciintr_link_map *pciintr_link_lookup __P((int));
-struct pcibios_intr_routing *pciintr_pir_lookup __P((int, int));
-int	pciintr_bitmap_count_irq __P((int, int *));
+struct pciintr_link_map *pciintr_link_lookup(int);
+struct pcibios_intr_routing *pciintr_pir_lookup(int, int);
+int	pciintr_bitmap_count_irq(int, int *);
 
 SIMPLEQ_HEAD(, pciintr_link_map) pciintr_link_map_list;
 
 const struct pciintr_icu_table {
 	pci_vendor_id_t	piit_vendor;
 	pci_product_id_t piit_product;
-	int (*piit_init) __P((pci_chipset_tag_t,
+	int (*piit_init)(pci_chipset_tag_t,
 		bus_space_tag_t, pcitag_t, pciintr_icu_tag_t *,
-		pciintr_icu_handle_t *));
+		pciintr_icu_handle_t *);
 } pciintr_icu_table[] = {
 	{ PCI_VENDOR_INTEL,	PCI_PRODUCT_INTEL_82371MX,
 	  piix_init },
@@ -171,6 +171,8 @@ const struct pciintr_icu_table {
 
 	{ PCI_VENDOR_AMD,	PCI_PRODUCT_AMD_PBC756_PMC,
 	  amd756_init },
+	{ PCI_VENDOR_AMD,	PCI_PRODUCT_AMD_766_ISA,
+	  amd756_init },
 
 	{ PCI_VENDOR_ALI,	PCI_PRODUCT_ALI_M1543,
 	  ali1543_init },
@@ -179,7 +181,7 @@ const struct pciintr_icu_table {
 	  NULL },
 };
 
-const struct pciintr_icu_table *pciintr_icu_lookup __P((pcireg_t));
+const struct pciintr_icu_table *pciintr_icu_lookup(pcireg_t);
 
 const struct pciintr_icu_table *
 pciintr_icu_lookup(id)
@@ -496,6 +498,13 @@ pci_intr_route_link(pc, ihp)
 	int rv = 1;
 	char *p = NULL;
 
+	if (pcibios_flags & PCIBIOS_INTR_FIXUP)
+		return 1;
+
+	if (ihp->line != 0 &&
+	    ihp->line != I386_PCI_INTERRUPT_LINE_NO_CONNECTION)
+		pcibios_pir_header.exclusive_irq |= (1 << ihp->line);
+
 	l = ihp->link;
 	if (!l || pciintr_icu_tag == NULL)
 		return (1);
@@ -554,6 +563,9 @@ pci_intr_post_fixup()
 	struct pciintr_link_map *l;
 	int i, pciirq;
 
+	if (pcibios_flags & PCIBIOS_INTR_FIXUP)
+		return 1;
+
 	if (!pciintr_icu_handle)
 		return 0;
 
@@ -562,7 +574,7 @@ pci_intr_post_fixup()
 		printf("pci_intr_post_fixup: PCI IRQs:");
 	for (l = SIMPLEQ_FIRST(&pciintr_link_map_list);
 	    l != NULL; l = SIMPLEQ_NEXT(l, list))
-		if (l->fixup_stage == 0 &&
+		if (l->fixup_stage == 0 && l->irq != 0 &&
 		    l->irq != I386_PCI_INTERRUPT_LINE_NO_CONNECTION) {
 			if (pcibios_flags & PCIBIOS_INTRDEBUG)
 				printf(" %d", l->irq);
@@ -595,6 +607,9 @@ pci_intr_header_fixup(pc, tag, ihp)
 	struct pciintr_link_map *l;
 	int irq, link, bus, device, function;
 	char *p = NULL;
+
+	if (pcibios_flags & PCIBIOS_INTR_FIXUP)
+		return 1;
 
 	irq = ihp->line;
 	ihp->link = NULL;

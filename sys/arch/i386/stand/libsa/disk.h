@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/disk.h,v 1.1 1997/11/30 21:59:50 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/disk.h,v 1.1.20.1 2002/06/11 03:35:55 art Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -51,7 +51,7 @@ TAILQ_HEAD(disklist_lh, diskinfo);
 /* Head of this list */
 extern struct diskinfo *bootdev_dip;
 
-void dump_diskinfo __P((void));
+void dump_diskinfo(void);
 
 #endif /* _DISKPROBE_H */
 

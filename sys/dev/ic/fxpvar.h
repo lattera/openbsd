@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.10 2001/11/05 17:25:58 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.10.2.1 2002/06/11 03:42:18 art Exp $	*/
 /*	$NetBSD: if_fxpvar.h,v 1.1 1997/06/05 02:01:58 thorpej Exp $	*/
 
 /*                  
@@ -79,7 +79,7 @@ struct fxp_softc {
 	bus_space_tag_t sc_st;		/* bus space tag */
 	bus_space_handle_t sc_sh;	/* bus space handle */
 	bus_dma_tag_t sc_dmat;		/* bus dma tag */
-	struct arpcom arpcom;		/* per-interface network data */
+	struct arpcom sc_arpcom;	/* per-interface network data */
 	struct mii_data sc_mii;		/* MII media information */
 	struct mbuf *rfa_headm;		/* first mbuf in receive frame area */
 	struct mbuf *rfa_tailm;		/* last mbuf in receive frame area */
@@ -122,9 +122,9 @@ struct fxp_softc {
 #define	CSR_WRITE_4(sc, reg, val)					\
 	bus_space_write_4((sc)->sc_st, (sc)->sc_sh, (reg), (val))
 
-extern int fxp_intr __P((void *));
-extern int fxp_attach_common __P((struct fxp_softc *, u_int8_t *, const char *));
-extern int fxp_detach __P((struct fxp_softc *));
+extern int fxp_intr(void *);
+extern int fxp_attach_common(struct fxp_softc *, u_int8_t *, const char *);
+extern int fxp_detach(struct fxp_softc *);
 
 #define	FXP_RXMAP_GET(sc)	((sc)->sc_rxmaps[(sc)->sc_rxfree++])
 #define	FXP_RXMAP_PUT(sc,map)	((sc)->sc_rxmaps[--(sc)->sc_rxfree] = (map))

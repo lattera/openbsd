@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.2 2002/06/11 03:33:03 art Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.55 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
@@ -110,7 +110,7 @@
  * to this is for memory that belongs to submaps that must be protected
  * by splvm().  pages in these submaps are not assigned to an object.
  *
- * note that just because a kernel object spans the entire kernel virutal
+ * note that just because a kernel object spans the entire kernel virtual
  * address space doesn't mean that it has to be mapped into the entire space.
  * large chunks of a kernel object's space go unused either because
  * that area of kernel VM is unmapped, or there is some other type of
@@ -127,7 +127,7 @@
  *   then that means that the page at offset 0x235000 in kernel_object is
  *   mapped at 0xf8235000.
  *
- * kernel object have one other special property: when the kernel virtual
+ * kernel objects have one other special property: when the kernel virtual
  * memory mapping them is unmapped, the backing memory in the object is
  * freed right away.   this is done with the uvm_km_pgremove() function.
  * this has to be done because there is no backing store for kernel pages
@@ -183,8 +183,8 @@ uvm_km_init(start, end)
 
 	uvm_map_setup(&kernel_map_store, base, end, VM_MAP_PAGEABLE);
 	kernel_map_store.pmap = pmap_kernel();
-	if (uvm_map(&kernel_map_store, &base, start - base, NULL,
-	    UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
+	if (base != start && uvm_map(&kernel_map_store, &base, start - base,
+	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
 	    UVM_INH_NONE, UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 
@@ -451,10 +451,10 @@ uvm_km_kmemalloc(map, obj, size, flags)
 
 		if (obj == NULL) {
 			pmap_kenter_pa(loopva, VM_PAGE_TO_PHYS(pg),
-			    VM_PROT_ALL);
+			    UVM_PROT_RW);
 		} else {
 			pmap_enter(map->pmap, loopva, VM_PAGE_TO_PHYS(pg),
-			    UVM_PROT_ALL,
+			    UVM_PROT_RW,
 			    PMAP_WIRED | VM_PROT_READ | VM_PROT_WRITE);
 		}
 		loopva += PAGE_SIZE;

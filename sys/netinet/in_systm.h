@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_systm.h,v 1.3 2001/06/09 07:03:41 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_systm.h,v 1.3.4.1 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: in_systm.h,v 1.8 1995/04/13 06:29:22 cgd Exp $	*/
 
 /*
@@ -58,7 +58,7 @@ typedef u_int32_t n_long;		/* long as received from the net */
 typedef u_int32_t n_time;		/* ms since 00:00 GMT, byte rev */
 
 #ifdef _KERNEL
-n_time	 iptime __P((void));
+n_time	 iptime(void);
 #endif /* _KERNEL */
 #endif /* _NETINET_IN_SYSTM_H_ */
 

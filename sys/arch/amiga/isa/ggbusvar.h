@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/ggbusvar.h,v 1.4 1996/11/28 23:33:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/ggbusvar.h,v 1.4.24.1 2002/06/11 03:34:58 art Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996 Niklas Hallqvist
@@ -39,7 +39,7 @@
  */
 struct intrhand {
 	struct	intrhand *ih_next;
-	int	(*ih_fun) __P((void *));
+	int	(*ih_fun)(void *);
 	void	*ih_arg;
 	u_long	ih_count;
 	int	ih_irq;

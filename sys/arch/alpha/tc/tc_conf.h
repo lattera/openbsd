@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/tc_conf.h,v 1.4 1997/01/24 19:58:20 niklas Exp $	*/
-/*	$NetBSD: tc_conf.h,v 1.3 1996/11/15 23:59:01 cgd Exp $	*/
+/* $OpenBSD: src/sys/arch/alpha/tc/tc_conf.h,v 1.4.24.1 2002/06/11 03:33:41 art Exp $ */
+/* $NetBSD: tc_conf.h,v 1.10 2000/06/04 19:14:29 cgd Exp $ */
 
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
@@ -33,12 +33,16 @@
  */
 
 #ifdef DEC_3000_500
-extern void	tc_3000_500_intr_setup __P((void));
-extern void	tc_3000_500_iointr __P((void *, unsigned long));
+#include <alpha/tc/tc_dma_3000_500.h>
 
-extern void	tc_3000_500_intr_establish __P((struct device *, void *,
-		    tc_intrlevel_t, int (*)(void *), void *));
-extern void	tc_3000_500_intr_disestablish __P((struct device *, void *));
+extern void	tc_3000_500_intr_setup(void);
+extern void	tc_3000_500_iointr(void *, unsigned long);
+
+extern const struct evcnt *
+		tc_3000_500_intr_evcnt(struct device *, void *);
+extern void	tc_3000_500_intr_establish(struct device *, void *,
+		    tc_intrlevel_t, int (*)(void *), void *);
+extern void	tc_3000_500_intr_disestablish(struct device *, void *);
 
 extern int	tc_3000_500_nslots;
 extern struct tc_slotdesc tc_3000_500_slots[];
@@ -49,15 +53,22 @@ extern struct tc_builtin tc_3000_500_nographics_builtins[];
 #endif /* DEC_3000_500 */
 
 #ifdef DEC_3000_300
-extern void	tc_3000_300_intr_setup __P((void));
-extern void	tc_3000_300_iointr __P((void *, unsigned long));
+#include <alpha/tc/tc_dma_3000_300.h>
 
-extern void	tc_3000_300_intr_establish __P((struct device *, void *,
-		    tc_intrlevel_t, int (*)(void *), void *));
-extern void	tc_3000_300_intr_disestablish __P((struct device *, void *));
+extern void	tc_3000_300_intr_setup(void);
+extern void	tc_3000_300_iointr(void *, unsigned long);
+
+extern const struct evcnt *
+		tc_3000_300_intr_evcnt(struct device *, void *);
+extern void	tc_3000_300_intr_establish(struct device *, void *,
+		    tc_intrlevel_t, int (*)(void *), void *);
+extern void	tc_3000_300_intr_disestablish(struct device *, void *);
 
 extern int	tc_3000_300_nslots;
 extern struct tc_slotdesc tc_3000_300_slots[];
 extern int	tc_3000_300_nbuiltins;
 extern struct tc_builtin tc_3000_300_builtins[];
 #endif /* DEC_3000_300 */
+
+extern int	tc_fb_cnattach(tc_addr_t);
+

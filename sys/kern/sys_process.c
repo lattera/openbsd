@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.14.2.1 2002/01/31 22:55:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.14.2.2 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -89,6 +89,7 @@ sys_ptrace(p, v, retval)
 	struct proc *t;				/* target process */
 	struct uio uio;
 	struct iovec iov;
+	struct ptrace_io_desc piod;
 	int error, write;
 	int temp;
 
@@ -120,13 +121,19 @@ sys_ptrace(p, v, retval)
 			return (EINVAL);
 
 		/*
-		 *	(2) it's already being traced, or
+		 *	(2) it's a system process
+		 */
+		if (ISSET(t->p_flag, P_SYSTEM))
+			return (EPERM);
+
+		/*
+		 *	(3) it's already being traced, or
 		 */
 		if (ISSET(t->p_flag, P_TRACED))
 			return (EBUSY);
 
 		/*
-		 *	(3) it's not owned by you, or the last exec
+		 *	(4) it's not owned by you, or the last exec
 		 *	    gave us setuid/setgid privs (unless
 		 *	    you're root), or...
 		 * 
@@ -142,7 +149,7 @@ sys_ptrace(p, v, retval)
 			return (error);
 
 		/*
-		 *	(4) ...it's init, which controls the security level
+		 *	(5) ...it's init, which controls the security level
 		 *	    of the entire system, and the system was not
 		 *          compiled with permanently insecure mode turned
 		 *	    on.
@@ -155,18 +162,15 @@ sys_ptrace(p, v, retval)
 	case  PT_READ_D:
 	case  PT_WRITE_I:
 	case  PT_WRITE_D:
+	case  PT_IO:
 	case  PT_CONTINUE:
 	case  PT_KILL:
 	case  PT_DETACH:
 #ifdef PT_STEP
 	case  PT_STEP:
 #endif
-#ifdef PT_GETREGS
 	case  PT_GETREGS:
-#endif
-#ifdef PT_SETREGS
 	case  PT_SETREGS:
-#endif
 #ifdef PT_GETFPREGS
 	case  PT_GETFPREGS:
 #endif
@@ -231,7 +235,34 @@ sys_ptrace(p, v, retval)
 		if (write == 0)
 			*retval = temp;
 		return (error);
-
+	case  PT_IO:
+		error = copyin(SCARG(uap, addr), &piod, sizeof(piod));
+		if (error)
+			return (error);
+		iov.iov_base = piod.piod_addr;
+		iov.iov_len = piod.piod_len;
+		uio.uio_iov = &iov;
+		uio.uio_iovcnt = 1;
+		uio.uio_offset = (off_t)(long)piod.piod_offs;
+		uio.uio_resid = piod.piod_len;
+		uio.uio_segflg = UIO_USERSPACE;
+		uio.uio_procp = p;
+		switch (piod.piod_op) {
+		case PIOD_READ_D:
+		case PIOD_READ_I:
+			uio.uio_rw = UIO_READ;
+			break;
+		case PIOD_WRITE_D:
+		case PIOD_WRITE_I:
+			uio.uio_rw = UIO_WRITE;
+			break;
+		default:
+			return (EINVAL);
+		}
+		error = procfs_domem(p, t, NULL, &uio);
+		piod.piod_len -= uio.uio_resid;
+		(void) copyout(&piod, SCARG(uap, addr), sizeof(piod));
+		return (error);
 #ifdef PT_STEP
 	case  PT_STEP:
 		/*
@@ -259,6 +290,11 @@ sys_ptrace(p, v, retval)
 			return (EINVAL);
 
 		PHOLD(t);
+		/* If the address paramter is not (int *)1, set the pc. */
+		if ((int *)SCARG(uap, addr) != (int *)1)
+			if ((error = process_set_pc(t, SCARG(uap, addr))) != 0)
+				goto relebad;
+
 #ifdef PT_STEP
 		/*
 		 * Arrange for a single-step, if that's requested and possible.
@@ -267,11 +303,6 @@ sys_ptrace(p, v, retval)
 		if (error)
 			goto relebad;
 #endif
-
-		/* If the address paramter is not (int *)1, set the pc. */
-		if ((int *)SCARG(uap, addr) != (int *)1)
-			if ((error = process_set_pc(t, SCARG(uap, addr))) != 0)
-				goto relebad;
 		PRELE(t);
 		goto sendsig;
 
@@ -352,15 +383,10 @@ sys_ptrace(p, v, retval)
 		SCARG(uap, data) = SIGSTOP;
 		goto sendsig;
 
-#ifdef PT_SETREGS
 	case  PT_SETREGS:
 		write = 1;
-#endif
-#ifdef PT_GETREGS
 	case  PT_GETREGS:
 		/* write = 0 done above. */
-#endif
-#if defined(PT_SETREGS) || defined(PT_GETREGS)
 		if (!procfs_validregs(t, NULL))
 			return (EINVAL);
 		else {
@@ -375,8 +401,6 @@ sys_ptrace(p, v, retval)
 			uio.uio_procp = p;
 			return (procfs_doregs(p, t, NULL, &uio));
 		}
-#endif
-
 #ifdef PT_SETFPREGS
 	case  PT_SETFPREGS:
 		write = 1;

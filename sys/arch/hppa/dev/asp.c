@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/asp.c,v 1.5 2000/02/09 05:04:22 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/asp.c,v 1.5.12.1 2002/06/11 03:35:36 art Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -123,11 +123,12 @@ struct asp_softc {
 	volatile struct asp_trs *sc_trs;
 };
 
+#define	ASP_IOMASK	0xfff00000
 /* ASP "Primary Controller" HPA */
 #define	ASP_CHPA	0xF0800000
 
-int	aspmatch __P((struct device *, void *, void *));
-void	aspattach __P((struct device *, struct device *, void *));
+int	aspmatch(struct device *, void *, void *);
+void	aspattach(struct device *, struct device *, void *);
 
 struct cfattach asp_ca = {
 	sizeof(struct asp_softc), aspmatch, aspattach
@@ -137,10 +138,10 @@ struct cfdriver asp_cd = {
 	NULL, "asp", DV_DULL
 };
 
-void asp_intr_establish __P((void *v, u_int32_t mask));
-void asp_intr_disestablish __P((void *v, u_int32_t mask));
-u_int32_t asp_intr_check __P((void *v));
-void asp_intr_ack __P((void *v, u_int32_t mask));
+void asp_intr_establish(void *v, u_int32_t mask);
+void asp_intr_disestablish(void *v, u_int32_t mask);
+u_int32_t asp_intr_check(void *v);
+void asp_intr_ack(void *v, u_int32_t mask);
 
 int
 aspmatch(parent, cfdata, aux)   
@@ -208,6 +209,7 @@ aspattach(parent, self, aux)
 	sc->sc_ic.gsc_intr_ack = asp_intr_ack;
 
 	ga.ga_ca = *ca;	/* clone from us */
+	ga.ga_hpamask = ASP_IOMASK;
 	ga.ga_name = "gsc";
 	ga.ga_ic = &sc->sc_ic;
 	config_found(self, &ga, gscprint);

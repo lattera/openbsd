@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/pcb.h,v 1.4 1997/01/24 19:57:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/pcb.h,v 1.4.24.1 2002/06/11 03:33:40 art Exp $	*/
 /*	$NetBSD: pcb.h,v 1.5 1996/11/13 22:21:00 cgd Exp $	*/
 
 /*
@@ -52,6 +52,7 @@ struct pcb {
 	struct fpreg	pcb_fp;			/* FP registers		[SW] */
 	unsigned long	pcb_onfault;		/* for copy faults	[SW] */
 	unsigned long	pcb_accessaddr;		/* for [fs]uswintr	[SW] */
+	struct cpu_info *__volatile pcb_fpcpu;	/* CPU with our FP state[SW] */
 };
 
 /*
@@ -65,5 +66,5 @@ struct md_coredump {
 };
 
 #ifdef _KERNEL
-void savectx __P((struct pcb *));
+void savectx(struct pcb *);
 #endif

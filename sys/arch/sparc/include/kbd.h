@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/Attic/kbd.h,v 1.7 1999/08/21 20:31:39 maja Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/Attic/kbd.h,v 1.7.14.1 2002/06/11 03:38:16 art Exp $	*/
 /*	$NetBSD: kbd.h,v 1.6 1996/03/31 22:21:35 pk Exp $ */
 
 /*
@@ -160,12 +160,10 @@
 #define	PADENTER	0x711
 
 #ifdef _KERNEL
-void 	kbd_serial __P((struct tty *,
-			void (*)(struct tty *), void (*)(struct tty *)));
-void 	ms_serial __P((struct tty *,
-			void (*)(struct tty *), void (*)(struct tty *)));
-void 	kbd_rint __P((int));
-void 	ms_rint __P((int));
-void 	kbd_ascii __P((struct tty *));
-int	kbd_docmd __P((int, int));
+void 	kbd_serial(struct tty *, void (*)(struct tty *), void (*)(struct tty *));
+void 	ms_serial(struct tty *, void (*)(struct tty *), void (*)(struct tty *));
+void 	kbd_rint(int);
+void 	ms_rint(int);
+void 	kbd_ascii(struct tty *);
+int	kbd_docmd(int, int);
 #endif

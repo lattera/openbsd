@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/noctvar.h,v 1.1 2002/06/02 18:15:03 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/noctvar.h,v 1.1.2.1 2002/06/11 03:42:26 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/reg.h,v 1.7 2000/06/15 17:00:37 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/reg.h,v 1.7.8.1 2002/06/11 03:35:37 art Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -153,6 +153,16 @@
 
 #define	DR_ITLB			9
 
+#define	DR0_PCXL2_HTLB_ADDR	24	/* page address of the htlb */
+#define	DR0_PCXL2_HTLB_CFG	25	/* htlb config */
+#define	DR0_PCXL2_HTLB_P	0	/* r   latches power fail signal */
+#define	DR0_PCXL2_HTLB_MASK	19	/*   w 12bit mask of the hash */
+#define	DR0_PCXL2_HTLB_FP	26	/* r/w 3bit FP delay */
+#define	DR0_PCXL2_HTLB_I	28	/* r/w disable ITLB htlb lookup */
+#define	DR0_PCXL2_HTLB_U	29	/* r/w set cr28 only if tag nomatch */
+#define	DR0_PCXL2_HTLB_N	30	/* r/w set cr28 from w3 or w7 (0) */
+#define	DR0_PCXL2_HTLB_D	31	/* r/w disable DTLB htlb lookup */
+
 #define	DR_ITLB_SIZE_1		24
 #define	DR_ITLB_SIZE_0		25
 
@@ -167,8 +177,9 @@
 #ifndef _LOCORE
 
 struct reg {
-	u_int32_t r_regs[HPPA_NREGS];
-	/* p'bably some cr* ? */
+	u_int32_t r_regs[HPPA_NREGS];	/* r0 is sar */
+	u_int32_t r_pc;
+	u_int32_t r_npc;
 };
 
 struct fpreg {

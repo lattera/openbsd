@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.42.4.1 2002/01/31 22:55:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.42.4.2 2002/06/11 03:31:36 art Exp $	*/
 /*	$NetBSD: ip_icmp.c,v 1.19 1996/02/13 23:42:22 christos Exp $	*/
 
 /*
@@ -98,6 +98,7 @@
 
 int	icmpmaskrepl = 0;
 int	icmpbmcastecho = 0;
+int	icmptstamprepl = 1;
 #ifdef ICMPPRINTFS
 int	icmpprintfs = 0;
 #endif
@@ -108,9 +109,9 @@ int	icmp_rediraccept = 1;
 int	icmp_redirtimeout = 10 * 60;
 static struct rttimer_queue *icmp_redirect_timeout_q = NULL;
 
-void icmp_mtudisc_timeout __P((struct rtentry *, struct rttimer *));
-int icmp_ratelimit __P((const struct in_addr *, const int, const int));
-static void icmp_redirect_timeout __P((struct rtentry *, struct rttimer *));
+void icmp_mtudisc_timeout(struct rtentry *, struct rttimer *);
+int icmp_ratelimit(const struct in_addr *, const int, const int);
+static void icmp_redirect_timeout(struct rtentry *, struct rttimer *);
 
 extern	struct protosw inetsw[];
 
@@ -127,22 +128,16 @@ icmp_init()
 	}
 }
 
-/*
- * Generate an error packet of type error
- * in response to bad packet ip.
- *
- * The ip packet inside has ip_off and ip_len in host byte order.
- */
-void
-icmp_error(n, type, code, dest, destifp)
+struct mbuf *
+icmp_do_error(n, type, code, dest, destifp)
 	struct mbuf *n;
 	int type, code;
 	n_long dest;
 	struct ifnet *destifp;
 {
-	register struct ip *oip = mtod(n, struct ip *), *nip;
-	register unsigned oiplen = oip->ip_hl << 2;
-	register struct icmp *icp;
+	struct ip *oip = mtod(n, struct ip *), *nip;
+	unsigned oiplen = oip->ip_hl << 2;
+	struct icmp *icp;
 	struct mbuf *m;
 	struct m_tag *mtag;
 	unsigned icmplen, mblen;
@@ -271,9 +266,32 @@ icmp_error(n, type, code, dest, destifp)
 		m_tag_unlink(n, mtag);
 		m_tag_prepend(m, mtag);
 	}
-	icmp_reflect(m);
+
+	return (m);
 
 freeit:
+	m_freem(n);
+	return (NULL);
+}
+
+/*
+ * Generate an error packet of type error
+ * in response to bad packet ip.
+ *
+ * The ip packet inside has ip_off and ip_len in host byte order.
+ */
+void
+icmp_error(n, type, code, dest, destifp)
+	struct mbuf *n;
+	int type, code;
+	n_long dest;
+	struct ifnet *destifp;
+{
+	struct mbuf *m;
+
+	m = icmp_do_error(n, type, code, dest, destifp);
+	if (m != NULL)
+		icmp_reflect(m);
 	m_freem(n);
 }
 
@@ -286,20 +304,14 @@ struct sockaddr_in icmpmask = { 8, 0 };
  * Process a received ICMP message.
  */
 void
-#if __STDC__
 icmp_input(struct mbuf *m, ...)
-#else
-icmp_input(m, va_alist)
-	struct mbuf *m;
-	va_dcl
-#endif
 {
-	register struct icmp *icp;
-	register struct ip *ip = mtod(m, struct ip *);
+	struct icmp *icp;
+	struct ip *ip = mtod(m, struct ip *);
 	int icmplen = ip->ip_len;
-	register int i;
+	int i;
 	struct in_ifaddr *ia;
-	void *(*ctlfunc) __P((int, struct sockaddr *, void *));
+	void *(*ctlfunc)(int, struct sockaddr *, void *);
 	int code;
 	extern u_char ip_protox[];
 	int hlen;
@@ -470,6 +482,9 @@ icmp_input(m, va_alist)
 		goto reflect;
 
 	case ICMP_TSTAMP:
+		if (icmptstamprepl == 0)
+			break;
+
 		if (!icmpbmcastecho &&
 		    (m->m_flags & (M_MCAST | M_BCAST)) != 0) {
 			icmpstat.icps_bmcastecho++;
@@ -607,8 +622,8 @@ void
 icmp_reflect(m)
 	struct mbuf *m;
 {
-	register struct ip *ip = mtod(m, struct ip *);
-	register struct in_ifaddr *ia;
+	struct ip *ip = mtod(m, struct ip *);
+	struct in_ifaddr *ia;
 	struct in_addr t;
 	struct mbuf *opts = 0;
 	int optlen = (ip->ip_hl << 2) - sizeof(struct ip);
@@ -669,7 +684,7 @@ icmp_reflect(m)
 	ip->ip_ttl = MAXTTL;
 
 	if (optlen > 0) {
-		register u_char *cp;
+		u_char *cp;
 		int opt, cnt;
 		u_int len;
 
@@ -752,12 +767,12 @@ done:
  */
 void
 icmp_send(m, opts)
-	register struct mbuf *m;
+	struct mbuf *m;
 	struct mbuf *opts;
 {
-	register struct ip *ip = mtod(m, struct ip *);
-	register int hlen;
-	register struct icmp *icp;
+	struct ip *ip = mtod(m, struct ip *);
+	int hlen;
+	struct icmp *icp;
 
 	hlen = ip->ip_hl << 2;
 	m->m_data += hlen;
@@ -805,6 +820,8 @@ icmp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (ENOTDIR);
 
 	switch (name[0]) {
+	case ICMPCTL_TSTAMPREPL:
+		return (sysctl_int(oldp, oldlenp, newp, newlen, &icmptstamprepl));
 	case ICMPCTL_MASKREPL:
 		return (sysctl_int(oldp, oldlenp, newp, newlen, &icmpmaskrepl));
 	case ICMPCTL_BMCASTECHO:
@@ -952,7 +969,7 @@ icmp_mtudisc_timeout(rt, r)
 		panic("icmp_mtudisc_timeout:  bad route to timeout");
 	if ((rt->rt_flags & (RTF_DYNAMIC | RTF_HOST)) == 
 	    (RTF_DYNAMIC | RTF_HOST)) {
-		void *(*ctlfunc) __P((int, struct sockaddr *, void *));
+		void *(*ctlfunc)(int, struct sockaddr *, void *);
 		extern u_char ip_protox[];
 		struct sockaddr_in sa;
 

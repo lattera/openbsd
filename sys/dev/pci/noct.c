@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.2 2002/06/04 21:25:16 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.2.2.1 2002/06/11 03:42:26 art Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

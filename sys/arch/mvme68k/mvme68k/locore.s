@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.29 2001/12/06 21:13:28 millert Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.29.2.1 2002/06/11 03:36:50 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -465,16 +465,6 @@ Lstart2:
 
 /* do pmap_bootstrap stuff */	
 	RELOC(mmutype, a0)
-	cmpl	#MMU_68060,a0@		| 68060?
-	jne	Lpmap040	        | no, skip
-        pea	a5@			| firstpa
-	pea	a4@			| nextpa
-	RELOC(pmap_bootstrap060,a0)
-	jbsr	a0@			| pmap_bootstrap(firstpa, nextpa)
-	addql	#8,sp
-        bra     Lmmu_enable
-      
-Lpmap040:	
         pea	a5@			| firstpa
 	pea	a4@			| nextpa
 	RELOC(pmap_bootstrap,a0)
@@ -542,7 +532,7 @@ Lstploaddone:
 	movc	d0,cacr			| turn on both caches
 	jmp	Lenab1
 Lchache040:
-        movl	#0x80008000,d0
+        movl	#CACHE40_ON,d0
 	movc	d0,cacr			| turn on both caches
 	jmp	Lenab1
 Lmotommu2:
@@ -574,10 +564,8 @@ Lenab1:
 Lenab2:
 /* flush TLB and turn on caches */
 	jbsr	_C_LABEL(TBIA)		| invalidate TLB
-	cmpl	#MMU_68040,_C_LABEL(mmutype) | 68040?
-	jeq	Lnocache0		| yes, cache already on
-	cmpl	#MMU_68060,_mmutype	| 68060?
-	jeq	Lnocache0		| yes, cache already on
+	cmpl	#MMU_68040,_C_LABEL(mmutype) | 68040 or 68060?
+	jle	Lnocache0		| yes, cache already on
 	movl	#CACHE_ON,d0
 	movc	d0,cacr			| clear cache(s)
 Lnocache0:
@@ -807,7 +795,7 @@ Lbe10:
 	btst	#8,d0			| data fault?
 	jne	Lbe10a
 	movql	#1,d0			| user program access FC
-					| (we dont seperate data/program)
+					| (we dont separate data/program)
 	btst	#5,a1@			| supervisor mode?
 	jeq	Lbe10a			| if no, done
 	movql	#5,d0			| else supervisor program access
@@ -1333,7 +1321,7 @@ Lsw2:
 	lea	a1@(PCB_FPCTX),a2	| pointer to FP save area
 	fsave	a2@			| save FP state
 #ifdef M68060
-	cmpl	#MMU_68060,_C_LABEL(mmutype) | is 68060?
+	cmpl	#FPU_68060,_C_LABEL(fputype) | is 68060?
 	jeq	Lsavfp60                | yes, goto Lsavfp60
 #endif  /* M68060 */
 	tstb	a2@			| null state frame?
@@ -1389,7 +1377,7 @@ Lresnonofpatall:
 #endif
 	lea	a1@(PCB_FPCTX),a0	| pointer to FP save area
 #ifdef M68060
-	cmpl	#MMU_68060,_C_LABEL(mmutype) | is 68060?
+	cmpl	#FPU_68060,_C_LABEL(fputype) | is 68060?
 	jeq	Lresfp60rest1           | yes, goto Lresfp60rest1
 #endif /* M68060 */
 	tstb	a0@			| null state frame?
@@ -1435,7 +1423,7 @@ ENTRY(savectx)
 	lea	a1@(PCB_FPCTX),a0	| pointer to FP save area
 	fsave	a0@			| save FP state
 #ifdef M68060
-	cmpl	#MMU_68060,_mmutype     | is 68060?
+	cmpl	#FPU_68060,_C_LABEL(fputype) | is 68060?
 	jeq	Lsavctx60               | yes, goto Lsavctx60
 #endif
 	tstb	a0@			| null state frame?
@@ -1661,10 +1649,8 @@ Lmotommu9:
 | Invalid single cache line
 ENTRY(DCIAS)
 _C_LABEL(_DCIAS):
-	cmpl	#MMU_68040,_C_LABEL(mmutype) | 68040
-	jeq	Ldciasx
-	cmpl	#MMU_68060,_C_LABEL(mmutype) | 68060
-	jeq	Ldciasx
+	cmpl	#MMU_68040,_C_LABEL(mmutype) | 68040 or 68060
+	jle	Ldciasx
 	movl	sp@(4),a0
 	.word	0xf468			| cpushl dc,a0@
 Ldciasx:
@@ -1760,7 +1746,7 @@ Lldustp060:
 	movc	d1,cacr
 #endif
 Lldustp040:
-	.word	0xf518			| pflusha XXX TDR
+	.word	0xf518			| pflusha
 	.long	0x4e7b0806		| movec d0,URP
 	rts
 
@@ -1798,7 +1784,7 @@ ENTRY(m68881_save)
 	movl	sp@(4),a0		| save area pointer
 	fsave	a0@			| save state
 #ifdef M68060
-	cmpl	#MMU_68060,_C_LABEL(mmutype) | 68040 or 68060?
+	cmpl	#FPU_68060,_C_LABEL(fputype) | is 68060?
 	jeq	Lm68060fpsave		| yes, goto Lm68060fpsave
 #endif
 	tstb	a0@			| null state frame?
@@ -1823,7 +1809,7 @@ Lm68060sdone:
 ENTRY(m68881_restore)
 	movl	sp@(4),a0		| save area pointer
 #ifdef M68060
-	cmpl	#MMU_68060,_C_LABEL(mmutype) | 68040 or 68060?
+	cmpl	#FPU_68060,_C_LABEL(fputype) | is 68060?
 	jeq	Lm68060fprestore	| yes, goto Lm68060fprestore
 #endif
 	tstb	a0@			| null state frame?

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rnd.c,v 1.50.4.1 2002/01/31 22:55:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/rnd.c,v 1.50.4.2 2002/06/11 03:42:15 art Exp $	*/
 
 /*
  * random.c -- A strong random number generator
@@ -312,7 +312,7 @@ int	rnd_debug = 0x0000;
 
 /*
  * For the purposes of better mixing, we use the CRC-32 polynomial as
- * well to make a twisted Generalized Feedback Shift Reigster
+ * well to make a twisted Generalized Feedback Shift Register
  *
  * (See M. Matsumoto & Y. Kurita, 1992.  Twisted GFSR generators.  ACM
  * Transactions on Modeling and Computer Simulation 2(3):179-194.
@@ -346,7 +346,7 @@ int	rnd_debug = 0x0000;
  * modulo the generator polymnomial.  Now, for random primitive polynomials,
  * this is a universal class of hash functions, meaning that the chance
  * of a collision is limited by the attacker's knowledge of the generator
- * polynomail, so if it is chosen at random, an attacker can never force
+ * polynomial, so if it is chosen at random, an attacker can never force
  * a collision.  Here, we use a fixed polynomial, but we *can* assume that
  * ###--> it is unknown to the processes generating the input entropy. <-###
  * Because of this important property, this is a good, collision-resistant
@@ -453,15 +453,15 @@ rnd_qlen(void)
 	return (len < 0)? -len : len;
 }
 
-void dequeue_randomness __P((void *));
+void dequeue_randomness(void *);
 
-static __inline void add_entropy_words __P((const u_int32_t *, u_int n));
-static __inline void extract_entropy __P((register u_int8_t *, int));
+static __inline void add_entropy_words(const u_int32_t *, u_int n);
+static __inline void extract_entropy(register u_int8_t *, int);
 
-static __inline u_int8_t arc4_getbyte __P((void));
-static __inline void arc4_stir __P((void));
-void arc4_reinit __P((void *v));
-void arc4maybeinit __P((void));
+static __inline u_int8_t arc4_getbyte(void);
+static __inline void arc4_stir(void);
+void arc4_reinit(void *v);
+void arc4maybeinit(void);
 
 /* Arcfour random stream generator.  This code is derived from section
  * 17.1 of Applied Cryptography, second edition, which describes a
@@ -474,7 +474,7 @@ void arc4maybeinit __P((void));
  * old state, and its input always includes the time of day in
  * microseconds.  Moreover, bytes from the stream may at any point be
  * diverted to multiple processes or even kernel functions desiring
- * random numbers.  This increases the strenght of the random stream,
+ * random numbers.  This increases the strength of the random stream,
  * but makes it impossible to use this code for encryption--There is
  * no way ever to reproduce the same stream of random bytes.
  *
@@ -544,7 +544,7 @@ arc4maybeinit(void)
 
 /*
  * called by timeout to mark arc4 for stirring,
- * actuall stirring happens on any access attempt.
+ * actual stirring happens on any access attempt.
  */
 void
 arc4_reinit(v)
@@ -553,7 +553,9 @@ arc4_reinit(v)
 	arc4random_initialized = 0;
 }
 
-int
+static int arc4random_8(void);
+
+static int
 arc4random_8(void)
 {
 	arc4maybeinit();
@@ -866,9 +868,9 @@ extract_entropy(buf, nbytes)
 			rs->entropy_count -= nbytes * 8;
 		else
 			rs->entropy_count = 0;
+		splx(s);
 		MD5Final(buffer, &tmp);
 		bzero(&tmp, sizeof(tmp));
-		splx(s);
 
 		/*
 		 * In case the hash function has some recognizable
@@ -893,6 +895,7 @@ extract_entropy(buf, nbytes)
 
 		/* Modify pool so next hash will produce different results */
 		add_timer_randomness(nbytes);
+		dequeue_randomness(&random_state);
 	}
 
 	/* Wipe data from memory */

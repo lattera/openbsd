@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/amphy.c,v 1.2 2000/11/20 16:22:15 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/amphy.c,v 1.2.8.1 2002/06/11 03:42:23 art Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -56,8 +56,8 @@
 
 #include <dev/mii/amphyreg.h>
 
-int	amphymatch __P((struct device *, void *, void *));
-void	amphyattach __P((struct device *, struct device *, void *));
+int	amphymatch(struct device *, void *, void *);
+void	amphyattach(struct device *, struct device *, void *);
 
 struct cfattach amphy_ca = {
 	sizeof(struct mii_softc), amphymatch, amphyattach, mii_phy_detach,
@@ -68,8 +68,8 @@ struct cfdriver amphy_cd = {
 	NULL, "amphy", DV_DULL
 };
 
-int	amphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	amphy_status __P((struct mii_softc *));
+int	amphy_service(struct mii_softc *, struct mii_data *, int);
+void	amphy_status(struct mii_softc *);
 
 int
 amphymatch(parent, match, aux)
@@ -78,10 +78,14 @@ amphymatch(parent, match, aux)
 {
 	struct mii_attach_args *ma = aux;
 
-	if ((MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxAMD &&
-	     MII_MODEL(ma->mii_id2) == MII_MODEL_xxAMD_79C873) ||
-	    (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxDAVICOM &&
-	     MII_MODEL(ma->mii_id2) == MII_MODEL_xxDAVICOM_DM9101))
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxAMD &&
+	     MII_MODEL(ma->mii_id2) == MII_MODEL_xxAMD_79C873)
+		return (10);
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_xxDAVICOM &&
+	    MII_MODEL(ma->mii_id2) == MII_MODEL_xxDAVICOM_DM9101)
+		return(10);
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_DAVICOM &&
+	    MII_MODEL(ma->mii_id2) == MII_MODEL_DAVICOM_DM9102)
 		return(10);
 
 	return(0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.8.10.1 2002/01/31 22:55:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.8.10.2 2002/06/11 03:35:36 art Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -50,8 +50,8 @@ struct com_gsc_regs {
 	u_int8_t reset;
 };
 
-int	com_gsc_probe __P((struct device *, void *, void *));
-void	com_gsc_attach __P((struct device *, struct device *, void *));
+int	com_gsc_probe(struct device *, void *, void *);
+void	com_gsc_attach(struct device *, struct device *, void *);
 
 struct cfattach com_gsc_ca = {
 	sizeof(struct com_softc), com_gsc_probe, com_gsc_attach
@@ -67,9 +67,10 @@ com_gsc_probe(parent, match, aux)
 	if (ga->ga_type.iodc_type != HPPA_TYPE_FIO ||
 	    (ga->ga_type.iodc_sv_model != HPPA_FIO_GRS232 &&
 	     (ga->ga_type.iodc_sv_model != HPPA_FIO_RS232)))
-		return 0;
+		return (0);
 
-	return comprobe1(ga->ga_iot, ga->ga_hpa + IOMOD_DEVOFFSET);
+	return (1);
+	/* HOZER comprobe1(ga->ga_iot, ga->ga_hpa + IOMOD_DEVOFFSET); */
 }
 
 void
@@ -85,15 +86,15 @@ com_gsc_attach(parent, self, aux)
 	sc->sc_iot = ga->ga_iot;
 	if (sc->sc_iobase == CONADDR)
 		sc->sc_ioh = comconsioh;
-	else if (bus_space_map(sc->sc_iot, ga->ga_hpa + IOMOD_DEVOFFSET,
-	    COM_NPORTS, 0, &sc->sc_ioh)) {
+	else if (bus_space_map(sc->sc_iot, sc->sc_iobase, COM_NPORTS,
+	    0, &sc->sc_ioh)) {
 		printf(": cannot map io space\n");
 		return;
 	}
 
 	regs = (struct com_gsc_regs *)ga->ga_hpa;
 	if (sc->sc_iobase != CONADDR) {
-		regs->reset = 0xd0;
+		/*regs->reset = 0xd0;*/
 		DELAY(1000);
 	}
 

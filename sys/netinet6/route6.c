@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.5 2001/02/16 08:48:07 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/route6.c,v 1.5.6.1 2002/06/11 03:31:38 art Exp $	*/
 /*	$KAME: route6.c,v 1.22 2000/12/03 00:54:00 itojun Exp $	*/
 
 /*
@@ -44,8 +44,8 @@
 
 #include <netinet/icmp6.h>
 
-static int ip6_rthdr0 __P((struct mbuf *, struct ip6_hdr *,
-    struct ip6_rthdr0 *));
+static int ip6_rthdr0(struct mbuf *, struct ip6_hdr *,
+    struct ip6_rthdr0 *);
 
 int
 route6_input(mp, offp, proto)
@@ -136,7 +136,7 @@ ip6_rthdr0(m, ip6, rh0)
 		) {
 		/*
 		 * Type 0 routing header can't contain more than 23 addresses.
-		 * RFC 2462: this limitation was removed since stict/loose
+		 * RFC 2462: this limitation was removed since strict/loose
 		 * bitmap field was deleted.
 		 */
 		ip6stat.ip6s_badoptions++;

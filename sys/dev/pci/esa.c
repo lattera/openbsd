@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/esa.c,v 1.2 2002/04/08 06:06:10 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/esa.c,v 1.2.4.1 2002/06/11 03:42:24 art Exp $	*/
 /* $NetBSD: esa.c,v 1.12 2002/03/24 14:17:35 jmcneill Exp $ */
 
 /*

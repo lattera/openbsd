@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.8 2001/06/09 06:16:37 angelos Exp $	*/
+/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.8.4.1 2002/06/11 03:30:45 art Exp $	*/
 /*	$NetBSD: bpfdesc.h,v 1.11 1995/09/27 18:30:42 thorpej Exp $	*/
 
 /*
@@ -101,6 +101,6 @@ struct bpf_if {
 };
 
 #ifdef _KERNEL
-int	 bpf_setf __P((struct bpf_d *, struct bpf_program *));
+int	 bpf_setf(struct bpf_d *, struct bpf_program *);
 #endif /* _KERNEL */
 #endif /* _NET_BPFDESC_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16 2001/11/28 13:47:39 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16.2.1 2002/06/11 03:29:40 art Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -56,7 +56,7 @@
 void
 new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
 	struct	exec_vmcmd_set *evsp;
-	int	(*proc) __P((struct proc * p, struct exec_vmcmd *));
+	int	(*proc)(struct proc * p, struct exec_vmcmd *);
 	u_long	len;
 	u_long	addr;
 	struct	vnode *vp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/bootarg.c,v 1.6 1999/05/20 12:56:40 aaron Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/bootarg.c,v 1.6.14.1 2002/06/11 03:32:24 art Exp $	*/
 
 /*
  * Copyright (c) 1997,1998 Michael Shalayeff
@@ -74,7 +74,7 @@ makebootargs(v, lenp)
 	*lenp = l;
 	/* copy them out */
 	for (p = bootarg_list, q = v;
-	     p != NULL && ((q + p->ba_size) - (u_char*)v) < l;
+	     p != NULL && ((q + p->ba_size) - (u_char *)v) < l;
 	     q += p->ba_size, p = p->ba_next) {
 #ifdef DEBUG
 		printf("%d,%d ", p->ba_type, p->ba_size);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_memrw.c,v 1.9 2001/11/06 19:53:16 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/db_memrw.c,v 1.9.2.1 2002/06/11 03:39:01 art Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.13 1996/11/20 18:57:28 gwr Exp $	*/
 
 /*-
@@ -67,7 +67,7 @@
 #include <ddb/db_access.h>
 
 
-static void db_write_text __P((vm_offset_t, size_t size, char *));
+static void db_write_text(vm_offset_t, size_t size, char *);
 
 /*
  * Read bytes from kernel address space for debugger.
@@ -80,15 +80,15 @@ db_read_bytes(addr, size, data)
 	register size_t	size;
 	register char	*data;
 {
-	register char	*src = (char*)addr;
+	register char	*src = (char *)addr;
 
 	if (size == 4) {
-		*((int*)data) = *((int*)src);
+		*((int *)data) = *((int *)src);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)data) = *((short*)src);
+		*((short *)data) = *((short *)src);
 		return;
 	}
 
@@ -116,7 +116,7 @@ db_write_text(addr, size, data)
 	if (size <= 0)
 		return;
 
-	dst = (char*)addr;
+	dst = (char *)addr;
 	pgva = trunc_page((long)dst);
 
 	goto firstpage;
@@ -188,12 +188,12 @@ db_write_bytes(addr, size, data)
 	}
 
 	if (size == 4) {
-		*((int*)dst) = *((int*)data);
+		*((int *)dst) = *((int *)data);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)dst) = *((short*)data);
+		*((short *)dst) = *((short *)data);
 		return;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/timeb.h,v 1.3 1999/05/14 23:18:54 aaron Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/timeb.h,v 1.3.14.1 2002/06/11 03:32:34 art Exp $	*/
 /*	$NetBSD: timeb.h,v 1.10 1995/06/05 19:39:35 pk Exp $	*/
 
 /*-
@@ -56,7 +56,7 @@ struct timeb {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int ftime __P((struct timeb *tp));
+int ftime(struct timeb *tp);
 __END_DECLS
 #endif /* _KERNEL */
 

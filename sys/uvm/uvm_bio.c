@@ -51,9 +51,9 @@
  * local functions
  */
 
-int	ubc_fault __P((struct uvm_faultinfo *, vaddr_t, struct vm_page **, int,
-    int, vm_fault_t, vm_prot_t, int));
-struct ubc_map *ubc_find_mapping __P((struct uvm_object *, voff_t));
+int	ubc_fault(struct uvm_faultinfo *, vaddr_t, struct vm_page **, int,
+    int, vm_fault_t, vm_prot_t, int);
+struct ubc_map *ubc_find_mapping(struct uvm_object *, voff_t);
 
 /*
  * local data structues

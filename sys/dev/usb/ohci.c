@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.24 2001/10/31 04:24:44 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.24.2.1 2002/06/11 03:42:30 art Exp $ */
 /*	$NetBSD: ohci.c,v 1.104 2001/09/28 23:57:21 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohci.c,v 1.22 1999/11/17 22:33:40 n_hibma Exp $	*/
 
@@ -205,6 +205,7 @@ Static int		ohci_str(usb_string_descriptor_t *, int, char *);
 
 Static void		ohci_timeout(void *);
 Static void		ohci_rhsc_able(ohci_softc_t *, int);
+Static void		ohci_rhsc_enable(void *sc);
 
 Static void		ohci_close_pipe(usbd_pipe_handle, ohci_soft_ed_t *);
 Static void		ohci_abort_xfer(usbd_xfer_handle, usbd_status);
@@ -592,7 +593,7 @@ ohci_alloc_sitd(ohci_softc_t *sc)
 			return (NULL);
 		for(i = 0; i < OHCI_SITD_CHUNK; i++) {
 			offs = i * OHCI_SITD_SIZE;
-			sitd = (ohci_soft_itd_t *)((char*)KERNADDR(&dma)+offs);
+			sitd = (ohci_soft_itd_t *)((char *)KERNADDR(&dma)+offs);
 			sitd->physaddr = DMAADDR(&dma) + offs;
 			sitd->nextitd = sc->sc_freeitds;
 			sc->sc_freeitds = sitd;
@@ -634,6 +635,15 @@ ohci_free_sitd(ohci_softc_t *sc, ohci_soft_itd_t *sitd)
 	sitd->nextitd = sc->sc_freeitds;
 	sc->sc_freeitds = sitd;
 	splx(s);
+}
+
+void
+ohci_reset(ohci_softc_t *sc)
+{
+	ohci_shutdown(sc);
+	/* disable all interrupts and then switch on all desired
+           interrupts */
+	OWRITE4(sc, OHCI_INTERRUPT_DISABLE, OHCI_ALL_INTRS);
 }
 
 usbd_status
@@ -861,6 +871,7 @@ ohci_init(ohci_softc_t *sc)
 	sc->sc_powerhook = powerhook_establish(ohci_power, sc);
 	sc->sc_shutdownhook = shutdownhook_establish(ohci_shutdown, sc);
 #endif
+	usb_callout_init(sc->sc_tmo_rhsc);
 
 	return (USBD_NORMAL_COMPLETION);
 
@@ -1137,10 +1148,8 @@ ohci_intr1(ohci_softc_t *sc)
 		 * on until the port has been reset.
 		 */
 		ohci_rhsc_able(sc, 0);
-#if defined (__OpenBSD__)
 		/* Do not allow RHSC interrupts > 1 per second */
-		timeout_add(&sc->sc_tmo_rhsc, hz);
-#endif
+		usb_callout(sc->sc_tmo_rhsc, hz, ohci_rhsc_enable, sc);
 	}
 
 	sc->sc_bus.intr_context--;

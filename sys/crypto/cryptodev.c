@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.c,v 1.28 2001/11/13 17:45:46 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.c,v 1.28.2.1 2002/06/11 03:28:34 art Exp $	*/
 
 /*
  * Copyright (c) 2001 Theo de Raadt
@@ -25,6 +25,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/param.h>
@@ -75,14 +80,14 @@ struct fcrypt {
 	int		sesn;
 };
 
-void	cryptoattach __P((int));
+void	cryptoattach(int);
 
-int	cryptoopen __P((dev_t, int, int, struct proc *));
-int	cryptoclose __P((dev_t, int, int, struct proc *));
-int	cryptoread __P((dev_t, struct uio *, int));
-int	cryptowrite __P((dev_t, struct uio *, int));
-int	cryptoioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
-int	cryptoselect __P((dev_t, int, struct proc *));
+int	cryptoopen(dev_t, int, int, struct proc *);
+int	cryptoclose(dev_t, int, int, struct proc *);
+int	cryptoread(dev_t, struct uio *, int);
+int	cryptowrite(dev_t, struct uio *, int);
+int	cryptoioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int	cryptoselect(dev_t, int, struct proc *);
 
 int	cryptof_read(struct file *, off_t *, struct uio *, struct ucred *);
 int	cryptof_write(struct file *, off_t *, struct uio *, struct ucred *);
@@ -110,7 +115,15 @@ struct	csession *csecreate(struct fcrypt *, u_int64_t, caddr_t, u_int64_t,
     struct auth_hash *);
 int	csefree(struct csession *);
 
-int	crypto_op(struct csession *, struct crypt_op *, struct proc *);
+int	cryptodev_op(struct csession *, struct crypt_op *, struct proc *);
+int	cryptodev_key(struct crypt_kop *);
+int	cryptodev_dokey(struct crypt_kop *kop, struct crparam kvp[]);
+
+int	cryptodev_cb(void *);
+int	cryptodevkey_cb(void *);
+
+int	usercrypto = 1;		/* userland may do crypto requests */
+int	cryptodevallowsoft = 0;	/* only use hardware crypto */
 
 /* ARGSUSED */
 int
@@ -235,14 +248,32 @@ cryptof_ioctl(fp, cmd, data, p)
 				goto bail;
 			}
 
-			MALLOC(cria.cri_key, u_int8_t *,
-			    cria.cri_klen / 8, M_XDATA, M_WAITOK);
-			if ((error = copyin(sop->mackey, cria.cri_key,
-			    cria.cri_klen / 8)))
-				goto bail;
+			if (cria.cri_klen) {
+				MALLOC(cria.cri_key, u_int8_t *,
+				    cria.cri_klen / 8, M_XDATA, M_WAITOK);
+				if ((error = copyin(sop->mackey, cria.cri_key,
+				    cria.cri_klen / 8)))
+					goto bail;
+			}
 		}
 
-		error = crypto_newsession(&sid, (txform ? &crie : &cria), 1);
+		error = crypto_newsession(&sid, (txform ? &crie : &cria),
+		    !cryptodevallowsoft);
+
+		if (error)
+			goto bail;
+
+		cse = csecreate(fcr, sid, crie.cri_key, crie.cri_klen,
+		    cria.cri_key, cria.cri_klen, sop->cipher, sop->mac, txform,
+		    thash);
+
+		if (cse == NULL) {
+			crypto_freesession(sid);
+			error = EINVAL;
+			goto bail;
+		}
+
+		sop->ses = cse->ses;
 
 bail:
 		if (error) {
@@ -250,13 +281,8 @@ bail:
 				FREE(crie.cri_key, M_XDATA);
 			if (cria.cri_key)
 				FREE(cria.cri_key, M_XDATA);
-			return (error);
 		}
 
-		cse = csecreate(fcr, sid, crie.cri_key, crie.cri_klen,
-		    cria.cri_key, cria.cri_klen, sop->cipher, sop->mac, txform,
-		    thash);
-		sop->ses = cse->ses;
 		break;
 	case CIOCFSESSION:
 		ses = *(u_int32_t *)data;
@@ -271,7 +297,13 @@ bail:
 		cse = csefind(fcr, cop->ses);
 		if (cse == NULL)
 			return (EINVAL);
-		error = crypto_op(cse, cop, p);
+		error = cryptodev_op(cse, cop, p);
+		break;
+	case CIOCKEY:
+		error = cryptodev_key((struct crypt_kop *)data);
+		break;
+	case CIOCSYMFEAT:
+		error = crypto_getfeat((int *)data);
 		break;
 	default:
 		error = EINVAL;
@@ -279,11 +311,8 @@ bail:
 	return (error);
 }
 
-int	cryptodev_cb(void *);
-
-
 int
-crypto_op(struct csession *cse, struct crypt_op *cop, struct proc *p)
+cryptodev_op(struct csession *cse, struct crypt_op *cop, struct proc *p)
 {
 	struct cryptop *crp = NULL;
 	struct cryptodesc *crde = NULL, *crda = NULL;
@@ -402,11 +431,12 @@ crypto_op(struct csession *cse, struct crypt_op *cop, struct proc *p)
 		goto bail;
 	}
 
-	if ((error = copyout(cse->uio.uio_iov[0].iov_base, cop->dst, cop->len)))
+	if (cop->dst &&
+	    (error = copyout(cse->uio.uio_iov[0].iov_base, cop->dst, cop->len)))
 		goto bail;
 
 	if (cop->mac &&
-	    (error = copyout(crp->crp_mac, cop->mac, cse->thash->hashsize)))
+	    (error = copyout(crp->crp_mac, cop->mac, cse->thash->authsize)))
 		goto bail;
 
 bail:
@@ -429,6 +459,107 @@ cryptodev_cb(void *op)
 		return crypto_dispatch(crp);
 	wakeup(cse);
 	return (0);
+}
+
+int
+cryptodevkey_cb(void *op)
+{
+	struct cryptkop *krp = (struct cryptkop *) op;
+
+	wakeup(krp);
+	return (0);
+}
+
+int
+cryptodev_key(struct crypt_kop *kop)
+{
+	struct cryptkop *krp = NULL;
+	int error = EINVAL;
+	int in, out, size, i;
+
+	if (kop->crk_iparams + kop->crk_oparams > CRK_MAXPARAM)
+		return (EFBIG);
+
+	in = kop->crk_iparams;
+	out = kop->crk_oparams;
+	switch (kop->crk_op) {
+	case CRK_MOD_EXP:
+		if (in == 3 && out == 1)
+			break;
+		return (EINVAL);
+	case CRK_MOD_EXP_CRT:
+		if (in == 6 && out == 1)
+			break;
+		return (EINVAL);
+	case CRK_DSA_SIGN:
+		if (in == 5 && out == 2)
+			break;
+		return (EINVAL);
+	case CRK_DSA_VERIFY:
+		if (in == 7 && out == 0)
+			break;
+		return (EINVAL);
+	case CRK_DH_COMPUTE_KEY:
+		if (in == 3 && out == 1)
+			break;
+		return (EINVAL);
+	default:
+		return (EINVAL);
+	}
+
+	krp = (struct cryptkop *)malloc(sizeof *krp, M_XDATA, M_WAITOK);
+	if (!krp)
+		return (ENOMEM);
+	bzero(krp, sizeof *krp);
+	krp->krp_op = kop->crk_op;
+	krp->krp_status = kop->crk_status;
+	krp->krp_iparams = kop->crk_iparams;
+	krp->krp_oparams = kop->crk_oparams;
+	krp->krp_status = 0;
+	krp->krp_callback = (int (*) (struct cryptkop *)) cryptodevkey_cb;
+
+	for (i = 0; i < CRK_MAXPARAM; i++)
+		krp->krp_param[i].crp_nbits = kop->crk_param[i].crp_nbits;
+	for (i = 0; i < krp->krp_iparams + krp->krp_oparams; i++) {
+		size = (krp->krp_param[i].crp_nbits + 7) / 8;
+		if (size == 0)
+			continue;
+		MALLOC(krp->krp_param[i].crp_p, caddr_t, size, M_XDATA, M_WAITOK);
+		if (i >= krp->krp_iparams)
+			continue;
+		error = copyin(kop->crk_param[i].crp_p, krp->krp_param[i].crp_p, size);
+		if (error)
+			goto fail;
+	}
+
+	error = crypto_kdispatch(krp);
+	if (error)
+		goto fail;
+	error = tsleep(krp, PSOCK, "crydev", 0);
+	if (error) {
+		/* XXX can this happen?  if so, how do we recover? */
+		goto fail;
+	}
+
+	for (i = krp->krp_iparams; i < krp->krp_iparams + krp->krp_oparams; i++) {
+		size = (krp->krp_param[i].crp_nbits + 7) / 8;
+		if (size == 0)
+			continue;
+		error = copyout(krp->krp_param[i].crp_p, kop->crk_param[i].crp_p, size);
+		if (error)
+			goto fail;
+	}
+
+fail:
+	if (krp) {
+		kop->crk_status = krp->krp_status;
+		for (i = 0; i < CRK_MAXPARAM; i++) {
+			if (krp->krp_param[i].crp_p)
+				FREE(krp->krp_param[i].crp_p, M_XDATA);
+		}
+		free(krp, M_XDATA);
+	}
+	return (error);
 }
 
 /* ARGSUSED */
@@ -490,6 +621,8 @@ cryptoopen(dev, flag, mode, p)
 	int	mode;
 	struct proc *p;
 {
+	if (usercrypto == 0)
+		return (ENXIO);
 	return (0);
 }
 
@@ -541,7 +674,6 @@ cryptoioctl(dev, cmd, data, flag, p)
 		fcr->sesn = 0;
 
 		error = falloc(p, &f, &fd);
-
 		if (error) {
 			FREE(fcr, M_XDATA);
 			return (error);
@@ -593,7 +725,7 @@ csedelete(struct fcrypt *fcr, struct csession *cse_del)
 	}
 	return (0);
 }
-	
+
 struct csession *
 cseadd(struct fcrypt *fcr, struct csession *cse)
 {
@@ -611,6 +743,8 @@ csecreate(struct fcrypt *fcr, u_int64_t sid, caddr_t key, u_int64_t keylen,
 
 	MALLOC(cse, struct csession *, sizeof(struct csession),
 	    M_XDATA, M_NOWAIT);
+	if (cse == NULL)
+		return NULL;
 	cse->key = key;
 	cse->keylen = keylen/8;
 	cse->mackey = mackey;

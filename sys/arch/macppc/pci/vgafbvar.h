@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.2 2001/10/31 12:26:18 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafbvar.h,v 1.2.2.1 2002/06/11 03:36:34 art Exp $	*/
 /*	$NetBSD: vgavar.h,v 1.2 1996/11/23 06:06:43 cgd Exp $	*/
 
 /*
@@ -51,35 +51,40 @@ struct vgafb_config {
 	char		vc_at;		/* normal attributes */
 	char		vc_so_at;	/* standout attributes */
 
-	int	(*vc_ioctl) __P((void *, u_long,
-		    caddr_t, int, struct proc *));
-	paddr_t	(*vc_mmap) __P((void *, off_t, int));
-	#if 0
-	struct raster   dc_raster;      /* raster description */
-	#endif
-	struct rcons    dc_rcons;       /* raster blitter control info */
+	int	(*vc_ioctl)(void *, u_long,
+		    caddr_t, int, struct proc *);
+	paddr_t	(*vc_mmap)(void *, off_t, int);
 
-	
+	struct rasops_info    dc_rinfo;       /* raster display data*/
+
+	bus_addr_t	membase;
+	bus_size_t	memsize;
+
+	bus_addr_t	mmiobase;
+	bus_size_t	mmiosize;
+
+	int vc_backlight_on;
 };
 
-int	vgafb_common_probe __P((bus_space_tag_t, bus_space_tag_t,
-	u_int32_t, size_t, u_int32_t, size_t, u_int32_t, size_t ));
-void	vgafb_common_setup __P((bus_space_tag_t, bus_space_tag_t,
+int	vgafb_common_probe(bus_space_tag_t, bus_space_tag_t,
+	u_int32_t, size_t, u_int32_t, size_t, u_int32_t, size_t );
+void	vgafb_common_setup(bus_space_tag_t, bus_space_tag_t,
 	    struct vgafb_config *, u_int32_t, size_t, u_int32_t, size_t,
-	    u_int32_t, size_t));
-void	vgafb_wscons_attach __P((struct device *, struct vgafb_config *, int));
-void	vgafb_wscons_console __P((struct vgafb_config *));
-void	vgafb_cnprobe __P((struct consdev *cp));
-void	vgafb_cnattach __P((bus_space_tag_t iot, bus_space_tag_t memt,
-	    void *pc, int bus, int device, int function));
-void	vgafb_wsdisplay_attach __P((struct device *parent,
-	    struct vgafb_config *vc, int console));
-int	vgafbioctl __P((void *, u_long, caddr_t, int, struct proc *));
-paddr_t	vgafbmmap __P((void *, off_t, int));
-int	vgafb_ioctl __P((void *, u_long, caddr_t, int, struct proc *));
-paddr_t	vgafb_mmap __P((void *, off_t, int));
-int	vgafb_alloc_screen __P((void *v, const struct wsscreen_descr *type,
-	    void **cookiep, int *curxp, int *curyp, long *attrp));
-void	vgafb_free_screen __P((void *v, void *cookie));
-int	vgafb_show_screen __P((void *v, void *cookie, int waitok,
-	    void (*cb) __P((void *, int, int)), void *cbarg));
+	    u_int32_t, size_t);
+void	vgafb_wscons_attach(struct device *, struct vgafb_config *, int);
+void	vgafb_wscons_console(struct vgafb_config *);
+void	vgafb_cnprobe(struct consdev *cp);
+void	vgafb_cnattach(bus_space_tag_t iot, bus_space_tag_t memt,
+	    void *pc, int bus, int device, int function);
+void	vgafb_wsdisplay_attach(struct device *parent,
+	    struct vgafb_config *vc, int console);
+int	vgafbioctl(void *, u_long, caddr_t, int, struct proc *);
+paddr_t	vgafbmmap(void *, off_t, int);
+int	vgafb_ioctl(void *, u_long, caddr_t, int, struct proc *);
+paddr_t	vgafb_mmap(void *, off_t, int);
+int	vgafb_alloc_screen(void *v, const struct wsscreen_descr *type,
+	    void **cookiep, int *curxp, int *curyp, long *attrp);
+void	vgafb_free_screen(void *v, void *cookie);
+int	vgafb_show_screen(void *v, void *cookie, int waitok,
+	    void (*cb)(void *, int, int), void *cbarg);
+void	vgafb_burn(void *v, u_int on, u_int flags);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/bt485var.h,v 1.2 2001/04/21 20:03:55 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/bt485var.h,v 1.2.8.1 2002/06/11 03:42:17 art Exp $ */
 /* $NetBSD$ */
 
 /*-
@@ -39,11 +39,11 @@
 
 
 struct ramdac_funcs *bt485_funcs(void);
-struct ramdac_cookie *bt485_register __P((void *,
+struct ramdac_cookie *bt485_register(void *,
 	int (*)(void *, void (*)(void *)),
 	void (*)(void *, u_int, u_int8_t),
-	u_int8_t (*)(void *, u_int)));
-void bt485_cninit __P((void *,
+	u_int8_t (*)(void *, u_int));
+void bt485_cninit(void *,
 	int (*)(void *, void (*)(void *)),
 	void (*)(void *, u_int, u_int8_t),
-	u_int8_t (*)(void *, u_int)));
+	u_int8_t (*)(void *, u_int));

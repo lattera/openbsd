@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32.2.2 2002/06/11 03:33:04 art Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.61 2001/11/25 06:42:47 chs Exp $	*/
 
 /*
@@ -289,7 +289,7 @@ sys_mmap(p, v, retval)
 	int flags, fd;
 	vaddr_t vm_min_address = VM_MIN_ADDRESS;
 	struct filedesc *fdp = p->p_fd;
-	struct file *fp;
+	struct file *fp = NULL;
 	struct vnode *vp;
 	void *handle;
 	int error;
@@ -358,29 +358,38 @@ sys_mmap(p, v, retval)
 	/*
 	 * check for file mappings (i.e. not anonymous) and verify file.
 	 */
-
 	if ((flags & MAP_ANON) == 0) {
 
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
 			return (EBADF);
+
+		FREF(fp);
 
 		if (fp->f_type != DTYPE_VNODE)
 			return (ENODEV);		/* only mmap vnodes! */
 		vp = (struct vnode *)fp->f_data;	/* convert to vnode */
 
 		if (vp->v_type != VREG && vp->v_type != VCHR &&
-		    vp->v_type != VBLK)
-			return (ENODEV);  /* only REG/CHR/BLK support mmap */
+		    vp->v_type != VBLK) {
+			error = ENODEV; /* only REG/CHR/BLK support mmap */
+			goto out;
+		}
 
-		if (vp->v_type != VCHR && pos < 0)
-			return (EINVAL);
+		if (vp->v_type != VCHR && pos < 0) {
+			error = ENODEV;
+			goto out;
+		}
 
-		if (vp->v_type != VCHR && (pos + size) < pos)
-			return (EINVAL);		/* no offset wrapping */
+		if (vp->v_type != VCHR && (pos + size) < pos) {
+			error = EINVAL;
+			goto out;
+		}
 
 		/* special case: catch SunOS style /dev/zero */
 		if (vp->v_type == VCHR && iszerodev(vp->v_rdev)) {
 			flags |= MAP_ANON;
+			FRELE(fp);
+			fp = NULL;
 			goto is_anon;
 		}
 
@@ -421,8 +430,10 @@ sys_mmap(p, v, retval)
 		/* check read access */
 		if (fp->f_flag & FREAD)
 			maxprot |= VM_PROT_READ;
-		else if (prot & PROT_READ)
-			return (EACCES);
+		else if (prot & PROT_READ) {
+			error = EACCES;
+			goto out;
+		}
 
 		/* check write access, shared case first */
 		if (flags & MAP_SHARED) {
@@ -440,9 +451,10 @@ sys_mmap(p, v, retval)
 					maxprot |= VM_PROT_WRITE;
 				else if (prot & PROT_WRITE)
 					return (EPERM);
+			} else if (prot & PROT_WRITE) {
+				error = EACCES;
+				goto out;
 			}
-			else if (prot & PROT_WRITE)
-				return (EACCES);
 		} else {
 			/* MAP_PRIVATE mappings can always write to */
 			maxprot |= VM_PROT_WRITE;
@@ -472,9 +484,9 @@ sys_mmap(p, v, retval)
 	if ((flags & MAP_ANON) != 0 ||
 	    ((flags & MAP_PRIVATE) != 0 && (prot & PROT_WRITE) != 0)) {
 		if (size >
-		    (p->p_rlimit[RLIMIT_DATA].rlim_cur -
-		     ctob(p->p_vmspace->vm_dsize))) {
-			return (ENOMEM);
+		    (p->p_rlimit[RLIMIT_DATA].rlim_cur - ctob(p->p_vmspace->vm_dsize))) {
+			error = ENOMEM;
+			goto out;
 		}
 	}
 
@@ -489,6 +501,9 @@ sys_mmap(p, v, retval)
 		/* remember to add offset */
 		*retval = (register_t)(addr + pageoff);
 
+out:
+	if (fp)
+		FRELE(fp);	
 	return (error);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/zssc.c,v 1.10 1997/01/18 12:26:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/zssc.c,v 1.10.24.1 2002/06/11 03:34:58 art Exp $	*/
 /*	$NetBSD: zssc.c,v 1.22 1996/12/23 09:10:33 veego Exp $	*/
 
 /*
@@ -51,11 +51,11 @@
 #include <amiga/dev/siopvar.h>
 #include <amiga/dev/zbusvar.h>
 
-void zsscattach __P((struct device *, struct device *, void *));
-int  zsscmatch __P((struct device *, void *, void *));
-int  zssc_dmaintr __P((void *));
+void zsscattach(struct device *, struct device *, void *);
+int  zsscmatch(struct device *, void *, void *);
+int  zssc_dmaintr(void *);
 #ifdef DEBUG
-void zssc_dump __P((void));
+void zssc_dump(void);
 #endif
 
 struct scsi_adapter zssc_scsiswitch = {

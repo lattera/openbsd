@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.10 2001/11/06 19:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.10.2.1 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: mem.c,v 1.15 1999/03/24 05:51:17 mrg Exp $	*/
 
 /*
@@ -61,17 +61,16 @@
 extern unsigned int avail_end;
 caddr_t zeropage;
 
-int	mmopen __P((dev_t, int, int));
-int	mmclose __P((dev_t, int, int));
-int	mmrw __P((dev_t, struct uio *, int));
-paddr_t	mmmmap __P((dev_t, off_t, int));
-
+#define	mmread	mmrw
+#define	mmwrite	mmrw
+cdev_decl(mm);
 
 /*ARGSUSED*/
 int
-mmopen(dev, flag, mode)
+mmopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	switch (minor(dev)) {
@@ -87,9 +86,10 @@ mmopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-mmclose(dev, flag, mode)
+mmclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -184,11 +184,11 @@ mmmmap(dev, off, prot)
 
 int
 mmioctl(dev, cmd, data, flags, p)
-    dev_t dev;
-    u_long cmd;
-    caddr_t data;
-    int flags;
-    struct proc *p;
+	dev_t dev;
+	u_long cmd;
+	caddr_t data;
+	int flags;
+	struct proc *p;
 {
-    return (EOPNOTSUPP);
+	return (EOPNOTSUPP);
 }

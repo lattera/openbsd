@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/qe.c,v 1.17.4.1 2002/01/31 22:55:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/qe.c,v 1.17.4.2 2002/06/11 03:38:16 art Exp $	*/
 
 /*
  * Copyright (c) 1998, 2000 Jason L. Wright.
@@ -79,24 +79,24 @@
 #include <sparc/dev/qereg.h>
 #include <sparc/dev/qevar.h>
 
-int	qematch __P((struct device *, void *, void *));
-void	qeattach __P((struct device *, struct device *, void *));
+int	qematch(struct device *, void *, void *);
+void	qeattach(struct device *, struct device *, void *);
 
-void	qeinit __P((struct qesoftc *));
-void	qestart __P((struct ifnet *));
-void	qestop __P((struct qesoftc *));
-void	qewatchdog __P((struct ifnet *));
-int	qeioctl __P((struct ifnet *, u_long, caddr_t));
-void	qereset __P((struct qesoftc *));
+void	qeinit(struct qesoftc *);
+void	qestart(struct ifnet *);
+void	qestop(struct qesoftc *);
+void	qewatchdog(struct ifnet *);
+int	qeioctl(struct ifnet *, u_long, caddr_t);
+void	qereset(struct qesoftc *);
 
-int		qeintr __P((void *));
-int		qe_eint __P((struct qesoftc *, u_int32_t));
-int		qe_rint __P((struct qesoftc *));
-int		qe_tint __P((struct qesoftc *));
-void		qe_read __P((struct qesoftc *, int, int));
-void		qe_mcreset __P((struct qesoftc *));
-void		qe_ifmedia_sts __P((struct ifnet *, struct ifmediareq *));
-int		qe_ifmedia_upd __P((struct ifnet *));
+int		qeintr(void *);
+int		qe_eint(struct qesoftc *, u_int32_t);
+int		qe_rint(struct qesoftc *);
+int		qe_tint(struct qesoftc *);
+void		qe_read(struct qesoftc *, int, int);
+void		qe_mcreset(struct qesoftc *);
+void		qe_ifmedia_sts(struct ifnet *, struct ifmediareq *);
+int		qe_ifmedia_upd(struct ifnet *);
 
 struct cfdriver qe_cd = {
 	NULL, "qe", DV_IFNET
@@ -130,7 +130,7 @@ qeattach(parent, self, aux)
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct confargs *ca = aux;
 	struct bootpath *bp;
-	extern void myetheraddr __P((u_char *));
+	extern void myetheraddr(u_char *);
 	int pri;
 
 	if (qec->sc_pri == 0) {
@@ -152,7 +152,7 @@ qeattach(parent, self, aux)
 
 	sc->sc_ih.ih_fun = qeintr;
 	sc->sc_ih.ih_arg = sc;
-	intr_establish(pri, &sc->sc_ih);
+	intr_establish(pri, &sc->sc_ih, IPL_NET);
 
 	myetheraddr(sc->sc_arpcom.ac_enaddr);
 
@@ -209,9 +209,11 @@ qestart(ifp)
 	bix = sc->sc_last_td;
 
 	for (;;) {
-		IFQ_DEQUEUE(&ifp->if_snd, m);
+		IFQ_POLL(&ifp->if_snd, m);
 		if (m == NULL)
 			break;
+
+		IFQ_DEQUEUE(&ifp->if_snd, m);
 
 #if NBPFILTER > 0
 		/*
@@ -325,7 +327,7 @@ qeintr(v)
 	if (qestat & QE_CR_STAT_RXIRQ)
 		r |= qe_rint(sc);
 
-	return r;
+	return (1);
 }
 
 /*
@@ -349,7 +351,6 @@ qe_tint(sc)
 		if (txd.tx_flags & QE_TXD_OWN)
 			break;
 
-		ifp->if_flags &= ~IFF_OACTIVE;
 		ifp->if_opackets++;
 
 		if (++bix == QE_TX_RING_MAXSIZE)
@@ -358,14 +359,22 @@ qe_tint(sc)
 		--sc->sc_no_td;
 	}
 
-	sc->sc_first_td = bix;
-
-	qestart(ifp);
-
 	if (sc->sc_no_td == 0)
 		ifp->if_timer = 0;
 
-	return 1;
+	/*
+	 * If we freed up at least one descriptor and tx is blocked,
+	 * unblock it and start it up again.
+	 */
+	if (sc->sc_first_td != bix) {
+		sc->sc_first_td = bix;
+		if (ifp->if_flags & IFF_OACTIVE) {
+			ifp->if_flags &= ~IFF_OACTIVE;
+			qestart(ifp);
+		}
+	}
+
+	return (1);
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84.2.1 2002/01/31 22:55:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84.2.2 2002/06/11 03:35:53 art Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -141,6 +141,7 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 cdev_decl(mm);
 cdev_decl(wd);
 cdev_decl(crypto);
+#include "systrace.h"
 #include "pty.h"
 #include "com.h"
 #include "pccom.h"
@@ -337,6 +338,7 @@ struct cdevsw	cdevsw[] =
 	cdev_iop_init(NIOP,iop),	/* 75: I2O IOP control interface */
 	cdev_radio_init(NRADIO, radio), /* 76: generic radio I/O */
 	cdev_ugen_init(NUSCANNER,uscanner),	/* 77: USB scanners */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 78: system call tracing */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -485,8 +487,8 @@ blktochr(dev)
  * disk driver name -> bdev major number table, which follows.
  * Note: floppies are not included as those are differentiated by the BIOS.
  */
-int findblkmajor __P((struct device *dv));
-dev_t dev_rawpart __P((struct device *));	/* XXX */
+int findblkmajor(struct device *dv);
+dev_t dev_rawpart(struct device *);	/* XXX */
 
 dev_t
 dev_rawpart(dv)

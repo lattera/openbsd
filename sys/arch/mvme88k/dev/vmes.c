@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmes.c,v 1.7 2001/11/07 22:31:57 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmes.c,v 1.7.2.1 2002/06/11 03:37:10 art Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -31,7 +31,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/systm.h>
@@ -39,7 +38,9 @@
 #include <sys/device.h>
 
 #include <machine/autoconf.h>
+#include <machine/conf.h>
 #include <machine/cpu.h>
+
 #include <mvme88k/dev/vme.h>
 
 /*
@@ -48,8 +49,8 @@
  * functions will decide how many address bits are relevant.
  */
 
-void vmesattach __P((struct device *, struct device *, void *));
-int  vmesmatch __P((struct device *, void *, void *));
+void vmesattach(struct device *, struct device *, void *);
+int  vmesmatch(struct device *, void *, void *);
 
 struct cfattach vmes_ca = {
         sizeof(struct vmessoftc), vmesmatch, vmesattach
@@ -59,13 +60,7 @@ struct cfdriver vmes_cd = {
         NULL, "vmes", DV_DULL, 0
 };
 
-int vmesscan __P((struct device *, void *, void*));
-int vmesopen __P((dev_t, int, int));
-int vmesclose __P((dev_t, int, int));
-int vmesioctl __P((dev_t, int, caddr_t, int, struct proc *));
-int vmesread __P((dev_t, struct uio *, int));
-int vmeswrite __P((dev_t, struct uio *, int));
-paddr_t vmesmmap __P((dev_t, off_t, int));
+int vmesscan(struct device *, void *, void *);
 
 int
 vmesmatch(parent, cf, args)
@@ -99,9 +94,10 @@ vmesattach(parent, self, args)
 
 /*ARGSUSED*/
 int
-vmesopen(dev, flag, mode)
+vmesopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 	if (minor(dev) >= vmes_cd.cd_ndevs ||
 	    vmes_cd.cd_devs[minor(dev)] == NULL)
@@ -111,9 +107,10 @@ vmesopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-vmesclose(dev, flag, mode)
+vmesclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return (0);
@@ -122,9 +119,10 @@ vmesclose(dev, flag, mode)
 /*ARGSUSED*/
 int
 vmesioctl(dev, cmd, data, flag, p)
-	dev_t   dev;
+	dev_t dev;
+	u_long cmd;
 	caddr_t data;
-	int     cmd, flag;
+	int flag;
 	struct proc *p;
 {
 	int error = 0;

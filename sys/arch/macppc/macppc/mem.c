@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/mem.c,v 1.3 2001/11/06 19:53:15 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/mem.c,v 1.3.2.1 2002/06/11 03:36:34 art Exp $	*/
 /*	$NetBSD: mem.c,v 1.1 1996/09/30 16:34:50 ws Exp $ */
 
 /*
@@ -59,6 +59,12 @@
 
 #include <machine/conf.h>
 
+/* open counter for aperture */
+#ifdef APERTURE
+static int ap_open_count = 0;
+extern int allowaperture;
+#endif
+
 /*ARGSUSED*/
 int
 mmopen(dev, flag, mode, p)
@@ -72,10 +78,22 @@ mmopen(dev, flag, mode, p)
 		case 1:
 		case 2:
 		case 12:
-			return (0);
+			break;
+#ifdef APERTURE
+	case 4:
+	        if (suser(p->p_ucred, &p->p_acflag) != 0 || !allowaperture)
+			return (EPERM);
+
+		/* authorize only one simultaneous open() */
+		if (ap_open_count > 0)
+			return(EPERM);
+		ap_open_count++;
+		break;
+#endif
 		default:
 			return (ENXIO);
 	}
+	return (0);
 }
 
 /*ARGSUSED*/
@@ -85,7 +103,10 @@ mmclose(dev, flag, mode, p)
 	int flag, mode;
 	struct proc *p;
 {
-
+#ifdef APERTURE
+	if (minor(dev) == 4)
+		ap_open_count--;
+#endif
 	return 0;
 }
 
@@ -113,7 +134,7 @@ mmrw(dev, uio, flags)
 		}
 		switch (minor(dev)) {
 
-/* minor device 0 is physical memory */
+		/* minor device 0 is physical memory */
 		case 0:
 			v = uio->uio_offset;
 			c = uio->uio_resid;
@@ -122,27 +143,30 @@ mmrw(dev, uio, flags)
 			error = uiomove((caddr_t)v, c, uio);
 			continue;
 
-/* minor device 1 is kernel memory */
+		/* minor device 1 is kernel memory */
 		case 1:
 			v = uio->uio_offset;
 			c = min(iov->iov_len, MAXPHYS);
 			error = uiomove((caddr_t)v, c, uio);
 			continue;
 
-/* minor device 2 is EOF/RATHOLE */
+		/* minor device 2 is EOF/RATHOLE */
 		case 2:
 			if (uio->uio_rw == UIO_WRITE)
 				uio->uio_resid = 0;
 			return 0;
 
-/* minor device 12 (/dev/zero) is source of nulls on read, rathole on write */
+		/* minor device 12 (/dev/zero) is source of nulls on read,
+		 * rathole on write
+		 */
 		case 12:
 			if (uio->uio_rw == UIO_WRITE) {
 				c = iov->iov_len;
 				break;
 			}
 			if (zeropage == NULL) {
-				zeropage = (caddr_t)malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				zeropage = (caddr_t)malloc(PAGE_SIZE, M_TEMP,
+				    M_WAITOK);
 				bzero(zeropage, PAGE_SIZE);
 			}
 			c = min(iov->iov_len, PAGE_SIZE);

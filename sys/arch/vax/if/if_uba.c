@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.7.4.1 2002/01/31 22:55:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.7.4.2 2002/06/11 03:39:19 art Exp $	*/
 /*	$NetBSD: if_uba.c,v 1.15 1999/01/01 21:43:18 ragge Exp $	*/
 
 /*
@@ -56,9 +56,9 @@
 #include <vax/uba/ubareg.h>
 #include <vax/uba/ubavar.h>
 
-static	int if_ubaalloc __P((struct ifubinfo *, struct ifrw *, int));
-static	void rcv_xmtbuf __P((struct ifxmt *));
-static	void restor_xmtbuf __P((struct ifxmt *));
+static	int if_ubaalloc(struct ifubinfo *, struct ifrw *, int);
+static	void rcv_xmtbuf(struct ifxmt *);
+static	void restor_xmtbuf(struct ifxmt *);
 
 /*
  * Routines supporting UNIBUS network interfaces.

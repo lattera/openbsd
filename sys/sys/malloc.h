@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/malloc.h,v 1.49.2.2 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/malloc.h,v 1.49.2.3 2002/06/11 03:32:33 art Exp $	*/
 /*	$NetBSD: malloc.h,v 1.39 1998/07/12 19:52:01 augustss Exp $	*/
 
 /*
@@ -150,7 +150,8 @@
 #define	M_USBHC		103	/* USB host controller */
 /* 104 - free */
 #define M_MEMDESC	105	/* Memory range */
-/* 106-107 - free */
+#define M_UFS_EXTATTR	106	/* Extended Attributes */
+/* 107 - free */
 #define M_CRYPTO_DATA   108	/* Crypto framework data buffers (keys etc.) */
 /* 109 - free */
 #define M_CREDENTIALS   110	/* IPsec-related credentials and ID info */
@@ -406,10 +407,12 @@ extern struct kmemusage *kmemusage;
 extern char *kmembase;
 extern struct kmembuckets bucket[];
 
-extern void *malloc __P((unsigned long size, int type, int flags));
-extern void free __P((void *addr, int type));
-extern int sysctl_malloc __P((int *, u_int, void *, size_t *, void *, size_t,
-			      struct proc *));
+extern void *malloc(unsigned long size, int type, int flags);
+extern void free(void *addr, int type);
+extern int sysctl_malloc(int *, u_int, void *, size_t *, void *, size_t,
+			      struct proc *);
+
+size_t malloc_roundup(size_t);
 
 size_t malloc_roundup(size_t);
 

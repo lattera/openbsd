@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netnatm/Attic/natm_pcb.c,v 1.4 2001/05/16 12:54:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netnatm/Attic/natm_pcb.c,v 1.4.4.1 2002/06/11 03:31:38 art Exp $	*/
 
 /*
  *
@@ -168,7 +168,7 @@ done:
 
 #ifdef DDB
 
-int npcb_dump __P((void));
+int npcb_dump(void);
 
 int npcb_dump()
 

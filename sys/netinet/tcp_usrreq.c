@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.54.4.1 2002/01/31 22:55:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.54.4.2 2002/06/11 03:31:37 art Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -34,11 +34,11 @@
  * SUCH DAMAGE.
  *
  *	@(#)COPYRIGHT	1.1 (NRL) 17 January 1995
- * 
+ *
  * NRL grants permission for redistribution and use in source and binary
  * forms, with or without modification, of the software and documentation
  * created at NRL provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
@@ -53,7 +53,7 @@
  * 4. Neither the name of the NRL nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THE SOFTWARE PROVIDED BY NRL IS PROVIDED BY NRL AND CONTRIBUTORS ``AS
  * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
@@ -65,7 +65,7 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the US Naval
@@ -81,6 +81,7 @@
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/domain.h>
+#include <sys/kernel.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -110,7 +111,7 @@ extern int tcp_rst_ppslim;
 /* from in_pcb.c */
 extern	struct baddynamicports baddynamicports;
 
-int tcp_ident __P((void *, size_t *, void *, size_t));
+int tcp_ident(void *, size_t *, void *, size_t);
 
 #ifdef INET6
 int
@@ -321,7 +322,7 @@ tcp_usrreq(so, req, m, nam, control)
 		soisconnecting(so);
 		tcpstat.tcps_connattempt++;
 		tp->t_state = TCPS_SYN_SENT;
-		TCP_TIMER_ARM(tp, TCPT_KEEP, tcptv_keep_init);	
+		TCP_TIMER_ARM(tp, TCPT_KEEP, tcptv_keep_init);
 #ifdef TCP_COMPAT_42
 		tp->iss = tcp_iss;
 		tcp_iss += TCP_ISSINCR/2;
@@ -421,7 +422,7 @@ tcp_usrreq(so, req, m, nam, control)
 
 	case PRU_SENSE:
 		((struct stat *) m)->st_blksize = so->so_snd.sb_hiwat;
-		(void) splx(s);
+		splx(s);
 		return (0);
 
 	case PRU_RCVOOB:
@@ -479,15 +480,6 @@ tcp_usrreq(so, req, m, nam, control)
 		else
 #endif
 			in_setpeeraddr(inp, nam);
-		break;
-
-	/*
-	 * TCP slow timer went off; going through this
-	 * routine for tracing's sake.
-	 */
-	case PRU_SLOWTIMO:
-		tp = tcp_timers(tp, (long)nam);
-		req |= (long)nam << 8;		/* for debug's sake */
 		break;
 
 	default:
@@ -651,11 +643,11 @@ tcp_ctloutput(op, so, level, optname, mp)
 }
 
 #ifndef TCP_SENDSPACE
-#define	TCP_SENDSPACE	1024*16;
+#define	TCP_SENDSPACE	1024*16
 #endif
 u_int	tcp_sendspace = TCP_SENDSPACE;
 #ifndef TCP_RECVSPACE
-#define	TCP_RECVSPACE	1024*16;
+#define	TCP_RECVSPACE	1024*16
 #endif
 u_int	tcp_recvspace = TCP_RECVSPACE;
 
@@ -790,7 +782,6 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 	size_t newlen;
 {
 	int error = 0, s;
-	int is_ipv6 = 0;
 	struct tcp_ident_mapping tir;
 	struct inpcb *inp;
 	struct sockaddr_in *fin, *lin;
@@ -808,7 +799,6 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 	switch (tir.faddr.ss_family) {
 #ifdef INET6
 	case AF_INET6:
-		is_ipv6 = 1;
 		fin6 = (struct sockaddr_in6 *)&tir.faddr;
 		error = in6_embedscope(&f6, fin6, NULL, NULL);
 		if (error)
@@ -828,34 +818,36 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 	}
 
 	s = splsoftnet();
-	if (is_ipv6) {
+	switch (tir.faddr.ss_family) {
+	case AF_INET6:
 #ifdef INET6
 		inp = in6_pcbhashlookup(&tcbtable, &f6,
 		    fin6->sin6_port, &l6, lin6->sin6_port);
-#else
-		panic("tcp_ident: cannot happen");
+		break;
 #endif
-	}
-	else 
-		inp = in_pcbhashlookup(&tcbtable,  fin->sin_addr, 
+	case AF_INET:
+		inp = in_pcbhashlookup(&tcbtable,  fin->sin_addr,
 		    fin->sin_port, lin->sin_addr, lin->sin_port);
+		break;
+	}
 
 	if (inp == NULL) {
 		++tcpstat.tcps_pcbhashmiss;
-		if (is_ipv6) {
+		switch (tir.faddr.ss_family) {
 #ifdef INET6
+		case AF_INET6:
 			inp = in_pcblookup(&tcbtable, &f6,
 			    fin6->sin6_port, &l6, lin6->sin6_port,
 			    INPLOOKUP_WILDCARD | INPLOOKUP_IPV6);
-#else
-			panic("tcp_ident: cannot happen");
+			break;
 #endif
-		}
-		else
+		case AF_INET:
 			inp = in_pcblookup(&tcbtable, &fin->sin_addr,
-			    fin->sin_port, &lin->sin_addr, lin->sin_port, 
+			    fin->sin_port, &lin->sin_addr, lin->sin_port,
 			    INPLOOKUP_WILDCARD);
-	}	
+			break;
+		}
+	}
 
 	if (inp != NULL && (inp->inp_socket->so_state & SS_CONNECTOUT)) {
 		tir.ruid = inp->inp_socket->so_ruid;
@@ -929,6 +921,14 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	case TCPCTL_RSTPPSLIMIT:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &tcp_rst_ppslim));
+	case TCPCTL_ACK_ON_PUSH:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &tcp_ack_on_push));
+#ifdef TCP_ECN
+	case TCPCTL_ECN:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		   &tcp_do_ecn));
+#endif
 	default:
 		return (ENOPROTOOPT);
 	}

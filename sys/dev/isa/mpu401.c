@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/mpu401.c,v 1.5 2001/11/06 19:53:19 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/mpu401.c,v 1.5.2.1 2002/06/11 03:42:22 art Exp $	*/
 /*	$NetBSD: mpu401.c,v 1.3 1998/11/25 22:17:06 augustss Exp $	*/
 
 /*
@@ -160,8 +160,8 @@ int
 mpu_open(v, flags, iintr, ointr, arg)
 	void *v;
 	int flags;
-	void (*iintr)__P((void *, int));
-	void (*ointr)__P((void *));
+	void (*iintr)(void *, int);
+	void (*ointr)(void *);
 	void *arg;
 {
 	struct mpu_softc *sc = v;
