@@ -35,7 +35,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/db/hash/hash_page.c,v 1.4 1998/07/27 05:22:11 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/db/hash/hash_page.c,v 1.5 1998/07/27 15:33:43 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 /*
@@ -54,6 +54,7 @@ static char rcsid[] = "$OpenBSD: src/lib/libc/db/hash/hash_page.c,v 1.4 1998/07/
  *	open_temp
  */
 
+#include <sys/param.h>
 #include <sys/types.h>
 
 #include <errno.h>
