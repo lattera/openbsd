@@ -38,7 +38,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)mapc.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: mapc.c,v 1.7 2002/08/05 07:24:26 pvalchev Exp $";
+static char *rcsid = "$Id: mapc.c,v 1.8 2003/03/13 22:08:02 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -685,7 +685,7 @@ mapc_meta_search(mnt_map *m, char *key, char **pval, int recurse)
 			 */
 			strlcpy(wildname, key, sizeof wildname);
 			while (error && (subp = strrchr(wildname, '/'))) {
-				strcpy(subp, "/*");	/* ok */
+				strncpy(subp, "/*", 2);
 #ifdef DEBUG
 				dlog("mapc recurses on %s", wildname);
 #endif
