@@ -1,8 +1,7 @@
-#	$OpenBSD: src/etc/locate.rc,v 1.2 1997/04/03 00:57:37 michaels Exp $
+#	$OpenBSD: src/etc/locate.rc,v 1.3 1997/11/22 12:32:35 kstailey Exp $
 #
 # /etc/locate.rc -  command script for updatedb(8)
 #
-# $Id: locate.rc,v 1.1 1996/08/17 01:30:25 michaels Exp $
 
 # temp directory
 TMPDIR="/tmp"
