@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/pci/ehci_pci.c,v 1.3 2004/05/30 01:25:17 tedu Exp $ */
 /*	$NetBSD: ehci_pci.c,v 1.15 2004/04/23 21:13:06 itojun Exp $	*/
 
 /*
