@@ -13,7 +13,7 @@
  * 
  */
 
-/* RCSID("$Id: ssh.h,v 1.31 1999/12/12 19:20:03 markus Exp $"); */
+/* RCSID("$Id: ssh.h,v 1.32 2000/01/04 00:08:00 markus Exp $"); */
 
 #ifndef SSH_H
 #define SSH_H
@@ -687,7 +687,7 @@ struct envstring {
 /*
  * Ensure all of data on socket comes through. f==read || f==write
  */
-int	atomicio(int (*f)(), int fd, void *s, size_t n);
+ssize_t	atomicio(ssize_t (*f)(), int fd, void *s, size_t n);
 
 #ifdef KRB4
 #include <krb.h>
