@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.4 2004/06/06 05:23:39 tedu Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.5 2004/06/06 21:58:49 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 2003/04/26 18:39:39 fvdl Exp $	*/
 
 /*-
@@ -120,13 +120,6 @@ struct cpu_info {
 	char *ci_ddbipi_stack;
 
 	struct evcnt ci_ipi_events[X86_NIPI];
-	volatile int ci_ddb_paused;     /* paused due to other proc in ddb */
-#define CI_DDB_RUNNING		0
-#define CI_DDB_SHOULDSTOP	1
-#define CI_DDB_STOPPED		2
-#define CI_DDB_ENTERDDB		3
-#define CI_DDB_INDDB		4
-
 };
 
 #define CPUF_BSP	0x0001		/* CPU is the original BSP */
@@ -173,10 +166,7 @@ void cpu_init_idle_pcbs(void);
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
-#if 0
 extern void need_resched(struct cpu_info *);
-#endif
-extern void need_resched(void);
 
 #else /* !MULTIPROCESSOR */
 
@@ -201,7 +191,6 @@ extern struct cpu_info cpu_info_primary;
  * or after the current trap/syscall if in system mode.
  */
 
-#ifdef MULTIPROCESSOR
 #define need_resched(ci)						\
 do {									\
 	struct cpu_info *__ci = (ci);					\
@@ -209,17 +198,8 @@ do {									\
 	if (__ci->ci_curproc != NULL)					\
 		aston(__ci->ci_curproc);				\
 } while (/*CONSTCOND*/0)
-#else
-#define need_resched()							\
-do {									\
-	struct cpu_info *__ci = curcpu();				\
-	__ci->ci_want_resched = 1;					\
-	if (__ci->ci_curproc != NULL)					\
-		aston(__ci->ci_curproc);				\
-} while (/*CONSTCOND*/0)
-#endif
 
-#endif
+#endif	/* MULTIPROCESSOR */
 
 #define aston(p)	((p)->p_md.md_astpending = 1)
 
@@ -334,10 +314,6 @@ void x86_bus_space_mallocok(void);
 #endif /* _KERNEL */
 
 #include <machine/psl.h>
-
-#ifdef MULTIPROCESSOR
-#include <sys/mplock.h>
-#endif
 
 /* 
  * CTL_MACHDEP definitions.
