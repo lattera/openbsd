@@ -24,12 +24,12 @@ provided "as is" without express or implied warranty.
  *      newsyslog - roll over selected logs at the appropriate time,
  *              keeping the a specified number of backup files around.
  *
- *      $Source: /a/cvsroot/src/usr.bin/newsyslog/newsyslog.c,v $
- *      $Author: jtc $
+ *      $Source: /cvs/src/usr.bin/newsyslog/newsyslog.c,v $
+ *      $Author: deraadt $
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: newsyslog.c,v 1.9 1995/01/21 21:53:46 jtc Exp $";
+static char rcsid[] = "$Id: newsyslog.c,v 1.1.1.1 1995/10/18 08:45:51 deraadt Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -180,7 +180,7 @@ PRS(argc,argv)
         progname = argv[0];
         timenow = time((time_t *) 0);
         daytime = ctime(&timenow) + 4;
-        daytime[16] = '\0';
+        daytime[15] = '\0';
 
         /* Let's find the pid of syslogd */
         syslog_pid = 0;
