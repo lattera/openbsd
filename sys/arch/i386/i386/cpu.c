@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.12 2004/03/23 00:57:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.13 2004/03/30 09:06:50 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -430,6 +430,7 @@ cpu_hatch(void *v)
 
 	cpu_init_idt();
 	lapic_enable();
+	lapic_initclocks();
 	lapic_set_lvt();
 	gdt_init_cpu(ci);
 
