@@ -1,0 +1,173 @@
+.\"	$OpenBSD: src/share/man/man4/man4.macppc/intro.4,v 1.17 2003/08/14 15:29:58 jason Exp $
+.\"
+.\" Copyright (c) 2001 Peter Valchev.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"
+.Dd August 3, 2001
+.Dt INTRO 4 macppc
+.Os
+.Sh NAME
+.Nm intro
+.Nd introduction to special files and hardware support
+.Sh DESCRIPTION
+The manual pages in section 4 describe the special files,
+related driver functions, and networking support
+available in the system.
+In this part of the manual, the
+.Tn SYNOPSIS
+section of
+each configurable device gives a sample specification
+for use in constructing a system description for the
+.Xr config 8
+program.
+The
+.Tn DIAGNOSTICS
+section lists messages which may appear on the console
+and/or in the system error log
+.Pa /var/log/messages
+due to errors in device operation;
+see
+.Xr syslogd 8
+for more information.
+.Pp
+This section contains both devices
+which may be configured into the system
+and network related information.
+The networking support is introduced in
+.Xr netintro 4 .
+.Sh DEVICE SUPPORT
+This section describes the hardware supported on the MacPPC
+platform.
+Software support for these devices comes in two forms.
+A hardware device may be supported with a character or block
+.Em device driver ,
+or it may be used within the networking subsystem and have a
+.Em network interface driver .
+Block and character devices are accessed through files in the file
+system of a special type; see
+.Xr mknod 8 .
+Network interfaces are indirectly accessed through the interprocess
+communication facilities provided by the system; see
+.Xr socket 2 .
+.Pp
+A hardware device is identified to the system at configuration time
+and the appropriate device or network interface driver is then compiled
+into the system.
+When the resultant system is booted, the autoconfiguration facilities
+in the system probe for the device and, if found, enable the software
+support for it.
+If a device does not respond at autoconfiguration
+time it is not accessible at any time afterwards.
+To enable a device which did not autoconfigure,
+the system will have to be rebooted.
+.Pp
+The configuration system is described in
+.Xr autoconf 4 .
+A list of the supported devices is given below.
+.Sh LIST OF DEVICES
+The devices listed below are supported in this incarnation of
+the system.
+Pseudo-devices are not listed.
+Devices are indicated by their functional interface.
+Not all supported devices are listed.
+.Pp
+.Bl -tag -width usscanner(4) -compact -offset indent
+.It Xr abtn 4
+ADB button.
+.It Xr aed 4
+ADB Event Device.
+.It Xr akbd 4
+ADB keyboard.
+.It Xr ams 4
+ADB mouse.
+.It Xr an 4
+Aironet Communications 4500/4800 IEEE 802.11DS wireless network adapter.
+.It Xr aue 4
+ADMtek AN986-based USB Ethernet adapters.
+.It Xr awacs 4
+Apple audio device.
+.It Xr bktr 4
+Video capture driver.
+.It Xr bm 4
+BMAC ethernet.
+.It Xr de 4
+DEC tulip-based ethernet cards.
+.It Xr eap 4
+Ensoniq AudioPCI based audio.
+.It Xr em 4
+Intel i82542, i82543, and i82544 Pro/1000 Gigabit ethernet.
+.It Xr fxp 4
+Intel EtherExpress PRO/100 Ethernet driver.
+.It Xr gem 4
+GMAC ethernet.
+.It Xr gpio 4
+PMU interrupt router.
+.It Xr hifn 4
+Hifn 7751 crypto accelerator.
+.It Xr hme 4
+National DP83840 ethernet cards.
+.It Xr iop 4
+I2O adapter.
+.It Xr kue 4
+Kawasaki LSI KL5KUSB101B-based USB ethernet.
+.It Xr safe 4
+SafeNet SafeXcel 1141/1741.
+.It Xr siop 4
+LSI/Symbios Logic/NCR 53c8xx SCSI adapter boards.
+.It Xr ti 4
+Alteon Networks Tigon I and II Gigabit Ethernet driver.
+.It Xr uaudio 4
+USB audio devices.
+.It Xr ukbd 4
+USB keyboard.
+.It Xr ulpt 4
+USB printers.
+.It Xr umass 4
+USB mass storage.
+.It Xr ums 4
+USB mouse.
+.It Xr uplcom 4
+I/O Data USB-RSAQ2 USB serial adapters.
+.It Xr uscanner 4
+USB scanners.
+.It Xr usscanner 4
+SCSI-over-USB scanners.
+.It Xr vgafb 4
+PCI VGA graphics.
+.It Xr wi 4
+WaveLAN/IEEE and PRISM-II 802.11DS wireless network adapters.
+.It Xr xl 4
+3Com EtherLink XL and Fast EtherLink XL Ethernet driver.
+.It Xr zs 4
+Zilog 8530 serial controller.
+.El
+.Sh SEE ALSO
+.Xr autoconf 4 ,
+.Xr config 8
+.Sh HISTORY
+The
+MacPPC
+.Nm
+first appeared in
+.Ox 3.0 .
