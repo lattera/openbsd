@@ -1,22 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.9.2.3 2002/06/22 07:23:16 miod Exp $
-
-.PATH:		${.CURDIR}/..
-
-PROG=	ssh-keysign
-BINOWN=	root
-
-BINMODE?=4555
-
-BINDIR=	/usr/libexec
-MAN=	ssh-keysign.8
-
-SRCS=	ssh-keysign.c
-
-.include <bsd.prog.mk>
-
-LDADD+=	-lcrypto -lz
-DPADD+=	${LIBCRYPTO} ${LIBZ}
-#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.9.2.3 2002/06/22 07:23:16 miod Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.9.2.4 2002/06/22 08:50:29 matthieu Exp $
 
 .include <bsd.own.mk>
 
