@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: misc.c,v 1.2 1994/08/31 19:28:50 jtc Exp $";
+static char rcsid[] = "$Id: misc.c,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $";
 #endif
 
 /* vix 26jan87 [RCS has the rest of the log]
@@ -622,7 +622,8 @@ mkprints(src, len)
 {
 	register char *dst = malloc(len*4 + 1);
 
-	mkprint(dst, src, len);
+	if (dst)
+		mkprint(dst, src, len);
 
 	return dst;
 }
