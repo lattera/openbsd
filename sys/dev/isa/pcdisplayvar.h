@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/pcdisplayvar.h,v 1.2.4.1 2001/05/14 22:24:48 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/isa/pcdisplayvar.h,v 1.2.4.2 2002/03/28 12:11:35 niklas Exp $ */
 /* $NetBSD: pcdisplayvar.h,v 1.1 1998/05/28 16:51:51 drochner Exp $ */
 
 /*
@@ -33,4 +33,4 @@
  *
  */
 
-int pcdisplay_cnattach __P((bus_space_tag_t, bus_space_tag_t));
+int pcdisplay_cnattach(bus_space_tag_t, bus_space_tag_t);

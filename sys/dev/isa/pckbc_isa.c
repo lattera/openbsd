@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/pckbc_isa.c,v 1.1.4.2 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/pckbc_isa.c,v 1.1.4.3 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: pckbc_isa.c,v 1.2 2000/03/23 07:01:35 thorpej Exp $	*/
 
 /*
@@ -50,8 +50,8 @@
 #include <dev/ic/i8042reg.h>
 #include <dev/ic/pckbcvar.h>
 
-int	pckbc_isa_match __P((struct device *, void *, void *));
-void	pckbc_isa_attach __P((struct device *, struct device *, void *));
+int	pckbc_isa_match(struct device *, void *, void *);
+void	pckbc_isa_attach(struct device *, struct device *, void *);
 
 struct pckbc_isa_softc {
 	struct pckbc_softc sc_pckbc;
@@ -64,7 +64,7 @@ struct cfattach pckbc_isa_ca = {
 	sizeof(struct pckbc_isa_softc), pckbc_isa_match, pckbc_isa_attach,
 };
 
-void	pckbc_isa_intr_establish __P((struct pckbc_softc *, pckbc_slot_t));
+void	pckbc_isa_intr_establish(struct pckbc_softc *, pckbc_slot_t);
 
 int
 pckbc_isa_match(parent, match, aux)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/vga_subr.c,v 1.1.4.1 2001/05/14 22:24:21 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/vga_subr.c,v 1.1.4.2 2002/03/28 12:09:41 niklas Exp $ */
 /* $NetBSD: vga_subr.c,v 1.6 2000/01/25 02:44:03 ad Exp $ */
 
 /*
@@ -46,8 +46,8 @@
 
 #include <dev/wscons/wsdisplayvar.h>
 
-static void fontram __P((struct vga_handle *));
-static void textram __P((struct vga_handle *));
+static void fontram(struct vga_handle *);
+static void textram(struct vga_handle *);
 
 static void
 fontram(vh)

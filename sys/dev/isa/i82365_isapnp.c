@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1.4.3 2001/11/13 21:10:01 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1.4.4 2002/03/28 12:11:35 niklas Exp $ */
 /*	$NetBSD: i82365_isapnp.c,v 1.8 2000/02/23 17:22:11 soren Exp $	*/
 
 /*
@@ -66,8 +66,8 @@ int	pcicisapnp_debug = 0 /* XXX */ ;
 #define	DPRINTF(arg)
 #endif
 
-int	pcic_isapnp_match __P((struct device *, void *, void *));
-void	pcic_isapnp_attach __P((struct device *, struct device *, void *));
+int	pcic_isapnp_match(struct device *, void *, void *);
+void	pcic_isapnp_attach(struct device *, struct device *, void *);
 
 struct cfattach pcic_isapnp_ca = {
 	sizeof(struct pcic_softc), pcic_isapnp_match, pcic_isapnp_attach

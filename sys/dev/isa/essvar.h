@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/essvar.h,v 1.2.4.1 2001/05/14 22:24:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/essvar.h,v 1.2.4.2 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: essvar.h,v 1.14 1999/03/18 06:03:31 mycroft Exp $	*/
 /*
  * Copyright 1997
@@ -34,7 +34,7 @@
  */
 
 /*
-** @(#) $RCSfile: essvar.h,v $ $Revision: 1.3 $ (SHARK) $Date: 2001/01/29 06:27:59 $
+** @(#) $RCSfile$ $Revision$ (SHARK) $Date$
 **
 **++
 **
@@ -103,7 +103,7 @@ struct ess_audio_channel
 	int	ist;
 	void	*ih;			/* interrupt vectoring */
 	u_long	nintr;			/* number of interrupts taken */
-	void	(*intr)__P((void*));	/* ISR for DMA complete */
+	void	(*intr)(void *);	/* ISR for DMA complete */
 	void	*arg;			/* arg for intr() */
 
 	/* Status information */
@@ -159,6 +159,6 @@ struct ess_softc
 	u_int	sc_version;		/* Legacy ES688/ES1688 ID */
 };
 
-int	essmatch __P((struct ess_softc *));
-void	essattach __P((struct ess_softc *));
+int	essmatch(struct ess_softc *);
+void	essattach(struct ess_softc *);
 

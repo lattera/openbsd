@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/z8530sc.c,v 1.4 1997/01/15 05:35:46 kstailey Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/z8530sc.c,v 1.4.14.1 2002/03/28 12:11:34 niklas Exp $ */
 /*	$NetBSD: z8530sc.c,v 1.4 1996/05/17 19:30:34 gwr Exp $	*/
 
 /*
@@ -68,8 +68,8 @@
 #include <dev/ic/z8530reg.h>
 #include <machine/z8530var.h>
 
-static void zsnull_intr __P((struct zs_chanstate *));
-static void zsnull_softint __P((struct zs_chanstate *));
+static void zsnull_intr(struct zs_chanstate *);
+static void zsnull_softint(struct zs_chanstate *);
 
 void
 zs_break(cs, set)

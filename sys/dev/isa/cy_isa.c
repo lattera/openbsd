@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/cy_isa.c,v 1.4.2.1 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/cy_isa.c,v 1.4.2.2 2002/03/28 12:11:35 niklas Exp $	*/
 
 /*
  * cy_isa.c
@@ -21,8 +21,8 @@
 #include <dev/ic/cd1400reg.h>
 #include <dev/ic/cyreg.h>
 
-static int cy_isa_probe __P((struct device *, void *, void *));
-void cy_isa_attach __P((struct device *, struct device *, void *));
+static int cy_isa_probe(struct device *, void *, void *);
+void cy_isa_attach(struct device *, struct device *, void *);
 
 struct cfattach cy_isa_ca = {
 	sizeof(struct cy_softc), cy_isa_probe, cy_isa_attach

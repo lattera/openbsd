@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isasubr.c,v 1.10.4.3 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/i82365_isasubr.c,v 1.10.4.4 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: i82365_isasubr.c,v 1.1 1998/06/07 18:28:31 sommerfe Exp $  */
 
 /*
@@ -188,7 +188,7 @@ pcic_isa_chip_intr_establish(pch, pf, ipl, fct, arg, xname)
 	pcmcia_chipset_handle_t pch;
 	struct pcmcia_function *pf;
 	int ipl;
-	int (*fct) __P((void *));
+	int (*fct)(void *);
 	void *arg;
 	char *xname;
 {

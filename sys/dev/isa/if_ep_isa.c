@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_ep_isa.c,v 1.18.4.1 2001/05/14 22:24:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_ep_isa.c,v 1.18.4.2 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: if_ep_isa.c,v 1.5 1996/05/12 23:52:36 mycroft Exp $	*/
 
 /*
@@ -81,14 +81,14 @@
 #include <dev/isa/isavar.h>
 #include <dev/isa/elink.h>
 
-int ep_isa_probe __P((struct device *, void *, void *));
-void ep_isa_attach __P((struct device *, struct device *, void *));
+int ep_isa_probe(struct device *, void *, void *);
+void ep_isa_attach(struct device *, struct device *, void *);
 
 struct cfattach ep_isa_ca = {
 	sizeof(struct ep_softc), ep_isa_probe, ep_isa_attach
 };
 
-static	void epaddcard __P((int, int, int, u_short));
+static	void epaddcard(int, int, int, u_short);
 
 /*
  * This keeps track of which ISAs have been through an ep probe sequence.

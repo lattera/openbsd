@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.3 2001/11/13 21:10:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.4 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: i82365_isa.c,v 1.11 1998/06/09 07:25:00 thorpej Exp $	*/
 
 /*
@@ -60,12 +60,12 @@
 #define	DPRINTF(arg)
 #endif
 
-int	pcic_isa_probe __P((struct device *, void *, void *));
-void	pcic_isa_attach __P((struct device *, struct device *, void *));
+int	pcic_isa_probe(struct device *, void *, void *);
+void	pcic_isa_attach(struct device *, struct device *, void *);
 
-void	*pcic_isa_chip_intr_establish __P((pcmcia_chipset_handle_t,
-	    struct pcmcia_function *, int, int (*) (void *), void *, char *));
-void	pcic_isa_chip_intr_disestablish __P((pcmcia_chipset_handle_t, void *));
+void	*pcic_isa_chip_intr_establish(pcmcia_chipset_handle_t,
+	    struct pcmcia_function *, int, int (*) (void *), void *, char *);
+void	pcic_isa_chip_intr_disestablish(pcmcia_chipset_handle_t, void *);
 
 struct cfattach pcic_isa_ca = {
 	sizeof(struct pcic_softc), pcic_isa_probe, pcic_isa_attach

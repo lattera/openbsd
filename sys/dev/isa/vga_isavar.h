@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/vga_isavar.h,v 1.2.10.1 2001/05/14 22:24:53 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/isa/vga_isavar.h,v 1.2.10.2 2002/03/28 12:11:36 niklas Exp $ */
 /* $NetBSD: vga_isavar.h,v 1.1 1998/03/22 15:14:36 drochner Exp $ */
 
 /*
@@ -28,4 +28,4 @@
  * rights to redistribute these changes.
  */
 
-int	vga_isa_cnattach __P((bus_space_tag_t, bus_space_tag_t));
+int	vga_isa_cnattach(bus_space_tag_t, bus_space_tag_t);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/Attic/egavar.h,v 1.2.4.1 2001/05/14 22:24:31 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/isa/Attic/egavar.h,v 1.2.4.2 2002/03/28 12:11:35 niklas Exp $ */
 /* $NetBSD: egavar.h,v 1.1 1999/12/13 16:28:57 drochner Exp $ */
 
 /*
@@ -33,4 +33,4 @@
  *
  */
 
-int ega_cnattach __P((bus_space_tag_t, bus_space_tag_t));
+int ega_cnattach(bus_space_tag_t, bus_space_tag_t);

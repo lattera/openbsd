@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/lpt_isa.c,v 1.10.6.1 2001/05/14 22:24:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/lpt_isa.c,v 1.10.6.2 2002/03/28 12:11:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994 Charles Hannum.
@@ -64,8 +64,8 @@
 #include <dev/ic/lptreg.h>
 #include <dev/ic/lptvar.h>
 
-int	lpt_isa_probe __P((struct device *, void *, void *));
-void	lpt_isa_attach __P((struct device *, struct device *, void *));
+int	lpt_isa_probe(struct device *, void *, void *);
+void	lpt_isa_attach(struct device *, struct device *, void *);
 
 struct cfattach lpt_isa_ca = {
 	sizeof(struct lpt_softc), lpt_isa_probe, lpt_isa_attach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.5 2002/03/06 02:11:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.6 2002/03/28 12:09:41 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Michael Shalayeff.  All rights reserved.
@@ -67,7 +67,7 @@ struct cfdriver twe_cd = {
 	NULL, "twe", DV_DULL
 };
 
-int	twe_scsi_cmd __P((struct scsi_xfer *));
+int	twe_scsi_cmd(struct scsi_xfer *);
 
 struct scsi_adapter twe_switch = {
 	twe_scsi_cmd, tweminphys, 0, 0,
@@ -77,14 +77,14 @@ struct scsi_device twe_dev = {
 	NULL, NULL, NULL, NULL
 };
 
-static __inline struct twe_ccb *twe_get_ccb __P((struct twe_softc *sc));
-static __inline void twe_put_ccb __P((struct twe_ccb *ccb));
-void twe_dispose __P((struct twe_softc *sc));
-int  twe_cmd __P((struct twe_ccb *ccb, int flags, int wait));
-int  twe_start __P((struct twe_ccb *ccb, int wait));
-int  twe_complete __P((struct twe_ccb *ccb));
-int  twe_done __P((struct twe_softc *sc, int idx));
-void twe_copy_internal_data __P((struct scsi_xfer *xs, void *v, size_t size));
+static __inline struct twe_ccb *twe_get_ccb(struct twe_softc *sc);
+static __inline void twe_put_ccb(struct twe_ccb *ccb);
+void twe_dispose(struct twe_softc *sc);
+int  twe_cmd(struct twe_ccb *ccb, int flags, int wait);
+int  twe_start(struct twe_ccb *ccb, int wait);
+int  twe_complete(struct twe_ccb *ccb);
+int  twe_done(struct twe_softc *sc, int idx);
+void twe_copy_internal_data(struct scsi_xfer *xs, void *v, size_t size);
 
 
 static __inline struct twe_ccb *

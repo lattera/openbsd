@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_ne_isapnp.c,v 1.3.6.1 2001/05/14 22:24:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_ne_isapnp.c,v 1.3.6.2 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: if_ne_isapnp.c,v 1.7 1998/07/23 19:30:45 christos Exp $	*/
 
 /*-
@@ -99,8 +99,8 @@
 #include <dev/isa/isapnpdevs.h>
 #endif
 
-static int ne_isapnp_match __P((struct device *, void *, void *));
-static void ne_isapnp_attach __P((struct device *, struct device *, void *));
+static int ne_isapnp_match(struct device *, void *, void *);
+static void ne_isapnp_attach(struct device *, struct device *, void *);
 
 struct ne_isapnp_softc {
 	struct	ne2000_softc sc_ne2000;		/* real "ne2000" softc */

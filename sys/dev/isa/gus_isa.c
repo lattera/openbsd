@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/gus_isa.c,v 1.1.4.1 2001/05/14 22:24:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/gus_isa.c,v 1.1.4.2 2002/03/28 12:11:35 niklas Exp $	*/
 /*	$NetBSD: gus.c,v 1.51 1998/01/25 23:48:06 mycroft Exp $	*/
 
 /*-
@@ -134,8 +134,8 @@
  * ISA bus driver routines
  */
 
-int	gus_isa_match __P((struct device *, void *, void *));
-void	gus_isa_attach __P((struct device *, struct device *, void *));
+int	gus_isa_match(struct device *, void *, void *);
+void	gus_isa_attach(struct device *, struct device *, void *);
 
 struct cfattach gus_isa_ca = {
 	sizeof(struct gus_softc), gus_isa_match, gus_isa_attach,
