@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.6 2003/05/19 22:41:30 tedu Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.7 2004/02/21 00:20:22 tedu Exp $	*/
 /*	$NetBSD: uvm_page.c,v 1.80 2002/10/30 02:48:28 simonb Exp $	*/
 
 /*
@@ -169,7 +169,11 @@ uvm_pageinsert(pg)
 	TAILQ_INSERT_TAIL(buck, pg, hashq);
 	simple_unlock(&uvm.hashlock);
 
-	if (UVM_OBJ_IS_AOBJ(uobj)) {
+	if (UVM_OBJ_IS_VTEXT(uobj)) {
+		uvmexp.execpages++;
+	} else if (UVM_OBJ_IS_VNODE(uobj)) {
+		uvmexp.filepages++;
+	} else if (UVM_OBJ_IS_AOBJ(uobj)) {
 		uvmexp.anonpages++;
 	}
 
@@ -200,10 +204,10 @@ uvm_pageremove(pg)
 	simple_unlock(&uvm.hashlock);
 
 	if (UVM_OBJ_IS_VTEXT(uobj) || UVM_OBJ_IS_VNODE(uobj)) {
-		if (UVM_OBJ_IS_VNODE(uobj))
-			uvmexp.filepages--;
-		else
+		if (UVM_OBJ_IS_VTEXT(uobj))
 			uvmexp.execpages--;
+		else
+			uvmexp.filepages--;
 		s = splbio();
 		vholdrele((struct vnode *)uobj);
 		splx(s);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.6 2003/05/19 22:31:57 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.7 2004/02/21 00:20:21 tedu Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -808,13 +808,12 @@ vput(vp)
 #endif
 	vputonfreelist(vp);
 
-	if (vp->v_flag & VTEXT) {
+	if (vp->v_flag & VEXECMAP) {
 		uvmexp.execpages -= vp->v_uobj.uo_npages;
 		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
-	vp->v_flag &= ~VTEXT;
+	vp->v_flag &= ~(VTEXT|VEXECMAP);
 	simple_unlock(&vp->v_interlock);
-
 	VOP_INACTIVE(vp, p);
 }
 
@@ -853,11 +852,11 @@ vrele(vp)
 #endif
 	vputonfreelist(vp);
 
-	if (vp->v_flag & VTEXT) {
+	if (vp->v_flag & VEXECMAP) {
 		uvmexp.execpages -= vp->v_uobj.uo_npages;
 		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
-	vp->v_flag &= ~VTEXT;
+	vp->v_flag &= ~(VTEXT|VEXECMAP);
 	if (vn_lock(vp, LK_EXCLUSIVE|LK_INTERLOCK, p) == 0)
 		VOP_INACTIVE(vp, p);
 }
@@ -1066,11 +1065,11 @@ vclean(vp, flags, p)
 	if (vp->v_flag & VXLOCK)
 		panic("vclean: deadlock");
 	vp->v_flag |= VXLOCK;
-	if (vp->v_flag & VTEXT) {
+	if (vp->v_flag & VEXECMAP) {
 		uvmexp.execpages -= vp->v_uobj.uo_npages;
 		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
-	vp->v_flag &= ~VTEXT;
+	vp->v_flag &= ~(VTEXT|VEXECMAP);
 
 	/*
 	 * Even if the count is zero, the VOP_INACTIVE routine may still
@@ -1372,6 +1371,8 @@ vprint(label, vp)
 		strlcat(buf, "|VROOT", sizeof buf);
 	if (vp->v_flag & VTEXT)
 		strlcat(buf, "|VTEXT", sizeof buf);
+	if (vp->v_flag & VEXECMAP)
+		strlcat(buf, "|VEXECMAP", sizeof buf);
 	if (vp->v_flag & VSYSTEM)
 		strlcat(buf, "|VSYSTEM", sizeof buf);
 	if (vp->v_flag & VXLOCK)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.20.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.20.2.5 2004/02/21 00:20:22 tedu Exp $	*/
 /*	$NetBSD: uvm_pdaemon.c,v 1.47 2002/06/20 15:05:29 chs Exp $	*/
 
 /*
@@ -164,12 +164,12 @@ uvmpd_tune(void)
 {
 	UVMHIST_FUNC("uvmpd_tune"); UVMHIST_CALLED(pdhist);
 
-	uvmexp.freemin = uvmexp.npages / 30;
+	uvmexp.freemin = uvmexp.npages / 20;
 
-	/* between 16k and 512k */
+	/* between 16k and 256k */
 	/* XXX:  what are these values good for? */
 	uvmexp.freemin = MAX(uvmexp.freemin, (16*1024) >> PAGE_SHIFT);
-	uvmexp.freemin = MIN(uvmexp.freemin, (512*1024) >> PAGE_SHIFT);
+	uvmexp.freemin = MIN(uvmexp.freemin, (256*1024) >> PAGE_SHIFT);
 
 	/* Make sure there's always a user page free. */
 	if (uvmexp.freemin < uvmexp.reserve_kernel + 1)
@@ -360,7 +360,7 @@ uvmpd_scan_inactive(pglst)
 	struct vm_page *p, *nextpg;
 	struct uvm_object *uobj;
 	struct vm_anon *anon;
-	struct vm_page *swpps[MAXBSIZE >> PAGE_SHIFT];
+	struct vm_page *swpps[round_page(MAXPHYS) >> PAGE_SHIFT];
 	struct simplelock *slock;
 	int swnpages, swcpages;
 	int swslot;
@@ -529,7 +529,7 @@ uvmpd_scan_inactive(pglst)
 
 			if ((p->pqflags & PQ_SWAPBACKED) == 0) {
 				uvm_unlock_pageq();
-				error = (uobj->pgops->pgo_put)(uobj, p->offset,
+				(void)(uobj->pgops->pgo_put)(uobj, p->offset,
 				    p->offset + PAGE_SIZE,
 				    PGO_CLEANIT|PGO_FREE);
 				uvm_lock_pageq();
@@ -619,7 +619,7 @@ uvmpd_scan_inactive(pglst)
 			 */
 
 			if (swslot == 0) {
-				swnpages = MAXBSIZE >> PAGE_SHIFT;
+				swnpages = MAXPHYS >> PAGE_SHIFT;
 				swslot = uvm_swap_alloc(&swnpages, TRUE);
 				if (swslot == 0) {
 					simple_unlock(slock);

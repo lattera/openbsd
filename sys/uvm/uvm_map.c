@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.7 2003/05/19 22:41:29 tedu Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.8 2004/02/21 00:20:22 tedu Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.120 2002/09/22 07:21:29 chs Exp $	*/
 
 /*
@@ -2263,7 +2263,7 @@ uvm_map_protect(map, start, end, new_prot, set_max)
 			pmap_protect(map->pmap, current->start, current->end,
 			    current->protection & MASK(entry));
 
-#ifdef notyet /* XXXART */
+#if 1
 			/*
 			 * If this entry points at a vnode, and the
 			 * protection includes VM_PROT_EXECUTE, mark

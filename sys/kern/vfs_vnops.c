@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.38.2.2 2002/11/04 18:02:31 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.38.2.3 2004/02/21 00:20:21 tedu Exp $	*/
 /*	$NetBSD: vfs_vnops.c,v 1.20 1996/02/04 02:18:41 christos Exp $	*/
 
 /*
@@ -211,31 +211,32 @@ vn_writechk(vp)
 	return (0);
 }
 
+void
+vn_markexec(vp)
+	struct vnode *vp;
+{
+	if ((vp->v_flag & VEXECMAP) == 0) {
+		uvmexp.filepages -= vp->v_uobj.uo_npages;
+		uvmexp.execpages += vp->v_uobj.uo_npages;
+	}
+	vp->v_flag |= VEXECMAP;
+}
+
+
 /*
  * Mark a vnode as being the text image of a running process.
  */
-void
+int
 vn_marktext(vp)
 	struct vnode *vp;
 {
-	if ((vp->v_flag & VTEXT) == 0) {
-		uvmexp.filepages -= vp->v_uobj.uo_npages;
-		uvmexp.execpages += vp->v_uobj.uo_npages;
-#if 0
-	/*
-	 * Doesn't help much because the pager is borked and ubc_flush is
-	 * slow.
-	 */
-#ifdef PMAP_PREFER
-		/*
-		 * Get rid of any cached reads from this vnode.
-		 * exec can't respect PMAP_PREFER when mapping the text.
-		 */
-		ubc_flush(&vp->v_uobj, 0, 0);
-#endif
-#endif
+	if (vp->v_writecount != 0) {
+		KASSERT((vp->v_flag & VTEXT) == 0);
+		return (ETXTBSY);
 	}
 	vp->v_flag |= VTEXT;
+	vn_markexec(vp);
+	return (0);
 }
 
 /*

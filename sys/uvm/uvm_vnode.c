@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.5 2004/02/21 00:20:22 tedu Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.59 2002/09/06 13:24:14 gehenna Exp $	*/
 
 /*
@@ -386,11 +386,6 @@ uvn_findpage(uobj, offset, pgp, flags)
 				uvm_wait("uvn_fp1");
 				simple_lock(&uobj->vmobjlock);
 				continue;
-			}
-			if (UVM_OBJ_IS_VTEXT(uobj)) {
-				uvmexp.execpages++;
-			} else {
-				uvmexp.filepages++;
 			}
 			s = splbio();
 			vhold((struct vnode *)uobj);
