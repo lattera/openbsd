@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* $Id: gzio.c,v 1.13 1996/05/22 11:52:24 me Exp $ */
+/* $Id: gzio.c,v 1.1 1996/07/27 02:39:45 tholo Exp $ */
 
 #include <stdio.h>
 
@@ -520,4 +520,15 @@ char*  gzerror (file, errnum)
     strcat(s->msg, ": ");
     strcat(s->msg, m);
     return s->msg;
+}
+
+/* ===========================================================================
+     Returns true (1) if file is zipped, else returns false (0).
+*/
+int  gz_iszipped (file)
+    gzFile file;
+{
+    gz_stream *s = (gz_stream*)file;
+
+    return(!(s->transparent));
 }
