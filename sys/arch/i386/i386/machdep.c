@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.32 2004/06/10 11:40:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.33 2004/06/10 20:38:43 grange Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -1304,9 +1304,11 @@ intel586_cpu_setup(cpu_device, model, step)
 	int model, step;
 {
 #if defined(I586_CPU)
-	fix_f00f();
-	printf("%s: F00F bug workaround installed\n", 
-	       curcpu()->ci_dev.dv_xname);
+	if (!cpu_f00f_bug) {
+		fix_f00f();
+		printf("%s: F00F bug workaround installed\n", 
+		    curcpu()->ci_dev.dv_xname);
+	}
 #endif
 }
 
