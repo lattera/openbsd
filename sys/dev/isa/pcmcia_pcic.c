@@ -1,4 +1,4 @@
-/*	$Id: pcmcia_pcic.c,v 1.23 1996/04/15 23:55:16 jtk Exp $	*/
+/*	$Id: pcmcia_pcic.c,v 1.5 1996/04/29 14:16:53 hvozda Exp $	*/
 /*
  *  Copyright (c) 1995, 1996 John T. Kohl
  *  All rights reserved.
@@ -49,7 +49,6 @@
 #include <sys/device.h>
 #include <sys/proc.h>
 #include <sys/user.h>
-#include <sys/cpu.h>
 
 #include <machine/pio.h>
 
