@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_axppci_33.c,v 1.8.6.1 2001/04/18 16:00:18 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_axppci_33.c,v 1.8.6.2 2002/03/06 00:24:08 niklas Exp $ */
 /* $NetBSD: dec_axppci_33.c,v 1.44 2000/05/22 20:13:32 thorpej Exp $ */
 
 /*
@@ -120,7 +120,7 @@ dec_axppci_33_init()
 	platform.device_register = dec_axppci_33_device_register;
 
 	lcp = lca_preinit();
-	iot = lcp->lc_iot;
+	iot = &lcp->lc_iot;
 	if (bus_space_map(iot, NSIO_PORT, NSIO_SIZE, 0, &nsio))
 		return;
 
@@ -150,7 +150,7 @@ dec_axppci_33_cons_init()
 	ctb = (struct ctb *)(((caddr_t)hwrpb) + hwrpb->rpb_ctb_off);
 
 	switch (ctb->ctb_term_type) {
-	case 2: 
+	case CTB_PRINTERPORT: 
 		/* serial console ... */
 		/* XXX */
 		{
@@ -161,7 +161,7 @@ dec_axppci_33_cons_init()
 			 */
 			DELAY(160000000 / comcnrate);
 
-			if(comcnattach(lcp->lc_iot, 0x3f8, comcnrate,
+			if(comcnattach(&lcp->lc_iot, 0x3f8, comcnrate,
 			    COM_FREQ,
 			    (TTYDEF_CFLAG & ~(CSIZE | PARENB)) | CS8))
 				panic("can't init serial console");
@@ -169,18 +169,18 @@ dec_axppci_33_cons_init()
 			break;
 		}
 
-	case 3:
+	case CTB_GRAPHICS:
 #if NPCKBD > 0
 		/* display console ... */
 		/* XXX */
-		(void) pckbc_cnattach(lcp->lc_iot, IO_KBD, KBCMDP,
+		(void) pckbc_cnattach(&lcp->lc_iot, IO_KBD, KBCMDP,
 		    PCKBC_KBD_SLOT);
 
 		if (CTB_TURBOSLOT_TYPE(ctb->ctb_turboslot) ==
 		    CTB_TURBOSLOT_TYPE_ISA)
-			isa_display_console(lcp->lc_iot, lcp->lc_memt);
+			isa_display_console(&lcp->lc_iot, &lcp->lc_memt);
 		else
-			pci_display_console(lcp->lc_iot, lcp->lc_memt,
+			pci_display_console(&lcp->lc_iot, &lcp->lc_memt,
 			    &lcp->lc_pc, CTB_TURBOSLOT_BUS(ctb->ctb_turboslot),
 			    CTB_TURBOSLOT_SLOT(ctb->ctb_turboslot), 0);
 #else

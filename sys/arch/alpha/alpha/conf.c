@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.3 2001/10/31 02:52:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.4 2002/03/06 00:24:08 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.16 1996/10/18 21:26:57 cgd Exp $	*/
 
 /*-
@@ -91,7 +91,6 @@ int	nblkdev = sizeof (bdevsw) / sizeof (bdevsw[0]);
 cdev_decl(mm);
 #include "pty.h"
 #include "tun.h"
-dev_type_open(filedescopen);
 #include "bpfilter.h"
 #include "iop.h"
 #include "ch.h"
@@ -103,6 +102,14 @@ cdev_decl(com);
 #include "wsdisplay.h"
 #include "wskbd.h"
 #include "wsmouse.h"
+#include "midi.h"
+cdev_decl(midi);
+#include "sequencer.h"
+cdev_decl(music);
+
+#include "spkr.h"
+cdev_decl(spkr);
+
 #include "lpt.h"
 cdev_decl(lpt);
 cdev_decl(prom);			/* XXX XXX XXX */
@@ -180,9 +187,9 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(NFD,fd),		/* 37: Floppy disk */
         cdev_tty_init(NCY,cy),          /* 38: Cyclom serial port */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 39: Kernel symbols device */
-	cdev_notdef(),			/* 40 */
-	cdev_notdef(),			/* 41 */
-	cdev_notdef(),			/* 42 */
+	cdev_spkr_init(NSPKR,spkr),	/* 40: PC speaker */
+	cdev_midi_init(NMIDI,midi),     /* 41: MIDI I/O */
+        cdev_midi_init(NSEQUENCER,sequencer),   /* 42: sequencer I/O */
 	cdev_disk_init(NRAID,raid),	/* 43: RAIDframe disk driver */
 	cdev_notdef(),			/* 44 */
 	cdev_usb_init(NUSB,usb),	/* 45: USB controller */
@@ -293,7 +300,7 @@ static int chrtoblktbl[] = {
 	/* 40 */	NODEV,
 	/* 41 */	NODEV,
 	/* 42 */	NODEV,
-	/* 43 */	16,
+	/* 43 */	16,		/* raid */
 	/* 44 */	NODEV,
 	/* 45 */	NODEV,
 	/* 46 */	NODEV,

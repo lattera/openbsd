@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_2100_a50.c,v 1.8.6.1 2001/04/18 16:00:13 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_2100_a50.c,v 1.8.6.2 2002/03/06 00:24:08 niklas Exp $ */
 /* $NetBSD: dec_2100_a50.c,v 1.43 2000/05/22 20:13:31 thorpej Exp $ */
 
 /*
@@ -116,7 +116,7 @@ dec_2100_a50_cons_init()
 	ctb = (struct ctb *)(((caddr_t)hwrpb) + hwrpb->rpb_ctb_off);
 
 	switch (ctb->ctb_term_type) {
-	case 2: 
+	case CTB_PRINTERPORT: 
 		/* serial console ... */
 		/* XXX */
 		{
@@ -127,7 +127,7 @@ dec_2100_a50_cons_init()
 			 */
 			DELAY(160000000 / comcnrate);
 
-			if(comcnattach(acp->ac_iot, 0x3f8, comcnrate,
+			if(comcnattach(&acp->ac_iot, 0x3f8, comcnrate,
 			    COM_FREQ,
 			    (TTYDEF_CFLAG & ~(CSIZE | PARENB)) | CS8))
 				panic("can't init serial console");
@@ -135,18 +135,18 @@ dec_2100_a50_cons_init()
 			break;
 		}
 
-	case 3:
+	case CTB_GRAPHICS:
 #if NPCKBD > 0
 		/* display console ... */
 		/* XXX */
-		(void) pckbc_cnattach(acp->ac_iot, IO_KBD, KBCMDP,
+		(void) pckbc_cnattach(&acp->ac_iot, IO_KBD, KBCMDP,
 		    PCKBC_KBD_SLOT);
 
 		if (CTB_TURBOSLOT_TYPE(ctb->ctb_turboslot) ==
 		    CTB_TURBOSLOT_TYPE_ISA)
-			isa_display_console(acp->ac_iot, acp->ac_memt);
+			isa_display_console(&acp->ac_iot, &acp->ac_memt);
 		else
-			pci_display_console(acp->ac_iot, acp->ac_memt,
+			pci_display_console(&acp->ac_iot, &acp->ac_memt,
 			    &acp->ac_pc, CTB_TURBOSLOT_BUS(ctb->ctb_turboslot),
 			    CTB_TURBOSLOT_SLOT(ctb->ctb_turboslot), 0);
 #else
