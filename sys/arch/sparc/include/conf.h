@@ -1,9 +1,7 @@
-/* $NetBSD: xio.h,v 1.2 1996/03/31 22:38:58 pk Exp $ */
+/*	$NetBSD: conf.h,v 1.1 1996/03/30 21:17:55 christos Exp $	*/
 
 /*
- *
- * Copyright (c) 1995 Charles D. Cranor
- * All rights reserved.
+ * Copyright (c) 1996 Christos Zoulas.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -15,7 +13,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by Charles D. Cranor.
+ *	This product includes software developed by Christos Zoulas.
  * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
@@ -31,35 +29,53 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * x i o . h
- *
- * this file defines the software structure we use to ioctl the
- * 753/7053.   this interface isn't set in stone and may (or may not)
- * need adjustment.
- *
- * author: Chuck Cranor <chuck@ccrc.wustl.edu>
- */
+#define mmread mmrw
+#define mmwrite mmrw
+cdev_decl(mm);
 
-/*
- * xylogic ioctl interface
- */
+/* open, close, ioctl */
+#define	cdev_openprom_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) nullop, 0, (dev_type_select((*))) enodev, \
+	(dev_type_mmap((*))) enodev }
 
-struct xd_iocmd {
-  u_char cmd;       /* in: command number */
-  u_char subfn;     /* in: subfunction number */
-  u_char errno;     /* out: error number */
-  u_char tries;     /* out: number of tries */
-  u_short sectcnt;  /* in,out: sector count (hw_spt on read drive param) */
-  u_short dlen;     /* in: length of data buffer (good sanity check) */
-  u_long block;     /* in: block number */
-  caddr_t dptr;     /* in: data buffer to do I/O from */
-};
+cdev_decl(openprom);
 
-#ifndef DIOSXDCMD
-#define DIOSXDCMD _IOWR('x', 101, struct xd_iocmd) /* do xd command */
-#endif
+cdev_decl(cn);
 
-#define XD_IOCMD_MAXS 16 /* max number of sectors you can do */
-#define XD_IOCMD_HSZ   4 /* size of one header */
-#define XD_IOCMD_DMSZ 24 /* defect map size */
+cdev_decl(zs);
+
+bdev_decl(fd);
+cdev_decl(fd);
+
+cdev_decl(fb);
+
+/* open, close, read, write, ioctl, select */
+#define	cdev_gen_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) nullop, \
+	0, dev_init(c,n,select), (dev_type_mmap((*))) enodev }
+
+cdev_decl(ms);
+
+cdev_decl(kbd);
+
+cdev_decl(bwtwo);
+
+cdev_decl(cgthree);
+
+cdev_decl(cgfour);
+
+cdev_decl(cgsix);
+
+cdev_decl(cgeight);
+
+bdev_decl(xd);
+cdev_decl(xd);
+
+bdev_decl(xy);
+cdev_decl(xy);
+
+bdev_decl(sw);
+cdev_decl(sw);
