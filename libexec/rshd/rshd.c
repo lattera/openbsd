@@ -39,7 +39,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rshd.c	8.2 (Berkeley) 4/6/94"; */
-static char *rcsid = "$Id: rshd.c,v 1.23 1998/06/03 02:35:20 angelos Exp $";
+static char *rcsid = "$Id: rshd.c,v 1.24 1998/06/22 19:44:46 art Exp $";
 #endif /* not lint */
 
 /*
@@ -407,7 +407,7 @@ doit(fromp)
 			if (getsockname(0, (struct sockaddr *)&local_addr,
 			    &rc) < 0) {
 				syslog(LOG_ERR, "getsockname: %m");
-				error("rlogind: getsockname: %m");
+				error("rshd: getsockname: %m");
 				exit(1);
 			}
 			authopts = KOPT_DO_MUTUAL;
