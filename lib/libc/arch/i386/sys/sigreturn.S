@@ -32,17 +32,14 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)sigreturn.s	5.2 (Berkeley) 12/17/90"
- *	$Id: sigreturn.S,v 1.2 1993/10/21 02:19:40 jtc Exp $
  */
 
-#if defined(SYSLIBC_SCCS) && !defined(lint)
-	.text
-	.asciz "$Id: sigreturn.S,v 1.2 1993/10/21 02:19:40 jtc Exp $"
-#endif /* SYSLIBC_SCCS and not lint */
-
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/sys/sigreturn.S,v 1.2 1996/08/19 08:13:42 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 /*
  * We must preserve the state of the registers as the user has set them up.

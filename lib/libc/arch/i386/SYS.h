@@ -33,8 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)SYS.h	5.5 (Berkeley) 5/7/91
- *	$Id: SYS.h,v 1.9 1995/12/28 22:35:54 jtc Exp $
+ *	$OpenBSD: src/lib/libc/arch/i386/SYS.h,v 1.3 1996/08/19 08:12:12 tholo Exp $
  */
 
 #include <machine/asm.h>

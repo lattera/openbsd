@@ -32,16 +32,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)modf.s	5.5 (Berkeley) 3/18/91
- *	$Id: modf.S,v 1.4 1995/12/28 20:03:58 jtc Exp $
  */
 
 #include <machine/asm.h>
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$Id: modf.S,v 1.4 1995/12/28 20:03:58 jtc Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/gen/modf.S,v 1.3 1996/08/19 08:12:33 tholo Exp $"
 #endif
 
 /*

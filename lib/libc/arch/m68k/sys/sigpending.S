@@ -35,11 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
+#if defined(SYSLIBC_SCCS)
 	.text
-	/*.asciz "from: @(#)sigpending.s	5.2 (Berkeley) 8/6/90"*/
-	.asciz "$Id: sigpending.S,v 1.1 1993/11/25 23:39:34 paulus Exp $"
-#endif /* LIBC_SCCS and not lint */
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/sys/sigpending.S,v 1.2 1996/08/19 08:15:42 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 #include "SYS.h"
 

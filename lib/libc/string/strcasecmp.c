@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static const char sccsid[] = "from: @(#)strcasecmp.c	5.10 (Berkeley) 1/26/91";*/
-static char *rcsid = "$Id: strcasecmp.c,v 1.4 1995/06/15 00:07:37 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/string/strcasecmp.c,v 1.2 1996/08/19 08:34:09 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <string.h>

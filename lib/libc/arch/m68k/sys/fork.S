@@ -35,11 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
+#if defined(SYSLIBC_SCCS)
 	.text
-	/*.asciz "from: @(#)fork.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: fork.S,v 1.2 1994/01/27 15:00:50 mycroft Exp $"
-#endif /* LIBC_SCCS and not lint */
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/sys/fork.S,v 1.2 1996/08/19 08:15:36 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 #include "SYS.h"
 

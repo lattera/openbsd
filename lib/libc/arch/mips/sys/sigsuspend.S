@@ -1,4 +1,3 @@
-/*	$OpenBSD: src/lib/libc/arch/mips/sys/Attic/sigsuspend.S,v 1.3 1996/07/30 20:28:01 pefo Exp $	*/
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -37,11 +36,10 @@
 
 #include "SYS.h"
 
-#if defined(LIBC_SCCS) && !defined(lint)
-	ASMSTR("from: @(#)sigsuspend.s	8.1 (Berkeley) 6/4/93")
-	ASMSTR("$Id: sigsuspend.S,v 1.2 1996/05/16 11:16:13 pefo Exp $")
-#endif /* LIBC_SCCS and not lint */
-
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/mips/sys/Attic/sigsuspend.S,v 1.4 1996/08/19 08:16:28 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 LEAF(sigsuspend)
 	.set	reorder

@@ -33,14 +33,12 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * from: Header: strlen.s,v 1.1 92/06/25 12:52:47 torek Exp
- * $Id: strlen.S,v 1.1 1993/10/07 00:22:07 cgd Exp $
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-	.asciz "@(#)strlen.s	8.1 (Berkeley) 6/4/93"
-#endif /* LIBC_SCCS and not lint */
+#if defined(LIBC_SCCS) 
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/sparc/string/strlen.S,v 1.2 1996/08/19 08:17:59 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 #include "DEFS.h"
 

@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)abort.c	5.11 (Berkeley) 2/23/91";*/
-static char *rcsid = "$Id: abort.c,v 1.5 1995/02/28 01:46:24 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/abort.c,v 1.2 1996/08/19 08:33:20 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <signal.h>

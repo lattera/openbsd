@@ -1,6 +1,7 @@
-#ifndef lint
-static char rcsid[] = "$Id: infinity.c,v 1.1 1995/04/17 12:23:41 ragge Exp $";
-#endif /* not lint */
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/vax/gen/infinity.c,v 1.2 1996/08/19 08:18:25 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
+
 /*
  * XXX - THIS IS (probably) COMPLETELY WRONG ON VAX!!!
  */

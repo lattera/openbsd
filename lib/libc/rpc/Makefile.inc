@@ -1,5 +1,4 @@
-#	$OpenBSD: src/lib/libc/rpc/Makefile.inc,v 1.2 1996/07/20 06:12:15 deraadt Exp $
-#	$NetBSD: Makefile.inc,v 1.8 1995/02/25 03:01:33 cgd Exp $
+#	$OpenBSD: src/lib/libc/rpc/Makefile.inc,v 1.3 1996/08/19 08:31:19 tholo Exp $
 
 # librpc sources
 .PATH:	${.CURDIR}/arch/${MACHINE}/rpc ${.CURDIR}/rpc

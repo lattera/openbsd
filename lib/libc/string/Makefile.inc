@@ -1,5 +1,4 @@
-#	from: @(#)Makefile.inc	5.6 (Berkeley) 3/5/91
-#	$Id: Makefile.inc,v 1.1.1.1 1995/10/18 08:42:20 deraadt Exp $
+#	$OpenBSD: src/lib/libc/string/Makefile.inc,v 1.3 1996/08/19 08:33:54 tholo Exp $
 
 # string sources
 .PATH: ${.CURDIR}/arch/${MACHINE_ARCH}/string ${.CURDIR}/string

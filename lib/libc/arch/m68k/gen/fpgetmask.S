@@ -3,6 +3,11 @@
  * Public domain.
  */
 
+#if defined(LIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/gen/fpgetmask.S,v 1.2 1996/08/19 08:14:16 tholo Exp $"
+#endif /* LIBC_SCCS */
+
 #include <machine/asm.h>
 
 ENTRY(fpgetmask)

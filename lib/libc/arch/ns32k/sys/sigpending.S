@@ -13,15 +13,13 @@
  * LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE
  * USE OF THIS SOFTWARE.
  */
-/*
- * HISTORY
- * 29-Apr-92  Johannes Helander (jvh) at Helsinki University of Technology
- *	Created.
- *
- *	$Id: sigpending.S,v 1.2 1994/03/07 23:20:50 phil Exp $
- */
 
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/ns32k/sys/Attic/sigpending.S,v 1.2 1996/08/19 08:17:14 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 SYSCALL(sigpending)
 	movd	S_ARG1, r1		/* fetch pointer to... */

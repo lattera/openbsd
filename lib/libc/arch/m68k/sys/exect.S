@@ -35,11 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
+#if defined(SYSLIBC_SCCS)
 	.text
-	/*.asciz "from: @(#)exect.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: exect.S,v 1.2 1994/08/04 05:02:44 chopps Exp $"
-#endif /* LIBC_SCCS and not lint */
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/sys/exect.S,v 1.2 1996/08/19 08:15:34 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 #include "SYS.h"
 #include <machine/psl.h>

@@ -1,6 +1,3 @@
-/*	$OpenBSD: src/lib/libc/arch/arm32/gen/Attic/isinf.c,v 1.2 1996/05/22 11:39:15 deraadt Exp $ */
-/* $NetBSD: isinf.c,v 1.2 1996/05/12 20:50:54 mark Exp $ */
-
 /*
  * Copyright (c) 1996 Mark Brinicombe
  *
@@ -32,6 +29,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#if defined(LIBC_SCCS) && !defined(lint)
+static char *rcsid = "$OpenBSD: src/lib/libc/arch/arm32/gen/Attic/isinf.c,v 1.3 1996/08/19 08:11:42 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
 #include <machine/ieee.h>

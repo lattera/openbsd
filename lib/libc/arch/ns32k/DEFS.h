@@ -33,12 +33,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)DEFS.h	5.1 (Berkeley) 4/23/90
- *
- *	$Id: DEFS.h,v 1.2 1994/05/03 20:39:52 phil Exp $
+ *	$OpenBSD: src/lib/libc/arch/ns32k/Attic/DEFS.h,v 1.2 1996/08/19 08:16:31 tholo Exp $
  *
  *  Modified for the ns532 by Phil Nelson, 12/1/92
- *
  */
 
 #include <machine/asm.h>

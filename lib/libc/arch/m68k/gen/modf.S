@@ -35,11 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
+#if defined(LIBC_SCCS)
 	.text
-	/*.asciz "from: @(#)modf.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: modf.S,v 1.1 1993/11/25 23:37:10 paulus Exp $"
-#endif /* LIBC_SCCS and not lint */
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/gen/modf.S,v 1.2 1996/08/19 08:14:30 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 #include "DEFS.h"
 

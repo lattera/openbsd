@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.4 1994/06/30 06:46:37 deraadt Exp $
+#	$OpenBSD: src/lib/libc/arch/sparc/Makefile.inc,v 1.2 1996/08/19 08:17:22 tholo Exp $
 
 KMINCLUDES= arch/sparc/SYS.h arch/sparc/DEFS.h
 KMSRCS=	bzero.S ffs.S strlen.S htonl.S htons.S \

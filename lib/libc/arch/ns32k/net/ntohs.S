@@ -25,15 +25,13 @@
  * any improvements or extensions that they make and grant Carnegie Mellon 
  * the rights to redistribute these changes.
  */
-/*
- * HISTORY
- * 11-May-92  Johannes Helander (jvh) at Helsinki University of Technology
- *	Created.
- *
- *	$Id: ntohs.S,v 1.1 1993/12/05 01:36:59 cgd Exp $
- */
 
 #include <machine/asm.h>
+
+#if defined(LIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/ns32k/net/Attic/ntohs.S,v 1.2 1996/08/19 08:16:58 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 	.text
 ENTRY(ntohs)

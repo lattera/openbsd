@@ -4,7 +4,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$Id: localeconv.c,v 1.6 1995/04/28 23:19:32 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/locale/localeconv.c,v 1.2 1996/08/19 08:28:20 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/localedef.h>

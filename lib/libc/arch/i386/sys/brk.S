@@ -32,17 +32,14 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)brk.s	5.2 (Berkeley) 12/17/90
- *	$Id: brk.S,v 1.9 1994/10/26 19:49:45 mycroft Exp $
  */
 
-#if defined(SYSLIBC_SCCS) && !defined(lint)
-	.text
-	.asciz "$Id: brk.S,v 1.9 1994/10/26 19:49:45 mycroft Exp $"
-#endif /* SYSLIBC_SCCS and not lint */
-
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/sys/brk.S,v 1.2 1996/08/19 08:13:28 tholo Exp $"
+#endif /* SYSLIB_SCCS */
 
 	.globl	_end
 	.globl	minbrk

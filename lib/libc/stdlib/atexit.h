@@ -30,8 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)atexit.h	5.1 (Berkeley) 5/15/90
- *	$Id: atexit.h,v 1.3 1995/06/14 05:16:04 jtc Exp $
+ *	$OpenBSD: src/lib/libc/stdlib/atexit.h,v 1.2 1996/08/19 08:33:23 tholo Exp $
  */
 
 /* must be at least 32 to guarantee ANSI conformance */

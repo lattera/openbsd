@@ -35,11 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
+#if defined(LIBC_SCCS)
 	.text
-	/*.asciz "from: @(#)htons.s	5.1 (Berkeley) 5/12/90"*/
-	.asciz "$Id: htons.S,v 1.1 1993/11/25 23:37:42 paulus Exp $"
-#endif /* LIBC_SCCS and not lint */
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/net/htons.S,v 1.2 1996/08/19 08:14:59 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 /* hostorder = htons(netorder) */
 

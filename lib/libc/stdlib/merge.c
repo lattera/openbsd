@@ -35,8 +35,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char sccsid[] = "from: @(#)merge.c	8.2 (Berkeley) 2/14/94";*/
-static char *rcsid = "$Id: merge.c,v 1.2 1994/06/16 05:26:36 mycroft Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/merge.c,v 1.2 1996/08/19 08:33:38 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 /*

@@ -1,5 +1,4 @@
-#	from: @(#)Makefile.inc	5.3 (Berkeley) 2/20/91
-#	$Id: Makefile.inc,v 1.10 1994/12/22 10:13:53 cgd Exp $
+#	$OpenBSD: src/lib/libc/compat-43/Makefile.inc,v 1.2 1996/08/19 08:19:13 tholo Exp $
 
 # compat-43 sources
 .PATH: ${.CURDIR}/arch/${MACHINE_ARCH}/compat-43 ${.CURDIR}/compat-43

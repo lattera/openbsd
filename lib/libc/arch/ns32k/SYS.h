@@ -33,12 +33,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)SYS.h	5.5 (Berkeley) 5/7/91
- *
- *	$Id: SYS.h,v 1.4 1994/05/03 20:39:55 phil Exp $
+ *	$OpenBSD: src/lib/libc/arch/ns32k/Attic/SYS.h,v 1.2 1996/08/19 08:16:33 tholo Exp $
  *
  *  Modified for the ns532 by Phil Nelson, 12/1/92
- *
  */
 
 #include <machine/asm.h>

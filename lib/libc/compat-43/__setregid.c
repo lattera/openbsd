@@ -29,10 +29,11 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)kern_prot.c	7.21 (Berkeley) 5/3/91
- *	$Id: __setregid.c,v 1.1 1994/04/10 06:32:37 cgd Exp $
  */
+
+#if defined(LIBC_SCCS) && !defined(lint)
+static char *rcsid = "$OpenBSD: src/lib/libc/compat-43/Attic/__setregid.c,v 1.2 1996/08/19 08:19:14 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
 #include <errno.h>

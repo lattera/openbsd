@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)multibyte.c	5.1 (Berkeley) 2/18/91";*/
-static char *rcsid = "$Id: multibyte.c,v 1.4 1995/03/05 07:41:15 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/Attic/multibyte.c,v 1.2 1996/08/19 08:33:39 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>

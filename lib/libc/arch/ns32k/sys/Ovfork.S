@@ -13,15 +13,13 @@
  * LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE
  * USE OF THIS SOFTWARE.
  */
-/*
- * HISTORY
- * 29-Apr-92  Johannes Helander (jvh) at Helsinki University of Technology
- *	Created.
- *
- *	$Id: Ovfork.S,v 1.2 1994/03/07 23:20:38 phil Exp $
- */
 
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/ns32k/sys/Attic/Ovfork.S,v 1.2 1996/08/19 08:17:04 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 /* 
  * r0 = pid of child in parent / pid of parent in child

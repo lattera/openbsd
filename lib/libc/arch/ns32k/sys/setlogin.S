@@ -13,15 +13,13 @@
  * LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE
  * USE OF THIS SOFTWARE.
  */
-/*
- * HISTORY
- * 29-Apr-92  Johannes Helander (jvh) at Helsinki University of Technology
- *	Created.
- *
- *	$Id: setlogin.S,v 1.5 1994/05/03 20:40:38 phil Exp $
- */
 
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/ns32k/sys/Attic/setlogin.S,v 1.2 1996/08/19 08:17:13 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 	.globl  ___logname_valid         /* in getlogin() */
 

@@ -33,14 +33,12 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * from: Header: fixunsdfsi.s,v 1.3 91/10/08 00:03:15 torek Exp
- * $Id: fixunsdfsi.S,v 1.2 1995/08/14 15:47:32 pk Exp $
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-	.asciz "@(#)fixunsdfsi.s	8.1 (Berkeley) 6/4/93"
-#endif /* LIBC_SCCS and not lint */
+#if defined(LIBC_SCCS) 
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/sparc/gen/fixunsdfsi.S,v 1.2 1996/08/19 08:17:27 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 /*
  * Convert double to unsigned integer (for gcc).

@@ -1,6 +1,6 @@
-#ifndef lint
-static char rcsid[] = "$Id: infinity.c,v 1.1 1993/11/25 23:37:05 paulus Exp $";
-#endif /* not lint */
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/m68k/gen/infinity.c,v 1.2 1996/08/19 08:14:24 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
 
 /* infinity.c */
 

@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)calloc.c	5.6 (Berkeley) 2/23/91";*/
-static char *rcsid = "$Id: calloc.c,v 1.5 1993/11/30 21:55:35 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/Attic/calloc.c,v 1.2 1996/08/19 08:33:27 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>

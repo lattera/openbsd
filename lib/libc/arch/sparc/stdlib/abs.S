@@ -33,14 +33,12 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * from: Header: abs.s,v 1.1 91/07/06 18:01:57 torek Exp
- * $Id: abs.S,v 1.1 1993/10/07 00:21:56 cgd Exp $
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-	.asciz "@(#)abs.s	8.1 (Berkeley) 6/4/93"
-#endif /* LIBC_SCCS and not lint */
+#if defined(LIBC_SCCS) 
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/sparc/stdlib/abs.S,v 1.2 1996/08/19 08:17:54 tholo Exp $"
+#endif /* LIBC_SCCS */
 
 /* abs - int absolute value */
 

@@ -32,15 +32,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)htonl.s	5.3 (Berkeley) 12/17/90
- *	$Id: htonl.S,v 1.4 1994/03/16 17:34:14 jtc Exp $
  */
 
 #include <machine/asm.h>
 
 #if defined(LIBC_SCCS)
-RCSID("$Id: htonl.S,v 1.4 1994/03/16 17:34:14 jtc Exp $")
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/net/htonl.S,v 1.2 1996/08/19 08:12:38 tholo Exp $"
 #endif
 
 /* netorder = htonl(hostorder) */

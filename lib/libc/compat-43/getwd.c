@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)getwd.c	5.1 (Berkeley) 2/20/91";*/
-static char *rcsid = "$Id: getwd.c,v 1.3 1993/08/26 00:43:05 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/compat-43/getwd.c,v 1.2 1996/08/19 08:19:24 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/param.h>

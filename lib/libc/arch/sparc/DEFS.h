@@ -34,9 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	From: @(#)DEFS.h	8.1 (Berkeley) 6/4/93
- *	$Id: DEFS.h,v 1.3 1994/02/10 20:15:28 pk Exp $
+ *	$OpenBSD: src/lib/libc/arch/sparc/DEFS.h,v 1.2 1996/08/19 08:17:21 tholo Exp $
  */
 
 #include <machine/asm.h>
-

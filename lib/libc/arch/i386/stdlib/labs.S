@@ -32,15 +32,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)abs.s	5.2 (Berkeley) 12/17/90
- *	$Id: labs.S,v 1.5 1994/03/16 17:40:25 jtc Exp $
  */
 
 #include <machine/asm.h>
 
 #if defined(LIBC_SCCS)
-RCSID("$Id: labs.S,v 1.5 1994/03/16 17:40:25 jtc Exp $")
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/stdlib/labs.S,v 1.2 1996/08/19 08:12:47 tholo Exp $"
 #endif
 
 ENTRY(labs)

@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.1 1994/05/24 07:12:11 glass Exp $
+#	$OpenBSD: src/lib/libc/arch/mips/Attic/Makefile.inc,v 1.2 1996/08/19 08:15:48 tholo Exp $
 
 KMINCLUDES=
 KMSRCS=

@@ -32,16 +32,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)divsi3.s	5.1 (Berkeley) 5/15/90
- *	$Id: divsi3.S,v 1.4 1995/12/28 20:03:54 jtc Exp $
  */
 
 #include <machine/asm.h>
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$Id: divsi3.S,v 1.4 1995/12/28 20:03:54 jtc Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/gen/divsi3.S,v 1.3 1996/08/19 08:12:16 tholo Exp $"
 #endif
 
 ENTRY(__divsi3)

@@ -3,6 +3,10 @@
  * Public domain.
  */
 
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/ns32k/gen/Attic/fpgetround.c,v 1.2 1996/08/19 08:16:42 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
+
 #include <ieeefp.h>
 
 fp_rnd

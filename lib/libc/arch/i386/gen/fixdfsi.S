@@ -32,16 +32,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)fixdfsi.s	5.4 (Berkeley) 4/12/91
- *	$Id: fixdfsi.S,v 1.4 1995/12/28 20:03:56 jtc Exp $
  */
 
 #include <machine/asm.h>
 
 #if defined(LIBC_SCCS)
 	.text
-	.asciz "$Id: fixdfsi.S,v 1.4 1995/12/28 20:03:56 jtc Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/gen/fixdfsi.S,v 1.3 1996/08/19 08:12:18 tholo Exp $"
 #endif
 
 ENTRY(__fixdfsi)

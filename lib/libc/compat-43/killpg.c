@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)killpg.c	5.3 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: killpg.c,v 1.4 1993/11/11 19:04:06 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/compat-43/killpg.c,v 1.2 1996/08/19 08:19:27 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>

@@ -3,6 +3,10 @@
  * Public domain.
  */
 
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/ns32k/gen/Attic/flt_rounds.c,v 1.2 1996/08/19 08:16:40 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
+
 static const int map[] = {
 	1,	/* round to nearest */
 	0,	/* round to zero */

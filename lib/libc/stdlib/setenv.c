@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)setenv.c	5.6 (Berkeley) 6/4/91";*/
-static char *rcsid = "$Id: setenv.c,v 1.7 1995/06/14 05:19:57 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/setenv.c,v 1.2 1996/08/19 08:33:48 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>

@@ -32,8 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)random.c	5.9 (Berkeley) 2/23/91";*/
-static char *rcsid = "$Id: random.c,v 1.1.1.1 1995/10/18 08:42:19 deraadt Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/random.c,v 1.3 1996/08/19 08:33:46 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdio.h>

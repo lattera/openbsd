@@ -32,17 +32,14 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)reboot.s	5.1 (Berkeley) 4/23/90
- *	$Id: reboot.S,v 1.2 1993/10/21 02:19:34 jtc Exp $
  */
 
-#if defined(SYSLIBC_SCCS) && !defined(lint)
-	.text
-	.asciz "$Id: reboot.S,v 1.2 1993/10/21 02:19:34 jtc Exp $"
-#endif /* SYSLIBC_SCCS and not lint */
-
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS) 
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/sys/Attic/reboot.S,v 1.2 1996/08/19 08:13:36 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 SYSCALL(reboot)
 	iret

@@ -35,8 +35,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-/*static char *sccsid = "from: @(#)ldiv.c	5.2 (Berkeley) 4/16/91";*/
-static char *rcsid = "$Id: qdiv.c,v 1.1 1995/03/21 23:12:38 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libc/stdlib/qdiv.c,v 1.2 1996/08/19 08:33:41 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>		/* qdiv_t */

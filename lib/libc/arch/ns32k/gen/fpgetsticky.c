@@ -1,9 +1,11 @@
-/*	$OpenBSD: src/lib/libc/arch/ns32k/gen/Attic/fpgetsticky.c,v 1.1 1996/04/21 23:38:41 deraadt Exp $	*/
-
 /*
  * Written by J.T. Conklin, Apr 11, 1995
  * Public domain.
  */
+
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/libc/arch/ns32k/gen/Attic/fpgetsticky.c,v 1.2 1996/08/19 08:16:43 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
 
 #include <ieeefp.h>
 #include <machine/cpufunc.h>

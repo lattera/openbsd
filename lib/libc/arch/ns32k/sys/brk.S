@@ -13,15 +13,13 @@
  * LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE
  * USE OF THIS SOFTWARE.
  */
-/*
- * HISTORY
- * 11-May-92  Johannes Helander (jvh) at Helsinki University of Technology
- *	Created.
- *
- *	$Id: brk.S,v 1.4 1994/06/10 22:46:14 phil Exp $
- */
 
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/ns32k/sys/Attic/brk.S,v 1.2 1996/08/19 08:17:05 tholo Exp $"
+#endif /* SYSLIBC_SCCS */
 
 	.globl	_curbrk
 	.globl	minbrk

@@ -32,17 +32,14 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	from: @(#)fork.s	5.1 (Berkeley) 4/23/90
- *	$Id: fork.S,v 1.5 1994/01/27 15:02:38 mycroft Exp $
  */
 
-#if defined(SYSLIBC_SCCS) && !defined(lint)
-	.text
-	.asciz "$Id: fork.S,v 1.5 1994/01/27 15:02:38 mycroft Exp $"
-#endif /* SYSLIBC_SCCS and not lint */
-
 #include "SYS.h"
+
+#if defined(SYSLIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/i386/sys/fork.S,v 1.2 1996/08/19 08:13:32 tholo Exp $"
+#endif /* SYSLIB_SCCS */
 
 SYSCALL(fork)
 	decl	%edx	/* from 1 to 0 in child, 0 to -1 in parent */

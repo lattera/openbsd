@@ -1,5 +1,3 @@
-/* $NetBSD: alloca.S,v 1.2 1996/05/12 20:25:46 mark Exp $ */
-
 /*
  * Copyright (c) 1995 Mark Brinicombe
  * All rights reserved.
@@ -30,13 +28,16 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id: alloca.S,v 1.1 1996/05/01 12:51:17 deraadt Exp $
  */
 
 /* like alloc, but automatic automatic free in return */
 
-# include "DEFS.h"
+#include "DEFS.h"
+
+#if defined(LIBC_SCCS)
+	.text
+	.asciz "$OpenBSD: src/lib/libc/arch/arm32/gen/Attic/alloca.S,v 1.3 1996/08/19 08:11:30 tholo Exp $"
+#endif
 
 	.text
 	.align	0
