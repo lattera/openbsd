@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.13 2004/02/19 10:59:30 niklas Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.14 2004/06/05 23:13:25 niklas Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure:
@@ -16,9 +16,14 @@ you mainly need to carry out the following procedure:
 
   $ cvs -d cvs.openbsd.org:/cvs rtag -d $NEW_TAG src/sys
 
+  If this operation is done local to cvs.openbsd.org, it will last about 2.5
+  minutes.
+
 * Tag the trunk with the new synchronization tag.
 
   $ cvs -d cvs.openbsd.org:/cvs rtag -rHEAD $NEW_TAG src/sys
+
+  This too takes 2.5 minutes local cvs time.
 
 * Have an SMP branch checkout available with -kk substitution done.
   For example check out a fresh one:
@@ -48,8 +53,8 @@ you mainly need to carry out the following procedure:
 
   $ cvs -q up -dP -rSMP -kk 2>&1 | grep '^C '
 
-* Build and test an i386 GENERIC.MP kernel as well as an alpha GENERIC,
-  fix every regression you can find.
+* Build and test an i386 GENERIC.MP & MP_LOCKDEBUG kernel as well as an
+  alpha GENERIC, fix every regression you can find.
 
 * Cvs contains nasty bugs in its client/server invocation.  Earlier this
   documentation has contained bug fixup instructions for the remote cvs
