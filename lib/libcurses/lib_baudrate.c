@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/Attic/lib_baudrate.c,v 1.4 1998/07/23 21:18:27 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_baudrate.c,v 1.5 1998/10/31 06:30:29 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -42,7 +42,7 @@
 #include <curses.priv.h>
 #include <term.h>	/* cur_term, pad_char */
 
-MODULE_ID("$From: lib_baudrate.c,v 1.11 1998/02/11 12:13:58 tom Exp $")
+MODULE_ID("$From: lib_baudrate.c,v 1.13 1998/09/19 21:34:26 tom Exp $")
 
 /*
  *	int
@@ -105,9 +105,6 @@ baudrate(void)
 {
 size_t i;
 int ret;
-#ifdef TRACE
-char *debug_rate;
-#endif
 
 	T((T_CALLED("baudrate()")));
 
@@ -118,15 +115,10 @@ char *debug_rate;
 	 */
 #ifdef TRACE
 	if (SP && !isatty(fileno(SP->_ofp))
-	 && (debug_rate = getenv("BAUDRATE")) != 0) {
-		long l;
-		char *p;
-
-		l = strtol(debug_rate, &p, 10);
-		if (p == debug_rate || *p != '\0' || l == LONG_MIN ||
-		    l > INT_MAX)
-			l = 9600;
-		returnCode((int)l);
+	 && getenv("BAUDRATE") != 0) {
+		if ((ret = _nc_getenv_num("BAUDRATE")) <= 0)
+			ret = 9600;
+		returnCode(ret);
 	}
 	else
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/Attic/lib_redrawln.c,v 1.3 1998/10/31 06:30:30 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/Attic/home_terminfo.c,v 1.1 1998/10/31 06:30:29 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -29,43 +29,36 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Thomas E. Dickey <dickey@clark.net> 1997                        *
+ *  Author: Thomas E. Dickey <dickey@clark.net> 1998                        *
  ****************************************************************************/
 
 /*
- *	lib_redrawln.c
- *
- *	The routine wredrawln().
- *
+ *	home_terminfo.c -- return the $HOME/.terminfo string, expanded
  */
 
 #include <curses.priv.h>
+#include <tic.h>
 
-MODULE_ID("$From: lib_redrawln.c,v 1.7 1998/09/19 20:09:50 Alexander.V.Lukyanov Exp $")
+MODULE_ID("$From: home_terminfo.c,v 1.1 1998/09/19 21:25:03 tom Exp $")
 
-int wredrawln(WINDOW *win, int beg, int num)
+#define my_length (strlen(home) + sizeof(PRIVATE_INFO))
+
+/* ncurses extension...fall back on user's private directory */
+
+char *
+_nc_home_terminfo(void)
 {
-	int i;
-	int end;
-	size_t len = (win->_maxx + 1) * sizeof(chtype);
+	char *home;
+	static char *temp = 0;
 
-	T((T_CALLED("wredrawln(%p,%d,%d)"), win, beg, num));
-
-	if (beg < 0)
-		beg = 0;
-
-	if (touchline (win, beg, num) == ERR)
-		returnCode(ERR);
-
-	end = beg + num;
-	if (end > win->_maxy + 1)
-		end = win->_maxy + 1;
-
-	for (i = beg; i < end; i++)
-	{
-		memset (curscr->_line[i+win->_begy].text+win->_begx, 0, len);
-		_nc_make_oldhash(i+win->_begy);
+	if (temp == 0) {
+		if ((home = getenv("HOME")) != 0
+		 && my_length <= PATH_MAX) {
+			temp = malloc(my_length);
+			if (temp == 0)
+				_nc_err_abort("Out of memory");
+			(void) sprintf(temp, PRIVATE_INFO, home);
+		}
 	}
-
-	returnCode(OK);
+	return temp;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/Attic/lib_redrawln.c,v 1.3 1998/10/31 06:30:30 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/Attic/getenv_num.c,v 1.1 1998/10/31 06:30:28 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -29,43 +29,30 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Thomas E. Dickey <dickey@clark.net> 1997                        *
+ *  Author: Thomas E. Dickey <dickey@clark.net> 1998                        *
  ****************************************************************************/
 
 /*
- *	lib_redrawln.c
- *
- *	The routine wredrawln().
- *
+ *	getenv_num.c -- obtain a number from the environment
  */
 
 #include <curses.priv.h>
 
-MODULE_ID("$From: lib_redrawln.c,v 1.7 1998/09/19 20:09:50 Alexander.V.Lukyanov Exp $")
+MODULE_ID("$From: getenv_num.c,v 1.1 1998/09/19 21:30:23 tom Exp $")
 
-int wredrawln(WINDOW *win, int beg, int num)
+int
+_nc_getenv_num(const char *name)
 {
-	int i;
-	int end;
-	size_t len = (win->_maxx + 1) * sizeof(chtype);
+	char *dst = 0;
+	char *src = getenv(name);
+	long value;
 
-	T((T_CALLED("wredrawln(%p,%d,%d)"), win, beg, num));
+	if ((src == 0)
+	 || (value = strtol(src, &dst, 0)) < 0
+	 || (dst == src)
+	 || (*dst != '\0')
+	 || (int)value < value)
+		value = -1;
 
-	if (beg < 0)
-		beg = 0;
-
-	if (touchline (win, beg, num) == ERR)
-		returnCode(ERR);
-
-	end = beg + num;
-	if (end > win->_maxy + 1)
-		end = win->_maxy + 1;
-
-	for (i = beg; i < end; i++)
-	{
-		memset (curscr->_line[i+win->_begy].text+win->_begx, 0, len);
-		_nc_make_oldhash(i+win->_begy);
-	}
-
-	returnCode(OK);
+	return (int) value;
 }
