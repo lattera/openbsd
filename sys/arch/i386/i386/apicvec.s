@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.8 2003/05/17 19:14:44 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.9 2004/03/22 23:47:53 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -62,7 +62,6 @@ XINTR(ipi):
 	call	_C_LABEL(i386_ipi_handler)
 	jmp	_C_LABEL(Xdoreti)
 #endif
-	
 	
 	/*
 	 * Interrupt from the local APIC timer.
