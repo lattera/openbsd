@@ -1,4 +1,4 @@
-/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.20 2001/12/14 01:37:56 miod Exp $   */
+/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.21 2001/12/14 02:11:45 miod Exp $   */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -215,6 +215,7 @@
 
 #include "assym.h"
 #include <machine/asm.h>
+#include <machine/board.h>
 #include <machine/param.h>          /* CPU_ and BRD_ defines */
 #include <machine/trap.h>           /* for T_ defines */
 #ifdef MVME188
