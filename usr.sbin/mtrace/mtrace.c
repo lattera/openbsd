@@ -52,7 +52,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#) $Id: mtrace.c,v 1.2 1995/12/14 01:46:22 deraadt Exp $";
+    "@(#) $Id: mtrace.c,v 1.3 1996/09/11 19:15:36 deraadt Exp $";
 #endif
 
 #include <netdb.h>
@@ -1166,6 +1166,7 @@ char *argv[];
     int seed;
 
     init_igmp();
+    seteuid(getuid());
     setuid(getuid());
 
     argv++, argc--;
