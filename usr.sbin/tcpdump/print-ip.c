@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ip.c,v 1.26 2004/05/08 01:01:35 mcbride Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ip.c,v 1.27 2004/08/10 19:55:35 markus Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.25 2004/04/28 02:17:03 mcbride Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.26 2004/05/08 01:01:35 mcbride Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -639,6 +639,8 @@ ip_print(register const u_char *bp, register u_int length)
 			if (sum != 0) {
 				(void)printf("%sbad cksum %x!", sep,
 					     ntohs(ip->ip_sum));
+				if (vflag > 1)
+					(void)printf(" differs by %x", htons(sum));
 				sep = ", ";
 			}
 		}
