@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.2 2001/11/12 01:26:10 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.2.2.1 2001/11/14 10:19:26 ho Exp $	*/
 /*	$NetBSD: uvm_param.h,v 1.5 2001/03/09 01:02:12 chs Exp $	*/
 
 /* 
