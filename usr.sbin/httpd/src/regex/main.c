@@ -3,6 +3,9 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <stdlib.h>
+#ifdef TPF
+#include <sysapi.h> /* for tmslc() */
+#endif /* TPF */
 
 #include "hsregex.h"
 #include "main.ih"
@@ -20,6 +23,8 @@ regoff_t endoff = 0;
 
 extern int split();
 extern void regprint();
+extern int optind;
+extern char *optarg;
 
 /*
  - main - do the simple case, hand off to regress() for regression
@@ -37,8 +42,6 @@ char *argv[];
 	int c;
 	int errflg = 0;
 	register int i;
-	extern int optind;
-	extern char *optarg;
 
 	progname = argv[0];
 
@@ -139,6 +142,9 @@ FILE *in;
 	char *bpname = "REG_BADPAT";
 	regex_t re;
 
+#ifdef TPF
+        tmslc(TMSLC_ENABLE, "IBMHIPRI"); /* extend our process' life */
+#endif /* TPF */
 	while (fgets(inbuf, sizeof(inbuf), in) != NULL) {
 		line++;
 		if (inbuf[0] == '#' || inbuf[0] == '\n')

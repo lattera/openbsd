@@ -63,6 +63,11 @@ EXTRA_DEPS=
 #RANLIB=
 
 ################################################################
+# Name of the installed Apache HTTP webserver.
+#
+#TARGET=
+
+################################################################
 # Dynamic Shared Object (DSO) support
 #
 # There is experimental support for compiling the Apache core and
@@ -119,12 +124,12 @@ Rule SHARED_CHAIN=default
 # functions. The format is: Rule RULE=value
 #
 # At present, only the following RULES are known: WANTHSREGEX, SOCKS4,
-# SOCKS5, IRIXNIS, IRIXN32 and PARANOID.
+# SOCKS5, IRIXNIS, IRIXN32, PARANOID, and DEV_RANDOM.
 #
-# For all Rules, if set to "yes", then Configure knows we want that
-# capability and does what is required to add it in. If set to "default"
-# then Configure makes a "best guess"; if set to anything else, or not
-# present, then nothing is done.
+# For all Rules except DEV_RANDOM, if set to "yes", then Configure knows
+# we want that capability and does what is required to add it in. If set
+# to "default" then Configure makes a "best guess"; if set to anything
+# else, or not present, then nothing is done.
 #
 # SOCKS4:
 #  If SOCKS4 is set to 'yes', be sure that you add the socks library
@@ -155,12 +160,47 @@ Rule SHARED_CHAIN=default
 #  is performing this function. If PARANOID is set to yes, it will
 #  actually print-out the code that the modules execute
 #
+# EXPAT:
+#  Include an Expat implementation into Apache for use by the
+#  modules. James Clark's Expat package (expat-lite) is bundled
+#  with Apache for the convenience of our users. The EXPAT rule
+#  determines which Expat implementation, if any, to use as follows:
+#
+#  Rule EXPAT=yes       : Use system Expat if available; otherwise
+#                         use bundled Expat (lib/expat-lite). If
+#                         neither exists the build will fail
+#  Rule EXPAT=no        : Don't include Expat at all
+#  Rule EXPAT=default   : If Expat can be found at the system or
+#                         in lib/expat-lite, use it; otherwise
+#                         skip it
+# 
+# CYGWIN_WINSOCK: 
+#  Use Win32 API system calls for socket communication instead 
+#  of Cygwin's POSIX.1 wrappers. This avoids the Cygwin specific
+#  implementation and uses the Win32 native calls. Should be faster
+#  and more reliable for high-load systems.  
+# 
 
 Rule SOCKS4=no
 Rule SOCKS5=no
 Rule IRIXNIS=no
 Rule IRIXN32=yes
 Rule PARANOID=no
+Rule EXPAT=default
+Rule CYGWIN_WINSOCK=no 
+
+# DEV_RANDOM:
+#  Note: this rule is only used when compiling mod_auth_digest.
+#  mod_auth_digest requires a cryptographically strong random seed for its
+#  random number generator. It knows two ways of getting this: 1) from
+#  a file or device (such as "/dev/random"), or 2) from the truerand
+#  library. If this rule is set to 'default' then Configure will choose
+#  to use /dev/random if it exists, else /dev/urandom if it exists,
+#  else the truerand library. To override this behaviour set DEV_RANDOM
+#  either to 'truerand' (to use the library) or to a device or file
+#  (e.g. '/dev/urandom'). If the truerand library is selected, Configure
+#  will assume "-L/usr/local/lib -lrand".
+Rule DEV_RANDOM=default
 
 # The following rules should be set automatically by Configure. However, if
 # they are not set by Configure (because we don't know the correct value for
@@ -201,6 +241,13 @@ Rule WANTHSREGEX=default
 ## to use mod_mmap_static without reading the full documentation.
 
 # AddModule modules/experimental/mod_mmap_static.o
+
+## mod_vhost_alias provides support for mass virtual hosting
+## by dynamically changing the document root and CGI directory
+## based on the host header or local IP address of the request.
+## See "../htdocs/manual/vhosts/mass.html".
+
+# AddModule modules/standard/mod_vhost_alias.o
 
 ##
 ## Config manipulation modules
@@ -290,13 +337,6 @@ AddModule modules/standard/mod_actions.o
 
 AddModule modules/standard/mod_userdir.o
 
-## The proxy module enables the server to act as a proxy for outside
-## http and ftp services. It's not as complete as it could be yet.
-## NOTE: You do not want this module UNLESS you are running a proxy;
-##       it is not needed for normal (origin server) operation.
-
-# AddModule modules/proxy/libproxy.a
-
 ## The Alias module provides simple URL translation and redirection.
 
 AddModule modules/standard/mod_alias.o
@@ -327,9 +367,34 @@ AddModule modules/standard/mod_auth.o
 # AddModule modules/standard/mod_auth_db.o
 
 ## "digest" implements HTTP Digest Authentication rather than the less 
-## secure Basic Auth used by the other modules.
+## secure Basic Auth used by the other modules.  This is the old version.
 
 # AddModule modules/standard/mod_digest.o
+
+## "auth_digest" implements HTTP/1.1 Digest Authentication (RFC 2617)
+## rather than the less secure Basic Auth used by the other modules.
+## This is an updated version of mod_digest, but it is not as well tested
+## and is therefore marked experimental.  Use either the one above, or
+## this one below, but not both digest modules.
+## Note: if you add this module in then you might also need the
+## truerand library (available for example from
+## ftp://research.att.com/dist/mab/librand.shar) - see the Rule
+## DEV_RANDOM above for more info.
+##
+## Must be added above (run later than) the proxy module because the
+## WWW-Authenticate and Proxy-Authenticate headers are parsed in the
+## post-read-request phase and it needs to know if this is a proxy request.
+
+# AddModule modules/experimental/mod_auth_digest.o
+
+## Optional Proxy
+##
+## The proxy module enables the server to act as a proxy for outside
+## http and ftp services. It's not as complete as it could be yet.
+## NOTE: You do not want this module UNLESS you are running a proxy;
+##       it is not needed for normal (origin server) operation.
+
+# AddModule modules/proxy/libproxy.a
 
 ## Optional response header manipulation modules. 
 ##
