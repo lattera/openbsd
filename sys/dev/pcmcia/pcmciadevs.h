@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs.h,v 1.3 1998/09/14 19:21:22 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs.h,v 1.4 1998/09/24 11:40:33 deraadt Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
