@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.3.14.1 2001/04/18 16:10:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/wl.c,v 1.3.14.2 2001/07/04 10:19:29 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -881,7 +881,7 @@ clccparam(sc, par, channel)
 	s = splcl();
 	sc->cl_reg->cl_car = channel;
 	if (par->c_ospeed == 0) { 
-		/* disconnect, drop RTS DTR stop reciever */
+		/* disconnect, drop RTS DTR stop receiver */
 		sc->cl_reg->cl_msvr_rts = 0x00;
 		sc->cl_reg->cl_msvr_dtr = 0x00;
 		sc->cl_reg->cl_ccr = 0x05;

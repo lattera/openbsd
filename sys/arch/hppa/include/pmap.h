@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.1 2001/04/18 16:06:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.2 2001/07/04 10:16:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -182,7 +182,6 @@ do { if (pmap) { \
 } } while (0)
 #define pmap_collect(pmap)
 #define pmap_release(pmap)
-#define pmap_pageable(pmap, start, end, pageable)
 #define pmap_copy(dpmap,spmap,da,len,sa)
 #define	pmap_update()
 #define	pmap_activate(p)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/conf.h,v 1.11.4.1 2001/04/18 16:02:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/conf.h,v 1.11.4.2 2001/07/04 10:15:15 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.4 1996/11/30 01:13:07 is Exp $	*/
 
 /*
@@ -36,13 +36,6 @@ bdev_decl(fd);
 cdev_decl(fd);
 
 cdev_decl(grf);
-
-cdev_decl(ipl);
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
 
 cdev_decl(ite);
 

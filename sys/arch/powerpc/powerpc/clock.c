@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/clock.c,v 1.5.2.2 2001/05/14 21:36:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/clock.c,v 1.5.2.3 2001/07/04 10:22:48 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 1996/09/30 16:34:40 ws Exp $	*/
 
 /*
@@ -34,15 +34,23 @@
 
 #include <sys/param.h>
 #include <sys/kernel.h>
+#include <sys/systm.h>
 
+#include <machine/autoconf.h>
 #include <machine/pio.h>
 #include <machine/intr.h>
+#include <dev/ofw/openfirm.h>
 
 #if 0
 #include <powerpc/pci/mpc106reg.h>
 #endif
 
-void resettodr();
+void resettodr(void);
+static inline u_quad_t mftb(void);
+
+/* XXX, called from asm code */
+void decr_intr(struct clockframe *frame);
+
 /*
  * Initially we assume a processor with a bus frequency of 12.5 MHz.
  */
@@ -64,10 +72,14 @@ static volatile u_long lasttb;
 
 typedef int (clock_read_t)(int *sec, int *min, int *hour, int *day,
          int *mon, int *yr);
+typedef int (time_read_t)(u_long *sec);
+typedef int (time_write_t)(u_long sec);
 
 int power4e_getclock(int *, int *, int *, int *, int *, int *);
 
 clock_read_t *clock_read = NULL;
+time_read_t  *time_read  = NULL;
+time_write_t  *time_write  = NULL;
 
 static u_long
 chiptotime(int sec, int min, int hour, int day, int mon, int year);
@@ -103,11 +115,16 @@ inittodr(base)
 
 	if (clock_read != NULL ) {
 		(*clock_read)( &sec, &min, &hour, &day, &mon, &year);
+		time.tv_sec = chiptotime(sec, min, hour, day, mon, year);
+	} else if (time_read != NULL) {
+		u_long cursec;
+		(*time_read)(&cursec);
+		time.tv_sec = cursec;
 	} else {
-		/* force failure on chiptotime */
-		mon = 0;
+		/* force failure */
+		time.tv_sec = 0;
 	} 
-	if ((time.tv_sec = chiptotime(sec, min, hour, day, mon, year)) == 0) {
+	if (time.tv_sec == 0) {
 		printf("WARNING: unable to get date/time");
 		/*
 		 * Believe the time in the file system for lack of
@@ -175,7 +192,16 @@ chiptotime(sec, min, hour, day, mon, year)
 void
 resettodr()
 {
+	struct timeval curtime = time;
+	if (time_write != NULL) {
+		curtime.tv_sec -= tz.tz_minuteswest * 60;
+		if (tz.tz_dsttime) {
+			curtime.tv_sec += 3600;
+		}
+		(*time_write)(curtime.tv_sec);
+	}
 }
+
 
 void
 decr_intr(frame)
@@ -211,9 +237,11 @@ decr_intr(frame)
 
 	pri = splclock();
 
-	if (pri & SPL_CLOCK)
+	if (pri & SPL_CLOCK) {
 		tickspending += nticks;
-	else {
+	} else {
+		nticks += tickspending;
+		tickspending = 0;
 		/*
 		 * Reenable interrupts
 		 */
@@ -269,10 +297,10 @@ calc_delayconst()
 			asm volatile ("mtmsr %0" :: "r"(msr));
 			break;
 		}
-		if (phandle = OF_child(qhandle))
+		if ((phandle = OF_child(qhandle)))
 			continue;
 		while (qhandle) {
-			if (phandle = OF_peer(qhandle))
+			if ((phandle = OF_peer(qhandle)))
 				break;
 			qhandle = OF_parent(qhandle);
 		}
@@ -347,28 +375,3 @@ setstatclockrate(arg)
 {
 	/* Do nothing */
 }
-
-
-#if 0
-int
-power4e_getclock(sec, min, hour, day, mon, year)
-	int *sec;
-	int *min;
-	int *hour;
-	int *day;
-	int *mon;
-	int *year;
-{
-	int clkbase = MPC106_V_PCI_MEM_SPACE + 0x000f1ff8;
-
-	outb(clkbase, inb(clkbase) | 0x40);	/* stop update */
-	*sec = inb(clkbase + 1);
-	*min = inb(clkbase + 2);
-	*hour = inb(clkbase + 3);
-	*day = inb(clkbase + 5);
-	*mon = inb(clkbase + 6);
-	*year = inb(clkbase + 7);
-	outb(clkbase, inb(clkbase) & ~0x40);
-	return(0);
-}
-#endif

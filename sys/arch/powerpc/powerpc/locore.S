@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/locore.S,v 1.9.2.1 2001/05/14 21:36:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/locore.S,v 1.9.2.2 2001/07/04 10:22:57 niklas Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*
@@ -55,6 +55,9 @@ _C_LABEL(esym):		.long	0	/* end of symbol table */
 _C_LABEL(proc0paddr):	.long	0	/* proc0 p_addr */
 idle_u:			.long	0	/* fake uarea during idle after exit */
 
+fwargsave:
+			.long 0
+			.long 0
 	.globl _C_LABEL(where)
 	.type  _C_LABEL(where),@object
 _C_LABEL(where):	.long	0
@@ -75,6 +78,9 @@ _ENTRY(_ASM_LABEL(start))
 	.globl	start
 	.type start,@function
 start:
+	lis	3, fwargsave@ha
+	stw	6, fwargsave@l(3)
+	stw	7, fwargsave@l+4(3)
 #ifdef SUPPORT_PPC1BUG
 	mr 	0,5
 	cmpwi	0,0,0
@@ -93,15 +99,20 @@ start:
 /* compute end of kernel memory */
 	lis	8,_end@ha
 	addi	8,8,_end@l
-#if 0
+	lis	3, fwargsave@ha
+	lwz	6, fwargsave@l(3)
+	lwz	7, fwargsave@l+4(3)
 #if defined(DDB) || defined(KERNFS)
-	lwz	9,0(8)			/* number of symbols */
-	add	8,8,9
-	lwzu	9,4(8)			/* length of string table */
-	add	8,8,9
-	lis	9,_C_LABEL(esym)@ha
-	stw	8,_C_LABEL(esym)@l(9)		/* save for symbol handling */
-#endif
+	cmpwi	6, 0
+	beq	1f
+	add	9,6,7
+	lwz	9, -4(9)
+	cmpwi   9,0
+	beq	1f
+	lis	8,_C_LABEL(esym)@ha
+	stw	9,_C_LABEL(esym)@l(8)
+	mr	8, 9
+1:
 #endif
 	li	9,PGOFSET
 	add	8,8,9
@@ -369,7 +380,8 @@ _C_LABEL(intr_depth):
 
 /*
  * This code gets copied to all the trap vectors
- * (except ISI/DSI, the interrupts, and possibly the debugging traps when using IPKDB).
+ * (except ISI/DSI, ALI, the interrupts, and possibly the debugging traps
+ * when using IPKDB).
  */
 	.text
 	.globl	_C_LABEL(trapcode),_C_LABEL(trapsize)
@@ -390,6 +402,29 @@ _C_LABEL(trapcode):
 1:
 	bla	s_trap
 _C_LABEL(trapsize) =	.-_C_LABEL(trapcode)
+
+/*
+ * For ALI: has to save DSISR and DAR
+ */
+	.globl  _C_LABEL(alitrap),_C_LABEL(alisize)
+_C_LABEL(alitrap):
+	mtsprg  1,1                     /* save SP */
+	stmw    28,tempsave(0)          /* free r28-r31 */
+	mfdar   30
+	mfdsisr 31
+	stmw    30,tempsave+16(0)
+	mflr    28                      /* save LR */
+	mfcr    29                      /* save CR */
+/* Test whether we already had PR set */
+	mfsrr1  31
+	mtcr    31
+	bc      4,17,1f                 /* branch if PSL_PR is clear */
+	lis     1,_C_LABEL(curpcb)@ha
+	lwz     1,_C_LABEL(curpcb)@l(1)
+	addi    1,1,USPACE              /* stack is top of user struct */
+1:
+	bla     s_trap
+_C_LABEL(alisize) = .-_C_LABEL(alitrap)
 
 /*
  * Similar to the above for DSI
@@ -712,6 +747,27 @@ _C_LABEL(tlbdsmiss):
 	isync
 	ba	EXC_DSI
 _C_LABEL(tlbdsmsize) =	.-_C_LABEL(tlbdsmiss)
+
+#ifdef DDB
+#define ddbsave 0xde0           /* primary save area for DDB */
+/*
+ * In case of DDB we want a separate trap catcher for it
+ */
+	.local  ddbstk
+	.comm   ddbstk,INTSTK,8         /* ddb stack */
+ 
+	.globl  _C_LABEL(ddblow),_C_LABEL(ddbsize)
+_C_LABEL(ddblow):
+	mtsprg  1,1                     /* save SP */
+	stmw    28,ddbsave(0)           /* free r28-r31 */
+	mflr    28                      /* save LR */
+	mfcr    29                      /* save CR */ 
+	lis     1,ddbstk+INTSTK@ha      /* get new SP */
+	addi    1,1,ddbstk+INTSTK@l
+	bla     ddbtrap
+_C_LABEL(ddbsize) = .-_C_LABEL(ddblow)
+#endif  /* DDB */
+
 
 #if NIPKDB > 0
 #define	ipkdbsave	0xde0		/* primary save area for IPKDB */
@@ -1305,3 +1361,49 @@ _C_LABEL(intrcnt):
 	.long 0,0,0,0
 	.long 0
 _C_LABEL(eintrcnt):
+
+#ifdef DDB   
+/*
+ * Deliberate entry to ddbtrap
+ */
+	.globl  _C_LABEL(ddb_trap)
+_C_LABEL(ddb_trap):
+	mtsprg  1,1
+	mfmsr   3
+	mtsrr1  3
+	andi.   3,3,~(PSL_EE|PSL_ME)@l
+	mtmsr   3                       /* disable interrupts */
+	isync
+	stmw    28,ddbsave(0)
+	mflr    28
+	li      29,EXC_BPT
+	mtlr    29
+	mfcr    29
+	mtsrr0  28
+
+/*
+ * Now the ddb trap catching code.
+ */
+ddbtrap:
+	FRAME_SETUP(ddbsave)
+/* Call C trap code: */
+	addi    3,1,8
+	bl      _C_LABEL(ddb_trap_glue)
+	or.     3,3,3
+	bne     ddbleave
+/* This wasn't for DDB, so switch to real trap: */
+	lwz     3,FRAME_EXC+8(1)        /* save exception */
+	stw     3,ddbsave+8(0)
+	FRAME_LEAVE(ddbsave)
+	mtsprg  1,1                     /* prepare for entrance to realtrap */
+	stmw    28,tempsave(0)
+	mflr    28
+	mfcr    29
+	lwz     31,ddbsave+8(0)
+	mtlr    31
+	b       realtrap
+ddbleave:
+	FRAME_LEAVE(ddbsave)
+	rfi
+#endif /* DDB */
+

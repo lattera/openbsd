@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.2 2001/04/18 16:07:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.3 2001/07/04 10:16:48 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1996/03/04 05:04:26 cgd Exp $	*/
 
 /*-
@@ -86,10 +86,6 @@
 #define	MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 #endif
 
-#define	CLSIZELOG2	0
-#define	CLSIZE		(1 << CLSIZELOG2)
-
-/* NOTE: SSIZE, SINCR and UPAGES must be multiples of CLSIZE */
 #define	SSIZE		1		/* initial stack size/NBPG */
 #define	SINCR		1		/* increment of stack/NBPG */
 #define	UPAGES		2		/* pages of u-area */
@@ -99,17 +95,11 @@
 #define MSGBUFSIZE	2*NBPG		/* default message buffer size */
 #endif
 
-#if !defined(UVM) && defined(PMAP_NEW)
-#error PMAP_NEW is not compatible with old VM
-#elif defined(UVM) && !defined(PMAP_NEW) && !defined(PMAP_OLD)
 #define PMAP_NEW
-#elif defined(PMAP_NEW) && defined(PMAP_OLD)
-#error Both PMAP_NEW and PMAP_OLD cannot be defined concurrently
-#endif
 
 /*
  * Constants related to network buffer management.
- * MCLBYTES must be no larger than CLBYTES (the software page size), and,
+ * MCLBYTES must be no larger than the software page size, and,
  * on machines that exchange pages of input or output buffers with mbuf
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
@@ -124,10 +114,10 @@
 #endif
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages
+ * Size of kernel malloc arena in logical pages
  */ 
 #ifndef NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(16 * 1024 * 1024 / CLBYTES)
+#define	NKMEMCLUSTERS	(16 * 1024 * 1024 / PAGE_SIZE)
 #endif
 
 /* pages ("clicks") to disk blocks */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/dbdma.c,v 1.1.2.1 2001/05/14 21:36:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/dbdma.c,v 1.1.2.2 2001/07/04 10:22:35 niklas Exp $	*/
 /*	$NetBSD: dbdma.c,v 1.2 1998/08/21 16:13:28 tsubai Exp $	*/
 
 /*
@@ -34,7 +34,6 @@
 
 
 
-static int	dbdma_alloc_index = 0;
 dbdma_command_t	*dbdma_alloc_commands = NULL;
 
 void

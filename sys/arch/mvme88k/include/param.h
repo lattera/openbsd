@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.2 2001/04/18 16:11:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.3 2001/07/04 10:20:04 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.
@@ -40,7 +40,7 @@
  * from: Utah $Hdr: machparam.h 1.11 89/08/14$
  *
  *	@(#)param.h	7.8 (Berkeley) 6/28/91
- *	$Id: param.h,v 1.15 2001/03/09 05:44:40 smurph Exp $
+ *	$Id: param.h,v 1.10.4.2 2001/04/18 16:11:23 niklas Exp $
  */
 #ifndef _MACHINE_PARAM_H_
 #define _MACHINE_PARAM_H_
@@ -70,11 +70,14 @@
 #define  ALIGN(p)		(((u_int)(p) + ALIGNBYTES) & ~ALIGNBYTES)
 #define  ALIGNED_POINTER(p,t)	((((u_long)(p)) & (sizeof(t)-1)) == 0)
 
-#ifndef NBPG
 #define NBPG		4096		/* bytes/page */
-#endif /* NBPG */
 #define PGOFSET		(NBPG-1)	/* byte offset into page */
 #define PGSHIFT		12		/* LOG2(NBPG) */
+
+#define	PAGE_SHIFT	12
+#define	PAGE_SIZE	(1 << PAGE_SHIFT)
+#define	PAGE_MASK	(PAGE_SIZE - 1)
+
 #define NPTEPG		(NBPG/(sizeof(u_int)))
 
 #define NBSEG		(1<<22)		/* bytes/segment */
@@ -95,10 +98,6 @@
 #define BLKDEV_IOSIZE	2048		/* Should this be changed? XXX */
 #define MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 
-#define CLSIZE		1
-#define CLSIZELOG2	0
-
-/* NOTE: SSIZE, SINCR and UPAGES must be multiples of CLSIZE */
 #define SSIZE		1		/* initial stack size/NBPG */
 #define SINCR		1		/* increment of stack/NBPG */
 #define USPACE		ctob(UPAGES)
@@ -116,7 +115,7 @@
 
 /*
  * Constants related to network buffer management.
- * MCLBYTES must be no larger than CLBYTES (the software page size), and,
+ * MCLBYTES must be no larger than the software page size, and,
  * on machines that exchange pages of input or output buffers with mbuf
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
@@ -135,10 +134,10 @@
 #endif
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages
+ * Size of kernel malloc arena in logical pages
  */ 
 #ifndef NKMEMCLUSTERS
-#define NKMEMCLUSTERS	(4096*1024/CLBYTES)
+#define NKMEMCLUSTERS	(4096*1024/PAGE_SIZE)
 #endif
 
 #define MSGBUFSIZE	4096

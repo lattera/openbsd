@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.2 2001/04/18 16:07:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.3 2001/07/04 10:16:39 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.84 2000/02/21 02:01:24 chs Exp $	*/
 
 /*
@@ -1782,7 +1782,7 @@ pmap_pinit(pmap)
 	pmap->pm_pdir = (pd_entry_t *) uvm_km_alloc(kernel_map, NBPG);
 	if (pmap->pm_pdir == NULL)
 		panic("pmap_pinit: kernel_map out of virtual space!");
-	(void) _pmap_extract(pmap_kernel(), (vaddr_t)pmap->pm_pdir,
+	(void) pmap_extract(pmap_kernel(), (vaddr_t)pmap->pm_pdir,
 			    (paddr_t *)&pmap->pm_pdirpa);
 
 	/* init PDP */
@@ -2032,7 +2032,7 @@ pmap_deactivate(p)
  */
 
 boolean_t
-_pmap_extract(pmap, va, pap)
+pmap_extract(pmap, va, pap)
 	struct pmap *pmap;
 	vaddr_t va;
 	paddr_t *pap;
@@ -2049,18 +2049,6 @@ _pmap_extract(pmap, va, pap)
 		return (TRUE);
 	}
 	return (FALSE);
-}
-
-paddr_t
-pmap_extract(pmap, va)
-	pmap_t pmap;
-	vaddr_t va;
-{
-	paddr_t pa;
-
-	if (_pmap_extract(pmap, va, &pa))
-		return (pa);
-	return (NULL);
 }
 
 /*
@@ -2915,10 +2903,9 @@ pmap_write_protect(pmap, sva, eva, prot)
  */
 
 void
-pmap_change_wiring(pmap, va, wired)
+pmap_unwire(pmap, va)
 	struct pmap *pmap;
 	vaddr_t va;
-	boolean_t wired;
 {
 	pt_entry_t *ptes;
 

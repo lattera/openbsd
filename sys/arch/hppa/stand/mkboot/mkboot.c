@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.1 2001/04/18 16:06:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.2 2001/07/04 10:16:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990, 1993
@@ -43,7 +43,7 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.1 2001/04/18 16:06:58 niklas Exp $";
+static char rcsid[] = "$OpenBSD: src/sys/arch/hppa/stand/mkboot/mkboot.c,v 1.7.4.2 2001/07/04 10:16:15 niklas Exp $";
 #endif /* not lint */
 #endif
 
@@ -389,7 +389,7 @@ bcddate(file, toc)
 		int tm_year;   /* years since 1900 */
 		int tm_wday;   /* day of the week (0-6) */
 		int tm_yday;   /* day of the year (0-365) */
-		int tm_isdst;  /* non-0 if daylight savings time is in effect */
+		int tm_isdst;  /* non-0 if daylight saving time is in effect */
 	} *tm;
 #else
 	struct tm *tm;

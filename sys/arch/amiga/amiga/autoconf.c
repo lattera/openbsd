@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/autoconf.c,v 1.12.10.1 2001/04/18 16:01:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/autoconf.c,v 1.12.10.2 2001/07/04 10:14:55 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.59 1998/01/15 21:55:51 is Exp $	*/
 
 /*
@@ -53,7 +53,7 @@ int cold;	/* 1 if still booting */
  * called at boot time, configure all devices on system
  */
 void
-configure()
+cpu_configure()
 {
 	int s;
 

@@ -1,4 +1,4 @@
-/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.8.4.1 2001/04/18 16:11:32 niklas Exp $   */
+/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.8.4.2 2001/07/04 10:20:09 niklas Exp $   */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -212,11 +212,8 @@
  * restored and control returns to where the exception occurred.
  *
  */
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
 
-#include "assym.s"
+#include "assym.h"
 #include <machine/trap.h>           /* for T_ defines */
 #include <machine/asm.h>
 

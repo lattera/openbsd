@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.3.6.1 2001/04/18 16:01:24 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.3.6.2 2001/07/04 10:14:44 niklas Exp $ */
 /* $NetBSD: pci_eb164.c,v 1.27 2000/06/06 00:50:15 thorpej Exp $ */
 
 /*-
@@ -105,6 +105,7 @@ void	dec_eb164_intr_disestablish __P((void *, void *));
 
 void	*dec_eb164_pciide_compat_intr_establish __P((void *, struct device *,
 	    struct pci_attach_args *, int, int (*)(void *), void *));
+void    dec_eb164_pciide_compat_intr_disestablish __P((void *, void *));
 
 #define	EB164_SIO_IRQ	4  
 #define	EB164_MAX_IRQ	24
@@ -135,6 +136,8 @@ pci_eb164_pickintr(ccp)
 
 	pc->pc_pciide_compat_intr_establish =
 	    dec_eb164_pciide_compat_intr_establish;
+	pc->pc_pciide_compat_intr_disestablish =
+	    dec_eb164_pciide_compat_intr_disestablish;
 
 	eb164_intrgate_iot = iot;
 	if (bus_space_map(eb164_intrgate_iot, 0x804, 3, 0,
@@ -330,6 +333,12 @@ dec_eb164_pciide_compat_intr_establish(v, dev, pa, chan, func, arg)
 		return (NULL);
 #endif
 	return (cookie);
+}
+
+void
+dec_eb164_pciide_compat_intr_disestablish(void *v, void *cookie)
+{
+	sio_intr_disestablish(NULL, cookie);
 }
 
 void

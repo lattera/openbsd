@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.2 2001/04/18 16:07:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.3 2001/07/04 10:16:33 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -40,6 +40,8 @@
 #include <sys/vnode.h>
 
 #include <machine/conf.h>
+
+#include "inet.h"
 
 #include "wd.h"
 bdev_decl(wd);
@@ -141,6 +143,7 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 cdev_decl(mm);
 cdev_decl(wd);
 cdev_decl(sw);
+cdev_decl(crypto);
 #include "pty.h"
 #include "com.h"
 #include "pccom.h"
@@ -149,7 +152,6 @@ cdev_decl(fd);
 cdev_decl(wt);
 cdev_decl(scd);
 #include "pc.h"
-#include "vt.h"
 cdev_decl(pc);
 #include "ss.h"
 #include "lpt.h"
@@ -208,19 +210,12 @@ cdev_decl(ulpt);
 cdev_decl(urio);
 #include "ucom.h"
 cdev_decl(ucom);
-
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
+#include "cz.h"
+cdev_decl(cztty);
 
 /* XXX -- this needs to be supported by config(8)! */
 #if (NCOM > 0) && (NPCCOM > 0)
 #error com and pccom are mutually exclusive.  Sorry.
-#endif
-#if (NVT > 0) && (NPC > 0)
-#error vt and pc are mutually exclusive.  Sorry.
 #endif
 
 #include "wsdisplay.h"
@@ -228,6 +223,16 @@ cdev_decl(ucom);
 #include "wsmouse.h"
 #include "wsmux.h"
 cdev_decl(wsmux);
+
+#ifdef USER_PCICONF
+#include "pci.h"
+cdev_decl(pci);
+#endif
+
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -247,11 +252,12 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(NFD,fd),		/* 9: floppy disk */
 	cdev_tape_init(NWT,wt),		/* 10: QIC-02/QIC-36 tape */
 	cdev_disk_init(NSCD,scd),	/* 11: Sony CD-ROM */
-#if 0
-	cdev_pc_init(NPC + NVT,pc),	/* 12: PC console */
-#endif
+#if NPC > 0
+	cdev_pc_init(NPC,pc),		/* 12: PC console */
+#else
 	cdev_wsdisplay_init(NWSDISPLAY,	/* 12: frame buffers, etc. */
 	    wsdisplay),
+#endif
 	cdev_disk_init(NSD,sd),		/* 13: SCSI disk */
 	cdev_tape_init(NST,st),		/* 14: SCSI tape */
 	cdev_disk_init(NCD,cd),		/* 15: SCSI CD-ROM */
@@ -291,7 +297,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 43 */
 #endif
-	cdev_gen_ipf(NIPF,ipl),         /* 44: ip filtering */
+	cdev_notdef(),			/* 44 */
 	cdev_random_init(1,random),	/* 45: random data source */
 	cdev_ocis_init(NPCTR,pctr),	/* 46: pentium performance counters */
 	cdev_disk_init(NRD,rd),		/* 47: ram disk driver */
@@ -324,6 +330,15 @@ struct cdevsw	cdevsw[] =
 	cdev_mouse_init(NWSMOUSE,	/* 68: mice */
 	    wsmouse),
 	cdev_mouse_init(NWSMUX, wsmux),	/* 69: ws multiplexor */
+	cdev_crypto_init(NCRYPTO,crypto), /* 70: /dev/crypto */
+	cdev_tty_init(NCZ,cztty),	/* 71: Cyclades-Z serial port */
+#ifdef USER_PCICONF
+	cdev_pci_init(NPCI,pci),        /* 72: PCI user */
+#else
+	cdev_notdef(),
+#endif
+	cdev_pf_init(NPF,pf),		/* 73: packet filter */
+	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -511,7 +526,7 @@ struct	consdev constab[] = {
 #if NWSDISPLAY > 0
 	cons_init(ws),
 #endif
-#if NPC + NVT > 0
+#if NPC > 0
 	cons_init(pc),
 #endif
 #if NCOM + NPCCOM > 0

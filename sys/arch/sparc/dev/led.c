@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/led.c,v 1.5.6.1 2001/05/14 21:37:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/led.c,v 1.5.6.2 2001/07/04 10:23:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -80,6 +80,7 @@ ledmatch(parent, vcf, aux)
 #if defined(SUN4)
 	struct cfdata *cf = vcf;
 #endif
+#if defined(SUN4) || defined(SUN4M)
 	struct confargs *ca = aux;
 	register struct romaux *ra = &ca->ca_ra;
 
@@ -89,7 +90,7 @@ ledmatch(parent, vcf, aux)
 			return (0);
 		return (1);
 	}
-#endif
+#endif /* SUN4M */
 
 #if defined(SUN4)
 	if (ca->ca_bustype == BUS_MAIN) {
@@ -99,7 +100,8 @@ ledmatch(parent, vcf, aux)
 			return (1);
 		return (0);
 	}
-#endif
+#endif /* SUN4 */
+#endif /* SUN4 || SUN4M */
 
 	return (0);
 }

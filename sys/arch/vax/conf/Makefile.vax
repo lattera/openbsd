@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/Makefile.vax,v 1.12.8.1 2001/05/14 21:37:52 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/Makefile.vax,v 1.12.8.2 2001/07/04 10:24:20 niklas Exp $
 #	$NetBSD: Makefile.vax,v 1.49 1999/07/26 05:20:49 cgd Exp $
 
 # Makefile for OpenBSD/vax
@@ -21,8 +21,6 @@
 
 # DEBUG is set to -g if debugging.
 # PROF is set to -pg if profiling.
-
-
 
 %OBJS
 
@@ -74,19 +72,11 @@ S!=	cd ../../../..; pwd
 .endif
 VAX=	$S/arch/vax
 
-HAVE_GCC28!=	${CC} --version | egrep "^(2\.8|egcs)" ; echo 
 INCLUDES=	-I. -I$S/arch -I$S -nostdinc
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-D_VAX_INLINE_
-CWARNFLAGS?=	-Werror 
-
-.if (${HAVE_GCC28} != "")
-CWARNFLAGS+=	-Wno-main
-.endif
+CWARNFLAGS?=	-Werror -Wall -Wno-main -Wno-format -Wno-uninitialized
 CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS}
-.if (${HAVE_GCC28} != "")
-CFLAGS+=	-mno-pic
-.endif
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE
 LINKFLAGS=	-N -Ttext 80000000 -e start
 STRIPFLAGS=	-d

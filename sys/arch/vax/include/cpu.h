@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.1 2001/05/14 21:37:58 niklas Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.2 2001/07/04 10:24:26 niklas Exp $      */
 /*      $NetBSD: cpu.h,v 1.41 1999/10/21 20:01:36 ragge Exp $      */
 
 /*
@@ -47,8 +47,6 @@
 #define	cpu_wait(p)
 #define	cpu_swapout(p)
 #define	cpu_number()			0
-
-void configure       __P((void));
 
 /*
  * All cpu-dependent info is kept in this struct. Pointer to the

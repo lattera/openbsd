@@ -45,26 +45,26 @@
 #include <machine/bus.h>
 #include <machine/autoconf.h>
 
-static void obio_attach __P((struct device *, struct device *, void *));
-static int obio_match __P((struct device *, void *, void *));
-static int obio_print __P((void *, const char *));
+static void macobio_attach __P((struct device *, struct device *, void *));
+static int macobio_match __P((struct device *, void *, void *));
+static int macobio_print __P((void *, const char *));
 
-struct obio_softc {
+struct macobio_softc {
 	struct device sc_dev;
 	int sc_node;
 	struct ppc_bus_space sc_membus_space;
 };
-struct cfdriver obio_cd = {
+struct cfdriver macobio_cd = {
 	NULL, "macobio", DV_DULL,
 };
 
 
-struct cfattach obio_ca = {
-	sizeof(struct obio_softc), obio_match, obio_attach
+struct cfattach macobio_ca = {
+	sizeof(struct macobio_softc), macobio_match, macobio_attach
 };
 
 int
-obio_match(parent, cf, aux)
+macobio_match(parent, cf, aux)
 	struct device *parent;
 	void *cf;
 	void *aux;
@@ -74,11 +74,12 @@ obio_match(parent, cf, aux)
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_APPLE)
 		switch (PCI_PRODUCT(pa->pa_id)) {
 
-		case 0x02:	/* gc */
-		case 0x07:	/* ohare */
-		case 0x10:	/* mac-io "Heathrow" */
-		case 0x17:	/* mac-io "Paddington" */
-		case 0x22:	/* mac-io "Keylargo" */
+		case PCI_PRODUCT_APPLE_GC:
+		case PCI_PRODUCT_APPLE_OHARE:
+		case PCI_PRODUCT_APPLE_HEATHROW:
+		case PCI_PRODUCT_APPLE_PADDINGTON:
+		case PCI_PRODUCT_APPLE_KEYLARGO:
+		case PCI_PRODUCT_APPLE_PANGEA_MACIO:
 			return 1;
 		}
 
@@ -92,34 +93,34 @@ u_int32_t *heathrow_FCR = NULL;
  * Attach all the sub-devices we can find
  */
 void
-obio_attach(parent, self, aux)
+macobio_attach(parent, self, aux)
 	struct device *parent, *self;
 	void *aux;
 {
-	struct obio_softc *sc = (struct obio_softc *)self;
+	struct macobio_softc *sc = (struct macobio_softc *)self;
 	struct pci_attach_args *pa = aux;
 	struct confargs ca;
 	int node, child, namelen;
 	u_int32_t reg[20];
-	int32_t intr[5];
+	int32_t intr[8];
 	char name[32];
 	int need_interrupt_controller = 0;
 
 	switch (PCI_PRODUCT(pa->pa_id)) {
 
 	/* XXX should not use name */
-	case 0x02:
+	case PCI_PRODUCT_APPLE_GC:
 		node = OF_finddevice("/bandit/gc");
 		need_interrupt_controller = 1;
 		break;
 
-	case 0x07:
+	case PCI_PRODUCT_APPLE_OHARE:
 		node = OF_finddevice("/bandit/ohare");
 		need_interrupt_controller = 1;
 		break;
 
-	case 0x10:	/* heathrow */
-	case 0x17:	/* paddington */
+	case PCI_PRODUCT_APPLE_HEATHROW:
+	case PCI_PRODUCT_APPLE_PADDINGTON:
 		node = OF_finddevice("mac-io");
 		if (node == -1)
 			node = OF_finddevice("/pci/mac-io");
@@ -131,14 +132,15 @@ obio_attach(parent, self, aux)
 				4);
 		}
 		break;
-	case 0x22:	/* keylargo */
+	case PCI_PRODUCT_APPLE_KEYLARGO:
+	case PCI_PRODUCT_APPLE_PANGEA_MACIO:
 		node = OF_finddevice("mac-io");
 		if (node == -1)
 			node = OF_finddevice("/pci/mac-io");
 
 		break;
 	default:
-		printf(": unknown obio controller\n");
+		printf(": unknown macobio controller\n");
 		return;
 	}
 	sc->sc_node = node;
@@ -171,7 +173,7 @@ obio_attach(parent, self, aux)
 		ca.ca_reg = 0;
 		ca.ca_intr = 0;
 
-		config_found(self, &ca, obio_print);
+		config_found(self, &ca, macobio_print);
 	}
 
 	for (child = OF_child(node); child; child = OF_peer(child)) {
@@ -195,36 +197,29 @@ obio_attach(parent, self, aux)
 		ca.ca_reg = reg;
 		ca.ca_intr = intr;
 
-		config_found(self, &ca, obio_print);
+		config_found(self, &ca, macobio_print);
 	}
 }
 
 int
-obio_print(aux, obio)
+macobio_print(aux, macobio)
 	void *aux;
-	const char *obio;
+	const char *macobio;
 {
+#ifdef MACOBIOVERBOSE
 	struct confargs *ca = aux;
 
-#if 0
-/* no reason to clutter the screen with unneccessary printfs */
-	if (obio)
-		printf("%s at %s", ca->ca_name, obio);
+	if (macobio)
+		printf("%s at %s", ca->ca_name, macobio);
 
 	if (ca->ca_nreg > 0)
 		printf(" offset 0x%x", ca->ca_reg[0]);
 
 	return UNCONF;
-#endif
+#else
 	return QUIET;
+#endif
 }
-
-typedef int mac_intr_handle_t;
-
-typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
-
 
 void *
 undef_mac_establish(lcv, irq, type, level, ih_fun, ih_arg, name)

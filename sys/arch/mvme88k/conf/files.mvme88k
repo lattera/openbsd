@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/files.mvme88k,v 1.7.2.1 2001/04/18 16:10:50 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/files.mvme88k,v 1.7.2.2 2001/07/04 10:19:51 niklas Exp $
 #	
 maxpartitions 16
 
@@ -77,9 +77,6 @@ attach vmel at vme
 file	arch/mvme88k/dev/vme.c			vme | vmes | vmel
 file	arch/mvme88k/dev/vmes.c			vmes needs-count
 file	arch/mvme88k/dev/vmel.c			vmel needs-count
-
-#ramdisk support
-file 	arch/mvme88k/dev/rd_root.c			ramdisk_hooks
 
 # list of standard files
 file	dev/cons.c					ite | ser | tty

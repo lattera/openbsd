@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/if_le.c,v 1.16.6.1 2001/05/14 21:37:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/if_le.c,v 1.16.6.2 2001/07/04 10:23:25 niklas Exp $	*/
 /*	$NetBSD: if_le.c,v 1.50 1997/09/09 20:54:48 pk Exp $	*/
 
 /*-
@@ -478,10 +478,12 @@ leattach(parent, self, aux)
 	{
 		u_long laddr;
 
+#if defined(SUN4C) || defined(SUN4M)
 		if (sbuschild && CPU_ISSUN4M)
 			laddr = (u_long)dvma_malloc_space(MEMSIZE,
 			     &sc->sc_mem, M_NOWAIT, M_SPACE_D24);
 		else
+#endif
 			laddr = (u_long)dvma_malloc(MEMSIZE,
 			     &sc->sc_mem, M_NOWAIT);
 #if defined (SUN4M)

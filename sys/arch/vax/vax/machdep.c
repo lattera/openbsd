@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.2 2001/05/14 21:39:05 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.3 2001/07/04 10:24:39 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -239,7 +239,7 @@ cpu_startup()
 		 * physical memory allocated for it.
 		 */
 		curbuf = (vm_offset_t) buffers + i * MAXBSIZE;
-		curbufsize = CLBYTES * (i < residual ? base + 1 : base);
+		curbufsize = PAGE_SIZE * (i < residual ? base + 1 : base);
 		while (curbufsize) {
 			pg = uvm_pagealloc(NULL, 0, NULL, 0);
 			if (pg == NULL)
@@ -267,23 +267,19 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-    mclrefcnt = (char *)malloc(NMBCLUSTERS+CLBYTES/MCLBYTES,
-        M_MBUF, M_NOWAIT);
-    bzero(mclrefcnt, NMBCLUSTERS+CLBYTES/MCLBYTES);
 	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr, 
 		VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 	
 	timeout_init();
 
 	printf("avail memory = %ld\n", ptoa(uvmexp.free));
-	printf("using %d buffers containing %d bytes of memory\n", nbuf, bufpages * CLBYTES);
+	printf("using %d buffers containing %d bytes of memory\n", nbuf, bufpages * PAGE_SIZE);
 
 	/*
 	 * Set up buffers, so they can be used to read disk labels.
 	 */
 
 	bufinit();
-	configure();
 }
 
 long	dumplo = 0;
@@ -306,11 +302,11 @@ cpu_dumpconf()
 			dumplo = nblks - btodb(ctob(dumpsize));
 	}
 	/*
-	 * Don't dump on the first CLBYTES (why CLBYTES?) in case the dump
+	 * Don't dump on the first block in case the dump
 	 * device includes a disk label.
 	 */
-	if (dumplo < btodb(CLBYTES))
-		dumplo = btodb(CLBYTES);
+	if (dumplo < btodb(PAGE_SIZE))
+		dumplo = btodb(PAGE_SIZE);
 }
 
 int
@@ -344,12 +340,7 @@ consinit()
 #endif
 	cninit();
 #ifdef DDB
-	{
-		extern int end; /* Contains pointer to symsize also */
-		extern int *esym;
-
-		ddb_init();
-	}
+	ddb_init();
 #ifdef DEBUG
 	if (sizeof(struct user) > REDZONEADDR)
 		panic("struct user inside red zone");
@@ -542,8 +533,13 @@ boot(howto)
 		");
 #endif
 
+		/* If rebooting and a dump is requested, do it. */
 		if (showto & RB_DUMP)
 			dumpsys();
+
+		/* Run any shutdown hooks. */
+		doshutdownhooks();
+
 		if (dep_call->cpu_reboot)
 			(*dep_call->cpu_reboot)(showto);
 
@@ -791,10 +787,10 @@ allocsys(v)
 	 */
 	if (bufpages == 0) {
 	    if (physmem < btoc(2 * 1024 * 1024))
-	        bufpages = physmem / (10 * CLSIZE);
+	        bufpages = physmem / 10;
 	    else
 		bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-		    BUFCACHEPERCENT / (100 * CLSIZE);
+		    BUFCACHEPERCENT / 100;
 	}
     if (nbuf == 0) 
         nbuf = bufpages < 16 ? 16 : bufpages;
@@ -806,8 +802,8 @@ allocsys(v)
             MAXBSIZE * 7 / 10;
 
     /* More buffer pages than fits into the buffers is senseless.  */
-    if (bufpages > nbuf * MAXBSIZE / CLBYTES)
-        bufpages = nbuf * MAXBSIZE / CLBYTES;
+    if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
+        bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
     /* Allocate 1/2 as many swap buffer headers as file i/o buffers.  */
     if (nswbuf == 0) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.1 2001/04/18 16:06:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.2 2001/07/04 10:16:02 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -114,11 +114,10 @@ cdev_decl(lpt);
 #include "com.h"
 cdev_decl(com);
 
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
 
 struct cdevsw   cdevsw[] =
 {
@@ -143,7 +142,7 @@ struct cdevsw   cdevsw[] =
 	cdev_bpftun_init(NTUN,tun),	/* 18: network tunnel */
 	cdev_lkm_init(NLKM,lkm),	/* 19: loadable module driver */
 	cdev_random_init(1,random),	/* 20: random generator */
-	cdev_gen_ipf(NIPF,ipl),		/* 21: ip filtering */
+	cdev_pf_init(NPF,pf),		/* 21: packet filter */
 	cdev_tty_init(1,pdc),		/* 22: PDC device */
 	cdev_tty_init(NCOM,com),	/* 23: RS232 */
 	cdev_disk_init(NFD,fd),		/* 24: floppy drive */
@@ -160,6 +159,7 @@ struct cdevsw   cdevsw[] =
 #else
 	cdev_notdef(),			/* 32 */
 #endif
+	cdev_altq_init(NALTQ,altq),	/* 33: ALTQ control interface */
 	cdev_lkm_dummy(),
 	cdev_lkm_dummy(),
 	cdev_lkm_dummy(),

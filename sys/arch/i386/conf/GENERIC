@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.2 2001/04/18 16:07:01 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.158.2.3 2001/07/04 10:16:20 niklas Exp $
 #	$NetBSD: GENERIC,v 1.48 1996/05/20 18:17:23 mrg Exp $
 #
 #	GENERIC -- everything that's currently supported
@@ -12,9 +12,9 @@ option		I386_CPU	# CPU classes; at least one is REQUIRED
 option		I486_CPU
 option		I586_CPU
 option		I686_CPU
-option		GPL_MATH_EMULATE	# floating point emulation
+option		GPL_MATH_EMULATE	# floating point emulation. required.
 
-option		UVM		# use the UVM virtual memory system
+option		USER_PCICONF	# user-space PCI configuration
 
 #option		VM86		# Virtual 8086 emulation
 #option		USER_LDT	# user-settable LDT; used by WINE
@@ -49,7 +49,6 @@ pci*	at mainbus0 bus ?
 
 option		PCIVERBOSE
 option		EISAVERBOSE
-#option		PCMCIAVERBOSE
 option		USBVERBOSE
 
 pchb*	at pci? dev ? function ?	# PCI-Host bridges
@@ -59,12 +58,14 @@ pci*	at pchb? bus ?
 pcib*	at pci? dev ? function ?	# PCI-ISA bridges (do nothing)
 
 # ISA PCMCIA controllers
+#option PCMCIAVERBOSE
 pcic0	at isa? port 0x3e0 iomem 0xd0000 iosiz 0x10000
 pcic1	at isa? port 0x3e2 iomem 0xe0000 iosiz 0x4000
 pcic2	at isa? port 0x3e4 iomem 0xe0000 iosiz 0x4000
-#tcic0	at isa? port 0x240 iomem 0xd0000 iosiz 0x10000
+tcic0	at isa? disable port 0x240 iomem 0xd0000 iosiz 0x10000
 
 # ISA Plug-and-Play PCMCIA controllers
+#option DEBUG_ISAPNP
 pcic*	at isapnp?
 
 # PCI PCMCIA controllers
@@ -72,7 +73,7 @@ pcic*	at pci? dev? function ?
 
 # PCMCIA bus support
 pcmcia*	at pcic? controller ? socket ?
-#pcmcia* at tcic? controller ? socket ?
+pcmcia* at tcic? controller ? socket ?
 
 # CardBus bus support
 cardbus*	at cardslot?
@@ -140,7 +141,7 @@ wskbd*		at pckbd? console ?
 wsmouse*	at pms? mux 0
 wsmouse*	at pmsi? mux 0
 
-pcppi0	at isa?
+pcppi0		at isa?
 sysbeep0	at pcppi?
 
 pccom0	at isa? port 0x3f8 irq 4	# standard PC serial ports
@@ -180,8 +181,8 @@ wsmouse*	at lms? mux 0
 wsmouse*	at mms? mux 0
 
 bt0	at isa? port 0x330 irq ? drq ?	# BusLogic [57]4X SCSI controllers
-bt1	at isa? port 0x334 irq ? drq ?	# BusLogic [57]4X SCSI controllers
-bt2	at isa? port ? irq ?
+bt1	at isa? disable port 0x334 irq ? drq ? # BusLogic [57]4X SCSI controllers
+bt2	at isa? disable port ? irq ?
 scsibus* at bt?
 aha0	at isa? port 0x330 irq ? drq ?	# Adaptec 154[02] SCSI controllers
 aha1	at isa? port 0x334 irq ? drq ?	# Adaptec 154[02] SCSI controllers
@@ -226,13 +227,13 @@ adw*	at pci? dev ? function ?	# AdvanSys ULTRA WIDE SCSI
 scsibus* at adw?
 pcscp*	at pci? dev ? function ?	# AMD 53c974 PCscsi-PCI SCSI
 scsibus* at pcscp?
-sea0	at isa? iomem 0xc8000 irq 5	# Seagate ST0[12] SCSI controllers
+sea0	at isa? disable iomem 0xc8000 irq 5	# Seagate ST0[12] SCSI controllers
 scsibus* at sea?
 uha0	at isa? port 0x330 irq ? drq ?	# UltraStor [13]4f SCSI controllers
-uha1	at isa? port 0x334 irq ? drq ?	# UltraStor [13]4f SCSI controllers
+uha1	at isa? disable port 0x334 irq ? drq ? # UltraStor [13]4f SCSI controllers
 uha*	at eisa? slot ?			# UltraStor 24f SCSI controllers
 scsibus* at uha?
-wds0	at isa? port 0x350 irq 15 drq 6	# WD7000 and TMC-7000 controllers
+wds0	at isa? disable port 0x350 irq 15 drq 6	# WD7000 and TMC-7000 controllers
 #wds1	at isa? port 0x358 irq 11 drq 5
 scsibus* at wds?
 
@@ -278,8 +279,8 @@ ne0	at isa? port 0x240 irq 9		# NE[12]000 ethernet
 ne1	at isa? port 0x300 irq 10		# NE[12]000 ethernet
 ne2	at isa? port 0x280 irq 9		# NE[12]000 ethernet
 ne*	at isapnp?				# NE[12]000 PnP ethernet
-eg0	at isa? port 0x310 irq 5		# 3C505/Etherlink+ ethernet
-el0	at isa? port 0x300 irq 9		# 3C501 ethernet
+eg0	at isa? disable port 0x310 irq 5	# 3C505/Etherlink+ ethernet
+el0	at isa? disable port 0x300 irq 9 	# 3C501 ethernet
 ep0	at isa? port ? irq ?			# 3C509 ethernet
 ep*	at isapnp?				# 3C509 PnP ethernet
 ep*	at isa? port ? irq ?			# 3C509 ethernet
@@ -324,8 +325,11 @@ ti*	at pci? dev ? function ?		# Alteon Tigon 1Gb ethernet
 skc*	at pci? dev ? function ?		# SysKonnect GEnesis 984x
 sk*	at skc?					#  each port of above
 wx*	at pci? dev ? function ?		# Intel Pro/1000 ethernet
+txp*	at pci? dev ? function ?		# 3com 3CR990
+nge*	at pci? dev ? function ?		# NS DP83820/DP83821 GigE
 
 # Wireless network cards
+wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
 #awi*	at pcmcia? function ?			# Bay Networks IEEE 802.11FH
 an*	at pci? dev ? function ?		# Aironet IEEE 802.11DS
@@ -352,6 +356,7 @@ bmtphy*	at mii? phy ?				# Broadcom 10/100 PHYs
 brgphy*	at mii? phy ?				# Broadcom Gigabit PHYs
 eephy* at mii? phy ?				# Marvell 88E1000 series PHY
 xmphy*	at mii? phy ?				# XaQti XMAC-II PHYs
+nsgphy*	at mii? phy ?				# NS gigabit PHYs
 ukphy*	at mii? phy ?				# "unknown" PHYs
 
 pss0	at isa? port 0x220 irq 7 drq 6		# Personal Sound System
@@ -375,7 +380,7 @@ ess*	at isapnp?				# ESS Tech ES188[78], ES888
 wss0	at isa? port 0x530 irq 10 drq 0		# Windows Sound System
 wss*	at isapnp?
 pas0	at isa? port 0x220 irq 7 drq 1		# ProAudio Spectrum
-gus0	at isa? port 0x220 irq 7 drq 1 drq2 6	# Gravis UltraSound (drq2 is record drq)
+gus0	at isa? disable port 0x220 irq 7 drq 1 drq2 6 # Gravis (drq2 is record drq)
 ym*	at isapnp?
 mpu*	at isapnp?
 
@@ -431,6 +436,11 @@ hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
 ubsec*	at pci? dev ? function ?	# Bluesteel Networks 5xxx crypto card
 #ises*	at pci? dev ? function ?	# Pijnenburg PCC-ISES
 
+# I2O
+iop*	at pci? dev ? function ?	# I2O
+ioprbs*	at iop? tid ?			# Random block storage
+scsibus* at ioprbs?
+
 pseudo-device	pctr		1
 pseudo-device	mtrr		1	# Memory range attributes control
 pseudo-device	sequencer	1
@@ -438,5 +448,4 @@ pseudo-device	sequencer	1
 
 # mouse & keyboard multiplexor pseudo-devices
 pseudo-device	wsmux		2
-
-#option DEBUG_ISAPNP
+pseudo-device	crypto		1

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.1 2001/04/18 16:01:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.2 2001/07/04 10:14:48 niklas Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*
@@ -321,7 +321,8 @@ elf_exec(fd, elf, entryp)
 				printf("lseek symbols: %s\n", strerror(errno));
 				return (1);
 			}
-			if (read(fd, (void *)ffp_save, shp[i].sh_size) != shp[i].sh_size) {
+			if (read(fd, (void *)ffp_save, shp[i].sh_size) !=
+			    shp[i].sh_size) {
 				printf("read symbols: %s\n", strerror(errno));
 				return (1);
 			}

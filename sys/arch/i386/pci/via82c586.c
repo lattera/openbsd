@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/via82c586.c,v 1.6.2.1 2001/04/18 16:08:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/via82c586.c,v 1.6.2.2 2001/07/04 10:18:07 niklas Exp $	*/
 /*	$NetBSD: via82c586.c,v 1.2 2000/07/18 11:24:09 soda Exp $	*/
 
 /*-
@@ -111,6 +111,9 @@ const int vp3_cfg_intr_shift[] = {
 	VP3_CFG_INTR_SHIFT_PIRQB,
 	VP3_CFG_INTR_SHIFT_PIRQC,
 	VP3_CFG_INTR_SHIFT_PIRQD,
+	VP3_CFG_INTR_SHIFT_PIRQ0,
+	VP3_CFG_INTR_SHIFT_PIRQ1,
+	VP3_CFG_INTR_SHIFT_PIRQ2,
 };
 
 #define	VP3_PIRQ(reg, pirq)	(((reg) >> vp3_cfg_intr_shift[(pirq)]) & \
@@ -253,10 +256,9 @@ via82c586_set_trigger(v, irq, trigger)
 			reg = pci_conf_read(ph->ph_pc, ph->ph_tag,
 			    VP3_CFG_PIRQ_REG);
 			shift = vp3_cfg_trigger_shift[i];
+			/* XXX we only upgrade the trigger here */
 			if (trigger == IST_LEVEL)
 				reg &= ~(VP3_CFG_TRIGGER_MASK << shift);
-			else
-				reg |= (VP3_CFG_TRIGGER_EDGE << shift);
 			pci_conf_write(ph->ph_pc, ph->ph_tag,
 			    VP3_CFG_PIRQ_REG, reg);
 			break;

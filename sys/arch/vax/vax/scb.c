@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/scb.c,v 1.1.8.1 2001/05/14 21:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/scb.c,v 1.1.8.2 2001/07/04 10:24:44 niklas Exp $	*/
 /*	$NetBSD: scb.c,v 1.9 2000/01/24 02:40:34 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
@@ -49,7 +49,6 @@ static	void scb_stray __P((void *));
 
 static	struct ivec_dsp *scb_vec;
 static	volatile int vector, ipl, gotintr;
-extern	int cold;
 /*
  * Generates a new SCB.
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ac.c,v 1.7 1997/04/20 07:01:11 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ac.c,v 1.7.14.1 2001/07/04 10:15:24 niklas Exp $	*/
 /*	$NetBSD: ac.c,v 1.9 1997/04/02 22:37:21 scottr Exp $	*/
 
 /*
@@ -330,6 +330,7 @@ accommand(dev, command, bufp, buflen)
 	bp->b_resid = 0;
 	bp->b_blkno = 0;
 	bp->b_error = 0;
+	LIST_INIT(&bp->b_dep);
 	if (scsireq(sc->sc_dev.dv_parent, &sc->sc_sq))
 		acstart(sc);
 	error = biowait(bp);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11 1997/09/14 03:43:02 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/dca.c,v 1.11.12.1 2001/07/04 10:15:26 niklas Exp $	*/
 /*	$NetBSD: dca.c,v 1.35 1997/05/05 20:58:18 thorpej Exp $	*/
 
 /*
@@ -797,7 +797,7 @@ dcaparam(tp, t)
 		(void) dcamctl(sc, 0, DMSET);	/* hang up line */
 
 	/*
-	 * Set the FIFO threshold based on the recieve speed, if we
+	 * Set the FIFO threshold based on the receive speed, if we
 	 * are changing it.
 	 */
 	if (tp->t_ispeed != t->c_ispeed) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/locore.s,v 1.18.14.1 2001/05/14 21:37:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/locore.s,v 1.18.14.2 2001/07/04 10:24:11 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.40 1996/11/06 20:19:54 cgd Exp $	*/
 
 /*
@@ -812,14 +812,14 @@ Lswnofpsave:
 #endif
 
 	/*
-	 * Call pmap_activate() to set the MMU context register
+	 * Call pmap_switch() to set the MMU context register
 	 */
 	movl	a2@(VM_PMAP),a2		| pmap = &vm.vm_map.pmap
 	pea	a2@			| push pmap
-	jbsr	_C_LABEL(pmap_activate)	| pmap_activate(pmap)
+	jbsr	_C_LABEL(pmap_switch)	| pmap_switch(pmap)
 	addql	#4,sp
 	movl	_C_LABEL(curpcb),a1	| restore p_addr
-| Note: pmap_activate will clear the cache if needed.
+| Note: pmap_switch will clear the cache if needed.
 
 	/*
 	 * Reload the registers for the new process.

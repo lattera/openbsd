@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/MVME147,v 1.10.14.1 2001/04/18 16:10:19 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/MVME147,v 1.10.14.2 2001/07/04 10:19:20 niklas Exp $
 
 machine		mvme68k m68k
 
@@ -37,7 +37,6 @@ option		GATEWAY		# IP packet forwarding
 #option		ISO		# OSI networking
 #option		TPIP
 #option		EON
-#option		COMPAT_09, COMPAT_10
 
 config		bsd	swap generic
 

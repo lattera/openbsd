@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.1 2001/04/18 16:06:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/autoconf.c,v 1.7.2.2 2001/07/04 10:16:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -80,14 +80,12 @@ extern int hz;
 #endif
 
 /*
- * configure:
+ * cpu_configure:
  * called at boot time, configure all devices on system
  */
 void
-configure()
+cpu_configure()
 {
-	extern int cold;
-
 	splhigh();
 	if (config_rootfound("mainbus", "mainbus") == NULL)
 		panic("no mainbus found");

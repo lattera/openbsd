@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.1 2001/04/18 16:07:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.2 2001/07/04 10:16:31 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -42,7 +42,7 @@
 /*
  * Setup the system to run on the current machine.
  *
- * Configure() is called at boot time and initializes the vba 
+ * cpu_configure() is called at boot time and initializes the vba 
  * device tables and the memory controller monitoring.  Available
  * devices are determined (from possibilities mentioned in ioconf.c),
  * and the drivers are initialized.
@@ -73,20 +73,19 @@ void diskconf __P((void));
  * the configuration process, and are used in initializing
  * the machine.
  */
-extern int	cold;		/* cold start flag initialized in locore.s */
 dev_t	bootdev = 0;		/* bootdevice, initialized in locore.s */
 
 /*
  * Determine i/o configuration for a machine.
  */
 void
-configure()
+cpu_configure()
 {
 
 	startrtclock();
 
 	if (config_rootfound("mainbus", NULL) == NULL)
-		panic("configure: mainbus not configured");
+		panic("cpu_configure: mainbus not configured");
 
 	printf("biomask %x netmask %x ttymask %x\n",
 	    (u_short)imask[IPL_BIO], (u_short)imask[IPL_NET],
@@ -100,6 +99,9 @@ configure()
 	 */
 	md_diskconf = diskconf;
 	cold = 0;
+
+	/* Set up proc0's TSS and LDT (after the FPU is configured). */
+	i386_proc0_tss_ldt_init();
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/via82c586reg.h,v 1.4.6.1 2001/04/18 16:08:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/via82c586reg.h,v 1.4.6.2 2001/07/04 10:18:07 niklas Exp $	*/
 /*	$NetBSD: via82c586reg.h,v 1.2 2000/04/22 15:00:41 uch Exp $	*/
 
 /*
@@ -56,8 +56,11 @@
 #define	VP3_CFG_INTR_SHIFT_PIRQB	0x10
 #define	VP3_CFG_INTR_SHIFT_PIRQC	0x1c
 #define	VP3_CFG_INTR_SHIFT_PIRQD	0x0c
+#define	VP3_CFG_INTR_SHIFT_PIRQ0	0x10
+#define	VP3_CFG_INTR_SHIFT_PIRQ1	0x08
+#define	VP3_CFG_INTR_SHIFT_PIRQ2	0x00
 
 #define	VP3_PIRQ_NONE			0
-#define	VP3_LEGAL_LINK(link)		((link) >= 0 && (link) <= 3)
+#define	VP3_LEGAL_LINK(link)		((link) >= 0 && (link) <= 6)
 #define	VP3_LEGAL_IRQ(irq)		((irq) >= 0 && (irq) <= 15 &&	\
 					 ((1 << (irq)) & VP3_PIRQ_MASK) != 0)

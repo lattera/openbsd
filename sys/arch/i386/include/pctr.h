@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pctr.h,v 1.9.8.1 2001/04/18 16:07:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pctr.h,v 1.9.8.2 2001/07/04 10:16:48 niklas Exp $	*/
 
 /*
  * Pentium performance counter driver for OpenBSD.
@@ -6,8 +6,7 @@
  *
  * Modification and redistribution in source and binary forms is
  * permitted provided that due credit is given to the author and the
- * OpenBSD project (for instance by leaving this copyright notice
- * intact).
+ * OpenBSD project by leaving this copyright notice intact.
  */
 
 #ifndef _I386_PCTR_H_

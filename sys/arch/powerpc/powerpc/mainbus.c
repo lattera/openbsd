@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mainbus.c,v 1.2.8.2 2001/05/14 21:36:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mainbus.c,v 1.2.8.3 2001/07/04 10:22:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -56,13 +56,13 @@ void	mb_intr_disestablish __P((struct confargs *));
 caddr_t	mb_cvtaddr __P((struct confargs *));
 int	mb_matchname __P((struct confargs *, char *));
 
+/*ARGSUSED*/
 static int
 mbmatch(parent, cfdata, aux)
 	struct device *parent;
 	void *cfdata;
 	void *aux;
 {
-	struct cfdata *cf = cfdata;
 
 	/*
 	 * That one mainbus is always here.
@@ -124,6 +124,12 @@ mbattach(parent, self, aux)
 				if (OF_getprop(node, "name", name, sizeof(name)) <= 0)
 					printf ("name not found on node %x\n");
 					continue;
+			}
+			if (strcmp(name, "memory-controller") == 0) {
+				nca.ca_name = "memc";
+				nca.ca_node = node;
+				nca.ca_bus = &sc->sc_bus;
+				config_found(self, &nca, mbprint);
 			}
 			if (strcmp(name, "pci") == 0) {
 				nca.ca_name = "mpcpcibr";

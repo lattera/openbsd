@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/XBUG.S,v 1.4 1998/04/02 10:49:05 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/XBUG.S,v 1.4.10.1 2001/07/04 10:19:46 niklas Exp $ */
 
 /*
- * Copyright (c) 1995 Theo de Raadt
+ * Copyright (c) 1989,1990,1995 Theo de Raadt
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

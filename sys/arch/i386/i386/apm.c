@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.2 2001/04/18 16:07:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.3 2001/07/04 10:16:29 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1998-2000 Michael Shalayeff. All rights reserved.
@@ -319,7 +319,8 @@ apm_suspend()
 {
 	dopowerhooks(PWR_SUSPEND);
 
-	vfs_syncwait(0);
+	if (cold)
+		vfs_syncwait(0);
 
 	(void)apm_set_powstate(APM_DEV_ALLDEVS, APM_SYS_SUSPEND);
 }
@@ -329,7 +330,8 @@ apm_standby()
 {
 	dopowerhooks(PWR_STANDBY);
 
-	vfs_syncwait(0);
+	if (cold)
+		vfs_syncwait(0);
 
 	(void)apm_set_powstate(APM_DEV_ALLDEVS, APM_SYS_STANDBY);
 }

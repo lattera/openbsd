@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/crossvar.h,v 1.5.14.1 2001/04/18 16:02:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/crossvar.h,v 1.5.14.2 2001/07/04 10:15:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1996 Niklas Hallqvist
@@ -61,9 +61,6 @@ struct cross_softc {
 	u_int16_t sc_imask;
 	volatile u_int16_t *sc_status;
 	struct vm_page sc_page[CROSS_BANK_SIZE / NBPG];
-#ifndef UVM
-	struct pager_struct sc_pager;
-#endif
 
 	struct amiga_bus_space sc_iot;
 	struct amiga_bus_space sc_memt;

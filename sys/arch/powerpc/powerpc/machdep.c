@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.3 2001/05/14 21:36:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.4 2001/07/04 10:22:58 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -31,7 +31,9 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
 #include "machine/ipkdb.h"
+*/
 
 #include <sys/param.h>
 #include <sys/buf.h>
@@ -65,6 +67,10 @@
 #endif
 #include <net/netisr.h>
 
+#include <dev/cons.h>
+
+#include <dev/ofw/openfirm.h>
+
 #include <machine/bat.h>
 #include <machine/pmap.h>
 #include <machine/powerpc.h>
@@ -74,6 +80,13 @@
 #include <machine/pio.h>
 #include "adb.h"
 
+#ifdef DDB
+#include <machine/db_machdep.h>
+#include <ddb/db_access.h>
+#include <ddb/db_sym.h>
+#include <ddb/db_extern.h>
+#endif
+
 /*
  * Global variables used here and there
  */
@@ -82,7 +95,6 @@ struct pmap *curpm;
 struct proc *fpuproc;
 
 extern struct user *proc0paddr;
-extern int cold;
 
 /* 
  * Declare these as initialized data so we can patch them.
@@ -101,12 +113,9 @@ int bufpages = 0;
 
 struct bat battable[16];
 
-#ifdef UVM
-/* ??? */
 vm_map_t exec_map = NULL;
 vm_map_t mb_map = NULL;
 vm_map_t phys_map = NULL;
-#endif
 
 int astpending;
 int ppc_malloc_ok = 0;
@@ -123,6 +132,10 @@ char *bootpath;
 char bootpathbuf[512];
 
 struct firmware *fw = NULL;
+
+#ifdef DDB
+void * startsym, *endsym;
+#endif
 
 void ofw_dbg(char *str);
 
@@ -143,21 +156,24 @@ int segment8_a_mapped = 0;
 
 extern int OF_stdout;
 extern int where;
+
+/* XXX, called from asm */
+void initppc(u_int startkernel, u_int endkernel, char *args);
+
 void
 initppc(startkernel, endkernel, args)
 	u_int startkernel, endkernel;
 	char *args;
 {
-	int phandle, qhandle;
-	char name[32];
-	struct machvec *mp;
-	extern trapcode, trapsize;
-	extern dsitrap, dsisize;
-	extern isitrap, isisize;
-	extern decrint, decrsize;
-	extern tlbimiss, tlbimsize;
-	extern tlbdlmiss, tlbdlmsize;
-	extern tlbdsmiss, tlbdsmsize;
+	extern void *trapcode; extern int trapsize;
+	extern void *dsitrap; extern int dsisize;
+	extern void *isitrap; extern int isisize;
+	extern void *alitrap; extern int alisize;
+	extern void *decrint; extern int decrsize;
+	extern void *tlbimiss; extern int tlbimsize;
+	extern void *tlbdlmiss; extern int tlbdlmsize;
+	extern void *tlbdsmiss; extern int tlbdsmsize;
+	extern void *ddblow; extern int ddbsize;
 #if NIPKDB > 0
 	extern ipkdblow, ipkdbsize;
 #endif
@@ -261,6 +277,9 @@ where = 3;
 		case EXC_ISI:
 			bcopy(&isitrap, (void *)EXC_ISI, (size_t)&isisize);
 			break;
+		case EXC_ALI:
+			bcopy(&alitrap, (void *)EXC_ALI, (size_t)&alisize);
+			break;
 #endif
 		case EXC_DECR:
 			bcopy(&decrint, (void *)EXC_DECR, (size_t)&decrsize);
@@ -274,25 +293,24 @@ where = 3;
 		case EXC_DSMISS:
 			bcopy(&tlbdsmiss, (void *)EXC_DSMISS, (size_t)&tlbdsmsize);
 			break;
-#if NIPKDB > 0
 		case EXC_PGM:
 		case EXC_TRC:
 		case EXC_BPT:
+#if defined(DDB)
+			bcopy(&ddblow, (void *)exc, (size_t)&ddbsize);
+#else 
+#if NIPKDB > 0
 			bcopy(&ipkdblow, (void *)exc, (size_t)&ipkdbsize);
-			break;
 #endif
+#endif
+			break;
 		}
 
 	syncicache((void *)EXC_RST, EXC_LAST - EXC_RST + 0x100);
 
 
-#ifdef UVM
 	uvmexp.pagesize = 4096;
 	uvm_setpagesize();
-
-#else
-	vm_set_page_size();
-#endif
 
 	/*
 	 * Initialize pmap module.
@@ -325,12 +343,11 @@ where = 3;
 	/* make a copy of the args! */
 	strncpy(bootpathbuf, args, 512);
 	bootpath= &bootpathbuf[0];
-	args = bootpath;
-	while ( *++args && *args != ' ');
-	if (*args) {
-		*args++ = 0;
-		while (*args) {
-			switch (*args++) {
+	while ( *++bootpath && *bootpath != ' ');
+	if (*bootpath) {
+		*bootpath++ = 0;
+		while (*bootpath) {
+			switch (*bootpath++) {
 			case 'a':
 				boothowto |= RB_ASKNAME;
 				break;
@@ -343,11 +360,20 @@ where = 3;
 			case 'c':
 				boothowto |= RB_CONFIG;
 				break;
+			default:
+				break;
 			}
 		}
 	}			
+	bootpath= &bootpathbuf[0];
 #if 0
-	ddb_init((int)(esym - (&_end)), &_end, esym);
+	bcopy(args +strlen(args) + 1, &startsym, sizeof(startsym));
+	bcopy(args +strlen(args) + 5, &endsym, sizeof(endsym)); 
+	ddb_init((int)((u_int)endsym - (u_int)startsym), startsym, endsym);
+#endif
+
+#ifdef DDB
+	ddb_init();
 #endif
 
 	/*
@@ -462,13 +488,8 @@ cpu_startup()
 	 * and then give everything true virtual addresses.
 	 */
 	sz = (int)allocsys((caddr_t)0);
-#ifdef UVM
 	if ((v = (caddr_t)uvm_km_zalloc(kernel_map, round_page(sz))) == 0)
 		panic("startup: no room for tables");
-#else
-	if ((v = (caddr_t)kmem_alloc(kernel_map, round_page(sz))) == 0)
-		panic("startup: no room for tables");
-#endif
 	if (allocsys(v) - v != sz)
 		panic("startup: table size inconsistency");
 
@@ -477,7 +498,6 @@ cpu_startup()
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	sz = MAXBSIZE * nbuf;
-#ifdef UVM
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
 		    NULL, UVM_UNKNOWN_OFFSET,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
@@ -486,13 +506,6 @@ cpu_startup()
 	/*
 	addr = (vaddr_t)buffers;
 	*/
-#else
-	buffer_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr, sz, TRUE);
-	buffers = (char *)minaddr;
-	if (vm_map_find(buffer_map, vm_object_allocate(sz), (vm_offset_t)0,
-	   &minaddr, sz, FALSE) != KERN_SUCCESS)
-		panic("startup: cannot allocate buffers");
-#endif
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
 	if (base >= MAXBSIZE) {
@@ -506,8 +519,7 @@ cpu_startup()
 		struct vm_page *pg;
 		
 		curbuf = (vm_offset_t)buffers + i * MAXBSIZE;
-		curbufsize = CLBYTES * (i < residual ? base + 1 : base);
-#ifdef UVM
+		curbufsize = PAGE_SIZE * (i < residual ? base + 1 : base);
 		while (curbufsize) {
 			pg = uvm_pagealloc(NULL, 0, NULL, 0);
 			if (pg == NULL)
@@ -518,63 +530,33 @@ cpu_startup()
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
-#else
-		vm_map_pageable(buffer_map, curbuf, curbuf + curbufsize,
-		    FALSE);
-		vm_map_simplify(buffer_map, curbuf);
-#endif
 	}
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
 	 */
-#ifdef UVM
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr, 16 * NCARGS,
 	    TRUE, FALSE, NULL);
-#else
-	exec_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr, 16 * NCARGS,
-	    TRUE);
-#endif
 
 	/*
 	 * Allocate a submap for physio
 	 */
-#ifdef UVM
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, TRUE, FALSE, NULL);
-#else
-	phys_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr, VM_PHYS_SIZE,
-	    TRUE);
-#endif
 	ppc_malloc_ok = 1;
 	
-	/*
-	 * Allocate mbuf pool.
-	 */
-	mclrefcnt = (char *)malloc(NMBCLUSTERS + CLBYTES/MCLBYTES, M_MBUF,
-	    M_NOWAIT);
-	bzero(mclrefcnt, NMBCLUSTERS + CLBYTES/MCLBYTES);
-#ifdef UVM
 	mb_map = uvm_km_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
 	    VM_MBUF_SIZE, FALSE, FALSE, NULL);
-#else
-	mb_map = kmem_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
-	    VM_MBUF_SIZE, FALSE);
-#endif
 	
 	/*
 	 * Initialize timeouts.
 	 */
 	timeout_init();
 	
-#ifdef UVM
 	printf("avail mem = %d\n", ptoa(uvmexp.free));
-#else
-	printf("avail mem = %d\n", ptoa(cnt.v_free_count));
-#endif
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
-	    bufpages * CLBYTES);
+	    bufpages * PAGE_SIZE);
 	
 	
 	/*
@@ -582,22 +564,7 @@ cpu_startup()
 	 */
 	bufinit();
 
-	/*
-	 * Configure devices.
-	 */
 	devio_malloc_safe = 1;
-	configure();
-	
-	/*
-	 * Now allow hardware interrupts.
-	 */
-	{
-		int msr;
-		
-		splhigh();
-		__asm__ volatile ("mfmsr %0; ori %0, %0, %1; mtmsr %0"
-			      : "=r"(msr) : "K"(PSL_EE));
-	}
 }
 	
 
@@ -634,7 +601,7 @@ allocsys(v)
 	 * Decide on buffer space to use.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem * BUFCACHEPERCENT / (100 * CLSIZE);
+		bufpages = physmem * BUFCACHEPERCENT / 100;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -647,17 +614,14 @@ allocsys(v)
 		    MAXBSIZE * 7 / 10;
 
 	/* More buffer pages than fits into the buffers is senseless.  */
-	if (bufpages > nbuf * MAXBSIZE / CLBYTES)
-		bufpages = nbuf * MAXBSIZE / CLBYTES;
+	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
+		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
 	if (nswbuf == 0) {
 		nswbuf = (nbuf / 2) & ~1;
 		if (nswbuf > 256)
 			nswbuf = 256;
 	}
-#if !defined(UVM)
-	valloc(swbuf, struct buf, nswbuf);
-#endif
 	valloc(buf, struct buf, nbuf);
 	
 	return v;
@@ -725,7 +689,6 @@ sendsig(catcher, sig, mask, code, type, val)
 	struct sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
 	int oldonstack;
-	int pa;
 	
 	frame.sf_signum = sig;
 	
@@ -769,7 +732,7 @@ sendsig(catcher, sig, mask, code, type, val)
 			 - (p->p_emul->e_esigcode - p->p_emul->e_sigcode));
 
 #if WHEN_WE_ONLY_FLUSH_DATA_WHEN_DOING_PMAP_ENTER
-	pa = pmap_extract(vm_map_pmap(&p->p_vmspace->vm_map),tf->srr0);
+	pmap_extract(vm_map_pmap(&p->p_vmspace->vm_map),tf->srr0, &pa);
 	syncicache(pa, (p->p_emul->e_esigcode - p->p_emul->e_sigcode));
 #endif
 }
@@ -907,7 +870,6 @@ boot(howto)
 {
 	static int syncing;
 	static char str[256];
-	char *ap = str, *ap1 = ap;
 
 	boothowto = howto;
 	if (!cold && !(howto & RB_NOSYNC) && !syncing) {
@@ -1042,9 +1004,6 @@ systype(char *name)
  *
  */
 #include <dev/pci/pcivar.h>
-typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
 
 int ppc_configed_intr_cnt = 0;
 struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
@@ -1161,7 +1120,7 @@ bus_space_unmap_p(t, bsh, size)
 {
 	bus_addr_t paddr;
 
-	paddr = (bus_addr_t) pmap_extract(pmap_kernel(), bsh);
+	pmap_extract(pmap_kernel(), bsh, &paddr);
 	bus_space_unmap((t), (bsh), (size));
 	return paddr ;
 }
@@ -1173,20 +1132,15 @@ bus_space_unmap(t, bsh, size)
 {
 	bus_addr_t sva;
 	bus_size_t off, len;
-	bus_addr_t bpa;
 
 	/* should this verify that the proper size is freed? */
 	sva = trunc_page(bsh);
 	off = bsh - sva;
 	len = size+off;
 
-#ifdef UVM
 	uvm_km_free_wakeup(phys_map, sva, len);
-#else
-	kmem_free_wakeup(phys_map, sva, len);
-#endif
 #if 0
-	bpa = pmap_extract(pmap_kernel(), sva);
+	pmap_extract(pmap_kernel(), sva, &bpa);
 	if (extent_free(devio_ex, bpa, size, EX_NOWAIT | 
 		(ppc_malloc_ok ? EX_MALLOCOK : 0)))
 	{
@@ -1229,11 +1183,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 
 		vaddr = VM_MIN_KERNEL_ADDRESS + ppc_kvm_size;
 	} else {
-#ifdef UVM
 		vaddr = uvm_km_valloc_wait(phys_map, len);
-#else
-		vaddr = kmem_alloc_wait(phys_map, len);
-#endif
 	}
 	*bshp = vaddr + off;
 #ifdef DEBUG_BUS_MEM_ADD_MAPPING
@@ -1252,6 +1202,30 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	}
 	return 0;
 }
+
+int
+bus_space_alloc(tag, rstart, rend, size, alignment, boundary, cacheable, addrp, handlep)
+	bus_space_tag_t tag;
+	bus_addr_t rstart, rend;
+	bus_size_t size, alignment, boundary;
+	int cacheable;
+	bus_addr_t *addrp;
+        bus_space_handle_t *handlep;
+{
+
+	panic("bus_space_alloc: unimplemented");
+}
+
+void
+bus_space_free(tag, handle, size)
+	bus_space_tag_t tag;
+	bus_space_handle_t handle;
+	bus_size_t size;
+{
+
+	panic("bus_space_free: unimplemented");
+}
+
 void *
 mapiodev(pa, len)
 	paddr_t pa;
@@ -1270,11 +1244,7 @@ mapiodev(pa, len)
 			return (void *)pa;
 		}
 	}
-#ifdef UVM
 	va = vaddr = uvm_km_valloc(phys_map, size);
-#else
-	va = vaddr = kmem_alloc(phys_map, size);
-#endif
 
 	if (va == 0) 
 		return NULL;
@@ -1292,8 +1262,8 @@ mapiodev(pa, len)
 	return (void*) (va+off);
 }
 void 
-unmapiodev(va, p_size)
-	void *va;
+unmapiodev(kva, p_size)
+	void *kva;
 	psize_t p_size;
 {
 	vaddr_t vaddr;
@@ -1301,13 +1271,9 @@ unmapiodev(va, p_size)
 
 	size = p_size;
 
-	vaddr = trunc_page(va);
+	vaddr = trunc_page((vaddr_t)kva);
 
-#ifdef UVM
 	uvm_km_free_wakeup(phys_map, vaddr, size);
-#else
-	kmem_free_wakeup(phys_map, vaddr, size);
-#endif
 
 	for (; size > 0; size -= NBPG) {
 #if 0
@@ -1336,7 +1302,6 @@ __C(bus_space_copy_,BYTES)(v, h1, o1, h2, o2, c)			\
 	bus_space_handle_t h1, h2;					\
 	bus_size_t o1, o2, c;						\
 {									\
-	TYPE val;							\
 	TYPE *src, *dst;						\
 	int i;								\
 									\

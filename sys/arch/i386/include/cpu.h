@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.1 2001/04/18 16:07:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.2 2001/07/04 10:16:46 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -174,9 +174,6 @@ extern int cpu_f00f_bug;
 void fix_f00f __P((void));
 #endif
 
-/* autoconf.c */
-void	configure __P((void));
-
 /* dkcsum.c */
 void	dkcsumattach __P((void));
 
@@ -184,6 +181,7 @@ void	dkcsumattach __P((void));
 void	delay __P((int));
 void	dumpconf __P((void));
 void	cpu_reset __P((void));
+void	i386_proc0_tss_ldt_init __P((void));
 
 /* locore.s */
 struct region_descriptor;
@@ -214,8 +212,8 @@ int	math_emulate __P((struct trapframe *));
 #ifdef USER_LDT
 /* sys_machdep.h */
 void	i386_user_cleanup __P((struct pcb *));
-int	i386_get_ldt __P((struct proc *, char *, register_t *));
-int	i386_set_ldt __P((struct proc *, char *, register_t *));
+int	i386_get_ldt __P((struct proc *, void *, register_t *));
+int	i386_set_ldt __P((struct proc *, void *, register_t *));
 #endif
 
 /* isa_machdep.c */

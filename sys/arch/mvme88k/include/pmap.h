@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.1 2001/04/18 16:11:24 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.2 2001/07/04 10:20:04 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -74,9 +74,7 @@ extern struct pmap	kernel_pmap_store;
 #define	pmap_kernel()		(&kernel_pmap_store)
 #define pmap_resident_count(pmap) ((pmap)->stats.resident_count)
 /* Used in builtin/device_pager.c */
-#define pmap_phys_address(frame)        ((vm_offset_t) (M88K_PTOB(frame)))
-/* Used in kern/mach_timedev.c */
-#define pmap_phys_to_frame(phys)        ((int) (M88K_BTOP(phys)))
+#define pmap_phys_address(frame)        ((vm_offset_t) (ptoa(frame)))
 
 #define PMAP_ACTIVATE(proc)	pmap_activate(proc)
 #define PMAP_DEACTIVATE(proc)	pmap_deactivate(proc)
@@ -97,7 +95,6 @@ extern struct pmap	kernel_pmap_store;
 
 void pmap_activate(struct proc *p);
 void pmap_deactivate(struct proc *p);
-int pmap_check_transaction(pmap_t pmap, vm_offset_t va, vm_prot_t type);
 
 vm_offset_t pmap_map(
 		vm_offset_t virt,
@@ -127,8 +124,6 @@ vm_offset_t pmap_extract_unlocked(pmap_t pmap, vm_offset_t va);
 void copy_to_phys(vm_offset_t srcva, vm_offset_t dstpa, int bytecount);
 void copy_from_phys(vm_offset_t srcpa, vm_offset_t dstva, int bytecount);
 void pmap_redzone(pmap_t pmap, vm_offset_t va);
-boolean_t pmap_verify_free(vm_offset_t phys);
-boolean_t pmap_valid_page(vm_offset_t p);
 void icache_flush(vm_offset_t pa);
 void pmap_dcache_flush(pmap_t pmap, vm_offset_t va);
 void pmap_cache_flush(pmap_t pmap, vm_offset_t virt, int bytes, int mode);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.2 2001/05/14 21:36:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.3 2001/07/04 10:23:03 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -43,9 +43,7 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 
-#ifdef UVM
 #include <uvm/uvm_extern.h>
-#endif
 
 #include <machine/cpu.h>
 #include <machine/frame.h>
@@ -54,6 +52,8 @@
 #include <machine/psl.h>
 #include <machine/trap.h>
 #include <machine/db_machdep.h>
+
+static int fix_unaligned __P((struct proc *p, struct trapframe *frame));
 
 /* These definitions should probably be somewhere else				XXX */
 #define	FIRSTARG	3		/* first argument is in reg 3 */
@@ -137,13 +137,8 @@ trap(frame)
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
 			else
 				ftype = VM_PROT_READ;
-#ifdef UVM
 			if (uvm_fault(map, trunc_page(va), 0, ftype)
 			    == KERN_SUCCESS)
-#else
-			if (vm_fault(map, trunc_page(va), ftype, FALSE)
-			    == KERN_SUCCESS)
-#endif
 			{
 				return;
 			}
@@ -169,16 +164,9 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 				vftype = VM_PROT_WRITE;
 			} else
 				vftype = ftype = VM_PROT_READ;
-#ifdef UVM
 			if (uvm_fault(&p->p_vmspace->vm_map,
 				     trunc_page(frame->dar), 0, ftype)
-			    == KERN_SUCCESS)
-#else
-			if (vm_fault(&p->p_vmspace->vm_map,
-				     trunc_page(frame->dar), ftype, FALSE)
-			    == KERN_SUCCESS)
-#endif
-			{
+			    == KERN_SUCCESS) {
 				break;
 			}
 #if 0
@@ -196,16 +184,9 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 			int ftype;
 			
 			ftype = VM_PROT_READ | VM_PROT_EXECUTE;
-#ifdef UVM
 			if (uvm_fault(&p->p_vmspace->vm_map,
 				     trunc_page(frame->srr0), 0, ftype)
-			    == KERN_SUCCESS)
-#else
-			if (vm_fault(&p->p_vmspace->vm_map,
-				     trunc_page(frame->srr0), ftype, FALSE)
-			    == KERN_SUCCESS)
-#endif
-			{
+			    == KERN_SUCCESS) {
 				break;
 			}
 		}
@@ -227,11 +208,7 @@ printf("isi iar %x\n", frame->srr0);
 			int nsys, n;
 			register_t args[10];
 			
-#ifdef UVM
 			uvmexp.syscalls++;
-#else
-			cnt.v_syscall++;
-#endif
 			
 			nsys = p->p_emul->e_nsysent;
 			callp = p->p_emul->e_sysent;
@@ -338,8 +315,18 @@ syscall_bad:
 		break;
 
 	case EXC_ALI|EXC_USER:
-		/* alignment exception, kill process */
-		trapsignal(p, SIGSEGV, VM_PROT_EXECUTE, SEGV_MAPERR, sv);
+		/* alignment exception 
+		 * we check to see if this can be fixed up
+		 * by the code that fixes the typical gcc misaligned code
+		 * then kill the process if not.
+		 */
+		if (fix_unaligned(p, frame) == 0) {
+			frame->srr0 += 4;
+		} else {
+			sv.sival_int = frame->srr0;
+			trapsignal(p, SIGSEGV, VM_PROT_EXECUTE, SEGV_MAPERR,
+				sv);
+		}
 		break;
 
 	default:
@@ -361,7 +348,6 @@ mpc_print_pci_stat();
 	{
 		char *errstr[8];
 		int errnum = 0;
-		int i;
 
 		if (frame->srr1 & (1<<(31-11))) { 
 			/* floating point enabled program exception */
@@ -421,11 +407,7 @@ for (i = 0; i < errnum; i++) {
 
 	astpending = 0;		/* we are about to do it */
 
-#ifdef UVM
 	uvmexp.softs++;
-#else
-	cnt.v_soft++;
-#endif
 
 	if (p->p_flag & P_OWEUPC) {
 		p->p_flag &= ~P_OWEUPC;
@@ -588,4 +570,53 @@ copyout(kaddr, udaddr, len)
 	}
 	curpcb->pcb_onfault = 0;
 	return 0;
+}
+
+/*
+ * For now, this only deals with the particular unaligned access case
+ * that gcc tends to generate.  Eventually it should handle all of the
+ * possibilities that can happen on a 32-bit PowerPC in big-endian mode.
+ */
+
+static int
+fix_unaligned(p, frame)
+	struct proc *p;
+	struct trapframe *frame;
+{
+	int indicator = EXC_ALI_OPCODE_INDICATOR(frame->dsisr);
+
+	switch (indicator) {
+	case EXC_ALI_LFD:
+	case EXC_ALI_STFD:
+		{
+			int reg = EXC_ALI_RST(frame->dsisr);
+			double *fpr = &p->p_addr->u_pcb.pcb_fpu.fpr[reg];
+
+			/* Juggle the FPU to ensure that we've initialized
+			 * the FPRs, and that their current state is in
+			 * the PCB.
+			 */
+			if (fpuproc != p) {
+				if (fpuproc)
+					save_fpu(fpuproc);
+				enable_fpu(p);
+			}
+			save_fpu(p);
+
+			if (indicator == EXC_ALI_LFD) {
+				if (copyin((void *)frame->dar, fpr,
+				    sizeof(double)) != 0)
+					return -1;
+				enable_fpu(p);
+			} else {
+				if (copyout(fpr, (void *)frame->dar,
+				    sizeof(double)) != 0)
+					return -1;
+			}
+			return 0;
+		}
+		break;
+	}
+
+	return -1;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/procfs_machdep.c,v 1.1.2.1 2001/04/18 16:07:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/procfs_machdep.c,v 1.1.2.2 2001/07/04 10:16:41 niklas Exp $	*/
 /*	$NetBSD: procfs_machdep.c,v 1.6 2001/02/21 21:39:59 jdolecek Exp $	*/
 
 /*
@@ -115,11 +115,12 @@ procfs_getcpuinfstr(char *buf, int *len)
 	if (left <= 0)
 		return 0;
 
-		
+#if defined(I586_CPU) || defined(I686_CPU)
 	if (pentium_mhz != 0)
 		l = snprintf(p, left, "cpu MHz\t\t: %d\n",
 		    pentium_mhz);
 	else
+#endif
 		l = snprintf(p, left, "cpu MHz\t\t: unknown\n");
 
 	left -= l;

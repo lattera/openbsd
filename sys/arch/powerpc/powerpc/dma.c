@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/dma.c,v 1.1.2.2 2001/05/14 21:36:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/dma.c,v 1.1.2.3 2001/07/04 10:22:55 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -53,13 +53,13 @@
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
-#ifdef UVM
 #include <uvm/uvm.h>
 #include <uvm/uvm_page.h>
-#else
-#endif
 
 #include <machine/bus.h>
+int _dmamem_alloc_range( bus_dma_tag_t t, bus_size_t size,
+	bus_size_t alignment, bus_size_t boundary, bus_dma_segment_t *segs,
+	int nsegs, int *rsegs, int flags, vm_offset_t low, vm_offset_t high);
 
 /*
  * Common function for DMA map creation.  May be called by bus-specific
@@ -162,7 +162,7 @@ _dmamap_load(t, map, buf, buflen, p, flags)
 		/*
 		 * Get the physical address for this segment.
 		 */
-		curaddr = (bus_addr_t)pmap_extract(pmap, (vm_offset_t)vaddr);
+		pmap_extract(pmap, (vm_offset_t)vaddr, (paddr_t *)&curaddr);
 
 		/*
 		 * Compute the segment size, and adjust counts.
@@ -308,8 +308,6 @@ _dmamem_alloc(t, size, alignment, boundary, segs, nsegs, rsegs, flags)
 	int *rsegs;
 	int flags;
 {
-	extern int avail_end;
-
 	return (_dmamem_alloc_range(t, size, alignment, boundary,
 	    segs, nsegs, rsegs, flags, 0, 0xf0000000));
 }
@@ -342,11 +340,7 @@ _dmamem_free(t, segs, nsegs)
 		}
 	}
 
-#if defined(UVM)
 	uvm_pglistfree(&mlist);
-#else
-	vm_page_free_memory(&mlist);
-#endif
 }
 
 /*
@@ -367,11 +361,7 @@ _dmamem_map(t, segs, nsegs, size, kvap, flags)
 	int curseg;
 
 	size = round_page(size);
-#if defined(UVM)
 	va = uvm_km_valloc(kmem_map, size);
-#else
-	va = kmem_alloc_pageable(kmem_map, size);
-#endif
 	if (va == 0)
 		return (ENOMEM);
 
@@ -409,11 +399,7 @@ _dmamem_unmap(t, kva, size)
 #endif
 
 	size = round_page(size);
-#if defined(UVM)
 	uvm_km_free(kmem_map, (vm_offset_t)kva, size);
-#else
-	kmem_free(kmem_map, (vm_offset_t)kva, size);
-#endif
 }
 
 /*
@@ -482,13 +468,8 @@ _dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 	 * Allocate pages from the VM system.
 	 */
 	TAILQ_INIT(&mlist);
-#if defined(UVM)
 	error = uvm_pglistalloc(size, low, high,
 	    alignment, boundary, &mlist, nsegs, (flags & BUS_DMA_NOWAIT) == 0);
-#else
-	error = vm_page_alloc_memory(size, low, high,
-	    alignment, boundary, &mlist, nsegs, (flags & BUS_DMA_NOWAIT) == 0);
-#endif
 	if (error)
 		return (error);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_memrw.c,v 1.1 1996/04/19 16:08:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_memrw.c,v 1.1.16.1 2001/07/04 10:18:19 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.1 1996/02/22 23:23:35 gwr Exp $	*/
 
 /* 
@@ -52,7 +52,7 @@
  */
 void
 db_read_bytes(addr, size, data)
-	vm_offset_t	addr;
+	db_addr_t	addr;
 	register size_t	size;
 	register char	*data;
 {
@@ -79,7 +79,7 @@ db_read_bytes(addr, size, data)
  */
 void
 db_write_bytes(addr, size, data)
-	vm_offset_t	addr;
+	db_addr_t	addr;
 	register size_t	size;
 	register char	*data;
 {

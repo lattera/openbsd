@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.5.12.1 2001/05/14 21:37:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_uba.c,v 1.5.12.2 2001/07/04 10:24:24 niklas Exp $	*/
 /*	$NetBSD: if_uba.c,v 1.15 1999/01/01 21:43:18 ragge Exp $	*/
 
 /*
@@ -228,7 +228,7 @@ if_ubaget(ifu, ifr, totlen, ifp)
 			}
 			len = min(len, MCLBYTES);
 			m->m_len = len;
-			if (!claligned(cp)){
+			if (((vaddr_t)cp & PAGE_MASK) != 0) {
 				goto copy;
 			}
 			/*
@@ -347,7 +347,8 @@ if_ubaput(ifu, ifw, m)
 	cp = ifw->ifw_addr;
 	while (m) {
 		dp = mtod(m, char *);
-		if (claligned(cp) && claligned(dp) &&
+		if (((vaddr_t)cp & PAGE_MASK) == 0 &&
+		    ((vaddr_t)dp & PAGE_MASK) == 0 &&
 		    (m->m_len == MCLBYTES || m->m_next == (struct mbuf *)0)) {
 			struct pte *pte;
 			int *ip;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.1 2001/05/14 21:38:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.2 2001/07/04 10:24:33 niklas Exp $ */
 /*	$NetBSD: conf.c,v 1.44 1999/10/27 16:38:54 ragge Exp $	*/
 
 /*-
@@ -93,8 +93,10 @@ bdev_decl(idc);
 #include "uu.h"
 bdev_decl(uu);
 
+#if 0
 #include "rl.h"
 bdev_decl(rl);
+#endif
 
 #include "ccd.h"
 bdev_decl(ccd);
@@ -121,12 +123,6 @@ bdev_decl(cd);
 #include "ksyms.h"
 cdev_decl(ksyms);
 
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
-
 struct bdevsw	bdevsw[] =
 {
 	bdev_disk_init(NHP,hp),		/* 0: RP0?/RM0? */
@@ -143,7 +139,7 @@ struct bdevsw	bdevsw[] =
 	bdev_disk_init(NRB,idc),	/* 11: IDC (RB730) */
 	bdev_disk_init(NRX,rx),		/* 12: RX?? on MSCP */
 	bdev_disk_init(NUU,uu),		/* 13: TU58 on DL11 */
-	bdev_disk_init(NRL,rl),		/* 14: RL01/02 */
+	bdev_notdef(),			/* 14: RL01/02 */
 	bdev_tape_init(NMT,mt),		/* 15: MSCP tape */
 	bdev_notdef(),			/* 16: was: KDB50/RA?? */
 	bdev_disk_init(NCCD,ccd),	/* 17: concatenated disk driver */
@@ -202,11 +198,15 @@ int	bdevtomaj (bdev)
  */
 #include <dev/cons.h>
 
-#include "lkc.h"
-#if NLKC
-#define	smgcngetc lkccngetc
+#include "wskbd.h"
+#if NWSKBD > 0
+#define smgcngetc wskbd_cngetc
 #else
-#define	smgcngetc nullcngetc
+static int
+smgcngetc(dev_t dev)
+{
+	return 0;
+}
 #endif
 
 #define smgcnputc wsdisplay_cnputc
@@ -312,7 +312,9 @@ cdev_decl(idc);
 cdev_decl(fd);
 cdev_decl(gencn);
 cdev_decl(rx);
+#if 0
 cdev_decl(rl);
+#endif
 cdev_decl(ccd);
 cdev_decl(raid);
 cdev_decl(hd);
@@ -433,6 +435,11 @@ dev_decl(filedesc,open);
 #include "wskbd.h"
 #include "wsmouse.h"
 
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
+
 struct cdevsw	cdevsw[] =
 {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -467,7 +474,7 @@ struct cdevsw	cdevsw[] =
 	cdev_ch_init(NAD,ad),		/* 29: DT A/D converter */
 	cdev_disk_init(NRX,rx),		/* 30: RX?? on MSCP */
 	cdev_graph_init(NIK,ik),	/* 31: Ikonas frame buffer */
-	cdev_disk_init(NRL,rl),		/* 32: RL01/02 on unibus */
+	cdev_notdef(),			/* 32: RL01/02 on unibus */
 	cdev_log_init(1,log),		/* 33: /dev/klog */
 	cdev_tty_init(NDHU,dhu),	/* 34: DHU-11 */
 	cdev_cnstore_init(NCRL,crl),	/* 35: Console RL02 on 8600 */
@@ -477,7 +484,7 @@ struct cdevsw	cdevsw[] =
 	cdev_audio_init(NNP,np),	/* 39: NP Intelligent Board */
 	cdev_graph_init(NQV,qv),	/* 40: QVSS graphic display */
 	cdev_graph_init(NQD,qd),	/* 41: QDSS graphic display */
-	cdev_gen_ipf(NIPF,ipl),	/* 42: Packet filter */
+	cdev_pf_init(NPF,pf),		/* 42: packet filter */
 	cdev_ingres_init(NII,ii),	/* 43: Ingres device */
 	cdev_notdef(),			/* 44  was Datakit */
 	cdev_notdef(),			/* 45  was Datakit */
@@ -512,7 +519,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 74 */
 #endif
-
+	cdev_altq_init(NALTQ,altq),	/* 75: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -660,6 +667,17 @@ iszerodev(dev)
 {
 
 	return (major(dev) == 3 && minor(dev) == 12);
+}
+
+int
+getmajor(void *ptr)
+{
+	int i;
+
+	for (i = 0; i < nchrdev; i++)
+		if (cdevsw[i].d_open == ptr)
+			return i;
+	panic("getmajor");
 }
 
 dev_t

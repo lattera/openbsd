@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/autoconf.h,v 1.6 1999/11/09 04:13:54 rahnds Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/autoconf.h,v 1.6.2.1 2001/07/04 10:22:19 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -98,5 +98,17 @@ struct confargs {
 void	set_clockintr __P((void (*)(struct clockframe *)));
 void	set_iointr __P((void (*)(void *, int)));
 int	badaddr	__P((void *, u_int32_t));
+void calc_delayconst(void);
+void ofrootfound(void);
+
+typedef int mac_intr_handle_t;
+typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
+            int, int, int (*func)(void *), void *, char *));
+typedef void     (intr_disestablish_t) __P((void *, void *));
+
+intr_establish_t mac_intr_establish;
+intr_disestablish_t mac_intr_disestablish;
+extern intr_establish_t *intr_establish_func;
+extern intr_disestablish_t *intr_disestablish_func;
 
 #endif /* _MACHINE_AUTOCONF_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.1 2001/04/18 16:06:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.2 2001/07/04 10:16:05 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -348,7 +348,7 @@ trap(type, frame)
 		 */
 		if (va >= (vaddr_t)vm->vm_maxsaddr + vm->vm_ssize) {
 			if (ret == KERN_SUCCESS) {
-				vsize_t nss = clrnd(btoc(va - USRSTACK + NBPG));
+				vsize_t nss = btoc(va - USRSTACK + NBPG);
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
 			} else if (ret == KERN_PROTECTION_FAILURE)

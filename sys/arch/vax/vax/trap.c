@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.11.6.1 2001/05/14 21:39:12 niklas Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.11.6.2 2001/07/04 10:24:46 niklas Exp $     */
 /*	$NetBSD: trap.c,v 1.47 1999/08/21 19:26:20 matt Exp $     */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.
@@ -180,7 +180,7 @@ if(faultdebug)printf("trap accflt type %lx, code %lx, pc %lx, psl %lx\n",
 		 * because we must check for PTE pages anyway we don't
 		 * bother doing it here.
 		 */
-		addr = trunc_page(frame->code);
+		addr = trunc_page((vaddr_t)frame->code);
 		if ((umode == 0) && (frame->code < 0))
 			map = kernel_map;
 		else

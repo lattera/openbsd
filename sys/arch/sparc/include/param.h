@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.4 2001/05/14 21:37:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.5 2001/07/04 10:23:31 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -101,16 +101,12 @@ extern int nbpg, pgofset, pgshift;
 #define	BLKDEV_IOSIZE	2048
 #define	MAXPHYS		(64 * 1024)
 
-#define	CLSIZE		1
-#define	CLSIZELOG2	0
-
-/* NOTE: SSIZE must be multiple of CLSIZE */
 #define	SSIZE		1		/* initial stack size in pages */
 #define	USPACE		8192
 
 /*
  * Constants related to network buffer management.
- * MCLBYTES must be no larger than CLBYTES (the software page size), and,
+ * MCLBYTES must be no larger than the software page size, and,
  * on machines that exchange pages of input or output buffers with mbuf
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
@@ -131,11 +127,13 @@ extern int nbpg, pgofset, pgshift;
 #define MSGBUFSIZE	4096		/* cannot be changed without great pain */
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages.
+ * Size of kernel malloc arena in logical pages.
  */
 #ifndef	NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(6 * 1024 * 1024 / CLBYTES)
+#define	NKMEMCLUSTERS	(6 * 1024 * 1024 / PAGE_SIZE)
 #endif
+
+#define PMAP_NEW
 
 /* pages ("clicks") to disk blocks */
 #define	ctod(x)		((x) << (PGSHIFT - DEV_BSHIFT))

@@ -227,6 +227,11 @@ akbdattach(parent, self, aux)
 	case ADB_PBG3JPKBD:
 		printf("PowerBook G3 keyboard (Japanese layout)\n");
 		break;
+	case ADB_PBG4KBD:
+		printf("PowerBook G4 keyboard (Inverted T)\n");
+		break;
+	case ADB_IBITISOKBD:
+		printf("iBook keyboard with inverted T (ISO layout)\n");
 	default:
 		printf("mapped device (%d)\n", sc->handler_id);
 		break;
@@ -521,7 +526,7 @@ akbd_cngetc(v, type, data)
 	adb_polling = 1;
 
 	while (polledkey == -1) {
-		adb_intr();
+		adb_intr(NULL); /* adb does not use the argument */
 		DELAY(10000);				/* XXX */
 	}
 

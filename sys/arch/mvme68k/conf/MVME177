@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/MVME177,v 1.3.2.1 2001/04/18 16:10:20 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/MVME177,v 1.3.2.2 2001/07/04 10:19:21 niklas Exp $
 
 machine		mvme68k m68k
 
@@ -59,6 +59,7 @@ le*	at vmes0 addr 0xffff1600 ipl 1 vec 0x76 len 0x100
 vmel0	at vme0
 
 scsibus* at ssh?
+scsibus* at vs?
 
 sd*	at scsibus? target ? lun ?
 st*	at scsibus? target ? lun ?

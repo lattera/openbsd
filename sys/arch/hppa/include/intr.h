@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/intr.h,v 1.8.4.1 2001/04/18 16:06:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/intr.h,v 1.8.4.2 2001/07/04 10:16:10 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1990,1991,1992,1994 The University of Utah and
@@ -84,6 +84,7 @@
 #define	splimp()		__spllow(IPL_CLOCK)
 #define	splclock()		__spllow(IPL_CLOCK)
 #define	splstatclock()		__spllow(IPL_CLOCK)
+#define	splvm()			__spllow(IPL_CLOCK)
 #define	splhigh()		__splhigh(IPL_HIGH)
 
 /* software interrupt register */

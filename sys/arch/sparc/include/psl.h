@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.3.12.1 2001/05/14 21:37:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.3.12.2 2001/07/04 10:23:33 niklas Exp $	*/
 /*	$NetBSD: psl.h,v 1.12 1997/03/10 21:49:11 pk Exp $ */
 
 /*
@@ -201,6 +201,7 @@ SPLHOLD(spltty, PIL_TTY)
  * Memory allocation (must be as high as highest network, tty, or disk device)
  */
 SPLHOLD(splimp, 7)
+SPLHOLD(splvm, 7)
 
 /*
  * remove.

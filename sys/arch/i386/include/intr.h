@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.1 2001/04/18 16:07:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.2 2001/07/04 10:16:47 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -141,6 +141,7 @@ spllower(ncpl)
  * Miscellaneous
  */
 #define	splimp()	splraise(imask[IPL_IMP])
+#define	splvm()		splraise(imask[IPL_IMP])
 #define	splhigh()	splraise(imask[IPL_HIGH])
 #define	spl0()		spllower(0)
 

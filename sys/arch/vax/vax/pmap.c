@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.1 2001/05/14 21:39:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/pmap.c,v 1.10.12.2 2001/07/04 10:24:41 niklas Exp $ */
 /*	$NetBSD: pmap.c,v 1.74 1999/11/13 21:32:25 matt Exp $	   */
 /*
  * Copyright (c) 1994, 1998, 1999 Ludd, University of Lule}, Sweden.
@@ -351,7 +351,7 @@ pmap_decpteref(pmap, pte)
 		return;
 	index = ((vaddr_t)pte - (vaddr_t)pmap->pm_p0br) >> PGSHIFT;
 
-	pte = (struct pte *)trunc_page(pte);
+	pte = (struct pte *)trunc_page((vaddr_t)pte);
 #ifdef PMAPDEBUG
 	if (startpmapdebug)
 		printf("pmap_decpteref: pmap %p pte %p index %d refcnt %d\n",
@@ -457,14 +457,12 @@ if(startpmapdebug)printf("pmap_release: pmap %p\n",pmap);
 #endif
 	extent_free(ptemap, (u_long)pmap->pm_p0br,
 	    USRPTSIZE * sizeof(struct pte), EX_WAITOK);
-	mtpr(0, PR_TBIA);
 }
 
 void
-pmap_change_wiring(pmap, va, wired) 
-	register pmap_t pmap;
+pmap_unwire(pmap, va)
+	pmap_t pmap;
 	vaddr_t va;
-	boolean_t wired;
 {
 	int *p, *pte, i;
 
@@ -482,10 +480,7 @@ pmap_change_wiring(pmap, va, wired)
 	}
 	pte = &p[i];
 
-	if(wired) 
-		*pte |= PG_W;
-	else
-		*pte &= ~PG_W;
+	*pte &= ~PG_W;
 }
 
 /*
@@ -590,7 +585,6 @@ if(startpmapdebug)
 	ptp[5] = ptp[0] + 5;
 	ptp[6] = ptp[0] + 6;
 	ptp[7] = ptp[0] + 7;
-	mtpr(0, PR_TBIA);
 }
 
 void
@@ -654,7 +648,6 @@ if(startpmapdebug)
 		ptp[7] = ptp[0] + 7;
 		ptp += LTOHPN;
 	}
-	mtpr(0, PR_TBIA);
 }
 
 /*
@@ -708,6 +701,9 @@ if (startpmapdebug)
 			    (prot & VM_PROT_WRITE ? PG_RW : PG_RO);
 		}
 
+		if (wired)
+			 newpte |= PG_W;
+
 		/*
 		 * Check if a pte page must be mapped in.
 		 */
@@ -717,7 +713,7 @@ if (startpmapdebug)
 			panic("pmap_enter: bad index %d", index);
 #endif
 		if (pmap->pm_refcnt[index] == 0) {
-			vaddr_t ptaddr = trunc_page(&patch[i]);
+			vaddr_t ptaddr = trunc_page((vaddr_t)&patch[i]);
 			paddr_t phys;
 			struct vm_page *pg;
 #ifdef DEBUG
@@ -748,14 +744,18 @@ if (startpmapdebug)
 
 	oldpte = patch[i] & ~(PG_V|PG_M);
 
-	/* No mapping change. Can this happen??? */
-	if (newpte == oldpte) {
-		RECURSEEND;
-		mtpr(0, PR_TBIA); /* Always; safety belt */
-		return;
-	}
+	/* No mapping change. Not allowed to happen. */
+	if (newpte == oldpte)
+		panic("pmap_enter onto myself");
 
 	pv = pv_table + (p >> PGSHIFT);
+
+	/* wiring change? */
+	if (newpte == (oldpte | PG_W)) {
+		patch[i] |= PG_W; /* Just wiring change */
+		RECURSEEND;
+		return;
+	}
 
 	/* Changing mapping? */
 	oldpte &= PG_FRAME;
@@ -784,13 +784,10 @@ if (startpmapdebug)
 		}
 		splx(s);
 	} else {
-		/* No mapping change, just flush the TLB */
+		/* No mapping change, just flush the TLB; necessary? */
 		mtpr(0, PR_TBIA);
 	}
 	pmap->pm_stats.resident_count++;
-
-	if(wired) 
-		newpte |= PG_W;
 
 	if (access_type & VM_PROT_READ) {
 		pv->pv_attr |= PG_V;
@@ -860,14 +857,14 @@ if(startpmapdebug)
 		*pentry++ = (count>>VAX_PGSHIFT)|PG_V|
 		    (prot & VM_PROT_WRITE ? PG_KW : PG_KR);
 	}
-	mtpr(0,PR_TBIA);
 	return(virtuell+(count-pstart)+KERNBASE);
 }
 
-paddr_t
-pmap_extract(pmap, va)
+boolean_t
+pmap_extract(pmap, va, pap)
 	pmap_t pmap;
 	vaddr_t va;
+	paddr_t *pap;
 {
 	paddr_t pa = 0;
 	int	*pte, sva;
@@ -878,23 +875,26 @@ if(startpmapdebug)printf("pmap_extract: pmap %p, va %lx\n",pmap, va);
 
 	if (va & KERNBASE) {
 		pa = kvtophys(va); /* Is 0 if not mapped */
-		return(pa);
+		*pap = pa;
+		return (TRUE);
 	}
 
 	sva = PG_PFNUM(va);
 	if (va < 0x40000000) {
 		if (sva > (pmap->pm_p0lr & ~AST_MASK))
-			return NULL;
+			return (FALSE);
 		pte = (int *)pmap->pm_p0br;
 	} else {
 		if (sva < pmap->pm_p1lr)
-			return NULL;
+			return (FALSE);
 		pte = (int *)pmap->pm_p1br;
 	}
-	if (kvtopte(&pte[sva])->pg_pfn) 
-		return ((pte[sva] & PG_FRAME) << VAX_PGSHIFT);
+	if (kvtopte(&pte[sva])->pg_pfn) {
+		*pap = ((pte[sva] & PG_FRAME) << VAX_PGSHIFT);
+		return (TRUE);
+	}
 	
-	return (NULL);
+	return (FALSE);
 }
 
 /*

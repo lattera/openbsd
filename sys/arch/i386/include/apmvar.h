@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/apmvar.h,v 1.9.2.1 2001/04/18 16:07:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/apmvar.h,v 1.9.2.2 2001/07/04 10:16:45 niklas Exp $	*/
 
 /*
  *  Copyright (c) 1995 John T. Kohl

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.4 2001/04/18 16:07:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.5 2001/07/04 10:16:32 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -405,11 +405,7 @@ bios32_service(service, e, ei)
 
 	endpa = i386_round_page(BIOS32_END);
 
-#if defined(UVM)
 	sva = va = uvm_km_valloc(kernel_map, endpa);
-#else
-	sva = va = kmem_alloc_pageable(kernel_map, endpa);
-#endif
 	if (va == 0)
 		return (0);
 

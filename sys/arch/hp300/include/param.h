@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.1 2000/03/02 07:04:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.2 2001/07/04 10:15:52 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:38 veego Exp $	*/
 
 /*
@@ -58,6 +58,11 @@
 #include <machine/intr.h>
 
 #define	PGSHIFT		12		/* LOG2(NBPG) */
+
+#define	PAGE_SHIFT	12
+#define	PAGE_SIZE	(1 << PAGE_SHIFT)
+#define	PAGE_MASK	(PAGE_SIZE - 1)
+
 #define	KERNBASE	0x00000000	/* start of kernel virtual */
 
 #define	SEGSHIFT	22		/* LOG2(NBSEG) */
@@ -71,10 +76,10 @@
 #define	NPTEPG		(NBPG/(sizeof (pt_entry_t)))
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages
+ * Size of kernel malloc arena in logical pages
  */ 
 #ifndef NKMEMCLUSTERS
-# define	NKMEMCLUSTERS	(2048 * 1024 / CLBYTES)
+# define	NKMEMCLUSTERS	(2048 * 1024 / PAGE_SIZE)
 #endif
 
 #define MSGBUFSIZE 4096
@@ -99,5 +104,7 @@ void	_delay __P((u_int));
 #define HPMMBASEADDR(v) \
 	((unsigned)(v) & ~HPMMMASK)
 #endif
+
+#define PMAP_NEW
 
 #endif	/* !_MACHINE_PARAM_H_ */

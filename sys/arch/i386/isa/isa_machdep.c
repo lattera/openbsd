@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.1 2001/04/18 16:07:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.2 2001/07/04 10:16:54 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -491,7 +491,6 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 {
 	struct intrhand **p, *q, *ih;
 	static struct intrhand fakehand = {fakeintr};
-	extern int cold;
 
 	/* no point in sleeping unless someone can free memory. */
 	ih = malloc(sizeof *ih, M_DEVBUF, cold ? M_NOWAIT : M_WAITOK);
@@ -1047,7 +1046,7 @@ _isa_dma_check_buffer(buf, buflen, segcnt, boundary, p)
 		/*
 		 * Get physical address for this segment.
 		 */
-		pa = pmap_extract(pmap, (vm_offset_t)vaddr);
+		pmap_extract(pmap, (vm_offset_t)vaddr, &pa);
 		pa = trunc_page(pa);
 
 		/*

@@ -1,11 +1,9 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/Attic/std.hppa,v 1.2.4.1 2001/04/18 16:05:53 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/Attic/std.hppa,v 1.2.4.2 2001/07/04 10:15:58 niklas Exp $
 #
 # Standard devices present on every hppa workstation
 #
 
 machine	hppa
-
-option		UVM
 
 mainbus0 at root		# root "bus"
 

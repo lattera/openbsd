@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka53.c,v 1.2.4.1 2001/05/14 21:38:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka53.c,v 1.2.4.2 2001/07/04 10:24:37 niklas Exp $	*/
 /*	$NetBSD: ka53.c,v 1.2 2000/06/04 02:19:27 matt Exp $	*/
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden.
@@ -52,8 +52,6 @@ static void    ka53_hardmem(void *);
 static void    ka53_steal_pages(void);
 static void    ka53_cache_enable(void);
 static void    ka53_halt(void);
-
-extern int cold;		/* cold-start flag */
 
 /* 
  * Declaration of 680-specific calls.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.2 2001/04/18 16:11:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.3 2001/07/04 10:20:06 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -59,7 +59,6 @@
 struct	device *parsedisk __P((char *, int, int, dev_t *));
 void	setroot __P((void));
 void	swapconf __P((void));
-void	configure __P((void));
 char	buginchr __P((void));
 int	getsb __P((char *, int));
 void	dumpconf __P((void));
@@ -68,18 +67,13 @@ struct device	*getdisk __P((char *, int, int, dev_t *));
 
 int cold;   /* 1 if still booting */
 
-/* XXX must be allocated statically because of early console init */
-struct   map extiomap[EIOMAPSIZE/16];
-extern   void *extiobase;
-
 /*
  * called at boot time, configure all devices on the system.
  */
 void
-configure()
+cpu_configure()
 {
 	bootdv = NULL; /* set by device drivers (if found) */
-/*	rminit(extiomap, (long)EIOMAPSIZE, (long)1, "extio", EIOMAPSIZE/16);*/
 
 	if (config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");

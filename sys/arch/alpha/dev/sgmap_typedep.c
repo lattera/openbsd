@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/sgmap_typedep.c,v 1.1.2.1 2001/04/18 16:00:42 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/sgmap_typedep.c,v 1.1.2.2 2001/07/04 10:14:33 niklas Exp $ */
 /* $NetBSD: sgmap_typedep.c,v 1.13 1999/07/08 18:05:23 thorpej Exp $ */
 
 /*-
@@ -185,7 +185,7 @@ __C(SGMAP_TYPE,_load)(t, map, buf, buflen, p, flags, sgmap)
 		 * Get the physical address for this segment.
 		 */
 		if (p != NULL)
-			pa = pmap_extract(p->p_vmspace->vm_map.pmap, va);
+			pmap_extract(p->p_vmspace->vm_map.pmap, va, &pa);
 		else
 			pa = vtophys(va);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1.2.2 2001/05/14 21:36:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1.2.3 2001/07/04 10:22:38 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -46,16 +46,17 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
-#ifdef UVM
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <uvm/uvm.h>
-#endif
 
 #include <machine/autoconf.h>
 #include <machine/intr.h>
 #include <machine/psl.h>
 #include <machine/pio.h>
+#include <machine/powerpc.h>
+
+#include <dev/ofw/openfirm.h>
 
 #define ICU_LEN 64
 #define LEGAL_IRQ(x) ((x >= 0) && (x < ICU_LEN))
@@ -144,11 +145,6 @@ u_int8_t *interrupt_reg;
 typedef void  (void_f) (void);
 extern void_f *pending_int_f;
 int prog_switch (void *arg);
-typedef int mac_intr_handle_t;
-
-typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
 
 intr_establish_t macintr_establish;
 intr_disestablish_t macintr_disestablish;
@@ -162,7 +158,6 @@ macintr_attach(parent, self, aux)
 	void *aux;
 {
 	struct confargs *ca = aux;
-	struct macintr_softc *sc = (void *)self;
 	extern intr_establish_t *intr_establish_func;
 	extern intr_disestablish_t *intr_disestablish_func;
 
@@ -179,6 +174,8 @@ macintr_attach(parent, self, aux)
 
 	mac_intr_establish(parent, 0x14, IST_LEVEL, IPL_HIGH,
 		prog_switch, (void *)0x14, "prog button");
+
+	ppc_intr_enable(1);
 
 	printf("\n");
 }
@@ -241,7 +238,6 @@ macintr_establish(lcv, irq, type, level, ih_fun, ih_arg, name)
 {
 	struct intrhand **p, *q, *ih;
 	static struct intrhand fakehand;
-	extern int cold;
 
 	fakehand.ih_next = NULL;
 	fakehand.ih_fun  = fakeintr;
@@ -505,7 +501,7 @@ cntlzw(x)
 void
 mac_ext_intr()
 {
-	int i, irq = 0;
+	int irq = 0;
 	int o_imen, r_imen;
 	int pcpl;
 	struct intrhand *ih;
@@ -541,10 +537,7 @@ printf("calling handler %x\n", ih->ih_fun);
 			ih = ih->ih_next;
 		}
 
-#ifdef UVM
 		uvmexp.intrs++;
-#else
-#endif
 		evirq[hwirq[irq]].ev_count++;
 	}
 	int_state &= ~r_imen;

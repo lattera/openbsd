@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.1 2000/03/02 07:04:30 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.2 2001/07/04 10:19:31 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -62,6 +62,11 @@
 #define	PGSHIFT		12		/* LOG2(NBPG) */
 #define	NBPG		(1 << PGSHIFT)	/* bytes/page */
 #define	PGOFSET		(NBPG-1)	/* byte offset into page */
+
+#define	PAGE_SHIFT	12
+#define	PAGE_SIZE	(1 << PAGE_SHIFT)
+#define	PAGE_MASK	(PAGE_SIZE - 1)
+
 #define	NPTEPG		(NBPG/(sizeof (pt_entry_t)))
 
 #define	SEGSHIFT	22		/* LOG2(NBSEG) */
@@ -77,10 +82,6 @@
 #define	BLKDEV_IOSIZE	2048
 #define	MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 
-#define	CLSIZELOG2	0
-#define	CLSIZE		(1 << CLSIZELOG2)
-
-/* NOTE: SSIZE, SINCR and UPAGES must be multiples of CLSIZE */
 #define	SSIZE		1		/* initial stack size/NBPG */
 #define	SINCR		1		/* increment of stack/NBPG */
 #define	UPAGES		2		/* pages of u-area */
@@ -88,7 +89,7 @@
 
 /*
  * Constants related to network buffer management.
- * MCLBYTES must be no larger than CLBYTES (the software page size), and,
+ * MCLBYTES must be no larger than the software page size, and,
  * on machines that exchange pages of input or output buffers with mbuf
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
@@ -109,10 +110,10 @@
 #define MSGBUFSIZE	4096
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages
+ * Size of kernel malloc arena in logical pages
  */ 
 #ifndef	NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(2048 * 1024 / CLBYTES)
+#define	NKMEMCLUSTERS	(2048 * 1024 / PAGE_SIZE)
 #endif
 
 /* pages ("clicks") to disk blocks */

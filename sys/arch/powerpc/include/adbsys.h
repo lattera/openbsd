@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/adbsys.h,v 1.2.2.1 2001/04/18 16:13:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/adbsys.h,v 1.2.2.2 2001/07/04 10:22:18 niklas Exp $	*/
 /*	$NetBSD: adbsys.h,v 1.4 2000/12/19 02:59:24 tsubai Exp $	*/
 
 /*-
@@ -120,6 +120,8 @@ typedef struct adb_dev_s{
 #define ADB_PBEXTKBD	24
 #define ADB_DESIGNKBD	27	/* XXX Needs to be verified XXX */
 #define ADB_PBJPKBD	30
+#define ADB_PBG4KBD	195
+#define ADB_IBITISOKBD	196
 #define ADB_PBG3JPKBD	201
 
 	/* Interesting mouse handler IDs */
@@ -168,5 +170,13 @@ typedef struct adb_listencmd_s{
 #define ADBIOCLISTENCMD		_IOW('A', 133, adb_listencmd_t)
 
 void	adb_init __P((void));
+
+#ifdef _KERNEL
+int	adb_poweroff __P((void));
+void	adb_restart __P((void));
+int	CountADBs __P((void));
+void	ADBReInit __P((void));
+int	adb_read_date_time __P((unsigned long *));
+#endif
 
 #endif /* _ADBSYS_MACHINE_ */

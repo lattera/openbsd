@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.10.12.2 2001/05/14 21:37:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.10.12.3 2001/07/04 10:24:16 niklas Exp $	*/
 /*	$NetBSD: sun3_startup.c,v 1.55 1996/11/20 18:57:38 gwr Exp $	*/
 
 /*-
@@ -143,7 +143,8 @@ high_segment_alloc(npages)
 /*
  * Prepare for running the PROM monitor
  */
-static void sun3_mode_monitor()
+static void
+sun3_mode_monitor()
 {
 	/* Install PROM vector table and enable NMI clock. */
 	/* XXX - Disable watchdog action? */
@@ -206,7 +207,7 @@ sun3_mon_halt()
 	/*NOTREACHED*/
 }
 
-void
+__dead void
 sun3_mon_reboot(bootstring)
 	char *bootstring;
 {
@@ -382,9 +383,9 @@ sun3_vm_init(kehp)
 	esym = end;
 	/* This will advance esym past the symbols. */
 	sun3_save_symtab(kehp);
-	virtual_avail = m68k_round_page(esym);
+	virtual_avail = round_page(esym);
 #else
-	virtual_avail = m68k_round_page(end);
+	virtual_avail = round_page(end);
 #endif
 	virtual_end = VM_MAX_KERNEL_ADDRESS;
 
@@ -402,7 +403,7 @@ sun3_vm_init(kehp)
 		/* PROM version 1 or later. */
 		avail_end = *romp->memoryAvail;
 	}
-	avail_end = m68k_trunc_page(avail_end);
+	avail_end = trunc_page(avail_end);
 
 	/*
 	 * Steal some special-purpose, already mapped pages.
@@ -421,8 +422,8 @@ sun3_vm_init(kehp)
 	pte |= PG_NC;
 	set_pte(va, pte);
 	/* offset by half a page to avoid PROM scribbles */
-	msgbufp = (struct msgbuf *)(va + (NBPG >> 1));
-	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
+	msgbufp = (struct msgbuf *)(va + MSGBUFOFF);
+	initmsgbuf((caddr_t)msgbufp, MSGBUFSIZE);
 
 	/*
 	 * Virtual and physical pages for proc[0] u-area (already mapped)
@@ -431,19 +432,6 @@ sun3_vm_init(kehp)
 	proc0_user_pa = avail_start;
 	virtual_avail += UPAGES*NBPG;
 	avail_start   += UPAGES*NBPG;
-#if 0
-	/* Make them non-cached.
-	 * XXX - Make these non-cached at their full-time mapping address.
-	 * XXX - Still need to do that? -gwr
-	 */
-	va = (vm_offset_t) proc0paddr;
-	while (va < virtual_avail) {
-		pte = get_pte(va);
-		pte |= PG_NC;
-		set_pte(va, pte);
-		va += NBPG;
-	}
-#endif
 
 	/*
 	 * Virtual and physical page used by dumpsys()
@@ -591,7 +579,7 @@ sun3_vm_init(kehp)
 
 	/* text */
 	va = (vm_offset_t) kernel_text;
-	eva = m68k_trunc_page(etext);
+	eva = trunc_page(etext);
 	while (va < eva) {
 		pte = get_pte(va);
 		if ((pte & (PG_VALID|PG_TYPE)) != PG_VALID) {
@@ -605,7 +593,7 @@ sun3_vm_init(kehp)
 	}
 
 	/* data and bss */
-	eva = m68k_round_page(end);
+	eva = round_page(end);
 	while (va < eva) {
 		pte = get_pte(va);
 		if ((pte & (PG_VALID|PG_TYPE)) != PG_VALID) {
@@ -737,8 +725,8 @@ tracedump(x1)
  */
 void
 v_handler(addr, str)
-int addr;
-char *str;
+	int addr;
+	char *str;
 {
 
 	switch (*str) {
@@ -880,8 +868,6 @@ void
 sun3_bootstrap(keh)
 	struct exec keh;	/* kernel exec header */
 {
-	extern int cold;
-
 	/* First, Clear BSS. */
 	bzero(edata, end - edata);
 

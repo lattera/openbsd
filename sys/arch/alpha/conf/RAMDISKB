@@ -1,13 +1,20 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/RAMDISKB,v 1.6.2.1 2001/04/18 16:00:37 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/RAMDISKB,v 1.6.2.2 2001/07/04 10:14:30 niklas Exp $
 #	$NetBSD: RAMDISK,v 1.9 1996/12/03 17:25:33 cgd Exp $
 
 machine	alpha			# architecture, used by config; REQUIRED
 
-option		UVM		# required
 option		PMAP_NEW	# required
+option		SMALL_KERNEL
 
 # CPU Support; at least one is REQUIRED
-option          DEC_550		# Miata:	Digital Personal Workstation
+#option		DEC_3000_500	# Flamingo etc:	3000/[4-9]00*
+#option		DEC_3000_300	# Pelican etc:	3000/300*
+#option		DEC_2100_A50	# Avanti etc:	AlphaStation 400, 200, etc.
+#option		DEC_KN20AA	# KN20AA:	AlphaStation 600
+#option		DEC_AXPPCI_33	# NoName:	AXPpci33, etc.
+#option		DEC_EB164	# EB164:	AlphaPC 164
+#option		DEC_2000_300	# "Jensen":	2000/300 (DECpc AXP 150)
+#option		DEC_550		# Miata:	Digital Personal Workstation
 option		DEC_6600	# EV6:		264DP OEM Board
 option		API_UP1000	# EV6:		Alpha Processor UP1000
 
@@ -20,7 +27,6 @@ maxusers	8			# estimated number of users
 
 # File system options
 option		FFS		# Fast file system
-option		KERNFS		# pseudo-fs to get at kernel internals
 
 # Networking options
 option		INET		# Internet protocol suite
@@ -64,7 +70,7 @@ de*	at	pci? dev ? function ?		# 21x4[012]-based Ethernet
 #xl*	at	pci? dev ? function ?		# 3COM 3c9xx (untested)
 #fpa*	at	pci? dev ? function ?		# DEC DEFPA FDDI cards
 #le*	at	pci? dev ? function ?		# PCI LANCE Ethernet (untested)
-ncr*	at	pci? dev ? function ?		# NCR 53c8xx SCSI
+siop*	at	pci? dev ? function ?		# NCR 53c8xx SCSI
 pceb*	at	pci? dev ? function ?		# Intel PCI-EISA brige
 vga*	at	pci? dev ? function ?		# PCI VGA graphics
 ppb*	at	pci? dev ? function ?		# PCI-PCI bridges
@@ -117,7 +123,7 @@ wd*	at pciide? channel ? drive ? flags 0x0000
 
 # SCSI bus support
 #scsibus* at	asc?
-scsibus* at	ncr?
+scsibus* at	siop?
 scsibus* at	isp?
 
 # SCSI devices

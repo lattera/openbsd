@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/Makefile,v 1.7.10.1 2001/04/18 16:06:58 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/Makefile,v 1.7.10.2 2001/07/04 10:16:16 niklas Exp $
 #	$NetBSD: Makefile,v 1.6 1996/02/01 22:31:28 mycroft Exp $
 #	@(#)Makefile	7.3 (Berkeley) 6/9/91
 
@@ -9,18 +9,19 @@
 NOPROG=	noprog
 NOMAN=	noman
 
-SUBDIR=	stand isa/pcvt/Util
+SUBDIR=	stand
 
 TI386=	../i386/tags
 SI386=	../i386/eisa/*.[ch] ../i386/i386/*.[ch] ../i386/include/*.h \
 	../i386/include/pc/*.h ../i386/isa/*.[ch] ../i386/pci/*.[ch]
 AI386=	../i386/i386/*.s ../i386/isa/*.s
+GI386= ../../gnu/arch/i386/*/*.[ch]
 
 # Directories in which to place i386 tags links
 DI386=	conf eisa i386 include isa pci
 
 tags:
-	-ctags -wdtf ${TI386} ${COMM} ${SI386}
+	-ctags -wdtf ${TI386} ${COMM} ${SI386} ${GI386}
 	egrep "^ENTRY(.*)|^ALTENTRY(.*)" ${AI386} | \
 	    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3 \1 /^\2(\3\4$$/;" \
 		>> ${TI386}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mem.c,v 1.5.2.1 2001/05/14 21:36:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mem.c,v 1.5.2.2 2001/07/04 10:22:59 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.1 1996/09/30 16:34:50 ws Exp $ */
 
 /*
@@ -46,19 +46,26 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/buf.h>
 #include <sys/systm.h>
+#include <sys/ioccom.h>
 #include <sys/uio.h>
 #include <sys/malloc.h>
+#include <sys/types.h>
+
+#include <machine/cpu.h>
 
 #include <vm/vm.h>
+#include <uvm/uvm_extern.h>
+
+#include <machine/conf.h>
 
 /*ARGSUSED*/
 int
-mmopen(dev, flag, mode)
+mmopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	switch (minor(dev)) {
@@ -74,9 +81,10 @@ mmopen(dev, flag, mode)
 
 /*ARGSUSED*/
 int
-mmclose(dev, flag, mode)
+mmclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
+	struct proc *p;
 {
 
 	return 0;
@@ -89,8 +97,8 @@ mmrw(dev, uio, flags)
 	struct uio *uio;
 	int flags;
 {
-	vm_offset_t o, v;
-	u_int c;
+	vm_offset_t v;
+	vm_size_t c;
 	struct iovec *iov;
 	int error = 0;
 	static caddr_t zeropage;
@@ -135,10 +143,10 @@ mmrw(dev, uio, flags)
 				break;
 			}
 			if (zeropage == NULL) {
-				zeropage = (caddr_t)malloc(CLBYTES, M_TEMP, M_WAITOK);
-				bzero(zeropage, CLBYTES);
+				zeropage = (caddr_t)malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				bzero(zeropage, PAGE_SIZE);
 			}
-			c = min(iov->iov_len, CLBYTES);
+			c = min(iov->iov_len, PAGE_SIZE);
 			error = uiomove(zeropage, c, uio);
 			continue;
 

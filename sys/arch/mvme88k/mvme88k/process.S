@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process.S,v 1.5.6.1 2001/04/18 16:11:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process.S,v 1.5.6.2 2001/07/04 10:20:21 niklas Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -30,14 +30,10 @@
  *
  */
 
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
-
-#include "assym.s"
-#include "machine/asm.h"
-#include "machine/psl.h"
-#include "machine/intr.h"
+#include "assym.h"
+#include <machine/asm.h>
+#include <machine/psl.h>
+#include <machine/intr.h>
 
 	data
 	align 4

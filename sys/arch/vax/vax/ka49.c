@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka49.c,v 1.1.8.1 2001/05/14 21:38:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka49.c,v 1.1.8.2 2001/07/04 10:24:35 niklas Exp $	*/
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -49,8 +49,6 @@ static	void	ka49_hardmem __P((void *));
 static	void	ka49_steal_pages __P((void));
 static	void	ka49_cache_enable __P((void));
 static	void	ka49_halt __P((void));
-
-extern int cold;		/* cold-start flag */
 
 /* 
  * Declaration of 49-specific calls.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.9 1998/03/01 14:12:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.9.10.1 2001/07/04 10:18:19 niklas Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.20 1997/02/05 05:10:25 scottr Exp $	*/
 
 /* 
@@ -87,9 +87,9 @@ db_var_short(varp, valp, op)
 #define	MAXINT	0x7fffffff
 
 #if 0
-#define	INKERNEL(va)	(((vm_offset_t)(va)) >= VM_MIN_KERNEL_ADDRESS && \
-			 (((vm_offset_t)(va)) < (USRSTACK - MAXSSIZ) || \
-			  ((vm_offset_t)(va)) >= USRSTACK))
+#define	INKERNEL(va)	(((vaddr_t)(va)) >= VM_MIN_KERNEL_ADDRESS && \
+			 (((vaddr_t)(va)) < (USRSTACK - MAXSSIZ) || \
+			  ((vaddr_t)(va)) >= USRSTACK))
 #else
 /* XXX - Slight hack... */
 extern int curpcb;

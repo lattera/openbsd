@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.1 2001/04/18 16:11:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.2 2001/07/04 10:20:24 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -54,14 +54,13 @@
 #include <sys/buf.h>
 #include <sys/user.h>
 #include <sys/vnode.h>
+#include <sys/extent.h>
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <vm/vm_map.h>
 
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 #include <machine/cpu.h>
 #include <machine/cpu_number.h>
@@ -69,7 +68,7 @@
 #include <machine/cmmu.h>
 #include <machine/pte.h>
 
-extern struct map *iomap;
+extern struct extent *iomap_extent;
 extern vm_map_t   iomap_map;
 
 /*
@@ -182,11 +181,7 @@ cpu_exit(struct proc *p)
 
 	(void) splimp();
 
-#if defined(UVM)
 	uvmexp.swtch++;
-#else
-	cnt.v_swtch++;
-#endif
 	switch_exit(p);
 	/* NOTREACHED */
 }
@@ -242,7 +237,8 @@ vmapbuf(bp, len)
 	vm_size_t len;
 {
 	register caddr_t addr;
-	register vm_offset_t pa, kva, off;
+	register vm_offset_t kva, off;
+	vm_offset_t pa;
 	struct pmap *pmap;
 
 #ifdef DIAGNOSTIC
@@ -250,7 +246,7 @@ vmapbuf(bp, len)
 		panic("vmapbuf");
 #endif
 
-	addr = (caddr_t)trunc_page(bp->b_saveaddr = bp->b_data);
+	addr = (caddr_t)trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
 	off = (vm_offset_t)bp->b_saveaddr & PGOFSET;
 	len = round_page(off + len);
 	pmap = vm_map_pmap(&bp->b_proc->p_vmspace->vm_map);
@@ -262,11 +258,7 @@ vmapbuf(bp, len)
 	 * when the address gets a new mapping.
 	 */
 
-#if defined(UVM)
 	kva = uvm_km_valloc_wait(phys_map, len);
-#else
-	kva = kmem_alloc_wait(phys_map, len);
-#endif
 	
 	/*
 	 * Flush the TLB for the range [kva, kva + off]. Strictly speaking,
@@ -278,8 +270,7 @@ vmapbuf(bp, len)
 
 	bp->b_data = (caddr_t)(kva + off);
 	while (len > 0) {
-		pa = pmap_extract(pmap, (vm_offset_t)addr);
-		if (pa == 0)
+		if (pmap_extract(pmap, (vm_offset_t)addr, &pa) == FALSE)
 			panic("vmapbuf: null page frame");
 		pmap_enter(vm_map_pmap(phys_map), kva, pa,
 			   VM_PROT_READ|VM_PROT_WRITE, TRUE, 0);
@@ -305,21 +296,16 @@ vunmapbuf(bp, len)
 		panic("vunmapbuf");
 #endif
 
-	addr = trunc_page(bp->b_data);
+	addr = trunc_page((vaddr_t)bp->b_data);
 	off = (vm_offset_t)bp->b_data & PGOFSET;
 	len = round_page(off + len);
-#if defined(UVM)
 	uvm_km_free_wakeup(phys_map, addr, len);
-#else
-	kmem_free_wakeup(phys_map, addr, len);
-#endif
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;
 }
 
 
-#if 1
-/* XXX_FUTURE
+/*
  * Map a range [pa, pa+len] in the given map to a kernel address
  * in iomap space.
  *
@@ -330,8 +316,8 @@ vunmapbuf(bp, len)
 vm_offset_t
 iomap_mapin(vm_offset_t pa, vm_size_t len, boolean_t canwait)
 {
-	vm_offset_t		iova, tva, off, ppa;
-	register int 		s;
+	vm_offset_t	iova, tva, off, ppa;
+	int 		s, error;
 
 	if (len == 0)
 		return NULL;
@@ -341,19 +327,13 @@ iomap_mapin(vm_offset_t pa, vm_size_t len, boolean_t canwait)
 
 	len = round_page(off + len);
 
-	s = splimp();
-	for (;;) {
-		iova = rmalloc(iomap, len);
-		if (iova != 0)
-			break;
-		if (canwait) {
-			(void)tsleep(iomap, PRIBIO+1, "iomapin", 0);
-			continue;
-		}
-		splx(s);
-		return NULL;
-	}
+	s = splhigh();
+	error = extent_alloc(iomap_extent, len, PAGE_SIZE, 0,
+	    canwait ? EX_WAITSPACE : 0, &iova);
 	splx(s);
+
+	if (error != 0)
+		return NULL;
 	
 	cmmu_flush_tlb(1, iova, len);
 
@@ -386,8 +366,8 @@ iomap_mapin(vm_offset_t pa, vm_size_t len, boolean_t canwait)
 int
 iomap_mapout(vm_offset_t kva, vm_size_t len)
 {
-	register int 		s;
-	vm_offset_t 		off;
+	vm_offset_t 	off;
+	int 		s, error;
 
 	off = kva & PGOFSET;
 	kva = trunc_page(kva);
@@ -395,14 +375,14 @@ iomap_mapout(vm_offset_t kva, vm_size_t len)
 
 	pmap_remove(vm_map_pmap(iomap_map), kva, kva + len);
 
-	s = splimp();
-	rmfree(iomap, len, kva);
-	wakeup(iomap);
+	s = splhigh();
+	error = extent_free(iomap_extent, kva, len, EX_NOWAIT);
 	splx(s);
+	if (error != 0)
+		printf("iomap_mapout: extent_free failed\n");
+
 	return 1;
 }
-
-#endif /* XXX_FUTURE */
 
 /*
  * Allocate/deallocate a cache-inhibited range of kernel virtual address
@@ -440,7 +420,7 @@ mapiospace(caddr_t pa, int len)
 	int off = (u_long)pa & PGOFSET;
 	extern vm_offset_t phys_map_vaddr1;
 
-	pa = (caddr_t)trunc_page(pa);
+	pa = (caddr_t)trunc_page((paddr_t)pa);
 
 	pmap_enter(kernel_pmap, phys_map_vaddr1, (vm_offset_t)pa,
 		   VM_PROT_READ|VM_PROT_WRITE, 1, 0);
@@ -506,24 +486,27 @@ badpaddr(caddr_t pa, int size)
 
 /*
  * Move pages from one kernel virtual address to another.
- * Size must be a multiple of CLSIZE.
  */
 void
-pagemove(caddr_t from, caddr_t to, size_t size)
+pagemove(from, to, size)
+	caddr_t from, to;
+	size_t size;
 {
-	register vm_offset_t pa;
+	vm_offset_t pa;
 
 #ifdef DEBUG
-	if (size & CLOFSET)
+	if ((size & PAGE_MASK) != 0)
 		panic("pagemove");
 #endif
 	while (size > 0) {
-		pa = pmap_extract(kernel_pmap, (vm_offset_t)from);
+		pmap_extract(kernel_pmap, (vm_offset_t)from, &pa);
 #ifdef DEBUG
+#if 0
 		if (pa == 0)
 			panic("pagemove 2");
-		if (pmap_extract(kernel_pmap, (vm_offset_t)to) != 0)
+		if (pmap_extract(kernel_pmap, (vm_offset_t)to, XXX) != 0)
 			panic("pagemove 3");
+#endif
 #endif
 		pmap_remove(kernel_pmap,
 			    (vm_offset_t)from, (vm_offset_t)from + NBPG);
@@ -537,45 +520,12 @@ pagemove(caddr_t from, caddr_t to, size_t size)
 }
 
 u_int
-kvtop(vm_offset_t va)
+kvtop(va)
+	vm_offset_t va;
 {
+	vm_offset_t pa;
 	extern pmap_t kernel_pmap;
-	return ((u_int)pmap_extract(kernel_pmap, va));
+
+	pmap_extract(kernel_pmap, va, &pa);
+	return ((u_int)pa);
 }
-
-/*
- * Map `size' bytes of physical memory starting at `paddr' into
- * kernel VA space at `vaddr'.  Read/write and cache-inhibit status
- * are specified by `prot'.
- */ 
-#if 0
-physaccess(vaddr, paddr, size, prot)
-	void *vaddr, *paddr;
-	register int size, prot;
-{
-/*	register pt_entry_t *pte;*/
-	pte_template_t *pte;
-	register u_int page;
-
-	pte = kvtopte(vaddr);
-	page = (u_int)paddr & PG_FRAME;
-	for (size = btoc(size); size; size--) {
-		*pte++ = PG_V | prot | page;
-		page += NBPG;
-	}
-	TBIAS();
-}
-
-physunaccess(vaddr, size)
-	caddr_t vaddr;
-	register int size;
-{
-	register pt_entry_t *pte;
-
-	pte = kvtopte(vaddr);
-	for (size = btoc(size); size; size--)
-		*pte++ = PG_NV;
-	TBIAS();
-}
-
-#endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.1 2001/05/14 21:36:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.2 2001/07/04 10:23:04 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*
@@ -42,9 +42,7 @@
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 
-#ifdef UVM
 #include <uvm/uvm_extern.h>
-#endif
 
 #include <machine/pcb.h>
 
@@ -71,7 +69,8 @@ cpu_fork(p1, p2, stack, stacksize)
 	
 	pcb->pcb_pm = p2->p_vmspace->vm_map.pmap;
 
-	pcb->pcb_pmreal = (struct pmap *)pmap_extract(pmap_kernel(), (vm_offset_t)pcb->pcb_pm);
+	pmap_extract(pmap_kernel(),
+		 (vm_offset_t)pcb->pcb_pm, (paddr_t *)&pcb->pcb_pmreal);
 	
 	/*
 	 * Setup the trap frame for the new process
@@ -137,7 +136,8 @@ cpu_swapin(p)
 {
 	struct pcb *pcb = &p->p_addr->u_pcb;
 	
-	pcb->pcb_pmreal = (struct pmap *)pmap_extract(pmap_kernel(), (vm_offset_t)pcb->pcb_pm);
+	pmap_extract(pmap_kernel(),
+		(vm_offset_t)pcb->pcb_pm, (paddr_t *)pcb->pcb_pmreal);
 }
 
 /*
@@ -148,10 +148,11 @@ pagemove(from, to, size)
 	caddr_t from, to;
 	size_t size;
 {
-	vm_offset_t pa, va;
+	vaddr_t va;
+	paddr_t pa;
 	
 	for (va = (vm_offset_t)from; size > 0; size -= NBPG) {
-		pa = pmap_extract(pmap_kernel(), va);
+		pmap_extract(pmap_kernel(), va, &pa);
 		pmap_remove(pmap_kernel(), va, va + NBPG);
 		pmap_enter(pmap_kernel(), (vm_offset_t)to, pa,
 			   VM_PROT_READ | VM_PROT_WRITE, 1,
@@ -193,16 +194,14 @@ cpu_coredump(p, vp, cred, chdr)
 {
 	struct coreseg cseg;
 	struct md_coredump md_core;
-	struct trapframe *tf;
 	int error;
 	
-#if 1
 	CORE_SETMAGIC(*chdr, COREMAGIC, MID_ZERO, 0);
 	chdr->c_hdrsize = ALIGN(sizeof *chdr);
 	chdr->c_seghdrsize = ALIGN(sizeof cseg);
 	chdr->c_cpusize = sizeof md_core;
 
-	process_read_regs(p, &md_core);
+	process_read_regs(p, &(md_core.regs));
 	
 	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_ZERO, CORE_CPU);
 	cseg.c_addr = 0;
@@ -218,7 +217,6 @@ cpu_coredump(p, vp, cred, chdr)
 		return error;
 
 	chdr->c_nseg++;
-#endif
 	return 0;
 }
 
@@ -237,17 +235,13 @@ vmapbuf(bp, len)
 	if (!(bp->b_flags & B_PHYS))
 		panic("vmapbuf");
 #endif
-	faddr = trunc_page(bp->b_saveaddr = bp->b_data);
+	faddr = trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
 	off = (vm_offset_t)bp->b_data - faddr;
 	len = round_page(off + len);
-#ifdef UVM
 	taddr = uvm_km_valloc_wait(phys_map, len);
-#else
-	taddr = kmem_alloc_wait(phys_map, len);
-#endif
 	bp->b_data = (caddr_t)(taddr + off);
 	for (; len > 0; len -= NBPG) {
-		pa = pmap_extract(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map), faddr);
+		pmap_extract(vm_map_pmap(&bp->b_proc->p_vmspace->vm_map), faddr, &pa);
 		pmap_enter(vm_map_pmap(phys_map), taddr, pa,
 			   VM_PROT_READ | VM_PROT_WRITE, 1, 0);
 		faddr += NBPG;
@@ -269,14 +263,10 @@ vunmapbuf(bp, len)
 	if (!(bp->b_flags & B_PHYS))
 		panic("vunmapbuf");
 #endif
-	addr = trunc_page(bp->b_data);
+	addr = trunc_page((vaddr_t)bp->b_data);
 	off = (vm_offset_t)bp->b_data - addr;
 	len = round_page(off + len);
-#ifdef UVM
 	uvm_km_free_wakeup(phys_map, addr, len);
-#else
-	kmem_free_wakeup(phys_map, addr, len);
-#endif
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;
 }

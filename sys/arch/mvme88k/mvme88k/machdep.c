@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.3 2001/04/18 16:11:37 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.4 2001/07/04 10:20:18 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -74,6 +74,7 @@
 #include <sys/exec.h>
 #include <sys/sysctl.h>
 #include <sys/errno.h>
+#include <sys/extent.h>
 
 #include <net/netisr.h>
 
@@ -95,14 +96,12 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 #include <mvme88k/dev/sysconreg.h>
 #include <mvme88k/dev/pcctworeg.h>
 
-#include "assym.s"			/* EF_EPSR, etc. */
+#include "assym.h"			/* EF_EPSR, etc. */
 #include "ksyms.h"
 #if DDB
 #include <machine/db_machdep.h>
@@ -128,7 +127,6 @@ void m88110_Xfp_precise __P((void));
 void setupiackvectors __P((void));
 void regdump __P((struct trapframe *f));
 void dumpsys __P((void));
-void configure __P((void));
 void consinit __P((void));
 void kdb_init __P((void));
 
@@ -170,10 +168,12 @@ volatile vm_offset_t kernelva;
 volatile vm_offset_t utilva;
 volatile vm_offset_t sramva;
 volatile vm_offset_t obiova;
-volatile vm_offset_t extiova;
+
+int ssir;
+int want_ast;
+int want_resched;
 
 int physmem;	  /* available physical memory, in pages */
-int cold;	  /* boot process flag */
 vm_offset_t avail_end, avail_start, avail_next;
 int foodebug = 0;    /* for size_memory() */
 int longformat = 1;  /* for regdump() */
@@ -184,13 +184,9 @@ int BugWorks = 0;
  */
 int   safepri = 0;
 
-#if defined(UVM)
 vm_map_t exec_map = NULL;
 vm_map_t mb_map = NULL;
 vm_map_t phys_map = NULL;
-#else
-vm_map_t buffer_map;
-#endif
 
 /*
  * iomap stuff is for managing chunks of virtual address space that
@@ -199,15 +195,10 @@ vm_map_t buffer_map;
  * are mapped so that pa == va. XXX smurph.
  */
 
-#if defined(UVM)
 vaddr_t iomapbase;
-#else
-vm_offset_t iomapbase;
-#endif 
 
-struct map *iomap;
+struct extent *iomap_extent;
 vm_map_t   iomap_map;
-int      niomap;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -480,11 +471,7 @@ cpu_startup()
 	int sz, i;
 	vm_size_t size;    
 	int base, residual;
-#if defined(UVM)
 	vaddr_t minaddr, maxaddr, uarea_pages;
-#else
-	vm_offset_t minaddr, maxaddr, uarea_pages;
-#endif 
 
 	/*
 	 * Initialize error message buffer (at end of core).
@@ -509,11 +496,7 @@ cpu_startup()
 	 */
 	sz = (int)allocsys((caddr_t)0);
 
-#if defined(UVM)
-	if ((v = (caddr_t)uvm_km_zalloc(kernel_map, m88k_round_page(sz))) == 0)
-#else
-	if ((v = (caddr_t)kmem_alloc(kernel_map, m88k_round_page(sz))) == 0)
-#endif
+	if ((v = (caddr_t)uvm_km_zalloc(kernel_map, round_page(sz))) == 0)
 		panic("startup: no room for tables");
 	if (allocsys(v) - v != sz)
 		panic("startup: table size inconsistency");
@@ -522,16 +505,11 @@ cpu_startup()
 	 * Grab UADDR virtual address
 	 */
 	uarea_pages = UADDR;
-#if defined(UVM)
 	uvm_map(kernel_map, (vaddr_t *)&uarea_pages, USPACE,
 		NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
 						     UVM_PROT_NONE,
 						     UVM_INH_NONE,
 						     UVM_ADV_NORMAL, 0));
-#else
-	vm_map_find(kernel_map, vm_object_allocate(USPACE), 0,
-		    (vm_offset_t *)&uarea_pages, USPACE, TRUE);
-#endif
 	if (uarea_pages != UADDR) {
 		printf("uarea_pages %x: UADDR not free\n", uarea_pages);
 		panic("bad UADDR");
@@ -554,16 +532,11 @@ cpu_startup()
 		 */
 		bugromva = BUGROM_START;
 
-#if defined(UVM)
 		uvm_map(kernel_map, (vaddr_t *)&bugromva, BUGROM_SIZE,
 			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
-#else
-		vm_map_find(kernel_map, vm_object_allocate(BUGROM_SIZE), 0,
-			    (vm_offset_t *)&bugromva, BUGROM_SIZE, TRUE);
-#endif
 		if (bugromva != BUGROM_START) {
 			printf("bugromva %x: BUGROM not free\n", bugromva);
 			panic("bad bugromva");
@@ -573,16 +546,11 @@ cpu_startup()
 		 * Grab the SRAM space that we hardwired in pmap_bootstrap
 		 */
 		sramva = SRAM_START;
-#if defined(UVM)
 		uvm_map(kernel_map, (vaddr_t *)&sramva, SRAM_SIZE,
 			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
-#else
-		vm_map_find(kernel_map, vm_object_allocate(SRAM_SIZE), 0,
-			    (vm_offset_t *)&sramva, SRAM_SIZE, TRUE);
-#endif
 
 		if (sramva != SRAM_START) {
 			printf("sramva %x: SRAM not free\n", sramva);
@@ -593,16 +561,11 @@ cpu_startup()
 		 * Grab the OBIO space that we hardwired in pmap_bootstrap
 		 */
 		obiova = OBIO_START;
-#if defined(UVM)
 		uvm_map(kernel_map, (vaddr_t *)&obiova, OBIO_SIZE,
 			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
-#else
-		vm_map_find(kernel_map, vm_object_allocate(OBIO_SIZE), 0,
-			    (vm_offset_t *)&obiova, OBIO_SIZE, TRUE);
-#endif
 		if (obiova != OBIO_START) {
 			printf("obiova %x: OBIO not free\n", obiova);
 			panic("bad OBIO");
@@ -615,16 +578,11 @@ cpu_startup()
 		 * Grab the UTIL space that we hardwired in pmap_bootstrap
 		 */
 		utilva = MVME188_UTILITY;
-#if defined(UVM)
 		uvm_map(kernel_map, (vaddr_t *)&utilva, MVME188_UTILITY_SIZE,
 			NULL, UVM_UNKNOWN_OFFSET,UVM_MAPFLAG(UVM_PROT_NONE, 
 							     UVM_PROT_NONE,
 							     UVM_INH_NONE,
 							     UVM_ADV_NORMAL, 0));
-#else
-		vm_map_find(kernel_map, vm_object_allocate(MVME188_UTILITY_SIZE), 0,
-			    (vm_offset_t *)&utilva, MVME188_UTILITY_SIZE, TRUE);
-#endif
 		if (utilva != MVME188_UTILITY) {
 			printf("utilva %x: UTILITY area not free\n", utilva);
 			panic("bad utilva");
@@ -640,21 +598,12 @@ cpu_startup()
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	size = MAXBSIZE * nbuf;
-#if defined(UVM)
-	if (uvm_map(kernel_map, (vaddr_t *) &buffers, m88k_round_page(size),
+	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
-#else
-	buffer_map = kmem_suballoc(kernel_map, (vm_offset_t *)&buffers,
-				   &maxaddr, size, TRUE);
-	minaddr = (vm_offset_t)buffers;
-	if (vm_map_find(buffer_map, vm_object_allocate(size), (vm_offset_t)0,
-	    (vm_offset_t *)&minaddr, size, FALSE) != KERN_SUCCESS)
-		panic("startup: cannot allocate buffers");
-#endif
 
 	if ((bufpages / nbuf) >= btoc(MAXBSIZE)) {
 		/* don't want to alloc more physical mem than needed */
@@ -664,7 +613,6 @@ cpu_startup()
 	residual = bufpages % nbuf;
 
 	for (i = 0; i < nbuf; i++) {
-#if defined(UVM)
 		vsize_t curbufsize;
 		vaddr_t curbuf;
 		struct vm_page *pg;
@@ -676,7 +624,7 @@ cpu_startup()
 		 * "base" pages for the rest.
 		 */
 		curbuf = (vm_offset_t) buffers + (i * MAXBSIZE);
-		curbufsize = CLBYTES * ((i < residual) ? (base+1) : base);
+		curbufsize = PAGE_SIZE * ((i < residual) ? (base+1) : base);
 
 		while (curbufsize) {
 			pg = uvm_pagealloc(NULL, 0, NULL, 0);
@@ -689,36 +637,14 @@ cpu_startup()
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
-#else
-		vm_size_t curbufsize;
-		vm_offset_t curbuf;
-
-		/*
-		 * First <residual> buffers get (base+1) physical pages
-		 * allocated for them.  The rest get (base) physical pages.
-		 *
-		 * The rest of each buffer occupies virtual space,
-		 * but has no physical memory allocated for it.
-		 */
-		curbuf = (vm_offset_t)buffers + i * MAXBSIZE;
-		curbufsize = CLBYTES * (i < residual ? base+1 : base);
-		/* this faults in the required physical pages */
-		vm_map_pageable(buffer_map, curbuf, curbuf+curbufsize, FALSE);
-		vm_map_simplify(buffer_map, curbuf);
-#endif 
 	}
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
 	 */
-#if defined(UVM)
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   16*NCARGS, VM_MAP_PAGEABLE, FALSE, NULL);
-#else
-	exec_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr,
-				 16*NCARGS, TRUE);
-#endif
 	
 #ifdef DEBUG
 	printf("exe_map from 0x%x to 0x%x\n", (unsigned)minaddr, (unsigned)maxaddr);
@@ -727,60 +653,36 @@ cpu_startup()
 	 * Allocate map for physio.
 	 */
 
-#if defined(UVM)
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
-#else
-	phys_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr, 
-				 VM_PHYS_SIZE, TRUE);
-#endif
 	if (phys_map == NULL) {
 		panic("cpu_startup: unable to create phys_map");
 	}
 
 	/* 
-	 * Allocate map for external I/O XXX new code - smurph 
+	 * Allocate map for external I/O
 	 */
-#if defined(UVM)
 	iomap_map = uvm_km_suballoc(kernel_map, &iomapbase, &maxaddr,
 				   IOMAP_SIZE, 0, FALSE, NULL);
-#else
-	iomap_map = kmem_suballoc(kernel_map, &iomapbase, &maxaddr, 
-				  IOMAP_SIZE, TRUE);
-#endif 
 	if (iomap_map == NULL) {
 		panic("cpu_startup: unable to create iomap_map");
 	}
-	rminit(iomap, IOMAP_SIZE, (u_long)iomapbase, "iomap", NIOPMAP);
+	iomap_extent = extent_create("iomap", iomapbase,
+	    iomapbase + IOMAP_SIZE, M_DEVBUF, NULL, 0, EX_NOWAIT);
+	if (iomap_extent == 0)
+		panic("unable to allocate extent for iomap");
 
-	/*
-	 * Finally, allocate mbuf pool.  Since mclrefcnt is an off-size
-	 * we use the more space efficient malloc in place of kmem_alloc.
-	 */
-	mclrefcnt = (char *)malloc(NMBCLUSTERS+CLBYTES/MCLBYTES,
-				   M_MBUF, M_NOWAIT);
-	bzero(mclrefcnt, NMBCLUSTERS+CLBYTES/MCLBYTES);
-#if defined(UVM)
 	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr,
 				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-#else
-	mb_map = kmem_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
-			       VM_MBUF_SIZE, FALSE);
-#endif
 	
 	/*
 	 * Initialize timeouts
 	 */
 	timeout_init();
 
-#if defined(UVM)
 	printf("avail mem = %ld (%ld pages)\n", ptoa(uvmexp.free), uvmexp.free);
-#else
-	printf("avail mem = %ld (%ld pages)\n", ptoa(cnt.v_free_count),
-	    ptoa(cnt.v_free_count)/NBPG);
-#endif
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
-	    bufpages * CLBYTES);
+	    bufpages * PAGE_SIZE);
 
 #if 0 /* #ifdef MFS */
 	/*
@@ -820,7 +722,6 @@ cpu_startup()
 		printf("kernel does not support -c; continuing..\n");
 #endif
 	}
-	configure();
 }
 
 /*
@@ -874,10 +775,10 @@ allocsys(v)
 	 */
 	if (bufpages == 0) {
 		if (physmem < btoc(2 * 1024 * 1024))
-			bufpages = physmem / (10 * CLSIZE);
+			bufpages = physmem / 10;
 		else
 			bufpages = (btoc(2 * 1024 * 1024) + physmem) *
-			    BUFCACHEPERCENT / (100 * CLSIZE);
+			    BUFCACHEPERCENT / 100;
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;
@@ -892,26 +793,16 @@ allocsys(v)
 		    MAXBSIZE * 7 / 10;
 
 	/* More buffer pages than fits into the buffers is senseless.  */
-	if (bufpages > nbuf * MAXBSIZE / CLBYTES)
-		bufpages = nbuf * MAXBSIZE / CLBYTES;
+	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
+		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
 	if (nswbuf == 0) {
 		nswbuf = (nbuf / 2) &~ 1;  /* force even */
 		if (nswbuf > 256)
 			nswbuf = 256;	  /* sanity */
 	}
-#if !defined(UVM)
-	valloc(swbuf, struct buf, nswbuf);
-#endif
 	valloc(buf, struct buf, nbuf);
 
-#if 1 /*XXX_FUTURE*/
-	/*
-	 * Arbitrarily limit the number of devices mapping
-	 * the IO space at a given time to NIOPMAP (= 32, default).
-	 */
-	valloc(iomap, struct map, niomap = NIOPMAP);
-#endif
 	return v;
 }
 
@@ -1047,13 +938,8 @@ sendsig(catcher, sig, mask, code, type, val)
 		psp->ps_sigstk.ss_flags |= SA_ONSTACK;
 	} else
 		fp = (struct sigframe *)(tf->r[31] - fsize);
-#if defined(UVM)
 	if ((unsigned)fp <= USRSTACK - ctob(p->p_vmspace->vm_ssize)) 
 		(void)uvm_grow(p, (unsigned)fp);
-#else
-	if ((unsigned)fp <= USRSTACK - ctob(p->p_vmspace->vm_ssize))
-		(void)grow(p, (unsigned)fp);
-#endif
 
 #ifdef DEBUG
 	if ((sigdebug & SDB_FOLLOW) ||
@@ -1167,15 +1053,9 @@ register_t *retval;
 	if (sigdebug & SDB_FOLLOW)
 		printf("sigreturn: pid %d, scp %x\n", p->p_pid, scp);
 #endif
-#if defined(UVM)
 	if ((int)scp & 3 || uvm_useracc((caddr_t)scp, sizeof *scp, B_WRITE) == 0 ||
 	    copyin((caddr_t)scp, (caddr_t)&ksc, sizeof(struct sigcontext)))
 		return (EINVAL);
-#else
-	if ((int)scp & 3 || useracc((caddr_t)scp, sizeof *scp, B_WRITE) == 0 ||
-	    copyin((caddr_t)scp, (caddr_t)&ksc, sizeof(struct sigcontext)))
-		return (EINVAL);
-#endif
 
 	tf = p->p_md.md_tf;
 	scp = &ksc;
@@ -1273,18 +1153,23 @@ boot(howto)
 		 */
 		resettodr();
 	}
-	splhigh();	  /* extreme priority */
+
+	/* Disable interrupts. */
+	splhigh();
+
 	if (howto & RB_HALT) {
 		printf("halted\n\n");
-		bugreturn();
 	} else {
+		/* If rebooting and a dump is requested, do it. */
 		if (howto & RB_DUMP)
 			dumpsys();
-		doboot();
-		/*NOTREACHED*/
+
+		/* Run any shutdown hooks. */
+		doshutdownhooks();
 	}
+	doboot();
 	/*NOTREACHED*/
-	while (1);  /* to keep compiler happy, and me from going crazy */
+	for (;;);  /* to keep compiler happy, and me from going crazy */
 }
 
 #ifdef MVME188
@@ -1323,11 +1208,11 @@ dumpconf()
 			dumplo = nblks - btodb(ctob(physmem));
 	}
 	/*
-	 * Don't dump on the first CLBYTES (why CLBYTES?)
+	 * Don't dump on the first block
 	 * in case the dump device includes a disk label.
 	 */
-	if (dumplo < btodb(CLBYTES))
-		dumplo = btodb(CLBYTES);
+	if (dumplo < btodb(PAGE_SIZE))
+		dumplo = btodb(PAGE_SIZE);
 }
 
 /*
@@ -1452,11 +1337,7 @@ vm_offset_t
 get_slave_stack(void)
 {
 	vm_offset_t addr = 0;
-#if defined(UVM)
 	addr = (vm_offset_t)uvm_km_zalloc(kernel_map, INTSTACK_SIZE + 4096);
-#else
-	addr = (vm_offset_t)kmem_alloc(kernel_map, INTSTACK_SIZE + 4096);
-#endif
 
 	if (addr == NULL)
 		panic("Cannot allocate slave stack");
@@ -1501,14 +1382,19 @@ intr_findvec(start, end)
 {
 	int vec;
 
+#ifdef DIAGNOSTIC
 	/* Sanity check! */
 	if (start < 0 || end > 255 || start > end)
 		panic("intr_findvec(): bad parameters");
-	for (vec = start; vec < end; --vec){
+#endif
+
+	for (vec = start; vec < end; vec++){
 		if (intr_handlers[vec] == NULL)
 			return (vec);
 	}
+#ifdef DIAGNOSTIC
 	printf("intr_findvec(): uh oh....\n", vec);
+#endif
 	return (-1);
 }
 
@@ -2052,11 +1938,7 @@ dosoftint()
 {
 	if (ssir & SIR_NET) {
 		siroff(SIR_NET);
-#if defined(UVM)
 		uvmexp.softs++;
-#else
-		cnt.v_soft++;
-#endif
 #define DONETISR(bit, fn) \
 	do { \
 		if (netisr & (1 << bit)) { \
@@ -2070,11 +1952,7 @@ dosoftint()
 
 	if (ssir & SIR_CLOCK) {
 		siroff(SIR_CLOCK);
-#if defined(UVM)
 		uvmexp.softs++;
-#else
-		cnt.v_soft++;
-#endif
 		softclock();
 	}
 }
@@ -2220,7 +2098,6 @@ regdump(struct trapframe *f)
 void
 mvme_bootstrap(void)
 {
-	extern int cold;
 	extern int kernelstart;
 	extern vm_offset_t size_memory(void);
 	extern struct consdev *cn_tab;
@@ -2275,13 +2152,9 @@ mvme_bootstrap(void)
 	/* startup fake console driver.  It will be replaced by consinit() */
 	cn_tab = &bootcons;
 
-#if defined(UVM)
 	uvmexp.pagesize = NBPG;
 	uvm_setpagesize();
-#else 
-	vm_set_page_size();
-#endif 
-	first_addr = m88k_round_page(first_addr);
+	first_addr = round_page(first_addr);
 
 	if (!no_symbols) boothowto |= RB_KDB;
 
@@ -2309,27 +2182,20 @@ mvme_bootstrap(void)
 	/*
 	 * Steal MSGBUFSIZE at the top of physical memory for msgbuf
 	 */
-	avail_end -= m88k_round_page(MSGBUFSIZE);
+	avail_end -= round_page(MSGBUFSIZE);
 #ifdef DEBUG
 	printf("MVME%x boot: memory from 0x%x to 0x%x\n", cputyp, avail_start, avail_end);
 #endif 
-	pmap_bootstrap((vm_offset_t)M88K_TRUNC_PAGE((unsigned)&kernelstart) /* = loadpt */, 
+	pmap_bootstrap((vm_offset_t)trunc_page((unsigned)&kernelstart) /* = loadpt */, 
 		       &avail_start, &avail_end, &virtual_avail,
 		       &virtual_end);
 
-#if defined(MACHINE_NEW_NONCONTIG)
 	/*
 	 * Tell the VM system about available physical memory.  
 	 * mvme88k only has one segment.
 	 */
-#if defined(UVM)
 	uvm_page_physload(atop(avail_start), atop(avail_end),
 			  atop(avail_start), atop(avail_end),VM_FREELIST_DEFAULT);
-#else
-	vm_page_physload(atop(avail_start), atop(avail_end),
-			 atop(avail_start), atop(avail_end));
-#endif /* UVM */
-#endif /* MACHINE_NEW_NONCONTIG */
 	
 	/*
 	 * Must initialize p_addr before autoconfig or

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/mpcpcibus.c,v 1.12.2.2 2001/05/14 21:36:51 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/mpcpcibus.c,v 1.12.2.3 2001/07/04 10:22:42 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -47,6 +47,7 @@
 
 #include <machine/autoconf.h>
 #include <machine/bat.h>
+#include <machine/powerpc.h>
 
 #if 0
 #include <dev/isa/isareg.h>
@@ -60,8 +61,8 @@
 #include <powerpc/pci/pcibrvar.h>
 #include <powerpc/pci/mpc106reg.h>
 
+#include <dev/ofw/openfirm.h>
 extern vm_map_t phys_map;
-extern ofw_eth_addr[];
 
 int	 mpcpcibrmatch __P((struct device *, void *, void *));
 void	 mpcpcibrattach __P((struct device *, struct device *, void *));
@@ -157,12 +158,7 @@ mpcpcibrmatch(parent, match, aux)
 	void *match, *aux;
 {
 	struct confargs *ca = aux;
-	int handle; 
 	int found = 0;
-	int err;
-	unsigned int val;
-	int qhandle;
-	char type[32];
 
 	if (strcmp(ca->ca_name, mpcpcibr_cd.cd_name) != 0)
 		return (found);
@@ -187,46 +183,8 @@ mpcpcibrattach(parent, self, aux)
 	int map, node;
 	char *bridge;
 	int of_node = 0;
-	u_int32_t base;
-	u_int32_t size;
 
 	switch(system_type) {
-	case POWER4e:
-		lcp = sc->sc_pcibr = &mpc_config;
-
-		addbatmap(MPC106_V_PCI_MEM_SPACE,
-			  MPC106_P_PCI_MEM_SPACE, BAT_I);
-
-		sc->sc_membus_space.bus_base = MPC106_V_PCI_MEM_SPACE;
-		sc->sc_membus_space.bus_reverse = 1;
-		sc->sc_iobus_space.bus_base = MPC106_V_PCI_IO_SPACE;
-		sc->sc_iobus_space.bus_reverse = 1;
-
-		lcp->lc_pc.pc_conf_v = lcp;
-		lcp->lc_pc.pc_attach_hook = mpc_attach_hook;
-		lcp->lc_pc.pc_bus_maxdevs = mpc_bus_maxdevs;
-		lcp->lc_pc.pc_make_tag = mpc_make_tag;
-		lcp->lc_pc.pc_decompose_tag = mpc_decompose_tag;
-		lcp->lc_pc.pc_conf_read = mpc_conf_read;
-		lcp->lc_pc.pc_conf_write = mpc_conf_write;
-		lcp->lc_pc.pc_ether_hw_addr = mpc_ether_hw_addr;
-		lcp->lc_iot = &sc->sc_iobus_space;
-		lcp->lc_memt = &sc->sc_membus_space;
-
-	        lcp->lc_pc.pc_intr_v = lcp;
-		lcp->lc_pc.pc_intr_map = mpc_intr_map;
-		lcp->lc_pc.pc_intr_string = mpc_intr_string;
-		lcp->lc_pc.pc_intr_establish = mpc_intr_establish;
-		lcp->lc_pc.pc_intr_disestablish = mpc_intr_disestablish;
-
-		printf(": MPC106, Revision 0x%x.\n", 
-				mpc_cfg_read_1(lcp, MPC106_PCI_REVID));
-#if 0
-		mpc_cfg_write_2(lcp, MPC106_PCI_STAT, 0xff80); /* Reset status */
-#endif
-		bridge = "MPC106";
-		break;
-
 	case OFWMACH:
 	case PWRSTK:
 		{
@@ -343,11 +301,13 @@ mpcpcibrattach(parent, self, aux)
 			char compat[32];
 			u_int32_t addr_offset;
 			u_int32_t data_offset;
+#if 0
 			struct pci_reserve_mem null_reserve = {
 				0,
 				0,
 				0
 			};
+#endif
 			int i;
 			int len;
 			int rangelen;
@@ -388,7 +348,7 @@ mpcpcibrattach(parent, self, aux)
 				printf("range lookup failed, node %x\n",
 				ca->ca_node);
 			}
-			/* translate byte(s) into item count/*/
+			/* translate byte(s) into item count*/
 			rangelen /= sizeof(struct ranges_new);
 
 			lcp = sc->sc_pcibr = &sc->pcibr_config;
@@ -463,14 +423,6 @@ mpcpcibrattach(parent, self, aux)
 				sc->sc_membus_space.bus_size = size;
 
 			}
-#if 0
-			printf("membase %x size %x iobase %x size %x\n",
-				sc->sc_membus_space.bus_base,
-				sc->sc_membus_space.bus_size,
-				sc->sc_iobus_space.bus_base,
-				sc->sc_iobus_space.bus_size);
-#endif
-			
 			addr_offset = 0;
 			for (i = 0; config_offsets[i].compat != NULL; i++) {
 				if (strcmp(config_offsets[i].compat, compat)
@@ -488,11 +440,13 @@ mpcpcibrattach(parent, self, aux)
 					" compatible %s\n", compat);
 				return;
 			}
-#if 0
-			printf(" mem base %x io base %x config addr %x"
+#ifdef PCI_DEBUG
+			printf(" mem base %x sz %x io base %x sz %x\n config addr %x"
 				" config data %x\n",
 				sc->sc_membus_space.bus_base,
+				sc->sc_membus_space.bus_size,
 				sc->sc_iobus_space.bus_base,
+				sc->sc_iobus_space.bus_size,
 				addr_offset, data_offset);
 #endif
 
@@ -615,7 +569,6 @@ find_node_intr(node, addr, intr)
 	u_int32_t map[64], *mp;
 	u_int32_t imask[8], maskedaddr[8];
 	u_int32_t icells;
-	char name [32];
 
 	len = OF_getprop(node, "AAPL,interrupts", intr, 4);
 	if (len == 4)
@@ -707,22 +660,22 @@ mpcpcibrprint(aux, pnp)
 
 /*
  *  Get PCI physical address from given viritual address.
- *  XXX Note that cross page boundarys are *not* garantueed to work!
+ *  XXX Note that cross page boundarys are *not* guarantee to work!
  */
 
 vm_offset_t
 vtophys(p)
-	void *p;
+	void * p;
 {
-	vm_offset_t pa;
-	vm_offset_t va;
+	paddr_t pa;
+	vaddr_t va;
 
-	va = (vm_offset_t)p;
+	va = (vaddr_t) p;
 	if((vm_offset_t)va < VM_MIN_KERNEL_ADDRESS) {
 		pa = va;
 	}
 	else {
-		pa = pmap_extract(vm_map_pmap(phys_map), va);
+		pmap_extract(vm_map_pmap(phys_map), va, &pa);
 	}
 	return(pa | ((pci_map_a == 1) ? MPC106_PCI_CPUMEM : 0 ));
 }
@@ -860,7 +813,8 @@ mpc_gen_config_reg(cpv, tag, offset)
 		}
 	} else {
 		/* config mechanism #2, type 0
-		/* standard cf8/cfc config */
+		 * standard cf8/cfc config
+		 */
 		reg =  0x80000000 | tag  | offset;
 
 	}
@@ -878,9 +832,7 @@ mpc_conf_read(cpv, tag, offset)
 
 	pcireg_t data;
 	u_int32_t reg;
-	int device;
 	int s;
-	int handle; 
 	int daddr = 0;
 
 	if(offset & 3 || offset < 0 || offset >= 0x100) {
@@ -933,7 +885,6 @@ mpc_conf_write(cpv, tag, offset, data)
 	struct pcibr_config *cp = cpv;
 	u_int32_t reg;
 	int s;
-	int handle; 
 	int daddr = 0;
 
 	reg = mpc_gen_config_reg(cpv, tag, offset);
@@ -968,6 +919,7 @@ mpc_conf_write(cpv, tag, offset, data)
 }
 
 
+/*ARGSUSED*/
 int
 mpc_intr_map(lcv, bustag, buspin, line, ihp)
 	void *lcv;
@@ -975,12 +927,7 @@ mpc_intr_map(lcv, bustag, buspin, line, ihp)
 	int buspin, line;
 	pci_intr_handle_t *ihp;
 {
-	struct pcibr_config *lcp = lcv;
-	pci_chipset_tag_t pc = &lcp->lc_pc; 
 	int error = 0;
-	int route;
-	int lvl;
-	int device;
 
 	*ihp = -1;
         if (buspin == 0) {
@@ -991,51 +938,6 @@ mpc_intr_map(lcv, bustag, buspin, line, ihp)
                 printf("mpc_intr_map: bad interrupt pin %d\n", buspin);
                 error = 1;
         }
-
-#if 0
-	/* this hack belongs elsewhere */
-	if(system_type == POWER4e) {
-		pci_decompose_tag(pc, bustag, NULL, &device, NULL);
-		route = in32rb(MPC106_PCI_CONF_SPACE + 0x860);
-		switch(device) {
-		case 1:			/* SCSI */
-			line = 6;
-			route &= ~0x0000ff00;
-			route |= line << 8;
-			break;
-
-		case 2:			/* Ethernet */
-			line = 14;
-			route &= ~0x00ff0000;
-			route |= line << 16;
-			break;
-
-		case 3:			/* Tundra VME */
-			line = 15;
-			route &= ~0xff000000;
-			route |= line << 24;
-			break;
-
-		case 4:			/* PMC Slot */
-			line = 9;
-			route &= ~0x000000ff;
-			route |= line;
-			break;
-
-		default:
-			printf("mpc_intr_map: bad dev slot %d!\n", device);
-			error = 1;
-			break;
-		}
-
-		lvl = isa_inb(0x04d0);
-		lvl |= isa_inb(0x04d1) << 8;
-		lvl |= 1L << line;
-		isa_outb(0x04d0, lvl);
-		isa_outb(0x04d1, lvl >> 8);
-		out32rb(MPC106_PCI_CONF_SPACE + 0x860, route);
-	}
-#endif
 
 	if(!error)
 		*ihp = line;
@@ -1052,12 +954,6 @@ mpc_intr_string(lcv, ih)
 	sprintf(str, "irq %d", ih);
 	return(str);
 }
-
-typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
-extern intr_establish_t *intr_establish_func;
-extern intr_disestablish_t *intr_disestablish_func;
 
 void *
 mpc_intr_establish(lcv, ih, level, func, arg, name)

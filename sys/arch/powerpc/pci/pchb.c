@@ -76,6 +76,9 @@ pchbmatch(parent, cf, aux)
 		case PCI_PRODUCT_APPLE_UNINORTH:
 		case PCI_PRODUCT_APPLE_UNINORTHETH:
 		case PCI_PRODUCT_APPLE_UNINORTHAGP:
+		case PCI_PRODUCT_APPLE_PANGEA_PCI1:
+		case PCI_PRODUCT_APPLE_PANGEA_PCI2:
+		case PCI_PRODUCT_APPLE_PANGEA_AGP:
 			return (1);
 		}
 		break;
@@ -91,13 +94,12 @@ pchbmatch(parent, cf, aux)
 	return (0);
 }
 
+/*ARGSUSED*/
 void
 pchbattach(parent, self, aux)
 	struct device *parent, *self;
 	void *aux;
 {
-	struct pci_attach_args *pa = aux;
-	char devinfo[256];
 
 	printf("\n");
 

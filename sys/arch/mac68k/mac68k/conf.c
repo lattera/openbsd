@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.1 2001/04/18 16:10:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.2 2001/07/04 10:18:36 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.41 1997/02/11 07:35:49 scottr Exp $	*/
 
 /*
@@ -119,11 +119,10 @@ cdev_decl(ksyms);
 cdev_decl(xfs_dev);
 #endif
 
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -162,7 +161,7 @@ struct cdevsw	cdevsw[] =
 	cdev_random_init(1,random),	/* 32: random data source */
 	cdev_ss_init(NSS,ss),           /* 33: SCSI scanner */
 	cdev_uk_init(NUK,uk),		/* 34: SCSI unknown */
-	cdev_gen_ipf(NIPF,ipl),         /* 35: IP filter log */
+	cdev_pf_init(NPF,pf),		/* 35: packet filter */
 	cdev_audio_init(NASC,asc),      /* 36: ASC audio device */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 37: Kernel symbols device */
 	cdev_notdef(),			/* 38 */
@@ -183,6 +182,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 51 */
 #endif
+	cdev_altq_init(NALTQ,altq),	/* 52: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/conf.c,v 1.14.2.1 2001/05/14 21:36:55 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/conf.c,v 1.14.2.2 2001/07/04 10:22:48 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -160,11 +160,6 @@ cdev_decl(xfs_dev);
  
 cdev_decl(lkm);
 
-#ifdef IPFILTER
-#define NIPF 1
-#else   
-#define NIPF 0
-#endif  
 #include "ksyms.h"
 cdev_decl(ksyms);
 #include "usb.h"
@@ -183,9 +178,18 @@ cdev_decl(ucom);
 #include "wsmux.h"
 cdev_decl(wsmux);
 
+#ifdef USER_PCICONF
+#include "pci.h"
+cdev_decl(pci);
+#endif
+
 #include "audio.h"
 cdev_decl(audio);
 
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
 
 struct cdevsw cdevsw[] = {
         cdev_cn_init(1,cn),             /* 0: virtual console */
@@ -227,7 +231,7 @@ struct cdevsw cdevsw[] = {
         cdev_lkm_dummy(),               /* 36 */
         cdev_lkm_dummy(),               /* 37 */
         cdev_lkm_dummy(),               /* 38 */
-        cdev_gen_ipf(NIPF,ipl),         /* 39: IP filter */
+        cdev_pf_init(NPF,pf),		/* 39: packet filter */
         cdev_random_init(1,random),     /* 40: random data source */
 	cdev_uk_init(NUK,uk),		/* 41: unknown SCSI */
 	cdev_ss_init(NSS,ss),           /* 42: SCSI scanner */
@@ -267,6 +271,12 @@ struct cdevsw cdevsw[] = {
 	cdev_mouse_init(NWSMOUSE,	/* 69: mice */
 		wsmouse),
 	cdev_mouse_init(NWSMUX, wsmux),	/* 70: ws multiplexor */
+#ifdef USER_PCICONF
+	cdev_pci_init(NPCI,pci),        /* 71: PCI user */
+#else
+	cdev_notdef(),
+#endif
+	cdev_altq_init(NALTQ,altq),	/* 72: ALTQ control interface */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.4 2001/05/14 21:37:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.5 2001/07/04 10:23:49 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -79,13 +79,16 @@ pagemove(from, to, size)
 	register caddr_t from, to;
 	size_t size;
 {
-	register paddr_t pa;
+	paddr_t pa;
 
-	if (size & CLOFSET || (int)from & CLOFSET || (int)to & CLOFSET)
+#ifdef DEBUG
+	if ((size & PAGE_MASK) != 0 ||
+	    ((vaddr_t)from & PAGE_MASK) != 0 ||
+	    ((vaddr_t)to & PAGE_MASK) != 0)
 		panic("pagemove 1");
+#endif
 	while (size > 0) {
-		pa = pmap_extract(pmap_kernel(), (vaddr_t)from);
-		if (pa == 0)
+		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
 			panic("pagemove 2");
 		pmap_remove(pmap_kernel(),
 		    (vaddr_t)from, (vaddr_t)from + PAGE_SIZE);
@@ -212,8 +215,7 @@ dvma_mapin_space(map, va, len, canwait, space)
 	kva = tva;
 
 	while (npf--) {
-		pa = pmap_extract(vm_map_pmap(map), va);
-		if (pa == 0)
+		if (pmap_extract(vm_map_pmap(map), va, &pa) == FALSE)
 			panic("dvma_mapin: null page frame");
 		pa = trunc_page(pa);
 
@@ -287,7 +289,6 @@ dvma_mapout(kva, va, len)
 /*
  * Map an IO request into kernel virtual address space.
  */
-/*ARGSUSED*/
 void
 vmapbuf(bp, sz)
 	struct buf *bp;
@@ -308,7 +309,6 @@ vmapbuf(bp, sz)
 	uva = trunc_page((vaddr_t)bp->b_data);
 	off = (vaddr_t)bp->b_data - uva;
 	size = round_page(off + sz);
-#if defined(UVM)
 	/*
 	 * Note that this is an expanded version of:
 	 *   kva = uvm_km_valloc_wait(kernel_map, size);
@@ -323,14 +323,10 @@ vmapbuf(bp, sz)
 			break;
 		tsleep(kernel_map, PVM, "vallocwait", 0);
 	}
-#else
-	kva = kmem_alloc_wait(kernel_map, size);
-#endif
 	bp->b_data = (caddr_t)(kva + off);
 
 	while (size > 0) {
-		pa = pmap_extract(pmap, uva);
-		if (pa == 0)
+		if (pmap_extract(pmap, uva, &pa) == FALSE)
 			panic("vmapbuf: null page frame");
 
 		/*
@@ -358,13 +354,12 @@ vmapbuf(bp, sz)
 /*
  * Free the io map addresses associated with this IO operation.
  */
-/*ARGSUSED*/
 void
 vunmapbuf(bp, sz)
 	register struct buf *bp;
 	vsize_t sz;
 {
-	register vaddr_t kva = (vaddr_t)bp->b_data;
+	register vaddr_t kva;
 	register vsize_t size, off;
 
 	if ((bp->b_flags & B_PHYS) == 0)
@@ -374,11 +369,7 @@ vunmapbuf(bp, sz)
 	off = (vaddr_t)bp->b_data - kva;
 	size = round_page(sz + off);
 
-#if defined(UVM)
 	uvm_km_free_wakeup(kernel_map, kva, size);
-#else
-	kmem_free_wakeup(kernel_map, kva, size);
-#endif
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = NULL;
 	if (CACHEINFO.c_vactype != VAC_NONE)

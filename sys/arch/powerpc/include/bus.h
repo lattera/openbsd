@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/bus.h,v 1.6.2.1 2001/04/18 16:13:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/bus.h,v 1.6.2.2 2001/07/04 10:22:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Per Fogelstrom.  All rights reserved.
@@ -47,7 +47,7 @@
 /*
  * Bus access types.
  */
-typedef u_int32_t bus_addr_t;
+typedef u_long    bus_addr_t;
 typedef u_int32_t bus_size_t;
 typedef u_int32_t bus_space_handle_t;
 typedef struct ppc_bus_space *bus_space_tag_t;
@@ -70,6 +70,12 @@ void	bus_space_unmap __P((bus_space_tag_t t, bus_space_handle_t bsh,
 	    bus_size_t size));
 int	bus_space_subregion __P((bus_space_tag_t t, bus_space_handle_t bsh,
 	    bus_size_t offset, bus_size_t size, bus_space_handle_t *nbshp));
+int	bus_space_alloc __P((bus_space_tag_t tag, bus_addr_t rstart,
+	    bus_addr_t rend, bus_size_t size, bus_size_t alignment,
+	    bus_size_t boundary, int cacheable, bus_addr_t *addrp,
+	    bus_space_handle_t *handlep));
+void	bus_space_free __P((bus_space_tag_t tag, bus_space_handle_t handle,
+	    bus_size_t size));
 
 #define bus_space_read(n,m)						      \
 static __inline CAT3(u_int,m,_t)					      \
@@ -150,12 +156,8 @@ bus_space_write_multi(4,32)
 #define __BA(t, h, o) ((void *)((h) + (o)))
 
 static __inline void
-bus_space_read_region_1(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	u_int8_t *addr;
-	size_t count;
+bus_space_read_region_1(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int8_t *addr, size_t count)
 {
 	volatile u_int8_t *s = __BA(tag, bsh, offset);
 
@@ -165,12 +167,8 @@ bus_space_read_region_1(tag, bsh, offset, addr, count)
 }
 
 static __inline void
-bus_space_read_region_2(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	u_int16_t *addr;
-	size_t count;
+bus_space_read_region_2(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int16_t *addr, size_t count)
 {
 	volatile u_int16_t *s = __BA(tag, bsh, offset);
 
@@ -181,12 +179,8 @@ bus_space_read_region_2(tag, bsh, offset, addr, count)
 }
 
 static __inline void
-bus_space_read_region_4(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	u_int32_t *addr;
-	size_t count;
+bus_space_read_region_4(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, u_int32_t *addr, size_t count)
 {
 	volatile u_int32_t *s = __BA(tag, bsh, offset);
 
@@ -211,12 +205,8 @@ bus_space_read_region_4(tag, bsh, offset, addr, count)
  */
 
 static __inline void
-bus_space_write_region_1(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	const u_int8_t *addr;
-	size_t count;
+bus_space_write_region_1(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int8_t *addr, size_t count)
 {
 	volatile u_int8_t *d = __BA(tag, bsh, offset);
 
@@ -226,12 +216,8 @@ bus_space_write_region_1(tag, bsh, offset, addr, count)
 }
 
 static __inline void
-bus_space_write_region_2(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	const u_int16_t *addr;
-	size_t count;
+bus_space_write_region_2(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int16_t *addr, size_t count)
 {
 	volatile u_int16_t *d = __BA(tag, bsh, offset);
 
@@ -242,12 +228,8 @@ bus_space_write_region_2(tag, bsh, offset, addr, count)
 }
 
 static __inline void
-bus_space_write_region_4(tag, bsh, offset, addr, count)
-	bus_space_tag_t tag;
-	bus_space_handle_t bsh;
-	bus_size_t offset;
-	const u_int32_t *addr;
-	size_t count;
+bus_space_write_region_4(bus_space_tag_t tag, bus_space_handle_t bsh,
+	bus_size_t offset, const u_int32_t *addr, size_t count)
 {
 	volatile u_int32_t *d = __BA(tag, bsh, offset);
 
@@ -261,6 +243,69 @@ bus_space_write_region_4(tag, bsh, offset, addr, count)
 #define	bus_space_write_region_8 !!! bus_space_write_region_8 unimplemented !!!
 #endif
 
+/*
+ *	void bus_space_set_multi_N __P((bus_space_tag_t tag,
+ *	    bus_space_handle_t bsh, bus_size_t offset, u_intN_t val,
+ *	    size_t count));
+ *
+ * Write the 1, 2, 4, or 8 byte value `val' to bus space described
+ * by tag/handle/offset `count' times.
+ */
+static __inline void bus_space_set_multi_1 __P((bus_space_tag_t,
+	bus_space_handle_t, bus_size_t, u_int8_t, size_t));
+static __inline void bus_space_set_multi_2 __P((bus_space_tag_t,
+	bus_space_handle_t, bus_size_t, u_int16_t, size_t));
+static __inline void bus_space_set_multi_4 __P((bus_space_tag_t,
+	bus_space_handle_t, bus_size_t, u_int32_t, size_t));
+
+static __inline void
+bus_space_set_multi_1(tag, bsh, offset, val, count)
+	bus_space_tag_t tag;
+	bus_space_handle_t bsh;
+	bus_size_t offset;
+	u_int8_t val;
+	size_t count;
+{
+	volatile u_int8_t *d = __BA(tag, bsh, offset);
+
+	while (count--)
+		*d = val;
+	__asm__ volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_set_multi_2(tag, bsh, offset, val, count)
+	bus_space_tag_t tag;
+	bus_space_handle_t bsh;
+	bus_size_t offset;
+	u_int16_t val;
+	size_t count;
+{
+	volatile u_int16_t *d = __BA(tag, bsh, offset);
+
+	while (count--)
+		__asm__ volatile("sthbrx %0, 0, %1" ::
+			"r"(val), "r"(d));
+	__asm__ volatile("eieio; sync");
+}
+
+static __inline void
+bus_space_set_multi_4(tag, bsh, offset, val, count)
+	bus_space_tag_t tag;
+	bus_space_handle_t bsh;
+	bus_size_t offset;
+	u_int32_t val;
+	size_t count;
+{
+	volatile u_int32_t *d = __BA(tag, bsh, offset);
+
+	while (count--)
+		__asm__ volatile("stwbrx %0, 0, %1" ::
+			"r"(val), "r"(d));
+	__asm__ volatile("eieio; sync");
+}
+
+#define	bus_space_set_multi_8 !!! bus_space_set_multi_8 unimplemented !!!
 
 /* These are OpenBSD extensions to the general NetBSD bus interface.  */
 void

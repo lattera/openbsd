@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pcibrvar.h,v 1.4.2.2 2001/05/14 21:36:52 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pcibrvar.h,v 1.4.2.3 2001/07/04 10:22:43 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -31,6 +31,10 @@
  * SUCH DAMAGE.
  *
  */
+
+#include <dev/pci/pcireg.h>
+#include <dev/pci/pcivar.h>
+#include <dev/pci/pcidevs.h>
 
 struct pcibr_config {
 	bus_space_tag_t lc_memt;
@@ -66,4 +70,8 @@ struct pci_reserve_mem {
 
 void pci_addr_fixup __P((struct pcibr_softc *, pci_chipset_tag_t, int,
 	struct pci_reserve_mem *));
+
+#define PCIADDR_SEARCH_IO  0
+#define PCIADDR_SEARCH_MEM 1
+struct extent *pciaddr_search __P((struct device *, int, bus_addr_t *, bus_size_t));
 

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.1 2001/05/14 21:38:03 niklas Exp $     */
+/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.2 2001/07/04 10:24:28 niklas Exp $     */
 /*	$NetBSD: pmap.h,v 1.37 1999/08/01 13:48:07 ragge Exp $	   */
 
 /* 
@@ -123,7 +123,6 @@ extern	struct pmap kernel_pmap_store;
 
 /* Routines that are best to define as macros */
 #define pmap_phys_address(phys)		((u_int)(phys) << PGSHIFT)
-#define pmap_unwire(pmap, v)		/* no need */
 #define pmap_copy(a,b,c,d,e)		/* Dont do anything */
 #define pmap_update()	mtpr(0,PR_TBIA) /* Update buffes */
 #define pmap_collect(pmap)		/* No need so far */
@@ -146,6 +145,7 @@ extern	struct pmap kernel_pmap_store;
 void	pmap_bootstrap __P((void));
 vaddr_t pmap_map __P((vm_offset_t, vm_offset_t, vm_offset_t, int));
 void	pmap_pinit __P((pmap_t));
+void	pmap_activate __P((struct proc *));
 
 #endif	/* _KERNEL */
 

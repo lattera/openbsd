@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.h,v 1.9 1998/07/01 02:47:37 angelos Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.h,v 1.9.8.1 2001/07/04 10:14:45 niklas Exp $	*/
 /*	$NetBSD: pci_machdep.h,v 1.6 1996/11/19 04:49:21 cgd Exp $	*/
 
 /*
@@ -71,7 +71,16 @@ struct alpha_pci_chipset {
         void            *(*pc_pciide_compat_intr_establish) __P((void *,
                             struct device *, struct pci_attach_args *, int,
                             int (*)(void *), void *));
+	void            (*pc_pciide_compat_intr_disestablish) __P((void *,
+			    void *));
+	char 		*pc_name;	/* PCI chipset name */
+	vaddr_t		pc_mem;		/* PCI memory address */
+	vaddr_t		pc_dense;	/* PCI dense memory address */
+	int		pc_bwx;		/* chipset supports BWX */
 };
+
+extern struct alpha_pci_chipset *alpha_pci_chipset;
+int alpha_sysctl_chipset(int *, u_int, char *, size_t *);
 
 /*
  * Functions provided to machine-independent PCI code.
@@ -103,12 +112,17 @@ struct alpha_pci_chipset {
  */
 void	pci_display_console __P((bus_space_tag_t, bus_space_tag_t,
 	    pci_chipset_tag_t, int, int, int));
-#define alpha_pci_decompose_tag(c, t, bp, dp, fp)                       \
+#define alpha_pci_decompose_tag(c, t, bp, dp, fp)			\
     (*(c)->pc_decompose_tag)((c)->pc_conf_v, (t), (bp), (dp), (fp))
-#define alpha_pciide_compat_intr_establish(c, d, p, ch, f, a)           \
-    ((c)->pc_pciide_compat_intr_establish == NULL ? NULL :              \
-     (*(c)->pc_pciide_compat_intr_establish)((c)->pc_conf_v, (d), (p),  \
+#define alpha_pciide_compat_intr_establish(c, d, p, ch, f, a)		\
+    ((c)->pc_pciide_compat_intr_establish == NULL ? NULL :		\
+     (*(c)->pc_pciide_compat_intr_establish)((c)->pc_conf_v, (d), (p),	\
         (ch), (f), (a)))
+
+#define alpha_pciide_compat_intr_disestablish(c, cookie)		\
+    do { if ((c)->pc_pciide_compat_intr_disestablish != NULL)		\
+	    ((c)->pc_pciide_compat_intr_disestablish)((c)->pc_conf_v,	\
+            (cookie)); } while (0)
 
 #ifdef _KERNEL
 void pci_display_console

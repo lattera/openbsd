@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/eeprom.c,v 1.6.14.1 2001/05/14 21:37:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/eeprom.c,v 1.6.14.2 2001/07/04 10:23:54 niklas Exp $	*/
 /*	$NetBSD: eeprom.c,v 1.8 1996/03/26 15:16:06 gwr Exp $	*/
 
 /*
@@ -175,12 +175,7 @@ eeprom_uio(uio)
 	va = eeprom_va;
 	if (uio->uio_rw != UIO_READ) {
 		/* Write requires a temporary buffer. */
-		buf = malloc(OBIO_EEPROM_SIZE, M_DEVBUF, M_WAITOK);
-		if (!buf) {
-			error = EAGAIN;
-			goto out;
-		}
-		va = buf;
+		va = buf = malloc(OBIO_EEPROM_SIZE, M_DEVBUF, M_WAITOK);
 	}
 
 	if ((error = uiomove(va + off, (int)cnt, uio)) != 0)

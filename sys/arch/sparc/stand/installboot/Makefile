@@ -1,8 +1,9 @@
-#	$OpenBSD: src/sys/arch/sparc/stand/installboot/Makefile,v 1.4.4.1 2001/05/14 21:37:21 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/installboot/Makefile,v 1.4.4.2 2001/07/04 10:23:51 niklas Exp $
 
 
 MAN=	installboot.8
 MANSUBDIR=/sparc
+LDSTATIC=-static
 
 .if ${MACHINE} == "sparc"
 BINDIR=	/usr/sbin

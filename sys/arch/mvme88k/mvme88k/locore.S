@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.9.4.1 2001/04/18 16:11:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.9.4.2 2001/07/04 10:20:12 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -57,16 +57,14 @@
  * rights to redistribute these changes.
  */
 
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
-
-#include "assym.s"
+#include "assym.h"
 #include "ksyms.h"
+
 #include <machine/asm.h>
 #include <machine/trap.h>
 #include <machine/m88100.h>
 #include <machine/psl.h>
+#include <machine/param.h>
 #include <machine/vmparam.h>      /* INTSTACK_SIZE */
 
 /***********************************************************************/
@@ -142,7 +140,7 @@ LABEL(_start_text)	/* This is the *real* start upon poweron or reset */
 	 *	r5 start of mini
 	 *	r6 end miniroot
 	 *	r7 ((Clun << 8) ; Dlun & FF) -> bootdev
-	 *	r8 cpu type (0x187, 0x188, 1x197)
+	 *	r8 cpu type (0x187, 0x188, 0x197)
 	 */
 /*
  *	(*entry)(flag, bugargs.ctrl_addr, cp, kernel.smini, 
@@ -483,13 +481,11 @@ _esym:
 	word 	0
 #endif /* DDB || NKSYMS > 0 */
 
-	global	_intiobase, _intiolimit, _extiobase
+	global	_intiobase, _intiolimit
 _intiobase:
 	word	0		| KVA of base of internal IO space
 _intiolimit:
 	word	0		| KVA of end of internal IO space
-_extiobase:
-	word	0		| KVA of base of external IO space
 
 	global	_proc0paddr	/* move to C code */
 _proc0paddr:

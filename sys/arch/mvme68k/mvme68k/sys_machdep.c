@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.1 2001/04/18 16:10:41 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.2 2001/07/04 10:19:42 niklas Exp $ */
 
 /*
  * Copyright (c) 1982, 1986, 1993
@@ -79,7 +79,8 @@ int len;
 #if defined(M68040) || defined(M68060)
 	if (mmutype <= MMU_68040) {
 		register int inc = 0;
-		int pa = 0, doall = 0;
+		paddr_t pa = 0;
+		int doall = 0;
 		caddr_t end;
 #ifdef COMPAT_HPUX
 		extern struct emul emul_hpux;
@@ -115,9 +116,8 @@ int len;
 			 */
 			if (!doall &&
 				 (pa == 0 || ((int)addr & PGOFSET) == 0)) {
-				pa = pmap_extract(curproc->p_vmspace->vm_map.pmap,
-										(vm_offset_t)addr);
-				if (pa == 0)
+				if (pmap_extract(curproc->p_vmspace->vm_map.pmap,
+				    (vm_offset_t)addr, &pa) == FALSE)
 					doall = 1;
 			}
 			switch (req) {

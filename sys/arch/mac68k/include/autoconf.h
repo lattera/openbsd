@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/autoconf.h,v 1.6 1997/11/30 06:10:29 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/autoconf.h,v 1.6.10.1 2001/07/04 10:18:30 niklas Exp $	*/
 /*	$NetBSD: autoconf.h,v 1.5 1996/12/17 06:47:40 scottr Exp $	*/
 
 /*
@@ -44,7 +44,6 @@
 #ifdef _KERNEL
 /* autoconf.c */
 void	setconf __P((void));
-void	configure __P((void));
 
 /* machdep.c */
 void	mac68k_set_io_offsets __P((vm_offset_t));

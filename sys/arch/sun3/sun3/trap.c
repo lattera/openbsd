@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.19.8.2 2001/05/14 21:37:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.19.8.3 2001/07/04 10:24:18 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.63-1.65ish 1997/01/16 15:41:40 gwr Exp $	*/
 
 /*
@@ -209,7 +209,7 @@ trap(type, code, v, frame)
 	u_quad_t sticks;
 	int si_type;
 
-	cnt.v_trap++;
+	uvmexp.traps++;
 	p = curproc;
 	ucode = 0;
 	sig = 0;
@@ -527,7 +527,7 @@ trap(type, code, v, frame)
 		}
 
 		/* OK, let the VM code handle the fault. */
-		rv = vm_fault(map, va, ftype, FALSE);
+		rv = uvm_fault(map, va, 0, ftype);
 #ifdef	DEBUG
 		if (rv && MDB_ISPID(p->p_pid)) {
 			printf("vm_fault(%x, %x, %x, 0) -> %x\n",
@@ -555,7 +555,7 @@ trap(type, code, v, frame)
 			if (rv == KERN_SUCCESS) {
 				unsigned nss;
 
-				nss = clrnd(btoc((u_int)(USRSTACK-va)));
+				nss = btoc((u_int)(USRSTACK-va));
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
 			} else if (rv == KERN_PROTECTION_FAILURE)
@@ -618,7 +618,7 @@ syscall(code, frame)
 	register_t args[8], rval[2];
 	u_quad_t sticks;
 
-	cnt.v_syscall++;
+	uvmexp.syscalls++;
 	if (!USERMODE(frame.f_sr))
 		panic("syscall");
 	p = curproc;

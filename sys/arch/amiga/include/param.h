@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.1 2000/03/02 07:04:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.2 2001/07/04 10:15:16 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:36 veego Exp $	*/
 
 /*
@@ -53,6 +53,11 @@
 #define	MACHINE		"amiga"
 
 #define	PGSHIFT		13		/* LOG2(NBPG) */
+
+#define	PAGE_SHIFT	13
+#define	PAGE_SIZE	(1 << PAGE_SHIFT)
+#define	PAGE_MASK	(PAGE_SIZE - 1)
+
 #define	KERNBASE	0x00000000	/* start of kernel virtual */
 
 #define	SEGSHIFT	24		/* LOG2(NBSEG) [68030 value] */
@@ -69,10 +74,10 @@
 #define	NPTEPG		(NBPG/(sizeof (pt_entry_t)))
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages
+ * Size of kernel malloc arena in logical pages
  */
 #ifndef NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(3072 * 1024 / CLBYTES)
+#define	NKMEMCLUSTERS	(3072 * 1024 / PAGE_SIZE)
 #endif
 
 #define MSGBUFSIZE	8192
@@ -84,6 +89,9 @@
 
 #ifdef _KERNEL
 #ifndef	_LOCORE
+
+#include <machine/cpu.h>
+
 void delay __P((int));
 void DELAY __P((int));
 #endif	/* !_LOCORE */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.1 2001/05/14 21:38:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/autoconf.c,v 1.9.12.2 2001/07/04 10:24:32 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.45 1999/10/23 14:56:05 ragge Exp $	*/
 
 /*
@@ -59,31 +59,29 @@
 
 #include <vax/bi/bireg.h>
 
+void	cpu_dumpconf __P((void));	/* machdep.c */
 void	gencnslask __P((void));
+void	setroot __P((void));		/* rootfil.c */
 
 struct cpu_dep *dep_call;
 int	mastercpu;	/* chief of the system */
 struct device *booted_from;
 
-extern int cold; 	/* cold-start flag */
-
 #define MAINBUS	0
 
 void
-configure()
+cpu_configure()
 {
-	extern int boothowto;
-
 	if (config_rootfound("mainbus", NULL) == NULL)
 		panic("mainbus not configured");
 
-    setroot();
-    /*
-     * Configure swap area and related system
-     * parameter based on device(s) used.
-     */
-    swapconf();
-    cpu_dumpconf();
+	setroot();
+	/*	
+	 * Configure swap area and related system
+	 * parameter based on device(s) used.
+	 */
+	swapconf();
+	cpu_dumpconf();
 
 	/*
 	 * We're ready to start up. Clear CPU cold start flag.

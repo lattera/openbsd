@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh.c,v 1.3.2.1 2001/04/18 16:11:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh.c,v 1.3.2.2 2001/07/04 10:19:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Michael L. Hitch
@@ -680,8 +680,8 @@ sshreset(sc)
 		for (i = 0; i < SSH_NACB; i++) {
 
 			pmap_cache_ctrl(pmap_kernel(),
-				M88K_TRUNC_PAGE((vm_offset_t)acb),
-				M88K_ROUND_PAGE((vm_offset_t)acb+sizeof(*acb)),
+				trunc_page((vm_offset_t)acb),
+				round_page((vm_offset_t)acb+sizeof(*acb)),
 				CACHE_INH);
 
 			TAILQ_INSERT_TAIL(&sc->free_list, acb, chain);

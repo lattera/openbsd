@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshdma.c,v 1.3.2.1 2001/04/18 16:11:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshdma.c,v 1.3.2.2 2001/07/04 10:19:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Nivas Madhur
@@ -173,8 +173,8 @@ afscattach(parent, self, auxp)
 
 		struct pcctworeg *pcc2 = (struct pcctworeg *)ca->ca_master;
 		
-		pmap_cache_ctrl(pmap_kernel(), M88K_TRUNC_PAGE((vm_offset_t)sc),
-			M88K_ROUND_PAGE((vm_offset_t)sc + sizeof(*sc)),
+		pmap_cache_ctrl(pmap_kernel(), trunc_page((vm_offset_t)sc),
+			round_page((vm_offset_t)sc + sizeof(*sc)),
 			CACHE_INH);
 
 		pcctwointr_establish(PCC2V_NCR, &sc->sc_ih);

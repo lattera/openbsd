@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/conf.c,v 1.23.4.2 2001/05/14 21:37:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/conf.c,v 1.23.4.3 2001/07/04 10:23:39 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.40 1996/04/11 19:20:03 thorpej Exp $ */
 
 /*
@@ -128,6 +128,11 @@ struct bdevsw	bdevsw[] =
 };
 int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
+
 struct cdevsw	cdevsw[] =
 {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -197,7 +202,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 56 */
 	cdev_notdef(),			/* 57 */
 	cdev_disk_init(NCD,cd),		/* 58: SCSI CD-ROM */
-	cdev_gen_ipf(NIPF,ipl),		/* 59: ip filtering log */
+	cdev_pf_init(NPF,pf),		/* 59: packet filter */
 	cdev_notdef(),			/* 60 */
 	cdev_notdef(),			/* 61 */
 	cdev_notdef(),			/* 62 */
@@ -263,6 +268,7 @@ struct cdevsw	cdevsw[] =
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 122: Kernel symbols device */
 	cdev_disk_init(NRAID,raid),     /* 123: RAIDframe disk driver */
 	cdev_ses_init(NSES,ses),	/* 124: SCSI SES or SAF-TE device */
+	cdev_altq_init(NALTQ,altq),	/* 125: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.6.2.1 2001/05/14 21:39:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/mem.c,v 1.6.2.2 2001/07/04 10:24:40 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.15 1999/03/24 05:51:17 mrg Exp $	*/
 
 /*
@@ -152,10 +152,10 @@ mmrw(dev, uio, flags)
 			}
 			if (zeropage == NULL) {
 				zeropage = (caddr_t)
-				    malloc(CLBYTES, M_TEMP, M_WAITOK);
-				bzero(zeropage, CLBYTES);
+				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				bzero(zeropage, PAGE_SIZE);
 			}
-			c = min(iov->iov_len, CLBYTES);
+			c = min(iov->iov_len, PAGE_SIZE);
 			error = uiomove(zeropage, c, uio);
 			continue;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/mem.c,v 1.9.2.1 2001/04/18 16:01:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/mem.c,v 1.9.2.2 2001/07/04 10:14:58 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.18 1997/02/02 07:17:14 thorpej Exp $	*/
 
 /*
@@ -56,9 +56,7 @@
 #include <machine/cpu.h>
 
 #include <vm/vm.h>
-#if defined(UVM)
 #include <uvm/uvm_extern.h>
-#endif
 
 extern int kernel_reload_write(struct uio *uio);
 extern u_int lowram;
@@ -160,15 +158,9 @@ mmrw(dev, uio, flags)
 		case 1:
 			v = uio->uio_offset;
 			c = min(iov->iov_len, MAXPHYS);
-#if defined(UVM)
 			if (!uvm_kernacc((caddr_t)v, c,
 			    uio->uio_rw == UIO_READ ? B_READ : B_WRITE))
 				return (EFAULT);
-#else
-			if (!kernacc((caddr_t)v, c,
-			    uio->uio_rw == UIO_READ ? B_READ : B_WRITE))
-				return (EFAULT);
-#endif
 			if (v < NBPG) {
 #ifdef DEBUG
 				/*
@@ -178,9 +170,9 @@ mmrw(dev, uio, flags)
 				if (uio->uio_rw == UIO_READ) {
 					if (devzeropage == NULL) {
 						devzeropage = (caddr_t)
-						    malloc(CLBYTES, M_TEMP,
+						    malloc(PAGE_SIZE, M_TEMP,
 						    M_WAITOK);
-						bzero(devzeropage, CLBYTES);
+						bzero(devzeropage, PAGE_SIZE);
 					}
 					c = min(c, NBPG - (int)v);
 					v = (vm_offset_t)devzeropage;
@@ -208,10 +200,10 @@ mmrw(dev, uio, flags)
 			}
 			if (devzeropage == NULL) {
 				devzeropage = (caddr_t)
-				    malloc(CLBYTES, M_TEMP, M_WAITOK);
-				bzero(devzeropage, CLBYTES);
+				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				bzero(devzeropage, PAGE_SIZE);
 			}
-			c = min(iov->iov_len, CLBYTES);
+			c = min(iov->iov_len, PAGE_SIZE);
 			error = uiomove(devzeropage, c, uio);
 			continue;
 

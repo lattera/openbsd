@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.1 2001/05/14 21:39:11 niklas Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.2 2001/07/04 10:24:46 niklas Exp $     */
 /*	$NetBSD: subr.s,v 1.32 1999/03/25 00:41:48 mrg Exp $	   */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.2 2001/04/18 16:07:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.3 2001/07/04 10:16:55 niklas Exp $	*/
 /*	$NetBSD: pccons.c,v 1.99.4.1 1996/06/04 20:03:53 cgd Exp $	*/
 
 /*-
@@ -1906,9 +1906,6 @@ pcmmap(dev, offset, nprot)
 void
 pc_xmode_on()
 {
-#ifdef COMPAT_10
-	struct trapframe *fp;
-#endif
 
 	if (pc_xmode)
 		return;
@@ -1919,13 +1916,6 @@ pc_xmode_on()
 	/* If still unchanged, get current shape. */
 	if (cursor_shape == 0xffff)
 		get_cursor_shape();
-#endif
-
-#ifdef COMPAT_10
-	/* This is done by i386_iopl(3) now. */
-	fp = curproc->p_md.md_regs;
-	if (securelevel <= 0)
-		fp->tf_eflags |= PSL_IOPL;
 #endif
 }
 

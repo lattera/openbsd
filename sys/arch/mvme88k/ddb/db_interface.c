@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.1 2001/04/18 16:10:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.2 2001/07/04 10:19:52 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -577,7 +577,7 @@ db_write_bytes(addr, size, data)
 #endif
 		*dst++ = *data++;    
 	}
-	physaddr = pmap_extract(kernel_pmap, (vm_offset_t)addr);
+	pmap_extract(kernel_pmap, (vm_offset_t)addr, &physaddr);
 	cmmu_flush_cache(physaddr, i); 
 }
 
@@ -825,6 +825,11 @@ void cpu_interrupt_to_db(cpu_no)
 {
 }
 
+void
+m88k_db_prom_cmd(void)
+{
+	doboot();
+}
 
 /************************/
 /* COMMAND TABLE / INIT */
@@ -848,6 +853,7 @@ struct db_command db_machine_cmds[] =
     {"translate",	m88k_db_translate,      0, 0},
     {"cmmucfg",		m88k_db_cmmucfg,        0, 0},
     {"where",		m88k_db_where,		0, 0},
+    {"prom",		m88k_db_prom_cmd,	0, 0},
     {(char  *) 0,}
 };
 
@@ -857,9 +863,7 @@ struct db_command db_machine_cmds[] =
 void
 kdb_init()
 {
-#ifdef DB_MACHINE_COMMANDS
 	db_machine_commands_install(db_machine_cmds);
-#endif
 	ddb_init();
 
 	db_printf("ddb enabled\n");

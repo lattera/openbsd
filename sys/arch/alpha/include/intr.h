@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/intr.h,v 1.5.8.1 2001/04/18 16:00:54 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/intr.h,v 1.5.8.2 2001/07/04 10:14:36 niklas Exp $ */
 /* $NetBSD: intr.h,v 1.25 2000/05/23 05:12:56 thorpej Exp $ */
 
 /*
@@ -74,6 +74,7 @@ _splraise(s)
 #define splimp()                _splraise(ALPHA_PSL_IPL_IO)
 #define spltty()                _splraise(ALPHA_PSL_IPL_IO)
 #define splserial()             _splraise(ALPHA_PSL_IPL_IO)
+#define	splvm()			_splraise(ALPHA_PSL_IPL_IO)
 #define splclock()              _splraise(ALPHA_PSL_IPL_CLOCK)
 #define splstatclock()          _splraise(ALPHA_PSL_IPL_CLOCK)
 #define splhigh()               _splraise(ALPHA_PSL_IPL_HIGH)

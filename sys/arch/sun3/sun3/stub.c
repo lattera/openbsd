@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/stub.c,v 1.6.8.1 2001/05/14 21:37:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/stub.c,v 1.6.8.2 2001/07/04 10:24:15 niklas Exp $	*/
 /*	$NetBSD: stub.c,v 1.13 1996/11/20 18:57:37 gwr Exp $	*/
 
 /*-
@@ -48,18 +48,11 @@
 
 #ifndef DDB
 void  Debugger __P((void));
-#endif
-
-/* Called by autoconf.c */
-#ifdef	RAMDISK_HOOKS
-void swapgeneric() {}
-#endif
 
 /*
  * When DDB is included, Debugger() comes from db_interface.c
  * otherwise we get the one compiled here.
  */
-#ifndef DDB
 void
 Debugger()
 {

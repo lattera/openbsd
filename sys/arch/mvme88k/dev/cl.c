@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.5.4.1 2001/04/18 16:10:53 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.5.4.2 2001/07/04 10:19:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -1236,7 +1236,7 @@ clccparam(sc, par, channel)
 	if (par->c_ospeed == 0) { 
 		/* dont kill the console */
 		if(sc->sc_cl[channel].cl_consio == 0) {
-			/* disconnect, drop RTS DTR stop reciever */
+			/* disconnect, drop RTS DTR stop receiver */
 			sc->cl_reg->cl_msvr_rts = 0x00;
 			sc->cl_reg->cl_msvr_dtr = 0x00;
 			sc->cl_reg->cl_ccr = 0x05;

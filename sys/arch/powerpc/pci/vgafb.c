@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb.c,v 1.9.4.1 2001/05/14 21:36:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb.c,v 1.9.4.2 2001/07/04 10:22:44 niklas Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*
@@ -66,10 +66,7 @@ void	vgafb_copyrows __P((void *, int, int, int));
 void	vgafb_eraserows __P((void *, int, int));
 void	vgafb_alloc_attr __P((void *c, int fg, int bg, int flags, long *));
 
-static void drawChar ( struct vgafb_config *vc, char ch, int cx,
-	int cy, char at);
-static void setPixel( struct vgafb_config *vc, int x, int y, int v);
-static void vgafb_invert_char ( struct vgafb_config *vc, int cx, int cy);
+void vgafb_setcolor __P((unsigned int index, u_int8_t r, u_int8_t g, u_int8_t b));
 extern const char fontdata_8x16[];
 
 struct vgafb_devconfig {
@@ -142,9 +139,7 @@ vgafb_common_probe(iot, memt, iobase, iosize, membase, memsize, mmiobase, mmiosi
 	size_t iosize, memsize, mmiosize;
 {
 	bus_space_handle_t ioh_b, ioh_c, ioh_d, memh, mmioh;
-	u_int16_t vgadata;
 	int gotio_b, gotio_c, gotio_d, gotmem, gotmmio, rv;
-	int width;
 
 	gotio_b = gotio_c = gotio_d = gotmem = gotmmio = rv = 0;
 
@@ -221,8 +216,6 @@ vgafb_common_setup(iot, memt, vc, iobase, iosize, membase, memsize, mmiobase, mm
 	u_int32_t iobase, membase, mmiobase;
 	size_t iosize, memsize, mmiosize;
 {
-	int cpos;
-	int width, height;
 
         vc->vc_iot = iot;
         vc->vc_memt = memt;
@@ -324,7 +317,6 @@ vgafb_wsdisplay_attach(parent, vc, console)
 	int console;
 {
 	struct wsemuldisplaydev_attach_args aa;
-	struct wscons_odev_spec *wo;
 
         aa.console = console;
 	aa.scrdata = &vgafb_screenlist;
@@ -401,7 +393,6 @@ vgafb_mmap(v, offset, prot)
 {
 	struct vgafb_config *vc = v;
 	bus_space_handle_t h;
-	u_int32_t *port;
 
 	/* memsize... */
 	if (offset >= 0x00000 && offset < 0x800000)	/* 8MB of mem??? */
@@ -420,8 +411,16 @@ vgafb_mmap(v, offset, prot)
 	else if (offset >= 0x20000000 && offset < 0x30000000)
 		/* mmiosize... */
 		h = vc->vc_mmioh + (offset - 0x20000000);
-	else
-		return (-1);
+	else {
+		/* XXX - allow mapping of the actual physical
+		 * device address, if the address is read from
+		 * pci bus config space
+		 */
+
+		/* NEEDS TO BE RESTRICTED to valid addresses for this device */
+		 
+		h = offset;
+	}
 
 #ifdef alpha
 	port = (u_int32_t *)(h << 5);
@@ -445,7 +444,6 @@ void
 vgafb_cnprobe(cp)
 	struct consdev *cp;
 {
-	int i, j;
 	if (cons_displaytype != 1) {
 		cp->cn_pri = CN_DEAD;
 		return;
@@ -503,7 +501,30 @@ vgafb_cnattach(iot, memt, pc, bus, device, function)
 		}
 	}
 	#endif
+	{ 
+	  int i;
+	  for (i = 0; i < 256; i++) {
+	     vgafb_setcolor(i, 255,255,255);
+	  }
+	}
+	vgafb_setcolor(WSCOL_BLACK, 0, 0, 0);
+	vgafb_setcolor(255, 255, 255, 255);
+	vgafb_setcolor(WSCOL_RED, 255, 0, 0);
+	vgafb_setcolor(WSCOL_GREEN, 0, 255, 0);
+	vgafb_setcolor(WSCOL_BROWN, 154, 85, 46);
+	vgafb_setcolor(WSCOL_BLUE, 0, 0, 255);
+	vgafb_setcolor(WSCOL_MAGENTA, 255, 255, 0);
+	vgafb_setcolor(WSCOL_CYAN, 0, 255, 255);
+	vgafb_setcolor(WSCOL_WHITE, 255, 255, 255);
 	wsdisplay_cnattach(&vgafb_stdscreen, ri, 0, 0, defattr);
+}
+
+void
+vgafb_setcolor(index, r, g, b) 
+	unsigned int index;
+	u_int8_t r, g, b;
+{
+	OF_call_method_1("color!", cons_display_ofh, 4, r, g, b, index);
 }
 
 int
@@ -544,12 +565,10 @@ vgafb_putcmap(vc, cm)
 	if (cm->index >= 256 || cm->count > 256 ||
 	    (cm->index + cm->count) > 256)
 		return EINVAL;
-#ifdef UVM
 	if (!uvm_useracc(cm->red, cm->count, B_READ) ||
 	    !uvm_useracc(cm->green, cm->count, B_READ) ||
 	    !uvm_useracc(cm->blue, cm->count, B_READ))
 		return EFAULT;
-#endif
 	copyin(cm->red,   &(vc->vc_cmap_red[index]),   count);
 	copyin(cm->green, &(vc->vc_cmap_green[index]), count);
 	copyin(cm->blue,  &(vc->vc_cmap_blue[index]),  count);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_asm_routines.S,v 1.7.4.1 2001/04/18 16:11:34 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_asm_routines.S,v 1.7.4.2 2001/07/04 10:20:13 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -36,11 +36,7 @@
  *
  **************************************************************RCS*****/
 
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
-
-#include "assym.s"
+#include "assym.h"
 #include <machine/trap.h>
 #include <machine/cpu_number.h>
 #include <machine/board.h>
@@ -1225,7 +1221,6 @@ ENTRY(copyoutstr)
 /*word 0	*/ /* to separate from routine below */
 /*######################################################################*/
 
-#if defined(UVM)
 /*
  * kcopy(const void *src, void *dst, size_t len);
  *
@@ -1552,7 +1547,6 @@ kcfault:
 	or	r2,   r0,   EFAULT	/* return fault */
 	br     kcdone
 #endif /* 0 */
-#endif /* UVM */
 
 /*
  * Gcc 2 generates calls to memcpy for bcopies of unknown size. memcpy

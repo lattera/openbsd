@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/wscons_machdep.c,v 1.1.4.1 2001/05/14 21:36:58 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/wscons_machdep.c,v 1.1.4.2 2001/07/04 10:23:04 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell
@@ -46,6 +46,7 @@
 #if NWSDISPLAY > 0
 #include <dev/wscons/wsdisplayvar.h>
 #endif
+#include <dev/wscons/wskbdvar.h>
 
 void wscnprobe __P((struct consdev *));
 void wscninit __P((struct consdev *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.5 1997/10/13 13:42:52 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/Locore.c,v 1.5.12.1 2001/07/04 10:22:46 niklas Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996 Wolfgang Solfrank.
@@ -38,6 +38,7 @@
 
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/systm.h>
 
 int whichqs;
 

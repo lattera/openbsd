@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.1 2001/04/18 16:11:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.2 2001/07/04 10:20:01 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr. 
  * All rights reserved.
@@ -93,8 +93,6 @@ struct vxsoftc {
 	struct envelope   *elist_head, *elist_tail;
 	struct packet     *plist_head, *plist_tail;
 };
-
-extern int cold;  /* var in autoconf.c that is set in machdep.c when booting */
 
 /* prototypes */
 
@@ -898,7 +896,7 @@ vx_ccparam(sc, par, port)
 		s = splvx();
 		/* dont kill the console */
 		if (sc->sc_info[port].vx_consio == 0) {
-			/* disconnect, drop RTS DTR stop reciever */
+			/* disconnect, drop RTS DTR stop receiver */
 			rts_ctl(sc, port, 0);
 			dtr_ctl(sc, port, 0);
 		}

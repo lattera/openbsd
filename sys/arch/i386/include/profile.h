@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/profile.h,v 1.3.14.1 2001/04/18 16:07:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/profile.h,v 1.3.14.2 2001/07/04 10:16:51 niklas Exp $	*/
 /*	$NetBSD: profile.h,v 1.6 1995/03/28 18:17:08 jtc Exp $	*/
 
 /*
@@ -54,7 +54,7 @@ mcount()								\
 	/*								\
 	 * frompcindex = pc pushed by call into self.			\
 	 */								\
-	__asm("movl (%%ebp),%0;movl 4(%0),%0" : "=r" (frompcindex));	\
+	__asm("movl (%%ebp),%0;movl 4(%0),%0" : "+r" (frompcindex));	\
 	_mcount(frompcindex, selfpc);					\
 }
 

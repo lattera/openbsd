@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.c,v 1.2.2.1 2001/04/18 16:01:21 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.c,v 1.2.2.2 2001/07/04 10:14:42 niklas Exp $ */
 /* $NetBSD: pci_550.c,v 1.18 2000/06/29 08:58:48 mrg Exp $ */
 
 /*-
@@ -105,6 +105,7 @@ void	dec_550_intr_disestablish __P((void *, void *));
 
 void	*dec_550_pciide_compat_intr_establish __P((void *, struct device *,
 	    struct pci_attach_args *, int, int (*)(void *), void *));
+void    dec_550_pciide_compat_intr_disestablish __P((void *, void *));
 
 #define	DEC_550_PCI_IRQ_BEGIN	8
 #define	DEC_550_MAX_IRQ		(64 - DEC_550_PCI_IRQ_BEGIN)
@@ -153,6 +154,8 @@ pci_550_pickintr(ccp)
 
 	pc->pc_pciide_compat_intr_establish =
 	    dec_550_pciide_compat_intr_establish;
+	pc->pc_pciide_compat_intr_disestablish =
+	    dec_550_pciide_compat_intr_disestablish;
 
 	/*
 	 * DEC 550's interrupts are enabled via the Pyxis interrupt
@@ -402,6 +405,14 @@ dec_550_pciide_compat_intr_establish(v, dev, pa, chan, func, arg)
 	    func, arg, "dec 550 irq");
 #endif
 	return (cookie);
+}
+
+void
+dec_550_pciide_compat_intr_disestablish(v, cookie)
+	void *v;
+	void *cookie;
+{
+	sio_intr_disestablish(NULL, cookie);
 }
 
 void

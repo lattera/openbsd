@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/GENERIC,v 1.25.2.1 2001/04/18 16:10:04 niklas Exp $
+#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/GENERIC,v 1.25.2.2 2001/07/04 10:18:23 niklas Exp $
 #	$NetBSD: GENERIC,v 1.52 1997/01/13 23:34:07 scottr Exp $
 #
 # GENERIC - an all-in-one kernel for the mac68k

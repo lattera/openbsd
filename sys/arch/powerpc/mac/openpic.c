@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.1.2.2 2001/05/14 21:36:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.1.2.3 2001/07/04 10:22:38 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -46,17 +46,17 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
-#ifdef UVM
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
 #include <uvm/uvm.h>
-#endif
 
 #include <machine/autoconf.h>
 #include <machine/intr.h>
 #include <machine/psl.h>
 #include <machine/pio.h>
+#include <machine/powerpc.h>
 #include <powerpc/mac/openpicreg.h>
+#include <dev/ofw/openfirm.h>
 
 #define ICU_LEN 128
 #define LEGAL_IRQ(x) ((x >= 0) && (x < ICU_LEN))
@@ -74,7 +74,6 @@ static char *intr_typename(int type);
 static void intr_calculatemasks();
 static __inline int cntlzw(int x);
 static int mapirq(int irq);
-static int read_irq();
 void openpic_enable_irq_mask(int irq_mask);
 
 extern u_int32_t *heathrow_FCR;
@@ -135,11 +134,6 @@ u_int8_t *interrupt_reg;
 typedef void  (void_f) (void);
 extern void_f *pending_int_f;
 static int prog_switch (void *arg);
-typedef int mac_intr_handle_t;
-
-typedef void     *(intr_establish_t) __P((void *, mac_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
 
 vaddr_t openpic_base;
 void * openpic_intr_establish( void * lcv, int irq, int type, int level,
@@ -153,7 +147,6 @@ openpic_attach(parent, self, aux)
 	void *aux;
 {
 	struct confargs *ca = aux;
-	struct openpic_softc *sc = (void *)self;
 	extern intr_establish_t *intr_establish_func;
 	extern intr_disestablish_t *intr_disestablish_func;
 	extern intr_establish_t *mac_intr_establish_func;
@@ -179,7 +172,7 @@ openpic_attach(parent, self, aux)
 
 #if 1
 	mac_intr_establish(parent, 0x37, IST_LEVEL,
-		IPL_HIGH, prog_switch, 0x37, "prog button");
+		IPL_HIGH, prog_switch, (void*)0x37, "prog button");
 #endif
 	ppc_intr_enable(1);
 
@@ -239,7 +232,6 @@ openpic_intr_establish(lcv, irq, type, level, ih_fun, ih_arg, name)
 {
 	struct intrhand **p, *q, *ih;
 	static struct intrhand fakehand;
-	extern int cold;
 
 	fakehand.ih_next = NULL;
 	fakehand.ih_fun  = fakeintr;
@@ -649,10 +641,7 @@ ext_intr_openpic()
 				ih = ih->ih_next;
 			}
 
-#ifdef UVM
 			uvmexp.intrs++;
-#else
-#endif
 			evirq[realirq].ev_count++;
 		}
 

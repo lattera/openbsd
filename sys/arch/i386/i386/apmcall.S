@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apmcall.S,v 1.1.2.1 2000/02/21 22:29:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apmcall.S,v 1.1.2.2 2001/07/04 10:16:31 niklas Exp $	*/
 
 /*
- * Copyright (c) 2000 Michael Shalayeff
+ * Copyright (c) 2000,2001 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,6 +99,10 @@ ENTRY(apmcall)
 	movl	%ecx, 8(%edi)
 	movl	%edx, 12(%edi)
 
+	testl	$0xff00, %eax
+	jnz	1f
+	xorl	%esi, %esi
+1:
 	movl	%esi, %eax
 
 	popl	%edi

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.1 2001/04/18 16:00:35 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.2 2001/07/04 10:14:26 niklas Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 #
 # Generic Alpha kernel.  Enough to get booted, etc., but not much more.
@@ -9,7 +9,6 @@ include "../../../conf/GENERIC"
 maxusers	32
 
 option		PMAP_NEW	# required
-option		UVM		# required
 
 # CPU Support
 option		DEC_3000_500	# Flamingo etc:	3000/[4-9]00*
@@ -37,14 +36,16 @@ option		PCIVERBOSE		# recognize "unknown" PCI devices
 option		TCVERBOSE		# recognize "unknown" TC devices
 option		USBVERBOSE
 
+option		USER_PCICONF		# user-space PCI configuration
+
 config		bsd	swap generic
 
 mainbus0 at	root
 cpu*	at	mainbus0
 
 # PCI USB Controllers
-uhci*	at pci?				# Universal Host Controller (Intel)
-ohci*	at pci?				# Open Host Controller
+uhci*	at pci? disable			# Universal Host Controller (Intel)
+ohci*	at pci?	disable			# Open Host Controller
 
 # USB bus support
 usb*	at uhci?
@@ -62,11 +63,11 @@ ucom*	at uftdi? portno ?
 uaudio* at uhub? port ? configuration ?	# USB Audio
 ulpt*	at uhub? port ? configuration ? # USB Printers
 ukbd*	at uhub? port ? configuration ?	# USB Keyboards
-wskbd*	at ukbd? console ? mux 1
+wskbd*	at ukbd? console ?
 umass*	at uhub? port ? configuration ? # USB Mass Storage devices
 scsibus* at umass?
 ums*	at uhub? port ? configuration ?	# USB Mice
-wsmouse* at ums? mux 0
+wsmouse* at ums?
 aue*	at uhub? port ?			# ADMtek AN986 Pegasus Ethernet
 cue*	at uhub? port ?			# CATC USB-EL1201A based Ethernet
 kue*	at uhub? port ?			# Kawasaki KL5KUSB101B based Ethernet
@@ -130,10 +131,8 @@ ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
 scsibus* at ahc?
 isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
 scsibus* at isp?
-ncr*	at pci? dev ? function ?	# NCR 53c8xx SCSI (old)
-scsibus* at ncr?
-#siop*	at pci? dev ? function ?	# NCR 53c8xx SCSI (new)
-#scsibus* at siop?
+siop*	at pci? dev ? function ?	# NCR 53c8xx SCSI
+scsibus* at siop?
 
 #UNTESTED: the following three drivers are untested.
 adw*	at pci? dev ? function ?	# AdvanSys ULTRA WIDE SCSI
@@ -155,6 +154,7 @@ ne*	at pci? dev ? function ?	# NE2000-compat ethernet cards
 fxp*	at pci? dev ? function ?	# EtherExpress 10/100B ethernet
 ep*	at pci? dev ? function ?	# 3COM 3c59x
 xl*	at pci? dev ? function ?	# 3COM 3c9xx
+txp*	at pci? dev ? function ?	# 3COM 3CR990
 fpa*	at pci? dev ? function ?	# DEC DEFPA FDDI cards
 
 #UNTESTED:  the vollowing section of drivers is untested on alpha.
@@ -189,6 +189,7 @@ iophy*	at mii? phy ?			# Intel 82553 PHYs
 icsphy*	at mii? phy ?			# ICS 1890 PHYs
 lxtphy*	at mii? phy ?			# Level1 LXT970 PHYs
 nsphy*	at mii? phy ?			# NS and compatible PHYs
+nsphyter*	at mii? phy ?		# NS and compatible PHYs
 qsphy*	at mii? phy ?			# Quality Semi QS6612 PHYs
 sqphy*	at mii? phy ?			# Seeq 8x220 PHYs
 rlphy*	at mii? phy ?			# RealTek 8139 internal PHYs
@@ -290,14 +291,13 @@ wsdisplay*	at	vga?
 #wsdisplay*	at	sfb?
 wsdisplay*	at	tga?
 wskbd*		at	pckbd?
-wsmouse*	at	pms? mux 0
-
-# mouse & keyboard multiplexor pseudo-devices
-pseudo-device   wsmux           2
+wsmouse*	at	pms?
 
 # crypto support
-#BROKEN: The following two drivers are broken because of 64-bit issues.
-#hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
+hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
 #ubsec*	at pci? dev ? function ?	# Bluesteel Networks 5xxx crypto card
+#ises*	at pci? dev ? function ?	# Pijnenburg PCC-ISES
 
 #pseudo-device	raid		4	# RAIDframe disk driver
+pseudo-device	crypto		1
+

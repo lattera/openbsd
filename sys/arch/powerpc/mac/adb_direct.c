@@ -259,7 +259,6 @@ void	pm_init_adb_device __P((void));
 #ifdef ADB_DEBUG
 void	print_single __P((u_char *));
 #endif
-void	adb_intr __P((void));
 void	adb_intr_II __P((void));
 void	adb_intr_IIsi __P((void));
 void	adb_intr_cuda __P((void));
@@ -290,6 +289,7 @@ int	adb_prog_switch_enable __P((void));
 int	adb_prog_switch_disable __P((void));
 /* we should create this and it will be the public version */
 int	send_adb __P((u_char *, void *, void *));
+int setsoftadb __P((void));
 
 #ifdef ADB_DEBUG
 /*
@@ -742,8 +742,8 @@ adb_guess_next_device(void)
  * This routine simply transfers control over to the appropriate
  * code for the machine we are running on.
  */
-void
-adb_intr(void)
+int
+adb_intr(void *arg)
 {
 	switch (adbHardware) {
 	case ADB_HW_II:
@@ -765,6 +765,7 @@ adb_intr(void)
 	case ADB_HW_UNKNOWN:
 		break;
 	}
+	return 1;
 }
 
 
@@ -1896,11 +1897,13 @@ adb_read_date_time(unsigned long *time)
 {
 	u_char output[ADB_MAX_MSG_LENGTH];
 	int result;
+	int retcode;
 	volatile int flag = 0;
 
 	switch (adbHardware) {
 	case ADB_HW_II:
-		return -1;
+		retcode = -1;
+		break;
 
 	case ADB_HW_IISI:
 		output[0] = 0x02;	/* 2 byte message */
@@ -1908,18 +1911,22 @@ adb_read_date_time(unsigned long *time)
 		output[2] = 0x03;	/* read date/time */
 		result = send_adb_IIsi((u_char *)output, (u_char *)output,
 		    (void *)adb_op_comprout, (int *)&flag, (int)0);
-		if (result != 0)	/* exit if not sent */
-			return -1;
+		if (result != 0) {	/* exit if not sent */
+			retcode = -1;
+			break;
+		}
 
 		while (0 == flag)	/* wait for result */
 			;
 
 		*time = (long)(*(long *)(output + 1));
-		return 0;
+		retcode = 0;
+		break;
 
 	case ADB_HW_PB:
 		pm_read_date_time(time);
-		return 0;
+		retcode = 0;
+		break;
 
 	case ADB_HW_CUDA:
 		output[0] = 0x02;	/* 2 byte message */
@@ -1927,19 +1934,32 @@ adb_read_date_time(unsigned long *time)
 		output[2] = 0x03;	/* read date/time */
 		result = send_adb_cuda((u_char *)output, (u_char *)output,
 		    (void *)adb_op_comprout, (void *)&flag, (int)0);
-		if (result != 0)	/* exit if not sent */
-			return -1;
+		if (result != 0) {	/* exit if not sent */
+			retcode = -1;
+			break;
+		}
 
 		while (0 == flag)	/* wait for result */
 			;
 
+		delay(20); /* completion occurs too soon? */
 		memcpy(time, output + 1, 4);
-		return 0;
+		retcode = 0;
+		break;
 
 	case ADB_HW_UNKNOWN:
 	default:
-		return -1;
+		retcode = -1;
+		break;
 	}
+	if (retcode == 0) {
+#define DIFF19041970 2082844800
+		*time -= DIFF19041970;
+
+	} else {
+		*time = 0;
+	}
+	return retcode;
 }
 
 /* caller should really use machine-independant version: setPramTime */
@@ -1951,6 +1971,7 @@ adb_set_date_time(unsigned long time)
 	int result;
 	volatile int flag = 0;
 
+	time += DIFF19041970;
 	switch (adbHardware) {
 
 	case ADB_HW_CUDA:

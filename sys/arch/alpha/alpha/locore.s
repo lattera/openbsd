@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.1 2001/04/18 16:00:22 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.11.2.2 2001/07/04 10:14:20 niklas Exp $ */
 /* $NetBSD: locore.s,v 1.80 2000/09/04 00:31:59 thorpej Exp $ */
 
 /*-
@@ -624,9 +624,7 @@ LEAF(savefpstate, 1)
 	stt	$f25, (25 * 8)(t1)
 	stt	$f26, (26 * 8)(t1)
 	stt	$f27, (27 * 8)(t1)
-	.set noat
 	stt	$f28, (28 * 8)(t1)
-	.set at
 	stt	$f29, (29 * 8)(t1)
 	stt	$f30, (30 * 8)(t1)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.6.12.1 2001/05/14 21:38:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/gencons.c,v 1.6.12.2 2001/07/04 10:24:34 niklas Exp $	*/
 /*	$NetBSD: gencons.c,v 1.22 2000/01/24 02:40:33 matt Exp $	*/
 
 /*
@@ -240,6 +240,7 @@ gencnstop(tp, flag)
         struct tty *tp;
         int flag;
 {
+	return 0;
 }
 
 void

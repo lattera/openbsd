@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.2 2001/04/18 16:13:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.3 2001/07/04 10:22:24 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.1 1996/09/30 16:34:28 ws Exp $	*/
 
 /*-
@@ -38,6 +38,7 @@
 #endif	/* _LOCORE */
 #endif
 
+
 /*
  * Machine dependent constants for PowerPC (32-bit only currently)
  */
@@ -50,6 +51,7 @@
 
 #define	ALIGNBYTES	(sizeof(double) - 1)
 #define	ALIGN(p)	(((u_int)(p) + ALIGNBYTES) & ~ALIGNBYTES)
+#define ALIGNED_POINTER(p,t)	((((u_long)(p)) & (sizeof(t)-1)) == 0)
 
 #define	PGSHIFT		12
 #define	NBPG		4096
@@ -63,9 +65,6 @@
 #define	BLKDEV_IOSIZE	NBPG
 #define	MAXPHYS		(64 * 1024)	/* max raw I/O transfer size */
 
-#define	CLSIZELOG2	0
-#define	CLSIZE		(1 << CLSIZELOG2)
-
 #define	UPAGES		4
 #define	USPACE		(UPAGES * NBPG)
 
@@ -73,7 +72,7 @@
 
 /*
  * Constants related to network buffer management.
- * MCLBYTES must be no larger than CLBYTES (the software page size), and,
+ * MCLBYTES must be no larger than the software page size, and,
  * on machines that exchange pages of input or output buffers with mbuf
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
@@ -94,10 +93,10 @@
 #define MSGBUFSIZE	(NBPG*2)
 
 /*
- * Size of kernel malloc arena in CLBYTES-sized logical pages.
+ * Size of kernel malloc arena in logical pages.
  */
 #ifndef	NKMEMCLUSTERS
-#define	NKMEMCLUSTERS	(16 * 1024 * 1024 / CLBYTES)
+#define	NKMEMCLUSTERS	(16 * 1024 * 1024 / PAGE_SIZE)
 #endif
 
 /*

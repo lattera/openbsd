@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/via.c,v 1.15 1998/05/03 07:16:53 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/via.c,v 1.15.8.1 2001/07/04 10:18:43 niklas Exp $	*/
 /*	$NetBSD: via.c,v 1.58 1997/03/04 04:11:52 scottr Exp $	*/
 
 /*-
@@ -112,7 +112,7 @@ void *slotptab[7] = {
 };
 
 void
-VIA_initialize()
+via_init()
 {
 	/* Initialize VIA1 */
 	/* set all timers to 0 */

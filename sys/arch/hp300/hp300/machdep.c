@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.2 2000/03/24 09:07:25 niklas Exp $	*/
-/*	$NetBSD: machdep.c,v 1.94 1997/06/12 15:46:29 mrg Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.3 2001/07/04 10:15:46 niklas Exp $	*/
+/*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -55,6 +55,7 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/kernel.h>
+#include <sys/device.h>
 #include <sys/malloc.h>
 #include <sys/map.h>
 #include <sys/mbuf.h>
@@ -100,9 +101,11 @@
 
 #include <dev/cons.h>
 
-#define	MAXMEM	64*1024*CLSIZE	/* XXX - from cmap.h */
+#define	MAXMEM	64*1024	/* XXX - from cmap.h */
 #include <vm/vm_kern.h>
 #include <vm/vm_param.h>
+
+#include <uvm/uvm_extern.h>
 
 #include "opt_useleds.h"
 
@@ -116,8 +119,11 @@
 /* the following is used externally (sysctl_hw) */
 char	machine[] = MACHINE;	/* from <machine/param.h> */
 
-vm_map_t buffer_map;
-extern vm_offset_t avail_end;
+vm_map_t exec_map = NULL;  
+vm_map_t mb_map = NULL;
+vm_map_t phys_map = NULL;
+
+extern paddr_t avail_start, avail_end;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -163,6 +169,7 @@ char	*hexstr __P((int, int));
 
 /* functions called from locore.s */
 void    dumpsys __P((void));
+void	hp300_init __P((void));
 void    straytrap __P((int, u_short));
 void	nmihand __P((struct frame));
 
@@ -182,8 +189,28 @@ int	conforced;		/* console has been forced */
  * and 68030 systems.  See clock.c for the delay
  * calibration algorithm.
  */
-int	cpuspeed;		/* relative cpu speed; XXX skewed on 68040 */
+int	cpuspeed;		/* relative cpu speed */
 int	delay_divisor;		/* delay constant */
+
+ /*
+ * Early initialization, before main() is called.
+ */
+void
+hp300_init()
+{
+	/*
+	 * Tell the VM system about available physical memory.  The
+	 * hp300 only has one segment.
+	 */
+	uvm_page_physload(atop(avail_start), atop(avail_end),
+	    atop(avail_start), atop(avail_end), VM_FREELIST_DEFAULT);
+
+	/* Initialize the interrupt handlers. */
+	intr_init();
+
+	/* Calibrate the delay loop. */
+	hp300_calibrate_delay();
+}
 
 /*
  * Console initialization: called early on from main,
@@ -233,8 +260,8 @@ cpu_startup()
 	unsigned i;
 	caddr_t v;
 	int base, residual;
-	vm_offset_t minaddr, maxaddr;
-	vm_size_t size;
+	vaddr_t minaddr, maxaddr;
+	vsize_t size;
 #ifdef DEBUG
 	extern int pmapdebug;
 	int opmapdebug = pmapdebug;
@@ -247,9 +274,8 @@ cpu_startup()
 	 * avail_end was pre-decremented in pmap_bootstrap to compensate.
 	 */
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
-		pmap_enter(pmap_kernel(), (vm_offset_t)msgbufp,
-		    avail_end + i * NBPG, VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		pmap_enter(pmap_kernel(), (vaddr_t)msgbufp,
+		    avail_end + i * NBPG, VM_PROT_ALL, TRUE, VM_PROT_ALL);
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -257,68 +283,78 @@ cpu_startup()
 	 */
 	printf(version);
 	identifycpu();
-	printf("real mem  = %d\n", ctob(physmem));
+	printf("real mem  = %u (%uK)\n", ctob(physmem), ctob(physmem)/1024);
 
 	/*
 	 * Find out how much space we need, allocate it,
 	 * and the give everything true virtual addresses.
 	 */
-	size = (vm_size_t)allocsys((caddr_t)0);
-	if ((v = (caddr_t)kmem_alloc(kernel_map, round_page(size))) == 0)
+	size = (vsize_t)allocsys((caddr_t)0);
+	if ((v = (caddr_t)uvm_km_zalloc(kernel_map, round_page(size))) == 0)
 		panic("startup: no room for tables");
 	if ((allocsys(v) - v) != size)
-		panic("startup: talbe size inconsistency");
+		panic("startup: table size inconsistency");
 
 	/*
 	 * Now allocate buffers proper.  They are different than the above
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	size = MAXBSIZE * nbuf;
-	buffer_map = kmem_suballoc(kernel_map, (vm_offset_t *)&buffers,
-				   &maxaddr, size, TRUE);
-	minaddr = (vm_offset_t)buffers;
-	if (vm_map_find(buffer_map, vm_object_allocate(size), (vm_offset_t)0,
-			&minaddr, size, FALSE) != KERN_SUCCESS)
-		panic("startup: cannot allocate buffers");
+	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
+		    NULL, UVM_UNKNOWN_OFFSET,
+		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
+				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+		panic("startup: cannot allocate VM for buffers");
+	minaddr = (vaddr_t)buffers;
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
 	for (i = 0; i < nbuf; i++) {
-		vm_size_t curbufsize;
-		vm_offset_t curbuf;
+		vsize_t curbufsize;
+		vaddr_t curbuf;
+		struct vm_page *pg;
 
 		/*
-		 * First <residual> buffers get (base+1) physical pages
-		 * allocated for them.  The rest get (base) physical pages.
-		 *
-		 * The rest of each buffer occupies virtual space,
-		 * but has no physical memory allocated for it.
+		 * Each buffer has MAXBSIZE bytes of VM space allocated.  Of
+		 * that MAXBSIZE space, we allocate and map (base+1) pages
+		 * for the first "residual" buffers, and then we allocate
+		 * "base" pages for the rest.
 		 */
-		curbuf = (vm_offset_t)buffers + i * MAXBSIZE;
-		curbufsize = CLBYTES * (i < residual ? base+1 : base);
-		vm_map_pageable(buffer_map, curbuf, curbuf+curbufsize, FALSE);
-		vm_map_simplify(buffer_map, curbuf);
+		curbuf = (vaddr_t) buffers + (i * MAXBSIZE);
+		curbufsize = PAGE_SIZE * ((i < residual) ? (base+1) : base);
+
+		while (curbufsize) {
+			pg = uvm_pagealloc(NULL, 0, NULL, 0);
+			if (pg == NULL) 
+				panic("cpu_startup: not enough memory for "
+				    "buffer cache");
+#if defined(PMAP_NEW)
+			pmap_kenter_pgs(curbuf, &pg, 1);
+#else
+			pmap_enter(kernel_map->pmap, curbuf,
+			    VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE,
+			    TRUE, VM_PROT_READ|VM_PROT_WRITE);
+#endif
+			curbuf += PAGE_SIZE;
+			curbufsize -= PAGE_SIZE;
+		}
 	}
+
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
 	 */
-	exec_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr,
-				 16*NCARGS, TRUE);
+	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
+				   16*NCARGS, TRUE, FALSE, NULL);
+
 	/*
 	 * Allocate a submap for physio
 	 */
-	phys_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_PHYS_SIZE, TRUE);
+	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
+				   VM_PHYS_SIZE, TRUE, FALSE, NULL);
 
-	/*
-	 * Finally, allocate mbuf pool.  Since mclrefcnt is an off-size
-	 * we use the more space efficient malloc in place of kmem_alloc.
-	 */
-	mclrefcnt = (char *)malloc(NMBCLUSTERS+CLBYTES/MCLBYTES,
-				   M_MBUF, M_NOWAIT);
-	bzero(mclrefcnt, NMBCLUSTERS+CLBYTES/MCLBYTES);
-	mb_map = kmem_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
-			       VM_MBUF_SIZE, FALSE);
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
+				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
+
 	/*
 	 * Initialize timeouts
 	 */
@@ -327,9 +363,10 @@ cpu_startup()
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif
-	printf("avail mem = %ld\n", ptoa(cnt.v_free_count));
-	printf("using %d buffers containing %d bytes of memory\n",
-		nbuf, bufpages * CLBYTES);
+	printf("avail mem = %lu (%uK)\n", ptoa(uvmexp.free),
+	    ptoa(uvmexp.free)/1024);
+	printf("using %d buffers containing %u bytes (%uK) of memory\n",
+		nbuf, bufpages * PAGE_SIZE, bufpages * PAGE_SIZE / 1024);
 
 	/*
 	 * Tell the VM system that page 0 isn't mapped.
@@ -337,7 +374,7 @@ cpu_startup()
 	 * XXX This is bogus; should just fix KERNBASE and
 	 * XXX VM_MIN_KERNEL_ADDRESS, but not right now.
 	 */
-	if (vm_map_protect(kernel_map, 0, NBPG, VM_PROT_NONE, TRUE)
+	if (uvm_map_protect(kernel_map, 0, NBPG, UVM_PROT_NONE, TRUE)
 	    != KERN_SUCCESS)
 		panic("can't mark page 0 off-limits");
 
@@ -345,11 +382,11 @@ cpu_startup()
 	 * Tell the VM system that writing to kernel text isn't allowed.
 	 * If we don't, we might end up COW'ing the text segment!
 	 *
-	 * XXX Should be m68k_trunc_page(&kernel_text) instead
+	 * XXX Should be trunc_page(&kernel_text) instead
 	 * XXX of NBPG.
 	 */
-	if (vm_map_protect(kernel_map, NBPG, m68k_round_page(&etext),
-	    VM_PROT_READ|VM_PROT_EXECUTE, TRUE) != KERN_SUCCESS)
+	if (uvm_map_protect(kernel_map, NBPG, round_page((vaddr_t)&etext),
+	    UVM_PROT_READ|UVM_PROT_EXEC, TRUE) != KERN_SUCCESS)
 		panic("can't protect kernel text");
 
 	/*
@@ -372,7 +409,6 @@ cpu_startup()
 		printf("kernel does not support -c; continuing..\n");
 #endif
 	}
-	configure();
 }
 
 /*
@@ -423,7 +459,7 @@ allocsys(v)
 	 * 1/2 as many swap buffer headers as file i/o buffers.
 	 */
 	if (bufpages == 0)
-		bufpages = physmem / 10 / CLSIZE;
+		bufpages = physmem / 10;
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -434,7 +470,6 @@ allocsys(v)
 		if (nswbuf > 256)
 			nswbuf = 256;		/* sanity */
 	}
-	valloc(swbuf, struct buf, nswbuf);
 	valloc(buf, struct buf, nbuf);
 	return (v);
 }
@@ -494,95 +529,76 @@ setregs(p, pack, stack, retval)
 char	cpu_model[120];
 extern	char version[];
 
-struct hp300_model {
-	int id;
-	const char *name;
-	const char *designation;
-	const char *speed;
+/*
+ * Text description of models we support, indexed by machineid.
+ */
+const char *hp300_models[] = {
+	"320",		/* HP_320 */
+	"318/319/330",	/* HP_330 */
+	"350",		/* HP_350 */
+	"360",		/* HP_360 */
+	"370",		/* HP_370 */
+	"340",		/* HP_340 */
+	"345",		/* HP_345 */
+	"375",		/* HP_375 */
+	"400",		/* HP_400 */
+	"380",		/* HP_380 */
+	"425",		/* HP_425 */
+	"433",		/* HP_433 */
+	"385"		/* HP_385 */
 };
 
-struct hp300_model hp300_models[] = {
-	{ HP_320,	"320",		"        ", "16.67"	},
-	{ HP_330,	"318/319/330",	"        ", "16.67"	},
-	{ HP_340,	"340",		"        ", "16.67"	},
-	{ HP_345,	"345",		"        ", "50"	},
-	{ HP_350,	"350",		"        ", "25"	},
-	{ HP_360,	"360",		"        ", "25"	},
-	{ HP_370,	"370",		"        ", "33.33"	},
-	{ HP_375,	"375",		"	 ", "50"	},
-	{ HP_380,	"380",		"        ", "25"	},
-	{ HP_385,	"385",		"        ", "33"	},
-	{ HP_400,	"400",		"        ", "50"	},
-	{ HP_425,	"425",		"     t s", "25"	},
-	{ HP_433,	"433",		"    t s ", "33"	},
-	{ 0,		NULL,		NULL,	    NULL	},
-};
+/* Map mmuid to single letter designation in 4xx models (e.g. 425s, 425t) */
+char hp300_designations[] = "    ttss e";
 
 void
 identifycpu()
 {
-	const char *t, *mc, *s;
-	char td;
-	int i, len;
+	const char *t;
+	char mc, *td;
+	int len;
 
 	/*
-	 * Find the model number.
+	 * Map machineid to model name.
 	 */
-	for (t = s = NULL, i = 0; hp300_models[i].name != NULL; i++) {
-		if (hp300_models[i].id == machineid) {
-			t = hp300_models[i].name;
-			s = hp300_models[i].speed;
-
-			if (mmuid < strlen(hp300_models[i].designation)) {
-				td = (hp300_models[i].designation)[mmuid];
-			} else {
-				td = (hp300_models[i].designation)[0];
-			}
-
-			/*
-			 * Adjust speed if the machine appears to be
-			 * running at a different clock rate.  Dividing
-			 * cpuspeed by 2.67 and truncating it works on my
-			 * systems, but I don't want to use floating point.
-			 */
-			if (cputype == CPU_68040) {
-				if (cpuspeed > 100)
-					s = "40";
-				else if (cpuspeed > 80)
-					s = "33";
-				else
-					s = "25";
-			}
-		}
-	}
-	if (t == NULL) {
+	if (machineid >= sizeof(hp300_models) / sizeof(char *)) {
 		printf("\nunknown machineid %d\n", machineid);
 		goto lose;
 	}
+	t = hp300_models[machineid];
 
 	/*
-	 * ...and the CPU type.
+	 * Look up special designation (425s, 425t, etc) by mmuid.
+	 */
+	if (mmuid < strlen(hp300_designations) &&
+	    hp300_designations[mmuid] != ' ') {
+		td = &hp300_designations[mmuid];
+		td[1] = '\0';
+	} else
+		td = "";
+
+	/*
+	 * ...and the CPU type
 	 */
 	switch (cputype) {
 	case CPU_68040:
-		mc = "40";
+		mc = '4';
+		/* adjust cpuspeed by 3/8 on '040 boxes */
+		cpuspeed *= 3;
+		cpuspeed /= 8;
 		break;
 	case CPU_68030:
-		mc = "30";
+		mc = '3';
 		break;
 	case CPU_68020:
-		mc = "20";
+		mc = '2';
 		break;
 	default:
 		printf("\nunknown cputype %d\n", cputype);
 		goto lose;
 	}
-
-	if (td != ' ')
-		sprintf(cpu_model, "HP 9000/%s%c (%sMHz MC680%s CPU", t, td,
-		    s, mc);
-	else
-		sprintf(cpu_model, "HP 9000/%s (%sMHz MC680%s CPU", t, s, mc);
+	sprintf(cpu_model, "HP 9000/%s%s (%dMHz MC680%c0 CPU", t, td, cpuspeed,
+	    mc);
 
 	/*
 	 * ...and the MMU type.
@@ -613,11 +629,11 @@ identifycpu()
 		len += sprintf(cpu_model + len, "+FPU");
 		break;
 	case FPU_68882:
-		len += sprintf(cpu_model + len, ", %sMHz MC68882 FPU", s);
+		len += sprintf(cpu_model + len, ", %dMHz MC68882 FPU", cpuspeed);
 		break;
 	case FPU_68881:
-		len += sprintf(cpu_model + len, ", %sMHz MC68881 FPU",
-		    machineid == HP_350 ? "20" : "16.67");
+		len += sprintf(cpu_model + len, ", %dMHz MC68881 FPU",
+		    machineid == HP_350 ? 20 : 16);
 		break;
 	default:
 		len += sprintf(cpu_model + len, ", unknown FPU");
@@ -643,9 +659,8 @@ identifycpu()
 		}
 	}
 
-	strcat(cpu_model, ")");
-	printf("%s\n", cpu_model);
-#if 0
+	printf("%s)\n", cpu_model);
+#ifdef DEBUG
 	printf("cpu: delay divisor %d", delay_divisor);
 	if (mmuid)
 		printf(", mmuid %d", mmuid);
@@ -697,7 +712,7 @@ identifycpu()
 #if !defined(HP433)
 	case HP_433:
 #endif
-		panic("SPU type not configured");
+		panic("SPU type not configured for machineid %d", machineid);
 	default:
 		break;
 	}
@@ -734,6 +749,12 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 			consdev = NODEV;
 		return (sysctl_rdstruct(oldp, oldlenp, newp, &consdev,
 		    sizeof consdev));
+	case CPU_CPUSPEED:
+		return (sysctl_rdint(oldp, oldlenp, newp, cpuspeed));
+	case CPU_MACHINEID:
+		return (sysctl_rdint(oldp, oldlenp, newp, machineid));
+	case CPU_MMUID:
+		return (sysctl_rdint(oldp, oldlenp, newp, mmuid));
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -746,8 +767,6 @@ void
 boot(howto)
 	int howto;
 {
-	extern int cold;
-
 #if __GNUC__	/* XXX work around lame compiler problem (gcc 2.7.2) */
 	(void)&howto;
 #endif
@@ -820,7 +839,7 @@ cpu_kcore_hdr_t cpu_kcore_hdr;
 
 /*
  * This is called by configure to set dumplo and dumpsize.
- * Dumps always skip the first CLBYTES of disk space
+ * Dumps always skip the first PAGE_SIZE of disk space
  * in case there might be a disk label stored there.
  * If there is extra space, put dump at the end to
  * reduce the chance that swapping trashes it.
@@ -845,7 +864,7 @@ dumpconf()
 	/*
 	 * XXX include the final RAM page which is not included in physmem.
 	 */
-	dumpsize = physmem + 1;
+	dumpsize = physmem;
 
 #ifdef HP300_NEWKVM
 	/* hp300 only uses a single segment. */
@@ -856,7 +875,7 @@ dumpconf()
 	cpu_kcore_hdr.sysseg_pa = pmap_kernel()->pm_stpa;
 #endif	/* HP300_NEWKVM */
 
-	/* Always skip the first CLBYTES, in case there is a label there. */
+	/* Always skip the first block, in case there is a label there. */
 	if (dumplo < ctod(1))
 		dumplo = ctod(1);
 
@@ -878,7 +897,7 @@ dumpsys()
 				/* dump routine */
 	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
 	int pg;			/* page being dumped */
-	vm_offset_t maddr;	/* PA being dumped */
+	paddr_t maddr;		/* PA being dumped */
 	int error;		/* error code from (*dump)() */
 #ifdef HP300_NEWKVM
 	kcore_seg_t *kseg_p;
@@ -902,12 +921,16 @@ dumpsys()
 		if (dumpsize == 0)
 			return;
 	}
-	if (dumplo < 0)
+	if (dumplo <= 0) {
+		printf("\ndump to dev %u,%u not possible\n", major(dumpdev),
+		    minor(dumpdev));
 		return;
+	}
 	dump = bdevsw[major(dumpdev)].d_dump;
 	blkno = dumplo;
 
-	printf("\ndumping to dev 0x%x, offset %ld\n", dumpdev, dumplo);
+	printf("\ndumping to dev %u,%u offset %ld\n", major(dumpdev),
+	    minor(dumpdev), dumplo);
 
 #ifdef HP300_NEWKVM
 	kseg_p = (kcore_seg_t *)dump_hdr;
@@ -969,8 +992,8 @@ dumpsys()
 		if (pg && (pg % NPGMB) == 0)
 			printf("%d ", pg / NPGMB);
 #undef NPGMB
-		pmap_enter(pmap_kernel(), (vm_offset_t)vmmap, maddr,
-		    VM_PROT_READ, TRUE, 0);
+		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, maddr,
+		    VM_PROT_READ, TRUE, VM_PROT_READ);
 
 		error = (*dump)(dumpdev, blkno, vmmap, NBPG);
 		switch (error) {
@@ -1267,7 +1290,7 @@ parityerrorfind()
 	looking = 1;
 	ecacheoff();
 	for (pg = btoc(lowram); pg < btoc(lowram)+physmem; pg++) {
-		pmap_enter(pmap_kernel(), (vm_offset_t)vmmap, ctob(pg),
+		pmap_enter(pmap_kernel(), (vaddr_t)vmmap, ctob(pg),
 		    VM_PROT_READ, TRUE, VM_PROT_READ);
 		ip = (int *)vmmap;
 		for (o = 0; o < NBPG; o += sizeof(int))
@@ -1280,7 +1303,7 @@ parityerrorfind()
 	found = 0;
 done:
 	looking = 0;
-	pmap_remove(pmap_kernel(), (vm_offset_t)vmmap, (vm_offset_t)&vmmap[NBPG]);
+	pmap_remove(pmap_kernel(), (vaddr_t)vmmap, (vaddr_t)&vmmap[NBPG]);
 	ecacheon();
 	splx(s);
 	return(found);

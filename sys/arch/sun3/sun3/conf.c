@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/conf.c,v 1.23.8.2 2001/05/14 21:37:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/conf.c,v 1.23.8.3 2001/07/04 10:24:07 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.51 1996/11/04 16:16:09 gwr Exp $	*/
 
 /*-
@@ -111,6 +111,11 @@ struct bdevsw	bdevsw[] =
 };
 int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 
+#include "pf.h"
+cdev_decl(pf);
+
+#include <altq/altqconf.h>
+
 struct cdevsw	cdevsw[] =
 {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
@@ -192,7 +197,7 @@ struct cdevsw	cdevsw[] =
 	cdev_random_init(1,random),	/* 72: randomness source */
 	cdev_uk_init(NUK,uk),		/* 73: unknown SCSI */
 	cdev_ss_init(NSS,ss),           /* 74: SCSI scanner */
-	cdev_gen_ipf(NIPF,ipl),		/* 75: ip filter log */
+	cdev_pf_init(NPF,pf),		/* 75: packet filter */
 	cdev_lkm_init(NLKM,lkm),	/* 76: loadable module driver */
 	cdev_lkm_dummy(),		/* 77 */
 	cdev_lkm_dummy(),		/* 78 */
@@ -202,6 +207,7 @@ struct cdevsw	cdevsw[] =
 	cdev_lkm_dummy(),		/* 82 */
 	cdev_ch_init(NCH,ch),		/* 83: SCSI autochanger */
 	cdev_ses_init(NSES,ses),	/* 84: SCSI SES or SAF-TE device */
+	cdev_altq_init(NALTQ,altq),	/* 85: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/copy.s,v 1.8.2.1 2001/04/18 16:10:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/copy.s,v 1.8.2.2 2001/07/04 10:18:17 niklas Exp $	*/
 /*	$NetBSD: copy.s,v 1.30 1998/03/04 06:39:14 thorpej Exp $	*/
 
 /*-
@@ -315,7 +315,6 @@ Lcosfault:
 	moveq	#EFAULT,d0
 	bra	Lcosdone
 
-#if defined(UVM)
 /*
  * kcopy(const void *src, void *dst, size_t len);
  *
@@ -346,7 +345,6 @@ Lkcfault:
 	addl    #16,sp			| pop args and return address
 	moveq   #EFAULT,d0		| indicate a fault
 	bra     Lkcdone
-#endif /* UVM */
 
 /*
  * fuword(caddr_t uaddr);

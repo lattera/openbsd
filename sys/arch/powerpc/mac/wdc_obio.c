@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/wdc_obio.c,v 1.2.2.2 2001/05/14 21:36:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/wdc_obio.c,v 1.2.2.3 2001/07/04 10:22:39 niklas Exp $	*/
 /*	$NetBSD: wdc_obio.c,v 1.4 1999/06/14 08:53:06 tsubai Exp $	*/
 
 /*-
@@ -146,8 +146,6 @@ wdc_obio_attach(parent, self, aux)
 	int use_dma = 1;
 	bus_addr_t cmdbase;
 	bus_size_t cmdsize;
-	bus_addr_t ctlbase;
-	bus_size_t ctlsize;
 
 	if (sc->sc_wdcdev.sc_dev.dv_cfdata->cf_flags & WDC_OPTIONS_DMA) {
 		if (ca->ca_nreg >= 16 || ca->ca_nintr == -1)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/prom.h,v 1.4.4.1 2001/04/18 16:11:25 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/prom.h,v 1.4.4.2 2001/07/04 10:20:05 niklas Exp $ */
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -175,6 +175,6 @@ struct mvmeprom_args {
 #define MVMEPROM_REG_NBARGEND	"r11"
 
 #ifndef RB_NOSYM
-#define RB_NOSYM 0x400
+#define RB_NOSYM 0x4000
 #endif
 #endif __MACHINE_PROM_H__

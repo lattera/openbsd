@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.1 2001/04/18 16:11:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.2 2001/07/04 10:20:03 niklas Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -83,7 +83,7 @@ struct clockframe {
 
 extern int intstack;
 
-#define	CLKF_USERMODE(framep)	((((struct trapframe *)(framep))->epsr & 80000000) == 0)
+#define	CLKF_USERMODE(framep)	((((struct trapframe *)(framep))->epsr & PSR_MODE) == 0)
 #define	CLKF_BASEPRI(framep)	(((struct trapframe *)(framep))->mask == 0)
 #define	CLKF_PC(framep)		(((struct trapframe *)(framep))->sxip & ~3)
 #define	CLKF_INTR(framep)	(((struct trapframe *)(framep))->r[31] > intstack)
@@ -112,7 +112,6 @@ extern int intstack;
 #else
 
 #define	ISIIOVA(va) 1
-#define ackbarf	((char *)(va) >= OBIO_START && (char *)(va) < (OBIO_START + OBIO_SIZE))
 #define	IIOV(pa)	((pa))
 #define	IIOP(va)	((va))
 #define	IIOPOFF(pa)	((int)(pa)-(int)OBIO_START)
@@ -127,14 +126,14 @@ extern int intstack;
 
 #define siroff(x)	(ssir &= ~x)
 
-int	ssir;
-int	want_ast;
+extern int	ssir;
+extern int	want_ast;
 
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
-int	want_resched;		/* resched() was called */
+extern int	want_resched;		/* resched() was called */
 #define	need_resched()		(want_resched = 1, want_ast = 1)
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.1 2000/03/24 09:08:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/mem.c,v 1.8.2.2 2001/07/04 10:24:14 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.19 1995/08/08 21:09:01 gwr Exp $	*/
 
 /*
@@ -196,9 +196,8 @@ mmrw(dev, uio, flags)
 			 */
 			o = v & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));
-			if (!kernacc((caddr_t)v, c,
-			    uio->uio_rw == UIO_READ ? B_READ : B_WRITE))
-			{
+			if (!uvm_kernacc((caddr_t)v, c,
+			    uio->uio_rw == UIO_READ ? B_READ : B_WRITE)) {
 				error = EFAULT;
 				goto unlock;
 			}
@@ -228,10 +227,10 @@ mmrw(dev, uio, flags)
 			 */
 			if (devzeropage == NULL) {
 				devzeropage = (caddr_t)
-				    malloc(CLBYTES, M_TEMP, M_WAITOK);
-				bzero(devzeropage, CLBYTES);
+				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK);
+				bzero(devzeropage, PAGE_SIZE);
 			}
-			c = min(iov->iov_len, CLBYTES);
+			c = min(iov->iov_len, PAGE_SIZE);
 			error = uiomove(devzeropage, c, uio);
 			continue;
 

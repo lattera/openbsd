@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.1 2001/04/18 16:13:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.2 2001/07/04 10:22:27 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 1996/09/30 16:34:29 ws Exp $	*/
 
 /*-
@@ -38,6 +38,10 @@
 #include <machine/pte.h>
 
 /*
+ * FUCK 
+#define PMAP_NEW
+ */
+/*
  * Segment registers
  */
 #ifndef	_LOCORE
@@ -52,13 +56,13 @@ typedef u_int sr_t;
 /* V->P mapping data */
 typedef int pmapv_t;
 #define VP_SR_SIZE	32
-#define VP_SR_MASK	VP_SR_SIZE-1
+#define VP_SR_MASK	(VP_SR_SIZE-1)
 #define VP_SR_POS 	27
 #define VP_IDX1_SIZE	1024
-#define VP_IDX1_MASK	VP_IDX1_SIZE-1
+#define VP_IDX1_MASK	(VP_IDX1_SIZE-1)
 #define VP_IDX1_POS 	17
 #define VP_IDX2_SIZE	32
-#define VP_IDX2_MASK	VP_IDX2_SIZE-1
+#define VP_IDX2_MASK	(VP_IDX2_SIZE-1)
 #define VP_IDX2_POS 	12
 
 /*
@@ -72,22 +76,46 @@ struct pmap {
 };
 
 typedef	struct pmap *pmap_t;
+void ptemodify(vm_offset_t pa, u_int mask, u_int val);
 
 #ifdef	_KERNEL
 extern struct pmap kernel_pmap_;
 #define	pmap_kernel()	(&kernel_pmap_)
+int ptebits(paddr_t pa, int bit);
 
-#define pmap_clear_modify(pa)		(ptemodify((pa), PTE_CHG, 0))
-#define	pmap_clear_reference(pa)	(ptemodify((pa), PTE_REF, 0))
-#define	pmap_is_modified(pa)		(ptebits((pa), PTE_CHG))
-#define	pmap_is_referenced(pa)		(ptebits((pa), PTE_REF))
-#define	pmap_change_wiring(pm, va, wired)
+
+#ifdef PMAP_NEW
+#define pmap_clear_modify(page)	 (ptemodify((page)->phys_addr, PTE_CHG, 0))
+#define	pmap_clear_reference(page) (ptemodify((page)->phys_addr, PTE_REF, 0))
+#define	pmap_is_modified(page)	 (ptebits((page)->phys_addr, PTE_CHG))
+#define	pmap_is_referenced(page) (ptebits((page)->phys_addr, PTE_REF))
+#define	pmap_unwire(pm, va)
+#else
+#define pmap_clear_modify(pa)	 (ptemodify((pa), PTE_CHG, 0))
+#define	pmap_clear_reference(pa) (ptemodify((pa), PTE_REF, 0))
+#define	pmap_is_modified(pa)	 (ptebits((pa), PTE_CHG))
+#define	pmap_is_referenced(pa) (ptebits((pa), PTE_REF))
+#define	pmap_unwire(pm, va)
+#endif
 
 #define	pmap_phys_address(x)		(x)
 
 #define pmap_resident_count(pmap)       ((pmap)->pm_stats.resident_count) 
 
+/*
+ * Alternate mapping methods for pool.
+ * Really simple. 0x0->0x80000000 contain 1->1 mappings of the physical
+ * memory.
+ */
+#define PMAP_MAP_POOLPAGE(pa)	((vaddr_t)pa)
+#define PMAP_UNMAP_POOLPAGE(va)	((paddr_t)va)
+
 void pmap_bootstrap __P((u_int kernelstart, u_int kernelend));
+
+void pmap_deactivate __P((struct proc *p));
+void pmap_activate __P((struct proc *p));
+void pmap_real_memory __P((vm_offset_t *start, vm_size_t *size));
+void switchexit __P((struct proc *));
 
 #endif	/* _KERNEL */
 #endif	/* _LOCORE */

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/files.mvme68k,v 1.13.2.1 2001/04/18 16:10:20 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/files.mvme68k,v 1.13.2.2 2001/07/04 10:19:22 niklas Exp $
 
 # config file for mvme68k
 
@@ -96,9 +96,6 @@ file	arch/mvme68k/dev/lp.c			lp needs-count
 device lptwo
 attach lptwo at pcctwo
 file	arch/mvme68k/dev/lptwo.c		lptwo needs-count
-
-# RAM disk for boot tape
-file arch/mvme68k/dev/rd_root.c			ramdisk_hooks
 
 device xdc {target = -1}
 attach xdc at vmes

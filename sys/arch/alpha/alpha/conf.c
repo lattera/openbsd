@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.1 2001/04/18 16:00:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.2 2001/07/04 10:14:19 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.16 1996/10/18 21:26:57 cgd Exp $	*/
 
 /*-
@@ -109,11 +109,6 @@ cdev_decl(com);
 cdev_decl(lpt);
 cdev_decl(rd);
 cdev_decl(raid);
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
 cdev_decl(prom);			/* XXX XXX XXX */
 cdev_decl(wd);
 #include "cy.h"
@@ -138,6 +133,14 @@ cdev_decl(ulpt);
 cdev_decl(ucom);
 #include "ugen.h"
 cdev_decl(ugen);
+#include "pf.h"
+cdev_decl(pf);
+#ifdef USER_PCICONF
+#include "pci.h"
+cdev_decl(pci);
+#endif
+
+#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -176,7 +179,7 @@ struct cdevsw	cdevsw[] =
 	cdev_scanner_init(NSS,ss),	/* 32: SCSI scanner */
 	cdev_uk_init(NUK,uk),		/* 33: SCSI unknown */
 	cdev_random_init(1,random),	/* 34: random data source */
-	cdev_gen_ipf(NIPF,ipl),		/* 35: IP filter log */
+	cdev_pf_init(NPF, pf),		/* 35: packet filter */
 	cdev_disk_init(NWD,wd), 	/* 36: ST506/ESDI/IDE disk */
 	cdev_notdef(),			/* 37 */
         cdev_tty_init(NCY,cy),          /* 38: Cyclom serial port */
@@ -197,6 +200,12 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 51 */
 #endif
+#ifdef USER_PCICONF
+	cdev_pci_init(NPCI,pci),	/* 52: PCI user */
+#else
+	cdev_notdef(),
+#endif
+	cdev_altq_init(NALTQ, altq),	/* 53: ALTQ control interface */
 };
 int	nchrdev = sizeof (cdevsw) / sizeof (cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/db_trace.c,v 1.6 1999/07/05 20:24:29 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/db_trace.c,v 1.6.4.1 2001/07/04 10:22:53 niklas Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.15 1996/02/22 23:23:41 gwr Exp $	*/
 
 /* 
@@ -97,7 +97,8 @@ db_dumpframe (u_int32_t pframe)
 	u_int32_t nextframe;
 	u_int32_t lr;
 	u_int32_t *access;
-	int error;
+	char *name;
+	db_expr_t offset;
 
 	access = (u_int32_t *)(pframe);
 	nextframe = *access;
@@ -105,7 +106,12 @@ db_dumpframe (u_int32_t pframe)
 	access = (u_int32_t *)(pframe+4);
 	lr = *access;
 
-	db_printf("lr %x fp %x nfp %x\n", lr, pframe, nextframe);
+	db_find_sym_and_offset(lr-4, &name, &offset);
+	if (!name) {
+		name = "?";
+		offset = 65536;
+	}
+	db_printf("%s+0x%x fp %x nfp %x\n", name, offset, pframe, nextframe);
 
 	return nextframe;
 }
@@ -119,11 +125,6 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 	db_expr_t	count;
 	char		*modif;
 {
-	int i, val, nargs, spa;
-	db_addr_t	regp;
-	char *		name;
-	boolean_t	kernel_only = TRUE;
-	boolean_t	trace_thread = FALSE;
 
 	if (have_addr == 0){
 		addr = ddb_regs.tf.fixreg[1];

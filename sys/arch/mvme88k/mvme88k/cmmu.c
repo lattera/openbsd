@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.2 2001/04/18 16:11:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.3 2001/07/04 10:20:07 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -309,8 +309,8 @@ cmmu_parity_enable(void)
       break;
 #endif /* MVME197 */
    }
-#endif  /* PARITY_ENABLE */
    CMMU_UNLOCK;
+#endif  /* PARITY_ENABLE */
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.1 2001/04/18 16:10:21 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/flash.c,v 1.6.2.2 2001/07/04 10:19:23 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -207,8 +207,6 @@ flashsavezone(sc, start)
 	u_char *zone;
 
 	zone = (u_char *)malloc(sc->sc_zonesize, M_TEMP, M_WAITOK);
-	if (!zone)
-		return (NULL);
 	sc->sc_vaddr[0] = FLCMD_RESET;
 	bcopy((u_char *)&sc->sc_vaddr[start], zone, sc->sc_zonesize);
 	return (zone);
@@ -394,8 +392,6 @@ flashwrite(dev, uio, flags)
 	int zonestart, zoneoff;
 
 	cmpbuf = (u_char *)malloc(sc->sc_zonesize, M_TEMP, M_WAITOK);
-	if (!cmpbuf)
-		return (ENOMEM);
 
 	while (uio->uio_resid > 0 && error == 0) {
 		iov = uio->uio_iov;

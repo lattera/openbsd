@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/boot.c,v 1.4.4.1 2001/04/18 16:11:45 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/boot.c,v 1.4.4.2 2001/07/04 10:20:26 niklas Exp $ */
 /*	$NetBSD: boot.c,v 1.2 1995/09/23 03:42:52 gwr Exp $ */
 
 /*-
@@ -44,11 +44,6 @@
 #include "stand.h"
 #include "libsa.h"
 
-#define RB_NOSYM 0x400
-#define RB_MULTI 0x4000
-#define RB_EXTRA 0x8000
-#define RB_ASKKERN 0x0010  /* ask kernel name  */
-
 int debug;
 int errno;
 extern char *version;
@@ -64,9 +59,6 @@ main()
 	printf("\n>> OpenBSD/mvme88k bootsd [%s]\n", version);
 
 	ret = parse_args(&file, &flag);
-	if (flag & RB_ASKKERN) {
-		ask = 1;
-	}
 	for (;;) {
 		if (ask) {
 			printf("boot: ");

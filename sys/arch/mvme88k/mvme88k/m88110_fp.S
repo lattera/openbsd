@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_fp.S,v 1.1.4.1 2001/04/18 16:11:36 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_fp.S,v 1.1.4.2 2001/07/04 10:20:17 niklas Exp $	*/
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -48,11 +48,7 @@
  * 2) Floating Point Privilege Violation
  */
 
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
-
-#include "assym.s"
+#include "assym.h"
 #include <machine/trap.h>
 #include <machine/asm.h>
 

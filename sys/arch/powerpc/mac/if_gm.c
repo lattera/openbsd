@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/if_gm.c,v 1.1.2.2 2001/05/14 21:36:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/if_gm.c,v 1.1.2.3 2001/07/04 10:22:36 niklas Exp $	*/
 /*	$NetBSD: if_gm.c,v 1.2 2000/03/04 11:17:00 tsubai Exp $	*/
 
 /*-
@@ -82,7 +82,7 @@ struct gmac_softc {
 #else
 	struct ethercom sc_ethercom;
 #define sc_if sc_ethercom.ec_if
-	char sc_laddr[6];
+	u_int8_t sc_laddr[6];
 #endif
 	vaddr_t sc_reg;
 	bus_space_handle_t gm_bush;
@@ -119,6 +119,7 @@ void gmac_stop __P((struct gmac_softc *));
 void gmac_reset __P((struct gmac_softc *));
 void gmac_init __P((struct gmac_softc *));
 void gmac_init_mac __P((struct gmac_softc *));
+void gmac_setladrf __P((struct gmac_softc *));
 
 int gmac_ioctl __P((struct ifnet *, u_long, caddr_t));
 void gmac_watchdog __P((struct ifnet *));
@@ -129,6 +130,8 @@ int gmac_mii_readreg __P((struct device *, int, int));
 void gmac_mii_writereg __P((struct device *, int, int, int));
 void gmac_mii_statchg __P((struct device *));
 void gmac_mii_tick __P((void *));
+
+u_int32_t ether_crc32_le(const u_int8_t *buf, size_t len);
 
 struct cfattach gm_ca = {
 	sizeof(struct gmac_softc), gmac_match, gmac_attach
@@ -145,11 +148,12 @@ gmac_match(parent, match, aux)
 {
 	struct pci_attach_args *pa = aux;
 
-	if ((PCI_VENDOR(pa->pa_id) == PCI_VENDOR_APPLE) &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_APPLE_GMAC))
-	{
-		return 1;
-	}
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_APPLE)
+		switch (PCI_PRODUCT(pa->pa_id)) {
+		case PCI_PRODUCT_APPLE_GMAC:
+		case PCI_PRODUCT_APPLE_GMAC2:
+			return 1;
+		}
 
 	return 0;
 }
@@ -164,11 +168,8 @@ gmac_attach(parent, self, aux)
 	pci_chipset_tag_t	pc = pa->pa_pc;
 	struct ifnet *ifp = &sc->sc_if;
 	struct mii_data *mii = &sc->sc_mii;
-	pci_intr_handle_t ih;
 	const char *intrstr = NULL;
 	char intrstrbuf[20];
-	bus_addr_t	iobase;
-	bus_size_t	iosize;
 	bus_addr_t	membase;
 	bus_size_t	memsize;
 #ifdef __NetBSD__
@@ -177,7 +178,6 @@ gmac_attach(parent, self, aux)
 	int i;
 	char *p;
 	struct gmac_dma *dp;
-	u_int32_t reg[10];
 	u_char laddr[6];
 
 #ifdef __NetBSD__
@@ -716,9 +716,9 @@ gmac_init_mac(sc)
 {
 	int i, tb;
 #ifdef __NetBSD__
-	char *laddr = sc->sc_laddr;
+	u_int8_t *laddr = sc->sc_laddr;
 #else /* !__NetBSD__ */
-	char *laddr = sc->sc_enaddr;
+	u_int8_t *laddr = sc->sc_enaddr;
 #endif
 
 	__asm ("mftb %0" : "=r"(tb));
@@ -780,17 +780,99 @@ gmac_init_mac(sc)
 }
 
 void
+gmac_setladrf(sc)
+	struct gmac_softc *sc;
+{
+	struct ifnet *ifp = &sc->sc_if;
+	struct ether_multi *enm;
+	struct ether_multistep step;
+#if defined(__OpenBSD__)
+	struct arpcom *ec = &sc->arpcom;
+#else
+	struct ethercom *ec = &sc->sc_ethercom;
+#endif
+	u_int32_t crc;
+	u_int32_t hash[16];
+	u_int v;
+	int i;
+
+	/* Clear hash table */
+	for (i = 0; i < 16; i++)
+		hash[i] = 0;
+
+	/* Get current RX configuration */
+	v = gmac_read_reg(sc, GMAC_RXMACCONFIG);
+
+	if ((ifp->if_flags & IFF_PROMISC) != 0) {
+		/* Turn on promiscuous mode; turn off the hash filter */
+		v |= GMAC_RXMAC_PR;
+		v &= ~GMAC_RXMAC_HEN;
+		ifp->if_flags |= IFF_ALLMULTI;
+		goto chipit;
+	}
+
+	/* Turn off promiscuous mode; turn on the hash filter */
+	v &= ~GMAC_RXMAC_PR;
+	v |= GMAC_RXMAC_HEN;
+
+	/*
+	 * Set up multicast address filter by passing all multicast addresses
+	 * through a crc generator, and then using the high order 8 bits as an
+	 * index into the 256 bit logical address filter.  The high order bit
+	 * selects the word, while the rest of the bits select the bit within
+	 * the word.
+	 */
+
+	ETHER_FIRST_MULTI(step, ec, enm);
+	while (enm != NULL) {
+		if (bcmp(enm->enm_addrlo, enm->enm_addrhi, 6)) {
+			/*
+			 * We must listen to a range of multicast addresses.
+			 * For now, just accept all multicasts, rather than
+			 * trying to set only those filter bits needed to match
+			 * the range.  (At this time, the only use of address
+			 * ranges is for IP multicast routing, for which the
+			 * range is big enough to require all bits set.)
+			 */
+			for (i = 0; i < 16; i++)
+				hash[i] = 0xffff;
+			ifp->if_flags |= IFF_ALLMULTI;
+			goto chipit;
+		}
+
+		crc = ether_crc32_le(enm->enm_addrlo, ETHER_ADDR_LEN);
+
+		/* Just want the 8 most significant bits. */
+		crc >>= 24;
+
+		/* Set the corresponding bit in the filter. */
+		hash[crc >> 4] |= 1 << (crc & 0xf);
+
+		ETHER_NEXT_MULTI(step, enm);
+	}
+
+	ifp->if_flags &= ~IFF_ALLMULTI;
+
+chipit:
+	/* Now load the hash table into the chip */
+	for (i = 0; i < 16; i++)
+		gmac_write_reg(sc, GMAC_HASHTABLE0 + i * 4, hash[i]);
+
+	gmac_write_reg(sc, GMAC_RXMACCONFIG, v);
+}
+
+void
 gmac_init(sc)
 	struct gmac_softc *sc;
 {
 	struct ifnet *ifp = &sc->sc_if;
 	u_int x;
-	int i;
 
 	gmac_stop_txdma(sc);
 	gmac_stop_rxdma(sc);
 
 	gmac_init_mac(sc);
+	gmac_setladrf(sc);
 
 	x = gmac_read_reg(sc, GMAC_RXMACCONFIG);
 	if (ifp->if_flags & IFF_PROMISC)
@@ -1068,4 +1150,28 @@ gmac_enable_hack()
 #endif
 
 	printf("gmac enabled\n");
+}
+
+/* HACK, THIS SHOULD NOT BE IN THIS FILE */
+u_int32_t
+ether_crc32_le(const u_int8_t *buf, size_t len)
+{
+        static const u_int32_t crctab[] = {
+                0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+                0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+                0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+                0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+        };
+        u_int32_t crc;
+        int i;
+
+        crc = 0xffffffffU;      /* initial value */
+
+        for (i = 0; i < len; i++) {
+                crc ^= buf[i];
+                crc = (crc >> 4) ^ crctab[crc & 0xf];
+                crc = (crc >> 4) ^ crctab[crc & 0xf];
+        }
+
+        return (crc);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/apecs.c,v 1.8.14.1 2001/04/18 16:01:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/apecs.c,v 1.8.14.2 2001/07/04 10:14:38 niklas Exp $	*/
 /*	$NetBSD: apecs.c,v 1.16 1996/12/05 01:39:34 cgd Exp $	*/
 
 /*-
@@ -164,6 +164,11 @@ apecs_init(acp, mallocsafe)
 	acp->ac_mallocsafe = mallocsafe;
 
 	apecs_pci_init(&acp->ac_pc, acp);
+	alpha_pci_chipset = &acp->ac_pc;
+	alpha_pci_chipset->pc_name = "apecs";
+	alpha_pci_chipset->pc_mem = APECS_PCI_SPARSE;
+	alpha_pci_chipset->pc_dense = APECS_PCI_DENSE;
+	alpha_pci_chipset->pc_bwx = 0;
 
 	acp->ac_initted = 1;
 }

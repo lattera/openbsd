@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_6600.c,v 1.2.2.1 2001/04/18 16:01:22 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_6600.c,v 1.2.2.2 2001/07/04 10:14:43 niklas Exp $ */
 /* $NetBSD: pci_6600.c,v 1.5 2000/06/06 00:50:15 thorpej Exp $ */
 
 /*-
@@ -85,6 +85,7 @@ const struct evcnt *dec_6600_intr_evcnt __P((void *, pci_intr_handle_t));
 int dec_6600_intr_map __P((void *, pcitag_t, int, int, pci_intr_handle_t *));
 void *dec_6600_pciide_compat_intr_establish __P((void *, struct device *,
     struct pci_attach_args *, int, int (*)(void *), void *));
+void  dec_6600_pciide_compat_intr_disestablish __P((void *, void *));
 
 struct alpha_shared_intr *dec_6600_pci_intr;
 
@@ -368,4 +369,12 @@ dec_6600_pciide_compat_intr_establish(v, dev, pa, chan, func, arg)
 		return (NULL);
 #endif
 	return (cookie);
+}
+
+void
+dec_6600_pciide_compat_intr_disestablish(v, cookie)
+	void *v;
+	void *cookie;
+{
+	sio_intr_disestablish(NULL, cookie);
 }

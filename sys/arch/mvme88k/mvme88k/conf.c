@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/conf.c,v 1.12.4.1 2001/04/18 16:11:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/conf.c,v 1.12.4.2 2001/07/04 10:20:08 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -195,13 +195,13 @@ cdev_decl(ksyms);
 #define NLKM 0
 #endif
 
-#ifdef IPFILTER
-#define NIPF 1
-#else
-#define NIPF 0
-#endif
+
+#include "pf.h"
+cdev_decl(pf);
 
 cdev_decl(lkm);
+
+#include <altq/altqconf.h>
 
 struct cdevsw	cdevsw[] =
 {
@@ -258,7 +258,7 @@ struct cdevsw	cdevsw[] =
 	cdev_lkm_dummy(),                /* 36 */
 	cdev_lkm_dummy(),                /* 37 */
 	cdev_lkm_dummy(),                /* 38 */
-	cdev_gen_ipf(NIPF,ipl),          /* 39: IP filter */
+	cdev_pf_init(NPF,pf),		/* 39: packet filter */
 	cdev_random_init(1,random),	 /* 40: random data source */
 	cdev_notdef(),                   /* 41 */
 	cdev_notdef(),                   /* 42 */
@@ -275,6 +275,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),                   /* 51 */
 #endif
+	cdev_altq_init(NALTQ,altq),	/* 52: ALTQ control interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

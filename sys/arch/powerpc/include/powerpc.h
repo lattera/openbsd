@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/powerpc.h,v 1.4 1999/07/05 21:01:19 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/powerpc.h,v 1.4.4.1 2001/07/04 10:22:27 niklas Exp $	*/
 /*	$NetBSD: powerpc.h,v 1.1 1996/09/30 16:34:30 ws Exp $	*/
 
 /*
@@ -76,5 +76,11 @@ struct firmware {
 #endif
 };
 extern  struct firmware *fw;
+void ofwconprobe(void);
+int ppc_open_pci_bridge __P((void));
+void ppc_close_pci_bridge __P((int));
+void install_extint __P((void (*handler) (void)));
+void ppc_intr_enable __P((int enable));
+int ppc_intr_disable __P((void));
 
 #endif	/* _MACHINE_POWERPC_H_ */

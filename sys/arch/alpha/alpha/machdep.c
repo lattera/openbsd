@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.3 2001/04/18 16:00:22 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.4 2001/07/04 10:14:21 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.206 2000/05/23 05:12:54 thorpej Exp $ */
 
 /*-
@@ -117,6 +117,8 @@
 #include <machine/rpb.h>
 #include <machine/prom.h>
 #include <machine/cpuconf.h>
+
+#include <dev/pci/pcivar.h>
 
 #ifdef DDB
 #include <machine/db_machdep.h>
@@ -856,7 +858,7 @@ allocsys(v)
 	 * minimum of 16 buffers.
 	 */
 	if (bufpages == 0)
-		bufpages = (physmem / ((100/BUFCACHEPERCENT) / CLSIZE));
+		bufpages = (physmem / (100/BUFCACHEPERCENT));
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -983,13 +985,6 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	/*
-	 * Finally, allocate mbuf pool.  Since mclrefcnt is an off-size
-	 * we use the more space efficient malloc in place of kmem_alloc.
-	 */
-	mclrefcnt = (char *)malloc(NMBCLUSTERS+CLBYTES/MCLBYTES,
-			M_MBUF, M_NOWAIT);
-	bzero(mclrefcnt, NMBCLUSTERS+CLBYTES/MCLBYTES);
 	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr,
 			VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
@@ -1026,7 +1021,6 @@ cpu_startup()
 		printf("kernel does not support -c; continuing..\n");
 #endif
 	}
-	configure();
 
 	/*
 	 * Set up the HWPCB so that it's safe to configure secondary
@@ -1121,8 +1115,6 @@ void
 boot(howto)
 	int howto;
 {
-	extern int cold;
-
 #if defined(MULTIPROCESSOR)
 #if 0 /* XXX See below. */
 	u_long cpu_id;
@@ -1783,8 +1775,7 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 {
 	dev_t consdev;
 
-	/* all sysctl names at this level are terminal */
-	if (namelen != 1)
+	if (name[0] != CPU_CHIPSET && namelen != 1)
 		return (ENOTDIR);		/* overloaded */
 
 	switch (name[0]) {
@@ -1816,6 +1807,9 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (sysctl_rdstring(oldp, oldlenp, newp,
 		    bootinfo.booted_kernel));
 
+	case CPU_CHIPSET:
+		return (alpha_sysctl_chipset(name + 1, namelen - 1, oldp,
+		    oldlenp));
 	default:
 		return (EOPNOTSUPP);
 	}
