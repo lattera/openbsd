@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/run.c,v 1.2 1996/06/26 05:39:45 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/run.c,v 1.3 1996/12/22 03:26:04 tholo Exp $	*/
 
 /*
  * Copyright (c) 1991 Carnegie Mellon University
@@ -50,6 +50,9 @@
  **********************************************************************
  * HISTORY
  * $Log: run.c,v $
+ * Revision 1.2  1996/06/26 05:39:45  deraadt
+ * rcsid
+ *
  * Revision 1.1  1995/12/16 11:46:49  deraadt
  * add sup to the tree
  *
@@ -167,7 +170,9 @@ int usepath;
 		return(-1);	/* no more process's, so exit with error */
 
 	if (pid == 0) {			/* child process */
+		setegid (getgid());
 		setgid (getgid());
+		seteuid (getuid());
 		setuid (getuid());
 		(*execrtn) (name,argv);
 		fprintf (stderr,"run: can't exec %s\n",name);

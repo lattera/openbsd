@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supfilesrv.c,v 1.4 1996/07/31 11:11:31 niklas Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supfilesrv.c,v 1.5 1996/12/22 03:26:05 tholo Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -44,6 +44,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supfilesrv.c,v $
+ * Revision 1.4  1996/07/31 11:11:31  niklas
+ * Better use time_t instead of long when dealing with times
+ *
  * Revision 1.3  1996/06/26 05:39:54  deraadt
  * rcsid
  *
@@ -1644,15 +1647,23 @@ int fileuid,filegid;
 #if	CMUCS
 	if (setgroups (grps[0], &grps[1]) < 0)
 		logerr ("setgroups: %%m");
+	if (setegid ((gid_t)grp->gr_gid) < 0)
+		logerr ("setegid: %%m");
 	if (setgid ((gid_t)grp->gr_gid) < 0)
 		logerr ("setgid: %%m");
+	if (seteuid ((uid_t)pwd->pw_uid) < 0)
+		logerr ("seteuid: %%m");
 	if (setuid ((uid_t)pwd->pw_uid) < 0)
 		logerr ("setuid: %%m");
 #else   /* CMUCS */
 	if (initgroups (pwd->pw_name,pwd->pw_gid) < 0)
 		return("Error setting group list");
+	if (setegid (pwd->pw_gid) < 0)
+		logerr ("setegid: %%m");
 	if (setgid (pwd->pw_gid) < 0)
 		logerr ("setgid: %%m");
+	if (seteuid (pwd->pw_uid) < 0)
+		logerr ("seteuid: %%m");
 	if (setuid (pwd->pw_uid) < 0)
 		logerr ("setuid: %%m");
 #endif	/* CMUCS */
