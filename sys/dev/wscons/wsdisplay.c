@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.50 2003/02/23 19:08:11 tedu Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.50.4.1 2004/11/02 02:14:04 brad Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -1171,7 +1171,8 @@ wsdisplay_internal_ioctl(sc, scr, cmd, data, flag, p)
 			if (!sc->sc_burnman) {
 				sc->sc_burnout = sc->sc_burnoutintvl;
 				/* reinit timeout if changed */
-				wsdisplay_burn(sc, sc->sc_burnflags);
+				if ((scr->scr_flags & SCR_GRAPHICS) == 0)
+					wsdisplay_burn(sc, sc->sc_burnflags);
 			}
 		}
 		return (error);
