@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*
@@ -34,7 +34,6 @@
 #include <sys/device.h>
 #include <sys/buf.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

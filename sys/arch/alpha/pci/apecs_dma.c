@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/apecs_dma.c,v 1.1.2.1 2001/04/18 16:01:06 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/apecs_dma.c,v 1.1.2.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: apecs_dma.c,v 1.13 2000/06/29 08:58:45 mrg Exp $ */
 
 /*-
@@ -50,7 +50,6 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

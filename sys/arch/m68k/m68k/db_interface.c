@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_interface.c,v 1.10 2000/01/01 22:18:54 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_interface.c,v 1.10.2.1 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.24 1997/02/18 22:27:32 gwr Exp $	*/
 
 /* 
@@ -35,7 +35,7 @@
 #include <sys/reboot.h>
 #include <sys/systm.h> /* just for boothowto --eichin */
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/cons.h>
 

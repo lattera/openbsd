@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -62,7 +62,7 @@
  * Size of shared memory map
  */
 #ifndef	SHMMAXPGS
-#define	SHMMAXPGS	1024
+#define	SHMMAXPGS       4096
 #endif
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/mem.c,v 1.9.2.2 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/mem.c,v 1.9.2.3 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.22 1999/03/27 00:30:07 mycroft Exp $	*/
 
 /*
@@ -54,8 +54,6 @@
 #include <sys/malloc.h>
 
 #include <machine/cpu.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -211,10 +209,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	/*
 	 * /dev/mem is the only one that makes sense through this

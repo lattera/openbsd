@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.8 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.9 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -56,7 +56,7 @@ _C_LABEL(splx):
 	movl	4(%esp),%eax
 	movl	%eax,CPL
 	testl	%eax,%eax
-	jnz	_C_LBALE(Xspllower)
+	jnz	_C_LABEL(Xspllower)
 	ret
 #endif /* PROF || GPROF */
 	
@@ -138,7 +138,7 @@ IDTVEC(doreti)
 
 IDTVEC(softtty)
 #if NPCCOM > 0
-	leal	SIR_TTYMASK(%ebx),%eax
+	movl	$IPL_SOFTTTY(%ebx),%eax
 	movl	%eax,CPL
 	call	_C_LABEL(comsoft)
 	movl	%ebx,CPL
@@ -153,7 +153,7 @@ IDTVEC(softtty)
 1:
 
 IDTVEC(softnet)
-	leal	SIR_NETMASK(%ebx),%eax
+	movl	$IPL_SOFTNET,%eax
 	movl	%eax,CPL
 	xorl	%edi,%edi
 	xchgl	_C_LABEL(netisr),%edi
@@ -163,7 +163,7 @@ IDTVEC(softnet)
 #undef DONETISR
 
 IDTVEC(softclock)
-	leal	SIR_CLOCKMASK(%ebx),%eax
+	movl	$IPL_SOFTCLOCK,%eax
 	movl	%eax,CPL
 	call	_C_LABEL(softclock)
 	movl	%ebx,CPL

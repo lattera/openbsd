@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.3 2001/07/14 10:02:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.4 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
@@ -54,7 +54,6 @@
 #include <sys/ioctl.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
@@ -547,7 +546,7 @@ npxdna(struct cpu_info *ci)
 	}
 
 #ifdef DIAGNOSTIC
-	if (lapic_tpr > 0 || ci->ci_fpsaving != 0)
+	if (lapic_tpr > IPL_NONE || ci->ci_fpsaving != 0)
 		panic("npxdna: masked");
 #endif
 
@@ -637,7 +636,7 @@ npxsave_cpu(struct cpu_info *ci)
 	KDASSERT(ci == curcpu());
 
 #ifdef DIAGNOSTIC
-	if (lapic_tpr > 0 || ci->ci_fpsaving != 0)
+	if (lapic_tpr > IPL_NONE || ci->ci_fpsaving != 0)
 		panic("npxsave_cpu: masked");
 #endif
 	if (p == NULL)

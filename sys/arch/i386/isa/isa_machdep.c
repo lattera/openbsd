@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.7 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.8 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -124,7 +124,7 @@
 #include <sys/malloc.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include "ioapic.h"
 
@@ -136,6 +136,7 @@
 #define _I386_BUS_DMA_PRIVATE
 #include <machine/bus.h>
 
+#include <machine/intr.h>
 #include <machine/pio.h>
 #include <machine/cpufunc.h>
 
@@ -176,7 +177,7 @@ int	_isa_bus_dmamap_load_raw __P((bus_dma_tag_t, bus_dmamap_t,
 	    bus_dma_segment_t *, int, bus_size_t, int));
 void	_isa_bus_dmamap_unload __P((bus_dma_tag_t, bus_dmamap_t));
 void	_isa_bus_dmamap_sync __P((bus_dma_tag_t, bus_dmamap_t,
-	    bus_dmasync_op_t));
+	    bus_addr_t, bus_size_t, int));
 
 int	_isa_bus_dmamem_alloc __P((bus_dma_tag_t, bus_size_t, bus_size_t,
 	    bus_size_t, bus_dma_segment_t *, int, int *, int));
@@ -277,13 +278,13 @@ isa_nodefaultirq()
 int
 isa_nmi()
 {
-
 	/* This is historic garbage; these ports are not readable */
 	log(LOG_CRIT, "No-maskable interrupt, may be parity error\n");
 	return(0);
 }
 
-u_long	intrstray[ICU_LEN] = {0};
+u_long  intrstray[ICU_LEN];
+
 /*
  * Caught a stray interrupt, notify
  */
@@ -324,7 +325,7 @@ intr_calculatemasks()
 	for (irq = 0; irq < ICU_LEN; irq++) {
 		int levels = 0;
 		for (q = intrhand[irq]; q; q = q->ih_next)
-			levels |= 1 << (q->ih_level>>CPSHIFT);
+			levels |= 1 << IPL(q->ih_level);
 		intrlevel[irq] = levels;
 		if (levels)
 			unusedirqs &= ~(1 << irq);
@@ -342,57 +343,21 @@ intr_calculatemasks()
 	/*
 	 * Initialize soft interrupt masks to block themselves.
 	 */
-#if 0
-	IMASK(IPL_AST) |= 1 << SIR_AST;
-#endif
 	IMASK(IPL_SOFTCLOCK) |= 1 << SIR_CLOCK;
 	IMASK(IPL_SOFTNET) |= 1 << SIR_NET;
-	
-#if 0
-	/*
-	 * IPL_NONE is used for hardware interrupts that are never blocked,
-	 * and do not block anything else.
-	 */
-	IMASK(IPL_NONE) = 0;
-#endif
+	IMASK(IPL_SOFTTTY) |= 1 << SIR_TTY;
 
 	/*
 	 * Enforce a hierarchy that gives slow devices a better chance at not
 	 * dropping data.
 	 */
-	for (level = 0; level<(NIPL-1); level++)
-		imask[level+1] |= imask[level];
-	
-#if 0
-	IMASK(IPL_SOFTCLOCK) |= IMASK(IPL_NONE);
-	IMASK(IPL_SOFTNET) |= IMASK(IPL_SOFTCLOCK);
-	IMASK(IPL_BIO) |= IMASK(IPL_SOFTNET);
-	IMASK(IPL_NET) |= IMASK(IPL_BIO);
-
-	/*
-	 * There are tty, network and disk drivers that use free() at interrupt
-	 * time, so imp > (tty | net | bio).
-	 */
-	IMASK(IPL_IMP) |= IMASK(IPL_TTY);
-
-	IMASK(IPL_AUDIO) |= IMASK(IPL_IMP);
-
-	/*
-	 * Since run queues may be manipulated by both the statclock and tty,
-	 * network, and disk drivers, clock > imp.
-	 */
-	IMASK(IPL_CLOCK) |= IMASK(IPL_AUDIO);
-
-	/*
-	 * IPL_HIGH must block everything that can manipulate a run queue.
-	 */
-	IMASK(IPL_HIGH) |= IMASK(IPL_CLOCK);
-#endif
+	for (level = 0; level < NIPL - 1; level++)
+		imask[level + 1] |= imask[level];
 
 	/* And eventually calculate the complete masks. */
 	for (irq = 0; irq < ICU_LEN; irq++) {
 		int irqs = 1 << irq;
-		int level = 0;
+		int level = IPL_NONE;
 
 		if (intrhand[irq] == NULL) {
 			level = IPL_HIGH;
@@ -405,13 +370,15 @@ intr_calculatemasks()
 			}
 		}
 		if (irqs != IMASK(level))
-			panic("irq %d level %x mask mismatch: %x vs %x", irq, level, irqs, IMASK(level));
-		
-		ilevel[irq] = level;
+			panic("irq %d level %x mask mismatch: %x vs %x", irq,
+			    level, irqs, IMASK(level));
+
 		intrmask[irq] = irqs;
+		ilevel[irq] = level;
+
 #if 0
-		printf("irq %d: level %x, mask 0x%x (%x)\n",
-		    irq, ilevel[irq], intrmask[irq], IMASK(ilevel[irq]));
+		printf("irq %d: level %x, mask 0x%x (%x)\n", irq, ilevel[irq],
+		    intrmask[irq], IMASK(ilevel[irq]));
 #endif
 	}
 
@@ -425,6 +392,8 @@ intr_calculatemasks()
 			irqs |= 1 << IRQ_SLAVE;
 		imen = ~irqs;
 	}
+
+	/* For speed of splx, provide the inverse of the interrupt masks. */
 	for (irq = 0; irq < ICU_LEN; irq++)
 		iunmask[irq] = ~imask[irq];
 }
@@ -983,12 +952,23 @@ _isa_bus_dmamap_unload(t, map)
  * Synchronize an ISA DMA map.
  */
 void
-_isa_bus_dmamap_sync(t, map, op)
+_isa_bus_dmamap_sync(t, map, offset, len, op)
 	bus_dma_tag_t t;
 	bus_dmamap_t map;
-	bus_dmasync_op_t op;
+	bus_addr_t offset;
+	bus_size_t len;
+	int op;
 {
 	struct i386_isa_dma_cookie *cookie = map->_dm_cookie;
+
+#ifdef DEBUG
+	if ((op & (BUS_DMASYNC_PREWRITE|BUS_DMASYNC_POSTREAD)) != 0) {
+		if (offset >= map->dm_mapsize)
+			panic("_isa_bus_dmamap_sync: bad offset");
+		if (len == 0 || (offset + len) > map->dm_mapsize)
+			panic("_isa_bus_dmamap_sync: bad length");
+	}
+#endif
 
 	switch (op) {
 	case BUS_DMASYNC_PREREAD:
@@ -1003,8 +983,9 @@ _isa_bus_dmamap_sync(t, map, op)
 		 * caller's buffer to the bounce buffer.
 		 */
 		if (cookie->id_flags & ID_IS_BOUNCING)
-			bcopy(cookie->id_origbuf, cookie->id_bouncebuf,
-			    cookie->id_origbuflen);
+			bcopy(cookie->id_origbuf + offset,
+			    cookie->id_bouncebuf + offset,
+			    len);
 		break;
 
 	case BUS_DMASYNC_POSTREAD:
@@ -1013,8 +994,9 @@ _isa_bus_dmamap_sync(t, map, op)
 		 * bounce buffer to the caller's buffer.
 		 */
 		if (cookie->id_flags & ID_IS_BOUNCING)
-			bcopy(cookie->id_bouncebuf, cookie->id_origbuf,
-			    cookie->id_origbuflen);
+			bcopy(cookie->id_bouncebuf + offset,
+			    cookie->id_origbuf + offset,
+			    len);
 		break;
 
 	case BUS_DMASYNC_POSTWRITE:
@@ -1312,7 +1294,7 @@ isadma_copyfrombuf(addr, nbytes, nphys, phys)
 	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
 	bus_dmamap_t dmam = phys[0].dmam;
 
-	bus_dmamap_sync(dmat, dmam, BUS_DMASYNC_POSTREAD);
+	bus_dmamap_sync(dmat, dmam, 0, dmam->dm_mapsize, BUS_DMASYNC_POSTREAD);
 }
 
 /*
@@ -1328,7 +1310,7 @@ isadma_copytobuf(addr, nbytes, nphys, phys)
 	bus_dma_tag_t dmat = ((struct isa_softc *)isa_dev)->sc_dmat;
 	bus_dmamap_t dmam = phys[0].dmam;
 
-	bus_dmamap_sync(dmat, dmam, BUS_DMASYNC_PREWRITE);
+	bus_dmamap_sync(dmat, dmam, 0, dmam->dm_mapsize, BUS_DMASYNC_PREWRITE);
 }
 #endif /* __ISADMA_COMPAT */
 #endif /* NISADMA > 0 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: macrom.c,v 1.31 1997/03/01 17:20:34 scottr Exp $	*/
 
 /*-
@@ -51,7 +51,7 @@
 #include <sys/queue.h>
 #include <sys/lock.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/viareg.h>
 #include "macrom.h"

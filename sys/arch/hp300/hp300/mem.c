@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/mem.c,v 1.11.2.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/mem.c,v 1.11.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.25 1999/03/27 00:30:06 mycroft Exp $	*/
 
 /*
@@ -55,7 +55,6 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 extern u_int lowram;
@@ -65,7 +64,7 @@ static caddr_t devzeropage;
 int	mmopen __P((dev_t, int, int));
 int	mmclose __P((dev_t, int, int));
 int	mmrw __P((dev_t, struct uio *, int));
-int	mmmmap __P((dev_t, int, int));
+paddr_t	mmmmap __P((dev_t, off_t, int));
 int	mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
 
 /*ARGSUSED*/
@@ -220,10 +219,11 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	/*
 	 * /dev/mem is the only one that makes sense through this

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.6.2.1 2001/07/04 10:15:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/intr.c,v 1.6.2.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: intr.c,v 1.5 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*-
@@ -48,7 +48,6 @@
 #include <sys/malloc.h>
 #include <sys/vmmeter.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <net/netisr.h>

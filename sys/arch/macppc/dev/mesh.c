@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/mesh.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/mesh.c,v 1.2.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: mesh.c,v 1.1 1999/02/19 13:06:03 tsubai Exp $	*/
 
 /*-
@@ -41,8 +41,7 @@
 #include <sys/queue.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
-
+#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.2 2001/10/31 02:52:43 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/interrupt.c,v 1.8.4.3 2001/11/13 21:00:48 niklas Exp $ */
 /* $NetBSD: interrupt.c,v 1.46 2000/06/03 20:47:36 thorpej Exp $ */
 
 /*-
@@ -79,8 +79,6 @@
 #include <sys/device.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

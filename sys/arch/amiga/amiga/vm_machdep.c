@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/vm_machdep.c,v 1.11.4.4 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/05/19 10:14:50 veego Exp $	*/
 
 /*
@@ -56,14 +56,9 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
 #include <sys/user.h>
 #include <uvm/uvm_extern.h>
 #include <machine/pte.h>
-
-/* XXX - Put this in some header file? */
-void child_return __P((struct proc *, struct frame));
-
 
 /*
  * Finish a fork operation, with process p2 nearly set up.
@@ -75,14 +70,16 @@ void child_return __P((struct proc *, struct frame));
  * the frame pointers on the stack after copying.
  */
 void
-cpu_fork(p1, p2, stack, stacksize)
-	register struct proc *p1, *p2;
+cpu_fork(p1, p2, stack, stacksize, func, arg)
+	struct proc *p1, *p2;
 	void *stack;
 	size_t stacksize;
+	void (*func)(void *);
+	void *arg;
 {
-	register struct pcb *pcb = &p2->p_addr->u_pcb;
-	register struct trapframe *tf;
-	register struct switchframe *sf;
+	struct pcb *pcb = &p2->p_addr->u_pcb;
+	struct trapframe *tf;
+	struct switchframe *sf;
 	extern struct pcb *curpcb;
 
 	p2->p_md.md_flags = p1->p_md.md_flags;
@@ -99,7 +96,7 @@ cpu_fork(p1, p2, stack, stacksize)
 
 	/*
 	 * Copy the trap frame, and arrange for the child to return directly
-	 * through return_to_user().  Note the inline cpu_set_kpc();
+	 * through return_to_user().
 	 */
 	tf = (struct trapframe *)((u_int)p2->p_addr + USPACE) - 1;
 	p2->p_md.md_regs = (int *)tf;
@@ -113,35 +110,9 @@ cpu_fork(p1, p2, stack, stacksize)
 
 	sf = (struct switchframe *)tf - 1;
 	sf->sf_pc = (u_int)proc_trampoline;
-	pcb->pcb_regs[6] = (int)child_return;	/* A2 */
-	pcb->pcb_regs[7] = (int)p2;		/* A3 */
+	pcb->pcb_regs[6] = (int)func;		/* A2 */
+	pcb->pcb_regs[7] = (int)arg;		/* A3 */
 	pcb->pcb_regs[11] = (int)sf;		/* SSP */
-}
-
-/*
- * cpu_set_kpc:
- *
- * Arrange for in-kernel execution of a process to continue at the
- * named pc, as if the code at that address were called as a function
- * with argument, the current process's process pointer.
- *
- * Note that it's assumed that when the named process returns, rei()
- * should be invoked, to return to user mode.
- */
-void
-cpu_set_kpc(p, pc, arg)
-	struct proc	*p;
-	void		(*pc) __P((void *));
-	void		*arg;
-{
-	struct pcb *pcbp;
-	struct switchframe *sf;
-
-	pcbp = &p->p_addr->u_pcb;
-	sf = (struct switchframe *)pcbp->pcb_regs[11];
-	sf->sf_pc = (u_int)proc_trampoline;
-	pcbp->pcb_regs[6] = (int)pc;		/* A2 */
-	pcbp->pcb_regs[7] = (int)arg;		/* A3 */
 }
 
 /*

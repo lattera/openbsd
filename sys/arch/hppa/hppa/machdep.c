@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.5 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.6 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -67,9 +67,8 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-#include <vm/vm.h>
-#include <uvm/uvm_page.h>
 #include <uvm/uvm.h>
+#include <uvm/uvm_page.h>
 
 #include <dev/cons.h>
 
@@ -97,7 +96,6 @@
 /*
  * Patchable buffer cache parameters
  */
-int nswbuf = 0;
 #ifdef NBUF
 int nbuf = NBUF;
 #else
@@ -464,12 +462,6 @@ hptsize=256;	/* XXX one page for now */
 	/* More buffer pages than fits into the buffers is senseless. */
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
-
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) &~ 1;
-		if (nswbuf > 256)
-			nswbuf = 256;
-	}
 	
 	v = vstart;
 #define valloc(name, type, num) (name) = (type *)v; v = (vaddr_t)((name)+(num))
@@ -615,8 +607,8 @@ cpu_startup()
 	 */
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-	    NULL, UVM_UNKNOWN_OFFSET, UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
-	    UVM_INH_NONE, UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE,
+	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
 	base = bufpages / nbuf;

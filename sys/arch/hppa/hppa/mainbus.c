@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.2 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2000 Michael Shalayeff
@@ -41,9 +41,8 @@
 #include <sys/extent.h>
 #include <sys/mbuf.h>
 
-#include <vm/vm.h>
-#include <uvm/uvm_page.h>
 #include <uvm/uvm.h>
+#include <uvm/uvm_page.h>
 
 #include <machine/pdc.h>
 #include <machine/iomod.h>
@@ -682,7 +681,8 @@ mbus_dmamap_unload(void *v, bus_dmamap_t map)
 }
 
 void
-mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_dmasync_op_t ops)
+mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_addr_t offset, bus_size_t len,
+    int ops)
 {
 	int i;
 	switch (ops) {
@@ -693,15 +693,17 @@ mbus_dmamap_sync(void *v, bus_dmamap_t map, bus_dmasync_op_t ops)
 
 	case BUS_DMASYNC_PREREAD:
 		for (i = map->dm_nsegs; i--; )
-			pdcache(HPPA_SID_KERNEL, map->dm_segs[i].ds_addr,
-			    map->dm_segs[i].ds_len);
+			pdcache(HPPA_SID_KERNEL,
+			    map->dm_segs[i].ds_addr + offset,
+			    len);
 		sync_caches();
 		break;
 
 	case BUS_DMASYNC_PREWRITE:
 		for (i = map->dm_nsegs; i--; )
-			fdcache(HPPA_SID_KERNEL, map->dm_segs[i].ds_addr,
-			    map->dm_segs[i].ds_len);
+			fdcache(HPPA_SID_KERNEL,
+			    map->dm_segs[i].ds_addr + offset,
+			    len);
 		sync_caches();
 		break;
 	}
@@ -723,7 +725,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 	    alignment, 0, &pglist, 1, FALSE))
 		return ENOMEM;
 
-	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET,
+	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
 	      UVM_ADV_RANDOM, 0)) != KERN_SUCCESS) {
 		uvm_pglistfree(&pglist);

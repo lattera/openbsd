@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.3 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.45 1997/02/10 22:13:40 scottr Exp $	*/
 
 /*
@@ -317,9 +317,6 @@ int	suline __P((caddr_t, caddr_t));
 void	savectx __P((struct pcb *));
 void	proc_trampoline __P((void));
 void	loadustp __P((int));
-
-/* trap.c */
-void    child_return __P((struct proc *, struct frame));
 
 /* vm_machdep.c */
 void	physaccess __P((caddr_t, caddr_t, register int, register int));

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.3.6.3 2001/10/31 02:52:44 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.3.6.4 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: pci_eb164.c,v 1.27 2000/06/06 00:50:15 thorpej Exp $ */
 
 /*-
@@ -74,7 +74,6 @@
 #include <sys/device.h>
 #include <sys/syslog.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 #include <machine/autoconf.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_pci.c,v 1.2.2.1 2001/04/18 16:01:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_pci.c,v 1.2.2.2 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: irongate_pci.c,v 1.2 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-
@@ -47,7 +47,6 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcireg.h>

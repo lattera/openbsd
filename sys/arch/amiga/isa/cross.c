@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/cross.c,v 1.13.6.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/cross.c,v 1.13.6.4 2001/11/13 21:00:50 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1996 Niklas Hallqvist, Carsten Hammer
@@ -37,7 +37,6 @@
 #include <sys/syslog.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

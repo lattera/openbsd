@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.1 2001/04/18 16:07:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.2 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: freebsd_machdep.c,v 1.10 1996/05/03 19:42:05 christos Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@
 #include <sys/exec.h>
 #include <sys/mount.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpufunc.h>
 #include <machine/npx.h>

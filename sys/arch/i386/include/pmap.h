@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.3 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.4 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -413,7 +413,7 @@ vaddr_t reserve_dumppages __P((vaddr_t)); /* XXX: not a pmap fn */
 /*
  * Do idle page zero'ing uncached to avoid polluting the cache.
  */
-void		pmap_zero_page_uncached __P((paddr_t));
+boolean_t	pmap_zero_page_uncached __P((paddr_t));
 #define	PMAP_PAGEIDLEZERO(pa)	pmap_zero_page_uncached((pa))
 
 /*

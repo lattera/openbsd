@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.9 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.10 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -119,8 +119,6 @@
 #include <dev/cons.h>
 #include <stand/boot/bootarg.h>
 
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 #include <uvm/uvm_extern.h>
 
 #include <sys/sysctl.h>
@@ -210,7 +208,6 @@ char machine_arch[] = "i386";		/* machine == machine_arch */
 int	cpu_apmhalt = 0;	/* sysctl'd to 1 for halt -p hack */
 #endif
 
-int	nswbuf = 0;
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -532,11 +529,6 @@ allocsys(v)
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) &~ 1;	/* force even */
-		if (nswbuf > 256)
-			nswbuf = 256;		/* sanity */
-	}
 	valloc(buf, struct buf, nbuf);
 	return v;
 }
@@ -553,7 +545,7 @@ setup_buffers(maxaddr)
 
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
@@ -3334,10 +3326,12 @@ _bus_dmamap_unload(t, map)
  * by bus-specific DMA map synchronization functions.
  */
 void
-_bus_dmamap_sync(t, map, op)
+_bus_dmamap_sync(t, map, addr, size, op)
 	bus_dma_tag_t t;
 	bus_dmamap_t map;
-	bus_dmasync_op_t op;
+	bus_addr_t addr;
+	bus_size_t size;
+	int op;
 {
 
 	/* Nothing to do here. */

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/files.alpha,v 1.30.2.3 2001/10/31 02:52:44 nate Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/files.alpha,v 1.30.2.4 2001/11/13 21:00:49 niklas Exp $
 #	$NetBSD: files.alpha,v 1.32 1996/11/25 04:03:21 cgd Exp $
 #
 # alpha-specific configuration info
@@ -132,8 +132,9 @@ major { wd = 0 }
 #
 
 file	arch/alpha/isa/isa_machdep.c	isa
+
 define isadma_bounce
-file arch/alpha/isa/isadmabounce.c	isadma_bounce
+file arch/alpha/isa/isadma_bounce.c	isadma_bounce
 
 device isabeep
 attach isabeep at pcppi
@@ -204,7 +205,7 @@ file	arch/alpha/pci/cia_bus_mem.c	cia
 file	arch/alpha/pci/cia_bwx_bus_io.c	cia
 file	arch/alpha/pci/cia_bwx_bus_mem.c	cia
 
-device	irongate: pcibus
+device	irongate: pcibus, isadma_bounce
 attach	irongate at mainbus
 file	arch/alpha/pci/irongate.c		irongate
 file	arch/alpha/pci/irongate_bus_io.c	irongate

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.2 2001/07/04 10:14:40 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia.c,v 1.8.8.3 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: cia.c,v 1.56 2000/06/29 08:58:45 mrg Exp $ */
 
 /*-
@@ -70,7 +70,7 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/rpb.h>
@@ -249,11 +249,14 @@ cia_init(ccp, mallocsafe)
 	alpha_pci_chipset = &ccp->cc_pc;
 	alpha_pci_chipset->pc_name = "cia";
 	alpha_pci_chipset->pc_dense = CIA_PCI_DENSE;
+	alpha_pci_chipset->pc_hae_mask = 7L << 29;
 	if (ccp->cc_flags & CCF_BUS_USE_BWX) {
 		alpha_pci_chipset->pc_mem = CIA_EV56_BWMEM;
+		alpha_pci_chipset->pc_ports = CIA_EV56_BWIO;
 		alpha_pci_chipset->pc_bwx = 1;
 	} else {
 		alpha_pci_chipset->pc_mem = CIA_PCI_SMEM1;
+		alpha_pci_chipset->pc_ports = CIA_PCI_SIO1;
 		alpha_pci_chipset->pc_bwx = 0;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.2 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.3 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: sbic.c,v 1.28 1996/10/13 03:07:29 christos Exp $	*/
 
 /*
@@ -53,9 +53,7 @@
 #include <sys/buf.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-#include <machine/pmap.h>
+#include <uvm/uvm_extern.h>
 #include <machine/cpu.h>
 #include <amiga/amiga/device.h>
 #include <amiga/amiga/custom.h>
@@ -68,7 +66,7 @@
 #include <amiga/amiga/cc.h>
 #include <amiga/dev/zbusvar.h>
 
-#include <vm/pmap.h>
+#include <uvm/uvm_pmap.h>
 
 /* Since I can't find this in any other header files */
 #define SCSI_PHASE(reg)	(reg&0x07)

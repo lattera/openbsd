@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.9.4.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.9.4.3 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: grf.c,v 1.41 1997/02/24 06:20:04 scottr Exp $	*/
 
 /*
@@ -66,8 +66,6 @@
 #include <machine/grfioctl.h>
 
 #include <miscfs/specfs/specdev.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 
@@ -271,10 +269,10 @@ grfselect(dev, rw, p)
 }
 
 /*ARGSUSED*/
-int
+paddr_t
 grfmmap(dev, off, prot)
 	dev_t dev;
-	int off;
+	off_t off;
 	int prot;
 {
 	int     unit = GRFUNIT(dev);

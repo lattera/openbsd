@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap.c,v 1.16.4.4 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap.c,v 1.16.4.5 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.68 1999/06/19 19:44:09 is Exp $	*/
 
 /*-
@@ -117,11 +117,8 @@
 #include <sys/proc.h>
 #include <sys/malloc.h>
 #include <sys/msgbuf.h>
-#include <vm/vm.h>
 #include <sys/user.h>
-#include <vm/vm_page.h>
 #include <uvm/uvm.h>
-#include <uvm/uvm_extern.h>
 #include <machine/pte.h>
 #include <machine/cpu.h>
 #include <machine/vmparam.h>
@@ -504,14 +501,14 @@ pmap_init()
 	addr = (vaddr_t) amigahwaddr;
 	if (uvm_map(kernel_map, &addr,
 		    ptoa(namigahwpg),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
 				UVM_INH_NONE, UVM_ADV_RANDOM,
 				UVM_FLAG_FIXED)) != KERN_SUCCESS)
 		goto bogons;
 	addr = (vaddr_t) Sysmap;
 	if (uvm_map(kernel_map, &addr, AMIGA_KPTSIZE,
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
 				UVM_INH_NONE, UVM_ADV_RANDOM,
 				UVM_FLAG_FIXED)) != KERN_SUCCESS) {
@@ -602,7 +599,7 @@ bogons:
 	 * we already have kernel PT pages.
 	 */
 	addr = 0;
-	rv = uvm_map(kernel_map, &addr, s, NULL, UVM_UNKNOWN_OFFSET,
+	rv = uvm_map(kernel_map, &addr, s, NULL, UVM_UNKNOWN_OFFSET, 0,
 		     UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				 UVM_ADV_RANDOM, UVM_FLAG_NOMERGE));
 	if (rv != KERN_SUCCESS || (addr + s) >= (vaddr_t)Sysmap)

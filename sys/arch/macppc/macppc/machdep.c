@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -53,7 +53,6 @@
 #include <sys/systm.h>
 #include <sys/user.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #ifdef SYSVSHM
@@ -107,7 +106,6 @@ extern struct user *proc0paddr;
 /*
  * Declare these as initialized data so we can patch them.
  */
-int	nswbuf = 0;
 #ifdef NBUF
 int	nbuf = NBUF;
 #else
@@ -264,7 +262,7 @@ where = 3;
 	/*
 	 * Set up trap vectors
 	 */
-	for (exc = EXC_RSVD; exc <= EXC_LAST; exc += 0x100)
+	for (exc = EXC_RSVD; exc <= EXC_LAST; exc += 0x100) {
 		switch (exc) {
 		default:
 			bcopy(&trapcode, (void *)exc, (size_t)&trapsize);
@@ -309,6 +307,17 @@ where = 3;
 #endif
 			break;
 		}
+	}
+
+	/* Grr, ALTIVEC_UNAVAIL is a vector not ~0xff aligned: 0x0f20 */
+	bcopy(&trapcode, (void *)0xf20, (size_t)&trapsize);
+	/*
+	 * since trapsize is > 0x20, we just overwrote the EXC_PERF handler
+	 * since we do not use it, we will "share" it with the EXC_VEC,
+	 * we dont support EXC_VEC either.
+	 * should be a 'ba 0xf20 written' at address 0xf00, but we
+	 * do not generate EXC_PERF exceptions...
+	 */
 
 	syncicache((void *)EXC_RST, EXC_LAST - EXC_RST + 0x100);
 
@@ -534,7 +543,7 @@ cpu_startup()
 	 */
 	sz = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("cpu_startup: cannot allocate VM for buffers");
@@ -645,11 +654,6 @@ allocsys(v)
 	if (bufpages > nbuf * MAXBSIZE / PAGE_SIZE)
 		bufpages = nbuf * MAXBSIZE / PAGE_SIZE;
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) & ~1;
-		if (nswbuf > 256)
-			nswbuf = 256;
-	}
 	valloc(buf, struct buf, nbuf);
 
 	return v;

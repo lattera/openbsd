@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*
@@ -43,7 +43,7 @@
 #include <sys/stat.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/powerpc.h>
 #include <machine/autoconf.h>

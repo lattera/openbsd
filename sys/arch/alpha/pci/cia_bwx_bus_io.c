@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia_bwx_bus_io.c,v 1.2.2.1 2001/04/18 16:01:10 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia_bwx_bus_io.c,v 1.2.2.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: cia_bwx_bus_io.c,v 1.3 2000/06/29 08:58:46 mrg Exp $ */
 
 /*
@@ -34,7 +34,6 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/sys_machdep.c,v 1.6.12.2 2001/07/04 10:15:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/sys_machdep.c,v 1.6.12.3 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.16 1997/05/19 10:14:47 veego Exp $	*/
 
 /*
@@ -51,7 +51,7 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 

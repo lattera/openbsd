@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/trap.c,v 1.17.10.4 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.56 1997/07/16 00:01:47 is Exp $	*/
 
 /*
@@ -56,11 +56,9 @@
 #include <sys/ktrace.h>
 #endif
 
-#include <vm/vm.h>
 #include <sys/user.h>
-#include <vm/pmap.h>
-
 #include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #include <machine/psl.h>
 #include <machine/trap.h>
@@ -194,9 +192,7 @@ void	trap __P((int, u_int, u_int, struct frame));
 int	db_trap __P((int, db_regs_t *));
 #endif
 void	syscall __P((register_t, struct frame));
-void	child_return __P((struct proc *, struct frame));
 void	_wb_fault __P((void));
-
 
 void
 userret(p, pc, oticks)
@@ -943,24 +939,6 @@ syscall(code, frame)
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);
-#endif
-}
-
-/*
- * Process the tail end of a fork() for the child
- */
-void
-child_return(p, frame)
-	struct proc *p;
-	struct frame frame;
-{
-	frame.f_regs[D0] = 0;
-	frame.f_sr &= ~PSL_C;	/* carry bit */
-
-	userret(p, frame.f_pc, p->p_sticks);
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p, SYS_fork, 0, 0);
 #endif
 }
 

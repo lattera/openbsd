@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.1 2001/04/18 16:00:09 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.2 2001/11/13 21:00:48 niklas Exp $ */
 /* $NetBSD: cpu.c,v 1.44 2000/05/23 05:12:53 thorpej Exp $ */
 
 /*-
@@ -72,7 +72,7 @@
 #include <sys/proc.h>
 #include <sys/user.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/atomic.h>
 #include <machine/autoconf.h>

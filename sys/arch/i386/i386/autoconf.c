@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.4 2001/10/27 09:57:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.5 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -93,9 +93,8 @@ cpu_configure()
 	if (config_rootfound("mainbus", NULL) == NULL)
 		panic("cpu_configure: mainbus not configured");
 
-	printf("biomask %x netmask %x ttymask %x\n",
-	    (u_short)IMASK(IPL_BIO), (u_short)IMASK(IPL_NET),
-	    (u_short)IMASK(IPL_TTY));
+	printf("biomask %x netmask %x ttymask %x\n", (u_short)IMASK(IPL_BIO),
+	    (u_short)IMASK(IPL_NET), (u_short)IMASK(IPL_TTY));
 
 #if NIOAPIC > 0
 	ioapic_enable();

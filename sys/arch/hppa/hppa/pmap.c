@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/pmap.c,v 1.32.2.3 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/pmap.c,v 1.32.2.4 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -209,6 +209,7 @@ void pmap_hptdump __P((void));
 
 u_int	kern_prot[8], user_prot[8];
 
+void pmap_pinit __P((pmap_t));
 #define	pmap_sid(pmap, va) \
 	(((va & 0xc0000000) != 0xc0000000)? pmap->pmap_space : HPPA_SID_KERNEL)
 
@@ -1009,7 +1010,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 	va = hppa_trunc_page(va);
 	space = pmap_sid(pmap, va);
 	tlbpage = tlbbtop(pa);
-	tlbprot = TLB_REF | pmap_prot(pmap, prot) | pmap->pmap_pid;
+	tlbprot = TLB_UNCACHEABLE | TLB_REF | pmap_prot(pmap, prot) | pmap->pmap_pid;
 
 	if (flags & VM_PROT_WRITE)
 		tlbprot |= TLB_DIRTY;
@@ -1599,7 +1600,7 @@ pmap_kenter_pa(va, pa, prot)
 		pv->pv_pmap = pmap_kernel();
 		pv->pv_space = HPPA_SID_KERNEL;
 		pv->pv_tlbpage = tlbbtop(pa);
-		pv->pv_tlbprot = TLB_WIRED | TLB_REF | TLB_DIRTY |
+		pv->pv_tlbprot = TLB_UNCACHEABLE | TLB_WIRED | TLB_REF | TLB_DIRTY |
 		    pmap_prot(pmap_kernel(), prot) | HPPA_PID_KERNEL |
 		    ((pa & HPPA_IOSPACE) == HPPA_IOSPACE? TLB_UNCACHEABLE : 0);
 		pmap_enter_va(pv);

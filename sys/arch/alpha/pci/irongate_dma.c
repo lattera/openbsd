@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_dma.c,v 1.2.2.1 2001/04/18 16:01:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_dma.c,v 1.2.2.2 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: irongate_dma.c,v 1.3 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-
@@ -62,7 +62,6 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
@@ -75,6 +74,8 @@
 
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
+
+#include "isadma.h"
 
 bus_dma_tag_t irongate_dma_get_tag(bus_dma_tag_t, alpha_bus_t);
 
@@ -109,7 +110,7 @@ irongate_dma_init(struct irongate_config *icp)
 	t->_dmamem_unmap = _bus_dmamem_unmap;
 	t->_dmamem_mmap = _bus_dmamem_mmap;
 
-#if 0
+#if NISADMA > 0
 	/*
 	 * Initialize the DMA tag used for ISA DMA.
 	 */
@@ -136,6 +137,7 @@ irongate_dma_init(struct irongate_config *icp)
 	t->_dmamem_unmap = _bus_dmamem_unmap;
 	t->_dmamem_mmap = _bus_dmamem_mmap;
 #endif
+
 	/* XXX XXX BEGIN XXX XXX */
 	{							/* XXX */
 		extern paddr_t alpha_XXX_dmamap_or;		/* XXX */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.2 2001/10/31 02:52:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.3 2001/11/13 21:00:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996 Carnegie-Mellon University.
@@ -39,7 +39,7 @@
 #include <sys/user.h>
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <compat/netbsd/netbsd_types.h>
 #include <compat/netbsd/netbsd_signal.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.17.8.1 2001/07/04 10:18:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ite.c,v 1.17.8.2 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: ite.c,v 1.32 1997/02/20 00:23:25 scottr Exp $	*/
 
 /*
@@ -76,8 +76,8 @@
 #include <machine/iteioctl.h>
 #include <machine/grfioctl.h>
 
-#include <vm/vm.h>
-#include <vm/pmap.h>
+#include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #include "../mac68k/macrom.h"
 

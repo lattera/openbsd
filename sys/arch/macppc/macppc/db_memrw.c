@@ -1,5 +1,5 @@
 /*	$NetBSD: db_memrw.c,v 1.4 2001/05/18 20:38:27 matt Exp $	*/
-/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/db_memrw.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/db_memrw.c,v 1.2.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 
 /* 
  * Mach Operating System
@@ -42,7 +42,7 @@
 #include <sys/proc.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
 #include <machine/pcb.h>

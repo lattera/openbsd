@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.4.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.4.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: if_bm.c,v 1.1 1999/01/01 01:27:52 tsubai Exp $	*/
 
 /*-
@@ -52,7 +52,7 @@
 #include <net/bpfdesc.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>

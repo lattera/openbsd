@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_memrw.c,v 1.2.2.2 2001/07/04 10:16:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_memrw.c,v 1.2.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.6 1999/04/12 20:38:19 pk Exp $	*/
 
 /* 
@@ -38,7 +38,7 @@
 #include <sys/proc.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
 

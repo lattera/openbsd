@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/isa/isadma_bounce.c,v 1.3 2001/11/06 19:53:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/isa/isadma_bounce.c,v 1.3.2.1 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: isadma_bounce.c,v 1.3 2000/06/29 09:02:57 mrg Exp $ */
 
 /*-

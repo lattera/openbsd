@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/bus_dma.c,v 1.1.2.3 2001/10/31 02:52:44 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/bus_dma.c,v 1.1.2.4 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: bus_dma.c,v 1.40 2000/07/17 04:47:56 thorpej Exp $ */
 
 /*-
@@ -47,7 +47,6 @@
 #include <sys/proc.h>
 #include <sys/mbuf.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
@@ -429,10 +428,12 @@ _bus_dmamap_unload(t, map)
  * by chipset-specific DMA map synchronization functions.
  */
 void
-_bus_dmamap_sync(t, map, op)
+_bus_dmamap_sync(t, map, offset, len, op)
 	bus_dma_tag_t t;
 	bus_dmamap_t map;
-	bus_dmasync_op_t op;
+	bus_addr_t offset;
+	bus_size_t len;
+	int op;
 {
 
 	/*

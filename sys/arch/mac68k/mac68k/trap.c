@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/trap.c,v 1.16.4.3 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/trap.c,v 1.16.4.4 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.68 1998/12/22 08:47:07 scottr Exp $	*/
 
 /*
@@ -71,10 +71,8 @@
 
 #include <m68k/fpe/fpu_emulate.h>
 
-#include <vm/vm.h>
-#include <vm/pmap.h>
-
 #include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #ifdef COMPAT_SUNOS
 #include <compat/sunos/sunos_syscall.h>
@@ -144,8 +142,8 @@ int mmupid = -1;
 void	trap __P((int, u_int, u_int, struct frame));
 void	syscall __P((register_t, struct frame));
 
-static inline void userret __P((struct proc *p, struct frame *fp,
-	    u_quad_t oticks, u_int faultaddr, int fromtrap));
+void userret __P((struct proc *p, struct frame *fp, u_quad_t oticks,
+	u_int faultaddr, int fromtrap));
 
 #if defined(M68040)
 static int	writeback __P((struct frame *, int));
@@ -159,7 +157,7 @@ static void dumpwb __P((int, u_short, u_int, u_int));
  * Trap and syscall both need the following work done before returning
  * to user mode.
  */
-static __inline void
+void
 userret(p, fp, oticks, faultaddr, fromtrap)
 	struct proc *p;
 	struct frame *fp;
@@ -1123,27 +1121,5 @@ syscall(code, frame)
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);
-#endif
-}
-
-void	child_return __P((struct proc *, struct frame));
-
-/*
- * Process the tail end of a fork() for the child.
- */
-void
-child_return(p, frame)
-	struct proc	*p;
-	struct frame	frame;
-{
-
-	frame.f_regs[D0] = 0;	/* Return value. */
-	frame.f_sr &= ~PSL_C;	/* carry bit indicates error */
-	frame.f_format = FMT0;
-
-	userret(p, &frame, 0, (u_int)0, 0);
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p, SYS_fork, 0, 0);
 #endif
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.2 2001/04/18 16:06:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -86,12 +86,6 @@ extern const char *cpu_typename;
  * Exported definitions unique to hp700/PA-RISC cpu support.
  */
 
-/*
- * definitions of cpu-dependent requirements
- * referenced in generic code
- */
-#undef	COPY_SIGCODE		/* copy sigcode above user stack in exec */
-
 #define	HPPA_PGALIAS	0x00100000
 #define	HPPA_PGAMASK	0xfff00000
 #define	HPPA_PGAOFF	0x000fffff
@@ -148,7 +142,6 @@ int	spcopy __P((pa_space_t ssp, const void *src,
 int	spstrcpy __P((pa_space_t ssp, const void *src,
 		      pa_space_t dsp, void *dst, size_t size, size_t *rsize));
 int	copy_on_fault __P((void));
-void	child_return __P((struct proc *p));
 void	switch_trampoline __P((void));
 void	switch_exit __P((struct proc *p));
 int	cpu_dumpsize __P((void));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ascvar.h,v 1.2.14.1 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ascvar.h,v 1.2.14.2 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: ascvar.h,v 1.3 1997/02/24 05:47:34 scottr Exp $	*/
 
 /*
@@ -48,4 +48,4 @@ int	ascread __P((dev_t, struct uio *, int));
 int	ascwrite __P((dev_t, struct uio *, int));
 int	ascioctl __P((dev_t, int, caddr_t, int, struct proc *p));
 int	ascselect __P((dev_t dev, int rw, struct proc *p));
-int	ascmmap __P((dev_t dev, int off, int prot));
+paddr_t	ascmmap __P((dev_t dev, off_t off, int prot));

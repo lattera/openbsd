@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.c,v 1.9.10.3 2001/10/31 02:52:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_machdep.c,v 1.9.10.4 2001/11/13 21:00:49 niklas Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.7 1996/11/19 04:57:32 cgd Exp $	*/
 
 /*
@@ -38,7 +38,7 @@
 #include <sys/systm.h>
 #include <sys/errno.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/cpu.h>
 #include <sys/sysctl.h>
 
@@ -128,6 +128,12 @@ alpha_sysctl_chipset(int *name, u_int namelen, char *where, size_t *sizep)
 	case CPU_CHIPSET_DENSE:
 		return (sysctl_rdquad(where, sizep, NULL,
 		    alpha_pci_chipset->pc_dense));
+	case CPU_CHIPSET_PORTS:
+		return (sysctl_rdquad(where, sizep, NULL,
+		    alpha_pci_chipset->pc_ports));
+	case CPU_CHIPSET_HAE_MASK:
+		return (sysctl_rdquad(where, sizep, NULL,
+		    alpha_pci_chipset->pc_hae_mask));
 	default:
 		return (EOPNOTSUPP);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.7.12.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/hpux_machdep.c,v 1.7.12.3 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: hpux_machdep.c,v 1.19 1998/02/16 20:58:30 thorpej Exp $	*/
 
 /*
@@ -73,8 +73,6 @@
 #include <machine/reg.h>
 #include <machine/psl.h>
 #include <machine/vmparam.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 

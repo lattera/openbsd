@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.4 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.5 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -98,7 +98,6 @@
 #include <dev/cons.h>
 
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
-#include <vm/vm_param.h>
 #include <uvm/uvm_extern.h>
 
 #include <arch/hp300/dev/hilreg.h>
@@ -120,7 +119,6 @@ extern paddr_t avail_start, avail_end;
 /*
  * Declare these as initialized data so we can patch them.
  */
-int	nswbuf = 0;
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -293,7 +291,7 @@ cpu_startup()
 	 */
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("startup: cannot allocate VM for buffers");
@@ -441,11 +439,6 @@ allocsys(v)
 		nbuf = bufpages;
 		if (nbuf < 16)
 			nbuf = 16;
-	}
-	if (nswbuf == 0) {
-		nswbuf = (nbuf / 2) &~ 1;	/* force even */
-		if (nswbuf > 256)
-			nswbuf = 256;		/* sanity */
 	}
 	valloc(buf, struct buf, nbuf);
 	return (v);

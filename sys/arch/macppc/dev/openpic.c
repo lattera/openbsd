@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.6.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.6.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -47,7 +47,6 @@
 #include <sys/socket.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 #include <machine/autoconf.h>

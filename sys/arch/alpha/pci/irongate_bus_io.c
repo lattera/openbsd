@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_bus_io.c,v 1.2.2.1 2001/04/18 16:01:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/irongate_bus_io.c,v 1.2.2.2 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: irongate_bus_io.c,v 1.4 2000/06/29 08:58:47 mrg Exp $ */
 
 /*-
@@ -43,7 +43,6 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

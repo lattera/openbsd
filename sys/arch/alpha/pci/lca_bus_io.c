@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lca_bus_io.c,v 1.2.10.1 2001/04/18 16:01:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lca_bus_io.c,v 1.2.10.2 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: lca_bus_io.c,v 1.8 1997/09/02 13:19:31 thorpej Exp $ */
 
 /*
@@ -34,7 +34,7 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/bus_space.c,v 1.4.4.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/bus_space.c,v 1.4.4.3 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: bus_space.c,v 1.5 1999/03/26 23:41:30 mycroft Exp $	*/
 
 /*-
@@ -49,7 +49,6 @@
 
 #include <machine/bus.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 int	bus_mem_add_mapping __P((bus_addr_t, bus_size_t,

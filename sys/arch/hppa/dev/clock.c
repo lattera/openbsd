@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -46,7 +46,7 @@
 #include <machine/autoconf.h>
 
 #if defined(DDB)
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/db_machdep.h>
 #include <ddb/db_sym.h>
 #include <ddb/db_extern.h>

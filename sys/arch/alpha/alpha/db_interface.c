@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_interface.c,v 1.9.2.1 2001/04/18 16:00:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_interface.c,v 1.9.2.2 2001/11/13 21:00:48 niklas Exp $ */
 /* $NetBSD: db_interface.c,v 1.8 1999/10/12 17:08:57 jdolecek Exp $ */
 
 /* 
@@ -53,7 +53,7 @@
 #include <sys/reboot.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/cons.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.35.2.5 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.35.2.6 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.95 1997/08/27 18:31:17 is Exp $	*/
 
 /*
@@ -79,7 +79,6 @@
 #include <net/netisr.h>
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
@@ -137,7 +136,6 @@ vm_map_t phys_map = NULL;
 /*
  * Declare these as initialized data so we can patch them.
  */
-int	nswbuf = 0;
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -394,11 +392,6 @@ again:
 			nbuf = 16;
 	}
 
-	if (nswbuf == 0) {
-		nswbuf = (nbuf * 3 / 4) &~ 1;	/* force even */
-		if (nswbuf > 256)
-			nswbuf = 256;		/* sanity */
-	}
 	valloc(buf, struct buf, nbuf);
 	/*
 	 * End of first pass, size has been calculated so allocate memory
@@ -423,7 +416,7 @@ again:
 	 */
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *)&buffers, round_page(size),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
 		panic("startup: cannot allocate buffers");

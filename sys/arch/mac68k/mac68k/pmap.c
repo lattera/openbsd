@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap.c,v 1.16.4.2 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap.c,v 1.16.4.3 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.55 1999/04/22 04:24:53 chs Exp $	*/
 
 /*
@@ -102,9 +102,6 @@
 #include <sys/pool.h>
 
 #include <machine/pte.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
 
@@ -341,14 +338,14 @@ pmap_init()
 	addr = (vaddr_t)IOBase;
 	if (uvm_map(kernel_map, &addr,
 		    m68k_ptob(IIOMAPSIZE + ROMMAPSIZE + VIDMAPSIZE),
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
 				UVM_INH_NONE, UVM_ADV_RANDOM,
 				UVM_FLAG_FIXED)) != KERN_SUCCESS)
 		goto bogons;
 	addr = (vaddr_t)Sysmap;
 	if (uvm_map(kernel_map, &addr, MAC_MAX_PTSIZE,
-		    NULL, UVM_UNKNOWN_OFFSET,
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
 				UVM_INH_NONE, UVM_ADV_RANDOM,
 				UVM_FLAG_FIXED)) != KERN_SUCCESS) {
@@ -422,7 +419,7 @@ pmap_init()
 	 * we already have kernel PT pages.
 	 */
 	addr = 0;
-	rv = uvm_map(kernel_map, &addr, s, NULL, UVM_UNKNOWN_OFFSET,
+	rv = uvm_map(kernel_map, &addr, s, NULL, UVM_UNKNOWN_OFFSET, 0,
 		     UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
 				 UVM_ADV_RANDOM, UVM_FLAG_NOMERGE));
 	if (rv != KERN_SUCCESS || (addr + s) >= (vaddr_t)Sysmap)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.3 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: asc.c,v 1.20 1997/02/24 05:47:33 scottr Exp $	*/
 
 /*
@@ -78,8 +78,8 @@
 #include <sys/fcntl.h>
 #include <sys/timeout.h>
 
-#include <vm/vm.h>
-#include <vm/pmap.h>
+#include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
@@ -272,10 +272,10 @@ ascselect(dev, rw, p)
 	return (0);
 }
 
-int
+paddr_t
 ascmmap(dev, off, prot)
 	dev_t dev;
-	int off;
+	off_t off;
 	int prot;
 {
 	int unit = ASCUNIT(dev);

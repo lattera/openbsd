@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/sys_machdep.c,v 1.5.12.2 2001/07/04 10:15:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/sys_machdep.c,v 1.5.12.3 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.17 1997/05/19 10:15:00 veego Exp $	*/
 
 /*
@@ -36,8 +36,6 @@
  *	@(#)sys_machdep.c	8.2 (Berkeley) 1/13/94
  */
 
-#include <machine/hp300spu.h>	/* XXX param.h includes cpu.h */
-
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/ioctl.h>
@@ -51,7 +49,7 @@
 #include <sys/buf.h>
 #include <sys/mount.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <sys/syscallargs.h>
 

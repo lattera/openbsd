@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/vgafb_pci.c,v 1.1.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: vga_pci.c,v 1.4 1996/12/05 01:39:38 cgd Exp $	*/
 
 /*
@@ -73,7 +73,7 @@ int	vgafb_pci_match __P((struct device *, struct cfdata *, void *));
 #endif
 void	vgafb_pci_attach __P((struct device *, struct device *, void *));
 
-int	vgafbpcimmap __P((void *, off_t, int));
+paddr_t	vgafbpcimmap __P((void *, off_t, int));
 int	vgafbpciioctl __P((void *, u_long, caddr_t, int, struct proc *));
 
 struct cfattach vgafb_pci_ca = {
@@ -388,7 +388,7 @@ vgafbpciioctl(v, cmd, data, flag, p)
 	return (vgafb_ioctl(sc->sc_vc, cmd, data, flag, p));
 }
 
-int
+paddr_t
 vgafbpcimmap(v, offset, prot)
 	void *v;
 	off_t offset;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2.2.2 2001/07/04 10:14:47 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsc.c,v 1.2.2.3 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: tsc.c,v 1.3 2000/06/25 19:17:40 thorpej Exp $ */
 
 /*-
@@ -234,6 +234,8 @@ tsp_init(mallocsafe, n)
 	alpha_pci_chipset = &pcp->pc_pc;
 	alpha_pci_chipset->pc_name = "tsunami";
 	alpha_pci_chipset->pc_mem = TS_P0(0);
+	alpha_pci_chipset->pc_ports = P_PCI_IO;
+	alpha_pci_chipset->pc_hae_mask = 0;
 	alpha_pci_chipset->pc_dense = TS_P0(0);
 	alpha_pci_chipset->pc_bwx = 1;
 	pcp->pc_initted = 1;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.5.4.1 2001/10/31 03:01:16 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/conf.c,v 1.5.4.2 2001/11/13 21:00:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -132,6 +132,8 @@ cdev_decl(ulpt);
 cdev_decl(urio);
 #include "ucom.h"
 cdev_decl(ucom);
+#include "uscanner.h"
+cdev_decl(uscanner);
 
 #include "apm.h"
 cdev_decl(apm);
@@ -236,6 +238,7 @@ struct cdevsw cdevsw[] = {
 #endif
 	cdev_altq_init(NALTQ,altq),	/* 72: ALTQ control interface */
 	cdev_iop_init(NIOP,iop),	/* 73: I2O IOP control interface */
+	cdev_ugen_init(NUSCANNER,uscanner), /* 74: usb scanner */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 

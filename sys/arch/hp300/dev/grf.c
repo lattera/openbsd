@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.3 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.4 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: grf.c,v 1.30 1998/08/20 08:33:41 kleink Exp $	*/
 
 /*
@@ -72,8 +72,6 @@
 #include <compat/hpux/hpux.h>
 extern struct emul emul_hpux;
 #endif
-
-#include <vm/vm.h>
 
 #include <uvm/uvm.h>
 
@@ -301,10 +299,11 @@ grfselect(dev, rw, p)
 }
 
 /*ARGSUSED*/
-int
+paddr_t
 grfmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct grf_softc *sc = grf_cd.cd_devs[GRFUNIT(dev)];
 

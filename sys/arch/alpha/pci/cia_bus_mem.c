@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/cia_bus_mem.c,v 1.6.14.1 2001/04/18 16:01:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/cia_bus_mem.c,v 1.6.14.2 2001/11/13 21:00:49 niklas Exp $	*/
 /*	$NetBSD: cia_bus_mem.c,v 1.7 1996/11/25 03:46:09 cgd Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 #include <sys/malloc.h>
 #include <sys/syslog.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 

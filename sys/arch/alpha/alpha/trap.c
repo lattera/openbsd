@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.2 2001/10/31 02:52:44 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.3 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -106,7 +106,6 @@
 #include <sys/ktrace.h>
 #endif
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/tsp_pci.c,v 1.1.2.1 2001/04/18 16:01:35 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/tsp_pci.c,v 1.1.2.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: tsp_pci.c,v 1.1 1999/06/29 06:46:47 ross Exp $ */
 
 /*-
@@ -37,7 +37,6 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcireg.h>

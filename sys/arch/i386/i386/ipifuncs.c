@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -52,11 +52,10 @@
 #include <sys/device.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
-
+#include <machine/cpufunc.h>
+#include <machine/cpuvar.h>
 #include <machine/intr.h>
 #include <machine/atomic.h>
-#include <machine/cpuvar.h>
 #include <machine/i82093var.h>
 
 void i386_ipi_halt(void);

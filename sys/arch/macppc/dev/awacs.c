@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/awacs.c,v 1.5.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/awacs.c,v 1.5.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: awacs.c,v 1.4 2001/02/26 21:07:51 wiz Exp $	*/
 
 /*-
@@ -112,7 +112,7 @@ int awacs_set_port(void *, mixer_ctrl_t *);
 int awacs_get_port(void *, mixer_ctrl_t *);
 int awacs_query_devinfo(void *, mixer_devinfo_t *);
 size_t awacs_round_buffersize(void *, int, size_t);
-int awacs_mappage(void *, void *, int, int);
+paddr_t awacs_mappage(void *, void *, off_t, int);
 int awacs_get_props(void *);
 void *awacs_allocm __P((void *, int, size_t, int, int));
 
@@ -995,11 +995,11 @@ awacs_allocm(h, dir, size, type, flags)
 	return p->addr;
 }
 
-int
+paddr_t
 awacs_mappage(h, mem, off, prot)
 	void *h;
 	void *mem;
-	int off;
+	off_t off;
 	int prot;
 {
 	if (off < 0)

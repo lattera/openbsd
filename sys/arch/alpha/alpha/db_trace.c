@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/db_trace.c,v 1.4.12.1 2001/04/18 16:00:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/db_trace.c,v 1.4.12.2 2001/11/13 21:00:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
@@ -35,7 +35,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/db_machdep.h>
 #include <machine/frame.h>

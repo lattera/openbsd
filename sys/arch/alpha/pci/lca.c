@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lca.c,v 1.7.14.2 2001/07/04 10:14:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lca.c,v 1.7.14.3 2001/11/13 21:00:49 niklas Exp $	*/
 /*	$NetBSD: lca.c,v 1.14 1996/12/05 01:39:35 cgd Exp $	*/
 
 /*-
@@ -70,7 +70,7 @@
 #include <sys/malloc.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/rpb.h>
@@ -169,6 +169,8 @@ lca_init(lcp, mallocsafe)
 	alpha_pci_chipset = &lcp->lc_pc;
 	alpha_pci_chipset->pc_name = "lca";
 	alpha_pci_chipset->pc_mem = LCA_PCI_SPARSE;
+	alpha_pci_chipset->pc_ports = LCA_PCI_SIO;
+	alpha_pci_chipset->pc_hae_mask = IOC_HAE_ADDREXT;
 	alpha_pci_chipset->pc_dense = LCA_PCI_DENSE;
 	alpha_pci_chipset->pc_bwx = 0;
 

@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/amiga/dev/Attic/sfas.c,v 1.6.14.3 2001/10/31 02:52:45 nate Exp $  */
+/*    $OpenBSD: src/sys/arch/amiga/dev/Attic/sfas.c,v 1.6.14.4 2001/11/13 21:00:50 niklas Exp $  */
 /*	$NetBSD: sfas.c,v 1.12 1996/10/13 03:07:33 christos Exp $	*/
 
 /*
@@ -52,10 +52,7 @@
 #include <sys/proc.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
-#include <vm/vm_page.h>
-#include <machine/pmap.h>
 #include <machine/cpu.h>
 #include <amiga/amiga/device.h>
 #include <amiga/amiga/cc.h>

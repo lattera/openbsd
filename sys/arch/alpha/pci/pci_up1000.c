@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_up1000.c,v 1.2.2.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_up1000.c,v 1.2.2.4 2001/11/13 21:00:49 niklas Exp $	*/
 /* $NetBSD: pci_up1000.c,v 1.6 2000/12/28 22:59:07 sommerfeld Exp $ */
 
 /*-
@@ -44,7 +44,6 @@
 #include <sys/errno.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>

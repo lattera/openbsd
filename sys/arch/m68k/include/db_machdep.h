@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/db_machdep.h,v 1.5.12.1 2001/07/04 10:18:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/db_machdep.h,v 1.5.12.2 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.20 1997/06/26 01:26:58 thorpej Exp $	*/
 
 /* 
@@ -39,7 +39,7 @@
  * XXX - Would rather not pull in vm headers, but need boolean_t,
  * at least until boolean_t moves to <sys/types.h> or someplace.
  */
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 
 #include <machine/frame.h>
 #include <machine/psl.h>

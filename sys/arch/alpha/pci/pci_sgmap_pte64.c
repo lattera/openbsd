@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_sgmap_pte64.c,v 1.3.2.1 2001/04/18 16:01:26 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_sgmap_pte64.c,v 1.3.2.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: pci_sgmap_pte64.c,v 1.4 2000/06/29 08:58:49 mrg Exp $ */
 
 /*-
@@ -45,7 +45,6 @@
 #include <sys/malloc.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

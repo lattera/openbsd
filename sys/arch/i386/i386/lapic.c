@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.6 2001/10/31 12:00:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.7 2001/11/13 21:00:51 niklas Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-
@@ -44,9 +44,6 @@
 #include <sys/user.h>
 #include <sys/systm.h>
 #include <sys/device.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -117,6 +114,14 @@ lapic_enable()
 extern struct mp_intr_map *lapic_ints[]; /* XXX header file? */
 
 void
+lapic_set_softvectors()
+{
+	idt_vec_set(LAPIC_SOFTCLOCK_VECTOR, Xintrsoftclock);
+	idt_vec_set(LAPIC_SOFTNET_VECTOR, Xintrsoftnet);
+	idt_vec_set(LAPIC_SOFTTTY_VECTOR, Xintrsofttty);
+}
+
+void
 lapic_set_lvt()
 {
 #ifdef MULTIPROCESSOR
@@ -164,11 +169,6 @@ lapic_boot_init(lapic_base)
 #endif
 	idt_vec_set(LAPIC_SPURIOUS_VECTOR, Xintrspurious);
 	idt_vec_set(LAPIC_TIMER_VECTOR, Xintrltimer);
-
-	idt_vec_set(LAPIC_SOFTCLOCK_VECTOR, Xintrsoftclock);
-	idt_vec_set(LAPIC_SOFTNET_VECTOR, Xintrsoftnet);
-	idt_vec_set(LAPIC_SOFTTTY_VECTOR, Xintrsofttty);
-
 }
 
 static __inline u_int32_t

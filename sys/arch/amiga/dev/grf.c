@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.8.14.2 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf.c,v 1.8.14.3 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: grf.c,v 1.32 1996/12/23 09:10:01 veego Exp $	*/
 
 /*
@@ -58,7 +58,7 @@
 #include <sys/systm.h>
 #include <sys/vnode.h>
 #include <sys/mman.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/cpu.h>
 #include <machine/fbio.h>
 #include <amiga/amiga/color.h>	/* DEBUG */
@@ -314,10 +314,11 @@ grfselect(dev, rw, p)
  * map the contents of a graphics display card into process' 
  * memory space.
  */
-int
+paddr_t
 grfmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct grf_softc *gp;
 	struct grfinfo *gi;

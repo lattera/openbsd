@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.1 2001/04/18 16:07:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.2 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.9 1996/05/03 19:23:59 christos Exp $	*/
 
 /* 
@@ -35,7 +35,7 @@
  */
 
 #include <sys/param.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <machine/trap.h>
 
 typedef	vaddr_t		db_addr_t;	/* address - unsigned */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mc.c,v 1.2.4.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_mc.c,v 1.2.4.3 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: if_mc.c,v 1.4 1998/01/12 19:22:09 thorpej Exp $	*/
 
 /*-
@@ -70,7 +70,7 @@
 #include <netccitt/pk_extern.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include "bpfilter.h"
 #if NBPFILTER > 0

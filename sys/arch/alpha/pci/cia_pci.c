@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia_pci.c,v 1.5.14.1 2001/04/18 16:01:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia_pci.c,v 1.5.14.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: cia_pci.c,v 1.25 2000/06/29 08:58:46 mrg Exp $ */
 
 /*
@@ -33,7 +33,6 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcireg.h>

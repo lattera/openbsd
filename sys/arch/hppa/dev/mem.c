@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.1 2001/07/04 10:15:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.2 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -277,10 +277,11 @@ mmrw(dev, uio, flags)
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;  
+	off_t off;
+	int prot;  
 {
 	if (minor(dev) != 0)
 		return (-1);

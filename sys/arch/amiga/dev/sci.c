@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sci.c,v 1.5.14.1 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sci.c,v 1.5.14.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: sci.c,v 1.19 1996/10/13 03:07:31 christos Exp $	*/
 
 /*
@@ -52,9 +52,7 @@
 #include <sys/buf.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-#include <machine/pmap.h>
+#include <uvm/uvm_extern.h>
 #include <machine/cpu.h>
 #include <amiga/amiga/device.h>
 #include <amiga/amiga/custom.h>

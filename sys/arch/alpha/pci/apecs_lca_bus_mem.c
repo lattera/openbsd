@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/apecs_lca_bus_mem.c,v 1.5.14.1 2001/04/18 16:01:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/apecs_lca_bus_mem.c,v 1.5.14.2 2001/11/13 21:00:49 niklas Exp $	*/
 /*	$NetBSD: apecs_lca_bus_mem.c,v 1.5 1996/08/27 16:29:24 cgd Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 #include <sys/malloc.h>
 #include <sys/syslog.h>
 #include <sys/device.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 

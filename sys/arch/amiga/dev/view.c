@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.3.14.1 2001/07/04 10:15:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.3.14.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: view.c,v 1.16 1996/10/13 03:07:35 christos Exp $	*/
 
 /*
@@ -386,10 +386,11 @@ view_set_colormap(vu, ucm)
 }
 
 /*ARGSUSED*/
-int
+paddr_t
 viewmmap(dev, off, prot)
         dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct view_softc *vu;
 	bmap_t *bm;

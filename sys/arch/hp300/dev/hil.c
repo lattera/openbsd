@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/hil.c,v 1.12.10.1 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/hil.c,v 1.12.10.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: hil.c,v 1.34 1997/04/02 22:37:32 scottr Exp $	*/
 
 /*
@@ -728,10 +728,11 @@ hpuxhilioctl(dev, cmd, data, flag)
 #endif
 
 /* ARGSUSED */
-int
+paddr_t
 hilmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	return (-1);
 }

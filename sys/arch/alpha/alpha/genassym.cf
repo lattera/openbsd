@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/alpha/genassym.cf,v 1.1.2.1 2001/10/31 02:52:43 nate Exp $
+#	$OpenBSD: src/sys/arch/alpha/alpha/genassym.cf,v 1.1.2.2 2001/11/13 21:00:48 niklas Exp $
 
 # Copyright (c) 1994, 1995 Gordon W. Ross
 # Copyright (c) 1993 Adam Glass
@@ -52,7 +52,7 @@ ifdef COMPAT_NETBSD
 include <compat/netbsd/netbsd_syscall.h>
 endif
 
-include <vm/vm.h>
+include <uvm/uvm_extern.h>
 
 # general constants
 export	NBPG

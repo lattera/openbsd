@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf_cc.c,v 1.6.14.1 2001/04/18 16:02:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/grf_cc.c,v 1.6.14.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: grf_cc.c,v 1.23 1996/12/23 09:10:02 veego Exp $	*/
 
 /*
@@ -44,7 +44,7 @@
 #include <sys/queue.h>
 #include <sys/device.h>
 #include <sys/systm.h>
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 #include <machine/cpu.h>
 #include <amiga/amiga/color.h>	/* DEBUG */
 #include <amiga/amiga/device.h>
@@ -58,7 +58,7 @@
 
 #include <sys/conf.h>
 #include <machine/conf.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include "view.h" 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.5 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.6 2001/11/13 21:00:51 niklas Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-
@@ -75,9 +75,6 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
-
-#include <vm/vm.h>
-#include <vm/vm_page.h>
 
 #include <machine/bus.h>
 #include <machine/psl.h>
@@ -447,6 +444,7 @@ ioapic_enable(void)
 	isa_nodefaultirq();
 #endif
 
+	lapic_set_softvectors();
 	lapic_set_lvt();
 
 	for (a = 0; a < 16; a++) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.6.10.3 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.6.10.4 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.13 1997/06/10 18:56:50 veego Exp $	*/
 
 /* 
@@ -52,8 +52,8 @@
 
 #include <hp300/hp300/clockreg.h>
 
-#include <vm/vm.h>
-#include <vm/pmap.h>
+#include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #define RELOC(v, t)	*((t*)((u_int)&(v) + firstpa))
 

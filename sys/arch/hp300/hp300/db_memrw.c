@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/db_memrw.c,v 1.3.12.1 2001/07/04 10:15:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/db_memrw.c,v 1.3.12.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.5 1997/06/10 18:48:47 veego Exp $	*/
 
 /*-
@@ -60,12 +60,11 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <machine/db_machdep.h>
 #include <machine/cpu.h>
-#include <machine/hp300spu.h>
 
 #include <ddb/db_access.h>
 

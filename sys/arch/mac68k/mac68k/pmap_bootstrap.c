@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.2 2001/07/04 10:18:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.3 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.50 1999/04/07 06:14:33 scottr Exp $	*/
 
 /* 
@@ -45,7 +45,7 @@
 #include <sys/msgbuf.h>
 #include <sys/reboot.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/pte.h>
 #include <mac68k/mac68k/clockreg.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/mem.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/mem.c,v 1.1.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.1 1996/09/30 16:34:50 ws Exp $ */
 
 /*
@@ -55,7 +55,6 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/conf.h>
@@ -163,10 +162,11 @@ mmrw(dev, uio, flags)
 	return error;
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
         dev_t dev;
-        int off, prot;
+        off_t off;
+	int prot;
 {
 	return (-1);
 }

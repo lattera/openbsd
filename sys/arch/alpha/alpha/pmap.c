@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.3 2001/10/31 02:52:44 nate Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.4 2001/11/13 21:00:48 niklas Exp $ */
 /* $NetBSD: pmap.c,v 1.154 2000/12/07 22:18:55 thorpej Exp $ */
 
 /*-
@@ -376,9 +376,6 @@ u_long	pmap_asn_generation[ALPHA_MAXPROCS]; /* current ASN generation */
  *	* pmap_all_pmaps_slock - This lock protects the global list of
  *	  all pmaps.  Note that a pm_slock must never be held while this
  *	  lock is held.
- *
- *	* pmap_growkernel_slock - This lock protects pmap_growkernel()
- *	  and the virtual_end variable.
  *
  *	* pmap_growkernel_slock - This lock protects pmap_growkernel()
  *	  and the virtual_end variable.
@@ -806,12 +803,9 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 
 	/*
 	 * Figure out how many PTE's are necessary to map the kernel.
-	 * The '512' comes from PAGER_MAP_SIZE in vm_pager_init().
-	 * This should be kept in sync.
-	 * We also reserve space for kmem_alloc_pageable() for vm_fork().
 	 */
 	lev3mapsize = (VM_PHYS_SIZE +
-		nbuf * MAXBSIZE + 16 * NCARGS) / NBPG + 512 +
+		nbuf * MAXBSIZE + + PAGER_MAP_SIZE + 16 * NCARGS) / NBPG +
 		(maxproc * UPAGES) + NKMEMCLUSTERS;
 
 #ifdef SYSVSHM
@@ -917,9 +911,6 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 		lev2map[l2pte_index(VM_MIN_KERNEL_ADDRESS+
 		    (i*PAGE_SIZE*NPTEPG))] = pte;
 	}
-
-	/* Initialize the pmap_growkernel_slock. */
-	simple_lock_init(&pmap_growkernel_slock);
 
 	/* Initialize the pmap_growkernel_slock. */
 	simple_lock_init(&pmap_growkernel_slock);
@@ -1701,7 +1692,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 #ifdef DEBUG
 	if (pmapdebug & (PDB_FOLLOW|PDB_ENTER))
 		printf("pmap_enter(%p, %lx, %lx, %x, %x)\n",
-		       pmap, va, pa, prot, access_type);
+		       pmap, va, pa, prot, flags);
 #endif
 	managed = PAGE_IS_MANAGED(pa);
 	isactive = PMAP_ISACTIVE(pmap, cpu_id);
@@ -2191,7 +2182,8 @@ boolean_t
 pmap_extract(pmap_t pmap, vaddr_t va, paddr_t *pap)
 {
 	pt_entry_t *l1pte, *l2pte, *l3pte;
-	paddr_t pa = 0;
+	boolean_t rv = FALSE;
+	paddr_t pa;
 
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW)
@@ -2212,18 +2204,19 @@ pmap_extract(pmap_t pmap, vaddr_t va, paddr_t *pap)
 		goto out;
 
 	pa = pmap_pte_pa(l3pte) | (va & PGOFSET);
+	*pap = pa;
+	rv = TRUE;
  out:
 	PMAP_UNLOCK(pmap);
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW) {
-		if (pa)
+		if (rv)
 			printf("0x%lx\n", pa);
 		else
 			printf("failed\n");
 	}
 #endif
-	*pap = pa;
-	return (pa != 0);
+	return (rv);
 }
 
 /*
@@ -3285,10 +3278,9 @@ pmap_physpage_alloc(int usage, paddr_t *pap)
 	 * properly initialize it in the constructor.
 	 */
 
-	pg = uvm_pagealloc(NULL, 0, NULL, UVM_PGA_USERESERVE);
+	pg = uvm_pagealloc(NULL, 0, NULL, usage == PGU_L1PT ?
+	    UVM_PGA_USERESERVE : UVM_PGA_USERESERVE|UVM_PGA_ZERO);
 	if (pg != NULL) {
-		if (usage != PGU_L1PT)
-			uvm_pagezero(pg);
 		pa = VM_PAGE_TO_PHYS(pg);
 
 		pvh = pa_to_pvh(pa);
@@ -3494,6 +3486,9 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		    PG_V | PG_ASM | PG_KRE | PG_KWE | PG_WIRED;
 		va += ALPHA_L2SEG_SIZE;
 	}
+
+	/* Invalidate the L1 PT cache. */
+	pool_cache_invalidate(&pmap_l1pt_cache);
 
 	virtual_end = va;
 

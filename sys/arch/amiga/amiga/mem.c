@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/mem.c,v 1.9.2.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/mem.c,v 1.9.2.4 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.18 1997/02/02 07:17:14 thorpej Exp $	*/
 
 /*
@@ -55,7 +55,6 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 extern int kernel_reload_write(struct uio *uio);
@@ -65,7 +64,7 @@ caddr_t devzeropage;
 int mmopen __P((dev_t, int, int, struct proc *));
 int mmclose __P((dev_t, int, int, struct proc *));
 int mmrw __P((dev_t, struct uio *, int));
-int mmmmap __P((dev_t, int, int));
+paddr_t mmmmap __P((dev_t, off_t, int));
 int mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
 
 /*ARGSUSED*/
@@ -239,10 +238,10 @@ unlock:
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off;
+	off_t off;
 	int prot;
 {
 	return (-1);

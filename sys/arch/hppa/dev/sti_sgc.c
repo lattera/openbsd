@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5.2.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/sti_sgc.c,v 1.5.2.3 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -40,7 +40,6 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm.h>
 
 #include <machine/bus.h>

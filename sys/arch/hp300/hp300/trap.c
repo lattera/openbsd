@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.3 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.4 2001/11/13 21:00:51 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.57 1998/02/16 20:58:31 thorpej Exp $	*/
 
 /*
@@ -72,8 +72,6 @@
  *	@(#)trap.c	8.5 (Berkeley) 1/4/94
  */
 
-#include <machine/hp300spu.h>	/* XXX param.h includes cpu.h */
-
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
@@ -97,10 +95,8 @@
 #include <machine/reg.h>
 #include <machine/intr.h>
 
-#include <vm/vm.h>
-#include <vm/pmap.h>
-
 #include <uvm/uvm_extern.h>
+#include <uvm/uvm_pmap.h>
 
 #include <dev/cons.h>
 
@@ -117,14 +113,13 @@ extern struct emul emul_sunos;
 int	writeback __P((struct frame *fp, int docachepush));
 void	trap __P((int type, u_int code, u_int v, struct frame frame));
 void	syscall __P((register_t code, struct frame frame));
-void	child_return __P((struct proc *, struct frame));
 
 #ifdef DEBUG
 void	dumpssw __P((u_short));
 void	dumpwb __P((int, u_short, u_int, u_int));
 #endif
 
-static inline void userret __P((struct proc *p, struct frame *fp,
+void userret __P((struct proc *p, struct frame *fp,
 	    u_quad_t oticks, u_int faultaddr, int fromtrap));
 
 int	astpending;
@@ -209,7 +204,7 @@ int mmupid = -1;
  * trap and syscall both need the following work done before returning
  * to user mode.
  */
-static inline void
+void
 userret(p, fp, oticks, faultaddr, fromtrap)
 	struct proc *p;
 	struct frame *fp;
@@ -1171,22 +1166,5 @@ bad:
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);
-#endif
-}
-
-void
-child_return(p, frame)
-	struct proc *p;
-	struct frame frame;
-{
-
-	frame.f_regs[D0] = 0;
-	frame.f_sr &= ~PSL_C;
-	frame.f_format = FMT0;
-
-	userret(p, &frame, 0, (u_int)0, 0);
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p, SYS_fork, 0, 0);
 #endif
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/prom.c,v 1.5.14.1 2001/04/18 16:00:29 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/prom.c,v 1.5.14.2 2001/11/13 21:00:49 niklas Exp $ */
 /* $NetBSD: prom.c,v 1.39 2000/03/06 21:36:05 thorpej Exp $ */
 
 /* 
@@ -28,7 +28,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 #include <sys/lock.h>
 #include <sys/proc.h>
 #include <sys/user.h>

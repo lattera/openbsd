@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.3 2001/07/04 10:16:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccons.c,v 1.42.6.4 2001/11/13 21:00:52 niklas Exp $	*/
 /*	$NetBSD: pccons.c,v 1.99.4.1 1996/06/04 20:03:53 cgd Exp $	*/
 
 /*-
@@ -1890,10 +1890,10 @@ loop:
 	goto top;
 }
 
-int
+paddr_t
 pcmmap(dev, offset, nprot)
 	dev_t dev;
-	int offset;
+	off_t offset;
 	int nprot;
 {
 

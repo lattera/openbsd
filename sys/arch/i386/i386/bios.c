@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.6 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.7 2001/11/13 21:00:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -43,7 +43,6 @@
 #include <sys/reboot.h>
 #include <sys/extent.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 

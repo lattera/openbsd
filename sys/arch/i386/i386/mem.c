@@ -1,5 +1,5 @@
 /*	$NetBSD: mem.c,v 1.31 1996/05/03 19:42:19 christos Exp $	*/
-/*	$OpenBSD: src/sys/arch/i386/i386/mem.c,v 1.14.2.3 2001/10/31 03:01:12 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/mem.c,v 1.14.2.4 2001/11/13 21:00:52 niklas Exp $ */
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1982, 1986, 1990, 1993
@@ -56,8 +56,6 @@
 
 #include <machine/cpu.h>
 #include <machine/conf.h>
-
-#include <vm/vm.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -222,10 +220,11 @@ mmrw(dev, uio, flags)
 	return (error);
 }
 
-int
+paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	struct proc *p = curproc;	/* XXX */
 
@@ -237,12 +236,6 @@ mmmmap(dev, off, prot)
 			return -1;
 		return i386_btop((u_int)off);
 
-/* minor device 1 is kernel memory */
-	case 1:
-		/* XXX - writability, executability checks? */
-		if (!uvm_kernacc((caddr_t)off, NBPG, B_READ))
-			return -1;
-		return i386_btop(vtophys(off));
 #ifdef APERTURE
 /* minor device 4 is aperture driver */
 	case 4:

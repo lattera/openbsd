@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/bztzsc.c,v 1.2.14.1 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/bztzsc.c,v 1.2.14.2 2001/11/13 21:00:50 niklas Exp $	*/
 /*	$NetBSD: bztzsc.c,v 1.2 1996/12/23 09:09:54 veego Exp $	*/
 
 /*
@@ -42,9 +42,7 @@
 #include <sys/device.h>
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
-#include <vm/vm.h>
-#include <vm/vm_page.h>
-#include <machine/pmap.h>
+#include <uvm/uvm_extern.h>
 #include <amiga/amiga/custom.h>
 #include <amiga/amiga/cc.h>
 #include <amiga/amiga/device.h>

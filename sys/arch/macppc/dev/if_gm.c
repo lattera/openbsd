@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gm.c,v 1.3.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gm.c,v 1.3.4.2 2001/11/13 21:00:53 niklas Exp $	*/
 /*	$NetBSD: if_gm.c,v 1.14 2001/07/22 11:29:46 wiz Exp $	*/
 
 /*-
@@ -41,7 +41,7 @@
 #include <sys/socket.h>
 #include <sys/systm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <net/if.h>
 #include <netinet/in.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7.12.1 2001/04/18 16:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/db_machdep.h,v 1.7.12.2 2001/11/13 21:00:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
@@ -33,7 +33,7 @@
 #define	_ALPHA_DB_MACHDEP_H_
 
 /* XXX - Need to include vm.h for boolean_t */
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #define DB_MACHINE_COMMANDS
 
