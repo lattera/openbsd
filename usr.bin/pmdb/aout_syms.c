@@ -1,4 +1,4 @@
-/*	$PMDB: aout_syms.c,v 1.17 2002/03/11 21:46:12 art Exp $	*/
+/*	$OpenBSD: src/usr.bin/pmdb/Attic/aout_syms.c,v 1.2 2002/03/15 16:41:06 jason Exp $	*/
 /*
  * Copyright (c) 2002 Federico Schwindt <fgsch@openbsd.org>
  * All rights reserved. 
