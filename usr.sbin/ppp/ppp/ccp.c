@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ccp.c,v 1.4 1999/03/11 01:50:04 brian Exp $
+ * $Id: ccp.c,v 1.5 1999/03/31 14:22:10 brian Exp $
  *
  *	TODO:
  *		o Support other compression protocols
@@ -411,9 +411,11 @@ CcpDecodeConfig(struct fsm *fp, u_char *cp, int plen, int mode_type,
 {
   /* Deal with incoming data */
   struct ccp *ccp = fsm2ccp(fp);
-  int type, length;
-  int f;
+  int type, length, f;
   const char *end;
+
+  if (mode_type == MODE_REQ)
+    ccp->in.algorithm = -1;	/* In case we've received two REQs in a row */
 
   while (plen >= sizeof(struct fsmconfig)) {
     type = *cp;
