@@ -42,7 +42,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)uucpd.c	5.10 (Berkeley) 2/26/91";*/
-static char rcsid[] = "$Id: uucpd.c,v 1.13 1998/05/22 04:33:08 deraadt Exp $";
+static char rcsid[] = "$Id: uucpd.c,v 1.14 1998/07/05 18:48:58 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -95,7 +95,6 @@ char **argv;
 	register int s, tcp_socket;
 	struct servent *sp;
 #endif /* !BSDINETD */
-	extern int errno;
 
 	environ = nenv;
 #ifdef BSDINETD

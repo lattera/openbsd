@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/uudecode/uudecode.c,v 1.7 1998/09/15 15:59:44 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/uudecode/uudecode.c,v 1.8 2000/02/01 03:23:46 deraadt Exp $	*/
 /*	$NetBSD: uudecode.c,v 1.6 1994/11/17 07:40:43 jtc Exp $	*/
 
 /*-
@@ -42,7 +42,7 @@ char copyright[] =
 #if 0
 static char sccsid[] = "@(#)uudecode.c	8.2 (Berkeley) 4/2/94";
 #endif
-static char rcsid[] = "$OpenBSD: src/usr.bin/uudecode/uudecode.c,v 1.7 1998/09/15 15:59:44 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/uudecode/uudecode.c,v 1.8 2000/02/01 03:23:46 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -112,7 +112,6 @@ main(argc, argv)
 static int
 decode(int tostdout)
 {
-	extern int errno;
 	struct passwd *pw;
 	register int n;
 	register char ch, *p;
