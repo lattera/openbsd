@@ -33,7 +33,7 @@
 
 #ifndef lint
 static char RCSid[] = 
-"$Id: filesys-os.c,v 6.17 1996/01/17 21:02:45 mcooper Exp $";
+"$Id: filesys-os.c,v 1.1 1996/02/03 12:12:55 dm Exp $";
 
 static char sccsid[] = "@(#)filesys-os.c";
 
@@ -51,7 +51,6 @@ static char copyright[] =
 
 #if 	FSI_TYPE == FSI_GETFSSTAT
 static struct statfs   *mnt = NULL;
-typedef u_long 		ulong;
 #if	FSTYPENAME
 #define f_type_eq(a, b) (! strcmp (((struct statfs *) (a))->f_fstypename, (b)))
 #else	/* !FSTYPENAME */
@@ -77,7 +76,7 @@ FILE *setmountent(file, mode)
 	char *file;
 	char *mode;
 {
-	ulong size;
+	u_int size;
 
 	if (mntbuf)
 		(void) free(mntbuf);
@@ -103,12 +102,14 @@ FILE *setmountent(file, mode)
 	char *file;
 	char *mode;
 {
-	ulong size;
+	int size;
 
 	if (mntbuf)
 		(void) free(mntbuf);
 
 	size = getfsstat((struct statfs *) NULL, 0, MNT_WAIT);
+	if (size == -1)
+		return ((FILE *)NULL);
 	size *= sizeof(struct statfs);
 	mntbuf = (char *) xmalloc(size);
 
@@ -144,7 +145,7 @@ mntent_t *getmountent(fptr)
 		mntstruct.me_flags |= MEFLAG_READONLY;
 
 	mntstruct.me_path = vmt2dataptr(mnt, VMT_STUB);
-	switch ((ulong)(struct vmount*)mnt->vmt_gfstype) {
+	switch ((struct vmount*)mnt->vmt_gfstype) {
 	      case MNT_NFS:
 		mntstruct.me_type = METYPE_NFS;
 		break;
