@@ -1,0 +1,48 @@
+.\"     $OpenBSD: src/usr.sbin/afs/src/arlad/Attic/CellServDB.5,v 1.5 2002/06/10 20:09:46 hin Exp $
+.\"	$KTH: CellServDB.5,v 1.3 2000/09/25 07:24:18 lha Exp $
+.Dd April 19, 2000
+.Dt CellServDB 5
+.Os Arla
+.Sh NAME
+.Nm CellServDB
+.Nd AFS cells and database servers
+.Sh DESCRIPTION
+The file
+.Nm
+lists AFS cells known to the local AFS cache manager.
+Each entry describes the name of an AFS cell and specifies the
+servers for that cell.
+.Pp
+Here is an example of the format of an entry in the file:
+.Bd -literal
+>cellname               # Freetext comment describing the cell
+ip-address              #first.server.for.cell
+ip-address              #second.server.for.cell
+ip-address              #third.server.for.cell
+.Ed
+.Pp
+.Nm
+is read when 
+.Nm
+is started, normally when the system boots.
+.Pp
+The text after the # is
+.Em not
+a comment, it's the hostname of the
+db-server, and it's used to lookup the address. The address is only
+used when the hostname is not found in DNS.
+.Pp
+Entries in the file are searched and expanded by many programs.
+.Pp
+In most cases it is better to distribute the information in
+.Nm
+with the AFSDB DNS resource records. This avoids having out of date
+information in
+.Nm Ns .
+.Pp
+When using AFSDB DNS resource records, entries entries should still
+be listed, but without any hosts. This is needed for dynroot to work.
+.Sh FILES
+.Pa /etc/afs/CellServDB
+.Sh SEE ALSO
+.Xr afsd 8
