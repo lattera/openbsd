@@ -1,8 +1,8 @@
-#	$OpenBSD: src/sbin/iopctl/Attic/Makefile,v 1.7 2004/05/03 15:18:19 drahn Exp $
+#	$OpenBSD: src/sbin/iopctl/Attic/Makefile,v 1.8 2004/08/06 23:06:23 deraadt Exp $
 
 .if (${MACHINE} == "i386") || (${MACHINE} == "amd64") || \
     (${MACHINE} == "macppc") || (${MACHINE} == "alpha") || \
-    (${MACHINE} == "cats")
+    (${MACHINE} == "cats") || (${MACHINE} == "sgi")
 PROG=   iopctl
 .else
 NOPROG=
