@@ -59,12 +59,6 @@ static char *rcsid = "$Id: repquota.c,v 1.12 2000/12/21 09:50:00 pjanzen Exp $";
 #include <string.h>
 #include <errno.h>
 
-#if DEV_BSHIFT < 10
-#define dbtokb(x) ((x) >> (10 - DEV_BSHIFT))
-#else
-#define dbtokb(x) ((x) << (DEV_BSHIFT - 10))
-#endif
-
 char *qfname = QUOTAFILENAME;
 char *qfextension[] = INITQFNAMES;
 
@@ -232,16 +226,19 @@ repquota(fs, type, qfpathname)
 		    fup->fu_dqblk.dqb_curblocks == 0)
 			continue;
 		printf("%-10s", fup->fu_name);
-		printf("%c%c%8lu%8lu%8lu%7s",
+		printf("%c%c%8d%8d%8d%7s",
 			fup->fu_dqblk.dqb_bsoftlimit && 
 			    fup->fu_dqblk.dqb_curblocks >= 
 			    fup->fu_dqblk.dqb_bsoftlimit ? '+' : '-',
 			fup->fu_dqblk.dqb_isoftlimit &&
 			    fup->fu_dqblk.dqb_curinodes >=
 			    fup->fu_dqblk.dqb_isoftlimit ? '+' : '-',
-			(int)(dbtokb((u_quad_t)fup->fu_dqblk.dqb_curblocks)),
-			(int)(dbtokb((u_quad_t)fup->fu_dqblk.dqb_bsoftlimit)),
-			(int)(dbtokb((u_quad_t)fup->fu_dqblk.dqb_bhardlimit)),
+			(int)(dbtob((u_quad_t)fup->fu_dqblk.dqb_curblocks)
+			    / 1024),
+			(int)(dbtob((u_quad_t)fup->fu_dqblk.dqb_bsoftlimit)
+			    / 1024),
+			(int)(dbtob((u_quad_t)fup->fu_dqblk.dqb_bhardlimit)
+			    / 1024),
 			fup->fu_dqblk.dqb_bsoftlimit && 
 			    fup->fu_dqblk.dqb_curblocks >= 
 			    fup->fu_dqblk.dqb_bsoftlimit ?
