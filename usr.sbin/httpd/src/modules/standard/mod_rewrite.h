@@ -253,8 +253,6 @@
 
 #define MAX_ENV_FLAGS 15
 
-#define MAX_NMATCH    10
-
 /*
 **
 **  our private data structures we handle with
@@ -356,7 +354,7 @@ typedef struct cache {
 typedef struct backrefinfo {
     char *source;
     int nsub;
-    regmatch_t regmatch[10];
+    regmatch_t regmatch[AP_MAX_REG_MATCH];
 } backrefinfo;
 
 

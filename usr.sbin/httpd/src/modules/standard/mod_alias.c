@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/httpd/src/modules/standard/mod_alias.c,v 1.8 2002/08/15 16:06:11 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/httpd/src/modules/standard/mod_alias.c,v 1.8.2.1 2003/11/04 18:27:45 miod Exp $ */
 
 /* ====================================================================
  * The Apache Software License, Version 1.1
@@ -303,7 +303,7 @@ static int alias_matches(const char *uri, const char *alias_fakename)
 static char *try_alias_list(request_rec *r, array_header *aliases, int doesc, int *status)
 {
     alias_entry *entries = (alias_entry *) aliases->elts;
-    regmatch_t regm[10];
+    regmatch_t regm[AP_MAX_REG_MATCH];
     char *found = NULL;
     int i;
 
@@ -312,10 +312,10 @@ static char *try_alias_list(request_rec *r, array_header *aliases, int doesc, in
 	int l;
 
 	if (p->regexp) {
-	    if (!ap_regexec(p->regexp, r->uri, p->regexp->re_nsub + 1, regm, 0)) {
+	    if (!ap_regexec(p->regexp, r->uri, AP_MAX_REG_MATCH, regm, 0)) {
 		if (p->real) {
 		    found = ap_pregsub(r->pool, p->real, r->uri,
-				    p->regexp->re_nsub + 1, regm);
+                                       AP_MAX_REG_MATCH, regm);
 		    if (found && doesc) {
 			found = ap_escape_uri(r->pool, found);
 		    }
