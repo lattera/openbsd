@@ -16,7 +16,7 @@
  */
 
 #if !defined(lint) && !defined(LINT)
-static char rcsid[] = "$Id: cron.c,v 1.5 1998/03/30 06:59:42 deraadt Exp $";
+static char rcsid[] = "$Id: cron.c,v 1.6 1999/05/23 17:19:23 aaron Exp $";
 #endif
 
 
@@ -373,7 +373,10 @@ sigchld_handler(x) {
 
 static void
 sighup_handler(x) {
+	int save_errno = errno;
+
 	log_close();
+	errno = save_errno;
 }
 
 
