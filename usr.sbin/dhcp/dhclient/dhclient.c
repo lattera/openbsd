@@ -56,7 +56,7 @@
 
 #ifndef lint
 static char copyright[] =
-"$Id: dhclient.c,v 1.5 1999/06/06 19:09:05 deraadt Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
+"$Id: dhclient.c,v 1.6 1999/11/30 21:45:10 angelos Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
 #include "dhcpd.h"
@@ -138,7 +138,7 @@ int main (argc, argv, envp)
  			error ("Insufficient memory to %s %s",
  			       "record interface", argv [i]);
  		    memset (tmp, 0, sizeof *tmp);
- 		    strcpy (tmp -> name, argv [i]);
+ 		    strlcpy (tmp -> name, argv [i], IFNAMSIZ);
  		    tmp -> next = interfaces;
  		    tmp -> flags = INTERFACE_REQUESTED;
 		    interfaces_requested = 1;
