@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.12 2004/06/06 05:22:51 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.13 2004/06/06 21:46:12 tedu Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -167,8 +167,9 @@ hardclock(frame)
 	register int delta;
 	extern int tickdelta;
 	extern long timedelta;
+#ifdef MULTIPROCESSOR
 	struct cpu_info *ci = curcpu();
-#ifndef MULTIPROCESSOR
+#else
 	extern int rrticks;
 #endif
 
@@ -195,16 +196,20 @@ hardclock(frame)
 	if (stathz == 0)
 		statclock(frame);
 
+#if defined(MULTIPROCESSOR)
 	if (--rrticks <= 0)
 		roundrobin(ci);
 
-#if defined(MULTIPROCESSOR)
 	/*
 	 * If we are not the primary CPU, we're not allowed to do
 	 * any more work.
 	 */
 	if (CPU_IS_PRIMARY(ci) == 0)
 		return;
+#else
+	if (--rrticks <= 0)
+		roundrobin(0);
+
 #endif
 
 	/*

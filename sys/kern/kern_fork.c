@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.14 2004/06/05 23:13:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.15 2004/06/06 21:46:12 tedu Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -204,17 +204,7 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	timeout_set(&p2->p_sleep_to, endtsleep, p2);
 	timeout_set(&p2->p_realit_to, realitexpire, p2);
 
-#if !defined(MULTIPROCESSOR)
-	/*
-	 * In the single-processor case, all processes will always run
-	 * on the same CPU.  So, initialize the child's CPU to the parent's
-	 * now.  In the multiprocessor case, the child's CPU will be
-	 * initialized in the low-level context switch code when the
-	 * process runs.
-	 */
-	KASSERT(p1->p_cpu != NULL);
-	p2->p_cpu = p1->p_cpu;
-#else
+#if defined(MULTIPROCESSOR)
 	/*
 	 * zero child's CPU pointer so we don't get trash.
 	 */

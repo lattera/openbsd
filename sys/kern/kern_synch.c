@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.14 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.15 2004/06/06 21:46:12 tedu Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -97,17 +97,13 @@ scheduler_start()
  * XXX We badly need to unify MULTIPROCESSOR with not MULTIPROCESSOR.
  */
 /* ARGSUSED */
+#ifdef MULTIPROCESSOR
 void
 roundrobin(struct cpu_info *ci)
 {
-#ifdef MULTIPROCESSOR
 	struct schedstate_percpu *spc = &ci->ci_schedstate;
-#else
-	struct proc *p = curproc;
-#endif
 	int s;
 
-#ifdef MULTIPROCESSOR
 	spc->spc_rrticks = rrticks_init;
 
 	if (curproc != NULL) {
@@ -124,7 +120,16 @@ roundrobin(struct cpu_info *ci)
 		}
 		splx(s);
 	}
+
+	need_resched(curcpu());
+}
 #else
+void
+roundrobin(struct cpu_info *ci)
+{
+	struct proc *p = curproc;
+	int s;
+
 	rrticks = rrticks_init;
 
 	if (p != NULL) {
@@ -141,10 +146,10 @@ roundrobin(struct cpu_info *ci)
 		}
 		splx(s);
 	}
-#endif
 
-	need_resched(curcpu());
+	need_resched(0);
 }
+#endif
 
 /*
  * Constants for digital decay and forget:
@@ -633,7 +638,9 @@ restart:
 				 */
 				if ((p->p_flag & P_INMEM) != 0) {
 					setrunqueue(p);
+#ifdef MULTIPROCESSOR
 					KASSERT(p->p_cpu != NULL);
+#endif
 					need_resched(p->p_cpu);
 				} else {
 					wakeup((caddr_t)&proc0);
@@ -874,10 +881,11 @@ resched_proc(struct proc *p, u_char pri)
 #ifdef MULTIPROCESSOR
 	ci = (p->p_cpu != NULL) ? p->p_cpu : curcpu();
 	if (pri < ci->ci_schedstate.spc_curpriority)
+		need_resched(ci);
 #else
 	if (pri < curpriority)
+		need_resched(0);
 #endif
-		need_resched(ci);
 }
 
 /*
