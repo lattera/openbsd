@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/sysctl/Attic/sysctl.c,v 1.17 1997/08/19 05:53:12 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/sysctl/Attic/sysctl.c,v 1.18 1997/08/19 06:16:26 millert Exp $	*/
 /*	$NetBSD: sysctl.c,v 1.9 1995/09/30 07:12:50 thorpej Exp $	*/
 
 /*
@@ -44,7 +44,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)sysctl.c	8.1 (Berkeley) 6/6/93";
 #else
-static char *rcsid = "$OpenBSD: src/usr.sbin/sysctl/Attic/sysctl.c,v 1.17 1997/08/19 05:53:12 millert Exp $";
+static char *rcsid = "$OpenBSD: src/usr.sbin/sysctl/Attic/sysctl.c,v 1.18 1997/08/19 06:16:26 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -362,7 +362,7 @@ parse(string, flags)
 				in_port_t port;
 
 				special |= BADDYNAMIC;
-				if (newval == NULL);
+				if (newval == NULL)
 					break;
 
 				(void)memset((void *)&newbaddynamic, 0,
