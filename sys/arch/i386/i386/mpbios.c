@@ -54,7 +54,7 @@
  *      Foundation, Inc. and its contributors.
  * 4. Neither the name of The NetBSD Foundation nor the names of its
  *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.  
+ *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -95,7 +95,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mpbios.c,v 1.1.2.1 2001/07/14 10:02:29 ho Exp $
+ *	$Id: mpbios.c,v 1.1.2.2 2001/07/15 11:04:49 ho Exp $
  */
 
 /*
@@ -153,7 +153,7 @@ static const char *loc_where[] = {
 	"bios"
 };
 
-struct mp_map 
+struct mp_map
 {
 	vaddr_t 	baseva;
 	int	 	vsize;
@@ -163,31 +163,31 @@ struct mp_map
 };
 
 /* XXX */
-char *bitmask_snprintf(u_quad_t, const char *, char *, size_t);
+char   *bitmask_snprintf(u_quad_t, const char *, char *, size_t);
 
-int mp_print __P((void *, const char *));
-int mp_match __P((struct device *,void *,void *));
-int mpbios_cpu_start __P((struct cpu_info *));
-static const void *mpbios_search __P((struct device *, paddr_t, int,
-    struct mp_map *));
-static inline int mpbios_cksum __P((const void *,int));
+int	mp_print(void *, const char *);
+int	mp_match(struct device *, void *, void *);
+int	mpbios_cpu_start(struct cpu_info *);
+const void *mpbios_search(struct device *, paddr_t, int,
+    struct mp_map *);
+static __inline int mpbios_cksum(const void *, int);
 
-static void mp_cfg_special_intr __P((const struct mpbios_int *, u_int32_t *));
-static void mp_cfg_pci_intr __P((const struct mpbios_int *, u_int32_t *));
-static void mp_cfg_eisa_intr __P((const struct mpbios_int *, u_int32_t *));
-static void mp_cfg_isa_intr __P((const struct mpbios_int *, u_int32_t *));
-static void mp_print_special_intr (int intr);
-static void mp_print_pci_intr (int intr);
-static void mp_print_eisa_intr (int intr);
-static void mp_print_isa_intr (int intr);
+void	mp_cfg_special_intr(const struct mpbios_int *, u_int32_t *);
+void	mp_cfg_pci_intr(const struct mpbios_int *, u_int32_t *);
+void	mp_cfg_eisa_intr(const struct mpbios_int *, u_int32_t *);
+void	mp_cfg_isa_intr(const struct mpbios_int *, u_int32_t *);
+void	mp_print_special_intr (int);
+void	mp_print_pci_intr (int);
+void	mp_print_eisa_intr (int);
+void	mp_print_isa_intr (int);
 
-static void mpbios_cpu __P((const u_int8_t *, struct device *));
-static void mpbios_bus __P((const u_int8_t *, struct device *));
-static void mpbios_ioapic __P((const u_int8_t *, struct device *));
-static void mpbios_int __P((const u_int8_t *, int, struct mp_intr_map *));
+void	mpbios_cpu(const u_int8_t *, struct device *);
+void	mpbios_bus(const u_int8_t *, struct device *);
+void	mpbios_ioapic(const u_int8_t *, struct device *);
+void	mpbios_int(const u_int8_t *, int, struct mp_intr_map *);
 
-static const void *mpbios_map __P((paddr_t, int, struct mp_map *));
-static void mpbios_unmap __P((struct mp_map *));
+const void *mpbios_map(paddr_t, int, struct mp_map *);
+static __inline void mpbios_unmap(struct mp_map *);
 
 /*
  * globals to help us bounce our way through parsing the config table.
@@ -203,7 +203,7 @@ int mp_verbose = 1;
 #else
 int mp_verbose = 0;
 #endif
-	
+
 struct cpu_functions mpbios_cpu_funcs = { mpbios_cpu_start, NULL };
 
 int
@@ -374,8 +374,8 @@ out:
  * const'ed pointer.
  */
 
-static const void *
-mpbios_map (pa, len, handle)
+const void *
+mpbios_map(pa, len, handle)
 	paddr_t pa;
 	int len;
 	struct mp_map *handle;
@@ -384,31 +384,31 @@ mpbios_map (pa, len, handle)
 	paddr_t endpa = i386_round_page(pa + len);
 	vaddr_t va = uvm_km_valloc(kernel_map, endpa - pgpa);
 	vaddr_t retva = va + (pa & PGOFSET);
-	
+
 	handle->pa = pa;
 	handle->pg = pgpa;
 	handle->psize = len;
 	handle->baseva = va;
 	handle->vsize = endpa-pgpa;
 
-	do {	  
+	do {
 		/* pmap_kenter_pa (va, pgpa, VM_PROT_READ); */
-	        pmap_enter(pmap_kernel(), va, pgpa, VM_PROT_READ, TRUE,
-			   VM_PROT_READ);
+		pmap_enter(pmap_kernel(), va, pgpa, VM_PROT_READ, TRUE,
+		    VM_PROT_READ);
 		va += NBPG;
 		pgpa += NBPG;
 	} while (pgpa < endpa);
 
-	return (const void *)retva;
+	return ((const void *)retva);
 }
 
-inline static void
-mpbios_unmap (handle)
+static __inline void
+mpbios_unmap(handle)
 	struct mp_map *handle;
 {
   	/* pmap_kremove (handle->baseva, handle->vsize); */
   	pmap_extract(pmap_kernel(), handle->baseva, NULL);
-	uvm_km_free (kernel_map, handle->baseva, handle->vsize);
+	uvm_km_free(kernel_map, handle->baseva, handle->vsize);
 }
 
 /*
@@ -424,22 +424,23 @@ mpbios_probe(self)
 	int		cthlen;
 	const u_int8_t	*mpbios_page;
 	int 		scan_loc;
-	
+
 	struct		mp_map t;
-	
+
 	/* see if EBDA exists */
 
-	mpbios_page = mpbios_map (0, NBPG, &t);
+	mpbios_page = mpbios_map(0, NBPG, &t);
 
-	ebda =   *(const u_int16_t *) (&mpbios_page[0x40e]);
+	/* XXX Ugly magic constants below. */
+	ebda = *(const u_int16_t *)(&mpbios_page[0x40e]);
 	ebda <<= 4;
-	
-	memtop = *(const u_int16_t *) (&mpbios_page[0x413]);
+
+	memtop = *(const u_int16_t *)(&mpbios_page[0x413]);
 	memtop <<= 10;
 
 	mpbios_page = NULL;
 	mpbios_unmap(&t);
-	
+
 	scan_loc = 0;
 
 	if (ebda && ebda < IOM_BEGIN ) {
@@ -447,7 +448,7 @@ mpbios_probe(self)
 		if (mp_fps != NULL)
 			goto found;
 	}
-	
+
 	scan_loc = 1;
 
 	if (memtop && memtop <= IOM_BEGIN ) {
@@ -455,15 +456,15 @@ mpbios_probe(self)
 		if (mp_fps != NULL)
 			goto found;
 	}
-	
+
 	scan_loc = 2;
-	
+
 	mp_fps = mpbios_search(self, BIOS_BASE, BIOS_COUNT, &mp_fp_map);
 	if (mp_fps != NULL)
 		goto found;
 
 	/* nothing found */
-	return 0;
+	return (0);
 
  found:
 	if (mp_verbose)
@@ -475,22 +476,22 @@ mpbios_probe(self)
 			printf("%s: MP fps invalid: "
 			    "no default config and no configuration table\n",
 			    self->dv_xname);
-			
+
 			goto err;
 		}
 		printf("%s: MP default configuration %d\n",
 		    self->dv_xname, mp_fps->mpfb1);
-		return 10;
+		return (10);
 	}
 
 	cthpa = mp_fps->pap;
 
-	mp_cth = mpbios_map (cthpa, sizeof (*mp_cth), &mp_cfg_table_map);
+	mp_cth = mpbios_map(cthpa, sizeof (*mp_cth), &mp_cfg_table_map);
 	cthlen = mp_cth->base_len;
 	mpbios_unmap(&mp_cfg_table_map);
-	
-	mp_cth = mpbios_map (cthpa, cthlen, &mp_cfg_table_map);
-	
+
+	mp_cth = mpbios_map(cthpa, cthlen, &mp_cfg_table_map);
+
 	if (mp_verbose)
 		printf("%s: MP config table at 0x%lx, %d bytes long\n",
 		    self->dv_xname, cthpa, cthlen);
@@ -501,13 +502,14 @@ mpbios_probe(self)
 		    MP_CT_SIG, mp_cth->signature);
 		goto err;
 	}
-	
+
 	if (mpbios_cksum(mp_cth, cthlen)) {
 		printf ("%s: MP Configuration Table checksum mismatch\n",
 		    self->dv_xname);
 		goto err;
 	}
-	return 10;
+	return (10);
+
  err:
 	if (mp_fps) {
 		mp_fps = NULL;
@@ -517,7 +519,7 @@ mpbios_probe(self)
 		mp_cth = NULL;
 		mpbios_unmap(&mp_cfg_table_map);
 	}
-	return 0;
+	return (0);
 }
 
 
@@ -525,15 +527,15 @@ mpbios_probe(self)
  * Simple byte checksum used on config tables.
  */
 
-inline static int     
-mpbios_cksum (start, len) 
+static __inline int
+mpbios_cksum (start, len)
 	const void *start;
 	int len;
 {
 	unsigned char res=0;
 	const char *p = start;
 	const char *end = p + len;
-	
+
 	while (p < end)
 		res += *p++;
 
@@ -561,26 +563,25 @@ mpbios_search (self, start, count, map)
 	int i, len;
 	const struct mpbios_fps *m;
 	int end = count - sizeof(*m);
-	const u_int8_t *base = mpbios_map (start, count, &t);	
+	const u_int8_t *base = mpbios_map (start, count, &t);
 
 	if (mp_verbose)
 		printf("%s: scanning 0x%lx to 0x%lx for MP signature\n",
 		    self->dv_xname, start, start+count-sizeof(*m));
-		
+
 	for (i = 0; i <= end; i += 4) {
 		m = (struct mpbios_fps *)&base[i];
-		
+
 		if ((m->signature == MP_FP_SIG) &&
 		    ((len = m->length << 4) != 0) &&
 		    mpbios_cksum(m, (m->length << 4)) == 0) {
+			mpbios_unmap(&t);
 
-			mpbios_unmap (&t);
-
-			return mpbios_map (start+i, len, map);
+			return (mpbios_map(start + i, len, map));
 		}
 	}
 	mpbios_unmap(&t);
-	
+
 	return 0;
 }
 
@@ -597,7 +598,7 @@ static struct mpbios_baseentry mp_conf[] =
 	{4, 8, 0, "lint"},
 };
 
-struct mp_bus *mp_busses; 
+struct mp_bus *mp_busses;
 struct mp_intr_map *mp_intrs;
 extern struct ioapic_softc *ioapics[]; /* XXX */
 
@@ -650,8 +651,8 @@ mpbios_scan(self)
 	int		type;
 	int		intr_cnt, cur_intr;
 	paddr_t		lapic_base;
-	
-	printf ("%s: Intel MP Specification ", self->dv_xname);
+
+	printf("%s: Intel MP Specification ", self->dv_xname);
 
 	switch (mp_fps->spec_rev) {
 	case 1:
@@ -663,7 +664,7 @@ mpbios_scan(self)
 	default:
 		printf("(unrecognized rev %d)", mp_fps->spec_rev);
 	}
-	
+
 	/*
 	 * looks like we've got a MP system.  start setting up
 	 * infrastructure..
@@ -673,9 +674,9 @@ mpbios_scan(self)
 	lapic_base = LAPIC_BASE;
 	if (mp_cth != NULL)
 		lapic_base = (paddr_t)mp_cth->apic_address;
-	
+
 	lapic_boot_init(lapic_base);
-		
+
 	/* check for use of 'default' configuration */
 	if (mp_fps->mpfb1 != 0) {
 		struct mpbios_proc pe;
@@ -684,7 +685,7 @@ mpbios_scan(self)
 
 		printf("\n%s: MP default configuration %d\n",
 		    self->dv_xname, mp_fps->mpfb1);
-		
+
 		/* use default addresses */
 		pe.apic_id = cpu_number();
 		pe.cpu_flags = PROCENTRY_FLAG_EN|PROCENTRY_FLAG_BP;
@@ -711,7 +712,7 @@ mpbios_scan(self)
 		 * but..
 		 */
 		if (mp_cth == NULL)
-			panic ("mpbios_scan: no config (can't happen?)");
+			panic("mpbios_scan: no config (can't happen?)");
 
 		printf("\n%s: MP OEM %8.8s Product %12.12s\n",
 		    self->dv_xname, mp_cth->oem_id, mp_cth->product_id);
@@ -722,10 +723,10 @@ mpbios_scan(self)
 		position = (const u_int8_t *)(mp_cth);
 		end = position + mp_cth->base_len;
 		position += sizeof(*mp_cth);
-		
+
 		count = mp_cth->entry_count;
 		intr_cnt = 0;
-		
+
 		while ((count--) && (position < end)) {
 			type = *position;
 			if (type >= MPS_MCT_NTYPES) {
@@ -747,25 +748,26 @@ mpbios_scan(self)
 				if (ie->dst_apic_id != 0xff)
 					intr_cnt++;
 				else if (type == MPS_MCT_IOINT)
-					intr_cnt += mp_conf[MPS_MCT_IOAPIC].count;
+					intr_cnt +=
+					    mp_conf[MPS_MCT_IOAPIC].count;
 				else
 					intr_cnt += mp_conf[MPS_MCT_CPU].count;
 			}
 			position += mp_conf[type].length;
 		}
 
-		mp_busses = malloc(sizeof(struct mp_bus)*
+		mp_busses = malloc(sizeof(struct mp_bus) *
 		    mp_conf[MPS_MCT_BUS].count, M_DEVBUF, M_NOWAIT);
-		mp_intrs = malloc(sizeof(struct mp_intr_map)*intr_cnt,
+		mp_intrs = malloc(sizeof(struct mp_intr_map) * intr_cnt,
 		    M_DEVBUF, M_NOWAIT);
-		
+
 		/* re-walk the table, recording info of interest */
-		position = (const u_int8_t *) mp_cth + sizeof(*mp_cth);
+		position = (const u_int8_t *)mp_cth + sizeof(*mp_cth);
 		count = mp_cth->entry_count;
 		cur_intr = 0;
-		
+
 		while ((count--) && (position < end)) {
-			switch (type = *(u_char *) position) {
+			switch (type = *(u_char *)position) {
 			case MPS_MCT_CPU:
 				mpbios_cpu(position, self);
 				break;
@@ -782,7 +784,8 @@ mpbios_scan(self)
 				cur_intr++;
 				break;
 			default:
-				printf("%s: unknown entry type %x in MP config table\n",
+				printf("%s: unknown entry type %x "
+				    "in MP config table\n",
 				    self->dv_xname, type);
 				/* NOTREACHED */
 				return;
@@ -791,20 +794,20 @@ mpbios_scan(self)
 			(u_char*)position += mp_conf[type].length;
 		}
 		if (mp_verbose && mp_cth->ext_len)
-			printf("%s: MP WARNING: %d bytes of extended entries not examined\n",
-			    self->dv_xname, 
-			    mp_cth->ext_len);
+			printf("%s: MP WARNING: %d "
+			    "bytes of extended entries not examined\n",
+			    self->dv_xname, mp_cth->ext_len);
 	}
 	/* Clean up. */
 	mp_fps = NULL;
-	mpbios_unmap (&mp_fp_map);
+	mpbios_unmap(&mp_fp_map);
 	if (mp_cth != NULL) {
 		mp_cth = NULL;
 		mpbios_unmap (&mp_cfg_table_map);
 	}
 }
 
-static void
+void
 mpbios_cpu(ent, self)
 	const u_int8_t *ent;
 	struct device *self;
@@ -823,7 +826,7 @@ mpbios_cpu(ent, self)
 	else
 		caa.cpu_role = CPU_ROLE_AP;
 
-	caa.caa_name   = "cpu";
+	caa.caa_name = "cpu";
 	caa.cpu_number = entry->apic_id;
 	caa.cpu_func = &mpbios_cpu_funcs;
 	caa.cpu_signature = entry->cpu_signature;
@@ -843,7 +846,8 @@ mpbios_cpu(ent, self)
  *
  * Fill in: trigger mode, polarity, and possibly delivery mode.
  */
-static void mp_cfg_special_intr (entry, redir)
+void
+mp_cfg_special_intr(entry, redir)
 	const struct mpbios_int *entry;
 	u_int32_t *redir;
 {
@@ -881,7 +885,8 @@ static void mp_cfg_special_intr (entry, redir)
 
 /* XXX too much duplicated code here. */
 
-static void mp_cfg_pci_intr (entry, redir)
+void
+mp_cfg_pci_intr(entry, redir)
 	const struct mpbios_int *entry;
 	u_int32_t *redir;
 {
@@ -900,13 +905,13 @@ static void mp_cfg_pci_intr (entry, redir)
 	default:
 		panic("unknown MPS interrupt polarity %d", mpspo);
 	}
-	
+
 	if (entry->int_type != MPS_INTTYPE_INT) {
 		mp_cfg_special_intr(entry, redir);
 		return;
 	}
 	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
-	
+
 	switch (mpstrig) {
 	case MPS_INTTR_DEF:
 	case MPS_INTTR_LEVEL:
@@ -916,11 +921,12 @@ static void mp_cfg_pci_intr (entry, redir)
 		*redir &= ~IOAPIC_REDLO_LEVEL;
 		break;
 	default:
-		panic("unknown MPS interrupt trigger %d", mpstrig);	
+		panic("unknown MPS interrupt trigger %d", mpstrig);
 	}
 }
 
-static void mp_cfg_eisa_intr (entry, redir)
+void
+mp_cfg_eisa_intr (entry, redir)
 	const struct mpbios_int *entry;
 	u_int32_t *redir;
 {
@@ -939,13 +945,13 @@ static void mp_cfg_eisa_intr (entry, redir)
 	default:
 		panic("unknown MPS interrupt polarity %d", mpspo);
 	}
-	
+
 	if (entry->int_type != MPS_INTTYPE_INT) {
 		mp_cfg_special_intr(entry, redir);
 		return;
 	}
 	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
-	
+
 	switch (mpstrig) {
 	case MPS_INTTR_LEVEL:
 		*redir |= IOAPIC_REDLO_LEVEL;
@@ -960,18 +966,19 @@ static void mp_cfg_eisa_intr (entry, redir)
 		 */
 		if (mp_busses[entry->src_bus_id].mb_data &
 		    (1<<entry->src_bus_irq)) {
-			*redir |= IOAPIC_REDLO_LEVEL;			
+			*redir |= IOAPIC_REDLO_LEVEL;
 		} else {
 			*redir &= ~IOAPIC_REDLO_LEVEL;
 		}
 		break;
 	default:
-		panic("unknown MPS interrupt trigger %d", mpstrig);	
+		panic("unknown MPS interrupt trigger %d", mpstrig);
 	}
 }
 
 
-static void mp_cfg_isa_intr (entry, redir)
+void
+mp_cfg_isa_intr(entry, redir)
 	const struct mpbios_int *entry;
 	u_int32_t *redir;
 {
@@ -990,13 +997,13 @@ static void mp_cfg_isa_intr (entry, redir)
 	default:
 		panic("unknown MPS interrupt polarity %d", mpspo);
 	}
-	
+
 	if (entry->int_type != MPS_INTTYPE_INT) {
 		mp_cfg_special_intr(entry, redir);
 		return;
 	}
-	*redir |= (IOAPIC_REDLO_DEL_LOPRI<<IOAPIC_REDLO_DEL_SHIFT);
-	
+	*redir |= (IOAPIC_REDLO_DEL_LOPRI << IOAPIC_REDLO_DEL_SHIFT);
+
 	switch (mpstrig) {
 	case MPS_INTTR_LEVEL:
 		*redir |= IOAPIC_REDLO_LEVEL;
@@ -1006,29 +1013,33 @@ static void mp_cfg_isa_intr (entry, redir)
 		*redir &= ~IOAPIC_REDLO_LEVEL;
 		break;
 	default:
-		panic("unknown MPS interrupt trigger %d", mpstrig);	
+		panic("unknown MPS interrupt trigger %d", mpstrig);
 	}
 }
 
 
-static void mp_print_special_intr (intr)
+void
+mp_print_special_intr(intr)
 	int intr;
 {
 }
 
-static void mp_print_pci_intr (intr)
+void
+mp_print_pci_intr(intr)
 	int intr;
 {
-	printf(" device %d INT_%c", (intr>>2)&0x1f, 'A' + (intr & 0x3));
+	printf(" device %d INT_%c", (intr >> 2) & 0x1f, 'A' + (intr & 0x3));
 }
 
-static void mp_print_isa_intr (intr)
+void
+mp_print_isa_intr(intr)
 	int intr;
 {
 	printf(" irq %d", intr);
 }
 
-static void mp_print_eisa_intr (intr)
+void
+mp_print_eisa_intr(intr)
 	int intr;
 {
 	printf(" EISA irq %d", intr);
@@ -1039,10 +1050,10 @@ static void mp_print_eisa_intr (intr)
 #define TAB_UNIT	4
 #define TAB_ROUND(a)	_TAB_ROUND(a, TAB_UNIT)
 
-#define _TAB_ROUND(a,u)	(((a) + (u - 1)) & ~(u-1))
-#define EXTEND_TAB(a,u)	(!(_TAB_ROUND(a,u) == _TAB_ROUND((a+1),u)))
+#define _TAB_ROUND(a,u)	(((a) + (u - 1)) & ~(u - 1))
+#define EXTEND_TAB(a,u)	(!(_TAB_ROUND(a, u) == _TAB_ROUND((a + 1), u)))
 
-static void
+void
 mpbios_bus(ent, self)
 	const u_int8_t *ent;
 	struct device *self;
@@ -1050,7 +1061,7 @@ mpbios_bus(ent, self)
 	const struct mpbios_bus *entry = (const struct mpbios_bus *)ent;
 	/* XXX should also add EISA support here. */
 	mp_busses[entry->bus_id].mb_intrs = NULL;
-	
+
 	if (memcmp(entry->bus_type, "PCI   ", 6) == 0) {
 		mp_busses[entry->bus_id].mb_name = "pci";
 		mp_busses[entry->bus_id].mb_idx = entry->bus_id;
@@ -1064,7 +1075,6 @@ mpbios_bus(ent, self)
 
 		mp_busses[entry->bus_id].mb_data =
 		    inb(ELCR0) | (inb(ELCR1) << 8);
-		
 	} else if (memcmp(entry->bus_type, "ISA   ", 6) == 0) {
 		mp_busses[entry->bus_id].mb_name = "isa";
 		mp_busses[entry->bus_id].mb_idx = 0; /* XXX */
@@ -1081,7 +1091,7 @@ mpbios_bus(ent, self)
 }
 
 
-static void
+void
 mpbios_ioapic(ent, self)
 	const u_int8_t *ent;
 	struct device *self;
@@ -1093,7 +1103,7 @@ mpbios_ioapic(ent, self)
 	if (!(entry->apic_flags & IOAPICENTRY_FLAG_EN))
 		return;
 
-	aaa.aaa_name   = "ioapic";
+	aaa.aaa_name = "ioapic";
 	aaa.apic_id = entry->apic_id;
 	aaa.apic_version = entry->apic_version;
 	aaa.apic_address = (paddr_t)entry->apic_address;
@@ -1102,14 +1112,14 @@ mpbios_ioapic(ent, self)
 	config_found_sm(self, &aaa, mp_print, mp_match);
 }
 
-static const char inttype_fmt[] = "\177\020"		
+static const char inttype_fmt[] = "\177\020"
 		"f\0\2type\0" "=\1NMI\0" "=\2SMI\0" "=\3ExtINT\0";
 
-static const char flagtype_fmt[] = "\177\020"		
+static const char flagtype_fmt[] = "\177\020"
 		"f\0\2pol\0" "=\1Act Hi\0" "=\3Act Lo\0"
 		"f\2\2trig\0" "=\1Edge\0" "=\3Level\0";
 
-static void
+void
 mpbios_int(ent, enttype, mpi)
 	const u_int8_t *ent;
 	int enttype;
@@ -1120,7 +1130,7 @@ mpbios_int(ent, enttype, mpi)
 
 	struct mp_intr_map *altmpi;
 	struct mp_bus *mpb;
-	
+
 	u_int32_t id = entry->dst_apic_id;
 	u_int32_t pin = entry->dst_apic_int;
 	u_int32_t bus = entry->src_bus_id;
@@ -1146,7 +1156,7 @@ mpbios_int(ent, enttype, mpi)
 	mpb->mb_intrs = mpi;
 	mpi->bus = mpb;
 	mpi->bus_pin = dev;
-	
+
 	mpi->ioapic_ih = APIC_INT_VIA_APIC |
 	    ((id<<APIC_INT_APIC_SHIFT) | ((pin<<APIC_INT_PIN_SHIFT)));
 
@@ -1158,7 +1168,7 @@ mpbios_int(ent, enttype, mpi)
 		    bus, id, pin);
 		return;
 	}
-	
+
 	(*mpb->mb_intr_cfg)(entry, &mpi->redir);
 
 	if (enttype == MPS_MCT_IOINT) {
@@ -1171,11 +1181,12 @@ mpbios_int(ent, enttype, mpi)
 		mpi->ioapic_pin = pin;
 
 		altmpi = sc->sc_pins[pin].ip_map;
-	
+
 		if (altmpi != NULL) {
 			if ((altmpi->type != type) ||
 			    (altmpi->flags != flags)) {
-				printf("%s: conflicting map entries for pin %d\n",
+				printf(
+				    "%s: conflicting map entries for pin %d\n",
 				    sc->sc_dev.dv_xname, pin);
 			}
 		} else {
@@ -1196,19 +1207,18 @@ mpbios_int(ent, enttype, mpi)
 		char buf[256];
 
 		printf("%s: int%d attached to %s",
-		    sc? sc->sc_dev.dv_xname : "local apic",
-		    pin,
+		    sc ? sc->sc_dev.dv_xname : "local apic", pin,
 		    mpb->mb_name);
 		if (mpb->mb_idx != -1)
 			printf("%d", mpb->mb_idx);
 
-		if (mpb != NULL) 
+		if (mpb != NULL)
 
 		(*(mpb->mb_intr_print))(dev);
 
-		printf(" (type %s", 
+		printf(" (type %s",
 		    bitmask_snprintf(type, inttype_fmt, buf, sizeof(buf)));
-		
+
 		printf(" flags %s)\n",
 		    bitmask_snprintf(flags, flagtype_fmt, buf, sizeof(buf)));
 	}
@@ -1226,8 +1236,8 @@ mpbios_cpu_start(struct cpu_info *ci)
 	 */
 
 	outb(IO_RTC, NVRAM_RESET);
-	outb(IO_RTC+1, NVRAM_RESET_SOFT);
-	
+	outb(IO_RTC + 1, NVRAM_RESET_SOFT);
+
 	/*
 	 * "and the warm reset vector (DWORD based at 40:67) to point
 	 * to the AP startup code ..."
@@ -1235,21 +1245,22 @@ mpbios_cpu_start(struct cpu_info *ci)
 
 	dwordptr[0] = 0;
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
-	
+
 	/* pmap_kenter_pa (0, 0, VM_PROT_READ|VM_PROT_WRITE); */
-	pmap_enter (pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
-	memcpy ((u_int8_t *) 0x467, dwordptr, 4);
+	pmap_enter(pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
+	    VM_PROT_READ|VM_PROT_WRITE);
+	/* XXX magic constant.  */
+	memcpy((u_int8_t *)0x467, dwordptr, 4);
 	/* pmap_kremove (0, NBPG); */
-	pmap_extract (pmap_kernel(), 0, NULL);
-	
+	pmap_extract(pmap_kernel(), 0, NULL);
+
 	/*
 	 * ... prior to executing the following sequence:"
 	 */
 
 	if (ci->ci_flags & CPUF_AP) {
 		if ((error = i386_ipi_init(ci->ci_cpuid)) != 0)
-			return error;
+			return (error);
 
 		delay(10000);
 
@@ -1257,15 +1268,15 @@ mpbios_cpu_start(struct cpu_info *ci)
 
 			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
 			    LAPIC_DLMODE_STARTUP)) != 0)
-				return error;
+				return (error);
 			delay(200);
 
 			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
 			    LAPIC_DLMODE_STARTUP)) != 0)
-				return error;
+				return (error);
 			delay(200);
 		}
 	}
-	return 0;
+	return (0);
 }
 
