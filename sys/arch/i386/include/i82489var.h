@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.3 2001/07/16 21:40:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.4 2001/10/27 09:57:31 niklas Exp $	*/
 /*	$NetBSD: i82489var.h,v 1.1.2.2 2000/02/21 18:46:14 sommerfeld Exp $	*/
 
 /*-
@@ -78,22 +78,22 @@ extern void Xintrspurious(void);
  * Vector used for inter-processor interrupts.
  */
 extern void Xintripi(void);
-#define LAPIC_IPI_VECTOR		0xe0
+#define LAPIC_IPI_VECTOR		IPL_IPI
 
 /*
  * Vector used for local apic timer interrupts.
  */
 
 extern void Xintrltimer(void);
-#define LAPIC_TIMER_VECTOR		0xd0
+#define LAPIC_TIMER_VECTOR		IPL_CLOCK
 
 /*
  * Vectors to be used for self-soft-interrupts.
  */
 
-#define LAPIC_SOFTCLOCK_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16)
-#define LAPIC_SOFTNET_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16 + 1)
-#define LAPIC_SOFTTTY_VECTOR		(NRSVIDT + (IPL_HIGH + 1) * 16 + 2)
+#define LAPIC_SOFTCLOCK_VECTOR		IPL_SOFTCLOCK
+#define LAPIC_SOFTNET_VECTOR		IPL_SOFTNET
+#define LAPIC_SOFTTTY_VECTOR		IPL_SOFTTTY
 
 extern void Xintrsoftclock(void);
 extern void Xintrsoftnet(void);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.3 2001/07/14 10:02:24 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.4 2001/10/27 09:57:31 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -94,12 +94,8 @@ cpu_configure()
 		panic("cpu_configure: mainbus not configured");
 
 	printf("biomask %x netmask %x ttymask %x\n",
-	    (u_short)imask[IPL_BIO], (u_short)imask[IPL_NET],
-	    (u_short)imask[IPL_TTY]);
-/* XXXSMP - NetBSD's diff were like this:
-+           (u_short)IMASK(IPL_BIO), (u_short)IMASK(IPL_NET),
-+           (u_short)IMASK(IPL_TTY));
-*/
+	    (u_short)IMASK(IPL_BIO), (u_short)IMASK(IPL_NET),
+	    (u_short)IMASK(IPL_TTY));
 
 #if NIOAPIC > 0
 	ioapic_enable();

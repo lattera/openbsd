@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.3 2001/07/14 10:02:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.4 2001/10/27 09:57:31 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -34,14 +34,19 @@
 #define _I386_INTR_H_
 
 /* Interrupt priority `levels'; not mutually exclusive. */
-#define	IPL_NONE	0	/* nothing */
-#define	IPL_BIO		1	/* block I/O */
-#define	IPL_NET		2	/* network */
-#define	IPL_TTY		3	/* terminal */
-#define	IPL_IMP		4	/* memory allocation */
-#define	IPL_AUDIO	5	/* audio */
-#define	IPL_CLOCK	6	/* clock */
-#define	IPL_HIGH	7	/* everything */
+#define	IPL_NONE	0x00			/* nothing */
+#define	IPL_SOFTCLOCK	(NRSVIDT + 0x10)	/* timeouts */
+#define	IPL_SOFTNET	(NRSVIDT + 0x20)	/* protocol stacks */
+#define	IPL_BIO		(NRSVIDT + 0x30)	/* block I/O */
+#define	IPL_NET		(NRSVIDT + 0x40)	/* network */
+#define	IPL_SOFTTTY	(NRSVIDT + 0x50)	/* delayed terminal handling */
+#define	IPL_TTY		(NRSVIDT + 0x60)	/* terminal */
+#define	IPL_IMP		(NRSVIDT + 0x70)	/* memory allocation */
+#define	IPL_AUDIO	(NRSVIDT + 0x80)	/* audio */
+#define	IPL_CLOCK	(NRSVIDT + 0x90)	/* clock */
+#define	IPL_HIGH	(NRSVIDT + 0xa0)	/* everything, except... */
+#define	IPL_IPI		(NRSVIDT + 0xb0)	/* interprocessor interrupt */
+#define NIPL		12
 
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
@@ -72,11 +77,12 @@ volatile u_int32_t ipending;
 volatile u_int32_t astpending;
 #endif
 
-int imask[IPL_HIGH+1];
-int iunmask[IPL_HIGH+1];
+int imask[NIPL];
+int iunmask[NIPL];
 
-#define IMASK(level) imask[(level)]
-#define IUNMASK(level) iunmask[(level)]
+#define CPSHIFT 4
+#define IMASK(level) imask[level >> CPSHIFT]
+#define IUNMASK(level) iunmask[level >> CPSHIFT]
 
 extern void Xspllower __P((void));
 
@@ -135,11 +141,11 @@ spllower(ncpl)
 /*
  * Hardware interrupt masks
  */
-#define	splbio()	splraise(imask[IPL_BIO])
-#define	splnet()	splraise(imask[IPL_NET])
-#define	spltty()	splraise(imask[IPL_TTY])
-#define	splaudio()	splraise(imask[IPL_AUDIO])
-#define	splclock()	splraise(imask[IPL_CLOCK])
+#define	splbio()	splraise(IPL_BIO)
+#define	splnet()	splraise(IPL_NET)
+#define	spltty()	splraise(IPL_TTY)
+#define	splaudio()	splraise(IPL_AUDIO)
+#define	splclock()	splraise(IPL_CLOCK)
 #define	splstatclock()	splhigh()
 
 /*
@@ -148,18 +154,18 @@ spllower(ncpl)
  * NOTE: spllowersoftclock() is used by hardclock() to lower the priority from
  * clock to softclock before it calls softclock().
  */
-#define	spllowersoftclock()	spllower(SIR_CLOCKMASK)
-#define	splsoftclock()		splraise(SIR_CLOCKMASK)
-#define	splsoftnet()		splraise(SIR_NETMASK)
-#define	splsofttty()		splraise(SIR_TTYMASK)
+#define	spllowersoftclock()	spllower(IPL_SOFTCLOCK)
+#define	splsoftclock()		splraise(IPL_SOFTCLOCK)
+#define	splsoftnet()		splraise(IPL_SOFTNET)
+#define	splsofttty()		splraise(IPL_SOFTTTY)
 
 /*
  * Miscellaneous
  */
-#define	splimp()	splraise(imask[IPL_IMP])
-#define	splvm()		splraise(imask[IPL_IMP])
-#define	splhigh()	splraise(imask[IPL_HIGH])
-#define	spl0()		spllower(0)
+#define	splimp()	splraise(IPL_IMP)
+#define	splvm()		splraise(IPL_IMP)
+#define	splhigh()	splraise(IPL_HIGH)
+#define	spl0()		spllower(IPL_NONE)
 
 /*
  * Software interrupt registration
@@ -179,9 +185,9 @@ softintr(sir, vec)
 }
 
 #define	setsoftast()	(astpending = 1)
-#define	setsoftclock()	softintr(1 << SIR_CLOCK,SIR_CLOCK)
-#define	setsoftnet()	softintr(1 << SIR_NET,SIR_NET)
-#define	setsofttty()	softintr(1 << SIR_TTY,SIR_TTY)
+#define	setsoftclock()	softintr(1 << SIR_CLOCK,IPL_CLOCK)
+#define	setsoftnet()	softintr(1 << SIR_NET,IPL_NET)
+#define	setsofttty()	softintr(1 << SIR_TTY,IPL_TTY)
 
 #define I386_IPI_HALT	0x00000001
 #define I386_IPI_TLB	0x00000002

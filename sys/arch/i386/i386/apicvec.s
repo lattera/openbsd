@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.3 2001/07/16 22:59:23 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.4 2001/10/27 09:57:31 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -91,7 +91,7 @@ XINTR(softclock):
 	INTRENTRY		
 	MAKE_FRAME		
 	pushl	CPL
-	movl	$IPL_CLOCK,CPL  /* XXX was IPL_SOFTCLOCK */
+	movl	$IPL_SOFTCLOCK,CPL
 	andl	$~(1<<SIR_CLOCK),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI
 	sti
@@ -104,7 +104,7 @@ XINTR(softnet):
 	INTRENTRY		
 	MAKE_FRAME		
 	pushl	CPL
-	movl	$IPL_NET,CPL	/* XXX was IPL_SOFTNET */
+	movl	$IPL_SOFTNET,CPL
 	andl	$~(1<<SIR_NET),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti
@@ -119,7 +119,7 @@ XINTR(softtty):
 	INTRENTRY		
 	MAKE_FRAME		
 	pushl	CPL
-	movl	$IPL_TTY,CPL	/* XXX was IPL_SOFTTTY */
+	movl	$IPL_SOFTTTY,CPL
 	andl	$~(1<<SIR_TTY),_C_LABEL(ipending)
 	movl	$0,_C_LABEL(local_apic)+LAPIC_EOI	
 	sti

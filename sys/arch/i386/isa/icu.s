@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.3 2001/07/14 13:40:45 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.4 2001/10/27 09:57:31 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -47,7 +47,7 @@ _imen:
 
 	ALIGN_TEXT
 _splhigh:
-	movl	$-1,%eax
+	movl	$IPL_HIGH,%eax
 	xchgl	%eax,CPL
 	ret
 
@@ -74,9 +74,10 @@ IDTVEC(spllower)
 	pushl	%edi
 	movl	CPL,%ebx		# save priority
 	movl	$1f,%esi		# address to resume loop at
-1:	movl	%ebx,%eax
-	notl	%eax
-	andl	_ipending,%eax
+1:	movl	%ebx,%eax		# get cpl
+	shrl	$4,%eax			# find its mask.
+	movl	_iunmask(,%eax,4),%eax
+	andl	_ipending,%eax		# any non-masked bits left?
 	jz	2f
 	bsfl	%eax,%eax
 	btrl	%eax,_ipending
@@ -100,7 +101,8 @@ IDTVEC(doreti)
 	movl	%ebx,CPL
 	movl	$1f,%esi		# address to resume loop at
 1:	movl	%ebx,%eax
-	notl	%eax
+	shrl	$4,%eax
+	movl	_iunmask(,%eax,4),%eax
 	andl	_ipending,%eax
 	jz	2f
 	bsfl    %eax,%eax               # slow, but not worth optimizing

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.3 2001/07/16 21:39:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.4 2001/10/27 09:57:31 niklas Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-
@@ -390,8 +390,7 @@ apic_vectorset(struct ioapic_softc *sc, int irq, int level)
 		pin->ip_level = 0;
 		pin->ip_vector = 0;
 	} else if (level != pin->ip_level) {
-		nvector = idt_vec_alloc(NRSVIDT + level * 16,
-		    NRSVIDT + level * 16 + 15);
+		nvector = idt_vec_alloc(level, level + 15);
 
 		if (nvector == 0) {
 			/*
