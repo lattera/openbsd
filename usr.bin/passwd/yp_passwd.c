@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.12 1998/07/13 02:15:01 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.12.8.1 2000/10/06 20:20:59 jason Exp $	*/
 
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -34,7 +34,7 @@
  */
 #ifndef lint
 /*static char sccsid[] = "from: @(#)yp_passwd.c	1.0 2/2/93";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.12 1998/07/13 02:15:01 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.12.8.1 2000/10/06 20:20:59 jason Exp $";
 #endif /* not lint */
 
 #ifdef	YP
@@ -72,7 +72,7 @@ pw_error(name, err, eval)
 	int err, eval;
 {
 	if(err) 
-		warn(name);
+		warn("%s", name);
 
 	warnx("YP passwd database unchanged.");
 	exit(eval);

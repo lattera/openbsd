@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/su/su.c,v 1.31 1998/03/25 21:27:27 art Exp $	*/
+/*	$OpenBSD: src/usr.bin/su/su.c,v 1.31.10.1 2000/10/06 20:20:59 jason Exp $	*/
 
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -41,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)su.c	5.26 (Berkeley) 7/6/91";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/su/su.c,v 1.31 1998/03/25 21:27:27 art Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/su/su.c,v 1.31.10.1 2000/10/06 20:20:59 jason Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -300,7 +300,7 @@ badlogin:
 	(void)setpriority(PRIO_PROCESS, 0, prio);
 
 	execv(shell, np);
-	err(1, shell);
+	err(1, "%s", shell);
 }
 
 int
