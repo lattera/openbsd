@@ -1,8 +1,0 @@
-#	$OpenBSD: src/etc/shells,v 1.4 1996/08/14 08:47:20 downsj Exp $
-# List of acceptable shells for chpass(1).
-# Ftpd will not allow users to connect who are not using
-# one of these shells.
-/bin/sh
-/bin/csh
-/bin/ksh
-/bin/rksh
