@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.23 2000/03/29 10:15:22 angelos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.23.2.1 2000/07/12 13:53:33 jason Exp $	*/
 
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
@@ -287,6 +287,7 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff)
 	ip = mtod(m, struct ip *);
 	ip->ip_len = htons(m->m_pkthdr.len);
 	HTONS(ip->ip_id);
+	HTONS(ip->ip_off);
 	ip->ip_sum = 0;
 	ip->ip_sum = in_cksum(m, ip->ip_hl << 2);
 	prot = ip->ip_p;
