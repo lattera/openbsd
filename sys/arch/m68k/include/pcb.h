@@ -1,9 +1,14 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/proc.h,v 1.6 2003/10/09 21:48:45 miod Exp $	*/
-/*	$NetBSD: proc.h,v 1.7 1997/03/16 09:41:36 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pcb.h,v 1.1 2003/10/09 21:48:47 miod Exp $	*/
+/*	$NetBSD: pcb.h,v 1.8 1995/05/12 12:55:17 mycroft Exp $	*/
 
 /*
- * Copyright (c) 1991, 1993
+ * Copyright (c) 1988 University of Utah.
+ * Copyright (c) 1982, 1986, 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * the Systems Programming Group of the University of Utah Computer
+ * Science Department.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,7 +34,36 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)proc.h	8.1 (Berkeley) 6/10/93
+ * from: Utah $Hdr: pcb.h 1.14 91/03/25$
+ *
+ *	@(#)pcb.h	8.1 (Berkeley) 6/10/93
  */
 
-#include <m68k/proc.h>
+#ifndef _M68K_PCB_H_
+#define _M68K_PCB_H_
+
+#include <machine/frame.h>
+
+/*
+ * m68k process control block
+ */
+struct pcb {
+	short	pcb_flags;	/* misc. process flags */
+	short	pcb_ps; 	/* processor status word */
+	int	pcb_ustp;	/* user segment table pointer */
+	int	pcb_usp;	/* user stack pointer */
+	int	pcb_regs[12];	/* D2-D7, A2-A7 */
+	caddr_t	pcb_onfault;	/* for copyin/out faults */
+	struct	fpframe pcb_fpregs; /* 68881/2 context save area */
+};
+
+/*
+ * The pcb is augmented with machine-dependent additional data for
+ * core dumps. For ports providing COMPAT_HPUX, this includes an HP-UX
+ * exec header which is dumped for HP-UX processes.
+ */
+struct md_coredump {
+	int	md_exec[16];	/* exec structure for HP-UX core dumps */
+};
+
+#endif /* _M68K_PCB_H_ */
