@@ -1,4 +1,4 @@
-#	$Id: list2sh.awk,v 1.4 1995/08/14 01:50:13 cgd Exp $
+#	$OpenBSD: src/distrib/i386/floppies/Attic/list2sh.awk,v 1.2 1996/04/25 21:28:00 niklas Exp $
 
 BEGIN {
 	printf("cd ${CURDIR}\n");

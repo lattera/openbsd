@@ -1,4 +1,4 @@
-#	$Id: copy_kernel.sh,v 1.1.1.1 1995/10/18 08:37:35 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/floppies/kc-common/Attic/copy_kernel.sh,v 1.3 1996/04/25 21:28:16 niklas Exp $
 #
 #	Kernel copy script
 
@@ -38,7 +38,7 @@ warning() {
 }
 
 trap "cancel;" 2 3
-echo	"NetBSD kernel copy program"
+echo	"OpenBSD kernel copy program"
 echo	""
 echo	"Default answers are displayed in brackets.  You may hit Control-C"
 echo	"at any time to cancel this operation (though if you hit Control-C at"
