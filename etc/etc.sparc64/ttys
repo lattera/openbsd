@@ -1,5 +1,5 @@
 #
-#	$OpenBSD: src/etc/etc.sparc64/ttys,v 1.4 2002/02/06 18:11:07 marc Exp $
+#	$OpenBSD: src/etc/etc.sparc64/ttys,v 1.5 2002/06/09 06:15:15 todd Exp $
 #
 # name	getty				type	status		comments
 #
