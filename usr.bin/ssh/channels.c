@@ -1,22 +1,22 @@
 /*
-
-channels.c
-
-Author: Tatu Ylonen <ylo@cs.hut.fi>
-
-Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
-                   All rights reserved
-
-Created: Fri Mar 24 16:35:24 1995 ylo
-
-This file contains functions for generic socket connection forwarding.
-There is also code for initiating connection forwarding for X11 connections,
-arbitrary tcp/ip connections, and the authentication agent connection.
-
-*/
+ * 
+ * channels.c
+ * 
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * 
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ * 
+ * Created: Fri Mar 24 16:35:24 1995 ylo
+ * 
+ * This file contains functions for generic socket connection forwarding.
+ * There is also code for initiating connection forwarding for X11 connections,
+ * arbitrary tcp/ip connections, and the authentication agent connection.
+ * 
+ */
 
 #include "includes.h"
-RCSID("$Id: channels.c,v 1.24 1999/11/22 21:02:38 markus Exp $");
+RCSID("$Id: channels.c,v 1.25 1999/11/23 22:25:53 markus Exp $");
 
 #include "ssh.h"
 #include "packet.h"

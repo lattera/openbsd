@@ -1,21 +1,21 @@
 /*
-
-auth-rh-rsa.c
-
-Author: Tatu Ylonen <ylo@cs.hut.fi>
-
-Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
-                   All rights reserved
-
-Created: Sun May  7 03:08:06 1995 ylo
-
-Rhosts or /etc/hosts.equiv authentication combined with RSA host
-authentication.
-
-*/
+ * 
+ * auth-rh-rsa.c
+ * 
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * 
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ * 
+ * Created: Sun May  7 03:08:06 1995 ylo
+ * 
+ * Rhosts or /etc/hosts.equiv authentication combined with RSA host
+ * authentication.
+ *
+ */
 
 #include "includes.h"
-RCSID("$Id: auth-rh-rsa.c,v 1.7 1999/11/22 21:02:38 markus Exp $");
+RCSID("$Id: auth-rh-rsa.c,v 1.8 1999/11/23 22:25:52 markus Exp $");
 
 #include "packet.h"
 #include "ssh.h"

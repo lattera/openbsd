@@ -1,20 +1,13 @@
 /*
-
-ssh-add.c
-
-Author: Tatu Ylonen <ylo@cs.hut.fi>
-
-Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
-                   All rights reserved
-
-Created: Thu Apr  6 00:52:24 1995 ylo
-
-Adds an identity to the authentication server, or removes an identity.
-
-*/
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ * Created: Thu Apr  6 00:52:24 1995 ylo
+ * Adds an identity to the authentication server, or removes an identity.
+ */
 
 #include "includes.h"
-RCSID("$Id: ssh-add.c,v 1.11 1999/11/16 22:49:28 markus Exp $");
+RCSID("$Id: ssh-add.c,v 1.12 1999/11/23 22:25:55 markus Exp $");
 
 #include "rsa.h"
 #include "ssh.h"

@@ -1,20 +1,20 @@
 /*
-
-pty.c
-
-Author: Tatu Ylonen <ylo@cs.hut.fi>
-
-Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
-                   All rights reserved
-
-Created: Fri Mar 17 04:37:25 1995 ylo
-
-Allocating a pseudo-terminal, and making it the controlling tty.
-
-*/
+ * 
+ * pty.c
+ * 
+ * Author: Tatu Ylonen <ylo@cs.hut.fi>
+ * 
+ * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
+ *                    All rights reserved
+ * 
+ * Created: Fri Mar 17 04:37:25 1995 ylo
+ * 
+ * Allocating a pseudo-terminal, and making it the controlling tty.
+ * 
+ */
 
 #include "includes.h"
-RCSID("$Id: pty.c,v 1.5 1999/10/16 20:57:52 deraadt Exp $");
+RCSID("$Id: pty.c,v 1.6 1999/11/23 22:25:54 markus Exp $");
 
 #include "pty.h"
 #include "ssh.h"
