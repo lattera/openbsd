@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide.c,v 1.163 2004/03/12 19:10:07 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide.c,v 1.163.2.1 2004/05/14 21:32:19 brad Exp $	*/
 /*	$NetBSD: pciide.c,v 1.127 2001/08/03 01:31:08 tsutsui Exp $	*/
 
 /*
@@ -2626,6 +2626,7 @@ apollo_sata_chip_map(struct pciide_softc *sc, struct pci_attach_args *pa)
 			continue;
 		pciide_mapchan(pa, cp, interface, &cmdsize, &ctlsize,
 		     pciide_pci_intr);
+		sata_setup_channel(&cp->wdc_channel);
 	}
 }
 
