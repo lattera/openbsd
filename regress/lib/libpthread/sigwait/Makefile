@@ -1,6 +1,5 @@
-# $OpenBSD: src/regress/lib/libpthread/sigwait/Makefile,v 1.1.1.1 2001/08/15 14:37:13 fgsch Exp $
+# $OpenBSD: src/regress/lib/libpthread/sigwait/Makefile,v 1.2 2002/01/03 00:43:48 art Exp $
 
 PROG=	sigwait
-SRCS=	sigwait.c
 
-.include <bsd.prog.mk>
+.include <bsd.regress.mk>
