@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ccp.c,v 1.8 1998/01/10 01:55:13 brian Exp $
+ * $Id: ccp.c,v 1.9 1998/01/20 22:46:21 brian Exp $
  *
  *	TODO:
  *		o Support other compression protocols
@@ -62,7 +62,6 @@ struct fsm CcpFsm = {
   0,
   ST_INITIAL,
   0, 0, 0,
-  0,
   {0, 0, 0, NULL, NULL, NULL},	/* FSM timer */
   {0, 0, 0, NULL, NULL, NULL},	/* Open timer */
   {0, 0, 0, NULL, NULL, NULL},	/* Stopped timer */

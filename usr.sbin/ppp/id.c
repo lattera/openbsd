@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: id.c,v 1.2 1997/12/21 14:27:03 brian Exp $
+ *	$Id: id.c,v 1.3 1997/12/27 19:22:26 brian Exp $
  */
 
 #include <sys/types.h>
@@ -32,7 +32,6 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sysexits.h>
 #include <unistd.h>
 
@@ -48,17 +47,13 @@
 #include "id.h"
 
 static int uid;
-static int gid;
 static int euid;
-static int egid;
 
 void
 ID0init()
 {
   uid = getuid();
-  gid = getgid();
   euid = geteuid();
-  egid = getegid();
 }
 
 static void
