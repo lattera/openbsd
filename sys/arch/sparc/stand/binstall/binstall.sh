@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: src/sys/arch/sparc/stand/Attic/binstall.sh,v 1.5 1996/12/12 08:42:44 deraadt Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/binstall/binstall.sh,v 1.1 1997/09/17 10:46:14 downsj Exp $
 #	$NetBSD: binstall.sh,v 1.3 1996/04/07 20:00:12 thorpej Exp $
 #
 
