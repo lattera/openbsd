@@ -1,0 +1,1439 @@
+This is Info file cvs.info, produced by Makeinfo-1.64 from the input
+file ../../work/ccvs/doc/cvs.texinfo.
+
+   Copyright (C) 1992, 1993 Signum Support AB Copyright (C) 1993, 1994
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the section entitled "GNU General Public License" is included
+exactly as in the original, and provided that the entire resulting
+derived work is distributed under the terms of a permission notice
+identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the section entitled "GNU General Public License"
+and this permission notice may be included in translations approved by
+the Free Software Foundation instead of in the original English.
+
+
+File: cvs.info,  Node: update options,  Next: update output,  Up: update
+
+update options
+--------------
+
+   These standard options are available with `update' (*note Common
+options::., for a complete description of them):
+
+`-D date'
+     Use the most recent revision no later than DATE.  This option is
+     sticky, and implies `-P'.  See *Note Sticky tags::, for more
+     information on sticky tags/dates.
+
+`-f'
+     Only useful with the `-D DATE' or `-r TAG' flags.  If no matching
+     revision is found, retrieve the most recent revision (instead of
+     ignoring the file).
+
+`-k KFLAG'
+     Process RCS keywords according to KFLAG.  See co(1).  This option
+     is sticky; future updates of this file in this working directory
+     will use the same KFLAG.  The `status' command can be viewed to
+     see the sticky options.  See *Note Invoking CVS::, for more
+     information on the `status' command.
+
+`-l'
+     Local; run only in current working directory.  *Note Recursive
+     behavior::.
+
+`-P'
+     Prune empty directories.  See *Note Moving directories::.
+
+`-p'
+     Pipe files to the standard output.
+
+`-R'
+     Update directories recursively (default).  *Note Recursive
+     behavior::.
+
+`-r tag'
+     Retrieve revision TAG.  This option is sticky, and implies `-P'.
+     See *Note Sticky tags::, for more information on sticky tags/dates.
+
+   These special options are also available with `update'.
+
+`-A'
+     Reset any sticky tags, dates, or `-k' options.  See *Note Sticky
+     tags::, for more information on sticky tags/dates.
+
+`-d'
+     Create any directories that exist in the repository if they're
+     missing from the working directory.  Normally, `update' acts only
+     on directories and files that were already enrolled in your
+     working directory.
+
+     This is useful for updating directories that were created in the
+     repository since the initial checkout; but it has an unfortunate
+     side effect.  If you deliberately avoided certain directories in
+     the repository when you created your working directory (either
+     through use of a module name or by listing explicitly the files
+     and directories you wanted on the command line), then updating
+     with `-d' will create those directories, which may not be what you
+     want.
+
+`-I NAME'
+     Ignore files whose names match NAME (in your working directory)
+     during the update.  You can specify `-I' more than once on the
+     command line to specify several files to ignore.  Use `-I !' to
+     avoid ignoring any files at all.  *Note cvsignore::, for other
+     ways to make CVS ignore some files.
+
+`-WSPEC'
+     Specify file names that should be filtered during update.  You can
+     use this option repeatedly.
+
+     SPEC can be a file name pattern of the same type that you can
+     specify in the `.cvswrappers' file. *Note Wrappers::.
+
+`-jREVISION'
+     With two `-j' options, merge changes from the revision specified
+     with the first `-j' option to the revision specified with the
+     second `j' option, into the working directory.
+
+     With one `-j' option, merge changes from the ancestor revision to
+     the revision specified with the `-j' option, into the working
+     directory.  The ancestor revision is the common ancestor of the
+     revision which the working directory is based on, and the revision
+     specified in the `-j' option.
+
+     In addition, each -j option can contain an optional date
+     specification which, when used with branches, can limit the chosen
+     revision to one within a specific date.  An optional date is
+     specified by adding a colon (:) to the tag:
+     `-jSYMBOLIC_TAG:DATE_SPECIFIER'.
+
+     *Note Merging::.
+
+
+File: cvs.info,  Node: update output,  Prev: update options,  Up: update
+
+update output
+-------------
+
+   `update' and `checkout' keep you informed of its progress by
+printing a line for each file, preceded by one character indicating the
+status of the file:
+
+`U FILE'
+     The file was brought up to date with respect to the repository.
+     This is done for any file that exists in the repository but not in
+     your source, and for files that you haven't changed but are not
+     the most recent versions available in the repository.
+
+`P FILE'
+     Like `U', but the CVS server sends a patch instead of an entire
+     file.  These two things accomplish the same thing.
+
+`A FILE'
+     The file has been added to your private copy of the sources, and
+     will be added to the source repository when you run `commit' on
+     the file.  This is a reminder to you that the file needs to be
+     committed.
+
+`R FILE'
+     The file has been removed from your private copy of the sources,
+     and will be removed from the source repository when you run
+     `commit' on the file.  This is a reminder to you that the file
+     needs to be committed.
+
+`M FILE'
+     The file is modified in  your  working  directory.
+
+     `M' can indicate one of two states for a file you're working on:
+     either there were no modifications to the same file in the
+     repository, so that your file remains as you last saw it; or there
+     were modifications in the repository as well as in your copy, but
+     they were merged successfully, without conflict, in your working
+     directory.
+
+     CVS will print some messages if it merges your work, and a backup
+     copy of your working file (as it looked before you ran `update')
+     will be made.  The exact name of that file is printed while
+     `update' runs.
+
+`C FILE'
+     A conflict was detected while trying to merge your changes to FILE
+     with changes from the source repository.  FILE (the copy in your
+     working directory) is now the output of the rcsmerge(1) command on
+     the two revisions; an unmodified copy of your file is also in your
+     working directory, with the name `.#FILE.REVISION' where REVISION
+     is the RCS revision that your modified file started from.  Resolve
+     the conflict as described in *Note Conflicts example:: (Note that
+     some systems automatically purge files that begin with `.#' if
+     they have not been accessed for a few days.  If you intend to keep
+     a copy of your original file, it is a very good idea to rename
+     it.)  Under VMS, the file name starts with `__' rather than `.#'.
+
+`? FILE'
+     FILE is in your working directory, but does not correspond to
+     anything in the source repository, and is not in the list of files
+     for CVS to ignore (see the description of the `-I' option, and
+     *note cvsignore::.).
+
+
+File: cvs.info,  Node: Invoking CVS,  Next: Administrative files,  Prev: CVS commands,  Up: Top
+
+Quick reference to CVS commands
+*******************************
+
+   This appendix describes how to invoke CVS, with references to where
+each command or feature is described in detail.  Other relevant
+references are the `--help'/`-H' option to CVS (*note Global
+options::.) and *Note Index::.
+
+`add [OPTIONS] [FILES...]'
+     Add a new file/directory.  See *Note Adding files::.
+
+    `-k KFLAG'
+          Set keyword expansion.
+
+    `-m MSG'
+          Set file description.
+
+`admin [OPTIONS] [FILES...]'
+     Administration of history files in the repository.  See *Note
+     admin::.
+
+    `-b[REV]'
+          Set default branch.
+
+    `-cSTRING'
+          Set comment leader.
+
+    `-kSUBST'
+          Set keyword substitution.  See *Note Keyword substitution::.
+
+    `-l[REV]'
+          Lock revision REV, or latest revision.
+
+    `-mREV:MSG'
+          Replace the log message of revision REV with MSG.
+
+    `-oRANGE'
+          Delete revisions from the history files
+
+    `-q'
+          Run quietly; do not print diagnostics.
+
+    `-sSTATE[:REV]'
+          Set the state.
+
+    `-t'
+          Set file description from standard input.
+
+    `-tFILE'
+          Set file description from FILE.
+
+    `-t-STRING'
+          Set file description to STRING.
+
+    `-u[REV]'
+          Unlock revision REV, or latest revision.
+
+`annotate [OPTIONS] [FILES...]'
+     Show last revision where each line was modified.  See *Note
+     annotate::.
+
+    `-D DATE'
+          Annotate the most recent revision no later than DATE.  See
+          *Note Common options::.
+
+    `-f'
+          Use head revision if tag/date not found.  See *Note Common
+          options::.
+
+    `-l'
+          Local; run only in current working directory.  *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Annotate revision TAG.  See *Note Common options::.
+
+`checkout [OPTIONS] MODULES...'
+     Get a copy of the sources.  See *Note checkout::.
+
+    `-A'
+          Reset any sticky tags/date/options.  See *Note Sticky tags::
+          and *Note Keyword substitution::.
+
+    `-c'
+          Output the module database.  See *Note checkout options::.
+
+    `-D DATE'
+          Check out revisions as of DATE (is sticky).  See *Note Common
+          options::.
+
+    `-d DIR'
+          Check out into DIR.  See *Note checkout options::.
+
+    `-f'
+          Use head revision if tag/date not found.  See *Note Common
+          options::.
+
+    `-j REV'
+          Merge in changes.  See *Note checkout options::.
+
+    `-k KFLAG'
+          Use KFLAG keyword expansion.  See *Note Substitution modes::.
+
+    `-l'
+          Local; run only in current working directory.  *Note
+          Recursive behavior::.
+
+    `-N'
+          Don't shorten module paths if -d specified.  See *Note
+          checkout options::.
+
+    `-n'
+          Do not run module program (if any).  See *Note checkout
+          options::.
+
+    `-P'
+          Prune empty directories.  See *Note Moving directories::.
+
+    `-p'
+          Check out files to standard output (avoids stickiness).  See
+          *Note checkout options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Checkout revision TAG (is sticky).  See *Note Common
+          options::.
+
+    `-s'
+          Like -c, but include module status.  See *Note checkout
+          options::.
+
+`commit [OPTIONS] [FILES...]'
+     Check changes into the repository.  See *Note commit::.
+
+    `-F FILE'
+          Read log message from FILE.  See *Note commit options::.
+
+    `-f'
+          Force the file to be committed; disables recursion.  See
+          *Note commit options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-m MSG'
+          Use MSG as log message.  See *Note commit options::.
+
+    `-n'
+          Do not run module program (if any).  See *Note commit
+          options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r REV'
+          Commit to REV.  See *Note commit options::.
+
+`diff [OPTIONS] [FILES...]'
+     Show differences between revisions.  See *Note diff::.  In
+     addition to the options shown below, accepts a wide variety of
+     options to control output style, for example `-c' for context
+     diffs.
+
+    `-D DATE1'
+          Diff revision for date against working file.  See *Note diff
+          options::.
+
+    `-D DATE2'
+          Diff REV1/DATE1 against DATE2.  See *Note diff options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-N'
+          Include diffs for added and removed files.  See *Note diff
+          options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r REV1'
+          Diff revision for REV1 against working file.  See *Note diff
+          options::.
+
+    `-r REV2'
+          Diff rev1/date1 against rev2.  See *Note diff options::.
+
+`edit [OPTIONS] [FILES...]'
+     Get ready to edit a watched file.  See *Note Editing files::.
+
+    `-a ACTIONS'
+          Specify actions for temporary watch, where ACTIONS is `edit',
+          `unedit', `commit', `all', or `none'.  See *Note Editing
+          files::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+`editors [OPTIONS] [FILES...]'
+     See who is editing a watched file.  See *Note Watch information::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+`export [OPTIONS] MODULES...'
+     Export files from CVS.  See *Note export::.
+
+    `-D DATE'
+          Check out revisions as of DATE.  See *Note Common options::.
+
+    `-d DIR'
+          Check out into DIR.  See *Note export options::.
+
+    `-f'
+          Use head revision if tag/date not found.  See *Note Common
+          options::.
+
+    `-k KFLAG'
+          Use KFLAG keyword expansion.  See *Note Substitution modes::.
+
+    `-l'
+          Local; run only in current working directory.  *Note
+          Recursive behavior::.
+
+    `-N'
+          Don't shorten module paths if -d specified.  See *Note export
+          options::.
+
+    `-n'
+          Do not run module program (if any).  See *Note export
+          options::.
+
+    `-P'
+          Prune empty directories.  See *Note Moving directories::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Checkout revision TAG (is sticky).  See *Note Common
+          options::.
+
+`history [OPTIONS] [FILES...]'
+     Show repository access history.  See *Note history::.
+
+    `-a'
+          All users (default is self).  See *Note history options::.
+
+    `-b STR'
+          Back to record with STR in module/file/repos field.  See
+          *Note history options::.
+
+    `-c'
+          Report on committed (modified) files.  See *Note history
+          options::.
+
+    `-D DATE'
+          Since DATE.  See *Note history options::.
+
+    `-e'
+          Report on all record types.  See *Note history options::.
+
+    `-l'
+          Last modified (committed or modified report).  See *Note
+          history options::.
+
+    `-m MODULE'
+          Report on MODULE (repeatable).  See *Note history options::.
+
+    `-n MODULE'
+          In MODULE.  See *Note history options::.
+
+    `-o'
+          Report on checked out modules.  See *Note history options::.
+
+    `-r REV'
+          Since revision REV.  See *Note history options::.
+
+    `-T'
+          Produce report on all TAGs.  See *Note history options::.
+
+    `-t TAG'
+          Since tag record placed in history file (by anyone).  See
+          *Note history options::.
+
+    `-u USER'
+          For user USER (repeatable).  See *Note history options::.
+
+    `-w'
+          Working directory must match.  See *Note history options::.
+
+    `-x TYPES'
+          Report on TYPES, one or more of `TOEFWUCGMAR'.  See *Note
+          history options::.
+
+    `-z ZONE'
+          Output for time zone ZONE.  See *Note history options::.
+
+`import [OPTIONS] REPOSITORY VENDOR-TAG RELEASE-TAGS...'
+     Import files into CVS, using vendor branches.  See *Note import::.
+
+    `-b BRA'
+          Import to vendor branch BRA.  See *Note Multiple vendor
+          branches::.
+
+    `-d'
+          Use the file's modification time as the time of import.  See
+          *Note import options::.
+
+    `-k KFLAG'
+          Set default RCS keyword substitution mode.  See *Note import
+          options::.
+
+    `-m MSG'
+          Use MSG for log message.  See *Note import options::.
+
+    `-I IGN'
+          More files to ignore (! to reset).  See *Note import
+          options::.
+
+    `-W SPEC'
+          More wrappers.  See *Note import options::.
+
+`init'
+     Create a CVS repository if it doesn't exist.  See *Note Creating a
+     repository::.
+
+`log [OPTIONS] [FILES...]'
+     Print out history information for files.  See *Note log::.
+
+    `-b'
+          Only list revisions on the default branch.  See *Note log
+          options::.
+
+    `-d DATES'
+          Specify dates (D1<D2 for range, D for latest before).  See
+          *Note log options::.
+
+    `-h'
+          Only print header.  See *Note log options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-N'
+          Do not list tags.  See *Note log options::.
+
+    `-R'
+          Only print name of RCS file.  See *Note log options::.
+
+    `-r REVS'
+          Only list revisions REVS.  See *Note log options::.
+
+    `-s STATES'
+          Only list revisions with specified states.  See *Note log
+          options::.
+
+    `-t'
+          Only print header and descriptive text.  See *Note log
+          options::.
+
+    `-w LOGINS'
+          Only list revisions checked in by specified logins.  See
+          *Note log options::.
+
+`login'
+     Prompt for password for authenticating server.  See *Note Password
+     authentication client::.
+
+`logout'
+     Remove stored password for authenticating server.  See *Note
+     Password authentication client::.
+
+`rdiff [OPTIONS] MODULES...'
+     Show differences between releases.  See *Note rdiff::.
+
+    `-c'
+          Context diff output format (default).  See *Note rdiff
+          options::.
+
+    `-D DATE'
+          Select revisions based on DATE.  See *Note Common options::.
+
+    `-f'
+          Use head revision if tag/date not found.  See *Note Common
+          options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r REV'
+          Select revisions based on REV.  See *Note Common options::.
+
+    `-s'
+          Short patch - one liner per file.  See *Note rdiff options::.
+
+    `-t'
+          Top two diffs - last change made to the file.  See *Note diff
+          options::.
+
+    `-u'
+          Unidiff output format.  See *Note rdiff options::.
+
+    `-V VERS'
+          Use RCS Version VERS for keyword expansion.  See *Note rdiff
+          options::.
+
+`release [OPTIONS] DIRECTORY'
+     Indicate that a directory is no longer in use.  See *Note
+     release::.
+
+    `-d'
+          Delete the given directory.  See *Note release options::.
+
+`remove [OPTIONS] [FILES...]'
+     Remove an entry from the repository.  See *Note Removing files::.
+
+    `-f'
+          Delete the file before removing it.  See *Note Removing
+          files::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+`rtag [OPTIONS] TAG MODULES...'
+     Add a symbolic tag to a module.  See *Note rtag::.
+
+    `-a'
+          Clear tag from removed files that would not otherwise be
+          tagged.  See *Note rtag options::.
+
+    `-b'
+          Create a branch named TAG.  See *Note rtag options::.
+
+    `-D DATE'
+          Tag revisions as of DATE.  See *Note rtag options::.
+
+    `-d'
+          Delete the given tag.  See *Note rtag options::.
+
+    `-F'
+          Move tag if it already exists.  See *Note rtag options::.
+
+    `-f'
+          Force a head revision match if tag/date not found.  See *Note
+          rtag options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-n'
+          No execution of tag program.  See *Note rtag options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Tag existing tag TAG.  See *Note rtag options::.
+
+`status [OPTIONS] FILES...'
+     Display status information in a working directory.  See *Note File
+     status::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-v'
+          Include tag information for file.  See *Note Tags::.
+
+`tag [OPTIONS] TAG [FILES...]'
+     Add a symbolic tag to checked out version of files.  See *Note
+     tag::.
+
+    `-b'
+          Create a branch named TAG.  See *Note tag options::.
+
+    `-D DATE'
+          Tag revisions as of DATE.  See *Note tag options::.
+
+    `-d'
+          Delete the given tag.  See *Note tag options::.
+
+    `-F'
+          Move tag if it already exists.  See *Note tag options::.
+
+    `-f'
+          Force a head revision match if tag/date not found.  See *Note
+          tag options::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-n'
+          No execution of tag program.  See *Note tag options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Tag existing tag TAG.  See *Note tag options::.
+
+`unedit [OPTIONS] [FILES...]'
+     Undo an edit command.  See *Note Editing files::.
+
+    `-a ACTIONS'
+          Specify actions for temporary watch, where ACTIONS is `edit',
+          `unedit', `commit', `all', or `none'.  See *Note Editing
+          files::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+`update [OPTIONS] [FILES...]'
+     Bring work tree in sync with repository.  See *Note update::.
+
+    `-A'
+          Reset any sticky tags/date/options.  See *Note Sticky tags::
+          and *Note Keyword substitution::.
+
+    `-D DATE'
+          Check out revisions as of DATE (is sticky).  See *Note Common
+          options::.
+
+    `-d'
+          Create directories.  See *Note update options::.
+
+    `-f'
+          Use head revision if tag/date not found.  See *Note Common
+          options::.
+
+    `-I IGN'
+          More files to ignore (! to reset).  See *Note import
+          options::.
+
+    `-j REV'
+          Merge in changes.  See *Note update options::.
+
+    `-k KFLAG'
+          Use KFLAG keyword expansion.  See *Note Substitution modes::.
+
+    `-l'
+          Local; run only in current working directory.  *Note
+          Recursive behavior::.
+
+    `-P'
+          Prune empty directories.  See *Note Moving directories::.
+
+    `-p'
+          Check out files to standard output (avoids stickiness).  See
+          *Note update options::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+    `-r TAG'
+          Checkout revision TAG (is sticky).  See *Note Common
+          options::.
+
+    `-W SPEC'
+          More wrappers.  See *Note import options::.
+
+`watch [on|off|add|remove] [OPTIONS] [FILES...]'
+     on/off: turn on/off read-only checkouts of files.  See *Note
+     Setting a watch::.
+
+     add/remove: add or remove notification on actions.  See *Note
+     Getting Notified::.
+
+    `-a ACTIONS'
+          Specify actions for temporary watch, where ACTIONS is `edit',
+          `unedit', `commit', `all', or `none'.  See *Note Editing
+          files::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+`watchers [OPTIONS] [FILES...]'
+     See who is watching a file.  See *Note Watch information::.
+
+    `-l'
+          Local; run only in current working directory.  See *Note
+          Recursive behavior::.
+
+    `-R'
+          Operate recursively (default).  *Note Recursive behavior::.
+
+
+File: cvs.info,  Node: Administrative files,  Next: Environment variables,  Prev: Invoking CVS,  Up: Top
+
+Reference manual for Administrative files
+*****************************************
+
+   Inside the repository, in the directory `$CVSROOT/CVSROOT', there
+are a number of supportive files for CVS.  You can use CVS in a limited
+fashion without any of them, but if they are set up properly they can
+help make life easier.  For a discussion of how to edit them, *Note
+Intro administrative files::.
+
+   The most important of these files is the `modules' file, which
+defines the modules inside the repository.
+
+* Menu:
+
+* modules::                     Defining modules
+* Wrappers::                    Treat directories as files
+* commit files::                The commit support files
+* commitinfo::                  Pre-commit checking
+* verifymsg::                   How are log messages evaluated?
+* editinfo::                    Specifying how log messages are created
+                                (obsolete)
+* loginfo::                     Where should log messages be sent?
+* rcsinfo::                     Templates for the log messages
+* cvsignore::                   Ignoring files via cvsignore
+* history file::                History information
+* Variables::                   Various variables are expanded
+
+
+File: cvs.info,  Node: modules,  Next: Wrappers,  Up: Administrative files
+
+The modules file
+================
+
+   The `modules' file records your definitions of names for collections
+of source code.  CVS will use these definitions if you use CVS to
+update the modules file (use normal commands like `add', `commit', etc).
+
+   The `modules' file may contain blank lines and comments (lines
+beginning with `#') as well as module definitions.  Long lines can be
+continued on the next line by specifying a backslash (`\') as the last
+character on the line.
+
+   A module definition is a single line of the `modules' file, in
+either of two formats.  In both cases, MNAME represents the symbolic
+module name, and the remainder of the line is its definition.
+
+`MNAME -a ALIASES...'
+     This represents the simplest way of defining a module MNAME.  The
+     `-a' flags the definition as a simple alias: CVS will treat any
+     use of MNAME (as a command argument) as if the list of names
+     ALIASES had been specified instead.  ALIASES may contain either
+     other module names or paths.  When you use paths in aliases,
+     `checkout' creates all intermediate directories in the working
+     directory, just as if the path had been specified explicitly in
+     the CVS arguments.
+
+`MNAME [ options ] DIR [ FILES... ] [ &MODULE... ]'
+     In the simplest case, this form of module definition reduces to
+     `MNAME DIR'.  This defines all the files in directory DIR as
+     module mname.  DIR is a relative path (from `$CVSROOT') to a
+     directory of source in the source repository.  In this case, on
+     checkout, a single directory called MNAME is created as a working
+     directory; no intermediate directory levels are used by default,
+     even if DIR was a path involving several directory levels.
+
+     By explicitly specifying files in the module definition after DIR,
+     you can select particular files from directory DIR.  The sample
+     definition for `modules' is an example of a module defined with a
+     single file from a particular directory.  Here is another example:
+
+          m4test  unsupported/gnu/m4 foreach.m4 forloop.m4
+
+     With this definition, executing `cvs checkout m4test' will create
+     a single working directory `m4test' containing the two files
+     listed, which both come from a common directory several levels deep
+     in the CVS source repository.
+
+     A module definition can refer to other modules by including
+     `&MODULE' in its definition.  `checkout' creates a subdirectory
+     for each such module, in the directory containing the module.  For
+     example, if modules contains
+
+          m4test &unsupported
+
+     then a checkout will create an `m4test' directory which contains a
+     directory called `unsupported', which in turns contains all the
+     directories and files which live there.
+
+    `-d NAME'
+          Name the working directory something other than the module
+          name.
+
+    `-e PROG'
+          Specify a program PROG to run whenever files in a module are
+          exported.  PROG runs with a single argument, the module name.
+
+    `-i PROG'
+          Specify a program PROG to run whenever files in a module are
+          committed.  PROG runs with a single argument, the full
+          pathname of the affected directory in a source repository.
+          The `commitinfo', `loginfo', and `verifymsg' files provide
+          other ways to call a program on commit.
+
+    `-o PROG'
+          Specify a program PROG to run whenever files in a module are
+          checked out.  PROG runs with a single argument, the module
+          name.
+
+    `-s STATUS'
+          Assign a status to the module.  When the module file is
+          printed with `cvs checkout -s' the modules are sorted
+          according to primarily module status, and secondarily
+          according to the module name.  This option has no other
+          meaning.  You can use this option for several things besides
+          status: for instance, list the person that is responsible for
+          this module.
+
+    `-t PROG'
+          Specify a program PROG to run whenever files in a module are
+          tagged with `rtag'.  PROG runs with two arguments: the module
+          name and the symbolic tag specified to `rtag'.  There is no
+          way to specify a program to run when `tag' is executed.
+
+    `-u PROG'
+          Specify a program PROG to run whenever `cvs update' is
+          executed from the top-level directory of the checked-out
+          module.  PROG runs with a single argument, the full path to
+          the source repository for this module.
+
+
+File: cvs.info,  Node: Wrappers,  Next: commit files,  Prev: modules,  Up: Administrative files
+
+The cvswrappers file
+====================
+
+   Wrappers allow you to set a hook which transforms files on their way
+in and out of CVS.
+
+   The file `cvswrappers' defines the script that will be run on a file
+when its name matches a regular expresion. There are two scripts that
+can be run on a file or directory. One script is executed on the
+file/directory before being checked into the repository (this is denoted
+with the `-t' flag) and the other when the file is checked out of the
+repository (this is denoted with the `-f' flag).  The `-t'/`-f' feature
+does not work with client/server CVS.
+
+   The `cvswrappers' also has a `-m' option to specify the merge
+methodology that should be used when the file is updated.  `MERGE'
+means the usual CVS behavior: try to merge the files (this generally
+will not work for binary files).  `COPY' means that `cvs update' will
+merely copy one version over the other, and require the user using
+mechanisms outside CVS, to insert any necessary changes.  The `-m'
+wrapper option only affects behavior when merging is done on update; it
+does not affect how files are stored.  See *Note Binary files::, for
+more on binary files.
+
+   The basic format of the file `cvswrappers' is:
+
+     wildcard     [option value][option value]...
+     
+     where option is one of
+     -f           from cvs filter         value: path to filter
+     -t           to cvs filter           value: path to filter
+     -m           update methodology      value: MERGE or COPY
+     -k           keyword expansion       value: expansion mode
+     
+     and value is a single-quote delimited value.
+
+     *.nib    -f 'unwrap %s' -t 'wrap %s %s' -m 'COPY'
+     *.c      -t 'indent %s %s'
+
+The above example of a `cvswrappers' file states that all
+files/directories that end with a `.nib' should be filtered with the
+`wrap' program before checking the file into the repository. The file
+should be filtered though the `unwrap' program when the file is checked
+out of the repository. The `cvswrappers' file also states that a `COPY'
+methodology should be used when updating the files in the repository
+(that is no merging should be performed).
+
+   The last example line says that all files that end with a `*.c'
+should be filtered with `indent' before being checked into the
+repository. Unlike the previous example no filtering of the `*.c' file
+is done when it is checked out of the repository.
+
+The `-t' filter is called with two arguments, the first is the name of
+the file/directory to filter and the second is the pathname to where
+the resulting filtered file should be placed.
+
+The `-f' filter is called with one argument, which is the name of the
+file to filter from. The end result of this filter will be a file in
+the users directory that they can work on as they normally would.
+
+   Note that the `-t'/`-f' features do not conveniently handle one
+portion of CVS's operation: determining when files are modified.  CVS
+will still want a file (or directory) to exist, and it will use its
+modification time to determine whether a file is modified.  If CVS
+erroneously thinks a file is unmodified (for example, a directory is
+unchanged but one of the files within it is changed), you can force it
+to check in the file anyway by specifying the `-f' option to `cvs
+commit' (*note commit options::.).
+
+   For another example, the following command imports a directory,
+treating files whose name ends in `.exe' as binary:
+
+     cvs import -I ! -W "*.exe -k 'b'" first-dir vendortag reltag
+
+
+File: cvs.info,  Node: commit files,  Next: commitinfo,  Prev: Wrappers,  Up: Administrative files
+
+The commit support files
+========================
+
+   The `-i' flag in the `modules' file can be used to run a certain
+program whenever files are committed (*note modules::.).  The files
+described in this section provide other, more flexible, ways to run
+programs whenever something is committed.
+
+   There are three kind of programs that can be run on commit.  They
+are specified in files in the repository, as described below.  The
+following table summarizes the file names and the purpose of the
+corresponding programs.
+
+`commitinfo'
+     The program is responsible for checking that the commit is
+     allowed.  If it exits with a non-zero exit status the commit will
+     be aborted.
+
+`verifymsg'
+     The specified program is used to evaluate the log message, and
+     possibly verify that it contains all required fields.  This is
+     most useful in combination with the `rcsinfo' file, which can hold
+     a log message template (*note rcsinfo::.).
+
+`editinfo'
+     The specified program is used to edit the log message, and
+     possibly verify that it contains all required fields.  This is
+     most useful in combination with the `rcsinfo' file, which can hold
+     a log message template (*note rcsinfo::.).  (obsolete)
+
+`loginfo'
+     The specified program is called when the commit is complete.  It
+     receives the log message and some additional information and can
+     store the log message in a file, or mail it to appropriate
+     persons, or maybe post it to a local newsgroup, or...  Your
+     imagination is the limit!
+
+* Menu:
+
+* syntax::                      The common syntax
+
+
+File: cvs.info,  Node: syntax,  Up: commit files
+
+The common syntax
+-----------------
+
+   The administrative files such as `commitinfo', `loginfo', `rcsinfo',
+`verifymsg', etc., all have a common format.  The purpose of the files
+are described later on.  The common syntax is described here.
+
+   Each line contains the following:
+   * A regular expression.  This is a basic regular expression in the
+     syntax used by GNU emacs.
+
+   * A whitespace separator--one or more spaces and/or tabs.
+
+   * A file name or command-line template.
+
+Blank lines are ignored.  Lines that start with the character `#' are
+treated as comments.  Long lines unfortunately can *not* be broken in
+two parts in any way.
+
+   The first regular expression that matches the current directory name
+in the repository is used.  The rest of the line is used as a file name
+or command-line as appropriate.
+
+
+File: cvs.info,  Node: commitinfo,  Next: verifymsg,  Prev: commit files,  Up: Administrative files
+
+Commitinfo
+==========
+
+   The `commitinfo' file defines programs to execute whenever `cvs
+commit' is about to execute.  These programs are used for pre-commit
+checking to verify that the modified, added and removed files are really
+ready to be committed.  This could be used, for instance, to verify
+that the changed files conform to to your site's standards for coding
+practice.
+
+   As mentioned earlier, each line in the `commitinfo' file consists of
+a regular expression and a command-line template.  The template can
+include a program name and any number of arguments you wish to supply
+to it.  The full path to the current source repository is appended to
+the template, followed by the file names of any files involved in the
+commit (added, removed, and modified files).
+
+   The first line with a regular expression matching the relative path
+to the module will be used.  If the command returns a non-zero exit
+status the commit will be aborted.
+
+   If the repository name does not match any of the regular expressions
+in this file, the `DEFAULT' line is used, if it is specified.
+
+   All occurances of the name `ALL' appearing as a regular expression
+are used in addition to the first matching regular expression or the
+name `DEFAULT'.
+
+   Note: when CVS is accessing a remote repository, `commitinfo' will
+be run on the *remote* (i.e., server) side, not the client side (*note
+Remote repositories::.).
+
+
+File: cvs.info,  Node: verifymsg,  Next: editinfo,  Prev: commitinfo,  Up: Administrative files
+
+Verifying log messages
+======================
+
+   Once you have entered a log message, you can evaluate that message
+to check for specific content, such as a bug ID.  Use the `verifymsg'
+file to specify a program that is used to verify the log message.  This
+program could be a simple script that checks that the entered message
+contains the required fields.
+
+   The `verifymsg' file is often most useful together with the
+`rcsinfo' file, which can be used to specify a log message template.
+
+   Each line in the `verifymsg' file consists of a regular expression
+and a command-line template.  The template must include a program name,
+and can include any number of arguments.  The full path to the current
+log message template file is appended to the template.
+
+   One thing that should be noted is that the `ALL' keyword is not
+supported.  If more than one matching line is found, the first one is
+used.  This can be useful for specifying a default verification script
+in a module, and then overriding it in a subdirectory.
+
+   If the repository name does not match any of the regular expressions
+in this file, the `DEFAULT' line is used, if it is specified.
+
+   If the verification script exits with a non-zero exit status, the
+commit is aborted.
+
+   Note that the verification script cannot change the log message; it
+can merely accept it or reject it.
+
+   The following is a little silly example of a `verifymsg' file,
+together with the corresponding `rcsinfo' file, the log message
+template and an verification  script.  We begin with the log message
+template.  We want to always record a bug-id number on the first line
+of the log message.  The rest of log message is free text.  The
+following template is found in the file `/usr/cvssupport/tc.template'.
+
+     BugId:
+
+   The script `/usr/cvssupport/bugid.verify' is used to evaluate the
+log message.
+
+     #!/bin/sh
+     #
+     #       bugid.verify filename
+     #
+     #  Verify that the log message contains a valid bugid
+     #  on the first line.
+     #
+     if head -1 < $1 | grep '^BugId:[ ]*[0-9][0-9]*$' > /dev/null; then
+         exit 0
+     else
+         echo "No BugId found."
+         exit 1
+     fi
+
+   The `verifymsg' file contains this line:
+
+     ^tc     /usr/cvssupport/bugid.edit
+
+   The `rcsinfo' file contains this line:
+
+     ^tc     /usr/cvssupport/tc.template
+
+
+File: cvs.info,  Node: editinfo,  Next: loginfo,  Prev: verifymsg,  Up: Administrative files
+
+Editinfo
+========
+
+   *NOTE:* The `editinfo' feature has been rendered obsolete.  To set a
+default editor for log messages use the `EDITOR' environment variable
+(*note Environment variables::.) or the `-e' global option (*note
+Global options::.).  See *Note verifymsg::, for information on the use
+of the `verifymsg' feature for evaluating log messages.
+
+   If you want to make sure that all log messages look the same way,
+you can use the `editinfo' file to specify a program that is used to
+edit the log message.  This program could be a custom-made editor that
+always enforces a certain style of the log message, or maybe a simple
+shell script that calls an editor, and checks that the entered message
+contains the required fields.
+
+   If no matching line is found in the `editinfo' file, the editor
+specified in the environment variable `$CVSEDITOR' is used instead.  If
+that variable is not set, then the environment variable `$EDITOR' is
+used instead.  If that variable is not set a default will be used.  See
+*Note Committing your changes::.
+
+   The `editinfo' file is often most useful together with the `rcsinfo'
+file, which can be used to specify a log message template.
+
+   Each line in the `editinfo' file consists of a regular expression
+and a command-line template.  The template must include a program name,
+and can include any number of arguments.  The full path to the current
+log message template file is appended to the template.
+
+   One thing that should be noted is that the `ALL' keyword is not
+supported.  If more than one matching line is found, the first one is
+used.  This can be useful for specifying a default edit script in a
+module, and then overriding it in a subdirectory.
+
+   If the repository name does not match any of the regular expressions
+in this file, the `DEFAULT' line is used, if it is specified.
+
+   If the edit script exits with a non-zero exit status, the commit is
+aborted.
+
+   Note: when CVS is accessing a remote repository, or when the `-m' or
+`-F' options to `cvs commit' are used, `editinfo' will not be consulted.
+There is no good workaround for this; use `verifymsg' instead.
+
+* Menu:
+
+* editinfo example::            Editinfo example
+
+
+File: cvs.info,  Node: editinfo example,  Up: editinfo
+
+Editinfo example
+----------------
+
+   The following is a little silly example of a `editinfo' file,
+together with the corresponding `rcsinfo' file, the log message
+template and an editor script.  We begin with the log message template.
+We want to always record a bug-id number on the first line of the log
+message.  The rest of log message is free text.  The following template
+is found in the file `/usr/cvssupport/tc.template'.
+
+     BugId:
+
+   The script `/usr/cvssupport/bugid.edit' is used to edit the log
+message.
+
+     #!/bin/sh
+     #
+     #       bugid.edit filename
+     #
+     #  Call $EDITOR on FILENAME, and verify that the
+     #  resulting file contains a valid bugid on the first
+     #  line.
+     if [ "x$EDITOR" = "x" ]; then EDITOR=vi; fi
+     if [ "x$CVSEDITOR" = "x" ]; then CVSEDITOR=$EDITOR; fi
+     $CVSEDITOR $1
+     until head -1|grep '^BugId:[ ]*[0-9][0-9]*$' < $1
+     do  echo -n  "No BugId found.  Edit again? ([y]/n)"
+         read ans
+         case ${ans} in
+             n*) exit 1;;
+         esac
+         $CVSEDITOR $1
+     done
+
+   The `editinfo' file contains this line:
+
+     ^tc     /usr/cvssupport/bugid.edit
+
+   The `rcsinfo' file contains this line:
+
+     ^tc     /usr/cvssupport/tc.template
+
+
+File: cvs.info,  Node: loginfo,  Next: rcsinfo,  Prev: editinfo,  Up: Administrative files
+
+Loginfo
+=======
+
+   The `loginfo' file is used to control where `cvs commit' log
+information is sent.  The first entry on a line is a regular expression
+which is tested against the directory that the change is being made to,
+relative to the `$CVSROOT'.  If a match is found, then the remainder of
+the line is a filter program that should expect log information on its
+standard input.
+
+   If the repository name does not match any of the regular expressions
+in this file, the `DEFAULT' line is used, if it is specified.
+
+   All occurances of the name `ALL' appearing as a regular expression
+are used in addition to the first matching regular expression or
+`DEFAULT'.
+
+   The first matching regular expression is used.
+
+   *Note commit files::, for a description of the syntax of the
+`loginfo' file.
+
+   The user may specify a format string as part of the filter.  The
+string is composed of a `%' followed by a space, or followed by a single
+format character, or followed by a set of format characters surrounded
+by `{' and `}' as separators.  The format characters are:
+
+s
+     file name
+
+V
+     old version number (pre-checkin)
+
+v
+     new version number (post-checkin)
+
+   All other characters that appear in a format string expand to an
+empty field (commas separating fields are still provided).
+
+   For example, some valid format strings are `%', `%s', `%{s}', and
+`%{sVv}'.
+
+   The output will be a string of tokens separated by spaces.  For
+backwards compatibility, the the first token will be the repository
+name.  The rest of the tokens will be comma-delimited lists of the
+information requested in the format string.  For example, if
+`/u/src/master' is the repository, `%{sVv}' is the format string, and
+three files (ChangeLog, Makefile, foo.c) were modified, the output
+might be:
+
+     /u/src/master ChangeLog,1.1,1.2 Makefile,1.3,1.4 foo.c,1.12,1.13
+
+   As another example, `%{}' means that only the name of the repository
+will be generated.
+
+   Note: when CVS is accessing a remote repository, `loginfo' will be
+run on the *remote* (i.e., server) side, not the client side (*note
+Remote repositories::.).
+
+* Menu:
+
+* loginfo example::             Loginfo example
+* Keeping a checked out copy::  Updating a tree on every checkin
+
+
+File: cvs.info,  Node: loginfo example,  Next: Keeping a checked out copy,  Up: loginfo
+
+Loginfo example
+---------------
+
+   The following `loginfo' file, together with the tiny shell-script
+below, appends all log messages to the file
+`$CVSROOT/CVSROOT/commitlog', and any commits to the administrative
+files (inside the `CVSROOT' directory) are also logged in
+`/usr/adm/cvsroot-log'.
+
+     ALL             /usr/local/bin/cvs-log $CVSROOT/CVSROOT/commitlog
+     ^CVSROOT        /usr/local/bin/cvs-log /usr/adm/cvsroot-log
+
+   The shell-script `/usr/local/bin/cvs-log' looks like this:
+
+     #!/bin/sh
+     (echo "------------------------------------------------------";
+      echo -n $USER"  ";
+      date;
+      echo;
+      sed '1s+'${CVSROOT}'++') >> $1
+
+
+File: cvs.info,  Node: Keeping a checked out copy,  Prev: loginfo example,  Up: loginfo
+
+Keeping a checked out copy
+--------------------------
+
+   It is often useful to maintain a directory tree which contains files
+which correspond to the latest version in the repository.  For example,
+other developers might want to refer to the latest sources without
+having to check them out, or you might be maintaining a web site with
+CVS and want every checkin to cause the files used by the web server to
+be updated.
+
+   The way to do this is by having loginfo invoke `cvs update'.  Doing
+so in the naive way will cause a problem with locks, so the `cvs update'
+must be run in the background.  Here is an example (this should all be
+on one line):
+
+     ^cyclic-pages		(date; cat; (sleep 2; cd /u/www/local-docs;
+      cvs -q update -d) &) >> $CVSROOT/CVSROOT/updatelog 2>&1
+
+   This will cause checkins to repository directories starting with
+`cyclic-pages' to update the checked out tree in `/u/www/local-docs'.
+
+
+File: cvs.info,  Node: rcsinfo,  Next: cvsignore,  Prev: loginfo,  Up: Administrative files
+
+Rcsinfo
+=======
+
+   The `rcsinfo' file can be used to specify a form to edit when
+filling out the commit log.  The `rcsinfo' file has a syntax similar to
+the `verifymsg', `commitinfo' and `loginfo' files.  *Note syntax::.
+Unlike the other files the second part is *not* a command-line
+template.  Instead, the part after the regular expression should be a
+full pathname to a file containing the log message template.
+
+   If the repository name does not match any of the regular expressions
+in this file, the `DEFAULT' line is used, if it is specified.
+
+   All occurances of the name `ALL' appearing as a regular expression
+are used in addition to the first matching regular expression or
+`DEFAULT'.
+
+   The log message template will be used as a default log message.  If
+you specify a log message with `cvs commit -m MESSAGE' or `cvs commit -f
+FILE' that log message will override the template.
+
+   *Note verifymsg::, for an example `rcsinfo' file.
+
+   When CVS is accessing a remote repository, the contents of `rcsinfo'
+at the time a directory is first checked out will specify a template
+which does not then change.  If you edit `rcsinfo' or its templates,
+you may need to check out a new working directory.
+
