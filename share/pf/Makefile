@@ -1,7 +1,7 @@
 #
-#	$OpenBSD: src/share/pf/Attic/Makefile,v 1.4 2003/03/02 12:19:57 dhartmei Exp $
+#	$OpenBSD: src/share/pf/Attic/Makefile,v 1.5 2003/08/02 18:25:49 henning Exp $
 #
-FILES=	queue1 queue2 queue3 ackpri
+FILES=	queue1 queue2 queue3 ackpri faq-example1 faq-example2 faq-example3
 NOOBJ=	noobj
 
 all clean cleandir depend lint tags:
