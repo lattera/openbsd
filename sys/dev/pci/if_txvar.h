@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.3 1998/10/10 04:30:09 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.4 1999/03/10 20:04:15 jason Exp $	*/
 
 /*-
  * Copyright (c) 1997 Semen Ustimenko
@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *      $Id: if_txvar.h,v 1.2 1998/09/22 21:54:55 jason Exp $
+ *      $FreeBSD: if_txvar.h,v 1.1 1998/11/01 07:44:33 semenu Exp $
  *
  */
 
