@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/bwtworeg.h,v 1.3 1997/08/08 08:24:43 downsj Exp $	*/
 /*	$NetBSD: bwtworeg.h,v 1.3 1996/02/27 00:32:39 pk Exp $ */
 
 /*

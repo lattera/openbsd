@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/include/Attic/ansi.h,v 1.6 1997/08/08 08:26:01 downsj Exp $	*/
 /*	$NetBSD: ansi.h,v 1.6 1996/11/15 22:38:59 jtc Exp $ */
 
 /*-

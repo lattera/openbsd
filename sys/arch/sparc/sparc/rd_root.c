@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/sparc/Attic/rd_root.c,v 1.2 1997/08/08 08:27:40 downsj Exp $	*/
 /*	$NetBSD: rd_root.c,v 1.2 1996/03/27 16:38:33 perry Exp $	*/
 
 /*

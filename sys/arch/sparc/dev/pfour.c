@@ -1,4 +1,4 @@
-/*	$Id: pfour.c,v 1.4 1995/11/09 21:26:13 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/pfour.c,v 1.6 1997/08/08 08:25:20 downsj Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

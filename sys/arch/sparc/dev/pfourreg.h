@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/pfourreg.h,v 1.4 1997/08/08 08:25:21 downsj Exp $	*/
 /*	$NetBSD: pfourreg.h,v 1.1 1996/02/27 22:09:36 thorpej Exp $	*/
 
 /*

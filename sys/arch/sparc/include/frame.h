@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/include/frame.h,v 1.2 1997/08/08 08:26:20 downsj Exp $	*/
 /*	$NetBSD: frame.h,v 1.2 1994/11/20 20:53:07 deraadt Exp $ */
 
 /*

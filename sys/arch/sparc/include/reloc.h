@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/include/reloc.h,v 1.2 1997/08/08 08:26:45 downsj Exp $	*/
 /*	$NetBSD: reloc.h,v 1.2 1994/11/20 20:53:30 deraadt Exp $ */
 
 /*
