@@ -15,7 +15,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: chap.h,v 1.6 1999/04/21 08:07:24 brian Exp $
+ * $Id: chap.h,v 1.7 1999/05/08 11:06:34 brian Exp $
  *
  *	TODO:
  */
@@ -29,7 +29,7 @@ struct physical;
 #define	CHAP_FAILURE	4
 
 struct chap {
-  struct descriptor desc;
+  struct fdescriptor desc;
   struct {
     pid_t pid;
     int fd;

@@ -23,13 +23,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: server.h,v 1.5 1998/05/21 21:48:18 brian Exp $
+ *	$Id: server.h,v 1.2 1999/02/06 03:22:47 brian Exp $
  */
 
 struct bundle;
 
 struct server {
-  struct descriptor desc;
+  struct fdescriptor desc;
   int fd;
   char passwd[50];
 

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: datalink.h,v 1.5 1999/07/15 02:10:32 brian Exp $
+ *	$Id: datalink.h,v 1.6 2000/01/07 03:26:53 brian Exp $
  */
 
 #define DATALINK_CLOSED  (0)
@@ -52,7 +52,7 @@ struct physical;
 struct bundle;
 
 struct datalink {
-  struct descriptor desc;       /* We play either a physical or a chat */
+  struct fdescriptor desc;       /* We play either a physical or a chat */
   int state;			/* Our DATALINK_* state */
   struct physical *physical;	/* Our link */
 

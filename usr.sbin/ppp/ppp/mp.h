@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mp.h,v 1.5 1999/08/05 10:32:14 brian Exp $
+ *	$Id: mp.h,v 1.6 2000/01/17 12:27:52 brian Exp $
  */
 
 struct mbuf;
@@ -60,7 +60,7 @@ struct peerid {
 };
 
 struct mpserver {
-  struct descriptor desc;
+  struct fdescriptor desc;
   int fd;			/* listen()ing or connect()ing here */
   struct sockaddr_un socket;	/* On this socket */
 

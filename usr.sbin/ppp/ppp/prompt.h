@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: prompt.h,v 1.4 1998/06/15 19:06:54 brian Exp $
+ *	$Id: prompt.h,v 1.2 1999/02/06 03:22:43 brian Exp $
  */
 
 #define LOCAL_AUTH	0x01
@@ -38,7 +38,7 @@ struct bundle;
 struct cmdargs;
 
 struct prompt {
-  struct descriptor desc;
+  struct fdescriptor desc;
   int fd_in, fd_out;
   struct datalink *TermMode;	/* The modem we're talking directly to */
   FILE *Term;			/* sits on top of fd_out */
