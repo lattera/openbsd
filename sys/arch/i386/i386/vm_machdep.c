@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.15 2004/06/06 19:01:37 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.16 2004/06/07 20:27:11 art Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -172,14 +172,12 @@ cpu_exit(p)
 	switch_exit(p);
 }
 
-#ifdef MULTIPROCESSOR
 void
 cpu_wait(p)
 	struct proc *p;
 {
 	tss_free(p->p_md.md_tss_sel);
 }
-#endif
 
 /*
  * Dump the machine specific segment at the start of a core dump.
