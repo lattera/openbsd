@@ -1,0 +1,42 @@
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+		bsd.dl		A GENERIC kernel without any support for
+				disk devices.
+
+OpenBSDrd
+
+		SYS_UBOOT	Unified boot file, used for booting from
+				the network.
+
+		HP-IB.geometry	A file containing geometry for some HP-IB
+				disk drives.
+
+		uboot.raw	Raw boot file, used internally for booting
+				from the CDROM.
+
+DistributionDescription
+
+OpenBSDbase(11.2M,34.0M)
+
+OpenBSDcomp(7.0M,23.5M)
+
+OpenBSDetc(94K,500K)
+
+OpenBSDgame(2.7M,6.7M)
+
+OpenBSDman(2.5M,9.2M)
+
+OpenBSDmisc(1.7M,5.8M)
+
+OpenBSDtext(947K,3.5M)
+
+OpenBSDxbase
+
+OpenBSDxfont
+
+OpenBSDxserv
+

@@ -1,0 +1,105 @@
+TopPart
+
+
+                kc{:--:}OSrev.fs		The sparc boot floppy; see below.
+
+		inst{:--:}OSrev.fs	The sparc installation floppy; see below.
+
+		upgr{:--:}OSrev.fs	The sparc upgrade floppy; see below.
+
+OpenBSDminiroot
+
+OpenBSDfloppy
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		bsd.scsi3	A kernel with SCSI target 3 re-mapped as 0
+				and 0 mapped as 3.
+
+		installboot	The OpenBSD/sparc boot loader installation`
+				program
+		bootxx		The OpenBSD/sparc boot block
+		boot		The OpenBSD/sparc secondary boot loader
+
+
+Please note that there are multiple bootable images and kernels, intended
+to allow installing OpenBSD/sparc in a variety of situations without
+requiring a pre-existing working operating system.
+
+The "kc{:--:}OSrev.fs" image is a bootable floppy image, which is used in conjunction
+with "inst{:--:}OSrev.fs" or "upgr{:--:}OSrev.fs", to allow installing or upgrading systems
+with supported floppy disk drives (not Sun4m at this time).
+
+The "miniroot{:--:}OSrev.fs" is a small bootable root filesystem that can be used
+for installation or upgrade where there is some means to copy the miniroot
+image into a swap or unused partition on the system, and also for diskless
+or net booting.  This can be convenient if you have a existing installation
+of OpenBSD, NetBSD, SunOS, or Solaris and wish to test or upgrade the
+existing system to OpenBSD.
+
+The "floppy{:--:}OSrev.fs" is a new bootable floppy image, with contents similar
+to a miniroot stored in a compressed kernel with pre-loaded ramdisk.  As
+of release time, this version has not received adequate testing and may
+not work reliably on many systems, but is provided as a convenience for
+for people installing on Sun4m systems where the other floppy installation
+method doesn't work due to lack of Sun4m floppy driver support.
+
+These bootable images are also useful as "failsafe" boots for system
+maintenance and disaster recovery.
+
+The kernel and boot images are provided for net booting installations.
+While the OpenBSD bootblocks will work with the provided miniroot images,
+Sun bootblocks require a separate kernel image and root filesystem.
+
+
+Bootable installation/upgrade floppies:
+  
+  kc{:--:}OSrev.fs
+ 	This disk is bootable, and only contains the boot loader and
+        kernel.
+
+  inst{:--:}OSrev.fs
+	This disk contains an installation file system, and has enough 
+	utilities on board to prepare your hard disk drive for OpenBSD.
+
+  upgr{:--:}OSrev.fs
+	This disk contains a file system, and has holds the utilities 
+	needed in order to upgrade an existing OpenBSD (or NetBSD) system
+	to a minimal working OpenBSD 2.3 system.
+
+  floppy{:--:}OSrev.fs
+	This disk contains a compressed ramdisk filesystem, and holds
+        all utilities needed to install or upgrade to OpenBSD 2.3
+  
+  miniroot{:--:}OSrev.fs
+	This is a miniroot filesystem image which can be copied to the
+	swap partition of an existing OpenBSD, NetBSD, Linux, SunOS, 
+	or Solaris installation to allow upgrading to OpenBSD 2.3
+
+
+DistributionDescription
+
+OpenBSDbase(12.7M,39.7M)
+
+OpenBSDetc(97K,510K)
+
+OpenBSDcomp(8.2M,27.4M)
+
+OpenBSDgame(2.8M,6.9M)
+
+OpenBSDman(2.4M,9.2M)
+
+OpenBSDmisc(1.7M,5.9M)
+
+OpenBSDtext(994K,3.7M)	
+
+OpenBSDxbase
+	
+OpenBSDxfont
+
+OpenBSDxserv
+
