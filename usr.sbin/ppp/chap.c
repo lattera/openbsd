@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: chap.c,v 1.3 1997/12/24 09:30:24 brian Exp $
+ * $Id: chap.c,v 1.4 1998/02/19 02:02:45 brian Exp $
  *
  *	TODO:
  */
@@ -225,7 +225,7 @@ RecvChapTalk(struct fsmheader *chp, struct mbuf *bp)
        */
       if (memcmp(cp, cdigest, 16) == 0) {
 	ChapOutput(CHAP_SUCCESS, chp->id, "Welcome!!", 10);
-        if ((mode & MODE_DIRECT) && isatty(modem) && Enabled(ConfUtmp))
+        if ((mode & MODE_DIRECT) && isatty(modem) && Enabled(ConfUtmp)) {
 	  if (Utmp)
 	    LogPrintf(LogERROR, "Oops, already logged in on %s\n",
 		      VarBaseDevice);
@@ -238,6 +238,7 @@ RecvChapTalk(struct fsmheader *chp, struct mbuf *bp)
 	    ID0login(&ut);
 	    Utmp = 1;
 	  }
+        }
 	NewPhase(PHASE_NETWORK);
 	break;
       }
