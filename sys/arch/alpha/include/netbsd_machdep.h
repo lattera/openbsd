@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/Attic/netbsd_machdep.h,v 1.2.4.1 2001/04/18 16:00:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/Attic/netbsd_machdep.h,v 1.2.4.2 2002/03/28 10:06:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -51,7 +51,7 @@ struct netbsd_sigcontext {
 };
 
 #ifdef _KERNEL
-void netbsd_sendsig __P((sig_t, int, int, u_long, int, union sigval));
+void netbsd_sendsig(sig_t, int, int, u_long, int, union sigval);
 #endif
 
 #endif /* _NETBSD_MACHDEP_H */

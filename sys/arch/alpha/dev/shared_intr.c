@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/dev/shared_intr.c,v 1.7.6.2 2001/07/04 10:14:34 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/dev/shared_intr.c,v 1.7.6.3 2002/03/28 10:06:13 niklas Exp $ */
 /* $NetBSD: shared_intr.c,v 1.13 2000/03/19 01:46:18 thorpej Exp $ */
 
 /*
@@ -41,7 +41,7 @@
 
 #include <machine/intr.h>
 
-static const char *intr_typename __P((int));
+static const char *intr_typename(int);
 
 static const char *
 intr_typename(type)
@@ -120,7 +120,7 @@ alpha_shared_intr_establish(intr, num, type, level, fn, arg, basename)
 	struct alpha_shared_intr *intr;
 	unsigned int num;
 	int type, level;
-	int (*fn) __P((void *));
+	int (*fn)(void *);
 	void *arg;
 	const char *basename;
 {

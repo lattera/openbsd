@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/sfbvar.h,v 1.4.10.1 2001/04/18 16:01:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/sfbvar.h,v 1.4.10.2 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: sfbvar.h,v 1.1 1996/05/01 21:15:51 cgd Exp $	*/
 
 /*
@@ -64,5 +64,5 @@ struct sfb_softc {
 };
 
 #if 0
-int sfb_cnattach __P((tc_addr_t));
+int sfb_cnattach(tc_addr_t);
 #endif

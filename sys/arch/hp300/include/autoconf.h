@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/autoconf.h,v 1.4.14.2 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/autoconf.h,v 1.4.14.3 2002/03/28 10:07:18 niklas Exp $	*/
 /*	$NetBSD: autoconf.h,v 1.4 1997/04/01 03:03:56 scottr Exp $	*/
 
 /*-
@@ -44,8 +44,8 @@ extern	caddr_t conaddr;		/* KVA of console device */
 extern	int convasize;			/* size of mapping at conaddr */
 extern	int conforced;			/* console has been forced */
 
-void	hp300_cninit __P((void));
-void	console_scan __P((int (*)(int, caddr_t, void *), void *));
-caddr_t	iomap __P((caddr_t, int));
-void	iounmap __P((caddr_t, int));
+void	hp300_cninit(void);
+void	console_scan(int (*)(int, caddr_t, void *), void *);
+caddr_t	iomap(caddr_t, int);
+void	iounmap(caddr_t, int);
 #endif /* _KERNEL */

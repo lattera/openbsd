@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7.2.2 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/com_gsc.c,v 1.7.2.3 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -50,8 +50,8 @@ struct com_gsc_regs {
 	u_int8_t reset;
 };
 
-int	com_gsc_probe __P((struct device *, void *, void *));
-void	com_gsc_attach __P((struct device *, struct device *, void *));
+int	com_gsc_probe(struct device *, void *, void *);
+void	com_gsc_attach(struct device *, struct device *, void *);
 
 struct cfattach com_gsc_ca = {
 	sizeof(struct com_softc), com_gsc_probe, com_gsc_attach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.3 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/conf.c,v 1.7.2.4 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.
@@ -92,9 +92,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 	dev_init(c,n,write), dev_init(c,n,ioctl),(dev_type_stop((*))) enodev, \
 	0, seltrue, (dev_type_mmap((*))) enodev }
 
-#define mmread  mmrw
-#define mmwrite mmrw
-cdev_decl(mm);
 #include "pty.h"
 #include "wsdisplay.h"
 #include "wskbd.h"
@@ -274,13 +271,13 @@ iskmemdev(dev)
 #include <dev/cons.h>
 
 cons_decl(pdc);
-/*cons_decl(wscons);*/
+cons_decl(ws);
 cons_decl(com);
 
 struct  consdev constab[] = {
 	cons_init(pdc),		/* XXX you'd better leave it here for pdc.c */
-#if NWSCONS1 > 0
-	cons_init(wscons),
+#if NWSDISPLAY > 0
+	cons_init(ws),
 #endif
 #if NCOM > 0
 	cons_init(com),

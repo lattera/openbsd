@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/ggbus.c,v 1.13.6.1 2001/07/04 10:15:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/ggbus.c,v 1.13.6.2 2002/03/28 10:06:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996 Niklas Hallqvist
@@ -54,26 +54,26 @@
 int ggdebug = 0;
 int ggstrayints = 0;
 
-void	ggbusattach __P((struct device *, struct device *, void *));
-int	ggbusmatch __P((struct device *, void *, void *));
-int	ggbusprint __P((void *, const char *));
+void	ggbusattach(struct device *, struct device *, void *);
+int	ggbusmatch(struct device *, void *, void *);
+int	ggbusprint(void *, const char *);
 
-int	ggbus_io_map __P((bus_space_tag_t, bus_addr_t, bus_size_t, int,
-	    bus_space_handle_t *));
-int	ggbus_mem_map __P((bus_space_tag_t, bus_addr_t, bus_size_t, int,
-	    bus_space_handle_t *));
-int	ggbus_cannot_mem_map __P((bus_space_tag_t, bus_addr_t, bus_size_t, int,
-	    bus_space_handle_t *));
-int	ggbus_unmap __P((bus_space_tag_t, bus_space_handle_t, bus_size_t));
+int	ggbus_io_map(bus_space_tag_t, bus_addr_t, bus_size_t, int,
+	    bus_space_handle_t *);
+int	ggbus_mem_map(bus_space_tag_t, bus_addr_t, bus_size_t, int,
+	    bus_space_handle_t *);
+int	ggbus_cannot_mem_map(bus_space_tag_t, bus_addr_t, bus_size_t, int,
+	    bus_space_handle_t *);
+int	ggbus_unmap(bus_space_tag_t, bus_space_handle_t, bus_size_t);
 
-int	ggbusintr __P((void *));
+int	ggbusintr(void *);
 
-void	ggbus_attach_hook __P((struct device *, struct device *,
-	    struct isabus_attach_args *));
-void	*ggbus_intr_establish __P((void *, int, int, int, int (*)(void *),
-	    void *, char *));
-void	ggbus_intr_disestablish __P((void *, void *));
-int	ggbus_intr_check __P((void *, int, int));
+void	ggbus_attach_hook(struct device *, struct device *,
+	    struct isabus_attach_args *);
+void	*ggbus_intr_establish(void *, int, int, int, int (*)(void *),
+	    void *, char *);
+void	ggbus_intr_disestablish(void *, void *);
+int	ggbus_intr_check(void *, int, int);
 
 struct cfattach ggbus_ca = {
 	sizeof(struct ggbus_softc), ggbusmatch, ggbusattach

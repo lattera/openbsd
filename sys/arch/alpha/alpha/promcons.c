@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/promcons.c,v 1.5.14.1 2001/04/18 16:00:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/promcons.c,v 1.5.14.2 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: promcons.c,v 1.5 1996/11/13 22:20:55 cgd Exp $	*/
 
 /*
@@ -52,9 +52,9 @@
 static struct  tty *prom_tty[1];
 static struct  timeout prom_to;
 
-void promstart __P((struct tty *));
-void promtimeout __P((void *));
-int promparam __P((struct tty *, struct termios *));
+void promstart(struct tty *);
+void promtimeout(void *);
+int promparam(struct tty *, struct termios *);
 cdev_decl(prom);
 cons_decl(prom);
 

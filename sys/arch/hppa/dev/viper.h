@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/viper.h,v 1.2.4.1 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/viper.h,v 1.2.4.2 2002/03/28 10:07:19 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1991,1994 The University of Utah and
@@ -213,6 +213,6 @@ struct vn_supr {
 	u_int		vns_zaddr;	/* Z Buffer Address (RO) */
 };
 
-void viper_setintrwnd __P((u_int32_t mask));
-void viper_eisa_en __P((void));
+void viper_setintrwnd(u_int32_t mask);
+void viper_eisa_en(void);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.3 2001/11/13 21:00:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/Attic/netbsd_machdep.c,v 1.3.4.4 2002/03/28 10:06:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996 Carnegie-Mellon University.
@@ -56,11 +56,11 @@ extern int sigpid;
 #define SDB_KSTACK      0x02
 #endif
 
-static void netbsd_to_openbsd_sigcontext __P ((struct netbsd_sigcontext *,
-	struct sigcontext *));
+static void netbsd_to_openbsd_sigcontext(struct netbsd_sigcontext *,
+	struct sigcontext *);
 
-static void openbsd_to_netbsd_sigcontext __P ((struct sigcontext *,
-	struct netbsd_sigcontext *));
+static void openbsd_to_netbsd_sigcontext(struct sigcontext *,
+	struct netbsd_sigcontext *);
 
 static void
 netbsd_to_openbsd_sigcontext(nbsc, obsc)

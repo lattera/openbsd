@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/mem.c,v 1.11.2.4 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/mem.c,v 1.11.2.5 2002/03/28 10:07:18 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.25 1999/03/27 00:30:06 mycroft Exp $	*/
 
 /*
@@ -61,11 +61,11 @@ extern u_int lowram;
 extern char *extiobase;
 static caddr_t devzeropage;
 
-int	mmopen __P((dev_t, int, int));
-int	mmclose __P((dev_t, int, int));
-int	mmrw __P((dev_t, struct uio *, int));
-paddr_t	mmmmap __P((dev_t, off_t, int));
-int	mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
+int	mmopen(dev_t, int, int);
+int	mmclose(dev_t, int, int);
+int	mmrw(dev_t, struct uio *, int);
+paddr_t	mmmmap(dev_t, off_t, int);
+int	mmioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 /*ARGSUSED*/
 int

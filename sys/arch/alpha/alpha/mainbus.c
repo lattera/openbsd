@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/mainbus.c,v 1.8.14.1 2001/04/18 16:00:23 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/mainbus.c,v 1.8.14.2 2002/03/28 10:06:13 niklas Exp $ */
 /* $NetBSD: mainbus.c,v 1.27 1998/06/24 01:10:35 ross Exp $ */
 
 /*
@@ -39,9 +39,9 @@
 #include <machine/cpuconf.h>
 
 /* Definition of the mainbus driver. */
-static int	mbmatch __P((struct device *, void *, void *));
-static void	mbattach __P((struct device *, struct device *, void *));
-static int	mbprint __P((void *, const char *));
+static int	mbmatch(struct device *, void *, void *);
+static void	mbattach(struct device *, struct device *, void *);
+static int	mbprint(void *, const char *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct device), mbmatch, mbattach

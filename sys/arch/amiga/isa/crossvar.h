@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/crossvar.h,v 1.5.14.2 2001/07/04 10:15:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/crossvar.h,v 1.5.14.3 2002/03/28 10:06:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1996 Niklas Hallqvist
@@ -39,7 +39,7 @@
  */
 struct intrhand {
 	struct	intrhand *ih_next;
-	int	(*ih_fun) __P ((void *));
+	int	(*ih_fun)(void *);
 	void	*ih_arg;
 	u_long	ih_count;
 	int	ih_irq;

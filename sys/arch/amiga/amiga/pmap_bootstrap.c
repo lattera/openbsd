@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap_bootstrap.c,v 1.1.2.2 2002/03/06 00:56:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap_bootstrap.c,v 1.1.2.3 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.68 1999/06/19 19:44:09 is Exp $	*/
 
 /*-
@@ -104,7 +104,7 @@ extern st_entry_t *Sysseg;
 extern int protostfree;
 #endif
 
-extern vaddr_t reserve_dumppages __P((vaddr_t));
+extern vaddr_t reserve_dumppages(vaddr_t);
 
 /*
  *	Bootstrap the system enough to run with virtual memory.

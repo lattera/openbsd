@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ms.c,v 1.4.14.1 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/ms.c,v 1.4.14.2 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: ms.c,v 1.14 1996/12/23 09:10:25 veego Exp $	*/
 
 /*
@@ -73,12 +73,12 @@
 #include <sys/conf.h>
 #include <machine/conf.h>
 
-void msattach __P((struct device *, struct device *, void *));
-int msmatch __P((struct device *, void *, void *));
+void msattach(struct device *, struct device *, void *);
+int msmatch(struct device *, void *, void *);
 
-void msintr __P((void *));
-void ms_enable __P((dev_t));
-void ms_disable __P((dev_t));
+void msintr(void *);
+void ms_enable(dev_t);
+void ms_disable(dev_t);
 
 struct ms_softc {
 	struct device sc_dev;

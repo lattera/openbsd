@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.2 2001/07/04 10:14:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/Attic/loadfile.c,v 1.7.8.3 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: loadfile.c,v 1.3 1997/04/06 08:40:59 cgd Exp $	*/
 
 /*
@@ -58,12 +58,12 @@
 #include "include/pte.h"
 
 #ifdef ALPHA_BOOT_ECOFF
-static int coff_exec __P((int, struct ecoff_exechdr *, u_int64_t *));
+static int coff_exec(int, struct ecoff_exechdr *, u_int64_t *);
 #endif
 #ifdef ALPHA_BOOT_ELF
-static int elf_exec __P((int, Elf64_Ehdr *, u_int64_t *));
+static int elf_exec(int, Elf64_Ehdr *, u_int64_t *);
 #endif
-int loadfile __P((char *, u_int64_t *));
+int loadfile(char *, u_int64_t *);
 
 paddr_t ffp_save, ptbr_save;
 vaddr_t ssym, esym;

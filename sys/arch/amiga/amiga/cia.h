@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cia.h,v 1.3.16.1 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cia.h,v 1.3.16.2 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: cia.h,v 1.9 1996/02/01 22:29:06 mycroft Exp $	*/
 
 /*
@@ -139,8 +139,8 @@ vm_offset_t CIAAbase, CIABbase, CIAADDR;
 #define CLRDSR(c) (c |= CIAB_PRA_DSR)
 #define ISDSR(c)  (!(c & CIAB_PRA_DSR))
 
-void dispatch_cia_ints __P((int, int));
-void ciaa_intr __P((void));
-void ciab_intr __P((void));
+void dispatch_cia_ints(int, int);
+void ciaa_intr(void);
+void ciab_intr(void);
 
 #endif /* _AMIGA_CIA_ */

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/netboot/dev_net.h,v 1.1 1996/10/30 22:40:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/netboot/dev_net.h,v 1.1.14.1 2002/03/28 10:06:13 niklas Exp $	*/
 
 
-int	net_open __P((struct open_file *, ...));
-int	net_close __P((struct open_file *));
+int	net_open(struct open_file *, ...);
+int	net_close(struct open_file *);
 int	net_ioctl();
 int	net_strategy();
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cc.c,v 1.7 1998/03/01 16:06:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/cc.c,v 1.7.10.1 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: cc.c,v 1.11 1997/06/23 23:46:23 is Exp $	*/
 
 /*
@@ -45,7 +45,7 @@
 #define INLINE
 #endif
 
-void	defchannel_handler __P((int));
+void	defchannel_handler(int);
 
 /* init all the "custom chips" */
 void

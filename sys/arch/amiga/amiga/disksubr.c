@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/disksubr.c,v 1.18.6.1 2001/04/18 16:01:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/disksubr.c,v 1.18.6.2 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.27 1996/10/13 03:06:34 christos Exp $	*/
 
 /*
@@ -69,10 +69,10 @@ struct rdbmap {
 #define b_cylin b_resid
 #define baddr(bp) (void *)((bp)->b_un.b_addr)
 
-u_long rdbchksum __P((void *));
-struct adostype getadostype __P((u_long));
-struct rdbmap *getrdbmap __P((dev_t, void (*)(struct buf *),
-    struct disklabel *, struct cpu_disklabel *));
+u_long rdbchksum(void *);
+struct adostype getadostype(u_long);
+struct rdbmap *getrdbmap(dev_t, void (*)(struct buf *),
+    struct disklabel *, struct cpu_disklabel *);
 
 /* XXX unknown function but needed for /sys/scsi to link */
 void

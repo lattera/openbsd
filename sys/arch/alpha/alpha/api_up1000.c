@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/api_up1000.c,v 1.2.2.2 2002/03/06 00:24:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/api_up1000.c,v 1.2.2.3 2002/03/28 10:06:12 niklas Exp $	*/
 /* $NetBSD: api_up1000.c,v 1.4 2000/06/20 03:48:53 matt Exp $ */
 
 /*
@@ -74,9 +74,9 @@ int bootdev_debug;
 #define DPRINTF(x)
 #endif
 
-void api_up1000_init __P((void));
-static void api_up1000_cons_init __P((void));
-static void api_up1000_device_register __P((struct device *, void *));
+void api_up1000_init(void);
+static void api_up1000_cons_init(void);
+static void api_up1000_device_register(struct device *, void *);
 
 void
 api_up1000_init()

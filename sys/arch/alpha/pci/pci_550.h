@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.h,v 1.2.2.1 2001/04/18 16:01:21 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_550.h,v 1.2.2.2 2002/03/28 10:06:13 niklas Exp $ */
 /* $NetBSD: pci_550.h,v 1.4 2000/06/05 21:47:23 thorpej Exp $ */
 
 /*
@@ -28,4 +28,4 @@
  * rights to redistribute these changes.
  */
 
-void	pci_550_pickintr __P((struct cia_config *));
+void	pci_550_pickintr(struct cia_config *);

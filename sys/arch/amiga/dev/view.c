@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.3.14.2 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/view.c,v 1.3.14.3 2002/03/28 10:06:14 niklas Exp $	*/
 /*	$NetBSD: view.c,v 1.16 1996/10/13 03:07:35 christos Exp $	*/
 
 /*
@@ -56,14 +56,14 @@
 
 #include "view.h"
 
-static void view_display __P((struct view_softc *));
-static void view_remove __P((struct view_softc *));
-static int view_setsize __P((struct view_softc *, struct view_size *));
+static void view_display(struct view_softc *);
+static void view_remove(struct view_softc *);
+static int view_setsize(struct view_softc *, struct view_size *);
 
-int view_get_colormap __P((struct view_softc *, colormap_t *));
-int view_set_colormap __P((struct view_softc *, colormap_t *));
+int view_get_colormap(struct view_softc *, colormap_t *);
+int view_set_colormap(struct view_softc *, colormap_t *);
 
-void viewattach __P((int));
+void viewattach(int);
 
 struct view_softc views[NVIEW];
 int view_inited;			/* also checked in ite_cc.c */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.4 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/clock.c,v 1.8.2.5 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -54,7 +54,7 @@
 
 struct timeval time;
 
-void startrtclock __P((void));
+void startrtclock(void);
 
 void
 cpu_initclocks()

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_eb164.c,v 1.3.6.2 2002/03/06 00:24:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_eb164.c,v 1.3.6.3 2002/03/28 10:06:12 niklas Exp $ */
 /* $NetBSD: dec_eb164.c,v 1.33 2000/05/22 20:13:32 thorpej Exp $ */
 
 /*
@@ -69,9 +69,9 @@ static int comcnrate = CONSPEED;
 
 #define	DR_VERBOSE(f) while (0)
 
-void dec_eb164_init __P((void));
-static void dec_eb164_cons_init __P((void));
-static void dec_eb164_device_register __P((struct device *, void *));
+void dec_eb164_init(void);
+static void dec_eb164_cons_init(void);
+static void dec_eb164_device_register(struct device *, void *);
 
 void
 dec_eb164_init()

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12.2.1 2001/04/18 16:06:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/db_interface.c,v 1.12.2.2 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -51,7 +51,7 @@
 
 #include <dev/cons.h>
 
-void kdbprinttrap __P((int, int));
+void kdbprinttrap(int, int);
 
 extern label_t *db_recover;
 extern int db_active;
@@ -142,7 +142,7 @@ db_read_bytes(addr, size, data)
 	size_t size;
 	char *data;
 {
-	register char *src = (char*)addr;
+	register char *src = (char *)addr;
 
 	while (size--)
 		*data++ = *src++;

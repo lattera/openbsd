@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/db_memrw.c,v 1.3.12.2 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/db_memrw.c,v 1.3.12.3 2002/03/28 10:07:18 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.5 1997/06/10 18:48:47 veego Exp $	*/
 
 /*-
@@ -68,7 +68,7 @@
 
 #include <ddb/db_access.h>
 
-static void	db_write_text __P((db_addr_t, size_t, char *));
+static void	db_write_text(db_addr_t, size_t, char *);
 
 /*
  * Read bytes from kernel address space for debugger.
@@ -81,15 +81,15 @@ db_read_bytes(addr, size, data)
 	size_t		size;
 	char		*data;
 {
-	char	*src = (char*)addr;
+	char	*src = (char *)addr;
 
 	if (size == 4) {
-		*((int*)data) = *((int*)src);
+		*((int *)data) = *((int *)src);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)data) = *((short*)src);
+		*((short *)data) = *((short *)src);
 		return;
 	}
 
@@ -209,12 +209,12 @@ db_write_bytes(addr, size, data)
 	}
 
 	if (size == 4) {
-		*((int*)dst) = *((int*)data);
+		*((int *)dst) = *((int *)data);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)dst) = *((short*)data);
+		*((short *)dst) = *((short *)data);
 		return;
 	}
 

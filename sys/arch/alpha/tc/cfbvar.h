@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/cfbvar.h,v 1.4.10.1 2001/04/18 16:01:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/cfbvar.h,v 1.4.10.2 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: cfbvar.h,v 1.1 1996/05/01 23:25:04 cgd Exp $	*/
 
 /*
@@ -64,5 +64,5 @@ struct cfb_softc {
 };
 
 #if 0
-int cfb_cnattach __P((tc_addr_t));
+int cfb_cnattach(tc_addr_t);
 #endif

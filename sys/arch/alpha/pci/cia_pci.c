@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/cia_pci.c,v 1.5.14.2 2001/11/13 21:00:49 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/cia_pci.c,v 1.5.14.3 2002/03/28 10:06:13 niklas Exp $ */
 /* $NetBSD: cia_pci.c,v 1.25 2000/06/29 08:58:46 mrg Exp $ */
 
 /*
@@ -40,14 +40,14 @@
 #include <alpha/pci/ciareg.h>
 #include <alpha/pci/ciavar.h>
 
-void		cia_attach_hook __P((struct device *, struct device *,
-		    struct pcibus_attach_args *));
-int		cia_bus_maxdevs __P((void *, int));
-pcitag_t	cia_make_tag __P((void *, int, int, int));
-void		cia_decompose_tag __P((void *, pcitag_t, int *, int *,
-		    int *));
-pcireg_t	cia_conf_read __P((void *, pcitag_t, int));
-void		cia_conf_write __P((void *, pcitag_t, int, pcireg_t));
+void		cia_attach_hook(struct device *, struct device *,
+		    struct pcibus_attach_args *);
+int		cia_bus_maxdevs(void *, int);
+pcitag_t	cia_make_tag(void *, int, int, int);
+void		cia_decompose_tag(void *, pcitag_t, int *, int *,
+		    int *);
+pcireg_t	cia_conf_read(void *, pcitag_t, int);
+void		cia_conf_write(void *, pcitag_t, int, pcireg_t);
 
 void
 cia_pci_init(pc, v)

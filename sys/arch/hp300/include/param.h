@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.5 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/param.h,v 1.9.12.6 2002/03/28 10:07:18 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:38 veego Exp $	*/
 
 /*
@@ -82,7 +82,7 @@
 #define	delay(us)	_delay((us) << 8)
 #define DELAY(us)	delay(us)
 
-void	_delay __P((u_int));
+void	_delay(u_int);
 #endif /* _KERNEL && !_LOCORE */
 
 #endif	/* !_MACHINE_PARAM_H_ */

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_interface.c,v 1.9.2.2 2001/11/13 21:00:48 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_interface.c,v 1.9.2.3 2002/03/28 10:06:12 niklas Exp $ */
 /* $NetBSD: db_interface.c,v 1.8 1999/10/12 17:08:57 jdolecek Exp $ */
 
 /* 
@@ -81,8 +81,8 @@ extern int trap_types;
 
 int	db_active = 0;
 
-void	db_mach_halt __P((db_expr_t, int, db_expr_t, char *));
-void	db_mach_reboot __P((db_expr_t, int, db_expr_t, char *));
+void	db_mach_halt(db_expr_t, int, db_expr_t, char *);
+void	db_mach_reboot(db_expr_t, int, db_expr_t, char *);
 
 struct db_command db_machine_cmds[] = {
 	{ "halt",	db_mach_halt,	0,	0 },

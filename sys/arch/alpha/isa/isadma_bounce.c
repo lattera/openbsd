@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/isa/isadma_bounce.c,v 1.3.2.1 2001/11/13 21:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/isa/isadma_bounce.c,v 1.3.2.2 2002/03/28 10:06:13 niklas Exp $	*/
 /* $NetBSD: isadma_bounce.c,v 1.3 2000/06/29 09:02:57 mrg Exp $ */
 
 /*-
@@ -97,9 +97,9 @@ struct isadma_bounce_cookie {
 #define	ID_BUFTYPE_UIO		3
 #define	ID_BUFTYPE_RAW		4
 
-int	isadma_bounce_alloc_bouncebuf __P((bus_dma_tag_t, bus_dmamap_t,
-	    bus_size_t, int));
-void	isadma_bounce_free_bouncebuf __P((bus_dma_tag_t, bus_dmamap_t));
+int	isadma_bounce_alloc_bouncebuf(bus_dma_tag_t, bus_dmamap_t,
+	    bus_size_t, int);
+void	isadma_bounce_free_bouncebuf(bus_dma_tag_t, bus_dmamap_t);
 
 /*
  * Create an ISA DMA map.

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.3 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.4 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998,1999 Michael Shalayeff
+ * Copyright (c) 1998-2002 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,38 +47,37 @@
  * CSL requests users of this software to return to csl-dist@cs.utah.edu any
  * improvements that they make and grant CSL redistribution rights.
  *
- * 	Utah $Hdr: mem.c 1.9 94/12/16$
+ *	Utah $Hdr: mem.c 1.9 94/12/16$
  */
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
+ *
  * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
- * any improvements or extensions that they make and grant Carnegie Mellon 
+ *
+ * any improvements or extensions that they make and grant Carnegie Mellon
  * the rights to redistribute these changes.
  */
 
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/buf.h>
-#include <sys/conf.h>
 #include <sys/malloc.h>
 #include <sys/proc.h>
 #include <sys/uio.h>
@@ -90,6 +89,7 @@
 
 #include <uvm/uvm.h>
 
+#include <machine/conf.h>
 #include <machine/bus.h>
 #include <machine/iomod.h>
 #include <machine/autoconf.h>
@@ -106,8 +106,8 @@ struct mem_softc {
 	volatile struct vi_trs *sc_vp;
 };
 
-int	memmatch __P((struct device *, void *, void *));
-void	memattach __P((struct device *, struct device *, void *));
+int	memmatch(struct device *, void *, void *);
+void	memattach(struct device *, struct device *, void *);
 
 struct cfattach mem_ca = {
 	sizeof(struct mem_softc), memmatch, memattach
@@ -117,18 +117,13 @@ struct cfdriver mem_cd = {
 	NULL, "mem", DV_DULL
 };
 
-#define mmread  mmrw
-#define mmwrite mmrw
-cdev_decl(mm);
-
+/* A lock for the vmmap, 16-byte aligned as PA-RISC semaphores must be. */
+static volatile int32_t vmmap_lock __attribute__ ((aligned (32))) = 1;
 extern char *vmmap;
 caddr_t zeropage;
 
-/* A lock for the vmmap, 16-byte aligned as PA-RISC semaphores must be. */
-static int32_t vmmap_lock __attribute__ ((aligned (16))) = 1;
-
 int
-memmatch(parent, cfdata, aux)   
+memmatch(parent, cfdata, aux)
 	struct device *parent;
 	void *cfdata;
 	void *aux;
@@ -138,6 +133,7 @@ memmatch(parent, cfdata, aux)
 	if (ca->ca_type.iodc_type != HPPA_TYPE_MEMORY ||
 	    ca->ca_type.iodc_sv_model != HPPA_MEMORY_PDEP)
 		return 0;
+
 	return 1;
 }
 
@@ -156,25 +152,28 @@ memattach(parent, self, aux)
 
 	/* XXX check if we are dealing w/ Viper */
 	if (ca->ca_hpa == (hppa_hpa_t)VIPER_HPA) {
-		int s;
 
 		sc->sc_vp = (struct vi_trs *)
 			&((struct iomod *)ca->ca_hpa)->priv_trs;
 
-		printf (" viper rev %x, ctrl %b",
-			sc->sc_vp->vi_status.hw_rev,
-			VI_CTRL, VIPER_BITS);
+		printf(" viper rev %x,", sc->sc_vp->vi_status.hw_rev);
+#if 0
+		{
+			int s;
 
-		s = splhigh();
-		VI_CTRL |= VI_CTRL_ANYDEN;
-		((struct vi_ctrl *)&VI_CTRL)->core_den = 0;
-		((struct vi_ctrl *)&VI_CTRL)->sgc0_den = 0;
-		((struct vi_ctrl *)&VI_CTRL)->sgc1_den = 0;
-		((struct vi_ctrl *)&VI_CTRL)->core_prf = 1;
-		sc->sc_vp->vi_control = VI_CTRL;
-		splx(s);
-#ifdef DEBUG
-		printf (" >> %b", VI_CTRL, VIPER_BITS);
+			printf(" ctrl %b", VI_CTRL, VIPER_BITS);
+
+			s = splhigh();
+			VI_CTRL |= VI_CTRL_ANYDEN;
+			((struct vi_ctrl *)&VI_CTRL)->core_den = 0;
+			((struct vi_ctrl *)&VI_CTRL)->sgc0_den = 0;
+			((struct vi_ctrl *)&VI_CTRL)->sgc1_den = 0;
+			((struct vi_ctrl *)&VI_CTRL)->core_prf = 1;
+			sc->sc_vp->vi_control = VI_CTRL;
+			splx(s);
+
+			printf (" >> %b, ", VI_CTRL, VIPER_BITS);
+		}
 #endif
 	} else
 		sc->sc_vp = NULL;
@@ -225,7 +224,7 @@ mmopen(dev, flag, ioflag, p)
 /*ARGSUSED*/
 int
 mmclose(dev, flag, mode, p)
-	dev_t dev;  
+	dev_t dev;
 	int flag, mode;
 	struct proc *p;
 {
@@ -240,12 +239,12 @@ mmrw(dev, uio, flags)
 {
 	extern u_int totalphysmem;
 	extern vaddr_t virtual_avail;
-	struct iovec 	*iov;
+	struct iovec	*iov;
 	int32_t lockheld = 0;
 	vaddr_t	v, o;
 	vm_prot_t prot;
 	int rw, error = 0;
-	u_int 	c;
+	u_int	c;
 
 	while (uio->uio_resid > 0 && error == 0) {
 		iov = uio->uio_iov;
@@ -269,8 +268,8 @@ mmrw(dev, uio, flags)
 			}
 
 			/*
-			 * If the address is inside our large 
-			 * directly-mapped kernel BTLB entry, 
+			 * If the address is inside our large
+			 * directly-mapped kernel BTLB entry,
 			 * use kmem instead.
 			 */
 			if (v < virtual_avail)
@@ -285,7 +284,7 @@ mmrw(dev, uio, flags)
 				    : "=r" (lockheld) : "r" (&vmmap_lock));
 				if (lockheld)
 					break;
-				error = tsleep((caddr_t)&vmmap_lock, 
+				error = tsleep((caddr_t)&vmmap_lock,
 				    PZERO | PCATCH,
 				    "mmrw", 0);
 				if (error)
@@ -330,8 +329,8 @@ use_kmem:
 			if (uio->uio_rw == UIO_WRITE) {
 				uio->uio_resid = 0;
 				return (0);
-			} 
-			/* 
+			}
+			/*
 			 * On the first call, allocate and zero a page
 			 * of memory for use with /dev/zero.
 			 */
@@ -363,7 +362,7 @@ paddr_t
 mmmmap(dev, off, prot)
 	dev_t dev;
 	off_t off;
-	int prot;  
+	int prot;
 {
 	if (minor(dev) != 0)
 		return (-1);

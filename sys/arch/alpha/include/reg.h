@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/reg.h,v 1.3.14.1 2001/10/31 02:52:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/reg.h,v 1.3.14.2 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: reg.h,v 1.2 1995/03/28 18:14:07 jtc Exp $	*/
 
 /*
@@ -92,10 +92,10 @@ struct fpreg {
 };
 
 #ifdef _KERNEL
-void	restorefpstate __P((struct fpreg *));
-void	savefpstate __P((struct fpreg *));
-void	frametoreg __P((struct trapframe *, struct reg *));
-void	regtoframe __P((struct reg *, struct trapframe *));
+void	restorefpstate(struct fpreg *);
+void	savefpstate(struct fpreg *);
+void	frametoreg(struct trapframe *, struct reg *);
+void	regtoframe(struct reg *, struct trapframe *);
 #endif
 
 #endif /* _ALPHA_REG_H_ */

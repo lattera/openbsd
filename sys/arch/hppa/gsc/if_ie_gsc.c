@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.2 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/if_ie_gsc.c,v 1.5.2.3 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998,1999 Michael Shalayeff
@@ -73,8 +73,8 @@ struct ie_gsc_regs {
 
 #define	IE_SIZE	0x8000
 
-int	ie_gsc_probe __P((struct device *, void *, void *));
-void	ie_gsc_attach __P((struct device *, struct device *, void *));
+int	ie_gsc_probe(struct device *, void *, void *);
+void	ie_gsc_attach(struct device *, struct device *, void *);
 
 struct cfattach ie_gsc_ca = {
 	sizeof(struct ie_softc), ie_gsc_probe, ie_gsc_attach
@@ -85,20 +85,20 @@ static int ie_gsc_media[] = {
 };
 #define	IE_NMEDIA	(sizeof(ie_gsc_media) / sizeof(ie_gsc_media[0]))
 
-static char mem[IE_SIZE+16];
+char *ie_mem;
 
-void ie_gsc_reset __P((struct ie_softc *sc, int what));
-void ie_gsc_attend __P((struct ie_softc *sc));
-void ie_gsc_run __P((struct ie_softc *sc));
-void ie_gsc_port __P((struct ie_softc *sc, u_int));
+void ie_gsc_reset(struct ie_softc *sc, int what);
+void ie_gsc_attend(struct ie_softc *sc);
+void ie_gsc_run(struct ie_softc *sc);
+void ie_gsc_port(struct ie_softc *sc, u_int);
 #ifdef USELEDS
-int ie_gsc_intrhook __P((struct ie_softc *sc, int what));
+int ie_gsc_intrhook(struct ie_softc *sc, int what);
 #endif
-u_int16_t ie_gsc_read16 __P((struct ie_softc *sc, int offset));
-void ie_gsc_write16 __P((struct ie_softc *sc, int offset, u_int16_t v));
-void ie_gsc_write24 __P((struct ie_softc *sc, int offset, int addr));
-void ie_gsc_memcopyin __P((struct ie_softc *sc, void *p, int offset, size_t));
-void ie_gsc_memcopyout __P((struct ie_softc *sc, const void *p, int, size_t));
+u_int16_t ie_gsc_read16(struct ie_softc *sc, int offset);
+void ie_gsc_write16(struct ie_softc *sc, int offset, u_int16_t v);
+void ie_gsc_write24(struct ie_softc *sc, int offset, int addr);
+void ie_gsc_memcopyin(struct ie_softc *sc, void *p, int offset, size_t);
+void ie_gsc_memcopyout(struct ie_softc *sc, const void *p, int, size_t);
 
 
 void
@@ -154,7 +154,7 @@ ie_gsc_attend(sc)
 {
 	register volatile struct ie_gsc_regs *r = (struct ie_gsc_regs *)sc->ioh;
 
-	fdcache(0, (vaddr_t)&mem, sizeof(mem));
+	fdcache(0, (vaddr_t)ie_mem, IE_SIZE);
 	r->ie_attn = 0;
 }
 
@@ -328,8 +328,7 @@ ie_gsc_attach(parent, self, aux)
 	sc->sc_maddr = kvtop((caddr_t)sc->bh);
 
 #else
-	bzero(mem, sizeof(mem));
-	sc->bh = ((u_int)&mem + 15) & ~0xf;
+	sc->bh = (u_int)ie_mem;
 	sc->sc_maddr = sc->bh;
 #endif
 	sc->sysbus = 0x40 | IE_SYSBUS_82586 | IE_SYSBUS_INTLOW | IE_SYSBUS_TRG | IE_SYSBUS_BE;

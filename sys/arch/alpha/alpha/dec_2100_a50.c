@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_2100_a50.c,v 1.8.6.2 2002/03/06 00:24:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_2100_a50.c,v 1.8.6.3 2002/03/28 10:06:12 niklas Exp $ */
 /* $NetBSD: dec_2100_a50.c,v 1.43 2000/05/22 20:13:31 thorpej Exp $ */
 
 /*
@@ -66,9 +66,9 @@
 #endif
 static int comcnrate = CONSPEED;
 
-void dec_2100_a50_init __P((void));
-static void dec_2100_a50_cons_init __P((void));
-static void dec_2100_a50_device_register __P((struct device *, void *));
+void dec_2100_a50_init(void);
+static void dec_2100_a50_cons_init(void);
+static void dec_2100_a50_device_register(struct device *, void *);
 
 const struct alpha_variation_table dec_2100_a50_variations[] = {
 	{ SV_ST_AVANTI,	"AlphaStation 400 4/233 (\"Avanti\")" },

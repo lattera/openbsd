@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/eisa/Attic/eisa_machdep.h,v 1.1.6.1 2001/04/18 16:06:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/eisa/Attic/eisa_machdep.h,v 1.1.6.2 2002/03/28 10:07:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -39,13 +39,13 @@ typedef int eisa_intr_handle_t;
 struct hppa_eisa_chipset {
 	void	*ec_v;
 
-	void	(*ec_attach_hook) __P((struct device *, struct device *,
-				       struct eisabus_attach_args *));
-	int	(*ec_intr_map) __P((void *, u_int, int *));
-	const char *(*ec_intr_string) __P((void *, int));
-	void	*(*ec_intr_establish) __P((void *, int, int, int,
-					   int (*)(void *), void *, char *));
-	void	(*ec_intr_disestablish) __P((void *, void *));
+	void	(*ec_attach_hook)(struct device *, struct device *,
+				  struct eisabus_attach_args *);
+	int	(*ec_intr_map)(void *, u_int, int *);
+	const char *(*ec_intr_string)(void *, int);
+	void	*(*ec_intr_establish)(void *, int, int, int,
+				      int (*)(void *), void *, char *);
+	void	(*ec_intr_disestablish)(void *, void *);
 };
 
 #if 0

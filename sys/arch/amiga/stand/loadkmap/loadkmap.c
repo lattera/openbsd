@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/stand/loadkmap/Attic/loadkmap.c,v 1.2 1996/10/04 22:35:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/stand/loadkmap/Attic/loadkmap.c,v 1.2.16.1 2002/03/28 10:06:15 niklas Exp $	*/
 /*	$NetBSD: loadkmap.c,v 1.4 1994/10/26 02:07:09 cgd Exp $	*/
 
 #include <sys/types.h>
@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 
-void load_kmap __P((const char *));
+void load_kmap(const char *);
 void dump_kmap(); 
 
 int

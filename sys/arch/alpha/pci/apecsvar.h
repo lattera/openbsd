@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/apecsvar.h,v 1.6.14.2 2002/03/06 00:47:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/apecsvar.h,v 1.6.14.3 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: apecsvar.h,v 1.5 1996/11/25 03:49:36 cgd Exp $	*/
 
 /*
@@ -65,9 +65,9 @@ struct apecs_softc {
 	struct	apecs_config *sc_acp;
 };
 
-void	apecs_init __P((struct apecs_config *, int));
-void	apecs_pci_init __P((pci_chipset_tag_t, void *));
-void	apecs_dma_init __P((struct apecs_config *));
+void	apecs_init(struct apecs_config *, int);
+void	apecs_pci_init(pci_chipset_tag_t, void *);
+void	apecs_dma_init(struct apecs_config *);
 
-void apecs_bus_io_init __P((bus_space_tag_t, void *));
-void apecs_bus_mem_init __P((bus_space_tag_t, void *));
+void apecs_bus_io_init(bus_space_tag_t, void *);
+void apecs_bus_mem_init(bus_space_tag_t, void *);

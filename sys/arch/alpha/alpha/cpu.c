@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.3 2002/03/12 11:54:17 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.6.14.4 2002/03/28 10:06:12 niklas Exp $ */
 /* $NetBSD: cpu.c,v 1.44 2000/05/23 05:12:53 thorpej Exp $ */
 
 /*-
@@ -93,7 +93,7 @@ struct cpu_info cpu_info[ALPHA_MAXPROCS];
 /* Bitmask of CPUs currently running. */
 __volatile u_long cpus_running;
 
-void	cpu_boot_secondary __P((struct cpu_info *));
+void	cpu_boot_secondary(struct cpu_info *);
 #else /* MULTIPROCESSOR */
 struct cpu_info cpu_info_store;
 #endif /* MULTIPROCESSOR */

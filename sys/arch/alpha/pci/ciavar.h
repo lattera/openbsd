@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/ciavar.h,v 1.8.8.2 2002/03/06 00:47:44 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/ciavar.h,v 1.8.8.3 2002/03/28 10:06:13 niklas Exp $ */
 /* $NetBSD: ciavar.h,v 1.17 2000/03/19 01:43:25 thorpej Exp $ */
 
 /*
@@ -72,14 +72,14 @@ struct cia_softc {
 	struct	cia_config *sc_ccp;
 };
 
-void	cia_init __P((struct cia_config *, int));
-void	cia_pci_init __P((pci_chipset_tag_t, void *));
-void	cia_dma_init __P((struct cia_config *));
+void	cia_init(struct cia_config *, int);
+void	cia_pci_init(pci_chipset_tag_t, void *);
+void	cia_dma_init(struct cia_config *);
 
-void	cia_bwx_bus_io_init __P((bus_space_tag_t, void *));
-void	cia_bwx_bus_mem_init __P((bus_space_tag_t, void *));
+void	cia_bwx_bus_io_init(bus_space_tag_t, void *);
+void	cia_bwx_bus_mem_init(bus_space_tag_t, void *);
 
-void	cia_bus_io_init __P((bus_space_tag_t, void *));
-void	cia_bus_mem_init __P((bus_space_tag_t, void *));
+void	cia_bus_io_init(bus_space_tag_t, void *);
+void	cia_bus_mem_init(bus_space_tag_t, void *);
 
-void	cia_pyxis_intr_enable __P((int, int));
+void	cia_pyxis_intr_enable(int, int);

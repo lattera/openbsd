@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/amiga/dev/Attic/ite_blank.c,v 1.1.2.1 2001/10/31 02:52:45 nate Exp $ */
+/* $OpenBSD: src/sys/arch/amiga/dev/Attic/ite_blank.c,v 1.1.2.2 2002/03/28 10:06:14 niklas Exp $ */
 /*-
  * Copyright (c) 1999 Marc Espie.
  *
@@ -40,8 +40,8 @@
 
 #define SUBR_BLANK(ip, mode)	((ip)->grf->g_mode((ip)->grf, GM_GRFIOCTL, &(mode), GRFIOCBLANK, (ip)->grf->g_grfdev ))
 
-void ite_blank __P((void *));
-void ite_unblank __P((struct ite_softc *));
+void ite_blank(void *);
+void ite_unblank(struct ite_softc *);
 
 static int blanked_screen = 0;
 static int blank_enabled = 0;

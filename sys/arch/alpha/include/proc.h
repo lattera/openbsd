@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/proc.h,v 1.4.14.1 2001/04/18 16:00:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/proc.h,v 1.4.14.2 2002/03/28 10:06:13 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.2 1995/03/24 15:01:36 cgd Exp $	*/
 
 /*
@@ -33,14 +33,22 @@
  * Machine-dependent part of the proc struct for the Alpha.
  */
 
+struct mdbpt {
+	vaddr_t	addr;
+	u_int32_t contents;
+};
+
 struct mdproc {
-	u_long	md_flags;
-	struct	trapframe *md_tf;	/* trap/syscall registers */
+	u_long md_flags;
+	struct trapframe *md_tf;	/* trap/syscall registers */
 	struct pcb *md_pcbpaddr;	/* phys addr of the pcb */
+	struct mdbpt md_sstep[2];	/* two breakpoints for sstep */
 };
 
 #define	MDP_FPUSED	0x0001		/* Process used the FPU */
+#define MDP_STEP1	0x0002		/* Single step normal */
+#define MDP_STEP2	0x0003		/* Single step branch */
 
 #ifdef _KERNEL
-void switch_exit __P((struct proc *));
+void switch_exit(struct proc *);
 #endif

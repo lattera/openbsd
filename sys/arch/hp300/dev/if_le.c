@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/if_le.c,v 1.12.8.1 2001/10/31 02:52:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/if_le.c,v 1.12.8.2 2002/03/28 10:07:18 niklas Exp $	*/
 /*	$NetBSD: if_le.c,v 1.43 1997/05/05 21:05:32 thorpej Exp $	*/
 
 /*-
@@ -75,20 +75,20 @@
 #include <hp300/hp300/leds.h>
 #endif
 
-int	lematch __P((struct device *, void *, void *));
-void	leattach __P((struct device *, struct device *, void *));
+int	lematch(struct device *, void *, void *);
+void	leattach(struct device *, struct device *, void *);
 
 struct cfattach le_ca = {
 	sizeof(struct le_softc), lematch, leattach
 };
 
-int	leintr __P((void *));
+int	leintr(void *);
 
 /* offsets for:	   ID,   REGS,    MEM,  NVRAM */
 int	lestd[] = { 0, 0x4000, 0x8000, 0xC008 };
 
-hide void lewrcsr __P((struct am7990_softc *, u_int16_t, u_int16_t));
-hide u_int16_t lerdcsr __P((struct am7990_softc *, u_int16_t));  
+hide void lewrcsr(struct am7990_softc *, u_int16_t, u_int16_t);
+hide u_int16_t lerdcsr(struct am7990_softc *, u_int16_t);  
 
 hide void
 lewrcsr(sc, port, val)

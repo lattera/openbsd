@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_axppci_33.c,v 1.8.6.2 2002/03/06 00:24:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_axppci_33.c,v 1.8.6.3 2002/03/28 10:06:12 niklas Exp $ */
 /* $NetBSD: dec_axppci_33.c,v 1.44 2000/05/22 20:13:32 thorpej Exp $ */
 
 /*
@@ -65,16 +65,16 @@
 #endif
 static int comcnrate = CONSPEED;
 
-void dec_axppci_33_init __P((void));
-static void dec_axppci_33_cons_init __P((void));
-static void dec_axppci_33_device_register __P((struct device *, void *));
+void dec_axppci_33_init(void);
+static void dec_axppci_33_cons_init(void);
+static void dec_axppci_33_device_register(struct device *, void *);
 
 const struct alpha_variation_table dec_axppci_33_variations[] = {
 	{ 0, "Alpha PC AXPpci33 (\"NoName\")" },
 	{ 0, NULL },
 };
 
-static struct lca_config *lca_preinit __P((void));
+static struct lca_config *lca_preinit(void);
 
 static struct lca_config *
 lca_preinit()
