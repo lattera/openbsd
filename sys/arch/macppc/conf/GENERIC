@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.1 2001/10/31 03:01:15 nate Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.2 2001/12/05 00:39:11 niklas Exp $
 #
 # PPC GENERIC config file
 #
@@ -16,7 +16,7 @@ option		PPC_MPC106_BUG
 option		PCIVERBOSE
 option		USBVERBOSE
 #option		MACOBIOVERBOSE
-option		WSEMUL_NO_DUMB
+#option		PPC_VECTOR_SUPPORTED
 
 option		USER_PCICONF	# user-space PCI configuration
 

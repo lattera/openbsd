@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.3 2001/10/31 03:01:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.4 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*

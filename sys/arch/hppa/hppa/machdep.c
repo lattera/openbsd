@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.6 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.7 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -162,12 +162,12 @@ int	totalphysmem, resvmem, physmem, esym;
  * Things for MI glue to stick on.
  */
 struct user *proc0paddr;
-long mem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(8) / sizeof(long)];
+long mem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(32) / sizeof(long)];
 struct extent *hppa_ex;
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 
 void delay_init __P((void));
@@ -608,7 +608,7 @@ cpu_startup()
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE,
-	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
 	base = bufpages / nbuf;
@@ -885,34 +885,36 @@ void
 boot(howto)
 	int howto;
 {
-	if (cold)
-		/* XXX howto |= RB_HALT */;
-	else {
-		boothowto = howto | (boothowto & RB_HALT);
+	/* If system is cold, just halt. */
+	if (cold) {
+		howto |= RB_HALT;
+		goto haltsys;
+	}
 
-		if (!(howto & RB_NOSYNC) && waittime < 0) {
-			extern struct proc proc0;
+	boothowto = howto | (boothowto & RB_HALT);
 
-			/* protect against curproc->p_stats refs in sync XXX */
-			if (curproc == NULL)
-				curproc = &proc0;
-
-			waittime = 0;
-			vfs_shutdown();
-			if ((howto & RB_TIMEBAD) == 0)
-				resettodr();
-			else
-				printf("WARNING: not updating battery clock\n");
-		}
+	if (!(howto & RB_NOSYNC)) {
+		waittime = 0;
+		vfs_shutdown();
+		/*
+		 * If we've been adjusting the clock, the todr
+		 * will be out of synch; adjust it now unless
+		 * the system was sitting in ddb.
+		 */
+		if ((howto & RB_TIMEBAD) == 0)
+			resettodr();
+		else
+			printf("WARNING: not updating battery clock\n");
 	}
 
 	/* XXX probably save howto into stable storage */
 
 	splhigh();
 
-	if ((howto & (RB_DUMP /* | RB_HALT */)) == RB_DUMP)
+	if (howto & RB_DUMP)
 		dumpsys();
 
+haltsys:
 	doshutdownhooks();
 
 	if (howto & RB_HALT) {

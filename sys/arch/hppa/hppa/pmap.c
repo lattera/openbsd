@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/pmap.c,v 1.32.2.4 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/pmap.c,v 1.32.2.5 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -763,6 +763,13 @@ pmap_bootstrap(vstart, vend)
 	   and we use it for pmap_steal_memory */
 }
 
+void
+pmap_virtual_space(vaddr_t *vstartp, vaddr_t *vendp)
+{
+	*vstartp = virtual_avail;
+	*vendp = virtual_end;
+}
+
 /*
  * pmap_steal_memory(size, startp, endp)
  *	steals memory block of size `size' from directly mapped
@@ -1076,7 +1083,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 		printf("pmap_enter: leaving\n");
 #endif
 
-	return (KERN_SUCCESS);
+	return (0);
 }
 
 /*
@@ -1135,7 +1142,7 @@ pmap_remove(pmap, sva, eva)
  */
 void
 pmap_page_protect(pg, prot)
-	vm_page_t pg;
+	struct vm_page *pg;
 	vm_prot_t prot;
 {
 	register struct pv_entry *pv;
@@ -1418,7 +1425,7 @@ pmap_copy_page(spa, dpa)
  */
 boolean_t
 pmap_clear_modify(pg)
-	vm_page_t pg;
+	struct vm_page *pg;
 {
 	register struct pv_entry *pv;
 	register paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -1451,7 +1458,7 @@ pmap_clear_modify(pg)
  */
 boolean_t
 pmap_is_modified(pg)
-	vm_page_t pg;
+	struct vm_page *pg;
 {
 	register struct pv_entry *pv;
 	register paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -1480,7 +1487,7 @@ pmap_is_modified(pg)
  */
 boolean_t
 pmap_clear_reference(pg)
-	vm_page_t pg;
+	struct vm_page *pg;
 {
 	register struct pv_entry *pv;
 	register paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -1513,7 +1520,7 @@ pmap_clear_reference(pg)
  */
 boolean_t
 pmap_is_referenced(pg)
-	vm_page_t pg;
+	struct vm_page *pg;
 {
 	register struct pv_entry *pv;
 	register paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -1611,19 +1618,6 @@ pmap_kenter_pa(va, pa, prot)
 	if (pmapdebug & PDB_ENTER)
 		printf("pmap_kenter_pa: leaving\n");
 #endif
-}
-
-void
-pmap_kenter_pgs(va, pgs, npgs)
-	vaddr_t va;
-	vm_page_t *pgs;
-	int npgs;
-{
-	int i;
-
-	va = hppa_trunc_page(va);
-	for (i = 0; i < npgs; i++)
-		pmap_kenter_pa(va + i*NBPG, VM_PAGE_TO_PHYS(pgs[i]), VM_PROT_ALL);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.7 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.8 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -314,7 +314,7 @@ vmapbuf(bp, sz)
 		kva = vm_map_min(kernel_map);
 		if (uvm_map(kernel_map, &kva, size, NULL, uva, 0,
 		    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == KERN_SUCCESS)
+		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == 0)
 			break;
 		tsleep(kernel_map, PVM, "vallocwait", 0);
 	}
@@ -333,10 +333,6 @@ vmapbuf(bp, sz)
 		if (!(cpuinfo.flags & CPUFLG_CACHE_MANDATORY))
 			pa |= PMAP_NC;
 
-		/*
-		 * pmap_enter distributes this mapping to all
-		 * contexts... maybe we should avoid this extra work
-		 */
 		pmap_enter(pmap_kernel(), kva, pa,
 			   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
 

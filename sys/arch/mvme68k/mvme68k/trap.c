@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.4 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.5 2001/12/05 00:39:12 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -167,9 +167,6 @@ void *sir_args[NSIR];
 u_char next_sir;
 
 int  writeback __P((struct frame *fp, int docachepush));
-
-void userret __P((struct proc *p, struct frame *fp,
-										  u_quad_t oticks, u_int faultaddr, int fromtrap));
 
 /*
  * trap and syscall both need the following work done before returning
@@ -538,12 +535,12 @@ copyfault:
 
 	case T_MMUFLT|T_USER:	/* page fault */
 		{
-			register vm_offset_t va;
-			register struct vmspace *vm = NULL;
-			register vm_map_t map;
+			vm_offset_t va;
+			struct vmspace *vm = NULL;
+			struct vm_map *map;
 			int rv;
 			vm_prot_t ftype, vftype;
-			extern vm_map_t kernel_map;
+			extern struct vm_map *kernel_map;
 
 			/* vmspace only significant if T_USER */
 			if (p)
@@ -583,10 +580,10 @@ copyfault:
 				vm_offset_t bva;
 
 				rv = pmap_mapmulti(map->pmap, va);
-				if (rv != KERN_SUCCESS) {
+				if (rv) {
 					bva = HPMMBASEADDR(va);
 					rv = uvm_fault(map, bva, 0, ftype);
-					if (rv == KERN_SUCCESS)
+					if (rv == 0)
 						(void) pmap_mapmulti(map->pmap, va);
 				}
 			} else
@@ -605,16 +602,16 @@ copyfault:
 			 * error.
 			 */
 			if ((caddr_t)va >= vm->vm_maxsaddr && map != kernel_map) {
-				if (rv == KERN_SUCCESS) {
+				if (rv == 0) {
 					unsigned nss;
 
 					nss = btoc(USRSTACK-(unsigned)va);
 					if (nss > vm->vm_ssize)
 						vm->vm_ssize = nss;
-				} else if (rv == KERN_PROTECTION_FAILURE)
-					rv = KERN_INVALID_ADDRESS;
+				} else if (rv == EACCES)
+					rv = EFAULT;
 			}
-			if (rv == KERN_SUCCESS) {
+			if (rv == 0) {
 				if (type == T_MMUFLT) {
 #if defined(M68040)
 					if (mmutype == MMU_68040)
@@ -1096,7 +1093,7 @@ bad:
 	if (error == ERESTART && (p->p_md.md_flags & MDP_STACKADJ))
 		frame.f_regs[SP] -= sizeof (int);
 #endif
-	userret(p, &frame, sticks, (u_int)0, 0);
+	userret(p, &frame, sticks, 0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);

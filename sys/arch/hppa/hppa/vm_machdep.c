@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.4 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.5 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -316,7 +316,7 @@ vmapbuf(bp, len)
 		kva = vm_map_min(phys_map);
 		if (uvm_map(phys_map, &kva, size, NULL, addr, 0,
 		    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == KERN_SUCCESS)
+		    UVM_INH_NONE, UVM_ADV_RANDOM, 0)) == 0)
 			break;
 		tsleep(phys_map, PVM, "vallocwait", 0);
 	}

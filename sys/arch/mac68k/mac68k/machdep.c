@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.6 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.7 2001/12/05 00:39:11 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.207 1998/07/08 04:39:34 thorpej Exp $	*/
 
 /*
@@ -180,9 +180,9 @@ u_int32_t mac68k_vidlen;	/* mem length */
 int	(*mac68k_bell_callback) __P((void *, int, int, int));
 caddr_t	mac68k_bell_cookie;
 
-vm_map_t exec_map = NULL;  
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;  
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -218,7 +218,6 @@ unsigned short  mac68k_netipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_impipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_clockipl = PSL_S | PSL_IPL2;
 unsigned short  mac68k_statclockipl = PSL_S | PSL_IPL2;
-unsigned short  mac68k_schedipl = PSL_S | PSL_IPL3;
 
 
 /*
@@ -452,7 +451,7 @@ again:
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vm_offset_t *) &buffers, round_page(size),
 	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_NONE,
-	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+	    UVM_PROT_NONE, UVM_INH_NONE, UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate VM for buffers");
 	minaddr = (vm_offset_t)buffers;
 	base = bufpages / nbuf;
@@ -632,6 +631,12 @@ boot(howto)
 	if (curproc)
 		savectx((struct pcb *)curproc->p_addr);
 
+	/* If system is cold, just halt. */
+	if (cold) {
+		howto |= RB_HALT;
+		goto haltsys;
+	}
+
 	boothowto = howto;
 	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
 		extern struct proc proc0;
@@ -673,6 +678,7 @@ boot(howto)
 		dumpsys();
 	}
 
+haltsys:
 	/* Run any shutdown hooks. */
 	doshutdownhooks();
 

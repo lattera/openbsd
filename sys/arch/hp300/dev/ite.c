@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ite.c,v 1.11.10.1 2001/07/04 10:15:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ite.c,v 1.11.10.2 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: ite.c,v 1.38 1997/03/31 07:37:25 scottr Exp $	*/
 
 /*
@@ -276,7 +276,7 @@ iteoff(ip, flag)
 	/*
 	 * XXX When the system is rebooted with "reboot", init(8)
 	 * kills the last process to have the console open.
-	 * If we don't revent the the ITE_ACTIVE bit from being
+	 * If we don't prevent the ITE_ACTIVE bit from being
 	 * cleared, we will never see messages printed during
 	 * the process of rebooting.
 	 */

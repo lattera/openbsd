@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.19.8.5 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/trap.c,v 1.19.8.6 2001/12/05 00:39:14 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.63-1.65ish 1997/01/16 15:41:40 gwr Exp $	*/
 
 /*
@@ -86,8 +86,6 @@ int  nodb_trap __P((int type, struct frame *));
 int astpending;
 int want_resched;
 
-void userret __P((struct proc *, struct frame *, u_quad_t));
-
 char	*trap_type[] = {
 	"Bus error",
 	"Address error",
@@ -147,11 +145,14 @@ int mmupid = -1;
  * trap and syscall both need the following work done before
  * returning to user mode.
  */
+/*ARGSUSED*/
 void
-userret(p, fp, oticks)
-	register struct proc *p;
-	register struct frame *fp;
+userret(p, fp, oticks, faultaddr, fromtrap)
+	struct proc *p;
+	struct frame *fp;
 	u_quad_t oticks;
+	u_int faultaddr;
+	int fromtrap;
 {
 	int sig;
 
@@ -450,12 +451,12 @@ trap(type, code, v, frame)
 		/*FALLTHROUGH*/
 
 	case T_MMUFLT|T_USER: { 	/* page fault */
-		register vm_offset_t va;
-		register struct vmspace *vm = NULL;
-		register vm_map_t map;
+		vm_offset_t va;
+		struct vmspace *vm = NULL;
+		struct vm_map *map;
 		int rv;
 		vm_prot_t ftype, vftype;
-		extern vm_map_t kernel_map;
+		extern struct vm_map *kernel_map;
 
 		/* vmspace only significant if T_USER */
 		if (p)
@@ -543,16 +544,16 @@ trap(type, code, v, frame)
 		 * error.
 		 */
 		if ((map != kernel_map) && ((caddr_t)va >= vm->vm_maxsaddr)) {
-			if (rv == KERN_SUCCESS) {
+			if (rv == 0) {
 				unsigned nss;
 
 				nss = btoc((u_int)(USRSTACK-va));
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (rv == KERN_PROTECTION_FAILURE)
-				rv = KERN_INVALID_ADDRESS;
+			} else if (rv == EACCES)
+				rv = EFAULT;
 		}
-		if (rv == KERN_SUCCESS)
+		if (rv == 0)
 			goto finish;
 
 		if ((type & T_USER) == 0) {
@@ -590,7 +591,7 @@ finish:
 		trapsignal(p, sig, ucode, si_type, sv);
 	}
 douret:
-	userret(p, &frame, sticks);
+	userret(p, &frame, sticks, 0, 0);
 }
 
 /*
@@ -740,7 +741,7 @@ syscall(code, frame)
 			frame.f_regs[SP] -= sizeof (int);
 	}
 #endif
-	userret(p, &frame, sticks);
+	userret(p, &frame, sticks, 0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);

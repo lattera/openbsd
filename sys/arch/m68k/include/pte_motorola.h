@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/pte_motorola.h,v 1.1 2001/11/30 20:54:50 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pte_motorola.h,v 1.1.2.1 2001/12/05 00:39:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1988 University of Utah.

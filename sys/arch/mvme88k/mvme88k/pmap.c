@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.5 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.6 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -46,19 +46,20 @@
 /* don't want to make them general yet. */
 #define OMRON_PMAP
 
-/*#define DEBUG 1*/
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/simplelock.h>
 #include <sys/proc.h>
 #include <sys/malloc.h>
+#include <sys/pool.h>
 #include <sys/msgbuf.h>
 #include <sys/user.h>
 
 #include <uvm/uvm.h>
 
 #include <machine/asm_macro.h>
+#include <machine/mmu.h>
 #include <machine/board.h>
 #include <machine/cmmu.h>
 #include <machine/cpu_number.h>
@@ -122,6 +123,8 @@ extern vm_offset_t      virtual_avail, virtual_end;
 
 int pmap_con_dbg = CD_NONE;
 #endif /* DEBUG */
+
+struct pool pmappool, pvpool;
 
 caddr_t  vmmap;
 pt_entry_t  *vmpte, *msgbufmap;
@@ -274,16 +277,18 @@ pv_entry_t pv_head_table; /* array of entries, one per page */
  *	We raise the interrupt level to splvm, to block interprocessor
  *	interrupts during pmap operations.
  */
-#define	SPLVM(spl)	{ spl = splvm(); }
-#define	SPLX(spl)	{ splx(spl); }
-#define PMAP_LOCK(pmap,spl) { \
-	SPLVM(spl); \
-	simple_lock(&(pmap)->lock); \
-}
-#define PMAP_UNLOCK(pmap, spl) { \
-	simple_unlock(&(pmap)->lock); \
-	SPLX(spl); \
-}
+#define	SPLVM(spl)	spl = splvm();
+#define	SPLX(spl)	splx(spl);
+#define PMAP_LOCK(pmap,spl) \
+	do { \
+		SPLVM(spl); \
+		simple_lock(&(pmap)->lock); \
+	} while (0)
+#define PMAP_UNLOCK(pmap, spl) \
+	do { \
+		simple_unlock(&(pmap)->lock); \
+		SPLX(spl); \
+	} while (0)
 
 #define PV_LOCK_TABLE_SIZE(n)	((vm_size_t)((n) * sizeof(struct simplelock)))
 #define PV_TABLE_SIZE(n)	((vm_size_t)((n) * sizeof(struct pv_entry)))
@@ -790,7 +795,7 @@ pmap_map_batc(vm_offset_t virt, vm_offset_t start, vm_offset_t end,
 void
 pmap_cache_ctrl(pmap_t pmap, vm_offset_t s, vm_offset_t e, unsigned mode)
 {
-	int		spl, spl_sav;
+	int		spl;
 	pt_entry_t	*pte;
 	vm_offset_t	va;
 	int		kflush;
@@ -835,11 +840,9 @@ pmap_cache_ctrl(pmap_t pmap, vm_offset_t s, vm_offset_t e, unsigned mode)
 		 * the modified bit and/or the reference bit by other cpu.
 		 *  XXX
 		 */
-		spl_sav = splimp();
 		opte.bits = invalidate_pte(pte);
 		((pte_template_t *)pte)->bits = (opte.bits & CACHE_MASK) | mode;
 		flush_atc_entry(users, va, kflush);
-		splx(spl_sav);
 
 		/*
 		 * Data cache should be copied back and invalidated.
@@ -1390,6 +1393,12 @@ pmap_init(void)
 		lock += npages;
 		attr += npages;
 	}
+
+	pool_init(&pmappool, sizeof(struct pmap), 0, 0, 0, "pmappl", 0,
+	    pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	pool_init(&pvpool, sizeof(pv_entry_t), 0, 0, 0, "pvpl", 0,
+	    NULL, NULL, M_VMPVENT);
+
 	pmap_initialized = TRUE;
 } /* pmap_init() */
 
@@ -1422,7 +1431,7 @@ pmap_zero_page(vm_offset_t phys)
 {
 	vm_offset_t	srcva;
 	pte_template_t	template;
-	unsigned int	spl_sav;
+	unsigned int	spl;
 	int		cpu;
 	pt_entry_t	*srcpte;
 
@@ -1434,10 +1443,10 @@ pmap_zero_page(vm_offset_t phys)
 			| m88k_protection(kernel_pmap, VM_PROT_READ | VM_PROT_WRITE)
 			| DT_VALID | CACHE_GLOBAL;
 
-	spl_sav = splimp();
+	SPLVM(spl);
 	cmmu_flush_tlb(1, srcva, PAGE_SIZE);
 	*srcpte = template.pte;
-	splx(spl_sav);
+	SPLX(spl);
 	bzero((void*)srcva, PAGE_SIZE);
 	/* force the data out */
 	cmmu_flush_remote_data_cache(cpu, phys, PAGE_SIZE);
@@ -1464,8 +1473,7 @@ pmap_create(void)
 
 	CHECK_PMAP_CONSISTENCY("pmap_create");
 
-	p = (struct pmap *)malloc(sizeof(*p), M_VMPMAP, M_WAITOK);
-
+	p = (struct pmap *)pool_get(&pmappool, PR_WAITOK);
 	bzero(p, sizeof(*p));
 	pmap_pinit(p);
 	return (p);
@@ -1698,7 +1706,7 @@ pmap_destroy(pmap_t p)
 
 	if (c == 0) {
 		pmap_release(p);
-		free((caddr_t)p, M_VMPMAP);
+		pool_put(&pmappool, p);
 	}
 
 } /* pmap_destroy() */
@@ -1870,7 +1878,7 @@ pmap_remove_range(pmap_t pmap, vm_offset_t s, vm_offset_t e)
 				cur = pvl->next;
 				if (cur != PV_ENTRY_NULL) {
 					*pvl = *cur;
-					free((caddr_t)cur, M_VMPVENT);
+					pool_put(&pvpool, cur);
 				} else {
 					pvl->pmap =  PMAP_NULL;
 				}
@@ -1889,7 +1897,7 @@ pmap_remove_range(pmap_t pmap, vm_offset_t s, vm_offset_t e)
 				}
 
 				prev->next = cur->next;
-				free((caddr_t)cur, M_VMPVENT);
+				pool_put(&pvpool, cur);
 			}
 
 			CHECK_PV_LIST(pa, pvl, "pmap_remove_range after");
@@ -2088,7 +2096,7 @@ remove_all_Retry:
 
 		if ((cur = pvl->next) != PV_ENTRY_NULL) {
 			*pvl  = *cur;
-			free((caddr_t)cur, M_VMPVENT);
+			pool_put(&pvpool, cur);
 		} else
 			pvl->pmap = PMAP_NULL;
 
@@ -2156,7 +2164,7 @@ pmap_copy_on_write(vm_offset_t phys)
 {
 	register pv_entry_t  pv_e;
 	register pt_entry_t  *pte;
-	int                  spl, spl_sav;
+	int                  spl;
 	register unsigned    users;
 	register pte_template_t      opte;
 	int                  kflush;
@@ -2226,12 +2234,10 @@ copy_on_write_Retry:
 		 * bit and/or the reference bit being written back
 		 * by other cpu.
 		 */
-		spl_sav = splimp();
 		opte.bits = invalidate_pte(pte);
 		opte.pte.prot = M88K_RO;
 		((pte_template_t *)pte)->bits = opte.bits;
 		flush_atc_entry(users, va, kflush);
-		splx(spl_sav);
 		
 		simple_unlock(&pmap->lock);
 		pv_e = pv_e->next;
@@ -2275,7 +2281,7 @@ pmap_protect(pmap_t pmap, vm_offset_t s, vm_offset_t e, vm_prot_t prot)
 {
 	pte_template_t		maprot;
 	unsigned		ap;
-	int			spl, spl_sav;
+	int			spl;
 	pt_entry_t		*pte;
 	vm_offset_t		va;
 	register unsigned	users;
@@ -2341,12 +2347,10 @@ pmap_protect(pmap_t pmap, vm_offset_t s, vm_offset_t e, vm_prot_t prot)
 		 * modified bit and/or the reference bit being 
 		 * written back by other cpu.
 		 */
-		spl_sav = splimp();
 		opte.bits = invalidate_pte(pte);
 		opte.pte.prot = ap;
 		((pte_template_t *)pte)->bits = opte.bits;
 		flush_atc_entry(users, va, kflush);
-		splx(spl_sav);
 		pte++;
 	}
 	PMAP_UNLOCK(pmap, spl);
@@ -2559,7 +2563,7 @@ pmap_enter(pmap_t pmap, vm_offset_t va, vm_offset_t pa,
 	   int flags)
 {
 	int		ap;
-	int		spl, spl_sav;
+	int		spl;
 	pv_entry_t	pv_e;
 	pt_entry_t	*pte;
 	vm_offset_t	old_pa;
@@ -2649,12 +2653,10 @@ Retry:
 			 * Invalidate pte temporarily to avoid being written back
 			 * the modified bit and/or the reference bit by other cpu.
 			 */
-			spl_sav = splimp();
 			opte.bits = invalidate_pte(pte);
 			template.pte.modified = opte.pte.modified;
 			*pte++ = template.pte;
 			flush_atc_entry(users, va, kflush);
-			splx(spl_sav);
 		}
 
 	} else { /* if ( pa == old_pa) */
@@ -2728,9 +2730,7 @@ Retry:
 				if (pv_e == PV_ENTRY_NULL) {
 					UNLOCK_PVH(pa);
 					PMAP_UNLOCK(pmap, spl);
-					pv_e = (pv_entry_t) malloc(sizeof *pv_e,
-								   M_VMPVENT,
-								   M_NOWAIT);
+					pv_e = pool_get(&pvpool, PR_NOWAIT);
 					goto Retry;
 				}
 				pv_e->va = va;
@@ -2767,9 +2767,9 @@ Retry:
 	PMAP_UNLOCK(pmap, spl);
 
 	if (pv_e != PV_ENTRY_NULL)
-		free((caddr_t) pv_e, M_VMPVENT);
+		pool_put(&pvpool, pv_e);
 
-	return (KERN_SUCCESS);
+	return (0);
 } /* pmap_enter */
 
 /*
@@ -2908,40 +2908,6 @@ pmap_copy(pmap_t dst_pmap, pmap_t src_pmap, vm_offset_t dst_addr,
 {
 
 }/* pmap_copy() */
-
-
-/*
- * Routine:	PMAP_UPDATE
- *
- * Function:
- *	Require that all active physical maps contain no incorrect entries
- *	NOW. [This update includes forcing updates of any address map
- *	cashing]
- *	Generally used to ensure that thread about to run will see a
- *	semantically correct world.
- *
- * Parameters:
- *	none
- *
- * Call:
- *	cmmuflush
- *
- *	The 88200 pmap implementation does not defer any operations.
- * Therefore, the translation table trees are always consistent while the
- * pmap lock is not held. Therefore, there is really no work to do in
- * this function other than to flush the TLB.
- */
-void
-pmap_update(void)
-{
-#ifdef DEBUG
-	if ((pmap_con_dbg & (CD_UPD | CD_FULL)) == (CD_UPD | CD_FULL))
-		printf("(pmap_update :%x) Called \n", curproc);
-#endif
-
-}/* pmap_update() */
-
-
 
 /*
  * Routine:	PMAP_COLLECT
@@ -3251,7 +3217,7 @@ void
 pmap_copy_page(vm_offset_t src, vm_offset_t dst)
 {
 	vm_offset_t dstva, srcva;
-	unsigned int spl_sav;
+	unsigned int spl;
 	int      aprot;
 	pte_template_t template;
 	pt_entry_t  *dstpte, *srcpte;
@@ -3272,7 +3238,7 @@ pmap_copy_page(vm_offset_t src, vm_offset_t dst)
 		DT_VALID | CACHE_GLOBAL;
 
 	/* do we need to write back dirty bits */
-	spl_sav = splimp();
+	SPLVM(spl);
 	cmmu_flush_tlb(1, srcva, PAGE_SIZE);
 	*srcpte = template.pte;
 
@@ -3283,7 +3249,7 @@ pmap_copy_page(vm_offset_t src, vm_offset_t dst)
 		CACHE_GLOBAL | DT_VALID;
 	cmmu_flush_tlb(1, dstva, PAGE_SIZE);
 	*dstpte  = template.pte;
-	splx(spl_sav);
+	SPLX(spl);
 
 	bcopy((void*)srcva, (void*)dstva, PAGE_SIZE);
 	/* flush source, dest out of cache? */
@@ -3327,7 +3293,7 @@ pmap_clear_modify(struct vm_page *pg)
 	pv_entry_t    pvep;
 	pt_entry_t    *pte;
 	pmap_t     pmap;
-	int        spl, spl_sav;
+	int        spl;
 	vm_offset_t      va;
 	unsigned      users;
 	pte_template_t   opte;
@@ -3386,13 +3352,11 @@ clear_modify_Retry:
 		 * Invalidate pte temporarily to avoid the modified bit 
 		 * and/or the reference being written back by other cpu.
 		 */
-		spl_sav = splimp();
 		opte.bits = invalidate_pte(pte);
 		/* clear modified bit */
 		opte.pte.modified = 0;
 		((pte_template_t *)pte)->bits = opte.bits;
 		flush_atc_entry(users, va, kflush);
-		splx(spl_sav);
 
 		simple_unlock(&pmap->lock);
 	}
@@ -3546,7 +3510,7 @@ pmap_clear_reference(struct vm_page *pg)
 	pv_entry_t	pvep;
 	pt_entry_t	*pte;
 	pmap_t		pmap;
-	int		spl, spl_sav;
+	int		spl;
 	vm_offset_t	va;
 	unsigned	users;
 	pte_template_t	opte;
@@ -3605,13 +3569,11 @@ pmap_clear_reference(struct vm_page *pg)
 		 * Invalidate pte temporarily to avoid the modified bit 
 		 * and/or the reference being written back by other cpu.
 		 */
-		spl_sav = splimp();
 		opte.bits = invalidate_pte(pte);
 		/* clear reference bit */
 		opte.pte.pg_used = 0;
 		((pte_template_t *)pte)->bits = opte.bits;
 		flush_atc_entry(users, va, kflush);
-		splx(spl_sav);
 
 		simple_unlock(&pmap->lock);
 		pvep = pvep->next;
@@ -4430,18 +4392,6 @@ void
 pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 {
 	pmap_enter(pmap_kernel(), va, pa, prot, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
-}
-
-void
-pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs)
-{
-	int i;
-
-	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
-		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
-			VM_PROT_READ|VM_PROT_WRITE,
-			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
-	}
 }
 
 void

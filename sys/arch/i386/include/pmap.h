@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.4 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.5 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -291,7 +291,7 @@ struct pmap {
 struct pv_entry;
 
 struct pv_head {
-	simple_lock_data_t pvh_lock;	/* locks every pv on this list */
+	struct simplelock pvh_lock;	/* locks every pv on this list */
 	struct pv_entry *pvh_list;	/* head of list (locked by pvh_lock) */
 };
 
@@ -375,7 +375,7 @@ extern int pmap_pg_g;			/* do we support PG_G? */
 
 #define	pmap_kernel()			(&kernel_pmap_store)
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
-#define	pmap_update()			tlbflush()
+#define	pmap_update()			/* nada */
 
 #define pmap_clear_modify(pg)		pmap_change_attrs(pg, 0, PG_M)
 #define pmap_clear_reference(pg)	pmap_change_attrs(pg, 0, PG_U)
@@ -431,7 +431,7 @@ pmap_update_pg(va)
 {
 #if defined(I386_CPU)
 	if (cpu_class == CPUCLASS_386)
-		pmap_update();
+		tlbflush();
 	else
 #endif
 		invlpg((u_int) va);
@@ -447,7 +447,7 @@ pmap_update_2pg(va, vb)
 {
 #if defined(I386_CPU)
 	if (cpu_class == CPUCLASS_386)
-		pmap_update();
+		tlbflush();
 	else
 #endif
 	{

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.4 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/grf.c,v 1.7.10.5 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: grf.c,v 1.30 1998/08/20 08:33:41 kleink Exp $	*/
 
 /*
@@ -654,7 +654,6 @@ grfunmap(dev, addr, p)
 	struct grf_softc *sc = grf_cd.cd_devs[GRFUNIT(dev)];
 	struct grf_data *gp = sc->sc_data;
 	vsize_t size;
-	int rv;
 
 #ifdef DEBUG
 	if (grfdebug & GDB_MMAP)
@@ -664,9 +663,8 @@ grfunmap(dev, addr, p)
 		return(EINVAL);		/* XXX: how do we deal with this? */
 	(void) (*gp->g_sw->gd_mode)(gp, GM_UNMAP, 0);
 	size = round_page(gp->g_display.gd_regsize + gp->g_display.gd_fbsize);
-	rv = uvm_unmap(&p->p_vmspace->vm_map, (vaddr_t)addr,
-	    (vaddr_t)addr + size);
-	return(rv == KERN_SUCCESS ? 0 : EINVAL);
+	uvm_unmap(&p->p_vmspace->vm_map, (vaddr_t)addr, (vaddr_t)addr + size);
+	return (0);
 }
 
 #ifdef COMPAT_HPUX

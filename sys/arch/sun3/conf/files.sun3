@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sun3/conf/Attic/files.sun3,v 1.13.2.2 2001/07/04 10:23:53 niklas Exp $
+#	$OpenBSD: src/sys/arch/sun3/conf/Attic/files.sun3,v 1.13.2.3 2001/12/05 00:39:14 niklas Exp $
 #	$NetBSD: files.sun3,v 1.26 1996/10/29 19:58:14 gwr Exp $
 
 #
@@ -152,8 +152,6 @@ device	xy: disk
 attach	xy at xyc
 file	arch/sun3/dev/xy.c		xy needs-flag
 
-
-
 #
 # Console (zs) related stuff
 #
@@ -183,9 +181,3 @@ major	{sd=7}	# SCSI disk
 major	{xd=10}	# Xylogics 7053
 major	{rd=13}	# RAM disk (for mini-kernel)
 major	{cd=18}	# CD-ROM drives
-
-# Compatibility modules
-
-# SunOS Binary Compatibility (COMPAT_SUNOS)
-include "../../../compat/sunos/files.sunos"
-file	arch/m68k/m68k/sunos_machdep.c	compat_sunos

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.4 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/trap.c,v 1.19.2.5 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Michael Shalayeff
@@ -141,8 +141,8 @@ trap(type, frame)
 {
 	struct proc *p = curproc;
 	struct pcb *pcbp;
-	register vaddr_t va;
-	register vm_map_t map;
+	vaddr_t va;
+	struct vm_map *map;
 	struct vmspace *vm;
 	register vm_prot_t vftype;
 	register pa_space_t space;
@@ -335,15 +335,15 @@ trap(type, frame)
 		 * error.
 		 */
 		if (va >= (vaddr_t)vm->vm_maxsaddr + vm->vm_ssize) {
-			if (ret == KERN_SUCCESS) {
+			if (ret == 0) {
 				vsize_t nss = btoc(va - USRSTACK + NBPG);
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (ret == KERN_PROTECTION_FAILURE)
-				ret = KERN_INVALID_ADDRESS;
+			} else if (ret == EACCES)
+				ret = EFAULT;
 		}
 
-		if (ret != KERN_SUCCESS) {
+		if (ret != 0) {
 			if (type & T_USER) {
 printf("trapsignal: uvm_fault\n");
 				sv.sival_int = frame->tf_ior;

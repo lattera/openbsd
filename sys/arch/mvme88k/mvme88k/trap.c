@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.4 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.5 2001/12/05 00:39:13 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -190,7 +190,7 @@ trap18x(unsigned type, struct m88100_saved_state *frame)
 {
 	struct proc *p;
 	u_quad_t sticks = 0;
-	vm_map_t map;
+	struct vm_map *map;
 	vm_offset_t va;
 	vm_prot_t ftype;
 	int fault_type;
@@ -202,7 +202,7 @@ trap18x(unsigned type, struct m88100_saved_state *frame)
 	int sig = 0;
 	unsigned pc = PC_REGS(frame);  /* get program counter (sxip) */
 
-	extern vm_map_t kernel_map;
+	extern struct vm_map *kernel_map;
 	extern unsigned guarded_access_start;
 	extern unsigned guarded_access_end;
 	extern unsigned guarded_access_bad;
@@ -404,7 +404,7 @@ trap18x(unsigned type, struct m88100_saved_state *frame)
 		if ((frame->dpfsr >> 16 & 0x7) == 0x4	     /* seg fault  */
 		    || (frame->dpfsr >> 16 & 0x7) == 0x5) {  /* page fault */
 			result = uvm_fault(map, va, 0, ftype);
-			if (result == KERN_SUCCESS) {
+			if (result == 0) {
 			/*
 			 * We could resolve the fault. Call
 			 * data_access_emulation to drain the data unit pipe
@@ -494,15 +494,15 @@ outtahere:
 		}
 
 		if ((caddr_t)va >= vm->vm_maxsaddr) {
-			if (result == KERN_SUCCESS) {
+			if (result == 0) {
 				nss = btoc(USRSTACK - va);/* XXX check this */
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (result == KERN_PROTECTION_FAILURE)
-				result = KERN_INVALID_ADDRESS;
+			} else if (result == EACCES)
+				result = EFAULT;
 		}
 
-		if (result == KERN_SUCCESS) {
+		if (result == 0) {
 			if (type == T_DATAFLT+T_USER) {
 			/*
 			 * We could resolve the fault. Call
@@ -519,9 +519,9 @@ outtahere:
 				frame->snip = frame->sxip & ~NIP_E;
 			}
 		} else {
-			sig = result == KERN_PROTECTION_FAILURE ? 
+			sig = result == EACCES ?
 				SIGBUS : SIGSEGV;
-			fault_type = result == KERN_PROTECTION_FAILURE ? 
+			fault_type = result == EACCES ?
 				BUS_ADRERR : SEGV_MAPERR;
 		}
 		break;
@@ -683,7 +683,7 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 {
 	struct proc *p;
 	u_quad_t sticks = 0;
-	vm_map_t map;
+	struct vm_map *map;
 	vm_offset_t va;
 	vm_prot_t ftype;
 	int fault_type;
@@ -696,7 +696,7 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 	unsigned pc = PC_REGS(frame);  /* get program counter (sxip) */
 	unsigned user = 0, write = 0, data = 0;
 
-	extern vm_map_t kernel_map;
+	extern struct vm_map *kernel_map;
 	extern unsigned guarded_access_start;
 	extern unsigned guarded_access_end;
 
@@ -965,7 +965,7 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 			if ((frame->dsr & CMMU_DSR_SI)	      /* seg fault  */
 			    || (frame->dsr & CMMU_DSR_PI)) { /* page fault */
 				result = uvm_fault(map, va, 0, ftype);
-				if (result == KERN_SUCCESS) {
+				if (result == 0) {
 					return;
 				}
 			}
@@ -973,7 +973,7 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 			if ((frame->isr & CMMU_ISR_SI)	      /* seg fault  */
 			    || (frame->isr & CMMU_ISR_PI)) { /* page fault */
 				result = uvm_fault(map, va, 0, ftype);
-				if (result == KERN_SUCCESS) {
+				if (result == 0) {
 					return;
 				}
 			}
@@ -1018,7 +1018,7 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 			if ((frame->dsr & CMMU_DSR_SI)	      /* seg fault  */
 			    || (frame->dsr & CMMU_DSR_PI)) { /* page fault */
 				result = uvm_fault(map, va, 0, ftype);
-				if (result == KERN_SUCCESS) {
+				if (result == 0) {
 					return;
 				}
 			}
@@ -1026,24 +1026,24 @@ trap197(unsigned type, struct m88100_saved_state *frame)
 			if ((frame->isr & CMMU_ISR_SI)	      /* seg fault  */
 			    || (frame->isr & CMMU_ISR_PI)) { /* page fault */
 				result = uvm_fault(map, va, 0, ftype);
-				if (result == KERN_SUCCESS) {
+				if (result == 0) {
 					return;
 				}
 			}
 		}
 
 		if ((caddr_t)va >= vm->vm_maxsaddr) {
-			if (result == KERN_SUCCESS) {
+			if (result == 0) {
 				nss = btoc(USRSTACK - va);/* XXX check this */
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (result == KERN_PROTECTION_FAILURE)
-				result = KERN_INVALID_ADDRESS;
+			} else if (result == EACCES)
+				result = EFAULT;
 		}
 
-		if (result != KERN_SUCCESS) {
-			sig = result == KERN_PROTECTION_FAILURE ? SIGBUS : SIGSEGV;
-			fault_type = result == KERN_PROTECTION_FAILURE ? BUS_ADRERR
+		if (result != 0) {
+			sig = result == EACCES ? SIGBUS : SIGSEGV;
+			fault_type = result == EACCES ? BUS_ADRERR
 				     : SEGV_MAPERR;
 		} else {
 			return;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8.4.1 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/sbus.c,v 1.8.4.2 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: sbus.c,v 1.17 1997/06/01 22:10:39 pk Exp $ */
 
 /*
@@ -329,7 +329,7 @@ sbus_testdma(sc, ca)
         struct romaux *ra = &ca->ca_ra;
 
 	/*
-	 * XXX how to handle more then one sbus?
+	 * XXX how to handle more than one sbus?
 	 */
 
 	if (getpropint(0, "slave-only", 0) & (1 << ca->ca_slot)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.18.4.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/machdep.c,v 1.18.4.3 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.108 2001/07/24 19:30:14 eeh Exp $ */
 
 /*-
@@ -793,8 +793,11 @@ boot(howto)
 		 * successfully by inittodr() or set by an explicit call
 		 * to resettodr() (e.g. from settimeofday()).
 		 */
-		if (sparc_clock_time_is_ok)
+		if ((howto & RB_TIMEBAD) == 0 && sparc_clock_time_is_ok) {
 			resettodr();
+		} else {
+			printf("WARNING: not updating battery clock\n");
+		}
 	}
 	(void) splhigh();		/* ??? */
 
@@ -1180,16 +1183,7 @@ _bus_dmamap_load(t, map, buf, buflen, p, flags)
 	map->dm_nsegs = 0;
 
 	if (buflen > map->_dm_size)
-	{ 
-#ifdef DEBUG
-		printf("_bus_dmamap_load(): error %lu > %lu -- map size exceeded!\n",
-		    (unsigned long)buflen, (unsigned long)map->_dm_size);
-#ifdef DDB
-		Debugger();
-#endif
-#endif
-		return (EINVAL);
-	}		
+		return (EFBIG);
 
 	sgsize = round_page(buflen + ((int)vaddr & PGOFSET));
 
@@ -1232,7 +1226,6 @@ _bus_dmamap_load_mbuf(t, map, m, flags)
 	struct mbuf *m;
 	int flags;
 {
-#if 1
 	bus_dma_segment_t segs[MAX_DMA_SEGS];
 	int i;
 	size_t len;
@@ -1281,10 +1274,6 @@ _bus_dmamap_load_mbuf(t, map, m, flags)
 
 	return (bus_dmamap_load_raw(t, map, segs, i,
 			    (bus_size_t)len, flags));
-#else
-	panic("_bus_dmamap_load_mbuf: not implemented");
-	return 0;
-#endif
 }
 
 /*
@@ -1297,65 +1286,38 @@ _bus_dmamap_load_uio(t, map, uio, flags)
 	struct uio *uio;
 	int flags;
 {
-/* 
- * XXXXXXX The problem with this routine is that it needs to 
- * lock the user address space that is being loaded, but there
- * is no real way for us to unlock it during the unload process.
- */
-#if 0
+	/*
+	 * XXXXXXX The problem with this routine is that it needs to 
+	 * lock the user address space that is being loaded, but there
+	 * is no real way for us to unlock it during the unload process.
+	 * As a result, only UIO_SYSSPACE uio's are allowed for now.
+	 */
 	bus_dma_segment_t segs[MAX_DMA_SEGS];
 	int i, j;
 	size_t len;
-	struct proc *p = uio->uio_procp;
-	struct pmap *pm;
 
-	/*
-	 * Check user read/write access to the data buffer.
-	 */
-	if (uio->uio_segflg == UIO_USERSPACE) {
-		pm = p->p_vmspace->vm_map.pmap;
-		for (i = 0; i < uio->uio_iovcnt; i++) {
-			/* XXXCDC: map not locked, rethink */
-			if (__predict_false(!uvm_useracc(uio->uio_iov[i].iov_base,
-				     uio->uio_iov[i].iov_len,
-/* XXX is UIO_WRITE correct? */
-				     (uio->uio_rw == UIO_WRITE) ? B_WRITE : B_READ)))
-				return (EFAULT);
-		}
-	} else
-		pm = pmap_kernel();
+	if (uio->uio_segflg != UIO_SYSSPACE)
+		return (EOPNOTSUPP);
 
-	i = 0;
+	/* Record for *_unload */
+	map->_dm_type = _DM_TYPE_UIO;
+	map->_dm_source = (void *)uio;
+
+	i = j = 0;
 	len = 0;
-	for (j=0; j<uio->uio_iovcnt; j++) {
-		struct iovec *iov = &uio->uio_iov[j];
-		vaddr_t vaddr = (vaddr_t)iov->iov_base;
-		bus_size_t buflen = iov->iov_len;
+	while (j < uio->uio_iovcnt) {
+		vaddr_t vaddr = (vaddr_t)uio->uio_iov[j].iov_base;
+		long buflen = (long)uio->uio_iov[j].iov_len;
 
-		/*
-		 * Lock the part of the user address space involved
-		 *    in the transfer.
-		 */
-		PHOLD(p);
-		if (__predict_false(uvm_vslock(p, vaddr, buflen,
-			    (uio->uio_rw == UIO_WRITE) ?
-			    VM_PROT_READ | VM_PROT_WRITE : VM_PROT_READ)
-			    != 0)) {
-				goto after_vsunlock;
-			}
-		
 		len += buflen;
 		while (buflen > 0 && i < MAX_DMA_SEGS) {
 			paddr_t pa;
 			long incr;
 
 			incr = min(buflen, NBPG);
-			(void) pmap_extract(pm, vaddr, &pa);
+			(void) pmap_extract(pmap_kernel(), vaddr, &pa);
 			buflen -= incr;
 			vaddr += incr;
-			if (segs[i].ds_len == 0)
-				segs[i].ds_addr = pa;
-
 
 			if (i > 0 && pa == (segs[i-1].ds_addr + segs[i-1].ds_len)
 			    && ((segs[i-1].ds_len + incr) < map->_dm_maxsegsz)) {
@@ -1370,18 +1332,16 @@ _bus_dmamap_load_uio(t, map, uio, flags)
 			segs[i]._ds_mlist = NULL;
 			i++;
 		}
-		uvm_vsunlock(p, bp->b_data, todo);
-		PRELE(p);
- 		if (buflen > 0 && i >= MAX_DMA_SEGS) 
+		j++;
+		if ((uio->uio_iovcnt - j) && i >= MAX_DMA_SEGS) {
 			/* Exceeded the size of our dmamap */
-			return E2BIG;
+			map->_dm_type = 0;
+			map->_dm_source = NULL;
+			return (E2BIG);
+		}
 	}
-	map->_dm_type = DM_TYPE_UIO;
-	map->_dm_source = (void *)uio;
-	return (bus_dmamap_load_raw(t, map, segs, i, 
-				    (bus_size_t)len, flags));
-#endif
-	return 0;
+
+	return (bus_dmamap_load_raw(t, map, segs, i, (bus_size_t)len, flags));
 }
 
 /*

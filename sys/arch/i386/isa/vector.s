@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.4 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/vector.s,v 1.10.6.5 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*
@@ -218,7 +218,7 @@ _Xintr/**/irq_num/**/:							;\
 	MASK(irq_num, icu)		/* mask it in hardware */	;\
 	ack(irq_num)			/* and allow other intrs */	;\
 	incl	MY_COUNT+V_INTR		/* statistical info */		;\
-	movl	_C_LABEL(ilevel) + (irq_num) * 4, %eax			;\
+	movl	_C_LABEL(iminlevel) + (irq_num) * 4, %eax		;\
 	movzbl	CPL,%ebx						;\
 	cmpl	%eax,%ebx						;\
 	/* XXX not jae? */						;\
@@ -226,8 +226,8 @@ _Xintr/**/irq_num/**/:							;\
 _Xresume/**/irq_num/**/:						;\
 	movzbl	CPL,%eax		/* cpl to restore on exit */	;\
 	pushl	%eax							;\
-	movl	_C_LABEL(ilevel) + (irq_num) * 4,%eax			;\
-	movl	%eax,CPL		/* add in this intr's mask */	;\
+	movl	_C_LABEL(imaxlevel) + (irq_num) * 4,%eax		;\
+	movl	%eax,CPL		/* block enough for this irq */	;\
 	sti				/* safe to take intrs now */	;\
 	movl	_C_LABEL(intrhand) + (irq_num) * 4,%ebx	/* head of chain */ ;\
 	testl	%ebx,%ebx						;\

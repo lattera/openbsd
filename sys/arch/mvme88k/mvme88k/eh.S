@@ -1,4 +1,4 @@
-/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.8.4.3 2001/10/31 03:01:19 nate Exp $   */
+/*   $OpenBSD: src/sys/arch/mvme88k/mvme88k/eh.S,v 1.8.4.4 2001/12/05 00:39:12 niklas Exp $   */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -214,10 +214,12 @@
  */
 
 #include "assym.h"
-#include <machine/trap.h>           /* for T_ defines */
 #include <machine/asm.h>
-
-#define	EH_DEBUG
+#include <machine/board.h>
+#include <machine/trap.h>           /* for T_ defines */
+#ifdef MVME188
+#include <machine/mvme188.h>
+#endif
 
 /*
  * The exception frame as defined in "machine/pcb.h" (among other places) is
@@ -240,7 +242,7 @@
 	data
 	align 4
 sbadcpupanic:
-	string  "eh.S: bad cpu number in FLAGS\n"
+	string  "eh.S: bad cpu number in FLAGS"
 	
 	text
 	align 8
@@ -1019,7 +1021,7 @@ badaddr__maybe_byte:
 badaddr__unknown_size:
 #ifndef NDEBUG
 	data
-1: 	string "bad length (%d) to badaddr() from 0x%x\n\000"
+1: 	string "bad length (%d) to badaddr() from 0x%x"
 	text
 	or.u   r2, r0, hi16(1b)
 	or     r2, r2, lo16(1b)

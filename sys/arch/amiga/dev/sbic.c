@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.3 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/sbic.c,v 1.10.6.4 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: sbic.c,v 1.28 1996/10/13 03:07:29 christos Exp $	*/
 
 /*
@@ -1789,7 +1789,7 @@ sbicgo(dev, xs)
 	 * push the data cache ( I think this won't work (EH))
 	 */
 #if defined(M68040) || defined(M68060)
-	if (mmutype == MMU_68040 && usedma && count) {
+	if (mmutype <= MMU_68040 && usedma && count) {
 		dma_cachectl(addr, count);
 		if (((u_int)addr & 0xF) || (((u_int)addr + count) & 0xF))
 			dev->sc_flags |= SBICF_DCFLUSH;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.2 2001/07/04 10:15:57 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/files.hppa,v 1.21.2.3 2001/12/05 00:39:10 niklas Exp $
 #
 # hppa-specific configuration info
 
@@ -62,7 +62,7 @@ define	gscbus	{ }
 # Mainbus
 #
 
-define	mainbus {[irq = -1]}
+define	mainbus {[offset = -1], [irq = -1]}
 device	mainbus
 attach	mainbus at root
 file	arch/hppa/hppa/mainbus.c	mainbus
@@ -120,7 +120,7 @@ major	{rd = 3}
 # GSC bus devices
 #
 
-device	gsc {[irq = -1]}
+device	gsc {[offset = -1], [irq = -1]}
 attach	gsc at gscbus
 file	arch/hppa/gsc/gscbus.c		gsc
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.9 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.10 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-

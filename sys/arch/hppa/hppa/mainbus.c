@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.3 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/mainbus.c,v 1.9.2.4 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998-2000 Michael Shalayeff
+ * Copyright (c) 1998-2001 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,9 +104,9 @@ mbus_add_mapping(bus_addr_t bpa, bus_size_t size, int cachable,
 
 		/* need a new mapping */
 		if (!(bmm[flex / 32] & (1 << (flex % 32)))) {
-			spa = bpa & FLEX_MASK;
+			spa = bpa & HPPA_FLEX_MASK;
 			epa = ((u_long)((u_int64_t)bpa + size +
-				~FLEX_MASK - 1) & FLEX_MASK) - 1;
+				~HPPA_FLEX_MASK - 1) & HPPA_FLEX_MASK) - 1;
 #ifdef BTLBDEBUG
 			printf ("bus_mem_add_mapping: adding flex=%x "
 				"%qx-%qx, ", flex, spa, epa);
@@ -727,7 +727,7 @@ mbus_dmamem_alloc(void *v, bus_size_t size, bus_size_t alignment,
 
 	if (uvm_map(kernel_map, &va, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
-	      UVM_ADV_RANDOM, 0)) != KERN_SUCCESS) {
+	      UVM_ADV_RANDOM, 0))) {
 		uvm_pglistfree(&pglist);
 		return ENOMEM;
 	}
@@ -832,16 +832,17 @@ mbattach(parent, self, aux)
 	/*
 	 * Local-Broadcast the HPA to all modules on the bus
 	 */
-	((struct iomod *)(pdc_hpa.hpa & FLEX_MASK))[FPA_IOMOD].io_flex =
-		(void *)((pdc_hpa.hpa & FLEX_MASK) | DMA_ENABLE);
+	((struct iomod *)(pdc_hpa.hpa & HPPA_FLEX_MASK))[FPA_IOMOD].io_flex =
+		(void *)((pdc_hpa.hpa & HPPA_FLEX_MASK) | DMA_ENABLE);
 
 	sc->sc_hpa = pdc_hpa.hpa;
-	printf (" [flex %x]\n", pdc_hpa.hpa & FLEX_MASK);
+	printf (" [flex %x]\n", pdc_hpa.hpa & HPPA_FLEX_MASK);
 
 	/* PDC first */
 	bzero (&nca, sizeof(nca));
 	nca.ca_name = "pdc";
 	nca.ca_hpa = 0;
+	nca.ca_hpamask = 0;
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
 	config_found(self, &nca, mbprint);
@@ -849,6 +850,7 @@ mbattach(parent, self, aux)
 	bzero (&nca, sizeof(nca));
 	nca.ca_name = "mainbus";
 	nca.ca_hpa = 0;
+	nca.ca_hpamask = HPPA_IOSPACE;
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
 	pdc_scanbus(self, &nca, -1, MAXMODBUS);
@@ -879,7 +881,8 @@ mbprint(aux, pnp)
 		printf("\"%s\" at %s (type %x, sv %x)", ca->ca_name, pnp,
 		    ca->ca_type.iodc_type, ca->ca_type.iodc_sv_model);
 	if (ca->ca_hpa) {
-		printf(" hpa %x", ca->ca_hpa);
+		if (ca->ca_hpa & ~ca->ca_hpamask)
+			printf(" offset %x", ca->ca_hpa & ~ca->ca_hpamask);
 		if (!pnp && ca->ca_irq >= 0)
 			printf(" irq %d", ca->ca_irq);
 	}
@@ -896,9 +899,13 @@ mbsubmatch(parent, match, aux)
 	register struct confargs *ca = aux;
 	register int ret;
 
-	if ((ret = (*cf->cf_attach->ca_match)(parent, match, aux))) {
+	if (ca->ca_hpa && ~ca->ca_hpamask && cf->hppacf_off != -1 &&
+	    ((ca->ca_hpa & ~ca->ca_hpamask) != cf->hppacf_off))
+		return (0);
+
+	if ((ret = (*cf->cf_attach->ca_match)(parent, match, aux)) &&
+	    cf->hppacf_irq != -1)
 		ca->ca_irq = cf->hppacf_irq;
-	}
 
 	return ret;
 }

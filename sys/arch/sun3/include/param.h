@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.4 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/param.h,v 1.17.12.5 2001/12/05 00:39:14 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.34 1996/03/04 05:04:40 cgd Exp $	*/
 
 /*
@@ -64,9 +64,9 @@
 #define	PAGE_SIZE	(1 << PAGE_SHIFT)
 #define	PAGE_MASK	(PAGE_SIZE - 1)
 
-#define NBSG		0x20000	/* bytes/segment */
-#define	SEGOFSET	(NBSG-1)	/* byte offset into segment */
 #define SEGSHIFT	17	        /* LOG2(NBSG) */
+#define NBSG		(1 << SEGSHIFT)	/* bytes/segment */
+#define	SEGOFSET	(NBSG-1)	/* byte offset into segment */
 
 #define	KERNBASE	0x0E000000	/* start of kernel virtual */
 #define	KERNTEXTOFF	0x0E004000	/* start of kernel text */
@@ -74,25 +74,6 @@
 #include <m68k/param.h>
 
 #define MAXBSIZE 0x8000		/* XXX temp until sun3 dma chaining */
-
-/*
- * Constants related to network buffer management.
- * MCLBYTES must be no larger than the software page size, and,
- * on machines that exchange pages of input or output buffers with mbuf
- * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
- * of the hardware page size.
- */
-#define	MSIZE		256		/* size of an mbuf */
-#define	MCLSHIFT	11
-#define	MCLBYTES	(1 << MCLSHIFT)	/* large enough for ether MTU */
-#define	MCLOFSET	(MCLBYTES - 1)
-#ifndef NMBCLUSTERS
-#ifdef GATEWAY
-#define	NMBCLUSTERS	512		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	256		/* map size, max cluster allocation */
-#endif
-#endif
 
 #define	MSGBUFOFF	0x200
 #define MSGBUFSIZE	(NBPG - MSGBUFOFF)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/bevar.h,v 1.10 1999/02/15 16:22:26 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/bevar.h,v 1.10.6.1 2001/12/05 00:39:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -45,7 +45,6 @@ struct besoftc {
 	int	sc_channel;		/* channel number */
 	int	sc_burst;
 	int	sc_tcvr_type;
-	int	sc_nticks;		/* negotiation ticks */
 
 	struct	be_bufs *sc_bufs, *sc_bufs_dva;
 	struct	be_desc *sc_desc, *sc_desc_dva;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.6 2001/11/13 21:00:48 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.7 2001/12/05 00:39:08 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.210 2000/06/01 17:12:38 thorpej Exp $ */
 
 /*-
@@ -149,9 +149,9 @@ int	bufpages = BUFPAGES;
 int	bufpages = 0;
 #endif
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 int	maxmem;			/* max memory per process */
 
@@ -914,7 +914,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate VM for buffers");
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
@@ -1120,11 +1120,7 @@ boot(howto)
 	splhigh();
 
 	/* If rebooting and a dump is requested do it. */
-#if 0
-	if ((howto & (RB_DUMP | RB_HALT)) == RB_DUMP)
-#else
 	if (howto & RB_DUMP)
-#endif
 		dumpsys();
 
 haltsys:

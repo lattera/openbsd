@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.5 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.6 2001/12/05 00:39:14 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.77 1996/10/13 03:47:51 christos Exp $	*/
 
 /*
@@ -102,9 +102,9 @@ int fputype;
 label_t *nofault;
 vm_offset_t vmmap;
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 /*
  * safepri is a safe priority for sleep to set for a spin-wait
@@ -282,7 +282,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-	                UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+	                UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate buffers");
 	minaddr = (vm_offset_t)buffers;
 	if ((bufpages / nbuf) >= btoc(MAXBSIZE)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.4 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.5 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.33 1997/07/29 17:55:38 fair Exp $	*/
 
 /*-
@@ -153,7 +153,7 @@ Mode of operation:
 #include <sparc/dev/i82586.h>
 
 static struct mbuf *last_not_for_us;
-vm_map_t ie_map; /* for obio */
+struct vm_map *ie_map; /* for obio */
 
 #define	IED_RINT	0x01
 #define	IED_TINT	0x02

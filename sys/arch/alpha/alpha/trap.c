@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.3 2001/11/13 21:00:49 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/trap.c,v 1.18.10.4 2001/12/05 00:39:08 niklas Exp $ */
 /* $NetBSD: trap.c,v 1.52 2000/05/24 16:48:33 thorpej Exp $ */
 
 /*-
@@ -434,12 +434,12 @@ trap(a0, a1, a2, entry, framep)
 		case ALPHA_MMCSR_INVALTRANS:
 		case ALPHA_MMCSR_ACCESS:
 	    	{
-			register vaddr_t va;
-			register struct vmspace *vm = NULL;
-			register vm_map_t map;
+			vaddr_t va;
+			struct vmspace *vm = NULL;
+			struct vm_map *map;
 			vm_prot_t ftype;
 			int rv;
-			extern vm_map_t kernel_map;
+			extern struct vm_map *kernel_map;
 
 			/*
 			 * If it was caused by fuswintr or suswintr,
@@ -501,17 +501,17 @@ trap(a0, a1, a2, entry, framep)
 			if (map != kernel_map &&
 			    (caddr_t)va >= vm->vm_maxsaddr &&
 			    va < USRSTACK) {
-				if (rv == KERN_SUCCESS) {
+				if (rv == 0) {
 					unsigned nss;
 	
 					nss = btoc(USRSTACK -
 					    (unsigned long)va);
 					if (nss > vm->vm_ssize)
 						vm->vm_ssize = nss;
-				} else if (rv == KERN_PROTECTION_FAILURE)
-					rv = KERN_INVALID_ADDRESS;
+				} else if (rv == EACCES)
+					rv = EFAULT;
 			}
-			if (rv == KERN_SUCCESS) {
+			if (rv == 0) {
 				goto out;
 			}
 
@@ -529,7 +529,7 @@ trap(a0, a1, a2, entry, framep)
 			ucode = ftype;
 			v = (caddr_t)a0;
 			typ = SEGV_MAPERR;
-			if (rv == KERN_RESOURCE_SHORTAGE) {
+			if (rv == ENOMEM) {
 				printf("UVM: pid %d (%s), uid %d killed: "
 				       "out of swap\n", p->p_pid, p->p_comm,
 				       p->p_cred && p->p_ucred ?

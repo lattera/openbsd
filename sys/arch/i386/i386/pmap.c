@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.7 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.8 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -268,11 +268,11 @@
 #endif
 
 struct lock pmap_main_lock;
-simple_lock_data_t pvalloc_lock;
-simple_lock_data_t pmaps_lock;
-simple_lock_data_t pmap_copy_page_lock;
-simple_lock_data_t pmap_zero_page_lock;
-simple_lock_data_t pmap_tmpptp_lock;
+struct simplelock pvalloc_lock;
+struct simplelock pmaps_lock;
+struct simplelock pmap_copy_page_lock;
+struct simplelock pmap_zero_page_lock;
+struct simplelock pmap_tmpptp_lock;
 
 #define PMAP_MAP_TO_HEAD_LOCK() \
      spinlockmgr(&pmap_main_lock, LK_SHARED, (void *) 0)
@@ -579,7 +579,7 @@ pmap_map_ptes(pmap)
 	if (!pmap_valid_entry(opde) || (opde & PG_FRAME) != pmap->pm_pdirpa) {
 		*APDP_PDE = (pd_entry_t) (pmap->pm_pdirpa | PG_RW | PG_V);
 		if (pmap_valid_entry(opde))
-			pmap_update();
+			tlbflush();
 	}
 	return(APTE_BASE);
 }
@@ -607,7 +607,7 @@ pmap_unmap_ptes(pmap)
  * p m a p   k e n t e r   f u n c t i o n s
  *
  * functions to quickly enter/remove pages from the kernel address
- * space.   pmap_kremove/pmap_kenter_pgs are exported to MI kernel.
+ * space.   pmap_kremove are exported to MI kernel.
  * we make use of the recursive PTE mappings.
  */
 
@@ -668,45 +668,7 @@ pmap_kremove(va, len)
 	}
 #if defined(I386_CPU)
 	if (cpu_class == CPUCLASS_386)
-		pmap_update();
-#endif
-}
-
-/*
- * pmap_kenter_pgs: enter in a number of vm_pages
- */
-
-void
-pmap_kenter_pgs(va, pgs, npgs)
-	vaddr_t va;
-	struct vm_page **pgs;
-	int npgs;
-{
-	pt_entry_t *pte, opte;
-	int lcv;
-	vaddr_t tva;
-#if defined(I386_CPU)
-	boolean_t need_update = FALSE;
-#endif
-
-	for (lcv = 0 ; lcv < npgs ; lcv++) {
-		tva = va + lcv * NBPG;
-		pte = vtopte(tva);
-		opte = *pte;
-		*pte = VM_PAGE_TO_PHYS(pgs[lcv]) | PG_RW | PG_V | pmap_pg_g;
-#if defined(I386_CPU)
-		if (cpu_class == CPUCLASS_386) {
-			if (pmap_valid_entry(opte))
-				need_update = TRUE;
-			continue;
-		}
-#endif
-		if (pmap_valid_entry(opte))
-			pmap_update_pg(tva);
-	}
-#if defined(I386_CPU)
-	if (need_update && cpu_class == CPUCLASS_386)
-		pmap_update();
+		tlbflush();
 #endif
 }
 
@@ -959,7 +921,7 @@ pmap_bootstrap(kva_start)
 	 * ensure the TLB is sync'd with reality by flushing it...
 	 */
 
-	pmap_update();
+	tlbflush();
 }
 
 /*
@@ -1444,7 +1406,7 @@ pmap_free_pvpage()
 {
 	int s;
 	struct vm_map *map;
-	vm_map_entry_t dead_entries;
+	struct vm_map_entry *dead_entries;
 	struct pv_page *pvp;
 
 	s = splimp(); /* protect kmem_map */
@@ -1675,7 +1637,7 @@ pmap_steal_ptp(obj, offset)
 				pmaps_hand->pm_pdir[idx] = 0;	/* zap! */
 				pmaps_hand->pm_stats.resident_count--;
 				if (pmap_is_curpmap(pmaps_hand))
-					pmap_update();
+					tlbflush();
 				else if (pmap_valid_entry(*APDP_PDE) &&
 					 (*APDP_PDE & PG_FRAME) ==
 					 pmaps_hand->pm_pdirpa) {
@@ -2511,12 +2473,12 @@ pmap_remove(pmap, sva, eva)
 	if (prr && prr->prr_npages) {
 #if defined(I386_CPU)
 		if (cpu_class == CPUCLASS_386) {
-			pmap_update();
+			tlbflush();
 		} else
 #endif
 		{ /* not I386 */
 			if (prr->prr_npages > PMAP_RR_MAX) {
-				pmap_update();
+				tlbflush();
 			} else {
 				while (prr->prr_npages) {
 					pmap_update_pg(
@@ -2631,7 +2593,7 @@ pmap_page_remove(pg)
 	PMAP_HEAD_TO_MAP_UNLOCK();
 #if defined(I386_CPU)
 	if (needs_update)
-		pmap_update();
+		tlbflush();
 #endif
 }
 
@@ -2744,9 +2706,6 @@ pmap_change_attrs(pg, setbits, clearbits)
 
 	for (pve = pvh->pvh_list; pve != NULL; pve = pve->pv_next) {
 #ifdef DIAGNOSTIC
-		if (pve->pv_va >= uvm.pager_sva && pve->pv_va < uvm.pager_eva) {
-			printf("pmap_change_attrs: found pager VA on pv_list\n");
-		}
 		if (!pmap_valid_entry(pve->pv_pmap->pm_pdir[pdei(pve->pv_va)]))
 			panic("pmap_change_attrs: mapping without PTP "
 			      "detected");
@@ -2776,7 +2735,7 @@ pmap_change_attrs(pg, setbits, clearbits)
 
 #if defined(I386_CPU)
 	if (needs_update)
-		pmap_update();
+		tlbflush();
 #endif
 	return(result != 0);
 }
@@ -2904,12 +2863,12 @@ pmap_write_protect(pmap, sva, eva, prot)
 	if (prr && prr->prr_npages) {
 #if defined(I386_CPU)
 		if (cpu_class == CPUCLASS_386) {
-			pmap_update();
+			tlbflush();
 		} else
 #endif
 		{ /* not I386 */
 			if (prr->prr_npages > PMAP_RR_MAX) {
-				pmap_update();
+				tlbflush();
 			} else {
 				while (prr->prr_npages) {
 					pmap_update_pg(prr->prr_vas[
@@ -3498,7 +3457,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 		ptp = pmap_get_ptp(pmap, pdei(va), FALSE);
 		if (ptp == NULL) {
 			if (flags & PMAP_CANFAIL) {
-				return (KERN_RESOURCE_SHORTAGE);
+				return (ENOMEM);
 			}
 			panic("pmap_enter: get ptp failed");
 		}
@@ -3598,7 +3557,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 			pve = pmap_alloc_pv(pmap, ALLOCPV_NEED);
 			if (pve == NULL) {
 				if (flags & PMAP_CANFAIL) {
-					error = KERN_RESOURCE_SHORTAGE;
+					error = ENOMEM;
 					goto out;
 				}
 				panic("pmap_enter: no pv entries available");
@@ -3636,7 +3595,7 @@ enter_now:
 	if ((opte & ~(PG_M|PG_U)) != npte && pmap_is_curpmap(pmap))
 		pmap_update_pg(va);
 
-	error = KERN_SUCCESS;
+	error = 0;
 
 out:
 	pmap_unmap_ptes(pmap);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/vmparam.h,v 1.6.10.4 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.16 1997/07/12 16:18:36 perry Exp $	*/
 
 /*
@@ -150,6 +150,7 @@
 /* 
  * pmap-specific data stored in the vm_physmem[] array.
  */   
+#define __HAVE_PMAP_PHYSSEG
 struct pmap_physseg { 
 	struct pv_entry *pvent;         /* pv table for this seg */
 	char *attrs;                    /* page attributes for this seg */

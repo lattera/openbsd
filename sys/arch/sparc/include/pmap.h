@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.3 2001/10/31 03:07:57 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.4 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -295,7 +295,7 @@ void		pmap_pinit __P((pmap_t));
 void		pmap_reference __P((pmap_t));
 void		pmap_release __P((pmap_t));
 void		pmap_remove __P((pmap_t, vaddr_t, vaddr_t));
-void		pmap_update __P((void));
+#define		pmap_update()	/* nothing */
 void		pmap_init __P((void));
 int		pmap_page_index __P((paddr_t));
 void		pmap_virtual_space __P((vaddr_t *, vaddr_t *));
@@ -357,7 +357,6 @@ void		pmap_changeprot4m __P((pmap_t, vaddr_t, vm_prot_t, int));
 #define		pmap_is_modified	pmap_is_modified4_4c
 #define		pmap_is_referenced	pmap_is_referenced4_4c
 #define		pmap_kenter_pa		pmap_kenter_pa4_4c
-#define		pmap_kenter_pgs		pmap_kenter_pgs4_4c
 #define		pmap_kremove		pmap_kremove4_4c
 #define		pmap_page_protect	pmap_page_protect4_4c
 #define		pmap_protect		pmap_protect4_4c
@@ -374,7 +373,6 @@ void		pmap_changeprot4m __P((pmap_t, vaddr_t, vm_prot_t, int));
 #define		pmap_is_modified	pmap_is_modified4m
 #define		pmap_is_referenced	pmap_is_referenced4m
 #define		pmap_kenter_pa		pmap_kenter_pa4m
-#define		pmap_kenter_pgs		pmap_kenter_pgs4m
 #define		pmap_kremove		pmap_kremove4m
 #define		pmap_page_protect	pmap_page_protect4m
 #define		pmap_protect		pmap_protect4m
@@ -411,7 +409,6 @@ extern void		(*pmap_changeprot_p) __P((pmap_t, vaddr_t,
 #define		pmap_is_modified	(*pmap_is_modified_p)
 #define		pmap_is_referenced	(*pmap_is_referenced_p)
 #define		pmap_kenter_pa		(*pmap_kenter_pa_p)
-#define		pmap_kenter_pgs		(*pmap_kenter_pgs_p)
 #define		pmap_kremove		(*pmap_kremove_p)
 #define		pmap_page_protect	(*pmap_page_protect_p)
 #define		pmap_protect		(*pmap_protect_p)

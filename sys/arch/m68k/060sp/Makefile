@@ -1,8 +1,9 @@
-# $OpenBSD: src/sys/arch/m68k/060sp/Makefile,v 1.4 1997/01/13 11:51:03 niklas Exp $
+# $OpenBSD: src/sys/arch/m68k/060sp/Makefile,v 1.4.14.1 2001/12/05 00:39:11 niklas Exp $
 # $NetBSD: Makefile,v 1.3 1996/12/31 22:44:13 veego Exp $
 #
-AS		= as -m68060
-LD		= ld
+AS?=	as
+AS+=	-m68060
+LD=	ld
 
 .SUFFIXES:	.o .S .sa .defs .h
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_trace.c,v 1.5.6.1 2001/04/18 16:10:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_trace.c,v 1.5.6.2 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -288,7 +288,7 @@ frame_is_sane(db_regs_t *regs)
 	return 0;
 
 #ifndef DIAGNOSTIC
-    /* disabled for now  -- see fpu_enable in luna88k/eh.s */
+    /* disabled for now  -- see fpu_enable in mvme88k/eh.s */
     /* r0 must be 0 (obviously) */
     if (regs->r[0] != 0)
 	return 0;
@@ -331,8 +331,7 @@ frame_is_sane(db_regs_t *regs)
 char *
 m88k_exception_name(unsigned vector)
 {
-    switch  (vector)
-    {
+	switch  (vector) {
 	default:
 	case   0: return "Reset";
 	case   1: return "Interrupt";
@@ -347,9 +346,12 @@ m88k_exception_name(unsigned vector)
 	case  10: return "Error Exception";
 	case 114: return "FPU precise";
 	case 115: return "FPU imprecise";
-	case 130: return "Ddb break";
-	case 131: return "Ddb trace";
-	case 132: return "Ddb trap";
+	case DDB_ENTRY_BKPT_NO:
+		return "ddb break";
+	case DDB_ENTRY_TRACE_NO:
+		return "ddb trace";
+	case DDB_ENTRY_TRAP_NO:
+		return "ddb trap";
 	case 451: return "Syscall";
     }
 }

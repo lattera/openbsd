@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.5 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/machdep.c,v 1.38.4.6 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.121 1999/03/26 23:41:29 mycroft Exp $	*/
 
 /*
@@ -110,9 +110,9 @@
 /* the following is used externally (sysctl_hw) */
 char	machine[] = MACHINE;	/* from <machine/param.h> */
 
-vm_map_t exec_map = NULL;  
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;  
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 extern paddr_t avail_start, avail_end;
 
@@ -293,7 +293,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
 	base = bufpages / nbuf;
@@ -317,7 +317,9 @@ cpu_startup()
 			if (pg == NULL) 
 				panic("cpu_startup: not enough memory for "
 				    "buffer cache");
-			pmap_kenter_pgs(curbuf, &pg, 1);
+
+			pmap_kenter_pa(curbuf, VM_PAGE_TO_PHYS(pg),
+			    VM_PROT_READ|VM_PROT_WRITE);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -353,8 +355,7 @@ cpu_startup()
 	 * XXX This is bogus; should just fix KERNBASE and
 	 * XXX VM_MIN_KERNEL_ADDRESS, but not right now.
 	 */
-	if (uvm_map_protect(kernel_map, 0, NBPG, UVM_PROT_NONE, TRUE)
-	    != KERN_SUCCESS)
+	if (uvm_map_protect(kernel_map, 0, NBPG, UVM_PROT_NONE, TRUE))
 		panic("can't mark page 0 off-limits");
 
 	/*
@@ -365,7 +366,7 @@ cpu_startup()
 	 * XXX of NBPG.
 	 */
 	if (uvm_map_protect(kernel_map, NBPG, round_page((vaddr_t)&etext),
-	    UVM_PROT_READ|UVM_PROT_EXEC, TRUE) != KERN_SUCCESS)
+	    UVM_PROT_READ|UVM_PROT_EXEC, TRUE))
 		panic("can't protect kernel text");
 
 	/*

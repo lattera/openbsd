@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.4 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.5 2001/12/05 00:39:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -58,6 +58,8 @@
 
 #include <uvm/uvm_extern.h>
 
+#include <machine/mmu.h>
+#include <machine/board.h>
 #include <machine/cmmu.h>
 #include <machine/cpu.h>
 #include <machine/cpu_number.h>
@@ -66,7 +68,7 @@
 #include <machine/trap.h>
 
 extern struct extent *iomap_extent;
-extern vm_map_t   iomap_map;
+extern struct vm_map *iomap_map;
 
 vm_offset_t iomap_mapin __P((vm_offset_t, vm_size_t, boolean_t));
 void iomap_mapout __P((vm_offset_t, vm_size_t));

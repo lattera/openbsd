@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/icu.h,v 1.4.6.1 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/icu.h,v 1.4.6.2 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: icu.h,v 1.19 1996/02/01 22:31:21 mycroft Exp $	*/
 
 /*-

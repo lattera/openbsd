@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/intr.h,v 1.1.2.2 2001/07/04 10:19:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/include/intr.h,v 1.1.2.3 2001/12/05 00:39:11 niklas Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.
@@ -73,7 +73,6 @@ u_long	allocate_sir __P((void (*proc)(), void *arg));
 #define	splclock()		spl5()
 #define	splstatclock()		spl5()
 #define	splhigh()		spl7()
-#define	splsched()		spl7()
 
 /* watch out for side effects */
 #define	splx(s)		(s & PSL_IPL ? _spl(s) : spl0())

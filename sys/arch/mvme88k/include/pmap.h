@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.4 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.5 2001/12/05 00:39:12 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -31,7 +31,7 @@ struct pmap {
     sdt_ptr_t		sdt_paddr;	/* physical pointer to sdt */
     sdt_ptr_t		sdt_vaddr;	/* virtual pointer to sdt */
     int			ref_count;	/* reference count */
-    simple_lock_data_t	lock;
+    struct simplelock	lock;
     struct pmap_statistics stats;	/* pmap statistics */
     
     /* cpus using of this pmap; NCPU must be <= 32 */
@@ -74,6 +74,8 @@ extern	caddr_t		vmmap;
 #define pmap_resident_count(pmap) ((pmap)->stats.resident_count)
 /* Used in builtin/device_pager.c */
 #define pmap_phys_address(frame)        ((vm_offset_t) (ptoa(frame)))
+
+#define pmap_update()		/* nothing */
 
 #define PMAP_ACTIVATE(proc)	pmap_activate(proc)
 #define PMAP_DEACTIVATE(proc)	pmap_deactivate(proc)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.4 2001/11/13 21:00:48 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.5 2001/12/05 00:39:08 niklas Exp $ */
 /* $NetBSD: pmap.c,v 1.154 2000/12/07 22:18:55 thorpej Exp $ */
 
 /*-
@@ -804,8 +804,8 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 	/*
 	 * Figure out how many PTE's are necessary to map the kernel.
 	 */
-	lev3mapsize = (VM_PHYS_SIZE +
-		nbuf * MAXBSIZE + + PAGER_MAP_SIZE + 16 * NCARGS) / NBPG +
+	lev3mapsize = (VM_PHYS_SIZE + (ubc_nwins << ubc_winshift) +
+		nbuf * MAXBSIZE + 16 * NCARGS + PAGER_MAP_SIZE) / NBPG +
 		(maxproc * UPAGES) + NKMEMCLUSTERS;
 
 #ifdef SYSVSHM
@@ -1035,6 +1035,13 @@ pmap_uses_prom_console(void)
 #endif /* NEW_SCC_DRIVER */
 }
 #endif /* _PMAP_MAY_USE_PROM_CONSOLE */
+
+void
+pmap_virtual_space(vaddr_t *vstartp, vaddr_t *vendp)
+{
+	*vstartp = VM_MIN_KERNEL_ADDRESS;
+	*vendp = VM_MAX_KERNEL_ADDRESS;
+}
 
 /*
  * pmap_steal_memory:		[ INTERFACE ]
@@ -1508,7 +1515,7 @@ pmap_do_remove(pmap_t pmap, vaddr_t sva, vaddr_t eva, boolean_t dowired)
  *	the permissions specified.
  */
 void
-pmap_page_protect(vm_page_t pg, vm_prot_t prot)
+pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
 	pmap_t pmap;
 	struct pv_head *pvh;
@@ -1687,7 +1694,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	boolean_t isactive;
 	boolean_t wired;
 	long cpu_id = cpu_number();
-	int error = KERN_SUCCESS;
+	int error = 0;
 
 #ifdef DEBUG
 	if (pmapdebug & (PDB_FOLLOW|PDB_ENTER))
@@ -1744,7 +1751,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		 */
 		if (pmap->pm_lev1map == kernel_lev1map) {
 			error = pmap_lev1map_create(pmap, cpu_id);
-			if (error != KERN_SUCCESS) {
+			if (error) {
 				if (flags & PMAP_CANFAIL)
 					goto out;
 				panic("pmap_enter: unable to create lev1map");
@@ -1761,7 +1768,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		if (pmap_pte_v(l1pte) == 0) {
 			pmap_physpage_addref(l1pte);
 			error = pmap_ptpage_alloc(pmap, l1pte, PGU_L2PT);
-			if (error != KERN_SUCCESS) {
+			if (error) {
 				pmap_l1pt_delref(pmap, l1pte, cpu_id);
 				if (flags & PMAP_CANFAIL)
 					goto out;
@@ -1786,7 +1793,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		if (pmap_pte_v(l2pte) == 0) {
 			pmap_physpage_addref(l2pte);
 			error = pmap_ptpage_alloc(pmap, l2pte, PGU_L3PT);
-			if (error != KERN_SUCCESS) {
+			if (error) {
 				pmap_l2pt_delref(pmap, l1pte, l2pte, cpu_id);
 				if (flags & PMAP_CANFAIL)
 					goto out;
@@ -1892,7 +1899,7 @@ pmap_enter(pmap_t pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 */
 	if (managed) {
 		error = pmap_pv_enter(pmap, pa, va, pte, TRUE);
-		if (error != KERN_SUCCESS) {
+		if (error) {
 			pmap_l3pt_delref(pmap, va, pte, cpu_id, NULL);
 			if (flags & PMAP_CANFAIL)
 				goto out;
@@ -2047,35 +2054,9 @@ pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 }
 
 /*
- * pmap_kenter_pgs:		[ INTERFACE ]
- *
- *	Enter a va -> pa mapping for the array of vm_page's into the
- *	kernel pmap without any physical->virtual tracking, starting
- *	at address va, for npgs pages.
- *
- *	Note: no locking is necessary in this function.
- */
-void
-pmap_kenter_pgs(vaddr_t va, vm_page_t *pgs, int npgs)
-{
-	int i;
-
-#ifdef DEBUG
-	if (pmapdebug & (PDB_FOLLOW|PDB_ENTER))
-		printf("pmap_kenter_pgs(%lx, %p, %d)\n",
-		    va, pgs, npgs);
-#endif
-
-	for (i = 0; i < npgs; i++)
-		pmap_kenter_pa(va + (PAGE_SIZE * i),
-		    VM_PAGE_TO_PHYS(pgs[i]),
-		    VM_PROT_READ|VM_PROT_WRITE);
-}
-
-/*
  * pmap_kremove:		[ INTERFACE ]
  *
- *	Remove a mapping entered with pmap_kenter_pa() or pmap_kenter_pgs()
+ *	Remove a mapping entered with pmap_kenter_pa()
  *	starting at va, for size bytes (assumed to be page rounded).
  */
 void
@@ -2237,27 +2218,6 @@ pmap_copy(pmap_t dst_pmap, pmap_t src_pmap, vaddr_t dst_addr, vsize_t len,
 		printf("pmap_copy(%p, %p, %lx, %lx, %lx)\n",
 		       dst_pmap, src_pmap, dst_addr, len, src_addr);
 #endif
-}
-
-/*
- * pmap_update:			[ INTERFACE ]
- *
- *	Require that all active physical maps contain no
- *	incorrect entries NOW, by processing any deferred
- *	pmap operations.
- */
-void
-pmap_update(void)
-{
-
-#ifdef DEBUG
-	if (pmapdebug & PDB_FOLLOW)
-		printf("pmap_update()\n");
-#endif
-
-	/*
-	 * Nothing to do; this pmap module does not defer any operations.
-	 */
 }
 
 /*
@@ -2452,7 +2412,7 @@ pmap_copy_page(paddr_t src, paddr_t dst)
  *	Clear the modify bits on the specified physical page.
  */
 boolean_t
-pmap_clear_modify(vm_page_t pg)
+pmap_clear_modify(struct vm_page *pg)
 {
 	struct pv_head *pvh;
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -2487,7 +2447,7 @@ pmap_clear_modify(vm_page_t pg)
  *	Clear the reference bit on the specified physical page.
  */
 boolean_t
-pmap_clear_reference(vm_page_t pg)
+pmap_clear_reference(struct vm_page *pg)
 {
 	struct pv_head *pvh;
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -2523,7 +2483,7 @@ pmap_clear_reference(vm_page_t pg)
  *	by any physical maps.
  */
 boolean_t
-pmap_is_referenced(vm_page_t pg)
+pmap_is_referenced(struct vm_page *pg)
 {
 	struct pv_head *pvh;
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -2546,7 +2506,7 @@ pmap_is_referenced(vm_page_t pg)
  *	by any physical maps.
  */
 boolean_t
-pmap_is_modified(vm_page_t pg)
+pmap_is_modified(struct vm_page *pg)
 {
 	struct pv_head *pvh;
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
@@ -3052,7 +3012,7 @@ pmap_pv_enter(pmap_t pmap, paddr_t pa, vaddr_t va, pt_entry_t *pte,
 	 */
 	newpv = pmap_pv_alloc();
 	if (newpv == NULL)
-		return (KERN_RESOURCE_SHORTAGE);
+		return (ENOMEM);
 	newpv->pv_va = va;
 	newpv->pv_pmap = pmap;
 	newpv->pv_pte = pte;
@@ -3085,7 +3045,7 @@ pmap_pv_enter(pmap_t pmap, paddr_t pa, vaddr_t va, pt_entry_t *pte,
 	if (dolock)
 		simple_unlock(&pvh->pvh_slock);
 
-	return (KERN_SUCCESS);
+	return (0);
 }
 
 /*
@@ -3527,7 +3487,7 @@ pmap_lev1map_create(pmap_t pmap, long cpu_id)
 	l1pt = pool_cache_get(&pmap_l1pt_cache, PR_NOWAIT);
 	if (l1pt == NULL) {
 		simple_unlock(&pmap_growkernel_slock);
-		return (KERN_RESOURCE_SHORTAGE);
+		return (ENOMEM);
 	}
 
 	pmap->pm_lev1map = l1pt;
@@ -3542,7 +3502,7 @@ pmap_lev1map_create(pmap_t pmap, long cpu_id)
 		pmap_asn_alloc(pmap, cpu_id);
 		PMAP_ACTIVATE(pmap, curproc, cpu_id);
 	}
-	return (KERN_SUCCESS);
+	return (0);
 }
 
 /*
@@ -3689,7 +3649,7 @@ pmap_ptpage_alloc(pmap_t pmap, pt_entry_t *pte, int usage)
 		 * another pmap!
 		 */
 		if (pmap_ptpage_steal(pmap, usage, &ptpa) == FALSE)
-			return (KERN_RESOURCE_SHORTAGE);
+			return (ENOMEM);
 	}
 
 	/*
@@ -3699,7 +3659,7 @@ pmap_ptpage_alloc(pmap_t pmap, pt_entry_t *pte, int usage)
 	    PG_V | PG_KRE | PG_KWE | PG_WIRED |
 	    (pmap == pmap_kernel() ? PG_ASM : 0));
 
-	return (KERN_SUCCESS);
+	return (0);
 }
 
 /*

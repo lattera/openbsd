@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.3 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/pmap_bootstrap.c,v 1.4.2.4 2001/12/05 00:39:12 niklas Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt
@@ -327,10 +327,6 @@ register vm_offset_t firstpa;
 
 	/*
 	 * Finally, validate the internal IO space PTEs (RW+CI).
-	 * We do this here since the 320/350 MMU registers (also
-	 * used, but to a lesser extent, on other models) are mapped
-	 * in this range and it would be nice to be able to access
-	 * them after the MMU is turned on.
 	 */
 	pte = (u_int *)iiopa;
 	epte = (u_int *)eiopa;
@@ -364,10 +360,8 @@ register vm_offset_t firstpa;
 	 * iiomapsize pages prior to external IO space at end of static
 	 * kernel page table.
 	 */
-	RELOC(intiobase, char *) = (char *)
-										m68k_ptob(nptpages*NPTEPG - (RELOC(iiomapsize, int)+EIOMAPSIZE));
-	RELOC(intiolimit, char *) = (char *)
-										 m68k_ptob(nptpages*NPTEPG - EIOMAPSIZE);
+	RELOC(intiobase, char *) = (char *)m68k_ptob(nptpages*NPTEPG - (RELOC(iiomapsize, int)+EIOMAPSIZE));
+	RELOC(intiolimit, char *) = (char *)m68k_ptob(nptpages*NPTEPG - EIOMAPSIZE);
 	/*
 	 * extiobase: base of external (DIO-II) IO space.
 	 * EIOMAPSIZE pages at the end of the static kernel page table.
@@ -754,10 +748,6 @@ register vm_offset_t firstpa;
 
 	/*
 	 * Finally, validate the internal IO space PTEs (RW+CI).
-	 * We do this here since the 320/350 MMU registers (also
-	 * used, but to a lesser extent, on other models) are mapped
-	 * in this range and it would be nice to be able to access
-	 * them after the MMU is turned on.
 	 */
 	pte = (u_int *)iiopa;
 	epte = (u_int *)eiopa;
@@ -904,4 +894,23 @@ register vm_offset_t firstpa;
 		va += NBPG;
 		RELOC(virtual_avail, vm_offset_t) = va;
 	}
+}
+
+void
+pmap_init_md()
+{
+	vaddr_t		addr;
+
+	/*
+	 * mark as unavailable the regions which we have mapped in
+	 * pmap_bootstrap().
+	 */
+	addr = (vaddr_t) intiobase;
+	if (uvm_map(kernel_map, &addr,
+		    m68k_ptob(iiomapsize+EIOMAPSIZE),
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
+		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
+				UVM_INH_NONE, UVM_ADV_RANDOM,
+				UVM_FLAG_FIXED)))
+		panic("pmap_init: bogons in the VM system!\n");
 }

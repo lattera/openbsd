@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.7 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.8 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*

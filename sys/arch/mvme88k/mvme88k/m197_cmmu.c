@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m197_cmmu.c,v 1.1.4.3 2001/10/31 03:01:19 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m197_cmmu.c,v 1.1.4.4 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -66,6 +66,7 @@
 #include <machine/cpu_number.h>
 #include <machine/locore.h>
 #include <machine/m88110.h>
+#include <machine/m88110_mmu.h>
 
 #ifdef DDB
 #include <ddb/db_output.h>

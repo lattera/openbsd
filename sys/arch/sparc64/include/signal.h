@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/signal.h,v 1.1.2.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/signal.h,v 1.1.2.2 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: signal.h,v 1.10 2001/05/09 19:50:49 kleink Exp $ */
 
 /*

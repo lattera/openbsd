@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.4 2001/10/31 03:01:19 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.5 2001/12/05 00:39:12 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.
@@ -40,7 +40,6 @@
  * from: Utah $Hdr: machparam.h 1.11 89/08/14$
  *
  *	@(#)param.h	7.8 (Berkeley) 6/28/91
- *	$Id: param.h,v 1.10.4.3 2001/07/04 10:20:04 niklas Exp $
  */
 #ifndef _MACHINE_PARAM_H_
 #define _MACHINE_PARAM_H_
@@ -80,10 +79,6 @@
 #define	PAGE_MASK	(PAGE_SIZE - 1)
 
 #define NPTEPG		(PAGE_SIZE / (sizeof(u_int)))
-
-#define SEGSHIFT	22		/* LOG2(NBSEG) */
-#define NBSEG		(1 << SEGSHIFT)	/* bytes/segment */
-#define SEGOFSET	(NBSEG - 1)	/* byte offset into segment */
 
 /*
  * 187 Bug uses the bottom 64k. We allocate ptes to map this into the

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/bug.h,v 1.4.6.2 2001/10/31 03:01:18 nate Exp $ */
-#ifndef __MACHINE_BUG_H__
-#define __MACHINE_BUG_H__
-#include <machine/bugio.h>
+/*	$OpenBSD: src/sys/arch/mvme88k/include/bug.h,v 1.4.6.3 2001/12/05 00:39:12 niklas Exp $ */
+
+#ifndef _MACHINE_BUG_H_
+#define _MACHINE_BUG_H_
 
 struct bugenv {
 	int	clun;
@@ -13,4 +13,5 @@ struct bugenv {
 	char	*argstart;
 	char	*argend;
 };
-#endif /* __MACHINE_BUG_H__ */
+
+#endif	/* _MACHINE_BUG_H_ */

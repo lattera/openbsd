@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.6 2001/11/13 21:04:15 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.7 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -81,7 +81,10 @@
 #include <net/netisr.h>
 
 #include <machine/asm_macro.h>   /* enable/disable interrupts */
+#include <machine/mmu.h>
+#include <machine/board.h>
 #include <machine/bug.h>
+#include <machine/bugio.h>
 #include <machine/cmmu.h>
 #include <machine/cpu.h>
 #include <machine/cpu_number.h>
@@ -189,9 +192,9 @@ int longformat = 1;  /* for regdump() */
  */
 int   safepri = PSR_SUPERVISOR;
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 /*
  * iomap stuff is for managing chunks of virtual address space that
@@ -203,7 +206,7 @@ vm_map_t phys_map = NULL;
 vaddr_t iomapbase;
 
 struct extent *iomap_extent;
-vm_map_t   iomap_map;
+struct vm_map *iomap_map;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -594,7 +597,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
 
@@ -624,7 +627,8 @@ cpu_startup()
 			if (pg == NULL)
 				panic("cpu_startup: not enough memory for "
 				      "buffer cache");
-			pmap_kenter_pgs(curbuf, &pg, 1);
+			pmap_kenter_pa(curbuf, VM_PAGE_TO_PHYS(pg),
+			    VM_PROT_READ|VM_PROT_WRITE);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -1411,7 +1415,7 @@ int
 slave_main()
 {
 	printf("slave CPU%d started\n", cpu_number());
-	while (-1); /* spin forever */
+	while (1); /* spin forever */
 	return 0;
 }
 
@@ -2046,6 +2050,8 @@ spl0()
 	return (x);
 }
 
+#ifdef EH_DEBUG
+
 void
 MY_info(f, p, flags, s)
 struct trapframe  *f;
@@ -2063,7 +2069,9 @@ MY_info_done(f, flags)
 	int         flags;
 {
 	regdump(f);
-}  
+} 
+
+#endif
 
 void
 nmihand(void *framep)

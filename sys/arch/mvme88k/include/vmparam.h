@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.6.4.3 2001/10/31 03:01:19 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.6.4.4 2001/12/05 00:39:12 niklas Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -109,6 +109,7 @@
 /*
  * pmap-specific data stored in the vm_physmem[] array.
  */
+#define __HAVE_PMAP_PHYSSEG
 struct pmap_physseg {
 	struct pv_entry *pvent;		/* pv table for this seg */
 	char *attrs;			/* page modify list for this seg */

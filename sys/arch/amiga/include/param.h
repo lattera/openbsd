@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.3 2001/10/31 02:52:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/include/Attic/param.h,v 1.10.12.4 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.35 1997/07/10 08:22:36 veego Exp $	*/
 
 /*
@@ -59,15 +59,6 @@
 #define	PAGE_MASK	(PAGE_SIZE - 1)
 
 #define	KERNBASE	0x00000000	/* start of kernel virtual */
-
-#define	SEGSHIFT	24		/* LOG2(NBSEG) [68030 value] */
-/* bytes/segment */
-/* (256 * (1 << PGSHIFT)) == (1 << SEGSHIFT) */
-#define NBSEG		((mmutype == MMU_68040) \
-			    ? (32 * (1 << PGSHIFT)) : (256 * (1 << PGSHIFT)))
-#define	SEGOFSET	(NBSEG-1)	/* byte offset into segment */
-
-#define	UPAGES		2		/* pages of u-area */
 
 #include <m68k/param.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/be.c,v 1.22.2.3 2001/10/31 03:07:56 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/be.c,v 1.22.2.4 2001/12/05 00:39:13 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -620,8 +620,6 @@ beinit(sc)
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	int s = splimp();
 	int i;
-
-	sc->sc_nticks = 0;
 
 	/*
 	 * Allocate descriptor ring and buffers, if not already done

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/pmap.h,v 1.7.14.2 2001/10/31 03:08:00 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/pmap.h,v 1.7.14.3 2001/12/05 00:39:14 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.18 1997/01/27 19:41:06 gwr Exp $	*/
 
 /*-
@@ -46,7 +46,7 @@
 
 struct pmap {
 	int	                pm_refcount;	/* pmap reference count */
-	simple_lock_data_t      pm_lock;	/* lock on pmap */
+	struct simplelock	pm_lock;	/* lock on pmap */
 	struct pmap_statistics	pm_stats;	/* pmap statistics */
 	int                     pm_version;
 	int                     pm_ctxnum;
@@ -69,6 +69,8 @@ extern void pmap_prefer(vm_offset_t, vm_offset_t *);
 /* This needs to be a macro to get code in kern_sysctl.c */
 extern segsz_t pmap_resident_pages(pmap_t);
 #define	pmap_resident_count(pmap)	pmap_resident_pages(pmap)
+
+#define pmap_update()		/* nothing */
 
 /*
  * Since PTEs also contain type bits, we have to have some way

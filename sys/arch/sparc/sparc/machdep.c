@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.8 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.9 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -110,9 +110,9 @@
 #include "led.h"
 #endif
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -176,8 +176,7 @@ cpu_startup()
 	/*
 	 * fix message buffer mapping, note phys addr of msgbuf is 0
 	 */
-	pmap_enter(pmap_kernel(), MSGBUF_VA, 0x0, VM_PROT_READ|VM_PROT_WRITE,
-	    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
+	pmap_map(MSGBUF_VA, 0, MSGBUFSIZE, VM_PROT_READ|VM_PROT_WRITE);
 	initmsgbuf((caddr_t)(MSGBUF_VA + (CPU_ISSUN4 ? 4096 : 0)), MSGBUFSIZE);
 
 	proc0.p_addr = proc0paddr;
@@ -210,7 +209,7 @@ cpu_startup()
         if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
                     NULL, UVM_UNKNOWN_OFFSET, 0,
                     UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-                                UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+                                UVM_ADV_NORMAL, 0)))
         	panic("cpu_startup: cannot allocate VM for buffers");
 
         minaddr = (vaddr_t) buffers;
@@ -676,9 +675,10 @@ boot(howto)
 	int i;
 	static char str[4];	/* room for "-sd\0" */
 
+	/* If system is cold, just halt. */
 	if (cold) {
-		printf("halted\n\n");
-		romhalt();
+		howto |= RB_HALT;
+		goto haltsys;
 	}
 
 	fb_unblank();
@@ -704,8 +704,15 @@ boot(howto)
 		}
 	}
 	(void) splhigh();		/* ??? */
+
+	if (howto & RB_DUMP)
+		dumpsys();
+
+haltsys:
+	/* Run any shutdown hooks */
+	doshutdownhooks();
+
 	if ((howto & RB_HALT) || (howto & RB_POWERDOWN)) {
-		doshutdownhooks();
 #if defined(SUN4M)
 		if (howto & RB_POWERDOWN) {
 #if NPOWER > 0 || NTCTRL >0
@@ -723,10 +730,7 @@ boot(howto)
 		printf("halted\n\n");
 		romhalt();
 	}
-	if (howto & RB_DUMP)
-		dumpsys();
 
-	doshutdownhooks();
 	printf("rebooting\n\n");
 	i = 1;
 	if (howto & RB_SINGLE)
@@ -938,7 +942,7 @@ mapdev(phys, virt, offset, size)
 	struct rom_reg *phys;
 	int offset, virt, size;
 {
-	vaddr_t v;
+	vaddr_t va;
 	paddr_t pa;
 	void *ret;
 	static vaddr_t iobase;
@@ -952,23 +956,23 @@ mapdev(phys, virt, offset, size)
 		panic("mapdev: zero size");
 
 	if (virt)
-		v = trunc_page(virt);
+		va = trunc_page(virt);
 	else {
-		v = iobase;
+		va = iobase;
 		iobase += size;
 		if (iobase > IODEV_END)	/* unlikely */
 			panic("mapiodev");
 	}
-	ret = (void *)(v | (((u_long)phys->rr_paddr + offset) & PGOFSET));
+	ret = (void *)(va | (((u_long)phys->rr_paddr + offset) & PGOFSET));
 			/* note: preserve page offset */
 
 	pa = trunc_page((vaddr_t)phys->rr_paddr + offset);
 	pmtype = PMAP_IOENC(phys->rr_iospace);
 
 	do {
-		pmap_enter(pmap_kernel(), v, pa | pmtype | PMAP_NC,
-			   VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED);
-		v += PAGE_SIZE;
+		pmap_kenter_pa(va, pa | pmtype | PMAP_NC,
+		    VM_PROT_READ | VM_PROT_WRITE);
+		va += PAGE_SIZE;
 		pa += PAGE_SIZE;
 	} while ((size -= PAGE_SIZE) > 0);
 	return (ret);

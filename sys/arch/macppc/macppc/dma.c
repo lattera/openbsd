@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/dma.c,v 1.3.4.2 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/dma.c,v 1.3.4.3 2001/12/05 00:39:11 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -246,8 +246,8 @@ _dmamap_load_uio(t, map, uio, flags)
 	struct uio *uio;
 	int flags;
 {
-
-	panic("_bus_dmamap_load_uio: not implemented");
+	/* XXX Need a real implementation. */
+	return (EOPNOTSUPP);
 }
 
 /*
@@ -349,7 +349,7 @@ _dmamem_free(t, segs, nsegs)
 	bus_dma_segment_t *segs;
 	int nsegs;
 {
-	vm_page_t m;
+	struct vm_page *m;
 	bus_addr_t addr;
 	struct pglist mlist;
 	int curseg;
@@ -486,7 +486,7 @@ _dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 	vm_offset_t high;
 {
 	vm_offset_t curaddr, lastaddr;
-	vm_page_t m;
+	struct vm_page *m;
 	struct pglist mlist;
 	int curseg, error;
 

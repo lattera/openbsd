@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.3 2001/12/05 00:39:13 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -99,19 +99,11 @@
 
 #ifdef notyet
 #include "fdc.h"		/* has NFDC and NFD; see files.sparc */
-#include "bwtwo.h"
-#include "cgthree.h"
-#include "cgsix.h"
-#include "tcx.h"
-#include "cgfourteen.h"
 #endif
 #define NFD 0
 #define NFDC 0
-#define NBWTWO 0
-#define NCGTHREE 0
-#define NCGSIX 0
-#define NTCX 0
-#define NCGFOURTEEN 0
+
+#include "wsdisplay.h"
 
 #include "rd.h"
 #include "ses.h"
@@ -127,6 +119,7 @@ cdev_decl(xfs_dev);
 #endif
 
 #include "ksyms.h"
+#include "inet.h"
 
 struct bdevsw	bdevsw[] =
 {
@@ -188,7 +181,7 @@ struct cdevsw	cdevsw[] =
 	cdev_fd_init(1,filedesc),	/* 24: file descriptor pseudo-device */
 	cdev_notdef(),			/* 25 */
 	cdev_disk_init(NWD,wd),		/* 26: IDE disk */
-	cdev_fb_init(NBWTWO,bwtwo),	/* 27: /dev/bwtwo */
+	cdev_notdef(),			/* 27 */
 	cdev_notdef(),			/* 28: Systech VPC-2200 versatec/centronics */
 	cdev_mouse_init(NKBD+NSUNKBD,kbd),	/* 29: /dev/kbd */
 	cdev_notdef(),			/* 30: Xylogics tape */
@@ -200,7 +193,7 @@ struct cdevsw	cdevsw[] =
 	cdev_tty_init(NCOM,com),	/* 36: NS16x50 compatible ports */
 	cdev_notdef(),			/* 37 */
 	cdev_notdef(),			/* 38 */
-	cdev_notdef(),			/* 39: /dev/cgfour */
+	cdev_notdef(),			/* 39 */
 	cdev_notdef(),			/* 40 */
 	cdev_notdef(),			/* 41 */
 	cdev_notdef(),			/* 42: SMD disk */
@@ -220,7 +213,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 52 */
 	cdev_notdef(),			/* 53 */
 	cdev_disk_init(NFD,fd),		/* 54: floppy disk */
-	cdev_fb_init(NCGTHREE,cgthree),	/* 55: /dev/cgthree */
+	cdev_notdef(),			/* 55 */
 	cdev_notdef(),			/* 56 */
 	cdev_notdef(),			/* 57 */
 	cdev_disk_init(NCD,cd),		/* 58: SCSI CD-ROM */
@@ -232,7 +225,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 64: /dev/cgeight */
 	cdev_notdef(),			/* 65 */
 	cdev_notdef(),			/* 66 */
-	cdev_fb_init(NCGSIX,cgsix),	/* 67: /dev/cgsix */
+	cdev_notdef(),			/* 67 */
 	cdev_notdef(),			/* 68 */
 	cdev_audio_init(NAUDIO,audio),	/* 69: /dev/audio */
 	cdev_openprom_init(1,openprom),	/* 70: /dev/openprom */
@@ -240,10 +233,11 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 72 */
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
 	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
-	cdev_notdef(),			/* 75 */
+	cdev_crypto_init(NCRYPTO,crypto), /* 75: /dev/crypto */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 76 *: Kernel symbols device */
 	cdev_tty_init(NSABTTY,sabtty),	/* 77: sab82532 serial ports */
-	cdev_notdef(),			/* 78 */
+	cdev_wsdisplay_init(NWSDISPLAY,	/* 78: frame buffers, etc. */
+	    wsdisplay),
 	cdev_notdef(),			/* 79 */
 	cdev_notdef(),			/* 80 */
 	cdev_notdef(),			/* 81 */
@@ -264,7 +258,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 96 */
 	cdev_notdef(),			/* 97 */
 	cdev_notdef(),			/* 98 */
-	cdev_fb_init(NCGFOURTEEN,cgfourteen), /* 99: /dev/cgfourteen */
+	cdev_notdef(),			/* 99 */
 	cdev_notdef(),			/* 100 */
 	cdev_notdef(),			/* 101 */
 	cdev_notdef(),			/* 102 */
@@ -278,7 +272,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),
 #endif
 	cdev_notdef(),			/* 108 */
-	cdev_fb_init(NTCX,tcx),		/* 109: /dev/tcx */
+	cdev_notdef(),			/* 109 */
 	cdev_disk_init(NVND,vnd),	/* 110: vnode disk driver */
 	cdev_bpftun_init(NTUN,tun),	/* 111: network tunnel */
 	cdev_lkm_init(NLKM,lkm),	/* 112: loadable module driver */

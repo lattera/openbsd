@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.4 2001/10/31 03:01:19 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.5 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -61,6 +61,7 @@
 #include <sys/types.h>
 #include <sys/simplelock.h>
 
+#include <machine/mmu.h>
 #include <machine/board.h>
 #include <machine/cmmu.h>
 #include <machine/cpus.h>

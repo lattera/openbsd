@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.2 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.3 2001/12/05 00:39:11 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -102,6 +102,9 @@ struct pmap *curpm;
 struct proc *fpuproc;
 
 extern struct user *proc0paddr;
+#ifdef PPC_VECTOR_SUPPORTED
+struct pool ppc_vecpl;
+#endif /* PPC_VECTOR_SUPPORTED */
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -119,9 +122,9 @@ int bufpages = 0;
 
 struct bat battable[16];
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 int astpending;
 int ppc_malloc_ok = 0;
@@ -478,6 +481,11 @@ where = 3;
 	 */
 	(void)power4e_get_eth_addr();
 
+#ifdef PPC_VECTOR_SUPPORTED
+        pool_init(&ppc_vecpl, sizeof(struct vreg), 16, 0, 0, "ppcvec",
+		    0, NULL, NULL, M_SUBPROC);
+#endif /* PPC_VECTOR_SUPPORTED */
+
 }
 void ofw_dbg(char *str)
 {
@@ -545,7 +553,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	/*
 	addr = (vaddr_t)buffers;
@@ -854,49 +862,11 @@ void
 softnet(isr)
 	int isr;
 {
-#ifdef	INET
-#include "ether.h"
-#if NETHER > 0
-	if (isr & (1 << NETISR_ARP))
-		arpintr();
-#endif
-	if (isr & (1 << NETISR_IP))
-		ipintr();
-#endif
-#ifdef INET6
-	if (isr & (1 << NETISR_IPV6))
-		ip6intr();
-#endif
-#ifdef NETATALK
-	if (isr & (1 << NETISR_ATALK))
-		atintr();
-#endif
-#ifdef	IMP
-	if (isr & (1 << NETISR_IMP))
-		impintr();
-#endif
-#ifdef	NS
-	if (isr & (1 << NETISR_NS))
-		nsintr();
-#endif
-#ifdef	ISO
-	if (isr & (1 << NETISR_ISO))
-		clnlintr();
-#endif
-#ifdef	CCITT
-	if (isr & (1 << NETISR_CCITT))
-		ccittintr();
-#endif
-#include "ppp.h"
-#if NPPP > 0
-	if (isr & (1 << NETISR_PPP))
-		pppintr();
-#endif
-#include "bridge.h"
-#if NBRIDGE > 0
-	if (isr & (1 << NETISR_BRIDGE))
-		bridgeintr();
-#endif
+#define DONETISR(flag, func) \
+	if (isr & (1 << flag))\
+		func();
+
+#include <net/netisr_dispatch.h>
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/cross.c,v 1.13.6.4 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/isa/Attic/cross.c,v 1.13.6.5 2001/12/05 00:39:09 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1996 Niklas Hallqvist, Carsten Hammer
@@ -113,7 +113,7 @@ void	*cross_intr_establish __P((void *, int, int, int, int (*)(void *),
 void	cross_intr_disestablish __P((void *, void *));
 int	cross_intr_check __P((void *, int, int));
 
-int	cross_pager_get_pages __P((vm_pager_t, vm_page_t *, int, boolean_t));
+int	cross_pager_get_pages __P((vm_pager_t, struct vm_page **, int, boolean_t));
 
 struct cfattach cross_ca = {
 	sizeof(struct cross_softc), crossmatch, crossattach
@@ -282,7 +282,7 @@ cross_mem_map(bst, addr, sz, cacheable, handle)
 	vm_map_lock(kernel_map);
 	error = vm_map_insert(kernel_map, object, 0, kva, kva + banked_size);
 	vm_map_unlock(kernel_map);
-	if (error != KERN_SUCCESS)
+	if (error)
 		goto fail_insert;
 
 	/* Tell caller where to find his data.  */
@@ -459,7 +459,7 @@ cross_intr_disestablish(ic, arg)
 int
 cross_pager_get_pages(pager, mlist, npages, sync)
 	vm_pager_t	pager;
-	vm_page_t	*mlist;
+	struct vm_page	**mlist;
 	int		npages;
 	boolean_t	sync;
 {

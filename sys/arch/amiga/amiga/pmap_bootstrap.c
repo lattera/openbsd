@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap_bootstrap.c,v 1.1 2001/11/30 23:14:28 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/pmap_bootstrap.c,v 1.1.2.1 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.68 1999/06/19 19:44:09 is Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.35.2.6 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/machdep.c,v 1.35.2.7 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.95 1997/08/27 18:31:17 is Exp $	*/
 
 /*
@@ -129,9 +129,9 @@ void fdintr __P((int));
  */
 u_int16_t amiga_ttyspl = PSL_S|PSL_IPL4;
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -418,7 +418,7 @@ again:
 	if (uvm_map(kernel_map, (vaddr_t *)&buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("startup: cannot allocate buffers");
 	minaddr = (vaddr_t) buffers;
 	if ((bufpages / nbuf) >= btoc(MAXBSIZE)) {
@@ -446,7 +446,9 @@ again:
 			if (pg == NULL)
 				panic("cpu_startup: not enough memory for "
 				      "buffer cache");
-			pmap_kenter_pgs(curbuf, &pg, 1);
+
+			pmap_kenter_pa(curbuf, VM_PAGE_TO_PHYS(pg),
+			    VM_PROT_READ|VM_PROT_WRITE);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -739,6 +741,12 @@ boot(howto)
 	if (curproc)
 		savectx(&curproc->p_addr->u_pcb);
 
+	/* If system is cold, just halt. */
+	if (cold) {
+		howto |= RB_HALT;
+		goto haltsys;
+	}
+
 	boothowto = howto;
 	if ((howto & RB_NOSYNC) == 0) {
 		bootsync();
@@ -762,6 +770,7 @@ boot(howto)
 	if (howto & RB_DUMP)
 		dumpsys();
 
+haltsys:
 	/* Run any shutdown hooks. */
 	doshutdownhooks();
 

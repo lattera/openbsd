@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.4 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.5 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0

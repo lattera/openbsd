@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.6 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.7 2001/12/05 00:39:11 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -124,9 +124,9 @@
 /* the following is used externally (sysctl_hw) */
 char machine[] = "mvme68k";		/* cpu "architecture" */
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 extern vm_offset_t avail_end;
 
@@ -343,7 +343,7 @@ again:
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, m68k_round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	minaddr = (vaddr_t)buffers;
 	
@@ -373,7 +373,9 @@ again:
 			if (pg == NULL)
 				panic("cpu_startup: not enough memory for "
 				      "buffer cache");
-			pmap_kenter_pgs(curbuf, &pg, 1);
+
+			pmap_kenter_pa(curbuf, VM_PAGE_TO_PHYS(pg),
+			    VM_PROT_READ|VM_PROT_WRITE);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -665,17 +667,22 @@ halt_establish(fn, pri)
 	}
 }
 
-void
+__dead void
 boot(howto)
 	register int howto;
 {
+	/* If system is cold, just halt. */
+	if (cold) {
+		howto |= RB_HALT;
+		goto haltsys;
+	}
 
 	/* take a snap shot before clobbering any registers */
 	if (curproc && curproc->p_addr)
 		savectx(curproc->p_addr);
 
 	boothowto = howto;
-	if ((howto&RB_NOSYNC) == 0 && waittime < 0) {
+	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
 		extern struct proc proc0;
 		/* do that another panic fly away */
 		if (curproc == NULL)
@@ -701,10 +708,11 @@ boot(howto)
 	if (howto & RB_DUMP)
 		dumpsys();
 
+haltsys:
 	/* Run any shutdown hooks. */
 	doshutdownhooks();
 
-	if (howto&RB_HALT) {
+	if (howto & RB_HALT) {
 		printf("halted\n\n");
 	} else {
 		struct haltvec *hv;

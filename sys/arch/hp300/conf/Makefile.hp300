@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.3 2001/11/13 21:00:50 niklas Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.4 2001/12/05 00:39:09 niklas Exp $
 #	$NetBSD: Makefile.hp300,v 1.54 1997/04/01 23:16:41 scottr Exp $
 
 # Makefile for OpenBSD
@@ -72,7 +72,7 @@ CPPFLAGS+=	-DCACHE_HAVE_PAC
 .if (${IDENT:M-DHP380} != "" || ${IDENT:M-DHP385} != "" || \
      ${IDENT:M-DHP425} != "" || ${IDENT:M-DHP433} != "")
 _OPTIONS+=	-DM68K_MMU_MOTOROLA
-CPPFLAGS+=	-DM68040
+CPPFLAGS+=	-DM68040 -DFPSP
 .endif
 .if ${_OPTIONS:M-DM68020} != ""
 CPPFLAGS+=	-DM68020

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.5 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.6 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -262,7 +262,8 @@ trap(frame)
 		printf("trap type %d code %x eip %x cs %x eflags %x cr2 %x cpl %x\n",
 		    type, frame.tf_err, frame.tf_eip, frame.tf_cs, frame.tf_eflags, rcr2(), lapic_tpr);
 
-		panic("trap");
+		panic("trap type %d, code=%x, pc=%x",
+		    type, frame.tf_err, frame.tf_eip);
 		/*NOTREACHED*/
 
 	case T_PROTFLT:
@@ -416,11 +417,11 @@ trap(frame)
 		/* FALLTHROUGH */
 
 	case T_PAGEFLT|T_USER: {	/* page fault */
-		register vm_offset_t va;
-		register struct vmspace *vm = p->p_vmspace;
-		register vm_map_t map;
+		vm_offset_t va;
+		struct vmspace *vm = p->p_vmspace;
+		struct vm_map *map;
 		int rv;
-		extern vm_map_t kernel_map;
+		extern struct vm_map *kernel_map;
 		unsigned nss;
 
 		if (vm == NULL)
@@ -469,7 +470,7 @@ trap(frame)
 		p->p_addr->u_pcb.pcb_onfault = NULL;
 		rv = uvm_fault(map, va, 0, ftype);
 		p->p_addr->u_pcb.pcb_onfault = onfault;
-		if (rv == KERN_SUCCESS) {
+		if (rv == 0) {
 			if (nss > vm->vm_ssize)
 				vm->vm_ssize = nss;
 			if (type == T_PAGEFLT)
@@ -565,8 +566,7 @@ trapwrite(addr)
 			nss = 0;
 	}
 
-	if (uvm_fault(&vm->vm_map, va, 0, VM_PROT_READ | VM_PROT_WRITE)
-	    != KERN_SUCCESS)
+	if (uvm_fault(&vm->vm_map, va, 0, VM_PROT_READ | VM_PROT_WRITE))
 		return 1;
 
 	if (nss > vm->vm_ssize)

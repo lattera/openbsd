@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/bzsc.c,v 1.6.14.2 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/dev/Attic/bzsc.c,v 1.6.14.3 2001/12/05 00:39:09 niklas Exp $	*/
 
 /*	$NetBSD: bzsc.c,v 1.14 1996/12/23 09:09:53 veego Exp $	*/
 
@@ -332,7 +332,7 @@ do { chain[n].ptr = (p); chain[n].len = (l); chain[n++].flg = (f); } while(0)
 		set_link(n, (vm_offset_t)p, l, SFAS_CHAIN_BUMP);
 	else if (
 #if defined(M68040) || defined(M68060)
-		 ((mmutype == MMU_68040) && ((vm_offset_t)p >= 0xFFFC0000)) &&
+		 ((mmutype <= MMU_68040) && ((vm_offset_t)p >= 0xFFFC0000)) &&
 #endif
 		 ((vm_offset_t)p >= 0xFF000000)) {
 		int	len;

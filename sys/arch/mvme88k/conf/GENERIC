@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/GENERIC,v 1.11.2.4 2001/11/13 21:04:14 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/GENERIC,v 1.11.2.5 2001/12/05 00:39:12 niklas Exp $
 
 machine		mvme88k 
 
@@ -10,6 +10,10 @@ option		MVME188		# support for 188
 option		"NCPUS=1"	# number of CPUs supported (max 4)
 option		BUGMAP		# use the Bug ROM VME mappings
 #option		DEBUG		# print debugging statements
+#option		EH_DEBUG	# debugging code for exception handlers
+
+# Define this if your processor has the xxx.usr bug (mask C82N)
+option		ERRATA__XXX_USR	
 
 maxusers	64
 

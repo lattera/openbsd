@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.3 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.4 2001/12/05 00:39:11 niklas Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.50 1999/04/07 06:14:33 scottr Exp $	*/
 
 /* 
@@ -641,4 +641,23 @@ bootstrap_mac68k(tc)
 		zs_init();
 
 	videoaddr = newvideoaddr;
+}
+
+void
+pmap_init_md()
+{
+	vaddr_t addr;
+
+	/*
+	 * Mark as unavailable the regions which we have mapped in
+	 * pmap_bootstrap().
+	 */
+	addr = (vaddr_t)IOBase;
+	if (uvm_map(kernel_map, &addr,
+		    m68k_ptob(IIOMAPSIZE + ROMMAPSIZE + VIDMAPSIZE),
+		    NULL, UVM_UNKNOWN_OFFSET, 0,
+		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE,
+				UVM_INH_NONE, UVM_ADV_RANDOM,
+				UVM_FLAG_FIXED)))
+		panic("pmap_init: bogons in the VM system!\n");
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_ie.c,v 1.11.2.4 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_ie.c,v 1.11.2.5 2001/12/05 00:39:11 niklas Exp $ */
 
 /*-
  * Copyright (c) 1999 Steve Murphree, Jr. 
@@ -148,7 +148,7 @@ Mode of operation:
 #include <mvme68k/dev/i82596.h>
 
 static struct mbuf *last_not_for_us;
-vm_map_t ie_map; /* for obio */
+struct vm_map *ie_map; /* for obio */
 
 #define	IED_RINT	0x01
 #define	IED_TINT	0x02

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.4 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/trap.c,v 1.16.4.5 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.57 1998/02/16 20:58:31 thorpej Exp $	*/
 
 /*
@@ -118,9 +118,6 @@ void	syscall __P((register_t code, struct frame frame));
 void	dumpssw __P((u_short));
 void	dumpwb __P((int, u_short, u_int, u_int));
 #endif
-
-void userret __P((struct proc *p, struct frame *fp,
-	    u_quad_t oticks, u_int faultaddr, int fromtrap));
 
 int	astpending;
 
@@ -604,10 +601,10 @@ dopanic:
 	    {
 		vaddr_t va;
 		struct vmspace *vm = p->p_vmspace;
-		vm_map_t map;
+		struct vm_map *map;
 		int rv;
 		vm_prot_t ftype, vftype;
-		extern vm_map_t kernel_map;
+		extern struct vm_map *kernel_map;
 
 #ifdef DEBUG
 		if ((mmudebug & MDB_WBFOLLOW) || MDB_ISPID(p->p_pid))
@@ -649,10 +646,10 @@ dopanic:
 			vaddr_t bva;
 
 			rv = pmap_mapmulti(map->pmap, va);
-			if (rv != KERN_SUCCESS) {
+			if (rv) {
 				bva = HPMMBASEADDR(va);
 				rv = uvm_fault(map, bva, 0, ftype);
-				if (rv == KERN_SUCCESS)
+				if (rv == 0)
 					(void) pmap_mapmulti(map->pmap, va);
 			}
 		} else
@@ -672,16 +669,16 @@ dopanic:
 		 */
 		if ((vm != NULL && (caddr_t)va >= vm->vm_maxsaddr)
 		    && map != kernel_map) {
-			if (rv == KERN_SUCCESS) {
+			if (rv == 0) {
 				unsigned nss;
 
 				nss = btoc(USRSTACK-(unsigned)va);
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (rv == KERN_PROTECTION_FAILURE)
-				rv = KERN_INVALID_ADDRESS;
+			} else if (rv == EACCES)
+				rv = EFAULT;
 		}
-		if (rv == KERN_SUCCESS) {
+		if (rv == 0) {
 			if (type == T_MMUFLT) {
 #ifdef M68040
 				if (cputype == CPU_68040)
@@ -1162,7 +1159,7 @@ bad:
 	if (error == ERESTART && (p->p_md.md_flags & MDP_STACKADJ))
 		frame.f_regs[SP] -= sizeof (int);
 #endif
-	userret(p, &frame, sticks, (u_int)0, 0);
+	userret(p, &frame, sticks, 0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);

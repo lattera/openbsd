@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.4 2001/10/31 02:52:47 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.5 2001/12/05 00:39:10 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -52,10 +52,6 @@
 #define	NBPG		4096		/* bytes/page */
 #define	PGOFSET		(NBPG-1)	/* byte offset into page */
 #define	PGSHIFT		12		/* LOG2(NBPG) */
-
-#define	SEGSHIFT	(PGSHIFT + (PGSHIFT-PTESHIFT))	/* LOG2(NBSEG) */
-#define NBSEG		(1 << SEGSHIFT)	/* bytes/segment (quadrant) */
-#define	SEGOFSET	(NBSEG-1)	/* byte offset into segment */
 
 #define	KERNBASE	0x00000000	/* start of kernel virtual */
 #define	BTOPKERNBASE	((u_long)KERNBASE >> PGSHIFT)

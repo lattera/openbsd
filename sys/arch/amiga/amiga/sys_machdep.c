@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/sys_machdep.c,v 1.6.12.3 2001/11/13 21:00:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amiga/amiga/Attic/sys_machdep.c,v 1.6.12.4 2001/12/05 00:39:09 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.16 1997/05/19 10:14:47 veego Exp $	*/
 
 /*
@@ -71,7 +71,7 @@ cachectl(req, addr, len)
 {
 	int error = 0;
 #if defined(M68040) || defined(M68060)
-	if (mmutype == MMU_68040) {
+	if (mmutype <= MMU_68040) {
 		register int inc = 0;
 		int doall = 0;
 		caddr_t end = 0;
@@ -182,7 +182,7 @@ dma_cachectl(addr, len)
 	int len;
 {
 #if defined(M68040) || defined(M68060)
-	if (mmutype == MMU_68040) {
+	if (mmutype <= MMU_68040) {
 		register int inc = 0;
 		int pa = 0;
 		caddr_t end;

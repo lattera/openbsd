@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18.2.5 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/pmap.c,v 1.18.2.6 2001/12/05 00:39:14 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.64 1996/11/20 18:57:35 gwr Exp $	*/
 
 /*-
@@ -2507,7 +2507,7 @@ pmap_enter(pmap, va, pa, prot, flags)
 	}
 	PMAP_UNLOCK();
 
-	return (KERN_SUCCESS);
+	return (0);
 }
 
 /*
@@ -3120,20 +3120,6 @@ pmap_resident_pages(pmap)
 	return (pages);
 }
 
-
-/*
- *	Require that all active physical maps contain no
- *	incorrect entries NOW.  [This update includes
- *	forcing updates of any address map caching.]
- *
- *	Generally used to insure that a thread about
- *	to run will see a semantically correct world.
- */
-void
-pmap_update()
-{
-}
-
 /*
  *	pmap_copy_page copies the specified (machine independent)
  *	page by mapping the page into virtual memory and using
@@ -3364,18 +3350,6 @@ void
 pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 {
 	pmap_enter(pmap_kernel(), va, pa, prot, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
-}
-
-void
-pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs)
-{
-	int i;
-
-	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
-		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
-			VM_PROT_READ|VM_PROT_WRITE,
-			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
-	}
 }
 
 void

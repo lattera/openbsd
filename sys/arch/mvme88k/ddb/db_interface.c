@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.4 2001/11/13 21:04:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/ddb/Attic/db_interface.c,v 1.4.6.5 2001/12/05 00:39:12 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -40,7 +40,7 @@
 #include <machine/m882xx.h>		 /* CMMU defs		        */
 #include <machine/trap.h>		 /* current_thread()            */
 #include <machine/db_machdep.h>		 /* local ddb stuff             */
-#include <machine/bug.h>		 /* bug routines 		*/
+#include <machine/bugio.h>		 /* bug routines 		*/
 #include <machine/locore.h>		 
 #include <machine/mmu.h>
 #include <machine/cpu_number.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.10 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.11 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -243,9 +243,9 @@ int	i386_fpu_fdivbug;
 bootarg_t *bootargp;
 vm_offset_t avail_end;
 
-vm_map_t exec_map = NULL;
-vm_map_t mb_map = NULL;
-vm_map_t phys_map = NULL;
+struct vm_map *exec_map = NULL;
+struct vm_map *mb_map = NULL;
+struct vm_map *phys_map = NULL;
 
 int kbd_reset;
 
@@ -541,13 +541,13 @@ setup_buffers(maxaddr)
 	vm_offset_t addr;
 	int base, residual, left, chunk, i;
 	struct pglist pgs, saved_pgs;
-	vm_page_t pg;
+	struct vm_page *pg;
 
 	size = MAXBSIZE * nbuf;
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+				UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 	addr = (vaddr_t)buffers;
 
@@ -1847,7 +1847,7 @@ boot(howto)
 	splhigh();
 
 	/* Do a dump if requested. */
-	if ((howto & (RB_DUMP | RB_HALT)) == RB_DUMP) {
+	if (howto & RB_DUMP) {
 		/* Save registers. */
 		savectx(&dumppcb);
 
@@ -2482,7 +2482,7 @@ init386(first_avail)
 #ifdef DEBUG
 	printf("\n");
 #endif
-	pmap_update();
+	tlbflush();
 #if 0
 #if NISADMA > 0
 	/*
@@ -2657,10 +2657,10 @@ cpu_reset()
 	 * entire address space.
 	 */
 	bzero((caddr_t)PTD, NBPG);
-	pmap_update(); 
+	tlbflush(); 
+#endif
 
 	for (;;);
-#endif
 }
 
 void
@@ -2991,7 +2991,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 			pmap_update_pg(va);
 		}
 	}
-	pmap_update();
+	tlbflush();
 
 	return 0;
 }
@@ -3365,7 +3365,7 @@ _bus_dmamem_free(t, segs, nsegs)
 	bus_dma_segment_t *segs;
 	int nsegs;
 {
-	vm_page_t m;
+	struct vm_page *m;
 	bus_addr_t addr;
 	struct pglist mlist;
 	int curseg;
@@ -3421,7 +3421,7 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
 			    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 		}
 	}
-	pmap_update();
+	tlbflush();
 
 	return (0);
 }
@@ -3596,7 +3596,7 @@ _bus_dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 	vm_offset_t high;
 {
 	vm_offset_t curaddr, lastaddr;
-	vm_page_t m;
+	struct vm_page *m;
 	struct pglist mlist;
 	int curseg, error;
 

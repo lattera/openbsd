@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/trap.c,v 1.16.4.4 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/trap.c,v 1.16.4.5 2001/12/05 00:39:11 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.68 1998/12/22 08:47:07 scottr Exp $	*/
 
 /*
@@ -141,9 +141,6 @@ int mmupid = -1;
 /* trap() and syscall() only called from locore */
 void	trap __P((int, u_int, u_int, struct frame));
 void	syscall __P((register_t, struct frame));
-
-void userret __P((struct proc *p, struct frame *fp, u_quad_t oticks,
-	u_int faultaddr, int fromtrap));
 
 #if defined(M68040)
 static int	writeback __P((struct frame *, int));
@@ -573,10 +570,10 @@ copyfault:
 	    {
 		vaddr_t va;
 		struct vmspace *vm = p->p_vmspace;
-		vm_map_t map;
+		struct vm_map *map;
 		int rv;
 		vm_prot_t ftype, vftype;
-		extern vm_map_t kernel_map;
+		extern struct vm_map *kernel_map;
 
 #ifdef DEBUG
 		if ((mmudebug & MDB_WBFOLLOW) || MDB_ISPID(p->p_pid))
@@ -624,16 +621,16 @@ copyfault:
 		 */
 		if ((vm != NULL && (caddr_t)va >= vm->vm_maxsaddr)
 		    && map != kernel_map) {
-			if (rv == KERN_SUCCESS) {
+			if (rv == 0) {
 				u_int nss;
 
 				nss = btoc(USRSTACK-(unsigned)va);
 				if (nss > vm->vm_ssize)
 					vm->vm_ssize = nss;
-			} else if (rv == KERN_PROTECTION_FAILURE)
-				rv = KERN_INVALID_ADDRESS;
+			} else if (rv == EACCES)
+				rv = EFAULT;
 		}
-		if (rv == KERN_SUCCESS) {
+		if (rv == 0) {
 			if (type == T_MMUFLT) {
 #if defined(M68040)
 				if (mmutype == MMU_68040)
@@ -1117,7 +1114,7 @@ syscall(code, frame)
 	if (error == ERESTART && (p->p_md.md_flags & MDP_STACKADJ))
 		frame.f_regs[SP] -= sizeof (int);
 #endif
-	userret(p, &frame, sticks, (u_int)0, 0);
+	userret(p, &frame, sticks, 0, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, error, rval[0]);

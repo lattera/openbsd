@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.1 2001/04/18 16:06:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/iomod.h,v 1.6.4.2 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -125,9 +125,6 @@
 
 #define	FPA_IOMOD	((FPA_HIGH-FPA_LOW)/sizeof(struct iomod))
 #define	MAXMODBUS	((int)(FPA_IOMOD))	/* maximum modules/bus */
-
-#define	FLEX_MASK	0xFFFC0000	/* (see below) */
-#define	HPPA_FLEX(a)	(((a) & FLEX_MASK) >> 18)
 
 /* size of HPA space for any device */
 #define	IOMOD_HPASIZE	0x1000

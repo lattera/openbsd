@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/RAMDISK,v 1.7.4.3 2001/10/31 02:52:46 nate Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/RAMDISK,v 1.7.4.4 2001/12/05 00:39:09 niklas Exp $
 #
 # Ram disk kernel.
 #
@@ -41,7 +41,6 @@ option		INET		# IP + ICMP + TCP + UDP
 option		BOOT_CONFIG	# add support for boot -c
 
 # Options for HP hardware
-option	 	FPSP		# floating point interface for 68040
 option	 	USELEDS		# make the lights twinkle
 #option		CONSCODE="9"	# force console at this select code
 option	 	UK_KEYBOARD	# include United Kingdom HIL keymap

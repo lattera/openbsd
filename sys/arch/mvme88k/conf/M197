@@ -1,13 +1,17 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/M197,v 1.1.4.4 2001/11/13 21:04:14 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/M197,v 1.1.4.5 2001/12/05 00:39:12 niklas Exp $
 
 machine mvme88k
 
 include "../../../conf/GENERIC"
 
-# processors this kernel should support
-
 option 		MVME197		# support for 197
+option		"NCPUS=1"	# Number of cpus supported (max 4)
 option		BUGMAP		# use Bug Rom VME Mappings
+#option		DEBUG		# print debugging statements
+#option		EH_DEBUG	# debugging code for exception handlers
+
+# Define this if your processor has the xxx.usr bug (mask C82N)
+option		ERRATA__XXX_USR	
 
 maxusers 64
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.8 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.9 2001/12/05 00:39:10 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -305,7 +305,7 @@ isa_strayintr(irq)
 
 int fastvec;
 int intrtype[ICU_LEN], intrmask[ICU_LEN], intrlevel[ICU_LEN];
-int ilevel[ICU_LEN];
+int iminlevel[ICU_LEN], imaxlevel[ICU_LEN];
 struct intrhand *intrhand[ICU_LEN];
 
 /*
@@ -357,28 +357,33 @@ intr_calculatemasks()
 	/* And eventually calculate the complete masks. */
 	for (irq = 0; irq < ICU_LEN; irq++) {
 		int irqs = 1 << irq;
-		int level = IPL_NONE;
+		int minlevel = IPL_NONE;
+		int maxlevel = IPL_NONE;
 
 		if (intrhand[irq] == NULL) {
-			level = IPL_HIGH;
+			maxlevel = IPL_HIGH;
 			irqs = IMASK(IPL_HIGH);
 		} else {
 			for (q = intrhand[irq]; q; q = q->ih_next) {
 				irqs |= IMASK(q->ih_level);
-				if (q->ih_level > level)
-					level = q->ih_level;
+				if (minlevel == IPL_NONE ||
+				    q->ih_level < minlevel)
+					minlevel = q->ih_level;
+				if (q->ih_level > maxlevel)
+					maxlevel = q->ih_level;
 			}
 		}
-		if (irqs != IMASK(level))
+		if (irqs != IMASK(maxlevel))
 			panic("irq %d level %x mask mismatch: %x vs %x", irq,
-			    level, irqs, IMASK(level));
+			    maxlevel, irqs, IMASK(maxlevel));
 
 		intrmask[irq] = irqs;
-		ilevel[irq] = level;
+		iminlevel[irq] = minlevel;
+		imaxlevel[irq] = maxlevel;
 
 #if 0
-		printf("irq %d: level %x, mask 0x%x (%x)\n", irq, ilevel[irq],
-		    intrmask[irq], IMASK(ilevel[irq]));
+		printf("irq %d: level %x, mask 0x%x (%x)\n", irq,
+		    imaxlevel[irq], intrmask[irq], IMASK(imaxlevel[irq]));
 #endif
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.3 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.4 2001/12/05 00:39:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff
@@ -98,6 +98,7 @@ extern const char *cpu_typename;
 #define	HPPA_FLEX_DATA	0xfff80001
 #define	HPPA_DMA_ENABLE	0x00000001
 #define	HPPA_FLEX_MASK	0xfffc0000
+#define	HPPA_FLEX(a)	(((a) & HPPA_FLEX_MASK) >> 18)
 #define	HPPA_SPA_ENABLE	0x00000020
 #define	HPPA_NMODSPBUS	64
 
