@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/tcfs/Attic/tcfslib.h,v 1.6 2000/06/19 20:35:48 fgsch Exp $	*/
+
 /*
  *	Transparent Cryptographic File System (TCFS) for NetBSD 
  *	Author and mantainer: 	Luigi Catuogno [luicat@tcfs.unisa.it]
