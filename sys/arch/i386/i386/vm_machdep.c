@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.13 2004/04/21 09:33:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.14 2004/06/06 18:42:07 grange Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -165,12 +165,14 @@ cpu_exit(p)
 	switch_exit(p);
 }
 
+#ifdef MULTIPROCESSOR
 void
 cpu_wait(p)
-     struct proc *p;
+	struct proc *p;
 {
 	tss_free(p->p_md.md_tss_sel);
 }
+#endif
 
 /*
  * Dump the machine specific segment at the start of a core dump.
@@ -260,14 +262,14 @@ pagemove(from, to, size)
 				pmap_tlb_shootdown(pmap_kernel(), (vaddr_t)to,
 				    otpte, &cpumask);
 #else
-				pmap_update_pg((vaddr_to)to);
+				pmap_update_pg((vaddr_t)to);
 #endif
 			if (ofpte & PG_V)
 #ifdef MULTIPROCESSOR
 				pmap_tlb_shootdown(pmap_kernel(),
 				    (vaddr_t)from, ofpte, &cpumask);
 #else
-				pmap_update_pg((vaddr_to)from);
+				pmap_update_pg((vaddr_t)from);
 #endif
 		}
 
