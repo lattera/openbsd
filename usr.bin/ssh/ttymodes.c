@@ -43,7 +43,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.14 2001/06/24 17:18:31 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.14.2.1 2002/03/07 17:37:48 jason Exp $");
 
 #include "packet.h"
 #include "log.h"
@@ -396,7 +396,7 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 
 		default:
 			debug("Ignoring unsupported tty mode opcode %d (0x%x)",
-			      opcode, opcode);
+			    opcode, opcode);
 			if (!compat20) {
 				/*
 				 * SSH1:
@@ -422,7 +422,6 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 					 * more coming after the mode data.
 					 */
 					log("parse_tty_modes: unknown opcode %d", opcode);
-					packet_integrity_check(0, 1, SSH_CMSG_REQUEST_PTY);
 					goto set;
   				}
 			} else {

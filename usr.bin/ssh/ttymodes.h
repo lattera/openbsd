@@ -1,4 +1,5 @@
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.11 2001/04/14 16:33:20 stevesk Exp $"); */
+/*	$OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.11.4.1 2002/03/07 17:37:48 jason Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland

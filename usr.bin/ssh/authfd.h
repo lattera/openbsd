@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.21.2.1 2002/03/07 17:37:46 jason Exp $	*/
+
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -10,8 +12,6 @@
  * incompatible with the protocol description in the RFC file, it must be
  * called by a name other than "ssh" or "Secure Shell".
  */
-
-/* RCSID("$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.21 2001/08/07 10:37:46 markus Exp $"); */
 
 #ifndef AUTHFD_H
 #define AUTHFD_H
@@ -74,7 +74,7 @@ ssh_decrypt_challenge(AuthenticationConnection *, Key *, BIGNUM *, u_char[16],
     u_int, u_char[16]);
 
 int
-ssh_agent_sign(AuthenticationConnection *, Key *, u_char **, int *, u_char *,
-    int);
+ssh_agent_sign(AuthenticationConnection *, Key *, u_char **, u_int *, u_char *,
+    u_int);
 
 #endif				/* AUTHFD_H */

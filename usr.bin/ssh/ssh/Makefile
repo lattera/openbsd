@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.36 2001/09/10 22:44:47 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.36.2.1 2002/03/07 17:37:48 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -36,5 +36,5 @@ DPADD+=  ${LIBKRBAFS}
 
 .include <bsd.prog.mk>
 
-LDADD+=	-lcrypto -lz
+LDADD+=	-lcrypto -lz -ldes
 DPADD+=	${LIBCRYPTO} ${LIBZ}
