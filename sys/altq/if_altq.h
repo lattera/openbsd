@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/if_altq.h,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/if_altq.h,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
 /*	$KAME: if_altq.h,v 1.6 2001/01/29 19:59:09 itojun Exp $	*/
 
 /*
@@ -91,6 +91,16 @@ struct altq_pktattr {
 };
 
 /*
+ * mbuf tag to carry a queue id (and hints for ECN).
+ */
+struct altq_tag {
+	u_int32_t	qid;		/* queue id */
+	/* hints for ecn */
+	int		af;		/* address family */
+	void		*hdr;		/* saved header position in mbuf */
+};
+
+/*
  * a token-bucket regulator limits the rate that a network driver can
  * dequeue packets from the output queue.
  * modern cards are able to buffer a large amount of packets and dequeue
@@ -119,7 +129,7 @@ struct tb_regulator {
 #define	ALTQF_DRIVER1	 0x40	/* driver specific */
 
 /* if_altqflags set internally only: */
-#define	ALTQF_CANTCHANGE 	(ALTQF_READY)
+#define	ALTQF_CANTCHANGE	(ALTQF_READY)
 
 /* altq_dequeue 2nd arg */
 #define	ALTDQ_REMOVE		1	/* dequeue mbuf from the queue */
@@ -151,7 +161,7 @@ struct tb_regulator {
 extern int altq_attach(struct ifaltq *, int, void *,
 			    int (*)(struct ifaltq *, struct mbuf *,
 				    struct altq_pktattr *),
-			    struct mbuf *(*)(struct ifaltq *, int), 
+			    struct mbuf *(*)(struct ifaltq *, int),
 			    int (*)(struct ifaltq *, int, void *),
 			    void *,
 			    void *(*)(void *, struct mbuf *, int));
@@ -160,7 +170,6 @@ extern int altq_enable(struct ifaltq *);
 extern int altq_disable(struct ifaltq *);
 extern struct mbuf *tbr_dequeue(struct ifaltq *, int);
 extern int (*altq_input)(struct mbuf *, int);
-void altq_etherclassify(struct ifaltq *, struct mbuf *, struct altq_pktattr *);
 
 #endif /* _KERNEL */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
 /*	$KAME: altq_var.h,v 1.8 2001/02/09 09:44:41 kjc Exp $	*/
 
 /*
@@ -41,107 +41,22 @@
 #ifndef ALTQ_CBQ
 #define ALTQ_CBQ		/* CBQ is enabled by default */
 #endif
-
-/*
- * filter structure for altq common classifier
- */
-struct acc_filter {
-	LIST_ENTRY(acc_filter)	f_chain;
-	void			*f_class;	/* pointer to the class */
-	u_long			f_handle;	/* filter id */
-	u_int32_t		f_fbmask;	/* filter bitmask */
-	struct flow_filter	f_filter;	/* filter value */
-};
-
-/*
- * XXX ACC_FILTER_TABLESIZE can't be larger than 2048 unless we fix
- * the handle assignment.
- */
-#define	ACC_FILTER_TABLESIZE	(256+1)
-#define	ACC_FILTER_MASK		(ACC_FILTER_TABLESIZE - 2)
-#define	ACC_WILDCARD_INDEX	(ACC_FILTER_TABLESIZE - 1)
-#ifdef __GNUC__
-#define	ACC_GET_HASH_INDEX(addr) \
-	({int x = (addr) + ((addr) >> 16); (x + (x >> 8)) & ACC_FILTER_MASK;})
-#else
-#define	ACC_GET_HASH_INDEX(addr) \
-	(((addr) + ((addr) >> 8) + ((addr) >> 16) + ((addr) >> 24)) \
-	& ACC_FILTER_MASK)
+#ifndef ALTQ_PRIQ
+#define ALTQ_PRIQ		/* PRIQ is enabled by default */
 #endif
-#define	ACC_GET_HINDEX(handle) ((handle) >> 20)
-
-struct acc_classifier {
-	u_int32_t			acc_fbmask;
-	LIST_HEAD(filt, acc_filter)	acc_filters[ACC_FILTER_TABLESIZE];
-};
-
-/*
- * flowinfo mask bits used by classifier
- */
-/* for ipv4 */
-#define	FIMB4_PROTO	0x0001
-#define	FIMB4_TOS	0x0002
-#define	FIMB4_DADDR	0x0004
-#define	FIMB4_SADDR	0x0008
-#define	FIMB4_DPORT	0x0010
-#define	FIMB4_SPORT	0x0020
-#define	FIMB4_GPI	0x0040
-#define	FIMB4_ALL	0x007f
-/* for ipv6 */
-#define	FIMB6_PROTO	0x0100
-#define	FIMB6_TCLASS	0x0200
-#define	FIMB6_DADDR	0x0400
-#define	FIMB6_SADDR	0x0800
-#define	FIMB6_DPORT	0x1000
-#define	FIMB6_SPORT	0x2000
-#define	FIMB6_GPI	0x4000
-#define	FIMB6_FLABEL	0x8000
-#define	FIMB6_ALL	0xff00
-
-#define	FIMB_ALL	(FIMB4_ALL|FIMB6_ALL)
-
-#define	FIMB4_PORTS	(FIMB4_DPORT|FIMB4_SPORT|FIMB4_GPI)
-#define	FIMB6_PORTS	(FIMB6_DPORT|FIMB6_SPORT|FIMB6_GPI)
+#ifndef ALTQ_HFSC
+#define ALTQ_HFSC		/* HFSC is enabled by default */
+#endif
 
 /*
  * machine dependent clock
  * a 64bit high resolution time counter.
  */
+extern int machclk_usepcc;
 extern u_int32_t machclk_freq;
 extern u_int32_t machclk_per_tick;
 extern void init_machclk(void);
-
-#if defined(__i386__) && !defined(ALTQ_NOPCC)
-/* for pentium tsc */
-#include <machine/cpufunc.h>
-
-#define	read_machclk()		rdtsc()
-#ifdef __OpenBSD__
-static __inline u_int64_t
-rdtsc(void)
-{
-	u_int64_t rv;
-	__asm __volatile(".byte 0x0f, 0x31" : "=A" (rv));
-	return (rv);
-}
-#endif /* __OpenBSD__ */
-
-#elif defined(__alpha__) && !defined(ALTQ_NOPCC)
-/* for alpha rpcc */
 extern u_int64_t read_machclk(void);
-
-#else /* !i386 && !alpha */
-/* emulate 256MHz using microtime() */
-#define	MACHCLK_SHIFT	8
-static __inline u_int64_t
-read_machclk(void)
-{
-	struct timeval tv;
-	microtime(&tv);
-	return (((u_int64_t)(tv.tv_sec - boottime.tv_sec) * 1000000
-		 + tv.tv_usec) << MACHCLK_SHIFT);
-}
-#endif /* !i386 && !alpha */
 
 /*
  * debug support
@@ -159,42 +74,8 @@ read_machclk(void)
 /*
  * misc stuff for compatibility
  */
-/* ioctl cmd type */
-#if defined(__FreeBSD__) && (__FreeBSD__ < 3)
-typedef int ioctlcmd_t;
-#else
-typedef u_long ioctlcmd_t;
-#endif
-
-/*
- * queue macros:
- * the interface of TAILQ_LAST macro changed after the introduction
- * of softupdate. redefine it here to make it work with pre-2.2.7.
- */
-#undef TAILQ_LAST
-#define	TAILQ_LAST(head, headname) \
-	(*(((struct headname *)((head)->tqh_last))->tqh_last))
-
-#ifndef TAILQ_EMPTY
-#define	TAILQ_EMPTY(head) ((head)->tqh_first == NULL)
-#endif
-#ifndef TAILQ_FOREACH
-#define TAILQ_FOREACH(var, head, field)					\
-	for (var = TAILQ_FIRST(head); var; var = TAILQ_NEXT(var, field))
-#endif
 
 /* macro for timeout/untimeout */
-#if (__FreeBSD_version > 300000) || defined(__NetBSD__)
-/* use callout */
-#include <sys/callout.h>
-
-#define	CALLOUT_INIT(c)		callout_init((c))
-#define	CALLOUT_RESET(c,t,f,a)	callout_reset((c),(t),(f),(a))
-#define	CALLOUT_STOP(c)		callout_stop((c))
-#ifndef CALLOUT_INITIALIZER
-#define	CALLOUT_INITIALIZER	{ { { NULL } }, 0, NULL, NULL, 0 }
-#endif
-#elif defined(__OpenBSD__)
 #include <sys/timeout.h>
 /* callout structure as a wrapper of struct timeout */
 struct callout {
@@ -206,40 +87,50 @@ struct callout {
 				     timeout_add(&(c)->c_to, (t)); } while (0)
 #define	CALLOUT_STOP(c)		timeout_del(&(c)->c_to)
 #define	CALLOUT_INITIALIZER	{ { { NULL }, NULL, NULL, 0, 0 } }
-#else
-/* use old-style timeout/untimeout */
-/* dummy callout structure */
-struct callout {
-	void		*c_arg;			/* function argument */
-	void		(*c_func)(void *);	/* function to call */
-};
-#define	CALLOUT_INIT(c)		do { bzero((c), sizeof(*(c))); } while (0)
-#define	CALLOUT_RESET(c,t,f,a)	do {	(c)->c_arg = (a);	\
-					(c)->c_func = (f);	\
-					timeout((f),(a),(t)); } while (0)
-#define	CALLOUT_STOP(c)		untimeout((c)->c_func,(c)->c_arg)
-#define	CALLOUT_INITIALIZER	{ NULL, NULL }
-#endif
-#if !defined(__FreeBSD__)
+
 typedef void (timeout_t)(void *);
-#endif
 
 #define	m_pktlen(m)		((m)->m_pkthdr.len)
 
-struct ifnet; struct mbuf; struct flowinfo;
+extern int pfaltq_running;
+
+struct ifnet; struct mbuf;;
+struct pf_altq; struct pf_qstats;
 
 void *altq_lookup(char *, int);
-int altq_extractflow(struct mbuf *, int, struct flowinfo *, u_int32_t);
-int acc_add_filter(struct acc_classifier *, struct flow_filter *,
-			   void *, u_long *);
-int acc_delete_filter(struct acc_classifier *, u_long);
-int acc_discard_filters(struct acc_classifier *, void *, int);
-void *acc_classify(void *, struct mbuf *, int);
 u_int8_t read_dsfield(struct mbuf *, struct altq_pktattr *);
 void write_dsfield(struct mbuf *, struct altq_pktattr *, u_int8_t);
 void altq_assert(const char *, int, const char *);
 int tbr_set(struct ifaltq *, struct tb_profile *);
 int tbr_get(struct ifaltq *, struct tb_profile *);
+int	altq_pfattach(struct pf_altq *);
+int	altq_pfdetach(struct pf_altq *);
+int	altq_add(struct pf_altq *);
+int	altq_remove(struct pf_altq *);
+int	altq_add_queue(struct pf_altq *);
+int	altq_remove_queue(struct pf_altq *);
+int	altq_getqstats(struct pf_altq *, void *, int *);
+
+int	cbq_pfattach(struct pf_altq *);
+int	cbq_add_altq(struct pf_altq *);
+int	cbq_remove_altq(struct pf_altq *);
+int	cbq_add_queue(struct pf_altq *);
+int	cbq_remove_queue(struct pf_altq *);
+int	cbq_getqstats(struct pf_altq *, void *, int *);
+
+int	priq_pfattach(struct pf_altq *);
+int	priq_add_altq(struct pf_altq *);
+int	priq_remove_altq(struct pf_altq *);
+int	priq_add_queue(struct pf_altq *);
+int	priq_remove_queue(struct pf_altq *);
+int	priq_getqstats(struct pf_altq *, void *, int *);
+
+int	hfsc_pfattach(struct pf_altq *);
+int	hfsc_add_altq(struct pf_altq *);
+int	hfsc_remove_altq(struct pf_altq *);
+int	hfsc_add_queue(struct pf_altq *);
+int	hfsc_remove_queue(struct pf_altq *);
+int	hfsc_getqstats(struct pf_altq *, void *, int *);
 
 #endif /* _KERNEL */
 #endif /* _ALTQ_ALTQ_VAR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/Attic/altq_rio.c,v 1.1.2.2 2002/03/28 11:26:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/Attic/altq_rio.c,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
 /*	$KAME: altq_rio.c,v 1.8 2000/12/14 08:12:46 thorpej Exp $	*/
 
 /*
@@ -63,11 +63,8 @@
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
-#include <sys/sockio.h>
 #include <sys/systm.h>
-#include <sys/proc.h>
 #include <sys/errno.h>
-#include <sys/kernel.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -79,8 +76,8 @@
 #include <netinet/ip6.h>
 #endif
 
+#include <net/pfvar.h>
 #include <altq/altq.h>
-#include <altq/altq_conf.h>
 #include <altq/altq_cdnr.h>
 #include <altq/altq_red.h>
 #include <altq/altq_rio.h>
@@ -99,7 +96,7 @@
 /*
  * AF DS (differentiated service) codepoints.
  * (classes can be mapped to CBQ or H-FSC classes.)
- * 
+ *
  *      0   1   2   3   4   5   6   7
  *    +---+---+---+---+---+---+---+---+
  *    |   CLASS   |DropPre| 0 |  CU   |
@@ -135,16 +132,15 @@
 #define	TH_MIN		 5	/* min threshold */
 #define	TH_MAX		15	/* max threshold */
 
-#define	RIO_LIMIT	60	/* default max queue lenght */
+#define	RIO_LIMIT	60	/* default max queue length */
 #define	RIO_STATS		/* collect statistics */
 
 #define	TV_DELTA(a, b, delta) {					\
 	register int	xxs;					\
 								\
-	delta = (a)->tv_usec - (b)->tv_usec; 			\
-	if ((xxs = (a)->tv_sec - (b)->tv_sec) != 0) { 		\
-		if (xxs < 0) { 					\
-			printf("rm_class: bogus time values");	\
+	delta = (a)->tv_usec - (b)->tv_usec;			\
+	if ((xxs = (a)->tv_sec - (b)->tv_sec) != 0) {		\
+		if (xxs < 0) {					\
 			delta = 60000000;			\
 		} else if (xxs > 4)  {				\
 			if (xxs > 60)				\
@@ -158,8 +154,6 @@
 	}							\
 }
 
-/* rio_list keeps all rio_queue_t's allocated. */
-static rio_queue_t *rio_list = NULL;
 /* default rio parameter values */
 static struct redparams default_rio_params[RIO_NDROPPREC] = {
   /* th_min,		 th_max,     inv_pmax */
@@ -169,323 +163,15 @@ static struct redparams default_rio_params[RIO_NDROPPREC] = {
 };
 
 /* internal function prototypes */
-static int rio_enqueue(struct ifaltq *, struct mbuf *,
-			    struct altq_pktattr *);
-static struct mbuf *rio_dequeue(struct ifaltq *, int);
-static int rio_request(struct ifaltq *, int, void *);
-static int rio_detach(rio_queue_t *);
 static int dscp2index(u_int8_t);
 
-/*
- * rio device interface
- */
-altqdev_decl(rio);
-
-int
-rioopen(dev, flag, fmt, p)
-	dev_t dev;
-	int flag, fmt;
-	struct proc *p;
-{
-	/* everything will be done when the queueing scheme is attached. */
-	return 0;
-}
-
-int
-rioclose(dev, flag, fmt, p)
-	dev_t dev;
-	int flag, fmt;
-	struct proc *p;
-{
-	rio_queue_t *rqp;
-	int err, error = 0;
-
-	while ((rqp = rio_list) != NULL) {
-		/* destroy all */
-		err = rio_detach(rqp);
-		if (err != 0 && error == 0)
-			error = err;
-	}
-
-	return error;
-}
-
-int
-rioioctl(dev, cmd, addr, flag, p)
-	dev_t dev;
-	ioctlcmd_t cmd;
-	caddr_t addr;
-	int flag;
-	struct proc *p;
-{
-	rio_queue_t *rqp;
-	struct rio_interface *ifacep;
-	struct ifnet *ifp;
-	int	error = 0;
-
-	/* check super-user privilege */
-	switch (cmd) {
-	case RIO_GETSTATS:
-		break;
-	default:
-#if (__FreeBSD_version > 400000)
-		if ((error = suser(p)) != 0)
-			return (error);
-#else
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
-			return (error);
-#endif
-		break;
-	}
-    
-	switch (cmd) {
-
-	case RIO_ENABLE:
-		ifacep = (struct rio_interface *)addr;
-		if ((rqp = altq_lookup(ifacep->rio_ifname, ALTQT_RIO)) == NULL) {
-			error = EBADF;
-			break;
-		}
-		error = altq_enable(rqp->rq_ifq);
-		break;
-
-	case RIO_DISABLE:
-		ifacep = (struct rio_interface *)addr;
-		if ((rqp = altq_lookup(ifacep->rio_ifname, ALTQT_RIO)) == NULL) {
-			error = EBADF;
-			break;
-		}
-		error = altq_disable(rqp->rq_ifq);
-		break;
-
-	case RIO_IF_ATTACH:
-		ifp = ifunit(((struct rio_interface *)addr)->rio_ifname);
-		if (ifp == NULL) {
-			error = ENXIO;
-			break;
-		}
-
-		/* allocate and initialize rio_queue_t */
-		MALLOC(rqp, rio_queue_t *, sizeof(rio_queue_t), M_DEVBUF, M_WAITOK);
-		if (rqp == NULL) {
-			error = ENOMEM;
-			break;
-		}
-		bzero(rqp, sizeof(rio_queue_t));
-
-		MALLOC(rqp->rq_q, class_queue_t *, sizeof(class_queue_t),
-		       M_DEVBUF, M_WAITOK);
-		if (rqp->rq_q == NULL) {
-			FREE(rqp, M_DEVBUF);
-			error = ENOMEM;
-			break;
-		}
-		bzero(rqp->rq_q, sizeof(class_queue_t));
-
-		rqp->rq_rio = rio_alloc(0, NULL, 0, 0);
-		if (rqp->rq_rio == NULL) {
-			FREE(rqp->rq_q, M_DEVBUF);
-			FREE(rqp, M_DEVBUF);
-			error = ENOMEM;
-			break;
-		}
-
-		rqp->rq_ifq = &ifp->if_snd;
-		qtail(rqp->rq_q) = NULL;
-		qlen(rqp->rq_q) = 0;
-		qlimit(rqp->rq_q) = RIO_LIMIT;
-		qtype(rqp->rq_q) = Q_RIO;
-
-		/*
-		 * set RIO to this ifnet structure.
-		 */
-		error = altq_attach(rqp->rq_ifq, ALTQT_RIO, rqp,
-				    rio_enqueue, rio_dequeue, rio_request,
-				    NULL, NULL);
-		if (error) {
-			rio_destroy(rqp->rq_rio);
-			FREE(rqp->rq_q, M_DEVBUF);
-			FREE(rqp, M_DEVBUF);
-			break;
-		}
-
-		/* add this state to the rio list */
-		rqp->rq_next = rio_list;
-		rio_list = rqp;
-		break;
-
-	case RIO_IF_DETACH:
-		ifacep = (struct rio_interface *)addr;
-		if ((rqp = altq_lookup(ifacep->rio_ifname, ALTQT_RIO)) == NULL) {
-			error = EBADF;
-			break;
-		}
-		error = rio_detach(rqp);
-		break;
-
-	case RIO_GETSTATS:
-		do {
-			struct rio_stats *q_stats;
-			rio_t *rp;
-			int i;
-
-			q_stats = (struct rio_stats *)addr;
-			if ((rqp = altq_lookup(q_stats->iface.rio_ifname,
-					       ALTQT_RIO)) == NULL) {
-				error = EBADF;
-				break;
-			}
-
-			rp = rqp->rq_rio;
-
-			q_stats->q_limit = qlimit(rqp->rq_q);
-			q_stats->weight	= rp->rio_weight;
-			q_stats->flags = rp->rio_flags;
-
-			for (i = 0; i < RIO_NDROPPREC; i++) {
-				q_stats->q_len[i] = rp->rio_precstate[i].qlen;
-				bcopy(&rp->q_stats[i], &q_stats->q_stats[i],
-				      sizeof(struct redstats));
-				q_stats->q_stats[i].q_avg =
-				    rp->rio_precstate[i].avg >> rp->rio_wshift;
-
-				q_stats->q_params[i].inv_pmax
-					= rp->rio_precstate[i].inv_pmax;
-				q_stats->q_params[i].th_min
-					= rp->rio_precstate[i].th_min;
-				q_stats->q_params[i].th_max
-					= rp->rio_precstate[i].th_max;
-			}
-		} while (0);
-		break;
-
-	case RIO_CONFIG:
-		do {
-			struct rio_conf *fc;
-			rio_t	*new;
-			int s, limit, i;
-
-			fc = (struct rio_conf *)addr;
-			if ((rqp = altq_lookup(fc->iface.rio_ifname,
-					       ALTQT_RIO)) == NULL) {
-				error = EBADF;
-				break;
-			}
-
-			new = rio_alloc(fc->rio_weight, &fc->q_params[0],
-					fc->rio_flags, fc->rio_pkttime);
-			if (new == NULL) {
-				error = ENOMEM;
-				break;
-			}
-
-			s = splimp();
-			_flushq(rqp->rq_q);
-			limit = fc->rio_limit;
-			if (limit < fc->q_params[RIO_NDROPPREC-1].th_max)
-				limit = fc->q_params[RIO_NDROPPREC-1].th_max;
-			qlimit(rqp->rq_q) = limit;
-
-			rio_destroy(rqp->rq_rio);
-			rqp->rq_rio = new;
-
-			splx(s);
-
-			/* write back new values */
-			fc->rio_limit = limit;
-			for (i = 0; i < RIO_NDROPPREC; i++) {
-				fc->q_params[i].inv_pmax =
-					rqp->rq_rio->rio_precstate[i].inv_pmax;
-				fc->q_params[i].th_min =
-					rqp->rq_rio->rio_precstate[i].th_min;
-				fc->q_params[i].th_max =
-					rqp->rq_rio->rio_precstate[i].th_max;
-			}
-		} while (0);
-		break;
-
-	case RIO_SETDEFAULTS:
-		do {
-			struct redparams *rp;
-			int i;
-
-			rp = (struct redparams *)addr;
-			for (i = 0; i < RIO_NDROPPREC; i++)
-				default_rio_params[i] = rp[i];
-		} while (0);
-		break;
-
-	default:
-		error = EINVAL;
-		break;
-	}
-
-	return error;
-}
-
-static int
-rio_detach(rqp)
-	rio_queue_t *rqp;
-{
-	rio_queue_t *tmp;
-	int error = 0;
-
-	if (ALTQ_IS_ENABLED(rqp->rq_ifq))
-		altq_disable(rqp->rq_ifq);
-
-	if ((error = altq_detach(rqp->rq_ifq)))
-		return (error);
-
-	if (rio_list == rqp)
-		rio_list = rqp->rq_next;
-	else {
-		for (tmp = rio_list; tmp != NULL; tmp = tmp->rq_next)
-			if (tmp->rq_next == rqp) {
-				tmp->rq_next = rqp->rq_next;
-				break;
-			}
-		if (tmp == NULL)
-			printf("rio_detach: no state found in rio_list!\n");
-	}
-
-	rio_destroy(rqp->rq_rio);
-	FREE(rqp->rq_q, M_DEVBUF);
-	FREE(rqp, M_DEVBUF);
-	return (error);
-}
-
-/*
- * rio support routines
- */
-static int
-rio_request(ifq, req, arg)
-	struct ifaltq *ifq;
-	int req;
-	void *arg;
-{
-	rio_queue_t *rqp = (rio_queue_t *)ifq->altq_disc;
-
-	switch (req) {
-	case ALTRQ_PURGE:
-		_flushq(rqp->rq_q);
-		if (ALTQ_IS_ENABLED(ifq))
-			ifq->ifq_len = 0;
-		break;
-	}
-	return (0);
-}
-
-
 rio_t *
-rio_alloc(weight, params, flags, pkttime)
-	int	weight;
-	struct redparams *params;
-	int	flags, pkttime;
+rio_alloc(int weight, struct redparams *params, int flags, int pkttime)
 {
-	rio_t 	*rp;
-	int	w, i;
-	int	npkts_per_sec;
-	
+	rio_t	*rp;
+	int	 w, i;
+	int	 npkts_per_sec;
+
 	MALLOC(rp, rio_t *, sizeof(rio_t), M_DEVBUF, M_WAITOK);
 	if (rp == NULL)
 		return (NULL);
@@ -495,13 +181,13 @@ rio_alloc(weight, params, flags, pkttime)
 	if (pkttime == 0)
 		/* default packet time: 1000 bytes / 10Mbps * 8 * 1000000 */
 		rp->rio_pkttime = 800;
-	else 
+	else
 		rp->rio_pkttime = pkttime;
 
 	if (weight != 0)
 		rp->rio_weight = weight;
 	else {
-		/* use derfault */
+		/* use default */
 		rp->rio_weight = W_WEIGHT;
 
 		/* when the link is very slow, adjust red parameters */
@@ -570,47 +256,22 @@ rio_alloc(weight, params, flags, pkttime)
 }
 
 void
-rio_destroy(rp)
-	rio_t *rp;
+rio_destroy(rio_t *rp)
 {
 	wtab_destroy(rp->rio_wtab);
 	FREE(rp, M_DEVBUF);
 }
 
-void 
-rio_getstats(rp, sp)
-	rio_t *rp;
-	struct redstats *sp;
+void
+rio_getstats(rio_t *rp, struct redstats *sp)
 {
-	int i;
-	
+	int	i;
+
 	for (i = 0; i < RIO_NDROPPREC; i++) {
 		bcopy(&rp->q_stats[i], sp, sizeof(struct redstats));
 		sp->q_avg = rp->rio_precstate[i].avg >> rp->rio_wshift;
 		sp++;
 	}
-}
-
-/*
- * enqueue routine:
- *
- *	returns: 0 when successfully queued.
- *		 ENOBUFS when drop occurs.
- */
-static int
-rio_enqueue(ifq, m, pktattr)
-	struct ifaltq *ifq;
-	struct mbuf *m;
-	struct altq_pktattr *pktattr;
-{
-	rio_queue_t *rqp = (rio_queue_t *)ifq->altq_disc;
-	int error = 0;
-
-	if (rio_addq(rqp->rq_rio, rqp->rq_q, m, pktattr) == 0)
-		ifq->ifq_len++;
-	else
-		error = ENOBUFS;
-	return error;
 }
 
 #if (RIO_NDROPPREC == 3)
@@ -621,7 +282,7 @@ rio_enqueue(ifq, m, pktattr)
 static int
 dscp2index(u_int8_t dscp)
 {
-	int dpindex = dscp & AF_DROPPRECMASK;
+	int	dpindex = dscp & AF_DROPPRECMASK;
 
 	if (dpindex == 0)
 		return (0);
@@ -643,17 +304,14 @@ dscp2index(u_int8_t dscp)
 #endif
 
 int
-rio_addq(rp, q, m, pktattr)
-	rio_t *rp;
-	class_queue_t *q;
-	struct mbuf *m;
-	struct altq_pktattr *pktattr;
+rio_addq(rio_t *rp, class_queue_t *q, struct mbuf *m,
+    struct altq_pktattr *pktattr)
 {
-	int avg, droptype;
-	u_int8_t dsfield, odsfield;
-	int dpindex, i, n, t;
-	struct timeval now;
-	struct dropprec_state *prec;
+	int			 avg, droptype;
+	u_int8_t		 dsfield, odsfield;
+	int			 dpindex, i, n, t;
+	struct timeval		 now;
+	struct dropprec_state	*prec;
 
 	dsfield = odsfield = read_dsfield(m, pktattr);
 	dpindex = dscp2index(dsfield);
@@ -696,7 +354,7 @@ rio_addq(rp, q, m, pktattr)
 
 	prec = &rp->rio_precstate[dpindex];
 	avg = prec->avg;
-    
+
 	/* see if we drop early */
 	droptype = DTYPE_NODROP;
 	if (avg >= prec->th_min_s && prec->qlen > 1) {
@@ -758,38 +416,11 @@ rio_addq(rp, q, m, pktattr)
 	return (0);
 }
 
-/*
- * dequeue routine:
- *	must be called in splimp.
- *
- *	returns: mbuf dequeued.
- *		 NULL when no packet is available in the queue.
- */
-
-static struct mbuf *
-rio_dequeue(ifq, op)
-	struct ifaltq *ifq;
-	int op;
-{
-	rio_queue_t *rqp = (rio_queue_t *)ifq->altq_disc;
-	struct mbuf *m = NULL;
-
-	if (op == ALTDQ_POLL)
-		return qhead(rqp->rq_q);
-
-	m = rio_getq(rqp->rq_rio, rqp->rq_q);
-	if (m != NULL)
-		ifq->ifq_len--;
-	return m;
-}
-
 struct mbuf *
-rio_getq(rp, q)
-	rio_t *rp;
-	class_queue_t *q;
+rio_getq(rio_t *rp, class_queue_t *q)
 {
-	struct mbuf *m;
-	int dpindex, i;
+	struct mbuf	*m;
+	int		 dpindex, i;
 
 	if ((m = _getq(q)) == NULL)
 		return NULL;
@@ -805,12 +436,3 @@ rio_getq(rp, q)
 	}
 	return (m);
 }
-
-#ifdef KLD_MODULE
-
-static struct altqsw rio_sw =
-	{"rio", rioopen, rioclose, rioioctl};
-
-ALTQ_MODULE(altq_rio, ALTQT_RIO, &rio_sw);
-
-#endif /* KLD_MODULE */

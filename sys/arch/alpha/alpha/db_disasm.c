@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/db_disasm.c,v 1.12.10.2 2002/03/28 10:06:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/db_disasm.c,v 1.12.10.3 2003/03/27 22:29:47 niklas Exp $ */
 /* $NetBSD: db_disasm.c,v 1.8 2000/05/25 19:57:30 jhawk Exp $ */
 
 /* 
@@ -1077,7 +1077,7 @@ loadstore_address:
 			  register_name(i.branch_format.ra));
 branch_displacement:
 		db_printsym(iadr + sizeof(alpha_instruction) +
-		    (signed_immediate << 2), DB_STGY_PROC);
+		    (signed_immediate << 2), DB_STGY_PROC, db_printf);
 		break;
 	default:
 		/*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.4 2002/03/06 00:24:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/conf.c,v 1.20.4.5 2003/03/27 22:29:47 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.16 1996/10/18 21:26:57 cgd Exp $	*/
 
 /*-
@@ -80,12 +80,6 @@ struct bdevsw	bdevsw[] =
 };
 int	nblkdev = sizeof (bdevsw) / sizeof (bdevsw[0]);
 
-/* open, close, write, ioctl */
-#define cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
-
 #define	mmread  mmrw
 #define	mmwrite mmrw
 cdev_decl(mm);
@@ -122,28 +116,20 @@ cdev_decl(cy);
 cdev_decl(xfs_dev);
 #endif
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 /* USB Devices */
 #include "usb.h"
-cdev_decl(usb);
 #include "uhid.h"
-cdev_decl(uhid);
 #include "ugen.h"
-cdev_decl(ugen);
 #include "ulpt.h"
-cdev_decl(ulpt);
 #include "ucom.h"
-cdev_decl(ucom);
-#include "ugen.h"
-cdev_decl(ugen);
 #include "pf.h"
 #ifdef USER_PCICONF
 #include "pci.h"
 cdev_decl(pci);
 #endif
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -194,10 +180,10 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 44 */
 	cdev_usb_init(NUSB,usb),	/* 45: USB controller */
 	cdev_usbdev_init(NUHID,uhid),	/* 46: USB generic HID */
-	cdev_lpt_init(NULPT,ulpt),	/* 47: USB printer */
-	cdev_ugen_init(NUGEN,ugen),	/* 48: USB generic driver */
+	cdev_ulpt_init(NULPT,ulpt),	/* 47: USB printer */
+	cdev_usbdev_init(NUGEN,ugen),	/* 48: USB generic driver */
 	cdev_tty_init(NUCOM, ucom),	/* 49: USB tty */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
@@ -208,7 +194,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),
 #endif
-	cdev_altq_init(NALTQ, altq),	/* 53: ALTQ control interface */
+	cdev_notdef(),			/* 53: ALTQ (deprecated) */
 	cdev_iop_init(NIOP, iop),	/* 54: I2O IOP control interface */
 };
 int	nchrdev = sizeof (cdevsw) / sizeof (cdevsw[0]);

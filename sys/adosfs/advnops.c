@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.15.8.5 2002/03/28 11:26:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.15.8.6 2003/03/27 22:28:24 niklas Exp $	*/
 /*	$NetBSD: advnops.c,v 1.32 1996/10/13 02:52:09 christos Exp $	*/
 
 /*
@@ -412,6 +412,7 @@ adosfs_strategy(v)
 	struct anode *ap;
 	struct vnode *vp;
 	int error;
+	int s;
 
 #ifdef ADOSFS_DIAGNOSTIC
 	advopprint(sp);
@@ -420,7 +421,9 @@ adosfs_strategy(v)
 	bp = sp->a_bp;
 	if (bp->b_vp == NULL) {
 		bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		error = EIO;
 		goto reterr;
 	}
@@ -430,7 +433,9 @@ adosfs_strategy(v)
 		error = VOP_BMAP(vp, bp->b_lblkno, NULL, &bp->b_blkno, NULL);
 		if (error) {
 			bp->b_flags |= B_ERROR;
+			s = splbio();
 			biodone(bp);
+			splx(s);
 			goto reterr;
 		}
 	}
