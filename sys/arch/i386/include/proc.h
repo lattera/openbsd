@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/proc.h,v 1.1.1.1.16.1 2001/04/18 16:07:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/proc.h,v 1.1.1.1.16.2 2003/04/11 16:19:35 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.10 1995/08/06 05:33:23 mycroft Exp $	*/
 
 /*
@@ -42,6 +42,7 @@
 struct mdproc {
 	struct	trapframe *md_regs;	/* registers on current frame */
 	int	md_flags;		/* machine-dependent flags */
+	int	md_tss_sel;		/* TSS selector */
 };
 
 /* md_flags */
