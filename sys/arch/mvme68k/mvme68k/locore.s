@@ -1,4 +1,4 @@
-/*	$Id: locore.s,v 1.4 1995/11/07 08:50:19 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.6 1996/04/28 10:57:27 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -71,7 +71,7 @@
  *	@(#)locore.s	8.6 (Berkeley) 5/27/94
  */
 
-#include "assym.s"
+#include "assym.h"
 #include <machine/prom.h>
 
 /*
