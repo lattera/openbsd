@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.5 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/i82489var.h,v 1.1.2.6 2004/03/30 09:10:44 niklas Exp $	*/
 /*	$NetBSD: i82489var.h,v 1.1.2.2 2000/02/21 18:46:14 sommerfeld Exp $	*/
 
 /*-
@@ -40,8 +40,8 @@
 #ifndef _I386_I82489VAR_H_
 #define _I386_I82489VAR_H_
 
-static __inline__ u_int32_t i82489_readreg __P((int));
-static __inline__ void i82489_writereg __P((int, u_int32_t));
+static __inline__ u_int32_t i82489_readreg(int);
+static __inline__ void i82489_writereg(int, u_int32_t);
 
 #ifdef _KERNEL
 extern volatile u_int32_t local_apic[];
@@ -99,14 +99,15 @@ extern void Xintrsoftclock(void);
 extern void Xintrsoftnet(void);
 extern void Xintrsofttty(void);
 
-extern void (*apichandler[]) __P((void));
+extern void (*apichandler[])(void);
 
 struct cpu_info;
 
-extern void lapic_boot_init __P((paddr_t));
-extern void lapic_set_lvt __P((void));
-extern void lapic_set_softvectors __P((void));
-extern void lapic_enable __P((void));
-extern void lapic_calibrate_timer __P((struct cpu_info *));
+extern void lapic_boot_init(paddr_t);
+extern void lapic_initclocks(void);
+extern void lapic_set_lvt(void);
+extern void lapic_set_softvectors(void);
+extern void lapic_enable(void);
+extern void lapic_calibrate_timer(struct cpu_info *);
 
 #endif
