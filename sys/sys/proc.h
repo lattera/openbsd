@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.24 2004/06/10 11:40:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.25 2004/06/10 17:55:12 deraadt Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -46,7 +46,6 @@
 #include <sys/timeout.h>		/* For struct timeout. */
 #include <sys/event.h>			/* For struct klist */
 
-#ifdef __HAVE_CPUINFO
 /*
  * CPU states.
  * XXX Not really scheduler state, but no other good place to put
@@ -60,7 +59,7 @@
 #define CPUSTATES	5
 
 /*
- * Per-CPU scheduler state. XXX - this should be in sys/sched.h
+ * Per-CPU scheduler state.
  */
 struct schedstate_percpu {
 	struct timeval spc_runtime;	/* time curproc started running */
@@ -78,6 +77,7 @@ struct schedstate_percpu {
 #define SPCF_SHOULDYIELD        0x0002  /* process should yield the CPU */
 #define SPCF_SWITCHCLEAR        (SPCF_SEENRR|SPCF_SHOULDYIELD)
 
+#ifdef __HAVE_CPUINFO
 /*
  * These are the fields we require in struct cpu_info that we get from
  * curcpu():
