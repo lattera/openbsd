@@ -39,7 +39,7 @@
  *
  *
  *	from: @(#)param.h	8.1 (Berkeley) 6/10/93
- *      $Id: param.h,v 1.1.1.1 1995/10/18 10:39:13 deraadt Exp $
+ *      $Id: param.h,v 1.2 1995/10/22 06:26:07 deraadt Exp $
  */
 
 /*
@@ -144,7 +144,7 @@
 #define pica_ptob(x)		((unsigned)(x) << PGSHIFT)
 
 #ifdef _KERNEL
-#ifndef LOCORE
+#ifndef _LOCORE
 extern int (*Mach_splnet)(), (*Mach_splbio)(), (*Mach_splimp)(),
 	   (*Mach_spltty)(), (*Mach_splclock)(), (*Mach_splstatclock)();
 #define	splnet()	((*Mach_splnet)())
