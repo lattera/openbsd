@@ -1,0 +1,17 @@
+dnl	$OpenBSD: src/distrib/notes/mac68k/Attic/xfer,v 1.19 2005/03/18 13:30:53 miod Exp $
+Installation is supported from several media types, including:
+
+	CD-ROM
+	FFS partitions (for upgrades only)
+	Tape
+	Remote NFS partition
+	FTP
+	HTTP
+
+OpenBSDXferShortPrelude
+
+OpenBSDXferBareTape(xbase xetc xfont xserv xshare)
+
+OpenBSDXferNFS
+
+OpenBSDXferFFS
