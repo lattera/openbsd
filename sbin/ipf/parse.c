@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/sbin/ipf/Attic/parse.c,v 1.18 1998/01/26 04:13:38 dgregor Exp $      */
+/*     $OpenBSD: src/sbin/ipf/Attic/parse.c,v 1.19 1998/02/27 19:37:35 deraadt Exp $      */
 /*
  * Copyright (C) 1993-1997 by Darren Reed.
  *
@@ -36,7 +36,7 @@
 
 #if !defined(lint)
 static const char sccsid[] ="@(#)parse.c	1.44 6/5/96 (C) 1993-1996 Darren Reed";
-static const char rcsid[] = "@(#)$Id: parse.c,v 2.0.2.18.2.1 1997/11/20 12:43:49 darrenr Exp $";
+static const char rcsid[] = "@(#)$Id: parse.c,v 1.18 1998/01/26 04:13:38 dgregor Exp $";
 #endif
 
 extern	struct	ipopt_names	ionames[], secclass[];
@@ -622,7 +622,7 @@ int	*resolved;
 			fprintf(stderr, "can't resolve hostname: %s\n", host);
 			return 0;
 		}
-		return np->n_net;
+		return htonl(np->n_net);
 	}
 	return *(u_32_t *)hp->h_addr;
 }
