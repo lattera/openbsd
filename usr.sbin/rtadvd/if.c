@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/rtadvd/if.c,v 1.3 2000/03/13 06:16:11 itojun Exp $	*/
+/*	$OpenBSD: src/usr.sbin/rtadvd/if.c,v 1.3.2.1 2000/10/21 05:19:33 jason Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -148,7 +148,7 @@ if_nametosdl(char *name)
 int
 if_getmtu(char *name)
 {
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#ifdef SIOCGIFMTU
 	struct ifreq ifr;
 	int s;
 
@@ -165,8 +165,7 @@ if_getmtu(char *name)
 	close(s);
 
 	return(ifr.ifr_mtu);
-#endif
-#ifdef __bsdi__
+#else
 	struct ifaddrs *ifap, *ifa;
 	struct if_data *ifd;
 
