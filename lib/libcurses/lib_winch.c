@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/Attic/tries.c,v 1.4 1998/11/17 03:16:22 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_winch.c,v 1.1 1998/11/17 03:16:21 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -29,77 +29,26 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Thomas E. Dickey <dickey@clark.net> 1997                        *
+ *  Author: Thomas E. Dickey <dickey@clark.net> 1998                        *
  ****************************************************************************/
 
 /*
-**	tries.c
+**	lib_winch.c
 **
-**	Functions to manage the tree of partial-completions for keycodes.
+**	The routine winch().
 **
 */
 
 #include <curses.priv.h>
 
-MODULE_ID("$From: tries.c,v 1.8 1998/11/07 22:54:48 tom Exp $")
+MODULE_ID("$From: lib_winch.c,v 1.1 1998/11/14 22:06:09 tom Exp $")
 
-/*
- * Expand a keycode into the string that it corresponds to, returning null if
- * no match was found, otherwise allocating a string of the result.
- */
-char *_nc_expand_try(struct tries *tree, unsigned short code, size_t len)
+chtype winch(WINDOW *win)
 {
-	struct tries *ptr = tree;
-	char *result = 0;
-
-	if (code != 0) {
-		while (ptr != 0) {
-			if ((result = _nc_expand_try(ptr->child, code, len + 1)) != 0) {
-				break;
-			}
-			if (ptr->value == code) {
-				result = typeCalloc(char, len+2);
-				break;
-			}
-			ptr = ptr->sibling;
-		}
+	T((T_CALLED("winch(%p)"), win));
+	if (win != 0) {
+		returnCode(win->_line[win->_cury].text[win->_curx]);
+	} else {
+		returnCode(0);
 	}
-	if (result != 0) {
-		if ((result[len] = ptr->ch) == 0)
-			*((unsigned char *)(result+len)) = 128;
-#ifdef TRACE
-		if (len == 0)
-			_tracef("expand_key %s %s", _trace_key(code), _nc_visbuf(result));
-#endif
-	}
-	return result;
-}
-
-/*
- * Remove a code from the specified tree, freeing the unused nodes.  Returns
- * true if the code was found/removed.
- */
-int _nc_remove_key(struct tries **tree, unsigned short code)
-{
-	if (code == 0)
-		return FALSE;
-		
-	while (*tree != 0) {
-		if (_nc_remove_key(&(*tree)->child, code)) {
-			return TRUE;
-		}
-		if ((*tree)->value == code) {
-			if((*tree)->child) {
-				/* don't cut the whole sub-tree */
-				(*tree)->value = 0;
-			} else {
-				struct tries *to_free = *tree;
-				*tree = (*tree)->sibling;
-				free(to_free);
-			}
-			return TRUE;
-		}
-		tree = &(*tree)->sibling;
-	}
-	return FALSE;
 }

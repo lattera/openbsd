@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/Attic/lib_freeall.c,v 1.1 1998/07/23 21:18:47 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_freeall.c,v 1.2 1998/11/17 03:16:21 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -32,16 +32,16 @@
  *  Author: Thomas E. Dickey <dickey@clark.net> 1996,1997                   *
  ****************************************************************************/
 
-#define HAVE_NC_FREEALL 1
-
 #include <curses.priv.h>
 #include <term.h>
+
+#if HAVE_NC_FREEALL
 
 #if HAVE_LIBDBMALLOC
 extern int malloc_errfd;	/* FIXME */
 #endif
 
-MODULE_ID("$From: lib_freeall.c,v 1.11 1998/02/11 12:13:57 tom Exp $")
+MODULE_ID("$From: lib_freeall.c,v 1.12 1998/11/08 01:33:09 tom Exp $")
 
 static void free_slk(SLK *p)
 {
@@ -139,3 +139,6 @@ void _nc_free_and_exit(int code)
 	_nc_freeall();
 	exit(code);
 }
+#else
+void _nc_freeall(void) { }
+#endif
