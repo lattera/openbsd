@@ -14,8 +14,11 @@
 # based on original version by Alan R. Martello <al@ee.pitt.edu>
 # And by A.Macpherson@bnr.co.uk for multi-homed hosts
 #
-# $Header: /a/swan/home/swan/staff/csg/lmjm/src/perl/mirror/RCS/ftp.pl,v 1.17 1993/04/21 10:06:54 lmjm Exp lmjm $
+# $Header: /cvs/src/gnu/usr.bin/perl/lib/ftp.pl,v 1.6 2002/10/27 22:25:26 millert Exp $
 # $Log: ftp.pl,v $
+# Revision 1.6  2002/10/27 22:25:26  millert
+# Resolve conflicts, remove old files, merge local changes
+#
 # Revision 1.17  1993/04/21  10:06:54  lmjm
 # Send all status reports to STDERR not to STDOUT (to allow use by ftpcat).
 # Allow target file to be '-' meaning STDOUT
@@ -328,10 +331,10 @@ sub ftp'cwd
 
 # Get a full directory listing:
 # &ftp'dir( remote LIST options )
-# Start a list goin with the given options.
+# Start a list going with the given options.
 # Presuming that the remote deamon uses the ls command to generate the
 # data to send back then you can send it some extra options (eg: -lRa)
-# return 1 if sucessful and 0 on a failure
+# return 1 if successful and 0 on a failure
 sub ftp'dir_open
 {
 	local( $options ) = @_;
