@@ -18,7 +18,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: main.c,v 1.2 1995/12/28 14:05:06 hannken Exp $";
+static char rcsid[] = "$Id: main.c,v 1.3 1996/01/07 09:55:33 deraadt Exp $";
 #endif
 
 #include <stdio.h>
@@ -582,7 +582,6 @@ void
 close_fd()
 {
     disestablish_ppp();
-    sleep(1);
 
     /* drop dtr to hang up */
     if (modem) {
