@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: src/distrib/i386/floppies/inst/Attic/install.sh,v 1.14 1996/10/07 18:48:23 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/floppies/inst/Attic/install.sh,v 1.14.2.1 1996/10/11 22:27:20 niklas Exp $
 #
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.
@@ -161,7 +161,7 @@ echo -n "View the boot messages again? [n] "
 getresp "n"
 case "$resp" in
 y*|Y*)
-	less /kern/msgbuf
+	less -rsS /kern/msgbuf
 	;;
 *)
 	echo	""
