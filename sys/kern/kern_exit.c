@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.10 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.11 2003/05/18 17:43:43 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -319,12 +319,15 @@ void
 exit2(p)
 	struct proc *p;
 {
+	int s;
 
 	simple_lock(&deadproc_slock);
 	LIST_INSERT_HEAD(&deadproc, p, p_hash);
 	simple_unlock(&deadproc_slock);
 
 	wakeup(&deadproc);
+
+	SCHED_LOCK(s);
 }
 
 /*
