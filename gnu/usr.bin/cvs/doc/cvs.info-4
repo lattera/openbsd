@@ -1,5 +1,5 @@
 This is Info file cvs.info, produced by Makeinfo version 1.67 from the
-input file ../../work/ccvs/doc/cvs.texinfo.
+input file ./cvs.texinfo.
 
 START-INFO-DIR-ENTRY
 * CVS: (cvs).          Concurrent Versions System
@@ -52,7 +52,7 @@ lock seems to stick around for an undue amount of time, find the person
 holding the lock and ask them about the cvs command they are running.
 If they aren't running a cvs command, look in the repository directory
 mentioned in the message and remove files which they own whose names
-start with `#cvs.tfl', `#cvs.rfl', or `#cvs.wfl'.
+start with `#cvs.rfl', `#cvs.wfl', or `#cvs.lock'.
 
    Note that these locks are to protect CVS's internal data structures
 and have no relationship to the word "lock" in the sense used by
@@ -532,22 +532,12 @@ Using keywords
 string, such as `$Id$', inside the file, and commit the file.  CVS will
 automatically expand the string as part of the commit operation.
 
-   It is common to embed `$Id$' string in the C source code.  This
-example shows the first few lines of a typical file, after keyword
-substitution has been performed:
-
-     static char *rcsid="$Id: samp.c,v 1.5 1993/10/19 14:57:32 ceder Exp $";
-     /* The following lines will prevent `gcc' version 2.X
-        from issuing an "unused variable" warning. */
-     #if __GNUC__ == 2
-     #define USE(var) static void * use_##var = (&use_##var, (void *) &var)
-     USE (rcsid);
-     #endif
-
-   Even though a clever optimizing compiler could remove the unused
-variable `rcsid', most compilers tend to include the string in the
-binary.  Some compilers have a `#pragma' directive to include literal
-text in the binary.
+   It is common to embed the `$Id$' string in the source files so that
+it gets passed through to generated files.  For example, if you are
+managing computer program source code, you might include a variable
+which is initialized to contain that string.  Or some C compilers may
+provide a `#pragma ident' directive.  Or a document management system
+might provide a way to pass a string through to generated files.
 
    The `ident' command (which is part of the RCS package) can be used
 to extract keywords and their values from a file.  This can be handy
@@ -697,7 +687,7 @@ commit it on the vendor branch and copy the modifications onto the main
 trunk.
 
    Use the `import' command to create and update the vendor branch.
-After a successful `import' the vendor branch is made the `head'
+When you import a new file, the vendor branch is made the `head'
 revision, so anyone that checks out a copy of the file gets that
 revision.  When a local modification is committed it is placed on the
 main trunk, and made the `head' revision.
