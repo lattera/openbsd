@@ -139,7 +139,7 @@ eisa_intr_map(ec, irq, ihp)
 	if (irq >= ICU_LEN) {
 		printf("eisa_intr_map: bad IRQ %d\n", irq);
 		*ihp = -1;
-		return 1;
+		return (1);
 	}
 	if (irq == 2) {
 		printf("eisa_intr_map: changed IRQ 2 to IRQ 9\n");
@@ -154,20 +154,20 @@ eisa_intr_map(ec, irq, ihp)
 		 * XXX Is this a valid assumption?
 		 */
 		
-		for (mip = mp_busses[bus].mb_intrs; mip != NULL; mip=mip->next) {
+		for (mip = mp_busses[bus].mb_intrs; mip != NULL;
+		    mip = mip->next) {
 			if (mip->bus_pin == irq) {
 				*ihp = mip->ioapic_ih | irq;
-				return 0;
+				return (0);
 			}
 		}
 		if (mip == NULL)
 			printf("eisa_intr_map: no MP mapping found\n");
 	}
 #endif
-	
 
 	*ihp = irq;
-	return 0;
+	return (0);
 }
 
 const char *
@@ -175,22 +175,20 @@ eisa_intr_string(ec, ih)
 	eisa_chipset_tag_t ec;
 	eisa_intr_handle_t ih;
 {
-	static char irqstr[8];		/* 4 + 2 + NULL + sanity */
+	static char irqstr[8];		/* 4 + 2 + NUL + sanity */
 
 	if (ih == 0 || (ih & 0xff) >= ICU_LEN || ih == 2)
 		panic("eisa_intr_string: bogus handle 0x%x", ih);
 
 #if NIOAPIC > 0
-	if (ih & APIC_INT_VIA_APIC)
+	if (ih & APIC_INT_VIA_APIC) {
 		sprintf(irqstr, "apic %d int %d (irq %d)",
-			APIC_IRQ_APIC(ih),
-			APIC_IRQ_PIN(ih),
-			ih&0xff);
-	else
-		sprintf(irqstr, "irq %d", ih&0xff);
-#else
-	sprintf(irqstr, "irq %d", ih);
+		    APIC_IRQ_APIC(ih), APIC_IRQ_PIN(ih), ih & 0xff);
+		return (irqstr);
+	}
 #endif
+
+	sprintf(irqstr, "irq %d", ih);
 	return (irqstr);
 	
 }
@@ -206,15 +204,15 @@ eisa_intr_establish(ec, ih, type, level, func, arg, what)
 #if NIOAPIC > 0
 	if (ih != -1) {
 		if (ih != -1 && (ih & APIC_INT_VIA_APIC)) {
-			return apic_intr_establish(ih, type, level,
-			    func, arg);
+			return (apic_intr_establish(ih, type, level, func, arg,
+			    what));
 		}
 	}
 #endif
 	if (ih == 0 || ih >= ICU_LEN || ih == 2)
 		panic("eisa_intr_establish: bogus handle 0x%x", ih);
 
-	return isa_intr_establish(NULL, ih, type, level, func, arg, what);
+	return (isa_intr_establish(NULL, ih, type, level, func, arg, what));
 }
 
 void
@@ -222,5 +220,5 @@ eisa_intr_disestablish(ec, cookie)
 	eisa_chipset_tag_t ec;
 	void *cookie;
 {
-	return isa_intr_disestablish(NULL, cookie);
+	return (isa_intr_disestablish(NULL, cookie));
 }
