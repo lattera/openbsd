@@ -1,4 +1,4 @@
-/* $Id: scio.c,v 1.6 2001/07/16 22:01:22 rees Exp $ */
+/* $Id: scio.c,v 1.7 2001/07/16 22:03:38 rees Exp $ */
 
 /*
 copyright 1997
@@ -52,6 +52,7 @@ such damages.
 #include <fcntl.h>
 #include <errno.h>
 
+#include "sectok.h"
 #include "sc7816.h"
 #include "todos_scrw.h"
 
