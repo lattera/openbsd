@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/games/larn/Attic/store.c,v 1.4 1998/09/15 05:12:33 pjanzen Exp $	*/
+/*	$OpenBSD: src/games/larn/Attic/store.c,v 1.5 2002/02/16 21:27:10 millert Exp $	*/
 /*	$NetBSD: store.c,v 1.6 1997/10/18 20:03:52 christos Exp $	 */
 
 /*-
@@ -39,7 +39,7 @@
 #if 0
 static char     sccsid[] = "@(#)store.c	5.4 (Berkeley) 5/13/91";
 #else
-static char rcsid[] = "$OpenBSD: src/games/larn/Attic/store.c,v 1.4 1998/09/15 05:12:33 pjanzen Exp $";
+static char rcsid[] = "$OpenBSD: src/games/larn/Attic/store.c,v 1.5 2002/02/16 21:27:10 millert Exp $";
 #endif
 #endif				/* not lint */
 
@@ -47,12 +47,12 @@ static char rcsid[] = "$OpenBSD: src/games/larn/Attic/store.c,v 1.4 1998/09/15 0
 #include "header.h"
 #include "extern.h"
 
-static void handsfull __P((void));
-static void outofstock __P((void));
-static void nogold __P((void));
-static void dnditem __P((int));
-static void banktitle __P((char *));
-static void otradhead __P((void));
+static void handsfull(void);
+static void outofstock(void);
+static void nogold(void);
+static void dnditem(int);
+static void banktitle(char *);
+static void otradhead(void);
 
 static int	dndcount = 0, dnditm = 0;
 

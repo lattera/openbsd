@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/colrm/colrm.c,v 1.5 2001/11/19 19:02:13 mpech Exp $	*/
+/*	$OpenBSD: src/usr.bin/colrm/colrm.c,v 1.6 2002/02/16 21:27:45 millert Exp $	*/
 /*	$NetBSD: colrm.c,v 1.4 1995/09/02 05:51:37 jtc Exp $	*/
 
 /*-
@@ -44,7 +44,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)colrm.c	8.2 (Berkeley) 5/4/95";
 #endif
-static char rcsid[] = "$OpenBSD: src/usr.bin/colrm/colrm.c,v 1.5 2001/11/19 19:02:13 mpech Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/colrm/colrm.c,v 1.6 2002/02/16 21:27:45 millert Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -59,8 +59,8 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/colrm/colrm.c,v 1.5 2001/11/19 19:0
 
 #define	TAB	8
 
-void check __P((FILE *));
-void usage __P((void));
+void check(FILE *);
+void usage(void);
 
 int
 main(argc, argv)

@@ -29,7 +29,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: usrdb.c,v 1.2 1999/08/06 20:41:08 deraadt Exp $";
+static char rcsid[] = "$Id: usrdb.c,v 1.3 2001/07/27 20:34:36 pvalchev Exp $";
 #endif
 
 #include <sys/types.h>
@@ -41,7 +41,7 @@ static char rcsid[] = "$Id: usrdb.c,v 1.2 1999/08/06 20:41:08 deraadt Exp $";
 #include "extern.h"
 #include "pathnames.h"
 
-static int uid_compare __P((const DBT *, const DBT *));
+static int uid_compare(const DBT *, const DBT *);
 
 static DB	*usracct_db;
 

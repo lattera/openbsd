@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/apply/apply.c,v 1.10 2001/09/04 23:35:58 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/apply/apply.c,v 1.11 2002/02/16 21:27:43 millert Exp $	*/
 /*	$NetBSD: apply.c,v 1.3 1995/03/25 03:38:23 glass Exp $	*/
 
 /*-
@@ -41,7 +41,7 @@
 #if 0
 static char sccsid[] = "@(#)apply.c	8.4 (Berkeley) 4/4/94";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/apply/apply.c,v 1.10 2001/09/04 23:35:58 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/apply/apply.c,v 1.11 2002/02/16 21:27:43 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -56,8 +56,8 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/apply/apply.c,v 1.10 2001/09/04 23:
 #include <string.h>
 #include <unistd.h>
 
-void	usage __P((void));
-int	system __P((const char *));
+void	usage(void);
+int	system(const char *);
 
 int
 main(argc, argv)

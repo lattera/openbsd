@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/games/pom/pom.c,v 1.6 1998/09/06 12:29:25 pjanzen Exp $	*/
+/*	$OpenBSD: src/games/pom/pom.c,v 1.7 2002/02/16 21:27:11 millert Exp $	*/
 /*    $NetBSD: pom.c,v 1.6 1996/02/06 22:47:29 jtc Exp $      */
 
 /*
@@ -46,7 +46,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)pom.c	8.1 (Berkeley) 5/31/93";
 #else
-static char rcsid[] = "$OpenBSD: src/games/pom/pom.c,v 1.6 1998/09/06 12:29:25 pjanzen Exp $";
+static char rcsid[] = "$OpenBSD: src/games/pom/pom.c,v 1.7 2002/02/16 21:27:11 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -84,11 +84,11 @@ static char rcsid[] = "$OpenBSD: src/games/pom/pom.c,v 1.6 1998/09/06 12:29:25 p
 #define	Pzero	  36.340410	/* lunar mean long of perigee at EPOCH */
 #define	Nzero	  318.510107	/* lunar mean long of node at EPOCH */
 
-void	adj360 __P((double *));
-double	dtor __P((double));
-double	potm __P((double));
-time_t	parsetime __P((char *));
-void	badformat __P((void));
+void	adj360(double *);
+double	dtor(double);
+double	potm(double);
+time_t	parsetime(char *);
+void	badformat(void);
 
 int
 main(argc, argv)

@@ -1,13 +1,13 @@
-/*	$OpenBSD: src/usr.bin/lex/libmain.c,v 1.4 1996/12/14 07:07:56 tholo Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/libmain.c,v 1.5 2002/02/16 21:27:47 millert Exp $	*/
 
 /* libmain - flex run-time support library "main" function */
 
-/* $Header: /cvs/src/usr.bin/lex/libmain.c,v 1.3 1996/07/13 22:22:05 millert Exp $ */
+/* $Header: /cvs/src/usr.bin/lex/libmain.c,v 1.4 1996/12/14 07:07:56 tholo Exp $ */
 
 #include <sys/cdefs.h>
 
-int yylex __P((void));
-int main __P((int, char **, char **));
+int yylex(void);
+int main(int, char **, char **);
 
 /* ARGSUSED */
 int

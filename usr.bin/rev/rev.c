@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/rev/rev.c,v 1.4 2001/11/19 19:02:16 mpech Exp $	*/
+/*	$OpenBSD: src/usr.bin/rev/rev.c,v 1.5 2002/02/16 21:27:51 millert Exp $	*/
 /*	$NetBSD: rev.c,v 1.5 1995/09/28 08:49:40 tls Exp $	*/
 
 /*-
@@ -44,7 +44,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)rev.c	8.3 (Berkeley) 5/4/95";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/rev/rev.c,v 1.4 2001/11/19 19:02:16 mpech Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/rev/rev.c,v 1.5 2002/02/16 21:27:51 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -57,7 +57,7 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/rev/rev.c,v 1.4 2001/11/19 19:02:16
 #include <string.h>
 #include <unistd.h>
 
-void usage __P((void));
+void usage(void);
 
 int
 main(argc, argv)

@@ -38,7 +38,7 @@
  * SUCH DAMAGE.
  */
 
-/* @(#)$Id: rxkad.h,v 1.7 1998/02/23 03:23:24 assar Exp $ */
+/* @(#)$Id: rxkad.h,v 1.2 2000/09/11 14:41:26 art Exp $ */
 
 #ifndef __RXKAD_H
 #define __RXKAD_H
@@ -137,11 +137,11 @@ struct ktc_principal {
   char cell[MAXKTCREALMLEN];
 };
 
-u_int32 life_to_time __P((u_int32 start, int life_));
+u_int32 life_to_time(u_int32 start, int life_);
 
-int time_to_life __P((u_int32 start, u_int32 end));
+int time_to_life(u_int32 start, u_int32 end);
 
-int tkt_CheckTimes __P((int32 begin, int32 end, int32 now));
+int tkt_CheckTimes(int32 begin, int32 end, int32 now);
 
 int
 tkt_MakeTicket __P((char *ticket,

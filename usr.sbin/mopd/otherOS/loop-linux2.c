@@ -28,7 +28,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: loop-bsd.c,v 1.11 1996/08/16 22:41:28 moj Exp $";
+static char rcsid[] = "$Id: loop-linux2.c,v 1.1 1999/03/27 14:31:22 maja Exp $";
 #endif
 
 #include <stdlib.h>
@@ -90,7 +90,7 @@ mopReadDL()
  */
 struct if_info *iflist;
 
-void   mopProcess    __P((struct if_info *, u_char *));
+void   mopProcess(struct if_info *, u_char *);
 
 /*
  * Loop indefinitely listening for MOP requests on the
