@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.70 2001/08/02 15:43:57 jakob Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.71 2001/08/02 16:14:05 jakob Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.70 2001/08/02 15:43:57 jakob Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.71 2001/08/02 16:14:05 jakob Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -59,7 +59,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.70 2001/08/02 15:43:57 jakob Ex
 #ifdef SMARTCARD
 #include <openssl/engine.h>
 #include "scard.h"
-#endif /* SMARTCARD */
+#endif
 
 typedef struct {
 	int fd;
