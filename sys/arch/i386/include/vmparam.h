@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/vmparam.h,v 1.6 1997/07/16 21:43:11 kstailey Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.15 1994/10/27 04:16:34 cgd Exp $	*/
 
 /*-
