@@ -66,12 +66,6 @@ static char *rcsid = "$Id: edquota.c,v 1.25 2000/12/21 09:48:05 pjanzen Exp $";
 #include <unistd.h>
 #include "pathnames.h"
 
-#if DEV_BSHIFT < 10
-#define dbtokb(x) ((x) >> (10 - DEV_BSHIFT))
-#else
-#define dbtokb(x) ((x) << (DEV_BSHIFT - 10))
-#endif
-
 char *qfname = QUOTAFILENAME;
 char *qfextension[] = INITQFNAMES;
 char *quotagroup = QUOTAGROUP;
@@ -437,12 +431,12 @@ writeprivs(quplist, outfd, name, quotatype)
 		err(1, "%s", tmpfil);
 	(void)fprintf(fd, "Quotas for %s %s:\n", qfextension[quotatype], name);
 	for (qup = quplist; qup; qup = qup->next) {
-		(void)fprintf(fd, "%s: %s %lu, limits (soft = %lu, hard = %lu)\n",
+		(void)fprintf(fd, "%s: %s %d, limits (soft = %d, hard = %d)\n",
 		    qup->fsname, "blocks in use:",
-		    (int)(dbtokb((u_quad_t)qup->dqblk.dqb_curblocks)),
-		    (int)(dbtokb((u_quad_t)qup->dqblk.dqb_bsoftlimit)),
-		    (int)(dbtokb((u_quad_t)qup->dqblk.dqb_bhardlimit)));
-		(void)fprintf(fd, "%s %lu, limits (soft = %lu, hard = %lu)\n",
+		    (int)(dbtob((u_quad_t)qup->dqblk.dqb_curblocks) / 1024),
+		    (int)(dbtob((u_quad_t)qup->dqblk.dqb_bsoftlimit) / 1024),
+		    (int)(dbtob((u_quad_t)qup->dqblk.dqb_bhardlimit) / 1024));
+		(void)fprintf(fd, "%s %d, limits (soft = %d, hard = %d)\n",
 		    "\tinodes in use:", qup->dqblk.dqb_curinodes,
 		    qup->dqblk.dqb_isoftlimit, qup->dqblk.dqb_ihardlimit);
 	}
